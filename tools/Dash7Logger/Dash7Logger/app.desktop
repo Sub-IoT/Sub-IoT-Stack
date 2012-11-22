@@ -1,0 +1,6 @@
+[Desktop Entry]
+Encoding=UTF-8
+Type=Application
+Name=Dash7Logger
+Exec=dash7logger
+Terminal=false
