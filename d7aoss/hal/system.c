@@ -6,7 +6,7 @@
  */
 
 #include "system.h"
-#include "led.h"
+#include "leds.h"
 #include "button.h"
 #include "uart.h"
 

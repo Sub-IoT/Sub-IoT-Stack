@@ -12,7 +12,7 @@
 
 #include <hal/system.h>
 #include <hal/button.h>
-#include <hal/led.h>
+#include <hal/leds.h>
 #include <hal/rtc.h>
 #include <log.h>
 
@@ -65,7 +65,7 @@ void tx_callback()
 
 void rx_callback(phy_rx_res_t* res)
 {
-	Log_Packet(res->data); // TODO other params
+	log_packet(res->data); // TODO other params
 	if(memcmp(res->data, packet, res->len) != 0)
 	{
 		__no_operation(); // TODO assert
