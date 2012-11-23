@@ -98,7 +98,7 @@ void rx_callback(phy_rx_res_t* res)
 }
 
 void main(void) {
-	System_Init();
+	system_init();
 	button_enable_interrupts();
 
 	rtc_init_counter_mode();

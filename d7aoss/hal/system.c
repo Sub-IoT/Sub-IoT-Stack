@@ -82,7 +82,7 @@ void PMM_SetVCore (u8 level) {
     } while (actLevel != level);
 }
 
-void System_Init()
+void system_init()
 {
 	 // Init all ports
 	 PADIR = 0xFF;
