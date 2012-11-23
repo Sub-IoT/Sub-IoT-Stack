@@ -71,7 +71,7 @@ typedef struct
     /// Reception status
     u8  status; // TODO?
     /// Reception level
-    u8  rssi;
+    s8  rssi;
     /// Reported EIRP
     s8  eirp;
     /// Link quality indicator

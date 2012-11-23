@@ -75,6 +75,22 @@ void rx_callback(phy_rx_res_t* res)
 	}
 	else
 	{
+		char text[14] = "RX OK     dBm";
+		u8 i = 6;
+		if (res->rssi < 0)
+		{
+			text[i++] = '-';
+			res->rssi  *= -1;
+		}
+		if (res->rssi  >= 100)
+		{
+			text[i++] = '1';
+			res->rssi  -= 100;
+		}
+
+		text[i++] = 0x30 + (res->rssi / 10);
+		text[i++] = 0x30 + (res->rssi % 10);
+		Log_PrintString((char*)&text, 14);
 		Led_Toggle(3);
 	}
 
