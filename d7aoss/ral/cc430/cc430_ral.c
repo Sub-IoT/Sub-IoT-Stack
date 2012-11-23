@@ -8,7 +8,6 @@
 #include "rf1a.h"
 #include "../../hal/system.h"
 #include "cc430_ral.h"
-#include <msp430.h>
 
 #include "../../log.h"
 
@@ -161,9 +160,11 @@ static int get_rssi()
 
 static void read_data()
 {
-	u8 rxBytes = ReadSingleReg(RXBYTES);
     if (rxLength == 0)
     {
+        // TODO should be working without this hack: now waiting until 30 bit is received
+    	__delay_cycles(540*CLOCKS_PER_1us);
+    	u8 rxBytes = ReadSingleReg(RXBYTES);
     	ReadBurstReg(RF_RXFIFORD, rxData, rxBytes);
         rxLength = rxData[0];
     	WriteSingleReg(PKTLEN, rxLength);
@@ -217,7 +218,7 @@ static void rx_data_isr()
     if (radioState == RadioStateReceiveInit)
     {
 		// make buffer size bigger to have less interrupts
-		radioRxLimit = 64;
+		radioRxLimit = 54;
 		WriteSingleReg(FIFOTHR, RADIO_FIFOTHR_FIFO_THR_1_64);
 
 		rxLength = 0;
@@ -239,7 +240,7 @@ static void rx_data_isr()
         rx_response.data = rxData;
         rx_response.lqi = 0; // TODO
         rx_response.rssi = get_rssi();
-        rx_response.status = rxData[rxLength+2] & BIT7; // TODO rename status to CRC OK
+        rx_response.status = 0; // TODO what is status flag (crc check?)
         rx_callback(&rx_response); // TODO get callback out of ISR?
         return;
     }

@@ -65,6 +65,7 @@ void tx_callback()
 
 void rx_callback(phy_rx_res_t* res)
 {
+	Log_Packet(res->data); // TODO other params
 	if(memcmp(res->data, packet, res->len - 2) != 0) //exclude CRC bytes in check
 	{
 		__no_operation(); // TODO assert
@@ -74,7 +75,7 @@ void rx_callback(phy_rx_res_t* res)
 	}
 	else
 	{
-		Led_Off(3);
+		Led_Toggle(3);
 	}
 
 	start_rx();

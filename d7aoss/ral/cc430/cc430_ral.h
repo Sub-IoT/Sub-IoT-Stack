@@ -13,7 +13,7 @@
 
 #include "../ral.h"
 #include "cc430_registers.h"
-#include "../../types.h"
+//#include "../../types.h"
 
 // The CC430 implementation of the RAL interface
 extern const struct ral_interface cc430_ral;

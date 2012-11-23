@@ -22,7 +22,6 @@ static void translate_spectrum_id(u8 spectrum_id, u8* channel_center_freq_index,
 static void rx_completed(ral_rx_res_t* rx_result)
 {
 	// TODO add PHY processing, FEC, ... ?
-	Log_Packet(rx_result->data); // TODO other params
 	rx_callback((phy_rx_res_t*)rx_result); // TODO phy_rx_res_t same as ral_rx_res_t for now ...
 }
 

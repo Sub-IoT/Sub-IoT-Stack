@@ -102,7 +102,6 @@ namespace Dash7Logger
 				
 				while(data.Count > 1 && data[0] != 0xDD)
 					data.RemoveAt(0);
-					
 				
 				while (data.Count > 3 && data[0] == 0xDD)
 	    		{

@@ -18,10 +18,11 @@
 
 // driver
 #include "rf1a.h"
-#include "../../types.h"
-#include "cc430_registers.h"
-#include "../../hal/driverlib/deprecated/CCS/msp430xgeneric.h" // TODO move defines to cc430_registers.h?
 #include "../../hal/system.h"
+//#include "../../types.h"
+//#include "cc430_registers.h"
+//#include "../../hal/driverlib/deprecated/CCS/msp430xgeneric.h" // TODO move defines to cc430_registers.h?
+//	#include "../../hal/system.h"
 
 
 // *************************************************************************************************
@@ -106,6 +107,7 @@ void ResetRadioCore(void)
 unsigned char ReadSingleReg(unsigned char addr)
 {
   unsigned char x;
+  u16 int_state;
 
   ENTER_CRITICAL_SECTION(int_state);
 
