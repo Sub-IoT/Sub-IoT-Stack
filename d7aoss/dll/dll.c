@@ -33,7 +33,10 @@ void tx_callback()
 
 void rx_callback(phy_rx_res_t* res)
 {
-	Log_Packet(res->data);
+	// Data Link Filtering
+
+	// CRC Validatino
+	if (res->status)
 }
 
 void dll_init()
