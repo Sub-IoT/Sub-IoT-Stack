@@ -8,7 +8,7 @@
 
 #include <string.h>
 
-#include <phy/phy.h>
+#include <dll/dll.h>
 
 #include <hal/system.h>
 #include <hal/button.h>
@@ -24,69 +24,69 @@
 
 #define PACKET_LEN 19
 
-static u8 packet[PACKET_LEN] = { 0x13, 0x50, 0xF1, 0x20, 0x59, 0x40, 0x46, 0x93, 0x21, 0xAB, 0x00, 0x31, 0x00, 0x24, 0x00, 0x00, 0x00, 0x01, 0x01 };
+//static u8 packet[PACKET_LEN] = { 0x13, 0x50, 0xF1, 0x20, 0x59, 0x40, 0x46, 0x93, 0x21, 0xAB, 0x00, 0x31, 0x00, 0x24, 0x00, 0x00, 0x00, 0x01, 0x01 };
 
 static u8 interrupt_flags = 0;
 static u8 rtcEnabled = 0;
 
-phy_rx_cfg_t rx_cfg = {
-		0, // timeout
-		0, // multiple TODO
-		0x10, // spectrum ID TODO
-		0, // coding scheme TODO
-		0, // RSSI min filter TODO
-		0x01  // sync word class TODO
+dll_channel_scan_t scan_cfg = {
+		0x10,
+		FrameTypeForegroundFrame,
+		0,
+		0
 };
 
-phy_tx_cfg_t tx_cfg = {
-	    0x10, // spectrum ID
-		0, // coding scheme
-		0, // sync word class
-	    packet,
-	    PACKET_LEN
+dll_channel_scan_series_t scan_series_cfg = {
+		1,
+		&scan_cfg
 };
+
 
 void start_rx()
 {
-	Led_On(2);
+	dll_channel_scan_series(&scan_series_cfg);
+	led_on(2);
 }
 
 void stop_rx()
 {
-	Led_Off(2);
+	led_off(2);
 }
 
 void tx_callback()
 {
-	Led_Off(3);
+	led_off(3);
 }
 
-void rx_callback()
+void rx_callback(dll_rx_res_t* cb)
 {
-
+	led_toggle(3);
+	start_rx();
 }
 
 void main(void) {
-	System_Init();
-	Buttons_EnableInterrupts();
+	system_init();
+	button_enable_interrupts();
 
-	Rtc_InitCounterMode();
-	Rtc_Start();
+	rtc_init_counter_mode();
+	rtc_start();
 
 	dll_init();
 	dll_set_tx_callback(&tx_callback);
 	dll_set_rx_callback(&rx_callback);
 
+	start_rx();
+
 	while(1)
 	{
+		/*
         if(INTERRUPT_BUTTON1 & interrupt_flags)
         {
         	interrupt_flags &= ~INTERRUPT_BUTTON1;
-        	Led_On(3);
+        	led_on(3);
 
-
-        	Buttons_ClearInterruptFlag();
-        	Buttons_EnableInterrupts();
+        	button_clear_interrupt_flag();
+        	button_enable_interrupts();
         }
 
         if (INTERRUPT_BUTTON3 & interrupt_flags)
@@ -96,43 +96,44 @@ void main(void) {
         	if (rtcEnabled)
 			{
 				rtcEnabled = 0;
-				Rtc_DisableInterrupt();
+				rtc_disable_interrupt();
 			} else {
 				rtcEnabled = 1;
-				Rtc_EnableInterrupt();
+				rtc_enable_interrupt();
 			}
 
-        	Buttons_ClearInterruptFlag();
-        	Buttons_EnableInterrupts();
+        	button_clear_interrupt_flag();
+        	button_enable_interrupts();
         }
 
         if (INTERRUPT_RTC & interrupt_flags)
 		{
-			Led_On(3);
+			led_on(3);
 
 			interrupt_flags &= ~INTERRUPT_RTC;
 		}
 
-		System_LowPowerMode(4,1);
+		*/
+		system_lowpower_mode(4,1);
 	}
 }
 
 #pragma vector=PORT1_VECTOR
 __interrupt void PORT1_ISR (void)
 {
-	if(Button_IsActive(1))
+	if(button_is_active(1))
 		interrupt_flags |= INTERRUPT_BUTTON1;
 	else
 		interrupt_flags &= ~INTERRUPT_BUTTON1;
 
-	if(Button_IsActive(3))
+	if(button_is_active(3))
 		interrupt_flags |= INTERRUPT_BUTTON3;
 	else
 		interrupt_flags &= ~INTERRUPT_BUTTON3;
 
 	if(interrupt_flags != 0)
 	{
-		Buttons_DisableInterrupts();
+		button_disable_interrupts();
 		LPM4_EXIT;
 	}
 }

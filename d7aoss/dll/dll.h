@@ -2,8 +2,8 @@
  * The PHY layer API
  *  Created on: Nov 23, 2012
  *  Authors:
- *  	glenn.ergeerts@artesis.be
  * 		maarten.weyn@artesis.be
+ *  	glenn.ergeerts@artesis.be
  */
 
 #ifndef DLL_H_
@@ -11,6 +11,17 @@
 
 #include "../types.h"
 #include "../phy/phy.h"
+
+typedef enum {
+	FrameTypeBackgroundFrame,
+	FrameTypeForegroundFrame
+} Frame_Type;
+
+typedef enum {
+	DllStateNone,
+    DllStateScanBackgroundFrame,
+    DllStateScanForegroundFrame
+} Dll_State_Enum;
 
 // Frame Control
 #define FRAME_CTL_LISTEN 		(1 << 7)
@@ -56,6 +67,7 @@ typedef struct {
 	dll_foreground_frame_address_ctl_header_t* address_ctl_header; // only when addressing enabled in frame ctl
 	u8* source_id_header; // only when framectrl en addr bit is set
 	u8* target_id_header; // only when framectrl nls = 0 and unicast
+	u8 payload_length;
 	u8* payload;
 	// TODO DLLS footer
 } dll_foreground_frame_t;
@@ -66,11 +78,51 @@ typedef struct {
 	// TODO also get CRC or only flag if CRC is ok from ral?
 } dll_background_frame_t;
 
+
+// =======================================================================
+// dll_rx_res_t
+// -----------------------------------------------------------------------
+/// Data Link Layer Packet reception result structure
+// =======================================================================
+typedef struct
+{
+    /// Frame Type
+    Frame_Type  frame_type;
+    /// Frame
+    void* frame;
+    /// Reception level
+    s8  rssi;
+    /// Link quality indicator
+    u8  lqi;
+
+} dll_rx_res_t;
+
+typedef struct
+{
+	u8 channel_id; // 0-255
+	Frame_Type scan_type; // BF / FF
+	u16 timout_scan_detect; // 0-65535 ti
+	u16 time_next_scan; // 0-65535 ti
+
+} dll_channel_scan_t;
+
+typedef struct
+{
+	u8 length;
+	dll_channel_scan_t* values;
+
+} dll_channel_scan_series_t;
+
+
+
+
 typedef void (*dll_tx_callback_t)(); // TODO result param?
-typedef void (*dll_rx_callback_t)();
+typedef void (*dll_rx_callback_t)(dll_rx_res_t*);
 
 void dll_init();
 void dll_set_tx_callback(dll_tx_callback_t);
 void dll_set_rx_callback(dll_rx_callback_t);
+
+void dll_channel_scan_series(dll_channel_scan_series_t*);
 
 #endif /* DLL_H_ */

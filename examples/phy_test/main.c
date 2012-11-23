@@ -137,7 +137,7 @@ void main(void) {
 				start_rx();
 			} else {
 				rtcEnabled = 1;
-				Rtc_EnableInterrupt();
+				rtc_enable_interrupt();
 				stop_rx();
 			}
 
