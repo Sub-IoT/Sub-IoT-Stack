@@ -22,8 +22,6 @@ The tools/Dash7Logger directory contains a command line application (.NET) which
 
 To get started: in a CCS v5.3 workspace import d7aoss and examples/phy_test as existing CCS Eclipse projects and build them. 
 
-We just found out that there is bug in the current version (caused by quickly merging code) which results in faults in the last part of received packets. We will fix this ASAP, but still wanted to push the code so you can already look
-
 Next steps according to us are:
 - discuss and complete RAL + PHY API
 - resolve TODOs (which are everywhere now)
