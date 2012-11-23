@@ -37,7 +37,7 @@ typedef struct
 typedef struct
 {
     /// Reception status
-    u8  status; // TODO?
+    u8  crc_ok;
     /// Reception level
     u8  rssi;
     /// Reported EIRP
