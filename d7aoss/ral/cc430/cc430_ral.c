@@ -115,33 +115,12 @@ static void listen()
 	Strobe(RF_SRX); // start rx
 }
 
-static void sleep()
-{
-    Strobe(RF_SIDLE);
-    Strobe(RF_SPWD);
-}
-
-static void idle()
-{
-	Strobe(RF_SIDLE);
-}
-
-static void flush_tx()
-{
-    Strobe(RF_SFTX);
-}
-
-void flush_rx()
-{
-    Strobe(RF_SFRX);
-}
-
 static void stop_listening()
 {
 	radioState = RadioStateNone;
 	disable_interrupt();
-	idle();
-	flush_rx();
+	Strobe(RF_SIDLE);
+	Strobe(RF_SFRX);
 }
 
 // TODO call from application layer?
@@ -191,7 +170,8 @@ static void tx_switch_to_end_state()
 static void tx_finish()
 {
 	disable_interrupt();
-    sleep();
+    Strobe(RF_SIDLE);
+    Strobe(RF_SPWD);
     radioState = RadioStateNone;
 
     tx_callback(); // TODO return code
@@ -204,9 +184,9 @@ static void rx_timeout_isr()
 
 static void rx_sync_isr()
 {
-    //				RFIFG3				RFIF4						RFIFG7				RFIFG9
-    RF1AIE  = RFIFG_FLAG_RXFilled | RFIFG_FLAG_RXFilledOrEOP  | RFIFG_FLAG_RXOverflow | RFIFG_FLAG_SyncWord;
-    RF1AIES = RFIFG_FLANK_RXFilled | RFIFG_FLANK_RXFilledOrEOP  | RFIFG_FLANK_RXOverflow | RFIFG_FLANK_SyncWord;
+    //Enable receive interrupts
+    RF1AIE  |= RFIFG_FLAG_RXFilled | RFIFG_FLAG_RXFilledOrEOP  | RFIFG_FLAG_RXOverflow;
+    RF1AIES |= RFIFG_FLANK_RXFilled | RFIFG_FLANK_RXFilledOrEOP  | RFIFG_FLANK_RXOverflow;
 }
 
 static void rx_data_isr()
@@ -231,9 +211,9 @@ static void rx_data_isr()
     if (rxRemainingBytes == 0)
     {
         radioState = RadioStateReceiveDone;
-        idle();
-        flush_rx();
-        sleep(); // TODO sleep or power down
+        Strobe(RF_SIDLE);
+        Strobe(RF_SFRX);
+        Strobe(RF_SPWD); // TODO sleep or power down
 
         rx_response.eirp = rxData[1] * 0.5 - 40;
         rx_response.len = rxLength;
@@ -360,7 +340,7 @@ void cc430_ral_tx(ral_tx_cfg_t* tx_cfg)
 {
 	// TODO use other tx_cfg settings
 
-	flush_tx();
+	Strobe(RF_SFTX);
 	WriteSingleReg(PKTCTRL0, (RADIO_PKTCTRL0_WHITE_DATA | RADIO_PKTCTRL0_PKT_FOR_NORMAL | RADIO_PKTCTRL0_LENGTH_FIXED));
 	WriteSingleReg(PKTLEN, tx_cfg->len);
 	WriteSingleReg(FIFOTHR, RADIO_FIFOTHR_CLOSE_IN_RX_0db | RADIO_FIFOTHR_FIFO_THR_61_4);
@@ -370,7 +350,7 @@ void cc430_ral_tx(ral_tx_cfg_t* tx_cfg)
 
 	radioState = RadioStateTransmitData;
 
-	idle();
+	Strobe(RF_SIDLE);
 
 	RF1AIFG = 0;
 	RF1AIE  = 0 | RFIFG_FLAG_TXBelowThresh | 0;
