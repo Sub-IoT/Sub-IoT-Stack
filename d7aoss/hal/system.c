@@ -6,7 +6,7 @@
  */
 
 #include "system.h"
-#include "led.h"
+#include "leds.h"
 #include "button.h"
 #include "uart.h"
 
@@ -82,7 +82,7 @@ void PMM_SetVCore (u8 level) {
     } while (actLevel != level);
 }
 
-void System_Init()
+void system_init()
 {
 	 // Init all ports
 	 PADIR = 0xFF;
