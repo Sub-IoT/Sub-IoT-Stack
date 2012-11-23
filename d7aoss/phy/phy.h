@@ -11,6 +11,12 @@
 
 #include "../types.h"
 
+typedef enum {
+	DllStateNone,
+    DllStateScanBackgroundFrame,
+    DllStateScanForegroundFrame,
+} Dll_State_Enum;
+
 
 // TODO implement FEC
 
