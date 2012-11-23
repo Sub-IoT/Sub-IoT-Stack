@@ -12,7 +12,7 @@
 
 
 // Currrently 1 sec intervals
-void Rtc_InitCounterMode()
+void rtc_init_counter_mode()
 {
     //Initialize Counter Mode of RTC_A
     /*
@@ -58,20 +58,20 @@ void Rtc_EnableInterrupt()
         RTCTEVIE);
 }
 
-void Rtc_DisableInterrupt()
+void rtc_disable_interrupt()
 {
     //Enable interrupt for counter overflow
     RTC_disableInterrupt(__MSP430_BASEADDRESS_RTC__,
         RTCTEVIE);
 }
 
-void Rtc_Start()
+void rtc_start()
 {
     //Start RTC Clock
     RTC_startClock(__MSP430_BASEADDRESS_RTC__);
 }
 
-void Rtc_Stop()
+void rtc_stop()
 {
     //Start RTC Clock
     RTC_holdClock(__MSP430_BASEADDRESS_RTC__);

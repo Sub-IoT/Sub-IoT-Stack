@@ -10,14 +10,14 @@
 
 
 
-void Buttons_Init();
+void button_init();
 
-void Buttons_EnableInterrupts();
+void button_enable_interrupts();
 
-void Buttons_DisableInterrupts();
+void button_disable_interrupts();
 
-void Buttons_ClearInterruptFlag();
+void button_clear_interrupt_flag();
 
-unsigned char Button_IsActive(unsigned char);
+unsigned char button_is_active(unsigned char);
 
 #endif //__BUTTON_H__

@@ -10,8 +10,8 @@
 
 #include "types.h"
 
-void Log_PrintString(char* message, u8 length);
+void log_print_string(char* message, u8 length);
 
-void Log_Packet(u8* packet);
+void log_packet(u8* packet);
 
 #endif /* __LOG_H_ */

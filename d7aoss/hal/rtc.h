@@ -9,13 +9,12 @@
 #define __RTC_H__
 
 // Currrently 1 sec intervals
-void Rtc_InitCounterMode();
+void rtc_init_counter_mode();
 
-void Rtc_EnableInterrupt();
-void Rtc_DisableInterrupt();
+void rtc_enable_interrupt();
+void rtc_disable_interrupt();
 
-void Rtc_Start();
-
-void Rtc_Stop();
+void rtc_start();
+void rtc_stop();
 
 #endif // __RTC_H__

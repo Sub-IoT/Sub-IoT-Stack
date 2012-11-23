@@ -7,23 +7,23 @@
 
 #include "button.h"
 
+#include "driverlib/5xx_6xx/gpio.h"
+#include "driverlib/5xx_6xx/wdt.h"
+
 #include "platforms/wizzimote.h"
 //#include "platforms/artesis.h"
 
 #include "addresses.h"
-//#include "inc/hw_memmap.h"
-#include "driverlib/5xx_6xx/gpio.h"
-#include "driverlib/5xx_6xx/wdt.h"
 
 
-void Buttons_Init()
+void button_init()
 {
     GPIO_setAsInputPin(INPUT1_BASEADDRESS, INPUT1_PORT, INPUT1_PIN);
     GPIO_setAsInputPin(INPUT2_BASEADDRESS, INPUT2_PORT, INPUT2_PIN);
     GPIO_setAsInputPin(INPUT2_BASEADDRESS, INPUT3_PORT, INPUT3_PIN);
 }
 
-void Buttons_EnableInterrupts()
+void button_enable_interrupts()
 {
     GPIO_enableInterrupt(INPUT1_BASEADDRESS, INPUT1_PORT, INPUT1_PIN);
     GPIO_enableInterrupt(INPUT2_BASEADDRESS, INPUT2_PORT, INPUT2_PIN);
@@ -36,24 +36,24 @@ void Buttons_EnableInterrupts()
     GPIO_interruptEdgeSelect(INPUT3_BASEADDRESS, INPUT3_PORT, INPUT3_PIN,
             GPIO_HIGH_TO_LOW_TRANSITION);
 
-    Buttons_ClearInterruptFlag();
+    button_clear_interrupt_flag();
 }
 
-void Buttons_DisableInterrupts()
+void button_disable_interrupts()
 {
     GPIO_disableInterrupt(INPUT1_BASEADDRESS, INPUT1_PORT, INPUT1_PIN);
     GPIO_disableInterrupt(INPUT2_BASEADDRESS, INPUT2_PORT, INPUT2_PIN);
     GPIO_disableInterrupt(INPUT3_BASEADDRESS, INPUT3_PORT, INPUT3_PIN);
 }
 
-void Buttons_ClearInterruptFlag()
+void button_clear_interrupt_flag()
 {
     GPIO_clearInterruptFlag(INPUT1_BASEADDRESS, INPUT1_PORT, INPUT1_PIN);
 	GPIO_clearInterruptFlag(INPUT2_BASEADDRESS, INPUT2_PORT, INPUT2_PIN);
 	GPIO_clearInterruptFlag(INPUT3_BASEADDRESS, INPUT3_PORT, INPUT3_PIN);
 }
 
-unsigned char Button_IsActive(unsigned char button_nr)
+unsigned char button_is_active(unsigned char button_nr)
 {
     switch (button_nr)
     {

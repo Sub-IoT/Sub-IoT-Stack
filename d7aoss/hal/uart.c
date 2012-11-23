@@ -11,7 +11,7 @@
 #include "driverlib/5xx_6xx/gpio.h"
 #include "driverlib/5xx_6xx/uart.h"
 
-void Uart_Init()
+void uart_init()
 {
     PMAPPWD = 0x02D52;                        // Get write-access to port mapping regs
     P2MAP0 = PM_UCA0RXD;                      // Map UCA0RXD output to P2.6
@@ -31,35 +31,35 @@ void Uart_Init()
 
 }
 
-void Uart_EnableInterrupt()
+void uart_enable_interrupt()
 {    
     UCA0IE |= UCRXIE;                         // Enable USCI_A0 RX interrupt
 }
 
 
-void Uart_TransmitData(unsigned char data)
+void uart_transmit_data(unsigned char data)
 {
-	while(!Uart_TxReady());
+	while(!uart_tx_ready());
     UCA0TXBUF = data;
 }
 
 
-void Uart_TransmitMessage(unsigned char *data, unsigned char length)
+void uart_transmit_message(unsigned char *data, unsigned char length)
 {
     unsigned char i=0;
     for (; i<length; i++)
     {
-        Uart_TransmitData(data[i]);
+        uart_transmit_data(data[i]);
     }
 
 }
 
-unsigned char Uart_TxReady()
+unsigned char uart_tx_ready()
 {
     return UCA0IFG&UCTXIFG;
 }
 
-unsigned char Uart_ReceiveData()
+unsigned char uart_receive_data()
 {
     return UCA0RXBUF;
 }
