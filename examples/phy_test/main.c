@@ -12,7 +12,7 @@
 
 #include <hal/system.h>
 #include <hal/button.h>
-#include <hal/leds.h>
+#include <hal/led.h>
 #include <hal/rtc.h>
 #include <log.h>
 
@@ -48,30 +48,30 @@ phy_tx_cfg_t tx_cfg = {
 void start_rx()
 {
 	phy_rx_start(&rx_cfg); // TODO remove (use timeout/multiple)
-	Led_On(2);
+	led_on(2);
 }
 
 void stop_rx()
 {
 	phy_rx_stop();
-	Led_Off(2);
+	led_off(2);
 }
 
 void tx_callback()
 {
-	Led_Off(3);
+	led_off(3);
 	start_rx(); // go back to rx mode
 }
 
 void rx_callback(phy_rx_res_t* res)
 {
-	Log_Packet(res->data); // TODO other params
+	log_packet(res->data); // TODO other params
 	if(memcmp(res->data, packet, res->len - 2) != 0) //exclude CRC bytes in check
 	{
 		__no_operation(); // TODO assert
-		Log_PrintString("!!! unexpected packet data", 26);
-		Led_Off(3);
-		Led_Toggle(1);
+		log_print_string("!!! unexpected packet data", 26);
+		led_off(3);
+		led_toggle(1);
 	}
 	else
 	{
@@ -90,8 +90,8 @@ void rx_callback(phy_rx_res_t* res)
 
 		text[i++] = 0x30 + (res->rssi / 10);
 		text[i++] = 0x30 + (res->rssi % 10);
-		Log_PrintString((char*)&text, 14);
-		Led_Toggle(3);
+		log_print_string((char*)&text, 14);
+		led_toggle(3);
 	}
 
 	start_rx();
@@ -99,10 +99,10 @@ void rx_callback(phy_rx_res_t* res)
 
 void main(void) {
 	System_Init();
-	Buttons_EnableInterrupts();
+	button_enable_interrupts();
 
-	Rtc_InitCounterMode();
-	Rtc_Start();
+	rtc_init_counter_mode();
+	rtc_start();
 
 	phy_init();
 	phy_set_tx_callback(&tx_callback);
@@ -115,15 +115,15 @@ void main(void) {
         if(INTERRUPT_BUTTON1 & interrupt_flags)
         {
         	interrupt_flags &= ~INTERRUPT_BUTTON1;
-        	Led_On(3);
+        	led_on(3);
 
         	if(phy_is_rx_in_progress() == true)
         		stop_rx();
 
         	phy_tx(&tx_cfg);
 
-        	Buttons_ClearInterruptFlag();
-        	Buttons_EnableInterrupts();
+        	button_clear_interrupt_flag();
+        	button_enable_interrupts();
         }
 
         if (INTERRUPT_BUTTON3 & interrupt_flags)
@@ -133,7 +133,7 @@ void main(void) {
         	if (rtcEnabled)
 			{
 				rtcEnabled = 0;
-				Rtc_DisableInterrupt();
+				rtc_disable_interrupt();
 				start_rx();
 			} else {
 				rtcEnabled = 1;
@@ -141,38 +141,38 @@ void main(void) {
 				stop_rx();
 			}
 
-        	Buttons_ClearInterruptFlag();
-        	Buttons_EnableInterrupts();
+        	button_clear_interrupt_flag();
+        	button_enable_interrupts();
         }
 
         if (INTERRUPT_RTC & interrupt_flags)
 		{
-			Led_On(3);
+			led_on(3);
 			stop_rx();
 			phy_tx(&tx_cfg);
 			interrupt_flags &= ~INTERRUPT_RTC;
 		}
 
-		System_LowPowerMode(4,1);
+		system_lowpower_mode(4,1);
 	}
 }
 
 #pragma vector=PORT1_VECTOR
 __interrupt void PORT1_ISR (void)
 {
-	if(Button_IsActive(1))
+	if(button_is_active(1))
 		interrupt_flags |= INTERRUPT_BUTTON1;
 	else
 		interrupt_flags &= ~INTERRUPT_BUTTON1;
 
-	if(Button_IsActive(3))
+	if(button_is_active(3))
 		interrupt_flags |= INTERRUPT_BUTTON3;
 	else
 		interrupt_flags &= ~INTERRUPT_BUTTON3;
 
 	if(interrupt_flags != 0)
 	{
-		Buttons_DisableInterrupts();
+		button_disable_interrupts();
 		LPM4_EXIT;
 	}
 }

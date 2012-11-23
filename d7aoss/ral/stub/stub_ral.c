@@ -10,37 +10,37 @@
 
 void stub_ral_init()
 {
-	Log_PrintString("stub_ral_init()", 15);
+	log_print_string("stub_ral_init()", 15);
 }
 
 void stub_ral_tx(ral_tx_cfg_t* cfg)
 {
-	Log_PrintString("stub_ral_send()", 15);
+	log_print_string("stub_ral_send()", 15);
 }
 
 void stub_ral_set_rx_callback(ral_rx_callback_t cb)
 {
-	Log_PrintString("stub_ral_set_rx_callback()", 26);
+	log_print_string("stub_ral_set_rx_callback()", 26);
 }
 
 void stub_ral_set_tx_callback(ral_tx_callback_t cb)
 {
-	Log_PrintString("stub_ral_set_tx_callback()", 26);
+	log_print_string("stub_ral_set_tx_callback()", 26);
 }
 
 void stub_ral_rx_start(ral_rx_cfg_t* cfg)
 {
-	Log_PrintString("stub_ral_rx_start()", 19);
+	log_print_string("stub_ral_rx_start()", 19);
 }
 
 void stub_ral_rx_stop()
 {
-	Log_PrintString("stub_ral_rx_stop()", 18);
+	log_print_string("stub_ral_rx_stop()", 18);
 }
 
 bool stub_ral_is_rx_in_progress()
 {
-	Log_PrintString("stub_ral_is_rx_in_progress()", 28);
+	log_print_string("stub_ral_is_rx_in_progress()", 28);
 	return false;
 }
 

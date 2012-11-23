@@ -8,15 +8,15 @@
 #ifndef __UART_H__
 #define _UART_H__
 
-void Uart_Init();
+void uart_init();
 
-void Uart_EnableInterrupt();
+void uart_enable_interrupt();
 
-void Uart_TransmitData(unsigned char data);
-void Uart_TransmitMessage(unsigned char *data, unsigned char length);
+void uart_transmit_data(unsigned char data);
+void uart_transmit_message(unsigned char *data, unsigned char length);
 
-unsigned char Uart_TxReady();
+unsigned char uart_tx_ready();
 
-unsigned char Uart_ReceiveData();
+unsigned char uart_receive_data();
 
 #endif // __UART_H__
