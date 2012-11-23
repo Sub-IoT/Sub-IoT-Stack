@@ -6,7 +6,7 @@
  */
 
 #include "system.h"
-#include "leds.h"
+#include "led.h"
 #include "button.h"
 #include "uart.h"
 
@@ -92,34 +92,34 @@ void System_Init()
 	 PCDIR = 0xFF;
 	 PCOUT = 0x00;
 
-    System_StopWatchdogTimer();
+    system_watchdog_timer_stop();
 
     //PMM_setVCore(PMMCOREV_2);
     PMM_SetVCore(2);
 
     PMM_SetStdSVSM(0x8088, 2, 4);
 
-    Leds_Init();
-    Buttons_Init();
-    Uart_Init();
+    led_init();
+    button_init();
+    uart_init();
 
-    System_GetUniqueId(tag_id);
+    system_get_unique_id(tag_id);
 
 }
 
-void System_StopWatchdogTimer()
+void system_watchdog_timer_stop()
 {
     //WDT_hold();
     WDTCTL = WDTPW + WDTHOLD;
 }
 
-void System_StartWatchdogTimer()
+void system_watchdog_timer_start()
 {
     //WDT_hold();
     WDTCTL = WDTPW + ~WDTHOLD;
 }
 
-void System_LowPowerMode(unsigned char mode, unsigned char enableInterrupts)
+void system_lowpower_mode(unsigned char mode, unsigned char enableInterrupts)
 {
     unsigned char registerSetting = 0;
     switch (mode)
@@ -148,7 +148,7 @@ void System_LowPowerMode(unsigned char mode, unsigned char enableInterrupts)
     __bis_SR_register(registerSetting);
 }
 
-void System_GetUniqueId(unsigned char *tagId)
+void system_get_unique_id(unsigned char *tagId)
 {
     struct s_TLV_Die_Record * pDIEREC;
     unsigned char bDieRecord_bytes;

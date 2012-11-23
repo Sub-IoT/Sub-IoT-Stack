@@ -238,9 +238,9 @@ static void rx_data_isr()
         rx_response.eirp = rxData[1] * 0.5 - 40;
         rx_response.len = rxLength;
         rx_response.data = rxData;
-        rx_response.lqi = 0; // TODO
+        rx_response.lqi = ReadSingleReg(LQI);
         rx_response.rssi = get_rssi();
-        rx_response.status = 0; // TODO what is status flag (crc check?)
+        rx_response.crc_ok = ReadSingleReg(PKTSTATUS) >> 7;
         rx_callback(&rx_response); // TODO get callback out of ISR?
         return;
     }

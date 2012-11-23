@@ -13,24 +13,24 @@ u8 logCounter = 0;
 
 // TODO only in debug mode?
 
-void Log_PrintString(char* message, u8 length)
+void log_print_string(char* message, u8 length)
 {
-	Uart_TransmitData(0xDD);
-	Uart_TransmitData(0x01);
-	Uart_TransmitData(logCounter++);
-	Uart_TransmitData(length);
-	Uart_TransmitMessage((unsigned char*) message, length);
-	Uart_TransmitData(0x00);
+	uart_transmit_data(0xDD);
+	uart_transmit_data(0x01);
+	uart_transmit_data(logCounter++);
+	uart_transmit_data(length);
+	uart_transmit_message((unsigned char*) message, length);
+	uart_transmit_data(0x00);
 }
 
-void Log_Packet(u8* packet) // TODO take direction param (tx/rx)?
+void log_packet(u8* packet) // TODO take direction param (tx/rx)?
 {
-	Uart_TransmitData(0xDD);
-	Uart_TransmitData(0x00);
-	Uart_TransmitData(logCounter++);
-	Uart_TransmitData(packet[0]);
-	Uart_TransmitMessage(packet, packet[0]);
-	Uart_TransmitData(0x00);
+	uart_transmit_data(0xDD);
+	uart_transmit_data(0x00);
+	uart_transmit_data(logCounter++);
+	uart_transmit_data(packet[0]);
+	uart_transmit_message(packet, packet[0]);
+	uart_transmit_data(0x00);
 
 }
 
