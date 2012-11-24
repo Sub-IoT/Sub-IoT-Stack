@@ -112,7 +112,7 @@ unsigned char ReadSingleReg(unsigned char addr)
   ENTER_CRITICAL_SECTION(int_state);
 
   RF1AINSTR1B = (addr | RF_REGRD); 
-  x = RF1ADOUT1B;
+  x = RF1ADOUTB;
 
   EXIT_CRITICAL_SECTION(int_state);  
 

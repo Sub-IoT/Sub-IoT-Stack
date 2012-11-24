@@ -215,7 +215,7 @@ static void rx_data_isr()
         Strobe(RF_SFRX);
         Strobe(RF_SPWD); // TODO sleep or power down
 
-        rx_response.eirp = rxData[1] * 0.5 - 40;
+        rx_response.eirp = (rxData[1] >> 1) - 40;
         rx_response.len = rxLength;
         rx_response.data = rxData;
         rx_response.lqi = ReadSingleReg(LQI);
