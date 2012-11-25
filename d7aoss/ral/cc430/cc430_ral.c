@@ -40,7 +40,7 @@ RF_SETTINGS rfSettings = {
     RADIO_SYNC0_CLASS1_NON_FEC,   // SYNC0
     RADIO_PKTLEN,   // PKTLEN
     (RADIO_PKTCTRL1_PQT(3) | RADIO_PKTCTRL1_ADR_CHK_NONE),   // PKTCTRL1  Packet automation control
-    (RADIO_PKTCTRL0_WHITE_DATA | RADIO_PKTCTRL0_PKT_FOR_NORMAL | RADIO_PKTCTRL0_CRC | RADIO_PKTCTRL0_LENGTH_INF),   // PKTCTRL0  Packet automation control
+    (RADIO_PKTCTRL0_WHITE_DATA | RADIO_PKTCTRL0_PKT_FOR_NORMAL | RADIO_PKTCTRL0_CRC | RADIO_PKTCTRL0_LENGTH_FIXED),   // PKTCTRL0  Packet automation control
     RADIO_ADDR,   // ADDR      Device address
     RADIO_CHAN,   // CHANNR    Channel number.
     RADIO_FREQ_IF,   // FSCTRL1   Frequency synthesizer control.
@@ -116,8 +116,6 @@ static void rx_timeout_isr()
 
 static void rx_sync_isr()
 {
-	radioState = RadioStateReceive;
-
     //Reset receive data
     rxLength = 0;
     rxRemainingBytes = 0;
@@ -130,28 +128,35 @@ static void rx_sync_isr()
 
 static void rx_data_isr()
 {
-    //Disable interrupts
 	RF1AIFG = 0;
     RF1AIE = 0;
     RF1AIES = 0;
 
-    if (rxLength == 0) {
+    u8 rxBytes = ReadSingleReg(RXBYTES);
+
+    if (radioState == RadioStateReceiveInit) {
+    	radioState = RadioStateReceive;
     	WriteSingleReg(FIFOTHR, RADIO_FIFOTHR_FIFO_THR_17_48);
-        // TODO should be working without this hack: now waiting until 30 bit is received
-    	__delay_cycles(540*CLOCKS_PER_1us);
-    	u8 rxBytes = ReadSingleReg(RXBYTES);
-    	ReadBurstReg(RF_RXFIFORD, rxData, rxBytes);
-        rxLength = rxData[0];
-    	WriteSingleReg(PKTLEN, rxLength);
-        rxRemainingBytes = rxLength>rxBytes ? rxLength-rxBytes: 0;
-        rxDataPointer = &rxData[rxBytes];
     }
 
-    while ((rxRemainingBytes > 0) && (ReadSingleReg(RXBYTES) > 0)) {
-	   *rxDataPointer = ReadSingleReg(RF_RXFIFORD);
+    if (rxLength == 0) {
+    	rxLength = ReadSingleReg(RXFIFO) + 1; // TODO Should not be + 1, maybe bug in transmit
+    	WriteSingleReg(PKTLEN, rxLength);
+    	rxRemainingBytes = rxLength - 1;
+		rxData[0] = rxLength;
 		rxDataPointer++;
-		rxRemainingBytes--;
+    	rxBytes--;
     }
+
+    if (rxRemainingBytes > rxBytes) {
+    	rxBytes--;
+    } else {
+    	rxBytes = rxRemainingBytes;
+    }
+
+	ReadBurstReg(RXFIFO, rxDataPointer, rxBytes);
+    rxRemainingBytes -= rxBytes;
+    rxDataPointer += rxBytes;
 
     if (rxRemainingBytes == 0) {
         radioState = RadioStateReceiveDone;
@@ -196,8 +201,8 @@ __interrupt void CC1101_ISR (void)
 		rx_data_isr();
 		break;
 	case 0x0A:             			// RFIFG4 RX FIFO filled or end of packet reached
-	  rx_data_isr();
-	  break;
+		rx_data_isr();
+		break;
 	case 0x0C: break;               // RFIFG5 TXAboveThresh_ISR();
 	case 0x0E: break;               // RFIFG6
 	case 0x10: break;               // RFIFG7
@@ -325,13 +330,13 @@ void cc430_ral_rx_start(ral_rx_cfg_t* cfg)
 	radioState = RadioStateReceiveInit;
 	WriteSingleReg(FIFOTHR, (RADIO_FIFOTHR_CLOSE_IN_RX_0db | RADIO_FIFOTHR_FIFO_THR_61_4));
 	WriteSingleReg(PKTCTRL0, (RADIO_PKTCTRL0_WHITE_DATA | RADIO_PKTCTRL0_PKT_FOR_NORMAL | RADIO_PKTCTRL0_LENGTH_INF));
-	WriteSingleReg(PKTLEN, 0xFF);
+	WriteSingleReg(PKTLEN, RADIO_PKTLEN);
 
 	RF1AIFG = 0;
 	RF1AIE  = RFIFG_FLAG_SyncWord;
 	RF1AIES = RFIFG_FLANK_SyncWord;
 
-	Strobe(RF_SRX); // start rx
+	Strobe(RF_SRX);
 }
 
 void cc430_ral_rx_stop()
