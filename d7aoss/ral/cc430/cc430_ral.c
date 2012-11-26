@@ -119,7 +119,7 @@ static void rx_sync_isr()
     rxRemainingBytes = 0;
     rxDataPointer = &rxData[0];
 
-    //Enable receive interrupts
+    //Clear all flags, enable receive interrupts
 	RF1AIFG = 0;
     RF1AIE  = RFIFG_FLAG_RXFilled | RFIFG_FLAG_SyncWord;
     RF1AIES = RFIFG_FLANK_RXFilled | RFIFG_FLANK_EndOfPacket;
@@ -127,8 +127,11 @@ static void rx_sync_isr()
 
 static void rx_data_isr()
 {
-u8 rxBytes = ReadSingleReg(RXBYTES);
+	//Read number of bytes in RXFIFO
+	u8 rxBytes = ReadSingleReg(RXBYTES);
 
+	//If length is not set (first time after sync word)
+	//get the length from RXFIFO and set PKTLEN so eop can be detected right
     if (rxLength == 0 && rxBytes > 0) {
     	rxLength = ReadSingleReg(RXFIFO) + 1; // TODO Should not be + 1, maybe bug in transmit
     	WriteSingleReg(PKTLEN, rxLength);
@@ -138,10 +141,14 @@ u8 rxBytes = ReadSingleReg(RXBYTES);
 		rxDataPointer++;
     }
 
-    if (rxRemainingBytes <= rxBytes) {
+    //Never read the entire buffer as long as more data is going to be received
+    if (rxRemainingBytes > rxBytes) {
+    	rxBytes--;
+    } else {
     	rxBytes = rxRemainingBytes;
     }
 
+    //Read data from buffer
 	ReadBurstReg(RXFIFO, rxDataPointer, rxBytes);
     rxRemainingBytes -= rxBytes;
     rxDataPointer += rxBytes;
@@ -149,9 +156,11 @@ u8 rxBytes = ReadSingleReg(RXBYTES);
     if (rxRemainingBytes == 0) {
         radioState = RadioStateReceiveDone;
 
+        //Disable interrupts
         RF1AIE = 0;
         RF1AIES = 0;
 
+        //Flush RXFIFO and go to sleep
         Strobe(RF_SIDLE);
         Strobe(RF_SFRX);
         Strobe(RF_SPWD);
@@ -177,10 +186,10 @@ __interrupt void CC1101_ISR (void)
   core_edge &= RF1AIES;
   core_vector += (core_edge) ? 0x22 : 0;
 
-  switch (core_vector) {
-  	// rising edges
+  switch (__even_in_range(core_vector, 0x42)) {
+  	// Rising edges
   	case 0x00: break;               // No RF core interrupt pending
-	case 0x02:						//RFIFG0 TODO: timeout not implemented yet
+	case 0x02:						// RFIFG0 TODO: timeout not implemented yet
 		rx_timeout_isr();
 		break;
 	case 0x04: break;               // RFIFG1 - RSSI_VALID
@@ -188,14 +197,14 @@ __interrupt void CC1101_ISR (void)
 	case 0x08:                      // RFIFG3 RX FIFO filled or above RX FIFO threshold
 		rx_data_isr();
 		break;
-	case 0x0A: break;             	// RFIFG4 RX FIFO filled or end of packet reached
+	case 0x0A: break;             	// RFIFG4 RX FIFO filled or end of packet reached (Do not use! Will not reset until rxfifo emptied)
 	case 0x0C: break;               // RFIFG5 TXAboveThresh_ISR();
 	case 0x0E: break;               // RFIFG6
 	case 0x10: break;               // RFIFG7
 	case 0x12:                      // RFIFG8
 		tx_switch_to_end_state();
 		break;
-	case 0x14:                      // RFIFG9 SyncWord_ISR()
+	case 0x14:                      // RFIFG9 SyncWord received
 		rx_sync_isr();
 		break;
 	case 0x16: break;               // RFIFG10 CRC OK
@@ -206,11 +215,11 @@ __interrupt void CC1101_ISR (void)
 	case 0x20: break;               // RFIFG15 WOR
 
 	// Falling Edges
-    case  0x22: break;              // No RF core interrupt pending
-    case  0x24: break;              // RFIFG0
-    case  0x26: break;              // RFIFG1
-    case  0x28: break;              // RFIFG2
-    case  0x2A: break;              // RFIFG3
+    case 0x22: break;               // No RF core interrupt pending
+    case 0x24: break;               // RFIFG0
+    case 0x26: break;               // RFIFG1
+    case 0x28: break;               // RFIFG2
+    case 0x2A: break;               // RFIFG3
     case 0x2C: break;               // RFIFG4
     case 0x2E:                      // RFIFG5 TXBelowThresh_ISR();
     	tx_switch_to_end_state();
@@ -219,10 +228,9 @@ __interrupt void CC1101_ISR (void)
     case 0x32: break;               // RFIFG7
     case 0x34: break;               // RFIFG8
     case 0x36:						// RFIFG9 End of packet reached
-        if (radioState == RadioStateTransmitData)
-        {
+        if (radioState == RadioStateTransmitData) {
             tx_finish();
-        } else {
+        } else if(radioState == RadioStateReceive) {
         	rx_data_isr();
         }
         break;
@@ -232,7 +240,7 @@ __interrupt void CC1101_ISR (void)
     case 0x3E: break;               // RFIFG13 RSSI below threshold
     case 0x40: break;               // RFIFG14
     case 0x42: break;               // RFIFG15
-    default: _never_executed();
+    default:break;
   }
 
   LPM4_EXIT;
@@ -316,14 +324,20 @@ void cc430_ral_rx_start(ral_rx_cfg_t* cfg)
 		// TODO assert, FEC not implemented yet
 	}
 
+	//Modify radio state
+	//Set PKTLEN to the highest possible number, we will change this to the right length later
+	//Set RXFIFO threshold as low as possible,
 	radioState = RadioStateReceiveInit;
 	WriteSingleReg(PKTLEN, RADIO_PKTLEN);
 	WriteSingleReg(FIFOTHR, (RADIO_FIFOTHR_CLOSE_IN_RX_0db | RADIO_FIFOTHR_FIFO_THR_61_4));
 
+	//Clear all interrupt flags, enable sync word interrupt
 	RF1AIFG = 0;
 	RF1AIE  = RFIFG_FLAG_SyncWord;
 	RF1AIES = RFIFG_FLANK_SyncWord;
 
+
+	//Flush RXFIFO, start receiving
 	Strobe(RF_SIDLE);
 	Strobe(RF_SFRX);
 	Strobe(RF_SRX);
