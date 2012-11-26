@@ -37,6 +37,7 @@ The tools/Dash7Logger directory contains a command line application (.NET) which
     * do not use the default location but point it to the right directory, eg <repo root>/examples/phy_test
     * select CC430F5137 as device
     * select the empty project template and click finish
+    * add dependencies: project properties | build | Dependencies | Add | d7aoss
     * add include dir: project properties | build | MSP430 compiler | include options | add dir to include search path | workspace | d7aoss
     * the application should now compile and link
 
