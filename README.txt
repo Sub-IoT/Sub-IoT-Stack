@@ -1,3 +1,4 @@
+# Introduction
 
 This project is build with CCS v5.3 and currently only supports the WizziMote.
 (As discussed previously supporting multiple toolchains and platforms is something we will do later.)
@@ -20,14 +21,32 @@ The phy_test example application listens on channel 10, button 1 sends one packe
 
 The tools/Dash7Logger directory contains a command line application (.NET) which outputs the logging received over UART in a formatted way.
 
-To get started: in a CCS v5.3 workspace import d7aoss and examples/phy_test as existing CCS Eclipse projects and build them. 
+# Getting started
 
-Next steps according to us are:
-- discuss and complete RAL + PHY API
-- resolve TODOs (which are everywhere now)
-- add documentation comments
-- fix coding style everywhere
-- add copyright/license header
-- define MAC API (or should we use DLL instead of MAC?)
-- implement MAC
+* clone the repository
+* import the d7aoss library in CCS:
+    * create new CCS project 
+    * use project name "d7aoss" and output type "static library"
+    * do not use the default location but point it to <repo root>/d7aoss
+    * select CC430F57137 as device
+    * select the empty project template and click finish
+    * the d7aoss project should be created an building it should work
+* import applications
+    * create new CCS project
+    * set the project name to the application name (eg phy_test) and output type "executable"
+    * do not use the default location but point it to the right directory, eg <repo root>/examples/phy_test
+    * select CC430F57137 as device
+    * select the empty project template and click finish
+    * add include dir: project properties | build | MSP430 compiler | include options | add dir to include search path | workspace | d7aoss
+    * the application should now compile and link
+
+#Next steps
+
+* discuss and complete RAL + PHY API
+* resolve TODOs (which are everywhere now)
+* add documentation comments
+* fix coding style everywhere
+* add copyright/license header
+* define MAC API (or should we use DLL instead of MAC?)
+* implement MAC
 
