@@ -40,7 +40,7 @@ The tools/Dash7Logger directory contains a command line application (.NET) which
     * add include dir: project properties | build | MSP430 compiler | include options | add dir to include search path | workspace | d7aoss
     * the application should now compile and link
 
-#Next steps
+# Next steps
 
 * discuss and complete RAL + PHY API
 * resolve TODOs (which are everywhere now)
