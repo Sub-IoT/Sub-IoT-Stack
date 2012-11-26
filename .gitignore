@@ -1,5 +1,7 @@
 .metadata/
 .settings/
 Debug/
+.cproject
+.ccsproject
+.project
 
-# .cproject .ccsproject .project needed?
