@@ -117,7 +117,7 @@ namespace Dash7Logger
 						case 0x00:	
 						{
 							List<byte> packet = data.GetRange(4, dataLength);
-							Console.WriteLine(string.Format("{0} DATA: {1}", DateTime.Now.ToString ("HH:mm:ss"), OSLCore.Converter.ConvertByteArrayToHexString(packet.ToArray())));
+							Console.WriteLine(string.Format("{0} DATA: {1}", DateTime.Now.ToString ("HH:mm:ss.fff"), OSLCore.Converter.ConvertByteArrayToHexString(packet.ToArray())));
 							int length = (int) packet[0];
 							double txreip = -40 + (((int) packet[1])  * 0.5);
 							byte subnet = packet[2];
@@ -195,7 +195,7 @@ namespace Dash7Logger
 							break;
 						}
 						case 0x01:							
-							Console.WriteLine(string.Format("{0} {1}",  DateTime.Now.ToString ("HH:mm:ss"), enc.GetString(data.GetRange(4, dataLength).ToArray())));
+							Console.WriteLine(string.Format("{0} {1}",  DateTime.Now.ToString ("HH:mm:ss.fff"), enc.GetString(data.GetRange(4, dataLength).ToArray())));
 							break;
 						}						
 						data.RemoveRange (0, 5 + dataLength);
