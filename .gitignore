@@ -3,3 +3,4 @@
 Debug/
 
 # .cproject .ccsproject .project needed?
+*.userprefs
