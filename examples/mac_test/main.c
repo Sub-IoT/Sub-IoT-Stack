@@ -29,16 +29,22 @@ static u8 data[DATA_LEN] = { 0xA0, 0xA1, 0xA2, 0xA3, 0xA4 };
 static u8 interrupt_flags = 0;
 static u8 rtcEnabled = 0;
 
-dll_channel_scan_t scan_cfg = {
+dll_channel_scan_t scan_cfg1 = {
 		0x10,
 		FrameTypeForegroundFrame,
-		0,
+		500,
+		0
+};
+dll_channel_scan_t scan_cfg2 = {
+		0x12,
+		FrameTypeForegroundFrame,
+		500,
 		0
 };
 
 dll_channel_scan_series_t scan_series_cfg = {
 		1,
-		&scan_cfg
+		{scan_cfg1, scan_cfg2}
 };
 
 

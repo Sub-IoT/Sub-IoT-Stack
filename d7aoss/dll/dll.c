@@ -6,14 +6,17 @@
  *  	glenn.ergeerts@artesis.be
  */
 #include "dll.h"
+#include "../timer.h"
 #include "../hal/system.h"
 #include "../log.h"
 #include <string.h>
 
 static dll_rx_callback_t dll_rx_callback;
 static dll_tx_callback_t dll_tx_callback;
+static dll_rx_res_t dll_res;
 
-dll_rx_res_t dll_res;
+static dll_channel_scan_series_t* current_css;
+static u8 current_scan_id = 0;
 
 u8 timeout_listen; // TL
 
@@ -195,7 +198,23 @@ static void phy_rx_callback(phy_rx_res_t* res)
 	}
 
 	dll_rx_callback(&dll_res);
+}
 
+static void scan_next(void* arg)
+{
+	dll_channel_scan_series(current_css);
+}
+
+static void scan_timeout(void* arg)
+{
+	log_print_string("scan time-out", 13);
+	timer_event event;
+	event.next_event = current_css->values[current_scan_id].time_next_scan;
+	event.f = &scan_next;
+
+	current_scan_id = current_scan_id < current_css->length - 1 ? 0 : current_scan_id + 1;
+
+	timer_add_event(&event);
 }
 
 void dll_init()
@@ -205,6 +224,8 @@ void dll_init()
 	phy_set_rx_callback(&phy_rx_callback);
 
 	dll_state = DllStateNone;
+
+	timer_init();
 }
 
 void dll_set_tx_callback(dll_tx_callback_t cb)
@@ -218,16 +239,13 @@ void dll_set_rx_callback(dll_rx_callback_t cb)
 
 void dll_channel_scan_series(dll_channel_scan_series_t* css)
 {
-	// TODO implement timing
-	// TODO allow multiple values
-
 	phy_rx_cfg_t rx_cfg;
-	rx_cfg.timeout = css->values->timout_scan_detect; // timeout
+	rx_cfg.timeout = css->values[current_scan_id].timout_scan_detect; // timeout
 	rx_cfg.multiple = 0; // multiple TODO
-	rx_cfg.spectrum_id = css->values->channel_id; // spectrum ID TODO
+	rx_cfg.spectrum_id = css[current_scan_id].values->channel_id; // spectrum ID TODO
 	rx_cfg.coding_scheme = 0; // coding scheme TODO
 	rx_cfg.rssi_min = 0; // RSSI min filter TODO
-	if (css->values->scan_type == FrameTypeForegroundFrame)
+	if (css->values[current_scan_id].scan_type == FrameTypeForegroundFrame)
 	{
 		rx_cfg.sync_word_class = 1;
 		dll_state = DllStateScanForegroundFrame;
@@ -236,7 +254,15 @@ void dll_channel_scan_series(dll_channel_scan_series_t* css)
 		dll_state = DllStateScanBackgroundFrame;
 	}
 
+	current_css = css;
 	phy_rx_start(&rx_cfg);
+
+	//TODO: timeout should be implemented using rF timer in phy
+	timer_event event;
+	event.next_event = rx_cfg.timeout;
+	event.f = &scan_timeout;
+
+	timer_add_event(&event);
 }
 
 void dll_tx_foreground_frame(u8* data, u8 length)
