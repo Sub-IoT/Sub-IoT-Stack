@@ -6,6 +6,7 @@
  *  	glenn.ergeerts@artesis.be
  */
 #include "dll.h"
+#include "../hal/system.h"
 #include "../log.h"
 #include <string.h>
 
@@ -16,8 +17,18 @@ dll_rx_res_t dll_res;
 
 u8 timeout_listen; // TL
 
+u8 frame_data[50]; // TODO max frame size
 
 Dll_State_Enum dll_state;
+
+phy_tx_cfg_t foreground_frame_tx_cfg = {
+	    0x10, // spectrum ID
+		0, // coding scheme
+		1, // sync word class
+	    frame_data,
+	    0
+};
+
 
 static bool check_subnet(u8 device_subnet, u8 frame_subnet)
 {
@@ -36,6 +47,7 @@ static bool check_subnet(u8 device_subnet, u8 frame_subnet)
 static void phy_tx_callback()
 {
 	log_print_string("TX OK", 5);
+	dll_tx_callback();
 }
 
 static void phy_rx_callback(phy_rx_res_t* res)
@@ -204,7 +216,6 @@ void dll_set_rx_callback(dll_rx_callback_t cb)
 	dll_rx_callback = cb;
 }
 
-
 void dll_channel_scan_series(dll_channel_scan_series_t* css)
 {
 	// TODO implement timing
@@ -226,4 +237,43 @@ void dll_channel_scan_series(dll_channel_scan_series_t* css)
 	}
 
 	phy_rx_start(&rx_cfg);
+}
+
+void dll_tx_foreground_frame(u8* data, u8 length)
+{
+	dll_foreground_frame_header_t frame_header;
+	frame_header.tx_eirp = 0x50; // (-40 + 0.5n) dBm // TODO hardcoded
+	frame_header.subnet = 0xf1; // TODO hardcoded, get from app?
+	frame_header.frame_ctl = !FRAME_CTL_LISTEN | !FRAME_CTL_DLLS | FRAME_CTL_EN_ADDR | !FRAME_CTL_FR_CONT | !FRAME_CTL_CRC32 | !FRAME_CTL_NM2 | FRAME_CTL_DIALOGFRAME; // TODO hardcoded
+
+	dll_foreground_frame_address_ctl_header_t address_ctl_header;
+	address_ctl_header.dialogId = 0x00; // TODO hardcoded
+	address_ctl_header.flags = ADDR_CTL_BROADCAST | !ADDR_CTL_VID | !ADDR_CTL_NLS; // TODO appl flags?
+
+	dll_foreground_frame_t frame;
+	frame.frame_header = &frame_header;
+	frame.source_id_header = tag_id; // TODO get from HAL, using global defined in system.h for now
+	frame.address_ctl_header = &address_ctl_header;
+
+	u8* pointer = frame_data + 1;
+	memcpy(pointer, frame.frame_header, sizeof(dll_foreground_frame_header_t));
+	pointer += sizeof(dll_foreground_frame_header_t);
+	memcpy(pointer, frame.address_ctl_header, sizeof(dll_foreground_frame_address_ctl_header_t));
+	pointer += sizeof(dll_foreground_frame_address_ctl_header_t);
+	memcpy(pointer, frame.source_id_header, 8 * sizeof(u8));
+	pointer += 8 * sizeof(u8);
+	memcpy(pointer, data, length); // TODO fixed size for now
+	pointer += length;
+
+	frame.length = pointer - frame_data - 1 ; // TODO remove -1 (count length byte or not?)
+	frame_data[0] = frame.length;
+
+	foreground_frame_tx_cfg.len = frame.length;
+
+	phy_result_t res = phy_tx(&foreground_frame_tx_cfg);
+	if(res == PHY_RADIO_IN_RX_MODE)
+	{
+		phy_rx_stop(); // TODO who is responsible for starting rx again? appl or DLL?
+		res = phy_tx(&foreground_frame_tx_cfg);
+	}
 }

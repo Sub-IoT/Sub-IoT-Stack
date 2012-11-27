@@ -125,4 +125,6 @@ void dll_set_rx_callback(dll_rx_callback_t);
 
 void dll_channel_scan_series(dll_channel_scan_series_t*);
 
+void dll_tx_foreground_frame(u8* data, u8 lenght);
+
 #endif /* DLL_H_ */

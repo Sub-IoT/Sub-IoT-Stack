@@ -22,9 +22,9 @@
 #define INTERRUPT_BUTTON3 	(1 << 2)
 #define INTERRUPT_RTC 		(1 << 3)
 
-#define PACKET_LEN 19
+#define DATA_LEN 5
 
-//static u8 packet[PACKET_LEN] = { 0x13, 0x50, 0xF1, 0x20, 0x59, 0x40, 0x46, 0x93, 0x21, 0xAB, 0x00, 0x31, 0x00, 0x24, 0x00, 0x00, 0x00, 0x01, 0x01 };
+static u8 data[DATA_LEN] = { 0xA0, 0xA1, 0xA2, 0xA3, 0xA4 };
 
 static u8 interrupt_flags = 0;
 static u8 rtcEnabled = 0;
@@ -56,6 +56,7 @@ void stop_rx()
 void tx_callback()
 {
 	led_off(3);
+	// TODO restart rx?
 }
 
 void rx_callback(dll_rx_res_t* cb)
@@ -79,16 +80,19 @@ void main(void) {
 
 	while(1)
 	{
-		/*
+
         if(INTERRUPT_BUTTON1 & interrupt_flags)
         {
         	interrupt_flags &= ~INTERRUPT_BUTTON1;
         	led_on(3);
 
+        	dll_tx_foreground_frame(data, DATA_LEN);
+
         	button_clear_interrupt_flag();
         	button_enable_interrupts();
         }
 
+        /*
         if (INTERRUPT_BUTTON3 & interrupt_flags)
         {
         	interrupt_flags &= ~INTERRUPT_BUTTON3;
