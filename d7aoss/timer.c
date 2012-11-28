@@ -48,6 +48,12 @@ void timer_init()
 
 void timer_add_event(timer_event* event)
 {
+	if (event->next_event == 0)
+	{
+		event->f(NULL);
+		return;
+	}
+
 	queue_push_value(&event_queue, (void*) event, sizeof(timer_event));
 
 	if (!started)

@@ -31,13 +31,13 @@ static u8 interrupt_flags = 0;
 dll_channel_scan_t scan_cfg1 = {
 		0x10,
 		FrameTypeForegroundFrame,
-		500,
+		1000,
 		0
 };
 dll_channel_scan_t scan_cfg2 = {
 		0x12,
 		FrameTypeForegroundFrame,
-		500,
+		1000,
 		0
 };
 
@@ -63,7 +63,7 @@ void tx_callback()
 void rx_callback(dll_rx_res_t* cb)
 {
 	led_toggle(3);
-	start_rx();
+	//start_rx();
 }
 
 void main(void) {
