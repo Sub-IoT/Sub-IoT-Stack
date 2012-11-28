@@ -28,6 +28,7 @@ u8* rxDataPointer;
 
 u8 txData[255];
 u8 txLength;
+u8 txRemainingBytes;
 u8* txDataPointer;
 
 
@@ -133,7 +134,7 @@ static void rx_data_isr()
 	//If length is not set (first time after sync word)
 	//get the length from RXFIFO and set PKTLEN so eop can be detected right
     if (rxLength == 0 && rxBytes > 0) {
-    	rxLength = ReadSingleReg(RXFIFO) + 1; // TODO Should not be + 1, maybe bug in transmit
+    	rxLength = ReadSingleReg(RXFIFO);
     	WriteSingleReg(PKTLEN, rxLength);
     	WriteSingleReg(FIFOTHR, RADIO_FIFOTHR_FIFO_THR_17_48);
     	rxRemainingBytes = rxLength - 1;
@@ -176,6 +177,23 @@ static void rx_data_isr()
     }
 }
 
+static void tx_data_isr()
+{
+	u8 txBytes;
+
+	if(txRemainingBytes > 64)
+	{
+		txBytes = 64;
+	} else {
+		txBytes = txRemainingBytes;
+	}
+
+	WriteBurstReg(RF_TXFIFOWR, txDataPointer, txBytes);
+
+	txRemainingBytes -= txBytes;
+	txDataPointer += txBytes;
+}
+
 #pragma vector=CC1101_VECTOR
 __interrupt void CC1101_ISR (void)
 {
@@ -201,9 +219,7 @@ __interrupt void CC1101_ISR (void)
 	case 0x0C: break;               // RFIFG5 TXAboveThresh_ISR();
 	case 0x0E: break;               // RFIFG6
 	case 0x10: break;               // RFIFG7
-	case 0x12:                      // RFIFG8
-		tx_switch_to_end_state();
-		break;
+	case 0x12: break;               // RFIFG8
 	case 0x14:                      // RFIFG9 SyncWord received
 		rx_sync_isr();
 		break;
@@ -222,7 +238,7 @@ __interrupt void CC1101_ISR (void)
     case 0x2A: break;               // RFIFG3
     case 0x2C: break;               // RFIFG4
     case 0x2E:                      // RFIFG5 TXBelowThresh_ISR();
-    	tx_switch_to_end_state();
+    	rx_data_isr();
         break;
     case 0x30: break;               // RFIFG6
     case 0x32: break;               // RFIFG7
@@ -284,20 +300,39 @@ void cc430_ral_tx(ral_tx_cfg_t* tx_cfg)
 {
 	// TODO use other tx_cfg settings
 
-	Strobe(RF_SFTX);
-	WriteSingleReg(PKTLEN, tx_cfg->len);
-	WriteSingleReg(FIFOTHR, RADIO_FIFOTHR_CLOSE_IN_RX_0db | RADIO_FIFOTHR_FIFO_THR_61_4);
-
-	//TODO: this works only for packets < 62 bytes
-	WriteBurstReg(RF_TXFIFOWR, tx_cfg->data, tx_cfg->len); // TODO remove length byte from data?
-
+	//Modify radio state
+	//Set PKTLEN to the packet length
+	//Set RXFIFO threshold
 	radioState = RadioStateTransmitData;
+	WriteSingleReg(PKTLEN, tx_cfg->len);
+	WriteSingleReg(FIFOTHR, RADIO_FIFOTHR_FIFO_THR_17_48);
 
-	Strobe(RF_SIDLE);
-
+	//Clear all interrupt flags, enable interrupts
 	RF1AIFG = 0;
-	RF1AIE  = 0 | RFIFG_FLAG_TXBelowThresh | 0;
-	RF1AIES = 0 | RFIFG_FLANK_TXBelowThresh | 0;
+	RF1AIE  = RFIFG_FLAG_EndOfPacket | RFIFG_FLAG_TXBelowThresh;
+	RF1AIES = RFIFG_FLANK_EndOfPacket | RFIFG_FLANK_TXBelowThresh;
+
+	//Flush TXFIFO
+	Strobe(RF_SIDLE);
+	Strobe(RF_SFTX);
+
+	//Prepare data
+	txLength = tx_cfg->len;
+	txRemainingBytes = txLength;
+	u8 txBytes = txLength;
+	txDataPointer = tx_cfg->data; // TODO copy data
+
+	if(txLength > 64)
+	{
+		txBytes = 64;
+	}
+
+	WriteBurstReg(RF_TXFIFOWR, txDataPointer, txBytes);
+
+	txRemainingBytes -= txBytes;
+	txDataPointer += txBytes;
+
+	// Start transmitting
 	Strobe(RF_STX);
 }
 
@@ -326,7 +361,7 @@ void cc430_ral_rx_start(ral_rx_cfg_t* cfg)
 
 	//Modify radio state
 	//Set PKTLEN to the highest possible number, we will change this to the right length later
-	//Set RXFIFO threshold as low as possible,
+	//Set RXFIFO threshold as low as possible
 	radioState = RadioStateReceiveInit;
 	WriteSingleReg(PKTLEN, RADIO_PKTLEN);
 	WriteSingleReg(FIFOTHR, (RADIO_FIFOTHR_CLOSE_IN_RX_0db | RADIO_FIFOTHR_FIFO_THR_61_4));
@@ -335,7 +370,6 @@ void cc430_ral_rx_start(ral_rx_cfg_t* cfg)
 	RF1AIFG = 0;
 	RF1AIE  = RFIFG_FLAG_SyncWord;
 	RF1AIES = RFIFG_FLANK_SyncWord;
-
 
 	//Flush RXFIFO, start receiving
 	Strobe(RF_SIDLE);
