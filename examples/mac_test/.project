@@ -3,7 +3,7 @@
 	<name>dll_test</name>
 	<comment></comment>
 	<projects>
-		<project>D7AOSS</project>
+		<project>d7aoss</project>
 	</projects>
 	<buildSpec>
 		<buildCommand>

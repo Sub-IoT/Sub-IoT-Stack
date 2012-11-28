@@ -1,3 +1,5 @@
+#include "types.h"
+
 #include "hal/system.h"
 #include "hal/rtc.h"
 #include "hal/leds.h"
@@ -46,12 +48,12 @@ int main(void) {
 	
     timer_init();
 
-    u16 test[] = {1024, 2048, 4096, 5012, 5014, 6036, 7060, 8024, 10000, 10048};
+    //u16 test[] = {1024, 2048, 4096, 5012, 5014, 6036, 7060, 8024, 10000, 10048};
 
-    u16 queue_storage[30];
+    //u16 queue_storage[30];
 
-    queue_init(&q, (u8*) &queue_storage, sizeof(queue_storage));
-
+    //queue_init(&q, (u8*) &queue_storage, sizeof(queue_storage));
+    /*
     queue_push_u16(&q, timing_series[0]);
     int i = 1;
     for (;i<series_number;i++)
@@ -93,6 +95,7 @@ int main(void) {
 
 
     __no_operation();
+    */
 
     //TA1CCR0 =  queue_pop_u16(&q);
     //TA1CCTL0 = CCIE; // Enable interrupt for CCR0

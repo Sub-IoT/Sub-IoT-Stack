@@ -51,8 +51,15 @@ u8 queue_pop_u8(queue* q)
 		return 0;
 
 	q->length--;
-
-	return (*q->front++);
+	u8 value = *(u16*)(q->front);
+	if (q->length == 0)
+	{
+		q->front = NULL;
+		q->rear = NULL;
+	} else {
+		q->front += 1;
+	}
+	return value;
 }
 
 u16 queue_pop_u16(queue* q)
@@ -62,7 +69,13 @@ u16 queue_pop_u16(queue* q)
 
 	q->length--;
 	u16 value = *(u16*)(q->front);
-	q->front += 2;
+	if (q->length == 0)
+	{
+		q->front = NULL;
+		q->rear = NULL;
+	} else {
+		q->front += 2;
+	}
 	return value;
 }
 
@@ -73,7 +86,13 @@ void* queue_pop_value(queue* q, u8 size)
 
 	q->length--;
 	u8* value = q->front;
-	q->front += size;
+	if (q->length == 0)
+	{
+		q->front = NULL;
+		q->rear = NULL;
+	} else {
+		q->front += size;
+	}
 	return (void*) value;
 }
 
@@ -112,6 +131,7 @@ void queue_push_value(queue* q, void* data, u8 size)
 		q->rear = q->start;
 	} else
 	{
+		check_for_space(q,size);
 		q->rear += size;
 	}
 

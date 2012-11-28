@@ -27,7 +27,6 @@
 static u8 data[DATA_LEN] = { 0xA0, 0xA1, 0xA2, 0xA3, 0xA4 };
 
 static u8 interrupt_flags = 0;
-static u8 rtcEnabled = 0;
 
 dll_channel_scan_t scan_cfg1 = {
 		0x10,
@@ -42,11 +41,7 @@ dll_channel_scan_t scan_cfg2 = {
 		0
 };
 
-dll_channel_scan_series_t scan_series_cfg = {
-		1,
-		{scan_cfg1, scan_cfg2}
-};
-
+dll_channel_scan_series_t scan_series_cfg;
 
 void start_rx()
 {
@@ -81,6 +76,14 @@ void main(void) {
 	dll_init();
 	dll_set_tx_callback(&tx_callback);
 	dll_set_rx_callback(&rx_callback);
+
+	dll_channel_scan_t scan_confgs[2];
+	scan_confgs[0] = scan_cfg1;
+	scan_confgs[1] = scan_cfg2;
+
+	scan_series_cfg.length = 2;
+	scan_series_cfg.values = scan_confgs;
+
 
 	start_rx();
 
