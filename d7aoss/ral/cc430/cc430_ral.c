@@ -181,9 +181,9 @@ static void tx_data_isr()
 {
 	u8 txBytes;
 
-	if(txRemainingBytes > 64)
+	if(txRemainingBytes > 48)
 	{
-		txBytes = 64;
+		txBytes = 48;
 	} else {
 		txBytes = txRemainingBytes;
 	}
@@ -238,7 +238,7 @@ __interrupt void CC1101_ISR (void)
     case 0x2A: break;               // RFIFG3
     case 0x2C: break;               // RFIFG4
     case 0x2E:                      // RFIFG5 TXBelowThresh_ISR();
-    	rx_data_isr();
+    	tx_data_isr();
         break;
     case 0x30: break;               // RFIFG6
     case 0x32: break;               // RFIFG7
