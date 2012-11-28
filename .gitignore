@@ -1,6 +1,7 @@
 .metadata/
 .settings/
 Debug/
-
-# .cproject .ccsproject .project needed?
+.cproject
+.ccsproject
+.project
 *.userprefs

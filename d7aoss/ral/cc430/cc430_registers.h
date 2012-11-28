@@ -86,6 +86,7 @@
 #define RADIO_FIFOTHR_CLOSE_IN_RX_18db  (3 << 4)
 #define RADIO_FIFOTHR_FIFO_THR_61_4     (0)             // FIFOTHR.FIFO_THR 61B TX /  4B RX
 #define RADIO_FIFOTHR_FIFO_THR_33_32    (7)             // FIFOTHR.FIFO_THR 33B TX / 32B RX
+#define RADIO_FIFOTHR_FIFO_THR_17_48    (11)             // FIFOTHR.FIFO_THR 17B TX / 48B RX
 #define RADIO_FIFOTHR_FIFO_THR_1_64     (15)            // FIFOTHR.FIFO_THR  1B TX / 64B RX
 
 
