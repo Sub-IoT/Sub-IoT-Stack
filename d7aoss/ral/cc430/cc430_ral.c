@@ -40,13 +40,8 @@ RF_SETTINGS rfSettings = {
     RADIO_SYNC1_CLASS1_NON_FEC,   // SYNC1
     RADIO_SYNC0_CLASS1_NON_FEC,   // SYNC0
     RADIO_PKTLEN,   // PKTLEN
-<<<<<<< HEAD
-    (RADIO_PKTCTRL1_PQT(3) | RADIO_PKTCTRL1_APPEND_STATUS | RADIO_PKTCTRL1_ADR_CHK_NONE),   // PKTCTRL1  Packet automation control
-    (RADIO_PKTCTRL0_WHITE_DATA | RADIO_PKTCTRL0_PKT_FOR_NORMAL | RADIO_PKTCTRL0_CRC | RADIO_PKTCTRL0_LENGTH_INF),   // PKTCTRL0  Packet automation control
-=======
     (RADIO_PKTCTRL1_PQT(3) | RADIO_PKTCTRL1_ADR_CHK_NONE),   // PKTCTRL1  Packet automation control
     (RADIO_PKTCTRL0_WHITE_DATA | RADIO_PKTCTRL0_PKT_FOR_NORMAL | RADIO_PKTCTRL0_LENGTH_FIXED),   // PKTCTRL0  Packet automation control
->>>>>>> master
     RADIO_ADDR,   // ADDR      Device address
     RADIO_CHAN,   // CHANNR    Channel number.
     RADIO_FREQ_IF,   // FSCTRL1   Frequency synthesizer control.
