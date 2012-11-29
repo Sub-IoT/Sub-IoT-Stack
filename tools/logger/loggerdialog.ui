@@ -34,6 +34,9 @@
    <item>
     <widget class="QPlainTextEdit" name="outputPlainTextEdit"/>
    </item>
+   <item>
+    <widget class="QPlainTextEdit" name="parsedOutputPlainTextEdit"/>
+   </item>
   </layout>
  </widget>
  <layoutdefault spacing="6" margin="11"/>
