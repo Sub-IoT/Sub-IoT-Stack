@@ -1,7 +1,6 @@
 #include "loggerdialog.h"
 #include "ui_loggerdialog.h"
 
-#include <QtGui>
 #include <QDebug>
 
 LoggerDialog::LoggerDialog(QWidget *parent) : QDialog(parent), ui(new Ui::LoggerDialog)
@@ -9,6 +8,8 @@ LoggerDialog::LoggerDialog(QWidget *parent) : QDialog(parent), ui(new Ui::Logger
     ui->setupUi(this);
 
     _serialPort = new SerialPort(this);
+    _receivedDataQueue = new QQueue<unsigned char>();
+
     connect(ui->serialPortComboBox, SIGNAL(currentIndexChanged(int)), SLOT(onSerialPortSelected(int)));
     connect(ui->connectButton, SIGNAL(pressed()), SLOT(onConnectButtonPressed()));
     connect(_serialPort, SIGNAL(readyRead()), SLOT(onDataAvailable()));
@@ -70,7 +71,60 @@ void LoggerDialog::onDataAvailable()
     for(int i = 0; i < data.size(); i++)
     {
         ui->outputPlainTextEdit->insertPlainText(QString().sprintf("0x%02x ", (unsigned char)data.constData()[i]));
+        _receivedDataQueue->enqueue((unsigned char)data.constData()[i]);
+    }    
+
+    parseReceivedData();
+}
+
+void LoggerDialog::parseReceivedData()
+{
+    if(_receivedDataQueue->size() < 3)
+        return;
+
+    unsigned char start = _receivedDataQueue->dequeue();
+    while(start != 0xDD && !_receivedDataQueue->isEmpty())
+    {
+        qDebug() << "skipping unexpected data" << QString().sprintf("0x%02x", start);
+        start = _receivedDataQueue->dequeue();
     }
+
+    if(_receivedDataQueue->size() < 2 || _receivedDataQueue->size() < _receivedDataQueue->at(1) + 2)
+    {
+        //  not a full packet, reinsert header and wait for more data ...
+        _receivedDataQueue->insert(0, 0xDD);
+        return;
+    }
+
+    uint type = _receivedDataQueue->dequeue();
+    uint len = _receivedDataQueue->dequeue();
+    if(type == 0x00)
+    {
+        QString msg = "[packet data] ";
+        for(int i = 0; i < len; i++)
+        {
+            msg += QString().sprintf("0x%02x ",_receivedDataQueue->dequeue());
+        }
+
+        appendToLog(msg, ui->parsedOutputPlainTextEdit);
+    }
+    if(type == 0x01)
+    {
+        QString msg;
+        for(int i = 0; i < len; i++)
+        {
+            msg += QString(_receivedDataQueue->dequeue());
+        }
+
+        appendToLog(msg, ui->parsedOutputPlainTextEdit);
+    }
+}
+
+void LoggerDialog::appendToLog(QString msg, QPlainTextEdit *textEdit)
+{
+    textEdit->appendPlainText(msg + "\n");
+    QScrollBar *scrollbar = textEdit->verticalScrollBar();
+    scrollbar->setValue(scrollbar->maximum());
 }
 
 QString LoggerDialog::errorString()
@@ -103,3 +157,4 @@ QString LoggerDialog::errorString()
             return "unknown error";
     }
 }
+

@@ -1,7 +1,8 @@
 #ifndef LOGGERDIALOG_H
 #define LOGGERDIALOG_H
 
-#include <QDialog>
+#include <QtGui>
+#include <QtCore/QQueue>
 
 #include <serialport/serialport.h>
 #include <serialport/serialportinfo.h>
@@ -28,11 +29,14 @@ protected slots:
 private:
     void detectSerialPorts();
     QString errorString();
+    void parseReceivedData();
+    void appendToLog(QString msg, QPlainTextEdit* textEdit);
 
     Ui::LoggerDialog *ui;
 
     QList<SerialPortInfo> _serialPorts;
     SerialPort* _serialPort;
+    QQueue<unsigned char>* _receivedDataQueue;
 };
 
 #endif // LOGGERDIALOG_H
