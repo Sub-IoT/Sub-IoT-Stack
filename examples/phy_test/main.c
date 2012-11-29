@@ -59,6 +59,7 @@ void stop_rx()
 
 void tx_callback()
 {
+	log_print_string("tx_callback");
 	led_off(3);
 	start_rx(); // go back to rx mode
 }
@@ -69,7 +70,7 @@ void rx_callback(phy_rx_res_t* res)
 	if(memcmp(res->data, packet, res->len) != 0)
 	{
 		__no_operation(); // TODO assert
-		log_print_string("!!! unexpected packet data", 26);
+		log_print_string("!!! unexpected packet data");
 		led_off(3);
 		led_toggle(1);
 	}
@@ -90,7 +91,7 @@ void rx_callback(phy_rx_res_t* res)
 
 		text[i++] = 0x30 + (res->rssi / 10);
 		text[i++] = 0x30 + (res->rssi % 10);
-		log_print_string((char*)&text, 14);
+		log_print_string((char*)&text);
 		led_toggle(3);
 	}
 
