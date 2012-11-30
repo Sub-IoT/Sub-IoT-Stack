@@ -10,7 +10,7 @@
 
 #include "types.h"
 
-void log_print_string(char* message, u8 length);
+void log_print_string(char* message);
 
 void log_packet(u8* packet);
 
