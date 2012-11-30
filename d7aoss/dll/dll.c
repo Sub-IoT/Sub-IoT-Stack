@@ -49,7 +49,7 @@ static bool check_subnet(u8 device_subnet, u8 frame_subnet)
 
 static void phy_tx_callback()
 {
-	log_print_string("TX OK", 5);
+	log_print_string("TX OK");
 	dll_tx_callback();
 }
 
@@ -60,7 +60,7 @@ static void phy_rx_callback(phy_rx_res_t* res)
 	// CRC Validation
 	if (!res->crc_ok)
 	{
-		log_print_string("CRC ERROR", 9);
+		log_print_string("CRC ERROR");
 		return;
 	}
 
@@ -69,19 +69,19 @@ static void phy_rx_callback(phy_rx_res_t* res)
 	{
 		if (!check_subnet(0xFF, res->data[0])) // TODO: get device_subnet from datastore
 		{
-			log_print_string("Subnet mismatch", 15);
+			log_print_string("Subnet mismatch");
 			return;
 		}
 	} else if (dll_state == DllStateScanForegroundFrame)
 	{
 		if (!check_subnet(0xFF, res->data[3])) // TODO: get device_subnet from datastore
 		{
-			log_print_string("Subnet mismatch", 15);
+			log_print_string("Subnet mismatch");
 			return;
 		}
 	} else
 	{
-		log_print_string("You fool, you can't be here", 27);
+		log_print_string("You fool, you can't be here");
 	}
 
 	// Optional Link Quality Assessment
@@ -207,7 +207,7 @@ static void scan_next(void* arg)
 
 static void scan_timeout(void* arg)
 {
-	log_print_string("scan time-out", 13);
+	log_print_string("scan time-out");
 	phy_rx_stop();
 	timer_event event;
 	event.next_event = current_css->values[current_scan_id].time_next_scan;
