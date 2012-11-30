@@ -179,17 +179,15 @@ static void rx_data_isr()
 
 static void tx_data_isr()
 {
-	u8 txBytes;
+	//Read number of free bytes in TXFIFO
+	u8 txBytes = 64 - ReadSingleReg(TXBYTES);
 
-	if(txRemainingBytes > 64)
+	if(txRemainingBytes < txBytes)
 	{
-		txBytes = 64;
-	} else {
 		txBytes = txRemainingBytes;
 	}
 
 	WriteBurstReg(RF_TXFIFOWR, txDataPointer, txBytes);
-
 	txRemainingBytes -= txBytes;
 	txDataPointer += txBytes;
 }
@@ -317,18 +315,17 @@ void cc430_ral_tx(ral_tx_cfg_t* tx_cfg)
 	Strobe(RF_SFTX);
 
 	//Prepare data
+	u8 txBytes = 64;
 	txLength = tx_cfg->len;
 	txRemainingBytes = txLength;
-	u8 txBytes = txLength;
 	txDataPointer = tx_cfg->data; // TODO copy data
 
-	if(txLength > 64)
+	if(txRemainingBytes < txBytes)
 	{
-		txBytes = 64;
+		txBytes = txRemainingBytes;
 	}
 
 	WriteBurstReg(RF_TXFIFOWR, txDataPointer, txBytes);
-
 	txRemainingBytes -= txBytes;
 	txDataPointer += txBytes;
 
