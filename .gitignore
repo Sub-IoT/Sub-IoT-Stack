@@ -4,4 +4,4 @@ Debug/
 .cproject
 .ccsproject
 .project
-
+*.userprefs

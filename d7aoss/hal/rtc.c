@@ -47,11 +47,11 @@ void rtc_init_counter_mode()
         RTC_PRESCALE_1,
         RTC_PSCLOCKSELECT_RT0PS,
         RTC_PSDIVIDER_16);
-        //RTC_PSDIVIDER_2);
+        //RTC_PSDIVIDER_RTC_PSDIVIDER_256);
 
 }
 
-void Rtc_EnableInterrupt()
+void rtc_enable_interrupt()
 {
     //Enable interrupt for counter overflow
     RTC_enableInterrupt(__MSP430_BASEADDRESS_RTC__,

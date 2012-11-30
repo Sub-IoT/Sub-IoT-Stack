@@ -8,7 +8,7 @@
 
 #include <string.h>
 
-#include <phy/phy.h>
+#include <dll/dll.h>
 
 #include <hal/system.h>
 #include <hal/button.h>
@@ -16,86 +16,54 @@
 #include <hal/rtc.h>
 #include <log.h>
 
+
 #define INTERRUPT_BUTTON1 	(1)
 #define INTERRUPT_BUTTON2 	(1 << 1)
 #define INTERRUPT_BUTTON3 	(1 << 2)
 #define INTERRUPT_RTC 		(1 << 3)
 
-#define PACKET_LEN 19
+#define DATA_LEN 5
 
-static u8 packet[PACKET_LEN] = { 0x13, 0x50, 0xF1, 0x20, 0x59, 0x40, 0x46, 0x93, 0x21, 0xAB, 0x00, 0x31, 0x00, 0x24, 0x00, 0x00, 0x00, 0x01, 0x01 };
+static u8 data[DATA_LEN] = { 0xA0, 0xA1, 0xA2, 0xA3, 0xA4 };
 
 static u8 interrupt_flags = 0;
-static u8 rtcEnabled = 0;
 
-phy_rx_cfg_t rx_cfg = {
-		0, // timeout
-		0, // multiple TODO
-		0x10, // spectrum ID TODO
-		0, // coding scheme TODO
-		0, // RSSI min filter TODO
-		0x01  // sync word class TODO
+dll_channel_scan_t scan_cfg1 = {
+		0x10,
+		FrameTypeForegroundFrame,
+		1000,
+		0
+};
+dll_channel_scan_t scan_cfg2 = {
+		0x12,
+		FrameTypeForegroundFrame,
+		1000,
+		0
 };
 
-phy_tx_cfg_t tx_cfg = {
-	    0x10, // spectrum ID
-		0, // coding scheme
-		0, // sync word class
-	    packet,
-	    PACKET_LEN
-};
+dll_channel_scan_series_t scan_series_cfg;
 
 void start_rx()
 {
-	phy_rx_start(&rx_cfg); // TODO remove (use timeout/multiple)
+	dll_channel_scan_series(&scan_series_cfg);
 	led_on(2);
 }
 
 void stop_rx()
 {
-	phy_rx_stop();
 	led_off(2);
 }
 
 void tx_callback()
 {
-	log_print_string("tx_callback");
 	led_off(3);
-	start_rx(); // go back to rx mode
+	// TODO restart rx?
 }
 
-void rx_callback(phy_rx_res_t* res)
+void rx_callback(dll_rx_res_t* cb)
 {
-	log_packet(res->data); // TODO other params
-	if(memcmp(res->data, packet, res->len) != 0)
-	{
-		__no_operation(); // TODO assert
-		log_print_string("!!! unexpected packet data");
-		led_off(3);
-		led_toggle(1);
-	}
-	else
-	{
-		char text[14] = "RX OK     dBm";
-		u8 i = 6;
-		if (res->rssi < 0)
-		{
-			text[i++] = '-';
-			res->rssi  *= -1;
-		}
-		if (res->rssi  >= 100)
-		{
-			text[i++] = '1';
-			res->rssi  -= 100;
-		}
-
-		text[i++] = 0x30 + (res->rssi / 10);
-		text[i++] = 0x30 + (res->rssi % 10);
-		log_print_string((char*)&text);
-		led_toggle(3);
-	}
-
-	start_rx();
+	led_toggle(3);
+	//start_rx();
 }
 
 void main(void) {
@@ -105,28 +73,35 @@ void main(void) {
 	rtc_init_counter_mode();
 	rtc_start();
 
-	phy_init();
-	phy_set_tx_callback(&tx_callback);
-	phy_set_rx_callback(&rx_callback);
+	dll_init();
+	dll_set_tx_callback(&tx_callback);
+	dll_set_rx_callback(&rx_callback);
+
+	dll_channel_scan_t scan_confgs[2];
+	scan_confgs[0] = scan_cfg1;
+	scan_confgs[1] = scan_cfg2;
+
+	scan_series_cfg.length = 2;
+	scan_series_cfg.values = scan_confgs;
+
 
 	start_rx();
 
 	while(1)
 	{
+
         if(INTERRUPT_BUTTON1 & interrupt_flags)
         {
         	interrupt_flags &= ~INTERRUPT_BUTTON1;
         	led_on(3);
 
-        	if(phy_is_rx_in_progress() == true)
-        		stop_rx();
-
-        	phy_tx(&tx_cfg);
+        	dll_tx_foreground_frame(data, DATA_LEN);
 
         	button_clear_interrupt_flag();
         	button_enable_interrupts();
         }
 
+        /*
         if (INTERRUPT_BUTTON3 & interrupt_flags)
         {
         	interrupt_flags &= ~INTERRUPT_BUTTON3;
@@ -135,11 +110,9 @@ void main(void) {
 			{
 				rtcEnabled = 0;
 				rtc_disable_interrupt();
-				start_rx();
 			} else {
 				rtcEnabled = 1;
 				rtc_enable_interrupt();
-				stop_rx();
 			}
 
         	button_clear_interrupt_flag();
@@ -149,11 +122,11 @@ void main(void) {
         if (INTERRUPT_RTC & interrupt_flags)
 		{
 			led_on(3);
-			stop_rx();
-			phy_tx(&tx_cfg);
+
 			interrupt_flags &= ~INTERRUPT_RTC;
 		}
 
+		*/
 		system_lowpower_mode(4,1);
 	}
 }
