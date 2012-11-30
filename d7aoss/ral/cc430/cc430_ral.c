@@ -342,6 +342,7 @@ void cc430_ral_rx_start(ral_rx_cfg_t* cfg)
 	// TODO center freq
 	// TODO set modulation
 	// TODO set symbol rate
+	// TOTO check RSSI
 	WriteSingleReg(CHANNR, cfg->channel_center_freq_index);
 	if(cfg->sync_word_class == 0x00) { // TODO assert valid class
 		if(cfg->coding_scheme == 0x00) {
