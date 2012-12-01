@@ -6,6 +6,7 @@
  */
 
 #include "log.h"
+#include "string.h"
 
 #include "hal/uart.h"
 

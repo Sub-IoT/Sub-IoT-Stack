@@ -100,6 +100,8 @@ static void phy_rx_callback(phy_rx_res_t* res)
 		dll_res.frame = &frame;
 	} else
 	{
+		log_packet(res->data);
+
 		dll_foreground_frame_t frame;
 		frame.length = res->data[0];
 

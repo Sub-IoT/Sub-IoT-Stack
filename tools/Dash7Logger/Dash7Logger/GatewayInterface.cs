@@ -106,17 +106,17 @@ namespace Dash7Logger
 				while (data.Count > 3 && data[0] == 0xDD)
 	    		{
 					byte type = data[1];
-	        		dataLength = data[3];
-		        	if (dataLength > 0 && dataLength + 5 <= data.Count)
+	        		dataLength = data[2];
+		        	if (dataLength > 0 && dataLength + 3 <= data.Count)
 		        	{
-		            	byte nr = data[2];
+		            	//byte nr = data[2];
 		                //data.RemoveRange(0, 6);
 					
 						switch (type)
 						{
 						case 0x00:	
 						{
-							List<byte> packet = data.GetRange(4, dataLength);
+							List<byte> packet = data.GetRange(3, dataLength);
 							Console.WriteLine(string.Format("{0} DATA: {1}", DateTime.Now.ToString ("HH:mm:ss.fff"), OSLCore.Converter.ConvertByteArrayToHexString(packet.ToArray())));
 							int length = (int) packet[0];
 							double txreip = -40 + (((int) packet[1])  * 0.5);
@@ -195,10 +195,10 @@ namespace Dash7Logger
 							break;
 						}
 						case 0x01:							
-							Console.WriteLine(string.Format("{0} {1}",  DateTime.Now.ToString ("HH:mm:ss.fff"), enc.GetString(data.GetRange(4, dataLength).ToArray())));
+							Console.WriteLine(string.Format("{0} {1}",  DateTime.Now.ToString ("HH:mm:ss.fff"), enc.GetString(data.GetRange(3, dataLength).ToArray())));
 							break;
 						}						
-						data.RemoveRange (0, 5 + dataLength);
+						data.RemoveRange (0, 3 + dataLength);
 			        }
 					else
 					{

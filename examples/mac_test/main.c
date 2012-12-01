@@ -27,6 +27,7 @@
 static u8 data[DATA_LEN] = { 0xA0, 0xA1, 0xA2, 0xA3, 0xA4 };
 
 static u8 interrupt_flags = 0;
+static u8 rtcEnabled = 0;
 
 dll_channel_scan_t scan_cfg1 = {
 		0x10,
@@ -57,12 +58,16 @@ void stop_rx()
 void tx_callback()
 {
 	led_off(3);
-	// TODO restart rx?
+	start_rx();
 }
 
 void rx_callback(dll_rx_res_t* cb)
 {
 	led_toggle(3);
+	log_print_string("RX CB");
+	//TODO: need to build dll frame log
+	//if (cb->frame_type == FrameTypeForegroundFrame)
+		//log_dll_frame(((dll_foreground_frame_t*)(cb->frame))->payload);
 	//start_rx();
 }
 
@@ -101,7 +106,7 @@ void main(void) {
         	button_enable_interrupts();
         }
 
-        /*
+
         if (INTERRUPT_BUTTON3 & interrupt_flags)
         {
         	interrupt_flags &= ~INTERRUPT_BUTTON3;
@@ -110,9 +115,11 @@ void main(void) {
 			{
 				rtcEnabled = 0;
 				rtc_disable_interrupt();
+				start_rx();
 			} else {
 				rtcEnabled = 1;
 				rtc_enable_interrupt();
+				stop_rx();
 			}
 
         	button_clear_interrupt_flag();
@@ -121,12 +128,14 @@ void main(void) {
 
         if (INTERRUPT_RTC & interrupt_flags)
 		{
-			led_on(3);
+        	led_on(3);
+        	stop_rx();
+        	dll_tx_foreground_frame(data, DATA_LEN);
 
 			interrupt_flags &= ~INTERRUPT_RTC;
 		}
 
-		*/
+
 		system_lowpower_mode(4,1);
 	}
 }
