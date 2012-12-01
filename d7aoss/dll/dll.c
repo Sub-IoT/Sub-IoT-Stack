@@ -50,7 +50,7 @@ static bool check_subnet(u8 device_subnet, u8 frame_subnet)
 static void phy_tx_callback()
 {
 	log_print_string("TX OK");
-	dll_tx_callback();
+	dll_tx_callback(DLLTxResultOK);
 }
 
 static void phy_rx_callback(phy_rx_res_t* res)
@@ -207,6 +207,9 @@ static void scan_next(void* arg)
 
 static void scan_timeout(void* arg)
 {
+	if (dll_state == DllStateNone)
+		return;
+
 	log_print_string("scan time-out");
 	phy_rx_stop();
 	timer_event event;
@@ -238,6 +241,12 @@ void dll_set_rx_callback(dll_rx_callback_t cb)
 	dll_rx_callback = cb;
 }
 
+void dll_stop_channel_scan()
+{
+	dll_state = DllStateNone;
+	phy_rx_stop();
+}
+
 void dll_channel_scan_series(dll_channel_scan_series_t* css)
 {
 	phy_rx_cfg_t rx_cfg;
@@ -265,6 +274,20 @@ void dll_channel_scan_series(dll_channel_scan_series_t* css)
 
 	timer_add_event(&event);
 }
+
+static void dll_cca2(void* arg)
+{
+	bool cca2 = phy_cca();
+	if (!cca2)
+	{
+		dll_tx_callback(DLLTxResultCCAFail);
+		return;
+	}
+
+	phy_result_t res = phy_tx(&foreground_frame_tx_cfg);
+
+}
+
 
 void dll_tx_foreground_frame(u8* data, u8 length)
 {
@@ -297,10 +320,24 @@ void dll_tx_foreground_frame(u8* data, u8 length)
 
 	foreground_frame_tx_cfg.len = frame.length;
 
-	phy_result_t res = phy_tx(&foreground_frame_tx_cfg);
-	if(res == PHY_RADIO_IN_RX_MODE)
+	bool cca1 = phy_cca();
+
+	if (!cca1)
 	{
-		phy_rx_stop(); // TODO who is responsible for starting rx again? appl or DLL?
-		res = phy_tx(&foreground_frame_tx_cfg);
+		dll_tx_callback(DLLTxResultCCAFail);
+		return;
 	}
+
+	timer_event event;
+	event.next_event = 5; // TODO: get T_G fron config
+	event.f = &dll_cca2;
+
+	timer_add_event(&event);
+
+//	phy_result_t res = phy_tx(&foreground_frame_tx_cfg);
+//	if(res == PHY_RADIO_IN_RX_MODE)
+//	{
+//		phy_rx_stop(); // TODO who is responsible for starting rx again? appl or DLL?
+//		res = phy_tx(&foreground_frame_tx_cfg);
+//	}
 }

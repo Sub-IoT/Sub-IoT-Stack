@@ -51,13 +51,15 @@ void start_rx()
 
 void stop_rx()
 {
+	dll_stop_channel_scan();
 	led_off(2);
 }
 
-void tx_callback()
+void tx_callback(Dll_Tx_Result result)
 {
 	led_off(3);
 	// TODO restart rx?
+	start_rx();
 }
 
 void rx_callback(dll_rx_res_t* cb)
@@ -95,6 +97,7 @@ void main(void) {
         	interrupt_flags &= ~INTERRUPT_BUTTON1;
         	led_on(3);
 
+        	stop_rx();
         	dll_tx_foreground_frame(data, DATA_LEN);
 
         	button_clear_interrupt_flag();

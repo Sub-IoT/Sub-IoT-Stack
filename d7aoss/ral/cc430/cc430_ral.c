@@ -210,7 +210,9 @@ __interrupt void CC1101_ISR (void)
 	case 0x02:						// RFIFG0 TODO: timeout not implemented yet
 		rx_timeout_isr();
 		break;
-	case 0x04: break;               // RFIFG1 - RSSI_VALID
+	case 0x04:
+		__no_operation();
+		break;               // RFIFG1 - RSSI_VALID
 	case 0x06: break;               // RFIFG2
 	case 0x08:                      // RFIFG3 RX FIFO filled or above RX FIFO threshold
 		rx_data_isr();
@@ -394,6 +396,30 @@ bool cc430_ral_is_rx_in_progress()
 	return radioState == RadioStateReceive || radioState == RadioStateReceiveInit;
 }
 
+bool cc430_ral_cca()
+{
+	RF1AIFG = 0;
+	RF1AIE  = RFIFG_FLAG_IOCFG1;
+	RF1AIES = RFIFG_FLANK_IOCFG1;
+
+	Strobe(RF_SIDLE);
+	Strobe(RF_SRX);
+
+	system_lowpower_mode(0, 1);
+
+	RF1AIE  = 0;
+	RF1AIES = 0;
+
+	int thr  = -92; // TODO: get from settings
+	int rssi = get_rssi();
+
+	bool cca_ok = (bool)(rssi < thr);
+
+	Strobe(RF_SIDLE);
+
+	return cca_ok;
+}
+
 // The CC430 implementation of the RAL interface
 const struct ral_interface cc430_ral =
 {
@@ -403,5 +429,6 @@ const struct ral_interface cc430_ral =
 	cc430_ral_set_rx_callback,
 	cc430_ral_rx_start,
 	cc430_ral_rx_stop,
-	cc430_ral_is_rx_in_progress
+	cc430_ral_is_rx_in_progress,
+	cc430_ral_cca,
 };

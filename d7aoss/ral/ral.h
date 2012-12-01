@@ -85,6 +85,7 @@ struct ral_interface {
   void (* rx_start)(ral_rx_cfg_t*);
   void (* rx_stop)();
   bool (* is_rx_in_progress)();
+  bool (* cca)();
 //  int (* on)(void);
 //  int (* off)(void);
 };

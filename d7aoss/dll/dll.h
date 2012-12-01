@@ -23,6 +23,11 @@ typedef enum {
     DllStateScanForegroundFrame
 } Dll_State_Enum;
 
+typedef enum {
+	DLLTxResultOK,
+	DLLTxResultCCAFail
+} Dll_Tx_Result;
+
 // Frame Control
 #define FRAME_CTL_LISTEN 		(1 << 7)
 #define FRAME_CTL_DLLS			(1 << 6)
@@ -116,13 +121,14 @@ typedef struct
 
 
 
-typedef void (*dll_tx_callback_t)(); // TODO result param?
+typedef void (*dll_tx_callback_t)(Dll_Tx_Result); // TODO result param?
 typedef void (*dll_rx_callback_t)(dll_rx_res_t*);
 
 void dll_init();
 void dll_set_tx_callback(dll_tx_callback_t);
 void dll_set_rx_callback(dll_rx_callback_t);
 
+void dll_stop_channel_scan();
 void dll_channel_scan_series(dll_channel_scan_series_t*);
 
 void dll_tx_foreground_frame(u8* data, u8 lenght);
