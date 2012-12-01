@@ -27,6 +27,10 @@ typedef enum {
     RadioStateReceiveDone
 } RadioStateEnum;
 
+// Interrupt handler function pointer
+// TODO Should be located in system.h or something so it can be used for all vectored interrupts
+typedef void (*InterruptHandler)(void);
+
 // RF_Settings can be created using TI RF Studio
 // Check CC430 User Guide for references of configuration settings, Table 25-19
 typedef struct S_RF_SETTINGS {

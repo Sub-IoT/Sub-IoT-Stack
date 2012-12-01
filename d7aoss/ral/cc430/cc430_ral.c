@@ -3,6 +3,7 @@
  *  Authors:
  * 		maarten.weyn@artesis.be
  *  	glenn.ergeerts@artesis.be
+ *  	alexanderhoet@gmail.com
  */
 
 #include "rf1a.h"
@@ -31,7 +32,58 @@ u8 txLength;
 u8 txRemainingBytes;
 u8* txDataPointer;
 
+//Interrupt function defines
+static void no_interrupt_isr(void);
+static void endofpacket_isr(void);
+static void rx_timeout_isr(void);
+static void rx_data_isr(void);
+static void tx_switch_to_end_state(void);
+static void rx_sync_isr(void);
+static void tx_data_isr(void);
+static void tx_finish(void);
 
+// Interrupt branch table
+InterruptHandler interrupt_table[34] = {
+	//Rising Edges
+	no_interrupt_isr,        	// No RF core interrupt pending
+	rx_timeout_isr,				// RFIFG0 - TODO: timeout not implemented yet
+	no_interrupt_isr,           // RFIFG1 - RSSI_VALID
+	no_interrupt_isr,           // RFIFG2
+	rx_data_isr,				// RFIFG3 - RX FIFO filled or above the RX FIFO threshold
+	no_interrupt_isr,           // RFIFG4 - RX FIFO filled or above the RX FIFO threshold or end of packet is reached (Do not use for eop! Will not reset until rxfifo emptied)
+	no_interrupt_isr,		    // RFIFG5 - TX FIFO filled or above the TX FIFO threshold
+	no_interrupt_isr,			// RFIFG6 - TX FIFO full
+	no_interrupt_isr,           // RFIFG7 - RX FIFO overflowed
+	no_interrupt_isr,			// RFIFG8 - TX FIFO underflowed
+	rx_sync_isr,				// RFIFG9 - Sync word sent or received
+	no_interrupt_isr,           // RFIFG10 - Packet received with CRC OK
+	no_interrupt_isr,           // RFIFG11 - Preamble quality reached (PQI) is above programmed PQT value
+	no_interrupt_isr,           // RFIFG12 - Clear channel assessment when RSSI level is below threshold
+	no_interrupt_isr,           // RFIFG13 - Carrier sense. RSSI level is above threshold
+	no_interrupt_isr,           // RFIFG14 - WOR event 0
+	no_interrupt_isr,       	// RFIFG15 - WOR event 1
+
+	//Falling Edges
+	no_interrupt_isr,        	// No RF core interrupt pending
+	no_interrupt_isr,			// RFIFG0 TODO: timeout not implemented yet
+	no_interrupt_isr,           // RFIFG1 - RSSI_VALID
+	no_interrupt_isr,           // RFIFG2 -
+	no_interrupt_isr,			// RFIFG3 - RX FIFO drained below RX FIFO threshold
+	no_interrupt_isr,           // RFIFG4 - RX FIFO empty
+	tx_data_isr,			    // RFIFG5 - TX FIFO below TX FIFO threshold
+	no_interrupt_isr,			// RFIFG6 - TX FIFO below TX FIFO threshold
+	no_interrupt_isr,           // RFIFG7 - RX FIFO flushed
+	no_interrupt_isr,			// RFIFG8 - TX FIFO flushed
+	endofpacket_isr,			// RFIFG9 - End of packet or in RX when optional address check fails or RX FIFO overflows or in TX when TX FIFO underflows
+	no_interrupt_isr,           // RFIFG10 - First byte read from RX FIFO
+	no_interrupt_isr,           // RFIFG11 - (LPW)
+	no_interrupt_isr,           // RFIFG12 - RSSI level is above threshold
+	no_interrupt_isr,           // RFIFG13 - RSSI level is below threshold
+	no_interrupt_isr,           // RFIFG14 - WOR event 0 + 1 ACLK
+	no_interrupt_isr,       	// RFIFG15 - RF oscillator stable or next WOR event0 triggered
+};
+
+//RF settings
 RF_SETTINGS rfSettings = {
     RADIO_GDO2_VALUE,   // IOCFG2.GDO2_CFG
     RADIO_GDO1_VALUE,   // IOCFG1.GDO1_CFG
@@ -88,11 +140,15 @@ static int get_rssi()
     return rssi;
 }
 
-static void tx_switch_to_end_state()
+static void no_interrupt_isr() { }
+
+static void endofpacket_isr()
 {
-    RF1AIFG = 0;
-    RF1AIE  = RFIFG_FLAG_EndOfPacket;
-    RF1AIES = RFIFG_FLANK_EndOfPacket;
+    if (radioState == RadioStateTransmitData) {
+        tx_finish();
+    } else if(radioState == RadioStateReceive) {
+    	rx_data_isr();
+    }
 }
 
 static void tx_finish()
@@ -195,68 +251,10 @@ static void tx_data_isr()
 #pragma vector=CC1101_VECTOR
 __interrupt void CC1101_ISR (void)
 {
-  u16 isr_vector = RF1AIV;
-  u16 core_vector = isr_vector & 0x003E;
-  u16 core_edge = 1 << ((core_vector-2) >> 1);
-
-  core_edge &= RF1AIES;
-  core_vector += (core_edge) ? 0x22 : 0;
-
-  switch (__even_in_range(core_vector, 0x42)) {
-  	// Rising edges
-  	case 0x00: break;               // No RF core interrupt pending
-	case 0x02:						// RFIFG0 TODO: timeout not implemented yet
-		rx_timeout_isr();
-		break;
-	case 0x04: break;               // RFIFG1 - RSSI_VALID
-	case 0x06: break;               // RFIFG2
-	case 0x08:                      // RFIFG3 RX FIFO filled or above RX FIFO threshold
-		rx_data_isr();
-		break;
-	case 0x0A: break;             	// RFIFG4 RX FIFO filled or end of packet reached (Do not use! Will not reset until rxfifo emptied)
-	case 0x0C: break;               // RFIFG5 TXAboveThresh_ISR();
-	case 0x0E: break;               // RFIFG6
-	case 0x10: break;               // RFIFG7
-	case 0x12: break;               // RFIFG8
-	case 0x14:                      // RFIFG9 SyncWord received
-		rx_sync_isr();
-		break;
-	case 0x16: break;               // RFIFG10 CRC OK
-	case 0x18: break;               // RFIFG11 PQT Reached
-	case 0x1A: break;               // RFIFG12 CCA
-	case 0x1C: break;               // RFIFG13 CarrierSense (RSSI above threshold)
-	case 0x1E: break;               // RFIFG14
-	case 0x20: break;               // RFIFG15 WOR
-
-	// Falling Edges
-    case 0x22: break;               // No RF core interrupt pending
-    case 0x24: break;               // RFIFG0
-    case 0x26: break;               // RFIFG1
-    case 0x28: break;               // RFIFG2
-    case 0x2A: break;               // RFIFG3
-    case 0x2C: break;               // RFIFG4
-    case 0x2E:                      // RFIFG5 TXBelowThresh_ISR();
-    	rx_data_isr();
-        break;
-    case 0x30: break;               // RFIFG6
-    case 0x32: break;               // RFIFG7
-    case 0x34: break;               // RFIFG8
-    case 0x36:						// RFIFG9 End of packet reached
-        if (radioState == RadioStateTransmitData) {
-            tx_finish();
-        } else if(radioState == RadioStateReceive) {
-        	rx_data_isr();
-        }
-        break;
-    case 0x38: break;               // RFIFG10
-    case 0x3A: break;               // RFIFG11
-    case 0x3C: break;               // RFIFG12
-    case 0x3E: break;               // RFIFG13 RSSI below threshold
-    case 0x40: break;               // RFIFG14
-    case 0x42: break;               // RFIFG15
-    default:break;
-  }
-
+  u16 isr_vector = RF1AIV >> 1;
+  u16 edge = (1 << (isr_vector - 1)) & RF1AIES;
+  if(edge) isr_vector |= 0x11;
+  interrupt_table[isr_vector]();
   LPM4_EXIT;
 }
 
