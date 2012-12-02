@@ -55,6 +55,8 @@ static void phy_tx_callback()
 
 static void phy_rx_callback(phy_rx_res_t* res)
 {
+	log_packet(res->data);
+
 	// Data Link Filtering
 
 	// CRC Validation
@@ -198,6 +200,7 @@ static void phy_rx_callback(phy_rx_res_t* res)
 		dll_res.frame_type = FrameTypeForegroundFrame;
 		dll_res.frame = (u8*) &frame;
 	}
+
 
 	dll_rx_callback(&dll_res);
 }

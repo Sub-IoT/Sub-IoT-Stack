@@ -87,7 +87,7 @@ void main(void) {
 	scan_confgs[0] = scan_cfg1;
 	scan_confgs[1] = scan_cfg2;
 
-	scan_series_cfg.length = 2;
+	scan_series_cfg.length = 1;
 	scan_series_cfg.values = scan_confgs;
 
 
