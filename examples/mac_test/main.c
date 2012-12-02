@@ -33,12 +33,12 @@ dll_channel_scan_t scan_cfg1 = {
 		1000,
 		0
 };
-//dll_channel_scan_t scan_cfg2 = {
-//		0x12,
-//		FrameTypeForegroundFrame,
-//		1000,
-//		0
-//};
+dll_channel_scan_t scan_cfg2 = {
+		0x12,
+		FrameTypeForegroundFrame,
+		1000,
+		0
+};
 
 dll_channel_scan_series_t scan_series_cfg;
 
@@ -57,7 +57,7 @@ void stop_rx()
 void start_tx()
 {
 	stop_rx();
-	dll_tx_foreground_frame((u8*)&counter, sizeof(counter), 0x10);
+	dll_tx_foreground_frame((u8*)&counter, sizeof(counter), 0x12);
 }
 
 void tx_callback(Dll_Tx_Result result)
@@ -90,9 +90,9 @@ void main(void) {
 
 	dll_channel_scan_t scan_confgs[1];
 	scan_confgs[0] = scan_cfg1;
-	//scan_confgs[1] = scan_cfg2;
+	scan_confgs[1] = scan_cfg2;
 
-	scan_series_cfg.length = 1;
+	scan_series_cfg.length = 2;
 	scan_series_cfg.values = scan_confgs;
 
 

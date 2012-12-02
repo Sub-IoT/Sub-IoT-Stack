@@ -127,7 +127,7 @@
 #define RADIO_FREQ_IF                   0x06            // FSCTRL1.FREQ_IF - (152.34375kHz) fIF = (fRFXT2/210) × FREQ_IF
 #define RADIO_FREQOFF                   0               // FSCTRL0 Frequency offset
 
-#define RADIO_FREQ_433                  ((u32)0x0010A8FF)   // pchan 1 fc = 433.163666 MHz
+#define RADIO_FREQ_433                  ((u32)0x0010A900)   // pchan 1 fc = 433.164062 MHz
 #define RADIO_FREQ2                     (u8)(RADIO_FREQ_433>>16 & 0xFF)
 #define RADIO_FREQ1                     (u8)(RADIO_FREQ_433>>8 & 0xFF)
 #define RADIO_FREQ0                     (u8)(RADIO_FREQ_433 & 0xFF)
@@ -136,10 +136,10 @@
 #define RADIO_MDMCFG4_CHANBW_M(VAL)     ((VAL&3)<<4)    // 1 - 162.5 Khz - MDMCFG4 Channel Bandwith Mantise
 #define RADIO_MDMCFG4_DRATE_E(VAL)      (VAL&15)        // 11  - MDMCFG4 - Data Rate Exponent
 
-#define RADIO_MDMCFG3_DRATE_M(VAL)      (VAL)           // 24 - 55.542 Kbaud - MDMCFG3 - Data Rate Montissa DRate = ((256+DRATE_M)x2^DRATE_E) * fXosc / 2^28
+#define RADIO_MDMCFG3_DRATE_M(VAL)      (VAL)           // 24 - 55.542 Kbaud - MDMCFG3 - Data Rate Mantissa DRate = ((256+DRATE_M)x2^DRATE_E) * fXosc / 2^28
 
-#define RADIO_MDMCFG2_DEM_DCFILT_OFF    (1 << 7)        // Disable digital dc blocking filter before demodulator. (current optimzed)
-#define RADIO_MDMCFG2_DEM_DCFILT_ON     (0 << 7)        // Disable digital dc blocking filter before demodulator. (better sensitivity)
+#define RADIO_MDMCFG2_DEM_DCFILT_OFF    (1 << 7)        // Disable digital dc blocking filter before demodulator. (current optimized)
+#define RADIO_MDMCFG2_DEM_DCFILT_ON     (0 << 7)        // Enable digital dc blocking filter before demodulator. (better sensitivity)
 #define RADIO_MDMCFG2_MOD_FORMAT_2FSK   (0 << 4)        // Modulation: 2-FSK
 #define RADIO_MDMCFG2_MOD_FORMAT_GFSK   (1 << 4)        // Modulation: 2-GSK
 #define RADIO_MDMCFG2_MOD_FORMAT_ASK    (3 << 4)        // Modulation: ASK/OOK
@@ -164,7 +164,7 @@
 #define RADIO_MDMCFG1_NUM_PREAMBLE_24B    (7<<4)
 #define RADIO_MDMCFG1_CHANSPC_E(VAL)      (VAL&3)       // 2 - Channel spacing Exponent
 
-#define RADIO_MDMCFG0_CHANSPC_M(VAL)      (VAL)         // 17 - 108.31 KhzChannel spacing Mantissa, chanspc = fosxc/2^18 x (256+chansp_m) x 2 ^chansp_e
+#define RADIO_MDMCFG0_CHANSPC_M(VAL)      (VAL)         // 16 - 107.910 Khz Channel spacing Mantissa, chanspc = fosxc/2^18 x (256+chansp_m) x 2 ^chansp_e
 
 #define RADIO_DEVIATN_E(VAL)                   ((VAL&7) << 4)// 5 - Deviation Exponent
 #define RADIO_DEVIATN_M(VAL)                   (VAL&7)       // 0 - 50.78 Khz) Deviation Mantissa - dev = fosxc/2^17 x (8+dev_m) x 2 ^dev_e
