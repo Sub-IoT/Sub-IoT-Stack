@@ -37,8 +37,8 @@
 #define RFIFG_FLANK_RXOverflow      (u16)0x0000
 #define RFIFG_FLAG_RXFlushed        (u16)0x0080  // RFIFG7 Negative Edge
 #define RFIFG_FLANK_RXFlushed       (u16)0x0080
-#define RFIFG_FLAG_TXUndererflow    (u16)0x0100  // RFIFG8 Positive Edge
-#define RFIFG_FLANK_TXUndererflow   (u16)0x0000
+#define RFIFG_FLAG_TXUnderflow    	(u16)0x0100  // RFIFG8 Positive Edge
+#define RFIFG_FLANK_TXUnderflow   	(u16)0x0000
 #define RFIFG_FLAG_TXFlushed        (u16)0x0100  // RFIFG8 Negative Edge
 #define RFIFG_FLANK_TXFlushed       (u16)0x0100
 #define RFIFG_FLAG_SyncWord         (u16)0x0200  // RFIFG9 Positive Edge

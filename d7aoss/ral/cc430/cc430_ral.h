@@ -3,6 +3,7 @@
  *  Authors:
  * 		maarten.weyn@artesis.be
  *  	glenn.ergeerts@artesis.be
+ *  	alexanderhoet@gmail.com
  */
 
 // RAL implementation for TI CC430 (code mostly taken from TI reference code for CC430.)
@@ -13,7 +14,6 @@
 
 #include "../ral.h"
 #include "cc430_registers.h"
-//#include "../../types.h"
 
 // The CC430 implementation of the RAL interface
 extern const struct ral_interface cc430_ral;
@@ -59,8 +59,6 @@ typedef struct S_RF_SETTINGS {
     unsigned char mdmcfg1;   // Modem configuration.
     unsigned char mdmcfg0;   // Modem configuration.
     unsigned char deviatn;   // Modem deviation setting (when FSK modulation is enabled).
-    //unsigned char frend1;    // Front end RX configuration.
-    //unsigned char frend0;    // Front end RX configuration.
     unsigned char mcsm2;    // Main Radio Control State Machine configuration.
     unsigned char mcsm1;     // Main Radio Control State Machine configuration.
     unsigned char mcsm0;     // Main Radio Control State Machine configuration.
@@ -78,19 +76,13 @@ typedef struct S_RF_SETTINGS {
     unsigned char fscal2;    // Frequency synthesizer calibration.
     unsigned char fscal1;    // Frequency synthesizer calibration.
     unsigned char fscal0;    // Frequency synthesizer calibration.
-    //unsigned char fstest;    // Frequency synthesizer calibration control
-    // ptest
-    // agctest
-    //unsigned char test2;     // Various test settings.
-    //unsigned char test1;     // Various test settings.
-    //unsigned char test0;     // Various test settings.
 } RF_SETTINGS;
 
 
 void cc430_ral_init(void);
 void cc430_ral_set_tx_callback(ral_tx_callback_t callback);
 void cc430_ral_set_rx_callback(ral_rx_callback_t callback);
-void cc430_ral_send(unsigned char* buffer);
+void cc430_ral_tx(ral_tx_cfg_t* tx_cfg);
 void cc430_ral_rx_start(ral_rx_cfg_t* cfg);
 void cc430_ral_rx_stop();
 bool cc430_ral_is_rx_in_progress();

@@ -36,9 +36,8 @@ u8* txDataPointer;
 static void no_interrupt_isr(void);
 static void endofpacket_isr(void);
 static void rx_timeout_isr(void);
-static void rx_data_isr(void);
-static void tx_switch_to_end_state(void);
 static void rx_sync_isr(void);
+static void rx_data_isr(void);
 static void tx_data_isr(void);
 static void tx_finish(void);
 
@@ -54,7 +53,7 @@ InterruptHandler interrupt_table[34] = {
 	no_interrupt_isr,		    // RFIFG5 - TX FIFO filled or above the TX FIFO threshold
 	no_interrupt_isr,			// RFIFG6 - TX FIFO full
 	no_interrupt_isr,           // RFIFG7 - RX FIFO overflowed
-	no_interrupt_isr,			// RFIFG8 - TX FIFO underflowed
+	tx_finish,					// RFIFG8 - TX FIFO underflowed
 	rx_sync_isr,				// RFIFG9 - Sync word sent or received
 	no_interrupt_isr,           // RFIFG10 - Packet received with CRC OK
 	no_interrupt_isr,           // RFIFG11 - Preamble quality reached (PQI) is above programmed PQT value
@@ -131,11 +130,11 @@ static int get_rssi()
 {
     s8  rssi_raw;
 
-    rssi_raw = (s8) ReadSingleReg(RSSI);      // CC430 RSSI is 0.5 dBm units, signed byte
-    int rssi = (int)rssi_raw;         // Convert to signed 16 bit (1 instr on MSP)
-    rssi += 128;                      // Make it positive...
-    rssi >>= 1;                        // ...So division to 1 dBm units can be a shift...
-    rssi -= 64 + CC430_RSSI_OFFSET;     // ...and then rescale it, including offset
+    rssi_raw = (s8) ReadSingleReg(RSSI);      	// CC430 RSSI is 0.5 dBm units, signed byte
+    int rssi = (int)rssi_raw;         			// Convert to signed 16 bit (1 instr on MSP)
+    rssi += 128;                      			// Make it positive...
+    rssi >>= 1;                        			// ...So division to 1 dBm units can be a shift...
+    rssi -= 64 + CC430_RSSI_OFFSET;     		// ...and then rescale it, including offset
 
     return rssi;
 }
@@ -149,16 +148,6 @@ static void endofpacket_isr()
     } else if(radioState == RadioStateReceive) {
     	rx_data_isr();
     }
-}
-
-static void tx_finish()
-{
-	RF1AIE = 0;
-    Strobe(RF_SIDLE);
-    Strobe(RF_SPWD);
-    radioState = RadioStateNone;
-
-    tx_callback(); // TODO return code
 }
 
 static void rx_timeout_isr()
@@ -176,10 +165,10 @@ static void rx_sync_isr()
     rxRemainingBytes = 0;
     rxDataPointer = &rxData[0];
 
-    //Clear all flags, enable receive interrupts
+	//Clear all interrupt flags, enable interrupts
 	RF1AIFG = 0;
-    RF1AIE  = RFIFG_FLAG_RXFilled | RFIFG_FLAG_SyncWord;
-    RF1AIES = RFIFG_FLANK_RXFilled | RFIFG_FLANK_EndOfPacket;
+	RF1AIE  = RFIFG_FLAG_RXFilled | RFIFG_FLAG_EndOfPacket;
+	RF1AIES = RFIFG_FLANK_RXFilled | RFIFG_FLANK_EndOfPacket;
 }
 
 static void rx_data_isr()
@@ -248,6 +237,76 @@ static void tx_data_isr()
 	txDataPointer += txBytes;
 }
 
+static void tx_finish()
+{
+	//Modify radio state
+	radioState = RadioStateNone;
+
+    //Disable interrupts
+    RF1AIE = 0;
+    RF1AIES = 0;
+
+	//Flush TX FIFO and go to sleep
+    Strobe(RF_SIDLE);
+    Strobe(RF_SFTX);
+    Strobe(RF_SPWD);
+
+    tx_callback();  // TODO get callback out of ISR?
+}
+
+static void set_channel(u8 channel_center_freq_index, u8 channel_bandwith_index)
+{
+	//Set channel center frequency
+	WriteSingleReg(CHANNR, channel_center_freq_index);
+
+	//Set channel bandwidth, modulation and symbol rate
+	switch(channel_bandwith_index)
+	{
+	case 0:
+		WriteSingleReg(MDMCFG3, RADIO_MDMCFG3_DRATE_M(24));
+		WriteSingleReg(MDMCFG4, (RADIO_MDMCFG4_CHANBW_E(1) | RADIO_MDMCFG4_CHANBW_M(0) | RADIO_MDMCFG4_DRATE_E(11)));
+		WriteSingleReg(DEVIATN, (RADIO_DEVIATN_E(5) | RADIO_DEVIATN_M(0)));
+		break;
+	case 1:
+		WriteSingleReg(MDMCFG3, RADIO_MDMCFG3_DRATE_M(24));
+		WriteSingleReg(MDMCFG4, (RADIO_MDMCFG4_CHANBW_E(2) | RADIO_MDMCFG4_CHANBW_M(0) | RADIO_MDMCFG4_DRATE_E(11)));
+		WriteSingleReg(DEVIATN, (RADIO_DEVIATN_E(5) | RADIO_DEVIATN_M(0)));
+		break;
+	case 2:
+		WriteSingleReg(MDMCFG3, RADIO_MDMCFG3_DRATE_M(248));
+		WriteSingleReg(MDMCFG4, (RADIO_MDMCFG4_CHANBW_E(1) | RADIO_MDMCFG4_CHANBW_M(0) | RADIO_MDMCFG4_DRATE_E(12)));
+		WriteSingleReg(DEVIATN, (RADIO_DEVIATN_E(5) | RADIO_DEVIATN_M(0)));
+		break;
+	case 3:
+		WriteSingleReg(MDMCFG3, RADIO_MDMCFG3_DRATE_M(248));
+		WriteSingleReg(MDMCFG4, (RADIO_MDMCFG4_CHANBW_E(0) | RADIO_MDMCFG4_CHANBW_M(1) | RADIO_MDMCFG4_DRATE_E(12)));
+		WriteSingleReg(DEVIATN, (RADIO_DEVIATN_E(5) | RADIO_DEVIATN_M(0)));
+		break;
+	}
+}
+
+static void set_sync_word_class(u8 sync_word_class, u8 coding_scheme)
+{
+	if(sync_word_class == 0x00) { // TODO assert valid class
+		if(coding_scheme == 0x00) {
+			WriteSingleReg(SYNC1, RADIO_SYNC1_CLASS0_NON_FEC);
+			WriteSingleReg(SYNC0, RADIO_SYNC0_CLASS0_NON_FEC);
+		} else if(coding_scheme == 0x01) {
+			WriteSingleReg(SYNC1, RADIO_SYNC1_CLASS0_NON_FEC);
+			WriteSingleReg(SYNC0, RADIO_SYNC0_CLASS0_NON_FEC);
+		}
+
+	} else if(sync_word_class == 0x01) {
+		if(coding_scheme == 0x00) {
+			WriteSingleReg(SYNC1, RADIO_SYNC1_CLASS1_FEC);
+			WriteSingleReg(SYNC0, RADIO_SYNC0_CLASS1_FEC);
+		} else if(coding_scheme == 0x01) {
+			WriteSingleReg(SYNC1, RADIO_SYNC1_CLASS1_FEC);
+			WriteSingleReg(SYNC0, RADIO_SYNC0_CLASS1_FEC);
+		}
+	}
+}
+
 #pragma vector=CC1101_VECTOR
 __interrupt void CC1101_ISR (void)
 {
@@ -258,9 +317,11 @@ __interrupt void CC1101_ISR (void)
   LPM4_EXIT;
 }
 
-
 void cc430_ral_init(void)
 {
+	//Modify radio state
+	radioState = RadioStateNone;
+
 	volatile u16 i;
 	u8 x;
 
@@ -294,45 +355,22 @@ void cc430_ral_set_rx_callback(ral_rx_callback_t callback)
 
 void cc430_ral_tx(ral_tx_cfg_t* tx_cfg)
 {
-	//Set channel center frequency
-	WriteSingleReg(CHANNR, tx_cfg->channel_center_freq_index);
-
-	//Set channel bandwidth, modulation and symbol rate
-	switch(tx_cfg->channel_bandwith_index)
-	{
-	case 0:
-		WriteSingleReg(MDMCFG3, RADIO_MDMCFG3_DRATE_M(24));
-		WriteSingleReg(MDMCFG4, (RADIO_MDMCFG4_CHANBW_E(1) | RADIO_MDMCFG4_CHANBW_M(0) | RADIO_MDMCFG4_DRATE_E(11)));
-		WriteSingleReg(DEVIATN, (RADIO_DEVIATN_E(5) | RADIO_DEVIATN_M(0)));
-		break;
-	case 1:
-		WriteSingleReg(MDMCFG3, RADIO_MDMCFG3_DRATE_M(24));
-		WriteSingleReg(MDMCFG4, (RADIO_MDMCFG4_CHANBW_E(2) | RADIO_MDMCFG4_CHANBW_M(0) | RADIO_MDMCFG4_DRATE_E(11)));
-		WriteSingleReg(DEVIATN, (RADIO_DEVIATN_E(5) | RADIO_DEVIATN_M(0)));
-		break;
-	case 2:
-		WriteSingleReg(MDMCFG3, RADIO_MDMCFG3_DRATE_M(248));
-		WriteSingleReg(MDMCFG4, (RADIO_MDMCFG4_CHANBW_E(1) | RADIO_MDMCFG4_CHANBW_M(0) | RADIO_MDMCFG4_DRATE_E(12)));
-		WriteSingleReg(DEVIATN, (RADIO_DEVIATN_E(5) | RADIO_DEVIATN_M(0)));
-		break;
-	case 3:
-		WriteSingleReg(MDMCFG3, RADIO_MDMCFG3_DRATE_M(248));
-		WriteSingleReg(MDMCFG4, (RADIO_MDMCFG4_CHANBW_E(0) | RADIO_MDMCFG4_CHANBW_M(1) | RADIO_MDMCFG4_DRATE_E(12)));
-		WriteSingleReg(DEVIATN, (RADIO_DEVIATN_E(5) | RADIO_DEVIATN_M(0)));
-		break;
-	}
-
 	//Modify radio state
+	radioState = RadioStateTransmitData;
+
+	//Set configuration
+	set_channel(tx_cfg->channel_center_freq_index, tx_cfg->channel_bandwith_index);
+	set_sync_word_class(tx_cfg->sync_word_class, tx_cfg->coding_scheme);
+
 	//Set PKTLEN to the packet length
 	//Set RXFIFO threshold
-	radioState = RadioStateTransmitData;
 	WriteSingleReg(PKTLEN, tx_cfg->len);
 	WriteSingleReg(FIFOTHR, RADIO_FIFOTHR_FIFO_THR_17_48);
 
 	//Clear all interrupt flags, enable interrupts
 	RF1AIFG = 0;
-	RF1AIE  = RFIFG_FLAG_EndOfPacket | RFIFG_FLAG_TXBelowThresh;
-	RF1AIES = RFIFG_FLANK_EndOfPacket | RFIFG_FLANK_TXBelowThresh;
+	RF1AIE  = RFIFG_FLAG_EndOfPacket | RFIFG_FLAG_TXBelowThresh | RFIFG_FLAG_TXUnderflow;
+	RF1AIES = RFIFG_FLANK_EndOfPacket | RFIFG_FLANK_TXBelowThresh | RFIFG_FLANK_TXUnderflow;
 
 	//Flush TXFIFO
 	Strobe(RF_SIDLE);
@@ -359,58 +397,19 @@ void cc430_ral_tx(ral_tx_cfg_t* tx_cfg)
 
 void cc430_ral_rx_start(ral_rx_cfg_t* cfg)
 {
-	//Set channel center frequency
-	WriteSingleReg(CHANNR, cfg->channel_center_freq_index);
-
-	//Set channel bandwidth, modulation and symbol rate
-	switch(cfg->channel_bandwith_index)
-	{
-	case 0:
-		WriteSingleReg(MDMCFG3, RADIO_MDMCFG3_DRATE_M(24));
-		WriteSingleReg(MDMCFG4, (RADIO_MDMCFG4_CHANBW_E(1) | RADIO_MDMCFG4_CHANBW_M(0) | RADIO_MDMCFG4_DRATE_E(11)));
-		WriteSingleReg(DEVIATN, (RADIO_DEVIATN_E(5) | RADIO_DEVIATN_M(0)));
-		break;
-	case 1:
-		WriteSingleReg(MDMCFG3, RADIO_MDMCFG3_DRATE_M(24));
-		WriteSingleReg(MDMCFG4, (RADIO_MDMCFG4_CHANBW_E(2) | RADIO_MDMCFG4_CHANBW_M(0) | RADIO_MDMCFG4_DRATE_E(11)));
-		WriteSingleReg(DEVIATN, (RADIO_DEVIATN_E(5) | RADIO_DEVIATN_M(0)));
-		break;
-	case 2:
-		WriteSingleReg(MDMCFG3, RADIO_MDMCFG3_DRATE_M(248));
-		WriteSingleReg(MDMCFG4, (RADIO_MDMCFG4_CHANBW_E(1) | RADIO_MDMCFG4_CHANBW_M(0) | RADIO_MDMCFG4_DRATE_E(12)));
-		WriteSingleReg(DEVIATN, (RADIO_DEVIATN_E(5) | RADIO_DEVIATN_M(0)));
-		break;
-	case 3:
-		WriteSingleReg(MDMCFG3, RADIO_MDMCFG3_DRATE_M(248));
-		WriteSingleReg(MDMCFG4, (RADIO_MDMCFG4_CHANBW_E(0) | RADIO_MDMCFG4_CHANBW_M(1) | RADIO_MDMCFG4_DRATE_E(12)));
-		WriteSingleReg(DEVIATN, (RADIO_DEVIATN_E(5) | RADIO_DEVIATN_M(0)));
-		break;
-	}
-
-	if(cfg->sync_word_class == 0x00) { // TODO assert valid class
-		if(cfg->coding_scheme == 0x00) {
-			WriteSingleReg(SYNC1, RADIO_SYNC1_CLASS0_NON_FEC);
-			WriteSingleReg(SYNC0, RADIO_SYNC0_CLASS0_NON_FEC);
-		}
-
-		// TODO assert, FEC not implemented yet
-	} else if(cfg->sync_word_class == 0x01) {
-		if(cfg->coding_scheme == 0x00) {
-			WriteSingleReg(SYNC1, RADIO_SYNC1_CLASS1_NON_FEC);
-			WriteSingleReg(SYNC0, RADIO_SYNC0_CLASS1_NON_FEC);
-		}
-
-		// TODO assert, FEC not implemented yet
-	}
-
 	//Modify radio state
+	radioState = RadioStateReceiveInit;
+
+	//Set configuration
+	set_channel(cfg->channel_center_freq_index, cfg->channel_bandwith_index);
+	set_sync_word_class(cfg->sync_word_class, cfg->coding_scheme);
+
 	//Set PKTLEN to the highest possible number, we will change this to the right length later
 	//Set RXFIFO threshold as low as possible
-	radioState = RadioStateReceiveInit;
 	WriteSingleReg(PKTLEN, RADIO_PKTLEN);
 	WriteSingleReg(FIFOTHR, (RADIO_FIFOTHR_CLOSE_IN_RX_0db | RADIO_FIFOTHR_FIFO_THR_61_4));
 
-	//Clear all interrupt flags, enable sync word interrupt
+	//Clear all interrupt flags, enable interrupts
 	RF1AIFG = 0;
 	RF1AIE  = RFIFG_FLAG_SyncWord;
 	RF1AIES = RFIFG_FLANK_SyncWord;
@@ -423,13 +422,13 @@ void cc430_ral_rx_start(ral_rx_cfg_t* cfg)
 
 void cc430_ral_rx_stop()
 {
-	radioState = RadioStateNone;
-
 	if (cc430_ral_is_rx_in_progress()) {
 		RF1AIE = 0;
 		Strobe(RF_SIDLE);
 		Strobe(RF_SFRX);
 	}
+
+	radioState = RadioStateNone;
 }
 
 bool cc430_ral_is_rx_in_progress()

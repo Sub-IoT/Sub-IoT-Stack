@@ -11,7 +11,6 @@
 
 #include "../types.h"
 
-
 // TODO implement FEC
 
 // =======================================================================
@@ -49,7 +48,7 @@ typedef struct
     // TODO u8  cca;
     /// Spectrum ID
     u8  spectrum_id;
-    /// Channel bandhwith index
+    /// Channel bandwidth index
 	u8  coding_scheme;
 	/// sync word class (0 or 1)
 	u8 sync_word_class;

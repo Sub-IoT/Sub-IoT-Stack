@@ -15,6 +15,8 @@ static phy_tx_callback_t tx_callback;
 
 static void translate_spectrum_id(u8 spectrum_id, u8* channel_center_freq_index, u8* channel_bandwith_index)
 {
+	// TODO check valid spectrum id
+
 	(*channel_center_freq_index) = spectrum_id & 0x0F;
 	(*channel_bandwith_index) = (spectrum_id >> 4) & 0x0F;
 }
@@ -46,8 +48,8 @@ phy_result_t phy_tx(phy_tx_cfg_t* cfg)
 
 	ral_tx_cfg_t ral_tx_cfg;
 	translate_spectrum_id(cfg->spectrum_id, &ral_tx_cfg.channel_center_freq_index, &ral_tx_cfg.channel_bandwith_index);
-	ral_tx_cfg.coding_scheme = 0; // TODO
-	ral_tx_cfg.sync_word_class = 0; // TODO
+	ral_tx_cfg.coding_scheme = cfg->coding_scheme;
+	ral_tx_cfg.sync_word_class = cfg->sync_word_class;
 	ral_tx_cfg.data = cfg->data;
 	ral_tx_cfg.len = cfg->data[0];
 	// TODO u16 timeout; // mac level?
@@ -73,8 +75,6 @@ void phy_set_rx_callback(phy_rx_callback_t cb)
 
 void phy_rx_start(phy_rx_cfg_t* cfg)
 {
-	// TODO check valid spectrum id
-
 	ral_rx_cfg_t ral_rx_cfg;
 	ral_rx_cfg.timeout = cfg->timeout;
 	ral_rx_cfg.multiple = cfg->multiple;
