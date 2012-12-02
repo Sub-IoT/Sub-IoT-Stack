@@ -314,10 +314,17 @@ void dll_tx_foreground_frame(u8* data, u8 length)
 	pointer += sizeof(dll_foreground_frame_address_ctl_header_t);
 	memcpy(pointer, frame.source_id_header, 8 * sizeof(u8));
 	pointer += 8 * sizeof(u8);
+
+	*pointer++ = 0; //dunno
+	*pointer++ = 0; //isfid
+	*pointer++ = 0; //isfoffset
+	*pointer++ = length; // payload length;
+
+
 	memcpy(pointer, data, length); // TODO fixed size for now
 	pointer += length;
 
-	frame.length = pointer - frame_data - 1 ; // TODO remove -1 (count length byte or not?)
+	frame.length = pointer - frame_data;
 	frame_data[0] = frame.length;
 
 	foreground_frame_tx_cfg.len = frame.length;
