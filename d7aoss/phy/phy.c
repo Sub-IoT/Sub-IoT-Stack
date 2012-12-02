@@ -95,3 +95,8 @@ u8 phy_is_rx_in_progress()
 {
 	return RAL_IMPLEMENTATION.is_rx_in_progress();
 }
+
+bool phy_cca(void)
+{
+	return RAL_IMPLEMENTATION.cca();
+}

@@ -29,7 +29,7 @@ static void timer_enable_interrupt()
 
 static void timer_disable_interrupt()
 {
-	TA1CCTL0 |= ~CCIE; // Disable interrupt for CCR0
+	TA1CCTL0 &= ~CCIE; // Disable interrupt for CCR0
 	started = false;
 }
 
