@@ -10,8 +10,7 @@
 #include "driverlib/5xx_6xx/gpio.h"
 #include "driverlib/5xx_6xx/wdt.h"
 
-#include "platforms/wizzimote.h"
-//#include "platforms/artesis.h"
+#include "platforms/platform.h"
 
 #include "addresses.h"
 

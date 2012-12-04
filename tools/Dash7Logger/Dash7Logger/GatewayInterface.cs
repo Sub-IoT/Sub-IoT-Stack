@@ -194,9 +194,28 @@ namespace Dash7Logger
 							
 							break;
 						}
-						case 0x01:							
+						case 0x01:	
+						{
 							Console.WriteLine(string.Format("{0} {1}",  DateTime.Now.ToString ("HH:mm:ss.fff"), enc.GetString(data.GetRange(3, dataLength).ToArray())));
 							break;
+						}
+						case 0x02: // command
+							{
+							List<byte> command = data.GetRange(3, dataLength);
+							switch (command[0])
+							{
+							case 0xB0: // request date time
+								DateTime time = DateTime.Now;
+								List<byte> response = new List<byte>();
+								response.AddRange(BitConverter.GetBytes((short)(time.Year)));
+								response.AddRange(BitConverter.GetBytes((char) (time.Month)));
+								response.AddRange(BitConverter.GetBytes((char) (time.Day)));
+
+
+								break;
+							}
+							break;
+							}
 						}						
 						data.RemoveRange (0, 3 + dataLength);
 			        }
@@ -214,7 +233,7 @@ namespace Dash7Logger
 		    data.Clear();	
 		}
 		
-				#region IDisposable implementation
+		#region IDisposable implementation
 		public void Dispose ()
 		{
 			if (this.serialPort != null)

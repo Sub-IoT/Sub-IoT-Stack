@@ -60,6 +60,7 @@ void tx_callback(Dll_Tx_Result result)
 {
 	led_off(3);
 	start_rx();
+	led_toggle(3);
 }
 
 void rx_callback(dll_rx_res_t* cb)
@@ -89,7 +90,6 @@ void main(void) {
 
 	scan_series_cfg.length = 1;
 	scan_series_cfg.values = scan_confgs;
-
 
 	start_rx();
 
@@ -144,6 +144,26 @@ void main(void) {
 
 #pragma vector=PORT1_VECTOR
 __interrupt void PORT1_ISR (void)
+{
+	if(button_is_active(1))
+		interrupt_flags |= INTERRUPT_BUTTON1;
+	else
+		interrupt_flags &= ~INTERRUPT_BUTTON1;
+
+	if(button_is_active(3))
+		interrupt_flags |= INTERRUPT_BUTTON3;
+	else
+		interrupt_flags &= ~INTERRUPT_BUTTON3;
+
+	if(interrupt_flags != 0)
+	{
+		button_disable_interrupts();
+		LPM4_EXIT;
+	}
+}
+
+#pragma vector=PORT2_VECTOR
+__interrupt void PORT2_ISR (void)
 {
 	if(button_is_active(1))
 		interrupt_flags |= INTERRUPT_BUTTON1;
