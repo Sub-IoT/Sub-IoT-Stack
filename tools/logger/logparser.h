@@ -23,6 +23,7 @@ protected slots:
 
 private:
     void parseReceivedData();
+    void parsePhyRxResult(QByteArray phyRxResult);
 
     SerialPort* _serialPort;
     QQueue<unsigned char>* _receivedDataQueue;

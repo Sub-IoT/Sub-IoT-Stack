@@ -32,7 +32,7 @@ private:
     void detectSerialPorts();
     QString errorString();
     void parseReceivedData();
-    void appendToLog(QString msg, QPlainTextEdit* textEdit);
+    void appendToLog(QString msg);
 
     Ui::LoggerDialog *ui;
 

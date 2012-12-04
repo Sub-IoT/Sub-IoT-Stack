@@ -73,19 +73,19 @@ void LoggerDialog::onSerialPortSelected(int index)
 
 void LoggerDialog::onLogMessageReceived(QString logMessage)
 {
-    appendToLog(logMessage, ui->parsedOutputPlainTextEdit);
+    appendToLog(logMessage);
 }
 
 
 void LoggerDialog::onPacketReceived(QString packet)
 {
-    appendToLog("[packet] " + packet, ui->parsedOutputPlainTextEdit);
+    appendToLog("[packet] " + packet);
 }
 
-void LoggerDialog::appendToLog(QString msg, QPlainTextEdit *textEdit)
+void LoggerDialog::appendToLog(QString msg)
 {
-    textEdit->appendPlainText(msg + "\n");
-    QScrollBar *scrollbar = textEdit->verticalScrollBar();
+    ui->parsedOutputPlainTextEdit->appendPlainText(msg);
+    QScrollBar *scrollbar = ui->parsedOutputPlainTextEdit->verticalScrollBar();
     scrollbar->setValue(scrollbar->maximum());
 }
 

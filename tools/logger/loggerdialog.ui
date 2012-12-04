@@ -32,9 +32,6 @@
     </layout>
    </item>
    <item>
-    <widget class="QPlainTextEdit" name="outputPlainTextEdit"/>
-   </item>
-   <item>
     <widget class="QPlainTextEdit" name="parsedOutputPlainTextEdit"/>
    </item>
   </layout>

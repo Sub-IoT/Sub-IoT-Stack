@@ -2,6 +2,8 @@
 
 #include <QDebug>
 
+#include "phy/phy.h"
+
 LogParser::LogParser(SerialPort* serialPort, QObject *parent) : QObject(parent)
 {
     _serialPort = serialPort;
@@ -15,7 +17,6 @@ void LogParser::onDataAvailable()
     QByteArray data = _serialPort->readAll();
     for(int i = 0; i < data.size(); i++)
     {
-        //ui->outputPlainTextEdit->insertPlainText(QString().sprintf("0x%02x ", (unsigned char)data.constData()[i]));
         _receivedDataQueue->enqueue((unsigned char)data.constData()[i]);
     }
 
@@ -41,14 +42,18 @@ void LogParser::parseReceivedData()
         return;
     }
 
-    uint type = _receivedDataQueue->dequeue();
-    uint len = _receivedDataQueue->dequeue();
+    u8 type = _receivedDataQueue->dequeue();
+    u8 len = _receivedDataQueue->dequeue();
     if(type == 0x00)
     {
         QString msg;
+        QByteArray frameData;
+        unsigned char byte;
         for(int i = 0; i < len; i++)
         {
-            msg += QString().sprintf("0x%02x ",_receivedDataQueue->dequeue());
+            byte = _receivedDataQueue->dequeue();
+            frameData.append(byte);
+            msg += QString().sprintf("0x%02x ", byte);
         }
 
         emit packetReceived(msg);
@@ -63,6 +68,39 @@ void LogParser::parseReceivedData()
 
         emit logMessageReceived(msg);
     }
+    if(type == 0x02)
+    {
+        QString msg;
+        QByteArray frameData;
+        unsigned char byte;
+        for(int i = 0; i < len; i++)
+        {
+            byte = _receivedDataQueue->dequeue();
+            frameData.append(byte);
+            msg += QString().sprintf("0x%02x ", byte);
+        }
+
+        emit packetReceived(msg);
+        parsePhyRxResult(frameData);
+    }
 
     parseReceivedData();
+}
+
+void LogParser::parsePhyRxResult(QByteArray phyRxResult)
+{
+    phy_rx_res_t* phy_result = (phy_rx_res_t*)phyRxResult.constData();
+    QString logMessage = QString("PHY RX:\n" \
+                                 "\tLength: %1 bytes\n" \
+                                 "\tCRC:   %2\n" \
+                                 "\tRSSI:   %3 dBm\n" \
+                                 "\tEIRP:   %4 dBm\n" \
+                                 "\tLQI:   %5\n")
+                            .arg(phy_result->len)
+                            .arg(phy_result->crc_ok ? "OK" : "NOT OK")
+                            .arg(phy_result->rssi)
+                            .arg(phy_result->eirp)
+                            .arg(phy_result->lqi);
+
+    emit logMessageReceived(logMessage);
 }

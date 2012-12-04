@@ -22,3 +22,5 @@ HEADERS  += loggerdialog.h \
     logparser.h
 
 FORMS    += loggerdialog.ui
+
+INCLUDEPATH += ../../d7aoss/
