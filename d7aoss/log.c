@@ -29,3 +29,11 @@ void log_packet(u8* packet) // TODO take direction param (tx/rx)?
 	uart_transmit_message(packet, packet[0]);
 }
 
+void log_phy_rx_res(phy_rx_res_t* res)
+{
+	u8 length = sizeof(phy_rx_res_t) - 2; // substract pointer length // TODO crossplatform?
+	uart_transmit_data(0xDD);
+	uart_transmit_data(0x02);
+	uart_transmit_data(length);
+	uart_transmit_message((unsigned char*)res, length); // submit header without frame data
+}

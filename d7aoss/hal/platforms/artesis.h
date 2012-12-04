@@ -10,7 +10,7 @@
 
 #include "../driverlib/5xx_6xx/gpio.h"
 
-#include "../types.h"
+#include "../../types.h"
 #include "../addresses.h"
 
 #define OUTPUT1_BASEADDRESS		__MSP430_BASEADDRESS_PORT1_R__
