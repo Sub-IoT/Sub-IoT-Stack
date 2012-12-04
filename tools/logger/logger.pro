@@ -15,8 +15,10 @@ TEMPLATE = app
 
 
 SOURCES += main.cpp\
-        loggerdialog.cpp
+        loggerdialog.cpp \
+    logparser.cpp
 
-HEADERS  += loggerdialog.h
+HEADERS  += loggerdialog.h \
+    logparser.h
 
 FORMS    += loggerdialog.ui

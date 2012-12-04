@@ -2,10 +2,11 @@
 #define LOGGERDIALOG_H
 
 #include <QtGui>
-#include <QtCore/QQueue>
 
 #include <serialport/serialport.h>
 #include <serialport/serialportinfo.h>
+
+#include "logparser.h"
 
 QT_USE_NAMESPACE_SERIALPORT
 
@@ -23,7 +24,8 @@ public:
     
 protected slots:
     void onSerialPortSelected(int index);
-    void onDataAvailable();
+    void onLogMessageReceived(QString logMessage);
+    void onPacketReceived(QString packet);
     void onConnectButtonPressed();
 
 private:
@@ -36,7 +38,7 @@ private:
 
     QList<SerialPortInfo> _serialPorts;
     SerialPort* _serialPort;
-    QQueue<unsigned char>* _receivedDataQueue;
+    LogParser* _logParser;
 };
 
 #endif // LOGGERDIALOG_H

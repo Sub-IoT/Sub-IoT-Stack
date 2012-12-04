@@ -1,6 +1,7 @@
 #include "loggerdialog.h"
 #include "ui_loggerdialog.h"
 
+#include <QtCore/QThread>
 #include <QDebug>
 
 LoggerDialog::LoggerDialog(QWidget *parent) : QDialog(parent), ui(new Ui::LoggerDialog)
@@ -8,11 +9,16 @@ LoggerDialog::LoggerDialog(QWidget *parent) : QDialog(parent), ui(new Ui::Logger
     ui->setupUi(this);
 
     _serialPort = new SerialPort(this);
-    _receivedDataQueue = new QQueue<unsigned char>();
+    _logParser = new LogParser(_serialPort, this);
 
     connect(ui->serialPortComboBox, SIGNAL(currentIndexChanged(int)), SLOT(onSerialPortSelected(int)));
     connect(ui->connectButton, SIGNAL(pressed()), SLOT(onConnectButtonPressed()));
-    connect(_serialPort, SIGNAL(readyRead()), SLOT(onDataAvailable()));
+    connect(_logParser, SIGNAL(logMessageReceived(QString)), SLOT(onLogMessageReceived(QString)));
+    connect(_logParser, SIGNAL(packetReceived(QString)), SLOT(onPacketReceived(QString)));
+
+    QThread readerThread;
+    _logParser->moveToThread(&readerThread);
+    readerThread.start();
 
     detectSerialPorts();
 }
@@ -47,17 +53,17 @@ void LoggerDialog::detectSerialPorts()
 
 void LoggerDialog::onConnectButtonPressed()
 {
-    if(!_serialPort->open(QIODevice::ReadWrite))
-    {
-        QMessageBox::critical(this, "Logger", "Serial port connection failed, reason: " + errorString(), QMessageBox::Ok);
-    }
-
     // TODO hardcoded settings
     _serialPort->setRate(SerialPort::Rate115200);
     _serialPort->setDataBits(SerialPort::Data8);
     _serialPort->setParity(SerialPort::NoParity);
     _serialPort->setFlowControl(SerialPort::UnknownFlowControl);
     _serialPort->setStopBits(SerialPort::TwoStop);
+
+    if(!_serialPort->open(QIODevice::ReadWrite))
+    {
+        QMessageBox::critical(this, "Logger", "Serial port connection failed, reason: " + errorString(), QMessageBox::Ok);
+    }
 }
 
 void LoggerDialog::onSerialPortSelected(int index)
@@ -65,59 +71,15 @@ void LoggerDialog::onSerialPortSelected(int index)
     _serialPort->setPort(_serialPorts.at(index));
 }
 
-void LoggerDialog::onDataAvailable()
+void LoggerDialog::onLogMessageReceived(QString logMessage)
 {
-    QByteArray data = _serialPort->readAll();
-    for(int i = 0; i < data.size(); i++)
-    {
-        ui->outputPlainTextEdit->insertPlainText(QString().sprintf("0x%02x ", (unsigned char)data.constData()[i]));
-        _receivedDataQueue->enqueue((unsigned char)data.constData()[i]);
-    }    
-
-    parseReceivedData();
+    appendToLog(logMessage, ui->parsedOutputPlainTextEdit);
 }
 
-void LoggerDialog::parseReceivedData()
+
+void LoggerDialog::onPacketReceived(QString packet)
 {
-    if(_receivedDataQueue->size() < 3)
-        return;
-
-    unsigned char start = _receivedDataQueue->dequeue();
-    while(start != 0xDD && !_receivedDataQueue->isEmpty())
-    {
-        qDebug() << "skipping unexpected data" << QString().sprintf("0x%02x", start);
-        start = _receivedDataQueue->dequeue();
-    }
-
-    if(_receivedDataQueue->size() < 2 || _receivedDataQueue->size() < _receivedDataQueue->at(1) + 2)
-    {
-        //  not a full packet, reinsert header and wait for more data ...
-        _receivedDataQueue->insert(0, 0xDD);
-        return;
-    }
-
-    uint type = _receivedDataQueue->dequeue();
-    uint len = _receivedDataQueue->dequeue();
-    if(type == 0x00)
-    {
-        QString msg = "[packet data] ";
-        for(int i = 0; i < len; i++)
-        {
-            msg += QString().sprintf("0x%02x ",_receivedDataQueue->dequeue());
-        }
-
-        appendToLog(msg, ui->parsedOutputPlainTextEdit);
-    }
-    if(type == 0x01)
-    {
-        QString msg;
-        for(int i = 0; i < len; i++)
-        {
-            msg += QString(_receivedDataQueue->dequeue());
-        }
-
-        appendToLog(msg, ui->parsedOutputPlainTextEdit);
-    }
+    appendToLog("[packet] " + packet, ui->parsedOutputPlainTextEdit);
 }
 
 void LoggerDialog::appendToLog(QString msg, QPlainTextEdit *textEdit)
