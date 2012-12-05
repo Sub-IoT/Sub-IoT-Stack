@@ -22,12 +22,12 @@
 #define INTERRUPT_BUTTON3 	(1 << 2)
 #define INTERRUPT_RTC 		(1 << 3)
 
-#define DATA_LEN 5
-
-static u8 data[DATA_LEN] = { 0xA0, 0xA1, 0xA2, 0xA3, 0xA4 };
+static u16 counter = 0;
 
 static u8 interrupt_flags = 0;
 static u8 rtcEnabled = 0;
+
+static u8 log_msg[100];
 
 dll_channel_scan_t scan_cfg1 = {
 		0x10,
@@ -56,16 +56,28 @@ void stop_rx()
 	led_off(2);
 }
 
+void start_tx()
+{
+	stop_rx();
+	dll_tx_foreground_frame((u8*)&counter, sizeof(counter));
+}
+
 void tx_callback(Dll_Tx_Result result)
 {
+	if(result == DLLTxResultOK)
+		counter++;
+
 	led_off(3);
 	start_rx();
 }
 
-void rx_callback(dll_rx_res_t* cb)
+void rx_callback(dll_rx_res_t* rx_res)
 {
 	led_toggle(3);
 	log_print_string("RX CB");
+	dll_foreground_frame_t* frame = (dll_foreground_frame_t*)rx_res->frame;
+	sprintf(log_msg, "rx: %d", *frame->payload);
+	log_print_string(log_msg);
 	//TODO: need to build dll frame log
 	//if (cb->frame_type == FrameTypeForegroundFrame)
 		//log_dll_frame(((dll_foreground_frame_t*)(cb->frame))->payload);
@@ -101,8 +113,7 @@ void main(void) {
         	interrupt_flags &= ~INTERRUPT_BUTTON1;
         	led_on(3);
 
-        	stop_rx();
-        	dll_tx_foreground_frame(data, DATA_LEN);
+        	start_tx();
 
         	button_clear_interrupt_flag();
         	button_enable_interrupts();
@@ -131,8 +142,7 @@ void main(void) {
         if (INTERRUPT_RTC & interrupt_flags)
 		{
         	led_on(3);
-        	stop_rx();
-        	dll_tx_foreground_frame(data, DATA_LEN);
+        	start_tx();
 
 			interrupt_flags &= ~INTERRUPT_RTC;
 		}

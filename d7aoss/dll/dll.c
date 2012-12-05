@@ -105,21 +105,18 @@ static void phy_rx_callback(phy_rx_res_t* res)
 		dll_foreground_frame_t frame;
 		frame.length = res->data[0];
 
-		dll_foreground_frame_header_t frame_header;
-		frame_header.tx_eirp = res->data[1] * 0.5 - 40;
-		frame_header.subnet = res->data[2];
-		frame_header.frame_ctl = res->data[3];
-
-		frame.frame_header = &frame_header;
+		frame.frame_header.tx_eirp = res->data[1] * 0.5 - 40;
+		frame.frame_header.subnet = res->data[2];
+		frame.frame_header.frame_ctl = res->data[3];
 
 		u8 data_pointer = 4;
 
-		if (frame_header.frame_ctl & 0x80) // Listen
+		if (frame.frame_header.frame_ctl & 0x80) // Listen
 			timeout_listen = 10;
 		else
 			timeout_listen = 0;
 
-		if (frame_header.frame_ctl & 0x40) // DLLS present
+		if (frame.frame_header.frame_ctl & 0x40) // DLLS present
 		{
 			// TODO parse DLLS Header
 			frame.dlls_header = NULL;
@@ -127,7 +124,7 @@ static void phy_rx_callback(phy_rx_res_t* res)
 			frame.dlls_header = NULL;
 		}
 
-		if (frame_header.frame_ctl & 0x20) // Enable Addressing
+		if (frame.frame_header.frame_ctl & 0x20) // Enable Addressing
 		{
 			// Address Control Header
 			dll_foreground_frame_address_ctl_header_t address_ctl;
@@ -171,17 +168,17 @@ static void phy_rx_callback(phy_rx_res_t* res)
 			frame.source_id_header = NULL;
 		}
 
-		if (frame_header.frame_ctl & 0x10) // Frame continuity
+		if (frame.frame_header.frame_ctl & 0x10) // Frame continuity
 		{
 			// TODO handle more than 1 frame
 		}
 
-		if (frame_header.frame_ctl & 0x08) // CRC 32
+		if (frame.frame_header.frame_ctl & 0x08) // CRC 32
 		{
 			// TODO support CRC32
 		}
 
-		if (frame_header.frame_ctl & 0x04) // Note Mode 2
+		if (frame.frame_header.frame_ctl & 0x04) // Note Mode 2
 		{
 			// Not supported
 		}
@@ -293,23 +290,19 @@ static void dll_cca2(void* arg)
 
 void dll_tx_foreground_frame(u8* data, u8 length)
 {
-	dll_foreground_frame_header_t frame_header;
-	frame_header.tx_eirp = 0x50; // (-40 + 0.5n) dBm // TODO hardcoded
-	frame_header.subnet = 0xf1; // TODO hardcoded, get from app?
-	frame_header.frame_ctl = !FRAME_CTL_LISTEN | !FRAME_CTL_DLLS | FRAME_CTL_EN_ADDR | !FRAME_CTL_FR_CONT | !FRAME_CTL_CRC32 | !FRAME_CTL_NM2 | FRAME_CTL_DIALOGFRAME; // TODO hardcoded
+	dll_foreground_frame_t frame;
+	frame.frame_header.tx_eirp = 0x50; // (-40 + 0.5n) dBm // TODO hardcoded
+	frame.frame_header.subnet = 0xf1; // TODO hardcoded, get from app?
+	frame.frame_header.frame_ctl = !FRAME_CTL_LISTEN | !FRAME_CTL_DLLS | FRAME_CTL_EN_ADDR | !FRAME_CTL_FR_CONT | !FRAME_CTL_CRC32 | !FRAME_CTL_NM2 | FRAME_CTL_DIALOGFRAME; // TODO hardcoded
 
 	dll_foreground_frame_address_ctl_header_t address_ctl_header;
 	address_ctl_header.dialogId = 0x00; // TODO hardcoded
 	address_ctl_header.flags = ADDR_CTL_BROADCAST | !ADDR_CTL_VID | !ADDR_CTL_NLS; // TODO appl flags?
 
-	dll_foreground_frame_t frame;
-	frame.frame_header = &frame_header;
 	frame.source_id_header = tag_id; // TODO get from HAL, using global defined in system.h for now
 	frame.address_ctl_header = &address_ctl_header;
 
-	u8* pointer = frame_data + 1;
-	memcpy(pointer, frame.frame_header, sizeof(dll_foreground_frame_header_t));
-	pointer += sizeof(dll_foreground_frame_header_t);
+	u8* pointer = frame_data + 1 + sizeof(dll_foreground_frame_t);
 	memcpy(pointer, frame.address_ctl_header, sizeof(dll_foreground_frame_address_ctl_header_t));
 	pointer += sizeof(dll_foreground_frame_address_ctl_header_t);
 	memcpy(pointer, frame.source_id_header, 8 * sizeof(u8));
