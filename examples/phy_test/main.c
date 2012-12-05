@@ -31,14 +31,14 @@ static u8 rtcEnabled = 0;
 phy_rx_cfg_t rx_cfg = {
 		0, // timeout
 		0, // multiple TODO
-		0x27, // spectrum ID TODO
+		0x10, // spectrum ID TODO
 		0, // coding scheme TODO
 		0, // RSSI min filter TODO
 		0x01  // sync word class TODO
 };
 
 phy_tx_cfg_t tx_cfg = {
-	    0x27, // spectrum ID
+	    0x10, // spectrum ID
 		0, // coding scheme
 		0, // sync word class
 	    packet,

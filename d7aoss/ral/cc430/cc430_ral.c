@@ -38,6 +38,7 @@ static void endofpacket_isr(void);
 static void rx_timeout_isr(void);
 static void rx_sync_isr(void);
 static void rx_data_isr(void);
+static void rx_finish(void);
 static void tx_data_isr(void);
 static void tx_finish(void);
 
@@ -52,7 +53,7 @@ InterruptHandler interrupt_table[34] = {
 	no_interrupt_isr,           // RFIFG4 - RX FIFO filled or above the RX FIFO threshold or end of packet is reached (Do not use for eop! Will not reset until rxfifo emptied)
 	no_interrupt_isr,		    // RFIFG5 - TX FIFO filled or above the TX FIFO threshold
 	no_interrupt_isr,			// RFIFG6 - TX FIFO full
-	no_interrupt_isr,           // RFIFG7 - RX FIFO overflowed
+	rx_finish, 			        // RFIFG7 - RX FIFO overflowed
 	tx_finish,					// RFIFG8 - TX FIFO underflowed
 	rx_sync_isr,				// RFIFG9 - Sync word sent or received
 	no_interrupt_isr,           // RFIFG10 - Packet received with CRC OK
@@ -143,10 +144,13 @@ static void no_interrupt_isr() { }
 
 static void endofpacket_isr()
 {
-    if (radioState == RadioStateTransmitData) {
+    if (radioState == RadioStateTransmit) {
         tx_finish();
+        tx_callback();	// TODO get callback out of ISR?
     } else if(radioState == RadioStateReceive) {
     	rx_data_isr();
+    	rx_finish();
+    	rx_callback(&rx_response); // TODO get callback out of ISR?
     }
 }
 
@@ -157,8 +161,9 @@ static void rx_timeout_isr()
 
 static void rx_sync_isr()
 {
-	//Modify radio state
-	radioState = RadioStateReceive;
+	//Only if radio receiving
+	if(radioState != RadioStateReceive)
+		rx_finish();
 
     //Reset receive data
     rxLength = 0;
@@ -167,12 +172,16 @@ static void rx_sync_isr()
 
 	//Clear all interrupt flags, enable interrupts
 	RF1AIFG = 0;
-	RF1AIE  = RFIFG_FLAG_RXFilled | RFIFG_FLAG_EndOfPacket;
 	RF1AIES = RFIFG_FLANK_RXFilled | RFIFG_FLANK_EndOfPacket;
+	RF1AIE = RFIFG_FLAG_RXFilled | RFIFG_FLAG_EndOfPacket;
 }
 
 static void rx_data_isr()
 {
+	//Only if radio receiving
+	if(radioState != RadioStateReceive)
+		rx_finish();
+
 	//Read number of bytes in RXFIFO
 	u8 rxBytes = ReadSingleReg(RXBYTES);
 
@@ -200,30 +209,37 @@ static void rx_data_isr()
     rxDataPointer += rxBytes;
 
     if (rxRemainingBytes == 0) {
-        radioState = RadioStateReceiveDone;
-
-        //Disable interrupts
-        RF1AIE = 0;
-        RF1AIES = 0;
-
-        //Flush RXFIFO and go to sleep
-        Strobe(RF_SIDLE);
-        Strobe(RF_SFRX);
-        Strobe(RF_SPWD);
-
         rx_response.eirp = (rxData[1] >> 1) - 40;
         rx_response.len = rxLength;
         rx_response.data = rxData;
         rx_response.lqi = ReadSingleReg(LQI);
         rx_response.rssi = get_rssi();
         rx_response.crc_ok = ReadSingleReg(PKTSTATUS) >> 7;
-        rx_callback(&rx_response); // TODO get callback out of ISR?
-        return;
     }
+}
+
+static void rx_finish(void)
+{
+	//Set radio state
+    radioState = RadioStateIdle;
+
+    //Disable interrupts
+    RF1AIE = 0;
+    RF1AIES = 0;
+    RF1AIFG = 0;
+
+    //Flush RXFIFO and go to sleep
+    Strobe(RF_SIDLE);
+    Strobe(RF_SFRX);
+    Strobe(RF_SPWD);
 }
 
 static void tx_data_isr()
 {
+	//Only if radio transmitting
+	if(radioState != RadioStateTransmit)
+		tx_finish();
+
 	//Read number of free bytes in TXFIFO
 	u8 txBytes = 64 - ReadSingleReg(TXBYTES);
 
@@ -239,19 +255,18 @@ static void tx_data_isr()
 
 static void tx_finish()
 {
-	//Modify radio state
-	radioState = RadioStateNone;
+	//Set radio state
+	radioState = RadioStateIdle;
 
     //Disable interrupts
     RF1AIE = 0;
     RF1AIES = 0;
+    RF1AIFG = 0;
 
 	//Flush TX FIFO and go to sleep
     Strobe(RF_SIDLE);
     Strobe(RF_SFTX);
     Strobe(RF_SPWD);
-
-    tx_callback();  // TODO get callback out of ISR?
 }
 
 static void set_channel(u8 channel_center_freq_index, u8 channel_bandwith_index)
@@ -312,30 +327,37 @@ __interrupt void CC1101_ISR (void)
 {
   u16 isr_vector = RF1AIV >> 1;
   u16 edge = (1 << (isr_vector - 1)) & RF1AIES;
-  if(edge) isr_vector |= 0x11;
+  if(edge) isr_vector += 0x11;
   interrupt_table[isr_vector]();
   LPM4_EXIT;
 }
 
 void cc430_ral_init(void)
 {
-	//Modify radio state
-	radioState = RadioStateNone;
-
-	volatile u16 i;
 	u8 x;
+	volatile u16 i;
 
+	//Modify radio state
+	radioState = RadioStateIdle;
+
+	//Reset radio core
 	ResetRadioCore();
 
-	// Wait before checking IDLE
+	//Wait for idle
 	for (i=100; i>0; --i);
 	do {
 		x = Strobe(RF_SIDLE);
 	} while ((x&0x70)!=0x00);
 
-	// Clear radio error register
+	//Clear radio error register
 	RF1AIFERR = 0;
 
+	//Disable interrupts
+    RF1AIE = 0;
+    RF1AIES = 0;
+    RF1AIFG = 0;
+
+	//Write configuration
     WriteBurstReg(IOCFG2, (unsigned char*) &rfSettings, sizeof(rfSettings));
     WriteSingleReg(TEST0, (RADIO_TEST0_HI(2) | RADIO_TEST0_VCO_SEL_CAL_DIS ));
 
@@ -355,8 +377,12 @@ void cc430_ral_set_rx_callback(ral_rx_callback_t callback)
 
 void cc430_ral_tx(ral_tx_cfg_t* tx_cfg)
 {
+	//Only if radio idle
+	if(radioState != RadioStateIdle)
+		return;
+
 	//Modify radio state
-	radioState = RadioStateTransmitData;
+	radioState = RadioStateTransmit;
 
 	//Set configuration
 	set_channel(tx_cfg->channel_center_freq_index, tx_cfg->channel_bandwith_index);
@@ -367,10 +393,10 @@ void cc430_ral_tx(ral_tx_cfg_t* tx_cfg)
 	WriteSingleReg(PKTLEN, tx_cfg->len);
 	WriteSingleReg(FIFOTHR, RADIO_FIFOTHR_FIFO_THR_17_48);
 
-	//Clear all interrupt flags, enable interrupts
+	//Clear all flags, enable interrupts
 	RF1AIFG = 0;
-	RF1AIE  = RFIFG_FLAG_EndOfPacket | RFIFG_FLAG_TXBelowThresh | RFIFG_FLAG_TXUnderflow;
 	RF1AIES = RFIFG_FLANK_EndOfPacket | RFIFG_FLANK_TXBelowThresh | RFIFG_FLANK_TXUnderflow;
+	RF1AIE = RFIFG_FLAG_EndOfPacket | RFIFG_FLAG_TXBelowThresh | RFIFG_FLAG_TXUnderflow;
 
 	//Flush TXFIFO
 	Strobe(RF_SIDLE);
@@ -397,8 +423,12 @@ void cc430_ral_tx(ral_tx_cfg_t* tx_cfg)
 
 void cc430_ral_rx_start(ral_rx_cfg_t* cfg)
 {
+	//Only if radio idle
+	if(radioState != RadioStateIdle)
+		return;
+
 	//Modify radio state
-	radioState = RadioStateReceiveInit;
+	radioState = RadioStateReceive;
 
 	//Set configuration
 	set_channel(cfg->channel_center_freq_index, cfg->channel_bandwith_index);
@@ -407,33 +437,29 @@ void cc430_ral_rx_start(ral_rx_cfg_t* cfg)
 	//Set PKTLEN to the highest possible number, we will change this to the right length later
 	//Set RXFIFO threshold as low as possible
 	WriteSingleReg(PKTLEN, RADIO_PKTLEN);
-	WriteSingleReg(FIFOTHR, (RADIO_FIFOTHR_CLOSE_IN_RX_0db | RADIO_FIFOTHR_FIFO_THR_61_4));
+	WriteSingleReg(FIFOTHR, RADIO_FIFOTHR_FIFO_THR_61_4);
 
-	//Clear all interrupt flags, enable interrupts
-	RF1AIFG = 0;
-	RF1AIE  = RFIFG_FLAG_SyncWord;
-	RF1AIES = RFIFG_FLANK_SyncWord;
-
-	//Flush RXFIFO, start receiving
+	//Flush RXFIFO
 	Strobe(RF_SIDLE);
 	Strobe(RF_SFRX);
+
+	//Clear all flags, enable interrupts
+	RF1AIFG = 0;
+	RF1AIES = RFIFG_FLANK_SyncWord;
+	RF1AIE = RFIFG_FLAG_SyncWord;
+
+	//Start receiving
 	Strobe(RF_SRX);
 }
 
 void cc430_ral_rx_stop()
 {
-	if (cc430_ral_is_rx_in_progress()) {
-		RF1AIE = 0;
-		Strobe(RF_SIDLE);
-		Strobe(RF_SFRX);
-	}
-
-	radioState = RadioStateNone;
+	rx_finish();
 }
 
 bool cc430_ral_is_rx_in_progress()
 {
-	return radioState == RadioStateReceive || radioState == RadioStateReceiveInit;
+	return radioState == RadioStateReceive;
 }
 
 // The CC430 implementation of the RAL interface

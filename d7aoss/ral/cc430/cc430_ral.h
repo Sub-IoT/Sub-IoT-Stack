@@ -19,12 +19,9 @@
 extern const struct ral_interface cc430_ral;
 
 typedef enum {
-    RadioStateNone,
+    RadioStateIdle,
     RadioStateTransmit,
-    RadioStateTransmitData,
-    RadioStateReceiveInit,
     RadioStateReceive,
-    RadioStateReceiveDone
 } RadioStateEnum;
 
 // Interrupt handler function pointer
