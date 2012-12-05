@@ -38,9 +38,8 @@ static void endofpacket_isr(void);
 static void rx_timeout_isr(void);
 static void rx_sync_isr(void);
 static void rx_data_isr(void);
-static void rx_finish(void);
 static void tx_data_isr(void);
-static void tx_finish(void);
+static void radio_finish(void);
 
 // Interrupt branch table
 InterruptHandler interrupt_table[34] = {
@@ -53,8 +52,8 @@ InterruptHandler interrupt_table[34] = {
 	no_interrupt_isr,           // RFIFG4 - RX FIFO filled or above the RX FIFO threshold or end of packet is reached (Do not use for eop! Will not reset until rxfifo emptied)
 	no_interrupt_isr,		    // RFIFG5 - TX FIFO filled or above the TX FIFO threshold
 	no_interrupt_isr,			// RFIFG6 - TX FIFO full
-	rx_finish, 			        // RFIFG7 - RX FIFO overflowed
-	tx_finish,					// RFIFG8 - TX FIFO underflowed
+	radio_finish, 			    // RFIFG7 - RX FIFO overflowed
+	radio_finish,				// RFIFG8 - TX FIFO underflowed
 	rx_sync_isr,				// RFIFG9 - Sync word sent or received
 	no_interrupt_isr,           // RFIFG10 - Packet received with CRC OK
 	no_interrupt_isr,           // RFIFG11 - Preamble quality reached (PQI) is above programmed PQT value
@@ -145,11 +144,11 @@ static void no_interrupt_isr() { }
 static void endofpacket_isr()
 {
     if (radioState == RadioStateTransmit) {
-        tx_finish();
+    	radio_finish();
         tx_callback();	// TODO get callback out of ISR?
     } else if(radioState == RadioStateReceive) {
     	rx_data_isr();
-    	rx_finish();
+    	radio_finish();
     	rx_callback(&rx_response); // TODO get callback out of ISR?
     }
 }
@@ -163,7 +162,7 @@ static void rx_sync_isr()
 {
 	//Only if radio receiving
 	if(radioState != RadioStateReceive)
-		rx_finish();
+		radio_finish();
 
     //Reset receive data
     rxLength = 0;
@@ -180,7 +179,7 @@ static void rx_data_isr()
 {
 	//Only if radio receiving
 	if(radioState != RadioStateReceive)
-		rx_finish();
+		radio_finish();
 
 	//Read number of bytes in RXFIFO
 	u8 rxBytes = ReadSingleReg(RXBYTES);
@@ -218,27 +217,11 @@ static void rx_data_isr()
     }
 }
 
-static void rx_finish(void)
-{
-	//Set radio state
-    radioState = RadioStateIdle;
-
-    //Disable interrupts
-    RF1AIE = 0;
-    RF1AIES = 0;
-    RF1AIFG = 0;
-
-    //Flush RXFIFO and go to sleep
-    Strobe(RF_SIDLE);
-    Strobe(RF_SFRX);
-    Strobe(RF_SPWD);
-}
-
 static void tx_data_isr()
 {
 	//Only if radio transmitting
 	if(radioState != RadioStateTransmit)
-		tx_finish();
+		radio_finish();
 
 	//Read number of free bytes in TXFIFO
 	u8 txBytes = 64 - ReadSingleReg(TXBYTES);
@@ -253,7 +236,7 @@ static void tx_data_isr()
 	txDataPointer += txBytes;
 }
 
-static void tx_finish()
+static void radio_finish()
 {
 	//Set radio state
 	radioState = RadioStateIdle;
@@ -263,8 +246,9 @@ static void tx_finish()
     RF1AIES = 0;
     RF1AIFG = 0;
 
-	//Flush TX FIFO and go to sleep
+	//Flush FIFOs and go to sleep
     Strobe(RF_SIDLE);
+    Strobe(RF_SFRX);
     Strobe(RF_SFTX);
     Strobe(RF_SPWD);
 }
@@ -339,6 +323,7 @@ void cc430_ral_init(void)
 
 	//Modify radio state
 	radioState = RadioStateIdle;
+
 
 	//Reset radio core
 	ResetRadioCore();
@@ -454,7 +439,7 @@ void cc430_ral_rx_start(ral_rx_cfg_t* cfg)
 
 void cc430_ral_rx_stop()
 {
-	rx_finish();
+	radio_finish();
 }
 
 bool cc430_ral_is_rx_in_progress()
