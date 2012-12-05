@@ -16,7 +16,7 @@ void log_print_string(char* message)
 {
 	u8 len = strlen(message);
 	uart_transmit_data(0xDD);
-	uart_transmit_data(0x01);
+	uart_transmit_data(LOG_TYPE_STRING);
 	uart_transmit_data(len);
 	uart_transmit_message((unsigned char*) message, len);
 }
@@ -24,7 +24,7 @@ void log_print_string(char* message)
 void log_packet(u8* packet) // TODO take direction param (tx/rx)?
 {
 	uart_transmit_data(0xDD);
-	uart_transmit_data(0x00);
+	uart_transmit_data(LOG_TYPE_PACKET);
 	uart_transmit_data(packet[0]);
 	uart_transmit_message(packet, packet[0]);
 }
@@ -33,7 +33,8 @@ void log_phy_rx_res(phy_rx_res_t* res)
 {
 	u8 length = sizeof(phy_rx_res_t) - 2; // substract pointer length // TODO crossplatform?
 	uart_transmit_data(0xDD);
-	uart_transmit_data(0x02);
+	uart_transmit_data(LOG_TYPE_PHY_RX_RES);
 	uart_transmit_data(length);
 	uart_transmit_message((unsigned char*)res, length); // submit header without frame data
 }
+
