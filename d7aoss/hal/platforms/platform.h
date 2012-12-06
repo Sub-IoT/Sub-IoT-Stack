@@ -8,8 +8,18 @@
 #ifndef PLATFORM_H_
 #define PLATFORM_H_
 
-//#include "platforms/wizzimote.h"
+#define PLATFORM_AGAIDI
+
+
+#ifdef PLATFORM_WIZZIMOTE
+#include "wizzimote.h"
+#elif defined PLATFORM_ARTESIS
 #include "artesis.h"
+#elif defined PLATFORM_AGAIDI
+#include "agaidi.h"
+#else
+	#error No platform set
+#endif
 
 
 #endif /* PLATFORM_H_ */
