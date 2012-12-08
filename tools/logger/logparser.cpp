@@ -2,7 +2,9 @@
 
 #include <QDebug>
 
+#include "log.h"
 #include "phy/phy.h"
+#include "dll/dll.h"
 
 LogParser::LogParser(SerialPort* serialPort, QObject *parent) : QObject(parent)
 {
@@ -35,6 +37,18 @@ void LogParser::parseReceivedData()
         start = _receivedDataQueue->dequeue();
     }
 
+    if(_receivedDataQueue->size() >= 1)
+    {
+        if(_receivedDataQueue->at(0) != LOG_TYPE_PACKET &&
+                _receivedDataQueue->at(0) != LOG_TYPE_STRING &&
+                _receivedDataQueue->at(0) !=LOG_TYPE_PHY_RX_RES &&
+                _receivedDataQueue->at(0) != 0x03) // TODO define
+        {
+            qWarning(qPrintable(QString("Unexpected type: %1, skipping ...").arg(_receivedDataQueue->at(0))));
+            parseReceivedData();
+        }
+    }
+
     if(_receivedDataQueue->size() < 2 || _receivedDataQueue->size() < _receivedDataQueue->at(1) + 2)
     {
         //  not a full packet, reinsert header and wait for more data ...
@@ -44,21 +58,8 @@ void LogParser::parseReceivedData()
 
     u8 type = _receivedDataQueue->dequeue();
     u8 len = _receivedDataQueue->dequeue();
-    if(type == 0x00)
-    {
-        QString msg;
-        QByteArray frameData;
-        unsigned char byte;
-        for(int i = 0; i < len; i++)
-        {
-            byte = _receivedDataQueue->dequeue();
-            frameData.append(byte);
-            msg += QString().sprintf("0x%02x ", byte);
-        }
 
-        emit packetReceived(msg);
-    }
-    if(type == 0x01)
+    if(type == LOG_TYPE_STRING)
     {
         QString msg;
         for(int i = 0; i < len; i++)
@@ -68,39 +69,54 @@ void LogParser::parseReceivedData()
 
         emit logMessageReceived(msg);
     }
-    if(type == 0x02)
+    if(type == LOG_TYPE_PHY_RX_RES)
     {
         QString msg;
-        QByteArray frameData;
+        QByteArray packetData;
         unsigned char byte;
         for(int i = 0; i < len; i++)
         {
             byte = _receivedDataQueue->dequeue();
-            frameData.append(byte);
+            packetData.append(byte);
             msg += QString().sprintf("0x%02x ", byte);
         }
 
-        emit packetReceived(msg);
-        parsePhyRxResult(frameData);
+        Packet p;
+        p.parsePhyRx(packetData);
+        _packets.append(p);
+    }
+    if(type == LOG_TYPE_DLL_RX_RES)
+    {
+        QString msg;
+        QByteArray packetData;
+        unsigned char byte;
+        for(int i = 0; i < len; i++)
+        {
+            byte = _receivedDataQueue->dequeue();
+            packetData.append(byte);
+            msg += QString().sprintf("0x%02x ", byte);
+        }
+
+        if(_packets.isEmpty())
+        {
+            qWarning("Received a DllRx while packets empty, probably the first log message received, skipping ...");
+            return;
+        }
+
+        Packet lastPacket = _packets.last();
+        if(lastPacket.hasDllInformation())
+        {
+            QString msg = "Out of sync, got DLL data while current packet instance already has parsed DLL data";
+            qCritical(msg.toLocal8Bit());
+            qDebug() << msg;
+        }
+
+        lastPacket.parseDllRx(packetData);
+
+        emit logMessageReceived(lastPacket.toString());
     }
 
     parseReceivedData();
 }
 
-void LogParser::parsePhyRxResult(QByteArray phyRxResult)
-{
-    phy_rx_res_t* phy_result = (phy_rx_res_t*)phyRxResult.constData();
-    QString logMessage = QString("PHY RX:\n" \
-                                 "\tLength: %1 bytes\n" \
-                                 "\tCRC:   %2\n" \
-                                 "\tRSSI:   %3 dBm\n" \
-                                 "\tEIRP:   %4 dBm\n" \
-                                 "\tLQI:   %5\n")
-                            .arg(phy_result->len)
-                            .arg(phy_result->crc_ok ? "OK" : "NOT OK")
-                            .arg(phy_result->rssi)
-                            .arg(phy_result->eirp)
-                            .arg(phy_result->lqi);
 
-    emit logMessageReceived(logMessage);
-}

@@ -9,12 +9,11 @@ LoggerDialog::LoggerDialog(QWidget *parent) : QDialog(parent), ui(new Ui::Logger
     ui->setupUi(this);
 
     _serialPort = new SerialPort(this);
-    _logParser = new LogParser(_serialPort, this);
+    _logParser = new LogParser(_serialPort);
 
     connect(ui->serialPortComboBox, SIGNAL(currentIndexChanged(int)), SLOT(onSerialPortSelected(int)));
     connect(ui->connectButton, SIGNAL(pressed()), SLOT(onConnectButtonPressed()));
     connect(_logParser, SIGNAL(logMessageReceived(QString)), SLOT(onLogMessageReceived(QString)));
-    connect(_logParser, SIGNAL(packetReceived(QString)), SLOT(onPacketReceived(QString)));
 
     QThread readerThread;
     _logParser->moveToThread(&readerThread);
@@ -74,12 +73,6 @@ void LoggerDialog::onSerialPortSelected(int index)
 void LoggerDialog::onLogMessageReceived(QString logMessage)
 {
     appendToLog(logMessage);
-}
-
-
-void LoggerDialog::onPacketReceived(QString packet)
-{
-    appendToLog("[packet] " + packet);
 }
 
 void LoggerDialog::appendToLog(QString msg)
