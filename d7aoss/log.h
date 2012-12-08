@@ -13,7 +13,7 @@
 #include "phy/phy.h"
 #include "dll/dll.h"
 
-#define LOG_TYPE_PACKET 0x00
+#define LOG_TYPE_PACKET 0x00 // TODO remove
 #define LOG_TYPE_STRING 0x01
 
 #define LOG_TYPE_PHY_RX_RES 0x02
@@ -25,7 +25,7 @@
 
 void log_print_string(char* message);
 
-void log_packet(u8* packet);
+void log_packet(u8* packet); // TODO remove
 
 void log_phy_rx_res(phy_rx_res_t* res);
 

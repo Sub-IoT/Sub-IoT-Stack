@@ -16,10 +16,14 @@ TEMPLATE = app
 
 SOURCES += main.cpp\
         loggerdialog.cpp \
-    logparser.cpp
+    logparser.cpp \
+    packet.cpp \
+    bytearrayutils.cpp
 
 HEADERS  += loggerdialog.h \
-    logparser.h
+    logparser.h \
+    packet.h \
+    bytearrayutils.h
 
 FORMS    += loggerdialog.ui
 

@@ -5,3 +5,4 @@ Debug/
 .ccsproject
 .project
 *.userprefs
+*.user*

@@ -25,7 +25,6 @@ public:
 protected slots:
     void onSerialPortSelected(int index);
     void onLogMessageReceived(QString logMessage);
-    void onPacketReceived(QString packet);
     void onConnectButtonPressed();
 
 private:
