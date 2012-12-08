@@ -92,93 +92,90 @@ static void phy_rx_callback(phy_rx_res_t* res)
 
 	if (dll_state == DllStateScanBackgroundFrame)
 	{
-		dll_background_frame_t frame;
-		frame.subnet = res->data[0];
-		memcpy(frame.payload, res->data+1, 4);
+		dll_background_frame_t* frame = (dll_background_frame_t*)frame_data;
+		frame->subnet = res->data[0];
+		memcpy(frame->payload, res->data+1, 4);
 
 		dll_res.frame_type = FrameTypeBackgroundFrame;
-		dll_res.frame = &frame;
+		dll_res.frame = frame;
 	} else
 	{
 		log_packet(res->data);
 
-		dll_foreground_frame_t frame;
-		frame.length = res->data[0];
+		dll_foreground_frame_t* frame = (dll_foreground_frame_t*)frame_data;
+		frame->length = res->data[0];
 
-		frame.frame_header.tx_eirp = res->data[1] * 0.5 - 40;
-		frame.frame_header.subnet = res->data[2];
-		frame.frame_header.frame_ctl = res->data[3];
+		frame->frame_header.tx_eirp = res->data[1] * 0.5 - 40;
+		frame->frame_header.subnet = res->data[2];
+		frame->frame_header.frame_ctl = res->data[3];
 
-		u8 data_pointer = 4;
+		u8* data_pointer = res->data + 4;
 
-		if (frame.frame_header.frame_ctl & 0x80) // Listen
+		if (frame->frame_header.frame_ctl & 0x80) // Listen
 			timeout_listen = 10;
 		else
 			timeout_listen = 0;
 
-		if (frame.frame_header.frame_ctl & 0x40) // DLLS present
+		if (frame->frame_header.frame_ctl & 0x40) // DLLS present
 		{
 			// TODO parse DLLS Header
-			frame.dlls_header = NULL;
+			frame->dlls_header = NULL;
 		} else {
-			frame.dlls_header = NULL;
+			frame->dlls_header = NULL;
 		}
 
-		if (frame.frame_header.frame_ctl & 0x20) // Enable Addressing
+		if (frame->frame_header.frame_ctl & 0x20) // Enable Addressing
 		{
 			// Address Control Header
-			dll_foreground_frame_address_ctl_header_t address_ctl;
-			address_ctl.dialogId = res->data[data_pointer++];
-			address_ctl.flags = res->data[data_pointer++];
-			frame.address_ctl_header = &address_ctl;
+			dll_foreground_frame_address_ctl_header_t* address_ctl = (dll_foreground_frame_address_ctl_header_t*) data_pointer;
+			frame->address_ctl_header = address_ctl;
+			data_pointer += sizeof(u8*);
 
-			u8 addressing = (address_ctl.flags & 0xC0) >> 6;
-			u8 vid = (address_ctl.flags & 0x20) >> 5;
-			u8 nls = (address_ctl.flags & 0x10) >> 4;
+			u8 addressing = (address_ctl->flags & 0xC0) >> 6;
+			u8 vid = (address_ctl->flags & 0x20) >> 5;
+			u8 nls = (address_ctl->flags & 0x10) >> 4;
 			// TODO parse Source ID Header
 
-			u8 id_uid[8];
+			frame->source_id_header = data_pointer;
 			if (vid)
 			{
-				memcpy(res->data + data_pointer, &id_uid, 2);
 				data_pointer += 2;
 			} else {
-				memcpy(res->data + data_pointer, &id_uid, 8);
 				data_pointer += 8;
 			}
-			frame.source_id_header = (u8*) &id_uid;
+
 
 			if (addressing == 0 && nls == 0)
 			{
 				u8 id_target[8];
 				if (vid)
 				{
-					memcpy(res->data + data_pointer, &id_target, 2);
+					memcpy(data_pointer, &id_target, 2);
 					data_pointer += 2;
 				} else {
-					memcpy(res->data + data_pointer, &id_target, 8);
+					memcpy(data_pointer, &id_target, 8);
 					data_pointer += 8;
 				}
-				frame.target_id_header = (u8*) &id_target;
+				frame->target_id_header = (u8*) &id_target;
 			} else {
-				frame.target_id_header = NULL;
+				frame->target_id_header = NULL;
 			}
 		} else {
-			frame.address_ctl_header = NULL;
-			frame.source_id_header = NULL;
+			frame->address_ctl_header = NULL;
+			frame->source_id_header = NULL;
 		}
 
-		if (frame.frame_header.frame_ctl & 0x10) // Frame continuity
+		if (frame->frame_header.frame_ctl & 0x10) // Frame continuity
 		{
 			// TODO handle more than 1 frame
 		}
 
-		if (frame.frame_header.frame_ctl & 0x08) // CRC 32
+		if (frame->frame_header.frame_ctl & 0x08) // CRC 32
 		{
 			// TODO support CRC32
 		}
 
-		if (frame.frame_header.frame_ctl & 0x04) // Note Mode 2
+		if (frame->frame_header.frame_ctl & 0x04) // Note Mode 2
 		{
 			// Not supported
 		}
@@ -186,16 +183,19 @@ static void phy_rx_callback(phy_rx_res_t* res)
 		// Frame Type
 		//u8 ffType = frame_header.frame_ctl & 0x03;
 
-		frame.payload_length = frame.length-data_pointer;
-		u8 payload[249];
+		data_pointer++; // TODO what is this?
+		data_pointer++; //isfid
+		data_pointer++; //isfoffset
 
-		memcpy(&payload, res->data + data_pointer, frame.payload_length);
-		frame.payload = (u8*) &payload;
+		frame->payload_length = (*data_pointer);
+		data_pointer++;
+		frame->payload = data_pointer;
 
 		dll_res.frame_type = FrameTypeForegroundFrame;
-		dll_res.frame = (u8*) &frame;
+		dll_res.frame = frame;
 	}
 
+	log_dll_rx_res(&dll_res);
 	dll_rx_callback(&dll_res);
 }
 
@@ -290,22 +290,19 @@ static void dll_cca2(void* arg)
 
 void dll_tx_foreground_frame(u8* data, u8 length)
 {
-	dll_foreground_frame_t frame;
-	frame.frame_header.tx_eirp = 0x50; // (-40 + 0.5n) dBm // TODO hardcoded
-	frame.frame_header.subnet = 0xf1; // TODO hardcoded, get from app?
-	frame.frame_header.frame_ctl = !FRAME_CTL_LISTEN | !FRAME_CTL_DLLS | FRAME_CTL_EN_ADDR | !FRAME_CTL_FR_CONT | !FRAME_CTL_CRC32 | !FRAME_CTL_NM2 | FRAME_CTL_DIALOGFRAME; // TODO hardcoded
+	dll_foreground_frame_t* frame = (dll_foreground_frame_t*) frame_data;
+	frame->frame_header.tx_eirp = 0x50; // (-40 + 0.5n) dBm // TODO hardcoded
+	frame->frame_header.subnet = 0xf1; // TODO hardcoded, get from app?
+	frame->frame_header.frame_ctl = !FRAME_CTL_LISTEN | !FRAME_CTL_DLLS | FRAME_CTL_EN_ADDR | !FRAME_CTL_FR_CONT | !FRAME_CTL_CRC32 | !FRAME_CTL_NM2 | FRAME_CTL_DIALOGFRAME; // TODO hardcoded
 
 	dll_foreground_frame_address_ctl_header_t address_ctl_header;
 	address_ctl_header.dialogId = 0x00; // TODO hardcoded
 	address_ctl_header.flags = ADDR_CTL_BROADCAST | !ADDR_CTL_VID | !ADDR_CTL_NLS; // TODO appl flags?
 
-	frame.source_id_header = tag_id; // TODO get from HAL, using global defined in system.h for now
-	frame.address_ctl_header = &address_ctl_header;
-
-	u8* pointer = frame_data + 1 + sizeof(dll_foreground_frame_t);
-	memcpy(pointer, frame.address_ctl_header, sizeof(dll_foreground_frame_address_ctl_header_t));
+	u8* pointer = frame_data + 1 + sizeof(dll_foreground_frame_header_t);
+	memcpy(pointer, &address_ctl_header, sizeof(dll_foreground_frame_address_ctl_header_t));
 	pointer += sizeof(dll_foreground_frame_address_ctl_header_t);
-	memcpy(pointer, frame.source_id_header, 8 * sizeof(u8));
+	memcpy(pointer, tag_id, 8 * sizeof(u8)); // TODO get from HAL, using global defined in system.h for now
 	pointer += 8 * sizeof(u8);
 
 	*pointer++ = 0; //dunno
@@ -317,10 +314,10 @@ void dll_tx_foreground_frame(u8* data, u8 length)
 	memcpy(pointer, data, length); // TODO fixed size for now
 	pointer += length;
 
-	frame.length = pointer - frame_data;
-	frame_data[0] = frame.length;
+	frame->length = pointer - frame_data;
+	frame_data[0] = frame->length;
 
-	foreground_frame_tx_cfg.len = frame.length;
+	foreground_frame_tx_cfg.len = frame->length;
 
 	bool cca1 = phy_cca();
 

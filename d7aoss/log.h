@@ -15,12 +15,20 @@
 
 #define LOG_TYPE_PACKET 0x00
 #define LOG_TYPE_STRING 0x01
+
 #define LOG_TYPE_PHY_RX_RES 0x02
+#define LOG_TYPE_PHY_RX_RES_SIZE 5
+
+#define LOG_TYPE_DLL_RX_RES 0x03
+#define LOG_TYPE_DLL_RX_RES_SIZE 1
+
 
 void log_print_string(char* message);
 
 void log_packet(u8* packet);
 
 void log_phy_rx_res(phy_rx_res_t* res);
+
+void log_dll_rx_res(dll_rx_res_t* res);
 
 #endif /* __LOG_H_ */

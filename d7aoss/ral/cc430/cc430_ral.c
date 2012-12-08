@@ -131,6 +131,10 @@ static void rx_data_isr()
 	//Read number of bytes in RXFIFO
 	u8 rxBytes = ReadSingleReg(RXBYTES);
 
+	// TODO why do we arrive here after tx with rxbytes == 0 ? Alexander please look into this
+	if (rxBytes == 0)
+		return;
+
 	//If length is not set (first time after sync word)
 	//get the length from RXFIFO and set PKTLEN so eop can be detected right
     if (rxLength == 0 && rxBytes > 0) {

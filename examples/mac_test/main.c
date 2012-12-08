@@ -35,12 +35,12 @@ dll_channel_scan_t scan_cfg1 = {
 		1000,
 		0
 };
-dll_channel_scan_t scan_cfg2 = {
-		0x12,
-		FrameTypeForegroundFrame,
-		1000,
-		0
-};
+//dll_channel_scan_t scan_cfg2 = {
+//		0x12,
+//		FrameTypeForegroundFrame,
+//		1000,
+//		0
+//};
 
 dll_channel_scan_series_t scan_series_cfg;
 
@@ -76,12 +76,8 @@ void rx_callback(dll_rx_res_t* rx_res)
 	led_toggle(3);
 	log_print_string("RX CB");
 	dll_foreground_frame_t* frame = (dll_foreground_frame_t*)rx_res->frame;
-	sprintf(log_msg, "rx: %d", *frame->payload);
-	log_print_string(log_msg);
-	//TODO: need to build dll frame log
-	//if (cb->frame_type == FrameTypeForegroundFrame)
-		//log_dll_frame(((dll_foreground_frame_t*)(cb->frame))->payload);
-	//start_rx();
+
+	start_rx();
 }
 
 void main(void) {
@@ -95,11 +91,11 @@ void main(void) {
 	dll_set_tx_callback(&tx_callback);
 	dll_set_rx_callback(&rx_callback);
 
-	dll_channel_scan_t scan_confgs[2];
+	dll_channel_scan_t scan_confgs[1];
 	scan_confgs[0] = scan_cfg1;
-	scan_confgs[1] = scan_cfg2;
+	//scan_confgs[1] = scan_cfg2;
 
-	scan_series_cfg.length = 2;
+	scan_series_cfg.length = 1;
 	scan_series_cfg.values = scan_confgs;
 
 
