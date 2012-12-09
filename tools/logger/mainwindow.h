@@ -1,5 +1,5 @@
-#ifndef LOGGERDIALOG_H
-#define LOGGERDIALOG_H
+#ifndef MAINWINDOW_H
+#define MAINWINDOW_H
 
 #include <QtGui>
 
@@ -11,33 +11,36 @@
 QT_USE_NAMESPACE_SERIALPORT
 
 namespace Ui {
-    class LoggerDialog;
+    class MainWindow;
 }
 
-class LoggerDialog : public QDialog
+class MainWindow : public QMainWindow
 {
     Q_OBJECT
     
 public:
-    explicit LoggerDialog(QWidget *parent = 0);
-    ~LoggerDialog();
-    
+    explicit MainWindow(QWidget *parent = 0);
+    ~MainWindow();
+
 protected slots:
     void onSerialPortSelected(int index);
     void onLogMessageReceived(QString logMessage);
-    void onConnectButtonPressed();
 
+    void on_connectAction_triggered(bool connect);
+    
 private:
+    void initToolbar();
     void detectSerialPorts();
     QString errorString();
     void parseReceivedData();
     void appendToLog(QString msg);
 
-    Ui::LoggerDialog *ui;
+    Ui::MainWindow *ui;
+    QComboBox* _serialPortComboBox;
 
     QList<SerialPortInfo> _serialPorts;
     SerialPort* _serialPort;
     LogParser* _logParser;
 };
 
-#endif // LOGGERDIALOG_H
+#endif // MAINWINDOW_H

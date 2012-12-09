@@ -1,18 +1,22 @@
-#include "loggerdialog.h"
-#include "ui_loggerdialog.h"
+#include "mainwindow.h"
+#include "ui_mainwindow.h"
 
 #include <QtCore/QThread>
 #include <QDebug>
 
-LoggerDialog::LoggerDialog(QWidget *parent) : QDialog(parent), ui(new Ui::LoggerDialog)
+
+MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
+
+    _serialPortComboBox = new QComboBox(this);
+    connect(_serialPortComboBox, SIGNAL(currentIndexChanged(int)), SLOT(onSerialPortSelected(int)));
+
+    initToolbar();
 
     _serialPort = new SerialPort(this);
     _logParser = new LogParser(_serialPort);
 
-    connect(ui->serialPortComboBox, SIGNAL(currentIndexChanged(int)), SLOT(onSerialPortSelected(int)));
-    connect(ui->connectButton, SIGNAL(pressed()), SLOT(onConnectButtonPressed()));
     connect(_logParser, SIGNAL(logMessageReceived(QString)), SLOT(onLogMessageReceived(QString)));
 
     QThread readerThread;
@@ -22,12 +26,18 @@ LoggerDialog::LoggerDialog(QWidget *parent) : QDialog(parent), ui(new Ui::Logger
     detectSerialPorts();
 }
 
-LoggerDialog::~LoggerDialog()
+MainWindow::~MainWindow()
 {
     delete ui;
 }
 
-void LoggerDialog::detectSerialPorts()
+void MainWindow::initToolbar()
+{
+    ui->toolBar->addWidget(_serialPortComboBox);
+    ui->toolBar->addAction(ui->connectAction);
+}
+
+void MainWindow::detectSerialPorts()
 {
     _serialPorts = SerialPortInfo::availablePorts();
     qDebug() << "Number of serial ports found: " << _serialPorts.count();
@@ -46,12 +56,14 @@ void LoggerDialog::detectSerialPorts()
                 .arg(info.vendorIdentifier()).arg(info.productIdentifier());
 
         qDebug() << s;
-        ui->serialPortComboBox->insertItem(i, info.portName());
+        _serialPortComboBox->insertItem(i, info.portName());
     }
 }
 
-void LoggerDialog::onConnectButtonPressed()
+void MainWindow::on_connectAction_triggered(bool connect)
 {
+    // TODO disconnect
+
     // TODO hardcoded settings
     _serialPort->setRate(SerialPort::Rate115200);
     _serialPort->setDataBits(SerialPort::Data8);
@@ -65,24 +77,24 @@ void LoggerDialog::onConnectButtonPressed()
     }
 }
 
-void LoggerDialog::onSerialPortSelected(int index)
+void MainWindow::onSerialPortSelected(int index)
 {
     _serialPort->setPort(_serialPorts.at(index));
 }
 
-void LoggerDialog::onLogMessageReceived(QString logMessage)
+void MainWindow::onLogMessageReceived(QString logMessage)
 {
     appendToLog(logMessage);
 }
 
-void LoggerDialog::appendToLog(QString msg)
+void MainWindow::appendToLog(QString msg)
 {
     ui->parsedOutputPlainTextEdit->appendPlainText(msg);
     QScrollBar *scrollbar = ui->parsedOutputPlainTextEdit->verticalScrollBar();
     scrollbar->setValue(scrollbar->maximum());
 }
 
-QString LoggerDialog::errorString()
+QString MainWindow::errorString()
 {
     switch(_serialPort->error())
     {
@@ -112,4 +124,3 @@ QString LoggerDialog::errorString()
             return "unknown error";
     }
 }
-

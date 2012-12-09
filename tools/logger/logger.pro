@@ -15,19 +15,21 @@ TEMPLATE = app
 
 
 SOURCES += main.cpp\
-        loggerdialog.cpp \
     logparser.cpp \
     packet.cpp \
     bytearrayutils.cpp \
-    hexdump.cpp
+    hexdump.cpp \
+    mainwindow.cpp
 
-HEADERS  += loggerdialog.h \
+HEADERS  += \
     logparser.h \
     packet.h \
     bytearrayutils.h \
     hexdump.h \
-    bytearrayutils.h
+    bytearrayutils.h \
+    mainwindow.h
 
-FORMS    += loggerdialog.ui
+FORMS    += \
+    mainwindow.ui
 
 INCLUDEPATH += ../../d7aoss/
