@@ -148,3 +148,8 @@ QString Packet::toString() const
 
     return hex.append(packetDescription);
 }
+
+bool Packet::isCrcValid() const
+{
+    return _crcOk;
+}

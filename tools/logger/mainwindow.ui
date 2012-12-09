@@ -20,6 +20,7 @@
       <property name="font">
        <font>
         <family>Monospace</family>
+        <pointsize>10</pointsize>
        </font>
       </property>
      </widget>
@@ -52,6 +53,10 @@
    <property name="checkable">
     <bool>true</bool>
    </property>
+   <property name="icon">
+    <iconset resource="resources.qrc">
+     <normaloff>:/icons/resources/media-record.png</normaloff>:/icons/resources/media-record.png</iconset>
+   </property>
    <property name="text">
     <string>Connect</string>
    </property>
@@ -59,7 +64,21 @@
     <string>Connect</string>
    </property>
   </action>
+  <action name="restartAction">
+   <property name="icon">
+    <iconset resource="resources.qrc">
+     <normaloff>:/icons/resources/system-reboot.png</normaloff>:/icons/resources/system-reboot.png</iconset>
+   </property>
+   <property name="text">
+    <string>Restart</string>
+   </property>
+   <property name="toolTip">
+    <string>Restart</string>
+   </property>
+  </action>
  </widget>
- <resources/>
+ <resources>
+  <include location="resources.qrc"/>
+ </resources>
  <connections/>
 </ui>

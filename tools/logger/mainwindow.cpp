@@ -13,11 +13,13 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
     connect(_serialPortComboBox, SIGNAL(currentIndexChanged(int)), SLOT(onSerialPortSelected(int)));
 
     initToolbar();
+    initStatusbar();
 
     _serialPort = new SerialPort(this);
     _logParser = new LogParser(_serialPort);
 
     connect(_logParser, SIGNAL(logMessageReceived(QString)), SLOT(onLogMessageReceived(QString)));
+    connect(_logParser, SIGNAL(packetParsed(bool)), SLOT(onPacketParsed(bool)));
 
     QThread readerThread;
     _logParser->moveToThread(&readerThread);
@@ -35,6 +37,25 @@ void MainWindow::initToolbar()
 {
     ui->toolBar->addWidget(_serialPortComboBox);
     ui->toolBar->addAction(ui->connectAction);
+    ui->toolBar->addSeparator();
+    ui->toolBar->addAction(ui->restartAction);
+}
+
+void MainWindow::initStatusbar()
+{
+    _packetsReceivedCountLabel = new QLabel(ui->statusbar);
+    _packetsReceivedCountLabel->setFrameStyle(QFrame::Panel | QFrame::Sunken);
+    ui->statusbar->addPermanentWidget(_packetsReceivedCountLabel);
+
+    _crcErrorsCountLabel = new QLabel(ui->statusbar);
+    _crcErrorsCountLabel->setFrameStyle(QFrame::Panel | QFrame::Sunken);
+    ui->statusbar->addPermanentWidget(_crcErrorsCountLabel);
+}
+
+void MainWindow::updateStatus()
+{
+    _packetsReceivedCountLabel->setText(QString("Packets received: %1").arg(_packetsReceivedCount));
+    _crcErrorsCountLabel->setText(QString("Packets with CRC errors: %2").arg(_crcErrorCount));
 }
 
 void MainWindow::detectSerialPorts()
@@ -77,6 +98,12 @@ void MainWindow::on_connectAction_triggered(bool connect)
     }
 }
 
+
+void MainWindow::on_restartAction_triggered()
+{
+    ui->parsedOutputPlainTextEdit->clear();
+}
+
 void MainWindow::onSerialPortSelected(int index)
 {
     _serialPort->setPort(_serialPorts.at(index));
@@ -92,6 +119,18 @@ void MainWindow::appendToLog(QString msg)
     ui->parsedOutputPlainTextEdit->appendPlainText(msg);
     QScrollBar *scrollbar = ui->parsedOutputPlainTextEdit->verticalScrollBar();
     scrollbar->setValue(scrollbar->maximum());
+}
+
+void MainWindow::onPacketParsed(bool crcOk)
+{
+    _packetsReceivedCount++;
+
+    if(!crcOk)
+    {
+        _crcErrorCount++;
+    }
+
+    updateStatus();
 }
 
 QString MainWindow::errorString()

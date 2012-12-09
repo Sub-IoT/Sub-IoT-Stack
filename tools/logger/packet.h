@@ -18,6 +18,7 @@ public:
     QByteArray rawPacket() const;
     QDateTime timestamp() const;
     QString toString() const;
+    bool isCrcValid() const;
 
 private:
     QDateTime _timestamp;

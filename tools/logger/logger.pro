@@ -33,3 +33,6 @@ FORMS    += \
     mainwindow.ui
 
 INCLUDEPATH += ../../d7aoss/
+
+RESOURCES += \
+    resources.qrc
