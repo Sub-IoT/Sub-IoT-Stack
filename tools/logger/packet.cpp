@@ -4,7 +4,10 @@
 #include "log.h"
 
 #include "bytearrayutils.h"
+<<<<<<< HEAD
 #include "hexdump.h"
+=======
+>>>>>>> 830d288ab639f802fc3b6265d70f93a07a10670a
 
 Packet::Packet()
 {

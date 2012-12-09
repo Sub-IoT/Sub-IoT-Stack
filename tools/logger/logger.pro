@@ -26,6 +26,7 @@ HEADERS  += loggerdialog.h \
     packet.h \
     bytearrayutils.h \
     hexdump.h
+    bytearrayutils.h
 
 FORMS    += loggerdialog.ui
 
