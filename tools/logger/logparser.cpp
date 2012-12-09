@@ -39,8 +39,7 @@ void LogParser::parseReceivedData()
 
     if(_receivedDataQueue->size() >= 1)
     {
-        if(_receivedDataQueue->at(0) != LOG_TYPE_PACKET &&
-                _receivedDataQueue->at(0) != LOG_TYPE_STRING &&
+        if(_receivedDataQueue->at(0) != LOG_TYPE_STRING &&
                 _receivedDataQueue->at(0) !=LOG_TYPE_PHY_RX_RES &&
                 _receivedDataQueue->at(0) != 0x03) // TODO define
         {

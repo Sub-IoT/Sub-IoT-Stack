@@ -34,6 +34,7 @@ private:
     u8 _dialogId;
     QByteArray _sourceId;
     QByteArray _payload;
+    u8 _spectrumId;
 };
 
 #endif // PACKET_H

@@ -93,10 +93,11 @@ void Packet::parseRawPacket()
 
 void Packet::parseDllRx(QByteArray data)
 {
-    if(data.size() != 1) // TODO define
+    if(data.size() != LOG_TYPE_DLL_RX_RES_SIZE)
         qCritical("Packet::parseDllRx unexpected data size");
 
     _frameType = (Frame_Type)data.constData()[0];
+    _spectrumId = data.constData()[1];
     _hasDllInformation = true;
 
     parseRawPacket();
@@ -132,11 +133,13 @@ QString Packet::toString() const
 
     packetDescription.append(QString("DLL:\n" \
                "\tFrame type: %1\n" \
-               "\tSubnet: %2\n" \
-               "\tDialog ID: %3\n" \
-               "\tSource ID: %4\n" \
-               "\tPayload: %5\n")
+               "\tSpectrum ID: %2\n" \
+               "\tSubnet: %3\n" \
+               "\tDialog ID: %4\n" \
+               "\tSource ID: %5\n" \
+               "\tPayload: %6\n")
             .arg(_frameType == FrameTypeForegroundFrame? "foreground" : "background")
+            .arg(QString().sprintf("0x%02x", _spectrumId))
             .arg(_subnet)
             .arg(_dialogId)
             .arg(ByteArrayUtils::toString(_sourceId))
