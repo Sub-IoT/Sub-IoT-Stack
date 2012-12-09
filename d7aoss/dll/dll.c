@@ -98,10 +98,9 @@ static void phy_rx_callback(phy_rx_res_t* res)
 
 		dll_res.frame_type = FrameTypeBackgroundFrame;
 		dll_res.frame = frame;
-	} else
+	}
+	else
 	{
-		log_packet(res->data);
-
 		dll_foreground_frame_t* frame = (dll_foreground_frame_t*)frame_data;
 		frame->length = res->data[0];
 
@@ -111,12 +110,12 @@ static void phy_rx_callback(phy_rx_res_t* res)
 
 		u8* data_pointer = res->data + 4;
 
-		if (frame->frame_header.frame_ctl & 0x80) // Listen
+		if (frame->frame_header.frame_ctl & FRAME_CTL_LISTEN) // Listen
 			timeout_listen = 10;
 		else
 			timeout_listen = 0;
 
-		if (frame->frame_header.frame_ctl & 0x40) // DLLS present
+		if (frame->frame_header.frame_ctl & FRAME_CTL_DLLS) // DLLS present
 		{
 			// TODO parse DLLS Header
 			frame->dlls_header = NULL;

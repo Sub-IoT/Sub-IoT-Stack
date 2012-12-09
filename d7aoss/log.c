@@ -21,14 +21,6 @@ void log_print_string(char* message)
 	uart_transmit_message((unsigned char*) message, len);
 }
 
-void log_packet(u8* packet) // TODO take direction param (tx/rx)?
-{
-	uart_transmit_data(0xDD);
-	uart_transmit_data(LOG_TYPE_PACKET);
-	uart_transmit_data(packet[0]);
-	uart_transmit_message(packet, packet[0]);
-}
-
 void log_phy_rx_res(phy_rx_res_t* res)
 {
 	// transmit the log header

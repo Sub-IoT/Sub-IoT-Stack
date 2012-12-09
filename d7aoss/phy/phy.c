@@ -55,8 +55,6 @@ phy_result_t phy_tx(phy_tx_cfg_t* cfg)
 	// TODO u8  cca;
 	// TODO s8  eirp;
 
-	log_packet(cfg->data); // TODO log other params
-
 	RAL_IMPLEMENTATION.tx(&ral_tx_cfg);
 
 	return PHY_OK;
