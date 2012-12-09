@@ -31,7 +31,7 @@ void Packet::parsePhyRx(QByteArray packetData)
 
 void Packet::parseRawPacket()
 {
-    Q_ASSERT_X(_hasDllInformation, "parseRawPacket", "Cannot parse when ng DLL RX log received");
+    Q_ASSERT_X(_hasDllInformation, "parseRawPacket", "Cannot parse when no DLL RX log received");
 
     const char* data = _rawPacket.constData();
 
@@ -43,8 +43,8 @@ void Packet::parseRawPacket()
     else if(_frameType == FrameTypeForegroundFrame)
     {
         data += 2;
-        _subnet = *data; data++;// TODO define
-        u8 frame_ctl = *data; data++; // TODO define
+        _subnet = *data; data++;
+        u8 frame_ctl = *data; data++;
 
         if(frame_ctl & FRAME_CTL_DLLS)
         {
