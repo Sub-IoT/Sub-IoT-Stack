@@ -4,6 +4,7 @@
 #include "log.h"
 
 #include "bytearrayutils.h"
+#include "hexdump.h"
 
 Packet::Packet()
 {
@@ -113,6 +114,9 @@ QDateTime Packet::timestamp() const
 
 QString Packet::toString() const
 {
+    char buffer[1000]; // TODO max size?
+    hexdump(buffer, _rawPacket.constData(), _rawPacket.length(), NULL, 0);
+    QString hex = QString("Packet:\n%1").arg(buffer);
     QString packetDescription =
             QString("PHY RX:\n" \
                  "\tLength: %1 bytes\n" \
@@ -139,5 +143,5 @@ QString Packet::toString() const
             .arg(ByteArrayUtils::toString(_payload))
             );
 
-    return packetDescription;
+    return hex.append(packetDescription);
 }

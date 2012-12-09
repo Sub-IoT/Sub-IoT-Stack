@@ -32,7 +32,13 @@
     </layout>
    </item>
    <item>
-    <widget class="QPlainTextEdit" name="parsedOutputPlainTextEdit"/>
+    <widget class="QPlainTextEdit" name="parsedOutputPlainTextEdit">
+     <property name="font">
+      <font>
+       <family>Monospace</family>
+      </font>
+     </property>
+    </widget>
    </item>
   </layout>
  </widget>

@@ -18,12 +18,14 @@ SOURCES += main.cpp\
         loggerdialog.cpp \
     logparser.cpp \
     packet.cpp \
-    bytearrayutils.cpp
+    bytearrayutils.cpp \
+    hexdump.cpp
 
 HEADERS  += loggerdialog.h \
     logparser.h \
     packet.h \
-    bytearrayutils.h
+    bytearrayutils.h \
+    hexdump.h
 
 FORMS    += loggerdialog.ui
 

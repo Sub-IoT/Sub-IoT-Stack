@@ -71,14 +71,12 @@ void LogParser::parseReceivedData()
     }
     if(type == LOG_TYPE_PHY_RX_RES)
     {
-        QString msg;
         QByteArray packetData;
         unsigned char byte;
         for(int i = 0; i < len; i++)
         {
             byte = _receivedDataQueue->dequeue();
             packetData.append(byte);
-            msg += QString().sprintf("0x%02x ", byte);
         }
 
         Packet p;
@@ -87,14 +85,12 @@ void LogParser::parseReceivedData()
     }
     if(type == LOG_TYPE_DLL_RX_RES)
     {
-        QString msg;
         QByteArray packetData;
         unsigned char byte;
         for(int i = 0; i < len; i++)
         {
             byte = _receivedDataQueue->dequeue();
             packetData.append(byte);
-            msg += QString().sprintf("0x%02x ", byte);
         }
 
         if(_packets.isEmpty())
