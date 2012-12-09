@@ -45,4 +45,5 @@ void log_dll_rx_res(dll_rx_res_t* res)
 	uart_transmit_data(LOG_TYPE_DLL_RX_RES);
 	uart_transmit_data(LOG_TYPE_DLL_RX_RES_SIZE);
 	uart_transmit_data(res->frame_type);
+	uart_transmit_data(res->spectrum_id);
 }

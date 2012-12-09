@@ -19,7 +19,7 @@
 #define LOG_TYPE_PHY_RX_RES_SIZE 5
 
 #define LOG_TYPE_DLL_RX_RES 0x03
-#define LOG_TYPE_DLL_RX_RES_SIZE 1
+#define LOG_TYPE_DLL_RX_RES_SIZE 2
 
 void log_print_string(char* message);
 

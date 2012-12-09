@@ -89,6 +89,7 @@ static void phy_rx_callback(phy_rx_res_t* res)
 	// parse packet
 	dll_res.rssi = res->rssi;
 	dll_res.lqi = res->lqi;
+	dll_res.spectrum_id = current_css->values[current_scan_id].spectrum_id;
 
 	if (dll_state == DllStateScanBackgroundFrame)
 	{
@@ -139,10 +140,11 @@ static void phy_rx_callback(phy_rx_res_t* res)
 			if (vid)
 			{
 				data_pointer += 2;
-			} else {
+			}
+			else
+			{
 				data_pointer += 8;
 			}
-
 
 			if (addressing == 0 && nls == 0)
 			{
@@ -151,7 +153,9 @@ static void phy_rx_callback(phy_rx_res_t* res)
 				{
 					memcpy(data_pointer, &id_target, 2);
 					data_pointer += 2;
-				} else {
+				}
+				else
+				{
 					memcpy(data_pointer, &id_target, 8);
 					data_pointer += 8;
 				}
@@ -250,7 +254,7 @@ void dll_channel_scan_series(dll_channel_scan_series_t* css)
 	phy_rx_cfg_t rx_cfg;
 	rx_cfg.timeout = css->values[current_scan_id].timout_scan_detect; // timeout
 	rx_cfg.multiple = 0; // multiple TODO
-	rx_cfg.spectrum_id = css->values[current_scan_id].channel_id; // spectrum ID TODO
+	rx_cfg.spectrum_id = css->values[current_scan_id].spectrum_id; // spectrum ID TODO
 	rx_cfg.coding_scheme = 0; // coding scheme TODO
 	rx_cfg.rssi_min = 0; // RSSI min filter TODO
 	if (css->values[current_scan_id].scan_type == FrameTypeForegroundFrame)
@@ -287,8 +291,10 @@ static void dll_cca2(void* arg)
 }
 
 
-void dll_tx_foreground_frame(u8* data, u8 length)
+void dll_tx_foreground_frame(u8* data, u8 length, u8 spectrum_id)
 {
+	foreground_frame_tx_cfg.spectrum_id = spectrum_id; // TODO check valid
+
 	dll_foreground_frame_t* frame = (dll_foreground_frame_t*) frame_data;
 	frame->frame_header.tx_eirp = 0x50; // (-40 + 0.5n) dBm // TODO hardcoded
 	frame->frame_header.subnet = 0xf1; // TODO hardcoded, get from app?

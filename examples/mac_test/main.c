@@ -27,8 +27,6 @@ static u16 counter = 0;
 static u8 interrupt_flags = 0;
 static u8 rtcEnabled = 0;
 
-static u8 log_msg[100];
-
 dll_channel_scan_t scan_cfg1 = {
 		0x10,
 		FrameTypeForegroundFrame,
@@ -59,7 +57,7 @@ void stop_rx()
 void start_tx()
 {
 	stop_rx();
-	dll_tx_foreground_frame((u8*)&counter, sizeof(counter));
+	dll_tx_foreground_frame((u8*)&counter, sizeof(counter), 0x10);
 }
 
 void tx_callback(Dll_Tx_Result result)

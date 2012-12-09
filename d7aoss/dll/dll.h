@@ -97,13 +97,15 @@ typedef struct
     s8  rssi;
     /// Link quality indicator
     u8  lqi;
+    /// spectrum id
+    u8 spectrum_id;
     /// Frame
     void* frame;
 } dll_rx_res_t;
 
 typedef struct
 {
-	u8 channel_id; // 0-255
+	u8 spectrum_id; // 0-255
 	Frame_Type scan_type; // BF / FF
 	u16 timout_scan_detect; // 0-65535 ti
 	u16 time_next_scan; // 0-65535 ti
@@ -128,6 +130,6 @@ void dll_set_rx_callback(dll_rx_callback_t);
 void dll_stop_channel_scan();
 void dll_channel_scan_series(dll_channel_scan_series_t*);
 
-void dll_tx_foreground_frame(u8* data, u8 lenght);
+void dll_tx_foreground_frame(u8* data, u8 length, u8 spectrum_id); // TODO spectrum id (and other tx params) should come from ALP file later
 
 #endif /* DLL_H_ */
