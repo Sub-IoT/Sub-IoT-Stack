@@ -74,8 +74,6 @@ void rx_callback(dll_rx_res_t* rx_res)
 {
 	led_toggle(3);
 	log_print_string("RX CB");
-
-	start_rx();
 }
 
 void main(void) {
