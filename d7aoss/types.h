@@ -16,7 +16,10 @@
 #define s16 signed short
 #define s32 signed long
 
-typedef u8 bool;
+#if !defined(__cplusplus)
+    typedef u8 bool;
+#endif
+
 #define true 1
 #define false 0
 

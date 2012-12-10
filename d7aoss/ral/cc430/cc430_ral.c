@@ -50,7 +50,7 @@ RF_SETTINGS rfSettings = {
     RADIO_FREQ1,   // FREQ1     Frequency control word, middle byte.
     RADIO_FREQ0,   // FREQ0     Frequency control word, low byte.
     (RADIO_MDMCFG4_CHANBW_E(2) | RADIO_MDMCFG4_CHANBW_M(1) | RADIO_MDMCFG4_DRATE_E(11)),   // MDMCFG4   Modem configuration.
-    RADIO_MDMCFG3_DRATE_M(26),   // MDMCFG3   Modem configuration.
+    RADIO_MDMCFG3_DRATE_M(24),   // MDMCFG3   Modem configuration.
     (RADIO_MDMCFG2_DEM_DCFILT_ON | RADIO_MDMCFG2_MOD_FORMAT_GFSK | RADIO_MDMCFG2_SYNC_MODE_16in16CS),   // MDMCFG2   Modem configuration.
     (RADIO_MDMCFG1_NUM_PREAMBLE_4B | RADIO_MDMCFG1_CHANSPC_E(2)),   // MDMCFG1   Modem configuration.
     RADIO_MDMCFG0_CHANSPC_M(16),   // MDMCFG0   Modem configuration.
@@ -130,6 +130,10 @@ static void rx_data_isr()
 {
 	//Read number of bytes in RXFIFO
 	u8 rxBytes = ReadSingleReg(RXBYTES);
+
+	// TODO why do we arrive here after tx with rxbytes == 0 ? Alexander please look into this
+	if (rxBytes == 0)
+		return;
 
 	//If length is not set (first time after sync word)
 	//get the length from RXFIFO and set PKTLEN so eop can be detected right
@@ -300,7 +304,33 @@ void cc430_ral_set_rx_callback(ral_rx_callback_t callback)
 
 void cc430_ral_tx(ral_tx_cfg_t* tx_cfg)
 {
-	// TODO use other tx_cfg settings
+	//Set channel center frequency
+	WriteSingleReg(CHANNR, tx_cfg->channel_center_freq_index);
+
+	//Set channel bandwidth, modulation and symbol rate
+	switch(tx_cfg->channel_bandwith_index)
+	{
+	case 0:
+		WriteSingleReg(MDMCFG3, RADIO_MDMCFG3_DRATE_M(24));
+		WriteSingleReg(MDMCFG4, (RADIO_MDMCFG4_CHANBW_E(1) | RADIO_MDMCFG4_CHANBW_M(0) | RADIO_MDMCFG4_DRATE_E(11)));
+		WriteSingleReg(DEVIATN, (RADIO_DEVIATN_E(5) | RADIO_DEVIATN_M(0)));
+		break;
+	case 1:
+		WriteSingleReg(MDMCFG3, RADIO_MDMCFG3_DRATE_M(24));
+		WriteSingleReg(MDMCFG4, (RADIO_MDMCFG4_CHANBW_E(2) | RADIO_MDMCFG4_CHANBW_M(0) | RADIO_MDMCFG4_DRATE_E(11)));
+		WriteSingleReg(DEVIATN, (RADIO_DEVIATN_E(5) | RADIO_DEVIATN_M(0)));
+		break;
+	case 2:
+		WriteSingleReg(MDMCFG3, RADIO_MDMCFG3_DRATE_M(248));
+		WriteSingleReg(MDMCFG4, (RADIO_MDMCFG4_CHANBW_E(1) | RADIO_MDMCFG4_CHANBW_M(0) | RADIO_MDMCFG4_DRATE_E(12)));
+		WriteSingleReg(DEVIATN, (RADIO_DEVIATN_E(5) | RADIO_DEVIATN_M(0)));
+		break;
+	case 3:
+		WriteSingleReg(MDMCFG3, RADIO_MDMCFG3_DRATE_M(248));
+		WriteSingleReg(MDMCFG4, (RADIO_MDMCFG4_CHANBW_E(0) | RADIO_MDMCFG4_CHANBW_M(1) | RADIO_MDMCFG4_DRATE_E(12)));
+		WriteSingleReg(DEVIATN, (RADIO_DEVIATN_E(5) | RADIO_DEVIATN_M(0)));
+		break;
+	}
 
 	//Modify radio state
 	//Set PKTLEN to the packet length
@@ -340,12 +370,35 @@ void cc430_ral_tx(ral_tx_cfg_t* tx_cfg)
 
 void cc430_ral_rx_start(ral_rx_cfg_t* cfg)
 {
-	// TODO channel bandwith conf?
-	// TODO center freq
-	// TODO set modulation
-	// TODO set symbol rate
-	// TOTO check RSSI
+
+	//Set channel center frequency
 	WriteSingleReg(CHANNR, cfg->channel_center_freq_index);
+
+	//Set channel bandwidth, modulation and symbol rate
+	switch(cfg->channel_bandwith_index)
+	{
+	case 0:
+		WriteSingleReg(MDMCFG3, RADIO_MDMCFG3_DRATE_M(24));
+		WriteSingleReg(MDMCFG4, (RADIO_MDMCFG4_CHANBW_E(1) | RADIO_MDMCFG4_CHANBW_M(0) | RADIO_MDMCFG4_DRATE_E(11)));
+		WriteSingleReg(DEVIATN, (RADIO_DEVIATN_E(5) | RADIO_DEVIATN_M(0)));
+		break;
+	case 1:
+		WriteSingleReg(MDMCFG3, RADIO_MDMCFG3_DRATE_M(24));
+		WriteSingleReg(MDMCFG4, (RADIO_MDMCFG4_CHANBW_E(2) | RADIO_MDMCFG4_CHANBW_M(0) | RADIO_MDMCFG4_DRATE_E(11)));
+		WriteSingleReg(DEVIATN, (RADIO_DEVIATN_E(5) | RADIO_DEVIATN_M(0)));
+		break;
+	case 2:
+		WriteSingleReg(MDMCFG3, RADIO_MDMCFG3_DRATE_M(248));
+		WriteSingleReg(MDMCFG4, (RADIO_MDMCFG4_CHANBW_E(1) | RADIO_MDMCFG4_CHANBW_M(0) | RADIO_MDMCFG4_DRATE_E(12)));
+		WriteSingleReg(DEVIATN, (RADIO_DEVIATN_E(5) | RADIO_DEVIATN_M(0)));
+		break;
+	case 3:
+		WriteSingleReg(MDMCFG3, RADIO_MDMCFG3_DRATE_M(248));
+		WriteSingleReg(MDMCFG4, (RADIO_MDMCFG4_CHANBW_E(0) | RADIO_MDMCFG4_CHANBW_M(1) | RADIO_MDMCFG4_DRATE_E(12)));
+		WriteSingleReg(DEVIATN, (RADIO_DEVIATN_E(5) | RADIO_DEVIATN_M(0)));
+		break;
+	}
+
 	if(cfg->sync_word_class == 0x00) { // TODO assert valid class
 		if(cfg->coding_scheme == 0x00) {
 			WriteSingleReg(SYNC1, RADIO_SYNC1_CLASS0_NON_FEC);

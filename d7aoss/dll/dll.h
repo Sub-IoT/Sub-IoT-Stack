@@ -67,7 +67,7 @@ typedef struct {
 
 typedef struct {
 	u8 length;
-	dll_foreground_frame_header_t* frame_header;
+	dll_foreground_frame_header_t frame_header;
 	dll_foreground_frame_dlls_header_t* dlls_header;  // only when DLLS enabled in frame ctl
 	dll_foreground_frame_address_ctl_header_t* address_ctl_header; // only when addressing enabled in frame ctl
 	u8* source_id_header; // only when framectrl en addr bit is set
@@ -93,29 +93,28 @@ typedef struct
 {
     /// Frame Type
     Frame_Type  frame_type;
-    /// Frame
-    void* frame;
     /// Reception level
     s8  rssi;
     /// Link quality indicator
     u8  lqi;
-
+    /// spectrum id
+    u8 spectrum_id;
+    /// Frame
+    void* frame;
 } dll_rx_res_t;
 
 typedef struct
 {
-	u8 channel_id; // 0-255
+	u8 spectrum_id; // 0-255
 	Frame_Type scan_type; // BF / FF
 	u16 timout_scan_detect; // 0-65535 ti
 	u16 time_next_scan; // 0-65535 ti
-
 } dll_channel_scan_t;
 
 typedef struct
 {
 	u8 length;
 	dll_channel_scan_t* values;
-
 } dll_channel_scan_series_t;
 
 
@@ -131,6 +130,6 @@ void dll_set_rx_callback(dll_rx_callback_t);
 void dll_stop_channel_scan();
 void dll_channel_scan_series(dll_channel_scan_series_t*);
 
-void dll_tx_foreground_frame(u8* data, u8 lenght);
+void dll_tx_foreground_frame(u8* data, u8 length, u8 spectrum_id); // TODO spectrum id (and other tx params) should come from ALP file later
 
 #endif /* DLL_H_ */

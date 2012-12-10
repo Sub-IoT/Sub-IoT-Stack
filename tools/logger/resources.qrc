@@ -1,0 +1,6 @@
+<RCC>
+    <qresource prefix="/icons">
+        <file>resources/media-record.png</file>
+        <file>resources/system-reboot.png</file>
+    </qresource>
+</RCC>
