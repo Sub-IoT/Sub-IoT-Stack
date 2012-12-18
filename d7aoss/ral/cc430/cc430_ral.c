@@ -41,7 +41,7 @@ RF_SETTINGS rfSettings = {
     RADIO_SYNC0_CLASS1_NON_FEC,   // SYNC0
     RADIO_PKTLEN,   // PKTLEN
     (RADIO_PKTCTRL1_PQT(3) | RADIO_PKTCTRL1_ADR_CHK_NONE),   // PKTCTRL1  Packet automation control
-    (RADIO_PKTCTRL0_WHITE_DATA | RADIO_PKTCTRL0_PKT_FOR_NORMAL | RADIO_PKTCTRL0_LENGTH_FIXED),   // PKTCTRL0  Packet automation control
+    (RADIO_PKTCTRL0_WHITE_DATA | RADIO_PKTCTRL0_PKT_FOR_NORMAL | RADIO_PKTCTRL0_CRC | RADIO_PKTCTRL0_LENGTH_FIXED),   // PKTCTRL0  Packet automation control
     RADIO_ADDR,   // ADDR      Device address
     RADIO_CHAN,   // CHANNR    Channel number.
     RADIO_FREQ_IF,   // FSCTRL1   Frequency synthesizer control.
@@ -175,7 +175,7 @@ static void rx_data_isr()
         rx_response.data = rxData;
         rx_response.lqi = ReadSingleReg(LQI);
         rx_response.rssi = get_rssi();
-        rx_response.crc_ok = ReadSingleReg(PKTSTATUS) >> 7;
+        rx_response.crc_ok = 1; // ReadSingleReg(PKTSTATUS) >> 7; check CRC using MSP430 not using RF
         rx_callback(&rx_response); // TODO get callback out of ISR?
         return;
     }
@@ -302,6 +302,16 @@ void cc430_ral_set_rx_callback(ral_rx_callback_t callback)
     rx_callback = callback;
 }
 
+u16 calc_CRC( u16 acc, u8 b)
+{
+ acc  = (u8)(acc >> 8) | (acc << 8);
+ acc ^= b;
+ acc ^= (u8)(acc & 0xff) >> 4;
+ acc ^= (acc << 8) << 4;
+ acc ^= ((acc & 0xff) << 4) << 1;
+return acc;
+}
+
 void cc430_ral_tx(ral_tx_cfg_t* tx_cfg)
 {
 	//Set channel center frequency
@@ -336,7 +346,7 @@ void cc430_ral_tx(ral_tx_cfg_t* tx_cfg)
 	//Set PKTLEN to the packet length
 	//Set RXFIFO threshold
 	radioState = RadioStateTransmitData;
-	WriteSingleReg(PKTLEN, tx_cfg->len);
+	WriteSingleReg(PKTLEN, tx_cfg->len); // length includes CRC
 	WriteSingleReg(FIFOTHR, RADIO_FIFOTHR_FIFO_THR_17_48);
 
 	//Clear all interrupt flags, enable interrupts
@@ -349,17 +359,27 @@ void cc430_ral_tx(ral_tx_cfg_t* tx_cfg)
 	Strobe(RF_SFTX);
 
 	//Prepare data
-	txLength = tx_cfg->len;
+	txLength = tx_cfg->len - 2; // length includes CRC
 	txRemainingBytes = txLength;
 	u8 txBytes = txLength;
 	txDataPointer = tx_cfg->data; // TODO copy data
 
-	if(txLength > 64)
+	if(txLength > 62)
 	{
-		txBytes = 64;
+		txBytes = 62;
 	}
 
 	WriteBurstReg(RF_TXFIFOWR, txDataPointer, txBytes);
+
+
+	CRCINIRES = 0xFFFF;
+	u8 i =1;
+	for(i=0; i<txLength-2; i++)
+	{
+		CRCDIRB_L = tx_cfg->data[i];
+	}
+	u16 engine_crc = CRCINIRES;
+	WriteBurstReg(RF_TXFIFOWR, (u8*) &engine_crc, 2);
 
 	txRemainingBytes -= txBytes;
 	txDataPointer += txBytes;

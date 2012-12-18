@@ -16,6 +16,7 @@
 
 extern u8 tag_id[8]; // TODO: keep this as global?
 
+void PMM_SetVCore (u8 level);
 void system_init();
 
 void system_watchdog_timer_stop();

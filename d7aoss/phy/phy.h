@@ -100,5 +100,6 @@ void phy_set_rx_callback(phy_rx_callback_t);
 void phy_rx_start(phy_rx_cfg_t*);
 void phy_rx_stop();
 bool phy_is_rx_in_progress();
+u8 phy_cca(void);
 
 #endif /* PHY_H_ */

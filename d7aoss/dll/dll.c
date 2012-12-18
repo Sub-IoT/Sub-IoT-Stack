@@ -289,9 +289,7 @@ static void dll_cca2(void* arg)
 	}
 
 	phy_result_t res = phy_tx(&foreground_frame_tx_cfg);
-
 }
-
 
 void dll_tx_foreground_frame(u8* data, u8 length, u8 spectrum_id)
 {
@@ -321,7 +319,7 @@ void dll_tx_foreground_frame(u8* data, u8 length, u8 spectrum_id)
 	memcpy(pointer, data, length); // TODO fixed size for now
 	pointer += length;
 
-	frame->length = pointer - frame_data;
+	frame->length = (pointer - frame_data) + 2; // length includes CRC
 	frame_data[0] = frame->length;
 
 	foreground_frame_tx_cfg.len = frame->length;
@@ -339,6 +337,7 @@ void dll_tx_foreground_frame(u8* data, u8 length, u8 spectrum_id)
 	event.f = &dll_cca2;
 
 	timer_add_event(&event);
+
 
 //	phy_result_t res = phy_tx(&foreground_frame_tx_cfg);
 //	if(res == PHY_RADIO_IN_RX_MODE)

@@ -24,12 +24,14 @@ static void timer_setvalue(u16 next_event)
 static void timer_enable_interrupt()
 {
 	TA1CCTL0 = CCIE; // Enable interrupt for CCR0
+	TA1CTL |= MC__UP;
 	started = true;
 }
 
 static void timer_disable_interrupt()
 {
 	TA1CCTL0 &= ~CCIE; // Disable interrupt for CCR0
+	TA1CTL &= ~MC__UP;
 	started = false;
 }
 
@@ -58,8 +60,8 @@ void timer_add_event(timer_event* event)
 
 	if (!started)
 	{
-		timer_setvalue(event->next_event);
 		timer_enable_interrupt();
+		timer_setvalue(event->next_event);
 	}
 }
 

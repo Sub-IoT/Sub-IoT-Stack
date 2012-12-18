@@ -94,8 +94,10 @@
 #define RADIO_SYNC0_CLASS0_NON_FEC      0xD0            // SYNC0
 #define RADIO_SYNC1_CLASS0_FEC          0xF4            // SYNC1
 #define RADIO_SYNC0_CLASS0_FEC          0x98            // SYNC0
-#define RADIO_SYNC1_CLASS1_NON_FEC      0x0B            // SYNC1
-#define RADIO_SYNC0_CLASS1_NON_FEC      0x67            // SYNC0
+//#define RADIO_SYNC1_CLASS1_NON_FEC      0x0B            // SYNC1
+//#define RADIO_SYNC0_CLASS1_NON_FEC      0x67            // SYNC0
+#define RADIO_SYNC1_CLASS1_NON_FEC      0x67            // SYNC1
+#define RADIO_SYNC0_CLASS1_NON_FEC      0x0B            // SYNC0
 #define RADIO_SYNC1_CLASS1_FEC          0x19            // SYNC1
 #define RADIO_SYNC0_CLASS1_FEC          0x2F            // SYNC0
 

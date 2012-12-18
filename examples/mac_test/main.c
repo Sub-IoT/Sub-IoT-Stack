@@ -57,16 +57,18 @@ void stop_rx()
 void start_tx()
 {
 	stop_rx();
-	dll_tx_foreground_frame((u8*)&counter, sizeof(counter), 0x12);
+	dll_tx_foreground_frame((u8*)&counter, sizeof(counter), 0x10);
 }
 
 void tx_callback(Dll_Tx_Result result)
 {
 	if(result == DLLTxResultOK)
 		counter++;
+	else
+
 
 	led_off(3);
-	start_rx();
+	//start_rx();
 	led_toggle(3);
 }
 
@@ -75,7 +77,7 @@ void rx_callback(dll_rx_res_t* rx_res)
 	led_toggle(3);
 	log_print_string("RX CB");
 
-	start_rx();
+	//start_rx();
 }
 
 void main(void) {
