@@ -116,7 +116,13 @@ void system_watchdog_timer_stop()
 void system_watchdog_timer_start()
 {
     //WDT_hold();
+	//WDTCTL = WDTPW + WDTIS__512K + WDTSSEL__ACLK;
     WDTCTL = WDTPW + ~WDTHOLD;
+}
+
+void system_watchdog_timer_reset()
+{
+	WDTCTL = (WDTCTL &0xff) | WDTPW | WDTCNTCL;
 }
 
 void system_lowpower_mode(unsigned char mode, unsigned char enableInterrupts)

@@ -96,6 +96,8 @@ void MainWindow::on_connectAction_triggered(bool connect)
     {
         QMessageBox::critical(this, "Logger", "Serial port connection failed, reason: " + errorString(), QMessageBox::Ok);
     }
+
+    qDebug() << "serial port opened";
 }
 
 

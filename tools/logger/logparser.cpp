@@ -17,6 +17,7 @@ LogParser::LogParser(SerialPort* serialPort, QObject *parent) : QObject(parent)
 void LogParser::onDataAvailable()
 {
     QByteArray data = _serialPort->readAll();
+    qDebug() << "Data size: " << data.size();
     for(int i = 0; i < data.size(); i++)
     {
         _receivedDataQueue->enqueue((unsigned char)data.constData()[i]);
@@ -27,6 +28,9 @@ void LogParser::onDataAvailable()
 
 void LogParser::parseReceivedData()
 {
+
+    qDebug() << "Data size: " << _receivedDataQueue->size();
+
     if(_receivedDataQueue->size() < 3)
         return;
 

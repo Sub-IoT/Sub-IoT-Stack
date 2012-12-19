@@ -8,6 +8,7 @@
 #include "dll.h"
 #include "../timer.h"
 #include "../hal/system.h"
+#include "../hal/crc.h"
 #include "../log.h"
 #include <string.h>
 
@@ -49,7 +50,6 @@ static bool check_subnet(u8 device_subnet, u8 frame_subnet)
 
 static void phy_tx_callback()
 {
-	log_print_string("TX OK");
 	dll_tx_callback(DLLTxResultOK);
 }
 
@@ -196,6 +196,8 @@ static void phy_rx_callback(phy_rx_res_t* res)
 		data_pointer++;
 		frame->payload = data_pointer;
 
+		memcpy((u8*) &(frame->crc16), (u8*) &(res->data[frame->length-2]), 2);
+
 		dll_res.frame_type = FrameTypeForegroundFrame;
 		dll_res.frame = frame;
 	}
@@ -293,6 +295,7 @@ static void dll_cca2(void* arg)
 
 void dll_tx_foreground_frame(u8* data, u8 length, u8 spectrum_id)
 {
+	//TODO: check if not already sending
 	foreground_frame_tx_cfg.spectrum_id = spectrum_id; // TODO check valid
 
 	dll_foreground_frame_t* frame = (dll_foreground_frame_t*) frame_data;
@@ -319,8 +322,12 @@ void dll_tx_foreground_frame(u8* data, u8 length, u8 spectrum_id)
 	memcpy(pointer, data, length); // TODO fixed size for now
 	pointer += length;
 
-	frame->length = (pointer - frame_data) + 2; // length includes CRC
-	frame_data[0] = frame->length;
+	frame->length = (pointer - frame_data);  // length includes CRC
+	frame_data[0] = frame->length + 2; //including CRC
+
+	frame->crc16 = crc_calculate(frame_data, frame->length);
+	memcpy(pointer, frame_data, 2);
+	frame->length += 2;
 
 	foreground_frame_tx_cfg.len = frame->length;
 

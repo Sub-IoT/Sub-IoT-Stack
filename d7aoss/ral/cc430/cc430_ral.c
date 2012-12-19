@@ -8,6 +8,7 @@
 #include "rf1a.h"
 #include "../../hal/system.h"
 #include "cc430_ral.h"
+#include "../../phy/phy.h"
 
 #define CC430_RSSI_OFFSET 74;
 
@@ -359,12 +360,12 @@ void cc430_ral_tx(ral_tx_cfg_t* tx_cfg)
 	Strobe(RF_SFTX);
 
 	//Prepare data
-	txLength = tx_cfg->len - 2; // length includes CRC
+	txLength = tx_cfg->len; // length includes CRC
 	txRemainingBytes = txLength;
 	u8 txBytes = txLength;
 	txDataPointer = tx_cfg->data; // TODO copy data
 
-	if(txLength > 62)
+	if(txLength > 64)
 	{
 		txBytes = 62;
 	}
@@ -372,14 +373,6 @@ void cc430_ral_tx(ral_tx_cfg_t* tx_cfg)
 	WriteBurstReg(RF_TXFIFOWR, txDataPointer, txBytes);
 
 
-	CRCINIRES = 0xFFFF;
-	u8 i =1;
-	for(i=0; i<txLength-2; i++)
-	{
-		CRCDIRB_L = tx_cfg->data[i];
-	}
-	u16 engine_crc = CRCINIRES;
-	WriteBurstReg(RF_TXFIFOWR, (u8*) &engine_crc, 2);
 
 	txRemainingBytes -= txBytes;
 	txDataPointer += txBytes;
@@ -487,6 +480,11 @@ bool cc430_ral_cca()
 	int rssi = get_rssi();
 
 	bool cca_ok = (bool)(rssi < thr);
+
+	if (!cca_ok)
+	{
+		__no_operation();
+	}
 
 	Strobe(RF_SIDLE);
 
