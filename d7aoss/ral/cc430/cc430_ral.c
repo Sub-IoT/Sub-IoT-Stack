@@ -176,7 +176,7 @@ static void rx_data_isr()
         rx_response.data = rxData;
         rx_response.lqi = ReadSingleReg(LQI);
         rx_response.rssi = get_rssi();
-        rx_response.crc_ok = 1; // ReadSingleReg(PKTSTATUS) >> 7; check CRC using MSP430 not using RF
+        //rx_response.crc_ok = 1; // ReadSingleReg(PKTSTATUS) >> 7; check CRC using MSP430 not using RF
         rx_callback(&rx_response); // TODO get callback out of ISR?
         return;
     }

@@ -85,7 +85,6 @@ u16 queue_pop_u16(queue* q)
 
 void* queue_pop_value(queue* q, u8 size)
 {
-	log_print_string("pop");
 	if (q->front == NULL)
 		return 0;
 
@@ -130,7 +129,6 @@ bool queue_push_u16(queue* q, u16 data)
 
 bool queue_push_value(queue* q, void* data, u8 size)
 {
-	log_print_string("push");
 	if (q->front == NULL)
 	{
 		q->front = q->start;

@@ -68,7 +68,7 @@ typedef struct
 typedef struct
 {
     /// Reception status
-    u8  crc_ok;
+    //u8  crc_ok;
     /// Reception level
     s8  rssi;
     /// Reported EIRP

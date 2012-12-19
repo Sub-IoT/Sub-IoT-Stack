@@ -15,6 +15,7 @@
 #include <hal/leds.h>
 #include <hal/rtc.h>
 #include <log.h>
+#include <timer.h>
 #include <hal/crc.h>
 
 
@@ -125,7 +126,6 @@ void main(void) {
         	start_tx();
 
         	button_clear_interrupt_flag();
-        	button_enable_interrupts();
         }
 
 
@@ -145,7 +145,6 @@ void main(void) {
 			}
 
         	button_clear_interrupt_flag();
-        	button_enable_interrupts();
         }
 
         if (INTERRUPT_RTC & interrupt_flags)
@@ -155,6 +154,12 @@ void main(void) {
 			interrupt_flags &= ~INTERRUPT_RTC;
 		}
 
+
+    	timer_event t_event;
+    	t_event.next_event = 100;
+    	t_event.f = button_enable_interrupts;
+
+    	timer_add_event(&t_event);
 
 		system_lowpower_mode(4,1);
 	}

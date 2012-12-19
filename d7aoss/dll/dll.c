@@ -59,16 +59,23 @@ static void phy_rx_callback(phy_rx_res_t* res)
 
 	// Data Link Filtering
 
-	// CRC Validation
-	if (!res->crc_ok)
-	{
-		log_print_string("CRC ERROR");
-		return;
-	}
+//	// CRC Validation
+//	if (!res->crc_ok)
+//	{
+//		log_print_string("CRC ERROR");
+//		return;
+//	}
 
 	// Subnet Matching do not parse it yet
 	if (dll_state == DllStateScanBackgroundFrame)
 	{
+		u16 crc = crc_calculate(res->data, 5);
+		if (memcmp((u8*) &(res->data[5]), (u8*) &crc, 2) != 0)
+		{
+			log_print_string("CRC ERROR");
+			return;
+		}
+
 		if (!check_subnet(0xFF, res->data[0])) // TODO: get device_subnet from datastore
 		{
 			log_print_string("Subnet mismatch");
@@ -76,6 +83,12 @@ static void phy_rx_callback(phy_rx_res_t* res)
 		}
 	} else if (dll_state == DllStateScanForegroundFrame)
 	{
+		u16 crc = crc_calculate(res->data, res->data[0] - 2);
+		if (memcmp((u8*) &(res->data[res->data[0] - 2]), (u8*) &crc, 2) != 0)
+		{
+			log_print_string("CRC ERROR");
+			return;
+		}
 		if (!check_subnet(0xFF, res->data[3])) // TODO: get device_subnet from datastore
 		{
 			log_print_string("Subnet mismatch");
