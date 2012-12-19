@@ -28,6 +28,7 @@ void system_init();
 
 void system_watchdog_timer_stop();
 void system_watchdog_timer_start();
+void system_watchdog_timer_reset();
 
 void system_lowpower_mode(unsigned char mode, unsigned char enableInterrupts);
 
