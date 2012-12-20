@@ -114,7 +114,7 @@ void main(void) {
 
 	log_print_string("started");
 
-	start_rx();
+	//start_rx();
 
 	while(1)
 	{

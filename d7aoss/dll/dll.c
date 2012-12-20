@@ -335,12 +335,10 @@ void dll_tx_foreground_frame(u8* data, u8 length, u8 spectrum_id)
 	memcpy(pointer, data, length); // TODO fixed size for now
 	pointer += length;
 
-	frame->length = (pointer - frame_data);  // length includes CRC
-	frame_data[0] = frame->length + 2; //including CRC
+	frame->length = (pointer - frame_data) + 2;  // length includes CRC
 
-	frame->crc16 = crc_calculate(frame_data, frame->length);
-	memcpy(pointer, frame_data, 2);
-	frame->length += 2;
+	u16 crc16 = crc_calculate(frame_data, frame->length - 2);
+	memcpy(pointer, &crc16, 2);
 
 	foreground_frame_tx_cfg.len = frame->length;
 
