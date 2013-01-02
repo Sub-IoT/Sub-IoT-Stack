@@ -1,0 +1,4 @@
+ADD_SUBDIRECTORY(phy_test)
+ADD_SUBDIRECTORY(mac_test)
+#ADD_SUBDIRECTORY(timing_test)
+

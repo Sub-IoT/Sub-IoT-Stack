@@ -14,6 +14,13 @@
 #define ENTER_CRITICAL_SECTION(x)  	__disable_interrupt(); //st( x = __read_status_register(); __disable_interrupt(); )
 #define EXIT_CRITICAL_SECTION(x)    __enable_interrupt(); //__write_status_register(x)
 
+#if defined(__MSPGCC__)
+#define __ISR(a,b)   void __attribute__((interrupt (a))) b (void)
+#define __even_in_range(a,b) (a)
+#else
+#define __ISR(a,b)   __interrupt void b (void)
+#endif
+
 extern u8 tag_id[8]; // TODO: keep this as global?
 
 void system_init();
