@@ -95,14 +95,20 @@ void MainWindow::on_connectAction_triggered(bool connect)
 {
     if(connect)
     {
-        // TODO hardcoded settings
-        _serialPort->setRate(SerialPort::Rate115200);
-        _serialPort->setDataBits(SerialPort::Data8);
-        _serialPort->setParity(SerialPort::NoParity);
-        _serialPort->setFlowControl(SerialPort::UnknownFlowControl);
-        _serialPort->setStopBits(SerialPort::TwoStop);
-
-        if(!_serialPort->open(QIODevice::ReadWrite))
+        if(_serialPort->open(QIODevice::ReadWrite))
+        {
+            // TODO hardcoded settings
+            if(!_serialPort->setRate(SerialPort::Rate115200) ||
+                !_serialPort->setDataBits(SerialPort::Data8) ||
+                !_serialPort->setParity(SerialPort::NoParity) ||
+                !_serialPort->setFlowControl(SerialPort::NoFlowControl) ||
+                !_serialPort->setStopBits(SerialPort::TwoStop))
+            {
+                _serialPort->close();
+                QMessageBox::critical(this, "Logger", "Can't configure serial port, reason: " + errorString());
+            }
+        }
+        else
         {
             QMessageBox::critical(this, "Logger", "Serial port connection failed, reason: " + errorString(), QMessageBox::Ok);
         }
@@ -119,6 +125,9 @@ void MainWindow::on_connectAction_triggered(bool connect)
 void MainWindow::on_restartAction_triggered()
 {
     ui->parsedOutputPlainTextEdit->clear();
+    _packetsReceivedCount = 0;
+    _crcError = 0;
+    updateStatus();
 }
 
 void MainWindow::onSerialPortSelected(int index)

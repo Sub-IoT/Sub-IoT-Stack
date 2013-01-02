@@ -9,6 +9,7 @@
 LogParser::LogParser(SerialPort* serialPort, QObject *parent) : QObject(parent)
 {
     _serialPort = serialPort;
+
     _receivedDataQueue = new QQueue<unsigned char>();
 
     connect(_serialPort, SIGNAL(readyRead()), SLOT(onDataAvailable()));
@@ -33,7 +34,9 @@ void LogParser::parseReceivedData()
     unsigned char start = _receivedDataQueue->dequeue();
     while(start != 0xDD && !_receivedDataQueue->isEmpty())
     {
-        qDebug() << "skipping unexpected data" << QString().sprintf("0x%02x", start);
+        if(start != 0xFF) // skip bytes received when cable disconnected
+            qDebug() << "skipping unexpected data" << QString().sprintf("0x%02x", start);
+
         start = _receivedDataQueue->dequeue();
     }
 
@@ -41,10 +44,10 @@ void LogParser::parseReceivedData()
     {
         if(_receivedDataQueue->at(0) != LOG_TYPE_STRING &&
                 _receivedDataQueue->at(0) !=LOG_TYPE_PHY_RX_RES &&
-                _receivedDataQueue->at(0) != LOG_TYPE_DLL_RX_RES_SIZE)
+                _receivedDataQueue->at(0) != LOG_TYPE_DLL_RX_RES)
         {
-            qWarning(qPrintable(QString("Unexpected type: %1, skipping ...").arg(_receivedDataQueue->at(0))));
-            parseReceivedData();
+            qWarning(qPrintable(QString().sprintf("Unexpected type: 0x%02x, skipping ...", _receivedDataQueue->at(0))));
+            return;
         }
     }
 

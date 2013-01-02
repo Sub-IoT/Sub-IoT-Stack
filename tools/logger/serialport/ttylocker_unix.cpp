@@ -92,8 +92,10 @@ static
 QString generateLockFileNameAsNamedForm(const char *portName)
 {
     QString result(lookupFirstSharedLockDir());
-    if (!result.isEmpty())
-        result.append(QLatin1String("/LCK..") + QLatin1String(portName));
+    if (!result.isEmpty()) {
+        result.append(QLatin1String("/LCK.."));
+        result.append(QString::fromLatin1(portName).replace(QLatin1Char('/'), QLatin1Char('_')));
+    }
     return result;
 }
 
