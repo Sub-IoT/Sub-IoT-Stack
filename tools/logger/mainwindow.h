@@ -45,14 +45,15 @@ private:
     QComboBox* _serialPortComboBox;
     QLabel* _packetsReceivedCountLabel;
     QLabel* _crcErrorsCountLabel;
+    QLabel* _connectionStatusLabel;
 
     QList<SerialPortInfo> _serialPorts;
     SerialPort* _serialPort;
     LogParser* _logParser;
 
-    int _packetsReceivedCount;
-    int _crcErrorCount;
-    int _bytesSkippedCound;
+    int _packetsReceivedCount = 0;
+    int _crcErrorCount = 0;
+    int _bytesSkippedCount = 0;
 };
 
 #endif // MAINWINDOW_H

@@ -41,7 +41,7 @@ void LogParser::parseReceivedData()
     {
         if(_receivedDataQueue->at(0) != LOG_TYPE_STRING &&
                 _receivedDataQueue->at(0) !=LOG_TYPE_PHY_RX_RES &&
-                _receivedDataQueue->at(0) != 0x03) // TODO define
+                _receivedDataQueue->at(0) != LOG_TYPE_DLL_RX_RES_SIZE)
         {
             qWarning(qPrintable(QString("Unexpected type: %1, skipping ...").arg(_receivedDataQueue->at(0))));
             parseReceivedData();
