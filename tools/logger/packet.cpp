@@ -22,7 +22,7 @@ void Packet::parsePhyRx(QByteArray packetData)
     const char* data = packetData.constData();
 
     _crcOk = data[0];
-    _rssi = data[1];
+    _rss = data[1];
     _eirp = data[2];
     _lqi = data[3];
     _length = data[4];
@@ -127,7 +127,7 @@ QString Packet::toString() const
                  "\tLQI:   %5\n")
             .arg(_length)
             .arg(_crcOk ? "OK" : "NOT OK")
-            .arg(_rssi)
+            .arg(_rss)
             .arg(_eirp)
             .arg(_lqi);
 
@@ -152,4 +152,9 @@ QString Packet::toString() const
 bool Packet::isCrcValid() const
 {
     return _crcOk;
+}
+
+signed int Packet::rss() const
+{
+    return _rss;
 }

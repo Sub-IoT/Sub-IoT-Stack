@@ -17,7 +17,7 @@ public:
     explicit LogParser(SerialPort* serialPort, QObject *parent = 0);
 
 signals:
-    void packetParsed(bool crcOk);
+    void packetParsed(Packet packet);
     void logMessageReceived(QString logMessage);
 
 protected slots:

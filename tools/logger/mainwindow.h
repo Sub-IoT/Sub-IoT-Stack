@@ -6,6 +6,8 @@
 #include <serialport/serialport.h>
 #include <serialport/serialportinfo.h>
 
+#include <qcustomplot/qcustomplot.h>
+
 #include "logparser.h"
 
 QT_USE_NAMESPACE_SERIALPORT
@@ -22,10 +24,11 @@ public:
     explicit MainWindow(QWidget *parent = 0);
     ~MainWindow();
 
+    void updatePlot();
 protected slots:
     void onSerialPortSelected(int index);
     void onLogMessageReceived(QString logMessage);
-    void onPacketParsed(bool crcOk);
+    void onPacketParsed(Packet packet);
 
     void on_connectAction_triggered(bool connect);
     
@@ -54,6 +57,8 @@ private:
     int _packetsReceivedCount = 0;
     int _crcErrorCount = 0;
     int _bytesSkippedCount = 0;
+    QVector<double> _rssValues;
+    QVector<double> _timestampValues;
 };
 
 #endif // MAINWINDOW_H

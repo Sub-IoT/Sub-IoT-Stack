@@ -19,7 +19,8 @@ SOURCES += main.cpp\
     packet.cpp \
     bytearrayutils.cpp \
     hexdump.cpp \
-    mainwindow.cpp
+    mainwindow.cpp \
+    qcustomplot/qcustomplot.cpp
 
 HEADERS  += \
     logparser.h \
@@ -27,7 +28,8 @@ HEADERS  += \
     bytearrayutils.h \
     hexdump.h \
     bytearrayutils.h \
-    mainwindow.h
+    mainwindow.h \
+    qcustomplot/qcustomplot.h
 
 FORMS    += \
     mainwindow.ui

@@ -4,9 +4,10 @@
 #include <QtCore/QThread>
 #include <QDebug>
 
-
 MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWindow)
-{
+{    
+    qRegisterMetaType<Packet>();
+
     ui->setupUi(this);
 
     _serialPortComboBox = new QComboBox(this);
@@ -15,7 +16,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
     _serialPort = new SerialPort(this);
     _logParser = new LogParser(_serialPort);
     connect(_logParser, SIGNAL(logMessageReceived(QString)), SLOT(onLogMessageReceived(QString)));
-    connect(_logParser, SIGNAL(packetParsed(bool)), SLOT(onPacketParsed(bool)));
+    connect(_logParser, SIGNAL(packetParsed(Packet)), SLOT(onPacketParsed(Packet)));
 
     initToolbar();
     initStatusbar();
@@ -25,6 +26,17 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
     readerThread.start();
 
     detectSerialPorts();
+
+    ui->plotWidget->addGraph();
+    ui->plotWidget->graph(0)->setScatterStyle(QCP::ssDisc);
+    ui->plotWidget->graph(0)->setScatterSize(5);
+    ui->plotWidget->xAxis->setLabel("timestamp");
+    ui->plotWidget->yAxis->setLabel("RSS [dBm]");
+    ui->plotWidget->yAxis->setRange(-120, 0);
+    ui->plotWidget->xAxis->setTickLabelType(QCPAxis::ltDateTime);
+    ui->plotWidget->xAxis->setDateTimeFormat("hh:mm:ss:zzz");
+    ui->plotWidget->xAxis->setTickLabelFont(QFont(QFont().family(), 8));
+    ui->plotWidget->yAxis->setTickLabelFont(QFont(QFont().family(), 8));
 }
 
 MainWindow::~MainWindow()
@@ -126,8 +138,12 @@ void MainWindow::on_restartAction_triggered()
 {
     ui->parsedOutputPlainTextEdit->clear();
     _packetsReceivedCount = 0;
-    _crcError = 0;
+    _crcErrorCount = 0;
     updateStatus();
+
+    _timestampValues.clear();
+    _rssValues.clear();
+    updatePlot();
 }
 
 void MainWindow::onSerialPortSelected(int index)
@@ -147,14 +163,26 @@ void MainWindow::appendToLog(QString msg)
     scrollbar->setValue(scrollbar->maximum());
 }
 
-void MainWindow::onPacketParsed(bool crcOk)
+void MainWindow::updatePlot()
+{
+    ui->plotWidget->graph(0)->setData(_timestampValues, _rssValues);
+    if(_timestampValues.size() > 0)
+        ui->plotWidget->xAxis->setRange(_timestampValues.first(), _timestampValues.last());
+    ui->plotWidget->replot();
+}
+
+void MainWindow::onPacketParsed(Packet packet)
 {
     _packetsReceivedCount++;
 
-    if(!crcOk)
+    if(!packet.isCrcValid())
     {
         _crcErrorCount++;
     }
+
+    _rssValues.append(packet.rss()); // TODO separate graph per device id
+    _timestampValues.append(packet.timestamp().toTime_t());
+    updatePlot();
 
     updateStatus();
 }

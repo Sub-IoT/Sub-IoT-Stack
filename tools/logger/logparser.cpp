@@ -112,7 +112,7 @@ void LogParser::parseReceivedData()
         lastPacket.parseDllRx(packetData);
 
         emit logMessageReceived(lastPacket.toString());
-        emit packetParsed(lastPacket.isCrcValid());
+        emit packetParsed(lastPacket);
     }
 
     parseReceivedData();

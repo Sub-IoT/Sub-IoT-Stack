@@ -19,6 +19,7 @@ public:
     QDateTime timestamp() const;
     QString toString() const;
     bool isCrcValid() const;
+    signed int rss() const;
 
 private:
     QDateTime _timestamp;
@@ -26,7 +27,7 @@ private:
     uint _length;
     bool _crcOk;
     signed int _eirp;
-    signed int _rssi;
+    signed int _rss;
     uint _lqi;
 
     bool _hasDllInformation;
@@ -37,5 +38,7 @@ private:
     QByteArray _payload;
     u8 _spectrumId;
 };
+
+Q_DECLARE_METATYPE(Packet)
 
 #endif // PACKET_H
