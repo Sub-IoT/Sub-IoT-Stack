@@ -12056,7 +12056,7 @@ void QCPItemLine::draw(QCPPainter *painter)
     return;
   // get visible segment of straight line inside clipRect:
   double clipPad = qMax(mHead.boundingDistance(), mTail.boundingDistance());
-  clipPad = qMax(clipPad, mainPen().widthF());
+  clipPad = qMax(clipPad, (double) (mainPen().width()));
   QLineF line = getRectClippedLine(startVec, endVec, clipRect().adjusted(-clipPad, -clipPad, clipPad, clipPad));
   // paint visible segment, if existent:
   if (!line.isNull())

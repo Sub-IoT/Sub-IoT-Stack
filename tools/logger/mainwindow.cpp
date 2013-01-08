@@ -10,6 +10,10 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
 
     ui->setupUi(this);
 
+    _packetsReceivedCount = 0;
+    _crcErrorCount = 0;
+    _bytesSkippedCount = 0;
+
     _serialPortComboBox = new QComboBox(this);
     connect(_serialPortComboBox, SIGNAL(currentIndexChanged(int)), SLOT(onSerialPortSelected(int)));
 

@@ -54,9 +54,9 @@ private:
     SerialPort* _serialPort;
     LogParser* _logParser;
 
-    int _packetsReceivedCount = 0;
-    int _crcErrorCount = 0;
-    int _bytesSkippedCount = 0;
+    int _packetsReceivedCount;
+    int _crcErrorCount;
+    int _bytesSkippedCount;
     QVector<double> _rssValues;
     QVector<double> _timestampValues;
 };
