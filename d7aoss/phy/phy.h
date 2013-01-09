@@ -4,101 +4,66 @@
  *  Authors:
  * 		maarten.weyn@artesis.be
  *  	glenn.ergeerts@artesis.be
+ *  	alexanderhoet@gmail.com
  */
 
-#ifndef PHY_H_
-#define PHY_H_
+#ifndef PHY_H
+#define PHY_H
 
-#include "../types.h"
+#ifdef __cplusplus
+extern "C" {
+#endif
 
-// TODO implement FEC
+#include <stdbool.h>
+#include <stdint.h>
 
-// =======================================================================
-// phy_rx_cfg_t
-// -----------------------------------------------------------------------
-/// Configuration structure for packet reception
-// =======================================================================
+//TODO implement FEC
+//TODO implement PN9
+
+#define SYNC_CLASS0_NON_FEC      0xE6D0
+#define SYNC_CLASS0_FEC          0xF498
+#define SYNC_CLASS1_NON_FEC      0x0B67
+#define SYNC_CLASS1_FEC          0x192F
+
+//Configuration structure for packet reception
 typedef struct
 {
-    /// Timeout value (0 : continuous) in ticks
-    u16 timeout;
-    /// Multiple or single reception flag
-    u8  multiple;
-    /// Spectrum ID
-    u8  spectrum_id;
-    /// Coding scheme (0 : PN9 coding, 1 : PN9 + D7 FEC)
-    u8  coding_scheme;
-    /// RSSI min filter
-    u8  rssi_min;
-    /// sync word class (0 or 1)
-    u8 sync_word_class;
-    /// TODO CCA
-} phy_rx_cfg_t;
+	uint8_t spectrum_id;		//Spectrum ID
+	uint8_t sync_word_class;	//Sync word class
+	uint8_t length;				//Packet length (0 : variable)
+	uint16_t timeout;			//Timeout value (0 : continuous) in milliseconds
+} phy_rx_cfg;
 
-// =======================================================================
-// phy_tx_cfg_t
-// -----------------------------------------------------------------------
-/// Configuration structure for packet transmission
-// =======================================================================
+//Packet reception result structure
 typedef struct
 {
-    /// Timeout
-    // TODO u16 timeout; // mac level?
-    /// CCA mode
-    // TODO u8  cca;
-    /// Spectrum ID
-    u8  spectrum_id;
-    /// Channel bandwidth index
-	u8  coding_scheme;
-	/// sync word class (0 or 1)
-	u8 sync_word_class;
-    /// pointer to the payload
-    u8* data; // TODO data should exclude length?
-    /// data length
-    u8  len;
-    /// Transmission power level in dBm ranged [-39, +10]
-    // TODO s8  eirp; // TODO set by MAC? part of data?
-} phy_tx_cfg_t;
+	uint8_t crc_ok;				//Cyclic redundancy check status
+    uint8_t lqi;				//Link quality indicator
+    uint8_t length;				//Packet length
+    uint8_t* data;				//Packet data
+    int16_t rssi;				//Received signal strength indicator
+} phy_rx_data;
 
-// =======================================================================
-// phy_rx_res_t
-// -----------------------------------------------------------------------
-/// Packet reception result structure
-// =======================================================================
+//Configuration structure for packet transmission
 typedef struct
 {
-    /// Reception status
-    u8  crc_ok;
-    /// Reception level
-    s8  rssi;
-    /// Reported EIRP
-    s8  eirp;
-    /// Link quality indicator
-    u8  lqi;
-    /// packet length in bytes
-    u8  len;
-    /// packet data
-    u8*  data;
+	uint8_t spectrum_id;		//Spectrum ID
+	uint8_t sync_word_class;	//Sync word class
+	uint8_t length;				//Packet length (0 : variable)
+	uint8_t eirp;				//Transmission power level in dBm ranged [-39, +10]
+	uint8_t* data;				//Packet data
+} phy_tx_cfg;
 
-} phy_rx_res_t; // TODO same as ral_rx_res_t for now ...
+void phy_init(void);
+void phy_tx(phy_tx_cfg* cfg);
+void phy_rx_start(phy_rx_cfg* cfg);
+void phy_rx_stop(void);
+bool phy_read(phy_rx_data* data);
+bool phy_is_rx_in_progress(void);
+bool phy_is_tx_in_progress(void);
 
-typedef enum
-{
-	PHY_OK,
-	PHY_RADIO_IN_RX_MODE
-} phy_result_t; // TODO return this for all functions
+#ifdef __cplusplus
+}
+#endif
 
-
-typedef void (*phy_tx_callback_t)(); // TODO result param?
-typedef void (*phy_rx_callback_t)(phy_rx_res_t*);
-
-void phy_init();
-phy_result_t phy_tx(phy_tx_cfg_t*);
-void phy_set_tx_callback(phy_tx_callback_t);
-void phy_set_rx_callback(phy_rx_callback_t);
-
-void phy_rx_start(phy_rx_cfg_t*);
-void phy_rx_stop();
-bool phy_is_rx_in_progress();
-
-#endif /* PHY_H_ */
+#endif /* PHY_H */

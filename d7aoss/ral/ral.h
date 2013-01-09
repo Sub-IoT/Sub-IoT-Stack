@@ -3,90 +3,65 @@
  *  Authors:
  * 		maarten.weyn@artesis.be
  *  	glenn.ergeerts@artesis.be
+ *  	alexanderhoet@gmail.com
  */
 
-#ifndef RAL_H_
-#define RAL_H_
+#ifndef RAL_H
+#define RAL_H
 
-#include "../types.h"
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include <stdbool.h>
+#include <stdint.h>
 
 // TODO who decides to power down the radio?
 
 typedef struct
 {
-    /// Timeout value (0 : continuous)
-    u16 timeout;
-    /// Multiple or single reception flag
-    u8  multiple;
-    /// Channel center frequency index
-    u8  channel_center_freq_index;
-    /// Channel bandhwith index
-    u8	channel_bandwith_index;
-    /// Coding scheme (0 : PN9 coding, 1 : PN9 + D7 FEC)
-	u8  coding_scheme;
-	/// sync word class (0 or 1)
-	u8 sync_word_class;
-	/// RSSI min filter
-    u8  rssi_min; // TODO
-
-    /// TODO CCA
-
-} ral_rx_cfg_t;
+	uint8_t channel_center_freq_index;		//Channel center frequency index
+	uint8_t	channel_bandwidth_index;		//Channel bandwidth index
+	uint8_t preamble_size;					//Number of preamble symbols
+	uint8_t length;							//Packet length (0 : variable)
+	uint16_t sync_word;						//Sync Word
+	uint16_t timeout;						//Timeout value (0 : continuous)
+} ral_rx_cfg;
 
 typedef struct
 {
-    /// Reception status
-    u8  crc_ok;
-    /// Reception level
-    u8  rssi;
-    /// Reported EIRP
-    s8  eirp;
-    /// Link quality indicator
-    u8  lqi;
-    /// packet length in bytes
-    u8  len;
-    /// packet data
-    u8*  data;
-
-} ral_rx_res_t;
+	uint8_t crc_ok;		//Cyclic redundancy check status
+    uint8_t lqi;		//Link quality indicator
+    uint8_t length;		//Packet length
+    uint8_t* data;		//Packet data
+    int16_t rssi;		//Received signal strength indicator
+} ral_rx_data;
 
 typedef struct
 {
-    /// Timeout
-    // TODO u16 timeout; // mac level?
-    /// CCA mode
-    // TODO u8  cca;
-    /// Channel center frequency index
-    u8  channel_center_freq_index;
-    /// Channel bandhwith index
-    u8	channel_bandwith_index;
-    /// Coding scheme (0 : PN9 coding, 1 : PN9 + D7 FEC)
-	u8  coding_scheme;
-	/// sync word class (0 or 1)
-	u8 sync_word_class;
-    /// pointer to the payload
-    u8* data;
-    /// data length
-    u8  len;
-    /// Transmission power level in dBm ranged [-39, +10]
-    // TODO s8  eirp;
-} ral_tx_cfg_t;
-
-typedef void (*ral_tx_callback_t)(); // TODO param
-typedef void (*ral_rx_callback_t)(ral_rx_res_t*);
+	uint8_t channel_center_freq_index;		//Channel center frequency index
+	uint8_t	channel_bandwidth_index;		//Channel bandwidth index
+	uint8_t eirp;							//Transmission power level in dBm ranged [-39, +10]
+	uint8_t preamble_size;					//Number of preamble symbols
+	uint8_t length;							//Packet length (0 : variable)
+	uint8_t* data;							//Packet data
+    uint16_t sync_word;						//Sync Word
+} ral_tx_cfg;
 
 // The interface a RAL implementation has to implement
-struct ral_interface {
+struct ral_interface
+{
   void (* init)(void);
-  void (* tx)(ral_tx_cfg_t*);
-  void (* set_tx_callback)(ral_tx_callback_t);
-  void (* set_rx_callback)(ral_rx_callback_t);
-  void (* rx_start)(ral_rx_cfg_t*);
-  void (* rx_stop)();
-  bool (* is_rx_in_progress)();
-//  int (* on)(void);
-//  int (* off)(void);
+  void (* tx)(ral_tx_cfg*);
+  void (* rx_start)(ral_rx_cfg*);
+  void (* rx_stop)(void);
+  bool (* read)(ral_rx_data*);
+  bool (* is_rx_in_progress)(void);
+  bool (* is_tx_in_progress)(void);
 };
 
-#endif /* RAL_H_ */
+#ifdef __cplusplus
+}
+#endif
+
+#endif /* RAL_H */

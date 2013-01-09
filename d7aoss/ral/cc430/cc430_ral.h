@@ -6,82 +6,51 @@
  *  	alexanderhoet@gmail.com
  */
 
-// RAL implementation for TI CC430 (code mostly taken from TI reference code for CC430.)
+#ifndef CC430_RAL_H
+#define CC430_RAL_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
 
-#ifndef CC430_RAL_H_
-#define CC430_RAL_H_
+#include <stdbool.h>
+#include <stdint.h>
 
 #include "../ral.h"
-#include "cc430_registers.h"
 
-// The CC430 implementation of the RAL interface
+#define RSSI_OFFSET 74;
+#define PATABLE_VAL 0xC4
+
+//The CC430 implementation of the RAL interface
 extern const struct ral_interface cc430_ral;
 
-typedef enum {
-    RadioStateIdle,
-    RadioStateTransmit,
-    RadioStateReceive,
-} RadioStateEnum;
-
-// Interrupt handler function pointer
-// TODO Should be located in system.h or something so it can be used for all vectored interrupts
+//Interrupt handler function pointer
 typedef void (*InterruptHandler)(void);
 
-// RF_Settings can be created using TI RF Studio
-// Check CC430 User Guide for references of configuration settings, Table 25-19
-typedef struct S_RF_SETTINGS {
-    // 25.3.5.1
-    unsigned char iocfg2;    // IOCFG2.GDO2_CFG output pin configuration
-    unsigned char iofcg1;    // IOCFG1.GDO1_CFG output pin configuration
-    unsigned char iofcg0;    // IOCFG0.GDO0_CFG output pin configuration
-    // Page 713
-    unsigned char fifothr;   // RXFIFO and TXFIFO thresholds.
-    unsigned char sync1;     //  Sync word, high byte
-    unsigned char sync0;     // Sync word, low byte
-    unsigned char pktlen;    // Packet length.
-    // Page 714
-    unsigned char pktctrl1;  // Packet automation control.
-    unsigned char pktctrl0;  // Packet automation control.
-    unsigned char addr;      // Device address.
-    unsigned char channr;    // Channel number.
-    unsigned char fsctrl1;   // Frequency synthesizer control.
-    unsigned char fsctrl0;   // Frequency synthesizer control.
-    unsigned char freq2;     // Frequency control word, high byte.
-    unsigned char freq1;     // Frequency control word, middle byte.
-    unsigned char freq0;     // Frequency control word, low byte.
-    unsigned char mdmcfg4;   // Modem configuration - Channel Bandwidth and symbol rate (exponent)
-    unsigned char mdmcfg3;   // Modem configuration - Symbol rate (mantissa)
-    unsigned char mdmcfg2;   // Modem configuration.
-    unsigned char mdmcfg1;   // Modem configuration.
-    unsigned char mdmcfg0;   // Modem configuration.
-    unsigned char deviatn;   // Modem deviation setting (when FSK modulation is enabled).
-    unsigned char mcsm2;    // Main Radio Control State Machine configuration.
-    unsigned char mcsm1;     // Main Radio Control State Machine configuration.
-    unsigned char mcsm0;     // Main Radio Control State Machine configuration.
-    unsigned char foccfg;    // Frequency Offset Compensation Configuration.
-    unsigned char bscfg;     // Bit synchronization Configuration.
-    unsigned char agcctrl2;  // AGC control.
-    unsigned char agcctrl1;  // AGC control.
-    unsigned char agcctrl0;  // AGC control.
-    unsigned char worevt1;   // High byte Event0 timeout
-    unsigned char worevt0;   // Low byte Event0 timeout
-    unsigned char worctl;    // Wake On Radio control
-    unsigned char frend1;    // Front end RX configuration
-    unsigned char frend0;    // Front end TX configuration
-    unsigned char fscal3;    // Frequency synthesizer calibration.
-    unsigned char fscal2;    // Frequency synthesizer calibration.
-    unsigned char fscal1;    // Frequency synthesizer calibration.
-    unsigned char fscal0;    // Frequency synthesizer calibration.
-} RF_SETTINGS;
+//Radio state enum
+typedef enum {
+    Idle = 0,
+    Receive = 1,
+    Transmit = 2,
+    FastTransmit = 3,
+    Calibrate = 4,
+    Settling = 5,
+    RxOverflow = 6,
+    TxOverflow = 7,
+    Sleeping = 8
+} RadioState;
 
-
+//Interface function prototypes
 void cc430_ral_init(void);
-void cc430_ral_set_tx_callback(ral_tx_callback_t callback);
-void cc430_ral_set_rx_callback(ral_rx_callback_t callback);
-void cc430_ral_tx(ral_tx_cfg_t* tx_cfg);
-void cc430_ral_rx_start(ral_rx_cfg_t* cfg);
-void cc430_ral_rx_stop();
-bool cc430_ral_is_rx_in_progress();
+void cc430_ral_tx(ral_tx_cfg* data);
+void cc430_ral_rx_start(ral_rx_cfg* cfg);
+void cc430_ral_rx_stop(void);
+bool cc430_ral_read(ral_rx_data* data);
+bool cc430_ral_is_rx_in_progress(void);
+bool cc430_ral_is_tx_in_progress(void);
 
-#endif /*CC430_RAL_H_*/
+#ifdef __cplusplus
+}
+#endif
+
+#endif /* CC430_RAL_H */

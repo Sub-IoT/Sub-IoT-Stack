@@ -5,6 +5,8 @@
  *  	glenn.ergeerts@artesis.be
  */
 
+#include <stdbool.h>
+
 #include "button.h"
 
 #include "driverlib/5xx_6xx/gpio.h"

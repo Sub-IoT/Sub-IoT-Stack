@@ -16,8 +16,4 @@
 #define s16 signed short
 #define s32 signed long
 
-typedef u8 bool;
-#define true 1
-#define false 0
-
 #endif // __TYPES_H__

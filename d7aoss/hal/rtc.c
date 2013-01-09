@@ -51,7 +51,7 @@ void rtc_init_counter_mode()
 
 }
 
-void Rtc_EnableInterrupt()
+void rtc_enable_interrupt()
 {
     //Enable interrupt for counter overflow
     RTC_enableInterrupt(__MSP430_BASEADDRESS_RTC__,

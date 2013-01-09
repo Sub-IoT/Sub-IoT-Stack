@@ -4,13 +4,12 @@
  *  Authors:
  * 		maarten.weyn@artesis.be
  *  	glenn.ergeerts@artesis.be
+ *  	alexanderhoet@gmail.com
  *
  */
 
 #ifndef D7STACK_H_
 #define D7STACK_H_
-
-#include "types.h"
 
 // configuration
 // TODO get from configure step or similar
