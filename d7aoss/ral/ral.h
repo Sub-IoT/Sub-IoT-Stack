@@ -58,6 +58,8 @@ struct ral_interface
   bool (* read)(ral_rx_data*);
   bool (* is_rx_in_progress)(void);
   bool (* is_tx_in_progress)(void);
+  bool (* cca)(void);
+
 };
 
 #ifdef __cplusplus

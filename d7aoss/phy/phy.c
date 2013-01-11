@@ -99,6 +99,11 @@ bool phy_is_tx_in_progress(void)
 	return RAL_IMPLEMENTATION.is_tx_in_progress();
 }
 
+bool phy_cca(void)
+{
+	return RAL_IMPLEMENTATION.cca();
+}
+
 /*
  *
  * Private functions

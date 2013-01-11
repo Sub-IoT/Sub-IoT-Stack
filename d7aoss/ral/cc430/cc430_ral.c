@@ -54,7 +54,8 @@ const struct ral_interface cc430_ral =
     cc430_ral_rx_stop,
     cc430_ral_read,
     cc430_ral_is_rx_in_progress,
-    cc430_ral_is_tx_in_progress
+    cc430_ral_is_tx_in_progress,
+	cc430_ral_cca
 };
 
 /*
@@ -380,4 +381,30 @@ static int16_t calculate_rssi(int8_t rssi_raw)
     rssi -= 64 + RSSI_OFFSET;     			// ...and then rescale it, including offset
 
     return rssi;
+}
+
+bool cc430_ral_cca()
+{
+	//TODO
+	/*RF1AIFG = 0;
+	RF1AIE  = RFIFG_FLAG_IOCFG1;
+	RF1AIES = RFIFG_FLANK_IOCFG1;
+
+	Strobe(RF_SIDLE);
+	Strobe(RF_SRX);
+
+	system_lowpower_mode(0, 1);
+
+	RF1AIE  = 0;
+	RF1AIES = 0;
+
+	int thr  = -92; // TODO: get from settings
+	int rssi = get_rssi();
+
+	bool cca_ok = (bool)(rssi < thr);
+
+	Strobe(RF_SIDLE);
+
+	return cca_ok;*/
+	return false;
 }

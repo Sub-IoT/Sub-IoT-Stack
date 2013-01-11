@@ -106,18 +106,18 @@ namespace Dash7Logger
 				while (data.Count > 3 && data[0] == 0xDD)
 	    		{
 					byte type = data[1];
-	        		dataLength = data[3];
-		        	if (dataLength > 0 && dataLength + 5 <= data.Count)
+	        		dataLength = data[2];
+		        	if (dataLength > 0 && dataLength + 3 <= data.Count)
 		        	{
-		            	byte nr = data[2];
+		            	//byte nr = data[2];
 		                //data.RemoveRange(0, 6);
 					
 						switch (type)
 						{
 						case 0x00:	
 						{
-							List<byte> packet = data.GetRange(4, dataLength);
-							Console.WriteLine(string.Format("{0} DATA: {1}", DateTime.Now.ToString ("HH:mm:ss"), OSLCore.Converter.ConvertByteArrayToHexString(packet.ToArray())));
+							List<byte> packet = data.GetRange(3, dataLength);
+							Console.WriteLine(string.Format("{0} DATA: {1}", DateTime.Now.ToString ("HH:mm:ss.fff"), OSLCore.Converter.ConvertByteArrayToHexString(packet.ToArray())));
 							int length = (int) packet[0];
 							double txreip = -40 + (((int) packet[1])  * 0.5);
 							byte subnet = packet[2];
@@ -194,11 +194,30 @@ namespace Dash7Logger
 							
 							break;
 						}
-						case 0x01:							
-							Console.WriteLine(string.Format("{0} {1}",  DateTime.Now.ToString ("HH:mm:ss"), enc.GetString(data.GetRange(4, dataLength).ToArray())));
+						case 0x01:	
+						{
+							Console.WriteLine(string.Format("{0} {1}",  DateTime.Now.ToString ("HH:mm:ss.fff"), enc.GetString(data.GetRange(3, dataLength).ToArray())));
 							break;
+						}
+						case 0x02: // command
+							{
+							List<byte> command = data.GetRange(3, dataLength);
+							switch (command[0])
+							{
+							case 0xB0: // request date time
+								DateTime time = DateTime.Now;
+								List<byte> response = new List<byte>();
+								response.AddRange(BitConverter.GetBytes((short)(time.Year)));
+								response.AddRange(BitConverter.GetBytes((char) (time.Month)));
+								response.AddRange(BitConverter.GetBytes((char) (time.Day)));
+
+
+								break;
+							}
+							break;
+							}
 						}						
-						data.RemoveRange (0, 5 + dataLength);
+						data.RemoveRange (0, 3 + dataLength);
 			        }
 					else
 					{
@@ -214,7 +233,7 @@ namespace Dash7Logger
 		    data.Clear();	
 		}
 		
-				#region IDisposable implementation
+		#region IDisposable implementation
 		public void Dispose ()
 		{
 			if (this.serialPort != null)

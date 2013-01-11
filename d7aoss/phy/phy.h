@@ -61,6 +61,7 @@ void phy_rx_stop(void);
 bool phy_read(phy_rx_data* data);
 bool phy_is_rx_in_progress(void);
 bool phy_is_tx_in_progress(void);
+bool phy_cca(void);
 
 #ifdef __cplusplus
 }

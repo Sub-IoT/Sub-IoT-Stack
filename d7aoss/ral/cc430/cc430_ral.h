@@ -48,6 +48,7 @@ void cc430_ral_rx_stop(void);
 bool cc430_ral_read(ral_rx_data* data);
 bool cc430_ral_is_rx_in_progress(void);
 bool cc430_ral_is_tx_in_progress(void);
+bool cc430_ral_cca(void);
 
 #ifdef __cplusplus
 }

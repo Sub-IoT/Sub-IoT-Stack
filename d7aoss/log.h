@@ -10,8 +10,21 @@
 
 #include "types.h"
 
-void log_print_string(char* message, u8 length);
+#include "phy/phy.h"
+#include "dll/dll.h"
 
-void log_packet(u8* packet);
+#define LOG_TYPE_STRING 0x01
+
+#define LOG_TYPE_PHY_RX_RES 0x02
+#define LOG_TYPE_PHY_RX_RES_SIZE 5
+
+#define LOG_TYPE_DLL_RX_RES 0x03
+#define LOG_TYPE_DLL_RX_RES_SIZE 2
+
+void log_print_string(char* message);
+
+void log_phy_rx_res(phy_rx_data* res);
+
+void log_dll_rx_res(dll_rx_res_t* res);
 
 #endif /* __LOG_H_ */
