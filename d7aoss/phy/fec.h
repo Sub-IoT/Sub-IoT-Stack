@@ -13,9 +13,8 @@ extern "C" {
 
 #include <stdint.h>
 
-void conv_init(uint8_t* state);
-void conv_encode(uint8_t* input, uint16_t* output, uint8_t* state);
-void interleave_deinterleave(uint16_t* input, uint16_t* output);
+void conv_encode(uint8_t* input, uint8_t* output, uint16_t length);
+void interleave_deinterleave(uint8_t* input, uint8_t* output, uint16_t length);
 
 
 #ifdef __cplusplus

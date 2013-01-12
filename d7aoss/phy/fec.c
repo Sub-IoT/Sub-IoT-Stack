@@ -8,97 +8,111 @@
 
 #include "fec.h"
 
-uint8_t fec_lut[16] = {0, 3, 1, 2, 3, 0, 2, 1 , 3 , 0, 2, 1, 0, 3, 1, 2};
+const uint8_t fec_lut[16] = {0, 3, 1, 2, 3, 0, 2, 1 , 3 , 0, 2, 1, 0, 3, 1, 2};
 
-void conv_init(uint8_t* state)
+/*
+ * output array size must at least be 2 x length and a multiple of 4bytes
+ * TODO append trellis terminator
+ */
+void conv_encode(uint8_t* input, uint8_t* output, uint16_t length)
 {
-	*state = 0;
-}
-
-void conv_encode(uint8_t* input, uint16_t* output, uint8_t* state)
-{
-	register uint8_t state_tmp;
+	uint16_t i;
+	register uint8_t state;
 	register uint8_t input_tmp;
 	register uint16_t output_tmp;
 
-	input_tmp = *input;
-	state_tmp = *state;
+	state = 0;
 
-	//bit 7
-	state_tmp = (state_tmp << 1) & 0x0E;
-	state_tmp |= (input_tmp >> 7) & 0x01;
-	output_tmp = fec_lut[state_tmp] << 14;
+	for (i = 0; i < length; i++) {
+		input_tmp = input[i];
 
-	//bit 6
-	state_tmp = (state_tmp << 1) & 0x0E;
-	state_tmp |= (input_tmp >> 6) & 0x01;
-	output_tmp |= fec_lut[state_tmp] << 12;
+		//bit 7
+		state = (state << 1) & 0x0E;
+		state |= (input_tmp >> 7) & 0x01;
+		output_tmp = fec_lut[state] << 14;
 
-	//bit 5
-	state_tmp = (state_tmp << 1) & 0x0E;
-	state_tmp |= (input_tmp >> 5) & 0x01;
-	output_tmp |= fec_lut[state_tmp] << 10;
+		//bit 6
+		state = (state << 1) & 0x0E;
+		state |= (input_tmp >> 6) & 0x01;
+		output_tmp |= fec_lut[state] << 12;
 
-	//bit 4
-	state_tmp = (state_tmp << 1) & 0x0E;
-	state_tmp |= (input_tmp >> 4) & 0x01;
-	output_tmp |= fec_lut[state_tmp] << 8;
+		//bit 5
+		state = (state << 1) & 0x0E;
+		state |= (input_tmp >> 5) & 0x01;
+		output_tmp |= fec_lut[state] << 10;
 
-	//bit 3
-	state_tmp = (state_tmp << 1) & 0x0E;
-	state_tmp |= (input_tmp >> 3) & 0x01;
-	output_tmp |= fec_lut[state_tmp] << 6;
+		//bit 4
+		state = (state << 1) & 0x0E;
+		state |= (input_tmp >> 4) & 0x01;
+		output_tmp |= fec_lut[state] << 8;
 
-	//bit 2
-	state_tmp = (state_tmp << 1) & 0x0E;
-	state_tmp |= (input_tmp >> 2) & 0x01;
-	output_tmp |= fec_lut[state_tmp] << 4;
+		//bit 3
+		state = (state << 1) & 0x0E;
+		state |= (input_tmp >> 3) & 0x01;
+		output_tmp |= fec_lut[state] << 6;
 
-	//bit 1
-	state_tmp = (state_tmp << 1) & 0x0E;
-	state_tmp |= (input_tmp >> 1) & 0x01;
-	output_tmp |= fec_lut[state_tmp] << 2;
+		//bit 2
+		state = (state << 1) & 0x0E;
+		state |= (input_tmp >> 2) & 0x01;
+		output_tmp |= fec_lut[state] << 4;
 
-	//bit 0
-	state_tmp = (state_tmp << 1) & 0x0E;
-	state_tmp |= input_tmp & 0x01;
-	output_tmp |= fec_lut[state_tmp];
+		//bit 1
+		state = (state << 1) & 0x0E;
+		state |= (input_tmp >> 1) & 0x01;
+		output_tmp |= fec_lut[state] << 2;
 
-	*output = output_tmp;
-	*state = state_tmp;
+		//bit 0
+		state = (state << 1) & 0x0E;
+		state |= input_tmp & 0x01;
+		output_tmp |= fec_lut[state];
+
+		output[i << 1] = output_tmp >> 8;
+		output[(i << 1) + 1] = output_tmp;
+	}
+}
+
+void conv_decode()
+{
+
 }
 
 /*
- * input/output must be a pointer to an array of 1 x uint32 or 2 x uint16 or 4 x uint8
+ * buffer size must be a multiple of 4
+ * input and output buffer may be the same
  */
-void interleave_deinterleave(uint16_t* input, uint16_t* output)
+void interleave_deinterleave(uint8_t* input, uint8_t* output, uint16_t length)
 {
+	uint16_t i;
 	register uint16_t input0;
 	register uint16_t input1;
 	register uint16_t output0;
 	register uint16_t output1;
 
-	input0 = input[0];
-	input1 = input[1];
+	for (i = 0; i < length; i+=4) {
+		input0 = (input[i] << 8) | input[i+1];
+		input1 = (input[i+2] << 8) | input[i+3];
 
-	output0 = (input0 >> 10) & 0x03;
-	output0 |= ((input0 >> 2) & 0x03) << 2;
-	output0 |= ((input1 >> 10) & 0x03) << 4;
-	output0 |= ((input1 >> 2) & 0x03) << 6;
-	output0 |= ((input0 >> 8) & 0x03) << 8;
-	output0 |= (input0 & 0x03) << 10;
-	output0 |= ((input1 >> 8) & 0x03) << 12;
-	output0 |= (input1 & 0x03) << 14;
+		output0 = (input0 >> 10) & 0x03;
+		output0 |= ((input0 >> 2) & 0x03) << 2;
+		output0 |= ((input1 >> 10) & 0x03) << 4;
+		output0 |= ((input1 >> 2) & 0x03) << 6;
+		output0 |= ((input0 >> 8) & 0x03) << 8;
+		output0 |= (input0 & 0x03) << 10;
+		output0 |= ((input1 >> 8) & 0x03) << 12;
+		output0 |= (input1 & 0x03) << 14;
 
-	output1 = (input0 >> 14) & 0x03;
-	output1 |= ((input0 >> 6) & 0x03) << 2;
-	output1 |= ((input1 >> 14) & 0x03) << 4;
-	output1 |= ((input1 >> 6) & 0x03) << 6;
-	output1 |= ((input0 >> 12) & 0x03) << 8;
-	output1 |= ((input0 >> 4) & 0x03) << 10;
-	output1 |= ((input1 >> 12) & 0x03) << 12;
-	output1 |= ((input1 >> 4) & 0x03) << 14;
+		output1 = (input0 >> 14) & 0x03;
+		output1 |= ((input0 >> 6) & 0x03) << 2;
+		output1 |= ((input1 >> 14) & 0x03) << 4;
+		output1 |= ((input1 >> 6) & 0x03) << 6;
+		output1 |= ((input0 >> 12) & 0x03) << 8;
+		output1 |= ((input0 >> 4) & 0x03) << 10;
+		output1 |= ((input1 >> 12) & 0x03) << 12;
+		output1 |= ((input1 >> 4) & 0x03) << 14;
 
-	output[0] = output0;
-	output[1] = output1;
+		output[i] = (uint8_t)(output0 >> 8);
+		output[i+1] = (uint8_t)output0;
+		output[i+2] = (uint8_t)(output1 >> 8);
+		output[i+3] = (uint8_t)output1;
+	}
 }
