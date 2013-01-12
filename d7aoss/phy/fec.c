@@ -8,26 +8,37 @@
 
 #include "fec.h"
 
-uint16_t interleave_deinterleave(uint16_t data)
+/*
+ * input/output must be a pointer to an array of 1 x uint32 or 2 x uint16 or 4 x uint8
+ */
+void interleave_deinterleave(uint16_t* input, uint16_t* output)
 {
-	uint16_t output = 0;
+	register uint16_t input0;
+	register uint16_t input1;
+	register uint16_t output0;
+	register uint16_t output1;
 
-	output = (data & 0x01) << 3;
-	output |= ((data >> 1) & 0x01) << 7;
-	output |= ((data >> 2) & 0x01) << 11;
-	output |= ((data >> 3) & 0x01) << 15;
-	output |= ((data >> 4) & 0x01) << 2;
-	output |= ((data >> 5) & 0x01) << 6;
-	output |= ((data >> 6) & 0x01) << 10;
-	output |= ((data >> 7) & 0x01) << 14;
-	output |= ((data >> 8) & 0x01) << 1;
-	output |= ((data >> 9) & 0x01) << 5;
-	output |= ((data >> 10) & 0x01) << 9;
-	output |= ((data >> 11) & 0x01) << 13;
-	output |= ((data >> 12) & 0x01);
-	output |= ((data >> 13) & 0x01) << 4;
-	output |= ((data >> 14) & 0x01) << 8;
-	output |= ((data >> 15) & 0x01) << 12;
+	input0 = input[0];
+	input1 = input[1];
 
-	return output;
+	output0 = (input0 >> 10) & 0x03;
+	output0 |= ((input0 >> 2) & 0x03) << 2;
+	output0 |= ((input1 >> 10) & 0x03) << 4;
+	output0 |= ((input1 >> 2) & 0x03) << 6;
+	output0 |= ((input0 >> 8) & 0x03) << 8;
+	output0 |= (input0 & 0x03) << 10;
+	output0 |= ((input1 >> 8) & 0x03) << 12;
+	output0 |= (input1 & 0x03) << 14;
+
+	output1 = (input0 >> 14) & 0x03;
+	output1 |= ((input0 >> 6) & 0x03) << 2;
+	output1 |= ((input1 >> 14) & 0x03) << 4;
+	output1 |= ((input1 >> 6) & 0x03) << 6;
+	output1 |= ((input0 >> 12) & 0x03) << 8;
+	output1 |= ((input0 >> 4) & 0x03) << 10;
+	output1 |= ((input1 >> 12) & 0x03) << 12;
+	output1 |= ((input1 >> 4) & 0x03) << 14;
+
+	output[0] = output0;
+	output[1] = output1;
 }

@@ -13,7 +13,7 @@ extern "C" {
 
 #include <stdint.h>
 
-uint16_t interleave_deinterleave(uint16_t data);
+void interleave_deinterleave(uint16_t* input, uint16_t* output);
 
 
 #ifdef __cplusplus
