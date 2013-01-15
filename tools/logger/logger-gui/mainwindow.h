@@ -3,8 +3,8 @@
 
 #include <QtGui>
 
-#include <serialport/serialport.h>
-#include <serialport/serialportinfo.h>
+#include <serialport.h>
+#include <serialportinfo.h>
 
 #include <qcustomplot/qcustomplot.h>
 

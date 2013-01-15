@@ -4,7 +4,7 @@
 #include <QObject>
 #include <QQueue>
 
-#include <serialport/serialport.h>
+#include <serialport.h>
 
 #include "packet.h"
 
