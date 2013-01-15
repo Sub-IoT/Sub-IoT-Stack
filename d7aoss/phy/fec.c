@@ -11,13 +11,18 @@
 
 const uint8_t fec_lut[16] = {0, 3, 1, 2, 3, 0, 2, 1 , 3 , 0, 2, 1, 0, 3, 1, 2};
 
-//TODO bitfields?
 typedef struct {
 	uint8_t populated;
 	uint8_t metric;
+	uint16_t path;
+} VITERBISTATE;
 
-
-} state;
+typedef struct {
+	VITERBISTATE states1[8];
+	VITERBISTATE states2[8];
+	VITERBISTATE* old;
+	VITERBISTATE* new;
+} CONVDECODESTATE;
 
 /*
  * output array size must at least be 2 x length and a multiple of 4bytes
@@ -83,7 +88,7 @@ void conv_encode(uint8_t* input, uint8_t* output, uint16_t length, uint8_t* stat
 }
 
 /*
- * Length must be a multiple of two
+ * Length must be a multiple of 4
  */
 void conv_decode(uint8_t* input, uint8_t* output, uint16_t length)
 {
@@ -94,23 +99,17 @@ void conv_decode(uint8_t* input, uint8_t* output, uint16_t length)
 	uint8_t state_tmp;
 	uint8_t symbol_tmp;
 	uint8_t metric_tmp;
-
-	state states1[8];
-	state states2[8];
-
-	state* states_old;
-	state* states_new;
-	state* states_tmp;
-
 	uint16_t input_tmp;
 
-	//Initialization
-	states_old = states1;
-	states_new = states2;
-	memset(states_old, 0, sizeof(state)  << 3);
-	memset(states_new, 0, sizeof(state)  << 3);
-	states_old[0].populated = 1;
+	CONVDECODESTATE state;
+	VITERBISTATE* states_tmp;
 
+	//Initialization
+	state.old = state.states1;
+	state.new = state.states2;
+	memset(state.old, 0, sizeof(VITERBISTATE)  << 3);
+	memset(state.new, 0, sizeof(VITERBISTATE)  << 3);
+	state.old[0].populated = 1;
 
 	//For every 2 bytes of the input buffer
 	for (i = 0; i < length; i+=2) {
@@ -123,42 +122,44 @@ void conv_decode(uint8_t* input, uint8_t* output, uint16_t length)
 			//Start of Viterbi algorithm
 			//For every state
 			for (k = 0; k < 8; k++) {
-				if(states_old[k].populated) {
+				if(state.old[k].populated) {
 					//Calculate state and cost for 0 (cost is hamming distance)
 					state_tmp = (k << 1) & 0x0E;
 					symbol_tmp = fec_lut[state_tmp];
-					metric_tmp = states_old[k].metric;
+					metric_tmp = state.old[k].metric;
 					metric_tmp += ((symbol ^ symbol_tmp) + 1) >> 1;
 
 					//Update new state
 					state_tmp &= 0x07;
-					if (!states_new[state_tmp].populated || metric_tmp < states_new[state_tmp].metric) {
-						states_new[state_tmp].populated = 1;
-						states_new[state_tmp].metric = metric_tmp;
+					if (!state.new[state_tmp].populated || metric_tmp < state.new[state_tmp].metric) {
+						state.new[state_tmp].populated = 1;
+						state.new[state_tmp].metric = metric_tmp;
+						state.new[state_tmp].path = state.old[k].path << 1;
 					}
 
 					//Calculate state and symbol for 1
 					state_tmp = ((k << 1) & 0x0E) | 0x01;
 					symbol_tmp = fec_lut[state_tmp];
-					metric_tmp = states_old[k].metric;
+					metric_tmp = state.old[k].metric;
 					metric_tmp += ((symbol ^ symbol_tmp) + 1) >> 1;
 
 					//Update new state
 					state_tmp &= 0x07;
-					if (!states_new[state_tmp].populated || metric_tmp < states_new[state_tmp].metric) {
-						states_new[state_tmp].populated = 1;
-						states_new[state_tmp].metric = metric_tmp;
+					if (!state.new[state_tmp].populated || metric_tmp < state.new[state_tmp].metric) {
+						state.new[state_tmp].populated = 1;
+						state.new[state_tmp].metric = metric_tmp;
+						state.new[state_tmp].path = (state.old[k].path << 1) | 0x01;
 					}
 				}
 			}
 
 			//Switch state arrays
-			states_tmp = states_new;
-			states_new = states_old;
-			states_old = states_tmp;
+			states_tmp = state.new;
+			state.new = state.old;
+			state.old = states_tmp;
 
 			//Reset new state array
-			memset(states_new, 0, sizeof(state)  << 3);
+			memset(state.new, 0, sizeof(VITERBISTATE)  << 3);
 		}
 	}
 }
