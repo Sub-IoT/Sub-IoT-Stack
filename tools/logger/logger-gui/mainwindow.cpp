@@ -4,6 +4,11 @@
 #include <QtCore/QThread>
 #include <QDebug>
 
+#include <serialport.h>
+QT_USE_NAMESPACE_SERIALPORT
+
+#include "connectdialog.h"
+
 MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWindow)
 {    
     qRegisterMetaType<Packet>();
@@ -14,22 +19,12 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
     _crcErrorCount = 0;
     _bytesSkippedCount = 0;
 
-    _serialPortComboBox = new QComboBox(this);
-    connect(_serialPortComboBox, SIGNAL(currentIndexChanged(int)), SLOT(onSerialPortSelected(int)));
-
-    _serialPort = new SerialPort(this);
-    _logParser = new LogParser(_serialPort);
-    connect(_logParser, SIGNAL(logMessageReceived(QString)), SLOT(onLogMessageReceived(QString)));
-    connect(_logParser, SIGNAL(packetParsed(Packet)), SLOT(onPacketParsed(Packet)));
+    _ioDevice = NULL;
+    _logParser = NULL;
+    _parserThread = new QThread();
 
     initToolbar();
     initStatusbar();
-
-    QThread readerThread;
-    _logParser->moveToThread(&readerThread);
-    readerThread.start();
-
-    detectSerialPorts();
 
     ui->plotWidget->addGraph();
     ui->plotWidget->graph(0)->setScatterStyle(QCP::ssDisc);
@@ -50,7 +45,6 @@ MainWindow::~MainWindow()
 
 void MainWindow::initToolbar()
 {
-    ui->toolBar->addWidget(_serialPortComboBox);
     ui->toolBar->addAction(ui->connectAction);
     ui->toolBar->addSeparator();
     ui->toolBar->addAction(ui->restartAction);
@@ -75,63 +69,80 @@ void MainWindow::initStatusbar()
 
 void MainWindow::updateStatus()
 {
-    if(_serialPort->isOpen())
-        _connectionStatusLabel->setText(QString("Connected to: %1").arg(_serialPort->portName()));
+    if(_ioDevice && _ioDevice->isOpen())
+    {
+        QString device;
+
+        SerialPort* serial = qobject_cast<SerialPort*>(_ioDevice);
+        if(serial != NULL)
+            device = serial->portName();
+
+        QFile* file = qobject_cast<QFile*>(_ioDevice);
+        if(file != NULL)
+            device = file->fileName();
+
+        _connectionStatusLabel->setText(QString("Connected to: %1").arg(device));
+    }
     else
-        _connectionStatusLabel->setText(QString("Not connected"));
+    {
+       _connectionStatusLabel->setText(QString("Not connected"));
+    }
 
     _packetsReceivedCountLabel->setText(QString("Packets received: %1").arg(_packetsReceivedCount));
     _crcErrorsCountLabel->setText(QString("Packets with CRC errors: %2").arg(_crcErrorCount));
-}
-
-void MainWindow::detectSerialPorts()
-{
-    _serialPorts = SerialPortInfo::availablePorts();
-    qDebug() << "Number of serial ports found: " << _serialPorts.count();
-    for (int i = 0; i < _serialPorts.count(); i++)
-    {
-        const SerialPortInfo &info = _serialPorts.at(i);
-        QString s(QObject::tr("Port: %1\n"
-                              "Location: %2\n"
-                              "Description: %3\n"
-                              "Manufacturer: %4\n"
-                              "Vendor Identifier: %5\n"
-                              "Product Identifier: %6\n"));
-
-        s = s.arg(info.portName()).arg(info.systemLocation())
-                .arg(info.description()).arg(info.manufacturer())
-                .arg(info.vendorIdentifier()).arg(info.productIdentifier());
-
-        qDebug() << s;
-        _serialPortComboBox->insertItem(i, info.portName());
-    }
 }
 
 void MainWindow::on_connectAction_triggered(bool connect)
 {
     if(connect)
     {
-        if(_serialPort->open(QIODevice::ReadWrite))
+        ConnectDialog dlg(this);
+        if(dlg.exec() == QDialog::Accepted)
         {
-            // TODO hardcoded settings
-            if(!_serialPort->setRate(SerialPort::Rate115200) ||
-                !_serialPort->setDataBits(SerialPort::Data8) ||
-                !_serialPort->setParity(SerialPort::NoParity) ||
-                !_serialPort->setFlowControl(SerialPort::NoFlowControl) ||
-                !_serialPort->setStopBits(SerialPort::TwoStop))
+            if(dlg.connectionType() == Serial)
             {
-                _serialPort->close();
-                QMessageBox::critical(this, "Logger", "Can't configure serial port, reason: " + errorString());
+                SerialPort* serialPort = new SerialPort(this);
+                _ioDevice = serialPort;
+                serialPort->setPort(dlg.serialPortName());
+                if(serialPort->open(QIODevice::ReadWrite))
+                {
+                    // TODO hardcoded settings
+                    if(!serialPort->setRate(SerialPort::Rate115200) ||
+                        !serialPort->setDataBits(SerialPort::Data8) ||
+                        !serialPort->setParity(SerialPort::NoParity) ||
+                        !serialPort->setFlowControl(SerialPort::NoFlowControl) ||
+                        !serialPort->setStopBits(SerialPort::TwoStop))
+                    {
+                        serialPort->close();
+                        QMessageBox::critical(this, "Logger", "Can't configure serial port, reason: " + serialErrorString());
+                        return;
+                    }
+
+                }
+                else
+                {
+                    QMessageBox::critical(this, "Logger", "Serial port connection failed, reason: " + serialErrorString(), QMessageBox::Ok);
+                    return;
+                }
             }
-        }
-        else
-        {
-            QMessageBox::critical(this, "Logger", "Serial port connection failed, reason: " + errorString(), QMessageBox::Ok);
+            else if(dlg.connectionType() == File)
+            {
+                QFile* file = new QFile(dlg.fileName(), this);
+                _ioDevice = file;
+            }
+
+            _logParser = new LogParser(_ioDevice, this);
+            QObject::connect(_logParser, SIGNAL(logMessageReceived(QString)), SLOT(onLogMessageReceived(QString)));
+            QObject::connect(_logParser, SIGNAL(packetParsed(Packet)), SLOT(onPacketParsed(Packet)));
+
+            _logParser->moveToThread(_parserThread);
+            _parserThread->start();
+            _logParser->openDevice();
         }
     }
     else
     {
-        _serialPort->close();
+        _ioDevice->close();
     }
 
     updateStatus();
@@ -148,11 +159,6 @@ void MainWindow::on_restartAction_triggered()
     _timestampValues.clear();
     _rssValues.clear();
     updatePlot();
-}
-
-void MainWindow::onSerialPortSelected(int index)
-{
-    _serialPort->setPort(_serialPorts.at(index));
 }
 
 void MainWindow::onLogMessageReceived(QString logMessage)
@@ -191,9 +197,10 @@ void MainWindow::onPacketParsed(Packet packet)
     updateStatus();
 }
 
-QString MainWindow::errorString()
+QString MainWindow::serialErrorString() const
 {
-    switch(_serialPort->error())
+    SerialPort* serial = qobject_cast<SerialPort*>(_ioDevice);
+    switch(serial->error())
     {
         case SerialPort::NoError:
             return "no error";

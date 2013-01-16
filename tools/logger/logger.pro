@@ -1,6 +1,7 @@
 TEMPLATE = subdirs
-
+CONFIG += ordered
 SUBDIRS += \
+    external/serialport \
     liblogger \
     logger-gui \
-    external/serialport
+    logger-cli

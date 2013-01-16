@@ -85,7 +85,7 @@
    </property>
    <property name="icon">
     <iconset resource="resources.qrc">
-     <normaloff>:/icons/resources/media-record.png</normaloff>:/icons/resources/media-record.png</iconset>
+     <normaloff>:/icons/resources/network-wired.png</normaloff>:/icons/resources/network-wired.png</iconset>
    </property>
    <property name="text">
     <string>Connect</string>

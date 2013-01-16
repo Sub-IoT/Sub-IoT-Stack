@@ -3,14 +3,10 @@
 
 #include <QtGui>
 
-#include <serialport.h>
-#include <serialportinfo.h>
-
 #include <qcustomplot/qcustomplot.h>
 
 #include "logparser.h"
 
-QT_USE_NAMESPACE_SERIALPORT
 
 namespace Ui {
     class MainWindow;
@@ -25,21 +21,17 @@ public:
     ~MainWindow();
 
     void updatePlot();
-protected slots:
-    void onSerialPortSelected(int index);
+
+private slots:
     void onLogMessageReceived(QString logMessage);
     void onPacketParsed(Packet packet);
-
-    void on_connectAction_triggered(bool connect);
-    
-private slots:
+    void on_connectAction_triggered(bool checked);
     void on_restartAction_triggered();
 
 private:
     void initToolbar();
     void initStatusbar();
-    void detectSerialPorts();
-    QString errorString();
+    QString serialErrorString() const;
     void parseReceivedData();
     void appendToLog(QString msg);
     void updateStatus();
@@ -50,9 +42,9 @@ private:
     QLabel* _crcErrorsCountLabel;
     QLabel* _connectionStatusLabel;
 
-    QList<SerialPortInfo> _serialPorts;
-    SerialPort* _serialPort;
+    QIODevice* _ioDevice;
     LogParser* _logParser;
+    QThread* _parserThread;
 
     int _packetsReceivedCount;
     int _crcErrorCount;

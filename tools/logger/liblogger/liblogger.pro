@@ -6,10 +6,10 @@
 
 QT       -= gui
 
-TARGET = liblogger
+TARGET = logger
 TEMPLATE = lib
 
-DEFINES += LIBLOGGER_LIBRARY
+DEFINES += LOGGER_LIBRARY
 
 SOURCES += \
     logparser.cpp \

@@ -6,18 +6,26 @@
 #include "phy/phy.h"
 #include "dll/dll.h"
 
-LogParser::LogParser(SerialPort* serialPort, QObject *parent) : QObject(parent)
+LogParser::LogParser(QIODevice* ioDevice, QObject *parent) : QObject(parent)
 {
-    _serialPort = serialPort;
+    _ioDevice = ioDevice;
 
     _receivedDataQueue = new QQueue<unsigned char>();
 
-    connect(_serialPort, SIGNAL(readyRead()), SLOT(onDataAvailable()));
+    connect(_ioDevice, SIGNAL(readyRead()), SLOT(onDataAvailable()));
+}
+
+void LogParser::openDevice()
+{
+    _ioDevice->open(QIODevice::ReadOnly);
+
+    if(_ioDevice->bytesAvailable() > 0) // trigger read for implementations like QFile which don't emit readyRead()
+        onDataAvailable();
 }
 
 void LogParser::onDataAvailable()
 {
-    QByteArray data = _serialPort->readAll();
+    QByteArray data = _ioDevice->readAll();
     for(int i = 0; i < data.size(); i++)
     {
         _receivedDataQueue->enqueue((unsigned char)data.constData()[i]);

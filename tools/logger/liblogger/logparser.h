@@ -4,17 +4,14 @@
 #include <QObject>
 #include <QQueue>
 
-#include <serialport.h>
-
 #include "packet.h"
-
-QT_USE_NAMESPACE_SERIALPORT
 
 class LogParser : public QObject
 {
     Q_OBJECT
 public:
-    explicit LogParser(SerialPort* serialPort, QObject *parent = 0);
+    explicit LogParser(QIODevice* ioDevice, QObject *parent = 0);
+    void openDevice();
 
 signals:
     void packetParsed(Packet packet);
@@ -28,7 +25,7 @@ private:
     void parsePhyRxResult(QByteArray frameData);
     void parseDllRxResult(QByteArray frameData);
 
-    SerialPort* _serialPort;
+    QIODevice* _ioDevice;
     QQueue<unsigned char>* _receivedDataQueue;
     QList<Packet> _packets;
 };

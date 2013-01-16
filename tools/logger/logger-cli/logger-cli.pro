@@ -1,37 +1,34 @@
-QT       += core gui
+#-------------------------------------------------
+#
+# Project created by QtCreator 2013-01-15T13:08:17
+#
+#-------------------------------------------------
 
-greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
+QT       += core
 
-TARGET = logger-gui
+QT       -= gui
+
+TARGET = logger-cli
+CONFIG   += console
+CONFIG   -= app_bundle
+
 TEMPLATE = app
 
 
-SOURCES += main.cpp\
-    mainwindow.cpp \
-    qcustomplot/qcustomplot.cpp \
-    connectdialog.cpp
-
-HEADERS  += \
-    mainwindow.h \
-    qcustomplot/qcustomplot.h \
-    connectdialog.h
-
-FORMS    += \
-    mainwindow.ui \
-    connectdialog.ui
-
-RESOURCES += \
-    resources.qrc
+SOURCES += main.cpp \
+    clilogger.cpp
 
 INCLUDEPATH += ../../../d7aoss/ # TODO remove?
 
-# link with liblogger
 win32:CONFIG(release, debug|release): LIBS += -L$$OUT_PWD/../liblogger/release/ -llogger
 else:win32:CONFIG(debug, debug|release): LIBS += -L$$OUT_PWD/../liblogger/debug/ -llogger
 else:unix: LIBS += -L$$OUT_PWD/../liblogger/ -llogger
 
 INCLUDEPATH += $$PWD/../liblogger
 DEPENDPATH += $$PWD/../liblogger
+
+HEADERS += \
+    clilogger.h
 
 # link with serialport TODO remove?
 win32:CONFIG(release, debug|release): LIBS += -L$$OUT_PWD/../external/serialport/release/ -lSerialPort
