@@ -11,19 +11,6 @@
 
 const uint8_t fec_lut[16] = {0, 3, 1, 2, 3, 0, 2, 1 , 3 , 0, 2, 1, 0, 3, 1, 2};
 
-typedef struct {
-	uint8_t populated;
-	uint8_t metric;
-	uint16_t path;
-} VITERBISTATE;
-
-typedef struct {
-	VITERBISTATE states1[8];
-	VITERBISTATE states2[8];
-	VITERBISTATE* old;
-	VITERBISTATE* new;
-} CONVDECODESTATE;
-
 /*
  * output array size must at least be 2 x length and a multiple of 4bytes
  * TODO append trellis terminator
@@ -87,10 +74,20 @@ void conv_encode(uint8_t* input, uint8_t* output, uint16_t length, uint8_t* stat
 	*state = state_tmp;
 }
 
+void conv_decode_init(CONVDECODESTATE* state)
+{
+	state->pathsize = 0;
+	state->old = state->states1;
+	state->new = state->states2;
+	memset(state->old, 0, sizeof(VITERBISTATE)  << 3);
+	memset(state->new, 0, sizeof(VITERBISTATE)  << 3);
+	state->old[0].populated = 1;
+}
+
 /*
  * Length must be a multiple of 4
  */
-void conv_decode(uint8_t* input, uint8_t* output, uint16_t length)
+void conv_decode(uint8_t* input, uint8_t* output, uint16_t length, CONVDECODESTATE* state)
 {
 	uint16_t i;
 	int8_t j;
@@ -101,15 +98,7 @@ void conv_decode(uint8_t* input, uint8_t* output, uint16_t length)
 	uint8_t metric_tmp;
 	uint16_t input_tmp;
 
-	CONVDECODESTATE state;
 	VITERBISTATE* states_tmp;
-
-	//Initialization
-	state.old = state.states1;
-	state.new = state.states2;
-	memset(state.old, 0, sizeof(VITERBISTATE)  << 3);
-	memset(state.new, 0, sizeof(VITERBISTATE)  << 3);
-	state.old[0].populated = 1;
 
 	//For every 2 bytes of the input buffer
 	for (i = 0; i < length; i+=2) {
@@ -122,44 +111,83 @@ void conv_decode(uint8_t* input, uint8_t* output, uint16_t length)
 			//Start of Viterbi algorithm
 			//For every state
 			for (k = 0; k < 8; k++) {
-				if(state.old[k].populated) {
+				if(state->old[k].populated) {
 					//Calculate state and cost for 0 (cost is hamming distance)
 					state_tmp = (k << 1) & 0x0E;
 					symbol_tmp = fec_lut[state_tmp];
-					metric_tmp = state.old[k].metric;
-					metric_tmp += ((symbol ^ symbol_tmp) + 1) >> 1;
+					metric_tmp = ((symbol ^ symbol_tmp) + 1) >> 1;
 
 					//Update new state
 					state_tmp &= 0x07;
-					if (!state.new[state_tmp].populated || metric_tmp < state.new[state_tmp].metric) {
-						state.new[state_tmp].populated = 1;
-						state.new[state_tmp].metric = metric_tmp;
-						state.new[state_tmp].path = state.old[k].path << 1;
+					if (!state->new[state_tmp].populated || (state->old[k].metric + metric_tmp) < state->new[state_tmp].metric) {
+						state->new[state_tmp].populated = 1;
+						state->new[state_tmp].metric = state->old[k].metric + metric_tmp;
+						memcpy(state->new[state_tmp].path, state->old[k].path, 4);
+						memcpy(state->new[state_tmp].pathmetric, state->old[k].pathmetric, 4);
+						state->new[state_tmp].path[0] <<= 1;
+						state->new[state_tmp].pathmetric[0] += metric_tmp;
+
 					}
 
 					//Calculate state and symbol for 1
 					state_tmp = ((k << 1) & 0x0E) | 0x01;
 					symbol_tmp = fec_lut[state_tmp];
-					metric_tmp = state.old[k].metric;
-					metric_tmp += ((symbol ^ symbol_tmp) + 1) >> 1;
+					metric_tmp = ((symbol ^ symbol_tmp) + 1) >> 1;
 
 					//Update new state
 					state_tmp &= 0x07;
-					if (!state.new[state_tmp].populated || metric_tmp < state.new[state_tmp].metric) {
-						state.new[state_tmp].populated = 1;
-						state.new[state_tmp].metric = metric_tmp;
-						state.new[state_tmp].path = (state.old[k].path << 1) | 0x01;
+					if (!state->new[state_tmp].populated || (state->old[k].metric + metric_tmp) < state->new[state_tmp].metric) {
+						state->new[state_tmp].populated = 1;
+						state->new[state_tmp].metric = state->old[k].metric + metric_tmp;
+						memcpy(state->new[state_tmp].path, state->old[k].path, 4);
+						memcpy(state->new[state_tmp].pathmetric, state->old[k].pathmetric, 4);
+						state->new[state_tmp].path[0] = (state->new[state_tmp].path[0] << 1) | 0x01;
+						state->new[state_tmp].pathmetric[0] += metric_tmp;
 					}
 				}
 			}
 
-			//Switch state arrays
-			states_tmp = state.new;
-			state.new = state.old;
-			state.old = states_tmp;
+			//Switch state pointers
+			states_tmp = state->new;
+			state->new = state->old;
+			state->old = states_tmp;
 
 			//Reset new state array
-			memset(state.new, 0, sizeof(VITERBISTATE)  << 3);
+			memset(state->new, 0, sizeof(VITERBISTATE)  << 3);
+		}
+
+		//Update path size
+		state->pathsize++;
+
+		//Write out oldest byte with smallest metric if pathsize = 4
+		if(state->pathsize == 4) {
+			state->pathsize--;
+
+			for (k = 0; k < 8; k++) {
+				metric_tmp = UINT8_MAX;
+
+				if (state->old[k].metric < metric_tmp) {
+					metric_tmp = state->old[1].metric;
+					*output = state->old[state_tmp].path[3];
+				}
+			}
+
+			output++;
+		}
+
+		//Rotate paths & metrics
+		for (k = 0; k < 8; k++) {
+			state->old[k].metric -= state->old[k].pathmetric[3];
+
+			state->old[k].path[3] = state->old[k].path[2];
+			state->old[k].path[2] = state->old[k].path[1];
+			state->old[k].path[1] = state->old[k].path[0];
+			state->old[k].path[0] = 0;
+
+			state->old[k].pathmetric[3] = state->old[k].pathmetric[2];
+			state->old[k].pathmetric[2] = state->old[k].pathmetric[1];
+			state->old[k].pathmetric[1] = state->old[k].pathmetric[0];
+			state->old[k].pathmetric[0] = 0;
 		}
 	}
 }
