@@ -20,6 +20,7 @@ public:
     QString toString() const;
     bool isCrcValid() const;
     signed int rss() const;
+    QByteArray sourceId() const;
 
 private:
     QDateTime _timestamp;

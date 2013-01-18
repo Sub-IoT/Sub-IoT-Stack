@@ -35,6 +35,7 @@ private:
     void parseReceivedData();
     void appendToLog(QString msg);
     void updateStatus();
+    void ensureDistinctColors();
 
     Ui::MainWindow *ui;
     QComboBox* _serialPortComboBox;
@@ -49,8 +50,10 @@ private:
     int _packetsReceivedCount;
     int _crcErrorCount;
     int _bytesSkippedCount;
-    QVector<double> _rssValues;
-    QVector<double> _timestampValues;
+    QHash<QString, QVector<double> > _rssValues;
+    QHash<QString, QVector<double> > _timestampValues;
+    double _timestampMin;
+    double _timestampMax;
 };
 
 #endif // MAINWINDOW_H

@@ -158,3 +158,8 @@ signed int Packet::rss() const
 {
     return _rss;
 }
+
+QByteArray Packet::sourceId() const
+{
+    return _sourceId;
+}

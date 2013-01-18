@@ -7,6 +7,8 @@
 #include <serialport.h>
 QT_USE_NAMESPACE_SERIALPORT
 
+#include "bytearrayutils.h"
+
 #include "connectdialog.h"
 
 MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWindow)
@@ -26,9 +28,9 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
     initToolbar();
     initStatusbar();
 
-    ui->plotWidget->addGraph();
-    ui->plotWidget->graph(0)->setScatterStyle(QCP::ssDisc);
-    ui->plotWidget->graph(0)->setScatterSize(5);
+    _timestampMin = QDateTime::currentDateTime().toTime_t();
+    _timestampMax = QDateTime::currentDateTime().toTime_t();
+
     ui->plotWidget->xAxis->setLabel("timestamp");
     ui->plotWidget->yAxis->setLabel("RSS [dBm]");
     ui->plotWidget->yAxis->setRange(-120, 0);
@@ -36,6 +38,9 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
     ui->plotWidget->xAxis->setDateTimeFormat("hh:mm:ss:zzz");
     ui->plotWidget->xAxis->setTickLabelFont(QFont(QFont().family(), 8));
     ui->plotWidget->yAxis->setTickLabelFont(QFont(QFont().family(), 8));
+    ui->plotWidget->legend->setVisible(true);
+    ui->plotWidget->legend->setFont(QFont(QFont().family(), 8));
+    ui->plotWidget->legend->setPositionStyle(QCPLegend::psBottomLeft);
 }
 
 MainWindow::~MainWindow()
@@ -158,6 +163,9 @@ void MainWindow::on_restartAction_triggered()
 
     _timestampValues.clear();
     _rssValues.clear();
+    ui->plotWidget->clearGraphs();
+    _timestampMin = QDateTime::currentDateTime().toTime_t();
+    _timestampMax = QDateTime::currentDateTime().toTime_t();
     updatePlot();
 }
 
@@ -175,9 +183,19 @@ void MainWindow::appendToLog(QString msg)
 
 void MainWindow::updatePlot()
 {
-    ui->plotWidget->graph(0)->setData(_timestampValues, _rssValues);
-    if(_timestampValues.size() > 0)
-        ui->plotWidget->xAxis->setRange(_timestampValues.first(), _timestampValues.last());
+    for(int i = 0; i < _rssValues.keys().count(); i++)
+    {
+        QString sourceId = _rssValues.keys()[i];
+        ui->plotWidget->graph(i)->setData(_timestampValues[sourceId], _rssValues[sourceId]);
+
+        if(_timestampValues[sourceId].value(0) < _timestampMin)
+            _timestampMin = _timestampValues[sourceId].value(0);
+
+        if(_timestampValues[sourceId].value(_timestampValues[sourceId].count()-1) > _timestampMax)
+            _timestampMax = _timestampValues[sourceId].value(_timestampValues[sourceId].count()-1);
+    }
+
+    ui->plotWidget->xAxis->setRange(_timestampMin, _timestampMax);
     ui->plotWidget->replot();
 }
 
@@ -190,11 +208,37 @@ void MainWindow::onPacketParsed(Packet packet)
         _crcErrorCount++;
     }
 
-    _rssValues.append(packet.rss()); // TODO separate graph per device id
-    _timestampValues.append(packet.timestamp().toTime_t());
+    QString sourceId = ByteArrayUtils::toString(packet.sourceId()).replace(" 0x", "").replace("0x", "");
+    if(!_rssValues.contains(sourceId))
+    {
+        _rssValues.insert(sourceId, QVector<double>());
+        _timestampValues.insert(sourceId, QVector<double>());
+
+        QCPGraph* deviceGraph = ui->plotWidget->addGraph();
+        deviceGraph->setScatterStyle(QCP::ssDisc);
+        deviceGraph->setScatterSize(5);
+        deviceGraph->setName(sourceId);
+        ensureDistinctColors();
+    }
+
+    _rssValues[sourceId].append(packet.rss());
+    _timestampValues[sourceId].append(packet.timestamp().toTime_t());
     updatePlot();
 
     updateStatus();
+}
+
+void MainWindow::ensureDistinctColors()
+{
+    double golden_ratio_conjugate = 0.618033988749895;
+    double h = qrand() / 100.0;
+    for(int i = 0; i < ui->plotWidget->graphCount(); i++)
+    {
+        h += golden_ratio_conjugate;
+        h = fmod(h, 1.0);
+        QColor color = QColor::fromHsvF(h, 0.5, 0.95);
+        ui->plotWidget->graph(i)->setPen(QPen(color));
+    }
 }
 
 QString MainWindow::serialErrorString() const
