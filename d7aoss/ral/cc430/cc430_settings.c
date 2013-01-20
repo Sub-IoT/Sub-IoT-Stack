@@ -11,7 +11,7 @@ RF_SETTINGS rfSettings = {
 	RADIO_SYNC0,     				// SYNC0	 Sync word, low byte
     RADIO_PKTLEN,    				// PKTLEN    Packet length.
     RADIO_PKTCTRL1_PQT(3) | RADIO_PKTCTRL1_APPEND_STATUS,   // PKTCTRL1  Packet automation control.
-    RADIO_PKTCTRL0_WHITE_DATA | RADIO_PKTCTRL0_CRC,   // PKTCTRL0  Packet automation control.
+    RADIO_PKTCTRL0_WHITE_DATA,      // PKTCTRL0  Packet automation control.
     RADIO_ADDR,   					// ADDR      Device address.
     RADIO_CHAN,   					// CHANNR    Channel number.
     RADIO_FREQ_IF,   				// FSCTRL1   Frequency synthesizer control.

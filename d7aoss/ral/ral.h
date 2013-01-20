@@ -43,8 +43,9 @@ typedef struct
 	uint8_t	channel_bandwidth_index;		//Channel bandwidth index
 	uint8_t eirp;							//Transmission power level in dBm ranged [-39, +10]
 	uint8_t preamble_size;					//Number of preamble symbols
-	uint8_t length;							//Packet length (0 : variable)
+	bool white_data;						//Enable hardware PN9 data whitening
 	uint8_t* data;							//Packet data
+	uint16_t length;						//Packet length
     uint16_t sync_word;						//Sync Word
 } ral_tx_cfg;
 

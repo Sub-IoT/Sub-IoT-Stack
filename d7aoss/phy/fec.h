@@ -28,6 +28,7 @@ typedef struct {
 	uint8_t pathsize;
 } CONVDECODESTATE;
 
+void conv_encode_init(uint8_t* state);
 void conv_encode(uint8_t* input, uint8_t* output, uint16_t length, uint8_t* state);
 void conv_decode_init(CONVDECODESTATE* state);
 void conv_decode(uint8_t* input, uint8_t* output, uint16_t length, CONVDECODESTATE* state);

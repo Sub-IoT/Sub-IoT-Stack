@@ -20,9 +20,8 @@ extern InterruptHandler interrupt_table[34];
 
 RadioState state;
 
-uint8_t packetBuffer[255];
-uint8_t packetLength;
-uint8_t remainingBytes;
+uint16_t packetLength;
+uint16_t remainingBytes;
 uint8_t* bufferPosition;
 
 uint8_t crc;
@@ -42,6 +41,8 @@ static RadioState get_radiostate(void);
 static void set_channel(uint8_t channel_center_freq_index, uint8_t channel_bandwidth_index);
 static void set_sync_word(uint16_t sync_word);
 static void set_preamble_size(uint8_t preamble_size);
+static void set_data_whitening(bool  white_data);
+static void set_length_infinite(bool infinite);
 static void set_timeout(uint16_t timeout);
 static int16_t calculate_rssi(int8_t);
 
@@ -78,6 +79,8 @@ void cc430_ral_init(void)
 
 void cc430_ral_tx(ral_tx_cfg* cfg)
 {
+	uint8_t txBytes;
+
 	//Only if radio idle
 	if(get_radiostate() != Idle)
 		return;
@@ -89,26 +92,32 @@ void cc430_ral_tx(ral_tx_cfg* cfg)
 	set_channel(cfg->channel_center_freq_index, cfg->channel_bandwidth_index);
 	set_sync_word(cfg->sync_word);
 	set_preamble_size(cfg->preamble_size);
+	set_data_whitening(cfg->white_data);
 
-	if(cfg->length == 0)
-	{
-		remainingBytes = cfg->data[0];
-		WriteSingleReg(PKTLEN, cfg->data[0]);
+	//Set packet length
+	remainingBytes = cfg->length;
+	WriteSingleReg(PKTLEN, (uint8_t)(cfg->length & 0X00FF));
 
-	} else {
-		remainingBytes = cfg->length;
-		WriteSingleReg(PKTLEN, cfg->length);
-	}
+	if(cfg->length > 255)
+		set_length_infinite(true);
+	else
+		set_length_infinite(false);
 
+	//Flush txfifo
+	//TODO Make this work!
+	//Strobe(RF_SFTX);
+
+	//Write initial data to txfifo
 	if(remainingBytes > 64)
-	{
-		WriteBurstReg(RF_TXFIFOWR, cfg->data, 64);
-		remainingBytes -= 64;
-		bufferPosition = &cfg->data[64];
-	} else {
-		WriteBurstReg(RF_TXFIFOWR, cfg->data, remainingBytes);
-	}
+		txBytes = 64;
+	else
+		txBytes = remainingBytes;
 
+	WriteBurstReg(RF_TXFIFOWR, cfg->data, txBytes);
+	bufferPosition = cfg->data + txBytes;
+	remainingBytes -= txBytes;
+
+	//Configure txfifo threshold
 	WriteSingleReg(FIFOTHR, RADIO_FIFOTHR_FIFO_THR_17_48);
 
 	//Enable interrupts
@@ -136,7 +145,7 @@ void cc430_ral_rx_start(ral_rx_cfg* cfg)
 	set_timeout(cfg->timeout);
 
 	packetReceived = false;
-	bufferPosition = packetBuffer;
+	//bufferPosition = packetBuffer;
 
 	if(cfg->length == 0)
 	{
@@ -167,7 +176,7 @@ void cc430_ral_rx_stop(void)
 bool cc430_ral_read(ral_rx_data* data)
 {
 	if(packetReceived) {
-		data->data = packetBuffer;
+		//data->data = packetBuffer;
 		data->length = packetLength;
 		data->rssi = rssi;
 		data->lqi = lqi;
@@ -214,6 +223,8 @@ void end_of_packet_isr()
 		rxtx_finish_isr();
 	} else if (state == Transmit) {
 		rxtx_finish_isr();
+	} else {
+		rxtx_finish_isr();
 	}
 }
 
@@ -257,15 +268,22 @@ void rx_data_isr()
 
 void tx_data_isr()
 {
-	//Read number of free bytes in TXFIFO
-	uint8_t txBytes = 64 - ReadSingleReg(TXBYTES);
+	uint8_t txBytes = ReadSingleReg(TXBYTES);
 
+	//If remaining bytes < (256 - remaining bytes in txfifo) go to fixed mode
+	if(remainingBytes < (256 - txBytes))
+		set_length_infinite(false);
+
+	//Calculate number of free bytes in TXFIFO
+	txBytes = 64 - txBytes;
+
+	//Write data
 	if(txBytes > remainingBytes)
 		txBytes = remainingBytes;
 
 	WriteBurstReg(RF_TXFIFOWR, bufferPosition, txBytes);
-	remainingBytes -= txBytes;
 	bufferPosition += txBytes;
+	remainingBytes -= txBytes;
 }
 
 void rxtx_finish_isr()
@@ -357,6 +375,26 @@ static void set_preamble_size(uint8_t preamble_size)
 		mdmcfg1 |= 0x10;
 
 	WriteSingleReg(MDMCFG1, mdmcfg1);
+}
+
+static void set_data_whitening(bool white_data)
+{
+	uint8_t pktctrl0 = ReadSingleReg(PKTCTRL0) & 0xBF;
+
+	if (white_data)
+		pktctrl0 |= RADIO_PKTCTRL0_WHITE_DATA;
+
+	WriteSingleReg(PKTCTRL0, pktctrl0);
+}
+
+static void set_length_infinite(bool infinite)
+{
+	uint8_t pktctrl0 = ReadSingleReg(PKTCTRL0) & 0xFC;
+
+	if (infinite)
+		pktctrl0 |= RADIO_PKTCTRL0_LENGTH_INF;
+
+	WriteSingleReg(PKTCTRL0, pktctrl0);
 }
 
 static void set_timeout(uint16_t timeout)

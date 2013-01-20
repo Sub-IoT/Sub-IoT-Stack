@@ -16,7 +16,7 @@ extern "C" {
 #define INITIAL_PN9	0x01FF
 
 void pn9_init(uint16_t* pn9);
-uint8_t pn9_encode_decode(uint8_t data, uint16_t* pn9);
+void pn9_encode_decode(uint8_t* input, uint8_t* output, uint16_t length, uint16_t* pn9);
 
 #ifdef __cplusplus
 }

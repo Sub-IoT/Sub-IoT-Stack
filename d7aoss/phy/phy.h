@@ -17,9 +17,6 @@ extern "C" {
 #include <stdbool.h>
 #include <stdint.h>
 
-//TODO implement FEC
-//TODO implement PN9
-
 #define SYNC_CLASS0_NON_FEC      0xE6D0
 #define SYNC_CLASS0_FEC          0xF498
 #define SYNC_CLASS1_NON_FEC      0x0B67
@@ -49,9 +46,9 @@ typedef struct
 {
 	uint8_t spectrum_id;		//Spectrum ID
 	uint8_t sync_word_class;	//Sync word class
-	uint8_t length;				//Packet length (0 : variable)
 	uint8_t eirp;				//Transmission power level in dBm ranged [-39, +10]
 	uint8_t* data;				//Packet data
+	uint16_t length;			//Packet length
 } phy_tx_cfg;
 
 void phy_init(void);

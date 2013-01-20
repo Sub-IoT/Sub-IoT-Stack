@@ -11,6 +11,11 @@
 
 const uint8_t fec_lut[16] = {0, 3, 1, 2, 3, 0, 2, 1 , 3 , 0, 2, 1, 0, 3, 1, 2};
 
+void conv_encode_init(uint8_t* state)
+{
+	*state = 0;
+}
+
 /*
  * output array size must at least be 2 x length and a multiple of 4bytes
  * TODO append trellis terminator

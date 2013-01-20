@@ -10,11 +10,15 @@
 #include <stdint.h>
 
 #include "phy.h"
+#include "fec.h"
+#include "pn9.h"
 #include "../d7aoss.h"
 #include "../ral/ral.h"
 
+uint8_t buffer[512];
+
 // Private function prototypes
-static bool translate_settings(uint8_t spectrum_id, uint8_t sync_word_class, uint8_t* channel_center_freq_index, uint8_t* channel_bandwith_index, uint8_t* preamble_size, uint16_t* sync_word);
+static bool translate_settings(uint8_t spectrum_id, uint8_t sync_word_class, uint8_t* fec, uint8_t* channel_center_freq_index, uint8_t* channel_bandwidth_index, uint8_t* preamble_size, uint16_t* sync_word);
 
 /*
  *
@@ -29,20 +33,40 @@ void phy_init()
 
 void phy_tx(phy_tx_cfg* cfg)
 {
+	uint8_t fec;
 	ral_tx_cfg ral_tx_cfg;
 
-	if(RAL_IMPLEMENTATION.is_rx_in_progress() || RAL_IMPLEMENTATION.is_tx_in_progress())
+	if (RAL_IMPLEMENTATION.is_rx_in_progress() || RAL_IMPLEMENTATION.is_tx_in_progress())
 		return; //TODO return error
 
-	if(!translate_settings(cfg->spectrum_id, cfg->sync_word_class, &ral_tx_cfg.channel_center_freq_index, &ral_tx_cfg.channel_bandwidth_index, &ral_tx_cfg.preamble_size, &ral_tx_cfg.sync_word))
+	if (!translate_settings(cfg->spectrum_id, cfg->sync_word_class, &fec, &ral_tx_cfg.channel_center_freq_index, &ral_tx_cfg.channel_bandwidth_index, &ral_tx_cfg.preamble_size, &ral_tx_cfg.sync_word))
 		return;  //TODO return error
 
-	ral_tx_cfg.length = cfg->length;
-	ral_tx_cfg.eirp = cfg->eirp;
-	ral_tx_cfg.data = cfg->data;
+	if (fec) {
+		uint16_t pn9;
+		uint8_t conv_enc_state;
 
-	// TODO u16 timeout; // mac level?
-	// TODO u8  cca;
+		//Data Whitening
+		pn9_init(&pn9);
+		pn9_encode_decode(cfg->data, cfg->data, cfg->length, &pn9);
+
+		//Convolutional encoding
+		conv_encode_init(&conv_enc_state);
+		conv_encode(cfg->data, buffer, cfg->length, &conv_enc_state);
+
+		//Interleaving
+		interleave_deinterleave(buffer, buffer, cfg->length << 1);
+
+		ral_tx_cfg.white_data = 0;
+		ral_tx_cfg.data = buffer;
+		ral_tx_cfg.length = cfg->length << 1;
+	} else {
+		ral_tx_cfg.white_data = 1;
+		ral_tx_cfg.data = cfg->data;
+		ral_tx_cfg.length = cfg->length;
+	}
+
+	ral_tx_cfg.eirp = cfg->eirp;
 
 	RAL_IMPLEMENTATION.tx(&ral_tx_cfg);
 
@@ -51,12 +75,13 @@ void phy_tx(phy_tx_cfg* cfg)
 
 void phy_rx_start(phy_rx_cfg* cfg)
 {
+	uint8_t fec;
 	ral_rx_cfg ral_rx_cfg;
 
 	if(RAL_IMPLEMENTATION.is_rx_in_progress() || RAL_IMPLEMENTATION.is_tx_in_progress())
 		return; //TODO return error
 
-	if(!translate_settings(cfg->spectrum_id, cfg->sync_word_class, &ral_rx_cfg.channel_center_freq_index, &ral_rx_cfg.channel_bandwidth_index, &ral_rx_cfg.preamble_size, &ral_rx_cfg.sync_word))
+	if(!translate_settings(cfg->spectrum_id, cfg->sync_word_class, &fec, &ral_rx_cfg.channel_center_freq_index, &ral_rx_cfg.channel_bandwidth_index, &ral_rx_cfg.preamble_size, &ral_rx_cfg.sync_word))
 		return; //TODO return error
 
 	ral_rx_cfg.length = cfg->length;
@@ -110,9 +135,9 @@ bool phy_cca(void)
  *
  */
 
-static bool translate_settings(uint8_t spectrum_id, uint8_t sync_word_class, uint8_t* channel_center_freq_index, uint8_t* channel_bandwidth_index, uint8_t* preamble_size, uint16_t* sync_word)
+static bool translate_settings(uint8_t spectrum_id, uint8_t sync_word_class, uint8_t* fec, uint8_t* channel_center_freq_index, uint8_t* channel_bandwidth_index, uint8_t* preamble_size, uint16_t* sync_word)
 {
-	uint8_t fec = spectrum_id >> 7;
+	*fec = spectrum_id >> 7;
 	*channel_center_freq_index = spectrum_id & 0x0F;
 	*channel_bandwidth_index = (spectrum_id >> 4) & 0x07;
 
@@ -143,12 +168,12 @@ static bool translate_settings(uint8_t spectrum_id, uint8_t sync_word_class, uin
 
 	//Assert valid sync word class and set sync word
 	if(sync_word_class == 0) {
-		if(fec == 0)
+		if(*fec == 0)
 			*sync_word = SYNC_CLASS0_NON_FEC;
 		else
 			*sync_word = SYNC_CLASS0_FEC;
 	} else if(sync_word_class == 1) {
-		if(fec == 0)
+		if(*fec == 0)
 			*sync_word = SYNC_CLASS1_NON_FEC;
 		else
 			*sync_word = SYNC_CLASS1_FEC;
