@@ -7,6 +7,7 @@
  */
 
 #include <string.h>
+#include <stdio.h>
 
 #include <phy/phy.h>
 
@@ -16,7 +17,7 @@
 #include <hal/rtc.h>
 #include <log.h>
 
-#include <phy/fec.h>
+#include "phy_tests.h"
 
 #define INTERRUPT_BUTTON1 	(1)
 #define INTERRUPT_BUTTON2 	(1 << 1)
@@ -46,6 +47,17 @@ void main(void)
     rtc_start();
 
 	phy_init();
+
+
+	unsigned int cycles;
+	cycles = test_pn9_timing();
+	printf("%d\n", cycles);
+	cycles = test_conv_encode_timing();
+	printf("%d\n", cycles);
+	cycles = test_conv_decode_timing();
+	printf("%d\n", cycles);
+	cycles = test_interleaving_timing();
+	printf("%d\n", cycles);
 
 	while(1) {
         if (INTERRUPT_BUTTON1 & interrupt_flags) {
