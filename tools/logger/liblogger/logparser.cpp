@@ -6,17 +6,26 @@
 #include "phy/phy.h"
 #include "dll/dll.h"
 
-LogParser::LogParser(SerialPort* serialPort, QObject *parent) : QObject(parent)
+LogParser::LogParser(QIODevice* ioDevice, QObject *parent) : QObject(parent)
 {
-    _serialPort = serialPort;
+    _ioDevice = ioDevice;
+
     _receivedDataQueue = new QQueue<unsigned char>();
 
-    connect(_serialPort, SIGNAL(readyRead()), SLOT(onDataAvailable()));
+    connect(_ioDevice, SIGNAL(readyRead()), SLOT(onDataAvailable()));
+}
+
+void LogParser::openDevice()
+{
+    _ioDevice->open(QIODevice::ReadOnly);
+
+    if(_ioDevice->bytesAvailable() > 0) // trigger read for implementations like QFile which don't emit readyRead()
+        onDataAvailable();
 }
 
 void LogParser::onDataAvailable()
 {
-    QByteArray data = _serialPort->readAll();
+    QByteArray data = _ioDevice->readAll();
     for(int i = 0; i < data.size(); i++)
     {
         _receivedDataQueue->enqueue((unsigned char)data.constData()[i]);
@@ -33,7 +42,9 @@ void LogParser::parseReceivedData()
     unsigned char start = _receivedDataQueue->dequeue();
     while(start != 0xDD && !_receivedDataQueue->isEmpty())
     {
-        qDebug() << "skipping unexpected data" << QString().sprintf("0x%02x", start);
+        if(start != 0xFF) // skip bytes received when cable disconnected
+            qDebug() << "skipping unexpected data" << QString().sprintf("0x%02x", start);
+
         start = _receivedDataQueue->dequeue();
     }
 
@@ -41,10 +52,10 @@ void LogParser::parseReceivedData()
     {
         if(_receivedDataQueue->at(0) != LOG_TYPE_STRING &&
                 _receivedDataQueue->at(0) !=LOG_TYPE_PHY_RX_RES &&
-                _receivedDataQueue->at(0) != 0x03) // TODO define
+                _receivedDataQueue->at(0) != LOG_TYPE_DLL_RX_RES)
         {
-            qWarning(qPrintable(QString("Unexpected type: %1, skipping ...").arg(_receivedDataQueue->at(0))));
-            parseReceivedData();
+            qWarning(qPrintable(QString().sprintf("Unexpected type: 0x%02x, skipping ...", _receivedDataQueue->at(0))));
+            return;
         }
     }
 
@@ -109,7 +120,7 @@ void LogParser::parseReceivedData()
         lastPacket.parseDllRx(packetData);
 
         emit logMessageReceived(lastPacket.toString());
-        emit packetParsed(lastPacket.isCrcValid());
+        emit packetParsed(lastPacket);
     }
 
     parseReceivedData();
