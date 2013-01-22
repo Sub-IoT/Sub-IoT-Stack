@@ -354,8 +354,8 @@ void dll_tx_foreground_frame(u8* data, u8 length, u8 spectrum_id)
 	event.next_event = 5; // TODO: get T_G fron config
 	event.f = &dll_cca2;
 
-	timer_add_event(&event);
-
+	if (!timer_add_event(&event))
+		dll_tx_callback(DLLTxResultFail);
 
 //	phy_result_t res = phy_tx(&foreground_frame_tx_cfg);
 //	if(res == PHY_RADIO_IN_RX_MODE)

@@ -25,7 +25,8 @@ typedef enum {
 
 typedef enum {
 	DLLTxResultOK,
-	DLLTxResultCCAFail
+	DLLTxResultCCAFail,
+	DLLTxResultFail
 } Dll_Tx_Result;
 
 // Frame Control
