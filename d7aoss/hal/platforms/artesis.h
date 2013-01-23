@@ -13,6 +13,9 @@
 #include "../../types.h"
 #include "../addresses.h"
 
+#define LED_RED	1
+#define LED_ORANGE 2
+
 #define OUTPUT1_BASEADDRESS		__MSP430_BASEADDRESS_PORT1_R__
 #define OUTPUT1_PORT			GPIO_PORT_P1
 #define OUTPUT1_PIN 			GPIO_PIN1

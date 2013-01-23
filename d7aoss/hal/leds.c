@@ -7,8 +7,8 @@
 
 #include "addresses.h"
 #include "leds.h"
-#include "platforms/wizzimote.h"
-//#include "platforms/artesis.h"
+
+#include "platforms/platform.h"
 
 //#include "inc/hw_memmap.h"
 #include "driverlib/5xx_6xx/gpio.h"

@@ -55,6 +55,8 @@ static void phy_tx_callback()
 
 static void phy_rx_callback(phy_rx_res_t* res)
 {
+	//log_packet(res->data);
+
 	// Data Link Filtering
 
 	// CRC Validation
