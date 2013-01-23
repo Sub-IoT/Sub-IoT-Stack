@@ -28,13 +28,12 @@
 // *************************************************************************************************
 uint8_t Strobe(uint8_t strobe)
 {
-	uint8_t gdo_state;
 	uint8_t statusByte = 0;
-	uint8_t tmpstrobe = strobe & 0x7F;
+	uint8_t strobe_tmp = strobe & 0x7F;
 	uint16_t int_state;
 
 	// Check for valid strobe command
-	if ((tmpstrobe >= RF_SRES) && (tmpstrobe <= RF_SNOP)) {
+	if ((strobe_tmp >= RF_SRES) && (strobe_tmp <= RF_SNOP)) {
 		ENTER_CRITICAL_SECTION(int_state);
 
 		// Clear the Status read flag
@@ -44,22 +43,17 @@ uint8_t Strobe(uint8_t strobe)
 		RADIO_INST_READY_WAIT();
 
 		// Write the strobe instruction
-		if ((tmpstrobe > RF_SRES) && (tmpstrobe < RF_SNOP)) {
-			gdo_state = ReadSingleReg(IOCFG2); // buffer IOCFG2 state
-			WriteSingleReg(IOCFG2, 0x29); // c-ready to GDO2
+		RF1AINSTRB = strobe;
 
-			RF1AINSTRB = strobe;
-			if (RF1AIN & 0x04) { // chip at sleep mode
-				if ((tmpstrobe != RF_SXOFF) && (tmpstrobe != RF_SPWD) && (tmpstrobe != RF_SWOR)) {
-					while (RF1AIN & 0x04); // c-ready ?
-					__delay_cycles(850); // Delay for ~810usec at 1.05MHz CPU clock, see erratum RF1A7
+		if (strobe_tmp != RF_SRES) {
+			if(RF1AIN & 0x04) {
+				if ((strobe_tmp != RF_SXOFF) && (strobe_tmp != RF_SWOR) && (strobe_tmp != RF_SPWD)  && (strobe_tmp != RF_SNOP)) {
+					while (RF1AIN & 0x04);	// Is chip ready?
+					__delay_cycles(850);	// Delay for ~810usec at 1.05MHz CPU clock, see erratum RF1A7
 				}
 			}
 
-			WriteSingleReg(IOCFG2, gdo_state); // restore IOCFG2 setting
 			RADIO_STAT_READY_WAIT();
-		} else { // chip active mode
-			RF1AINSTRB = strobe;
 		}
 
 		statusByte = RF1ASTATB;
@@ -78,7 +72,7 @@ uint8_t Strobe(uint8_t strobe)
 void ResetRadioCore (void)
 {
   Strobe(RF_SRES);                          // Reset the Radio Core
-  Strobe(RF_SNOP);                          // Reset Radio Pointer
+  Strobe(RF_SNOP);                          // Get Radio Status
 }
 
 // *****************************************************************************

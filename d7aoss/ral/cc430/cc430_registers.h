@@ -79,7 +79,7 @@ extern "C" {
 #define RFIFG_FLANK_AllNegativeEdge 0xFFFF
 
 // IOCFGx.GDOx_CFG
-#define RADIO_GDO2_VALUE                0x0A            // IOCFG2.GDO2_CFG - PLL
+#define RADIO_GDO2_VALUE                0x29            // IOCFG2.GDO2_CFG - RF_RDYn Do not change! Is used in the strobe command.
 #define RADIO_GDO1_VALUE                0x1E            // IOCFG1.GDO1_CFG - RSSI Valid (only on CC430)
 #define RADIO_GDO0_VALUE                0x1F            // IOCFG0.GDO0_CFG - RX Timout (only on CC430)
 

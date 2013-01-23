@@ -14,6 +14,7 @@
 #include "rf1a.h"
 #include "cc430_ral.h"
 #include "cc430_registers.h"
+#include "../../hal/driverlib/5xx_6xx/timera.h"
 
 extern RF_SETTINGS rfSettings;
 extern InterruptHandler interrupt_table[34];
@@ -70,6 +71,7 @@ void cc430_ral_init(void)
 	//Set radio state
 	state = Idle;
 
+	//Reset the radio core
 	ResetRadioCore();
 
 	//Write configuration
@@ -81,12 +83,12 @@ void cc430_ral_tx(ral_tx_cfg* cfg)
 {
 	uint8_t txBytes;
 
-	//Only if radio idle
-	if(get_radiostate() != Idle)
-		return;
-
 	//Set radio state
 	state = Transmit;
+
+	//Set radio to idle and flush the txfifo
+	Strobe(RF_SIDLE);
+	Strobe(RF_SFTX);
 
 	//Set configuration
 	set_channel(cfg->channel_center_freq_index, cfg->channel_bandwidth_index);
@@ -102,10 +104,6 @@ void cc430_ral_tx(ral_tx_cfg* cfg)
 		set_length_infinite(true);
 	else
 		set_length_infinite(false);
-
-	//Flush txfifo
-	//TODO Make this work!
-	//Strobe(RF_SFTX);
 
 	//Write initial data to txfifo
 	if(remainingBytes > 64)
@@ -126,6 +124,7 @@ void cc430_ral_tx(ral_tx_cfg* cfg)
 	RF1AIE  = RFIFG_FLAG_TXBelowThresh | RFIFG_FLAG_TXUnderflow | RFIFG_FLAG_EndOfPacket;
 
 	//Start transmitting
+	TimerA_configureContinuousMode(__MSP430_BASEADDRESS_T0A5__, TIMERA_CLOCKSOURCE_SMCLK, TIMERA_CLOCKSOURCE_DIVIDER_1, TIMERA_TAIE_INTERRUPT_DISABLE, TIMERA_DO_CLEAR);
 	Strobe(RF_STX);
 }
 
@@ -218,6 +217,8 @@ void no_interrupt_isr() { }
 
 void end_of_packet_isr()
 {
+	TimerA_stop(__MSP430_BASEADDRESS_T0A5__);
+
 	if (state == Receive) {
 		rx_data_isr();
 		rxtx_finish_isr();
