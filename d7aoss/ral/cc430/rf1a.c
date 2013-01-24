@@ -49,7 +49,7 @@ uint8_t Strobe(uint8_t strobe)
 			if(RF1AIN & 0x04) {
 				if ((strobe_tmp != RF_SXOFF) && (strobe_tmp != RF_SWOR) && (strobe_tmp != RF_SPWD)  && (strobe_tmp != RF_SNOP)) {
 					while (RF1AIN & 0x04);	// Is chip ready?
-					__delay_cycles(850);	// Delay for ~810usec at 1.05MHz CPU clock, see erratum RF1A7
+					__delay_cycles(16200);	// Delay for ~810usec at 20MHz CPU clock, see erratum RF1A7
 				}
 			}
 
