@@ -16,22 +16,21 @@ void pn9_init(uint16_t* pn9)
 void pn9_encode_decode(uint8_t* input, uint8_t* output, uint16_t length, uint16_t* pn9)
 {
 	register uint16_t i;
-	register uint8_t j;
-	register uint8_t bit0;
-	register uint8_t bit5;
+	register uint16_t pn9_tmp;
 
-	for (i = 0; i < length; i++) {
+	pn9_tmp = *pn9;
+
+	for (i = length; i > 0; i--) {
 		*output = *input ^ (uint8_t)*pn9;
 
-		for (j = 8; j != 0; j--) {
-			bit0 = (uint8_t)(*pn9 & 0x01);
-			bit5 = (uint8_t)((*pn9 >> 5) & 0x01);
-
-			*pn9 >>= 1;
-			*pn9 |= (bit0 ^ bit5) << 8;
-		}
+		pn9_tmp |= ((pn9_tmp << 9) & 0x1E00) ^ ((pn9_tmp << 4) & 0x1E00);
+		pn9_tmp >>= 4;
+		pn9_tmp |= ((pn9_tmp << 9) & 0x1E00) ^ ((pn9_tmp << 4) & 0x1E00);
+		pn9_tmp >>= 4;
 
 		input++;
 		output++;
 	}
+
+	*pn9 = pn9_tmp;
 }

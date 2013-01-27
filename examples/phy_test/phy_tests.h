@@ -13,5 +13,4 @@ unsigned int test_conv_encode_timing(void);
 unsigned int test_conv_decode_timing(void);
 unsigned int test_interleaving_timing(void);
 
-
 #endif /* PHY_TIMING_TEST_H_ */
