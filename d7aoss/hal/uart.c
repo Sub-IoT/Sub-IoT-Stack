@@ -6,6 +6,7 @@
  */
 
 #include "uart.h"
+#include "platforms/platform.h"
 
 #include <msp430.h>
 #include "driverlib/5xx_6xx/gpio.h"
@@ -14,12 +15,12 @@
 void uart_init()
 {
     PMAPPWD = 0x02D52;                        // Get write-access to port mapping regs
-    P2MAP0 = PM_UCA0RXD;                      // Map UCA0RXD output to P2.6
-    P2MAP1 = PM_UCA0TXD;                      // Map UCA0TXD output to P2.7
+    UART_RX = PM_UCA0RXD;                      // Map UCA0RXD output to P2.6
+    UART_TX = PM_UCA0TXD;                      // Map UCA0TXD output to P2.7
     PMAPPWD = 0;                              // Lock port mapping registers
 
-    P2DIR |= BIT1;                            // Set P2.7 as TX output
-    P2SEL |= BIT0 + BIT1;                     // Select P2.6 & P2.7 to UART function
+    P2DIR |= BIT5;                            // Set P1.6 as TX output
+    P2SEL |= BIT5 + BIT6;                     // Select P1.5 & P1.6 to UART function
 
     UCA0CTL1 |= UCSWRST;                      // **Put state machine in reset**
     UCA0CTL1 |= UCSSEL_2;                     // SMCLK
