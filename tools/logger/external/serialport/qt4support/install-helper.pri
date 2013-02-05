@@ -5,7 +5,7 @@ system("$$QMAKE_MKDIR $$SERIALPORT_PROJECT_INCLUDEDIR")
 
 for(header_file, PUBLIC_HEADERS) {
    header_file ~=s,/,$$QMAKE_DIR_SEP,
-   system("$$QMAKE_COPY $${header_file} $$SERIALPORT_PROJECT_INCLUDEDIR")
+   system("$$QMAKE_COPY \"$${header_file}\" \"$$SERIALPORT_PROJECT_INCLUDEDIR\"")
 }
 
 target_headers.files  = $$PUBLIC_HEADERS

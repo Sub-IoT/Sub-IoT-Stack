@@ -129,7 +129,7 @@ class CommOverlappedEventNotifier : public AbstractOverlappedEventNotifier
 {
 public:
     CommOverlappedEventNotifier(SerialPortPrivate *d, DWORD eventMask, QObject *parent)
-        : AbstractOverlappedEventNotifier(d, CommEvent, true, parent)
+        : AbstractOverlappedEventNotifier(d, CommEvent, false, parent)
         , originalEventMask(eventMask), triggeredEventMask(0) {
         ::SetCommMask(dptr->descriptor, originalEventMask);
         startWaitCommEvent();
@@ -138,12 +138,12 @@ public:
     void startWaitCommEvent() { ::WaitCommEvent(dptr->descriptor, &triggeredEventMask, &o); }
 
     virtual bool processCompletionRoutine() {
-        bool ret = false;
+        DWORD numberOfBytesTransferred = 0;
+        ::GetOverlappedResult(dptr->descriptor, &o, &numberOfBytesTransferred, FALSE);
         if (EV_ERR & triggeredEventMask)
-            ret = dptr->processIoErrors();
-        if (EV_RXCHAR & triggeredEventMask)
-            ret = dptr->startAsyncRead();
-        return ret;
+            dptr->processIoErrors();
+        dptr->startAsyncRead();
+        return true;
     }
 
 private:

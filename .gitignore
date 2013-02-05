@@ -8,3 +8,5 @@ Debug/
 *.user*
 Makefile*
 object_script*
+*.Debug
+*.Release

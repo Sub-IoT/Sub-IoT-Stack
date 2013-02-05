@@ -100,8 +100,29 @@ namespace Dash7Logger
 				
 				data.AddRange(bytes);	
 				
-				while(data.Count > 1 && data[0] != 0xDD)
+				while(data.Count > 1 && (data[0] != 0xDD && data[0] != 0x00))
 					data.RemoveAt(0);
+
+                while (data.Count >= 20 && data[0] == 0x00)
+                {
+                    if (data[1] == 0x02 && data[19] == 0x0D)
+                    {
+                        List<byte> packet = data.GetRange(2, 17);
+
+                        List<byte> fixedNodeId = packet.GetRange(0, 8);
+                        List<byte> mobileNodeId = packet.GetRange(8, 8);
+                        int rss = packet[16] - 256;
+
+
+                        Console.WriteLine(string.Format("{0} - {1}: {2} dBm", OSLCore.Converter.ConvertByteArrayToHexString(fixedNodeId.ToArray()), OSLCore.Converter.ConvertByteArrayToHexString(mobileNodeId.ToArray()), rss));
+
+                        data.RemoveRange(0, 20);
+                    }
+                    else
+                    {
+                        data.Clear();
+                    }
+                }
 				
 				while (data.Count > 3 && data[0] == 0xDD)
 	    		{
@@ -302,7 +323,7 @@ namespace Dash7Logger
 				Console.WriteLine(ex.Message);	
 			}
 			
-		    data.Clear();	
+		    //data.Clear();	
 		}
 		
 		#region IDisposable implementation

@@ -122,7 +122,19 @@ void system_watchdog_timer_start()
 
 void system_watchdog_timer_reset()
 {
-	WDTCTL = (WDTCTL &0xff) | WDTPW | WDTCNTCL;
+	//Set Counter Clear bit
+	unsigned char newWDTStatus = ( WDTCTL_L | WDTCNTCL );
+	WDTCTL = WDTPW + newWDTStatus;
+}
+
+void system_watchdog_timer_init(unsigned char clockSelect, unsigned char clockDivider)
+{
+    WDTCTL = WDTPW + WDTCNTCL + clockSelect + clockDivider;
+}
+
+void system_watchdog_init(unsigned char clockSelect, unsigned char clockDivider)
+{
+    WDTCTL = WDTPW + WDTCNTCL + WDTTMSEL + clockSelect + clockDivider;
 }
 
 void system_lowpower_mode(unsigned char mode, unsigned char enableInterrupts)
