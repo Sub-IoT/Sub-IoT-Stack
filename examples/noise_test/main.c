@@ -34,7 +34,8 @@ s8 get_rssi()
 
 void rx_callback(phy_rx_res_t* res)
 {
-	// we should not get here!
+	// we received a valid packet, put the radio back in rx mode to re-enable RSSI sniffing
+	phy_rx_start(&rx_cfg);
 	led_on(1);
 }
 
@@ -49,11 +50,11 @@ int main(void) {
 	phy_set_rx_callback(&rx_callback);
 
 	// reconfigure radio so when don't wait for sync words etc
-	char mdmcfg2 =  RADIO_MDMCFG2_DEM_DCFILT_ON
-			| RADIO_MDMCFG2_MOD_FORMAT_GFSK // TODO MOD_FORMAT?
-			// | RADIO_MDMCFG2_MANCHESTER_EN // TODO disable?
-			| RADIO_MDMCFG2_SYNC_MODE_NONE;
-	WriteSingleReg(MDMCFG2, mdmcfg2);
+//	char mdmcfg2 =  RADIO_MDMCFG2_DEM_DCFILT_ON
+//			| RADIO_MDMCFG2_MOD_FORMAT_GFSK // TODO MOD_FORMAT?
+//			| RADIO_MDMCFG2_MANCHESTER_EN // TODO disable?
+//			| RADIO_MDMCFG2_SYNC_MODE_16in16CS; // | RADIO_MDMCFG2_SYNC_MODE_NONE;
+//	WriteSingleReg(MDMCFG2, mdmcfg2);
 
 	phy_rx_start(&rx_cfg);
 
