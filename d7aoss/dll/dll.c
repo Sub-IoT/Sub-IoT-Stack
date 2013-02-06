@@ -49,7 +49,10 @@ static bool check_subnet(u8 device_subnet, u8 frame_subnet)
 
 static void phy_tx_callback()
 {
-	log_print_string("TX OK");
+	#ifdef LOG_DLL
+		log_print_string("TX OK");
+	#endif
+
 	dll_tx_callback(DLLTxResultOK);
 }
 
@@ -200,7 +203,9 @@ static void phy_rx_callback(phy_rx_res_t* res)
 		dll_res.frame = frame;
 	}
 
-	log_dll_rx_res(&dll_res);
+	#ifdef LOG_DLL
+		log_dll_rx_res(&dll_res);
+	#endif
 	dll_rx_callback(&dll_res);
 }
 
@@ -214,7 +219,7 @@ static void scan_timeout(void* arg)
 	if (dll_state == DllStateNone)
 		return;
 
-	log_print_string("scan time-out");
+	//log_print_string("scan time-out");
 	phy_rx_stop();
 	timer_event event;
 	event.next_event = current_css->values[current_scan_id].time_next_scan;
@@ -289,9 +294,7 @@ static void dll_cca2(void* arg)
 	}
 
 	phy_result_t res = phy_tx(&foreground_frame_tx_cfg);
-
 }
-
 
 void dll_tx_foreground_frame(u8* data, u8 length, u8 spectrum_id)
 {
@@ -321,7 +324,7 @@ void dll_tx_foreground_frame(u8* data, u8 length, u8 spectrum_id)
 	memcpy(pointer, data, length); // TODO fixed size for now
 	pointer += length;
 
-	frame->length = pointer - frame_data;
+	frame->length = (pointer - frame_data) + 2; // length includes CRC
 	frame_data[0] = frame->length;
 
 	foreground_frame_tx_cfg.len = frame->length;
@@ -339,6 +342,7 @@ void dll_tx_foreground_frame(u8* data, u8 length, u8 spectrum_id)
 	event.f = &dll_cca2;
 
 	timer_add_event(&event);
+
 
 //	phy_result_t res = phy_tx(&foreground_frame_tx_cfg);
 //	if(res == PHY_RADIO_IN_RX_MODE)

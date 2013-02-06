@@ -15,6 +15,7 @@
 #include <hal/leds.h>
 #include <hal/rtc.h>
 #include <log.h>
+//#include <hal/crc.h>
 
 
 #define INTERRUPT_BUTTON1 	(1)
@@ -26,6 +27,9 @@ static u16 counter = 0;
 
 static u8 interrupt_flags = 0;
 static u8 rtcEnabled = 0;
+
+
+static u8 tx = 0;
 
 dll_channel_scan_t scan_cfg1 = {
 		0x10,
@@ -56,18 +60,31 @@ void stop_rx()
 
 void start_tx()
 {
+	if (tx)
+		return;
+
+	tx = 1;
 	stop_rx();
-	dll_tx_foreground_frame((u8*)&counter, sizeof(counter), 0x12);
+	led_on(3);
+	dll_tx_foreground_frame((u8*)&counter, sizeof(counter), 0x10);
 }
 
 void tx_callback(Dll_Tx_Result result)
 {
 	if(result == DLLTxResultOK)
+	{
 		counter++;
+		led_off(3);
+		log_print_string("TX OK");
+	}
+	else
+	{
+		led_toggle(1);
+		log_print_string("TX CCA FAIL");
+	}
 
-	led_off(3);
 	start_rx();
-	led_toggle(3);
+	tx = 0;
 }
 
 void rx_callback(dll_rx_res_t* rx_res)
@@ -87,12 +104,14 @@ void main(void) {
 	dll_set_tx_callback(&tx_callback);
 	dll_set_rx_callback(&rx_callback);
 
-	dll_channel_scan_t scan_confgs[1];
+	dll_channel_scan_t scan_confgs[2];
 	scan_confgs[0] = scan_cfg1;
 	scan_confgs[1] = scan_cfg2;
 
 	scan_series_cfg.length = 1;
 	scan_series_cfg.values = scan_confgs;
+
+	log_print_string("started");
 
 	start_rx();
 
@@ -102,7 +121,6 @@ void main(void) {
         if(INTERRUPT_BUTTON1 & interrupt_flags)
         {
         	interrupt_flags &= ~INTERRUPT_BUTTON1;
-        	led_on(3);
 
         	start_tx();
 
@@ -132,7 +150,6 @@ void main(void) {
 
         if (INTERRUPT_RTC & interrupt_flags)
 		{
-        	led_on(3);
         	start_tx();
 
 			interrupt_flags &= ~INTERRUPT_RTC;
@@ -158,7 +175,9 @@ __interrupt void PORT1_ISR (void)
 
 	if(interrupt_flags != 0)
 	{
+		log_print_string("button_disable_interrupts");
 		button_disable_interrupts();
+		// TODO: debouncing
 		LPM4_EXIT;
 	}
 }
