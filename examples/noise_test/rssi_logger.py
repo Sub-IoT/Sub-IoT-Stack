@@ -15,5 +15,5 @@ while 1:
 	# got sync byte ...
 	channr = struct.unpack("b", ser.read(1))[0]
 	rssi = struct.unpack("b", ser.read(1))[0]
-	#print datetime.now().strftime("%H:%M:%S.%f") + '\t' + str(channr) + '\t' + str(rssi)
-	print str(time.time()) + '\t' + str(channr) + '\t' + str(rssi)
+	print '%(timestamp)s\t%(channr)02X\t%(rssi)s' % \
+		{ 'timestamp': str(time.time()), 'channr': channr, 'rssi': str(rssi) }
