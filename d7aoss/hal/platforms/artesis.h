@@ -40,7 +40,4 @@
 #define INPUT3_PORT				GPIO_PORT_P2
 #define INPUT3_PIN				GPIO_PIN1
 
-#define UART_RX					P1MAP6
-#define UART_TX					P1MAP5
-
 #endif /* ARTESIS_H_ */

@@ -1,3 +1,14 @@
+/*
+ * This program measures the RSSI values in all normal channels for noise measurements
+ * The measured RSSI value and channel number is logged over UART.
+ * The rssi_logger.py script parses this data.
+ *  Created on: Feb 4, 2012
+ *  Authors:
+ *  	glenn.ergeerts@artesis.be
+ */
+
+
+
 #include <msp430.h> 
 
 #include <phy/phy.h>
@@ -5,21 +16,24 @@
 #include <ral/cc430/rf1a.h>
 #include <ral/cc430/cc430_registers.h>
 
-#define CC430_RSSI_OFFSET 74;
-
+#define CC430_RSSI_OFFSET 74
 #define INTERRUPT_RTC 		(1 << 3)
+#define CHANNEL_COUNT 8
 
 static u8 interrupt_flags = 0;
 
 static u8 logbuffer[3] = {0xFE /* sync byte */, 0x00 /* channr */, 0x00 /* RSSI */};
 
+static u8 spectrum_ids[CHANNEL_COUNT] = { 0x10, 0x12, 0x14, 0x16, 0x18, 0x1A, 0x1C, 0x1E }; // TODO only normal channel classes?
+static u8 current_spectrum_index = 0;
+
 phy_rx_cfg_t rx_cfg = {
 		0, // timeout
-		0, // multiple TODO
-		0x27, // spectrum ID TODO
-		0, // coding scheme TODO
-		0, // RSSI min filter TODO
-		0x01  // sync word class TODO
+		0, // multiple
+		0x10, // spectrum ID
+		0, // coding scheme
+		0, // RSSI min filter
+		0x01  // sync word class
 };
 
 s8 get_rssi()
@@ -32,11 +46,19 @@ s8 get_rssi()
     return rssi;
 }
 
+u8 get_next_spectrum_id()
+{
+	current_spectrum_index++;
+	if(current_spectrum_index == CHANNEL_COUNT)
+		current_spectrum_index = 0;
+
+	return spectrum_ids[current_spectrum_index];
+}
+
 void rx_callback(phy_rx_res_t* res)
 {
-	// we received a valid packet, put the radio back in rx mode to re-enable RSSI sniffing
-	phy_rx_start(&rx_cfg);
-	led_on(1);
+	// we received a valid packet
+	// do nothing, RTC interrupt will restart rx
 }
 
 int main(void) {
@@ -63,8 +85,13 @@ int main(void) {
         if (INTERRUPT_RTC & interrupt_flags)
 		{
 			led_toggle(3);
+			logbuffer[1] = rx_cfg.spectrum_id;
 			logbuffer[2] = get_rssi();
 			uart_transmit_message(logbuffer, sizeof(logbuffer));
+
+			phy_rx_stop();
+			rx_cfg.spectrum_id = get_next_spectrum_id();
+			phy_rx_start(&rx_cfg);
 
 			interrupt_flags &= ~INTERRUPT_RTC;
 		}
