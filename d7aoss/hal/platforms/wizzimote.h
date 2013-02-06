@@ -37,7 +37,4 @@
 #define INPUT3_PORT				GPIO_PORT_P1
 #define INPUT3_PIN				GPIO_PIN4
 
-#define UART_RX					P2MAP0
-#define UART_TX					P2MAP1
-
 #endif /* WIZZIMOTE_H_ */
