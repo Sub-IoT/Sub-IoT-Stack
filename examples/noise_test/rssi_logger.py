@@ -1,19 +1,43 @@
-#!/usr/bin/python
+#! /usr/local/bin/python
 
-import serial
-import struct
-import time
+import sys as system
+import os as os
+import serial as serial
+import shutil as shutil
+import time as time
 
-ser = serial.Serial('/dev/ttyUSB0', 115200)
+import ctypes
 
-while 1:
-	data = ser.read(1)
-	while data != '\xfe':
-		print 'unexpected data: ' + str(struct.unpack("B", data)[0])
-		data = ser.read(1)
+FILE_NAME = "noise_test"
+FILE_EXTENSION = ".csv"
 
-	# got sync byte ...
-	channr = struct.unpack("b", ser.read(1))[0]
-	rssi = struct.unpack("b", ser.read(1))[0]
-	print '%(timestamp)s\t%(channr)02X\t%(rssi)s' % \
-		{ 'timestamp': str(time.time()), 'channr': channr, 'rssi': str(rssi) }
+SERIAL_PORT = 'COM7'
+#SERIAL_PORT = '/dev/ttyUSB0'
+SERIAL_RATE_9600 = 9600
+SERIAL_RATE_115200 = 115200
+
+def parse_rssi(rssi):
+        if (rssi >= 128):
+                rssi = (rssi - 256)/2 - 74
+        else:
+                rssi = rssi/2 - 74
+        return rssi
+
+def main():
+        serial_port = serial.Serial(SERIAL_PORT, SERIAL_RATE_9600)
+        f = open(FILE_NAME + FILE_EXTENSION, 'w')
+        f.write("Timestamp, Channel number (0-14), RSSI (dBm)" + "\n")
+        while(True):
+                data = serial_port.read(size=2)
+                timestamp = int(time.time())
+                channel = int(data[0].encode("hex"), 16)
+                rssi = int(data[1].encode("hex"), 16)
+                rssi = parse_rssi(rssi)
+                f.write(str(timestamp) + ", ")
+                f.write(str(channel) + ", ")
+                f.write(str(rssi) + "\n")
+                f.flush()
+                print "RSSI (dBm) = " + str(rssi)
+                
+if __name__ == "__main__":
+	main()
