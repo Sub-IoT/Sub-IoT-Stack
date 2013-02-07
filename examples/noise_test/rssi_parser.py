@@ -1,4 +1,4 @@
-#! /usr/local/bin/python
+#! /usr/bin/python
 
 import csv as csv
 import matplotlib.pyplot as pyplot
