@@ -49,7 +49,7 @@ static bool check_subnet(u8 device_subnet, u8 frame_subnet)
 
 static void phy_tx_callback()
 {
-	#ifdef LOG_DLL
+	#ifdef LOG_DLL_ENABLED
 		log_print_string("TX OK");
 	#endif
 
@@ -65,8 +65,11 @@ static void phy_rx_callback(phy_rx_res_t* res)
 	// CRC Validation
 	if (!res->crc_ok)
 	{
-		log_print_string("CRC ERROR");
-		return;
+		#ifdef LOG_DLL_ENABLED
+			log_print_string("CRC ERROR");
+		#endif
+
+			return;
 	}
 
 	// Subnet Matching do not parse it yet
@@ -74,19 +77,26 @@ static void phy_rx_callback(phy_rx_res_t* res)
 	{
 		if (!check_subnet(0xFF, res->data[0])) // TODO: get device_subnet from datastore
 		{
-			log_print_string("Subnet mismatch");
+			#ifdef LOG_DLL_ENABLED
+				log_print_string("Subnet mismatch");
+			#endif
 			return;
 		}
 	} else if (dll_state == DllStateScanForegroundFrame)
 	{
 		if (!check_subnet(0xFF, res->data[3])) // TODO: get device_subnet from datastore
 		{
-			log_print_string("Subnet mismatch");
+			#ifdef LOG_DLL_ENABLED
+				log_print_string("Subnet mismatch");
+			#endif
+
 			return;
 		}
 	} else
 	{
-		log_print_string("You fool, you can't be here");
+		#ifdef LOG_DLL_ENABLED
+			log_print_string("You fool, you can't be here");
+		#endif
 	}
 
 	// Optional Link Quality Assessment
@@ -203,7 +213,7 @@ static void phy_rx_callback(phy_rx_res_t* res)
 		dll_res.frame = frame;
 	}
 
-	#ifdef LOG_DLL
+	#ifdef LOG_DLL_ENABLED
 		log_dll_rx_res(&dll_res);
 	#endif
 	dll_rx_callback(&dll_res);
