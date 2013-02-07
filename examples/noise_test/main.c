@@ -38,11 +38,15 @@ phy_rx_cfg_t rx_cfg = {
 
 s8 get_rssi()
 {
+	// ensure the RSSI value is valid // TODO add to RAL code as well? (check after merge of phy_modifications branch)
+	while ((RF1AIFG & BIT1) == 0x00);
+
     s8 rssi_raw = (s8) ReadSingleReg(RSSI);      // CC430 RSSI is 0.5 dBm units, signed byte
     s8 rssi = (int)rssi_raw;         // Convert to signed 16 bit (1 instr on MSP)
     rssi += 128;                      // Make it positive...
     rssi >>= 1;                        // ...So division to 1 dBm units can be a shift...
     rssi -= 64 + CC430_RSSI_OFFSET;     // ...and then rescale it, including offset
+    RF1AIFG &= ~BIT1; // TODO not sure if this is still needed after the phy_modification branch is merged, but it is for now ...
     return rssi;
 }
 
