@@ -262,6 +262,7 @@ void dll_set_rx_callback(dll_rx_callback_t cb)
 
 void dll_stop_channel_scan()
 {
+	// TODO remove scan_timeout events from queue?
 	dll_state = DllStateNone;
 	phy_rx_stop();
 }
