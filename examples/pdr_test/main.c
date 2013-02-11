@@ -40,7 +40,7 @@ static mode_t mode = mode_idle;
 dll_channel_scan_t scan_cfg1 = {
 		0x10,
 		FrameTypeForegroundFrame,
-		1000, // TODO
+		1000, // TODO increase this after stack supports receiving multiple packets during one scan
 		0
 };
 
@@ -67,15 +67,10 @@ void start_tx()
 
 void tx_callback(Dll_Tx_Result result)
 {
-	if(result == DLLTxResultOK)
-	{
-		counter++; // TODO count CCA failed as well?
-	}
-	else
-	{
-		led_toggle(1);
-	}
+	if(result != DLLTxResultOK)
+		led_on(1);
 
+	counter++; // increment even if CCA failed
 	led_off(3);
 }
 
