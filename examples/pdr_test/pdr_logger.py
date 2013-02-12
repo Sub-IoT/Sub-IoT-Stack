@@ -35,6 +35,7 @@ def main():
 	test_name = raw_input("Enter test name: ")
 	f = open(FILE_NAME_PREFIX + test_name + FILE_EXTENSION, 'w')
 	f.write("# distance (m), PDR (%), # packets, timestamp started" + "\n")
+	f.write("distance, PDR, packet_count, started_timestamp\n")
 	raw_input("Press any key to start testing...")
 	stop_testing = False
 	while not stop_testing:
