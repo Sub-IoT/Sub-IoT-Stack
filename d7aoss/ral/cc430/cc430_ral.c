@@ -10,7 +10,8 @@
 #include "cc430_ral.h"
 #include "../../phy/phy.h"
 
-#define CC430_RSSI_OFFSET 74;
+#define CC430_RSSI_OFFSET 74
+#define CC430_CCA_RSSI_THRESHOLD -86 // TODO configurable
 
 static ral_tx_callback_t tx_callback;
 static ral_rx_callback_t rx_callback;
@@ -482,10 +483,9 @@ bool cc430_ral_cca()
 	RF1AIE  = 0;
 	RF1AIES = 0;
 
-	int thr  = -92; // TODO: get from settings
 	int rssi = get_rssi();
 
-	bool cca_ok = (bool)(rssi < thr);
+	bool cca_ok = (bool)(rssi < CC430_CCA_RSSI_THRESHOLD);
 
 	if (!cca_ok)
 	{

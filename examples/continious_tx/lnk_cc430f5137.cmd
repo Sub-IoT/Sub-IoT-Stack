@@ -194,3 +194,4 @@ SECTIONS
 
 -l cc430f5137.cmd
 
+-l "../../../d7aoss/Debug/d7aoss.lib"
