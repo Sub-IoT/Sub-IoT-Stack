@@ -67,7 +67,7 @@ void start_tx()
 	tx = 1;
 	stop_rx();
 	led_on(3);
-	dll_tx_foreground_frame((u8*)&counter, sizeof(counter), 0x10);
+	dll_tx_foreground_frame((u8*)&counter, sizeof(counter), 0x10, 0);
 
 }
 

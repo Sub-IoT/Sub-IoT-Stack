@@ -311,13 +311,14 @@ static void dll_cca2(void* arg)
 	phy_result_t res = phy_tx(&foreground_frame_tx_cfg);
 }
 
-void dll_tx_foreground_frame(u8* data, u8 length, u8 spectrum_id)
+void dll_tx_foreground_frame(u8* data, u8 length, u8 spectrum_id, s8 tx_eirp)
 {
 	//TODO: check if not already sending
 	foreground_frame_tx_cfg.spectrum_id = spectrum_id; // TODO check valid
+	foreground_frame_tx_cfg.eirp = tx_eirp;
 
 	dll_foreground_frame_t* frame = (dll_foreground_frame_t*) frame_data;
-	frame->frame_header.tx_eirp = 0x50; // (-40 + 0.5n) dBm // TODO hardcoded
+	frame->frame_header.tx_eirp = (tx_eirp + 40) * 2; // (-40 + 0.5n) dBm
 	frame->frame_header.subnet = 0xf1; // TODO hardcoded, get from app?
 	frame->frame_header.frame_ctl = !FRAME_CTL_LISTEN | !FRAME_CTL_DLLS | FRAME_CTL_EN_ADDR | !FRAME_CTL_FR_CONT | !FRAME_CTL_CRC32 | !FRAME_CTL_NM2 | FRAME_CTL_DIALOGFRAME; // TODO hardcoded
 

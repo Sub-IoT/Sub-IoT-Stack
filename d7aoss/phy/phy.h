@@ -57,7 +57,7 @@ typedef struct
     /// data length
     u8  len;
     /// Transmission power level in dBm ranged [-39, +10]
-    // TODO s8  eirp; // TODO set by MAC? part of data?
+    s8  eirp; // TODO set by MAC? part of data?
 } phy_tx_cfg_t;
 
 // =======================================================================

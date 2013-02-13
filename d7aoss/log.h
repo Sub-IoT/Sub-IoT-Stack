@@ -9,8 +9,8 @@
 #define __LOG_H_
 
 
-#define LOG_DLL 0
-#define LOG_PHY 1
+//#define LOG_DLL
+//#define LOG_PHY
 
 #include "types.h"
 

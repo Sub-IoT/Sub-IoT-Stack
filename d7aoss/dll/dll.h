@@ -132,6 +132,6 @@ void dll_set_rx_callback(dll_rx_callback_t);
 void dll_stop_channel_scan();
 void dll_channel_scan_series(dll_channel_scan_series_t*);
 
-void dll_tx_foreground_frame(u8* data, u8 length, u8 spectrum_id); // TODO spectrum id (and other tx params) should come from ALP file later
+void dll_tx_foreground_frame(u8* data, u8 length, u8 spectrum_id, s8 tx_eirp); // TODO spectrum id (and other tx params) should come from ALP file later
 
 #endif /* DLL_H_ */

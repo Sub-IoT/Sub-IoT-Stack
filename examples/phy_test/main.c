@@ -42,7 +42,8 @@ phy_tx_cfg_t tx_cfg = {
 		0, // coding scheme
 		0, // sync word class
 	    packet,
-	    PACKET_LEN
+	    PACKET_LEN,
+	    0, // tx_eirp
 };
 
 void start_rx()

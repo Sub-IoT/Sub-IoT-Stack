@@ -129,7 +129,7 @@ bool queue_push_u16(queue* q, u16 data)
 
 bool queue_push_value(queue* q, void* data, u8 size)
 {
-	log_print_string("push");
+	//log_print_string("push");
 	if (q->front == NULL)
 	{
 		q->front = q->start;

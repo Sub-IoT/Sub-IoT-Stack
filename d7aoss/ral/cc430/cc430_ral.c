@@ -343,6 +343,11 @@ void cc430_ral_tx(ral_tx_cfg_t* tx_cfg)
 		break;
 	}
 
+	// Set TX EIRP
+	// todo: get data from table
+	if (tx_cfg->eirp == 10) WritePATable(0xC0);
+	else WritePATable(0x51); // -0.3dbm
+
 	//Modify radio state
 	//Set PKTLEN to the packet length
 	//Set RXFIFO threshold
@@ -360,6 +365,7 @@ void cc430_ral_tx(ral_tx_cfg_t* tx_cfg)
 	Strobe(RF_SFTX);
 
 	//Prepare data
+
 	txLength = tx_cfg->len; // length includes CRC
 	txRemainingBytes = txLength;
 	u8 txBytes = txLength;

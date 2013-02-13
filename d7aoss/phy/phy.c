@@ -55,7 +55,7 @@ phy_result_t phy_tx(phy_tx_cfg_t* cfg)
 	ral_tx_cfg.len = cfg->data[0];
 	// TODO u16 timeout; // mac level?
 	// TODO u8  cca;
-	// TODO s8  eirp;
+	ral_tx_cfg.eirp = cfg->eirp;
 
 	RAL_IMPLEMENTATION.tx(&ral_tx_cfg);
 
