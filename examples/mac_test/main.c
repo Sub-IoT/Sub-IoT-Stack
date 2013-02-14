@@ -38,12 +38,13 @@ dll_channel_scan_t scan_cfg1 = {
 		1000,
 		0
 };
-dll_channel_scan_t scan_cfg2 = {
-		0x12,
-		FrameTypeForegroundFrame,
-		1000,
-		0
-};
+
+//dll_channel_scan_t scan_cfg1 = {
+//		0x12,
+//		FrameTypeForegroundFrame,
+//		1000,
+//		0
+//};
 
 dll_channel_scan_series_t scan_series_cfg;
 
@@ -136,11 +137,10 @@ void main(void) {
 	dll_set_tx_callback(&tx_callback);
 	dll_set_rx_callback(&rx_callback);
 
-	dll_channel_scan_t scan_confgs[2];
+	dll_channel_scan_t scan_confgs[1];
 	scan_confgs[0] = scan_cfg1;
-	scan_confgs[1] = scan_cfg2;
 
-	scan_series_cfg.length = 1;
+	scan_series_cfg.length = 0;
 	scan_series_cfg.values = scan_confgs;
 
 	log_print_string("started");
@@ -157,6 +157,7 @@ void main(void) {
         	start_tx();
 
         	button_clear_interrupt_flag();
+        	button_enable_interrupts();
         }
 
 
@@ -176,6 +177,7 @@ void main(void) {
 			}
 
         	button_clear_interrupt_flag();
+        	button_enable_interrupts();
         }
 
         if (INTERRUPT_RTC & interrupt_flags)
@@ -185,13 +187,6 @@ void main(void) {
 
 			interrupt_flags &= ~INTERRUPT_RTC;
 		}
-
-
-    	timer_event t_event;
-    	t_event.next_event = 100;
-    	t_event.f = button_enable_interrupts;
-
-    	timer_add_event(&t_event);
 
 		system_lowpower_mode(4,1);
 	}
