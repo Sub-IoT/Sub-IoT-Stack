@@ -76,13 +76,11 @@ typedef struct {
 	u8 payload_length;
 	u8* payload;
 	// TODO DLLS footer
-	u16 crc16;
 } dll_foreground_frame_t;
 
 typedef struct {
 	u8 subnet;
 	u8 payload[4];
-	u16 crc16;
 } dll_background_frame_t;
 
 

@@ -80,8 +80,8 @@ static void phy_rx_callback(phy_rx_res_t* res)
 		}
 	} else if (dll_state == DllStateScanForegroundFrame)
 	{
-		u16 crc = crc_calculate(res->data, res->data[0] - 2);
-		if (memcmp((u8*) &(res->data[res->data[0] - 2]), (u8*) &crc, 2) != 0)
+		u16 crc = crc_calculate(res->data, res->len - 2);
+		if (memcmp((u8*) &(res->data[res->len - 2]), (u8*) &crc, 2) != 0)
 		{
 			log_print_string("CRC ERROR");
 			return;
@@ -211,8 +211,6 @@ static void phy_rx_callback(phy_rx_res_t* res)
 		data_pointer++;
 		frame->payload = data_pointer;
 
-		memcpy((u8*) &(frame->crc16), (u8*) &(res->data[frame->length-2]), 2);
-
 		dll_res.frame_type = FrameTypeForegroundFrame;
 		dll_res.frame = frame;
 	}
@@ -233,7 +231,9 @@ static void scan_timeout(void* arg)
 	if (dll_state == DllStateNone)
 		return;
 
-	//log_print_string("scan time-out");
+	#ifdef LOG_DLL_ENABLED
+		log_print_string("scan time-out");
+	#endif
 	phy_rx_stop();
 	timer_event event;
 	event.next_event = current_css->values[current_scan_id].time_next_scan;
@@ -273,6 +273,10 @@ void dll_stop_channel_scan()
 
 void dll_channel_scan_series(dll_channel_scan_series_t* css)
 {
+	#ifdef LOG_DLL_ENABLED
+		log_print_string("Starting channel scan");
+	#endif
+
 	phy_rx_cfg_t rx_cfg;
 	rx_cfg.timeout = css->values[current_scan_id].timout_scan_detect; // timeout
 	rx_cfg.multiple = 0; // multiple TODO
