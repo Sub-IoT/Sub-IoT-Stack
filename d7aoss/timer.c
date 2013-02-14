@@ -7,6 +7,7 @@
 
 #include "timer.h"
 #include "queue.h"
+#include "log.h"
 
 #include "hal/system.h"
 
@@ -48,21 +49,28 @@ void timer_init()
 	started = false;
 }
 
-void timer_add_event(timer_event* event)
+bool timer_add_event(timer_event* event)
 {
 	if (event->next_event == 0)
 	{
 		event->f(NULL);
-		return;
+		return 1;
 	}
 
-	queue_push_value(&event_queue, (void*) event, sizeof(timer_event));
-
-	if (!started)
+	if (queue_push_value(&event_queue, (void*) event, sizeof(timer_event)))
 	{
-		timer_enable_interrupt();
-		timer_setvalue(event->next_event);
+		if (!started)
+		{
+			timer_enable_interrupt();
+			timer_setvalue(event->next_event);
+		}
+	} else {
+		log_print_string("Cannot add event, queue is full");
+		return 0;
 	}
+
+
+	return 1;
 }
 
 // Timer A0 interrupt service routine

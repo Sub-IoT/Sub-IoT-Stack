@@ -44,6 +44,9 @@
 
 #include "qglobal.h"
 
+//quickfix for windows
+#define QT_SERIALPORT_LIB
+
 #if defined(QT_SERIALPORT_LIB)
 #  define Q_SERIALPORT_EXPORT Q_DECL_EXPORT
 #else

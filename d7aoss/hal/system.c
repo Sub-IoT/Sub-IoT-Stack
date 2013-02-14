@@ -116,6 +116,7 @@ void system_watchdog_timer_stop()
 void system_watchdog_timer_start()
 {
     //WDT_hold();
+	//WDTCTL = WDTPW + WDTIS__512K + WDTSSEL__ACLK;
     WDTCTL = WDTPW + ~WDTHOLD;
 }
 

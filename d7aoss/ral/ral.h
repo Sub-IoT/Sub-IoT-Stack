@@ -37,7 +37,7 @@ typedef struct
 typedef struct
 {
     /// Reception status
-    u8  crc_ok;
+    //u8  crc_ok;
     /// Reception level
     s8  rssi;
     /// Reported EIRP
@@ -70,7 +70,7 @@ typedef struct
     /// data length
     u8  len;
     /// Transmission power level in dBm ranged [-39, +10]
-    // TODO s8  eirp;
+    s8  eirp;
 } ral_tx_cfg_t;
 
 typedef void (*ral_tx_callback_t)(); // TODO param
