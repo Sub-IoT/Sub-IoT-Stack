@@ -61,8 +61,12 @@ namespace Dash7Logger
 				
 				if (comPort == string.Empty)
 				{
-					Console.WriteLine("Give COM Port: ");
-					comPort = Console.ReadLine();
+                    Console.WriteLine("Give COM Port: ");
+                    foreach (string port in SerialPort.GetPortNames())
+                    {
+                        Console.WriteLine(port);
+                    }
+                    comPort = Console.ReadLine();
 					Console.WriteLine("{0} will be used", comPort);				
 				}	
 				

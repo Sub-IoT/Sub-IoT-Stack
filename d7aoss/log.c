@@ -30,7 +30,6 @@ void log_phy_rx_res(phy_rx_data* res)
 
 	// transmit struct member per member, so we are not dependent on packing
 	uart_transmit_data(res->rssi);
-	//uart_transmit_data(res->eirp);
 	uart_transmit_data(res->lqi);
 	uart_transmit_data(res->length);
 

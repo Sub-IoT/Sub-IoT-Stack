@@ -93,9 +93,6 @@ extern "C" {
 #define RADIO_FIFOTHR_FIFO_THR_17_48    (11)             // FIFOTHR.FIFO_THR 17B TX / 48B RX
 #define RADIO_FIFOTHR_FIFO_THR_1_64     (15)            // FIFOTHR.FIFO_THR  1B TX / 64B RX
 
-#define RADIO_SYNC1					    0xD3            // SYNC1
-#define RADIO_SYNC0      				0x91            // SYNC0
-
 #define RADIO_PKTLEN                    0xFF            // PKTLEN (default)
 
 #define RADIO_PKTCTRL1_PQT(VAL)         ((VAL&7) << 5)  // PKTCTRL1.PQT must be at least VAL * 4 good bits

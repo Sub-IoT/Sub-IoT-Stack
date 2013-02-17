@@ -5,10 +5,11 @@
  *      Author: Maarten Weyn
  */
 
-#include <stddef.h>
+#include <stdbool.h>
 
 #include "timer.h"
 #include "queue.h"
+#include "log.h"
 
 #include "hal/system.h"
 
@@ -26,12 +27,14 @@ static void timer_setvalue(u16 next_event)
 static void timer_enable_interrupt()
 {
 	TA1CCTL0 = CCIE; // Enable interrupt for CCR0
+	TA1CTL |= MC__UP;
 	started = true;
 }
 
 static void timer_disable_interrupt()
 {
 	TA1CCTL0 &= ~CCIE; // Disable interrupt for CCR0
+	TA1CTL &= ~MC__UP;
 	started = false;
 }
 
@@ -48,21 +51,28 @@ void timer_init()
 	started = false;
 }
 
-void timer_add_event(timer_event* event)
+bool timer_add_event(timer_event* event)
 {
 	if (event->next_event == 0)
 	{
 		event->f(NULL);
-		return;
+		return true;
 	}
 
-	queue_push_value(&event_queue, (void*) event, sizeof(timer_event));
-
-	if (!started)
+	if (queue_push_value(&event_queue, (void*) event, sizeof(timer_event)))
 	{
-		timer_setvalue(event->next_event);
-		timer_enable_interrupt();
+		if (!started)
+		{
+			timer_enable_interrupt();
+			timer_setvalue(event->next_event);
+		}
+	} else {
+		log_print_string("Cannot add event, queue is full");
+		return false;
 	}
+
+
+	return true;
 }
 
 // Timer A0 interrupt service routine

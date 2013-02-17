@@ -41,4 +41,7 @@
 #define INPUT3_PORT				GPIO_PORT_P2
 #define INPUT3_PIN				GPIO_PIN0
 
+#define UART_RX					P1MAP5
+#define UART_TX					P1MAP6
+
 #endif /* AGAIDI_H_ */

@@ -6,3 +6,7 @@ Debug/
 .project
 *.userprefs
 *.user*
+Makefile*
+object_script*
+*.Debug
+*.Release

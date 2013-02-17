@@ -5,9 +5,6 @@
  *      Author: Maarten Weyn
  */
 
-#include <stdbool.h>
-#include <stddef.h>
-
 #include "queue.h"
 
 static void shift_queue (queue* q, u8 places)
@@ -28,7 +25,7 @@ static void shift_queue (queue* q, u8 places)
 	q->rear -= places;
 }
 
-static void check_for_space(queue* q, u8 size)
+static bool check_for_space(queue* q, u8 size)
 {
 	if (q->rear + 1 > q->start + q->size)
 	{
@@ -36,7 +33,11 @@ static void check_for_space(queue* q, u8 size)
 
 		if (q->front > q->start)
 			shift_queue(q, q->start - q->front);
+		else
+			return 0;
 	}
+
+	return 1;
 }
 
 void queue_init(queue* q, u8* buffer, u16 size)
@@ -116,30 +117,35 @@ u16 queue_read_u16(queue* q, u8 position)
 		return *(value + position);
 }
 
-void queue_push_u8(queue* q, u8 data)
+bool queue_push_u8(queue* q, u8 data)
 {
-	queue_push_value(q, &data, 1);
+	return queue_push_value(q, &data, 1);
 }
 
-void queue_push_u16(queue* q, u16 data)
+bool queue_push_u16(queue* q, u16 data)
 {
-	queue_push_value(q, &data, 2);
+	return queue_push_value(q, &data, 2);
 }
 
-void queue_push_value(queue* q, void* data, u8 size)
+bool queue_push_value(queue* q, void* data, u8 size)
 {
+	//log_print_string("push");
 	if (q->front == NULL)
 	{
 		q->front = q->start;
 		q->rear = q->start;
 	} else
 	{
-		check_for_space(q,size);
+		if (!check_for_space(q,size))
+			return 0;
+
 		q->rear += size;
 	}
 
 	memcpy(q->rear, data, size);
 	q->length++;
+
+	return 1;
 }
 
 void queue_insert_u8(queue* q, u8 data, u8 position)
