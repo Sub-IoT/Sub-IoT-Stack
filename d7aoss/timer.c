@@ -5,6 +5,7 @@
  *      Author: Maarten Weyn
  */
 
+#include <stddef.h>
 #include <stdbool.h>
 
 #include "timer.h"
