@@ -1,72 +1,48 @@
 /*
- *  Created on: Nov 22, 2012
- *  Authors:
- * 		maarten.weyn@artesis.be
- *  	glenn.ergeerts@artesis.be
- *  	alexanderhoet@gmail.com
+ * cc430_phy.c
+ *
+ *  Created on: 13-feb.-2013
+ *      Author: Miesalex
  */
 
 #include <msp430.h>
 #include <stdbool.h>
 #include <stdint.h>
 
-#include "../ral.h"
-#include "rf1a.h"
-#include "cc430_ral.h"
+#include "../phy.h"
+#include "cc430_phy.h"
 #include "cc430_registers.h"
-#include "../../hal/driverlib/5xx_6xx/timera.h"
 
+#include "rf1a.h"
+
+/*
+ * Variables
+ */
 extern RF_SETTINGS rfSettings;
 extern InterruptHandler interrupt_table[34];
 
 RadioState state;
 
-uint16_t packetLength;
-uint16_t remainingBytes;
+uint8_t buffer[255];
+uint8_t packetLength;
+uint8_t remainingBytes;
 uint8_t* bufferPosition;
 
-uint8_t crc;
 uint8_t lqi;
 int16_t rssi;
+
+bool fec;
+uint8_t channel_center_freq_index;
+uint8_t channel_bandwidth_index;
+uint8_t preamble_size;
+uint16_t sync_word;
+
 bool packetReceived;
 
-//Interrupt function prototypes
-void no_interrupt_isr();
-void end_of_packet_isr();
-void rx_data_isr();
-void tx_data_isr();
-void rxtx_finish_isr();
-
-// Private function prototypes
-static RadioState get_radiostate(void);
-static void set_channel(uint8_t channel_center_freq_index, uint8_t channel_bandwidth_index);
-static void set_sync_word(uint16_t sync_word);
-static void set_preamble_size(uint8_t preamble_size);
-static void set_data_whitening(bool  white_data);
-static void set_length_infinite(bool infinite);
-static void set_timeout(uint16_t timeout);
-static int16_t calculate_rssi(int8_t);
-
-// The CC430 implementation of the RAL interface
-const struct ral_interface cc430_ral =
-{
-	cc430_ral_init,
-	cc430_ral_tx,
-    cc430_ral_rx_start,
-    cc430_ral_rx_stop,
-    cc430_ral_read,
-    cc430_ral_is_rx_in_progress,
-    cc430_ral_is_tx_in_progress,
-	cc430_ral_cca
-};
-
 /*
- *
- * Public functions
- *
+ * Phy implementation functions
  */
-
-void cc430_ral_init(void)
+void phy_init(void)
 {
 	//Set radio state
 	state = Idle;
@@ -79,41 +55,37 @@ void cc430_ral_init(void)
 	WriteSinglePATable(PATABLE_VAL);
 }
 
-void cc430_ral_tx(ral_tx_cfg* cfg)
+bool phy_tx(phy_tx_cfg* cfg)
 {
-	uint8_t txBytes;
+	if(get_radiostate() != Idle)
+		return false;
 
 	//Set radio state
 	state = Transmit;
 
-	//Set radio to idle and flush the txfifo
+	//Go to idle and flush the txfifo
 	Strobe(RF_SIDLE);
 	Strobe(RF_SFTX);
 
 	//Set configuration
-	set_channel(cfg->channel_center_freq_index, cfg->channel_bandwidth_index);
-	set_sync_word(cfg->sync_word);
-	set_preamble_size(cfg->preamble_size);
-	set_data_whitening(cfg->white_data);
+	if(!phy_translate_settings(cfg->spectrum_id, cfg->sync_word_class, &fec, &channel_center_freq_index, &channel_bandwidth_index, &preamble_size, &sync_word))
+		return false;
+
+	set_length_infinite(false);
+	set_data_whitening(true);
+	set_channel(channel_center_freq_index, channel_bandwidth_index);
+	set_preamble_size(preamble_size);
+	set_sync_word(sync_word);
+
+	//Set buffer position
+	bufferPosition = cfg->data;
 
 	//Set packet length
 	remainingBytes = cfg->length;
-	WriteSingleReg(PKTLEN, (uint8_t)(cfg->length & 0X00FF));
-
-	if(cfg->length > 255)
-		set_length_infinite(true);
-	else
-		set_length_infinite(false);
+	WriteSingleReg(PKTLEN, cfg->length);
 
 	//Write initial data to txfifo
-	if(remainingBytes > 64)
-		txBytes = 64;
-	else
-		txBytes = remainingBytes;
-
-	WriteBurstReg(RF_TXFIFOWR, cfg->data, txBytes);
-	bufferPosition = cfg->data + txBytes;
-	remainingBytes -= txBytes;
+	tx_data_isr();
 
 	//Configure txfifo threshold
 	WriteSingleReg(FIFOTHR, RADIO_FIFOTHR_FIFO_THR_17_48);
@@ -124,38 +96,51 @@ void cc430_ral_tx(ral_tx_cfg* cfg)
 	RF1AIE  = RFIFG_FLAG_TXBelowThresh | RFIFG_FLAG_TXUnderflow | RFIFG_FLAG_EndOfPacket;
 
 	//Start transmitting
-	TimerA_configureContinuousMode(__MSP430_BASEADDRESS_T0A5__, TIMERA_CLOCKSOURCE_SMCLK, TIMERA_CLOCKSOURCE_DIVIDER_1, TIMERA_TAIE_INTERRUPT_DISABLE, TIMERA_DO_CLEAR);
 	Strobe(RF_STX);
+
+	return true;
 }
 
-void cc430_ral_rx_start(ral_rx_cfg* cfg)
+bool phy_rx_start(phy_rx_cfg* cfg)
 {
-	//Only if radio idle
 	if(get_radiostate() != Idle)
-		return;
+		return false;
 
 	//Set radio state
 	state = Receive;
 
+	//Flush the txfifo
+	Strobe(RF_SIDLE);
+	Strobe(RF_SFRX);
+
 	//Set configuration
-	set_channel(cfg->channel_center_freq_index, cfg->channel_bandwidth_index);
-	set_sync_word(cfg->sync_word);
-	set_preamble_size(cfg->preamble_size);
+	if(!phy_translate_settings(cfg->spectrum_id, cfg->sync_word_class, &fec, &channel_center_freq_index, &channel_bandwidth_index, &preamble_size, &sync_word))
+		return false;
+
+	set_length_infinite(false);
+	set_data_whitening(true);
+	set_channel(channel_center_freq_index, channel_bandwidth_index);
+	set_preamble_size(preamble_size);
+	set_sync_word(sync_word);
 	set_timeout(cfg->timeout);
 
+	//Reset packet received flag
 	packetReceived = false;
-	//bufferPosition = packetBuffer;
 
-	if(cfg->length == 0)
+	//Set buffer position
+	bufferPosition = buffer;
+
+	//Set packet length and configure txfifo threshold
+	packetLength = cfg->length;
+	remainingBytes = cfg->length;
+
+	if(packetLength == 0)
 	{
-		packetLength = 0;
 		WriteSingleReg(PKTLEN, 0xFF);
 		WriteSingleReg(FIFOTHR, RADIO_FIFOTHR_FIFO_THR_61_4);
 	} else {
-		packetLength = cfg->length;
-		WriteSingleReg(PKTLEN, cfg->length);
+		WriteSingleReg(PKTLEN, packetLength);
 		WriteSingleReg(FIFOTHR, RADIO_FIFOTHR_FIFO_THR_17_48);
-		remainingBytes = cfg->length;
 	}
 
 	//Enable interrupts
@@ -165,21 +150,22 @@ void cc430_ral_rx_start(ral_rx_cfg* cfg)
 
 	//Start receiving
 	Strobe(RF_SRX);
+
+	return true;
 }
 
-void cc430_ral_rx_stop(void)
+void phy_rx_stop(void)
 {
 	rxtx_finish_isr();
 }
 
-bool cc430_ral_read(ral_rx_data* data)
+bool phy_read(phy_rx_data* data)
 {
 	if(packetReceived) {
-		//data->data = packetBuffer;
+		data->data = buffer;
 		data->length = packetLength;
 		data->rssi = rssi;
 		data->lqi = lqi;
-		data->crc_ok = crc;
 		packetReceived = false;
 		return true;
 	}
@@ -187,22 +173,45 @@ bool cc430_ral_read(ral_rx_data* data)
 	return false;
 }
 
-bool cc430_ral_is_rx_in_progress(void)
+bool phy_is_rx_in_progress(void)
 {
-	return (get_radiostate() == Receive);
+	return (state == Receive);
 }
 
-bool cc430_ral_is_tx_in_progress(void)
+bool phy_is_tx_in_progress(void)
 {
-	return (get_radiostate() == Transmit);
+	return (state == Transmit);
+}
+
+bool phy_cca(void)
+{
+    RF1AIE  = RFIFG_FLAG_IOCFG1;
+    RF1AIFG = 0;
+    RF1AIES = RFIFG_FLANK_IOCFG1;
+
+    Strobe(RF_SIDLE);
+    Strobe(RF_SRX);
+
+    system_lowpower_mode(0, 1);
+
+    RF1AIE  = 0;
+    RF1AIES = 0;
+
+    int rssi = get_rssi();
+
+    bool cca_ok = (bool)(rssi < CCA_RSSI_THRESHOLD);
+
+    if (!cca_ok)
+    	__no_operation();
+
+    Strobe(RF_SIDLE);
+
+    return cca_ok;
 }
 
 /*
- *
- * Interrupt Functions
- *
+ * Interrupt functions
  */
-
 #pragma vector=CC1101_VECTOR
 __interrupt void CC1101_ISR (void)
 {
@@ -213,12 +222,11 @@ __interrupt void CC1101_ISR (void)
   LPM4_EXIT;
 }
 
+
 void no_interrupt_isr() { }
 
 void end_of_packet_isr()
 {
-	TimerA_stop(__MSP430_BASEADDRESS_T0A5__);
-
 	if (state == Receive) {
 		rx_data_isr();
 		rxtx_finish_isr();
@@ -229,12 +237,26 @@ void end_of_packet_isr()
 	}
 }
 
+void tx_data_isr()
+{
+	//Calculate number of free bytes in TXFIFO
+	uint8_t txBytes = 64 - ReadSingleReg(TXBYTES);
+
+	//Write data
+	if(txBytes > remainingBytes)
+		txBytes = remainingBytes;
+
+	WriteBurstReg(RF_TXFIFOWR, bufferPosition, txBytes);
+	remainingBytes -= txBytes;
+	bufferPosition += txBytes;
+}
+
 void rx_data_isr()
 {
 	//Read number of bytes in RXFIFO
 	uint8_t rxBytes = ReadSingleReg(RXBYTES);
 
-    //If length is not set get the length from RXFIFO and set PKTLEN so eop can be detected right
+    //If length is not set get the length from RXFIFO and set PKTLEN
 	if (packetLength == 0) {
 		packetLength = ReadSingleReg(RXFIFO);
 		WriteSingleReg(PKTLEN, packetLength);
@@ -257,34 +279,13 @@ void rx_data_isr()
 	remainingBytes -= rxBytes;
     bufferPosition += rxBytes;
 
+    //When all data has been received read rssi and lqi value and set packetreceived flag
     if(remainingBytes == 0)
     {
     	rssi = calculate_rssi(ReadSingleReg(RXFIFO));
-    	crc = ReadSingleReg(RXFIFO);
-    	lqi = crc & 0x7F;
-    	crc >>= 7;
+    	lqi = ReadSingleReg(RXFIFO) & 0x7F;
     	packetReceived = true;
     }
-}
-
-void tx_data_isr()
-{
-	uint8_t txBytes = ReadSingleReg(TXBYTES);
-
-	//If remaining bytes < (256 - remaining bytes in txfifo) go to fixed mode
-	if(remainingBytes < (256 - txBytes))
-		set_length_infinite(false);
-
-	//Calculate number of free bytes in TXFIFO
-	txBytes = 64 - txBytes;
-
-	//Write data
-	if(txBytes > remainingBytes)
-		txBytes = remainingBytes;
-
-	WriteBurstReg(RF_TXFIFOWR, bufferPosition, txBytes);
-	bufferPosition += txBytes;
-	remainingBytes -= txBytes;
 }
 
 void rxtx_finish_isr()
@@ -304,12 +305,9 @@ void rxtx_finish_isr()
 }
 
 /*
- *
  * Private functions
- *
  */
-
-static RadioState get_radiostate(void)
+RadioState get_radiostate(void)
 {
 	uint8_t state = Strobe(RF_SNOP) >> 4;
 
@@ -319,7 +317,7 @@ static RadioState get_radiostate(void)
 	return (RadioState)state;
 }
 
-static void set_channel(uint8_t channel_center_freq_index, uint8_t channel_bandwith_index)
+void set_channel(uint8_t channel_center_freq_index, uint8_t channel_bandwith_index)
 {
 	//Set channel center frequency
 	WriteSingleReg(CHANNR, channel_center_freq_index);
@@ -350,13 +348,13 @@ static void set_channel(uint8_t channel_center_freq_index, uint8_t channel_bandw
 	}
 }
 
-static void set_sync_word(uint16_t sync_word)
+void set_sync_word(uint16_t sync_word)
 {
 	WriteSingleReg(SYNC0, (uint8_t)(sync_word >> 8));
 	WriteSingleReg(SYNC1, (uint8_t)(sync_word & 0x00FF));
 }
 
-static void set_preamble_size(uint8_t preamble_size)
+void set_preamble_size(uint8_t preamble_size)
 {
 	uint8_t mdmcfg1 = ReadSingleReg(MDMCFG1) & 0x03;
 
@@ -378,7 +376,7 @@ static void set_preamble_size(uint8_t preamble_size)
 	WriteSingleReg(MDMCFG1, mdmcfg1);
 }
 
-static void set_data_whitening(bool white_data)
+void set_data_whitening(bool white_data)
 {
 	uint8_t pktctrl0 = ReadSingleReg(PKTCTRL0) & 0xBF;
 
@@ -388,7 +386,7 @@ static void set_data_whitening(bool white_data)
 	WriteSingleReg(PKTCTRL0, pktctrl0);
 }
 
-static void set_length_infinite(bool infinite)
+void set_length_infinite(bool infinite)
 {
 	uint8_t pktctrl0 = ReadSingleReg(PKTCTRL0) & 0xFC;
 
@@ -398,7 +396,7 @@ static void set_length_infinite(bool infinite)
 	WriteSingleReg(PKTCTRL0, pktctrl0);
 }
 
-static void set_timeout(uint16_t timeout)
+void set_timeout(uint16_t timeout)
 {
 	if (timeout == 0) {
 		WriteSingleReg(WORCTRL, RADIO_WORCTRL_ALCK_PD);
@@ -411,7 +409,7 @@ static void set_timeout(uint16_t timeout)
 	}
 }
 
-static int16_t calculate_rssi(int8_t rssi_raw)
+int16_t calculate_rssi(int8_t rssi_raw)
 {
 	// CC430 RSSI is 0.5 dBm units, signed byte
     int16_t rssi = (int16_t)rssi_raw;		//Convert to signed 16 bit
@@ -422,28 +420,3 @@ static int16_t calculate_rssi(int8_t rssi_raw)
     return rssi;
 }
 
-bool cc430_ral_cca()
-{
-	//TODO
-	/*RF1AIFG = 0;
-	RF1AIE  = RFIFG_FLAG_IOCFG1;
-	RF1AIES = RFIFG_FLANK_IOCFG1;
-
-	Strobe(RF_SIDLE);
-	Strobe(RF_SRX);
-
-	system_lowpower_mode(0, 1);
-
-	RF1AIE  = 0;
-	RF1AIES = 0;
-
-	int thr  = -92; // TODO: get from settings
-	int rssi = get_rssi();
-
-	bool cca_ok = (bool)(rssi < thr);
-
-	Strobe(RF_SIDLE);
-
-	return cca_ok;*/
-	return false;
-}

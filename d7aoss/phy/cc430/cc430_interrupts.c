@@ -6,14 +6,7 @@
  *  	alexanderhoet@gmail.com
  */
 
-#include "cc430_ral.h"
-
-//Interrupt function prototypes
-extern void no_interrupt_isr();
-extern void end_of_packet_isr();
-extern void rx_data_isr();
-extern void tx_data_isr();
-extern void rxtx_finish_isr();
+#include "cc430_phy.h"
 
 // Interrupt branch table
 InterruptHandler interrupt_table[34] = {

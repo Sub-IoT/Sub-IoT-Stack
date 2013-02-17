@@ -17,8 +17,6 @@
 #include <hal/rtc.h>
 #include <log.h>
 
-#include "phy_tests.h"
-
 #define INTERRUPT_BUTTON1 	(1)
 #define INTERRUPT_BUTTON2 	(1 << 1)
 #define INTERRUPT_BUTTON3 	(1 << 2)
@@ -27,12 +25,22 @@
 static u8 interrupt_flags = 0;
 static u8 rtcEnabled = 0;
 
-static uint8_t buffer[16] = {0x00, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77, 0x88, 0x99, 0xAA, 0xBB, 0xCC, 0xDD, 0xEE, 0xFF};
+static uint8_t buffer[48] = {0x30, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77, 0x88, 0x99, 0xAA, 0xBB, 0xCC, 0xDD, 0xEE, 0xFF,
+		0x10, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77, 0x88, 0x99, 0xAA, 0xBB, 0xCC, 0xDD, 0xEE, 0xFF,
+		0x10, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77, 0x88, 0x99, 0xAA, 0xBB, 0xCC, 0xDD, 0xEE, 0xFF};
+
+phy_tx_cfg tx_cfg = {
+	0x10,
+	1,
+	0,
+	48,
+	buffer
+};
 
 phy_rx_cfg rx_cfg = {
-	0x00,
+	0x10,
+	1,
 	0,
-	16,
 	0
 };
 
@@ -48,24 +56,11 @@ void main(void)
 
 	phy_init();
 
-
-	unsigned int cycles;
-	cycles = test_pn9_timing();
-	printf("%d\n", cycles);
-	cycles = test_conv_encode_timing();
-	printf("%d\n", cycles);
-	cycles = test_conv_decode_timing();
-	printf("%d\n", cycles);
-	cycles = test_interleaving_timing();
-	printf("%d\n", cycles);
-
 	while(1) {
         if (INTERRUPT_BUTTON1 & interrupt_flags) {
-        	phy_tx_cfg tx_cfg = {0x00, 0, 0, buffer, 16};
-
         	interrupt_flags &= ~INTERRUPT_BUTTON1;
 
-        	//phy_rx_stop();
+        	phy_rx_stop();
         	phy_tx(&tx_cfg);
 
         	button_clear_interrupt_flag();
@@ -88,20 +83,19 @@ void main(void)
         }
 
         if (INTERRUPT_RTC & interrupt_flags) {
-        	phy_tx_cfg tx_cfg = {0x00, 0, 0, buffer, 16};
-
         	interrupt_flags &= ~INTERRUPT_RTC;
 
-        	//phy_rx_stop();
+        	phy_rx_stop();
         	phy_tx(&tx_cfg);
         }
 
         if (phy_read(&rx_data)) {
-        	led_toggle(1);
+        	if(memcmp(buffer, rx_data.data, sizeof(buffer)) == 0)
+        		led_toggle(1);
         }
 
         if (!phy_is_rx_in_progress() && !phy_is_tx_in_progress()) {
-        	//phy_rx_start(&rx_cfg);
+        	phy_rx_start(&rx_cfg);
         }
 
         if (phy_is_rx_in_progress())

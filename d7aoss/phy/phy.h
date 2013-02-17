@@ -34,7 +34,6 @@ typedef struct
 //Packet reception result structure
 typedef struct
 {
-	uint8_t crc_ok;				//Cyclic redundancy check status
     uint8_t lqi;				//Link quality indicator
     uint8_t length;				//Packet length
     uint8_t* data;				//Packet data
@@ -47,18 +46,22 @@ typedef struct
 	uint8_t spectrum_id;		//Spectrum ID
 	uint8_t sync_word_class;	//Sync word class
 	uint8_t eirp;				//Transmission power level in dBm ranged [-39, +10]
+	uint8_t length;				//Packet length
 	uint8_t* data;				//Packet data
-	uint16_t length;			//Packet length
 } phy_tx_cfg;
 
-void phy_init(void);
-void phy_tx(phy_tx_cfg* cfg);
-void phy_rx_start(phy_rx_cfg* cfg);
-void phy_rx_stop(void);
-bool phy_read(phy_rx_data* data);
-bool phy_is_rx_in_progress(void);
-bool phy_is_tx_in_progress(void);
-bool phy_cca(void);
+//Phy interface
+extern void phy_init(void);
+extern bool phy_tx(phy_tx_cfg* cfg);
+extern bool phy_rx_start(phy_rx_cfg* cfg);
+extern void phy_rx_stop(void);
+extern bool phy_read(phy_rx_data* data);
+extern bool phy_is_rx_in_progress(void);
+extern bool phy_is_tx_in_progress(void);
+extern bool phy_cca(void);
+
+//
+bool phy_translate_settings(uint8_t spectrum_id, uint8_t sync_word_class, bool* fec, uint8_t* channel_center_freq_index, uint8_t* channel_bandwidth_index, uint8_t* preamble_size, uint16_t* sync_word);
 
 #ifdef __cplusplus
 }
