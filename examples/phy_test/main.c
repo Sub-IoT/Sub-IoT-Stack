@@ -9,7 +9,7 @@
 #include <string.h>
 #include <stdio.h>
 
-#include <phy/phy.h>
+#include <d7aoss.h>
 
 #include <hal/system.h>
 #include <hal/button.h>

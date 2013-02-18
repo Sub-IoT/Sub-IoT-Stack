@@ -11,20 +11,23 @@
 #ifndef D7STACK_H_
 #define D7STACK_H_
 
-// configuration
-// TODO get from configure step or similar
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+/*
+ *  Configuration section
+ *
+ *  TODO get from configure step or similar
+ */
 
 #define DEBUG
 
-#define RAL_IMPLEMENTATION cc430_ral
+#include "phy/phy.h"
+#include "dll/dll.h"
 
-#if RAL_IMPLEMENTATION == stub_ral
-#	include "ral/stub/stub_ral.h"
-#elif RAL_IMPLEMENTATION == cc430_ral
-#	include "ral/cc430/cc430_ral.h"
+#ifdef __cplusplus
+extern "C" {
 #endif
-
-// the RAL implementation to use
-extern const struct ral_interface RAL_IMPLEMENTATION;
 
 #endif /* D7STACK_H_ */

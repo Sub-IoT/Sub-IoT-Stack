@@ -8,6 +8,10 @@
 #ifndef CC430_PHY_H_
 #define CC430_PHY_H_
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include <msp430.h>
 #include <stdbool.h>
 #include <stdint.h>
@@ -76,5 +80,9 @@ void set_data_whitening(bool  white_data);
 void set_length_infinite(bool infinite);
 void set_timeout(uint16_t timeout);
 int16_t calculate_rssi(int8_t rssi_raw);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* CC430_PHY_H_ */
