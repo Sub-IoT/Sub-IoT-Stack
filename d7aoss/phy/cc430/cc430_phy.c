@@ -185,6 +185,8 @@ bool phy_is_tx_in_progress(void)
 
 bool phy_cca(void)
 {
+	int rssi = 0;
+
     RF1AIE  = RFIFG_FLAG_IOCFG1;
     RF1AIFG = 0;
     RF1AIES = RFIFG_FLANK_IOCFG1;
@@ -197,7 +199,7 @@ bool phy_cca(void)
     RF1AIE  = 0;
     RF1AIES = 0;
 
-    int rssi = get_rssi();
+    //int rssi = get_rssi();
 
     bool cca_ok = (bool)(rssi < CCA_RSSI_THRESHOLD);
 
