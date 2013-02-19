@@ -39,6 +39,7 @@ void Packet::parseRawPacket()
     {
         // TODO
         qCritical("not implemented yet");
+        return;
     }
     else if(_frameType == FrameTypeForegroundFrame)
     {
@@ -50,6 +51,7 @@ void Packet::parseRawPacket()
         {
             // TODO
             qCritical("not implemented yet");
+            return;
         }
 
         if(frame_ctl & FRAME_CTL_EN_ADDR)
@@ -79,6 +81,7 @@ void Packet::parseRawPacket()
             {
                 // TODO parse target ID header
                 qCritical("not implemented yet");
+                return;
             }
 
             data++; // TODO what is this?
