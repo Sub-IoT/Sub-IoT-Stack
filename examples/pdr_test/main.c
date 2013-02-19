@@ -62,7 +62,7 @@ void start_tx()
 {
 	led_on(3);
 
-	dll_tx_foreground_frame((u8*)&counter, sizeof(counter), 0x10);
+	dll_tx_foreground_frame((u8*)&counter, sizeof(counter), 0x10, 0);
 }
 
 void tx_callback(Dll_Tx_Result result)

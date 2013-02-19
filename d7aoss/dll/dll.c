@@ -8,6 +8,7 @@
 #include "dll.h"
 #include "../timer.h"
 #include "../hal/system.h"
+#include "../hal/crc.h"
 #include "../log.h"
 #include <string.h>
 
@@ -52,7 +53,6 @@ static void phy_tx_callback()
 	#ifdef LOG_DLL_ENABLED
 		log_print_string("TX OK");
 	#endif
-
 	dll_tx_callback(DLLTxResultOK);
 }
 
@@ -61,20 +61,16 @@ static void phy_rx_callback(phy_rx_res_t* res)
 	//log_packet(res->data);
 
 	// Data Link Filtering
-
-	// CRC Validation
-	if (!res->crc_ok)
-	{
-		#ifdef LOG_DLL_ENABLED
-			log_print_string("CRC ERROR");
-		#endif
-
-			return;
-	}
-
 	// Subnet Matching do not parse it yet
 	if (dll_state == DllStateScanBackgroundFrame)
 	{
+		u16 crc = crc_calculate(res->data, 5);
+		if (memcmp((u8*) &(res->data[5]), (u8*) &crc, 2) != 0)
+		{
+			log_print_string("CRC ERROR");
+			return;
+		}
+
 		if (!check_subnet(0xFF, res->data[0])) // TODO: get device_subnet from datastore
 		{
 			#ifdef LOG_DLL_ENABLED
@@ -84,6 +80,12 @@ static void phy_rx_callback(phy_rx_res_t* res)
 		}
 	} else if (dll_state == DllStateScanForegroundFrame)
 	{
+		u16 crc = crc_calculate(res->data, res->len - 2);
+		if (memcmp((u8*) &(res->data[res->len - 2]), (u8*) &crc, 2) != 0)
+		{
+			log_print_string("CRC ERROR");
+			return;
+		}
 		if (!check_subnet(0xFF, res->data[3])) // TODO: get device_subnet from datastore
 		{
 			#ifdef LOG_DLL_ENABLED
@@ -229,7 +231,9 @@ static void scan_timeout(void* arg)
 	if (dll_state == DllStateNone)
 		return;
 
-	//log_print_string("scan time-out");
+	#ifdef LOG_DLL_ENABLED
+		log_print_string("scan time-out");
+	#endif
 	phy_rx_stop();
 	timer_event event;
 	event.next_event = current_css->values[current_scan_id].time_next_scan;
@@ -269,6 +273,10 @@ void dll_stop_channel_scan()
 
 void dll_channel_scan_series(dll_channel_scan_series_t* css)
 {
+	#ifdef LOG_DLL_ENABLED
+		log_print_string("Starting channel scan");
+	#endif
+
 	phy_rx_cfg_t rx_cfg;
 	rx_cfg.timeout = css->values[current_scan_id].timout_scan_detect; // timeout
 	rx_cfg.multiple = 0; // multiple TODO
@@ -307,12 +315,14 @@ static void dll_cca2(void* arg)
 	phy_result_t res = phy_tx(&foreground_frame_tx_cfg);
 }
 
-void dll_tx_foreground_frame(u8* data, u8 length, u8 spectrum_id)
+void dll_tx_foreground_frame(u8* data, u8 length, u8 spectrum_id, s8 tx_eirp)
 {
+	//TODO: check if not already sending
 	foreground_frame_tx_cfg.spectrum_id = spectrum_id; // TODO check valid
+	foreground_frame_tx_cfg.eirp = tx_eirp;
 
 	dll_foreground_frame_t* frame = (dll_foreground_frame_t*) frame_data;
-	frame->frame_header.tx_eirp = 0x50; // (-40 + 0.5n) dBm // TODO hardcoded
+	frame->frame_header.tx_eirp = (tx_eirp + 40) * 2; // (-40 + 0.5n) dBm
 	frame->frame_header.subnet = 0xf1; // TODO hardcoded, get from app?
 	frame->frame_header.frame_ctl = !FRAME_CTL_LISTEN | !FRAME_CTL_DLLS | FRAME_CTL_EN_ADDR | !FRAME_CTL_FR_CONT | !FRAME_CTL_CRC32 | !FRAME_CTL_NM2 | FRAME_CTL_DIALOGFRAME; // TODO hardcoded
 
@@ -335,8 +345,10 @@ void dll_tx_foreground_frame(u8* data, u8 length, u8 spectrum_id)
 	memcpy(pointer, data, length); // TODO fixed size for now
 	pointer += length;
 
-	frame->length = (pointer - frame_data) + 2; // length includes CRC
-	frame_data[0] = frame->length;
+	frame->length = (pointer - frame_data) + 2;  // length includes CRC
+
+	u16 crc16 = crc_calculate(frame_data, frame->length - 2);
+	memcpy(pointer, &crc16, 2);
 
 	foreground_frame_tx_cfg.len = frame->length;
 
@@ -352,8 +364,8 @@ void dll_tx_foreground_frame(u8* data, u8 length, u8 spectrum_id)
 	event.next_event = 5; // TODO: get T_G fron config
 	event.f = &dll_cca2;
 
-	timer_add_event(&event);
-
+	if (!timer_add_event(&event))
+		dll_tx_callback(DLLTxResultFail);
 
 //	phy_result_t res = phy_tx(&foreground_frame_tx_cfg);
 //	if(res == PHY_RADIO_IN_RX_MODE)

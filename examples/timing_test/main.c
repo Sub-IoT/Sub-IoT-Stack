@@ -18,7 +18,7 @@ void callback2(void* arg);
 
 void callback1(void* arg)
 {
-	log_print_string("callback 1", 10);
+	log_print_string("callback 1");
 	led_toggle(3);
 	timer_event event;
 	event.next_event = 1024;
@@ -28,7 +28,7 @@ void callback1(void* arg)
 
 void callback2(void* arg)
 {
-	log_print_string("callback 2", 10);
+	log_print_string("callback 2");
 	led_toggle(1);
 	timer_event event;
 	event.next_event = 1024;
@@ -39,7 +39,7 @@ void callback2(void* arg)
 int main(void) {
     system_init();
 
-    log_print_string("started", 7);
+    log_print_string("started");
 
    //TA1CCTL0 = CCIE;							// CCR0 interrupt enabled
 //    TA1CTL = TASSEL_1 + MC__UP + ID_3 + TACLR;           // ACLK/8, up mode, clear timer
@@ -106,7 +106,7 @@ int main(void) {
 	event.f = &callback1;
 	timer_add_event(&event);
 
-    log_print_string("Counting", 8);
+    log_print_string("Counting");
 
 	while(1)
 	{

@@ -19,6 +19,6 @@ typedef struct
 
 void timer_init();
 
-void timer_add_event(timer_event* event);
+bool timer_add_event(timer_event* event);
 
 #endif /* TIMER_H_ */

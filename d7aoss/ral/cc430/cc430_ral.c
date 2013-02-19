@@ -8,6 +8,7 @@
 #include "rf1a.h"
 #include "../../hal/system.h"
 #include "cc430_ral.h"
+#include "../../phy/phy.h"
 
 #define CC430_RSSI_OFFSET 74
 #define CC430_CCA_RSSI_THRESHOLD -86 // TODO configurable
@@ -176,7 +177,7 @@ static void rx_data_isr()
         rx_response.data = rxData;
         rx_response.lqi = ReadSingleReg(LQI);
         rx_response.rssi = get_rssi();
-        rx_response.crc_ok = 1; // ReadSingleReg(PKTSTATUS) >> 7; check CRC using MSP430 not using RF
+        //rx_response.crc_ok = 1; // ReadSingleReg(PKTSTATUS) >> 7; check CRC using MSP430 not using RF
         rx_callback(&rx_response); // TODO get callback out of ISR?
         return;
     }
@@ -343,6 +344,11 @@ void cc430_ral_tx(ral_tx_cfg_t* tx_cfg)
 		break;
 	}
 
+	// Set TX EIRP
+	// todo: get data from table
+	if (tx_cfg->eirp == 10) WritePATable(0xC0);
+	else WritePATable(0x51); // -0.3dbm
+
 	//Modify radio state
 	//Set PKTLEN to the packet length
 	//Set RXFIFO threshold
@@ -360,12 +366,13 @@ void cc430_ral_tx(ral_tx_cfg_t* tx_cfg)
 	Strobe(RF_SFTX);
 
 	//Prepare data
-	txLength = tx_cfg->len - 2; // length includes CRC
+
+	txLength = tx_cfg->len; // length includes CRC
 	txRemainingBytes = txLength;
 	u8 txBytes = txLength;
 	txDataPointer = tx_cfg->data; // TODO copy data
 
-	if(txLength > 62)
+	if(txLength > 64)
 	{
 		txBytes = 62;
 	}
@@ -373,14 +380,6 @@ void cc430_ral_tx(ral_tx_cfg_t* tx_cfg)
 	WriteBurstReg(RF_TXFIFOWR, txDataPointer, txBytes);
 
 
-	CRCINIRES = 0xFFFF;
-	u8 i =1;
-	for(i=0; i<txLength-2; i++)
-	{
-		CRCDIRB_L = tx_cfg->data[i];
-	}
-	u16 engine_crc = CRCINIRES;
-	WriteBurstReg(RF_TXFIFOWR, (u8*) &engine_crc, 2);
 
 	txRemainingBytes -= txBytes;
 	txDataPointer += txBytes;
@@ -487,6 +486,11 @@ bool cc430_ral_cca()
 	int rssi = get_rssi();
 
 	bool cca_ok = (bool)(rssi < CC430_CCA_RSSI_THRESHOLD);
+
+	if (!cca_ok)
+	{
+		__no_operation();
+	}
 
 	Strobe(RF_SIDLE);
 

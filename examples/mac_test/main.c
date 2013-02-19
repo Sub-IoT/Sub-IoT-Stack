@@ -15,7 +15,8 @@
 #include <hal/leds.h>
 #include <hal/rtc.h>
 #include <log.h>
-//#include <hal/crc.h>
+#include <timer.h>
+#include <hal/crc.h>
 
 
 #define INTERRUPT_BUTTON1 	(1)
@@ -37,12 +38,13 @@ dll_channel_scan_t scan_cfg1 = {
 		1000,
 		0
 };
-dll_channel_scan_t scan_cfg2 = {
-		0x12,
-		FrameTypeForegroundFrame,
-		1000,
-		0
-};
+
+//dll_channel_scan_t scan_cfg1 = {
+//		0x12,
+//		FrameTypeForegroundFrame,
+//		1000,
+//		0
+//};
 
 dll_channel_scan_series_t scan_series_cfg;
 
@@ -66,7 +68,8 @@ void start_tx()
 	tx = 1;
 	stop_rx();
 	led_on(3);
-	dll_tx_foreground_frame((u8*)&counter, sizeof(counter), 0x10);
+	dll_tx_foreground_frame((u8*)&counter, sizeof(counter), 0x10, 0);
+
 }
 
 void tx_callback(Dll_Tx_Result result)
@@ -77,10 +80,14 @@ void tx_callback(Dll_Tx_Result result)
 		led_off(3);
 		log_print_string("TX OK");
 	}
-	else
+	else if (result == DLLTxResultCCAFail)
 	{
 		led_toggle(1);
 		log_print_string("TX CCA FAIL");
+	} else
+	{
+		led_toggle(1);
+		log_print_string("TX FAIL");
 	}
 
 	start_rx();
@@ -100,15 +107,40 @@ void main(void) {
 	rtc_init_counter_mode();
 	rtc_start();
 
+	/*
+	CRC test
+
+	//u8 msg[] = {0x31, 0xFF, 0x41, 0x43, 0x54, 0x49, 0x56, 0x45, 0x20, 0x42, 0x54, 0x4E, 0x31, 0x00, 0x00};
+	u8 msg[] = {0x29,	0x64,	0xFF,	0x61,	0x15,	0x34,	0xD0,	0x9F,	0x9E,	0x88,	0xEA,	0x2D,
+			0x2A,	0x87,	0x5C,	0x39,	0x2D,	0xF5,	0xB4,	0x5C,	0x3F,	0xF1,	0x03,	0x81,
+			0xD4,	0x13,	0xFA,	0x32,	0x90,	0x75,	0x67,	0x3E,	0x48,	0xDA,	0x84,	0x90,
+			0xF4,	0x2C,	0xC8,	0xD1,	0x54};
+
+	u8 size = 41;
+	u16 crc = crc_calculate(msg, size);
+	u16 crc2 = crc16(msg, size);
+	u16 crc3 = CRCCCITT(msg, size, 0xffff, 0);
+
+	u8 text[] = "crc = 0x0000\0";
+	u8 temp = crc & 0x0F;
+	text[11] = (temp <= 9) ? 0x30 + temp : (0x41-10) + temp;
+	temp = (crc >> 4) & 0x0F;
+	text[10] = (temp <= 9) ? 0x30 + temp : (0x41-10) + temp;
+	temp = (crc >> 8) & 0x0F;
+	text[9] = (temp <= 9) ? 0x30 + temp : (0x41-10) + temp;
+	temp = (crc >> 12) & 0x0F;
+	text[8] = (temp <= 9) ? 0x30 + temp : (0x41-10) + temp;
+	log_print_string(text);
+	*/
+
 	dll_init();
 	dll_set_tx_callback(&tx_callback);
 	dll_set_rx_callback(&rx_callback);
 
-	dll_channel_scan_t scan_confgs[2];
+	dll_channel_scan_t scan_confgs[1];
 	scan_confgs[0] = scan_cfg1;
-	scan_confgs[1] = scan_cfg2;
 
-	scan_series_cfg.length = 1;
+	scan_series_cfg.length = 0;
 	scan_series_cfg.values = scan_confgs;
 
 	log_print_string("started");
@@ -150,11 +182,11 @@ void main(void) {
 
         if (INTERRUPT_RTC & interrupt_flags)
 		{
+        	log_print_string("rtc");
         	start_tx();
 
 			interrupt_flags &= ~INTERRUPT_RTC;
 		}
-
 
 		system_lowpower_mode(4,1);
 	}
