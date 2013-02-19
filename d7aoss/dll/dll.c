@@ -303,7 +303,7 @@ void dll_channel_scan_series(dll_channel_scan_series_t* css)
 
 static void dll_cca2(void* arg)
 {
-	bool cca2 = phy_cca();
+	bool cca2 = false; //phy_cca();
 	if (!cca2)
 	{
 		dll_tx_callback(DLLTxResultCCAFail);
@@ -350,7 +350,7 @@ void dll_tx_foreground_frame(u8* data, u8 length, u8 spectrum_id, s8 tx_eirp)
 
 	foreground_frame_tx_cfg.length = frame->length;
 
-	bool cca1 = phy_cca();
+	bool cca1 = false; //phy_cca();
 
 	if (!cca1)
 	{

@@ -1,8 +1,10 @@
 /*
- * phy.c
- *
- *  Created on: 16-feb.-2013
- *      Author: Miesalex
+ * The PHY layer API
+ *  Created on: Nov 22, 2012
+ *  Authors:
+ * 		maarten.weyn@artesis.be
+ *  	glenn.ergeerts@artesis.be
+ *  	alexanderhoet@gmail.com
  */
 
 #include "phy.h"

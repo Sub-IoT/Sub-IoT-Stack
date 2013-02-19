@@ -1,6 +1,8 @@
 /*
  *  Created on: Jan 11, 2013
  *  Authors:
+ * 		maarten.weyn@artesis.be
+ *  	glenn.ergeerts@artesis.be
  *  	alexanderhoet@gmail.com
  */
 

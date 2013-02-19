@@ -58,7 +58,7 @@ extern void phy_rx_stop(void);
 extern bool phy_read(phy_rx_data* data);
 extern bool phy_is_rx_in_progress(void);
 extern bool phy_is_tx_in_progress(void);
-extern bool phy_cca(void);
+extern bool phy_cca(phy_rx_cfg* cfg);
 
 //
 bool phy_translate_settings(uint8_t spectrum_id, uint8_t sync_word_class, bool* fec, uint8_t* channel_center_freq_index, uint8_t* channel_bandwidth_index, uint8_t* preamble_size, uint16_t* sync_word);

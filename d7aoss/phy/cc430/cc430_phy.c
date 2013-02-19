@@ -1,8 +1,9 @@
 /*
- * cc430_phy.c
- *
- *  Created on: 13-feb.-2013
- *      Author: Miesalex
+ *  Created on: Nov 22, 2012
+ *  Authors:
+ * 		maarten.weyn@artesis.be
+ *  	glenn.ergeerts@artesis.be
+ *  	alexanderhoet@gmail.com
  */
 
 #include <msp430.h>
@@ -183,30 +184,42 @@ bool phy_is_tx_in_progress(void)
 	return (state == Transmit);
 }
 
-bool phy_cca(void)
+bool phy_cca(phy_rx_cfg* cfg)
 {
-	int rssi = 0;
+	bool cca_ok;
+	uint8_t rssi_raw = 0;
 
+	if(get_radiostate() != Idle)
+		return false;
+
+	//Set radio Idle
+	Strobe(RF_SIDLE);
+
+	//Set configuration
+	if(!phy_translate_settings(cfg->spectrum_id, cfg->sync_word_class, &fec, &channel_center_freq_index, &channel_bandwidth_index, &preamble_size, &sync_word))
+		return false;
+
+	set_channel(channel_center_freq_index, channel_bandwidth_index);
+
+	//Enable interrupts
     RF1AIE  = RFIFG_FLAG_IOCFG1;
     RF1AIFG = 0;
     RF1AIES = RFIFG_FLANK_IOCFG1;
 
-    Strobe(RF_SIDLE);
+    //Start receiving
     Strobe(RF_SRX);
 
-    system_lowpower_mode(0, 1);
+    system_lowpower_mode(0, 1); //Todo should system call be made here?
 
-    RF1AIE  = 0;
-    RF1AIES = 0;
+    rxtx_finish_isr();
 
-    //int rssi = get_rssi();
+    rssi_raw = ReadSingleReg(RSSI);
+    rssi = calculate_rssi(rssi_raw);
 
-    bool cca_ok = (bool)(rssi < CCA_RSSI_THRESHOLD);
+    cca_ok = (bool)(rssi < CCA_RSSI_THRESHOLD);
 
     if (!cca_ok)
-    	__no_operation();
-
-    Strobe(RF_SIDLE);
+    	__no_operation(); //???
 
     return cca_ok;
 }
@@ -221,7 +234,7 @@ __interrupt void CC1101_ISR (void)
   uint16_t edge = (1 << (isr_vector - 1)) & RF1AIES;
   if(edge) isr_vector += 0x11;
   interrupt_table[isr_vector]();
-  LPM4_EXIT;
+  LPM4_EXIT;  //Todo should system call be made here?
 }
 
 
