@@ -58,6 +58,7 @@ extern void phy_rx_stop(void);
 extern bool phy_read(phy_rx_data* data);
 extern bool phy_is_rx_in_progress(void);
 extern bool phy_is_tx_in_progress(void);
+extern int16_t phy_get_rssi(phy_rx_cfg* cfg);
 extern bool phy_cca(phy_rx_cfg* cfg);
 
 //
