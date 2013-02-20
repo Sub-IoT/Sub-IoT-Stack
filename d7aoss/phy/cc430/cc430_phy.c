@@ -218,42 +218,7 @@ extern int16_t phy_get_rssi(phy_rx_cfg* cfg)
 
 bool phy_cca(phy_rx_cfg* cfg)
 {
-	bool cca_ok;
-	uint8_t rssi_raw = 0;
-
-	if(get_radiostate() != Idle)
-		return false;
-
-	//Set radio Idle
-	Strobe(RF_SIDLE);
-
-	//Set configuration
-	if(!phy_translate_settings(cfg->spectrum_id, cfg->sync_word_class, &fec, &channel_center_freq_index, &channel_bandwidth_index, &preamble_size, &sync_word))
-		return false;
-
-	set_channel(channel_center_freq_index, channel_bandwidth_index);
-
-	//Enable interrupts
-    RF1AIE  = RFIFG_FLAG_IOCFG1;
-    RF1AIFG = 0;
-    RF1AIES = RFIFG_FLANK_IOCFG1;
-
-    //Start receiving
-    Strobe(RF_SRX);
-
-    system_lowpower_mode(0, 1); //Todo should system call be made here?
-
-    rxtx_finish_isr();
-
-    rssi_raw = ReadSingleReg(RSSI);
-    rssi = calculate_rssi(rssi_raw);
-
-    cca_ok = (bool)(rssi < CCA_RSSI_THRESHOLD);
-
-    if (!cca_ok)
-    	__no_operation(); //???
-
-    return cca_ok;
+    return (bool)(phy_get_rssi(cfg) < CCA_RSSI_THRESHOLD);
 }
 
 /*
