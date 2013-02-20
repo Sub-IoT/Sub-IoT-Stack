@@ -216,11 +216,6 @@ extern int16_t phy_get_rssi(phy_rx_cfg* cfg)
     return calculate_rssi(rssi_raw);
 }
 
-bool phy_cca(phy_rx_cfg* cfg)
-{
-    return (bool)(phy_get_rssi(cfg) < CCA_RSSI_THRESHOLD);
-}
-
 /*
  * Interrupt functions
  */

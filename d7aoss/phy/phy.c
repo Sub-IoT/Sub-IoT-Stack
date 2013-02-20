@@ -9,6 +9,11 @@
 
 #include "phy.h"
 
+bool phy_cca(phy_rx_cfg* cfg)
+{
+    return (bool)(phy_get_rssi(cfg) < CCA_RSSI_THRESHOLD);
+}
+
 bool phy_translate_settings(uint8_t spectrum_id, uint8_t sync_word_class, bool* fec, uint8_t* channel_center_freq_index, uint8_t* channel_bandwidth_index, uint8_t* preamble_size, uint16_t* sync_word)
 {
 	*fec = (bool)spectrum_id >> 7;

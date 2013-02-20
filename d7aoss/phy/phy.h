@@ -21,6 +21,7 @@ extern "C" {
 #define SYNC_CLASS0_FEC          0xF498
 #define SYNC_CLASS1_NON_FEC      0x0B67
 #define SYNC_CLASS1_FEC          0x192F
+#define CCA_RSSI_THRESHOLD -86 // TODO configurable
 
 //Configuration structure for packet reception
 typedef struct
@@ -59,9 +60,8 @@ extern bool phy_read(phy_rx_data* data);
 extern bool phy_is_rx_in_progress(void);
 extern bool phy_is_tx_in_progress(void);
 extern int16_t phy_get_rssi(phy_rx_cfg* cfg);
-extern bool phy_cca(phy_rx_cfg* cfg);
 
-//
+bool phy_cca(phy_rx_cfg* cfg);
 bool phy_translate_settings(uint8_t spectrum_id, uint8_t sync_word_class, bool* fec, uint8_t* channel_center_freq_index, uint8_t* channel_bandwidth_index, uint8_t* preamble_size, uint16_t* sync_word);
 
 #ifdef __cplusplus

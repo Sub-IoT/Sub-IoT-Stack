@@ -26,7 +26,6 @@ extern "C" {
  */
 #define RSSI_OFFSET 74;
 #define PATABLE_VAL 0xC4
-#define CCA_RSSI_THRESHOLD -86 // TODO configurable
 
 /*
  * Type definitions
@@ -60,7 +59,6 @@ bool phy_read(phy_rx_data* data);
 bool phy_is_rx_in_progress(void);
 bool phy_is_tx_in_progress(void);
 int16_t phy_get_rssi(phy_rx_cfg* cfg);
-bool phy_cca(phy_rx_cfg* cfg);
 
 /*
  * Interrupt function prototypes
