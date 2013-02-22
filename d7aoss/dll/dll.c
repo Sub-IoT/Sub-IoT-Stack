@@ -30,6 +30,16 @@ phy_tx_cfg_t foreground_frame_tx_cfg = {
 		0, // coding scheme
 		1, // sync word class
 	    frame_data,
+	    0,
+	    0
+};
+
+phy_tx_cfg_t background_frame_tx_cfg = {
+	    0x10, // spectrum ID
+		0, // coding scheme
+		0, // sync word class
+	    frame_data,
+	    0,
 	    0
 };
 
@@ -373,4 +383,35 @@ void dll_tx_foreground_frame(u8* data, u8 length, u8 spectrum_id, s8 tx_eirp)
 //		phy_rx_stop(); // TODO who is responsible for starting rx again? appl or DLL?
 //		res = phy_tx(&foreground_frame_tx_cfg);
 //	}
+}
+
+void dll_tx_background_frame(u8* data, u8 subnet, u8 spectrum_id, s8 tx_eirp)
+{
+	background_frame_tx_cfg.spectrum_id = spectrum_id;
+	background_frame_tx_cfg.eirp = tx_eirp;
+	background_frame_tx_cfg.len = 7;
+
+	dll_background_frame_t* frame = (dll_background_frame_t*) frame_data;
+	frame->subnet = subnet;
+	memcpy(frame->payload, data, 4);
+
+	u8* pointer = frame_data + 5;
+
+	u16 crc16 = crc_calculate(frame_data, 5);
+	memcpy(pointer, &crc16, 2);
+
+	bool cca1 = phy_cca();
+
+	if (!cca1)
+	{
+		dll_tx_callback(DLLTxResultCCAFail);
+		return;
+	}
+
+	timer_event event;
+	event.next_event = 5; // TODO: get T_G from config
+	event.f = &dll_cca2;
+
+	if (!timer_add_event(&event))
+		dll_tx_callback(DLLTxResultFail);
 }
