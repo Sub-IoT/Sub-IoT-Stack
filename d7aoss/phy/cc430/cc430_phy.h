@@ -52,13 +52,13 @@ typedef void (*InterruptHandler)(void);
  * Phy implementation function prototypes
  */
 void phy_init(void);
-bool phy_tx(phy_tx_cfg* cfg);
-bool phy_rx_start(phy_rx_cfg* cfg);
-void phy_rx_stop(void);
-bool phy_read(phy_rx_data* data);
+void phy_idle(void);
+bool phy_tx(phy_tx_cfg_t* cfg);
+bool phy_rx(phy_rx_cfg_t* cfg);
+bool phy_read(phy_rx_data_t* data);
 bool phy_is_rx_in_progress(void);
 bool phy_is_tx_in_progress(void);
-int16_t phy_get_rssi(phy_rx_cfg* cfg);
+int16_t phy_get_rssi(phy_rx_cfg_t* cfg);
 
 /*
  * Interrupt function prototypes

@@ -7,9 +7,25 @@
  *  	alexanderhoet@gmail.com
  */
 
+#include <stdbool.h>
+#include <stddef.h>
+#include <stdint.h>
+
 #include "phy.h"
 
-bool phy_cca(phy_rx_cfg* cfg)
+phy_tx_callback_t phy_tx_callback = NULL;
+phy_rx_callback_t phy_rx_callback = NULL;
+
+void phy_set_tx_callback(phy_tx_callback_t cb)
+{
+	phy_tx_callback = cb;
+}
+void phy_set_rx_callback(phy_rx_callback_t cb)
+{
+	phy_rx_callback = cb;
+}
+
+bool phy_cca(phy_rx_cfg_t* cfg)
 {
     return (bool)(phy_get_rssi(cfg) < CCA_RSSI_THRESHOLD);
 }

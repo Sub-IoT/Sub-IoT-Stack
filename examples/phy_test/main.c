@@ -29,7 +29,7 @@ static uint8_t buffer[48] = {0x30, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77, 0x8
 		0x10, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77, 0x88, 0x99, 0xAA, 0xBB, 0xCC, 0xDD, 0xEE, 0xFF,
 		0x10, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77, 0x88, 0x99, 0xAA, 0xBB, 0xCC, 0xDD, 0xEE, 0xFF};
 
-phy_tx_cfg tx_cfg = {
+phy_tx_cfg_t tx_cfg = {
 	0x10,
 	1,
 	0,
@@ -37,14 +37,33 @@ phy_tx_cfg tx_cfg = {
 	buffer
 };
 
-phy_rx_cfg rx_cfg = {
+phy_rx_cfg_t rx_cfg = {
 	0x10,
 	1,
 	0,
 	0
 };
 
-phy_rx_data rx_data;
+phy_rx_data_t rx_data;
+
+void start_rx(void)
+{
+	phy_rx(&rx_cfg);
+}
+
+void start_tx(void)
+{
+	phy_idle();
+	phy_tx(&tx_cfg);
+}
+
+void rx_callback(void)
+{
+    if (phy_read(&rx_data)) {
+    	//if(memcmp(buffer, rx_data.data, sizeof(buffer)) == 0)
+    		led_toggle(1);
+    }
+}
 
 void main(void)
 {
@@ -55,13 +74,13 @@ void main(void)
     rtc_start();
 
 	phy_init();
+	phy_set_rx_callback(rx_callback);
 
 	while(1) {
         if (INTERRUPT_BUTTON1 & interrupt_flags) {
         	interrupt_flags &= ~INTERRUPT_BUTTON1;
 
-        	phy_rx_stop();
-        	phy_tx(&tx_cfg);
+        	start_tx();
 
         	button_clear_interrupt_flag();
         	button_enable_interrupts();
@@ -85,17 +104,11 @@ void main(void)
         if (INTERRUPT_RTC & interrupt_flags) {
         	interrupt_flags &= ~INTERRUPT_RTC;
 
-        	phy_rx_stop();
-        	phy_tx(&tx_cfg);
-        }
-
-        if (phy_read(&rx_data)) {
-        	if(memcmp(buffer, rx_data.data, sizeof(buffer)) == 0)
-        		led_toggle(1);
+        	start_tx();
         }
 
         if (!phy_is_rx_in_progress() && !phy_is_tx_in_progress()) {
-        	phy_rx_start(&rx_cfg);
+        	start_rx();
         }
 
         if (phy_is_rx_in_progress())
@@ -105,11 +118,13 @@ void main(void)
         	led_off(2);
         }
 
-        if (phy_is_tx_in_progress()) {
+        if (phy_is_tx_in_progress())
+        {
         	led_on(3);
         } else {
         	led_off(3);
         }
+
 
 		system_lowpower_mode(4,1);
 	}

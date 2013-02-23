@@ -8,6 +8,7 @@
 
 #include <msp430.h>
 #include <stdbool.h>
+#include <stddef.h>
 #include <stdint.h>
 
 #include "../phy.h"
@@ -56,7 +57,12 @@ void phy_init(void)
 	WriteSinglePATable(PATABLE_VAL);
 }
 
-bool phy_tx(phy_tx_cfg* cfg)
+void phy_idle(void)
+{
+	rxtx_finish_isr();
+}
+
+bool phy_tx(phy_tx_cfg_t* cfg)
 {
 	if(get_radiostate() != Idle)
 		return false;
@@ -102,7 +108,7 @@ bool phy_tx(phy_tx_cfg* cfg)
 	return true;
 }
 
-bool phy_rx_start(phy_rx_cfg* cfg)
+bool phy_rx(phy_rx_cfg_t* cfg)
 {
 	if(get_radiostate() != Idle)
 		return false;
@@ -155,12 +161,7 @@ bool phy_rx_start(phy_rx_cfg* cfg)
 	return true;
 }
 
-void phy_rx_stop(void)
-{
-	rxtx_finish_isr();
-}
-
-bool phy_read(phy_rx_data* data)
+bool phy_read(phy_rx_data_t* data)
 {
 	if(packetReceived) {
 		data->data = buffer;
@@ -184,7 +185,7 @@ bool phy_is_tx_in_progress(void)
 	return (state == Transmit);
 }
 
-extern int16_t phy_get_rssi(phy_rx_cfg* cfg)
+extern int16_t phy_get_rssi(phy_rx_cfg_t* cfg)
 {
 	uint8_t rssi_raw = 0;
 
@@ -237,8 +238,12 @@ void end_of_packet_isr()
 	if (state == Receive) {
 		rx_data_isr();
 		rxtx_finish_isr();
+		if(phy_rx_callback != NULL)
+			phy_rx_callback();
 	} else if (state == Transmit) {
 		rxtx_finish_isr();
+		if(phy_tx_callback != NULL)
+			phy_tx_callback();
 	} else {
 		rxtx_finish_isr();
 	}

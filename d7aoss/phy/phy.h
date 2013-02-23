@@ -30,7 +30,7 @@ typedef struct
 	uint8_t sync_word_class;	//Sync word class
 	uint8_t length;				//Packet length (0 : variable)
 	uint16_t timeout;			//Timeout value (0 : continuous) in milliseconds
-} phy_rx_cfg;
+} phy_rx_cfg_t;
 
 //Packet reception result structure
 typedef struct
@@ -39,7 +39,7 @@ typedef struct
     uint8_t length;				//Packet length
     uint8_t* data;				//Packet data
     int16_t rssi;				//Received signal strength indicator
-} phy_rx_data;
+} phy_rx_data_t;
 
 //Configuration structure for packet transmission
 typedef struct
@@ -49,19 +49,30 @@ typedef struct
 	uint8_t eirp;				//Transmission power level in dBm ranged [-39, +10]
 	uint8_t length;				//Packet length
 	uint8_t* data;				//Packet data
-} phy_tx_cfg;
+} phy_tx_cfg_t;
+
+//Define callback funtion pointer types
+typedef void (*phy_tx_callback_t)(void);
+typedef void (*phy_rx_callback_t)(void);
+
+//Declare callback function pointers
+extern phy_tx_callback_t phy_tx_callback;
+extern phy_rx_callback_t phy_rx_callback;
 
 //Phy interface
 extern void phy_init(void);
-extern bool phy_tx(phy_tx_cfg* cfg);
-extern bool phy_rx_start(phy_rx_cfg* cfg);
-extern void phy_rx_stop(void);
-extern bool phy_read(phy_rx_data* data);
+extern void phy_idle(void);
+extern bool phy_tx(phy_tx_cfg_t* cfg);
+extern bool phy_rx(phy_rx_cfg_t* cfg);
+extern bool phy_read(phy_rx_data_t* data);
 extern bool phy_is_rx_in_progress(void);
 extern bool phy_is_tx_in_progress(void);
-extern int16_t phy_get_rssi(phy_rx_cfg* cfg);
+extern int16_t phy_get_rssi(phy_rx_cfg_t* cfg);
 
-bool phy_cca(phy_rx_cfg* cfg);
+//Implementation independant phy functions
+void phy_set_tx_callback(phy_tx_callback_t);
+void phy_set_rx_callback(phy_rx_callback_t);
+bool phy_cca(phy_rx_cfg_t* cfg);
 bool phy_translate_settings(uint8_t spectrum_id, uint8_t sync_word_class, bool* fec, uint8_t* channel_center_freq_index, uint8_t* channel_bandwidth_index, uint8_t* preamble_size, uint16_t* sync_word);
 
 #ifdef __cplusplus

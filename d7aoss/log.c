@@ -21,7 +21,7 @@ void log_print_string(char* message)
 	uart_transmit_message((unsigned char*) message, len);
 }
 
-void log_phy_rx_res(phy_rx_data* res)
+void log_phy_rx_res(phy_rx_data_t* res)
 {
 	// transmit the log header
 	uart_transmit_data(0xDD);
