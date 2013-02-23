@@ -25,14 +25,13 @@ u8 frame_data[50]; // TODO max frame size
 
 Dll_State_Enum dll_state;
 
-phy_tx_cfg foreground_frame_tx_cfg = {
+phy_tx_cfg_t foreground_frame_tx_cfg = {
 	    0x10, // spectrum ID
-		0, // coding scheme
-		1, // sync word class
+		1, // coding scheme
+		0,
 		0,
 	    frame_data
 };
-
 
 static bool check_subnet(u8 device_subnet, u8 frame_subnet)
 {
@@ -48,15 +47,15 @@ static bool check_subnet(u8 device_subnet, u8 frame_subnet)
 	return 1;
 }
 
-/*static void phy_tx_callback()
+static void tx_callback()
 {
 	#ifdef LOG_DLL_ENABLED
 		log_print_string("TX OK");
 	#endif
 	dll_tx_callback(DLLTxResultOK);
-}*/
+}
 
-static void phy_rx_callback(phy_rx_data* res)
+static void rx_callback(phy_rx_data_t* res)
 {
 	//log_packet(res->data);
 
@@ -234,7 +233,7 @@ static void scan_timeout(void* arg)
 	#ifdef LOG_DLL_ENABLED
 		log_print_string("scan time-out");
 	#endif
-	phy_rx_stop();
+	phy_idle();
 	timer_event event;
 	event.next_event = current_css->values[current_scan_id].time_next_scan;
 	event.f = &scan_next;
@@ -247,6 +246,8 @@ static void scan_timeout(void* arg)
 void dll_init()
 {
 	phy_init();
+	phy_set_rx_callback(rx_callback);
+	phy_set_tx_callback(tx_callback);
 
 	dll_state = DllStateNone;
 
@@ -266,7 +267,7 @@ void dll_stop_channel_scan()
 {
 	// TODO remove scan_timeout events from queue?
 	dll_state = DllStateNone;
-	phy_rx_stop();
+	phy_idle();
 }
 
 void dll_channel_scan_series(dll_channel_scan_series_t* css)
@@ -275,7 +276,7 @@ void dll_channel_scan_series(dll_channel_scan_series_t* css)
 		log_print_string("Starting channel scan");
 	#endif
 
-	phy_rx_cfg rx_cfg;
+	phy_rx_cfg_t rx_cfg;
 	rx_cfg.timeout = css->values[current_scan_id].timout_scan_detect; // timeout
 	//rx_cfg.multiple = 0; // multiple TODO
 	rx_cfg.spectrum_id = css->values[current_scan_id].spectrum_id; // spectrum ID TODO
@@ -291,7 +292,7 @@ void dll_channel_scan_series(dll_channel_scan_series_t* css)
 	}
 
 	current_css = css;
-	phy_rx_start(&rx_cfg);
+	phy_rx(&rx_cfg);
 
 	//TODO: timeout should be implemented using rF timer in phy
 	timer_event event;
