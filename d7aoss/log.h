@@ -8,8 +8,8 @@
 #ifndef __LOG_H_
 #define __LOG_H_
 
-#define LOG_DLL_ENABLED
-#define LOG_PHY_ENABLED
+//#define LOG_DLL_ENABLED
+//#define LOG_PHY_ENABLED
 
 #include "types.h"
 

@@ -21,6 +21,8 @@
 #include <hal/leds.h>
 #include <hal/rtc.h>
 
+#define CHANNEL_ID	0x14
+
 #define INTERRUPT_BUTTON1 	(1)
 #define INTERRUPT_BUTTON2 	(1 << 1)
 #define INTERRUPT_BUTTON3 	(1 << 2)
@@ -38,7 +40,7 @@ static u8 tx_mode_enabled = 0;
 static mode_t mode = mode_idle;
 
 dll_channel_scan_t scan_cfg1 = {
-		0x10,
+		CHANNEL_ID,
 		FrameTypeForegroundFrame,
 		1000, // TODO increase this after stack supports receiving multiple packets during one scan
 		0
@@ -62,7 +64,7 @@ void start_tx()
 {
 	led_on(3);
 
-	dll_tx_foreground_frame((u8*)&counter, sizeof(counter), 0x10);
+	dll_tx_foreground_frame((u8*)&counter, sizeof(counter), CHANNEL_ID, 4);
 }
 
 void tx_callback(Dll_Tx_Result result)
@@ -78,6 +80,7 @@ void rx_callback(dll_rx_res_t* rx_res)
 {
 	dll_foreground_frame_t* foreground_frame = (dll_foreground_frame_t*) rx_res->frame;
 	uart_transmit_message(foreground_frame->payload, 2);
+	uart_transmit_message(&rx_res->rssi, 1);
 	led_toggle(3);
 }
 
