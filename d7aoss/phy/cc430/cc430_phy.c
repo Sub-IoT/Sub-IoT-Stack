@@ -30,16 +30,13 @@ uint8_t packetLength;
 uint8_t remainingBytes;
 uint8_t* bufferPosition;
 
-uint8_t lqi;
-int16_t rssi;
+phy_rx_data_t rx_data;
 
 bool fec;
 uint8_t channel_center_freq_index;
 uint8_t channel_bandwidth_index;
 uint8_t preamble_size;
 uint16_t sync_word;
-
-bool packetReceived;
 
 /*
  * Phy implementation functions
@@ -131,9 +128,6 @@ bool phy_rx(phy_rx_cfg_t* cfg)
 	set_sync_word(sync_word);
 	set_timeout(cfg->timeout);
 
-	//Reset packet received flag
-	packetReceived = false;
-
 	//Set buffer position
 	bufferPosition = buffer;
 
@@ -159,20 +153,6 @@ bool phy_rx(phy_rx_cfg_t* cfg)
 	Strobe(RF_SRX);
 
 	return true;
-}
-
-bool phy_read(phy_rx_data_t* data)
-{
-	if(packetReceived) {
-		data->data = buffer;
-		data->length = packetLength;
-		data->rssi = rssi;
-		data->lqi = lqi;
-		packetReceived = false;
-		return true;
-	}
-
-	return false;
 }
 
 bool phy_is_rx_in_progress(void)
@@ -223,13 +203,12 @@ extern int16_t phy_get_rssi(phy_rx_cfg_t* cfg)
 #pragma vector=CC1101_VECTOR
 __interrupt void CC1101_ISR (void)
 {
-  uint16_t isr_vector = RF1AIV >> 1;
-  uint16_t edge = (1 << (isr_vector - 1)) & RF1AIES;
-  if(edge) isr_vector += 0x11;
-  interrupt_table[isr_vector]();
-  LPM4_EXIT;  //Todo should system call be made here?
+	uint16_t isr_vector = RF1AIV >> 1;
+	uint16_t edge = (1 << (isr_vector - 1)) & RF1AIES;
+	if(edge) isr_vector += 0x11;
+	interrupt_table[isr_vector]();
+	LPM4_EXIT;  //Todo should system call be made here?
 }
-
 
 void no_interrupt_isr() { }
 
@@ -239,7 +218,7 @@ void end_of_packet_isr()
 		rx_data_isr();
 		rxtx_finish_isr();
 		if(phy_rx_callback != NULL)
-			phy_rx_callback();
+			phy_rx_callback(&rx_data);
 	} else if (state == Transmit) {
 		rxtx_finish_isr();
 		if(phy_tx_callback != NULL)
@@ -294,9 +273,10 @@ void rx_data_isr()
     //When all data has been received read rssi and lqi value and set packetreceived flag
     if(remainingBytes == 0)
     {
-    	rssi = calculate_rssi(ReadSingleReg(RXFIFO));
-    	lqi = ReadSingleReg(RXFIFO) & 0x7F;
-    	packetReceived = true;
+		rx_data.data = buffer;
+		rx_data.length = packetLength;
+		rx_data.rssi = calculate_rssi(ReadSingleReg(RXFIFO));
+		rx_data.lqi = ReadSingleReg(RXFIFO) & 0x7F;
     }
 }
 

@@ -53,7 +53,7 @@ typedef struct
 
 //Define callback funtion pointer types
 typedef void (*phy_tx_callback_t)(void);
-typedef void (*phy_rx_callback_t)(void);
+typedef void (*phy_rx_callback_t)(phy_rx_data_t*);
 
 //Declare callback function pointers
 extern phy_tx_callback_t phy_tx_callback;

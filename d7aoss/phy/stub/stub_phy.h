@@ -16,10 +16,9 @@ extern "C" {
  * Phy implementation function prototypes
  */
 void phy_init(void);
+void phy_idle(void);
 bool phy_tx(phy_tx_cfg* cfg);
-bool phy_rx_start(phy_rx_cfg* cfg);
-void phy_rx_stop(void);
-bool phy_read(phy_rx_data* data);
+bool phy_rx(phy_rx_cfg* cfg);
 bool phy_is_rx_in_progress(void);
 bool phy_is_tx_in_progress(void);
 bool phy_cca(void);

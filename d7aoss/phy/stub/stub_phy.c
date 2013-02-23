@@ -18,22 +18,22 @@ void phy_init(void)
 	return;
 }
 
-bool phy_tx(phy_tx_cfg* cfg)
-{
-	return true;
-}
-
-bool phy_rx_start(phy_rx_cfg* cfg)
-{
-	return true;
-}
-
-void phy_rx_stop(void)
+void phy_idle(void)
 {
 	return;
 }
 
-bool phy_read(phy_rx_data* data)
+bool phy_tx(phy_tx_cfg_t* cfg)
+{
+	return true;
+}
+
+bool phy_rx(phy_rx_cfg_t* cfg)
+{
+	return true;
+}
+
+bool phy_read(phy_rx_data_t* data)
 {
 	return false;
 }

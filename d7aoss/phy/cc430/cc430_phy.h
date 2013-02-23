@@ -55,7 +55,6 @@ void phy_init(void);
 void phy_idle(void);
 bool phy_tx(phy_tx_cfg_t* cfg);
 bool phy_rx(phy_rx_cfg_t* cfg);
-bool phy_read(phy_rx_data_t* data);
 bool phy_is_rx_in_progress(void);
 bool phy_is_tx_in_progress(void);
 int16_t phy_get_rssi(phy_rx_cfg_t* cfg);
