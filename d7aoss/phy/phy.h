@@ -17,11 +17,12 @@ extern "C" {
 #include <stdbool.h>
 #include <stdint.h>
 
-#define SYNC_CLASS0_NON_FEC      0xE6D0
-#define SYNC_CLASS0_FEC          0xF498
-#define SYNC_CLASS1_NON_FEC      0x0B67
-#define SYNC_CLASS1_FEC          0x192F
-#define CCA_RSSI_THRESHOLD -86 // TODO configurable
+#define SYNC_CLASS0_NON_FEC     0xE6D0
+#define SYNC_CLASS0_FEC         0xF498
+#define SYNC_CLASS1_NON_FEC     0x0B67
+#define SYNC_CLASS1_FEC         0x192F
+#define TRELLIS_TERMINATOR		0x0B
+#define CCA_RSSI_THRESHOLD		-86 // TODO configurable
 
 //Configuration structure for packet reception
 typedef struct
