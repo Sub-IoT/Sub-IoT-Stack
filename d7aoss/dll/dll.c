@@ -19,6 +19,7 @@ static dll_rx_res_t dll_res;
 static dll_channel_scan_series_t* current_css;
 static u8 current_scan_id = 0;
 
+u8 current_spectrum_id = 0;
 u8 timeout_listen; // TL
 
 u8 frame_data[50]; // TODO max frame size
@@ -308,11 +309,31 @@ static void dll_cca2(void* arg)
 	bool cca2 = phy_cca();
 	if (!cca2)
 	{
+		//log_print_string("CCA2-Fail");
 		dll_tx_callback(DLLTxResultCCAFail);
 		return;
 	}
-
 	phy_result_t res = phy_tx(&foreground_frame_tx_cfg);
+}
+
+void dll_csma()
+{
+	bool cca1 = phy_cca();
+
+	if (!cca1)
+	{
+		//log_print_string("CCA1-Fail");
+		dll_tx_callback(DLLTxResultFail);
+		return;
+	}
+
+	timer_event event;
+	event.next_event = 5; // TODO: get T_G fron config
+	event.f = &dll_cca2;
+
+	if (!timer_add_event(&event))
+		dll_tx_callback(DLLTxResultFail);
+		return;
 }
 
 void dll_tx_foreground_frame(u8* data, u8 length, u8 spectrum_id, s8 tx_eirp)
@@ -351,21 +372,6 @@ void dll_tx_foreground_frame(u8* data, u8 length, u8 spectrum_id, s8 tx_eirp)
 	memcpy(pointer, &crc16, 2);
 
 	foreground_frame_tx_cfg.len = frame->length;
-
-	bool cca1 = phy_cca();
-
-	if (!cca1)
-	{
-		dll_tx_callback(DLLTxResultCCAFail);
-		return;
-	}
-
-	timer_event event;
-	event.next_event = 5; // TODO: get T_G fron config
-	event.f = &dll_cca2;
-
-	if (!timer_add_event(&event))
-		dll_tx_callback(DLLTxResultFail);
 
 //	phy_result_t res = phy_tx(&foreground_frame_tx_cfg);
 //	if(res == PHY_RADIO_IN_RX_MODE)

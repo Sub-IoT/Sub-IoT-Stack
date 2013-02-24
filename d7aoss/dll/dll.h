@@ -127,6 +127,7 @@ void dll_init();
 void dll_set_tx_callback(dll_tx_callback_t);
 void dll_set_rx_callback(dll_rx_callback_t);
 
+void dll_csma();
 void dll_stop_channel_scan();
 void dll_channel_scan_series(dll_channel_scan_series_t*);
 
