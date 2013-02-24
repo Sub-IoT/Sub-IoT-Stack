@@ -46,7 +46,7 @@ typedef struct
 {
 	uint8_t spectrum_id;		//Spectrum ID
 	uint8_t sync_word_class;	//Sync word class
-	uint8_t eirp;				//Transmission power level in dBm ranged [-39, +10]
+	int8_t eirp;				//Transmission power level in dBm ranged [-39, +10]
 	uint8_t length;				//Packet length
 	uint8_t* data;				//Packet data
 } phy_tx_cfg_t;

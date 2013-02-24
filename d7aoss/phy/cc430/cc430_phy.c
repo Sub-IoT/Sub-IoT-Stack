@@ -80,6 +80,7 @@ bool phy_tx(phy_tx_cfg_t* cfg)
 	set_channel(channel_center_freq_index, channel_bandwidth_index);
 	set_preamble_size(preamble_size);
 	set_sync_word(sync_word);
+	set_eirp(cfg->eirp);
 
 	//Set buffer position
 	bufferPosition = cfg->data;
@@ -399,6 +400,11 @@ void set_timeout(uint16_t timeout)
 		WriteSingleReg(WOREVT0, timeout & 0x00FF);
 		WriteSingleReg(WOREVT1, timeout >> 8);
 	}
+}
+
+void set_eirp(int8_t eirp)
+{
+	//TODO implement eirp
 }
 
 int16_t calculate_rssi(int8_t rssi_raw)

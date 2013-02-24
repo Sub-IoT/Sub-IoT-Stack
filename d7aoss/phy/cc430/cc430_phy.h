@@ -78,6 +78,7 @@ void set_preamble_size(uint8_t preamble_size);
 void set_data_whitening(bool  white_data);
 void set_length_infinite(bool infinite);
 void set_timeout(uint16_t timeout);
+void set_eirp(int8_t eirp);
 int16_t calculate_rssi(int8_t rssi_raw);
 
 #ifdef __cplusplus
