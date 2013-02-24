@@ -323,7 +323,7 @@ void dll_csma()
 	if (!cca1)
 	{
 		//log_print_string("CCA1-Fail");
-		dll_tx_callback(DLLTxResultFail);
+		dll_tx_callback(DLLTxResultCCAFail);
 		return;
 	}
 
