@@ -54,6 +54,7 @@ static void phy_tx_callback()
 	#ifdef LOG_DLL_ENABLED
 		log_print_string("TX OK");
 	#endif
+		log_print_string("packet verzonden- DLL");
 	dll_tx_callback(DLLTxResultOK);
 }
 
@@ -252,8 +253,6 @@ void dll_init()
 	phy_set_rx_callback(&phy_rx_callback);
 
 	dll_state = DllStateNone;
-
-	timer_init();
 }
 
 void dll_set_tx_callback(dll_tx_callback_t cb)
@@ -309,7 +308,7 @@ static void dll_cca2(void* arg)
 	bool cca2 = phy_cca();
 	if (!cca2)
 	{
-		//log_print_string("CCA2-Fail");
+		log_print_string("CCA2-Fail");
 		dll_tx_callback(DLLTxResultCCAFail);
 		return;
 	}
@@ -322,7 +321,7 @@ void dll_csma()
 
 	if (!cca1)
 	{
-		//log_print_string("CCA1-Fail");
+		log_print_string("CCA1-Fail");
 		dll_tx_callback(DLLTxResultCCAFail);
 		return;
 	}
@@ -330,14 +329,18 @@ void dll_csma()
 	timer_event event;
 	event.next_event = 5; // TODO: get T_G fron config
 	event.f = &dll_cca2;
+	//timer_add_event(&event);
 
 	if (!timer_add_event(&event))
+	{
 		dll_tx_callback(DLLTxResultFail);
 		return;
+	}
 }
 
 void dll_tx_foreground_frame(u8* data, u8 length, u8 spectrum_id, s8 tx_eirp)
 {
+	log_print_string("Begin packet - dll");
 	//TODO: check if not already sending
 	foreground_frame_tx_cfg.spectrum_id = spectrum_id; // TODO check valid
 	foreground_frame_tx_cfg.eirp = tx_eirp;
@@ -372,6 +375,7 @@ void dll_tx_foreground_frame(u8* data, u8 length, u8 spectrum_id, s8 tx_eirp)
 	memcpy(pointer, &crc16, 2);
 
 	foreground_frame_tx_cfg.len = frame->length;
+	log_print_string("End packet- dll");
 
 //	phy_result_t res = phy_tx(&foreground_frame_tx_cfg);
 //	if(res == PHY_RADIO_IN_RX_MODE)
