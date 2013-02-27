@@ -67,7 +67,9 @@ static void phy_rx_callback(phy_rx_res_t* res)
 		u16 crc = crc_calculate(res->data, 5);
 		if (memcmp((u8*) &(res->data[5]), (u8*) &crc, 2) != 0)
 		{
-			log_print_string("CRC ERROR");
+			#ifdef LOG_DLL_ENABLED
+				log_print_string("CRC ERROR");
+			#endif
 			return;
 		}
 
@@ -83,7 +85,9 @@ static void phy_rx_callback(phy_rx_res_t* res)
 		u16 crc = crc_calculate(res->data, res->len - 2);
 		if (memcmp((u8*) &(res->data[res->len - 2]), (u8*) &crc, 2) != 0)
 		{
-			log_print_string("CRC ERROR");
+			#ifdef LOG_DLL_ENABLED
+				log_print_string("CRC ERROR");
+			#endif
 			return;
 		}
 		if (!check_subnet(0xFF, res->data[3])) // TODO: get device_subnet from datastore
