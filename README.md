@@ -30,6 +30,8 @@ The tools/Dash7Logger directory contains a command line application (.NET) which
     * do not use the default location but point it to <repo root>/d7aoss
     * select CC430F5137 as device
     * select the empty project template and click finish
+    * choose the correct platform in hal/platforms/platform.h
+    * in the phy folder include only the used radio in the build, exclude all others
     * the d7aoss project should be created an building it should work
 * import applications
     * create new CCS project

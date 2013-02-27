@@ -1,112 +1,80 @@
 /*
+ * The PHY layer API
  *  Created on: Nov 22, 2012
  *  Authors:
  * 		maarten.weyn@artesis.be
  *  	glenn.ergeerts@artesis.be
+ *  	alexanderhoet@gmail.com
  */
 
-#include "../log.h"
+#include <stdbool.h>
+#include <stddef.h>
+#include <stdint.h>
 
 #include "phy.h"
-#include "../d7aoss.h" // TODO remove
 
-static phy_rx_callback_t rx_callback;
-static phy_tx_callback_t tx_callback;
-
-static void translate_spectrum_id(u8 spectrum_id, u8* channel_center_freq_index, u8* channel_bandwith_index)
-{
-	(*channel_center_freq_index) = spectrum_id & 0x0F;
-	(*channel_bandwith_index) = (spectrum_id >> 4) & 0x0F;
-}
-
-static void rx_completed(ral_rx_res_t* rx_result)
-{
-	// TODO add PHY processing, FEC, ... ?
-	#ifdef LOG_PHY_ENABLED
-		log_phy_rx_res((phy_rx_res_t*)rx_result);
-	#endif
-	rx_callback((phy_rx_res_t*)rx_result); // TODO phy_rx_res_t same as ral_rx_res_t for now ...
-}
-
-static void tx_completed()
-{
-	// TODO add PHY processing ... ?
-	// TODO log
-	tx_callback(); // TODO what do this params mean?
-}
-
-void phy_init()
-{
-	RAL_IMPLEMENTATION.init();
-	RAL_IMPLEMENTATION.set_rx_callback(&rx_completed);
-	RAL_IMPLEMENTATION.set_tx_callback(&tx_completed);
-}
-
-phy_result_t phy_tx(phy_tx_cfg_t* cfg)
-{
-	if(RAL_IMPLEMENTATION.is_rx_in_progress())
-		return PHY_RADIO_IN_RX_MODE;
-
-	ral_tx_cfg_t ral_tx_cfg;
-	translate_spectrum_id(cfg->spectrum_id, &ral_tx_cfg.channel_center_freq_index, &ral_tx_cfg.channel_bandwith_index);
-	ral_tx_cfg.coding_scheme = 0; // TODO
-	ral_tx_cfg.sync_word_class = 0; // TODO
-	ral_tx_cfg.data = cfg->data;
-	ral_tx_cfg.len = cfg->data[0];
-	// TODO u16 timeout; // mac level?
-	// TODO u8  cca;
-	ral_tx_cfg.eirp = cfg->eirp;
-
-	RAL_IMPLEMENTATION.tx(&ral_tx_cfg);
-
-	phy_rx_res_t temp;
-	temp.data = cfg->data;
-	temp.len = cfg->len;
-	temp.rssi = 0;
-	temp.eirp = 0;
-	temp.lqi = 0;
-
-	log_phy_rx_res(&temp);
-
-	return PHY_OK;
-}
+phy_tx_callback_t phy_tx_callback = NULL;
+phy_rx_callback_t phy_rx_callback = NULL;
 
 void phy_set_tx_callback(phy_tx_callback_t cb)
 {
-	tx_callback = cb;
+	phy_tx_callback = cb;
 }
-
 void phy_set_rx_callback(phy_rx_callback_t cb)
 {
-	rx_callback = cb;
+	phy_rx_callback = cb;
 }
 
-void phy_rx_start(phy_rx_cfg_t* cfg)
+bool phy_cca(phy_rx_cfg_t* cfg)
 {
-	// TODO check valid spectrum id
-
-	ral_rx_cfg_t ral_rx_cfg;
-	ral_rx_cfg.timeout = cfg->timeout;
-	ral_rx_cfg.multiple = cfg->multiple;
-	ral_rx_cfg.rssi_min = cfg->rssi_min;
-	ral_rx_cfg.sync_word_class = cfg->sync_word_class;
-	translate_spectrum_id(cfg->spectrum_id, &ral_rx_cfg.channel_center_freq_index, &ral_rx_cfg.channel_bandwith_index);
-	ral_rx_cfg.coding_scheme = cfg->coding_scheme;
-
-	RAL_IMPLEMENTATION.rx_start(&ral_rx_cfg);
+    return (bool)(phy_get_rssi(cfg) < CCA_RSSI_THRESHOLD);
 }
 
-void phy_rx_stop()
+bool phy_translate_settings(uint8_t spectrum_id, uint8_t sync_word_class, bool* fec, uint8_t* channel_center_freq_index, uint8_t* channel_bandwidth_index, uint8_t* preamble_size, uint16_t* sync_word)
 {
-	RAL_IMPLEMENTATION.rx_stop();
-}
+	*fec = (bool)spectrum_id >> 7;
+	*channel_center_freq_index = spectrum_id & 0x0F;
+	*channel_bandwidth_index = (spectrum_id >> 4) & 0x07;
 
-u8 phy_is_rx_in_progress()
-{
-	return RAL_IMPLEMENTATION.is_rx_in_progress();
-}
+	//Assert valid spectrum id and set preamble size;
+	if(*channel_bandwidth_index == 0) {
+		if(*channel_center_freq_index == 0 || *channel_center_freq_index == 1)
+			*preamble_size = 4;
+		else
+			return false;
+	} else if(*channel_bandwidth_index == 1) {
+		if(~*channel_center_freq_index & 0x01)
+			*preamble_size = 4;
+		else
+			return false;
+	} else if (*channel_bandwidth_index == 2) {
+		if(*channel_center_freq_index & 0x01)
+			*preamble_size = 6;
+		else
+			return false;
+	} else if (*channel_bandwidth_index == 3) {
+		if(*channel_center_freq_index == 2 || *channel_center_freq_index == 12)
+			*preamble_size = 6;
+		else
+			return false;
+	} else {
+		return false;
+	}
 
-u8 phy_cca(void)
-{
-	return RAL_IMPLEMENTATION.cca();
+	//Assert valid sync word class and set sync word
+	if(sync_word_class == 0) {
+		if(*fec == 0)
+			*sync_word = SYNC_CLASS0_NON_FEC;
+		else
+			*sync_word = SYNC_CLASS0_FEC;
+	} else if(sync_word_class == 1) {
+		if(*fec == 0)
+			*sync_word = SYNC_CLASS1_NON_FEC;
+		else
+			*sync_word = SYNC_CLASS1_FEC;
+	} else {
+	   return false;
+	}
+
+	return true;
 }

@@ -21,6 +21,8 @@
 
 u8 tag_id[8];
 
+void clock_init(void);
+
 
 void PMM_SetStdSVSM(unsigned short svsmh_cfg, u8 Von, u8 Voffon) {
     unsigned short svsmh_reg;
@@ -99,12 +101,23 @@ void system_init()
 
     PMM_SetStdSVSM(0x8088, 2, 4);
 
+    clock_init();
+
     led_init();
     button_init();
     uart_init();
 
     system_get_unique_id(tag_id);
 
+}
+
+void clock_init(void)
+{
+	UCSCTL1 = 0x0050;
+	UCSCTL2 = 0x0261;
+	UCSCTL3 = 0x0020;
+	UCSCTL4 = 0x0233;
+	UCSCTL6 = 0x0100;
 }
 
 void system_watchdog_timer_stop()

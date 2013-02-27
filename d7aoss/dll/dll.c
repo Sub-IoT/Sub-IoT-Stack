@@ -27,12 +27,11 @@ Dll_State_Enum dll_state;
 
 phy_tx_cfg_t foreground_frame_tx_cfg = {
 	    0x10, // spectrum ID
-		0, // coding scheme
-		1, // sync word class
-	    frame_data,
-	    0
+		1, // coding scheme
+		0,
+		0,
+	    frame_data
 };
-
 
 static bool check_subnet(u8 device_subnet, u8 frame_subnet)
 {
@@ -48,7 +47,7 @@ static bool check_subnet(u8 device_subnet, u8 frame_subnet)
 	return 1;
 }
 
-static void phy_tx_callback()
+static void tx_callback()
 {
 	#ifdef LOG_DLL_ENABLED
 		log_print_string("TX OK");
@@ -56,7 +55,7 @@ static void phy_tx_callback()
 	dll_tx_callback(DLLTxResultOK);
 }
 
-static void phy_rx_callback(phy_rx_res_t* res)
+static void rx_callback(phy_rx_data_t* res)
 {
 	//log_packet(res->data);
 
@@ -80,8 +79,8 @@ static void phy_rx_callback(phy_rx_res_t* res)
 		}
 	} else if (dll_state == DllStateScanForegroundFrame)
 	{
-		u16 crc = crc_calculate(res->data, res->len - 2);
-		if (memcmp((u8*) &(res->data[res->len - 2]), (u8*) &crc, 2) != 0)
+		u16 crc = crc_calculate(res->data, res->length - 2);
+		if (memcmp((u8*) &(res->data[res->length - 2]), (u8*) &crc, 2) != 0)
 		{
 			log_print_string("CRC ERROR");
 			return;
@@ -234,7 +233,7 @@ static void scan_timeout(void* arg)
 	#ifdef LOG_DLL_ENABLED
 		log_print_string("scan time-out");
 	#endif
-	phy_rx_stop();
+	phy_idle();
 	timer_event event;
 	event.next_event = current_css->values[current_scan_id].time_next_scan;
 	event.f = &scan_next;
@@ -247,8 +246,8 @@ static void scan_timeout(void* arg)
 void dll_init()
 {
 	phy_init();
-	phy_set_tx_callback(&phy_tx_callback);
-	phy_set_rx_callback(&phy_rx_callback);
+	phy_set_rx_callback(rx_callback);
+	phy_set_tx_callback(tx_callback);
 
 	dll_state = DllStateNone;
 
@@ -268,7 +267,7 @@ void dll_stop_channel_scan()
 {
 	// TODO remove scan_timeout events from queue?
 	dll_state = DllStateNone;
-	phy_rx_stop();
+	phy_idle();
 }
 
 void dll_channel_scan_series(dll_channel_scan_series_t* css)
@@ -279,10 +278,10 @@ void dll_channel_scan_series(dll_channel_scan_series_t* css)
 
 	phy_rx_cfg_t rx_cfg;
 	rx_cfg.timeout = css->values[current_scan_id].timout_scan_detect; // timeout
-	rx_cfg.multiple = 0; // multiple TODO
+	//rx_cfg.multiple = 0; // multiple TODO
 	rx_cfg.spectrum_id = css->values[current_scan_id].spectrum_id; // spectrum ID TODO
-	rx_cfg.coding_scheme = 0; // coding scheme TODO
-	rx_cfg.rssi_min = 0; // RSSI min filter TODO
+	//rx_cfg.coding_scheme = 0; // coding scheme TODO
+	//rx_cfg.rssi_min = 0; // RSSI min filter TODO
 	if (css->values[current_scan_id].scan_type == FrameTypeForegroundFrame)
 	{
 		rx_cfg.sync_word_class = 1;
@@ -293,7 +292,7 @@ void dll_channel_scan_series(dll_channel_scan_series_t* css)
 	}
 
 	current_css = css;
-	phy_rx_start(&rx_cfg);
+	phy_rx(&rx_cfg);
 
 	//TODO: timeout should be implemented using rF timer in phy
 	timer_event event;
@@ -305,14 +304,14 @@ void dll_channel_scan_series(dll_channel_scan_series_t* css)
 
 static void dll_cca2(void* arg)
 {
-	bool cca2 = phy_cca();
+	bool cca2 = false; //phy_cca();
 	if (!cca2)
 	{
 		dll_tx_callback(DLLTxResultCCAFail);
 		return;
 	}
 
-	phy_result_t res = phy_tx(&foreground_frame_tx_cfg);
+	phy_tx(&foreground_frame_tx_cfg);
 }
 
 void dll_tx_foreground_frame(u8* data, u8 length, u8 spectrum_id, s8 tx_eirp)
@@ -350,9 +349,9 @@ void dll_tx_foreground_frame(u8* data, u8 length, u8 spectrum_id, s8 tx_eirp)
 	u16 crc16 = crc_calculate(frame_data, frame->length - 2);
 	memcpy(pointer, &crc16, 2);
 
-	foreground_frame_tx_cfg.len = frame->length;
+	foreground_frame_tx_cfg.length = frame->length;
 
-	bool cca1 = phy_cca();
+	bool cca1 = false; //phy_cca();
 
 	if (!cca1)
 	{
