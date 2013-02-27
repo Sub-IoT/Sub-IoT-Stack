@@ -8,6 +8,8 @@
 
 #include "pn9.h"
 
+#ifdef D7_PHY_USE_FEC
+
 void pn9_init(uint16_t* pn9)
 {
 	*pn9 = INITIAL_PN9;
@@ -34,3 +36,5 @@ void pn9_encode_decode(uint8_t* input, uint8_t* output, uint16_t length, uint16_
 
 	*pn9 = pn9_tmp;
 }
+
+#endif

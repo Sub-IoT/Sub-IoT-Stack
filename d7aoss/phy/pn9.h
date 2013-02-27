@@ -13,6 +13,8 @@ extern "C" {
 
 #include <stdint.h>
 
+#define D7_PHY_USE_FEC //TODO move to general config file
+
 #define INITIAL_PN9	0x01FF
 
 void pn9_init(uint16_t* pn9);

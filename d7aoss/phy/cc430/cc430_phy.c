@@ -13,7 +13,6 @@
 
 #include "../phy.h"
 #include "../fec.h"
-#include "../pn9.h"
 #include "cc430_phy.h"
 #include "cc430_registers.h"
 
@@ -29,15 +28,10 @@ RadioState state;
 
 uint8_t buffer[255];
 uint8_t packetLength;
-uint8_t remainingBytes;
 uint8_t* bufferPosition;
+uint16_t remainingBytes;
 
 bool fec;
-uint16_t pn9;
-uint16_t fecremainingbytes;
-uint8_t* pn9buffer[PN9_BUFFER_SIZE];
-uint8_t* fecbuffer[FEC_BUFFER_SIZE];
-
 uint8_t channel_center_freq_index;
 uint8_t channel_bandwidth_index;
 uint8_t preamble_size;
@@ -78,7 +72,7 @@ bool phy_tx(phy_tx_cfg_t* cfg)
 	Strobe(RF_SIDLE);
 	Strobe(RF_SFTX);
 
-	//Set configuration
+	//General configuration
 	if(!phy_translate_settings(cfg->spectrum_id, cfg->sync_word_class, &fec, &channel_center_freq_index, &channel_bandwidth_index, &preamble_size, &sync_word))
 		return false;
 
@@ -86,23 +80,35 @@ bool phy_tx(phy_tx_cfg_t* cfg)
 	set_preamble_size(preamble_size);
 	set_sync_word(sync_word);
 	set_eirp(cfg->eirp);
-	set_length_infinite(true);
 
-	remainingBytes = cfg->length;
-
+#ifdef D7_PHY_USE_FEC
 	if(fec)
 	{
-		pn9_init(&pn9);
-		set_data_whitening(true);
-		fecremainingbytes = ((remainingBytes & 0xFE) + 2) << 1;
-		WriteSingleReg(PKTLEN, (fecremainingbytes & 0xFF));
-	} else {
+		//Disable hardware data whitening
 		set_data_whitening(false);
-		WriteSingleReg(PKTLEN, remainingBytes);
-	}
 
-	//Set buffer position
-	bufferPosition = cfg->data;
+		//Configure length settings
+		set_length_infinite(true);
+		remainingBytes = ((cfg->length & 0xFE) + 2) << 1;
+		WriteSingleReg(PKTLEN, (uint8_t)(remainingBytes & 0x00FF));
+
+		//Initialize fec encoding
+		fec_encode_init(cfg->data, cfg->length);
+	} else {
+#endif
+		//Enable hardware data whitening
+		set_data_whitening(true);
+
+		//Configure length settings
+		set_length_infinite(false);
+		remainingBytes = cfg->length;
+		WriteSingleReg(PKTLEN, (uint8_t)remainingBytes);
+
+		//Set buffer position
+		bufferPosition = cfg->data;
+#ifdef D7_PHY_USE_FEC
+	}
+#endif
 
 	//Write initial data to txfifo
 	tx_data_isr();
@@ -249,51 +255,38 @@ void tx_data_isr()
 	//Calculate number of free bytes in TXFIFO
 	uint8_t txBytes = 64 - ReadSingleReg(TXBYTES);
 
-	//Limit number of bytes to remaining bytes
-	if(txBytes > remainingBytes)
-		txBytes = remainingBytes;
-
+#ifdef D7_PHY_USE_FEC
 	if(fec)
 	{
-		//Todo half txbytes, what with trellis terminator
+		uint8_t buffer[16];
 
-		//Limit number of bytes to pn9 buffer size
-		if(txBytes > FEC_BUFFER_SIZE)
-			txBytes = FEC_BUFFER_SIZE;
+		//If remaining bytes is equal or less than 255 - fifo size, set length to fixed
+		if(remainingBytes < 192)
+			set_length_infinite(false);
 
-		//Apply pn9 encoding on data
-		pn9_encode_decode(bufferPosition, pn9buffer, txBytes, &pn9);
-		remainingBytes -= txBytes;
-		bufferPosition += txBytes;
+		//Limit number of txBytes to the buffer size
+		if(txBytes > 16)
+			txBytes = 16;
 
-		//Append trellis terminator if last part of data
-		if(txBytes < FEC_BUFFER_SIZE) {
-			//Append 1 byte if uneven, append two bytes if even
-			if(txBytes & 0x01) {
-				pn9buffer[txBytes] = TRELLIS_TERMINATOR;
-				txBytes++;
-			} else {
-				pn9buffer[txBytes] = TRELLIS_TERMINATOR;
-				pn9buffer[txBytes + 1] = TRELLIS_TERMINATOR;
-				txBytes += 2;
-			}
-		}
-
-		//Do convolutional encoding
-		conv_encode(pn9buffer, fecbuffer, txBytes);
-		txBytes <<= 1;
-
-		//Do interleaving
-		interleave_deinterleave(fecbuffer, fecbuffer, txBytes);
+		//Get encoded data
+		txBytes = fec_encode(buffer, txBytes);
 
 		//Write data to tx fifo
-		WriteBurstReg(RF_TXFIFOWR, fecbuffer, txBytes);
+		WriteBurstReg(RF_TXFIFOWR, buffer, txBytes);
+		remainingBytes -= txBytes;
 	} else {
+#endif
+		//Limit number of bytes to remaining bytes
+		if(txBytes > remainingBytes)
+			txBytes = remainingBytes;
+
 		//Write data to tx fifo
 		WriteBurstReg(RF_TXFIFOWR, bufferPosition, txBytes);
 		remainingBytes -= txBytes;
 		bufferPosition += txBytes;
+#ifdef D7_PHY_USE_FEC
 	}
+#endif
 }
 
 void rx_data_isr()

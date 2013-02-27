@@ -1,241 +1,147 @@
 /*
- *  Created on: Jan 11, 2013
+ * The PHY layer API
+ *  Created on: Nov 22, 2012
  *  Authors:
  * 		maarten.weyn@artesis.be
  *  	glenn.ergeerts@artesis.be
  *  	alexanderhoet@gmail.com
  */
 
-#include <cstring>
 #include <stdint.h>
 
+#include "phy.h"
 #include "fec.h"
+
+#ifdef D7_PHY_USE_FEC
 
 const uint8_t fec_lut[16] = {0, 3, 1, 2, 3, 0, 2, 1 , 3 , 0, 2, 1, 0, 3, 1, 2};
 
-void conv_encode_init(uint8_t* state)
+uint8_t remainingbytes;
+uint16_t fecremainingbytes;
+uint8_t* inputbuffer;
+
+uint16_t pn9;
+uint8_t fecstate;
+
+void fec_encode_init(uint8_t* input, uint8_t length)
 {
-	*state = 0;
+	inputbuffer = input;
+	remainingbytes = length;
+	fecremainingbytes = ((length & 0xFE) + 2) << 1;
+
+	pn9 = INITIAL_PN9;
 }
 
-/*
- * output array size must at least be 2 x length and a multiple of 4bytes
- * TODO append trellis terminator
- */
-void conv_encode(uint8_t* input, uint8_t* output, uint16_t length, uint8_t* state)
+uint8_t fec_encode(uint8_t* output, uint8_t length)
 {
-	uint16_t i;
-	register uint8_t state_tmp;
-	register uint8_t input_tmp;
-	register uint16_t output_tmp;
+	uint8_t i;
+	uint8_t pn9buffer[2];
+	uint16_t fecbuffer[2];
+	uint16_t output0;
+	uint16_t output1;
+	uint8_t outputlength;
 
-	state_tmp = *state;
+	//Make sure the expected output length is a multiple of 4
+	length &= 0xFC;
 
-	for (i = 0; i < length; i++) {
-		input_tmp = input[i];
+	//Reset the number of processed bytes
+	outputlength = 0;
 
-		//bit 7
-		state_tmp = (state_tmp << 1) & 0x0E;
-		state_tmp |= (input_tmp >> 7) & 0x01;
-		output_tmp = fec_lut[state_tmp] << 14;
+	while(fecremainingbytes > 0 && length > 0)
+	{
+		// Output bytes are generated 4 at a time, fec doubles the amount of bytes so the number of input bytes must be 2.
+		for(i = 0; i < 2; i++)
+		{
+			// Get the next  byte from the input buffer if available and apply data whitening, otherwise append trellis terminator
+			if(remainingbytes > 0) {
+				pn9buffer[i] = *inputbuffer++;
 
-		//bit 6
-		state_tmp = (state_tmp << 1) & 0x0E;
-		state_tmp |= (input_tmp >> 6) & 0x01;
-		output_tmp |= fec_lut[state_tmp] << 12;
+				//Apply pn9 data whitening
+				pn9buffer[i] = pn9buffer[i] ^ (uint8_t)pn9;
 
-		//bit 5
-		state_tmp = (state_tmp << 1) & 0x0E;
-		state_tmp |= (input_tmp >> 5) & 0x01;
-		output_tmp |= fec_lut[state_tmp] << 10;
+				pn9 |= ((pn9 << 9) & 0x1E00) ^ ((pn9 << 4) & 0x1E00);
+				pn9 >>= 4;
+				pn9 |= ((pn9 << 9) & 0x1E00) ^ ((pn9 << 4) & 0x1E00);
+				pn9 >>= 4;
 
-		//bit 4
-		state_tmp = (state_tmp << 1) & 0x0E;
-		state_tmp |= (input_tmp >> 4) & 0x01;
-		output_tmp |= fec_lut[state_tmp] << 8;
-
-		//bit 3
-		state_tmp = (state_tmp << 1) & 0x0E;
-		state_tmp |= (input_tmp >> 3) & 0x01;
-		output_tmp |= fec_lut[state_tmp] << 6;
-
-		//bit 2
-		state_tmp = (state_tmp << 1) & 0x0E;
-		state_tmp |= (input_tmp >> 2) & 0x01;
-		output_tmp |= fec_lut[state_tmp] << 4;
-
-		//bit 1
-		state_tmp = (state_tmp << 1) & 0x0E;
-		state_tmp |= (input_tmp >> 1) & 0x01;
-		output_tmp |= fec_lut[state_tmp] << 2;
-
-		//bit 0
-		state_tmp = (state_tmp << 1) & 0x0E;
-		state_tmp |= input_tmp & 0x01;
-		output_tmp |= fec_lut[state_tmp];
-
-		output[i << 1] = output_tmp >> 8;
-		output[(i << 1) + 1] = output_tmp;
-	}
-
-	*state = state_tmp;
-}
-
-void conv_decode_init(CONVDECODESTATE* state)
-{
-	state->pathsize = 0;
-	state->old = state->states1;
-	state->new = state->states2;
-	memset(state->old, 0, sizeof(VITERBISTATE)  << 3);
-	memset(state->new, 0, sizeof(VITERBISTATE)  << 3);
-	state->old[0].populated = 1;
-}
-
-/*
- * Length must be a multiple of 4
- */
-void conv_decode(uint8_t* input, uint8_t* output, uint16_t length, CONVDECODESTATE* state)
-{
-	uint16_t i;
-	int8_t j;
-	uint8_t k;
-	uint8_t symbol;
-	uint8_t state_tmp;
-	uint8_t symbol_tmp;
-	uint8_t metric_tmp;
-	uint16_t input_tmp;
-
-	VITERBISTATE* states_tmp;
-
-	//For every 2 bytes of the input buffer
-	for (i = 0; i < length; i+=2) {
-		input_tmp = (input[i] << 8) | input[i+1];
-
-		//For every input symbol (left to right)
-		for (j = 14; j >= 0; j-=2) {
-			symbol = (input_tmp >> j) & 0x03;
-
-			//Start of Viterbi algorithm
-			//For every state
-			for (k = 0; k < 8; k++) {
-				if(state->old[k].populated) {
-					//Calculate state and cost for 0 (cost is hamming distance)
-					state_tmp = (k << 1) & 0x0E;
-					symbol_tmp = fec_lut[state_tmp];
-					metric_tmp = ((symbol ^ symbol_tmp) + 1) >> 1;
-
-					//Update new state
-					state_tmp &= 0x07;
-					if (!state->new[state_tmp].populated || (state->old[k].metric + metric_tmp) < state->new[state_tmp].metric) {
-						state->new[state_tmp].populated = 1;
-						state->new[state_tmp].metric = state->old[k].metric + metric_tmp;
-						memcpy(state->new[state_tmp].path, state->old[k].path, 4);
-						memcpy(state->new[state_tmp].pathmetric, state->old[k].pathmetric, 4);
-						state->new[state_tmp].path[0] <<= 1;
-						state->new[state_tmp].pathmetric[0] += metric_tmp;
-
-					}
-
-					//Calculate state and symbol for 1
-					state_tmp = ((k << 1) & 0x0E) | 0x01;
-					symbol_tmp = fec_lut[state_tmp];
-					metric_tmp = ((symbol ^ symbol_tmp) + 1) >> 1;
-
-					//Update new state
-					state_tmp &= 0x07;
-					if (!state->new[state_tmp].populated || (state->old[k].metric + metric_tmp) < state->new[state_tmp].metric) {
-						state->new[state_tmp].populated = 1;
-						state->new[state_tmp].metric = state->old[k].metric + metric_tmp;
-						memcpy(state->new[state_tmp].path, state->old[k].path, 4);
-						memcpy(state->new[state_tmp].pathmetric, state->old[k].pathmetric, 4);
-						state->new[state_tmp].path[0] = (state->new[state_tmp].path[0] << 1) | 0x01;
-						state->new[state_tmp].pathmetric[0] += metric_tmp;
-					}
-				}
+				remainingbytes--;
+			} else {
+				pn9buffer[i] = TRELLIS_TERMINATOR;
 			}
 
-			//Switch state pointers
-			states_tmp = state->new;
-			state->new = state->old;
-			state->old = states_tmp;
+			//Apply convolutional encoding
+			//bit 7
+			fecstate = (fecstate << 1) & 0x0E;
+			fecstate |= (pn9buffer[i] >> 7) & 0x01;
+			fecbuffer[i] = fec_lut[fecstate] << 14;
 
-			//Reset new state array
-			memset(state->new, 0, sizeof(VITERBISTATE)  << 3);
+			//bit 6
+			fecstate = (fecstate << 1) & 0x0E;
+			fecstate |= (pn9buffer[i] >> 6) & 0x01;
+			fecbuffer[i] |= fec_lut[fecstate] << 12;
+
+			//bit 5
+			fecstate = (fecstate << 1) & 0x0E;
+			fecstate |= (pn9buffer[i] >> 5) & 0x01;
+			fecbuffer[i] |= fec_lut[fecstate] << 10;
+
+			//bit 4
+			fecstate = (fecstate << 1) & 0x0E;
+			fecstate |= (pn9buffer[i] >> 4) & 0x01;
+			fecbuffer[i] |= fec_lut[fecstate] << 8;
+
+			//bit 3
+			fecstate = (fecstate << 1) & 0x0E;
+			fecstate |= (pn9buffer[i] >> 3) & 0x01;
+			fecbuffer[i] |= fec_lut[fecstate] << 6;
+
+			//bit 2
+			fecstate = (fecstate << 1) & 0x0E;
+			fecstate |= (pn9buffer[i] >> 2) & 0x01;
+			fecbuffer[i] |= fec_lut[fecstate] << 4;
+
+			//bit 1
+			fecstate = (fecstate << 1) & 0x0E;
+			fecstate |= (pn9buffer[i] >> 1) & 0x01;
+			fecbuffer[i] |= fec_lut[fecstate] << 2;
+
+			//bit 0
+			fecstate = (fecstate << 1) & 0x0E;
+			fecstate |= pn9buffer[i] & 0x01;
+			fecbuffer[i] |= fec_lut[fecstate];
 		}
 
-		//Update path size
-		state->pathsize++;
+		//Apply interleaving
+		output0 = (fecbuffer[0] >> 10) & 0x03;
+		output0 |= ((fecbuffer[0] >> 2) & 0x03) << 2;
+		output0 |= ((fecbuffer[1] >> 10) & 0x03) << 4;
+		output0 |= ((fecbuffer[1] >> 2) & 0x03) << 6;
+		output0 |= ((fecbuffer[0] >> 8) & 0x03) << 8;
+		output0 |= (fecbuffer[0] & 0x03) << 10;
+		output0 |= ((fecbuffer[1] >> 8) & 0x03) << 12;
+		output0 |= (fecbuffer[1] & 0x03) << 14;
 
-		//Write out oldest byte with smallest metric if pathsize = 4
-		if(state->pathsize == 4) {
-			state->pathsize--;
+		output1 = (fecbuffer[0] >> 14) & 0x03;
+		output1 |= ((fecbuffer[0] >> 6) & 0x03) << 2;
+		output1 |= ((fecbuffer[1] >> 14) & 0x03) << 4;
+		output1 |= ((fecbuffer[1] >> 6) & 0x03) << 6;
+		output1 |= ((fecbuffer[0] >> 12) & 0x03) << 8;
+		output1 |= ((fecbuffer[0] >> 4) & 0x03) << 10;
+		output1 |= ((fecbuffer[1] >> 12) & 0x03) << 12;
+		output1 |= ((fecbuffer[1] >> 4) & 0x03) << 14;
 
-			for (k = 0; k < 8; k++) {
-				metric_tmp = UINT8_MAX;
+		//Write output to output buffer
+		*output++ = (uint8_t)(output0 >> 8);
+		*output++ = (uint8_t)output0;
+		*output++ = (uint8_t)(output1 >> 8);
+		*output++ = (uint8_t)output1;
 
-				if (state->old[k].metric < metric_tmp) {
-					metric_tmp = state->old[1].metric;
-					*output = state->old[state_tmp].path[3];
-				}
-			}
-
-			output++;
-		}
-
-		//Rotate paths & metrics
-		for (k = 0; k < 8; k++) {
-			state->old[k].metric -= state->old[k].pathmetric[3];
-
-			state->old[k].path[3] = state->old[k].path[2];
-			state->old[k].path[2] = state->old[k].path[1];
-			state->old[k].path[1] = state->old[k].path[0];
-			state->old[k].path[0] = 0;
-
-			state->old[k].pathmetric[3] = state->old[k].pathmetric[2];
-			state->old[k].pathmetric[2] = state->old[k].pathmetric[1];
-			state->old[k].pathmetric[1] = state->old[k].pathmetric[0];
-			state->old[k].pathmetric[0] = 0;
-		}
+		fecremainingbytes -= 4;
+		length -= 4;
+		outputlength += 4;
 	}
+
+	return outputlength;
 }
 
-/*
- * buffer size must be a multiple of 4
- * input and output buffer may be the same
- */
-void interleave_deinterleave(uint8_t* input, uint8_t* output, uint16_t length)
-{
-	uint16_t i;
-	register uint16_t input0;
-	register uint16_t input1;
-	register uint16_t output0;
-	register uint16_t output1;
-
-	for (i = 0; i < length; i+=4) {
-		input0 = (input[i] << 8) | input[i+1];
-		input1 = (input[i+2] << 8) | input[i+3];
-
-		output0 = (input0 >> 10) & 0x03;
-		output0 |= ((input0 >> 2) & 0x03) << 2;
-		output0 |= ((input1 >> 10) & 0x03) << 4;
-		output0 |= ((input1 >> 2) & 0x03) << 6;
-		output0 |= ((input0 >> 8) & 0x03) << 8;
-		output0 |= (input0 & 0x03) << 10;
-		output0 |= ((input1 >> 8) & 0x03) << 12;
-		output0 |= (input1 & 0x03) << 14;
-
-		output1 = (input0 >> 14) & 0x03;
-		output1 |= ((input0 >> 6) & 0x03) << 2;
-		output1 |= ((input1 >> 14) & 0x03) << 4;
-		output1 |= ((input1 >> 6) & 0x03) << 6;
-		output1 |= ((input0 >> 12) & 0x03) << 8;
-		output1 |= ((input0 >> 4) & 0x03) << 10;
-		output1 |= ((input1 >> 12) & 0x03) << 12;
-		output1 |= ((input1 >> 4) & 0x03) << 14;
-
-		output[i] = (uint8_t)(output0 >> 8);
-		output[i+1] = (uint8_t)output0;
-		output[i+2] = (uint8_t)(output1 >> 8);
-		output[i+3] = (uint8_t)output1;
-	}
-}
+#endif /* D7_PHY_USE_FEC */
