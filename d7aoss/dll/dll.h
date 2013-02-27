@@ -1,5 +1,5 @@
 /*
- * The PHY layer API
+ * The Data Link layer API
  *  Created on: Nov 23, 2012
  *  Authors:
  * 		maarten.weyn@artesis.be

@@ -37,7 +37,7 @@ void LogParser::onDataAvailable()
 void LogParser::parseReceivedData()
 {
 
-    qDebug() << "Data size: " << _receivedDataQueue->size();
+    //qDebug() << "Data size: " << _receivedDataQueue->size();
 
     if(_receivedDataQueue->size() < 3)
         return;
