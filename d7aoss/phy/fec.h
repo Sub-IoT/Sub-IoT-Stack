@@ -14,9 +14,13 @@
 extern "C" {
 #endif
 
-void fec_encode_init(uint8_t* input, uint8_t length);
-uint8_t fec_encode(uint8_t* output, uint8_t length);
+#include <stdbool.h>
+#include <stdint.h>
 
+void fec_init();
+void fec_set_length(uint8_t length);
+bool fec_encode(uint8_t* input, uint8_t* output);
+bool fec_decode(uint8_t* input, uint8_t* output);
 
 #ifdef __cplusplus
 }

@@ -81,6 +81,7 @@ bool phy_tx(phy_tx_cfg_t* cfg)
 	set_sync_word(sync_word);
 	set_eirp(cfg->eirp);
 
+	//TODO Return error if fec not enabled but requested
 #ifdef D7_PHY_USE_FEC
 	if(fec)
 	{
@@ -93,7 +94,8 @@ bool phy_tx(phy_tx_cfg_t* cfg)
 		WriteSingleReg(PKTLEN, (uint8_t)(remainingBytes & 0x00FF));
 
 		//Initialize fec encoding
-		fec_encode_init(cfg->data, cfg->length);
+		fec_init();
+		fec_set_length(cfg->length);
 	} else {
 #endif
 		//Enable hardware data whitening
@@ -103,12 +105,12 @@ bool phy_tx(phy_tx_cfg_t* cfg)
 		set_length_infinite(false);
 		remainingBytes = cfg->length;
 		WriteSingleReg(PKTLEN, (uint8_t)remainingBytes);
-
-		//Set buffer position
-		bufferPosition = cfg->data;
 #ifdef D7_PHY_USE_FEC
 	}
 #endif
+
+	//Set buffer position
+	bufferPosition = cfg->data;
 
 	//Write initial data to txfifo
 	tx_data_isr();
@@ -258,22 +260,25 @@ void tx_data_isr()
 #ifdef D7_PHY_USE_FEC
 	if(fec)
 	{
-		uint8_t buffer[16];
+		uint8_t buffer[4];
 
 		//If remaining bytes is equal or less than 255 - fifo size, set length to fixed
 		if(remainingBytes < 192)
 			set_length_infinite(false);
 
-		//Limit number of txBytes to the buffer size
-		if(txBytes > 16)
-			txBytes = 16;
+		while(txBytes >= 4)
+		{
 
-		//Get encoded data
-		txBytes = fec_encode(buffer, txBytes);
+		//Get encoded data, stop when no more data available
+		if(fec_encode(bufferPosition, buffer) == 0)
+			break;
 
 		//Write data to tx fifo
-		WriteBurstReg(RF_TXFIFOWR, buffer, txBytes);
-		remainingBytes -= txBytes;
+		WriteBurstReg(RF_TXFIFOWR, buffer, 4);
+		remainingBytes -= 4;
+		bufferPosition += 2;
+		txBytes -= 4;
+		}
 	} else {
 #endif
 		//Limit number of bytes to remaining bytes
