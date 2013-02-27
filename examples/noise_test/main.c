@@ -18,13 +18,15 @@
 
 #define CC430_RSSI_OFFSET 74
 #define INTERRUPT_RTC 		(1 << 3)
-#define CHANNEL_COUNT 8
+#define CHANNEL_COUNT 16
 
 static u8 interrupt_flags = 0;
 
 static u8 logbuffer[2] = {0x00 /* channr */, 0x00 /* RSSI */};
 
-static u8 spectrum_ids[CHANNEL_COUNT] = { 0x10, 0x12, 0x14, 0x16, 0x18, 0x1A, 0x1C, 0x1E }; // TODO only normal channel classes?
+static u8 spectrum_ids[CHANNEL_COUNT] = { 0x10, 0x12, 0x14, 0x16, 0x18, 0x1A, 0x1C, 0x1E,
+											0x21, 0x23, 0x25, 0x27, 0x29, 0x2B,
+											0x32, 0x3c }; // TODO only normal channel classes?
 
 static u8 current_spectrum_index = 0;
 
