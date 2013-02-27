@@ -15,21 +15,41 @@ from collections import namedtuple
 TEST_MESSAGE_COUNT = 50
 FILE_NAME_PREFIX = "pdr_test_"
 FILE_EXTENSION = ".csv"
+SYNC_WORD = 'CE'
 
 serial_port = None
-SerialData = namedtuple('SerialData', 'counter rssi')
+SerialData = namedtuple('SerialData', 'mac counter rssi')
+
+get_input = input if system.version_info[0] >= 3 else raw_input # TODO compatibility beween python 2 and 3, can be removed if we switch to python 3 (waiting on matplotlib)
 
 def read_value_from_serial():
+	data = serial_port.read(size=1)
+	while not data.encode("hex").upper() == SYNC_WORD:
+		print("received unexpected data (%s), waiting for sync word " % data.encode("hex").upper())
+		data = serial_port.read(size=1)
+		
+
+	mac = serial_port.read(size=8).encode("hex")	
 	data = serial_port.read(size=2)
 	counter = struct.unpack("H", data)[0] 
 	data = serial_port.read(size=1)
 	rssi = struct.unpack("b", data)[0] 
-	serialData = SerialData(counter, rssi)
+	serialData = SerialData(mac, counter, rssi)
 	return serialData
 
 def empty_serial_buffer():
 	while serial_port.inWaiting() > 0:
 		serial_port.read(1)
+
+def wait_for_slave_tag():
+	key = ''
+	while key != "y":
+		empty_serial_buffer()
+		data = read_value_from_serial()
+		print("Received slave tag with MAC: %s" % data.mac)
+		key = get_input("use this as slave node? (y/n) ")
+
+	return data.mac
 
 def main():
 	if (len(system.argv) != 3):
@@ -38,9 +58,10 @@ def main():
 
 	global serial_port 
 	serial_port = serial.Serial(system.argv[1], system.argv[2])
-	get_input = input if system.version_info[0] >= 3 else raw_input # TODO compatibility beween python 2 and 3, can be removed if we switch to python 3 (waiting on matplotlib)
 	test_name = get_input("Enter test name: ")
-	f = open(FILE_NAME_PREFIX + test_name + FILE_EXTENSION, 'w')
+	print("Waiting for slave tag ...")
+	slave_mac = wait_for_slave_tag()
+	f = open(FILE_NAME_PREFIX + test_name + "_" + slave_mac + FILE_EXTENSION, 'w')
 	f.write("# distance (m), PDR (%), # packets, timestamp started, avg RSSI value, std dev RSSI" + "\n")
 	f.write("distance, PDR, packet_count, started_timestamp, rssi_avg, rssi_std\n")
 	get_input("Press any key to start testing...")
@@ -55,22 +76,25 @@ def main():
 		rssi_values = []
 		while(total_msgs_count < TEST_MESSAGE_COUNT):
 			serialData = read_value_from_serial()
-			succes_msgs_count += 1
-			new_counter = serialData.counter
-			if(new_counter > counter + 1):
-				error_count += new_counter - (counter + 1)
-				print("!!! packet missed")
+			if(serialData.mac == slave_mac):
+				succes_msgs_count += 1
+				new_counter = serialData.counter
+				if(new_counter > counter + 1):
+					error_count += new_counter - (counter + 1)
+					print("!!! packet missed")
 
-			counter = new_counter
-			total_msgs_count = counter - initial_counter
-			rssi_values.append(serialData.rssi)
-			print("received counter value %(counter)i @ %(rssi)s dBm ==> %(pct)0.2f%% missed of %(total)i messages" % \
-				{
-					'pct': (error_count*100)/total_msgs_count, 
-					'total': total_msgs_count,
-					'counter': counter,
-					'rssi': serialData.rssi
-				})
+				counter = new_counter
+				total_msgs_count = counter - initial_counter
+				rssi_values.append(serialData.rssi)
+				print("received counter value %(counter)i @ %(rssi)s dBm ==> %(pct)0.2f%% missed of %(total)i messages" % \
+					{
+						'pct': (error_count*100)/total_msgs_count, 
+						'total': total_msgs_count,
+						'counter': counter,
+						'rssi': serialData.rssi
+					})
+			else:
+				print("Received data from another mac: %s" % serialData.mac)
 
 		dist = float(get_input("Distance between sender and receiver (in m): "))
 		pdr = (succes_msgs_count*100)/total_msgs_count
