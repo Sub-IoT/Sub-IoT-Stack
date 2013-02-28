@@ -18,7 +18,22 @@ static void dll_tx_callback(Dll_Tx_Result status)
 
 static void dll_rx_callback(dll_rx_res_t* result)
 {
-	nwl_rx_callback(result);
+	nwl_rx_res_t res;
+	res.frame_type = result->frame_type;
+
+	if (res.frame_type == FrameTypeBackgroundFrame)
+	{
+		nwl_background_frame_t bf;
+		bf.length = 6;
+		bf.tx_eirp = 0;
+		bf.subnet = ((dll_background_frame_t*) result->frame)->subnet;
+		bf.bpid = ((dll_background_frame_t*) result->frame)->payload[0];
+		memcpy((void*) bf.protocol_data,(void*) &(((dll_background_frame_t*) result->frame)->payload[1]), 3);
+
+		res.frame = &bf;
+	}
+
+	nwl_rx_callback(&res);
 }
 
 void nwl_init()
@@ -52,7 +67,7 @@ void nwl_tx_advertising_protocol_data(u8 channel_id, u16 eta, u8 tx_eirp, u8 sub
 	frame.bpid = BPID_AdvP;
 	AdvP_Data *data = (AdvP_Data*) frame.protocol_data;
 	data->channel_id = channel_id;
-	data->eta = eta;
+	memcpy((void*) data->eta, (void*) &eta, 2);
 
 
 	nwl_tx_background_frame(&frame, spectrum_id);
@@ -68,7 +83,7 @@ void nwl_tx_reservation_protocol_data(u8 res_type, u16 res_duration, u8 tx_eirp,
 	frame.bpid = BPID_AdvP;
 	ResP_Data *data = (ResP_Data*) frame.protocol_data;
 	data->res_type = res_type;
-	data->res_duration = res_duration;
+	memcpy((void*) data->res_duration, (void*) &res_duration, 2);
 
 
 	nwl_tx_background_frame(&frame, spectrum_id);

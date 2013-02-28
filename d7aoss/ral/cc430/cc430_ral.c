@@ -118,8 +118,6 @@ static void rx_sync_isr()
 	radioState = RadioStateReceive;
 
     //Reset receive data
-    rxLength = 0;
-    rxRemainingBytes = 0;
     rxDataPointer = &rxData[0];
 
     //Clear all flags, enable receive interrupts
@@ -172,7 +170,7 @@ static void rx_data_isr()
         Strobe(RF_SFRX);
         Strobe(RF_SPWD);
 
-        rx_response.eirp = (rxData[1] >> 1) - 40;
+        rx_response.eirp = (rxData[1] >> 1) - 40; // only valid for FF
         rx_response.len = rxLength;
         rx_response.data = rxData;
         rx_response.lqi = ReadSingleReg(LQI);
@@ -344,6 +342,22 @@ void cc430_ral_tx(ral_tx_cfg_t* tx_cfg)
 		break;
 	}
 
+	if(tx_cfg->sync_word_class == 0x00) { // TODO assert valid class
+		if(tx_cfg->coding_scheme == 0x00) {
+			WriteSingleReg(SYNC1, RADIO_SYNC1_CLASS0_NON_FEC);
+			WriteSingleReg(SYNC0, RADIO_SYNC0_CLASS0_NON_FEC);
+		}
+
+		// TODO assert, FEC not implemented yet
+	} else if(tx_cfg->sync_word_class == 0x01) {
+		if(tx_cfg->coding_scheme == 0x00) {
+			WriteSingleReg(SYNC1, RADIO_SYNC1_CLASS1_NON_FEC);
+			WriteSingleReg(SYNC0, RADIO_SYNC0_CLASS1_NON_FEC);
+		}
+
+		// TODO assert, FEC not implemented yet
+	}
+
 	// Set TX EIRP
 	// todo: get data from table
 	if (tx_cfg->eirp == 10) WritePATable(0xC0);
@@ -419,28 +433,43 @@ void cc430_ral_rx_start(ral_rx_cfg_t* cfg)
 		break;
 	}
 
+	//Modify radio state
+	radioState = RadioStateReceiveInit;
 	if(cfg->sync_word_class == 0x00) { // TODO assert valid class
+		// Background Frame
 		if(cfg->coding_scheme == 0x00) {
 			WriteSingleReg(SYNC1, RADIO_SYNC1_CLASS0_NON_FEC);
 			WriteSingleReg(SYNC0, RADIO_SYNC0_CLASS0_NON_FEC);
 		}
 
 		// TODO assert, FEC not implemented yet
+
+		// Packet length is always 7 in background frame
+		WriteSingleReg(PKTLEN, 7);
+		WriteSingleReg(FIFOTHR, (RADIO_FIFOTHR_CLOSE_IN_RX_0db | RADIO_FIFOTHR_FIFO_THR_33_32));
+		rxLength = 7;
+		rxRemainingBytes = 7;
+
 	} else if(cfg->sync_word_class == 0x01) {
+		// Foreground Frame
 		if(cfg->coding_scheme == 0x00) {
 			WriteSingleReg(SYNC1, RADIO_SYNC1_CLASS1_NON_FEC);
 			WriteSingleReg(SYNC0, RADIO_SYNC0_CLASS1_NON_FEC);
 		}
 
 		// TODO assert, FEC not implemented yet
+
+		//Set PKTLEN to the highest possible number, we will change this to the right length later
+		//Set RXFIFO threshold as low as possible
+
+		WriteSingleReg(PKTLEN, RADIO_PKTLEN);
+		WriteSingleReg(FIFOTHR, (RADIO_FIFOTHR_CLOSE_IN_RX_0db | RADIO_FIFOTHR_FIFO_THR_61_4));
+		rxLength = 0;
+		rxRemainingBytes = 0;
 	}
 
-	//Modify radio state
-	//Set PKTLEN to the highest possible number, we will change this to the right length later
-	//Set RXFIFO threshold as low as possible
-	radioState = RadioStateReceiveInit;
-	WriteSingleReg(PKTLEN, RADIO_PKTLEN);
-	WriteSingleReg(FIFOTHR, (RADIO_FIFOTHR_CLOSE_IN_RX_0db | RADIO_FIFOTHR_FIFO_THR_61_4));
+
+
 
 	//Clear all interrupt flags, enable sync word interrupt
 	RF1AIFG = 0;

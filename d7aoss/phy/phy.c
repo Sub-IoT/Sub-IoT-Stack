@@ -50,7 +50,7 @@ phy_result_t phy_tx(phy_tx_cfg_t* cfg)
 	ral_tx_cfg_t ral_tx_cfg;
 	translate_spectrum_id(cfg->spectrum_id, &ral_tx_cfg.channel_center_freq_index, &ral_tx_cfg.channel_bandwith_index);
 	ral_tx_cfg.coding_scheme = 0; // TODO
-	ral_tx_cfg.sync_word_class = 0; // TODO
+	ral_tx_cfg.sync_word_class = cfg->sync_word_class; // TODO
 	ral_tx_cfg.data = cfg->data;
 	ral_tx_cfg.len = cfg->data[0];
 	// TODO u16 timeout; // mac level?

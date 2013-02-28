@@ -16,12 +16,12 @@
 
 static u16 counter = 0;
 
-static u8 tx = 0;
 static timer_event event;
 static u16 timer = 30000;
 
 void send_adv_prot_data()
 {
+	led_on(1);
 	nwl_tx_advertising_protocol_data(0x10, timer, 0, 0xFF, 0x10);
 	timer -= 1024;
 }
@@ -36,20 +36,19 @@ void tx_callback(Dll_Tx_Result result)
 	if(result == DLLTxResultOK)
 	{
 		counter++;
-		led_off(3);
+		led_off(1);
 		log_print_string("TX OK");
 	}
 	else if (result == DLLTxResultCCAFail)
 	{
-		led_toggle(1);
+		led_toggle(2);
 		log_print_string("TX CCA FAIL");
 	} else
 	{
-		led_toggle(1);
+		led_toggle(2);
 		log_print_string("TX FAIL");
 	}
 
-	tx = 0;
 
 	timer_add_event(&event);
 }

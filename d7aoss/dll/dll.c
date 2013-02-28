@@ -43,6 +43,8 @@ phy_tx_cfg_t background_frame_tx_cfg = {
 	    0
 };
 
+phy_tx_cfg_t *current_cfg;
+
 
 static bool check_subnet(u8 device_subnet, u8 frame_subnet)
 {
@@ -52,7 +54,7 @@ static bool check_subnet(u8 device_subnet, u8 frame_subnet)
 			return 0;
 	}
 
-	if (frame_subnet & device_subnet & 0x0F != device_subnet & 0x0F)
+	if ((frame_subnet & device_subnet & 0x0F) != (device_subnet & 0x0F))
 			return 0;
 
 	return 1;
@@ -322,7 +324,7 @@ static void dll_cca2(void* arg)
 		return;
 	}
 
-	phy_result_t res = phy_tx(&foreground_frame_tx_cfg);
+	phy_result_t res = phy_tx(current_cfg);
 }
 
 void dll_tx_foreground_frame(u8* data, u8 length, u8 spectrum_id, s8 tx_eirp)
@@ -372,6 +374,7 @@ void dll_tx_foreground_frame(u8* data, u8 length, u8 spectrum_id, s8 tx_eirp)
 
 	timer_event event;
 	event.next_event = 5; // TODO: get T_G fron config
+	current_cfg = &foreground_frame_tx_cfg;
 	event.f = &dll_cca2;
 
 	if (!timer_add_event(&event))
@@ -410,6 +413,7 @@ void dll_tx_background_frame(u8* data, u8 subnet, u8 spectrum_id, s8 tx_eirp)
 
 	timer_event event;
 	event.next_event = 5; // TODO: get T_G from config
+	current_cfg = &background_frame_tx_cfg;
 	event.f = &dll_cca2;
 
 	if (!timer_add_event(&event))

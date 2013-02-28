@@ -21,17 +21,25 @@ typedef struct {
 
 typedef struct {
 	u8 channel_id;
-	u16 eta;
+	u8 eta[2];
 } AdvP_Data;
 
 typedef struct {
 	u8 res_type;
-	u16 res_duration;
+	u8 res_duration[2];
 } ResP_Data;
+
+typedef struct
+{
+    /// Frame Type
+    Frame_Type  frame_type;
+    /// Frame
+    void* frame;
+} nwl_rx_res_t;
 
 
 typedef void (*nwl_tx_callback_t)(Dll_Tx_Result);
-typedef void (*nwl_rx_callback_t)(dll_rx_res_t*);
+typedef void (*nwl_rx_callback_t)(nwl_rx_res_t *);
 
 void nwl_init();
 void nwl_set_tx_callback(nwl_tx_callback_t);
