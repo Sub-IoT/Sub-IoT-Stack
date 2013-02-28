@@ -218,12 +218,8 @@ void end_of_packet_isr()
 	if (state == Receive) {
 		rx_data_isr();
 		rxtx_finish_isr();
-		if(phy_rx_callback != NULL)
-			phy_rx_callback(&rx_data);
 	} else if (state == Transmit) {
 		rxtx_finish_isr();
-		if(phy_tx_callback != NULL)
-			phy_tx_callback();
 	} else {
 		rxtx_finish_isr();
 	}
@@ -241,6 +237,11 @@ void tx_data_isr()
 	WriteBurstReg(RF_TXFIFOWR, bufferPosition, txBytes);
 	remainingBytes -= txBytes;
 	bufferPosition += txBytes;
+
+	if(remainingBytes == 0) {
+		if(phy_tx_callback != NULL)
+			phy_tx_callback();
+	}
 }
 
 void rx_data_isr()
@@ -274,10 +275,13 @@ void rx_data_isr()
     //When all data has been received read rssi and lqi value and set packetreceived flag
     if(remainingBytes == 0)
     {
-		rx_data.data = buffer;
+    	rx_data.lqi = ReadSingleReg(RXFIFO) & 0x7F;
 		rx_data.length = packetLength;
+		rx_data.data = buffer;
 		rx_data.rssi = calculate_rssi(ReadSingleReg(RXFIFO));
-		rx_data.lqi = ReadSingleReg(RXFIFO) & 0x7F;
+
+		if(phy_rx_callback != NULL)
+			phy_rx_callback(&rx_data);
     }
 }
 
