@@ -26,7 +26,7 @@
 
 void log_print_string(char* message);
 
-void log_phy_rx_res(phy_rx_res_t* res);
+void log_phy_rx_res(phy_rx_data_t* res);
 
 void log_dll_rx_res(dll_rx_res_t* res);
 

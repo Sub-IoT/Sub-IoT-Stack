@@ -5,6 +5,9 @@
  *      Author: Maarten Weyn
  */
 
+#include <stddef.h>
+#include <stdbool.h>
+
 #include "queue.h"
 
 static void shift_queue (queue* q, u8 places)

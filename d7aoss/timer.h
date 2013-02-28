@@ -8,11 +8,12 @@
 #ifndef TIMER_H_
 #define TIMER_H_
 
-#include "types.h"
+#include <stdbool.h>
+#include <stdint.h>
 
 typedef struct
 {
-	u16 next_event;
+	uint16_t next_event;
 	void (*f) (void*);
 
 } timer_event;
@@ -20,5 +21,4 @@ typedef struct
 void timer_init();
 
 bool timer_add_event(timer_event* event);
-
 #endif /* TIMER_H_ */
