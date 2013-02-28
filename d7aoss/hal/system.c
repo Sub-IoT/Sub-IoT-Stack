@@ -101,7 +101,7 @@ void system_init()
 
     PMM_SetStdSVSM(0x8088, 2, 4);
 
-    clock_init();
+    //clock_init(); // TODO seems to break UART
 
     led_init();
     button_init();
