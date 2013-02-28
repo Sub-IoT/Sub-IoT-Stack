@@ -48,7 +48,7 @@ bool phy_is_tx_in_progress(void)
 	return false;
 }
 
-bool phy_cca(void)
+bool phy_cca(phy_rx_cfg_t* cfg)
 {
 	return true;
 }
