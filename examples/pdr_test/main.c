@@ -21,7 +21,9 @@
 #include <hal/leds.h>
 #include <hal/rtc.h>
 
-#define CHANNEL_ID	0x14
+#define SYNC_WORD 0xCE
+
+#define CHANNEL_ID	0x1A
 
 #define INTERRUPT_BUTTON1 	(1)
 #define INTERRUPT_BUTTON2 	(1 << 1)
@@ -64,7 +66,7 @@ void start_tx()
 {
 	led_on(3);
 
-	dll_tx_foreground_frame((u8*)&counter, sizeof(counter), CHANNEL_ID, 4);
+	dll_tx_foreground_frame((u8*)&counter, sizeof(counter), CHANNEL_ID, 0);
 }
 
 void tx_callback(Dll_Tx_Result result)
@@ -79,6 +81,8 @@ void tx_callback(Dll_Tx_Result result)
 void rx_callback(dll_rx_res_t* rx_res)
 {
 	dll_foreground_frame_t* foreground_frame = (dll_foreground_frame_t*) rx_res->frame;
+	uart_transmit_data(SYNC_WORD);
+	uart_transmit_message(foreground_frame->source_id_header, 8);
 	uart_transmit_message(foreground_frame->payload, 2);
 	uart_transmit_message(&rx_res->rssi, 1);
 	led_toggle(3);

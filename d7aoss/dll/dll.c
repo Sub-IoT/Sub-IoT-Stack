@@ -66,7 +66,9 @@ static void rx_callback(phy_rx_data_t* res)
 		u16 crc = crc_calculate(res->data, 5);
 		if (memcmp((u8*) &(res->data[5]), (u8*) &crc, 2) != 0)
 		{
-			log_print_string("CRC ERROR");
+			#ifdef LOG_DLL_ENABLED
+				log_print_string("CRC ERROR");
+			#endif
 			return;
 		}
 
@@ -82,7 +84,9 @@ static void rx_callback(phy_rx_data_t* res)
 		u16 crc = crc_calculate(res->data, res->length - 2);
 		if (memcmp((u8*) &(res->data[res->length - 2]), (u8*) &crc, 2) != 0)
 		{
-			log_print_string("CRC ERROR");
+			#ifdef LOG_DLL_ENABLED
+				log_print_string("CRC ERROR");
+			#endif
 			return;
 		}
 		if (!check_subnet(0xFF, res->data[3])) // TODO: get device_subnet from datastore
@@ -277,6 +281,7 @@ void dll_channel_scan_series(dll_channel_scan_series_t* css)
 	#endif
 
 	phy_rx_cfg_t rx_cfg;
+	rx_cfg.length = 0;
 	rx_cfg.timeout = css->values[current_scan_id].timout_scan_detect; // timeout
 	//rx_cfg.multiple = 0; // multiple TODO
 	rx_cfg.spectrum_id = css->values[current_scan_id].spectrum_id; // spectrum ID TODO
@@ -304,7 +309,7 @@ void dll_channel_scan_series(dll_channel_scan_series_t* css)
 
 static void dll_cca2(void* arg)
 {
-	bool cca2 = false; //phy_cca();
+	bool cca2 = true;
 	if (!cca2)
 	{
 		dll_tx_callback(DLLTxResultCCAFail);
@@ -317,8 +322,9 @@ static void dll_cca2(void* arg)
 void dll_tx_foreground_frame(u8* data, u8 length, u8 spectrum_id, s8 tx_eirp)
 {
 	//TODO: check if not already sending
-	foreground_frame_tx_cfg.spectrum_id = spectrum_id; // TODO check valid
+	foreground_frame_tx_cfg.spectrum_id = spectrum_id; // TODO check valid (Alexander: this check is already done in phy)
 	foreground_frame_tx_cfg.eirp = tx_eirp;
+	foreground_frame_tx_cfg.sync_word_class = 1;
 
 	dll_foreground_frame_t* frame = (dll_foreground_frame_t*) frame_data;
 	frame->frame_header.tx_eirp = (tx_eirp + 40) * 2; // (-40 + 0.5n) dBm
@@ -351,7 +357,7 @@ void dll_tx_foreground_frame(u8* data, u8 length, u8 spectrum_id, s8 tx_eirp)
 
 	foreground_frame_tx_cfg.length = frame->length;
 
-	bool cca1 = false; //phy_cca();
+	bool cca1 = true;
 
 	if (!cca1)
 	{
