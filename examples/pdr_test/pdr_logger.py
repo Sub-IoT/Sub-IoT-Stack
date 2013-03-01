@@ -10,7 +10,7 @@ import struct as struct
 import ctypes
 import datetime
 
-TEST_MESSAGE_COUNT = 25
+TEST_MESSAGE_COUNT = 1000
 FILE_NAME_PREFIX = "pdr_test_"
 FILE_EXTENSION = ".csv"
 
