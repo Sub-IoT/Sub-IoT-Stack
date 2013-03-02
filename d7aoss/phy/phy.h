@@ -25,7 +25,7 @@ extern "C" {
 #define SYNC_CLASS1_FEC         0x192F
 #define TRELLIS_TERMINATOR		0x0B
 #define INITIAL_PN9				0x01FF
-#define INITIAL_FECSTATE		0x00
+#define INITIAL_FECSTATE		0x0700
 #define CCA_RSSI_THRESHOLD		-86 // TODO configurable
 
 //Configuration structure for packet reception
