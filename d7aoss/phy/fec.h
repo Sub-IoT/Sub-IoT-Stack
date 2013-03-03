@@ -17,10 +17,25 @@ extern "C" {
 #include <stdbool.h>
 #include <stdint.h>
 
-void fec_init();
+typedef struct {
+	uint8_t cost;
+	uint32_t path;
+} VITERBIPATH;
+
+typedef struct {
+	uint8_t path_size;
+	VITERBIPATH* old;
+	VITERBIPATH* new;
+	VITERBIPATH states1[8];
+	VITERBIPATH states2[8];
+} VITERBISTATE;
+
+
+void fec_init_encode(uint8_t* input);
+void fec_init_decode(uint8_t* output);
 void fec_set_length(uint8_t length);
-bool fec_encode(uint8_t* input, uint8_t* output);
-bool fec_decode(uint8_t* input, uint8_t* output);
+bool fec_encode(uint8_t* output);
+bool fec_decode(uint8_t* input);
 
 #ifdef __cplusplus
 }

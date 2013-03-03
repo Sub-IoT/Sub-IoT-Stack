@@ -266,8 +266,8 @@ void tx_data_isr()
 		{
 
 		//Get encoded data, stop when no more data available
-		if(fec_encode(bufferPosition, buffer) == 0)
-			break;
+		//if(fec_encode(bufferPosition, buffer) == false)
+		//	break;
 
 		//Write data to tx fifo
 		WriteBurstReg(RF_TXFIFOWR, buffer, 4);
