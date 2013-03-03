@@ -71,6 +71,9 @@ void rx_callback(phy_rx_data_t* rx_data)
 void main(void)
 {
 	system_init();
+
+	test_fec_encoding();
+
 	button_enable_interrupts();
 
     rtc_init_counter_mode();

@@ -94,8 +94,8 @@ bool phy_tx(phy_tx_cfg_t* cfg)
 		WriteSingleReg(PKTLEN, (uint8_t)(remainingBytes & 0x00FF));
 
 		//Initialize fec encoding
-		fec_init();
-		fec_set_length(cfg->length);
+		//fec_init();
+		//fec_set_length(cfg->length);
 	} else {
 #endif
 		//Enable hardware data whitening
