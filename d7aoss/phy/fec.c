@@ -18,7 +18,7 @@
 
 const uint8_t fec_lut[16] = {0, 3, 1, 2, 3, 0, 2, 1 , 3 , 0, 2, 1, 0, 3, 1, 2};
 
-uint8_t* buffer;
+uint8_t* iobuffer;
 
 uint8_t packetlength;
 uint16_t fecpacketlength;
@@ -32,7 +32,7 @@ VITERBISTATE vstate;
 
 void fec_init_encode(uint8_t* input)
 {
-	buffer = input;
+	iobuffer = input;
 
 	packetlength = 255;
 	fecpacketlength = 512;
@@ -46,7 +46,7 @@ void fec_init_encode(uint8_t* input)
 
 void fec_init_decode(uint8_t* output)
 {
-	buffer = output;
+	iobuffer = output;
 
 	packetlength = 255;
 	fecpacketlength = 512;
@@ -79,7 +79,7 @@ void fec_set_length(uint8_t length)
 
 bool fec_encode(uint8_t* output)
 {
-	int8_t i;
+	uint8_t i;
 	uint16_t tmppn9;
 	uint8_t pn9buffer;
 	uint16_t fecbuffer[2];
@@ -92,7 +92,7 @@ bool fec_encode(uint8_t* output)
 		//Get byte from the input buffer if available and apply data whitening, otherwise append trellis terminator
 		if(processedbytes < packetlength) {
 			//Pn9 data whitening
-			pn9buffer = *buffer++ ^ (uint8_t)pn9;
+			pn9buffer = *iobuffer++ ^ (uint8_t)pn9;
 
 			//Rotate pn9 code
 			tmppn9 = ((pn9 << 5) ^ pn9) & 0x01E0;
@@ -110,39 +110,39 @@ bool fec_encode(uint8_t* output)
 
 		fecbuffer[i] = fec_lut[fecstate >> 7] << 14;
 		fecstate = (fecstate << 1) & 0x07FF;
-		fecbuffer[i] = fec_lut[fecstate >> 7] << 12;
+		fecbuffer[i] |= fec_lut[fecstate >> 7] << 12;
 		fecstate = (fecstate << 1) & 0x07FF;
-		fecbuffer[i] = fec_lut[fecstate >> 7] << 10;
+		fecbuffer[i] |= fec_lut[fecstate >> 7] << 10;
 		fecstate = (fecstate << 1) & 0x07FF;
-		fecbuffer[i] = fec_lut[fecstate >> 7] << 8;
+		fecbuffer[i] |= fec_lut[fecstate >> 7] << 8;
 		fecstate = (fecstate << 1) & 0x07FF;
-		fecbuffer[i] = fec_lut[fecstate >> 7] << 6;
+		fecbuffer[i] |= fec_lut[fecstate >> 7] << 6;
 		fecstate = (fecstate << 1) & 0x07FF;
-		fecbuffer[i] = fec_lut[fecstate >> 7] << 4;
+		fecbuffer[i] |= fec_lut[fecstate >> 7] << 4;
 		fecstate = (fecstate << 1) & 0x07FF;
-		fecbuffer[i] = fec_lut[fecstate >> 7] << 2;
+		fecbuffer[i] |= fec_lut[fecstate >> 7] << 2;
 		fecstate = (fecstate << 1) & 0x07FF;
-		fecbuffer[i] = fec_lut[fecstate >> 7];
+		fecbuffer[i] |= fec_lut[fecstate >> 7];
 		fecstate = (fecstate << 1) & 0x07FF;
 	}
 
 	//Interleaving and write to output buffer
-	output[0] = (fecbuffer[0] >> 10) & 0x03;
-	output[0] |= ((fecbuffer[0] >> 2) & 0x03) << 2;
-	output[0] |= ((fecbuffer[1] >> 10) & 0x03) << 4;
-	output[0] |= ((fecbuffer[1] >> 2) & 0x03) << 6;
-	output[1] = ((fecbuffer[0] >> 8) & 0x03);
-	output[1] |= (fecbuffer[0] & 0x03) << 2;
-	output[1] |= ((fecbuffer[1] >> 8) & 0x03) << 4;
-	output[1] |= (fecbuffer[1] & 0x03) << 6;
-	output[2] = (fecbuffer[0] >> 14) & 0x03;
-	output[2] |= ((fecbuffer[0] >> 6) & 0x03) << 2;
-	output[2] |= ((fecbuffer[1] >> 14) & 0x03) << 4;
-	output[2] |= ((fecbuffer[1] >> 6) & 0x03) << 6;
-	output[3] = ((fecbuffer[0] >> 12) & 0x03);
-	output[3] |= ((fecbuffer[0] >> 4) & 0x03) << 2;
-	output[3] |= ((fecbuffer[1] >> 12) & 0x03) << 4;
-	output[3] |= ((fecbuffer[1] >> 4) & 0x03) << 6;
+	output[0] = ((fecbuffer[0] >> 8) & 0x03);
+	output[0] |= (fecbuffer[0] & 0x03) << 2;
+	output[0] |= ((fecbuffer[1] >> 8) & 0x03) << 4;
+	output[0] |= (fecbuffer[1] & 0x03) << 6;
+	output[1] = (fecbuffer[0] >> 10) & 0x03;
+	output[1] |= ((fecbuffer[0] >> 2) & 0x03) << 2;
+	output[1] |= ((fecbuffer[1] >> 10) & 0x03) << 4;
+	output[1] |= ((fecbuffer[1] >> 2) & 0x03) << 6;
+	output[2] = ((fecbuffer[0] >> 12) & 0x03);
+	output[2] |= ((fecbuffer[0] >> 4) & 0x03) << 2;
+	output[2] |= ((fecbuffer[1] >> 12) & 0x03) << 4;
+	output[2] |= ((fecbuffer[1] >> 4) & 0x03) << 6;
+	output[3] = (fecbuffer[0] >> 14) & 0x03;
+	output[3] |= ((fecbuffer[0] >> 6) & 0x03) << 2;
+	output[3] |= ((fecbuffer[1] >> 14) & 0x03) << 4;
+	output[3] |= ((fecbuffer[1] >> 6) & 0x03) << 6;
 
 	fecprocessedbytes += 4;
 
@@ -226,7 +226,7 @@ bool fec_decode(uint8_t* input)
 	        	vstate.new[j].cost -= vstate.new[min_state].cost;
 
 			//Pn9 data dewhitening
-			*buffer++ = (vstate.new[min_state].path >> 24) ^ pn9;
+			*iobuffer++ = (vstate.new[min_state].path >> 24) ^ pn9;
 
 			//Rotate pn9 code
 			tmppn9 = ((pn9 << 5) ^ pn9) & 0x01E0;
@@ -249,7 +249,7 @@ bool fec_decode(uint8_t* input)
 
 			while(processedbytes < packetlength) {
 				//Pn9 data dewhitening
-				*buffer++ = (vstate.new[min_state].path >> ((vstate.path_size - 1) << 3)) ^ pn9;
+				*iobuffer++ = (vstate.new[min_state].path >> ((vstate.path_size - 1) << 3)) ^ pn9;
 
 				//Rotate pn9 code
 				tmppn9 = ((pn9 << 5) ^ pn9) & 0x01E0;
