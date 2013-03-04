@@ -73,6 +73,7 @@ void main(void)
 	system_init();
 
 	test_fec_encoding();
+	test_fec_decoding();
 
 	button_enable_interrupts();
 

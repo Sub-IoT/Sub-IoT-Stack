@@ -9,6 +9,7 @@
 #define PHY_TIMING_TEST_H_
 
 unsigned int test_fec_encoding(void);
+unsigned int test_fec_decoding(void);
 
 
 #endif /* PHY_TIMING_TEST_H_ */

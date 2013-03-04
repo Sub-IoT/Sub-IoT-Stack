@@ -19,7 +19,7 @@ extern "C" {
 
 typedef struct {
 	uint8_t cost;
-	uint32_t path;
+	uint16_t path;
 } VITERBIPATH;
 
 typedef struct {

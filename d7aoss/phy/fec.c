@@ -58,14 +58,14 @@ void fec_init_decode(uint8_t* output)
 
 	vstate.path_size = 0;
 
-	vstate.states1[0].cost = 0;
+	vstate.states1[0].cost = 100;
 	vstate.states1[1].cost = 100;
 	vstate.states1[2].cost = 100;
 	vstate.states1[3].cost = 100;
 	vstate.states1[4].cost = 100;
 	vstate.states1[5].cost = 100;
 	vstate.states1[6].cost = 100;
-	vstate.states1[7].cost = 100;
+	vstate.states1[7].cost = 0;
 
 	vstate.old = vstate.states1;
 	vstate.new = vstate.states2;
@@ -151,40 +151,43 @@ bool fec_encode(uint8_t* output)
 
 bool fec_decode(uint8_t* input)
 {
-	int8_t i, j, k;
+	uint8_t i, j, k;
 	uint8_t min_state;
 	uint8_t symbol, inputbit;
 	uint8_t cost0, cost1;
 	uint8_t state0, state1;
 	uint16_t tmppn9;
 	uint16_t fecbuffer[2];
+	VITERBIPATH* vstate_tmp;
 
 	if(fecprocessedbytes >= fecpacketlength)
 		return false;
 
-	//Deinterleaving
-	fecbuffer[0] = (input[0] >> 2) & 0x03;
-	fecbuffer[0] |= ((input[1] >> 2) & 0x03) << 2;
-	fecbuffer[0] |= ((input[2] >> 2) & 0x03) << 4;
-	fecbuffer[0] |= ((input[3] >> 2) & 0x03) << 6;
-	fecbuffer[0] |= (input[0] & 0x03) << 8;
-	fecbuffer[0] |= (input[1] & 0x03) << 10;
-	fecbuffer[0] |= (input[2] & 0x03) << 12;
-	fecbuffer[0] |= (input[3] & 0x03) << 14;
-	fecbuffer[1] = (input[0] >> 6) & 0x03;
-	fecbuffer[1] |= ((input[1] >> 6) & 0x03) << 2;
-	fecbuffer[1] |= ((input[2] >> 6) & 0x03) << 4;
-	fecbuffer[1] |= ((input[3] >> 6) & 0x03) << 6;
-	fecbuffer[1] |= ((input[0] >> 4) & 0x03) << 8;
-	fecbuffer[1] |= ((input[1] >> 4) & 0x03) << 10;
-	fecbuffer[1] |= ((input[2] >> 4) & 0x03) << 12;
-	fecbuffer[1] |= ((input[3] >> 4) & 0x03) << 14;
+	//Deinterleaving (symbols are stored in reverse as this is easier for Viterbi decoding)
+	fecbuffer[0]  = ((input[0] >> 2) & 0x03) << 14;
+	fecbuffer[0] |= ((input[1] >> 2) & 0x03) << 12;
+	fecbuffer[0] |= ((input[2] >> 2) & 0x03) << 10;
+	fecbuffer[0] |= ((input[3] >> 2) & 0x03) << 8;
+	fecbuffer[0] |= (input[0] & 0x03) << 6;
+	fecbuffer[0] |= (input[1] & 0x03) << 4;
+	fecbuffer[0] |= (input[2] & 0x03) << 2;
+	fecbuffer[0] |= (input[3] & 0x03);
+	fecbuffer[1]  = ((input[0] >> 6) & 0x03) << 14;
+	fecbuffer[1] |= ((input[1] >> 6) & 0x03) << 12;
+	fecbuffer[1] |= ((input[2] >> 6) & 0x03) << 10;
+	fecbuffer[1] |= ((input[3] >> 6) & 0x03) << 8;
+	fecbuffer[1] |= ((input[0] >> 4) & 0x03) << 6;
+	fecbuffer[1] |= ((input[1] >> 4) & 0x03) << 4;
+	fecbuffer[1] |= ((input[2] >> 4) & 0x03) << 2;
+	fecbuffer[1] |= (input[3] >> 4) & 0x03;
+
+	fecprocessedbytes +=4;
 
 	for (i = 0; i < 2; i++) {
-
 		//Viterbi decoding
-		for (j = 14; j >= 0; j-=2) {
-			symbol = (fecbuffer[i] >> j) & 0x03;
+		for (j = 8; j != 0; j--) {
+			symbol = fecbuffer[i] & 0x03;
+			fecbuffer[i] >>= 2;
 
 			for(k = 0; k < 8; k++) {
 				inputbit = k & 0x01;
@@ -207,26 +210,30 @@ bool fec_decode(uint8_t* input)
 					vstate.new[k].path |= inputbit;
 				}
 			}
+
+			//Swap Viterbi paths
+			vstate_tmp = vstate.new;
+			vstate.new = vstate.old;
+			vstate.old = vstate_tmp;
 		}
 
 		vstate.path_size++;
-		fecprocessedbytes +=2;
 
 		//Flush out byte if path is full
-		if (vstate.path_size == 4) {
+		if ((vstate.path_size == 2) && (processedbytes < packetlength)) {
 			//Calculate path with lowest cost
 			min_state = 0;
-			for (j = 1; j < 8; j++) {
-				if(vstate.new[j].cost < vstate.new[min_state].cost)
+			for (j = 7; j != 0; j--) {
+				if(vstate.old[j].cost < vstate.old[min_state].cost)
 					min_state = j;
 			}
 
 	        //Normalize costs
 	        for (j = 0; j < 8; j++)
-	        	vstate.new[j].cost -= vstate.new[min_state].cost;
+	        	vstate.old[j].cost -= vstate.old[min_state].cost;
 
 			//Pn9 data dewhitening
-			*iobuffer++ = (vstate.new[min_state].path >> 24) ^ pn9;
+			*iobuffer++ = (vstate.old[min_state].path >> 8) ^ pn9;
 
 			//Rotate pn9 code
 			tmppn9 = ((pn9 << 5) ^ pn9) & 0x01E0;
@@ -236,30 +243,6 @@ bool fec_decode(uint8_t* input)
 
 			vstate.path_size--;
 			processedbytes++;
-		}
-
-		//Flush out remaining bytes if all input bytes have been processed
-		if (fecprocessedbytes >= fecpacketlength) {
-			//Calculate path with lowest cost
-			min_state = 0;
-			for (j = 1; j < 8; j++) {
-				if(vstate.new[j].cost < vstate.new[min_state].cost)
-					min_state = j;
-			}
-
-			while(processedbytes < packetlength) {
-				//Pn9 data dewhitening
-				*iobuffer++ = (vstate.new[min_state].path >> ((vstate.path_size - 1) << 3)) ^ pn9;
-
-				//Rotate pn9 code
-				tmppn9 = ((pn9 << 5) ^ pn9) & 0x01E0;
-				pn9 = tmppn9 | (pn9 >> 4);
-				tmppn9 = ((pn9 << 5) ^ pn9) & 0x01E0;
-				pn9 = tmppn9 | (pn9 >> 4);
-
-				vstate.path_size--;
-				processedbytes++;
-			}
 		}
 	}
 
