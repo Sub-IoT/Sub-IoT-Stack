@@ -16,7 +16,9 @@
 
 #ifdef D7_PHY_USE_FEC
 
-const uint8_t fec_lut[16] = {0, 3, 1, 2, 3, 0, 2, 1 , 3 , 0, 2, 1, 0, 3, 1, 2};
+const uint8_t fec_lut[16] = {0, 3, 1, 2, 3, 0, 2, 1, 3, 0, 2, 1, 0, 3, 1, 2};
+const uint8_t trellis0_lut[8] = {0, 1, 3, 2, 3, 2, 0, 1};
+const uint8_t trellis1_lut[8] = {3, 2, 0, 1, 0, 1, 3, 2};
 
 uint8_t* iobuffer;
 
@@ -154,8 +156,6 @@ bool fec_decode(uint8_t* input)
 	uint8_t i, j, k;
 	uint8_t min_state;
 	uint8_t symbol, inputbit;
-	uint8_t cost0, cost1;
-	uint8_t state0, state1;
 	uint16_t tmppn9;
 	uint16_t fecbuffer[2];
 	VITERBIPATH* vstate_tmp;
@@ -190,24 +190,38 @@ bool fec_decode(uint8_t* input)
 			fecbuffer[i] >>= 2;
 
 			for(k = 0; k < 8; k++) {
-				inputbit = k & 0x01;
+				uint8_t cost0, cost1;
+				uint8_t state0, state1;
+				uint8_t hamming0, hamming1;
 
-				state0 = (k & 0x06) >> 1;
-				cost0 = vstate.old[state0].cost;
-				cost0 += ((fec_lut[(state0 << 1) | inputbit] ^ symbol) + 1) >> 1;
-
+				state0 = k >> 1;
 				state1 = state0 + 4;
-				cost1 = vstate.old[state1].cost;
-				cost1 += ((fec_lut[(state1 << 1) | inputbit] ^ symbol) + 1) >> 1;
 
-				if(cost0 <= cost1) {
-					vstate.new[k].cost = cost0;
+				cost0  = vstate.old[state0].cost;
+				cost1  = vstate.old[state1].cost;
+
+				hamming0 = cost0 + ((trellis0_lut[state0] ^ symbol) + 1) >> 1;
+				hamming1 = cost1 + ((trellis0_lut[state1] ^ symbol) + 1) >> 1;
+
+				if(hamming0 <= hamming1) {
+					vstate.new[k].cost = hamming0;
 					vstate.new[k].path = vstate.old[state0].path << 1;
-					vstate.new[k].path |= inputbit;
 				} else {
-					vstate.new[k].cost = cost1;
+					vstate.new[k].cost = hamming1;
 					vstate.new[k].path = vstate.old[state1].path << 1;
-					vstate.new[k].path |= inputbit;
+				}
+
+				k++;
+
+				hamming0 = cost0 + ((trellis1_lut[state0] ^ symbol) + 1) >> 1;
+				hamming1 = cost1 + ((trellis1_lut[state1] ^ symbol) + 1) >> 1;
+
+				if(hamming0 <= hamming1) {
+					vstate.new[k].cost = hamming0;
+					vstate.new[k].path = vstate.old[state0].path << 1 | 0x01;
+				} else {
+					vstate.new[k].cost = hamming1;
+					vstate.new[k].path = vstate.old[state1].path << 1 | 0x01;
 				}
 			}
 
