@@ -101,7 +101,7 @@ void system_init()
 
     PMM_SetStdSVSM(0x8088, 2, 4);
 
-    //clock_init(); // TODO seems to break UART
+    clock_init();
 
     led_init();
     button_init();
@@ -113,7 +113,7 @@ void system_init()
 void clock_init(void)
 {
 	UCSCTL1 = 0x0050;
-	UCSCTL2 = 0x01E8;
+	UCSCTL2 = 0x01F9;
 	UCSCTL3 = 0x0020;
 	UCSCTL4 = 0x0233;
 	UCSCTL5 = 0x0040;
