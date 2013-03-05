@@ -387,10 +387,10 @@ void rx_data_isr()
     //When all data has been received read rssi and lqi value and set packetreceived flag
     if(remainingBytes == 0)
     {
+    	rx_data.rssi = calculate_rssi(ReadSingleReg(RXFIFO));
     	rx_data.lqi = ReadSingleReg(RXFIFO) & 0x7F;
 		rx_data.length = *buffer;
 		rx_data.data = buffer;
-		rx_data.rssi = calculate_rssi(ReadSingleReg(RXFIFO));
     }
 }
 
