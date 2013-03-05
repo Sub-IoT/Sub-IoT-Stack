@@ -16,6 +16,7 @@ TEST_MESSAGE_COUNT = 10
 RESULTS_DIR = "testresults"
 FILE_EXTENSION = ".csv"
 PDR_RESULT_FILENAME = "pdr"
+RUNNING_TEST_FILENAME = "_in_progress"
 SYNC_WORD = 'CE'
 
 serial_port = None
@@ -82,6 +83,8 @@ def main():
 		error_count = 0
 		total_msgs_count = 0
 		rssi_values = []
+		current_test_file = open(get_result_dir() + RUNNING_TEST_FILENAME, 'w')
+		current_test_file.write("timestamp, counter, RSSI, error_pct\n")
 		while(total_msgs_count < TEST_MESSAGE_COUNT):
 			serialData = read_value_from_serial()
 			if(serialData.mac == slave_mac):
@@ -101,10 +104,19 @@ def main():
 						'counter': counter,
 						'rssi': serialData.rssi
 					})
+				current_test_file.write("%(timestamp)s, %(counter)i, %(rssi)s, %(pct)0.2f\n" % \
+					{
+						'pct': (error_count*100)/total_msgs_count, 
+						'timestamp': str(datetime.datetime.now()),
+						'counter': counter,
+						'rssi': serialData.rssi
+					})
+				current_test_file.flush()
 			else:
 				print("Received data from another mac: %s" % serialData.mac)
 
 		dist = float(get_input("Distance between sender and receiver (in m): "))
+		os.rename(get_result_dir() + RUNNING_TEST_FILENAME, get_result_dir() + str(datetime.datetime.now()) + "_" + str(dist) + "m")
 		pdr = (succes_msgs_count*100)/total_msgs_count
 		rssi_avg = np.average(rssi_values)
 		rssi_std = np.std(rssi_values)
