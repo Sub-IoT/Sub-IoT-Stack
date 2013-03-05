@@ -155,7 +155,7 @@ bool fec_decode(uint8_t* input)
 {
 	uint8_t i, j, k;
 	uint8_t min_state;
-	uint8_t symbol, inputbit;
+	uint8_t symbol;
 	uint16_t tmppn9;
 	uint16_t fecbuffer[2];
 	VITERBIPATH* vstate_tmp;
