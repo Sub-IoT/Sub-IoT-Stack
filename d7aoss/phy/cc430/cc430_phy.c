@@ -182,19 +182,15 @@ extern int16_t phy_get_rssi(phy_rx_cfg_t* cfg)
 
 	set_channel(channel_center_freq_index, channel_bandwidth_index);
 
-	//Enable interrupts
-    RF1AIE  = RFIFG_FLAG_IOCFG1;
-    RF1AIFG = 0;
-    RF1AIES = RFIFG_FLANK_IOCFG1;
-
     //Start receiving
     Strobe(RF_SRX);
 
-    system_lowpower_mode(0, 1); //Todo should system call be made here?
-
-    rxtx_finish_isr();
+    //Wait until RSSI valid
+    while((RF1AIN & RFIFG_FLAG_IOCFG1) == 0);
 
     rssi_raw = ReadSingleReg(RSSI);
+    rxtx_finish_isr();
+
     return calculate_rssi(rssi_raw);
 }
 
