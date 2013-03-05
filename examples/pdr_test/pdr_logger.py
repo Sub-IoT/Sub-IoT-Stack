@@ -12,13 +12,15 @@ import datetime
 import numpy as np
 from collections import namedtuple
 
-TEST_MESSAGE_COUNT = 50
-FILE_NAME_PREFIX = "pdr_test_"
+TEST_MESSAGE_COUNT = 10
+RESULTS_DIR = "testresults"
 FILE_EXTENSION = ".csv"
+PDR_RESULT_FILENAME = "pdr"
 SYNC_WORD = 'CE'
 
 serial_port = None
 SerialData = namedtuple('SerialData', 'mac counter rssi')
+test_name = ""
 
 get_input = input if system.version_info[0] >= 3 else raw_input # TODO compatibility beween python 2 and 3, can be removed if we switch to python 3 (waiting on matplotlib)
 
@@ -42,6 +44,7 @@ def empty_serial_buffer():
 		serial_port.read(1)
 
 def wait_for_slave_tag():
+	print("Waiting for slave tag ...")
 	key = ''
 	while key != "y":
 		empty_serial_buffer()
@@ -51,6 +54,9 @@ def wait_for_slave_tag():
 
 	return data.mac
 
+def	get_result_dir():
+	return RESULTS_DIR + "/" + test_name + "/"
+
 def main():
 	if (len(system.argv) != 3):
 		print("Usage: <serialport (eg COM7)> <baudrate (eg 9600)>")
@@ -58,12 +64,14 @@ def main():
 
 	global serial_port 
 	serial_port = serial.Serial(system.argv[1], system.argv[2])
+	global test_name
 	test_name = get_input("Enter test name: ")
-	print("Waiting for slave tag ...")
+	os.mkdir(get_result_dir())
+	
 	slave_mac = wait_for_slave_tag()
-	f = open(FILE_NAME_PREFIX + test_name + "_" + slave_mac + FILE_EXTENSION, 'w')
-	f.write("# distance (m), PDR (%), # packets, timestamp started, avg RSSI value, std dev RSSI" + "\n")
-	f.write("distance, PDR, packet_count, started_timestamp, rssi_avg, rssi_std\n")
+	pdr_csv_file = open(get_result_dir() + PDR_RESULT_FILENAME + "_" + slave_mac + FILE_EXTENSION, 'w')
+	pdr_csv_file.write("# distance (m), PDR (%), # packets, timestamp started, avg RSSI value, std dev RSSI" + "\n")
+	pdr_csv_file.write("distance, PDR, packet_count, started_timestamp, rssi_avg, rssi_std\n")
 	get_input("Press any key to start testing...")
 	stop_testing = False
 	while not stop_testing:
@@ -109,7 +117,7 @@ def main():
 				'rssi_std': rssi_std,
 			})
 
-		f.write("%(dist)0.2f, %(pdr)0.2f, %(total)i, %(timestamp)s, %(rssi_avg)0.2f, %(rssi_std)0.2f\n" %
+		pdr_csv_file.write("%(dist)0.2f, %(pdr)0.2f, %(total)i, %(timestamp)s, %(rssi_avg)0.2f, %(rssi_std)0.2f\n" %
 			{
 				'dist': dist,
 				'pdr': pdr,
@@ -119,7 +127,7 @@ def main():
 				'rssi_std': rssi_std,
 			})
 		
-		f.flush()
+		pdr_csv_file.flush()
 
 		keypressed = get_input("Press any key to start next test, 'q' to stop testing ... ")
 		if keypressed == "q":
