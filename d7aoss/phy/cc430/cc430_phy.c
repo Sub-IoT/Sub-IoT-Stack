@@ -161,8 +161,7 @@ bool phy_rx(phy_rx_cfg_t* cfg)
 		//Configure length settings
 		set_length_infinite(true);
 
-
-		if(packetLength == 0)
+		if(cfg->length == 0)
 		{
 			packetLength = 0;
 			remainingBytes = 0;
@@ -347,14 +346,15 @@ void rx_data_isr()
 		if(remainingBytes < 192)
 			set_length_infinite(false);
 
-		//Never read the entire buffer as long as more data is going to be received
-		while (rxBytes > 4) {
+		//Read data from buffer and decode
+		while (rxBytes >= 4) {
 			ReadBurstReg(RXFIFO, fecbuffer, 4);
 
 			if(fec_decode(fecbuffer) == false)
 				break;
 
 			remainingBytes -= 4;
+			rxBytes -= 4;
 		}
 	} else {
 #endif
