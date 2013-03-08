@@ -12,7 +12,7 @@ import datetime
 import numpy as np
 from collections import namedtuple
 
-TEST_MESSAGE_COUNT = 10
+TEST_MESSAGE_COUNT = 100
 RESULTS_DIR = "testresults"
 FILE_EXTENSION = ".csv"
 PDR_RESULT_FILENAME = "pdr"
@@ -116,7 +116,8 @@ def main():
 				print("Received data from another mac: %s" % serialData.mac)
 
 		dist = float(get_input("Distance between sender and receiver (in m): "))
-		os.rename(get_result_dir() + RUNNING_TEST_FILENAME, get_result_dir() + str(datetime.datetime.now()) + "_" + str(dist) + "m")
+		current_test_file.close()
+		os.rename(get_result_dir() + RUNNING_TEST_FILENAME, get_result_dir() + time.strftime("%Y%m%d%H%M%S") + "-" + str(dist) + "m")
 		pdr = (succes_msgs_count*100)/total_msgs_count
 		rssi_avg = np.average(rssi_values)
 		rssi_std = np.std(rssi_values)
