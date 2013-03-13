@@ -69,6 +69,7 @@ void start_tx()
 	stop_rx();
 	led_on(3);
 	dll_tx_foreground_frame((u8*)&counter, sizeof(counter), 0x10, 0);
+	dll_csma();
 
 }
 
