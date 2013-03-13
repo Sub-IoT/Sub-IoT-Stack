@@ -16,13 +16,4 @@
 #define s16 signed short
 #define s32 signed long
 
-#if !defined(__cplusplus)
-    typedef u8 bool;
-#endif
-
-#define true 1
-#define false 0
-
-#define NULL 0
-
 #endif // __TYPES_H__

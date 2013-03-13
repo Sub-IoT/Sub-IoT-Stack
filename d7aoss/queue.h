@@ -8,6 +8,8 @@
 #ifndef QUEUE_H_
 #define QUEUE_H_
 
+#include <stdbool.h>
+
 #include "types.h"
 
 typedef struct
@@ -34,7 +36,5 @@ void queue_set_u16(queue* q, u16 data, u8 position);
 void queue_insert_u8(queue* q, u8 data, u8 position);
 void queue_insert_u16(queue* q, u16 data, u8 position);
 bool queue_is_empty(queue* q);
-
-
 
 #endif /* QUEUE_H_ */

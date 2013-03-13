@@ -45,7 +45,7 @@ void LogParser::parseReceivedData()
     unsigned char start = _receivedDataQueue->dequeue();
     while(start != 0xDD && !_receivedDataQueue->isEmpty())
     {
-        if(start != 0xFF) // skip bytes received when cable disconnected
+        if(start != 0xFF && start != 0x00) // skip bytes received when cable disconnected
             qDebug() << "skipping unexpected data" << QString().sprintf("0x%02x", start);
 
         start = _receivedDataQueue->dequeue();

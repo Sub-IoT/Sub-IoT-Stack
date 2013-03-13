@@ -5,77 +5,81 @@
  *  	glenn.ergeerts@artesis.be
  */
 
-#ifndef __CC430_REGISTERS_H_
-#define __CC430_REGISTERS_H_
+#ifndef CC430_REGISTERS_H
+#define CC430_REGISTERS_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+#include "stdint.h"
 
 // Radio Core Interrupt Flags
-
-#define RFIFG_FLAG_IOCFG0        	(u16)0x0001  // RFIFG0
-#define RFIFG_FLANK_IOCFG0       	(u16)0x0000
-#define RFIFG_FLAG_IOCFG1        	(u16)0x0002  // RFIFG1
-#define RFIFG_FLANK_IOCFG1       	(u16)0x0000
-#define RFIFG_FLAG_IOCFG2        	(u16)0x0004  // RFIFG2
-#define RFIFG_FLANK_IOCFG2       	(u16)0x0000
-#define RFIFG_FLAG_RXFilled      	(u16)0x0008  // RFIFG3 Positive Edge
-#define RFIFG_FLANK_RXFilled      	(u16)0x0000
-#define RFIFG_FLAG_RXDrained  		(u16)0x0008  // RFIFG3 Negative Edge
-#define RFIFG_FLANK_RXDrained  		(u16)0x0008
-#define RFIFG_FLAG_RXFilledOrEOP 	(u16)0x0010  // RFIFG4 Positive Edge
-#define RFIFG_FLANK_RXFilledOrEOP   (u16)0x0000
-#define RFIFG_FLAG_RXEmpty          (u16)0x0010  // RFIFG4 Negative Edge
-#define RFIFG_FLANK_RXEmpty    		(u16)0x0010
-#define RFIFG_FLAG_TXFilled      	(u16)0x0020  // RFIFG5 Positive Edge
-#define RFIFG_FLANK_TXFilled      	(u16)0x0000
-#define RFIFG_FLAG_TXBelowThresh    (u16)0x0020  // RFIFG5 Negative Edge
-#define RFIFG_FLANK_TXBelowThresh   (u16)0x0020
-#define RFIFG_FLAG_TXFull           (u16)0x0040  // RFIFG6 Positive Edge
-#define RFIFG_FLANK_TXFull          (u16)0x0000
-#define RFIFG_FLAG_TXDrained     	(u16)0x0040  // RFIFG6 Negative Edge
-#define RFIFG_FLANK_TXDrained     	(u16)0x0040
-#define RFIFG_FLAG_RXOverflow       (u16)0x0080  // RFIFG7 Positive Edge
-#define RFIFG_FLANK_RXOverflow      (u16)0x0000
-#define RFIFG_FLAG_RXFlushed        (u16)0x0080  // RFIFG7 Negative Edge
-#define RFIFG_FLANK_RXFlushed       (u16)0x0080
-#define RFIFG_FLAG_TXUndererflow    (u16)0x0100  // RFIFG8 Positive Edge
-#define RFIFG_FLANK_TXUndererflow   (u16)0x0000
-#define RFIFG_FLAG_TXFlushed        (u16)0x0100  // RFIFG8 Negative Edge
-#define RFIFG_FLANK_TXFlushed       (u16)0x0100
-#define RFIFG_FLAG_SyncWord         (u16)0x0200  // RFIFG9 Positive Edge
-#define RFIFG_FLANK_SyncWord        (u16)0x0000
-#define RFIFG_FLAG_EndOfPacket      (u16)0x0200  // RFIFG9 Negative Edge
-#define RFIFG_FLANK_EndOfPacket     (u16)0x0200
-#define RFIFG_FLAG_CRCOK         	(u16)0x0400  // RFIFG10 Positive Edge
-#define RFIFG_FLANK_CRCOK         	(u16)0x0000
-#define RFIFG_FLAG_RXFirstByte      (u16)0x0400  // RFIFG10 Negative Edge
-#define RFIFG_FLANK_RXFirstByte     (u16)0x0400
-#define RFIFG_FLAG_PQTReached       (u16)0x0800  // RFIFG11 Positive Edge
-#define RFIFG_FLANK_PQTReached      (u16)0x0000
-#define RFIFG_FLAG_LPW              (u16)0x0800  // RFIFG11 Negative Edge
-#define RFIFG_FLANK_LPW             (u16)0x0800
-#define RFIFG_FLAG_ClearChannel     (u16)0x1000  // RFIFG12 Positive Edge
-#define RFIFG_FLANK_ClearChannel    (u16)0x0000
-#define RFIFG_FLAG_RSSIAboveThr     (u16)0x1000  // RFIFG12 Negative Edge
-#define RFIFG_FLANK_RSSIAboveThr    (u16)0x1000
-#define RFIFG_FLAG_CarrierSense     (u16)0x2000  // RFIFG13 Positive Edge
-#define RFIFG_FLANK_CarrierSense    (u16)0x0000
-#define RFIFG_FLAG_CSRSSIAboveThr   (u16)0x2000  // RFIFG13 Negative Edge
-#define RFIFG_FLANK_CSRSSIAboveThr  (u16)0x2000
-#define RFIFG_FLAG_WOREvent0        (u16)0x4000  // RFIFG14 Positive Edge
-#define RFIFG_FLANK_WOREvent0       (u16)0x0000
-#define RFIFG_FLAG_WOREvent0ACLK    (u16)0x4000  // RFIFG14 Negative Edge
-#define RFIFG_FLANK_WOREvent0ACLK   (u16)0x4000
-#define RFIFG_FLAG_WORevent1        (u16)0x8000  // RFIFG15 Positive Edge
-#define RFIFG_FLANK_WORevent1       (u16)0x0000
-#define RFIFG_FLAG_OscStable        (u16)0x8000  // RFIFG15 Negative Edge
-#define RFIFG_FLANK_OscStable       (u16)0x8000
-#define RFIFG_FLAG_AllPositiveEdge  (u16)0xFFFF
-#define RFIFG_FLANK_AllPositiveEdge (u16)0x0000
-#define RFIFG_FLAG_AllNegativeEdge  (u16)0xFFFF
-#define RFIFG_FLANK_AllNegativeEdge (u16)0xFFFF
+#define RFIFG_FLAG_IOCFG0        	0x0001  // RFIFG0
+#define RFIFG_FLANK_IOCFG0       	0x0000
+#define RFIFG_FLAG_IOCFG1        	0x0002  // RFIFG1
+#define RFIFG_FLANK_IOCFG1       	0x0000
+#define RFIFG_FLAG_IOCFG2        	0x0004  // RFIFG2
+#define RFIFG_FLANK_IOCFG2       	0x0000
+#define RFIFG_FLAG_RXFilled      	0x0008  // RFIFG3 Positive Edge
+#define RFIFG_FLANK_RXFilled      	0x0000
+#define RFIFG_FLAG_RXDrained  		0x0008  // RFIFG3 Negative Edge
+#define RFIFG_FLANK_RXDrained  		0x0008
+#define RFIFG_FLAG_RXFilledOrEOP 	0x0010  // RFIFG4 Positive Edge
+#define RFIFG_FLANK_RXFilledOrEOP   0x0000
+#define RFIFG_FLAG_RXEmpty          0x0010  // RFIFG4 Negative Edge
+#define RFIFG_FLANK_RXEmpty    		0x0010
+#define RFIFG_FLAG_TXFilled      	0x0020  // RFIFG5 Positive Edge
+#define RFIFG_FLANK_TXFilled      	0x0000
+#define RFIFG_FLAG_TXBelowThresh    0x0020  // RFIFG5 Negative Edge
+#define RFIFG_FLANK_TXBelowThresh   0x0020
+#define RFIFG_FLAG_TXFull           0x0040  // RFIFG6 Positive Edge
+#define RFIFG_FLANK_TXFull          0x0000
+#define RFIFG_FLAG_TXDrained     	0x0040  // RFIFG6 Negative Edge
+#define RFIFG_FLANK_TXDrained     	0x0040
+#define RFIFG_FLAG_RXOverflow       0x0080  // RFIFG7 Positive Edge
+#define RFIFG_FLANK_RXOverflow      0x0000
+#define RFIFG_FLAG_RXFlushed        0x0080  // RFIFG7 Negative Edge
+#define RFIFG_FLANK_RXFlushed       0x0080
+#define RFIFG_FLAG_TXUnderflow    	0x0100  // RFIFG8 Positive Edge
+#define RFIFG_FLANK_TXUnderflow   	0x0000
+#define RFIFG_FLAG_TXFlushed        0x0100  // RFIFG8 Negative Edge
+#define RFIFG_FLANK_TXFlushed       0x0100
+#define RFIFG_FLAG_SyncWord         0x0200  // RFIFG9 Positive Edge
+#define RFIFG_FLANK_SyncWord        0x0000
+#define RFIFG_FLAG_EndOfPacket      0x0200  // RFIFG9 Negative Edge
+#define RFIFG_FLANK_EndOfPacket     0x0200
+#define RFIFG_FLAG_CRCOK         	0x0400  // RFIFG10 Positive Edge
+#define RFIFG_FLANK_CRCOK         	0x0000
+#define RFIFG_FLAG_RXFirstByte      0x0400  // RFIFG10 Negative Edge
+#define RFIFG_FLANK_RXFirstByte     0x0400
+#define RFIFG_FLAG_PQTReached       0x0800  // RFIFG11 Positive Edge
+#define RFIFG_FLANK_PQTReached      0x0000
+#define RFIFG_FLAG_LPW              0x0800  // RFIFG11 Negative Edge
+#define RFIFG_FLANK_LPW             0x0800
+#define RFIFG_FLAG_ClearChannel     0x1000  // RFIFG12 Positive Edge
+#define RFIFG_FLANK_ClearChannel    0x0000
+#define RFIFG_FLAG_RSSIAboveThr     0x1000  // RFIFG12 Negative Edge
+#define RFIFG_FLANK_RSSIAboveThr    0x1000
+#define RFIFG_FLAG_CarrierSense     0x2000  // RFIFG13 Positive Edge
+#define RFIFG_FLANK_CarrierSense    0x0000
+#define RFIFG_FLAG_CSRSSIAboveThr   0x2000  // RFIFG13 Negative Edge
+#define RFIFG_FLANK_CSRSSIAboveThr  0x2000
+#define RFIFG_FLAG_WOREvent0        0x4000  // RFIFG14 Positive Edge
+#define RFIFG_FLANK_WOREvent0       0x0000
+#define RFIFG_FLAG_WOREvent0ACLK    0x4000  // RFIFG14 Negative Edge
+#define RFIFG_FLANK_WOREvent0ACLK   0x4000
+#define RFIFG_FLAG_WORevent1        0x8000  // RFIFG15 Positive Edge
+#define RFIFG_FLANK_WORevent1       0x0000
+#define RFIFG_FLAG_OscStable        0x8000  // RFIFG15 Negative Edge
+#define RFIFG_FLANK_OscStable       0x8000
+#define RFIFG_FLAG_AllPositiveEdge  0xFFFF
+#define RFIFG_FLANK_AllPositiveEdge 0x0000
+#define RFIFG_FLAG_AllNegativeEdge  0xFFFF
+#define RFIFG_FLANK_AllNegativeEdge 0xFFFF
 
 // IOCFGx.GDOx_CFG
-#define RADIO_GDO2_VALUE                0x29            // IOCFG2.GDO2_CFG - CHIP_RDYn - See  Design Note DN503
+#define RADIO_GDO2_VALUE                0x29            // IOCFG2.GDO2_CFG - RF_RDYn Do not change! Is used in the strobe command.
 #define RADIO_GDO1_VALUE                0x1E            // IOCFG1.GDO1_CFG - RSSI Valid (only on CC430)
 #define RADIO_GDO0_VALUE                0x1F            // IOCFG0.GDO0_CFG - RX Timout (only on CC430)
 
@@ -89,17 +93,8 @@
 #define RADIO_FIFOTHR_FIFO_THR_17_48    (11)             // FIFOTHR.FIFO_THR 17B TX / 48B RX
 #define RADIO_FIFOTHR_FIFO_THR_1_64     (15)            // FIFOTHR.FIFO_THR  1B TX / 64B RX
 
-
-#define RADIO_SYNC1_CLASS0_NON_FEC      0xE6            // SYNC1
-#define RADIO_SYNC0_CLASS0_NON_FEC      0xD0            // SYNC0
-#define RADIO_SYNC1_CLASS0_FEC          0xF4            // SYNC1
-#define RADIO_SYNC0_CLASS0_FEC          0x98            // SYNC0
-//#define RADIO_SYNC1_CLASS1_NON_FEC      0x0B            // SYNC1
-//#define RADIO_SYNC0_CLASS1_NON_FEC      0x67            // SYNC0
-#define RADIO_SYNC1_CLASS1_NON_FEC      0x67            // SYNC1
-#define RADIO_SYNC0_CLASS1_NON_FEC      0x0B            // SYNC0
-#define RADIO_SYNC1_CLASS1_FEC          0x19            // SYNC1
-#define RADIO_SYNC0_CLASS1_FEC          0x2F            // SYNC0
+#define RADIO_SYNC1      				0xE6            // SYNC1
+#define RADIO_SYNC0      				0xD0            // SYNC0
 
 #define RADIO_PKTLEN                    0xFF            // PKTLEN (default)
 
@@ -129,10 +124,10 @@
 #define RADIO_FREQ_IF                   0x06            // FSCTRL1.FREQ_IF - (152.34375kHz) fIF = (fRFXT2/210) × FREQ_IF
 #define RADIO_FREQOFF                   0               // FSCTRL0 Frequency offset
 
-#define RADIO_FREQ_433                  ((u32)0x0010A900)   // pchan 1 fc = 433.164062 MHz
-#define RADIO_FREQ2                     (u8)(RADIO_FREQ_433>>16 & 0xFF)
-#define RADIO_FREQ1                     (u8)(RADIO_FREQ_433>>8 & 0xFF)
-#define RADIO_FREQ0                     (u8)(RADIO_FREQ_433 & 0xFF)
+#define RADIO_FREQ_433                  ((uint32_t)0x0010A900)   // pchan 1 fc = 433.164062 MHz
+#define RADIO_FREQ2                     (uint8_t)(RADIO_FREQ_433>>16 & 0xFF)
+#define RADIO_FREQ1                     (uint8_t)(RADIO_FREQ_433>>8 & 0xFF)
+#define RADIO_FREQ0                     (uint8_t)(RADIO_FREQ_433 & 0xFF)
 
 #define RADIO_MDMCFG4_CHANBW_E(VAL)     ((VAL&3)<<6)    // 2 - 162.5 Khz - MDMCFG4 Channel Bandwith Exponent BDW = fxosc / (8 x (4 + chbw_M) x 2^chbw_E)
 #define RADIO_MDMCFG4_CHANBW_M(VAL)     ((VAL&3)<<4)    // 1 - 162.5 Khz - MDMCFG4 Channel Bandwith Mantise
@@ -299,7 +294,7 @@
 #define RADIO_WORCTRL_EVENT1_TIMEOUT48     (7<<4)
 #define RADIO_WORCTRL_WOR_RES_29us         (0)
 #define RADIO_WORCTRL_WOR_RES_920us        (1)
-#define RADIO_WORCTRL_WOR_RES_30ms         (2)
+#define RADIO_WORCTRL_WOR_RES_32ms         (2)
 #define RADIO_WORCTRL_WOR_RES_940ms        (3)
 
 #define RADIO_FREND1_LNA_CURRENT(VAL)            ((VAL&3)<<6)   // Front End RX Configuration
@@ -315,18 +310,19 @@
 #define RADIO_FSCAL3_LO(VAL)                    (VAL&15)
 
 #define RADIO_FSCAL2_VCO_CORE_H_EN       (1<<5)
-#define RADIO_FSCAL2_FSCAL2(VAL)         (VAL&31)
+#define RADIO_FSCAL2_FSCAL2(VAL)         (VAL&15)
 
 #define RADIO_FSCAL1(VAL)         (VAL&31)
 
 #define RADIO_FSCAL0(VAL)         (VAL&127)
-
-
 
 #define RADIO_TEST0_HI(VAL)             ((VAL&63)<<2)
 #define RADIO_TEST0_VCO_SEL_CAL_EN      (1 << 1)
 #define RADIO_TEST0_VCO_SEL_CAL_DIS     (0 << 1)
 #define RADIO_TEST0_LO_EN               (1)
 
+#ifdef __cplusplus
+}
+#endif
 
-#endif // __CC430_REGISTERS_H_
+#endif /* CC430_REGISTERS_H */

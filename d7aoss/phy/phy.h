@@ -4,100 +4,79 @@
  *  Authors:
  * 		maarten.weyn@artesis.be
  *  	glenn.ergeerts@artesis.be
+ *  	alexanderhoet@gmail.com
  */
 
-#ifndef PHY_H_
-#define PHY_H_
+#ifndef PHY_H
+#define PHY_H
 
-#include "../types.h"
+#ifdef __cplusplus
+extern "C" {
+#endif
 
-// TODO implement FEC
+#include <stdbool.h>
+#include <stdint.h>
 
-// =======================================================================
-// phy_rx_cfg_t
-// -----------------------------------------------------------------------
-/// Configuration structure for packet reception
-// =======================================================================
+#define SYNC_CLASS0_NON_FEC      0xE6D0
+#define SYNC_CLASS0_FEC          0xF498
+#define SYNC_CLASS1_NON_FEC      0x0B67
+#define SYNC_CLASS1_FEC          0x192F
+#define CCA_RSSI_THRESHOLD -86 // TODO configurable
+
+//Configuration structure for packet reception
 typedef struct
 {
-    /// Timeout value (0 : continuous) in ticks
-    u16 timeout;
-    /// Multiple or single reception flag
-    u8  multiple;
-    /// Spectrum ID
-    u8  spectrum_id;
-    /// Coding scheme (0 : PN9 coding, 1 : PN9 + D7 FEC)
-    u8  coding_scheme;
-    /// RSSI min filter
-    u8  rssi_min;
-    /// sync word class (0 or 1)
-    u8 sync_word_class;
-    /// TODO CCA
+	uint8_t spectrum_id;		//Spectrum ID
+	uint8_t sync_word_class;	//Sync word class
+	uint8_t length;				//Packet length (0 : variable)
+	uint16_t timeout;			//Timeout value (0 : continuous) in milliseconds
 } phy_rx_cfg_t;
 
-// =======================================================================
-// phy_tx_cfg_t
-// -----------------------------------------------------------------------
-/// Configuration structure for packet transmission
-// =======================================================================
+//Packet reception result structure
 typedef struct
 {
-    /// Timeout
-    // TODO u16 timeout; // mac level?
-    /// CCA mode
-    // TODO u8  cca;
-    /// Spectrum ID
-    u8  spectrum_id;
-    /// Channel bandhwith index
-	u8  coding_scheme;
-	/// sync word class (0 or 1)
-	u8 sync_word_class;
-    /// pointer to the payload
-    u8* data; // TODO data should exclude length?
-    /// data length
-    u8  len;
-    /// Transmission power level in dBm ranged [-39, +10]
-    s8  eirp; // TODO set by MAC? part of data?
+    uint8_t lqi;				//Link quality indicator
+    uint8_t length;				//Packet length
+    uint8_t* data;				//Packet data
+    int16_t rssi;				//Received signal strength indicator
+} phy_rx_data_t;
+
+//Configuration structure for packet transmission
+typedef struct
+{
+	uint8_t spectrum_id;		//Spectrum ID
+	uint8_t sync_word_class;	//Sync word class
+	int8_t eirp;				//Transmission power level in dBm ranged [-39, +10]
+	uint8_t length;				//Packet length
+	uint8_t* data;				//Packet data
 } phy_tx_cfg_t;
 
-// =======================================================================
-// phy_rx_res_t
-// -----------------------------------------------------------------------
-/// Packet reception result structure
-// =======================================================================
-typedef struct
-{
-    /// Reception level
-    s8  rssi;
-    /// Reported EIRP
-    s8  eirp;
-    /// Link quality indicator
-    u8  lqi;
-    /// packet length in bytes
-    u8  len;
-    /// packet data
-    u8*  data;
+//Define callback funtion pointer types
+typedef void (*phy_tx_callback_t)(void);
+typedef void (*phy_rx_callback_t)(phy_rx_data_t*);
 
-} phy_rx_res_t; // TODO same as ral_rx_res_t for now ...
+//Declare callback function pointers
+extern phy_tx_callback_t phy_tx_callback;
+extern phy_rx_callback_t phy_rx_callback;
 
-typedef enum
-{
-	PHY_OK,
-	PHY_RADIO_IN_RX_MODE
-} phy_result_t; // TODO return this for all functions
+//Phy interface
+extern void phy_init(void);
+extern void phy_idle(void);
+extern bool phy_tx(phy_tx_cfg_t* cfg);
+extern bool phy_rx(phy_rx_cfg_t* cfg);
+extern bool phy_read(phy_rx_data_t* data);
+extern bool phy_is_rx_in_progress(void);
+extern bool phy_is_tx_in_progress(void);
+extern int16_t phy_get_rssi(uint8_t spectrum_id, uint8_t sync_word_class);
 
-
-typedef void (*phy_tx_callback_t)(); // TODO result param?
-typedef void (*phy_rx_callback_t)(phy_rx_res_t*);
-
-void phy_init();
-phy_result_t phy_tx(phy_tx_cfg_t*);
+//Implementation independant phy functions
 void phy_set_tx_callback(phy_tx_callback_t);
 void phy_set_rx_callback(phy_rx_callback_t);
+bool phy_cca(uint8_t spectrum_id, uint8_t sync_word_class);
+bool phy_translate_settings(uint8_t spectrum_id, uint8_t sync_word_class, bool* fec, uint8_t* channel_center_freq_index, uint8_t* channel_bandwidth_index, uint8_t* preamble_size, uint16_t* sync_word);
 
-void phy_rx_start(phy_rx_cfg_t*);
-void phy_rx_stop();
-bool phy_is_rx_in_progress();
-u8 phy_cca(void);
+#ifdef __cplusplus
+}
+#endif
 
-#endif /* PHY_H_ */
+#endif /* PHY_H */
