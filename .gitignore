@@ -10,3 +10,4 @@ Makefile*
 object_script*
 *.Debug
 *.Release
+lnk_*.cmd
