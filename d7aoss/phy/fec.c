@@ -1,241 +1,266 @@
 /*
- *  Created on: Jan 11, 2013
+ * The PHY layer API
+ *  Created on: Nov 22, 2012
  *  Authors:
  * 		maarten.weyn@artesis.be
  *  	glenn.ergeerts@artesis.be
  *  	alexanderhoet@gmail.com
  */
 
-#include <cstring>
+#include <stdbool.h>
+#include <stddef.h>
 #include <stdint.h>
 
+#include "phy.h"
 #include "fec.h"
 
-const uint8_t fec_lut[16] = {0, 3, 1, 2, 3, 0, 2, 1 , 3 , 0, 2, 1, 0, 3, 1, 2};
+#ifdef D7_PHY_USE_FEC
 
-void conv_encode_init(uint8_t* state)
+const uint8_t fec_lut[16] = {0, 3, 1, 2, 3, 0, 2, 1, 3, 0, 2, 1, 0, 3, 1, 2};
+const uint8_t trellis0_lut[8] = {0, 1, 3, 2, 3, 2, 0, 1};
+const uint8_t trellis1_lut[8] = {3, 2, 0, 1, 0, 1, 3, 2};
+
+uint8_t* iobuffer;
+
+uint8_t packetlength;
+uint16_t fecpacketlength;
+
+uint8_t processedbytes;
+uint16_t fecprocessedbytes;
+
+uint16_t pn9;
+uint16_t fecstate;
+VITERBISTATE vstate;
+
+void fec_init_encode(uint8_t* input)
 {
-	*state = 0;
+	iobuffer = input;
+
+	packetlength = 255;
+	fecpacketlength = 512;
+
+	processedbytes = 0;
+	fecprocessedbytes = 0;
+
+	pn9 = INITIAL_PN9;
+	fecstate = INITIAL_FECSTATE;
 }
 
-/*
- * output array size must at least be 2 x length and a multiple of 4bytes
- * TODO append trellis terminator
- */
-void conv_encode(uint8_t* input, uint8_t* output, uint16_t length, uint8_t* state)
+void fec_init_decode(uint8_t* output)
 {
-	uint16_t i;
-	register uint8_t state_tmp;
-	register uint8_t input_tmp;
-	register uint16_t output_tmp;
+	iobuffer = output;
 
-	state_tmp = *state;
+	packetlength = 255;
+	fecpacketlength = 512;
 
-	for (i = 0; i < length; i++) {
-		input_tmp = input[i];
+	processedbytes = 0;
+	fecprocessedbytes = 0;
 
-		//bit 7
-		state_tmp = (state_tmp << 1) & 0x0E;
-		state_tmp |= (input_tmp >> 7) & 0x01;
-		output_tmp = fec_lut[state_tmp] << 14;
+	pn9 = INITIAL_PN9;
 
-		//bit 6
-		state_tmp = (state_tmp << 1) & 0x0E;
-		state_tmp |= (input_tmp >> 6) & 0x01;
-		output_tmp |= fec_lut[state_tmp] << 12;
+	vstate.path_size = 0;
 
-		//bit 5
-		state_tmp = (state_tmp << 1) & 0x0E;
-		state_tmp |= (input_tmp >> 5) & 0x01;
-		output_tmp |= fec_lut[state_tmp] << 10;
+	vstate.states1[0].cost = 100;
+	vstate.states1[1].cost = 100;
+	vstate.states1[2].cost = 100;
+	vstate.states1[3].cost = 100;
+	vstate.states1[4].cost = 100;
+	vstate.states1[5].cost = 100;
+	vstate.states1[6].cost = 100;
+	vstate.states1[7].cost = 0;
 
-		//bit 4
-		state_tmp = (state_tmp << 1) & 0x0E;
-		state_tmp |= (input_tmp >> 4) & 0x01;
-		output_tmp |= fec_lut[state_tmp] << 8;
+	vstate.old = vstate.states1;
+	vstate.new = vstate.states2;
+}
 
-		//bit 3
-		state_tmp = (state_tmp << 1) & 0x0E;
-		state_tmp |= (input_tmp >> 3) & 0x01;
-		output_tmp |= fec_lut[state_tmp] << 6;
+void fec_set_length(uint8_t length)
+{
+	packetlength = length;
+	fecpacketlength = ((length & 0xFE) + 2) << 1;
+}
 
-		//bit 2
-		state_tmp = (state_tmp << 1) & 0x0E;
-		state_tmp |= (input_tmp >> 2) & 0x01;
-		output_tmp |= fec_lut[state_tmp] << 4;
+bool fec_encode(uint8_t* output)
+{
+	uint8_t i;
+	uint16_t tmppn9;
+	uint8_t pn9buffer;
+	uint16_t fecbuffer[2];
 
-		//bit 1
-		state_tmp = (state_tmp << 1) & 0x0E;
-		state_tmp |= (input_tmp >> 1) & 0x01;
-		output_tmp |= fec_lut[state_tmp] << 2;
+	if(fecprocessedbytes >= fecpacketlength)
+		return false;
 
-		//bit 0
-		state_tmp = (state_tmp << 1) & 0x0E;
-		state_tmp |= input_tmp & 0x01;
-		output_tmp |= fec_lut[state_tmp];
+	for(i = 0; i < 2; i++)
+	{
+		//Get byte from the input buffer if available and apply data whitening, otherwise append trellis terminator
+		if(processedbytes < packetlength) {
+			//Pn9 data whitening
+			pn9buffer = *iobuffer++ ^ (uint8_t)pn9;
 
-		output[i << 1] = output_tmp >> 8;
-		output[(i << 1) + 1] = output_tmp;
+			//Rotate pn9 code
+			tmppn9 = ((pn9 << 5) ^ pn9) & 0x01E0;
+			pn9 = tmppn9 | (pn9 >> 4);
+			tmppn9 = ((pn9 << 5) ^ pn9) & 0x01E0;
+			pn9 = tmppn9 | (pn9 >> 4);
+
+			processedbytes++;
+		} else {
+			pn9buffer = TRELLIS_TERMINATOR;
+		}
+
+		//Convolutional encoding
+		fecstate |= pn9buffer;
+
+		fecbuffer[i] = fec_lut[fecstate >> 7] << 14;
+		fecstate = (fecstate << 1) & 0x07FF;
+		fecbuffer[i] |= fec_lut[fecstate >> 7] << 12;
+		fecstate = (fecstate << 1) & 0x07FF;
+		fecbuffer[i] |= fec_lut[fecstate >> 7] << 10;
+		fecstate = (fecstate << 1) & 0x07FF;
+		fecbuffer[i] |= fec_lut[fecstate >> 7] << 8;
+		fecstate = (fecstate << 1) & 0x07FF;
+		fecbuffer[i] |= fec_lut[fecstate >> 7] << 6;
+		fecstate = (fecstate << 1) & 0x07FF;
+		fecbuffer[i] |= fec_lut[fecstate >> 7] << 4;
+		fecstate = (fecstate << 1) & 0x07FF;
+		fecbuffer[i] |= fec_lut[fecstate >> 7] << 2;
+		fecstate = (fecstate << 1) & 0x07FF;
+		fecbuffer[i] |= fec_lut[fecstate >> 7];
+		fecstate = (fecstate << 1) & 0x07FF;
 	}
 
-	*state = state_tmp;
+	//Interleaving and write to output buffer
+	output[0] = ((fecbuffer[0] >> 8) & 0x03);
+	output[0] |= (fecbuffer[0] & 0x03) << 2;
+	output[0] |= ((fecbuffer[1] >> 8) & 0x03) << 4;
+	output[0] |= (fecbuffer[1] & 0x03) << 6;
+	output[1] = (fecbuffer[0] >> 10) & 0x03;
+	output[1] |= ((fecbuffer[0] >> 2) & 0x03) << 2;
+	output[1] |= ((fecbuffer[1] >> 10) & 0x03) << 4;
+	output[1] |= ((fecbuffer[1] >> 2) & 0x03) << 6;
+	output[2] = ((fecbuffer[0] >> 12) & 0x03);
+	output[2] |= ((fecbuffer[0] >> 4) & 0x03) << 2;
+	output[2] |= ((fecbuffer[1] >> 12) & 0x03) << 4;
+	output[2] |= ((fecbuffer[1] >> 4) & 0x03) << 6;
+	output[3] = (fecbuffer[0] >> 14) & 0x03;
+	output[3] |= ((fecbuffer[0] >> 6) & 0x03) << 2;
+	output[3] |= ((fecbuffer[1] >> 14) & 0x03) << 4;
+	output[3] |= ((fecbuffer[1] >> 6) & 0x03) << 6;
+
+	fecprocessedbytes += 4;
+
+	return true;
 }
 
-void conv_decode_init(CONVDECODESTATE* state)
+bool fec_decode(uint8_t* input)
 {
-	state->pathsize = 0;
-	state->old = state->states1;
-	state->new = state->states2;
-	memset(state->old, 0, sizeof(VITERBISTATE)  << 3);
-	memset(state->new, 0, sizeof(VITERBISTATE)  << 3);
-	state->old[0].populated = 1;
-}
-
-/*
- * Length must be a multiple of 4
- */
-void conv_decode(uint8_t* input, uint8_t* output, uint16_t length, CONVDECODESTATE* state)
-{
-	uint16_t i;
-	int8_t j;
-	uint8_t k;
+	uint8_t i, j, k;
+	uint8_t min_state;
 	uint8_t symbol;
-	uint8_t state_tmp;
-	uint8_t symbol_tmp;
-	uint8_t metric_tmp;
-	uint16_t input_tmp;
+	uint16_t tmppn9;
+	uint16_t fecbuffer[2];
+	VITERBIPATH* vstate_tmp;
 
-	VITERBISTATE* states_tmp;
+	if(fecprocessedbytes >= fecpacketlength)
+		return false;
 
-	//For every 2 bytes of the input buffer
-	for (i = 0; i < length; i+=2) {
-		input_tmp = (input[i] << 8) | input[i+1];
+	//Deinterleaving (symbols are stored in reverse as this is easier for Viterbi decoding)
+	fecbuffer[0]  = ((input[0] >> 2) & 0x03) << 14;
+	fecbuffer[0] |= ((input[1] >> 2) & 0x03) << 12;
+	fecbuffer[0] |= ((input[2] >> 2) & 0x03) << 10;
+	fecbuffer[0] |= ((input[3] >> 2) & 0x03) << 8;
+	fecbuffer[0] |= (input[0] & 0x03) << 6;
+	fecbuffer[0] |= (input[1] & 0x03) << 4;
+	fecbuffer[0] |= (input[2] & 0x03) << 2;
+	fecbuffer[0] |= (input[3] & 0x03);
+	fecbuffer[1]  = ((input[0] >> 6) & 0x03) << 14;
+	fecbuffer[1] |= ((input[1] >> 6) & 0x03) << 12;
+	fecbuffer[1] |= ((input[2] >> 6) & 0x03) << 10;
+	fecbuffer[1] |= ((input[3] >> 6) & 0x03) << 8;
+	fecbuffer[1] |= ((input[0] >> 4) & 0x03) << 6;
+	fecbuffer[1] |= ((input[1] >> 4) & 0x03) << 4;
+	fecbuffer[1] |= ((input[2] >> 4) & 0x03) << 2;
+	fecbuffer[1] |= (input[3] >> 4) & 0x03;
 
-		//For every input symbol (left to right)
-		for (j = 14; j >= 0; j-=2) {
-			symbol = (input_tmp >> j) & 0x03;
+	fecprocessedbytes +=4;
 
-			//Start of Viterbi algorithm
-			//For every state
-			for (k = 0; k < 8; k++) {
-				if(state->old[k].populated) {
-					//Calculate state and cost for 0 (cost is hamming distance)
-					state_tmp = (k << 1) & 0x0E;
-					symbol_tmp = fec_lut[state_tmp];
-					metric_tmp = ((symbol ^ symbol_tmp) + 1) >> 1;
+	for (i = 0; i < 2; i++) {
+		//Viterbi decoding
+		for (j = 8; j != 0; j--) {
+			symbol = fecbuffer[i] & 0x03;
+			fecbuffer[i] >>= 2;
 
-					//Update new state
-					state_tmp &= 0x07;
-					if (!state->new[state_tmp].populated || (state->old[k].metric + metric_tmp) < state->new[state_tmp].metric) {
-						state->new[state_tmp].populated = 1;
-						state->new[state_tmp].metric = state->old[k].metric + metric_tmp;
-						memcpy(state->new[state_tmp].path, state->old[k].path, 4);
-						memcpy(state->new[state_tmp].pathmetric, state->old[k].pathmetric, 4);
-						state->new[state_tmp].path[0] <<= 1;
-						state->new[state_tmp].pathmetric[0] += metric_tmp;
+			for(k = 0; k < 8; k++) {
+				uint8_t cost0, cost1;
+				uint8_t state0, state1;
+				uint8_t hamming0, hamming1;
 
-					}
+				state0 = k >> 1;
+				state1 = state0 + 4;
 
-					//Calculate state and symbol for 1
-					state_tmp = ((k << 1) & 0x0E) | 0x01;
-					symbol_tmp = fec_lut[state_tmp];
-					metric_tmp = ((symbol ^ symbol_tmp) + 1) >> 1;
+				cost0  = vstate.old[state0].cost;
+				cost1  = vstate.old[state1].cost;
 
-					//Update new state
-					state_tmp &= 0x07;
-					if (!state->new[state_tmp].populated || (state->old[k].metric + metric_tmp) < state->new[state_tmp].metric) {
-						state->new[state_tmp].populated = 1;
-						state->new[state_tmp].metric = state->old[k].metric + metric_tmp;
-						memcpy(state->new[state_tmp].path, state->old[k].path, 4);
-						memcpy(state->new[state_tmp].pathmetric, state->old[k].pathmetric, 4);
-						state->new[state_tmp].path[0] = (state->new[state_tmp].path[0] << 1) | 0x01;
-						state->new[state_tmp].pathmetric[0] += metric_tmp;
-					}
+				hamming0 = cost0 + ((trellis0_lut[state0] ^ symbol) + 1) >> 1;
+				hamming1 = cost1 + ((trellis0_lut[state1] ^ symbol) + 1) >> 1;
+
+				if(hamming0 <= hamming1) {
+					vstate.new[k].cost = hamming0;
+					vstate.new[k].path = vstate.old[state0].path << 1;
+				} else {
+					vstate.new[k].cost = hamming1;
+					vstate.new[k].path = vstate.old[state1].path << 1;
+				}
+
+				k++;
+
+				hamming0 = cost0 + ((trellis1_lut[state0] ^ symbol) + 1) >> 1;
+				hamming1 = cost1 + ((trellis1_lut[state1] ^ symbol) + 1) >> 1;
+
+				if(hamming0 <= hamming1) {
+					vstate.new[k].cost = hamming0;
+					vstate.new[k].path = vstate.old[state0].path << 1 | 0x01;
+				} else {
+					vstate.new[k].cost = hamming1;
+					vstate.new[k].path = vstate.old[state1].path << 1 | 0x01;
 				}
 			}
 
-			//Switch state pointers
-			states_tmp = state->new;
-			state->new = state->old;
-			state->old = states_tmp;
-
-			//Reset new state array
-			memset(state->new, 0, sizeof(VITERBISTATE)  << 3);
+			//Swap Viterbi paths
+			vstate_tmp = vstate.new;
+			vstate.new = vstate.old;
+			vstate.old = vstate_tmp;
 		}
 
-		//Update path size
-		state->pathsize++;
+		vstate.path_size++;
 
-		//Write out oldest byte with smallest metric if pathsize = 4
-		if(state->pathsize == 4) {
-			state->pathsize--;
-
-			for (k = 0; k < 8; k++) {
-				metric_tmp = UINT8_MAX;
-
-				if (state->old[k].metric < metric_tmp) {
-					metric_tmp = state->old[1].metric;
-					*output = state->old[state_tmp].path[3];
-				}
+		//Flush out byte if path is full
+		if ((vstate.path_size == 2) && (processedbytes < packetlength)) {
+			//Calculate path with lowest cost
+			min_state = 0;
+			for (j = 7; j != 0; j--) {
+				if(vstate.old[j].cost < vstate.old[min_state].cost)
+					min_state = j;
 			}
 
-			output++;
-		}
+	        //Normalize costs
+	        for (j = 0; j < 8; j++)
+	        	vstate.old[j].cost -= vstate.old[min_state].cost;
 
-		//Rotate paths & metrics
-		for (k = 0; k < 8; k++) {
-			state->old[k].metric -= state->old[k].pathmetric[3];
+			//Pn9 data dewhitening
+			*iobuffer++ = (vstate.old[min_state].path >> 8) ^ pn9;
 
-			state->old[k].path[3] = state->old[k].path[2];
-			state->old[k].path[2] = state->old[k].path[1];
-			state->old[k].path[1] = state->old[k].path[0];
-			state->old[k].path[0] = 0;
+			//Rotate pn9 code
+			tmppn9 = ((pn9 << 5) ^ pn9) & 0x01E0;
+			pn9 = tmppn9 | (pn9 >> 4);
+			tmppn9 = ((pn9 << 5) ^ pn9) & 0x01E0;
+			pn9 = tmppn9 | (pn9 >> 4);
 
-			state->old[k].pathmetric[3] = state->old[k].pathmetric[2];
-			state->old[k].pathmetric[2] = state->old[k].pathmetric[1];
-			state->old[k].pathmetric[1] = state->old[k].pathmetric[0];
-			state->old[k].pathmetric[0] = 0;
+			vstate.path_size--;
+			processedbytes++;
 		}
 	}
+
+	return true;
 }
 
-/*
- * buffer size must be a multiple of 4
- * input and output buffer may be the same
- */
-void interleave_deinterleave(uint8_t* input, uint8_t* output, uint16_t length)
-{
-	uint16_t i;
-	register uint16_t input0;
-	register uint16_t input1;
-	register uint16_t output0;
-	register uint16_t output1;
-
-	for (i = 0; i < length; i+=4) {
-		input0 = (input[i] << 8) | input[i+1];
-		input1 = (input[i+2] << 8) | input[i+3];
-
-		output0 = (input0 >> 10) & 0x03;
-		output0 |= ((input0 >> 2) & 0x03) << 2;
-		output0 |= ((input1 >> 10) & 0x03) << 4;
-		output0 |= ((input1 >> 2) & 0x03) << 6;
-		output0 |= ((input0 >> 8) & 0x03) << 8;
-		output0 |= (input0 & 0x03) << 10;
-		output0 |= ((input1 >> 8) & 0x03) << 12;
-		output0 |= (input1 & 0x03) << 14;
-
-		output1 = (input0 >> 14) & 0x03;
-		output1 |= ((input0 >> 6) & 0x03) << 2;
-		output1 |= ((input1 >> 14) & 0x03) << 4;
-		output1 |= ((input1 >> 6) & 0x03) << 6;
-		output1 |= ((input0 >> 12) & 0x03) << 8;
-		output1 |= ((input0 >> 4) & 0x03) << 10;
-		output1 |= ((input1 >> 12) & 0x03) << 12;
-		output1 |= ((input1 >> 4) & 0x03) << 14;
-
-		output[i] = (uint8_t)(output0 >> 8);
-		output[i+1] = (uint8_t)output0;
-		output[i+2] = (uint8_t)(output1 >> 8);
-		output[i+3] = (uint8_t)output1;
-	}
-}
+#endif /* D7_PHY_USE_FEC */

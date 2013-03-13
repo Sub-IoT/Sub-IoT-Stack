@@ -24,8 +24,10 @@ extern "C" {
 /*
  * Defines
  */
-#define RSSI_OFFSET 74;
+#define RSSI_OFFSET 74
 #define PATABLE_VAL 0xC4
+#define PN9_BUFFER_SIZE 16
+#define FEC_BUFFER_SIZE 32
 
 /*
  * Type definitions

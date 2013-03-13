@@ -42,7 +42,7 @@ static u8 tx_mode_enabled = 0;
 static mode_t mode = mode_idle;
 
 dll_channel_scan_t scan_cfg1 = {
-		CHANNEL_ID,
+		CHANNEL_ID^0x80,
 		FrameTypeForegroundFrame,
 		1000, // TODO increase this after stack supports receiving multiple packets during one scan
 		0
@@ -66,7 +66,7 @@ void start_tx()
 {
 	led_on(3);
 
-	dll_tx_foreground_frame((u8*)&counter, sizeof(counter), CHANNEL_ID, 0);
+	dll_tx_foreground_frame((u8*)&counter, sizeof(counter), CHANNEL_ID^0x80, 10);
 }
 
 void tx_callback(Dll_Tx_Result result)

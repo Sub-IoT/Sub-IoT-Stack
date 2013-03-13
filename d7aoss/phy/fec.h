@@ -1,6 +1,9 @@
 /*
- *  Created on: Jan 11, 2013
+ * The PHY layer API
+ *  Created on: Nov 22, 2012
  *  Authors:
+ * 		maarten.weyn@artesis.be
+ *  	glenn.ergeerts@artesis.be
  *  	alexanderhoet@gmail.com
  */
 
@@ -11,29 +14,28 @@
 extern "C" {
 #endif
 
+#include <stdbool.h>
 #include <stdint.h>
 
 typedef struct {
-	uint8_t metric;
-	uint8_t populated;
-	uint8_t path[4];
-	uint8_t pathmetric[4];
-} VITERBISTATE;
+	uint8_t cost;
+	uint16_t path;
+} VITERBIPATH;
 
 typedef struct {
-	VITERBISTATE states1[8];
-	VITERBISTATE states2[8];
-	VITERBISTATE* old;
-	VITERBISTATE* new;
-	uint8_t pathsize;
-} CONVDECODESTATE;
+	uint8_t path_size;
+	VITERBIPATH* old;
+	VITERBIPATH* new;
+	VITERBIPATH states1[8];
+	VITERBIPATH states2[8];
+} VITERBISTATE;
 
-void conv_encode_init(uint8_t* state);
-void conv_encode(uint8_t* input, uint8_t* output, uint16_t length, uint8_t* state);
-void conv_decode_init(CONVDECODESTATE* state);
-void conv_decode(uint8_t* input, uint8_t* output, uint16_t length, CONVDECODESTATE* state);
-void interleave_deinterleave(uint8_t* input, uint8_t* output, uint16_t length);
 
+void fec_init_encode(uint8_t* input);
+void fec_init_decode(uint8_t* output);
+void fec_set_length(uint8_t length);
+bool fec_encode(uint8_t* output);
+bool fec_decode(uint8_t* input);
 
 #ifdef __cplusplus
 }
