@@ -15,7 +15,7 @@
 #include <string.h>
 
 #include <dll/dll.h>
-
+#include <trans/trans.h>
 #include <hal/system.h>
 #include <hal/button.h>
 #include <hal/leds.h>
@@ -23,7 +23,7 @@
 
 #define SYNC_WORD 0xCE
 
-#define CHANNEL_ID	0x1A
+#define CHANNEL_ID	0x18
 
 #define INTERRUPT_BUTTON1 	(1)
 #define INTERRUPT_BUTTON2 	(1 << 1)
@@ -42,7 +42,7 @@ static u8 tx_mode_enabled = 0;
 static mode_t mode = mode_idle;
 
 dll_channel_scan_t scan_cfg1 = {
-		CHANNEL_ID^0x80,
+		CHANNEL_ID,
 		FrameTypeForegroundFrame,
 		1000, // TODO increase this after stack supports receiving multiple packets during one scan
 		0
@@ -65,17 +65,27 @@ void stop_rx()
 void start_tx()
 {
 	led_on(3);
-
-	dll_tx_foreground_frame((u8*)&counter, sizeof(counter), CHANNEL_ID^0x80, 10);
+	trans_tx_foreground_frame((u8*)&counter, sizeof(counter), CHANNEL_ID, 10);
 }
 
-void tx_callback(Dll_Tx_Result result)
+void tx_callback(Trans_Tx_Result result)
 {
-	if(result != DLLTxResultOK)
-		led_on(1);
+	switch(result){
+			case TransPacketSent:
+				log_print_string("TX successful");
+				counter++; // increment even if CCA failed
+				led_off(3);
+				break;
+			case TransTCAFail:
+				log_print_string("T_CA is less than the T_G");
+				break;
+			case TransPacketFail:
+				log_print_string("Problem with the CCA");
+				counter++; // increment even if CCA failed
+				led_off(3);
+				break;
+		}
 
-	counter++; // increment even if CCA failed
-	led_off(3);
 }
 
 void rx_callback(dll_rx_res_t* rx_res)
@@ -95,8 +105,9 @@ void main(void) {
 	rtc_init_counter_mode();
 	rtc_start();
 
+	trans_init();
+	trans_set_tx_callback(&tx_callback);
 	dll_init();
-	dll_set_tx_callback(&tx_callback);
 	dll_set_rx_callback(&rx_callback);
 
 	dll_channel_scan_t scan_confgs[1];
