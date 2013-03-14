@@ -48,6 +48,29 @@ static bool check_subnet(u8 device_subnet, u8 frame_subnet)
 	return 1;
 }
 
+static void scan_next(void* arg)
+{
+	dll_channel_scan_series(current_css);
+}
+
+static void scan_timeout()
+{
+	if (dll_state == DllStateNone)
+		return;
+
+	#ifdef LOG_DLL_ENABLED
+		log_print_string("scan time-out");
+	#endif
+	phy_idle();
+	timer_event event;
+	event.next_event = current_css->values[current_scan_id].time_next_scan;
+	event.f = &scan_next;
+
+	current_scan_id = current_scan_id < current_css->length - 1 ? current_scan_id + 1 : 0;
+
+	timer_add_event(&event);
+}
+
 static void tx_callback()
 {
 	#ifdef LOG_DLL_ENABLED
@@ -59,6 +82,11 @@ static void tx_callback()
 static void rx_callback(phy_rx_data_t* res)
 {
 	//log_packet(res->data);
+	if (res == NULL)
+	{
+		scan_timeout();
+		return;
+	}
 
 	// Data Link Filtering
 	// Subnet Matching do not parse it yet
@@ -225,29 +253,6 @@ static void rx_callback(phy_rx_data_t* res)
 	dll_rx_callback(&dll_res);
 }
 
-static void scan_next(void* arg)
-{
-	dll_channel_scan_series(current_css);
-}
-
-static void scan_timeout(void* arg)
-{
-	if (dll_state == DllStateNone)
-		return;
-
-	#ifdef LOG_DLL_ENABLED
-		log_print_string("scan time-out");
-	#endif
-	phy_idle();
-	timer_event event;
-	event.next_event = current_css->values[current_scan_id].time_next_scan;
-	event.f = &scan_next;
-
-	current_scan_id = current_scan_id < current_css->length - 1 ? current_scan_id + 1 : 0;
-
-	timer_add_event(&event);
-}
-
 void dll_init()
 {
 	timer_init();
@@ -283,7 +288,7 @@ void dll_channel_scan_series(dll_channel_scan_series_t* css)
 
 	phy_rx_cfg_t rx_cfg;
 	rx_cfg.length = 0;
-	rx_cfg.timeout = css->values[current_scan_id].timout_scan_detect; // timeout
+	rx_cfg.timeout = css->values[current_scan_id].timeout_scan_detect; // timeout
 	//rx_cfg.multiple = 0; // multiple TODO
 	rx_cfg.spectrum_id = css->values[current_scan_id].spectrum_id; // spectrum ID TODO
 	//rx_cfg.coding_scheme = 0; // coding scheme TODO
@@ -301,12 +306,14 @@ void dll_channel_scan_series(dll_channel_scan_series_t* css)
 	phy_rx(&rx_cfg);
 
 
+	/*
 	//TODO: timeout should be implemented using rF timer in phy
 	timer_event event;
 	event.next_event = rx_cfg.timeout;
 	event.f = &scan_timeout;
 
 	timer_add_event(&event);
+	*/
 
 }
 

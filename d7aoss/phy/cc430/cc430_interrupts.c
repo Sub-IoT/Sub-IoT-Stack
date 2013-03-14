@@ -12,7 +12,7 @@
 InterruptHandler interrupt_table[34] = {
 	//Rising Edges
 	no_interrupt_isr,        	// No RF core interrupt pending
-	rxtx_finish_isr,			// RFIFG0 - Timeout
+	rx_timout_isr,			// RFIFG0 - Timeout
 	no_interrupt_isr,           // RFIFG1 - RSSI_VALID
 	no_interrupt_isr,           // RFIFG2
 	rx_data_isr,				// RFIFG3 - RX FIFO filled or above the RX FIFO threshold
