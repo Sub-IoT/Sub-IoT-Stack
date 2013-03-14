@@ -57,7 +57,8 @@ void phy_init(void)
 
 void phy_idle(void)
 {
-	rxtx_finish_isr();
+	if (state != Idle)
+		rxtx_finish_isr();
 }
 
 bool phy_tx(phy_tx_cfg_t* cfg)

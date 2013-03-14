@@ -50,7 +50,6 @@ static void control_tx_callback(Dll_Tx_Result Result)
 void trans_init(){
 	dll_init();
 	dll_set_tx_callback(&control_tx_callback);
-	timer_init();
 }
 
 void trans_set_tx_callback(trans_tx_callback_t cb)

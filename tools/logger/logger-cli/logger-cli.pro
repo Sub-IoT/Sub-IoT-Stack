@@ -31,8 +31,8 @@ HEADERS += \
     clilogger.h
 
 # link with serialport TODO remove?
-win32:CONFIG(release, debug|release): LIBS += -L$$OUT_PWD/../external/serialport/release/ -lSerialPort
-else:win32:CONFIG(debug, debug|release): LIBS += -L$$OUT_PWD/../external/serialport/debug/ -lSerialPort
+win32:CONFIG(release, debug|release): LIBS += -L$$OUT_PWD/../external/serialport/release/ -lSerialPortd0
+else:win32:CONFIG(debug, debug|release): LIBS += -L$$OUT_PWD/../external/serialport/debug/ -lSerialPortd0
 else:unix: LIBS += -L$$OUT_PWD/../external/serialport/ -lSerialPort
 
 INCLUDEPATH += $$PWD/../external/serialport

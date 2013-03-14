@@ -250,6 +250,8 @@ static void scan_timeout(void* arg)
 
 void dll_init()
 {
+	timer_init();
+
 	phy_init();
 	phy_set_rx_callback(rx_callback);
 	phy_set_tx_callback(tx_callback);
@@ -298,12 +300,14 @@ void dll_channel_scan_series(dll_channel_scan_series_t* css)
 	current_css = css;
 	phy_rx(&rx_cfg);
 
+
 	//TODO: timeout should be implemented using rF timer in phy
 	timer_event event;
 	event.next_event = rx_cfg.timeout;
 	event.f = &scan_timeout;
 
 	timer_add_event(&event);
+
 }
 
 static void dll_cca2(void* arg)

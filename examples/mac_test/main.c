@@ -33,7 +33,7 @@ static u8 rtcEnabled = 0;
 static u8 tx = 0;
 
 dll_channel_scan_t scan_cfg1 = {
-		0x10,
+		0x1C,
 		FrameTypeForegroundFrame,
 		1000,
 		0
@@ -68,7 +68,7 @@ void start_tx()
 	tx = 1;
 	stop_rx();
 	led_on(3);
-	dll_tx_foreground_frame((u8*)&counter, sizeof(counter), 0x10, 0);
+	dll_tx_foreground_frame((u8*)&counter, sizeof(counter), 0x1C, 0);
 	dll_csma();
 
 }

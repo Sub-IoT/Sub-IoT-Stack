@@ -1,6 +1,6 @@
 #include <QCoreApplication>
 
-#include <clilogger.h>
+#include "clilogger.h"
 
 int main(int argc, char *argv[])
 {
