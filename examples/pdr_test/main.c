@@ -40,6 +40,7 @@ static u16 counter = 0;
 static u8 interrupt_flags = 0;
 static u8 tx_mode_enabled = 0;
 static mode_t mode = mode_idle;
+static bool start_channel_scan = true;
 
 dll_channel_scan_t scan_cfg1 = {
 		CHANNEL_ID,
@@ -52,12 +53,14 @@ dll_channel_scan_series_t scan_series_cfg;
 
 void start_rx()
 {
+	start_channel_scan = false;
 	dll_channel_scan_series(&scan_series_cfg);
 	led_on(1);
 }
 
 void stop_rx()
 {
+	start_channel_scan = false;
 	dll_stop_channel_scan();
 	led_off(1);
 }
@@ -96,6 +99,8 @@ void rx_callback(dll_rx_res_t* rx_res)
 	uart_transmit_message(foreground_frame->payload, 2);
 	uart_transmit_message(&rx_res->rssi, 1);
 	led_toggle(3);
+
+	start_channel_scan = true;
 }
 
 void main(void) {
@@ -126,7 +131,7 @@ void main(void) {
         	if(mode != mode_rx)
         	{
         		mode = mode_rx;
-        		start_rx();
+        		start_channel_scan = true;
         	}
         	else
         	{
@@ -163,6 +168,8 @@ void main(void) {
 
 			interrupt_flags &= ~INTERRUPT_RTC;
 		}
+
+        if (start_channel_scan) start_rx();
 
 
 		system_lowpower_mode(4,1);
