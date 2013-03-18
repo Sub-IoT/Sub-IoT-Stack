@@ -132,7 +132,12 @@ bool phy_tx(phy_tx_cfg_t* cfg)
 bool phy_rx(phy_rx_cfg_t* cfg)
 {
 	if(get_radiostate() != Idle)
+	{
+		#ifdef LOG_PHY_ENABLED
+		log_print_string("Cannot RX, PHy not idle");
+		#endif
 		return false;
+	}
 
 	//Set radio state
 	state = Receive;
@@ -260,6 +265,11 @@ __interrupt void CC1101_ISR (void)
 	uint16_t isr_vector = RF1AIV >> 1;
 	uint16_t edge = (1 << (isr_vector - 1)) & RF1AIES;
 	if(edge) isr_vector += 0x11;
+
+	#ifdef LOG_DLL_ENABLED
+		log_print_string("scan time-out");
+	#endif
+
 	interrupt_table[isr_vector]();
 	LPM4_EXIT;  //Todo should system call be made here?
 }
@@ -270,13 +280,13 @@ void end_of_packet_isr()
 {
 	if (state == Receive) {
 		rx_data_isr();
+		rxtx_finish_isr(); // TODO: should this be called by DLL?
 		if(phy_rx_callback != NULL)
 			phy_rx_callback(&rx_data);
-		rxtx_finish_isr();
 	} else if (state == Transmit) {
+		rxtx_finish_isr();
 		if(phy_tx_callback != NULL)
 			phy_tx_callback();
-		rxtx_finish_isr();
 	} else {
 		rxtx_finish_isr();
 	}

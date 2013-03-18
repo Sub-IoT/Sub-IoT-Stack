@@ -98,6 +98,7 @@ static void rx_callback(phy_rx_data_t* res)
 			#ifdef LOG_DLL_ENABLED
 				log_print_string("CRC ERROR");
 			#endif
+			scan_next(NULL); // how to reïnitiate scan on CRC Error, PHY should stay in RX
 			return;
 		}
 
@@ -106,6 +107,7 @@ static void rx_callback(phy_rx_data_t* res)
 			#ifdef LOG_DLL_ENABLED
 				log_print_string("Subnet mismatch");
 			#endif
+			scan_next(NULL); // how to reïnitiate scan on subnet mismatch, PHY should stay in RX
 			return;
 		}
 	} else if (dll_state == DllStateScanForegroundFrame)
@@ -116,6 +118,7 @@ static void rx_callback(phy_rx_data_t* res)
 			#ifdef LOG_DLL_ENABLED
 				log_print_string("CRC ERROR");
 			#endif
+			scan_next(NULL); // how to reïnitiate scan on CRC Error, PHY should stay in RX
 			return;
 		}
 		if (!check_subnet(0xFF, res->data[3])) // TODO: get device_subnet from datastore
@@ -123,6 +126,7 @@ static void rx_callback(phy_rx_data_t* res)
 			#ifdef LOG_DLL_ENABLED
 				log_print_string("Subnet mismatch");
 			#endif
+				scan_next(NULL); // how to reïnitiate scan on subnet mismatch, PHY should stay in RX
 
 			return;
 		}
@@ -303,7 +307,14 @@ void dll_channel_scan_series(dll_channel_scan_series_t* css)
 	}
 
 	current_css = css;
-	phy_rx(&rx_cfg);
+	bool phy_rx_result = phy_rx(&rx_cfg);
+
+	#ifdef LOG_DLL_ENABLED
+	if (!phy_rx_result)
+	{
+		log_print_string("Starting channel scan FAILED");
+	}
+	#endif
 
 
 	/*
