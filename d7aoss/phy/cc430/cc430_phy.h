@@ -66,7 +66,8 @@ int16_t phy_get_rssi(uint8_t spectrum_id, uint8_t sync_word_class);
  */
 void no_interrupt_isr();
 void end_of_packet_isr();
-void rx_timout_isr();
+void rx_timeout_isr();
+void rx_fifo_overflow_isr();
 void rx_data_isr();
 void tx_data_isr();
 void rxtx_finish_isr();

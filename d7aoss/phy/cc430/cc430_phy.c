@@ -15,6 +15,7 @@
 #include "../fec.h"
 #include "cc430_phy.h"
 #include "cc430_registers.h"
+#include "../../log.h"
 
 #include "rf1a.h"
 
@@ -131,6 +132,10 @@ bool phy_tx(phy_tx_cfg_t* cfg)
 
 bool phy_rx(phy_rx_cfg_t* cfg)
 {
+	#ifdef LOG_PHY_ENABLED
+	log_print_string("phy_rx");
+	#endif
+
 	if(get_radiostate() != Idle)
 	{
 		#ifdef LOG_PHY_ENABLED
@@ -266,9 +271,14 @@ __interrupt void CC1101_ISR (void)
 	uint16_t edge = (1 << (isr_vector - 1)) & RF1AIES;
 	if(edge) isr_vector += 0x11;
 
-	#ifdef LOG_DLL_ENABLED
-		log_print_string("scan time-out");
-	#endif
+//	#ifdef LOG_PHY_ENABLED
+//		uart_transmit_data(0xDD);
+//		uart_transmit_data(LOG_TYPE_STRING);
+//		uart_transmit_data(13);
+//		uart_transmit_message("CC1101_ISR ", 11);
+//		uart_transmit_data(48 + (isr_vector / 10));
+//		uart_transmit_data(48 + (isr_vector - (10 * (isr_vector / 10))));
+//	#endif
 
 	interrupt_table[isr_vector]();
 	LPM4_EXIT;  //Todo should system call be made here?
@@ -333,6 +343,10 @@ void tx_data_isr()
 
 void rx_data_isr()
 {
+#ifdef LOG_PHY_ENABLED
+		log_print_string("rx_data_isr 0");
+	#endif
+
 	//Read number of bytes in RXFIFO
 	uint8_t rxBytes = ReadSingleReg(RXBYTES);
 
@@ -378,6 +392,9 @@ void rx_data_isr()
 		bufferPosition[0] = packetLength;
 		bufferPosition++;
 		rxBytes--;
+#ifdef LOG_PHY_ENABLED
+		log_print_string("rx_data_isr getting packetLength");
+	#endif
 	}
 
 	//Never read the entire buffer as long as more data is going to be received
@@ -402,11 +419,29 @@ void rx_data_isr()
     	rx_data.lqi = ReadSingleReg(RXFIFO) & 0x7F;
 		rx_data.length = *buffer;
 		rx_data.data = buffer;
+		#ifdef LOG_PHY_ENABLED
+			log_print_string("rx_data_isr packet received");
+		#endif
     }
+
+	#ifdef LOG_PHY_ENABLED
+		log_print_string("rx_data_isr 1");
+	#endif
 }
 
-void rx_timout_isr()
+void rx_timeout_isr()
 {
+	rxtx_finish_isr();
+	if(phy_rx_callback != NULL)
+		phy_rx_callback(NULL);
+}
+
+void rx_fifo_overflow_isr()
+{
+	#ifdef LOG_PHY_ENABLED
+		log_print_string("rx_fifo_overflow");
+	#endif
+
 	rxtx_finish_isr();
 	if(phy_rx_callback != NULL)
 		phy_rx_callback(NULL);
