@@ -29,6 +29,7 @@ void system_init();
 void system_watchdog_timer_stop();
 void system_watchdog_timer_start();
 void system_watchdog_timer_reset();
+void system_watchdog_timer_enable_interrupt();
 void system_watchdog_timer_init(unsigned char clockSelect, unsigned char clockDivider);
 void system_watchdog_init(unsigned char clockSelect, unsigned char clockDivider);
 
