@@ -99,7 +99,7 @@ def main():
 				rssi_values.append(serialData.rssi)
 				print("received counter value %(counter)i @ %(rssi)s dBm ==> %(pct)0.2f%% missed of %(total)i messages" % \
 					{
-						'pct': (error_count*100)/total_msgs_count, 
+						'pct':(error_count*100)/total_msgs_count, 
 						'total': total_msgs_count,
 						'counter': counter,
 						'rssi': serialData.rssi
