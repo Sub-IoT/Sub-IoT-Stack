@@ -41,7 +41,7 @@ static u8 interrupt_flags = 0;
 static mode_t mode = mode_idle;
 static s8 tx_eirp[40] = {9.9, 8.8, 7.8, 6.8, 5.8, 4.8, 3.6, 2.0, 0.1, -1.1, -2.1, -3.1, -4.1,
 						-5.3, -6.0, -7.1, -8.3, -10.1, -11.4, -12.3, -13.3, -14.3, -15.5, -16.2
-						-17, -18.8, -20.4, -21, 22.5, -23.3, -24.3, -25.3, -26.5, -27.9, -29.5,
+						-17, -18.8, -20.4, -21, -22.5, -23.3, -24.3, -25.3, -26.5, -27.9, -29.5,
 						-31.4, -33.8, -36.5, -38.3, -62.7};
 static s8 used_eirp = 10;
 int i = 0;
@@ -74,10 +74,6 @@ void tx_callback(Trans_Tx_Result result)
 
 void main(void) {
 	system_init();
-
-	//system_watchdog_init(WDTSSEL0, 0x03); // 32KHz / 2^19
-		//system_watchdog_timer_enable_interrupt();
-		//system_watchdog_timer_start();
 
 	button_enable_interrupts();
 
