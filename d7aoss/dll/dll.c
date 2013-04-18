@@ -24,6 +24,8 @@ u8 timeout_listen; // TL
 
 u8 frame_data[50]; // TODO max frame size
 
+u8 dialog_id = 0;
+
 Dll_State_Enum dll_state;
 
 phy_tx_cfg_t foreground_frame_tx_cfg = {
@@ -373,7 +375,7 @@ void dll_tx_foreground_frame(u8* data, u8 length, u8 spectrum_id, s8 tx_eirp)
 	frame->frame_header.frame_ctl = !FRAME_CTL_LISTEN | !FRAME_CTL_DLLS | FRAME_CTL_EN_ADDR | !FRAME_CTL_FR_CONT | !FRAME_CTL_CRC32 | !FRAME_CTL_NM2 | FRAME_CTL_DIALOGFRAME; // TODO hardcoded
 
 	dll_foreground_frame_address_ctl_header_t address_ctl_header;
-	address_ctl_header.dialogId = 0x00; // TODO hardcoded
+	address_ctl_header.dialogId = dialog_id++; // TODO hardcoded
 	address_ctl_header.flags = ADDR_CTL_BROADCAST | !ADDR_CTL_VID | !ADDR_CTL_NLS; // TODO appl flags?
 
 	u8* pointer = frame_data + 1 + sizeof(dll_foreground_frame_header_t);

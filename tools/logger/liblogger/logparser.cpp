@@ -82,6 +82,18 @@ void LogParser::parseReceivedData()
 
         emit logMessageReceived(msg);
     }
+    /*
+    if (type == LOG_TYPE_DATA)
+    {
+        QString msg = "0x";
+        for(int i = 0; i < len; i++)
+        {
+            msg += QString().sprintf("%02x", _receivedDataQueue->dequeue());
+        }
+
+        emit logMessageReceived(msg);
+    }
+    */
     if(type == LOG_TYPE_PHY_RX_RES)
     {
         QByteArray packetData;

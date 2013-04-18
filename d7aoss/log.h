@@ -17,6 +17,7 @@
 #include "dll/dll.h"
 
 #define LOG_TYPE_STRING 0x01
+#define LOG_TYPE_DATA 0x02
 
 #define LOG_TYPE_PHY_RX_RES 0x02
 #define LOG_TYPE_PHY_RX_RES_SIZE 5
@@ -25,6 +26,7 @@
 #define LOG_TYPE_DLL_RX_RES_SIZE 2
 
 void log_print_string(char* message);
+void log_print_data(uint8_t* message, uint8_t length);
 
 void log_phy_rx_res(phy_rx_data_t* res);
 

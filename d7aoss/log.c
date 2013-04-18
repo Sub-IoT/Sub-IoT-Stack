@@ -21,6 +21,14 @@ void log_print_string(char* message)
 	uart_transmit_message((unsigned char*) message, len);
 }
 
+void log_print_data(uint8_t* message, uint8_t length)
+{
+	uart_transmit_data(0xDD);
+	uart_transmit_data(LOG_TYPE_DATA);
+	uart_transmit_data(length);
+	uart_transmit_message((unsigned char*) message, length);
+}
+
 void log_phy_rx_res(phy_rx_data_t* res)
 {
 	// transmit the log header
