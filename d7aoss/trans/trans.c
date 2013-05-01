@@ -13,7 +13,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-static u16 current__t_ca = 0;
+static uint16_t current__t_ca = 0;
 static u8 current__t_g = 0;
 static u8 current__spectrum_id = 0;
 
