@@ -21,6 +21,8 @@
 
 u8 tag_id[8];
 
+void clock_init(void);
+
 
 void PMM_SetStdSVSM(unsigned short svsmh_cfg, u8 Von, u8 Voffon) {
     unsigned short svsmh_reg;
@@ -99,25 +101,38 @@ void system_init()
 
     PMM_SetStdSVSM(0x8088, 2, 4);
 
+    clock_init();
+
     led_init();
     button_init();
     uart_init();
 
     system_get_unique_id(tag_id);
+}
 
+void clock_init(void)
+{
+	UCSCTL1 = 0x0050;
+	UCSCTL2 = 0x01F9;
+	UCSCTL3 = 0x0020;
+	UCSCTL4 = 0x0233;
+	UCSCTL5 = 0x0040;
+	UCSCTL6 = 0x0100;
 }
 
 void system_watchdog_timer_stop()
 {
     //WDT_hold();
-    WDTCTL = WDTPW + WDTHOLD;
+	unsigned char newWDTStatus = WDTCTL_L | WDTHOLD;
+    WDTCTL = WDTPW + newWDTStatus;
 }
 
 void system_watchdog_timer_start()
 {
     //WDT_hold();
 	//WDTCTL = WDTPW + WDTIS__512K + WDTSSEL__ACLK;
-    WDTCTL = WDTPW + ~WDTHOLD;
+    unsigned char newWDTStatus = WDTCTL_L & ~WDTHOLD;
+    WDTCTL = WDTPW + newWDTStatus;
 }
 
 void system_watchdog_timer_reset()
@@ -127,14 +142,19 @@ void system_watchdog_timer_reset()
 	WDTCTL = WDTPW + newWDTStatus;
 }
 
+void system_watchdog_timer_enable_interrupt()
+{
+	SFRIE1 |= WDTIE;
+}
+
 void system_watchdog_timer_init(unsigned char clockSelect, unsigned char clockDivider)
 {
-    WDTCTL = WDTPW + WDTCNTCL + clockSelect + clockDivider;
+    WDTCTL = WDTPW + WDTCNTCL + WDTTMSEL + clockSelect + clockDivider;
 }
 
 void system_watchdog_init(unsigned char clockSelect, unsigned char clockDivider)
 {
-    WDTCTL = WDTPW + WDTCNTCL + WDTTMSEL + clockSelect + clockDivider;
+    WDTCTL = WDTPW + WDTCNTCL + clockSelect + clockDivider;
 }
 
 void system_lowpower_mode(unsigned char mode, unsigned char enableInterrupts)

@@ -107,7 +107,7 @@ typedef struct
 {
 	u8 spectrum_id; // 0-255
 	Frame_Type scan_type; // BF / FF
-	u16 timout_scan_detect; // 0-65535 ti
+	u16 timeout_scan_detect; // 0-65535 ti
 	u16 time_next_scan; // 0-65535 ti
 } dll_channel_scan_t;
 
@@ -127,6 +127,7 @@ void dll_init();
 void dll_set_tx_callback(dll_tx_callback_t);
 void dll_set_rx_callback(dll_rx_callback_t);
 
+void dll_csma();
 void dll_stop_channel_scan();
 void dll_channel_scan_series(dll_channel_scan_series_t*);
 

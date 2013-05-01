@@ -19,9 +19,12 @@ static dll_rx_res_t dll_res;
 static dll_channel_scan_series_t* current_css;
 static u8 current_scan_id = 0;
 
+u8 current_spectrum_id = 0;
 u8 timeout_listen; // TL
 
 u8 frame_data[50]; // TODO max frame size
+
+u8 dialog_id = 0;
 
 Dll_State_Enum dll_state;
 
@@ -45,7 +48,6 @@ phy_tx_cfg_t background_frame_tx_cfg = {
 
 phy_tx_cfg_t *current_cfg;
 
-
 static bool check_subnet(u8 device_subnet, u8 frame_subnet)
 {
 	if (frame_subnet & 0xF0 != 0xF0)
@@ -60,7 +62,30 @@ static bool check_subnet(u8 device_subnet, u8 frame_subnet)
 	return 1;
 }
 
-static void phy_tx_callback()
+static void scan_next(void* arg)
+{
+	dll_channel_scan_series(current_css);
+}
+
+static void scan_timeout()
+{
+	if (dll_state == DllStateNone)
+		return;
+
+	#ifdef LOG_DLL_ENABLED
+		log_print_string("scan time-out");
+	#endif
+	phy_idle();
+	timer_event event;
+	event.next_event = current_css->values[current_scan_id].time_next_scan;
+	event.f = &scan_next;
+
+	current_scan_id = current_scan_id < current_css->length - 1 ? current_scan_id + 1 : 0;
+
+	timer_add_event(&event);
+}
+
+static void tx_callback()
 {
 	#ifdef LOG_DLL_ENABLED
 		log_print_string("TX OK");
@@ -68,9 +93,14 @@ static void phy_tx_callback()
 	dll_tx_callback(DLLTxResultOK);
 }
 
-static void phy_rx_callback(phy_rx_res_t* res)
+static void rx_callback(phy_rx_data_t* res)
 {
 	//log_packet(res->data);
+	if (res == NULL)
+	{
+		scan_timeout();
+		return;
+	}
 
 	// Data Link Filtering
 	// Subnet Matching do not parse it yet
@@ -79,7 +109,10 @@ static void phy_rx_callback(phy_rx_res_t* res)
 		u16 crc = crc_calculate(res->data, 5);
 		if (memcmp((u8*) &(res->data[5]), (u8*) &crc, 2) != 0)
 		{
-			log_print_string("CRC ERROR");
+			#ifdef LOG_DLL_ENABLED
+				log_print_string("CRC ERROR");
+			#endif
+			scan_next(NULL); // how to reïnitiate scan on CRC Error, PHY should stay in RX
 			return;
 		}
 
@@ -88,14 +121,18 @@ static void phy_rx_callback(phy_rx_res_t* res)
 			#ifdef LOG_DLL_ENABLED
 				log_print_string("Subnet mismatch");
 			#endif
+			scan_next(NULL); // how to reïnitiate scan on subnet mismatch, PHY should stay in RX
 			return;
 		}
 	} else if (dll_state == DllStateScanForegroundFrame)
 	{
-		u16 crc = crc_calculate(res->data, res->len - 2);
-		if (memcmp((u8*) &(res->data[res->len - 2]), (u8*) &crc, 2) != 0)
+		u16 crc = crc_calculate(res->data, res->length - 2);
+		if (memcmp((u8*) &(res->data[res->length - 2]), (u8*) &crc, 2) != 0)
 		{
-			log_print_string("CRC ERROR");
+			#ifdef LOG_DLL_ENABLED
+				log_print_string("CRC ERROR");
+			#endif
+			scan_next(NULL); // how to reïnitiate scan on CRC Error, PHY should stay in RX
 			return;
 		}
 		if (!check_subnet(0xFF, res->data[3])) // TODO: get device_subnet from datastore
@@ -103,6 +140,7 @@ static void phy_rx_callback(phy_rx_res_t* res)
 			#ifdef LOG_DLL_ENABLED
 				log_print_string("Subnet mismatch");
 			#endif
+				scan_next(NULL); // how to reïnitiate scan on subnet mismatch, PHY should stay in RX
 
 			return;
 		}
@@ -233,38 +271,15 @@ static void phy_rx_callback(phy_rx_res_t* res)
 	dll_rx_callback(&dll_res);
 }
 
-static void scan_next(void* arg)
-{
-	dll_channel_scan_series(current_css);
-}
-
-static void scan_timeout(void* arg)
-{
-	if (dll_state == DllStateNone)
-		return;
-
-	#ifdef LOG_DLL_ENABLED
-		log_print_string("scan time-out");
-	#endif
-	phy_rx_stop();
-	timer_event event;
-	event.next_event = current_css->values[current_scan_id].time_next_scan;
-	event.f = &scan_next;
-
-	current_scan_id = current_scan_id < current_css->length - 1 ? current_scan_id + 1 : 0;
-
-	timer_add_event(&event);
-}
-
 void dll_init()
 {
+	timer_init();
+
 	phy_init();
-	phy_set_tx_callback(&phy_tx_callback);
-	phy_set_rx_callback(&phy_rx_callback);
+	phy_set_rx_callback(rx_callback);
+	phy_set_tx_callback(tx_callback);
 
 	dll_state = DllStateNone;
-
-	timer_init();
 }
 
 void dll_set_tx_callback(dll_tx_callback_t cb)
@@ -280,7 +295,7 @@ void dll_stop_channel_scan()
 {
 	// TODO remove scan_timeout events from queue?
 	dll_state = DllStateNone;
-	phy_rx_stop();
+	phy_idle();
 }
 
 void dll_channel_scan_series(dll_channel_scan_series_t* css)
@@ -290,11 +305,12 @@ void dll_channel_scan_series(dll_channel_scan_series_t* css)
 	#endif
 
 	phy_rx_cfg_t rx_cfg;
-	rx_cfg.timeout = css->values[current_scan_id].timout_scan_detect; // timeout
-	rx_cfg.multiple = 0; // multiple TODO
+	rx_cfg.length = 0;
+	rx_cfg.timeout = css->values[current_scan_id].timeout_scan_detect; // timeout
+	//rx_cfg.multiple = 0; // multiple TODO
 	rx_cfg.spectrum_id = css->values[current_scan_id].spectrum_id; // spectrum ID TODO
-	rx_cfg.coding_scheme = 0; // coding scheme TODO
-	rx_cfg.rssi_min = 0; // RSSI min filter TODO
+	//rx_cfg.coding_scheme = 0; // coding scheme TODO
+	//rx_cfg.rssi_min = 0; // RSSI min filter TODO
 	if (css->values[current_scan_id].scan_type == FrameTypeForegroundFrame)
 	{
 		rx_cfg.sync_word_class = 1;
@@ -305,33 +321,69 @@ void dll_channel_scan_series(dll_channel_scan_series_t* css)
 	}
 
 	current_css = css;
-	phy_rx_start(&rx_cfg);
+	bool phy_rx_result = phy_rx(&rx_cfg);
 
+	#ifdef LOG_DLL_ENABLED
+	if (!phy_rx_result)
+	{
+		log_print_string("Starting channel scan FAILED");
+	}
+	#endif
+
+
+	/*
 	//TODO: timeout should be implemented using rF timer in phy
 	timer_event event;
 	event.next_event = rx_cfg.timeout;
 	event.f = &scan_timeout;
 
 	timer_add_event(&event);
+	*/
+
 }
 
 static void dll_cca2(void* arg)
 {
-	bool cca2 = phy_cca();
+	bool cca2 = true;
 	if (!cca2)
 	{
 		dll_tx_callback(DLLTxResultCCAFail);
 		return;
 	}
+	phy_tx(&foreground_frame_tx_cfg);
+}
 
+void dll_csma()
+{
+	bool cca1 = phy_cca(foreground_frame_tx_cfg.spectrum_id, foreground_frame_tx_cfg.sync_word_class);
+
+	if (!cca1)
+	{
+		dll_tx_callback(DLLTxResultCCAFail);
+		return;
+	}
+
+<<<<<<< HEAD
 	phy_result_t res = phy_tx(current_cfg);
+=======
+	timer_event event;
+	event.next_event = 5; // TODO: get T_G fron config
+	event.f = &dll_cca2;
+
+	if (!timer_add_event(&event))
+	{
+		dll_tx_callback(DLLTxResultFail);
+		return;
+	}
+>>>>>>> master
 }
 
 void dll_tx_foreground_frame(u8* data, u8 length, u8 spectrum_id, s8 tx_eirp)
 {
 	//TODO: check if not already sending
-	foreground_frame_tx_cfg.spectrum_id = spectrum_id; // TODO check valid
+	foreground_frame_tx_cfg.spectrum_id = spectrum_id; // TODO check valid (Alexander: this check is already done in phy)
 	foreground_frame_tx_cfg.eirp = tx_eirp;
+	foreground_frame_tx_cfg.sync_word_class = 1;
 
 	dll_foreground_frame_t* frame = (dll_foreground_frame_t*) frame_data;
 	frame->frame_header.tx_eirp = (tx_eirp + 40) * 2; // (-40 + 0.5n) dBm
@@ -339,7 +391,7 @@ void dll_tx_foreground_frame(u8* data, u8 length, u8 spectrum_id, s8 tx_eirp)
 	frame->frame_header.frame_ctl = !FRAME_CTL_LISTEN | !FRAME_CTL_DLLS | FRAME_CTL_EN_ADDR | !FRAME_CTL_FR_CONT | !FRAME_CTL_CRC32 | !FRAME_CTL_NM2 | FRAME_CTL_DIALOGFRAME; // TODO hardcoded
 
 	dll_foreground_frame_address_ctl_header_t address_ctl_header;
-	address_ctl_header.dialogId = 0x00; // TODO hardcoded
+	address_ctl_header.dialogId = dialog_id++; // TODO hardcoded
 	address_ctl_header.flags = ADDR_CTL_BROADCAST | !ADDR_CTL_VID | !ADDR_CTL_NLS; // TODO appl flags?
 
 	u8* pointer = frame_data + 1 + sizeof(dll_foreground_frame_header_t);
@@ -362,6 +414,7 @@ void dll_tx_foreground_frame(u8* data, u8 length, u8 spectrum_id, s8 tx_eirp)
 	u16 crc16 = crc_calculate(frame_data, frame->length - 2);
 	memcpy(pointer, &crc16, 2);
 
+<<<<<<< HEAD
 	foreground_frame_tx_cfg.len = frame->length;
 
 	bool cca1 = phy_cca();
@@ -386,6 +439,9 @@ void dll_tx_foreground_frame(u8* data, u8 length, u8 spectrum_id, s8 tx_eirp)
 //		phy_rx_stop(); // TODO who is responsible for starting rx again? appl or DLL?
 //		res = phy_tx(&foreground_frame_tx_cfg);
 //	}
+=======
+	foreground_frame_tx_cfg.length = frame->length;
+>>>>>>> master
 }
 
 void dll_tx_background_frame(u8* data, u8 subnet, u8 spectrum_id, s8 tx_eirp)

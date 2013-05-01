@@ -3,12 +3,13 @@
  *  Authors:
  * 		maarten.weyn@artesis.be
  *  	glenn.ergeerts@artesis.be
+ *  	alexanderhoet@gmail.com
  */
 
-
 #include <string.h>
+#include <stdio.h>
 
-#include <phy/phy.h>
+#include <d7aoss.h>
 
 #include <hal/system.h>
 #include <hal/button.h>
@@ -21,138 +22,107 @@
 #define INTERRUPT_BUTTON3 	(1 << 2)
 #define INTERRUPT_RTC 		(1 << 3)
 
-#define PACKET_LEN 19
-
-static u8 packet[PACKET_LEN] = { 0x13, 0x50, 0xF1, 0x20, 0x59, 0x40, 0x46, 0x93, 0x21, 0xAB, 0x00, 0x31, 0x00, 0x24, 0x00, 0x00, 0x00, 0x01, 0x01 };
-
 static u8 interrupt_flags = 0;
 static u8 rtcEnabled = 0;
 
-phy_rx_cfg_t rx_cfg = {
-		0, // timeout
-		0, // multiple TODO
-		0x27, // spectrum ID TODO
-		0, // coding scheme TODO
-		0, // RSSI min filter TODO
-		0x01  // sync word class TODO
-};
+static uint8_t buffer[16] = {0x10, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77, 0x88, 0x99, 0xAA, 0xBB, 0xCC, 0xDD, 0xEE, 0xFF};
 
 phy_tx_cfg_t tx_cfg = {
-	    0x27, // spectrum ID
-		0, // coding scheme
-		0, // sync word class
-	    packet,
-	    PACKET_LEN,
-	    0, // tx_eirp
+	0x90,
+	1,
+	0,
+	16,
+	buffer
 };
 
-void start_rx()
+phy_rx_cfg_t rx_cfg = {
+	0x90,
+	1,
+	0,
+	0
+};
+
+void start_rx(void)
 {
-	phy_rx_start(&rx_cfg); // TODO remove (use timeout/multiple)
-	led_on(2);
+	phy_rx(&rx_cfg);
 }
 
-void stop_rx()
+void start_tx(void)
 {
-	phy_rx_stop();
-	led_off(2);
+	phy_idle();
+	phy_tx(&tx_cfg);
 }
 
-void tx_callback()
+void rx_callback(phy_rx_data_t* rx_data)
 {
-	log_print_string("tx_callback");
-	led_off(3);
-	start_rx(); // go back to rx mode
-}
-
-void rx_callback(phy_rx_res_t* res)
-{
-	if(memcmp(res->data, packet, res->len) != 0)
-	{
-		__no_operation(); // TODO assert
-		log_print_string("!!! unexpected packet data");
-		led_off(3);
+	if(memcmp(buffer, rx_data->data, sizeof(buffer)) == 0)
 		led_toggle(1);
-	}
-	else
-	{
-		char text[14] = "RX OK     dBm";
-		u8 i = 6;
-		if (res->rssi < 0)
-		{
-			text[i++] = '-';
-			res->rssi  *= -1;
-		}
-		if (res->rssi  >= 100)
-		{
-			text[i++] = '1';
-			res->rssi  -= 100;
-		}
-
-		text[i++] = 0x30 + (res->rssi / 10);
-		text[i++] = 0x30 + (res->rssi % 10);
-		log_print_string((char*)&text);
-		led_toggle(3);
-	}
-
-	start_rx();
 }
 
-void main(void) {
+void main(void)
+{
 	system_init();
+
+	//test_fec_encoding();
+	//test_fec_decoding();
+
 	button_enable_interrupts();
 
-	rtc_init_counter_mode();
-	rtc_start();
+    rtc_init_counter_mode();
+    rtc_start();
 
 	phy_init();
-	phy_set_tx_callback(&tx_callback);
-	phy_set_rx_callback(&rx_callback);
+	phy_set_rx_callback(rx_callback);
 
-	start_rx();
-
-	while(1)
-	{
-        if(INTERRUPT_BUTTON1 & interrupt_flags)
-        {
+	while(1) {
+        if (INTERRUPT_BUTTON1 & interrupt_flags) {
         	interrupt_flags &= ~INTERRUPT_BUTTON1;
-        	led_on(3);
 
-        	if(phy_is_rx_in_progress() == true)
-        		stop_rx();
-
-        	phy_tx(&tx_cfg);
+        	start_tx();
 
         	button_clear_interrupt_flag();
         	button_enable_interrupts();
         }
 
-        if (INTERRUPT_BUTTON3 & interrupt_flags)
-        {
-        	interrupt_flags &= ~INTERRUPT_BUTTON3;
+        if (INTERRUPT_BUTTON3 & interrupt_flags) {
+			interrupt_flags &= ~INTERRUPT_BUTTON3;
 
-        	if (rtcEnabled)
-			{
+			if (rtcEnabled) {
 				rtcEnabled = 0;
 				rtc_disable_interrupt();
-				start_rx();
 			} else {
 				rtcEnabled = 1;
 				rtc_enable_interrupt();
-				stop_rx();
 			}
 
-        	button_clear_interrupt_flag();
-        	button_enable_interrupts();
+			button_clear_interrupt_flag();
+			button_enable_interrupts();
         }
 
-        if (INTERRUPT_RTC & interrupt_flags)
-		{
-			led_on(3);
-			stop_rx();
-			phy_tx(&tx_cfg);
-			interrupt_flags &= ~INTERRUPT_RTC;
-		}
+        if (INTERRUPT_RTC & interrupt_flags) {
+        	interrupt_flags &= ~INTERRUPT_RTC;
+
+        	start_tx();
+        }
+
+        if (!phy_is_rx_in_progress() && !phy_is_tx_in_progress()) {
+        	start_rx();
+        }
+
+        if (phy_is_rx_in_progress())
+        {
+        	led_on(2);
+        } else {
+        	led_off(2);
+        }
+
+        if (phy_is_tx_in_progress())
+        {
+        	led_on(3);
+        } else {
+        	led_off(3);
+        }
+
 
 		system_lowpower_mode(4,1);
 	}

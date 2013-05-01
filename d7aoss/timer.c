@@ -5,6 +5,9 @@
  *      Author: Maarten Weyn
  */
 
+#include <stddef.h>
+#include <stdbool.h>
+
 #include "timer.h"
 #include "queue.h"
 #include "log.h"
@@ -54,7 +57,7 @@ bool timer_add_event(timer_event* event)
 	if (event->next_event == 0)
 	{
 		event->f(NULL);
-		return 1;
+		return true;
 	}
 
 	if (queue_push_value(&event_queue, (void*) event, sizeof(timer_event)))
@@ -66,11 +69,11 @@ bool timer_add_event(timer_event* event)
 		}
 	} else {
 		log_print_string("Cannot add event, queue is full");
-		return 0;
+		return false;
 	}
 
 
-	return 1;
+	return true;
 }
 
 // Timer A0 interrupt service routine
