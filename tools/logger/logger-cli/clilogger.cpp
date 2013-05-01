@@ -3,6 +3,8 @@
 #include <serialport.h>
 #include <serialportinfo.h>
 
+#include <QDateTime>
+
 QT_USE_NAMESPACE_SERIALPORT
 
 #include <logparser.h>
@@ -47,7 +49,7 @@ CliLogger::CliLogger(QObject *parent) : QObject(parent)
 
 void CliLogger::onMessageReceived(QString msg)
 {
-    qDebug() << "msg: " << msg;
+    qDebug() << QTime::currentTime().toString("hh:mm:ss.zzz") << " msg: " << msg;
 }
 
 bool CliLogger::isSerialPort(QString arg) const

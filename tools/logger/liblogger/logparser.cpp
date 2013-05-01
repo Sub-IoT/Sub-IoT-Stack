@@ -5,6 +5,7 @@
 #include "log.h"
 #include "phy/phy.h"
 #include "dll/dll.h"
+#include "hexdump.h"
 
 LogParser::LogParser(QIODevice* ioDevice, QObject *parent) : QObject(parent)
 {
@@ -82,18 +83,19 @@ void LogParser::parseReceivedData()
 
         emit logMessageReceived(msg);
     }
-    /*
+
     if (type == LOG_TYPE_DATA)
     {
-        QString msg = "0x";
+        QString hex= "Data: ";
+        unsigned char byte;
         for(int i = 0; i < len; i++)
         {
-            msg += QString().sprintf("%02x", _receivedDataQueue->dequeue());
+            byte = _receivedDataQueue->at(i);
+            hex.append(QString("%1").arg(byte, 2, 16, QChar('0')).toUpper());
         }
-
-        emit logMessageReceived(msg);
+        emit logMessageReceived(hex);
     }
-    */
+
     if(type == LOG_TYPE_PHY_RX_RES)
     {
         QByteArray packetData;

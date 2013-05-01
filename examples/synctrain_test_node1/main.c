@@ -46,42 +46,52 @@ Calendar currentTime;
 
 void start_tx(void* arg)
 {
+	log_print_string("tx_event removed");
 	system_watchdog_timer_reset();
 
 	//if (tx)
 	//	return;
 
 	//tx = 1;
-	led_on(1);
+	led_on(2);
 	sync_position = SYNC_LENGTH;
 
 	timer_add_event(&sync_event);
+	log_print_string("sync_event added");
 
 	counter = sync_position * SYNC_INTERVAL_MS;
 
 	trans_tx_background_frame((uint8_t*) &counter, 0xFF, SEND_CHANNEL, 10);
-	log_print_string("FF");
+	log_print_string("BF");
+	log_print_data((uint8_t*) &sync_position, 1);
 	//trans_tx_foreground_frame(data, dataLength, SEND_CHANNEL, 10);
 }
 
 void start_tx_sync(void* arg)
 {
 
-
+	log_print_string("sync_event removed");
 	sync_position--;
 
-	if (sync_position > 0)
+	if (sync_position == 0)
 	{
 		led_on(3);
-		timer_add_event(&event);
+
 		trans_tx_foreground_frame(data, dataLength, SEND_CHANNEL, 10);
+
+		log_print_string("tx_event added");
 		log_print_string("FF");
+
+		timer_add_event(&event);
 	} else {
-		timer_add_event(&sync_event);
+		log_print_string("sync_event added");
 		counter = sync_position * SYNC_INTERVAL_MS;
-		led_on(1);
-		trans_tx_background_frame((uint8_t*) &counter, 0xFF, SEND_CHANNEL, 10);
+		led_on(2);
 		log_print_string("BF");
+
+		log_print_data((uint8_t*) &sync_position, 1);
+		trans_tx_background_frame((uint8_t*) &counter, 0xFF, SEND_CHANNEL, 10);
+		timer_add_event(&sync_event);
 	}
 }
 
@@ -90,7 +100,7 @@ void tx_callback(Trans_Tx_Result result)
 	if(result == TransPacketSent)
 	{
 		led_off(3);
-		led_off(1);
+		led_off(2);
 		log_print_string("TX OK");
 	}
 	else
@@ -100,7 +110,7 @@ void tx_callback(Trans_Tx_Result result)
 	}
 
 	//tx = 0;
-	timer_add_event(&event);
+	//timer_add_event(&event);
 }
 
 
