@@ -22,28 +22,26 @@ static u8 current_scan_id = 0;
 u8 current_spectrum_id = 0;
 u8 timeout_listen; // TL
 
-u8 frame_data[50]; // TODO max frame size
+uint8_t frame_data[50]; // TODO max frame size
 
-u8 dialog_id = 0;
+uint8_t dialog_id = 0;
 
 Dll_State_Enum dll_state;
 
 phy_tx_cfg_t foreground_frame_tx_cfg = {
-	    0x10, // spectrum ID
-		0, // coding scheme
-		1, // sync word class
-	    frame_data,
-	    0,
-	    0
+            0x10, 	// spectrum ID
+			1, 		// Sync word class
+			0,		// Transmission power level in dBm ranged [-39, +10]
+			0,		// Packet length
+            frame_data	//Packet data
 };
 
 phy_tx_cfg_t background_frame_tx_cfg = {
-	    0x10, // spectrum ID
-		0, // coding scheme
-		0, // sync word class
-	    frame_data,
-	    0,
-	    0
+		0x10, 	// spectrum ID
+		0, 		// Sync word class
+		0,		// Transmission power level in dBm ranged [-39, +10]
+		7,		// Packet length
+		frame_data	//Packet data
 };
 
 phy_tx_cfg_t *current_cfg;
@@ -350,7 +348,7 @@ static void dll_cca2(void* arg)
 		dll_tx_callback(DLLTxResultCCAFail);
 		return;
 	}
-	phy_tx(&foreground_frame_tx_cfg);
+	phy_tx(current_cfg);
 }
 
 void dll_csma()
@@ -363,11 +361,9 @@ void dll_csma()
 		return;
 	}
 
-<<<<<<< HEAD
-	phy_result_t res = phy_tx(current_cfg);
-=======
 	timer_event event;
 	event.next_event = 5; // TODO: get T_G fron config
+	current_cfg = &foreground_frame_tx_cfg;
 	event.f = &dll_cca2;
 
 	if (!timer_add_event(&event))
@@ -375,7 +371,6 @@ void dll_csma()
 		dll_tx_callback(DLLTxResultFail);
 		return;
 	}
->>>>>>> master
 }
 
 void dll_tx_foreground_frame(u8* data, u8 length, u8 spectrum_id, s8 tx_eirp)
@@ -414,41 +409,15 @@ void dll_tx_foreground_frame(u8* data, u8 length, u8 spectrum_id, s8 tx_eirp)
 	u16 crc16 = crc_calculate(frame_data, frame->length - 2);
 	memcpy(pointer, &crc16, 2);
 
-<<<<<<< HEAD
-	foreground_frame_tx_cfg.len = frame->length;
 
-	bool cca1 = phy_cca();
-
-	if (!cca1)
-	{
-		dll_tx_callback(DLLTxResultCCAFail);
-		return;
-	}
-
-	timer_event event;
-	event.next_event = 5; // TODO: get T_G fron config
-	current_cfg = &foreground_frame_tx_cfg;
-	event.f = &dll_cca2;
-
-	if (!timer_add_event(&event))
-		dll_tx_callback(DLLTxResultFail);
-
-//	phy_result_t res = phy_tx(&foreground_frame_tx_cfg);
-//	if(res == PHY_RADIO_IN_RX_MODE)
-//	{
-//		phy_rx_stop(); // TODO who is responsible for starting rx again? appl or DLL?
-//		res = phy_tx(&foreground_frame_tx_cfg);
-//	}
-=======
 	foreground_frame_tx_cfg.length = frame->length;
->>>>>>> master
 }
 
 void dll_tx_background_frame(u8* data, u8 subnet, u8 spectrum_id, s8 tx_eirp)
 {
 	background_frame_tx_cfg.spectrum_id = spectrum_id;
 	background_frame_tx_cfg.eirp = tx_eirp;
-	background_frame_tx_cfg.len = 7;
+	background_frame_tx_cfg.length = 7;
 
 	dll_background_frame_t* frame = (dll_background_frame_t*) frame_data;
 	frame->subnet = subnet;
@@ -459,7 +428,7 @@ void dll_tx_background_frame(u8* data, u8 subnet, u8 spectrum_id, s8 tx_eirp)
 	u16 crc16 = crc_calculate(frame_data, 5);
 	memcpy(pointer, &crc16, 2);
 
-	bool cca1 = phy_cca();
+	bool cca1 = phy_cca(background_frame_tx_cfg.spectrum_id, foreground_frame_tx_cfg.sync_word_class);
 
 	if (!cca1)
 	{

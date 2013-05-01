@@ -66,9 +66,14 @@ void trans_tx_foreground_frame(u8* data, u8 length, u8 spectrum_id, s8 tx_eirp){
 	trans_rigd_ccp(spectrum_id, true);
 }
 
+void trans_tx_background_frame(u8* data, u8 subnet, u8 spectrum_id, s8 tx_eirp){
+	dll_tx_background_frame(data, subnet, spectrum_id, tx_eirp);
+}
+
 // transport layer, Random Increase Geometric decaying slot back-off , Congestion Control Process
 void trans_rigd_ccp(u8 spectrum_id, bool init_status){
 	if(init_status){//initialization of the parameters, only for new packets
+		//TODO: Dragan: fix overflow
 		current__t_ca = 400;
 		current__t_g = 5;
 		current__spectrum_id = spectrum_id;

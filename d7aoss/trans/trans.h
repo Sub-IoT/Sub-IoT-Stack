@@ -23,6 +23,7 @@ void trans_init();
 
 void trans_set_tx_callback(trans_tx_callback_t);
 void trans_tx_foreground_frame(u8* data, u8 length, u8 spectrum_id, s8 tx_eirp);
+void trans_tx_background_frame(u8* data, u8 subnet, u8 spectrum_id, s8 tx_eirp);
 
 
 void trans_rigd_ccp(u8 spectrum_id, bool init_status);
