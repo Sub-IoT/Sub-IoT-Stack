@@ -13,7 +13,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-static u8 current__t_ca = 0;
+static u16 current__t_ca = 0;
 static u8 current__t_g = 0;
 static u8 current__spectrum_id = 0;
 
@@ -40,7 +40,7 @@ static void control_tx_callback(Dll_Tx_Result Result)
 			case DLLTxResultFail:
 				trans_tx_callback(TransPacketFail);
 				#ifdef LOG_TRANS_ENABLED
-					log_print_string("Fail to send");
+					log_print_string("Fail to sent");
 				#endif
 				break;
 		}
