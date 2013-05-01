@@ -251,8 +251,8 @@ extern int16_t phy_get_rssi(uint8_t spectrum_id, uint8_t sync_word_class)
 {
 	uint8_t rssi_raw = 0;
 
-	//if(get_radiostate() != Idle)
-		//return false;
+	if(get_radiostate() != Idle)
+		return false;
 
 	//Set radio Idle
 	Strobe(RF_SIDLE);
