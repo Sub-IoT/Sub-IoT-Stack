@@ -56,7 +56,7 @@ bool timer_insert_value_in_queue(timer_event* event)
 {
 	// TODO: substract time already gone
 	u8 position = 0;
-	uint16_t sum_next_event = 0;
+	int16_t sum_next_event = -TA1R;
 
 	while (position < event_queue.length)
 	{
@@ -65,11 +65,20 @@ bool timer_insert_value_in_queue(timer_event* event)
 		{
 			sum_next_event += temp_event->next_event;
 		} else {
-			event->next_event -= sum_next_event;
-			//TODO get return value
+			uint16_t elapsed = 0;
+			if (position == 0)
+			{
+				elapsed = TA1R;
+				timer_disable_interrupt();
+				started = false;
+			} else {
+				event->next_event -= sum_next_event;
+			}
+
 			queue_insert_value(&event_queue, (void*) event, position, sizeof(timer_event));
 			temp_event = (timer_event*) queue_read_value(&event_queue, position+1, sizeof(timer_event));
-			temp_event->next_event -= event->next_event;
+
+			temp_event->next_event -= (event->next_event + elapsed);
 			return true;
 		}
 		position++;
