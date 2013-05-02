@@ -52,6 +52,39 @@ void timer_init()
 	started = false;
 }
 
+bool timer_insert_value_in_queue(timer_event* event)
+{
+	// TODO: substract time already gone
+	u8 position = 0;
+	uint16_t sum_next_event = 0;
+
+	while (position < event_queue.length)
+	{
+		timer_event *temp_event = (timer_event*) queue_read_value(&event_queue, position, sizeof(timer_event));
+		if (event->next_event > sum_next_event + temp_event->next_event)
+		{
+			sum_next_event += temp_event->next_event;
+		} else {
+			event->next_event -= sum_next_event;
+			//TODO get return value
+			queue_insert_value(&event_queue, (void*) event, position, sizeof(timer_event));
+			temp_event = (timer_event*) queue_read_value(&event_queue, position+1, sizeof(timer_event));
+			temp_event->next_event -= event->next_event;
+			return true;
+		}
+		position++;
+	}
+
+	if (position == event_queue.length)
+	{
+		event->next_event -= sum_next_event;
+		return queue_push_value(&event_queue, (void*) event, sizeof(timer_event));
+	}
+
+	return true;
+}
+
+
 bool timer_add_event(timer_event* event)
 {
 	if (event->next_event == 0)
@@ -60,7 +93,7 @@ bool timer_add_event(timer_event* event)
 		return true;
 	}
 
-	if (queue_push_value(&event_queue, (void*) event, sizeof(timer_event)))
+	if (timer_insert_value_in_queue(event))
 	{
 		if (!started)
 		{

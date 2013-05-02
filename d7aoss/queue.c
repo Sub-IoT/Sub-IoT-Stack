@@ -10,7 +10,7 @@
 
 #include "queue.h"
 
-static void shift_queue (queue* q, u8 places)
+static void shift_queue (queue* q, uint8_t places)
 {
 	if (q->front - places < q->start)
 	{
@@ -18,7 +18,7 @@ static void shift_queue (queue* q, u8 places)
 		return;
 	}
 
-	u8* data_ptr = q->front;
+	uint8_t* data_ptr = q->front;
 	while (data_ptr <= q->rear)
 	{
 		*(data_ptr-places) = *(data_ptr++);
@@ -28,7 +28,7 @@ static void shift_queue (queue* q, u8 places)
 	q->rear -= places;
 }
 
-static bool check_for_space(queue* q, u8 size)
+static bool check_for_space(queue* q, uint8_t size)
 {
 	if (q->rear + 1 > q->start + q->size)
 	{
@@ -43,7 +43,7 @@ static bool check_for_space(queue* q, u8 size)
 	return 1;
 }
 
-void queue_init(queue* q, u8* buffer, u16 size)
+void queue_init(queue* q, uint8_t* buffer, uint16_t size)
 {
 	q->size = size;
 	q->front = NULL;
@@ -52,13 +52,13 @@ void queue_init(queue* q, u8* buffer, u16 size)
 	q->length = 0;
 }
 
-u8 queue_pop_u8(queue* q)
+uint8_t queue_pop_u8(queue* q)
 {
 	if (q->front == NULL)
 		return 0;
 
 	q->length--;
-	u8 value = *(u16*)(q->front);
+	uint8_t value = *(uint16_t*)(q->front);
 	if (q->length == 0)
 	{
 		q->front = NULL;
@@ -69,13 +69,13 @@ u8 queue_pop_u8(queue* q)
 	return value;
 }
 
-u16 queue_pop_u16(queue* q)
+uint16_t queue_pop_u16(queue* q)
 {
 	if (q->front == NULL)
 			return 0;
 
 	q->length--;
-	u16 value = *(u16*)(q->front);
+	uint16_t value = *(uint16_t*)(q->front);
 	if (q->length == 0)
 	{
 		q->front = NULL;
@@ -86,13 +86,13 @@ u16 queue_pop_u16(queue* q)
 	return value;
 }
 
-void* queue_pop_value(queue* q, u8 size)
+void* queue_pop_value(queue* q, uint8_t size)
 {
 	if (q->front == NULL)
 		return 0;
 
 	q->length--;
-	u8* value = q->front;
+	uint8_t* value = q->front;
 	if (q->length == 0)
 	{
 		q->front = NULL;
@@ -103,7 +103,7 @@ void* queue_pop_value(queue* q, u8 size)
 	return (void*) value;
 }
 
-u8 queue_read_u8(queue* q, u8 position)
+uint8_t queue_read_u8(queue* q, uint8_t position)
 {
 	if (q->front + position > q->rear)
 		return 0;
@@ -111,26 +111,34 @@ u8 queue_read_u8(queue* q, u8 position)
 	return *(q->front + position);
 }
 
-u16 queue_read_u16(queue* q, u8 position)
+uint16_t queue_read_u16(queue* q, uint8_t position)
 {
-	u16* value = (u16*) q->front;
-	if (value + position > (u16*)q->rear)
+	uint16_t* value = (uint16_t*) q->front;
+	if (value + position > (uint16_t*)q->rear)
 			return 0;
 
 		return *(value + position);
 }
 
-bool queue_push_u8(queue* q, u8 data)
+void* queue_read_value(queue* q, uint8_t position, uint8_t size)
+{
+	if (q->front + (position * size) > q->rear)
+			return 0;
+
+	return (void*) (q->front + (position * size));
+}
+
+bool queue_push_u8(queue* q, uint8_t data)
 {
 	return queue_push_value(q, &data, 1);
 }
 
-bool queue_push_u16(queue* q, u16 data)
+bool queue_push_u16(queue* q, uint16_t data)
 {
 	return queue_push_value(q, &data, 2);
 }
 
-bool queue_push_value(queue* q, void* data, u8 size)
+bool queue_push_value(queue* q, void* data, uint8_t size)
 {
 	//log_print_string("push");
 	if (q->front == NULL)
@@ -151,12 +159,12 @@ bool queue_push_value(queue* q, void* data, u8 size)
 	return 1;
 }
 
-void queue_insert_u8(queue* q, u8 data, u8 position)
+void queue_insert_u8(queue* q, uint8_t data, uint8_t position)
 {
 	check_for_space(q,1);
 
-	u8* position_ptr = q->front + position;
-	u8* data_ptr = q->rear++;
+	uint8_t* position_ptr = q->front + position;
+	uint8_t* data_ptr = q->rear++;
 	while (data_ptr >= position_ptr)
 	{
 		*(data_ptr+1) = *(data_ptr--);
@@ -166,16 +174,16 @@ void queue_insert_u8(queue* q, u8 data, u8 position)
 	q->length++;
 }
 
-void queue_insert_u16(queue* q, u16 data, u8 position)
+void queue_insert_u16(queue* q, uint16_t data, uint8_t position)
 {
 	check_for_space(q,2);
 
-	u16* position_ptr = (u16*)(q->front) + position;
-	u16* data_ptr = (u16*)(q->rear);
+	uint16_t* position_ptr = (uint16_t*)(q->front) + position;
+	uint16_t* data_ptr = (uint16_t*)(q->rear);
 	q->rear += 2;
 	while (data_ptr >= position_ptr)
 	{
-		u16* new_data_ptr = data_ptr + 1;
+		uint16_t* new_data_ptr = data_ptr + 1;
 		*(new_data_ptr) = *(data_ptr--);
 	}
 
@@ -183,15 +191,33 @@ void queue_insert_u16(queue* q, u16 data, u8 position)
 	q->length++;
 }
 
-
-void queue_set_u8(queue* q, u8 data, u8 position)
+void queue_insert_value(queue* q, void* data, uint8_t position, uint8_t size)
 {
-	u8* data_ptr = (u8*)(q->front) + position;
+	check_for_space(q,size);
+
+	uint8_t* position_ptr = q->front + (position * size);
+	uint8_t* data_ptr = q->rear;
+	q->rear += size;
+	while (data_ptr >= position_ptr)
+	{
+		uint8_t* new_data_ptr = data_ptr + size;
+		memcpy(new_data_ptr, data_ptr, size);
+		data_ptr -= size;
+	}
+
+	memcpy(position_ptr, data, size);
+	q->length++;
+}
+
+
+void queue_set_u8(queue* q, uint8_t data, uint8_t position)
+{
+	uint8_t* data_ptr = (uint8_t*)(q->front) + position;
 	*data_ptr = data;
 }
-void queue_set_u16(queue* q, u16 data, u8 position)
+void queue_set_u16(queue* q, uint16_t data, uint8_t position)
 {
-	u16* data_ptr = (u16*)(q->front) + position;
+	uint16_t* data_ptr = (uint16_t*)(q->front) + position;
 	*data_ptr = data;
 }
 
