@@ -10,6 +10,7 @@
 
 //#define LOG_DLL_ENABLED
 //#define LOG_PHY_ENABLED
+#define LOG_TRANS_ENABLED
 
 #include "types.h"
 

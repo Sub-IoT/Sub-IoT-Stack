@@ -26,21 +26,21 @@ static void control_tx_callback(Dll_Tx_Result Result)
 {
 	switch(Result){
 			case DLLTxResultOK:
-				trans_tx_callback(TransPacketSent);
 				#ifdef LOG_TRANS_ENABLED
-					log_print_string("Packet is sent");
+					log_print_string("Trans: Packet is sent");
 				#endif
+				trans_tx_callback(TransPacketSent);
 				break;
 			case DLLTxResultCCAFail:
 				trans_rigd_ccp(current__spectrum_id, false);
 				#ifdef LOG_TRANS_ENABLED
-					log_print_string("CCA fail");
+					log_print_string("Trans: CCA fail");
 				#endif
 				break;
 			case DLLTxResultFail:
 				trans_tx_callback(TransPacketFail);
 				#ifdef LOG_TRANS_ENABLED
-					log_print_string("Fail to sent");
+					log_print_string("Trans: Fail to sent");
 				#endif
 				break;
 		}

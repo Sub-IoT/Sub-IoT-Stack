@@ -47,7 +47,6 @@ Calendar currentTime;
 void start_tx(void* arg)
 {
 	log_print_string("tx_event removed");
-	system_watchdog_timer_reset();
 
 	//if (tx)
 	//	return;
@@ -97,6 +96,8 @@ void start_tx_sync(void* arg)
 
 void tx_callback(Trans_Tx_Result result)
 {
+	system_watchdog_timer_reset();
+
 	if(result == TransPacketSent)
 	{
 		led_off(3);

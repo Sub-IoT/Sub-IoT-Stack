@@ -348,7 +348,10 @@ static void dll_cca2(void* arg)
 		dll_tx_callback(DLLTxResultCCAFail);
 		return;
 	}
-	phy_tx(current_cfg);
+	if (!phy_tx(current_cfg))
+	{
+		dll_tx_callback(DLLTxResultFail);
+	}
 }
 
 void dll_csma()
