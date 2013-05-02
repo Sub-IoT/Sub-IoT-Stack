@@ -8,9 +8,14 @@
 #include "log.h"
 #include "timer.h"
 
+void callback1(void* arg);
+void callback2(void* arg);
+
+
 u8 series_number = 10;
 //u16 timing_series[] = { 1024, 1024, 2048, 1024, 2, 1024, 1024, 1024, 4096, 1024};
 u16 timing_series[] = {4096, 5014, 1024, 2048, 5012, 6036, 7060, 8024, 10000, 10048};
+void* event_series[] ={&callback1, &callback1, &callback2, &callback1, &callback1, &callback1, &callback1, &callback1, &callback1, &callback1};
 
 queue q;
 
@@ -20,20 +25,20 @@ void callback1(void* arg)
 {
 	log_print_string("callback 1");
 	led_toggle(3);
-	timer_event event;
-	event.next_event = 1024;
-	event.f = &callback2;
-	timer_add_event(&event);
+//	timer_event event;
+//	event.next_event = 1024;
+//	event.f = &callback2;
+//	timer_add_event(&event);
 }
 
 void callback2(void* arg)
 {
 	log_print_string("callback 2");
 	led_toggle(1);
-	timer_event event;
-	event.next_event = 1024;
-	event.f = &callback1;
-	timer_add_event(&event);
+//	timer_event event;
+//	event.next_event = 1024;
+//	event.f = &callback1;
+//	timer_add_event(&event);
 }
 
 int main(void) {
@@ -100,11 +105,15 @@ int main(void) {
     //TA1CCR0 =  queue_pop_u16(&q);
     //TA1CCTL0 = CCIE; // Enable interrupt for CCR0
 
+    uint8_t i=0;
+    for (; i<sizeof(timing_series); i++)
+    {
+    	timer_event event;
+		event.next_event = timing_series[i];
+		event.f = event_series[i];
+		timer_add_event(&event);
+    }
 
-	timer_event event;
-	event.next_event = 1024;
-	event.f = &callback1;
-	timer_add_event(&event);
 
     log_print_string("Counting");
 
