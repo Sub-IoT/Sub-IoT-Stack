@@ -86,7 +86,7 @@ bool timer_insert_value_in_queue(timer_event* event)
 
 	if (position == event_queue.length)
 	{
-		event->next_event -= sum_next_event;
+		if (started) event->next_event -= sum_next_event;
 		return queue_push_value(&event_queue, (void*) event, sizeof(timer_event));
 	}
 
@@ -102,7 +102,11 @@ bool timer_add_event(timer_event* event)
 		return true;
 	}
 
-	if (timer_insert_value_in_queue(event))
+	timer_event new_event;
+	new_event.f = event->f;
+	new_event.next_event = event->next_event;
+
+	if (timer_insert_value_in_queue(&new_event))
 	{
 		if (!started)
 		{
