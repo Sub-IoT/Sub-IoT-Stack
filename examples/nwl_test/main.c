@@ -17,13 +17,17 @@
 static u16 counter = 0;
 
 static timer_event event;
-static u16 timer = 30000;
+static u16 timer = 500;
 
 void send_adv_prot_data()
 {
 	led_on(1);
 	nwl_tx_advertising_protocol_data(0x10, timer, 0, 0xFF, 0x10);
-	timer -= 1024;
+	timer -= 10;
+	if (timer > 0)
+	{
+		timer_add_event(&event);
+	}
 }
 
 void rx_callback(dll_rx_res_t* rx_res)
@@ -49,8 +53,6 @@ void tx_callback(Dll_Tx_Result result)
 		log_print_string("TX FAIL");
 	}
 
-
-	timer_add_event(&event);
 }
 
 
@@ -66,7 +68,7 @@ void main(void) {
 
 
 	event.f = &send_adv_prot_data;
-	event.next_event = 1024;
+	event.next_event = 10;
 
 	timer_add_event(&event);
 
