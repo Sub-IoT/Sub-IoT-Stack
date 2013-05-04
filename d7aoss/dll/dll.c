@@ -48,12 +48,15 @@ phy_tx_cfg_t *current_cfg;
 
 static bool check_subnet(u8 device_subnet, u8 frame_subnet)
 {
+	// FFS = 0xF?
 	if (frame_subnet & 0xF0 != 0xF0)
 	{
+		// No -> FSS = DSS?
 		if (frame_subnet & 0xF0 != device_subnet & 0xF0)
 			return 0;
 	}
 
+	// FSM & DSM = DSM?
 	if ((frame_subnet & device_subnet & 0x0F) != (device_subnet & 0x0F))
 			return 0;
 
@@ -133,7 +136,7 @@ static void rx_callback(phy_rx_data_t* res)
 			scan_next(NULL); // how to reïnitiate scan on CRC Error, PHY should stay in RX
 			return;
 		}
-		if (!check_subnet(0xFF, res->data[3])) // TODO: get device_subnet from datastore
+		if (!check_subnet(0xFF, res->data[2])) // TODO: get device_subnet from datastore
 		{
 			#ifdef LOG_DLL_ENABLED
 				log_print_string("Subnet mismatch");
@@ -385,7 +388,7 @@ void dll_tx_foreground_frame(u8* data, u8 length, u8 spectrum_id, s8 tx_eirp)
 
 	dll_foreground_frame_t* frame = (dll_foreground_frame_t*) frame_data;
 	frame->frame_header.tx_eirp = (tx_eirp + 40) * 2; // (-40 + 0.5n) dBm
-	frame->frame_header.subnet = 0xf1; // TODO hardcoded, get from app?
+	frame->frame_header.subnet = 0xFF; // TODO hardcoded, get from app?
 	frame->frame_header.frame_ctl = !FRAME_CTL_LISTEN | !FRAME_CTL_DLLS | FRAME_CTL_EN_ADDR | !FRAME_CTL_FR_CONT | !FRAME_CTL_CRC32 | !FRAME_CTL_NM2 | FRAME_CTL_DIALOGFRAME; // TODO hardcoded
 
 	dll_foreground_frame_address_ctl_header_t address_ctl_header;
