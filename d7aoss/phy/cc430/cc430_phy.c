@@ -226,6 +226,7 @@ bool phy_rx(phy_rx_cfg_t* cfg)
 	}
 #endif
 
+	//TODO: set minimum sync word rss to scan minimum energy
 	//Enable interrupts
 	RF1AIES = RFIFG_FLANK_IOCFG0 | RFIFG_FLANK_RXFilled | RFIFG_FLANK_RXOverflow | RFIFG_FLANK_EndOfPacket;
 	RF1AIFG = 0;

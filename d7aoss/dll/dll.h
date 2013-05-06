@@ -94,26 +94,26 @@ typedef struct
     /// Frame Type
     Frame_Type  frame_type;
     /// Reception level
-    s8  rssi;
+    int8_t rssi;
     /// Link quality indicator
-    u8  lqi;
+    uint8_t  lqi;
     /// spectrum id
-    u8 spectrum_id;
+    uint8_t spectrum_id;
     /// Frame
     void* frame;
 } dll_rx_res_t;
 
 typedef struct
 {
-	u8 spectrum_id; // 0-255
+	uint8_t spectrum_id; // 0-255
 	Frame_Type scan_type; // BF / FF
-	u16 timeout_scan_detect; // 0-65535 ti
-	u16 time_next_scan; // 0-65535 ti
+	uint16_t timeout_scan_detect; // 0-65535 ti
+	uint16_t time_next_scan; // 0-65535 ti
 } dll_channel_scan_t;
 
 typedef struct
 {
-	u8 length;
+	uint8_t length;
 	dll_channel_scan_t* values;
 } dll_channel_scan_series_t;
 
@@ -127,11 +127,18 @@ void dll_init();
 void dll_set_tx_callback(dll_tx_callback_t);
 void dll_set_rx_callback(dll_rx_callback_t);
 
+void dll_set_scan_minimum_energy(int16_t e_sm);
+void dll_set_background_scan_detection_timeout(uint16_t t_bsd);
+void dll_set_foreground_scan_detection_timeout(uint16_t t_fsd);
+void dll_set_scan_spectrum_id(uint8_t spectrum_id);
+
 void dll_csma();
 void dll_stop_channel_scan();
+void dll_background_scan();
+void dll_foreground_scan();
 void dll_channel_scan_series(dll_channel_scan_series_t*);
 
-void dll_tx_foreground_frame(u8* data, u8 length, u8 spectrum_id, s8 tx_eirp); // TODO spectrum id (and other tx params) should come from ALP file later
-void dll_tx_background_frame(u8* data, u8 subnet, u8 spectrum_id, s8 tx_eirp);
+void dll_tx_foreground_frame(uint8_t* data, uint8_t length, uint8_t subnet, uint8_t spectrum_id, int8_t tx_eirp);
+void dll_tx_background_frame(uint8_t* data, uint8_t subnet, uint8_t spectrum_id, int8_t tx_eirp);
 
 #endif /* DLL_H_ */

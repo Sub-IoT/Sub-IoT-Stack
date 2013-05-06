@@ -17,16 +17,22 @@ static dll_tx_callback_t dll_tx_callback;
 static dll_rx_res_t dll_res;
 
 static dll_channel_scan_series_t* current_css;
-static u8 current_scan_id = 0;
+static uint8_t current_scan_id = 0;
 
-u8 current_spectrum_id = 0;
-u8 timeout_listen; // TL
 
+uint8_t timeout_listen; // TL
 uint8_t frame_data[50]; // TODO max frame size
 
 uint8_t dialog_id = 0;
 
 Dll_State_Enum dll_state;
+
+//Scan parameters
+int16_t scan_minimum_energy = -140; // E_sm
+uint16_t background_scan_detection_timeout;
+uint16_t foreground_scan_detection_timeout;
+uint8_t spectrum_id = 0;
+
 
 phy_tx_cfg_t foreground_frame_tx_cfg = {
             0x10, 	// spectrum ID
@@ -77,6 +83,11 @@ static void scan_timeout()
 		log_print_string("scan time-out");
 	#endif
 	phy_idle();
+
+	if (current_css == NULL)
+		return;
+
+	//Channel scan series
 	timer_event event;
 	event.next_event = current_css->values[current_scan_id].time_next_scan;
 	event.f = &scan_next;
@@ -292,6 +303,26 @@ void dll_set_rx_callback(dll_rx_callback_t cb)
 	dll_rx_callback = cb;
 }
 
+void dll_set_scan_minimum_energy(int16_t e_sm)
+{
+	scan_minimum_energy = e_sm; // E_sm
+}
+
+void dll_set_background_scan_detection_timeout(uint16_t t_bsd)
+{
+	background_scan_detection_timeout = t_bsd;
+}
+
+void dll_set_foreground_scan_detection_timeout(uint16_t t_fsd)
+{
+	foreground_scan_detection_timeout = t_fsd;
+}
+
+void dll_set_scan_spectrum_id(uint8_t spect_id)
+{
+	spectrum_id = spect_id;
+}
+
 void dll_stop_channel_scan()
 {
 	// TODO remove scan_timeout events from queue?
@@ -299,10 +330,67 @@ void dll_stop_channel_scan()
 	phy_idle();
 }
 
+void dll_background_scan()
+{
+	#ifdef LOG_DLL_ENABLED
+		log_print_string("Starting background scan");
+	#endif
+
+	//check for signal detected above E_sm
+	// TODO: is this the best method?
+	if (phy_get_rssi(spectrum_id, 0) <= scan_minimum_energy)
+	{
+		#ifdef LOG_DLL_ENABLED
+			log_print_string("No signal deteced");
+		#endif
+		return;
+	}
+
+	phy_rx_cfg_t rx_cfg;
+	rx_cfg.length = 0;
+	rx_cfg.timeout = background_scan_detection_timeout; // timeout
+	rx_cfg.spectrum_id = spectrum_id; // spectrum ID
+	rx_cfg.scan_minimum_energy = scan_minimum_energy;
+	rx_cfg.sync_word_class = 0;
+
+	current_css = NULL;
+	bool phy_rx_result = phy_rx(&rx_cfg);
+
+	#ifdef LOG_DLL_ENABLED
+	if (!phy_rx_result)
+	{
+		log_print_string("Starting channel scan FAILED");
+	}
+	#endif
+}
+void dll_foreground_scan()
+{
+	#ifdef LOG_DLL_ENABLED
+		log_print_string("Starting foreground scan");
+	#endif
+
+	phy_rx_cfg_t rx_cfg;
+	rx_cfg.length = 0;
+	rx_cfg.timeout = background_scan_detection_timeout; // timeout
+	rx_cfg.spectrum_id = spectrum_id; // spectrum ID
+	rx_cfg.scan_minimum_energy = scan_minimum_energy;
+	rx_cfg.sync_word_class = 1;
+
+	current_css = NULL;
+	bool phy_rx_result = phy_rx(&rx_cfg);
+
+	#ifdef LOG_DLL_ENABLED
+	if (!phy_rx_result)
+	{
+		log_print_string("Starting channel scan FAILED");
+	}
+	#endif
+}
+
 void dll_channel_scan_series(dll_channel_scan_series_t* css)
 {
 	#ifdef LOG_DLL_ENABLED
-		log_print_string("Starting channel scan");
+		log_print_string("Starting channel scan series");
 	#endif
 
 	phy_rx_cfg_t rx_cfg;
@@ -311,7 +399,7 @@ void dll_channel_scan_series(dll_channel_scan_series_t* css)
 	//rx_cfg.multiple = 0; // multiple TODO
 	rx_cfg.spectrum_id = css->values[current_scan_id].spectrum_id; // spectrum ID TODO
 	//rx_cfg.coding_scheme = 0; // coding scheme TODO
-	//rx_cfg.rssi_min = 0; // RSSI min filter TODO
+	rx_cfg.scan_minimum_energy = scan_minimum_energy;
 	if (css->values[current_scan_id].scan_type == FrameTypeForegroundFrame)
 	{
 		rx_cfg.sync_word_class = 1;
@@ -379,7 +467,7 @@ void dll_csma()
 	}
 }
 
-void dll_tx_foreground_frame(u8* data, u8 length, u8 spectrum_id, s8 tx_eirp)
+void dll_tx_foreground_frame(uint8_t* data, uint8_t length, uint8_t subnet, uint8_t spectrum_id, int8_t tx_eirp, bool nwl_security)
 {
 	//TODO: check if not already sending
 	foreground_frame_tx_cfg.spectrum_id = spectrum_id; // TODO check valid (Alexander: this check is already done in phy)
@@ -388,7 +476,7 @@ void dll_tx_foreground_frame(u8* data, u8 length, u8 spectrum_id, s8 tx_eirp)
 
 	dll_foreground_frame_t* frame = (dll_foreground_frame_t*) frame_data;
 	frame->frame_header.tx_eirp = (tx_eirp + 40) * 2; // (-40 + 0.5n) dBm
-	frame->frame_header.subnet = 0xFF; // TODO hardcoded, get from app?
+	frame->frame_header.subnet = subnet; // TODO hardcoded, get from app?
 	frame->frame_header.frame_ctl = !FRAME_CTL_LISTEN | !FRAME_CTL_DLLS | FRAME_CTL_EN_ADDR | !FRAME_CTL_FR_CONT | !FRAME_CTL_CRC32 | !FRAME_CTL_NM2 | FRAME_CTL_DIALOGFRAME; // TODO hardcoded
 
 	dll_foreground_frame_address_ctl_header_t address_ctl_header;

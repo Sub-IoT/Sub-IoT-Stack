@@ -18,8 +18,8 @@
 dll_channel_scan_t scan_cfg1 = {
 		0x10,
 		FrameTypeBackgroundFrame,
-		1000,
-		0
+		20,
+		500
 };
 
 dll_channel_scan_series_t scan_series_cfg;

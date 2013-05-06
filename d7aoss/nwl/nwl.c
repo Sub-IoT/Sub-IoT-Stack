@@ -6,6 +6,7 @@
  */
 
 #include "nwl.h"
+#include "../log.h"
 
 
 static nwl_rx_callback_t nwl_rx_callback;
@@ -53,12 +54,12 @@ void nwl_set_rx_callback(nwl_rx_callback_t cb)
 	nwl_rx_callback = cb;
 }
 
-void nwl_tx_background_frame(nwl_background_frame_t* data, u8 spectrum_id)
+void nwl_tx_background_frame(nwl_background_frame_t* data, uint8_t spectrum_id)
 {
 	dll_tx_background_frame(&(data->bpid), data->subnet, spectrum_id, data->tx_eirp);
 }
 
-void nwl_tx_advertising_protocol_data(u8 channel_id, u16 eta, u8 tx_eirp, u8 subnet, u8 spectrum_id)
+void nwl_tx_advertising_protocol_data(uint8_t channel_id, uint16_t eta, int8_t tx_eirp, uint8_t subnet, uint8_t spectrum_id)
 {
 	nwl_background_frame_t frame;
 	frame.length = 6;
@@ -73,19 +74,49 @@ void nwl_tx_advertising_protocol_data(u8 channel_id, u16 eta, u8 tx_eirp, u8 sub
 	nwl_tx_background_frame(&frame, spectrum_id);
 }
 
-void nwl_tx_reservation_protocol_data(u8 res_type, u16 res_duration, u8 tx_eirp, u8 subnet, u8 spectrum_id)
+void nwl_tx_reservation_protocol_data(uint8_t res_type, uint16_t res_duration, int8_t tx_eirp, uint8_t subnet, uint8_t spectrum_id)
 
 {
 	nwl_background_frame_t frame;
 	frame.length = 6;
 	frame.tx_eirp = tx_eirp;
 	frame.subnet = subnet;
-	frame.bpid = BPID_AdvP;
+	frame.bpid = BPID_ResP;
 	ResP_Data *data = (ResP_Data*) frame.protocol_data;
 	data->res_type = res_type;
 	memcpy((void*) data->res_duration, (void*) &res_duration, 2);
 
 
 	nwl_tx_background_frame(&frame, spectrum_id);
+}
+
+void nwl_tx_network_protocol_data(uint8_t* data, uint8_t length, nwl_security* security, nwl_routing_header* routing, uint8_t subnet, uint8_t spectrum_id, int8_t tx_eirp)
+{
+	uint8_t dll_data[248];
+	uint8_t offset = 0;
+	bool nwl_security = false;
+	if (security != NULL)
+	{
+		#ifdef LOG_NWL_ENABLED
+			log_print_string("NWL: security not implemented");
+		#endif
+	}
+
+	if (security != NULL)
+	{
+		#ifdef LOG_NWL_ENABLED
+			log_print_string("NWL: routing not implemented");
+		#endif
+	}
+
+
+
+	memcpy(&dll_data[offset], data, length);
+
+	uint8_t dll_data_length = offset + length;
+
+	//TODO: assert dll_data_length < 255-7
+
+	dll_tx_foreground_frame(dll_data, dll_data_length, subnet, spectrum_id, tx_eirp, nwl_security);
 }
 
