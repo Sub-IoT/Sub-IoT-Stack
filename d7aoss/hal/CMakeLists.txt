@@ -7,6 +7,8 @@ ADD_LIBRARY(HAL
     rtc.c
     system.c
     uart.c
+    crc.c
 )
+
 ADD_SUBDIRECTORY(driverlib)
 

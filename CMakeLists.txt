@@ -32,3 +32,8 @@ SET(CMAKE_EXE_LINKER_FLAGS "-mmcu=cc430f6137 -Wl,--gc-sections")
 ADD_SUBDIRECTORY(d7aoss)
 ADD_SUBDIRECTORY(examples)
 
+#######################################
+# Configuration
+#######################################
+SET(PhyRadioDriver "CC430" CACHE STRING "Radio chip driver used by PHY")
+SET_PROPERTY(CACHE PhyRadioDriver PROPERTY STRINGS CC430 STUB)
