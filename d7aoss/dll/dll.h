@@ -25,7 +25,9 @@ typedef enum {
 
 typedef enum {
 	DLLTxResultOK,
-	DLLTxResultCCAFail,
+	DLLTxResultCCA1Fail,
+	DLLTxResultCCA2Fail,
+	DLLTxResultCCAOK,
 	DLLTxResultFail
 } Dll_Tx_Result;
 
@@ -42,9 +44,11 @@ typedef enum {
 #define FRAME_CTL_RFU			(3)
 
 typedef struct {
-	u8 dialogId;
-	u8 flags; // see ADDR_CTL_* defines
-} dll_foreground_frame_address_ctl_header_t;
+	uint8_t dialogId;
+	uint8_t flags; // see ADDR_CTL_* defines
+	uint8_t* source_id; // only when framectrl en addr bit is set
+	uint8_t* target_id; // only when framectrl nls = 0 and unicast
+} dll_foreground_frame_address_ctl_t;
 
 // Address Control Header
 #define ADDR_CTL_UNICAST	(0 << 6)
@@ -56,32 +60,53 @@ typedef struct {
 #define ADDR_CTL_APPFLAGS(VAL)	(VAL&0x0F)
 
 typedef struct {
-	u8 tx_eirp; // (-40 + 0.5n) dBm
-	u8 subnet;
-	u8 frame_ctl; // see FRAME_CTL_* defines
+	uint8_t tx_eirp; // (-40 + 0.5n) dBm
+	uint8_t subnet;
+	uint8_t frame_ctl; // see FRAME_CTL_* defines
 } dll_foreground_frame_header_t;
 
 typedef struct {
-	u8 dlls_code;
-	// TODO dlls_init_data
-} dll_foreground_frame_dlls_header_t;
+	uint8_t dlls_code;
+		uint8_t* dlls_initalization_data;
+		uint8_t* dlls_footer;
+} dll_foreground_frame_security_t;
 
 typedef struct {
 	u8 length;
 	dll_foreground_frame_header_t frame_header;
-	dll_foreground_frame_dlls_header_t* dlls_header;  // only when DLLS enabled in frame ctl
-	dll_foreground_frame_address_ctl_header_t* address_ctl_header; // only when addressing enabled in frame ctl
-	u8* source_id_header; // only when framectrl en addr bit is set
-	u8* target_id_header; // only when framectrl nls = 0 and unicast
-	u8 payload_length;
-	u8* payload;
+	dll_foreground_frame_security_t* dlls_header;  // only when DLLS enabled in frame ctl
+	dll_foreground_frame_address_ctl_t* address_ctl; // only when addressing enabled in frame ctl
+	uint8_t payload_length;
+	uint8_t* payload;
 	// TODO DLLS footer
 } dll_foreground_frame_t;
 
 typedef struct {
-	u8 subnet;
-	u8 payload[4];
+	uint8_t subnet;
+	uint8_t payload[4];
 } dll_background_frame_t;
+
+typedef struct {
+	uint8_t dialog_id;
+	uint8_t addressing_option;  // ADDR_CTL_UNICAST / ADDR_CTL_BROADCAST / ADDR_CTL_ANYCAST / ADDR_CTL_MULTICAST
+	bool virtual_id; // 1> 2 byte virtual id // 0 > 8 byte device id
+	uint8_t application_flags; // 4 bit
+	uint8_t* source_id; // only when framectrl en addr bit is set
+	uint8_t* target_id; // only when framectrl nls = 0 and unicast
+} dll_foreground_frame_adressing;
+
+typedef struct
+{
+	uint8_t subnet;				// Subnet
+	uint8_t spectrum_id;		// Spectrum ID
+	int8_t 	eirp;				// Transmission power level in dBm ranged [-39, +10]
+	bool listen;				// Listen for T_l time for new packet after contention period
+	dll_foreground_frame_security_t* security;		// DLL security header and footer
+	dll_foreground_frame_adressing* addressing;
+	bool nwl_security;			// Network Layer security enabled / disabled
+	bool frame_continuity; 		// A frame follow directly after the current
+	uint8_t frame_type;			// FRAME_CTL_DIALOGFRAME / FRAME_CTL_DIALOGNACK / FRAME_CTL_STREAMFRAME
+} dll_ff_tx_cfg_t;
 
 
 // =======================================================================
@@ -132,13 +157,15 @@ void dll_set_background_scan_detection_timeout(uint16_t t_bsd);
 void dll_set_foreground_scan_detection_timeout(uint16_t t_fsd);
 void dll_set_scan_spectrum_id(uint8_t spectrum_id);
 
-void dll_csma();
+void dll_csma(bool enabled);
 void dll_stop_channel_scan();
 void dll_background_scan();
 void dll_foreground_scan();
 void dll_channel_scan_series(dll_channel_scan_series_t*);
 
-void dll_tx_foreground_frame(uint8_t* data, uint8_t length, uint8_t subnet, uint8_t spectrum_id, int8_t tx_eirp);
-void dll_tx_background_frame(uint8_t* data, uint8_t subnet, uint8_t spectrum_id, int8_t tx_eirp);
+void dll_create_foreground_frame(uint8_t* data, uint8_t length, dll_ff_tx_cfg_t* params);
+void dll_create_background_frame(uint8_t* data, uint8_t subnet, uint8_t spectrum_id, int8_t tx_eirp);
+
+void dll_tx_frame();
 
 #endif /* DLL_H_ */

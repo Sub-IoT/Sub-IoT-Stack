@@ -21,7 +21,8 @@
 #define __ISR(a,b)   __interrupt void b (void)
 #endif
 
-extern u8 tag_id[8]; // TODO: keep this as global?
+extern u8 device_id[8]; // TODO: keep this as global?
+extern u8 virtual_id[2];
 
 void PMM_SetVCore (u8 level);
 void system_init();

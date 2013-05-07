@@ -57,14 +57,14 @@ void nwl_init();
 void nwl_set_tx_callback(nwl_tx_callback_t);
 void nwl_set_rx_callback(nwl_rx_callback_t);
 
-// paramaters for DLL
+// parameters for DLL
 //TODO: set this through configuration files
 
 
 // Background frames
-void nwl_tx_advertising_protocol_data(uint8_t channel_id, uint16_t eta, int8_t tx_eirp, uint8_t subnet, uint8_t spectrum_id);
-void nwl_tx_reservation_protocol_data(uint8_t res_type, uint16_t res_duration, int8_t tx_eirp, uint8_t subnet, uint8_t spectrum_id);
+void nwl_build_advertising_protocol_data(uint8_t channel_id, uint16_t eta, int8_t tx_eirp, uint8_t subnet, uint8_t spectrum_id);
+void nwl_build_reservation_protocol_data(uint8_t res_type, uint16_t res_duration, int8_t tx_eirp, uint8_t subnet, uint8_t spectrum_id);
 //void nwl_tx_background_frame(nwl_background_frame_t* data, uint8_t spectrum_id);
 
 // Foreground frames
-void nwl_tx_network_protocol_data(uint8_t* data, uint8_t length, nwl_security* security, nwl_routing_header* routing, uint8_t subnet, uint8_t spectrum_id, int8_t tx_eirp);
+void nwl_build_network_protocol_data(uint8_t* data, uint8_t length, nwl_security* security, nwl_routing_header* routing, uint8_t subnet, uint8_t spectrum_id, int8_t tx_eirp, uint8_t dialog_id);

@@ -3,6 +3,7 @@
  *
  *  Created on: 21-feb.-2013
  *      Author: Dragan Subotic
+ *      		Maarten Weyn
  */
 
 
@@ -18,6 +19,7 @@ static uint8_t current__t_g = 0;
 static uint8_t current__spectrum_id = 0;
 
 static int temp_time= 0;
+static uint8_t dialogid = 0;
 
 static trans_tx_callback_t trans_tx_callback;
 
@@ -31,7 +33,11 @@ static void control_tx_callback(Dll_Tx_Result Result)
 				#endif
 				trans_tx_callback(TransPacketSent);
 				break;
-			case DLLTxResultCCAFail:
+			case DLLTxResultCCAOK:
+				dll_tx_frame();
+				break;
+			case DLLTxResultCCA1Fail:
+			case DLLTxResultCCA2Fail:
 				trans_rigd_ccp(current__spectrum_id, false);
 				#ifdef LOG_TRANS_ENABLED
 					log_print_string("Trans: CCA fail");
@@ -48,8 +54,8 @@ static void control_tx_callback(Dll_Tx_Result Result)
 }
 
 void trans_init(){
-	dll_init();
-	dll_set_tx_callback(&control_tx_callback);
+	nwl_init();
+	nwl_set_tx_callback(&control_tx_callback);
 }
 
 void trans_set_tx_callback(trans_tx_callback_t cb)
@@ -58,17 +64,17 @@ void trans_set_tx_callback(trans_tx_callback_t cb)
 }
 
 static void final_rigd(void* arg){
-	 dll_csma();
+	 dll_csma(true);
 }
 
 void trans_tx_foreground_frame(uint8_t* data, uint8_t length, uint8_t subnet, uint8_t spectrum_id, int8_t tx_eirp){
-	dll_tx_foreground_frame(data, length, subnet, spectrum_id, tx_eirp);
+	nwl_build_network_protocol_data(data, length, NULL, NULL, subnet, spectrum_id, tx_eirp, dialogid++);
 	trans_rigd_ccp(spectrum_id, true);
 }
 
-void trans_tx_background_frame(uint8_t* data, uint8_t subnet, uint8_t spectrum_id, int8_t tx_eirp){
-	dll_tx_background_frame(data, subnet, spectrum_id, tx_eirp);
-}
+//void trans_tx_background_frame(uint8_t* data, uint8_t subnet, uint8_t spectrum_id, int8_t tx_eirp){
+//	nwl_build_background_frame(data, subnet, spectrum_id, tx_eirp);
+//}
 
 // transport layer, Random Increase Geometric decaying slot back-off , Congestion Control Process
 void trans_rigd_ccp(uint8_t spectrum_id, bool init_status){

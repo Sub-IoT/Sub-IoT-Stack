@@ -7,6 +7,7 @@
 
 #include "nwl.h"
 #include "../log.h"
+#include "../hal/system.h"
 
 
 static nwl_rx_callback_t nwl_rx_callback;
@@ -54,12 +55,12 @@ void nwl_set_rx_callback(nwl_rx_callback_t cb)
 	nwl_rx_callback = cb;
 }
 
-void nwl_tx_background_frame(nwl_background_frame_t* data, uint8_t spectrum_id)
+void nwl_build_background_frame(nwl_background_frame_t* data, uint8_t spectrum_id)
 {
-	dll_tx_background_frame(&(data->bpid), data->subnet, spectrum_id, data->tx_eirp);
+	dll_create_background_frame(&(data->bpid), data->subnet, spectrum_id, data->tx_eirp);
 }
 
-void nwl_tx_advertising_protocol_data(uint8_t channel_id, uint16_t eta, int8_t tx_eirp, uint8_t subnet, uint8_t spectrum_id)
+void nwl_build_advertising_protocol_data(uint8_t channel_id, uint16_t eta, int8_t tx_eirp, uint8_t subnet, uint8_t spectrum_id)
 {
 	nwl_background_frame_t frame;
 	frame.length = 6;
@@ -71,10 +72,10 @@ void nwl_tx_advertising_protocol_data(uint8_t channel_id, uint16_t eta, int8_t t
 	memcpy((void*) data->eta, (void*) &eta, 2);
 
 
-	nwl_tx_background_frame(&frame, spectrum_id);
+	nwl_build_background_frame(&frame, spectrum_id);
 }
 
-void nwl_tx_reservation_protocol_data(uint8_t res_type, uint16_t res_duration, int8_t tx_eirp, uint8_t subnet, uint8_t spectrum_id)
+void nwl_build_reservation_protocol_data(uint8_t res_type, uint16_t res_duration, int8_t tx_eirp, uint8_t subnet, uint8_t spectrum_id)
 
 {
 	nwl_background_frame_t frame;
@@ -87,36 +88,55 @@ void nwl_tx_reservation_protocol_data(uint8_t res_type, uint16_t res_duration, i
 	memcpy((void*) data->res_duration, (void*) &res_duration, 2);
 
 
-	nwl_tx_background_frame(&frame, spectrum_id);
+	nwl_build_background_frame(&frame, spectrum_id);
 }
 
-void nwl_tx_network_protocol_data(uint8_t* data, uint8_t length, nwl_security* security, nwl_routing_header* routing, uint8_t subnet, uint8_t spectrum_id, int8_t tx_eirp)
+void nwl_build_network_protocol_data(uint8_t* data, uint8_t length, nwl_security* security, nwl_routing_header* routing, uint8_t subnet, uint8_t spectrum_id, int8_t tx_eirp, uint8_t dialog_id)
 {
 	uint8_t dll_data[248];
 	uint8_t offset = 0;
-	bool nwl_security = false;
+
+	dll_ff_tx_cfg_t dll_params;
+	dll_params.eirp = tx_eirp;
+	dll_params.spectrum_id = spectrum_id;
+	dll_params.subnet = subnet;
+
+	//TODO: get from params
+	dll_params.listen = false;
+	dll_params.security = NULL;
+
+	dll_foreground_frame_adressing adressing;
+	adressing.dialog_id = dialog_id;
+	adressing.addressing_option = ADDR_CTL_BROADCAST; //TODO: enable other
+	adressing.virtual_id = false;
+	adressing.source_id = device_id;
+	dll_params.addressing = &adressing;
+
+
 	if (security != NULL)
 	{
 		#ifdef LOG_NWL_ENABLED
 			log_print_string("NWL: security not implemented");
 		#endif
+
+		//dll_params.nwl_security = true;
+		dll_params.nwl_security = false;
+	} else {
+		dll_params.nwl_security = false;
 	}
 
-	if (security != NULL)
+	if (routing != NULL)
 	{
 		#ifdef LOG_NWL_ENABLED
 			log_print_string("NWL: routing not implemented");
 		#endif
 	}
 
-
-
 	memcpy(&dll_data[offset], data, length);
 
 	uint8_t dll_data_length = offset + length;
 
 	//TODO: assert dll_data_length < 255-7
-
-	dll_tx_foreground_frame(dll_data, dll_data_length, subnet, spectrum_id, tx_eirp, nwl_security);
+	dll_create_foreground_frame(dll_data, dll_data_length, &dll_params);
 }
 

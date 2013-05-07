@@ -23,7 +23,6 @@ static uint8_t current_scan_id = 0;
 uint8_t timeout_listen; // TL
 uint8_t frame_data[50]; // TODO max frame size
 
-uint8_t dialog_id = 0;
 
 Dll_State_Enum dll_state;
 
@@ -206,16 +205,16 @@ static void rx_callback(phy_rx_data_t* res)
 		if (frame->frame_header.frame_ctl & 0x20) // Enable Addressing
 		{
 			// Address Control Header
-			dll_foreground_frame_address_ctl_header_t* address_ctl = (dll_foreground_frame_address_ctl_header_t*) data_pointer;
-			frame->address_ctl_header = address_ctl;
-			data_pointer += sizeof(u8*);
+			dll_foreground_frame_address_ctl_t* address_ctl = (dll_foreground_frame_address_ctl_t*) data_pointer;
+			frame->address_ctl = address_ctl;
+			data_pointer += sizeof(uint8_t*);
 
-			u8 addressing = (address_ctl->flags & 0xC0) >> 6;
-			u8 vid = (address_ctl->flags & 0x20) >> 5;
-			u8 nls = (address_ctl->flags & 0x10) >> 4;
+			uint8_t addressing = (address_ctl->flags & 0xC0) >> 6;
+			uint8_t vid = (address_ctl->flags & 0x20) >> 5;
+			uint8_t nls = (address_ctl->flags & 0x10) >> 4;
 			// TODO parse Source ID Header
 
-			frame->source_id_header = data_pointer;
+			frame->address_ctl->source_id = data_pointer;
 			if (vid)
 			{
 				data_pointer += 2;
@@ -238,13 +237,13 @@ static void rx_callback(phy_rx_data_t* res)
 					memcpy(data_pointer, &id_target, 8);
 					data_pointer += 8;
 				}
-				frame->target_id_header = (u8*) &id_target;
+				frame->address_ctl->target_id = (u8*) &id_target;
 			} else {
-				frame->target_id_header = NULL;
+				frame->address_ctl->target_id = NULL;
 			}
 		} else {
-			frame->address_ctl_header = NULL;
-			frame->source_id_header = NULL;
+			frame->address_ctl = NULL;
+			frame->address_ctl->source_id = NULL;
 		}
 
 		if (frame->frame_header.frame_ctl & 0x10) // Frame continuity
@@ -418,46 +417,46 @@ void dll_channel_scan_series(dll_channel_scan_series_t* css)
 		log_print_string("Starting channel scan FAILED");
 	}
 	#endif
-
-
-	/*
-	//TODO: timeout should be implemented using rF timer in phy
-	timer_event event;
-	event.next_event = rx_cfg.timeout;
-	event.f = &scan_timeout;
-
-	timer_add_event(&event);
-	*/
-
 }
 
 static void dll_cca2(void* arg)
 {
-	bool cca2 = true;
+	bool cca2 = phy_cca(current_cfg->spectrum_id, current_cfg->sync_word_class);;
 	if (!cca2)
 	{
-		dll_tx_callback(DLLTxResultCCAFail);
+		dll_tx_callback(DLLTxResultCCA2Fail);
 		return;
 	}
+
+	dll_tx_callback(DLLTxResultCCAOK);
+}
+
+void dll_tx_frame()
+{
 	if (!phy_tx(current_cfg))
 	{
 		dll_tx_callback(DLLTxResultFail);
 	}
 }
 
-void dll_csma()
+void dll_csma(bool enabled)
 {
-	bool cca1 = phy_cca(foreground_frame_tx_cfg.spectrum_id, foreground_frame_tx_cfg.sync_word_class);
+	if (!enabled)
+	{
+		dll_tx_callback(DLLTxResultCCAOK);
+		return;
+	}
+
+	bool cca1 = phy_cca(current_cfg->spectrum_id, current_cfg->sync_word_class);
 
 	if (!cca1)
 	{
-		dll_tx_callback(DLLTxResultCCAFail);
+		dll_tx_callback(DLLTxResultCCA1Fail);
 		return;
 	}
 
 	timer_event event;
 	event.next_event = 5; // TODO: get T_G fron config
-	current_cfg = &foreground_frame_tx_cfg;
 	event.f = &dll_cca2;
 
 	if (!timer_add_event(&event))
@@ -467,27 +466,60 @@ void dll_csma()
 	}
 }
 
-void dll_tx_foreground_frame(uint8_t* data, uint8_t length, uint8_t subnet, uint8_t spectrum_id, int8_t tx_eirp, bool nwl_security)
+void dll_create_foreground_frame(uint8_t* data, uint8_t length, dll_ff_tx_cfg_t* params)
 {
-	//TODO: check if not already sending
-	foreground_frame_tx_cfg.spectrum_id = spectrum_id; // TODO check valid (Alexander: this check is already done in phy)
-	foreground_frame_tx_cfg.eirp = tx_eirp;
+	//TODO: check if in idle state
+	foreground_frame_tx_cfg.spectrum_id = params->spectrum_id; // TODO check valid (should be done in the upper layer of stack)
+	foreground_frame_tx_cfg.eirp = params->eirp;
 	foreground_frame_tx_cfg.sync_word_class = 1;
 
 	dll_foreground_frame_t* frame = (dll_foreground_frame_t*) frame_data;
-	frame->frame_header.tx_eirp = (tx_eirp + 40) * 2; // (-40 + 0.5n) dBm
-	frame->frame_header.subnet = subnet; // TODO hardcoded, get from app?
-	frame->frame_header.frame_ctl = !FRAME_CTL_LISTEN | !FRAME_CTL_DLLS | FRAME_CTL_EN_ADDR | !FRAME_CTL_FR_CONT | !FRAME_CTL_CRC32 | !FRAME_CTL_NM2 | FRAME_CTL_DIALOGFRAME; // TODO hardcoded
+	frame->frame_header.tx_eirp = (params->eirp + 40) * 2; // (-40 + 0.5n) dBm
+	frame->frame_header.subnet = params->subnet;
+	frame->frame_header.frame_ctl = 0;
 
-	dll_foreground_frame_address_ctl_header_t address_ctl_header;
-	address_ctl_header.dialogId = dialog_id++; // TODO hardcoded
-	address_ctl_header.flags = ADDR_CTL_BROADCAST | !ADDR_CTL_VID | !ADDR_CTL_NLS; // TODO appl flags?
+	if (params->listen) frame->frame_header.frame_ctl |= FRAME_CTL_LISTEN;
+
+	if (params->security != NULL)
+	{
+		#ifdef LOG_DLL_ENABLED
+			log_print_string("DLL: security not implemented");
+		#endif
+		//frame->frame_header.frame_ctl |= FRAME_CTL_DLLS;
+	}
 
 	u8* pointer = frame_data + 1 + sizeof(dll_foreground_frame_header_t);
-	memcpy(pointer, &address_ctl_header, sizeof(dll_foreground_frame_address_ctl_header_t));
-	pointer += sizeof(dll_foreground_frame_address_ctl_header_t);
-	memcpy(pointer, tag_id, 8 * sizeof(u8)); // TODO get from HAL, using global defined in system.h for now
-	pointer += 8 * sizeof(u8);
+
+	if (params->addressing != NULL)
+	{
+		frame->frame_header.frame_ctl |= FRAME_CTL_EN_ADDR;
+
+		dll_foreground_frame_address_ctl_t address_ctl;
+		address_ctl.dialogId = params->addressing->dialog_id;
+		address_ctl.flags = params->addressing->addressing_option;
+		if (params->addressing->virtual_id) address_ctl.flags |= ADDR_CTL_VID;
+		if (params->nwl_security) address_ctl.flags |= ADDR_CTL_NLS;
+
+		memcpy(pointer, &address_ctl, 2);
+		pointer += 2;
+
+		uint8_t address_length = params->addressing->virtual_id ? 2 : 8;
+		memcpy(pointer, params->addressing->source_id, address_length);
+		pointer += address_length;
+
+		if (params->addressing->addressing_option == ADDR_CTL_UNICAST && !params->nwl_security)
+		{
+			memcpy(pointer, params->addressing->target_id, address_length);
+			pointer += address_length;
+		}
+	}
+
+	if (params->frame_continuity) frame->frame_header.frame_ctl |= FRAME_CTL_FR_CONT;
+
+	// CRC32 not implemented
+	// frame->frame_header.frame_ctl |= FRAME_CTL_CRC32;
+
+	frame->frame_header.frame_ctl |= params->frame_type;
 
 	*pointer++ = 0; //dunno
 	*pointer++ = 0; //isfid
@@ -503,11 +535,12 @@ void dll_tx_foreground_frame(uint8_t* data, uint8_t length, uint8_t subnet, uint
 	u16 crc16 = crc_calculate(frame_data, frame->length - 2);
 	memcpy(pointer, &crc16, 2);
 
-
 	foreground_frame_tx_cfg.length = frame->length;
+
+	current_cfg = &foreground_frame_tx_cfg;
 }
 
-void dll_tx_background_frame(u8* data, u8 subnet, u8 spectrum_id, s8 tx_eirp)
+void dll_create_background_frame(u8* data, u8 subnet, u8 spectrum_id, s8 tx_eirp)
 {
 	background_frame_tx_cfg.spectrum_id = spectrum_id;
 	background_frame_tx_cfg.eirp = tx_eirp;
@@ -522,19 +555,5 @@ void dll_tx_background_frame(u8* data, u8 subnet, u8 spectrum_id, s8 tx_eirp)
 	u16 crc16 = crc_calculate(frame_data, 5);
 	memcpy(pointer, &crc16, 2);
 
-	bool cca1 = phy_cca(background_frame_tx_cfg.spectrum_id, foreground_frame_tx_cfg.sync_word_class);
-
-	if (!cca1)
-	{
-		dll_tx_callback(DLLTxResultCCAFail);
-		return;
-	}
-
-	timer_event event;
-	event.next_event = 5; // TODO: get T_G from config
 	current_cfg = &background_frame_tx_cfg;
-	event.f = &dll_cca2;
-
-	if (!timer_add_event(&event))
-		dll_tx_callback(DLLTxResultFail);
 }

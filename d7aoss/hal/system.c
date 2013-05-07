@@ -19,7 +19,8 @@
 
 #include "driverlib/inc/hw_types.h"
 
-u8 tag_id[8];
+uint8_t device_id[8];
+uint8_t virtual_id[2];
 
 void clock_init(void);
 
@@ -86,6 +87,8 @@ void PMM_SetVCore (u8 level) {
 
 void system_init()
 {
+	system_watchdog_timer_stop();
+
 	 // Init all ports
 	 PADIR = 0xFF;
 	 PAOUT = 0x00;
@@ -93,8 +96,6 @@ void system_init()
 	 PBOUT = 0x00;
 	 PCDIR = 0xFF;
 	 PCOUT = 0x00;
-
-    system_watchdog_timer_stop();
 
     //PMM_setVCore(PMMCOREV_2);
     PMM_SetVCore(2);
@@ -107,7 +108,7 @@ void system_init()
     button_init();
     uart_init();
 
-    system_get_unique_id(tag_id);
+    system_get_unique_id(device_id);
 }
 
 void clock_init(void)
@@ -199,15 +200,20 @@ void system_get_unique_id(unsigned char *tagId)
 
     //unsigned char tagId[8];
     unsigned char* pointer = (unsigned char*) &(pDIEREC->wafer_id);
-    tagId[0] = pointer[3];
-    tagId[1] = pointer[2];
-    tagId[2] = pointer[1];
-    tagId[3] = pointer[0];
+    device_id[0] = pointer[3];
+    device_id[1] = pointer[2];
+    device_id[2] = pointer[1];
+    device_id[3] = pointer[0];
     pointer = (unsigned char*) &(pDIEREC->die_x_position);
-    tagId[4] = pointer[1];
-    tagId[5] = pointer[0];
+    device_id[4] = pointer[1];
+    device_id[5] = pointer[0];
 
     pointer = (unsigned char*) &(pDIEREC->die_y_position);
-    tagId[6] = pointer[1];
-    tagId[7] = pointer[0];
+    device_id[6] = pointer[1];
+    device_id[7] = pointer[0];
+
+    //TODO: correct way to find virtual_id -> set by app layer
+
+    virtual_id[0] = device_id[4] ^ device_id[5];
+    virtual_id[1] = device_id[6] ^ device_id[7];
 }
