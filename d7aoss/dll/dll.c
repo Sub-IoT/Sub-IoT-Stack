@@ -6,7 +6,7 @@
  *  	glenn.ergeerts@artesis.be
  */
 #include "dll.h"
-#include "../timer.h"
+#include "../hal/timer.h"
 #include "../hal/system.h"
 #include "../hal/crc.h"
 #include "../log.h"

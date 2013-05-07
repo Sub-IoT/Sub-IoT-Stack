@@ -5,7 +5,7 @@
  *  	glenn.ergeerts@artesis.be
  */
 
-#include "addresses.h"
+#include "cc430_addresses.h"
 #include "leds.h"
 #include "platforms/platform.h"
 

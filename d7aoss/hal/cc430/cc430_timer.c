@@ -9,10 +9,10 @@
 #include <stdbool.h>
 
 #include "timer.h"
-#include "queue.h"
-#include "log.h"
+#include "../../queue.h" // TODO move somewhere else?
+#include "../../log.h"
 
-#include "hal/system.h"
+#include "cc430_addresses.h"
 
 static timer_event event_array[20];
 static queue event_queue;

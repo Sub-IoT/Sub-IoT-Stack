@@ -11,7 +11,7 @@
 
 #include <d7aoss.h>
 
-#include <hal/system.h>
+#include <msp430.h>
 #include <hal/button.h>
 #include <hal/leds.h>
 #include <hal/rtc.h>

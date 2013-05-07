@@ -13,7 +13,7 @@
 #include "driverlib/5xx_6xx/wdt.h"
 
 #include "platforms/platform.h"
-#include "addresses.h"
+#include "cc430_addresses.h"
 
 
 void button_init()

@@ -9,6 +9,7 @@
 #include "leds.h"
 #include "button.h"
 #include "uart.h"
+#include "cc430_addresses.h"
 
 //#include "inc/hw_memmap.h"
 //#include "driverlib/5xx_6xx/wdt.h"

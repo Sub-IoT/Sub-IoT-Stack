@@ -17,6 +17,7 @@
 #include <log.h>
 #include <timer.h>
 #include <hal/crc.h>
+#include <msp430.h> // TODO
 
 
 #define INTERRUPT_BUTTON1 	(1)
