@@ -79,7 +79,13 @@ void phy_idle(void)
 bool phy_tx(phy_tx_cfg_t* cfg)
 {
 	if(get_radiostate() != Idle)
+	{
+		#ifdef LOG_PHY_ENABLED
+		log_print_string("PHY radio not idle");
+		#endif
+
 		return false;
+	}
 
 	//Set radio state
 	state = Transmit;
@@ -90,7 +96,13 @@ bool phy_tx(phy_tx_cfg_t* cfg)
 
 	//General configuration
 	if(!phy_translate_settings(cfg->spectrum_id, cfg->sync_word_class, &fec, &channel_center_freq_index, &channel_bandwidth_index, &preamble_size, &sync_word))
+	{
+		#ifdef LOG_PHY_ENABLED
+		log_print_string("PHY Cannot translate settings");
+		#endif
+
 		return false;
+	}
 
 	set_channel(channel_center_freq_index, channel_bandwidth_index);
 	set_preamble_size(preamble_size);

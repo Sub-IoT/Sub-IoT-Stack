@@ -99,7 +99,7 @@ static void scan_timeout()
 static void tx_callback()
 {
 	#ifdef LOG_DLL_ENABLED
-		log_print_string("TX OK");
+		log_print_string("DLL TX OK");
 	#endif
 	dll_tx_callback(DLLTxResultOK);
 }

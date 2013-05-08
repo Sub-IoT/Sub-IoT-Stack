@@ -15,7 +15,7 @@
 #include <timer.h>
 
 
-#define ADV_TIMESPAN 1
+#define ADV_TIMESPAN 10
 #define MSG_TIMESPAN 2000;
 static u16 counter = 0;
 
@@ -38,7 +38,7 @@ void send_adv_prot_data(void * arg)
 
 	dll_tx_frame();
 
-	timer -= 1;
+	timer -= 10;
 	if (timer > 0)
 	{
 		timer_add_event(&event);
