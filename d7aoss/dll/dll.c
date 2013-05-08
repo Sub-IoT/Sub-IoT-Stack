@@ -51,7 +51,7 @@ phy_tx_cfg_t background_frame_tx_cfg = {
 
 phy_tx_cfg_t *current_cfg;
 
-static bool check_subnet(u8 device_subnet, u8 frame_subnet)
+static bool check_subnet(uint8_t device_subnet, uint8_t frame_subnet)
 {
 	// FFS = 0xF?
 	if (frame_subnet & 0xF0 != 0xF0)
@@ -61,11 +61,14 @@ static bool check_subnet(u8 device_subnet, u8 frame_subnet)
 			return 0;
 	}
 
-	// FSM & DSM = DSM?
-	if ((frame_subnet & device_subnet & 0x0F) != (device_subnet & 0x0F))
-			return 0;
+	uint8_t fsm = frame_subnet & 0x0F;
+	uint8_t dsm = device_subnet & 0x0F;
 
-	return 1;
+	// FSM & DSM = DSM?
+	if ((fsm & dsm) == dsm)
+			return 1;
+
+	return 0;
 }
 
 static void scan_next(void* arg)
