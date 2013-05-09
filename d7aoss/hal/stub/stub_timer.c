@@ -6,12 +6,27 @@
 
 #include <timer.h>
 
-void timer_init()
+void _timer_init()
+{
+    _timer_enable_interrupt();
+}
+
+void _timer_enable_interrupt()
 {
 
 }
 
-bool timer_add_event(timer_event* event)
+void _timer_disable_interrupt()
+{
+
+}
+
+int16_t _timer_getvalue()
+{
+    return 0;
+}
+
+void _timer_setvalue(uint16_t next_event)
 {
 
 }

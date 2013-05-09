@@ -11,6 +11,9 @@
 #include <stdbool.h>
 #include <stdint.h>
 
+#include "../queue.h"
+
+// TODO move public timer API & implementation away from HAL because it is not hardware specific.
 typedef struct
 {
 	uint16_t next_event;
@@ -18,7 +21,23 @@ typedef struct
 
 } timer_event;
 
+static timer_event event_array[20];
+static queue event_queue;
+static bool started;
+
 void timer_init();
 
-bool timer_add_event(timer_event* event);
+void timer_completed();
+
+// private function prototypes, those are hardware specific
+void _timer_init();
+
+int16_t _timer_getvalue();
+
+void _timer_setvalue(uint16_t next_event);
+
+void _timer_enable_interrupt();
+
+void _timer_disable_interrupt();
+
 #endif /* TIMER_H_ */

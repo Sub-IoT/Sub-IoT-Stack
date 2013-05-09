@@ -10,6 +10,12 @@ IF(D7AOSS_PHY_RADIO_DRIVER STREQUAL "CC430")
 	)
 ENDIF()
 
+IF(D7AOSS_PHY_RADIO_DRIVER STREQUAL "STUB")
+        SET(RADIOSRCS
+                        stub/stub_phy.c
+        )
+ENDIF()
+
 ADD_LIBRARY(PHY
     phy.c
     fec.c
