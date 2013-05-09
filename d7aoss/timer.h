@@ -21,4 +21,5 @@ typedef struct
 void timer_init();
 
 bool timer_add_event(timer_event* event);
+uint16_t get_counter_value();
 #endif /* TIMER_H_ */

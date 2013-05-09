@@ -15,7 +15,7 @@
 #include <timer.h>
 
 
-#define ADV_TIMESPAN 10
+#define ADV_TIMESPAN 5
 #define MSG_TIMESPAN 2000;
 static u16 counter = 0;
 
@@ -32,30 +32,32 @@ void send_adv_prot_data(void * arg)
 
 	if (!csma_ok)
 	{
-		dll_csma(true);
+		dll_ca(100);
 		return;
 	}
 
-	dll_tx_frame();
 
-	timer -= 10;
+
+	timer -= ADV_TIMESPAN;
 	if (timer > 0)
 	{
 		timer_add_event(&event);
 	} else {
 		led_on(3);
 		nwl_build_network_protocol_data((uint8_t*) &counter, 2, NULL, NULL, 0xFF, 0x10, 0, counter & 0xFF);
-		dll_tx_frame();
+
 
 		csma_ok = false;
 
 		counter++;
 		event.next_event = MSG_TIMESPAN;
+
 		timer_add_event(&event);
 
 		timer = 500;
 		event.next_event = ADV_TIMESPAN;
 	}
+	dll_tx_frame();
 }
 
 void rx_callback(nwl_rx_res_t* rx_res)
@@ -65,6 +67,8 @@ void rx_callback(nwl_rx_res_t* rx_res)
 
 void tx_callback(Dll_Tx_Result result)
 {
+
+
 	if(result == DLLTxResultOK)
 	{
 		counter++;
@@ -99,8 +103,9 @@ void main(void) {
 	nwl_set_tx_callback(&tx_callback);
 	nwl_set_rx_callback(&rx_callback);
 
-	log_print_string("started");
 
+
+	log_print_string("started");
 
 	event.f = &send_adv_prot_data;
 	event.next_event = ADV_TIMESPAN;

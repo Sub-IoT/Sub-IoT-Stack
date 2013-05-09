@@ -71,7 +71,6 @@ void nwl_build_advertising_protocol_data(uint8_t channel_id, uint16_t eta, int8_
 	data->channel_id = channel_id;
 	memcpy((void*) data->eta, (void*) &eta, 2);
 
-
 	nwl_build_background_frame(&frame, spectrum_id);
 }
 

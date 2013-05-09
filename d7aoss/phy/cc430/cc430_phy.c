@@ -10,6 +10,7 @@
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
+#include <string.h>
 
 #include "../phy.h"
 #include "../fec.h"
@@ -40,6 +41,8 @@ uint16_t sync_word;
 
 phy_rx_data_t rx_data;
 
+phy_tx_cfg_t last_tx_cfg;
+
 
 //for this moment both int8, should be changed to float or double values.
 static int8_t eirp_values[103] = {9.9, 9.5, 9.2, 8.8, 8.5, 8.1, 7.8, 7.4, 7.1, 6.8, 6.4, 6.3, 6.1, 6.0, 5.8, 5.5, 5.1, 4.9, 4.8, 4.4, //20
@@ -68,6 +71,10 @@ void phy_init(void)
 	//Write configuration
 	WriteRfSettings(&rfSettings);
 
+	last_tx_cfg.eirp=0;
+	last_tx_cfg.spectrum_id = 0;
+	last_tx_cfg.sync_word_class=0;
+
 }
 
 void phy_idle(void)
@@ -76,7 +83,87 @@ void phy_idle(void)
 		rxtx_finish_isr();
 }
 
-bool phy_tx(phy_tx_cfg_t* cfg)
+
+// configure using cfg
+extern bool phy_set_tx(phy_tx_cfg_t* cfg)
+{
+	//General configuration
+	if(!phy_translate_settings(cfg->spectrum_id, cfg->sync_word_class, &fec, &channel_center_freq_index, &channel_bandwidth_index, &preamble_size, &sync_word))
+	{
+		#ifdef LOG_PHY_ENABLED
+		log_print_string("PHY Cannot translate settings");
+		#endif
+
+		return false;
+	}
+
+	set_channel(channel_center_freq_index, channel_bandwidth_index);
+	set_preamble_size(preamble_size);
+	set_sync_word(sync_word);
+	set_eirp(cfg->eirp);
+
+	//TODO Return error if fec not enabled but requested
+	#ifdef D7_PHY_USE_FEC
+	if (fec) {
+		//Disable hardware data whitening
+		set_data_whitening(false);
+	} else {
+#endif
+		//Enable hardware data whitening
+		set_data_whitening(true);
+#ifdef D7_PHY_USE_FEC
+	}
+	#endif
+
+	return true;
+}
+// send data
+extern bool phy_tx_data(phy_tx_cfg_t* cfg)
+{
+
+	//TODO Return error if fec not enabled but requested
+	#ifdef D7_PHY_USE_FEC
+	if (fec) {
+		//Initialize fec encoding
+		fec_init_encode(cfg->data);
+
+		//Configure length settings
+		set_length_infinite(true);
+		fec_set_length(cfg->length);
+		remainingBytes = ((cfg->length & 0xFE) + 2) << 1;
+		WriteSingleReg(PKTLEN, (uint8_t)(remainingBytes & 0x00FF));
+	} else {
+	#endif
+
+		//Set buffer position
+		bufferPosition = cfg->data;
+
+		//Configure length settings
+		set_length_infinite(false);
+		remainingBytes = cfg->length;
+		WriteSingleReg(PKTLEN, (uint8_t)remainingBytes);
+	#ifdef D7_PHY_USE_FEC
+	}
+	#endif
+
+	//Write initial data to txfifo
+	tx_data_isr();
+
+	//Configure txfifo threshold
+	WriteSingleReg(FIFOTHR, RADIO_FIFOTHR_FIFO_THR_17_48);
+
+	//Enable interrupts
+	RF1AIES = RFIFG_FLANK_TXBelowThresh | RFIFG_FLANK_TXUnderflow | RFIFG_FLANK_EndOfPacket;
+	RF1AIFG = 0;
+	RF1AIE  = RFIFG_FLAG_TXBelowThresh | RFIFG_FLAG_TXUnderflow | RFIFG_FLAG_EndOfPacket;
+
+	//Start transmitting
+	Strobe(RF_STX);
+
+	return true;
+}
+
+bool phy_init_tx()
 {
 	if(get_radiostate() != Idle)
 	{
@@ -94,66 +181,25 @@ bool phy_tx(phy_tx_cfg_t* cfg)
 	Strobe(RF_SIDLE);
 	Strobe(RF_SFTX);
 
-	//General configuration
-	if(!phy_translate_settings(cfg->spectrum_id, cfg->sync_word_class, &fec, &channel_center_freq_index, &channel_bandwidth_index, &preamble_size, &sync_word))
-	{
-		#ifdef LOG_PHY_ENABLED
-		log_print_string("PHY Cannot translate settings");
-		#endif
+	return true;
+}
 
+bool phy_tx(phy_tx_cfg_t* cfg)
+{
+	if (!phy_init_tx())
+	{
 		return false;
 	}
 
-	set_channel(channel_center_freq_index, channel_bandwidth_index);
-	set_preamble_size(preamble_size);
-	set_sync_word(sync_word);
-	set_eirp(cfg->eirp);
-
-//TODO Return error if fec not enabled but requested
-#ifdef D7_PHY_USE_FEC
-	if (fec) {
-		//Disable hardware data whitening
-		set_data_whitening(false);
-
-		//Initialize fec encoding
-		fec_init_encode(cfg->data);
-
-		//Configure length settings
-		set_length_infinite(true);
-		fec_set_length(cfg->length);
-		remainingBytes = ((cfg->length & 0xFE) + 2) << 1;
-		WriteSingleReg(PKTLEN, (uint8_t)(remainingBytes & 0x00FF));
-	} else {
-#endif
-		//Enable hardware data whitening
-		set_data_whitening(true);
-
-		//Set buffer position
-		bufferPosition = cfg->data;
-
-		//Configure length settings
-		set_length_infinite(false);
-		remainingBytes = cfg->length;
-		WriteSingleReg(PKTLEN, (uint8_t)remainingBytes);
-#ifdef D7_PHY_USE_FEC
+	//if (last_tx_cfg.spectrum_id != cfg->spectrum_id || last_tx_cfg.sync_word_class != cfg->sync_word_class || last_tx_cfg.eirp != cfg->eirp)
+	if (memcmp(&last_tx_cfg, cfg, 3) != 0)
+	{
+		if (!phy_set_tx(cfg))
+			return false;
+		memcpy(&last_tx_cfg, cfg, 3);
 	}
-#endif
 
-	//Write initial data to txfifo
-	tx_data_isr();
-
-	//Configure txfifo threshold
-	WriteSingleReg(FIFOTHR, RADIO_FIFOTHR_FIFO_THR_17_48);
-
-	//Enable interrupts
-	RF1AIES = RFIFG_FLANK_TXBelowThresh | RFIFG_FLANK_TXUnderflow | RFIFG_FLANK_EndOfPacket;
-	RF1AIFG = 0;
-	RF1AIE  = RFIFG_FLAG_TXBelowThresh | RFIFG_FLAG_TXUnderflow | RFIFG_FLAG_EndOfPacket;
-
-	//Start transmitting
-	Strobe(RF_STX);
-
-	return true;
+	return phy_tx_data(cfg);
 }
 
 bool phy_rx(phy_rx_cfg_t* cfg)

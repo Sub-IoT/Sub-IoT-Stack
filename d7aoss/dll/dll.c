@@ -14,6 +14,7 @@
 
 static dll_rx_callback_t dll_rx_callback;
 static dll_tx_callback_t dll_tx_callback;
+static dll_tx_callback_t dll_tx_callback_temp;
 static dll_rx_res_t dll_res;
 
 static dll_channel_scan_series_t* current_css;
@@ -22,9 +23,11 @@ static uint8_t current_scan_id = 0;
 
 uint8_t timeout_listen; // TL
 uint8_t frame_data[50]; // TODO max frame size
-
+uint16_t timestamp;
+uint8_t timeout_ca; 	// T_ca
 
 Dll_State_Enum dll_state;
+
 
 //Scan parameters
 int16_t scan_minimum_energy = -140; // E_sm
@@ -468,6 +471,40 @@ void dll_csma(bool enabled)
 		return;
 	}
 }
+
+
+void dll_ca_callback(Dll_Tx_Result result)
+{
+	dll_tx_callback = dll_tx_callback_temp;
+
+	if (result == DLLTxResultCCAOK)
+	{
+		dll_tx_callback(DLLTxResultCCAOK);
+	} else
+	{
+		uint16_t new_time = get_counter_value();
+		uint16_t diff = (new_time - timestamp) >> 6;
+		if (diff < (timeout_ca - 5))
+		{
+			timeout_ca-= diff;
+			dll_ca(timeout_ca);
+		} else {
+			dll_tx_callback(DLLTxResultCAFail);
+		}
+	}
+}
+
+void dll_ca(uint8_t t_ca)
+{
+	dll_tx_callback_temp = dll_tx_callback;
+	dll_tx_callback = dll_ca_callback;
+
+	timeout_ca = t_ca;
+	timestamp = get_counter_value();
+	dll_csma(true);
+}
+
+
 
 void dll_create_foreground_frame(uint8_t* data, uint8_t length, dll_ff_tx_cfg_t* params)
 {

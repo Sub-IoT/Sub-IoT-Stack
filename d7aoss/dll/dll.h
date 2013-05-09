@@ -27,6 +27,7 @@ typedef enum {
 	DLLTxResultOK,
 	DLLTxResultCCA1Fail,
 	DLLTxResultCCA2Fail,
+	DLLTxResultCAFail,
 	DLLTxResultCCAOK,
 	DLLTxResultFail
 } Dll_Tx_Result;
@@ -158,6 +159,7 @@ void dll_set_foreground_scan_detection_timeout(uint16_t t_fsd);
 void dll_set_scan_spectrum_id(uint8_t spectrum_id);
 
 void dll_csma(bool enabled);
+void dll_ca(uint8_t t_ca);
 void dll_stop_channel_scan();
 void dll_background_scan();
 void dll_foreground_scan();

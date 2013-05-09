@@ -50,6 +50,11 @@ void timer_init()
 	queue_init(&event_queue, (u8*)&event_array, sizeof(event_array));
 	//max_time = 0;
 	started = false;
+
+
+	// set timer to ticks/32
+	TA0CTL = TASSEL_1 + MC__CONTINUOUS + ID_0 + TACLR;           // ACLK/1, continous mode, clear timer
+	TA0EX0 = TAIDEX_0;
 }
 
 bool timer_insert_value_in_queue(timer_event* event)
@@ -120,6 +125,11 @@ bool timer_add_event(timer_event* event)
 
 
 	return true;
+}
+
+uint16_t get_counter_value()
+{
+	return TA0R;
 }
 
 // Timer A0 interrupt service routine
