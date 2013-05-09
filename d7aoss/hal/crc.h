@@ -8,9 +8,11 @@
 #ifndef CRC_H_
 #define CRC_H_
 
-u16 crc_calculate(u8* data, u8 length);
-u16 crc16(u8 *data_p, u16 length);
-unsigned short CRCCCITT(unsigned char *data, u8 length, unsigned short seed, unsigned short final);
+#include <stdint.h>
+
+uint16_t crc_calculate(uint8_t* data, uint8_t length);
+uint16_t crc16(uint8_t *data_p, uint16_t length);
+unsigned short CRCCCITT(unsigned char *data, uint8_t length, unsigned short seed, unsigned short final);
 
 
 #endif /* CRC_H_ */

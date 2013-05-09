@@ -7,5 +7,5 @@ ADD_LIBRARY(D7AOSS
     log.c
     queue.c
     )
-TARGET_LINK_LIBRARIES(D7AOSS HAL DLL PHY DRV)
+TARGET_LINK_LIBRARIES(D7AOSS HAL DLL PHY) #TODO find a way to conditionally link DRV
 
