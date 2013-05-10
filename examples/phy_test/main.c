@@ -15,7 +15,7 @@
 #include <hal/button.h>
 #include <hal/leds.h>
 #include <hal/rtc.h>
-#include <log.h>
+#include <framework/log.h>
 
 #define INTERRUPT_BUTTON1 	(1)
 #define INTERRUPT_BUTTON2 	(1 << 1)
