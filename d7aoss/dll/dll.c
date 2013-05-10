@@ -6,10 +6,10 @@
  *  	glenn.ergeerts@artesis.be
  */
 #include "dll.h"
-#include "../hal/timer.h"
+#include "../framework/timer.h"
 #include "../hal/system.h"
 #include "../hal/crc.h"
-#include "../log.h"
+#include "../framework/log.h"
 #include <string.h>
 
 static dll_rx_callback_t dll_rx_callback;

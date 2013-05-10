@@ -6,27 +6,27 @@
 
 #include "../timer.h"
 
-void _timer_init()
+void hal_timer_init()
 {
-    _timer_enable_interrupt();
+    hal_timer_enable_interrupt();
 }
 
-void _timer_enable_interrupt()
-{
-
-}
-
-void _timer_disable_interrupt()
+void hal_timer_enable_interrupt()
 {
 
 }
 
-int16_t _timer_getvalue()
+void hal_timer_disable_interrupt()
+{
+
+}
+
+int16_t hal_timer_getvalue()
 {
     return 0;
 }
 
-void _timer_setvalue(uint16_t next_event)
+void hal_timer_setvalue(uint16_t next_event)
 {
 
 }

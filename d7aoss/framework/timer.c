@@ -6,9 +6,11 @@
 
 #include "timer.h"
 
+#include "../hal/timer.h"
+
 void timer_init()
 {
-    _timer_init();
+    hal_timer_init();
 
     queue_init(&event_queue, (u8*)&event_array, sizeof(event_array));
     started = false;
@@ -18,7 +20,7 @@ bool timer_insert_value_in_queue(timer_event* event)
 {
     // TODO: substract time already gone
     u8 position = 0;
-    int16_t sum_next_event = - _timer_getvalue();
+    int16_t sum_next_event = - hal_timer_getvalue();
 
     while (position < event_queue.length)
     {
@@ -30,8 +32,8 @@ bool timer_insert_value_in_queue(timer_event* event)
             uint16_t elapsed = 0;
             if (position == 0)
             {
-                elapsed = _timer_getvalue();
-                _timer_disable_interrupt();
+                elapsed = hal_timer_getvalue();
+                hal_timer_disable_interrupt();
                 started = false;
             } else {
                 event->next_event -= sum_next_event;
@@ -71,9 +73,9 @@ bool timer_add_event(timer_event* event)
     {
         if (!started)
         {
-            _timer_enable_interrupt();
+            hal_timer_enable_interrupt();
             started = true;
-            _timer_setvalue(event->next_event);
+            hal_timer_setvalue(event->next_event);
         }
     } else {
         log_print_string("Cannot add event, queue is full");
@@ -89,10 +91,10 @@ void timer_completed()
 
     if (event_queue.length == 0)
     {
-        _timer_disable_interrupt();
+        hal_timer_disable_interrupt();
         started = false;
     } else {
-        _timer_setvalue(((timer_event*) event_queue.front)->next_event);
+        hal_timer_setvalue(((timer_event*) event_queue.front)->next_event);
     }
 
     event->f(NULL);

@@ -10,7 +10,7 @@
 
 #include <stdbool.h>
 
-#include "types.h"
+#include "../types.h"
 
 typedef struct
 {

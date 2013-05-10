@@ -8,7 +8,7 @@
 #include "log.h"
 #include "string.h"
 
-#include "hal/uart.h"
+#include "../hal/uart.h"
 
 // TODO only in debug mode?
 

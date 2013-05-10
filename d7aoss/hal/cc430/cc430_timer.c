@@ -8,37 +8,37 @@
 #include <stddef.h>
 #include <stdbool.h>
 
-#include "../../log.h"
+#include "../../framework/log.h"
 
 #include "cc430_addresses.h"
 
 
-void _timer_setvalue(u16 next_event)
+void hal_timer_setvalue(u16 next_event)
 {
 	TA1CCR0 = next_event;
 	TA1CTL |= TACLR;
 }
 
-void _timer_enable_interrupt()
+void hal_timer_enable_interrupt()
 {
 	TA1CCTL0 = CCIE; // Enable interrupt for CCR0
 	TA1CTL |= MC__UP;
 }
 
-void _timer_disable_interrupt()
+void hal_timer_disable_interrupt()
 {
 	TA1CCTL0 &= ~CCIE; // Disable interrupt for CCR0
 	TA1CTL &= ~MC__UP;
 }
 
-void _timer_init()
+void hal_timer_init()
 {
 	//set timer to ticks (=1024 Hz)
 	TA1CTL = TASSEL_1 + MC__UP + ID_3 + TACLR;           // ACLK/8, up mode, clear timer
 	TA1EX0 = TAIDEX_3;							// divide /4
 }
 
-int16_t _timer_getvalue()
+int16_t hal_timer_getvalue()
 {
     return TA1R;
 }

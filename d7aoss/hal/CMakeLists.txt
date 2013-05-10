@@ -8,7 +8,6 @@ SET(HAL_API
     system.h
     uart.h
     timer.h
-    timer.c
 )
 
 IF(D7AOSS_HAL_DRIVER STREQUAL "CC430")
