@@ -13,19 +13,19 @@
 #include "cc430_addresses.h"
 
 
-static void _timer_setvalue(u16 next_event)
+void _timer_setvalue(u16 next_event)
 {
 	TA1CCR0 = next_event;
 	TA1CTL |= TACLR;
 }
 
-static void _timer_enable_interrupt()
+void _timer_enable_interrupt()
 {
 	TA1CCTL0 = CCIE; // Enable interrupt for CCR0
 	TA1CTL |= MC__UP;
 }
 
-static void _timer_disable_interrupt()
+void _timer_disable_interrupt()
 {
 	TA1CCTL0 &= ~CCIE; // Disable interrupt for CCR0
 	TA1CTL &= ~MC__UP;

@@ -4,7 +4,7 @@
  *  	glenn.ergeerts@artesis.be
  */
 
-#include <crc.h>
+#include "../crc.h"
 
 uint16_t crc_calculate(uint8_t* data, uint8_t length)
 {

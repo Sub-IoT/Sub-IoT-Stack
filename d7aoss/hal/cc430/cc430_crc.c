@@ -5,7 +5,7 @@
  *      Author: Maarten Weyn
  */
 
-#include "system.h"
+#include "../system.h"
 #include "cc430_addresses.h"
 
 u16 crc_calculate(u8* data, u8 length)

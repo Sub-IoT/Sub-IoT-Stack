@@ -4,7 +4,7 @@
  *  	glenn.ergeerts@artesis.be
  */
 
-#include <timer.h>
+#include "../timer.h"
 
 void _timer_init()
 {

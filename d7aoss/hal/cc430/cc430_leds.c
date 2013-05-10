@@ -6,7 +6,7 @@
  */
 
 #include "cc430_addresses.h"
-#include "leds.h"
+#include "../leds.h"
 #include "platforms/platform.h"
 
 //#include "inc/hw_memmap.h"

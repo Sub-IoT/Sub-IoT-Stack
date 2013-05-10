@@ -7,7 +7,7 @@
 
 
 #include "trans.h"
-#include "../timer.h"
+#include "../hal/timer.h"
 #include "../log.h"
 #include <string.h>
 #include <stdio.h>

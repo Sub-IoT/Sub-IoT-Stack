@@ -8,7 +8,7 @@
 #include <msp430.h>
 #include <stdint.h>
 #include <phy/fec.h>
-#include <hal/driverlib/5xx_6xx/timera.h>
+#include <hal/cc430/driverlib/5xx_6xx/timera.h>
 
 #include "phy_tests.h"
 
