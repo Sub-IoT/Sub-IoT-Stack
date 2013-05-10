@@ -29,6 +29,8 @@ void timer_init();
 
 void timer_completed();
 
+bool timer_add_event(timer_event* event);
+
 // private function prototypes, those are hardware specific
 void _timer_init();
 
