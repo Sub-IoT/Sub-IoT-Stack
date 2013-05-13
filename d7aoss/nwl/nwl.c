@@ -69,7 +69,11 @@ void nwl_build_advertising_protocol_data(uint8_t channel_id, uint16_t eta, int8_
 	frame.bpid = BPID_AdvP;
 	AdvP_Data *data = (AdvP_Data*) frame.protocol_data;
 	data->channel_id = channel_id;
-	memcpy((void*) data->eta, (void*) &eta, 2);
+	//memcpy((void*) data->eta, (void*) &eta, 2);
+
+	// change to MSB
+	data->eta[0] = eta >> 8;
+	data->eta[1] = eta & 0XFF;
 
 	nwl_build_background_frame(&frame, spectrum_id);
 }

@@ -28,6 +28,7 @@ void send_adv_prot_data(void * arg)
 	led_on(1);
 
 	nwl_build_advertising_protocol_data(0x10, timer, 0, 0xFF, 0x10);
+	log_print_data((uint8_t*)&timer, 2);
 
 
 	if (!csma_ok)
@@ -124,7 +125,8 @@ __interrupt void ISR_trap(void)
 {
   /* For debugging purposes, you can trap the CPU & code execution here with an
      infinite loop */
-  while (1);
+  //while (1);
+	__no_operation();
 
   /* If a reset is preferred, in scenarios where you want to reset the entire system and
      restart the application from the beginning, use one of the following lines depending

@@ -90,7 +90,9 @@ static void scan_timeout()
 	phy_idle();
 
 	if (current_css == NULL)
+	{
 		return;
+	}
 
 	//Channel scan series
 	timer_event event;
@@ -286,6 +288,19 @@ static void rx_callback(phy_rx_data_t* res)
 		log_dll_rx_res(&dll_res);
 	#endif
 	dll_rx_callback(&dll_res);
+
+
+	if (current_css == NULL)
+	{
+		log_print_string(("DLL no series so stop listening"));
+		return;
+	}
+
+	// in current spec reset channel scan
+	log_print_string(("DLL restart channel scan series"));
+
+	current_scan_id = 0;
+	scan_next(NULL);
 }
 
 void dll_init()
@@ -359,6 +374,7 @@ void dll_background_scan()
 	rx_cfg.sync_word_class = 0;
 
 	current_css = NULL;
+
 	bool phy_rx_result = phy_rx(&rx_cfg);
 
 	#ifdef LOG_DLL_ENABLED
@@ -376,7 +392,7 @@ void dll_foreground_scan()
 
 	phy_rx_cfg_t rx_cfg;
 	rx_cfg.length = 0;
-	rx_cfg.timeout = background_scan_detection_timeout; // timeout
+	rx_cfg.timeout = foreground_scan_detection_timeout; // timeout
 	rx_cfg.spectrum_id = spectrum_id; // spectrum ID
 	rx_cfg.scan_minimum_energy = scan_minimum_energy;
 	rx_cfg.sync_word_class = 1;

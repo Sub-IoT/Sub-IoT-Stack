@@ -14,6 +14,8 @@
 #define ENTER_CRITICAL_SECTION(x)  	__disable_interrupt(); //st( x = __read_status_register(); __disable_interrupt(); )
 #define EXIT_CRITICAL_SECTION(x)    __enable_interrupt(); //__write_status_register(x)
 
+#define SWITCH_BYTES(x) (x << 8 | x >> 8)
+
 #if defined(__MSPGCC__)
 #define __ISR(a,b)   void __attribute__((interrupt (a))) b (void)
 #define __even_in_range(a,b) (a)

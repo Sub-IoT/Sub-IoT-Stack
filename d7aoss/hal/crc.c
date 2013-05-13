@@ -16,10 +16,11 @@ u16 crc_calculate(u8* data, u8 length)
 		CRCDIRB_L = data[i];
 	}
 	u16 crc = CRCINIRES;
-	u16 crc2 =  ((u32)CRCRESR << 16) + ~CRCRESR;
-	return crc;
+	//u16 crc2 =  ((u32)CRCRESR << 16) + ~CRCRESR;
+	u16 crcMSB = (crc << 8) | (crc >> 8);
+	return crcMSB;
 }
-
+/*
 #define POLY 0x8408
 u16 crc16(u8 *data_p, u16 length)
 {
@@ -114,3 +115,4 @@ unsigned short CRCCCITT(unsigned char *data, u8 length, unsigned short seed, uns
    return (unsigned short)(crc ^ final);
 
 }
+*/
