@@ -1,0 +1,4 @@
+SET(CMOCKERY_SRCS cmockery/cmockery.c)
+INCLUDE_DIRECTORIES(cmockery)
+ADD_EXECUTABLE(tests timer_tests.c ${CMOCKERY_SRCS})
+TARGET_LINK_LIBRARIES(tests D7AOSS rt)
