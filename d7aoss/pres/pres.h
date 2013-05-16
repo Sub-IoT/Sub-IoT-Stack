@@ -21,7 +21,7 @@
 #define SETTING_SELECTOR_FEC_TX 1 << 5
 #define SETTING_SELECTOR_FEC_RX 1 << 4
 #define SETTING_SELECTOR_BLINK_CHANNELS 1 << 3
-#define SETTING_SELECTOR_HI-RATE_CHANNELS 1 << 2
+#define SETTING_SELECTOR_HI_RATE_CHANNELS 1 << 2
 #define SETTING_SELECTOR_NORMAL_CHANNELS 1 << 1
 
 #include "../types.h"
@@ -32,10 +32,10 @@
 const uint8_t filesystem[] = {
 
 		/* network configuration: ID=0x00  len=10, alloc=10 */
-		virtual_id,                                         /* virtual id */
+		0x00, 0x00,                                         /* virtual id */
 	    0xFF,                                               /* Device Subnet */
 	    0xFF,                                               /* Beacon Subnet */
-	    SETTING_SELECTOR_ENDPOINT | RATE_CHANNELS | SETTING_SELECTOR_NORMAL_CHANNELS,                    /* Active Setting */
+	    (uint8_t) (SETTING_SELECTOR_ENDPOINT | SETTING_SELECTOR_HI_RATE_CHANNELS | SETTING_SELECTOR_NORMAL_CHANNELS),                    /* Active Setting */
 	    0x00,                                               /* Default Device Flags */
 	    2,                                                  /* Beacon Redudancy (attempts) */
 	    0x0002//,                                     /* Hold Scan Sequence Cycles */

@@ -30,9 +30,14 @@ void uart_init()
     P1SEL |= BIT5 + BIT6;                     // Select P1.5 & P1.6 to UART function
 #endif
 
+    //UBR0=0x12; UBR1=0x00; UMCTL=0x84; /* 2097152Hz 115228bps */
+    //UBR0=0x09; UBR1=0x00; UMCTL=0x10; /* 1048576Hz 115228bps */
+    //UBR00=0x6D; UBR10=0x00; UMCTL0=0x44; /* uart0 1048576Hz 9602bps */
+
     UCA0CTL1 |= UCSWRST;                      // **Put state machine in reset**
     UCA0CTL1 |= UCSSEL_2;                     // SMCLK
     UCA0BR0 = 9;                              // 1MHz 115200 (see User's Guide)
+
     UCA0BR1 = 0;                              // 1MHz 115200
     UCA0MCTL |= UCBRS_1 + UCBRF_0;            // Modulation UCBRSx=1, UCBRFx=0
     UCA0CTL1 &= ~UCSWRST;                     // **Initialize USCI state machine**

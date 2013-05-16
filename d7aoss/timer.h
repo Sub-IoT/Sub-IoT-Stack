@@ -22,4 +22,8 @@ void timer_init();
 
 bool timer_add_event(timer_event* event);
 uint16_t get_counter_value();
+
+void timer_enable_interrupt();
+void timer_disable_interrupt();
+
 #endif /* TIMER_H_ */

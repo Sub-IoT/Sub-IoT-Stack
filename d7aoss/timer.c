@@ -25,14 +25,14 @@ static void timer_setvalue(u16 next_event)
 	TA1CTL |= TACLR;
 }
 
-static void timer_enable_interrupt()
+void timer_enable_interrupt()
 {
 	TA1CCTL0 = CCIE; // Enable interrupt for CCR0
 	TA1CTL |= MC__UP;
 	started = true;
 }
 
-static void timer_disable_interrupt()
+void timer_disable_interrupt()
 {
 	TA1CCTL0 &= ~CCIE; // Disable interrupt for CCR0
 	TA1CTL &= ~MC__UP;

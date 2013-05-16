@@ -14,6 +14,7 @@
 //#include "driverlib/5xx_6xx/wdt.h"
 #include "driverlib/5xx_6xx/tlv.h"
 #include "driverlib/5xx_6xx/pmm.h"
+#include "driverlib/5xx_6xx/ucs.h"
 
 //#include "cc430_registers.h"
 
@@ -113,12 +114,40 @@ void system_init()
 
 void clock_init(void)
 {
-	UCSCTL1 = 0x0050;
-	UCSCTL2 = 0x01F9;
-	UCSCTL3 = 0x0020;
-	UCSCTL4 = 0x0233;
-	UCSCTL5 = 0x0040;
-	UCSCTL6 = 0x0100;
+//	UCSCTL1 = DCORSEL_5; // 0x0050
+	//UCSCTL1 = DCORSEL_1;
+//	UCSCTL2 = 0x01F9;
+//	UCSCTL3 = 0x0020;
+//	UCSCTL4 = 0x0233;
+//	UCSCTL5 = 0x0040;
+//	UCSCTL6 = 0x0100;
+
+	//Set DCO FLL reference = REFO
+	UCS_clockSignalInit(
+			__MSP430_BASEADDRESS_UCS_RF__,
+		UCS_FLLREF,
+		UCS_REFOCLK_SELECT,
+		UCS_CLOCK_DIVIDER_1
+		);
+	//Set ACLK = REFO
+	UCS_clockSignalInit(
+			__MSP430_BASEADDRESS_UCS_RF__,
+		UCS_ACLK,
+		UCS_REFOCLK_SELECT,
+		UCS_CLOCK_DIVIDER_1
+		);
+
+	//Set Ratio and Desired MCLK Frequency  and initialize DCO
+	UCS_initFLLSettle(
+			__MSP430_BASEADDRESS_UCS_RF__,
+		1000, // 1000 khz
+		31   //  1000 kHz / 32.768 Khz (Crystal)
+		);
+
+
+//	unsigned long clockValueSMCLK = UCS_getSMCLK(__MSP430_BASEADDRESS_UCS_RF__);
+//	unsigned long clockValueMCLK = UCS_getMCLK(__MSP430_BASEADDRESS_UCS_RF__);
+//	unsigned long clockValueCLK = UCS_getACLK(__MSP430_BASEADDRESS_UCS_RF__);
 }
 
 void system_watchdog_timer_stop()

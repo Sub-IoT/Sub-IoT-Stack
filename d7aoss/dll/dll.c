@@ -297,7 +297,9 @@ static void rx_callback(phy_rx_data_t* res)
 	}
 
 	// in current spec reset channel scan
-	log_print_string(("DLL restart channel scan series"));
+	#ifdef LOG_DLL_ENABLED
+		log_print_string(("DLL restart channel scan series"));
+	#endif
 
 	current_scan_id = 0;
 	scan_next(NULL);
