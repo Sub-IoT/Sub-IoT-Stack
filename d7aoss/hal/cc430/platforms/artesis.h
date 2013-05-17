@@ -10,8 +10,7 @@
 
 #include "../driverlib/5xx_6xx/gpio.h"
 
-#include "../../types.h"
-#include "../addresses.h"
+#include "../cc430_addresses.h"
 
 #define LED_RED	1
 #define LED_GREEN 2

@@ -20,6 +20,7 @@
 #include <hal/button.h>
 #include <hal/leds.h>
 #include <hal/rtc.h>
+#include <msp430.h>
 
 #define SYNC_WORD 0xCE
 
@@ -34,12 +35,12 @@ typedef enum {
 	mode_idle,
 	mode_tx,
 	mode_rx
-} mode_t;
+} app_mode_t;
 
 static u16 counter = 0;
 static u8 interrupt_flags = 0;
 static u8 tx_mode_enabled = 0;
-static mode_t mode = mode_idle;
+static app_mode_t mode = mode_idle;
 static bool start_channel_scan = true;
 
 dll_channel_scan_t scan_cfg1 = {

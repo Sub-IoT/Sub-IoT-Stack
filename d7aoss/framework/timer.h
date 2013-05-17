@@ -11,6 +11,8 @@
 #include <stdbool.h>
 #include <stdint.h>
 
+#include "queue.h"
+
 typedef struct
 {
 	uint16_t next_event;
@@ -18,7 +20,13 @@ typedef struct
 
 } timer_event;
 
+static timer_event event_array[20];
+static queue event_queue;
+static bool started;
+
 void timer_init();
+
+void timer_completed();
 
 bool timer_add_event(timer_event* event);
 uint16_t get_counter_value();

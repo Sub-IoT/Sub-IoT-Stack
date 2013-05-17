@@ -16,7 +16,7 @@
 #include "../fec.h"
 #include "cc430_phy.h"
 #include "cc430_registers.h"
-#include "../../log.h"
+#include "../../framework/log.h"
 
 #include "rf1a.h"
 

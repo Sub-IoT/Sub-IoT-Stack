@@ -14,9 +14,10 @@
 #include <hal/button.h>
 #include <hal/leds.h>
 #include <hal/rtc.h>
-#include <log.h>
-#include <timer.h>
+#include <framework/log.h>
+#include <framework/timer.h>
 #include <hal/crc.h>
+#include <msp430.h> // TODO
 
 
 #define INTERRUPT_BUTTON1 	(1)

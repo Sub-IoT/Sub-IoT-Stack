@@ -14,7 +14,8 @@
 #include <hal/button.h>
 #include <hal/leds.h>
 #include <hal/rtc.h>
-#include <log.h>
+#include <framework/log.h>
+#include <msp430.h>
 
 #define INTERRUPT_RTC 		(1 << 3)
 

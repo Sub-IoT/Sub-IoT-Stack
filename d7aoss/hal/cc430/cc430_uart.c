@@ -5,7 +5,7 @@
  *  	glenn.ergeerts@artesis.be
  */
 
-#include "uart.h"
+#include "../uart.h"
 #include "platforms/platform.h"
 
 #include <msp430.h>

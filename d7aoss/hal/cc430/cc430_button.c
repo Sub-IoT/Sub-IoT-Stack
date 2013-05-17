@@ -7,13 +7,13 @@
 
 #include <stdbool.h>
 
-#include "button.h"
+#include "../button.h"
 
 #include "driverlib/5xx_6xx/gpio.h"
 #include "driverlib/5xx_6xx/wdt.h"
 
 #include "platforms/platform.h"
-#include "addresses.h"
+#include "cc430_addresses.h"
 
 
 void button_init()

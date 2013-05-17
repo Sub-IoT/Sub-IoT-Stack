@@ -8,15 +8,15 @@
 #ifndef __LOG_H_
 #define __LOG_H_
 
+
+//#TODO define from cmake
 //#define LOG_DLL_ENABLED
 //#define LOG_PHY_ENABLED
 //#define LOG_NWL_ENABLED
 //#define LOG_TRANS_ENABLED
 
-#include "types.h"
-
-#include "phy/phy.h"
-#include "dll/dll.h"
+#include "../phy/phy.h"
+#include "../dll/dll.h"
 
 #define LOG_TYPE_STRING 0x01
 #define LOG_TYPE_DATA 0x02

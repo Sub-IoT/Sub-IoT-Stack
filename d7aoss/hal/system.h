@@ -9,7 +9,6 @@
 #define __SYSTEM_H__
 
 #include "../types.h"
-#include "addresses.h"
 
 #define ENTER_CRITICAL_SECTION(x)  	__disable_interrupt(); //st( x = __read_status_register(); __disable_interrupt(); )
 #define EXIT_CRITICAL_SECTION(x)    __enable_interrupt(); //__write_status_register(x)

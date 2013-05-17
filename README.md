@@ -32,7 +32,8 @@ The tools/logger directory contains both a command line application and a GUI (Q
     * select CC430F5137 as device
     * select the empty project template and click finish
     * choose the correct platform in hal/platforms/platform.h
-    * in the phy folder include only the used radio in the build, exclude all others
+    * in the phy directory include only the used radio in the build, exclude all others
+    * in the hal directory include only the used hardware in the build, exclude all others
     * the d7aoss project should be created an building it should work
 * import applications
     * create new CCS project
