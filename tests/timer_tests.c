@@ -1,22 +1,7 @@
-#include <stdarg.h>
-#include <stddef.h>
-#include <setjmp.h>
-#include <cmockery.h>
-#include <unistd.h>
-
-#include <assert.h>
+#include "test.h"
 
 #include "../d7aoss/framework/timer.h"
 
-// If unit testing is enabled override assert with mock_assert().
-#define UNIT_TESTING // TODO define using cmake
-#ifdef UNIT_TESTING
-extern void mock_assert(const int result, const char* const expression,
-                        const char * const file, const int line);
-#undef assert
-#define assert(expression) \
-    mock_assert((int)(expression), #expression, __FILE__, __LINE__);
-#endif // UNIT_TESTING
 
 bool callback_called = false;
 
@@ -27,6 +12,8 @@ void callback()
 
 void timer_when_adding_event_callback_should_be_called(void **state)
 {
+    callback_called = false;
+
     timer_init();
     timer_event t;
     t.f = &callback;
@@ -38,9 +25,39 @@ void timer_when_adding_event_callback_should_be_called(void **state)
     assert(callback_called);
 }
 
+void timer_when_adding_event_with_next_event_eq_0_callback_should_be_called_immediately(void **state)
+{
+    callback_called = false;
+
+    timer_init();
+    timer_event t;
+    t.f = &callback;
+    t.next_event = 0;
+    timer_add_event(&t);
+
+    // don't wait for signal which triggers callback;
+
+    assert(callback_called);
+}
+
+void timer_when_adding_event_and_queue_is_full_it_should_return_false(void **state)
+{
+    int max_queue_len = sizeof(event_array) / sizeof(timer_event);
+    timer_event t;
+    t.f = &callback;
+    t.next_event = 1000;
+    int i;
+    for(i = 0; i < max_queue_len; i++)
+        timer_add_event(&t);
+
+    assert_false(timer_add_event(&t));
+}
+
 int main(int argc, char* argv[]) {
     const UnitTest tests[] = {
         unit_test(timer_when_adding_event_callback_should_be_called),
+        unit_test(timer_when_adding_event_with_next_event_eq_0_callback_should_be_called_immediately),
+        unit_test(timer_when_adding_event_and_queue_is_full_it_should_return_false),
     };
 
     return run_tests(tests);
