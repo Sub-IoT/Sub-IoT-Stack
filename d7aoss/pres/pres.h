@@ -27,6 +27,8 @@
 #include "../types.h"
 #include "../hal/system.h"
 
+// ADD .fs			: {} > FLASH to .cmd file to use filesystem
+
 #pragma DATA_SECTION(filesystem, ".fs")
 
 const uint8_t filesystem[] = {

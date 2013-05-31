@@ -8,8 +8,6 @@
 #ifndef ADDRESSES_H
 #define ADDRESSES_H
 
-// TODO move to HAL
-
 #include <msp430.h>
 
 #ifndef __MSP430_BASEADDRESS_PORT1_R__

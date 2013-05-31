@@ -12,5 +12,6 @@ ADD_LIBRARY( DRV
     uart_baudrate.c
     uart.c
     wdt.c
+    ucs.c
     )
 

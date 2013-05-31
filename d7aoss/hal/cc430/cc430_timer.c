@@ -9,11 +9,12 @@
 #include <stdbool.h>
 
 #include "../../framework/log.h"
+#include "../../framework/timer.h"
 
 #include "cc430_addresses.h"
 
 
-void hal_timer_setvalue(u16 next_event)
+void hal_timer_setvalue(uint16_t next_event)
 {
 	TA1CCR0 = next_event;
 	TA1CTL |= TACLR;

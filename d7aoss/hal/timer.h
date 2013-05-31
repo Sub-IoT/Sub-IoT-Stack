@@ -5,8 +5,8 @@
  *      Author: Maarten Weyn
  */
 
-#ifndef TIMER_H_
-#define TIMER_H_
+#ifndef HAL_TIMER_H_
+#define HAL_TIMER_H_
 
 #include <stdbool.h>
 #include <stdint.h>
@@ -21,4 +21,4 @@ void hal_timer_enable_interrupt();
 
 void hal_timer_disable_interrupt();
 
-#endif /* TIMER_H_ */
+#endif /* HAL_TIMER_H_ */

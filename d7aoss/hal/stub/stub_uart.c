@@ -26,10 +26,10 @@ void uart_transmit_message(unsigned char *data, unsigned char length)
 
 unsigned char uart_tx_ready()
 {
-
+	return 0;
 }
 
 unsigned char uart_receive_data()
 {
-
+	return 0;
 }

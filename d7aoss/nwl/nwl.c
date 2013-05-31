@@ -6,7 +6,7 @@
  */
 
 #include "nwl.h"
-#include "../log.h"
+#include "../framework/log.h"
 #include "../hal/system.h"
 
 
