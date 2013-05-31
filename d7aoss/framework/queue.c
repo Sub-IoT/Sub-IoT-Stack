@@ -30,7 +30,7 @@ static void shift_queue (queue* q, uint8_t places)
 
 static bool check_for_space(queue* q, uint8_t size)
 {
-	if (q->rear + 1 > q->start + q->size)
+    if (q->rear + 1 >= q->start + q->size)
 	{
 		// no place at the end anymore!
 
@@ -145,10 +145,11 @@ bool queue_push_value(queue* q, void* data, uint8_t size)
 	{
 		q->front = q->start;
 		q->rear = q->start;
-	} else
+    }
+    else
 	{
 		if (!check_for_space(q,size))
-			return 0;
+            return false;
 
 		q->rear += size;
 	}
@@ -156,7 +157,7 @@ bool queue_push_value(queue* q, void* data, uint8_t size)
 	memcpy(q->rear, data, size);
 	q->length++;
 
-	return 1;
+    return true;
 }
 
 void queue_insert_u8(queue* q, uint8_t data, uint8_t position)
