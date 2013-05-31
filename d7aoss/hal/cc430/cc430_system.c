@@ -27,7 +27,7 @@ uint8_t virtual_id[2];
 void clock_init(void);
 
 
-void PMM_SetStdSVSM(unsigned short svsmh_cfg, u8 Von, u8 Voffon) {
+void PMM_SetStdSVSM(unsigned short svsmh_cfg, uint8_t Von, uint8_t Voffon) {
     unsigned short svsmh_reg;
     unsigned short svsml_reg;
 
@@ -74,7 +74,7 @@ void SetVCoreDown (unsigned char level)
   PMMCTL0_H = 0x00;                         // Lock PMM module registers for write access
 }
 
-void PMM_SetVCore (u8 level) {
+void PMM_SetVCore (uint8_t level) {
     unsigned char actLevel;
 
     // Note: change level by one step only

@@ -125,8 +125,8 @@ static void rx_callback(phy_rx_data_t* res)
 	// Subnet Matching do not parse it yet
 	if (dll_state == DllStateScanBackgroundFrame)
 	{
-		u16 crc = crc_calculate(res->data, 5);
-		if (memcmp((u8*) &(res->data[5]), (u8*) &crc, 2) != 0)
+		uint16_t crc = crc_calculate(res->data, 5);
+		if (memcmp((uint8_t*) &(res->data[5]), (uint8_t*) &crc, 2) != 0)
 		{
 			#ifdef LOG_DLL_ENABLED
 				log_print_string("CRC ERROR");
@@ -145,8 +145,8 @@ static void rx_callback(phy_rx_data_t* res)
 		}
 	} else if (dll_state == DllStateScanForegroundFrame)
 	{
-		u16 crc = crc_calculate(res->data, res->length - 2);
-		if (memcmp((u8*) &(res->data[res->length - 2]), (u8*) &crc, 2) != 0)
+		uint16_t crc = crc_calculate(res->data, res->length - 2);
+		if (memcmp((uint8_t*) &(res->data[res->length - 2]), (uint8_t*) &crc, 2) != 0)
 		{
 			#ifdef LOG_DLL_ENABLED
 				log_print_string("CRC ERROR");
@@ -195,7 +195,7 @@ static void rx_callback(phy_rx_data_t* res)
 		frame->frame_header.subnet = res->data[2];
 		frame->frame_header.frame_ctl = res->data[3];
 
-		u8* data_pointer = res->data + 4;
+		uint8_t* data_pointer = res->data + 4;
 
 		if (frame->frame_header.frame_ctl & FRAME_CTL_LISTEN) // Listen
 			timeout_listen = 10;
@@ -234,7 +234,7 @@ static void rx_callback(phy_rx_data_t* res)
 
 			if (addressing == 0 && nls == 0)
 			{
-				u8 id_target[8];
+				uint8_t id_target[8];
 				if (vid)
 				{
 					memcpy(data_pointer, &id_target, 2);
@@ -245,7 +245,7 @@ static void rx_callback(phy_rx_data_t* res)
 					memcpy(data_pointer, &id_target, 8);
 					data_pointer += 8;
 				}
-				frame->address_ctl->target_id = (u8*) &id_target;
+				frame->address_ctl->target_id = (uint8_t*) &id_target;
 			} else {
 				frame->address_ctl->target_id = NULL;
 			}
@@ -546,7 +546,7 @@ void dll_create_foreground_frame(uint8_t* data, uint8_t length, dll_ff_tx_cfg_t*
 		//frame->frame_header.frame_ctl |= FRAME_CTL_DLLS;
 	}
 
-	u8* pointer = frame_data + 1 + sizeof(dll_foreground_frame_header_t);
+	uint8_t* pointer = frame_data + 1 + sizeof(dll_foreground_frame_header_t);
 
 	if (params->addressing != NULL)
 	{
@@ -590,7 +590,7 @@ void dll_create_foreground_frame(uint8_t* data, uint8_t length, dll_ff_tx_cfg_t*
 
 	frame->length = (pointer - frame_data) + 2;  // length includes CRC
 
-	u16 crc16 = crc_calculate(frame_data, frame->length - 2);
+	uint16_t crc16 = crc_calculate(frame_data, frame->length - 2);
 	memcpy(pointer, &crc16, 2);
 
 	foreground_frame_tx_cfg.length = frame->length;
@@ -598,7 +598,7 @@ void dll_create_foreground_frame(uint8_t* data, uint8_t length, dll_ff_tx_cfg_t*
 	current_cfg = &foreground_frame_tx_cfg;
 }
 
-void dll_create_background_frame(u8* data, u8 subnet, u8 spectrum_id, s8 tx_eirp)
+void dll_create_background_frame(uint8_t* data, uint8_t subnet, uint8_t spectrum_id, int8_t tx_eirp)
 {
 	background_frame_tx_cfg.spectrum_id = spectrum_id;
 	background_frame_tx_cfg.eirp = tx_eirp;
@@ -608,9 +608,9 @@ void dll_create_background_frame(u8* data, u8 subnet, u8 spectrum_id, s8 tx_eirp
 	frame->subnet = subnet;
 	memcpy(frame->payload, data, 4);
 
-	u8* pointer = frame_data + 5;
+	uint8_t* pointer = frame_data + 5;
 
-	u16 crc16 = crc_calculate(frame_data, 5);
+	uint16_t crc16 = crc_calculate(frame_data, 5);
 	memcpy(pointer, &crc16, 2);
 
 	current_cfg = &background_frame_tx_cfg;

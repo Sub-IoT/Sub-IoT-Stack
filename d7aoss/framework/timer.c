@@ -14,14 +14,14 @@ void timer_init()
 {
     hal_timer_init();
 
-    queue_init(&event_queue, (u8*)&event_array, sizeof(event_array));
+    queue_init(&event_queue, (uint8_t*)&event_array, sizeof(event_array));
     started = false;
 }
 
 bool timer_insert_value_in_queue(timer_event* event)
 {
     // TODO: substract time already gone
-    u8 position = 0;
+	uint8_t position = 0;
     int16_t sum_next_event = - hal_timer_getvalue();
 
     while (position < event_queue.length)

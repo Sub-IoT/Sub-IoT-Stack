@@ -14,13 +14,15 @@
 #include <stdint.h>
 
 
-//depricated
-#define u8 unsigned char
-#define u16 unsigned short
-#define u32 unsigned long
+//depricated/
+/*
+#define u8 unsigned char -> uint8_t
+#define u16 unsigned short -> uint16_t
+#define u32 unsigned long -> uint32_t
 
-#define s8 signed char
-#define s16 signed short
-#define s32 signed long
+#define s8 signed char -> int8_t
+#define s16 signed short -> int16_t
+#define s32 signed long -> int32_t
+*/
 
 #endif // __TYPES_H__

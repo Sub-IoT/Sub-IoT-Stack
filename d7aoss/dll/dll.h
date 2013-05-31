@@ -73,7 +73,7 @@ typedef struct {
 } dll_foreground_frame_security_t;
 
 typedef struct {
-	u8 length;
+	uint8_t length;
 	dll_foreground_frame_header_t frame_header;
 	dll_foreground_frame_security_t* dlls_header;  // only when DLLS enabled in frame ctl
 	dll_foreground_frame_address_ctl_t* address_ctl; // only when addressing enabled in frame ctl

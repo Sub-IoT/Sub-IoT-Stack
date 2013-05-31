@@ -11,21 +11,21 @@
 #define BPID_ResP 0xF1
 
 typedef struct {
-	u8 length;
-	u8 tx_eirp;
-	u8 subnet;
-	u8 bpid;
-	u8 protocol_data[3];
+	uint8_t length;
+	uint8_t tx_eirp;
+	uint8_t subnet;
+	uint8_t bpid;
+	uint8_t protocol_data[3];
 } nwl_background_frame_t;
 
 typedef struct {
-	u8 channel_id;
-	u8 eta[2];
+	uint8_t channel_id;
+	uint8_t eta[2];
 } AdvP_Data;
 
 typedef struct {
-	u8 res_type;
-	u8 res_duration[2];
+	uint8_t res_type;
+	uint8_t res_duration[2];
 } ResP_Data;
 
 typedef struct

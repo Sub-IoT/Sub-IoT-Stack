@@ -22,8 +22,8 @@
 #define INTERRUPT_BUTTON3 	(1 << 2)
 #define INTERRUPT_RTC 		(1 << 3)
 
-static u8 interrupt_flags = 0;
-static u8 rtcEnabled = 0;
+static uint8_t interrupt_flags = 0;
+static uint8_t rtcEnabled = 0;
 
 static uint8_t buffer[16] = {0x10, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77, 0x88, 0x99, 0xAA, 0xBB, 0xCC, 0xDD, 0xEE, 0xFF};
 

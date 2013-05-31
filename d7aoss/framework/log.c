@@ -14,7 +14,7 @@
 
 void log_print_string(char* message)
 {
-	u8 len = strlen(message);
+	uint8_t len = strlen(message);
 	uart_transmit_data(0xDD);
 	uart_transmit_data(LOG_TYPE_STRING);
 	uart_transmit_data(len);

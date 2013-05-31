@@ -23,10 +23,10 @@
 #define __ISR(a,b)   __interrupt void b (void)
 #endif
 
-extern u8 device_id[8]; // TODO: keep this as global?
-extern u8 virtual_id[2];
+extern uint8_t device_id[8]; // TODO: keep this as global?
+extern uint8_t virtual_id[2];
 
-void PMM_SetVCore (u8 level);
+void PMM_SetVCore (uint8_t level);
 void system_init();
 
 void system_watchdog_timer_stop();

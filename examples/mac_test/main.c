@@ -25,13 +25,13 @@
 #define INTERRUPT_BUTTON3 	(1 << 2)
 #define INTERRUPT_RTC 		(1 << 3)
 
-static u16 counter = 0;
+static uint16_t counter = 0;
 
-static u8 interrupt_flags = 0;
-static u8 rtcEnabled = 0;
+static uint8_t interrupt_flags = 0;
+static uint8_t rtcEnabled = 0;
 
 
-static u8 tx = 0;
+static uint8_t tx = 0;
 
 dll_channel_scan_t scan_cfg1 = {
 		0x1C,
@@ -69,9 +69,15 @@ void start_tx()
 	tx = 1;
 	stop_rx();
 	led_on(3);
-	dll_tx_foreground_frame((u8*)&counter, sizeof(counter), 0x1C, 0);
-	dll_csma();
 
+	dll_ff_tx_cfg_t cfg;
+	cfg.eirp = 0;
+	cfg.spectrum_id = 0x1C;
+	cfg.subnet = 0xFF;
+
+	dll_create_foreground_frame((uint8_t*)&counter, sizeof(counter), &cfg);
+	//dll_csma(1);
+	dll_tx_frame();
 }
 
 void tx_callback(Dll_Tx_Result result)
@@ -82,11 +88,16 @@ void tx_callback(Dll_Tx_Result result)
 		led_off(3);
 		log_print_string("TX OK");
 	}
-	else if (result == DLLTxResultCCAFail)
+	else if (result == DLLTxResultCCA1Fail)
 	{
 		led_toggle(1);
-		log_print_string("TX CCA FAIL");
-	} else
+		log_print_string("TX CCA 1 FAIL");
+	}
+	else if (result == DLLTxResultCCA2Fail)
+		{
+			led_toggle(1);
+			log_print_string("TX CCA 2 FAIL");
+		} else
 	{
 		led_toggle(1);
 		log_print_string("TX FAIL");

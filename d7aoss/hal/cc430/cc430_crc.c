@@ -11,12 +11,12 @@
 uint16_t crc_calculate(uint8_t* data, uint8_t length)
 {
 	CRCINIRES = 0xFFFF;
-	u8 i = 0;
+	uint8_t i = 0;
 	for(; i<length; i++)
 	{
 		CRCDIRB_L = data[i];
 	}
-	u16 crc = CRCINIRES;
-	u16 crcMSB = (crc << 8) | (crc >> 8);
+	uint16_t crc = CRCINIRES;
+	uint16_t crcMSB = (crc << 8) | (crc >> 8);
 	return crcMSB;
 }

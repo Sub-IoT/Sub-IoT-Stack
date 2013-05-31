@@ -21,6 +21,8 @@
 #include <hal/leds.h>
 #include <hal/rtc.h>
 #include <msp430.h>
+#include <framework/log.h>
+#include <hal/uart.h>
 
 #define SYNC_WORD 0xCE
 
@@ -37,9 +39,9 @@ typedef enum {
 	mode_rx
 } app_mode_t;
 
-static u16 counter = 0;
-static u8 interrupt_flags = 0;
-static u8 tx_mode_enabled = 0;
+static uint16_t counter = 0;
+static uint8_t interrupt_flags = 0;
+//static u8 tx_mode_enabled = 0;
 static app_mode_t mode = mode_idle;
 static bool start_channel_scan = true;
 
@@ -69,7 +71,7 @@ void stop_rx()
 void start_tx()
 {
 	led_on(3);
-	trans_tx_foreground_frame((u8*)&counter, sizeof(counter), CHANNEL_ID, 10);
+	trans_tx_foreground_frame((uint8_t*)&counter, sizeof(counter), 0xFF, CHANNEL_ID, 10);
 }
 
 void tx_callback(Trans_Tx_Result result)
@@ -96,9 +98,9 @@ void rx_callback(dll_rx_res_t* rx_res)
 {
 	dll_foreground_frame_t* foreground_frame = (dll_foreground_frame_t*) rx_res->frame;
 	uart_transmit_data(SYNC_WORD);
-	uart_transmit_message(foreground_frame->source_id_header, 8);
+	uart_transmit_message(foreground_frame->address_ctl->source_id, 8);
 	uart_transmit_message(foreground_frame->payload, 2);
-	uart_transmit_message(&rx_res->rssi, 1);
+	uart_transmit_message((uint8_t*) &rx_res->rssi, 1);
 	led_toggle(3);
 
 	start_channel_scan = true;

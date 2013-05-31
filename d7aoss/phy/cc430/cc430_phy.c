@@ -643,7 +643,7 @@ void set_timeout(uint16_t timeout)
 
 void set_eirp(int8_t eirp)
 {
-	u8 i;
+	uint8_t i;
 	for( i = 0; i < sizeof(eirp_values); i++ )
 	{
 		if (eirp >= eirp_values[i]) //round the given eirp to a lower possible value
