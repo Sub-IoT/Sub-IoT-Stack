@@ -14,13 +14,14 @@
 #include <framework/log.h>
 #include <framework/timer.h>
 
+#include <msp430.h>
 
 #define ADV_TIMESPAN 5
 #define MSG_TIMESPAN 2000;
-static u16 counter = 0;
+static uint16_t counter = 0;
 
 static timer_event event;
-static u16 timer = 500;
+static uint16_t timer = 500;
 bool csma_ok = false;
 
 void send_adv_prot_data(void * arg)

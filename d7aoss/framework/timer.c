@@ -101,3 +101,8 @@ void timer_completed()
 
     event->f(NULL);
 }
+
+uint16_t timer_get_counter_value()
+{
+    return hal_timer_getvalue();
+}

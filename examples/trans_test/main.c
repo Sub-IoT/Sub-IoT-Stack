@@ -19,8 +19,8 @@
 
 #define INTERRUPT_RTC 		(1 << 3)
 
-u8 dataSend = 0;
-static u8 interrupt_flags = 0;
+uint8_t dataSend = 0;
+static uint8_t interrupt_flags = 0;
 bool IsReceived = false;
 
 dll_channel_scan_t scan_cfg1 = {
@@ -50,7 +50,7 @@ void start_tx()
 
 	//log_print_string("start_tx");
 	dataSend++;
-	trans_tx_foreground_frame(&dataSend, sizeof(dataSend), 0x18, 0x00);
+    trans_tx_foreground_frame(&dataSend, sizeof(dataSend), 0xFF, 0x18, 0x00);
 
 }
 
