@@ -22,10 +22,13 @@ typedef void (*trans_tx_callback_t)(Trans_Tx_Result);
 void trans_init();
 
 void trans_set_tx_callback(trans_tx_callback_t);
+void trans_set_initial_t_ca(uint16_t t_ca);
+
+
 void trans_tx_foreground_frame(uint8_t* data, uint8_t length, uint8_t subnet, uint8_t spectrum_id, int8_t tx_eirp);
 //void trans_tx_background_frame(uint8_t* data, uint8_t subnet, uint8_t spectrum_id, int8_t tx_eirp);
 
 
-void trans_rigd_ccp(uint8_t spectrum_id, bool init_status);
+void trans_rigd_ccp(uint8_t spectrum_id, bool init_status, bool wait_for_t_ca_timeout);
 
 #endif /* TRANS_H_ */

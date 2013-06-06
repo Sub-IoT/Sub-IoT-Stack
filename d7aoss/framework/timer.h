@@ -29,6 +29,6 @@ void timer_init();
 void timer_completed();
 
 bool timer_add_event(timer_event* event);
-uint16_t get_counter_value();
+uint16_t timer_get_counter_value();
 
 #endif /* TIMER_H_ */

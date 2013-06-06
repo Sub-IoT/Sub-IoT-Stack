@@ -10,10 +10,10 @@
 
 
 //#TODO define from cmake
-//#define LOG_DLL_ENABLED
-//#define LOG_PHY_ENABLED
-//#define LOG_NWL_ENABLED
-//#define LOG_TRANS_ENABLED
+#define LOG_DLL_ENABLED
+#define LOG_PHY_ENABLED
+#define LOG_NWL_ENABLED
+#define LOG_TRANS_ENABLED
 
 #include "../phy/phy.h"
 #include "../dll/dll.h"

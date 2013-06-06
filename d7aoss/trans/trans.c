@@ -17,6 +17,8 @@
 static uint16_t current__t_ca = 0;
 static uint8_t current__t_g = 0;
 static uint8_t current__spectrum_id = 0;
+static uint16_t init_t_ca = 400;
+static uint16_t last_ca = 0;
 
 static int temp_time= 0;
 static uint8_t dialogid = 0;
@@ -38,7 +40,7 @@ static void control_tx_callback(Dll_Tx_Result Result)
 				break;
 			case DLLTxResultCCA1Fail:
 			case DLLTxResultCCA2Fail:
-				trans_rigd_ccp(current__spectrum_id, false);
+				trans_rigd_ccp(current__spectrum_id, false, true);
 				#ifdef LOG_TRANS_ENABLED
 					log_print_string("Trans: CCA fail");
 				#endif
@@ -63,13 +65,22 @@ void trans_set_tx_callback(trans_tx_callback_t cb)
 	trans_tx_callback = cb;
 }
 
+void trans_set_initial_t_ca(uint16_t t_ca)
+{
+	init_t_ca = t_ca;
+}
+
 static void final_rigd(void* arg){
 	 dll_csma(true);
 }
 
+static void t_ca_timeout_rigd(void* arg){
+	trans_rigd_ccp(current__spectrum_id, false, false);
+}
+
 void trans_tx_foreground_frame(uint8_t* data, uint8_t length, uint8_t subnet, uint8_t spectrum_id, int8_t tx_eirp){
 	nwl_build_network_protocol_data(data, length, NULL, NULL, subnet, spectrum_id, tx_eirp, dialogid++);
-	trans_rigd_ccp(spectrum_id, true);
+	trans_rigd_ccp(spectrum_id, true, false);
 }
 
 //void trans_tx_background_frame(uint8_t* data, uint8_t subnet, uint8_t spectrum_id, int8_t tx_eirp){
@@ -77,21 +88,35 @@ void trans_tx_foreground_frame(uint8_t* data, uint8_t length, uint8_t subnet, ui
 //}
 
 // transport layer, Random Increase Geometric decaying slot back-off , Congestion Control Process
-void trans_rigd_ccp(uint8_t spectrum_id, bool init_status){
+void trans_rigd_ccp(uint8_t spectrum_id, bool init_status, bool wait_for_t_ca_timeout){
+	timer_event event;
+
 	if(init_status){//initialization of the parameters, only for new packets
 		//TODO: Dragan: fix overflow
-		current__t_ca = 400;
+		current__t_ca = init_t_ca;
 		current__t_g = 5;
 		current__spectrum_id = spectrum_id;
+	}
+	if (wait_for_t_ca_timeout)
+	{
+		uint16_t time_since_last_ca = timer_get_counter_value() - last_ca;
+		if (time_since_last_ca < current__t_ca)
+		{
+			event.next_event = current__t_ca - time_since_last_ca;
+			event.f = &t_ca_timeout_rigd;
+			timer_add_event(&event);
+			return;
+		}
 	}
 	current__t_ca = current__t_ca/2;
 	if(current__t_ca > current__t_g){
 		float n_time = rand();
 		n_time = (n_time / 32767) * current__t_ca; // Random Time before the CCA will be executed
 		temp_time = (int)n_time;
-		timer_event event;
+
 		event.next_event = temp_time; // Wait random time (0 - new__t_ca)
 		event.f = &final_rigd;
+		last_ca = timer_get_counter_value();
 		timer_add_event(&event);
 	}
 	else{

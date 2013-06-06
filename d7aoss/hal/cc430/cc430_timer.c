@@ -39,7 +39,7 @@ void hal_timer_init()
 	TA1EX0 = TAIDEX_3;							// divide /4
 }
 
-int16_t hal_timer_getvalue()
+uint16_t hal_timer_getvalue()
 {
     return TA1R;
 }
