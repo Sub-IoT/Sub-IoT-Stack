@@ -5,12 +5,12 @@
 
 bool callback_called = false;
 
-void callback()
+static void callback()
 {
     callback_called = true;
 }
 
-void timer_when_adding_event_callback_should_be_called(void **state)
+void test_timer_when_adding_event_callback_should_be_called(void **state)
 {
     callback_called = false;
 
@@ -25,7 +25,7 @@ void timer_when_adding_event_callback_should_be_called(void **state)
     assert(callback_called);
 }
 
-void timer_when_adding_event_with_next_event_eq_0_callback_should_be_called_immediately(void **state)
+void test_timer_when_adding_event_with_next_event_eq_0_callback_should_be_called_immediately(void **state)
 {
     callback_called = false;
 
@@ -40,7 +40,7 @@ void timer_when_adding_event_with_next_event_eq_0_callback_should_be_called_imme
     assert(callback_called);
 }
 
-void timer_when_adding_event_and_queue_is_full_it_should_return_false(void **state)
+void test_timer_when_adding_event_and_queue_is_full_it_should_return_false(void **state)
 {
     int max_queue_len = sizeof(event_array) / sizeof(timer_event);
     timer_event t;
@@ -53,12 +53,10 @@ void timer_when_adding_event_and_queue_is_full_it_should_return_false(void **sta
     assert_false(timer_add_event(&t));
 }
 
-int main(int argc, char* argv[]) {
-    const UnitTest tests[] = {
-        unit_test(timer_when_adding_event_callback_should_be_called),
-        unit_test(timer_when_adding_event_with_next_event_eq_0_callback_should_be_called_immediately),
-        unit_test(timer_when_adding_event_and_queue_is_full_it_should_return_false),
-    };
+const UnitTest test_timer_tests[] = {
+    unit_test(test_timer_when_adding_event_callback_should_be_called),
+    unit_test(test_timer_when_adding_event_with_next_event_eq_0_callback_should_be_called_immediately),
+    unit_test(test_timer_when_adding_event_and_queue_is_full_it_should_return_false),
+};
 
-    return run_tests(tests);
-}
+
