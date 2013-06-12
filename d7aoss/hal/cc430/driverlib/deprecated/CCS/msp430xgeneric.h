@@ -89,7 +89,7 @@ typedef void (* __SFR_FARPTR)();
 #define LPM3_bits              (SCG1+SCG0+CPUOFF)
 #define LPM4_bits              (SCG1+SCG0+OSCOFF+CPUOFF)
 
-#include "in430.h"
+#include <intrinsics.h>
 
 #define LPM0         _bis_SR_register(LPM0_bits)         /* Enter Low Power Mode 0 */
 #define LPM0_EXIT    _bic_SR_register_on_exit(LPM0_bits) /* Exit Low Power Mode 0 */

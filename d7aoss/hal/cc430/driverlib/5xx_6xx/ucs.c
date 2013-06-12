@@ -44,6 +44,9 @@
 #endif
 #include "debug.h"
 #include "../inc/sfr_sys_baseAddress.h"
+#ifdef __GNUC__
+#define __get_SR_register() READ_SR
+#endif
 
 //******************************************************************************
 //

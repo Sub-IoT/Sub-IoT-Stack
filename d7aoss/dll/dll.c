@@ -505,7 +505,8 @@ void dll_ca_callback(Dll_Tx_Result result)
 		dll_tx_callback(DLLTxResultCCAOK);
 	} else
 	{
-		uint16_t new_time = timer_get_counter_value();
+
+        uint16_t new_time = timer_get_counter_value();
 		uint16_t diff = (new_time - timestamp) >> 6;
 		if (diff < (timeout_ca - 5))
 		{
@@ -523,7 +524,7 @@ void dll_ca(uint8_t t_ca)
 	dll_tx_callback = dll_ca_callback;
 
 	timeout_ca = t_ca;
-	timestamp = timer_get_counter_value();
+    timestamp = timer_get_counter_value();
 	dll_csma(true);
 }
 
