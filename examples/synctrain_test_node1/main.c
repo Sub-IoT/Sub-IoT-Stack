@@ -15,12 +15,14 @@
 #include <hal/rtc.h>
 #include <log.h>
 #include <timer.h>
-#include <hal/driverlib/5xx_6xx/rtc.h>
+#include <hal/rtc.h>
 
-#define SEND_INTERVAL_MS	10000
+#define SEND_INTERVAL_MS	1000
 #define SYNC_INTERVAL_MS	500
 #define SYNC_LENGTH			10
 #define SEND_CHANNEL 0x1C
+
+#define USE_LEDS
 
 #define INTERRUPT_RTC 		(1 << 3)
 #define BATTERY_OFFSET	-10
@@ -28,6 +30,7 @@
 
 //static u8 interrupt_flags = 0;
 //static u8 tx = 0;
+
 u8 data[32];
 uint32_t counter;
 u8 dataLength = 0;
@@ -37,10 +40,10 @@ u8 sync_position = 0;
 timer_event event;
 timer_event sync_event;
 
-u16 adc12_result;
-u8  adc12_data_ready;
+uint16_t adc12_result;
+volatile uint8_t  adc12_data_ready;
 
-u16 battery_measurement(void);
+uint16_t battery_measurement(void);
 Calendar currentTime;
 
 
@@ -52,7 +55,10 @@ void start_tx(void* arg)
 	//	return;
 
 	//tx = 1;
+	#ifdef USE_LEDS
 	led_on(2);
+	#endif
+
 	sync_position = SYNC_LENGTH;
 
 	timer_add_event(&sync_event);
@@ -74,7 +80,9 @@ void start_tx_sync(void* arg)
 
 	if (sync_position == 0)
 	{
+		#ifdef USE_LEDS
 		led_on(3);
+		#endif
 
 		trans_tx_foreground_frame(data, dataLength, SEND_CHANNEL, 10);
 
@@ -85,7 +93,9 @@ void start_tx_sync(void* arg)
 	} else {
 		log_print_string("sync_event added");
 		counter = sync_position * SYNC_INTERVAL_MS;
+		#ifdef USE_LEDS
 		led_on(2);
+		#endif
 		log_print_string("BF");
 
 		log_print_data((uint8_t*) &sync_position, 1);
@@ -97,9 +107,10 @@ void start_tx_sync(void* arg)
 void tx_callback(Trans_Tx_Result result)
 {
 	system_watchdog_timer_reset();
-
+#ifdef USE_LEDS
 	if(result == TransPacketSent)
 	{
+
 		led_off(3);
 		led_off(2);
 		log_print_string("TX OK");
@@ -109,6 +120,7 @@ void tx_callback(Trans_Tx_Result result)
 		led_toggle(1);
 		log_print_string("TX CCA FAIL");
 	}
+#endif
 
 	//tx = 0;
 	//timer_add_event(&event);
