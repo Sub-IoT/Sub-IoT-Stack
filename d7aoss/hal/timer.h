@@ -13,7 +13,7 @@
 
 void hal_timer_init();
 
-int16_t hal_timer_getvalue();
+uint16_t hal_timer_getvalue();
 
 void hal_timer_setvalue(uint16_t next_event);
 

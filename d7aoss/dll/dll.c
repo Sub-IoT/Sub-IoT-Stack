@@ -213,13 +213,17 @@ static void rx_callback(phy_rx_data_t* res)
 		if (frame->frame_header.frame_ctl & 0x20) // Enable Addressing
 		{
 			// Address Control Header
-			dll_foreground_frame_address_ctl_t* address_ctl = (dll_foreground_frame_address_ctl_t*) data_pointer;
-			frame->address_ctl = address_ctl;
-			data_pointer += sizeof(uint8_t*);
+			dll_foreground_frame_address_ctl_t address_ctl;// = (dll_foreground_frame_address_ctl_t*) data_pointer;
+			frame->address_ctl = &address_ctl;
+			frame->address_ctl->dialogId = *data_pointer;
+			data_pointer++;
+			frame->address_ctl->flags = *data_pointer;
+			data_pointer++;
+			//data_pointer += sizeof(uint8_t*);
 
-			uint8_t addressing = (address_ctl->flags & 0xC0) >> 6;
-			uint8_t vid = (address_ctl->flags & 0x20) >> 5;
-			uint8_t nls = (address_ctl->flags & 0x10) >> 4;
+			uint8_t addressing = (frame->address_ctl->flags & 0xC0) >> 6;
+			uint8_t vid = (frame->address_ctl->flags & 0x20) >> 5;
+			uint8_t nls = (frame->address_ctl->flags & 0x10) >> 4;
 			// TODO parse Source ID Header
 
 			frame->address_ctl->source_id = data_pointer;
