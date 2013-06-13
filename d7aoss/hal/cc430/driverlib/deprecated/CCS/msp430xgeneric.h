@@ -89,7 +89,7 @@ typedef void (* __SFR_FARPTR)();
 #define LPM3_bits              (SCG1+SCG0+CPUOFF)
 #define LPM4_bits              (SCG1+SCG0+OSCOFF+CPUOFF)
 
-#include <intrinsics.h>
+#include <in430.h>
 
 #define LPM0         _bis_SR_register(LPM0_bits)         /* Enter Low Power Mode 0 */
 #define LPM0_EXIT    _bic_SR_register_on_exit(LPM0_bits) /* Exit Low Power Mode 0 */
@@ -11515,16 +11515,16 @@ typedef void (* __SFR_FARPTR)();
 /* status registers */
 #define PARTNUM                0x30           /*  PARTNUM    - Chip ID */
 #define VERSION                0x31           /*  VERSION    - Chip ID */
-#define FREQEST                0x32           /*  FREQEST    – Frequency Offset Estimate from demodulator */
-#define LQI                    0x33           /*  LQI        – Demodulator estimate for Link Quality */
-#define RSSI                   0x34           /*  RSSI       – Received signal strength indication */
-#define MARCSTATE              0x35           /*  MARCSTATE  – Main Radio Control State Machine state */
-#define WORTIME1               0x36           /*  WORTIME1   – High byte of WOR time */
-#define WORTIME0               0x37           /*  WORTIME0   – Low byte of WOR time */
-#define PKTSTATUS              0x38           /*  PKTSTATUS  – Current GDOx status and packet status */
-#define VCO_VC_DAC             0x39           /*  VCO_VC_DAC – Current setting from PLL calibration module */
-#define TXBYTES                0x3A           /*  TXBYTES    – Underflow and number of bytes */
-#define RXBYTES                0x3B           /*  RXBYTES    – Overflow and number of bytes */
+#define FREQEST                0x32           /*  FREQEST    Â– Frequency Offset Estimate from demodulator */
+#define LQI                    0x33           /*  LQI        Â– Demodulator estimate for Link Quality */
+#define RSSI                   0x34           /*  RSSI       Â– Received signal strength indication */
+#define MARCSTATE              0x35           /*  MARCSTATE  Â– Main Radio Control State Machine state */
+#define WORTIME1               0x36           /*  WORTIME1   Â– High byte of WOR time */
+#define WORTIME0               0x37           /*  WORTIME0   Â– Low byte of WOR time */
+#define PKTSTATUS              0x38           /*  PKTSTATUS  Â– Current GDOx status and packet status */
+#define VCO_VC_DAC             0x39           /*  VCO_VC_DAC Â– Current setting from PLL calibration module */
+#define TXBYTES                0x3A           /*  TXBYTES    Â– Underflow and number of bytes */
+#define RXBYTES                0x3B           /*  RXBYTES    Â– Overflow and number of bytes */
 
 /* burst write registers */
 #define PATABLE                0x3E           /*  PATABLE - PA control settings table */
