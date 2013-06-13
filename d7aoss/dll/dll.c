@@ -381,13 +381,16 @@ void dll_background_scan()
 
 	current_css = NULL;
 
-	bool phy_rx_result = phy_rx(&rx_cfg);
+
 
 	#ifdef LOG_DLL_ENABLED
+	bool phy_rx_result = phy_rx(&rx_cfg);
 	if (!phy_rx_result)
 	{
 		log_print_string("Starting channel scan FAILED");
 	}
+	#else
+	phy_rx(&rx_cfg);
 	#endif
 }
 void dll_foreground_scan()
@@ -404,7 +407,6 @@ void dll_foreground_scan()
 	rx_cfg.sync_word_class = 1;
 
 	current_css = NULL;
-	phy_rx(&rx_cfg);
 
 	#ifdef LOG_DLL_ENABLED
 	bool phy_rx_result = phy_rx(&rx_cfg);
@@ -412,6 +414,8 @@ void dll_foreground_scan()
 	{
 		log_print_string("Starting channel scan FAILED");
 	}
+	#else
+	phy_rx(&rx_cfg);
 	#endif
 }
 
