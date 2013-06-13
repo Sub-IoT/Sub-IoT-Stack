@@ -33,7 +33,7 @@ void hal_timer_disable_interrupt()
 
 }
 
-int16_t hal_timer_getvalue()
+uint16_t hal_timer_getvalue()
 {
     return 0;
 }
