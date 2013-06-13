@@ -20,7 +20,7 @@ typedef struct {
 
 typedef struct {
 	uint8_t channel_id;
-	uint8_t eta[2];
+	uint16_t eta;
 } AdvP_Data;
 
 typedef struct {

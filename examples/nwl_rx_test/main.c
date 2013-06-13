@@ -11,12 +11,14 @@
 #include <hal/button.h>
 #include <hal/leds.h>
 #include <hal/rtc.h>
-#include <log.h>
-#include <timer.h>
+#include <framework/log.h>
+#include <framework/timer.h>
+
+#include <msp430.h>
 
 
 dll_channel_scan_t scan_cfg1 = {
-		0x10,
+		0x1C,
 		FrameTypeBackgroundFrame,
 		20,
 		500
@@ -45,7 +47,7 @@ void rx_callback(nwl_rx_res_t* rx_res)
 			log_print_data(data->eta, 2);
 
 			timer_event event;
-			event.next_event = *((uint16_t*)data->eta);
+			event.next_event = (*((uint16_t*)data->eta)) << 8 | (*((uint16_t*)data->eta)) >> 8;
 			foreground_channel_id = data->channel_id;
 			dll_set_foreground_scan_detection_timeout(200);
 			dll_set_scan_spectrum_id(data->channel_id);
@@ -93,8 +95,7 @@ void main(void) {
 	}
 }
 
-
-#pragma vector=ADC12_VECTOR,AES_VECTOR,COMP_B_VECTOR,DMA_VECTOR,PORT1_VECTOR,PORT2_VECTOR,RTC_VECTOR,SYSNMI_VECTOR,UNMI_VECTOR,USCI_A0_VECTOR,USCI_B0_VECTOR,WDT_VECTOR,TIMER0_A1_VECTOR,TIMER0_A0_VECTOR,TIMER1_A1_VECTOR
+#pragma vector=AES_VECTOR,COMP_B_VECTOR,DMA_VECTOR,PORT1_VECTOR,PORT2_VECTOR,SYSNMI_VECTOR,UNMI_VECTOR,USCI_A0_VECTOR,USCI_B0_VECTOR,WDT_VECTOR,TIMER0_A1_VECTOR,TIMER0_A0_VECTOR,TIMER1_A1_VECTOR
 __interrupt void ISR_trap(void)
 {
   /* For debugging purposes, you can trap the CPU & code execution here with an
@@ -110,4 +111,3 @@ __interrupt void ISR_trap(void)
      to trigger a software BOR.   */
   PMMCTL0 = PMMPW | PMMSWBOR;          // Apply PMM password and trigger SW BOR
 }
-

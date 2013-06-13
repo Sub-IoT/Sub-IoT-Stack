@@ -90,8 +90,6 @@ void rx_callback(nwl_rx_res_t* rx_res)
 
 void tx_callback(Dll_Tx_Result result)
 {
-
-
 	if(result == DLLTxResultOK)
 	{
 		counter++;
@@ -114,7 +112,6 @@ void tx_callback(Dll_Tx_Result result)
 		led_toggle(2);
 		log_print_string("TX FAIL");
 	}
-
 }
 
 

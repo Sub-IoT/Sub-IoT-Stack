@@ -442,13 +442,16 @@ void dll_channel_scan_series(dll_channel_scan_series_t* css)
 	}
 
 	current_css = css;
-	bool phy_rx_result = phy_rx(&rx_cfg);
+
 
 	#ifdef LOG_DLL_ENABLED
+	bool phy_rx_result = phy_rx(&rx_cfg);
 	if (!phy_rx_result)
 	{
 		log_print_string("Starting channel scan FAILED");
 	}
+	#else
+	phy_rx(&rx_cfg);
 	#endif
 }
 
