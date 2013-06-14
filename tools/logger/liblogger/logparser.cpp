@@ -2,7 +2,7 @@
 
 #include <QDebug>
 
-#include "log.h"
+#include "framework/log.h"
 #include "phy/phy.h"
 #include "dll/dll.h"
 #include "hexdump.h"
@@ -70,8 +70,8 @@ void LogParser::parseReceivedData()
         return;
     }
 
-    u8 type = _receivedDataQueue->dequeue();
-    u8 len = _receivedDataQueue->dequeue();
+    uint8_t type = _receivedDataQueue->dequeue();
+    uint8_t len = _receivedDataQueue->dequeue();
 
     if(type == LOG_TYPE_STRING)
     {

@@ -1,7 +1,7 @@
 #include "packet.h"
 
 #include "phy/phy.h"
-#include "log.h"
+#include "framework/log.h"
 
 #include "bytearrayutils.h"
 #include "hexdump.h"
@@ -45,7 +45,7 @@ void Packet::parseRawPacket()
     {
         data += 2;
         _subnet = *data; data++;
-        u8 frame_ctl = *data; data++;
+        uint8_t frame_ctl = *data; data++;
 
         if(frame_ctl & FRAME_CTL_DLLS)
         {
@@ -57,8 +57,8 @@ void Packet::parseRawPacket()
         if(frame_ctl & FRAME_CTL_EN_ADDR)
         {
             _dialogId = *data; data++;
-            u8 flags = *data; data++;
-            u8 addressingOptions = (flags & 0xC0) >> 6;
+            uint8_t flags = *data; data++;
+            uint8_t addressingOptions = (flags & 0xC0) >> 6;
             bool vidEnabled = (flags & 0x20);
             bool nlsEnabled = (flags & 0x10);
             // TODO frame continuity
@@ -87,7 +87,7 @@ void Packet::parseRawPacket()
             data++; // TODO what is this?
             data++; // isfid
             data++; // isfoffset
-            u8 payloadLength = *data; data++;
+            uint8_t payloadLength = *data; data++;
             _payload = QByteArray(data, payloadLength);
         }
     }
