@@ -20,9 +20,11 @@ static dll_rx_res_t dll_res;
 static dll_channel_scan_series_t* current_css;
 static uint8_t current_scan_id = 0;
 
+phy_tx_cfg_t *current_phy_cfg;
+
 
 uint8_t timeout_listen; // TL
-uint8_t frame_data[50]; // TODO max frame size
+uint8_t frame_data[255]; // TODO max frame size
 uint16_t timestamp;
 uint8_t timeout_ca; 	// T_ca
 
@@ -48,11 +50,11 @@ phy_tx_cfg_t background_frame_tx_cfg = {
 		0x10, 	// spectrum ID
 		0, 		// Sync word class
 		0,		// Transmission power level in dBm ranged [-39, +10]
-		7,		// Packet length
+		6,
 		frame_data	//Packet data
 };
 
-phy_tx_cfg_t *current_cfg;
+
 
 static bool check_subnet(uint8_t device_subnet, uint8_t frame_subnet)
 {
@@ -457,7 +459,7 @@ void dll_channel_scan_series(dll_channel_scan_series_t* css)
 
 static void dll_cca2(void* arg)
 {
-	bool cca2 = phy_cca(current_cfg->spectrum_id, current_cfg->sync_word_class);;
+	bool cca2 = phy_cca(current_phy_cfg->spectrum_id, current_phy_cfg->sync_word_class);;
 	if (!cca2)
 	{
 		dll_tx_callback(DLLTxResultCCA2Fail);
@@ -469,7 +471,7 @@ static void dll_cca2(void* arg)
 
 void dll_tx_frame()
 {
-	if (!phy_tx(current_cfg))
+	if (!phy_tx(current_phy_cfg))
 	{
 		dll_tx_callback(DLLTxResultFail);
 	}
@@ -483,7 +485,7 @@ void dll_csma(bool enabled)
 		return;
 	}
 
-	bool cca1 = phy_cca(current_cfg->spectrum_id, current_cfg->sync_word_class);
+	bool cca1 = phy_cca(current_phy_cfg->spectrum_id, current_phy_cfg->sync_word_class);
 
 	if (!cca1)
 	{
@@ -608,23 +610,23 @@ void dll_create_foreground_frame(uint8_t* data, uint8_t length, dll_ff_tx_cfg_t*
 
 	foreground_frame_tx_cfg.length = frame->length;
 
-	current_cfg = &foreground_frame_tx_cfg;
+	current_phy_cfg = &foreground_frame_tx_cfg;
 }
 
 void dll_create_background_frame(uint8_t* data, uint8_t subnet, uint8_t spectrum_id, int8_t tx_eirp)
 {
 	background_frame_tx_cfg.spectrum_id = spectrum_id;
 	background_frame_tx_cfg.eirp = tx_eirp;
-	background_frame_tx_cfg.length = 7;
+	background_frame_tx_cfg.length = 6;
 
 	dll_background_frame_t* frame = (dll_background_frame_t*) frame_data;
 	frame->subnet = subnet;
-	memcpy(frame->payload, data, 4);
+	memcpy(frame->payload, data, 3);
 
-	uint8_t* pointer = frame_data + 5;
+	uint8_t* pointer = frame_data + 4;
 
-	uint16_t crc16 = crc_calculate(frame_data, 5);
+	uint16_t crc16 = crc_calculate(frame_data, 4);
 	memcpy(pointer, &crc16, 2);
 
-	current_cfg = &background_frame_tx_cfg;
+	current_phy_cfg = &background_frame_tx_cfg;
 }

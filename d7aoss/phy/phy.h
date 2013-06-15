@@ -17,7 +17,7 @@ extern "C" {
 #include <stdbool.h>
 #include <stdint.h>
 
-#define D7_PHY_USE_FEC //TODO move to general config file
+//#define D7_PHY_USE_FEC //TODO move to general config file
 
 #define SYNC_CLASS0_NON_FEC     0xE6D0
 #define SYNC_CLASS0_FEC         0xF498
@@ -75,11 +75,16 @@ extern bool phy_is_rx_in_progress(void);
 extern bool phy_is_tx_in_progress(void);
 extern int16_t phy_get_rssi(uint8_t spectrum_id, uint8_t sync_word_class);
 
-//Implementation independant phy functions
+extern void dissable_autocalibration();
+extern void enable_autocalibration();
+extern void manual_calibration();
+
+//Implementation independent phy functions
 void phy_set_tx_callback(phy_tx_callback_t);
 void phy_set_rx_callback(phy_rx_callback_t);
 bool phy_cca(uint8_t spectrum_id, uint8_t sync_word_class);
 bool phy_translate_settings(uint8_t spectrum_id, uint8_t sync_word_class, bool* fec, uint8_t* channel_center_freq_index, uint8_t* channel_bandwidth_index, uint8_t* preamble_size, uint16_t* sync_word);
+
 
 #ifdef __cplusplus
 }

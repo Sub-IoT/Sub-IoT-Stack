@@ -26,11 +26,10 @@ static void dll_rx_callback(dll_rx_res_t* result)
 	if (res.frame_type == FrameTypeBackgroundFrame)
 	{
 		nwl_background_frame_t bf;
-		bf.length = 6;
 		bf.tx_eirp = 0;
 		bf.subnet = ((dll_background_frame_t*) result->frame)->subnet;
 		bf.bpid = ((dll_background_frame_t*) result->frame)->payload[0];
-		memcpy((void*) bf.protocol_data,(void*) &(((dll_background_frame_t*) result->frame)->payload[1]), 3);
+		memcpy((void*) bf.protocol_data,(void*) &(((dll_background_frame_t*) result->frame)->payload[1]), 2);
 
 		res.frame = &bf;
 	}
@@ -60,38 +59,17 @@ void nwl_build_background_frame(nwl_background_frame_t* data, uint8_t spectrum_i
 	dll_create_background_frame(&(data->bpid), data->subnet, spectrum_id, data->tx_eirp);
 }
 
-void nwl_build_advertising_protocol_data(uint8_t channel_id, uint16_t eta, int8_t tx_eirp, uint8_t subnet, uint8_t spectrum_id)
+void nwl_build_advertising_protocol_data(uint8_t channel_id, uint16_t eta, int8_t tx_eirp, uint8_t subnet)
 {
 	nwl_background_frame_t frame;
-	frame.length = 6;
 	frame.tx_eirp = tx_eirp;
 	frame.subnet = subnet;
 	frame.bpid = BPID_AdvP;
-	AdvP_Data *data = (AdvP_Data*) frame.protocol_data;
-	data->channel_id = channel_id;
-	//memcpy((void*) data->eta, (void*) &eta, 2);
-
 	// change to MSB
-	data->eta[0] = eta >> 8;
-	data->eta[1] = eta & 0XFF;
+	frame.protocol_data[0] = eta >> 8;
+	frame.protocol_data[1] = eta & 0XFF;
 
-	nwl_build_background_frame(&frame, spectrum_id);
-}
-
-void nwl_build_reservation_protocol_data(uint8_t res_type, uint16_t res_duration, int8_t tx_eirp, uint8_t subnet, uint8_t spectrum_id)
-
-{
-	nwl_background_frame_t frame;
-	frame.length = 6;
-	frame.tx_eirp = tx_eirp;
-	frame.subnet = subnet;
-	frame.bpid = BPID_ResP;
-	ResP_Data *data = (ResP_Data*) frame.protocol_data;
-	data->res_type = res_type;
-	memcpy((void*) data->res_duration, (void*) &res_duration, 2);
-
-
-	nwl_build_background_frame(&frame, spectrum_id);
+	nwl_build_background_frame(&frame, channel_id);
 }
 
 void nwl_build_network_protocol_data(uint8_t* data, uint8_t length, nwl_security* security, nwl_routing_header* routing, uint8_t subnet, uint8_t spectrum_id, int8_t tx_eirp, uint8_t dialog_id)

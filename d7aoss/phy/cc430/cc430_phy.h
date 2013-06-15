@@ -85,6 +85,14 @@ void set_timeout(uint16_t timeout);
 void set_eirp(int8_t eirp);
 int16_t calculate_rssi(int8_t rssi_raw);
 
+void dissable_autocalibration();
+void enable_autocalibration();
+void manual_calibration();
+
+bool phy_init_tx();
+bool phy_set_tx(phy_tx_cfg_t* cfg);
+bool phy_tx_data(phy_tx_cfg_t* cfg);
+
 #ifdef __cplusplus
 }
 #endif

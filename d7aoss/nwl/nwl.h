@@ -8,25 +8,18 @@
 #include "../dll/dll.h"
 
 #define BPID_AdvP 0xF0
-#define BPID_ResP 0xF1
 
 typedef struct {
-	uint8_t length;
 	uint8_t tx_eirp;
 	uint8_t subnet;
 	uint8_t bpid;
-	uint8_t protocol_data[3];
+	uint8_t protocol_data[2];
 } nwl_background_frame_t;
 
 typedef struct {
-	uint8_t channel_id;
 	uint16_t eta;
 } AdvP_Data;
 
-typedef struct {
-	uint8_t res_type;
-	uint8_t res_duration[2];
-} ResP_Data;
 
 typedef struct
 {
@@ -62,8 +55,7 @@ void nwl_set_rx_callback(nwl_rx_callback_t);
 
 
 // Background frames
-void nwl_build_advertising_protocol_data(uint8_t channel_id, uint16_t eta, int8_t tx_eirp, uint8_t subnet, uint8_t spectrum_id);
-void nwl_build_reservation_protocol_data(uint8_t res_type, uint16_t res_duration, int8_t tx_eirp, uint8_t subnet, uint8_t spectrum_id);
+void nwl_build_advertising_protocol_data(uint8_t channel_id, uint16_t eta, int8_t tx_eirp, uint8_t subnet);
 //void nwl_tx_background_frame(nwl_background_frame_t* data, uint8_t spectrum_id);
 
 // Foreground frames

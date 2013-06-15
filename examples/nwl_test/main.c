@@ -14,6 +14,8 @@
 #include <framework/log.h>
 #include <framework/timer.h>
 #include <hal/cc430/driverlib/5xx_6xx/rtc.h>
+#include <phy/cc430/cc430_phy.h>
+#include <dll/dll.h>
 
 #include <msp430.h>
 
@@ -21,6 +23,7 @@
 #define MSG_TIMESPAN 1000;
 
 #define SEND_CHANNEL 0x1C
+#define SEND_SUBNET 0xFF
 #define USE_LEDS
 
 #define CLOCKS_PER_1us	1
@@ -30,7 +33,8 @@ static uint16_t counter = 0;
 
 static timer_event event;
 static uint16_t timer = 500;
-bool csma_ok = false;
+volatile bool csma_ok = false;
+volatile bool initialized = false;
 
 uint8_t data[64];
 uint8_t dataLength = 0;
@@ -49,14 +53,38 @@ void send_adv_prot_data(void * arg)
 {
 	led_on(1);
 
-	nwl_build_advertising_protocol_data(SEND_CHANNEL, timer, 10, 0xFF, SEND_CHANNEL);
+	nwl_build_advertising_protocol_data(SEND_CHANNEL, timer, 10, SEND_SUBNET);
+
+
+
+
+//	packet[0] = SEND_SUBNET;
+//	packet[1] = BPID_AdvP;
+//	packet[2] = timer >> 8;
+//	packet[3] = timer & 0XFF;
+//	uint16_t crc16 = crc_calculate(packet, 4);
+//	memcpy(&packet[4], &crc16, 2);
+//
+//	// 4 byte preamble
+//	data[6] = 0b10101010;
+
 	//log_print_data((uint8_t*)&timer, 2);
+
+
 
 
 	if (!csma_ok)
 	{
+		//dissable_autocalibration();
 		dll_ca(100);
 		return;
+	}
+
+	if (!initialized)
+	{
+		initialized = true;
+		phy_init_tx();
+		phy_set_tx(current_phy_cfg);
 	}
 
 
@@ -65,6 +93,10 @@ void send_adv_prot_data(void * arg)
 	if (timer > 0)
 	{
 		timer_add_event(&event);
+		if (!phy_tx_data(current_phy_cfg))
+		{
+			log_print_string("TX BB start Fail");
+		}
 	} else {
 		led_on(3);
 		nwl_build_network_protocol_data((uint8_t*) &data, dataLength, NULL, NULL, 0xFF, SEND_CHANNEL, 10, counter & 0xFF);
@@ -80,7 +112,7 @@ void send_adv_prot_data(void * arg)
 		timer = 500;
 		event.next_event = ADV_TIMESPAN;
 	}
-	dll_tx_frame();
+	//dll_tx_frame();
 }
 
 void rx_callback(nwl_rx_res_t* rx_res)
@@ -101,13 +133,21 @@ void tx_callback(Dll_Tx_Result result)
 	{
 		csma_ok = true;
 		send_adv_prot_data(NULL);
+
 	}
 	else if (result == DLLTxResultCCA1Fail || result == DLLTxResultCCA2Fail)
 	{
 		led_off(1);
 		led_toggle(2);
 		log_print_string("TX CCA FAIL");
-	} else
+	}
+	else if (result == DLLTxResultCAFail)
+	{
+		led_off(1);
+		led_toggle(2);
+		log_print_string("TX CA FAIL");
+	}
+	else
 	{
 		led_toggle(2);
 		log_print_string("TX FAIL");
@@ -122,6 +162,10 @@ void main(void) {
 	nwl_init();
 	nwl_set_tx_callback(&tx_callback);
 	nwl_set_rx_callback(&rx_callback);
+
+
+
+	//manual_calibration();
 
 	//Setup Current Time for Calendar
 	currentTime.Seconds    = 0x50;

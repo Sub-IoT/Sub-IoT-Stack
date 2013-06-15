@@ -39,6 +39,9 @@ uint8_t channel_bandwidth_index;
 uint8_t preamble_size;
 uint16_t sync_word;
 
+static uint8_t previous_spectrum_id = 0xFF;
+static uint8_t previous_sync_word_class = 0xFF;
+
 phy_rx_data_t rx_data;
 
 phy_tx_cfg_t last_tx_cfg;
@@ -527,13 +530,13 @@ void rxtx_finish_isr()
 	RF1AIFG = 0;
 
 	//Flush FIFOs and go to sleep
-	Strobe(RF_SIDLE);
-	Strobe(RF_SFRX);
-	Strobe(RF_SFTX);
-	Strobe(RF_SPWD);
-
-	//Set radio state
-	state = Idle;
+//	Strobe(RF_SIDLE);
+//	Strobe(RF_SFRX);
+//	Strobe(RF_SFTX);
+//	Strobe(RF_SPWD);
+//
+//	//Set radio state
+//	state = Idle;
 }
 
 /*
@@ -578,6 +581,9 @@ void set_channel(uint8_t channel_center_freq_index, uint8_t channel_bandwith_ind
 		WriteSingleReg(DEVIATN, (RADIO_DEVIATN_E(5) | RADIO_DEVIATN_M(0)));
 		break;
 	}
+
+	// is this the right place?
+	Strobe(RF_SCAL);
 }
 
 void set_sync_word(uint16_t sync_word)
@@ -663,4 +669,19 @@ int16_t calculate_rssi(int8_t rssi_raw)
     rssi -= 64 + RSSI_OFFSET;     			// ...and then rescale it, including offset
 
     return rssi;
+}
+
+void dissable_autocalibration()
+{
+	WriteSingleReg(MCSM0, RADIO_MCSM0_FS_AUTOCAL_NEVER);
+}
+
+void enable_autocalibration()
+{
+	WriteSingleReg(MCSM0, RADIO_MCSM0_FS_AUTOCAL_4THIDLE);
+}
+
+void manual_calibration()
+{
+	Strobe(RF_SCAL);
 }

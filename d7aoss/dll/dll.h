@@ -144,7 +144,7 @@ typedef struct
 } dll_channel_scan_series_t;
 
 
-
+extern phy_tx_cfg_t *current_phy_cfg;
 
 typedef void (*dll_tx_callback_t)(Dll_Tx_Result); // TODO result param?
 typedef void (*dll_rx_callback_t)(dll_rx_res_t*);

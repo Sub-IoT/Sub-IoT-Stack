@@ -29,6 +29,7 @@ uint8_t foreground_channel_id;
 
 void scan_foreground_frame(void* arg)
 {
+	log_print_string("FF Scan");
 	dll_foreground_scan();
 }
 
@@ -42,23 +43,28 @@ void rx_callback(nwl_rx_res_t* rx_res)
 		nwl_background_frame_t* frame = (nwl_background_frame_t*) rx_res->frame;
 		if (frame->bpid == BPID_AdvP)
 		{
-			AdvP_Data* data = (AdvP_Data*) frame->protocol_data;
+			AdvP_Data data;
+
+			data.channel_id = frame->protocol_data[0];
+			data.eta = (frame->protocol_data[1] << 8) | frame->protocol_data[2];
+
 			log_print_string("AdvP_Data");
-			log_print_data(data->eta, 2);
+			log_print_data((uint8_t*) frame->protocol_data, 3);
+			log_print_data((uint8_t*) &(data.eta), 2);
+
+			dll_stop_channel_scan();
 
 			timer_event event;
-			event.next_event = (*((uint16_t*)data->eta)) << 8 | (*((uint16_t*)data->eta)) >> 8;
-			foreground_channel_id = data->channel_id;
+			event.next_event = data.eta - 100;
+			foreground_channel_id = data.channel_id;
 			dll_set_foreground_scan_detection_timeout(200);
-			dll_set_scan_spectrum_id(data->channel_id);
+			dll_set_scan_spectrum_id(data.channel_id);
 			event.f = &scan_foreground_frame;
 
 			timer_add_event(&event);
 		}
-
-
-
 	} else {
+		log_print_string("FF");
 		led_toggle(2);
 	}
 }
@@ -67,6 +73,7 @@ start_rx()
 {
 	led_on(3);
 	dll_channel_scan_series(&scan_series_cfg);
+
 }
 
 
@@ -87,7 +94,11 @@ void main(void) {
 	log_print_string("started");
 
 
-	start_rx();
+	//start_rx();
+
+	dll_set_foreground_scan_detection_timeout(0);
+	dll_set_scan_spectrum_id(0x1C);
+	dll_foreground_scan();
 
 	while(1)
 	{
