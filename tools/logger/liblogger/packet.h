@@ -33,11 +33,11 @@ private:
 
     bool _hasDllInformation;
     Frame_Type _frameType;
-    u8 _subnet;
-    u8 _dialogId;
+    uint8_t _subnet;
+    uint8_t _dialogId;
     QByteArray _sourceId;
     QByteArray _payload;
-    u8 _spectrumId;
+    uint8_t _spectrumId;
 };
 
 Q_DECLARE_METATYPE(Packet)
