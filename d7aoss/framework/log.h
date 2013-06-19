@@ -10,10 +10,10 @@
 
 
 //#TODO define from cmake
-#define LOG_DLL_ENABLED
-#define LOG_PHY_ENABLED
-#define LOG_NWL_ENABLED
-#define LOG_TRANS_ENABLED
+//#define LOG_DLL_ENABLED
+//#define LOG_PHY_ENABLED
+//#define LOG_NWL_ENABLED
+//#define LOG_TRANS_ENABLED
 
 #include "../phy/phy.h"
 #include "../dll/dll.h"
@@ -26,6 +26,8 @@
 
 #define LOG_TYPE_DLL_RX_RES 0x03
 #define LOG_TYPE_DLL_RX_RES_SIZE 2
+
+bool itoa(int32_t n, char* out);
 
 void log_print_string(char* message);
 void log_print_data(uint8_t* message, uint8_t length);

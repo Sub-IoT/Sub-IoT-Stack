@@ -106,3 +106,22 @@ uint16_t timer_get_counter_value()
 {
     return hal_timer_getvalue();
 }
+
+void benchmarking_timer_init()
+{
+	hal_benchmarking_timer_init();
+}
+
+uint32_t benchmarking_timer_getvalue()
+{
+    return hal_benchmarking_timer_getvalue();
+}
+void benchmarking_timer_start()
+{
+	hal_benchmarking_timer_start();
+}
+
+void benchmarking_timer_stop()
+{
+	hal_benchmarking_timer_stop();
+}

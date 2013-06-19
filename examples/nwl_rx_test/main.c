@@ -45,8 +45,8 @@ void rx_callback(nwl_rx_res_t* rx_res)
 		{
 			AdvP_Data data;
 
-			data.channel_id = frame->protocol_data[0];
-			data.eta = (frame->protocol_data[1] << 8) | frame->protocol_data[2];
+			//data.channel_id = frame->protocol_data[0];
+			data.eta = (frame->protocol_data[0] << 8) | (frame->protocol_data[1] & 0xFF);
 
 			log_print_string("AdvP_Data");
 			log_print_data((uint8_t*) frame->protocol_data, 3);
@@ -56,9 +56,9 @@ void rx_callback(nwl_rx_res_t* rx_res)
 
 			timer_event event;
 			event.next_event = data.eta - 100;
-			foreground_channel_id = data.channel_id;
+			//foreground_channel_id = data.channel_id;
 			dll_set_foreground_scan_detection_timeout(200);
-			dll_set_scan_spectrum_id(data.channel_id);
+			//dll_set_scan_spectrum_id(data.channel_id);
 			event.f = &scan_foreground_frame;
 
 			timer_add_event(&event);
@@ -94,11 +94,11 @@ void main(void) {
 	log_print_string("started");
 
 
-	//start_rx();
+	start_rx();
 
-	dll_set_foreground_scan_detection_timeout(0);
-	dll_set_scan_spectrum_id(0x1C);
-	dll_foreground_scan();
+//	dll_set_foreground_scan_detection_timeout(0);
+//	dll_set_scan_spectrum_id(0x1C);
+//	dll_foreground_scan();
 
 	while(1)
 	{

@@ -31,4 +31,11 @@ void timer_completed();
 bool timer_add_event(timer_event* event);
 uint16_t timer_get_counter_value();
 
+
+
+void benchmarking_timer_init();
+uint32_t benchmarking_timer_getvalue();
+void benchmarking_timer_start();
+void benchmarking_timer_stop();
+
 #endif /* TIMER_H_ */

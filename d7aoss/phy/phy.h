@@ -79,6 +79,8 @@ extern void dissable_autocalibration();
 extern void enable_autocalibration();
 extern void manual_calibration();
 
+extern void phy_keep_radio_on(bool);
+
 //Implementation independent phy functions
 void phy_set_tx_callback(phy_tx_callback_t);
 void phy_set_rx_callback(phy_rx_callback_t);

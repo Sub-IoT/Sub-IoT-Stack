@@ -20,7 +20,7 @@
 #include <msp430.h>
 
 #define ADV_TIMESPAN 5
-#define MSG_TIMESPAN 1000;
+#define MSG_TIMESPAN 5000;
 
 #define SEND_CHANNEL 0x1C
 #define SEND_SUBNET 0xFF
@@ -32,12 +32,13 @@
 static uint16_t counter = 0;
 
 static timer_event event;
-static uint16_t timer = 500;
+static
 volatile bool csma_ok = false;
 volatile bool initialized = false;
 
 uint8_t data[64];
 uint8_t dataLength = 0;
+uint8_t check = 0;
 
 uint16_t battery_voltage;
 
@@ -48,12 +49,15 @@ volatile bool update_battery_level = false;
 
 uint16_t battery_measurement(void);
 Calendar currentTime;
+uint16_t timetosend = 0;
+
+uint32_t t1, t2;
 
 void send_adv_prot_data(void * arg)
 {
 	led_on(1);
 
-	nwl_build_advertising_protocol_data(SEND_CHANNEL, timer, 10, SEND_SUBNET);
+
 
 
 
@@ -69,12 +73,13 @@ void send_adv_prot_data(void * arg)
 //	data[6] = 0b10101010;
 
 	//log_print_data((uint8_t*)&timer, 2);
-
+	//check++;
 
 
 
 	if (!csma_ok)
 	{
+		nwl_build_advertising_protocol_data(SEND_CHANNEL, 500, 10, SEND_SUBNET);
 		//dissable_autocalibration();
 		dll_ca(100);
 		return;
@@ -82,27 +87,42 @@ void send_adv_prot_data(void * arg)
 
 	if (!initialized)
 	{
-		initialized = true;
-		phy_init_tx();
-		phy_set_tx(current_phy_cfg);
+			initialized = true;
+			phy_init_tx();
+			phy_set_tx(current_phy_cfg);
+			phy_keep_radio_on(true);
+			timetosend = timer_get_counter_value() + 500;
 	}
 
-
-
-	timer -= ADV_TIMESPAN;
-	if (timer > 0)
+	uint16_t currentTime = timer_get_counter_value();
+	int16_t timer = timetosend - currentTime;
+	char msg[16];
+	itoa(timer, msg);
+	log_print_string(msg);
+	if (timer > 500)
 	{
-		timer_add_event(&event);
-		if (!phy_tx_data(current_phy_cfg))
+		__no_operation();
+	}
+	else if (timer > 3)
+	{
+		// building takes 400us
+		nwl_build_advertising_protocol_data(SEND_CHANNEL, timer, 10, SEND_SUBNET);
+		// sending frame takes 2600us
+		dll_tx_frame();
+		if (timer < ADV_TIMESPAN)
 		{
-			log_print_string("TX BB start Fail");
+			event.next_event = timer;
 		}
+
+		timer_add_event(&event);
+
 	} else {
 		led_on(3);
 		nwl_build_network_protocol_data((uint8_t*) &data, dataLength, NULL, NULL, 0xFF, SEND_CHANNEL, 10, counter & 0xFF);
-
+		phy_keep_radio_on(false);
 
 		csma_ok = false;
+		initialized = false;
 
 		counter++;
 		event.next_event = MSG_TIMESPAN;
@@ -111,6 +131,10 @@ void send_adv_prot_data(void * arg)
 
 		timer = 500;
 		event.next_event = ADV_TIMESPAN;
+
+		log_print_string("FF");
+		dll_tx_frame();
+		system_watchdog_timer_reset();
 	}
 	//dll_tx_frame();
 }
@@ -122,16 +146,21 @@ void rx_callback(nwl_rx_res_t* rx_res)
 
 void tx_callback(Dll_Tx_Result result)
 {
+	//check--;
 	if(result == DLLTxResultOK)
 	{
+
+
 		counter++;
 		led_off(1);
 		led_off(3);
-		log_print_string("TX OK");
+		//log_print_string("TX OK");
 	}
 	else if (result == DLLTxResultCCAOK)
 	{
 		csma_ok = true;
+
+		log_print_string("CA");
 		send_adv_prot_data(NULL);
 
 	}
@@ -195,6 +224,9 @@ void main(void) {
 
 	log_print_string("started");
 
+	benchmarking_timer_init();
+	benchmarking_timer_start();
+
 	event.f = &send_adv_prot_data;
 	event.next_event = ADV_TIMESPAN;
 
@@ -202,6 +234,7 @@ void main(void) {
 
 	system_watchdog_init(WDTSSEL0, 0x03); // 32KHz / 2^19
 	system_watchdog_timer_start();
+
 
 	while(1)
 	{
@@ -319,7 +352,7 @@ __interrupt void ADC12ISR (void)
   }
 }
 
-#pragma vector=AES_VECTOR,COMP_B_VECTOR,DMA_VECTOR,PORT1_VECTOR,PORT2_VECTOR,SYSNMI_VECTOR,UNMI_VECTOR,USCI_A0_VECTOR,USCI_B0_VECTOR,WDT_VECTOR,TIMER0_A1_VECTOR,TIMER0_A0_VECTOR,TIMER1_A1_VECTOR
+#pragma vector=AES_VECTOR,COMP_B_VECTOR,DMA_VECTOR,PORT1_VECTOR,PORT2_VECTOR,SYSNMI_VECTOR,UNMI_VECTOR,USCI_A0_VECTOR,USCI_B0_VECTOR,WDT_VECTOR,TIMER0_A0_VECTOR,TIMER1_A1_VECTOR
 __interrupt void ISR_trap(void)
 {
   /* For debugging purposes, you can trap the CPU & code execution here with an

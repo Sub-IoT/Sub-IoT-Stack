@@ -12,6 +12,54 @@
 
 // TODO only in debug mode?
 
+/* Custom reverse() function for which the length of the string is
+ * known in advance (avoids a call to strlen() and including
+ * string.h).
+ *
+ * @args: a null-terminated string
+ * @return: nothing
+ * @result: the characters in str are reversed
+ */
+void reverse(char* str, uint8_t length){
+	uint8_t i = 0, j = length-1;
+	uint8_t tmp;
+    while (i < j) {
+        tmp = str[i];
+        str[i] = str[j];
+        str[j] = tmp;
+        i++; j--;
+    }
+}
+
+/* Returns the string representation of integer n. Assumes 32-bit
+ * int, and 8-bit bytes (i.e. sizeof(char) = 1, sizeof(int) = 4).
+ * Assumes char *out is big enough to hold the string
+ * representation of n.
+ *
+ * @args: int n to convert, char* out for the result
+ * @result the string representation of n is stored in out
+ * @return 0 on success, -1 on error
+ */
+bool itoa(int32_t n, char* out)
+{
+    // if negative, need 1 char for the sign
+	uint8_t sign = n < 0? 1: 0;
+	uint8_t i = 0;
+    if (n == 0) {
+        out[i++] = '0';
+    } else if (n < 0) {
+        out[i++] = '-';
+        n = -n;
+    }
+    while (n > 0) {
+        out[i++] = '0' + n % 10;
+        n /= 10;
+    }
+    out[i] = '\0';
+    reverse(out + sign, i - sign);
+    return 0;
+}
+
 void log_print_string(char* message)
 {
 	uint8_t len = strlen(message);

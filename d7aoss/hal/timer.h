@@ -21,4 +21,10 @@ void hal_timer_enable_interrupt();
 
 void hal_timer_disable_interrupt();
 
+
+void hal_benchmarking_timer_init();
+uint32_t hal_benchmarking_timer_getvalue();
+void hal_benchmarking_timer_start();
+void hal_benchmarking_timer_stop();
+
 #endif /* HAL_TIMER_H_ */

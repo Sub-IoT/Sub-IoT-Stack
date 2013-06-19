@@ -39,6 +39,8 @@ uint8_t channel_bandwidth_index;
 uint8_t preamble_size;
 uint16_t sync_word;
 
+bool init_and_close_radio = true;
+
 static uint8_t previous_spectrum_id = 0xFF;
 static uint8_t previous_sync_word_class = 0xFF;
 
@@ -86,12 +88,14 @@ void phy_idle(void)
 		rxtx_finish_isr();
 }
 
-
-// configure using cfg
-extern bool phy_set_tx(phy_tx_cfg_t* cfg)
+bool phy_translate_and_set_settings(uint8_t spectrum_id, uint8_t sync_word_class)
 {
-	//General configuration
-	if(!phy_translate_settings(cfg->spectrum_id, cfg->sync_word_class, &fec, &channel_center_freq_index, &channel_bandwidth_index, &preamble_size, &sync_word))
+	if (previous_spectrum_id == spectrum_id && previous_sync_word_class == sync_word_class)
+		return true;
+
+	Strobe(RF_SIDLE);
+
+	if(!phy_translate_settings(spectrum_id, sync_word_class, &fec, &channel_center_freq_index, &channel_bandwidth_index, &preamble_size, &sync_word))
 	{
 		#ifdef LOG_PHY_ENABLED
 		log_print_string("PHY Cannot translate settings");
@@ -103,6 +107,20 @@ extern bool phy_set_tx(phy_tx_cfg_t* cfg)
 	set_channel(channel_center_freq_index, channel_bandwidth_index);
 	set_preamble_size(preamble_size);
 	set_sync_word(sync_word);
+
+	previous_spectrum_id = spectrum_id;
+	previous_sync_word_class = sync_word_class;
+
+	return true;
+}
+
+
+// configure using cfg
+extern bool phy_set_tx(phy_tx_cfg_t* cfg)
+{
+	//General configuration
+	phy_translate_and_set_settings(cfg->spectrum_id, cfg->sync_word_class);
+
 	set_eirp(cfg->eirp);
 
 	//TODO Return error if fec not enabled but requested
@@ -189,17 +207,20 @@ bool phy_init_tx()
 
 bool phy_tx(phy_tx_cfg_t* cfg)
 {
-	if (!phy_init_tx())
+	if (init_and_close_radio)
 	{
-		return false;
-	}
-
-	//if (last_tx_cfg.spectrum_id != cfg->spectrum_id || last_tx_cfg.sync_word_class != cfg->sync_word_class || last_tx_cfg.eirp != cfg->eirp)
-	if (memcmp(&last_tx_cfg, cfg, 3) != 0)
-	{
-		if (!phy_set_tx(cfg))
+		if (!phy_init_tx())
+		{
 			return false;
-		memcpy(&last_tx_cfg, cfg, 3);
+		}
+
+		//if (last_tx_cfg.spectrum_id != cfg->spectrum_id || last_tx_cfg.sync_word_class != cfg->sync_word_class || last_tx_cfg.eirp != cfg->eirp)
+		if (memcmp(&last_tx_cfg, cfg, 3) != 0)
+		{
+			if (!phy_set_tx(cfg))
+				return false;
+			memcpy(&last_tx_cfg, cfg, 3);
+		}
 	}
 
 	return phy_tx_data(cfg);
@@ -227,12 +248,10 @@ bool phy_rx(phy_rx_cfg_t* cfg)
 	Strobe(RF_SFRX);
 
 	//Set configuration
-	if(!phy_translate_settings(cfg->spectrum_id, cfg->sync_word_class, &fec, &channel_center_freq_index, &channel_bandwidth_index, &preamble_size, &sync_word))
+
+	if (!phy_translate_and_set_settings(cfg->spectrum_id, cfg->sync_word_class))
 		return false;
 
-	set_channel(channel_center_freq_index, channel_bandwidth_index);
-	set_preamble_size(preamble_size);
-	set_sync_word(sync_word);
 	set_timeout(cfg->timeout);
 
 //TODO Return error if fec not enabled but requested
@@ -313,17 +332,9 @@ extern int16_t phy_get_rssi(uint8_t spectrum_id, uint8_t sync_word_class)
 {
 	uint8_t rssi_raw = 0;
 
-	if(get_radiostate() != Idle)
+	if (!phy_translate_and_set_settings(spectrum_id, sync_word_class))
 		return false;
 
-	//Set radio Idle
-	Strobe(RF_SIDLE);
-
-	//Set configuration
-	if(!phy_translate_settings(spectrum_id, sync_word_class, &fec, &channel_center_freq_index, &channel_bandwidth_index, &preamble_size, &sync_word))
-		return false;
-
-	set_channel(channel_center_freq_index, channel_bandwidth_index);
 
     //Start receiving
     Strobe(RF_SRX);
@@ -529,14 +540,17 @@ void rxtx_finish_isr()
 	RF1AIE  = 0;
 	RF1AIFG = 0;
 
-	//Flush FIFOs and go to sleep
-//	Strobe(RF_SIDLE);
-//	Strobe(RF_SFRX);
-//	Strobe(RF_SFTX);
-//	Strobe(RF_SPWD);
-//
-//	//Set radio state
-//	state = Idle;
+	if (init_and_close_radio)
+	{
+		//Flush FIFOs and go to sleep
+		Strobe(RF_SIDLE);
+		Strobe(RF_SFRX);
+		Strobe(RF_SFTX);
+		Strobe(RF_SPWD);
+
+		//Set radio state
+		state = Idle;
+	}
 }
 
 /*
@@ -671,17 +685,22 @@ int16_t calculate_rssi(int8_t rssi_raw)
     return rssi;
 }
 
-void dissable_autocalibration()
-{
-	WriteSingleReg(MCSM0, RADIO_MCSM0_FS_AUTOCAL_NEVER);
-}
+//void dissable_autocalibration()
+//{
+//	WriteSingleReg(MCSM0, RADIO_MCSM0_FS_AUTOCAL_NEVER);
+//}
+//
+//void enable_autocalibration()
+//{
+//	WriteSingleReg(MCSM0, RADIO_MCSM0_FS_AUTOCAL_4THIDLE);
+//}
+//
+//void manual_calibration()
+//{
+//	Strobe(RF_SCAL);
+//}
 
-void enable_autocalibration()
+void phy_keep_radio_on(bool status)
 {
-	WriteSingleReg(MCSM0, RADIO_MCSM0_FS_AUTOCAL_4THIDLE);
-}
-
-void manual_calibration()
-{
-	Strobe(RF_SCAL);
+	init_and_close_radio = !status;
 }
