@@ -10,6 +10,7 @@
 
 #include <msp430.h>
 
+
 void callback1(void* arg);
 void callback2(void* arg);
 
@@ -30,9 +31,14 @@ void callback2(void* arg);
 
 void callback1(void* arg)
 {
+	uint32_t counter_2 = benchmarking_timer_getvalue();
+	benchmarking_timer_stop();
+	log_print_string("benchmark: %d", counter_2);
+
+	benchmarking_timer_start();
 	timer_add_event(&event);
 	count++;
-//	uint32_t counter_2 = benchmarking_timer_getvalue();
+
 //	uint32_t diff_2 = counter_2 - prev_counter_2;
 //	prev_counter_2 = counter_2;
 //
@@ -43,11 +49,9 @@ void callback1(void* arg)
 
 	uint32_t counter_1 = timer_get_counter_value();
 	uint32_t diff_1 = counter_1 - prev_counter_1;
-	char msg[16];
+	//char msg[16];
 
-	itoa(diff_1, msg);
-	log_print_string(msg);
-
+	//itoa(diff_1, msg);
 
 
 	led_toggle(3);

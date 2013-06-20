@@ -65,7 +65,7 @@ void hal_benchmarking_timer_start()
 {
 	//TA0CCTL0 = CCIE; // Enable interrupt for CCR0
 	//TA0CTL |= MC__CONTINUOUS;
-	TA0CTL |= TAIE;
+	TA0CTL |= TAIE + TACLR;
 	benchmarking_timer_rollover = 0;
 }
 
