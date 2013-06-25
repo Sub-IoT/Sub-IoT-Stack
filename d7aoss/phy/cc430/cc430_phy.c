@@ -232,10 +232,11 @@ bool phy_rx(phy_rx_cfg_t* cfg)
 	log_print_string("phy_rx");
 	#endif
 
-	if(get_radiostate() != Idle)
+	RadioState current_state = get_radiostate();
+	if(current_state != Idle && current_state != Receive)
 	{
 		#ifdef LOG_PHY_ENABLED
-		log_print_string("Cannot RX, PHy not idle");
+		log_print_string("PHY Cannot RX, PHy not idle");
 		#endif
 		return false;
 	}

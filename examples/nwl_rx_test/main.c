@@ -43,19 +43,21 @@ void rx_callback(nwl_rx_res_t* rx_res)
 		nwl_background_frame_t* frame = (nwl_background_frame_t*) rx_res->frame;
 		if (frame->bpid == BPID_AdvP)
 		{
+			dll_stop_channel_scan();
 			AdvP_Data data;
 
 			//data.channel_id = frame->protocol_data[0];
 			data.eta = (frame->protocol_data[0] << 8) | (frame->protocol_data[1] & 0xFF);
 
 			log_print_string("AdvP_Data");
-			log_print_data((uint8_t*) frame->protocol_data, 3);
-			log_print_data((uint8_t*) &(data.eta), 2);
+			char msg[8];
+			itoa(data.eta, msg);
+			log_print_string(msg);
 
-			dll_stop_channel_scan();
+
 
 			timer_event event;
-			event.next_event = data.eta - 100;
+			event.next_event = data.eta < 100 ? 0:  data.eta - 100;
 			//foreground_channel_id = data.channel_id;
 			dll_set_foreground_scan_detection_timeout(200);
 			//dll_set_scan_spectrum_id(data.channel_id);
@@ -66,6 +68,7 @@ void rx_callback(nwl_rx_res_t* rx_res)
 	} else {
 		log_print_string("FF");
 		led_toggle(2);
+		dll_foreground_scan();
 	}
 }
 
@@ -94,11 +97,11 @@ void main(void) {
 	log_print_string("started");
 
 
-	start_rx();
+	//start_rx();
 
-//	dll_set_foreground_scan_detection_timeout(0);
-//	dll_set_scan_spectrum_id(0x1C);
-//	dll_foreground_scan();
+dll_set_foreground_scan_detection_timeout(0);
+dll_set_scan_spectrum_id(0x1C);
+	dll_foreground_scan();
 
 	while(1)
 	{
@@ -106,7 +109,7 @@ void main(void) {
 	}
 }
 
-#pragma vector=AES_VECTOR,COMP_B_VECTOR,DMA_VECTOR,PORT1_VECTOR,PORT2_VECTOR,SYSNMI_VECTOR,UNMI_VECTOR,USCI_A0_VECTOR,USCI_B0_VECTOR,WDT_VECTOR,TIMER0_A1_VECTOR,TIMER0_A0_VECTOR,TIMER1_A1_VECTOR
+#pragma vector=ADC12_VECTOR,RTC_VECTOR,AES_VECTOR,COMP_B_VECTOR,DMA_VECTOR,PORT1_VECTOR,PORT2_VECTOR,SYSNMI_VECTOR,UNMI_VECTOR,USCI_A0_VECTOR,USCI_B0_VECTOR,WDT_VECTOR,TIMER0_A0_VECTOR,TIMER1_A1_VECTOR
 __interrupt void ISR_trap(void)
 {
   /* For debugging purposes, you can trap the CPU & code execution here with an

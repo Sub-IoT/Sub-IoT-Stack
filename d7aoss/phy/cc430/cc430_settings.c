@@ -27,7 +27,7 @@
 	RADIO_DEVIATN_E(5) | RADIO_DEVIATN_M(0),   // DEVIATN   Modem deviation setting (when FSK modulation is enabled).
     RADIO_MCSM2_RX_TIME(7),			// MCSM2		 Main Radio Control State Machine configuration.
     RADIO_MCSM1_CCA_RSSILOWRX | RADIO_MCSM1_RXOFF_MODE_IDLE | RADIO_MCSM1_TXOFF_MODE_IDLE,	// MCSM1 Main Radio Control State Machine configuration.
-    RADIO_MCSM0_FS_AUTOCAL_4THIDLE,// MCSM0     Main Radio Control State Machine configuration.
+    RADIO_MCSM0_FS_AUTOCAL_FROMIDLE,// MCSM0     Main Radio Control State Machine configuration.
     RADIO_FOCCFG_FOC_PRE_K_3K | RADIO_FOCCFG_FOC_POST_K_HALFK | RADIO_FOCCFG_FOC_LIMIT_4THBW,   // FOCCFG    Frequency Offset Compensation Configuration.
     RADIO_BSCFG_BS_PRE_KI_2KI | RADIO_BSCFG_BS_PRE_KP_3KP | RADIO_BSCFG_BS_POST_KI_1KP | RADIO_BSCFG_BS_POST_KP_1KP | RADIO_BSCFG_BS_LIMIT_0,   // BSCFG     Bit synchronization Configuration.
     RADIO_AGCCTRL2_MAX_DVGA_GAIN_ALL | RADIO_AGCCTRL2_MAX_LNA_GAIN_SUB0 | RADIO_AGCCTRL2_MAX_MAGN_TARGET_33,   // AGCCTRL2  AGC control.

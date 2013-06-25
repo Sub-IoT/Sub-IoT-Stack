@@ -87,7 +87,7 @@ static void scan_timeout()
 		return;
 
 	#ifdef LOG_DLL_ENABLED
-		log_print_string("scan time-out");
+		log_print_string("DLL scan time-out");
 	#endif
 	phy_idle();
 
@@ -127,11 +127,11 @@ static void rx_callback(phy_rx_data_t* res)
 	// Subnet Matching do not parse it yet
 	if (dll_state == DllStateScanBackgroundFrame)
 	{
-		uint16_t crc = crc_calculate(res->data, 5);
-		if (memcmp((uint8_t*) &(res->data[5]), (uint8_t*) &crc, 2) != 0)
+		uint16_t crc = crc_calculate(res->data, 4);
+		if (memcmp((uint8_t*) &(res->data[4]), (uint8_t*) &crc, 2) != 0)
 		{
 			#ifdef LOG_DLL_ENABLED
-				log_print_string("CRC ERROR");
+				log_print_string("DLL CRC ERROR");
 			#endif
 			scan_next(NULL); // how to reïnitiate scan on CRC Error, PHY should stay in RX
 			return;
@@ -140,7 +140,7 @@ static void rx_callback(phy_rx_data_t* res)
 		if (!check_subnet(0xFF, res->data[0])) // TODO: get device_subnet from datastore
 		{
 			#ifdef LOG_DLL_ENABLED
-				log_print_string("Subnet mismatch");
+				log_print_string("DLL Subnet mismatch");
 			#endif
 			scan_next(NULL); // how to reïnitiate scan on subnet mismatch, PHY should stay in RX
 			return;
@@ -151,7 +151,7 @@ static void rx_callback(phy_rx_data_t* res)
 		if (memcmp((uint8_t*) &(res->data[res->length - 2]), (uint8_t*) &crc, 2) != 0)
 		{
 			#ifdef LOG_DLL_ENABLED
-				log_print_string("CRC ERROR");
+				log_print_string("DLL CRC ERROR");
 			#endif
 			scan_next(NULL); // how to reïnitiate scan on CRC Error, PHY should stay in RX
 			return;
@@ -159,7 +159,7 @@ static void rx_callback(phy_rx_data_t* res)
 		if (!check_subnet(0xFF, res->data[2])) // TODO: get device_subnet from datastore
 		{
 			#ifdef LOG_DLL_ENABLED
-				log_print_string("Subnet mismatch");
+				log_print_string("DLL Subnet mismatch");
 			#endif
 				scan_next(NULL); // how to reïnitiate scan on subnet mismatch, PHY should stay in RX
 
@@ -168,7 +168,7 @@ static void rx_callback(phy_rx_data_t* res)
 	} else
 	{
 		#ifdef LOG_DLL_ENABLED
-			log_print_string("You fool, you can't be here");
+			log_print_string("DLL You fool, you can't be here");
 		#endif
 	}
 
@@ -354,6 +354,7 @@ void dll_set_scan_spectrum_id(uint8_t spect_id)
 void dll_stop_channel_scan()
 {
 	// TODO remove scan_timeout events from queue?
+	current_css = NULL;
 	dll_state = DllStateNone;
 	phy_idle();
 }
@@ -361,15 +362,17 @@ void dll_stop_channel_scan()
 void dll_background_scan()
 {
 	#ifdef LOG_DLL_ENABLED
-		log_print_string("Starting background scan");
+		log_print_string("DLL Starting background scan");
 	#endif
+
+	dll_state = DllStateScanForegroundFrame;
 
 	//check for signal detected above E_sm
 	// TODO: is this the best method?
 	if (phy_get_rssi(spectrum_id, 0) <= scan_minimum_energy)
 	{
 		#ifdef LOG_DLL_ENABLED
-			log_print_string("No signal deteced");
+			log_print_string("DLL No signal deteced");
 		#endif
 		return;
 	}
@@ -383,13 +386,11 @@ void dll_background_scan()
 
 	current_css = NULL;
 
-
-
 	#ifdef LOG_DLL_ENABLED
 	bool phy_rx_result = phy_rx(&rx_cfg);
 	if (!phy_rx_result)
 	{
-		log_print_string("Starting channel scan FAILED");
+		log_print_string("DLL Starting channel scan FAILED");
 	}
 	#else
 	phy_rx(&rx_cfg);
@@ -400,6 +401,8 @@ void dll_foreground_scan()
 	#ifdef LOG_DLL_ENABLED
 		log_print_string("Starting foreground scan");
 	#endif
+
+	dll_state = DllStateScanForegroundFrame;
 
 	phy_rx_cfg_t rx_cfg;
 	rx_cfg.length = 0;
@@ -414,7 +417,7 @@ void dll_foreground_scan()
 	bool phy_rx_result = phy_rx(&rx_cfg);
 	if (!phy_rx_result)
 	{
-		log_print_string("Starting channel scan FAILED");
+		log_print_string("DLL Starting channel scan FAILED");
 	}
 	#else
 	phy_rx(&rx_cfg);
@@ -424,7 +427,7 @@ void dll_foreground_scan()
 void dll_channel_scan_series(dll_channel_scan_series_t* css)
 {
 	#ifdef LOG_DLL_ENABLED
-		log_print_string("Starting channel scan series");
+		log_print_string("DLL Starting channel scan series");
 	#endif
 
 	phy_rx_cfg_t rx_cfg;
@@ -450,7 +453,7 @@ void dll_channel_scan_series(dll_channel_scan_series_t* css)
 	bool phy_rx_result = phy_rx(&rx_cfg);
 	if (!phy_rx_result)
 	{
-		log_print_string("Starting channel scan FAILED");
+		log_print_string("DLL Starting channel scan FAILED");
 	}
 	#else
 	phy_rx(&rx_cfg);

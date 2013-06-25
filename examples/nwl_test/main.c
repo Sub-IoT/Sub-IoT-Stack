@@ -15,6 +15,7 @@
 #include <framework/timer.h>
 #include <hal/cc430/driverlib/5xx_6xx/rtc.h>
 #include <phy/cc430/cc430_phy.h>
+#include <hal/crc.h>
 #include <dll/dll.h>
 
 #include <msp430.h>
@@ -53,51 +54,83 @@ uint16_t timetosend = 0;
 
 uint32_t t1, t2;
 
+Frame_Type frameType;
+
+
 void send_adv_prot_data(void * arg)
 {
 	led_on(1);
 
-
-
-
-
-
-//	packet[0] = SEND_SUBNET;
-//	packet[1] = BPID_AdvP;
-//	packet[2] = timer >> 8;
-//	packet[3] = timer & 0XFF;
-//	uint16_t crc16 = crc_calculate(packet, 4);
-//	memcpy(&packet[4], &crc16, 2);
+//	event.next_event = MSG_TIMESPAN;
+//	timer_add_event(&event);
 //
-//	// 4 byte preamble
-//	data[6] = 0b10101010;
+//	log_print_string("FF");
+//
+//	nwl_build_network_protocol_data((uint8_t*) &data, dataLength, NULL, NULL, 0xFF, SEND_CHANNEL, 10, counter & 0xFF);
+//	dll_tx_frame();
+//	led_off(1);
+//
+//	return;
+
+
+	int16_t timer = 500;
+
+
+	uint8_t packet[255];
+	packet[0] = SEND_SUBNET;
+	packet[1] = BPID_AdvP;
+	packet[2] = timer >> 8;
+	packet[3] = timer & 0XFF;
+	uint16_t crc16 = crc_calculate(&packet[0], 4);
+	memcpy(&packet[4], &crc16, 2);
+
+	// 4 byte preamble
+	packet[6] = 0xAA;
+	packet[7] = 0xAA;
+	packet[8] = 0xAA;
+	packet[9] = 0xAA;
+
+	// 2 byte sync word
+	packet[10] = 0xE6;
+	packet[11] = 0xD0;
+	packet[12] = SEND_SUBNET;
+	packet[13] = BPID_AdvP;
+	packet[14] = timer >> 8;
+	packet[15] = timer & 0XFF;
+	crc16 = crc_calculate(&packet[12], 4);
+	memcpy(&packet[16], &crc16, 2);
+
+	uint8_t length = 19;
+
 
 	//log_print_data((uint8_t*)&timer, 2);
 	//check++;
 
 
 
-	if (!csma_ok)
-	{
-		nwl_build_advertising_protocol_data(SEND_CHANNEL, 500, 10, SEND_SUBNET);
-		//dissable_autocalibration();
-		dll_ca(100);
-		return;
-	}
+//	if (!csma_ok)
+//	{
+//		nwl_build_advertising_protocol_data(SEND_CHANNEL, 500, 10, SEND_SUBNET);
+//		//dissable_autocalibration();
+//		dll_ca(100);
+//		return;
+//	}
 
 	if (!initialized)
 	{
 			initialized = true;
-			phy_init_tx();
-			phy_set_tx(current_phy_cfg);
-			phy_keep_radio_on(true);
+//			phy_init_tx();
+//			phy_set_tx(current_phy_cfg);
+//			phy_keep_radio_on(true);
 			timetosend = timer_get_counter_value() + 500;
 	}
 
 	uint16_t currentTime = timer_get_counter_value();
-	int16_t timer = timetosend - currentTime;
+	timer = timetosend - currentTime;
+	timer = 0;
 	char msg[16];
 	itoa(timer, msg);
+	log_print_data((uint8_t*) &timer, 2);
 	log_print_string(msg);
 	if (timer > 500)
 	{
@@ -107,22 +140,32 @@ void send_adv_prot_data(void * arg)
 	{
 		// building takes 400us
 		nwl_build_advertising_protocol_data(SEND_CHANNEL, timer, 10, SEND_SUBNET);
+		frameType = FrameTypeBackgroundFrame;
+
 		// sending frame takes 2600us
 		dll_tx_frame();
-		if (timer < ADV_TIMESPAN)
-		{
-			event.next_event = timer;
-		}
+//		if (timer < ADV_TIMESPAN)
+//		{
+//			event.next_event = timer;
+//		}
 
-		timer_add_event(&event);
+		//timer_add_event(&event);
 
 	} else {
 		led_on(3);
 		nwl_build_network_protocol_data((uint8_t*) &data, dataLength, NULL, NULL, 0xFF, SEND_CHANNEL, 10, counter & 0xFF);
-		phy_keep_radio_on(false);
+
+		frameType = FrameTypeForegroundFrame;
+		//phy_keep_radio_on(false);
 
 		csma_ok = false;
 		initialized = false;
+
+		log_print_string("FF");
+		dll_tx_frame();
+
+
+		//phy_idle();
 
 		counter++;
 		event.next_event = MSG_TIMESPAN;
@@ -132,8 +175,7 @@ void send_adv_prot_data(void * arg)
 		timer = 500;
 		event.next_event = ADV_TIMESPAN;
 
-		log_print_string("FF");
-		dll_tx_frame();
+
 		system_watchdog_timer_reset();
 	}
 	//dll_tx_frame();
@@ -149,11 +191,16 @@ void tx_callback(Dll_Tx_Result result)
 	//check--;
 	if(result == DLLTxResultOK)
 	{
-
-
 		counter++;
 		led_off(1);
 		led_off(3);
+
+		if (frameType == FrameTypeBackgroundFrame)
+		{
+			send_adv_prot_data(NULL);
+		} else {
+			//Strobe(RF_SCAL);
+		}
 		//log_print_string("TX OK");
 	}
 	else if (result == DLLTxResultCCAOK)
@@ -224,8 +271,8 @@ void main(void) {
 
 	log_print_string("started");
 
-	benchmarking_timer_init();
-	benchmarking_timer_start();
+//	benchmarking_timer_init();
+//	benchmarking_timer_start();
 
 	event.f = &send_adv_prot_data;
 	event.next_event = ADV_TIMESPAN;
