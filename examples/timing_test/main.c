@@ -10,6 +10,7 @@
 
 #include <msp430.h>
 
+
 void callback1(void* arg);
 void callback2(void* arg);
 
@@ -30,9 +31,14 @@ void callback2(void* arg);
 
 void callback1(void* arg)
 {
-	timer_add_event(&event);
-	count++;
 //	uint32_t counter_2 = benchmarking_timer_getvalue();
+//	benchmarking_timer_stop();
+//	log_print_string("benchmark: %d", counter_2);
+//
+//	benchmarking_timer_start();
+//	timer_add_event(&event);
+//	count++;
+
 //	uint32_t diff_2 = counter_2 - prev_counter_2;
 //	prev_counter_2 = counter_2;
 //
@@ -41,15 +47,13 @@ void callback1(void* arg)
 //	itoa(diff_2, msg);
 //	log_print_string(msg);
 
-	uint32_t counter_1 = timer_get_counter_value();
-	uint32_t diff_1 = counter_1 - prev_counter_1;
-	char msg[16];
+//	uint32_t counter_1 = timer_get_counter_value();
+//	uint32_t diff_1 = counter_1 - prev_counter_1;
+	//char msg[16];
 
-	itoa(diff_1, msg);
-	log_print_string(msg);
+	//itoa(diff_1, msg);
 
-
-
+	log_print_string("callback 1");
 	led_toggle(3);
 //	timer_event event;
 //	event.next_event = 1024;
@@ -76,25 +80,25 @@ int main(void) {
 
 
 
-//    uint8_t i=0;
-//    for (; i<sizeof(timing_series) / sizeof(u16); i++)
-//    {
-//    	timer_event event;
-//		event.next_event = timing_series[i];
-//		event.f = event_series[i];
-//		log_print_string("add event");
-//		timer_add_event(&event);
-//    }
+    uint8_t i=0;
+    for (; i<sizeof(timing_series) / sizeof(uint16_t); i++)
+    {
+    	timer_event event;
+		event.next_event = timing_series[i];
+		event.f = event_series[i];
+		log_print_string("add event %d", timing_series[i]);
+		timer_add_event(&event);
+    }
 
 
-    event.next_event = 10;
-    event.f = &callback1;
+//    event.next_event = 10;
+//    event.f = &callback1;
 
-    benchmarking_timer_init();
-    benchmarking_timer_start();
-
-    prev_counter_1 = timer_get_counter_value();
-    timer_add_event(&event);
+//    benchmarking_timer_init();
+//    benchmarking_timer_start();
+//
+//    prev_counter_1 = timer_get_counter_value();
+//    timer_add_event(&event);
 
     log_print_string("Counting");
 

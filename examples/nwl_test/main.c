@@ -126,12 +126,10 @@ void send_adv_prot_data(void * arg)
 	}
 
 	uint16_t currentTime = timer_get_counter_value();
-	timer = timetosend - currentTime;
-	timer = 0;
-	char msg[16];
-	itoa(timer, msg);
-	log_print_data((uint8_t*) &timer, 2);
-	log_print_string(msg);
+
+	int16_t timer = timetosend - currentTime;
+
+	log_print_string("timer value: %d", timer);
 	if (timer > 500)
 	{
 		__no_operation();

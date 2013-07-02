@@ -5,18 +5,13 @@ import os as os
 import serial as serial
 import shutil as shutil
 import time as time
+import struct
 
 import ctypes
 
 FILE_NAME = "noise_test"
 FILE_EXTENSION = ".csv"
 
-def parse_rssi(rssi):
-    if (rssi >= 128):
-            rssi = (rssi - 256)/2 - 74
-    else:
-            rssi = rssi/2 - 74
-    return rssi
 
 def main():
 	if (len(system.argv) != 3):
@@ -30,8 +25,8 @@ def main():
 		data = serial_port.read(size=2)
 		timestamp = int(time.time())
 		channel = int(data[0].encode("hex"), 16)
-		rssi = int(data[1].encode("hex"), 16)
-		rssi = parse_rssi(rssi)
+		rssi = struct.unpack("b", data[1])[0]
+		
 		f.write(str(timestamp) + ", ")
 		f.write(str(channel) + ", ")
 		f.write(str(rssi) + "\n")

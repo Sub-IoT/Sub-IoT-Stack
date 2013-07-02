@@ -19,7 +19,7 @@ static volatile uint8_t benchmarking_timer_rollover = 0;
 
 void hal_timer_setvalue(uint16_t next_event)
 {
-	TA1CCR0 = TA1R + next_event;
+	TA1CCR0 = next_event;
 	//TA1CTL |= TACLR;
 }
 
@@ -65,7 +65,7 @@ void hal_benchmarking_timer_start()
 {
 	//TA0CCTL0 = CCIE; // Enable interrupt for CCR0
 	//TA0CTL |= MC__CONTINUOUS;
-	TA0CTL |= TAIE;
+	TA0CTL |= TAIE + TACLR;
 	benchmarking_timer_rollover = 0;
 }
 

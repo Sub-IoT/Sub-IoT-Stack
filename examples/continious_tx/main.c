@@ -12,18 +12,19 @@
 #include <hal/system.h>
 #include <hal/leds.h>
 
+#include <msp430.h>
 
 #define PACKET_LEN 19
 #define INTERRUPT_BUTTON1       (1)
 #define CHANNEL_COUNT   8
 
-static u8 packet[PACKET_LEN] = { 0x13, 0x50, 0xF1, 0x20, 0x59, 0x40, 0x46, 0x93, 0x21, 0xAB, 0x00, 0x31, 0x00, 0x24, 0x00, 0x00, 0x00, 0x01, 0x01 };
+static uint8_t packet[PACKET_LEN] = { 0x13, 0x50, 0xF1, 0x20, 0x59, 0x40, 0x46, 0x93, 0x21, 0xAB, 0x00, 0x31, 0x00, 0x24, 0x00, 0x00, 0x00, 0x01, 0x01 };
 
-static u8 spectrum_ids[CHANNEL_COUNT] = { 0x10, 0x12, 0x14, 0x16, 0x18, 0x1A, 0x1C, 0x1E }; // TODO only normal channel classes?
+static uint8_t spectrum_ids[CHANNEL_COUNT] = { 0x10, 0x12, 0x14, 0x16, 0x18, 0x1A, 0x1C, 0x1E }; // TODO only normal channel classes?
 
-static u8 current_spectrum_index = 0;
+static uint8_t current_spectrum_index = 0;
 
-static u8 interrupt_flags = 0;
+static uint8_t interrupt_flags = 0;
 
 phy_tx_cfg_t tx_cfg = {
 	0x10,
@@ -33,7 +34,7 @@ phy_tx_cfg_t tx_cfg = {
 	packet
 };
 
-u8 get_next_spectrum_id()
+uint8_t get_next_spectrum_id()
 {
         current_spectrum_index++;
         if(current_spectrum_index == CHANNEL_COUNT)

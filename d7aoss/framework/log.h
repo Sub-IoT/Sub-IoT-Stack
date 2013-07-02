@@ -27,9 +27,10 @@
 #define LOG_TYPE_DLL_RX_RES 0x03
 #define LOG_TYPE_DLL_RX_RES_SIZE 2
 
-bool itoa(int32_t n, char* out);
+// TODO: can be removed now log_print_string accepts a printf style format string?
+//bool itoa(int32_t n, char* out);
 
-void log_print_string(char* message);
+void log_print_string(char* format, ...);
 void log_print_data(uint8_t* message, uint8_t length);
 
 void log_phy_rx_res(phy_rx_data_t* res);

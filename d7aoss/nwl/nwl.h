@@ -60,3 +60,5 @@ void nwl_build_advertising_protocol_data(uint8_t channel_id, uint16_t eta, int8_
 
 // Foreground frames
 void nwl_build_network_protocol_data(uint8_t* data, uint8_t length, nwl_security* security, nwl_routing_header* routing, uint8_t subnet, uint8_t spectrum_id, int8_t tx_eirp, uint8_t dialog_id);
+
+void nwl_build_datastream_protocol_data(uint8_t* data, uint8_t length, uint8_t subnet, uint8_t spectrum_id, int8_t tx_eirp, uint8_t dialog_id);

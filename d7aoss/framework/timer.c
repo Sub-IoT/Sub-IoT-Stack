@@ -22,6 +22,37 @@ bool timer_insert_value_in_queue(timer_event* event)
 {
     // TODO: substract time already gone
 	uint8_t position = 0;
+	event->next_event = hal_timer_getvalue() + event->next_event;
+
+	while (position < event_queue.length)
+	{
+		timer_event *temp_event = (timer_event*) queue_read_value(&event_queue, position, sizeof(timer_event));
+		if (temp_event->next_event > event->next_event)
+		{
+			queue_insert_value(&event_queue, (void*) event, position, sizeof(timer_event));
+			position = 0;
+			break;
+		}
+		position++;
+	}
+
+	if (position == event_queue.length)
+	{
+		return queue_push_value(&event_queue, (void*) event, sizeof(timer_event));
+	}
+
+	uint8_t i = 0;
+
+	log_print_string("Timer current value: %d", hal_timer_getvalue());
+	for (;i<event_queue.length; i++)
+	{
+		timer_event *temp_event = (timer_event*) queue_read_value(&event_queue, position, sizeof(timer_event));
+		log_print_string("Queue %d:  %d", i, temp_event->next_event);
+	}
+	log_print_string("Timer current value: %d", hal_timer_getvalue());
+
+	/*
+	// code when timer was up instead of continous
     int16_t sum_next_event = - hal_timer_getvalue();
 
     while (position < event_queue.length)
@@ -55,6 +86,7 @@ bool timer_insert_value_in_queue(timer_event* event)
         if (started) event->next_event -= sum_next_event;
         return queue_push_value(&event_queue, (void*) event, sizeof(timer_event));
     }
+    */
 
     return true;
 }
@@ -77,7 +109,7 @@ bool timer_add_event(timer_event* event)
         {
             hal_timer_enable_interrupt();
             started = true;
-            hal_timer_setvalue(event->next_event);
+            hal_timer_setvalue(new_event.next_event);
         }
     } else {
         //log_print_string("Cannot add event, queue is full");
