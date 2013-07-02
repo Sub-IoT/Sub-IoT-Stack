@@ -26,6 +26,8 @@
 extern uint8_t device_id[8]; // TODO: keep this as global?
 extern uint8_t virtual_id[2];
 
+extern uint32_t clock_speed;
+
 void PMM_SetVCore (uint8_t level);
 void system_init();
 

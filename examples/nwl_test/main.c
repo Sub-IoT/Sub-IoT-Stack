@@ -127,7 +127,7 @@ void send_adv_prot_data(void * arg)
 
 	uint16_t currentTime = timer_get_counter_value();
 
-	int16_t timer = timetosend - currentTime;
+	timer = timetosend - currentTime;
 
 	log_print_string("timer value: %d", timer);
 	if (timer > 500)

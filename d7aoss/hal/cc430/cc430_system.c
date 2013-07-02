@@ -23,6 +23,7 @@
 
 uint8_t device_id[8];
 uint8_t virtual_id[2];
+uint32_t clock_speed;
 
 void clock_init(void);
 
@@ -139,16 +140,22 @@ void clock_init(void)
 		);
 
 	//Set Ratio and Desired MCLK Frequency  and initialize DCO
+//	UCS_initFLLSettle(
+//			__MSP430_BASEADDRESS_UCS_RF__,
+//		1000, // 1000 khz
+//		31   //  1000 kHz / 32.768 Khz (Crystal)
+//		);
+
 	UCS_initFLLSettle(
-			__MSP430_BASEADDRESS_UCS_RF__,
-		1000, // 1000 khz
-		31   //  1000 kHz / 32.768 Khz (Crystal)
-		);
+				__MSP430_BASEADDRESS_UCS_RF__,
+			10000, // 10000 khz
+			305   //  10000 kHz / 32.768 Khz (Crystal)
+			);
 
 
-//	unsigned long clockValueSMCLK = UCS_getSMCLK(__MSP430_BASEADDRESS_UCS_RF__);
-//	unsigned long clockValueMCLK = UCS_getMCLK(__MSP430_BASEADDRESS_UCS_RF__);
-//	unsigned long clockValueCLK = UCS_getACLK(__MSP430_BASEADDRESS_UCS_RF__);
+	clock_speed = UCS_getSMCLK(__MSP430_BASEADDRESS_UCS_RF__);
+	//unsigned long clockValueMCLK = UCS_getMCLK(__MSP430_BASEADDRESS_UCS_RF__);
+	//unsigned long clockValueCLK = UCS_getACLK(__MSP430_BASEADDRESS_UCS_RF__);
 }
 
 void system_watchdog_timer_stop()

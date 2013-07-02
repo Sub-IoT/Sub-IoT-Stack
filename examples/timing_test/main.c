@@ -17,7 +17,7 @@ void callback2(void* arg);
 
 uint8_t series_number = 10;
 //u16 timing_series[] = { 1024, 1024, 2048, 1024, 2, 1024, 1024, 1024, 4096, 1024};
-uint16_t timing_series[] = {4096, 5014, 1024, 2048, 5012, 6036, 7060, 8024, 10000, 10048};
+uint16_t timing_series[] = {4096, 5014, 1024, 2048, 5012, 6036, 7060, 8024, 10000, 2};
 void* event_series[] ={&callback1, &callback1, &callback2, &callback1, &callback1, &callback1, &callback1, &callback1, &callback1, &callback1};
 
 queue q;
@@ -53,7 +53,8 @@ void callback1(void* arg)
 
 	//itoa(diff_1, msg);
 
-	log_print_string("callback 1");
+	uint16_t current_timer = hal_timer_getvalue();
+	log_print_string("callback 1: %d", current_timer);
 	led_toggle(3);
 //	timer_event event;
 //	event.next_event = 1024;
@@ -63,7 +64,8 @@ void callback1(void* arg)
 
 void callback2(void* arg)
 {
-	log_print_string("callback 2");
+	uint16_t current_timer = hal_timer_getvalue();
+	log_print_string("callback 2: %d", current_timer);
 	led_toggle(1);
 //	timer_event event;
 //	event.next_event = 1024;
