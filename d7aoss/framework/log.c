@@ -66,6 +66,7 @@ static char buffer[BUFFER_SIZE];
 //    return 0;
 //}
 
+#pragma NO_HOOKS(log_print_string)
 void log_print_string(char* format, ...)
 {
     va_list args;
@@ -111,3 +112,15 @@ void log_dll_rx_res(dll_rx_res_t* res)
 	uart_transmit_data(res->frame_type);
 	uart_transmit_data(res->spectrum_id);
 }
+
+#ifdef LOG_TRACE_ENABLED
+void __entry_hook(const char* function_name)
+{
+	log_print_string("> %s", function_name);
+}
+
+void __exit_hook(const char* function_name)
+{
+	log_print_string("< %s", function_name);
+}
+#endif

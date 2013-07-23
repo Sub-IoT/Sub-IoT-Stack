@@ -57,14 +57,14 @@ void uart_enable_interrupt()
     UCA0IE |= UCRXIE;                         // Enable USCI_A0 RX interrupt
 }
 
-
+#pragma NO_HOOKS(uart_transmit_data)
 void uart_transmit_data(unsigned char data)
 {
 	while(!uart_tx_ready());
     UCA0TXBUF = data;
 }
 
-
+#pragma NO_HOOKS(uart_transmit_message)
 void uart_transmit_message(unsigned char *data, unsigned char length)
 {
     unsigned char i=0;
@@ -75,6 +75,7 @@ void uart_transmit_message(unsigned char *data, unsigned char length)
 
 }
 
+#pragma NO_HOOKS(uart_tx_ready)
 unsigned char uart_tx_ready()
 {
     return UCA0IFG&UCTXIFG;
