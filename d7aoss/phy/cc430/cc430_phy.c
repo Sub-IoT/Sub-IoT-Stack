@@ -259,6 +259,7 @@ bool phy_rx(phy_rx_cfg_t* cfg)
 #ifdef D7_PHY_USE_FEC
 	if (fec) {
 		//Disable hardware data whitening
+		// TODO: datawhitening should be after FEC so HW datawhitening can still be used - current implementation is wrong.
 		set_data_whitening(false);
 
 		//Initialize fec encoding

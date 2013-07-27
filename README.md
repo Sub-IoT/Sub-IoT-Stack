@@ -1,9 +1,9 @@
 # Introduction
 
-This project is build with CCS v5.3 and currently only supports the WizziMote.
+This project is built with CCS v5.3 and currently only supports the WizziMote.
 (As discussed previously supporting multiple toolchains and platforms is something we will do later.)
 
-The goal of the project is to provide a reference implementation of the DASH7 Mode2 spec.
+The goal of the project is to provide a reference implementation of the DASH7 Alliance protocol.
 This implementation should focus on completeness, correctness and being easy to understand.
 Performance and code size are less important aspects.
 For clarity a clear separation between the ISO layers is maintained in the code.
@@ -21,6 +21,8 @@ There is also a basic logging functionality defined in log.h which allows loggin
 The examples directory contain example programs showing specific functionality of the stack.
 
 The tools/logger directory contains both a command line application and a GUI (Qt) application which outputs the logging received over UART in a formatted way.
+
+Please commit changes to a seperate branch and create a pull request if you want to have it merged to the master branch.
 
 # Getting started
 

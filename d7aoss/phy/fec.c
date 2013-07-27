@@ -92,6 +92,7 @@ bool fec_encode(uint8_t* output)
 	for(i = 0; i < 2; i++)
 	{
 		//Get byte from the input buffer if available and apply data whitening, otherwise append trellis terminator
+		// TODO: datawhitening should be after FEC so HW datawhitening can still be used
 		if(processedbytes < packetlength) {
 			//Pn9 data whitening
 			pn9buffer = *iobuffer++ ^ (uint8_t)pn9;

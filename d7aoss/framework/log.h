@@ -11,10 +11,11 @@
 
 //#TODO define from cmake
 #define LOG_FWK_ENABLED
-//#define LOG_DLL_ENABLED
-//#define LOG_PHY_ENABLED
-//#define LOG_NWL_ENABLED
-//#define LOG_TRANS_ENABLED
+#define LOG_DLL_ENABLED
+#define LOG_PHY_ENABLED
+#define LOG_NWL_ENABLED
+#define LOG_TRANS_ENABLED
+#define LOG_TRACE_ENABLED // TODO for CCS set compiler options --entry-param and --exit-param to "name" for this to work (manually for now)
 
 #include "../phy/phy.h"
 #include "../dll/dll.h"
