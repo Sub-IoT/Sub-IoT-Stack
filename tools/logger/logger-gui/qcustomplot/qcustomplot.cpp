@@ -4084,7 +4084,7 @@ void QCPAxis::setNumberFormat(const QString &formatCode)
   QString allowedFormatChars = "eEfgG";
   if (allowedFormatChars.contains(formatCode.at(0)))
   {
-    mNumberFormatChar = formatCode.at(0).toAscii();
+    mNumberFormatChar = formatCode.at(0).toLatin1();
   } else
   {
     qDebug() << Q_FUNC_INFO << "Invalid number format code (first char not in 'eEfgG'):" << formatCode;
@@ -7313,75 +7313,6 @@ void QCustomPlot::rescaleAxes()
   mPlottables.at(0)->rescaleAxes(false); // onlyEnlarge disabled on first plottable
   for (int i=1; i<mPlottables.size(); ++i)
     mPlottables.at(i)->rescaleAxes(true);  // onlyEnlarge enabled on all other plottables
-}
-
-/*!
-  Saves a PDF with the vectorized plot to the file \a fileName. The axis ratio as well as the scale
-  of texts and lines will be derived from the specified \a width and \a height. This means, the
-  output will look like the normal on-screen output of a QCustomPlot widget with the corresponding
-  pixel width and height. If either \a width or \a height is zero, the exported image will have
-  the same dimensions as the QCustomPlot widget currently has.
-
-  \a noCosmeticPen disables the use of cosmetic pens when drawing to the PDF file. Cosmetic pens
-  are pens with numerical width 0, which are always drawn as a one pixel wide line, no matter what
-  zoom factor is set in the PDF-Viewer. For more information about cosmetic pens, see QPainter and
-  QPen documentation.
-  
-  The objects of the plot will appear in the current selection state. So when you don't want e.g.
-  selected axes to be painted in their selected look, deselect everything with \ref deselectAll
-  before calling this function.
-
-  Returns true on success.
-  
-  \warning
-  \li If you plan on editing the exported PDF file with a vector graphics editor like
-  Inkscape, it is advised to set \a noCosmeticPen to true to avoid losing those cosmetic lines
-  (which might be quite many, because cosmetic pens are the default for e.g. axes and tick marks).
-  \li If calling this function inside the constructor of the parent of the QCustomPlot widget
-  (i.e. the MainWindow constructor, if QCustomPlot is inside the MainWindow), always provide
-  explicit non-zero widths and heights. If you leave \a width or \a height as 0 (default), this
-  function uses the current width and height of the QCustomPlot widget. However, in Qt, these
-  aren't defined yet inside the constructor, so you would get an image that has strange
-  widths/heights.
-  
-  \see savePng, saveBmp, saveJpg, saveRastered
-*/
-bool QCustomPlot::savePdf(const QString &fileName, bool noCosmeticPen, int width, int height)
-{
-  bool success = false;
-  int newWidth, newHeight;
-  if (width == 0 || height == 0)
-  {
-    newWidth = this->width();
-    newHeight = this->height();
-  } else
-  {
-    newWidth = width;
-    newHeight = height;
-  }
-  
-  QPrinter printer(QPrinter::ScreenResolution);
-  printer.setOutputFileName(fileName);
-  printer.setFullPage(true);
-  QRect oldViewport = mViewport;
-  mViewport = QRect(0, 0, newWidth, newHeight);
-  updateAxisRect();
-  printer.setPaperSize(mViewport.size(), QPrinter::DevicePixel);
-  QCPPainter printpainter;
-  if (printpainter.begin(&printer))
-  {
-    printpainter.setPdfExportMode(true);
-    printpainter.setWindow(mViewport);
-    printpainter.setRenderHint(QPainter::NonCosmeticDefaultPen, noCosmeticPen);
-    if (mColor != Qt::white && mColor != Qt::transparent && mColor.alpha() > 0) // draw pdf background color if not white/transparent
-      printpainter.fillRect(mViewport, mColor);
-    draw(&printpainter);
-    printpainter.end();
-    success = true;
-  }
-  mViewport = oldViewport;
-  updateAxisRect();
-  return success;
 }
 
 /*!

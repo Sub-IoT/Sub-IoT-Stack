@@ -1,4 +1,4 @@
-QT       += core gui
+QT       += core gui serialport
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
@@ -33,10 +33,3 @@ else:unix: LIBS += -L$$OUT_PWD/../liblogger/ -llogger
 INCLUDEPATH += $$PWD/../liblogger
 DEPENDPATH += $$PWD/../liblogger
 
-# link with serialport TODO remove?
-win32:CONFIG(release, debug|release): LIBS += -L$$OUT_PWD/../external/serialport/release/ -lSerialPortd0
-else:win32:CONFIG(debug, debug|release): LIBS += -L$$OUT_PWD/../external/serialport/debug/ -lSerialPortd0
-else:unix: LIBS += -L$$OUT_PWD/../external/serialport/ -lSerialPort
-
-INCLUDEPATH += $$PWD/../external/serialport
-DEPENDPATH += $$PWD/../external/serialport

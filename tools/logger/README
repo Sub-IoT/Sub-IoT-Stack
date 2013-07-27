@@ -1,4 +1,4 @@
-* download the Qt libraries for your platfrom (OS and compiler combination) from here: http://qt-project.org/downloads
+* download the Qt libraries (> v5.1) for your platfrom (OS and compiler combination) from here: http://qt-project.org/downloads
 * install the Qt libraries
 * to build using command line:
 	$ cd <logger src dir>

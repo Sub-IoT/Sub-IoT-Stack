@@ -3,10 +3,7 @@
 
 #include <QDialog>
 
-#include <serialport.h>
-#include <serialportinfo.h>
-
-QT_USE_NAMESPACE_SERIALPORT
+#include <QtSerialPort>
 
 namespace Ui {
 class ConnectDialog;
@@ -28,7 +25,7 @@ public:
     ~ConnectDialog();
     void detectSerialPorts();
     ConnectionType connectionType() const;
-    QString serialPortName() const;
+    QSerialPortInfo serialPortInfo() const;
     QString fileName() const;
 
 private slots:
@@ -39,7 +36,7 @@ private:
     ConnectionType parseConnectionName(QString connectionName);
 
     Ui::ConnectDialog *ui;
-    QList<SerialPortInfo> _serialPorts;
+    QList<QSerialPortInfo> _serialPorts;
     ConnectionType _connectionType;
 };
 

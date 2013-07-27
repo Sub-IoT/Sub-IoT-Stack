@@ -2,6 +2,9 @@
 #define MAINWINDOW_H
 
 #include <QtGui>
+#include <QComboBox>
+#include <QLabel>
+#include <QMainWindow>
 
 #include <qcustomplot/qcustomplot.h>
 

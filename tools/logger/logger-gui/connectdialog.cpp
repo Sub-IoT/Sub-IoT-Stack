@@ -60,11 +60,11 @@ ConnectionType ConnectDialog::parseConnectionName(QString connectionName)
 
 void ConnectDialog::detectSerialPorts()
 {
-    _serialPorts = SerialPortInfo::availablePorts();
+    _serialPorts = QSerialPortInfo::availablePorts();
     qDebug() << "Number of serial ports found: " << _serialPorts.count();
     for (int i = 0; i < _serialPorts.count(); i++)
     {
-        const SerialPortInfo &info = _serialPorts.at(i);
+        const QSerialPortInfo &info = _serialPorts.at(i);
         QString s(QObject::tr("Port: %1\n"
                               "Location: %2\n"
                               "Description: %3\n"
@@ -81,9 +81,15 @@ void ConnectDialog::detectSerialPorts()
     }
 }
 
-QString ConnectDialog::serialPortName() const
+QSerialPortInfo ConnectDialog::serialPortInfo() const
 {
-    return ui->serialPortComboBox->currentText();
+    QString serialPortName = ui->serialPortComboBox->currentText();
+    for (int i = 0; i < _serialPorts.count(); i++)
+    {
+        const QSerialPortInfo &info = _serialPorts.at(i);
+        if(info.portName() == serialPortName)
+            return info;
+    }
 }
 
 QString ConnectDialog::fileName() const

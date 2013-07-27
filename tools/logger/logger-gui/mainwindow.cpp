@@ -1,11 +1,12 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 
+#include <QMessageBox>
+#include <QScrollBar>
 #include <QtCore/QThread>
 #include <QDebug>
 
-#include <serialport.h>
-QT_USE_NAMESPACE_SERIALPORT
+#include <QtSerialPort/QSerialPort>
 
 #include "bytearrayutils.h"
 
@@ -78,7 +79,7 @@ void MainWindow::updateStatus()
     {
         QString device;
 
-        SerialPort* serial = qobject_cast<SerialPort*>(_ioDevice);
+        QSerialPort* serial = qobject_cast<QSerialPort*>(_ioDevice);
         if(serial != NULL)
             device = serial->portName();
 
@@ -106,17 +107,17 @@ void MainWindow::on_connectAction_triggered(bool connect)
         {
             if(dlg.connectionType() == Serial)
             {
-                SerialPort* serialPort = new SerialPort(this);
+                QSerialPort* serialPort = new QSerialPort(this);
                 _ioDevice = serialPort;
-                serialPort->setPort(dlg.serialPortName());
+                serialPort->setPort( dlg.serialPortInfo());
                 if(serialPort->open(QIODevice::ReadWrite))
                 {
                     // TODO hardcoded settings
-                    if(!serialPort->setRate(SerialPort::Rate115200) ||
-                        !serialPort->setDataBits(SerialPort::Data8) ||
-                        !serialPort->setParity(SerialPort::NoParity) ||
-                        !serialPort->setFlowControl(SerialPort::NoFlowControl) ||
-                        !serialPort->setStopBits(SerialPort::TwoStop))
+                    if(!serialPort->setBaudRate(QSerialPort::Baud115200) ||
+                        !serialPort->setDataBits(QSerialPort::Data8) ||
+                        !serialPort->setParity(QSerialPort::NoParity) ||
+                        !serialPort->setFlowControl(QSerialPort::NoFlowControl) ||
+                        !serialPort->setStopBits(QSerialPort::TwoStop))
                     {
                         serialPort->close();
                         QMessageBox::critical(this, "Logger", "Can't configure serial port, reason: " + serialErrorString());
@@ -243,31 +244,30 @@ void MainWindow::ensureDistinctColors()
 
 QString MainWindow::serialErrorString() const
 {
-    SerialPort* serial = qobject_cast<SerialPort*>(_ioDevice);
+    QSerialPort* serial = qobject_cast<QSerialPort*>(_ioDevice);
     switch(serial->error())
     {
-        case SerialPort::NoError:
+        case QSerialPort::NoError:
             return "no error";
-        case SerialPort::NoSuchDeviceError:
-            return "no such device";
-        case SerialPort::PermissionDeniedError:
-            return "permission denied";
-        case SerialPort::DeviceAlreadyOpenedError:
+        case QSerialPort::DeviceNotFoundError:
+            return "device not found";
+        case QSerialPort::PermissionError:
+            return "permission error";
+        case QSerialPort::OpenError:
             return "device is already opened";
-        case SerialPort::DeviceIsNotOpenedError:
-            return "device is not opened";
-        case SerialPort::FramingError:
+        case QSerialPort::FramingError:
             return "framing error";
-        case SerialPort::ParityError:
+        case QSerialPort::ParityError:
             return "parity error";
-        case SerialPort::BreakConditionError:
+        case QSerialPort::BreakConditionError:
             return "break condition error";
-        case SerialPort::IoError:
-            return "i/o error";
-        case SerialPort::UnsupportedPortOperationError:
-            return "unsupported port operation error";
-        case SerialPort::UnknownPortError:
-            return "unknown port error";
+        case QSerialPort::ReadError:
+            return "read error";
+        case QSerialPort::WriteError:
+            return "write error";
+        case QSerialPort::UnsupportedOperationError:
+            return "unsupported operation error";
+        case QSerialPort::UnknownError:
         default:
             return "unknown error";
     }
