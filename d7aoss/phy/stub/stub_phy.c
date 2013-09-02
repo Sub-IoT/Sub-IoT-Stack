@@ -6,9 +6,22 @@
  */
 
 #include <stdbool.h>
+#include <stddef.h>
 #include <stdint.h>
 
 #include "../phy.h"
+
+phy_tx_callback_t phy_tx_callback = NULL;
+phy_rx_callback_t phy_rx_callback = NULL;
+
+void phy_set_tx_callback(phy_tx_callback_t cb)
+{
+	phy_tx_callback = cb;
+}
+void phy_set_rx_callback(phy_rx_callback_t cb)
+{
+	phy_rx_callback = cb;
+}
 
 /*
  * Phy implementation functions
