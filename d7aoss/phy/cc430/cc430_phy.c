@@ -12,8 +12,8 @@
 #include <stdint.h>
 #include <string.h>
 
-#include "../phy.h"
-#include "../fec.h"
+#include "../../phy/phy.h"
+#include "../../phy/fec.h"
 #include "cc430_phy.h"
 #include "cc430_registers.h"
 #include "../../framework/log.h"
