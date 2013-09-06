@@ -15,7 +15,14 @@
 #define LOG_PHY_ENABLED
 #define LOG_NWL_ENABLED
 #define LOG_TRANS_ENABLED
-#define LOG_TRACE_ENABLED // TODO for CCS set compiler options --entry-param and --exit-param to "name" for this to work (manually for now)
+/*
+ * TODO this is manually set in CSS!
+ * to enable function tracing go to the d7aoss project properties:
+ * build -> msp430 compiler -> Advanced options -> entry/exit hooks
+ * Leave both fields empty and set the param fields to "name"
+ * When LOG_TRACE_ENABLED is defined the functions will be listed.
+ */
+#define LOG_TRACE_ENABLED
 
 #include "../phy/phy.h"
 #include "../dll/dll.h"

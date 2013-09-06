@@ -8,7 +8,7 @@
 #ifndef PLATFORM_H_
 #define PLATFORM_H_
 
-#define PLATFORM_WIZZIMOTE
+#define PLATFORM_ARTESIS
 
 
 #ifdef PLATFORM_WIZZIMOTE
