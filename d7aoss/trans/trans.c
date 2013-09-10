@@ -31,7 +31,7 @@ static void control_tx_callback(Dll_Tx_Result Result)
 	switch(Result){
 			case DLLTxResultOK:
 				#ifdef LOG_TRANS_ENABLED
-					log_print_string("Trans: Packet is sent");
+				log_print_stack_string(LOG_TRANS, "Trans: Packet is sent");
 				#endif
 				trans_tx_callback(TransPacketSent);
 				break;
@@ -42,13 +42,13 @@ static void control_tx_callback(Dll_Tx_Result Result)
 			case DLLTxResultCCA2Fail:
 				trans_rigd_ccp(current__spectrum_id, false, true);
 				#ifdef LOG_TRANS_ENABLED
-					log_print_string("Trans: CCA fail");
+				log_print_stack_string(LOG_TRANS, "Trans: CCA fail");
 				#endif
 				break;
 			case DLLTxResultFail:
 				trans_tx_callback(TransPacketFail);
 				#ifdef LOG_TRANS_ENABLED
-					log_print_string("Trans: Fail to sent");
+				log_print_stack_string(LOG_TRANS, "Trans: Fail to sent");
 				#endif
 				break;
 		}

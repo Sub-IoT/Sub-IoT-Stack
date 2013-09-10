@@ -87,7 +87,7 @@ static void scan_timeout()
 		return;
 
 	#ifdef LOG_DLL_ENABLED
-		log_print_string("DLL scan time-out");
+		log_print_stack_string(LOG_DLL, "DLL scan time-out");
 	#endif
 	phy_idle();
 
@@ -109,7 +109,7 @@ static void scan_timeout()
 static void tx_callback()
 {
 	#ifdef LOG_DLL_ENABLED
-		log_print_string("DLL TX OK");
+		log_print_stack_string(LOG_DLL, "DLL TX OK");
 	#endif
 	dll_tx_callback(DLLTxResultOK);
 }
@@ -131,7 +131,7 @@ static void rx_callback(phy_rx_data_t* res)
 		if (memcmp((uint8_t*) &(res->data[4]), (uint8_t*) &crc, 2) != 0)
 		{
 			#ifdef LOG_DLL_ENABLED
-				log_print_string("DLL CRC ERROR");
+				log_print_stack_string(LOG_DLL, "DLL CRC ERROR");
 			#endif
 			scan_next(NULL); // how to reïnitiate scan on CRC Error, PHY should stay in RX
 			return;
@@ -140,7 +140,7 @@ static void rx_callback(phy_rx_data_t* res)
 		if (!check_subnet(0xFF, res->data[0])) // TODO: get device_subnet from datastore
 		{
 			#ifdef LOG_DLL_ENABLED
-				log_print_string("DLL Subnet mismatch");
+				log_print_stack_string(LOG_DLL, "DLL Subnet mismatch");
 			#endif
 			scan_next(NULL); // how to reïnitiate scan on subnet mismatch, PHY should stay in RX
 			return;
@@ -151,7 +151,7 @@ static void rx_callback(phy_rx_data_t* res)
 		if (memcmp((uint8_t*) &(res->data[res->length - 2]), (uint8_t*) &crc, 2) != 0)
 		{
 			#ifdef LOG_DLL_ENABLED
-				log_print_string("DLL CRC ERROR");
+				log_print_stack_string(LOG_DLL, "DLL CRC ERROR");
 			#endif
 			scan_next(NULL); // how to reïnitiate scan on CRC Error, PHY should stay in RX
 			return;
@@ -159,7 +159,7 @@ static void rx_callback(phy_rx_data_t* res)
 		if (!check_subnet(0xFF, res->data[2])) // TODO: get device_subnet from datastore
 		{
 			#ifdef LOG_DLL_ENABLED
-				log_print_string("DLL Subnet mismatch");
+				log_print_stack_string(LOG_DLL, "DLL Subnet mismatch");
 			#endif
 				scan_next(NULL); // how to reïnitiate scan on subnet mismatch, PHY should stay in RX
 
@@ -168,7 +168,7 @@ static void rx_callback(phy_rx_data_t* res)
 	} else
 	{
 		#ifdef LOG_DLL_ENABLED
-			log_print_string("DLL You fool, you can't be here");
+			log_print_stack_string(LOG_DLL, "DLL You fool, you can't be here");
 		#endif
 	}
 
@@ -298,13 +298,13 @@ static void rx_callback(phy_rx_data_t* res)
 
 	if (current_css == NULL)
 	{
-		log_print_string(("DLL no series so stop listening"));
+		log_print_stack_string(LOG_DLL, ("DLL no series so stop listening"));
 		return;
 	}
 
 	// in current spec reset channel scan
 	#ifdef LOG_DLL_ENABLED
-		log_print_string(("DLL restart channel scan series"));
+		log_print_stack_string(LOG_DLL, ("DLL restart channel scan series"));
 	#endif
 
 	current_scan_id = 0;
@@ -362,7 +362,7 @@ void dll_stop_channel_scan()
 void dll_background_scan()
 {
 	#ifdef LOG_DLL_ENABLED
-		log_print_string("DLL Starting background scan");
+		log_print_stack_string(LOG_DLL, "DLL Starting background scan");
 	#endif
 
 	dll_state = DllStateScanForegroundFrame;
@@ -372,7 +372,7 @@ void dll_background_scan()
 	if (phy_get_rssi(spectrum_id, 0) <= scan_minimum_energy)
 	{
 		#ifdef LOG_DLL_ENABLED
-			log_print_string("DLL No signal deteced");
+			log_print_stack_string(LOG_DLL, "DLL No signal deteced");
 		#endif
 		return;
 	}
@@ -390,7 +390,7 @@ void dll_background_scan()
 	bool phy_rx_result = phy_rx(&rx_cfg);
 	if (!phy_rx_result)
 	{
-		log_print_string("DLL Starting channel scan FAILED");
+		log_print_stack_string(LOG_DLL, "DLL Starting channel scan FAILED");
 	}
 	#else
 	phy_rx(&rx_cfg);
@@ -399,7 +399,7 @@ void dll_background_scan()
 void dll_foreground_scan()
 {
 	#ifdef LOG_DLL_ENABLED
-		log_print_string("Starting foreground scan");
+		log_print_stack_string(LOG_DLL, "Starting foreground scan");
 	#endif
 
 	dll_state = DllStateScanForegroundFrame;
@@ -417,7 +417,7 @@ void dll_foreground_scan()
 	bool phy_rx_result = phy_rx(&rx_cfg);
 	if (!phy_rx_result)
 	{
-		log_print_string("DLL Starting channel scan FAILED");
+		log_print_stack_string(LOG_DLL, "DLL Starting channel scan FAILED");
 	}
 	#else
 	phy_rx(&rx_cfg);
@@ -427,7 +427,7 @@ void dll_foreground_scan()
 void dll_channel_scan_series(dll_channel_scan_series_t* css)
 {
 	#ifdef LOG_DLL_ENABLED
-		log_print_string("DLL Starting channel scan series");
+		log_print_stack_string(LOG_DLL, "DLL Starting channel scan series");
 	#endif
 
 	phy_rx_cfg_t rx_cfg;
@@ -453,7 +453,7 @@ void dll_channel_scan_series(dll_channel_scan_series_t* css)
 	bool phy_rx_result = phy_rx(&rx_cfg);
 	if (!phy_rx_result)
 	{
-		log_print_string("DLL Starting channel scan FAILED");
+		log_print_stack_string(LOG_DLL, "DLL Starting channel scan FAILED");
 	}
 	#else
 	phy_rx(&rx_cfg);
@@ -559,7 +559,7 @@ void dll_create_foreground_frame(uint8_t* data, uint8_t length, dll_ff_tx_cfg_t*
 	if (params->security != NULL)
 	{
 		#ifdef LOG_DLL_ENABLED
-			log_print_string("DLL: security not implemented");
+			log_print_stack_string(LOG_DLL, "DLL: security not implemented");
 		#endif
 		//frame->frame_header.frame_ctl |= FRAME_CTL_DLLS;
 	}

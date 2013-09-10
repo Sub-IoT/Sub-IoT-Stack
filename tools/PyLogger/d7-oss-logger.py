@@ -15,12 +15,13 @@
 # pip install colorama
 # 
 # TODO's
-# - Include more debugging options
 # - General interface for most of the options.
 # - better error controlling
+# - Fix some ugly code (TODO's)
 
 from __future__ import division, absolute_import, print_function, unicode_literals
 from colorama import init, Fore, Back, Style
+from collections import defaultdict
 import sys as system
 import os as os
 import serial as serial
@@ -33,14 +34,31 @@ import logging
 import argparse
 
 DEBUG = 0
-serial_port = None
+
 SYNC_WORD = "DD"
 
+### Global variables we need, do not change! ###
+serial_port = None
 dataQueue = Queue.Queue()
 displayQueue = Queue.Queue()
 
+#TODO fix this ugly code... but it works
+data = [("PHY", "GREEN"), ("DLL", "RED"), ("MAC", "YELLOW"), ("NWL", "BLUE"), ("TRANS", "MAGENTA"), ("FWK", "CYAN")]
+stackColors = defaultdict(list)
+for layer, color in data:
+	stackColors[layer].append(color)
+
+stackLayers = {'01' : "PHY", '02': "DLL", '03': "MAC", '04': "NWL", '05': "TRANS", '10': "FWK"}
+
+
 get_input = input if system.version_info[0] >= 3 else raw_input
 logging.Formatter(fmt='%(asctime)s.%(msecs)d', datefmt='%Y-%m-%d,%H:%M:%S')
+
+# Small helper function that will format our colors
+def formatHeader(header, color):
+	bgColor = getattr(Back, color)
+	fgColor = getattr(Fore, color)
+	return bgColor + Style.BRIGHT + Fore.WHITE + header + fgColor + Back.RESET + Style.NORMAL + "  "
 
 ###
 # The different logs classes, every class has its own read, write and print function for costumization
@@ -61,11 +79,10 @@ class Logs(object):
 
 	def read_length(self):
 		length = serial_port.read(size = 1)
-		self.length = struct.unpack("b", length)[0]
+		self.length = int(struct.unpack("b", length)[0])
 
 
 class LogString(Logs):
-	prefix = Back.GREEN + Style.BRIGHT + Fore.WHITE + "STRING" + Fore.GREEN + Back.RESET + Style.NORMAL + "  "
 	def __init__(self):
 		Logs.__init__(self, "string")
 
@@ -82,13 +99,12 @@ class LogString(Logs):
 
 	def __str__(self):
 		if hasattr(self, 'message'):
-			string = self.prefix + self.message + Style.RESET_ALL
+			string = formatHeader("STRING", "GREEN") + self.message + Style.RESET_ALL
 			return string
 		return ""
 
 
 class LogData(Logs):
-	prefix = Back.BLUE + Style.BRIGHT + Fore.WHITE + "DATA" + Fore.BLUE + Back.RESET + Style.NORMAL + "  "
 	def __init__(self):
 		Logs.__init__(self, "data")
 
@@ -105,12 +121,35 @@ class LogData(Logs):
 
 	def __str__(self):
 		if hasattr(self, 'data'):
-			string = self.prefix + str(self.data) + Style.RESET_ALL
+			string = formatHeader("DATA", "BLUE") + str(self.data) + Style.RESET_ALL
+			return string
+		return ""
+
+class LogStack(Logs):
+	def __init__(self):
+		Logs.__init__(self, "stack")
+
+	def read(self):
+		layer = serial_port.read(size=1).encode('hex').upper()
+		self.layer = stackLayers.get(layer, "STACK")
+		#print("Got layer: %s with stack: %s" % (layer, self.layer))
+		self.color = stackColors[self.layer][0]
+		self.read_length()
+		self.message = serial_port.read(size=self.length)
+		return self
+
+	def write(self):
+		if hasattr(self, 'message'):
+			return self.layer + ": " + self.message + "\n"
+		return ""
+
+	def __str__(self):
+		if hasattr(self, 'message'):
+			string = formatHeader("STK: " + self.layer, self.color) + self.message + Style.RESET_ALL
 			return string
 		return ""
 
 class LogTrace(Logs):
-	prefix = Back.CYAN + Style.BRIGHT + Fore.WHITE + "TRACE" + Fore.CYAN + Back.RESET + Style.NORMAL + "  "
 	def __init__(self):
 		Logs.__init__(self, "trace")
 
@@ -126,28 +165,32 @@ class LogTrace(Logs):
 
 	def __str__(self):
 		if hasattr(self, 'message'):
-			string = self.prefix + self.message + Style.RESET_ALL
+			string = formatHeader("TRACE", "CYAN") + self.message + Style.RESET_ALL
 			return string
 		return ""
 
-class LogPhyRxRes(Logs):
-	prefix = Back.MAGENTA + Style.BRIGHT + Fore.WHITE + "PHY" + Fore.MAGENTA + Back.RESET + Style.NORMAL + "  "
-	def __init__(self):
-		Logs.__init__(self, "phyrx")
 
-	def read(self):
-		self.read_length()
-		self.rssi = struct.unpack('B', serial_port.read(size=1))[0]
-		self.lqi = struct.unpack('B', serial_port.read(size=1))[0]
-		print("We got rssi: %s" % int(self.rssi))
-		print("We got lqi: %s" % int(self.lqi))
 
-class LogDllRxRes(Logs):
+class LogDllRes(Logs):
 	def __init__(self):
 		Logs.__init__(self, "dllrx")
 
 	def read(self):
-		pass
+		self.read_length()
+		self.frame_type = str(struct.unpack('b', serial_port.read(size=1))[0])
+		self.spectrum_id = "0x" + str(serial_port.read(size=1).encode("hex").upper())
+		return self
+
+	def write(self):
+		if hasattr(self, 'frame_type'):
+			return "DLL RES: frame_type " + self.frame_type + " spectrum_id " + self.spectrum_id
+		return ""
+
+	def __str__(self):
+		if hasattr(self, 'frame_type'):
+			string = formatHeader("DLL RES", "CYAN") + "frame_type " + self.frame_type + " spectrum_id " + self.spectrum_id
+			return string
+		return ""
 
 
 ##
@@ -206,10 +249,14 @@ class write_d7(threading.Thread):
 			try:
 				while not self.queue.empty():
 					data = self.queue.get()
-					self.file.write(data.write())
+					encoded = (data.write()).encode('utf-8')
+					self.file.write(encoded)
 				time.sleep(10)
 			except Exception as inst:
 				print(inst)
+
+def dummy():
+	pass
 
 def read_value_from_serial():
 	result = {}
@@ -225,15 +272,18 @@ def read_value_from_serial():
 
 	log_string = LogString()
 	log_data = LogData()
-	log_phy = LogPhy()
+	log_stack = LogStack()
 	log_trace = LogTrace()
+	log_dll_res = LogDllRes()
 
 	processedread = {"01" : log_string.read, 
 			 "02" : log_data.read,
-			 "03" : log_phy.read,
-			 "10" : log_trace.read }
+			 "03" : log_stack.read,
+			 "FD" : log_dll_res.read,
+			 "FF" : log_trace.read, }
 		 
 	# See if we have found our type in the LOG_TYPES
+	#print("We got logtype: %s" % logtype)
 	result = processedread[logtype]()
 
 	return result
@@ -266,12 +316,12 @@ def main():
 
 	parseThread = parse_d7(dataQueue, displayQueue)
 	displayThread = display_d7(displayQueue)
-	#writeThread = write_d7(f, dataQueue)
+	writeThread = write_d7(f, dataQueue)
 
 	try:
 		parseThread.start()
 		displayThread.start()
-		#writeThread.start()
+		writeThread.start()
 
 	except (KeyboardInterrupt, SystemExit):
 		keep_running = False
@@ -292,7 +342,7 @@ def main():
 	print("The logger is stopping!")
 	parseThread.stop()
 	displayThread.stop()
-	#writeThread.stop()
+	writeThread.stop()
 
 if __name__ == "__main__":
 	main()
