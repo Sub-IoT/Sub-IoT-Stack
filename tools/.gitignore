@@ -2,3 +2,4 @@
 *Release/
 *.user
 ui_*.h
+*.log

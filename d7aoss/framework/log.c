@@ -80,6 +80,20 @@ void log_print_string(char* format, ...)
 	uart_transmit_message((unsigned char*) buffer, len);
 }
 
+#pragma NO_HOOKS(log_trace)
+void log_trace(char* format, ...)
+{
+	va_list args;
+	va_start(args, format);
+	uint8_t len = vsnprintf(buffer, BUFFER_SIZE, format, args);
+	va_end(args);
+
+	uart_transmit_data(0xDD);
+	uart_transmit_data(LOG_TYPE_FUNC_TRACE);
+	uart_transmit_data(len);
+	uart_transmit_message((unsigned char*) buffer, len);
+}
+
 void log_print_data(uint8_t* message, uint8_t length)
 {
 	uart_transmit_data(0xDD);
@@ -116,11 +130,11 @@ void log_dll_rx_res(dll_rx_res_t* res)
 #ifdef LOG_TRACE_ENABLED
 void __entry_hook(const char* function_name)
 {
-	log_print_string("> %s", function_name);
+	log_trace("> %s", function_name);
 }
 
 void __exit_hook(const char* function_name)
 {
-	log_print_string("< %s", function_name);
+	log_trace("< %s", function_name);
 }
 #endif

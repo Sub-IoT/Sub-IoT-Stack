@@ -30,17 +30,20 @@
 #define LOG_TYPE_STRING 0x01
 #define LOG_TYPE_DATA 0x02
 
-#define LOG_TYPE_PHY_RX_RES 0x02
+#define LOG_TYPE_PHY_RX_RES 0x03
 #define LOG_TYPE_PHY_RX_RES_SIZE 5
 
-#define LOG_TYPE_DLL_RX_RES 0x03
+#define LOG_TYPE_DLL_RX_RES 0x04
 #define LOG_TYPE_DLL_RX_RES_SIZE 2
+
+#define LOG_TYPE_FUNC_TRACE 0x10
 
 // TODO: can be removed now log_print_string accepts a printf style format string?
 //bool itoa(int32_t n, char* out);
 
 void log_print_string(char* format, ...);
 void log_print_data(uint8_t* message, uint8_t length);
+void log_trace(char* format, ...);
 
 void log_phy_rx_res(phy_rx_data_t* res);
 
