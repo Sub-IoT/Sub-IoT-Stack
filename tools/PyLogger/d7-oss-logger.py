@@ -15,9 +15,9 @@
 # pip install colorama
 # 
 # TODO's
-# - General interface for most of the options.
 # - better error controlling
 # - Fix some ugly code (TODO's)
+# - should convert all upcase string to lower case and in the display change them to upcase [code convenctions]
 
 from __future__ import division, absolute_import, print_function, unicode_literals
 from colorama import init, Fore, Back, Style
@@ -33,12 +33,13 @@ import time
 import logging
 import argparse
 
-DEBUG = 0
+DEBUG = 1
 
 SYNC_WORD = "DD"
 
 ### Global variables we need, do not change! ###
 serial_port = None
+settings = None
 dataQueue = Queue.Queue()
 displayQueue = Queue.Queue()
 
@@ -48,7 +49,7 @@ stackColors = defaultdict(list)
 for layer, color in data:
 	stackColors[layer].append(color)
 
-stackLayers = {'01' : "PHY", '02': "DLL", '03': "MAC", '04': "NWL", '05': "TRANS", '10': "FWK"}
+stackLayers = {'01' : "PHY", '02': "DLL", '03': "MAC", '04': "NWL", '05': "TRANS", '0A': "FWK"}
 
 
 get_input = input if system.version_info[0] >= 3 else raw_input
@@ -58,7 +59,10 @@ logging.Formatter(fmt='%(asctime)s.%(msecs)d', datefmt='%Y-%m-%d,%H:%M:%S')
 def formatHeader(header, color):
 	bgColor = getattr(Back, color)
 	fgColor = getattr(Fore, color)
-	return bgColor + Style.BRIGHT + Fore.WHITE + header + fgColor + Back.RESET + Style.NORMAL + "  "
+	msg = bgColor + Style.BRIGHT + Fore.WHITE + header + fgColor + Back.RESET + Style.NORMAL
+	# Make sure we outline everything
+	msg += " " * (41 - (len(msg)))
+	return msg
 
 ###
 # The different logs classes, every class has its own read, write and print function for costumization
@@ -93,14 +97,14 @@ class LogString(Logs):
 		return self
 
 	def write(self):
-		if hasattr(self, 'message'):
-			return "STR: " + self.message + "\n"
+		if settings["string"]:
+			return "STRING: " + self.message + "\n"
 		return ""
 
 	def __str__(self):
-		if hasattr(self, 'message'):
+		if settings["string"]:
 			string = formatHeader("STRING", "GREEN") + self.message + Style.RESET_ALL
-			return string
+			return string + "\n"
 		return ""
 
 
@@ -115,14 +119,14 @@ class LogData(Logs):
 		return self
 	
 	def write(self):
-		if hasattr(self, 'data'):
-			return "DAT: " + str(self.data) + "\n"
+		if settings["data"]:
+			return "DATA: " + str(self.data) + "\n"
 		return ""
 
 	def __str__(self):
-		if hasattr(self, 'data'):
+		if settings["data"]:
 			string = formatHeader("DATA", "BLUE") + str(self.data) + Style.RESET_ALL
-			return string
+			return string + "\n"
 		return ""
 
 class LogStack(Logs):
@@ -139,14 +143,14 @@ class LogStack(Logs):
 		return self
 
 	def write(self):
-		if hasattr(self, 'message'):
+		if settings["stack"] and settings[self.layer.lower()]:
 			return self.layer + ": " + self.message + "\n"
 		return ""
 
 	def __str__(self):
-		if hasattr(self, 'message'):
+		if settings["stack"] and settings[self.layer.lower()]:
 			string = formatHeader("STK: " + self.layer, self.color) + self.message + Style.RESET_ALL
-			return string
+			return string + "\n"
 		return ""
 
 class LogTrace(Logs):
@@ -159,21 +163,20 @@ class LogTrace(Logs):
 		return self
 
 	def write(self):
-		if hasattr(self, 'message'):
+		if settings["trace"]:
 			return "TRACE: " + self.message + "\n"
 		return ""
 
 	def __str__(self):
-		if hasattr(self, 'message'):
-			string = formatHeader("TRACE", "CYAN") + self.message + Style.RESET_ALL
-			return string
+		if settings["trace"]:
+			string = formatHeader("TRACE", "YELLOW") + self.message + Style.RESET_ALL
+			return string + "\n"
 		return ""
-
 
 
 class LogDllRes(Logs):
 	def __init__(self):
-		Logs.__init__(self, "dllrx")
+		Logs.__init__(self, "dllres")
 
 	def read(self):
 		self.read_length()
@@ -182,15 +185,40 @@ class LogDllRes(Logs):
 		return self
 
 	def write(self):
-		if hasattr(self, 'frame_type'):
-			return "DLL RES: frame_type " + self.frame_type + " spectrum_id " + self.spectrum_id
+		if settings["dllres"]:
+			return "DLL RES: frame_type " + self.frame_type + " spectrum_id " + self.spectrum_id + "\n"
 		return ""
 
 	def __str__(self):
-		if hasattr(self, 'frame_type'):
-			string = formatHeader("DLL RES", "CYAN") + "frame_type " + self.frame_type + " spectrum_id " + self.spectrum_id
-			return string
+		if settings["dllres"]:
+			string = formatHeader("DLL RES", "RED") + "frame_type " + self.frame_type + " spectrum_id " + self.spectrum_id + Style.RESET_ALL
+			return string + "\n"
 		return ""
+
+class LogPhyRes(Logs):
+	def __init__(self):
+		Logs.__init__(self, "phyres")
+
+	def read(self):
+		self.read_length()
+		self.rssi = struct.unpack('b', serial_port.read(size=1))[0]
+		self.lqi = struct.unpack('b', serial_port.read(size=1))[0]
+		self.data_length = struct.unpack('b', serial_port.read(size=1))[0]
+		#print("rssi: %s" % self.rssi)
+		#print("lqi: %s" % self.lqi)
+		#print("data_length: %s" % self.data_length)
+		return self
+
+	# TODO implement this
+	def write(self):
+		return ""
+
+	def __str__(self):
+		if settings["phyres"]:
+			string = formatHeader("PHY RES", "GREEN") + "rssi: " + str(self.rssi) + " lqi: " + str(self.lqi) + Style.RESET_ALL
+			return string + "\n"
+		return ""
+
 
 
 ##
@@ -230,7 +258,7 @@ class display_d7(threading.Thread):
 			try:
 				while not self.queue.empty():
 					data = self.queue.get()
-					print(data)
+					print(data, end='')
 			except Exception as inst:
 				print (inst)
 
@@ -245,7 +273,7 @@ class write_d7(threading.Thread):
 		self.keep_running = False
 
 	def run(self):
-		while self.keep_running:
+		while self.keep_running and settings['file'] != None:
 			try:
 				while not self.queue.empty():
 					data = self.queue.get()
@@ -275,11 +303,13 @@ def read_value_from_serial():
 	log_stack = LogStack()
 	log_trace = LogTrace()
 	log_dll_res = LogDllRes()
+	log_phy_res = LogPhyRes()
 
 	processedread = {"01" : log_string.read, 
 			 "02" : log_data.read,
 			 "03" : log_stack.read,
 			 "FD" : log_dll_res.read,
+			 "FE" : log_phy_res.read,
 			 "FF" : log_trace.read, }
 		 
 	# See if we have found our type in the LOG_TYPES
@@ -293,35 +323,56 @@ def empty_serial_buffer():
 		serial_port.read(1)
 
 def main():
-	global serial_port
+	global serial_port, settings
+	# Some variables we need
+	init()
+	keep_running = True
+	dateTime = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
 
 	# Setup the console parser
 	parser = argparse.ArgumentParser(description = "DASH7 logger.")
 	parser.add_argument('serial', metavar="serial port", help="serial port (eg COM7 or /dev/ttyUSB0)")
 	parser.add_argument('-b', '--baud' , default=115200, metavar="baudrate", type=int, help="set the baud rate (default: 115200)")
 	parser.add_argument('-v', '--version', action='version', version='DASH7 Logger 0.5', help="show the current version")
-	parser.add_argument('-f', '--file', metavar="file", help="write to a specific file")
-	args = vars(parser.parse_args())
+	parser.add_argument('-f', '--file', metavar="file", help="write to a specific file", nargs='?', default=None, const=dateTime)
+	general_options = parser.add_argument_group('general logging')
+	general_options.add_argument('--string', help="Disable string logs", action="store_false", default=True)
+	general_options.add_argument('--data', help="Disable data logs", action="store_false", default=True)
+	general_options.add_argument('--trace', help="Disable trace logs", action="store_false", default=True)
+	stack_options = parser.add_argument_group('stack logging')
+	stack_options.add_argument('--phy', help="Disable logs for phy", action="store_false", default=True)
+	stack_options.add_argument('--dll', help="Disable logs for dll", action="store_false", default=True)
+	stack_options.add_argument('--mac', help="Disable logs for mac", action="store_false", default=True)
+	stack_options.add_argument('--nwl', help="Disable logs for nwl", action="store_false", default=True)
+	stack_options.add_argument('--trans', help="Disable logs for trans", action="store_false", default=True)
+	stack_options.add_argument('--fwk', help="Disable logs for fwk", action="store_false", default=True)
+	stack_options.add_argument('--stack', help="Disable all stack logs", action="store_false", default=True)
+	special_options = parser.add_argument_group('special logging')
+	special_options.add_argument('--dllres', help="Disable DLL RES logs", action="store_false", default=True)
+	special_options.add_argument('--phyres', help="Disable PHY RES Logs", action="store_false", default=True)
+	settings = vars(parser.parse_args())
 
-	init()
-	keep_running = True
-	# TODO make baud rate configurable
-	serial_port = serial.Serial(args['serial'], args['baud'])
-	datestr = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
-	# TODO should open a file for every log type
-	f = open(datestr + '.log', 'w')
-	f.write("Start D7 logger (%s)" % datestr)
-	f.flush()
+	# Setup the serial port
+	serial_port = serial.Serial(settings['serial'], settings['baud'])
 	empty_serial_buffer()
+
+	# Only write a file if we have a file defined
+	if settings["file"] != None:
+		f = open(settings["file"] + '.log', 'w')
+		f.write("Start D7 logger @ (%s) \n" % dateTime)
+		f.flush()
+		# Create the write thread
+		writeThread = write_d7(f, dataQueue)
 
 	parseThread = parse_d7(dataQueue, displayQueue)
 	displayThread = display_d7(displayQueue)
-	writeThread = write_d7(f, dataQueue)
 
+	
 	try:
 		parseThread.start()
 		displayThread.start()
-		writeThread.start()
+		if settings["file"] != None:
+			writeThread.start()
 
 	except (KeyboardInterrupt, SystemExit):
 		keep_running = False
@@ -342,7 +393,8 @@ def main():
 	print("The logger is stopping!")
 	parseThread.stop()
 	displayThread.stop()
-	writeThread.stop()
+	if settings["file"] != None:
+		writeThread.stop()
 
 if __name__ == "__main__":
 	main()

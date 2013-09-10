@@ -510,6 +510,7 @@ void rx_data_isr()
 		rx_data.data = buffer;
 		#ifdef LOG_PHY_ENABLED
 		log_print_stack_string(LOG_PHY, "rx_data_isr packet received");
+		log_phy_rx_res(&rx_data);
 		#endif
     }
 
