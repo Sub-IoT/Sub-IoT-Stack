@@ -212,7 +212,7 @@ class LogPhyRes(Logs):
 		data = serial_port.read(size=self.packet_length)
 		self.subnet = "0x" + str(data[2].encode("hex").upper())
 		self.tx_eirp = int(struct.unpack('b', data[1])[0]) * 0.5 - 40;
-		self.frame_ctl = bin(int(data[3], 16))[2:].zfill(8)
+		self.frame_ctl = "0x" + str(data[3].encode("hex").upper())
 		self.source_id = str(data[6:14].encode("hex").upper())
 		self.data_length = int(struct.unpack('b', data[17])[0])
 		self.data = self.dataEncoding(data[18:18+self.data_length])
@@ -251,7 +251,7 @@ class LogPhyRes(Logs):
 		if settings["phyres"]:
 			#TODO format as table, this is quite ugly, there is a easier way, should look into it
 			string = formatHeader("PHY RES", "GREEN") + "Received packet will following properties" + "\n"
-			string += " " * 12 + "rssi: " + str(self.rssi) + " " * 10 + "lqi: " + str(self.lqi) + " "*18 + "subnet: " + str(self.subnet) + "\n"
+			string += " " * 12 + "rssi: " + str(self.rssi) + " " * 10 + "lqi: " + str(self.lqi) + " "*14 + "subnet: " + str(self.subnet) + "\n"
 			string += " " * 12 + "tx_eirp: " + str(self.tx_eirp) + " " *6 + "frame_ctl: " + str(self.frame_ctl) + " "*6 + "source: " + self.source_id + "\n"
 			string += " " *12 + "data: " + str(self.data) 
 			string += Style.RESET_ALL
