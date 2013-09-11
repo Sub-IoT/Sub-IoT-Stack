@@ -7,3 +7,6 @@ ui_*.h
 build
 qrc_resources.cpp
 qrc_resources.o
+*.so
+*.so.1.0
+*.so.1.0.0
