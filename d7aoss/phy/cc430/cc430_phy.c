@@ -98,7 +98,7 @@ bool phy_translate_and_set_settings(uint8_t spectrum_id, uint8_t sync_word_class
 	if(!phy_translate_settings(spectrum_id, sync_word_class, &fec, &channel_center_freq_index, &channel_bandwidth_index, &preamble_size, &sync_word))
 	{
 		#ifdef LOG_PHY_ENABLED
-		log_print_string("PHY Cannot translate settings");
+		log_print_stack_string(LOG_PHY, "PHY Cannot translate settings");
 		#endif
 
 		return false;
@@ -189,7 +189,7 @@ bool phy_init_tx()
 	if(get_radiostate() != Idle)
 	{
 		#ifdef LOG_PHY_ENABLED
-		log_print_string("PHY radio not idle");
+		log_print_stack_string(LOG_PHY, "PHY radio not idle");
 		#endif
 
 		return false;
@@ -229,14 +229,14 @@ bool phy_tx(phy_tx_cfg_t* cfg)
 bool phy_rx(phy_rx_cfg_t* cfg)
 {
 	#ifdef LOG_PHY_ENABLED
-	log_print_string("phy_rx");
+	log_print_stack_string(LOG_PHY, "phy_rx");
 	#endif
 
 	RadioState current_state = get_radiostate();
 	if(current_state != Idle && current_state != Receive)
 	{
 		#ifdef LOG_PHY_ENABLED
-		log_print_string("PHY Cannot RX, PHy not idle");
+		log_print_stack_string(LOG_PHY, "PHY Cannot RX, PHy not idle");
 		#endif
 		return false;
 	}
@@ -433,7 +433,7 @@ void tx_data_isr()
 void rx_data_isr()
 {
 #ifdef LOG_PHY_ENABLED
-		log_print_string("rx_data_isr 0");
+	log_print_stack_string(LOG_PHY, "rx_data_isr 0");
 	#endif
 
 	//Read number of bytes in RXFIFO
@@ -482,7 +482,7 @@ void rx_data_isr()
 		bufferPosition++;
 		rxBytes--;
 #ifdef LOG_PHY_ENABLED
-		log_print_string("rx_data_isr getting packetLength");
+		log_print_stack_string(LOG_PHY, "rx_data_isr getting packetLength");
 	#endif
 	}
 
@@ -509,12 +509,13 @@ void rx_data_isr()
 		rx_data.length = *buffer;
 		rx_data.data = buffer;
 		#ifdef LOG_PHY_ENABLED
-			log_print_string("rx_data_isr packet received");
+		log_print_stack_string(LOG_PHY, "rx_data_isr packet received");
+		log_phy_rx_res(&rx_data);
 		#endif
     }
 
 	#ifdef LOG_PHY_ENABLED
-		log_print_string("rx_data_isr 1");
+    log_print_stack_string(LOG_PHY, "rx_data_isr 1");
 	#endif
 }
 
@@ -528,7 +529,7 @@ void rx_timeout_isr()
 void rx_fifo_overflow_isr()
 {
 	#ifdef LOG_PHY_ENABLED
-		log_print_string("rx_fifo_overflow");
+	log_print_stack_string(LOG_PHY, "rx_fifo_overflow");
 	#endif
 
 	rxtx_finish_isr();

@@ -10,11 +10,12 @@
 
 
 //#TODO define from cmake
-#define LOG_FWK_ENABLED
-#define LOG_DLL_ENABLED
 #define LOG_PHY_ENABLED
+#define LOG_DLL_ENABLED
+#define LOG_MAC_ENABLED
 #define LOG_NWL_ENABLED
 #define LOG_TRANS_ENABLED
+#define LOG_FWK_ENABLED
 /*
  * TODO this is manually set in CSS!
  * to enable function tracing go to the d7aoss project properties:
@@ -27,23 +28,40 @@
 #include "../phy/phy.h"
 #include "../dll/dll.h"
 
+// generic logging functions
 #define LOG_TYPE_STRING 0x01
 #define LOG_TYPE_DATA 0x02
+#define LOG_TYPE_STACK 0x03
 
-#define LOG_TYPE_PHY_RX_RES 0x02
+// stack logging opcodes
+#define LOG_PHY 0x01
+#define LOG_DLL 0x02
+#define LOG_MAC 0x03
+#define LOG_NWL 0x04
+#define LOG_TRANS 0x05
+#define LOG_FWK 0x10
+//TODO define others
+
+// These are optional special logging types, use a higher value
+#define LOG_TYPE_PHY_RX_RES 0xFE
 #define LOG_TYPE_PHY_RX_RES_SIZE 5
 
-#define LOG_TYPE_DLL_RX_RES 0x03
+#define LOG_TYPE_DLL_RX_RES 0xFD
 #define LOG_TYPE_DLL_RX_RES_SIZE 2
+
+#define LOG_TYPE_FUNC_TRACE 0xFF
 
 // TODO: can be removed now log_print_string accepts a printf style format string?
 //bool itoa(int32_t n, char* out);
 
+// generic logging functions
 void log_print_string(char* format, ...);
+void log_print_stack_string(char type, char* format, ...);
 void log_print_data(uint8_t* message, uint8_t length);
 
+// special logging functions
+void log_print_trace(char* format, ...);
 void log_phy_rx_res(phy_rx_data_t* res);
-
 void log_dll_rx_res(dll_rx_res_t* res);
 
 #endif /* __LOG_H_ */
