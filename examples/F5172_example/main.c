@@ -34,6 +34,4 @@ int main(void) {
 		led_on(1);
 		system_lowpower_mode(4,1);
 	}
-	
-	return 0;
 }
