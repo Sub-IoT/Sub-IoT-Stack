@@ -3,3 +3,7 @@
 *.user
 ui_*.h
 *.log
+*.o
+build
+qrc_resources.cpp
+qrc_resources.o
