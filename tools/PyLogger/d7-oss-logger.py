@@ -22,7 +22,9 @@
 from __future__ import division, absolute_import, print_function, unicode_literals
 from colorama import init, Fore, Back, Style
 from collections import defaultdict
-import sys as system
+import sys
+reload(sys) 
+sys.setdefaultencoding('utf-8') 
 import os as os
 import serial as serial
 import struct as struct
@@ -42,6 +44,7 @@ serial_port = None
 settings = None
 dataQueue = Queue.Queue()
 displayQueue = Queue.Queue()
+trace_pos = 0
 
 #TODO fix this ugly code... but it works
 data = [("PHY", "GREEN"), ("DLL", "RED"), ("MAC", "YELLOW"), ("NWL", "BLUE"), ("TRANS", "MAGENTA"), ("FWK", "CYAN")]
@@ -49,10 +52,10 @@ stackColors = defaultdict(list)
 for layer, color in data:
 	stackColors[layer].append(color)
 
-stackLayers = {'01' : "PHY", '02': "DLL", '03': "MAC", '04': "NWL", '05': "TRANS", '0A': "FWK"}
+stackLayers = {'01' : "PHY", '02': "DLL", '03': "MAC", '04': "NWL", '05': "TRANS", '10': "FWK"}
 
 
-get_input = input if system.version_info[0] >= 3 else raw_input
+get_input = input if sys.version_info[0] >= 3 else raw_input
 logging.Formatter(fmt='%(asctime)s.%(msecs)d', datefmt='%Y-%m-%d,%H:%M:%S')
 
 # Small helper function that will format our colors
@@ -168,8 +171,10 @@ class LogTrace(Logs):
 		return ""
 
 	def __str__(self):
+		global trace_pos
 		if settings["trace"]:
 			string = formatHeader("TRACE", "YELLOW") + self.message + Style.RESET_ALL
+			
 			return string + "\n"
 		return ""
 
@@ -339,7 +344,10 @@ def read_value_from_serial():
 	log_dll_res = LogDllRes()
 	log_phy_res = LogPhyRes()
 
-	processedread = {"01" : log_string.read, 
+
+	processedread = {
+			 "00" : dummy,
+			 "01" : log_string.read, 
 			 "02" : log_data.read,
 			 "03" : log_stack.read,
 			 "FD" : log_dll_res.read,
@@ -411,7 +419,7 @@ def main():
 
 	except (KeyboardInterrupt, SystemExit):
 		keep_running = False
-		system.exit()
+		sys.exit()
 	except Exception as inst:
 		print ("Error unable to start thread")
 		print (inst)
