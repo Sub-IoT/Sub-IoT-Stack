@@ -33,7 +33,7 @@ import time
 import logging
 import argparse
 
-DEBUG = 1
+DEBUG = 0
 
 SYNC_WORD = "DD"
 
@@ -203,19 +203,53 @@ class LogPhyRes(Logs):
 		self.read_length()
 		self.rssi = struct.unpack('b', serial_port.read(size=1))[0]
 		self.lqi = struct.unpack('b', serial_port.read(size=1))[0]
-		self.data_length = struct.unpack('b', serial_port.read(size=1))[0]
+		self.packet_length = struct.unpack('b', serial_port.read(size=1))[0]
+		data = serial_port.read(size=self.packet_length)
+		self.subnet = "0x" + str(data[2].encode("hex").upper())
+		self.tx_eirp = int(struct.unpack('b', data[1])[0]) * 0.5 - 40;
+		self.frame_ctl = bin(int(data[3], 16))[2:].zfill(8)
+		self.source_id = str(data[6:14].encode("hex").upper())
+		self.data_length = int(struct.unpack('b', data[17])[0])
+		self.data = self.dataEncoding(data[18:18+self.data_length])
+
+		#self.data = [data[i:i+2].decode("utf-8", errors='replace') for i in range(0, len(data), 2)]
+		#self.data = [data[i].encode("hex").upper() for i in range(0, len(data))]
+		#self.data = [str(struct.unpack('b', data[i])[0]) for i in range(0, len(data))]
+		#print("data_length %s" % self.data_length)
+		#print("dump_data: %s" % self.data)
 		#print("rssi: %s" % self.rssi)
 		#print("lqi: %s" % self.lqi)
 		#print("data_length: %s" % self.data_length)
 		return self
 
+	def dataEncoding(self, byte_str):
+		if settings["display"] == 'hex':
+			return " ".join(["0x" + byte_str[i].encode("hex").upper() for i in range(0, len(byte_str))])
+		elif settings["display"] == 'bin':
+			return " ".join([bin(int(byte_str[i].encode("hex").upper(), 16))[2:].zfill(8) for i in range(0, len(byte_str))])
+		elif settings["display"] == 'dec':
+			return " ".join([str(struct.unpack('b', byte_str[i])[0]) for i in range(0, len(byte_str))])
+		else:
+			return " ".join([byte_str[i].decode("utf-8", errors='replace') for i in range(0, len(byte_str))])
+
 	# TODO implement this
 	def write(self):
+		if settings["phyres"]:
+			string = "PHY RES: "
+			string += " rssi: " + str(self.rssi) + " lqi: " + str(self.lqi) + " subnet: " + str(self.subnet)
+			string += " tx_eirp: " + str(self.tx_eirp) + " frame_ctl: " + str(self.frame_ctl) + " source: " + self.source_id
+			string += " data: " + str(self.data) + "\n"
+			return string
 		return ""
 
 	def __str__(self):
 		if settings["phyres"]:
-			string = formatHeader("PHY RES", "GREEN") + "rssi: " + str(self.rssi) + " lqi: " + str(self.lqi) + Style.RESET_ALL
+			#TODO format as table, this is quite ugly, there is a easier way, should look into it
+			string = formatHeader("PHY RES", "GREEN") + "Received packet will following properties" + "\n"
+			string += " " * 12 + "rssi: " + str(self.rssi) + " " * 10 + "lqi: " + str(self.lqi) + " "*18 + "subnet: " + str(self.subnet) + "\n"
+			string += " " * 12 + "tx_eirp: " + str(self.tx_eirp) + " " *6 + "frame_ctl: " + str(self.frame_ctl) + " "*6 + "source: " + self.source_id + "\n"
+			string += " " *12 + "data: " + str(self.data) 
+			string += Style.RESET_ALL
 			return string + "\n"
 		return ""
 
@@ -350,6 +384,7 @@ def main():
 	special_options = parser.add_argument_group('special logging')
 	special_options.add_argument('--dllres', help="Disable DLL RES logs", action="store_false", default=True)
 	special_options.add_argument('--phyres', help="Disable PHY RES Logs", action="store_false", default=True)
+	special_options.add_argument('--display', help="Format the data of PHY RES", choices=['hex', 'bin', 'txt', 'dec'], default='hex')
 	settings = vars(parser.parse_args())
 
 	# Setup the serial port
@@ -398,5 +433,3 @@ def main():
 
 if __name__ == "__main__":
 	main()
-
-
