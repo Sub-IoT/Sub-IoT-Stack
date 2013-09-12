@@ -1,8 +1,9 @@
 /*
  *  Created on: Nov 22, 2012
  *  Authors:
- * 		maarten.weyn@artesis.be
- *  	glenn.ergeerts@artesis.be
+ *      maarten.weyn@artesis.be
+ *      glenn.ergeerts@artesis.be
+ *      jan.stevens@ieee.org
  */
 
 #include "../uart.h"
@@ -16,7 +17,7 @@
 void uart_init()
 {
 #ifdef PLATFORM_MSP430
-    PMAPPWD = 0x02D52;						  // Get write-access to port mapping regs
+    PMAPPWD = 0x02D52;                                            // Get write-access to port mapping regs
     P1DIR |= BIT6 + BIT7;
     P1MAP7 = PM_UCA0RXD;                      // Map UCA0RXD output to P1.6
     P1MAP6 = PM_UCA0TXD;                      // Map UCA0TXD output to P1.7
@@ -27,7 +28,7 @@ void uart_init()
 
     /*
      * CUBR1 = UARTCLK/(Baudr*256)
-     * CUBR0 = (UARTCLK/Baudr)–256*CUBR1
+     * CUBR0 = (UARTCLK/Baudr)Â–256*CUBR1
      */
 
     UCA0CTL1 |= UCSWRST;                      // **Put state machine in reset**
@@ -52,7 +53,7 @@ void uart_enable_interrupt()
 #pragma NO_HOOKS(uart_transmit_data)
 void uart_transmit_data(unsigned char data)
 {
-	while(!uart_tx_ready());
+        while(!uart_tx_ready());
     UCA0TXBUF = data;
 }
 

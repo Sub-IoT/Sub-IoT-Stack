@@ -8,6 +8,8 @@
 #ifndef SPI_H_
 #define SPI_H_
 
+#define DATARATE 115200
+
 void spi_init();
 
 void spi_enable_interrupt();

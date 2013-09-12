@@ -39,7 +39,7 @@ int main(void) {
 		//led_on(1);
 
 		log_print_clean("We have started");
-		system_lowpower_mode(4,1);
+		//system_lowpower_mode(4,1);
 	}
 }
 
@@ -51,17 +51,19 @@ __interrupt void USCI_B0_ISR(void)
   switch(__even_in_range(UCB0IV,4))
   {
     case 0: break;                          // Vector 0 - no interrupt
-    case 2: // Vector 2 - RXIFG
-      spi_tx_ready();           // USCI_A0 TX buffer ready?
-      test_data = spi_receive_data();
-      if (test_data == SLV_Data)              // Test for correct character RX'd
+    case 2:                                 // Vector 2 - RXIFG
+      while (!(UCB0IFG&UCTXIFG));           // USCI_A0 TX buffer ready?
+      test_data = UCB0RXBUF;
+      if (UCB0RXBUF==SLV_Data)              // Test for correct character RX'd
         P1OUT |= BIT4;                      // If correct, P1.4 high
       else
         P1OUT &= ~BIT4;                     // If incorrect, P1.4 low
 
       MST_Data++;                           // Increment data
       SLV_Data++;
-      spi_transmit_data(MST_Data);                 // Send next value
+      UCB0TXBUF = MST_Data;                 // Send next value
+
+      for(i = 20; i>0; i--);                // Add time between transmissions to
                                             // make sure slave can process information
       break;
     case 4: break;                          // Vector 4 - TXIFG
