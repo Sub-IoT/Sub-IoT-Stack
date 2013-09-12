@@ -80,6 +80,16 @@ void log_print_string(char* format, ...)
 	uart_transmit_message((unsigned char*) buffer, len);
 }
 
+#pragma NO_HOOKS(log_print_clean)
+void log_print_clean(char* format, ...)
+{
+	va_list args;
+	va_start(args, format);
+	uint8_t len = vsnprintf(buffer, BUFFER_SIZE, format, args);
+	va_end(args);
+	uart_transmit_message((unsigned char*) buffer, len);
+}
+
 void log_print_data(uint8_t* message, uint8_t length)
 {
 	uart_transmit_data(0xDD);

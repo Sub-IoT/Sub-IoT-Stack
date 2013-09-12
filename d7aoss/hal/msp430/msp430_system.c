@@ -9,6 +9,7 @@
 #include "../leds.h"
 #include "../button.h"
 #include "../uart.h"
+#include "../spi.h"
 #include "msp430_addresses.h"
 
 //#include "inc/hw_memmap.h"
@@ -111,6 +112,7 @@ void system_init()
     led_init();
     button_init();
     uart_init();
+    spi_init();
 
     system_get_unique_id(device_id);
 }

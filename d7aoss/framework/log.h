@@ -33,6 +33,7 @@
 //bool itoa(int32_t n, char* out);
 
 void log_print_string(char* format, ...);
+void log_print_clean(char* format, ...);
 void log_print_data(uint8_t* message, uint8_t length);
 
 void log_phy_rx_res(phy_rx_data_t* res);

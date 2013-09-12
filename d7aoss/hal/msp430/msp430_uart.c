@@ -15,31 +15,15 @@
 
 void uart_init()
 {
-#ifdef PLATFORM_WIZZIMOTE // TODO ugly solution for now, UART needs to be extracted from oss-7 and implemented by platform specific HAL library
-    PMAPPWD = 0x02D52;                        // Get write-access to port mapping regs
-    P2MAP0 = PM_UCA0RXD;                      // Map UCA0RXD output to P2.6
-    P2MAP1 = PM_UCA0TXD;                      // Map UCA0TXD output to P2.7
-    PMAPPWD = 0;                              // Lock port mapping registers
-	P2DIR |= BIT1;                            // Set P2.7 as TX output
-    P2SEL |= BIT0 + BIT1;
-
-#elif defined PLATFORM_ARTESIS
-    PMAPPWD = 0x02D52;                        // Get write-access to port mapping regs
-    P1MAP6 = PM_UCA0RXD;                      // Map UCA0RXD output to P2.6
-    P1MAP5 = PM_UCA0TXD;                      // Map UCA0TXD output to P2.7
-    PMAPPWD = 0;                              // Lock port mapping registers
-    P1DIR |= BIT5;                            // Set P1.6 as TX output
-    P1SEL |= BIT5 + BIT6;                     // Select P1.5 & P1.6 to UART function
-
-#elif defined PLATFORM_MSP430
-    PMAPPWD = 0x02D52;                        // Get write-access to port mapping regs
-    P1MAP2 = PM_UCA0RXD;                      // Map UCA0RXD output to P2.6
-    P1MAP1 = PM_UCA0TXD;                      // Map UCA0TXD output to P2.7
+#ifdef PLATFORM_MSP430
+    PMAPPWD = 0x02D52;						  // Get write-access to port mapping regs
+    P1DIR |= BIT6 + BIT7;
+    P1MAP7 = PM_UCA0RXD;                      // Map UCA0RXD output to P1.6
+    P1MAP6 = PM_UCA0TXD;                      // Map UCA0TXD output to P1.7
     PMAPPWD = 0;                              // Lock port mapping registers
     P1DIR |= BIT1;                            // Set P1.6 as TX output
-    P1SEL |= BIT1 + BIT2;                     // Select P1.5 & P1.6 to UART function
+    P1SEL |= BIT6 + BIT7;                     // Select P1.5 & P1.6 to UART function
 #endif
-
 
     /*
      * CUBR1 = UARTCLK/(Baudr*256)
@@ -54,7 +38,6 @@ void uart_init()
 
 //    UCA0BR0 = 9;                              // 1MHz 115200 (see User's Guide)
 //    UCA0BR1 = 0;                              // 1MHz 115200
-
 
     UCA0MCTL |= UCBRS_1 + UCBRF_0;            // Modulation UCBRSx=1, UCBRFx=0
     UCA0CTL1 &= ~UCSWRST;                     // **Initialize USCI state machine**
