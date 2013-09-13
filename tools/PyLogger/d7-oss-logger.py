@@ -65,7 +65,7 @@ logging.Formatter(fmt='%(asctime)s.%(msecs)d', datefmt='%Y-%m-%d,%H:%M:%S')
 def formatHeader(header, color, datetime):
 	bgColor = getattr(Back, color)
 	fgColor = getattr(Fore, color)
-	msg = Style.DIM + datetime.strftime("%H:%M:%S") + "  " + bgColor  + Style.BRIGHT + Fore.WHITE + header + fgColor + Back.RESET + Style.NORMAL
+	msg = Style.DIM + datetime.strftime("%H:%M:%S.%f") + "  " + bgColor  + Style.BRIGHT + Fore.WHITE + header + fgColor + Back.RESET + Style.NORMAL
 	# Make sure we outline everything
 	msg += " " * (55 - (len(msg)))
 	return msg
