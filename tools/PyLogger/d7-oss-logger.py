@@ -7,7 +7,8 @@
 # Discription:
 # This is a python logger for D7 when logging is active.
 # It's an alternative for the Qt logger currently used, which is not that great for installing and quick debugging
-# Before using the logger make sure you have installed python 2.7 or higher and the serial library
+# Before using the logger make sure you have installed python 2.7 and the serial library
+# There is no current support for Python 3+!
 # 
 # Install:
 # Before usage, install following python packages using PyPI (pip python)
@@ -22,7 +23,9 @@
 from __future__ import division, absolute_import, print_function, unicode_literals
 from colorama import init, Fore, Back, Style
 from collections import defaultdict
+import glob
 import sys
+import imp
 reload(sys) 
 sys.setdefaultencoding('utf-8') 
 import os as os
@@ -59,13 +62,17 @@ get_input = input if sys.version_info[0] >= 3 else raw_input
 logging.Formatter(fmt='%(asctime)s.%(msecs)d', datefmt='%Y-%m-%d,%H:%M:%S')
 
 # Small helper function that will format our colors
-def formatHeader(header, color):
+def formatHeader(header, color, datetime):
 	bgColor = getattr(Back, color)
 	fgColor = getattr(Fore, color)
-	msg = bgColor + Style.BRIGHT + Fore.WHITE + header + fgColor + Back.RESET + Style.NORMAL
+	msg = Style.DIM + datetime.strftime("%H:%M:%S") + "  " + bgColor  + Style.BRIGHT + Fore.WHITE + header + fgColor + Back.RESET + Style.NORMAL
 	# Make sure we outline everything
-	msg += " " * (41 - (len(msg)))
+	msg += " " * (55 - (len(msg)))
 	return msg
+
+# Shortcut for printing errors
+def printError(error):
+	print(formatHeader("ERROR", "RED", datetime.datetime.now()) + Back.RED  + Style.BRIGHT + Fore.WHITE + str(error) + Style.RESET_ALL)
 
 ###
 # The different logs classes, every class has its own read, write and print function for costumization
@@ -74,6 +81,7 @@ class Logs(object):
 	def __init__(self, logType):
 		self.logType = logType
 		self.length = 0
+		self.datetime = datetime.datetime.now()
 
 	def read(self):
 		pass
@@ -86,7 +94,7 @@ class Logs(object):
 
 	def read_length(self):
 		length = serial_port.read(size = 1)
-		self.length = int(struct.unpack("b", length)[0])
+		self.length = int(struct.unpack('B', length)[0])
 
 
 class LogString(Logs):
@@ -106,7 +114,7 @@ class LogString(Logs):
 
 	def __str__(self):
 		if settings["string"]:
-			string = formatHeader("STRING", "GREEN") + self.message + Style.RESET_ALL
+			string = formatHeader("STRING", "GREEN", self.datetime) + self.message + Style.RESET_ALL
 			return string + "\n"
 		return ""
 
@@ -118,7 +126,7 @@ class LogData(Logs):
 	def read(self):
 		self.read_length()
 		data = serial_port.read(size=self.length)
-		self.data = struct.unpack('b', data)[0]
+		self.data = data.encode("hex").upper()
 		return self
 	
 	def write(self):
@@ -128,7 +136,7 @@ class LogData(Logs):
 
 	def __str__(self):
 		if settings["data"]:
-			string = formatHeader("DATA", "BLUE") + str(self.data) + Style.RESET_ALL
+			string = formatHeader("DATA", "BLUE", self.datetime) + str(self.data) + Style.RESET_ALL
 			return string + "\n"
 		return ""
 
@@ -143,6 +151,7 @@ class LogStack(Logs):
 		self.color = stackColors[self.layer][0]
 		self.read_length()
 		self.message = serial_port.read(size=self.length)
+		#self.message = struct.unpack("I", self.message)
 		return self
 
 	def write(self):
@@ -152,7 +161,7 @@ class LogStack(Logs):
 
 	def __str__(self):
 		if settings["stack"] and settings[self.layer.lower()]:
-			string = formatHeader("STK: " + self.layer, self.color) + self.message + Style.RESET_ALL
+			string = formatHeader("STK: " + self.layer, self.color, self.datetime) + self.message + Style.RESET_ALL
 			return string + "\n"
 		return ""
 
@@ -173,7 +182,7 @@ class LogTrace(Logs):
 	def __str__(self):
 		global trace_pos
 		if settings["trace"]:
-			string = formatHeader("TRACE", "YELLOW") + self.message + Style.RESET_ALL
+			string = formatHeader("TRACE", "YELLOW", self.datetime) + self.message + Style.RESET_ALL
 			
 			return string + "\n"
 		return ""
@@ -185,7 +194,7 @@ class LogDllRes(Logs):
 
 	def read(self):
 		self.read_length()
-		self.frame_type = str(struct.unpack('b', serial_port.read(size=1))[0])
+		self.frame_type = str(struct.unpack('B', serial_port.read(size=1))[0])
 		self.spectrum_id = "0x" + str(serial_port.read(size=1).encode("hex").upper())
 		return self
 
@@ -196,7 +205,7 @@ class LogDllRes(Logs):
 
 	def __str__(self):
 		if settings["dllres"]:
-			string = formatHeader("DLL RES", "RED") + "frame_type " + self.frame_type + " spectrum_id " + self.spectrum_id + Style.RESET_ALL
+			string = formatHeader("DLL RES", "RED", self.datetime) + "frame_type " + self.frame_type + " spectrum_id " + self.spectrum_id + Style.RESET_ALL
 			return string + "\n"
 		return ""
 
@@ -207,14 +216,14 @@ class LogPhyRes(Logs):
 	def read(self):
 		self.read_length()
 		self.rssi = struct.unpack('b', serial_port.read(size=1))[0]
-		self.lqi = struct.unpack('b', serial_port.read(size=1))[0]
-		self.packet_length = struct.unpack('b', serial_port.read(size=1))[0]
+		self.lqi = struct.unpack('B', serial_port.read(size=1))[0]
+		self.packet_length = struct.unpack('B', serial_port.read(size=1))[0]
 		data = serial_port.read(size=self.packet_length)
 		self.subnet = "0x" + str(data[2].encode("hex").upper())
-		self.tx_eirp = int(struct.unpack('b', data[1])[0]) * 0.5 - 40;
+		self.tx_eirp = int(struct.unpack('B', data[1])[0]) * 0.5 - 40;
 		self.frame_ctl = "0x" + str(data[3].encode("hex").upper())
 		self.source_id = str(data[6:14].encode("hex").upper())
-		self.data_length = int(struct.unpack('b', data[17])[0])
+		self.data_length = int(struct.unpack('B', data[17])[0])
 		self.data = self.dataEncoding(data[18:18+self.data_length])
 
 		#self.data = [data[i:i+2].decode("utf-8", errors='replace') for i in range(0, len(data), 2)]
@@ -237,7 +246,6 @@ class LogPhyRes(Logs):
 		else:
 			return " ".join([byte_str[i].decode("utf-8", errors='replace') for i in range(0, len(byte_str))])
 
-	# TODO implement this
 	def write(self):
 		if settings["phyres"]:
 			string = "PHY RES: "
@@ -250,10 +258,10 @@ class LogPhyRes(Logs):
 	def __str__(self):
 		if settings["phyres"]:
 			#TODO format as table, this is quite ugly, there is a easier way, should look into it
-			string = formatHeader("PHY RES", "GREEN") + "Received packet will following properties" + "\n"
-			string += " " * 12 + "rssi: " + str(self.rssi) + " " * 10 + "lqi: " + str(self.lqi) + " "*14 + "subnet: " + str(self.subnet) + "\n"
-			string += " " * 12 + "tx_eirp: " + str(self.tx_eirp) + " " *6 + "frame_ctl: " + str(self.frame_ctl) + " "*6 + "source: " + self.source_id + "\n"
-			string += " " *12 + "data: " + str(self.data) 
+			string = formatHeader("PHY RES", "GREEN", self.datetime) + "Received packet will following properties" + "\n"
+			string += " " * 22 + "rssi: " + str(self.rssi) + " " * 10 + "lqi: " + str(self.lqi) + " "*14 + "subnet: " + str(self.subnet) + "\n"
+			string += " " * 22 + "tx_eirp: " + str(self.tx_eirp) + " " *6 + "frame_ctl: " + str(self.frame_ctl) + " "*6 + "source: " + self.source_id + "\n"
+			string += " " * 22 + "data: " + str(self.data) 
 			string += Style.RESET_ALL
 			return string + "\n"
 		return ""
@@ -270,9 +278,6 @@ class parse_d7(threading.Thread):
 		self.disQueue = disQueue
 		threading.Thread.__init__(self)
 
-	def stop(self):
-		self.keep_running = False
-
 	def run(self):
 		while self.keep_running:
 			try:
@@ -281,16 +286,13 @@ class parse_d7(threading.Thread):
 					self.datQueue.put(serialData)
 					self.disQueue.put(serialData)
 			except Exception as inst:
-				print(inst)
+				printError(inst)
 
 class display_d7(threading.Thread):
 	def __init__(self, disQueue):
 		self.keep_running = True
 		self.queue = disQueue
 		threading.Thread.__init__(self)
-
-	def stop(self):
-		self.keep_running = False
 
 	def run(self):
 		while self.keep_running:
@@ -299,7 +301,7 @@ class display_d7(threading.Thread):
 					data = self.queue.get()
 					print(data, end='')
 			except Exception as inst:
-				print (inst)
+				printError(inst)
 
 class write_d7(threading.Thread):
 	def __init__(self, fileStream, queue):
@@ -308,20 +310,19 @@ class write_d7(threading.Thread):
 		self.queue = queue
 		threading.Thread.__init__(self)
 
-	def stop(self):
-		self.keep_running = False
-
 	def run(self):
 		while self.keep_running and settings['file'] != None:
 			try:
 				while not self.queue.empty():
 					data = self.queue.get()
 					encoded = (data.write()).encode('utf-8')
+					self.file.write(data.datetime.strftime("%Y/%m/%d %H:%M:%S  "))
 					self.file.write(encoded)
 				time.sleep(10)
 			except Exception as inst:
-				print(inst)
+				printError(inst)
 
+## Helper functions ##
 def dummy():
 	pass
 
@@ -345,38 +346,58 @@ def read_value_from_serial():
 	log_phy_res = LogPhyRes()
 
 
-	processedread = {
-			 "00" : dummy,
+	result = {
 			 "01" : log_string.read, 
 			 "02" : log_data.read,
 			 "03" : log_stack.read,
 			 "FD" : log_dll_res.read,
 			 "FE" : log_phy_res.read,
-			 "FF" : log_trace.read, }
+			 "FF" : log_trace.read, }.get(logtype, dummy)
 		 
 	# See if we have found our type in the LOG_TYPES
 	#print("We got logtype: %s" % logtype)
-	result = processedread[logtype]()
+	#result = processedread[logtype]()
 
-	return result
+	return result()
 
 def empty_serial_buffer():
 	while serial_port.inWaiting() > 0:
 		serial_port.read(1)
 
+def list_serial_ports():
+	# Check for windows
+	available = []
+	if os.name == 'nt':
+		# Scan available ports
+		for i in range(256):
+			try:
+				s = serial.Serial(i)
+				available.append('COM'+str(i+1))
+				s.close()
+			except serial.SerialException:
+				pass
+	else:
+		# for linux only include the USB0 com ports
+		available = glob.glob('/dev/ttyUSB*')
+	
+	for port in available:
+		print(formatHeader("PORT", "GREEN", datetime.datetime.now()) + port + Style.RESET_ALL)
+
+## Main function ##
 def main():
 	global serial_port, settings
+	keep_running = True
 	# Some variables we need
 	init()
-	keep_running = True
 	dateTime = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
 
 	# Setup the console parser
-	parser = argparse.ArgumentParser(description = "DASH7 logger.")
-	parser.add_argument('serial', metavar="serial port", help="serial port (eg COM7 or /dev/ttyUSB0)")
+	parser = argparse.ArgumentParser(description = "DASH7 logger for the OSS-7 stack. You can exit the logger using Ctrl-c, it takes some time.")
+	parser.add_argument('serial', metavar="serial port", help="serial port (eg COM7 or /dev/ttyUSB0)", nargs='?')
 	parser.add_argument('-b', '--baud' , default=115200, metavar="baudrate", type=int, help="set the baud rate (default: 115200)")
 	parser.add_argument('-v', '--version', action='version', version='DASH7 Logger 0.5', help="show the current version")
 	parser.add_argument('-f', '--file', metavar="file", help="write to a specific file", nargs='?', default=None, const=dateTime)
+	parser.add_argument('-l', '--list', help="Lists available serial ports", action="store_true", default=False)
 	general_options = parser.add_argument_group('general logging')
 	general_options.add_argument('--string', help="Disable string logs", action="store_false", default=True)
 	general_options.add_argument('--data', help="Disable data logs", action="store_false", default=True)
@@ -395,49 +416,51 @@ def main():
 	special_options.add_argument('--display', help="Format the data of PHY RES", choices=['hex', 'bin', 'txt', 'dec'], default='hex')
 	settings = vars(parser.parse_args())
 
+	# We only want to list the serial ports, then exit
+	if settings["list"]:
+		list_serial_ports()
+		sys.exit()
+
 	# Setup the serial port
+	if settings["serial"] is None:
+		printError("You didn't specify a serial port!")
+		sys.exit()
+
 	serial_port = serial.Serial(settings['serial'], settings['baud'])
 	empty_serial_buffer()
 
+	# Array containing all the threads
+	threads = []
 	# Only write a file if we have a file defined
 	if settings["file"] != None:
 		f = open(settings["file"] + '.log', 'w')
 		f.write("Start D7 logger @ (%s) \n" % dateTime)
 		f.flush()
 		# Create the write thread
-		writeThread = write_d7(f, dataQueue)
+		threads.append(write_d7(f, dataQueue))
 
-	parseThread = parse_d7(dataQueue, displayQueue)
-	displayThread = display_d7(displayQueue)
+	threads.append(parse_d7(dataQueue, displayQueue))
+	threads.append(display_d7(displayQueue))
 
-	
 	try:
-		parseThread.start()
-		displayThread.start()
-		if settings["file"] != None:
-			writeThread.start()
-
-	except (KeyboardInterrupt, SystemExit):
-		keep_running = False
-		sys.exit()
+		for t in threads:
+			t.start()
 	except Exception as inst:
-		print ("Error unable to start thread")
-		print (inst)
-	
+		printError("Error unable to start thread")
+		printError(inst)
+
 	while keep_running:
 		try:
-			input = raw_input()
-			if input == "x":
-				keep_running = False
+			# Sleep a very short time, we are just waiting for a keyboard intterupt really
+			time.sleep(0.0001)
+		except KeyboardInterrupt:
+			print("\nCtrl-c received! Sending Kill to the threads...")
+			for t in threads:
+				t.keep_running = False
+			keep_running = False
 
-		except Exception as inst:
-			print (inst)
-
-	print("The logger is stopping!")
-	parseThread.stop()
-	displayThread.stop()
-	if settings["file"] != None:
-		writeThread.stop()
+	print("The logger is stopping, please wait")
+	sys.exit()
 
 if __name__ == "__main__":
 	main()

@@ -23,6 +23,7 @@
 from __future__ import division, absolute_import, unicode_literals, print_function
 import sys
 import time
+import struct as struct
 reload(sys) 
 sys.setdefaultencoding('utf-8') 
 import serial as serial
@@ -83,6 +84,7 @@ class LogGenerator(object):
 def main():
 	logGen = LogGenerator("/dev/pts/2")
 	keep_running = True
+
 	while keep_running:
 		try:
 			logGen.string("Example of possible output that can be expected from the D7 stack")
