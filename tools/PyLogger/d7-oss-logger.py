@@ -258,9 +258,9 @@ class LogPhyRes(Logs):
 	def __str__(self):
 		if settings["phyres"]:
 			#TODO format as table, this is quite ugly, there is a easier way, should look into it
-			string = formatHeader("PHY RES", "GREEN", self.datetime) + "Received packet will following properties" + "\n"
+			string = formatHeader("PHY RES", "GREEN", self.datetime) + "Received packet from: " + self.source_id + "\n"
 			string += " " * 22 + "rssi: " + str(self.rssi) + " " * 10 + "lqi: " + str(self.lqi) + " "*14 + "subnet: " + str(self.subnet) + "\n"
-			string += " " * 22 + "tx_eirp: " + str(self.tx_eirp) + " " *6 + "frame_ctl: " + str(self.frame_ctl) + " "*6 + "source: " + self.source_id + "\n"
+			string += " " * 22 + "tx_eirp: " + str(self.tx_eirp) + " " *6 + "frame_ctl: " + str(self.frame_ctl) + "\n"
 			string += " " * 22 + "data: " + str(self.data) 
 			string += Style.RESET_ALL
 			return string + "\n"
