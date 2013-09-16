@@ -26,7 +26,7 @@
 #include <msp430.h>
 
 
-#define RECEIVE_CHANNEL 0x12
+#define RECEIVE_CHANNEL 0x1E
 
 // event to create a led blink
 static timer_event dim_led_event;

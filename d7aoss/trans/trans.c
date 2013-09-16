@@ -114,12 +114,15 @@ void trans_rigd_ccp(uint8_t spectrum_id, bool init_status, bool wait_for_t_ca_ti
 		n_time = (n_time / 32767) * current__t_ca; // Random Time before the CCA will be executed
 		temp_time = (int)n_time;
 
+		log_print_stack_string(LOG_TRANS, "RIGD: Wait Random Time: %d", temp_time);
+
 		event.next_event = temp_time; // Wait random time (0 - new__t_ca)
 		event.f = &final_rigd;
 		last_ca = timer_get_counter_value();
 		timer_add_event(&event);
 	}
 	else{
+		log_print_stack_string(LOG_TRANS, "RIGD: Failed");
 		trans_tx_callback(TransTCAFail);
 		return;
 	}
