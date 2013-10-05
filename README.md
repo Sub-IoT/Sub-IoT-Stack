@@ -24,7 +24,7 @@ The tools/logger directory contains both a command line application and a GUI (Q
 
 Please commit changes to a separate branch and create a pull request if you want to have it merged to the master branch.
 
-Licence: LGPS v2.1 http://www.gnu.org/licenses/lgpl-2.1.txt
+License: LGPS v2.1 http://www.gnu.org/licenses/lgpl-2.1.txt
 
 # Getting started
 
