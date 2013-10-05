@@ -14,7 +14,7 @@ The implementation to be used should come from some kind of configure step later
 
 Further up in the stack are the DLL layer, the transport layer and the network layer.
 
-Next to this layer there is also a hwardware abstraction layer.
+Next to this layer there is also a hardware abstraction layer.
 The HAL directory should contain the hardware abstraction layer API and its implementations. At the moment this contains code from TI's driverlib and some functions for button, leds, rtc, system and uart handling. Support for multiple hardware platforms is not implemented at the moment and should be discussed eventually.
 There is also a basic logging functionality defined in log.h which allows logging to UART. (This should be expanded to allow specifying for example the layer and the log level.)
 
@@ -22,7 +22,9 @@ The examples directory contain example programs showing specific functionality o
 
 The tools/logger directory contains both a command line application and a GUI (Qt) application which outputs the logging received over UART in a formatted way.
 
-Please commit changes to a seperate branch and create a pull request if you want to have it merged to the master branch.
+Please commit changes to a separate branch and create a pull request if you want to have it merged to the master branch.
+
+Licence: LGPS v2.1 http://www.gnu.org/licenses/lgpl-2.1.txt
 
 # Getting started
 
