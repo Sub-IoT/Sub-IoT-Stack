@@ -1,12 +1,12 @@
 # Introduction
 
-This project is built with CCS v5.3 and currently only supports the WizziMote.
-(As discussed previously supporting multiple toolchains and platforms is something we will do later.)
-
 The goal of the project is to provide a reference implementation of the DASH7 Alliance protocol.
 This implementation should focus on completeness, correctness and being easy to understand.
 Performance and code size are less important aspects.
 For clarity a clear separation between the ISO layers is maintained in the code.
+
+This project is built with CCS v5.3 and currently only supports the WizziMote and ArtesisTag.
+(As discussed previously supporting multiple toolchains and platforms is something we will do later.)
 
 The PHY directory contains the PHY API together with radio specific implementations.
 At the moment there are 2 implementations, one for the CC430 radio and a stub one which only does logging.
