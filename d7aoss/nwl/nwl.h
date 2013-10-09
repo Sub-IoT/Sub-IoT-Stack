@@ -16,6 +16,8 @@
  *
  */
 
+#ifndef NWL_H_
+#define NWL_H_
 
 #include "../types.h"
 #include "../dll/dll.h"
