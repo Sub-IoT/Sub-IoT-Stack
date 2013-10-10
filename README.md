@@ -55,6 +55,5 @@ License: LGPS v2.1 http://www.gnu.org/licenses/lgpl-2.1.txt
 * resolve TODOs (which are everywhere atm)
 * add documentation comments
 * fix coding style everywhere
-* add copyright/license header
 
 
