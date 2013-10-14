@@ -57,3 +57,4 @@ License: LGPS v2.1 http://www.gnu.org/licenses/lgpl-2.1.txt
 * fix coding style everywhere
 
 
+[![githalytics.com alpha](https://cruel-carlota.pagodabox.com/725ca2b507c1d85404803b081f882cab "githalytics.com")](http://githalytics.com/CoSys-Lab/dash7-ap-open-source-stack)
