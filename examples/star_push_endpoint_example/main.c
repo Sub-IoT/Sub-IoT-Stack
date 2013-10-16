@@ -45,6 +45,7 @@
 
 static uint8_t tx = 0;
 static uint16_t counter = 0;
+static volatile bool add_tx_event = true;
 
 timer_event event;
 
@@ -65,12 +66,11 @@ void start_tx(void* ar)
 
 		trans_tx_foreground_frame((uint8_t*)&counter, sizeof(counter), 0xFF, SEND_CHANNEL, TX_EIRP);
 	}
-	timer_add_event(&event);
+	add_tx_event = true;
 }
 
 void tx_callback(Trans_Tx_Result result)
 {
-
 	counter++;
 
 	if(result == TransPacketSent)
@@ -102,7 +102,6 @@ int main(void) {
 	// The initial Tca for the CSMA-CA in
 	trans_set_initial_t_ca(200);
 
-
 	event.next_event = SEND_INTERVAL_MS;
 	event.f = &start_tx;
 
@@ -118,7 +117,13 @@ int main(void) {
 
 	while(1)
 	{
-		system_lowpower_mode(4,1);
+		if (add_tx_event)
+		{
+			add_tx_event = false;
+			timer_add_event(&event);
+		}
+
+		system_lowpower_mode(3,1);
 	}
 }
 
