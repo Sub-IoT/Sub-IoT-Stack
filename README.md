@@ -52,7 +52,7 @@ License: LGPS v2.1 http://www.gnu.org/licenses/lgpl-2.1.txt
 # Next steps
 
 * implement complete spec
-* resolve TODOs (which are everywhere atm)
+* resolve to-dos (which are everywhere atm)
 * add documentation comments
 * fix coding style everywhere
 
