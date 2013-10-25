@@ -40,6 +40,10 @@ extern uint8_t virtual_id[2];
 
 extern uint32_t clock_speed;
 
+extern uint8_t vCore_level;
+extern uint16_t target_clock_speed_kHz;
+extern uint8_t init_IO;
+
 void PMM_SetVCore (uint8_t level);
 void system_init();
 

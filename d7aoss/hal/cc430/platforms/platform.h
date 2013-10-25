@@ -28,6 +28,8 @@
 #include "artesis.h"
 #elif defined PLATFORM_AGAIDI
 #include "agaidi.h"
+#elif defined PLATFORM_CHRONOS
+#include "chronos.h"
 #else
 	#error No platform set
 #endif

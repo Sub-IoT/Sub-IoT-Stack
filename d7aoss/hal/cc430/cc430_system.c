@@ -37,6 +37,10 @@ uint8_t device_id[8];
 uint8_t virtual_id[2];
 uint32_t clock_speed;
 
+uint8_t vCore_level = 2;
+uint16_t target_clock_speed_kHz = 10000;
+uint8_t init_IO = 1;
+
 void clock_init(void);
 
 
@@ -102,26 +106,28 @@ void PMM_SetVCore (uint8_t level) {
 
 void system_init()
 {
-	system_watchdog_timer_stop();
+	 system_watchdog_timer_stop();
 
-	 // Init all ports
-	 PADIR = 0xFF;
-	 PAOUT = 0x00;
-	 PBDIR = 0xFF;
-	 PBOUT = 0x00;
-	 PCDIR = 0xFF;
-	 PCOUT = 0x00;
-
-    //PMM_setVCore(PMMCOREV_2);
-    PMM_SetVCore(2);
+    PMM_SetVCore(vCore_level);
 
     PMM_SetStdSVSM(0x8088, 2, 4);
 
     clock_init();
 
-    led_init();
-    button_init();
-    uart_init();
+    if (init_IO)
+    {
+    	// Init all ports
+		PADIR = 0xFF;
+		PAOUT = 0x00;
+		PBDIR = 0xFF;
+		PBOUT = 0x00;
+		PCDIR = 0xFF;
+		PCOUT = 0x00;
+
+    	led_init();
+    	button_init();
+    	uart_init();
+    }
 
     system_get_unique_id(device_id);
 }
@@ -158,11 +164,13 @@ void clock_init(void)
 //		31   //  1000 kHz / 32.768 Khz (Crystal)
 //		);
 
+	_BIS_SR(SCG0);                  // Disable the FLL control loop
 	UCS_initFLLSettle(
-				__MSP430_BASEADDRESS_UCS_RF__,
-			10000, // 10000 khz
-			305   //  10000 kHz / 32.768 Khz (Crystal)
+			__MSP430_BASEADDRESS_UCS_RF__,
+			target_clock_speed_kHz, // 10000 khz
+			(uint16_t) ((target_clock_speed_kHz * 1000) / 32768)   //  10000 kHz / 32.768 Khz  = 305(Crystal)
 			);
+	_BIC_SR(SCG0);                  // Enable the FLL control loop
 
 
 	clock_speed = UCS_getSMCLK(__MSP430_BASEADDRESS_UCS_RF__);
