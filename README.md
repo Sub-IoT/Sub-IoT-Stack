@@ -28,26 +28,7 @@ License: LGPS v2.1 http://www.gnu.org/licenses/lgpl-2.1.txt
 
 # Getting started
 
-* clone the repository
-* import the d7aoss library in CCS:
-    * create new CCS project 
-    * use project name "d7aoss" and output type "static library"
-    * do not use the default location but point it to <repo root>/d7aoss
-    * select CC430F5137 as device
-    * select the empty project template and click finish
-    * choose the correct platform in hal/platforms/platform.h
-    * in the phy directory include only the used radio in the build, exclude all others
-    * in the hal directory include only the used hardware in the build, exclude all others
-    * the d7aoss project should be created an building it should work
-* import applications
-    * create new CCS project
-    * set the project name to the application name (eg phy_test) and output type "executable"
-    * do not use the default location but point it to the right directory, eg <repo root>/examples/phy_test
-    * select CC430F5137 as device
-    * select the empty project template and click finish
-    * add dependencies: project properties | build | Dependencies | Add | d7aoss
-    * add include dir: project properties | build | MSP430 compiler | include options | add dir to include search path | workspace | d7aoss
-    * the application should now compile and link
+Wiki: https://github.com/CoSys-Lab/dash7-ap-open-source-stack/wiki/Start-To-Guide
 
 # Next steps
 

@@ -360,6 +360,7 @@ extern void display_am_pm_symbol(uint8_t timeAM);
 
 // Set_value display functions
 extern void display_value1(uint8_t segments, uint32_t  value, uint8_t digits, uint8_t blanks, uint8_t disp_mode);
+extern void display_hex_value(uint8_t segments, uint32_t  value, uint8_t digits, uint8_t blanks, uint8_t disp_mode);
 extern void display_hours_12_or_24(uint8_t segments, uint32_t  value, uint8_t digits, uint8_t blanks, uint8_t disp_mode);
 
 // Integer to string conversion 

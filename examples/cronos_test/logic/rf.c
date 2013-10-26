@@ -13,6 +13,7 @@
 #include "altitude.h"
 #include "temperature.h"
 #include "battery.h"
+#include "user.h"
 
 #include <framework/timer.h>
 
@@ -35,7 +36,7 @@ void send_beacon(void* ar)
 		data[2] = (uint8_t) sBatt.voltage;
 
 		timer_add_event(&event);
-		trans_tx_foreground_frame(data, dataLength, 0xFF, SEND_CHANNEL, TX_EIRP);
+		trans_tx_foreground_frame(data, dataLength, 0xFF, beacon_channel, txPower);
 	}
 }
 
@@ -54,7 +55,7 @@ void tx_callback(Trans_Tx_Result result)
 
 void blink_init()
 {
-	event.next_event = SEND_INTERVAL_MS;
+	event.next_event = beacon_interval;
 	event.f = &send_beacon;
 
 	data[0] = 0x65;
@@ -137,6 +138,79 @@ void display_sync(uint8_t line, uint8_t update)
 		display_chars(LCD_SEG_L2_5_0, (uint8_t *)"  SYNC", SEG_ON);
 	}
 }
+void mx_beacon(uint8_t line)
+{
+  // Clear display
+  clear_display_all();
+
+  uint8_t select;
+  int32_t  channel =  beacon_channel;
+  int32_t  interval = beacon_interval / 1000;
+  int32_t power = txPower;
+  uint8_t * str;
+
+  // Init value index
+  select = 0;
+
+  // Loop values until all are set or user breaks	set
+  while(1)
+  {
+    // Idle timeout: exit without saving
+    if (sys.flag.idle_timeout)
+    {
+      break;
+    }
+
+    // Button STAR (short): save, then exit
+    if (button.flag.star)
+    {
+    	// Store local variables in global
+    	beacon_channel 	 = channel;
+    	beacon_interval = interval * 1000;
+    	txPower = power;
+
+    	break;
+    }
+
+    switch (select)
+    {
+    	case 0:		// Display channel
+    		clear_display_all();
+			str = itoa(channel, 2, 0);
+			display_chars(LCD_SEG_L1_1_0, str, SEG_ON);
+			display_chars(LCD_SEG_L2_5_0, (uint8_t *)" CHAN", SEG_ON);
+
+			// Set hours
+			set_value(&channel, 2, 0, 16, 45, SETVALUE_ROLLOVER_VALUE + SETVALUE_DISPLAY_VALUE + SETVALUE_NEXT_VALUE, LCD_SEG_L1_1_0, display_hex_value);
+			select = 1;
+			break;
+
+    	case 1:		// Set interval
+    		clear_display_all();
+			str = itoa(interval, 2, 0);
+			display_chars(LCD_SEG_L1_1_0, str, SEG_ON);
+			display_chars(LCD_SEG_L2_5_0, (uint8_t *)" SEC", SEG_ON);
+
+			set_value(&interval, 2, 0, 1, 65, SETVALUE_ROLLOVER_VALUE + SETVALUE_DISPLAY_VALUE + SETVALUE_NEXT_VALUE, LCD_SEG_L2_1_0, display_value1);
+			select = 2;
+			break;
+
+    	case 2:		// Set power
+    		clear_display_all();
+			str = itoa(power, 2, 0);
+			display_chars(LCD_SEG_L1_1_0, str, SEG_ON);
+			display_chars(LCD_SEG_L2_5_0, (uint8_t *)" TX PW", SEG_ON);
+
+			set_value(&power, 2, 0, 0, 10, SETVALUE_ROLLOVER_VALUE + SETVALUE_DISPLAY_VALUE + SETVALUE_NEXT_VALUE, LCD_SEG_L1_1_0, display_value1);
+			select = 0;
+			break;
+    }
+  }
+
+  // Clear button flags
+  button.all_flags = 0;
+}
+
 
 #ifndef CONFIG_USE_SYNC_TOSET_TIME
 // *************************************************************************************************

@@ -52,6 +52,8 @@
 #include "clock.h"
 #include "user.h"
 
+#include <hal/rtc.h>
+
 //pfs
 //#ifndef ELIMINATE_BLUEROBIN
 //#include "bluerobin.h"

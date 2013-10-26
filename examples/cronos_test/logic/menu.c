@@ -371,7 +371,7 @@ const struct menu menu_L2_Ppt =
 const struct menu menu_L2_beacon =
 {
 	FUNCTION(sx_beacon),				// direct function
-	FUNCTION(dummy),				// sub menu function
+	FUNCTION(mx_beacon),				// sub menu function
 	FUNCTION(menu_skip_next),		// next item function
 	FUNCTION(display_beacon),			// display function
 	FUNCTION(update_time),			// new display data

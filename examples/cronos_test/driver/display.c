@@ -291,6 +291,66 @@ uint8_t * itoa(uint32_t  n, uint8_t digits, uint8_t blanks)
 	return (itoa_str);	
 } 
 
+uint8_t * itoa_hex(uint32_t  n, uint8_t digits, uint8_t blanks)
+{
+	uint8_t i;
+	uint8_t digits1 = digits;
+
+	// Preset result string
+	memcpy(itoa_str, "0000000", 7);
+
+	// Return empty string if number of digits is invalid (valid range for digits: 1-7)
+	if ((digits == 0) || (digits > 7)) return (itoa_str);
+
+	// Calculate digits from least to most significant number
+	do
+	{
+		uint8_t digit = n % 16;
+		if (digit < 10)
+		{
+			itoa_str[digits-1] = n % 10 + '0';
+		} else {
+			switch (digit)
+			{
+			case 10:
+				itoa_str[digits-1] = 'A';
+				break;
+			case 11:
+				itoa_str[digits-1] = 'B';
+				break;
+			case 12:
+				itoa_str[digits-1] = 'C';
+				break;
+			case 13:
+				itoa_str[digits-1] = 'D';
+				break;
+			case 14:
+				itoa_str[digits-1] = 'E';
+				break;
+			case 15:
+				itoa_str[digits-1] = 'F';
+				break;
+			}
+		}
+		n /= 16;
+	} while (--digits > 0);
+
+	// Remove specified number of leading '0', always keep last one
+	i = 0;
+	while ((itoa_str[i] == '0') && (i < digits1-1))
+	{
+		if (blanks > 0)
+		{
+			// Convert only specified number of leading '0'
+			itoa_str[i]=' ';
+			blanks--;
+		}
+		i++;
+	}
+
+	return (itoa_str);
+}
+
 
 // *************************************************************************************************
 // @fn          display_value1
@@ -310,6 +370,17 @@ void display_value1(uint8_t segments, uint32_t  value, uint8_t digits, uint8_t b
 	// Display string in blink mode
 	display_chars(segments, str, disp_mode);
 }
+
+void display_hex_value(uint8_t segments, uint32_t  value, uint8_t digits, uint8_t blanks, uint8_t disp_mode)
+{
+	uint8_t * str;
+
+	str = itoa_hex(value, digits, blanks);
+
+	// Display string in blink mode
+	display_chars(segments, str, disp_mode);
+}
+
 
 
 

@@ -42,6 +42,10 @@ volatile s_request_flags request;
 // Variable holding message flags
 volatile s_message_flags message;
 
+int8_t txPower;
+uint8_t beacon_channel;
+uint16_t beacon_interval;
+
 // Function pointers for LINE1 and LINE2 display function
 void (*fptr_lcd_function_line1)(uint8_t line, uint8_t update);
 void (*fptr_lcd_function_line2)(uint8_t line, uint8_t update);
@@ -204,6 +208,10 @@ void init_global_variables(void)
 	request.all_flags 	= 0;
 	display.all_flags 	= 0;
 	message.all_flags	= 0;
+
+	txPower = TX_EIRP;
+	beacon_channel = SEND_CHANNEL;
+	beacon_interval = SEND_INTERVAL_MS;
 
 	// Force full display update when starting up
 	display.flag.full_update = 1;
