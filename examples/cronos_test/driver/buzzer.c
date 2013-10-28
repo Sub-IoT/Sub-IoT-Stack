@@ -50,10 +50,12 @@
 // logic
 //#include "alarm.h"
 
+static timer_event buzzer_event;
+
 
 // *************************************************************************************************
 // Prototypes section
-void toggle_buzzer(void);
+void toggle_buzzer(void* arg);
 void countdown_buzzer(void);
 
 
@@ -90,8 +92,8 @@ void reset_buzzer(void)
 // @fn          start_buzzer
 // @brief       Start buzzer output for a number of cylces
 // @param       uint8_t cycles		Keep buzzer output for number of cycles
-//				uint16_t on_time	Output buzzer for "on_time" ACLK ticks
-//				uint16_t off_time	Do not output buzzer for "off_time" ACLK ticks
+//				uint16_t on_time	Output buzzer for "on_time" msec
+//				uint16_t off_time	Do not output buzzer for "off_time" msec
 // @return      none
 // *************************************************************************************************
 void start_buzzer(uint8_t cycles, uint16_t on_time, uint16_t off_time)
@@ -106,26 +108,31 @@ void start_buzzer(uint8_t cycles, uint16_t on_time, uint16_t off_time)
 		// Need to init every time, because SimpliciTI claims same timer
 			
 		// Reset TA1R, set up mode, TA1 runs from 32768Hz ACLK 
-		//TA1CTL = TACLR | MC_1 | TASSEL__ACLK;
+		TA1CTL = TACLR | MC_1 | TASSEL__ACLK;
 
 		// Set PWM frequency 
-        //TA1CCR0 = sBuzzer.steps;
+        TA1CCR0 = sBuzzer.steps;
 
 		// Enable IRQ, set output mode "toggle"
-		//TA1CCTL0 = OUTMOD_4;
+		TA1CCTL0 = OUTMOD_4;
 
 		// Allow buzzer PWM output on P2.7
 		P2SEL |= BIT7;
 
+
 		// Activate Timer0_A3 periodic interrupts
 		//fptr_Timer0_A3_function = toggle_buzzer;
 		//Timer0_A3_Start(sBuzzer.on_time);
+		buzzer_event.f = &toggle_buzzer;
+		buzzer_event.next_event = sBuzzer.on_time;
 
 		// Preload timer advance variable
 		//sTimer.timer0_A3_ticks = sBuzzer.off_time;
 
 		// Start with buzzer output on
 		sBuzzer.state 	 	= BUZZER_ON_OUTPUT_ENABLED;
+
+		timer_add_event(&buzzer_event);
 	}
 }
 
@@ -141,13 +148,13 @@ void start_buzzer_steps(uint8_t cycles, uint16_t on_time, uint16_t off_time, uin
 // @param       none
 // @return      none
 // *************************************************************************************************
-void toggle_buzzer(void)
+void toggle_buzzer(void* arg)
 {
 	// Turn off buzzer
 	if (sBuzzer.state == BUZZER_ON_OUTPUT_ENABLED)
 	{
 		// Stop PWM timer 
-		//TA1CTL &= ~(BIT4 | BIT5);
+		TA1CTL &= ~(BIT4 | BIT5);
 
 		// Reset and disable buzzer PWM output
 		P2OUT &= ~BIT7;
@@ -156,6 +163,11 @@ void toggle_buzzer(void)
 		// Update buzzer state
 		sBuzzer.state = BUZZER_ON_OUTPUT_DISABLED;
 		
+		buzzer_event.f = &toggle_buzzer;
+		buzzer_event.next_event = sBuzzer.off_time;
+
+		timer_add_event(&buzzer_event);
+
 		// Reload Timer0_A4 IRQ to restart output
 		//sTimer.timer0_A3_ticks = sBuzzer.on_time;
 	}
@@ -168,14 +180,19 @@ void toggle_buzzer(void)
 		if (sBuzzer.state != BUZZER_OFF) 
 		{
 			// Reset timer TA1
-			//TA1R = 0;
-			//TA1CTL |= MC_1;
+			TA1R = 0;
+			TA1CTL |= MC_1;
 
 			// Enable buzzer PWM output
 			P2SEL |= BIT7;
 	
 			// Update buzzer state
 			sBuzzer.state = BUZZER_ON_OUTPUT_ENABLED;
+
+			buzzer_event.f = &toggle_buzzer;
+			buzzer_event.next_event = sBuzzer.on_time;
+
+			timer_add_event(&buzzer_event);
 	
 			// Reload Timer0_A4 IRQ to turn off output
 			//sTimer.timer0_A3_ticks = sBuzzer.off_time;
@@ -193,14 +210,14 @@ void toggle_buzzer(void)
 void stop_buzzer(void)
 {
 	// Stop PWM timer 
-	//TA1CTL &= ~(BIT4 | BIT5);
+	TA1CTL &= ~(BIT4 | BIT5);
 
 	// Disable buzzer PWM output
 	P2OUT &= ~BIT7;
 	P2SEL &= ~BIT7;
 	
 	// Clear PWM timer interrupt    
-	//TA1CCTL0 &= ~CCIE;
+	TA0CCTL0 &= ~CCIE;
 
 	// Disable periodic start/stop interrupts
 	//Timer0_A3_Stop();
@@ -237,4 +254,30 @@ void countdown_buzzer(void)
 	{
 		stop_buzzer();
 	}
+}
+
+
+#pragma vector = TIMER0_A1_VECTOR
+__interrupt void TIMER0_A1_5_ISR(void)
+{
+	switch (TA0IV)
+	{
+		// Timer0_A3	Configurable periodic IRQ (used by button_repeat and buzzer)
+		case 0x06:	// Disable IE
+				TA0CCTL3 &= ~CCIE;
+				// Reset IRQ flag
+				TA0CCTL3 &= ~CCIFG;
+				// Store new value in CCR
+				//value = TA0R + sTimer.timer0_A3_ticks; //timer0_A3_ticks_g;
+				// Load CCR register with next capture point
+				//TA0CCR3 = value;
+				// Enable timer interrupt
+				TA0CCTL3 |= CCIE;
+				// Call function handler
+				//fptr_Timer0_A3_function();
+				break;
+	}
+
+	// Exit from LPM3 on RETI
+	_BIC_SR_IRQ(LPM3_bits);
 }

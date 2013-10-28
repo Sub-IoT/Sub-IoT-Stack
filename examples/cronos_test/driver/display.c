@@ -308,7 +308,7 @@ uint8_t * itoa_hex(uint32_t  n, uint8_t digits, uint8_t blanks)
 		uint8_t digit = n % 16;
 		if (digit < 10)
 		{
-			itoa_str[digits-1] = n % 10 + '0';
+			itoa_str[digits-1] = digit + '0';
 		} else {
 			switch (digit)
 			{

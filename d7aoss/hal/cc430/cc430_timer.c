@@ -64,28 +64,34 @@ uint16_t hal_timer_getvalue()
 
 void hal_benchmarking_timer_init()
 {
+	#ifdef ENABLE_BENCHMARKING_TIMER
 	//set timer to microticks (= 1 MHz)
 	TA0CTL = TASSEL_2  + MC__CONTINUOUS + ID_0 + TACLR;           // SMCLK, continuous up mode, clear timer
+	#endif
 }
 
 uint32_t hal_benchmarking_timer_getvalue()
 {
+	#ifdef ENABLE_BENCHMARKING_TIMER
     return TA0R + (benchmarking_timer_rollover * 0xFFFF);
+	#else
+    return 0;
+	#endif
 }
 
 void hal_benchmarking_timer_start()
 {
-	//TA0CCTL0 = CCIE; // Enable interrupt for CCR0
-	//TA0CTL |= MC__CONTINUOUS;
-	TA0CTL |= TAIE + TACLR;
+	#ifdef ENABLE_BENCHMARKING_TIMER
+	A0CTL |= TAIE + TACLR;
 	benchmarking_timer_rollover = 0;
+	#endif
 }
 
 void hal_benchmarking_timer_stop()
 {
-	//TA0CCTL0 &= ~CCIE; // Disable interrupt for CCR0
-	//TA0CTL &= ~MC__CONTINUOUS;
+	#ifdef ENABLE_BENCHMARKING_TIMER
 	TA0CTL &= ~TAIE;
+	#endif
 }
 
 // Timer A0 interrupt service routine
@@ -103,6 +109,7 @@ __interrupt void Timer_A_CCO (void)
 //    	 }
 }
 
+#ifdef ENABLE_BENCHMARKING_TIMER
 #pragma vector=TIMER0_A1_VECTOR
 __interrupt void Timer_A_TA (void)
 {
@@ -120,5 +127,5 @@ __interrupt void Timer_A_TA (void)
     	            break;
     	 }
 }
-
+#endif
 

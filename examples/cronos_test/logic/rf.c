@@ -97,9 +97,9 @@ void display_beacon(uint8_t line, uint8_t update)
 	if (update == DISPLAY_LINE_UPDATE_FULL)
 	{
 		if (blinking)
-			display_chars(LCD_SEG_L2_5_0, (uint8_t *)" D  ON", SEG_ON);
+			display_chars(LCD_SEG_L2_5_0, (uint8_t *)" D7 ON", SEG_ON);
 		else
-			display_chars(LCD_SEG_L2_5_0, (uint8_t *)" D OFF", SEG_ON);
+			display_chars(LCD_SEG_L2_5_0, (uint8_t *)" D7OFF", SEG_ON);
 
 	}
 }
@@ -175,10 +175,10 @@ void mx_beacon(uint8_t line)
     switch (select)
     {
     	case 0:		// Display channel
-    		clear_display_all();
+    		//clear_display_all();
 			str = itoa(channel, 2, 0);
 			display_chars(LCD_SEG_L1_1_0, str, SEG_ON);
-			display_chars(LCD_SEG_L2_5_0, (uint8_t *)" CHAN", SEG_ON);
+			display_chars(LCD_SEG_L2_5_0, (uint8_t *)"  CHAN", SEG_ON);
 
 			// Set hours
 			set_value(&channel, 2, 0, 16, 45, SETVALUE_ROLLOVER_VALUE + SETVALUE_DISPLAY_VALUE + SETVALUE_NEXT_VALUE, LCD_SEG_L1_1_0, display_hex_value);
@@ -186,20 +186,20 @@ void mx_beacon(uint8_t line)
 			break;
 
     	case 1:		// Set interval
-    		clear_display_all();
+    		//clear_display_all();
 			str = itoa(interval, 2, 0);
 			display_chars(LCD_SEG_L1_1_0, str, SEG_ON);
-			display_chars(LCD_SEG_L2_5_0, (uint8_t *)" SEC", SEG_ON);
+			display_chars(LCD_SEG_L2_5_0, (uint8_t *)"  SEC", SEG_ON);
 
-			set_value(&interval, 2, 0, 1, 65, SETVALUE_ROLLOVER_VALUE + SETVALUE_DISPLAY_VALUE + SETVALUE_NEXT_VALUE, LCD_SEG_L2_1_0, display_value1);
+			set_value(&interval, 2, 0, 1, 65, SETVALUE_ROLLOVER_VALUE + SETVALUE_DISPLAY_VALUE + SETVALUE_NEXT_VALUE, LCD_SEG_L1_1_0, display_value1);
 			select = 2;
 			break;
 
     	case 2:		// Set power
-    		clear_display_all();
+    		//clear_display_all();
 			str = itoa(power, 2, 0);
 			display_chars(LCD_SEG_L1_1_0, str, SEG_ON);
-			display_chars(LCD_SEG_L2_5_0, (uint8_t *)" TX PW", SEG_ON);
+			display_chars(LCD_SEG_L2_5_0, (uint8_t *)"TxDbm", SEG_ON);
 
 			set_value(&power, 2, 0, 0, 10, SETVALUE_ROLLOVER_VALUE + SETVALUE_DISPLAY_VALUE + SETVALUE_NEXT_VALUE, LCD_SEG_L1_1_0, display_value1);
 			select = 0;

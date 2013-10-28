@@ -48,7 +48,7 @@ extern void reset_buzzer(void);
 extern void start_buzzer(uint8_t cycles, uint16_t on_time, uint16_t off_time);
 extern void start_buzzer_steps(uint8_t cycles, uint16_t on_time, uint16_t off_time, uint8_t steps);
 extern void stop_buzzer(void);
-extern void toggle_buzzer(void);
+extern void toggle_buzzer(void* arg);
 extern uint8_t is_buzzer(void);
 extern void countdown_buzzer(void);
 
@@ -90,8 +90,8 @@ struct buzzer
 	// Current buzzer output state
 	uint8_t state;
 
-        // Current steps (~freq)
-        uint8_t steps;
+    // Current steps (~freq)
+    uint8_t steps;
 
 };
 extern struct buzzer sBuzzer;

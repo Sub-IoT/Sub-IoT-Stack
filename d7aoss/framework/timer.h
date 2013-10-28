@@ -19,6 +19,8 @@
 #ifndef TIMER_H_
 #define TIMER_H_
 
+//#define ENABLE_BENCHMARKING_TIMER
+
 #include <stdbool.h>
 #include <stdint.h>
 
