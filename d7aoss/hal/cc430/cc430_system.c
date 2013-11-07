@@ -106,7 +106,7 @@ void PMM_SetVCore (uint8_t level) {
 
 void system_init()
 {
-	 system_watchdog_timer_stop();
+	system_watchdog_timer_stop();
 
     PMM_SetVCore(vCore_level);
 
@@ -168,7 +168,7 @@ void clock_init(void)
 	UCS_initFLLSettle(
 			__MSP430_BASEADDRESS_UCS_RF__,
 			target_clock_speed_kHz, // 10000 khz
-			(uint16_t) ((target_clock_speed_kHz * 1000) / 32768)   //  10000 kHz / 32.768 Khz  = 305(Crystal)
+			(uint16_t) ((target_clock_speed_kHz * 1000.00) / 32768)   //  10000 kHz / 32.768 Khz  = 305(Crystal)
 			);
 	_BIC_SR(SCG0);                  // Enable the FLL control loop
 
