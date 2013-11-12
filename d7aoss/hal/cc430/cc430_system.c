@@ -38,7 +38,8 @@ uint8_t virtual_id[2];
 uint32_t clock_speed;
 
 uint8_t vCore_level = 2;
-uint16_t target_clock_speed_kHz = 10000;
+//uint16_t target_clock_speed_kHz = 10000;
+uint16_t target_clock_speed_kHz = 2000;
 uint8_t init_IO = 1;
 
 void clock_init(void);
