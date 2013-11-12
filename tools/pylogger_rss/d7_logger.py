@@ -194,7 +194,7 @@ class BoundControlBox(wx.Panel):
 class GraphFrame(wx.Frame):
 	""" The main frame of the application
 	"""
-	title = 'Demo: dynamic matplotlib graph'
+	title = 'DASH7 Demo plot RSS of start network'
 	
 	def __init__(self):
 		wx.Frame.__init__(self, None, -1, self.title)
@@ -423,59 +423,7 @@ class GraphFrame(wx.Frame):
 	def on_flash_status_off(self, event):
 		self.statusbar.SetStatusText('')
 
-		
-def main():
-	if (len(system.argv) != 2):
-		print("Usage: <serialport (eg COM7)>")
-		system.exit(2)
-
-	global serial_port 
-	keep_running = True
-	serial_port = serial.Serial(system.argv[1], 115200)
-	datestr = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
-	
-	f = open(datestr + FILE_EXTENSION, 'w')
-	f.write("timestamp, mac, rss, battery\n")
-	f.flush()
-	empty_serial_buffer()
-	
-	#parseThread = parse_d7(dataQueue, pushQueue)
-	#csvThread = write_csv(f, dataQueue)
-	
-	ydata = [0] * 50
-	
-	fig=plt.figure()
-	#plt.axis([0,1000,0,1])
-				
-	plt.ion()
-	line, = plt.plot(ydata)
-	plt.ylim([-20,-110])
-	plt.show()
-	counter = 0;
-	
-	while keep_running:
-		try:						
-			read_value_from_serial()
-			while not dataQueue.empty():
-				serialData = dataQueue.get()				
-				f.write("%s,%s,%s,%s,%s\n" %(serialData.timestamp.strftime("%Y-%m-%d %H:%M:%S.%f"), serialData.mac, serialData.rss, serialData.data, serialData.battery))
-				print("%s,%s,%s,%s,%s" %(serialData.timestamp.strftime("%Y-%m-%d %H:%M:%S.%f"), serialData.mac, serialData.rss, serialData.data, serialData.battery))
-				
-				ydata.append(serialData.rss)
-				del ydata[0]
-				plt.scatter(counter, serialData.rss)
-				#line.set_xdata(np.arange(len(ydata)))
-				#line.set_ydata(ydata)
-				counter= counter + 1
-				plt.draw()
-				
-		except Exception as inst:
-			print (inst)
 			
-	print("This program is stopping")
-	parseThread.stop()
-	csvThread.stop()
-	
 if __name__ == '__main__':
 
 
