@@ -120,16 +120,19 @@ int main(void) {
 	dim_led_event.next_event = 50;
 	dim_led_event.f = &dim_led;
 
-	system_watchdog_init(WDTSSEL0, 0x03);
-	system_watchdog_timer_start();
+	//system_watchdog_init(WDTSSEL0, 0x03);
+	//system_watchdog_timer_start();
 
 	blink_led();
 
 	while(1)
 	{
-		if (start_channel_scan) start_rx();
+		if (start_channel_scan)
+		{
+			start_rx();
+		}
 
-		system_lowpower_mode(4,1);
+		system_lowpower_mode(3,1);
 	}
 }
 

@@ -36,7 +36,7 @@
 #include <msp430.h>
 
 
-#define SEND_INTERVAL_MS 2000
+#define SEND_INTERVAL_MS 1000
 #define SEND_CHANNEL 0x1E
 #define TX_EIRP 10
 

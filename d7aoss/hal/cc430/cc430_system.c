@@ -39,7 +39,8 @@ uint32_t clock_speed;
 
 uint8_t vCore_level = 2;
 //uint16_t target_clock_speed_kHz = 10000;
-uint16_t target_clock_speed_kHz = 2000;
+//uint16_t target_clock_speed_kHz = 1677216;
+uint32_t target_clock_speed_Hz = 4194304;
 uint8_t init_IO = 1;
 
 void clock_init(void);
@@ -168,8 +169,8 @@ void clock_init(void)
 	_BIS_SR(SCG0);                  // Disable the FLL control loop
 	UCS_initFLLSettle(
 			__MSP430_BASEADDRESS_UCS_RF__,
-			target_clock_speed_kHz, // 10000 khz
-			(uint16_t) ((target_clock_speed_kHz * 1000.00) / 32768)   //  10000 kHz / 32.768 Khz  = 305(Crystal)
+			target_clock_speed_Hz / 1000, // 10000 khz
+			(uint16_t) (target_clock_speed_Hz / 32768)   //  10000 kHz / 32.768 Khz  = 305(Crystal)
 			);
 	_BIC_SR(SCG0);                  // Enable the FLL control loop
 
