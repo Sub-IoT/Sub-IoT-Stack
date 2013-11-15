@@ -120,8 +120,8 @@ int main(void) {
 	dim_led_event.next_event = 50;
 	dim_led_event.f = &dim_led;
 
-	//system_watchdog_init(WDTSSEL0, 0x03);
-	//system_watchdog_timer_start();
+	system_watchdog_init(WDTSSEL0, 0x03);
+	system_watchdog_timer_start();
 
 	blink_led();
 
@@ -132,12 +132,13 @@ int main(void) {
 			start_rx();
 		}
 
-		system_lowpower_mode(3,1);
+		// Don't know why but system reboots when LPM > 1 since ACLK is uses for UART
+		system_lowpower_mode(1,1);
 	}
 }
 
 
-#pragma vector=ADC12_VECTOR,RTC_VECTOR,AES_VECTOR,COMP_B_VECTOR,DMA_VECTOR,PORT1_VECTOR,PORT2_VECTOR,SYSNMI_VECTOR,UNMI_VECTOR,USCI_A0_VECTOR,USCI_B0_VECTOR,WDT_VECTOR,TIMER0_A0_VECTOR,TIMER1_A1_VECTOR
+#pragma vector=ADC12_VECTOR,RTC_VECTOR,AES_VECTOR,COMP_B_VECTOR,DMA_VECTOR,PORT1_VECTOR,PORT2_VECTOR,SYSNMI_VECTOR,UNMI_VECTOR,USCI_A0_VECTOR,USCI_B0_VECTOR,WDT_VECTOR,TIMER0_A0_VECTOR,TIMER1_A1_VECTOR,TIMER0_A1_VECTOR
 __interrupt void ISR_trap(void)
 {
   /* For debugging purposes, you can trap the CPU & code execution here with an

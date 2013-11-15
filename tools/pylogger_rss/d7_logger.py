@@ -212,7 +212,7 @@ class GraphFrame(wx.Frame):
 		self.redraw_timer.Start(100)
 		
 		global serial_port
-		serial_port = serial.Serial(system.argv[1], 115200)
+		serial_port = serial.Serial(system.argv[1], 9600)
 		datestr = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
 		
 		self.f = open(datestr + FILE_EXTENSION, 'w')

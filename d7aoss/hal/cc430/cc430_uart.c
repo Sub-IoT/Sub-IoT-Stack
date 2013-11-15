@@ -50,32 +50,45 @@ void uart_init()
      */
 
     UCA0CTL1 |= UCSWRST;                      // **Put state machine in reset**
-    UCA0CTL1 |= UCSSEL_2;                     // SMCLK
+    UCA0CTL1 |= UCSSEL_1;                     // ACLK
+    double c_speed = 32768.0;
 
-    double n = clock_speed / BAUDRATE;
+    double n = c_speed / BAUDRATE;
     uint8_t ucos16 = (n >= 16);
 
     if (ucos16)
     {
-        uint32_t c_speed = clock_speed / 16.0;
+    	n = n / 16.0;
     	UCA0MCTL |= UCOS16;
 
-    	UCA0BR1 = c_speed / (BAUDRATE*256);
-    	UCA0BR0 = (c_speed / BAUDRATE) - (256*UCA0BR1);
+    	//UCA0BR1 = (uint8_t) (c_speed / (BAUDRATE*256.0));
+    	//UCA0BR0 = (uint8_t) ((c_speed / BAUDRATE) - (256*UCA0BR1));
+    	UCA0BRW = (uint16_t) n;
 
-    	uint8_t ucbrf = (uint8_t) ((n/16 - UCA0BRW) * 16 + 0.5);
+    	uint8_t ucbrf = (uint8_t) ((n - UCA0BRW) * 16 + 0.5);
 
     	UCA0MCTL |= ucbrf << 4;
     } else {
-    	UCA0BR1 = clock_speed / (BAUDRATE*256);
-    	UCA0BR0 = ((clock_speed )  / BAUDRATE) - (256*UCA0BR1);
+    	//UCA0BR1 = (uint8_t) (c_speed / (BAUDRATE*256.0));
+    	//UCA0BR0 = (uint8_t) ((c_speed / BAUDRATE) - (256*UCA0BR1));
+    	UCA0BRW = (uint16_t) n;
 
     	uint8_t ucbrs = (uint8_t) ((n - UCA0BRW) * 8 + 0.5);
 
     	UCA0MCTL |= ucbrs << 1;
     }
 
+//    UCA0BRW = 0x01b4;
+//    UCA0MCTL |= 0x07 << 1;
+//
     UCA0CTL1 &= ~UCSWRST;                     // **Initialize USCI state machine**
+
+//    UCA0CTL1 |= UCSWRST;                      // **Put state machine in reset**
+//    UCA0CTL1 |= UCSSEL_1;                     // CLK = ACLK
+//    UCA0BR0 = 0x0D;                           // 2400 (see User's Guide)
+//    UCA0BR1 = 0x00;                           //
+//    UCA0MCTL |= UCBRS_6+UCBRF_0;              // Modulation UCBRSx=6, UCBRFx=0
+//    UCA0CTL1 &= ~UCSWRST;                     // **Initialize USCI state machine**
 
 }
 
