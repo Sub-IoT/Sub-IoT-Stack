@@ -194,7 +194,7 @@ class BoundControlBox(wx.Panel):
 class GraphFrame(wx.Frame):
 	""" The main frame of the application
 	"""
-	title = 'DASH7 Demo plot RSS of start network'
+	title = 'DASH7 Demo plot RSS of star network'
 	
 	def __init__(self):
 		wx.Frame.__init__(self, None, -1, self.title)
@@ -212,7 +212,7 @@ class GraphFrame(wx.Frame):
 		self.redraw_timer.Start(100)
 		
 		global serial_port
-		serial_port = serial.Serial(system.argv[1], 115200)
+		serial_port = serial.Serial(system.argv[1], 9600)
 		datestr = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
 		
 		self.f = open(datestr + FILE_EXTENSION, 'w')

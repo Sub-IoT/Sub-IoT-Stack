@@ -20,7 +20,7 @@
 #ifndef __UART_H__
 #define _UART_H__
 
-#define BAUDRATE 115200
+#define BAUDRATE 9600 //115200
 
 void uart_init();
 

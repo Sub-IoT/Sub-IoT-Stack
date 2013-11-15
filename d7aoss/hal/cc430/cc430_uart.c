@@ -43,32 +43,28 @@ void uart_init()
     P1SEL |= BIT5 + BIT6;                     // Select P1.5 & P1.6 to UART function
 #endif
 
-
-    /*
-     * CUBR1 = UARTCLK/(Baudr*256)
-     * CUBR0 = (UARTCLK/Baudr)–256*CUBR1
-     */
-
     UCA0CTL1 |= UCSWRST;                      // **Put state machine in reset**
-    UCA0CTL1 |= UCSSEL_2;                     // SMCLK
+    UCA0CTL1 |= UCSSEL__ACLK;                 // ACLK
 
-    double n = clock_speed / BAUDRATE;
+    double n = (1.0 * AUX_CLOCK) / BAUDRATE;
     uint8_t ucos16 = (n >= 16);
 
     if (ucos16)
     {
-        uint32_t c_speed = clock_speed / 16.0;
+        uint32_t c_speed = AUX_CLOCK / 16.0;
     	UCA0MCTL |= UCOS16;
 
-    	UCA0BR1 = c_speed / (BAUDRATE*256);
-    	UCA0BR0 = (c_speed / BAUDRATE) - (256*UCA0BR1);
+    	UCA0BR1 = (uint8_t) (c_speed / (BAUDRATE * 256.0));
+    	UCA0BR0 = (c_speed / BAUDRATE) - (256. * UCA0BR1);
 
     	uint8_t ucbrf = (uint8_t) ((n/16 - UCA0BRW) * 16 + 0.5);
 
     	UCA0MCTL |= ucbrf << 4;
-    } else {
-    	UCA0BR1 = clock_speed / (BAUDRATE*256);
-    	UCA0BR0 = ((clock_speed )  / BAUDRATE) - (256*UCA0BR1);
+    }
+    else
+    {
+    	UCA0BR1 = (uint8_t) (1.0 *  AUX_CLOCK / (BAUDRATE * 256.0));
+    	UCA0BR0 = (uint8_t) (n - (256.0 * UCA0BR1));
 
     	uint8_t ucbrs = (uint8_t) ((n - UCA0BRW) * 8 + 0.5);
 
