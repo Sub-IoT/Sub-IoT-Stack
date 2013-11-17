@@ -86,7 +86,7 @@ static void nwl_rx_callback(nwl_rx_res_t* result)
 		datastream_result.lenght = data->payload_length;
 		datastream_result.payload = data->payload;
 
-		trans_rx_datastream_callback(&datastream_result);
+		trans_rx_datastream_callback(datastream_result);
 	}
 }
 
