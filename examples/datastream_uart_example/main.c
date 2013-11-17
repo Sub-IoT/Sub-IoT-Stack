@@ -14,8 +14,8 @@
  * Contributors:
  *     maarten.weyn@uantwerpen.be
  *
- * 	Example code for Star topology, push model
- * 	This is the Gateway example
+ * 	Example of datastream communication
+ * 	Uart <-> datastream
  *
  * 	add the link to d7aoss library in de lnk_*.cmd file, e.g. -l "../../../d7aoss/Debug/d7aoss.lib"
  * 	Make sure to select the correct platform in d7aoss/hal/cc430/platforms.platform.h
@@ -38,63 +38,12 @@
 
 
 #define RECEIVE_CHANNEL 0x1E
+#define SEND_CHANNEL 0x1E
+#define TX_EIRP 10
 
-// event to create a led blink
-static timer_event dim_led_event;
-static bool start_channel_scan = false;
-
-static const dll_channel_scan_t scan_cfg = {
-		RECEIVE_CHANNEL,
-		FrameTypeForegroundFrame,
-		0,
-		0
-};
-
-static dll_channel_scan_series_t scan_series_cfg;
-
-void blink_led()
-{
-	led_on(1);
-
-	timer_add_event(&dim_led_event);
-}
-
-void dim_led(void* arg)
-{
-	led_off(1);
-}
-
-void start_rx()
-{
-	start_channel_scan = false;
-	dll_channel_scan_series(&scan_series_cfg);
-}
-
-void rx_callback(dll_rx_res_t* rx_res)
-{
-	system_watchdog_timer_reset();
-
-	blink_led();
-
-	// log endpoint's device_id, RSS of link, and payload of device
-	dll_foreground_frame_t* frame = (dll_foreground_frame_t*) (rx_res->frame);
-	uart_transmit_data(0xCE); // NULL
-	uart_transmit_data(11 + frame->payload_length);
-	uart_transmit_data(0x10); // deviceid
-	uart_transmit_message(frame->address_ctl->source_id, 8); // id mobile node
-	uart_transmit_data(0x20); // netto rss
-	uart_transmit_data(rx_res->rssi - frame->frame_header.tx_eirp); // signal strenght mobile node -> fixed node
-	uart_transmit_message(frame->payload, frame->payload_length);
-	uart_transmit_data(0x0D); // carriage return
-
-	// Restart channel scanning
-	start_channel_scan = true;
-}
-
-
+#define USE_LEDS
 
 int main(void) {
-
 	// Initialize the OSS-7 Stack
 	system_init();
 
@@ -105,13 +54,16 @@ int main(void) {
 	scan_series_cfg.length = 1;
 	scan_series_cfg.values = scan_confgs;
 
-	// Currently we address the Data Link Layer for RX, this should go to an upper layer once it is working.
-	dll_init();
-	dll_set_rx_callback(&rx_callback);
+	// Currently we address the Transport Layer, this should go to an upper layer once it is working.
+	trans_init();
+	trans_set_tx_callback(&tx_callback);
+	// The initial Tca for the CSMA-CA in
+	trans_set_initial_t_ca(200);
+	trans_set_datastream_rx_callback(&datastream_callback);
 
 	start_channel_scan = true;
 
-	log_print_string("gateway started");
+	log_print_string("node started");
 
 	// Log the device id
 	log_print_data(device_id, 8);
@@ -137,7 +89,6 @@ int main(void) {
 	}
 }
 
-
 #pragma vector=ADC12_VECTOR,RTC_VECTOR,AES_VECTOR,COMP_B_VECTOR,DMA_VECTOR,PORT1_VECTOR,PORT2_VECTOR,SYSNMI_VECTOR,UNMI_VECTOR,USCI_A0_VECTOR,USCI_B0_VECTOR,WDT_VECTOR,TIMER0_A0_VECTOR,TIMER1_A1_VECTOR,TIMER0_A1_VECTOR
 __interrupt void ISR_trap(void)
 {
@@ -154,4 +105,3 @@ __interrupt void ISR_trap(void)
      to trigger a software BOR.   */
   PMMCTL0 = PMMPW | PMMSWBOR;          // Apply PMM password and trigger SW BOR
 }
-
