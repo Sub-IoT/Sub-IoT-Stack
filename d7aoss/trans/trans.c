@@ -75,7 +75,7 @@ static void nwl_rx_callback(nwl_rx_res_t* result)
 	}
 	else if (result->protocol_type == ProtocolTypeNetworkProtocol)
 	{
-		assert("not implemented yet");
+		//ASSERT("not implemented yet");
 	}
 	else if (result->protocol_type == ProtocolTypeDatastreamProtocol)
 	{
@@ -127,6 +127,16 @@ void trans_tx_foreground_frame(uint8_t* data, uint8_t length, uint8_t subnet, ui
 void trans_tx_datastream(uint8_t* data, uint8_t length, uint8_t subnet, uint8_t spectrum_id, int8_t tx_eirp) {
 	nwl_build_datastream_protocol_data(data, length, NULL, subnet, spectrum_id, tx_eirp, dialogid++);
 	trans_rigd_ccp(spectrum_id, true, false);
+}
+
+void trans_rx_datastream_start(uint8_t subnet, uint8_t spectrum_id)
+{
+	nwl_rx_start(subnet, spectrum_id, ProtocolTypeDatastreamProtocol);
+}
+
+void trans_rx_datastream_stop()
+{
+	nwl_rx_stop();
 }
 
 

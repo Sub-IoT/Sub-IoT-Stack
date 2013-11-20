@@ -49,6 +49,11 @@ void trans_tx_datastream(uint8_t* data, uint8_t length, uint8_t subnet, uint8_t 
 //void trans_tx_background_frame(uint8_t* data, uint8_t subnet, uint8_t spectrum_id, int8_t tx_eirp);
 
 
+void trans_rx_datastream_start(uint8_t subnet, uint8_t spectrum_id);
+void trans_rx_datastream_stop();
+
+
+
 void trans_rigd_ccp(uint8_t spectrum_id, bool init_status, bool wait_for_t_ca_timeout);
 
 #endif /* TRANS_H_ */

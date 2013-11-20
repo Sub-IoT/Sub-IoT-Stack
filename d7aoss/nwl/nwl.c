@@ -52,7 +52,7 @@ static void dll_rx_callback(dll_rx_res_t* result)
 		else // D7ANP
 		{
 			// TODO implement d7anp
-			assert("not implemented yet");
+			//ASSERT("not implemented yet");
 			res.data = NULL;
 			res.protocol_type = ProtocolTypeNetworkProtocol;
 		}
@@ -196,3 +196,29 @@ void nwl_build_datastream_protocol_data(uint8_t* data, uint8_t length, nwl_secur
 	dll_create_foreground_frame(dll_data, dll_data_length, &dll_params);
 }
 
+
+void nwl_rx_start(uint8_t subnet, uint8_t spectrum_id, Protocol_Type type)
+{
+	dll_channel_scan_t scan_cfg = {
+			0x00,
+			FrameTypeForegroundFrame,
+			0,
+			0
+	};
+
+	scan_cfg.spectrum_id = spectrum_id;
+
+	if (type == ProtocolTypeBackgroundProtocol)
+		scan_cfg.scan_type = FrameTypeBackgroundFrame;
+
+	dll_channel_scan_series_t scan_series_cfg;
+	scan_series_cfg.length = 1;
+	scan_series_cfg.values = &scan_cfg;
+
+	dll_channel_scan_series(&scan_series_cfg);
+}
+
+void nwl_rx_stop()
+{
+	dll_stop_channel_scan();
+}
