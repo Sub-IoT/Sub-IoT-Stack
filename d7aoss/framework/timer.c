@@ -125,7 +125,7 @@ bool timer_add_event(timer_event* event)
 
     if (event->next_event == 0)
     {
-        event->f(NULL);
+        event->f();
         return true;
     }
 
@@ -186,7 +186,7 @@ void timer_completed()
         	directly_fire_new_event = true;
     }
 
-    event->f(NULL);
+    event->f();
 
     if (directly_fire_new_event)
     	timer_completed();

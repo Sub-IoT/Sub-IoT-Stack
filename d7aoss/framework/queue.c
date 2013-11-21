@@ -21,7 +21,7 @@
 
 #include "queue.h"
 
-static void shift_queue (queue* q, uint8_t places)
+static void shift_queue (queue_t* q, uint8_t places)
 {
 	if (q->front - places < q->start)
 	{
@@ -39,7 +39,7 @@ static void shift_queue (queue* q, uint8_t places)
 	q->rear -= places;
 }
 
-static bool check_for_space(queue* q, uint8_t size)
+static bool check_for_space(queue_t* q, uint8_t size)
 {
     if (q->rear + 1 >= q->start + q->size)
 	{
@@ -54,7 +54,7 @@ static bool check_for_space(queue* q, uint8_t size)
 	return 1;
 }
 
-void queue_init(queue* q, uint8_t* buffer, uint16_t size)
+void queue_init(queue_t* q, uint8_t* buffer, uint16_t size)
 {
 	q->size = size;
 	q->front = NULL;
@@ -63,7 +63,7 @@ void queue_init(queue* q, uint8_t* buffer, uint16_t size)
 	q->length = 0;
 }
 
-uint8_t queue_pop_u8(queue* q)
+uint8_t queue_pop_u8(queue_t* q)
 {
 	if (q->front == NULL)
 		return 0;
@@ -80,7 +80,7 @@ uint8_t queue_pop_u8(queue* q)
 	return value;
 }
 
-uint16_t queue_pop_u16(queue* q)
+uint16_t queue_pop_u16(queue_t* q)
 {
 	if (q->front == NULL)
 			return 0;
@@ -97,7 +97,7 @@ uint16_t queue_pop_u16(queue* q)
 	return value;
 }
 
-void* queue_pop_value(queue* q, uint8_t size)
+void* queue_pop_value(queue_t* q, uint8_t size)
 {
 	if (q->front == NULL)
 		return 0;
@@ -114,7 +114,7 @@ void* queue_pop_value(queue* q, uint8_t size)
 	return (void*) value;
 }
 
-uint8_t queue_read_u8(queue* q, uint8_t position)
+uint8_t queue_read_u8(queue_t* q, uint8_t position)
 {
 	if (q->front + position > q->rear)
 		return 0;
@@ -122,7 +122,7 @@ uint8_t queue_read_u8(queue* q, uint8_t position)
 	return *(q->front + position);
 }
 
-uint16_t queue_read_u16(queue* q, uint8_t position)
+uint16_t queue_read_u16(queue_t* q, uint8_t position)
 {
 	uint16_t* value = (uint16_t*) q->front;
 	if (value + position > (uint16_t*)q->rear)
@@ -131,7 +131,7 @@ uint16_t queue_read_u16(queue* q, uint8_t position)
 		return *(value + position);
 }
 
-void* queue_read_value(queue* q, uint8_t position, uint8_t size)
+void* queue_read_value(queue_t* q, uint8_t position, uint8_t size)
 {
 	if (q->front + (position * size) > q->rear)
 			return 0;
@@ -139,17 +139,17 @@ void* queue_read_value(queue* q, uint8_t position, uint8_t size)
 	return (void*) (q->front + (position * size));
 }
 
-bool queue_push_u8(queue* q, uint8_t data)
+bool queue_push_u8(queue_t* q, uint8_t data)
 {
 	return queue_push_value(q, &data, 1);
 }
 
-bool queue_push_u16(queue* q, uint16_t data)
+bool queue_push_u16(queue_t* q, uint16_t data)
 {
 	return queue_push_value(q, &data, 2);
 }
 
-bool queue_push_value(queue* q, void* data, uint8_t size)
+bool queue_push_value(queue_t* q, void* data, uint8_t size)
 {
 	//log_print_stack_string(LOG_FWK, "push");
 	if (q->front == NULL)
@@ -171,7 +171,7 @@ bool queue_push_value(queue* q, void* data, uint8_t size)
     return true;
 }
 
-void queue_insert_u8(queue* q, uint8_t data, uint8_t position)
+void queue_insert_u8(queue_t* q, uint8_t data, uint8_t position)
 {
 	check_for_space(q,1);
 
@@ -186,7 +186,7 @@ void queue_insert_u8(queue* q, uint8_t data, uint8_t position)
 	q->length++;
 }
 
-void queue_insert_u16(queue* q, uint16_t data, uint8_t position)
+void queue_insert_u16(queue_t* q, uint16_t data, uint8_t position)
 {
 	check_for_space(q,2);
 
@@ -203,7 +203,7 @@ void queue_insert_u16(queue* q, uint16_t data, uint8_t position)
 	q->length++;
 }
 
-void queue_insert_value(queue* q, void* data, uint8_t position, uint8_t size)
+void queue_insert_value(queue_t* q, void* data, uint8_t position, uint8_t size)
 {
 	check_for_space(q,size);
 
@@ -222,18 +222,18 @@ void queue_insert_value(queue* q, void* data, uint8_t position, uint8_t size)
 }
 
 
-void queue_set_u8(queue* q, uint8_t data, uint8_t position)
+void queue_set_u8(queue_t* q, uint8_t data, uint8_t position)
 {
 	uint8_t* data_ptr = (uint8_t*)(q->front) + position;
 	*data_ptr = data;
 }
-void queue_set_u16(queue* q, uint16_t data, uint8_t position)
+void queue_set_u16(queue_t* q, uint16_t data, uint8_t position)
 {
 	uint16_t* data_ptr = (uint16_t*)(q->front) + position;
 	*data_ptr = data;
 }
 
-bool queue_is_empty(queue* q)
+bool queue_is_empty(queue_t* q)
 {
 	return q->front == NULL;
 }

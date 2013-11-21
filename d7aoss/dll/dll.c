@@ -88,7 +88,7 @@ static bool check_subnet(uint8_t device_subnet, uint8_t frame_subnet)
 	return 0;
 }
 
-static void scan_next(void* arg)
+static void scan_next()
 {
 	dll_channel_scan_series(current_css);
 }
@@ -472,7 +472,7 @@ void dll_channel_scan_series(dll_channel_scan_series_t* css)
 	#endif
 }
 
-static void dll_cca2(void* arg)
+static void dll_cca2()
 {
 	bool cca2 = phy_cca(current_phy_cfg->spectrum_id, current_phy_cfg->sync_word_class);;
 	if (!cca2)

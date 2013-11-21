@@ -23,6 +23,7 @@
 #include "../hal/uart.h"
 
 #include <stdio.h>
+#include <stdarg.h>
 
 // TODO only in debug mode?
 #define BUFFER_SIZE 50

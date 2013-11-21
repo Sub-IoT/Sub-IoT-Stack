@@ -28,13 +28,12 @@
 
 typedef struct
 {
-	uint16_t next_event;
-	void (*f) (void*);
-
+    uint16_t next_event;
+    void (*f) (void);
 } timer_event;
 
 static timer_event event_array[20];
-static queue event_queue;
+static queue_t event_queue;
 static bool started;
 
 void timer_init();
