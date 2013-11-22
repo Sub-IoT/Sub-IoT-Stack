@@ -27,7 +27,26 @@ dll_channel_scan_t scan_cfg1 = {
 dll_channel_scan_series_t scan_series_cfg;
 uint8_t foreground_channel_id;
 
-void scan_foreground_frame(void* arg)
+static char *i2a(unsigned i, char *a, unsigned r)
+{
+	if (i/r > 0) a = i2a(i/r,a,r);
+	*a = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ"[i%r];
+	return a+1;
+}
+
+char *itoa(int i, char *a, int r)
+{
+	if ((r < 2) || (r > 36)) r = 10;
+	if (i < 0)
+	{
+		*a = '-';
+		*i2a(-(unsigned)i,a+1,r) = 0;
+	}
+	else *i2a(i,a,r) = 0;
+	return a;
+}
+
+void scan_foreground_frame()
 {
 	log_print_string("FF Scan");
 	dll_foreground_scan();
@@ -36,11 +55,11 @@ void scan_foreground_frame(void* arg)
 void rx_callback(nwl_rx_res_t* rx_res)
 {
 	log_print_string("RX CB");
-	if (rx_res->frame_type == FrameTypeBackgroundFrame)
+	if (rx_res->protocol_type == ProtocolTypeBackgroundProtocol)
 	{
 		led_toggle(3);
 
-		nwl_background_frame_t* frame = (nwl_background_frame_t*) rx_res->frame;
+		nwl_background_frame_t* frame = (nwl_background_frame_t*) rx_res->data;
 		if (frame->bpid == BPID_AdvP)
 		{
 			dll_stop_channel_scan();
@@ -51,7 +70,7 @@ void rx_callback(nwl_rx_res_t* rx_res)
 
 			log_print_string("AdvP_Data");
 			char msg[8];
-			itoa(data.eta, msg);
+			itoa(data.eta, msg, 10);
 			log_print_string(msg);
 
 
@@ -109,7 +128,7 @@ dll_set_scan_spectrum_id(0x1C);
 	}
 }
 
-#pragma vector=ADC12_VECTOR,RTC_VECTOR,AES_VECTOR,COMP_B_VECTOR,DMA_VECTOR,PORT1_VECTOR,PORT2_VECTOR,SYSNMI_VECTOR,UNMI_VECTOR,USCI_A0_VECTOR,USCI_B0_VECTOR,WDT_VECTOR,TIMER0_A0_VECTOR,TIMER1_A1_VECTOR
+#pragma vector=ADC12_VECTOR,RTC_VECTOR,AES_VECTOR,COMP_B_VECTOR,DMA_VECTOR,PORT1_VECTOR,PORT2_VECTOR,SYSNMI_VECTOR,UNMI_VECTOR,USCI_A0_VECTOR,USCI_B0_VECTOR,WDT_VECTOR,TIMER0_A0_VECTOR,TIMER1_A1_VECTOR,TIMER0_A1_VECTOR
 __interrupt void ISR_trap(void)
 {
   /* For debugging purposes, you can trap the CPU & code execution here with an

@@ -17,3 +17,4 @@ moc*.cpp
 targetConfigs
 Thumbs.db
 *.csv
+build/
