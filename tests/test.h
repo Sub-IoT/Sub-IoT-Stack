@@ -4,7 +4,7 @@
 #include <stdarg.h>
 #include <stddef.h>
 #include <setjmp.h>
-#include <cmockery.h>
+#include "cmockery.h"
 #include <unistd.h>
 
 #include <assert.h>
