@@ -43,7 +43,6 @@ void uart_init()
     P1SEL |= BIT5 + BIT6;                     // Select P1.5 & P1.6 to UART function
 #endif
 
-
     UCA0CTL1 |= UCSWRST;                      // **Put state machine in reset**
 //    UCA0CTL1 |= UCSSEL_1;                     // ACLK
 //    double c_speed = 32768.0;

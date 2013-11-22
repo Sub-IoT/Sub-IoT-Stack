@@ -194,7 +194,7 @@ class BoundControlBox(wx.Panel):
 class GraphFrame(wx.Frame):
 	""" The main frame of the application
 	"""
-	title = 'DASH7 Demo plot RSS of start network'
+	title = 'DASH7 Demo plot RSS of star network'
 	
 	def __init__(self):
 		wx.Frame.__init__(self, None, -1, self.title)

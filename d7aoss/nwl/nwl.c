@@ -25,6 +25,8 @@
 static nwl_rx_callback_t nwl_rx_callback;
 static nwl_tx_callback_t nwl_tx_callback;
 
+static uint8_t datastream_frame_id = 0;
+
 static void dll_tx_callback(Dll_Tx_Result status)
 {
 	nwl_tx_callback(status);
@@ -33,9 +35,8 @@ static void dll_tx_callback(Dll_Tx_Result status)
 static void dll_rx_callback(dll_rx_res_t* result)
 {
 	nwl_rx_res_t res;
-	res.frame_type = result->frame_type;
 
-	if (res.frame_type == FrameTypeBackgroundFrame)
+	if (result->frame_type == FrameTypeBackgroundFrame)
 	{
 		nwl_background_frame_t bf;
 		bf.tx_eirp = 0;
@@ -43,7 +44,30 @@ static void dll_rx_callback(dll_rx_res_t* result)
 		bf.bpid = ((dll_background_frame_t*) result->frame)->payload[0];
 		memcpy((void*) bf.protocol_data,(void*) &(((dll_background_frame_t*) result->frame)->payload[1]), 2);
 
-		res.frame = &bf;
+		res.data = &bf;
+		res.protocol_type = ProtocolTypeBackgroundProtocol;
+
+		//TODO: should a BF be send to transport layer??
+	}
+	{
+		dll_foreground_frame_t* frame = (dll_foreground_frame_t*) result->frame;
+		if (result->frame_type == FrameTypeForegroundFrameStreamFrame) // D7ADP
+		{
+			nwl_ff_D7ANP_t d7anp_frame;
+			d7anp_frame.frame_id = frame->payload[0];
+			d7anp_frame.payload_length = frame->payload_length - 1;
+			d7anp_frame.payload = &(frame->payload[1]);
+
+			res.data = &d7anp_frame;
+			res.protocol_type = ProtocolTypeDatastreamProtocol;
+		}
+		else // D7ANP
+		{
+			// TODO implement d7anp
+			//ASSERT("not implemented yet");
+			res.data = NULL;
+			res.protocol_type = ProtocolTypeNetworkProtocol;
+		}
 	}
 
 	nwl_rx_callback(&res);
@@ -125,6 +149,11 @@ void nwl_build_network_protocol_data(uint8_t* data, uint8_t length, nwl_security
 		#endif
 	}
 
+	dll_data[offset++] = 0; //dunno
+	dll_data[offset++] = 0; //isfid
+	dll_data[offset++] = 0; //isfoffset
+	dll_data[offset++] = length; // payload length;
+
 	memcpy(&dll_data[offset], data, length);
 
 	uint8_t dll_data_length = offset + length;
@@ -133,3 +162,67 @@ void nwl_build_network_protocol_data(uint8_t* data, uint8_t length, nwl_security
 	dll_create_foreground_frame(dll_data, dll_data_length, &dll_params);
 }
 
+void nwl_build_datastream_protocol_data(uint8_t* data, uint8_t length, nwl_security* security, uint8_t subnet, uint8_t spectrum_id, int8_t tx_eirp, uint8_t dialog_id)
+{
+	uint8_t dll_data[248];
+	uint8_t offset = 0;
+
+	dll_ff_tx_cfg_t dll_params;
+	dll_params.eirp = tx_eirp;
+	dll_params.spectrum_id = spectrum_id;
+	dll_params.subnet = subnet;
+
+	//TODO: get from params
+	dll_params.listen = false;
+	dll_params.security = NULL;
+	dll_params.addressing = NULL;
+	dll_params.frame_type = FRAME_CTL_STREAMFRAME;
+
+	if (security != NULL)
+	{
+		#ifdef LOG_NWL_ENABLED
+		log_print_stack_string(LOG_NWL, "NWL: security not implemented");
+		#endif
+
+		//dll_params.nwl_security = true;
+		dll_params.nwl_security = false;
+	} else {
+		dll_params.nwl_security = false;
+	}
+
+	dll_data[offset++] = datastream_frame_id++;
+
+	memcpy(&dll_data[offset], data, length);
+
+	uint8_t dll_data_length = offset + length;
+
+	//TODO: assert dll_data_length < 255-7
+	dll_create_foreground_frame(dll_data, dll_data_length, &dll_params);
+}
+
+
+void nwl_rx_start(uint8_t subnet, uint8_t spectrum_id, Protocol_Type type)
+{
+	dll_channel_scan_t scan_cfg = {
+			0x00,
+			FrameTypeForegroundFrame,
+			0,
+			0
+	};
+
+	scan_cfg.spectrum_id = spectrum_id;
+
+	if (type == ProtocolTypeBackgroundProtocol)
+		scan_cfg.scan_type = FrameTypeBackgroundFrame;
+
+	dll_channel_scan_series_t scan_series_cfg;
+	scan_series_cfg.length = 1;
+	scan_series_cfg.values = &scan_cfg;
+
+	dll_channel_scan_series(&scan_series_cfg);
+}
+
+void nwl_rx_stop()
+{
+	dll_stop_channel_scan();
+}

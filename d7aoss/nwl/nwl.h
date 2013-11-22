@@ -24,6 +24,13 @@
 
 #define BPID_AdvP 0xF0
 
+typedef enum {
+	ProtocolTypeBackgroundProtocol,
+	ProtocolTypeNetworkProtocol,
+	ProtocolTypeDatastreamProtocol
+} Protocol_Type;
+
+
 typedef struct {
 	uint8_t tx_eirp;
 	uint8_t subnet;
@@ -32,16 +39,22 @@ typedef struct {
 } nwl_background_frame_t;
 
 typedef struct {
+	uint8_t frame_id;
+	uint8_t payload_length;
+	uint8_t* payload;
+} nwl_ff_D7ANP_t;
+
+typedef struct {
 	uint16_t eta;
 } AdvP_Data;
 
 
 typedef struct
 {
-    /// Frame Type
-    Frame_Type  frame_type;
-    /// Frame
-    void* frame;
+    /// Protocol Type
+    Protocol_Type  protocol_type;
+    /// Data
+    void* data;
 } nwl_rx_res_t;
 
 typedef struct {
@@ -75,6 +88,8 @@ void nwl_build_advertising_protocol_data(uint8_t channel_id, uint16_t eta, int8_
 
 // Foreground frames
 void nwl_build_network_protocol_data(uint8_t* data, uint8_t length, nwl_security* security, nwl_routing_header* routing, uint8_t subnet, uint8_t spectrum_id, int8_t tx_eirp, uint8_t dialog_id);
+void nwl_build_datastream_protocol_data(uint8_t* data, uint8_t length, nwl_security* security, uint8_t subnet, uint8_t spectrum_id, int8_t tx_eirp, uint8_t dialog_id);
 
-void nwl_build_datastream_protocol_data(uint8_t* data, uint8_t length, uint8_t subnet, uint8_t spectrum_id, int8_t tx_eirp, uint8_t dialog_id);
+void nwl_rx_start(uint8_t subnet, uint8_t spectrum_id, Protocol_Type type);
+void nwl_rx_stop();
 #endif

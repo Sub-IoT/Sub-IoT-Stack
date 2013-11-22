@@ -277,28 +277,30 @@ static void rx_callback(phy_rx_data_t* res)
 			// TODO handle more than 1 frame
 		}
 
-		if (frame->frame_header.frame_ctl & 0x08) // CRC 32
-		{
-			// TODO support CRC32
-		}
-
 		if (frame->frame_header.frame_ctl & 0x04) // Note Mode 2
 		{
 			// Not supported
 		}
 
 		// Frame Type
-		//u8 ffType = frame_header.frame_ctl & 0x03;
+		dll_res.frame_type = (Frame_Type) (frame->frame_header.frame_ctl & 0x03);
 
-		data_pointer++; // TODO what is this?
-		data_pointer++; //isfid
-		data_pointer++; //isfoffset
+		if (dll_res.frame_type == FrameTypeForegroundFrameStreamFrame)
+		{
+			frame->payload_length = frame->length - (data_pointer - res->data) - 2;
+			frame->payload = data_pointer;
+		} else {
 
-		frame->payload_length = (*data_pointer);
-		data_pointer++;
-		frame->payload = data_pointer;
+			// TODO: should be done in upper layer
+			data_pointer++; // TODO what is this?
+			data_pointer++; //isfid
+			data_pointer++; //isfoffset
 
-		dll_res.frame_type = FrameTypeForegroundFrame;
+			frame->payload_length = (*data_pointer);
+			data_pointer++;
+			frame->payload = data_pointer;
+		}
+
 		dll_res.frame = frame;
 	}
 
@@ -449,13 +451,13 @@ void dll_channel_scan_series(dll_channel_scan_series_t* css)
 	rx_cfg.spectrum_id = css->values[current_scan_id].spectrum_id; // spectrum ID TODO
 	//rx_cfg.coding_scheme = 0; // coding scheme TODO
 	rx_cfg.scan_minimum_energy = scan_minimum_energy;
-	if (css->values[current_scan_id].scan_type == FrameTypeForegroundFrame)
+	if (css->values[current_scan_id].scan_type == FrameTypeBackgroundFrame)
 	{
-		rx_cfg.sync_word_class = 1;
-		dll_state = DllStateScanForegroundFrame;
-	} else {
 		rx_cfg.sync_word_class = 0;
 		dll_state = DllStateScanBackgroundFrame;
+	} else {
+		rx_cfg.sync_word_class = 1;
+		dll_state = DllStateScanForegroundFrame;
 	}
 
 	current_css = css;
@@ -604,16 +606,7 @@ void dll_create_foreground_frame(uint8_t* data, uint8_t length, dll_ff_tx_cfg_t*
 
 	if (params->frame_continuity) frame->frame_header.frame_ctl |= FRAME_CTL_FR_CONT;
 
-	// CRC32 not implemented
-	// frame->frame_header.frame_ctl |= FRAME_CTL_CRC32;
-
 	frame->frame_header.frame_ctl |= params->frame_type;
-
-	*pointer++ = 0; //dunno
-	*pointer++ = 0; //isfid
-	*pointer++ = 0; //isfoffset
-	*pointer++ = length; // payload length;
-
 
 	memcpy(pointer, data, length); // TODO fixed size for now
 	pointer += length;

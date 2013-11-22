@@ -35,6 +35,7 @@ static int temp_time= 0;
 static uint8_t dialogid = 0;
 
 static trans_tx_callback_t trans_tx_callback;
+static trans_rx_datastream_callback_t trans_rx_datastream_callback;
 
 //Flow Control Process
 static void control_tx_callback(Dll_Tx_Result Result)
@@ -66,14 +67,43 @@ static void control_tx_callback(Dll_Tx_Result Result)
 	return;
 }
 
+static void nwl_rx_callback(nwl_rx_res_t* result)
+{
+	if (result->protocol_type == ProtocolTypeBackgroundProtocol)
+	{
+		// Should this be here?
+	}
+	else if (result->protocol_type == ProtocolTypeNetworkProtocol)
+	{
+		//ASSERT("not implemented yet");
+	}
+	else if (result->protocol_type == ProtocolTypeDatastreamProtocol)
+	{
+		Trans_Rx_Datastream_Result datastream_result;
+		nwl_ff_D7ANP_t* data = (nwl_ff_D7ANP_t*) result->data;
+
+		//TODO: check data->frame_id?
+		datastream_result.lenght = data->payload_length;
+		datastream_result.payload = data->payload;
+
+		trans_rx_datastream_callback(datastream_result);
+	}
+}
+
 void trans_init(){
 	nwl_init();
 	nwl_set_tx_callback(&control_tx_callback);
+	nwl_set_rx_callback(&nwl_rx_callback);
 }
 
 void trans_set_tx_callback(trans_tx_callback_t cb)
 {
 	trans_tx_callback = cb;
+}
+
+void trans_set_datastream_rx_callback(trans_rx_datastream_callback_t cb)
+{
+	trans_rx_datastream_callback = cb;
 }
 
 void trans_set_initial_t_ca(uint16_t t_ca)
@@ -93,6 +123,22 @@ void trans_tx_foreground_frame(uint8_t* data, uint8_t length, uint8_t subnet, ui
 	nwl_build_network_protocol_data(data, length, NULL, NULL, subnet, spectrum_id, tx_eirp, dialogid++);
 	trans_rigd_ccp(spectrum_id, true, false);
 }
+
+void trans_tx_datastream(uint8_t* data, uint8_t length, uint8_t subnet, uint8_t spectrum_id, int8_t tx_eirp) {
+	nwl_build_datastream_protocol_data(data, length, NULL, subnet, spectrum_id, tx_eirp, dialogid++);
+	trans_rigd_ccp(spectrum_id, true, false);
+}
+
+void trans_rx_datastream_start(uint8_t subnet, uint8_t spectrum_id)
+{
+	nwl_rx_start(subnet, spectrum_id, ProtocolTypeDatastreamProtocol);
+}
+
+void trans_rx_datastream_stop()
+{
+	nwl_rx_stop();
+}
+
 
 //void trans_tx_background_frame(uint8_t* data, uint8_t subnet, uint8_t spectrum_id, int8_t tx_eirp){
 //	nwl_build_background_frame(data, subnet, spectrum_id, tx_eirp);

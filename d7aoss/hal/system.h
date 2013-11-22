@@ -35,6 +35,8 @@
 #define __ISR(a,b)   __interrupt void b (void)
 #endif
 
+#define AUX_CLOCK	32768
+
 extern uint8_t device_id[8]; // TODO: keep this as global?
 extern uint8_t virtual_id[2];
 
