@@ -36,10 +36,22 @@ static void dll_rx_callback(dll_rx_res_t* result)
 {
 	nwl_rx_res_t res;
 
-	if (result->frame_type == FrameTypeForegroundFrame)
+	if (result->frame_type == FrameTypeBackgroundFrame)
+	{
+		nwl_background_frame_t bf;
+		bf.tx_eirp = 0;
+		bf.subnet = ((dll_background_frame_t*) result->frame)->subnet;
+		bf.bpid = ((dll_background_frame_t*) result->frame)->payload[0];
+		memcpy((void*) bf.protocol_data,(void*) &(((dll_background_frame_t*) result->frame)->payload[1]), 2);
+
+		res.data = &bf;
+		res.protocol_type = ProtocolTypeBackgroundProtocol;
+
+		//TODO: should a BF be send to transport layer??
+	}
 	{
 		dll_foreground_frame_t* frame = (dll_foreground_frame_t*) result->frame;
-		if (frame->address_ctl == NULL) // D7ADP
+		if (result->frame_type == FrameTypeForegroundFrameStreamFrame) // D7ADP
 		{
 			nwl_ff_D7ANP_t d7anp_frame;
 			d7anp_frame.frame_id = frame->payload[0];
@@ -56,19 +68,6 @@ static void dll_rx_callback(dll_rx_res_t* result)
 			res.data = NULL;
 			res.protocol_type = ProtocolTypeNetworkProtocol;
 		}
-	}
-	else if (result->frame_type == FrameTypeBackgroundFrame)
-	{
-		nwl_background_frame_t bf;
-		bf.tx_eirp = 0;
-		bf.subnet = ((dll_background_frame_t*) result->frame)->subnet;
-		bf.bpid = ((dll_background_frame_t*) result->frame)->payload[0];
-		memcpy((void*) bf.protocol_data,(void*) &(((dll_background_frame_t*) result->frame)->payload[1]), 2);
-
-		res.data = &bf;
-		res.protocol_type = ProtocolTypeBackgroundProtocol;
-
-		//TODO: should a BF be send to transport layer??
 	}
 
 	nwl_rx_callback(&res);
@@ -150,6 +149,11 @@ void nwl_build_network_protocol_data(uint8_t* data, uint8_t length, nwl_security
 		#endif
 	}
 
+	dll_data[offset++] = 0; //dunno
+	dll_data[offset++] = 0; //isfid
+	dll_data[offset++] = 0; //isfoffset
+	dll_data[offset++] = length; // payload length;
+
 	memcpy(&dll_data[offset], data, length);
 
 	uint8_t dll_data_length = offset + length;
@@ -171,8 +175,8 @@ void nwl_build_datastream_protocol_data(uint8_t* data, uint8_t length, nwl_secur
 	//TODO: get from params
 	dll_params.listen = false;
 	dll_params.security = NULL;
-
 	dll_params.addressing = NULL;
+	dll_params.frame_type = FRAME_CTL_STREAMFRAME;
 
 	if (security != NULL)
 	{

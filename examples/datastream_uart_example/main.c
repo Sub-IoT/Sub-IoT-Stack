@@ -46,10 +46,10 @@
 // event to create a led blink
 static timer_event dim_led_event;
 static timer_event check_uart_event;
-static bool start_channel_scan = false;
-static bool new_uart_data = false;
-static bool check_for_uart_data = false;
-static bool is_checking_for_uart_data = false;
+static volatile bool start_channel_scan = false;
+static volatile bool new_uart_data = false;
+static volatile bool check_for_uart_data = false;
+static volatile bool is_checking_for_uart_data = false;
 
 static uint8_t data[32];
 static uint8_t data_lenght = 0;
@@ -79,14 +79,14 @@ void tx_callback(Trans_Tx_Result result)
 		#ifdef USE_LEDS
 		led_off(3);
 		#endif
-		log_print_string("TX OK");
+		//log_print_string("TX OK");
 	}
 	else
 	{
 		#ifdef USE_LEDS
 		led_toggle(1);
 		#endif
-		log_print_string("TX CCA FAIL");
+		//log_print_string("TX CCA FAIL");
 	}
 
 	start_channel_scan = true;
@@ -96,7 +96,7 @@ void send_uart_data()
 {
 	uint8_t send_data[32];
 	memcpy((void*)send_data, (void*)data, data_lenght);
-	trans_tx_foreground_frame((uint8_t*)&send_data, data_lenght, 0xFF, SEND_CHANNEL, TX_EIRP);
+	trans_tx_datastream((uint8_t*)&send_data, data_lenght, 0xFF, SEND_CHANNEL, TX_EIRP);
 	data_lenght = 0;
 }
 
@@ -139,7 +139,7 @@ int main(void) {
 
 	start_channel_scan = true;
 
-	log_print_string("node started");
+	//log_print_string("node started");
 
 	// Log the device id
 	log_print_data(device_id, 8);
@@ -151,8 +151,8 @@ int main(void) {
 	check_uart_event.next_event = 1;
 	check_uart_event.f = &check_uart;
 
-	system_watchdog_init(WDTSSEL0, 0x03);
-	system_watchdog_timer_start();
+	//system_watchdog_init(WDTSSEL0, 0x03);
+	//ystem_watchdog_timer_start();
 
 	uart_enable_interrupt();
 
@@ -194,12 +194,13 @@ __interrupt void USCI_A0_ISR(void)
 				send_uart_data();
 			}
 
-			if (data_lenght < 30)
+			if (data_lenght < 32)
 			{
 				data[data_lenght++] = UCA0RXBUF;
 				new_uart_data = true;
 			}
 
+			LPM3_EXIT;
 			break;
 		}
 		case 4:break;                             // Vector 4 - TXIFG

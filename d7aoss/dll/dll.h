@@ -25,8 +25,12 @@
 #include "../phy/phy.h"
 
 typedef enum {
-	FrameTypeBackgroundFrame,
-	FrameTypeForegroundFrame
+	FrameTypeForegroundFrameDialogFrame = 0x00,
+	FrameTypeForegroundFrameDialogNACK = 0x01,
+	FrameTypeForegroundFrameStreamFrame = 0x02,
+	FrameTypeForegroundFrame,
+	FrameTypeBackgroundFrame
+
 } Frame_Type;
 
 typedef enum {
