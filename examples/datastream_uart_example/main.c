@@ -51,7 +51,7 @@ static volatile bool new_uart_data = false;
 static volatile bool check_for_uart_data = false;
 static volatile bool is_checking_for_uart_data = false;
 
-static uint8_t data[32];
+static uint8_t data[200];
 static uint8_t data_lenght = 0;
 
 void blink_led()
@@ -61,7 +61,7 @@ void blink_led()
 	timer_add_event(&dim_led_event);
 }
 
-void dim_led(void* arg)
+void dim_led()
 {
 	led_off(1);
 }
@@ -101,7 +101,7 @@ void send_uart_data()
 }
 
 
-void check_uart(void* arg)
+void check_uart()
 {
 	if (data_lenght > 0  && !new_uart_data)
 	{
@@ -189,13 +189,10 @@ __interrupt void USCI_A0_ISR(void)
 			if (!is_checking_for_uart_data)
 				check_for_uart_data = true;
 
-			if (data_lenght == 32)
+			if (data_lenght == 200)
 			{
 				send_uart_data();
-			}
-
-			if (data_lenght < 32)
-			{
+			} else	{
 				data[data_lenght++] = UCA0RXBUF;
 				new_uart_data = true;
 			}

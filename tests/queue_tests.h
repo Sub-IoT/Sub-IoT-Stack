@@ -6,7 +6,7 @@ void queue_when_pushing_value_and_queue_is_full_it_should_return_false(void **st
 {
     int size = 10;
     char buffer[size];
-    queue q;
+    queue_t q;
     queue_init(&q, buffer, size);
     int max_queue_len = sizeof(buffer) / sizeof(uint8_t);
     uint8_t i;
