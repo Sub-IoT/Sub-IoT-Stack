@@ -18,3 +18,4 @@ targetConfigs
 Thumbs.db
 *.csv
 build/
+html/
