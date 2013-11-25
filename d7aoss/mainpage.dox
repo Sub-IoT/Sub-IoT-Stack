@@ -1,0 +1,12 @@
+/** \mainpage DASH7 Alliance Stack OpenSource Stack
+
+\section  dash7_sec What is Dash7
+
+DASH7 is an open source RFID-standard for wireless sensor networking, which operates in the 433 MHz unlicensed ISM band/SRD band. DASH7 provides multi-year battery life, range of up to 2 km, indoor location with 1 meter accuracy, low latency for connecting with moving things, a very small open source protocol stack, AES 128-bit shared key encryption support, and data transfer of up to 200 kbit/s. DASH7 is the name of the technology promoted by the non-profit consortium called the DASH7 Alliance.
+
+\section oss_sec What is the goal of OSS-7
+
+The goal of the project is to provide a reference implementation of the DASH7 Alliance protocol. This implementation should focus on completeness, correctness and being easy to understand. Performance and code size are less important aspects. For clarity a clear separation between the ISO layers is maintained in the code.
+**/
+ 
+ 
