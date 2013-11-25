@@ -37,6 +37,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
   <div id="navrow1" class="tabs">
     <ul class="tablist">
       <li><a href="index.html"><span>Main&#160;Page</span></a></li>
+      <li><a href="pages.html"><span>Related&#160;Pages</span></a></li>
       <li class="current"><a href="annotated.html"><span>Data&#160;Structures</span></a></li>
       <li><a href="files.html"><span>Files</span></a></li>
       <li>
@@ -69,7 +70,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
      onmouseover="return searchBox.OnSearchSelectShow()"
      onmouseout="return searchBox.OnSearchSelectHide()"
      onkeydown="return searchBox.OnSearchSelectKey(event)">
-<a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(0)"><span class="SelectionMark">&#160;</span>All</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(1)"><span class="SelectionMark">&#160;</span>Data Structures</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(2)"><span class="SelectionMark">&#160;</span>Variables</a></div>
+<a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(0)"><span class="SelectionMark">&#160;</span>All</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(1)"><span class="SelectionMark">&#160;</span>Data Structures</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(2)"><span class="SelectionMark">&#160;</span>Files</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(3)"><span class="SelectionMark">&#160;</span>Functions</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(4)"><span class="SelectionMark">&#160;</span>Variables</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(5)"><span class="SelectionMark">&#160;</span>Typedefs</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(6)"><span class="SelectionMark">&#160;</span>Enumerations</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(7)"><span class="SelectionMark">&#160;</span>Enumerator</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(8)"><span class="SelectionMark">&#160;</span>Macros</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(9)"><span class="SelectionMark">&#160;</span>Pages</a></div>
 
 <!-- iframe showing the search results (closed by default) -->
 <div id="MSearchResultsWindow">
@@ -86,32 +87,90 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <div class="title">phy_rx_cfg_t Struct Reference</div>  </div>
 </div><!--header-->
 <div class="contents">
+
+<p><code>#include &lt;<a class="el" href="phy_8h_source.html">phy.h</a>&gt;</code></p>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-attribs"></a>
 Data Fields</h2></td></tr>
-<tr class="memitem:ad174b14b06ad593115e7dd7d2a1e5118"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ad174b14b06ad593115e7dd7d2a1e5118"></a>
-uint8_t&#160;</td><td class="memItemRight" valign="bottom"><b>spectrum_id</b></td></tr>
+<tr class="memitem:ad174b14b06ad593115e7dd7d2a1e5118"><td class="memItemLeft" align="right" valign="top">uint8_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structphy__rx__cfg__t.html#ad174b14b06ad593115e7dd7d2a1e5118">spectrum_id</a></td></tr>
 <tr class="separator:ad174b14b06ad593115e7dd7d2a1e5118"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a0fd1ce956b21ec1955f9644678dcd422"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a0fd1ce956b21ec1955f9644678dcd422"></a>
-uint8_t&#160;</td><td class="memItemRight" valign="bottom"><b>sync_word_class</b></td></tr>
+<tr class="memitem:a0fd1ce956b21ec1955f9644678dcd422"><td class="memItemLeft" align="right" valign="top">uint8_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structphy__rx__cfg__t.html#a0fd1ce956b21ec1955f9644678dcd422">sync_word_class</a></td></tr>
 <tr class="separator:a0fd1ce956b21ec1955f9644678dcd422"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a836776363b65607e24dfdd8d2e2bc8c3"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a836776363b65607e24dfdd8d2e2bc8c3"></a>
-uint8_t&#160;</td><td class="memItemRight" valign="bottom"><b>length</b></td></tr>
+<tr class="memitem:a836776363b65607e24dfdd8d2e2bc8c3"><td class="memItemLeft" align="right" valign="top">uint8_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structphy__rx__cfg__t.html#a836776363b65607e24dfdd8d2e2bc8c3">length</a></td></tr>
 <tr class="separator:a836776363b65607e24dfdd8d2e2bc8c3"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a8b6950c95a5a9dbced0507f80c1464c2"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a8b6950c95a5a9dbced0507f80c1464c2"></a>
-uint16_t&#160;</td><td class="memItemRight" valign="bottom"><b>timeout</b></td></tr>
+<tr class="memitem:a8b6950c95a5a9dbced0507f80c1464c2"><td class="memItemLeft" align="right" valign="top">uint16_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structphy__rx__cfg__t.html#a8b6950c95a5a9dbced0507f80c1464c2">timeout</a></td></tr>
 <tr class="separator:a8b6950c95a5a9dbced0507f80c1464c2"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aadeceb4b780d3f10f5b5853293318ae2"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aadeceb4b780d3f10f5b5853293318ae2"></a>
-int8_t&#160;</td><td class="memItemRight" valign="bottom"><b>scan_minimum_energy</b></td></tr>
+<tr class="memitem:aadeceb4b780d3f10f5b5853293318ae2"><td class="memItemLeft" align="right" valign="top">int8_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structphy__rx__cfg__t.html#aadeceb4b780d3f10f5b5853293318ae2">scan_minimum_energy</a></td></tr>
 <tr class="separator:aadeceb4b780d3f10f5b5853293318ae2"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
+<h2 class="groupheader">Field Documentation</h2>
+<a class="anchor" id="a836776363b65607e24dfdd8d2e2bc8c3"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">uint8_t phy_rx_cfg_t::length</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a class="anchor" id="aadeceb4b780d3f10f5b5853293318ae2"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int8_t phy_rx_cfg_t::scan_minimum_energy</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a class="anchor" id="ad174b14b06ad593115e7dd7d2a1e5118"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">uint8_t phy_rx_cfg_t::spectrum_id</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a class="anchor" id="a0fd1ce956b21ec1955f9644678dcd422"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">uint8_t phy_rx_cfg_t::sync_word_class</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a class="anchor" id="a8b6950c95a5a9dbced0507f80c1464c2"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">uint16_t phy_rx_cfg_t::timeout</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
 <hr/>The documentation for this struct was generated from the following file:<ul>
 <li>d7aoss/phy/<a class="el" href="phy_8h_source.html">phy.h</a></li>
 </ul>
 </div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Sat Nov 23 2013 08:43:39 for OSS-7: Open Source Stack for Dash7 Alliance Protocol by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Mon Nov 25 2013 10:24:17 for OSS-7: Open Source Stack for Dash7 Alliance Protocol by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.5
 </small></address>

@@ -37,6 +37,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
   <div id="navrow1" class="tabs">
     <ul class="tablist">
       <li><a href="index.html"><span>Main&#160;Page</span></a></li>
+      <li><a href="pages.html"><span>Related&#160;Pages</span></a></li>
       <li><a href="annotated.html"><span>Data&#160;Structures</span></a></li>
       <li class="current"><a href="files.html"><span>Files</span></a></li>
       <li>
@@ -60,6 +61,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
   <div id="navrow2" class="tabs2">
     <ul class="tablist">
       <li><a href="files.html"><span>File&#160;List</span></a></li>
+      <li><a href="globals.html"><span>Globals</span></a></li>
     </ul>
   </div>
 <!-- window showing the filter options -->
@@ -67,7 +69,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
      onmouseover="return searchBox.OnSearchSelectShow()"
      onmouseout="return searchBox.OnSearchSelectHide()"
      onkeydown="return searchBox.OnSearchSelectKey(event)">
-<a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(0)"><span class="SelectionMark">&#160;</span>All</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(1)"><span class="SelectionMark">&#160;</span>Data Structures</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(2)"><span class="SelectionMark">&#160;</span>Variables</a></div>
+<a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(0)"><span class="SelectionMark">&#160;</span>All</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(1)"><span class="SelectionMark">&#160;</span>Data Structures</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(2)"><span class="SelectionMark">&#160;</span>Files</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(3)"><span class="SelectionMark">&#160;</span>Functions</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(4)"><span class="SelectionMark">&#160;</span>Variables</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(5)"><span class="SelectionMark">&#160;</span>Typedefs</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(6)"><span class="SelectionMark">&#160;</span>Enumerations</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(7)"><span class="SelectionMark">&#160;</span>Enumerator</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(8)"><span class="SelectionMark">&#160;</span>Macros</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(9)"><span class="SelectionMark">&#160;</span>Pages</a></div>
 
 <!-- iframe showing the search results (closed by default) -->
 <div id="MSearchResultsWindow">
@@ -86,7 +88,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <div class="title">uart_baudrate.h</div>  </div>
 </div><!--header-->
 <div class="contents">
-<div class="fragment"><div class="line"><a name="l00001"></a><span class="lineno">    1</span>&#160;<span class="comment">/* --COPYRIGHT--,BSD</span></div>
+<a href="uart__baudrate_8h.html">Go to the documentation of this file.</a><div class="fragment"><div class="line"><a name="l00001"></a><span class="lineno">    1</span>&#160;<span class="comment">/* --COPYRIGHT--,BSD</span></div>
 <div class="line"><a name="l00002"></a><span class="lineno">    2</span>&#160;<span class="comment"> * Copyright (c) 2012, Texas Instruments Incorporated</span></div>
 <div class="line"><a name="l00003"></a><span class="lineno">    3</span>&#160;<span class="comment"> * All rights reserved.</span></div>
 <div class="line"><a name="l00004"></a><span class="lineno">    4</span>&#160;<span class="comment"> *</span></div>
@@ -126,41 +128,41 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <div class="line"><a name="l00038"></a><span class="lineno">   38</span>&#160;<span class="comment">//peripheral in msp430xgeneric.h file</span></div>
 <div class="line"><a name="l00039"></a><span class="lineno">   39</span>&#160;<span class="comment">//</span></div>
 <div class="line"><a name="l00040"></a><span class="lineno">   40</span>&#160;<span class="comment">//*****************************************************************************</span></div>
-<div class="line"><a name="l00041"></a><span class="lineno">   41</span>&#160;<span class="preprocessor">#define __MSP430_HAS_USCI_Ax__</span></div>
+<div class="line"><a name="l00041"></a><span class="lineno"><a class="line" href="uart__baudrate_8h.html#a820b58667d329795e817c79291d42463">   41</a></span>&#160;<span class="preprocessor">#define __MSP430_HAS_USCI_Ax__</span></div>
 <div class="line"><a name="l00042"></a><span class="lineno">   42</span>&#160;<span class="preprocessor"></span></div>
 <div class="line"><a name="l00043"></a><span class="lineno">   43</span>&#160;<span class="comment">//*****************************************************************************</span></div>
 <div class="line"><a name="l00044"></a><span class="lineno">   44</span>&#160;<span class="comment">//</span></div>
 <div class="line"><a name="l00045"></a><span class="lineno">   45</span>&#160;<span class="comment">//The following value selects low frequency mode eand NOT the oversampling mode</span></div>
 <div class="line"><a name="l00046"></a><span class="lineno">   46</span>&#160;<span class="comment">//</span></div>
 <div class="line"><a name="l00047"></a><span class="lineno">   47</span>&#160;<span class="comment">//*****************************************************************************</span></div>
-<div class="line"><a name="l00048"></a><span class="lineno">   48</span>&#160;<span class="preprocessor">#define UARTBAUDRATE_LOW_FREQUENCY_BAUDRATE_GENERATION    0x00</span></div>
+<div class="line"><a name="l00048"></a><span class="lineno"><a class="line" href="uart__baudrate_8h.html#a55edf922e90f78c35d21572a9df2eae4">   48</a></span>&#160;<span class="preprocessor">#define UARTBAUDRATE_LOW_FREQUENCY_BAUDRATE_GENERATION    0x00</span></div>
 <div class="line"><a name="l00049"></a><span class="lineno">   49</span>&#160;<span class="preprocessor"></span></div>
 <div class="line"><a name="l00050"></a><span class="lineno">   50</span>&#160;</div>
 <div class="line"><a name="l00051"></a><span class="lineno"><a class="line" href="struct_e_r_r_o_r___s_t_r_u_c_t_u_r_e.html">   51</a></span>&#160;<span class="keyword">typedef</span> <span class="keyword">struct </span><a class="code" href="struct_e_r_r_o_r___s_t_r_u_c_t_u_r_e.html">ERROR_STRUCTURE</a> {</div>
-<div class="line"><a name="l00052"></a><span class="lineno">   52</span>&#160;    <span class="keywordtype">double</span> max_error;</div>
-<div class="line"><a name="l00053"></a><span class="lineno">   53</span>&#160;    <span class="keywordtype">double</span> max_positive_error;</div>
-<div class="line"><a name="l00054"></a><span class="lineno">   54</span>&#160;    <span class="keywordtype">double</span> max_negative_error;</div>
-<div class="line"><a name="l00055"></a><span class="lineno">   55</span>&#160;}<a class="code" href="struct_e_r_r_o_r___s_t_r_u_c_t_u_r_e.html">MAX_ERR</a>;</div>
+<div class="line"><a name="l00052"></a><span class="lineno"><a class="line" href="struct_e_r_r_o_r___s_t_r_u_c_t_u_r_e.html#aaaad9e679b5aea59d3c7ef2e9688d55d">   52</a></span>&#160;    <span class="keywordtype">double</span> <a class="code" href="struct_e_r_r_o_r___s_t_r_u_c_t_u_r_e.html#aaaad9e679b5aea59d3c7ef2e9688d55d">max_error</a>;</div>
+<div class="line"><a name="l00053"></a><span class="lineno"><a class="line" href="struct_e_r_r_o_r___s_t_r_u_c_t_u_r_e.html#adcdc723268501b0e8fc49213e396a760">   53</a></span>&#160;    <span class="keywordtype">double</span> <a class="code" href="struct_e_r_r_o_r___s_t_r_u_c_t_u_r_e.html#adcdc723268501b0e8fc49213e396a760">max_positive_error</a>;</div>
+<div class="line"><a name="l00054"></a><span class="lineno"><a class="line" href="struct_e_r_r_o_r___s_t_r_u_c_t_u_r_e.html#a1b3762625715e337e02739571eb4d5a9">   54</a></span>&#160;    <span class="keywordtype">double</span> <a class="code" href="struct_e_r_r_o_r___s_t_r_u_c_t_u_r_e.html#a1b3762625715e337e02739571eb4d5a9">max_negative_error</a>;</div>
+<div class="line"><a name="l00055"></a><span class="lineno">   55</span>&#160;}<a class="code" href="uart__baudrate_8h.html#a9504d5594dcb3ad424b2df236da4c069">MAX_ERR</a>;</div>
 <div class="line"><a name="l00056"></a><span class="lineno">   56</span>&#160;</div>
 <div class="line"><a name="l00057"></a><span class="lineno">   57</span>&#160;</div>
-<div class="line"><a name="l00058"></a><span class="lineno">   58</span>&#160;<span class="keyword">extern</span> <span class="keywordtype">double</span> UARTBAUDRATE_txTbit (<span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> mode,</div>
+<div class="line"><a name="l00058"></a><span class="lineno">   58</span>&#160;<span class="keyword">extern</span> <span class="keywordtype">double</span> <a class="code" href="uart__baudrate_8c.html#ac351b08596b0b41728470fb9e93909b3">UARTBAUDRATE_txTbit</a> (<span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> mode,</div>
 <div class="line"><a name="l00059"></a><span class="lineno">   59</span>&#160;    <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> i,</div>
 <div class="line"><a name="l00060"></a><span class="lineno">   60</span>&#160;    <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> s_mod,</div>
 <div class="line"><a name="l00061"></a><span class="lineno">   61</span>&#160;    <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> f_mod</div>
 <div class="line"><a name="l00062"></a><span class="lineno">   62</span>&#160;    );</div>
 <div class="line"><a name="l00063"></a><span class="lineno">   63</span>&#160;</div>
-<div class="line"><a name="l00064"></a><span class="lineno">   64</span>&#160;<span class="keyword">extern</span> <a class="code" href="struct_e_r_r_o_r___s_t_r_u_c_t_u_r_e.html">MAX_ERR</a> UARTBAUDRATE_txError (<span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> mode,</div>
+<div class="line"><a name="l00064"></a><span class="lineno">   64</span>&#160;<span class="keyword">extern</span> <a class="code" href="struct_e_r_r_o_r___s_t_r_u_c_t_u_r_e.html">MAX_ERR</a> <a class="code" href="uart__baudrate_8c.html#a4e761edda85f1cd72ff28d29b518efac">UARTBAUDRATE_txError</a> (<span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> mode,</div>
 <div class="line"><a name="l00065"></a><span class="lineno">   65</span>&#160;    <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> s_mod,</div>
 <div class="line"><a name="l00066"></a><span class="lineno">   66</span>&#160;    <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> f_mod</div>
 <div class="line"><a name="l00067"></a><span class="lineno">   67</span>&#160;    );</div>
 <div class="line"><a name="l00068"></a><span class="lineno">   68</span>&#160;</div>
-<div class="line"><a name="l00069"></a><span class="lineno">   69</span>&#160;<span class="keyword">extern</span> <a class="code" href="struct_e_r_r_o_r___s_t_r_u_c_t_u_r_e.html">MAX_ERR</a> UARTBAUDRATE_rxError (<span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> mode,</div>
+<div class="line"><a name="l00069"></a><span class="lineno">   69</span>&#160;<span class="keyword">extern</span> <a class="code" href="struct_e_r_r_o_r___s_t_r_u_c_t_u_r_e.html">MAX_ERR</a> <a class="code" href="uart__baudrate_8c.html#ab941184e0d81402dc02b206755bb03dc">UARTBAUDRATE_rxError</a> (<span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> mode,</div>
 <div class="line"><a name="l00070"></a><span class="lineno">   70</span>&#160;    <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> s_mod,</div>
 <div class="line"><a name="l00071"></a><span class="lineno">   71</span>&#160;    <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> f_mod,</div>
 <div class="line"><a name="l00072"></a><span class="lineno">   72</span>&#160;    <span class="keywordtype">double</span> t_sync</div>
 <div class="line"><a name="l00073"></a><span class="lineno">   73</span>&#160;    );</div>
 <div class="line"><a name="l00074"></a><span class="lineno">   74</span>&#160;</div>
-<div class="line"><a name="l00075"></a><span class="lineno">   75</span>&#160;<span class="keyword">extern</span> <span class="keywordtype">unsigned</span> <span class="keywordtype">short</span> UARTBAUDRATE_calculateBaudDividers (</div>
+<div class="line"><a name="l00075"></a><span class="lineno">   75</span>&#160;<span class="keyword">extern</span> <span class="keywordtype">unsigned</span> <span class="keywordtype">short</span> <a class="code" href="uart__baudrate_8c.html#a800e06755402fae49999ffc3baee0303">UARTBAUDRATE_calculateBaudDividers</a> (</div>
 <div class="line"><a name="l00076"></a><span class="lineno">   76</span>&#160;    <span class="keywordtype">double</span> brclk_f,</div>
 <div class="line"><a name="l00077"></a><span class="lineno">   77</span>&#160;    <span class="keywordtype">double</span> baudrate_f,</div>
 <div class="line"><a name="l00078"></a><span class="lineno">   78</span>&#160;    <span class="keywordtype">unsigned</span> <span class="keywordtype">char</span> *UCAxBR0_value,</div>
@@ -169,11 +171,19 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <div class="line"><a name="l00081"></a><span class="lineno">   81</span>&#160;    <span class="keywordtype">unsigned</span> <span class="keywordtype">short</span> overSampling</div>
 <div class="line"><a name="l00082"></a><span class="lineno">   82</span>&#160;    );</div>
 <div class="line"><a name="l00083"></a><span class="lineno">   83</span>&#160;<span class="preprocessor">#endif</span></div>
+<div class="ttc" id="uart__baudrate_8c_html_ac351b08596b0b41728470fb9e93909b3"><div class="ttname"><a href="uart__baudrate_8c.html#ac351b08596b0b41728470fb9e93909b3">UARTBAUDRATE_txTbit</a></div><div class="ttdeci">double UARTBAUDRATE_txTbit(unsigned int mode, unsigned int i, unsigned int s_mod, unsigned int f_mod)</div><div class="ttdef"><b>Definition:</b> uart_baudrate.c:65</div></div>
+<div class="ttc" id="uart__baudrate_8c_html_a800e06755402fae49999ffc3baee0303"><div class="ttname"><a href="uart__baudrate_8c.html#a800e06755402fae49999ffc3baee0303">UARTBAUDRATE_calculateBaudDividers</a></div><div class="ttdeci">unsigned short UARTBAUDRATE_calculateBaudDividers(double brclk_f, double baudrate_f, unsigned char *UCAxBR0_value, unsigned char *UCAxBR1_value, unsigned int *UCAxMCTL_value, unsigned short overSampling)</div><div class="ttdef"><b>Definition:</b> uart_baudrate.c:194</div></div>
+<div class="ttc" id="uart__baudrate_8c_html_ab941184e0d81402dc02b206755bb03dc"><div class="ttname"><a href="uart__baudrate_8c.html#ab941184e0d81402dc02b206755bb03dc">UARTBAUDRATE_rxError</a></div><div class="ttdeci">MAX_ERR UARTBAUDRATE_rxError(unsigned int mode, unsigned int s_mod, unsigned int f_mod, double t_sync)</div><div class="ttdef"><b>Definition:</b> uart_baudrate.c:123</div></div>
+<div class="ttc" id="uart__baudrate_8c_html_a4e761edda85f1cd72ff28d29b518efac"><div class="ttname"><a href="uart__baudrate_8c.html#a4e761edda85f1cd72ff28d29b518efac">UARTBAUDRATE_txError</a></div><div class="ttdeci">MAX_ERR UARTBAUDRATE_txError(unsigned int mode, unsigned int s_mod, unsigned int f_mod)</div><div class="ttdef"><b>Definition:</b> uart_baudrate.c:87</div></div>
+<div class="ttc" id="struct_e_r_r_o_r___s_t_r_u_c_t_u_r_e_html_adcdc723268501b0e8fc49213e396a760"><div class="ttname"><a href="struct_e_r_r_o_r___s_t_r_u_c_t_u_r_e.html#adcdc723268501b0e8fc49213e396a760">ERROR_STRUCTURE::max_positive_error</a></div><div class="ttdeci">double max_positive_error</div><div class="ttdef"><b>Definition:</b> uart_baudrate.h:53</div></div>
+<div class="ttc" id="struct_e_r_r_o_r___s_t_r_u_c_t_u_r_e_html_aaaad9e679b5aea59d3c7ef2e9688d55d"><div class="ttname"><a href="struct_e_r_r_o_r___s_t_r_u_c_t_u_r_e.html#aaaad9e679b5aea59d3c7ef2e9688d55d">ERROR_STRUCTURE::max_error</a></div><div class="ttdeci">double max_error</div><div class="ttdef"><b>Definition:</b> uart_baudrate.h:52</div></div>
+<div class="ttc" id="struct_e_r_r_o_r___s_t_r_u_c_t_u_r_e_html_a1b3762625715e337e02739571eb4d5a9"><div class="ttname"><a href="struct_e_r_r_o_r___s_t_r_u_c_t_u_r_e.html#a1b3762625715e337e02739571eb4d5a9">ERROR_STRUCTURE::max_negative_error</a></div><div class="ttdeci">double max_negative_error</div><div class="ttdef"><b>Definition:</b> uart_baudrate.h:54</div></div>
 <div class="ttc" id="struct_e_r_r_o_r___s_t_r_u_c_t_u_r_e_html"><div class="ttname"><a href="struct_e_r_r_o_r___s_t_r_u_c_t_u_r_e.html">ERROR_STRUCTURE</a></div><div class="ttdef"><b>Definition:</b> uart_baudrate.h:51</div></div>
+<div class="ttc" id="uart__baudrate_8h_html_a9504d5594dcb3ad424b2df236da4c069"><div class="ttname"><a href="uart__baudrate_8h.html#a9504d5594dcb3ad424b2df236da4c069">MAX_ERR</a></div><div class="ttdeci">struct ERROR_STRUCTURE MAX_ERR</div></div>
 </div><!-- fragment --></div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Sat Nov 23 2013 08:43:38 for OSS-7: Open Source Stack for Dash7 Alliance Protocol by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Mon Nov 25 2013 10:24:14 for OSS-7: Open Source Stack for Dash7 Alliance Protocol by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.5
 </small></address>

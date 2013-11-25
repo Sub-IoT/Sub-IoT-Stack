@@ -37,6 +37,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
   <div id="navrow1" class="tabs">
     <ul class="tablist">
       <li><a href="index.html"><span>Main&#160;Page</span></a></li>
+      <li><a href="pages.html"><span>Related&#160;Pages</span></a></li>
       <li><a href="annotated.html"><span>Data&#160;Structures</span></a></li>
       <li class="current"><a href="files.html"><span>Files</span></a></li>
       <li>
@@ -60,6 +61,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
   <div id="navrow2" class="tabs2">
     <ul class="tablist">
       <li><a href="files.html"><span>File&#160;List</span></a></li>
+      <li><a href="globals.html"><span>Globals</span></a></li>
     </ul>
   </div>
 <!-- window showing the filter options -->
@@ -67,7 +69,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
      onmouseover="return searchBox.OnSearchSelectShow()"
      onmouseout="return searchBox.OnSearchSelectHide()"
      onkeydown="return searchBox.OnSearchSelectKey(event)">
-<a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(0)"><span class="SelectionMark">&#160;</span>All</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(1)"><span class="SelectionMark">&#160;</span>Data Structures</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(2)"><span class="SelectionMark">&#160;</span>Variables</a></div>
+<a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(0)"><span class="SelectionMark">&#160;</span>All</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(1)"><span class="SelectionMark">&#160;</span>Data Structures</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(2)"><span class="SelectionMark">&#160;</span>Files</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(3)"><span class="SelectionMark">&#160;</span>Functions</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(4)"><span class="SelectionMark">&#160;</span>Variables</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(5)"><span class="SelectionMark">&#160;</span>Typedefs</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(6)"><span class="SelectionMark">&#160;</span>Enumerations</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(7)"><span class="SelectionMark">&#160;</span>Enumerator</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(8)"><span class="SelectionMark">&#160;</span>Macros</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(9)"><span class="SelectionMark">&#160;</span>Pages</a></div>
 
 <!-- iframe showing the search results (closed by default) -->
 <div id="MSearchResultsWindow">
@@ -86,7 +88,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <div class="title">fec.h</div>  </div>
 </div><!--header-->
 <div class="contents">
-<div class="fragment"><div class="line"><a name="l00001"></a><span class="lineno">    1</span>&#160;<span class="comment">/*</span></div>
+<a href="fec_8h.html">Go to the documentation of this file.</a><div class="fragment"><div class="line"><a name="l00001"></a><span class="lineno">    1</span>&#160;<span class="comment">/*</span></div>
 <div class="line"><a name="l00002"></a><span class="lineno">    2</span>&#160;<span class="comment"> * (C) Copyright 2013 University of Antwerp (http://www.cosys-lab.be) and others.</span></div>
 <div class="line"><a name="l00003"></a><span class="lineno">    3</span>&#160;<span class="comment"> *</span></div>
 <div class="line"><a name="l00004"></a><span class="lineno">    4</span>&#160;<span class="comment"> * All rights reserved. This program and the accompanying materials</span></div>
@@ -117,36 +119,45 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <div class="line"><a name="l00029"></a><span class="lineno">   29</span>&#160;<span class="preprocessor">#include &lt;stdint.h&gt;</span></div>
 <div class="line"><a name="l00030"></a><span class="lineno">   30</span>&#160;</div>
 <div class="line"><a name="l00031"></a><span class="lineno"><a class="line" href="struct_v_i_t_e_r_b_i_p_a_t_h.html">   31</a></span>&#160;<span class="keyword">typedef</span> <span class="keyword">struct </span>{</div>
-<div class="line"><a name="l00032"></a><span class="lineno">   32</span>&#160;    uint8_t cost;</div>
-<div class="line"><a name="l00033"></a><span class="lineno">   33</span>&#160;    uint16_t path;</div>
+<div class="line"><a name="l00032"></a><span class="lineno"><a class="line" href="struct_v_i_t_e_r_b_i_p_a_t_h.html#a69cc36042ddf8af4e0c3f0bcc2f1c86a">   32</a></span>&#160;    uint8_t <a class="code" href="struct_v_i_t_e_r_b_i_p_a_t_h.html#a69cc36042ddf8af4e0c3f0bcc2f1c86a">cost</a>;</div>
+<div class="line"><a name="l00033"></a><span class="lineno"><a class="line" href="struct_v_i_t_e_r_b_i_p_a_t_h.html#aed440a34c09a23c4aeb4cc10958e8df3">   33</a></span>&#160;    uint16_t <a class="code" href="struct_v_i_t_e_r_b_i_p_a_t_h.html#aed440a34c09a23c4aeb4cc10958e8df3">path</a>;</div>
 <div class="line"><a name="l00034"></a><span class="lineno">   34</span>&#160;} <a class="code" href="struct_v_i_t_e_r_b_i_p_a_t_h.html">VITERBIPATH</a>;</div>
 <div class="line"><a name="l00035"></a><span class="lineno">   35</span>&#160;</div>
 <div class="line"><a name="l00036"></a><span class="lineno"><a class="line" href="struct_v_i_t_e_r_b_i_s_t_a_t_e.html">   36</a></span>&#160;<span class="keyword">typedef</span> <span class="keyword">struct </span>{</div>
-<div class="line"><a name="l00037"></a><span class="lineno">   37</span>&#160;    uint8_t path_size;</div>
-<div class="line"><a name="l00038"></a><span class="lineno">   38</span>&#160;    <a class="code" href="struct_v_i_t_e_r_b_i_p_a_t_h.html">VITERBIPATH</a>* old;</div>
-<div class="line"><a name="l00039"></a><span class="lineno">   39</span>&#160;    <a class="code" href="struct_v_i_t_e_r_b_i_p_a_t_h.html">VITERBIPATH</a>* <span class="keyword">new</span>;</div>
-<div class="line"><a name="l00040"></a><span class="lineno">   40</span>&#160;    <a class="code" href="struct_v_i_t_e_r_b_i_p_a_t_h.html">VITERBIPATH</a> states1[8];</div>
-<div class="line"><a name="l00041"></a><span class="lineno">   41</span>&#160;    <a class="code" href="struct_v_i_t_e_r_b_i_p_a_t_h.html">VITERBIPATH</a> states2[8];</div>
+<div class="line"><a name="l00037"></a><span class="lineno"><a class="line" href="struct_v_i_t_e_r_b_i_s_t_a_t_e.html#ac9c00f87726d6e6a7fbfa594867f031b">   37</a></span>&#160;    uint8_t <a class="code" href="struct_v_i_t_e_r_b_i_s_t_a_t_e.html#ac9c00f87726d6e6a7fbfa594867f031b">path_size</a>;</div>
+<div class="line"><a name="l00038"></a><span class="lineno"><a class="line" href="struct_v_i_t_e_r_b_i_s_t_a_t_e.html#ab54d8300e8209dbbc583f90b6401799b">   38</a></span>&#160;    <a class="code" href="struct_v_i_t_e_r_b_i_p_a_t_h.html">VITERBIPATH</a>* <a class="code" href="struct_v_i_t_e_r_b_i_s_t_a_t_e.html#ab54d8300e8209dbbc583f90b6401799b">old</a>;</div>
+<div class="line"><a name="l00039"></a><span class="lineno"><a class="line" href="struct_v_i_t_e_r_b_i_s_t_a_t_e.html#adbd87f533f56f806def8e959fdde56a4">   39</a></span>&#160;    <a class="code" href="struct_v_i_t_e_r_b_i_p_a_t_h.html">VITERBIPATH</a>* <span class="keyword">new</span>;</div>
+<div class="line"><a name="l00040"></a><span class="lineno"><a class="line" href="struct_v_i_t_e_r_b_i_s_t_a_t_e.html#aef0ba17e07889be5bd1a8291df3c571a">   40</a></span>&#160;    <a class="code" href="struct_v_i_t_e_r_b_i_p_a_t_h.html">VITERBIPATH</a> states1[8];</div>
+<div class="line"><a name="l00041"></a><span class="lineno"><a class="line" href="struct_v_i_t_e_r_b_i_s_t_a_t_e.html#a9ddb62f248a3c9d2be11f7472a4b252d">   41</a></span>&#160;    <a class="code" href="struct_v_i_t_e_r_b_i_p_a_t_h.html">VITERBIPATH</a> states2[8];</div>
 <div class="line"><a name="l00042"></a><span class="lineno">   42</span>&#160;} <a class="code" href="struct_v_i_t_e_r_b_i_s_t_a_t_e.html">VITERBISTATE</a>;</div>
 <div class="line"><a name="l00043"></a><span class="lineno">   43</span>&#160;</div>
 <div class="line"><a name="l00044"></a><span class="lineno">   44</span>&#160;</div>
-<div class="line"><a name="l00045"></a><span class="lineno">   45</span>&#160;<span class="keywordtype">void</span> fec_init_encode(uint8_t* input);</div>
-<div class="line"><a name="l00046"></a><span class="lineno">   46</span>&#160;<span class="keywordtype">void</span> fec_init_decode(uint8_t* output);</div>
-<div class="line"><a name="l00047"></a><span class="lineno">   47</span>&#160;<span class="keywordtype">void</span> fec_set_length(uint8_t length);</div>
-<div class="line"><a name="l00048"></a><span class="lineno">   48</span>&#160;<span class="keywordtype">bool</span> fec_encode(uint8_t* output);</div>
-<div class="line"><a name="l00049"></a><span class="lineno">   49</span>&#160;<span class="keywordtype">bool</span> fec_decode(uint8_t* input);</div>
+<div class="line"><a name="l00045"></a><span class="lineno">   45</span>&#160;<span class="keywordtype">void</span> <a class="code" href="fec_8h.html#ac5faad889d4cd75743ec0a425694d2dc">fec_init_encode</a>(uint8_t* input);</div>
+<div class="line"><a name="l00046"></a><span class="lineno">   46</span>&#160;<span class="keywordtype">void</span> <a class="code" href="fec_8h.html#a40cb08f237afb1c50034b549f7bf7b2b">fec_init_decode</a>(uint8_t* output);</div>
+<div class="line"><a name="l00047"></a><span class="lineno">   47</span>&#160;<span class="keywordtype">void</span> <a class="code" href="fec_8h.html#a1ccec7d2e3c7a7e2bfe9cfaf31b4f02f">fec_set_length</a>(uint8_t length);</div>
+<div class="line"><a name="l00048"></a><span class="lineno">   48</span>&#160;<span class="keywordtype">bool</span> <a class="code" href="fec_8h.html#af3cbed6fd576cb4fbfc0355e7c69aaec">fec_encode</a>(uint8_t* output);</div>
+<div class="line"><a name="l00049"></a><span class="lineno">   49</span>&#160;<span class="keywordtype">bool</span> <a class="code" href="fec_8h.html#ae9aba5af422966157a23d3a7eeeb8808">fec_decode</a>(uint8_t* input);</div>
 <div class="line"><a name="l00050"></a><span class="lineno">   50</span>&#160;</div>
 <div class="line"><a name="l00051"></a><span class="lineno">   51</span>&#160;<span class="preprocessor">#ifdef __cplusplus</span></div>
 <div class="line"><a name="l00052"></a><span class="lineno">   52</span>&#160;<span class="preprocessor"></span>}</div>
 <div class="line"><a name="l00053"></a><span class="lineno">   53</span>&#160;<span class="preprocessor">#endif</span></div>
 <div class="line"><a name="l00054"></a><span class="lineno">   54</span>&#160;<span class="preprocessor"></span></div>
 <div class="line"><a name="l00055"></a><span class="lineno">   55</span>&#160;<span class="preprocessor">#endif </span><span class="comment">/* FEC_H_ */</span><span class="preprocessor"></span></div>
+<div class="ttc" id="struct_v_i_t_e_r_b_i_p_a_t_h_html_aed440a34c09a23c4aeb4cc10958e8df3"><div class="ttname"><a href="struct_v_i_t_e_r_b_i_p_a_t_h.html#aed440a34c09a23c4aeb4cc10958e8df3">VITERBIPATH::path</a></div><div class="ttdeci">uint16_t path</div><div class="ttdef"><b>Definition:</b> fec.h:33</div></div>
+<div class="ttc" id="struct_v_i_t_e_r_b_i_s_t_a_t_e_html_ab54d8300e8209dbbc583f90b6401799b"><div class="ttname"><a href="struct_v_i_t_e_r_b_i_s_t_a_t_e.html#ab54d8300e8209dbbc583f90b6401799b">VITERBISTATE::old</a></div><div class="ttdeci">VITERBIPATH * old</div><div class="ttdef"><b>Definition:</b> fec.h:38</div></div>
+<div class="ttc" id="struct_v_i_t_e_r_b_i_s_t_a_t_e_html_ac9c00f87726d6e6a7fbfa594867f031b"><div class="ttname"><a href="struct_v_i_t_e_r_b_i_s_t_a_t_e.html#ac9c00f87726d6e6a7fbfa594867f031b">VITERBISTATE::path_size</a></div><div class="ttdeci">uint8_t path_size</div><div class="ttdef"><b>Definition:</b> fec.h:37</div></div>
 <div class="ttc" id="struct_v_i_t_e_r_b_i_p_a_t_h_html"><div class="ttname"><a href="struct_v_i_t_e_r_b_i_p_a_t_h.html">VITERBIPATH</a></div><div class="ttdef"><b>Definition:</b> fec.h:31</div></div>
+<div class="ttc" id="struct_v_i_t_e_r_b_i_p_a_t_h_html_a69cc36042ddf8af4e0c3f0bcc2f1c86a"><div class="ttname"><a href="struct_v_i_t_e_r_b_i_p_a_t_h.html#a69cc36042ddf8af4e0c3f0bcc2f1c86a">VITERBIPATH::cost</a></div><div class="ttdeci">uint8_t cost</div><div class="ttdef"><b>Definition:</b> fec.h:32</div></div>
+<div class="ttc" id="fec_8h_html_ac5faad889d4cd75743ec0a425694d2dc"><div class="ttname"><a href="fec_8h.html#ac5faad889d4cd75743ec0a425694d2dc">fec_init_encode</a></div><div class="ttdeci">void fec_init_encode(uint8_t *input)</div></div>
+<div class="ttc" id="fec_8h_html_a40cb08f237afb1c50034b549f7bf7b2b"><div class="ttname"><a href="fec_8h.html#a40cb08f237afb1c50034b549f7bf7b2b">fec_init_decode</a></div><div class="ttdeci">void fec_init_decode(uint8_t *output)</div></div>
+<div class="ttc" id="fec_8h_html_a1ccec7d2e3c7a7e2bfe9cfaf31b4f02f"><div class="ttname"><a href="fec_8h.html#a1ccec7d2e3c7a7e2bfe9cfaf31b4f02f">fec_set_length</a></div><div class="ttdeci">void fec_set_length(uint8_t length)</div></div>
+<div class="ttc" id="fec_8h_html_ae9aba5af422966157a23d3a7eeeb8808"><div class="ttname"><a href="fec_8h.html#ae9aba5af422966157a23d3a7eeeb8808">fec_decode</a></div><div class="ttdeci">bool fec_decode(uint8_t *input)</div></div>
 <div class="ttc" id="struct_v_i_t_e_r_b_i_s_t_a_t_e_html"><div class="ttname"><a href="struct_v_i_t_e_r_b_i_s_t_a_t_e.html">VITERBISTATE</a></div><div class="ttdef"><b>Definition:</b> fec.h:36</div></div>
+<div class="ttc" id="fec_8h_html_af3cbed6fd576cb4fbfc0355e7c69aaec"><div class="ttname"><a href="fec_8h.html#af3cbed6fd576cb4fbfc0355e7c69aaec">fec_encode</a></div><div class="ttdeci">bool fec_encode(uint8_t *output)</div></div>
 </div><!-- fragment --></div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Sat Nov 23 2013 08:43:38 for OSS-7: Open Source Stack for Dash7 Alliance Protocol by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Mon Nov 25 2013 10:24:15 for OSS-7: Open Source Stack for Dash7 Alliance Protocol by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.5
 </small></address>

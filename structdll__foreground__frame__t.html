@@ -37,6 +37,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
   <div id="navrow1" class="tabs">
     <ul class="tablist">
       <li><a href="index.html"><span>Main&#160;Page</span></a></li>
+      <li><a href="pages.html"><span>Related&#160;Pages</span></a></li>
       <li class="current"><a href="annotated.html"><span>Data&#160;Structures</span></a></li>
       <li><a href="files.html"><span>Files</span></a></li>
       <li>
@@ -69,7 +70,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
      onmouseover="return searchBox.OnSearchSelectShow()"
      onmouseout="return searchBox.OnSearchSelectHide()"
      onkeydown="return searchBox.OnSearchSelectKey(event)">
-<a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(0)"><span class="SelectionMark">&#160;</span>All</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(1)"><span class="SelectionMark">&#160;</span>Data Structures</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(2)"><span class="SelectionMark">&#160;</span>Variables</a></div>
+<a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(0)"><span class="SelectionMark">&#160;</span>All</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(1)"><span class="SelectionMark">&#160;</span>Data Structures</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(2)"><span class="SelectionMark">&#160;</span>Files</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(3)"><span class="SelectionMark">&#160;</span>Functions</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(4)"><span class="SelectionMark">&#160;</span>Variables</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(5)"><span class="SelectionMark">&#160;</span>Typedefs</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(6)"><span class="SelectionMark">&#160;</span>Enumerations</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(7)"><span class="SelectionMark">&#160;</span>Enumerator</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(8)"><span class="SelectionMark">&#160;</span>Macros</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(9)"><span class="SelectionMark">&#160;</span>Pages</a></div>
 
 <!-- iframe showing the search results (closed by default) -->
 <div id="MSearchResultsWindow">
@@ -86,35 +87,104 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <div class="title">dll_foreground_frame_t Struct Reference</div>  </div>
 </div><!--header-->
 <div class="contents">
+
+<p><code>#include &lt;<a class="el" href="dll_8h_source.html">dll.h</a>&gt;</code></p>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-attribs"></a>
 Data Fields</h2></td></tr>
-<tr class="memitem:ad3177fbe5de5d5400b1b1f9d226a6b91"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ad3177fbe5de5d5400b1b1f9d226a6b91"></a>
-uint8_t&#160;</td><td class="memItemRight" valign="bottom"><b>length</b></td></tr>
+<tr class="memitem:ad3177fbe5de5d5400b1b1f9d226a6b91"><td class="memItemLeft" align="right" valign="top">uint8_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structdll__foreground__frame__t.html#ad3177fbe5de5d5400b1b1f9d226a6b91">length</a></td></tr>
 <tr class="separator:ad3177fbe5de5d5400b1b1f9d226a6b91"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aa219faf6353d5a5547dab5ad73dbca3b"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aa219faf6353d5a5547dab5ad73dbca3b"></a>
-<a class="el" href="structdll__foreground__frame__header__t.html">dll_foreground_frame_header_t</a>&#160;</td><td class="memItemRight" valign="bottom"><b>frame_header</b></td></tr>
+<tr class="memitem:aa219faf6353d5a5547dab5ad73dbca3b"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structdll__foreground__frame__header__t.html">dll_foreground_frame_header_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structdll__foreground__frame__t.html#aa219faf6353d5a5547dab5ad73dbca3b">frame_header</a></td></tr>
 <tr class="separator:aa219faf6353d5a5547dab5ad73dbca3b"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:adc1de7c66891f36c188d237521c4149d"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="adc1de7c66891f36c188d237521c4149d"></a>
-<a class="el" href="structdll__foreground__frame__security__t.html">dll_foreground_frame_security_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><b>dlls_header</b></td></tr>
+<tr class="memitem:adc1de7c66891f36c188d237521c4149d"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structdll__foreground__frame__security__t.html">dll_foreground_frame_security_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structdll__foreground__frame__t.html#adc1de7c66891f36c188d237521c4149d">dlls_header</a></td></tr>
 <tr class="separator:adc1de7c66891f36c188d237521c4149d"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a4114f7f528acd4534ea5054bd10aab7f"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a4114f7f528acd4534ea5054bd10aab7f"></a>
-<a class="el" href="structdll__foreground__frame__address__ctl__t.html">dll_foreground_frame_address_ctl_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><b>address_ctl</b></td></tr>
+<tr class="memitem:a4114f7f528acd4534ea5054bd10aab7f"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structdll__foreground__frame__address__ctl__t.html">dll_foreground_frame_address_ctl_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structdll__foreground__frame__t.html#a4114f7f528acd4534ea5054bd10aab7f">address_ctl</a></td></tr>
 <tr class="separator:a4114f7f528acd4534ea5054bd10aab7f"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aa4005271cc6fbea09ba4b8dd68790e6e"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aa4005271cc6fbea09ba4b8dd68790e6e"></a>
-uint8_t&#160;</td><td class="memItemRight" valign="bottom"><b>payload_length</b></td></tr>
+<tr class="memitem:aa4005271cc6fbea09ba4b8dd68790e6e"><td class="memItemLeft" align="right" valign="top">uint8_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structdll__foreground__frame__t.html#aa4005271cc6fbea09ba4b8dd68790e6e">payload_length</a></td></tr>
 <tr class="separator:aa4005271cc6fbea09ba4b8dd68790e6e"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a59b3d2b0e604bb3d68076b1f1c67e40c"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a59b3d2b0e604bb3d68076b1f1c67e40c"></a>
-uint8_t *&#160;</td><td class="memItemRight" valign="bottom"><b>payload</b></td></tr>
+<tr class="memitem:a59b3d2b0e604bb3d68076b1f1c67e40c"><td class="memItemLeft" align="right" valign="top">uint8_t *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structdll__foreground__frame__t.html#a59b3d2b0e604bb3d68076b1f1c67e40c">payload</a></td></tr>
 <tr class="separator:a59b3d2b0e604bb3d68076b1f1c67e40c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
+<h2 class="groupheader">Field Documentation</h2>
+<a class="anchor" id="a4114f7f528acd4534ea5054bd10aab7f"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="structdll__foreground__frame__address__ctl__t.html">dll_foreground_frame_address_ctl_t</a>* dll_foreground_frame_t::address_ctl</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a class="anchor" id="adc1de7c66891f36c188d237521c4149d"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="structdll__foreground__frame__security__t.html">dll_foreground_frame_security_t</a>* dll_foreground_frame_t::dlls_header</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a class="anchor" id="aa219faf6353d5a5547dab5ad73dbca3b"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="structdll__foreground__frame__header__t.html">dll_foreground_frame_header_t</a> dll_foreground_frame_t::frame_header</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a class="anchor" id="ad3177fbe5de5d5400b1b1f9d226a6b91"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">uint8_t dll_foreground_frame_t::length</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a class="anchor" id="a59b3d2b0e604bb3d68076b1f1c67e40c"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">uint8_t* dll_foreground_frame_t::payload</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a class="anchor" id="aa4005271cc6fbea09ba4b8dd68790e6e"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">uint8_t dll_foreground_frame_t::payload_length</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
 <hr/>The documentation for this struct was generated from the following file:<ul>
 <li>d7aoss/dll/<a class="el" href="dll_8h_source.html">dll.h</a></li>
 </ul>
 </div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Sat Nov 23 2013 08:43:39 for OSS-7: Open Source Stack for Dash7 Alliance Protocol by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Mon Nov 25 2013 10:24:17 for OSS-7: Open Source Stack for Dash7 Alliance Protocol by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.5
 </small></address>

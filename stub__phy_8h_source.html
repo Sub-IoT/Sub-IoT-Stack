@@ -37,6 +37,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
   <div id="navrow1" class="tabs">
     <ul class="tablist">
       <li><a href="index.html"><span>Main&#160;Page</span></a></li>
+      <li><a href="pages.html"><span>Related&#160;Pages</span></a></li>
       <li><a href="annotated.html"><span>Data&#160;Structures</span></a></li>
       <li class="current"><a href="files.html"><span>Files</span></a></li>
       <li>
@@ -60,6 +61,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
   <div id="navrow2" class="tabs2">
     <ul class="tablist">
       <li><a href="files.html"><span>File&#160;List</span></a></li>
+      <li><a href="globals.html"><span>Globals</span></a></li>
     </ul>
   </div>
 <!-- window showing the filter options -->
@@ -67,7 +69,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
      onmouseover="return searchBox.OnSearchSelectShow()"
      onmouseout="return searchBox.OnSearchSelectHide()"
      onkeydown="return searchBox.OnSearchSelectKey(event)">
-<a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(0)"><span class="SelectionMark">&#160;</span>All</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(1)"><span class="SelectionMark">&#160;</span>Data Structures</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(2)"><span class="SelectionMark">&#160;</span>Variables</a></div>
+<a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(0)"><span class="SelectionMark">&#160;</span>All</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(1)"><span class="SelectionMark">&#160;</span>Data Structures</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(2)"><span class="SelectionMark">&#160;</span>Files</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(3)"><span class="SelectionMark">&#160;</span>Functions</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(4)"><span class="SelectionMark">&#160;</span>Variables</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(5)"><span class="SelectionMark">&#160;</span>Typedefs</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(6)"><span class="SelectionMark">&#160;</span>Enumerations</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(7)"><span class="SelectionMark">&#160;</span>Enumerator</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(8)"><span class="SelectionMark">&#160;</span>Macros</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(9)"><span class="SelectionMark">&#160;</span>Pages</a></div>
 
 <!-- iframe showing the search results (closed by default) -->
 <div id="MSearchResultsWindow">
@@ -86,7 +88,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <div class="title">stub_phy.h</div>  </div>
 </div><!--header-->
 <div class="contents">
-<div class="fragment"><div class="line"><a name="l00001"></a><span class="lineno">    1</span>&#160;<span class="comment">/*</span></div>
+<a href="stub__phy_8h.html">Go to the documentation of this file.</a><div class="fragment"><div class="line"><a name="l00001"></a><span class="lineno">    1</span>&#160;<span class="comment">/*</span></div>
 <div class="line"><a name="l00002"></a><span class="lineno">    2</span>&#160;<span class="comment"> * (C) Copyright 2013 University of Antwerp (http://www.cosys-lab.be) and others.</span></div>
 <div class="line"><a name="l00003"></a><span class="lineno">    3</span>&#160;<span class="comment"> *</span></div>
 <div class="line"><a name="l00004"></a><span class="lineno">    4</span>&#160;<span class="comment"> * All rights reserved. This program and the accompanying materials</span></div>
@@ -116,23 +118,31 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <div class="line"><a name="l00028"></a><span class="lineno">   28</span>&#160;<span class="comment">/*</span></div>
 <div class="line"><a name="l00029"></a><span class="lineno">   29</span>&#160;<span class="comment"> * Phy implementation function prototypes</span></div>
 <div class="line"><a name="l00030"></a><span class="lineno">   30</span>&#160;<span class="comment"> */</span></div>
-<div class="line"><a name="l00031"></a><span class="lineno">   31</span>&#160;<span class="keywordtype">void</span> phy_init(<span class="keywordtype">void</span>);</div>
-<div class="line"><a name="l00032"></a><span class="lineno">   32</span>&#160;<span class="keywordtype">void</span> phy_idle(<span class="keywordtype">void</span>);</div>
-<div class="line"><a name="l00033"></a><span class="lineno">   33</span>&#160;<span class="keywordtype">bool</span> phy_tx(phy_tx_cfg* cfg);</div>
-<div class="line"><a name="l00034"></a><span class="lineno">   34</span>&#160;<span class="keywordtype">bool</span> phy_rx(phy_rx_cfg* cfg);</div>
-<div class="line"><a name="l00035"></a><span class="lineno">   35</span>&#160;<span class="keywordtype">bool</span> phy_is_rx_in_progress(<span class="keywordtype">void</span>);</div>
-<div class="line"><a name="l00036"></a><span class="lineno">   36</span>&#160;<span class="keywordtype">bool</span> phy_is_tx_in_progress(<span class="keywordtype">void</span>);</div>
-<div class="line"><a name="l00037"></a><span class="lineno">   37</span>&#160;<span class="keywordtype">bool</span> phy_cca(uint8_t spectrum_id, uint8_t sync_word_class);</div>
+<div class="line"><a name="l00031"></a><span class="lineno">   31</span>&#160;<span class="keywordtype">void</span> <a class="code" href="cc430__phy_8c.html#ab76f7e9538861d8d7955069a92e9ba7a">phy_init</a>(<span class="keywordtype">void</span>);</div>
+<div class="line"><a name="l00032"></a><span class="lineno">   32</span>&#160;<span class="keywordtype">void</span> <a class="code" href="cc430__phy_8c.html#aab415014a09011ed55c3cab8e31765ca">phy_idle</a>(<span class="keywordtype">void</span>);</div>
+<div class="line"><a name="l00033"></a><span class="lineno">   33</span>&#160;<span class="keywordtype">bool</span> <a class="code" href="cc430__phy_8c.html#ac74dd73a90ece5594a4d7ece86afb8e1">phy_tx</a>(phy_tx_cfg* cfg);</div>
+<div class="line"><a name="l00034"></a><span class="lineno">   34</span>&#160;<span class="keywordtype">bool</span> <a class="code" href="cc430__phy_8c.html#a0c97c7e754e7d406f8760b70dc277731">phy_rx</a>(phy_rx_cfg* cfg);</div>
+<div class="line"><a name="l00035"></a><span class="lineno">   35</span>&#160;<span class="keywordtype">bool</span> <a class="code" href="cc430__phy_8c.html#a1ef62777fc4c0d4a4fb00d71ceb85b93">phy_is_rx_in_progress</a>(<span class="keywordtype">void</span>);</div>
+<div class="line"><a name="l00036"></a><span class="lineno">   36</span>&#160;<span class="keywordtype">bool</span> <a class="code" href="cc430__phy_8c.html#a124caa678ac414226cbcc02f14603f2a">phy_is_tx_in_progress</a>(<span class="keywordtype">void</span>);</div>
+<div class="line"><a name="l00037"></a><span class="lineno">   37</span>&#160;<span class="keywordtype">bool</span> <a class="code" href="phy_8c.html#ae44ec159569ad9e8aca20903e1616f1d">phy_cca</a>(uint8_t <a class="code" href="dll_8c.html#a04dbe032d82232a5c5e09bef0334c20a">spectrum_id</a>, uint8_t sync_word_class);</div>
 <div class="line"><a name="l00038"></a><span class="lineno">   38</span>&#160;</div>
 <div class="line"><a name="l00039"></a><span class="lineno">   39</span>&#160;<span class="preprocessor">#ifdef __cplusplus</span></div>
 <div class="line"><a name="l00040"></a><span class="lineno">   40</span>&#160;<span class="preprocessor"></span>}</div>
 <div class="line"><a name="l00041"></a><span class="lineno">   41</span>&#160;<span class="preprocessor">#endif</span></div>
 <div class="line"><a name="l00042"></a><span class="lineno">   42</span>&#160;<span class="preprocessor"></span></div>
 <div class="line"><a name="l00043"></a><span class="lineno">   43</span>&#160;<span class="preprocessor">#endif </span><span class="comment">/* STUB_PHY_H_ */</span><span class="preprocessor"></span></div>
+<div class="ttc" id="phy_8c_html_ae44ec159569ad9e8aca20903e1616f1d"><div class="ttname"><a href="phy_8c.html#ae44ec159569ad9e8aca20903e1616f1d">phy_cca</a></div><div class="ttdeci">bool phy_cca(uint8_t spectrum_id, uint8_t sync_word_class)</div><div class="ttdef"><b>Definition:</b> phy.c:41</div></div>
+<div class="ttc" id="dll_8c_html_a04dbe032d82232a5c5e09bef0334c20a"><div class="ttname"><a href="dll_8c.html#a04dbe032d82232a5c5e09bef0334c20a">spectrum_id</a></div><div class="ttdeci">uint8_t spectrum_id</div><div class="ttdef"><b>Definition:</b> dll.c:50</div></div>
+<div class="ttc" id="cc430__phy_8c_html_aab415014a09011ed55c3cab8e31765ca"><div class="ttname"><a href="cc430__phy_8c.html#aab415014a09011ed55c3cab8e31765ca">phy_idle</a></div><div class="ttdeci">void phy_idle(void)</div><div class="ttdef"><b>Definition:</b> cc430_phy.c:97</div></div>
+<div class="ttc" id="cc430__phy_8c_html_a1ef62777fc4c0d4a4fb00d71ceb85b93"><div class="ttname"><a href="cc430__phy_8c.html#a1ef62777fc4c0d4a4fb00d71ceb85b93">phy_is_rx_in_progress</a></div><div class="ttdeci">bool phy_is_rx_in_progress(void)</div><div class="ttdef"><b>Definition:</b> cc430_phy.c:335</div></div>
+<div class="ttc" id="cc430__phy_8c_html_ab76f7e9538861d8d7955069a92e9ba7a"><div class="ttname"><a href="cc430__phy_8c.html#ab76f7e9538861d8d7955069a92e9ba7a">phy_init</a></div><div class="ttdeci">void phy_init(void)</div><div class="ttdef"><b>Definition:</b> cc430_phy.c:80</div></div>
+<div class="ttc" id="cc430__phy_8c_html_a0c97c7e754e7d406f8760b70dc277731"><div class="ttname"><a href="cc430__phy_8c.html#a0c97c7e754e7d406f8760b70dc277731">phy_rx</a></div><div class="ttdeci">bool phy_rx(phy_rx_cfg_t *cfg)</div><div class="ttdef"><b>Definition:</b> cc430_phy.c:241</div></div>
+<div class="ttc" id="cc430__phy_8c_html_ac74dd73a90ece5594a4d7ece86afb8e1"><div class="ttname"><a href="cc430__phy_8c.html#ac74dd73a90ece5594a4d7ece86afb8e1">phy_tx</a></div><div class="ttdeci">bool phy_tx(phy_tx_cfg_t *cfg)</div><div class="ttdef"><b>Definition:</b> cc430_phy.c:220</div></div>
+<div class="ttc" id="cc430__phy_8c_html_a124caa678ac414226cbcc02f14603f2a"><div class="ttname"><a href="cc430__phy_8c.html#a124caa678ac414226cbcc02f14603f2a">phy_is_tx_in_progress</a></div><div class="ttdeci">bool phy_is_tx_in_progress(void)</div><div class="ttdef"><b>Definition:</b> cc430_phy.c:340</div></div>
 </div><!-- fragment --></div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Sat Nov 23 2013 08:43:39 for OSS-7: Open Source Stack for Dash7 Alliance Protocol by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Mon Nov 25 2013 10:24:15 for OSS-7: Open Source Stack for Dash7 Alliance Protocol by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.5
 </small></address>

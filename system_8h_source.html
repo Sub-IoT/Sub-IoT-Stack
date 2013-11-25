@@ -37,6 +37,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
   <div id="navrow1" class="tabs">
     <ul class="tablist">
       <li><a href="index.html"><span>Main&#160;Page</span></a></li>
+      <li><a href="pages.html"><span>Related&#160;Pages</span></a></li>
       <li><a href="annotated.html"><span>Data&#160;Structures</span></a></li>
       <li class="current"><a href="files.html"><span>Files</span></a></li>
       <li>
@@ -60,6 +61,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
   <div id="navrow2" class="tabs2">
     <ul class="tablist">
       <li><a href="files.html"><span>File&#160;List</span></a></li>
+      <li><a href="globals.html"><span>Globals</span></a></li>
     </ul>
   </div>
 <!-- window showing the filter options -->
@@ -67,7 +69,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
      onmouseover="return searchBox.OnSearchSelectShow()"
      onmouseout="return searchBox.OnSearchSelectHide()"
      onkeydown="return searchBox.OnSearchSelectKey(event)">
-<a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(0)"><span class="SelectionMark">&#160;</span>All</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(1)"><span class="SelectionMark">&#160;</span>Data Structures</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(2)"><span class="SelectionMark">&#160;</span>Variables</a></div>
+<a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(0)"><span class="SelectionMark">&#160;</span>All</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(1)"><span class="SelectionMark">&#160;</span>Data Structures</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(2)"><span class="SelectionMark">&#160;</span>Files</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(3)"><span class="SelectionMark">&#160;</span>Functions</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(4)"><span class="SelectionMark">&#160;</span>Variables</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(5)"><span class="SelectionMark">&#160;</span>Typedefs</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(6)"><span class="SelectionMark">&#160;</span>Enumerations</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(7)"><span class="SelectionMark">&#160;</span>Enumerator</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(8)"><span class="SelectionMark">&#160;</span>Macros</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(9)"><span class="SelectionMark">&#160;</span>Pages</a></div>
 
 <!-- iframe showing the search results (closed by default) -->
 <div id="MSearchResultsWindow">
@@ -86,7 +88,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <div class="title">system.h</div>  </div>
 </div><!--header-->
 <div class="contents">
-<div class="fragment"><div class="line"><a name="l00001"></a><span class="lineno">    1</span>&#160;<span class="comment">/*</span></div>
+<a href="system_8h.html">Go to the documentation of this file.</a><div class="fragment"><div class="line"><a name="l00001"></a><span class="lineno">    1</span>&#160;<span class="comment">/*</span></div>
 <div class="line"><a name="l00002"></a><span class="lineno">    2</span>&#160;<span class="comment"> * (C) Copyright 2013 University of Antwerp (http://www.cosys-lab.be) and others.</span></div>
 <div class="line"><a name="l00003"></a><span class="lineno">    3</span>&#160;<span class="comment"> *</span></div>
 <div class="line"><a name="l00004"></a><span class="lineno">    4</span>&#160;<span class="comment"> * All rights reserved. This program and the accompanying materials</span></div>
@@ -110,49 +112,65 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <div class="line"><a name="l00022"></a><span class="lineno">   22</span>&#160;<span class="preprocessor"></span></div>
 <div class="line"><a name="l00023"></a><span class="lineno">   23</span>&#160;<span class="preprocessor">#include &quot;../types.h&quot;</span></div>
 <div class="line"><a name="l00024"></a><span class="lineno">   24</span>&#160;</div>
-<div class="line"><a name="l00025"></a><span class="lineno">   25</span>&#160;<span class="preprocessor">#define ENTER_CRITICAL_SECTION(x)   __disable_interrupt(); //st( x = __read_status_register(); __disable_interrupt(); )</span></div>
-<div class="line"><a name="l00026"></a><span class="lineno">   26</span>&#160;<span class="preprocessor"></span><span class="preprocessor">#define EXIT_CRITICAL_SECTION(x)    __enable_interrupt(); //__write_status_register(x)</span></div>
+<div class="line"><a name="l00025"></a><span class="lineno"><a class="line" href="system_8h.html#a81bd8438bd53715b20f45ef6f7a1a8c1">   25</a></span>&#160;<span class="preprocessor">#define ENTER_CRITICAL_SECTION(x)   __disable_interrupt(); //st( x = __read_status_register(); __disable_interrupt(); )</span></div>
+<div class="line"><a name="l00026"></a><span class="lineno"><a class="line" href="system_8h.html#a98c17b875da74687ccf00fbfdc6718e1">   26</a></span>&#160;<span class="preprocessor"></span><span class="preprocessor">#define EXIT_CRITICAL_SECTION(x)    __enable_interrupt(); //__write_status_register(x)</span></div>
 <div class="line"><a name="l00027"></a><span class="lineno">   27</span>&#160;<span class="preprocessor"></span></div>
-<div class="line"><a name="l00028"></a><span class="lineno">   28</span>&#160;<span class="preprocessor">#define SWITCH_BYTES(x) (x &lt;&lt; 8 | x &gt;&gt; 8)</span></div>
-<div class="line"><a name="l00029"></a><span class="lineno">   29</span>&#160;<span class="preprocessor"></span><span class="preprocessor">#define SPLITUINT16(x) (uint8_t)((x) &gt;&gt; 8), (uint8_t)((x) &amp; 0x00FF)</span></div>
+<div class="line"><a name="l00028"></a><span class="lineno"><a class="line" href="system_8h.html#afb32f9dbc561ea486c92a17cb62b3b81">   28</a></span>&#160;<span class="preprocessor">#define SWITCH_BYTES(x) (x &lt;&lt; 8 | x &gt;&gt; 8)</span></div>
+<div class="line"><a name="l00029"></a><span class="lineno"><a class="line" href="system_8h.html#af442009da99e86a8873b7b1444817cc7">   29</a></span>&#160;<span class="preprocessor"></span><span class="preprocessor">#define SPLITUINT16(x) (uint8_t)((x) &gt;&gt; 8), (uint8_t)((x) &amp; 0x00FF)</span></div>
 <div class="line"><a name="l00030"></a><span class="lineno">   30</span>&#160;<span class="preprocessor"></span></div>
 <div class="line"><a name="l00031"></a><span class="lineno">   31</span>&#160;<span class="preprocessor">#if defined(__MSPGCC__)</span></div>
 <div class="line"><a name="l00032"></a><span class="lineno">   32</span>&#160;<span class="preprocessor"></span><span class="preprocessor">#define __ISR(a,b)   void __attribute__((interrupt (a))) b (void)</span></div>
 <div class="line"><a name="l00033"></a><span class="lineno">   33</span>&#160;<span class="preprocessor"></span><span class="preprocessor">#define __even_in_range(a,b) (a)</span></div>
 <div class="line"><a name="l00034"></a><span class="lineno">   34</span>&#160;<span class="preprocessor"></span><span class="preprocessor">#else</span></div>
-<div class="line"><a name="l00035"></a><span class="lineno">   35</span>&#160;<span class="preprocessor"></span><span class="preprocessor">#define __ISR(a,b)   __interrupt void b (void)</span></div>
+<div class="line"><a name="l00035"></a><span class="lineno"><a class="line" href="system_8h.html#a2a7b627abb5af639829c7e7b70a04cd5">   35</a></span>&#160;<span class="preprocessor"></span><span class="preprocessor">#define __ISR(a,b)   __interrupt void b (void)</span></div>
 <div class="line"><a name="l00036"></a><span class="lineno">   36</span>&#160;<span class="preprocessor"></span><span class="preprocessor">#endif</span></div>
 <div class="line"><a name="l00037"></a><span class="lineno">   37</span>&#160;<span class="preprocessor"></span></div>
-<div class="line"><a name="l00038"></a><span class="lineno">   38</span>&#160;<span class="preprocessor">#define AUX_CLOCK   32768</span></div>
+<div class="line"><a name="l00038"></a><span class="lineno"><a class="line" href="system_8h.html#a6cbc837e94461dd832b07ead5597278a">   38</a></span>&#160;<span class="preprocessor">#define AUX_CLOCK   32768</span></div>
 <div class="line"><a name="l00039"></a><span class="lineno">   39</span>&#160;<span class="preprocessor"></span></div>
-<div class="line"><a name="l00040"></a><span class="lineno">   40</span>&#160;<span class="keyword">extern</span> uint8_t device_id[8]; <span class="comment">// TODO: keep this as global?</span></div>
-<div class="line"><a name="l00041"></a><span class="lineno">   41</span>&#160;<span class="keyword">extern</span> uint8_t virtual_id[2];</div>
+<div class="line"><a name="l00040"></a><span class="lineno">   40</span>&#160;<span class="keyword">extern</span> uint8_t <a class="code" href="cc430__system_8c.html#a16fd0edcede96ae1cac4b55a3b18ed53">device_id</a>[8]; <span class="comment">// TODO: keep this as global?</span></div>
+<div class="line"><a name="l00041"></a><span class="lineno">   41</span>&#160;<span class="keyword">extern</span> uint8_t <a class="code" href="cc430__system_8c.html#a8e0dcca7a783a73159af5cee113a8bb2">virtual_id</a>[2];</div>
 <div class="line"><a name="l00042"></a><span class="lineno">   42</span>&#160;</div>
-<div class="line"><a name="l00043"></a><span class="lineno">   43</span>&#160;<span class="keyword">extern</span> uint32_t clock_speed;</div>
+<div class="line"><a name="l00043"></a><span class="lineno">   43</span>&#160;<span class="keyword">extern</span> uint32_t <a class="code" href="cc430__system_8c.html#a6b31cd786761f86279de4b3a2c3d839f">clock_speed</a>;</div>
 <div class="line"><a name="l00044"></a><span class="lineno">   44</span>&#160;</div>
-<div class="line"><a name="l00045"></a><span class="lineno">   45</span>&#160;<span class="keyword">extern</span> uint8_t vCore_level;</div>
-<div class="line"><a name="l00046"></a><span class="lineno">   46</span>&#160;<span class="keyword">extern</span> uint16_t target_clock_speed_kHz;</div>
-<div class="line"><a name="l00047"></a><span class="lineno">   47</span>&#160;<span class="keyword">extern</span> uint8_t init_IO;</div>
+<div class="line"><a name="l00045"></a><span class="lineno">   45</span>&#160;<span class="keyword">extern</span> uint8_t <a class="code" href="cc430__system_8c.html#a3d3e27a8904f4101aae497506a50a577">vCore_level</a>;</div>
+<div class="line"><a name="l00046"></a><span class="lineno">   46</span>&#160;<span class="keyword">extern</span> uint16_t <a class="code" href="system_8h.html#a2971aa9e5825b6a5715f1451c7979878">target_clock_speed_kHz</a>;</div>
+<div class="line"><a name="l00047"></a><span class="lineno">   47</span>&#160;<span class="keyword">extern</span> uint8_t <a class="code" href="cc430__system_8c.html#aa37dd0729709f555671c589ba7df49f7">init_IO</a>;</div>
 <div class="line"><a name="l00048"></a><span class="lineno">   48</span>&#160;</div>
-<div class="line"><a name="l00049"></a><span class="lineno">   49</span>&#160;<span class="keywordtype">void</span> PMM_SetVCore (uint8_t level);</div>
-<div class="line"><a name="l00050"></a><span class="lineno">   50</span>&#160;<span class="keywordtype">void</span> system_init();</div>
+<div class="line"><a name="l00049"></a><span class="lineno">   49</span>&#160;<span class="keywordtype">void</span> <a class="code" href="cc430__system_8c.html#a838b70f3ccb51b397e72b80bb8d766f7">PMM_SetVCore</a> (uint8_t level);</div>
+<div class="line"><a name="l00050"></a><span class="lineno">   50</span>&#160;<span class="keywordtype">void</span> <a class="code" href="cc430__system_8c.html#a5e845e4be7ca0fd9d41d58b774045f71">system_init</a>();</div>
 <div class="line"><a name="l00051"></a><span class="lineno">   51</span>&#160;</div>
-<div class="line"><a name="l00052"></a><span class="lineno">   52</span>&#160;<span class="keywordtype">void</span> system_watchdog_timer_stop();</div>
-<div class="line"><a name="l00053"></a><span class="lineno">   53</span>&#160;<span class="keywordtype">void</span> system_watchdog_timer_start();</div>
-<div class="line"><a name="l00054"></a><span class="lineno">   54</span>&#160;<span class="keywordtype">void</span> system_watchdog_timer_reset();</div>
-<div class="line"><a name="l00055"></a><span class="lineno">   55</span>&#160;<span class="keywordtype">void</span> system_watchdog_timer_enable_interrupt();</div>
-<div class="line"><a name="l00056"></a><span class="lineno">   56</span>&#160;<span class="keywordtype">void</span> system_watchdog_timer_init(<span class="keywordtype">unsigned</span> <span class="keywordtype">char</span> clockSelect, <span class="keywordtype">unsigned</span> <span class="keywordtype">char</span> clockDivider);</div>
-<div class="line"><a name="l00057"></a><span class="lineno">   57</span>&#160;<span class="keywordtype">void</span> system_watchdog_init(<span class="keywordtype">unsigned</span> <span class="keywordtype">char</span> clockSelect, <span class="keywordtype">unsigned</span> <span class="keywordtype">char</span> clockDivider);</div>
+<div class="line"><a name="l00052"></a><span class="lineno">   52</span>&#160;<span class="keywordtype">void</span> <a class="code" href="cc430__system_8c.html#acbcebd4ee2f0ac804577d67d19077ed2">system_watchdog_timer_stop</a>();</div>
+<div class="line"><a name="l00053"></a><span class="lineno">   53</span>&#160;<span class="keywordtype">void</span> <a class="code" href="cc430__system_8c.html#a63572eda1c3a0b9ff8c5e1b66d864359">system_watchdog_timer_start</a>();</div>
+<div class="line"><a name="l00054"></a><span class="lineno">   54</span>&#160;<span class="keywordtype">void</span> <a class="code" href="cc430__system_8c.html#a9011c0484fda9afaac7bfff45a6b0d08">system_watchdog_timer_reset</a>();</div>
+<div class="line"><a name="l00055"></a><span class="lineno">   55</span>&#160;<span class="keywordtype">void</span> <a class="code" href="cc430__system_8c.html#a8d7f9995740e06a902b2564a87b853dc">system_watchdog_timer_enable_interrupt</a>();</div>
+<div class="line"><a name="l00056"></a><span class="lineno">   56</span>&#160;<span class="keywordtype">void</span> <a class="code" href="cc430__system_8c.html#a3a5e1bc0a42ed5a81a7d6d0ce369b1c0">system_watchdog_timer_init</a>(<span class="keywordtype">unsigned</span> <span class="keywordtype">char</span> clockSelect, <span class="keywordtype">unsigned</span> <span class="keywordtype">char</span> clockDivider);</div>
+<div class="line"><a name="l00057"></a><span class="lineno">   57</span>&#160;<span class="keywordtype">void</span> <a class="code" href="cc430__system_8c.html#a938728185b5751d84e51664b758f21c8">system_watchdog_init</a>(<span class="keywordtype">unsigned</span> <span class="keywordtype">char</span> clockSelect, <span class="keywordtype">unsigned</span> <span class="keywordtype">char</span> clockDivider);</div>
 <div class="line"><a name="l00058"></a><span class="lineno">   58</span>&#160;</div>
-<div class="line"><a name="l00059"></a><span class="lineno">   59</span>&#160;<span class="keywordtype">void</span> system_lowpower_mode(<span class="keywordtype">unsigned</span> <span class="keywordtype">char</span> mode, <span class="keywordtype">unsigned</span> <span class="keywordtype">char</span> enableInterrupts);</div>
+<div class="line"><a name="l00059"></a><span class="lineno">   59</span>&#160;<span class="keywordtype">void</span> <a class="code" href="cc430__system_8c.html#a2f6381909d2a9f1f14374893795ece02">system_lowpower_mode</a>(<span class="keywordtype">unsigned</span> <span class="keywordtype">char</span> mode, <span class="keywordtype">unsigned</span> <span class="keywordtype">char</span> enableInterrupts);</div>
 <div class="line"><a name="l00060"></a><span class="lineno">   60</span>&#160;</div>
-<div class="line"><a name="l00061"></a><span class="lineno">   61</span>&#160;<span class="keywordtype">void</span> system_get_unique_id(<span class="keywordtype">unsigned</span> <span class="keywordtype">char</span> *tagId);</div>
+<div class="line"><a name="l00061"></a><span class="lineno">   61</span>&#160;<span class="keywordtype">void</span> <a class="code" href="cc430__system_8c.html#af5b40e4c3d9370c8c6b71302630f4c0f">system_get_unique_id</a>(<span class="keywordtype">unsigned</span> <span class="keywordtype">char</span> *tagId);</div>
 <div class="line"><a name="l00062"></a><span class="lineno">   62</span>&#160;</div>
 <div class="line"><a name="l00063"></a><span class="lineno">   63</span>&#160;<span class="preprocessor">#endif // __SYSTEM_H__</span></div>
+<div class="ttc" id="cc430__system_8c_html_a838b70f3ccb51b397e72b80bb8d766f7"><div class="ttname"><a href="cc430__system_8c.html#a838b70f3ccb51b397e72b80bb8d766f7">PMM_SetVCore</a></div><div class="ttdeci">void PMM_SetVCore(uint8_t level)</div><div class="ttdef"><b>Definition:</b> cc430_system.c:96</div></div>
+<div class="ttc" id="cc430__system_8c_html_acbcebd4ee2f0ac804577d67d19077ed2"><div class="ttname"><a href="cc430__system_8c.html#acbcebd4ee2f0ac804577d67d19077ed2">system_watchdog_timer_stop</a></div><div class="ttdeci">void system_watchdog_timer_stop()</div><div class="ttdef"><b>Definition:</b> cc430_system.c:183</div></div>
+<div class="ttc" id="cc430__system_8c_html_a3d3e27a8904f4101aae497506a50a577"><div class="ttname"><a href="cc430__system_8c.html#a3d3e27a8904f4101aae497506a50a577">vCore_level</a></div><div class="ttdeci">uint8_t vCore_level</div><div class="ttdef"><b>Definition:</b> cc430_system.c:40</div></div>
+<div class="ttc" id="cc430__system_8c_html_a938728185b5751d84e51664b758f21c8"><div class="ttname"><a href="cc430__system_8c.html#a938728185b5751d84e51664b758f21c8">system_watchdog_init</a></div><div class="ttdeci">void system_watchdog_init(unsigned char clockSelect, unsigned char clockDivider)</div><div class="ttdef"><b>Definition:</b> cc430_system.c:215</div></div>
+<div class="ttc" id="cc430__system_8c_html_a2f6381909d2a9f1f14374893795ece02"><div class="ttname"><a href="cc430__system_8c.html#a2f6381909d2a9f1f14374893795ece02">system_lowpower_mode</a></div><div class="ttdeci">void system_lowpower_mode(unsigned char mode, unsigned char enableInterrupts)</div><div class="ttdef"><b>Definition:</b> cc430_system.c:220</div></div>
+<div class="ttc" id="system_8h_html_a2971aa9e5825b6a5715f1451c7979878"><div class="ttname"><a href="system_8h.html#a2971aa9e5825b6a5715f1451c7979878">target_clock_speed_kHz</a></div><div class="ttdeci">uint16_t target_clock_speed_kHz</div></div>
+<div class="ttc" id="cc430__system_8c_html_aa37dd0729709f555671c589ba7df49f7"><div class="ttname"><a href="cc430__system_8c.html#aa37dd0729709f555671c589ba7df49f7">init_IO</a></div><div class="ttdeci">uint8_t init_IO</div><div class="ttdef"><b>Definition:</b> cc430_system.c:44</div></div>
+<div class="ttc" id="cc430__system_8c_html_a9011c0484fda9afaac7bfff45a6b0d08"><div class="ttname"><a href="cc430__system_8c.html#a9011c0484fda9afaac7bfff45a6b0d08">system_watchdog_timer_reset</a></div><div class="ttdeci">void system_watchdog_timer_reset()</div><div class="ttdef"><b>Definition:</b> cc430_system.c:198</div></div>
+<div class="ttc" id="cc430__system_8c_html_a63572eda1c3a0b9ff8c5e1b66d864359"><div class="ttname"><a href="cc430__system_8c.html#a63572eda1c3a0b9ff8c5e1b66d864359">system_watchdog_timer_start</a></div><div class="ttdeci">void system_watchdog_timer_start()</div><div class="ttdef"><b>Definition:</b> cc430_system.c:190</div></div>
+<div class="ttc" id="cc430__system_8c_html_a8e0dcca7a783a73159af5cee113a8bb2"><div class="ttname"><a href="cc430__system_8c.html#a8e0dcca7a783a73159af5cee113a8bb2">virtual_id</a></div><div class="ttdeci">uint8_t virtual_id[2]</div><div class="ttdef"><b>Definition:</b> cc430_system.c:37</div></div>
+<div class="ttc" id="cc430__system_8c_html_a16fd0edcede96ae1cac4b55a3b18ed53"><div class="ttname"><a href="cc430__system_8c.html#a16fd0edcede96ae1cac4b55a3b18ed53">device_id</a></div><div class="ttdeci">uint8_t device_id[8]</div><div class="ttdef"><b>Definition:</b> cc430_system.c:36</div></div>
+<div class="ttc" id="cc430__system_8c_html_a8d7f9995740e06a902b2564a87b853dc"><div class="ttname"><a href="cc430__system_8c.html#a8d7f9995740e06a902b2564a87b853dc">system_watchdog_timer_enable_interrupt</a></div><div class="ttdeci">void system_watchdog_timer_enable_interrupt()</div><div class="ttdef"><b>Definition:</b> cc430_system.c:205</div></div>
+<div class="ttc" id="cc430__system_8c_html_a3a5e1bc0a42ed5a81a7d6d0ce369b1c0"><div class="ttname"><a href="cc430__system_8c.html#a3a5e1bc0a42ed5a81a7d6d0ce369b1c0">system_watchdog_timer_init</a></div><div class="ttdeci">void system_watchdog_timer_init(unsigned char clockSelect, unsigned char clockDivider)</div><div class="ttdef"><b>Definition:</b> cc430_system.c:210</div></div>
+<div class="ttc" id="cc430__system_8c_html_af5b40e4c3d9370c8c6b71302630f4c0f"><div class="ttname"><a href="cc430__system_8c.html#af5b40e4c3d9370c8c6b71302630f4c0f">system_get_unique_id</a></div><div class="ttdeci">void system_get_unique_id(unsigned char *tagId)</div><div class="ttdef"><b>Definition:</b> cc430_system.c:249</div></div>
+<div class="ttc" id="cc430__system_8c_html_a6b31cd786761f86279de4b3a2c3d839f"><div class="ttname"><a href="cc430__system_8c.html#a6b31cd786761f86279de4b3a2c3d839f">clock_speed</a></div><div class="ttdeci">uint32_t clock_speed</div><div class="ttdef"><b>Definition:</b> cc430_system.c:38</div></div>
+<div class="ttc" id="cc430__system_8c_html_a5e845e4be7ca0fd9d41d58b774045f71"><div class="ttname"><a href="cc430__system_8c.html#a5e845e4be7ca0fd9d41d58b774045f71">system_init</a></div><div class="ttdeci">void system_init()</div><div class="ttdef"><b>Definition:</b> cc430_system.c:109</div></div>
 </div><!-- fragment --></div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Sat Nov 23 2013 08:43:38 for OSS-7: Open Source Stack for Dash7 Alliance Protocol by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Mon Nov 25 2013 10:24:14 for OSS-7: Open Source Stack for Dash7 Alliance Protocol by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.5
 </small></address>

@@ -37,6 +37,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
   <div id="navrow1" class="tabs">
     <ul class="tablist">
       <li><a href="index.html"><span>Main&#160;Page</span></a></li>
+      <li><a href="namespaces.html"><span>Namespaces</span></a></li>
       <li><a href="annotated.html"><span>Data&#160;Structures</span></a></li>
       <li class="current"><a href="files.html"><span>Files</span></a></li>
       <li>
@@ -60,6 +61,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
   <div id="navrow2" class="tabs2">
     <ul class="tablist">
       <li><a href="files.html"><span>File&#160;List</span></a></li>
+      <li><a href="globals.html"><span>Globals</span></a></li>
     </ul>
   </div>
 <!-- window showing the filter options -->
@@ -67,7 +69,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
      onmouseover="return searchBox.OnSearchSelectShow()"
      onmouseout="return searchBox.OnSearchSelectHide()"
      onkeydown="return searchBox.OnSearchSelectKey(event)">
-<a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(0)"><span class="SelectionMark">&#160;</span>All</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(1)"><span class="SelectionMark">&#160;</span>Data Structures</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(2)"><span class="SelectionMark">&#160;</span>Variables</a></div>
+<a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(0)"><span class="SelectionMark">&#160;</span>All</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(1)"><span class="SelectionMark">&#160;</span>Data Structures</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(2)"><span class="SelectionMark">&#160;</span>Namespaces</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(3)"><span class="SelectionMark">&#160;</span>Files</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(4)"><span class="SelectionMark">&#160;</span>Functions</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(5)"><span class="SelectionMark">&#160;</span>Variables</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(6)"><span class="SelectionMark">&#160;</span>Typedefs</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(7)"><span class="SelectionMark">&#160;</span>Enumerations</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(8)"><span class="SelectionMark">&#160;</span>Enumerator</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(9)"><span class="SelectionMark">&#160;</span>Macros</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(10)"><span class="SelectionMark">&#160;</span>Pages</a></div>
 
 <!-- iframe showing the search results (closed by default) -->
 <div id="MSearchResultsWindow">
@@ -86,7 +88,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <div class="title">buzzer.h</div>  </div>
 </div><!--header-->
 <div class="contents">
-<div class="fragment"><div class="line"><a name="l00001"></a><span class="lineno">    1</span>&#160;<span class="comment">// *************************************************************************************************</span></div>
+<a href="buzzer_8h.html">Go to the documentation of this file.</a><div class="fragment"><div class="line"><a name="l00001"></a><span class="lineno">    1</span>&#160;<span class="comment">// *************************************************************************************************</span></div>
 <div class="line"><a name="l00002"></a><span class="lineno">    2</span>&#160;<span class="comment">//</span></div>
 <div class="line"><a name="l00003"></a><span class="lineno">    3</span>&#160;<span class="comment">//  Copyright (C) 2009 Texas Instruments Incorporated - http://www.ti.com/ </span></div>
 <div class="line"><a name="l00004"></a><span class="lineno">    4</span>&#160;<span class="comment">//   </span></div>
@@ -132,36 +134,36 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <div class="line"><a name="l00044"></a><span class="lineno">   44</span>&#160;</div>
 <div class="line"><a name="l00045"></a><span class="lineno">   45</span>&#160;<span class="comment">// *************************************************************************************************</span></div>
 <div class="line"><a name="l00046"></a><span class="lineno">   46</span>&#160;<span class="comment">// Prototypes section</span></div>
-<div class="line"><a name="l00047"></a><span class="lineno">   47</span>&#160;<span class="keyword">extern</span> <span class="keywordtype">void</span> reset_buzzer(<span class="keywordtype">void</span>);</div>
-<div class="line"><a name="l00048"></a><span class="lineno">   48</span>&#160;<span class="keyword">extern</span> <span class="keywordtype">void</span> start_buzzer(uint8_t cycles, uint16_t on_time, uint16_t off_time);</div>
-<div class="line"><a name="l00049"></a><span class="lineno">   49</span>&#160;<span class="keyword">extern</span> <span class="keywordtype">void</span> start_buzzer_steps(uint8_t cycles, uint16_t on_time, uint16_t off_time, uint8_t steps);</div>
-<div class="line"><a name="l00050"></a><span class="lineno">   50</span>&#160;<span class="keyword">extern</span> <span class="keywordtype">void</span> stop_buzzer(<span class="keywordtype">void</span>);</div>
-<div class="line"><a name="l00051"></a><span class="lineno">   51</span>&#160;<span class="keyword">extern</span> <span class="keywordtype">void</span> toggle_buzzer(<span class="keywordtype">void</span>* arg);</div>
-<div class="line"><a name="l00052"></a><span class="lineno">   52</span>&#160;<span class="keyword">extern</span> uint8_t is_buzzer(<span class="keywordtype">void</span>);</div>
-<div class="line"><a name="l00053"></a><span class="lineno">   53</span>&#160;<span class="keyword">extern</span> <span class="keywordtype">void</span> countdown_buzzer(<span class="keywordtype">void</span>);</div>
+<div class="line"><a name="l00047"></a><span class="lineno">   47</span>&#160;<span class="keyword">extern</span> <span class="keywordtype">void</span> <a class="code" href="buzzer_8c.html#a74ce954c5ce3d1c00d939966875ab5b0">reset_buzzer</a>(<span class="keywordtype">void</span>);</div>
+<div class="line"><a name="l00048"></a><span class="lineno">   48</span>&#160;<span class="keyword">extern</span> <span class="keywordtype">void</span> <a class="code" href="buzzer_8c.html#a6f346d2863b252fef867a3c704c518ab">start_buzzer</a>(uint8_t cycles, uint16_t on_time, uint16_t off_time);</div>
+<div class="line"><a name="l00049"></a><span class="lineno">   49</span>&#160;<span class="keyword">extern</span> <span class="keywordtype">void</span> <a class="code" href="buzzer_8c.html#a12888cfa396f9b8703d1a36d3ea7f62c">start_buzzer_steps</a>(uint8_t cycles, uint16_t on_time, uint16_t off_time, uint8_t steps);</div>
+<div class="line"><a name="l00050"></a><span class="lineno">   50</span>&#160;<span class="keyword">extern</span> <span class="keywordtype">void</span> <a class="code" href="buzzer_8c.html#aae27bf01c6ea1cd31b107df8062f9931">stop_buzzer</a>(<span class="keywordtype">void</span>);</div>
+<div class="line"><a name="l00051"></a><span class="lineno">   51</span>&#160;<span class="keyword">extern</span> <span class="keywordtype">void</span> <a class="code" href="buzzer_8c.html#abd769fc4bd7229c6834b256635a8e037">toggle_buzzer</a>(<span class="keywordtype">void</span>* arg);</div>
+<div class="line"><a name="l00052"></a><span class="lineno">   52</span>&#160;<span class="keyword">extern</span> uint8_t <a class="code" href="buzzer_8c.html#a99e5be68e50a8fe97601d53a38e180db">is_buzzer</a>(<span class="keywordtype">void</span>);</div>
+<div class="line"><a name="l00053"></a><span class="lineno">   53</span>&#160;<span class="keyword">extern</span> <span class="keywordtype">void</span> <a class="code" href="buzzer_8c.html#a6ebe57e53056da38da80a74424ef36e9">countdown_buzzer</a>(<span class="keywordtype">void</span>);</div>
 <div class="line"><a name="l00054"></a><span class="lineno">   54</span>&#160;</div>
 <div class="line"><a name="l00055"></a><span class="lineno">   55</span>&#160;</div>
 <div class="line"><a name="l00056"></a><span class="lineno">   56</span>&#160;<span class="comment">// *************************************************************************************************</span></div>
 <div class="line"><a name="l00057"></a><span class="lineno">   57</span>&#160;<span class="comment">// Defines section</span></div>
 <div class="line"><a name="l00058"></a><span class="lineno">   58</span>&#160;</div>
 <div class="line"><a name="l00059"></a><span class="lineno">   59</span>&#160;<span class="comment">// Buzzer states</span></div>
-<div class="line"><a name="l00060"></a><span class="lineno">   60</span>&#160;<span class="preprocessor">#define BUZZER_OFF                          (0u)</span></div>
-<div class="line"><a name="l00061"></a><span class="lineno">   61</span>&#160;<span class="preprocessor"></span><span class="preprocessor">#define BUZZER_ON_OUTPUT_DISABLED           (1u)</span></div>
-<div class="line"><a name="l00062"></a><span class="lineno">   62</span>&#160;<span class="preprocessor"></span><span class="preprocessor">#define BUZZER_ON_OUTPUT_ENABLED            (2u)</span></div>
+<div class="line"><a name="l00060"></a><span class="lineno"><a class="line" href="buzzer_8h.html#aaa1a6e80bb4409bde4f568816709a28f">   60</a></span>&#160;<span class="preprocessor">#define BUZZER_OFF                          (0u)</span></div>
+<div class="line"><a name="l00061"></a><span class="lineno"><a class="line" href="buzzer_8h.html#a5ab4c484a6b51e7ac1cd2b11997b8124">   61</a></span>&#160;<span class="preprocessor"></span><span class="preprocessor">#define BUZZER_ON_OUTPUT_DISABLED           (1u)</span></div>
+<div class="line"><a name="l00062"></a><span class="lineno"><a class="line" href="buzzer_8h.html#a285f0dd9ac652c2c961e04aa298b0a8e">   62</a></span>&#160;<span class="preprocessor"></span><span class="preprocessor">#define BUZZER_ON_OUTPUT_ENABLED            (2u)</span></div>
 <div class="line"><a name="l00063"></a><span class="lineno">   63</span>&#160;<span class="preprocessor"></span></div>
 <div class="line"><a name="l00064"></a><span class="lineno">   64</span>&#160;<span class="comment">// Buzzer modes</span></div>
-<div class="line"><a name="l00065"></a><span class="lineno">   65</span>&#160;<span class="preprocessor">#define BUZZER_MODE_SINGLE                  (0u)</span></div>
-<div class="line"><a name="l00066"></a><span class="lineno">   66</span>&#160;<span class="preprocessor"></span><span class="preprocessor">#define BUZZER_MODE_SINGLE_CONTINUOUS       (1u)</span></div>
-<div class="line"><a name="l00067"></a><span class="lineno">   67</span>&#160;<span class="preprocessor"></span><span class="preprocessor">#define BUZZER_MODE_DOUBLE_CONTINUOUS       (2u)</span></div>
+<div class="line"><a name="l00065"></a><span class="lineno"><a class="line" href="buzzer_8h.html#a6cd916c41257cf26b23587b2d531dd2d">   65</a></span>&#160;<span class="preprocessor">#define BUZZER_MODE_SINGLE                  (0u)</span></div>
+<div class="line"><a name="l00066"></a><span class="lineno"><a class="line" href="buzzer_8h.html#a25c22b23cb526865c41193763a4eda32">   66</a></span>&#160;<span class="preprocessor"></span><span class="preprocessor">#define BUZZER_MODE_SINGLE_CONTINUOUS       (1u)</span></div>
+<div class="line"><a name="l00067"></a><span class="lineno"><a class="line" href="buzzer_8h.html#ac03566a4bf8b67487715a7219dbeca63">   67</a></span>&#160;<span class="preprocessor"></span><span class="preprocessor">#define BUZZER_MODE_DOUBLE_CONTINUOUS       (2u)</span></div>
 <div class="line"><a name="l00068"></a><span class="lineno">   68</span>&#160;<span class="preprocessor"></span></div>
 <div class="line"><a name="l00069"></a><span class="lineno">   69</span>&#160;<span class="comment">// Buzzer output signal frequency = 32,768kHz/(BUZZER_TIMER_STEPS+1)/2 = 2.7kHz</span></div>
-<div class="line"><a name="l00070"></a><span class="lineno">   70</span>&#160;<span class="preprocessor">#define BUZZER_TIMER_STEPS                  (5u)    </span></div>
+<div class="line"><a name="l00070"></a><span class="lineno"><a class="line" href="buzzer_8h.html#a6f05d1fedac52690db4df376b2dc9989">   70</a></span>&#160;<span class="preprocessor">#define BUZZER_TIMER_STEPS                  (5u)    </span></div>
 <div class="line"><a name="l00071"></a><span class="lineno">   71</span>&#160;<span class="preprocessor"></span></div>
 <div class="line"><a name="l00072"></a><span class="lineno">   72</span>&#160;<span class="comment">// Buzzer on time</span></div>
-<div class="line"><a name="l00073"></a><span class="lineno">   73</span>&#160;<span class="preprocessor">#define BUZZER_ON_TICKS                     (CONV_MS_TO_TICKS(20))</span></div>
+<div class="line"><a name="l00073"></a><span class="lineno"><a class="line" href="buzzer_8h.html#a99b3980b8e9210616d4bde849d27012c">   73</a></span>&#160;<span class="preprocessor">#define BUZZER_ON_TICKS                     (CONV_MS_TO_TICKS(20))</span></div>
 <div class="line"><a name="l00074"></a><span class="lineno">   74</span>&#160;<span class="preprocessor"></span></div>
 <div class="line"><a name="l00075"></a><span class="lineno">   75</span>&#160;<span class="comment">// Buzzer off time</span></div>
-<div class="line"><a name="l00076"></a><span class="lineno">   76</span>&#160;<span class="preprocessor">#define BUZZER_OFF_TICKS                    (CONV_MS_TO_TICKS(200))</span></div>
+<div class="line"><a name="l00076"></a><span class="lineno"><a class="line" href="buzzer_8h.html#a0cb24d0c65f9b7edeac029eae50a2b81">   76</a></span>&#160;<span class="preprocessor">#define BUZZER_OFF_TICKS                    (CONV_MS_TO_TICKS(200))</span></div>
 <div class="line"><a name="l00077"></a><span class="lineno">   77</span>&#160;<span class="preprocessor"></span></div>
 <div class="line"><a name="l00078"></a><span class="lineno">   78</span>&#160;</div>
 <div class="line"><a name="l00079"></a><span class="lineno">   79</span>&#160;<span class="comment">// *************************************************************************************************</span></div>
@@ -169,20 +171,20 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <div class="line"><a name="l00081"></a><span class="lineno"><a class="line" href="structbuzzer.html">   81</a></span>&#160;<span class="keyword">struct </span><a class="code" href="structbuzzer.html">buzzer</a></div>
 <div class="line"><a name="l00082"></a><span class="lineno">   82</span>&#160;{</div>
 <div class="line"><a name="l00083"></a><span class="lineno">   83</span>&#160;    <span class="comment">// Keep output for &quot;time&quot; seconds</span></div>
-<div class="line"><a name="l00084"></a><span class="lineno">   84</span>&#160;    uint8_t <a class="code" href="structtime.html">time</a>;</div>
+<div class="line"><a name="l00084"></a><span class="lineno"><a class="line" href="structbuzzer.html#a7fdc8638258b7286dbca17fede926433">   84</a></span>&#160;    uint8_t <a class="code" href="structbuzzer.html#a7fdc8638258b7286dbca17fede926433">time</a>;</div>
 <div class="line"><a name="l00085"></a><span class="lineno">   85</span>&#160;    </div>
 <div class="line"><a name="l00086"></a><span class="lineno">   86</span>&#160;    <span class="comment">// On/off duty </span></div>
-<div class="line"><a name="l00087"></a><span class="lineno">   87</span>&#160;    uint16_t on_time;</div>
-<div class="line"><a name="l00088"></a><span class="lineno">   88</span>&#160;    uint16_t off_time;</div>
+<div class="line"><a name="l00087"></a><span class="lineno"><a class="line" href="structbuzzer.html#aec32fcb6e30bd31d37a1bdc00a46dd77">   87</a></span>&#160;    uint16_t <a class="code" href="structbuzzer.html#aec32fcb6e30bd31d37a1bdc00a46dd77">on_time</a>;</div>
+<div class="line"><a name="l00088"></a><span class="lineno"><a class="line" href="structbuzzer.html#ab793cdb2015b135d99ea02fae7d2edbf">   88</a></span>&#160;    uint16_t <a class="code" href="structbuzzer.html#ab793cdb2015b135d99ea02fae7d2edbf">off_time</a>;</div>
 <div class="line"><a name="l00089"></a><span class="lineno">   89</span>&#160;    </div>
 <div class="line"><a name="l00090"></a><span class="lineno">   90</span>&#160;    <span class="comment">// Current buzzer output state</span></div>
-<div class="line"><a name="l00091"></a><span class="lineno">   91</span>&#160;    uint8_t state;</div>
+<div class="line"><a name="l00091"></a><span class="lineno"><a class="line" href="structbuzzer.html#a609e13fb024f53929e9e33018abbea62">   91</a></span>&#160;    uint8_t <a class="code" href="structbuzzer.html#a609e13fb024f53929e9e33018abbea62">state</a>;</div>
 <div class="line"><a name="l00092"></a><span class="lineno">   92</span>&#160;</div>
 <div class="line"><a name="l00093"></a><span class="lineno">   93</span>&#160;    <span class="comment">// Current steps (~freq)</span></div>
-<div class="line"><a name="l00094"></a><span class="lineno">   94</span>&#160;    uint8_t steps;</div>
+<div class="line"><a name="l00094"></a><span class="lineno"><a class="line" href="structbuzzer.html#ab962e5861b9afcdce386780cc7b78146">   94</a></span>&#160;    uint8_t <a class="code" href="structbuzzer.html#ab962e5861b9afcdce386780cc7b78146">steps</a>;</div>
 <div class="line"><a name="l00095"></a><span class="lineno">   95</span>&#160;</div>
 <div class="line"><a name="l00096"></a><span class="lineno">   96</span>&#160;};</div>
-<div class="line"><a name="l00097"></a><span class="lineno">   97</span>&#160;<span class="keyword">extern</span> <span class="keyword">struct </span><a class="code" href="structbuzzer.html">buzzer</a> sBuzzer;</div>
+<div class="line"><a name="l00097"></a><span class="lineno">   97</span>&#160;<span class="keyword">extern</span> <span class="keyword">struct </span><a class="code" href="structbuzzer.html">buzzer</a> <a class="code" href="buzzer_8c.html#a0ee207556eaf43d8f38fc9798c2ff48e">sBuzzer</a>;</div>
 <div class="line"><a name="l00098"></a><span class="lineno">   98</span>&#160;</div>
 <div class="line"><a name="l00099"></a><span class="lineno">   99</span>&#160;</div>
 <div class="line"><a name="l00100"></a><span class="lineno">  100</span>&#160;<span class="comment">// *************************************************************************************************</span></div>
@@ -192,12 +194,24 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <div class="line"><a name="l00104"></a><span class="lineno">  104</span>&#160;</div>
 <div class="line"><a name="l00105"></a><span class="lineno">  105</span>&#160;</div>
 <div class="line"><a name="l00106"></a><span class="lineno">  106</span>&#160;<span class="preprocessor">#endif </span><span class="comment">/*BUZZER_H_*/</span><span class="preprocessor"></span></div>
+<div class="ttc" id="buzzer_8c_html_a0ee207556eaf43d8f38fc9798c2ff48e"><div class="ttname"><a href="buzzer_8c.html#a0ee207556eaf43d8f38fc9798c2ff48e">sBuzzer</a></div><div class="ttdeci">struct buzzer sBuzzer</div><div class="ttdef"><b>Definition:</b> buzzer.c:68</div></div>
+<div class="ttc" id="buzzer_8c_html_a74ce954c5ce3d1c00d939966875ab5b0"><div class="ttname"><a href="buzzer_8c.html#a74ce954c5ce3d1c00d939966875ab5b0">reset_buzzer</a></div><div class="ttdeci">void reset_buzzer(void)</div><div class="ttdef"><b>Definition:</b> buzzer.c:83</div></div>
 <div class="ttc" id="structbuzzer_html"><div class="ttname"><a href="structbuzzer.html">buzzer</a></div><div class="ttdef"><b>Definition:</b> buzzer.h:81</div></div>
-<div class="ttc" id="structtime_html"><div class="ttname"><a href="structtime.html">time</a></div><div class="ttdef"><b>Definition:</b> clock.h:62</div></div>
+<div class="ttc" id="buzzer_8c_html_a6ebe57e53056da38da80a74424ef36e9"><div class="ttname"><a href="buzzer_8c.html#a6ebe57e53056da38da80a74424ef36e9">countdown_buzzer</a></div><div class="ttdeci">void countdown_buzzer(void)</div><div class="ttdef"><b>Definition:</b> buzzer.c:250</div></div>
+<div class="ttc" id="buzzer_8c_html_a12888cfa396f9b8703d1a36d3ea7f62c"><div class="ttname"><a href="buzzer_8c.html#a12888cfa396f9b8703d1a36d3ea7f62c">start_buzzer_steps</a></div><div class="ttdeci">void start_buzzer_steps(uint8_t cycles, uint16_t on_time, uint16_t off_time, uint8_t steps)</div><div class="ttdef"><b>Definition:</b> buzzer.c:139</div></div>
+<div class="ttc" id="structbuzzer_html_a609e13fb024f53929e9e33018abbea62"><div class="ttname"><a href="structbuzzer.html#a609e13fb024f53929e9e33018abbea62">buzzer::state</a></div><div class="ttdeci">uint8_t state</div><div class="ttdef"><b>Definition:</b> buzzer.h:91</div></div>
+<div class="ttc" id="buzzer_8c_html_aae27bf01c6ea1cd31b107df8062f9931"><div class="ttname"><a href="buzzer_8c.html#aae27bf01c6ea1cd31b107df8062f9931">stop_buzzer</a></div><div class="ttdeci">void stop_buzzer(void)</div><div class="ttdef"><b>Definition:</b> buzzer.c:210</div></div>
+<div class="ttc" id="structbuzzer_html_ab962e5861b9afcdce386780cc7b78146"><div class="ttname"><a href="structbuzzer.html#ab962e5861b9afcdce386780cc7b78146">buzzer::steps</a></div><div class="ttdeci">uint8_t steps</div><div class="ttdef"><b>Definition:</b> buzzer.h:94</div></div>
+<div class="ttc" id="structbuzzer_html_a7fdc8638258b7286dbca17fede926433"><div class="ttname"><a href="structbuzzer.html#a7fdc8638258b7286dbca17fede926433">buzzer::time</a></div><div class="ttdeci">uint8_t time</div><div class="ttdef"><b>Definition:</b> buzzer.h:84</div></div>
+<div class="ttc" id="structbuzzer_html_ab793cdb2015b135d99ea02fae7d2edbf"><div class="ttname"><a href="structbuzzer.html#ab793cdb2015b135d99ea02fae7d2edbf">buzzer::off_time</a></div><div class="ttdeci">uint16_t off_time</div><div class="ttdef"><b>Definition:</b> buzzer.h:88</div></div>
+<div class="ttc" id="buzzer_8c_html_a99e5be68e50a8fe97601d53a38e180db"><div class="ttname"><a href="buzzer_8c.html#a99e5be68e50a8fe97601d53a38e180db">is_buzzer</a></div><div class="ttdeci">uint8_t is_buzzer(void)</div><div class="ttdef"><b>Definition:</b> buzzer.c:237</div></div>
+<div class="ttc" id="buzzer_8c_html_a6f346d2863b252fef867a3c704c518ab"><div class="ttname"><a href="buzzer_8c.html#a6f346d2863b252fef867a3c704c518ab">start_buzzer</a></div><div class="ttdeci">void start_buzzer(uint8_t cycles, uint16_t on_time, uint16_t off_time)</div><div class="ttdef"><b>Definition:</b> buzzer.c:99</div></div>
+<div class="ttc" id="structbuzzer_html_aec32fcb6e30bd31d37a1bdc00a46dd77"><div class="ttname"><a href="structbuzzer.html#aec32fcb6e30bd31d37a1bdc00a46dd77">buzzer::on_time</a></div><div class="ttdeci">uint16_t on_time</div><div class="ttdef"><b>Definition:</b> buzzer.h:87</div></div>
+<div class="ttc" id="buzzer_8c_html_abd769fc4bd7229c6834b256635a8e037"><div class="ttname"><a href="buzzer_8c.html#abd769fc4bd7229c6834b256635a8e037">toggle_buzzer</a></div><div class="ttdeci">void toggle_buzzer(void *arg)</div><div class="ttdef"><b>Definition:</b> buzzer.c:151</div></div>
 </div><!-- fragment --></div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Sat Nov 23 2013 08:43:39 for OSS-7: Open Source Stack for Dash7 Alliance Protocol by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Mon Nov 25 2013 10:10:10 for OSS-7: Open Source Stack for Dash7 Alliance Protocol by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.5
 </small></address>

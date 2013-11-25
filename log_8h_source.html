@@ -37,6 +37,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
   <div id="navrow1" class="tabs">
     <ul class="tablist">
       <li><a href="index.html"><span>Main&#160;Page</span></a></li>
+      <li><a href="pages.html"><span>Related&#160;Pages</span></a></li>
       <li><a href="annotated.html"><span>Data&#160;Structures</span></a></li>
       <li class="current"><a href="files.html"><span>Files</span></a></li>
       <li>
@@ -60,6 +61,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
   <div id="navrow2" class="tabs2">
     <ul class="tablist">
       <li><a href="files.html"><span>File&#160;List</span></a></li>
+      <li><a href="globals.html"><span>Globals</span></a></li>
     </ul>
   </div>
 <!-- window showing the filter options -->
@@ -67,7 +69,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
      onmouseover="return searchBox.OnSearchSelectShow()"
      onmouseout="return searchBox.OnSearchSelectHide()"
      onkeydown="return searchBox.OnSearchSelectKey(event)">
-<a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(0)"><span class="SelectionMark">&#160;</span>All</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(1)"><span class="SelectionMark">&#160;</span>Data Structures</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(2)"><span class="SelectionMark">&#160;</span>Variables</a></div>
+<a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(0)"><span class="SelectionMark">&#160;</span>All</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(1)"><span class="SelectionMark">&#160;</span>Data Structures</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(2)"><span class="SelectionMark">&#160;</span>Files</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(3)"><span class="SelectionMark">&#160;</span>Functions</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(4)"><span class="SelectionMark">&#160;</span>Variables</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(5)"><span class="SelectionMark">&#160;</span>Typedefs</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(6)"><span class="SelectionMark">&#160;</span>Enumerations</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(7)"><span class="SelectionMark">&#160;</span>Enumerator</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(8)"><span class="SelectionMark">&#160;</span>Macros</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(9)"><span class="SelectionMark">&#160;</span>Pages</a></div>
 
 <!-- iframe showing the search results (closed by default) -->
 <div id="MSearchResultsWindow">
@@ -86,7 +88,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <div class="title">log.h</div>  </div>
 </div><!--header-->
 <div class="contents">
-<div class="fragment"><div class="line"><a name="l00001"></a><span class="lineno">    1</span>&#160;<span class="comment">/*</span></div>
+<a href="log_8h.html">Go to the documentation of this file.</a><div class="fragment"><div class="line"><a name="l00001"></a><span class="lineno">    1</span>&#160;<span class="comment">/*</span></div>
 <div class="line"><a name="l00002"></a><span class="lineno">    2</span>&#160;<span class="comment"> * (C) Copyright 2013 University of Antwerp (http://www.cosys-lab.be) and others.</span></div>
 <div class="line"><a name="l00003"></a><span class="lineno">    3</span>&#160;<span class="comment"> *</span></div>
 <div class="line"><a name="l00004"></a><span class="lineno">    4</span>&#160;<span class="comment"> * All rights reserved. This program and the accompanying materials</span></div>
@@ -110,8 +112,8 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <div class="line"><a name="l00022"></a><span class="lineno">   22</span>&#160;<span class="preprocessor"></span></div>
 <div class="line"><a name="l00023"></a><span class="lineno">   23</span>&#160;</div>
 <div class="line"><a name="l00024"></a><span class="lineno">   24</span>&#160;<span class="comment">//#TODO define from cmake</span></div>
-<div class="line"><a name="l00025"></a><span class="lineno">   25</span>&#160;<span class="preprocessor">#define LOG_PHY_ENABLED</span></div>
-<div class="line"><a name="l00026"></a><span class="lineno">   26</span>&#160;<span class="preprocessor"></span><span class="preprocessor">#define LOG_DLL_ENABLED</span></div>
+<div class="line"><a name="l00025"></a><span class="lineno"><a class="line" href="log_8h.html#ac6de2a2dd3b41d517285fd16fadd0ef2">   25</a></span>&#160;<span class="preprocessor">#define LOG_PHY_ENABLED</span></div>
+<div class="line"><a name="l00026"></a><span class="lineno"><a class="line" href="log_8h.html#a5eec945fa53eac5b7032336a7391b37a">   26</a></span>&#160;<span class="preprocessor"></span><span class="preprocessor">#define LOG_DLL_ENABLED</span></div>
 <div class="line"><a name="l00027"></a><span class="lineno">   27</span>&#160;<span class="preprocessor"></span><span class="comment">//#define LOG_NWL_ENABLED</span></div>
 <div class="line"><a name="l00028"></a><span class="lineno">   28</span>&#160;<span class="comment">//#define LOG_TRANS_ENABLED</span></div>
 <div class="line"><a name="l00029"></a><span class="lineno">   29</span>&#160;<span class="comment">//#define LOG_FWK_ENABLED</span></div>
@@ -129,48 +131,54 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <div class="line"><a name="l00041"></a><span class="lineno">   41</span>&#160;<span class="preprocessor">#include &quot;../dll/dll.h&quot;</span></div>
 <div class="line"><a name="l00042"></a><span class="lineno">   42</span>&#160;</div>
 <div class="line"><a name="l00043"></a><span class="lineno">   43</span>&#160;<span class="comment">// generic logging functions</span></div>
-<div class="line"><a name="l00044"></a><span class="lineno">   44</span>&#160;<span class="preprocessor">#define LOG_TYPE_STRING 0x01</span></div>
-<div class="line"><a name="l00045"></a><span class="lineno">   45</span>&#160;<span class="preprocessor"></span><span class="preprocessor">#define LOG_TYPE_DATA 0x02</span></div>
-<div class="line"><a name="l00046"></a><span class="lineno">   46</span>&#160;<span class="preprocessor"></span><span class="preprocessor">#define LOG_TYPE_STACK 0x03</span></div>
+<div class="line"><a name="l00044"></a><span class="lineno"><a class="line" href="log_8h.html#a04d176fd83a09712ef8056dc03c1cfba">   44</a></span>&#160;<span class="preprocessor">#define LOG_TYPE_STRING 0x01</span></div>
+<div class="line"><a name="l00045"></a><span class="lineno"><a class="line" href="log_8h.html#aad00cecd3cd0853463f5e7eda0563530">   45</a></span>&#160;<span class="preprocessor"></span><span class="preprocessor">#define LOG_TYPE_DATA 0x02</span></div>
+<div class="line"><a name="l00046"></a><span class="lineno"><a class="line" href="log_8h.html#a2ef4a3eb533256282f2f1af719df891f">   46</a></span>&#160;<span class="preprocessor"></span><span class="preprocessor">#define LOG_TYPE_STACK 0x03</span></div>
 <div class="line"><a name="l00047"></a><span class="lineno">   47</span>&#160;<span class="preprocessor"></span></div>
 <div class="line"><a name="l00048"></a><span class="lineno">   48</span>&#160;<span class="comment">// stack logging opcodes</span></div>
-<div class="line"><a name="l00049"></a><span class="lineno">   49</span>&#160;<span class="preprocessor">#define LOG_PHY 0x01</span></div>
-<div class="line"><a name="l00050"></a><span class="lineno">   50</span>&#160;<span class="preprocessor"></span><span class="preprocessor">#define LOG_DLL 0x02</span></div>
-<div class="line"><a name="l00051"></a><span class="lineno">   51</span>&#160;<span class="preprocessor"></span><span class="preprocessor">#define LOG_MAC 0x03</span></div>
-<div class="line"><a name="l00052"></a><span class="lineno">   52</span>&#160;<span class="preprocessor"></span><span class="preprocessor">#define LOG_NWL 0x04</span></div>
-<div class="line"><a name="l00053"></a><span class="lineno">   53</span>&#160;<span class="preprocessor"></span><span class="preprocessor">#define LOG_TRANS 0x05</span></div>
-<div class="line"><a name="l00054"></a><span class="lineno">   54</span>&#160;<span class="preprocessor"></span><span class="preprocessor">#define LOG_FWK 0x10</span></div>
+<div class="line"><a name="l00049"></a><span class="lineno"><a class="line" href="log_8h.html#a6c92dac42d64cfcc6491b8720078885d">   49</a></span>&#160;<span class="preprocessor">#define LOG_PHY 0x01</span></div>
+<div class="line"><a name="l00050"></a><span class="lineno"><a class="line" href="log_8h.html#aef4de4d20de1ffaf2e3eb9e25fb66eb1">   50</a></span>&#160;<span class="preprocessor"></span><span class="preprocessor">#define LOG_DLL 0x02</span></div>
+<div class="line"><a name="l00051"></a><span class="lineno"><a class="line" href="log_8h.html#a76cd40ee743793d50e949e0a265051b1">   51</a></span>&#160;<span class="preprocessor"></span><span class="preprocessor">#define LOG_MAC 0x03</span></div>
+<div class="line"><a name="l00052"></a><span class="lineno"><a class="line" href="log_8h.html#a2c4f52b2bc6cd4c1f2bd4cbc91426368">   52</a></span>&#160;<span class="preprocessor"></span><span class="preprocessor">#define LOG_NWL 0x04</span></div>
+<div class="line"><a name="l00053"></a><span class="lineno"><a class="line" href="log_8h.html#ab348f33f8d8a8c782a376aaea678cbd3">   53</a></span>&#160;<span class="preprocessor"></span><span class="preprocessor">#define LOG_TRANS 0x05</span></div>
+<div class="line"><a name="l00054"></a><span class="lineno"><a class="line" href="log_8h.html#a080589aa5965f9c4183716f48ef068da">   54</a></span>&#160;<span class="preprocessor"></span><span class="preprocessor">#define LOG_FWK 0x10</span></div>
 <div class="line"><a name="l00055"></a><span class="lineno">   55</span>&#160;<span class="preprocessor"></span><span class="comment">//TODO define others</span></div>
 <div class="line"><a name="l00056"></a><span class="lineno">   56</span>&#160;</div>
 <div class="line"><a name="l00057"></a><span class="lineno">   57</span>&#160;<span class="comment">// These are optional special logging types, use a higher value</span></div>
-<div class="line"><a name="l00058"></a><span class="lineno">   58</span>&#160;<span class="preprocessor">#define LOG_TYPE_PHY_RX_RES 0xFE</span></div>
-<div class="line"><a name="l00059"></a><span class="lineno">   59</span>&#160;<span class="preprocessor"></span><span class="preprocessor">#define LOG_TYPE_PHY_RX_RES_SIZE 5</span></div>
+<div class="line"><a name="l00058"></a><span class="lineno"><a class="line" href="log_8h.html#a702a395efc02fd6497151d167e04c4a8">   58</a></span>&#160;<span class="preprocessor">#define LOG_TYPE_PHY_RX_RES 0xFE</span></div>
+<div class="line"><a name="l00059"></a><span class="lineno"><a class="line" href="log_8h.html#a545fdbcbe7f609f508da8b8d701cdb85">   59</a></span>&#160;<span class="preprocessor"></span><span class="preprocessor">#define LOG_TYPE_PHY_RX_RES_SIZE 5</span></div>
 <div class="line"><a name="l00060"></a><span class="lineno">   60</span>&#160;<span class="preprocessor"></span></div>
-<div class="line"><a name="l00061"></a><span class="lineno">   61</span>&#160;<span class="preprocessor">#define LOG_TYPE_DLL_RX_RES 0xFD</span></div>
-<div class="line"><a name="l00062"></a><span class="lineno">   62</span>&#160;<span class="preprocessor"></span><span class="preprocessor">#define LOG_TYPE_DLL_RX_RES_SIZE 2</span></div>
+<div class="line"><a name="l00061"></a><span class="lineno"><a class="line" href="log_8h.html#af156d380d8655e89cfb980f95d49ffa7">   61</a></span>&#160;<span class="preprocessor">#define LOG_TYPE_DLL_RX_RES 0xFD</span></div>
+<div class="line"><a name="l00062"></a><span class="lineno"><a class="line" href="log_8h.html#ac312cd56facce8b1cbe22af0e2259f8b">   62</a></span>&#160;<span class="preprocessor"></span><span class="preprocessor">#define LOG_TYPE_DLL_RX_RES_SIZE 2</span></div>
 <div class="line"><a name="l00063"></a><span class="lineno">   63</span>&#160;<span class="preprocessor"></span></div>
-<div class="line"><a name="l00064"></a><span class="lineno">   64</span>&#160;<span class="preprocessor">#define LOG_TYPE_FUNC_TRACE 0xFF</span></div>
+<div class="line"><a name="l00064"></a><span class="lineno"><a class="line" href="log_8h.html#a5770005c3281fadee2d87ad6b3db764f">   64</a></span>&#160;<span class="preprocessor">#define LOG_TYPE_FUNC_TRACE 0xFF</span></div>
 <div class="line"><a name="l00065"></a><span class="lineno">   65</span>&#160;<span class="preprocessor"></span></div>
 <div class="line"><a name="l00066"></a><span class="lineno">   66</span>&#160;<span class="comment">// TODO: can be removed now log_print_string accepts a printf style format string?</span></div>
 <div class="line"><a name="l00067"></a><span class="lineno">   67</span>&#160;<span class="comment">//bool itoa(int32_t n, char* out);</span></div>
 <div class="line"><a name="l00068"></a><span class="lineno">   68</span>&#160;</div>
 <div class="line"><a name="l00069"></a><span class="lineno">   69</span>&#160;<span class="comment">// generic logging functions</span></div>
-<div class="line"><a name="l00070"></a><span class="lineno">   70</span>&#160;<span class="keywordtype">void</span> log_print_string(<span class="keywordtype">char</span>* format, ...);</div>
-<div class="line"><a name="l00071"></a><span class="lineno">   71</span>&#160;<span class="keywordtype">void</span> log_print_stack_string(<span class="keywordtype">char</span> type, <span class="keywordtype">char</span>* format, ...);</div>
-<div class="line"><a name="l00072"></a><span class="lineno">   72</span>&#160;<span class="keywordtype">void</span> log_print_data(uint8_t* message, uint8_t length);</div>
+<div class="line"><a name="l00070"></a><span class="lineno">   70</span>&#160;<span class="keywordtype">void</span> <a class="code" href="log_8c.html#a9fc3a477127a1e4f9dc5f0af89f933f8">log_print_string</a>(<span class="keywordtype">char</span>* format, ...);</div>
+<div class="line"><a name="l00071"></a><span class="lineno">   71</span>&#160;<span class="keywordtype">void</span> <a class="code" href="log_8c.html#a66ea58a86c581812322d8f34178fcb38">log_print_stack_string</a>(<span class="keywordtype">char</span> type, <span class="keywordtype">char</span>* format, ...);</div>
+<div class="line"><a name="l00072"></a><span class="lineno">   72</span>&#160;<span class="keywordtype">void</span> <a class="code" href="log_8c.html#aa754b3870694abd357c3030cf70b4321">log_print_data</a>(uint8_t* message, uint8_t length);</div>
 <div class="line"><a name="l00073"></a><span class="lineno">   73</span>&#160;</div>
 <div class="line"><a name="l00074"></a><span class="lineno">   74</span>&#160;<span class="comment">// special logging functions</span></div>
-<div class="line"><a name="l00075"></a><span class="lineno">   75</span>&#160;<span class="keywordtype">void</span> log_print_trace(<span class="keywordtype">char</span>* format, ...);</div>
-<div class="line"><a name="l00076"></a><span class="lineno">   76</span>&#160;<span class="keywordtype">void</span> log_phy_rx_res(<a class="code" href="structphy__rx__data__t.html">phy_rx_data_t</a>* res);</div>
-<div class="line"><a name="l00077"></a><span class="lineno">   77</span>&#160;<span class="keywordtype">void</span> log_dll_rx_res(<a class="code" href="structdll__rx__res__t.html">dll_rx_res_t</a>* res);</div>
+<div class="line"><a name="l00075"></a><span class="lineno">   75</span>&#160;<span class="keywordtype">void</span> <a class="code" href="log_8c.html#ae55e3107e583350be93690b429b51f3a">log_print_trace</a>(<span class="keywordtype">char</span>* format, ...);</div>
+<div class="line"><a name="l00076"></a><span class="lineno">   76</span>&#160;<span class="keywordtype">void</span> <a class="code" href="log_8c.html#ac61cdf659e1a5694432c1400cbefd91d">log_phy_rx_res</a>(<a class="code" href="structphy__rx__data__t.html">phy_rx_data_t</a>* res);</div>
+<div class="line"><a name="l00077"></a><span class="lineno">   77</span>&#160;<span class="keywordtype">void</span> <a class="code" href="log_8c.html#ac8b522deccf5c41d7c2513211d0352de">log_dll_rx_res</a>(<a class="code" href="structdll__rx__res__t.html">dll_rx_res_t</a>* res);</div>
 <div class="line"><a name="l00078"></a><span class="lineno">   78</span>&#160;</div>
 <div class="line"><a name="l00079"></a><span class="lineno">   79</span>&#160;<span class="preprocessor">#endif </span><span class="comment">/* __LOG_H_ */</span><span class="preprocessor"></span></div>
+<div class="ttc" id="log_8c_html_a9fc3a477127a1e4f9dc5f0af89f933f8"><div class="ttname"><a href="log_8c.html#a9fc3a477127a1e4f9dc5f0af89f933f8">log_print_string</a></div><div class="ttdeci">void log_print_string(char *format,...)</div><div class="ttdef"><b>Definition:</b> log.c:33</div></div>
 <div class="ttc" id="structdll__rx__res__t_html"><div class="ttname"><a href="structdll__rx__res__t.html">dll_rx_res_t</a></div><div class="ttdoc">Data Link Layer Packet reception result structure. </div><div class="ttdef"><b>Definition:</b> dll.h:134</div></div>
+<div class="ttc" id="log_8c_html_ac61cdf659e1a5694432c1400cbefd91d"><div class="ttname"><a href="log_8c.html#ac61cdf659e1a5694432c1400cbefd91d">log_phy_rx_res</a></div><div class="ttdeci">void log_phy_rx_res(phy_rx_data_t *res)</div><div class="ttdef"><b>Definition:</b> log.c:83</div></div>
+<div class="ttc" id="log_8c_html_ae55e3107e583350be93690b429b51f3a"><div class="ttname"><a href="log_8c.html#ae55e3107e583350be93690b429b51f3a">log_print_trace</a></div><div class="ttdeci">void log_print_trace(char *format,...)</div><div class="ttdef"><b>Definition:</b> log.c:62</div></div>
+<div class="ttc" id="log_8c_html_ac8b522deccf5c41d7c2513211d0352de"><div class="ttname"><a href="log_8c.html#ac8b522deccf5c41d7c2513211d0352de">log_dll_rx_res</a></div><div class="ttdeci">void log_dll_rx_res(dll_rx_res_t *res)</div><div class="ttdef"><b>Definition:</b> log.c:99</div></div>
 <div class="ttc" id="structphy__rx__data__t_html"><div class="ttname"><a href="structphy__rx__data__t.html">phy_rx_data_t</a></div><div class="ttdef"><b>Definition:</b> phy.h:54</div></div>
+<div class="ttc" id="log_8c_html_aa754b3870694abd357c3030cf70b4321"><div class="ttname"><a href="log_8c.html#aa754b3870694abd357c3030cf70b4321">log_print_data</a></div><div class="ttdeci">void log_print_data(uint8_t *message, uint8_t length)</div><div class="ttdef"><b>Definition:</b> log.c:75</div></div>
+<div class="ttc" id="log_8c_html_a66ea58a86c581812322d8f34178fcb38"><div class="ttname"><a href="log_8c.html#a66ea58a86c581812322d8f34178fcb38">log_print_stack_string</a></div><div class="ttdeci">void log_print_stack_string(char type, char *format,...)</div><div class="ttdef"><b>Definition:</b> log.c:47</div></div>
 </div><!-- fragment --></div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Sat Nov 23 2013 08:43:37 for OSS-7: Open Source Stack for Dash7 Alliance Protocol by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Mon Nov 25 2013 10:24:14 for OSS-7: Open Source Stack for Dash7 Alliance Protocol by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.5
 </small></address>

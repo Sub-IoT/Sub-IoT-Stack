@@ -37,6 +37,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
   <div id="navrow1" class="tabs">
     <ul class="tablist">
       <li><a href="index.html"><span>Main&#160;Page</span></a></li>
+      <li><a href="namespaces.html"><span>Namespaces</span></a></li>
       <li><a href="annotated.html"><span>Data&#160;Structures</span></a></li>
       <li class="current"><a href="files.html"><span>Files</span></a></li>
       <li>
@@ -60,6 +61,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
   <div id="navrow2" class="tabs2">
     <ul class="tablist">
       <li><a href="files.html"><span>File&#160;List</span></a></li>
+      <li><a href="globals.html"><span>Globals</span></a></li>
     </ul>
   </div>
 <!-- window showing the filter options -->
@@ -67,7 +69,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
      onmouseover="return searchBox.OnSearchSelectShow()"
      onmouseout="return searchBox.OnSearchSelectHide()"
      onkeydown="return searchBox.OnSearchSelectKey(event)">
-<a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(0)"><span class="SelectionMark">&#160;</span>All</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(1)"><span class="SelectionMark">&#160;</span>Data Structures</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(2)"><span class="SelectionMark">&#160;</span>Variables</a></div>
+<a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(0)"><span class="SelectionMark">&#160;</span>All</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(1)"><span class="SelectionMark">&#160;</span>Data Structures</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(2)"><span class="SelectionMark">&#160;</span>Namespaces</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(3)"><span class="SelectionMark">&#160;</span>Files</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(4)"><span class="SelectionMark">&#160;</span>Functions</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(5)"><span class="SelectionMark">&#160;</span>Variables</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(6)"><span class="SelectionMark">&#160;</span>Typedefs</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(7)"><span class="SelectionMark">&#160;</span>Enumerations</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(8)"><span class="SelectionMark">&#160;</span>Enumerator</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(9)"><span class="SelectionMark">&#160;</span>Macros</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(10)"><span class="SelectionMark">&#160;</span>Pages</a></div>
 
 <!-- iframe showing the search results (closed by default) -->
 <div id="MSearchResultsWindow">
@@ -86,7 +88,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <div class="title">date.h</div>  </div>
 </div><!--header-->
 <div class="contents">
-<div class="fragment"><div class="line"><a name="l00001"></a><span class="lineno">    1</span>&#160;<span class="comment">// *************************************************************************************************</span></div>
+<a href="date_8h.html">Go to the documentation of this file.</a><div class="fragment"><div class="line"><a name="l00001"></a><span class="lineno">    1</span>&#160;<span class="comment">// *************************************************************************************************</span></div>
 <div class="line"><a name="l00002"></a><span class="lineno">    2</span>&#160;<span class="comment">//</span></div>
 <div class="line"><a name="l00003"></a><span class="lineno">    3</span>&#160;<span class="comment">//  Copyright (C) 2009 Texas Instruments Incorporated - http://www.ti.com/ </span></div>
 <div class="line"><a name="l00004"></a><span class="lineno">    4</span>&#160;<span class="comment">//   </span></div>
@@ -131,11 +133,11 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <div class="line"><a name="l00043"></a><span class="lineno">   43</span>&#160;</div>
 <div class="line"><a name="l00044"></a><span class="lineno">   44</span>&#160;<span class="comment">// *************************************************************************************************</span></div>
 <div class="line"><a name="l00045"></a><span class="lineno">   45</span>&#160;<span class="comment">// Prototypes section</span></div>
-<div class="line"><a name="l00046"></a><span class="lineno">   46</span>&#160;<span class="keyword">extern</span> <span class="keywordtype">void</span> reset_date(<span class="keywordtype">void</span>);</div>
-<div class="line"><a name="l00047"></a><span class="lineno">   47</span>&#160;<span class="keyword">extern</span> <span class="keywordtype">void</span> add_day(<span class="keywordtype">void</span>);</div>
-<div class="line"><a name="l00048"></a><span class="lineno">   48</span>&#160;<span class="keyword">extern</span> <span class="keywordtype">void</span> mx_date(uint8_t line);</div>
-<div class="line"><a name="l00049"></a><span class="lineno">   49</span>&#160;<span class="keyword">extern</span> <span class="keywordtype">void</span> sx_date(uint8_t line);</div>
-<div class="line"><a name="l00050"></a><span class="lineno">   50</span>&#160;<span class="keyword">extern</span> <span class="keywordtype">void</span> display_date(uint8_t line, uint8_t update);</div>
+<div class="line"><a name="l00046"></a><span class="lineno">   46</span>&#160;<span class="keyword">extern</span> <span class="keywordtype">void</span> <a class="code" href="date_8c.html#ab53da57f1167a2da0ae9552a6ffb2b1e">reset_date</a>(<span class="keywordtype">void</span>);</div>
+<div class="line"><a name="l00047"></a><span class="lineno">   47</span>&#160;<span class="keyword">extern</span> <span class="keywordtype">void</span> <a class="code" href="date_8c.html#a53efc90f66c6ac2c70b34a8788116f34">add_day</a>(<span class="keywordtype">void</span>);</div>
+<div class="line"><a name="l00048"></a><span class="lineno">   48</span>&#160;<span class="keyword">extern</span> <span class="keywordtype">void</span> <a class="code" href="date_8c.html#a1779b64dcc33073b0aadfff74370b4af">mx_date</a>(uint8_t line);</div>
+<div class="line"><a name="l00049"></a><span class="lineno">   49</span>&#160;<span class="keyword">extern</span> <span class="keywordtype">void</span> <a class="code" href="date_8c.html#a648b90b44195497b275b826661d7c990">sx_date</a>(uint8_t line);</div>
+<div class="line"><a name="l00050"></a><span class="lineno">   50</span>&#160;<span class="keyword">extern</span> <span class="keywordtype">void</span> <a class="code" href="date_8c.html#a55eea9a995dabee29545d8ed8831a91e">display_date</a>(uint8_t line, uint8_t update);</div>
 <div class="line"><a name="l00051"></a><span class="lineno">   51</span>&#160;</div>
 <div class="line"><a name="l00052"></a><span class="lineno">   52</span>&#160;</div>
 <div class="line"><a name="l00053"></a><span class="lineno">   53</span>&#160;<span class="comment">// *************************************************************************************************</span></div>
@@ -146,12 +148,12 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <div class="line"><a name="l00058"></a><span class="lineno">   58</span>&#160;<span class="comment">// Global Variable section</span></div>
 <div class="line"><a name="l00059"></a><span class="lineno"><a class="line" href="structdate.html">   59</a></span>&#160;<span class="keyword">struct </span><a class="code" href="structdate.html">date</a></div>
 <div class="line"><a name="l00060"></a><span class="lineno">   60</span>&#160;{</div>
-<div class="line"><a name="l00061"></a><span class="lineno">   61</span>&#160;    uint8_t  view;</div>
-<div class="line"><a name="l00062"></a><span class="lineno">   62</span>&#160;    uint8_t  day;</div>
-<div class="line"><a name="l00063"></a><span class="lineno">   63</span>&#160;    uint8_t  month;</div>
-<div class="line"><a name="l00064"></a><span class="lineno">   64</span>&#160;    uint16_t year;</div>
+<div class="line"><a name="l00061"></a><span class="lineno"><a class="line" href="structdate.html#ab9483425c56e872005d015e8d7db165c">   61</a></span>&#160;    uint8_t  <a class="code" href="structdate.html#ab9483425c56e872005d015e8d7db165c">view</a>;</div>
+<div class="line"><a name="l00062"></a><span class="lineno"><a class="line" href="structdate.html#af96ed8316b95d2654d8d33c47da16b3e">   62</a></span>&#160;    uint8_t  <a class="code" href="structdate.html#af96ed8316b95d2654d8d33c47da16b3e">day</a>;</div>
+<div class="line"><a name="l00063"></a><span class="lineno"><a class="line" href="structdate.html#a8239600a130ed352042ad0ed742e32e6">   63</a></span>&#160;    uint8_t  <a class="code" href="structdate.html#a8239600a130ed352042ad0ed742e32e6">month</a>;</div>
+<div class="line"><a name="l00064"></a><span class="lineno"><a class="line" href="structdate.html#a2db517ba9022f39d6ff5b89eeac86c8a">   64</a></span>&#160;    uint16_t <a class="code" href="structdate.html#a2db517ba9022f39d6ff5b89eeac86c8a">year</a>;</div>
 <div class="line"><a name="l00065"></a><span class="lineno">   65</span>&#160;};</div>
-<div class="line"><a name="l00066"></a><span class="lineno">   66</span>&#160;<span class="keyword">extern</span> <span class="keyword">struct </span><a class="code" href="structdate.html">date</a> sDate;</div>
+<div class="line"><a name="l00066"></a><span class="lineno">   66</span>&#160;<span class="keyword">extern</span> <span class="keyword">struct </span><a class="code" href="structdate.html">date</a> <a class="code" href="date_8c.html#adab7c48a4ee1cf8688e5a4d3dacf09f9">sDate</a>;</div>
 <div class="line"><a name="l00067"></a><span class="lineno">   67</span>&#160;</div>
 <div class="line"><a name="l00068"></a><span class="lineno">   68</span>&#160;</div>
 <div class="line"><a name="l00069"></a><span class="lineno">   69</span>&#160;<span class="comment">// *************************************************************************************************</span></div>
@@ -159,11 +161,21 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <div class="line"><a name="l00071"></a><span class="lineno">   71</span>&#160;</div>
 <div class="line"><a name="l00072"></a><span class="lineno">   72</span>&#160;</div>
 <div class="line"><a name="l00073"></a><span class="lineno">   73</span>&#160;<span class="preprocessor">#endif </span><span class="comment">/*DATE_H_*/</span><span class="preprocessor"></span></div>
+<div class="ttc" id="date_8c_html_adab7c48a4ee1cf8688e5a4d3dacf09f9"><div class="ttname"><a href="date_8c.html#adab7c48a4ee1cf8688e5a4d3dacf09f9">sDate</a></div><div class="ttdeci">struct date sDate</div><div class="ttdef"><b>Definition:</b> date.c:74</div></div>
+<div class="ttc" id="date_8c_html_a53efc90f66c6ac2c70b34a8788116f34"><div class="ttname"><a href="date_8c.html#a53efc90f66c6ac2c70b34a8788116f34">add_day</a></div><div class="ttdeci">void add_day(void)</div><div class="ttdef"><b>Definition:</b> date.c:147</div></div>
+<div class="ttc" id="structdate_html_ab9483425c56e872005d015e8d7db165c"><div class="ttname"><a href="structdate.html#ab9483425c56e872005d015e8d7db165c">date::view</a></div><div class="ttdeci">uint8_t view</div><div class="ttdef"><b>Definition:</b> date.h:61</div></div>
+<div class="ttc" id="structdate_html_af96ed8316b95d2654d8d33c47da16b3e"><div class="ttname"><a href="structdate.html#af96ed8316b95d2654d8d33c47da16b3e">date::day</a></div><div class="ttdeci">uint8_t day</div><div class="ttdef"><b>Definition:</b> date.h:62</div></div>
+<div class="ttc" id="date_8c_html_ab53da57f1167a2da0ae9552a6ffb2b1e"><div class="ttname"><a href="date_8c.html#ab53da57f1167a2da0ae9552a6ffb2b1e">reset_date</a></div><div class="ttdeci">void reset_date(void)</div><div class="ttdef"><b>Definition:</b> date.c:87</div></div>
 <div class="ttc" id="structdate_html"><div class="ttname"><a href="structdate.html">date</a></div><div class="ttdef"><b>Definition:</b> date.h:59</div></div>
+<div class="ttc" id="structdate_html_a8239600a130ed352042ad0ed742e32e6"><div class="ttname"><a href="structdate.html#a8239600a130ed352042ad0ed742e32e6">date::month</a></div><div class="ttdeci">uint8_t month</div><div class="ttdef"><b>Definition:</b> date.h:63</div></div>
+<div class="ttc" id="structdate_html_a2db517ba9022f39d6ff5b89eeac86c8a"><div class="ttname"><a href="structdate.html#a2db517ba9022f39d6ff5b89eeac86c8a">date::year</a></div><div class="ttdeci">uint16_t year</div><div class="ttdef"><b>Definition:</b> date.h:64</div></div>
+<div class="ttc" id="date_8c_html_a648b90b44195497b275b826661d7c990"><div class="ttname"><a href="date_8c.html#a648b90b44195497b275b826661d7c990">sx_date</a></div><div class="ttdeci">void sx_date(line_t line)</div><div class="ttdef"><b>Definition:</b> date.c:274</div></div>
+<div class="ttc" id="date_8c_html_a55eea9a995dabee29545d8ed8831a91e"><div class="ttname"><a href="date_8c.html#a55eea9a995dabee29545d8ed8831a91e">display_date</a></div><div class="ttdeci">void display_date(line_t line, update_t update)</div><div class="ttdef"><b>Definition:</b> date.c:289</div></div>
+<div class="ttc" id="date_8c_html_a1779b64dcc33073b0aadfff74370b4af"><div class="ttname"><a href="date_8c.html#a1779b64dcc33073b0aadfff74370b4af">mx_date</a></div><div class="ttdeci">void mx_date(line_t line)</div><div class="ttdef"><b>Definition:</b> date.c:183</div></div>
 </div><!-- fragment --></div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Sat Nov 23 2013 08:43:39 for OSS-7: Open Source Stack for Dash7 Alliance Protocol by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Mon Nov 25 2013 10:10:10 for OSS-7: Open Source Stack for Dash7 Alliance Protocol by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.5
 </small></address>

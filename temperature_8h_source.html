@@ -37,6 +37,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
   <div id="navrow1" class="tabs">
     <ul class="tablist">
       <li><a href="index.html"><span>Main&#160;Page</span></a></li>
+      <li><a href="namespaces.html"><span>Namespaces</span></a></li>
       <li><a href="annotated.html"><span>Data&#160;Structures</span></a></li>
       <li class="current"><a href="files.html"><span>Files</span></a></li>
       <li>
@@ -60,6 +61,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
   <div id="navrow2" class="tabs2">
     <ul class="tablist">
       <li><a href="files.html"><span>File&#160;List</span></a></li>
+      <li><a href="globals.html"><span>Globals</span></a></li>
     </ul>
   </div>
 <!-- window showing the filter options -->
@@ -67,7 +69,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
      onmouseover="return searchBox.OnSearchSelectShow()"
      onmouseout="return searchBox.OnSearchSelectHide()"
      onkeydown="return searchBox.OnSearchSelectKey(event)">
-<a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(0)"><span class="SelectionMark">&#160;</span>All</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(1)"><span class="SelectionMark">&#160;</span>Data Structures</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(2)"><span class="SelectionMark">&#160;</span>Variables</a></div>
+<a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(0)"><span class="SelectionMark">&#160;</span>All</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(1)"><span class="SelectionMark">&#160;</span>Data Structures</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(2)"><span class="SelectionMark">&#160;</span>Namespaces</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(3)"><span class="SelectionMark">&#160;</span>Files</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(4)"><span class="SelectionMark">&#160;</span>Functions</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(5)"><span class="SelectionMark">&#160;</span>Variables</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(6)"><span class="SelectionMark">&#160;</span>Typedefs</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(7)"><span class="SelectionMark">&#160;</span>Enumerations</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(8)"><span class="SelectionMark">&#160;</span>Enumerator</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(9)"><span class="SelectionMark">&#160;</span>Macros</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(10)"><span class="SelectionMark">&#160;</span>Pages</a></div>
 
 <!-- iframe showing the search results (closed by default) -->
 <div id="MSearchResultsWindow">
@@ -86,7 +88,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <div class="title">temperature.h</div>  </div>
 </div><!--header-->
 <div class="contents">
-<div class="fragment"><div class="line"><a name="l00001"></a><span class="lineno">    1</span>&#160;<span class="comment">// *************************************************************************************************</span></div>
+<a href="temperature_8h.html">Go to the documentation of this file.</a><div class="fragment"><div class="line"><a name="l00001"></a><span class="lineno">    1</span>&#160;<span class="comment">// *************************************************************************************************</span></div>
 <div class="line"><a name="l00002"></a><span class="lineno">    2</span>&#160;<span class="comment">//</span></div>
 <div class="line"><a name="l00003"></a><span class="lineno">    3</span>&#160;<span class="comment">//  Copyright (C) 2009 Texas Instruments Incorporated - http://www.ti.com/ </span></div>
 <div class="line"><a name="l00004"></a><span class="lineno">    4</span>&#160;<span class="comment">//   </span></div>
@@ -133,13 +135,13 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <div class="line"><a name="l00045"></a><span class="lineno">   45</span>&#160;<span class="comment">// Prototypes section</span></div>
 <div class="line"><a name="l00046"></a><span class="lineno">   46</span>&#160;</div>
 <div class="line"><a name="l00047"></a><span class="lineno">   47</span>&#160;<span class="comment">// internal functions</span></div>
-<div class="line"><a name="l00048"></a><span class="lineno">   48</span>&#160;<span class="keyword">extern</span> <span class="keywordtype">void</span> reset_temp_measurement(<span class="keywordtype">void</span>);</div>
-<div class="line"><a name="l00049"></a><span class="lineno">   49</span>&#160;<span class="keyword">extern</span> uint8_t is_temp_measurement(<span class="keywordtype">void</span>);</div>
-<div class="line"><a name="l00050"></a><span class="lineno">   50</span>&#160;<span class="keyword">extern</span> <span class="keywordtype">void</span> temperature_measurement(uint8_t filter);</div>
+<div class="line"><a name="l00048"></a><span class="lineno">   48</span>&#160;<span class="keyword">extern</span> <span class="keywordtype">void</span> <a class="code" href="temperature_8c.html#a38a9f88297b97db5d23bcc91a4a3e8bb">reset_temp_measurement</a>(<span class="keywordtype">void</span>);</div>
+<div class="line"><a name="l00049"></a><span class="lineno">   49</span>&#160;<span class="keyword">extern</span> uint8_t <a class="code" href="temperature_8c.html#aeb5884f0697b5e46e515f062512cab31">is_temp_measurement</a>(<span class="keywordtype">void</span>);</div>
+<div class="line"><a name="l00050"></a><span class="lineno">   50</span>&#160;<span class="keyword">extern</span> <span class="keywordtype">void</span> <a class="code" href="temperature_8c.html#a6e6042786c16d920d1c6f2e209e6111f">temperature_measurement</a>(uint8_t filter);</div>
 <div class="line"><a name="l00051"></a><span class="lineno">   51</span>&#160;</div>
 <div class="line"><a name="l00052"></a><span class="lineno">   52</span>&#160;<span class="comment">// menu functions</span></div>
-<div class="line"><a name="l00053"></a><span class="lineno">   53</span>&#160;<span class="keyword">extern</span> <span class="keywordtype">void</span> mx_temperature(uint8_t line);</div>
-<div class="line"><a name="l00054"></a><span class="lineno">   54</span>&#160;<span class="keyword">extern</span> <span class="keywordtype">void</span> display_temperature(uint8_t line, uint8_t update);</div>
+<div class="line"><a name="l00053"></a><span class="lineno">   53</span>&#160;<span class="keyword">extern</span> <span class="keywordtype">void</span> <a class="code" href="temperature_8c.html#a233d0ccc6d449c19f4f4ba3f712d237c">mx_temperature</a>(uint8_t line);</div>
+<div class="line"><a name="l00054"></a><span class="lineno">   54</span>&#160;<span class="keyword">extern</span> <span class="keywordtype">void</span> <a class="code" href="temperature_8c.html#a4da047a0a700380dd8d57560063befa7">display_temperature</a>(uint8_t line, uint8_t update);</div>
 <div class="line"><a name="l00055"></a><span class="lineno">   55</span>&#160;</div>
 <div class="line"><a name="l00056"></a><span class="lineno">   56</span>&#160;</div>
 <div class="line"><a name="l00057"></a><span class="lineno">   57</span>&#160;<span class="comment">// *************************************************************************************************</span></div>
@@ -151,13 +153,13 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <div class="line"><a name="l00063"></a><span class="lineno"><a class="line" href="structtemp.html">   63</a></span>&#160;<span class="keyword">struct </span><a class="code" href="structtemp.html">temp</a></div>
 <div class="line"><a name="l00064"></a><span class="lineno">   64</span>&#160;{</div>
 <div class="line"><a name="l00065"></a><span class="lineno">   65</span>&#160;    <span class="comment">// MENU_ITEM_NOT_VISIBLE, MENU_ITEM_VISIBLE</span></div>
-<div class="line"><a name="l00066"></a><span class="lineno">   66</span>&#160;    menu_t      state;</div>
+<div class="line"><a name="l00066"></a><span class="lineno"><a class="line" href="structtemp.html#ae4eac1a4cf5605f812c282421bcbcb67">   66</a></span>&#160;    <a class="code" href="project_8h.html#a44455c5614c38dfadce594b2228fd055">menu_t</a>      <a class="code" href="structtemp.html#ae4eac1a4cf5605f812c282421bcbcb67">state</a>;</div>
 <div class="line"><a name="l00067"></a><span class="lineno">   67</span>&#160;    <span class="comment">// Temperature (°C) in 2.1 format</span></div>
-<div class="line"><a name="l00068"></a><span class="lineno">   68</span>&#160;    int16_t         degrees;</div>
+<div class="line"><a name="l00068"></a><span class="lineno"><a class="line" href="structtemp.html#abc603f0ef364cb5b054c1e600c58e968">   68</a></span>&#160;    int16_t         <a class="code" href="structtemp.html#abc603f0ef364cb5b054c1e600c58e968">degrees</a>;</div>
 <div class="line"><a name="l00069"></a><span class="lineno">   69</span>&#160;    <span class="comment">// User set calibration value (°C) in 2.1 format</span></div>
-<div class="line"><a name="l00070"></a><span class="lineno">   70</span>&#160;    int16_t         offset;</div>
+<div class="line"><a name="l00070"></a><span class="lineno"><a class="line" href="structtemp.html#a76cbe4e4a6b0c4388881078805ab93c5">   70</a></span>&#160;    int16_t         <a class="code" href="structtemp.html#a76cbe4e4a6b0c4388881078805ab93c5">offset</a>;</div>
 <div class="line"><a name="l00071"></a><span class="lineno">   71</span>&#160;};</div>
-<div class="line"><a name="l00072"></a><span class="lineno">   72</span>&#160;<span class="keyword">extern</span> <span class="keyword">struct </span><a class="code" href="structtemp.html">temp</a> sTemp;</div>
+<div class="line"><a name="l00072"></a><span class="lineno">   72</span>&#160;<span class="keyword">extern</span> <span class="keyword">struct </span><a class="code" href="structtemp.html">temp</a> <a class="code" href="temperature_8c.html#a0ccdaedb88889e2728ebbbc88fb586a7">sTemp</a>;</div>
 <div class="line"><a name="l00073"></a><span class="lineno">   73</span>&#160;</div>
 <div class="line"><a name="l00074"></a><span class="lineno">   74</span>&#160;</div>
 <div class="line"><a name="l00075"></a><span class="lineno">   75</span>&#160;<span class="comment">// *************************************************************************************************</span></div>
@@ -165,11 +167,21 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <div class="line"><a name="l00077"></a><span class="lineno">   77</span>&#160;</div>
 <div class="line"><a name="l00078"></a><span class="lineno">   78</span>&#160;</div>
 <div class="line"><a name="l00079"></a><span class="lineno">   79</span>&#160;<span class="preprocessor">#endif </span><span class="comment">/*TEMPERATURE_H_*/</span><span class="preprocessor"></span></div>
+<div class="ttc" id="temperature_8c_html_a38a9f88297b97db5d23bcc91a4a3e8bb"><div class="ttname"><a href="temperature_8c.html#a38a9f88297b97db5d23bcc91a4a3e8bb">reset_temp_measurement</a></div><div class="ttdeci">void reset_temp_measurement(void)</div><div class="ttdef"><b>Definition:</b> temperature.c:84</div></div>
+<div class="ttc" id="structtemp_html_a76cbe4e4a6b0c4388881078805ab93c5"><div class="ttname"><a href="structtemp.html#a76cbe4e4a6b0c4388881078805ab93c5">temp::offset</a></div><div class="ttdeci">int16_t offset</div><div class="ttdef"><b>Definition:</b> temperature.h:70</div></div>
+<div class="ttc" id="project_8h_html_a44455c5614c38dfadce594b2228fd055"><div class="ttname"><a href="project_8h.html#a44455c5614c38dfadce594b2228fd055">menu_t</a></div><div class="ttdeci">menu_t</div><div class="ttdef"><b>Definition:</b> project.h:49</div></div>
+<div class="ttc" id="temperature_8c_html_a233d0ccc6d449c19f4f4ba3f712d237c"><div class="ttname"><a href="temperature_8c.html#a233d0ccc6d449c19f4f4ba3f712d237c">mx_temperature</a></div><div class="ttdeci">void mx_temperature(uint8_t line)</div><div class="ttdef"><b>Definition:</b> temperature.c:191</div></div>
+<div class="ttc" id="temperature_8c_html_a0ccdaedb88889e2728ebbbc88fb586a7"><div class="ttname"><a href="temperature_8c.html#a0ccdaedb88889e2728ebbbc88fb586a7">sTemp</a></div><div class="ttdeci">struct temp sTemp</div><div class="ttdef"><b>Definition:</b> temperature.c:71</div></div>
+<div class="ttc" id="temperature_8c_html_aeb5884f0697b5e46e515f062512cab31"><div class="ttname"><a href="temperature_8c.html#aeb5884f0697b5e46e515f062512cab31">is_temp_measurement</a></div><div class="ttdeci">uint8_t is_temp_measurement(void)</div><div class="ttdef"><b>Definition:</b> temperature.c:179</div></div>
 <div class="ttc" id="structtemp_html"><div class="ttname"><a href="structtemp.html">temp</a></div><div class="ttdef"><b>Definition:</b> temperature.h:63</div></div>
+<div class="ttc" id="temperature_8c_html_a4da047a0a700380dd8d57560063befa7"><div class="ttname"><a href="temperature_8c.html#a4da047a0a700380dd8d57560063befa7">display_temperature</a></div><div class="ttdeci">void display_temperature(uint8_t line, uint8_t update)</div><div class="ttdef"><b>Definition:</b> temperature.c:277</div></div>
+<div class="ttc" id="structtemp_html_abc603f0ef364cb5b054c1e600c58e968"><div class="ttname"><a href="structtemp.html#abc603f0ef364cb5b054c1e600c58e968">temp::degrees</a></div><div class="ttdeci">int16_t degrees</div><div class="ttdef"><b>Definition:</b> temperature.h:68</div></div>
+<div class="ttc" id="temperature_8c_html_a6e6042786c16d920d1c6f2e209e6111f"><div class="ttname"><a href="temperature_8c.html#a6e6042786c16d920d1c6f2e209e6111f">temperature_measurement</a></div><div class="ttdeci">void temperature_measurement(uint8_t filter)</div><div class="ttdef"><b>Definition:</b> temperature.c:100</div></div>
+<div class="ttc" id="structtemp_html_ae4eac1a4cf5605f812c282421bcbcb67"><div class="ttname"><a href="structtemp.html#ae4eac1a4cf5605f812c282421bcbcb67">temp::state</a></div><div class="ttdeci">menu_t state</div><div class="ttdef"><b>Definition:</b> temperature.h:66</div></div>
 </div><!-- fragment --></div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Sat Nov 23 2013 08:43:39 for OSS-7: Open Source Stack for Dash7 Alliance Protocol by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Mon Nov 25 2013 10:10:10 for OSS-7: Open Source Stack for Dash7 Alliance Protocol by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.5
 </small></address>

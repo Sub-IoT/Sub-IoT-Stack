@@ -37,6 +37,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
   <div id="navrow1" class="tabs">
     <ul class="tablist">
       <li><a href="index.html"><span>Main&#160;Page</span></a></li>
+      <li><a href="namespaces.html"><span>Namespaces</span></a></li>
       <li class="current"><a href="annotated.html"><span>Data&#160;Structures</span></a></li>
       <li><a href="files.html"><span>Files</span></a></li>
       <li>
@@ -69,7 +70,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
      onmouseover="return searchBox.OnSearchSelectShow()"
      onmouseout="return searchBox.OnSearchSelectHide()"
      onkeydown="return searchBox.OnSearchSelectKey(event)">
-<a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(0)"><span class="SelectionMark">&#160;</span>All</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(1)"><span class="SelectionMark">&#160;</span>Data Structures</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(2)"><span class="SelectionMark">&#160;</span>Variables</a></div>
+<a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(0)"><span class="SelectionMark">&#160;</span>All</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(1)"><span class="SelectionMark">&#160;</span>Data Structures</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(2)"><span class="SelectionMark">&#160;</span>Namespaces</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(3)"><span class="SelectionMark">&#160;</span>Files</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(4)"><span class="SelectionMark">&#160;</span>Functions</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(5)"><span class="SelectionMark">&#160;</span>Variables</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(6)"><span class="SelectionMark">&#160;</span>Typedefs</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(7)"><span class="SelectionMark">&#160;</span>Enumerations</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(8)"><span class="SelectionMark">&#160;</span>Enumerator</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(9)"><span class="SelectionMark">&#160;</span>Macros</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(10)"><span class="SelectionMark">&#160;</span>Pages</a></div>
 
 <!-- iframe showing the search results (closed by default) -->
 <div id="MSearchResultsWindow">
@@ -86,29 +87,76 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <div class="title">batt Struct Reference</div>  </div>
 </div><!--header-->
 <div class="contents">
+
+<p><code>#include &lt;<a class="el" href="battery_8h_source.html">battery.h</a>&gt;</code></p>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-attribs"></a>
 Data Fields</h2></td></tr>
-<tr class="memitem:a13ba87e00c6a296d62d5836443763d95"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a13ba87e00c6a296d62d5836443763d95"></a>
-menu_t&#160;</td><td class="memItemRight" valign="bottom"><b>state</b></td></tr>
+<tr class="memitem:a13ba87e00c6a296d62d5836443763d95"><td class="memItemLeft" align="right" valign="top"><a class="el" href="project_8h.html#a44455c5614c38dfadce594b2228fd055">menu_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structbatt.html#a13ba87e00c6a296d62d5836443763d95">state</a></td></tr>
 <tr class="separator:a13ba87e00c6a296d62d5836443763d95"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aff18bc7509e0ea770ca9d83af0f7fb10"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aff18bc7509e0ea770ca9d83af0f7fb10"></a>
-uint8_t&#160;</td><td class="memItemRight" valign="bottom"><b>lobatt_display</b></td></tr>
+<tr class="memitem:aff18bc7509e0ea770ca9d83af0f7fb10"><td class="memItemLeft" align="right" valign="top">uint8_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structbatt.html#aff18bc7509e0ea770ca9d83af0f7fb10">lobatt_display</a></td></tr>
 <tr class="separator:aff18bc7509e0ea770ca9d83af0f7fb10"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ad3124d377ab79dd133882ff45410e41a"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ad3124d377ab79dd133882ff45410e41a"></a>
-uint16_t&#160;</td><td class="memItemRight" valign="bottom"><b>voltage</b></td></tr>
+<tr class="memitem:ad3124d377ab79dd133882ff45410e41a"><td class="memItemLeft" align="right" valign="top">uint16_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structbatt.html#ad3124d377ab79dd133882ff45410e41a">voltage</a></td></tr>
 <tr class="separator:ad3124d377ab79dd133882ff45410e41a"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a669cf472ec1bf4491362bd09c3cc2222"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a669cf472ec1bf4491362bd09c3cc2222"></a>
-int16_t&#160;</td><td class="memItemRight" valign="bottom"><b>offset</b></td></tr>
+<tr class="memitem:a669cf472ec1bf4491362bd09c3cc2222"><td class="memItemLeft" align="right" valign="top">int16_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structbatt.html#a669cf472ec1bf4491362bd09c3cc2222">offset</a></td></tr>
 <tr class="separator:a669cf472ec1bf4491362bd09c3cc2222"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
+<h2 class="groupheader">Field Documentation</h2>
+<a class="anchor" id="aff18bc7509e0ea770ca9d83af0f7fb10"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">uint8_t batt::lobatt_display</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a class="anchor" id="a669cf472ec1bf4491362bd09c3cc2222"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int16_t batt::offset</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a class="anchor" id="a13ba87e00c6a296d62d5836443763d95"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="project_8h.html#a44455c5614c38dfadce594b2228fd055">menu_t</a> batt::state</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a class="anchor" id="ad3124d377ab79dd133882ff45410e41a"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">uint16_t batt::voltage</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
 <hr/>The documentation for this struct was generated from the following file:<ul>
 <li>examples/cronos_test/logic/<a class="el" href="battery_8h_source.html">battery.h</a></li>
 </ul>
 </div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Sat Nov 23 2013 08:43:39 for OSS-7: Open Source Stack for Dash7 Alliance Protocol by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Mon Nov 25 2013 10:10:12 for OSS-7: Open Source Stack for Dash7 Alliance Protocol by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.5
 </small></address>

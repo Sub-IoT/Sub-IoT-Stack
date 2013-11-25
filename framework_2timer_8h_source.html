@@ -37,6 +37,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
   <div id="navrow1" class="tabs">
     <ul class="tablist">
       <li><a href="index.html"><span>Main&#160;Page</span></a></li>
+      <li><a href="pages.html"><span>Related&#160;Pages</span></a></li>
       <li><a href="annotated.html"><span>Data&#160;Structures</span></a></li>
       <li class="current"><a href="files.html"><span>Files</span></a></li>
       <li>
@@ -60,6 +61,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
   <div id="navrow2" class="tabs2">
     <ul class="tablist">
       <li><a href="files.html"><span>File&#160;List</span></a></li>
+      <li><a href="globals.html"><span>Globals</span></a></li>
     </ul>
   </div>
 <!-- window showing the filter options -->
@@ -67,7 +69,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
      onmouseover="return searchBox.OnSearchSelectShow()"
      onmouseout="return searchBox.OnSearchSelectHide()"
      onkeydown="return searchBox.OnSearchSelectKey(event)">
-<a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(0)"><span class="SelectionMark">&#160;</span>All</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(1)"><span class="SelectionMark">&#160;</span>Data Structures</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(2)"><span class="SelectionMark">&#160;</span>Variables</a></div>
+<a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(0)"><span class="SelectionMark">&#160;</span>All</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(1)"><span class="SelectionMark">&#160;</span>Data Structures</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(2)"><span class="SelectionMark">&#160;</span>Files</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(3)"><span class="SelectionMark">&#160;</span>Functions</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(4)"><span class="SelectionMark">&#160;</span>Variables</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(5)"><span class="SelectionMark">&#160;</span>Typedefs</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(6)"><span class="SelectionMark">&#160;</span>Enumerations</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(7)"><span class="SelectionMark">&#160;</span>Enumerator</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(8)"><span class="SelectionMark">&#160;</span>Macros</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(9)"><span class="SelectionMark">&#160;</span>Pages</a></div>
 
 <!-- iframe showing the search results (closed by default) -->
 <div id="MSearchResultsWindow">
@@ -86,7 +88,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <div class="title">timer.h</div>  </div>
 </div><!--header-->
 <div class="contents">
-<div class="fragment"><div class="line"><a name="l00001"></a><span class="lineno">    1</span>&#160;<span class="comment">/*</span></div>
+<a href="framework_2timer_8h.html">Go to the documentation of this file.</a><div class="fragment"><div class="line"><a name="l00001"></a><span class="lineno">    1</span>&#160;<span class="comment">/*</span></div>
 <div class="line"><a name="l00002"></a><span class="lineno">    2</span>&#160;<span class="comment"> * (C) Copyright 2013 University of Antwerp (http://www.cosys-lab.be) and others.</span></div>
 <div class="line"><a name="l00003"></a><span class="lineno">    3</span>&#160;<span class="comment"> *</span></div>
 <div class="line"><a name="l00004"></a><span class="lineno">    4</span>&#160;<span class="comment"> * All rights reserved. This program and the accompanying materials</span></div>
@@ -112,39 +114,49 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <div class="line"><a name="l00024"></a><span class="lineno">   24</span>&#160;<span class="preprocessor">#include &lt;stdbool.h&gt;</span></div>
 <div class="line"><a name="l00025"></a><span class="lineno">   25</span>&#160;<span class="preprocessor">#include &lt;stdint.h&gt;</span></div>
 <div class="line"><a name="l00026"></a><span class="lineno">   26</span>&#160;</div>
-<div class="line"><a name="l00027"></a><span class="lineno">   27</span>&#160;<span class="preprocessor">#include &quot;queue.h&quot;</span></div>
+<div class="line"><a name="l00027"></a><span class="lineno">   27</span>&#160;<span class="preprocessor">#include &quot;<a class="code" href="queue_8h.html">queue.h</a>&quot;</span></div>
 <div class="line"><a name="l00028"></a><span class="lineno">   28</span>&#160;</div>
 <div class="line"><a name="l00029"></a><span class="lineno"><a class="line" href="structtimer__event.html">   29</a></span>&#160;<span class="keyword">typedef</span> <span class="keyword">struct</span></div>
 <div class="line"><a name="l00030"></a><span class="lineno">   30</span>&#160;{</div>
-<div class="line"><a name="l00031"></a><span class="lineno">   31</span>&#160;    uint16_t next_event;</div>
-<div class="line"><a name="l00032"></a><span class="lineno">   32</span>&#160;    void (*f) (void);</div>
+<div class="line"><a name="l00031"></a><span class="lineno"><a class="line" href="structtimer__event.html#ac2dc9bfed490b5ad743f8cb419599ce8">   31</a></span>&#160;    uint16_t <a class="code" href="structtimer__event.html#ac2dc9bfed490b5ad743f8cb419599ce8">next_event</a>;</div>
+<div class="line"><a name="l00032"></a><span class="lineno"><a class="line" href="structtimer__event.html#a103fb36c53b110aee049e00f25bb588b">   32</a></span>&#160;    void (*f) (void);</div>
 <div class="line"><a name="l00033"></a><span class="lineno">   33</span>&#160;} <a class="code" href="structtimer__event.html">timer_event</a>;</div>
 <div class="line"><a name="l00034"></a><span class="lineno">   34</span>&#160;</div>
 <div class="line"><a name="l00035"></a><span class="lineno">   35</span>&#160;<span class="keyword">static</span> <a class="code" href="structtimer__event.html">timer_event</a> event_array[20];</div>
 <div class="line"><a name="l00036"></a><span class="lineno">   36</span>&#160;<span class="keyword">static</span> <a class="code" href="structqueue__t.html">queue_t</a> event_queue;</div>
 <div class="line"><a name="l00037"></a><span class="lineno">   37</span>&#160;<span class="keyword">static</span> <span class="keywordtype">bool</span> started;</div>
 <div class="line"><a name="l00038"></a><span class="lineno">   38</span>&#160;</div>
-<div class="line"><a name="l00039"></a><span class="lineno">   39</span>&#160;<span class="keywordtype">void</span> timer_init();</div>
+<div class="line"><a name="l00039"></a><span class="lineno">   39</span>&#160;<span class="keywordtype">void</span> <a class="code" href="framework_2timer_8c.html#a896a4c37c6ecf8868ef0dc758e5a598c">timer_init</a>();</div>
 <div class="line"><a name="l00040"></a><span class="lineno">   40</span>&#160;</div>
-<div class="line"><a name="l00041"></a><span class="lineno">   41</span>&#160;<span class="keywordtype">void</span> timer_completed();</div>
+<div class="line"><a name="l00041"></a><span class="lineno">   41</span>&#160;<span class="keywordtype">void</span> <a class="code" href="framework_2timer_8c.html#ac6c41eb8cfb2af5bef94a2840d8b040b">timer_completed</a>();</div>
 <div class="line"><a name="l00042"></a><span class="lineno">   42</span>&#160;</div>
-<div class="line"><a name="l00043"></a><span class="lineno">   43</span>&#160;<span class="keywordtype">bool</span> timer_add_event(<a class="code" href="structtimer__event.html">timer_event</a>* event);</div>
-<div class="line"><a name="l00044"></a><span class="lineno">   44</span>&#160;uint16_t timer_get_counter_value();</div>
+<div class="line"><a name="l00043"></a><span class="lineno">   43</span>&#160;<span class="keywordtype">bool</span> <a class="code" href="framework_2timer_8c.html#aacd6bcef0579f8c1812049c98c0c98c7">timer_add_event</a>(<a class="code" href="structtimer__event.html">timer_event</a>* event);</div>
+<div class="line"><a name="l00044"></a><span class="lineno">   44</span>&#160;uint16_t <a class="code" href="framework_2timer_8c.html#a8271e23ad85e79411d5fc6c26f3dfcf1">timer_get_counter_value</a>();</div>
 <div class="line"><a name="l00045"></a><span class="lineno">   45</span>&#160;</div>
 <div class="line"><a name="l00046"></a><span class="lineno">   46</span>&#160;</div>
 <div class="line"><a name="l00047"></a><span class="lineno">   47</span>&#160;</div>
-<div class="line"><a name="l00048"></a><span class="lineno">   48</span>&#160;<span class="keywordtype">void</span> benchmarking_timer_init();</div>
-<div class="line"><a name="l00049"></a><span class="lineno">   49</span>&#160;uint32_t benchmarking_timer_getvalue();</div>
-<div class="line"><a name="l00050"></a><span class="lineno">   50</span>&#160;<span class="keywordtype">void</span> benchmarking_timer_start();</div>
-<div class="line"><a name="l00051"></a><span class="lineno">   51</span>&#160;<span class="keywordtype">void</span> benchmarking_timer_stop();</div>
+<div class="line"><a name="l00048"></a><span class="lineno">   48</span>&#160;<span class="keywordtype">void</span> <a class="code" href="framework_2timer_8c.html#a246649dc515d11b54cfb8acdf99ed951">benchmarking_timer_init</a>();</div>
+<div class="line"><a name="l00049"></a><span class="lineno">   49</span>&#160;uint32_t <a class="code" href="framework_2timer_8c.html#a14a524fddbef46fb76c05b58a232609c">benchmarking_timer_getvalue</a>();</div>
+<div class="line"><a name="l00050"></a><span class="lineno">   50</span>&#160;<span class="keywordtype">void</span> <a class="code" href="framework_2timer_8c.html#a30f279c161236a1ee5f8847fa434af2f">benchmarking_timer_start</a>();</div>
+<div class="line"><a name="l00051"></a><span class="lineno">   51</span>&#160;<span class="keywordtype">void</span> <a class="code" href="framework_2timer_8c.html#ae71a7752e50b93b63eba04e9c136463e">benchmarking_timer_stop</a>();</div>
 <div class="line"><a name="l00052"></a><span class="lineno">   52</span>&#160;</div>
 <div class="line"><a name="l00053"></a><span class="lineno">   53</span>&#160;<span class="preprocessor">#endif </span><span class="comment">/* TIMER_H_ */</span><span class="preprocessor"></span></div>
+<div class="ttc" id="framework_2timer_8c_html_a14a524fddbef46fb76c05b58a232609c"><div class="ttname"><a href="framework_2timer_8c.html#a14a524fddbef46fb76c05b58a232609c">benchmarking_timer_getvalue</a></div><div class="ttdeci">uint32_t benchmarking_timer_getvalue()</div><div class="ttdef"><b>Definition:</b> timer.c:205</div></div>
+<div class="ttc" id="framework_2timer_8c_html_a8271e23ad85e79411d5fc6c26f3dfcf1"><div class="ttname"><a href="framework_2timer_8c.html#a8271e23ad85e79411d5fc6c26f3dfcf1">timer_get_counter_value</a></div><div class="ttdeci">uint16_t timer_get_counter_value()</div><div class="ttdef"><b>Definition:</b> timer.c:195</div></div>
+<div class="ttc" id="framework_2timer_8c_html_ac6c41eb8cfb2af5bef94a2840d8b040b"><div class="ttname"><a href="framework_2timer_8c.html#ac6c41eb8cfb2af5bef94a2840d8b040b">timer_completed</a></div><div class="ttdeci">void timer_completed()</div><div class="ttdef"><b>Definition:</b> timer.c:167</div></div>
+<div class="ttc" id="framework_2timer_8c_html_aacd6bcef0579f8c1812049c98c0c98c7"><div class="ttname"><a href="framework_2timer_8c.html#aacd6bcef0579f8c1812049c98c0c98c7">timer_add_event</a></div><div class="ttdeci">bool timer_add_event(timer_event *event)</div><div class="ttdef"><b>Definition:</b> timer.c:118</div></div>
+<div class="ttc" id="queue_8h_html"><div class="ttname"><a href="queue_8h.html">queue.h</a></div></div>
 <div class="ttc" id="structqueue__t_html"><div class="ttname"><a href="structqueue__t.html">queue_t</a></div><div class="ttdef"><b>Definition:</b> queue.h:26</div></div>
+<div class="ttc" id="framework_2timer_8c_html_a246649dc515d11b54cfb8acdf99ed951"><div class="ttname"><a href="framework_2timer_8c.html#a246649dc515d11b54cfb8acdf99ed951">benchmarking_timer_init</a></div><div class="ttdeci">void benchmarking_timer_init()</div><div class="ttdef"><b>Definition:</b> timer.c:200</div></div>
 <div class="ttc" id="structtimer__event_html"><div class="ttname"><a href="structtimer__event.html">timer_event</a></div><div class="ttdef"><b>Definition:</b> timer.h:29</div></div>
+<div class="ttc" id="structtimer__event_html_ac2dc9bfed490b5ad743f8cb419599ce8"><div class="ttname"><a href="structtimer__event.html#ac2dc9bfed490b5ad743f8cb419599ce8">timer_event::next_event</a></div><div class="ttdeci">uint16_t next_event</div><div class="ttdef"><b>Definition:</b> timer.h:31</div></div>
+<div class="ttc" id="framework_2timer_8c_html_ae71a7752e50b93b63eba04e9c136463e"><div class="ttname"><a href="framework_2timer_8c.html#ae71a7752e50b93b63eba04e9c136463e">benchmarking_timer_stop</a></div><div class="ttdeci">void benchmarking_timer_stop()</div><div class="ttdef"><b>Definition:</b> timer.c:214</div></div>
+<div class="ttc" id="framework_2timer_8c_html_a30f279c161236a1ee5f8847fa434af2f"><div class="ttname"><a href="framework_2timer_8c.html#a30f279c161236a1ee5f8847fa434af2f">benchmarking_timer_start</a></div><div class="ttdeci">void benchmarking_timer_start()</div><div class="ttdef"><b>Definition:</b> timer.c:209</div></div>
+<div class="ttc" id="framework_2timer_8c_html_a896a4c37c6ecf8868ef0dc758e5a598c"><div class="ttname"><a href="framework_2timer_8c.html#a896a4c37c6ecf8868ef0dc758e5a598c">timer_init</a></div><div class="ttdeci">void timer_init()</div><div class="ttdef"><b>Definition:</b> timer.c:25</div></div>
 </div><!-- fragment --></div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Sat Nov 23 2013 08:43:38 for OSS-7: Open Source Stack for Dash7 Alliance Protocol by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Mon Nov 25 2013 10:24:14 for OSS-7: Open Source Stack for Dash7 Alliance Protocol by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.5
 </small></address>

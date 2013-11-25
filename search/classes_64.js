@@ -1,6 +1,5 @@
 var searchData=
 [
-  ['date',['date',['../structdate.html',1,'']]],
   ['dll_5fbackground_5fframe_5ft',['dll_background_frame_t',['../structdll__background__frame__t.html',1,'']]],
   ['dll_5fchannel_5fscan_5fseries_5ft',['dll_channel_scan_series_t',['../structdll__channel__scan__series__t.html',1,'']]],
   ['dll_5fchannel_5fscan_5ft',['dll_channel_scan_t',['../structdll__channel__scan__t.html',1,'']]],

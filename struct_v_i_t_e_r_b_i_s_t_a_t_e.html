@@ -37,6 +37,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
   <div id="navrow1" class="tabs">
     <ul class="tablist">
       <li><a href="index.html"><span>Main&#160;Page</span></a></li>
+      <li><a href="pages.html"><span>Related&#160;Pages</span></a></li>
       <li class="current"><a href="annotated.html"><span>Data&#160;Structures</span></a></li>
       <li><a href="files.html"><span>Files</span></a></li>
       <li>
@@ -69,7 +70,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
      onmouseover="return searchBox.OnSearchSelectShow()"
      onmouseout="return searchBox.OnSearchSelectHide()"
      onkeydown="return searchBox.OnSearchSelectKey(event)">
-<a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(0)"><span class="SelectionMark">&#160;</span>All</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(1)"><span class="SelectionMark">&#160;</span>Data Structures</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(2)"><span class="SelectionMark">&#160;</span>Variables</a></div>
+<a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(0)"><span class="SelectionMark">&#160;</span>All</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(1)"><span class="SelectionMark">&#160;</span>Data Structures</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(2)"><span class="SelectionMark">&#160;</span>Files</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(3)"><span class="SelectionMark">&#160;</span>Functions</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(4)"><span class="SelectionMark">&#160;</span>Variables</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(5)"><span class="SelectionMark">&#160;</span>Typedefs</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(6)"><span class="SelectionMark">&#160;</span>Enumerations</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(7)"><span class="SelectionMark">&#160;</span>Enumerator</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(8)"><span class="SelectionMark">&#160;</span>Macros</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(9)"><span class="SelectionMark">&#160;</span>Pages</a></div>
 
 <!-- iframe showing the search results (closed by default) -->
 <div id="MSearchResultsWindow">
@@ -86,32 +87,90 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <div class="title">VITERBISTATE Struct Reference</div>  </div>
 </div><!--header-->
 <div class="contents">
+
+<p><code>#include &lt;<a class="el" href="fec_8h_source.html">fec.h</a>&gt;</code></p>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-attribs"></a>
 Data Fields</h2></td></tr>
-<tr class="memitem:ac9c00f87726d6e6a7fbfa594867f031b"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ac9c00f87726d6e6a7fbfa594867f031b"></a>
-uint8_t&#160;</td><td class="memItemRight" valign="bottom"><b>path_size</b></td></tr>
+<tr class="memitem:ac9c00f87726d6e6a7fbfa594867f031b"><td class="memItemLeft" align="right" valign="top">uint8_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="struct_v_i_t_e_r_b_i_s_t_a_t_e.html#ac9c00f87726d6e6a7fbfa594867f031b">path_size</a></td></tr>
 <tr class="separator:ac9c00f87726d6e6a7fbfa594867f031b"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ab54d8300e8209dbbc583f90b6401799b"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ab54d8300e8209dbbc583f90b6401799b"></a>
-<a class="el" href="struct_v_i_t_e_r_b_i_p_a_t_h.html">VITERBIPATH</a> *&#160;</td><td class="memItemRight" valign="bottom"><b>old</b></td></tr>
+<tr class="memitem:ab54d8300e8209dbbc583f90b6401799b"><td class="memItemLeft" align="right" valign="top"><a class="el" href="struct_v_i_t_e_r_b_i_p_a_t_h.html">VITERBIPATH</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="struct_v_i_t_e_r_b_i_s_t_a_t_e.html#ab54d8300e8209dbbc583f90b6401799b">old</a></td></tr>
 <tr class="separator:ab54d8300e8209dbbc583f90b6401799b"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:adbd87f533f56f806def8e959fdde56a4"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="adbd87f533f56f806def8e959fdde56a4"></a>
-<a class="el" href="struct_v_i_t_e_r_b_i_p_a_t_h.html">VITERBIPATH</a> *&#160;</td><td class="memItemRight" valign="bottom"><b>new</b></td></tr>
+<tr class="memitem:adbd87f533f56f806def8e959fdde56a4"><td class="memItemLeft" align="right" valign="top"><a class="el" href="struct_v_i_t_e_r_b_i_p_a_t_h.html">VITERBIPATH</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="struct_v_i_t_e_r_b_i_s_t_a_t_e.html#adbd87f533f56f806def8e959fdde56a4">new</a></td></tr>
 <tr class="separator:adbd87f533f56f806def8e959fdde56a4"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aef0ba17e07889be5bd1a8291df3c571a"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aef0ba17e07889be5bd1a8291df3c571a"></a>
-<a class="el" href="struct_v_i_t_e_r_b_i_p_a_t_h.html">VITERBIPATH</a>&#160;</td><td class="memItemRight" valign="bottom"><b>states1</b> [8]</td></tr>
+<tr class="memitem:aef0ba17e07889be5bd1a8291df3c571a"><td class="memItemLeft" align="right" valign="top"><a class="el" href="struct_v_i_t_e_r_b_i_p_a_t_h.html">VITERBIPATH</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="struct_v_i_t_e_r_b_i_s_t_a_t_e.html#aef0ba17e07889be5bd1a8291df3c571a">states1</a> [8]</td></tr>
 <tr class="separator:aef0ba17e07889be5bd1a8291df3c571a"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a9ddb62f248a3c9d2be11f7472a4b252d"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a9ddb62f248a3c9d2be11f7472a4b252d"></a>
-<a class="el" href="struct_v_i_t_e_r_b_i_p_a_t_h.html">VITERBIPATH</a>&#160;</td><td class="memItemRight" valign="bottom"><b>states2</b> [8]</td></tr>
+<tr class="memitem:a9ddb62f248a3c9d2be11f7472a4b252d"><td class="memItemLeft" align="right" valign="top"><a class="el" href="struct_v_i_t_e_r_b_i_p_a_t_h.html">VITERBIPATH</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="struct_v_i_t_e_r_b_i_s_t_a_t_e.html#a9ddb62f248a3c9d2be11f7472a4b252d">states2</a> [8]</td></tr>
 <tr class="separator:a9ddb62f248a3c9d2be11f7472a4b252d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
+<h2 class="groupheader">Field Documentation</h2>
+<a class="anchor" id="adbd87f533f56f806def8e959fdde56a4"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="struct_v_i_t_e_r_b_i_p_a_t_h.html">VITERBIPATH</a>* VITERBISTATE::new</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a class="anchor" id="ab54d8300e8209dbbc583f90b6401799b"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="struct_v_i_t_e_r_b_i_p_a_t_h.html">VITERBIPATH</a>* VITERBISTATE::old</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a class="anchor" id="ac9c00f87726d6e6a7fbfa594867f031b"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">uint8_t VITERBISTATE::path_size</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a class="anchor" id="aef0ba17e07889be5bd1a8291df3c571a"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="struct_v_i_t_e_r_b_i_p_a_t_h.html">VITERBIPATH</a> VITERBISTATE::states1[8]</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a class="anchor" id="a9ddb62f248a3c9d2be11f7472a4b252d"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="struct_v_i_t_e_r_b_i_p_a_t_h.html">VITERBIPATH</a> VITERBISTATE::states2[8]</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
 <hr/>The documentation for this struct was generated from the following file:<ul>
 <li>d7aoss/phy/<a class="el" href="fec_8h_source.html">fec.h</a></li>
 </ul>
 </div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Sat Nov 23 2013 08:43:40 for OSS-7: Open Source Stack for Dash7 Alliance Protocol by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Mon Nov 25 2013 10:24:17 for OSS-7: Open Source Stack for Dash7 Alliance Protocol by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.5
 </small></address>

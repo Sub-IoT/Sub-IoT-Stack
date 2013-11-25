@@ -37,6 +37,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
   <div id="navrow1" class="tabs">
     <ul class="tablist">
       <li><a href="index.html"><span>Main&#160;Page</span></a></li>
+      <li><a href="pages.html"><span>Related&#160;Pages</span></a></li>
       <li class="current"><a href="annotated.html"><span>Data&#160;Structures</span></a></li>
       <li><a href="files.html"><span>Files</span></a></li>
       <li>
@@ -69,7 +70,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
      onmouseover="return searchBox.OnSearchSelectShow()"
      onmouseout="return searchBox.OnSearchSelectHide()"
      onkeydown="return searchBox.OnSearchSelectKey(event)">
-<a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(0)"><span class="SelectionMark">&#160;</span>All</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(1)"><span class="SelectionMark">&#160;</span>Data Structures</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(2)"><span class="SelectionMark">&#160;</span>Variables</a></div>
+<a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(0)"><span class="SelectionMark">&#160;</span>All</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(1)"><span class="SelectionMark">&#160;</span>Data Structures</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(2)"><span class="SelectionMark">&#160;</span>Files</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(3)"><span class="SelectionMark">&#160;</span>Functions</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(4)"><span class="SelectionMark">&#160;</span>Variables</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(5)"><span class="SelectionMark">&#160;</span>Typedefs</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(6)"><span class="SelectionMark">&#160;</span>Enumerations</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(7)"><span class="SelectionMark">&#160;</span>Enumerator</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(8)"><span class="SelectionMark">&#160;</span>Macros</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(9)"><span class="SelectionMark">&#160;</span>Pages</a></div>
 
 <!-- iframe showing the search results (closed by default) -->
 <div id="MSearchResultsWindow">
@@ -86,29 +87,76 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <div class="title">s_TLV_Die_Record Struct Reference</div>  </div>
 </div><!--header-->
 <div class="contents">
+
+<p><code>#include &lt;<a class="el" href="tlv_8h_source.html">tlv.h</a>&gt;</code></p>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-attribs"></a>
 Data Fields</h2></td></tr>
-<tr class="memitem:a06e3fbb658d56905815bb94c62143599"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a06e3fbb658d56905815bb94c62143599"></a>
-unsigned long&#160;</td><td class="memItemRight" valign="bottom"><b>wafer_id</b></td></tr>
+<tr class="memitem:a06e3fbb658d56905815bb94c62143599"><td class="memItemLeft" align="right" valign="top">unsigned long&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structs___t_l_v___die___record.html#a06e3fbb658d56905815bb94c62143599">wafer_id</a></td></tr>
 <tr class="separator:a06e3fbb658d56905815bb94c62143599"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a52124d96d22323b982d0aa2c7c708a3d"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a52124d96d22323b982d0aa2c7c708a3d"></a>
-unsigned int&#160;</td><td class="memItemRight" valign="bottom"><b>die_x_position</b></td></tr>
+<tr class="memitem:a52124d96d22323b982d0aa2c7c708a3d"><td class="memItemLeft" align="right" valign="top">unsigned int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structs___t_l_v___die___record.html#a52124d96d22323b982d0aa2c7c708a3d">die_x_position</a></td></tr>
 <tr class="separator:a52124d96d22323b982d0aa2c7c708a3d"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:af222580fd271b90c891869597debf668"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="af222580fd271b90c891869597debf668"></a>
-unsigned int&#160;</td><td class="memItemRight" valign="bottom"><b>die_y_position</b></td></tr>
+<tr class="memitem:af222580fd271b90c891869597debf668"><td class="memItemLeft" align="right" valign="top">unsigned int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structs___t_l_v___die___record.html#af222580fd271b90c891869597debf668">die_y_position</a></td></tr>
 <tr class="separator:af222580fd271b90c891869597debf668"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ab83c4a3177dc08fc334fc964dc37e632"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ab83c4a3177dc08fc334fc964dc37e632"></a>
-unsigned int&#160;</td><td class="memItemRight" valign="bottom"><b>test_results</b></td></tr>
+<tr class="memitem:ab83c4a3177dc08fc334fc964dc37e632"><td class="memItemLeft" align="right" valign="top">unsigned int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structs___t_l_v___die___record.html#ab83c4a3177dc08fc334fc964dc37e632">test_results</a></td></tr>
 <tr class="separator:ab83c4a3177dc08fc334fc964dc37e632"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
+<h2 class="groupheader">Field Documentation</h2>
+<a class="anchor" id="a52124d96d22323b982d0aa2c7c708a3d"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">unsigned int s_TLV_Die_Record::die_x_position</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a class="anchor" id="af222580fd271b90c891869597debf668"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">unsigned int s_TLV_Die_Record::die_y_position</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a class="anchor" id="ab83c4a3177dc08fc334fc964dc37e632"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">unsigned int s_TLV_Die_Record::test_results</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a class="anchor" id="a06e3fbb658d56905815bb94c62143599"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">unsigned long s_TLV_Die_Record::wafer_id</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
 <hr/>The documentation for this struct was generated from the following file:<ul>
 <li>d7aoss/hal/cc430/driverlib/5xx_6xx/<a class="el" href="tlv_8h_source.html">tlv.h</a></li>
 </ul>
 </div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Sat Nov 23 2013 08:43:39 for OSS-7: Open Source Stack for Dash7 Alliance Protocol by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Mon Nov 25 2013 10:24:17 for OSS-7: Open Source Stack for Dash7 Alliance Protocol by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.5
 </small></address>

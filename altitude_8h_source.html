@@ -37,6 +37,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
   <div id="navrow1" class="tabs">
     <ul class="tablist">
       <li><a href="index.html"><span>Main&#160;Page</span></a></li>
+      <li><a href="namespaces.html"><span>Namespaces</span></a></li>
       <li><a href="annotated.html"><span>Data&#160;Structures</span></a></li>
       <li class="current"><a href="files.html"><span>Files</span></a></li>
       <li>
@@ -60,6 +61,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
   <div id="navrow2" class="tabs2">
     <ul class="tablist">
       <li><a href="files.html"><span>File&#160;List</span></a></li>
+      <li><a href="globals.html"><span>Globals</span></a></li>
     </ul>
   </div>
 <!-- window showing the filter options -->
@@ -67,7 +69,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
      onmouseover="return searchBox.OnSearchSelectShow()"
      onmouseout="return searchBox.OnSearchSelectHide()"
      onkeydown="return searchBox.OnSearchSelectKey(event)">
-<a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(0)"><span class="SelectionMark">&#160;</span>All</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(1)"><span class="SelectionMark">&#160;</span>Data Structures</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(2)"><span class="SelectionMark">&#160;</span>Variables</a></div>
+<a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(0)"><span class="SelectionMark">&#160;</span>All</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(1)"><span class="SelectionMark">&#160;</span>Data Structures</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(2)"><span class="SelectionMark">&#160;</span>Namespaces</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(3)"><span class="SelectionMark">&#160;</span>Files</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(4)"><span class="SelectionMark">&#160;</span>Functions</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(5)"><span class="SelectionMark">&#160;</span>Variables</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(6)"><span class="SelectionMark">&#160;</span>Typedefs</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(7)"><span class="SelectionMark">&#160;</span>Enumerations</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(8)"><span class="SelectionMark">&#160;</span>Enumerator</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(9)"><span class="SelectionMark">&#160;</span>Macros</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(10)"><span class="SelectionMark">&#160;</span>Pages</a></div>
 
 <!-- iframe showing the search results (closed by default) -->
 <div id="MSearchResultsWindow">
@@ -86,7 +88,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <div class="title">altitude.h</div>  </div>
 </div><!--header-->
 <div class="contents">
-<div class="fragment"><div class="line"><a name="l00001"></a><span class="lineno">    1</span>&#160;<span class="comment">// *************************************************************************************************</span></div>
+<a href="altitude_8h.html">Go to the documentation of this file.</a><div class="fragment"><div class="line"><a name="l00001"></a><span class="lineno">    1</span>&#160;<span class="comment">// *************************************************************************************************</span></div>
 <div class="line"><a name="l00002"></a><span class="lineno">    2</span>&#160;<span class="comment">//</span></div>
 <div class="line"><a name="l00003"></a><span class="lineno">    3</span>&#160;<span class="comment">//  Copyright (C) 2009 Texas Instruments Incorporated - http://www.ti.com/ </span></div>
 <div class="line"><a name="l00004"></a><span class="lineno">    4</span>&#160;<span class="comment">//   </span></div>
@@ -132,20 +134,20 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <div class="line"><a name="l00044"></a><span class="lineno">   44</span>&#160;</div>
 <div class="line"><a name="l00045"></a><span class="lineno">   45</span>&#160;<span class="comment">// *************************************************************************************************</span></div>
 <div class="line"><a name="l00046"></a><span class="lineno">   46</span>&#160;<span class="comment">// Prototypes section</span></div>
-<div class="line"><a name="l00047"></a><span class="lineno">   47</span>&#160;<span class="keyword">extern</span> <span class="keywordtype">void</span> reset_altitude_measurement(<span class="keywordtype">void</span>);</div>
-<div class="line"><a name="l00048"></a><span class="lineno">   48</span>&#160;<span class="keyword">extern</span> uint8_t is_altitude_measurement(<span class="keywordtype">void</span>);</div>
-<div class="line"><a name="l00049"></a><span class="lineno">   49</span>&#160;<span class="keyword">extern</span> <span class="keywordtype">void</span> start_altitude_measurement(<span class="keywordtype">void</span>);</div>
-<div class="line"><a name="l00050"></a><span class="lineno">   50</span>&#160;<span class="keyword">extern</span> <span class="keywordtype">void</span> stop_altitude_measurement(<span class="keywordtype">void</span>);</div>
-<div class="line"><a name="l00051"></a><span class="lineno">   51</span>&#160;<span class="keyword">extern</span> <span class="keywordtype">void</span> do_altitude_measurement(uint8_t filter);</div>
+<div class="line"><a name="l00047"></a><span class="lineno">   47</span>&#160;<span class="keyword">extern</span> <span class="keywordtype">void</span> <a class="code" href="altitude_8c.html#a3ffa1c8aba5beba77bb047988e96c29d">reset_altitude_measurement</a>(<span class="keywordtype">void</span>);</div>
+<div class="line"><a name="l00048"></a><span class="lineno">   48</span>&#160;<span class="keyword">extern</span> uint8_t <a class="code" href="altitude_8c.html#adc539623a195da849f3d4ac230dbc7e2">is_altitude_measurement</a>(<span class="keywordtype">void</span>);</div>
+<div class="line"><a name="l00049"></a><span class="lineno">   49</span>&#160;<span class="keyword">extern</span> <span class="keywordtype">void</span> <a class="code" href="altitude_8c.html#a1b7917d1fa26fac7e3b6d061f742f643">start_altitude_measurement</a>(<span class="keywordtype">void</span>);</div>
+<div class="line"><a name="l00050"></a><span class="lineno">   50</span>&#160;<span class="keyword">extern</span> <span class="keywordtype">void</span> <a class="code" href="altitude_8c.html#a06fc139fba01aa685af546822ad1e2da">stop_altitude_measurement</a>(<span class="keywordtype">void</span>);</div>
+<div class="line"><a name="l00051"></a><span class="lineno">   51</span>&#160;<span class="keyword">extern</span> <span class="keywordtype">void</span> <a class="code" href="altitude_8c.html#aab40ad27060d9271bbc4f1bbbc9be8d9">do_altitude_measurement</a>(uint8_t filter);</div>
 <div class="line"><a name="l00052"></a><span class="lineno">   52</span>&#160;<span class="preprocessor">#ifdef CONFIG_ALTI_ACCUMULATOR</span></div>
 <div class="line"><a name="l00053"></a><span class="lineno">   53</span>&#160;<span class="preprocessor"></span><span class="keyword">extern</span> <span class="keywordtype">void</span> display_selection_altunits(uint8_t segments, uint32_t  index, uint8_t digits, uint8_t blanks);</div>
 <div class="line"><a name="l00054"></a><span class="lineno">   54</span>&#160;<span class="keyword">extern</span> <span class="keywordtype">void</span> altitude_accumulator_periodic (<span class="keywordtype">void</span>);</div>
 <div class="line"><a name="l00055"></a><span class="lineno">   55</span>&#160;<span class="preprocessor">#endif</span></div>
 <div class="line"><a name="l00056"></a><span class="lineno">   56</span>&#160;<span class="preprocessor"></span></div>
 <div class="line"><a name="l00057"></a><span class="lineno">   57</span>&#160;<span class="comment">// menu functions</span></div>
-<div class="line"><a name="l00058"></a><span class="lineno">   58</span>&#160;<span class="keyword">extern</span> <span class="keywordtype">void</span> sx_altitude(uint8_t line);</div>
-<div class="line"><a name="l00059"></a><span class="lineno">   59</span>&#160;<span class="keyword">extern</span> <span class="keywordtype">void</span> mx_altitude(uint8_t line);</div>
-<div class="line"><a name="l00060"></a><span class="lineno">   60</span>&#160;<span class="keyword">extern</span> <span class="keywordtype">void</span> display_altitude(uint8_t line, uint8_t update);</div>
+<div class="line"><a name="l00058"></a><span class="lineno">   58</span>&#160;<span class="keyword">extern</span> <span class="keywordtype">void</span> <a class="code" href="altitude_8c.html#abe32da1648164dec5651813652a64e26">sx_altitude</a>(uint8_t line);</div>
+<div class="line"><a name="l00059"></a><span class="lineno">   59</span>&#160;<span class="keyword">extern</span> <span class="keywordtype">void</span> <a class="code" href="altitude_8c.html#ac59cfe4643853c70ae63b261bb74f09b">mx_altitude</a>(uint8_t line);</div>
+<div class="line"><a name="l00060"></a><span class="lineno">   60</span>&#160;<span class="keyword">extern</span> <span class="keywordtype">void</span> <a class="code" href="altitude_8c.html#a4fe0424eb3ade8d73330e0444b05d6c9">display_altitude</a>(uint8_t line, uint8_t update);</div>
 <div class="line"><a name="l00061"></a><span class="lineno">   61</span>&#160;<span class="preprocessor">#ifdef CONFIG_ALTI_ACCUMULATOR</span></div>
 <div class="line"><a name="l00062"></a><span class="lineno">   62</span>&#160;<span class="preprocessor"></span><span class="keyword">extern</span> <span class="keywordtype">void</span> sx_alt_accumulator(uint8_t line);</div>
 <div class="line"><a name="l00063"></a><span class="lineno">   63</span>&#160;<span class="keyword">extern</span> <span class="keywordtype">void</span> mx_alt_accumulator(uint8_t line);</div>
@@ -156,7 +158,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <div class="line"><a name="l00068"></a><span class="lineno">   68</span>&#160;<span class="comment">// Defines section</span></div>
 <div class="line"><a name="l00069"></a><span class="lineno">   69</span>&#160;</div>
 <div class="line"><a name="l00070"></a><span class="lineno">   70</span>&#160;<span class="comment">// Stop altitude measurement after 60 minutes to save battery</span></div>
-<div class="line"><a name="l00071"></a><span class="lineno">   71</span>&#160;<span class="preprocessor">#define ALTITUDE_MEASUREMENT_TIMEOUT    (60*60u)</span></div>
+<div class="line"><a name="l00071"></a><span class="lineno"><a class="line" href="altitude_8h.html#afa19d087e21e34ea9e35a4d1150cd3b0">   71</a></span>&#160;<span class="preprocessor">#define ALTITUDE_MEASUREMENT_TIMEOUT    (60*60u)</span></div>
 <div class="line"><a name="l00072"></a><span class="lineno">   72</span>&#160;<span class="preprocessor"></span></div>
 <div class="line"><a name="l00073"></a><span class="lineno">   73</span>&#160;</div>
 <div class="line"><a name="l00074"></a><span class="lineno">   74</span>&#160;<span class="comment">// *************************************************************************************************</span></div>
@@ -164,24 +166,24 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <div class="line"><a name="l00076"></a><span class="lineno"><a class="line" href="structalt.html">   76</a></span>&#160;<span class="keyword">struct </span><a class="code" href="structalt.html">alt</a></div>
 <div class="line"><a name="l00077"></a><span class="lineno">   77</span>&#160;{</div>
 <div class="line"><a name="l00078"></a><span class="lineno">   78</span>&#160;    <span class="comment">// MENU_ITEM_NOT_VISIBLE, MENU_ITEM_VISIBLE   </span></div>
-<div class="line"><a name="l00079"></a><span class="lineno">   79</span>&#160;    menu_t  state; </div>
+<div class="line"><a name="l00079"></a><span class="lineno"><a class="line" href="structalt.html#a94c2868b6b60636db2f082536676b1ed">   79</a></span>&#160;    <a class="code" href="project_8h.html#a44455c5614c38dfadce594b2228fd055">menu_t</a>  <a class="code" href="structalt.html#a94c2868b6b60636db2f082536676b1ed">state</a>; </div>
 <div class="line"><a name="l00080"></a><span class="lineno">   80</span>&#160;</div>
 <div class="line"><a name="l00081"></a><span class="lineno">   81</span>&#160;    <span class="comment">// Pressure (Pa)</span></div>
-<div class="line"><a name="l00082"></a><span class="lineno">   82</span>&#160;    uint32_t        pressure;</div>
+<div class="line"><a name="l00082"></a><span class="lineno"><a class="line" href="structalt.html#abd64186237663fb0c1dae58d22f3c845">   82</a></span>&#160;    uint32_t        <a class="code" href="structalt.html#abd64186237663fb0c1dae58d22f3c845">pressure</a>;</div>
 <div class="line"><a name="l00083"></a><span class="lineno">   83</span>&#160;</div>
 <div class="line"><a name="l00084"></a><span class="lineno">   84</span>&#160;    <span class="comment">// Temperature (°K)</span></div>
-<div class="line"><a name="l00085"></a><span class="lineno">   85</span>&#160;    uint16_t        temperature;</div>
+<div class="line"><a name="l00085"></a><span class="lineno"><a class="line" href="structalt.html#a1e1c52d4a18ed28c1031b20440e6609a">   85</a></span>&#160;    uint16_t        <a class="code" href="structalt.html#a1e1c52d4a18ed28c1031b20440e6609a">temperature</a>;</div>
 <div class="line"><a name="l00086"></a><span class="lineno">   86</span>&#160;</div>
 <div class="line"><a name="l00087"></a><span class="lineno">   87</span>&#160;    <span class="comment">// Altitude (m)</span></div>
-<div class="line"><a name="l00088"></a><span class="lineno">   88</span>&#160;    int16_t         altitude;</div>
+<div class="line"><a name="l00088"></a><span class="lineno"><a class="line" href="structalt.html#a6e20b408895693e6a9e7eca1dd5e0d54">   88</a></span>&#160;    int16_t         <a class="code" href="structalt.html#a6e20b408895693e6a9e7eca1dd5e0d54">altitude</a>;</div>
 <div class="line"><a name="l00089"></a><span class="lineno">   89</span>&#160;    </div>
 <div class="line"><a name="l00090"></a><span class="lineno">   90</span>&#160;    <span class="comment">// Altitude offset stored during calibration</span></div>
-<div class="line"><a name="l00091"></a><span class="lineno">   91</span>&#160;    int16_t         altitude_offset;</div>
+<div class="line"><a name="l00091"></a><span class="lineno"><a class="line" href="structalt.html#afd9ac69054346ac77c634fb9af83eb57">   91</a></span>&#160;    int16_t         <a class="code" href="structalt.html#afd9ac69054346ac77c634fb9af83eb57">altitude_offset</a>;</div>
 <div class="line"><a name="l00092"></a><span class="lineno">   92</span>&#160;</div>
 <div class="line"><a name="l00093"></a><span class="lineno">   93</span>&#160;    <span class="comment">// Timeout</span></div>
-<div class="line"><a name="l00094"></a><span class="lineno">   94</span>&#160;    uint16_t        timeout;</div>
+<div class="line"><a name="l00094"></a><span class="lineno"><a class="line" href="structalt.html#a46d7e3946217a9dd0e0ac853b90b4aa1">   94</a></span>&#160;    uint16_t        <a class="code" href="structalt.html#a46d7e3946217a9dd0e0ac853b90b4aa1">timeout</a>;</div>
 <div class="line"><a name="l00095"></a><span class="lineno">   95</span>&#160;};</div>
-<div class="line"><a name="l00096"></a><span class="lineno">   96</span>&#160;<span class="keyword">extern</span> <span class="keyword">struct </span><a class="code" href="structalt.html">alt</a> sAlt;</div>
+<div class="line"><a name="l00096"></a><span class="lineno">   96</span>&#160;<span class="keyword">extern</span> <span class="keyword">struct </span><a class="code" href="structalt.html">alt</a> <a class="code" href="altitude_8c.html#a195faa2077882b20074557cd720f96e9">sAlt</a>;</div>
 <div class="line"><a name="l00097"></a><span class="lineno">   97</span>&#160;</div>
 <div class="line"><a name="l00098"></a><span class="lineno">   98</span>&#160;</div>
 <div class="line"><a name="l00099"></a><span class="lineno">   99</span>&#160;<span class="comment">// *************************************************************************************************</span></div>
@@ -189,11 +191,27 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <div class="line"><a name="l00101"></a><span class="lineno">  101</span>&#160;</div>
 <div class="line"><a name="l00102"></a><span class="lineno">  102</span>&#160;</div>
 <div class="line"><a name="l00103"></a><span class="lineno">  103</span>&#160;<span class="preprocessor">#endif </span><span class="comment">/*ALTITUDE_H_*/</span><span class="preprocessor"></span></div>
+<div class="ttc" id="altitude_8c_html_a06fc139fba01aa685af546822ad1e2da"><div class="ttname"><a href="altitude_8c.html#a06fc139fba01aa685af546822ad1e2da">stop_altitude_measurement</a></div><div class="ttdeci">void stop_altitude_measurement(void)</div><div class="ttdef"><b>Definition:</b> altitude.c:214</div></div>
+<div class="ttc" id="structalt_html_a1e1c52d4a18ed28c1031b20440e6609a"><div class="ttname"><a href="structalt.html#a1e1c52d4a18ed28c1031b20440e6609a">alt::temperature</a></div><div class="ttdeci">uint16_t temperature</div><div class="ttdef"><b>Definition:</b> altitude.h:85</div></div>
+<div class="ttc" id="altitude_8c_html_ac59cfe4643853c70ae63b261bb74f09b"><div class="ttname"><a href="altitude_8c.html#ac59cfe4643853c70ae63b261bb74f09b">mx_altitude</a></div><div class="ttdeci">void mx_altitude(uint8_t line)</div><div class="ttdef"><b>Definition:</b> altitude.c:303</div></div>
+<div class="ttc" id="structalt_html_afd9ac69054346ac77c634fb9af83eb57"><div class="ttname"><a href="structalt.html#afd9ac69054346ac77c634fb9af83eb57">alt::altitude_offset</a></div><div class="ttdeci">int16_t altitude_offset</div><div class="ttdef"><b>Definition:</b> altitude.h:91</div></div>
+<div class="ttc" id="altitude_8c_html_a195faa2077882b20074557cd720f96e9"><div class="ttname"><a href="altitude_8c.html#a195faa2077882b20074557cd720f96e9">sAlt</a></div><div class="ttdeci">struct alt sAlt</div><div class="ttdef"><b>Definition:</b> altitude.c:75</div></div>
 <div class="ttc" id="structalt_html"><div class="ttname"><a href="structalt.html">alt</a></div><div class="ttdef"><b>Definition:</b> altitude.h:76</div></div>
+<div class="ttc" id="altitude_8c_html_aab40ad27060d9271bbc4f1bbbc9be8d9"><div class="ttname"><a href="altitude_8c.html#aab40ad27060d9271bbc4f1bbbc9be8d9">do_altitude_measurement</a></div><div class="ttdeci">void do_altitude_measurement(uint8_t filter)</div><div class="ttdef"><b>Definition:</b> altitude.c:238</div></div>
+<div class="ttc" id="project_8h_html_a44455c5614c38dfadce594b2228fd055"><div class="ttname"><a href="project_8h.html#a44455c5614c38dfadce594b2228fd055">menu_t</a></div><div class="ttdeci">menu_t</div><div class="ttdef"><b>Definition:</b> project.h:49</div></div>
+<div class="ttc" id="altitude_8c_html_adc539623a195da849f3d4ac230dbc7e2"><div class="ttname"><a href="altitude_8c.html#adc539623a195da849f3d4ac230dbc7e2">is_altitude_measurement</a></div><div class="ttdeci">uint8_t is_altitude_measurement(void)</div><div class="ttdef"><b>Definition:</b> altitude.c:167</div></div>
+<div class="ttc" id="altitude_8c_html_a3ffa1c8aba5beba77bb047988e96c29d"><div class="ttname"><a href="altitude_8c.html#a3ffa1c8aba5beba77bb047988e96c29d">reset_altitude_measurement</a></div><div class="ttdeci">void reset_altitude_measurement(void)</div><div class="ttdef"><b>Definition:</b> altitude.c:105</div></div>
+<div class="ttc" id="structalt_html_a6e20b408895693e6a9e7eca1dd5e0d54"><div class="ttname"><a href="structalt.html#a6e20b408895693e6a9e7eca1dd5e0d54">alt::altitude</a></div><div class="ttdeci">int16_t altitude</div><div class="ttdef"><b>Definition:</b> altitude.h:88</div></div>
+<div class="ttc" id="altitude_8c_html_abe32da1648164dec5651813652a64e26"><div class="ttname"><a href="altitude_8c.html#abe32da1648164dec5651813652a64e26">sx_altitude</a></div><div class="ttdeci">void sx_altitude(uint8_t line)</div><div class="ttdef"><b>Definition:</b> altitude.c:289</div></div>
+<div class="ttc" id="structalt_html_abd64186237663fb0c1dae58d22f3c845"><div class="ttname"><a href="structalt.html#abd64186237663fb0c1dae58d22f3c845">alt::pressure</a></div><div class="ttdeci">uint32_t pressure</div><div class="ttdef"><b>Definition:</b> altitude.h:82</div></div>
+<div class="ttc" id="altitude_8c_html_a1b7917d1fa26fac7e3b6d061f742f643"><div class="ttname"><a href="altitude_8c.html#a1b7917d1fa26fac7e3b6d061f742f643">start_altitude_measurement</a></div><div class="ttdeci">void start_altitude_measurement(void)</div><div class="ttdef"><b>Definition:</b> altitude.c:179</div></div>
+<div class="ttc" id="structalt_html_a46d7e3946217a9dd0e0ac853b90b4aa1"><div class="ttname"><a href="structalt.html#a46d7e3946217a9dd0e0ac853b90b4aa1">alt::timeout</a></div><div class="ttdeci">uint16_t timeout</div><div class="ttdef"><b>Definition:</b> altitude.h:94</div></div>
+<div class="ttc" id="altitude_8c_html_a4fe0424eb3ade8d73330e0444b05d6c9"><div class="ttname"><a href="altitude_8c.html#a4fe0424eb3ade8d73330e0444b05d6c9">display_altitude</a></div><div class="ttdeci">void display_altitude(uint8_t line, uint8_t update)</div><div class="ttdef"><b>Definition:</b> altitude.c:404</div></div>
+<div class="ttc" id="structalt_html_a94c2868b6b60636db2f082536676b1ed"><div class="ttname"><a href="structalt.html#a94c2868b6b60636db2f082536676b1ed">alt::state</a></div><div class="ttdeci">menu_t state</div><div class="ttdef"><b>Definition:</b> altitude.h:79</div></div>
 </div><!-- fragment --></div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Sat Nov 23 2013 08:43:39 for OSS-7: Open Source Stack for Dash7 Alliance Protocol by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Mon Nov 25 2013 10:10:10 for OSS-7: Open Source Stack for Dash7 Alliance Protocol by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.5
 </small></address>

@@ -37,6 +37,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
   <div id="navrow1" class="tabs">
     <ul class="tablist">
       <li><a href="index.html"><span>Main&#160;Page</span></a></li>
+      <li><a href="namespaces.html"><span>Namespaces</span></a></li>
       <li><a href="annotated.html"><span>Data&#160;Structures</span></a></li>
       <li class="current"><a href="files.html"><span>Files</span></a></li>
       <li>
@@ -60,6 +61,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
   <div id="navrow2" class="tabs2">
     <ul class="tablist">
       <li><a href="files.html"><span>File&#160;List</span></a></li>
+      <li><a href="globals.html"><span>Globals</span></a></li>
     </ul>
   </div>
 <!-- window showing the filter options -->
@@ -67,7 +69,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
      onmouseover="return searchBox.OnSearchSelectShow()"
      onmouseout="return searchBox.OnSearchSelectHide()"
      onkeydown="return searchBox.OnSearchSelectKey(event)">
-<a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(0)"><span class="SelectionMark">&#160;</span>All</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(1)"><span class="SelectionMark">&#160;</span>Data Structures</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(2)"><span class="SelectionMark">&#160;</span>Variables</a></div>
+<a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(0)"><span class="SelectionMark">&#160;</span>All</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(1)"><span class="SelectionMark">&#160;</span>Data Structures</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(2)"><span class="SelectionMark">&#160;</span>Namespaces</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(3)"><span class="SelectionMark">&#160;</span>Files</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(4)"><span class="SelectionMark">&#160;</span>Functions</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(5)"><span class="SelectionMark">&#160;</span>Variables</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(6)"><span class="SelectionMark">&#160;</span>Typedefs</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(7)"><span class="SelectionMark">&#160;</span>Enumerations</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(8)"><span class="SelectionMark">&#160;</span>Enumerator</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(9)"><span class="SelectionMark">&#160;</span>Macros</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(10)"><span class="SelectionMark">&#160;</span>Pages</a></div>
 
 <!-- iframe showing the search results (closed by default) -->
 <div id="MSearchResultsWindow">
@@ -86,7 +88,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <div class="title">clock.h</div>  </div>
 </div><!--header-->
 <div class="contents">
-<div class="fragment"><div class="line"><a name="l00001"></a><span class="lineno">    1</span>&#160;<span class="comment">// *************************************************************************************************</span></div>
+<a href="clock_8h.html">Go to the documentation of this file.</a><div class="fragment"><div class="line"><a name="l00001"></a><span class="lineno">    1</span>&#160;<span class="comment">// *************************************************************************************************</span></div>
 <div class="line"><a name="l00002"></a><span class="lineno">    2</span>&#160;<span class="comment">//</span></div>
 <div class="line"><a name="l00003"></a><span class="lineno">    3</span>&#160;<span class="comment">//  Copyright (C) 2009 Texas Instruments Incorporated - http://www.ti.com/ </span></div>
 <div class="line"><a name="l00004"></a><span class="lineno">    4</span>&#160;<span class="comment">//   </span></div>
@@ -128,57 +130,75 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <div class="line"><a name="l00040"></a><span class="lineno">   40</span>&#160;<span class="comment">// Defines section</span></div>
 <div class="line"><a name="l00041"></a><span class="lineno">   41</span>&#160;</div>
 <div class="line"><a name="l00042"></a><span class="lineno">   42</span>&#160;<span class="comment">// Definitions for time format</span></div>
-<div class="line"><a name="l00043"></a><span class="lineno">   43</span>&#160;<span class="preprocessor">#define TIMEFORMAT_24H                  (0u)</span></div>
-<div class="line"><a name="l00044"></a><span class="lineno">   44</span>&#160;<span class="preprocessor"></span><span class="preprocessor">#define TIMEFORMAT_12H                  (1u)</span></div>
+<div class="line"><a name="l00043"></a><span class="lineno"><a class="line" href="clock_8h.html#a629f0d4d7a342f6b047dad16694986d3">   43</a></span>&#160;<span class="preprocessor">#define TIMEFORMAT_24H                  (0u)</span></div>
+<div class="line"><a name="l00044"></a><span class="lineno"><a class="line" href="clock_8h.html#aab911e40db88c68836defd8b0ac6bef3">   44</a></span>&#160;<span class="preprocessor"></span><span class="preprocessor">#define TIMEFORMAT_12H                  (1u)</span></div>
 <div class="line"><a name="l00045"></a><span class="lineno">   45</span>&#160;<span class="preprocessor"></span></div>
 <div class="line"><a name="l00046"></a><span class="lineno">   46</span>&#160;<span class="comment">// *************************************************************************************************</span></div>
 <div class="line"><a name="l00047"></a><span class="lineno">   47</span>&#160;<span class="comment">// Prototypes section</span></div>
-<div class="line"><a name="l00048"></a><span class="lineno">   48</span>&#160;<span class="keyword">extern</span> <span class="keywordtype">void</span> reset_clock(<span class="keywordtype">void</span>);</div>
-<div class="line"><a name="l00049"></a><span class="lineno">   49</span>&#160;<span class="keyword">extern</span> <span class="keywordtype">void</span> sx_time(uint8_t line);</div>
-<div class="line"><a name="l00050"></a><span class="lineno">   50</span>&#160;<span class="keyword">extern</span> <span class="keywordtype">void</span> mx_time(uint8_t line);</div>
-<div class="line"><a name="l00051"></a><span class="lineno">   51</span>&#160;<span class="keyword">extern</span> <span class="keywordtype">void</span> clock_tick(<span class="keywordtype">void</span>);</div>
-<div class="line"><a name="l00052"></a><span class="lineno">   52</span>&#160;<span class="keyword">extern</span> <span class="keywordtype">void</span> display_selection_Timeformat1(uint8_t segments, uint32_t  index, uint8_t digits, uint8_t blanks, uint8_t dummy);</div>
-<div class="line"><a name="l00053"></a><span class="lineno">   53</span>&#160;<span class="keyword">extern</span> <span class="keywordtype">void</span> display_time(uint8_t line, uint8_t update);</div>
+<div class="line"><a name="l00048"></a><span class="lineno">   48</span>&#160;<span class="keyword">extern</span> <span class="keywordtype">void</span> <a class="code" href="clock_8c.html#a7ad7026db6e5f41704969676a27b892e">reset_clock</a>(<span class="keywordtype">void</span>);</div>
+<div class="line"><a name="l00049"></a><span class="lineno">   49</span>&#160;<span class="keyword">extern</span> <span class="keywordtype">void</span> <a class="code" href="clock_8c.html#a9107ffa72e4e16d81b0b41ae1cf0a0e0">sx_time</a>(uint8_t line);</div>
+<div class="line"><a name="l00050"></a><span class="lineno">   50</span>&#160;<span class="keyword">extern</span> <span class="keywordtype">void</span> <a class="code" href="clock_8c.html#ad06714ecfaacba209f15966986a79704">mx_time</a>(uint8_t line);</div>
+<div class="line"><a name="l00051"></a><span class="lineno">   51</span>&#160;<span class="keyword">extern</span> <span class="keywordtype">void</span> <a class="code" href="clock_8c.html#a4529daa6019ff1f8d068a0d6d4cfbdbf">clock_tick</a>(<span class="keywordtype">void</span>);</div>
+<div class="line"><a name="l00052"></a><span class="lineno">   52</span>&#160;<span class="keyword">extern</span> <span class="keywordtype">void</span> <a class="code" href="clock_8h.html#a3ec41321ec8ca3cd835889d9a3a260cc">display_selection_Timeformat1</a>(uint8_t segments, uint32_t  index, uint8_t digits, uint8_t blanks, uint8_t <a class="code" href="user_8c.html#a078c060ccd457b6661f2dd5b633e3396">dummy</a>);</div>
+<div class="line"><a name="l00053"></a><span class="lineno">   53</span>&#160;<span class="keyword">extern</span> <span class="keywordtype">void</span> <a class="code" href="clock_8c.html#ac09f5e534b2b2da24666e395d7f0d503">display_time</a>(uint8_t line, uint8_t update);</div>
 <div class="line"><a name="l00054"></a><span class="lineno">   54</span>&#160;</div>
 <div class="line"><a name="l00055"></a><span class="lineno">   55</span>&#160;<span class="comment">// English units support</span></div>
-<div class="line"><a name="l00056"></a><span class="lineno">   56</span>&#160;<span class="keyword">extern</span> uint8_t convert_hour_to_12H_format(uint8_t hour);</div>
-<div class="line"><a name="l00057"></a><span class="lineno">   57</span>&#160;<span class="keyword">extern</span> uint8_t is_hour_am(uint8_t hour);</div>
+<div class="line"><a name="l00056"></a><span class="lineno">   56</span>&#160;<span class="keyword">extern</span> uint8_t <a class="code" href="clock_8h.html#a3106248ceccc22c007662127a1be86bd">convert_hour_to_12H_format</a>(uint8_t hour);</div>
+<div class="line"><a name="l00057"></a><span class="lineno">   57</span>&#160;<span class="keyword">extern</span> uint8_t <a class="code" href="clock_8h.html#a2bc38c8aa915294b502fdfe4dccb0190">is_hour_am</a>(uint8_t hour);</div>
 <div class="line"><a name="l00058"></a><span class="lineno">   58</span>&#160;</div>
 <div class="line"><a name="l00059"></a><span class="lineno">   59</span>&#160;</div>
 <div class="line"><a name="l00060"></a><span class="lineno">   60</span>&#160;<span class="comment">// *************************************************************************************************</span></div>
 <div class="line"><a name="l00061"></a><span class="lineno">   61</span>&#160;<span class="comment">// Global Variable section</span></div>
 <div class="line"><a name="l00062"></a><span class="lineno"><a class="line" href="structtime.html">   62</a></span>&#160;<span class="keyword">struct </span><a class="code" href="structtime.html">time</a></div>
 <div class="line"><a name="l00063"></a><span class="lineno">   63</span>&#160;{</div>
-<div class="line"><a name="l00064"></a><span class="lineno">   64</span>&#160;    uint32_t    system_time;</div>
+<div class="line"><a name="l00064"></a><span class="lineno"><a class="line" href="structtime.html#a544d2db61e902d27d3e59cd5cbb20b7e">   64</a></span>&#160;    uint32_t    <a class="code" href="structtime.html#a544d2db61e902d27d3e59cd5cbb20b7e">system_time</a>;</div>
 <div class="line"><a name="l00065"></a><span class="lineno">   65</span>&#160;</div>
 <div class="line"><a name="l00066"></a><span class="lineno">   66</span>&#160;    <span class="comment">// Flag to minimize display updates</span></div>
-<div class="line"><a name="l00067"></a><span class="lineno">   67</span>&#160;    uint8_t         drawFlag;</div>
+<div class="line"><a name="l00067"></a><span class="lineno"><a class="line" href="structtime.html#ac1a001b0abb56aa7b515cab36ab0c763">   67</a></span>&#160;    uint8_t         <a class="code" href="structtime.html#ac1a001b0abb56aa7b515cab36ab0c763">drawFlag</a>;</div>
 <div class="line"><a name="l00068"></a><span class="lineno">   68</span>&#160;</div>
 <div class="line"><a name="l00069"></a><span class="lineno">   69</span>&#160;    <span class="comment">// Viewing style</span></div>
-<div class="line"><a name="l00070"></a><span class="lineno">   70</span>&#160;    uint8_t     line1ViewStyle;</div>
-<div class="line"><a name="l00071"></a><span class="lineno">   71</span>&#160;    uint8_t     line2ViewStyle;</div>
+<div class="line"><a name="l00070"></a><span class="lineno"><a class="line" href="structtime.html#a318ae1415ebf9ab41813d45ee1c16e15">   70</a></span>&#160;    uint8_t     <a class="code" href="structtime.html#a318ae1415ebf9ab41813d45ee1c16e15">line1ViewStyle</a>;</div>
+<div class="line"><a name="l00071"></a><span class="lineno"><a class="line" href="structtime.html#ac355e00ec20a2d0ac94053003f9a27dc">   71</a></span>&#160;    uint8_t     <a class="code" href="structtime.html#ac355e00ec20a2d0ac94053003f9a27dc">line2ViewStyle</a>;</div>
 <div class="line"><a name="l00072"></a><span class="lineno">   72</span>&#160;    </div>
 <div class="line"><a name="l00073"></a><span class="lineno">   73</span>&#160;    <span class="comment">// Time data</span></div>
-<div class="line"><a name="l00074"></a><span class="lineno">   74</span>&#160;    uint8_t     hour;</div>
-<div class="line"><a name="l00075"></a><span class="lineno">   75</span>&#160;    uint8_t     minute;</div>
-<div class="line"><a name="l00076"></a><span class="lineno">   76</span>&#160;    uint8_t         second;</div>
+<div class="line"><a name="l00074"></a><span class="lineno"><a class="line" href="structtime.html#aa161a868794063125aa286d161fbd9bc">   74</a></span>&#160;    uint8_t     <a class="code" href="structtime.html#aa161a868794063125aa286d161fbd9bc">hour</a>;</div>
+<div class="line"><a name="l00075"></a><span class="lineno"><a class="line" href="structtime.html#a15d8c0aab9e21bcc8c0a1c142b21a87a">   75</a></span>&#160;    uint8_t     <a class="code" href="structtime.html#a15d8c0aab9e21bcc8c0a1c142b21a87a">minute</a>;</div>
+<div class="line"><a name="l00076"></a><span class="lineno"><a class="line" href="structtime.html#ab99c95365d82ac9fdc6646bf9f6107d0">   76</a></span>&#160;    uint8_t         <a class="code" href="structtime.html#ab99c95365d82ac9fdc6646bf9f6107d0">second</a>;</div>
 <div class="line"><a name="l00077"></a><span class="lineno">   77</span>&#160;    </div>
 <div class="line"><a name="l00078"></a><span class="lineno">   78</span>&#160;    <span class="comment">// Inactivity detection (exits set_value() function)</span></div>
-<div class="line"><a name="l00079"></a><span class="lineno">   79</span>&#160;    uint32_t    last_activity;</div>
+<div class="line"><a name="l00079"></a><span class="lineno"><a class="line" href="structtime.html#a0ef19cf3092c17ae72b10e711da574b1">   79</a></span>&#160;    uint32_t    <a class="code" href="structtime.html#a0ef19cf3092c17ae72b10e711da574b1">last_activity</a>;</div>
 <div class="line"><a name="l00080"></a><span class="lineno">   80</span>&#160;<span class="preprocessor">    #ifdef CONFIG_SIDEREAL</span></div>
 <div class="line"><a name="l00081"></a><span class="lineno">   81</span>&#160;<span class="preprocessor"></span>    <span class="comment">// offset of local time from UTC (=1: set time is UTC+1 =CET)</span></div>
 <div class="line"><a name="l00082"></a><span class="lineno">   82</span>&#160;    int8_t      UTCoffset;</div>
 <div class="line"><a name="l00083"></a><span class="lineno">   83</span>&#160;<span class="preprocessor">    #endif</span></div>
 <div class="line"><a name="l00084"></a><span class="lineno">   84</span>&#160;<span class="preprocessor"></span>};</div>
-<div class="line"><a name="l00085"></a><span class="lineno">   85</span>&#160;<span class="keyword">extern</span> <span class="keyword">volatile</span> <span class="keyword">struct </span><a class="code" href="structtime.html">time</a> sTime;</div>
+<div class="line"><a name="l00085"></a><span class="lineno">   85</span>&#160;<span class="keyword">extern</span> <span class="keyword">volatile</span> <span class="keyword">struct </span><a class="code" href="structtime.html">time</a> <a class="code" href="clock_8c.html#a1e16bca96cf7044478d1c23b9b86014a">sTime</a>;</div>
 <div class="line"><a name="l00086"></a><span class="lineno">   86</span>&#160;</div>
 <div class="line"><a name="l00087"></a><span class="lineno">   87</span>&#160;</div>
 <div class="line"><a name="l00088"></a><span class="lineno">   88</span>&#160;<span class="preprocessor">#endif </span><span class="comment">/*CLOCKTIMER_H_*/</span><span class="preprocessor"></span></div>
+<div class="ttc" id="structtime_html_a318ae1415ebf9ab41813d45ee1c16e15"><div class="ttname"><a href="structtime.html#a318ae1415ebf9ab41813d45ee1c16e15">time::line1ViewStyle</a></div><div class="ttdeci">uint8_t line1ViewStyle</div><div class="ttdef"><b>Definition:</b> clock.h:70</div></div>
+<div class="ttc" id="clock_8h_html_a3ec41321ec8ca3cd835889d9a3a260cc"><div class="ttname"><a href="clock_8h.html#a3ec41321ec8ca3cd835889d9a3a260cc">display_selection_Timeformat1</a></div><div class="ttdeci">void display_selection_Timeformat1(uint8_t segments, uint32_t index, uint8_t digits, uint8_t blanks, uint8_t dummy)</div></div>
+<div class="ttc" id="structtime_html_a15d8c0aab9e21bcc8c0a1c142b21a87a"><div class="ttname"><a href="structtime.html#a15d8c0aab9e21bcc8c0a1c142b21a87a">time::minute</a></div><div class="ttdeci">uint8_t minute</div><div class="ttdef"><b>Definition:</b> clock.h:75</div></div>
+<div class="ttc" id="clock_8c_html_ac09f5e534b2b2da24666e395d7f0d503"><div class="ttname"><a href="clock_8c.html#ac09f5e534b2b2da24666e395d7f0d503">display_time</a></div><div class="ttdeci">void display_time(uint8_t line, uint8_t update)</div><div class="ttdef"><b>Definition:</b> clock.c:389</div></div>
+<div class="ttc" id="structtime_html_ac355e00ec20a2d0ac94053003f9a27dc"><div class="ttname"><a href="structtime.html#ac355e00ec20a2d0ac94053003f9a27dc">time::line2ViewStyle</a></div><div class="ttdeci">uint8_t line2ViewStyle</div><div class="ttdef"><b>Definition:</b> clock.h:71</div></div>
+<div class="ttc" id="structtime_html_aa161a868794063125aa286d161fbd9bc"><div class="ttname"><a href="structtime.html#aa161a868794063125aa286d161fbd9bc">time::hour</a></div><div class="ttdeci">uint8_t hour</div><div class="ttdef"><b>Definition:</b> clock.h:74</div></div>
+<div class="ttc" id="clock_8h_html_a2bc38c8aa915294b502fdfe4dccb0190"><div class="ttname"><a href="clock_8h.html#a2bc38c8aa915294b502fdfe4dccb0190">is_hour_am</a></div><div class="ttdeci">uint8_t is_hour_am(uint8_t hour)</div></div>
+<div class="ttc" id="clock_8h_html_a3106248ceccc22c007662127a1be86bd"><div class="ttname"><a href="clock_8h.html#a3106248ceccc22c007662127a1be86bd">convert_hour_to_12H_format</a></div><div class="ttdeci">uint8_t convert_hour_to_12H_format(uint8_t hour)</div></div>
+<div class="ttc" id="structtime_html_a544d2db61e902d27d3e59cd5cbb20b7e"><div class="ttname"><a href="structtime.html#a544d2db61e902d27d3e59cd5cbb20b7e">time::system_time</a></div><div class="ttdeci">uint32_t system_time</div><div class="ttdef"><b>Definition:</b> clock.h:64</div></div>
+<div class="ttc" id="clock_8c_html_a4529daa6019ff1f8d068a0d6d4cfbdbf"><div class="ttname"><a href="clock_8c.html#a4529daa6019ff1f8d068a0d6d4cfbdbf">clock_tick</a></div><div class="ttdeci">void clock_tick(void)</div><div class="ttdef"><b>Definition:</b> clock.c:136</div></div>
+<div class="ttc" id="structtime_html_ab99c95365d82ac9fdc6646bf9f6107d0"><div class="ttname"><a href="structtime.html#ab99c95365d82ac9fdc6646bf9f6107d0">time::second</a></div><div class="ttdeci">uint8_t second</div><div class="ttdef"><b>Definition:</b> clock.h:76</div></div>
+<div class="ttc" id="clock_8c_html_ad06714ecfaacba209f15966986a79704"><div class="ttname"><a href="clock_8c.html#ad06714ecfaacba209f15966986a79704">mx_time</a></div><div class="ttdeci">void mx_time(uint8_t line)</div><div class="ttdef"><b>Definition:</b> clock.c:234</div></div>
+<div class="ttc" id="clock_8c_html_a9107ffa72e4e16d81b0b41ae1cf0a0e0"><div class="ttname"><a href="clock_8c.html#a9107ffa72e4e16d81b0b41ae1cf0a0e0">sx_time</a></div><div class="ttdeci">void sx_time(uint8_t line)</div><div class="ttdef"><b>Definition:</b> clock.c:374</div></div>
+<div class="ttc" id="structtime_html_a0ef19cf3092c17ae72b10e711da574b1"><div class="ttname"><a href="structtime.html#a0ef19cf3092c17ae72b10e711da574b1">time::last_activity</a></div><div class="ttdeci">uint32_t last_activity</div><div class="ttdef"><b>Definition:</b> clock.h:79</div></div>
 <div class="ttc" id="structtime_html"><div class="ttname"><a href="structtime.html">time</a></div><div class="ttdef"><b>Definition:</b> clock.h:62</div></div>
+<div class="ttc" id="user_8c_html_a078c060ccd457b6661f2dd5b633e3396"><div class="ttname"><a href="user_8c.html#a078c060ccd457b6661f2dd5b633e3396">dummy</a></div><div class="ttdeci">void dummy(uint8_t line)</div><div class="ttdef"><b>Definition:</b> user.c:81</div></div>
+<div class="ttc" id="clock_8c_html_a1e16bca96cf7044478d1c23b9b86014a"><div class="ttname"><a href="clock_8c.html#a1e16bca96cf7044478d1c23b9b86014a">sTime</a></div><div class="ttdeci">struct time sTime</div><div class="ttdef"><b>Definition:</b> clock.c:87</div></div>
+<div class="ttc" id="clock_8c_html_a7ad7026db6e5f41704969676a27b892e"><div class="ttname"><a href="clock_8c.html#a7ad7026db6e5f41704969676a27b892e">reset_clock</a></div><div class="ttdeci">void reset_clock(void)</div><div class="ttdef"><b>Definition:</b> clock.c:107</div></div>
+<div class="ttc" id="structtime_html_ac1a001b0abb56aa7b515cab36ab0c763"><div class="ttname"><a href="structtime.html#ac1a001b0abb56aa7b515cab36ab0c763">time::drawFlag</a></div><div class="ttdeci">uint8_t drawFlag</div><div class="ttdef"><b>Definition:</b> clock.h:67</div></div>
 </div><!-- fragment --></div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Sat Nov 23 2013 08:43:39 for OSS-7: Open Source Stack for Dash7 Alliance Protocol by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Mon Nov 25 2013 10:10:10 for OSS-7: Open Source Stack for Dash7 Alliance Protocol by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.5
 </small></address>

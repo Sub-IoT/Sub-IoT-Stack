@@ -37,6 +37,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
   <div id="navrow1" class="tabs">
     <ul class="tablist">
       <li><a href="index.html"><span>Main&#160;Page</span></a></li>
+      <li><a href="pages.html"><span>Related&#160;Pages</span></a></li>
       <li class="current"><a href="annotated.html"><span>Data&#160;Structures</span></a></li>
       <li><a href="files.html"><span>Files</span></a></li>
       <li>
@@ -69,7 +70,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
      onmouseover="return searchBox.OnSearchSelectShow()"
      onmouseout="return searchBox.OnSearchSelectHide()"
      onkeydown="return searchBox.OnSearchSelectKey(event)">
-<a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(0)"><span class="SelectionMark">&#160;</span>All</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(1)"><span class="SelectionMark">&#160;</span>Data Structures</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(2)"><span class="SelectionMark">&#160;</span>Variables</a></div>
+<a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(0)"><span class="SelectionMark">&#160;</span>All</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(1)"><span class="SelectionMark">&#160;</span>Data Structures</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(2)"><span class="SelectionMark">&#160;</span>Files</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(3)"><span class="SelectionMark">&#160;</span>Functions</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(4)"><span class="SelectionMark">&#160;</span>Variables</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(5)"><span class="SelectionMark">&#160;</span>Typedefs</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(6)"><span class="SelectionMark">&#160;</span>Enumerations</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(7)"><span class="SelectionMark">&#160;</span>Enumerator</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(8)"><span class="SelectionMark">&#160;</span>Macros</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(9)"><span class="SelectionMark">&#160;</span>Pages</a></div>
 
 <!-- iframe showing the search results (closed by default) -->
 <div id="MSearchResultsWindow">
@@ -86,41 +87,132 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <div class="title">s_TLV_ADC_Cal_Data Struct Reference</div>  </div>
 </div><!--header-->
 <div class="contents">
+
+<p><code>#include &lt;<a class="el" href="tlv_8h_source.html">tlv.h</a>&gt;</code></p>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-attribs"></a>
 Data Fields</h2></td></tr>
-<tr class="memitem:af9e1073ddd8bcde0f3578cc56ee95974"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="af9e1073ddd8bcde0f3578cc56ee95974"></a>
-unsigned int&#160;</td><td class="memItemRight" valign="bottom"><b>adc_gain_factor</b></td></tr>
+<tr class="memitem:af9e1073ddd8bcde0f3578cc56ee95974"><td class="memItemLeft" align="right" valign="top">unsigned int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structs___t_l_v___a_d_c___cal___data.html#af9e1073ddd8bcde0f3578cc56ee95974">adc_gain_factor</a></td></tr>
 <tr class="separator:af9e1073ddd8bcde0f3578cc56ee95974"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a79d849d52ba751744fa599b77f78548e"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a79d849d52ba751744fa599b77f78548e"></a>
-unsigned int&#160;</td><td class="memItemRight" valign="bottom"><b>adc_offset</b></td></tr>
+<tr class="memitem:a79d849d52ba751744fa599b77f78548e"><td class="memItemLeft" align="right" valign="top">unsigned int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structs___t_l_v___a_d_c___cal___data.html#a79d849d52ba751744fa599b77f78548e">adc_offset</a></td></tr>
 <tr class="separator:a79d849d52ba751744fa599b77f78548e"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a7e6de2dce3964b91fcad91ee9e73946f"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a7e6de2dce3964b91fcad91ee9e73946f"></a>
-unsigned int&#160;</td><td class="memItemRight" valign="bottom"><b>adc_ref15_30_temp</b></td></tr>
+<tr class="memitem:a7e6de2dce3964b91fcad91ee9e73946f"><td class="memItemLeft" align="right" valign="top">unsigned int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structs___t_l_v___a_d_c___cal___data.html#a7e6de2dce3964b91fcad91ee9e73946f">adc_ref15_30_temp</a></td></tr>
 <tr class="separator:a7e6de2dce3964b91fcad91ee9e73946f"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a23f8f4ce9d1d7274c2e1720a292a8a8f"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a23f8f4ce9d1d7274c2e1720a292a8a8f"></a>
-unsigned int&#160;</td><td class="memItemRight" valign="bottom"><b>adc_ref15_85_temp</b></td></tr>
+<tr class="memitem:a23f8f4ce9d1d7274c2e1720a292a8a8f"><td class="memItemLeft" align="right" valign="top">unsigned int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structs___t_l_v___a_d_c___cal___data.html#a23f8f4ce9d1d7274c2e1720a292a8a8f">adc_ref15_85_temp</a></td></tr>
 <tr class="separator:a23f8f4ce9d1d7274c2e1720a292a8a8f"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a79c430b992f20815079c0e7dab385a2c"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a79c430b992f20815079c0e7dab385a2c"></a>
-unsigned int&#160;</td><td class="memItemRight" valign="bottom"><b>adc_ref20_30_temp</b></td></tr>
+<tr class="memitem:a79c430b992f20815079c0e7dab385a2c"><td class="memItemLeft" align="right" valign="top">unsigned int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structs___t_l_v___a_d_c___cal___data.html#a79c430b992f20815079c0e7dab385a2c">adc_ref20_30_temp</a></td></tr>
 <tr class="separator:a79c430b992f20815079c0e7dab385a2c"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aec57d8c3eefd1bd9d33014f61e00763d"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aec57d8c3eefd1bd9d33014f61e00763d"></a>
-unsigned int&#160;</td><td class="memItemRight" valign="bottom"><b>adc_ref20_85_temp</b></td></tr>
+<tr class="memitem:aec57d8c3eefd1bd9d33014f61e00763d"><td class="memItemLeft" align="right" valign="top">unsigned int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structs___t_l_v___a_d_c___cal___data.html#aec57d8c3eefd1bd9d33014f61e00763d">adc_ref20_85_temp</a></td></tr>
 <tr class="separator:aec57d8c3eefd1bd9d33014f61e00763d"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a79547018b6142891b7b0f3a64bd79544"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a79547018b6142891b7b0f3a64bd79544"></a>
-unsigned int&#160;</td><td class="memItemRight" valign="bottom"><b>adc_ref25_30_temp</b></td></tr>
+<tr class="memitem:a79547018b6142891b7b0f3a64bd79544"><td class="memItemLeft" align="right" valign="top">unsigned int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structs___t_l_v___a_d_c___cal___data.html#a79547018b6142891b7b0f3a64bd79544">adc_ref25_30_temp</a></td></tr>
 <tr class="separator:a79547018b6142891b7b0f3a64bd79544"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a0192560a3a0d5d75be91853789dae1db"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a0192560a3a0d5d75be91853789dae1db"></a>
-unsigned int&#160;</td><td class="memItemRight" valign="bottom"><b>adc_ref25_85_temp</b></td></tr>
+<tr class="memitem:a0192560a3a0d5d75be91853789dae1db"><td class="memItemLeft" align="right" valign="top">unsigned int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structs___t_l_v___a_d_c___cal___data.html#a0192560a3a0d5d75be91853789dae1db">adc_ref25_85_temp</a></td></tr>
 <tr class="separator:a0192560a3a0d5d75be91853789dae1db"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
+<h2 class="groupheader">Field Documentation</h2>
+<a class="anchor" id="af9e1073ddd8bcde0f3578cc56ee95974"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">unsigned int s_TLV_ADC_Cal_Data::adc_gain_factor</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a class="anchor" id="a79d849d52ba751744fa599b77f78548e"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">unsigned int s_TLV_ADC_Cal_Data::adc_offset</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a class="anchor" id="a7e6de2dce3964b91fcad91ee9e73946f"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">unsigned int s_TLV_ADC_Cal_Data::adc_ref15_30_temp</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a class="anchor" id="a23f8f4ce9d1d7274c2e1720a292a8a8f"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">unsigned int s_TLV_ADC_Cal_Data::adc_ref15_85_temp</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a class="anchor" id="a79c430b992f20815079c0e7dab385a2c"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">unsigned int s_TLV_ADC_Cal_Data::adc_ref20_30_temp</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a class="anchor" id="aec57d8c3eefd1bd9d33014f61e00763d"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">unsigned int s_TLV_ADC_Cal_Data::adc_ref20_85_temp</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a class="anchor" id="a79547018b6142891b7b0f3a64bd79544"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">unsigned int s_TLV_ADC_Cal_Data::adc_ref25_30_temp</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a class="anchor" id="a0192560a3a0d5d75be91853789dae1db"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">unsigned int s_TLV_ADC_Cal_Data::adc_ref25_85_temp</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
 <hr/>The documentation for this struct was generated from the following file:<ul>
 <li>d7aoss/hal/cc430/driverlib/5xx_6xx/<a class="el" href="tlv_8h_source.html">tlv.h</a></li>
 </ul>
 </div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Sat Nov 23 2013 08:43:39 for OSS-7: Open Source Stack for Dash7 Alliance Protocol by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Mon Nov 25 2013 10:24:17 for OSS-7: Open Source Stack for Dash7 Alliance Protocol by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.5
 </small></address>

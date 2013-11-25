@@ -37,6 +37,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
   <div id="navrow1" class="tabs">
     <ul class="tablist">
       <li><a href="index.html"><span>Main&#160;Page</span></a></li>
+      <li><a href="namespaces.html"><span>Namespaces</span></a></li>
       <li><a href="annotated.html"><span>Data&#160;Structures</span></a></li>
       <li class="current"><a href="files.html"><span>Files</span></a></li>
       <li>
@@ -60,6 +61,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
   <div id="navrow2" class="tabs2">
     <ul class="tablist">
       <li><a href="files.html"><span>File&#160;List</span></a></li>
+      <li><a href="globals.html"><span>Globals</span></a></li>
     </ul>
   </div>
 <!-- window showing the filter options -->
@@ -67,7 +69,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
      onmouseover="return searchBox.OnSearchSelectShow()"
      onmouseout="return searchBox.OnSearchSelectHide()"
      onkeydown="return searchBox.OnSearchSelectKey(event)">
-<a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(0)"><span class="SelectionMark">&#160;</span>All</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(1)"><span class="SelectionMark">&#160;</span>Data Structures</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(2)"><span class="SelectionMark">&#160;</span>Variables</a></div>
+<a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(0)"><span class="SelectionMark">&#160;</span>All</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(1)"><span class="SelectionMark">&#160;</span>Data Structures</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(2)"><span class="SelectionMark">&#160;</span>Namespaces</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(3)"><span class="SelectionMark">&#160;</span>Files</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(4)"><span class="SelectionMark">&#160;</span>Functions</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(5)"><span class="SelectionMark">&#160;</span>Variables</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(6)"><span class="SelectionMark">&#160;</span>Typedefs</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(7)"><span class="SelectionMark">&#160;</span>Enumerations</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(8)"><span class="SelectionMark">&#160;</span>Enumerator</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(9)"><span class="SelectionMark">&#160;</span>Macros</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(10)"><span class="SelectionMark">&#160;</span>Pages</a></div>
 
 <!-- iframe showing the search results (closed by default) -->
 <div id="MSearchResultsWindow">
@@ -86,7 +88,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <div class="title">battery.h</div>  </div>
 </div><!--header-->
 <div class="contents">
-<div class="fragment"><div class="line"><a name="l00001"></a><span class="lineno">    1</span>&#160;<span class="comment">// *************************************************************************************************</span></div>
+<a href="battery_8h.html">Go to the documentation of this file.</a><div class="fragment"><div class="line"><a name="l00001"></a><span class="lineno">    1</span>&#160;<span class="comment">// *************************************************************************************************</span></div>
 <div class="line"><a name="l00002"></a><span class="lineno">    2</span>&#160;<span class="comment">//</span></div>
 <div class="line"><a name="l00003"></a><span class="lineno">    3</span>&#160;<span class="comment">//  Copyright (C) 2009 Texas Instruments Incorporated - http://www.ti.com/ </span></div>
 <div class="line"><a name="l00004"></a><span class="lineno">    4</span>&#160;<span class="comment">//   </span></div>
@@ -134,24 +136,24 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <div class="line"><a name="l00046"></a><span class="lineno">   46</span>&#160;<span class="comment">// Prototypes section</span></div>
 <div class="line"><a name="l00047"></a><span class="lineno">   47</span>&#160;</div>
 <div class="line"><a name="l00048"></a><span class="lineno">   48</span>&#160;<span class="comment">// Internal functions</span></div>
-<div class="line"><a name="l00049"></a><span class="lineno">   49</span>&#160;<span class="keyword">extern</span> <span class="keywordtype">void</span> reset_batt_measurement(<span class="keywordtype">void</span>);</div>
-<div class="line"><a name="l00050"></a><span class="lineno">   50</span>&#160;<span class="keyword">extern</span> <span class="keywordtype">void</span> battery_measurement(<span class="keywordtype">void</span>);</div>
+<div class="line"><a name="l00049"></a><span class="lineno">   49</span>&#160;<span class="keyword">extern</span> <span class="keywordtype">void</span> <a class="code" href="battery_8c.html#afd26bf8c4f95d42a32e025bbea665dd5">reset_batt_measurement</a>(<span class="keywordtype">void</span>);</div>
+<div class="line"><a name="l00050"></a><span class="lineno">   50</span>&#160;<span class="keyword">extern</span> <span class="keywordtype">void</span> <a class="code" href="battery_8c.html#a129b74cddcdba0aa5972489d07f3c391">battery_measurement</a>(<span class="keywordtype">void</span>);</div>
 <div class="line"><a name="l00051"></a><span class="lineno">   51</span>&#160;</div>
 <div class="line"><a name="l00052"></a><span class="lineno">   52</span>&#160;<span class="comment">// Menu functions</span></div>
-<div class="line"><a name="l00053"></a><span class="lineno">   53</span>&#160;<span class="keyword">extern</span> <span class="keywordtype">void</span> display_battery_V(uint8_t line, uint8_t update);</div>
+<div class="line"><a name="l00053"></a><span class="lineno">   53</span>&#160;<span class="keyword">extern</span> <span class="keywordtype">void</span> <a class="code" href="battery_8c.html#a53992d0f323017454afffd246f9a427f">display_battery_V</a>(uint8_t line, uint8_t update);</div>
 <div class="line"><a name="l00054"></a><span class="lineno">   54</span>&#160;</div>
 <div class="line"><a name="l00055"></a><span class="lineno">   55</span>&#160;</div>
 <div class="line"><a name="l00056"></a><span class="lineno">   56</span>&#160;<span class="comment">// *************************************************************************************************</span></div>
 <div class="line"><a name="l00057"></a><span class="lineno">   57</span>&#160;<span class="comment">// Defines section</span></div>
 <div class="line"><a name="l00058"></a><span class="lineno">   58</span>&#160;</div>
 <div class="line"><a name="l00059"></a><span class="lineno">   59</span>&#160;<span class="comment">// Battery high voltage threshold</span></div>
-<div class="line"><a name="l00060"></a><span class="lineno">   60</span>&#160;<span class="preprocessor">#define BATTERY_HIGH_THRESHOLD          (360u)</span></div>
+<div class="line"><a name="l00060"></a><span class="lineno"><a class="line" href="battery_8h.html#a9acc06ca65d42889fdf10feaeccdf9b0">   60</a></span>&#160;<span class="preprocessor">#define BATTERY_HIGH_THRESHOLD          (360u)</span></div>
 <div class="line"><a name="l00061"></a><span class="lineno">   61</span>&#160;<span class="preprocessor"></span></div>
 <div class="line"><a name="l00062"></a><span class="lineno">   62</span>&#160;<span class="comment">// Battery end of life voltage threshold -&gt; disable radio, show &quot;lobatt&quot; message</span></div>
-<div class="line"><a name="l00063"></a><span class="lineno">   63</span>&#160;<span class="preprocessor">#define BATTERY_LOW_THRESHOLD           (240u)</span></div>
+<div class="line"><a name="l00063"></a><span class="lineno"><a class="line" href="battery_8h.html#a81dcad98d885218ac30b2719a57ae5d2">   63</a></span>&#160;<span class="preprocessor">#define BATTERY_LOW_THRESHOLD           (240u)</span></div>
 <div class="line"><a name="l00064"></a><span class="lineno">   64</span>&#160;<span class="preprocessor"></span></div>
 <div class="line"><a name="l00065"></a><span class="lineno">   65</span>&#160;<span class="comment">// Show &quot;lobatt&quot; message every n seconds</span></div>
-<div class="line"><a name="l00066"></a><span class="lineno">   66</span>&#160;<span class="preprocessor">#define BATTERY_LOW_MESSAGE_CYCLE       (15u)</span></div>
+<div class="line"><a name="l00066"></a><span class="lineno"><a class="line" href="battery_8h.html#a8e6877d5542d286ad2e045852236f6c2">   66</a></span>&#160;<span class="preprocessor">#define BATTERY_LOW_MESSAGE_CYCLE       (15u)</span></div>
 <div class="line"><a name="l00067"></a><span class="lineno">   67</span>&#160;<span class="preprocessor"></span></div>
 <div class="line"><a name="l00068"></a><span class="lineno">   68</span>&#160;</div>
 <div class="line"><a name="l00069"></a><span class="lineno">   69</span>&#160;<span class="comment">// *************************************************************************************************</span></div>
@@ -159,29 +161,38 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <div class="line"><a name="l00071"></a><span class="lineno"><a class="line" href="structbatt.html">   71</a></span>&#160;<span class="keyword">struct </span><a class="code" href="structbatt.html">batt</a></div>
 <div class="line"><a name="l00072"></a><span class="lineno">   72</span>&#160;{</div>
 <div class="line"><a name="l00073"></a><span class="lineno">   73</span>&#160;    <span class="comment">// MENU_ITEM_NOT_VISIBLE, MENU_ITEM_VISIBLE</span></div>
-<div class="line"><a name="l00074"></a><span class="lineno">   74</span>&#160;    menu_t      state;</div>
+<div class="line"><a name="l00074"></a><span class="lineno"><a class="line" href="structbatt.html#a13ba87e00c6a296d62d5836443763d95">   74</a></span>&#160;    <a class="code" href="project_8h.html#a44455c5614c38dfadce594b2228fd055">menu_t</a>      <a class="code" href="structbatt.html#a13ba87e00c6a296d62d5836443763d95">state</a>;</div>
 <div class="line"><a name="l00075"></a><span class="lineno">   75</span>&#160;    </div>
 <div class="line"><a name="l00076"></a><span class="lineno">   76</span>&#160;    <span class="comment">// Counter for alternating &quot;lobatt&quot; display</span></div>
-<div class="line"><a name="l00077"></a><span class="lineno">   77</span>&#160;    uint8_t             lobatt_display;</div>
+<div class="line"><a name="l00077"></a><span class="lineno"><a class="line" href="structbatt.html#aff18bc7509e0ea770ca9d83af0f7fb10">   77</a></span>&#160;    uint8_t             <a class="code" href="structbatt.html#aff18bc7509e0ea770ca9d83af0f7fb10">lobatt_display</a>;</div>
 <div class="line"><a name="l00078"></a><span class="lineno">   78</span>&#160;    </div>
 <div class="line"><a name="l00079"></a><span class="lineno">   79</span>&#160;    <span class="comment">// Battery voltage</span></div>
-<div class="line"><a name="l00080"></a><span class="lineno">   80</span>&#160;    uint16_t            voltage;</div>
+<div class="line"><a name="l00080"></a><span class="lineno"><a class="line" href="structbatt.html#ad3124d377ab79dd133882ff45410e41a">   80</a></span>&#160;    uint16_t            <a class="code" href="structbatt.html#ad3124d377ab79dd133882ff45410e41a">voltage</a>;</div>
 <div class="line"><a name="l00081"></a><span class="lineno">   81</span>&#160;    </div>
 <div class="line"><a name="l00082"></a><span class="lineno">   82</span>&#160;    <span class="comment">// Battery voltage offset</span></div>
-<div class="line"><a name="l00083"></a><span class="lineno">   83</span>&#160;    int16_t             offset;</div>
+<div class="line"><a name="l00083"></a><span class="lineno"><a class="line" href="structbatt.html#a669cf472ec1bf4491362bd09c3cc2222">   83</a></span>&#160;    int16_t             <a class="code" href="structbatt.html#a669cf472ec1bf4491362bd09c3cc2222">offset</a>;</div>
 <div class="line"><a name="l00084"></a><span class="lineno">   84</span>&#160;};</div>
-<div class="line"><a name="l00085"></a><span class="lineno">   85</span>&#160;<span class="keyword">extern</span> <span class="keyword">struct </span><a class="code" href="structbatt.html">batt</a> sBatt;</div>
+<div class="line"><a name="l00085"></a><span class="lineno">   85</span>&#160;<span class="keyword">extern</span> <span class="keyword">struct </span><a class="code" href="structbatt.html">batt</a> <a class="code" href="battery_8c.html#a726f1a5318688b7da3a9c04181efbff8">sBatt</a>;</div>
 <div class="line"><a name="l00086"></a><span class="lineno">   86</span>&#160;</div>
 <div class="line"><a name="l00087"></a><span class="lineno">   87</span>&#160;</div>
 <div class="line"><a name="l00088"></a><span class="lineno">   88</span>&#160;<span class="comment">// *************************************************************************************************</span></div>
 <div class="line"><a name="l00089"></a><span class="lineno">   89</span>&#160;<span class="comment">// Extern section</span></div>
 <div class="line"><a name="l00090"></a><span class="lineno">   90</span>&#160;</div>
 <div class="line"><a name="l00091"></a><span class="lineno">   91</span>&#160;<span class="preprocessor">#endif </span><span class="comment">/*BATTERY_H_*/</span><span class="preprocessor"></span></div>
+<div class="ttc" id="battery_8c_html_a129b74cddcdba0aa5972489d07f3c391"><div class="ttname"><a href="battery_8c.html#a129b74cddcdba0aa5972489d07f3c391">battery_measurement</a></div><div class="ttdeci">void battery_measurement(void)</div><div class="ttdef"><b>Definition:</b> battery.c:100</div></div>
+<div class="ttc" id="project_8h_html_a44455c5614c38dfadce594b2228fd055"><div class="ttname"><a href="project_8h.html#a44455c5614c38dfadce594b2228fd055">menu_t</a></div><div class="ttdeci">menu_t</div><div class="ttdef"><b>Definition:</b> project.h:49</div></div>
+<div class="ttc" id="structbatt_html_ad3124d377ab79dd133882ff45410e41a"><div class="ttname"><a href="structbatt.html#ad3124d377ab79dd133882ff45410e41a">batt::voltage</a></div><div class="ttdeci">uint16_t voltage</div><div class="ttdef"><b>Definition:</b> battery.h:80</div></div>
+<div class="ttc" id="battery_8c_html_afd26bf8c4f95d42a32e025bbea665dd5"><div class="ttname"><a href="battery_8c.html#afd26bf8c4f95d42a32e025bbea665dd5">reset_batt_measurement</a></div><div class="ttdeci">void reset_batt_measurement(void)</div><div class="ttdef"><b>Definition:</b> battery.c:81</div></div>
+<div class="ttc" id="structbatt_html_a13ba87e00c6a296d62d5836443763d95"><div class="ttname"><a href="structbatt.html#a13ba87e00c6a296d62d5836443763d95">batt::state</a></div><div class="ttdeci">menu_t state</div><div class="ttdef"><b>Definition:</b> battery.h:74</div></div>
+<div class="ttc" id="structbatt_html_aff18bc7509e0ea770ca9d83af0f7fb10"><div class="ttname"><a href="structbatt.html#aff18bc7509e0ea770ca9d83af0f7fb10">batt::lobatt_display</a></div><div class="ttdeci">uint8_t lobatt_display</div><div class="ttdef"><b>Definition:</b> battery.h:77</div></div>
+<div class="ttc" id="structbatt_html_a669cf472ec1bf4491362bd09c3cc2222"><div class="ttname"><a href="structbatt.html#a669cf472ec1bf4491362bd09c3cc2222">batt::offset</a></div><div class="ttdeci">int16_t offset</div><div class="ttdef"><b>Definition:</b> battery.h:83</div></div>
 <div class="ttc" id="structbatt_html"><div class="ttname"><a href="structbatt.html">batt</a></div><div class="ttdef"><b>Definition:</b> battery.h:71</div></div>
+<div class="ttc" id="battery_8c_html_a53992d0f323017454afffd246f9a427f"><div class="ttname"><a href="battery_8c.html#a53992d0f323017454afffd246f9a427f">display_battery_V</a></div><div class="ttdeci">void display_battery_V(uint8_t line, uint8_t update)</div><div class="ttdef"><b>Definition:</b> battery.c:157</div></div>
+<div class="ttc" id="battery_8c_html_a726f1a5318688b7da3a9c04181efbff8"><div class="ttname"><a href="battery_8c.html#a726f1a5318688b7da3a9c04181efbff8">sBatt</a></div><div class="ttdeci">struct batt sBatt</div><div class="ttdef"><b>Definition:</b> battery.c:68</div></div>
 </div><!-- fragment --></div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Sat Nov 23 2013 08:43:39 for OSS-7: Open Source Stack for Dash7 Alliance Protocol by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Mon Nov 25 2013 10:10:10 for OSS-7: Open Source Stack for Dash7 Alliance Protocol by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.5
 </small></address>

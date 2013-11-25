@@ -37,6 +37,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
   <div id="navrow1" class="tabs">
     <ul class="tablist">
       <li><a href="index.html"><span>Main&#160;Page</span></a></li>
+      <li><a href="namespaces.html"><span>Namespaces</span></a></li>
       <li class="current"><a href="annotated.html"><span>Data&#160;Structures</span></a></li>
       <li><a href="files.html"><span>Files</span></a></li>
       <li>
@@ -69,7 +70,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
      onmouseover="return searchBox.OnSearchSelectShow()"
      onmouseout="return searchBox.OnSearchSelectHide()"
      onkeydown="return searchBox.OnSearchSelectKey(event)">
-<a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(0)"><span class="SelectionMark">&#160;</span>All</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(1)"><span class="SelectionMark">&#160;</span>Data Structures</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(2)"><span class="SelectionMark">&#160;</span>Variables</a></div>
+<a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(0)"><span class="SelectionMark">&#160;</span>All</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(1)"><span class="SelectionMark">&#160;</span>Data Structures</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(2)"><span class="SelectionMark">&#160;</span>Namespaces</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(3)"><span class="SelectionMark">&#160;</span>Files</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(4)"><span class="SelectionMark">&#160;</span>Functions</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(5)"><span class="SelectionMark">&#160;</span>Variables</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(6)"><span class="SelectionMark">&#160;</span>Typedefs</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(7)"><span class="SelectionMark">&#160;</span>Enumerations</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(8)"><span class="SelectionMark">&#160;</span>Enumerator</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(9)"><span class="SelectionMark">&#160;</span>Macros</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(10)"><span class="SelectionMark">&#160;</span>Pages</a></div>
 
 <!-- iframe showing the search results (closed by default) -->
 <div id="MSearchResultsWindow">
@@ -86,34 +87,119 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <div class="title">s_request_flags Union Reference</div>  </div>
 </div><!--header-->
 <div class="contents">
+
+<p><code>#include &lt;<a class="el" href="project_8h_source.html">project.h</a>&gt;</code></p>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-attribs"></a>
 Data Fields</h2></td></tr>
-<tr class="memitem:a522d8345e3566ac5737ddbd7e354a589"><td class="memItemLeft" ><a class="anchor" id="a522d8345e3566ac5737ddbd7e354a589"></a>
-struct {</td></tr>
-<tr class="memitem:a87abe99427be89ec892b1fa24ab14a6c"><td class="memItemLeft" >&#160;&#160;&#160;uint16_t&#160;&#160;&#160;<b>temperature_measurement</b>: 1</td></tr>
+<tr class="memitem:a522d8345e3566ac5737ddbd7e354a589"><td class="memItemLeft" >struct {</td></tr>
+<tr class="memitem:a87abe99427be89ec892b1fa24ab14a6c"><td class="memItemLeft" >&#160;&#160;&#160;uint16_t&#160;&#160;&#160;<a class="el" href="unions__request__flags.html#a8351c6b10da8426314da55d309685e50">temperature_measurement</a>: 1</td></tr>
 <tr class="separator:a87abe99427be89ec892b1fa24ab14a6c"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a6fc4f71fdd04f49c77438e9c28468cef"><td class="memItemLeft" >&#160;&#160;&#160;uint16_t&#160;&#160;&#160;<b>voltage_measurement</b>: 1</td></tr>
+<tr class="memitem:a6fc4f71fdd04f49c77438e9c28468cef"><td class="memItemLeft" >&#160;&#160;&#160;uint16_t&#160;&#160;&#160;<a class="el" href="unions__request__flags.html#aad86f1c849c86a3b9f731c96febe1a70">voltage_measurement</a>: 1</td></tr>
 <tr class="separator:a6fc4f71fdd04f49c77438e9c28468cef"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ae667835caf55a74455afa6dd43eeca41"><td class="memItemLeft" >&#160;&#160;&#160;uint16_t&#160;&#160;&#160;<b>altitude_measurement</b>: 1</td></tr>
+<tr class="memitem:ae667835caf55a74455afa6dd43eeca41"><td class="memItemLeft" >&#160;&#160;&#160;uint16_t&#160;&#160;&#160;<a class="el" href="unions__request__flags.html#a6793ab9deab34a92d0b4fedc82157435">altitude_measurement</a>: 1</td></tr>
 <tr class="separator:ae667835caf55a74455afa6dd43eeca41"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a55b4837aa0b3ad9ad78c7cb5581a74ca"><td class="memItemLeft" >&#160;&#160;&#160;uint16_t&#160;&#160;&#160;<b>acceleration_measurement</b>: 1</td></tr>
+<tr class="memitem:a55b4837aa0b3ad9ad78c7cb5581a74ca"><td class="memItemLeft" >&#160;&#160;&#160;uint16_t&#160;&#160;&#160;<a class="el" href="unions__request__flags.html#a5702129e077eef818c52146df98d6d7f">acceleration_measurement</a>: 1</td></tr>
 <tr class="separator:a55b4837aa0b3ad9ad78c7cb5581a74ca"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a9f33261a818492cad855cd346be88ac9"><td class="memItemLeft" >&#160;&#160;&#160;uint16_t&#160;&#160;&#160;<b>alarm_buzzer</b>: 1</td></tr>
+<tr class="memitem:a9f33261a818492cad855cd346be88ac9"><td class="memItemLeft" >&#160;&#160;&#160;uint16_t&#160;&#160;&#160;<a class="el" href="unions__request__flags.html#ae124f131a43c5b2dfc93dccda728e244">alarm_buzzer</a>: 1</td></tr>
 <tr class="separator:a9f33261a818492cad855cd346be88ac9"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a522d8345e3566ac5737ddbd7e354a589"><td class="memItemLeft" valign="top">}&#160;</td><td class="memItemRight" valign="bottom"><b>flag</b></td></tr>
+<tr class="memitem:a522d8345e3566ac5737ddbd7e354a589"><td class="memItemLeft" valign="top">}&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="unions__request__flags.html#a522d8345e3566ac5737ddbd7e354a589">flag</a></td></tr>
 <tr class="separator:a522d8345e3566ac5737ddbd7e354a589"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a2bcafef696bddeec8199b5d7168e97a3"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a2bcafef696bddeec8199b5d7168e97a3"></a>
-uint16_t&#160;</td><td class="memItemRight" valign="bottom"><b>all_flags</b></td></tr>
+<tr class="memitem:a2bcafef696bddeec8199b5d7168e97a3"><td class="memItemLeft" align="right" valign="top">uint16_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="unions__request__flags.html#a2bcafef696bddeec8199b5d7168e97a3">all_flags</a></td></tr>
 <tr class="separator:a2bcafef696bddeec8199b5d7168e97a3"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
+<h2 class="groupheader">Field Documentation</h2>
+<a class="anchor" id="a5702129e077eef818c52146df98d6d7f"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">uint16_t s_request_flags::acceleration_measurement</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a class="anchor" id="ae124f131a43c5b2dfc93dccda728e244"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">uint16_t s_request_flags::alarm_buzzer</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a class="anchor" id="a2bcafef696bddeec8199b5d7168e97a3"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">uint16_t s_request_flags::all_flags</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a class="anchor" id="a6793ab9deab34a92d0b4fedc82157435"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">uint16_t s_request_flags::altitude_measurement</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a class="anchor" id="a522d8345e3566ac5737ddbd7e354a589"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">struct { ... }   s_request_flags::flag</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a class="anchor" id="a8351c6b10da8426314da55d309685e50"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">uint16_t s_request_flags::temperature_measurement</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a class="anchor" id="aad86f1c849c86a3b9f731c96febe1a70"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">uint16_t s_request_flags::voltage_measurement</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
 <hr/>The documentation for this union was generated from the following file:<ul>
 <li>examples/cronos_test/<a class="el" href="project_8h_source.html">project.h</a></li>
 </ul>
 </div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Sat Nov 23 2013 08:43:39 for OSS-7: Open Source Stack for Dash7 Alliance Protocol by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Mon Nov 25 2013 10:10:13 for OSS-7: Open Source Stack for Dash7 Alliance Protocol by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.5
 </small></address>

@@ -37,6 +37,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
   <div id="navrow1" class="tabs">
     <ul class="tablist">
       <li><a href="index.html"><span>Main&#160;Page</span></a></li>
+      <li><a href="pages.html"><span>Related&#160;Pages</span></a></li>
       <li><a href="annotated.html"><span>Data&#160;Structures</span></a></li>
       <li class="current"><a href="files.html"><span>Files</span></a></li>
       <li>
@@ -60,6 +61,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
   <div id="navrow2" class="tabs2">
     <ul class="tablist">
       <li><a href="files.html"><span>File&#160;List</span></a></li>
+      <li><a href="globals.html"><span>Globals</span></a></li>
     </ul>
   </div>
 <!-- window showing the filter options -->
@@ -67,7 +69,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
      onmouseover="return searchBox.OnSearchSelectShow()"
      onmouseout="return searchBox.OnSearchSelectHide()"
      onkeydown="return searchBox.OnSearchSelectKey(event)">
-<a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(0)"><span class="SelectionMark">&#160;</span>All</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(1)"><span class="SelectionMark">&#160;</span>Data Structures</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(2)"><span class="SelectionMark">&#160;</span>Variables</a></div>
+<a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(0)"><span class="SelectionMark">&#160;</span>All</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(1)"><span class="SelectionMark">&#160;</span>Data Structures</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(2)"><span class="SelectionMark">&#160;</span>Files</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(3)"><span class="SelectionMark">&#160;</span>Functions</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(4)"><span class="SelectionMark">&#160;</span>Variables</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(5)"><span class="SelectionMark">&#160;</span>Typedefs</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(6)"><span class="SelectionMark">&#160;</span>Enumerations</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(7)"><span class="SelectionMark">&#160;</span>Enumerator</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(8)"><span class="SelectionMark">&#160;</span>Macros</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(9)"><span class="SelectionMark">&#160;</span>Pages</a></div>
 
 <!-- iframe showing the search results (closed by default) -->
 <div id="MSearchResultsWindow">
@@ -86,7 +88,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <div class="title">chronos.h</div>  </div>
 </div><!--header-->
 <div class="contents">
-<div class="fragment"><div class="line"><a name="l00001"></a><span class="lineno">    1</span>&#160;<span class="comment">/*</span></div>
+<a href="chronos_8h.html">Go to the documentation of this file.</a><div class="fragment"><div class="line"><a name="l00001"></a><span class="lineno">    1</span>&#160;<span class="comment">/*</span></div>
 <div class="line"><a name="l00002"></a><span class="lineno">    2</span>&#160;<span class="comment"> * (C) Copyright 2013 University of Antwerp (http://www.cosys-lab.be) and others.</span></div>
 <div class="line"><a name="l00003"></a><span class="lineno">    3</span>&#160;<span class="comment"> *</span></div>
 <div class="line"><a name="l00004"></a><span class="lineno">    4</span>&#160;<span class="comment"> * All rights reserved. This program and the accompanying materials</span></div>
@@ -111,43 +113,43 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <div class="line"><a name="l00023"></a><span class="lineno">   23</span>&#160;</div>
 <div class="line"><a name="l00024"></a><span class="lineno">   24</span>&#160;<span class="preprocessor">#include &quot;../cc430_addresses.h&quot;</span></div>
 <div class="line"><a name="l00025"></a><span class="lineno">   25</span>&#160;</div>
-<div class="line"><a name="l00026"></a><span class="lineno">   26</span>&#160;<span class="preprocessor">#define OUTPUT1_BASEADDRESS     0x0A22 // 0x0A22</span></div>
-<div class="line"><a name="l00027"></a><span class="lineno">   27</span>&#160;<span class="preprocessor"></span><span class="preprocessor">#define OUTPUT1_PORT            0x00</span></div>
-<div class="line"><a name="l00028"></a><span class="lineno">   28</span>&#160;<span class="preprocessor"></span><span class="preprocessor">#define OUTPUT1_PIN             GPIO_PIN3</span></div>
+<div class="line"><a name="l00026"></a><span class="lineno"><a class="line" href="chronos_8h.html#aca4c6ded0cad1e8f6a15895a8d2448da">   26</a></span>&#160;<span class="preprocessor">#define OUTPUT1_BASEADDRESS     0x0A22 // 0x0A22</span></div>
+<div class="line"><a name="l00027"></a><span class="lineno"><a class="line" href="chronos_8h.html#a308092b815103f71a1ec7ebbb85cf5ce">   27</a></span>&#160;<span class="preprocessor"></span><span class="preprocessor">#define OUTPUT1_PORT            0x00</span></div>
+<div class="line"><a name="l00028"></a><span class="lineno"><a class="line" href="chronos_8h.html#a96ee63c57d7193175443e4d3c7d928f7">   28</a></span>&#160;<span class="preprocessor"></span><span class="preprocessor">#define OUTPUT1_PIN             GPIO_PIN3</span></div>
 <div class="line"><a name="l00029"></a><span class="lineno">   29</span>&#160;<span class="preprocessor"></span></div>
-<div class="line"><a name="l00030"></a><span class="lineno">   30</span>&#160;<span class="preprocessor">#define OUTPUT2_BASEADDRESS     0x0A21 // 0x0A21</span></div>
-<div class="line"><a name="l00031"></a><span class="lineno">   31</span>&#160;<span class="preprocessor"></span><span class="preprocessor">#define OUTPUT2_PORT            0x00</span></div>
-<div class="line"><a name="l00032"></a><span class="lineno">   32</span>&#160;<span class="preprocessor"></span><span class="preprocessor">#define OUTPUT2_PIN             GPIO_PIN3</span></div>
+<div class="line"><a name="l00030"></a><span class="lineno"><a class="line" href="chronos_8h.html#a42486d3f7f7fcdfa5c7f69f6e2ac9cb3">   30</a></span>&#160;<span class="preprocessor">#define OUTPUT2_BASEADDRESS     0x0A21 // 0x0A21</span></div>
+<div class="line"><a name="l00031"></a><span class="lineno"><a class="line" href="chronos_8h.html#ab261045699c4e10eb365b6f7ec816862">   31</a></span>&#160;<span class="preprocessor"></span><span class="preprocessor">#define OUTPUT2_PORT            0x00</span></div>
+<div class="line"><a name="l00032"></a><span class="lineno"><a class="line" href="chronos_8h.html#a4279dba584153d38abdbfa206bc3931e">   32</a></span>&#160;<span class="preprocessor"></span><span class="preprocessor">#define OUTPUT2_PIN             GPIO_PIN3</span></div>
 <div class="line"><a name="l00033"></a><span class="lineno">   33</span>&#160;<span class="preprocessor"></span></div>
-<div class="line"><a name="l00034"></a><span class="lineno">   34</span>&#160;<span class="preprocessor">#define OUTPUT3_BASEADDRESS     0x0A20 // 0x0A20</span></div>
-<div class="line"><a name="l00035"></a><span class="lineno">   35</span>&#160;<span class="preprocessor"></span><span class="preprocessor">#define OUTPUT3_PORT            0x00</span></div>
-<div class="line"><a name="l00036"></a><span class="lineno">   36</span>&#160;<span class="preprocessor"></span><span class="preprocessor">#define OUTPUT3_PIN             GPIO_PIN3</span></div>
+<div class="line"><a name="l00034"></a><span class="lineno"><a class="line" href="chronos_8h.html#afb1ef317dd68c38b3a4e8fb15c7dd9da">   34</a></span>&#160;<span class="preprocessor">#define OUTPUT3_BASEADDRESS     0x0A20 // 0x0A20</span></div>
+<div class="line"><a name="l00035"></a><span class="lineno"><a class="line" href="chronos_8h.html#ab7b4b960a3691d6c0a403736ed7a19a0">   35</a></span>&#160;<span class="preprocessor"></span><span class="preprocessor">#define OUTPUT3_PORT            0x00</span></div>
+<div class="line"><a name="l00036"></a><span class="lineno"><a class="line" href="chronos_8h.html#a23dd1432a8532f62fbda9932a138a2b2">   36</a></span>&#160;<span class="preprocessor"></span><span class="preprocessor">#define OUTPUT3_PIN             GPIO_PIN3</span></div>
 <div class="line"><a name="l00037"></a><span class="lineno">   37</span>&#160;<span class="preprocessor"></span></div>
-<div class="line"><a name="l00038"></a><span class="lineno">   38</span>&#160;<span class="preprocessor">#define INPUT1_BASEADDRESS      __MSP430_BASEADDRESS_PORT2_R__</span></div>
-<div class="line"><a name="l00039"></a><span class="lineno">   39</span>&#160;<span class="preprocessor"></span><span class="preprocessor">#define INPUT1_PORT             GPIO_PORT_P2</span></div>
-<div class="line"><a name="l00040"></a><span class="lineno">   40</span>&#160;<span class="preprocessor"></span><span class="preprocessor">#define INPUT1_PIN              GPIO_PIN2</span></div>
+<div class="line"><a name="l00038"></a><span class="lineno"><a class="line" href="chronos_8h.html#ae7fe4426a9f3220d13824caeb1162eca">   38</a></span>&#160;<span class="preprocessor">#define INPUT1_BASEADDRESS      __MSP430_BASEADDRESS_PORT2_R__</span></div>
+<div class="line"><a name="l00039"></a><span class="lineno"><a class="line" href="chronos_8h.html#a955a7d20eb3076403e615138fddf910d">   39</a></span>&#160;<span class="preprocessor"></span><span class="preprocessor">#define INPUT1_PORT             GPIO_PORT_P2</span></div>
+<div class="line"><a name="l00040"></a><span class="lineno"><a class="line" href="chronos_8h.html#ade3265152866bfab3e24a219ec2ce2c3">   40</a></span>&#160;<span class="preprocessor"></span><span class="preprocessor">#define INPUT1_PIN              GPIO_PIN2</span></div>
 <div class="line"><a name="l00041"></a><span class="lineno">   41</span>&#160;<span class="preprocessor"></span></div>
-<div class="line"><a name="l00042"></a><span class="lineno">   42</span>&#160;<span class="preprocessor">#define INPUT2_BASEADDRESS      __MSP430_BASEADDRESS_PORT2_R__</span></div>
-<div class="line"><a name="l00043"></a><span class="lineno">   43</span>&#160;<span class="preprocessor"></span><span class="preprocessor">#define INPUT2_PORT             GPIO_PORT_P2</span></div>
-<div class="line"><a name="l00044"></a><span class="lineno">   44</span>&#160;<span class="preprocessor"></span><span class="preprocessor">#define INPUT2_PIN              GPIO_PIN1</span></div>
+<div class="line"><a name="l00042"></a><span class="lineno"><a class="line" href="chronos_8h.html#a010e7c7ecb71518b9d8506c8471d3827">   42</a></span>&#160;<span class="preprocessor">#define INPUT2_BASEADDRESS      __MSP430_BASEADDRESS_PORT2_R__</span></div>
+<div class="line"><a name="l00043"></a><span class="lineno"><a class="line" href="chronos_8h.html#aa65dc4d2d8f65b512396c96150f45243">   43</a></span>&#160;<span class="preprocessor"></span><span class="preprocessor">#define INPUT2_PORT             GPIO_PORT_P2</span></div>
+<div class="line"><a name="l00044"></a><span class="lineno"><a class="line" href="chronos_8h.html#a8d35928a7b0c41f05d30145d7d88369c">   44</a></span>&#160;<span class="preprocessor"></span><span class="preprocessor">#define INPUT2_PIN              GPIO_PIN1</span></div>
 <div class="line"><a name="l00045"></a><span class="lineno">   45</span>&#160;<span class="preprocessor"></span></div>
-<div class="line"><a name="l00046"></a><span class="lineno">   46</span>&#160;<span class="preprocessor">#define INPUT3_BASEADDRESS      __MSP430_BASEADDRESS_PORT2_R__</span></div>
-<div class="line"><a name="l00047"></a><span class="lineno">   47</span>&#160;<span class="preprocessor"></span><span class="preprocessor">#define INPUT3_PORT             GPIO_PORT_P2</span></div>
-<div class="line"><a name="l00048"></a><span class="lineno">   48</span>&#160;<span class="preprocessor"></span><span class="preprocessor">#define INPUT3_PIN              GPIO_PIN4</span></div>
+<div class="line"><a name="l00046"></a><span class="lineno"><a class="line" href="chronos_8h.html#a70e5c29900b2ccf6d33d09f5c98b0ab3">   46</a></span>&#160;<span class="preprocessor">#define INPUT3_BASEADDRESS      __MSP430_BASEADDRESS_PORT2_R__</span></div>
+<div class="line"><a name="l00047"></a><span class="lineno"><a class="line" href="chronos_8h.html#a7d85a9aa1b6a88f12a25903e303fdf07">   47</a></span>&#160;<span class="preprocessor"></span><span class="preprocessor">#define INPUT3_PORT             GPIO_PORT_P2</span></div>
+<div class="line"><a name="l00048"></a><span class="lineno"><a class="line" href="chronos_8h.html#ac366054f262695b867fcb223ff66d600">   48</a></span>&#160;<span class="preprocessor"></span><span class="preprocessor">#define INPUT3_PIN              GPIO_PIN4</span></div>
 <div class="line"><a name="l00049"></a><span class="lineno">   49</span>&#160;<span class="preprocessor"></span></div>
-<div class="line"><a name="l00050"></a><span class="lineno">   50</span>&#160;<span class="preprocessor">#define INPUT4_BASEADDRESS      __MSP430_BASEADDRESS_PORT2_R__</span></div>
-<div class="line"><a name="l00051"></a><span class="lineno">   51</span>&#160;<span class="preprocessor"></span><span class="preprocessor">#define INPUT4_PORT             GPIO_PORT_P2</span></div>
-<div class="line"><a name="l00052"></a><span class="lineno">   52</span>&#160;<span class="preprocessor"></span><span class="preprocessor">#define INPUT4_PIN              GPIO_PIN0</span></div>
+<div class="line"><a name="l00050"></a><span class="lineno"><a class="line" href="chronos_8h.html#a18451cd972df8f5551e78ae86f40002f">   50</a></span>&#160;<span class="preprocessor">#define INPUT4_BASEADDRESS      __MSP430_BASEADDRESS_PORT2_R__</span></div>
+<div class="line"><a name="l00051"></a><span class="lineno"><a class="line" href="chronos_8h.html#a695eb2ea29608dc51f8bc9420b4ae3fd">   51</a></span>&#160;<span class="preprocessor"></span><span class="preprocessor">#define INPUT4_PORT             GPIO_PORT_P2</span></div>
+<div class="line"><a name="l00052"></a><span class="lineno"><a class="line" href="chronos_8h.html#a9c41ad8a6147fe507285b3c072aedb2a">   52</a></span>&#160;<span class="preprocessor"></span><span class="preprocessor">#define INPUT4_PIN              GPIO_PIN0</span></div>
 <div class="line"><a name="l00053"></a><span class="lineno">   53</span>&#160;<span class="preprocessor"></span></div>
-<div class="line"><a name="l00054"></a><span class="lineno">   54</span>&#160;<span class="preprocessor">#define INPUT5_BASEADDRESS      __MSP430_BASEADDRESS_PORT2_R__</span></div>
-<div class="line"><a name="l00055"></a><span class="lineno">   55</span>&#160;<span class="preprocessor"></span><span class="preprocessor">#define INPUT5_PORT             GPIO_PORT_P2</span></div>
-<div class="line"><a name="l00056"></a><span class="lineno">   56</span>&#160;<span class="preprocessor"></span><span class="preprocessor">#define INPUT5_PIN              GPIO_PIN3</span></div>
+<div class="line"><a name="l00054"></a><span class="lineno"><a class="line" href="chronos_8h.html#aecde2ca8b01b04c3cfebc162627912e3">   54</a></span>&#160;<span class="preprocessor">#define INPUT5_BASEADDRESS      __MSP430_BASEADDRESS_PORT2_R__</span></div>
+<div class="line"><a name="l00055"></a><span class="lineno"><a class="line" href="chronos_8h.html#a659d0d78263293db7817f7f81c140639">   55</a></span>&#160;<span class="preprocessor"></span><span class="preprocessor">#define INPUT5_PORT             GPIO_PORT_P2</span></div>
+<div class="line"><a name="l00056"></a><span class="lineno"><a class="line" href="chronos_8h.html#acfcd185db227397647ab20a5fc0679a2">   56</a></span>&#160;<span class="preprocessor"></span><span class="preprocessor">#define INPUT5_PIN              GPIO_PIN3</span></div>
 <div class="line"><a name="l00057"></a><span class="lineno">   57</span>&#160;<span class="preprocessor"></span></div>
 <div class="line"><a name="l00058"></a><span class="lineno">   58</span>&#160;<span class="preprocessor">#endif </span><span class="comment">/* CHRONOS_H_ */</span><span class="preprocessor"></span></div>
 </div><!-- fragment --></div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Sat Nov 23 2013 08:43:38 for OSS-7: Open Source Stack for Dash7 Alliance Protocol by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Mon Nov 25 2013 10:24:14 for OSS-7: Open Source Stack for Dash7 Alliance Protocol by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.5
 </small></address>

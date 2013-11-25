@@ -37,6 +37,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
   <div id="navrow1" class="tabs">
     <ul class="tablist">
       <li><a href="index.html"><span>Main&#160;Page</span></a></li>
+      <li><a href="pages.html"><span>Related&#160;Pages</span></a></li>
       <li class="current"><a href="annotated.html"><span>Data&#160;Structures</span></a></li>
       <li><a href="files.html"><span>Files</span></a></li>
       <li>
@@ -69,7 +70,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
      onmouseover="return searchBox.OnSearchSelectShow()"
      onmouseout="return searchBox.OnSearchSelectHide()"
      onkeydown="return searchBox.OnSearchSelectKey(event)">
-<a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(0)"><span class="SelectionMark">&#160;</span>All</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(1)"><span class="SelectionMark">&#160;</span>Data Structures</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(2)"><span class="SelectionMark">&#160;</span>Variables</a></div>
+<a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(0)"><span class="SelectionMark">&#160;</span>All</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(1)"><span class="SelectionMark">&#160;</span>Data Structures</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(2)"><span class="SelectionMark">&#160;</span>Files</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(3)"><span class="SelectionMark">&#160;</span>Functions</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(4)"><span class="SelectionMark">&#160;</span>Variables</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(5)"><span class="SelectionMark">&#160;</span>Typedefs</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(6)"><span class="SelectionMark">&#160;</span>Enumerations</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(7)"><span class="SelectionMark">&#160;</span>Enumerator</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(8)"><span class="SelectionMark">&#160;</span>Macros</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(9)"><span class="SelectionMark">&#160;</span>Pages</a></div>
 
 <!-- iframe showing the search results (closed by default) -->
 <div id="MSearchResultsWindow">
@@ -86,38 +87,118 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <div class="title">Calendar Struct Reference</div>  </div>
 </div><!--header-->
 <div class="contents">
+
+<p><code>#include &lt;<a class="el" href="cc430_2driverlib_25xx__6xx_2rtc_8h_source.html">rtc.h</a>&gt;</code></p>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-attribs"></a>
 Data Fields</h2></td></tr>
-<tr class="memitem:af824758f515ee1a0dd1dd6b6430b7315"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="af824758f515ee1a0dd1dd6b6430b7315"></a>
-unsigned char&#160;</td><td class="memItemRight" valign="bottom"><b>Seconds</b></td></tr>
+<tr class="memitem:af824758f515ee1a0dd1dd6b6430b7315"><td class="memItemLeft" align="right" valign="top">unsigned char&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="struct_calendar.html#af824758f515ee1a0dd1dd6b6430b7315">Seconds</a></td></tr>
 <tr class="separator:af824758f515ee1a0dd1dd6b6430b7315"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a48e7a76b0aa7265be271e24ae1862a91"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a48e7a76b0aa7265be271e24ae1862a91"></a>
-unsigned char&#160;</td><td class="memItemRight" valign="bottom"><b>Minutes</b></td></tr>
+<tr class="memitem:a48e7a76b0aa7265be271e24ae1862a91"><td class="memItemLeft" align="right" valign="top">unsigned char&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="struct_calendar.html#a48e7a76b0aa7265be271e24ae1862a91">Minutes</a></td></tr>
 <tr class="separator:a48e7a76b0aa7265be271e24ae1862a91"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ad18ff4d1a6c1a6701ab79d5aeb44edcc"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ad18ff4d1a6c1a6701ab79d5aeb44edcc"></a>
-unsigned char&#160;</td><td class="memItemRight" valign="bottom"><b>Hours</b></td></tr>
+<tr class="memitem:ad18ff4d1a6c1a6701ab79d5aeb44edcc"><td class="memItemLeft" align="right" valign="top">unsigned char&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="struct_calendar.html#ad18ff4d1a6c1a6701ab79d5aeb44edcc">Hours</a></td></tr>
 <tr class="separator:ad18ff4d1a6c1a6701ab79d5aeb44edcc"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a6f4808d0e52926143ce9ce475cf60038"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a6f4808d0e52926143ce9ce475cf60038"></a>
-unsigned char&#160;</td><td class="memItemRight" valign="bottom"><b>DayOfWeek</b></td></tr>
+<tr class="memitem:a6f4808d0e52926143ce9ce475cf60038"><td class="memItemLeft" align="right" valign="top">unsigned char&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="struct_calendar.html#a6f4808d0e52926143ce9ce475cf60038">DayOfWeek</a></td></tr>
 <tr class="separator:a6f4808d0e52926143ce9ce475cf60038"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a7343985b8dad4d60dd1cb306b6f791b2"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a7343985b8dad4d60dd1cb306b6f791b2"></a>
-unsigned char&#160;</td><td class="memItemRight" valign="bottom"><b>DayOfMonth</b></td></tr>
+<tr class="memitem:a7343985b8dad4d60dd1cb306b6f791b2"><td class="memItemLeft" align="right" valign="top">unsigned char&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="struct_calendar.html#a7343985b8dad4d60dd1cb306b6f791b2">DayOfMonth</a></td></tr>
 <tr class="separator:a7343985b8dad4d60dd1cb306b6f791b2"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ad0619325defb59c7e6744030a5b8de24"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ad0619325defb59c7e6744030a5b8de24"></a>
-unsigned char&#160;</td><td class="memItemRight" valign="bottom"><b>Month</b></td></tr>
+<tr class="memitem:ad0619325defb59c7e6744030a5b8de24"><td class="memItemLeft" align="right" valign="top">unsigned char&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="struct_calendar.html#ad0619325defb59c7e6744030a5b8de24">Month</a></td></tr>
 <tr class="separator:ad0619325defb59c7e6744030a5b8de24"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:acd79f762f193e2261a5a08270cdcb588"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="acd79f762f193e2261a5a08270cdcb588"></a>
-unsigned int&#160;</td><td class="memItemRight" valign="bottom"><b>Year</b></td></tr>
+<tr class="memitem:acd79f762f193e2261a5a08270cdcb588"><td class="memItemLeft" align="right" valign="top">unsigned int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="struct_calendar.html#acd79f762f193e2261a5a08270cdcb588">Year</a></td></tr>
 <tr class="separator:acd79f762f193e2261a5a08270cdcb588"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
+<h2 class="groupheader">Field Documentation</h2>
+<a class="anchor" id="a7343985b8dad4d60dd1cb306b6f791b2"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">unsigned char Calendar::DayOfMonth</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a class="anchor" id="a6f4808d0e52926143ce9ce475cf60038"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">unsigned char Calendar::DayOfWeek</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a class="anchor" id="ad18ff4d1a6c1a6701ab79d5aeb44edcc"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">unsigned char Calendar::Hours</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a class="anchor" id="a48e7a76b0aa7265be271e24ae1862a91"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">unsigned char Calendar::Minutes</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a class="anchor" id="ad0619325defb59c7e6744030a5b8de24"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">unsigned char Calendar::Month</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a class="anchor" id="af824758f515ee1a0dd1dd6b6430b7315"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">unsigned char Calendar::Seconds</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a class="anchor" id="acd79f762f193e2261a5a08270cdcb588"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">unsigned int Calendar::Year</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
 <hr/>The documentation for this struct was generated from the following file:<ul>
 <li>d7aoss/hal/cc430/driverlib/5xx_6xx/<a class="el" href="cc430_2driverlib_25xx__6xx_2rtc_8h_source.html">rtc.h</a></li>
 </ul>
 </div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Sat Nov 23 2013 08:43:39 for OSS-7: Open Source Stack for Dash7 Alliance Protocol by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Mon Nov 25 2013 10:24:16 for OSS-7: Open Source Stack for Dash7 Alliance Protocol by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.5
 </small></address>

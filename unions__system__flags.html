@@ -37,6 +37,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
   <div id="navrow1" class="tabs">
     <ul class="tablist">
       <li><a href="index.html"><span>Main&#160;Page</span></a></li>
+      <li><a href="namespaces.html"><span>Namespaces</span></a></li>
       <li class="current"><a href="annotated.html"><span>Data&#160;Structures</span></a></li>
       <li><a href="files.html"><span>Files</span></a></li>
       <li>
@@ -69,7 +70,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
      onmouseover="return searchBox.OnSearchSelectShow()"
      onmouseout="return searchBox.OnSearchSelectHide()"
      onkeydown="return searchBox.OnSearchSelectKey(event)">
-<a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(0)"><span class="SelectionMark">&#160;</span>All</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(1)"><span class="SelectionMark">&#160;</span>Data Structures</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(2)"><span class="SelectionMark">&#160;</span>Variables</a></div>
+<a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(0)"><span class="SelectionMark">&#160;</span>All</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(1)"><span class="SelectionMark">&#160;</span>Data Structures</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(2)"><span class="SelectionMark">&#160;</span>Namespaces</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(3)"><span class="SelectionMark">&#160;</span>Files</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(4)"><span class="SelectionMark">&#160;</span>Functions</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(5)"><span class="SelectionMark">&#160;</span>Variables</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(6)"><span class="SelectionMark">&#160;</span>Typedefs</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(7)"><span class="SelectionMark">&#160;</span>Enumerations</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(8)"><span class="SelectionMark">&#160;</span>Enumerator</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(9)"><span class="SelectionMark">&#160;</span>Macros</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(10)"><span class="SelectionMark">&#160;</span>Pages</a></div>
 
 <!-- iframe showing the search results (closed by default) -->
 <div id="MSearchResultsWindow">
@@ -86,44 +87,189 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <div class="title">s_system_flags Union Reference</div>  </div>
 </div><!--header-->
 <div class="contents">
+
+<p><code>#include &lt;<a class="el" href="project_8h_source.html">project.h</a>&gt;</code></p>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-attribs"></a>
 Data Fields</h2></td></tr>
-<tr class="memitem:ab38b63ceabfdc3ad8c129945e81f24f8"><td class="memItemLeft" ><a class="anchor" id="ab38b63ceabfdc3ad8c129945e81f24f8"></a>
-struct {</td></tr>
-<tr class="memitem:a7654cda682893563f2cd23c4378a91ff"><td class="memItemLeft" >&#160;&#160;&#160;uint16_t&#160;&#160;&#160;<b>idle_timeout</b>: 1</td></tr>
+<tr class="memitem:ab38b63ceabfdc3ad8c129945e81f24f8"><td class="memItemLeft" >struct {</td></tr>
+<tr class="memitem:a7654cda682893563f2cd23c4378a91ff"><td class="memItemLeft" >&#160;&#160;&#160;uint16_t&#160;&#160;&#160;<a class="el" href="unions__system__flags.html#a62a9a88ba09e2d2a705ee9a308a8e606">idle_timeout</a>: 1</td></tr>
 <tr class="separator:a7654cda682893563f2cd23c4378a91ff"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ae7cf075742285b29de6f770800e18143"><td class="memItemLeft" >&#160;&#160;&#160;uint16_t&#160;&#160;&#160;<b>idle_timeout_enabled</b>: 1</td></tr>
+<tr class="memitem:ae7cf075742285b29de6f770800e18143"><td class="memItemLeft" >&#160;&#160;&#160;uint16_t&#160;&#160;&#160;<a class="el" href="unions__system__flags.html#a930f90d4783551e5cfe8a3e15e7743c9">idle_timeout_enabled</a>: 1</td></tr>
 <tr class="separator:ae7cf075742285b29de6f770800e18143"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ad066b1e3c86a0a0c6a88dddcf9dbab43"><td class="memItemLeft" >&#160;&#160;&#160;uint16_t&#160;&#160;&#160;<b>lock_buttons</b>: 1</td></tr>
+<tr class="memitem:ad066b1e3c86a0a0c6a88dddcf9dbab43"><td class="memItemLeft" >&#160;&#160;&#160;uint16_t&#160;&#160;&#160;<a class="el" href="unions__system__flags.html#ac30fa8c5b120318f06ed0e5604cf07d9">lock_buttons</a>: 1</td></tr>
 <tr class="separator:ad066b1e3c86a0a0c6a88dddcf9dbab43"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a96bfff7eaec3440141e8556c4df855d4"><td class="memItemLeft" >&#160;&#160;&#160;uint16_t&#160;&#160;&#160;<b>mask_buzzer</b>: 1</td></tr>
+<tr class="memitem:a96bfff7eaec3440141e8556c4df855d4"><td class="memItemLeft" >&#160;&#160;&#160;uint16_t&#160;&#160;&#160;<a class="el" href="unions__system__flags.html#a42ff9f51582e34921d1bbc70db96df6b">mask_buzzer</a>: 1</td></tr>
 <tr class="separator:a96bfff7eaec3440141e8556c4df855d4"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a9e4d2bf791237b65ebbaab6e347ba09e"><td class="memItemLeft" >&#160;&#160;&#160;uint16_t&#160;&#160;&#160;<b>up_down_repeat_enabled</b>: 1</td></tr>
+<tr class="memitem:a9e4d2bf791237b65ebbaab6e347ba09e"><td class="memItemLeft" >&#160;&#160;&#160;uint16_t&#160;&#160;&#160;<a class="el" href="unions__system__flags.html#afaa3651b54505cdc82f61cde6d0b7543">up_down_repeat_enabled</a>: 1</td></tr>
 <tr class="separator:a9e4d2bf791237b65ebbaab6e347ba09e"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a2e402e76d674a0382bfd6fe8ac45bf8f"><td class="memItemLeft" >&#160;&#160;&#160;uint16_t&#160;&#160;&#160;<b>low_battery</b>: 1</td></tr>
+<tr class="memitem:a2e402e76d674a0382bfd6fe8ac45bf8f"><td class="memItemLeft" >&#160;&#160;&#160;uint16_t&#160;&#160;&#160;<a class="el" href="unions__system__flags.html#abe9a23cc99bee5c407a61da2b58191fc">low_battery</a>: 1</td></tr>
 <tr class="separator:a2e402e76d674a0382bfd6fe8ac45bf8f"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a34ef060126ebba7771c8a5dd129b49a4"><td class="memItemLeft" >&#160;&#160;&#160;uint16_t&#160;&#160;&#160;<b>use_metric_units</b>: 1</td></tr>
+<tr class="memitem:a34ef060126ebba7771c8a5dd129b49a4"><td class="memItemLeft" >&#160;&#160;&#160;uint16_t&#160;&#160;&#160;<a class="el" href="unions__system__flags.html#a163bed6d64825877037dffde7746bb42">use_metric_units</a>: 1</td></tr>
 <tr class="separator:a34ef060126ebba7771c8a5dd129b49a4"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a859c0083589f8597c038fc92c2c0cc4b"><td class="memItemLeft" >&#160;&#160;&#160;uint16_t&#160;&#160;&#160;<b>am_pm_time</b>: 1</td></tr>
+<tr class="memitem:a859c0083589f8597c038fc92c2c0cc4b"><td class="memItemLeft" >&#160;&#160;&#160;uint16_t&#160;&#160;&#160;<a class="el" href="unions__system__flags.html#a1f5a8a224bd5fde8715b88fa437ef660">am_pm_time</a>: 1</td></tr>
 <tr class="separator:a859c0083589f8597c038fc92c2c0cc4b"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:afa90d71ca8e025be989411799819ca3e"><td class="memItemLeft" >&#160;&#160;&#160;uint16_t&#160;&#160;&#160;<b>delay_over</b>: 1</td></tr>
+<tr class="memitem:afa90d71ca8e025be989411799819ca3e"><td class="memItemLeft" >&#160;&#160;&#160;uint16_t&#160;&#160;&#160;<a class="el" href="unions__system__flags.html#aeffebbcd4518ce2fa64f459d4da3a9cc">delay_over</a>: 1</td></tr>
 <tr class="separator:afa90d71ca8e025be989411799819ca3e"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ae2b1588978d7772fa4fdb3efedfd276e"><td class="memItemLeft" >&#160;&#160;&#160;uint16_t&#160;&#160;&#160;<b>no_beep</b>: 1</td></tr>
+<tr class="memitem:ae2b1588978d7772fa4fdb3efedfd276e"><td class="memItemLeft" >&#160;&#160;&#160;uint16_t&#160;&#160;&#160;<a class="el" href="unions__system__flags.html#a28f974cc61b6568389e3059813869c74">no_beep</a>: 1</td></tr>
 <tr class="separator:ae2b1588978d7772fa4fdb3efedfd276e"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ab38b63ceabfdc3ad8c129945e81f24f8"><td class="memItemLeft" valign="top">}&#160;</td><td class="memItemRight" valign="bottom"><b>flag</b></td></tr>
+<tr class="memitem:ab38b63ceabfdc3ad8c129945e81f24f8"><td class="memItemLeft" valign="top">}&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="unions__system__flags.html#ab38b63ceabfdc3ad8c129945e81f24f8">flag</a></td></tr>
 <tr class="separator:ab38b63ceabfdc3ad8c129945e81f24f8"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ad3649911e65fbefdfff4d33b1c7f809b"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ad3649911e65fbefdfff4d33b1c7f809b"></a>
-uint16_t&#160;</td><td class="memItemRight" valign="bottom"><b>all_flags</b></td></tr>
+<tr class="memitem:ad3649911e65fbefdfff4d33b1c7f809b"><td class="memItemLeft" align="right" valign="top">uint16_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="unions__system__flags.html#ad3649911e65fbefdfff4d33b1c7f809b">all_flags</a></td></tr>
 <tr class="separator:ad3649911e65fbefdfff4d33b1c7f809b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
+<h2 class="groupheader">Field Documentation</h2>
+<a class="anchor" id="ad3649911e65fbefdfff4d33b1c7f809b"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">uint16_t s_system_flags::all_flags</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a class="anchor" id="a1f5a8a224bd5fde8715b88fa437ef660"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">uint16_t s_system_flags::am_pm_time</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a class="anchor" id="aeffebbcd4518ce2fa64f459d4da3a9cc"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">uint16_t s_system_flags::delay_over</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a class="anchor" id="ab38b63ceabfdc3ad8c129945e81f24f8"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">struct { ... }   s_system_flags::flag</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a class="anchor" id="a62a9a88ba09e2d2a705ee9a308a8e606"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">uint16_t s_system_flags::idle_timeout</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a class="anchor" id="a930f90d4783551e5cfe8a3e15e7743c9"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">uint16_t s_system_flags::idle_timeout_enabled</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a class="anchor" id="ac30fa8c5b120318f06ed0e5604cf07d9"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">uint16_t s_system_flags::lock_buttons</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a class="anchor" id="abe9a23cc99bee5c407a61da2b58191fc"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">uint16_t s_system_flags::low_battery</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a class="anchor" id="a42ff9f51582e34921d1bbc70db96df6b"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">uint16_t s_system_flags::mask_buzzer</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a class="anchor" id="a28f974cc61b6568389e3059813869c74"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">uint16_t s_system_flags::no_beep</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a class="anchor" id="afaa3651b54505cdc82f61cde6d0b7543"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">uint16_t s_system_flags::up_down_repeat_enabled</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a class="anchor" id="a163bed6d64825877037dffde7746bb42"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">uint16_t s_system_flags::use_metric_units</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
 <hr/>The documentation for this union was generated from the following file:<ul>
 <li>examples/cronos_test/<a class="el" href="project_8h_source.html">project.h</a></li>
 </ul>
 </div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Sat Nov 23 2013 08:43:39 for OSS-7: Open Source Stack for Dash7 Alliance Protocol by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Mon Nov 25 2013 10:10:13 for OSS-7: Open Source Stack for Dash7 Alliance Protocol by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.5
 </small></address>

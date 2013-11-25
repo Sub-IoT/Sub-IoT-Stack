@@ -37,6 +37,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
   <div id="navrow1" class="tabs">
     <ul class="tablist">
       <li><a href="index.html"><span>Main&#160;Page</span></a></li>
+      <li><a href="namespaces.html"><span>Namespaces</span></a></li>
       <li><a href="annotated.html"><span>Data&#160;Structures</span></a></li>
       <li class="current"><a href="files.html"><span>Files</span></a></li>
       <li>
@@ -60,6 +61,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
   <div id="navrow2" class="tabs2">
     <ul class="tablist">
       <li><a href="files.html"><span>File&#160;List</span></a></li>
+      <li><a href="globals.html"><span>Globals</span></a></li>
     </ul>
   </div>
 <!-- window showing the filter options -->
@@ -67,7 +69,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
      onmouseover="return searchBox.OnSearchSelectShow()"
      onmouseout="return searchBox.OnSearchSelectHide()"
      onkeydown="return searchBox.OnSearchSelectKey(event)">
-<a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(0)"><span class="SelectionMark">&#160;</span>All</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(1)"><span class="SelectionMark">&#160;</span>Data Structures</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(2)"><span class="SelectionMark">&#160;</span>Variables</a></div>
+<a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(0)"><span class="SelectionMark">&#160;</span>All</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(1)"><span class="SelectionMark">&#160;</span>Data Structures</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(2)"><span class="SelectionMark">&#160;</span>Namespaces</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(3)"><span class="SelectionMark">&#160;</span>Files</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(4)"><span class="SelectionMark">&#160;</span>Functions</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(5)"><span class="SelectionMark">&#160;</span>Variables</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(6)"><span class="SelectionMark">&#160;</span>Typedefs</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(7)"><span class="SelectionMark">&#160;</span>Enumerations</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(8)"><span class="SelectionMark">&#160;</span>Enumerator</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(9)"><span class="SelectionMark">&#160;</span>Macros</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(10)"><span class="SelectionMark">&#160;</span>Pages</a></div>
 
 <!-- iframe showing the search results (closed by default) -->
 <div id="MSearchResultsWindow">
@@ -86,7 +88,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <div class="title">rf.h</div>  </div>
 </div><!--header-->
 <div class="contents">
-<div class="fragment"><div class="line"><a name="l00001"></a><span class="lineno">    1</span>&#160;<span class="comment">/*</span></div>
+<a href="rf_8h.html">Go to the documentation of this file.</a><div class="fragment"><div class="line"><a name="l00001"></a><span class="lineno">    1</span>&#160;<span class="comment">/*</span></div>
 <div class="line"><a name="l00002"></a><span class="lineno">    2</span>&#160;<span class="comment"> * rf.h</span></div>
 <div class="line"><a name="l00003"></a><span class="lineno">    3</span>&#160;<span class="comment"> *</span></div>
 <div class="line"><a name="l00004"></a><span class="lineno">    4</span>&#160;<span class="comment"> *  Created on: 7-dec.-2012</span></div>
@@ -98,33 +100,48 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <div class="line"><a name="l00010"></a><span class="lineno">   10</span>&#160;<span class="preprocessor"></span></div>
 <div class="line"><a name="l00011"></a><span class="lineno">   11</span>&#160;<span class="preprocessor">#include &quot;../project.h&quot;</span></div>
 <div class="line"><a name="l00012"></a><span class="lineno">   12</span>&#160;</div>
-<div class="line"><a name="l00013"></a><span class="lineno">   13</span>&#160;<span class="preprocessor">#include &lt;trans/trans.h&gt;</span></div>
+<div class="line"><a name="l00013"></a><span class="lineno">   13</span>&#160;<span class="preprocessor">#include &lt;<a class="code" href="trans_8h.html">trans/trans.h</a>&gt;</span></div>
 <div class="line"><a name="l00014"></a><span class="lineno">   14</span>&#160;</div>
-<div class="line"><a name="l00015"></a><span class="lineno">   15</span>&#160;<span class="keyword">extern</span> int8_t txPower;</div>
-<div class="line"><a name="l00016"></a><span class="lineno">   16</span>&#160;<span class="keyword">extern</span> uint8_t beacon_channel;</div>
-<div class="line"><a name="l00017"></a><span class="lineno">   17</span>&#160;<span class="keyword">extern</span> uint16_t beacon_interval;</div>
+<div class="line"><a name="l00015"></a><span class="lineno">   15</span>&#160;<span class="keyword">extern</span> int8_t <a class="code" href="rf_8h.html#a5faa020feb44ee89aba5675c5713a3b6">txPower</a>;</div>
+<div class="line"><a name="l00016"></a><span class="lineno">   16</span>&#160;<span class="keyword">extern</span> uint8_t <a class="code" href="rf_8h.html#a10110dd221a8b98d19e6b92c14d9ea7f">beacon_channel</a>;</div>
+<div class="line"><a name="l00017"></a><span class="lineno">   17</span>&#160;<span class="keyword">extern</span> uint16_t <a class="code" href="rf_8h.html#a44d3ba471952893dead3426f91dd5d0e">beacon_interval</a>;</div>
 <div class="line"><a name="l00018"></a><span class="lineno">   18</span>&#160;</div>
-<div class="line"><a name="l00019"></a><span class="lineno">   19</span>&#160;<span class="keywordtype">void</span> tx_callback(Trans_Tx_Result result);</div>
+<div class="line"><a name="l00019"></a><span class="lineno">   19</span>&#160;<span class="keywordtype">void</span> <a class="code" href="rf_8c.html#aee3720fe408ea8ffa4586784b55bec60">tx_callback</a>(<a class="code" href="trans_8h.html#aa272a8c8a08ea9204185833ebb6e0415">Trans_Tx_Result</a> result);</div>
 <div class="line"><a name="l00020"></a><span class="lineno">   20</span>&#160;</div>
-<div class="line"><a name="l00021"></a><span class="lineno">   21</span>&#160;<span class="keywordtype">void</span> blink_init();</div>
-<div class="line"><a name="l00022"></a><span class="lineno">   22</span>&#160;<span class="keywordtype">void</span> blink_start();</div>
-<div class="line"><a name="l00023"></a><span class="lineno">   23</span>&#160;<span class="keywordtype">void</span> blink_stop();</div>
+<div class="line"><a name="l00021"></a><span class="lineno">   21</span>&#160;<span class="keywordtype">void</span> <a class="code" href="rf_8c.html#aa177e5510417afe594d1a7d651579ed1">blink_init</a>();</div>
+<div class="line"><a name="l00022"></a><span class="lineno">   22</span>&#160;<span class="keywordtype">void</span> <a class="code" href="rf_8c.html#ab2506a6ebd49bf3d009602447d678bea">blink_start</a>();</div>
+<div class="line"><a name="l00023"></a><span class="lineno">   23</span>&#160;<span class="keywordtype">void</span> <a class="code" href="rf_8c.html#a5bdb39cecf654c1ca2c85994d158b317">blink_stop</a>();</div>
 <div class="line"><a name="l00024"></a><span class="lineno">   24</span>&#160;</div>
-<div class="line"><a name="l00025"></a><span class="lineno">   25</span>&#160;<span class="keywordtype">void</span> display_sync(uint8_t line, uint8_t update);</div>
-<div class="line"><a name="l00026"></a><span class="lineno">   26</span>&#160;<span class="keywordtype">void</span> display_beacon(uint8_t line, uint8_t update);</div>
+<div class="line"><a name="l00025"></a><span class="lineno">   25</span>&#160;<span class="keywordtype">void</span> <a class="code" href="rf_8c.html#a0ad9bc94933399739ecffbbe3f6fc7cd">display_sync</a>(uint8_t line, uint8_t update);</div>
+<div class="line"><a name="l00026"></a><span class="lineno">   26</span>&#160;<span class="keywordtype">void</span> <a class="code" href="rf_8c.html#ab5d03da4e51a4b6baa7dea50fc9a7c9e">display_beacon</a>(uint8_t line, uint8_t update);</div>
 <div class="line"><a name="l00027"></a><span class="lineno">   27</span>&#160;</div>
-<div class="line"><a name="l00028"></a><span class="lineno">   28</span>&#160;<span class="keywordtype">void</span> mx_beacon(uint8_t line);</div>
+<div class="line"><a name="l00028"></a><span class="lineno">   28</span>&#160;<span class="keywordtype">void</span> <a class="code" href="rf_8c.html#ad366c1bef49126265c28931d8f433eb0">mx_beacon</a>(uint8_t line);</div>
 <div class="line"><a name="l00029"></a><span class="lineno">   29</span>&#160;</div>
-<div class="line"><a name="l00030"></a><span class="lineno">   30</span>&#160;<span class="keywordtype">void</span> sx_beacon(uint8_t line);</div>
-<div class="line"><a name="l00031"></a><span class="lineno">   31</span>&#160;<span class="keywordtype">void</span> sx_sync(uint8_t line);</div>
+<div class="line"><a name="l00030"></a><span class="lineno">   30</span>&#160;<span class="keywordtype">void</span> <a class="code" href="rf_8c.html#a1ea3714bbbad8044931bea883a313320">sx_beacon</a>(uint8_t line);</div>
+<div class="line"><a name="l00031"></a><span class="lineno">   31</span>&#160;<span class="keywordtype">void</span> <a class="code" href="rf_8c.html#a368e0e18e4c64c590b87bc59e178c772">sx_sync</a>(uint8_t line);</div>
 <div class="line"><a name="l00032"></a><span class="lineno">   32</span>&#160;</div>
-<div class="line"><a name="l00033"></a><span class="lineno">   33</span>&#160;<span class="keywordtype">void</span> start_d7_sync();</div>
+<div class="line"><a name="l00033"></a><span class="lineno">   33</span>&#160;<span class="keywordtype">void</span> <a class="code" href="rf_8c.html#a5cb71386b713781d509b7f20e714d829">start_d7_sync</a>();</div>
 <div class="line"><a name="l00034"></a><span class="lineno">   34</span>&#160;</div>
 <div class="line"><a name="l00035"></a><span class="lineno">   35</span>&#160;<span class="preprocessor">#endif </span><span class="comment">/* RF_H_ */</span><span class="preprocessor"></span></div>
+<div class="ttc" id="rf_8c_html_aee3720fe408ea8ffa4586784b55bec60"><div class="ttname"><a href="rf_8c.html#aee3720fe408ea8ffa4586784b55bec60">tx_callback</a></div><div class="ttdeci">void tx_callback(Trans_Tx_Result result)</div><div class="ttdef"><b>Definition:</b> rf.c:43</div></div>
+<div class="ttc" id="rf_8c_html_a368e0e18e4c64c590b87bc59e178c772"><div class="ttname"><a href="rf_8c.html#a368e0e18e4c64c590b87bc59e178c772">sx_sync</a></div><div class="ttdeci">void sx_sync(uint8_t line)</div><div class="ttdef"><b>Definition:</b> rf.c:222</div></div>
+<div class="ttc" id="rf_8c_html_a1ea3714bbbad8044931bea883a313320"><div class="ttname"><a href="rf_8c.html#a1ea3714bbbad8044931bea883a313320">sx_beacon</a></div><div class="ttdeci">void sx_beacon(uint8_t line)</div><div class="ttdef"><b>Definition:</b> rf.c:82</div></div>
+<div class="ttc" id="rf_8c_html_a5bdb39cecf654c1ca2c85994d158b317"><div class="ttname"><a href="rf_8c.html#a5bdb39cecf654c1ca2c85994d158b317">blink_stop</a></div><div class="ttdeci">void blink_stop()</div><div class="ttdef"><b>Definition:</b> rf.c:75</div></div>
+<div class="ttc" id="rf_8c_html_a5cb71386b713781d509b7f20e714d829"><div class="ttname"><a href="rf_8c.html#a5cb71386b713781d509b7f20e714d829">start_d7_sync</a></div><div class="ttdeci">void start_d7_sync(void)</div><div class="ttdef"><b>Definition:</b> rf.c:233</div></div>
+<div class="ttc" id="rf_8c_html_ad366c1bef49126265c28931d8f433eb0"><div class="ttname"><a href="rf_8c.html#ad366c1bef49126265c28931d8f433eb0">mx_beacon</a></div><div class="ttdeci">void mx_beacon(uint8_t line)</div><div class="ttdef"><b>Definition:</b> rf.c:141</div></div>
+<div class="ttc" id="rf_8c_html_ab5d03da4e51a4b6baa7dea50fc9a7c9e"><div class="ttname"><a href="rf_8c.html#ab5d03da4e51a4b6baa7dea50fc9a7c9e">display_beacon</a></div><div class="ttdeci">void display_beacon(uint8_t line, uint8_t update)</div><div class="ttdef"><b>Definition:</b> rf.c:95</div></div>
+<div class="ttc" id="rf_8h_html_a5faa020feb44ee89aba5675c5713a3b6"><div class="ttname"><a href="rf_8h.html#a5faa020feb44ee89aba5675c5713a3b6">txPower</a></div><div class="ttdeci">int8_t txPower</div><div class="ttdef"><b>Definition:</b> main.c:45</div></div>
+<div class="ttc" id="rf_8c_html_ab2506a6ebd49bf3d009602447d678bea"><div class="ttname"><a href="rf_8c.html#ab2506a6ebd49bf3d009602447d678bea">blink_start</a></div><div class="ttdeci">void blink_start()</div><div class="ttdef"><b>Definition:</b> rf.c:68</div></div>
+<div class="ttc" id="rf_8c_html_a0ad9bc94933399739ecffbbe3f6fc7cd"><div class="ttname"><a href="rf_8c.html#a0ad9bc94933399739ecffbbe3f6fc7cd">display_sync</a></div><div class="ttdeci">void display_sync(uint8_t line, uint8_t update)</div><div class="ttdef"><b>Definition:</b> rf.c:134</div></div>
+<div class="ttc" id="trans_8h_html_aa272a8c8a08ea9204185833ebb6e0415"><div class="ttname"><a href="trans_8h.html#aa272a8c8a08ea9204185833ebb6e0415">Trans_Tx_Result</a></div><div class="ttdeci">Trans_Tx_Result</div><div class="ttdef"><b>Definition:</b> trans.h:27</div></div>
+<div class="ttc" id="trans_8h_html"><div class="ttname"><a href="trans_8h.html">trans.h</a></div></div>
+<div class="ttc" id="rf_8c_html_aa177e5510417afe594d1a7d651579ed1"><div class="ttname"><a href="rf_8c.html#aa177e5510417afe594d1a7d651579ed1">blink_init</a></div><div class="ttdeci">void blink_init()</div><div class="ttdef"><b>Definition:</b> rf.c:56</div></div>
+<div class="ttc" id="rf_8h_html_a10110dd221a8b98d19e6b92c14d9ea7f"><div class="ttname"><a href="rf_8h.html#a10110dd221a8b98d19e6b92c14d9ea7f">beacon_channel</a></div><div class="ttdeci">uint8_t beacon_channel</div><div class="ttdef"><b>Definition:</b> main.c:46</div></div>
+<div class="ttc" id="rf_8h_html_a44d3ba471952893dead3426f91dd5d0e"><div class="ttname"><a href="rf_8h.html#a44d3ba471952893dead3426f91dd5d0e">beacon_interval</a></div><div class="ttdeci">uint16_t beacon_interval</div><div class="ttdef"><b>Definition:</b> main.c:47</div></div>
 </div><!-- fragment --></div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Sat Nov 23 2013 08:43:39 for OSS-7: Open Source Stack for Dash7 Alliance Protocol by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Mon Nov 25 2013 10:10:10 for OSS-7: Open Source Stack for Dash7 Alliance Protocol by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.5
 </small></address>
