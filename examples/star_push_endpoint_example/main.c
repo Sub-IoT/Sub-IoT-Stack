@@ -49,7 +49,7 @@ static volatile bool add_tx_event = true;
 
 timer_event event;
 
-void start_tx(void* ar)
+void start_tx()
 {
 	if (!tx)
 	{
