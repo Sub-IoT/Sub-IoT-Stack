@@ -1,20 +1,18 @@
-/*
- * (C) Copyright 2013 University of Antwerp (http://www.cosys-lab.be) and others.
+/*! \file fec.c
  *
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the GNU Lesser General Public License
- * (LGPL) version 2.1 which accompanies this distribution, and is available at
- * http://www.gnu.org/licenses/lgpl-2.1.html
- *
+ * \copyright (C) Copyright 2013 University of Antwerp (http://www.cosys-lab.be) and others.\n
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.\n
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
  *
- * Contributors:
- *     	glenn.ergeerts@uantwerpen.be
- *     	maarten.weyn@uantwerpen.be
- *		alexanderhoet@gmail.com
+ * \author glenn.ergeerts@uantwerpen.be
+ * \author maarten.weyn@uantwerpen.be
+ *	\author alexanderhoet@gmail.com
  *
  */
 

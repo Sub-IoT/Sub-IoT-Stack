@@ -59,7 +59,7 @@ void blink_led()
 	timer_add_event(&dim_led_event);
 }
 
-void dim_led(void* arg)
+void dim_led()
 {
 	led_off(1);
 }

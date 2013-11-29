@@ -13,7 +13,7 @@
  * \author maarten.weyn@uantwerpen.be
  * \author glenn.ergeerts@uantwerpen.be
  *
- *	\brief High Level API for hardware
+ *  \brief High Level API for hardware
  *
  *  The high level API to initialize the hardware
  */

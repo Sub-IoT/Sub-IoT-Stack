@@ -394,7 +394,7 @@ def main():
 	# Setup the console parser
 	parser = argparse.ArgumentParser(description = "DASH7 logger for the OSS-7 stack. You can exit the logger using Ctrl-c, it takes some time.")
 	parser.add_argument('serial', metavar="serial port", help="serial port (eg COM7 or /dev/ttyUSB0)", nargs='?')
-	parser.add_argument('-b', '--baud' , default=115200, metavar="baudrate", type=int, help="set the baud rate (default: 115200)")
+	parser.add_argument('-b', '--baud' , default=9600, metavar="baudrate", type=int, help="set the baud rate (default: 9600)")
 	parser.add_argument('-v', '--version', action='version', version='DASH7 Logger 0.5', help="show the current version")
 	parser.add_argument('-f', '--file', metavar="file", help="write to a specific file", nargs='?', default=None, const=dateTime)
 	parser.add_argument('-l', '--list', help="Lists available serial ports", action="store_true", default=False)
