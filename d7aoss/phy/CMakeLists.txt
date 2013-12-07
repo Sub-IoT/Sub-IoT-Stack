@@ -16,6 +16,12 @@ IF(D7AOSS_PHY_RADIO_DRIVER STREQUAL "STUB")
         )
 ENDIF()
 
+IF(D7AOSS_PHY_RADIO_DRIVER STREQUAL "SIM")
+        SET(RADIOSRCS
+                        sim/sim_phy.c
+        )
+ENDIF()
+
 ADD_LIBRARY(PHY
     phy.c
     fec.c

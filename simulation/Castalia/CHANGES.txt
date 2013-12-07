@@ -1,0 +1,184 @@
+
+Castalia 3.2: Changes from 3.1
+------------------------------------------
+- Bug fixes: 
+   -sleeping bug in 802.15.4 MAC
+   -possible segfault in TimerService code
+   -bugs with DESTROY_NODE and OUT_OF_ENERGY msgs
+   -bug with NODE_STARTUP. Now the Radio and
+    Resource Mgr receive and are affected by 
+    the node startup msg
+   -readRSSI was returning -197dBm when no signal
+    was received. Now the noiseFloor is returned
+   -error accumulating in rare cases due to 
+    subtract_dBm(). Now this method is not used. 
+
+- TunableMAC: changed the beacon TX to not leave
+  gaps. Collect richer output
+
+- Better structured and cleaned the Virtual app/
+  rouring/MAC classes and associated generic packets.  
+
+- VirtualApp: empty appID means no filtering of packets
+ 
+- Added --title and --scale flags to CastaliaPlot, 
+  added check for valid gnuplot executable
+
+- Images (png, gif, jpg) produced with CastaliaPlot
+  contain in the header metadata the full command
+  that produced them.
+ 
+
+Castalia 3.1: Changes from 3.0
+------------------------------------------
+- Introduction of CastaliaPlot to create graphs
+  automatically based on CastaliaResults output
+
+- Features added to CastaliaResults
+  e.g., options --all --sum -v
+ 
+- Enhanced Tunable MAC with CSMA persistence 
+  options, and TX options
+
+- Dublicate packets handled in virtual routing
+  and virtual MAC modules
+
+- Radio module enhanced to handle TXing without
+  interruption
+ 
+- Minor cleanup and bug fixes:
+  Cleaned up throughput app,
+  bugs in GTS 802.15.4MAC
+  bug in multipathRings
+
+
+
+Castalia 3.0: Major changes from 2.3
+------------------------------------------
+- Porting to OMNeT++ 4.x
+
+- Major restructuring of input and output
+  1) Standard way to create output and trace files
+  2) Introduced Castalia script to assist in
+     creating complex simulation scenarios without
+     the need for custom scripting solutions 
+  3) Introduced CastaliaResults script to assist
+     in processing the output easily without the
+     need for custom scripting solutions
+
+- Created virtual classes for app, net, and MAC.
+  New apps or protocols can be easily derived
+  from these classes, which provide considerable
+  abstraction tools and services.
+
+- Independent service of timers to be used with 
+  the app routing and MAC modules
+
+- Complete redefinition of Radio module
+  1) Radio receives signals from the channel.
+     Reception/interference calculations done
+     in radio now (instead of channel)
+  2) More accurate interference calculation
+     (dynamic intereference accounted not just max)
+  3) Ability to calculate number of bit errors
+     in a packet (not just 0/1)
+  4) Multiple RX modes (with different power consumed,
+     datarate, modulation) that can change dynamically
+  5) Multiple sleep levels.
+  6) Transition times and power easily defined
+  7) Multiple carrier frequencies, than ca change dynamically
+  8) RSSI calculation is modeled more accurately taking 
+     into account the history of signals a radio experiences
+
+- Implementation of the Baseline BAN MAC as described
+  in the IEEE 802.15 Task Group 6 proposal.
+ 
+
+Castalia 2.3: Changes from ver 2.2
+------------------------------------------
+- Implemented GTS mode in 802.15.4 MAC,
+  fixed several bugs.
+- TMAC enhanced to select mechanisms for TA
+  extension and collision resolution
+- Minor modifications in bridgeTestRun script
+  added average energy consumption
+- Batch script for running BAN simulations added
+
+
+Castalia 2.2: Changes from ver 2.1
+------------------------------------------
+- Implementation of 802.15.4 MAC (CAP, beacon mode)
+- added modulation types diffBPSK, diffQPSK
+- throughtputTest application measuring latency
+- throughtputTest app supporting multihop traffic
+  with nextRecipient parameter
+- Bug with TMAC sending many RTS packets fixed
+
+
+
+Castalia 2.1: Changes from ver 2.0
+------------------------------------------
+- T-MAC fully tested and debugged
+- S-MAC implemented as variant of T-MAC
+- Replaced buffer implementations with std <queue>
+- parsePRRMap() debugged and complete functionality
+- Automated test suite implemented, look in Tests/
+- 3 more parameters for sensing devices
+
+
+
+Castalia 2.0: Major changes from ver 1.3
+------------------------------------------
+
+== Wireless channel module
+1. Mobility support (!)
+2. Time-varying links (!)
+3. 3D coordinates and orientation
+4. the 2 directions of a link correlated
+   with a dedicated parameter
+
+== Radio Module
+1. Custom modulation allowed by defining
+   a SNR->BER array. 
+2. variance in TX power introduced. The radio
+   now sends explicit TxPower to the channel,
+   instead of a power level index.
+
+
+== MAC module
+1. TMAC implemented
+
+
+== Application modules
+1. Test throughput app introduced
+
+
+
+Castalia 1.3: Changes from ver 1.2
+------------------------------------------
+- Implementation of 2 routing protocols
+- Implementation of 2 new example applications (using routing protocols)
+- Advanced ability to define various degrees of simpler channel and radio models
+- Bug fixes with the TunableMAC and routing modules
+
+
+
+
+Castalia 1.2: Changes from ver 1.1
+------------------------------------------
+- Creation of a network/routing module.
+- Ability to modify several radio and MAC parameters 
+  through the application code at run-time.
+- Minor bug fixes relating with EV.
+- Richer debug messages
+  (awaiting for the visualization tool)
+
+
+
+Castalia 1.1: Changes from ver 1.0
+------------------------------------------
+-Restructuring of the input (omnetpp.ini parameter file)
+ to be more modular.
+-Restructuring of the output to be clearer.
+-Changes to the run scripts to accomodate the above changes.
+-Minor bug fixes relating building problems under Cygwin.

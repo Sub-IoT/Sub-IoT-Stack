@@ -16,48 +16,22 @@
  *
  */
 
-#include "../timer.h"
 
-void hal_timer_init()
+#include "../leds.h"
+
+void led_init()
 {
 }
 
-void hal_timer_enable_interrupt()
-{
 
+void led_on(unsigned char led_nr)
+{
 }
 
-void hal_timer_disable_interrupt()
+void led_off(unsigned char led_nr)
 {
-
 }
 
-uint16_t hal_timer_getvalue()
+void led_toggle(unsigned char led_nr)
 {
-    return 0;
-}
-
-void hal_timer_setvalue(uint16_t next_event)
-{
-
-}
-
-void hal_benchmarking_timer_init()
-{
-
-}
-
-void hal_benchmarking_timer_start()
-{
-
-}
-
-void hal_benchmarking_timer_stop()
-{
-
-}
-
-uint32_t hal_benchmarking_timer_getvalue()
-{
-
 }
