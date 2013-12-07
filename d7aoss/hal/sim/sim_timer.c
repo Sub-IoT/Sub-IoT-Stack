@@ -17,6 +17,9 @@
  */
 
 #include "../timer.h"
+#include "../framework/timer.h"
+
+#include "../../simulation/Castalia/src/node/application/oss7Test/SimHalInterface.h"
 
 void hal_timer_init()
 {
@@ -34,12 +37,12 @@ void hal_timer_disable_interrupt()
 
 uint16_t hal_timer_getvalue()
 {
-    return 0;
+    return 0; // TODO
 }
 
 void hal_timer_setvalue(uint16_t next_event)
 {
-
+    set_timer(next_event);
 }
 
 void hal_benchmarking_timer_init()
@@ -60,4 +63,9 @@ void hal_benchmarking_timer_stop()
 uint32_t hal_benchmarking_timer_getvalue()
 {
 
+}
+
+void sim_timer_completed()
+{
+    timer_completed();
 }

@@ -13,51 +13,53 @@
  *
  * Contributors:
  *     	glenn.ergeerts@uantwerpen.be
- *
  */
 
-#include "../timer.h"
+#include <stdbool.h>
+#include <stdint.h>
 
-void hal_timer_init()
+#include "../phy.h"
+#include "../../simulation/Castalia/src/node/application/oss7Test/SimPhyInterface.h"
+
+/*
+ * Phy implementation functions
+ */
+void phy_init(void)
 {
+	return;
 }
 
-void hal_timer_enable_interrupt()
+void phy_idle(void)
 {
-
+	return;
 }
 
-void hal_timer_disable_interrupt()
+bool phy_tx(phy_tx_cfg_t* cfg)
 {
-
+    return sim_phy_tx(cfg);
 }
 
-uint16_t hal_timer_getvalue()
+bool phy_rx(phy_rx_cfg_t* cfg)
+{
+    return sim_phy_rx(cfg);
+}
+
+bool phy_read(phy_rx_data_t* data)
+{
+	return false;
+}
+
+bool phy_is_rx_in_progress(void)
+{
+    return false; // TODO
+}
+
+bool phy_is_tx_in_progress(void)
+{
+    return false; // TODO
+}
+
+int16_t phy_get_rssi(uint8_t spectrum_id, uint8_t sync_word_class)
 {
     return 0;
-}
-
-void hal_timer_setvalue(uint16_t next_event)
-{
-
-}
-
-void hal_benchmarking_timer_init()
-{
-
-}
-
-void hal_benchmarking_timer_start()
-{
-
-}
-
-void hal_benchmarking_timer_stop()
-{
-
-}
-
-uint32_t hal_benchmarking_timer_getvalue()
-{
-
 }

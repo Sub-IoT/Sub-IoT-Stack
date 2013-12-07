@@ -16,48 +16,34 @@
  *
  */
 
-#include "../timer.h"
+#include "../../simulation/Castalia/src/node/application/oss7Test/SimHalInterface.h"
 
-void hal_timer_init()
-{
-}
-
-void hal_timer_enable_interrupt()
+void uart_init()
 {
 
 }
 
-void hal_timer_disable_interrupt()
+void uart_enable_interrupt()
 {
 
 }
 
-uint16_t hal_timer_getvalue()
-{
-    return 0;
-}
-
-void hal_timer_setvalue(uint16_t next_event)
+void uart_transmit_data(unsigned char data)
 {
 
 }
 
-void hal_benchmarking_timer_init()
+void uart_transmit_message(unsigned char *data, unsigned char length)
 {
-
+    log_msg(data, length);
 }
 
-void hal_benchmarking_timer_start()
+unsigned char uart_tx_ready()
 {
-
+	return 0;
 }
 
-void hal_benchmarking_timer_stop()
+unsigned char uart_receive_data()
 {
-
-}
-
-uint32_t hal_benchmarking_timer_getvalue()
-{
-
+	return 0;
 }

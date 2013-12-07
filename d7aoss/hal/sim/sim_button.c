@@ -16,48 +16,27 @@
  *
  */
 
-#include "../timer.h"
-
-void hal_timer_init()
-{
-}
-
-void hal_timer_enable_interrupt()
+void button_init()
 {
 
 }
 
-void hal_timer_disable_interrupt()
+void button_enable_interrupts()
 {
 
 }
 
-uint16_t hal_timer_getvalue()
-{
-    return 0;
-}
-
-void hal_timer_setvalue(uint16_t next_event)
+void button_disable_interrupts()
 {
 
 }
 
-void hal_benchmarking_timer_init()
+void button_clear_interrupt_flag()
 {
 
 }
 
-void hal_benchmarking_timer_start()
+unsigned char button_is_active(unsigned char button)
 {
-
-}
-
-void hal_benchmarking_timer_stop()
-{
-
-}
-
-uint32_t hal_benchmarking_timer_getvalue()
-{
-
+	return 0;
 }

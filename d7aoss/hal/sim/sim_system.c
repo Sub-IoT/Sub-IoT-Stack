@@ -16,48 +16,56 @@
  *
  */
 
-#include "../timer.h"
+#include "../system.h"
 
-void hal_timer_init()
-{
-}
+uint8_t device_id[8];
 
-void hal_timer_enable_interrupt()
+void PMM_SetVCore (uint8_t level)
 {
 
 }
 
-void hal_timer_disable_interrupt()
+void system_init()
 {
 
 }
 
-uint16_t hal_timer_getvalue()
-{
-    return 0;
-}
-
-void hal_timer_setvalue(uint16_t next_event)
+void system_watchdog_timer_stop()
 {
 
 }
 
-void hal_benchmarking_timer_init()
+void system_watchdog_timer_start()
 {
 
 }
 
-void hal_benchmarking_timer_start()
+void system_watchdog_timer_reset()
 {
 
 }
 
-void hal_benchmarking_timer_stop()
+void system_watchdog_timer_enable_interrupt()
 {
 
 }
 
-uint32_t hal_benchmarking_timer_getvalue()
+void system_watchdog_timer_init(unsigned char clockSelect, unsigned char clockDivider)
+{
+
+}
+
+void system_watchdog_init(unsigned char clockSelect, unsigned char clockDivider)
+{
+
+}
+
+void system_lowpower_mode(unsigned char mode, unsigned char enableInterrupts)
+{
+
+}
+
+void system_get_unique_id(unsigned char *tagId)
 {
 
 }
