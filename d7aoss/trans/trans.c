@@ -109,11 +109,11 @@ void trans_set_initial_t_ca(uint16_t t_ca)
 	init_t_ca = t_ca;
 }
 
-static void final_rigd(void* arg){
+static void final_rigd(){
 	 dll_csma(true);
 }
 
-static void t_ca_timeout_rigd(void* arg){
+static void t_ca_timeout_rigd(){
 	trans_rigd_ccp(current__spectrum_id, false, false);
 }
 

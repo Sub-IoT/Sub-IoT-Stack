@@ -20,7 +20,7 @@
 dll_channel_scan_t scan_cfg1 = {
 		0x1C,
 		FrameTypeBackgroundFrame,
-		20,
+		0,//20,
 		500
 };
 
@@ -116,11 +116,11 @@ void main(void) {
 	log_print_string("started");
 
 
-	//start_rx();
+	start_rx();
 
-dll_set_foreground_scan_detection_timeout(0);
-dll_set_scan_spectrum_id(0x1C);
-	dll_foreground_scan();
+	//dll_set_foreground_scan_detection_timeout(0);
+	//dll_set_scan_spectrum_id(0x1C);
+	//dll_foreground_scan();
 
 	while(1)
 	{

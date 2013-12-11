@@ -37,7 +37,7 @@
 
 
 #define SEND_INTERVAL_MS 1000
-#define SEND_CHANNEL 0x1E
+#define SEND_CHANNEL 0x1A
 #define TX_EIRP 10
 
 // Macro which can be removed in production environment

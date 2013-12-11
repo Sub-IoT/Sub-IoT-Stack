@@ -1,0 +1,923 @@
+#!/usr/bin/python
+# ****************************************************************************
+# *  Copyright: National ICT Australia,  2009 - 2010                         *
+# *  Developed at the ATP lab, Networked Systems research theme              *
+# *  Author(s): Yuriy Tselishchev                                            *
+# *  This file is distributed under the terms in the attached LICENSE file.  *
+# *  If you do not find this file, copies can be found by writing to:        *
+# *                                                                          *
+# *      NICTA, Locked Bag 9013, Alexandria, NSW 1435, Australia             *
+# *      Attention:  License Inquiry.                                        *
+# *                                                                          *
+# ***************************************************************************/
+
+import os, sys, commands, getopt, re, math
+from optparse import OptionParser
+
+z_values = {99:2.577,98.5:2.43,97.5:2.243,95:1.96,90:1.645,85:1.439,75:1.151}
+
+parser = OptionParser(usage="usage: %prog [file [file]] [options]")
+parser.add_option("-c","--confidence-interval", dest="confidence", type="float", metavar="CL", help="Display confidence intervals where possible (http://en.wikipedia.org/wiki/Confidence_interval), for confidence level CL, supported values of CL: " + str(sorted(z_values.keys())))
+parser.add_option("-f","--filter-rows", dest="row_filter", type="string", metavar="RE", help="Select a subset of rows by applying RE (regular expression) filter")
+parser.add_option("-i","--input", dest="input", type="string", metavar="FILE[,FILE]", help="Load results from each FILE")
+parser.add_option("-l","--long", dest="long", default=False, action="store_true", help="Display long (full) labels for table rows")
+parser.add_option("-n","--node", dest="pernode", default=False, action="store_true", help="Display results for each node individually")
+parser.add_option("-o","--output", dest="output", type="int", default=1, metavar="[1|2]", help="Choose output type, supported values are 1 (visual) and 2 (compact)")
+parser.add_option("-p","--percentage", dest="percentage", default=False, action="store_true", help="Display breakdowns as percentage of total amounts where possible")
+parser.add_option("-s","--show", dest="filter", type="string", metavar="RE", help="Select a subset of available outputs by applying RE (regular expression)")
+parser.add_option("-v","--variability-interval", dest="varint", type="float", metavar="VL", help="Display variablility interval: the tightest interval that contains atleast VL% of the values (useful when running simulations with multiple seeds)")
+parser.add_option("--all", dest="all", default=False, action="store_true", help="Display ALL data points in a separate table")
+parser.add_option("--filter-columns", dest="col_filter", type="string", metavar="RE", help="Select a subset of columns by applying RE (regular expression) filter, only works with breakdown outputs")
+parser.add_option("--order", dest="order", type="string", metavar="STRING", help="Select label ordering for the table, first label will become column headers. Labels without '=' can be matched by keyword 'configs'")
+parser.add_option("--precision", dest="precision", type="int", default=5, metavar="N", help="Set precision of floating point numbers, in decimal places (default is 3)")
+parser.add_option("--sum", dest="sum", default=False, action="store_true", help="Display sum instead of average when data across more than one node is aggregated")
+
+command = "CastaliaResults " + " ".join(sys.argv[1:])
+print command + "\r" + " "*len(command),
+(options,args) = parser.parse_args()
+
+if options.confidence and options.confidence not in z_values:
+	quit("CastaliaResults: ERROR supported values of confidence level are " + str(sorted(z_values.keys())))
+
+# reworked from http://code.activestate.com/recipes/135435-sort-a-string-using-numeric-order/
+# to take into account negative and floating point numbers too ;)
+def sorted_copy(alist):
+	indices = map(_generate_index, alist)
+	decorated = zip(indices, alist)
+	decorated.sort()
+	return [ item for index, item in decorated ]
+
+def _generate_index(str):
+	# Splits a string into alpha and numeric elements, which
+	# is used as an index for sorting
+	index = []
+	
+	def _append(fragment, alist=index):
+		if fragment and fragment[0].isdigit(): 
+			fragment = float(fragment)
+			if len(alist) > 0 and alist[-1][-1] == "-": 
+				fragment = -fragment
+				alist[-1] = alist[-1][:-1]
+		alist.append(fragment)
+	
+	# initialize loop
+	if len(str) > 0: prev_isdigit = str[0].isdigit()
+	current_fragment = ''
+	# group a string into digit and non-digit parts
+	for char in str:
+		curr_isdigit = char.isdigit() or char == '.' and prev_isdigit and '.' not in current_fragment
+		if curr_isdigit == prev_isdigit:
+			current_fragment += char
+		else:
+			_append(current_fragment)
+			current_fragment = char
+			prev_isdigit = curr_isdigit
+	_append(current_fragment)
+	return tuple(index)
+# end of reworked code from http://code.activestate.com
+
+# simple function to determine if a number has floating point component
+def is_int(num):
+	if type(num) != float: return False
+	return int(num) == num
+
+# table class, allows to populate table with information (i.e. cells)
+# in any arbitrary order, allows to have empty cells
+class Table():
+	# table constructor, parameters:
+	# output - output type, 1 or 2
+	# replace - symbol to use in empty cells, can be empty string
+	# filter - regular expression to perform row filtering 
+	#		(note that column filtering is done elsewhere)
+	def __init__(self,output,replace,filter = None):
+		self.width = 0	# this variable denotes the width of row label column (i.e. first column)
+		self.cols = {}	# this dictionary keeps the widths of each subsequent column
+		self.rows = {}	# this is dictionary of dictionaries of actual table values
+		self.replace = replace
+		self.filter = filter
+		self.output = output
+	
+	# add a cell to the table, parameters:
+	# row - row label, can be any string. Row labels are unique
+	#		i.e. table can not have two rows with the same label
+	# col - column label, same restrictions apply as for row
+	# value - string value to be inserted
+	def addCell(self,row,col,value):
+		row = str(row)
+		col = str(col)
+		value = str(value)
+		if self.width < len(row): self.width = len(row)
+		if col not in self.cols: self.cols[col] = len(col)
+		if self.cols[col] < len(value): self.cols[col] = len(value)
+		if row not in self.rows: self.rows[row] = {}
+		self.rows[row][col] = value
+	
+	# prints the table, parameters:
+	# no_header - if true, first column (i.e. row headers)
+	#			will not be printed
+	# orderIn - a (partial) list of column names, 
+	#			specifying the order in which they are printed
+	def printTable(self,no_header = 0,orderIn = []):
+		# row filter may force us to skip some rows
+		regexp = None
+		if (self.filter): regexp = re.compile(self.filter, re.I)
+		
+		# initialise order of columns
+		order = []
+		
+		# first, copy all column names from prefidened orderIn
+		for col in orderIn: order.append(col)
+	
+		# next, append all missing columns in alphabetical order
+		for col in sorted_copy(self.cols.keys()):
+			if col not in order: order.append(col)
+		
+		# visual output
+		if self.output == 1:
+			line = ""		# this is separating line, printed on top, bottom and 
+							# once to separate headers and table data
+			header = ""		# this string holds table headers, formatted
+							# according to column widths
+			
+			# initialise 'header' and 'line' variables
+			if no_header == 0 and self.width != 0:
+				header += "|" + " "*(self.width + 2)
+				line += "+" + "-"*(self.width + 2)
+			for col in order:
+				if col in orderIn: header += "| " + col.rjust(self.cols[col]) + " "
+				else: header += "| " + col.ljust(self.cols[col]) + " "
+				line += "+" + "-"*(self.cols[col]+2)
+			header += "|"
+			line += "+"
+			
+			# loop through all rows of the table
+			first_row = 1
+			for row in sorted_copy(self.rows.keys()):
+				# check if we have row filter. If yes, it has to match for row to be displayed
+				if regexp == None or regexp.search(row):
+					
+					# if this is first row, print table header
+					if first_row:
+						print line
+						print header
+						print line
+						first_row = 0
+					
+					# print row header, if needed
+					if no_header == 0 and self.width != 0:
+						print "|", row.ljust(self.width),
+					
+					# print all cells of this row by looping through columns
+					for col in order:
+						if col in self.rows[row]: cell = self.rows[row][col]
+						else: cell = str(self.replace)
+						if col in orderIn: print "|", cell.rjust(self.cols[col]),
+						else: print "|", cell.ljust(self.cols[col]),
+					print "|"
+		
+			# print the final horisontal line
+			if first_row: print "[Table is empty]"
+			else: print line
+		
+		# compact output
+		elif self.output == 2:
+			first_row = 1
+			# loop through all rows of the table
+			for row in sorted_copy(self.rows.keys()):
+				# check if we have row filter. If yes, it has to match for row to be displayed
+				if regexp == None or regexp.search(row):
+					
+					# if this is first row, print table header
+					if first_row: 
+						if no_header == 0: print " |",
+						print " | ".join(order)
+						first_row = 0
+					
+					# print row header, if needed
+					if no_header == 0: print row,
+					
+					# print all cells of this row by looping through columns
+					for col in order:
+						if col in self.rows[row]: print "|", self.rows[row][col],
+						else: print "|", str(self.replace),
+					print ""
+		else:
+			quit("CastaliaResults: ERROR Unknown output type " + self.output)
+	
+	# normalises table data as a breakdown, i.e. 
+	# make sure that sum of each row = 1. Parameters:
+	# sum - optional dictionary that contains 
+	#		precomputed sums of each row, used for 
+	#		confidence and variable interval tables
+	def normalize(self,sum=None):
+		# if sum is not given, compute it
+		if not sum:
+			sum = {}
+			for row in self.rows:
+				for col in self.cols:
+					if col in self.rows[row]:
+						if row in sum: sum[row] += float(self.rows[row][col])
+						else: sum[row] = float(self.rows[row][col])
+					self.cols[col] = len(col)
+		
+		# divide each cell by the sum of the whole row
+		for row in self.rows:
+			if sum[row] == 0: continue
+			for col in self.cols:
+				if col in self.rows[row]:
+					if (":" in self.rows[row][col]):	# special case for variable intervals table
+						values = self.rows[row][col].split(":")
+						for i in range(len(values)):
+							values[i] = str(round(float(values[i])/sum[row],options.precision))
+						value = ":".join(values)
+					else:
+						value = str(round(float(self.rows[row][col])/sum[row],options.precision))
+					self.rows[row][col] = value
+					if len(value) > self.cols[col]: self.cols[col] = len(value)
+		
+		# return sum array for future use
+		return sum
+
+# a class to store information from a single simple output
+class Output():
+	def __init__(self, name,n,i):
+		self.name = name
+		self.data = {}						# root dictionary of this output, indexed by labels
+		self.min_i = self.max_i = int(i)	# index dimension of the output, i.e. number of different indexes
+		self.min_n = self.max_n = int(n)	# node dimension of the output
+		
+		# three dictionaries to assist with computing the total number of distinct entries in this output
+		self.nxi = {}			# two-level dictionary, indexed by bl (big label) and n:i:l (node-index-label)
+								# to store total number of outputs ever seen
+		self.nxi_max = {}		# maximum number of unique node-index combinations, indexed by bl (big label)
+
+	# Add an entry to the output. Parameters:
+	#	n - node number
+	#	i - index number
+	#	bl - big (i.e. full) label for this entry (e.g. configuration 'MyConfig,rate=5')
+	#	l - short label for this entry (e.g. breakdown label 'Overflown packets')
+	#	v - actual value to be added
+	#	r - repeat number for this value, can be -1
+	def add(self,n,i,bl,l,v,r):
+		# update node and index dimensions
+		i = int(i)
+		n = int(n)
+		if self.min_i > i:
+			self.min_i = i
+		elif self.max_i < i:
+			self.max_i = i
+		if self.min_n > n:
+			self.min_n = n
+		elif self.max_n < n:
+			self.max_n = n
+		self.i = self.max_i - self.min_i + 1
+		self.n = self.max_n - self.min_n + 1
+		
+		# find data dictionary by short label (top level)
+		if l not in self.data:
+			self.data[l] = {}
+		data = self.data[l]
+		
+		# find data dictionary by big label (2nd level)
+		if bl not in data:
+			data[bl] = {}
+		data = data[bl]
+		
+		# create dictionary keys for the new entry
+		key = str(n) + ":" + str(i) # node-index key
+		key2 = key + ":" + l		# node-index-label key
+
+		# update nxi dictionaries
+		if bl not in self.nxi:
+			self.nxi[bl] = {}
+		if key2 not in self.nxi[bl]:
+			self.nxi[bl][key2] = 0
+		self.nxi[bl][key2] += 1
+		if bl not in self.nxi_max or self.nxi[bl][key2] > self.nxi_max[bl]:
+			self.nxi_max[bl] = self.nxi[bl][key2]
+		
+		# fially, append the value to the data dictionary 
+		# "node:index" is 3rd level, array of values is last level
+		if key not in data:
+			data[key] = []
+		r = int(r)
+		if (r > -1):
+			while len(data[key]) <= r:
+				data[key].append(0)
+			if (data[key][r] != 0 and data[key][r] != v):
+				quit("CastaliaResults: ERROR Duplicate labels in input files")
+			data[key][r] = v
+		else: data[key].append(v)
+	
+	def pernode_total(self,bl):
+		return self.nxi_max[bl]
+	
+	def total(self,bl):
+		if options.sum:
+			return self.nxi_max[bl]
+		return self.nxi_max[bl]*len(self.nxi[bl].keys())
+			
+	def aggregate_total(self,bl,l=None):
+		if options.sum: return 1
+		if l:
+			count = 0
+			for label in self.nxi[bl].keys():
+				if l == label.split(":")[2]:
+					count += 1 
+			return count
+		else:
+			return len(self.nxi[bl].keys())
+		
+modules = {}
+labels = {}
+
+# this function will look for a module with a given name 'm' in dictionary 'modules'
+# if module is not present, a new entry will be added. Next an output 'o' is 
+# located in the module (again, new entry is created if not found)
+# finally, add() function is called to add a new entry. Parameters:
+#	m - module name
+#	n - node number
+#	i - index number
+#	o - output name
+#	bl - big (i.e. full) label for this entry (i.e. configuration)
+#	l - short label for this entry (i.e. breakdown label)
+#	v - actual value to be added
+def saveOutput(m,n,i,o,bl,l,v,r):
+	if m not in modules: modules[m] = {}
+	m = modules[m]
+	if o not in m: m[o] = Output(o,n,i)
+	m[o].add(n,i,bl,l,v,r)
+
+# find mean and confidence interval of a list of values. Parameters:
+#	list - list of values to perform calculation on
+# 	amt - number of items in the list, may not always be len(list)
+def mean_ci(list,amt=None):
+	#calculate mean
+	mean = 0
+	for n in list: mean += float(n)
+	if (amt == None): amt = len(list)
+	mean = mean/amt
+	
+	#check if need to calculate confidence interval
+	if not options.confidence or amt < 2: 
+		if is_int(mean):
+			return int(mean), None
+		else:
+			return round(mean,options.precision), None
+
+	#calculate confidence interval
+	mean_sq = 0
+	for n in list: 
+		diff = mean-float(n)
+		mean_sq += diff*diff
+	std = math.sqrt(mean_sq/amt)/math.sqrt(amt - 1)
+	ci = z_values[options.confidence]*std/math.sqrt(amt)
+	
+	# if mean is integer, we return it as integer to avoid entries like 1.000 in the table
+	# otherwise use round function to obtain required precision (to make sure that table
+	# entries are of the same length)
+	if is_int(mean):
+		return int(mean), round(ci,options.precision)
+	else:
+		return round(mean,options.precision), round(ci,options.precision)
+
+# find smallest range covering [options.varint]% of samples
+def varint(list):
+	# Calculate the required number of items to be included in the list
+	amt = int(math.ceil(len(list)*options.varint/100.0))-1
+	# convert items in the list to floats and sort it
+	for i in range(len(list)):
+		list[i] = float(list[i])
+	list = sorted(list)
+	
+	min_i = 0						# starting index of the shortest interval found so far
+	min_int = list[amt] - list[0]	# length of the shortest interval found so far
+	current = 1						# starting index of the interval being checked
+
+	# loop through all possible intervals to find one with shortest length
+	while current+amt < len(list):
+		new_int = list[amt+current] - list[current]
+		if new_int < min_int:
+			min_int = new_int
+			min_i = current
+		current += 1
+		
+	# return found interval as a string in the format MIN:MAX
+	if is_int(list[min_i]) and is_int(list[min_i+amt]):
+		return str(int(list[min_i]))+":"+str(int(list[min_i+amt]))
+	else:
+		return str(round(list[min_i],options.precision))+":"+str(round(list[min_i+amt],options.precision))
+	
+# this function will print a list of all modules that were added to the 'modules' 
+# dictionary. For each module a list of outputs is displayed, and for each output - it's dimensions
+def printModules():
+	table = Table(1,"")		# first argument(1) will enforce visual format output
+							# second argument("") will replace missing cells with empty string
+	
+	row = 0					# count rows, using this index as row header
+	for mname in sorted(modules.keys()):	# loop through all module names
+		m = modules[mname]
+		first = 1
+		for oname in sorted(m.keys()):		# loop through all outputs of each module
+			row += 1
+			if (first):						# for first output of each module add module's name to the table
+				table.addCell(row,"Module",mname)
+				first = 0
+			o = m[oname]
+			table.addCell(row,"Output",oname)		# add output name to the table
+			d = str(o.n) + "x" + str(o.i)			# obtain node-index dimensions
+			if len(o.data.keys()) > 1:				# obtain breakdown dimensions
+				d += "(" + str(len(o.data.keys())) + ")"
+			table.addCell(row,"Dimensions",d)		# add dimensions to the table
+			
+	table.printTable(1,["Module","Output"])			# note that second argument enforces column order 
+	print "NOTE: select from the available outputs using the -s option\n"
+
+# short function to check if a label matches a given pattern
+def matchLabel(label,pattern):
+	if "=" in label:
+		return pattern in label
+	else:
+		return pattern == 'configs'
+
+# this function will take a comma separated string of labels and produce row and 
+# column headers out of it. Parameters:
+#	label - string of comma-separated labels
+#	order - string of comma-separated ordered labels, usually comes from --order flag
+def createHeaders(label,order):
+	labels = label.split(",")
+	
+	# if order is not given, last label from the list will become column header
+	if order == None:
+		col = labels[-1]
+		del labels[-1]
+		row = ",".join(labels)
+		return (col,row)
+	
+	# otherwise search through the labels to find column header
+	# This will be first element of order array i.e. order[0]
+	order = order.split(",")
+	col_labels = []
+	for label in labels:
+		if matchLabel(label,order[0]):
+			col_labels.append(label)
+	
+	if len(col_labels) > 0:
+		# join all matched labels to make column header
+		col = ",".join(col_labels)
+	else:
+		# if nothing matched then take the last label to be column header
+		col = labels[-1]
+	
+	# proceed to create row header
+	row_labels = []
+	# first add any labels from the ordered list
+	for label_order in order:
+		for label in labels:
+			if matchLabel(label,label_order) and label not in col:
+				row_labels.append(label)
+	# then add any remaining labels	
+	for label in labels:
+		if label not in row_labels and label not in col:
+			row_labels.append(label)
+			
+	row = ",".join(row_labels)
+	return (col,row)
+	
+# this function will analyze the output, aggregate it and print it 
+# as a table depending on its contents and the options of the script 
+# Parameters:
+# 	name - name of the output to be printed
+#	o - output object to be printed
+def printOutput(name,o):
+
+	# create table objects, options.output indicates display format
+	# and options.row_filter will be applied to all table rows
+	table = Table(options.output,0,options.row_filter)
+	if options.confidence: table_ci = Table(options.output,0,options.row_filter)
+	else: table_ci = None
+	if options.all: table_all = Table(options.output,"-",options.row_filter)
+	else: table_all = None
+	if options.varint: table_varint = Table(options.output,"0:0",options.row_filter)
+	else: table_varint = None
+	
+	# 'no_header' variable indicates if row headers will be printed
+	no_header = 1
+	
+	# helper function to load values into all table objects 
+	# (table_ci, table_all and table_varint are optional)
+	def load(row,col,values,total):
+		mean,ci = mean_ci(values,total)
+		table.addCell(row,col,mean)
+		if table_ci and ci: 
+			table_ci.addCell(row,col,ci)
+		if table_all:
+			row_all = row
+			if not row_all: row_all = "seed"
+			for i in range(len(values)):
+				if is_int(float(values[i])): 
+					table_all.addCell(row_all+" "+str(i),col,int(values[i]))
+				else: 
+					table_all.addCell(row_all+" "+str(i),col,round(float(values[i]),options.precision))
+		if table_varint:
+			table_varint.addCell(row,col,varint(values))
+	
+	# print_i and print_n variables indicate if index and node information
+	# is worth displaying (i.e. theres more than one index and more than one node)
+	print_i = 1
+	print_n = 1
+	if o.min_i == o.max_i: print_i = 0
+	if o.min_n == o.max_n: print_n = 0
+	
+	# helper function to shorten the label by removing common parts
+	def short(label):
+		if options.long: return label
+		list = label.split(",")
+		result = []
+		i = 0
+		for l in list: 
+			if len(labels[i]) > 1: result.append(l.strip(" "))
+			i += 1
+		return ",".join(result)
+	
+	# apply column filter if present
+	if options.col_filter and len(o.data.keys()):
+		regexp = re.compile(options.col_filter, re.I)
+		columns = []
+		for col in o.data.keys():
+			if regexp.search(col): columns.append(col)
+	else:
+		columns = o.data.keys()
+		
+	# start actual printing by printing the name
+	if len(columns) == 0:
+		print "\n", name, "\n[Table is empty]\n"
+		return
+	elif len(columns) == 1 and len(columns[0]): print "\n", name, "-", columns[0]
+	else: print "\n", name	
+	
+	# first breaking point of the function is to check the number of labels in the
+	# output. If multiple labels present then they will be used as column headers
+	if len(columns) > 1:
+		# loop through available labels in this output
+		for col in sorted_copy(columns):
+			# extract the data for a particular label
+			data = o.data[col]
+			# if data has more than one entry, we will need row headers
+			if len(data.keys()) > 1: no_header = 0
+			
+			# if table needs to be displayed on a per node basis,
+			# we will use a separate row for each node
+			if (options.pernode):
+				# check each entry for that label, in alphabetical order
+				for label in data:
+					# if we have sufficient node or index data, we are also 
+					# bound to display them as headers 'no_header' may 
+					# already be 0 at this point
+					if print_i or print_n: no_header = 0
+					
+					# go though each combination of node:index, 
+					# avaliable for this output
+					for n in range(o.min_n,o.max_n+1):
+						for i in range(o.min_i,o.max_i+1):
+							key = str(n)+":"+str(i)
+							if key in data[label]:
+								# create a header for this row
+								row = short(label)
+								if print_n: 
+									if len(row): row += ",node="+str(n)
+									else: row = "node="+str(n)
+								if print_i: 
+									if len(row): row += ",index="+str(i)
+									else: row = "index="+str(i)
+								if options.order: row = ",".join(createHeaders(row,options.order))
+								
+								load(row,col,data[label][key],o.pernode_total(label))
+			
+			# we will group all nodes together to become a single row
+			else:
+				#check each entry for the label, in alphabetical order
+				for label in data:
+					# here all_values list will hold all values that will become a signle cell
+					all_values = []
+					final_values = []
+					max_values = 0
+					# aggregate data across all nodes and indexes
+					for n in range(o.min_n,o.max_n+1):
+						for i in range(o.min_i,o.max_i+1):
+							key = str(n)+":"+str(i)
+							#if key in data[label]: all_values.extend(data[label][key])
+							if key in data[label]:
+								all_values.append(data[label][key])
+								if max_values < len(data[label][key]):
+									max_values = len(data[label][key])
+
+					# compute average across all nodes per seed
+					for i in range(0,max_values):
+						this_value = 0;
+						for tmp_values in all_values:
+							if i < len(tmp_values):
+								this_value = this_value + float(tmp_values[i]);
+						final_values.append(this_value/o.aggregate_total(label,col))
+
+					# if atleast one entry exists, load it into the final table
+					if len(final_values) > 0:
+						row = short(label)
+						if options.order: row = ",".join(createHeaders(row,options.order))
+						#load(row,col,all_values,o.total(label))
+						load(row,col,final_values,len(final_values))
+
+						
+		# convert absolute values to percentage (if -p option is set)
+		if options.percentage:
+			sum = table.normalize()
+			if table_ci: table_ci.normalize(sum)
+			if table_all: table_all.normalize()
+			if table_varint: table_varint.normalize(sum)
+			
+	else:
+		# this happens when there is only one label in the output,
+		# That is single output value, for example energy spent.
+		data = o.data[columns[0]]
+		no_header = 0
+		
+		# per node option is present, will not aggregate the data here
+		if options.pernode:
+			# Determine which dimension (node or index) has more values to become primary
+			# By default, node dimension is primary, but if index has more values
+			# index will become primary. Primary dimension will become columns
+			# of the table
+			primary_i = "node"
+			if (o.max_i - o.min_i > o.max_n - o.min_n): primary_i = "index"
+			
+			# go through each tuple (label,node,index) in the output
+			for label in data:
+				for n in range(o.min_n,o.max_n+1):
+					for i in range(o.min_i,o.max_i+1):
+						# key is used to retrieve data from the output
+						key = str(n)+":"+str(i)
+						if key not in data[label]: continue
+						row = short(label)
+						if print_n: 
+							if len(row): row += ",node="+str(n)
+							else: row = "node="+str(n)
+						if print_i: 
+							if len(row): row += ",index="+str(i)
+							else: row = "index="+str(i)
+						# determine row and column headers depending on which dimension is primary
+						(col,row) = createHeaders(row,options.order or primary_i)
+						load(row,col,data[label][key],o.pernode_total(label))
+		
+		# no per node option is set, will aggregate all information to a single cell
+		else:
+			# go through each label in the output
+			for label in data:
+				(col,row) = createHeaders(short(label),options.order)				
+								
+				# aggregate node and index information
+				all_values = []
+				final_values = []
+				max_values = 0
+				for n in range(o.min_n,o.max_n+1):
+					for i in range(o.min_i,o.max_i+1):
+						key = str(n)+":"+str(i)
+						#if key in data[label]: all_values.extend(data[label][key])
+						if key in data[label]:
+							all_values.append(data[label][key])
+							if max_values < len(data[label][key]):
+								max_values = len(data[label][key])
+
+				# compute average (or sum) across all nodes per seed
+				for i in range(0,max_values):
+					this_value = 0;
+					for tmp_values in all_values:
+						if i < len(tmp_values):
+							this_value = this_value + float(tmp_values[i]);
+					final_values.append(this_value/o.aggregate_total(label))
+		
+				# if atleast one entry exists, load it into the final table
+				if len(final_values) > 0: load(row,col,final_values,len(final_values))
+	
+	table.printTable(no_header)
+	
+	# print additional tables if any
+	if options.confidence and len(table_ci.rows.keys()) > 0:
+		print name + " - confidence intervals"
+		table_ci.printTable(no_header)
+	if options.varint and len(table_varint.rows.keys()) > 0:
+		print name + " - variability intervals"
+		table_varint.printTable(no_header)
+	if options.all and len(table_all.rows.keys()) > 0:
+		print name + " - all values"
+		table_all.printTable(no_header)
+	print ""
+
+# calls printOutput function on outputs that match
+# specified RE pattern
+def printOutputs(pattern):
+	regexp = re.compile(pattern, re.I)
+	for mname in sorted(modules.keys()):
+		m = modules[mname]
+		for oname in sorted(m.keys()):
+			if (regexp.search(oname)):
+				printOutput(mname+":"+oname,m[oname])
+
+# read data from inputfile
+def readFile(file):
+	if not os.path.exists(file) or not os.path.isfile(file):
+		quit("CastaliaResults: ERROR no such file " + file)
+	f = open(file,"r")
+	lines = f.readlines()
+	f.close()
+
+	# prepare regex for file parsing
+	r_castalia = re.compile("^Castalia\|\s+(.+)$")
+	r_output = re.compile("^([-+]?[0-9]*\.?[0-9]+([eE][-+]?[0-9]+)?)\s*(.*)$")
+	r_histogram = re.compile("^histogram name:(.+)$")
+	r_histogram_params = re.compile("histogram_min:([-+]?[0-9]*\.?[0-9]+) histogram_max:([-+]?[0-9]*\.?[0-9]+)$")
+	r_histogram_values = re.compile("histogram_values\s(.+)$")
+	r_simple = re.compile("^simple output name:(.+)$")
+	r_simple_index = re.compile("^index:(\d+) simple output name:(.+)$")
+	r_module = re.compile("^module:SN\.(.+)$")
+	r_node = re.compile("^node\[(\d+)\]\.(.+)$")
+	r_label = re.compile("^label:(.+)$")
+	r_repeat_label = re.compile("^repeat:(\d+) label:(.+)$")
+	r_what = re.compile("what:(.+)$")
+	r_when = re.compile("when:(.+)$")
+	
+	# parse the input
+	bl = module = "Unknown"
+	repeat = n = i = -1
+	level = 0
+	# input levels:
+	# 0 - none, expect 'label'
+	# 1 - label, expect 'module'
+	# 2 - module, expect 'output', 'output+index', 'histogram'
+	# 3 - output, expect data
+	# 4 - histogram, expect min, values
+	for line in lines:
+		# check the 'Castalia|' prefix
+		m = r_castalia.match(line)
+		if (m): line = m.group(1)
+		else: continue
+
+		if level == 3:
+			# check for output data
+			m = r_output.match(line)
+			if (m):
+				saveOutput(module,n,i,o,bl,m.group(3),m.group(1),repeat)
+				continue
+			else:
+				level = 2
+				
+				
+		if level == 4: 
+			# check for histogram parameters
+			m = r_histogram_params.match(line)
+			if (m):
+				histogram_min = float(m.group(1))
+				histogram_max = float(m.group(2))
+				continue
+	
+			# check for histogram values, calculate histogram properties and save values
+			m = r_histogram_values.match(line)
+			if (m):
+				vals = m.group(1).split(" ")
+				size = len(vals) - 1
+				step = float(histogram_max - histogram_min)/size
+				curr = histogram_min
+				if is_int(step): step = int(step)
+				if is_int(curr): curr = int(curr)
+				for val in vals:
+					next = curr+step
+					if is_int(next): next = int(next)
+					if next > histogram_max: next = "inf"
+					saveOutput(module,n,i,o,bl,"["+str(curr)+","+str(next)+")",val,repeat)
+					curr += step
+				level = 2
+				continue
+		
+		if level == 2:
+			# check for simple output declaration
+			m = r_simple.match(line)
+			if (m):
+				i = -1
+				o = m.group(1)
+				level = 3
+				continue
+
+			# check for simple output declaration with an index
+			m = r_simple_index.match(line)
+			if (m):
+				i = m.group(1)
+				o = m.group(2)
+				level = 3
+				continue
+
+			# check for histogram declaration
+			m = r_histogram.match(line)
+			if (m):
+				o = m.group(1)
+				level = 4
+				continue
+			
+			level = 1
+	
+		if level == 1:
+			# check for module declaration
+			m = r_module.match(line)
+			if (m):
+				line = m.group(1)
+				i = -1
+				# within module declaration look for node information
+				m = r_node.match(line)
+				if (m):
+					n = m.group(1)
+					module = m.group(2)
+				else:
+					module = line
+					n = -1
+				level = 2
+				continue
+
+			level = 0	
+
+		if level == 0:
+
+			# check for repeated label declaration
+			m = r_repeat_label.match(line)
+			if (m):
+				repeat = m.group(1)
+				bl = m.group(2)	
+				if not options.long:
+					list = bl.split(",")
+					i = 0
+					for l in list:
+						if i not in labels: labels[i] = []
+						if l not in labels[i]: labels[i].append(l)
+						i += 1
+				level = 1
+				continue
+						
+			# check for label declaration
+			m = r_label.match(line)
+			if (m):
+				repeat = -1
+				bl = m.group(1)
+				if not options.long:
+					list = bl.split(",")
+					i = 0
+					for l in list:
+						if i not in labels: labels[i] = []
+						if l not in labels[i]: labels[i].append(l)
+						i += 1
+				level = 1
+				continue
+	
+		if r_what.match(line) or r_when.match(line): continue
+		print "CastaliaResults: WARNING Unknown input at level " + str(level) + ": " + line
+
+# find and print list of input files
+def findFiles():
+	table = Table(1,"")
+	row = 1
+	for file in os.listdir('./'):
+		if os.path.isfile(file):
+			f = open(file,"r")
+			line1 = f.readline()
+			line2 = f.readline()
+			f.close()
+			what = "unknown"
+			when = "unknown"
+			m = re.match(r"^Castalia\|\s+what:(.+)$",line1)
+			if (m): what = m.group(1)
+			m = re.match(r"^Castalia\|\s+when:(.+)$",line2)
+			if (m): when = m.group(1)
+			m = re.match(r"^Castalia\|",line1)
+			if (m): 
+				table.addCell(file,"Configuration",what)
+				table.addCell(file,"Date",when)
+				row += 1
+	if row > 1:
+		print "Castalia output files in current directory:"
+		table.printTable()
+		print "NOTE: select from the available files by running CastaliaResults FILE [FILE]\n"
+	else: print "CastaliaResults: No castalia output files found in current directory\n"
+
+# -------------
+# This is the main() code of the script
+# -------------
+print ""
+# if input is specified, read and display it, otherwise search for files
+if len(args) or options.input:
+	for file in args: readFile(file)
+	if options.input:
+		files = options.input.split(",")
+		for file in files: readFile(file)
+	# if filter is specified, print outputs
+	# otherwise print the list of modules and their outputs to choose from
+	if len(modules.keys()) == 0: quit("CastaliaResults: ERROR nothing to display")
+	if (options.filter): printOutputs(options.filter)
+	else: printModules()
+else:
+	findFiles()

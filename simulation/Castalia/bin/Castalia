@@ -1,0 +1,385 @@
+#!/usr/bin/python
+# ****************************************************************************
+# *  Copyright: National ICT Australia,  2009 - 2010                         *
+# *  Developed at the ATP lab, Networked Systems research theme              *
+# *  Author(s): Yuriy Tselishchev                                            *
+# *  This file is distributed under the terms in the attached LICENSE file.  *
+# *  If you do not find this file, copies can be found by writing to:        *
+# *                                                                          *
+# *      NICTA, Locked Bag 9013, Alexandria, NSW 1435, Australia             *
+# *      Attention:  License Inquiry.                                        *
+# *                                                                          *
+# ***************************************************************************/
+
+import os, sys, commands, getopt, re, subprocess
+from datetime import date, time, datetime, timedelta
+from optparse import OptionParser
+
+#initialise important paths
+pathToBin = sys.path[0]
+pathToCastalia = os.path.abspath(pathToBin + "/../")
+pathToCastaliaBin = pathToCastalia + "/CastaliaBin";
+pathToExtract = pathToBin + "/extractOmnetppINI"
+
+if len(sys.argv) == 1:
+	has_header = 0
+	for file in os.listdir('./'):
+		if not os.path.isfile(file): continue
+		if not re.search(r"\.ini$",file): continue
+		lines = commands.getoutput(pathToExtract + " " + file).split("\n")
+		if len(lines) < 2: continue
+		has_general = 0;
+		list = []
+		for line in lines:
+			m = re.match(r"\[General\]", line)
+			if m: 
+				if not has_general: list.append("General")
+				has_general = 1
+				continue
+			m = re.match(r"^\[Config (\S+)\]",line)
+			if m: list.append(m.group(1))
+		if has_general:
+			if not has_header:
+				has_header = 1
+				print "\nList of available input files and configurations:"
+			print "\n* "+file
+			print "\t"+"\n\t".join(list)
+	if not has_header:
+		print "\nNo castalia input files found in this directory\n"
+	else: print ""
+	quit()
+	
+parser = OptionParser(usage="usage: %prog [options]")
+parser.add_option("-c","--config", dest="config", type="string", default="General", help="A list of configuration names to use, comma separated configurations will be joined together, configurations listed in brackets will be interleaved")
+parser.add_option("-i","--input", dest="input", type="string", default="omnetpp.ini", metavar="FILE", help="Select input configuration file, default is omnetpp.ini")
+parser.add_option("-d","--debug", dest="debug", default=False, action="store_true", help="Debug mode, will display results from each CastaliaBin execution")
+parser.add_option("-o","--output", dest="output", type="string", metavar="FILE", help="Select output file for writing results, generated from current date by default") 
+parser.add_option("-r","--repeat", dest="repeat", type="int", metavar="N", default=1, help="Number of repetitions for each unique scenario")
+(options,args) = parser.parse_args()
+
+if len(args):
+	quit("\nERROR: unexpected argument\n"+args[0])
+
+customConfigList = []
+
+def makeConfig(c,dictionary):
+	name,value = c.split('=',1)
+	if name not in dictionary:
+		quit("\nERROR: no such configuration, '" + name + "'\nAvailable configurations: " + ", ".join(dictionary.keys()))
+	c = dictionary[name]
+	if len(c.keys()) > 1:
+		quit("\nERROR: configuration '" + name + "' has more than one parameter and cannot be used with '=' syntax")
+	return { c.keys()[0]:customConfigList[int(value)] }
+	
+def generateConfig(dictionary,base,interleaved = []):
+	result = {}
+	for c in interleaved:
+		if c in dictionary:
+			config = dictionary[c]
+		elif '=' in c:
+			config = makeConfig(c,dictionary)
+		else:
+			quit("\nERROR: no such configuration, '" + c + "'\nAvailable configurations: " + ", ".join(dictionary.keys()) + "\n")
+		for k in config.keys():
+			if result.has_key(k) and result[k] != config[k]:
+				quit("\nERROR: conflicting values for parameter '" + k + "' in interleaved congigurations: '"+ result[k] +"' and '"+ config[k] +"'\n")
+			result[k] = config[k]
+	
+	result2 = {}
+	for c in base:
+		if (c in dictionary):
+			config = dictionary[c]
+		elif '=' in c:
+			config = makeConfig(c,dictionary)
+		else:
+			quit("\nERROR: no such configuration, '" + c + "'\nAvailable configurations: " + ", ".join(dictionary.keys()) + "\n")
+		for k in config.keys():
+			if result2.has_key(k) and result2[k] != config[k]:
+				quit("\nERROR: conflicting values for parameter '" + k + "' in base congigurations: '"+ result2[k] +"' and '"+ config[k] +"'\n")
+			result2[k] = config[k]
+	
+	for k in result2.keys():
+		if k not in result: result[k] = result2[k]
+
+	if ("General" not in dictionary):
+		quit("ERROR: no [General] section found")
+	config = dictionary["General"]
+	for k in config.keys():
+		if (k not in result):
+			result[k] = config[k]
+	return result
+
+def detectCPUs():
+	# Linux, Unix and MacOS:
+	if hasattr(os, "sysconf"):
+		if os.sysconf_names.has_key("SC_NPROCESSORS_ONLN"):
+			# Linux & Unix:
+			ncpus = os.sysconf("SC_NPROCESSORS_ONLN")
+			if isinstance(ncpus, int) and ncpus > 0:
+				return ncpus
+		else: # OSX:
+			return int(os.popen2("sysctl -n hw.ncpu")[1].read())
+	# Windows:
+	if os.environ.has_key("NUMBER_OF_PROCESSORS"):
+		ncpus = int(os.environ["NUMBER_OF_PROCESSORS"]);
+		if ncpus > 0:
+			return ncpus
+	return 1 # Default
+
+ini = commands.getoutput(pathToExtract + " " + options.input).split("\n")
+if len(ini) < 2: quit("\nERROR: Unable to read configuration")
+if not os.path.exists(pathToCastaliaBin) or not os.path.isfile(pathToCastaliaBin):
+	quit("\nERROR: CastaliaBin not found (need to run make?)")
+
+section = ""
+configDictionary = {}
+configIterations = {}
+
+for line in ini:
+	if (line == "[General]"):
+		section = "General"
+		continue
+
+	m = re.match(r"^\[Config (\S+)\]$",line)
+	if (m):
+		section = m.group(1)
+		continue
+
+	k = re.split("\s=\s",line,1)
+	if (len(k) != 2):
+		quit("\nERROR: Unexpected line in configuration file:\n" + line)
+		
+	currentConfig = {}
+	if (configDictionary.has_key(section)):
+		currentConfig = configDictionary[section]
+	currentConfig[k[0]] = k[1]
+	configDictionary[section] = currentConfig
+	if re.match(r"\$\{",k[1]):
+		if section not in configIterations:
+			configIterations[section] = len(k[1].split(","))
+
+baseConfigList = []
+interleavedConfigList = []
+config = options.config
+
+if config[0] == ',' or config[-1] == ',':
+	quit("\nERROR: Configuration parameter cannot start or end with a comma\n\t" + config)
+
+tmpconfig = config
+config = ""
+
+while (tmpconfig != ""):
+
+	# try to match a custom config of the form 'setParam="text"'
+	m = re.match(r"^([^=]*=)(\"[^\"]*\")(.*)$",tmpconfig) 
+	if (m):
+		config += m.group(1)
+		config += str(len(customConfigList))
+		customConfigList.append(m.group(2))
+		tmpconfig = m.group(3)
+		continue
+	
+	# try to match a custom config of the form 'setParam=${name=val1,val2,val3}'
+	m = re.match(r"^([^=]*=)(\$\{[^=\}]+=[^\}]+\})(.*)$",tmpconfig) 
+	if (m):
+		config += m.group(1)
+		config += str(len(customConfigList))
+		customConfigList.append(m.group(2))
+		tmpconfig = m.group(3)
+		continue
+
+	# try to match a custom config of the form 'setParam=${val1,val2,val3}'
+	m = re.match(r"^([^=]+=)\$\{([^=\}]+)\}(.*)$",tmpconfig) 
+	if (m):
+		config += m.group(1)
+		config += str(len(customConfigList))
+		# transform ${val1,val2,val3} into ${name=val1,val2,val3}
+		customConfigList.append("${" + m.group(1).strip(',') + m.group(2) + "}")
+		tmpconfig = m.group(3)
+		continue
+	
+	# try to match a custom config of the form 'setParam=val'
+	m = re.match(r"^([^=]*=)([^,\[]*)(.*)$",tmpconfig)
+	if (m):
+		config += m.group(1)
+		config += str(len(customConfigList))
+		customConfigList.append(m.group(2))
+		tmpconfig = m.group(3)
+		continue
+	
+	m = re.match(r"^([^=]*)$",tmpconfig)
+	if (m):
+		config += m.group(1)
+		tmpconfig = ""
+	else:
+		quit("\nERROR: Unexpected configuration syntax:\n" + tmpconfig)
+
+while (config != ""):
+	m = re.match(r"^([^\[]*[^,\[]),?(.*)$",config)
+	if (m):
+		baseConfigList.extend(m.group(1).split(","))
+		config = m.group(2)
+		continue
+
+	m = re.match(r"^\[([^\]]+)\],?(.*)$",config)
+	if (m):
+		interleavedConfigList.append(m.group(1).split(","))
+		config = m.group(2)
+		continue
+
+	quit("\nERROR: Unknown configuration syntax at\n\t" + config)
+
+#print baseConfigList
+#print interleavedConfigList
+#print customConfigList
+
+iniList = []
+labelList = []
+
+if len(interleavedConfigList) > 0:
+	interleavedIndex = [0]*len(interleavedConfigList)
+	increment = 0
+	tmpList = []
+
+	while (increment < len(interleavedIndex)):
+		tmpElement = []
+		for i in range(0,len(interleavedIndex)):
+			tmp = interleavedConfigList[i]
+			tmpElement.append(tmp[interleavedIndex[i]])
+		tmpList.append(tmpElement)
+		increment = 0
+		while (increment < len(interleavedIndex)):
+			if (interleavedIndex[increment] < len(interleavedConfigList[increment]) - 1):
+				interleavedIndex[increment] += 1
+				break
+			else:
+				interleavedIndex[increment] = 0
+				increment += 1
+	for i in range(0,len(tmpList)):
+		iniList.append(generateConfig(configDictionary,baseConfigList,tmpList[i]))
+		tmpList2 = []
+		for c in tmpList[i]:
+			if c not in configIterations: tmpList2.append(c)
+		labelList.append(",".join(tmpList2))
+else:
+	iniList.append(generateConfig(configDictionary,baseConfigList))
+	tmpList2 = []
+	for c in baseConfigList:
+		if c not in configIterations: tmpList2.append(c)
+	labelList.append(",".join(tmpList2))
+
+for i in range(0,len(labelList)):
+	labels = labelList[i].split(",")
+	j = 0;
+	while j < len(labels):
+		if ('=' in labels[j]):
+			name,value = labels[j].split("=")
+			value = customConfigList[int(value)]
+			m = re.match("^\$\{(.+)\}$",value)
+			if (m):					# this is a parameter study
+				# delete it from labels - omnet will make a label for it
+				del labels[j]
+				continue
+			else:					# this is not a parameter study
+				# just substitute the right value
+				labels[j] = name + "=" + value
+		j += 1;
+	labelList[i] = ",".join(labels)
+
+ini_num = 0
+if options.output: fr = open(options.output,"w")
+else: fr = open(datetime.now().strftime("%y%m%d-%H%M%S")+".txt","w")
+fr.write("Castalia| what:" + options.config + " (" + str(options.repeat) + ")\n")
+fr.write("Castalia| when:" + datetime.now().strftime("%Y-%m-%d %H:%M") + "\n")
+
+r_castalia = re.compile("^Castalia\|\s+(.+)$")
+r_scenario = re.compile("Scenario:\s(.*)\$repetition=(\d+)$")
+r_progress = re.compile("^\*\* Event \#\d+\s+T=(\S+)\s+Elapsed: (\S+)s.+\s(\d+)\% completed")
+r_newrun = re.compile("Preparing for running configuration General, run #(\d+)")
+r_totalrun = re.compile("Number of runs: (\d+)")
+
+for ini in iniList:
+	ini_num += 1
+	baselabel = label = labelList.pop(0)
+	f = open("omnetpp.tmp","w")
+	f.write("[General]\n")
+	f.write("repeat = " + str(options.repeat) + "\n")
+	for k in sorted(ini.keys()):
+		f.write(k + " = " + ini[k] + "\n")
+	f.close();
+	has_output = 0
+	if sys.version_info > (2,7):
+		data = subprocess.check_output([pathToCastaliaBin, '-f', 'omnetpp.tmp', '-x', 'General']).split("\n")
+	else:
+		data = subprocess.Popen([pathToCastaliaBin, '-f', 'omnetpp.tmp', '-x', 'General'], stdout=subprocess.PIPE).communicate()[0].split("\n")
+	
+	if len(data) > 6: data = data[6]
+	else: data = ""
+
+	m = r_totalrun.match(data)
+	if (m):
+		runs = "/" + m.group(1)
+	else:
+		print "WARNING: unable to determine total simulation runs"
+		runs = ""
+	
+	CastaliaProcess = subprocess.Popen([pathToCastaliaBin, '-f', 'omnetpp.tmp'], stdout = subprocess.PIPE)
+	raw_output = []
+	while 1:
+		line = CastaliaProcess.stdout.readline()
+		if not line: break
+		
+		m = r_castalia.match(line)
+		if (m):		#this is an output line, starting with 'Castalia |' prefix
+			fr.write(line)
+			has_output = 1
+			continue
+		
+		if options.debug: print line,
+		
+		m = r_progress.match(line)
+		if (m):		#this is simulation progress line
+			simtime = float(m.group(1))
+			elapsed = float(m.group(2))
+			percent = int(m.group(3))
+			if not options.debug:
+				print "\rRunning Castalia:\tConfiguration", str(ini_num) + "/" + str(len(iniList)),
+				print "\tRun", str(run) + runs,
+				print "\tComplete", str(percent) + "%",
+
+			if percent == 100:	#end of this run, record execution time in the results file
+				if not options.debug:
+					print "\tTime taken", str(timedelta(0,elapsed))
+				fr.write("Castalia|		module:SN.Simulation\n")
+				fr.write("Castalia|			simple output name:Execution time, seconds\n")
+				fr.write("Castalia|				" + str(elapsed) + "\n")
+				fr.write("Castalia|			simple output name:Execution ratio (simtime/realtime)\n")
+				fr.write("Castalia|				" + str(simtime/elapsed) + "\n")
+			continue
+				
+		m = r_scenario.match(line)
+		if (m):
+			raw_output = []
+			has_output = 0
+			label = m.group(1).replace("$","").replace(" ","").strip(",")
+			if len(label) == 0:
+				if len(baselabel) > 0:
+					label = baselabel
+				else:
+					label = "None"
+			elif len(baselabel) > 0: 
+				label = baselabel + "," + label
+			fr.write("Castalia| repeat:"+m.group(2)+" label:"+label+"\n")
+			continue
+		
+		m = r_newrun.match(line)
+		if (m):
+			run = int(m.group(1)) + 1
+
+	if not has_output: 
+		fr.write("\n".join(raw_output))
+		print "\n".join(raw_output)
+
+if not options.debug: commands.getoutput("rm omnetpp.tmp")
+fr.close()
+

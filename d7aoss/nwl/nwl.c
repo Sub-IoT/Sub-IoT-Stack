@@ -126,6 +126,7 @@ void nwl_build_network_protocol_data(uint8_t* data, uint8_t length, nwl_security
 	adressing.virtual_id = false;
 	adressing.source_id = device_id;
 	dll_params.addressing = &adressing;
+	dll_params.frame_type = FRAME_CTL_DIALOGFRAME;
 
 
 	if (security != NULL)
