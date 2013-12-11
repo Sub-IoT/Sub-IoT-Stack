@@ -16,48 +16,9 @@
  *
  */
 
-#include "../timer.h"
+#include "../crc.h"
 
-void hal_timer_init()
+uint16_t crc_calculate(uint8_t* data, uint8_t length)
 {
-}
-
-void hal_timer_enable_interrupt()
-{
-
-}
-
-void hal_timer_disable_interrupt()
-{
-
-}
-
-uint16_t hal_timer_getvalue()
-{
-    return 0;
-}
-
-void hal_timer_setvalue(uint16_t next_event)
-{
-
-}
-
-void hal_benchmarking_timer_init()
-{
-
-}
-
-void hal_benchmarking_timer_start()
-{
-
-}
-
-void hal_benchmarking_timer_stop()
-{
-
-}
-
-uint32_t hal_benchmarking_timer_getvalue()
-{
-
+	return 0;
 }

@@ -16,48 +16,27 @@
  *
  */
 
-#include "../timer.h"
-
-void hal_timer_init()
-{
-}
-
-void hal_timer_enable_interrupt()
+void rtc_init_counter_mode()
 {
 
 }
 
-void hal_timer_disable_interrupt()
+void rtc_enable_interrupt()
 {
 
 }
 
-uint16_t hal_timer_getvalue()
-{
-    return 0;
-}
-
-void hal_timer_setvalue(uint16_t next_event)
+void rtc_disable_interrupt()
 {
 
 }
 
-void hal_benchmarking_timer_init()
+void rtc_start()
 {
 
 }
 
-void hal_benchmarking_timer_start()
-{
-
-}
-
-void hal_benchmarking_timer_stop()
-{
-
-}
-
-uint32_t hal_benchmarking_timer_getvalue()
+void rtc_stop()
 {
 
 }
