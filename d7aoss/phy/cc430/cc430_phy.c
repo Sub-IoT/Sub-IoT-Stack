@@ -449,7 +449,7 @@ void rx_data_isr()
 	#endif
 
 	//Read number of bytes in RXFIFO
-	uint8_t rxBytes = ReadSingleReg(RXBYTES);
+	volatile uint8_t rxBytes = ReadSingleReg(RXBYTES);
 
 #ifdef D7_PHY_USE_FEC
 	if(fec)
@@ -617,8 +617,8 @@ void set_channel(uint8_t channel_center_freq_index, uint8_t channel_bandwith_ind
 
 void set_sync_word(uint16_t sync_word)
 {
-	WriteSingleReg(SYNC0, (uint8_t)(sync_word >> 8));
-	WriteSingleReg(SYNC1, (uint8_t)(sync_word & 0x00FF));
+	WriteSingleReg(SYNC1, (uint8_t)(sync_word >> 8));
+	WriteSingleReg(SYNC0, (uint8_t)(sync_word & 0x00FF));
 }
 
 void set_preamble_size(uint8_t preamble_size)
