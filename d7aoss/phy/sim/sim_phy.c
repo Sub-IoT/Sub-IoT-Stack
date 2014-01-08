@@ -24,9 +24,10 @@
 /*
  * Phy implementation functions
  */
+
+
 void phy_init(void)
 {
-	return;
 }
 
 void phy_idle(void)
@@ -61,5 +62,12 @@ bool phy_is_tx_in_progress(void)
 
 int16_t phy_get_rssi(uint8_t spectrum_id, uint8_t sync_word_class)
 {
-    return 0;
+    // TODO get actuall rssi value
+    // problem: we need to wait for the radio to enter RX and the RSSI to become valid before returning here.
+    // However we cannot block here until this value can be read since we need to return from handleMessage() before
+    // the message which switches the radio to RX is delivered/processed.
+    // I don't see a solution right now...
+    // Alternatively this could work if the phy API would use a callback for when the RSSI reading is completed.
+    // Or if the DLL would ensure the radio is switched to RX and the time needed for a valid RSSI reading is reached before calling this.
+    return -120;
 }

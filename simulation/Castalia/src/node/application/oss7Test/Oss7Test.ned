@@ -11,6 +11,9 @@ simple Oss7Test like node.application.iApplication {
 	int packetHeaderOverhead = default (8);
 	int priority = default (1);
 	int constantDataPayload = default (8);
+        bool isBlinker = default (true);
+        double phyDelayForValidRssi = default (0);
+        double phyDelayForSleep2Rx = default (0);
 
  gates:
  	output toCommunicationModule;

@@ -20,12 +20,22 @@ extern "C" {
     #include "phy.h"
 }
 
+#include <stdint.h>
+#include "SimPhyInterface.h"
+
 using namespace std;
 
 class Oss7Test : public VirtualApplication {
  private:
 	int packetHeaderOverhead;
 	int constantDataPayload;
+    bool isBlinker;
+    // time in ms needed before valid RSSI is reported after switching to RX
+    // TODO measure this, this should be: symbolsForRSSI x bitsPerSymbol / dataRate
+    simtime_t phyDelayForValidRssi;
+    // time in ms needed for changing the radio state from sleep to RX
+    // TODO measure this
+    simtime_t phyDelayForSleep2Rx;
 
  protected:
 	void startup();
@@ -39,17 +49,20 @@ public:
     void oss7_api_trace(char* msg, uint8_t len);
     bool oss7_api_phy_rx(phy_rx_cfg_t*);
     bool oss7_api_phy_tx(phy_tx_cfg_t*);
+//    void oss7_api_phy_get_rssi();
+//    void oss7_api_phy_set_rssi_measurement_completed_callback(phy_rssi_measurement_completed_callback_t);
 };
 
 enum Oss7TestTimers {
     TIMER_RX,
     TIMER_RX_TIMEOUT,
+    TIMER_TX,
     TIMER_TX_COMPLETED,
     TIMER_OSS7
+    //TIMER_RSSI_MEASUREMENT_COMPLETED
 };
 
 Oss7Test* oss7_node();
-
 
 extern "C" void timer_completed(); // prototype for callback implemented in oss7 sim_timer.c
 

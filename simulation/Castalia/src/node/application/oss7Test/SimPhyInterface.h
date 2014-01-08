@@ -12,6 +12,7 @@ extern "C" {
 
 bool sim_phy_rx(phy_rx_cfg_t*);
 bool sim_phy_tx(phy_tx_cfg_t*);
+//void sim_phy_get_rssi();
 
 #ifdef __cplusplus
 }

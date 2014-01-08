@@ -22,8 +22,8 @@ OPTS=" -f -r --deep -o CastaliaBin -u Cmdenv -P $ROOT -M debug"
 EXCLUDEDIRS=" -X Simulations -X out -X bin"
 
 # Use options -I -L -l to include external header files or libraries
-EXTOPTS="-I../../d7aoss/hal -L../../../oss-7-build-posix/d7aoss/hal -lHAL 
-	-L../../../oss-7-build-posix/d7aoss/framework -lFRAMEWORK -I../../d7aoss/framework 
+EXTOPTS="-I../../d7aoss/framework -L../../../oss-7-build-posix/d7aoss/framework -lFRAMEWORK
+        -I../../d7aoss/hal -L../../../oss-7-build-posix/d7aoss/hal -lHAL
 	-I../../d7aoss/trans -L../../../oss-7-build-posix/d7aoss/trans/ -lTRANS
 	-I../../d7aoss/nwl -L../../../oss-7-build-posix/d7aoss/nwl/ -lNWL
 	-I../../d7aoss/dll -L../../../oss-7-build-posix/d7aoss/dll/ -lDLL
