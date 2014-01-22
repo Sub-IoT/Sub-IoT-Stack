@@ -14,6 +14,7 @@
  *
  */
 
+#include <string.h>
 
 #include "nwl.h"
 #include "../framework/log.h"

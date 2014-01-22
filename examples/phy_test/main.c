@@ -11,35 +11,33 @@
 
 #include <d7aoss.h>
 
-#include <msp430.h>
 #include <hal/button.h>
 #include <hal/leds.h>
 #include <hal/rtc.h>
+#include <hal/system.h>
 #include <framework/log.h>
 
-#define INTERRUPT_BUTTON1 	(1)
-#define INTERRUPT_BUTTON2 	(1 << 1)
-#define INTERRUPT_BUTTON3 	(1 << 2)
-#define INTERRUPT_RTC 		(1 << 3)
+#include "interrupts.h"
 
-static uint8_t interrupt_flags = 0;
 static uint8_t rtcEnabled = 0;
 
 static uint8_t buffer[16] = {0x10, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77, 0x88, 0x99, 0xAA, 0xBB, 0xCC, 0xDD, 0xEE, 0xFF};
 
+/*
+ */
 phy_tx_cfg_t tx_cfg = {
-	0x90,
-	1,
-	0,
-	16,
-	buffer
+	.spectrum_id=0x90,
+	.sync_word_class=1,
+	.eirp=0,
+	.length=16,
+	.data=buffer
 };
 
 phy_rx_cfg_t rx_cfg = {
-	0x90,
-	1,
-	0,
-	0
+	.spectrum_id=0x90,
+	.sync_word_class=1,
+	.length=0,
+	.timeout=0
 };
 
 void start_rx(void)
@@ -59,17 +57,17 @@ void rx_callback(phy_rx_data_t* rx_data)
 		led_toggle(1);
 }
 
-void main(void)
+int main(void)
 {
 	system_init();
+    rtc_init_counter_mode();
+    rtc_start();
 
 	//test_fec_encoding();
 	//test_fec_decoding();
 
 	button_enable_interrupts();
 
-    rtc_init_counter_mode();
-    rtc_start();
 
 	phy_init();
 	phy_set_rx_callback(rx_callback);
@@ -77,6 +75,7 @@ void main(void)
 	while(1) {
         if (INTERRUPT_BUTTON1 & interrupt_flags) {
         	interrupt_flags &= ~INTERRUPT_BUTTON1;
+//        	led_toggle(1);
 
         	start_tx();
 
@@ -101,6 +100,7 @@ void main(void)
 
         if (INTERRUPT_RTC & interrupt_flags) {
         	interrupt_flags &= ~INTERRUPT_RTC;
+        	led_toggle(0);
 
         	start_tx();
         }
@@ -126,41 +126,6 @@ void main(void)
 
 		system_lowpower_mode(4,1);
 	}
+	return 0;
 }
 
-#pragma vector=PORT1_VECTOR
-__interrupt void PORT1_ISR (void)
-{
-	if(button_is_active(1))
-		interrupt_flags |= INTERRUPT_BUTTON1;
-	else
-		interrupt_flags &= ~INTERRUPT_BUTTON1;
-
-	if(button_is_active(3))
-		interrupt_flags |= INTERRUPT_BUTTON3;
-	else
-		interrupt_flags &= ~INTERRUPT_BUTTON3;
-
-	if(interrupt_flags != 0)
-	{
-		button_disable_interrupts();
-		LPM4_EXIT;
-	}
-}
-
-#pragma vector=RTC_VECTOR
-__interrupt void RTC_ISR (void)
-{
-    switch (RTCIV){
-        case 0: break;  //No interrupts
-        case 2: break;  //RTCRDYIFG
-        case 4:         //RTCEVIFG
-        	interrupt_flags |= INTERRUPT_RTC;
-        	LPM4_EXIT;
-            break;
-        case 6: break;  //RTCAIFG
-        case 8: break;  //RT0PSIFG
-        case 10: break; //RT1PSIFG
-        default: break;
-    }
-}
