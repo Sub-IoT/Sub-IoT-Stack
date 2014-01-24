@@ -53,8 +53,10 @@ void start_tx(void)
 
 void rx_callback(phy_rx_data_t* rx_data)
 {
-	if(memcmp(buffer, rx_data->data, sizeof(buffer)) == 0)
-		led_toggle(1);
+	led_toggle(1);
+	if(memcmp(buffer, rx_data->data, sizeof(buffer)) == 0) {
+//		led_toggle(1);
+	}
 }
 
 int main(void)
@@ -67,6 +69,7 @@ int main(void)
 	//test_fec_decoding();
 
 	button_enable_interrupts();
+	rtc_disable_interrupt();
 
 
 	phy_init();
@@ -81,6 +84,8 @@ int main(void)
 
         	button_clear_interrupt_flag();
         	button_enable_interrupts();
+//        	rtc_enable_interrupt();
+//        	rtcEnabled = 1;
         }
 
         if (INTERRUPT_BUTTON3 & interrupt_flags) {

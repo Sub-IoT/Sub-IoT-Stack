@@ -27,8 +27,6 @@ void PMM_SetVCore(uint8_t level) {
 
 void system_init() {
 //	/* Enable CRC clock */
-//	RCC_AHBPeriphClockCmd(RCC_AHBPeriph_CRC, ENABLE);
-//	clock_init();
 	systick_init();
 	system_get_unique_id(device_id);
     //TODO: correct way to find virtual_id -> set by app layer
