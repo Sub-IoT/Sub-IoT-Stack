@@ -5,6 +5,7 @@
  */
 
 #include <stm32l1xx_rcc.h>
+#include <misc.h>
 
 #include <hal/system.h>
 #include <hal/leds.h>
@@ -27,6 +28,7 @@ void PMM_SetVCore(uint8_t level) {
 
 void system_init() {
 //	/* Enable CRC clock */
+	NVIC_PriorityGroupConfig(NVIC_PriorityGroup_2 );
 	systick_init();
 	system_get_unique_id(device_id);
     //TODO: correct way to find virtual_id -> set by app layer

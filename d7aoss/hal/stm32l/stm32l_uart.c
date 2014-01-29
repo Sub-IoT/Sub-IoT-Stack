@@ -57,10 +57,10 @@ typedef struct {
 	volatile unsigned int pos;
 	volatile unsigned int top;
 	uint8_t data[PRINTF_SERIAL_BUFFER_SIZE];
-} buffer;
+} usart_buffer;
 
-static buffer serial_tx = { .pos = 0, .top = 0 };
-static buffer serial_rx = { .pos = 0, .top = 0 };
+static usart_buffer serial_tx;
+static usart_buffer serial_rx;
 
 void uart_disable_interrupt() {
 	NVIC ->ICER[USART_IRQ_N(PRINTF_USART_NUMBER) >> 0x05] =
@@ -72,10 +72,10 @@ void uart_enable_interrupt() {
 			(uint32_t) 0x01 << (USART_IRQ_N(PRINTF_USART_NUMBER) & (uint8_t) 0x1F);
 }
 
-static inline bool store_char(unsigned char c, buffer *buffer) {
+static bool store_char(unsigned char c, usart_buffer *buffer) {
 	uart_disable_interrupt();
-	int i = (unsigned int) (buffer->pos + 1) % PRINTF_SERIAL_BUFFER_SIZE;
-	bool canAdd = i != buffer->top;
+	unsigned int i = (unsigned int) (buffer->pos + 1) % PRINTF_SERIAL_BUFFER_SIZE;
+	bool canAdd = (i != buffer->top);
 
 	if (canAdd) {
 		buffer->data[buffer->pos] = c;
@@ -129,29 +129,33 @@ void uart_init()
 	NVIC_InitTypeDef NVIC_InitStructure;
 
 	/* Configure the Priority Group to 2 bits */
-	NVIC_PriorityGroupConfig(NVIC_PriorityGroup_2 );
 
 	/* Enable the USARTx Interrupt */
 	NVIC_InitStructure.NVIC_IRQChannel = USART_IRQ_N(PRINTF_USART_NUMBER);
-	NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 0xf;
-	NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0xf;
+	NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 3;
+	NVIC_InitStructure.NVIC_IRQChannelSubPriority = 3;
 	NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
 	NVIC_Init(&NVIC_InitStructure);
 
 	/* Enable USART */
 	USART_Cmd(PRINTF_USART, ENABLE);
+	serial_tx.pos = 0;
+	serial_tx.top = 0;
+	serial_rx.pos = 0;
+	serial_rx.top = 0;
 	/* Enable RXNE interrupt */
 	PRINTF_USART ->CR1 |= USART_CR1_RXNEIE;
-
 }
 
 
 void uart_transmit_data(unsigned char data)
 {
+	bool stored = store_char(data, &serial_tx);
 	// Enable transmit buffer empty interrupt
 	PRINTF_USART ->CR1 |= USART_CR1_TXEIE;
 	// Wait until buffer has space
-	while(!store_char(data, &serial_tx)) {
+	while(!stored) {
+		stored = store_char(data, &serial_tx);
 	}
 
 }
@@ -206,7 +210,8 @@ void PRINTF_USART_IRQ_HANDLER(void) {
 			unsigned char c = PRINTF_USART ->DR;
 			store_char(c, &serial_rx);
 		} else {
-			unsigned char c = PRINTF_USART ->DR;
+			// load an discard data register value
+			PRINTF_USART ->DR;
 		};
 	}
 }
