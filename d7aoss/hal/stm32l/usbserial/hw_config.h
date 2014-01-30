@@ -34,13 +34,6 @@
 #include "platform_config.h"
 #include "usb_type.h"
 
-/* Exported types ------------------------------------------------------------*/
-typedef enum
-{
-  COM1 = 0,
-  COM2 = 1
-} COM_TypeDef;
-
 /* Exported constants --------------------------------------------------------*/
 /* Exported macro ------------------------------------------------------------*/
 /* Exported define -----------------------------------------------------------*/
@@ -54,11 +47,11 @@ void USB_Interrupts_Config(void);
 void USB_Cable_Config (FunctionalState NewState);
 void USART_Config_Default(void);
 bool USART_Config(void);
-void USB_To_USART_Send_Data(uint8_t* data_buffer, uint8_t Nb_bytes);
-void USART_To_USB_Send_Data(void);
 void Handle_USBAsynchXfer (void);
 void Get_SerialNum(void);
-void USB_Send_Data(char* data, int len);
+void USB_Send_Data(unsigned char* data, int len);
+void USB_Send_Character(char data);
+
 
 /* External variables --------------------------------------------------------*/
 

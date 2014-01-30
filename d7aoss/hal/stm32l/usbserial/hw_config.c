@@ -307,7 +307,7 @@ void Handle_USBAsynchXfer(void)
 
 }
 
-void USB_Send_Data(char* data, int len) {
+void USB_Send_Data(unsigned char* data, int len) {
 	for (int i = 0; i < len; i++) {
 		USART_Rx_Buffer[USART_Rx_ptr_in] = data[i];
 		USART_Rx_ptr_in++;
@@ -316,6 +316,18 @@ void USB_Send_Data(char* data, int len) {
 		{
 			USART_Rx_ptr_in = 0;
 		}
+	}
+
+}
+
+void USB_Send_Character(char data)
+{
+	USART_Rx_Buffer[USART_Rx_ptr_in] = data;
+	USART_Rx_ptr_in++;
+	/* To avoid buffer overflow */
+	if (USART_Rx_ptr_in == USART_RX_DATA_SIZE)
+	{
+		USART_Rx_ptr_in = 0;
 	}
 
 }

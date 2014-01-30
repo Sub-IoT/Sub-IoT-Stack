@@ -34,6 +34,8 @@
 #include "usb_istr.h"
 #include "usb_pwr.h"
 
+#include "rotating_buffer.h"
+
 /* Private typedef -----------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/
 
@@ -108,6 +110,7 @@ void EP1_IN_Callback (void)
 void EP3_OUT_Callback(void)
 {
   uint16_t USB_Rx_Cnt;
+  extern rotating_buffer usb_rx;
   
   /* Get the received data buffer and update the counter */
   USB_Rx_Cnt = USB_SIL_Read(EP3_OUT, USB_Rx_Buffer);
@@ -115,8 +118,7 @@ void EP3_OUT_Callback(void)
   /* USB data will be immediately processed, this allow next USB traffic being 
   NAKed till the end of the USART Xfer */
   for (int i = 0 ; i < USB_Rx_Cnt; i++) {
-	  // FIXME what to do with received data???
-//	  putc_usart(USB_Rx_Buffer[i]);
+	  rotating_buffer_store_char(USB_Rx_Buffer[i], &usb_rx);
   }
   
 #ifndef STM32F10X_CL
