@@ -5,6 +5,7 @@
  */
 
 #include <stm32l1xx_rcc.h>
+#include <stm32l1xx_pwr.h>
 #include <misc.h>
 
 #include <hal/system.h>
@@ -17,8 +18,6 @@
 
 #define UDID_ADDRESS 0x1FF80050
 
-
-
 uint8_t device_id[8]; // TODO: keep this as global?
 uint8_t virtual_id[2];
 
@@ -28,12 +27,12 @@ void PMM_SetVCore(uint8_t level) {
 
 void system_init() {
 //	/* Enable CRC clock */
-	NVIC_PriorityGroupConfig(NVIC_PriorityGroup_2 );
+	NVIC_PriorityGroupConfig(NVIC_PriorityGroup_2);
 	systick_init();
 	system_get_unique_id(device_id);
-    //TODO: correct way to find virtual_id -> set by app layer
-    virtual_id[0] = device_id[4] ^ device_id[5];
-    virtual_id[1] = device_id[6] ^ device_id[7];
+	//TODO: correct way to find virtual_id -> set by app layer
+	virtual_id[0] = device_id[4] ^ device_id[5];
+	virtual_id[1] = device_id[6] ^ device_id[7];
 
 	led_init();
 	button_init();
@@ -67,6 +66,21 @@ void system_watchdog_init(unsigned char clockSelect, unsigned char clockDivider)
 }
 
 void system_lowpower_mode(unsigned char mode, unsigned char enableInterrupts) {
+	uint8_t pwrMode = enableInterrupts? PWR_STOPEntry_WFI : PWR_STOPEntry_WFE;
+	switch (mode) {
+	case 4:
+		PWR_EnterSTOPMode(PWR_Regulator_ON, pwrMode);
+		break;
+	case 3:
+		break;
+	case 2:
+		break;
+	case 1:
+		break;
+	case 0:
+	default:
+		break;
+	}
 
 }
 

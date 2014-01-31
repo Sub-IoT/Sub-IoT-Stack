@@ -21,3 +21,6 @@ build/
 html/
 etc
 /openocd.log
+/phy_test
+/star_push_endpoint_example
+/star_push_gateway_example
