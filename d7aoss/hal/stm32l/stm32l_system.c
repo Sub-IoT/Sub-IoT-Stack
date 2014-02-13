@@ -13,6 +13,7 @@
 #include <hal/button.h>
 #include <hal/uart.h>
 #include <hal/rtc.h>
+#include <hal/timer.h>
 
 #include "systick.h"
 
@@ -26,7 +27,6 @@ void PMM_SetVCore(uint8_t level) {
 }
 
 void system_init() {
-//	/* Enable CRC clock */
 	NVIC_PriorityGroupConfig(NVIC_PriorityGroup_2);
 	systick_init();
 	system_get_unique_id(device_id);
@@ -37,7 +37,6 @@ void system_init() {
 	led_init();
 	button_init();
 	uart_init();
-
 }
 
 void system_watchdog_timer_stop() {
@@ -66,18 +65,23 @@ void system_watchdog_init(unsigned char clockSelect, unsigned char clockDivider)
 }
 
 void system_lowpower_mode(unsigned char mode, unsigned char enableInterrupts) {
-	uint8_t pwrMode = enableInterrupts? PWR_STOPEntry_WFI : PWR_STOPEntry_WFE;
+	uint8_t pwrMode = enableInterrupts ? PWR_STOPEntry_WFI : PWR_STOPEntry_WFE;
 	switch (mode) {
 	case 4:
+		//STOP mode
 		PWR_EnterSTOPMode(PWR_Regulator_ON, pwrMode);
 		break;
 	case 3:
+		// Low Power sleep?
 		break;
 	case 2:
+		// Low power run?
 		break;
 	case 1:
+		// 4MHz run?
 		break;
 	case 0:
+		// full speed run?
 	default:
 		break;
 	}
