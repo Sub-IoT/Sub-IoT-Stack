@@ -124,7 +124,7 @@ int main(void)
         }
 
 
-		system_lowpower_mode(4,1);
+//		system_lowpower_mode(4,1);
 	}
 	return 0;
 }
