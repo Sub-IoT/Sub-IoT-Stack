@@ -18,7 +18,7 @@
 #ifndef PLATFORM_H_
 #define PLATFORM_H_
 
-#define PLATFORM_WIZZIMOTE
+#define PLATFORM_ARTESIS
 
 
 #ifdef PLATFORM_WIZZIMOTE
@@ -29,6 +29,8 @@
 #include "agaidi.h"
 #elif defined PLATFORM_CHRONOS
 #include "chronos.h"
+#elif defined PLATFORM_BELIGUM
+#include "beligum.h"
 #else
 	#error No platform set
 #endif

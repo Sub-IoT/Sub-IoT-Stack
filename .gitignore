@@ -19,3 +19,4 @@ Thumbs.db
 *.csv
 build/
 html/
+.launches

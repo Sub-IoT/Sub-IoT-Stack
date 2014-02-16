@@ -22,25 +22,17 @@
 
 #include <msp430.h>
 #include "driverlib/5xx_6xx/gpio.h"
-#include "driverlib/5xx_6xx/uart.h"
+//#include "driverlib/5xx_6xx/uart.h"
 
 void uart_init()
 {
-#ifdef PLATFORM_WIZZIMOTE // TODO ugly solution for now, UART needs to be extracted from oss-7 and implemented by platform specific HAL library
-    PMAPPWD = 0x02D52;                        // Get write-access to port mapping regs
-    P2MAP0 = PM_UCA0RXD;                      // Map UCA0RXD output to P2.6
-    P2MAP1 = PM_UCA0TXD;                      // Map UCA0TXD output to P2.7
+	PMAPPWD = 0x02D52;                        // Get write-access to port mapping regs
+    PLATFORM_UCA0RXD = PM_UCA0RXD;                      // Map UCA0RXD output to Px
+    PLATFORM_UCA0TXD = PM_UCA0TXD;                      // Map UCA0TXD output to Px
     PMAPPWD = 0;                              // Lock port mapping registers
-	P2DIR |= BIT1;                            // Set P2.7 as TX output
-    P2SEL |= BIT0 + BIT1;
-#elif defined PLATFORM_ARTESIS
+    PLATFORM_PxDIR |= PLATFORM_PxDIRBIT;                            // Set Px as TX output
+    PLATFORM_PxSEL |= PLATFORM_PxSELBIT;
     PMAPPWD = 0x02D52;                        // Get write-access to port mapping regs
-    P1MAP6 = PM_UCA0RXD;                      // Map UCA0RXD output to P2.6
-    P1MAP5 = PM_UCA0TXD;                      // Map UCA0TXD output to P2.7
-    PMAPPWD = 0;                              // Lock port mapping registers
-    P1DIR |= BIT5;                            // Set P1.6 as TX output
-    P1SEL |= BIT5 + BIT6;                     // Select P1.5 & P1.6 to UART function
-#endif
 
     UCA0CTL1 |= UCSWRST;                      // **Put state machine in reset**
 //    UCA0CTL1 |= UCSSEL_1;                     // ACLK

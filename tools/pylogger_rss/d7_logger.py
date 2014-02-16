@@ -10,7 +10,7 @@ import time as time
 import struct as struct
 import ctypes
 import datetime
-import Queue
+import queue
 import wx
 from collections import namedtuple
 

@@ -14,8 +14,7 @@
  * Contributors:
  *     maarten.weyn@uantwerpen.be
  *
- * 	Example code for Star topology, push model
- * 	This is the endpoint example
+ * Test to see if uart is working
  *
  * 	add the link to d7aoss library in de lnk_*.cmd file, e.g. -l "../../../d7aoss/Debug/d7aoss.lib"
  * 	Make sure to select the correct platform in d7aoss/hal/cc430/platforms.platform.h
@@ -34,61 +33,35 @@
 #include <framework/log.h>
 #include <framework/timer.h>
 #include <msp430.h>
+#include <hal/uart.h>
 
 
-#define SEND_INTERVAL_MS 1000
+#define SEND_INTERVAL_MS 100
 #define SEND_CHANNEL 0x1E
 #define TX_EIRP 10
 
 // Macro which can be removed in production environment
 #define USE_LEDS
 
-static uint8_t tx = 0;
-static uint16_t counter = 0;
+//static uint8_t tx = 0;
 static volatile bool add_tx_event = true;
+static volatile uint8_t dataLength = 0;
+
+static volatile int16_t temperature_internal;
+static volatile uint16_t battery_voltage;
+
+static volatile uint16_t counter = 0;
 
 timer_event event;
+uint8_t data[] = {0xCE,0x10,0x10,0x46,0x94,0x20,0x27,0x00,0x13,0x00,0x1A,0x20,0x00,0x65,0x01,0x30,0x70,0x02,0x0D};
 
-void start_tx()
+
+void tx()
 {
-	if (!tx)
-	{
-		// Kicks the watchdog timer
-		system_watchdog_timer_reset();
-
-		tx = 1;
-
-		#ifdef USE_LEDS
-		led_on(3);
-		#endif
-
-		log_print_string("TX...");
-
-		trans_tx_foreground_frame((uint8_t*)&counter, sizeof(counter), 0xFF, SEND_CHANNEL, TX_EIRP);
-	}
-	add_tx_event = true;
-}
-
-void tx_callback(Trans_Tx_Result result)
-{
-	counter++;
-
-	if(result == TransPacketSent)
-	{
-		#ifdef USE_LEDS
-		led_off(3);
-		#endif
-		log_print_string("TX OK");
-	}
-	else
-	{
-		#ifdef USE_LEDS
-		led_toggle(1);
-		#endif
-		log_print_string("TX CCA FAIL");
-	}
-
-	tx = 0;
+	//log_print_string("TX.................................... %d", counter++);
+	uart_transmit_message(data, 19);
+	led_toggle(1);
+	timer_add_event(&event);
 }
 
 int main(void) {
@@ -98,37 +71,25 @@ int main(void) {
 
 	// Currently we address the Transport Layer, this should go to an upper layer once it is working.
 	trans_init();
-	trans_set_tx_callback(&tx_callback);
 	// The initial Tca for the CSMA-CA in
 	trans_set_initial_t_ca(200);
 
 	event.next_event = SEND_INTERVAL_MS;
-	event.f = &start_tx;
+	event.f = &tx;
 
-	log_print_string("endpoint started");
+
+	log_print_string("test started");
 
 	timer_add_event(&event);
 
-	// Log the device id
-	log_print_data(device_id, 8);
-
-	system_watchdog_init(WDTSSEL0, 0x03);
-	system_watchdog_timer_start();
-
 	while(1)
 	{
-		if (add_tx_event)
-		{
-			add_tx_event = false;
-			timer_add_event(&event);
-		}
-
 		system_lowpower_mode(3,1);
 	}
 }
 
 
-#pragma vector=ADC12_VECTOR,RTC_VECTOR,AES_VECTOR,COMP_B_VECTOR,DMA_VECTOR,PORT1_VECTOR,PORT2_VECTOR,SYSNMI_VECTOR,UNMI_VECTOR,USCI_A0_VECTOR,USCI_B0_VECTOR,WDT_VECTOR,TIMER0_A0_VECTOR,TIMER1_A1_VECTOR
+#pragma vector=RTC_VECTOR,AES_VECTOR,COMP_B_VECTOR,DMA_VECTOR,PORT1_VECTOR,PORT2_VECTOR,SYSNMI_VECTOR,UNMI_VECTOR,USCI_A0_VECTOR,USCI_B0_VECTOR,WDT_VECTOR,TIMER0_A0_VECTOR,TIMER1_A1_VECTOR
 __interrupt void ISR_trap(void)
 {
   /* For debugging purposes, you can trap the CPU & code execution here with an

@@ -1,7 +1,7 @@
 /*
  *  Created on: Feb 2, 2013
  *  Authors:
- * 		maarten.weyn@artesis.be
+ * 		maarten.weyn@uantwerpen.be
  */
 
 
@@ -118,13 +118,9 @@ void main(void) {
 
 	start_rx();
 
-	//dll_set_foreground_scan_detection_timeout(0);
-	//dll_set_scan_spectrum_id(0x1C);
-	//dll_foreground_scan();
-
 	while(1)
 	{
-		system_lowpower_mode(4,1);
+		system_lowpower_mode(3,1);
 	}
 }
 
