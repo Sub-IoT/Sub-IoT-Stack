@@ -4,6 +4,7 @@
  * 		maarten.weyn@artesis.be
  *  	glenn.ergeerts@artesis.be
  *  	alexanderhoet@gmail.com
+ *  	armin@otheruse.nl
  */
 
 #include "cc1101_phy.h"
@@ -33,3 +34,19 @@ InterruptHandlerDescriptor interrupt_table[6] = {
 		{.gdoSetting = 0x04, .edge = GDOEdgeRising, .handler = rx_fifo_overflow_isr},
 		{.handler = 0},
 };
+
+void CC1101_ISR (GDOLine gdo)
+{
+	uint8_t gdo_setting = ReadSingleReg(gdo);
+	uint8_t index = 0;
+	InterruptHandlerDescriptor descriptor;
+	do {
+		descriptor = interrupt_table[index];
+		if ((gdo_setting & 0x7f) == (descriptor.gdoSetting | descriptor.edge)) {
+			descriptor.handler();
+			break;
+		}
+		index++;
+	}
+	while (descriptor.handler != 0);
+}

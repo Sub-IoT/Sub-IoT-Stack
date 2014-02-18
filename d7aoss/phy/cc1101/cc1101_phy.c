@@ -24,7 +24,6 @@
  * Variables
  */
 extern RF_SETTINGS rfSettings;
-extern InterruptHandlerDescriptor interrupt_table[];
 
 RadioState state;
 
@@ -187,8 +186,6 @@ extern bool phy_tx_data(phy_tx_cfg_t* cfg)
 	radioEnableGDO2Interrupt();
 	radioEnableGDO0Interrupt();
 
-//	RF1AIES = RFIFG_FLANK_TXBelowThresh | RFIFG_FLANK_TXUnderflow | RFIFG_FLANK_EndOfPacket;
-//	RF1AIE  = RFIFG_FLAG_TXBelowThresh | RFIFG_FLAG_TXUnderflow | RFIFG_FLAG_EndOfPacket;
 	//Start transmitting
 	Strobe(RF_STX);
 
@@ -325,9 +322,6 @@ bool phy_rx(phy_rx_cfg_t* cfg)
 	radioClearInterruptPendingLines();
 	radioEnableGDO2Interrupt();
 	radioEnableGDO0Interrupt();
-//	RF1AIES = RFIFG_FLANK_IOCFG0 | RFIFG_FLANK_RXFilled | RFIFG_FLANK_RXOverflow | RFIFG_FLANK_EndOfPacket;
-//	RF1AIFG = 0;`
-//	RF1AIE  = RFIFG_FLAG_IOCFG0 | RFIFG_FLAG_RXFilled | RFIFG_FLAG_RXOverflow | RFIFG_FLAG_EndOfPacket;
 
 	//Start receiving
 	Strobe(RF_SRX);
@@ -356,12 +350,8 @@ extern int16_t phy_get_rssi(uint8_t spectrum_id, uint8_t sync_word_class)
     //Start receiving
     Strobe(RF_SRX);
 
-    //Wait until RSSI valid
 	//FIXME wait for RSSI VALID!!!
-    // This is hardly possible with CC1101
-
-
-//    while((RF1AIN & RFIFG_FLAG_IOCFG1) == 0);
+    // Is this possible with CC1101?
 
     rssi_raw = ReadSingleReg(RSSI);
     rxtx_finish_isr();
@@ -372,22 +362,6 @@ extern int16_t phy_get_rssi(uint8_t spectrum_id, uint8_t sync_word_class)
 /*
  * Interrupt functions
  */
-void CC1101_ISR (GDOLine gdo)
-{
-	uint8_t gdo_setting = ReadSingleReg(gdo);
-//	uint8_t gdo_setting = phy_gdo_settings[gdo];
-	uint8_t index = 0;
-	InterruptHandlerDescriptor descriptor;
-	do {
-		descriptor = interrupt_table[index];
-		if ((gdo_setting & 0x7f) == (descriptor.gdoSetting | descriptor.edge)) {
-			descriptor.handler();
-			break;
-		}
-		index++;
-	}
-	while (descriptor.handler != 0);
-}
 
 void no_interrupt_isr() { }
 
