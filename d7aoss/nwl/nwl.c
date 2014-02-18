@@ -149,10 +149,7 @@ void nwl_build_network_protocol_data(uint8_t* data, uint8_t length, nwl_security
 		#endif
 	}
 
-	dll_data[offset++] = 0; //dunno
-	dll_data[offset++] = 0; //isfid
-	dll_data[offset++] = 0; //isfoffset
-	dll_data[offset++] = length; // payload length;
+	//dll_data[offset++] = length; // payload length;
 
 	memcpy(&dll_data[offset], data, length);
 

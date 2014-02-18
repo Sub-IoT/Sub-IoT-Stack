@@ -26,6 +26,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
     initStatusbar();
 
     QThread readerThread;
+    _logParser->setParent(0);
     _logParser->moveToThread(&readerThread);
     readerThread.start();
 

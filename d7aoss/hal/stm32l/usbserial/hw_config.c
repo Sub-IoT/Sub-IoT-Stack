@@ -26,13 +26,18 @@
  */
 
 /* Includes ------------------------------------------------------------------*/
+#include "stm32l1xx.h"
+#include "stm32l1xx_usart.h"
+#include "stm32l1xx_rcc.h"
+#include "stm32l1xx_syscfg.h"
+#include "misc.h"
 
-#include "stm32_it.h"
 #include "usb_lib.h"
 #include "usb_prop.h"
 #include "usb_desc.h"
-#include "hw_config.h"
 #include "usb_pwr.h"
+#include "hw_config.h"
+
 
 /* Private typedef -----------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/

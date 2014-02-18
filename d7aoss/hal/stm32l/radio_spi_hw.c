@@ -14,11 +14,7 @@
 #include <stm32l1xx_spi.h>
 #include <stm32l1xx_syscfg.h>
 
-#include "systick.h"
-
-#include "cc1101_constants.h"
 #include "cc1101_core.h"
-#include "cc1101_phy.h"
 #include "radio_spi_hw.h"
 
 extern void CC1101_ISR (GDOLine gdo);

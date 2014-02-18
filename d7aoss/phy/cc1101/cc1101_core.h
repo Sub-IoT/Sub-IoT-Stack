@@ -20,7 +20,7 @@ typedef enum {
 	GDOLine0 = 0x2,
 	GDOLine1 = 0x1,
 	GDOLine2 = 0x0
-}GDOLine;
+} GDOLine;
 
 typedef enum {
 	GDOEdgeRising = 0x40,
@@ -71,7 +71,7 @@ typedef struct {
 } RF_SETTINGS;
 
 uint8_t Strobe(unsigned char strobe);
-void ResetRadioCore (void);
+void ResetRadioCore(void);
 void WriteRfSettings(RF_SETTINGS *pRfSettings);
 
 uint8_t ReadSingleReg(uint8_t addr);

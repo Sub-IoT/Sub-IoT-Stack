@@ -33,7 +33,6 @@
 /* Includes ------------------------------------------------------------------*/
 #if defined(STM32L1XX_MD) || defined(STM32L1XX_HD)|| defined(STM32L1XX_MD_PLUS)
 #include "stm32l1xx.h"
-#include "stm32l1xx_conf.h"
 #elif defined (STM32F10X_MD) || defined (STM32F10X_HD) || defined (STM32F10X_XL) || defined (STM32F10X_CL)
 #include "stm32f10x_conf.h"
 #include "stm32f10x.h"
@@ -58,11 +57,6 @@
 #define USB_DISCONNECT_PIN                  0
 #define RCC_APB2Periph_GPIO_DISCONNECT      0
 #endif
-
-#define EVAL_COM_IRQHandler					USART2_IRQHandler
-#define EVAL_COM_IRQn						USART2_IRQn
-#define EVAL_COM							USART2
-#define COM									COM2
 
 /* Exported macro ------------------------------------------------------------*/
 /* Exported functions ------------------------------------------------------- */
