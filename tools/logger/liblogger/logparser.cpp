@@ -52,6 +52,7 @@ void LogParser::parseReceivedData()
         start = _receivedDataQueue->dequeue();
     }
 
+/*
     if(_receivedDataQueue->size() >= 1)
     {
         if(_receivedDataQueue->at(0) != LOG_TYPE_STRING &&
@@ -62,7 +63,7 @@ void LogParser::parseReceivedData()
             return;
         }
     }
-
+*/
     if(_receivedDataQueue->size() < 2 || _receivedDataQueue->size() < _receivedDataQueue->at(1) + 2)
     {
         //  not a full packet, reinsert header and wait for more data ...

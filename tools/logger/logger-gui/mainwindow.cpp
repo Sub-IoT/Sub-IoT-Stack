@@ -141,7 +141,8 @@ void MainWindow::on_connectAction_triggered(bool connect)
             QObject::connect(_logParser, SIGNAL(logMessageReceived(QString)), SLOT(onLogMessageReceived(QString)));
             QObject::connect(_logParser, SIGNAL(packetParsed(Packet)), SLOT(onPacketParsed(Packet)));
 
-            _logParser->moveToThread(_parserThread);
+           _logParser->setParent(0);
+           _logParser->moveToThread(_parserThread);
             _parserThread->start();
             _logParser->openDevice();
         }
