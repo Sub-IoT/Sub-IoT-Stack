@@ -25,6 +25,33 @@ IF(D7AOSS_HAL_DRIVER STREQUAL "CC430")
         ADD_SUBDIRECTORY(cc430/driverlib)
 ENDIF()
 
+IF(D7AOSS_HAL_DRIVER STREQUAL "STM32L")
+    INCLUDE_DIRECTORIES(stm32l/driverlib/STM32L1xx_StdPeriph_Driver/inc)
+    INCLUDE_DIRECTORIES(stm32l/driverlib/CMSIS/Device/ST/STM32L1xx/Include)
+    INCLUDE_DIRECTORIES(stm32l/driverlib/CMSIS/Include)
+    INCLUDE_DIRECTORIES(stm32l/driverlib/STM32_USB-FS-Device_Driver/inc)
+    INCLUDE_DIRECTORIES(stm32l/usbserial)
+    ADD_SUBDIRECTORY(stm32l/driverlib)
+    SET(HAL_SRCS
+                        stm32l/interrupts.c
+                        stm32l/rotating_buffer.c
+                        stm32l/stm32l_crc.c
+                        stm32l/stm32l_system.c
+                        #system
+                        #usbserial
+                        #etc
+                        stm32l/radio_spi_hw.c
+                        stm32l/rotating_buffer.h
+                        stm32l/stm32l_led.c
+                        stm32l/stm32l_timer.c
+                        stm32l/systick.c
+                        stm32l/interrupts.c
+                        stm32l/stm32l_button.c
+                        stm32l/stm32l_rtc.c
+                        stm32l/stm32l_virtual_uart.c
+        )
+ENDIF()
+
 IF(D7AOSS_HAL_DRIVER STREQUAL "STUB")
         SET(HAL_SRCS
                         stub/stub_button.c

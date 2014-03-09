@@ -8,7 +8,7 @@
 #include "stm32l1xx_gpio.h"
 #include "stm32l1xx_rcc.h"
 
-#include <hal/leds.h>
+#include <leds.h>
 
 static volatile GPIO_TypeDef* _led_ports[4];
 static volatile uint16_t _led_pins[4];

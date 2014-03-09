@@ -12,8 +12,8 @@
 #include <stm32l1xx_syscfg.h>
 #include <misc.h>
 
-#include <hal/leds.h>
-#include <hal/button.h>
+#include <leds.h>
+#include <button.h>
 
 #include "interrupts.h"
 

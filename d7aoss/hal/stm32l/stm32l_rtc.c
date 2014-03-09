@@ -9,8 +9,8 @@
 #include <stm32l1xx_rtc.h>
 #include <misc.h>
 
-#include <hal/leds.h>
-#include <hal/rtc.h>
+#include <leds.h>
+#include <rtc.h>
 
 #include "interrupts.h"
 

@@ -8,12 +8,12 @@
 #include <stm32l1xx_pwr.h>
 #include <misc.h>
 
-#include <hal/system.h>
-#include <hal/leds.h>
-#include <hal/button.h>
-#include <hal/uart.h>
-#include <hal/rtc.h>
-#include <hal/timer.h>
+#include <system.h>
+#include <leds.h>
+#include <button.h>
+#include <uart.h>
+#include <rtc.h>
+#include <timer.h>
 
 #include "systick.h"
 

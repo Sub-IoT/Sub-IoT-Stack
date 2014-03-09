@@ -11,13 +11,13 @@
 #include "stm32l1xx_rcc.h"
 #include "stm32l1xx_tim.h"
 
-#include <framework/log.h>
-#include <framework/timer.h>
+#include <../framework/log.h>
+#include <../framework/timer.h>
 
 #include <signal.h>
 #include <time.h>
 
-timer_t timerid;
+//timer_t timerid;
 
 void hal_timer_init() {
 	TIM_TimeBaseInitTypeDef TIM_TimeBaseStructure;

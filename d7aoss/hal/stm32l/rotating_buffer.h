@@ -10,7 +10,7 @@
 
 #define ROTATING_BUFFER_SIZE 200
 #include <stdbool.h>
-#include <types.h>
+#include <stdint.h>
 
 typedef struct {
 	volatile unsigned int pos;

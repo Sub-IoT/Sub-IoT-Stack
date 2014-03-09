@@ -16,10 +16,10 @@
 #include "cc1101_phy.h"
 #include "cc1101_registers.h"
 #include "cc1101_constants.h"
-#include "log.h"
+#include "../framework/log.h"
 
 #include "cc1101_core.h"
-#include "radio_spi_hw.h"
+//#include "radio_spi_hw.h"
 /*
  * Variables
  */

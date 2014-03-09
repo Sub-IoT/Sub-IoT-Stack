@@ -5,7 +5,7 @@
  *      Author: armin
  */
 
-#include <types.h>
+#include <stdint.h>
 
 #include "interrupts.h"
 

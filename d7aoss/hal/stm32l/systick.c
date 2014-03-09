@@ -69,7 +69,7 @@ void delayuS(uint32_t uS) {
 		return;
 
 	// Delay loop for Cortex M3 thumb2
-	asm volatile (
+    __asm volatile (
 			// Load loop count to register
 			" mov r3, %[loops]\n"
 

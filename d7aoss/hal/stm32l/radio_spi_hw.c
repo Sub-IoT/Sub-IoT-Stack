@@ -14,7 +14,7 @@
 #include <stm32l1xx_spi.h>
 #include <stm32l1xx_syscfg.h>
 
-#include "cc1101_core.h"
+#include "../../phy/cc1101/cc1101_core.h" // TODO refactor, don't depend on this here
 #include "radio_spi_hw.h"
 
 extern void CC1101_ISR (GDOLine gdo);

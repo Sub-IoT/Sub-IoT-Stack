@@ -5,7 +5,7 @@
  */
 #include <stm32l1xx_crc.h>
 
-#include <hal/crc.h>
+#include <crc.h>
 
 #define CRC16_POLY 0x8005
 #define CRC_INIT 0xFFFF
