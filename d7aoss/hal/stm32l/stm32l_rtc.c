@@ -22,7 +22,7 @@ void rtc_init_counter_mode() {
 	RCC_APB1PeriphClockCmd(RCC_APB1Periph_PWR, ENABLE);
 
 	/* Allow access to RTC */
-	PWR_RTCAccessCmd(ENABLE);
+    //PWR_RTCAccessCmd(ENABLE); //TODO strm32l1xx_pwr.c does not compile
 
 	  /* Reset RTC Domain */
 	  RCC_RTCResetCmd(ENABLE);

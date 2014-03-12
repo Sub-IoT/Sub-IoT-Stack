@@ -10,7 +10,7 @@ SET(HAL_API
     timer.h
 )
 
-IF(D7AOSS_HAL_DRIVER STREQUAL "CC430")
+IF(D7AOSS_HAL_DRIVER STREQUAL "cc430")
         SET(HAL_SRCS
                         cc430/cc430_button.c
                         cc430/cc430_addresses.h
@@ -25,7 +25,7 @@ IF(D7AOSS_HAL_DRIVER STREQUAL "CC430")
         ADD_SUBDIRECTORY(cc430/driverlib)
 ENDIF()
 
-IF(D7AOSS_HAL_DRIVER STREQUAL "STM32L")
+IF(D7AOSS_HAL_DRIVER STREQUAL "stm32l")
     INCLUDE_DIRECTORIES(stm32l/driverlib/STM32L1xx_StdPeriph_Driver/inc)
     INCLUDE_DIRECTORIES(stm32l/driverlib/CMSIS/Device/ST/STM32L1xx/Include)
     INCLUDE_DIRECTORIES(stm32l/driverlib/CMSIS/Include)
@@ -34,25 +34,28 @@ IF(D7AOSS_HAL_DRIVER STREQUAL "STM32L")
     ADD_SUBDIRECTORY(stm32l/driverlib)
     SET(HAL_SRCS
                         stm32l/interrupts.c
+                        stm32l/rotating_buffer.h
                         stm32l/rotating_buffer.c
                         stm32l/stm32l_crc.c
                         stm32l/stm32l_system.c
-                        #system
                         #usbserial
                         #etc
                         stm32l/radio_spi_hw.c
-                        stm32l/rotating_buffer.h
                         stm32l/stm32l_led.c
                         stm32l/stm32l_timer.c
                         stm32l/systick.c
-                        stm32l/interrupts.c
                         stm32l/stm32l_button.c
                         stm32l/stm32l_rtc.c
                         stm32l/stm32l_virtual_uart.c
+                        #stm32l/system/debug_hardfault.c # TODO does not compile
+                        stm32l/system/startup.c
+                        stm32l/system/STM32L1xx_MD_Handlers.c
+                        stm32l/system/syscall.c
+                        stm32l/system/system_stm32l1xx.c
         )
 ENDIF()
 
-IF(D7AOSS_HAL_DRIVER STREQUAL "STUB")
+IF(D7AOSS_HAL_DRIVER STREQUAL "stub")
         SET(HAL_SRCS
                         stub/stub_button.c
                         stub/stub_crc.c
@@ -65,7 +68,7 @@ IF(D7AOSS_HAL_DRIVER STREQUAL "STUB")
 
 ENDIF()
 
-IF(D7AOSS_HAL_DRIVER STREQUAL "SIM")
+IF(D7AOSS_HAL_DRIVER STREQUAL "sim")
         SET(HAL_SRCS
                         sim/sim_button.c
                         sim/sim_crc.c
@@ -80,9 +83,11 @@ ENDIF()
 
 ADD_LIBRARY(HAL ${HAL_API} ${HAL_SRCS})
 
-IF(D7AOSS_HAL_DRIVER STREQUAL "CC430")
+IF(D7AOSS_HAL_DRIVER STREQUAL "cc430")
     TARGET_LINK_LIBRARIES(HAL DRV)
-ELSEIF(D7AOSS_HAL_DRIVER STREQUAL "STUB")
+ELSEIF(D7AOSS_HAL_DRIVER STREQUAL "stm32l")
+    TARGET_LINK_LIBRARIES(HAL DRV)
+ELSEIF(D7AOSS_HAL_DRIVER STREQUAL "stub")
     TARGET_LINK_LIBRARIES(HAL rt)
 ELSE()
     TARGET_LINK_LIBRARIES(HAL)

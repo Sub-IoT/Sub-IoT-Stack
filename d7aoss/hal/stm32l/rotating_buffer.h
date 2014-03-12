@@ -21,7 +21,7 @@ typedef struct {
 
 bool rotating_buffer_store_char(unsigned char c, rotating_buffer *buffer);
 uint8_t rotating_buffer_read_char(rotating_buffer *buffer);
-inline bool rotating_buffer_is_empty(rotating_buffer *buffer) {
+static inline bool rotating_buffer_is_empty(rotating_buffer *buffer) {
 	return buffer->pos == buffer->top;
 }
 

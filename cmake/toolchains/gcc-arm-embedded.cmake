@@ -26,5 +26,6 @@ SET(CMAKE_C_FLAGS
   "${CMAKE_C_FLAGS}"
   "-fno-common"
   "-Wstrict-prototypes -ffunction-sections -fdata-sections"
-  "-mcpu=cortex-m3"
+  "-mthumb -mcpu=cortex-m3 -mfix-cortex-m3-ldrd -msoft-float"
+  #"-mcpu=cortex-m3 -mthumb -mno-thumb-interwork -mfpu=vfp -msoft-float -mfix-cortex-m3-ldrd"
 )

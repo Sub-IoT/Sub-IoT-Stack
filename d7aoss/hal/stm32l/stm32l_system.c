@@ -3,7 +3,7 @@
  *  Authors:
  *  	glenn.ergeerts@artesis.be
  */
-
+#define assert_param(expr) ((void)0)
 #include <stm32l1xx_rcc.h>
 #include <stm32l1xx_pwr.h>
 #include <misc.h>
@@ -69,7 +69,7 @@ void system_lowpower_mode(unsigned char mode, unsigned char enableInterrupts) {
 	switch (mode) {
 	case 4:
 		//STOP mode
-		PWR_EnterSTOPMode(PWR_Regulator_ON, pwrMode);
+        //PWR_EnterSTOPMode(PWR_Regulator_ON, pwrMode); // TODO results in Error: selected processor does not support ARM mode `wfi'
 		break;
 	case 3:
 		// Low Power sleep?
