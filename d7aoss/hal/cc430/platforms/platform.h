@@ -18,7 +18,7 @@
 #ifndef PLATFORM_H_
 #define PLATFORM_H_
 
-#define PLATFORM_ARTESIS
+#define PLATFORM_WIZZIMOTE
 
 
 #ifdef PLATFORM_WIZZIMOTE

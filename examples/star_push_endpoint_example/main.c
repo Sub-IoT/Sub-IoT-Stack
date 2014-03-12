@@ -47,6 +47,9 @@ static uint8_t tx = 0;
 static uint16_t counter = 0;
 static volatile bool add_tx_event = true;
 
+static uint8_t data[32];
+static volatile uint8_t dataLength = 0;
+
 timer_event event;
 
 void start_tx()
@@ -64,7 +67,9 @@ void start_tx()
 
 		log_print_string("TX...");
 
-		trans_tx_foreground_frame((uint8_t*)&counter, sizeof(counter), 0xFF, SEND_CHANNEL, TX_EIRP);
+		data[5] = counter >> 8;
+		data[6] = counter & 0xFF;
+		trans_tx_foreground_frame(data, dataLength, 0xFF, SEND_CHANNEL, TX_EIRP);
 	}
 	add_tx_event = true;
 }
@@ -106,6 +111,26 @@ int main(void) {
 	event.f = &start_tx;
 
 	log_print_string("endpoint started");
+
+	D7AQP_Command_Request_Template template;
+	template.command_code = D7AQP_COMMAND_CODE_EXTENSION | D7AQP_COMMAND_TYPE_NA2P_REQUEST | D7AQP_OPCODE_ANNOUNCEMENT_FILE;
+	template.command_extension = D7AQP_COMMAND_EXTENSION_NORESPONSE;
+	template.dialog_template = NULL;
+
+	data[0] = template.command_code;
+	data[1] = template.command_extension;
+
+	D7AQP_Single_File_Return_Template file_template;
+	file_template.return_file_id = 0;
+	file_template.file_offset = 0;
+	file_template.isfb_total_length = 2;
+
+	data[2] = file_template.return_file_id;
+	data[3] = file_template.file_offset;
+	data[4] = file_template.isfb_total_length;
+
+
+	dataLength = 7;
 
 	timer_add_event(&event);
 

@@ -133,7 +133,7 @@ int main(void) {
 		}
 
 		// Don't know why but system reboots when LPM > 1 since ACLK is uses for UART
-		system_lowpower_mode(3,1);
+		system_lowpower_mode(0,1);
 	}
 }
 

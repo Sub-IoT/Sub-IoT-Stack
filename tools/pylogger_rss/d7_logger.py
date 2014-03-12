@@ -10,9 +10,10 @@ import time as time
 import struct as struct
 import ctypes
 import datetime
-import queue
+import Queue
 import wx
 from collections import namedtuple
+import argparse
 
 import logging
 
@@ -211,8 +212,14 @@ class GraphFrame(wx.Frame):
 		self.Bind(wx.EVT_TIMER, self.on_redraw_timer, self.redraw_timer)		
 		self.redraw_timer.Start(100)
 		
-		global serial_port
-		serial_port = serial.Serial(system.argv[1], 9600)
+		global serial_port, settings
+		
+		parser = argparse.ArgumentParser(description = "DASH7 logger for the OSS-7 stack. You can exit the logger using Ctrl-c, it takes some time.")
+		parser.add_argument('serial', default="COM5", metavar="serial port", help="serial port (eg COM7 or /dev/ttyUSB0)", nargs='?')
+		parser.add_argument('-b', '--baud' , default=9600, metavar="baudrate", type=int, help="set the baud rate (default: 9600)")
+		settings = vars(parser.parse_args())
+		
+		serial_port = serial.Serial(settings['serial'], settings['baud'])
 		datestr = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
 		
 		self.f = open(datestr + FILE_EXTENSION, 'w')

@@ -45,7 +45,7 @@ typedef struct
 	uint8_t sync_word_class;	//Sync word class
 	uint8_t length;				//Packet length (0 : variable)
 	uint16_t timeout;			//Timeout value (0 : continuous) in milliseconds
-	int8_t scan_minimum_energy;
+	int16_t scan_minimum_energy;
 } phy_rx_cfg_t;
 
 //Packet reception result structure

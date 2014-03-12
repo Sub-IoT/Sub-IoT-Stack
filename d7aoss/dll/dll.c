@@ -289,12 +289,12 @@ static void rx_callback(phy_rx_data_t* res)
 		} else {
 
 			// TODO: should be done in upper layer
-			data_pointer++; // TODO what is this?
-			data_pointer++; //isfid
-			data_pointer++; //isfoffset
+			//data_pointer++; // TODO what is this?
+			//data_pointer++; //isfid
+			//data_pointer++; //isfoffset
 
-			frame->payload_length = (*data_pointer);
-			data_pointer++;
+			frame->payload_length = frame->length - (data_pointer - res->data) - 2;
+			//data_pointer++;
 			frame->payload = data_pointer;
 		}
 
