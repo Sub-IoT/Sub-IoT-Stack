@@ -21,7 +21,7 @@
 
 
 //#TODO define from cmake
-//#define LOG_PHY_ENABLED
+#define LOG_PHY_ENABLED
 //#define LOG_DLL_ENABLED
 //#define LOG_NWL_ENABLED
 //#define LOG_TRANS_ENABLED
