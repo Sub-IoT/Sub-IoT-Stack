@@ -1,7 +1,7 @@
 CMAKE_MINIMUM_REQUIRED (VERSION 2.6)
 PROJECT (D7AOSS C)
 
-SET(CMAKE_C_FLAGS "-std=c99")
+SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=c99")
 
 #######################################
 # Configuration

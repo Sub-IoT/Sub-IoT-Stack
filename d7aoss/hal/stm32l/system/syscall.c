@@ -32,7 +32,7 @@ int _write(int file, char *ptr, int len);
 
  Minimal implementation:
  */
-/*
+
 int _close(int file) {
 	return -1;
 }
@@ -51,20 +51,20 @@ char **environ = __env;
 
  Minimal implementation (for a system without processes):
  */
-//int _execve(char *name, char **argv, char **env) {
-//    errno = ENOMEM;
-//    return -1;
-//}
+int _execve(char *name, char **argv, char **env) {
+    errno = ENOMEM;
+    return -1;
+}
 /*
  fork
  Create a new process.
 
  Minimal implementation (for a system without processes):
  */
-//int _fork() {
-//    errno = EAGAIN;
-//    return -1;
-//}
+int _fork() {
+    errno = EAGAIN;
+    return -1;
+}
 /*
  fstat
  Status of an open file.
@@ -73,10 +73,10 @@ char **environ = __env;
  character special devices.
 
  */
-//int _fstat(int file, struct stat *st) {
-//	st->st_mode = S_IFCHR;
-//	return 0;
-//}
+int _fstat(int file, struct stat *st) {
+    st->st_mode = S_IFCHR;
+    return 0;
+}
 
 /*
  * getpid
@@ -88,9 +88,9 @@ char **environ = __env;
 
  *
  */
-//int _getpid() {
-//	return 1;
-//}
+int _getpid() {
+    return 1;
+}
 /*
  isatty
  Query whether output stream is a terminal.
@@ -98,19 +98,19 @@ char **environ = __env;
  For consistency with the other minimal implementations, which only support output to stdout,
  this minimal implementation is suggested:
  */
-//int _isatty(int file) {
-//	return 1;
-//}
+int _isatty(int file) {
+    return 1;
+}
 /*
  kill
  Send a signal.
 
  Minimal implementation:
  */
-//int _kill(int pid, int sig) {
-//	errno = EINVAL;
-//	return (-1);
-//}
+int _kill(int pid, int sig) {
+    errno = EINVAL;
+    return (-1);
+}
 
 /*
  link
@@ -130,23 +130,23 @@ int _link(char *old, char *new) {
 
  Minimal implementation:
  */
-//int _lseek(int file, int ptr, int dir) {
-//	return 0;
-//}
+int _lseek(int file, int ptr, int dir) {
+    return 0;
+}
 /*
  open
  Open a file. Minimal implementation:
  */
-//int _open(const char *name, int flags, int mode) {
-//	return -1;
-//}
+int _open(const char *name, int flags, int mode) {
+    return -1;
+}
 /*
  read
  Read from a file. Minimal implementation:
  */
-//int _read(int file, char *ptr, int len) {
-//	return 0;
-//}
+int _read(int file, char *ptr, int len) {
+    return 0;
+}
 
 /*
  sbrk
@@ -156,63 +156,63 @@ int _link(char *old, char *new) {
  The following suffices for a standalone system;
  it exploits the symbol end automatically defined by the GNU linker.
  */
-//caddr_t _sbrk(int incr) {
-//    extern char end; /* Defined by the linker */
-//    static char *heap_end;
-//    char *prev_heap_end;
+caddr_t _sbrk(int incr) {
+    extern char end; /* Defined by the linker */
+    static char *heap_end;
+    char *prev_heap_end;
 
-//    if (heap_end == 0) {
-//        heap_end = &end;
-//    }
-//    prev_heap_end = heap_end;
-//    char * stack = (char*) __get_MSP();
-//    if (heap_end + incr > stack) {
-//        errno = ENOMEM;
-//        return (caddr_t) -1;
-//    }
+    if (heap_end == 0) {
+        heap_end = &end;
+    }
+    prev_heap_end = heap_end;
+    char * stack = (char*) __get_MSP();
+    if (heap_end + incr > stack) {
+        errno = ENOMEM;
+        return (caddr_t) -1;
+    }
 
-//    heap_end += incr;
-//    return (caddr_t) prev_heap_end;
-//}
+    heap_end += incr;
+    return (caddr_t) prev_heap_end;
+}
 /*
  stat
  Status of a file (by name).
 
  Minimal implementation:
  */
-//int _stat(const char *file, struct stat *st) {
-//    st->st_mode = S_IFCHR;
-//    return 0;
-//}
+int _stat(const char *file, struct stat *st) {
+    st->st_mode = S_IFCHR;
+    return 0;
+}
 /*
  times
  Timing information for current process.
 
  Minimal implementation:
  */
-//clock_t _times(struct tms *buf) {
-//	return -1;
-//}
+clock_t _times(struct tms *buf) {
+    return -1;
+}
 /*
  unlink
  Remove a file's directory entry.
 
  Minimal implementation:
  */
-//int _unlink(char *name) {
-//	errno = ENOENT;
-//	return -1;
-//}
+int _unlink(char *name) {
+    errno = ENOENT;
+    return -1;
+}
 /*
  wait
  Wait for a child process.
 
  Minimal implementation:
  */
-//int _wait(int *status) {
-//    errno = ECHILD;
-//    return -1;
-//}
+int _wait(int *status) {
+    errno = ECHILD;
+    return -1;
+}
 /*
  write
  Write a character to a file.

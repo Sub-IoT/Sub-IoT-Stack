@@ -23,9 +23,9 @@ SET(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ONLY)
 SET(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)
 
 SET(CMAKE_C_FLAGS
-  "${CMAKE_C_FLAGS}"
-  "-fno-common"
-  "-Wstrict-prototypes -ffunction-sections -fdata-sections"
-  "-mthumb -mcpu=cortex-m3 -mfix-cortex-m3-ldrd -msoft-float"
-  #"-mcpu=cortex-m3 -mthumb -mno-thumb-interwork -mfpu=vfp -msoft-float -mfix-cortex-m3-ldrd"
+  "${CMAKE_C_FLAGS} -fno-common -Wstrict-prototypes -ffunction-sections -fdata-sections -mthumb -mcpu=cortex-m3 -mfix-cortex-m3-ldrd -msoft-float" CACHE STRING "" FORCE)
+
+ADD_DEFINITIONS(
+    "-DHSE_VALUE=8000000" # TODO define somewhere else?
+    "-DSTM32L1XX_MD"
 )

@@ -69,7 +69,7 @@ void system_lowpower_mode(unsigned char mode, unsigned char enableInterrupts) {
 	switch (mode) {
 	case 4:
 		//STOP mode
-        //PWR_EnterSTOPMode(PWR_Regulator_ON, pwrMode); // TODO results in Error: selected processor does not support ARM mode `wfi'
+        PWR_EnterSTOPMode(PWR_Regulator_ON, pwrMode);
 		break;
 	case 3:
 		// Low Power sleep?
