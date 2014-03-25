@@ -14,7 +14,6 @@
 #include "cc1101_constants.h"
 //#include "radio_spi_hw.h" // TODO provide HAL SPI API
 #include "cc1101_core.h"
-//#include "systick.h"
 
 // *************************************************************************************************
 // @fn          Strobe

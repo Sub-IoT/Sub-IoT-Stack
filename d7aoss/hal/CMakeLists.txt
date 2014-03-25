@@ -41,6 +41,7 @@ IF(D7AOSS_HAL_DRIVER STREQUAL "stm32l")
                         #usbserial
                         #etc
                         stm32l/radio_spi_hw.c
+                        stm32l/radio_spi_settings.h
                         stm32l/stm32l_led.c
                         stm32l/stm32l_timer.c
                         stm32l/systick.c

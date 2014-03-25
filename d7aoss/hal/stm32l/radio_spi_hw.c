@@ -16,6 +16,7 @@
 
 #include "../../phy/cc1101/cc1101_core.h" // TODO refactor, don't depend on this here
 #include "radio_spi_hw.h"
+#include "radio_spi_settings.h"
 
 extern void CC1101_ISR (GDOLine gdo);
 static GPIO_InitTypeDef GPIO_InitStructure;
