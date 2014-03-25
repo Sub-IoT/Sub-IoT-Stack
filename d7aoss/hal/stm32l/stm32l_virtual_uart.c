@@ -7,18 +7,18 @@
 
 #include "uart.h"
 
-//#include "hw_config.h"
+#include "hw_config.h"
 #include "rotating_buffer.h"
-//#include "usb_init.h"
+#include "usb_init.h"
 
 rotating_buffer usb_rx;
 
 void uart_init() {
-//	Set_System();
-//	Set_USBClock();
-//	USB_Interrupts_Config();
+    Set_System();
+    Set_USBClock();
+    USB_Interrupts_Config();
 
-//	USB_Init();
+    USB_Init();
 
 }
 

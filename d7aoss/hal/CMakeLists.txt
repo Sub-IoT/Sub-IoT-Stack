@@ -26,6 +26,7 @@ IF(D7AOSS_HAL_DRIVER STREQUAL "cc430")
 ENDIF()
 
 IF(D7AOSS_HAL_DRIVER STREQUAL "stm32l")
+    INCLUDE_DIRECTORIES(stm32l/)
     INCLUDE_DIRECTORIES(stm32l/driverlib/STM32L1xx_StdPeriph_Driver/inc)
     INCLUDE_DIRECTORIES(stm32l/driverlib/CMSIS/Device/ST/STM32L1xx/Include)
     INCLUDE_DIRECTORIES(stm32l/driverlib/CMSIS/Include)
@@ -38,7 +39,18 @@ IF(D7AOSS_HAL_DRIVER STREQUAL "stm32l")
                         stm32l/rotating_buffer.c
                         stm32l/stm32l_crc.c
                         stm32l/stm32l_system.c
-                        #usbserial
+                        stm32l/usbserial/hw_config.c
+                        stm32l/usbserial/usb_prop.c
+                        stm32l/usbserial/usb_desc.c
+                        stm32l/usbserial/usb_pwr.c
+                        stm32l/usbserial/usb_istr.c
+                        stm32l/usbserial/usb_endp.c
+                        stm32l/driverlib/STM32_USB-FS-Device_Driver/src/usb_init.c
+                        stm32l/driverlib/STM32_USB-FS-Device_Driver/src/usb_mem.c
+                        stm32l/driverlib/STM32_USB-FS-Device_Driver/src/usb_core.c
+                        stm32l/driverlib/STM32_USB-FS-Device_Driver/src/usb_regs.c
+                        stm32l/driverlib/STM32_USB-FS-Device_Driver/src/usb_sil.c
+                        stm32l/driverlib/STM32_USB-FS-Device_Driver/src/usb_int.c
                         #etc
                         stm32l/radio_spi_hw.c
                         stm32l/radio_spi_settings.h
