@@ -23,19 +23,19 @@ void uart_init() {
 }
 
 void uart_enable_interrupt() {
-//	NVIC->ISER[0] = (uint32_t) 0x01 << (USB_LP_IRQn & (uint8_t) 0x1F);
+    NVIC->ISER[0] = (uint32_t) 0x01 << (USB_LP_IRQn & (uint8_t) 0x1F);
 }
 
 void uart_disable_interrupt() {
-//	NVIC->ICER[0] = (uint32_t) 0x01 << (USB_LP_IRQn & (uint8_t) 0x1F);
+    NVIC->ICER[0] = (uint32_t) 0x01 << (USB_LP_IRQn & (uint8_t) 0x1F);
 }
 
 void uart_transmit_data(unsigned char data) {
-//	USB_Send_Character(data);
+    USB_Send_Character(data);
 
 }
 void uart_transmit_message(unsigned char *data, unsigned char length) {
-//	USB_Send_Data(data, length);
+    USB_Send_Data(data, length);
 }
 
 unsigned char uart_tx_ready() {
