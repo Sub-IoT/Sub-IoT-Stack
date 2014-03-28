@@ -10,6 +10,7 @@ CMAKE_FORCE_CXX_COMPILER(arm-none-eabi-g++ GNU)
 
 SET(CMAKE_SYSTEM_NAME Generic)
 SET(CMAKE_SYSTEM_VERSION 1)
+SET(CMAKE_CROSSCOMPILING 1)
 
 # where is the target environment 
 SET(CMAKE_FIND_ROOT_PATH  /opt/toolchains/gcc-arm-none-eabi-4_8-2013q4)
