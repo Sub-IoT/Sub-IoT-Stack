@@ -175,7 +175,7 @@ void dll_set_scan_spectrum_id(uint8_t spectrum_id);
 void dll_csma(bool enabled);
 void dll_ca(uint8_t t_ca);
 void dll_stop_channel_scan();
-void dll_background_scan();
+uint8_t dll_background_scan();
 void dll_foreground_scan();
 void dll_channel_scan_series(dll_channel_scan_series_t*);
 

@@ -76,6 +76,8 @@ void rx_callback(dll_rx_res_t* rx_res)
 
 	blink_led();
 
+	log_print_string("received msg");
+
 	// log endpoint's device_id, RSS of link, and payload of device
 	dll_foreground_frame_t* frame = (dll_foreground_frame_t*) (rx_res->frame);
 	uart_transmit_data(0xCE); // NULL

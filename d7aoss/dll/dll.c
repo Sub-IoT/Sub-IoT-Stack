@@ -370,7 +370,7 @@ void dll_stop_channel_scan()
 	phy_idle();
 }
 
-void dll_background_scan()
+uint8_t dll_background_scan()
 {
 	#ifdef LOG_DLL_ENABLED
 		log_print_stack_string(LOG_DLL, "DLL Starting background scan");
@@ -380,13 +380,18 @@ void dll_background_scan()
 
 	//check for signal detected above E_sm
 	// TODO: is this the best method?
-	if (phy_get_rssi(spectrum_id, 0) <= scan_minimum_energy)
+	int rss = phy_get_rssi(spectrum_id, 0);
+	if (rss <= scan_minimum_energy)
 	{
 		#ifdef LOG_DLL_ENABLED
-			log_print_stack_string(LOG_DLL, "DLL No signal deteced");
+			log_print_stack_string(LOG_DLL, "DLL No signal detected: %d", rss);
 		#endif
-		return;
+		return 0;
 	}
+
+	#ifdef LOG_DLL_ENABLED
+		log_print_stack_string(LOG_DLL, "DLL Background Scan signal detected: %d", rss);
+	#endif
 
 	phy_rx_cfg_t rx_cfg;
 	rx_cfg.length = 0;
@@ -406,6 +411,8 @@ void dll_background_scan()
 	#else
 	phy_rx(&rx_cfg);
 	#endif
+
+	return 1;
 }
 void dll_foreground_scan()
 {
