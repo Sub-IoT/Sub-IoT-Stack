@@ -140,7 +140,8 @@ void ReadBurstReg(uint8_t addr, uint8_t* buffer, uint8_t count) {
 	uint8_t _addr = (addr & 0x3F) | READ_BURST;
 	radioSelect();
 	spiSendByte(_addr);
-	for (int i = 0; i < count; i++) {
+	uint8_t i;
+	for (i = 0; i < count; i++) {
 		buffer[i] = spiSendByte(0); // send dummy byte to receive reply
 	}
 	radioDeselect();
@@ -158,7 +159,8 @@ void WriteBurstReg(uint8_t addr, uint8_t* buffer, uint8_t count) {
 	uint8_t _addr = (addr & 0x3F) | WRITE_BURST;
 	radioSelect();
 	spiSendByte(_addr);
-	for (int i = 0; i < count; i++) {
+	uint8_t i;
+	for (i = 0; i < count; i++) {
 		spiSendByte(buffer[i]);
 	}
 	radioDeselect();
