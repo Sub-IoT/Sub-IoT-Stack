@@ -33,7 +33,7 @@ GROUP(libgcc.a libc.a libm.a)
  */
  
 /* Used in QEMU, the embedded images entry point is in the interrupts table */
-ENTRY(Reset_Handler)
+ENTRY(boot_entry)
 
 SECTIONS
 {
