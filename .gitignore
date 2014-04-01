@@ -20,3 +20,8 @@ Thumbs.db
 build/
 html/
 .launches
+*.dep
+*.ewp
+*.eww
+*.sfr
+settings

@@ -16,6 +16,7 @@ from collections import namedtuple
 import threading
 
 import logging
+import argparse
 
 # The recommended way to use wx with mpl is with the WXAgg
 # backend. 
@@ -28,11 +29,15 @@ serial_port = None
 
 
 def read_value_from_serial():
-	data = serial_port.read()
-	#read_length()
-	#message = serial_port.read(self.length)
-	print(data.encode("hex").upper())
-	#print(data.encode("hex").upper())
+	data = serial_port.read()	
+
+	length = struct.unpack("b", data)[0]
+	print("length: %d" % length);
+		
+	data = serial_port.read(size=length)
+	print("data: "  + data)
+	
+	
 	#print(">D7: " + data.encode("hex").upper() + " " + data + "\n")
 	#print(">D7: " + self.message + "\n")
 	#print(">D7: " + data.encode("hex").upper() + "\n")
@@ -58,12 +63,14 @@ def empty_serial_buffer():
 		serial_port.read(1)
 
 def main():
-	if (len(system.argv) != 2):
-		print("Usage: <serialport (eg COM7)>")
-		system.exit(2)
 
-	global serial_port 
-	serial_port = serial.Serial(system.argv[1], 9600)
+	global serial_port, settings
+	parser = argparse.ArgumentParser(description = "DASH7 to UART test. You can exit the logger using Ctrl-c, it takes some time.")
+	parser.add_argument('serial', default="COM10", metavar="serial port", help="serial port (eg COM7 or /dev/ttyUSB0)", nargs='?')
+	parser.add_argument('-b', '--baud' , default=9600, metavar="baudrate", type=int, help="set the baud rate (default: 9600)")
+	settings = vars(parser.parse_args())
+
+	serial_port = serial.Serial(settings['serial'], settings['baud'])
 	
 	empty_serial_buffer()
 	keep_running = True
@@ -78,8 +85,9 @@ def main():
 	while keep_running:
 		try:						
 			input = raw_input("Prompt> ")
+			serial_port.write(chr(len(input)))
 			serial_port.write(input)
-			print("<SER: " + input.encode("hex").upper()) 
+			print("<SER: " + input.encode("hex").upper() + " length: %i" % len(input)) 
 
 		
 		except (KeyboardInterrupt, SystemExit):	
