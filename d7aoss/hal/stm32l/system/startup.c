@@ -63,7 +63,6 @@ extern void SystemInit(void);
 extern void SystemCoreClockUpdate(void);
 // Prototype the required startup functions
 extern void main(void);
-
 // The entry point of the application, prepare segments,
 // initialize the cpu and execute main()
 void boot_entry(void)
@@ -93,3 +92,5 @@ void boot_entry(void)
   // Do nothing when returned from main, just keep looping
   while(1);
 }
+
+#include "STM32L1xx_MD_Handlers.h"

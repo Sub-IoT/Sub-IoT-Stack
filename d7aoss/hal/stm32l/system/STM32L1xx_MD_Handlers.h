@@ -27,6 +27,9 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  */
+#ifndef _STM32L1xx_MD_HANDLERS_H
+#define _STM32L1xx_MD_HANDLERS_H
+
 #ifdef STM32L1XX_MD
 // The GCC compiler defines the current architecture derived from the -mcpu argument.
 // When target cpu is the cortex-m3, it automatically defines __ARM_ARCH_7M__
@@ -45,7 +48,7 @@
  * are weakly aliased which means that (re)definitions will override these.
  *****************************************************************************/
 
-void irq_undefined() {
+void irq_undefined(void) {
 	// Do nothing when occurred interrupt is not defined, just keep looping
 	while (1)
 		;
@@ -125,7 +128,7 @@ extern void boot_entry(void);
 // Defined irq vectors using simple c code following the description in a white
 // paper from ARM[3] and code example from Simonsson Fun Technologies[4].
 // These vectors are placed at the memory location defined in the linker script
-//void (* const g_pfnVectors[])(void) SECTION(".isr_vector") =
+//void* __attribute__ ((used)) g_pfnVectors[] SECTION(".isr_vector") =
 void* g_pfnVectors[] SECTION(".isr_vector") =
 {
 	// Stack and program reset entry point
@@ -206,3 +209,4 @@ void* g_pfnVectors[] SECTION(".isr_vector") =
  *  [4] http://fun-tech.se/stm32/OlimexBlinky/mini.php
  *****************************************************************************/
 
+#endif
