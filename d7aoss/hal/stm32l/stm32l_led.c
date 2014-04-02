@@ -34,8 +34,8 @@ void led_config(unsigned char index, GPIO_TypeDef* port, uint16_t pin, uint16_t 
 
 void led_init()
 {
-	led_config(1, GPIOB, GPIO_Pin_0, RCC_AHBPeriph_GPIOB );
-	led_config(0, GPIOB, GPIO_Pin_1, RCC_AHBPeriph_GPIOB );
+	led_config(1, GPIOB, GPIO_Pin_6, RCC_AHBPeriph_GPIOB );
+	led_config(0, GPIOB, GPIO_Pin_7, RCC_AHBPeriph_GPIOB );
 	led_config(2, GPIOA, GPIO_Pin_2, RCC_AHBPeriph_GPIOA );
 	led_config(3, GPIOA, GPIO_Pin_3, RCC_AHBPeriph_GPIOA );
 
