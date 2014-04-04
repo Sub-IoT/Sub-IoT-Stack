@@ -32,6 +32,7 @@
 #include "stm32l1xx_syscfg.h"
 #include "misc.h"
 
+#include "usb_istr.h"
 #include "usb_lib.h"
 #include "usb_prop.h"
 #include "usb_desc.h"
@@ -417,6 +418,46 @@ void USB_OTG_BSP_uDelay(const uint32_t usec)
 
 	while (!(SysTick ->CTRL & SysTick_CTRL_COUNTFLAG_Msk))
 		;
+}
+#endif /* STM32F10X_CL */
+
+#ifndef STM32F10X_CL
+/*******************************************************************************
+* Function Name  : USB_IRQHandler
+* Description    : This function handles USB Low Priority interrupts
+*                  requests.
+* Input          : None
+* Output         : None
+* Return         : None
+*******************************************************************************/
+void USB_LP_IRQHandler(void)
+#if defined(STM32L1XX_MD) || defined(STM32L1XX_HD)|| defined(STM32L1XX_MD_PLUS)
+#else
+void USB_LP_CAN1_RX0_IRQHandler(void)
+#endif
+{
+  USB_Istr();
+}
+#endif /* STM32F10X_CL */
+/*******************************************************************************
+* Function Name  : EVAL_COM1_IRQHandler
+* Description    : This function handles EVAL_COM1 global interrupt request.
+ Input          : None
+* Output         : None
+* Return         : None
+*******************************************************************************/
+
+#ifdef STM32F10X_CL
+/*******************************************************************************
+* Function Name  : OTG_FS_IRQHandler
+* Description    : This function handles USB-On-The-Go FS global interrupt request.
+* Input          : None
+* Output         : None
+* Return         : None
+*******************************************************************************/
+void OTG_FS_IRQHandler(void)
+{
+  STM32_PCD_OTG_ISR_Handler();
 }
 #endif /* STM32F10X_CL */
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/

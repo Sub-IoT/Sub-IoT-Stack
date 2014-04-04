@@ -79,7 +79,7 @@ int main(void)
         led_toggle(2);
 
         // TODO commented for now
-        /*
+
         if (INTERRUPT_BUTTON1 & interrupt_flags) {
         	interrupt_flags &= ~INTERRUPT_BUTTON1;
 //        	led_toggle(1);
@@ -128,7 +128,7 @@ int main(void)
         	led_on(3);
         } else {
         	led_off(3);
-        }*/
+        }
 
 
 //		system_lowpower_mode(4,1);
