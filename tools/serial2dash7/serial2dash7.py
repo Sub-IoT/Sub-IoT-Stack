@@ -11,7 +11,7 @@ import struct as struct
 import ctypes
 import datetime
 import Queue
-import wx
+#import wx
 from collections import namedtuple
 import threading
 

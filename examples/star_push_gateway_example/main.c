@@ -89,6 +89,8 @@ void rx_callback(dll_rx_res_t* rx_res)
 	uart_transmit_message(frame->payload, frame->payload_length);
 	uart_transmit_data(0x0D); // carriage return
 
+	log_print_data(frame->payload, frame->payload_length);
+
 	// Restart channel scanning
 	start_channel_scan = true;
 }
