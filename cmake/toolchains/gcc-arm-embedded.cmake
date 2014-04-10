@@ -13,7 +13,7 @@ SET(CMAKE_SYSTEM_VERSION 1)
 SET(CMAKE_CROSSCOMPILING 1)
 
 # where is the target environment 
-SET(CMAKE_FIND_ROOT_PATH  /opt/toolchains/gcc-arm-none-eabi-4_8-2013q4)
+SET(CMAKE_FIND_ROOT_PATH  /opt/toolchains/gcc-arm-none-eabi-4_8-2014q1)
 
 MESSAGE(STATUS "Cross-compiling using gcc-arm-embedded toolchain")
 
