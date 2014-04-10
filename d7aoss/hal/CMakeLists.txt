@@ -63,8 +63,8 @@ IF(D7AOSS_HAL_DRIVER STREQUAL "stm32l")
                         stm32l/system/debug_hardfault.c
                         stm32l/system/startup.c
                         stm32l/system/syscall.c
-                        stm32l/system/system_stm32l1xx.c
                         stm32l/system/STM32L1xx_MD_Handlers.h
+                        stm32l/board_config/${D7AOSS_HAL_STM32L_BOARD}/system_stm32l1xx.c
         )
 ENDIF()
 
