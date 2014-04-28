@@ -515,7 +515,18 @@ void dll_csma(bool enabled)
 	}
 
 	timer_event event;
-	event.next_event = 5; // TODO: get T_G fron config
+
+	// TODO: calculate Tg only once
+	// Calculate correct t_g
+
+	uint8_t channel_bandwidth_index = (spectrum_id >> 4) & 0x07;
+	uint8_t fec = (bool)spectrum_id >> 7;
+
+	if (channel_bandwidth_index == 1)
+		event.next_event = fec == 0 ? 5 : 10;
+	else
+		event.next_event = fec == 0 ? 2 : 3;
+
 	event.f = &dll_cca2;
 
 	if (!timer_add_event(&event))
