@@ -24,6 +24,7 @@ static nwl_rx_callback_t nwl_rx_callback;
 static nwl_tx_callback_t nwl_tx_callback;
 
 static uint8_t datastream_frame_id = 0;
+static uint8_t dll_data[248]; //TODO: should be dynamic or queue
 
 static void dll_tx_callback(Dll_Tx_Result status)
 {
@@ -108,7 +109,6 @@ void nwl_build_advertising_protocol_data(uint8_t channel_id, uint16_t eta, int8_
 
 void nwl_build_network_protocol_data(uint8_t* data, uint8_t length, nwl_security* security, nwl_routing_header* routing, uint8_t subnet, uint8_t spectrum_id, int8_t tx_eirp, uint8_t dialog_id)
 {
-	uint8_t dll_data[248];
 	uint8_t offset = 0;
 
 	dll_ff_tx_cfg_t dll_params;
@@ -160,7 +160,6 @@ void nwl_build_network_protocol_data(uint8_t* data, uint8_t length, nwl_security
 
 void nwl_build_datastream_protocol_data(uint8_t* data, uint8_t length, nwl_security* security, uint8_t subnet, uint8_t spectrum_id, int8_t tx_eirp, uint8_t dialog_id)
 {
-	uint8_t dll_data[248];
 	uint8_t offset = 0;
 
 	dll_ff_tx_cfg_t dll_params;
