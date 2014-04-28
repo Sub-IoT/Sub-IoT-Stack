@@ -29,6 +29,8 @@ static uint8_t current__spectrum_id = 0;
 static uint16_t init_t_ca = 400;
 static uint16_t last_ca = 0;
 
+static Trans_CSMA_CA_Type csma_ca_type = TransCsmaCaAind;
+
 static int temp_time= 0;
 static uint8_t dialogid = 0;
 
@@ -92,6 +94,8 @@ void trans_init(){
 	nwl_init();
 	nwl_set_tx_callback(&control_tx_callback);
 	nwl_set_rx_callback(&nwl_rx_callback);
+
+
 }
 
 void trans_set_tx_callback(trans_tx_callback_t cb)
@@ -110,6 +114,12 @@ void trans_set_initial_t_ca(uint16_t t_ca)
 }
 
 
+void trans_set_csma_ca(Trans_CSMA_CA_Type type)
+{
+	csma_ca_type = type;
+}
+
+
 static void final_rigd(){
 	 dll_csma(true);
 }
@@ -118,9 +128,24 @@ static void t_ca_timeout_rigd(){
 	trans_rigd_ccp(current__spectrum_id, false, false);
 }
 
+static void trans_initiate_csma_ca(uint8_t spectrum_id)
+{
+	switch (csma_ca_type)
+	{
+	case TransCsmaCaAind:
+		break;
+	case TransCsmaCaRaind:
+		break;
+	case TransCsmaCaRigd:
+		trans_rigd_ccp(spectrum_id, true, false);
+		break;
+	}
+}
+
+
 void trans_tx_foreground_frame(uint8_t* data, uint8_t length, uint8_t subnet, uint8_t spectrum_id, int8_t tx_eirp) {
 	nwl_build_network_protocol_data(data, length, NULL, NULL, subnet, spectrum_id, tx_eirp, dialogid++);
-	trans_rigd_ccp(spectrum_id, true, false);
+	trans_initiate_csma_ca(spectrum_id);
 }
 
 
@@ -172,13 +197,13 @@ void trans_tx_query(D7AQP_Command_Request_Template* request_template, void* file
 	}
 
 	nwl_build_network_protocol_data(data, pointer, NULL, NULL, subnet, spectrum_id, tx_eirp, dialogid++);
-	trans_rigd_ccp(spectrum_id, true, false);
+	trans_initiate_csma_ca(spectrum_id);
 
 }
 
 void trans_tx_datastream(uint8_t* data, uint8_t length, uint8_t subnet, uint8_t spectrum_id, int8_t tx_eirp) {
 	nwl_build_datastream_protocol_data(data, length, NULL, subnet, spectrum_id, tx_eirp, dialogid++);
-	trans_rigd_ccp(spectrum_id, true, false);
+	trans_initiate_csma_ca(spectrum_id);
 }
 
 void trans_rx_datastream_start(uint8_t subnet, uint8_t spectrum_id)
@@ -196,7 +221,46 @@ void trans_rx_datastream_stop()
 //	nwl_build_background_frame(data, subnet, spectrum_id, tx_eirp);
 //}
 
-// transport layer, Random Increase Geometric decaying slot back-off , Congestion Control Process
+/*! \brief Transport Layer CSMA-CA Congestion Control Process according to the Adaptive Increase No Division (AIND) algorithm
+ *
+ *  The Congentstion Control Process acccording to the AIND algorithm
+ *  AIND CSMA-CA is a process where ad-hoc slotting takes place, the insertion happens at the beginning of the
+ *	slot, and the slot duration is equal (approximately) to the duration of the transmission being queued.
+ *
+ *	\todo Calculate wait duration
+ *
+ *  \param spectrum_id The Spectrum ID used for the CCA
+ *  \param init_status Flag to indicate if the process needs to be initiated.
+ */
+void trans_aind_ccp(uint8_t spectrum_id, bool init_status)
+{
+	timer_event event;
+
+	// Initialisation of the parameters, only for new packets
+	if(init_status) {
+		current__t_ca = init_t_ca;
+		current__t_g = 5;
+		current__spectrum_id = spectrum_id;
+	} else {
+		// wait for transmission duration
+		event.next_event = 5; // todo: calculate read transmission duration
+		event.f = &t_ca_timeout_aind;
+		timer_add_event(&event);
+		return;
+	}
+}
+
+/*! \brief Transport Layer CSMA-CA Congestion Control Process according to the Random Increase Geometric Division (RIGD) algorithm
+ *
+ *  The Congentstion Control Process acccording to the RIGD algorithm
+ *  RIGD CA is a process where ad-hoc slotting takes place, the slot insertion is random, and the slot duration decays
+ *	by the model (TCA0)(1 / 2(n+1)), where n >= 0 and TCA0 is the duration of the timeout for all slots.
+ *
+ *
+ *  \param spectrum_id The Spectrum ID used for the CCA
+ *  \param init_status Flag to indicate if the process needs to be initiated.
+ *  \param wait_for_t_ca_timeout Flag to indicate if the process needs to wait for a Tca timeout.
+ */
 void trans_rigd_ccp(uint8_t spectrum_id, bool init_status, bool wait_for_t_ca_timeout){
 	timer_event event;
 
