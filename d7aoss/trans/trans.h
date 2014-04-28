@@ -93,6 +93,8 @@ void trans_tx_foreground_frame(uint8_t* data, uint8_t length, uint8_t subnet, ui
 void trans_tx_datastream(uint8_t* data, uint8_t length, uint8_t subnet, uint8_t spectrum_id, int8_t tx_eirp);
 //void trans_tx_background_frame(uint8_t* data, uint8_t subnet, uint8_t spectrum_id, int8_t tx_eirp);
 
+void trans_tx_query(D7AQP_Command_Request_Template* request_template, void* file_template, uint8_t subnet, uint8_t spectrum_id, int8_t tx_eirp);
+
 
 void trans_rx_datastream_start(uint8_t subnet, uint8_t spectrum_id);
 void trans_rx_datastream_stop();

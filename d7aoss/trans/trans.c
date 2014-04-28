@@ -119,10 +119,61 @@ static void t_ca_timeout_rigd(){
 }
 
 void trans_tx_foreground_frame(uint8_t* data, uint8_t length, uint8_t subnet, uint8_t spectrum_id, int8_t tx_eirp) {
-
-
 	nwl_build_network_protocol_data(data, length, NULL, NULL, subnet, spectrum_id, tx_eirp, dialogid++);
 	trans_rigd_ccp(spectrum_id, true, false);
+}
+
+
+/*! \brief Creates a D7AQP Query (transport layer)
+ *
+ *  Creates a D7AQP Query based on the Command Request Template
+ *  Currently only Announcement of file is uses
+ *
+ *  \todo implement other query
+ *
+ *  \param request_template Pointer to the Command Request Template
+ *  \param file_template The corresponding file template
+ *  \param subnet The subnet which needs to be used to send the query
+ *  \param spectrum_id The spectrum_id which needs to be used to send the query
+ *  \param tx_eirp The transmit EIRP which need to be used to send the query
+ */
+void trans_tx_query(D7AQP_Command_Request_Template* request_template, void* file_template, uint8_t subnet, uint8_t spectrum_id, int8_t tx_eirp)
+{
+	uint8_t data[64];//TODO: should be dynamic or queue
+	uint8_t pointer = 0;
+	uint8_t i = 0;
+
+	data[pointer++] = request_template->command_code;
+	if (request_template->command_code & D7AQP_COMMAND_CODE_EXTENSION == D7AQP_COMMAND_CODE_EXTENSION)
+		data[pointer++] = request_template->command_extension;
+
+	if (request_template->dialog_template != NULL)
+	{
+		data[pointer++] = request_template->dialog_template->response_timeout >> 8;
+		data[pointer++] = request_template->dialog_template->response_timeout & 0xFF;
+		data[pointer++] = request_template->dialog_template->response_channel_list_lenght;
+
+		for (i=0;i<request_template->dialog_template->response_channel_list_lenght;i++)
+			data[pointer++] = request_template->dialog_template->response_channel_list[i];
+	}
+
+	switch (request_template->command_code & D7AQP_OPCODE_ANNOUNCEMENT_FILE)
+	{
+		case D7AQP_OPCODE_ANNOUNCEMENT_FILE:
+		{
+			D7AQP_Single_File_Return_Template* sfr_tmpl = (D7AQP_Single_File_Return_Template*) file_template;
+			data[pointer++] = sfr_tmpl->return_file_id;
+			data[pointer++] = sfr_tmpl->file_offset;
+			data[pointer++] = sfr_tmpl->isfb_total_length;
+
+			memcpy(&data[pointer], sfr_tmpl->file_data, sfr_tmpl->isfb_total_length - sfr_tmpl->file_offset);
+			pointer+= sfr_tmpl->isfb_total_length - sfr_tmpl->file_offset;
+		}
+	}
+
+	nwl_build_network_protocol_data(data, pointer, NULL, NULL, subnet, spectrum_id, tx_eirp, dialogid++);
+	trans_rigd_ccp(spectrum_id, true, false);
+
 }
 
 void trans_tx_datastream(uint8_t* data, uint8_t length, uint8_t subnet, uint8_t spectrum_id, int8_t tx_eirp) {
