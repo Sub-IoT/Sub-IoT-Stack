@@ -25,7 +25,7 @@
 
 static uint16_t current__t_ca = 0;
 static uint8_t current__t_g = 0;
-static uint8_t current__spectrum_id = 0;
+//static uint8_t current__spectrum_id = 0;
 static uint16_t init_t_ca = 400;
 static uint16_t last_ca = 0;
 
@@ -52,7 +52,7 @@ static void control_tx_callback(Dll_Tx_Result Result)
 				break;
 			case DLLTxResultCCA1Fail:
 			case DLLTxResultCCA2Fail:
-				trans_rigd_ccp(current__spectrum_id, false, true);
+				trans_process_csma_ca();
 				#ifdef LOG_TRANS_ENABLED
 				log_print_stack_string(LOG_TRANS, "Trans: CCA fail");
 				#endif
@@ -94,8 +94,6 @@ void trans_init(){
 	nwl_init();
 	nwl_set_tx_callback(&control_tx_callback);
 	nwl_set_rx_callback(&nwl_rx_callback);
-
-
 }
 
 void trans_set_tx_callback(trans_tx_callback_t cb)
@@ -114,30 +112,83 @@ void trans_set_initial_t_ca(uint16_t t_ca)
 }
 
 
+/*! \brief Sets the type of CSMA CA
+ *
+ *  Sets the type of CSMA CA, options are AIND, RAIND and RIGD
+ *
+ *  \todo implement RAIND
+ *
+ *  \param type The CSMA CA Algorithm to be used
+ */
 void trans_set_csma_ca(Trans_CSMA_CA_Type type)
 {
 	csma_ca_type = type;
 }
 
+static void trans_aind_ccp_process()
+{
+	uint16_t time_since_last_ca = timer_get_counter_value() - last_ca;
+	if (current__t_ca < time_since_last_ca)
+	{
+		#ifdef LOG_TRANS_ENABLED
+		log_print_stack_string(LOG_TRANS, "AIND: Failed");
+		#endif
+		trans_tx_callback(TransTCAFail);
+		return;
+	}
 
-static void final_rigd(){
+	current__t_ca -= time_since_last_ca;
+
+	last_ca = timer_get_counter_value();
+	dll_csma(true);
+}
+
+static void final_rigd() {
 	 dll_csma(true);
 }
 
-static void t_ca_timeout_rigd(){
-	trans_rigd_ccp(current__spectrum_id, false, false);
+static void t_ca_timeout_rigd() {
+	trans_rigd_ccp(false);
 }
 
 static void trans_initiate_csma_ca(uint8_t spectrum_id)
 {
+	//current__spectrum_id = spectrum_id;
+	current__t_ca = init_t_ca;
+
+	// Calculate correct t_g
+	uint8_t channel_bandwidth_index = (spectrum_id >> 4) & 0x07;
+	uint8_t fec = (bool)spectrum_id >> 7;
+
+	if (channel_bandwidth_index == 1)
+		current__t_g = fec == 0 ? 5 : 10;
+	else
+		current__t_g = fec == 0 ? 2 : 3;
+
 	switch (csma_ca_type)
 	{
 	case TransCsmaCaAind:
+		trans_aind_ccp(true);
+		break;
+	case TransCsmaCaRaind:
+		//break;
+	case TransCsmaCaRigd:
+		trans_rigd_ccp(false);
+		break;
+	}
+}
+
+static void trans_process_csma_ca()
+{
+	switch (csma_ca_type)
+	{
+	case TransCsmaCaAind:
+		trans_aind_ccp(false);
 		break;
 	case TransCsmaCaRaind:
 		break;
 	case TransCsmaCaRigd:
-		trans_rigd_ccp(spectrum_id, true, false);
+		trans_rigd_ccp(true);
 		break;
 	}
 }
@@ -198,7 +249,6 @@ void trans_tx_query(D7AQP_Command_Request_Template* request_template, void* file
 
 	nwl_build_network_protocol_data(data, pointer, NULL, NULL, subnet, spectrum_id, tx_eirp, dialogid++);
 	trans_initiate_csma_ca(spectrum_id);
-
 }
 
 void trans_tx_datastream(uint8_t* data, uint8_t length, uint8_t subnet, uint8_t spectrum_id, int8_t tx_eirp) {
@@ -232,19 +282,18 @@ void trans_rx_datastream_stop()
  *  \param spectrum_id The Spectrum ID used for the CCA
  *  \param init_status Flag to indicate if the process needs to be initiated.
  */
-void trans_aind_ccp(uint8_t spectrum_id, bool init_status)
+void trans_aind_ccp(bool init_status)
 {
 	timer_event event;
 
 	// Initialisation of the parameters, only for new packets
-	if(init_status) {
-		current__t_ca = init_t_ca;
-		current__t_g = 5;
-		current__spectrum_id = spectrum_id;
+	if (init_status) {
+		last_ca = timer_get_counter_value();
+		trans_aind_ccp_process();
 	} else {
 		// wait for transmission duration
 		event.next_event = 5; // todo: calculate read transmission duration
-		event.f = &t_ca_timeout_aind;
+		event.f = &trans_aind_ccp_process;
 		timer_add_event(&event);
 		return;
 	}
@@ -258,18 +307,11 @@ void trans_aind_ccp(uint8_t spectrum_id, bool init_status)
  *
  *
  *  \param spectrum_id The Spectrum ID used for the CCA
- *  \param init_status Flag to indicate if the process needs to be initiated.
  *  \param wait_for_t_ca_timeout Flag to indicate if the process needs to wait for a Tca timeout.
  */
-void trans_rigd_ccp(uint8_t spectrum_id, bool init_status, bool wait_for_t_ca_timeout){
+void trans_rigd_ccp(bool wait_for_t_ca_timeout){
 	timer_event event;
 
-	if(init_status){//initialization of the parameters, only for new packets
-		//TODO: Dragan: fix overflow
-		current__t_ca = init_t_ca;
-		current__t_g = 5;
-		current__spectrum_id = spectrum_id;
-	}
 	if (wait_for_t_ca_timeout)
 	{
 		uint16_t time_since_last_ca = timer_get_counter_value() - last_ca;
@@ -281,8 +323,9 @@ void trans_rigd_ccp(uint8_t spectrum_id, bool init_status, bool wait_for_t_ca_ti
 			return;
 		}
 	}
+
 	current__t_ca = current__t_ca/2;
-	if(current__t_ca > current__t_g){
+	if (current__t_ca > current__t_g) {
 		float n_time = rand();
 		n_time = (n_time / 32767) * current__t_ca; // Random Time before the CCA will be executed
 		temp_time = (int)n_time;
@@ -295,8 +338,7 @@ void trans_rigd_ccp(uint8_t spectrum_id, bool init_status, bool wait_for_t_ca_ti
 		event.f = &final_rigd;
 		last_ca = timer_get_counter_value();
 		timer_add_event(&event);
-	}
-	else{
+	} else {
 		#ifdef LOG_TRANS_ENABLED
 		log_print_stack_string(LOG_TRANS, "RIGD: Failed");
 		#endif

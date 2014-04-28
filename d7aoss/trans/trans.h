@@ -108,11 +108,12 @@ void trans_rx_datastream_stop();
 
 
 static void trans_initiate_csma_ca(uint8_t spectrum_id);
-
+static void trans_process_csma_ca();
 //AIND
-void trans_aind_ccp(uint8_t spectrum_id, bool init_status, bool wait_for_t_ca_timeout);
+void trans_aind_ccp(bool init_status);
+static void trans_aind_ccp_process();
 //RIGD
-void trans_rigd_ccp(uint8_t spectrum_id, bool init_status, bool wait_for_t_ca_timeout);
+void trans_rigd_ccp(bool wait_for_t_ca_timeout);
 static void t_ca_timeout_rigd();
 static void final_rigd();
 

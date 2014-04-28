@@ -90,7 +90,7 @@ void phy_init(void)
 
 	last_tx_cfg.eirp=0;
 	last_tx_cfg.spectrum_id = 0;
-	last_tx_cfg.sync_word_class=0;
+	last_tx_cfg.sync_word_class = 0;
 
 }
 
