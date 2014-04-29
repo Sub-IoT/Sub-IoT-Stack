@@ -36,6 +36,7 @@ static uint8_t dialogid = 0;
 
 static trans_tx_callback_t trans_tx_callback;
 static trans_rx_datastream_callback_t trans_rx_datastream_callback;
+static trans_rx_query_callback_t trans_rx_query_callback;
 
 //Flow Control Process
 static void control_tx_callback(Dll_Tx_Result Result)
@@ -75,12 +76,20 @@ static void nwl_rx_callback(nwl_rx_res_t* result)
 	}
 	else if (result->protocol_type == ProtocolTypeNetworkProtocol)
 	{
-		//ASSERT("not implemented yet");
+		Trans_Rx_Query_Result query_result;
+		nwl_ff_D7ANP_t* data = (nwl_ff_D7ANP_t*) result->data;
+
+		query_result.command_code = data->payload[0];
+
+		query_result.lenght = data->payload_length;
+		query_result.payload = data->payload;
+
+		trans_rx_query_callback(query_result);
 	}
 	else if (result->protocol_type == ProtocolTypeDatastreamProtocol)
 	{
 		Trans_Rx_Datastream_Result datastream_result;
-		nwl_ff_D7ANP_t* data = (nwl_ff_D7ANP_t*) result->data;
+		nwl_ff_D7ADP_t* data = (nwl_ff_D7ADP_t*) result->data;
 
 		//TODO: check data->frame_id?
 		datastream_result.lenght = data->payload_length;
@@ -105,6 +114,12 @@ void trans_set_datastream_rx_callback(trans_rx_datastream_callback_t cb)
 {
 	trans_rx_datastream_callback = cb;
 }
+
+void trans_set_query_rx_callback(trans_rx_query_callback_t cb)
+{
+	trans_rx_query_callback = cb;
+}
+
 
 void trans_set_initial_t_ca(uint16_t t_ca)
 {
@@ -261,7 +276,13 @@ void trans_rx_datastream_start(uint8_t subnet, uint8_t spectrum_id)
 	nwl_rx_start(subnet, spectrum_id, ProtocolTypeDatastreamProtocol);
 }
 
-void trans_rx_datastream_stop()
+
+void trans_rx_query_start(uint8_t subnet, uint8_t spectrum_id)
+{
+	nwl_rx_start(subnet, spectrum_id, ProtocolTypeNetworkProtocol);
+}
+
+void trans_rx_stop()
 {
 	nwl_rx_stop();
 }

@@ -69,6 +69,12 @@ typedef struct {
 } D7AQP_Dialog_Template;
 
 typedef struct {
+	uint8_t number_of_acks;
+	uint8_t* device_ids;
+} D7AQP_Ack_Template;
+
+
+typedef struct {
 	uint8_t command_code;
 	uint8_t command_extension;
 	D7AQP_Dialog_Template* dialog_template;
@@ -82,12 +88,23 @@ typedef struct {
 } D7AQP_Single_File_Return_Template;
 
 typedef struct {
+
 	uint8_t lenght;
 	uint8_t* payload;
 } Trans_Rx_Datastream_Result;
 
+typedef struct {
+	uint8_t command_code;
+	uint8_t command_extension;
+	D7AQP_Dialog_Template* dialog_template;
+	uint8_t lenght;
+	uint8_t* payload;
+} Trans_Rx_Query_Result;
+
 typedef void (*trans_tx_callback_t)(Trans_Tx_Result);
 typedef void (*trans_rx_datastream_callback_t)(Trans_Rx_Datastream_Result);
+typedef void (*trans_rx_query_callback_t)(Trans_Rx_Query_Result);
+
 void trans_init();
 
 void trans_set_tx_callback(trans_tx_callback_t);
@@ -104,7 +121,8 @@ void trans_tx_query(D7AQP_Command_Request_Template* request_template, void* file
 
 
 void trans_rx_datastream_start(uint8_t subnet, uint8_t spectrum_id);
-void trans_rx_datastream_stop();
+void trans_rx_query_start(uint8_t subnet, uint8_t spectrum_id);
+void trans_rx_stop();
 
 static void trans_initiate_csma_ca(uint8_t spectrum_id);
 static void trans_process_csma_ca();

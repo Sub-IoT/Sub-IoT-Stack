@@ -52,19 +52,24 @@ static void dll_rx_callback(dll_rx_res_t* result)
 		dll_foreground_frame_t* frame = (dll_foreground_frame_t*) result->frame;
 		if (result->frame_type == FrameTypeForegroundFrameStreamFrame) // D7ADP
 		{
-			nwl_ff_D7ANP_t d7anp_frame;
-			d7anp_frame.frame_id = frame->payload[0];
-			d7anp_frame.payload_length = frame->payload_length - 1;
-			d7anp_frame.payload = &(frame->payload[1]);
+			nwl_ff_D7ADP_t d7adp_frame;
+			d7adp_frame.frame_id = frame->payload[0];
+			d7adp_frame.payload_length = frame->payload_length - 1;
+			d7adp_frame.payload = &(frame->payload[1]);
 
-			res.data = &d7anp_frame;
+			res.data = &d7adp_frame;
 			res.protocol_type = ProtocolTypeDatastreamProtocol;
 		}
 		else // D7ANP
 		{
-			// TODO implement d7anp
-			//ASSERT("not implemented yet");
-			res.data = NULL;
+			nwl_ff_D7ANP_t d7anp_frame;
+			d7anp_frame.d7anls_auth_data = NULL;
+			d7anp_frame.d7anls_header = NULL;
+			d7anp_frame.d7anp_routing_header = NULL;
+			d7anp_frame.payload_length = frame->payload_length - 1;
+			d7anp_frame.payload = &(frame->payload[1]);
+
+			res.data = &d7anp_frame;
 			res.protocol_type = ProtocolTypeNetworkProtocol;
 		}
 	}

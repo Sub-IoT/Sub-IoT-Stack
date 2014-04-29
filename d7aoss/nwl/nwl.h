@@ -40,6 +40,14 @@ typedef struct {
 	uint8_t frame_id;
 	uint8_t payload_length;
 	uint8_t* payload;
+} nwl_ff_D7ADP_t;
+
+typedef struct {
+	uint8_t* d7anls_header;
+	uint8_t* d7anp_routing_header;
+	uint8_t payload_length;
+	uint8_t* payload;
+	uint8_t* d7anls_auth_data;
 } nwl_ff_D7ANP_t;
 
 typedef struct {
