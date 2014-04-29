@@ -43,12 +43,7 @@
 static timer_event dim_led_event;
 static bool start_channel_scan = false;
 
-static const dll_channel_scan_t scan_cfg = {
-		RECEIVE_CHANNEL,
-		FrameTypeForegroundFrame,
-		0,
-		0
-};
+
 
 static dll_channel_scan_series_t scan_series_cfg;
 
@@ -98,6 +93,13 @@ void rx_callback(dll_rx_res_t* rx_res)
 
 
 int main(void) {
+	const dll_channel_scan_t scan_cfg = {
+			RECEIVE_CHANNEL,
+			FrameTypeForegroundFrame,
+			0,
+			0
+	};
+
 
 	// Initialize the OSS-7 Stack
 	system_init();

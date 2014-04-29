@@ -215,7 +215,7 @@ class GraphFrame(wx.Frame):
 		global serial_port, settings
 		
 		parser = argparse.ArgumentParser(description = "DASH7 logger for the OSS-7 stack. You can exit the logger using Ctrl-c, it takes some time.")
-		parser.add_argument('serial', default="COM10", metavar="serial port", help="serial port (eg COM7 or /dev/ttyUSB0)", nargs='?')
+		parser.add_argument('serial', default="COM4", metavar="serial port", help="serial port (eg COM7 or /dev/ttyUSB0)", nargs='?')
 		parser.add_argument('-b', '--baud' , default=9600, metavar="baudrate", type=int, help="set the baud rate (default: 9600)")
 		settings = vars(parser.parse_args())
 		

@@ -53,8 +53,6 @@ static volatile uint8_t dataLength = 0;
 static D7AQP_Command_Request_Template template;
 static D7AQP_Single_File_Return_Template file_template;
 
-static timer_event event;
-
 void start_tx()
 {
 	if (!tx)
@@ -101,6 +99,7 @@ void tx_callback(Trans_Tx_Result result)
 }
 
 int main(void) {
+	timer_event event;
 
 	// Initialize the OSS-7 Stack
 	system_init();
