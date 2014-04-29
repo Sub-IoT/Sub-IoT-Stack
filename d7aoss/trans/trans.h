@@ -106,7 +106,6 @@ void trans_tx_query(D7AQP_Command_Request_Template* request_template, void* file
 void trans_rx_datastream_start(uint8_t subnet, uint8_t spectrum_id);
 void trans_rx_datastream_stop();
 
-
 static void trans_initiate_csma_ca(uint8_t spectrum_id);
 static void trans_process_csma_ca();
 //AIND

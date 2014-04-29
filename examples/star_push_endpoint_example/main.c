@@ -115,13 +115,19 @@ int main(void) {
 
 	log_print_string("endpoint started");
 
-	// No response (acknowledgement)
+	// No response (no acknowledgement)
 	template.command_code = D7AQP_COMMAND_CODE_EXTENSION | D7AQP_COMMAND_TYPE_NA2P_REQUEST | D7AQP_OPCODE_ANNOUNCEMENT_FILE;
 	template.command_extension = D7AQP_COMMAND_EXTENSION_NORESPONSE;
 	template.dialog_template = NULL;
 
 	// Waiting for response (acknowledgement)
-	//template.command_code = D7AQP_COMMAND_TYPE_NA2P_REQUEST | D7AQP_OPCODE_ANNOUNCEMENT_FILE;
+//	template.command_code = D7AQP_COMMAND_TYPE_NA2P_REQUEST | D7AQP_OPCODE_ANNOUNCEMENT_FILE;
+//
+//	D7AQP_Dialog_Template dialog_template;
+//	dialog_template.response_timeout = 200;
+//	dialog_template.response_channel_list_lenght = 0; // means same as send channel
+//
+//	template.dialog_template = &dialog_template;
 
 	file_template.return_file_id = 0;
 	file_template.file_offset = 0;

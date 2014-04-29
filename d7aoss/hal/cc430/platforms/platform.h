@@ -18,7 +18,7 @@
 #ifndef PLATFORM_H_
 #define PLATFORM_H_
 
-#define PLATFORM_WIZZIMOTE
+#define PLATFORM_AGAIDI
 
 
 #ifdef PLATFORM_WIZZIMOTE
