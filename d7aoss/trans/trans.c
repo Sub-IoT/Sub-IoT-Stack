@@ -79,7 +79,25 @@ static void nwl_rx_callback(nwl_rx_res_t* result)
 		Trans_Rx_Query_Result query_result;
 		nwl_ff_D7ANP_t* data = (nwl_ff_D7ANP_t*) result->data;
 
-		query_result.command_code = data->payload[0];
+		uint8_t pointer = 0;
+		query_result.command_code = data->payload[pointer++];
+		if (query_result.command_code & D7AQP_COMMAND_CODE_EXTENSION == D7AQP_COMMAND_CODE_EXTENSION)
+			query_result.command_extension = data->payload[pointer++];
+		else
+			query_result.command_extension = 0;
+
+		if (query_result.command_extension & D7AQP_COMMAND_EXTENSION_NORESPONSE == D7AQP_COMMAND_EXTENSION_NORESPONSE)
+		{
+			query_result.dialog_template = NULL;
+		} else {
+			D7AQP_Dialog_Template dialog_template;
+			dialog_template.response_timeout = (uint16_t)(data->payload[pointer++] << 8) | (uint16_t)(data->payload[pointer++]);
+			dialog_template.response_channel_list_lenght = data->payload[pointer++];
+			dialog_template.response_channel_list = &data->payload[pointer];
+			pointer += dialog_template.response_channel_list_lenght;
+
+			query_result.dialog_template = &dialog_template;
+		}
 
 		query_result.lenght = data->payload_length;
 		query_result.payload = data->payload;

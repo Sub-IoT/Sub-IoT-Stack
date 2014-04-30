@@ -28,6 +28,7 @@
 
 #define SWITCH_BYTES(x) (x << 8 | x >> 8)
 #define SPLITUINT16(x) (uint8_t)((x) >> 8), (uint8_t)((x) & 0x00FF)
+#define MERGEUINT16(x,y) (uint16_t)((x) << 8) | (uint16_t)(y)
 
 #if defined(__MSPGCC__)
 #define __ISR(a,b)   void __attribute__((interrupt (a))) b (void)
