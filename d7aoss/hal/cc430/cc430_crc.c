@@ -31,3 +31,4 @@ uint16_t crc_calculate(uint8_t* data, uint8_t length)
 	uint16_t crcMSB = (crc << 8) | (crc >> 8);
 	return crcMSB;
 }
+
