@@ -33,7 +33,7 @@ phy_tx_cfg_t *current_phy_cfg;
 
 
 uint8_t timeout_listen; // TL
-uint8_t frame_data[255]; // TODO max frame size
+uint8_t frame_data[100]; // TODO: get rid of fixed buffer
 uint16_t timestamp;
 uint8_t timeout_ca; 	// T_ca
 

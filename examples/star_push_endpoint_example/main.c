@@ -50,8 +50,7 @@ static volatile bool add_tx_event = true;
 static uint8_t data[32];
 static volatile uint8_t dataLength = 0;
 
-static D7AQP_Command_Request_Template template;
-static D7AQP_Single_File_Return_Template file_template;
+static D7AQP_Command command;
 
 void start_tx()
 {
@@ -71,7 +70,7 @@ void start_tx()
 		data[0] = counter >> 8;
 		data[1] = counter & 0xFF;
 
-		trans_tx_query(&template, &file_template, 0xFF, SEND_CHANNEL, TX_EIRP);
+		trans_tx_query(&command, 0xFF, SEND_CHANNEL, TX_EIRP);
 	}
 	add_tx_event = true;
 }
@@ -116,23 +115,26 @@ int main(void) {
 	log_print_string("endpoint started");
 
 	// No response (no acknowledgement)
-//	template.command_code = D7AQP_COMMAND_CODE_EXTENSION | D7AQP_COMMAND_TYPE_NA2P_REQUEST | D7AQP_OPCODE_ANNOUNCEMENT_FILE;
-//	template.command_extension = D7AQP_COMMAND_EXTENSION_NORESPONSE;
-//	template.dialog_template = NULL;
+//	command.command_code = D7AQP_COMMAND_CODE_EXTENSION | D7AQP_COMMAND_TYPE_NA2P_REQUEST | D7AQP_OPCODE_ANNOUNCEMENT_FILE;
+//	command.command_extension = D7AQP_COMMAND_EXTENSION_NORESPONSE;
+//	command.dialog_template = NULL;
 
 	// Waiting for response (acknowledgement)
-	template.command_code = D7AQP_COMMAND_TYPE_NA2P_REQUEST | D7AQP_OPCODE_ANNOUNCEMENT_FILE;
+	command.command_code = D7AQP_COMMAND_TYPE_NA2P_REQUEST | D7AQP_OPCODE_ANNOUNCEMENT_FILE;
 
 	D7AQP_Dialog_Template dialog_template;
 	dialog_template.response_timeout = 200;
 	dialog_template.response_channel_list_lenght = 0; // means same as send channel
 
-	template.dialog_template = &dialog_template;
+	command.dialog_template = &dialog_template;
 
+	D7AQP_Single_File_Return_Template file_template;
 	file_template.return_file_id = 0;
 	file_template.file_offset = 0;
 	file_template.isfb_total_length = 2;
 	file_template.file_data = data;
+
+	command.command_data = &file_template;
 
 	timer_add_event(&event);
 

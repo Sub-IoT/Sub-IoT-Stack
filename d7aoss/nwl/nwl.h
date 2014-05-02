@@ -61,6 +61,7 @@ typedef struct
     Protocol_Type  protocol_type;
     /// Data
     void* data;
+    dll_rx_res_t* dll_rx_res;
 } nwl_rx_res_t;
 
 typedef struct {

@@ -43,10 +43,6 @@
 static timer_event dim_led_event;
 static bool start_channel_scan = false;
 
-
-
-static dll_channel_scan_series_t scan_series_cfg;
-
 void blink_led()
 {
 	led_on(1);
@@ -62,10 +58,10 @@ void dim_led()
 void start_rx()
 {
 	start_channel_scan = false;
-	dll_channel_scan_series(&scan_series_cfg);
+	trans_rx_query_start(0xFF, RECEIVE_CHANNEL);
 }
 
-void rx_callback(dll_rx_res_t* rx_res)
+void rx_callback(Trans_Rx_Query_Result* rx_res)
 {
 	system_watchdog_timer_reset();
 
@@ -74,17 +70,28 @@ void rx_callback(dll_rx_res_t* rx_res)
 	log_print_string("received msg");
 
 	// log endpoint's device_id, RSS of link, and payload of device
-	dll_foreground_frame_t* frame = (dll_foreground_frame_t*) (rx_res->frame);
+	dll_foreground_frame_t* frame = (dll_foreground_frame_t*) (rx_res->nwl_rx_res->dll_rx_res->frame);
 	uart_transmit_data(0xCE); // NULL
 	uart_transmit_data(11 + frame->payload_length);
 	uart_transmit_data(0x10); // deviceid
 	uart_transmit_message(frame->address_ctl->source_id, 8); // id mobile node
 	uart_transmit_data(0x20); // netto rss
-	uart_transmit_data(rx_res->rssi - frame->frame_header.tx_eirp); // signal strenght mobile node -> fixed node
+	uart_transmit_data(rx_res->nwl_rx_res->dll_rx_res->rssi - frame->frame_header.tx_eirp); // signal strenght mobile node -> fixed node
 	uart_transmit_message(frame->payload, frame->payload_length);
 	uart_transmit_data(0x0D); // carriage return
 
-	log_print_data(frame->payload, frame->payload_length);
+	switch (rx_res->d7aqp_command->command_code & 0x0F)
+	{
+		case D7AQP_OPCODE_ANNOUNCEMENT_FILE:
+		{
+			D7AQP_Single_File_Return_Template* sfr_tmpl = (D7AQP_Single_File_Return_Template*) rx_res->d7aqp_command->command_data;
+			log_print_string("D7AQP File Announcement received for file %i starting from byte %i", sfr_tmpl->return_file_id, sfr_tmpl->file_offset);
+			log_print_data(sfr_tmpl->file_data, sfr_tmpl->isfb_total_length - sfr_tmpl->file_offset);
+		}
+	}
+
+
+
 
 	// Restart channel scanning
 	start_channel_scan = true;
@@ -93,27 +100,12 @@ void rx_callback(dll_rx_res_t* rx_res)
 
 
 int main(void) {
-	const dll_channel_scan_t scan_cfg = {
-			RECEIVE_CHANNEL,
-			FrameTypeForegroundFrame,
-			0,
-			0
-	};
-
-
 	// Initialize the OSS-7 Stack
 	system_init();
 
-	// Set channel scan series to 1 entry
-	// This should be done by writing the specific configuration file, when the uper layers are created.
-	dll_channel_scan_t scan_confgs[1];
-	scan_confgs[0] = scan_cfg;
-	scan_series_cfg.length = 1;
-	scan_series_cfg.values = scan_confgs;
-
-	// Currently we address the Data Link Layer for RX, this should go to an upper layer once it is working.
-	dll_init();
-	dll_set_rx_callback(&rx_callback);
+	// Currently we address the Transport Layer for RX, this should go to an upper layer once it is working.
+	trans_init();
+	trans_set_query_rx_callback(&rx_callback);
 
 	start_channel_scan = true;
 

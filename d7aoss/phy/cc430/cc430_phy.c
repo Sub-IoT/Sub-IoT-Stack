@@ -40,7 +40,7 @@ extern InterruptHandler interrupt_table[34];
 
 RadioState state;
 
-uint8_t buffer[255];
+uint8_t buffer[100]; // TODO: get rid of fixed buffer
 uint8_t packetLength;
 uint8_t* bufferPosition;
 uint16_t remainingBytes;

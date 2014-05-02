@@ -31,7 +31,6 @@ static uint16_t last_ca = 0;
 
 static Trans_CSMA_CA_Type csma_ca_type = TransCsmaCaAind;
 
-static int temp_time= 0;
 static uint8_t dialogid = 0;
 
 static trans_tx_callback_t trans_tx_callback;
@@ -76,19 +75,24 @@ static void nwl_rx_callback(nwl_rx_res_t* result)
 	}
 	else if (result->protocol_type == ProtocolTypeNetworkProtocol)
 	{
+		D7AQP_Command d7aqp_command;
 		Trans_Rx_Query_Result query_result;
+
+		query_result.nwl_rx_res = result;
+		query_result.d7aqp_command = &d7aqp_command;
+
 		nwl_ff_D7ANP_t* data = (nwl_ff_D7ANP_t*) result->data;
 
 		uint8_t pointer = 0;
-		query_result.command_code = data->payload[pointer++];
-		if (query_result.command_code & D7AQP_COMMAND_CODE_EXTENSION == D7AQP_COMMAND_CODE_EXTENSION)
-			query_result.command_extension = data->payload[pointer++];
+		d7aqp_command.command_code = data->payload[pointer++];
+		if (d7aqp_command.command_code & D7AQP_COMMAND_CODE_EXTENSION == D7AQP_COMMAND_CODE_EXTENSION)
+			d7aqp_command.command_extension = data->payload[pointer++];
 		else
-			query_result.command_extension = 0;
+			d7aqp_command.command_extension = 0;
 
-		if (query_result.command_extension & D7AQP_COMMAND_EXTENSION_NORESPONSE == D7AQP_COMMAND_EXTENSION_NORESPONSE)
+		if (d7aqp_command.command_extension & D7AQP_COMMAND_EXTENSION_NORESPONSE == D7AQP_COMMAND_EXTENSION_NORESPONSE)
 		{
-			query_result.dialog_template = NULL;
+			d7aqp_command.dialog_template = NULL;
 		} else {
 			D7AQP_Dialog_Template dialog_template;
 			dialog_template.response_timeout = (uint16_t)(data->payload[pointer++] << 8) | (uint16_t)(data->payload[pointer++]);
@@ -96,13 +100,30 @@ static void nwl_rx_callback(nwl_rx_res_t* result)
 			dialog_template.response_channel_list = &data->payload[pointer];
 			pointer += dialog_template.response_channel_list_lenght;
 
-			query_result.dialog_template = &dialog_template;
+			d7aqp_command.dialog_template = &dialog_template;
 		}
 
-		query_result.lenght = data->payload_length;
-		query_result.payload = data->payload;
+		//TODO: implement other queries
+		d7aqp_command.ack_template = NULL;
+		d7aqp_command.global_query_template = NULL;
+		d7aqp_command.local_query_template = NULL;
+		d7aqp_command.error_template = NULL;
 
-		trans_rx_query_callback(query_result);
+		switch (d7aqp_command.command_code & 0x0F)
+		{
+			case D7AQP_OPCODE_ANNOUNCEMENT_FILE:
+			{
+				D7AQP_Single_File_Return_Template sfr_tmpl;
+				sfr_tmpl.return_file_id = data->payload[pointer++];
+				sfr_tmpl.file_offset = data->payload[pointer++];
+				sfr_tmpl.isfb_total_length = data->payload[pointer++];
+				sfr_tmpl.file_data = &data->payload[pointer];
+
+				pointer += sfr_tmpl.isfb_total_length - sfr_tmpl.file_offset;
+			}
+		}
+
+		trans_rx_query_callback(&query_result);
 	}
 	else if (result->protocol_type == ProtocolTypeDatastreamProtocol)
 	{
@@ -113,7 +134,7 @@ static void nwl_rx_callback(nwl_rx_res_t* result)
 		datastream_result.lenght = data->payload_length;
 		datastream_result.payload = data->payload;
 
-		trans_rx_datastream_callback(datastream_result);
+		trans_rx_datastream_callback(&datastream_result);
 	}
 }
 
@@ -246,31 +267,31 @@ void trans_tx_foreground_frame(uint8_t* data, uint8_t length, uint8_t subnet, ui
  *  \param spectrum_id The spectrum_id which needs to be used to send the query
  *  \param tx_eirp The transmit EIRP which need to be used to send the query
  */
-void trans_tx_query(D7AQP_Command_Request_Template* request_template, void* file_template, uint8_t subnet, uint8_t spectrum_id, int8_t tx_eirp)
+void trans_tx_query(D7AQP_Command* command, uint8_t subnet, uint8_t spectrum_id, int8_t tx_eirp)
 {
 	uint8_t data[64];//TODO: should be dynamic or queue
 	uint8_t pointer = 0;
 	uint8_t i = 0;
 
-	data[pointer++] = request_template->command_code;
-	if (request_template->command_code & D7AQP_COMMAND_CODE_EXTENSION == D7AQP_COMMAND_CODE_EXTENSION)
-		data[pointer++] = request_template->command_extension;
+	data[pointer++] = command->command_code;
+	if (command->command_code & D7AQP_COMMAND_CODE_EXTENSION == D7AQP_COMMAND_CODE_EXTENSION)
+		data[pointer++] = command->command_extension;
 
-	if (request_template->dialog_template != NULL)
+	if (command->dialog_template != NULL)
 	{
-		data[pointer++] = request_template->dialog_template->response_timeout >> 8;
-		data[pointer++] = request_template->dialog_template->response_timeout & 0xFF;
-		data[pointer++] = request_template->dialog_template->response_channel_list_lenght;
+		data[pointer++] = command->dialog_template->response_timeout >> 8;
+		data[pointer++] = command->dialog_template->response_timeout & 0xFF;
+		data[pointer++] = command->dialog_template->response_channel_list_lenght;
 
-		for (i=0;i<request_template->dialog_template->response_channel_list_lenght;i++)
-			data[pointer++] = request_template->dialog_template->response_channel_list[i];
+		for (i=0;i<command->dialog_template->response_channel_list_lenght;i++)
+			data[pointer++] = command->dialog_template->response_channel_list[i];
 	}
 
-	switch (request_template->command_code & D7AQP_OPCODE_ANNOUNCEMENT_FILE)
+	switch (command->command_code & 0x0F)
 	{
 		case D7AQP_OPCODE_ANNOUNCEMENT_FILE:
 		{
-			D7AQP_Single_File_Return_Template* sfr_tmpl = (D7AQP_Single_File_Return_Template*) file_template;
+			D7AQP_Single_File_Return_Template* sfr_tmpl = (D7AQP_Single_File_Return_Template*) command->command_data;
 			data[pointer++] = sfr_tmpl->return_file_id;
 			data[pointer++] = sfr_tmpl->file_offset;
 			data[pointer++] = sfr_tmpl->isfb_total_length;
@@ -363,17 +384,16 @@ void trans_rigd_ccp(bool wait_for_t_ca_timeout){
 		}
 	}
 
-	current__t_ca = current__t_ca/2;
+	current__t_ca = current__t_ca >> 1; // = % 2
 	if (current__t_ca > current__t_g) {
-		float n_time = rand();
-		n_time = (n_time / 32767) * current__t_ca; // Random Time before the CCA will be executed
-		temp_time = (int)n_time;
+		uint32_t n_time = rand();
+		n_time = (n_time * current__t_ca) >> 15; // Random Time before the CCA will be executed
 
 		#ifdef LOG_TRANS_ENABLED
-		log_print_stack_string(LOG_TRANS, "RIGD: Wait Random Time: %d", temp_time);
+		log_print_stack_string(LOG_TRANS, "RIGD: Wait Random Time: %d", (uint16_t) n_time);
 		#endif
 
-		event.next_event = temp_time; // Wait random time (0 - new__t_ca)
+		event.next_event = (uint16_t) n_time; // Wait random time (0 - new__t_ca)
 		event.f = &final_rigd;
 		last_ca = timer_get_counter_value();
 		timer_add_event(&event);

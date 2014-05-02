@@ -24,7 +24,7 @@ static nwl_rx_callback_t nwl_rx_callback;
 static nwl_tx_callback_t nwl_tx_callback;
 
 static uint8_t datastream_frame_id = 0;
-static uint8_t dll_data[248]; //TODO: should be dynamic or queue
+static uint8_t dll_data[100]; //TODO: get rid of fixed array
 
 static void dll_tx_callback(Dll_Tx_Result status)
 {
@@ -34,6 +34,7 @@ static void dll_tx_callback(Dll_Tx_Result status)
 static void dll_rx_callback(dll_rx_res_t* result)
 {
 	nwl_rx_res_t res;
+	res.dll_rx_res = result;
 
 	if (result->frame_type == FrameTypeBackgroundFrame)
 	{

@@ -73,12 +73,18 @@ typedef struct {
 	uint8_t* device_ids;
 } D7AQP_Ack_Template;
 
+typedef struct {
+	uint8_t rfu;
+} D7AQP_Global_Query_Template;
 
 typedef struct {
-	uint8_t command_code;
-	uint8_t command_extension;
-	D7AQP_Dialog_Template* dialog_template;
-} D7AQP_Command_Request_Template;
+	uint8_t rfu;
+} D7AQP_Local_Query_Template;
+
+
+typedef struct {
+	uint8_t rfu;
+} D7AQP_Error_Template;
 
 typedef struct {
 	uint8_t return_file_id;
@@ -97,17 +103,26 @@ typedef struct {
 	uint8_t command_code;
 	uint8_t command_extension;
 	D7AQP_Dialog_Template* dialog_template;
-	uint8_t lenght;
-	uint8_t* payload;
+	D7AQP_Ack_Template* ack_template;
+	D7AQP_Global_Query_Template* global_query_template;
+	D7AQP_Local_Query_Template* local_query_template;
+	D7AQP_Error_Template* error_template;
+	void* command_data;
+} D7AQP_Command;
+
+typedef struct {
+	D7AQP_Command d7aqp_command;
+	nwl_rx_res_t* nwl_rx_res;
 } Trans_Rx_Query_Result;
 
 typedef void (*trans_tx_callback_t)(Trans_Tx_Result);
-typedef void (*trans_rx_datastream_callback_t)(Trans_Rx_Datastream_Result);
-typedef void (*trans_rx_query_callback_t)(Trans_Rx_Query_Result);
+typedef void (*trans_rx_datastream_callback_t)(Trans_Rx_Datastream_Result*);
+typedef void (*trans_rx_query_callback_t)(Trans_Rx_Query_Result*);
 
 void trans_init();
 
 void trans_set_tx_callback(trans_tx_callback_t);
+void trans_set_query_rx_callback(trans_rx_query_callback_t);
 void trans_set_datastream_rx_callback(trans_rx_datastream_callback_t);
 void trans_set_initial_t_ca(uint16_t t_ca);
 void trans_set_csma_ca(Trans_CSMA_CA_Type type);
@@ -117,7 +132,7 @@ void trans_tx_foreground_frame(uint8_t* data, uint8_t length, uint8_t subnet, ui
 void trans_tx_datastream(uint8_t* data, uint8_t length, uint8_t subnet, uint8_t spectrum_id, int8_t tx_eirp);
 //void trans_tx_background_frame(uint8_t* data, uint8_t subnet, uint8_t spectrum_id, int8_t tx_eirp);
 
-void trans_tx_query(D7AQP_Command_Request_Template* request_template, void* file_template, uint8_t subnet, uint8_t spectrum_id, int8_t tx_eirp);
+void trans_tx_query(D7AQP_Command* command, uint8_t subnet, uint8_t spectrum_id, int8_t tx_eirp);
 
 
 void trans_rx_datastream_start(uint8_t subnet, uint8_t spectrum_id);
