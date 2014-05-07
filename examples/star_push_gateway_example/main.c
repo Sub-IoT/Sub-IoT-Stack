@@ -80,11 +80,11 @@ void rx_callback(Trans_Rx_Query_Result* rx_res)
 	uart_transmit_message(frame->payload, frame->payload_length);
 	uart_transmit_data(0x0D); // carriage return
 
-	switch (rx_res->d7aqp_command->command_code & 0x0F)
+	switch (rx_res->d7aqp_command.command_code & 0x0F)
 	{
 		case D7AQP_OPCODE_ANNOUNCEMENT_FILE:
 		{
-			D7AQP_Single_File_Return_Template* sfr_tmpl = (D7AQP_Single_File_Return_Template*) rx_res->d7aqp_command->command_data;
+			D7AQP_Single_File_Return_Template* sfr_tmpl = (D7AQP_Single_File_Return_Template*) rx_res->d7aqp_command.command_data;
 			log_print_string("D7AQP File Announcement received for file %i starting from byte %i", sfr_tmpl->return_file_id, sfr_tmpl->file_offset);
 			log_print_data(sfr_tmpl->file_data, sfr_tmpl->isfb_total_length - sfr_tmpl->file_offset);
 		}

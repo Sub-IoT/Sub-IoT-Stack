@@ -37,6 +37,8 @@ static trans_tx_callback_t trans_tx_callback;
 static trans_rx_datastream_callback_t trans_rx_datastream_callback;
 static trans_rx_query_callback_t trans_rx_query_callback;
 
+Trans_Rx_Query_Result query_result;
+
 //Flow Control Process
 static void control_tx_callback(Dll_Tx_Result Result)
 {
@@ -75,24 +77,20 @@ static void nwl_rx_callback(nwl_rx_res_t* result)
 	}
 	else if (result->protocol_type == ProtocolTypeNetworkProtocol)
 	{
-		D7AQP_Command d7aqp_command;
-		Trans_Rx_Query_Result query_result;
-
 		query_result.nwl_rx_res = result;
-		query_result.d7aqp_command = &d7aqp_command;
 
 		nwl_ff_D7ANP_t* data = (nwl_ff_D7ANP_t*) result->data;
 
 		uint8_t pointer = 0;
-		d7aqp_command.command_code = data->payload[pointer++];
-		if (d7aqp_command.command_code & D7AQP_COMMAND_CODE_EXTENSION == D7AQP_COMMAND_CODE_EXTENSION)
-			d7aqp_command.command_extension = data->payload[pointer++];
+		query_result.d7aqp_command.command_code = data->payload[pointer++];
+		if (query_result.d7aqp_command.command_code & D7AQP_COMMAND_CODE_EXTENSION == D7AQP_COMMAND_CODE_EXTENSION)
+			query_result.d7aqp_command.command_extension = data->payload[pointer++];
 		else
-			d7aqp_command.command_extension = 0;
+			query_result.d7aqp_command.command_extension = 0;
 
-		if (d7aqp_command.command_extension & D7AQP_COMMAND_EXTENSION_NORESPONSE == D7AQP_COMMAND_EXTENSION_NORESPONSE)
+		if (query_result.d7aqp_command.command_extension & D7AQP_COMMAND_EXTENSION_NORESPONSE == D7AQP_COMMAND_EXTENSION_NORESPONSE)
 		{
-			d7aqp_command.dialog_template = NULL;
+			query_result.d7aqp_command.dialog_template = NULL;
 		} else {
 			D7AQP_Dialog_Template dialog_template;
 			dialog_template.response_timeout = (uint16_t)(data->payload[pointer++] << 8) | (uint16_t)(data->payload[pointer++]);
@@ -100,16 +98,16 @@ static void nwl_rx_callback(nwl_rx_res_t* result)
 			dialog_template.response_channel_list = &data->payload[pointer];
 			pointer += dialog_template.response_channel_list_lenght;
 
-			d7aqp_command.dialog_template = &dialog_template;
+			query_result.d7aqp_command.dialog_template = &dialog_template;
 		}
 
 		//TODO: implement other queries
-		d7aqp_command.ack_template = NULL;
-		d7aqp_command.global_query_template = NULL;
-		d7aqp_command.local_query_template = NULL;
-		d7aqp_command.error_template = NULL;
+		query_result.d7aqp_command.ack_template = NULL;
+		query_result.d7aqp_command.global_query_template = NULL;
+		query_result.d7aqp_command.local_query_template = NULL;
+		query_result.d7aqp_command.error_template = NULL;
 
-		switch (d7aqp_command.command_code & 0x0F)
+		switch (query_result.d7aqp_command.command_code & 0x0F)
 		{
 			case D7AQP_OPCODE_ANNOUNCEMENT_FILE:
 			{
@@ -120,6 +118,8 @@ static void nwl_rx_callback(nwl_rx_res_t* result)
 				sfr_tmpl.file_data = &data->payload[pointer];
 
 				pointer += sfr_tmpl.isfb_total_length - sfr_tmpl.file_offset;
+
+				query_result.d7aqp_command.command_data = &sfr_tmpl;
 			}
 		}
 
