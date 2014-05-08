@@ -115,18 +115,18 @@ int main(void) {
 	log_print_string("endpoint started");
 
 	// No response (no acknowledgement)
-	command.command_code = D7AQP_COMMAND_CODE_EXTENSION | D7AQP_COMMAND_TYPE_NA2P_REQUEST | D7AQP_OPCODE_ANNOUNCEMENT_FILE;
-	command.command_extension = D7AQP_COMMAND_EXTENSION_NORESPONSE;
-	command.dialog_template = NULL;
+//	command.command_code = D7AQP_COMMAND_CODE_EXTENSION | D7AQP_COMMAND_TYPE_NA2P_REQUEST | D7AQP_OPCODE_ANNOUNCEMENT_FILE;
+//	command.command_extension = D7AQP_COMMAND_EXTENSION_NORESPONSE;
+//	command.dialog_template = NULL;
 
 	// Waiting for response (acknowledgement)
-//	command.command_code = D7AQP_COMMAND_TYPE_NA2P_REQUEST | D7AQP_OPCODE_ANNOUNCEMENT_FILE;
+	command.command_code = D7AQP_COMMAND_TYPE_NA2P_REQUEST | D7AQP_OPCODE_ANNOUNCEMENT_FILE;
 //
-//	D7AQP_Dialog_Template dialog_template;
-//	dialog_template.response_timeout = 200;
-//	dialog_template.response_channel_list_lenght = 0; // means same as send channel
+	D7AQP_Dialog_Template dialog_template;
+	dialog_template.response_timeout = 200;
+	dialog_template.response_channel_list_lenght = 0; // means same as send channel
 //
-//	command.dialog_template = &dialog_template;
+	command.dialog_template = &dialog_template;
 
 	D7AQP_Single_File_Return_Template file_template;
 	file_template.return_file_id = 0;

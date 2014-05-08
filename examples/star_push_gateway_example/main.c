@@ -38,10 +38,14 @@
 
 
 #define RECEIVE_CHANNEL 0x10
+#define TX_EIRP 10
+#define USE_LEDS
 
 // event to create a led blink
 static timer_event dim_led_event;
 static bool start_channel_scan = false;
+
+static D7AQP_Command command;
 
 void blink_led()
 {
@@ -91,14 +95,47 @@ void rx_callback(Trans_Rx_Query_Result* rx_res)
 		}
 	}
 
+	if (rx_res->d7aqp_command.command_extension & D7AQP_COMMAND_EXTENSION_NORESPONSE)
+	{
+		// Restart channel scanning
+		start_channel_scan = true;
+	} else {
+		// send ack
+		// todo: put outside interrupt
+		// todo: use dialog template
+
+		command.command_code = D7AQP_COMMAND_CODE_EXTENSION | D7AQP_COMMAND_TYPE_RESPONSE | D7AQP_OPCODE_ANNOUNCEMENT_FILE;
+		command.command_extension = D7AQP_COMMAND_EXTENSION_NORESPONSE;
+		command.dialog_template = NULL;
+		command.command_data = NULL;
+
+		led_on(3);
+		trans_tx_query(&command, 0xFF, RECEIVE_CHANNEL, TX_EIRP);
+	}
+
+}
 
 
+void tx_callback(Trans_Tx_Result result)
+{
+	if(result == TransPacketSent)
+	{
+		#ifdef USE_LEDS
+		led_off(3);
+		#endif
+		log_print_string("TX OK");
+	}
+	else
+	{
+		#ifdef USE_LEDS
+		led_toggle(2);
+		#endif
+		log_print_string("TX CCA FAIL");
+	}
 
 	// Restart channel scanning
 	start_channel_scan = true;
 }
-
-
 
 int main(void) {
 	// Initialize the OSS-7 Stack
@@ -107,6 +144,9 @@ int main(void) {
 	// Currently we address the Transport Layer for RX, this should go to an upper layer once it is working.
 	trans_init();
 	trans_set_query_rx_callback(&rx_callback);
+	trans_set_tx_callback(&tx_callback);
+	// The initial Tca for the CSMA-CA in
+	trans_set_initial_t_ca(200);
 
 	start_channel_scan = true;
 

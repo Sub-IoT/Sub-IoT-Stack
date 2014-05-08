@@ -37,7 +37,8 @@ static trans_tx_callback_t trans_tx_callback;
 static trans_rx_datastream_callback_t trans_rx_datastream_callback;
 static trans_rx_query_callback_t trans_rx_query_callback;
 
-Trans_Rx_Query_Result query_result;
+static Trans_Rx_Query_Result query_result;
+static D7AQP_Dialog_Template dialog_template;
 
 //Flow Control Process
 static void control_tx_callback(Dll_Tx_Result Result)
@@ -92,7 +93,6 @@ static void nwl_rx_callback(nwl_rx_res_t* result)
 		{
 			query_result.d7aqp_command.dialog_template = NULL;
 		} else {
-			D7AQP_Dialog_Template dialog_template;
 			dialog_template.response_timeout = (uint16_t)(data->payload[pointer++] << 8) | (uint16_t)(data->payload[pointer++]);
 			dialog_template.response_channel_list_lenght = data->payload[pointer++];
 			dialog_template.response_channel_list = &data->payload[pointer];
@@ -287,17 +287,39 @@ void trans_tx_query(D7AQP_Command* command, uint8_t subnet, uint8_t spectrum_id,
 			data[pointer++] = command->dialog_template->response_channel_list[i];
 	}
 
-	switch (command->command_code & 0x0F)
+	switch (command->command_code & 0x70)
 	{
-		case D7AQP_OPCODE_ANNOUNCEMENT_FILE:
+		// Response
+		case D7AQP_COMMAND_TYPE_RESPONSE:
 		{
-			D7AQP_Single_File_Return_Template* sfr_tmpl = (D7AQP_Single_File_Return_Template*) command->command_data;
-			data[pointer++] = sfr_tmpl->return_file_id;
-			data[pointer++] = sfr_tmpl->file_offset;
-			data[pointer++] = sfr_tmpl->isfb_total_length;
+			switch (command->command_code & 0x0F)
+			{
+				case D7AQP_OPCODE_ANNOUNCEMENT_FILE:
+				{
+					break;
+				}
+			}
+			break;
+		}
 
-			memcpy(&data[pointer], sfr_tmpl->file_data, sfr_tmpl->isfb_total_length - sfr_tmpl->file_offset);
-			pointer+= sfr_tmpl->isfb_total_length - sfr_tmpl->file_offset;
+		// NA2P Request
+		case D7AQP_COMMAND_TYPE_NA2P_REQUEST:
+		{
+			switch (command->command_code & 0x0F)
+			{
+				case D7AQP_OPCODE_ANNOUNCEMENT_FILE:
+				{
+					D7AQP_Single_File_Return_Template* sfr_tmpl = (D7AQP_Single_File_Return_Template*) command->command_data;
+					data[pointer++] = sfr_tmpl->return_file_id;
+					data[pointer++] = sfr_tmpl->file_offset;
+					data[pointer++] = sfr_tmpl->isfb_total_length;
+
+					memcpy(&data[pointer], sfr_tmpl->file_data, sfr_tmpl->isfb_total_length - sfr_tmpl->file_offset);
+					pointer+= sfr_tmpl->isfb_total_length - sfr_tmpl->file_offset;
+				}
+				break;
+			}
+			break;
 		}
 	}
 
