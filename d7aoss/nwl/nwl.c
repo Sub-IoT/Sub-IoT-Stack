@@ -26,6 +26,11 @@ static nwl_tx_callback_t nwl_tx_callback;
 static uint8_t datastream_frame_id = 0;
 static uint8_t dll_data[100]; //TODO: get rid of fixed array
 
+nwl_rx_res_t res;
+static nwl_background_frame_t bf;
+static nwl_ff_D7ADP_t d7adp_frame;
+static nwl_ff_D7ANP_t d7anp_frame;;
+
 static void dll_tx_callback(Dll_Tx_Result status)
 {
 	nwl_tx_callback(status);
@@ -33,12 +38,11 @@ static void dll_tx_callback(Dll_Tx_Result status)
 
 static void dll_rx_callback(dll_rx_res_t* result)
 {
-	nwl_rx_res_t res;
+
 	res.dll_rx_res = result;
 
 	if (result->frame_type == FrameTypeBackgroundFrame)
 	{
-		nwl_background_frame_t bf;
 		bf.tx_eirp = 0;
 		bf.subnet = ((dll_background_frame_t*) result->frame)->subnet;
 		bf.bpid = ((dll_background_frame_t*) result->frame)->payload[0];
@@ -53,7 +57,7 @@ static void dll_rx_callback(dll_rx_res_t* result)
 		dll_foreground_frame_t* frame = (dll_foreground_frame_t*) result->frame;
 		if (result->frame_type == FrameTypeForegroundFrameStreamFrame) // D7ADP
 		{
-			nwl_ff_D7ADP_t d7adp_frame;
+
 			d7adp_frame.frame_id = frame->payload[0];
 			d7adp_frame.payload_length = frame->payload_length - 1;
 			d7adp_frame.payload = &(frame->payload[1]);
@@ -63,12 +67,12 @@ static void dll_rx_callback(dll_rx_res_t* result)
 		}
 		else // D7ANP
 		{
-			nwl_ff_D7ANP_t d7anp_frame;
+
 			d7anp_frame.d7anls_auth_data = NULL;
 			d7anp_frame.d7anls_header = NULL;
 			d7anp_frame.d7anp_routing_header = NULL;
 			d7anp_frame.payload_length = frame->payload_length - 1;
-			d7anp_frame.payload = &(frame->payload[1]);
+			d7anp_frame.payload = &(frame->payload[0]);
 
 			res.data = &d7anp_frame;
 			res.protocol_type = ProtocolTypeNetworkProtocol;

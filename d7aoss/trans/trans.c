@@ -83,12 +83,12 @@ static void nwl_rx_callback(nwl_rx_res_t* result)
 
 		uint8_t pointer = 0;
 		query_result.d7aqp_command.command_code = data->payload[pointer++];
-		if (query_result.d7aqp_command.command_code & D7AQP_COMMAND_CODE_EXTENSION == D7AQP_COMMAND_CODE_EXTENSION)
+		if (query_result.d7aqp_command.command_code & D7AQP_COMMAND_CODE_EXTENSION)
 			query_result.d7aqp_command.command_extension = data->payload[pointer++];
 		else
 			query_result.d7aqp_command.command_extension = 0;
 
-		if (query_result.d7aqp_command.command_extension & D7AQP_COMMAND_EXTENSION_NORESPONSE == D7AQP_COMMAND_EXTENSION_NORESPONSE)
+		if (query_result.d7aqp_command.command_extension & D7AQP_COMMAND_EXTENSION_NORESPONSE)
 		{
 			query_result.d7aqp_command.dialog_template = NULL;
 		} else {
