@@ -103,6 +103,20 @@ int main(void) {
 	// Initialize the OSS-7 Stack
 	system_init();
 
+
+	// CRC Test
+	uint8_t test_data[10];
+	uint8_t i = 0;
+	for(; i<=9; i++)
+	{
+		test_data[i] = i+49;
+	}
+
+	uint16_t crc1 = crc_calculate(test_data, 9);
+
+	uint16_t crc2 = crc_calculate2(test_data, 9);
+
+
 	// Currently we address the Transport Layer, this should go to an upper layer once it is working.
 	trans_init();
 	trans_set_tx_callback(&tx_callback);
