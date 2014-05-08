@@ -274,7 +274,7 @@ void trans_tx_query(D7AQP_Command* command, uint8_t subnet, uint8_t spectrum_id,
 	uint8_t i = 0;
 
 	data[pointer++] = command->command_code;
-	if (command->command_code & D7AQP_COMMAND_CODE_EXTENSION == D7AQP_COMMAND_CODE_EXTENSION)
+	if (command->command_code & D7AQP_COMMAND_CODE_EXTENSION)
 		data[pointer++] = command->command_extension;
 
 	if (command->dialog_template != NULL)

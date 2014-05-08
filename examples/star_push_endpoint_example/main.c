@@ -36,8 +36,8 @@
 #include <msp430.h>
 
 
-#define SEND_INTERVAL_MS 1000
-#define SEND_CHANNEL 0x1E
+#define SEND_INTERVAL_MS 2000
+#define SEND_CHANNEL 0x10
 #define TX_EIRP 10
 
 // Macro which can be removed in production environment

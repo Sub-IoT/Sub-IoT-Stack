@@ -37,7 +37,7 @@
 #include <msp430.h>
 
 
-#define RECEIVE_CHANNEL 0x1E
+#define RECEIVE_CHANNEL 0x10
 
 // event to create a led blink
 static timer_event dim_led_event;
@@ -85,7 +85,8 @@ void rx_callback(Trans_Rx_Query_Result* rx_res)
 		case D7AQP_OPCODE_ANNOUNCEMENT_FILE:
 		{
 			D7AQP_Single_File_Return_Template* sfr_tmpl = (D7AQP_Single_File_Return_Template*) rx_res->d7aqp_command.command_data;
-			log_print_string("D7AQP File Announcement received for file %x starting from byte %i", sfr_tmpl->return_file_id, sfr_tmpl->file_offset);
+			log_print_string("D7AQP File Announcement received");
+			log_print_string(" - file 0x%x starting from byte %d", sfr_tmpl->return_file_id, sfr_tmpl->file_offset);
 			log_print_data(sfr_tmpl->file_data, sfr_tmpl->isfb_total_length - sfr_tmpl->file_offset);
 		}
 	}
