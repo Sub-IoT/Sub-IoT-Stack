@@ -107,19 +107,41 @@ static void nwl_rx_callback(nwl_rx_res_t* result)
 		query_result.d7aqp_command.local_query_template = NULL;
 		query_result.d7aqp_command.error_template = NULL;
 
-		switch (query_result.d7aqp_command.command_code & 0x0F)
+		switch (command->command_code & 0x70)
 		{
-			case D7AQP_OPCODE_ANNOUNCEMENT_FILE:
+			// Response
+			case D7AQP_COMMAND_TYPE_RESPONSE:
 			{
-				D7AQP_Single_File_Return_Template sfr_tmpl;
-				sfr_tmpl.return_file_id = data->payload[pointer++];
-				sfr_tmpl.file_offset = data->payload[pointer++];
-				sfr_tmpl.isfb_total_length = data->payload[pointer++];
-				sfr_tmpl.file_data = &data->payload[pointer];
+				switch (command->command_code & 0x0F)
+				{
+					case D7AQP_OPCODE_ANNOUNCEMENT_FILE:
+					{
+						query_result.d7aqp_command.command_data = NULL;
+						break;
+					}
+				}
+				break;
+			}
 
-				pointer += sfr_tmpl.isfb_total_length - sfr_tmpl.file_offset;
+			// NA2P Request
+			case D7AQP_COMMAND_TYPE_NA2P_REQUEST:
+			{
+				switch (query_result.d7aqp_command.command_code & 0x0F)
+				{
+					case D7AQP_OPCODE_ANNOUNCEMENT_FILE:
+					{
+						D7AQP_Single_File_Return_Template sfr_tmpl;
+						sfr_tmpl.return_file_id = data->payload[pointer++];
+						sfr_tmpl.file_offset = data->payload[pointer++];
+						sfr_tmpl.isfb_total_length = data->payload[pointer++];
+						sfr_tmpl.file_data = &data->payload[pointer];
 
-				query_result.d7aqp_command.command_data = &sfr_tmpl;
+						pointer += sfr_tmpl.isfb_total_length - sfr_tmpl.file_offset;
+
+						query_result.d7aqp_command.command_data = &sfr_tmpl;
+					}
+				}
+				break;
 			}
 		}
 

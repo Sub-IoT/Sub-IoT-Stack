@@ -123,14 +123,14 @@ void tx_callback(Trans_Tx_Result result)
 		#ifdef USE_LEDS
 		led_off(3);
 		#endif
-		log_print_string("TX OK");
+		log_print_string("ACK SEND");
 	}
 	else
 	{
 		#ifdef USE_LEDS
 		led_toggle(2);
 		#endif
-		log_print_string("TX CCA FAIL");
+		log_print_string("TX ACK CCA FAIL");
 	}
 
 	// Restart channel scanning
