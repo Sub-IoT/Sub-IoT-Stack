@@ -33,7 +33,7 @@ phy_tx_cfg_t *current_phy_cfg;
 
 
 uint8_t timeout_listen; // TL
-uint8_t frame_data[255]; // TODO max frame size
+uint8_t frame_data[100]; // TODO: get rid of fixed buffer
 uint16_t timestamp;
 uint8_t timeout_ca; 	// T_ca
 
@@ -289,12 +289,12 @@ static void rx_callback(phy_rx_data_t* res)
 		} else {
 
 			// TODO: should be done in upper layer
-			data_pointer++; // TODO what is this?
-			data_pointer++; //isfid
-			data_pointer++; //isfoffset
+			//data_pointer++; // TODO what is this?
+			//data_pointer++; //isfid
+			//data_pointer++; //isfoffset
 
-			frame->payload_length = (*data_pointer);
-			data_pointer++;
+			frame->payload_length = frame->length - (data_pointer - res->data) - 2;
+			//data_pointer++;
 			frame->payload = data_pointer;
 		}
 
@@ -370,7 +370,7 @@ void dll_stop_channel_scan()
 	phy_idle();
 }
 
-void dll_background_scan()
+uint8_t dll_background_scan()
 {
 	#ifdef LOG_DLL_ENABLED
 		log_print_stack_string(LOG_DLL, "DLL Starting background scan");
@@ -380,13 +380,18 @@ void dll_background_scan()
 
 	//check for signal detected above E_sm
 	// TODO: is this the best method?
-	if (phy_get_rssi(spectrum_id, 0) <= scan_minimum_energy)
+	int rss = phy_get_rssi(spectrum_id, 0);
+	if (rss <= scan_minimum_energy)
 	{
 		#ifdef LOG_DLL_ENABLED
-			log_print_stack_string(LOG_DLL, "DLL No signal deteced");
+			log_print_stack_string(LOG_DLL, "DLL No signal detected: %d", rss);
 		#endif
-		return;
+		return 0;
 	}
+
+	#ifdef LOG_DLL_ENABLED
+		log_print_stack_string(LOG_DLL, "DLL Background Scan signal detected: %d", rss);
+	#endif
 
 	phy_rx_cfg_t rx_cfg;
 	rx_cfg.length = 0;
@@ -406,6 +411,8 @@ void dll_background_scan()
 	#else
 	phy_rx(&rx_cfg);
 	#endif
+
+	return 1;
 }
 void dll_foreground_scan()
 {
@@ -508,7 +515,18 @@ void dll_csma(bool enabled)
 	}
 
 	timer_event event;
-	event.next_event = 5; // TODO: get T_G fron config
+
+	// TODO: calculate Tg only once
+	// Calculate correct t_g
+
+	uint8_t channel_bandwidth_index = (spectrum_id >> 4) & 0x07;
+	uint8_t fec = (bool)spectrum_id >> 7;
+
+	if (channel_bandwidth_index == 1)
+		event.next_event = fec == 0 ? 5 : 10;
+	else
+		event.next_event = fec == 0 ? 2 : 3;
+
 	event.f = &dll_cca2;
 
 	if (!timer_add_event(&event))

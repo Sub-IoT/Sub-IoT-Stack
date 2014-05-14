@@ -20,12 +20,17 @@
 dll_channel_scan_t scan_cfg1 = {
 		0x1C,
 		FrameTypeBackgroundFrame,
-		0,//20,
+		20,
 		500
 };
 
 dll_channel_scan_series_t scan_series_cfg;
 uint8_t foreground_channel_id;
+
+
+static timer_event event;
+
+static volatile uint8_t receiving = 0;
 
 static char *i2a(unsigned i, char *a, unsigned r)
 {
@@ -74,15 +79,16 @@ void rx_callback(nwl_rx_res_t* rx_res)
 			log_print_string(msg);
 
 
-
-			timer_event event;
-			event.next_event = data.eta < 100 ? 0:  data.eta - 100;
+			dll_set_foreground_scan_detection_timeout(data.eta * 2);
+			scan_foreground_frame();
+			//timer_event event;
+			//event.next_event = data.eta < 100 ? 0:  data.eta - 100;
 			//foreground_channel_id = data.channel_id;
-			dll_set_foreground_scan_detection_timeout(200);
+			//dll_set_foreground_scan_detection_timeout(200);
 			//dll_set_scan_spectrum_id(data.channel_id);
-			event.f = &scan_foreground_frame;
+			//event.f = &scan_foreground_frame;
 
-			timer_add_event(&event);
+			//timer_add_event(&event);
 		}
 	} else {
 		log_print_string("FF");
@@ -91,10 +97,19 @@ void rx_callback(nwl_rx_res_t* rx_res)
 	}
 }
 
-start_rx()
+void start_rx()
 {
+	if (receiving == 1)
+		return;
+
+
 	led_on(3);
-	dll_channel_scan_series(&scan_series_cfg);
+	///dll_channel_scan_series(&scan_series_cfg);
+
+	dll_background_scan();
+
+	timer_add_event(&event);
+	led_off(3);
 
 }
 
@@ -113,10 +128,17 @@ void main(void) {
 	scan_series_cfg.length = 0;
 	scan_series_cfg.values = scan_confgs;
 
+	dll_set_background_scan_detection_timeout(20);
+	dll_set_scan_spectrum_id(0x1C);
+	dll_set_scan_minimum_energy(-100);
+
+	event.f = &start_rx;
+	event.next_event = 500;
+
 	log_print_string("started");
 
 
-	start_rx();
+	timer_add_event(&event);
 
 	while(1)
 	{

@@ -42,17 +42,19 @@
 #define TX_EIRP 10
 
 #define USE_LEDS
+#define UART_DATA_BUFFER_LENGTH 200
+
 
 // event to create a led blink
 static timer_event dim_led_event;
-static timer_event check_uart_event;
 static volatile bool start_channel_scan = false;
-static volatile bool new_uart_data = false;
-static volatile bool check_for_uart_data = false;
-static volatile bool is_checking_for_uart_data = false;
 
-static uint8_t data[200];
-static uint8_t data_lenght = 0;
+static uint8_t uart_data[UART_DATA_BUFFER_LENGTH];
+static volatile uint8_t uart_dataLength = 0;
+static volatile uint8_t uart_ptr = 0;
+
+static bool process_uart_data = false;
+
 
 void blink_led()
 {
@@ -68,6 +70,7 @@ void dim_led()
 
 void start_rx()
 {
+	led_on(3);
 	start_channel_scan = false;
 	trans_rx_datastream_start(0xFF, RECEIVE_CHANNEL);
 }
@@ -92,27 +95,28 @@ void tx_callback(Trans_Tx_Result result)
 	start_channel_scan = true;
 }
 
-void send_uart_data()
+void push_char(char byte)
 {
-	uint8_t send_data[32];
-	memcpy((void*)send_data, (void*)data, data_lenght);
-	trans_tx_datastream((uint8_t*)&send_data, data_lenght, 0xFF, SEND_CHANNEL, TX_EIRP);
-	data_lenght = 0;
+	uart_data[uart_ptr++] = byte;
+	if (uart_ptr == 1)
+		uart_dataLength = byte;
+	else if (uart_ptr - 1 >= uart_dataLength)
+		process_uart_data = true;
 }
 
 
-void check_uart()
+void process_uart()
 {
-	if (data_lenght > 0  && !new_uart_data)
-	{
-		send_uart_data();
-		is_checking_for_uart_data = false;
-	} else if (new_uart_data)
-	{
-		new_uart_data = false;
-		timer_add_event(&check_uart_event);
-	}
+	trans_rx_datastream_stop();
+	led_off(3);
+
+	blink_led();
+	trans_tx_datastream((uint8_t*)&uart_data+1, uart_dataLength, 0xFF, SEND_CHANNEL, TX_EIRP);
+
+	uart_dataLength = 0;
+	uart_ptr = 0;
 }
+
 
 void datastream_rx_callback(Trans_Rx_Datastream_Result result)
 {
@@ -120,10 +124,12 @@ void datastream_rx_callback(Trans_Rx_Datastream_Result result)
 
 	blink_led();
 
+	uart_transmit_data(result.lenght);
 	uart_transmit_message(result.payload, result.lenght);
 
 	// Restart channel scanning
-	start_channel_scan = true;
+	//start_channel_scan = true;
+	start_rx();
 }
 
 int main(void) {
@@ -148,23 +154,18 @@ int main(void) {
 	dim_led_event.next_event = 50;
 	dim_led_event.f = &dim_led;
 
-	check_uart_event.next_event = 1;
-	check_uart_event.f = &check_uart;
-
 	//system_watchdog_init(WDTSSEL0, 0x03);
 	//ystem_watchdog_timer_start();
 
 	uart_enable_interrupt();
 
-	blink_led();
 
 	while(1)
 	{
-		if (check_for_uart_data)
+		if (process_uart_data)
 		{
-			is_checking_for_uart_data = true;
-			check_for_uart_data = false;
-			timer_add_event(&check_uart_event);
+			process_uart_data = false;
+			process_uart();
 		}
 
 		if (start_channel_scan)
@@ -173,7 +174,7 @@ int main(void) {
 		}
 
 
-		system_lowpower_mode(3,1);
+		system_lowpower_mode(0,1);
 	}
 }
 
@@ -186,17 +187,9 @@ __interrupt void USCI_A0_ISR(void)
 		case 0:break;                             // Vector 0 - no interrupt
 		case 2:
 		{
-			if (!is_checking_for_uart_data)
-				check_for_uart_data = true;
-
-			if (data_lenght == 200)
-			{
-				send_uart_data();
-			} else	{
-				data[data_lenght++] = UCA0RXBUF;
-				new_uart_data = true;
-			}
-
+			while((UCA0IFG & UCRXIFG) == 1);
+			char byte =  UCA0RXBUF;
+			push_char(byte);
 			LPM3_EXIT;
 			break;
 		}

@@ -40,7 +40,7 @@ extern InterruptHandler interrupt_table[34];
 
 RadioState state;
 
-uint8_t buffer[255];
+uint8_t buffer[100]; // TODO: get rid of fixed buffer
 uint8_t packetLength;
 uint8_t* bufferPosition;
 uint16_t remainingBytes;
@@ -90,7 +90,7 @@ void phy_init(void)
 
 	last_tx_cfg.eirp=0;
 	last_tx_cfg.spectrum_id = 0;
-	last_tx_cfg.sync_word_class=0;
+	last_tx_cfg.sync_word_class = 0;
 
 }
 
@@ -516,8 +516,8 @@ void rx_data_isr()
     //When all data has been received read rssi and lqi value and set packetreceived flag
     if(remainingBytes == 0)
     {
-    	rx_data.rssi = calculate_rssi(ReadSingleReg(RXFIFO));
-    	rx_data.lqi = ReadSingleReg(RXFIFO) & 0x7F;
+    	rx_data.rssi = calculate_rssi(ReadSingleReg(RSSI));
+    	rx_data.lqi = ReadSingleReg(LQI);
 		rx_data.length = *buffer;
 		rx_data.data = buffer;
 		#ifdef LOG_PHY_ENABLED

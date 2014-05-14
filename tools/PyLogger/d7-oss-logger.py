@@ -223,13 +223,14 @@ class LogPhyRes(Logs):
 		self.tx_eirp = int(struct.unpack('B', data[1])[0]) * 0.5 - 40;
 		self.frame_ctl = "0x" + str(data[3].encode("hex").upper())
 		self.source_id = str(data[6:14].encode("hex").upper())
-		self.data_length = int(struct.unpack('B', data[17])[0])
-		self.data = self.dataEncoding(data[18:18+self.data_length])
+		self.data_length = self.packet_length - 16;
+		self.data = self.dataEncoding(data[14:14+self.data_length])
+		self.crc = self.dataEncoding(data[14+self.data_length:16+self.data_length])
 
 		#self.data = [data[i:i+2].decode("utf-8", errors='replace') for i in range(0, len(data), 2)]
 		#self.data = [data[i].encode("hex").upper() for i in range(0, len(data))]
 		#self.data = [str(struct.unpack('b', data[i])[0]) for i in range(0, len(data))]
-		#print("data_length %s" % self.data_length)
+		#print("packet_length %s" % self.packet_length)
 		#print("dump_data: %s" % self.data)
 		#print("rssi: %s" % self.rssi)
 		#print("lqi: %s" % self.lqi)
@@ -259,8 +260,8 @@ class LogPhyRes(Logs):
 		if settings["phyres"]:
 			#TODO format as table, this is quite ugly, there is a easier way, should look into it
 			string = formatHeader("PHY RES", "GREEN", self.datetime) + "Received packet from: " + self.source_id + "\n"
-			string += " " * 22 + "rssi: " + str(self.rssi) + " " * 10 + "lqi: " + str(self.lqi) + " "*14 + "subnet: " + str(self.subnet) + "\n"
-			string += " " * 22 + "tx_eirp: " + str(self.tx_eirp) + " " *6 + "frame_ctl: " + str(self.frame_ctl) + "\n"
+			string += " " * 22 + "rssi: " + str(self.rssi) + " dBm"+ " " * 7 + "lqi: " + str(self.lqi) + " "*14 + "subnet: " + str(self.subnet) + "\n"
+			string += " " * 22 + "tx_eirp: " + str(self.tx_eirp) + " dBm   " + "frame_ctl: " + str(self.frame_ctl) +  " "*7+ "CRC: " + str(self.crc) + "\n"
 			string += " " * 22 + "data: " + str(self.data) 
 			string += Style.RESET_ALL
 			return string + "\n"
@@ -393,7 +394,7 @@ def main():
 
 	# Setup the console parser
 	parser = argparse.ArgumentParser(description = "DASH7 logger for the OSS-7 stack. You can exit the logger using Ctrl-c, it takes some time.")
-	parser.add_argument('serial', default="COM9", metavar="serial port", help="serial port (eg COM7 or /dev/ttyUSB0)", nargs='?')
+	parser.add_argument('serial', default="COM4", metavar="serial port", help="serial port (eg COM7 or /dev/ttyUSB0)", nargs='?')
 	parser.add_argument('-b', '--baud' , default=115200, metavar="baudrate", type=int, help="set the baud rate (default: 9600)")
 	parser.add_argument('-v', '--version', action='version', version='DASH7 Logger 0.5', help="show the current version")
 	parser.add_argument('-f', '--file', metavar="file", help="write to a specific file", nargs='?', default=None, const=dateTime)
