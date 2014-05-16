@@ -18,7 +18,7 @@
 #ifndef PLATFORM_H_
 #define PLATFORM_H_
 
-#define PLATFORM_WIZZIMOTE
+#define PLATFORM_MATRIX
 
 
 #ifdef PLATFORM_WIZZIMOTE
@@ -31,6 +31,8 @@
 #include "chronos.h"
 #elif defined PLATFORM_BELIGUM
 #include "beligum.h"
+#elif defined PLATFORM_MATRIX
+#include "matrix_tp1104r3.h"
 #else
 	#error No platform set
 #endif
