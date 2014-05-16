@@ -107,7 +107,7 @@ void push_char(char byte)
 
 void process_uart()
 {
-	trans_rx_datastream_stop();
+    trans_rx_stop();
 	led_off(3);
 
 	blink_led();
