@@ -29,6 +29,8 @@
 #define LED_GREEN 3
 
 // UART
+// RX: P1.5
+// TX: P1.6
 #define PLATFORM_UCA0RXD	P1MAP5
 #define PLATFORM_UCA0TXD	P1MAP6
 
