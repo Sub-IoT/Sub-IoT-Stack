@@ -11,8 +11,8 @@
 #include <msp430.h>
 
 
-void callback1(void* arg);
-void callback2(void* arg);
+void callback1();
+void callback2();
 
 
 uint8_t series_number = 10;
@@ -20,16 +20,16 @@ uint8_t series_number = 10;
 uint16_t timing_series[] = {4096, 5014, 1024, 2048, 5012, 6036, 7060, 8024, 10000, 2};
 void* event_series[] ={&callback1, &callback1, &callback2, &callback1, &callback1, &callback1, &callback1, &callback1, &callback1, &callback1};
 
-queue q;
+queue_t q;
 
 uint8_t count = 0;
 timer_event event;
 uint32_t prev_counter_1 = 0;
 uint32_t prev_counter_2 = 0;
 
-void callback2(void* arg);
+void callback2();
 
-void callback1(void* arg)
+void callback1()
 {
 //	uint32_t counter_2 = benchmarking_timer_getvalue();
 //	benchmarking_timer_stop();
@@ -62,7 +62,7 @@ void callback1(void* arg)
 //	timer_add_event(&event);
 }
 
-void callback2(void* arg)
+void callback2()
 {
 	uint16_t current_timer = hal_timer_getvalue();
 	log_print_string("callback 2: %d", current_timer);

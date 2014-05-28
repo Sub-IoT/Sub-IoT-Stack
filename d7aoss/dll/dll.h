@@ -1,9 +1,19 @@
-/*
- * The Data Link layer API
- *  Created on: Nov 23, 2012
- *  Authors:
- * 		maarten.weyn@artesis.be
- *  	glenn.ergeerts@artesis.be
+/*! \file dll.h
+ *
+ * \copyright (C) Copyright 2013 University of Antwerp (http://www.cosys-lab.be) and others.\n
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.\n
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * \author maarten.weyn@uantwerpen.be
+ * \author glenn.ergeerts@uantwerpen.be
+ *
+ * \brief The Data Link Layer API
  */
 
 #ifndef DLL_H_
@@ -13,8 +23,12 @@
 #include "../phy/phy.h"
 
 typedef enum {
-	FrameTypeBackgroundFrame,
-	FrameTypeForegroundFrame
+	FrameTypeForegroundFrameDialogFrame = 0x00,
+	FrameTypeForegroundFrameDialogNACK = 0x01,
+	FrameTypeForegroundFrameStreamFrame = 0x02,
+	FrameTypeForegroundFrame,
+	FrameTypeBackgroundFrame
+
 } Frame_Type;
 
 typedef enum {
@@ -161,7 +175,7 @@ void dll_set_scan_spectrum_id(uint8_t spectrum_id);
 void dll_csma(bool enabled);
 void dll_ca(uint8_t t_ca);
 void dll_stop_channel_scan();
-void dll_background_scan();
+uint8_t dll_background_scan();
 void dll_foreground_scan();
 void dll_channel_scan_series(dll_channel_scan_series_t*);
 

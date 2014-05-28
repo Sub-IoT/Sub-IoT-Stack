@@ -1,0 +1,48 @@
+#!/usr/bin/python
+# ****************************************************************************
+# *  Copyright: National ICT Australia,  2007 - 2010                         *
+# *  Developed at the ATP lab, Networked Systems research theme              *
+# *  Author(s): Yuriy Tselishchev                                            *
+# *  This file is distributed under the terms in the attached LICENSE file.  *
+# *  If you do not find this file, copies can be found by writing to:        *
+# *                                                                          *
+# *      NICTA, Locked Bag 9013, Alexandria, NSW 1435, Australia             *
+# *      Attention:  License Inquiry.                                        *
+# *                                                                          *
+# ***************************************************************************/
+
+import sys, os.path
+
+def read_file(name,hasGeneral = 0):
+    
+    if (not os.path.exists(name) or not os.path.isfile(name)):
+	quit("ERROR: no such file " + name)
+
+    f = open(name,"r")
+    lines = f.readlines()
+    f.close()
+
+    for line in lines:
+	line = line.strip()
+	if (line == "[General]"): 
+	    if (hasGeneral): continue
+	    hasGeneral = 1
+	if (len(line) == 0 or line[0] == '#'): continue
+	pos = line.find('#')
+	if (pos != -1): 
+	    line = line[:pos].strip()
+	if (line.find("include") == 0):
+	    file = line[8:]
+	    read_file(file, hasGeneral)
+	else: print line
+    
+    return
+
+file = "omnetpp.ini"
+if (len(sys.argv) > 1):
+    file = sys.argv[1]
+    if (os.path.dirname(file) != ''):
+	os.chdir(os.path.dirname(file))
+	file = os.path.basename(file)
+            
+read_file(file)

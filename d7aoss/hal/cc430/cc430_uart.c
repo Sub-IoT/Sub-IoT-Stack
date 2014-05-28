@@ -1,8 +1,19 @@
-/*
- *  Created on: Nov 22, 2012
- *  Authors:
- * 		maarten.weyn@artesis.be
- *  	glenn.ergeerts@artesis.be
+/*!
+ *
+ * \copyright (C) Copyright 2013 University of Antwerp (http://www.cosys-lab.be) and others.\n
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.\n
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * Contributors:
+ * 		maarten.weyn@uantwerpen.be
+ *     	glenn.ergeerts@uantwerpen.be
+ *
  */
 
 #include "../uart.h"
@@ -11,43 +22,66 @@
 
 #include <msp430.h>
 #include "driverlib/5xx_6xx/gpio.h"
-#include "driverlib/5xx_6xx/uart.h"
+//#include "driverlib/5xx_6xx/uart.h"
 
 void uart_init()
 {
-#ifdef PLATFORM_WIZZIMOTE // TODO ugly solution for now, UART needs to be extracted from oss-7 and implemented by platform specific HAL library
-    PMAPPWD = 0x02D52;                        // Get write-access to port mapping regs
-    P2MAP0 = PM_UCA0RXD;                      // Map UCA0RXD output to P2.6
-    P2MAP1 = PM_UCA0TXD;                      // Map UCA0TXD output to P2.7
+	PMAPPWD = 0x02D52;                        // Get write-access to port mapping regs
+    PLATFORM_UCA0RXD = PM_UCA0RXD;                      // Map UCA0RXD output to Px
+    PLATFORM_UCA0TXD = PM_UCA0TXD;                      // Map UCA0TXD output to Px
     PMAPPWD = 0;                              // Lock port mapping registers
-	P2DIR |= BIT1;                            // Set P2.7 as TX output
-    P2SEL |= BIT0 + BIT1;
-#elif defined PLATFORM_ARTESIS
+    PLATFORM_PxDIR |= PLATFORM_PxDIRBIT;                            // Set Px as TX output
+    PLATFORM_PxSEL |= PLATFORM_PxSELBIT;
     PMAPPWD = 0x02D52;                        // Get write-access to port mapping regs
-    P1MAP6 = PM_UCA0RXD;                      // Map UCA0RXD output to P2.6
-    P1MAP5 = PM_UCA0TXD;                      // Map UCA0TXD output to P2.7
-    PMAPPWD = 0;                              // Lock port mapping registers
-    P1DIR |= BIT5;                            // Set P1.6 as TX output
-    P1SEL |= BIT5 + BIT6;                     // Select P1.5 & P1.6 to UART function
-#endif
-
-
-    /*
-     * CUBR1 = UARTCLK/(Baudr*256)
-     * CUBR0 = (UARTCLK/Baudr)–256*CUBR1
-     */
 
     UCA0CTL1 |= UCSWRST;                      // **Put state machine in reset**
-    UCA0CTL1 |= UCSSEL_2;                     // SMCLK
+//    UCA0CTL1 |= UCSSEL_1;                     // ACLK
+//    double c_speed = 32768.0;
+//
+//    double n = c_speed / BAUDRATE;
+//    uint8_t ucos16 = (n >= 16);
+//
+//    if (ucos16)
+//    {
+//    	n = n / 16.0;
+//    	UCA0MCTL |= UCOS16;
+//
+//    	//UCA0BR1 = (uint8_t) (c_speed / (BAUDRATE*256.0));
+//    	//UCA0BR0 = (uint8_t) ((c_speed / BAUDRATE) - (256*UCA0BR1));
+//    	UCA0BRW = (uint16_t) n;
+//
+//    	uint8_t ucbrf = (uint8_t) ((n - UCA0BRW) * 16 + 0.5);
+//
+//    	UCA0MCTL |= ucbrf << 4;
+//    } else {
+//    	//UCA0BR1 = (uint8_t) (c_speed / (BAUDRATE*256.0));
+//    	//UCA0BR0 = (uint8_t) ((c_speed / BAUDRATE) - (256*UCA0BR1));
+//    	UCA0BRW = (uint16_t) n;
+//
+//    	uint8_t ucbrs = (uint8_t) ((n - UCA0BRW) * 8 + 0.5);
+//
+//    	UCA0MCTL |= ucbrs << 1;
+//    }
+//
+////    UCA0BRW = 0x01b4;
+////    UCA0MCTL |= 0x07 << 1;
+////
 
-    UCA0BR1 = clock_speed / (BAUDRATE*256);
-    UCA0BR0 = ((clock_speed + (BAUDRATE/2))  / BAUDRATE) - (256*UCA0BR1);
+//    UCA0CTL1 |= UCSWRST;                      // **Put state machine in reset**
+//    UCA0CTL1 |= UCSSEL_1;                     // CLK = ACLK
+//    UCA0BR0 = 0x0D;                           // 2400 (see User's Guide)
+//    UCA0BR1 = 0x00;                           //
+//    UCA0MCTL |= UCBRS_6+UCBRF_0;              // Modulation UCBRSx=6, UCBRFx=0
+//    UCA0CTL1 &= ~UCSWRST;                     // **Initialize USCI state machine**
 
-//    UCA0BR0 = 9;                              // 1MHz 115200 (see User's Guide)
-//    UCA0BR1 = 0;                              // 1MHz 115200
 
 
-    UCA0MCTL |= UCBRS_1 + UCBRF_0;            // Modulation UCBRSx=1, UCBRFx=0
+    UCA0CTL1 |= UCSSEL_2;
+    double n = 1.0 * clock_speed / BAUDRATE;
+    UCA0BRW = (uint16_t) n;
+    uint8_t ucbrs = (uint8_t) ((n - UCA0BRW) * 8 + 0.5);
+    UCA0MCTL |= ucbrs << 1;
+
     UCA0CTL1 &= ~UCSWRST;                     // **Initialize USCI state machine**
 
 }

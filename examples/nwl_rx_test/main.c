@@ -1,7 +1,7 @@
 /*
  *  Created on: Feb 2, 2013
  *  Authors:
- * 		maarten.weyn@artesis.be
+ * 		maarten.weyn@uantwerpen.be
  */
 
 
@@ -27,7 +27,31 @@ dll_channel_scan_t scan_cfg1 = {
 dll_channel_scan_series_t scan_series_cfg;
 uint8_t foreground_channel_id;
 
-void scan_foreground_frame(void* arg)
+
+static timer_event event;
+
+static volatile uint8_t receiving = 0;
+
+static char *i2a(unsigned i, char *a, unsigned r)
+{
+	if (i/r > 0) a = i2a(i/r,a,r);
+	*a = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ"[i%r];
+	return a+1;
+}
+
+char *itoa(int i, char *a, int r)
+{
+	if ((r < 2) || (r > 36)) r = 10;
+	if (i < 0)
+	{
+		*a = '-';
+		*i2a(-(unsigned)i,a+1,r) = 0;
+	}
+	else *i2a(i,a,r) = 0;
+	return a;
+}
+
+void scan_foreground_frame()
 {
 	log_print_string("FF Scan");
 	dll_foreground_scan();
@@ -36,11 +60,11 @@ void scan_foreground_frame(void* arg)
 void rx_callback(nwl_rx_res_t* rx_res)
 {
 	log_print_string("RX CB");
-	if (rx_res->frame_type == FrameTypeBackgroundFrame)
+	if (rx_res->protocol_type == ProtocolTypeBackgroundProtocol)
 	{
 		led_toggle(3);
 
-		nwl_background_frame_t* frame = (nwl_background_frame_t*) rx_res->frame;
+		nwl_background_frame_t* frame = (nwl_background_frame_t*) rx_res->data;
 		if (frame->bpid == BPID_AdvP)
 		{
 			dll_stop_channel_scan();
@@ -51,19 +75,20 @@ void rx_callback(nwl_rx_res_t* rx_res)
 
 			log_print_string("AdvP_Data");
 			char msg[8];
-			itoa(data.eta, msg);
+			itoa(data.eta, msg, 10);
 			log_print_string(msg);
 
 
-
-			timer_event event;
-			event.next_event = data.eta < 100 ? 0:  data.eta - 100;
+			dll_set_foreground_scan_detection_timeout(data.eta * 2);
+			scan_foreground_frame();
+			//timer_event event;
+			//event.next_event = data.eta < 100 ? 0:  data.eta - 100;
 			//foreground_channel_id = data.channel_id;
-			dll_set_foreground_scan_detection_timeout(200);
+			//dll_set_foreground_scan_detection_timeout(200);
 			//dll_set_scan_spectrum_id(data.channel_id);
-			event.f = &scan_foreground_frame;
+			//event.f = &scan_foreground_frame;
 
-			timer_add_event(&event);
+			//timer_add_event(&event);
 		}
 	} else {
 		log_print_string("FF");
@@ -72,10 +97,19 @@ void rx_callback(nwl_rx_res_t* rx_res)
 	}
 }
 
-start_rx()
+void start_rx()
 {
+	if (receiving == 1)
+		return;
+
+
 	led_on(3);
-	dll_channel_scan_series(&scan_series_cfg);
+	///dll_channel_scan_series(&scan_series_cfg);
+
+	dll_background_scan();
+
+	timer_add_event(&event);
+	led_off(3);
 
 }
 
@@ -94,22 +128,25 @@ void main(void) {
 	scan_series_cfg.length = 0;
 	scan_series_cfg.values = scan_confgs;
 
+	dll_set_background_scan_detection_timeout(20);
+	dll_set_scan_spectrum_id(0x1C);
+	dll_set_scan_minimum_energy(-100);
+
+	event.f = &start_rx;
+	event.next_event = 500;
+
 	log_print_string("started");
 
 
-	//start_rx();
-
-dll_set_foreground_scan_detection_timeout(0);
-dll_set_scan_spectrum_id(0x1C);
-	dll_foreground_scan();
+	timer_add_event(&event);
 
 	while(1)
 	{
-		system_lowpower_mode(4,1);
+		system_lowpower_mode(3,1);
 	}
 }
 
-#pragma vector=ADC12_VECTOR,RTC_VECTOR,AES_VECTOR,COMP_B_VECTOR,DMA_VECTOR,PORT1_VECTOR,PORT2_VECTOR,SYSNMI_VECTOR,UNMI_VECTOR,USCI_A0_VECTOR,USCI_B0_VECTOR,WDT_VECTOR,TIMER0_A0_VECTOR,TIMER1_A1_VECTOR
+#pragma vector=ADC12_VECTOR,RTC_VECTOR,AES_VECTOR,COMP_B_VECTOR,DMA_VECTOR,PORT1_VECTOR,PORT2_VECTOR,SYSNMI_VECTOR,UNMI_VECTOR,USCI_A0_VECTOR,USCI_B0_VECTOR,WDT_VECTOR,TIMER0_A0_VECTOR,TIMER1_A1_VECTOR,TIMER0_A1_VECTOR
 __interrupt void ISR_trap(void)
 {
   /* For debugging purposes, you can trap the CPU & code execution here with an

@@ -26,7 +26,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <cmockery.h>
+#include "cmockery.h"
 
 // Size of guard bytes around dynamically allocated blocks.
 #define MALLOC_GUARD_SIZE 16

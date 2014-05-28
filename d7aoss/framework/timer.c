@@ -1,10 +1,18 @@
-/*
- *  Created on: May 9, 2013
- *  Authors:
- *  	maarten.weyn@artesis.be
- *  	glenn.ergeerts@artesis.be
+/*! \file timer.c
+ *
+ * \copyright (C) Copyright 2013 University of Antwerp (http://www.cosys-lab.be) and others.\n
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.\n
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * \author maarten.weyn@uantwerpen.be
+ * \author glenn.ergeerts@uantwerpen.be
  */
-
 #include "timer.h"
 
 #include "../hal/timer.h"
@@ -20,19 +28,20 @@ void timer_init()
 
 bool timer_insert_value_in_queue(timer_event* event)
 {
-	#ifdef LOG_FWK_ENABLED
 	uint16_t current_timer = hal_timer_getvalue();
-	log_print_string("timer_insert S - Timer current value: %d", current_timer);
+	#ifdef LOG_FWK_ENABLED
+	log_print_stack_string(LOG_FWK, "timer_insert S - Timer current value: %d.%d", current_timer/1000, current_timer%1000);
 	#endif
 
     // TODO: substract time already gone
 	uint8_t position = 0;
-	event->next_event = hal_timer_getvalue() + event->next_event;
+	uint16_t next_event =  event->next_event;
+	event->next_event = current_timer + event->next_event;
 
 	while (position < event_queue.length)
 	{
 		timer_event *temp_event = (timer_event*) queue_read_value(&event_queue, position, sizeof(timer_event));
-		if (temp_event->next_event > event->next_event)
+		if ((temp_event->next_event - current_timer)  > next_event)
 		{
 			if (position == 0)
 			{
@@ -57,10 +66,10 @@ bool timer_insert_value_in_queue(timer_event* event)
 	for (;position<event_queue.length; position++)
 	{
 		timer_event *temp_event = (timer_event*) queue_read_value(&event_queue, position, sizeof(timer_event));
-		log_print_string("Queue: %d", temp_event->next_event);
+		log_print_stack_string(LOG_FWK, "Queue: %d.%d", temp_event->next_event/1000, temp_event->next_event%1000);
 	}
 	current_timer = hal_timer_getvalue();
-	log_print_string("timer_insert E - Timer current value: %d", current_timer);
+	log_print_stack_string(LOG_FWK, "timer_insert E - Timer current value: %d.%d", current_timer/1000, current_timer%1000);
 	#endif
 	/*
 	// code when timer was up instead of continous
@@ -106,13 +115,13 @@ bool timer_add_event(timer_event* event)
 {
 	#ifdef LOG_FWK_ENABLED
 	uint16_t current_timer = hal_timer_getvalue();
-	log_print_string("timer_add_event: %d", event->next_event);
-	log_print_string("timer_add_event timer S : %d", current_timer);
+	log_print_stack_string(LOG_FWK, "timer_add_event: %d.%d", event->next_event/1000,event->next_event%1000);
+	log_print_stack_string(LOG_FWK, "timer_add_event timer S : %d.%d", current_timer/1000, current_timer%1000);
 	#endif
 
     if (event->next_event == 0)
     {
-        event->f(NULL);
+        event->f();
         return true;
     }
 
@@ -133,19 +142,19 @@ bool timer_add_event(timer_event* event)
 		{
 			#ifdef LOG_FWK_ENABLED
         	current_timer = hal_timer_getvalue();
-        	log_print_string("timer_add_event M timer overrun : %d", current_timer);
-        	log_print_string("timer_add_event M: %d", new_event.next_event);
+        	log_print_stack_string(LOG_FWK, "timer_add_event M timer overrun : %d.%d", current_timer/1000,current_timer%1000);
+        	log_print_stack_string(LOG_FWK, "timer_add_event M: %d.%d", new_event.next_event/1000,  new_event.next_event%1000);
 			#endif
 			timer_completed();
 		}
     } else {
-        //log_print_string("Cannot add event, queue is full");
+        //log_print_stack_string(LOG_FWK, "Cannot add event, queue is full");
         return false;
     }
 
 	#ifdef LOG_FWK_ENABLED
 	current_timer = hal_timer_getvalue();
-	log_print_string("timer_add_event timer E : %d", current_timer);
+	log_print_stack_string(LOG_FWK, "timer_add_event timer E : %d.%d", current_timer/1000,current_timer%1000);
 	#endif
 
     return true;
@@ -155,7 +164,7 @@ void timer_completed()
 {
 	#ifdef LOG_FWK_ENABLED
 	uint16_t current_timer = hal_timer_getvalue();
-	log_print_string("timer_completed: %d", current_timer);
+	log_print_stack_string(LOG_FWK, "timer_completed: %d.%d", current_timer/1000,current_timer%1000);
 	#endif
 
     timer_event* event = (timer_event*) queue_pop_value(&event_queue, sizeof(timer_event));
@@ -173,7 +182,7 @@ void timer_completed()
         	directly_fire_new_event = true;
     }
 
-    event->f(NULL);
+    event->f();
 
     if (directly_fire_new_event)
     	timer_completed();

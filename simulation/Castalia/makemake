@@ -1,0 +1,36 @@
+# ****************************************************************************
+# *  Copyright: National ICT Australia,  2007 - 2010                         *
+# *  Developed at the ATP lab, Networked Systems research theme              *
+# *  Author(s): Athanassios Boulis, Yuriy Tselishchev                        *
+# *  This file is distributed under the terms in the attached LICENSE file.  *
+# *  If you do not find this file, copies can be found by writing to:        *
+# *                                                                          *
+# *      NICTA, Locked Bag 9013, Alexandria, NSW 1435, Australia             *
+# *      Attention:  License Inquiry.                                        *
+# *                                                                          *
+# ***************************************************************************/
+
+#!/bin/bash
+
+ROOT=`pwd`
+
+# The following options are used by OMNeT's opp_makemake tool
+# For explanation and a complete list of options run: opp_makemake -h
+OPTS=" -f -r --deep -o CastaliaBin -u Cmdenv -P $ROOT -M debug"
+
+# -X excludes a directory from being considered
+EXCLUDEDIRS=" -X Simulations -X out -X bin"
+
+# Use options -I -L -l to include external header files or libraries
+EXTOPTS="-I../../d7aoss/framework -L../../../oss-7-build-posix/d7aoss/framework -lFRAMEWORK
+        -I../../d7aoss/hal -L../../../oss-7-build-posix/d7aoss/hal -lHAL
+	-I../../d7aoss/trans -L../../../oss-7-build-posix/d7aoss/trans/ -lTRANS
+	-I../../d7aoss/nwl -L../../../oss-7-build-posix/d7aoss/nwl/ -lNWL
+	-I../../d7aoss/dll -L../../../oss-7-build-posix/d7aoss/dll/ -lDLL
+	-I../../d7aoss/phy -L../../../oss-7-build-posix/d7aoss/phy/ -lPHY
+"
+# TODO generate from cmake (build dir)
+
+# Run OMNeT's opp_makemake tool with the above options
+opp_makemake $OPTS $EXCLUDEDIRS $EXTOPTS
+

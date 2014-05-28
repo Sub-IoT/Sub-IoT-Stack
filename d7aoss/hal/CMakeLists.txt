@@ -53,6 +53,19 @@ IF(D7AOSS_HAL_DRIVER STREQUAL "STUB")
 
 ENDIF()
 
+IF(D7AOSS_HAL_DRIVER STREQUAL "SIM")
+        SET(HAL_SRCS
+                        sim/sim_button.c
+                        sim/sim_crc.c
+                        sim/sim_leds.c
+                        sim/sim_rtc.c
+                        sim/sim_system.c
+                        sim/sim_uart.c
+                        sim/sim_timer.c
+        )
+
+ENDIF()
+
 ADD_LIBRARY(HAL ${HAL_API} ${HAL_SRCS})
 
 IF(D7AOSS_HAL_DRIVER STREQUAL "CC430")

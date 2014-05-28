@@ -1,7 +1,18 @@
 /*
- *  Created on: July 10, 2013
- *  Authors:
- * 		maarten.weyn@uantwerpen.be
+ * (C) Copyright 2013 University of Antwerp (http://www.cosys-lab.be) and others.
+ *
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the GNU Lesser General Public License
+ * (LGPL) version 2.1 which accompanies this distribution, and is available at
+ * http://www.gnu.org/licenses/lgpl-2.1.html
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Lesser General Public License for more details.
+ *
+ * Contributors:
+ *     maarten.weyn@uantwerpen.be
  *
  * 	Example code for Star topology, push model
  * 	This is the Gateway example
@@ -26,20 +37,11 @@
 #include <msp430.h>
 
 
-#define RECEIVE_CHANNEL 0x12
+#define RECEIVE_CHANNEL 0x10
 
 // event to create a led blink
 static timer_event dim_led_event;
 static bool start_channel_scan = false;
-
-static const dll_channel_scan_t scan_cfg = {
-		RECEIVE_CHANNEL,
-		FrameTypeForegroundFrame,
-		0,
-		0
-};
-
-static dll_channel_scan_series_t scan_series_cfg;
 
 void blink_led()
 {
@@ -48,7 +50,7 @@ void blink_led()
 	timer_add_event(&dim_led_event);
 }
 
-void dim_led(void* arg)
+void dim_led()
 {
 	led_off(1);
 }
@@ -56,25 +58,41 @@ void dim_led(void* arg)
 void start_rx()
 {
 	start_channel_scan = false;
-	dll_channel_scan_series(&scan_series_cfg);
+	trans_rx_query_start(0xFF, RECEIVE_CHANNEL);
 }
 
-void rx_callback(dll_rx_res_t* rx_res)
+void rx_callback(Trans_Rx_Query_Result* rx_res)
 {
 	system_watchdog_timer_reset();
 
 	blink_led();
 
+	log_print_string("Received Query");
+
 	// log endpoint's device_id, RSS of link, and payload of device
-	dll_foreground_frame_t* frame = (dll_foreground_frame_t*) (rx_res->frame);
-	uart_transmit_data(0xCE); // NULL
-	uart_transmit_data(11 + frame->payload_length);
-	uart_transmit_data(0x10); // deviceid
-	uart_transmit_message(frame->address_ctl->source_id, 8); // id mobile node
-	uart_transmit_data(0x20); // netto rss
-	uart_transmit_data(rx_res->rssi - frame->frame_header.tx_eirp); // signal strenght mobile node -> fixed node
-	uart_transmit_message(frame->payload, frame->payload_length);
-	uart_transmit_data(0x0D); // carriage return
+//	dll_foreground_frame_t* frame = (dll_foreground_frame_t*) (rx_res->nwl_rx_res->dll_rx_res->frame);
+//	uart_transmit_data(0xCE); // NULL
+//	uart_transmit_data(11 + frame->payload_length);
+//	uart_transmit_data(0x10); // deviceid
+//	uart_transmit_message(frame->address_ctl->source_id, 8); // id mobile node
+//	uart_transmit_data(0x20); // netto rss
+//	uart_transmit_data(rx_res->nwl_rx_res->dll_rx_res->rssi - frame->frame_header.tx_eirp); // signal strenght mobile node -> fixed node
+//	uart_transmit_message(frame->payload, frame->payload_length);
+//	uart_transmit_data(0x0D); // carriage return
+
+	switch (rx_res->d7aqp_command.command_code & 0x0F)
+	{
+		case D7AQP_OPCODE_ANNOUNCEMENT_FILE:
+		{
+			D7AQP_Single_File_Return_Template* sfr_tmpl = (D7AQP_Single_File_Return_Template*) rx_res->d7aqp_command.command_data;
+			log_print_string("D7AQP File Announcement received");
+			log_print_string(" - file 0x%x starting from byte %d", sfr_tmpl->return_file_id, sfr_tmpl->file_offset);
+			log_print_data(sfr_tmpl->file_data, sfr_tmpl->isfb_total_length - sfr_tmpl->file_offset);
+		}
+	}
+
+
+
 
 	// Restart channel scanning
 	start_channel_scan = true;
@@ -83,20 +101,12 @@ void rx_callback(dll_rx_res_t* rx_res)
 
 
 int main(void) {
-
 	// Initialize the OSS-7 Stack
 	system_init();
 
-	// Set channel scan series to 1 entry
-	// This should be done by writing the specific configuration file, when the uper layers are created.
-	dll_channel_scan_t scan_confgs[1];
-	scan_confgs[0] = scan_cfg;
-	scan_series_cfg.length = 1;
-	scan_series_cfg.values = scan_confgs;
-
-	// Currently we address the Data Link Layer for RX, this should go to an upper layer once it is working.
-	dll_init();
-	dll_set_rx_callback(&rx_callback);
+	// Currently we address the Transport Layer for RX, this should go to an upper layer once it is working.
+	trans_init();
+	trans_set_query_rx_callback(&rx_callback);
 
 	start_channel_scan = true;
 
@@ -116,14 +126,18 @@ int main(void) {
 
 	while(1)
 	{
-		if (start_channel_scan) start_rx();
+		if (start_channel_scan)
+		{
+			start_rx();
+		}
 
-		system_lowpower_mode(4,1);
+		// Don't know why but system reboots when LPM > 1 since ACLK is uses for UART
+		system_lowpower_mode(0,1);
 	}
 }
 
 
-#pragma vector=ADC12_VECTOR,RTC_VECTOR,AES_VECTOR,COMP_B_VECTOR,DMA_VECTOR,PORT1_VECTOR,PORT2_VECTOR,SYSNMI_VECTOR,UNMI_VECTOR,USCI_A0_VECTOR,USCI_B0_VECTOR,WDT_VECTOR,TIMER0_A0_VECTOR,TIMER1_A1_VECTOR
+#pragma vector=ADC12_VECTOR,RTC_VECTOR,AES_VECTOR,COMP_B_VECTOR,DMA_VECTOR,PORT1_VECTOR,PORT2_VECTOR,SYSNMI_VECTOR,UNMI_VECTOR,USCI_A0_VECTOR,USCI_B0_VECTOR,WDT_VECTOR,TIMER0_A0_VECTOR,TIMER1_A1_VECTOR,TIMER0_A1_VECTOR
 __interrupt void ISR_trap(void)
 {
   /* For debugging purposes, you can trap the CPU & code execution here with an

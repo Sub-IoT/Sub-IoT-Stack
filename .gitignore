@@ -14,3 +14,15 @@ lnk_*.cmd
 *~
 moc*.cpp
 
+targetConfigs
+Thumbs.db
+*.csv
+build/
+html/
+.launches
+*.dep
+*.ewp
+*.eww
+*.sfr
+settings
+targetConfigs

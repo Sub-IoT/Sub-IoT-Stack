@@ -1,9 +1,21 @@
 /*
- *  Created on: Nov 22, 2012
- *  Authors:
- * 		maarten.weyn@artesis.be
- *  	glenn.ergeerts@artesis.be
- *  	alexanderhoet@gmail.com
+ * (C) Copyright 2013 University of Antwerp (http://www.cosys-lab.be) and others.
+ *
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the GNU Lesser General Public License
+ * (LGPL) version 2.1 which accompanies this distribution, and is available at
+ * http://www.gnu.org/licenses/lgpl-2.1.html
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Lesser General Public License for more details.
+ *
+ * Contributors:
+ *     	glenn.ergeerts@uantwerpen.be
+ *     	maarten.weyn@uantwerpen.be
+ *		alexanderhoet@gmail.com
+ *
  */
 
 #include <msp430.h>
@@ -28,7 +40,7 @@ extern InterruptHandler interrupt_table[34];
 
 RadioState state;
 
-uint8_t buffer[255];
+uint8_t buffer[100]; // TODO: get rid of fixed buffer
 uint8_t packetLength;
 uint8_t* bufferPosition;
 uint16_t remainingBytes;
@@ -78,7 +90,7 @@ void phy_init(void)
 
 	last_tx_cfg.eirp=0;
 	last_tx_cfg.spectrum_id = 0;
-	last_tx_cfg.sync_word_class=0;
+	last_tx_cfg.sync_word_class = 0;
 
 }
 
@@ -98,7 +110,7 @@ bool phy_translate_and_set_settings(uint8_t spectrum_id, uint8_t sync_word_class
 	if(!phy_translate_settings(spectrum_id, sync_word_class, &fec, &channel_center_freq_index, &channel_bandwidth_index, &preamble_size, &sync_word))
 	{
 		#ifdef LOG_PHY_ENABLED
-		log_print_string("PHY Cannot translate settings");
+		log_print_stack_string(LOG_PHY, "PHY Cannot translate settings");
 		#endif
 
 		return false;
@@ -189,7 +201,7 @@ bool phy_init_tx()
 	if(get_radiostate() != Idle)
 	{
 		#ifdef LOG_PHY_ENABLED
-		log_print_string("PHY radio not idle");
+		log_print_stack_string(LOG_PHY, "PHY radio not idle");
 		#endif
 
 		return false;
@@ -229,14 +241,14 @@ bool phy_tx(phy_tx_cfg_t* cfg)
 bool phy_rx(phy_rx_cfg_t* cfg)
 {
 	#ifdef LOG_PHY_ENABLED
-	log_print_string("phy_rx");
+	log_print_stack_string(LOG_PHY, "phy_rx");
 	#endif
 
 	RadioState current_state = get_radiostate();
 	if(current_state != Idle && current_state != Receive)
 	{
 		#ifdef LOG_PHY_ENABLED
-		log_print_string("PHY Cannot RX, PHy not idle");
+		log_print_stack_string(LOG_PHY, "PHY Cannot RX, PHy not idle");
 		#endif
 		return false;
 	}
@@ -433,11 +445,11 @@ void tx_data_isr()
 void rx_data_isr()
 {
 #ifdef LOG_PHY_ENABLED
-		log_print_string("rx_data_isr 0");
+	log_print_stack_string(LOG_PHY, "rx_data_isr 0");
 	#endif
 
 	//Read number of bytes in RXFIFO
-	uint8_t rxBytes = ReadSingleReg(RXBYTES);
+	volatile uint8_t rxBytes = ReadSingleReg(RXBYTES);
 
 #ifdef D7_PHY_USE_FEC
 	if(fec)
@@ -482,7 +494,7 @@ void rx_data_isr()
 		bufferPosition++;
 		rxBytes--;
 #ifdef LOG_PHY_ENABLED
-		log_print_string("rx_data_isr getting packetLength");
+		log_print_stack_string(LOG_PHY, "rx_data_isr getting packetLength");
 	#endif
 	}
 
@@ -504,17 +516,18 @@ void rx_data_isr()
     //When all data has been received read rssi and lqi value and set packetreceived flag
     if(remainingBytes == 0)
     {
-    	rx_data.rssi = calculate_rssi(ReadSingleReg(RXFIFO));
-    	rx_data.lqi = ReadSingleReg(RXFIFO) & 0x7F;
+    	rx_data.rssi = calculate_rssi(ReadSingleReg(RSSI));
+    	rx_data.lqi = ReadSingleReg(LQI);
 		rx_data.length = *buffer;
 		rx_data.data = buffer;
 		#ifdef LOG_PHY_ENABLED
-			log_print_string("rx_data_isr packet received");
+		log_print_stack_string(LOG_PHY, "rx_data_isr packet received");
+		log_phy_rx_res(&rx_data);
 		#endif
     }
 
 	#ifdef LOG_PHY_ENABLED
-		log_print_string("rx_data_isr 1");
+    log_print_stack_string(LOG_PHY, "rx_data_isr 1");
 	#endif
 }
 
@@ -528,7 +541,7 @@ void rx_timeout_isr()
 void rx_fifo_overflow_isr()
 {
 	#ifdef LOG_PHY_ENABLED
-		log_print_string("rx_fifo_overflow");
+	log_print_stack_string(LOG_PHY, "rx_fifo_overflow");
 	#endif
 
 	rxtx_finish_isr();
@@ -604,8 +617,8 @@ void set_channel(uint8_t channel_center_freq_index, uint8_t channel_bandwith_ind
 
 void set_sync_word(uint16_t sync_word)
 {
-	WriteSingleReg(SYNC0, (uint8_t)(sync_word >> 8));
-	WriteSingleReg(SYNC1, (uint8_t)(sync_word & 0x00FF));
+	WriteSingleReg(SYNC1, (uint8_t)(sync_word >> 8));
+	WriteSingleReg(SYNC0, (uint8_t)(sync_word & 0x00FF));
 }
 
 void set_preamble_size(uint8_t preamble_size)

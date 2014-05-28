@@ -1,10 +1,20 @@
-/*
- * The PHY layer API
- *  Created on: Nov 22, 2012
- *  Authors:
- * 		maarten.weyn@artesis.be
- *  	glenn.ergeerts@artesis.be
- *  	alexanderhoet@gmail.com
+/*! \file phy.h
+ *
+ * \copyright (C) Copyright 2013 University of Antwerp (http://www.cosys-lab.be) and others.\n
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.\n
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * \author glenn.ergeerts@uantwerpen.be
+ * \author maarten.weyn@uantwerpen.be
+ *	\author alexanderhoet@gmail.com
+ *
+ *	\brief The PHY layer API
  */
 
 #ifndef PHY_H
@@ -35,7 +45,7 @@ typedef struct
 	uint8_t sync_word_class;	//Sync word class
 	uint8_t length;				//Packet length (0 : variable)
 	uint16_t timeout;			//Timeout value (0 : continuous) in milliseconds
-	int8_t scan_minimum_energy;
+	int16_t scan_minimum_energy;
 } phy_rx_cfg_t;
 
 //Packet reception result structure

@@ -1,8 +1,18 @@
-/*
- * chronos.h
+/*!
  *
- *  Created on: Oct 17, 2012
- *      Author: maarten
+ * \copyright (C) Copyright 2013 University of Antwerp (http://www.cosys-lab.be) and others.\n
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.\n
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * Contributors:
+ * 		maarten.weyn@uantwerpen.be
+ *
  */
 
 #ifndef CHRONOS_H_
@@ -10,8 +20,7 @@
 
 #include "../driverlib/5xx_6xx/gpio.h"
 
-#include "../../types.h"
-#include "../addresses.h"
+#include "../cc430_addresses.h"
 
 #define OUTPUT1_BASEADDRESS		0x0A22 // 0x0A22
 #define OUTPUT1_PORT			0x00

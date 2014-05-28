@@ -1,10 +1,19 @@
-/*
- * The PHY layer API
- *  Created on: Nov 23, 2012
- *  Authors:
- * 		maarten.weyn@artesis.be
- *  	glenn.ergeerts@artesis.be
+/*! \file dll.c
+ *
+ * \copyright (C) Copyright 2013 University of Antwerp (http://www.cosys-lab.be) and others.\n
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.\n
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * \author maarten.weyn@uantwerpen.be
+ * \author glenn.ergeerts@uantwerpen.be
  */
+
 #include "dll.h"
 #include "../framework/timer.h"
 #include "../hal/system.h"
@@ -24,7 +33,7 @@ phy_tx_cfg_t *current_phy_cfg;
 
 
 uint8_t timeout_listen; // TL
-uint8_t frame_data[255]; // TODO max frame size
+uint8_t frame_data[100]; // TODO: get rid of fixed buffer
 uint16_t timestamp;
 uint8_t timeout_ca; 	// T_ca
 
@@ -76,7 +85,7 @@ static bool check_subnet(uint8_t device_subnet, uint8_t frame_subnet)
 	return 0;
 }
 
-static void scan_next(void* arg)
+static void scan_next()
 {
 	dll_channel_scan_series(current_css);
 }
@@ -87,7 +96,7 @@ static void scan_timeout()
 		return;
 
 	#ifdef LOG_DLL_ENABLED
-		log_print_string("DLL scan time-out");
+		log_print_stack_string(LOG_DLL, "DLL scan time-out");
 	#endif
 	phy_idle();
 
@@ -109,7 +118,7 @@ static void scan_timeout()
 static void tx_callback()
 {
 	#ifdef LOG_DLL_ENABLED
-		log_print_string("DLL TX OK");
+		log_print_stack_string(LOG_DLL, "DLL TX OK");
 	#endif
 	dll_tx_callback(DLLTxResultOK);
 }
@@ -131,18 +140,18 @@ static void rx_callback(phy_rx_data_t* res)
 		if (memcmp((uint8_t*) &(res->data[4]), (uint8_t*) &crc, 2) != 0)
 		{
 			#ifdef LOG_DLL_ENABLED
-				log_print_string("DLL CRC ERROR");
+				log_print_stack_string(LOG_DLL, "DLL CRC ERROR");
 			#endif
-			scan_next(NULL); // how to reïnitiate scan on CRC Error, PHY should stay in RX
+			scan_next(); // how to reïnitiate scan on CRC Error, PHY should stay in RX
 			return;
 		}
 
 		if (!check_subnet(0xFF, res->data[0])) // TODO: get device_subnet from datastore
 		{
 			#ifdef LOG_DLL_ENABLED
-				log_print_string("DLL Subnet mismatch");
+				log_print_stack_string(LOG_DLL, "DLL Subnet mismatch");
 			#endif
-			scan_next(NULL); // how to reïnitiate scan on subnet mismatch, PHY should stay in RX
+			scan_next(); // how to reïnitiate scan on subnet mismatch, PHY should stay in RX
 			return;
 		}
 	} else if (dll_state == DllStateScanForegroundFrame)
@@ -151,24 +160,24 @@ static void rx_callback(phy_rx_data_t* res)
 		if (memcmp((uint8_t*) &(res->data[res->length - 2]), (uint8_t*) &crc, 2) != 0)
 		{
 			#ifdef LOG_DLL_ENABLED
-				log_print_string("DLL CRC ERROR");
+				log_print_stack_string(LOG_DLL, "DLL CRC ERROR");
 			#endif
-			scan_next(NULL); // how to reïnitiate scan on CRC Error, PHY should stay in RX
+			scan_next(); // how to reïnitiate scan on CRC Error, PHY should stay in RX
 			return;
 		}
 		if (!check_subnet(0xFF, res->data[2])) // TODO: get device_subnet from datastore
 		{
 			#ifdef LOG_DLL_ENABLED
-				log_print_string("DLL Subnet mismatch");
+				log_print_stack_string(LOG_DLL, "DLL Subnet mismatch");
 			#endif
-				scan_next(NULL); // how to reïnitiate scan on subnet mismatch, PHY should stay in RX
+				scan_next(); // how to reïnitiate scan on subnet mismatch, PHY should stay in RX
 
 			return;
 		}
 	} else
 	{
 		#ifdef LOG_DLL_ENABLED
-			log_print_string("DLL You fool, you can't be here");
+			log_print_stack_string(LOG_DLL, "DLL You fool, you can't be here");
 		#endif
 	}
 
@@ -265,28 +274,30 @@ static void rx_callback(phy_rx_data_t* res)
 			// TODO handle more than 1 frame
 		}
 
-		if (frame->frame_header.frame_ctl & 0x08) // CRC 32
-		{
-			// TODO support CRC32
-		}
-
 		if (frame->frame_header.frame_ctl & 0x04) // Note Mode 2
 		{
 			// Not supported
 		}
 
 		// Frame Type
-		//u8 ffType = frame_header.frame_ctl & 0x03;
+		dll_res.frame_type = (Frame_Type) (frame->frame_header.frame_ctl & 0x03);
 
-		data_pointer++; // TODO what is this?
-		data_pointer++; //isfid
-		data_pointer++; //isfoffset
+		if (dll_res.frame_type == FrameTypeForegroundFrameStreamFrame)
+		{
+			frame->payload_length = frame->length - (data_pointer - res->data) - 2;
+			frame->payload = data_pointer;
+		} else {
 
-		frame->payload_length = (*data_pointer);
-		data_pointer++;
-		frame->payload = data_pointer;
+			// TODO: should be done in upper layer
+			//data_pointer++; // TODO what is this?
+			//data_pointer++; //isfid
+			//data_pointer++; //isfoffset
 
-		dll_res.frame_type = FrameTypeForegroundFrame;
+			frame->payload_length = frame->length - (data_pointer - res->data) - 2;
+			//data_pointer++;
+			frame->payload = data_pointer;
+		}
+
 		dll_res.frame = frame;
 	}
 
@@ -298,17 +309,17 @@ static void rx_callback(phy_rx_data_t* res)
 
 	if (current_css == NULL)
 	{
-		log_print_string(("DLL no series so stop listening"));
+		log_print_stack_string(LOG_DLL, ("DLL no series so stop listening"));
 		return;
 	}
 
 	// in current spec reset channel scan
 	#ifdef LOG_DLL_ENABLED
-		log_print_string(("DLL restart channel scan series"));
+		log_print_stack_string(LOG_DLL, ("DLL restart channel scan series"));
 	#endif
 
 	current_scan_id = 0;
-	scan_next(NULL);
+	scan_next();
 }
 
 void dll_init()
@@ -359,23 +370,28 @@ void dll_stop_channel_scan()
 	phy_idle();
 }
 
-void dll_background_scan()
+uint8_t dll_background_scan()
 {
 	#ifdef LOG_DLL_ENABLED
-		log_print_string("DLL Starting background scan");
+		log_print_stack_string(LOG_DLL, "DLL Starting background scan");
 	#endif
 
 	dll_state = DllStateScanForegroundFrame;
 
 	//check for signal detected above E_sm
 	// TODO: is this the best method?
-	if (phy_get_rssi(spectrum_id, 0) <= scan_minimum_energy)
+	int rss = phy_get_rssi(spectrum_id, 0);
+	if (rss <= scan_minimum_energy)
 	{
 		#ifdef LOG_DLL_ENABLED
-			log_print_string("DLL No signal deteced");
+			log_print_stack_string(LOG_DLL, "DLL No signal detected: %d", rss);
 		#endif
-		return;
+		return 0;
 	}
+
+	#ifdef LOG_DLL_ENABLED
+		log_print_stack_string(LOG_DLL, "DLL Background Scan signal detected: %d", rss);
+	#endif
 
 	phy_rx_cfg_t rx_cfg;
 	rx_cfg.length = 0;
@@ -390,16 +406,18 @@ void dll_background_scan()
 	bool phy_rx_result = phy_rx(&rx_cfg);
 	if (!phy_rx_result)
 	{
-		log_print_string("DLL Starting channel scan FAILED");
+		log_print_stack_string(LOG_DLL, "DLL Starting channel scan FAILED");
 	}
 	#else
 	phy_rx(&rx_cfg);
 	#endif
+
+	return 1;
 }
 void dll_foreground_scan()
 {
 	#ifdef LOG_DLL_ENABLED
-		log_print_string("Starting foreground scan");
+		log_print_stack_string(LOG_DLL, "Starting foreground scan");
 	#endif
 
 	dll_state = DllStateScanForegroundFrame;
@@ -417,7 +435,7 @@ void dll_foreground_scan()
 	bool phy_rx_result = phy_rx(&rx_cfg);
 	if (!phy_rx_result)
 	{
-		log_print_string("DLL Starting channel scan FAILED");
+		log_print_stack_string(LOG_DLL, "DLL Starting channel scan FAILED");
 	}
 	#else
 	phy_rx(&rx_cfg);
@@ -427,7 +445,7 @@ void dll_foreground_scan()
 void dll_channel_scan_series(dll_channel_scan_series_t* css)
 {
 	#ifdef LOG_DLL_ENABLED
-		log_print_string("DLL Starting channel scan series");
+		log_print_stack_string(LOG_DLL, "DLL Starting channel scan series");
 	#endif
 
 	phy_rx_cfg_t rx_cfg;
@@ -437,13 +455,13 @@ void dll_channel_scan_series(dll_channel_scan_series_t* css)
 	rx_cfg.spectrum_id = css->values[current_scan_id].spectrum_id; // spectrum ID TODO
 	//rx_cfg.coding_scheme = 0; // coding scheme TODO
 	rx_cfg.scan_minimum_energy = scan_minimum_energy;
-	if (css->values[current_scan_id].scan_type == FrameTypeForegroundFrame)
+	if (css->values[current_scan_id].scan_type == FrameTypeBackgroundFrame)
 	{
-		rx_cfg.sync_word_class = 1;
-		dll_state = DllStateScanForegroundFrame;
-	} else {
 		rx_cfg.sync_word_class = 0;
 		dll_state = DllStateScanBackgroundFrame;
+	} else {
+		rx_cfg.sync_word_class = 1;
+		dll_state = DllStateScanForegroundFrame;
 	}
 
 	current_css = css;
@@ -453,14 +471,14 @@ void dll_channel_scan_series(dll_channel_scan_series_t* css)
 	bool phy_rx_result = phy_rx(&rx_cfg);
 	if (!phy_rx_result)
 	{
-		log_print_string("DLL Starting channel scan FAILED");
+		log_print_stack_string(LOG_DLL, "DLL Starting channel scan FAILED");
 	}
 	#else
 	phy_rx(&rx_cfg);
 	#endif
 }
 
-static void dll_cca2(void* arg)
+static void dll_cca2()
 {
 	bool cca2 = phy_cca(current_phy_cfg->spectrum_id, current_phy_cfg->sync_word_class);;
 	if (!cca2)
@@ -497,7 +515,18 @@ void dll_csma(bool enabled)
 	}
 
 	timer_event event;
-	event.next_event = 5; // TODO: get T_G fron config
+
+	// TODO: calculate Tg only once
+	// Calculate correct t_g
+
+	uint8_t channel_bandwidth_index = (spectrum_id >> 4) & 0x07;
+	uint8_t fec = (bool)spectrum_id >> 7;
+
+	if (channel_bandwidth_index == 1)
+		event.next_event = fec == 0 ? 5 : 10;
+	else
+		event.next_event = fec == 0 ? 2 : 3;
+
 	event.f = &dll_cca2;
 
 	if (!timer_add_event(&event))
@@ -559,7 +588,7 @@ void dll_create_foreground_frame(uint8_t* data, uint8_t length, dll_ff_tx_cfg_t*
 	if (params->security != NULL)
 	{
 		#ifdef LOG_DLL_ENABLED
-			log_print_string("DLL: security not implemented");
+			log_print_stack_string(LOG_DLL, "DLL: security not implemented");
 		#endif
 		//frame->frame_header.frame_ctl |= FRAME_CTL_DLLS;
 	}
@@ -592,16 +621,7 @@ void dll_create_foreground_frame(uint8_t* data, uint8_t length, dll_ff_tx_cfg_t*
 
 	if (params->frame_continuity) frame->frame_header.frame_ctl |= FRAME_CTL_FR_CONT;
 
-	// CRC32 not implemented
-	// frame->frame_header.frame_ctl |= FRAME_CTL_CRC32;
-
 	frame->frame_header.frame_ctl |= params->frame_type;
-
-	*pointer++ = 0; //dunno
-	*pointer++ = 0; //isfid
-	*pointer++ = 0; //isfoffset
-	*pointer++ = length; // payload length;
-
 
 	memcpy(pointer, data, length); // TODO fixed size for now
 	pointer += length;

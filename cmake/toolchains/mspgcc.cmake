@@ -9,8 +9,6 @@ SET(CMAKE_C_COMPILER msp430-gcc)
 SET(CMAKE_LINKER msp430-gcc)
 SET(CMAKE_AR msp430-ar)
 SET(CMAKE_RANLIB msp430-ranlib)
-# where is the target environment 
-SET(CMAKE_FIND_ROOT_PATH  /opt/toolchains/mspgcc)
 
 # search for programs in the build host directories
 SET(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM ONLY)

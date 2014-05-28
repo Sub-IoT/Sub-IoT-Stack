@@ -1,8 +1,19 @@
-/*
- * timer.c
+/*!
  *
- *  Created on: 26-nov.-2012
- *      Author: Maarten Weyn
+ * \copyright (C) Copyright 2013 University of Antwerp (http://www.cosys-lab.be) and others.\n
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.\n
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * Contributors:
+ * 		maarten.weyn@uantwerpen.be
+ *     	glenn.ergeerts@uantwerpen.be
+ *
  */
 
 #include <stddef.h>
@@ -52,28 +63,34 @@ uint16_t hal_timer_getvalue()
 
 void hal_benchmarking_timer_init()
 {
+	#ifdef ENABLE_BENCHMARKING_TIMER
 	//set timer to microticks (= 1 MHz)
 	TA0CTL = TASSEL_2  + MC__CONTINUOUS + ID_0 + TACLR;           // SMCLK, continuous up mode, clear timer
+	#endif
 }
 
 uint32_t hal_benchmarking_timer_getvalue()
 {
+	#ifdef ENABLE_BENCHMARKING_TIMER
     return TA0R + (benchmarking_timer_rollover * 0xFFFF);
+	#else
+    return 0;
+	#endif
 }
 
 void hal_benchmarking_timer_start()
 {
-	//TA0CCTL0 = CCIE; // Enable interrupt for CCR0
-	//TA0CTL |= MC__CONTINUOUS;
-	TA0CTL |= TAIE + TACLR;
+	#ifdef ENABLE_BENCHMARKING_TIMER
+	A0CTL |= TAIE + TACLR;
 	benchmarking_timer_rollover = 0;
+	#endif
 }
 
 void hal_benchmarking_timer_stop()
 {
-	//TA0CCTL0 &= ~CCIE; // Disable interrupt for CCR0
-	//TA0CTL &= ~MC__CONTINUOUS;
+	#ifdef ENABLE_BENCHMARKING_TIMER
 	TA0CTL &= ~TAIE;
+	#endif
 }
 
 // Timer A0 interrupt service routine
@@ -91,6 +108,7 @@ __interrupt void Timer_A_CCO (void)
 //    	 }
 }
 
+#ifdef ENABLE_BENCHMARKING_TIMER
 #pragma vector=TIMER0_A1_VECTOR
 __interrupt void Timer_A_TA (void)
 {
@@ -108,5 +126,5 @@ __interrupt void Timer_A_TA (void)
     	            break;
     	 }
 }
-
+#endif
 
