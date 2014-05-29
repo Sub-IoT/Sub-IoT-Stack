@@ -5,18 +5,30 @@
  *      Author: Maarten Weyn
  */
 
-#include "../system.h"
-#include "msp430_addresses.h"
+#include "crc.h"
+
+static uint16_t crc;
+
+// TODO refactor: software implementation of CRC is not plaform specific and can be reused
+
+void crc_ccitt_update(uint8_t x)
+{
+     uint16_t crc_new = (uint8_t)(crc >> 8) | (crc << 8);
+     crc_new ^= x;
+     crc_new ^= (uint8_t)(crc_new & 0xff) >> 4;
+     crc_new ^= crc_new << 12;
+     crc_new ^= (crc_new & 0xff) << 5;
+     crc = crc_new;
+}
 
 uint16_t crc_calculate(uint8_t* data, uint8_t length)
 {
-	CRCINIRES = 0xFFFF;
+	crc = 0xffff;
 	uint8_t i = 0;
+
 	for(; i<length; i++)
 	{
-		CRCDIRB_L = data[i];
+		crc_ccitt_update(data[i]);
 	}
-	uint16_t crc = CRCINIRES;
-	uint16_t crcMSB = (crc << 8) | (crc >> 8);
-	return crcMSB;
+	return crc;
 }
