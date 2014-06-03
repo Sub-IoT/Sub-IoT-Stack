@@ -107,7 +107,7 @@ void push_char(char byte)
 
 void process_uart()
 {
-	trans_rx_datastream_stop();
+    trans_rx_stop();
 	led_off(3);
 
 	blink_led();
@@ -118,14 +118,14 @@ void process_uart()
 }
 
 
-void datastream_rx_callback(Trans_Rx_Datastream_Result result)
+void datastream_rx_callback(Trans_Rx_Datastream_Result* result)
 {
 	system_watchdog_timer_reset();
 
 	blink_led();
 
-	uart_transmit_data(result.lenght);
-	uart_transmit_message(result.payload, result.lenght);
+	uart_transmit_data(result->lenght);
+	uart_transmit_message(result->payload, result->lenght);
 
 	// Restart channel scanning
 	//start_channel_scan = true;
@@ -148,7 +148,7 @@ int main(void) {
 	//log_print_string("node started");
 
 	// Log the device id
-	log_print_data(device_id, 8);
+	//log_print_data(device_id, 8);
 
 	// configure blinking led event
 	dim_led_event.next_event = 50;
