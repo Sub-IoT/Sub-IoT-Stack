@@ -14,8 +14,8 @@
  * Contributors:
  *     maarten.weyn@uantwerpen.be
  *
- * 	Example code for Star topology, push model
- * 	This is the Gateway example
+ * 	Example of Request Response Dialog
+ * 	This is the responder
  *
  * 	add the link to d7aoss library in de lnk_*.cmd file, e.g. -l "../../../d7aoss/Debug/d7aoss.lib"
  * 	Make sure to select the correct platform in d7aoss/hal/cc430/platforms.platform.h
@@ -40,6 +40,12 @@
 #define RECEIVE_CHANNEL 0x10
 #define TX_EIRP 10
 #define USE_LEDS
+
+
+static uint8_t file_00[] = {0,0,0,0,0,0,0,0};
+static uint8_t file_01[] = {1,1,1,1,1,1,1,1};
+static uint8_t file_02[] = {2,2,2,2,2,2,2,2};
+static uint8_t* filesystem[] = {file_00, file_01, file_02};
 
 // event to create a led blink
 static timer_event dim_led_event;
@@ -73,26 +79,57 @@ void rx_callback(Trans_Rx_Query_Result* rx_res)
 
 	dll_foreground_frame_t* frame = (dll_foreground_frame_t*) (rx_res->nwl_rx_res->dll_rx_res->frame);
 	log_print_string("Received Query from :%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x;",
-					frame->address_ctl->source_id[0] >> 4, frame->address_ctl->source_id[0] & 0x0F,
-					frame->address_ctl->source_id[1] >> 4, frame->address_ctl->source_id[1] & 0x0F,
-					frame->address_ctl->source_id[2] >> 4, frame->address_ctl->source_id[2] & 0x0F,
-					frame->address_ctl->source_id[3] >> 4, frame->address_ctl->source_id[3] & 0x0F,
-					frame->address_ctl->source_id[4] >> 4, frame->address_ctl->source_id[4] & 0x0F,
-					frame->address_ctl->source_id[5] >> 4, frame->address_ctl->source_id[5] & 0x0F,
-					frame->address_ctl->source_id[6] >> 4, frame->address_ctl->source_id[6] & 0x0F,
-					frame->address_ctl->source_id[7] >> 4, frame->address_ctl->source_id[7] & 0x0F);
+				frame->address_ctl->source_id[0] >> 4, frame->address_ctl->source_id[0] & 0x0F,
+				frame->address_ctl->source_id[1] >> 4, frame->address_ctl->source_id[1] & 0x0F,
+				frame->address_ctl->source_id[2] >> 4, frame->address_ctl->source_id[2] & 0x0F,
+				frame->address_ctl->source_id[3] >> 4, frame->address_ctl->source_id[3] & 0x0F,
+				frame->address_ctl->source_id[4] >> 4, frame->address_ctl->source_id[4] & 0x0F,
+				frame->address_ctl->source_id[5] >> 4, frame->address_ctl->source_id[5] & 0x0F,
+				frame->address_ctl->source_id[6] >> 4, frame->address_ctl->source_id[6] & 0x0F,
+				frame->address_ctl->source_id[7] >> 4, frame->address_ctl->source_id[7] & 0x0F);
 	log_print_string("RSS: %d dBm", rx_res->nwl_rx_res->dll_rx_res->rssi);
 	log_print_string("Netto Link: %d dBm", rx_res->nwl_rx_res->dll_rx_res->rssi  - frame->frame_header.tx_eirp);
 
 	switch (rx_res->d7aqp_command.command_code & 0x0F)
 	{
-		case D7AQP_OPCODE_ANNOUNCEMENT_FILE:
+		case D7AQP_OPCODE_COLLECTION_FILE_FILE:
 		{
-			D7AQP_Single_File_Return_Template* sfr_tmpl = (D7AQP_Single_File_Return_Template*) rx_res->d7aqp_command.command_data;
-			log_print_string("D7AQP File Announcement received");
-			log_print_string(" - file 0x%x starting from byte %d", sfr_tmpl->return_file_id, sfr_tmpl->file_offset);
-			log_print_data(sfr_tmpl->file_data, sfr_tmpl->isfb_total_length - sfr_tmpl->file_offset);
+			D7AQP_Single_File_Call_Template* sfr_tmpl = (D7AQP_Single_File_Call_Template*) rx_res->d7aqp_command.command_data;
+			log_print_string("D7AQP File Call received");
+			log_print_string(" - file 0x%x starting from byte %d", sfr_tmpl->return_file_id, sfr_tmpl->return_file_entry_offset);
+			log_print_string(" - max return %d bytes", sfr_tmpl->max_returned_bytes);
+
+			if (sfr_tmpl->return_file_id <= 3)
+			{
+				if (sfr_tmpl->return_file_entry_offset < 8)
+				{
+					command.command_code = D7AQP_COMMAND_CODE_EXTENSION | D7AQP_COMMAND_TYPE_RESPONSE | D7AQP_OPCODE_COLLECTION_FILE_FILE;
+					command.command_extension = D7AQP_COMMAND_EXTENSION_NORESPONSE;
+					command.dialog_template = NULL;
+
+					D7AQP_Single_File_Return_Template file_template;
+					file_template.return_file_id = sfr_tmpl->return_file_id;
+					file_template.file_offset = sfr_tmpl->return_file_entry_offset;
+					file_template.isfb_total_length = sfr_tmpl->max_returned_bytes < 8 ? sfr_tmpl->max_returned_bytes : 8;
+					file_template.file_data = &filesystem[sfr_tmpl->return_file_id][sfr_tmpl->return_file_entry_offset];
+
+					command.command_data = &file_template;
+				} else {
+					// send error template
+				}
+
+			} else {
+				// send error template
+			}
+
+			led_on(3);
+					trans_tx_query(&command, 0xFF, RECEIVE_CHANNEL, TX_EIRP);
+			break;
 		}
+
+		default:
+			// Restart channel scanning
+			start_channel_scan = true;
 	}
 
 	if (rx_res->d7aqp_command.command_extension & D7AQP_COMMAND_EXTENSION_NORESPONSE)

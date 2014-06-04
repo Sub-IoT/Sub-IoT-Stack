@@ -107,12 +107,12 @@ static void nwl_rx_callback(nwl_rx_res_t* result)
 		query_result.d7aqp_command.local_query_template = NULL;
 		query_result.d7aqp_command.error_template = NULL;
 
-		switch (command->command_code & 0x70)
+		switch (query_result.d7aqp_command.command_code & 0x70)
 		{
 			// Response
 			case D7AQP_COMMAND_TYPE_RESPONSE:
 			{
-				switch (command->command_code & 0x0F)
+				switch (query_result.d7aqp_command.command_code & 0x0F)
 				{
 					case D7AQP_OPCODE_ANNOUNCEMENT_FILE:
 					{

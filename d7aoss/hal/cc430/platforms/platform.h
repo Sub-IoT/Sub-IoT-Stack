@@ -18,7 +18,8 @@
 #ifndef PLATFORM_H_
 #define PLATFORM_H_
 
-#define PLATFORM_WIZZIMOTE
+// Select the corrrect platform in the line below
+#define PLATFORM_AGAIDI
 
 
 #ifdef PLATFORM_WIZZIMOTE

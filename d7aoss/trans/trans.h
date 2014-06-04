@@ -94,6 +94,12 @@ typedef struct {
 } D7AQP_Single_File_Return_Template;
 
 typedef struct {
+	uint8_t max_returned_bytes;
+	uint8_t	return_file_id;
+	uint8_t return_file_entry_offset;
+} D7AQP_Single_File_Call_Template;
+
+typedef struct {
 
 	uint8_t lenght;
 	uint8_t* payload;
