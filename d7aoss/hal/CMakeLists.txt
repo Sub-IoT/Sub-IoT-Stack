@@ -68,6 +68,22 @@ IF(D7AOSS_HAL_DRIVER STREQUAL "stm32l")
         )
 ENDIF()
 
+IF(D7AOSS_HAL_DRIVER STREQUAL "msp430")
+        SET(HAL_SRCS
+                        msp430/msp430_button.c
+                        msp430/msp430_addresses.h
+                        msp430/msp430_crc.c
+                        msp430/msp430_leds.c
+                        msp430/msp430_rtc.c
+                        msp430/msp430_system.c
+                        msp430/msp430_uart.c
+                        msp430/msp430_timer.c
+                        msp430/msp430_spi.c
+        )
+
+        ADD_SUBDIRECTORY(msp430/driverlib)
+ENDIF()
+
 IF(D7AOSS_HAL_DRIVER STREQUAL "stub")
         SET(HAL_SRCS
                         stub/stub_button.c
@@ -100,6 +116,8 @@ SET_TARGET_PROPERTIES(HAL PROPERTIES LINKER_LANGUAGE C)
 IF(D7AOSS_HAL_DRIVER STREQUAL "cc430")
     TARGET_LINK_LIBRARIES(HAL DRV)
 ELSEIF(D7AOSS_HAL_DRIVER STREQUAL "stm32l")
+    TARGET_LINK_LIBRARIES(HAL DRV)
+ELSEIF(D7AOSS_HAL_DRIVER STREQUAL "MSP430")
     TARGET_LINK_LIBRARIES(HAL DRV)
 ELSEIF(D7AOSS_HAL_DRIVER STREQUAL "stub")
     TARGET_LINK_LIBRARIES(HAL rt)

@@ -22,6 +22,7 @@
 #include "../uart.h"
 #include "cc430_addresses.h"
 
+#include "pre_init.h"
 //#include "inc/hw_memmap.h"
 //#include "driverlib/5xx_6xx/wdt.h"
 #include "driverlib/5xx_6xx/tlv.h"

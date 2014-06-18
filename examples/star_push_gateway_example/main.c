@@ -35,7 +35,6 @@
 #include <framework/log.h>
 #include <framework/timer.h>
 
-
 #define RECEIVE_CHANNEL 0x10
 
 // event to create a led blink
@@ -66,7 +65,10 @@ void rx_callback(Trans_Rx_Query_Result* rx_res)
 
 	blink_led();
 
-	log_print_string("Received Query");
+	dll_foreground_frame_t* frame = (dll_foreground_frame_t*) (rx_res->nwl_rx_res->dll_rx_res->frame);
+	log_print_string("Received Query from %02x%02x%02x%02x%02x%02x%02x", frame->address_ctl->source_id[0], frame->address_ctl->source_id[1], frame->address_ctl->source_id[2], frame->address_ctl->source_id[3], frame->address_ctl->source_id[4], frame->address_ctl->source_id[5], frame->address_ctl->source_id[6], frame->address_ctl->source_id[7]);
+	log_print_string("RSS: %d dBm", rx_res->nwl_rx_res->dll_rx_res->rssi);
+	log_print_string("Netto Link: %d dBm", rx_res->nwl_rx_res->dll_rx_res->rssi  - frame->frame_header.tx_eirp);
 
 	// log endpoint's device_id, RSS of link, and payload of device
 //	dll_foreground_frame_t* frame = (dll_foreground_frame_t*) (rx_res->nwl_rx_res->dll_rx_res->frame);
@@ -118,8 +120,8 @@ int main(void) {
 	dim_led_event.next_event = 50;
 	dim_led_event.f = &dim_led;
 
-//	system_watchdog_init(WDTSSEL0, 0x03);
-//	system_watchdog_timer_start();
+	system_watchdog_init(0x0020, 0x03);
+	system_watchdog_timer_start();
 
 	blink_led();
 
@@ -134,4 +136,3 @@ int main(void) {
 		system_lowpower_mode(0,1);
 	}
 }
-

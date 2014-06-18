@@ -102,6 +102,7 @@ static void scan_timeout()
 
 	if (current_css == NULL)
 	{
+		dll_rx_callback(NULL);
 		return;
 	}
 

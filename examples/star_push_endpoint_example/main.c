@@ -34,7 +34,6 @@
 #include <framework/log.h>
 #include <framework/timer.h>
 
-
 #define SEND_INTERVAL_MS 2000
 #define SEND_CHANNEL 0x10
 #define TX_EIRP 10
@@ -140,8 +139,8 @@ int main(void) {
 	// Log the device id
 	log_print_data(device_id, 8);
 
-//	system_watchdog_init(WDTSSEL0, 0x03);
-//	system_watchdog_timer_start();
+	system_watchdog_init(0x0020, 0x03);
+	system_watchdog_timer_start();
 
 	while(1)
 	{
@@ -154,6 +153,3 @@ int main(void) {
 		system_lowpower_mode(3,1);
 	}
 }
-
-
-
