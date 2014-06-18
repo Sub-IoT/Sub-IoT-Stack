@@ -35,6 +35,7 @@ IF(D7AOSS_HAL_DRIVER STREQUAL "MSP430")
                         msp430/msp430_system.c
                         msp430/msp430_uart.c
                         msp430/msp430_timer.c
+                        msp430/msp430_spi.c
         )
 
         ADD_SUBDIRECTORY(msp430/driverlib)
