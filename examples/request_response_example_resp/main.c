@@ -99,9 +99,9 @@ void rx_callback(Trans_Rx_Query_Result* rx_res)
 			log_print_string(" - file 0x%x starting from byte %d", sfr_tmpl->return_file_id, sfr_tmpl->return_file_entry_offset);
 			log_print_string(" - max return %d bytes", sfr_tmpl->max_returned_bytes);
 
-			if (sfr_tmpl->return_file_id <= 3)
+			if (sfr_tmpl->return_file_id < 3) // for example fixed file system containing 3 files
 			{
-				if (sfr_tmpl->return_file_entry_offset < 8)
+				if (sfr_tmpl->return_file_entry_offset < 8) // for example fixed file sizes of 8 byte
 				{
 					command.command_code = D7AQP_COMMAND_CODE_EXTENSION | D7AQP_COMMAND_TYPE_RESPONSE | D7AQP_OPCODE_COLLECTION_FILE_FILE;
 					command.command_extension = D7AQP_COMMAND_EXTENSION_NORESPONSE;

@@ -209,13 +209,13 @@ void nwl_build_datastream_protocol_data(uint8_t* data, uint8_t length, nwl_secur
 void nwl_rx_start(uint8_t subnet, uint8_t spectrum_id, Protocol_Type type)
 {
 	dll_channel_scan_t scan_cfg = {
-			0x00,
+			spectrum_id,
 			FrameTypeForegroundFrame,
 			0,
 			0
 	};
 
-	scan_cfg.spectrum_id = spectrum_id;
+	//scan_cfg.spectrum_id = spectrum_id;
 
 	if (type == ProtocolTypeBackgroundProtocol)
 		scan_cfg.scan_type = FrameTypeBackgroundFrame;

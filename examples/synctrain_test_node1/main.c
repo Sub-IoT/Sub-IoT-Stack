@@ -9,18 +9,20 @@
 
 #include <trans/trans.h>
 
+#include <dll/dll.h>
+
 #include <hal/system.h>
 #include <hal/button.h>
 #include <hal/leds.h>
 #include <hal/rtc.h>
-#include <log.h>
-#include <timer.h>
+#include <framework/log.h>
+#include <framework/timer.h>
 #include <hal/rtc.h>
 
-#define SEND_INTERVAL_MS	1000
-#define SYNC_INTERVAL_MS	500
-#define SYNC_LENGTH			10
-#define SEND_CHANNEL 0x1C
+#define SEND_INTERVAL_MS	10000
+#define SYNC_PERIOD_MS		1000
+#define SYNC_LENGTH			50
+#define SEND_CHANNEL 0x10
 
 #define USE_LEDS
 
@@ -28,14 +30,19 @@
 #define BATTERY_OFFSET	-10
 #define CLOCKS_PER_1us	20
 
+#define LED_RED	2
+#define LED_ORANGE 1
+#define LED_GREEN 3
+
 //static u8 interrupt_flags = 0;
 //static u8 tx = 0;
 
-u8 data[32];
-uint32_t counter;
-u8 dataLength = 0;
-u16 battery_voltage;
-u8 sync_position = 0;
+uint8_t data[32];
+uint16_t eta;
+uint8_t dataLength = 0;
+uint16_t battery_voltage;
+uint8_t sync_position = 0;
+uint32_t volatile targetTimeStamp;
 
 timer_event event;
 timer_event sync_event;
@@ -44,10 +51,10 @@ uint16_t adc12_result;
 volatile uint8_t  adc12_data_ready;
 
 uint16_t battery_measurement(void);
-Calendar currentTime;
+//Calendar currentTime;
 
 
-void start_tx(void* arg)
+void start_tx()
 {
 	log_print_string("tx_event removed");
 
@@ -56,50 +63,59 @@ void start_tx(void* arg)
 
 	//tx = 1;
 	#ifdef USE_LEDS
-	led_on(2);
+	led_on(LED_GREEN);
 	#endif
 
 	sync_position = SYNC_LENGTH;
 
-	timer_add_event(&sync_event);
-	log_print_string("sync_event added");
+	//timer_add_event(&sync_event);
+	//log_print_string("sync_event added");
 
-	counter = sync_position * SYNC_INTERVAL_MS;
+	targetTimeStamp = timer_get_counter_value() + SYNC_PERIOD_MS;
 
-	trans_tx_background_frame((uint8_t*) &counter, 0xFF, SEND_CHANNEL, 10);
-	log_print_string("BF");
-	log_print_data((uint8_t*) &sync_position, 1);
+	eta = 1000;
+
+	//trans_tx_background_frame((uint8_t*) &counter, 0xFF, SEND_CHANNEL, 10);
+	nwl_build_advertising_protocol_data(SEND_CHANNEL, eta, 10, 0xFF);
+	dll_tx_frame();
+	//log_print_string("BF");
+	//log_print_data((uint8_t*) &sync_position, 1);
 	//trans_tx_foreground_frame(data, dataLength, SEND_CHANNEL, 10);
+
+	timer_add_event(&sync_event);
 }
 
-void start_tx_sync(void* arg)
+void start_tx_sync()
 {
 
-	log_print_string("sync_event removed");
-	sync_position--;
+	//log_print_string("sync_event removed");
+	eta = targetTimeStamp - timer_get_counter_value();
 
-	if (sync_position == 0)
+	if (eta < 10 || eta > SYNC_PERIOD_MS)
 	{
 		#ifdef USE_LEDS
-		led_on(3);
+		led_off(LED_GREEN);
+		led_on(LED_ORANGE);
 		#endif
 
-		trans_tx_foreground_frame(data, dataLength, SEND_CHANNEL, 10);
+		trans_tx_foreground_frame(data, dataLength, 0xFF, SEND_CHANNEL, 10);
 
-		log_print_string("tx_event added");
-		log_print_string("FF");
+		//log_print_string("tx_event added");
+		//log_print_string("FF");
 
 		timer_add_event(&event);
 	} else {
-		log_print_string("sync_event added");
-		counter = sync_position * SYNC_INTERVAL_MS;
+		//log_print_string("sync_event added");
 		#ifdef USE_LEDS
-		led_on(2);
+		led_on(LED_GREEN);
 		#endif
-		log_print_string("BF");
+		//log_print_string("BF");
 
-		log_print_data((uint8_t*) &sync_position, 1);
-		trans_tx_background_frame((uint8_t*) &counter, 0xFF, SEND_CHANNEL, 10);
+		//log_print_data((uint8_t*) &sync_position, 1);
+		//trans_tx_background_frame((uint8_t*) &counter, 0xFF, SEND_CHANNEL, 10);
+
+		nwl_build_advertising_protocol_data(SEND_CHANNEL, eta, 10, 0xFF);
+		dll_tx_frame();
 		timer_add_event(&sync_event);
 	}
 }
@@ -111,13 +127,12 @@ void tx_callback(Trans_Tx_Result result)
 	if(result == TransPacketSent)
 	{
 
-		led_off(3);
-		led_off(2);
+		led_off(LED_ORANGE);
 		log_print_string("TX OK");
 	}
 	else
 	{
-		led_toggle(1);
+		led_toggle(LED_RED);
 		log_print_string("TX CCA FAIL");
 	}
 #endif
@@ -143,21 +158,21 @@ int main(void) {
 	event.next_event = SEND_INTERVAL_MS;
 	event.f = &start_tx;
 
-	sync_event.next_event = SYNC_INTERVAL_MS;
+	sync_event.next_event = 5;
 	sync_event.f = &start_tx_sync;
 
 	log_print_string("sync node 1 started");
 
 	timer_add_event(&event);
 
-	log_print_data(tag_id, 8);
+	//log_print_data(tag_id, 8);
 
-	system_watchdog_init(WDTSSEL0, 0x03); // 32KHz / 2^19
-	system_watchdog_timer_start();
+	//system_watchdog_init(WDTSSEL0, 0x03); // 32KHz / 2^19
+	//system_watchdog_timer_start();
 
 	while(1)
 	{
 
-		system_lowpower_mode(4,1);
+		system_lowpower_mode(0,1);
 	}
 }

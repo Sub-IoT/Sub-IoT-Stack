@@ -102,7 +102,8 @@ static void scan_timeout()
 
 	if (current_css == NULL)
 	{
-		dll_rx_callback(NULL);
+		if(dll_rx_callback != NULL)
+			dll_rx_callback(NULL);
 		return;
 	}
 
@@ -310,7 +311,9 @@ static void rx_callback(phy_rx_data_t* res)
 
 	if (current_css == NULL)
 	{
-		log_print_stack_string(LOG_DLL, ("DLL no series so stop listening"));
+		#ifdef LOG_DLL_ENABLED
+			log_print_stack_string(LOG_DLL, ("DLL no series so stop listening"));
+		#endif
 		return;
 	}
 
@@ -377,7 +380,7 @@ uint8_t dll_background_scan()
 		log_print_stack_string(LOG_DLL, "DLL Starting background scan");
 	#endif
 
-	dll_state = DllStateScanForegroundFrame;
+	dll_state = DllStateScanBackgroundFrame;
 
 	//check for signal detected above E_sm
 	// TODO: is this the best method?

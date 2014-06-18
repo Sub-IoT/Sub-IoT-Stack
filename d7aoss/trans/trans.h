@@ -46,6 +46,12 @@
 #define D7AQP_COMMAND_EXTENSION_NOCSMA				1 << 2
 #define D7AQP_COMMAND_EXTENSION_NORESPONSE			1 << 1
 
+#define D7AQP_ERROR_CODE_INVALID_COMMAND_CODE					0x01
+#define D7AQP_ERROR_CODE_INVALID_COMMAND_PARAMETER				0x02
+#define D7AQP_ERROR_CODE_AUTHORIZATION_FAILURE					0x08
+#define D7AQP_ERROR_CODE_GENERIC_ENCAPSULATED_PROTOCOL_ERROR	0x50
+#define D7AQP_ERROR_CODE_VID_NOT_AVAILABLE						0x51
+
 
 #include "../types.h"
 #include "../nwl/nwl.h"
@@ -61,6 +67,16 @@ typedef enum {
 	TransPacketFail,
 	TransTCAFail
 } Trans_Tx_Result;
+
+/** @struct D7AQP_Dialog_Template
+ *  @brief 6.4.3 This structure describes the Dialog Template, which describes on which channel a response has to be sent.
+ *  @var D7AQP_Dialog_Template::response_timeout
+ *  Field 'response_timeout' contains the number of ticks before which a response has to be sent.
+ *  @var D7AQP_Dialog_Template::response_channel_list_lenght
+ *  Field 'response_channel_list_lenght' contains the number of channels which will folow in the response channel list (if 0 then response equals query channel)
+ *  @var D7AQP_Dialog_Template::response_channel_list
+ *  Field 'response_channel_list' contains an array of response_channel_list channels.
+ **/
 
 typedef struct {
 	uint16_t response_timeout;
@@ -82,9 +98,38 @@ typedef struct {
 } D7AQP_Local_Query_Template;
 
 
+/** @struct D7AQP_Error_Template
+ *  @brief 6.4.6 This structure describes the Error template of the D7A Querry Protocol
+ *  @var D7AQP_Error_Template::error_code
+ *  Field 'error_code' contains A Unique value that identifies the class of the error
+ *  @var D7AQP_Error_Template::error_subcode
+ *  Field 'error_subcode' is optional. It is a value that extends each error code to provide more information.
+ *  @var D7AQP_Error_Template::d7aqp_error_data
+ *  Field 'd7aqp_error_data' is optional. Has M bytes. It is a detailed description of an D7AQP error.
+ *  @var D7AQP_Error_Template::extended_error_data
+ *  Field 'extended_error_data' is optional. Has N bytes. It is storage for information relating to errors with encapsulated data.
+ **/
+
+// 6.5.1 Single File Templates
+
 typedef struct {
-	uint8_t rfu;
+	uint8_t error_code;
+	uint8_t error_subcode;
+	uint8_t* d7aqp_error_data;
+	uint8_t* extended_error_data;
 } D7AQP_Error_Template;
+
+/** @struct D7AQP_Single_File_Return_Template
+ *  @brief 6.5.1 Contains the data template for a response of a collection query or an annoucement query.
+ *  @var D7AQP_Single_File_Return_Template::return_file_id
+ *  Field 'max_returned_bytes' contains the file id the of the file which is returned.
+ *  @var D7AQP_Single_File_Return_Template::file_offset
+ *  Field 'max_returned_bytes' contains the offset from which the file is returned.
+ *  @var D7AQP_Single_File_Return_Template::isfb_total_length
+ *  Field 'max_returned_bytes' contains the total length of the file which is returned.
+ *  @var D7AQP_Single_File_Return_Template::file_data
+ *  Field 'max_returned_bytes' contains the returned file data.
+ *  **/
 
 typedef struct {
 	uint8_t return_file_id;
@@ -92,6 +137,17 @@ typedef struct {
 	uint8_t isfb_total_length;
 	uint8_t* file_data;
 } D7AQP_Single_File_Return_Template;
+
+
+/** @struct D7AQP_Single_File_Call_Template
+ *  @brief 6.5.1 Contains the data template for a collection query.
+ *  @var D7AQP_Single_File_Call_Template::max_returned_bytes
+ *  Field 'max_returned_bytes' contains max number of bytes returned by the responder.
+ *  @var D7AQP_Single_File_Call_Template::return_file_id
+ *  Field 'return_file_id' contains the file id of the file which needs to be returned.
+ *  @var D7AQP_Single_File_Call_Template::return_file_entry_offset
+ *  Field 'return_file_entry_offset' contains the offset from which the file needs to be returned.
+ **/
 
 typedef struct {
 	uint8_t max_returned_bytes;
