@@ -1,4 +1,2 @@
-ADD_SUBDIRECTORY(nwl_test)
-ADD_SUBDIRECTORY(nwl_rx_test)
 ADD_SUBDIRECTORY(star_push_gateway_example)
 ADD_SUBDIRECTORY(star_push_endpoint_example)
