@@ -153,12 +153,12 @@ Currently we use the <a href="https://www.olimex.com/Products/MSP430/JTAG/MSP430
 <tr>
 <td>DD7AOSS_PHY_RADIO_DRIVER</td>
 <td>defines which radio driver to use</td>
-<td>CC430, CC1101, STUB, SIM</td>
+<td>cc430, cc1101, stub, sim</td>
 </tr>
 <tr>
 <td>D7AOSS_HAL_DRIVER</td>
 <td>defines which hardware abastraction layer implementation to use</td>
-<td>CC430, MSP430, STM32L, STUB, SIM</td>
+<td>cc430, msp430, stm32l, stub, sim</td>
 </tr>
 <tr>
 <td>D7AOSS_BUILD_EXAMPLES</td>
@@ -176,7 +176,7 @@ Currently we use the <a href="https://www.olimex.com/Products/MSP430/JTAG/MSP430
 <p>Here is an example using CC430, assuming you cloned the repository in the directory oss-7 are inside this directory:</p>
 <pre><code class="bash">$ cd ..
 $ mkdir oss7-build &amp;&amp; cd oss7-build
-$ cmake .. -DD7AOSS_PHY_RADIO_DRIVER=&quot;CC430&quot; -DD7AOSS_HAL_DRIVER=&quot;CC430&quot; -DD7AOSS_BUILD_EXAMPLES=y -DCMAKE_TOOLCHAIN_FILE=&quot;../oss-7/cmake/toolchains/mspgcc.cmake&quot;
+$ cmake .. -DD7AOSS_PHY_RADIO_DRIVER=&quot;cc430&quot; -DD7AOSS_HAL_DRIVER=&quot;cc430&quot; -DD7AOSS_BUILD_EXAMPLES=y -DCMAKE_TOOLCHAIN_FILE=&quot;../oss-7/cmake/toolchains/mspgcc.cmake&quot;
 $ make
 </code></pre>
 
