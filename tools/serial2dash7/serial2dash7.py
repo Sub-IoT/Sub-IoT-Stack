@@ -66,8 +66,8 @@ def main():
 
 	global serial_port, settings
 	parser = argparse.ArgumentParser(description = "DASH7 to UART test. You can exit the logger using Ctrl-c, it takes some time.")
-	parser.add_argument('serial', default="COM10", metavar="serial port", help="serial port (eg COM7 or /dev/ttyUSB0)", nargs='?')
-	parser.add_argument('-b', '--baud' , default=9600, metavar="baudrate", type=int, help="set the baud rate (default: 9600)")
+	parser.add_argument('serial', default="COM6", metavar="serial port", help="serial port (eg COM7 or /dev/ttyUSB0)", nargs='?')
+	parser.add_argument('-b', '--baud' , default=115200, metavar="baudrate", type=int, help="set the baud rate (default: 9600)")
 	settings = vars(parser.parse_args())
 
 	serial_port = serial.Serial(settings['serial'], settings['baud'])

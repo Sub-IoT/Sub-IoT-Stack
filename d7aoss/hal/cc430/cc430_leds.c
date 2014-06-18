@@ -29,6 +29,10 @@ void led_init()
     GPIO_setAsOutputPin(OUTPUT1_BASEADDRESS, OUTPUT1_PORT, OUTPUT1_PIN);
     GPIO_setAsOutputPin(OUTPUT2_BASEADDRESS, OUTPUT2_PORT, OUTPUT2_PIN);
     GPIO_setAsOutputPin(OUTPUT3_BASEADDRESS, OUTPUT3_PORT, OUTPUT3_PIN);
+
+    led_off(1);
+    led_off(2);
+    led_off(3);
 }
 
 
@@ -37,14 +41,14 @@ void led_on(unsigned char led_nr)
     switch (led_nr)
     {
         case 1:
-            GPIO_setOutputHighOnPin(OUTPUT1_BASEADDRESS, OUTPUT1_PORT, OUTPUT1_PIN);
+        	OUTPUT1_TYPE == 0 ? GPIO_setOutputHighOnPin(OUTPUT1_BASEADDRESS, OUTPUT1_PORT, OUTPUT1_PIN): GPIO_setOutputLowOnPin(OUTPUT1_BASEADDRESS, OUTPUT1_PORT, OUTPUT1_PIN);
             break;
         case 2:
-            GPIO_setOutputHighOnPin(OUTPUT2_BASEADDRESS, OUTPUT2_PORT, OUTPUT2_PIN);
-            break;
+        	OUTPUT2_TYPE == 0 ? GPIO_setOutputHighOnPin(OUTPUT2_BASEADDRESS, OUTPUT2_PORT, OUTPUT2_PIN): GPIO_setOutputLowOnPin(OUTPUT2_BASEADDRESS, OUTPUT2_PORT, OUTPUT2_PIN);
+        	 break;
         case 3:
-            GPIO_setOutputHighOnPin(OUTPUT3_BASEADDRESS, OUTPUT3_PORT, OUTPUT3_PIN);
-            break;
+        	OUTPUT3_TYPE == 0 ? GPIO_setOutputHighOnPin(OUTPUT3_BASEADDRESS, OUTPUT3_PORT, OUTPUT3_PIN): GPIO_setOutputLowOnPin(OUTPUT3_BASEADDRESS, OUTPUT3_PORT, OUTPUT3_PIN);
+        	break;
     }
 }
 
@@ -53,13 +57,13 @@ void led_off(unsigned char led_nr)
     switch (led_nr)
     {
 		case 1:
-			GPIO_setOutputLowOnPin(OUTPUT1_BASEADDRESS, OUTPUT1_PORT, OUTPUT1_PIN);
+			OUTPUT1_TYPE == 0 ? GPIO_setOutputLowOnPin(OUTPUT1_BASEADDRESS, OUTPUT1_PORT, OUTPUT1_PIN): GPIO_setOutputHighOnPin(OUTPUT1_BASEADDRESS, OUTPUT1_PORT, OUTPUT1_PIN);
 			break;
 		case 2:
-			GPIO_setOutputLowOnPin(OUTPUT2_BASEADDRESS, OUTPUT2_PORT, OUTPUT2_PIN);
-			break;
+			OUTPUT2_TYPE == 0 ? GPIO_setOutputLowOnPin(OUTPUT2_BASEADDRESS, OUTPUT2_PORT, OUTPUT2_PIN): GPIO_setOutputHighOnPin(OUTPUT2_BASEADDRESS, OUTPUT2_PORT, OUTPUT2_PIN);
+			 break;
 		case 3:
-			GPIO_setOutputLowOnPin(OUTPUT3_BASEADDRESS, OUTPUT3_PORT, OUTPUT3_PIN);
+			OUTPUT3_TYPE == 0 ? GPIO_setOutputLowOnPin(OUTPUT3_BASEADDRESS, OUTPUT3_PORT, OUTPUT3_PIN): GPIO_setOutputHighOnPin(OUTPUT3_BASEADDRESS, OUTPUT3_PORT, OUTPUT3_PIN);
 			break;
     }
 }

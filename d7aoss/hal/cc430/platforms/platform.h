@@ -31,6 +31,8 @@
 #include "chronos.h"
 #elif defined PLATFORM_BELIGUM
 #include "beligum.h"
+#elif defined PLATFORM_MATRIX
+#include "matrix_tp1104r3.h"
 #else
 	#error No platform set
 #endif

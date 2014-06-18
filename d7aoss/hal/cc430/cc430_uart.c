@@ -27,15 +27,15 @@
 void uart_init()
 {
 	PMAPPWD = 0x02D52;                        // Get write-access to port mapping regs
-    PLATFORM_UCA0RXD = PM_UCA0RXD;                      // Map UCA0RXD output to Px
-    PLATFORM_UCA0TXD = PM_UCA0TXD;                      // Map UCA0TXD output to Px
+    PLATFORM_UCA0RXD = PM_UCA0RXD;            // Map UCA0RXD output to Px
+    PLATFORM_UCA0TXD = PM_UCA0TXD;            // Map UCA0TXD output to Px
     PMAPPWD = 0;                              // Lock port mapping registers
-    PLATFORM_PxDIR |= PLATFORM_PxDIRBIT;                            // Set Px as TX output
+    PLATFORM_PxDIR |= PLATFORM_PxDIRBIT;      // Set Px as TX output
     PLATFORM_PxSEL |= PLATFORM_PxSELBIT;
     PMAPPWD = 0x02D52;                        // Get write-access to port mapping regs
 
     UCA0CTL1 |= UCSWRST;                      // **Put state machine in reset**
-//    UCA0CTL1 |= UCSSEL_1;                     // ACLK
+//    UCA0CTL1 |= UCSSEL_1;                   // ACLK
 //    double c_speed = 32768.0;
 //
 //    double n = c_speed / BAUDRATE;
