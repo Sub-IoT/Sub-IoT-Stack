@@ -21,6 +21,8 @@
 #ifndef STUB_PHY_H_
 #define STUB_PHY_H_
 
+#include "../phy.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -30,8 +32,8 @@ extern "C" {
  */
 void phy_init(void);
 void phy_idle(void);
-bool phy_tx(phy_tx_cfg* cfg);
-bool phy_rx(phy_rx_cfg* cfg);
+bool phy_tx(phy_tx_cfg_t* cfg);
+bool phy_rx(phy_rx_cfg_t* cfg);
 bool phy_is_rx_in_progress(void);
 bool phy_is_tx_in_progress(void);
 bool phy_cca(uint8_t spectrum_id, uint8_t sync_word_class);
@@ -41,3 +43,4 @@ bool phy_cca(uint8_t spectrum_id, uint8_t sync_word_class);
 #endif
 
 #endif /* STUB_PHY_H_ */
+

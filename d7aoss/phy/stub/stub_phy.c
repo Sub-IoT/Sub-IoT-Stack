@@ -18,9 +18,12 @@
  */
 
 #include <stdbool.h>
+#include <stddef.h>
 #include <stdint.h>
 
-#include "../phy.h"
+#include "../../phy/phy.h"
+#include "stub_phy.h"
+#include "../../framework/log.h"
 
 /*
  * Phy implementation functions
@@ -60,7 +63,7 @@ bool phy_is_tx_in_progress(void)
 	return false;
 }
 
-bool phy_cca(uint8_t spectrum_id, uint8_t sync_word_class)
+extern int16_t phy_get_rssi(uint8_t spectrum_id, uint8_t sync_word_class)
 {
-	return true;
+	return 0;
 }

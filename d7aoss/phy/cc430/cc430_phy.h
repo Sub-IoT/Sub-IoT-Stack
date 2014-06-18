@@ -29,7 +29,7 @@ extern "C" {
 #include <stdbool.h>
 #include <stdint.h>
 
-#include "../phy.h"
+#include "../../phy/phy.h"
 #include "rf1a.h"
 #include "cc430_registers.h"
 

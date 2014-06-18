@@ -13,7 +13,6 @@ object_script*
 lnk_*.cmd
 *~
 moc*.cpp
-
 targetConfigs
 Thumbs.db
 *.csv
