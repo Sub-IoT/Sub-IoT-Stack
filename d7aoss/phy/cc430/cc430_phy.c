@@ -61,7 +61,7 @@ phy_rx_data_t rx_data;
 phy_tx_cfg_t last_tx_cfg;
 
 // from -35 to 10 dbm in steps of +- 1
-static int8_t eirp_values[46] = {1,2,2,3,3,4,4,5,6,6,7,8,9,A,C,E,F,19,1A,1B,1D,1E,24,33,25,34,26,28,29,2A,2B,2D,2F,3C,3F,60,8D,CF,8A,87,84,81,C8,C5,C2,C0};
+static int8_t eirp_values[46] = {0x1,0x2,0x2,0x3,0x3,0x4,0x4,0x5,0x6,0x6,0x7,0x8,0x9,0xA,0xC,0xE,0xF,0x19,0x1A,0x1B,0x1D,0x1E,0x24,0x33,0x25,0x34,0x26,0x28,0x29,0x2A,0x2B,0x2D,0x2F,0x3C,0x3F,0x60,0x8D,0xCF,0x8A,0x87,0x84,0x81,0xC8,0xC5,0xC2,0xC0};
 
  /*
  * Phy implementation functions
@@ -678,13 +678,13 @@ void set_eirp(int8_t eirp)
 		eirp_index = eirp + 35;
 	}
 
-	 for(i=7; (i>=0) && (eirp_index>=0); i--, eirp_index-=3) {
+	 for(i=7; (i<8) && (eirp_index<46); i--, eirp_index-=3) {
 		 pa_table[i] = eirp_values[eirp_index];
 	 }
 
 	 WriteBurstPATable(&pa_table[i], (uint8_t)(8-i));
 
-	 WriteSingleReg(RADIO_FREND0_LODIV_BUF_CURRENT_TX(1) | RADIO_FREND0_PA_POWER((uint8_t)(7-i)));
+	 WriteSingleReg(FREND0, RADIO_FREND0_LODIV_BUF_CURRENT_TX(1) | RADIO_FREND0_PA_POWER((uint8_t)(7-i)));
 
 }
 

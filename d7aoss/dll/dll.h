@@ -25,7 +25,6 @@
 typedef enum {
 	FrameTypeForegroundFrame,
 	FrameTypeBackgroundFrame
-
 } Frame_Type;
 
 typedef enum {
@@ -136,8 +135,7 @@ void dll_channel_scan_series(dll_channel_scan_series_t*);
  *  \param address_length Lenght in bytes of the target address. 0 (broadcast message), 2 (VID), or 8 (UID).
  *  \param params the TX configuration (subnet, spectrum ID, EIRP, frame type (BF or FF)).
  */
-dll_create_frame(uint8_t* data, uint8_t length, uint8_t* target_address, uint8_t address_length, dll_tx_cfg_t* params);
-
+void dll_create_frame(uint8_t* data, uint8_t length, uint8_t* target_address, uint8_t address_length, dll_tx_cfg_t* params);
 void dll_tx_frame();
 
 #endif /* DLL_H_ */

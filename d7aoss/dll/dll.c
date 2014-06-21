@@ -74,18 +74,24 @@ static bool check_subnet(uint8_t device_subnet, uint8_t frame_subnet)
 	uint8_t fsm = frame_subnet & 0x0F;
 	uint8_t dsi = device_subnet & 0x0F;
 
-	// FSM & DSM != 0?
-	if ((fsm & dsm) == 0)
+	// FSM & DSI != 0?
+	if ((fsm & dsi) == 0)
 			return 0;
 
 	return 1;
 }
 
+/*! \brief Starts next scan according to scan series
+ *
+ */
 static void scan_next()
 {
 	dll_channel_scan_series(current_css);
 }
 
+/*! \brief Handles RX scan timeout event from phy
+ *
+ */
 static void scan_timeout()
 {
 	if (dll_state == DllStateNone)
@@ -113,12 +119,17 @@ static void scan_timeout()
 	timer_add_event(&event);
 }
 
+/*! \brief Forwards phy tx callback
+ *
+ */
 static void tx_callback()
 {
 	#ifdef LOG_DLL_ENABLED
 		log_print_stack_string(LOG_DLL, "DLL TX OK");
 	#endif
-	dll_tx_callback(DLLTxResultOK);
+
+	if (dll_tx_callback != NULL)
+		dll_tx_callback(DLLTxResultOK);
 }
 
 /*! \brief RX Callback function of the DLL which parses the frame received from the Phy
@@ -160,156 +171,54 @@ static void rx_callback(phy_rx_data_t* res)
 		return;
 	}
 
+	//Todo: implement link quality assement
+
+
 	//Todo: work further on rx callback
-
-	// Subnet Matching do not parse it yet
-	if (dll_state == DllStateScanBackgroundFrame)
-	{
-
-
-		if (!check_subnet(0xFF, res->data[0])) // TODO: get device_subnet from datastore
-		{
-			#ifdef LOG_DLL_ENABLED
-				log_print_stack_string(LOG_DLL, "DLL Subnet mismatch");
-			#endif
-			scan_next(); // how to reïnitiate scan on subnet mismatch, PHY should stay in RX
-			return;
-		}
-	} else if (dll_state == DllStateScanForegroundFrame)
-	{
-
-	} else
-	{
-		#ifdef LOG_DLL_ENABLED
-			log_print_stack_string(LOG_DLL, "DLL You fool, you can't be here");
-		#endif
-	}
-
-	// Optional Link Quality Assessment
 
 	// parse packet
 	dll_res.rssi = res->rssi;
 	dll_res.lqi = res->lqi;
 	dll_res.spectrum_id = current_css->values[current_scan_id].spectrum_id;
 
+	dll_frame_t* frame = (dll_frame_t*)frame_data;
+	frame->length = res->data[0];
+	frame->subnet = res->data[1];
+	frame->control = res->data[2];
+	if (frame->control & 0x80) // target address present
+	{
+		frame->target_address = &res->data[3];
+		if (frame->control & 0x40) // VID
+		{
+			frame->payload = &res->data[6];
+			frame->payload_length = frame->length - 8;
+		}
+		else // UID
+		{
+			frame->payload = &res->data[12];
+			frame->payload_length = frame->length - 14;
+		}
+	} else {
+		frame->target_address = NULL;
+		frame->payload_length = frame->length - 6;
+	}
+
+	dll_res.frame = frame;
+
 	if (dll_state == DllStateScanBackgroundFrame)
 	{
-		dll_frame_t* frame = (dll_frame_t*)frame_data;
-		frame->subnet = res->data[0];
-		memcpy(frame->payload, res->data+1, 4);
-
 		dll_res.frame_type = FrameTypeBackgroundFrame;
-		dll_res.frame = frame;
 	}
 	else
 	{
-		dll_foreground_frame_t* frame = (dll_foreground_frame_t*)frame_data;
-		frame->length = res->data[0];
-
-		frame->frame_header.tx_eirp = res->data[1] * 0.5 - 40;
-		frame->frame_header.subnet = res->data[2];
-		frame->frame_header.frame_ctl = res->data[3];
-
-		uint8_t* data_pointer = res->data + 4;
-
-		if (frame->frame_header.frame_ctl & FRAME_CTL_LISTEN) // Listen
-			timeout_listen = 10;
-		else
-			timeout_listen = 0;
-
-		if (frame->frame_header.frame_ctl & FRAME_CTL_DLLS) // DLLS present
-		{
-			// TODO parse DLLS Header
-			frame->dlls_header = NULL;
-		} else {
-			frame->dlls_header = NULL;
-		}
-
-		if (frame->frame_header.frame_ctl & 0x20) // Enable Addressing
-		{
-			// Address Control Header
-			dll_foreground_frame_address_ctl_t address_ctl;// = (dll_foreground_frame_address_ctl_t*) data_pointer;
-			frame->address_ctl = &address_ctl;
-			frame->address_ctl->dialogId = *data_pointer;
-			data_pointer++;
-			frame->address_ctl->flags = *data_pointer;
-			data_pointer++;
-			//data_pointer += sizeof(uint8_t*);
-
-			uint8_t addressing = (frame->address_ctl->flags & 0xC0) >> 6;
-			uint8_t vid = (frame->address_ctl->flags & 0x20) >> 5;
-			uint8_t nls = (frame->address_ctl->flags & 0x10) >> 4;
-			// TODO parse Source ID Header
-
-			frame->address_ctl->source_id = data_pointer;
-			if (vid)
-			{
-				data_pointer += 2;
-			}
-			else
-			{
-				data_pointer += 8;
-			}
-
-			if (addressing == 0 && nls == 0)
-			{
-				uint8_t id_target[8];
-				if (vid)
-				{
-					memcpy(data_pointer, &id_target, 2);
-					data_pointer += 2;
-				}
-				else
-				{
-					memcpy(data_pointer, &id_target, 8);
-					data_pointer += 8;
-				}
-				frame->address_ctl->target_id = (uint8_t*) &id_target;
-			} else {
-				frame->address_ctl->target_id = NULL;
-			}
-		} else {
-			frame->address_ctl = NULL;
-			frame->address_ctl->source_id = NULL;
-		}
-
-		if (frame->frame_header.frame_ctl & 0x10) // Frame continuity
-		{
-			// TODO handle more than 1 frame
-		}
-
-		if (frame->frame_header.frame_ctl & 0x04) // Note Mode 2
-		{
-			// Not supported
-		}
-
-		// Frame Type
-		dll_res.frame_type = (Frame_Type) (frame->frame_header.frame_ctl & 0x03);
-
-		if (dll_res.frame_type == FrameTypeForegroundFrameStreamFrame)
-		{
-			frame->payload_length = frame->length - (data_pointer - res->data) - 2;
-			frame->payload = data_pointer;
-		} else {
-
-			// TODO: should be done in upper layer
-			//data_pointer++; // TODO what is this?
-			//data_pointer++; //isfid
-			//data_pointer++; //isfoffset
-
-			frame->payload_length = frame->length - (data_pointer - res->data) - 2;
-			//data_pointer++;
-			frame->payload = data_pointer;
-		}
-
-		dll_res.frame = frame;
+		dll_res.frame_type = FrameTypeForegroundFrame;
 	}
 
 	#ifdef LOG_DLL_ENABLED
 		log_dll_rx_res(&dll_res);
 	#endif
-	dll_rx_callback(&dll_res);
 
+	dll_rx_callback(&dll_res);
 
 	if (current_css == NULL)
 	{
@@ -601,22 +510,4 @@ void dll_create_frame(uint8_t* data, uint8_t length, uint8_t* target_address, ui
 
 	uint16_t crc16 = crc_calculate(frame_data, frame_tx_cfg.length - 2);
 	memcpy(&frame_data[frame_tx_cfg.length - 2], &crc16, 2);
-}
-
-void dll_create_background_frame(uint8_t* data, uint8_t subnet, uint8_t spectrum_id, int8_t tx_eirp)
-{
-	background_frame_tx_cfg.spectrum_id = spectrum_id;
-	background_frame_tx_cfg.eirp = tx_eirp;
-	background_frame_tx_cfg.length = 6;
-
-	dll_background_frame_t* frame = (dll_background_frame_t*) frame_data;
-	frame->subnet = subnet;
-	memcpy(frame->payload, data, 3);
-
-	uint8_t* pointer = frame_data + 4;
-
-	uint16_t crc16 = crc_calculate(frame_data, 4);
-	memcpy(pointer, &crc16, 2);
-
-	current_phy_cfg = &background_frame_tx_cfg;
 }
