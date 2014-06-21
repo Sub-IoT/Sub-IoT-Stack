@@ -75,14 +75,14 @@ bool phy_translate_settings(uint8_t spectrum_id, uint8_t sync_word_class, bool* 
 	//Assert valid sync word class and set sync word
 	if(sync_word_class == 0) {
 		if(*fec == 0)
-			*sync_word = SYNC_CLASS0_NON_FEC;
+			*sync_word = SYNC_CLASS0_CS0;
 		else
-			*sync_word = SYNC_CLASS0_FEC;
+			*sync_word = SYNC_CLASS0_CS1;
 	} else if(sync_word_class == 1) {
 		if(*fec == 0)
-			*sync_word = SYNC_CLASS1_NON_FEC;
+			*sync_word = SYNC_CLASS1_CS0;
 		else
-			*sync_word = SYNC_CLASS1_FEC;
+			*sync_word = SYNC_CLASS1_CS1;
 	} else {
 	   return false;
 	}

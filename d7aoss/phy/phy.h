@@ -27,16 +27,22 @@ extern "C" {
 #include <stdbool.h>
 #include <stdint.h>
 
+#define CHANNEL_CODE_INDEX_CODING_PN9						0 << 6
+#define CHANNEL_CODE_INDEX_CODING_FEC_PN9					2 << 6
+#define CHANNEL_CODE_INDEX_CODING_CHANNEL_CLASS_LO_RATE		0 << 4
+#define CHANNEL_CODE_INDEX_CODING_CHANNEL_CLASS_NORMAL_RATE	1 << 4
+#define CHANNEL_CODE_INDEX_CODING_CHANNEL_CLASS_HI_RATE		2 << 4
+
 //#define D7_PHY_USE_FEC //TODO move to general config file
 
-#define SYNC_CLASS0_NON_FEC     0xE6D0
-#define SYNC_CLASS0_FEC         0xF498
-#define SYNC_CLASS1_NON_FEC     0x0B67
-#define SYNC_CLASS1_FEC         0x192F
-#define TRELLIS_TERMINATOR		0x0B
+#define SYNC_CLASS0_CS0     0xE6D0
+#define SYNC_CLASS0_CS1     0xF498
+#define SYNC_CLASS1_CS0     0x0B67
+#define SYNC_CLASS1_CS1     0x192F
 #define INITIAL_PN9				0x01FF
-#define INITIAL_FECSTATE		0x0700
 #define CCA_RSSI_THRESHOLD		-86 // TODO configurable
+
+
 
 //Configuration structure for packet reception
 typedef struct

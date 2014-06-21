@@ -60,21 +60,10 @@ phy_rx_data_t rx_data;
 
 phy_tx_cfg_t last_tx_cfg;
 
+// from -35 to 10 dbm in steps of +- 1
+static int8_t eirp_values[46] = {1,2,2,3,3,4,4,5,6,6,7,8,9,A,C,E,F,19,1A,1B,1D,1E,24,33,25,34,26,28,29,2A,2B,2D,2F,3C,3F,60,8D,CF,8A,87,84,81,C8,C5,C2,C0};
 
-//for this moment both int8, should be changed to float or double values.
-static int8_t eirp_values[103] = {9.9, 9.5, 9.2, 8.8, 8.5, 8.1, 7.8, 7.4, 7.1, 6.8, 6.4, 6.3, 6.1, 6.0, 5.8, 5.5, 5.1, 4.9, 4.8, 4.4, //20
-							4.0, 3.6, 3.2, 2.8, 2.3, 2.0, 1.9, 1.4, 0.4, 0.1, -0.3, -0.5, -0.8, -0.9, -1.1, -1.4, -1.5, -1.7, -2.1, //40
-                		   -2.2, -2.3, -2.5, -2.8, -2.9, -3.0, -3.1, -3.3, -3.5, -3.8, -4.0, -4.1, -4.6, -4.7, -5.3, -5.6, -5.9, //56
-                		   -6.0, -6.5, -6.8, -6.9, -7.1, -7.7, -7.8, -8.3, -8.7, -8.9, -9.9, -10.1, -11.4, -12.3, -13.3, -13.7, //72
-                		   -14.3, -14.9, -15.5, -15.6, -15.7, -16.2, -17.0, -17.8, -18.8, -19.0, -19.3,-19.8, -20.4, -21.0, -21.3, //87
-                		   -21.7, -22.5, -23.3, -24.3, -24.5, -25.3, -26.5, -27.9, -29.5, -29.6, -31.4, -33.8, -36.5,-38.3, -38.4, -62.7}; //103
-
-static int8_t eirp_reg_values[103]={0xC0, 0xC1, 0xC2, 0xC3, 0xC4, 0xC5, 0xC6, 0xC7, 0xC8, 0xC9, 0xCA, 0x80, 0xCB, 0x81, 0xCC, 0xCD, 0x84, 0xCE, 0x85, 0x86, //20
-							0x87, 0x88, 0x89, 0x8A, 0x8B, 0xCF,0x8C, 0x8D, 0x8E, 0x60, 0x51, 0x61, 0x40, 0x52, 0x3, 0x3E, 0x53, 0x3D, 0x3C, 0x54, //40
-							0x64, 0x3B, 0x55, 0x65, 0x2F, 0x3A, 0x56, 0x66, 0x39, 0x57, 0x67, 0x8F, 0x2C, 0x2B, 0x37, 0x6A, 0x2A, 0x6B, 0x36, 0x29,//60
-							0x6C, 0x6D, 0x28, 0x35, 0x27, 0x6E, 0x26, 0x34, 0x25, 0x33, 0x24, 0x1F, 0x1E, 0x1D, 0x6F, 0x23, 0x32, 0x1B, 0x1A, 0x19,//80
-							0x18, 0x22, 0xF, 0x17, 0xD, 0xC, 0x31, 0xB, 0x15, 0x9, 0x14, 0x21, 0x7, 0x13, 0x5, 0x4, 0x12, 0x3, 0x11, 0x1, 0x10, 0x30, 0x0}; //103
-/*
+ /*
  * Phy implementation functions
  */
 void phy_init(void)
@@ -678,15 +667,25 @@ void set_timeout(uint16_t timeout)
 
 void set_eirp(int8_t eirp)
 {
+	int8_t eirp_index = 0;
 	uint8_t i;
-	for( i = 0; i < sizeof(eirp_values); i++ )
+	uint8_t  pa_table[8];
+
+	if (eirp >= 10)
 	{
-		if (eirp >= eirp_values[i]) //round the given eirp to a lower possible value
-		{
-			WriteSinglePATable(eirp_reg_values[i]);
-			break;
-		}
+		eirp_index = 45;
+	} else if (eirp > -35) {
+		eirp_index = eirp + 35;
 	}
+
+	 for(i=7; (i>=0) && (eirp_index>=0); i--, eirp_index-=3) {
+		 pa_table[i] = eirp_values[eirp_index];
+	 }
+
+	 WriteBurstPATable(&pa_table[i], (uint8_t)(8-i));
+
+	 WriteSingleReg(RADIO_FREND0_LODIV_BUF_CURRENT_TX(1) | RADIO_FREND0_PA_POWER((uint8_t)(7-i)));
+
 }
 
 int16_t calculate_rssi(int8_t rssi_raw)
