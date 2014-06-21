@@ -20,6 +20,8 @@
 #include "../hal/crc.h"
 #include "../framework/log.h"
 #include <string.h>
+#include <stdio.h>
+#include <stdlib.h>
 
 static dll_rx_callback_t dll_rx_callback;
 static dll_tx_callback_t dll_tx_callback;
@@ -38,6 +40,13 @@ uint16_t timestamp;
 uint8_t timeout_ca; 	// T_ca
 
 Dll_State_Enum dll_state;
+
+static uint16_t current__t_ca = 0;
+static const uint8_t current__t_g = 5;
+static uint16_t init_t_ca = 400;
+static uint16_t last_ca = 0;
+
+static Dll_CSMA_CA_Type csma_ca_type = DllCsmaCaAind;
 
 
 //Scan parameters
@@ -151,6 +160,7 @@ static void rx_callback(phy_rx_data_t* res)
 	// 1. CRC Validation
 	// 2. Subnet filtering
 	// 3. Link quality assesment
+	// 4. target address?
 
 	uint16_t crc = crc_calculate(res->data, res->length - 2);
 	if (memcmp((uint8_t*) &(res->data[res->length - 2]), (uint8_t*) &crc, 2) != 0)
@@ -173,9 +183,6 @@ static void rx_callback(phy_rx_data_t* res)
 
 	//Todo: implement link quality assement
 
-
-	//Todo: work further on rx callback
-
 	// parse packet
 	dll_res.rssi = res->rssi;
 	dll_res.lqi = res->lqi;
@@ -190,11 +197,31 @@ static void rx_callback(phy_rx_data_t* res)
 		frame->target_address = &res->data[3];
 		if (frame->control & 0x40) // VID
 		{
+			if (memcmp(frame->target_address, &virtual_id, 2) == 0)
+			{
+				#ifdef LOG_DLL_ENABLED
+				log_print_stack_string(LOG_DLL, "DLL this device is not the target");
+				#endif
+				scan_next(); // how to reïnitiate scan  PHY should stay in RX
+
+				return;
+			}
+
 			frame->payload = &res->data[6];
 			frame->payload_length = frame->length - 8;
 		}
 		else // UID
 		{
+			if (memcmp(frame->target_address, &virtual_id, 8) == 0)
+			{
+				#ifdef LOG_DLL_ENABLED
+				log_print_stack_string(LOG_DLL, "DLL this device is not the target");
+				#endif
+				scan_next(); // how to reïnitiate scan  PHY should stay in RX
+
+				return;
+			}
+
 			frame->payload = &res->data[12];
 			frame->payload_length = frame->length - 14;
 		}
@@ -398,11 +425,13 @@ static void dll_cca2()
 	bool cca2 = phy_cca(current_phy_cfg->spectrum_id, current_phy_cfg->sync_word_class);;
 	if (!cca2)
 	{
-		dll_tx_callback(DLLTxResultCCA2Fail);
+		dll_initiate_csma_ca();
+		//dll_tx_callback(DLLTxResultCCA2Fail);
 		return;
 	}
 
-	dll_tx_callback(DLLTxResultCCAOK);
+	dll_tx_frame();
+	//dll_tx_callback(DLLTxResultCCAOK);
 }
 
 void dll_tx_frame()
@@ -425,7 +454,7 @@ void dll_csma(bool enabled)
 
 	if (!cca1)
 	{
-		dll_tx_callback(DLLTxResultCCA1Fail);
+		dll_initiate_csma_ca();//dll_tx_callback(DLLTxResultCCA1Fail);
 		return;
 	}
 
@@ -511,3 +540,160 @@ void dll_create_frame(uint8_t* data, uint8_t length, uint8_t* target_address, ui
 	uint16_t crc16 = crc_calculate(frame_data, frame_tx_cfg.length - 2);
 	memcpy(&frame_data[frame_tx_cfg.length - 2], &crc16, 2);
 }
+
+
+void dll_set_initial_t_ca(uint16_t t_ca)
+{
+	init_t_ca = t_ca;
+}
+
+
+/*! \brief Sets the type of CSMA CA
+ *
+ *  Sets the type of CSMA CA, options are AIND, RAIND and RIGD
+ *
+ *  \todo implement RAIND
+ *
+ *  \param type The CSMA CA Algorithm to be used
+ */
+void dll_set_csma_ca(Dll_CSMA_CA_Type type)
+{
+	csma_ca_type = type;
+}
+
+static void dll_aind_ccp_process()
+{
+	uint16_t time_since_last_ca = timer_get_counter_value() - last_ca;
+	if (current__t_ca < time_since_last_ca)
+	{
+		#ifdef LOG_TRANS_ENABLED
+		log_print_stack_string(LOG_TRANS, "AIND: Failed");
+		#endif
+		dll_tx_callback(DLLTxResultCAFail);
+		return;
+	}
+
+	current__t_ca -= time_since_last_ca;
+
+	last_ca = timer_get_counter_value();
+	dll_csma(true);
+}
+
+static void final_rigd() {
+	 dll_csma(true);
+}
+
+static void t_ca_timeout_rigd() {
+	dll_rigd_ccp(false);
+}
+
+static void dll_initiate_csma_ca()
+{
+	current__t_ca = init_t_ca;
+
+	switch (csma_ca_type)
+	{
+	case DllCsmaCaAind:
+		dll_aind_ccp(true);
+		break;
+	case DllCsmaCaRaind:
+		//break;
+	case DllCsmaCaRigd:
+		dll_rigd_ccp(false);
+		break;
+	}
+}
+
+static void dll_process_csma_ca()
+{
+	switch (csma_ca_type)
+	{
+	case DllCsmaCaAind:
+		dll_aind_ccp(false);
+		break;
+	case DllCsmaCaRaind:
+		break;
+	case DllCsmaCaRigd:
+		dll_rigd_ccp(true);
+		break;
+	}
+}
+
+
+
+/*! \brief Transport Layer CSMA-CA Congestion Control Process according to the Adaptive Increase No Division (AIND) algorithm
+ *
+ *  The Congentstion Control Process acccording to the AIND algorithm
+ *  AIND CSMA-CA is a process where ad-hoc slotting takes place, the insertion happens at the beginning of the
+ *	slot, and the slot duration is equal (approximately) to the duration of the transmission being queued.
+ *
+ *	\todo Calculate wait duration
+ *
+ *  \param spectrum_id The Spectrum ID used for the CCA
+ *  \param init_status Flag to indicate if the process needs to be initiated.
+ */
+void dll_aind_ccp(bool init_status)
+{
+	timer_event event;
+
+	// Initialisation of the parameters, only for new packets
+	if (init_status) {
+		last_ca = timer_get_counter_value();
+		dll_aind_ccp_process();
+	} else {
+		// wait for transmission duration
+		event.next_event = 5; // todo: calculate read transmission duration
+		event.f = &dll_aind_ccp_process;
+		timer_add_event(&event);
+		return;
+	}
+}
+
+/*! \brief Transport Layer CSMA-CA Congestion Control Process according to the Random Increase Geometric Division (RIGD) algorithm
+ *
+ *  The Congentstion Control Process acccording to the RIGD algorithm
+ *  RIGD CA is a process where ad-hoc slotting takes place, the slot insertion is random, and the slot duration decays
+ *	by the model (TCA0)(1 / 2(n+1)), where n >= 0 and TCA0 is the duration of the timeout for all slots.
+ *
+ *
+ *  \param spectrum_id The Spectrum ID used for the CCA
+ *  \param wait_for_t_ca_timeout Flag to indicate if the process needs to wait for a Tca timeout.
+ */
+void dll_rigd_ccp(bool wait_for_t_ca_timeout){
+	timer_event event;
+
+	if (wait_for_t_ca_timeout)
+	{
+		uint16_t time_since_last_ca = timer_get_counter_value() - last_ca;
+		if (time_since_last_ca < current__t_ca)
+		{
+			event.next_event = current__t_ca - time_since_last_ca;
+			event.f = &t_ca_timeout_rigd;
+			timer_add_event(&event);
+			return;
+		}
+	}
+
+	current__t_ca = current__t_ca >> 1; // = % 2
+	if (current__t_ca > current__t_g) {
+		uint32_t n_time = rand();
+		n_time = (n_time * current__t_ca) >> 15; // Random Time before the CCA will be executed
+
+		#ifdef LOG_TRANS_ENABLED
+		log_print_stack_string(LOG_TRANS, "RIGD: Wait Random Time: %d", (uint16_t) n_time);
+		#endif
+
+		event.next_event = (uint16_t) n_time; // Wait random time (0 - new__t_ca)
+		event.f = &final_rigd;
+		last_ca = timer_get_counter_value();
+		timer_add_event(&event);
+	} else {
+		#ifdef LOG_TRANS_ENABLED
+		log_print_stack_string(LOG_TRANS, "RIGD: Failed");
+		#endif
+		dll_tx_callback(DLLTxResultCAFail);
+		return;
+	}
+}
+
+

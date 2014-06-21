@@ -57,12 +57,6 @@
 #include "../nwl/nwl.h"
 
 typedef enum {
-	TransCsmaCaAind,
-	TransCsmaCaRaind,
-	TransCsmaCaRigd
-} Trans_CSMA_CA_Type;
-
-typedef enum {
 	TransPacketSent,
 	TransPacketFail,
 	TransTCAFail
@@ -186,8 +180,6 @@ void trans_init();
 void trans_set_tx_callback(trans_tx_callback_t);
 void trans_set_query_rx_callback(trans_rx_query_callback_t);
 void trans_set_datastream_rx_callback(trans_rx_datastream_callback_t);
-void trans_set_initial_t_ca(uint16_t t_ca);
-void trans_set_csma_ca(Trans_CSMA_CA_Type type);
 
 
 void trans_tx_foreground_frame(uint8_t* data, uint8_t length, uint8_t subnet, uint8_t spectrum_id, int8_t tx_eirp);
@@ -200,16 +192,5 @@ void trans_tx_query(D7AQP_Command* command, uint8_t subnet, uint8_t spectrum_id,
 void trans_rx_datastream_start(uint8_t subnet, uint8_t spectrum_id);
 void trans_rx_query_start(uint8_t subnet, uint8_t spectrum_id);
 void trans_rx_stop();
-
-static void trans_initiate_csma_ca(uint8_t spectrum_id);
-static void trans_process_csma_ca();
-//AIND
-void trans_aind_ccp(bool init_status);
-static void trans_aind_ccp_process();
-//RIGD
-void trans_rigd_ccp(bool wait_for_t_ca_timeout);
-static void t_ca_timeout_rigd();
-static void final_rigd();
-
 
 #endif /* TRANS_H_ */
