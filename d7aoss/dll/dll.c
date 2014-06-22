@@ -514,31 +514,33 @@ void dll_ca(uint8_t t_ca)
 }
 
 /** \copydoc dll_create_frame */
-void dll_create_frame(uint8_t* data, uint8_t length, uint8_t* target_address, uint8_t address_length, dll_tx_cfg_t* params)
+void dll_create_frame(uint8_t* target_address, uint8_t address_length, dll_tx_cfg_t* params)
 {
 	//TODO: check if in idle state
 	frame_tx_cfg.spectrum_id = params->spectrum_id; // TODO check valid (should be done in the upper layer of stack)
 	frame_tx_cfg.eirp = params->eirp;
 	frame_tx_cfg.sync_word_class = (params->frame_type == FrameTypeForegroundFrame) ? 1 : 0;
-	frame_tx_cfg.length = length + 5 + address_length;
+	frame_tx_cfg.length = tx_queue.length + 5 + address_length;
 	current_phy_cfg = &frame_tx_cfg;
 
-	frame_data[0] = frame_tx_cfg.length;	// Lenght
-	frame_data[1] = params->subnet; 				// Subnet
-	frame_data[2] = 0x3F & (params->eirp + 32);
+	queue_create_header_space(&tx_queue, 3 + address_length);
+
+	tx_queue.front[0] = frame_tx_cfg.length;	// Lenght
+	tx_queue.front[1] = params->subnet; 				// Subnet
+	tx_queue.front[2] = 0x3F & (params->eirp + 32);
 	if (address_length == 2)
 	{
-		frame_data[2] |= 0xC0;
+		tx_queue.front[2] |= 0xC0;
 	} else if (address_length == 8)
 	{
-		frame_data[2] |= 0x80;
+		tx_queue.front[2] |= 0x80;
 	}
 
-	memcpy(&frame_data[3], target_address, address_length);
-	memcpy(&frame_data[3 + address_length], data, length);
+	memcpy(&tx_queue.front[3], target_address, address_length);
 
-	uint16_t crc16 = crc_calculate(frame_data, frame_tx_cfg.length - 2);
-	memcpy(&frame_data[frame_tx_cfg.length - 2], &crc16, 2);
+	uint16_t crc16 = crc_calculate(tx_queue.front, frame_tx_cfg.length - 2);
+	queue_push_u8(&tx_queue, crc16 >> 8);
+	queue_push_u8(&tx_queue, crc16 & 0xFF);
 }
 
 

@@ -24,11 +24,13 @@
 #include <stdint.h>
 #include <string.h>
 
+#include "../../hal/system.h"
 #include "../../phy/phy.h"
 #include "../../phy/fec.h"
 #include "cc430_phy.h"
 #include "cc430_registers.h"
 #include "../../framework/log.h"
+#include "../../framework/queue.h"
 
 #include "rf1a.h"
 
@@ -40,9 +42,8 @@ extern InterruptHandler interrupt_table[34];
 
 RadioState state;
 
-uint8_t buffer[100]; // TODO: get rid of fixed buffer
 uint8_t packetLength;
-uint8_t* bufferPosition;
+//uint8_t* bufferPosition;
 uint16_t remainingBytes;
 
 bool fec;
@@ -62,6 +63,60 @@ phy_tx_cfg_t last_tx_cfg;
 
 // from -35 to 10 dbm in steps of +- 1
 static int8_t eirp_values[46] = {0x1,0x2,0x2,0x3,0x3,0x4,0x4,0x5,0x6,0x6,0x7,0x8,0x9,0xA,0xC,0xE,0xF,0x19,0x1A,0x1B,0x1D,0x1E,0x24,0x33,0x25,0x34,0x26,0x28,0x29,0x2A,0x2B,0x2D,0x2F,0x3C,0x3F,0x60,0x8D,0xCF,0x8A,0x87,0x84,0x81,0xC8,0xC5,0xC2,0xC0};
+
+
+// *****************************************************************************
+// @fn          ReadBurstRegToQueue
+// @brief       Read multiple bytes of  the radio registers and put it in a queu
+// @param       unsigned char addr      Beginning address of burst read
+// @param       queue_t *buffer   		The target queue
+// @param       unsigned char count     Number of bytes to be read
+// @return      none
+// *****************************************************************************
+static void ReadBurstRegToQueue(uint8_t addr, queue_t* buffer, uint8_t count)
+{
+	uint8_t i;
+	uint16_t int_state;
+
+	ENTER_CRITICAL_SECTION(int_state);
+
+	RADIO_INST_READY_WAIT();
+	RF1AINSTR1B = RF_REGRD | addr;
+
+	for (i = 0; i < (count-1); i++) {
+		RADIO_DOUT_READY_WAIT();
+		queue_push_u8(buffer, RF1ADOUT1B);
+	}
+	queue_push_u8(buffer, RF1ADOUT1B);
+
+	EXIT_CRITICAL_SECTION(int_state);
+}
+
+// *****************************************************************************
+// @fn          WriteBurstRegFromQueue
+// @brief       Write multiple bytes to the radio registers from a queue
+// @param       unsigned char addr      Beginning address of burst write
+// @param       unsigned char *buffer   Pointer to data table
+// @param       unsigned char count     Number of bytes to be written
+// @return      none
+// *****************************************************************************
+void WriteBurstRegFromQueue(uint8_t addr, queue_t* buffer, uint8_t count)
+{
+	uint8_t i;
+	uint16_t int_state;
+
+	ENTER_CRITICAL_SECTION(int_state);
+
+	RADIO_INST_READY_WAIT();
+	RF1AINSTRW = ((RF_REGWR | addr) << 8) + queue_pop_u8(buffer);
+
+	for (i = 1; i < count; i++) {
+		RADIO_DIN_READY_WAIT();
+		RF1ADINB = queue_pop_u8(buffer);
+	}
+
+	EXIT_CRITICAL_SECTION(int_state);
+}
 
  /*
  * Phy implementation functions
@@ -158,7 +213,7 @@ extern bool phy_tx_data(phy_tx_cfg_t* cfg)
 	#endif
 
 		//Set buffer position
-		bufferPosition = cfg->data;
+		//bufferPosition = cfg->data;
 
 		//Configure length settings
 		set_length_infinite(false);
@@ -288,7 +343,8 @@ bool phy_rx(phy_rx_cfg_t* cfg)
 		set_data_whitening(true);
 
 		//Set buffer position
-		bufferPosition = buffer;
+		//bufferPosition = buffer;
+		queue_clear(&rx_queue);
 
 		//Configure length settings and txfifo threshold
 		set_length_infinite(false);
@@ -423,9 +479,8 @@ void tx_data_isr()
 			txBytes = remainingBytes;
 
 		//Write data to tx fifo
-		WriteBurstReg(RF_TXFIFOWR, bufferPosition, txBytes);
+		WriteBurstRegFromQueue(RF_TXFIFOWR, &tx_queue, txBytes);
 		remainingBytes -= txBytes;
-		bufferPosition += txBytes;
 #ifdef D7_PHY_USE_FEC
 	}
 #endif
@@ -479,8 +534,7 @@ void rx_data_isr()
 		WriteSingleReg(PKTLEN, packetLength);
 		WriteSingleReg(FIFOTHR, RADIO_FIFOTHR_FIFO_THR_17_48);
 		remainingBytes = packetLength - 1;
-		bufferPosition[0] = packetLength;
-		bufferPosition++;
+		queue_push_u8(&rx_queue, packetLength);
 		rxBytes--;
 #ifdef LOG_PHY_ENABLED
 		log_print_stack_string(LOG_PHY, "rx_data_isr getting packetLength");
@@ -495,9 +549,8 @@ void rx_data_isr()
     }
 
     //Read data from buffer
-	ReadBurstReg(RXFIFO, bufferPosition, rxBytes);
+	ReadBurstRegToQueue(RXFIFO, &rx_queue, rxBytes);
 	remainingBytes -= rxBytes;
-    bufferPosition += rxBytes;
 #ifdef D7_PHY_USE_FEC
 	}
 #endif
@@ -507,8 +560,8 @@ void rx_data_isr()
     {
     	rx_data.rssi = calculate_rssi(ReadSingleReg(RSSI));
     	rx_data.lqi = ReadSingleReg(LQI);
-		rx_data.length = *buffer;
-		rx_data.data = buffer;
+		rx_data.length = *rx_queue.front;
+		rx_data.data = rx_queue.front;
 		#ifdef LOG_PHY_ENABLED
 		log_print_stack_string(LOG_PHY, "rx_data_isr packet received");
 		log_phy_rx_res(&rx_data);

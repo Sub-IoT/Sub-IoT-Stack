@@ -22,7 +22,7 @@ void timer_init()
 {
     hal_timer_init();
 
-    queue_init(&event_queue, (uint8_t*)&event_array, sizeof(event_array));
+    queue_init(&event_queue, (uint8_t*)&event_array, sizeof(event_array), sizeof(timer_event));
     started = false;
 }
 
@@ -40,7 +40,7 @@ bool timer_insert_value_in_queue(timer_event* event)
 
 	while (position < event_queue.length)
 	{
-		timer_event *temp_event = (timer_event*) queue_read_value(&event_queue, position, sizeof(timer_event));
+		timer_event *temp_event = (timer_event*) queue_read_value(&event_queue, position);
 		if ((temp_event->next_event - current_timer)  > next_event)
 		{
 			if (position == 0)
@@ -48,7 +48,7 @@ bool timer_insert_value_in_queue(timer_event* event)
 				hal_timer_disable_interrupt();
 				started = false;
 			}
-			queue_insert_value(&event_queue, (void*) event, position, sizeof(timer_event));
+			queue_insert_value(&event_queue, (void*) event, position);
 			position = 0;
 			break;
 		}
@@ -57,7 +57,7 @@ bool timer_insert_value_in_queue(timer_event* event)
 
 	if (position == event_queue.length)
 	{
-		if (!queue_push_value(&event_queue, (void*) event, sizeof(timer_event)))
+		if (!queue_push_value(&event_queue, (void*) event))
 			return false;
 	}
 
@@ -167,7 +167,7 @@ void timer_completed()
 	log_print_stack_string(LOG_FWK, "timer_completed: %d.%d", current_timer/1000,current_timer%1000);
 	#endif
 
-    timer_event* event = (timer_event*) queue_pop_value(&event_queue, sizeof(timer_event));
+    timer_event* event = (timer_event*) queue_pop_value(&event_queue);
 
     bool directly_fire_new_event = false;
 

@@ -150,14 +150,13 @@ static void final_rigd();
 /*! \brief Create a frame (Data Link Layer)
  *
  *  Creates a DLL Frame based on the parameters, optional target address and data.
+ *  The payload should be added to the TX Queue prior to calling this method
  *
- *  \param data The payload of the frame
- *  \param length The lenght of the payload (max 250 bytes according DASH7 spec, but max can be lower depending on implementation).
  *  \param target_address Optional target address, there is no target address on broadcast messages.
  *  \param address_length Lenght in bytes of the target address. 0 (broadcast message), 2 (VID), or 8 (UID).
  *  \param params the TX configuration (subnet, spectrum ID, EIRP, frame type (BF or FF)).
  */
-void dll_create_frame(uint8_t* data, uint8_t length, uint8_t* target_address, uint8_t address_length, dll_tx_cfg_t* params);
+void dll_create_frame(uint8_t* target_address, uint8_t address_length, dll_tx_cfg_t* params);
 void dll_tx_frame();
 
 #endif /* DLL_H_ */

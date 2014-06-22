@@ -24,8 +24,6 @@
 static nwl_rx_callback_t nwl_rx_callback;
 static nwl_tx_callback_t nwl_tx_callback;
 
-static uint8_t dll_data[100]; //TODO: get rid of fixed array
-
 nwl_rx_res_t res;
 static nwl_background_frame_t bf;
 //static nwl_ff_D7ADP_t d7adp_frame;
@@ -45,8 +43,8 @@ static void dll_rx_callback(dll_rx_res_t* result)
 
 	if (result->frame_type == FrameTypeBackgroundFrame)
 	{
-		bf.tx_eirp = 0;
-		bf.subnet = result->frame->subnet;
+		//bf.tx_eirp = 0;
+		//bf.subnet = result->frame->subnet;
 		bf.bpid = result->frame->payload[0];
 		memcpy((void*) bf.protocol_data,(void*) &(result->frame->payload[1]), 2);
 
@@ -86,7 +84,15 @@ void nwl_set_rx_callback(nwl_rx_callback_t cb)
 	nwl_rx_callback = cb;
 }
 
-void nwl_build_background_frame(nwl_background_frame_t* frame, uint8_t spectrum_id, int8_t tx_eirp, uint8_t subnet)
+/*! \brief Prepares the data link layer for a background frame  (Network Layer)
+ *
+ * 	Sets the headers for the background frame. The should be in the TX_Queue prior to calling this function.
+ *
+ *  \param uint8_t spectrum_id 	The channel on which to send the background frame.
+ *  \param uint8_t tx_eirp 		The send EIRP.
+ *  \param uint8_t subnet 		The subnet to of the background frame.
+ */
+static void nwl_build_background_frame(uint8_t spectrum_id, int8_t tx_eirp, uint8_t subnet)
 {
 	dll_tx_cfg_t dll_params;
 	dll_params.eirp = tx_eirp;
@@ -94,18 +100,23 @@ void nwl_build_background_frame(nwl_background_frame_t* frame, uint8_t spectrum_
 	dll_params.subnet = subnet;
 	dll_params.frame_type = FrameTypeBackgroundFrame;
 
-	dll_create_frame((uint8_t*) &(frame->bpid), 3, NULL, 0, &dll_params);
+	dll_create_frame(NULL, 0, &dll_params);
 }
 
-void nwl_build_advertising_protocol_data(uint8_t channel_id, uint16_t eta, int8_t tx_eirp, uint8_t subnet)
+/** \copydoc nwl_build_advertising_protocol_data */
+void nwl_build_advertising_protocol_data(uint16_t eta, uint8_t spectrum_id, int8_t tx_eirp, uint8_t subnet)
 {
-	nwl_background_frame_t frame;
-	frame.bpid = BPID_AdvP;
-	// change to MSB
-	frame.protocol_data[0] = eta >> 8;
-	frame.protocol_data[1] = eta & 0XFF;
+	queue_clear(&tx_queue);
 
-	nwl_build_background_frame(&frame, channel_id, tx_eirp, subnet);
+	// BPID
+	queue_push_u8(&tx_queue, BPID_AdvP);
+
+	// protocol data
+	// change to MSB
+	queue_push_u8(&tx_queue, eta >> 8);
+	queue_push_u8(&tx_queue, eta & 0XFF);
+
+	nwl_build_background_frame(spectrum_id, tx_eirp, subnet);
 }
 
 void nwl_build_network_protocol_data(uint8_t* data, uint8_t length, nwl_security* security, nwl_routing_header* routing, uint8_t subnet, uint8_t spectrum_id, int8_t tx_eirp, uint8_t dialog_id)
@@ -133,34 +144,31 @@ void nwl_build_network_protocol_data(uint8_t* data, uint8_t length, nwl_security
 		#endif
 	}
 
-	//dll_data[offset++] = length; // payload length;
-
-	memcpy(&dll_data[offset], data, length);
-
-	uint8_t dll_data_length = offset + length;
+	queue_clear(&tx_queue);
+	queue_push_u8_array(&tx_queue, data, length);
 
 	//TODO: assert dll_data_length < 255-7
-	dll_create_frame(dll_data, dll_data_length, NULL, 0, &dll_params);
+	dll_create_frame( NULL, 0, &dll_params);
 }
-
-void nwl_build_datastream_protocol_data(uint8_t* data, uint8_t length, nwl_security* security, uint8_t subnet, uint8_t spectrum_id, int8_t tx_eirp, uint8_t dialog_id)
-{
-	uint8_t offset = 0;
-
-	dll_tx_cfg_t dll_params;
-	dll_params.eirp = tx_eirp;
-	dll_params.spectrum_id = spectrum_id;
-	dll_params.subnet = subnet;
-	dll_params.frame_type = FrameTypeForegroundFrame;
-
-
-	memcpy(&dll_data[offset], data, length);
-
-	uint8_t dll_data_length = offset + length;
-
-	//TODO: assert dll_data_length < 255-7
-	dll_create_frame(dll_data, dll_data_length, NULL, 0, &dll_params);
-}
+//
+//void nwl_build_datastream_protocol_data(uint8_t* data, uint8_t length, nwl_security* security, uint8_t subnet, uint8_t spectrum_id, int8_t tx_eirp, uint8_t dialog_id)
+//{
+//	uint8_t offset = 0;
+//
+//	dll_tx_cfg_t dll_params;
+//	dll_params.eirp = tx_eirp;
+//	dll_params.spectrum_id = spectrum_id;
+//	dll_params.subnet = subnet;
+//	dll_params.frame_type = FrameTypeForegroundFrame;
+//
+//
+//	memcpy(&dll_data[offset], data, length);
+//
+//	uint8_t dll_data_length = offset + length;
+//
+//	//TODO: assert dll_data_length < 255-7
+//	dll_create_frame(dll_data, dll_data_length, NULL, 0, &dll_params);
+//}
 
 
 void nwl_rx_start(uint8_t subnet, uint8_t spectrum_id, Protocol_Type type)

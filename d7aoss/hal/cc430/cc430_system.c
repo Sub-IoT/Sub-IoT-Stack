@@ -106,7 +106,7 @@ void PMM_SetVCore (uint8_t level) {
     } while (actLevel != level);
 }
 
-void system_init()
+void system_init(uint8_t* tx_buffer, uint16_t tx_buffer_size, uint8_t* rx_buffer, uint16_t rx_buffer_size)
 {
 	system_watchdog_timer_stop();
 
@@ -132,6 +132,9 @@ void system_init()
     }
 
     system_get_unique_id(device_id);
+
+    queue_init_with_header(&tx_queue, tx_buffer, tx_buffer_size, 1, 30);
+    queue_init(&rx_queue, rx_buffer, rx_buffer_size, 1);
 }
 
 void clock_init(void)

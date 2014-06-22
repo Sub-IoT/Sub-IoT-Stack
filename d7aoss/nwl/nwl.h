@@ -30,10 +30,9 @@ typedef enum {
 
 
 typedef struct {
-	uint8_t tx_eirp;
-	uint8_t subnet;
 	uint8_t bpid;
-	uint8_t protocol_data[2];
+	uint8_t data_length;
+	uint8_t* protocol_data;
 } nwl_background_frame_t;
 
 typedef struct {
@@ -90,12 +89,22 @@ void nwl_set_rx_callback(nwl_rx_callback_t);
 
 
 // Background frames
-void nwl_build_advertising_protocol_data(uint8_t channel_id, uint16_t eta, int8_t tx_eirp, uint8_t subnet);
-//void nwl_tx_background_frame(nwl_background_frame_t* data, uint8_t spectrum_id);
+
+/*! \brief Builds a advertising protocol background frame  (Network Layer)
+ *
+ *  Creates a Background Frame for the advertising protocol
+ *
+ *
+ *  \param uint16_t eta 		Number of ticks which needs to be put in the data.
+ *  \param uint8_t spectrum_id 	The channel on which to send the background frame.
+ *  \param uint8_t tx_eirp 		The send EIRP.
+ *  \param uint8_t subnet 		The subnet to of the background frame.
+ */
+void nwl_build_advertising_protocol_data(uint16_t eta, uint8_t spectrum_id, int8_t tx_eirp, uint8_t subnet);
 
 // Foreground frames
 void nwl_build_network_protocol_data(uint8_t* data, uint8_t length, nwl_security* security, nwl_routing_header* routing, uint8_t subnet, uint8_t spectrum_id, int8_t tx_eirp, uint8_t dialog_id);
-void nwl_build_datastream_protocol_data(uint8_t* data, uint8_t length, nwl_security* security, uint8_t subnet, uint8_t spectrum_id, int8_t tx_eirp, uint8_t dialog_id);
+//void nwl_build_datastream_protocol_data(uint8_t* data, uint8_t length, nwl_security* security, uint8_t subnet, uint8_t spectrum_id, int8_t tx_eirp, uint8_t dialog_id);
 
 void nwl_rx_start(uint8_t subnet, uint8_t spectrum_id, Protocol_Type type);
 void nwl_rx_stop();

@@ -22,6 +22,7 @@
 #define __SYSTEM_H__
 
 #include "../types.h"
+#include "../framework/queue.h"
 
 #define ENTER_CRITICAL_SECTION(x)  	__disable_interrupt(); //st( x = __read_status_register(); __disable_interrupt(); )
 #define EXIT_CRITICAL_SECTION(x)    __enable_interrupt(); //__write_status_register(x)
@@ -48,8 +49,11 @@ extern uint8_t vCore_level;
 extern uint16_t target_clock_speed_kHz;
 extern uint8_t init_IO;
 
+queue_t tx_queue;
+queue_t rx_queue;
+
 void PMM_SetVCore (uint8_t level);
-void system_init();
+void system_init(uint8_t* tx_buffer, uint16_t tx_buffer_size, uint8_t* rx_buffer, uint16_t rx_buffer_size);
 
 void system_watchdog_timer_stop();
 void system_watchdog_timer_start();
