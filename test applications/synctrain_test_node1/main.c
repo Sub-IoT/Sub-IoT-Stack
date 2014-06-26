@@ -1,13 +1,13 @@
 /*
  *  Created on: Jan 23, 2013
  *  Authors:
- * 		maarten.weyn@artesis.be
+ * 		maarten.weyn@uantwerpen.be
  */
 
 
 #include <string.h>
 
-#include <trans/trans.h>
+#include <nwl/nwl.h>
 
 #include <dll/dll.h>
 
@@ -37,6 +37,7 @@
 //static u8 interrupt_flags = 0;
 //static u8 tx = 0;
 
+uint8_t buffer[128];
 uint8_t data[32];
 uint16_t eta;
 uint8_t dataLength = 0;
@@ -76,7 +77,7 @@ void start_tx()
 	eta = 1000;
 
 	//trans_tx_background_frame((uint8_t*) &counter, 0xFF, SEND_CHANNEL, 10);
-	nwl_build_advertising_protocol_data(SEND_CHANNEL, eta, 10, 0xFF);
+	nwl_build_advertising_protocol_data(eta, SEND_CHANNEL, 10, 0xFF);
 	dll_tx_frame();
 	//log_print_string("BF");
 	//log_print_data((uint8_t*) &sync_position, 1);
@@ -98,7 +99,7 @@ void start_tx_sync()
 		led_on(LED_ORANGE);
 		#endif
 
-		trans_tx_foreground_frame(data, dataLength, 0xFF, SEND_CHANNEL, 10);
+		//trans_tx_foreground_frame(data, dataLength, 0xFF, SEND_CHANNEL, 10);
 
 		//log_print_string("tx_event added");
 		//log_print_string("FF");
@@ -119,7 +120,7 @@ void start_tx_sync()
 		timer_add_event(&sync_event);
 	}
 }
-
+/*
 void tx_callback(Trans_Tx_Result result)
 {
 	system_watchdog_timer_reset();
@@ -140,10 +141,28 @@ void tx_callback(Trans_Tx_Result result)
 	//tx = 0;
 	//timer_add_event(&event);
 }
+*/
+
+void tx_callback(Dll_Tx_Result result)
+{
+#ifdef USE_LEDS
+	if(result == DLLTxResultOK)
+	{
+
+		led_off(LED_ORANGE);
+		log_print_string("TX OK");
+	}
+	else
+	{
+		led_toggle(LED_RED);
+		log_print_string("TX CCA FAIL");
+	}
+#endif
+}
 
 
 int main(void) {
-	system_init();
+	system_init(buffer, 128, buffer, 128);
 
 
 	data[0] = 1;
@@ -152,8 +171,9 @@ int main(void) {
 	dataLength = 3;
 
 
-	trans_init();
-	trans_set_tx_callback(&tx_callback);
+	nwl_init();
+	//trans_set_tx_callback(&tx_callback);
+	nwl_set_tx_callback(tx_callback);
 
 	event.next_event = SEND_INTERVAL_MS;
 	event.f = &start_tx;

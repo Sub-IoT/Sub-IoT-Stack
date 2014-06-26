@@ -119,6 +119,23 @@ void nwl_build_advertising_protocol_data(uint16_t eta, uint8_t spectrum_id, int8
 	nwl_build_background_frame(spectrum_id, tx_eirp, subnet);
 }
 
+/** \copydoc nwl_build_beaconprotocol_data */
+void nwl_build_beaconprotocol_data(uint8_t spectrum_id, int8_t tx_eirp, uint8_t subnet)
+{
+	queue_clear(&tx_queue);
+
+	// BPID
+	queue_push_u8(&tx_queue, BPID_BeaconP);
+
+	// protocol data
+	// change to MSB
+	queue_push_u8(&tx_queue, virtual_id >> 8);
+	queue_push_u8(&tx_queue, virtual_id & 0XFF);
+
+	nwl_build_background_frame(spectrum_id, tx_eirp, subnet);
+}
+
+
 void nwl_build_network_protocol_data(uint8_t* data, uint8_t length, nwl_security* security, nwl_routing_header* routing, uint8_t subnet, uint8_t spectrum_id, int8_t tx_eirp, uint8_t dialog_id)
 {
 	uint8_t offset = 0;
