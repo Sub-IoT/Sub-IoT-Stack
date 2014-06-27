@@ -136,15 +136,14 @@ void dll_channel_scan_series(dll_channel_scan_series_t*);
 void dll_set_initial_t_ca(uint16_t t_ca);
 void dll_set_csma_ca(Dll_CSMA_CA_Type type);
 
-static void dll_initiate_csma_ca();
-static void dll_process_csma_ca();
+void dll_initiate_csma_ca();
+//static void dll_process_csma_ca();
 //AIND
 void dll_aind_ccp(bool init_status);
-static void dll_aind_ccp_process();
 //RIGD
 void dll_rigd_ccp(bool wait_for_t_ca_timeout);
-static void t_ca_timeout_rigd();
-static void final_rigd();
+
+
 
 
 /*! \brief Create a frame (Data Link Layer)

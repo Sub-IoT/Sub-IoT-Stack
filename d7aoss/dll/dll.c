@@ -64,6 +64,10 @@ phy_tx_cfg_t frame_tx_cfg = {
             frame_data	//Packet data
 };
 
+static void dll_aind_ccp_process();
+static void t_ca_timeout_rigd();
+static void final_rigd();
+
 /*! \brief Check the frame subnet with the device subnet
  *
  *
@@ -589,7 +593,7 @@ static void t_ca_timeout_rigd() {
 	dll_rigd_ccp(false);
 }
 
-static void dll_initiate_csma_ca()
+void dll_initiate_csma_ca()
 {
 	current__t_ca = init_t_ca;
 
@@ -605,21 +609,21 @@ static void dll_initiate_csma_ca()
 		break;
 	}
 }
-
-static void dll_process_csma_ca()
-{
-	switch (csma_ca_type)
-	{
-	case DllCsmaCaAind:
-		dll_aind_ccp(false);
-		break;
-	case DllCsmaCaRaind:
-		break;
-	case DllCsmaCaRigd:
-		dll_rigd_ccp(true);
-		break;
-	}
-}
+//
+//static void dll_process_csma_ca()
+//{
+//	switch (csma_ca_type)
+//	{
+//	case DllCsmaCaAind:
+//		dll_aind_ccp(false);
+//		break;
+//	case DllCsmaCaRaind:
+//		break;
+//	case DllCsmaCaRigd:
+//		dll_rigd_ccp(true);
+//		break;
+//	}
+//}
 
 
 

@@ -40,22 +40,66 @@ static void dll_rx_callback(dll_rx_res_t* result)
 		return;
 
 	res.dll_rx_res = result;
+	dll_frame_t* frame = (dll_frame_t*) result->frame;
 
 	if (result->frame_type == FrameTypeBackgroundFrame)
 	{
 		bf.bpid = result->frame->payload[0];
 		bf.data_length = 2; // currently both types are lenght 2
-		bf.protocol_data = &(result->frame->payload[1]);
+		bf.protocol_data = &(frame->payload[1]);
 
 		res.data = &bf;
-		res.protocol_type = ProtocolTypeBackgroundProtocol;
+
+		switch (bf.bpid)
+		{
+		case 0xF0:
+			res.protocol_type = ProtocolTypeAdvertisementProtocol;
+			break;
+		case 0xF1:
+			res.protocol_type = ProtocolTypeBeaconProtocol;
+			break;
+		}
 	} else
 	{
-		d7anp_frame.d7anls_auth_data = NULL;
+
+		d7anp_frame.control = frame->payload[0];
+
 		d7anp_frame.d7anls_header = NULL;
-		d7anp_frame.d7anp_routing_header = NULL;
-		d7anp_frame.payload_length = result->frame->payload_length;
-		d7anp_frame.payload = &(result->frame->payload[0]);
+
+		switch(d7anp_frame.control & NWL_CONTRL_SRC_FULL)
+		{
+			case NWL_CONTRL_SRC_VID:
+				d7anp_frame.source_access_templ_length = 2;
+				break;
+			case NWL_CONTRL_SRC_UID:
+				d7anp_frame.source_access_templ_length = 8;
+				break;
+			case NWL_CONTRL_SRC_FULL:
+			{
+				nwl_full_access_template* access = (nwl_full_access_template*) &(frame->payload[1]);
+				if (access->control & NWL_ACCESS_TEMPL_CTRL_VID)
+					d7anp_frame.source_access_templ_length = 4;
+				else
+					d7anp_frame.source_access_templ_length = 10;
+
+				d7anp_frame.source_access_templ_length += access->control & 0x0F;
+				break;
+			}
+			default:
+				d7anp_frame.source_access_templ_length = 0;
+		}
+
+		if (d7anp_frame.source_access_templ_length == 0)
+		{
+			d7anp_frame.d7anp_source_access_templ = NULL;
+		} else {
+			d7anp_frame.d7anp_source_access_templ = &(frame->payload[1]);
+		}
+
+		d7anp_frame.d7anls_auth_data = NULL;
+
+		d7anp_frame.payload_length = frame->payload_length - (1 + d7anp_frame.source_access_templ_length);
+		d7anp_frame.payload = &(frame->payload[1 +  d7anp_frame.source_access_templ_length]);
 
 		res.data = &d7anp_frame;
 		res.protocol_type = ProtocolTypeNetworkProtocol;
@@ -134,7 +178,7 @@ void nwl_build_beaconprotocol_data(uint8_t spectrum_id, int8_t tx_eirp, uint8_t 
 
 /** \copydoc nwl_build_network_protocol_data */
 
-void nwl_build_network_protocol_data(uint8_t control, nwl_security* security, void* source_access, uint8_t* target_address, uint8_t target_address_lenght, uint8_t subnet, uint8_t spectrum_id, int8_t tx_eirp, uint8_t dialog_id)
+void nwl_build_network_protocol_data(uint8_t control, nwl_security* security, nwl_full_access_template* source_access, uint8_t* target_address, uint8_t target_address_lenght, uint8_t subnet, uint8_t spectrum_id, int8_t tx_eirp)
 {
 	uint8_t access_tmpl_length = 0;
 
@@ -163,7 +207,7 @@ void nwl_build_network_protocol_data(uint8_t control, nwl_security* security, vo
 		case NWL_CONTRL_SRC_VID:
 			access_tmpl_length = 2;
 			break;
-		case NWL_CONTRL_SRC_VID:
+		case NWL_CONTRL_SRC_UID:
 			access_tmpl_length = 8;
 			break;
 		case NWL_CONTRL_SRC_FULL:
@@ -174,7 +218,7 @@ void nwl_build_network_protocol_data(uint8_t control, nwl_security* security, vo
 			else
 				access_tmpl_length = 10;
 
-			access_tmpl_length += access->control & OxOF;
+			access_tmpl_length += (access->control & 0x0F);
 			break;
 		}
 	}
@@ -183,10 +227,21 @@ void nwl_build_network_protocol_data(uint8_t control, nwl_security* security, vo
 
 	tx_queue.front[0] = control;
 
-	if (access_tmpl_length > 0)
+	switch(control & NWL_CONTRL_SRC_FULL)
 	{
-		memcpy(&tx_queue.front[1], source_access, access_tmpl_length);
+		case NWL_CONTRL_SRC_VID:
+			memcpy(&tx_queue.front[1], virtual_id, access_tmpl_length);
+			break;
+		case NWL_CONTRL_SRC_UID:
+			memcpy(&tx_queue.front[1], device_id, access_tmpl_length);
+			break;
+		case NWL_CONTRL_SRC_FULL:
+		{
+			memcpy(&tx_queue.front[1], source_access, access_tmpl_length);
+			break;
+		}
 	}
+
 
 	dll_create_frame(target_address, target_address_lenght, &dll_params);
 }
@@ -223,7 +278,7 @@ void nwl_rx_start(uint8_t subnet, uint8_t spectrum_id, Protocol_Type type)
 
 	//scan_cfg.spectrum_id = spectrum_id;
 
-	if (type == ProtocolTypeBackgroundProtocol)
+	if (type != ProtocolTypeNetworkProtocol)
 		scan_cfg.scan_type = FrameTypeBackgroundFrame;
 
 	dll_channel_scan_series_t scan_series_cfg;

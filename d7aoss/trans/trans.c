@@ -17,15 +17,13 @@
 
 
 #include "trans.h"
+#include "../hal/system.h"
 #include "../framework/timer.h"
 #include "../framework/log.h"
 #include <string.h>
 
-
-static uint8_t dialogid = 0;
-
 static trans_tx_callback_t trans_tx_callback;
-static trans_rx_datastream_callback_t trans_rx_datastream_callback;
+//static trans_rx_datastream_callback_t trans_rx_datastream_callback;
 static trans_rx_query_callback_t trans_rx_query_callback;
 
 static Trans_Rx_Query_Result query_result;
@@ -53,11 +51,7 @@ static void control_tx_callback(Dll_Tx_Result Result)
 
 static void nwl_rx_callback(nwl_rx_res_t* result)
 {
-	if (result->protocol_type == ProtocolTypeBackgroundProtocol)
-	{
-		// Should this be here?
-	}
-	else if (result->protocol_type == ProtocolTypeNetworkProtocol)
+	if (result->protocol_type == ProtocolTypeNetworkProtocol)
 	{
 		query_result.nwl_rx_res = result;
 
@@ -127,7 +121,11 @@ static void nwl_rx_callback(nwl_rx_res_t* result)
 		}
 
 		trans_rx_query_callback(&query_result);
+	} else {
+		// TODO: handle BF
 	}
+
+	/*
 	else if (result->protocol_type == ProtocolTypeDatastreamProtocol)
 	{
 		Trans_Rx_Datastream_Result datastream_result;
@@ -139,6 +137,7 @@ static void nwl_rx_callback(nwl_rx_res_t* result)
 
 		trans_rx_datastream_callback(&datastream_result);
 	}
+	*/
 }
 
 void trans_init(){
@@ -151,11 +150,11 @@ void trans_set_tx_callback(trans_tx_callback_t cb)
 {
 	trans_tx_callback = cb;
 }
-
-void trans_set_datastream_rx_callback(trans_rx_datastream_callback_t cb)
-{
-	trans_rx_datastream_callback = cb;
-}
+//
+//void trans_set_datastream_rx_callback(trans_rx_datastream_callback_t cb)
+//{
+//	trans_rx_datastream_callback = cb;
+//}
 
 void trans_set_query_rx_callback(trans_rx_query_callback_t cb)
 {
@@ -163,7 +162,10 @@ void trans_set_query_rx_callback(trans_rx_query_callback_t cb)
 }
 
 void trans_tx_foreground_frame(uint8_t* data, uint8_t length, uint8_t subnet, uint8_t spectrum_id, int8_t tx_eirp) {
-	nwl_build_network_protocol_data(data, length, NULL, NULL, subnet, spectrum_id, tx_eirp, dialogid++);
+	queue_clear(&tx_queue);
+	queue_push_u8_array(&tx_queue, data, length);
+
+	nwl_build_network_protocol_data(NWL_CONTRL_SRC_UID, NULL, NULL, NULL, 0, subnet, spectrum_id, tx_eirp);
 	dll_initiate_csma_ca();
 }
 
@@ -237,19 +239,21 @@ void trans_tx_query(D7AQP_Command* command, uint8_t subnet, uint8_t spectrum_id,
 		}
 	}
 
-	nwl_build_network_protocol_data(data, pointer, NULL, NULL, subnet, spectrum_id, tx_eirp, dialogid++);
+	queue_clear(&tx_queue);
+	queue_push_u8_array(&tx_queue, data, pointer);
+	nwl_build_network_protocol_data(NWL_CONTRL_SRC_UID, NULL, NULL, NULL, 0, subnet, spectrum_id, tx_eirp);
 	dll_initiate_csma_ca();
 }
 
-void trans_tx_datastream(uint8_t* data, uint8_t length, uint8_t subnet, uint8_t spectrum_id, int8_t tx_eirp) {
-	nwl_build_datastream_protocol_data(data, length, NULL, subnet, spectrum_id, tx_eirp, dialogid++);
-	dll_initiate_csma_ca();
-}
+//void trans_tx_datastream(uint8_t* data, uint8_t length, uint8_t subnet, uint8_t spectrum_id, int8_t tx_eirp) {
+//	nwl_build_datastream_protocol_data(data, length, NULL, subnet, spectrum_id, tx_eirp, dialogid++);
+//	dll_initiate_csma_ca();
+//}
 
-void trans_rx_datastream_start(uint8_t subnet, uint8_t spectrum_id)
-{
-	nwl_rx_start(subnet, spectrum_id, ProtocolTypeDatastreamProtocol);
-}
+//void trans_rx_datastream_start(uint8_t subnet, uint8_t spectrum_id)
+//{
+//	nwl_rx_start(subnet, spectrum_id, ProtocolTypeDatastreamProtocol);
+//}
 
 
 void trans_rx_query_start(uint8_t subnet, uint8_t spectrum_id)
