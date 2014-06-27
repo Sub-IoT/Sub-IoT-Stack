@@ -23,10 +23,21 @@
 #define BPID_AdvP 0xF0
 #define BPID_BeaconP 0xF1
 
+#define NWL_CONTRL_NLS		1 << 7
+#define NWL_CONTRL_EXT		1 << 6
+#define NWL_CONTRL_CFG(VAL)	(0x0F & VAL) << 2
+#define NWL_CONTRL_SRC_NO	0
+#define NWL_CONTRL_SRC_UID	1
+#define NWL_CONTRL_SRC_VID	2
+#define NWL_CONTRL_SRC_FULL	3
+
+#define NWL_ACCESS_TEMPL_CTRL_VID		1 << 6
+#define NWL_ACCESS_TEMPL_CTRL_CSMA(VAL)	(VAL & 0x03) << 4
+#define NWL_ACCESS_TEMPL_CTRL_LEN(VAL)	(VAL & 0x0F)
+
 typedef enum {
 	ProtocolTypeBackgroundProtocol,
-	ProtocolTypeNetworkProtocol,
-	ProtocolTypeDatastreamProtocol
+	ProtocolTypeNetworkProtocol
 } Protocol_Type;
 
 
@@ -43,17 +54,20 @@ typedef struct {
 } nwl_ff_D7ADP_t;
 
 typedef struct {
+	uint8_t control;
 	uint8_t* d7anls_header;
-	uint8_t* d7anp_routing_header;
+	uint8_t* d7anp_source_access_templ;
 	uint8_t payload_length;
 	uint8_t* payload;
 	uint8_t* d7anls_auth_data;
 } nwl_ff_D7ANP_t;
 
 typedef struct {
-	uint16_t eta;
-} AdvP_Data;
-
+	uint8_t control;
+	uint8_t* device_id;
+	uint8_t timeout;
+	uint8_t* channel_list;
+} nwl_full_access_template;
 
 typedef struct
 {
@@ -67,7 +81,6 @@ typedef struct
 typedef struct {
 	uint8_t nls_code;
 	uint8_t* nls_initialization_data;
-	uint8_t* target_address;
 } nwl_security;
 
 typedef struct {
@@ -117,7 +130,26 @@ void nwl_build_advertising_protocol_data(uint16_t eta, uint8_t spectrum_id, int8
 void nwl_build_beaconprotocol_data(uint8_t spectrum_id, int8_t tx_eirp, uint8_t subnet);
 
 // Foreground frames
-void nwl_build_network_protocol_data(uint8_t* data, uint8_t length, nwl_security* security, nwl_routing_header* routing, uint8_t subnet, uint8_t spectrum_id, int8_t tx_eirp, uint8_t dialog_id);
+
+void nwl_build_advertising_protocol_data(uint16_t eta, uint8_t spectrum_id, int8_t tx_eirp, uint8_t subnet);
+
+/*! \brief Builds a network protocol foreground frame  (Network Layer)
+ *
+ *  Creates a Foreground Frame for the network protocol
+ *  The payload should be put in the TX queue prior to calling this method
+ *
+ *
+ *  \param uint8_t control 			The control field
+ *  \param nwl_security* security	The optional security header
+ *  \param void* source_access		The optional source access template
+ *  \param uint8_t* target_address  The target address
+ *  \param uint8_t target_address_lenght The size of the target address (0/2/8 bytes)
+ *  \param uint8_t subnet			The subnet of the message
+ *  \param uint8_t spectrum_id 		The channel on which to send the foreground frame.
+ *  \param uint8_t tx_eirp 			The send EIRP.
+ *  \param uint8_t subnet 			The subnet to of the background frame.
+ */
+void nwl_build_network_protocol_data(uint8_t control, nwl_security* security, void* source_access, uint8_t* target_address, uint8_t target_address_lenght, uint8_t subnet, uint8_t spectrum_id, int8_t tx_eirp, uint8_t dialog_id);
 //void nwl_build_datastream_protocol_data(uint8_t* data, uint8_t length, nwl_security* security, uint8_t subnet, uint8_t spectrum_id, int8_t tx_eirp, uint8_t dialog_id);
 
 void nwl_rx_start(uint8_t subnet, uint8_t spectrum_id, Protocol_Type type);
