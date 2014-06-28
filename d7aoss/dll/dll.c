@@ -540,7 +540,8 @@ void dll_create_frame(uint8_t* target_address, uint8_t address_length, dll_tx_cf
 		tx_queue.front[2] |= 0x80;
 	}
 
-	memcpy(&tx_queue.front[3], target_address, address_length);
+	if (address_length != 0)
+		memcpy(&tx_queue.front[3], target_address, address_length);
 
 	uint16_t crc16 = crc_calculate(tx_queue.front, frame_tx_cfg.length - 2);
 	queue_push_u8(&tx_queue, crc16 >> 8);

@@ -274,6 +274,7 @@ bool queue_create_header_space(queue_t* q, uint8_t required_header_space)
 			return 0;
 
 	q->front -= required_header_space;
+	q->length += required_header_space;
 
 	return 1;
 }

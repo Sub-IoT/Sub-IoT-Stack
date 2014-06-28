@@ -450,6 +450,9 @@ void end_of_packet_isr()
 
 void tx_data_isr()
 {
+	if (remainingBytes == 0)
+		return;
+
 	//Calculate number of free bytes in TXFIFO
 	uint8_t txBytes = 64 - ReadSingleReg(TXBYTES);
 

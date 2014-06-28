@@ -42,6 +42,7 @@
 // event to create a led blink
 static timer_event dim_led_event;
 static bool start_channel_scan = false;
+uint8_t buffer[128];
 
 static D7AQP_Command command;
 
@@ -69,18 +70,51 @@ void rx_callback(Trans_Rx_Query_Result* rx_res)
 
 	blink_led();
 
-	dll_foreground_frame_t* frame = (dll_foreground_frame_t*) (rx_res->nwl_rx_res->dll_rx_res->frame);
-	log_print_string("Received Query from :%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x;",
-					frame->address_ctl->source_id[0] >> 4, frame->address_ctl->source_id[0] & 0x0F,
-					frame->address_ctl->source_id[1] >> 4, frame->address_ctl->source_id[1] & 0x0F,
-					frame->address_ctl->source_id[2] >> 4, frame->address_ctl->source_id[2] & 0x0F,
-					frame->address_ctl->source_id[3] >> 4, frame->address_ctl->source_id[3] & 0x0F,
-					frame->address_ctl->source_id[4] >> 4, frame->address_ctl->source_id[4] & 0x0F,
-					frame->address_ctl->source_id[5] >> 4, frame->address_ctl->source_id[5] & 0x0F,
-					frame->address_ctl->source_id[6] >> 4, frame->address_ctl->source_id[6] & 0x0F,
-					frame->address_ctl->source_id[7] >> 4, frame->address_ctl->source_id[7] & 0x0F);
+	if (rx_res->nwl_rx_res->protocol_type == ProtocolTypeNetworkProtocol)
+	{
+		nwl_ff_D7ANP_t* np = (nwl_ff_D7ANP_t*) (rx_res->nwl_rx_res->data);
+
+		switch (np->control & NWL_CONTRL_SRC_FULL)
+		{
+		case NWL_CONTRL_SRC_UID:
+			log_print_string("Received Query from :%x%x%x%x;",
+								np->d7anp_source_access_templ[0] >> 4, np->d7anp_source_access_templ[0] & 0x0F,
+								np->d7anp_source_access_templ[1] >> 4, np->d7anp_source_access_templ[1] & 0x0F);
+			break;
+		case NWL_CONTRL_SRC_VID:
+			log_print_string("Received Query from :%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x;",
+								np->d7anp_source_access_templ[0] >> 4, np->d7anp_source_access_templ[0] & 0x0F,
+								np->d7anp_source_access_templ[1] >> 4, np->d7anp_source_access_templ[1] & 0x0F,
+								np->d7anp_source_access_templ[2] >> 4, np->d7anp_source_access_templ[2] & 0x0F,
+								np->d7anp_source_access_templ[3] >> 4, np->d7anp_source_access_templ[3] & 0x0F,
+								np->d7anp_source_access_templ[4] >> 4, np->d7anp_source_access_templ[4] & 0x0F,
+								np->d7anp_source_access_templ[5] >> 4, np->d7anp_source_access_templ[5] & 0x0F,
+								np->d7anp_source_access_templ[6] >> 4, np->d7anp_source_access_templ[6] & 0x0F,
+								np->d7anp_source_access_templ[7] >> 4, np->d7anp_source_access_templ[7] & 0x0F);
+			break;
+		case NWL_CONTRL_SRC_FULL:
+			if (np->d7anp_source_access_templ[0] & NWL_ACCESS_TEMPL_CTRL_VID)
+			{
+				log_print_string("Received Query from :%x%x%x%x;",
+						np->d7anp_source_access_templ[1] >> 4, np->d7anp_source_access_templ[1] & 0x0F,
+						np->d7anp_source_access_templ[2] >> 4, np->d7anp_source_access_templ[2] & 0x0F);
+			} else {
+				log_print_string("Received Query from :%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x;",
+												np->d7anp_source_access_templ[1] >> 4, np->d7anp_source_access_templ[1] & 0x0F,
+												np->d7anp_source_access_templ[2] >> 4, np->d7anp_source_access_templ[2] & 0x0F,
+												np->d7anp_source_access_templ[3] >> 4, np->d7anp_source_access_templ[3] & 0x0F,
+												np->d7anp_source_access_templ[4] >> 4, np->d7anp_source_access_templ[4] & 0x0F,
+												np->d7anp_source_access_templ[5] >> 4, np->d7anp_source_access_templ[5] & 0x0F,
+												np->d7anp_source_access_templ[6] >> 4, np->d7anp_source_access_templ[6] & 0x0F,
+												np->d7anp_source_access_templ[7] >> 4, np->d7anp_source_access_templ[7] & 0x0F,
+												np->d7anp_source_access_templ[8] >> 4, np->d7anp_source_access_templ[8] & 0x0F);
+			}
+		}
+	}
+
+	dll_frame_t* frame = (dll_frame_t*) (rx_res->nwl_rx_res->dll_rx_res->frame);
 	log_print_string("RSS: %d dBm", rx_res->nwl_rx_res->dll_rx_res->rssi);
-	log_print_string("Netto Link: %d dBm", rx_res->nwl_rx_res->dll_rx_res->rssi  - frame->frame_header.tx_eirp);
+	log_print_string("Netto Link: %d dBm", rx_res->nwl_rx_res->dll_rx_res->rssi  - (frame->control & 0x3F));
 
 	switch (rx_res->d7aqp_command.command_code & 0x0F)
 	{
@@ -137,14 +171,14 @@ void tx_callback(Trans_Tx_Result result)
 
 int main(void) {
 	// Initialize the OSS-7 Stack
-	system_init();
+	system_init(buffer, 128, buffer, 128);
 
 	// Currently we address the Transport Layer for RX, this should go to an upper layer once it is working.
 	trans_init();
 	trans_set_query_rx_callback(&rx_callback);
 	trans_set_tx_callback(&tx_callback);
 	// The initial Tca for the CSMA-CA in
-	trans_set_initial_t_ca(200);
+	dll_set_initial_t_ca(200);
 
 	start_channel_scan = true;
 

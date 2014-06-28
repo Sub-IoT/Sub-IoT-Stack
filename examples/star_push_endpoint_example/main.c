@@ -45,6 +45,7 @@ static uint8_t tx = 0;
 static uint16_t counter = 0;
 static volatile bool add_tx_event = true;
 
+uint8_t buffer[128];
 static uint8_t data[32];
 static volatile uint8_t dataLength = 0;
 
@@ -99,13 +100,13 @@ int main(void) {
 	timer_event event;
 
 	// Initialize the OSS-7 Stack
-	system_init();
+	system_init(buffer, 128, buffer, 128);
 
 	// Currently we address the Transport Layer, this should go to an upper layer once it is working.
 	trans_init();
 	trans_set_tx_callback(&tx_callback);
 	// The initial Tca for the CSMA-CA in
-	trans_set_initial_t_ca(200);
+	dll_set_initial_t_ca(200);
 
 	event.next_event = SEND_INTERVAL_MS;
 	event.f = &start_tx;

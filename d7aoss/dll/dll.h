@@ -45,7 +45,7 @@ typedef enum {
 // Frame Control
 #define FRAME_CTRL_TARGET	1 << 7
 #define FRAME_CTRL_VID		1 << 6
-#define FRAME_EIRP(VAL)		(VAL)
+#define FRAME_EIRP(VAL)		(VAL & 0x3F)
 
 #define CHANNEL_GUARD_INTERVAL		5
 #define CHANNEL_SILENCE_INTERVAL	1
