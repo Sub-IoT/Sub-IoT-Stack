@@ -44,7 +44,7 @@ RadioState state;
 
 uint8_t packetLength;
 //uint8_t* bufferPosition;
-uint16_t remainingBytes;
+int16_t remainingBytes;
 
 bool fec;
 uint8_t channel_center_freq_index;
@@ -76,20 +76,25 @@ static int8_t eirp_values[46] = {0x1,0x2,0x2,0x3,0x3,0x4,0x4,0x5,0x6,0x6,0x7,0x8
 static void ReadBurstRegToQueue(uint8_t addr, queue_t* buffer, uint8_t count)
 {
 	uint8_t i;
-	uint16_t int_state;
+	//uint16_t int_state;
 
-	ENTER_CRITICAL_SECTION(int_state);
+	//ENTER_CRITICAL_SECTION(int_state);
 
 	RADIO_INST_READY_WAIT();
 	RF1AINSTR1B = RF_REGRD | addr;
 
+	//queue_create_space(buffer, count);
+
 	for (i = 0; i < (count-1); i++) {
 		RADIO_DOUT_READY_WAIT();
 		queue_push_u8(buffer, RF1ADOUT1B);
+		//buffer->front[i] = RF1ADOUT1B;
 	}
-	queue_push_u8(buffer, RF1ADOUT1B);
 
-	EXIT_CRITICAL_SECTION(int_state);
+	queue_push_u8(buffer, RF1ADOUT1B);
+	//buffer->front[i] = RF1ADOUT1B;
+
+	//EXIT_CRITICAL_SECTION(int_state);
 }
 
 // *****************************************************************************
@@ -491,7 +496,7 @@ void tx_data_isr()
 
 void rx_data_isr()
 {
-#ifdef LOG_PHY_ENABLED
+	#ifdef LOG_PHY_ENABLED
 	log_print_stack_string(LOG_PHY, "rx_data_isr 0");
 	#endif
 
@@ -539,7 +544,7 @@ void rx_data_isr()
 		remainingBytes = packetLength - 1;
 		queue_push_u8(&rx_queue, packetLength);
 		rxBytes--;
-#ifdef LOG_PHY_ENABLED
+	#ifdef LOG_PHY_ENABLED
 		log_print_stack_string(LOG_PHY, "rx_data_isr getting packetLength");
 	#endif
 	}
@@ -551,15 +556,25 @@ void rx_data_isr()
     	rxBytes = remainingBytes;
     }
 
+
+	uint16_t int_state;
+    ENTER_CRITICAL_SECTION(int_state);
     //Read data from buffer
+	#ifdef LOG_PHY_ENABLED
+		log_print_stack_string(LOG_PHY, "Getting %d byte from RXFifo", rxBytes);
+	#endif
 	ReadBurstRegToQueue(RXFIFO, &rx_queue, rxBytes);
 	remainingBytes -= rxBytes;
+
+#ifdef LOG_PHY_ENABLED
+	log_print_stack_string(LOG_PHY, "%d bytes remaingin", remainingBytes);
+#endif
 #ifdef D7_PHY_USE_FEC
 	}
 #endif
 
     //When all data has been received read rssi and lqi value and set packetreceived flag
-    if(remainingBytes == 0)
+    if(remainingBytes <= 0)
     {
     	rx_data.rssi = calculate_rssi(ReadSingleReg(RSSI));
     	rx_data.lqi = ReadSingleReg(LQI);
@@ -570,6 +585,8 @@ void rx_data_isr()
 		log_phy_rx_res(&rx_data);
 		#endif
     }
+
+    EXIT_CRITICAL_SECTION(int_state);
 
 	#ifdef LOG_PHY_ENABLED
     log_print_stack_string(LOG_PHY, "rx_data_isr 1");

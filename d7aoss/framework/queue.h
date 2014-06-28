@@ -66,5 +66,6 @@ bool queue_is_empty(queue_t* q);
 void queue_clear(queue_t* q);
 
 bool queue_create_header_space(queue_t* q, uint8_t required_header_space);
+bool queue_create_space(queue_t* q, uint8_t required_space);
 
 #endif /* QUEUE_H_ */

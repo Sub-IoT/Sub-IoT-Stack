@@ -278,3 +278,23 @@ bool queue_create_header_space(queue_t* q, uint8_t required_header_space)
 
 	return 1;
 }
+
+bool queue_create_space(queue_t* q, uint8_t required_space)
+{
+	if (q->front == NULL)
+	{
+		q->front = q->start;
+		q->rear = q->start;
+	}
+
+
+	if (q->rear + required_space > q->start + q->size)
+		if (!(shift_queue_left(q, required_space)))
+			return 0;
+
+	q->rear += required_space;
+	q->length += required_space;
+
+	return 1;
+}
+
