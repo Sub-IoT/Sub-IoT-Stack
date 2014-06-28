@@ -27,7 +27,7 @@ static trans_tx_callback_t trans_tx_callback;
 static trans_rx_query_callback_t trans_rx_query_callback;
 
 static Trans_Rx_Query_Result query_result;
-static D7AQP_Dialog_Template dialog_template;
+//static D7AQP_Dialog_Template dialog_template;
 
 //Flow Control Process
 static void control_tx_callback(Dll_Tx_Result Result)
@@ -51,11 +51,39 @@ static void control_tx_callback(Dll_Tx_Result Result)
 
 static void nwl_rx_callback(nwl_rx_res_t* result)
 {
+	query_result.nwl_rx_res = result;
+
+	if (result->protocol_type == ProtocolTypeNetworkProtocol)
+	{
+		nwl_ff_D7ANP_t* data = (nwl_ff_D7ANP_t*) result->data;
+
+		query_result.d7aqp_command.control = data->payload[0];
+		query_result.d7aqp_command.transaction_id = data->payload[1];
+		query_result.d7aqp_command.query_template = NULL;
+		query_result.d7aqp_command.ack_template = NULL;
+		query_result.d7aqp_command.alp_data = &data->payload[2];
+		query_result.d7aqp_command.alp_length = data->payload_length - 2;
+
+		if (trans_rx_query_callback != NULL)
+		{
+			trans_rx_query_callback(&query_result);
+		}
+
+
+	} else if(result->protocol_type == ProtocolTypeBeaconProtocol)
+	{
+		//nwl_background_frame_t* data = (nwl_background_frame_t*) result->data;
+		// What to do with BF???
+	}
+
+	/*
+
 	if (result->protocol_type == ProtocolTypeNetworkProtocol)
 	{
 		query_result.nwl_rx_res = result;
 
 		nwl_ff_D7ANP_t* data = (nwl_ff_D7ANP_t*) result->data;
+
 
 		uint8_t pointer = 0;
 		query_result.d7aqp_command.command_code = data->payload[pointer++];
@@ -121,9 +149,11 @@ static void nwl_rx_callback(nwl_rx_res_t* result)
 		}
 
 		trans_rx_query_callback(&query_result);
+
 	} else {
 		// TODO: handle BF
 	}
+*/
 
 	/*
 	else if (result->protocol_type == ProtocolTypeDatastreamProtocol)
@@ -183,12 +213,28 @@ void trans_tx_foreground_frame(uint8_t* data, uint8_t length, uint8_t subnet, ui
  *  \param spectrum_id The spectrum_id which needs to be used to send the query
  *  \param tx_eirp The transmit EIRP which need to be used to send the query
  */
-void trans_tx_query(D7AQP_Command* command, uint8_t subnet, uint8_t spectrum_id, int8_t tx_eirp)
+void trans_tx_query(D7AQP_Query_Template* query, uint8_t* alp_data, uint8_t alp_length, uint8_t subnet, uint8_t spectrum_id, int8_t tx_eirp)
 {
-	uint8_t data[64];//TODO: should be dynamic or queue
-	uint8_t pointer = 0;
-	uint8_t i = 0;
 
+	if (query != NULL)
+	{
+		log_print_stack_string(LOG_TRANS, "Query is not yet implemented");
+		return;
+	}
+
+	queue_clear(&tx_queue);
+	queue_push_u8(&tx_queue, D7AQP_CONTROL_DIALOG_SINGLE); // Control byte
+	queue_push_u8(&tx_queue, 0); // Transaction ID
+	queue_push_u8_array(&tx_queue, alp_data, alp_length);
+	nwl_build_network_protocol_data(NWL_CONTRL_SRC_UID, NULL, NULL, NULL, 0, subnet, spectrum_id, tx_eirp);
+	dll_initiate_csma_ca();
+
+	//uint8_t data[64];//TODO: should be dynamic or queue
+	//uint8_t pointer = 0;
+	//uint8_t i = 0;
+
+
+	/*
 	data[pointer++] = command->command_code;
 	if (command->command_code & D7AQP_COMMAND_CODE_EXTENSION)
 		data[pointer++] = command->command_extension;
@@ -238,11 +284,10 @@ void trans_tx_query(D7AQP_Command* command, uint8_t subnet, uint8_t spectrum_id,
 			break;
 		}
 	}
+	 */
 
-	queue_clear(&tx_queue);
-	queue_push_u8_array(&tx_queue, data, pointer);
-	nwl_build_network_protocol_data(NWL_CONTRL_SRC_UID, NULL, NULL, NULL, 0, subnet, spectrum_id, tx_eirp);
-	dll_initiate_csma_ca();
+
+
 }
 
 //void trans_tx_datastream(uint8_t* data, uint8_t length, uint8_t subnet, uint8_t spectrum_id, int8_t tx_eirp) {

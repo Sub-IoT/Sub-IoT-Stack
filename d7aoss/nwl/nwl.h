@@ -41,6 +41,12 @@ typedef enum {
 	ProtocolTypeNetworkProtocol
 } Protocol_Type;
 
+typedef struct {
+	uint8_t nls: 1;
+	uint8_t ext: 1;
+	uint8_t routing_cfg: 4;
+	uint8_t src: 2;
+} nwl_control;
 
 typedef struct {
 	uint8_t bpid;

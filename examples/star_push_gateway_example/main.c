@@ -44,7 +44,7 @@ static timer_event dim_led_event;
 static bool start_channel_scan = false;
 uint8_t buffer[128];
 
-static D7AQP_Command command;
+//static D7AQP_Command command;
 
 void blink_led()
 {
@@ -73,42 +73,45 @@ void rx_callback(Trans_Rx_Query_Result* rx_res)
 	if (rx_res->nwl_rx_res->protocol_type == ProtocolTypeNetworkProtocol)
 	{
 		nwl_ff_D7ANP_t* np = (nwl_ff_D7ANP_t*) (rx_res->nwl_rx_res->data);
+		uint8_t* address_ptr = NULL;
+		uint8_t address_length = 0;
 
 		switch (np->control & NWL_CONTRL_SRC_FULL)
 		{
 		case NWL_CONTRL_SRC_UID:
-			log_print_string("Received Query from :%x%x%x%x;",
-								np->d7anp_source_access_templ[0] >> 4, np->d7anp_source_access_templ[0] & 0x0F,
-								np->d7anp_source_access_templ[1] >> 4, np->d7anp_source_access_templ[1] & 0x0F);
+			address_ptr = &(np->d7anp_source_access_templ[0]);
+			address_length = 2;
 			break;
 		case NWL_CONTRL_SRC_VID:
-			log_print_string("Received Query from :%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x;",
-								np->d7anp_source_access_templ[0] >> 4, np->d7anp_source_access_templ[0] & 0x0F,
-								np->d7anp_source_access_templ[1] >> 4, np->d7anp_source_access_templ[1] & 0x0F,
-								np->d7anp_source_access_templ[2] >> 4, np->d7anp_source_access_templ[2] & 0x0F,
-								np->d7anp_source_access_templ[3] >> 4, np->d7anp_source_access_templ[3] & 0x0F,
-								np->d7anp_source_access_templ[4] >> 4, np->d7anp_source_access_templ[4] & 0x0F,
-								np->d7anp_source_access_templ[5] >> 4, np->d7anp_source_access_templ[5] & 0x0F,
-								np->d7anp_source_access_templ[6] >> 4, np->d7anp_source_access_templ[6] & 0x0F,
-								np->d7anp_source_access_templ[7] >> 4, np->d7anp_source_access_templ[7] & 0x0F);
+			address_ptr = &(np->d7anp_source_access_templ[0]);
+			address_length = 8;
 			break;
 		case NWL_CONTRL_SRC_FULL:
+			address_ptr = &(np->d7anp_source_access_templ[1]);
+
 			if (np->d7anp_source_access_templ[0] & NWL_ACCESS_TEMPL_CTRL_VID)
 			{
-				log_print_string("Received Query from :%x%x%x%x;",
-						np->d7anp_source_access_templ[1] >> 4, np->d7anp_source_access_templ[1] & 0x0F,
-						np->d7anp_source_access_templ[2] >> 4, np->d7anp_source_access_templ[2] & 0x0F);
+				address_length = 2;
 			} else {
-				log_print_string("Received Query from :%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x;",
-												np->d7anp_source_access_templ[1] >> 4, np->d7anp_source_access_templ[1] & 0x0F,
-												np->d7anp_source_access_templ[2] >> 4, np->d7anp_source_access_templ[2] & 0x0F,
-												np->d7anp_source_access_templ[3] >> 4, np->d7anp_source_access_templ[3] & 0x0F,
-												np->d7anp_source_access_templ[4] >> 4, np->d7anp_source_access_templ[4] & 0x0F,
-												np->d7anp_source_access_templ[5] >> 4, np->d7anp_source_access_templ[5] & 0x0F,
-												np->d7anp_source_access_templ[6] >> 4, np->d7anp_source_access_templ[6] & 0x0F,
-												np->d7anp_source_access_templ[7] >> 4, np->d7anp_source_access_templ[7] & 0x0F,
-												np->d7anp_source_access_templ[8] >> 4, np->d7anp_source_access_templ[8] & 0x0F);
+				address_length = 8;
 			}
+		}
+
+		if (address_length == 2)
+		{
+			log_print_string("Received Query from :%x%x%x%x;",
+								address_ptr[0] >> 4, address_ptr[0] & 0x0F,
+								address_ptr[1] >> 4, address_ptr[1] & 0x0F);
+		} else if (address_length == 8) {
+			log_print_string("Received Query from :%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x;",
+								address_ptr[0] >> 4, address_ptr[0] & 0x0F,
+								address_ptr[1] >> 4, address_ptr[1] & 0x0F,
+								address_ptr[2] >> 4, address_ptr[2] & 0x0F,
+								address_ptr[3] >> 4, address_ptr[3] & 0x0F,
+								address_ptr[4] >> 4, address_ptr[4] & 0x0F,
+								address_ptr[5] >> 4, address_ptr[5] & 0x0F,
+								address_ptr[6] >> 4, address_ptr[6] & 0x0F,
+								address_ptr[7] >> 4, address_ptr[7] & 0x0F);
 		}
 	}
 
@@ -116,6 +119,10 @@ void rx_callback(Trans_Rx_Query_Result* rx_res)
 	log_print_string("RSS: %d dBm", rx_res->nwl_rx_res->dll_rx_res->rssi);
 	log_print_string("Netto Link: %d dBm", rx_res->nwl_rx_res->dll_rx_res->rssi  - (frame->control & 0x3F));
 
+	log_print_string("D7AQP received - ALP data:");
+	log_print_data(rx_res->d7aqp_command.alp_data, rx_res->d7aqp_command.alp_length);
+
+	/*
 	switch (rx_res->d7aqp_command.command_code & 0x0F)
 	{
 		case D7AQP_OPCODE_ANNOUNCEMENT_FILE:
@@ -144,6 +151,7 @@ void rx_callback(Trans_Rx_Query_Result* rx_res)
 		led_on(3);
 		trans_tx_query(&command, 0xFF, RECEIVE_CHANNEL, TX_EIRP);
 	}
+	*/
 
 }
 
