@@ -202,18 +202,15 @@ void trans_tx_foreground_frame(uint8_t* data, uint8_t length, uint8_t subnet, ui
 
 /*! \brief Creates a D7AQP Query (transport layer)
  *
- *  Creates a D7AQP Query based on the Command Request Template
- *  Currently only Announcement of file is uses
+ *  Creates a D7AQP Query based on the Query Template
+ *  An ALP Records should be added to the Tx Queue prior to calling this method
  *
- *  \todo implement other query
- *
- *  \param request_template Pointer to the Command Request Template
- *  \param file_template The corresponding file template
+ *  \param D7AQP_Query_Template Optional query template
  *  \param subnet The subnet which needs to be used to send the query
  *  \param spectrum_id The spectrum_id which needs to be used to send the query
  *  \param tx_eirp The transmit EIRP which need to be used to send the query
  */
-void trans_tx_query(D7AQP_Query_Template* query, uint8_t* alp_data, uint8_t alp_length, uint8_t subnet, uint8_t spectrum_id, int8_t tx_eirp)
+void trans_tx_query(D7AQP_Query_Template* query,  uint8_t subnet, uint8_t spectrum_id, int8_t tx_eirp)
 {
 
 	if (query != NULL)
@@ -222,10 +219,9 @@ void trans_tx_query(D7AQP_Query_Template* query, uint8_t* alp_data, uint8_t alp_
 		return;
 	}
 
-	queue_clear(&tx_queue);
+	queue_create_header_space(&tx_queue, 2)
 	queue_push_u8(&tx_queue, D7AQP_CONTROL_DIALOG_SINGLE); // Control byte
 	queue_push_u8(&tx_queue, 0); // Transaction ID
-	queue_push_u8_array(&tx_queue, alp_data, alp_length);
 	nwl_build_network_protocol_data(NWL_CONTRL_SRC_UID, NULL, NULL, NULL, 0, subnet, spectrum_id, tx_eirp);
 	dll_initiate_csma_ca();
 

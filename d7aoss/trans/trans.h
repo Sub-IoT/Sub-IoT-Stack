@@ -99,48 +99,6 @@ typedef struct {
 //	uint8_t rfu;
 //} D7AQP_Local_Query_Template;
 
-
-/** @struct D7AQP_Error_Template
- *  @brief 6.4.6 This structure describes the Error template of the D7A Querry Protocol
- *  @var D7AQP_Error_Template::error_code
- *  Field 'error_code' contains A Unique value that identifies the class of the error
- *  @var D7AQP_Error_Template::error_subcode
- *  Field 'error_subcode' is optional. It is a value that extends each error code to provide more information.
- *  @var D7AQP_Error_Template::d7aqp_error_data
- *  Field 'd7aqp_error_data' is optional. Has M bytes. It is a detailed description of an D7AQP error.
- *  @var D7AQP_Error_Template::extended_error_data
- *  Field 'extended_error_data' is optional. Has N bytes. It is storage for information relating to errors with encapsulated data.
- **/
-
-// 6.5.1 Single File Templates
-//
-//typedef struct {
-//	uint8_t error_code;
-//	uint8_t error_subcode;
-//	uint8_t* d7aqp_error_data;
-//	uint8_t* extended_error_data;
-//} D7AQP_Error_Template;
-
-/** @struct D7AQP_Single_File_Return_Template
- *  @brief 6.5.1 Contains the data template for a response of a collection query or an annoucement query.
- *  @var D7AQP_Single_File_Return_Template::return_file_id
- *  Field 'max_returned_bytes' contains the file id the of the file which is returned.
- *  @var D7AQP_Single_File_Return_Template::file_offset
- *  Field 'max_returned_bytes' contains the offset from which the file is returned.
- *  @var D7AQP_Single_File_Return_Template::isfb_total_length
- *  Field 'max_returned_bytes' contains the total length of the file which is returned.
- *  @var D7AQP_Single_File_Return_Template::file_data
- *  Field 'max_returned_bytes' contains the returned file data.
- *  **/
-//
-//typedef struct {
-//	uint8_t return_file_id;
-//	uint8_t	file_offset;
-//	uint8_t isfb_total_length;
-//	uint8_t* file_data;
-//} D7AQP_Single_File_Return_Template;
-//
-
 /** @struct D7AQP_Single_File_Call_Template
  *  @brief 6.5.1 Contains the data template for a collection query.
  *  @var D7AQP_Single_File_Call_Template::max_returned_bytes
@@ -186,7 +144,7 @@ void trans_set_query_rx_callback(trans_rx_query_callback_t);
 //void trans_tx_datastream(uint8_t* data, uint8_t length, uint8_t subnet, uint8_t spectrum_id, int8_t tx_eirp);
 //void trans_tx_background_frame(uint8_t* data, uint8_t subnet, uint8_t spectrum_id, int8_t tx_eirp);
 
-void trans_tx_query(D7AQP_Query_Template* query, uint8_t* alp_data, uint8_t alp_length, uint8_t subnet, uint8_t spectrum_id, int8_t tx_eirp);
+void trans_tx_query(D7AQP_Query_Template* query, uint8_t subnet, uint8_t spectrum_id, int8_t tx_eirp);
 //nwl_build_network_protocol_data(uint8_t control, nwl_security* security, nwl_full_access_template* source_access, uint8_t* target_address, uint8_t target_address_lenght, uint8_t subnet, uint8_t spectrum_id, int8_t tx_eirp)
 
 
