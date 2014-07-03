@@ -56,6 +56,6 @@ void alp_create_structure_for_tx(uint8_t flags, uint8_t id, uint8_t nr_of_templa
 		}
 	}
 
-	queue_push_u8_array(&tx_queue, alp_data, alp_length);
+	//queue_push_u8_array(&tx_queue, alp_data, alp_length);
 
 }

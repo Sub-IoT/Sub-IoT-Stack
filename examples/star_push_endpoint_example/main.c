@@ -69,7 +69,11 @@ void start_tx()
 		data[0] = counter >> 8;
 		data[1] = counter & 0xFF;
 
-		trans_tx_query(&command, 0xFF, SEND_CHANNEL, TX_EIRP);
+		//trans_tx_query(&command, 0xFF, SEND_CHANNEL, TX_EIRP);
+		queue_clear(&tx_queue);
+		queue_push_u8(&tx_queue, counter & 0xFF);
+		queue_push_u8(&tx_queue, counter >> 8);
+		trans_tx_query(NULL, 0xFF, SEND_CHANNEL, TX_EIRP);
 	}
 	add_tx_event = true;
 }
@@ -114,9 +118,9 @@ int main(void) {
 	log_print_string("endpoint started");
 
 	// No response (no acknowledgement)
-	command.command_code = D7AQP_COMMAND_CODE_EXTENSION | D7AQP_COMMAND_TYPE_NA2P_REQUEST | D7AQP_OPCODE_ANNOUNCEMENT_FILE;
-	command.command_extension = D7AQP_COMMAND_EXTENSION_NORESPONSE;
-	command.dialog_template = NULL;
+	//command.command_code = D7AQP_COMMAND_CODE_EXTENSION | D7AQP_COMMAND_TYPE_NA2P_REQUEST | D7AQP_OPCODE_ANNOUNCEMENT_FILE;
+	//command.command_extension = D7AQP_COMMAND_EXTENSION_NORESPONSE;
+	//command.dialog_template = NULL;
 
 	// Waiting for response (acknowledgement)
 //	command.command_code = D7AQP_COMMAND_TYPE_NA2P_REQUEST | D7AQP_OPCODE_ANNOUNCEMENT_FILE;
@@ -126,14 +130,14 @@ int main(void) {
 //	dialog_template.response_channel_list_lenght = 0; // means same as send channel
 //
 //	command.dialog_template = &dialog_template;
-
-	D7AQP_Single_File_Return_Template file_template;
-	file_template.return_file_id = 0;
-	file_template.file_offset = 0;
-	file_template.isfb_total_length = 2;
-	file_template.file_data = data;
-
-	command.command_data = &file_template;
+//
+//	D7AQP_Single_File_Return_Template file_template;
+//	file_template.return_file_id = 0;
+//	file_template.file_offset = 0;
+//	file_template.isfb_total_length = 2;
+//	file_template.file_data = data;
+//
+//	command.command_data = &file_template;
 
 	timer_add_event(&event);
 
