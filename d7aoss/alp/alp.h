@@ -87,7 +87,7 @@ typedef struct
 
 typedef struct {
 	uint8_t file_id;
-	uint16_t	start_byte_offset;
+	uint16_t start_byte_offset;
 	uint16_t bytes_accessing;
 	uint8_t* data;
 } ALP_File_Data_Template;
@@ -109,7 +109,13 @@ typedef struct {
 } ALP_File_Error_Template;
 
 
-
+/*! \brief Formats the ALP record structure and adds it to the TX Queue  (Application Layer)
+ *
+ *  \param uint8_t 			flags 		The Flags for the ALP record structre
+ *  \param uint8_t 			id 			The ALP Id.
+ *  \param uint8_t 			lenght 		The lenght of the array of ALP templates
+ *  \paral ALP_Template*	templates	The array of ALP_Templates
+ */
 void alp_create_structure_for_tx(uint8_t flags, uint8_t id, uint8_t length, ALP_Template* templates);
 
 

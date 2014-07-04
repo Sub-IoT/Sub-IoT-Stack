@@ -35,9 +35,23 @@ extern "C" {
 
 #include "phy/phy.h"
 #include "dll/dll.h"
+#include "nwl/nwl.h"
+#include "trans/trans.h"
+#include "alp/alp.h"
+#include "hal/system.h"
+
+/*! \brief Initializes the stack and HAL
+ *
+ *  \param uint8_t* tx_buffer 		A pointer to a data array which can be used for the TX Queue
+ *  \param uint8_t 	tx_buffer_size 	The size of the TX Buffer
+ *  \param uint8_t* rx_buffer 		A pointer to a data array which can be used for the RX Queue
+ *  \paral uint8_t*	rx_buffer_size	The size of the RX Buffer
+ */
+void d7aoss_init(uint8_t* tx_buffer, uint16_t tx_buffer_size, uint8_t* rx_buffer, uint16_t rx_buffer_size);
+
 
 #ifdef __cplusplus
-extern "C" {
+extern }
 #endif
 
 #endif /* D7STACK_H_ */

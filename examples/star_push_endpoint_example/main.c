@@ -26,8 +26,7 @@
 
 #include <string.h>
 
-#include <trans/trans.h>
-#include <hal/system.h>
+#include <d7aoss.h>
 #include <hal/button.h>
 #include <hal/leds.h>
 #include <hal/rtc.h>
@@ -49,7 +48,9 @@ uint8_t buffer[128];
 static uint8_t data[32];
 static volatile uint8_t dataLength = 0;
 
-static D7AQP_Command command;
+//static D7AQP_Command command;
+static ALP_File_Data_Template data_template;
+static ALP_Template alp_template;
 
 void start_tx()
 {
@@ -66,16 +67,10 @@ void start_tx()
 
 		log_print_string("TX...");
 
-		//data[0] = counter >> 8;
-		//data[1] = counter & 0xFF;
+		data[0] = counter >> 8;
+		data[1] = counter & 0xFF;
 
-		//trans_tx_query(&command, 0xFF, SEND_CHANNEL, TX_EIRP);
-		queue_clear(&tx_queue);
-		//queue_push_u8(&tx_queue, counter & 0xFF);
-		//queue_push_u8(&tx_queue, counter >> 8);
-
-		queue_push_u8(&tx_queue, 0xFF);
-		queue_push_u8(&tx_queue, 0xFF);
+		alp_create_structure_for_tx(ALP_REC_FLG_TYPE_UNSOLICITED, 0, 1, &alp_template);
 		trans_tx_query(NULL, 0xFF, SEND_CHANNEL, TX_EIRP);
 	}
 	add_tx_event = true;
@@ -107,10 +102,9 @@ int main(void) {
 	timer_event event;
 
 	// Initialize the OSS-7 Stack
-	system_init(buffer, 128, buffer, 128);
-
 	// Currently we address the Transport Layer, this should go to an upper layer once it is working.
-	trans_init();
+	d7aoss_init(buffer, 128, buffer, 128);
+
 	trans_set_tx_callback(&tx_callback);
 	// The initial Tca for the CSMA-CA in
 	dll_set_initial_t_ca(200);
@@ -141,6 +135,14 @@ int main(void) {
 //	file_template.file_data = data;
 //
 //	command.command_data = &file_template;
+
+	alp_template.op = ALP_OP_RESP_DATA;
+	alp_template.data = (uint8_t*) &data_template;
+
+	data_template.file_id = 0;
+	data_template.start_byte_offset = 0;
+	data_template.bytes_accessing = 2;
+	data_template.data = data;
 
 	timer_add_event(&event);
 

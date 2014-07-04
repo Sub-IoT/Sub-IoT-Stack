@@ -73,7 +73,7 @@ static int8_t eirp_values[46] = {0x1,0x2,0x2,0x3,0x3,0x4,0x4,0x5,0x6,0x6,0x7,0x8
 // @param       unsigned char count     Number of bytes to be read
 // @return      none
 // *****************************************************************************
-static void ReadBurstRegToQueue(uint8_t addr, queue_t* buffer, uint8_t count)
+/*static void ReadBurstRegToQueue(uint8_t addr, queue_t* buffer, uint8_t count)
 {
 	uint8_t i;
 	uint16_t int_state;
@@ -94,6 +94,7 @@ static void ReadBurstRegToQueue(uint8_t addr, queue_t* buffer, uint8_t count)
 
 	EXIT_CRITICAL_SECTION(int_state);
 }
+*/
 
 // *****************************************************************************
 // @fn          WriteBurstRegFromQueue

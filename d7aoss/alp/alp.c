@@ -18,17 +18,23 @@
 #include "alp.h"
 #include "../hal/system.h"
 
+/** \copydoc alp_create_structure_for_tx */
+
 void alp_create_structure_for_tx(uint8_t flags, uint8_t id, uint8_t nr_of_templates, ALP_Template* templates)
 {
 	queue_clear(&tx_queue);
 	queue_push_u8(&tx_queue, flags);
-	queue_push_u8(&tx_queue, 3);  // Length change after calculation of the total lenght
+	queue_push_u8(&tx_queue, 3);  // Length changes after calculation of the total lenght
 	queue_push_u8(&tx_queue, id);
 
 	uint8_t i = 0;
+	uint8_t total_length = 3;
 	for (; i<nr_of_templates; i++)
 	{
+		queue_push_u8(&tx_queue, templates[i].op);
+		total_length++;
 
+		uint8_t length = 0;
 		switch (templates[i].op)
 		{
 			case ALP_OP_READ_DATA: // File Data Template
@@ -36,7 +42,20 @@ void alp_create_structure_for_tx(uint8_t flags, uint8_t id, uint8_t nr_of_templa
 			case ALP_OP_WRITE_DATA:
 			case ALP_OP_WRITE_FLUSH:
 			case ALP_OP_RESP_DATA:
+			case ALP_OP_RESP_ALL: // FILE Header + Data Template
+			{
+				ALP_File_Data_Template* templ = (ALP_File_Data_Template*) templates[i].data;
+
+				queue_push_u8(&tx_queue, templ->file_id);
+				queue_push_u8(&tx_queue, templ->start_byte_offset >> 8);
+				queue_push_u8(&tx_queue, templ->start_byte_offset & 0xFF);
+				queue_push_u8(&tx_queue, templ->bytes_accessing >> 8);
+				queue_push_u8(&tx_queue, templ->bytes_accessing & 0xFF);
+				queue_push_u8_array(&tx_queue, templ->data, templ->bytes_accessing);
+
+				total_length += 5 + templ->bytes_accessing;
 				break;
+			}
 			case ALP_OP_READ_HEADER: // File ID Template
 			case ALP_OP_ACTION_EXIST:
 			case ALP_OP_ACTION_DELETE:
@@ -44,18 +63,19 @@ void alp_create_structure_for_tx(uint8_t flags, uint8_t id, uint8_t nr_of_templa
 			case ALP_OP_ACTION_FLUSH:
 			case ALP_OP_ACTION_OPEN:
 			case ALP_OP_ACTION_CLOSE:
+				length = 1;
 				break;
 			case ALP_OP_WRITE_PROP: // File Header Template
 			case ALP_OP_ACTION_CREATE:
 			case ALP_OP_RESP_HEADER:
-				break;
-			case ALP_OP_RESP_ALL: // FILE Header + Data Template
+				length = templates[i].data[2] + 3;
 				break;
 			case ALP_OP_RESP_ERROR: // File Error Template
+				length = 2;
 				break;
 		}
+
 	}
 
-	//queue_push_u8_array(&tx_queue, alp_data, alp_length);
-
+	tx_queue.front[1] = total_length;
 }
