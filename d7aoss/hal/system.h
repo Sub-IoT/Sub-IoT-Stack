@@ -24,8 +24,10 @@
 #include "../types.h"
 #include "../framework/queue.h"
 
-#define ENTER_CRITICAL_SECTION(x)  	__disable_interrupt(); //st( x = __read_status_register(); __disable_interrupt(); )
-#define EXIT_CRITICAL_SECTION(x)    __enable_interrupt(); //__write_status_register(x)
+//#define ENTER_CRITICAL_SECTION(x)  	__disable_interrupt(); //st( x = __read_status_register(); __disable_interrupt(); )
+//#define EXIT_CRITICAL_SECTION(x)    __enable_interrupt(); //__write_status_register(x)
+#define ENTER_CRITICAL_SECTION(x)  	x = __get_interrupt_state(); __disable_interrupt()
+#define EXIT_CRITICAL_SECTION(x)    __set_interrupt_state(x)
 
 #define SWITCH_BYTES(x) (x << 8 | x >> 8)
 #define SPLITUINT16(x) (uint8_t)((x) >> 8), (uint8_t)((x) & 0x00FF)

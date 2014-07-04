@@ -220,8 +220,8 @@ void trans_tx_query(D7AQP_Query_Template* query,  uint8_t subnet, uint8_t spectr
 	}
 
 	queue_create_header_space(&tx_queue, 2);
-	queue_push_u8(&tx_queue, D7AQP_CONTROL_DIALOG_SINGLE); // Control byte
-	queue_push_u8(&tx_queue, 0); // Transaction ID
+	tx_queue.front[0] =  D7AQP_CONTROL_DIALOG_SINGLE; // Control byte
+	tx_queue.front[1] =  0; // Transaction ID
 	nwl_build_network_protocol_data(NWL_CONTRL_SRC_UID, NULL, NULL, NULL, 0, subnet, spectrum_id, tx_eirp);
 	dll_initiate_csma_ca();
 

@@ -66,13 +66,16 @@ void start_tx()
 
 		log_print_string("TX...");
 
-		data[0] = counter >> 8;
-		data[1] = counter & 0xFF;
+		//data[0] = counter >> 8;
+		//data[1] = counter & 0xFF;
 
 		//trans_tx_query(&command, 0xFF, SEND_CHANNEL, TX_EIRP);
 		queue_clear(&tx_queue);
-		queue_push_u8(&tx_queue, counter & 0xFF);
-		queue_push_u8(&tx_queue, counter >> 8);
+		//queue_push_u8(&tx_queue, counter & 0xFF);
+		//queue_push_u8(&tx_queue, counter >> 8);
+
+		queue_push_u8(&tx_queue, 0xFF);
+		queue_push_u8(&tx_queue, 0xFF);
 		trans_tx_query(NULL, 0xFF, SEND_CHANNEL, TX_EIRP);
 	}
 	add_tx_event = true;

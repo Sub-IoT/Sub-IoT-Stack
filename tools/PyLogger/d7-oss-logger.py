@@ -65,7 +65,7 @@ logging.Formatter(fmt='%(asctime)s.%(msecs)d', datefmt='%Y-%m-%d,%H:%M:%S')
 def formatHeader(header, color, datetime):
 	bgColor = getattr(Back, color)
 	fgColor = getattr(Fore, color)
-	msg = Style.DIM + datetime.strftime("%H:%M:%S.%f") + "  " + bgColor  + Style.BRIGHT + Fore.WHITE + header + fgColor + Back.RESET + Style.NORMAL
+	msg = Style.DIM + datetime.strftime("%H:%M:%S.%f") + "  " + bgColor  + Style.BRIGHT + Fore.WHITE + header + fgColor + Back.RESET + Style.NORMAL + " "
 	# Make sure we outline everything
 	msg += " " * (55 - (len(msg)))
 	return msg
@@ -219,13 +219,14 @@ class LogPhyRes(Logs):
 		self.lqi = struct.unpack('B', serial_port.read(size=1))[0]
 		self.packet_length = struct.unpack('B', serial_port.read(size=1))[0]
 		data = serial_port.read(size=self.packet_length)
-		self.subnet = "0x" + str(data[2].encode("hex").upper())
-		self.tx_eirp = int(struct.unpack('B', data[1])[0]) * 0.5 - 40;
-		self.frame_ctl = "0x" + str(data[3].encode("hex").upper())
-		self.source_id = str(data[6:14].encode("hex").upper())
-		self.data_length = self.packet_length - 16;
-		self.data = self.dataEncoding(data[14:14+self.data_length])
-		self.crc = self.dataEncoding(data[14+self.data_length:16+self.data_length])
+		self.subnet = "0x" + str(data[1].encode("hex").upper())
+		self.frame_ctl = "0x" + str(data[2].encode("hex").upper())
+		self.tx_eirp = int(0xCF & struct.unpack('B', data[2])[0]);
+		
+		#self.source_id = str(data[6:14].encode("hex").upper())
+		self.data_length = self.packet_length - 5;
+		self.data = self.dataEncoding(data[3:3+self.data_length])
+		self.crc = self.dataEncoding(data[3+self.data_length:5+self.data_length])
 
 		#self.data = [data[i:i+2].decode("utf-8", errors='replace') for i in range(0, len(data), 2)]
 		#self.data = [data[i].encode("hex").upper() for i in range(0, len(data))]
@@ -259,7 +260,7 @@ class LogPhyRes(Logs):
 	def __str__(self):
 		if settings["phyres"]:
 			#TODO format as table, this is quite ugly, there is a easier way, should look into it
-			string = formatHeader("PHY RES", "GREEN", self.datetime) + "Received packet from: " + self.source_id + "\n"
+			string = formatHeader("PHY: RES", "GREEN", self.datetime) + "Received packet: \n" # from: " + self.source_id + "\n"
 			string += " " * 22 + "rssi: " + str(self.rssi) + " dBm"+ " " * 7 + "lqi: " + str(self.lqi) + " "*14 + "subnet: " + str(self.subnet) + "\n"
 			string += " " * 22 + "tx_eirp: " + str(self.tx_eirp) + " dBm   " + "frame_ctl: " + str(self.frame_ctl) +  " "*7+ "CRC: " + str(self.crc) + "\n"
 			string += " " * 22 + "data: " + str(self.data) 

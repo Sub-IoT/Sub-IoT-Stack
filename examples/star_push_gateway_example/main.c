@@ -117,7 +117,7 @@ void rx_callback(Trans_Rx_Query_Result* rx_res)
 
 	dll_frame_t* frame = (dll_frame_t*) (rx_res->nwl_rx_res->dll_rx_res->frame);
 	log_print_string("RSS: %d dBm", rx_res->nwl_rx_res->dll_rx_res->rssi);
-	log_print_string("Netto Link: %d dBm", rx_res->nwl_rx_res->dll_rx_res->rssi  - (frame->control & 0x3F));
+	log_print_string("Netto Link: %d dBm", rx_res->nwl_rx_res->dll_rx_res->rssi  - ((frame->control & 0x3F) - 32));
 
 	log_print_string("D7AQP received - ALP data:");
 	log_print_data(rx_res->d7aqp_command.alp_data, rx_res->d7aqp_command.alp_length);

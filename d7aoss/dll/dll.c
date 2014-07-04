@@ -167,7 +167,7 @@ static void rx_callback(phy_rx_data_t* res)
 	// 4. target address?
 
 	uint16_t crc = crc_calculate(res->data, res->length - 2);
-	if (memcmp((uint8_t*) &(res->data[res->length - 2]), (uint8_t*) &crc, 2) != 0)
+	if ((res->data[res->length - 2] != (crc >> 8)) || (res->data[res->length - 1] != (crc & 0xFF)))
 	{
 		#ifdef LOG_DLL_ENABLED
 			log_print_stack_string(LOG_DLL, "DLL CRC ERROR");
@@ -532,16 +532,20 @@ void dll_create_frame(uint8_t* target_address, uint8_t address_length, dll_tx_cf
 	tx_queue.front[0] = frame_tx_cfg.length;	// Lenght
 	tx_queue.front[1] = params->subnet; 				// Subnet
 	tx_queue.front[2] = 0x3F & (params->eirp + 32);
-	if (address_length == 2)
-	{
-		tx_queue.front[2] |= 0xC0;
-	} else if (address_length == 8)
-	{
-		tx_queue.front[2] |= 0x80;
-	}
 
 	if (address_length != 0)
-		memcpy(&tx_queue.front[3], target_address, address_length);
+	{
+		if (address_length == 2)
+		{
+			tx_queue.front[2] |= 0xC0;
+		} else if (address_length == 8)
+		{
+			tx_queue.front[2] |= 0x80;
+		}
+
+		if (address_length != 0)
+			memcpy(&tx_queue.front[3], target_address, address_length);
+	}
 
 	uint16_t crc16 = crc_calculate(tx_queue.front, frame_tx_cfg.length - 2);
 	queue_push_u8(&tx_queue, crc16 >> 8);

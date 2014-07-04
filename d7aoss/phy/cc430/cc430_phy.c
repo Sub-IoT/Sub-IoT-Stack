@@ -76,25 +76,23 @@ static int8_t eirp_values[46] = {0x1,0x2,0x2,0x3,0x3,0x4,0x4,0x5,0x6,0x6,0x7,0x8
 static void ReadBurstRegToQueue(uint8_t addr, queue_t* buffer, uint8_t count)
 {
 	uint8_t i;
-	//uint16_t int_state;
-
-	//ENTER_CRITICAL_SECTION(int_state);
+	uint16_t int_state;
+	ENTER_CRITICAL_SECTION(int_state);
 
 	RADIO_INST_READY_WAIT();
 	RF1AINSTR1B = RF_REGRD | addr;
 
-	//queue_create_space(buffer, count);
-
 	for (i = 0; i < (count-1); i++) {
 		RADIO_DOUT_READY_WAIT();
-		queue_push_u8(buffer, RF1ADOUT1B);
-		//buffer->front[i] = RF1ADOUT1B;
+		buffer->rear[1+i] = RF1ADOUT1B;
 	}
 
-	queue_push_u8(buffer, RF1ADOUT1B);
-	//buffer->front[i] = RF1ADOUT1B;
+	buffer->rear[1+i] = RF1ADOUT1B;
 
-	//EXIT_CRITICAL_SECTION(int_state);
+	buffer->length += count;
+	buffer->rear += count;
+
+	EXIT_CRITICAL_SECTION(int_state);
 }
 
 // *****************************************************************************
@@ -113,12 +111,15 @@ void WriteBurstRegFromQueue(uint8_t addr, queue_t* buffer, uint8_t count)
 	ENTER_CRITICAL_SECTION(int_state);
 
 	RADIO_INST_READY_WAIT();
-	RF1AINSTRW = ((RF_REGWR | addr) << 8) + queue_pop_u8(buffer);
+	RF1AINSTRW = ((RF_REGWR | addr) << 8) + buffer->front[0];//queue_pop_u8(buffer);
 
 	for (i = 1; i < count; i++) {
 		RADIO_DIN_READY_WAIT();
-		RF1ADINB = queue_pop_u8(buffer);
+		RF1ADINB = buffer->front[i]; //queue_pop_u8(buffer);
 	}
+
+	buffer->front += count;
+	buffer->length -= count;
 
 	EXIT_CRITICAL_SECTION(int_state);
 }
@@ -487,7 +488,13 @@ void tx_data_isr()
 			txBytes = remainingBytes;
 
 		//Write data to tx fifo
+		#ifdef LOG_PHY_ENABLED
+		log_print_stack_string(LOG_PHY, "Data to TX Fifo:");
+		log_print_data(tx_queue.front, txBytes);
+		#endif
+
 		WriteBurstRegFromQueue(RF_TXFIFOWR, &tx_queue, txBytes);
+
 		remainingBytes -= txBytes;
 #ifdef D7_PHY_USE_FEC
 	}
@@ -557,17 +564,22 @@ void rx_data_isr()
     }
 
 
-	uint16_t int_state;
-    ENTER_CRITICAL_SECTION(int_state);
+//	uint16_t int_state;
+//    ENTER_CRITICAL_SECTION(int_state);
     //Read data from buffer
 	#ifdef LOG_PHY_ENABLED
 		log_print_stack_string(LOG_PHY, "Getting %d byte from RXFifo", rxBytes);
 	#endif
-	ReadBurstRegToQueue(RXFIFO, &rx_queue, rxBytes);
+	//ReadBurstRegToQueue(RXFIFO, &rx_queue, rxBytes);
+	ReadBurstReg(RXFIFO, &rx_queue.rear[1], rxBytes);
+
+	rx_queue.length += rxBytes;
+	rx_queue.rear += rxBytes;
+
 	remainingBytes -= rxBytes;
 
 #ifdef LOG_PHY_ENABLED
-	log_print_stack_string(LOG_PHY, "%d bytes remaingin", remainingBytes);
+	log_print_stack_string(LOG_PHY, "%d bytes remaining", remainingBytes);
 #endif
 #ifdef D7_PHY_USE_FEC
 	}
@@ -582,11 +594,12 @@ void rx_data_isr()
 		rx_data.data = rx_queue.front;
 		#ifdef LOG_PHY_ENABLED
 		log_print_stack_string(LOG_PHY, "rx_data_isr packet received");
+		log_print_data(rx_data.data, rx_data.length);
 		log_phy_rx_res(&rx_data);
 		#endif
     }
 
-    EXIT_CRITICAL_SECTION(int_state);
+    //EXIT_CRITICAL_SECTION(int_state);
 
 	#ifdef LOG_PHY_ENABLED
     log_print_stack_string(LOG_PHY, "rx_data_isr 1");
