@@ -26,7 +26,10 @@ from collections import defaultdict
 import glob
 import sys
 import imp
-imp.reload(sys) 
+import pcap
+from pcap import PCAPFormatter
+
+imp.reload(sys)
 sys.setdefaultencoding('utf-8') 
 import os as os
 import serial as serial
@@ -214,18 +217,26 @@ class LogPhyRes(Logs):
         Logs.__init__(self, "phyres")
 
     def read(self):
+        self.raw_data = bytearray() # TODO refactor
         self.read_length()
-        self.rssi = struct.unpack('b', serial_port.read(size=1))[0]
-        self.lqi = struct.unpack('B', serial_port.read(size=1))[0]
-        self.packet_length = struct.unpack('B', serial_port.read(size=1))[0]
-        data = serial_port.read(size=self.packet_length)
-        self.subnet = "0x" + str(data[2].encode("hex").upper())
-        self.tx_eirp = int(struct.unpack('B', data[1])[0]) * 0.5 - 40;
-        self.frame_ctl = "0x" + str(data[3].encode("hex").upper())
-        self.source_id = str(data[6:14].encode("hex").upper())
-        self.data_length = self.packet_length - 16;
-        self.data = self.dataEncoding(data[14:14+self.data_length])
-        self.crc = self.dataEncoding(data[14+self.data_length:16+self.data_length])
+        raw_rssi = serial_port.read(size=1)
+        self.rssi = struct.unpack('b', raw_rssi)[0]
+        self.raw_data.append(raw_rssi)
+        raw_lqi = serial_port.read(size=1)
+        self.lqi = struct.unpack('B', raw_lqi)[0]
+        self.raw_data.append(raw_lqi)
+        raw_packet_length = serial_port.read(size=1)
+        self.packet_length = struct.unpack('B', raw_packet_length)[0]
+        self.raw_data.append(raw_packet_length)
+        self.data = serial_port.read(size=self.packet_length)
+        self.raw_data.extend(self.data)
+        self.subnet = "0x" + str(self.data[2].encode("hex").upper())
+        self.tx_eirp = int(struct.unpack('B', self.data[1])[0]) * 0.5 - 40
+        self.frame_ctl = "0x" + str(self.data[3].encode("hex").upper())
+        self.source_id = str(self.data[6:14].encode("hex").upper())
+        self.data_length = self.packet_length - 16
+        self.data = self.dataEncoding(self.data[14:14+self.data_length])
+        self.crc = self.dataEncoding(self.data[14+self.data_length:16+self.data_length])
 
         #self.data = [data[i:i+2].decode("utf-8", errors='replace') for i in range(0, len(data), 2)]
         #self.data = [data[i].encode("hex").upper() for i in range(0, len(data))]
@@ -256,6 +267,9 @@ class LogPhyRes(Logs):
             return string
         return ""
 
+    def get_raw_data(self):
+        return self.raw_data
+
     def __str__(self):
         if settings["phyres"]:
             #TODO format as table, this is quite ugly, there is a easier way, should look into it
@@ -273,9 +287,9 @@ class LogPhyRes(Logs):
 # Different threads we use
 ##
 class parse_d7(threading.Thread):
-    def __init__(self, datQueue, disQueue):
+    def __init__(self, pcap_file, disQueue):
         self.keep_running = True
-        self.datQueue = datQueue
+        self.pcap_file = pcap_file
         self.disQueue = disQueue
         threading.Thread.__init__(self)
 
@@ -284,8 +298,12 @@ class parse_d7(threading.Thread):
             try:
                 serialData = read_value_from_serial()
                 if serialData is not None:
-                    self.datQueue.put(serialData)
                     self.disQueue.put(serialData)
+                    if isinstance(serialData, LogPhyRes) and self.pcap_file != None:
+                        self.pcap_file.write(PCAPFormatter.build_record_data(serialData.get_raw_data()))
+                        self.pcap_file.flush()
+                        print('pcap written')
+
             except Exception as inst:
                 printError(inst)
 
@@ -358,7 +376,6 @@ def read_value_from_serial():
     # See if we have found our type in the LOG_TYPES
     #print("We got logtype: %s" % logtype)
     #result = processedread[logtype]()
-
     return result()
 
 def empty_serial_buffer():
@@ -397,7 +414,7 @@ def main():
     parser.add_argument('serial', default="COM12", metavar="serial port", help="serial port (eg COM7 or /dev/ttyUSB0)", nargs='?')
     parser.add_argument('-b', '--baud' , default=115200, metavar="baudrate", type=int, help="set the baud rate (default: 9600)")
     parser.add_argument('-v', '--version', action='version', version='DASH7 Logger 0.5', help="show the current version")
-    parser.add_argument('-f', '--file', metavar="file", help="write to a specific file", nargs='?', default=None, const=dateTime)
+    parser.add_argument('-f', '--file', metavar="file", help="write to a pcap file", nargs='?', default=None, const=dateTime)
     parser.add_argument('-l', '--list', help="Lists available serial ports", action="store_true", default=False)
     general_options = parser.add_argument_group('general logging')
     general_options.add_argument('--string', help="Disable string logs", action="store_false", default=True)
@@ -434,13 +451,12 @@ def main():
     threads = []
     # Only write a file if we have a file defined
     if settings["file"] != None:
-        f = open(settings["file"] + '.log', 'w')
-        f.write("Start D7 logger @ (%s) \n" % dateTime)
-        f.flush()
-        # Create the write thread
-        threads.append(write_d7(f, dataQueue))
+        # TODO check if file already exists
+        pcap_file = open(settings["file"], 'w')
+        pcap_file.write(PCAPFormatter.build_global_header_data())
+        pcap_file.flush()
 
-    threads.append(parse_d7(dataQueue, displayQueue))
+    threads.append(parse_d7(pcap_file, displayQueue))
     threads.append(display_d7(displayQueue))
 
     try:
