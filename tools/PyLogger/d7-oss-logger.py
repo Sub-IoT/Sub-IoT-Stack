@@ -471,6 +471,7 @@ def main():
     # Array containing all the threads
     threads = []
     # Only write a file if we have a file defined
+    pcap_file = None
     if settings["file"] != None:
         # TODO check if file already exists
         pcap_file = open(settings["file"], 'w')
