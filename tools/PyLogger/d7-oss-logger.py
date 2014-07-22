@@ -32,6 +32,7 @@ from pcap import PCAPFormatter
 imp.reload(sys)
 sys.setdefaultencoding('utf-8') 
 import os as os
+import errno
 import serial as serial
 import struct as struct
 import datetime
@@ -44,6 +45,7 @@ import argparse
 DEBUG = 0
 
 SYNC_WORD = "DD"
+PIPE_FILENAME = 'pipe'
 
 ### Global variables we need, do not change! ###
 serial_port = None
@@ -287,9 +289,12 @@ class LogPhyRes(Logs):
 # Different threads we use
 ##
 class parse_d7(threading.Thread):
-    def __init__(self, pcap_file, disQueue):
+    def __init__(self, pcap_file, is_pipe_enabled, disQueue):
         self.keep_running = True
         self.pcap_file = pcap_file
+        self.is_pipe_enabled = is_pipe_enabled
+        self.is_pipe_connected = False
+        self.pipe = None
         self.disQueue = disQueue
         threading.Thread.__init__(self)
 
@@ -299,11 +304,26 @@ class parse_d7(threading.Thread):
                 serialData = read_value_from_serial()
                 if serialData is not None:
                     self.disQueue.put(serialData)
-                    if isinstance(serialData, LogPhyRes) and self.pcap_file != None:
-                        self.pcap_file.write(PCAPFormatter.build_record_data(serialData.get_raw_data()))
-                        self.pcap_file.flush()
-                        print('pcap written')
-
+                    if isinstance(serialData, LogPhyRes):
+                        if self.pcap_file != None:
+                            self.pcap_file.write(PCAPFormatter.build_record_data(serialData.get_raw_data()))
+                            self.pcap_file.flush()
+                        if self.is_pipe_enabled:
+                            if self.is_pipe_connected is False:
+                                try:
+                                    self.pipe = os.open(PIPE_FILENAME, os.O_WRONLY | os.O_NONBLOCK)
+                                    os.write(self.pipe, PCAPFormatter.build_global_header_data())
+                                    self.is_pipe_connected = True
+                                except OSError as e:
+                                    if e.errno == errno.ENXIO:
+                                        print("Wireshark not listening yet ...")
+                            else:
+                                try:
+                                    os.write(self.pipe, PCAPFormatter.build_record_data(serialData.get_raw_data()))
+                                except OSError as e:
+                                    if e.errno == errno.EPIPE:
+                                        print("Wireshark stopped listening, waiting for reconnection ...")
+                                        self.is_pipe_connected = False
             except Exception as inst:
                 printError(inst)
 
@@ -415,6 +435,7 @@ def main():
     parser.add_argument('-b', '--baud' , default=115200, metavar="baudrate", type=int, help="set the baud rate (default: 9600)")
     parser.add_argument('-v', '--version', action='version', version='DASH7 Logger 0.5', help="show the current version")
     parser.add_argument('-f', '--file', metavar="file", help="write to a pcap file", nargs='?', default=None, const=dateTime)
+    parser.add_argument('-p', '--pipe', help="stream live pcap data to a named pipe", action="store_true", default=False) # TODO print filename
     parser.add_argument('-l', '--list', help="Lists available serial ports", action="store_true", default=False)
     general_options = parser.add_argument_group('general logging')
     general_options.add_argument('--string', help="Disable string logs", action="store_false", default=True)
@@ -456,7 +477,11 @@ def main():
         pcap_file.write(PCAPFormatter.build_global_header_data())
         pcap_file.flush()
 
-    threads.append(parse_d7(pcap_file, displayQueue))
+    if settings["pipe"]:
+        if not os.path.exists(PIPE_FILENAME):
+            os.mkfifo(PIPE_FILENAME)
+
+    threads.append(parse_d7(pcap_file, settings["pipe"], displayQueue))
     threads.append(display_d7(displayQueue))
 
     try:
