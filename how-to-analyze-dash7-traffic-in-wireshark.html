@@ -3,7 +3,7 @@
       xmlns:og="http://ogp.me/ns#"
       xmlns:fb="https://www.facebook.com/2008/fbml">
 <head>
-    <title>News - OSS-7</title>
+    <title>How to analyze DASH7 traffic in wireshark - OSS-7</title>
     <!-- Using the latest rendering mode for IE -->
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta charset="utf-8">
@@ -11,10 +11,10 @@
     
 
     <!-- Open Graph tags -->
-            <meta property="og:type" content="website"/>
-            <meta property="og:title" content="OSS-7"/>
-            <meta property="og:url" content=""/>
-            <meta property="og:description" content="OSS-7"/>
+            <meta property="og:type" content="article"/>
+            <meta property="og:title" content="How to analyze DASH7 traffic in wireshark"/>
+            <meta property="og:url" content="/how-to-analyze-dash7-traffic-in-wireshark.html"/>
+            <meta property="og:description" content="This post explains how to configure wireshark so it can be used to analyze DASH7 traffic captured using a OSS-7 powered node."/>
 
     <!-- Bootstrap -->
         <link rel="stylesheet" href="/theme/css/bootstrap.spacelab.min.css" type="text/css"/>
@@ -71,20 +71,55 @@ OSS-7            </a>
     <div class="row">
         <div class="col-sm-9">
 
-            <article>
-                <h2><a href="/how-to-analyze-dash7-traffic-in-wireshark.html">How to analyze DASH7 traffic in wireshark</a></h2>
-                <div class="summary"><p>This post explains how to configure wireshark so it can be used to analyze DASH7 traffic captured using a OSS-7 powered node.</p>
-                    <a class="btn btn-default btn-xs" href="/how-to-analyze-dash7-traffic-in-wireshark.html">more ...</a>
+    <section id="content">
+        <article>
+            <header class="page-header">
+                <h1>
+                    <a href="/how-to-analyze-dash7-traffic-in-wireshark.html"
+                       rel="bookmark"
+                       title="Permalink to How to analyze DASH7 traffic in wireshark">
+                        How to analyze DASH7 traffic in wireshark
+                    </a>
+                </h1>
+            </header>
+            <div class="entry-content">
+                <div class="panel">
+                    <div class="panel-body">
+<footer class="post-info">
+    <span class="label label-default">Date</span>
+    <span class="published">
+        <i class="fa fa-calendar"></i><time datetime="2014-08-13T16:00:00"> Wed 13 August 2014</time>
+    </span>
+
+
+
+<span class="label label-default">Tags</span>
+	<a href="/tag/tools.html">Tools</a>
+    
+</footer><!-- /.post-info -->                    </div>
                 </div>
-            </article>
-            <hr/>
-            <article>
-                <h2><a href="/welcome-to-our-new-site.html">Welcome to our new site!</a></h2>
-                <div class="summary"><p>On this site you will find all information to get started with OSS-7!</p>
-                    <a class="btn btn-default btn-xs" href="/welcome-to-our-new-site.html">more ...</a>
-                </div>
-            </article>
-            <hr/>
+                <p>In this post we assume you already have a OSS-7 powered node running and are able to get the log information using the tools/PyLogger/d7-oss-logger.py script. The OSS-7 stack running on the node needs to be built with LOG_PHY_ENABLED defined, in order to receive the raw packet data.</p>
+<p>When the d7-oss-logger.py script is started with the <code>-f [file]</code> parameter it will dump the received traffic to the specified file in the PCAP format (the file format used by wireshark).</p>
+<p>Next we need to configure wireshark to correctly dissect this file. Since wireshark obviously does not know about the OSS-7 and DASH7 packet structure we will need to add a dissector plugin which adds support for parsing the DASH7 packets.
+This plugin is provided in the form of a lua script and can be found in the OSS-7 repository in the <code>tools/wireshark-dissector/</code> directory. Next we need to tell wireshark to use this script. This can be done by calling the script from the init.lua script by adding the following line:</p>
+<div class="codehilite"><pre><span class="nb">dofile</span><span class="p">(</span><span class="s1">&#39;</span><span class="s">&lt;PATH-TO-OSS7&gt;/tools/wireshark-dissector/oss7-wireshark-dissector.lua&#39;</span><span class="p">)</span>
+</pre></div>
+
+
+<p>The init.lua script can found in <code>$HOME/.wireshark/init.lua</code> on linux or <code>C:\Program Files\Wireshark</code> on Windows.</p>
+<p>As a final step we need to configure wireshark to use this dissector. This is done by coupling the User 0 link layer type (which the logger uses to write the PCAP file) to the protocol dissector for DASH7. 
+To do this select <code>Edit &gt; Preferences &gt; Protocols &gt; DLT_USER &gt; Edit &gt; New</code>. 
+Fill in the dialog like in the screenshot below and press OK.
+<img alt="DLT" src="/images/dlt.png" /></p>
+<p>Now you should be able to analyze DASH7 packets by loading a PCAP file captured with the logger tool. This is shown in the screenshot below.
+<img alt="wireshark dissector" src="/images/wireshark-dissector.png" /></p>
+<p>The dissector does not yet support the full protocol however. This will be implemented in parallel with the stack itself.
+As long as you use the same git revision for the stack and for the dissector script you should be fine.</p>
+<p>In a future post we will explain how to go one step further and do live tracing of packets in wireshark instead of reading from a previously captured file.</p>
+            </div>
+            <!-- /.entry-content -->
+        </article>
+    </section>
 
         </div>
         <div class="col-sm-3 well well-sm" id="sidebar">
