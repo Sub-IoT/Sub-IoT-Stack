@@ -3,7 +3,7 @@
       xmlns:og="http://ogp.me/ns#"
       xmlns:fb="https://www.facebook.com/2008/fbml">
 <head>
-    <title>News - OSS-7</title>
+    <title>Live capturing of DASH7 traffic in wireshark - OSS-7</title>
     <!-- Using the latest rendering mode for IE -->
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta charset="utf-8">
@@ -11,19 +11,19 @@
     
 
     <!-- Open Graph tags -->
-            <meta property="og:type" content="website"/>
-            <meta property="og:title" content="OSS-7"/>
-            <meta property="og:url" content=".."/>
-            <meta property="og:description" content="OSS-7"/>
+            <meta property="og:type" content="article"/>
+            <meta property="og:title" content="Live capturing of DASH7 traffic in wireshark"/>
+            <meta property="og:url" content="./live-capturing-of-dash7-traffic-in-wireshark.html"/>
+            <meta property="og:description" content="This post explains how to configure wireshark so it can be used capture live DASH7 traffic using a OSS-7 powered node."/>
 
     <!-- Bootstrap -->
-        <link rel="stylesheet" href="../theme/css/bootstrap.spacelab.min.css" type="text/css"/>
-    <link href="../theme/css/font-awesome.min.css" rel="stylesheet">
+        <link rel="stylesheet" href="./theme/css/bootstrap.spacelab.min.css" type="text/css"/>
+    <link href="./theme/css/font-awesome.min.css" rel="stylesheet">
 
-    <link href="../theme/css/pygments/default.css" rel="stylesheet">
-    <link rel="stylesheet" href="../theme/css/style.css" type="text/css"/>
+    <link href="./theme/css/pygments/default.css" rel="stylesheet">
+    <link rel="stylesheet" href="./theme/css/style.css" type="text/css"/>
 
-        <link href="../feeds/all.atom.xml" type="application/atom+xml" rel="alternate"
+        <link href="./feeds/all.atom.xml" type="application/atom+xml" rel="alternate"
               title="OSS-7 ATOM Feed"/>
 
 </head>
@@ -38,29 +38,29 @@
                 <span class="icon-bar"></span>
                 <span class="icon-bar"></span>
             </button>
-            <a href="../" class="navbar-brand">
+            <a href="./" class="navbar-brand">
 OSS-7            </a>
         </div>
         <div class="collapse navbar-collapse navbar-ex1-collapse">
             <ul class="nav navbar-nav">
-                         <li><a href="../pages/community.html">
+                         <li><a href="./pages/community.html">
                              Community
                           </a></li>
-                         <li><a href="../pages/hardware.html">
+                         <li><a href="./pages/hardware.html">
                              Hardware
                           </a></li>
-                         <li><a href="../pages/quickstart.html">
+                         <li><a href="./pages/quickstart.html">
                              Quickstart
                           </a></li>
-                         <li><a href="../pages/resources.html">
+                         <li><a href="./pages/resources.html">
                              Resources
                           </a></li>
                         <li class="active">
-                            <a href="../category/news.html">News</a>
+                            <a href="./category/news.html">News</a>
                         </li>
             </ul>
             <ul class="nav navbar-nav navbar-right">
-                <li><a href="../archives.html"><i class="fa fa-th-list"></i><span class="icon-label">Archives</span></a></li>
+                <li><a href="./archives.html"><i class="fa fa-th-list"></i><span class="icon-label">Archives</span></a></li>
             </ul>
         </div>
         <!-- /.navbar-collapse -->
@@ -71,27 +71,46 @@ OSS-7            </a>
     <div class="row">
         <div class="col-sm-9">
 
-            <article>
-                <h2><a href="../live-capturing-of-dash7-traffic-in-wireshark.html">Live capturing of DASH7 traffic in wireshark</a></h2>
-                <div class="summary"><p>This post explains how to configure wireshark so it can be used capture live DASH7 traffic using a OSS-7 powered node.</p>
-                    <a class="btn btn-default btn-xs" href="../live-capturing-of-dash7-traffic-in-wireshark.html">more ...</a>
+    <section id="content">
+        <article>
+            <header class="page-header">
+                <h1>
+                    <a href="./live-capturing-of-dash7-traffic-in-wireshark.html"
+                       rel="bookmark"
+                       title="Permalink to Live capturing of DASH7 traffic in wireshark">
+                        Live capturing of DASH7 traffic in wireshark
+                    </a>
+                </h1>
+            </header>
+            <div class="entry-content">
+                <div class="panel">
+                    <div class="panel-body">
+<footer class="post-info">
+    <span class="label label-default">Date</span>
+    <span class="published">
+        <i class="fa fa-calendar"></i><time datetime="2014-08-28T12:00:00"> Thu 28 August 2014</time>
+    </span>
+
+
+
+<span class="label label-default">Tags</span>
+	<a href="./tag/tools.html">Tools</a>
+    
+</footer><!-- /.post-info -->                    </div>
                 </div>
-            </article>
-            <hr/>
-            <article>
-                <h2><a href="../how-to-analyze-dash7-traffic-in-wireshark.html">How to analyze DASH7 traffic in wireshark</a></h2>
-                <div class="summary"><p>This post explains how to configure wireshark so it can be used to analyze DASH7 traffic captured using a OSS-7 powered node.</p>
-                    <a class="btn btn-default btn-xs" href="../how-to-analyze-dash7-traffic-in-wireshark.html">more ...</a>
-                </div>
-            </article>
-            <hr/>
-            <article>
-                <h2><a href="../welcome-to-our-new-site.html">Welcome to our new site!</a></h2>
-                <div class="summary"><p>On this site you will find all information to get started with OSS-7!</p>
-                    <a class="btn btn-default btn-xs" href="../welcome-to-our-new-site.html">more ...</a>
-                </div>
-            </article>
-            <hr/>
+                <p>As promised in the <a href="./how-to-analyze-dash7-traffic-in-wireshark.html">previous post</a> we will show how to do live capturing in wireshark instead of reading from a previous captured file. Instead of dumping the PCAP data to a regular file the logger writes the data to a named pipe and wireshark reads from this named pipe. As a prerequisite, make sure the setup of the <a href="./how-to-analyze-dash7-traffic-in-wireshark.html">previous post</a> is functional, since we will be building on top of this. </p>
+<p>When the d7-oss-logger.py script is started with the <code>-p</code> parameter it will dump the received traffic to a named pipe. The filename of this named pipe depends on the OS you are running, for POSIX systems this is <code>/tmp/oss7-pipe</code>, for MS Windows this is <code>\\.\pipe\oss7-pipe</code>.
+The logger will create the named pipe and wait for a client connection (by wireshark in our case) before it writes data to it.
+When wireshark conencts the logger will first transmit the PCAP header, followed by the subsequent frames which are received.
+It is possible to stop listening in wireshark and reconnect later.</p>
+<p>Now, how to configure wireshark to use this named pipe? We add the named pipe 'interface' by choosing <code>Capture &gt; Options ... &gt; Manage Interfaces &gt; New</code> and filling in the pipe filename mentioned above in the <code>Pipe</code> field. The named pipe should appear in the interface list, and you can now start listening on it.</p>
+<p>One caveat to keep in mind is that when you quit the logger while capturing in wireshark you will need to restart the capture in wireshark again after restarting the logger. 
+Being able to start the logger from within wiresharj would make the integration easier, but this is not possible in wireshark currently. However, there is a <a href="http://sharkfest.wireshark.org/sharkfest.13/presentations/NAP-11_Expanding-Wireshark-Beyond-Ethernet-and-Network-Interfaces_Kershaw-Ryan.pdf">proposal</a> which might enable this in the future.</p>
+<p>Happy capturing!</p>
+            </div>
+            <!-- /.entry-content -->
+        </article>
+    </section>
 
         </div>
         <div class="col-sm-3 well well-sm" id="sidebar">
@@ -102,15 +121,15 @@ OSS-7            </a>
 
 
 
-                <li class="list-group-item"><a href="../"><h4><i class="fa fa-tags fa-lg"></i><span class="icon-label">Tags</span></h4></a>
+                <li class="list-group-item"><a href="./"><h4><i class="fa fa-tags fa-lg"></i><span class="icon-label">Tags</span></h4></a>
                     <ul class="list-group" id="tags">
                         <li class="list-group-item tag-1">
-                            <a href="../tag/tools.html">
+                            <a href="./tag/tools.html">
                                 Tools
                             </a>
                         </li>
                         <li class="list-group-item tag-4">
-                            <a href="../tag/general.html">
+                            <a href="./tag/general.html">
                                 General
                             </a>
                         </li>
@@ -169,17 +188,17 @@ OSS-7            </a>
 <script src="//code.jquery.com/jquery.js"></script>
 
 <!-- Include all compiled plugins (below), or include individual files as needed -->
-<script src="../theme/js/bootstrap.min.js"></script>
+<script src="./theme/js/bootstrap.min.js"></script>
 
 <!-- Enable responsive features in IE8 with Respond.js (https://github.com/scottjehl/Respond) -->
-<script src="../theme/js/respond.min.js"></script>
+<script src="./theme/js/respond.min.js"></script>
 
     <script type="text/javascript">
         $(document).ready(function () {
             if (!window.jXHR) {
                 var jxhr = document.createElement('script');
                 jxhr.type = 'text/javascript';
-                jxhr.src = '../theme/js/jXHR.js';
+                jxhr.src = './theme/js/jXHR.js';
                 var s = document.getElementsByTagName('script')[0];
                 s.parentNode.insertBefore(jxhr, s);
             }
@@ -192,7 +211,7 @@ OSS-7            </a>
             });
         });
     </script>
-    <script src="../theme/js/github.js" type="text/javascript"></script>
+    <script src="./theme/js/github.js" type="text/javascript"></script>
     <script type="text/javascript">
 
         var _gaq = _gaq || [];
