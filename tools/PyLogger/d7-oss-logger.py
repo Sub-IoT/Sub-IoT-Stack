@@ -27,7 +27,7 @@ import glob
 import sys
 import imp
 import pcap
-from pcap import PCAPFormatter
+from wireshark import WiresharkNamedPipeLogger, PCAPFormatter
 
 imp.reload(sys)
 sys.setdefaultencoding('utf-8') 
@@ -45,7 +45,6 @@ import argparse
 DEBUG = 0
 
 SYNC_WORD = "DD"
-PIPE_FILENAME = 'pipe'
 
 ### Global variables we need, do not change! ###
 serial_port = None
@@ -289,10 +288,10 @@ class LogPhyRes(Logs):
 # Different threads we use
 ##
 class parse_d7(threading.Thread):
-    def __init__(self, pcap_file, is_pipe_enabled, disQueue):
+    def __init__(self, pcap_file, wireshark_logger, disQueue):
         self.keep_running = True
         self.pcap_file = pcap_file
-        self.is_pipe_enabled = is_pipe_enabled
+        self.wireshark_logger = wireshark_logger
         self.is_pipe_connected = False
         self.pipe = None
         self.disQueue = disQueue
@@ -308,22 +307,8 @@ class parse_d7(threading.Thread):
                         if self.pcap_file != None:
                             self.pcap_file.write(PCAPFormatter.build_record_data(serialData.get_raw_data()))
                             self.pcap_file.flush()
-                        if self.is_pipe_enabled:
-                            if self.is_pipe_connected is False:
-                                try:
-                                    self.pipe = os.open(PIPE_FILENAME, os.O_WRONLY | os.O_NONBLOCK)
-                                    os.write(self.pipe, PCAPFormatter.build_global_header_data())
-                                    self.is_pipe_connected = True
-                                except OSError as e:
-                                    if e.errno == errno.ENXIO:
-                                        print("Wireshark not listening yet ...")
-                            else:
-                                try:
-                                    os.write(self.pipe, PCAPFormatter.build_record_data(serialData.get_raw_data()))
-                                except OSError as e:
-                                    if e.errno == errno.EPIPE:
-                                        print("Wireshark stopped listening, waiting for reconnection ...")
-                                        self.is_pipe_connected = False
+                        if self.wireshark_logger != None:
+                            self.wireshark_logger.write(serialData)
             except Exception as inst:
                 printError(inst)
 
@@ -479,10 +464,9 @@ def main():
         pcap_file.flush()
 
     if settings["pipe"]:
-        if not os.path.exists(PIPE_FILENAME):
-            os.mkfifo(PIPE_FILENAME)
+        wireshark_logger = WiresharkNamedPipeLogger()
 
-    threads.append(parse_d7(pcap_file, settings["pipe"], displayQueue))
+    threads.append(parse_d7(pcap_file, wireshark_logger, displayQueue))
     threads.append(display_d7(displayQueue))
 
     try:

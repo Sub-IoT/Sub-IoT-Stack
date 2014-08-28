@@ -1,6 +1,34 @@
-__author__ = 'glenn'
+__author__ = 'Glenn Ergeerts'
 
 import struct
+import os
+import errno
+
+class WiresharkNamedPipeLogger:
+    PIPE_FILENAME = '/tmp/oss7-pipe'
+
+    is_pipe_connected = False
+
+    def __init__(self):
+        if not os.path.exists(self.PIPE_FILENAME):
+            os.mkfifo(self.PIPE_FILENAME)
+
+    def write(self, serialData):
+        if self.is_pipe_connected is False:
+            try:
+                self.pipe = os.open(self.PIPE_FILENAME, os.O_WRONLY | os.O_NONBLOCK)
+                os.write(self.pipe, PCAPFormatter.build_global_header_data())
+                self.is_pipe_connected = True
+            except OSError as e:
+                if e.errno == errno.ENXIO:
+                    print("Wireshark not listening yet ...")
+        else:
+            try:
+                os.write(self.pipe, PCAPFormatter.build_record_data(serialData.get_raw_data()))
+            except OSError as e:
+                if e.errno == errno.EPIPE:
+                    print("Wireshark stopped listening, waiting for reconnection ...")
+                    self.is_pipe_connected = False
 
 class PCAPFormatter:
     MAGIC_NUMBER = 0xa1b2c3d4
@@ -33,10 +61,3 @@ class PCAPFormatter:
                           len(packet),
                           len(packet)
                           ) + packet
-
-if __name__ == "__main__":
-    s = PCAPFormatter.build_global_header_data() + PCAPFormatter.build_record_data('test') + PCAPFormatter.build_record_data('test')
-    newfile = open('temp.pcap', 'wb')
-    newfile.write(bytearray(s))
-    newfile.close()
-    print " ".join(["0x" + s[i].encode("hex").upper() for i in range(0, len(s))])
