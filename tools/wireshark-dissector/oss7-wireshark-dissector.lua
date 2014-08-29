@@ -91,13 +91,15 @@ f.alp_record_data = ProtoField.bytes("oss7_proto.alp.template.record_data", "ALP
 f.file_data_tmpl_id = ProtoField.uint8("oss7_proto.alp.file_data_template_id", "File ID")
 f.file_data_start_byte_offset = ProtoField.uint16("oss7_proto.alp.file_data_template_start_byte_offset", "Start Byte Offset")
 f.file_data_bytes_accessing = ProtoField.uint16("oss7_proto.alp.file_data_template_bytes_accessing", "Bytes Accessing")
+f.file_data = ProtoField.bytes("oss7_proto.alp.file_data", "File Data")
 
 function parse_file_date_template(buffer,pointer,tree)
 	tree:add(f.file_data_tmpl_id, buffer(pointer, 1))
 	tree:add(f.file_data_start_byte_offset, buffer(pointer + 1, 2))
-	tree:add(f.file_data_bytes_accessing, buffer(pointer + 3, 2))
-	pointer = pointer + 5
-	
+	local bytes_accessing = buffer(pointer + 3, 2):uint()
+	tree:add(f.file_data_bytes_accessing, bytes_accessing)
+	tree:add(f.file_data, buffer(pointer + 5, bytes_accessing))
+	pointer = pointer + 5 + bytes_accessing
 	return pointer
 
 end
