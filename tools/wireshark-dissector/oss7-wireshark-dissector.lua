@@ -42,9 +42,65 @@ f.trans_cc_nack_only = ProtoField.bool("oss7_proto.trans.cc.nack_only", "NACK On
 f.trans_cc_query = ProtoField.bool("oss7_proto.trans.cc.query", "Query Template")
 f.trans_cc_ack_tpl = ProtoField.bool("oss7_proto.trans.cc.ack_tpl", "Acknowledge Return Template")
 
-f.alp_record_flags = ProtoField.uint8("oss7_proto.alp.record_flags", "Record Flags")
+f.alp_record_flags = ProtoField.uint8("oss7_proto.alp.record_flags", "Record Flags", base.HEX)
 f.alp_record_length = ProtoField.uint8("oss7_proto.alp.record_lenght", "Record Length")
-f.alp_record_flags = ProtoField.uint8("oss7_proto.alp.record_flags", "Record Flags")
+f.alp_id = ProtoField.uint8("oss7_proto.alp.id", "ALP ID")
+f.alp_templates = ProtoField.bytes("oss7_proto.alp.templates", "ALP Templates")
+
+local alp_flag_chunk_ctrls = {
+    [0] = "Intermediary packet of a chunked message",
+    [1] = "First packet of a chunked message",
+    [2] = "Last packet of a chunked message",
+    [3] = "ALP packet is not chunked"
+}
+
+local alp_flag_types = {
+	[0] = "Response message",
+	[1] = "Unsolicited response type message",
+	[2] = "Command with no response",
+	[3] = "Command with required response"
+}
+
+f.alp_flag_chunk_ctrl = ProtoField.uint8("oss7_proto.alp.flag.chunk_ctrl", "Chunk Control", base.DEC, alp_flag_chunk_ctrls)
+f.alp_flag_type = ProtoField.uint8("oss7_proto.alp.flag.type", "Type", base.DEC, alp_flag_types)
+f.alp_flag_grouped = ProtoField.uint8("oss7_proto.alp.flag.grouped", "Grouped", base.DEC)
+
+local alp_ops = {
+	[0] = "Read File Data",
+	[1] = "Read File Header",
+	[2] = "Read File Header + Data",
+	[4] = "Write File Data",
+	[5] = "Write File Data Flush",
+	[6] = "Write File Properties",
+	[16] = "Exist File",
+	[17] = "Create New File",
+	[18] = "Delete File",
+	[19] = "Restore File",
+	[20] = "Flush File",
+	[21] = "Open File",
+	[22] = "Close File",
+	[32] = "Return File Data",
+	[33] = "Return File Header",
+	[34] = "Return File Header + Data",
+	[255] = "Return Error"
+}
+
+f.alp_op = ProtoField.uint8("oss7_proto.alp.template.op", "ALP OP", base.DEC, alp_ops)
+f.alp_record_data = ProtoField.bytes("oss7_proto.alp.template.record_data", "ALP Record Data")
+
+f.file_data_tmpl_id = ProtoField.uint8("oss7_proto.alp.file_data_template_id", "File ID")
+f.file_data_start_byte_offset = ProtoField.uint16("oss7_proto.alp.file_data_template_start_byte_offset", "Start Byte Offset")
+f.file_data_bytes_accessing = ProtoField.uint16("oss7_proto.alp.file_data_template_bytes_accessing", "Bytes Accessing")
+
+function parse_file_date_template(buffer,pointer,tree)
+	tree:add(f.file_data_tmpl_id, buffer(pointer, 1))
+	tree:add(f.file_data_start_byte_offset, buffer(pointer + 1, 2))
+	tree:add(f.file_data_bytes_accessing, buffer(pointer + 3, 2))
+	pointer = pointer + 5
+	
+	return pointer
+
+end
 
 function oss7_proto.dissector(buffer,pinfo,tree)
 	pinfo.cols.protocol = "DASH7 Alliance Protocol DRAFT 1.0"
@@ -125,13 +181,14 @@ function oss7_proto.dissector(buffer,pinfo,tree)
 			nwl_subtree:add(f.nwl_source_access_template, "Short Access Template with UID Address")
 			local nwl_access_temp_subtree = nwl_subtree:add("Access Template", nil);
 			nwl_access_temp_subtree:add(f.nwl_access_device_id, payload(nwl_offset, 8));
-			pinfo.cols.src = payload(nwl_offset, 8):string()
+			pinfo.cols.src = tostring(string.format("%s", payload(nwl_offset, 8):bytes()))
+			
 			nwl_offset = nwl_offset + 8
 		elseif ctrl_src == 2 then	
 			nwl_subtree:add(f.nwl_source_access_template, "Short Access Template with VID Address")			
 			local nwl_access_temp_subtree = nwl_subtree:add("Access Template", nil);
 			nwl_access_temp_subtree:add(f.nwl_access_device_id, payload(nwl_offset, 2));
-			pinfo.cols.src = payload(nwl_offset, 2):string()
+			pinfo.cols.src = tostring(string.format("%s", payload(nwl_offset, 2):bytes()))
 			nwl_offset = nwl_offset + 2
 		elseif ctrl_src == 3 then	
 			nwl_subtree:add(f.nwl_source_access_template, "Full Access Template")			
@@ -171,8 +228,41 @@ function oss7_proto.dissector(buffer,pinfo,tree)
 		
 		-- Application Layer
 		
-		local apl_subtree = subtree.add("Application Layer Programming Interface", nil)
+		local alp_subtree = subtree:add("Application Layer Programming Interface", nil)
 		local alp_offset = 0
+		
+		alp_subtree:add(f.alp_record_flags, alp_data(alp_offset, 1))
+		
+			local alp_flags_subtree = alp_subtree:add("Record Flags", nil)
+			alp_flags_subtree:add(f.alp_flag_chunk_ctrl, alp_data(alp_offset, 1):uint() / 64)
+			alp_flags_subtree:add(f.alp_flag_type, alp_data(alp_offset, 1):uint() % 64 / 16 )			
+			alp_flags_subtree:add(f.alp_flag_grouped, alp_data(alp_offset, 1):uint() % 8)
+			
+		alp_offset = alp_offset + 1
+		
+		local alp_record_length = alp_data(alp_offset, 1):uint()
+		alp_subtree:add(f.alp_record_length, alp_record_length)
+		alp_offset = alp_offset + 1
+		alp_subtree:add(f.alp_id, alp_data(alp_offset, 1))
+		alp_offset = alp_offset + 1
+
+		local alp_template = alp_data(alp_offset, alp_record_length - 3)
+		alp_subtree:add(f.alp_templates, alp_template)
+		
+		while alp_offset < alp_record_length do
+			local alp_template_subtree = alp_subtree:add("ALP Template", nil)
+			local alp_op =  alp_data(alp_offset, 1):uint()
+			alp_template_subtree:add(f.alp_op, alp_op)
+			alp_offset = alp_offset + 1
+			
+			if alp_op == 32 then -- File Data Template
+				alp_offset = parse_file_date_template(alp_data, alp_offset, alp_template_subtree)
+			end
+			
+			
+		
+		end
+		
 		
 		
 	
