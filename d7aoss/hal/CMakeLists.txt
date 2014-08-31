@@ -25,6 +25,17 @@ IF(D7AOSS_HAL_DRIVER STREQUAL "cc430")
         ADD_SUBDIRECTORY(cc430/driverlib)
 ENDIF()
 
+IF(D7AOSS_HAL_DRIVER STREQUAL "efm32gg")
+    INCLUDE_DIRECTORIES(efm32gg/)
+    INCLUDE_DIRECTORIES(efm32gg/CMSIS/include)
+    INCLUDE_DIRECTORIES(efm32gg/CMSIS/device/include)
+    SET(HAL_SRCS
+                        efm32gg/CMSIS/device/src/system_efm32gg.c
+                        efm32gg/CMSIS/device/src/startup_gcc_efm32gg.s
+        )
+    ADD_DEFINITIONS(-DEFM32GG990F1024) # TODO make configurable
+ENDIF()
+
 IF(D7AOSS_HAL_DRIVER STREQUAL "stm32l")
     INCLUDE_DIRECTORIES(stm32l/)
     INCLUDE_DIRECTORIES(stm32l/driverlib/STM32L1xx_StdPeriph_Driver/inc)
