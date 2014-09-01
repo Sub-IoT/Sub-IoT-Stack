@@ -70,7 +70,7 @@ void rx_callback(Trans_Rx_Query_Result* rx_res)
 	blink_led();
 
 	dll_foreground_frame_t* frame = (dll_foreground_frame_t*) (rx_res->nwl_rx_res->dll_rx_res->frame);
-	log_print_string("Received Query from :%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x;",
+	log_print_string("Received Query from :%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x;",
 					frame->address_ctl->source_id[0] >> 4, frame->address_ctl->source_id[0] & 0x0F,
 					frame->address_ctl->source_id[1] >> 4, frame->address_ctl->source_id[1] & 0x0F,
 					frame->address_ctl->source_id[2] >> 4, frame->address_ctl->source_id[2] & 0x0F,
