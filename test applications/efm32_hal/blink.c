@@ -15,11 +15,9 @@
 
 #include <stdint.h>
 #include <stdbool.h>
-#include "em_device.h"
-#include "em_chip.h"
 #include "em_cmu.h"
-#include "em_emu.h"
-#include "em_gpio.h"
+#include "em_chip.h"
+#include "leds.h"
 
 volatile uint32_t msTicks; /* counts 1ms timeTicks */
 
@@ -46,35 +44,6 @@ void Delay(uint32_t dlyTicks)
   while ((msTicks - curTicks) < dlyTicks) ;
 }
 
-typedef struct
-{
-  GPIO_Port_TypeDef   port;
-  unsigned int        pin;
-} leds_t;
-
-static const leds_t leds[ 2 ] = {{gpioPortE,2},{gpioPortE,3}};
-
-void led_init(void)
-{
-  int i;
-
-  CMU_ClockEnable(cmuClock_HFPER, true);
-  CMU_ClockEnable(cmuClock_GPIO, true);
-  for ( i=0; i< 2; i++ )
-  {
-    GPIO_PinModeSet(leds[i].port, leds[i].pin, gpioModePushPull, 0);
-  }
-}
-
-void led_set(int ledNo)
-{
-	GPIO_PinOutSet(leds[ledNo].port, leds[ledNo].pin);
-}
-
-void led_toggle(int ledNo)
-{
-    GPIO_PinOutToggle(leds[ledNo].port, leds[ledNo].pin);
-}
 
 /**************************************************************************//**
  * @brief  Main function
@@ -88,7 +57,7 @@ int main(void)
 
   /* Initialize LED driver */
   led_init();
-  led_set(0);
+  led_on(0);
 
   /* Infinite blink loop */
   while (1)
