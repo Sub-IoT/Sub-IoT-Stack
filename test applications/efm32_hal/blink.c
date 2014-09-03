@@ -15,9 +15,8 @@
 
 #include <stdint.h>
 #include <stdbool.h>
-#include "em_cmu.h"
-#include "em_chip.h"
 #include "leds.h"
+#include "system.h"
 
 volatile uint32_t msTicks; /* counts 1ms timeTicks */
 
@@ -50,10 +49,7 @@ void Delay(uint32_t dlyTicks)
  *****************************************************************************/
 int main(void)
 {
-  /* Chip errata */
-  CHIP_Init();
-
-  if (SysTick_Config(CMU_ClockFreqGet(cmuClock_CORE) / 1000)) while (1) ;
+    system_init();
 
   /* Initialize LED driver */
   led_init();
