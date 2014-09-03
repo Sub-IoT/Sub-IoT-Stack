@@ -26,14 +26,20 @@ IF(D7AOSS_HAL_DRIVER STREQUAL "cc430")
 ENDIF()
 
 IF(D7AOSS_HAL_DRIVER STREQUAL "efm32gg")
+    ENABLE_LANGUAGE(ASM)
+    SET_PROPERTY(SOURCE efm32gg/CMSIS/device/src/startup_gcc_efm32gg.s PROPERTY LANGUAGE ASM)
     INCLUDE_DIRECTORIES(efm32gg/)
     INCLUDE_DIRECTORIES(efm32gg/CMSIS/include)
     INCLUDE_DIRECTORIES(efm32gg/CMSIS/device/include)
+    INCLUDE_DIRECTORIES(efm32gg/emlib/inc)
     SET(HAL_SRCS
                         efm32gg/CMSIS/device/src/system_efm32gg.c
                         efm32gg/CMSIS/device/src/startup_gcc_efm32gg.s
+                        efm32gg/emlib/src/em_assert.c
+                        efm32gg/emlib/src/em_system.c
+                        efm32gg/emlib/src/em_cmu.c
+                        efm32gg/emlib/src/em_gpio.c
         )
-    ADD_DEFINITIONS(-DEFM32GG990F1024) # TODO make configurable
 ENDIF()
 
 IF(D7AOSS_HAL_DRIVER STREQUAL "stm32l")
