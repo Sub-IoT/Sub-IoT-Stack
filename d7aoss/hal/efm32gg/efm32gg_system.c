@@ -14,11 +14,49 @@
  *
  */
 
+#include <sys/stat.h>
+#include <stdlib.h>
+
 #include "system.h"
 #include "uart.h"
 
 #include "em_cmu.h"
 #include "em_chip.h"
+
+
+
+extern char _end;                 /**< Defined by the linker */
+
+/**************************************************************************//**
+ * @brief
+ *  Increase heap. Needed for printf
+ *
+ * @param[in] incr
+ *  Number of bytes you want increment the program's data space.
+ *
+ * @return
+ *  Rsturns a pointer to the start of the new area.
+ *****************************************************************************/
+caddr_t _sbrk(int incr)
+{
+  static char       *heap_end;
+  char              *prev_heap_end;
+
+  if (heap_end == 0)
+  {
+    heap_end = &_end;
+  }
+
+  prev_heap_end = heap_end;
+  if ((heap_end + incr) > (char*) __get_MSP())
+  {
+    exit(1);
+  }
+  heap_end += incr;
+
+  return (caddr_t) prev_heap_end;
+}
+
 
 void system_init()
 {

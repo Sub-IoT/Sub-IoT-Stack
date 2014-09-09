@@ -17,7 +17,7 @@
 #include <stdbool.h>
 #include "leds.h"
 #include "system.h"
-#include "uart.h"
+#include "log.h"
 
 volatile uint32_t msTicks; /* counts 1ms timeTicks */
 
@@ -61,7 +61,8 @@ int main(void)
   {
     led_toggle(0);
     led_toggle(1);
-    uart_transmit_message(data, 12);
+    //uart_transmit_message(data, 12);
+    log_print_string("%s", data);
     Delay(1000);
   }
 }
