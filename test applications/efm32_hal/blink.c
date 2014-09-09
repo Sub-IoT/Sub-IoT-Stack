@@ -17,6 +17,7 @@
 #include <stdbool.h>
 #include "leds.h"
 #include "system.h"
+#include "uart.h"
 
 volatile uint32_t msTicks; /* counts 1ms timeTicks */
 
@@ -50,7 +51,7 @@ void Delay(uint32_t dlyTicks)
 int main(void)
 {
     system_init();
-
+    char data[12] = "Hello gecko\n";
   /* Initialize LED driver */
   led_init();
   led_on(0);
@@ -60,6 +61,7 @@ int main(void)
   {
     led_toggle(0);
     led_toggle(1);
+    uart_transmit_message(data, 12);
     Delay(1000);
   }
 }

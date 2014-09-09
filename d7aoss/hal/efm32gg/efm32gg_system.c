@@ -15,6 +15,7 @@
  */
 
 #include "system.h"
+#include "uart.h"
 
 #include "em_cmu.h"
 #include "em_chip.h"
@@ -25,4 +26,11 @@ void system_init()
     CHIP_Init();
 
     if (SysTick_Config(CMU_ClockFreqGet(cmuClock_CORE) / 1000)) while (1) ;
+
+    // init clock
+    CMU_ClockDivSet(cmuClock_HF, cmuClkDiv_2);       // Set HF clock divider to /2 to keep core frequency < 32MHz
+    CMU_OscillatorEnable(cmuOsc_HFXO, true, true);   // Enable XTAL Osc and wait to stabilize
+    CMU_ClockSelectSet(cmuClock_HF, cmuSelect_HFXO); // Select HF XTAL osc as system clock source. 48MHz XTAL, but we divided the system clock by 2, therefore our HF clock will be 24MHz
+
+    uart_init();
 }
