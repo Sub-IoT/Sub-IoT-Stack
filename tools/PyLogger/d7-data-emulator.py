@@ -9,7 +9,7 @@
 # sudo apt-get install socat
 # 
 # Then run the following command:
-# socat -d -d PTY:echo=0,b115200,raw,crnl,icanon=1 PTY:echo=0,b115200,raw,crnl,icanon=1
+# socat -d -d pty,raw,echo=0 pty,raw,echo=0
 
 
 #define LOG_PHY 0x01
@@ -82,7 +82,7 @@ class LogGenerator(object):
 
 
 def main():
-	logGen = LogGenerator("/dev/pts/2")
+	logGen = LogGenerator("/dev/pts/12")
 	keep_running = True
 
 	while keep_running:

@@ -26,7 +26,7 @@
 
 #include <string.h>
 
-#include <trans/trans.h>
+#include <d7aoss.h>
 #include <hal/system.h>
 #include <hal/button.h>
 #include <hal/leds.h>
@@ -51,11 +51,16 @@ static uint16_t counter = 0;
 static volatile bool add_tx_event = true;
 static volatile bool wait_for_response = false;
 
+uint8_t buffer[128];
+
 static volatile uint8_t dataLength = 0;
 
-static D7AQP_Single_File_Call_Template file_template;
+//static D7AQP_Single_File_Call_Template file_template;
 
-static D7AQP_Command command;
+//static D7AQP_Command command;
+
+static ALP_File_Data_Template data_template;
+static ALP_Template alp_template;
 
 void start_tx()
 {
@@ -72,11 +77,17 @@ void start_tx()
 
 		log_print_string("TX...");
 
-		file_template.return_file_id++;
-		if (file_template.return_file_id > END_FILE_ID)
-			file_template.return_file_id = START_FILE_ID;
+		alp_template.op = ALP_OP_READ_DATA;
+		alp_template.data = (uint8_t*) &data_template;
 
-		trans_tx_query(&command, 0xFF, SEND_CHANNEL, TX_EIRP);
+		data_template.file_id = 0;
+		data_template.start_byte_offset = 0;
+		data_template.bytes_accessing = 0;
+		data_template.data = NULL;
+
+		alp_create_structure_for_tx(ALP_REC_FLG_TYPE_COMMAND_RESPONSE, 0, 1, &alp_template);
+		trans_tx_query(NULL, 0xFF, SEND_CHANNEL, TX_EIRP);
+
 	}
 	add_tx_event = true;
 }
@@ -87,7 +98,7 @@ void rx_callback(Trans_Rx_Query_Result* rx_res)
 
 	led_on(1);
 
-	log_print_string("Received Query");
+	/*log_print_string("Received Query");
 
 	if ((rx_res->d7aqp_command.command_code & 0x70 == 0) && (rx_res->d7aqp_command.command_code & 0x0F == D7AQP_OPCODE_COLLECTION_FILE_FILE & 0x0F))
 	{
@@ -101,6 +112,7 @@ void rx_callback(Trans_Rx_Query_Result* rx_res)
 	} else {
 		log_print_string("Unexpected query received");
 	}
+	*/
 
 	led_off(1);
 }
@@ -133,20 +145,22 @@ int main(void) {
 	timer_event event;
 
 	// Initialize the OSS-7 Stack
-	system_init();
-
 	// Currently we address the Transport Layer, this should go to an upper layer once it is working.
-	trans_init();
+	d7aoss_init(buffer, 128, buffer, 128);
+
+
 	trans_set_tx_callback(&tx_callback);
-	trans_set_query_rx_callback(&rx_callback);
-	// The initial Tca for the CSMA-CA in
-	trans_set_initial_t_ca(200);
+    // The initial Tca for the CSMA-CA in
+	dll_set_initial_t_ca(200);
+
+	//trans_set_query_rx_callback(&rx_callback);
 
 	event.next_event = SEND_INTERVAL_MS;
 	event.f = &start_tx;
 
 	log_print_string("Requester started");
 
+	/*
 	command.command_code = D7AQP_COMMAND_TYPE_NA2P_REQUEST | D7AQP_OPCODE_COLLECTION_FILE_FILE;
 	//
 	D7AQP_Dialog_Template dialog_template;
@@ -160,6 +174,7 @@ int main(void) {
 	file_template.return_file_id = END_FILE_ID;
 
 	command.command_data = &file_template;
+	 */
 
 	timer_add_event(&event);
 

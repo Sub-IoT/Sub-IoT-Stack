@@ -3,8 +3,6 @@
 # Created on: Sep 09, 2013
 # Authors:
 # 	jan.stevens@ieee.org
-#	glenn.ergeerts@uantwerpen.be
-#	maarten.weyn@uantwerpen.be
 # 	
 # Discription:
 # This is a python logger for D7 when logging is active.

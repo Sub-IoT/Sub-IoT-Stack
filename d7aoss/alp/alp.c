@@ -37,9 +37,21 @@ void alp_create_structure_for_tx(uint8_t flags, uint8_t id, uint8_t nr_of_templa
 		uint8_t length = 0;
 		switch (templates[i].op)
 		{
-			case ALP_OP_READ_DATA: // File Data Template
+			case ALP_OP_READ_DATA: // File Data Template (no data)
 			case ALP_OP_READ_ALL:
-			case ALP_OP_WRITE_DATA:
+			{
+				ALP_File_Data_Template* templ = (ALP_File_Data_Template*) templates[i].data;
+
+				queue_push_u8(&tx_queue, templ->file_id);
+				queue_push_u8(&tx_queue, templ->start_byte_offset >> 8);
+				queue_push_u8(&tx_queue, templ->start_byte_offset & 0xFF);
+				queue_push_u8(&tx_queue, templ->bytes_accessing >> 8);
+				queue_push_u8(&tx_queue, templ->bytes_accessing & 0xFF);
+
+				total_length += 5;
+				break;
+			}
+			case ALP_OP_WRITE_DATA: // File Data Template
 			case ALP_OP_WRITE_FLUSH:
 			case ALP_OP_RESP_DATA:
 			case ALP_OP_RESP_ALL: // FILE Header + Data Template

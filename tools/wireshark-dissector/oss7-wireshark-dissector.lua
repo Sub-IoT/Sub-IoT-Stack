@@ -2,6 +2,8 @@ oss7_proto = Proto("oss7_proto", "DASH7 Alliance Protocol DRAFT 1.0")
 
 local f = oss7_proto.fields
 
+
+
 f.rssi = ProtoField.int16("oss7_proto.rssi", "RSSI")
 f.lqi = ProtoField.uint8("oss7_proto.lqi", "Link Quality Indicator")
 
@@ -11,7 +13,6 @@ f.control = ProtoField.uint8("oss7_proto.dll.control", "Control", base.HEX)
 f.control_tgt = ProtoField.bool("oss7_proto.dll.control.tgt", "Target Address Present")
 f.control_vid = ProtoField.bool("oss7_proto.dll.control.vid", "Virtual ID")
 f.tx_eirp = ProtoField.uint8("oss7_proto.dll.control.tx_eirp", "TX EIRP")
--- todo make array
 f.tadr = ProtoField.bytes("oss7_proto.dll.tadr", "Target Address")
 f.payload = ProtoField.bytes("oss7_proto.dll.payload", "Payload")
 f.crc = ProtoField.uint16("oss7_proto.dll.crc", "CRC", base.HEX)
@@ -42,10 +43,38 @@ f.trans_cc_nack_only = ProtoField.bool("oss7_proto.trans.cc.nack_only", "NACK On
 f.trans_cc_query = ProtoField.bool("oss7_proto.trans.cc.query", "Query Template")
 f.trans_cc_ack_tpl = ProtoField.bool("oss7_proto.trans.cc.ack_tpl", "Acknowledge Return Template")
 
+local query_logical_codes = {
+	[0] = "OR",
+	[1] = "AND",
+	[2] = "XOR"
+}
+
+f.trans_query_nr_of_queries =  ProtoField.uint8("oss7_proto.trans.query.nr", "Number of Unitary Queries")
+f.trans_query_logical_code =  ProtoField.uint8("oss7_proto.trans.query.logical_code", "Logical Code")
+f.trans_query_file_id = ProtoField.uint8("oss7_proto.trans.query.file_id", "File ID")
+f.trans_query_file_offset = ProtoField.uint8("oss7_proto.trans.query.file_offset", "File Offset")
+f.trans_query_file_compare_length = ProtoField.uint8("oss7_proto.trans.query.compare_length", "Compare Length")
+f.trans_query_file_compare_code = ProtoField.uint8("oss7_proto.trans.query.compare_code", "Compare Code")
+f.trans_query_file_compare_mask = ProtoField.uint8("oss7_proto.trans.query.compare_mask", "Compare Mask")
+f.trans_query_file_compare_value = ProtoField.uint8("oss7_proto.trans.query.compare_value", "Compare Value")
+
+local query_cc_types = {
+	[0] = "Non-null check",
+	[1] = "Arithmetic comparison",
+	[2] = "String token search",
+	[3] = "Proprietary/Custom"
+}
+
+f.trans_query_file_compare_code_masked = ProtoField.bool("oss7_proto.trans.query.cc.masked", "Masked")
+f.trans_query_file_compare_code_type = ProtoField.uint8("oss7_proto.trans.query.cc.type", "Type", base.HEX, query_cc_types)
+f.trans_query_file_compare_code_params = ProtoField.bool("oss7_proto.trans.query.cc.params", "Params, base.HEX")
+
 f.alp_record_flags = ProtoField.uint8("oss7_proto.alp.record_flags", "Record Flags", base.HEX)
 f.alp_record_length = ProtoField.uint8("oss7_proto.alp.record_lenght", "Record Length")
 f.alp_id = ProtoField.uint8("oss7_proto.alp.id", "ALP ID")
 f.alp_templates = ProtoField.bytes("oss7_proto.alp.templates", "ALP Templates")
+
+f.alp_type = ProtoField.string("oss7_proto.alp.type", "ALP Template Type")
 
 local alp_flag_chunk_ctrls = {
     [0] = "Intermediary packet of a chunked message",
@@ -92,8 +121,26 @@ f.file_data_tmpl_id = ProtoField.uint8("oss7_proto.alp.file_data_template_id", "
 f.file_data_start_byte_offset = ProtoField.uint16("oss7_proto.alp.file_data_template_start_byte_offset", "Start Byte Offset")
 f.file_data_bytes_accessing = ProtoField.uint16("oss7_proto.alp.file_data_template_bytes_accessing", "Bytes Accessing")
 f.file_data = ProtoField.bytes("oss7_proto.alp.file_data", "File Data")
+f.file_header = ProtoField.bytes("oss7_proto.alp.file_header", "File Header Data")
 
-function parse_file_date_template(buffer,pointer,tree)
+local file_error_codes = {
+	[0x00] = "No Error, OK Response",
+	[0x01] = "Cannot access file: File ID does not exist",
+	[0x02] = "Cannot create file: File ID already exists",
+	[0x03] = "Cannot restore file: File is not restorable",
+	[0x04] = "Cannot access file: Insufficient permissions",
+	[0x05] = "Cannot create file: Supplied length (in header) is beyond file limits",
+	[0x06] = "Cannot create file: Supplied allocation (in header) is beyond file limits",
+	[0x07] = "Cannot write: Supplied start offset is out of bounds of file allocation",
+	[0x08] = "Cannot complete write: Supplied data goes beyond file allocation",
+	[0xFF] = "Unkown Error"
+}
+
+f.file_error_templ_id = ProtoField.uint8("oss7_proto.alp.file_error_template_id", "Erroneous File ID")
+f.file_error_templ_error = ProtoField.uint8("oss7_proto.alp.file_error_template_error_code", "File Error Code", base.HEX, file_error_codes)
+
+function parse_file_data_template(buffer,pointer,tree)	
+	tree:add(f.alp_type, "File Data Template")
 	tree:add(f.file_data_tmpl_id, buffer(pointer, 1))
 	tree:add(f.file_data_start_byte_offset, buffer(pointer + 1, 2))
 	local bytes_accessing = buffer(pointer + 3, 2):uint()
@@ -101,8 +148,46 @@ function parse_file_date_template(buffer,pointer,tree)
 	tree:add(f.file_data, buffer(pointer + 5, bytes_accessing))
 	pointer = pointer + 5 + bytes_accessing
 	return pointer
-
 end
+
+function parse_file_header_template(buffer,pointer,tree)
+	tree:add(f.alp_type, "File Header Template")
+	tree:add(f.file_data_tmpl_id, buffer(pointer, 1))
+	tree:add(f.file_data_start_byte_offset, buffer(pointer + 1, 1))
+	local bytes_accessing = buffer(pointer + 2, 1):uint()
+	tree:add(f.file_data_bytes_accessing, bytes_accessing)
+	tree:add(f.file_header, buffer(pointer + 3, bytes_accessing))
+	pointer = pointer + 3 + bytes_accessing
+	return pointer
+end
+
+function parse_file_header_data_template(buffer,pointer,tree)	
+	tree:add(f.alp_type, "File Header + Data Template")
+	tree:add(f.file_data_tmpl_id, buffer(pointer, 1))
+	local start_byte = buffer(pointer + 1, 2)
+	tree:add(f.file_data_start_byte_offset, start_byte)
+	local bytes_accessing = buffer(pointer + 3, 2):uint()
+	tree:add(f.file_data_bytes_accessing, bytes_accessing)
+	tree:add(f.file_header, buffer(pointer + 5, start_byte))
+	tree:add(f.file_data, buffer(pointer + 5 + start_byte, bytes_accessing - start_byte))
+	pointer = pointer + 5 + bytes_accessing
+	return pointer
+end
+
+function parse_file_id_template(buffer,pointer,tree)
+	tree:add(f.alp_type, "File ID Template")
+	tree:add(f.file_data_tmpl_id, buffer(pointer, 1))
+	pointer = pointer + 1
+	return pointer
+end
+
+function parse_file_error_template(buffer,pointer,tree)
+	tree:add(f.alp_type, "File Error Template")
+	tree:add(f.file_data_tmpl_id, buffer(pointer, 1))
+	pointer = pointer + 1
+	return pointer
+end
+
 
 function oss7_proto.dissector(buffer,pinfo,tree)
 	pinfo.cols.protocol = "DASH7 Alliance Protocol DRAFT 1.0"
@@ -134,8 +219,7 @@ function oss7_proto.dissector(buffer,pinfo,tree)
 		local dll_control_subtree = dll_subtree:add("DLL Control", nil)
 		dll_control_subtree:add(f.control_tgt, buffer(offset, 1):uint() / 128  )	
 		dll_control_subtree:add(f.control_vid, buffer(offset, 1):uint() % 128 / 64 )
-		-- todo only use 6 last bytes 0x3F
-		dll_control_subtree:add(f.tx_eirp, buffer(offset, 1):uint() % 64 - 32 ):append_text(" dBm")	
+		dll_control_subtree:add(f.tx_eirp, (buffer(offset, 1):uint() % 64) - 32 ):append_text(" dBm")	
 	
 	offset = offset + 1
 	
@@ -214,15 +298,51 @@ function oss7_proto.dissector(buffer,pinfo,tree)
 			trans_command_code_subtree:add(f.trans_cc_dialog, nwl_payload(trans_offset, 1):uint() / 64)	
 			trans_command_code_subtree:add(f.trans_cc_ordered, nwl_payload(trans_offset, 1):uint() % 64 / 32 )			
 			trans_command_code_subtree:add(f.trans_cc_ack_req, nwl_payload(trans_offset, 1):uint() % 32 / 16 )			
-			trans_command_code_subtree:add(f.trans_cc_nack_only, nwl_payload(trans_offset, 1):uint() % 16 / 8 )			
-			trans_command_code_subtree:add(f.trans_cc_query, nwl_payload(trans_offset, 1):uint() % 4 / 2 )			
+			trans_command_code_subtree:add(f.trans_cc_nack_only, nwl_payload(trans_offset, 1):uint() % 16 / 8 )
+			
+			local trans_query_present = nwl_payload(trans_offset, 1):uint() % 4 / 2
+			trans_command_code_subtree:add(f.trans_cc_query, trans_query_present)			
 			trans_command_code_subtree:add(f.trans_cc_ack_tpl, nwl_payload(trans_offset, 1):uint() % 2)
 
 		trans_offset = trans_offset + 1
 		
 		trans_subtree:add(f.trans_tran_id, nwl_payload(trans_offset, 1))
 		trans_offset = trans_offset + 1
-		-- todo: query templates
+		
+		if trans_query_present == 1 then 
+			local nr_of_queries = nwl_payload(trans_offset, 1)
+			trans_subtree:add(f.trans_query_nr_of_queries, nr_of_queries)
+			trans_subtree:add(f.trans_query_logical_code, nwl_payload(trans_offset + 1, 1))
+			trans_offset = trans_offset + 2
+			
+			for i=0,nr_of_queries,1 do
+				trans_subtree:add(f.trans_query_file_id, nwl_payload(trans_offset, 1))
+				trans_subtree:add(f.trans_query_file_offset, nwl_payload(trans_offset + 1, 1))
+				local query_compare_length = nwl_payload(trans_offset + 2, 1)
+				trans_subtree:add(f.trans_query_file_compare_length, query_compare_length)
+				local query_compare_code =  nwl_payload(trans_offset + 3, 1):uint()
+				trans_subtree:add(f.trans_query_file_compare_code, query_compare_code)
+				
+				local query_compare_code_subtree = trans_subtree:add("Compare Code", nil)
+				local trans_query_file_compare_code_masked = query_compare_code / 128
+				query_compare_code_subtree:add(f.trans_query_file_compare_code_masked, trans_query_file_compare_code_masked)	
+				query_compare_code_subtree:add(f.trans_query_file_compare_code_type, query_compare_code % 128 / 32 )			
+				query_compare_code_subtree:add(f.trans_query_file_compare_code_params, query_compare_code % 32)
+				
+				trans_offset = trans_offset + 4
+				if trans_query_file_compare_code_masked then
+					trans_subtree:add(f.trans_query_file_compare_mask, nwl_payload(trans_offset, query_compare_length))
+					trans_offset = trans_offset + query_compare_length
+				end
+				
+				trans_subtree:add(f.trans_query_file_compare_mask, nwl_payload(trans_offset, query_compare_length))
+				trans_offset = trans_offset + query_compare_length		
+				
+			end
+			
+		end
+		
+		-- todo: ack template
 		
 		payload_length = payload_length - trans_offset
 		local alp_data = nwl_payload(trans_offset, payload_length)
@@ -257,8 +377,17 @@ function oss7_proto.dissector(buffer,pinfo,tree)
 			alp_template_subtree:add(f.alp_op, alp_op)
 			alp_offset = alp_offset + 1
 			
-			if alp_op == 32 then -- File Data Template
-				alp_offset = parse_file_date_template(alp_data, alp_offset, alp_template_subtree)
+			
+			if alp_op <= 5 or alp_op == 32 then -- File Data Template
+				alp_offset = parse_file_data_template(alp_data, alp_offset, alp_template_subtree)
+			elseif alp_op == 6 or alp_op == 17 or alp_op == 33  then -- File Header Template			
+				alp_offset = parse_file_header_template(alp_data, alp_offset, alp_template_subtree)
+			elseif alp_op == 16 or (alp_op >= 18  and alp_op <= 22) then -- File ID Template			
+				alp_offset = parse_file_id_template(alp_data, alp_offset, alp_template_subtree)
+			elseif alp_op == 34 then -- File Header + Data Template				
+				alp_offset = parse_file_header_data_template(alp_data, alp_offset, alp_template_subtree)
+			elseif alp_op == 255 then -- File Error Template				
+				alp_offset = parse_file_error_template(alp_data, alp_offset, alp_template_subtree)
 			end
 			
 			
