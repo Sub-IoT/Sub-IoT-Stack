@@ -122,6 +122,19 @@ static void nwl_rx_callback(nwl_rx_res_t* result)
 						query_result.d7aqp_command.command_data = NULL;
 						break;
 					}
+					case D7AQP_OPCODE_COLLECTION_FILE_FILE:
+					{
+						D7AQP_Single_File_Return_Template sfr_tmpl; //following convention, seems unsafe
+						sfr_tmpl.return_file_id = data->payload[pointer++];
+						sfr_tmpl.file_offset = data->payload[pointer++];
+						sfr_tmpl.isfb_total_length = data->payload[pointer++];
+						sfr_tmpl.file_data = &data->payload[pointer];
+
+						pointer += sfr_tmpl.isfb_total_length - sfr_tmpl.file_offset;
+
+						query_result.d7aqp_command.command_data = &sfr_tmpl;
+						break;
+					}
 				}
 				break;
 			}
@@ -254,6 +267,16 @@ void trans_tx_query(D7AQP_Query_Template* query,  uint8_t subnet, uint8_t spectr
 			{
 				case D7AQP_OPCODE_ANNOUNCEMENT_FILE:
 				{
+					break;
+				}
+				case D7AQP_OPCODE_COLLECTION_FILE_FILE:
+				{
+					D7AQP_Single_File_Return_Template* sfr_tmpl = (D7AQP_Single_File_Return_Template*) command->command_data; //following convetion, feels unsafe
+					data[pointer++] = sfr_tmpl->return_file_id;
+					data[pointer++] = sfr_tmpl->file_offset;
+					data[pointer++] = sfr_tmpl->isfb_total_length;
+					memcpy(&data[pointer], sfr_tmpl->file_data, sfr_tmpl->isfb_total_length - sfr_tmpl->file_offset);
+					pointer+= sfr_tmpl->isfb_total_length - sfr_tmpl->file_offset;
 					break;
 				}
 			}
