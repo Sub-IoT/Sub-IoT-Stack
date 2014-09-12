@@ -42,9 +42,9 @@
 #define USE_LEDS
 
 
-static uint8_t file_00[] = {0,0,0,0,0,0,0,0};
-static uint8_t file_01[] = {1,1,1,1,1,1,1,1};
-static uint8_t file_02[] = {2,2,2,2,2,2,2,2};
+static uint8_t file_00[] = {0,0};
+static uint8_t file_01[] = {1,1};
+static uint8_t file_02[] = {2,2};
 static uint8_t* filesystem[] = {file_00, file_01, file_02};
 
 // event to create a led blink
@@ -52,6 +52,9 @@ static timer_event dim_led_event;
 static bool start_channel_scan = false;
 
 static D7AQP_Command command;
+
+static ALP_File_Data_Template tx_data_template;
+static ALP_Template tx_alp_template;
 
 uint8_t buffer[128];
 
@@ -78,6 +81,32 @@ void rx_callback(Trans_Rx_Query_Result* rx_res)
 	system_watchdog_timer_reset();
 
 	blink_led();
+
+	D7AQP_Command* command = &(rx_res->d7aqp_command);
+	ALP_Record_Structure* alp = (ALP_Record_Structure*) command->alp_data;
+	//uint8_t lenght = alp->record_lenght - 3;
+
+	ALP_Template* alp_template = (ALP_Template*) alp->alp_templates;
+
+	if (alp_template->op == ALP_OP_READ_DATA)
+	{
+		ALP_File_Data_Template* data_template = (ALP_File_Data_Template*) alp_template->data;
+		if (data_template->file_id < 3)
+		{
+			tx_alp_template.op = ALP_OP_RESP_DATA;
+			tx_alp_template.data = (uint8_t*) &tx_data_template;
+
+			tx_data_template.file_id = data_template->file_id ;
+			tx_data_template.start_byte_offset = 0;
+			tx_data_template.bytes_accessing = 2;
+			tx_data_template.data = filesystem[data_template->file_id];
+
+			alp_create_structure_for_tx(ALP_REC_FLG_TYPE_RESPONSE, 0, 1, &tx_alp_template);
+			trans_tx_query(NULL, 0xFF, RECEIVE_CHANNEL, TX_EIRP);
+		}
+	}
+
+
 
 	/*
 	dll_foreground_frame_t* frame = (dll_foreground_frame_t*) (rx_res->nwl_rx_res->dll_rx_res->frame);
