@@ -26,7 +26,7 @@
 
 #include <string.h>
 
-#include <trans/trans.h>
+#include <d7aoss.h>
 #include <hal/system.h>
 #include <hal/button.h>
 #include <hal/leds.h>
@@ -53,6 +53,8 @@ static bool start_channel_scan = false;
 
 static D7AQP_Command command;
 
+uint8_t buffer[128];
+
 void blink_led()
 {
 	led_on(1);
@@ -77,6 +79,7 @@ void rx_callback(Trans_Rx_Query_Result* rx_res)
 
 	blink_led();
 
+	/*
 	dll_foreground_frame_t* frame = (dll_foreground_frame_t*) (rx_res->nwl_rx_res->dll_rx_res->frame);
 	log_print_string("Received Query from :%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x;",
 				frame->address_ctl->source_id[0] >> 4, frame->address_ctl->source_id[0] & 0x0F,
@@ -149,6 +152,7 @@ void rx_callback(Trans_Rx_Query_Result* rx_res)
 		led_on(3);
 		trans_tx_query(&command, 0xFF, RECEIVE_CHANNEL, TX_EIRP);
 	}
+	*/
 
 }
 
@@ -176,18 +180,18 @@ void tx_callback(Trans_Tx_Result result)
 
 int main(void) {
 	// Initialize the OSS-7 Stack
-	system_init();
+	// Currently we address the Transport Layer, this should go to an upper layer once it is working.
+	d7aoss_init(buffer, 128, buffer, 128);
 
-	// Currently we address the Transport Layer for RX, this should go to an upper layer once it is working.
-	trans_init();
-	trans_set_query_rx_callback(&rx_callback);
+
 	trans_set_tx_callback(&tx_callback);
 	// The initial Tca for the CSMA-CA in
-	trans_set_initial_t_ca(200);
+	dll_set_initial_t_ca(200);
+	trans_set_query_rx_callback(&rx_callback);
 
 	start_channel_scan = true;
 
-	log_print_string("gateway started");
+	log_print_string("responder started");
 
 	// Log the device id
 	log_print_data(device_id, 8);

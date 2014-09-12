@@ -145,7 +145,9 @@ function parse_file_data_template(buffer,pointer,tree)
 	tree:add(f.file_data_start_byte_offset, buffer(pointer + 1, 2))
 	local bytes_accessing = buffer(pointer + 3, 2):uint()
 	tree:add(f.file_data_bytes_accessing, bytes_accessing)
-	tree:add(f.file_data, buffer(pointer + 5, bytes_accessing))
+	if bytes_accessing >  0 then
+		tree:add(f.file_data, buffer(pointer + 5, bytes_accessing))
+	end
 	pointer = pointer + 5 + bytes_accessing
 	return pointer
 end
