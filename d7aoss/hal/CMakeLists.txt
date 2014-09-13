@@ -14,15 +14,38 @@ IF(D7AOSS_HAL_DRIVER STREQUAL "cc430")
         SET(HAL_SRCS
                         cc430/cc430_button.c
                         cc430/cc430_addresses.h
-                        cc430/cc430_crc.c
                         cc430/cc430_leds.c
                         cc430/cc430_rtc.c
                         cc430/cc430_system.c
                         cc430/cc430_uart.c
                         cc430/cc430_timer.c
+                        crc_software.c
         )
 
         ADD_SUBDIRECTORY(cc430/driverlib)
+ENDIF()
+
+IF(D7AOSS_HAL_DRIVER STREQUAL "efm32gg")
+    ENABLE_LANGUAGE(ASM)
+    SET_PROPERTY(SOURCE efm32gg/CMSIS/device/src/startup_gcc_efm32gg.s PROPERTY LANGUAGE ASM)
+    INCLUDE_DIRECTORIES(efm32gg/)
+    INCLUDE_DIRECTORIES(efm32gg/CMSIS/include)
+    INCLUDE_DIRECTORIES(efm32gg/CMSIS/device/include)
+    INCLUDE_DIRECTORIES(efm32gg/emlib/inc)
+    SET(HAL_SRCS
+                        efm32gg/CMSIS/device/src/system_efm32gg.c
+                        efm32gg/CMSIS/device/src/startup_gcc_efm32gg.s
+                        efm32gg/emlib/src/em_assert.c
+                        efm32gg/emlib/src/em_system.c
+                        efm32gg/emlib/src/em_cmu.c
+                        efm32gg/emlib/src/em_emu.c
+                        efm32gg/emlib/src/em_gpio.c
+                        efm32gg/emlib/src/em_usart.c
+                        efm32gg/efm32gg_leds.c
+                        efm32gg/efm32gg_system.c
+                        efm32gg/efm32gg_uart.c
+                        crc_software.c
+        )
 ENDIF()
 
 IF(D7AOSS_HAL_DRIVER STREQUAL "stm32l")
@@ -72,13 +95,13 @@ IF(D7AOSS_HAL_DRIVER STREQUAL "msp430")
         SET(HAL_SRCS
                         msp430/msp430_button.c
                         msp430/msp430_addresses.h
-                        msp430/msp430_crc.c
                         msp430/msp430_leds.c
                         msp430/msp430_rtc.c
                         msp430/msp430_system.c
                         msp430/msp430_uart.c
                         msp430/msp430_timer.c
                         msp430/msp430_spi.c
+                        crc_software.c
         )
 
         ADD_SUBDIRECTORY(msp430/driverlib)
