@@ -13,125 +13,146 @@
  * \author maarten.weyn@uantwerpen.be
  *
  * \brief The File System API implementation
- */*
+ */
 
 
 #include "fs.h"
 
 
-static const filesystem_info *fs_info;
-
-void fs_init(const filesystem_info *file_system_info)
+void fs_init()
 {
-	fs_info =file_system_info;
+//	uint8_t i = 0;
+//	file_handler* fh = NULL;
+//	for (;i<filesystem_info_nr_files;i++)
+//	{
+//		fh = fs_open(i, file_system_user_root, file_system_user_root, file_system_access_type_read);
+//	}
 }
 
 
-uint8_t fs_open(file_handler *fh uint8_t file_id, file_system_user user, file_system_access_type access_type)
+uint8_t fs_open(file_handler * file_handle, uint8_t file_id, file_system_user user, file_system_access_type access_type)
 {
-	if (file_id >= 32)
+	if (file_id >= filesystem_info_nr_files)
 		// custom Files not supported yet
-		return 255
-
-	/*
-
-	uint8_t file_id_map = file_id / 8;
-	uint8_t file_id_map_id = file_id % 8;
+		return 1;
 
 
-	if ((fs_info->fs_bitmap->file_bitmap_D7A[file_id_map] >> file_id_map_id) == 0)
+	if (file_id > 0)
+	{
+		if (filesystem_info_bitmap[file_id] == 0)
 			return 1; // not present
+	} else {
+		if (filesystem_info_bitmap[file_id] == 0)
+		{
+			Data_Element_File_Header* header = (Data_Element_File_Header*)(filesystem_info_headers);
+			if ((header->properties_3_file_id != 0) || (SWITCH_BYTES(header->length) == 0))
+							return 1; // no present
+		}
+
+	}
 
 
-
-	file_info *fi = (void*) (fs_address_info->file_info_start_address + sizeof(filesystem_info) + (sizeof(file_info) * file_id));
+	file_info* fi = (file_info*) (&filesystem_info_headers[6*filesystem_info_bitmap[file_id]]);
 
 	uint8_t permission_mask = 0;
 	// TODO: validate correct user
 	if (user == file_system_user_user)
 	{
-		permission_mask |= PERMISSION_CODE_USER_MASK;
+		permission_mask |= DA_PERMISSION_CODE_USER_MASK;
 	} else if (user == file_system_user_guest)
 	{
-		permission_mask |= PERMISSION_CODE_GUEST_MASK;
+		permission_mask |= DA_PERMISSION_CODE_GUEST_MASK;
 	}
 
 	if (access_type == file_system_access_type_read)
 	{
-		permission_mask &= PERMISSION_CODE_READ_MASK;
+		permission_mask &= DA_PERMISSION_CODE_READ_MASK;
 	} else if (access_type == file_system_access_type_write)
 	{
-		permission_mask &= PERMISSION_CODE_WRITE_MASK;
+		permission_mask &= DA_PERMISSION_CODE_WRITE_MASK;
 	} else if (access_type == file_system_access_type_run)
 	{
-		permission_mask &= PERMISSION_CODE_RUN_MASK;
+		permission_mask &= DA_PERMISSION_CODE_RUN_MASK;
 	}
 
-	if ((user != file_system_user_root) && !(fi->permissions & permission_mask))
+	if ((user != file_system_user_root) && !(fi->header.properties_0_permissions & permission_mask))
+	{
 		return 2;
+	}
 
-	fh->file_info = fi;
-	fh->file = (void*) (fs_address_info->files_start_address + fi->offset);
-
-*/
+	file_handle->info = fi;
+	file_handle->file = (uint8_t*) &filesystem_files[SWITCH_BYTES(fi->file_offset)];
 
 	return 0;
 }
 
 uint8_t fs_close(file_handler *fh)
 {
-	/*
+
 	if (fh != NULL)
 	{
 		fh->file = NULL;
-		fh->file_info = NULL;
+		fh->info = NULL;
 		return 0;
 	}
-	*/
+
 
 	return 1;
 }
 
 uint8_t fs_read_byte(file_handler *fh, uint8_t offset)
 {
-	/*
-	if (fh->file_info->length > offset)
-	{
-		uint8_t* data = fh->file;
-		return data[offset];
-	}
-	else
-	{
+	if (fh == NULL)
 		return 0;
+
+	if (SWITCH_BYTES(fh->info->header.length) > offset)
+	{
+		return ((uint8_t*)fh->file)[offset];
 	}
-	*/
+
+	return 0;
 }
 
 uint16_t fs_read_short(file_handler *fh, uint8_t offset)
 {
-	/*
-	if (fh->file_info->length > offset + 1)
+	if (fh == NULL)
+			return 0;
+
+	if (SWITCH_BYTES(fh->info->header.length) > offset + 1)
 	{
 		uint8_t* ptr = fh->file;
 		return *(uint16_t*) (&ptr[offset]);
 	}
-	else
-	{
-		return 0;
-	}
-	*/
+
+	return 0;
 }
 
 
 uint8_t fs_read_data(file_handler *fh, uint8_t *data_array, uint8_t offset, uint8_t length)
 {
-	/*
-	if (fh->file_info->length > offset + length - 1)
+	if (fh == NULL)
+			return 0;
+
+	if (SWITCH_BYTES(fh->info->header.length) > offset + length - 1)
 	{
 		uint8_t* ptr = fh->file;
 		memcpy(data_array, &ptr[offset], length);
-		return 0;
+		return length;
 	}
-	*/
-	return 1;
+
+	return 0;
+}
+
+
+uint8_t* fs_get_data_pointer(file_handler *fh, uint8_t offset)
+{
+	if (fh == NULL)
+		return 0;
+
+	if (SWITCH_BYTES(fh->info->header.length) > offset + 1)
+	{
+		return (uint8_t*) (&fh->file[offset]);
+	}
+
+	return 0;
 }

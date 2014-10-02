@@ -27,11 +27,11 @@
 #define DA_PERMISSION_CODE_GUEST_READ		1 << 2
 #define DA_PERMISSION_CODE_GUEST_WRITE		1 << 1
 #define DA_PERMISSION_CODE_GUEST_RUN		1
-#define DA_PERMISSION_CODE_USER_MASK B00111000
-#define DA_PERMISSION_CODE_GUEST_MASK B00000111
-#define DA_PERMISSION_CODE_READ_MASK B00100100
-#define DA_PERMISSION_CODE_WRITE_MASK B00010010
-#define DA_PERMISSION_CODE_RUN_MASK B00001001
+#define DA_PERMISSION_CODE_USER_MASK 		0x38
+#define DA_PERMISSION_CODE_GUEST_MASK 		0x07
+#define DA_PERMISSION_CODE_READ_MASK		0x24
+#define DA_PERMISSION_CODE_WRITE_MASK 		0x12
+#define DA_PERMISSION_CODE_RUN_MASK 		0x09
 
 
 #define DA_NOTIFICATION_STORAGE_CLASS(VAL)		(VAL & 0x03)
@@ -49,7 +49,6 @@ typedef enum {
 	DataElementStorageClassRestorable,		// The content is kept in a volatile memory of the device. It is accessible for read, and can be backed-up upon request in a permanent storage location. It is restored form the permanent location on device power on.
 	DataElementStorageClassPermanent		// The content is kept in a permanent memory of the device. It is accessible for read.
 } Data_Element_Storage_Class;
-
 
 typedef struct
 {

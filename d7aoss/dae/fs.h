@@ -53,15 +53,14 @@
 
 typedef struct
 {
-	uint8_t* fs_info_bitmap;
-	uint8_t* files_info_start;
-	uint8_t* files_start;
-} filesystem_info;
+	Data_Element_File_Header header;
+	uint16_t file_offset;
+} file_info;
 
 typedef struct
 {
-	Data_Element_File_Header *header;
-	void *file;
+	file_info *info;
+	uint8_t *file;
 } file_handler;
 
 typedef enum
@@ -78,12 +77,13 @@ typedef enum
 	file_system_access_type_run
 } file_system_access_type;
 
-
+extern uint8_t filesystem_info_nr_files;
+extern const uint8_t filesystem_info_bitmap[];
 extern const uint8_t filesystem_info_headers[];
 extern const uint8_t filesystem_files[];
 
 
-void fs_init(const filesystem_info *address_info);
+void fs_init();
 
 /** Opens a file and gives file_handler and return code
  * 	@param fh the returned file handler
@@ -92,13 +92,14 @@ void fs_init(const filesystem_info *address_info);
  * 	@param access_type the access type (read, write, run)
  * 	@return status variable: 0: succes, 1 file not found, 2 incorrect user rights
  */
-uint8_t fs_open(file_handler *fh,  uint8_t file_id, file_system_user user, file_system_access_type access_type);
+uint8_t fs_open(file_handler * file_handle, uint8_t file_id, file_system_user user, file_system_access_type access_type);
 
 uint8_t fs_close(file_handler *fh);
 
 uint8_t fs_read_byte(file_handler *fh, uint8_t offset);
 uint16_t fs_read_short(file_handler *fh, uint8_t offset);
 uint8_t fs_read_data(file_handler *fh, uint8_t *data_array, uint8_t offset, uint8_t length);
+uint8_t* fs_get_data_pointer(file_handler *fh, uint8_t offset);
 
 
 

@@ -38,6 +38,7 @@ extern "C" {
 #include "nwl/nwl.h"
 #include "trans/trans.h"
 #include "alp/alp.h"
+#include "dae/fs.h"
 #include "hal/system.h"
 
 /*! \brief Initializes the stack and HAL

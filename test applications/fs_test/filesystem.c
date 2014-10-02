@@ -12,6 +12,7 @@
 #include "dae/fs.h"
 
 
+uint8_t filesystem_info_nr_files = 32;
 
 #pragma DATA_SECTION(filesystem_info_bitmap, ".fs_fileinfo_bitmap")
 #pragma RETAIN(filesystem_info_bitmap)
@@ -24,7 +25,7 @@ const uint8_t filesystem_info_bitmap[32] = {	0,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xF
 #pragma RETAIN(filesystem_info_headers)
 const uint8_t filesystem_info_headers[] = {
 		// 0x00: UID
-		0x00,0x00,0x03,0x44, 8 , 8
+		0x00,0x00,0x03,0x24, 0x00,0x08, 0x00,0x08, 0x00,0x00
 
 };
 

@@ -25,5 +25,7 @@
 void d7aoss_init(uint8_t* tx_buffer, uint16_t tx_buffer_size, uint8_t* rx_buffer, uint16_t rx_buffer_size)
 {
 	system_init(tx_buffer, tx_buffer_size, rx_buffer, rx_buffer_size);
+	fs_init();
+
 	trans_init();
 }

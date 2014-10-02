@@ -34,7 +34,7 @@ void alp_create_structure_for_tx(uint8_t flags, uint8_t id, uint8_t nr_of_templa
 		queue_push_u8(&tx_queue, templates[i].op);
 		total_length++;
 
-		uint8_t length = 0;
+		//uint8_t length = 0;
 		switch (templates[i].op)
 		{
 			case ALP_OP_READ_DATA: // File Data Template (no data)
@@ -75,15 +75,15 @@ void alp_create_structure_for_tx(uint8_t flags, uint8_t id, uint8_t nr_of_templa
 			case ALP_OP_ACTION_FLUSH:
 			case ALP_OP_ACTION_OPEN:
 			case ALP_OP_ACTION_CLOSE:
-				length = 1;
+				total_length += 1;
 				break;
 			case ALP_OP_WRITE_PROP: // File Header Template
 			case ALP_OP_ACTION_CREATE:
 			case ALP_OP_RESP_HEADER:
-				length = templates[i].data[2] + 3;
+				total_length += templates[i].data[2] + 3;
 				break;
 			case ALP_OP_RESP_ERROR: // File Error Template
-				length = 2;
+				total_length += 2;
 				break;
 		}
 
