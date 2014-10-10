@@ -106,6 +106,8 @@ __interrupt void Timer_A_CCO (void)
 //    	   case 10: benchmarking_timer_rollover++;                  // overflow
 //    	            break;
 //    	 }
+
+	LPM4_EXIT;
 }
 
 #ifdef ENABLE_BENCHMARKING_TIMER

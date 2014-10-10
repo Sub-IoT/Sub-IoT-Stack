@@ -15,34 +15,18 @@
  * \brief The File System API
  *
  *	Add following sections to the SECTIONS in .cmd linker file to use the filesystem
- *		.fs_fileinfo			: {} > FLASH_FS_FI
- *		.fs_files				: {} > FLASH_FS_FILES
+ *		.fs_fileinfo_bitmap : 	{} > FLASH_FS1
+ *  	.fs_fileinfo: 			{} > FLASH_FS1
+ *		.fs_files	: 			{} > FLASH_FS2
  *
  *	Add FLASH_FS_FI and FLASH_FS_FILES to the MEMORY section
  *  eg.
- *  	FLASH_FS_FI	            : origin = 0xC000, length = 0x0064
- *  	FLASH_FS_FILES	        : origin = 0xC064, length = 0x019C
+ *  	FLASH_FS1               : origin = 0xC000, length = 0x0200 // The file headers
+ *	    FLASH_FS2               : origin = 0xC200, length = 0x0400 // The file contents
  */
 
-#ifndef PRES_H_
-#define PRES_H_
-
-// must correspond with your linker file
-//TODO: check how this could be in filesystem.c not in d7oos
-//#define FILESYSTEM_FILE_INFO_START_ADDRESS			0x8000
-//#define FILESYSTEM_FILES_START_ADDRESS				0x8064
-
-
-/*
-#define FILESYSTEM_NETWORK_CONFIGURATION 			0
-#define FILESYSTEM_DEVICE_FEATURES 					FILESYSTEM_NETWORK_CONFIGURATION + FILESYSTEM_NETWORK_CONFIGURATION_SIZE
-#define FILESYSTEM_CHANNEL_CONFIGURATION			FILESYSTEM_DEVICE_FEATURES + FILESYSTEM_DEVICE_FEATURES_SIZE
-#define FILESYSTEM_REAL_TIME_SCHEDULER				FILESYSTEM_CHANNEL_CONFIGURATION + FILESYSTEM_CHANNEL_CONFIGURATION_SIZE
-#define FILESYSTEM_SLEEP_SCAN_SCHEDULER				FILESYSTEM_REAL_TIME_SCHEDULER + FILESYSTEM_REAL_TIME_SCHEDULER_SIZE
-#define FILESYSTEM_HOLD_SCAN_SCHEDULER				FILESYSTEM_SLEEP_SCAN_SCHEDULER + FILESYSTEM_SLEEP_SCAN_SCHEDULER_SIZE
-#define FILESYSTEM_BEACON_TRANSMIT_SERIES			FILESYSTEM_HOLD_SCAN_SCHEDULER + FILESYSTEM_HOLD_SCAN_SCHEDULER_SIZE
-*/
-
+#ifndef FS_H_
+#define FS_H_
 
 
 #include "../hal/system.h"
@@ -61,6 +45,7 @@ typedef struct
 {
 	file_info *info;
 	uint8_t *file;
+	uint8_t permission_mask;
 } file_handler;
 
 typedef enum
@@ -102,7 +87,11 @@ uint8_t fs_read_data(file_handler *fh, uint8_t *data_array, uint8_t offset, uint
 uint8_t* fs_get_data_pointer(file_handler *fh, uint8_t offset);
 
 
+uint8_t fs_write_byte(file_handler *fh, uint8_t offset, uint8_t value, bool store);
+uint8_t fs_write_data(file_handler *fh, uint8_t offset, uint8_t* data, uint8_t length, bool store);
 
 
 
-#endif /* PRES_H_ */
+
+
+#endif /* FS_H_ */

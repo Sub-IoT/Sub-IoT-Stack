@@ -1,4 +1,4 @@
-/*!
+/*! \file crc.h
  *
  * \copyright (C) Copyright 2013 University of Antwerp (http://www.cosys-lab.be) and others.\n
  * This library is free software; you can redistribute it and/or
@@ -10,33 +10,16 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
  *
- * Contributors:
- * 		maarten.weyn@uantwerpen.be
+ * \author maarten.weyn@uantwerpen.be
  *
  */
 
-#ifndef PLATFORM_H_
-#define PLATFORM_H_
-
-// Select the corrrect platform in the line below
-#define PLATFORM_ARTESIS
+#ifndef FLASH_H_
+#define FLASH_H_
 
 
-#ifdef PLATFORM_WIZZIMOTE
-#include "wizzimote.h"
-#elif defined PLATFORM_ARTESIS
-#include "artesis.h"
-#elif defined PLATFORM_AGAIDI
-#include "agaidi.h"
-#elif defined PLATFORM_CHRONOS
-#include "chronos.h"
-#elif defined PLATFORM_BELIGUM
-#include "beligum.h"
-#elif defined PLATFORM_MATRIX
-#include "matrix_tp1104r3.h"
-#else
-	#error No platform set
-#endif
+#include <stdint.h>
 
+void write_bytes_to_flash(uint8_t *address, uint8_t* data, uint16_t length);
 
-#endif /* PLATFORM_H_ */
+#endif /* FLASH_H_ */

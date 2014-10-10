@@ -62,6 +62,14 @@
 #define D7AQP_CONTROL_QUERY					1 << 1
 #define D7AQP_CONTROL_ACK_TPL				1
 
+#define D7AQP_QUERY_COMP_CODE_MASKED		1 << 7
+#define D7AQP_QUERY_COMP_CODE_VALTYPE		1 << 6
+#define D7AQP_QUERY_COMP_CODE_COMPTYPE_NONNULL	0 << 4
+#define D7AQP_QUERY_COMP_CODE_COMPTYPE_ARITHM	1 << 4
+#define D7AQP_QUERY_COMP_CODE_COMPTYPE_STRING	2 << 4
+#define D7AQP_QUERY_COMP_CODE_COMPTYPE_CUSTOM	3 << 4
+#define D7AQP_QUERY_COMP_CODE_PARAMS(VAL)	(VAL & 0x0F)
+
 #include "../types.h"
 #include "../nwl/nwl.h"
 
@@ -82,7 +90,18 @@ typedef struct {
 } D7AQP_Control;
 
 typedef struct {
-	uint8_t rfu;
+	uint8_t file_id;
+	uint8_t file_offset;
+	uint8_t compare_length;
+	uint8_t compare_code;
+	uint8_t* compare_mask;
+	uint8_t* compare_value;
+} D7AQP_Unitary_Query_Template;
+
+typedef struct {
+	uint8_t nr_of_unitary_queries;
+	uint8_t logical_code;
+	D7AQP_Unitary_Query_Template *unitary_queries;
 } D7AQP_Query_Template;
 
 
@@ -90,30 +109,6 @@ typedef struct {
 	uint8_t number_of_acks;
 	uint8_t* device_ids;
 } D7AQP_Ack_Template;
-//
-//typedef struct {
-//	uint8_t rfu;
-//} D7AQP_Global_Query_Template;
-//
-//typedef struct {
-//	uint8_t rfu;
-//} D7AQP_Local_Query_Template;
-
-/** @struct D7AQP_Single_File_Call_Template
- *  @brief 6.5.1 Contains the data template for a collection query.
- *  @var D7AQP_Single_File_Call_Template::max_returned_bytes
- *  Field 'max_returned_bytes' contains max number of bytes returned by the responder.
- *  @var D7AQP_Single_File_Call_Template::return_file_id
- *  Field 'return_file_id' contains the file id of the file which needs to be returned.
- *  @var D7AQP_Single_File_Call_Template::return_file_entry_offset
- *  Field 'return_file_entry_offset' contains the offset from which the file needs to be returned.
- **/
-
-//typedef struct {
-//	uint8_t max_returned_bytes;
-//	uint8_t	return_file_id;
-//	uint8_t return_file_entry_offset;
-//} D7AQP_Single_File_Call_Template;
 
 typedef struct {
 	uint8_t control;

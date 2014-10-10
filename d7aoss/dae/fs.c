@@ -17,6 +17,8 @@
 
 
 #include "fs.h"
+#include "../hal/flash.h"
+#include "../trans/trans.h"
 
 
 void fs_init()
@@ -37,48 +39,51 @@ uint8_t fs_open(file_handler * file_handle, uint8_t file_id, file_system_user us
 		return 1;
 
 
-	if (file_id > 0)
-	{
-		if (filesystem_info_bitmap[file_id] == 0)
+//	if (file_id > 0)
+//	{
+		if (filesystem_info_bitmap[file_id] == 0xFF)
 			return 1; // not present
-	} else {
-		if (filesystem_info_bitmap[file_id] == 0)
-		{
-			Data_Element_File_Header* header = (Data_Element_File_Header*)(filesystem_info_headers);
-			if ((header->properties_3_file_id != 0) || (SWITCH_BYTES(header->length) == 0))
-							return 1; // no present
-		}
+//	} else {
+//		if (filesystem_info_bitmap[file_id] == 0)
+//		{
+//			Data_Element_File_Header* header = (Data_Element_File_Header*)(filesystem_info_headers);
+//			if ((header->properties_3_file_id != 0) || (SWITCH_BYTES(header->length) == 0))
+//							return 1; // no present
+//		}
+//
+//	}
 
-	}
 
+	file_info* fi = (file_info*) (&filesystem_info_headers[9*filesystem_info_bitmap[file_id]]);
 
-	file_info* fi = (file_info*) (&filesystem_info_headers[6*filesystem_info_bitmap[file_id]]);
-
-	uint8_t permission_mask = 0;
+	file_handle->permission_mask = 0;
 	// TODO: validate correct user
 	if (user == file_system_user_user)
 	{
-		permission_mask |= DA_PERMISSION_CODE_USER_MASK;
+		file_handle->permission_mask |= DA_PERMISSION_CODE_USER_MASK;
 	} else if (user == file_system_user_guest)
 	{
-		permission_mask |= DA_PERMISSION_CODE_GUEST_MASK;
+		file_handle->permission_mask |= DA_PERMISSION_CODE_GUEST_MASK;
 	}
 
 	if (access_type == file_system_access_type_read)
 	{
-		permission_mask &= DA_PERMISSION_CODE_READ_MASK;
+		file_handle->permission_mask &= DA_PERMISSION_CODE_READ_MASK;
 	} else if (access_type == file_system_access_type_write)
 	{
-		permission_mask &= DA_PERMISSION_CODE_WRITE_MASK;
+		file_handle->permission_mask &= DA_PERMISSION_CODE_WRITE_MASK;
 	} else if (access_type == file_system_access_type_run)
 	{
-		permission_mask &= DA_PERMISSION_CODE_RUN_MASK;
+		file_handle->permission_mask &= DA_PERMISSION_CODE_RUN_MASK;
 	}
 
-	if ((user != file_system_user_root) && !(fi->header.properties_0_permissions & permission_mask))
+	if ((user != file_system_user_root) && !(fi->header.properties_permissions & file_handle->permission_mask))
 	{
+		file_handle->permission_mask = 0;
 		return 2;
 	}
+
+	file_handle->permission_mask &= fi->header.properties_permissions;
 
 	file_handle->info = fi;
 	file_handle->file = (uint8_t*) &filesystem_files[SWITCH_BYTES(fi->file_offset)];
@@ -153,6 +158,94 @@ uint8_t* fs_get_data_pointer(file_handler *fh, uint8_t offset)
 	{
 		return (uint8_t*) (&fh->file[offset]);
 	}
+
+	return 0;
+}
+
+uint8_t fs_write_byte(file_handler *fh, uint8_t offset, uint8_t value, bool store)
+{
+	return fs_write_data(fh, offset, (uint8_t*) &value, 1, store);
+}
+
+
+uint8_t fs_write_data(file_handler *fh, uint8_t offset, uint8_t* data, uint8_t length, bool store)
+{
+	if (fh == NULL)
+		return 1;
+
+	if (!(fh->permission_mask & DA_PERMISSION_CODE_WRITE_MASK))
+		return 2;
+
+	if (SWITCH_BYTES(fh->info->header.length) < offset + length)
+	{
+		return 3;
+	}
+
+	if (fh->info->header.properties_flags & DA_NOTIFICATION_NOTIFY)
+	{
+		// Notification flag is set for this file
+		if (fh->info->header.properties_flags & DA_NOTIFICATION_ACCESS_WRITE)
+		{
+			file_handler nf;
+			fs_open(&nf, fh->info->header.properties_file_id, file_system_user_root, file_system_access_type_read);
+			uint8_t nf_pointer = 0;
+
+			uint8_t tnf_flags = fs_read_byte(&nf, nf_pointer++);
+			if (tnf_flags & DA_TNF_FLAGS_QUERY) // Query Present
+			{
+				D7AQP_Query_Template query;
+				query.nr_of_unitary_queries = fs_read_byte(&nf, nf_pointer++);
+				if (query.nr_of_unitary_queries > 1)
+				{
+					query.logical_code = fs_read_byte(&nf, nf_pointer++);
+				}
+				else
+				{
+					ASSERT("Not implemented yet");
+					//TODO: implement multiple queries in notification
+				}
+				query.unitary_queries = (D7AQP_Unitary_Query_Template*) fs_get_data_pointer(&nf, nf_pointer);
+
+				if (query.unitary_queries[0].file_id != fh->info->header.properties_file_id)
+				{
+					ASSERT ("Not implemented yet");
+					//TODO: implement notification where query uses other file then writing file
+				}
+
+				nf_pointer += 4;
+
+				if ((query.unitary_queries[0].compare_code & D7AQP_QUERY_COMP_CODE_MASKED)) // masked not implemented
+				{
+					ASSERT ("Not implemented");
+					//TODO: implement mask in query
+				}
+
+				uint8_t* compare_value;
+
+				if ((query.unitary_queries[0].compare_code & D7AQP_QUERY_COMP_CODE_VALTYPE)) // compare with previous file value
+				{
+					compare_value = fs_get_data_pointer(&fp, query.unitary_queries[0].file_offset);
+				}
+				else
+				{
+					compare_value = fs_get_data_pointer(&fp, nf_pointer);
+				}
+
+				nf_pointer += query.unitary_queries[0].compare_length;
+			}
+		}
+	}
+
+	if (store)
+	{
+		// Check if storage class is Restorable
+		if ((fh->info->header.properties_flags & 0x03) != (uint8_t) DataElementStorageClassRestorable)
+			return 4;
+
+		write_bytes_to_flash(&fh->file[offset], data, length);
+	}
+
+
 
 	return 0;
 }

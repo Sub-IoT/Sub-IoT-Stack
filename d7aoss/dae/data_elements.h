@@ -35,13 +35,17 @@
 
 
 #define DA_NOTIFICATION_STORAGE_CLASS(VAL)		(VAL & 0x03)
-#define DA_NOTIFICATION_COND					1 << 7
-#define DA_NOTIFICATION_NOTIFY					1 << 6
-#define DA_NOTIFICATION_ACCESS_WRITE			0 << 4
-#define DA_NOTIFICATION_ACCESS_READ				1 << 4
-#define DA_NOTIFICATION_ACCESS_LIST				2 << 4
-#define DA_NOTIFICATION_ACCESS_ANY				3 << 4
-#define DA_NOTIFICATION_QOS(VAL)				(VAL & 7)
+#define DA_NOTIFICATION_NOTIFY					1 << 7
+#define DA_NOTIFICATION_ACCESS_WRITE			2 << 6
+#define DA_NOTIFICATION_ACCESS_READ				1 << 6
+#define DA_NOTIFICATION_ACCESS_LIST				0 << 6
+#define DA_NOTIFICATION_ACCESS_ANY				3 << 6
+#define DA_NOTIFICATION_QOS(VAL)				(VAL & 7) << 2
+
+#define DA_TNF_FLAGS_QUERY						0x01
+#define DA_TNF_FLAGS_TGT						0x02
+#define DA_TNF_FLAGS_VID						0x04
+#define DA_TNF_FLAGS_NLS						0x08
 
 typedef enum {
 	DataElementStorageClassTransient = 0,	// The content is not kept in memory. It cannot be read back.
@@ -52,10 +56,9 @@ typedef enum {
 
 typedef struct
 {
-     uint8_t properties_3_file_id;
-     uint8_t properties_2;
-     uint8_t properties_1_storage_class;
-     uint8_t properties_0_permissions;
+     uint8_t properties_file_id;
+     uint8_t properties_flags;
+     uint8_t properties_permissions;
      uint16_t length;
      uint16_t allocated_length;
 } Data_Element_File_Header;
