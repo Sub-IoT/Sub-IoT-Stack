@@ -19,6 +19,7 @@
 #include "fs.h"
 #include "../hal/flash.h"
 #include "../trans/trans.h"
+#include <string.h>
 
 
 void fs_init()
@@ -181,12 +182,14 @@ uint8_t fs_write_data(file_handler *fh, uint8_t offset, uint8_t* data, uint8_t l
 		return 3;
 	}
 
+	file_handler nf;
+	bool do_notify = false;
+
 	if (fh->info->header.properties_flags & DA_NOTIFICATION_NOTIFY)
 	{
 		// Notification flag is set for this file
 		if (fh->info->header.properties_flags & DA_NOTIFICATION_ACCESS_WRITE)
 		{
-			file_handler nf;
 			fs_open(&nf, fh->info->header.properties_file_id, file_system_user_root, file_system_access_type_read);
 			uint8_t nf_pointer = 0;
 
@@ -201,14 +204,14 @@ uint8_t fs_write_data(file_handler *fh, uint8_t offset, uint8_t* data, uint8_t l
 				}
 				else
 				{
-					ASSERT("Not implemented yet");
+					return 255;
 					//TODO: implement multiple queries in notification
 				}
 				query.unitary_queries = (D7AQP_Unitary_Query_Template*) fs_get_data_pointer(&nf, nf_pointer);
 
 				if (query.unitary_queries[0].file_id != fh->info->header.properties_file_id)
 				{
-					ASSERT ("Not implemented yet");
+					return 255;
 					//TODO: implement notification where query uses other file then writing file
 				}
 
@@ -216,22 +219,55 @@ uint8_t fs_write_data(file_handler *fh, uint8_t offset, uint8_t* data, uint8_t l
 
 				if ((query.unitary_queries[0].compare_code & D7AQP_QUERY_COMP_CODE_MASKED)) // masked not implemented
 				{
-					ASSERT ("Not implemented");
+					return 255;
 					//TODO: implement mask in query
 				}
 
 				uint8_t* compare_value;
 
-				if ((query.unitary_queries[0].compare_code & D7AQP_QUERY_COMP_CODE_VALTYPE)) // compare with previous file value
+				if ((query.unitary_queries[0].compare_code & D7AQP_QUERY_COMP_CODE_COMPTYPE_NONNULL))
 				{
-					compare_value = fs_get_data_pointer(&fp, query.unitary_queries[0].file_offset);
-				}
-				else
+					uint8_t i = 0;
+					while (i < length && !do_notify)
+					{
+						if (data[i++] != 0)
+							do_notify = true;
+					}
+				} else if ((query.unitary_queries[0].compare_code & D7AQP_QUERY_COMP_CODE_COMPTYPE_ARITHM))
 				{
-					compare_value = fs_get_data_pointer(&fp, nf_pointer);
-				}
+					if ((query.unitary_queries[0].compare_code & D7AQP_QUERY_COMP_CODE_VALTYPE)) // compare with previous file value
+					{
+						compare_value = fs_get_data_pointer(fh, query.unitary_queries[0].file_offset);
+					}
+					else
+					{
+						compare_value = fs_get_data_pointer(&nf, nf_pointer);
+						nf_pointer += query.unitary_queries[0].compare_length;
+					}
 
-				nf_pointer += query.unitary_queries[0].compare_length;
+					switch (query.unitary_queries[0].compare_code & D7AQP_QUERY_COMP_CODE_PARAMS(0x0F))
+					{
+						case 0: // inequality
+						{
+							if (memcmp(compare_value, data, query.unitary_queries[0].compare_length) != 0)
+							{
+								do_notify = true;
+								break;
+							}
+						}
+						case 1:
+						{
+							if (memcmp(compare_value, data, query.unitary_queries[0].compare_length) == 0)
+							{
+								do_notify = true;
+								break;
+							}
+						}
+						default:
+							return 255;
+							//TODO implemnet other options
+					}
+				}
 			}
 		}
 	}
@@ -243,6 +279,11 @@ uint8_t fs_write_data(file_handler *fh, uint8_t offset, uint8_t* data, uint8_t l
 			return 4;
 
 		write_bytes_to_flash(&fh->file[offset], data, length);
+	}
+
+	if (do_notify)
+	{
+
 	}
 
 
