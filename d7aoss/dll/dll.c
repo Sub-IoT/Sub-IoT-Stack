@@ -53,11 +53,11 @@ static Dll_CSMA_CA_Type csma_ca_type = DllCsmaCaAind;
 int16_t scan_minimum_energy = -140; // E_sm
 uint16_t background_scan_detection_timeout;
 uint16_t foreground_scan_detection_timeout;
-uint8_t spectrum_id = 0;
+uint8_t spectrum_id[2] = {0, 0};
 
 
 phy_tx_cfg_t frame_tx_cfg = {
-            0x10, 	// spectrum ID
+            {0x04, 0x00}, 	// spectrum ID
 			1, 		// Sync word class
 			0,		// Transmission power level in dBm ranged [-39, +10]
 			0,		// Packet length
@@ -190,7 +190,8 @@ static void rx_callback(phy_rx_data_t* res)
 	// parse packet
 	dll_res.rssi = res->rssi;
 	dll_res.lqi = res->lqi;
-	dll_res.spectrum_id = current_css->values[current_scan_id].spectrum_id;
+	memcpy(dll_res.spectrum_id, current_css->values[current_scan_id].spectrum_id, 2);
+	// todo: take into account band / CS ...
 
 	dll_frame_t* frame = (dll_frame_t*)frame_data;
 	frame->length = res->data[0];
@@ -303,9 +304,9 @@ void dll_set_foreground_scan_detection_timeout(uint16_t t_fsd)
 	foreground_scan_detection_timeout = t_fsd;
 }
 
-void dll_set_scan_spectrum_id(uint8_t spect_id)
+void dll_set_scan_spectrum_id(uint8_t spect_id[2])
 {
-	spectrum_id = spect_id;
+	memcpy(spectrum_id, spect_id, 2);
 }
 
 void dll_stop_channel_scan()
@@ -342,7 +343,7 @@ uint8_t dll_background_scan()
 	phy_rx_cfg_t rx_cfg;
 	rx_cfg.length = 0;
 	rx_cfg.timeout = background_scan_detection_timeout; // timeout
-	rx_cfg.spectrum_id = spectrum_id; // spectrum ID
+	memcpy(rx_cfg.spectrum_id, spectrum_id, 2); // spectrum ID
 	rx_cfg.scan_minimum_energy = scan_minimum_energy;
 	rx_cfg.sync_word_class = 0;
 
@@ -371,7 +372,7 @@ void dll_foreground_scan()
 	phy_rx_cfg_t rx_cfg;
 	rx_cfg.length = 0;
 	rx_cfg.timeout = foreground_scan_detection_timeout; // timeout
-	rx_cfg.spectrum_id = spectrum_id; // spectrum ID
+	memcpy(rx_cfg.spectrum_id, spectrum_id, 2); // spectrum ID
 	rx_cfg.scan_minimum_energy = scan_minimum_energy;
 	rx_cfg.sync_word_class = 1;
 
@@ -398,7 +399,7 @@ void dll_channel_scan_series(dll_channel_scan_series_t* css)
 	rx_cfg.length = 0;
 	rx_cfg.timeout = css->values[current_scan_id].timeout_scan_detect; // timeout
 	//rx_cfg.multiple = 0; // multiple TODO
-	rx_cfg.spectrum_id = css->values[current_scan_id].spectrum_id; // spectrum ID TODO
+	memcpy(rx_cfg.spectrum_id, css->values[current_scan_id].spectrum_id, 2); // spectrum ID
 	//rx_cfg.coding_scheme = 0; // coding scheme TODO
 	rx_cfg.scan_minimum_energy = scan_minimum_energy;
 	if (css->values[current_scan_id].scan_type == FrameTypeBackgroundFrame)
@@ -467,13 +468,7 @@ void dll_csma(bool enabled)
 	// TODO: calculate Tg only once
 	// Calculate correct t_g
 
-	uint8_t channel_bandwidth_index = (spectrum_id >> 4) & 0x07;
-	uint8_t fec = (bool)spectrum_id >> 7;
-
-	if (channel_bandwidth_index == 1)
-		event.next_event = fec == 0 ? 5 : 10;
-	else
-		event.next_event = fec == 0 ? 2 : 3;
+	event.next_event = 5;
 
 	event.f = &dll_cca2;
 
@@ -521,7 +516,7 @@ void dll_ca(uint8_t t_ca)
 void dll_create_frame(uint8_t* target_address, uint8_t address_length, dll_tx_cfg_t* params)
 {
 	//TODO: check if in idle state
-	frame_tx_cfg.spectrum_id = params->spectrum_id; // TODO check valid (should be done in the upper layer of stack)
+	memcpy(frame_tx_cfg.spectrum_id, params->spectrum_id, 2); // TODO check valid (should be done in the upper layer of stack)
 	frame_tx_cfg.eirp = params->eirp;
 	frame_tx_cfg.sync_word_class = (params->frame_type == FrameTypeForegroundFrame) ? 1 : 0;
 	frame_tx_cfg.length = tx_queue.length + 5 + address_length;

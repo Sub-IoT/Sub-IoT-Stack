@@ -64,7 +64,7 @@ typedef struct {
 typedef struct
 {
 	uint8_t subnet;				// Subnet
-	uint8_t spectrum_id;		// Spectrum ID
+	uint8_t spectrum_id[2];		// Spectrum ID
 	int8_t 	eirp;				// Transmission power level in dBm ranged [-39, +10]
 	Frame_Type frame_type;		// Frame Type
 } dll_tx_cfg_t;
@@ -84,14 +84,14 @@ typedef struct
     /// Link quality indicator
     uint8_t  lqi;
     /// spectrum id
-    uint8_t spectrum_id;
+    uint8_t spectrum_id[2];
     /// Frame
     dll_frame_t* frame;
 } dll_rx_res_t;
 
 typedef struct
 {
-	uint8_t spectrum_id; // 0-255
+	uint8_t spectrum_id[2];
 	Frame_Type scan_type; // BF / FF
 	uint16_t timeout_scan_detect; // 0-65535 ti
 	uint16_t time_next_scan; // 0-65535 ti
@@ -123,7 +123,7 @@ void dll_set_rx_callback(dll_rx_callback_t);
 void dll_set_scan_minimum_energy(int16_t e_sm);
 void dll_set_background_scan_detection_timeout(uint16_t t_bsd);
 void dll_set_foreground_scan_detection_timeout(uint16_t t_fsd);
-void dll_set_scan_spectrum_id(uint8_t spectrum_id);
+void dll_set_scan_spectrum_id(uint8_t spectrum_id[2]);
 
 void dll_csma(bool enabled);
 void dll_ca(uint8_t t_ca);

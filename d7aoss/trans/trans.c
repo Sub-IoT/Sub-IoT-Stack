@@ -204,7 +204,7 @@ void trans_set_query_rx_callback(trans_rx_query_callback_t cb)
 	trans_rx_query_callback = cb;
 }
 
-void trans_tx_foreground_frame(uint8_t* data, uint8_t length, uint8_t subnet, uint8_t spectrum_id, int8_t tx_eirp) {
+void trans_tx_foreground_frame(uint8_t* data, uint8_t length, uint8_t subnet, uint8_t spectrum_id[2], int8_t tx_eirp) {
 	queue_clear(&tx_queue);
 	queue_push_u8_array(&tx_queue, data, length);
 
@@ -223,7 +223,7 @@ void trans_tx_foreground_frame(uint8_t* data, uint8_t length, uint8_t subnet, ui
  *  \param spectrum_id The spectrum_id which needs to be used to send the query
  *  \param tx_eirp The transmit EIRP which need to be used to send the query
  */
-void trans_tx_query(D7AQP_Query_Template* query,  uint8_t subnet, uint8_t spectrum_id, int8_t tx_eirp)
+void trans_tx_query(D7AQP_Query_Template* query,  uint8_t subnet, uint8_t spectrum_id[2], int8_t tx_eirp)
 {
 
 	if (query != NULL)
@@ -320,7 +320,7 @@ void trans_tx_query(D7AQP_Query_Template* query,  uint8_t subnet, uint8_t spectr
 //}
 
 
-void trans_rx_query_start(uint8_t subnet, uint8_t spectrum_id)
+void trans_rx_query_start(uint8_t subnet, uint8_t spectrum_id[2])
 {
 	nwl_rx_start(subnet, spectrum_id, ProtocolTypeNetworkProtocol);
 }

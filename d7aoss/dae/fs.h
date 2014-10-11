@@ -90,7 +90,8 @@ uint8_t* fs_get_data_pointer(file_handler *fh, uint8_t offset);
 uint8_t fs_write_byte(file_handler *fh, uint8_t offset, uint8_t value, bool store);
 uint8_t fs_write_data(file_handler *fh, uint8_t offset, uint8_t* data, uint8_t length, bool store);
 
-
+static bool fs_check_notification_query(uint8_t tnf_id, file_handler* fh, uint8_t* data, uint8_t length);
+static void fs_send_notification(uint8_t tnf_id);
 
 
 

@@ -133,11 +133,11 @@ void nwl_set_rx_callback(nwl_rx_callback_t cb)
  *  \param uint8_t tx_eirp 		The send EIRP.
  *  \param uint8_t subnet 		The subnet to of the background frame.
  */
-static void nwl_build_background_frame(uint8_t spectrum_id, int8_t tx_eirp, uint8_t subnet)
+static void nwl_build_background_frame(uint8_t spectrum_id[2], int8_t tx_eirp, uint8_t subnet)
 {
 	dll_tx_cfg_t dll_params;
 	dll_params.eirp = tx_eirp;
-	dll_params.spectrum_id = spectrum_id;
+	memcpy(dll_params.spectrum_id, spectrum_id, 2);
 	dll_params.subnet = subnet;
 	dll_params.frame_type = FrameTypeBackgroundFrame;
 
@@ -145,7 +145,7 @@ static void nwl_build_background_frame(uint8_t spectrum_id, int8_t tx_eirp, uint
 }
 
 /** \copydoc nwl_build_advertising_protocol_data */
-void nwl_build_advertising_protocol_data(uint16_t eta, uint8_t spectrum_id, int8_t tx_eirp, uint8_t subnet)
+void nwl_build_advertising_protocol_data(uint16_t eta, uint8_t spectrum_id[2], int8_t tx_eirp, uint8_t subnet)
 {
 	queue_clear(&tx_queue);
 
@@ -161,7 +161,7 @@ void nwl_build_advertising_protocol_data(uint16_t eta, uint8_t spectrum_id, int8
 }
 
 /** \copydoc nwl_build_beaconprotocol_data */
-void nwl_build_beaconprotocol_data(uint8_t spectrum_id, int8_t tx_eirp, uint8_t subnet)
+void nwl_build_beaconprotocol_data(uint8_t spectrum_id[2], int8_t tx_eirp, uint8_t subnet)
 {
 	queue_clear(&tx_queue);
 
@@ -178,13 +178,13 @@ void nwl_build_beaconprotocol_data(uint8_t spectrum_id, int8_t tx_eirp, uint8_t 
 
 /** \copydoc nwl_build_network_protocol_data */
 
-void nwl_build_network_protocol_data(uint8_t control, nwl_security* security, nwl_full_access_template* source_access, uint8_t* target_address, uint8_t target_address_lenght, uint8_t subnet, uint8_t spectrum_id, int8_t tx_eirp)
+void nwl_build_network_protocol_data(uint8_t control, nwl_security* security, nwl_full_access_template* source_access, uint8_t* target_address, uint8_t target_address_lenght, uint8_t subnet, uint8_t spectrum_id[2], int8_t tx_eirp)
 {
 	uint8_t access_tmpl_length = 0;
 
 	dll_tx_cfg_t dll_params;
 	dll_params.eirp = tx_eirp;
-	dll_params.spectrum_id = spectrum_id;
+	memcpy(dll_params.spectrum_id, spectrum_id, 2);
 	dll_params.subnet = subnet;
 	dll_params.frame_type = FrameTypeForegroundFrame;
 
@@ -267,10 +267,11 @@ void nwl_build_network_protocol_data(uint8_t control, nwl_security* security, nw
 //}
 
 
-void nwl_rx_start(uint8_t subnet, uint8_t spectrum_id, Protocol_Type type)
+void nwl_rx_start(uint8_t subnet, uint8_t spectrum_id[2], Protocol_Type type)
 {
 	dll_channel_scan_t scan_cfg = {
-			spectrum_id,
+			spectrum_id[1],
+			spectrum_id[0],
 			FrameTypeForegroundFrame,
 			0,
 			0

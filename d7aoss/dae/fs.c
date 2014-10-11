@@ -182,7 +182,6 @@ uint8_t fs_write_data(file_handler *fh, uint8_t offset, uint8_t* data, uint8_t l
 		return 3;
 	}
 
-	file_handler nf;
 	bool do_notify = false;
 
 	if (fh->info->header.properties_flags & DA_NOTIFICATION_NOTIFY)
@@ -190,85 +189,7 @@ uint8_t fs_write_data(file_handler *fh, uint8_t offset, uint8_t* data, uint8_t l
 		// Notification flag is set for this file
 		if (fh->info->header.properties_flags & DA_NOTIFICATION_ACCESS_WRITE)
 		{
-			fs_open(&nf, fh->info->header.properties_file_id, file_system_user_root, file_system_access_type_read);
-			uint8_t nf_pointer = 0;
-
-			uint8_t tnf_flags = fs_read_byte(&nf, nf_pointer++);
-			if (tnf_flags & DA_TNF_FLAGS_QUERY) // Query Present
-			{
-				D7AQP_Query_Template query;
-				query.nr_of_unitary_queries = fs_read_byte(&nf, nf_pointer++);
-				if (query.nr_of_unitary_queries > 1)
-				{
-					query.logical_code = fs_read_byte(&nf, nf_pointer++);
-				}
-				else
-				{
-					return 255;
-					//TODO: implement multiple queries in notification
-				}
-				query.unitary_queries = (D7AQP_Unitary_Query_Template*) fs_get_data_pointer(&nf, nf_pointer);
-
-				if (query.unitary_queries[0].file_id != fh->info->header.properties_file_id)
-				{
-					return 255;
-					//TODO: implement notification where query uses other file then writing file
-				}
-
-				nf_pointer += 4;
-
-				if ((query.unitary_queries[0].compare_code & D7AQP_QUERY_COMP_CODE_MASKED)) // masked not implemented
-				{
-					return 255;
-					//TODO: implement mask in query
-				}
-
-				uint8_t* compare_value;
-
-				if ((query.unitary_queries[0].compare_code & D7AQP_QUERY_COMP_CODE_COMPTYPE_NONNULL))
-				{
-					uint8_t i = 0;
-					while (i < length && !do_notify)
-					{
-						if (data[i++] != 0)
-							do_notify = true;
-					}
-				} else if ((query.unitary_queries[0].compare_code & D7AQP_QUERY_COMP_CODE_COMPTYPE_ARITHM))
-				{
-					if ((query.unitary_queries[0].compare_code & D7AQP_QUERY_COMP_CODE_VALTYPE)) // compare with previous file value
-					{
-						compare_value = fs_get_data_pointer(fh, query.unitary_queries[0].file_offset);
-					}
-					else
-					{
-						compare_value = fs_get_data_pointer(&nf, nf_pointer);
-						nf_pointer += query.unitary_queries[0].compare_length;
-					}
-
-					switch (query.unitary_queries[0].compare_code & D7AQP_QUERY_COMP_CODE_PARAMS(0x0F))
-					{
-						case 0: // inequality
-						{
-							if (memcmp(compare_value, data, query.unitary_queries[0].compare_length) != 0)
-							{
-								do_notify = true;
-								break;
-							}
-						}
-						case 1:
-						{
-							if (memcmp(compare_value, data, query.unitary_queries[0].compare_length) == 0)
-							{
-								do_notify = true;
-								break;
-							}
-						}
-						default:
-							return 255;
-							//TODO implemnet other options
-					}
-				}
-			}
+			fs_check_notification_query(fh->info->header.properties_file_id, fh, data, length);
 		}
 	}
 
@@ -283,10 +204,109 @@ uint8_t fs_write_data(file_handler *fh, uint8_t offset, uint8_t* data, uint8_t l
 
 	if (do_notify)
 	{
-
+		fs_send_notification(fh->info->header.properties_file_id);
 	}
 
 
 
 	return 0;
+}
+
+bool fs_check_notification_query(uint8_t tnf_id, file_handler* fh, uint8_t* data, uint8_t length)
+{
+	file_handler nf;
+	fs_open(&nf, tnf_id, file_system_user_root, file_system_access_type_read);
+	uint8_t nf_pointer = 0;
+
+	uint8_t tnf_flags = fs_read_byte(&nf, nf_pointer++);
+	if (tnf_flags & DA_TNF_FLAGS_QUERY) // Query Present
+	{
+		nf_pointer++; // Lenght of query template
+		D7AQP_Query_Template query;
+		query.nr_of_unitary_queries = fs_read_byte(&nf, nf_pointer++);
+		if (query.nr_of_unitary_queries > 1)
+		{
+			query.logical_code = fs_read_byte(&nf, nf_pointer++);
+		}
+		else
+		{
+			return 255;
+			//TODO: implement multiple queries in notification
+		}
+		query.unitary_queries = (D7AQP_Unitary_Query_Template*) fs_get_data_pointer(&nf, nf_pointer);
+
+//		if (query.unitary_queries[0].file_id != file_id)
+//		{
+//			return false;
+//			//TODO: check and implement notification where query uses other file then writing file
+//		}
+
+		nf_pointer += 4;
+
+		if ((query.unitary_queries[0].compare_code & D7AQP_QUERY_COMP_CODE_MASKED)) // masked not implemented
+		{
+			return 255;
+			//TODO: implement mask in query
+		}
+
+		uint8_t* compare_value;
+
+		if ((query.unitary_queries[0].compare_code & D7AQP_QUERY_COMP_CODE_COMPTYPE_NONNULL))
+		{
+			uint8_t i = 0;
+			while (i < length)
+			{
+				if (data[i++] != 0)
+					return true;
+			}
+		} else if ((query.unitary_queries[0].compare_code & D7AQP_QUERY_COMP_CODE_COMPTYPE_ARITHM))
+		{
+			if ((query.unitary_queries[0].compare_code & D7AQP_QUERY_COMP_CODE_VALTYPE)) // compare with previous file value
+			{
+				compare_value = fs_get_data_pointer(fh, query.unitary_queries[0].file_offset);
+			}
+			else
+			{
+				compare_value = fs_get_data_pointer(&nf, nf_pointer);
+				nf_pointer += query.unitary_queries[0].compare_length;
+			}
+
+			switch (query.unitary_queries[0].compare_code & D7AQP_QUERY_COMP_CODE_PARAMS(0x0F))
+			{
+				case 0: // inequality
+				{
+					if (memcmp(compare_value, data, query.unitary_queries[0].compare_length) != 0)
+						return true;
+				}
+				case 1:
+				{
+					if (memcmp(compare_value, data, query.unitary_queries[0].compare_length) == 0)
+						return true;
+				}
+				default:
+					return false;
+					//TODO implemnet other options
+			}
+		}
+	}
+
+	return false;
+}
+
+void fs_send_notification(uint8_t tnf_id)
+{
+	file_handler nf;
+	fs_open(&nf, tnf_id, file_system_user_root, file_system_access_type_read);
+
+	uint8_t nf_pointer = 0;
+
+	uint8_t tnf_flags = fs_read_byte(&nf, nf_pointer++);
+	if (tnf_flags & DA_TNF_FLAGS_QUERY) // Query Present
+	{
+		nf_pointer += 1 + fs_read_byte(&nf, nf_pointer); // Skip the query
+	}
+
+
+
+	//trans_tx_query(D7AQP_Query_Template* query, uint8_t subnet, uint8_t spectrum_id, int8_t tx_eirp);
 }

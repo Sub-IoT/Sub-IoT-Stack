@@ -54,7 +54,7 @@ uint16_t sync_word;
 
 bool init_and_close_radio = true;
 
-static uint8_t previous_spectrum_id = 0xFF;
+static uint8_t previous_spectrum_id[2] = {0xFF, 0xFF};
 static uint8_t previous_sync_word_class = 0xFF;
 
 phy_rx_data_t rx_data;
@@ -140,7 +140,8 @@ void phy_init(void)
 	WriteRfSettings(&rfSettings);
 
 	last_tx_cfg.eirp=0;
-	last_tx_cfg.spectrum_id = 0;
+	last_tx_cfg.spectrum_id[0] = 0;
+	last_tx_cfg.spectrum_id[1] = 0;
 	last_tx_cfg.sync_word_class = 0;
 
 }
@@ -151,9 +152,9 @@ void phy_idle(void)
 		rxtx_finish_isr();
 }
 
-bool phy_translate_and_set_settings(uint8_t spectrum_id, uint8_t sync_word_class)
+bool phy_translate_and_set_settings(uint8_t spectrum_id[2], uint8_t sync_word_class)
 {
-	if (previous_spectrum_id == spectrum_id && previous_sync_word_class == sync_word_class)
+	if (!memcmp(previous_spectrum_id, spectrum_id, 2) && previous_sync_word_class == sync_word_class)
 		return true;
 
 	Strobe(RF_SIDLE);
@@ -171,7 +172,7 @@ bool phy_translate_and_set_settings(uint8_t spectrum_id, uint8_t sync_word_class
 	set_preamble_size(preamble_size);
 	set_sync_word(sync_word);
 
-	previous_spectrum_id = spectrum_id;
+	memcpy(previous_spectrum_id, spectrum_id, 2);
 	previous_sync_word_class = sync_word_class;
 
 	return true;
@@ -394,7 +395,7 @@ bool phy_is_tx_in_progress(void)
 	return (state == Transmit);
 }
 
-extern int16_t phy_get_rssi(uint8_t spectrum_id, uint8_t sync_word_class)
+extern int16_t phy_get_rssi(uint8_t spectrum_id[2], uint8_t sync_word_class)
 {
 	uint8_t rssi_raw = 0;
 

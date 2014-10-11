@@ -122,7 +122,7 @@ void nwl_set_rx_callback(nwl_rx_callback_t);
  *  \param uint8_t tx_eirp 		The send EIRP.
  *  \param uint8_t subnet 		The subnet to of the background frame.
  */
-void nwl_build_advertising_protocol_data(uint16_t eta, uint8_t spectrum_id, int8_t tx_eirp, uint8_t subnet);
+void nwl_build_advertising_protocol_data(uint16_t eta, uint8_t spectrum_id[2], int8_t tx_eirp, uint8_t subnet);
 
 /*! \brief Builds a beacon protocol background frame  (Network Layer)
  *
@@ -135,11 +135,11 @@ void nwl_build_advertising_protocol_data(uint16_t eta, uint8_t spectrum_id, int8
  *  \param uint8_t tx_eirp 		The send EIRP.
  *  \param uint8_t subnet 		The subnet to of the background frame.
  */
-void nwl_build_beaconprotocol_data(uint8_t spectrum_id, int8_t tx_eirp, uint8_t subnet);
+void nwl_build_beaconprotocol_data(uint8_t spectrum_id[2], int8_t tx_eirp, uint8_t subnet);
 
 // Foreground frames
 
-void nwl_build_advertising_protocol_data(uint16_t eta, uint8_t spectrum_id, int8_t tx_eirp, uint8_t subnet);
+void nwl_build_advertising_protocol_data(uint16_t eta, uint8_t spectrum_id[2], int8_t tx_eirp, uint8_t subnet);
 
 /*! \brief Builds a network protocol foreground frame  (Network Layer)
  *
@@ -157,9 +157,9 @@ void nwl_build_advertising_protocol_data(uint16_t eta, uint8_t spectrum_id, int8
  *  \param uint8_t tx_eirp 			The send EIRP.
  *  \param uint8_t subnet 			The subnet to of the background frame.
  */
-void nwl_build_network_protocol_data(uint8_t control, nwl_security* security, nwl_full_access_template* source_access, uint8_t* target_address, uint8_t target_address_lenght, uint8_t subnet, uint8_t spectrum_id, int8_t tx_eirp);
+void nwl_build_network_protocol_data(uint8_t control, nwl_security* security, nwl_full_access_template* source_access, uint8_t* target_address, uint8_t target_address_lenght, uint8_t subnet, uint8_t spectrum_id[2], int8_t tx_eirp);
 //void nwl_build_datastream_protocol_data(uint8_t* data, uint8_t length, nwl_security* security, uint8_t subnet, uint8_t spectrum_id, int8_t tx_eirp, uint8_t dialog_id);
 
-void nwl_rx_start(uint8_t subnet, uint8_t spectrum_id, Protocol_Type type);
+void nwl_rx_start(uint8_t subnet, uint8_t spectrum_id[2], Protocol_Type type);
 void nwl_rx_stop();
 #endif

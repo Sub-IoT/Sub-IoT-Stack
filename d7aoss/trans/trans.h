@@ -139,12 +139,12 @@ void trans_set_query_rx_callback(trans_rx_query_callback_t);
 //void trans_tx_datastream(uint8_t* data, uint8_t length, uint8_t subnet, uint8_t spectrum_id, int8_t tx_eirp);
 //void trans_tx_background_frame(uint8_t* data, uint8_t subnet, uint8_t spectrum_id, int8_t tx_eirp);
 
-void trans_tx_query(D7AQP_Query_Template* query, uint8_t subnet, uint8_t spectrum_id, int8_t tx_eirp);
+void trans_tx_query(D7AQP_Query_Template* query, uint8_t subnet, uint8_t spectrum_id[2], int8_t tx_eirp);
 //nwl_build_network_protocol_data(uint8_t control, nwl_security* security, nwl_full_access_template* source_access, uint8_t* target_address, uint8_t target_address_lenght, uint8_t subnet, uint8_t spectrum_id, int8_t tx_eirp)
 
 
 //void trans_rx_datastream_start(uint8_t subnet, uint8_t spectrum_id);
-void trans_rx_query_start(uint8_t subnet, uint8_t spectrum_id);
+void trans_rx_query_start(uint8_t subnet, uint8_t spectrum_id[2]);
 void trans_rx_stop();
 
 #endif /* TRANS_H_ */
