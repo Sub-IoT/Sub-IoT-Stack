@@ -275,11 +275,15 @@ bool fs_check_notification_query(uint8_t tnf_id, file_handler* fh, uint8_t* data
 				{
 					if (memcmp(compare_value, data, unitary_queries[0].compare_length) != 0)
 						return true;
+
+					break;
 				}
 				case 1:
 				{
 					if (memcmp(compare_value, data, unitary_queries[0].compare_length) == 0)
 						return true;
+
+					break;
 				}
 				default:
 					return false;
