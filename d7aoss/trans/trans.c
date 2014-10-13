@@ -222,6 +222,7 @@ void trans_tx_foreground_frame(uint8_t* data, uint8_t length, uint8_t subnet, ui
  *  \param subnet The subnet which needs to be used to send the query
  *  \param spectrum_id The spectrum_id which needs to be used to send the query
  *  \param tx_eirp The transmit EIRP which need to be used to send the query
+ *  \todo Todo: implement unicast
  */
 void trans_tx_query(D7AQP_Query_Template* query,  uint8_t subnet, uint8_t spectrum_id[2], int8_t tx_eirp)
 {

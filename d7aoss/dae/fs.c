@@ -19,6 +19,7 @@
 #include "fs.h"
 #include "../hal/flash.h"
 #include "../trans/trans.h"
+#include "../alp/alp.h"
 #include <string.h>
 
 
@@ -189,7 +190,7 @@ uint8_t fs_write_data(file_handler *fh, uint8_t offset, uint8_t* data, uint8_t l
 		// Notification flag is set for this file
 		if (fh->info->header.properties_flags & DA_NOTIFICATION_ACCESS_WRITE)
 		{
-			fs_check_notification_query(fh->info->header.properties_file_id, fh, data, length);
+			do_notify = fs_check_notification_query(fh->info->header.properties_file_id, fh, data, length);
 		}
 	}
 
@@ -222,18 +223,15 @@ bool fs_check_notification_query(uint8_t tnf_id, file_handler* fh, uint8_t* data
 	if (tnf_flags & DA_TNF_FLAGS_QUERY) // Query Present
 	{
 		nf_pointer++; // Lenght of query template
-		D7AQP_Query_Template query;
-		query.nr_of_unitary_queries = fs_read_byte(&nf, nf_pointer++);
-		if (query.nr_of_unitary_queries > 1)
+		uint8_t nr_of_unitary_queries = fs_read_byte(&nf, nf_pointer++);
+		if (nr_of_unitary_queries > 1)
 		{
-			query.logical_code = fs_read_byte(&nf, nf_pointer++);
-		}
-		else
-		{
-			return 255;
+			uint8_t logical_code = fs_read_byte(&nf, nf_pointer++);
 			//TODO: implement multiple queries in notification
+			return false;
 		}
-		query.unitary_queries = (D7AQP_Unitary_Query_Template*) fs_get_data_pointer(&nf, nf_pointer);
+
+		D7AQP_Unitary_Query_Template *unitary_queries  = (D7AQP_Unitary_Query_Template*) fs_get_data_pointer(&nf, nf_pointer);
 
 //		if (query.unitary_queries[0].file_id != file_id)
 //		{
@@ -243,15 +241,15 @@ bool fs_check_notification_query(uint8_t tnf_id, file_handler* fh, uint8_t* data
 
 		nf_pointer += 4;
 
-		if ((query.unitary_queries[0].compare_code & D7AQP_QUERY_COMP_CODE_MASKED)) // masked not implemented
+		if ((unitary_queries[0].compare_code & D7AQP_QUERY_COMP_CODE_MASKED)) // masked not implemented
 		{
-			return 255;
+			return false;
 			//TODO: implement mask in query
 		}
 
 		uint8_t* compare_value;
 
-		if ((query.unitary_queries[0].compare_code & D7AQP_QUERY_COMP_CODE_COMPTYPE_NONNULL))
+		if ((unitary_queries[0].compare_code & D7AQP_QUERY_COMP_CODE_COMPTYPE_NONNULL))
 		{
 			uint8_t i = 0;
 			while (i < length)
@@ -259,28 +257,28 @@ bool fs_check_notification_query(uint8_t tnf_id, file_handler* fh, uint8_t* data
 				if (data[i++] != 0)
 					return true;
 			}
-		} else if ((query.unitary_queries[0].compare_code & D7AQP_QUERY_COMP_CODE_COMPTYPE_ARITHM))
+		} else if ((unitary_queries[0].compare_code & D7AQP_QUERY_COMP_CODE_COMPTYPE_ARITHM))
 		{
-			if ((query.unitary_queries[0].compare_code & D7AQP_QUERY_COMP_CODE_VALTYPE)) // compare with previous file value
+			if ((unitary_queries[0].compare_code & D7AQP_QUERY_COMP_CODE_VALTYPE)) // compare with previous file value
 			{
-				compare_value = fs_get_data_pointer(fh, query.unitary_queries[0].file_offset);
+				compare_value = fs_get_data_pointer(fh, unitary_queries[0].file_offset);
 			}
 			else
 			{
 				compare_value = fs_get_data_pointer(&nf, nf_pointer);
-				nf_pointer += query.unitary_queries[0].compare_length;
+				nf_pointer += unitary_queries[0].compare_length;
 			}
 
-			switch (query.unitary_queries[0].compare_code & D7AQP_QUERY_COMP_CODE_PARAMS(0x0F))
+			switch (unitary_queries[0].compare_code & D7AQP_QUERY_COMP_CODE_PARAMS(0x0F))
 			{
 				case 0: // inequality
 				{
-					if (memcmp(compare_value, data, query.unitary_queries[0].compare_length) != 0)
+					if (memcmp(compare_value, data, unitary_queries[0].compare_length) != 0)
 						return true;
 				}
 				case 1:
 				{
-					if (memcmp(compare_value, data, query.unitary_queries[0].compare_length) == 0)
+					if (memcmp(compare_value, data, unitary_queries[0].compare_length) == 0)
 						return true;
 				}
 				default:
@@ -306,7 +304,55 @@ void fs_send_notification(uint8_t tnf_id)
 		nf_pointer += 1 + fs_read_byte(&nf, nf_pointer); // Skip the query
 	}
 
+	uint8_t spectrum_id[2];
+	spectrum_id[1] = fs_read_byte(&nf, nf_pointer++);
+	spectrum_id[0] = fs_read_byte(&nf, nf_pointer++);
+	int8_t tx_eirp = ((int8_t) ((fs_read_byte(&nf, nf_pointer++) & 0x7F) / 2) - 20) ;
+	int8_t subnet = fs_read_byte(&nf, nf_pointer++);
 
+	uint8_t* target_id = NULL;
+	if (tnf_flags & 0x02)
+	{
+		target_id = fs_get_data_pointer(&nf, nf_pointer);
+		if (tnf_flags & 0x04)
+			nf_pointer+= 2;
+		else
+			nf_pointer+= 8;
+	}
 
-	//trans_tx_query(D7AQP_Query_Template* query, uint8_t subnet, uint8_t spectrum_id, int8_t tx_eirp);
+	//TODO: use target_id in query
+
+	uint8_t alp_rec_flags =  fs_read_byte(&nf, nf_pointer++);
+	uint8_t alp_rec_length =  fs_read_byte(&nf, nf_pointer++);
+	uint8_t alp_alp_id =  fs_read_byte(&nf, nf_pointer++);
+	uint8_t alp_op =  fs_read_byte(&nf, nf_pointer++);
+	uint8_t alp_id =  fs_read_byte(&nf, nf_pointer++);
+	uint8_t alp_offset=  SWITCH_BYTES(fs_read_short(&nf, nf_pointer));
+	nf_pointer += 2;
+	uint8_t alp_length =  SWITCH_BYTES(fs_read_short(&nf, nf_pointer));
+	nf_pointer += 2;
+
+	// TODO: only singular templates are currently supported
+	uint8_t alp_nr_of_templates = 1;
+
+	ALP_File_Data_Template data_template;
+	ALP_Template alp_template;
+
+	alp_template.op = ALP_OP_RESP_DATA;
+	alp_template.data = (uint8_t*) &data_template;
+
+	if (alp_op == ALP_OP_READ_DATA)
+	{
+		data_template.file_id = alp_id;
+		data_template.start_byte_offset = alp_offset;
+		data_template.bytes_accessing = alp_length;
+
+		file_handler fh;
+		fs_open(&fh, alp_id, file_system_user_root, file_system_access_type_read);
+
+		data_template.data = fs_get_data_pointer(&fh, (uint8_t) alp_offset);
+	}
+
+	alp_create_structure_for_tx(ALP_REC_FLG_TYPE_UNSOLICITED, alp_alp_id, alp_nr_of_templates, &alp_template);
+	trans_tx_query(NULL, subnet, spectrum_id, tx_eirp);
 }

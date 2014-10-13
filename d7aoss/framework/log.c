@@ -79,6 +79,7 @@ void log_print_data(uint8_t* message, uint8_t length)
 
 void log_phy_rx_res(phy_rx_data_t* res)
 {
+	// TODO: add channel id and frame_type
 	// transmit the log header
 	uart_transmit_data(0xDD);
 	uart_transmit_data(LOG_TYPE_PHY_RX_RES);
