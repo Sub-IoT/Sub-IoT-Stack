@@ -19,15 +19,29 @@
 
 #include <stdbool.h>
 #include <stdint.h>
-
+//**********************************************/
+//Initialize and start the timer                          /
+//**********************************************/
 void hal_timer_init();
 
+//**********************************************/
+//Get the nuber of ticks from the start of the timer                      /
+//**********************************************/
 uint16_t hal_timer_getvalue();
 
+//**********************************************/
+//Initialize the timer value                          /
+//**********************************************/
 void hal_timer_setvalue(uint16_t next_event);
 
+//**********************************************/
+//Enable the interrupt on the timer                          /
+//**********************************************/
 void hal_timer_enable_interrupt();
 
+//**********************************************/
+//Disable the interrupt on the timer                          /
+//**********************************************/
 void hal_timer_disable_interrupt();
 
 
