@@ -35,7 +35,7 @@ extern char _end;                 /**< Defined by the linker */
  *  Number of bytes you want increment the program's data space.
  *
  * @return
- *  Rsturns a pointer to the start of the new area.
+ *  Returns a pointer to the start of the new area.
  *****************************************************************************/
 caddr_t _sbrk(int incr)
 {
@@ -63,7 +63,7 @@ void system_init()
     /* Chip errata */
     CHIP_Init();
 
-    if (SysTick_Config(CMU_ClockFreqGet(cmuClock_CORE) / 1000)) while (1) ;
+    //if (SysTick_Config(CMU_ClockFreqGet(cmuClock_CORE) / 1000)) while (1) ;
 
     // init clock
     CMU_ClockDivSet(cmuClock_HF, cmuClkDiv_2);       // Set HF clock divider to /2 to keep core frequency < 32MHz
