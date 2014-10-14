@@ -41,9 +41,11 @@ IF(D7AOSS_HAL_DRIVER STREQUAL "efm32gg")
                         efm32gg/emlib/src/em_emu.c
                         efm32gg/emlib/src/em_gpio.c
                         efm32gg/emlib/src/em_usart.c
+                        efm32gg/emlib/src/em_rtc.c
                         efm32gg/efm32gg_leds.c
                         efm32gg/efm32gg_system.c
                         efm32gg/efm32gg_uart.c
+                        efm32gg/efm32gg_timer.c
                         crc_software.c
         )
 ENDIF()

@@ -18,32 +18,25 @@
 #include "leds.h"
 #include "system.h"
 #include "log.h"
+#include "timer.h"
 
-volatile uint32_t msTicks; /* counts 1ms timeTicks */
+void Timer_Loop(void);
 
-void Delay(uint32_t dlyTicks);
+timer_event timer = { .next_event = 1024 , .f = Timer_Loop };
+
+char data[12] = "Hello gecko\n";
 
 /**************************************************************************//**
  * @brief SysTick_Handler
  * Interrupt Service Routine for system tick counter
  *****************************************************************************/
-void SysTick_Handler(void)
+void Timer_Loop(void)
 {
-  msTicks++;       /* increment counter necessary in Delay()*/
+    led_toggle(0);
+    led_toggle(1);
+    log_print_string("%s", data);
+    timer_add_event( &timer );
 }
-
-/**************************************************************************//**
- * @brief Delays number of msTick Systicks (typically 1 ms)
- * @param dlyTicks Number of ticks to delay
- *****************************************************************************/
-void Delay(uint32_t dlyTicks)
-{
-  uint32_t curTicks;
-
-  curTicks = msTicks;
-  while ((msTicks - curTicks) < dlyTicks) ;
-}
-
 
 /**************************************************************************//**
  * @brief  Main function
@@ -51,18 +44,17 @@ void Delay(uint32_t dlyTicks)
 int main(void)
 {
     system_init();
-    char data[12] = "Hello gecko\n";
-  /* Initialize LED driver */
-  led_init();
-  led_on(0);
+    /* Initialize LED driver */
+    led_init();
+    led_on(0);
 
-  /* Infinite blink loop */
-  while (1)
-  {
-    led_toggle(0);
-    led_toggle(1);
-    //uart_transmit_message(data, 12);
-    log_print_string("%s", data);
-    Delay(1000);
-  }
+    log_print_string("Starting\n");
+
+    timer_init();
+    Timer_Loop();
+
+    /* Infinite loop */
+    while (1)
+    {
+    }
 }
