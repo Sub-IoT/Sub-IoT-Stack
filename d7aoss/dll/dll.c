@@ -202,7 +202,7 @@ static void rx_callback(phy_rx_data_t* res)
 		frame->target_address = &res->data[3];
 		if (frame->control & 0x40) // VID
 		{
-			if (memcmp(frame->target_address, &virtual_id, 2) == 0)
+			if (memcmp(frame->target_address, virtual_id, 2) == 0)
 			{
 				#ifdef LOG_DLL_ENABLED
 				log_print_stack_string(LOG_DLL, "DLL this device is not the target");
@@ -217,7 +217,7 @@ static void rx_callback(phy_rx_data_t* res)
 		}
 		else // UID
 		{
-			if (memcmp(frame->target_address, &virtual_id, 8) == 0)
+			if (memcmp(frame->target_address, &device_id, 8) == 0)
 			{
 				#ifdef LOG_DLL_ENABLED
 				log_print_stack_string(LOG_DLL, "DLL this device is not the target");

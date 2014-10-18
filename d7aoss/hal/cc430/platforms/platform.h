@@ -19,7 +19,7 @@
 #define PLATFORM_H_
 
 // Select the corrrect platform in the line below
-#define PLATFORM_AGAIDI
+#define PLATFORM_ARTESIS
 
 
 #ifdef PLATFORM_WIZZIMOTE

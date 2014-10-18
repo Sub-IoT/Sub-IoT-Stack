@@ -21,20 +21,21 @@
 #include "../button.h"
 #include "../uart.h"
 #include "cc430_addresses.h"
+#include "../../dae/fs.h"
 
 #include "pre_init.h"
 //#include "inc/hw_memmap.h"
 //#include "driverlib/5xx_6xx/wdt.h"
 #include "driverlib/5xx_6xx/tlv.h"
-#include "driverlib/5xx_6xx/pmm.h"
+//#include "driverlib/5xx_6xx/pmm.h"
 #include "driverlib/5xx_6xx/ucs.h"
 
 //#include "cc430_registers.h"
 
 #include "driverlib/inc/hw_types.h"
 
-uint8_t device_id[8];
-uint8_t virtual_id[2];
+//uint8_t device_id[8];
+//uint8_t virtual_id[2];
 uint32_t clock_speed;
 
 uint8_t vCore_level = 2;
@@ -131,10 +132,11 @@ void system_init(uint8_t* tx_buffer, uint16_t tx_buffer_size, uint8_t* rx_buffer
     	uart_init();
     }
 
-    system_get_unique_id(device_id);
-
     queue_init_with_header(&tx_queue, tx_buffer, tx_buffer_size, 1, 30);
     queue_init(&rx_queue, rx_buffer, rx_buffer_size, 1);
+
+
+    system_check_set_unique_id();
 }
 
 void clock_init(void)
@@ -249,33 +251,59 @@ void system_lowpower_mode(unsigned char mode, unsigned char enableInterrupts)
     __bis_SR_register(registerSetting);
 }
 
-void system_get_unique_id(unsigned char *tagId)
+void system_check_set_unique_id()
 {
-    struct s_TLV_Die_Record * pDIEREC;
-    unsigned char bDieRecord_bytes;
+	file_handler fh;
+	fs_open(&fh, DA_FILE_ID_UID, file_system_user_root, file_system_access_type_read);
+	device_id = fs_get_data_pointer(&fh, 0);
 
-    TLV_getInfo(TLV_TAG_DIERECORD,
-        0,
-        &bDieRecord_bytes,
-        (unsigned int **)&pDIEREC
-        );
+	fs_open(&fh, DA_FILE_DLL_CONFIGURATION, file_system_user_root, file_system_access_type_read);
+	virtual_id = fs_get_data_pointer(&fh, 2);
 
-    //unsigned char tagId[8];
-    unsigned char* pointer = (unsigned char*) &(pDIEREC->wafer_id);
-    device_id[0] = pointer[3];
-    device_id[1] = pointer[2];
-    device_id[2] = pointer[1];
-    device_id[3] = pointer[0];
-    pointer = (unsigned char*) &(pDIEREC->die_x_position);
-    device_id[4] = pointer[1];
-    device_id[5] = pointer[0];
 
-    pointer = (unsigned char*) &(pDIEREC->die_y_position);
-    device_id[6] = pointer[1];
-    device_id[7] = pointer[0];
+	uint8_t i = 0;
+	bool device_id_null = true;
+	for(;i<8;i++)
+	{
+		if (device_id[i] != 0x00)
+		{
+			device_id_null = false;
+			break;
+		}
+	}
 
-    //TODO: correct way to find virtual_id -> set by app layer
+	if (device_id_null)
+	{
+		struct s_TLV_Die_Record * pDIEREC;
+		unsigned char bDieRecord_bytes;
 
-    virtual_id[0] = device_id[4] ^ device_id[5];
-    virtual_id[1] = device_id[6] ^ device_id[7];
+		TLV_getInfo(TLV_TAG_DIERECORD,
+			0,
+			&bDieRecord_bytes,
+			(unsigned int **)&pDIEREC
+			);
+
+		unsigned char tagId[8];
+		unsigned char* pointer = (unsigned char*) &(pDIEREC->wafer_id);
+		tagId[0] = pointer[3];
+		tagId[1] = pointer[2];
+		tagId[2] = pointer[1];
+		tagId[3] = pointer[0];
+		pointer = (unsigned char*) &(pDIEREC->die_x_position);
+		tagId[4] = pointer[1];
+		tagId[5] = pointer[0];
+
+		pointer = (unsigned char*) &(pDIEREC->die_y_position);
+		tagId[6] = pointer[1];
+		tagId[7] = pointer[0];
+
+		fs_open(&fh, DA_FILE_ID_UID, file_system_user_root, file_system_access_type_write);
+
+		fs_write_data(&fh, 0, (uint8_t*) tagId, 8, true);
+
+		//TODO: correct way to find virtual_id -> set by app layer
+
+		//virtual_id[0] = device_id[4] ^ device_id[5];
+		//virtual_id[1] = device_id[6] ^ device_id[7];
+	}
 }

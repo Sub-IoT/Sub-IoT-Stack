@@ -42,8 +42,10 @@
 
 #define AUX_CLOCK	32768
 
-extern uint8_t device_id[8]; // TODO: keep this as global?
-extern uint8_t virtual_id[2];
+//extern uint8_t device_id[8]; // TODO: keep this as global?
+//extern uint8_t virtual_id[2];
+uint8_t* device_id;
+uint8_t* virtual_id;
 
 extern uint32_t clock_speed;
 
@@ -66,6 +68,6 @@ void system_watchdog_init(unsigned char clockSelect, unsigned char clockDivider)
 
 void system_lowpower_mode(unsigned char mode, unsigned char enableInterrupts);
 
-void system_get_unique_id(unsigned char *tagId);
+void system_check_set_unique_id();
 
 #endif // __SYSTEM_H__

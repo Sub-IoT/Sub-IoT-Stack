@@ -34,7 +34,6 @@
 #include <framework/timer.h>
 
 #define SEND_INTERVAL_MS 2000
-#define SEND_CHANNEL 0x10
 #define TX_EIRP 10
 
 // Macro which can be removed in production environment
@@ -44,9 +43,11 @@ static uint8_t tx = 0;
 static uint16_t counter = 0;
 static volatile bool add_tx_event = true;
 
-uint8_t buffer[128];
-static uint8_t data[32];
+uint8_t buffer[32];
+static uint8_t data[2];
 static volatile uint8_t dataLength = 0;
+
+static uint8_t send_channel[2] = {0x04, 0x00};
 
 //static D7AQP_Command command;
 static ALP_File_Data_Template data_template;
@@ -71,7 +72,7 @@ void start_tx()
 		data[1] = counter & 0xFF;
 
 		alp_create_structure_for_tx(ALP_REC_FLG_TYPE_UNSOLICITED, 0, 1, &alp_template);
-		trans_tx_query(NULL, 0xFF, SEND_CHANNEL, TX_EIRP);
+		trans_tx_query(NULL, 0xFF, (uint8_t*) &send_channel, TX_EIRP);
 	}
 	add_tx_event = true;
 }
