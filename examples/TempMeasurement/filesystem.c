@@ -26,14 +26,14 @@
 #include "dae/fs.h"
 
 
-uint8_t filesystem_info_nr_files = 40; // first 32 - DA7, next 8 application dependent
+uint8_t const filesystem_info_nr_files = 40; // first 32 - DA7, next 8 application dependent
 
 #pragma DATA_SECTION(filesystem_info_bitmap, ".fs_fileinfo_bitmap")
 #pragma RETAIN(filesystem_info_bitmap)
 
 const uint8_t filesystem_info_bitmap[40] = {	// D7 Specific
 												0,1,2,3,4,0xFF,5,0xFF,
-												6,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0x7,
+												6,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,7,
 												0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,
 												0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,
 												// Appication specific
@@ -77,7 +77,7 @@ const uint8_t filesystem_info_headers[] = {
 		// 0x1C: Key Table
 
 		// 0x20: App Temperature
-		0x0F,0x82,0x36, 0x00,0x04, 0x00,0x04, 0x00,0x4D
+		0x0F,0x82,0x36, 0x00,0x06, 0x00,0x06, 0x00,0x42
 };
 
 #pragma DATA_SECTION(filesystem_files, ".fs_files")
@@ -133,7 +133,7 @@ const uint8_t filesystem_files[] = {
 				// Fie Data Template
 				0x20, // FILE ID
 				0x00, 0x02, // Start byte offset
-				0x00, 0x02, // Bytes Accessing
+				0x00, 0x04, // Bytes Accessing
 
 		// 0x14-18: Reception Notification Files
 		// 0x19: Location Data List (Optional)
@@ -141,7 +141,7 @@ const uint8_t filesystem_files[] = {
 		// 0x1B: Application Extension
 		// 0x1C: Key Table
 		// 0x20: App Temperature
-		0x00,0x01, 0xAA, 0xBB
+		0x00,0x01, 0xAA, 0xBB, 0xAA, 0xBB
 };
 
 #endif

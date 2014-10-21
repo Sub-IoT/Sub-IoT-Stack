@@ -20,12 +20,7 @@
 #define __LOG_H_
 
 
-//#TODO define from cmake
-//#define LOG_PHY_ENABLED
-//#define LOG_DLL_ENABLED
-//#define LOG_NWL_ENABLED
-//#define LOG_TRANS_ENABLED
-//#define LOG_FWK_ENABLED
+// Set logging options in d7aoss.h
 /*
  * TODO this is manually set in CSS!
  * to enable function tracing go to the d7aoss project properties:
@@ -38,6 +33,7 @@
 
 #include "../phy/phy.h"
 #include "../dll/dll.h"
+#include "../d7aoss.h"
 
 // generic logging functions
 #define LOG_TYPE_STRING 0x01

@@ -55,9 +55,9 @@ static void dll_rx_callback(dll_rx_res_t* result)
 		case 0xF0:
 			res.protocol_type = ProtocolTypeAdvertisementProtocol;
 			break;
-		case 0xF1:
-			res.protocol_type = ProtocolTypeBeaconProtocol;
-			break;
+//		case 0xF1:
+//			res.protocol_type = ProtocolTypeBeaconProtocol;
+//			break;
 		}
 	} else
 	{

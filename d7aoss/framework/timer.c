@@ -65,7 +65,7 @@ bool timer_insert_value_in_queue(timer_event* event)
 	position = 0;
 	for (;position<event_queue.length; position++)
 	{
-		timer_event *temp_event = (timer_event*) queue_read_value(&event_queue, position, sizeof(timer_event));
+		timer_event *temp_event = (timer_event*) queue_read_value(&event_queue, position);
 		log_print_stack_string(LOG_FWK, "Queue: %d.%d", temp_event->next_event/1000, temp_event->next_event%1000);
 	}
 	current_timer = hal_timer_getvalue();

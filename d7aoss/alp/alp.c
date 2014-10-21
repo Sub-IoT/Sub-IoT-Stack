@@ -23,6 +23,7 @@
 void alp_create_structure_for_tx(uint8_t flags, uint8_t id, uint8_t nr_of_templates, ALP_Template* templates)
 {
 	queue_clear(&tx_queue);
+	// TODO: check if push was ok
 	queue_push_u8(&tx_queue, flags);
 	queue_push_u8(&tx_queue, 3);  // Length changes after calculation of the total lenght
 	queue_push_u8(&tx_queue, id);

@@ -18,15 +18,17 @@
 
 #include "trans.h"
 #include "../hal/system.h"
+#include "../dll/dll.h"
+#include "../alp/alp.h"
 #include "../framework/timer.h"
 #include "../framework/log.h"
 #include <string.h>
 
 static trans_tx_callback_t trans_tx_callback;
 //static trans_rx_datastream_callback_t trans_rx_datastream_callback;
-static trans_rx_query_callback_t trans_rx_query_callback;
+//static trans_rx_query_callback_t trans_rx_query_callback;
 
-static Trans_Rx_Query_Result query_result;
+//static Trans_Rx_Query_Result query_result;
 //static D7AQP_Dialog_Template dialog_template;
 
 //Flow Control Process
@@ -51,122 +53,71 @@ static void control_tx_callback(Dll_Tx_Result Result)
 
 static void nwl_rx_callback(nwl_rx_res_t* result)
 {
-	query_result.nwl_rx_res = result;
+	//query_result.nwl_rx_res = result;
 
 	if (result->protocol_type == ProtocolTypeNetworkProtocol)
 	{
 		nwl_ff_D7ANP_t* data = (nwl_ff_D7ANP_t*) result->data;
+		D7AQP_Command command;
 
-		query_result.d7aqp_command.control = data->payload[0];
-		query_result.d7aqp_command.transaction_id = data->payload[1];
-		query_result.d7aqp_command.query_template = NULL;
-		query_result.d7aqp_command.ack_template = NULL;
-		query_result.d7aqp_command.alp_data = &data->payload[2];
-		query_result.d7aqp_command.alp_length = data->payload_length - 2;
+		command.control = data->payload[0];
+		command.transaction_id = data->payload[1];
+		command.query_template = NULL;
+		command.ack_template = NULL;
+		command.alp_data = &data->payload[2];
+		command.alp_length = data->payload_length - 2;
 
-		if (trans_rx_query_callback != NULL)
+		// todo: from where to get subnet and tx_eirp, get spectrum_id, target_id from query
+		uint8_t subnet = ((dll_frame_t*)(result->dll_rx_res->frame))->subnet;
+		int8_t tx_eirp =((dll_frame_t*)(result->dll_rx_res->frame)->control && 0x3F) - 32;
+
+		trans_execute_query(command.alp_data, ALP_REC_FLG_TYPE_RESPONSE, file_system_user_guest, subnet, result->dll_rx_res->spectrum_id, tx_eirp, 0, NULL);
+
+		/*bt
+
+		ALP_Record_Structure* alp = (ALP_Record_Structure*) command->alp_data;
+		//uint8_t lenght = alp->record_lenght - 3;
+
+		ALP_Template* alp_template = (ALP_Template*) alp->alp_templates;
+
+		switch (alp_template->op)
 		{
-			trans_rx_query_callback(&query_result);
-		}
 
-
-	} else if(result->protocol_type == ProtocolTypeBeaconProtocol)
-	{
-		//nwl_background_frame_t* data = (nwl_background_frame_t*) result->data;
-		// What to do with BF???
-	}
-
-	/*
-
-	if (result->protocol_type == ProtocolTypeNetworkProtocol)
-	{
-		query_result.nwl_rx_res = result;
-
-		nwl_ff_D7ANP_t* data = (nwl_ff_D7ANP_t*) result->data;
-
-
-		uint8_t pointer = 0;
-		query_result.d7aqp_command.command_code = data->payload[pointer++];
-		if (query_result.d7aqp_command.command_code & D7AQP_COMMAND_CODE_EXTENSION)
-			query_result.d7aqp_command.command_extension = data->payload[pointer++];
-		else
-			query_result.d7aqp_command.command_extension = 0;
-
-		if (query_result.d7aqp_command.command_extension & D7AQP_COMMAND_EXTENSION_NORESPONSE)
-		{
-			query_result.d7aqp_command.dialog_template = NULL;
-		} else {
-			dialog_template.response_timeout = (uint16_t)(data->payload[pointer++] << 8) | (uint16_t)(data->payload[pointer++]);
-			dialog_template.response_channel_list_lenght = data->payload[pointer++];
-			dialog_template.response_channel_list = &data->payload[pointer];
-			pointer += dialog_template.response_channel_list_lenght;
-
-			query_result.d7aqp_command.dialog_template = &dialog_template;
-		}
-
-		//TODO: implement other queries
-		query_result.d7aqp_command.ack_template = NULL;
-		query_result.d7aqp_command.global_query_template = NULL;
-		query_result.d7aqp_command.local_query_template = NULL;
-		query_result.d7aqp_command.error_template = NULL;
-
-		switch (query_result.d7aqp_command.command_code & 0x70)
-		{
-			// Response
-			case D7AQP_COMMAND_TYPE_RESPONSE:
+			case: ALP_OP_READ_DATA
 			{
-				switch (query_result.d7aqp_command.command_code & 0x0F)
+				ALP_File_Data_Template* data_template = (ALP_File_Data_Template*) alp_template->data;
+				tx_alp_template.op = ALP_OP_RESP_DATA;
+				tx_alp_template.data = (uint8_t*) &tx_data_template;
+
+				file_handler fh;
+				uint8_t res = fs_open(&fh,  data_template->file_id, file_system_user_guest, file_system_access_type_read);
+
+				if (res != 0)
 				{
-					case D7AQP_OPCODE_ANNOUNCEMENT_FILE:
-					{
-						query_result.d7aqp_command.command_data = NULL;
-						break;
-					}
-					case D7AQP_OPCODE_COLLECTION_FILE_FILE:
-					{
-						D7AQP_Single_File_Return_Template sfr_tmpl; //following convention, seems unsafe
-						sfr_tmpl.return_file_id = data->payload[pointer++];
-						sfr_tmpl.file_offset = data->payload[pointer++];
-						sfr_tmpl.isfb_total_length = data->payload[pointer++];
-						sfr_tmpl.file_data = &data->payload[pointer];
-
-						pointer += sfr_tmpl.isfb_total_length - sfr_tmpl.file_offset;
-
-						query_result.d7aqp_command.command_data = &sfr_tmpl;
-						break;
-					}
+					log_print_stack_string(LOG_TRANS, "Cannot access requested file %d", data_template->file_id);
+					return;
 				}
-				break;
-			}
 
-			// NA2P Request
-			case D7AQP_COMMAND_TYPE_NA2P_REQUEST:
-			{
-				switch (query_result.d7aqp_command.command_code & 0x0F)
-				{
-					case D7AQP_OPCODE_ANNOUNCEMENT_FILE:
-					{
-						D7AQP_Single_File_Return_Template sfr_tmpl;
-						sfr_tmpl.return_file_id = data->payload[pointer++];
-						sfr_tmpl.file_offset = data->payload[pointer++];
-						sfr_tmpl.isfb_total_length = data->payload[pointer++];
-						sfr_tmpl.file_data = &data->payload[pointer];
 
-						pointer += sfr_tmpl.isfb_total_length - sfr_tmpl.file_offset;
+				tx_data_template.file_id = data_template->file_id ;
+				tx_data_template.start_byte_offset = 0;
+				tx_data_template.bytes_accessing = 2;
+				tx_data_template.data = filesystem[data_template->file_id];
 
-						query_result.d7aqp_command.command_data = &sfr_tmpl;
-					}
-				}
-				break;
+				alp_create_structure_for_tx(ALP_REC_FLG_TYPE_RESPONSE, 0, 1, &tx_alp_template);
+				trans_tx_query(NULL, 0xFF, RECEIVE_CHANNEL, TX_EIRP);
 			}
 		}
 
-		trans_rx_query_callback(&query_result);
+		 */
+//		if (trans_rx_query_callback != NULL)
+//		{
+//			trans_rx_query_callback(&query_result);
+//		}
 
-	} else {
-		// TODO: handle BF
+
 	}
-*/
+
 
 	/*
 	else if (result->protocol_type == ProtocolTypeDatastreamProtocol)
@@ -201,7 +152,7 @@ void trans_set_tx_callback(trans_tx_callback_t cb)
 
 void trans_set_query_rx_callback(trans_rx_query_callback_t cb)
 {
-	trans_rx_query_callback = cb;
+	//trans_rx_query_callback = cb;
 }
 
 void trans_tx_foreground_frame(uint8_t* data, uint8_t length, uint8_t subnet, uint8_t spectrum_id[2], int8_t tx_eirp) {
@@ -229,7 +180,10 @@ void trans_tx_query(D7AQP_Query_Template* query,  uint8_t subnet, uint8_t spectr
 
 	if (query != NULL)
 	{
+		#ifdef LOG_TRANS_ENABLED
 		log_print_stack_string(LOG_TRANS, "Query is not yet implemented");
+		#endif
+
 		return;
 	}
 
@@ -329,6 +283,51 @@ void trans_rx_query_start(uint8_t subnet, uint8_t spectrum_id[2])
 void trans_rx_stop()
 {
 	nwl_rx_stop();
+}
+
+void trans_execute_query(uint8_t* alp, uint8_t alp_response_type, file_system_user user, uint8_t subnet, uint8_t spectrum_id[2], int8_t tx_eirp, uint8_t target_id_length, uint8_t* target_id)
+{
+
+	//uint8_t alp_rec_flags =  alp[pointer++]; // 0
+	//uint8_t alp_rec_length =  alp[pointer++]; // 1
+	//uint8_t alp_alp_id =  alp[pointer++]; // 2
+	//uint8_t alp_op =  alp[pointer++]; // 3
+	//uint8_t alp_id =  fs_read_byte(&nf, nf_pointer++); // 4
+	uint8_t alp_offset=  MERGEUINT16(alp[5], alp[6]); // 5, 6
+	uint8_t alp_length =  MERGEUINT16(alp[7], alp[8]); // 7, 8
+
+	// TODO: only singular templates are currently supported
+	uint8_t alp_nr_of_templates = 1;
+
+	ALP_File_Data_Template data_template;
+	ALP_Template alp_template;
+
+	alp_template.op = ALP_OP_RESP_DATA;
+	alp_template.data = (uint8_t*) &data_template;
+
+	if (alp[3] == ALP_OP_READ_DATA)
+	{
+		data_template.file_id = alp[4];
+		data_template.start_byte_offset = alp_offset;
+		data_template.bytes_accessing = alp_length;
+
+		file_handler fh;
+		uint8_t res = fs_open(&fh, data_template.file_id, user, file_system_access_type_read);
+
+		if (res != 0)
+		{
+			#ifdef LOG_TRANS_ENABLED
+			log_print_stack_string(LOG_TRANS, "Cannot access requested file");
+			#endif
+
+			return;
+		}
+
+		data_template.data = fs_get_data_pointer(&fh, (uint8_t) alp_offset);
+	}
+
+	alp_create_structure_for_tx(alp_response_type, alp[2], alp_nr_of_templates, &alp_template);
+	trans_tx_query(NULL, subnet, spectrum_id, tx_eirp);
 }
 
 

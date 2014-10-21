@@ -17,6 +17,7 @@
 
 #include "cc430_addresses.h"
 #include "..\flash.h"
+#include <string.h>
 
 
 #define SEGPTR(x) (uint8_t*) ((uint16_t)(x) & 0xFE00)
@@ -30,21 +31,24 @@ void write_bytes_to_flash(uint8_t *address, uint8_t* data, uint16_t length)
 	uint16_t offset = (uint16_t) address - (uint16_t)start;
 
 	memcpy(buffer, start, 512); // Copy FLASH segment to RAM
-	memcpy(&buffer[offset], data, length); // Adapt segment in RAM
+	if (memcmp(&buffer[offset], data, length) != 0)
+	{
+		memcpy(&buffer[offset], data, length); // Adapt segment in RAM
 
-	while (FCTL3 & BUSY);
-	FCTL3 = FWKEY; // Clear Lock bit
-	FCTL1 = FWKEY + ERASE;  // ERASE
-	*start = 0; // Erase FLASH segment
+		while (FCTL3 & BUSY);
+		FCTL3 = FWKEY; // Clear Lock bit
+		FCTL1 = FWKEY + ERASE;  // ERASE
+		*start = 0; // Erase FLASH segment
 
-	while (FCTL3 & BUSY);
-	FCTL1 = FWKEY + WRT; // WRITE
+		while (FCTL3 & BUSY);
+		FCTL1 = FWKEY + WRT; // WRITE
 
-	memcpy(start, &buffer, 512); // Write RAM to FLASH
+		memcpy(start, &buffer, 512); // Write RAM to FLASH
 
-	while (FCTL3 & BUSY);
-	FCTL1 = FWKEY; // Clear Write/Erase bit
-	FCTL3 = FWKEY + LOCK; // Reset LOCK bit
+		while (FCTL3 & BUSY);
+		FCTL1 = FWKEY; // Clear Write/Erase bit
+		FCTL3 = FWKEY + LOCK; // Reset LOCK bit
+	}
 
 	_enable_interrupt();
 }

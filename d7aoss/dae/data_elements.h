@@ -58,13 +58,13 @@ typedef enum {
 	DataElementStorageClassPermanent		// The content is kept in a permanent memory of the device. It is accessible for read.
 } Data_Element_Storage_Class;
 
-typedef struct
+typedef struct __attribute__((__packed__))
 {
      uint8_t properties_file_id;
      uint8_t properties_flags;
      uint8_t properties_permissions;
-     uint16_t length;
-     uint16_t allocated_length;
+     uint8_t length[2];
+     uint8_t allocated_length[2];
 } Data_Element_File_Header;
 
 

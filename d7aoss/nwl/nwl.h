@@ -37,7 +37,7 @@
 
 typedef enum {
 	ProtocolTypeAdvertisementProtocol,
-	ProtocolTypeBeaconProtocol,
+	//ProtocolTypeBeaconProtocol,
 	ProtocolTypeNetworkProtocol
 } Protocol_Type;
 

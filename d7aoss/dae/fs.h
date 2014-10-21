@@ -38,7 +38,7 @@
 typedef struct
 {
 	Data_Element_File_Header header;
-	uint16_t file_offset;
+	uint8_t file_offset[2];
 } file_info;
 
 typedef struct
@@ -62,7 +62,7 @@ typedef enum
 	file_system_access_type_run
 } file_system_access_type;
 
-extern uint8_t filesystem_info_nr_files;
+extern const uint8_t filesystem_info_nr_files;
 extern const uint8_t filesystem_info_bitmap[];
 extern const uint8_t filesystem_info_headers[];
 extern const uint8_t filesystem_files[];

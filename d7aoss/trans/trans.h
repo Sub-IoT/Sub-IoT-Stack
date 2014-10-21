@@ -72,6 +72,7 @@
 
 #include "../types.h"
 #include "../nwl/nwl.h"
+#include "../dae/fs.h"
 
 typedef enum {
 	TransPacketSent,
@@ -146,5 +147,6 @@ void trans_tx_query(D7AQP_Query_Template* query, uint8_t subnet, uint8_t spectru
 //void trans_rx_datastream_start(uint8_t subnet, uint8_t spectrum_id);
 void trans_rx_query_start(uint8_t subnet, uint8_t spectrum_id[2]);
 void trans_rx_stop();
+void trans_execute_query(uint8_t* alp, uint8_t alp_response_type, file_system_user user, uint8_t subnet, uint8_t spectrum_id[2], int8_t tx_eirp, uint8_t target_id_length, uint8_t* target_id);
 
 #endif /* TRANS_H_ */

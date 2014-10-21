@@ -34,6 +34,8 @@
  *	    FLASH_FS2               : origin = 0xC200, length = 0x0400 // The file contents
  */
 
+#define UART
+
 #include <d7aoss.h>
 //#include <framework/log.h>
 #include <framework/timer.h>
@@ -152,7 +154,7 @@ int main(void) {
 	int16_t temperature_internal;
 	file_handler fh;
 
-	d7aoss_init(buffer, 32, buffer, 32);
+	d7aoss_init(buffer, 128, buffer, 128);
 	trans_set_tx_callback(&tx_callback);
 	
 	// Configure event to measure temperature
@@ -176,8 +178,8 @@ int main(void) {
 			fs_open(&fh, 32, file_system_user_user, file_system_access_type_write);
 
 			uint8_t data[2];
-			data[0] = (uint8_t) (temperature_internal>> 8);
-			data[1] = (uint8_t) (temperature_internal);
+			data[1] = (uint8_t) (temperature_internal>> 8);
+			data[0] = (uint8_t) (temperature_internal);
 
 			fs_write_data(&fh, 2, data, 2,true);
 
@@ -186,7 +188,7 @@ int main(void) {
 			timer_add_event(&event);
 		}
 
-		system_lowpower_mode(3,1);
+		system_lowpower_mode(0,1);
 	}
 
 }

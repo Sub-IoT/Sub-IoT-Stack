@@ -22,6 +22,7 @@
 #include "../uart.h"
 #include "cc430_addresses.h"
 #include "../../dae/fs.h"
+#include "../../d7aoss.h"
 
 #include "pre_init.h"
 //#include "inc/hw_memmap.h"
@@ -128,8 +129,16 @@ void system_init(uint8_t* tx_buffer, uint16_t tx_buffer_size, uint8_t* rx_buffer
 		PCOUT = 0x00;
 
     	led_init();
+
+		#ifdef BUTTONS
     	button_init();
+		#endif
+
+
+		#ifdef UART
     	uart_init();
+		#endif
+
     }
 
     queue_init_with_header(&tx_queue, tx_buffer, tx_buffer_size, 1, 30);

@@ -13,13 +13,14 @@
  * Contributors:
  * 		maarten.weyn@uantwerpen.be
  *
+ * 	Select the correct platform in d7ass.h
+ *
  */
 
 #ifndef PLATFORM_H_
 #define PLATFORM_H_
 
-// Select the corrrect platform in the line below
-#define PLATFORM_ARTESIS
+#include "../../../d7aoss.h"
 
 
 #ifdef PLATFORM_WIZZIMOTE

@@ -34,6 +34,16 @@ void fs_init()
 }
 
 
+/*! \brief Opens a file (File System)
+ *
+ *  Checks the correct file id, user and access type and sets the file_handler to the correct file.
+ *
+ *  \param file_handle A pointer to the File Handle which will be set.
+ *  \param file_id The ID of the file to be opened.
+ *  \param user The user (root, user, guest).
+ *  \param access_type The access type (read, write, run)
+ *  \return Returs success or fail (0: OK, 1: File not present, 2: wrong permissions)
+ */
 uint8_t fs_open(file_handler * file_handle, uint8_t file_id, file_system_user user, file_system_access_type access_type)
 {
 	if (file_id >= filesystem_info_nr_files)
@@ -88,7 +98,7 @@ uint8_t fs_open(file_handler * file_handle, uint8_t file_id, file_system_user us
 	file_handle->permission_mask &= fi->header.properties_permissions;
 
 	file_handle->info = fi;
-	file_handle->file = (uint8_t*) &filesystem_files[SWITCH_BYTES(fi->file_offset)];
+	file_handle->file = (uint8_t*) &filesystem_files[MERGEUINT16(fi->file_offset[0], fi->file_offset[1])];
 
 	return 0;
 }
@@ -112,7 +122,7 @@ uint8_t fs_read_byte(file_handler *fh, uint8_t offset)
 	if (fh == NULL)
 		return 0;
 
-	if (SWITCH_BYTES(fh->info->header.length) > offset)
+	if (MERGEUINT16(fh->info->header.length[0],fh->info->header.length[1]) > offset)
 	{
 		return ((uint8_t*)fh->file)[offset];
 	}
@@ -125,7 +135,7 @@ uint16_t fs_read_short(file_handler *fh, uint8_t offset)
 	if (fh == NULL)
 			return 0;
 
-	if (SWITCH_BYTES(fh->info->header.length) > offset + 1)
+	if (MERGEUINT16(fh->info->header.length[0],fh->info->header.length[1]) > offset + 1)
 	{
 		uint8_t* ptr = fh->file;
 		return *(uint16_t*) (&ptr[offset]);
@@ -140,7 +150,7 @@ uint8_t fs_read_data(file_handler *fh, uint8_t *data_array, uint8_t offset, uint
 	if (fh == NULL)
 			return 0;
 
-	if (SWITCH_BYTES(fh->info->header.length) > offset + length - 1)
+	if (MERGEUINT16(fh->info->header.length[0],fh->info->header.length[1]) > offset + length - 1)
 	{
 		uint8_t* ptr = fh->file;
 		memcpy(data_array, &ptr[offset], length);
@@ -156,7 +166,7 @@ uint8_t* fs_get_data_pointer(file_handler *fh, uint8_t offset)
 	if (fh == NULL)
 		return 0;
 
-	if (SWITCH_BYTES(fh->info->header.length) > offset + 1)
+	if (MERGEUINT16(fh->info->header.length[0],fh->info->header.length[1]) > offset + 1)
 	{
 		return (uint8_t*) (&fh->file[offset]);
 	}
@@ -178,7 +188,7 @@ uint8_t fs_write_data(file_handler *fh, uint8_t offset, uint8_t* data, uint8_t l
 	if (!(fh->permission_mask & DA_PERMISSION_CODE_WRITE_MASK))
 		return 2;
 
-	if (SWITCH_BYTES(fh->info->header.length) < offset + length)
+	if (MERGEUINT16(fh->info->header.length[0],fh->info->header.length[1]) < offset + length)
 	{
 		return 3;
 	}
@@ -215,6 +225,7 @@ uint8_t fs_write_data(file_handler *fh, uint8_t offset, uint8_t* data, uint8_t l
 
 bool fs_check_notification_query(uint8_t tnf_id, file_handler* fh, uint8_t* data, uint8_t length)
 {
+
 	file_handler nf;
 	fs_open(&nf, tnf_id, file_system_user_root, file_system_access_type_read);
 	uint8_t nf_pointer = 0;
@@ -297,6 +308,7 @@ bool fs_check_notification_query(uint8_t tnf_id, file_handler* fh, uint8_t* data
 
 void fs_send_notification(uint8_t tnf_id)
 {
+
 	file_handler nf;
 	fs_open(&nf, tnf_id, file_system_user_root, file_system_access_type_read);
 
@@ -315,17 +327,23 @@ void fs_send_notification(uint8_t tnf_id)
 	int8_t subnet = fs_read_byte(&nf, nf_pointer++);
 
 	uint8_t* target_id = NULL;
+	uint8_t target_id_length = 0;
 	if (tnf_flags & 0x02)
 	{
 		target_id = fs_get_data_pointer(&nf, nf_pointer);
 		if (tnf_flags & 0x04)
-			nf_pointer+= 2;
+			target_id_length= 2;
 		else
-			nf_pointer+= 8;
+			target_id_length= 8;
+
+		nf_pointer += target_id_length;
 	}
 
 	//TODO: use target_id in query
 
+	trans_execute_query(fs_get_data_pointer(&nf, nf_pointer), ALP_REC_FLG_TYPE_UNSOLICITED, file_system_user_root, subnet, spectrum_id, tx_eirp, target_id_length, target_id);
+
+/*
 	uint8_t alp_rec_flags =  fs_read_byte(&nf, nf_pointer++);
 	uint8_t alp_rec_length =  fs_read_byte(&nf, nf_pointer++);
 	uint8_t alp_alp_id =  fs_read_byte(&nf, nf_pointer++);
@@ -359,4 +377,5 @@ void fs_send_notification(uint8_t tnf_id)
 
 	alp_create_structure_for_tx(ALP_REC_FLG_TYPE_UNSOLICITED, alp_alp_id, alp_nr_of_templates, &alp_template);
 	trans_tx_query(NULL, subnet, spectrum_id, tx_eirp);
+*/
 }

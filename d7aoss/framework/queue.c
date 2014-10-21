@@ -19,7 +19,10 @@
 #include <stdbool.h>
 #include <string.h>
 
+
+
 #include "queue.h"
+#include "log.h"
 
 static bool shift_queue_left (queue_t* q, uint8_t places)
 {
@@ -154,7 +157,12 @@ bool queue_push_u8(queue_t* q, uint8_t data)
 	else
 	{
 		if (!check_for_space(q,1))
+		{
+			#ifdef LOG_FWK_ENABLED
+				log_print_stack_string(LOG_FWK, "Queue is full");
+			#endif
 			return false;
+		}
 
 		q->rear ++;
 	}
