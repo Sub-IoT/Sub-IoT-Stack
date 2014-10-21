@@ -462,6 +462,7 @@ def main():
         pcap_file.write(PCAPFormatter.build_global_header_data())
         pcap_file.flush()
 
+    wireshark_logger = None
     if settings["pipe"]:
         wireshark_logger = WiresharkNamedPipeLogger()
 
