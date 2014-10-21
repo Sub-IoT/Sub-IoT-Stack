@@ -225,7 +225,7 @@ extern bool phy_tx_data(phy_tx_cfg_t* cfg)
 
 		//Configure length settings
 		set_length_infinite(false);
-		remainingBytes = cfg->length;
+		remainingBytes = tx_queue.length;
 		WriteSingleReg(PKTLEN, (uint8_t)remainingBytes);
 	#ifdef D7_PHY_USE_FEC
 	}

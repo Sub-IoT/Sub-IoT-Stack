@@ -19,7 +19,6 @@
 #define DATA_ELEMENTS_H_
 
 #define DA_FILE_ID_UID						0x00
-
 #define DA_FILE_DLL_CONFIGURATION			0x06
 
 

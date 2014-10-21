@@ -26,9 +26,9 @@
 
 static trans_tx_callback_t trans_tx_callback;
 //static trans_rx_datastream_callback_t trans_rx_datastream_callback;
-//static trans_rx_query_callback_t trans_rx_query_callback;
+static trans_rx_alp_callback_t trans_rx_alp_callback;
 
-//static Trans_Rx_Query_Result query_result;
+static Trans_Rx_Alp_Result alp_result;
 //static D7AQP_Dialog_Template dialog_template;
 
 //Flow Control Process
@@ -53,7 +53,7 @@ static void control_tx_callback(Dll_Tx_Result Result)
 
 static void nwl_rx_callback(nwl_rx_res_t* result)
 {
-	//query_result.nwl_rx_res = result;
+	alp_result.nwl_rx_res = result;
 
 	if (result->protocol_type == ProtocolTypeNetworkProtocol)
 	{
@@ -67,53 +67,26 @@ static void nwl_rx_callback(nwl_rx_res_t* result)
 		command.alp_data = &data->payload[2];
 		command.alp_length = data->payload_length - 2;
 
-		// todo: from where to get subnet and tx_eirp, get spectrum_id, target_id from query
-		uint8_t subnet = ((dll_frame_t*)(result->dll_rx_res->frame))->subnet;
-		int8_t tx_eirp =((dll_frame_t*)(result->dll_rx_res->frame)->control && 0x3F) - 32;
+		alp_result.alp_record.record_flags = data->payload[2];
+		alp_result.alp_record.record_lenght = data->payload[3];
+		alp_result.alp_record.alp_id = data->payload[4];
+		alp_result.alp_record.alp_templates = &data->payload[5];
 
-		trans_execute_query(command.alp_data, ALP_REC_FLG_TYPE_RESPONSE, file_system_user_guest, subnet, result->dll_rx_res->spectrum_id, tx_eirp, 0, NULL);
-
-		/*bt
-
-		ALP_Record_Structure* alp = (ALP_Record_Structure*) command->alp_data;
-		//uint8_t lenght = alp->record_lenght - 3;
-
-		ALP_Template* alp_template = (ALP_Template*) alp->alp_templates;
-
-		switch (alp_template->op)
+		if ((uint8_t)(alp_result.alp_record.record_flags & ALP_REC_FLG_TYPE_COMMAND_RESPONSE) == ALP_REC_FLG_TYPE_COMMAND_RESPONSE)
 		{
+			// todo: from where to get subnet and tx_eirp, get spectrum_id, target_id from query
+			uint8_t subnet = ((dll_frame_t*)(result->dll_rx_res->frame))->subnet;
+			int8_t tx_eirp =((dll_frame_t*)(result->dll_rx_res->frame)->control && 0x3F) - 32;
 
-			case: ALP_OP_READ_DATA
-			{
-				ALP_File_Data_Template* data_template = (ALP_File_Data_Template*) alp_template->data;
-				tx_alp_template.op = ALP_OP_RESP_DATA;
-				tx_alp_template.data = (uint8_t*) &tx_data_template;
-
-				file_handler fh;
-				uint8_t res = fs_open(&fh,  data_template->file_id, file_system_user_guest, file_system_access_type_read);
-
-				if (res != 0)
-				{
-					log_print_stack_string(LOG_TRANS, "Cannot access requested file %d", data_template->file_id);
-					return;
-				}
-
-
-				tx_data_template.file_id = data_template->file_id ;
-				tx_data_template.start_byte_offset = 0;
-				tx_data_template.bytes_accessing = 2;
-				tx_data_template.data = filesystem[data_template->file_id];
-
-				alp_create_structure_for_tx(ALP_REC_FLG_TYPE_RESPONSE, 0, 1, &tx_alp_template);
-				trans_tx_query(NULL, 0xFF, RECEIVE_CHANNEL, TX_EIRP);
-			}
+			trans_execute_query(command.alp_data, ALP_REC_FLG_TYPE_RESPONSE, file_system_user_guest, subnet, result->dll_rx_res->spectrum_id, tx_eirp, 0, NULL);
 		}
 
-		 */
-//		if (trans_rx_query_callback != NULL)
-//		{
-//			trans_rx_query_callback(&query_result);
-//		}
+
+
+		if (trans_rx_alp_callback != NULL)
+		{
+			trans_rx_alp_callback(&alp_result);
+		}
 
 
 	}
@@ -144,15 +117,10 @@ void trans_set_tx_callback(trans_tx_callback_t cb)
 {
 	trans_tx_callback = cb;
 }
-//
-//void trans_set_datastream_rx_callback(trans_rx_datastream_callback_t cb)
-//{
-//	trans_rx_datastream_callback = cb;
-//}
 
-void trans_set_query_rx_callback(trans_rx_query_callback_t cb)
+void trans_set_alp_rx_callback(trans_rx_alp_callback_t cb)
 {
-	//trans_rx_query_callback = cb;
+	trans_rx_alp_callback = cb;
 }
 
 void trans_tx_foreground_frame(uint8_t* data, uint8_t length, uint8_t subnet, uint8_t spectrum_id[2], int8_t tx_eirp) {

@@ -266,10 +266,6 @@ void system_check_set_unique_id()
 	fs_open(&fh, DA_FILE_ID_UID, file_system_user_root, file_system_access_type_read);
 	device_id = fs_get_data_pointer(&fh, 0);
 
-	fs_open(&fh, DA_FILE_DLL_CONFIGURATION, file_system_user_root, file_system_access_type_read);
-	virtual_id = fs_get_data_pointer(&fh, 2);
-
-
 	uint8_t i = 0;
 	bool device_id_null = true;
 	for(;i<8;i++)

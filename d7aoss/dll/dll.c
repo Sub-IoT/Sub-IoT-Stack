@@ -19,6 +19,7 @@
 #include "../hal/system.h"
 #include "../hal/crc.h"
 #include "../framework/log.h"
+#include "../dae/fs.h"
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -35,7 +36,7 @@ phy_tx_cfg_t *current_phy_cfg;
 
 
 uint8_t timeout_listen; // TL
-uint8_t frame_data[100]; // TODO: get rid of fixed buffer
+//uint8_t frame_data[100]; // TODO: get rid of fixed buffer
 uint16_t timestamp;
 uint8_t timeout_ca; 	// T_ca
 
@@ -56,13 +57,19 @@ uint16_t foreground_scan_detection_timeout;
 uint8_t spectrum_id[2] = {0, 0};
 
 
+// DLL Parameters
+uint8_t* device_subnet;
+uint8_t* destination_subnet;
+
 phy_tx_cfg_t frame_tx_cfg = {
             {0x04, 0x00}, 	// spectrum ID
 			1, 		// Sync word class
-			0,		// Transmission power level in dBm ranged [-39, +10]
-			0,		// Packet length
-            frame_data	//Packet data
+			0//,		// Transmission power level in dBm ranged [-39, +10]
+			//0,		// Packet length
+            //frame_data	//Packet data
 };
+
+dll_frame_t frame;
 
 static void dll_aind_ccp_process();
 static void t_ca_timeout_rigd();
@@ -175,7 +182,7 @@ static void rx_callback(phy_rx_data_t* res)
 		scan_next(); // how to reïnitiate scan on CRC Error, PHY should stay in RX
 		return;
 	}
-	if (!check_subnet(0xFF, res->data[1])) // TODO: get device_subnet from datastore
+	if (!check_subnet(*device_subnet, res->data[1])) // TODO: get device_subnet from datastore
 	{
 		#ifdef LOG_DLL_ENABLED
 			log_print_stack_string(LOG_DLL, "DLL Subnet mismatch");
@@ -193,16 +200,15 @@ static void rx_callback(phy_rx_data_t* res)
 	memcpy(dll_res.spectrum_id, current_css->values[current_scan_id].spectrum_id, 2);
 	// todo: take into account band / CS ...
 
-	dll_frame_t* frame = (dll_frame_t*)frame_data;
-	frame->length = res->data[0];
-	frame->subnet = res->data[1];
-	frame->control = res->data[2];
-	if (frame->control & 0x80) // target address present
+	frame.length = res->data[0];
+	frame.subnet = res->data[1];
+	frame.control = res->data[2];
+	if (frame.control & 0x80) // target address present
 	{
-		frame->target_address = &res->data[3];
-		if (frame->control & 0x40) // VID
+		frame.target_address = &res->data[3];
+		if (frame.control & 0x40) // VID
 		{
-			if (memcmp(frame->target_address, virtual_id, 2) == 0)
+			if (memcmp(frame.target_address, virtual_id, 2) == 0)
 			{
 				#ifdef LOG_DLL_ENABLED
 				log_print_stack_string(LOG_DLL, "DLL this device is not the target");
@@ -212,12 +218,12 @@ static void rx_callback(phy_rx_data_t* res)
 				return;
 			}
 
-			frame->payload = &res->data[6];
-			frame->payload_length = frame->length - 8;
+			frame.payload = &res->data[6];
+			frame.payload_length = frame.length - 8;
 		}
 		else // UID
 		{
-			if (memcmp(frame->target_address, &device_id, 8) == 0)
+			if (memcmp(frame.target_address, &device_id, 8) == 0)
 			{
 				#ifdef LOG_DLL_ENABLED
 				log_print_stack_string(LOG_DLL, "DLL this device is not the target");
@@ -227,15 +233,16 @@ static void rx_callback(phy_rx_data_t* res)
 				return;
 			}
 
-			frame->payload = &res->data[12];
-			frame->payload_length = frame->length - 14;
+			frame.payload = &res->data[12];
+			frame.payload_length = frame.length - 14;
 		}
 	} else {
-		frame->target_address = NULL;
-		frame->payload_length = frame->length - 6;
+		frame.target_address = NULL;
+		frame.payload = &res->data[3];
+		frame.payload_length = frame.length - 5;
 	}
 
-	dll_res.frame = frame;
+	dll_res.frame = &frame;
 
 	if (dll_state == DllStateScanBackgroundFrame)
 	{
@@ -272,6 +279,13 @@ static void rx_callback(phy_rx_data_t* res)
 void dll_init()
 {
 	timer_init();
+
+	file_handler fh;
+	fs_open(&fh, DA_FILE_DLL_CONFIGURATION, file_system_user_root, file_system_access_type_read);
+	device_subnet = fs_get_data_pointer(&fh, 0);
+	destination_subnet = fs_get_data_pointer(&fh, 1);
+	virtual_id = fs_get_data_pointer(&fh, 2);
+	fs_close(&fh);
 
 	phy_init();
 	phy_set_rx_callback(rx_callback);
@@ -519,12 +533,12 @@ void dll_create_frame(uint8_t* target_address, uint8_t address_length, dll_tx_cf
 	memcpy(frame_tx_cfg.spectrum_id, params->spectrum_id, 2); // TODO check valid (should be done in the upper layer of stack)
 	frame_tx_cfg.eirp = params->eirp;
 	frame_tx_cfg.sync_word_class = (params->frame_type == FrameTypeForegroundFrame) ? 1 : 0;
-	frame_tx_cfg.length = tx_queue.length + 5 + address_length;
+	//frame_tx_cfg.length = tx_queue.length + 5 + address_length;
 	current_phy_cfg = &frame_tx_cfg;
 
 	queue_create_header_space(&tx_queue, 3 + address_length);
 
-	tx_queue.front[0] = frame_tx_cfg.length;	// Lenght
+	tx_queue.front[0] = tx_queue.length + 5 + address_length;	// Lenght
 	tx_queue.front[1] = params->subnet; 				// Subnet
 	tx_queue.front[2] = 0x3F & (params->eirp + 32);
 
@@ -542,7 +556,7 @@ void dll_create_frame(uint8_t* target_address, uint8_t address_length, dll_tx_cf
 			memcpy(&tx_queue.front[3], target_address, address_length);
 	}
 
-	uint16_t crc16 = crc_calculate(tx_queue.front, frame_tx_cfg.length - 2);
+	uint16_t crc16 = crc_calculate(tx_queue.front, tx_queue.length);
 	queue_push_u8(&tx_queue, crc16 >> 8);
 	queue_push_u8(&tx_queue, crc16 & 0xFF);
 }

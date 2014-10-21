@@ -73,6 +73,7 @@
 #include "../types.h"
 #include "../nwl/nwl.h"
 #include "../dae/fs.h"
+#include "../alp/alp.h"
 
 typedef enum {
 	TransPacketSent,
@@ -117,22 +118,22 @@ typedef struct {
 	D7AQP_Query_Template* query_template;
 	D7AQP_Ack_Template* ack_template;
 	uint8_t alp_length;
-	void* alp_data;
+	uint8_t* alp_data;
 } D7AQP_Command;
 
 typedef struct {
-	D7AQP_Command d7aqp_command;
+	ALP_Record_Structure alp_record;
 	nwl_rx_res_t* nwl_rx_res;
-} Trans_Rx_Query_Result;
+} Trans_Rx_Alp_Result;
 
 typedef void (*trans_tx_callback_t)(Trans_Tx_Result);
 //typedef void (*trans_rx_datastream_callback_t)(Trans_Rx_Datastream_Result*);
-typedef void (*trans_rx_query_callback_t)(Trans_Rx_Query_Result*);
+typedef void (*trans_rx_alp_callback_t)(Trans_Rx_Alp_Result*);
 
 void trans_init();
 
 void trans_set_tx_callback(trans_tx_callback_t);
-void trans_set_query_rx_callback(trans_rx_query_callback_t);
+void trans_set_alp_rx_callback(trans_rx_alp_callback_t);
 //void trans_set_datastream_rx_callback(trans_rx_datastream_callback_t);
 
 

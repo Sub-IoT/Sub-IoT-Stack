@@ -57,7 +57,8 @@ static volatile uint8_t adc12_data_ready;
 // event to create a led blink
 static timer_event dim_led_event;
 
-int16_t temperature_internal;
+int16_t temperature_internal = -100;
+
 
 void blink_led()
 {
@@ -172,18 +173,22 @@ int main(void) {
 		if (add_sensor_event)
 		{
 			add_sensor_event = false;
+			int16_t temp = temperature_measurement();
 
-			temperature_internal = temperature_measurement();
+			if ((temperature_interal - temp > 1) || (temperature_interal - temp < 1))
+			{
+				fs_open(&fh, 32, file_system_user_user, file_system_access_type_write);
 
-			fs_open(&fh, 32, file_system_user_user, file_system_access_type_write);
+				uint8_t data[2];
+				data[0] = (uint8_t) (temperature_internal>> 8);
+				data[1] = (uint8_t) (temperature_internal);
 
-			uint8_t data[2];
-			data[1] = (uint8_t) (temperature_internal>> 8);
-			data[0] = (uint8_t) (temperature_internal);
+				fs_write_data(&fh, 2, data, 2,true);
 
-			fs_write_data(&fh, 2, data, 2,true);
+				fs_close(&fh);
+				temperature_interal = temp;
+			}
 
-			fs_close(&fh);
 
 			timer_add_event(&event);
 		}
