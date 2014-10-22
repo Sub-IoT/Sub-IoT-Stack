@@ -34,7 +34,6 @@
  *	    FLASH_FS2               : origin = 0xC200, length = 0x0400 // The file contents
  */
 
-#define UART
 
 #include <d7aoss.h>
 //#include <framework/log.h>
