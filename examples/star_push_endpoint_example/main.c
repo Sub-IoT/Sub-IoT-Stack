@@ -54,7 +54,7 @@ static uint16_t counter = 0;
 static volatile bool add_tx_event = true;
 
 uint8_t buffer[128];
-static uint8_t data[2];
+static uint8_t data[4];
 static volatile uint8_t dataLength = 0;
 
 static uint8_t send_channel[2] = {0x04, 0x00};
@@ -126,7 +126,7 @@ int main(void) {
 
 	data_template.file_id = 0;
 	data_template.start_byte_offset = 0;
-	data_template.bytes_accessing = 2;
+	data_template.bytes_accessing = 4;
 	data_template.data = data;
 
 	timer_add_event(&event);

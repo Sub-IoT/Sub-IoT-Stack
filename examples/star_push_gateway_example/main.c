@@ -18,9 +18,21 @@
  * 	This is the Gateway example
  *
  * 	add the link to d7aoss library in de lnk_*.cmd file, e.g. -l "../../../d7aoss/Debug/d7aoss.lib"
- * 	Make sure to select the correct platform in d7aoss/hal/cc430/platforms.platform.h
+ * 	Make sure to select the correct platform in d7aoss.h
  * 	If your platform is not present, you can add a header file in platforms and commit it to the repository.
  * 	Exclude the stub directories in d7aoss from the build when building for a device.
+ *
+ *  Create the apporpriate file system settings for the FLASH system:
+ *
+ * 	Add following sections to the SECTIONS in .cmd linker file to use the filesystem
+ *		.fs_fileinfo_bitmap : 	{} > FLASH_FS1
+ *  	.fs_fileinfo: 			{} > FLASH_FS1
+ *		.fs_files	: 			{} > FLASH_FS2
+ *
+ *	Add FLASH_FS_FI and FLASH_FS_FILES to the MEMORY section
+ *  eg.
+ *  	FLASH_FS1               : origin = 0xC000, length = 0x0200 // The file headers
+ *	    FLASH_FS2               : origin = 0xC200, length = 0x0400 // The file contents
  */
 
 
@@ -35,7 +47,6 @@
 #include <framework/log.h>
 #include <framework/timer.h>
 
-#define RECEIVE_CHANNEL 0x10
 #define TX_EIRP 10
 #define USE_LEDS
 
@@ -44,7 +55,8 @@ static timer_event dim_led_event;
 static bool start_channel_scan = false;
 uint8_t buffer[128];
 
-//static D7AQP_Command command;
+static uint8_t receive_channel[2] = {0x04, 0x00};
+
 
 void blink_led()
 {
@@ -61,10 +73,10 @@ void dim_led()
 void start_rx()
 {
 	start_channel_scan = false;
-	trans_rx_query_start(0xFF, RECEIVE_CHANNEL);
+	trans_rx_query_start(0xFF, receive_channel);
 }
 
-void rx_callback(Trans_Rx_Query_Result* rx_res)
+void rx_callback(Trans_Rx_Alp_Result* rx_res)
 {
 	system_watchdog_timer_reset();
 
@@ -100,23 +112,24 @@ void rx_callback(Trans_Rx_Query_Result* rx_res)
 		if (address_length == 2)
 		{
 			log_print_string("Received Query from :%x%x%x%x;",
-								address_ptr[0] >> 4, address_ptr[0] & 0x0F,
 								address_ptr[1] >> 4, address_ptr[1] & 0x0F);
 		} else if (address_length == 8) {
 			log_print_string("Received Query from :%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x;",
-					frame->address_ctl->source_id[0] >> 4, frame->address_ctl->source_id[0] & 0x0F,
-					frame->address_ctl->source_id[1] >> 4, frame->address_ctl->source_id[1] & 0x0F,
-					frame->address_ctl->source_id[2] >> 4, frame->address_ctl->source_id[2] & 0x0F,
-					frame->address_ctl->source_id[3] >> 4, frame->address_ctl->source_id[3] & 0x0F,
-					frame->address_ctl->source_id[4] >> 4, frame->address_ctl->source_id[4] & 0x0F,
-					frame->address_ctl->source_id[5] >> 4, frame->address_ctl->source_id[5] & 0x0F,
-					frame->address_ctl->source_id[6] >> 4, frame->address_ctl->source_id[6] & 0x0F,
-					frame->address_ctl->source_id[7] >> 4, frame->address_ctl->source_id[7] & 0x0F);
+					address_ptr[0] >> 4, address_ptr[0] & 0x0F,
+					address_ptr[1] >> 4, address_ptr[1] & 0x0F,
+					address_ptr[2] >> 4, address_ptr[2] & 0x0F,
+					address_ptr[3] >> 4, address_ptr[3] & 0x0F,
+					address_ptr[4] >> 4, address_ptr[4] & 0x0F,
+					address_ptr[5] >> 4, address_ptr[5] & 0x0F,
+					address_ptr[6] >> 4, address_ptr[6] & 0x0F,
+					address_ptr[7] >> 4, address_ptr[7] & 0x0F);
+		}
 	log_print_string("RSS: %d dBm", rx_res->nwl_rx_res->dll_rx_res->rssi);
-	log_print_string("Netto Link: %d dBm", rx_res->nwl_rx_res->dll_rx_res->rssi  - ((frame->control & 0x3F) - 32));
+	//log_print_string("Netto Link: %d dBm", rx_res->nwl_rx_res->dll_rx_res->rssi  - ((frame->control & 0x3F) - 32));
 
 	log_print_string("D7AQP received - ALP data:");
-	log_print_data(rx_res->d7aqp_command.alp_data, rx_res->d7aqp_command.alp_length);
+	//log_print_data(rx_res->d7aqp_command.alp_data, rx_res->d7aqp_command.alp_length);
+	}
 
 	/*
 	switch (rx_res->d7aqp_command.command_code & 0x0F)
@@ -179,7 +192,7 @@ int main(void) {
 
 	// Currently we address the Transport Layer for RX, this should go to an upper layer once it is working.
 	trans_init();
-	trans_set_query_rx_callback(&rx_callback);
+	trans_set_alp_rx_callback(&rx_callback);
 	trans_set_tx_callback(&tx_callback);
 	// The initial Tca for the CSMA-CA in
 	dll_set_initial_t_ca(200);
