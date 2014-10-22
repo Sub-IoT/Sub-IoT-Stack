@@ -185,7 +185,7 @@ uint8_t fs_write_data(file_handler *fh, uint8_t offset, uint8_t* data, uint8_t l
 	if (fh == NULL)
 		return 1;
 
-	if (!(fh->permission_mask & DA_PERMISSION_CODE_WRITE_MASK))
+	if ((fh->permission_mask != 0)  && !(fh->permission_mask & DA_PERMISSION_CODE_WRITE_MASK))
 		return 2;
 
 	if (MERGEUINT16(fh->info->header.length[0],fh->info->header.length[1]) < offset + length)
@@ -207,7 +207,7 @@ uint8_t fs_write_data(file_handler *fh, uint8_t offset, uint8_t* data, uint8_t l
 	if (store)
 	{
 		// Check if storage class is Restorable
-		if ((fh->info->header.properties_flags & 0x03) != (uint8_t) DataElementStorageClassRestorable)
+		if ((fh->permission_mask != 0)  && ((fh->info->header.properties_flags & 0x03) != (uint8_t) DataElementStorageClassRestorable))
 			return 4;
 
 		write_bytes_to_flash(&fh->file[offset], data, length);

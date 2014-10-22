@@ -34,6 +34,7 @@
 #include "../phy/phy.h"
 #include "../dll/dll.h"
 #include "../d7aoss.h"
+#include "../hal/uart.h"
 
 // generic logging functions
 #define LOG_TYPE_STRING 0x01

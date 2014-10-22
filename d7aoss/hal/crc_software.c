@@ -11,6 +11,7 @@
  * Lesser General Public License for more details.
  *
  *  \author glenn.ergeerts@uantwerpen.be
+ *  \author maarten.weyn@uantwerpen.be
  *
  */
 

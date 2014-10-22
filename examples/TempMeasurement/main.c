@@ -17,7 +17,7 @@
  * 	Example of the notification system
  *
  * 	add the link to d7aoss library in de lnk_*.cmd file, e.g. -l "../../../d7aoss/Debug/d7aoss.lib"
- * 	Make sure to select the correct platform in d7aoss/hal/cc430/platforms.platform.h
+ * 	Make sure to select the correct platform in d7aoss.h
  * 	If your platform is not present, you can add a header file in platforms and commit it to the repository.
  * 	Exclude the stub directories in d7aoss from the build when building for a device.
  *
@@ -175,7 +175,7 @@ int main(void) {
 			add_sensor_event = false;
 			int16_t temp = temperature_measurement();
 
-			if ((temperature_interal - temp > 1) || (temperature_interal - temp < 1))
+			if ((temperature_internal - temp > 1) || (temperature_internal - temp < 1))
 			{
 				fs_open(&fh, 32, file_system_user_user, file_system_access_type_write);
 
@@ -186,7 +186,7 @@ int main(void) {
 				fs_write_data(&fh, 2, data, 2,true);
 
 				fs_close(&fh);
-				temperature_interal = temp;
+				temperature_internal = temp;
 			}
 
 

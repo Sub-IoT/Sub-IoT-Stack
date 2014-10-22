@@ -538,7 +538,7 @@ void dll_create_frame(uint8_t* target_address, uint8_t address_length, dll_tx_cf
 
 	queue_create_header_space(&tx_queue, 3 + address_length);
 
-	tx_queue.front[0] = tx_queue.length + 5 + address_length;	// Lenght
+	tx_queue.front[0] = tx_queue.length + 2;// + 5 + address_length;	// Lenght
 	tx_queue.front[1] = params->subnet; 				// Subnet
 	tx_queue.front[2] = 0x3F & (params->eirp + 32);
 

@@ -21,7 +21,7 @@
 #include "cc430_registers.h"
 
 //RF settings
- RF_SETTINGS rfSettings = {
+RF_SETTINGS rfSettings = {
 	RADIO_GDO2_VALUE,   			// IOCFG2    GDO2 output pin configuration.
 	RADIO_GDO1_VALUE,    			// IOCFG1    GDO1 output pin configuration.
     RADIO_GDO0_VALUE,   			// IOCFG0    GDO0 output pin configuration.

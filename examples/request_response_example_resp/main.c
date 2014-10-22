@@ -37,26 +37,22 @@
 #include <msp430.h>
 
 
-#define RECEIVE_CHANNEL 0x10
+#define TEMPERATURE_INTERVAL_MS 2000
 #define TX_EIRP 10
 #define USE_LEDS
-
-
-static uint8_t file_00[] = {0,0};
-static uint8_t file_01[] = {1,1};
-static uint8_t file_02[] = {2,2};
-static uint8_t* filesystem[] = {file_00, file_01, file_02};
 
 // event to create a led blink
 static timer_event dim_led_event;
 static bool start_channel_scan = false;
+static volatile uint8_t add_sensor_event = 0;
 
-static D7AQP_Command command;
-
-static ALP_File_Data_Template tx_data_template;
-static ALP_Template tx_alp_template;
-
+static uint8_t receive_channel[2] = { 0x04,0x00};
 uint8_t buffer[128];
+
+
+#define CLOCKS_PER_1us	20
+static volatile uint16_t adc12_result;
+static volatile uint8_t adc12_data_ready;
 
 void blink_led()
 {
@@ -73,117 +69,67 @@ void dim_led()
 void start_rx()
 {
 	start_channel_scan = false;
-	trans_rx_query_start(0xFF, RECEIVE_CHANNEL);
+	trans_rx_query_start(0xFF, receive_channel);
 }
 
-void rx_callback(Trans_Rx_Query_Result* rx_res)
+void get_temperature()
 {
-	system_watchdog_timer_reset();
-
-	blink_led();
-
-	D7AQP_Command* command = &(rx_res->d7aqp_command);
-	ALP_Record_Structure* alp = (ALP_Record_Structure*) command->alp_data;
-	//uint8_t lenght = alp->record_lenght - 3;
-
-	ALP_Template* alp_template = (ALP_Template*) alp->alp_templates;
-
-	if (alp_template->op == ALP_OP_READ_DATA)
-	{
-		ALP_File_Data_Template* data_template = (ALP_File_Data_Template*) alp_template->data;
-		if (data_template->file_id < 3)
-		{
-			tx_alp_template.op = ALP_OP_RESP_DATA;
-			tx_alp_template.data = (uint8_t*) &tx_data_template;
-
-			tx_data_template.file_id = data_template->file_id ;
-			tx_data_template.start_byte_offset = 0;
-			tx_data_template.bytes_accessing = 2;
-			tx_data_template.data = filesystem[data_template->file_id];
-
-			alp_create_structure_for_tx(ALP_REC_FLG_TYPE_RESPONSE, 0, 1, &tx_alp_template);
-			trans_tx_query(NULL, 0xFF, RECEIVE_CHANNEL, TX_EIRP);
-		}
-	}
-
-
-
-	/*
-	dll_foreground_frame_t* frame = (dll_foreground_frame_t*) (rx_res->nwl_rx_res->dll_rx_res->frame);
-	log_print_string("Received Query from :%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x;",
-				frame->address_ctl->source_id[0] >> 4, frame->address_ctl->source_id[0] & 0x0F,
-				frame->address_ctl->source_id[1] >> 4, frame->address_ctl->source_id[1] & 0x0F,
-				frame->address_ctl->source_id[2] >> 4, frame->address_ctl->source_id[2] & 0x0F,
-				frame->address_ctl->source_id[3] >> 4, frame->address_ctl->source_id[3] & 0x0F,
-				frame->address_ctl->source_id[4] >> 4, frame->address_ctl->source_id[4] & 0x0F,
-				frame->address_ctl->source_id[5] >> 4, frame->address_ctl->source_id[5] & 0x0F,
-				frame->address_ctl->source_id[6] >> 4, frame->address_ctl->source_id[6] & 0x0F,
-				frame->address_ctl->source_id[7] >> 4, frame->address_ctl->source_id[7] & 0x0F);
-	log_print_string("RSS: %d dBm", rx_res->nwl_rx_res->dll_rx_res->rssi);
-	log_print_string("Netto Link: %d dBm", rx_res->nwl_rx_res->dll_rx_res->rssi  - frame->frame_header.tx_eirp);
-
-	switch (rx_res->d7aqp_command.command_code & 0x0F)
-	{
-		case D7AQP_OPCODE_COLLECTION_FILE_FILE:
-		{
-			D7AQP_Single_File_Call_Template* sfr_tmpl = (D7AQP_Single_File_Call_Template*) rx_res->d7aqp_command.command_data;
-			log_print_string("D7AQP File Call received");
-			log_print_string(" - file 0x%x starting from byte %d", sfr_tmpl->return_file_id, sfr_tmpl->return_file_entry_offset);
-			log_print_string(" - max return %d bytes", sfr_tmpl->max_returned_bytes);
-
-			if (sfr_tmpl->return_file_id < 3) // for example fixed file system containing 3 files
-			{
-				if (sfr_tmpl->return_file_entry_offset < 8) // for example fixed file sizes of 8 byte
-				{
-					command.command_code = D7AQP_COMMAND_CODE_EXTENSION | D7AQP_COMMAND_TYPE_RESPONSE | D7AQP_OPCODE_COLLECTION_FILE_FILE;
-					command.command_extension = D7AQP_COMMAND_EXTENSION_NORESPONSE;
-					command.dialog_template = NULL;
-
-					D7AQP_Single_File_Return_Template file_template;
-					file_template.return_file_id = sfr_tmpl->return_file_id;
-					file_template.file_offset = sfr_tmpl->return_file_entry_offset;
-					file_template.isfb_total_length = sfr_tmpl->max_returned_bytes < 8 ? sfr_tmpl->max_returned_bytes : 8;
-					file_template.file_data = &filesystem[sfr_tmpl->return_file_id][sfr_tmpl->return_file_entry_offset];
-
-					command.command_data = &file_template;
-				} else {
-					// send error template
-				}
-
-			} else {
-				// send error template
-			}
-
-			led_on(3);
-					trans_tx_query(&command, 0xFF, RECEIVE_CHANNEL, TX_EIRP);
-			break;
-		}
-
-		default:
-			// Restart channel scanning
-			start_channel_scan = true;
-	}
-
-	if (rx_res->d7aqp_command.command_extension & D7AQP_COMMAND_EXTENSION_NORESPONSE)
-	{
-		// Restart channel scanning
-		start_channel_scan = true;
-	} else {
-		// send ack
-		// todo: put outside interrupt
-		// todo: use dialog template
-
-		command.command_code = D7AQP_COMMAND_CODE_EXTENSION | D7AQP_COMMAND_TYPE_RESPONSE | D7AQP_OPCODE_ANNOUNCEMENT_FILE;
-		command.command_extension = D7AQP_COMMAND_EXTENSION_NORESPONSE;
-		command.dialog_template = NULL;
-		command.command_data = NULL;
-
-		led_on(3);
-		trans_tx_query(&command, 0xFF, RECEIVE_CHANNEL, TX_EIRP);
-	}
-	*/
-
+	add_sensor_event = true;
 }
+
+
+uint16_t adc12_single_conversion(uint16_t ref, uint16_t sht, uint16_t channel)
+{
+	// Initialize the shared reference module
+	REFCTL0 |= REFMSTR + ref + REFON;    		// Enable internal reference (1.5V or 2.5V)
+
+	// Initialize ADC12_A
+	ADC12CTL0 = sht + ADC12ON;					// Set sample time
+	ADC12CTL1 = ADC12SHP;                     	// Enable sample timer
+	ADC12MCTL0 = ADC12SREF_1 + channel;  		// ADC input channel
+	ADC12IE = 0x001;                          	// ADC_IFG upon conv result-ADCMEMO
+
+  	// Wait 2 ticks (66us) to allow internal reference to settle
+	__delay_cycles(66*CLOCKS_PER_1us);
+
+	// Start ADC12
+	ADC12CTL0 |= ADC12ENC;
+
+	// Clear data ready flag
+  	adc12_data_ready = 0;
+
+  	// Sampling and conversion start
+    ADC12CTL0 |= ADC12SC;
+
+    // Wait until ADC12 has finished
+    __delay_cycles(200*CLOCKS_PER_1us);
+	while (!adc12_data_ready);
+
+	// Shut down ADC12
+	ADC12CTL0 &= ~(ADC12ENC | ADC12SC | sht);
+	ADC12CTL0 &= ~ADC12ON;
+
+	// Shut down reference voltage
+	REFCTL0 &= ~(REFMSTR + ref + REFON);
+
+	ADC12IE = 0;
+
+	// Return ADC result
+	return (adc12_result);
+}
+
+int16_t temperature_measurement()
+{
+	uint16_t adc_result;
+	volatile int16_t temperaturemV;
+
+	// Convert internal temperature diode voltage
+	adc_result = adc12_single_conversion(REFVSEL_0, ADC12SHT0_8, ADC12INCH_10);
+	temperaturemV = (int16_t) (adc_result * 0.3662109375); //(= /4096*1500)
+
+    return temperaturemV;
+}
+
 
 
 void tx_callback(Trans_Tx_Result result)
@@ -207,32 +153,40 @@ void tx_callback(Trans_Tx_Result result)
 	start_channel_scan = true;
 }
 
-int main(void) {
+	int main(void) {
+
+	timer_event event;
+	int16_t temperature_internal;
+	file_handler fh;
+
+
 	// Initialize the OSS-7 Stack
-	// Currently we address the Transport Layer, this should go to an upper layer once it is working.
 	d7aoss_init(buffer, 128, buffer, 128);
 
 
 	trans_set_tx_callback(&tx_callback);
 	// The initial Tca for the CSMA-CA in
 	dll_set_initial_t_ca(200);
-	trans_set_query_rx_callback(&rx_callback);
 
 	start_channel_scan = true;
 
-	log_print_string("responder started");
-
-	// Log the device id
-	log_print_data(device_id, 8);
 
 	// configure blinking led event
 	dim_led_event.next_event = 50;
 	dim_led_event.f = &dim_led;
 
-	system_watchdog_init(WDTSSEL0, 0x03);
-	system_watchdog_timer_start();
+	// Configure event to measure temperature
+	event.next_event = TEMPERATURE_INTERVAL_MS;
+	event.f = &get_temperature;
 
 	blink_led();
+	//timer_add_event(&event);
+
+
+	log_print_string("responder started");
+
+	// Log the device id
+	log_print_data(device_id, 8);
 
 	while(1)
 	{
@@ -241,26 +195,58 @@ int main(void) {
 			start_rx();
 		}
 
+		if (add_sensor_event)
+		{
+			add_sensor_event = false;
+			temperature_internal = temperature_measurement();
+
+			fs_open(&fh, 32, file_system_user_user, file_system_access_type_write);
+
+			uint8_t data[2];
+			data[0] = (uint8_t) (temperature_internal>> 8);
+			data[1] = (uint8_t) (temperature_internal);
+
+			fs_write_data(&fh, 2, data, 2,true);
+
+			fs_close(&fh);
+
+			//timer_add_event(&event);
+		}
+
 		// Don't know why but system reboots when LPM > 1 since ACLK is uses for UART
 		system_lowpower_mode(0,1);
 	}
 }
 
 
-#pragma vector=ADC12_VECTOR,RTC_VECTOR,AES_VECTOR,COMP_B_VECTOR,DMA_VECTOR,PORT1_VECTOR,PORT2_VECTOR,SYSNMI_VECTOR,UNMI_VECTOR,USCI_A0_VECTOR,USCI_B0_VECTOR,WDT_VECTOR,TIMER0_A0_VECTOR,TIMER1_A1_VECTOR,TIMER0_A1_VECTOR
-__interrupt void ISR_trap(void)
+
+#pragma vector=ADC12_VECTOR
+__interrupt void ADC12ISR (void)
 {
-  /* For debugging purposes, you can trap the CPU & code execution here with an
-     infinite loop */
-  //while (1);
-	__no_operation();
-
-  /* If a reset is preferred, in scenarios where you want to reset the entire system and
-     restart the application from the beginning, use one of the following lines depending
-     on your MSP430 device family, and make sure to comment out the while (1) line above */
-
-  /* If you are using MSP430F5xx or MSP430F6xx devices, use the following line
-     to trigger a software BOR.   */
-  PMMCTL0 = PMMPW | PMMSWBOR;          // Apply PMM password and trigger SW BOR
+  switch(__even_in_range(ADC12IV,34))
+  {
+//  case  0: break;                           // Vector  0:  No interrupt
+//  case  2: break;                           // Vector  2:  ADC overflow
+//  case  4: break;                           // Vector  4:  ADC timing overflow
+  case  6:                                  // Vector  6:  ADC12IFG0
+    		adc12_result = ADC12MEM0;                       // Move results, IFG is cleared
+    		adc12_data_ready = 1;
+    		//_BIC_SR_IRQ(LPM3_bits);   						// Exit active CPU
+    		break;
+//  case  8: break;                           // Vector  8:  ADC12IFG1
+//  case 10: break;                           // Vector 10:  ADC12IFG2
+//  case 12: break;                           // Vector 12:  ADC12IFG3
+//  case 14: break;                           // Vector 14:  ADC12IFG4
+//  case 16: break;                           // Vector 16:  ADC12IFG5
+//  case 18: break;                           // Vector 18:  ADC12IFG6
+//  case 20: break;                           // Vector 20:  ADC12IFG7
+//  case 22: break;                           // Vector 22:  ADC12IFG8
+//  case 24: break;                           // Vector 24:  ADC12IFG9
+//  case 26: break;                           // Vector 26:  ADC12IFG10
+//  case 28: break;                           // Vector 28:  ADC12IFG11
+//  case 30: break;                           // Vector 30:  ADC12IFG12
+//  case 32: break;                           // Vector 32:  ADC12IFG13
+//  case 34: break;                           // Vector 34:  ADC12IFG14
+  default: break;
+  }
 }
-
