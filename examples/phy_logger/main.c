@@ -30,8 +30,9 @@
  *
  *	Add FLASH_FS_FI and FLASH_FS_FILES to the MEMORY section
  *  eg.
- *  	FLASH_FS1               : origin = 0xC000, length = 0x0200 // The file headers
- *	    FLASH_FS2               : origin = 0xC200, length = 0x0400 // The file contents
+ *		FLASH                   : origin = 0x8600, length = 0x7980
+ *   	FLASH_FS1               : origin = 0x8000, length = 0x0200
+ *   	FLASH_FS2               : origin = 0x8200, length = 0x0400
  */
 
 
