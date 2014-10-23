@@ -232,4 +232,4 @@ SECTIONS
 
 -l cc430f5137.cmd
 
--l "C:\Users\Maarten Weyn\Documents\git\dash7-ap-open-source-stack\d7aoss\Debug\d7aoss.lib"
+-l "..\..\..\d7aoss\Debug\d7aoss.lib"
