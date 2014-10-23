@@ -269,18 +269,18 @@ void nwl_build_network_protocol_data(uint8_t control, nwl_security* security, nw
 
 void nwl_rx_start(uint8_t subnet, uint8_t spectrum_id[2], Protocol_Type type)
 {
-	dll_channel_scan_t scan_cfg = {
-			spectrum_id[1],
-			spectrum_id[0],
-			FrameTypeForegroundFrame,
-			0,
-			0
-	};
+	dll_channel_scan_t scan_cfg;
 
-	//scan_cfg.spectrum_id = spectrum_id;
+	scan_cfg.spectrum_id[0] = spectrum_id[0];
+	scan_cfg.spectrum_id[1] = spectrum_id[1];
+	scan_cfg.time_next_scan = 0;
+	scan_cfg.timeout_scan_detect = 0;
+
 
 	if (type != ProtocolTypeNetworkProtocol)
 		scan_cfg.scan_type = FrameTypeBackgroundFrame;
+	else
+		scan_cfg.scan_type = FrameTypeForegroundFrame;
 
 	dll_channel_scan_series_t scan_series_cfg;
 	scan_series_cfg.length = 1;
