@@ -57,15 +57,12 @@ uint8_t buffer[128];
 static uint8_t data[4];
 static volatile uint8_t dataLength = 0;
 
-static uint8_t send_channel[2] = {0x04, 0x00};
+static uint8_t send_channel[2] = {0x00, 0x04};
 
 //static D7AQP_Command command;
 static ALP_File_Data_Template data_template;
 static ALP_Template alp_template;
 
-//1DFF3E01469321AB0033001EC000400D012020000200040316AABB7AF2
-//1DFF2A01469321AB0033001EC000400D00202000020004BBAA16033DB1
-static uint8_t frame_data[] = {0x1D,0xFF,0x3E,0x01,0x46,0x93,0x21,0xAB,0x00,0x33,0x00,0x1E,0xC0,0x00,0x40,0x0D,0x01,0x20,0x20,0x00,0x02,0x00,0x04,0x03,0x16,0xAA,0xBB,0x7A,0xF2};
 void start_tx()
 {
 	if (!tx)
@@ -81,31 +78,13 @@ void start_tx()
 
 		log_print_string("TX...");
 
-		//data[0] = counter >> 8;
-		//data[1] = counter & 0xFF;
-		data[0] = 0x03;
-		data[1] = 0x16;
-		data[2] = 0xAA;
-		data[3] = 0xBB;
+		data[0] = counter >> 8;
+		data[1] = counter & 0xFF;
 
-		//alp_create_structure_for_tx(ALP_REC_FLG_TYPE_UNSOLICITED, 0, 1, &alp_template);
-		//trans_tx_query(NULL, 0xFF, send_channel, TX_EIRP);
+		alp_create_structure_for_tx(ALP_REC_FLG_TYPE_UNSOLICITED, 0, 1, &alp_template);
+		trans_tx_query(NULL, 0xFF, send_channel, TX_EIRP);
 
-		queue_clear(&tx_queue);
-		queue_push_u8_array(&tx_queue, frame_data, 0x1D);
 
-		phy_tx_cfg_t phy_cfg;
-		phy_cfg.eirp = 10;
-		memcpy(phy_cfg.spectrum_id, send_channel, 2);
-		phy_cfg.sync_word_class = 1;
-
-		if (phy_tx(&phy_cfg))
-		{
-			log_print_string("send ok");
-		} else {
-
-			log_print_string("send fail");
-		}
 	}
 	add_tx_event = true;
 }
