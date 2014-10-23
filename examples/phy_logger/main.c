@@ -1,3 +1,40 @@
+/*
+ * (C) Copyright 2013 University of Antwerp (http://www.cosys-lab.be) and others.
+ *
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the GNU Lesser General Public License
+ * (LGPL) version 2.1 which accompanies this distribution, and is available at
+ * http://www.gnu.org/licenses/lgpl-2.1.html
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Lesser General Public License for more details.
+ *
+ * Contributors:
+ *     maarten.weyn@uantwerpen.be
+ *
+ * 	Example Phy logger which can be used to sniff your network
+ *
+ * 	add the link to d7aoss library in de lnk_*.cmd file, e.g. -l "../../../d7aoss/Debug/d7aoss.lib"
+ * 	Make sure to select the correct platform in d7aoss.h
+ * 	If your platform is not present, you can add a header file in platforms and commit it to the repository.
+ * 	Exclude the stub directories in d7aoss from the build when building for a device.
+ *
+ * 	Create the apporpriate file system settings for the FLASH system:
+ *
+ * 	Add following sections to the SECTIONS in .cmd linker file to use the filesystem
+ *		.fs_fileinfo_bitmap : 	{} > FLASH_FS1
+ *  	.fs_fileinfo: 			{} > FLASH_FS1
+ *		.fs_files	: 			{} > FLASH_FS2
+ *
+ *	Add FLASH_FS_FI and FLASH_FS_FILES to the MEMORY section
+ *  eg.
+ *  	FLASH_FS1               : origin = 0xC000, length = 0x0200 // The file headers
+ *	    FLASH_FS2               : origin = 0xC200, length = 0x0400 // The file contents
+ */
+
+
 #include <d7aoss.h>
 #include <framework/log.h>
 #include <hal/leds.h>
