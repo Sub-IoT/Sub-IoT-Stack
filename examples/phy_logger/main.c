@@ -105,6 +105,8 @@ int main(void) {
 	phy_set_rx_callback(&rx_callback);
 	
 	log_print_string("started");
+	start_rx();
+
 	while(1)
 	{
 
