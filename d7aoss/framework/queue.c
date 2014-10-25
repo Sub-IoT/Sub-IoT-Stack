@@ -71,7 +71,7 @@ static bool check_for_space(queue_t* q, uint8_t nr_of_elements)
 		// no place at the end anymore!
 
 		if (q->front > q->start)
-			return shift_queue_left(q, q->start - q->front);
+			return shift_queue_left(q,  q->front - q->start);
 		else
 			return 0;
 	}
