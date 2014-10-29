@@ -40,26 +40,27 @@
 extern RF_SETTINGS rfSettings;
 extern InterruptHandler interrupt_table[34];
 
-RadioState state;
+static RadioState state;
 
-uint8_t packetLength;
+static uint8_t packetLength;
 //uint8_t* bufferPosition;
-int16_t remainingBytes;
+static int16_t remainingBytes;
 
-bool fec;
-uint8_t channel_center_freq_index;
-uint8_t channel_bandwidth_index;
-uint8_t preamble_size;
-uint16_t sync_word;
+static bool fec;
+static uint8_t channel_center_freq_index;
+static uint8_t channel_bandwidth_index;
+static uint8_t preamble_size;
+static uint16_t sync_word;
 
-bool init_and_close_radio = true;
+static bool init_and_close_radio = true;
+static bool phy_initialized = false;
 
 static uint8_t previous_spectrum_id[2] = {0xFF, 0xFF};
 static uint8_t previous_sync_word_class = 0xFF;
 
-phy_rx_data_t rx_data;
+static phy_rx_data_t rx_data;
 
-phy_tx_cfg_t last_tx_cfg;
+static phy_tx_cfg_t last_tx_cfg;
 
 // from -35 to 10 dbm in steps of +- 1
 static const int8_t eirp_values[46] = {0x1,0x2,0x2,0x3,0x3,0x4,0x4,0x5,0x6,0x6,0x7,0x8,0x9,0xA,0xC,0xE,0xF,0x19,0x1A,0x1B,0x1D,0x1E,0x24,0x33,0x25,0x34,0x26,0x28,0x29,0x2A,0x2B,0x2D,0x2F,0x3C,0x3F,0x60,0x8D,0xCF,0x8A,0x87,0x84,0x81,0xC8,0xC5,0xC2,0xC0};
@@ -263,7 +264,7 @@ bool phy_init_tx()
 
 bool phy_tx(phy_tx_cfg_t* cfg)
 {
-	if (init_and_close_radio)
+	if (init_and_close_radio || !phy_initialized)
 	{
 		if (!phy_init_tx())
 		{
@@ -277,6 +278,8 @@ bool phy_tx(phy_tx_cfg_t* cfg)
 				return false;
 			memcpy(&last_tx_cfg, cfg, 3);
 		}
+
+		phy_initialized = true;
 	}
 
 	return phy_tx_data(cfg);
@@ -797,5 +800,22 @@ int16_t calculate_rssi(int8_t rssi_raw)
 
 void phy_keep_radio_on(bool status)
 {
-	init_and_close_radio = !status;
+	if (status)
+	{
+		if (!init_and_close_radio)
+			return;
+
+		WriteSingleReg(MCSM1, RADIO_MCSM1_CCA_RSSILOWRX | RADIO_MCSM1_RXOFF_MODE_RX | RADIO_MCSM1_TXOFF_MODE_TX);
+		phy_initialized = false;
+		init_and_close_radio = false;
+	}
+	else
+	{
+		if (init_and_close_radio)
+			return;
+
+		WriteSingleReg(MCSM1, RADIO_MCSM1_CCA_RSSILOWRX | RADIO_MCSM1_RXOFF_MODE_IDLE | RADIO_MCSM1_TXOFF_MODE_IDLE);
+		init_and_close_radio = true;
+	}
+
 }

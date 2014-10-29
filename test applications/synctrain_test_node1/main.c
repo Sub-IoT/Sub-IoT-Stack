@@ -75,7 +75,7 @@ static uint8_t sync_word[2] = {0xD0, 0xE6}; //0xE6D0
 
 static bool first_packet = true;
 
-static int16_t eta = 500;
+static uint16_t eta = 500;
 
 static uint16_t pn9;
 static uint8_t pn9buffer;
@@ -109,7 +109,7 @@ void start_tx_sync()
 	eta = targetTimeStamp - timer_get_counter_value();
 	log_print_string("ADVP eta: %d", eta);
 
-	if (eta < 10 || eta > SYNC_PERIOD_MS)
+	if (eta < 5 || eta > SYNC_PERIOD_MS)
 	{
 //		#ifdef USE_LEDS
 //		led_off(LED_GREEN);
@@ -123,7 +123,6 @@ void start_tx_sync()
 
 		packetTransmit = 1;
 		transmitting = 0;
-		timer_add_event(&event);
 
 	} else {
 //		//log_print_string("sync_event added");
@@ -319,7 +318,7 @@ void start_tx()
 
 	//set_data_whitening(false);
 
-	WriteSingleReg(MCSM1, RADIO_MCSM1_CCA_RSSILOWRX | RADIO_MCSM1_RXOFF_MODE_IDLE | RADIO_MCSM1_TXOFF_MODE_TX);
+	phy_keep_radio_on(true);
 
 
 	packetTransmit = 0;
@@ -331,6 +330,7 @@ void start_tx()
 
 
 
+	timer_add_event(&event);
 	transmitting = 1;
 
 }
