@@ -52,7 +52,7 @@
 
 // These are optional special logging types, use a higher value
 #define LOG_TYPE_PHY_RX_RES 0xFE
-#define LOG_TYPE_PHY_RX_RES_SIZE 5
+#define LOG_TYPE_PHY_RX_RES_SIZE 8
 
 #define LOG_TYPE_DLL_RX_RES 0xFD
 #define LOG_TYPE_DLL_RX_RES_SIZE 2

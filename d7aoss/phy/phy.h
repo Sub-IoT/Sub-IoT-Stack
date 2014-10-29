@@ -61,6 +61,8 @@ typedef struct
     uint8_t length;				//Packet length
     uint8_t* data;				//Packet data
     int16_t rssi;				//Received signal strength indicator
+    uint8_t spectrum_id[2];
+    uint8_t sync_word_class;
 } phy_rx_data_t;
 
 //Configuration structure for packet transmission

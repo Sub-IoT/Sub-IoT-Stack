@@ -188,17 +188,9 @@ extern bool phy_set_tx(phy_tx_cfg_t* cfg)
 	set_eirp(cfg->eirp);
 
 	//TODO Return error if fec not enabled but requested
-	#ifdef D7_PHY_USE_FEC
-	if (fec) {
-		//Disable hardware data whitening
-		set_data_whitening(false);
-	} else {
-#endif
-		//Enable hardware data whitening
-		set_data_whitening(true);
-#ifdef D7_PHY_USE_FEC
-	}
-	#endif
+
+	//TODO: only enable if it was dissabled previously
+	//set_data_whitening(true);
 
 	return true;
 }
@@ -317,15 +309,15 @@ bool phy_rx(phy_rx_cfg_t* cfg)
 	if (!phy_translate_and_set_settings(cfg->spectrum_id, cfg->sync_word_class))
 		return false;
 
+	rx_data.spectrum_id[0] = cfg->spectrum_id[0];
+	rx_data.spectrum_id[1] = cfg->spectrum_id[1];
+	rx_data.sync_word_class = cfg->sync_word_class;
+
 	set_timeout(cfg->timeout);
 
 //TODO Return error if fec not enabled but requested
 #ifdef D7_PHY_USE_FEC
 	if (fec) {
-		//Disable hardware data whitening
-		// TODO: datawhitening should be after FEC so HW datawhitening can still be used - current implementation is wrong.
-		set_data_whitening(false);
-
 		//Initialize fec encoding
 		fec_init_decode(buffer);
 
@@ -348,7 +340,8 @@ bool phy_rx(phy_rx_cfg_t* cfg)
 	} else {
 #endif
 		//Enable hardware data whitening
-		set_data_whitening(true);
+		//todo: only enable when dissabled previously
+		//set_data_whitening(true);
 
 		//Set buffer position
 		//bufferPosition = buffer;
