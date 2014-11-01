@@ -42,7 +42,7 @@
 
 #define INTERRUPT_RTC 		(1 << 3)
 #define BATTERY_OFFSET	-10
-#define CLOCKS_PER_1us	20
+#define CLOCKS_PER_1us	4
 
 #define LED_RED	1
 #define LED_ORANGE 2
@@ -51,6 +51,8 @@
 //static u8 interrupt_flags = 0;
 //static u8 tx = 0;
 #define BUFFER_LENGTH 512
+
+#define TX_EIRP 10
 
 
 uint8_t buffer[BUFFER_LENGTH];
@@ -71,14 +73,15 @@ timer_event queue_event;
 //uint8_t data[512];
 
 static uint8_t spectrum_id[2] = { 0x00, 0x04};
-static uint8_t sync_word[2] = {0xD0, 0xE6}; //0xE6D0
-
-static bool first_packet = true;
 
 static uint16_t eta = 500;
 
-static uint16_t pn9;
-static uint8_t pn9buffer;
+static uint16_t counter = 0;
+
+static ALP_File_Data_Template data_template;
+static ALP_Template alp_template;
+
+static uint8_t data[4];
 
 //
 //
@@ -111,36 +114,41 @@ void start_tx_sync()
 
 	if (eta < 5 || eta > SYNC_PERIOD_MS)
 	{
-//		#ifdef USE_LEDS
-//		led_off(LED_GREEN);
-//		led_on(LED_ORANGE);
-//		#endif
-//
-//		//trans_tx_foreground_frame(data, dataLength, 0xFF, SEND_CHANNEL, 10);
-//
-//		//log_print_string("tx_event added");
+		if (eta > SYNC_PERIOD_MS)
+			eta = 4;
+
+//		while (eta > 0)
+//		{
+//			__delay_cycles(4);
+//			eta--;
+//		}
+
+		#ifdef USE_LEDS
+		led_off(LED_GREEN);
+		led_on(LED_ORANGE);
+		#endif
+
+		data[0] = counter >> 8;
+		data[1] = counter & 0xFF;
+		counter++;
+
+		alp_create_structure_for_tx(ALP_REC_FLG_TYPE_UNSOLICITED, 0, 1, &alp_template);
+		trans_tx_query(NULL, 0xFF, spectrum_id, TX_EIRP);
+
+		log_print_string("tx_event added");
 		log_print_string("FF");
 
 		packetTransmit = 1;
 		transmitting = 0;
 
 	} else {
-//		//log_print_string("sync_event added");
-//		#ifdef USE_LEDS
-//		led_on(LED_GREEN);
-//		#endif
-//		//log_print_string("BF");
-//
-//		//log_print_data((uint8_t*) &sync_position, 1);
-//		//trans_tx_background_frame((uint8_t*) &counter, 0xFF, SEND_CHANNEL, 10);
-//
-
 		#ifdef USE_LEDS
-		led_on(LED_ORANGE);
+		led_on(LED_GREEN);
 		#endif
+		log_print_string("BF");
 
 
-		nwl_build_advertising_protocol_data(eta, spectrum_id, 10, 0xFF);
+		nwl_build_advertising_protocol_data(eta, spectrum_id, TX_EIRP, 0xFF);
 		dll_tx_frame();
 	}
 }
@@ -152,6 +160,7 @@ void tx_callback(Dll_Tx_Result result)
 	{
 
 		led_off(LED_ORANGE);
+		led_off(LED_GREEN);
 		log_print_string("TX OK");
 	}
 	else
@@ -163,138 +172,6 @@ void tx_callback(Dll_Tx_Result result)
 	transmitting = 1;
 #endif
 }
-
-uint8_t calculate_pn9(uint8_t input)
-{
-//	uint16_t tmppn9;
-//
-//	//Pn9 data whitening
-//	pn9buffer = input ^ (uint8_t)pn9;
-//
-//	//Rotate pn9 code
-//	tmppn9 = ((pn9 << 5) ^ pn9) & 0x01E0;
-//	pn9 = tmppn9 | (pn9 >> 4);
-//	tmppn9 = ((pn9 << 5) ^ pn9) & 0x01E0;
-//	pn9 = tmppn9 | (pn9 >> 4);
-//
-//	return pn9buffer;
-	return input;
-}
-
-void fill_buffer()
-{
-	while (tx_queue.length < (BUFFER_LENGTH-(30+14)) && eta > 0)
-	{
-		if (!first_packet)
-		{
-			uint8_t i = 0;
-
-			for (;i<PREAMBLE_SIZE_MIN;i++)
-				queue_push_u8(&tx_queue, PREAMBLE_SYMBOL);
-
-			queue_push_u8(&tx_queue, sync_word[1]);
-			queue_push_u8(&tx_queue, sync_word[0]);
-		} else {
-			first_packet = false;
-		}
-
-
-		// re_init PN9
-		pn9 = INITIAL_PN9;
-
-		uint8_t frame[8];
-		frame[0] = calculate_pn9(8); // LENGTH
-//		frame[1] = calculate_pn9(0xFF); // SUBNET
-//		frame[2] = calculate_pn9(42); // Control
-//		frame[3] = calculate_pn9(0xF0); // BPID
-//		frame[4] = calculate_pn9(eta >> 8); // eta
-//		frame[5] = calculate_pn9((uint8_t) eta); // eta
-//
-//		uint16_t crc = crc_calculate(frame, 6);
-//
-//		frame[6] = calculate_pn9(crc >> 8);
-//		frame[7] = calculate_pn9((uint8_t) crc);
-
-		uint8_t i = 1;
-		for (;i<8;i++)
-			frame[i] = i;
-
-		queue_push_u8_array(&tx_queue, frame, 8);
-
-		eta--;
-	}
-}
-
-void queue_data()
-{
-
-	led_toggle(LED_ORANGE);
-
-	fill_buffer();
-
-	uint8_t TxStatus = Strobe(RF_SNOP);
-	uint8_t freeSpaceInFifo;
-
-	switch (TxStatus & CC430_STATE_MASK) {
-		case CC430_STATE_TX:
-			// If there's anything to transfer..
-			if (freeSpaceInFifo = MIN(tx_queue.length, TxStatus & CC430_FIFO_BYTES_AVAILABLE_MASK))
-			//if (freeSpaceInFifo = TxStatus & CC430_FIFO_BYTES_AVAILABLE_MASK)
-			{
-			 // txBytesLeft -= freeSpaceInFifo;
-
-			  while(freeSpaceInFifo--)
-			  {
-				WriteSingleReg(TXFIFO, queue_pop_u8(&tx_queue));
-				//txPosition++;
-			  }
-
-			  if(tx_queue.length == 0)
-			  {
-				RF1AIES |= BIT9;      // End-of-packet TX interrupt
-				RF1AIFG &= ~BIT9;     // clear RFIFG9
-				//while(!(RF1AIFG & BIT9)); // poll RFIFG9 for TX end-of-packet
-				//RF1AIES &= ~BIT9;      // End-of-packet TX interrupt
-				//RF1AIFG &= ~BIT9;     // clear RFIFG9
-				transmitting = 0;
-				packetTransmit = 1;
-			  }
-			}
-
-			timer_add_event(&queue_event);
-
-			break;
-
-		case CC430_STATE_TX_UNDERFLOW:
-			Strobe(RF_SFTX);  // Flush the TX FIFO
-
-			//__no_operation(void);
-			// No break here!
-
-			if(!packetTransmit)
-				packetTransmit = 1;
-
-			transmitting = 0;
-			led_off(LED_GREEN);
-			led_on(LED_RED);
-			timer_add_event(&event);;
-		default:
-			if(!packetTransmit)
-			  packetTransmit = 1;
-
-			if (transmitting) {
-				if ((TxStatus & CC430_STATE_MASK) == CC430_STATE_IDLE) {
-				  transmitting = 0;
-					led_off(LED_GREEN);
-					timer_add_event(&event);
-				} else {
-					timer_add_event(&queue_event);
-				}
-			}
-		break;
-	}
-}
-
 void start_tx()
 {
 	led_on(LED_GREEN);
@@ -345,11 +222,13 @@ int main(void) {
 	event.next_event = SEND_INTERVAL_MS;
 	event.f = &start_tx;
 
-	//sync_event.next_event = 5;
-	//sync_event.f = &start_tx_sync;
+		alp_template.op = ALP_OP_RESP_DATA;
+	alp_template.data = (uint8_t*) &data_template;
 
-	queue_event.next_event = 1;
-	queue_event.f = &queue_data;
+	data_template.file_id = 32;
+	data_template.start_byte_offset = 2;
+	data_template.bytes_accessing = 4;
+	data_template.data = data;
 
 	log_print_string("sync node 1 started");
 
