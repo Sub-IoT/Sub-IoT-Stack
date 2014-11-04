@@ -458,6 +458,9 @@ void dll_tx_frame()
 	if (!phy_tx(current_phy_cfg))
 	{
 		dll_tx_callback(DLLTxResultFail);
+	} else
+	{
+		dll_tx_callback(DLLTxResultOK);
 	}
 }
 

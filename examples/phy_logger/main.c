@@ -98,6 +98,7 @@ int main(void) {
 	scan_cfg.spectrum_id[1] = 0x04;
 	scan_cfg.spectrum_id[0] = 0x00;
 	scan_cfg.scan_type = FrameTypeForegroundFrame;
+	//scan_cfg.scan_type = FrameTypeBackgroundFrame;
 	scan_cfg.time_next_scan = 0;
 	scan_cfg.timeout_scan_detect = 0;
 

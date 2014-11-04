@@ -124,18 +124,18 @@ void nwl_set_rx_callback(nwl_rx_callback_t);
  */
 void nwl_build_advertising_protocol_data(uint16_t eta, uint8_t spectrum_id[2], int8_t tx_eirp, uint8_t subnet);
 
-/*! \brief Builds a beacon protocol background frame  (Network Layer)
- *
- *  Creates a Background Frame for the beacon protocol
- *  This protocol is not in the draft but is evaluated for proposition
- *  It broadcasts the VID of the node
- *
- *
- *  \param uint8_t spectrum_id 	The channel on which to send the background frame.
- *  \param uint8_t tx_eirp 		The send EIRP.
- *  \param uint8_t subnet 		The subnet to of the background frame.
- */
-void nwl_build_beaconprotocol_data(uint8_t spectrum_id[2], int8_t tx_eirp, uint8_t subnet);
+///*! \brief Builds a beacon protocol background frame  (Network Layer)
+// *
+// *  Creates a Background Frame for the beacon protocol
+// *  This protocol is not in the draft but is evaluated for proposition
+// *  It broadcasts the VID of the node
+// *
+// *
+// *  \param uint8_t spectrum_id 	The channel on which to send the background frame.
+// *  \param uint8_t tx_eirp 		The send EIRP.
+// *  \param uint8_t subnet 		The subnet to of the background frame.
+// */
+//void nwl_build_beaconprotocol_data(uint8_t spectrum_id[2], int8_t tx_eirp, uint8_t subnet);
 
 // Foreground frames
 

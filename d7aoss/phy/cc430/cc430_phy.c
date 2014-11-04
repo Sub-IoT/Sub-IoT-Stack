@@ -243,7 +243,8 @@ extern bool phy_tx_data(phy_tx_cfg_t* cfg)
 
 bool phy_init_tx()
 {
-	if(get_radiostate() != Idle)
+	RadioState state = get_radiostate();
+	if (state != Idle && state != Transmit)
 	{
 		#ifdef LOG_PHY_ENABLED
 		log_print_stack_string(LOG_PHY, "PHY radio not idle");

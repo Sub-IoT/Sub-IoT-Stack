@@ -141,9 +141,10 @@ void trans_tx_foreground_frame(uint8_t* data, uint8_t length, uint8_t subnet, ui
  *  \param subnet The subnet which needs to be used to send the query
  *  \param spectrum_id The spectrum_id which needs to be used to send the query
  *  \param tx_eirp The transmit EIRP which need to be used to send the query
+ *  \param cca Use CCA (default = true)
  *  \todo Todo: implement unicast
  */
-void trans_tx_query(D7AQP_Query_Template* query,  uint8_t subnet, uint8_t spectrum_id[2], int8_t tx_eirp)
+void trans_tx_query(D7AQP_Query_Template* query,  uint8_t subnet, uint8_t spectrum_id[2], int8_t tx_eirp, bool cca)
 {
 
 	if (query != NULL)
@@ -159,7 +160,10 @@ void trans_tx_query(D7AQP_Query_Template* query,  uint8_t subnet, uint8_t spectr
 	tx_queue.front[0] =  D7AQP_CONTROL_DIALOG_SINGLE; // Control byte
 	tx_queue.front[1] =  0; // Transaction ID
 	nwl_build_network_protocol_data(NWL_CONTRL_SRC_UID, NULL, NULL, NULL, 0, subnet, spectrum_id, tx_eirp);
-	dll_initiate_csma_ca();
+	if (cca)
+		dll_initiate_csma_ca();
+	else
+		dll_tx_frame();
 
 	//uint8_t data[64];//TODO: should be dynamic or queue
 	//uint8_t pointer = 0;
@@ -295,7 +299,7 @@ void trans_execute_query(uint8_t* alp, uint8_t alp_response_type, file_system_us
 	}
 
 	alp_create_structure_for_tx(alp_response_type, alp[2], alp_nr_of_templates, &alp_template);
-	trans_tx_query(NULL, subnet, spectrum_id, tx_eirp);
+	trans_tx_query(NULL, subnet, spectrum_id, tx_eirp, true);
 }
 
 

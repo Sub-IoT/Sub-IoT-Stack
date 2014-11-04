@@ -161,6 +161,7 @@ void nwl_build_advertising_protocol_data(uint16_t eta, uint8_t spectrum_id[2], i
 }
 
 /** \copydoc nwl_build_beaconprotocol_data */
+/*
 void nwl_build_beaconprotocol_data(uint8_t spectrum_id[2], int8_t tx_eirp, uint8_t subnet)
 {
 	queue_clear(&tx_queue);
@@ -175,6 +176,7 @@ void nwl_build_beaconprotocol_data(uint8_t spectrum_id[2], int8_t tx_eirp, uint8
 
 	nwl_build_background_frame(spectrum_id, tx_eirp, subnet);
 }
+*/
 
 /** \copydoc nwl_build_network_protocol_data */
 

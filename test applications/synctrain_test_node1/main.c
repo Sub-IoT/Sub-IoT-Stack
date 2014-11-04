@@ -61,9 +61,9 @@ uint16_t battery_voltage;
 uint8_t sync_position = 0;
 uint32_t volatile targetTimeStamp;
 
-unsigned char transmitting = 0;
-unsigned char receiving = 0;
-unsigned char packetTransmit;
+volatile unsigned char transmitting = 0;
+volatile unsigned char receiving = 0;
+volatile unsigned char packetTransmit;
 
 timer_event event;
 timer_event sync_event;
@@ -132,14 +132,18 @@ void start_tx_sync()
 		data[1] = counter & 0xFF;
 		counter++;
 
+		phy_keep_radio_on(false);
+
 		alp_create_structure_for_tx(ALP_REC_FLG_TYPE_UNSOLICITED, 0, 1, &alp_template);
-		trans_tx_query(NULL, 0xFF, spectrum_id, TX_EIRP);
+		trans_tx_query(NULL, 0xFF, spectrum_id, TX_EIRP, false);
 
 		log_print_string("tx_event added");
 		log_print_string("FF");
 
 		packetTransmit = 1;
 		transmitting = 0;
+		timer_add_event(&event);
+
 
 	} else {
 		#ifdef USE_LEDS
@@ -150,6 +154,7 @@ void start_tx_sync()
 
 		nwl_build_advertising_protocol_data(eta, spectrum_id, TX_EIRP, 0xFF);
 		dll_tx_frame();
+
 	}
 }
 
@@ -168,9 +173,12 @@ void tx_callback(Dll_Tx_Result result)
 		led_toggle(LED_RED);
 		log_print_string("TX CCA FAIL");
 	}
-
-	transmitting = 1;
 #endif
+
+	if (!packetTransmit)
+		transmitting = 1;
+
+
 }
 void start_tx()
 {
@@ -207,7 +215,6 @@ void start_tx()
 
 
 
-	timer_add_event(&event);
 	transmitting = 1;
 
 }
