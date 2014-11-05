@@ -18,6 +18,7 @@
 
 #include "nwl.h"
 #include "../framework/log.h"
+#include "../framework/timer.h"
 #include "../hal/system.h"
 
 
@@ -28,10 +29,16 @@ nwl_rx_res_t res;
 static nwl_background_frame_t bf;
 //static nwl_ff_D7ADP_t d7adp_frame;
 static nwl_ff_D7ANP_t d7anp_frame;
+volatile static bool process_callback = true;
+volatile static bool tx_callback_received = false;
+
 
 static void dll_tx_callback(Dll_Tx_Result status)
 {
-	nwl_tx_callback(status);
+	if (process_callback)
+		nwl_tx_callback(status);
+
+	tx_callback_received = true;
 }
 
 static void dll_rx_callback(dll_rx_res_t* result)
@@ -158,6 +165,38 @@ void nwl_build_advertising_protocol_data(uint16_t eta, uint8_t spectrum_id[2], i
 	queue_push_u8(&tx_queue, eta & 0XFF);
 
 	nwl_build_background_frame(spectrum_id, tx_eirp, subnet);
+}
+/** \copydoc nwl_build_advp_sync_train */
+void nwl_build_advp_sync_train(uint16_t duration, uint8_t spectrum_id[2], int8_t tx_eirp, uint8_t subnet)
+{
+	uint16_t advp_target_timestamp = timer_get_counter_value() + duration;
+
+	phy_keep_radio_on(true);
+	//process_callback = false;
+
+	uint16_t eta = duration; //advp_target_timestamp - timer_get_counter_value();
+
+	//nwl_event.next_event =
+
+	while (eta > 5 && eta <= duration)
+	{
+		tx_callback_received = false;
+
+		nwl_build_advertising_protocol_data(eta, spectrum_id, tx_eirp, subnet);
+		dll_tx_frame();
+
+		while (!tx_callback_received);
+
+		__delay_cycles(6000);
+
+		eta = advp_target_timestamp - timer_get_counter_value();
+	}
+
+
+	phy_keep_radio_on(false);
+
+
+	process_callback = true;
 }
 
 /** \copydoc nwl_build_beaconprotocol_data */

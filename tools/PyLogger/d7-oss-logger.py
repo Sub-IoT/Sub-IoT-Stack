@@ -236,7 +236,7 @@ class LogPhyRes(Logs):
 		#Length
         raw_packet_length = serial_port.read(size=1)
         self.packet_length = struct.unpack('B', raw_packet_length)[0]
-        print("packet_length %s 0x%s" % (self.packet_length,  str(raw_packet_length.encode("hex").upper())))
+        #print("packet_length %s 0x%s" % (self.packet_length,  str(raw_packet_length.encode("hex").upper())))
         self.raw_data.append(raw_packet_length)
 		#Data
         self.data = serial_port.read(size=self.packet_length)

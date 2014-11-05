@@ -21,7 +21,7 @@
 #ifndef D7STACK_H_
 #define D7STACK_H_
 
-#define UART // Uncomment if you want to use logging or uart  (6k code size increase)
+//#define UART // Uncomment if you want to use logging or uart  (6k code size increase)
 #ifdef UART
 	// Set Logging options
 	//#define LOG_PHY_ENABLED

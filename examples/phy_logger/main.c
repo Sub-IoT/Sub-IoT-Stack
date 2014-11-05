@@ -61,6 +61,8 @@ void start_rx()
 		rx_cfg.sync_word_class = 1;
 	}
 
+	//phy_keep_radio_on(true);
+
 	bool phy_rx_result = phy_rx(&rx_cfg);
 	if (!phy_rx_result)
 	{
@@ -81,7 +83,9 @@ void rx_callback(phy_rx_data_t* rx_res)
 	if (rx_res != NULL)
 	{
 		led_on(3);
-		log_phy_rx_res(rx_res);
+		//log_phy_rx_res(rx_res);
+		uint16_t eta = MERGEUINT16(rx_res->data[4], rx_res->data[5]);
+		log_print_string("eta: %d", eta);
 		led_off(3);
 	}
 
@@ -97,8 +101,8 @@ int main(void) {
 
 	scan_cfg.spectrum_id[1] = 0x04;
 	scan_cfg.spectrum_id[0] = 0x00;
-	scan_cfg.scan_type = FrameTypeForegroundFrame;
-	//scan_cfg.scan_type = FrameTypeBackgroundFrame;
+	//scan_cfg.scan_type = FrameTypeForegroundFrame;
+	scan_cfg.scan_type = FrameTypeBackgroundFrame;
 	scan_cfg.time_next_scan = 0;
 	scan_cfg.timeout_scan_detect = 0;
 
