@@ -172,7 +172,7 @@ void nwl_build_advp_sync_train(uint16_t duration, uint8_t spectrum_id[2], int8_t
 	uint16_t advp_target_timestamp = timer_get_counter_value() + duration;
 
 	phy_keep_radio_on(true);
-	//process_callback = false;
+	process_callback = false;
 
 	uint16_t eta = duration; //advp_target_timestamp - timer_get_counter_value();
 
@@ -187,7 +187,7 @@ void nwl_build_advp_sync_train(uint16_t duration, uint8_t spectrum_id[2], int8_t
 
 		while (!tx_callback_received);
 
-		__delay_cycles(6000);
+		__delay_cycles(8000);
 
 		eta = advp_target_timestamp - timer_get_counter_value();
 	}
