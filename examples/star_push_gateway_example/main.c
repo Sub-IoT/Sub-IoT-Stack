@@ -130,6 +130,7 @@ void rx_callback(Trans_Rx_Alp_Result* rx_res)
 	log_print_string("D7AQP received - ALP data:");
 	//log_print_data(rx_res->d7aqp_command.alp_data, rx_res->d7aqp_command.alp_length);
 	}
+	start_channel_scan = true;
 
 	/*
 	switch (rx_res->d7aqp_command.command_code & 0x0F)
