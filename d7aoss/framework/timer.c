@@ -41,8 +41,15 @@ bool timer_insert_value_in_queue(timer_event* event)
 	while (position < event_queue.length)
 	{
 		timer_event *temp_event = (timer_event*) queue_read_value(&event_queue, position);
+		#ifdef LOG_FWK_ENABLED
+		log_print_stack_string(LOG_FWK, " - temp_event: %d - current_timer %d (%d)", temp_event->next_event, current_timer, temp_event->next_event - current_timer);
+		#endif
 		if ((temp_event->next_event - current_timer)  > next_event)
 		{
+			#ifdef LOG_FWK_ENABLED
+			log_print_stack_string(LOG_FWK, " - next-event-current_timer > next_event");
+			log_print_stack_string(LOG_FWK, " - %d > %d", temp_event->next_event - current_timer, next_event);
+			#endif
 			if (position == 0)
 			{
 				hal_timer_disable_interrupt();
@@ -57,8 +64,23 @@ bool timer_insert_value_in_queue(timer_event* event)
 
 	if (position == event_queue.length)
 	{
+		#ifdef LOG_FWK_ENABLED
+		log_print_stack_string(LOG_FWK, " - position == event_queue.length");
+		#endif
 		if (!queue_push_value(&event_queue, (void*) event))
+		{
+			#ifdef LOG_FWK_ENABLED
+			log_print_stack_string(LOG_FWK, " - Cannot add timmer at the end");
+			#endif
+
 			return false;
+		}
+		#ifdef LOG_FWK_ENABLED
+		else {
+
+			log_print_stack_string(LOG_FWK, " - Timer added at the end");
+		}
+		#endif
 	}
 
 	#ifdef LOG_FWK_ENABLED

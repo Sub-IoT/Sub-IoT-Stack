@@ -26,20 +26,36 @@
 
 static bool shift_queue_left (queue_t* q, uint8_t places)
 {
+	#ifdef LOG_FWK_ENABLED
+	log_print_stack_string(LOG_FWK, "shift_queue_left for %d places", places);
+	log_print_data(q->start, q->length * q->element_size + places);
+	#endif
+
 	if (q->front - places < q->start)
 	{
 		// cannot move before start
+		#ifdef LOG_FWK_ENABLED
+		log_print_stack_string(LOG_FWK, " - cannot move before start");
+		#endif
 		return 0;
 	}
 
 	uint8_t* data_ptr = q->front;
-	while (data_ptr <= q->rear)
+	while (data_ptr < q->rear + q->element_size)
 	{
+		#ifdef LOG_FWK_ENABLED
+		log_print_data(data_ptr, 1);
+		log_print_stack_string(LOG_FWK," - data_ptr %d / q->rear %d", data_ptr, q->rear);
+		#endif
 		*(data_ptr-places) = *(data_ptr++);
 	}
 
 	q->front-= places;
 	q->rear -= places;
+
+	#ifdef LOG_FWK_ENABLED
+	log_print_data(q->start, q->length * q->element_size + places);
+	#endif
 
 	return 1;
 }
@@ -66,14 +82,26 @@ static bool shift_queue_right (queue_t* q, uint8_t places)
 
 static bool check_for_space(queue_t* q, uint8_t nr_of_elements)
 {
+
     if (q->rear + (q->element_size * nr_of_elements) >= q->start + q->size)
 	{
+		#ifdef LOG_FWK_ENABLED
+		log_print_stack_string(LOG_FWK, "Check_for_space - no space anymore at the end");
+		#endif
 		// no place at the end anymore!
 
 		if (q->front > q->start)
+		{
+			#ifdef LOG_FWK_ENABLED
+			log_print_stack_string(LOG_FWK, " - shifting queue");
+			#endif
 			return shift_queue_left(q,  q->front - q->start);
-		else
+		} else {
+			#ifdef LOG_FWK_ENABLED
+			log_print_stack_string(LOG_FWK, " - cannot shift");
+			#endif
 			return 0;
+		}
 	}
 
 	return 1;
@@ -199,6 +227,15 @@ bool queue_push_u8_array(queue_t* q, uint8_t* data, uint8_t length)
 
 bool queue_push_value(queue_t* q, void* data)
 {
+	#ifdef LOG_FWK_ENABLED
+	log_print_stack_string(LOG_FWK, "queue_push_value");
+	log_print_stack_string(LOG_FWK, "- start %d", q->start);
+	log_print_stack_string(LOG_FWK, "- front %d", q->front);
+	log_print_stack_string(LOG_FWK, "- rear %d", q->rear);
+	log_print_stack_string(LOG_FWK, "- length %d", q->length);
+	log_print_data(q->front, q->length * q->element_size);
+	#endif
+
 	//log_print_stack_string(LOG_FWK, "push");
 	if (q->front == NULL)
 	{
@@ -208,13 +245,32 @@ bool queue_push_value(queue_t* q, void* data)
     else
 	{
 		if (!check_for_space(q,1))
+		{
+			#ifdef LOG_FWK_ENABLED
+			log_print_stack_string(LOG_FWK, " - no space");
+			#endif
             return false;
+		}
+		#ifdef LOG_FWK_ENABLED
+		else {
+		log_print_stack_string(LOG_FWK, " - space ok");
+		}
+		#endif
+
+
 
 		q->rear += q->element_size;
 	}
 
 	memcpy(q->rear, data, q->element_size);
 	q->length++;
+
+	#ifdef LOG_FWK_ENABLED
+	log_print_stack_string(LOG_FWK, "+ front %d", q->front);
+	log_print_stack_string(LOG_FWK, "+ rear %d", q->rear);
+	log_print_stack_string(LOG_FWK, "+ length %d", q->length);
+	log_print_data(q->front, q->length * q->element_size);
+	#endif
 
     return true;
 }
@@ -236,7 +292,11 @@ void queue_insert_u8(queue_t* q, uint8_t data, uint8_t position)
 
 void queue_insert_value(queue_t* q, void* data, uint8_t position)
 {
-	check_for_space(q,1);
+	bool space = check_for_space(q,1);
+
+	#ifdef LOG_FWK_ENABLED
+	log_print_stack_string(LOG_FWK, "queue_insert_value space: %d", space);
+	#endif
 
 	uint8_t* position_ptr = q->front + (position * q->element_size);
 	uint8_t* data_ptr = q->rear;
