@@ -24,7 +24,7 @@
 #define UART // Uncomment if you want to use logging or uart  (6k code size increase)
 #ifdef UART
 	// Set Logging options
-	#define LOG_PHY_ENABLED
+	//#define LOG_PHY_ENABLED
 	#define LOG_DLL_ENABLED
 	//#define LOG_NWL_ENABLED
 	//#define LOG_TRANS_ENABLED

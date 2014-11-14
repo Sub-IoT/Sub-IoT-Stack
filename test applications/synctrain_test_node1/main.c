@@ -17,8 +17,8 @@
 #include <phy/cc430/cc430_phy.h>
 #include <phy/cc430/rf1a.h>
 
-#define SEND_INTERVAL_MS	2000
-#define SYNC_PERIOD_MS		500
+#define SEND_INTERVAL_MS	5000
+#define SYNC_PERIOD_MS		2000
 #define SYNC_LENGTH			50
 
 #define USE_LEDS
@@ -44,8 +44,8 @@
 #define BATTERY_OFFSET	-10
 #define CLOCKS_PER_1us	4
 
-#define LED_RED	1
-#define LED_ORANGE 2
+#define LED_RED	2
+#define LED_ORANGE 1
 #define LED_GREEN 3
 
 //static u8 interrupt_flags = 0;
@@ -61,9 +61,9 @@ uint16_t battery_voltage;
 uint8_t sync_position = 0;
 uint32_t volatile targetTimeStamp;
 
-unsigned char transmitting = 0;
-unsigned char receiving = 0;
-unsigned char packetTransmit;
+volatile unsigned char transmitting = 0;
+volatile unsigned char receiving = 0;
+volatile unsigned char packetTransmit;
 
 timer_event event;
 timer_event sync_event;
@@ -74,9 +74,9 @@ timer_event queue_event;
 
 static uint8_t spectrum_id[2] = { 0x00, 0x04};
 
-static uint16_t eta = 500;
+//static uint16_t eta = 500;
 
-static uint16_t counter = 0;
+//static uint16_t counter = 0;
 
 static ALP_File_Data_Template data_template;
 static ALP_Template alp_template;
@@ -109,48 +109,53 @@ void start_tx_sync()
 {
 //
 //	//log_print_string("sync_event removed");
-	eta = targetTimeStamp - timer_get_counter_value();
-	log_print_string("ADVP eta: %d", eta);
-
-	if (eta < 5 || eta > SYNC_PERIOD_MS)
-	{
-		if (eta > SYNC_PERIOD_MS)
-			eta = 4;
-
-//		while (eta > 0)
-//		{
-//			__delay_cycles(4);
-//			eta--;
-//		}
-
-		#ifdef USE_LEDS
-		led_off(LED_GREEN);
-		led_on(LED_ORANGE);
-		#endif
-
-		data[0] = counter >> 8;
-		data[1] = counter & 0xFF;
-		counter++;
-
-		alp_create_structure_for_tx(ALP_REC_FLG_TYPE_UNSOLICITED, 0, 1, &alp_template);
-		trans_tx_query(NULL, 0xFF, spectrum_id, TX_EIRP);
-
-		log_print_string("tx_event added");
-		log_print_string("FF");
-
-		packetTransmit = 1;
-		transmitting = 0;
-
-	} else {
-		#ifdef USE_LEDS
-		led_on(LED_GREEN);
-		#endif
-		log_print_string("BF");
-
-
-		nwl_build_advertising_protocol_data(eta, spectrum_id, TX_EIRP, 0xFF);
-		dll_tx_frame();
-	}
+//	eta = targetTimeStamp - timer_get_counter_value();
+//	log_print_string("ADVP eta: %d", eta);
+//
+//	if (eta < 5 || eta > SYNC_PERIOD_MS)
+//	{
+//		if (eta > SYNC_PERIOD_MS)
+//			eta = 4;
+//
+////		while (eta > 0)
+////		{
+////			__delay_cycles(4);
+////			eta--;
+////		}
+//
+//		#ifdef USE_LEDS
+//		led_off(LED_GREEN);
+//		led_on(LED_ORANGE);
+//		#endif
+//
+//		data[0] = counter >> 8;
+//		data[1] = counter & 0xFF;
+//		counter++;
+//
+//		phy_keep_radio_on(false);
+//
+//		alp_create_structure_for_tx(ALP_REC_FLG_TYPE_UNSOLICITED, 0, 1, &alp_template);
+//		trans_tx_query(NULL, 0xFF, spectrum_id, TX_EIRP, false);
+//
+//		log_print_string("tx_event added");
+//		log_print_string("FF");
+//
+//		packetTransmit = 1;
+//		transmitting = 0;
+//		timer_add_event(&event);
+//
+//
+//	} else {
+//		#ifdef USE_LEDS
+//		led_on(LED_GREEN);
+//		#endif
+//		log_print_string("BF");
+//
+//
+//		nwl_build_advertising_protocol_data(eta, spectrum_id, TX_EIRP, 0xFF);
+//		dll_tx_frame();
+//
+//	}
 }
 
 void tx_callback(Dll_Tx_Result result)
@@ -159,7 +164,7 @@ void tx_callback(Dll_Tx_Result result)
 	if(result == DLLTxResultOK)
 	{
 
-		led_off(LED_ORANGE);
+		led_toggle(LED_ORANGE);
 		led_off(LED_GREEN);
 		log_print_string("TX OK");
 	}
@@ -168,9 +173,12 @@ void tx_callback(Dll_Tx_Result result)
 		led_toggle(LED_RED);
 		log_print_string("TX CCA FAIL");
 	}
-
-	transmitting = 1;
 #endif
+
+//	if (!packetTransmit)
+//		transmitting = 1;
+
+
 }
 void start_tx()
 {
@@ -195,20 +203,22 @@ void start_tx()
 
 	//set_data_whitening(false);
 
-	phy_keep_radio_on(true);
+	//phy_keep_radio_on(true);
 
 
-	packetTransmit = 0;
+	//packetTransmit = 0;
 
-	targetTimeStamp = timer_get_counter_value() + SYNC_PERIOD_MS;
+	//targetTimeStamp = timer_get_counter_value() + SYNC_PERIOD_MS;
 	//eta = 5;
 
 	//timer_add_event(&queue_event);
 
-
-
+	nwl_build_advp_sync_train(SYNC_PERIOD_MS, spectrum_id, TX_EIRP, 0xFF);
+	alp_create_structure_for_tx(ALP_REC_FLG_TYPE_UNSOLICITED, 0, 1, &alp_template);
+	trans_tx_query(NULL, 0xFF, spectrum_id, TX_EIRP, false);
 	timer_add_event(&event);
-	transmitting = 1;
+
+	//transmitting = 1;
 
 }
 

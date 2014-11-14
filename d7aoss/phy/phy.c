@@ -44,9 +44,9 @@ bool phy_cca(uint8_t spectrum_id[2], uint8_t sync_word_class)
 bool phy_translate_settings(uint8_t spectrum_id[2], uint8_t sync_word_class, bool* fec, uint8_t* channel_center_freq_index, uint8_t* channel_channel_class, uint8_t* preamble_size, uint16_t* sync_word)
 {
 	// TODO: implement freq band
-	*fec = (bool)((spectrum_id[1] & 0x02) >> 1);
-	*channel_center_freq_index = spectrum_id[0];
-	*channel_channel_class = (spectrum_id[1] >> 2) & 0x03;
+	*fec = (bool)((spectrum_id[0] & 0x02) >> 1);
+	*channel_center_freq_index = spectrum_id[1];
+	*channel_channel_class = (spectrum_id[0] >> 2) & 0x03;
 
 	//Assert valid spectrum id and set preamble size;
 	if(*channel_channel_class == 0) { // Lo-Rate
