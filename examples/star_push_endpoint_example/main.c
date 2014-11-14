@@ -57,7 +57,7 @@ uint8_t buffer[128];
 static uint8_t data[4];
 static volatile uint8_t dataLength = 0;
 
-static uint8_t send_channel[2] = {0x00, 0x04};
+static uint8_t send_channel[2] = {0x04, 0x00};
 
 //static D7AQP_Command command;
 static ALP_File_Data_Template data_template;
@@ -82,7 +82,7 @@ void start_tx()
 		data[1] = counter & 0xFF;
 
 		alp_create_structure_for_tx(ALP_REC_FLG_TYPE_UNSOLICITED, 0, 1, &alp_template);
-		trans_tx_query(NULL, 0xFF, send_channel, TX_EIRP);
+		trans_tx_query(NULL, 0xFF, send_channel, TX_EIRP, true);
 
 
 	}
