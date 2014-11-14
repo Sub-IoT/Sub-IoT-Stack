@@ -95,8 +95,8 @@ int main(void) {
 	// Initialize the OSS-7 Stack
 	d7aoss_init(buffer, 128, buffer, 128);
 
-	scan_cfg.spectrum_id[1] = 0x04;
-	scan_cfg.spectrum_id[0] = 0x00;
+	scan_cfg.spectrum_id[1] = 0x00;
+	scan_cfg.spectrum_id[0] = 0x04;
 	scan_cfg.scan_type = FrameTypeForegroundFrame;
 	scan_cfg.time_next_scan = 0;
 	scan_cfg.timeout_scan_detect = 0;
