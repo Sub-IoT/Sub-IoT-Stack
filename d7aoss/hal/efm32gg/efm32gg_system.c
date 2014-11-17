@@ -23,8 +23,9 @@
 #include "em_cmu.h"
 #include "em_chip.h"
 
+#define UDID_ADDRESS 0x1FF800A0
 
-
+uint8_t     device_id[8]; // TODO: keep this as global?
 extern char _end;                 /**< Defined by the linker */
 
 /**************************************************************************//**
@@ -65,10 +66,60 @@ void system_init()
 
     //if (SysTick_Config(CMU_ClockFreqGet(cmuClock_CORE) / 1000)) while (1) ;
 
+    system_get_unique_id(device_id);
+
     // init clock
     CMU_ClockDivSet(cmuClock_HF, cmuClkDiv_2);       // Set HF clock divider to /2 to keep core frequency < 32MHz
     CMU_OscillatorEnable(cmuOsc_HFXO, true, true);   // Enable XTAL Osc and wait to stabilize
     CMU_ClockSelectSet(cmuClock_HF, cmuSelect_HFXO); // Select HF XTAL osc as system clock source. 48MHz XTAL, but we divided the system clock by 2, therefore our HF clock will be 24MHz
 
+    led_init();
+    //button_init();
     uart_init();
 }
+
+void system_watchdog_timer_stop()
+{
+    // TODO
+}
+
+void system_watchdog_timer_start()
+{
+    // TODO
+}
+
+void system_watchdog_timer_reset()
+{
+    // TODO
+}
+
+void system_watchdog_timer_enable_interrupt()
+{
+    // TODO
+}
+
+void system_watchdog_timer_init(unsigned char clockSelect, unsigned char clockDivider) // TODO refactor (params?)
+{
+    // TODO
+}
+
+void system_watchdog_init(unsigned char clockSelect, unsigned char clockDivider) // TODO refactor (params?)
+{
+    // TODO
+}
+
+void system_lowpower_mode(unsigned char mode, unsigned char enableInterrupts)
+{
+    // TODO
+}
+
+void system_get_unique_id(unsigned char *tagId)
+{
+    uint8_t* udid = (uint8_t*) UDID_ADDRESS;
+    unsigned char i;
+    for (i = 0; i < 8; i++)
+    {
+    	tagId[i] = udid[i];
+    }
+}
+

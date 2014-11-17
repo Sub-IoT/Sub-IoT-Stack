@@ -11,14 +11,13 @@ IF(D7AOSS_PHY_RADIO_DRIVER STREQUAL "cc430")
 ENDIF()
 
 IF(D7AOSS_PHY_RADIO_DRIVER STREQUAL "cc1101")
+    INCLUDE_DIRECTORIES(cc1101/)
+    INCLUDE_DIRECTORIES(../framework/)
+    INCLUDE_DIRECTORIES(../hal/)
         SET(RADIOSRCS
-                        cc1101/cc1101_constants.h
                         cc1101/cc1101_core.c
-                        cc1101/cc1101_core.h
                         cc1101/cc1101_interrupts.c
                         cc1101/cc1101_phy.c
-                        cc1101/cc1101_phy.h
-                        cc1101/cc1101_registers.h
                         cc1101/cc1101_settings.c
         )
 ENDIF()
