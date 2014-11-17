@@ -88,6 +88,9 @@ void log_phy_rx_res(phy_rx_data_t* res)
 	// transmit struct member per member, so we are not dependent on packing
 	uart_transmit_data(res->rssi);
 	uart_transmit_data(res->lqi);
+	uart_transmit_data(res->spectrum_id[1]);
+	uart_transmit_data(res->spectrum_id[0]);
+	uart_transmit_data(res->sync_word_class);
 	uart_transmit_data(res->length);
 
 	// transmit the packet

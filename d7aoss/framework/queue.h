@@ -41,7 +41,7 @@
 typedef struct
 {
 	uint16_t size;
-	uint8_t length;
+	uint16_t length;
 	uint8_t* front;
 	uint8_t* rear;
 	uint8_t* start;

@@ -18,6 +18,7 @@
 
 #include "nwl.h"
 #include "../framework/log.h"
+#include "../framework/timer.h"
 #include "../hal/system.h"
 
 
@@ -28,10 +29,16 @@ nwl_rx_res_t res;
 static nwl_background_frame_t bf;
 //static nwl_ff_D7ADP_t d7adp_frame;
 static nwl_ff_D7ANP_t d7anp_frame;
+volatile static bool process_callback = true;
+volatile static bool tx_callback_received = false;
+
 
 static void dll_tx_callback(Dll_Tx_Result status)
 {
-	nwl_tx_callback(status);
+	if (process_callback)
+		nwl_tx_callback(status);
+
+	tx_callback_received = true;
 }
 
 static void dll_rx_callback(dll_rx_res_t* result)
@@ -159,8 +166,41 @@ void nwl_build_advertising_protocol_data(uint16_t eta, uint8_t spectrum_id[2], i
 
 	nwl_build_background_frame(spectrum_id, tx_eirp, subnet);
 }
+/** \copydoc nwl_build_advp_sync_train */
+void nwl_build_advp_sync_train(uint16_t duration, uint8_t spectrum_id[2], int8_t tx_eirp, uint8_t subnet)
+{
+	uint16_t advp_target_timestamp = timer_get_counter_value() + duration;
+
+	phy_keep_radio_on(true);
+	process_callback = false;
+
+	uint16_t eta = duration; //advp_target_timestamp - timer_get_counter_value();
+
+	//nwl_event.next_event =
+
+	while (eta > 5 && eta <= duration)
+	{
+		tx_callback_received = false;
+
+		nwl_build_advertising_protocol_data(eta, spectrum_id, tx_eirp, subnet);
+		dll_tx_frame();
+
+		while (!tx_callback_received);
+
+		__delay_cycles(8000);
+
+		eta = advp_target_timestamp - timer_get_counter_value();
+	}
+
+
+	phy_keep_radio_on(false);
+
+
+	process_callback = true;
+}
 
 /** \copydoc nwl_build_beaconprotocol_data */
+/*
 void nwl_build_beaconprotocol_data(uint8_t spectrum_id[2], int8_t tx_eirp, uint8_t subnet)
 {
 	queue_clear(&tx_queue);
@@ -175,6 +215,7 @@ void nwl_build_beaconprotocol_data(uint8_t spectrum_id[2], int8_t tx_eirp, uint8
 
 	nwl_build_background_frame(spectrum_id, tx_eirp, subnet);
 }
+*/
 
 /** \copydoc nwl_build_network_protocol_data */
 
@@ -269,18 +310,18 @@ void nwl_build_network_protocol_data(uint8_t control, nwl_security* security, nw
 
 void nwl_rx_start(uint8_t subnet, uint8_t spectrum_id[2], Protocol_Type type)
 {
-	dll_channel_scan_t scan_cfg = {
-			spectrum_id[1],
-			spectrum_id[0],
-			FrameTypeForegroundFrame,
-			0,
-			0
-	};
+	dll_channel_scan_t scan_cfg;
 
-	//scan_cfg.spectrum_id = spectrum_id;
+	scan_cfg.spectrum_id[0] = spectrum_id[0];
+	scan_cfg.spectrum_id[1] = spectrum_id[1];
+	scan_cfg.time_next_scan = 0;
+	scan_cfg.timeout_scan_detect = 0;
+
 
 	if (type != ProtocolTypeNetworkProtocol)
 		scan_cfg.scan_type = FrameTypeBackgroundFrame;
+	else
+		scan_cfg.scan_type = FrameTypeForegroundFrame;
 
 	dll_channel_scan_series_t scan_series_cfg;
 	scan_series_cfg.length = 1;

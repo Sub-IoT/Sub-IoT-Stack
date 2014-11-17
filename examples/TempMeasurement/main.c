@@ -172,10 +172,10 @@ int main(void) {
 		if (add_sensor_event)
 		{
 			add_sensor_event = false;
-			int16_t temp = temperature_measurement();
+			temperature_internal = temperature_measurement();
 
-			if ((temperature_internal - temp > 1) || (temperature_internal - temp < 1))
-			{
+			//if ((temperature_internal - temp > 1) || (temperature_internal - temp < 1))
+			//{
 				fs_open(&fh, 32, file_system_user_user, file_system_access_type_write);
 
 				uint8_t data[2];
@@ -185,8 +185,8 @@ int main(void) {
 				fs_write_data(&fh, 2, data, 2,true);
 
 				fs_close(&fh);
-				temperature_internal = temp;
-			}
+				//temperature_internal = temp;
+			//}
 
 
 			timer_add_event(&event);
