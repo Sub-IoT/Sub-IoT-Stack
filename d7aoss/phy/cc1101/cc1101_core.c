@@ -14,6 +14,16 @@
 #include "cc1101_constants.h"
 //#include "radio_spi_hw.h" // TODO provide HAL SPI API
 #include "cc1101_core.h"
+#include "spi.h"
+#include "timer.h"
+#include "log.h"
+
+// turn on/off the debug prints
+#if 1
+#define DPRINT(...) log_print_string(__VA_ARGS__)
+#else
+#define DPRINT(...)  
+#endif
 
 // *************************************************************************************************
 // @fn          Strobe
@@ -22,18 +32,19 @@
 // @return      none
 // *************************************************************************************************
 uint8_t Strobe(uint8_t strobe) {
-	uint8_t statusByte = 0;
-	uint8_t strobe_tmp = strobe & 0x7F;
+
+    DPRINT("STROBE 0x%02X", strobe);
+
+    uint8_t statusByte = 0;
+    uint8_t strobe_tmp = strobe & 0x7F;
 //	uint16_t int_state;
 
-	// Check for valid strobe command
-	if ((strobe_tmp >= RF_SRES) && (strobe_tmp <= RF_SNOP)) {
-		radioSelect();
-		statusByte = spiSendByte(strobe & 0x3f);
-		radioDeselect();
-	}
+    // Check for valid strobe command
+    if ((strobe_tmp >= RF_SRES) && (strobe_tmp <= RF_SNOP)) {
+            statusByte = spi_byte(strobe & 0x3f);
+    }
 
-	return statusByte;
+    return statusByte;
 }
 
 // *****************************************************************************
@@ -41,16 +52,22 @@ uint8_t Strobe(uint8_t strobe) {
 // @brief       Reset the radio core using RF_SRES command
 // @param       none
 // @return      none
-// *****************************************************************************
+// ***********************************;******************************************
 void ResetRadioCore(void) {
-	radioDeselect();
-	delayuS(30);
-	radioSelect();
-	delayuS(30);
-	radioDeselect();
-	delayuS(45);
-	Strobe(RF_SRES);                          // Reset the Radio Core
-	Strobe(RF_SNOP);                          // Get Radio Status
+
+    DPRINT("RESET RADIO");
+
+    spi_deselect_chip();
+    //delayuS(30);
+    timer_wait_ms(1);
+    spi_select_chip();
+    //delayuS(30);
+    timer_wait_ms(1);
+    spi_deselect_chip();
+    //delayuS(45);
+    timer_wait_ms(1);
+    Strobe(RF_SRES);                          // Reset the Radio Core
+    Strobe(RF_SNOP);                          // Get Radio Status
 }
 
 // *****************************************************************************
@@ -64,34 +81,88 @@ void WriteRfSettings(RF_SETTINGS *rfsettings) {
 }
 
 
-static uint8_t readreg(uint8_t regAddr) {
-	radioSelect();
-	spiSendByte((regAddr & 0x3F) | READ_SINGLE);
-	uint8_t val = spiSendByte(0); // send dummy byte to receive reply
-	radioDeselect();
-	return val;
+static uint8_t readreg(uint8_t addr) {
+
+
+
+    /*
+    radioSelect();
+    spiSendByte((addr & 0x3F) | READ_SINGLE);
+    uint8_t val = spiSendByte(0); // send dummy byte to receive reply
+    radioDeselect();
+    */
+
+    unsigned char buf[2] = { ((addr & 0x3F) | READ_SINGLE), 0 };
+
+    spi_string( buf, buf, 2 );
+
+    DPRINT("READ REG 0x%02X @0x%02X", buf[1], addr);
+
+    return buf[1];
 }
 
-static uint8_t readstatus(uint8_t regAddr) {
-	uint8_t ret, retCheck, data, data2;
-	uint8_t addr = (regAddr & 0x3F) | READ_BURST;
-	radioSelect();
-	ret = spiSendByte(addr);
-	data = spiSendByte(0); // send dummy byte to receive reply
+static uint8_t readstatus(uint8_t addr)
+{
 
-	//See CC1101's Errata for SPI read errors
-	while (true) {
-		retCheck = spiSendByte(addr);
-		data2 = spiSendByte(0);
-		if (ret == retCheck && data == data2)
-			break;
-		else {
-			ret = retCheck;
-			data = data2;
-		}
-	}
-	radioDeselect();
-	return data;
+
+    uint8_t ret, retCheck, data, data2;
+    /*
+    uint8_t addr = (addr & 0x3F) | READ_BURST;
+    radioSelect();
+    ret = spiSendByte(addr);
+    data = spiSendByte(0); // send dummy byte to receive reply
+
+    See CC1101's Errata for SPI read errors
+    while (true) {
+    	retCheck = spiSendByte(addr);
+        data2 = spiSendByte(0);
+    	if (ret == retCheck && data == data2)
+    		break;
+    	else {
+    		ret = retCheck;
+    		data = data2;
+    	}
+    }
+    radioDeselect();
+    return data;
+    */
+
+    uint8_t txBuf[2] = { ((addr & 0x3F) | READ_BURST), 0 };
+    uint8_t rxBuf[2];
+
+    // turn off the auto Chip Select for polling purposes
+    spi_auto_cs_off();
+    // manually select the chip
+    spi_select_chip();
+    // read register
+    spi_string( txBuf, rxBuf, 2 );
+    ret = rxBuf[0];
+    data = rxBuf[1];
+    
+    //See CC1101's Errata for SPI read errors
+    while (true)
+    {
+    	spi_string( txBuf, rxBuf, 2 );
+        retCheck = rxBuf[0];
+        data2 = rxBuf[1];
+    	if (ret == retCheck && data == data2)
+        {
+            break;
+        }
+        else
+        {
+    	    ret = retCheck;
+            data = data2;
+    	}
+    }
+    // manually deselect the chip
+    spi_deselect_chip();
+    // Enable auto Chip Select
+    spi_auto_cs_on();
+
+    DPRINT("READ STATUS 0x%02X @0x%02X", data, addr);
+
+    return data;
 }
 
 
@@ -102,16 +173,18 @@ static uint8_t readstatus(uint8_t regAddr) {
 // @return      unsigned char data_out  Value of byte that was read
 // *****************************************************************************
 uint8_t ReadSingleReg(uint8_t addr) {
-	uint8_t value;
 
-	// Check for valid configuration register address, PATABLE or FIFO
-	if ((addr <= 0x2E) || (addr >= 0x3E)) {
-		value = readreg(addr);
-	}
-	else {
-		value = readstatus(addr);
-	}
-	return value;
+    uint8_t value;
+
+    // Check for valid configuration register address, PATABLE or FIFO
+    if ((addr<= 0x2E) || (addr>= 0x3E)) {
+            value = readreg(addr);
+    }
+    else {
+            value = readstatus(addr);
+    }
+
+    return value;
 }
 
 // *****************************************************************************
@@ -122,10 +195,19 @@ uint8_t ReadSingleReg(uint8_t addr) {
 // @return      none
 // *****************************************************************************
 void WriteSingleReg(uint8_t addr, uint8_t value) {
-	radioSelect();
-	spiSendByte((addr & 0x3F));
-	spiSendByte(value);
-	radioDeselect();
+
+
+
+    //radioSelect();
+    //spiSendByte((addr & 0x3F));
+    //spiSendByte(value);
+    //radioDeselect();
+
+    uint8_t buf[2] = { (addr & 0x3F), value };
+
+    spi_string( buf, NULL, 2 );
+
+    DPRINT("WRITE SREG 0x%02X @0x%02X", value, addr);
 }
 
 // *****************************************************************************
@@ -137,14 +219,31 @@ void WriteSingleReg(uint8_t addr, uint8_t value) {
 // @return      none
 // *****************************************************************************
 void ReadBurstReg(uint8_t addr, uint8_t* buffer, uint8_t count) {
-	uint8_t _addr = (addr & 0x3F) | READ_BURST;
-	radioSelect();
-	spiSendByte(_addr);
-	uint8_t i;
-	for (i = 0; i < count; i++) {
-		buffer[i] = spiSendByte(0); // send dummy byte to receive reply
-	}
-	radioDeselect();
+
+    DPRINT("READ BREG @0x%02X", addr);
+
+    //uint8_t _addr = (addr & 0x3F) | READ_BURST;
+    //radioSelect();
+    //spiSendByte(_addr);
+    //uint8_t i;
+    //for (i = 0; i < count; i++) {
+    //        buffer[i] = spiSendByte(0); // send dummy byte to receive reply
+    //}
+    //radioDeselect();
+    
+    // fill tx buffer
+    uint8_t buf[count+1];
+    buf[0] = (addr & 0x3F) | READ_BURST;
+
+    // read registers
+    spi_string( buf, buf, count+1 );
+
+    // retreive register values
+    uint8_t i;
+    for (i = 0; i < count; i++)
+    {
+        buffer[i] = buf[i+1];
+    }
 }
 
 // *****************************************************************************
@@ -156,14 +255,30 @@ void ReadBurstReg(uint8_t addr, uint8_t* buffer, uint8_t count) {
 // @return      none
 // *****************************************************************************
 void WriteBurstReg(uint8_t addr, uint8_t* buffer, uint8_t count) {
-	uint8_t _addr = (addr & 0x3F) | WRITE_BURST;
-	radioSelect();
-	spiSendByte(_addr);
-	uint8_t i;
-	for (i = 0; i < count; i++) {
-		spiSendByte(buffer[i]);
-	}
-	radioDeselect();
+
+    DPRINT("WRITE BREG @0x%02X", addr);
+
+    //uint8_t _addr = (addr & 0x3F) | WRITE_BURST;
+    //radioSelect();
+    //spiSendByte(_addr);
+    //uint8_t i;
+    //for (i = 0; i < count; i++) {
+    //	spiSendByte(buffer[i]);
+    //}
+    //radioDeselect();
+
+    // fill transmission buffer
+    uint8_t buf[count+1];
+    buf[0] = (addr & 0x3F) | WRITE_BURST;
+
+    uint8_t i;
+    for (i = 0; i < count; i++)
+    {
+        buf[i+1] = buffer[i];
+    }
+
+    // write register values
+    spi_string( buf, buf, count+1 );
 }
 
 // *****************************************************************************

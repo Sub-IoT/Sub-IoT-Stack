@@ -28,22 +28,24 @@
 
 typedef struct
 {
-    uint16_t next_event;
     void (*f) (void);
+    uint16_t next_event;
 } timer_event;
 
 static timer_event event_array[20];
 static queue_t event_queue;
 static bool started;
 
-void timer_init();
+void timer_init(void);
 
-void timer_completed();
+void timer_completed(void);
 
 bool timer_add_event(timer_event* event);
-uint16_t timer_get_counter_value();
+uint16_t timer_get_counter_value(void);
 
 
+void timer_wait_done(void);
+void timer_wait_ms(uint16_t ms);
 
 void benchmarking_timer_init();
 uint32_t benchmarking_timer_getvalue();

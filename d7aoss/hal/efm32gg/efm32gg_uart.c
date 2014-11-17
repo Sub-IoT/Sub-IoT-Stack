@@ -20,23 +20,28 @@
 
 #include "uart.h"
 
-#define UART_PORT gpioPortD // USART location #1: PD0 and PD1
-#define UART_TX_pin 0      // PD0
-#define UART_RX_pin 1      // PD1
+#define UART_CHANNEL        UART0
+#define UART_BAUDRATE       38400
+#define UART_CLOCK          cmuClock_UART0
+#define UART_ROUTE_LOCATION UART_ROUTE_LOCATION_LOC1
+
+#define UART_PORT           gpioPortE   // UART0 location #1: PE0 and PE1
+#define UART_PIN_TX         0           // PE0
+#define UART_PIN_RX         1           // PE1
 
 void uart_init()
 {
     CMU_ClockEnable(cmuClock_GPIO, true);
-    CMU_ClockEnable(cmuClock_USART1, true);
+    CMU_ClockEnable(UART_CLOCK, true);
 
-    GPIO_PinModeSet(UART_PORT, UART_TX_pin, gpioModePushPull, 1); // Configure UART TX pin as digital output, initialize high since UART TX idles high (otherwise glitches can occur)
-    GPIO_PinModeSet(UART_PORT, UART_RX_pin, gpioModeInput, 0);    // Configure UART RX pin as input (no filter)
+    GPIO_PinModeSet(UART_PORT, UART_PIN_TX, gpioModePushPullDrive,  1); // Configure UART TX pin as digital output, initialize high since UART TX idles high (otherwise glitches can occur)
+    GPIO_PinModeSet(UART_PORT, UART_PIN_RX, gpioModeInput,          0);    // Configure UART RX pin as input (no filter)
 
     USART_InitAsync_TypeDef uartInit =
     {
       .enable       = usartDisable,   // Wait to enable the transmitter and receiver
       .refFreq      = 0,              // Setting refFreq to 0 will invoke the CMU_ClockFreqGet() function and measure the HFPER clock
-      .baudrate     = 38400,          // Desired baud rate
+      .baudrate     = UART_BAUDRATE,  // Desired baud rate
       .oversampling = usartOVS16,     // Set oversampling value to x16
       .databits     = usartDatabits8, // 8 data bits
       .parity       = usartNoParity,  // No parity bits
@@ -46,20 +51,20 @@ void uart_init()
       .prsRxCh      = usartPrsRxCh0,  // Doesn't matter which channel we select
     };
 
-    USART_InitAsync(USART1, &uartInit);
-    USART1->ROUTE = UART_ROUTE_RXPEN | UART_ROUTE_TXPEN | UART_ROUTE_LOCATION_LOC1; // Clear RX/TX buffers and shift regs, enable transmitter and receiver pins
+    USART_InitAsync(UART_CHANNEL, &uartInit);
+    UART_CHANNEL->ROUTE = UART_ROUTE_RXPEN | UART_ROUTE_TXPEN | UART_ROUTE_LOCATION; // Clear RX/TX buffers and shift regs, enable transmitter and receiver pins
 
-    USART_IntClear(USART1, _UART_IF_MASK);
+    USART_IntClear(UART_CHANNEL, _UART_IF_MASK);
     NVIC_ClearPendingIRQ(UART1_RX_IRQn);
     NVIC_ClearPendingIRQ(UART1_TX_IRQn);
 
-    USART_Enable(USART1, usartEnable);
+    USART_Enable(UART_CHANNEL, usartEnable);
 }
 
 void uart_transmit_data(unsigned char data)
 {
-    while(!(USART1->STATUS & (1 << 6))) {}; // wait for TX buffer to empty
-    USART1->TXDATA = data;
+    while(!(UART_CHANNEL->STATUS & (1 << 6))) {}; // wait for TX buffer to empty
+    UART_CHANNEL->TXDATA = data;
 }
 
 // TODO move to generic uart, not HAL implementation specific?

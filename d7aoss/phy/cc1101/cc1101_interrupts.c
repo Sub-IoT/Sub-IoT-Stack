@@ -8,6 +8,7 @@
  */
 
 #include "cc1101_phy.h"
+#include "cc1101_core.h"
 
 /*
 0x00	Associated to the RX FIFO: Asserts when RX FIFO is filled at or above the RX FIFO threshold. De-asserts when RX FIFO is drained below the same threshold.
@@ -35,7 +36,7 @@ InterruptHandlerDescriptor interrupt_table[6] = {
 		{.handler = 0},
 };
 
-void CC1101_ISR (GDOLine gdo)
+void CC1101_ISR(GDOLine gdo)
 {
 	uint8_t gdo_setting = ReadSingleReg(gdo);
 	uint8_t index = 0;

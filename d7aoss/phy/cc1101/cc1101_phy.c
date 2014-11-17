@@ -19,7 +19,7 @@
 #include "../framework/log.h"
 
 #include "cc1101_core.h"
-//#include "radio_spi_hw.h"
+#include "radio_hw.h"
 /*
  * Variables
  */
@@ -72,7 +72,7 @@ void phy_init(void)
 {
 	//Set radio state
 	state = Idle;
-	spiInit();
+	spi_init();
 	radioConfigureInterrupt();
 
 	//Reset the radio core

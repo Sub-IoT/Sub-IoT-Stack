@@ -144,7 +144,7 @@ static void rx_callback(phy_rx_data_t* res)
 			#ifdef LOG_DLL_ENABLED
 				log_print_stack_string(LOG_DLL, "DLL CRC ERROR");
 			#endif
-			scan_next(); // how to reïnitiate scan on CRC Error, PHY should stay in RX
+			scan_next(); // how to reï¿½nitiate scan on CRC Error, PHY should stay in RX
 			return;
 		}
 
@@ -153,7 +153,7 @@ static void rx_callback(phy_rx_data_t* res)
 			#ifdef LOG_DLL_ENABLED
 				log_print_stack_string(LOG_DLL, "DLL Subnet mismatch");
 			#endif
-			scan_next(); // how to reïnitiate scan on subnet mismatch, PHY should stay in RX
+			scan_next(); // how to reï¿½nitiate scan on subnet mismatch, PHY should stay in RX
 			return;
 		}
 	} else if (dll_state == DllStateScanForegroundFrame)
@@ -164,7 +164,7 @@ static void rx_callback(phy_rx_data_t* res)
 			#ifdef LOG_DLL_ENABLED
 				log_print_stack_string(LOG_DLL, "DLL CRC ERROR");
 			#endif
-			scan_next(); // how to reïnitiate scan on CRC Error, PHY should stay in RX
+			scan_next(); // how to reï¿½nitiate scan on CRC Error, PHY should stay in RX
 			return;
 		}
 		if (!check_subnet(0xFF, res->data[2])) // TODO: get device_subnet from datastore
@@ -172,7 +172,7 @@ static void rx_callback(phy_rx_data_t* res)
 			#ifdef LOG_DLL_ENABLED
 				log_print_stack_string(LOG_DLL, "DLL Subnet mismatch");
 			#endif
-				scan_next(); // how to reïnitiate scan on subnet mismatch, PHY should stay in RX
+				scan_next(); // how to reï¿½nitiate scan on subnet mismatch, PHY should stay in RX
 
 			return;
 		}
@@ -527,9 +527,9 @@ void dll_csma(bool enabled)
 	uint8_t fec = (bool)spectrum_id >> 7;
 
 	if (channel_bandwidth_index == 1)
-		event.next_event = fec == 0 ? 5 : 10;
+		event.next_event = (fec == 0)? 5 : 10;
 	else
-		event.next_event = fec == 0 ? 2 : 3;
+		event.next_event = (fec == 0)? 2 : 3;
 
 	event.f = &dll_cca2;
 
