@@ -8,21 +8,23 @@ SET(HAL_API
     system.h
     uart.h
     timer.h
+    spi.h
+    radio_hw.h
 )
 
 IF(D7AOSS_HAL_DRIVER STREQUAL "cc430")
-        SET(HAL_SRCS
-                        cc430/cc430_button.c
-                        cc430/cc430_addresses.h
-                        cc430/cc430_leds.c
-                        cc430/cc430_rtc.c
-                        cc430/cc430_system.c
-                        cc430/cc430_uart.c
-                        cc430/cc430_timer.c
-                        crc_software.c
-        )
+    SET(HAL_SRCS
+                    cc430/cc430_button.c
+                    cc430/cc430_addresses.h
+                    cc430/cc430_leds.c
+                    cc430/cc430_rtc.c
+                    cc430/cc430_system.c
+                    cc430/cc430_uart.c
+                    cc430/cc430_timer.c
+                    crc_software.c
+    )
 
-        ADD_SUBDIRECTORY(cc430/driverlib)
+    ADD_SUBDIRECTORY(cc430/driverlib)
 ENDIF()
 
 IF(D7AOSS_HAL_DRIVER STREQUAL "efm32gg")
@@ -32,6 +34,9 @@ IF(D7AOSS_HAL_DRIVER STREQUAL "efm32gg")
     INCLUDE_DIRECTORIES(efm32gg/CMSIS/include)
     INCLUDE_DIRECTORIES(efm32gg/CMSIS/device/include)
     INCLUDE_DIRECTORIES(efm32gg/emlib/inc)
+    INCLUDE_DIRECTORIES(efm32gg/kits/common/drivers)
+    INCLUDE_DIRECTORIES(../phy/)
+    INCLUDE_DIRECTORIES(../phy/cc1101/)
     SET(HAL_SRCS
                         efm32gg/CMSIS/device/src/system_efm32gg.c
                         efm32gg/CMSIS/device/src/startup_gcc_efm32gg.s
@@ -42,10 +47,15 @@ IF(D7AOSS_HAL_DRIVER STREQUAL "efm32gg")
                         efm32gg/emlib/src/em_gpio.c
                         efm32gg/emlib/src/em_usart.c
                         efm32gg/emlib/src/em_rtc.c
+                        efm32gg/emlib/src/em_dma.c
+                        efm32gg/emlib/src/em_int.c
+                        efm32gg/kits/common/drivers/dmactrl.c
                         efm32gg/efm32gg_leds.c
                         efm32gg/efm32gg_system.c
                         efm32gg/efm32gg_uart.c
                         efm32gg/efm32gg_timer.c
+                        efm32gg/efm32gg_spi.c
+                        efm32gg/radio_hw.c
                         crc_software.c
         )
 ENDIF()

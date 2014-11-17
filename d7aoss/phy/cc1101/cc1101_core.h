@@ -16,6 +16,7 @@ extern "C" {
 
 #include <stdint.h>
 
+
 typedef enum {
 	GDOLine0 = 0x2,
 	GDOLine1 = 0x1,
@@ -27,6 +28,7 @@ typedef enum {
 	GDOEdgeFalling = 0x0,
 } GDOEdge;
 
+extern void CC1101_ISR(GDOLine gdo);
 
 typedef struct {
     uint8_t iocfg2;    // IOCFG2.GDO2_CFG output pin configuration
@@ -51,7 +53,7 @@ typedef struct {
     uint8_t mdmcfg1;   // Modem configuration.
     uint8_t mdmcfg0;   // Modem configuration.
     uint8_t deviatn;   // Modem deviation setting (when FSK modulation is enabled).
-    uint8_t mcsm2;    // Main Radio Control State Machine configuration.
+    uint8_t mcsm2;     // Main Radio Control State Machine configuration.
     uint8_t mcsm1;     // Main Radio Control State Machine configuration.
     uint8_t mcsm0;     // Main Radio Control State Machine configuration.
     uint8_t foccfg;    // Frequency Offset Compensation Configuration.
@@ -61,7 +63,7 @@ typedef struct {
     uint8_t agcctrl0;  // AGC control.
     uint8_t worevt1;   // High byte Event0 timeout
     uint8_t worevt0;   // Low byte Event0 timeout
-    uint8_t worctrl;    // Wake On Radio control
+    uint8_t worctrl;   // Wake On Radio control
     uint8_t frend1;    // Front end RX configuration
     uint8_t frend0;    // Front end TX configuration
     uint8_t fscal3;    // Frequency synthesizer calibration.
