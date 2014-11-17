@@ -50,5 +50,4 @@ ENDIF()
 IF(D7AOSS_HAL_DRIVER STREQUAL "efm32gg")
     ADD_SUBDIRECTORY("test applications/efm32_spi")
 ENDIF()
-    
-ADD_SUBDIRECTORY("examples")
+
