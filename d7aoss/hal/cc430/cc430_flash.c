@@ -16,7 +16,7 @@
  */
 
 #include "cc430_addresses.h"
-#include "..\flash.h"
+#include "../flash.h"
 #include <string.h>
 
 
