@@ -26,7 +26,6 @@ from collections import defaultdict
 import glob
 import sys
 import imp
-import pcap
 from wireshark import WiresharkNamedPipeLogger, PCAPFormatter
 
 imp.reload(sys)
