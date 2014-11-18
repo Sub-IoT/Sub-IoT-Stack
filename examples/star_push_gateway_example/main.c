@@ -55,7 +55,7 @@ static timer_event dim_led_event;
 static bool start_channel_scan = false;
 uint8_t buffer[128];
 
-static uint8_t receive_channel[2] = {0x04, 0x00};
+static uint8_t receive_channel[2] = {0x04, 0x0E};
 
 
 void blink_led()
@@ -128,10 +128,9 @@ void rx_callback(Trans_Rx_Alp_Result* rx_res)
 	//log_print_string("Netto Link: %d dBm", rx_res->nwl_rx_res->dll_rx_res->rssi  - ((frame->control & 0x3F) - 32));
 
 	log_print_string("D7AQP received - ALP data:");
-	//log_print_data(rx_res->d7aqp_command.alp_data, rx_res->d7aqp_command.alp_length);
-	}
-	start_channel_scan = true;
 
+	log_print_data((uint8_t*) & (rx_res->alp_record), rx_res->alp_record.record_lenght);
+	}
 	start_channel_scan = true;
 
 }
