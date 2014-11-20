@@ -32,7 +32,7 @@ uint16_t hal_timer_getvalue();
 //**********************************************/
 //Initialize the timer value                          /
 //**********************************************/
-void hal_timer_setvalue(uint16_t next_event);
+void hal_timer_setvalue(uint32_t next_event);
 
 //**********************************************/
 //Enable the interrupt on the timer                          /

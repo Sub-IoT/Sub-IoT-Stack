@@ -119,8 +119,13 @@ uint16_t hal_timer_getvalue() {
     return (uint16_t)RTC->CNT;
 }
 
-void hal_timer_setvalue(uint16_t next_event) {
+void hal_timer_setvalue(uint32_t next_event) {
   
+    // the timer counter is 24 bits
+    if( next_event & 0xFF000000 )
+    {
+        next_event = 0x00FFFFFF;
+    }
     /* Init counter */
 #ifndef USE_NEW_CONFIGURATION
     RTC_CompareSet(1, next_event );
