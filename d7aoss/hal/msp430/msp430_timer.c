@@ -17,43 +17,55 @@
 static volatile uint8_t benchmarking_timer_rollover = 0;
 
 
-void hal_timer_setvalue(uint16_t next_event)
+void hal_timer_setvalue( uint32_t next_event )
 {
-	TA0CCR0 = next_event;
-	//TA1CTL |= TACLR;
+    // the timer counter is 16 bits
+    if( next_event & 0xFFFF0000 )
+    {
+        next_event = 0x0000FFFF;
+    }
+
+    TA0CCR0 = next_event;
+    //TA1CTL |= TACLR;
 }
 
-void hal_timer_enable_interrupt()
+void hal_timer_enable_interrupt( void )
 {
-	TA0CCTL0 = CCIE; // Enable interrupt for CCR0
-	//TA1CTL |= MC__UP;
-	//TA1CTL |= MC__CONTINUOUS;
+    TA0CCTL0 = CCIE; // Enable interrupt for CCR0
+    //TA1CTL |= MC__UP;
+    //TA1CTL |= MC__CONTINUOUS;
 }
 
-void hal_timer_disable_interrupt()
+void hal_timer_disable_interrupt( void )
 {
-	TA0CCTL0 &= ~CCIE; // Disable interrupt for CCR0
-	//TA1CTL &= ~MC__UP;
-	//TA1CTL &= ~MC__CONTINUOUS;
+    TA0CCTL0 &= ~CCIE; // Disable interrupt for CCR0
+    //TA1CTL &= ~MC__UP;
+    //TA1CTL &= ~MC__CONTINUOUS;
 }
 
-void hal_timer_init()
+void hal_timer_init( void )
 {
-	//set timer to ticks (=1024 Hz)
-	//TA1CTL = TASSEL_1 + MC__UP + ID_3 + TACLR;           // ACLK/8, up mode, clear timer
-	TA0CTL = TASSEL_1 + MC__CONTINUOUS + ID_3 + TACLR;           // ACLK/8, continuous up mode, clear timer
-	TA0EX0 = TAIDEX_3;							// divide /4
+    //set timer to ticks (=1024 Hz)
+    //TA1CTL = TASSEL_1 + MC__UP + ID_3 + TACLR;           // ACLK/8, up mode, clear timer
+    TA0CTL = TASSEL_1 + MC__CONTINUOUS + ID_3 + TACLR;           // ACLK/8, continuous up mode, clear timer
+    TA0EX0 = TAIDEX_3;							// divide /4
 }
 
-uint16_t hal_timer_getvalue()
+uint32_t hal_timer_getvalue( void )
 {
-    return TA0R;
+    return (uint32_t)TA0R;
 }
+
+void hal_timer_counter_reset( void )
+{
+    hal_timer_init();
+}
+
 
 void hal_benchmarking_timer_init()
 {
-	//set timer to microticks (= 1 MHz)
-	//TA0CTL = TASSEL_2  + MC__CONTINUOUS + ID_0 + TACLR;           // SMCLK, continuous up mode, clear timer
+    //set timer to microticks (= 1 MHz)
+    //TA0CTL = TASSEL_2  + MC__CONTINUOUS + ID_0 + TACLR;           // SMCLK, continuous up mode, clear timer
 }
 
 uint32_t hal_benchmarking_timer_getvalue()
