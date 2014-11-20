@@ -69,7 +69,7 @@ uint32_t hal_timer_getvalue( void )
 
 void hal_timer_counter_reset( void )
 {
-    TA1CTL = TASSEL_1 + MC__CONTINUOUS + ID_3 + TACLR;           // ACLK/8, continuous up mode, clear timer
+    hal_timer_init();
 }
 
 void hal_benchmarking_timer_init()
