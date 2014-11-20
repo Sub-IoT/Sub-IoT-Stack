@@ -44,6 +44,7 @@ void hal_timer_enable_interrupt();
 //**********************************************/
 void hal_timer_disable_interrupt();
 
+void hal_timer_counter_reset();
 
 void hal_benchmarking_timer_init();
 uint32_t hal_benchmarking_timer_getvalue();

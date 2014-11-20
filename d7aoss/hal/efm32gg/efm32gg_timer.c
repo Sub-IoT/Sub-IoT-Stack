@@ -19,6 +19,7 @@
 
 //timer_t timerid;
 
+#define USE_NEW_CONFIGURATION
 
 #define RTC_FREQ    32768
 
@@ -44,14 +45,19 @@ void startLfxoForRtc(void)
 }
 
 /**************************************************************************//**
- * @brief Enables LFACLK and selects LFXO as clock source for RTC
- *        Sets up the RTC to generate an interrupt every minute.
+ * @brief Enables LFACLK and selects LFXO as clock source for RTC.
+ *        Sets up the RTC to count at 1024 Hz.
+ *        The counter should not be cleared on a compare match and keep running.
+ *        Interrupts should be cleared and enabled.
+ *        The counter should run.
  *****************************************************************************/
 void hal_timer_init() {
     /* Configuring clocks in the Clock Management Unit (CMU) */
     startLfxoForRtc();
 
     RTC_Init_TypeDef rtcInit = RTC_INIT_DEFAULT;
+
+#ifndef USE_NEW_CONFIGURATION
 
     rtcInit.enable   = false;      /* Enable RTC after init has run */
     rtcInit.comp0Top = true;      /* Clear counter on compare match */
@@ -70,6 +76,20 @@ void hal_timer_init() {
     RTC_IntEnable(RTC_IEN_COMP0);
     RTC_IntDisable(RTC_IEN_COMP1);
     INT_Enable();
+#else
+    rtcInit.enable   = false;   /* Don't enable RTC after init has run */
+    rtcInit.comp0Top = false;   /* Don't clear counter on compare match */
+    rtcInit.debugRun = false;   /* Counter shall not keep running during debug halt. */
+
+    /* Initialize the RTC */
+    RTC_Init(&rtcInit);
+
+    /* Enable interrupts */
+    RTC_IntClear(RTC_IFC_COMP0);
+    RTC_IntDisable(RTC_IEN_COMP0);
+    NVIC_EnableIRQ(RTC_IRQn);
+    INT_Enable();
+#endif
 
     /* Start Counter */
     RTC_Enable(true);
@@ -77,12 +97,22 @@ void hal_timer_init() {
 
 void hal_timer_enable_interrupt() {
     /* Enable interrupt */
+#ifndef USE_NEW_CONFIGURATION
+    RTC_IntClear(RTC_IFC_COMP1);
     RTC_IntEnable(RTC_IEN_COMP1);
-    //INT_Enable();
+#else
+    RTC_IntClear(RTC_IFC_COMP0);
+    RTC_IntEnable(RTC_IEN_COMP0);
+#endif
+
 }
 
 void hal_timer_disable_interrupt() {
+#ifndef USE_NEW_CONFIGURATION
     RTC_IntDisable(RTC_IEN_COMP1);
+#else
+    RTC_IntDisable(RTC_IEN_COMP0);
+#endif
 }
 
 uint16_t hal_timer_getvalue() {
@@ -92,10 +122,19 @@ uint16_t hal_timer_getvalue() {
 void hal_timer_setvalue(uint16_t next_event) {
   
     /* Init counter */
-    RTC_CompareSet(1, next_event - 1 );
+#ifndef USE_NEW_CONFIGURATION
+    RTC_CompareSet(1, next_event );
+#else
+    RTC_CompareSet(0, next_event );
+#endif
 }
 
-	/**************************************************************************//**
+void hal_timer_counter_reset( void )
+{
+    RTC_CounterReset();
+}
+
+/******************************************************************************
  * @brief RTC Interrupt Handler.
  *****************************************************************************/
 void RTC_IRQHandler(void)
@@ -103,7 +142,12 @@ void RTC_IRQHandler(void)
     /* Clear interrupt source */
     if(RTC->IF&RTC_IFC_COMP0)
     {
+#ifndef USE_NEW_CONFIGURATION
         RTC_IntClear(RTC_IFC_COMP0);
+#else
+        RTC_IntClear(RTC_IFC_COMP0);
+        timer_completed();
+#endif
     }
     else if(RTC->IF&RTC_IFC_COMP1)
     {
