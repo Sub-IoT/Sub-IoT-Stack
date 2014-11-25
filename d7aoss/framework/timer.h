@@ -42,7 +42,7 @@ bool timer_add_event( timer_event* event );
 uint32_t timer_get_counter_value( void );
 
 static uint8_t timer_get_next_event( void );
-static void timer_configure_next_event( uint8_t event_position );
+static void timer_configure_next_event( void );
 static bool timer_add_event_in_stack( timer_event new_event );
 static bool timer_update_stack( void );
 

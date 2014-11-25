@@ -18,7 +18,7 @@
 #include "log.h"
 
 // turn on/off the debug prints
-#if 0
+#if 1
 #define DPRINT(...) log_print_stack_string(LOG_FWK, __VA_ARGS__)
 #else
 #define DPRINT(...)  
@@ -29,6 +29,7 @@
 timer_event timer_event_stack[TIMER_EVENT_STACK_SIZE];
 uint8_t     timer_next_event_position;
 uint8_t     timer_event_count;
+bool        timer_event_running;
 
 
 
@@ -37,6 +38,7 @@ void timer_init( void )
 {
     hal_timer_init();
     timer_event_count = 0;
+    timer_event_running = false;
     uint8_t i;
     for( i=0 ; i<TIMER_EVENT_STACK_SIZE ; i++ )
     {
@@ -51,67 +53,55 @@ bool timer_add_event( timer_event* event )
     new_event.f = event->f;
     new_event.next_event = event->next_event;
     
-    // if there is no event running
-    if( timer_event_count == 0 )
-    {
-        // reset counter
-        hal_timer_counter_reset();
-    }
-
-    DPRINT("Adding event: t: %d @%p" ,new_event.next_event, new_event.f );
-
+    DPRINT("Adding event: t: %d @%p" , new_event.next_event, new_event.f );
     
     // add the new event in the stack
-    timer_add_event_in_stack( new_event );
-    // update the times of all events
-    timer_update_stack();
-    // get which event will be next
-    timer_next_event_position = timer_get_next_event();
-    // configure the interruption
-    timer_configure_next_event( timer_next_event_position );
+    if( !timer_add_event_in_stack( new_event ) ) { return false; }
 
-    // if there was no event running
-    if( timer_event_count == 1 )
+    // configure the next event if one is not currently executed
+    if( timer_event_running == false )
     {
-        // enable interrupts
-        hal_timer_enable_interrupt();
+        // configure the interrupt
+        timer_configure_next_event();
     }
     
-    DPRINT("%d events in the stack", timer_event_count);
-
     return true;
 }
 
 void timer_completed( void )
 {
-    timer_event event;
+    // to avoid configuring annother event when one is still executing
+    timer_event_running = true;
 
-    // save event function
-    event.f = timer_event_stack[timer_next_event_position].f;
+    timer_event event;
+    uint8_t event_position = timer_next_event_position;
+    event.f = timer_event_stack[event_position].f;
+
+    // delete event from stack
+    timer_event_stack[event_position].f = NULL;
+    
+    // update event count
+    timer_event_count--;
+
+    // execute event
+    event.f();
 
     DPRINT("Event completed: @%p", event.f);
 
-    // delete event from stack
-    timer_event_stack[timer_next_event_position].f = NULL;
-
-    // update event count
-    timer_event_count--;
-    
+    // if there is other events waiting
     if( timer_event_count > 0 )
     {
         // prepare the next event
-        timer_update_stack();
-        timer_next_event_position = timer_get_next_event();
-        timer_configure_next_event( timer_next_event_position );
+        timer_configure_next_event();
     }
     else
     {
-        // disable interrupts
+        // disable interrupts to avoid unwanted events
         hal_timer_disable_interrupt();
     }
-    
-    // execute event
-    event.f();
+
+    // end of running event
+    timer_event_running = false;
 }
 
 uint32_t timer_get_counter_value( void )
@@ -121,6 +111,7 @@ uint32_t timer_get_counter_value( void )
 
 static uint8_t timer_get_next_event( void )
 {
+    // if the stack is empty
     if( timer_event_count == 0 )
     {
         // trap processor
@@ -128,12 +119,16 @@ static uint8_t timer_get_next_event( void )
         while(1);
     }
 
-    // search for the smaller time in the stack
     int32_t next_event_time_temp;
     int32_t next_event_time = 0xFFFFFF; // maximum counter value
     uint8_t next_event_position;
     uint8_t event_count = 0;
     uint8_t i;
+
+    // always update the stack before using it
+    timer_update_stack();
+
+    // search for the smaller time in the stack
     for( i=0 ; i<TIMER_EVENT_STACK_SIZE ; i++ )
     {
         if( timer_event_stack[i].f != NULL )
@@ -169,28 +164,31 @@ static uint8_t timer_get_next_event( void )
 }
 
 
-static void timer_configure_next_event( uint8_t event_position )
+static void timer_configure_next_event( void )
 {
-    int32_t event_time = timer_event_stack[event_position].next_event;
+    int32_t event_time;
+
+    // retrieve the next event position in the stack
+    timer_next_event_position = timer_get_next_event();
 
     // ajust the value for configuring the interrupt ( register = number of ticks - 1 )
-    event_time--;
+    event_time = timer_event_stack[timer_next_event_position].next_event - 1;
 
     // if the time is already elapsed
     if( event_time <= hal_timer_getvalue() )
     {
         // fire the event
+        DPRINT("Event fired: t: %d @%p pos: %d", event_time, timer_event_stack[event_position].f, event_position);
         timer_completed();
     }
     else
     {
         // set next interrupt
-        hal_timer_enable_interrupt();
+        hal_timer_disable_interrupt();
         hal_timer_setvalue( (uint32_t)event_time );
-        
+        hal_timer_enable_interrupt();
         DPRINT("Event configured: t: %d @%p pos: %d", event_time, timer_event_stack[event_position].f, event_position);
     }
-
 }
 
 
@@ -202,6 +200,7 @@ static bool timer_add_event_in_stack( timer_event new_event )
     {
         if( timer_event_stack[i].f == NULL)
         {
+            timer_update_stack();
             timer_event_stack[i] = new_event;
             timer_event_count++;
 
@@ -211,14 +210,15 @@ static bool timer_add_event_in_stack( timer_event new_event )
     }
 
     log_print_stack_string(LOG_FWK, "TIMER: Stack full!");
-    while(1);
+    return false;
 }
 
 static bool timer_update_stack( void )
 {
-    // just return if there is no event
+    // just reset counter if there is no event
     if( timer_event_count == 0 )
     {
+        hal_timer_counter_reset();
         return true;
     }
 
@@ -227,6 +227,7 @@ static bool timer_update_stack( void )
 
     // get the elapsed time
     int32_t current_time = (int32_t)hal_timer_getvalue();
+
     // reset the counter
     hal_timer_counter_reset();
 
