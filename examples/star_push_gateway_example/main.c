@@ -92,20 +92,20 @@ void rx_callback(Trans_Rx_Alp_Result* rx_res)
 		{
 		case NWL_CONTRL_SRC_UID:
 			address_ptr = &(np->d7anp_source_access_templ[0]);
-			address_length = 2;
+			address_length = 8;
 			break;
 		case NWL_CONTRL_SRC_VID:
 			address_ptr = &(np->d7anp_source_access_templ[0]);
-			address_length = 8;
+			address_length = 2;
 			break;
 		case NWL_CONTRL_SRC_FULL:
 			address_ptr = &(np->d7anp_source_access_templ[1]);
 
 			if (np->d7anp_source_access_templ[0] & NWL_ACCESS_TEMPL_CTRL_VID)
 			{
-				address_length = 2;
-			} else {
 				address_length = 8;
+			} else {
+				address_length = 2;
 			}
 		}
 
