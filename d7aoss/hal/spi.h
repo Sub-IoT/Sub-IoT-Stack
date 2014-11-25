@@ -12,13 +12,16 @@
 
 void spi_init();
 
-void spi_enable_interrupt();
+void spi_auto_cs_on(void);
 
-void spi_transmit_data(unsigned char data);
-void spi_transmit_message(unsigned char *data, unsigned char length);
+void spi_auto_cs_off(void);
 
-unsigned char spi_tx_ready();
+void spi_select_chip(void);
 
-unsigned char spi_receive_data();
+void spi_deselect_chip(void);
+
+unsigned char spi_byte(unsigned char data);
+
+void spi_string(unsigned char *TxData, unsigned char *RxData, unsigned int length);
 
 #endif /* SPI_H_ */

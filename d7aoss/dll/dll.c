@@ -179,7 +179,7 @@ static void rx_callback(phy_rx_data_t* res)
 		#ifdef LOG_DLL_ENABLED
 			log_print_stack_string(LOG_DLL, "DLL CRC ERROR");
 		#endif
-		scan_next(); // how to reïnitiate scan on CRC Error, PHY should stay in RX
+		scan_next(); // how to reï¿½nitiate scan on CRC Error, PHY should stay in RX
 		return;
 	}
 	if (!check_subnet(*device_subnet, res->data[1])) // TODO: get device_subnet from datastore
@@ -187,7 +187,7 @@ static void rx_callback(phy_rx_data_t* res)
 		#ifdef LOG_DLL_ENABLED
 			log_print_stack_string(LOG_DLL, "DLL Subnet mismatch");
 		#endif
-			scan_next(); // how to reïnitiate scan on subnet mismatch, PHY should stay in RX
+			scan_next(); // how to reï¿½nitiate scan on subnet mismatch, PHY should stay in RX
 
 		return;
 	}
@@ -213,7 +213,7 @@ static void rx_callback(phy_rx_data_t* res)
 				#ifdef LOG_DLL_ENABLED
 				log_print_stack_string(LOG_DLL, "DLL this device is not the target");
 				#endif
-				scan_next(); // how to reïnitiate scan  PHY should stay in RX
+				scan_next(); // how to reï¿½nitiate scan  PHY should stay in RX
 
 				return;
 			}
@@ -228,7 +228,7 @@ static void rx_callback(phy_rx_data_t* res)
 				#ifdef LOG_DLL_ENABLED
 				log_print_stack_string(LOG_DLL, "DLL this device is not the target");
 				#endif
-				scan_next(); // how to reïnitiate scan  PHY should stay in RX
+				scan_next(); // how to reï¿½nitiate scan  PHY should stay in RX
 
 				return;
 			}

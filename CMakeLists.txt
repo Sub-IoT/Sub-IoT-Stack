@@ -48,5 +48,6 @@ ENDIF()
 
 # TODO temp for testing
 IF(D7AOSS_HAL_DRIVER STREQUAL "efm32gg")
-	ADD_SUBDIRECTORY("test applications/efm32_hal")
+    ADD_SUBDIRECTORY("test applications/efm32_spi")
 ENDIF()
+
