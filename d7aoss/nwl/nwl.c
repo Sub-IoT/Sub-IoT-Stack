@@ -31,6 +31,8 @@ static nwl_background_frame_t bf;
 static nwl_ff_D7ANP_t d7anp_frame;
 volatile static bool process_callback = true;
 volatile static bool tx_callback_received = false;
+static dll_channel_scan_t scan_cfg;
+static dll_channel_scan_series_t scan_series_cfg;
 
 
 static void dll_tx_callback(Dll_Tx_Result status)
@@ -310,7 +312,7 @@ void nwl_build_network_protocol_data(uint8_t control, nwl_security* security, nw
 
 void nwl_rx_start(uint8_t subnet, uint8_t spectrum_id[2], Protocol_Type type)
 {
-	dll_channel_scan_t scan_cfg;
+
 
 	scan_cfg.spectrum_id[0] = spectrum_id[0];
 	scan_cfg.spectrum_id[1] = spectrum_id[1];
@@ -323,7 +325,7 @@ void nwl_rx_start(uint8_t subnet, uint8_t spectrum_id[2], Protocol_Type type)
 	else
 		scan_cfg.scan_type = FrameTypeForegroundFrame;
 
-	dll_channel_scan_series_t scan_series_cfg;
+
 	scan_series_cfg.length = 1;
 	scan_series_cfg.values = &scan_cfg;
 
