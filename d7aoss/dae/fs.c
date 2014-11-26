@@ -321,8 +321,8 @@ void fs_send_notification(uint8_t tnf_id)
 	}
 
 	uint8_t spectrum_id[2];
-	spectrum_id[1] = fs_read_byte(&nf, nf_pointer++);
 	spectrum_id[0] = fs_read_byte(&nf, nf_pointer++);
+	spectrum_id[1] = fs_read_byte(&nf, nf_pointer++);
 	int8_t tx_eirp = ((int8_t) ((fs_read_byte(&nf, nf_pointer++) & 0x7F) / 2) - 20) ;
 	int8_t subnet = fs_read_byte(&nf, nf_pointer++);
 
