@@ -129,7 +129,7 @@ void rx_callback(Trans_Rx_Alp_Result* rx_res)
 
 	log_print_string("D7AQP received - ALP data:");
 
-	log_print_data((uint8_t*) & (rx_res->alp_record), rx_res->alp_record.record_lenght);
+	log_print_data((uint8_t*) (rx_res->alp_record.alp_templates), rx_res->alp_record.record_lenght-3);
 	}
 	start_channel_scan = true;
 
