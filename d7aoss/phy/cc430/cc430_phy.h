@@ -88,7 +88,7 @@ void rxtx_finish_isr();
  * Local function prototypes
  */
 RadioState get_radiostate(void);
-void set_channel(uint8_t channel_center_freq_index, uint8_t channel_bandwidth_index);
+void set_channel(uint8_t frequency_band, uint8_t channel_center_freq_index, uint8_t channel_bandwidth_index);
 void set_sync_word(uint16_t sync_word);
 void set_preamble_size(uint8_t preamble_size);
 void set_data_whitening(bool  white_data);

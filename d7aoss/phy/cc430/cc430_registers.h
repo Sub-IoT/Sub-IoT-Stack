@@ -138,6 +138,8 @@ extern "C" {
 #define RADIO_FREQOFF                   0               // FSCTRL0 Frequency offset
 
 #define RADIO_FREQ_433                  ((uint32_t)0x0010A900)   // pchan 1 fc = 433.164062 MHz
+#define RADIO_FREQ_868                  ((uint32_t)0x00216267)   // pchan 1 fc = 867.999994 MHz
+#define RADIO_FREQ_915                  ((uint32_t)0x0022B13B)   // pchan 1 fc = 901.999969 MHz
 #define RADIO_FREQ2                     (uint8_t)(RADIO_FREQ_433>>16 & 0xFF)
 #define RADIO_FREQ1                     (uint8_t)(RADIO_FREQ_433>>8 & 0xFF)
 #define RADIO_FREQ0                     (uint8_t)(RADIO_FREQ_433 & 0xFF)

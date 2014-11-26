@@ -47,6 +47,7 @@ static uint8_t packetLength;
 static int16_t remainingBytes;
 
 static bool fec;
+static uint8_t frequency_band;
 static uint8_t channel_center_freq_index;
 static uint8_t channel_bandwidth_index;
 static uint8_t preamble_size;
@@ -160,7 +161,7 @@ bool phy_translate_and_set_settings(uint8_t spectrum_id[2], uint8_t sync_word_cl
 
 	Strobe(RF_SIDLE);
 
-	if(!phy_translate_settings(spectrum_id, sync_word_class, &fec, &channel_center_freq_index, &channel_bandwidth_index, &preamble_size, &sync_word))
+	if(!phy_translate_settings(spectrum_id, sync_word_class, &fec, &frequency_band, &channel_center_freq_index, &channel_bandwidth_index, &preamble_size, &sync_word))
 	{
 		#ifdef LOG_PHY_ENABLED
 		log_print_stack_string(LOG_PHY, "PHY Cannot translate settings");
@@ -169,7 +170,7 @@ bool phy_translate_and_set_settings(uint8_t spectrum_id[2], uint8_t sync_word_cl
 		return false;
 	}
 
-	set_channel(channel_center_freq_index, channel_bandwidth_index);
+	set_channel(frequency_band, channel_center_freq_index, channel_bandwidth_index);
 	set_preamble_size(preamble_size);
 	set_sync_word(sync_word);
 
@@ -655,7 +656,7 @@ RadioState get_radiostate(void)
 	return (RadioState)state;
 }
 
-void set_channel(uint8_t channel_center_freq_index, uint8_t channel_bandwith_index)
+void set_channel(uint8_t frequency_band, uint8_t channel_center_freq_index, uint8_t channel_bandwith_index)
 {
 	//Set channel center frequency
 	WriteSingleReg(CHANNR, channel_center_freq_index);
@@ -664,9 +665,9 @@ void set_channel(uint8_t channel_center_freq_index, uint8_t channel_bandwith_ind
 	switch(channel_bandwith_index)
 	{
 	case 0:
-		WriteSingleReg(MDMCFG3, RADIO_MDMCFG3_DRATE_M(24));
-		WriteSingleReg(MDMCFG4, (RADIO_MDMCFG4_CHANBW_E(1) | RADIO_MDMCFG4_CHANBW_M(0) | RADIO_MDMCFG4_DRATE_E(11)));
-		WriteSingleReg(DEVIATN, (RADIO_DEVIATN_E(5) | RADIO_DEVIATN_M(0)));
+		WriteSingleReg(MDMCFG3, RADIO_MDMCFG3_DRATE_M(131));
+		WriteSingleReg(MDMCFG4, (RADIO_MDMCFG4_CHANBW_E(3) | RADIO_MDMCFG4_CHANBW_M(0) | RADIO_MDMCFG4_DRATE_E(8)));
+		WriteSingleReg(DEVIATN, (RADIO_DEVIATN_E(0) | RADIO_DEVIATN_M(16)));
 		break;
 	case 1:
 		WriteSingleReg(MDMCFG3, RADIO_MDMCFG3_DRATE_M(24));
@@ -678,13 +679,31 @@ void set_channel(uint8_t channel_center_freq_index, uint8_t channel_bandwith_ind
 		WriteSingleReg(MDMCFG4, (RADIO_MDMCFG4_CHANBW_E(1) | RADIO_MDMCFG4_CHANBW_M(0) | RADIO_MDMCFG4_DRATE_E(12)));
 		WriteSingleReg(DEVIATN, (RADIO_DEVIATN_E(5) | RADIO_DEVIATN_M(0)));
 		break;
-	case 3:
-		WriteSingleReg(MDMCFG3, RADIO_MDMCFG3_DRATE_M(248));
-		WriteSingleReg(MDMCFG4, (RADIO_MDMCFG4_CHANBW_E(0) | RADIO_MDMCFG4_CHANBW_M(1) | RADIO_MDMCFG4_DRATE_E(12)));
-		WriteSingleReg(DEVIATN, (RADIO_DEVIATN_E(5) | RADIO_DEVIATN_M(0)));
-		break;
+//	case 3:
+//		WriteSingleReg(MDMCFG3, RADIO_MDMCFG3_DRATE_M(248));
+//		WriteSingleReg(MDMCFG4, (RADIO_MDMCFG4_CHANBW_E(0) | RADIO_MDMCFG4_CHANBW_M(1) | RADIO_MDMCFG4_DRATE_E(12)));
+//		WriteSingleReg(DEVIATN, (RADIO_DEVIATN_E(5) | RADIO_DEVIATN_M(0)));
+//		break;
 	}
 
+	switch(frequency_band)
+		{
+		case 0:
+			WriteSingleReg(RADIO_FREQ2, (uint8_t)(RADIO_FREQ_433>>16 & 0xFF));
+			WriteSingleReg(RADIO_FREQ1, (uint8_t)(RADIO_FREQ_433>>18 & 0xFF));
+			WriteSingleReg(RADIO_FREQ0, (uint8_t)(RADIO_FREQ_433 & 0xFF));
+			break;
+		case 1:
+			WriteSingleReg(RADIO_FREQ2, (uint8_t)(RADIO_FREQ_868>>16 & 0xFF));
+			WriteSingleReg(RADIO_FREQ1, (uint8_t)(RADIO_FREQ_868>>18 & 0xFF));
+			WriteSingleReg(RADIO_FREQ0, (uint8_t)(RADIO_FREQ_868 & 0xFF));
+			break;
+		case 2:
+			WriteSingleReg(RADIO_FREQ2, (uint8_t)(RADIO_FREQ_915>>16 & 0xFF));
+			WriteSingleReg(RADIO_FREQ1, (uint8_t)(RADIO_FREQ_915>>18 & 0xFF));
+			WriteSingleReg(RADIO_FREQ0, (uint8_t)(RADIO_FREQ_915 & 0xFF));
+			break;
+		}
 	// is this the right place?
 	Strobe(RF_SCAL);
 }
