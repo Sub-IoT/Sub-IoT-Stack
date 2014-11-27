@@ -3,5 +3,6 @@ INCLUDE_DIRECTORIES(../hal/)
 ADD_LIBRARY(FRAMEWORK 
     log.c
     queue.c
-    timer.c
+    #timer.c
+    timer_new.c
     ) 
