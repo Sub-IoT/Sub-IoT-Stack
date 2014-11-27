@@ -55,7 +55,7 @@ static timer_event dim_led_event;
 static bool start_channel_scan = false;
 uint8_t buffer[128];
 
-static uint8_t receive_channel[2] = {0x00, 0x0E};
+static uint8_t receive_channel[2] = {0x04, 0x0E};
 
 
 void blink_led()
@@ -111,10 +111,10 @@ void rx_callback(Trans_Rx_Alp_Result* rx_res)
 
 		if (address_length == 2)
 		{
-			log_print_string("Received Query from :%x%x%x%x;",
+			log_print_string("Received Query from: %x%x%x%x",
 								address_ptr[1] >> 4, address_ptr[1] & 0x0F);
 		} else if (address_length == 8) {
-			log_print_string("Received Query from :%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x;",
+			log_print_string("Received Query from: %x%x%x%x%x%x%x%x%x%x%x%x%x%x%x",
 					address_ptr[0] >> 4, address_ptr[0] & 0x0F,
 					address_ptr[1] >> 4, address_ptr[1] & 0x0F,
 					address_ptr[2] >> 4, address_ptr[2] & 0x0F,
