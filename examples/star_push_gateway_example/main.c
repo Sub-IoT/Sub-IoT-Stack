@@ -55,7 +55,7 @@ static timer_event dim_led_event;
 static bool start_channel_scan = false;
 uint8_t buffer[128];
 
-static uint8_t receive_channel[2] = {0x04, 0x0E};
+static uint8_t receive_channel[2] = {0x00, 0x0E};
 
 
 void blink_led()
