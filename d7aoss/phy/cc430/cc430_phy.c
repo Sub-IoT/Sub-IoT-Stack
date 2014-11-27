@@ -659,9 +659,17 @@ RadioState get_radiostate(void)
 void set_channel(uint8_t frequency_band, uint8_t channel_center_freq_index, uint8_t channel_bandwith_index)
 {
 	//Set channel center frequency
+	#ifdef LOG_PHY_ENABLED
+	log_print_stack_string(LOG_PHY, "Set channel freq index: %d", channel_center_freq_index);
+	#endif
+
 	WriteSingleReg(CHANNR, channel_center_freq_index);
 
 	//Set channel bandwidth, modulation and symbol rate
+
+	#ifdef LOG_PHY_ENABLED
+	log_print_stack_string(LOG_PHY, "Set channel bandwidth index: %d", channel_bandwith_index);
+	#endif
 	switch(channel_bandwith_index)
 	{
 	case 0:
@@ -686,24 +694,31 @@ void set_channel(uint8_t frequency_band, uint8_t channel_center_freq_index, uint
 //		break;
 	}
 
+	#ifdef LOG_PHY_ENABLED
+	log_print_stack_string(LOG_PHY, "Set cfrequency band: %d", frequency_band);
+	#endif
+
+	/*
 	switch(frequency_band)
 		{
 		case 0:
 			WriteSingleReg(RADIO_FREQ2, (uint8_t)(RADIO_FREQ_433>>16 & 0xFF));
-			WriteSingleReg(RADIO_FREQ1, (uint8_t)(RADIO_FREQ_433>>18 & 0xFF));
+			WriteSingleReg(RADIO_FREQ1, (uint8_t)(RADIO_FREQ_433>>8 & 0xFF));
 			WriteSingleReg(RADIO_FREQ0, (uint8_t)(RADIO_FREQ_433 & 0xFF));
 			break;
 		case 1:
 			WriteSingleReg(RADIO_FREQ2, (uint8_t)(RADIO_FREQ_868>>16 & 0xFF));
-			WriteSingleReg(RADIO_FREQ1, (uint8_t)(RADIO_FREQ_868>>18 & 0xFF));
+			WriteSingleReg(RADIO_FREQ1, (uint8_t)(RADIO_FREQ_868>>8 & 0xFF));
 			WriteSingleReg(RADIO_FREQ0, (uint8_t)(RADIO_FREQ_868 & 0xFF));
 			break;
 		case 2:
 			WriteSingleReg(RADIO_FREQ2, (uint8_t)(RADIO_FREQ_915>>16 & 0xFF));
-			WriteSingleReg(RADIO_FREQ1, (uint8_t)(RADIO_FREQ_915>>18 & 0xFF));
+			WriteSingleReg(RADIO_FREQ1, (uint8_t)(RADIO_FREQ_915>>8 & 0xFF));
 			WriteSingleReg(RADIO_FREQ0, (uint8_t)(RADIO_FREQ_915 & 0xFF));
 			break;
 		}
+	*/
+
 	// is this the right place?
 	Strobe(RF_SCAL);
 }
