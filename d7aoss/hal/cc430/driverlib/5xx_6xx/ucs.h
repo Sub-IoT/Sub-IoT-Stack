@@ -163,52 +163,53 @@
 //Prototypes for the APIs.
 //
 //*****************************************************************************
-extern void
-UCS_setExternalClockSource (unsigned int baseaddress,
-    unsigned long XT1CLK_frequency,
-    unsigned long XT2CLK_frequency
-    );
+
+//extern void
+//UCS_setExternalClockSource (unsigned int baseaddress,
+//    unsigned long XT1CLK_frequency,
+//    unsigned long XT2CLK_frequency
+//    );
 extern void
 UCS_clockSignalInit ( unsigned int baseaddress,
     unsigned char selectedClockSignal,
     unsigned int clockSource,
     unsigned char clockSourceDivider
     );
-extern void
-UCS_LFXT1Start ( unsigned int baseAddress,
-    unsigned int xt1drive,
-    unsigned char xcap
-    );
-extern void
-UCS_HFXT1Start (
-    unsigned int baseAddress,
-    unsigned int xt1drive
-    );
-extern void
-UCS_bypassXT1 ( unsigned int baseAddress,
-    unsigned char highOrLowFrequency
-    );
-extern unsigned short
-UCS_bypassXT1WithTimeout (
-    unsigned int baseAddress,
-    unsigned char highOrLowFrequency,
-    unsigned int timeout
-    );
-extern void
-UCS_XT1Off (unsigned int baseAddress);
-
-extern unsigned short
-UCS_LFXT1StartWithTimeout (
-    unsigned int baseAddress,
-    unsigned int xt1drive,
-    unsigned char xcap,
-    unsigned int timeout
-    );
-extern unsigned short
-UCS_HFXT1StartWithTimeout (  unsigned int baseAddress,
-    unsigned int xt1drive,
-    unsigned int timeout
-    );
+//extern void
+//UCS_LFXT1Start ( unsigned int baseAddress,
+//    unsigned int xt1drive,
+//    unsigned char xcap
+//    );
+//extern void
+//UCS_HFXT1Start (
+//    unsigned int baseAddress,
+//    unsigned int xt1drive
+//    );
+//extern void
+//UCS_bypassXT1 ( unsigned int baseAddress,
+//    unsigned char highOrLowFrequency
+//    );
+//extern unsigned short
+//UCS_bypassXT1WithTimeout (
+//    unsigned int baseAddress,
+//    unsigned char highOrLowFrequency,
+//    unsigned int timeout
+//    );
+//extern void
+//UCS_XT1Off (unsigned int baseAddress);
+//
+//extern unsigned short
+//UCS_LFXT1StartWithTimeout (
+//    unsigned int baseAddress,
+//    unsigned int xt1drive,
+//    unsigned char xcap,
+//    unsigned int timeout
+//    );
+//extern unsigned short
+//UCS_HFXT1StartWithTimeout (  unsigned int baseAddress,
+//    unsigned int xt1drive,
+//    unsigned int timeout
+//    );
 /*
 extern void UCS_XT2Start (  unsigned int baseAddress,
     unsigned int xt2drive
@@ -241,31 +242,31 @@ extern void UCS_initFLLSettle (    unsigned int baseAddress,
     unsigned int fsystem,
     unsigned int ratio
     );
-
-extern void UCS_enableClockRequest (    unsigned int baseAddress,
-    unsigned char selectClock
-    );
-extern void UCS_disableClockRequest (
-    unsigned int baseAddress,
-    unsigned char selectClock
-    );
-extern unsigned char UCS_faultFlagStatus (
-    unsigned int baseAddress,
-    unsigned char mask
-    );
-
-extern void UCS_clearFaultFlag (
-    unsigned int baseAddress,
-    unsigned char mask
-    );
-extern void UCS_SMCLKOff (unsigned int baseAddress);
-
-extern void UCS_SMCLKOn (unsigned int baseAddress);
-extern unsigned long UCS_getACLK (unsigned int baseAddress);
+//
+//extern void UCS_enableClockRequest (    unsigned int baseAddress,
+//    unsigned char selectClock
+//    );
+//extern void UCS_disableClockRequest (
+//    unsigned int baseAddress,
+//    unsigned char selectClock
+//    );
+//extern unsigned char UCS_faultFlagStatus (
+//    unsigned int baseAddress,
+//    unsigned char mask
+//    );
+//
+//extern void UCS_clearFaultFlag (
+//    unsigned int baseAddress,
+//    unsigned char mask
+//    );
+//extern void UCS_SMCLKOff (unsigned int baseAddress);
+//
+//extern void UCS_SMCLKOn (unsigned int baseAddress);
+//extern unsigned long UCS_getACLK (unsigned int baseAddress);
 extern unsigned long UCS_getSMCLK (unsigned int baseAddress);
-extern unsigned long UCS_getMCLK (unsigned int baseAddress);
-extern unsigned int UCS_clearAllOscFlagsWithTimeout(unsigned int baseAddress, 
-                                             unsigned int timeout);
+//extern unsigned long UCS_getMCLK (unsigned int baseAddress);
+//extern unsigned int UCS_clearAllOscFlagsWithTimeout(unsigned int baseAddress,
+//                                             unsigned int timeout);
        
 
 #endif

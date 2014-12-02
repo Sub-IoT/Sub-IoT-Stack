@@ -18,24 +18,32 @@
  * 	This is the endpoint example
  *
  * 	add the link to d7aoss library in de lnk_*.cmd file, e.g. -l "../../../d7aoss/Debug/d7aoss.lib"
- * 	Make sure to select the correct platform in d7aoss/hal/cc430/platforms.platform.h
+ * 	Make sure to select the correct platform in d7aoss.h
  * 	If your platform is not present, you can add a header file in platforms and commit it to the repository.
  * 	Exclude the stub directories in d7aoss from the build when building for a device.
+ *
+ *  Create the apporpriate file system settings for the FLASH system:
+ *
+ * 	Add following sections to the SECTIONS in .cmd linker file to use the filesystem
+ *		.fs_fileinfo_bitmap : 	{} > FLASH_FS1
+ *  	.fs_fileinfo: 			{} > FLASH_FS1
+ *		.fs_files	: 			{} > FLASH_FS2
+ *
+ *	Add FLASH_FS_FI and FLASH_FS_FILES to the MEMORY section
+ *  eg.
+ *  	FLASH_FS1               : origin = 0xC000, length = 0x0200 // The file headers
+ *	    FLASH_FS2               : origin = 0xC200, length = 0x0400 // The file contents
  */
 
 
-#include <string.h>
 
-#include <trans/trans.h>
-#include <hal/system.h>
-#include <hal/button.h>
-#include <hal/leds.h>
-#include <hal/rtc.h>
+#include <d7aoss.h>
 #include <framework/log.h>
 #include <framework/timer.h>
+#include <msp430.h>
+#include <hal/leds.h>
 
 #define SEND_INTERVAL_MS 2000
-#define SEND_CHANNEL 0x10
 #define TX_EIRP 10
 
 // Macro which can be removed in production environment
@@ -45,10 +53,15 @@ static uint8_t tx = 0;
 static uint16_t counter = 0;
 static volatile bool add_tx_event = true;
 
-static uint8_t data[32];
+uint8_t buffer[128];
+static uint8_t data[4];
 static volatile uint8_t dataLength = 0;
 
-static D7AQP_Command command;
+static uint8_t send_channel[2] = {0x04, 0x0E};
+
+//static D7AQP_Command command;
+static ALP_File_Data_Template data_template;
+static ALP_Template alp_template;
 
 void start_tx()
 {
@@ -68,7 +81,10 @@ void start_tx()
 		data[0] = counter >> 8;
 		data[1] = counter & 0xFF;
 
-		trans_tx_query(&command, 0xFF, SEND_CHANNEL, TX_EIRP);
+		alp_create_structure_for_tx(ALP_REC_FLG_TYPE_UNSOLICITED, 0, 1, &alp_template);
+		trans_tx_query(NULL, 0xFF, send_channel, TX_EIRP, true);
+
+
 	}
 	add_tx_event = true;
 }
@@ -99,40 +115,21 @@ int main(void) {
 	timer_event event;
 
 	// Initialize the OSS-7 Stack
-	system_init();
-
-	// Currently we address the Transport Layer, this should go to an upper layer once it is working.
-	trans_init();
+	d7aoss_init(buffer, 128, buffer, 128);
 	trans_set_tx_callback(&tx_callback);
-	// The initial Tca for the CSMA-CA in
-	trans_set_initial_t_ca(200);
 
 	event.next_event = SEND_INTERVAL_MS;
 	event.f = &start_tx;
 
 	log_print_string("endpoint started");
 
-	// No response (no acknowledgement)
-	command.command_code = D7AQP_COMMAND_CODE_EXTENSION | D7AQP_COMMAND_TYPE_NA2P_REQUEST | D7AQP_OPCODE_ANNOUNCEMENT_FILE;
-	command.command_extension = D7AQP_COMMAND_EXTENSION_NORESPONSE;
-	command.dialog_template = NULL;
+	alp_template.op = ALP_OP_RESP_DATA;
+	alp_template.data = (uint8_t*) &data_template;
 
-	// Waiting for response (acknowledgement)
-//	command.command_code = D7AQP_COMMAND_TYPE_NA2P_REQUEST | D7AQP_OPCODE_ANNOUNCEMENT_FILE;
-//
-//	D7AQP_Dialog_Template dialog_template;
-//	dialog_template.response_timeout = 200;
-//	dialog_template.response_channel_list_lenght = 0; // means same as send channel
-//
-//	command.dialog_template = &dialog_template;
-
-	D7AQP_Single_File_Return_Template file_template;
-	file_template.return_file_id = 0;
-	file_template.file_offset = 0;
-	file_template.isfb_total_length = 2;
-	file_template.file_data = data;
-
-	command.command_data = &file_template;
+	data_template.file_id = 32;
+	data_template.start_byte_offset = 2;
+	data_template.bytes_accessing = 4;
+	data_template.data = data;
 
 	timer_add_event(&event);
 
@@ -150,6 +147,6 @@ int main(void) {
 			timer_add_event(&event);
 		}
 
-		system_lowpower_mode(3,1);
+		system_lowpower_mode(0,1);
 	}
 }

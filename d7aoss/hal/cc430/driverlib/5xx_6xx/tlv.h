@@ -1,3 +1,4 @@
+
 /* --COPYRIGHT--,BSD
  * Copyright (c) 2012, Texas Instruments Incorporated
  * All rights reserved.
@@ -201,11 +202,13 @@ extern void TLV_getInfo(unsigned char tag,
                         unsigned char *length, 
                         unsigned int **data_address
                         );
+/*
 extern unsigned int TLV_getDeviceType();
 extern unsigned int TLV_getMemory(unsigned char instance);
 extern unsigned int TLV_getPeripheral(unsigned char tag, 
                                       unsigned char instance
                                       );
 extern unsigned char TLV_getInterrupt(unsigned char tag);
+*/
 
 #endif

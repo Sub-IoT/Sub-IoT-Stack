@@ -27,6 +27,11 @@ extern "C" {
 
 #include <stdint.h>
 
+#define RADIO_INST_READY_WAIT()		while(!(RF1AIFCTL1 & RFINSTRIFG))
+#define RADIO_DIN_READY_WAIT()		while(!(RF1AIFCTL1 & RFDINIFG))
+#define RADIO_STAT_READY_WAIT()		while(!(RF1AIFCTL1 & RFSTATIFG))
+#define RADIO_DOUT_READY_WAIT()		while(!(RF1AIFCTL1 & RFDOUTIFG))
+
 typedef struct {
     uint8_t iocfg2;    // IOCFG2.GDO2_CFG output pin configuration
     uint8_t iofcg1;    // IOCFG1.GDO1_CFG output pin configuration

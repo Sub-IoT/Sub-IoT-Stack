@@ -21,7 +21,7 @@
 #include "uart.h"
 
 #define UART_CHANNEL        UART0
-#define UART_BAUDRATE       115200
+#define UART_BAUDRATE       BAUDRATE
 #define UART_CLOCK          cmuClock_UART0
 #define UART_ROUTE_LOCATION UART_ROUTE_LOCATION_LOC1
 

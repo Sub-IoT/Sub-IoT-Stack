@@ -20,12 +20,7 @@
 #define __LOG_H_
 
 
-//#TODO define from cmake
-#define LOG_PHY_ENABLED
-#define LOG_DLL_ENABLED
-//#define LOG_NWL_ENABLED
-//#define LOG_TRANS_ENABLED
-//#define LOG_FWK_ENABLED
+// Set logging options in d7aoss.h
 /*
  * TODO this is manually set in CSS!
  * to enable function tracing go to the d7aoss project properties:
@@ -38,6 +33,8 @@
 
 #include "../phy/phy.h"
 #include "../dll/dll.h"
+#include "../d7aoss.h"
+#include "../hal/uart.h"
 
 // generic logging functions
 #define LOG_TYPE_STRING 0x01
@@ -55,7 +52,7 @@
 
 // These are optional special logging types, use a higher value
 #define LOG_TYPE_PHY_RX_RES 0xFE
-#define LOG_TYPE_PHY_RX_RES_SIZE 5
+#define LOG_TYPE_PHY_RX_RES_SIZE 8
 
 #define LOG_TYPE_DLL_RX_RES 0xFD
 #define LOG_TYPE_DLL_RX_RES_SIZE 2

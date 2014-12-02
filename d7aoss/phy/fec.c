@@ -51,7 +51,6 @@ void fec_init_encode(uint8_t* input)
 	processedbytes = 0;
 	fecprocessedbytes = 0;
 
-	pn9 = INITIAL_PN9;
 	fecstate = INITIAL_FECSTATE;
 }
 
@@ -64,8 +63,6 @@ void fec_init_decode(uint8_t* output)
 
 	processedbytes = 0;
 	fecprocessedbytes = 0;
-
-	pn9 = INITIAL_PN9;
 
 	vstate.path_size = 0;
 
@@ -91,8 +88,6 @@ void fec_set_length(uint8_t length)
 bool fec_encode(uint8_t* output)
 {
 	uint8_t i;
-	uint16_t tmppn9;
-	uint8_t pn9buffer;
 	uint16_t fecbuffer[2];
 
 	if(fecprocessedbytes >= fecpacketlength)
@@ -101,17 +96,17 @@ bool fec_encode(uint8_t* output)
 	for(i = 0; i < 2; i++)
 	{
 		//Get byte from the input buffer if available and apply data whitening, otherwise append trellis terminator
-		// TODO: datawhitening should be after FEC so HW datawhitening can still be used
+		// TODO: remove data whitening
 		if(processedbytes < packetlength) {
 			//Pn9 data whitening
-			pn9buffer = *iobuffer++ ^ (uint8_t)pn9;
-
-			//Rotate pn9 code
-			tmppn9 = ((pn9 << 5) ^ pn9) & 0x01E0;
-			pn9 = tmppn9 | (pn9 >> 4);
-			tmppn9 = ((pn9 << 5) ^ pn9) & 0x01E0;
-			pn9 = tmppn9 | (pn9 >> 4);
-
+//			pn9buffer = *iobuffer++ ^ (uint8_t)pn9;
+//
+//			//Rotate pn9 code
+//			tmppn9 = ((pn9 << 5) ^ pn9) & 0x01E0;
+//			pn9 = tmppn9 | (pn9 >> 4);
+//			tmppn9 = ((pn9 << 5) ^ pn9) & 0x01E0;
+//			pn9 = tmppn9 | (pn9 >> 4);
+			pn9buffer = *iobuffer++;
 			processedbytes++;
 		} else {
 			pn9buffer = TRELLIS_TERMINATOR;
