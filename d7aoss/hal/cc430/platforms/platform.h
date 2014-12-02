@@ -21,6 +21,8 @@
 #define PLATFORM_H_
 
 #include "../../../d7aoss.h"
+// Select the corrrect platform in the line below
+#define PLATFORM_WIZZIMOTE
 
 
 #ifdef PLATFORM_WIZZIMOTE

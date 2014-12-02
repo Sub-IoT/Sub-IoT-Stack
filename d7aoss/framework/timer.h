@@ -47,7 +47,7 @@ static bool timer_add_event_in_stack( timer_event new_event );
 static bool timer_update_stack( void );
 
 void timer_wait_done( void );
-void timer_wait_ms( uint16_t ms );
+void timer_wait_ms( uint32_t ms );
 
 void benchmarking_timer_init();
 uint32_t benchmarking_timer_getvalue();

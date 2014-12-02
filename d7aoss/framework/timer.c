@@ -17,8 +17,9 @@
 #include "../hal/timer.h"
 #include "log.h"
 
+
 // turn on/off the debug prints
-#if LOG_FWK_ENABLED
+#ifdef LOG_FWK_ENABLED
 #define DPRINT(...) log_print_stack_string(LOG_FWK, __VA_ARGS__)
 #else
 #define DPRINT(...)
@@ -26,10 +27,10 @@
 
 #define TIMER_EVENT_STACK_SIZE  20
 
-timer_event timer_event_stack[TIMER_EVENT_STACK_SIZE];
-uint8_t     timer_next_event_position;
-uint8_t     timer_event_count;
-bool        timer_event_running;
+static volatile timer_event timer_event_stack[TIMER_EVENT_STACK_SIZE];
+static volatile uint8_t     timer_next_event_position;
+static volatile uint8_t     timer_event_count;
+static volatile bool        timer_event_running;
 
 
 
@@ -44,16 +45,20 @@ void timer_init( void )
     {
         timer_event_stack[i].f = NULL;
     }
+    DPRINT("Timer init.");
 }
 
 
 bool timer_add_event( timer_event* event )
 {
+    hal_timer_disable_interrupt();
+
     timer_event new_event;
     new_event.f = event->f;
     new_event.next_event = event->next_event;
 
-    DPRINT("Adding event: t: %d @%p" , new_event.next_event, new_event.f );
+    DPRINT("Adding event: t: %ld @%p." , new_event.next_event, new_event.f );
+
 
     // add the new event in the stack
     if( !timer_add_event_in_stack( new_event ) ) { return false; }
@@ -64,7 +69,7 @@ bool timer_add_event( timer_event* event )
         // configure the interrupt
         timer_configure_next_event();
     }
-
+    
     return true;
 }
 
@@ -72,6 +77,9 @@ void timer_completed( void )
 {
     // to avoid configuring annother event when one is still executing
     timer_event_running = true;
+
+    hal_timer_disable_interrupt();
+    hal_timer_clear_interrupt();
 
     timer_event event;
     uint8_t event_position = timer_next_event_position;
@@ -86,22 +94,13 @@ void timer_completed( void )
     // execute event
     event.f();
 
-    DPRINT("Event completed: @%p", event.f);
-
-    // if there is other events waiting
-    if( timer_event_count > 0 )
-    {
-        // prepare the next event
-        timer_configure_next_event();
-    }
-    else
-    {
-        // disable interrupts to avoid unwanted events
-        hal_timer_disable_interrupt();
-    }
-
+    DPRINT("Event completed: @%p.", event.f);
+    
     // end of running event
     timer_event_running = false;
+
+    // prepare the next event
+    timer_configure_next_event();
 }
 
 uint32_t timer_get_counter_value( void )
@@ -119,16 +118,16 @@ static uint8_t timer_get_next_event( void )
         while(1);
     }
 
-    int32_t next_event_time_temp;
+    int32_t next_event_time_temp = 0;
     int32_t next_event_time = 0xFFFFFF; // maximum counter value
-    uint8_t next_event_position;
+    uint8_t next_event_position = 0;
     uint8_t event_count = 0;
-    uint8_t i;
+    uint8_t i = 0;
 
     // always update the stack before using it
     timer_update_stack();
 
-    // search for the smaller time in the stack
+    // search for the smallest time in the stack
     for( i=0 ; i<TIMER_EVENT_STACK_SIZE ; i++ )
     {
         if( timer_event_stack[i].f != NULL )
@@ -136,7 +135,7 @@ static uint8_t timer_get_next_event( void )
             // return first event found if there is only one event
             if( timer_event_count == 1 )
             {
-                DPRINT("One event found: t: %d @%p pos: %d", timer_event_stack[i].next_event, timer_event_stack[i].f, i );
+                DPRINT("One event found: t: %ld @%p pos: %u.", timer_event_stack[i].next_event, timer_event_stack[i].f, i );
                 return i;
             }
 
@@ -153,7 +152,7 @@ static uint8_t timer_get_next_event( void )
             event_count++;
             if( event_count >= timer_event_count )
             {
-                DPRINT("Next event found: t: %d @%p pos: %d among %d", timer_event_stack[next_event_position].next_event, timer_event_stack[next_event_position].f, next_event_position, event_count );
+                DPRINT("Next event found: t: %ld @%p pos: %u among %u.", timer_event_stack[next_event_position].next_event, timer_event_stack[next_event_position].f, next_event_position, event_count );
                 return next_event_position;
             }
         }
@@ -166,28 +165,31 @@ static uint8_t timer_get_next_event( void )
 
 static void timer_configure_next_event( void )
 {
-    int32_t event_time;
-
-    // retrieve the next event position in the stack
-    timer_next_event_position = timer_get_next_event();
-
-    // ajust the value for configuring the interrupt ( register = number of ticks - 1 )
-    event_time = timer_event_stack[timer_next_event_position].next_event - 1;
-
-    // if the time is already elapsed
-    if( event_time <= hal_timer_getvalue() )
+    if( timer_event_count > 0 )
     {
-        // fire the event
-        //DPRINT("Event fired: t: %d @%p pos: %d", event_time, timer_event_stack[event_position].f, event_position);
-        timer_completed();
-    }
-    else
-    {
-        // set next interrupt
-        hal_timer_disable_interrupt();
-        hal_timer_setvalue( (uint32_t)event_time );
-        hal_timer_enable_interrupt();
-        //DPRINT("Event configured: t: %d @%p pos: %d", event_time, timer_event_stack[event_position].f, event_position);
+        int32_t event_time;
+
+        // retrieve the next event position in the stack
+        timer_next_event_position = timer_get_next_event();
+
+        // ajust the value for configuring the interrupt ( register = number of ticks - 1 )
+        event_time = timer_event_stack[timer_next_event_position].next_event - 1;
+
+        // if the time is already elapsed
+        if( event_time <= hal_timer_getvalue() )
+        {
+            // fire the event
+            DPRINT("Event fired: t: %ld @%p pos: %u.", event_time, timer_event_stack[timer_next_event_position].f, timer_next_event_position);
+            timer_completed();
+        }
+        else
+        {
+            // set next interrupt
+            hal_timer_disable_interrupt();
+            hal_timer_setvalue( (uint32_t)event_time );
+            hal_timer_enable_interrupt();
+            DPRINT("Event configured: t: %ld @%p pos: %u.", event_time, timer_event_stack[timer_next_event_position].f, timer_next_event_position);
+        }
     }
 }
 
@@ -195,6 +197,11 @@ static void timer_configure_next_event( void )
 static bool timer_add_event_in_stack( timer_event new_event )
 {
     uint8_t i;
+    if( new_event.f == NULL )
+    {
+        log_print_stack_string( LOG_FWK, "Event added no configured!" );
+        return false;
+    }
     // add event to the first free spot in the stack
     for( i=0 ; i<TIMER_EVENT_STACK_SIZE ; i++ )
     {
@@ -204,7 +211,7 @@ static bool timer_add_event_in_stack( timer_event new_event )
             timer_event_stack[i] = new_event;
             timer_event_count++;
 
-            DPRINT("Event added in stack: t: %d @%p pos: %d", timer_event_stack[i].next_event, timer_event_stack[i].f, i);
+            DPRINT("Event added in stack: t: %ld @%p pos: %u.", timer_event_stack[i].next_event, timer_event_stack[i].f, i);
             return true;
         }
     }
@@ -218,6 +225,7 @@ static bool timer_update_stack( void )
     // just reset counter if there is no event
     if( timer_event_count == 0 )
     {
+        DPRINT("Counter reseted: time since last: %u.", hal_timer_getvalue() );
         hal_timer_counter_reset();
         return true;
     }
@@ -242,7 +250,7 @@ static bool timer_update_stack( void )
             event_count++;
             if( event_count >= timer_event_count )
             {
-                DPRINT("Stack updated: time elapsed: %d", current_time);
+                DPRINT("Stack updated: time elapsed: %ld.", current_time);
                 return true;
             }
         }
@@ -254,11 +262,7 @@ static bool timer_update_stack( void )
 
 
 
-
-
-
-
-volatile bool waiting;
+static volatile bool waiting;
 
 void timer_wait_done( void )
 {
@@ -267,18 +271,21 @@ void timer_wait_done( void )
 
 timer_event timer_wait = { .next_event = 0, .f = timer_wait_done };
 
-void timer_wait_ms( uint16_t ms )
+void timer_wait_ms( uint32_t ms )
 {
-    /*
-	waiting = true;
-    timer_wait.next_event = ms;
+    
+    
+    waiting = true;
+    timer_wait.next_event = (int32_t)(ms*1024)/1000;
     timer_add_event( &timer_wait );
     while(waiting);
-    */
+    
+   /* 
     int i;
     for( i=0 ; i<ms ; i++ )
     {
-            volatile uint32_t n = 32000;
+            volatile uint32_t n = 320;
             while(n--);
     }
+    */
 }
