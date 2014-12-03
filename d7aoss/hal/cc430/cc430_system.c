@@ -145,7 +145,7 @@ void system_init(uint8_t* tx_buffer, uint16_t tx_buffer_size, uint8_t* rx_buffer
     queue_init(&rx_queue, rx_buffer, rx_buffer_size, 1);
 
 
-    //system_check_set_unique_id();
+    system_check_set_unique_id();
 }
 
 void clock_init(void)

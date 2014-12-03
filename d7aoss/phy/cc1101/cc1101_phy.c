@@ -339,7 +339,7 @@ bool phy_is_tx_in_progress(void)
 	return (state == Transmit);
 }
 
-extern int16_t phy_get_rssi(uint8_t spectrum_id, uint8_t sync_word_class)
+extern int16_t phy_get_rssi(uint8_t spectrum_id[2], uint8_t sync_word_class)
 {
 	uint8_t rssi_raw = 0;
 

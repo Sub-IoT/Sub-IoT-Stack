@@ -22,10 +22,7 @@
 #include "../alp/alp.h"
 #include <string.h>
 
-const uint8_t filesystem_info_nr_files;
-const uint8_t filesystem_info_bitmap[];
-const uint8_t filesystem_info_headers[];
-const uint8_t filesystem_files[];
+
 
 void fs_init()
 {
