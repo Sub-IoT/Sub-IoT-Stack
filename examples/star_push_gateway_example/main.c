@@ -51,12 +51,14 @@
 #define USE_LEDS
 
 // event to create a led blink
-static timer_event dim_led_event;
 static bool start_channel_scan = false;
 uint8_t buffer[128];
 
 static uint8_t receive_channel[2] = {0x04, 0x0E};
 
+// configure blinking led event
+void dim_led();
+static timer_event dim_led_event = { .next_event = 50, .f = &dim_led };
 
 void blink_led()
 {
@@ -148,14 +150,13 @@ int main(void) {
 
 	start_channel_scan = true;
 
+        timer_wait_ms( 500 );
+
 	log_print_string("gateway started");
 
 	// Log the device id
 	log_print_data(device_id, 8);
 
-	// configure blinking led event
-	dim_led_event.next_event = 50;
-	dim_led_event.f = &dim_led;
 
 	system_watchdog_init(0x0020, 0x03);
 	system_watchdog_timer_start();

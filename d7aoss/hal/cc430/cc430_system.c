@@ -52,14 +52,14 @@ void PMM_SetStdSVSM(unsigned short svsmh_cfg, uint8_t Von, uint8_t Voffon) {
     unsigned short svsmh_reg;
     unsigned short svsml_reg;
 
-    PMMCTL0_H    = 0xA5;
-    svsmh_reg       = svsmh_cfg | ((unsigned short)Von << 8) | (unsigned short)Voffon;
-    svsml_reg       = SVSMLCTL & 0x070F;
-    svsml_reg      |= svsmh_reg & 0x08C0;   // Always disable SVML (useless)
-    PMMIFG        = 0;
-    PMMRIE        = 0;
-    SVSMHCTL   = svsmh_reg;
-    SVSMLCTL   = svsml_reg;
+    PMMCTL0_H   = 0xA5;
+    svsmh_reg   = svsmh_cfg | ((unsigned short)Von << 8) | (unsigned short)Voffon;
+    svsml_reg   = SVSMLCTL & 0x070F;
+    svsml_reg  |= svsmh_reg & 0x08C0;   // Always disable SVML (useless)
+    PMMIFG      = 0;
+    PMMRIE      = 0;
+    SVSMHCTL    = svsmh_reg;
+    SVSMLCTL    = svsml_reg;
     while ((PMMIFG & (SVSMLDLYIFG+SVSMHDLYIFG)) != (SVSMLDLYIFG+SVSMHDLYIFG));
 
     PMMIFG        = 0;

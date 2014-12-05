@@ -20,6 +20,7 @@
 #include "../hal/system.h"
 #include "../dll/dll.h"
 #include "../alp/alp.h"
+#include "../nwl/nwl.h"
 #include "../framework/timer.h"
 #include "../framework/log.h"
 #include <string.h>

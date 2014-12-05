@@ -63,7 +63,7 @@ bool phy_tx(phy_tx_cfg_t* cfg);
 bool phy_rx(phy_rx_cfg_t* cfg);
 bool phy_is_rx_in_progress(void);
 bool phy_is_tx_in_progress(void);
-int16_t phy_get_rssi(uint8_t spectrum_id, uint8_t sync_word_class);
+int16_t phy_get_rssi(uint8_t spectrum_id[2], uint8_t sync_word_class);
 
 /*
  * Interrupt function prototypes

@@ -3,8 +3,8 @@ INCLUDE_DIRECTORIES(${D7AOSS_SOURCE_DIR}/d7aoss/framework)
 INCLUDE_DIRECTORIES(${D7AOSS_SOURCE_DIR}/d7aoss/hal)
 INCLUDE_DIRECTORIES(${D7AOSS_SOURCE_DIR}/d7aoss/dll)
 
-ADD_EXECUTABLE(star_push_gateway_example main.c)
-TARGET_LINK_LIBRARIES(star_push_gateway_example D7AOSS PHY HAL FRAMEWORK DLL NWL TRANS)
+ADD_EXECUTABLE(star_push_gateway_example main.c filesystem.c)
+TARGET_LINK_LIBRARIES(star_push_gateway_example D7AOSS ALP DAE PHY HAL FRAMEWORK DLL NWL TRANS)
 
 IF(D7AOSS_HAL_DRIVER STREQUAL "efm32gg")
 SET_TARGET_PROPERTIES(star_push_gateway_example PROPERTIES LINK_FLAGS "-T${D7AOSS_SOURCE_DIR}/d7aoss/hal/efm32gg/CMSIS/device/linker/efm32gg.ld")

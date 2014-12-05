@@ -50,5 +50,5 @@ void write_bytes_to_flash(uint8_t *address, uint8_t* data, uint16_t length)
 		FCTL3 = FWKEY + LOCK; // Reset LOCK bit
 	}
 
-	_enable_interrupt();
+	__enable_interrupt();
 }

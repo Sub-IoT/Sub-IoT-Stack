@@ -24,7 +24,7 @@
 
 
 // TODO only in debug mode?
-#define BUFFER_SIZE 50
+#define BUFFER_SIZE 100
 static char buffer[BUFFER_SIZE];
 
 #pragma NO_HOOKS(log_print_string)
