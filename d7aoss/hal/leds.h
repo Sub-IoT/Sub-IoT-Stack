@@ -18,22 +18,6 @@
 #ifndef __LEDS_H__
 #define __LEDS_H__
 
-
-#define RED_BASEADDRESS		__MSP430_BASEADDRESS_PORT2_R__
-#define RED_PORT			GPIO_PORT_P2
-#define RED_PIN 			GPIO_PIN3
-#define RED_TYPE			0
-
-#define GREEN_BASEADDRESS 	__MSP430_BASEADDRESS_PORT2_R__
-#define GREEN_PORT 			GPIO_PORT_P2
-#define GREEN_PIN 			GPIO_PIN4
-#define GREEN_TYPE			0
-
-#define BLUE_BASEADDRESS  	__MSP430_BASEADDRESS_PORT2_R__
-#define BLUE_PORT 			GPIO_PORT_P2
-#define BLUE_PIN 			GPIO_PIN5
-#define BLUE_TYPE			0
-
 void led_init();
 
 void led_on(unsigned char led_nr);
