@@ -57,7 +57,7 @@ uint8_t buffer[128];
 static uint8_t data[4];
 static volatile uint8_t dataLength = 0;
 
-static uint8_t send_channel[2] = {0x14, 0x0E};
+static uint8_t send_channel[2] = {0x04, 0x0E};
 
 //static D7AQP_Command command;
 static ALP_File_Data_Template data_template;
@@ -127,7 +127,7 @@ int main(void) {
 	alp_template.data = (uint8_t*) &data_template;
 
 	data_template.file_id = 32;
-	data_template.start_byte_offset = 2;
+	data_template.start_byte_offset = 0;
 	data_template.bytes_accessing = 4;
 	data_template.data = data;
 
