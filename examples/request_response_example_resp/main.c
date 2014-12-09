@@ -46,7 +46,7 @@ static timer_event dim_led_event;
 static bool start_channel_scan = false;
 static volatile uint8_t add_sensor_event = 0;
 
-static uint8_t receive_channel[2] = { 0x04,0x00};
+static uint8_t receive_channel[2] = {0x04,0x00};
 uint8_t buffer[128];
 
 
@@ -153,8 +153,7 @@ void tx_callback(Trans_Tx_Result result)
 	start_channel_scan = true;
 }
 
-	int main(void) {
-
+int main(void) {
 	timer_event event;
 	int16_t temperature_internal;
 	file_handler fh;
@@ -180,7 +179,7 @@ void tx_callback(Trans_Tx_Result result)
 	event.f = &get_temperature;
 
 	blink_led();
-	//timer_add_event(&event);
+	timer_add_event(&event);
 
 
 	log_print_string("responder started");
@@ -210,7 +209,7 @@ void tx_callback(Trans_Tx_Result result)
 
 			fs_close(&fh);
 
-			//timer_add_event(&event);
+			timer_add_event(&event);
 		}
 
 		// Don't know why but system reboots when LPM > 1 since ACLK is uses for UART

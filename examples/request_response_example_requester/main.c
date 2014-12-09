@@ -92,7 +92,7 @@ void start_tx()
 		data_template.data = NULL;
 
 		alp_create_structure_for_tx(ALP_REC_FLG_TYPE_COMMAND_RESPONSE, counter, 1, &alp_template);
-		trans_tx_query(NULL, 0xFF, send_channel, TX_EIRP);
+		trans_tx_query(NULL, 0xFF, send_channel, TX_EIRP, true);
 
 	}
 
