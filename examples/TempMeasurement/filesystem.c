@@ -130,7 +130,7 @@ const uint8_t filesystem_files[] = {
 			0x20,0x02,0x02,0x50,// File ID 0x20, file offset 2 , compare length 2 , previous value - arithmetic comp - inequality
 
 			// Channel ID
-			0x04, 0x0E, // Band 0: 433 / Class 1: Normal Rate / Coding 0: PN9, Index 0: 433.164
+			0x04, 0x00, // Band 0: 433 / Class 1: Normal Rate / Coding 0: PN9, Index 0: 433.164
 			0x64, // TX EIRP 2 x (10 dBm + 50)
 			// Subnet
 			0xFF,

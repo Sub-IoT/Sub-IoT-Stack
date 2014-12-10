@@ -36,7 +36,7 @@
 
 
 #include <d7aoss.h>
-//#include <framework/log.h>
+#include <framework/log.h>
 #include <framework/timer.h>
 #include <msp430.h>
 #include <hal/leds.h>
@@ -54,7 +54,8 @@ static volatile uint16_t adc12_result;
 static volatile uint8_t adc12_data_ready;
 
 // event to create a led blink
-static timer_event dim_led_event;
+void dim_led();
+static timer_event dim_led_event = {&dim_led, 50};
 
 int16_t temperature_internal = -100;
 
@@ -137,33 +138,25 @@ void tx_callback(Trans_Tx_Result result)
 		led_off(LED_ERROR);
 		blink_led();
 		#endif
-		//log_print_string("TX OK");
+		log_print_string("TX OK");
 	}
 	else
 	{
 		#ifdef USE_LEDS
 		led_on(LED_ERROR);
 		#endif
-		//log_print_string("TX CCA FAIL");
+		log_print_string("TX CCA FAIL");
 	}
 }
 
 
 int main(void) {
-	timer_event event;
+	timer_event event = {&get_temperature, TEMPERATURE_INTERVAL_MS};
 	int16_t temperature_internal;
 	file_handler fh;
 
 	d7aoss_init(buffer, 128, buffer, 128);
 	trans_set_tx_callback(&tx_callback);
-	
-	// Configure event to measure temperature
-	event.next_event = TEMPERATURE_INTERVAL_MS;
-	event.f = &get_temperature;
-
-	// configure blinking led event
-	dim_led_event.next_event = 50;
-	dim_led_event.f = &dim_led;
 
 	timer_add_event(&event);
 
@@ -174,20 +167,17 @@ int main(void) {
 			add_sensor_event = false;
 			temperature_internal = temperature_measurement();
 
-			//if ((temperature_internal - temp > 1) || (temperature_internal - temp < 1))
-			//{
-				fs_open(&fh, 32, file_system_user_user, file_system_access_type_write);
+			log_print_string("Updating temperature: %d mV", temperature_internal);
 
-				uint8_t data[2];
-				data[0] = (uint8_t) (temperature_internal>> 8);
-				data[1] = (uint8_t) (temperature_internal);
+			fs_open(&fh, 32, file_system_user_user, file_system_access_type_write);
 
-				fs_write_data(&fh, 2, data, 2,true);
+			uint8_t data[2];
+			data[0] = (uint8_t) (temperature_internal>> 8);
+			data[1] = (uint8_t) (temperature_internal);
 
-				fs_close(&fh);
-				//temperature_internal = temp;
-			//}
+			fs_write_data(&fh, 2, data, 2,true);
 
+			fs_close(&fh);
 
 			timer_add_event(&event);
 		}
