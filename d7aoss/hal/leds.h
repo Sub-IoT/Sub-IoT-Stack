@@ -18,11 +18,15 @@
 #ifndef __LEDS_H__
 #define __LEDS_H__
 
+#include "../types.h"
+
 void led_init();
 
-void led_on(unsigned char led_nr);
-void led_off(unsigned char led_nr);
-void led_toggle(unsigned char led_nr);
+void led_on(uint8_t led_nr);
+void led_off(uint8_t led_nr);
+void led_toggle(uint8_t led_nr);
+void led_blink(uint8_t led_id);
+
 
 
 #endif // __LEDS_H__

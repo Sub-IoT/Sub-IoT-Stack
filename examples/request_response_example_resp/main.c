@@ -41,8 +41,7 @@
 #define TX_EIRP 10
 #define USE_LEDS
 
-// event to create a led blink
-static timer_event dim_led_event;
+
 static bool start_channel_scan = false;
 static volatile uint8_t add_sensor_event = 0;
 
@@ -55,17 +54,6 @@ uint8_t rx_buffer[128];
 static volatile uint16_t adc12_result;
 static volatile uint8_t adc12_data_ready;
 
-void blink_led()
-{
-	led_on(1);
-
-	timer_add_event(&dim_led_event);
-}
-
-void dim_led()
-{
-	led_off(1);
-}
 
 void start_rx()
 {
@@ -171,15 +159,13 @@ int main(void) {
 	start_channel_scan = true;
 
 
-	// configure blinking led event
-	dim_led_event.next_event = 50;
-	dim_led_event.f = &dim_led;
-
 	// Configure event to measure temperature
 	event.next_event = TEMPERATURE_INTERVAL_MS;
 	event.f = &get_temperature;
 
-	blink_led();
+
+	led_blink(1);
+
 	timer_add_event(&event);
 
 

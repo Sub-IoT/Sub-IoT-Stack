@@ -53,24 +53,9 @@ static volatile uint8_t add_sensor_event = 0;
 static volatile uint16_t adc12_result;
 static volatile uint8_t adc12_data_ready;
 
-// event to create a led blink
-void dim_led();
-static timer_event dim_led_event = {&dim_led, 50};
-
 int16_t temperature_internal = -100;
 
 
-void blink_led()
-{
-	led_on(LED_OK);
-
-	timer_add_event(&dim_led_event);
-}
-
-void dim_led()
-{
-	led_off(LED_OK);
-}
 
 void get_temperature()
 {
@@ -136,7 +121,7 @@ void tx_callback(Trans_Tx_Result result)
 	{
 		#ifdef USE_LEDS
 		led_off(LED_ERROR);
-		blink_led();
+		led_blink(LED_OK);
 		#endif
 		log_print_string("TX OK");
 	}

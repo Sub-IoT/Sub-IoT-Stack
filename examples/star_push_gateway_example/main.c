@@ -36,41 +36,19 @@
  */
 
 
-#include <string.h>
-
-#include <trans/trans.h>
-#include <hal/system.h>
-#include <hal/button.h>
-#include <hal/leds.h>
-#include <hal/rtc.h>
-#include <hal/uart.h>
+#include <d7aoss.h>
 #include <framework/log.h>
 #include <framework/timer.h>
+#include <msp430.h>
+#include <hal/leds.h>
 
 #define TX_EIRP 10
 #define USE_LEDS
 
-// event to create a led blink
 static bool start_channel_scan = false;
 uint8_t buffer[128];
 
 static uint8_t receive_channel[2] = {0x04, 0x00};
-
-// configure blinking led event
-void dim_led();
-static timer_event dim_led_event = { .next_event = 50, .f = &dim_led };
-
-void blink_led()
-{
-	led_on(1);
-
-	timer_add_event(&dim_led_event);
-}
-
-void dim_led()
-{
-	led_off(1);
-}
 
 void start_rx()
 {
@@ -82,7 +60,7 @@ void rx_callback(Trans_Rx_Alp_Result* rx_res)
 {
 	system_watchdog_timer_reset();
 
-	blink_led();
+	led_blink(1);
 
 	if (rx_res->nwl_rx_res->protocol_type == ProtocolTypeNetworkProtocol)
 	{
@@ -140,17 +118,14 @@ void rx_callback(Trans_Rx_Alp_Result* rx_res)
 
 int main(void) {
 	// Initialize the OSS-7 Stack
-	system_init(buffer, 128, buffer, 128);
+	d7aoss_init(buffer, 128, buffer, 128);
 
-	// Currently we address the Transport Layer for RX, this should go to an upper layer once it is working.
-	trans_init();
 	trans_set_alp_rx_callback(&rx_callback);
 	// The initial Tca for the CSMA-CA in
 	dll_set_initial_t_ca(200);
 
 	start_channel_scan = true;
 
-        timer_wait_ms( 500 );
 
 	log_print_string("gateway started");
 
@@ -161,7 +136,7 @@ int main(void) {
 	system_watchdog_init(0x0020, 0x03);
 	system_watchdog_timer_start();
 
-	blink_led();
+	led_blink(1);
 
 	while(1)
 	{

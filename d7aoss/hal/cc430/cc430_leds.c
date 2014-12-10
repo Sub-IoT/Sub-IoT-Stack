@@ -19,10 +19,16 @@
 #include "cc430_addresses.h"
 #include "../leds.h"
 #include "platforms/platform.h"
+#include "../../framework/timer.h"
 
 //#include "inc/hw_memmap.h"
 #include "driverlib/5xx_6xx/gpio.h"
 #include "driverlib/5xx_6xx/wdt.h"
+
+static void led_dim();
+
+static timer_event dim_led_event = { .next_event = 50, .f = &led_dim };
+static uint8_t blink_led_mask = 0;
 
 void led_init()
 {
@@ -82,4 +88,33 @@ void led_toggle(unsigned char led_nr)
 			GPIO_toggleOutputOnPin(OUTPUT3_BASEADDRESS, OUTPUT3_PORT, OUTPUT3_PIN);
 			break;
     }
+}
+
+
+void led_blink(unsigned char led_id)
+{
+	led_on(led_id);
+
+	blink_led_mask = blink_led_mask | (1 << led_id);
+
+	timer_add_event(&dim_led_event);
+}
+
+static void led_dim()
+{
+	if ((blink_led_mask & (uint8_t) BIT1) == (uint8_t) BIT1)
+	{
+		led_off(1);
+		blink_led_mask = blink_led_mask & !BIT1;
+	}
+	if ((blink_led_mask & (uint8_t) BIT2) == (uint8_t) BIT2)
+	{
+		led_off(2);
+		blink_led_mask = blink_led_mask & !BIT2;
+	}
+	if ((blink_led_mask & (uint8_t) BIT3) == (uint8_t) BIT3)
+	{
+		led_off(3);
+		blink_led_mask = blink_led_mask & !BIT3;
+	}
 }
