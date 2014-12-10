@@ -60,7 +60,8 @@ static uint8_t counter = 0;
 static volatile bool add_tx_event = true;
 static volatile bool wait_for_response = false;
 
-uint8_t buffer[128];
+uint8_t tx_buffer[128];
+uint8_t rx_buffer[128];
 
 static volatile uint8_t dataLength = 0;
 
@@ -81,7 +82,7 @@ void start_tx()
 		led_on(3);
 		#endif
 
-		log_print_string("TX...");
+		log_print_string("TX Request");
 
 		alp_template.op = ALP_OP_READ_DATA;
 		alp_template.data = (uint8_t*) &data_template;
@@ -144,7 +145,7 @@ void tx_callback(Trans_Tx_Result result)
 		#endif
 		log_print_string("TX OK");
 
-		//wait_for_response = true;
+		wait_for_response = true;
 	}
 	else
 	{
@@ -161,8 +162,7 @@ int main(void) {
 	timer_event event;
 
 	// Initialize the OSS-7 Stack
-	// Currently we address the Transport Layer, this should go to an upper layer once it is working.
-	d7aoss_init(buffer, 128, buffer, 128);
+	d7aoss_init(tx_buffer, 128, rx_buffer, 128);
 
 
 	trans_set_tx_callback(&tx_callback);
@@ -186,6 +186,7 @@ int main(void) {
 		if (wait_for_response)
 		{
 			wait_for_response = false;
+			log_print_string("Starting RX");
 			trans_rx_query_start(0xFF, send_channel);
 		}
 

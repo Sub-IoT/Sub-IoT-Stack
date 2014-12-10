@@ -176,9 +176,9 @@ static void rx_callback(phy_rx_data_t* res)
 	uint16_t crc = crc_calculate(res->data, res->length - 2);
 	if ((res->data[res->length - 2] != (crc >> 8)) || (res->data[res->length - 1] != (crc & 0xFF)))
 	{
-		#ifdef LOG_DLL_ENABLED
-			log_print_stack_string(LOG_DLL, "DLL CRC ERROR");
-		#endif
+		//#ifdef LOG_DLL_ENABLED
+			log_print_stack_string(LOG_DLL, "DLL CRC ERROR 0x%x vs 0x%x%x", crc, res->data[res->length - 2], res->data[res->length - 1]);
+		//#endif
 		scan_next(); // how to re�nitiate scan on CRC Error, PHY should stay in RX
 		return;
 	}
@@ -259,6 +259,10 @@ static void rx_callback(phy_rx_data_t* res)
 
 	dll_rx_callback(&dll_res);
 
+	current_css = NULL;
+
+	/*
+	IS this correct?? after reception of packet -> stop channel scan.
 	if (current_css == NULL)
 	{
 		#ifdef LOG_DLL_ENABLED
@@ -274,6 +278,7 @@ static void rx_callback(phy_rx_data_t* res)
 
 	current_scan_id = 0;
 	scan_next();
+	*/
 }
 
 void dll_init()
@@ -460,7 +465,7 @@ void dll_tx_frame()
 		dll_tx_callback(DLLTxResultFail);
 	} else
 	{
-		dll_tx_callback(DLLTxResultOK);
+		dll_tx_callback(DLLTxInitiated);
 	}
 }
 

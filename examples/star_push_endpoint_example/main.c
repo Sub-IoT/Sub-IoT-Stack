@@ -43,7 +43,7 @@
 #include <msp430.h>
 #include <hal/leds.h>
 
-#define SEND_INTERVAL_MS 2000
+#define SEND_INTERVAL_MS 1000
 #define TX_EIRP 10
 
 // Macro which can be removed in production environment
@@ -57,7 +57,7 @@ uint8_t buffer[128];
 static uint8_t data[4];
 static volatile uint8_t dataLength = 0;
 
-static uint8_t send_channel[2] = {0x04, 0x0E};
+static uint8_t send_channel[2] = {0x04, 0x00};
 
 //static D7AQP_Command command;
 static ALP_File_Data_Template data_template;

@@ -31,6 +31,7 @@
 #include "cc430_registers.h"
 #include "../../framework/log.h"
 #include "../../framework/queue.h"
+#include "../../framework/timer.h"
 
 #include "rf1a.h"
 
@@ -151,7 +152,10 @@ void phy_init(void)
 void phy_idle(void)
 {
 	if (state != Idle)
+	{
 		rxtx_finish_isr();
+		state = Idle;
+	}
 }
 
 bool phy_translate_and_set_settings(uint8_t spectrum_id[2], uint8_t sync_word_class)
@@ -244,8 +248,8 @@ extern bool phy_tx_data(phy_tx_cfg_t* cfg)
 
 bool phy_init_tx()
 {
-	RadioState state = get_radiostate();
-	if (state != Idle && state != Transmit)
+	RadioState current_state = get_radiostate();
+	if (current_state != Idle && current_state != Transmit)
 	{
 		#ifdef LOG_PHY_ENABLED
 		log_print_stack_string(LOG_PHY, "PHY radio not idle");
@@ -297,9 +301,22 @@ bool phy_rx(phy_rx_cfg_t* cfg)
 	if(current_state != Idle && current_state != Receive)
 	{
 		#ifdef LOG_PHY_ENABLED
-		log_print_stack_string(LOG_PHY, "PHY Cannot RX, PHy not idle");
+		log_print_stack_string(LOG_PHY, "PHY Cannot RX, PHY not idle, retrying");
 		#endif
-		return false;
+
+//		timer_wait_ms(100);
+//
+//		if(current_state != Idle && current_state != Receive)
+//		{
+//			//#ifdef LOG_PHY_ENABLED
+//			log_print_stack_string(LOG_PHY, "PHY Cannot RX, PHY not idle, stopping");
+//			//#endif
+			return false;
+//		}
+
+		//#ifdef LOG_PHY_ENABLED
+		//log_print_stack_string(LOG_PHY, "ok PHY idle");
+		//#endif
 	}
 
 	//Set radio state
@@ -443,14 +460,26 @@ void end_of_packet_isr()
 	if (state == Receive) {
 		rx_data_isr();
 		rxtx_finish_isr(); // TODO: should this be called by DLL?
+		state = Idle;
+
+		#ifdef LOG_PHY_ENABLED
+		log_print_stack_string(LOG_PHY, "PHY RX End of Packet");
+		#endif
+
 		if(phy_rx_callback != NULL)
 			phy_rx_callback(&rx_data);
 	} else if (state == Transmit) {
 		rxtx_finish_isr();
+		state = Idle;
+
+		#ifdef LOG_PHY_ENABLED
+		log_print_stack_string(LOG_PHY, "PHY TX End of Packet");
+		#endif
 		if(phy_tx_callback != NULL)
 			phy_tx_callback();
 	} else {
 		rxtx_finish_isr();
+		state = Idle;
 	}
 }
 
@@ -637,9 +666,6 @@ void rxtx_finish_isr()
 		Strobe(RF_SFRX);
 		Strobe(RF_SFTX);
 		Strobe(RF_SPWD);
-
-		//Set radio state
-		state = Idle;
 	}
 }
 
@@ -695,7 +721,7 @@ void set_channel(uint8_t frequency_band, uint8_t channel_center_freq_index, uint
 	}
 
 	#ifdef LOG_PHY_ENABLED
-	log_print_stack_string(LOG_PHY, "Set cfrequency band: %d", frequency_band);
+	log_print_stack_string(LOG_PHY, "Set frequency band: %d", frequency_band);
 	#endif
 
 	/*

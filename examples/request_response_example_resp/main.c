@@ -47,7 +47,8 @@ static bool start_channel_scan = false;
 static volatile uint8_t add_sensor_event = 0;
 
 static uint8_t receive_channel[2] = {0x04,0x00};
-uint8_t buffer[128];
+uint8_t tx_buffer[128];
+uint8_t rx_buffer[128];
 
 
 #define CLOCKS_PER_1us	20
@@ -139,14 +140,14 @@ void tx_callback(Trans_Tx_Result result)
 		#ifdef USE_LEDS
 		led_off(3);
 		#endif
-		log_print_string("ACK SEND");
+		log_print_string("RESPONSE SEND");
 	}
 	else
 	{
 		#ifdef USE_LEDS
 		led_toggle(2);
 		#endif
-		log_print_string("TX ACK CCA FAIL");
+		log_print_string("TX RESPONSE CCA FAIL");
 	}
 
 	// Restart channel scanning
@@ -160,7 +161,7 @@ int main(void) {
 
 
 	// Initialize the OSS-7 Stack
-	d7aoss_init(buffer, 128, buffer, 128);
+	d7aoss_init(tx_buffer, 128, rx_buffer, 128);
 
 
 	trans_set_tx_callback(&tx_callback);
