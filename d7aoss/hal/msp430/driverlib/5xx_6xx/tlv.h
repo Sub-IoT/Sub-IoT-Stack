@@ -97,9 +97,9 @@ struct s_Peripheral_Memory_Data {
 #define TLV_TAG_ADC12CAL          TLV_ADC12CAL
 #define TLV_TAG_ADC10CAL          TLV_ADC10CAL
 #define TLV_TAG_REFCAL            TLV_REFCAL
-#define TLV_TAG_TIMER_D_CAL		  TLV_TIMERDCAL
+#define TLV_TAG_TIMER_D_CAL          TLV_TIMERDCAL
 //Deprecated
-#define TLV_TIMER_D_CAL       	  TLV_TIMERDCAL    /*  Timer_Dx calibration */
+#define TLV_TIMER_D_CAL             TLV_TIMERDCAL    /*  Timer_Dx calibration */
 
 #define TLV_TAG_TAGEXT            TLV_TAGEXT
 #define TLV_TAG_TAGEND            TLV_TAGEND
@@ -188,8 +188,8 @@ struct s_Peripheral_Memory_Data {
 //******************************************************************************
 // Device Descriptors - Fixed Memory Locations
 //******************************************************************************
-#define DEVICE_ID_0		(0x1A04)
-#define DEVICE_ID_1		(0x1A05)
+#define DEVICE_ID_0        (0x1A04)
+#define DEVICE_ID_1        (0x1A05)
 
 //*****************************************************************************
 //

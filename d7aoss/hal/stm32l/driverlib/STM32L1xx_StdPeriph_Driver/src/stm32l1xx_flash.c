@@ -959,7 +959,7 @@ FLASH_Status DATA_EEPROM_ProgramWord(uint32_t Address, uint32_t Data)
         (++) void FLASH_OB_UserConfig(uint8_t OB_IWDG, uint8_t OB_STOP, uint8_t OB_STDBY) => to configure 
              the user option Bytes: IWDG, STOP and the Standby.
         (++) void FLASH_OB_BORConfig(uint8_t OB_BOR) => to Set the BOR level.
-        (++) FLASH_Status FLASH_ProgramOTP(uint32_t Address, uint32_t Data) => to program the OTP bytes			.
+        (++) FLASH_Status FLASH_ProgramOTP(uint32_t Address, uint32_t Data) => to program the OTP bytes            .
     (#) Once all needed option bytes to be programmed are correctly written, call the
         FLASH_OB_Launch(void) function to launch the Option Bytes programming process.
     (#) Call the FLASH_OB_Lock() to disable the Flash option control register access (recommended

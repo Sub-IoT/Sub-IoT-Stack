@@ -12,9 +12,9 @@
  * Lesser General Public License for more details.
  *
  * Contributors:
- *     	glenn.ergeerts@uantwerpen.be
- *     	maarten.weyn@uantwerpen.be
- *		Miesalex
+ *         glenn.ergeerts@uantwerpen.be
+ *         maarten.weyn@uantwerpen.be
+ *        Miesalex
  */
 
 #include <stdbool.h>
@@ -30,40 +30,40 @@
  */
 void phy_init(void)
 {
-	return;
+    return;
 }
 
 void phy_idle(void)
 {
-	return;
+    return;
 }
 
 bool phy_tx(phy_tx_cfg_t* cfg)
 {
-	return true;
+    return true;
 }
 
 bool phy_rx(phy_rx_cfg_t* cfg)
 {
-	return true;
+    return true;
 }
 
 bool phy_read(phy_rx_data_t* data)
 {
-	return false;
+    return false;
 }
 
 bool phy_is_rx_in_progress(void)
 {
-	return false;
+    return false;
 }
 
 bool phy_is_tx_in_progress(void)
 {
-	return false;
+    return false;
 }
 
 extern int16_t phy_get_rssi(uint8_t spectrum_id, uint8_t sync_word_class)
 {
-	return 0;
+    return 0;
 }

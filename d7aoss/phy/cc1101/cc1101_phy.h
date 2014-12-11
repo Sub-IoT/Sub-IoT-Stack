@@ -1,9 +1,9 @@
 /*
  *  Created on: Nov 22, 2012
  *  Authors:
- * 		maarten.weyn@artesis.be
- *  	glenn.ergeerts@artesis.be
- *  	alexanderhoet@gmail.com
+ *         maarten.weyn@artesis.be
+ *      glenn.ergeerts@artesis.be
+ *      alexanderhoet@gmail.com
  */
 
 #ifndef CC1101_PHY_H_
@@ -50,9 +50,9 @@ typedef enum {
 typedef void (*InterruptHandler)(void);
 
 typedef struct {
-	uint8_t gdoSetting;
-	GDOEdge edge;
-	InterruptHandler handler;
+    uint8_t gdoSetting;
+    GDOEdge edge;
+    InterruptHandler handler;
 } InterruptHandlerDescriptor;
 /*
  * Phy implementation function prototypes
@@ -63,7 +63,6 @@ bool phy_tx(phy_tx_cfg_t* cfg);
 bool phy_rx(phy_rx_cfg_t* cfg);
 bool phy_is_rx_in_progress(void);
 bool phy_is_tx_in_progress(void);
-int16_t phy_get_rssi(uint8_t spectrum_id, uint8_t sync_word_class);
 
 /*
  * Interrupt function prototypes

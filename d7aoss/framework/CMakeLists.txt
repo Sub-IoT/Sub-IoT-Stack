@@ -4,4 +4,4 @@ ADD_LIBRARY(FRAMEWORK
     log.c
     queue.c
     timer.c
-    ) 
+) 

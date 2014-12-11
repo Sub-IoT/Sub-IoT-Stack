@@ -12,9 +12,9 @@
  * Lesser General Public License for more details.
  *
  * Contributors:
- *     	glenn.ergeerts@uantwerpen.be
- *     	maarten.weyn@uantwerpen.be
- *		Miesalex
+ *         glenn.ergeerts@uantwerpen.be
+ *         maarten.weyn@uantwerpen.be
+ *        Miesalex
  */
 
 

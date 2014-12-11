@@ -18,9 +18,21 @@
  * 	This is the Gateway example
  *
  * 	add the link to d7aoss library in de lnk_*.cmd file, e.g. -l "../../../d7aoss/Debug/d7aoss.lib"
- * 	Make sure to select the correct platform in d7aoss/hal/cc430/platforms.platform.h
+ * 	Make sure to select the correct platform in d7aoss.h
  * 	If your platform is not present, you can add a header file in platforms and commit it to the repository.
  * 	Exclude the stub directories in d7aoss from the build when building for a device.
+ *
+ *  Create the apporpriate file system settings for the FLASH system:
+ *
+ * 	Add following sections to the SECTIONS in .cmd linker file to use the filesystem
+ *		.fs_fileinfo_bitmap : 	{} > FLASH_FS1
+ *  	.fs_fileinfo: 			{} > FLASH_FS1
+ *		.fs_files	: 			{} > FLASH_FS2
+ *
+ *	Add FLASH_FS_FI and FLASH_FS_FILES to the MEMORY section
+ *  eg.
+ *  	FLASH_FS1               : origin = 0xC000, length = 0x0200 // The file headers
+ *	    FLASH_FS2               : origin = 0xC200, length = 0x0400 // The file contents
  */
 
 
@@ -35,15 +47,18 @@
 #include <framework/log.h>
 #include <framework/timer.h>
 
-#define RECEIVE_CHANNEL 0x10
 #define TX_EIRP 10
 #define USE_LEDS
 
 // event to create a led blink
-static timer_event dim_led_event;
 static bool start_channel_scan = false;
+uint8_t buffer[128];
 
-static D7AQP_Command command;
+static uint8_t receive_channel[2] = {0x04, 0x0E};
+
+// configure blinking led event
+void dim_led();
+static timer_event dim_led_event = { .next_event = 50, .f = &dim_led };
 
 void blink_led()
 {
@@ -60,102 +75,88 @@ void dim_led()
 void start_rx()
 {
 	start_channel_scan = false;
-	trans_rx_query_start(0xFF, RECEIVE_CHANNEL);
+	trans_rx_query_start(0xFF, receive_channel);
 }
 
-void rx_callback(Trans_Rx_Query_Result* rx_res)
+void rx_callback(Trans_Rx_Alp_Result* rx_res)
 {
 	system_watchdog_timer_reset();
 
 	blink_led();
 
-	dll_foreground_frame_t* frame = (dll_foreground_frame_t*) (rx_res->nwl_rx_res->dll_rx_res->frame);
-	log_print_string("Received Query from :%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x;",
-					frame->address_ctl->source_id[0] >> 4, frame->address_ctl->source_id[0] & 0x0F,
-					frame->address_ctl->source_id[1] >> 4, frame->address_ctl->source_id[1] & 0x0F,
-					frame->address_ctl->source_id[2] >> 4, frame->address_ctl->source_id[2] & 0x0F,
-					frame->address_ctl->source_id[3] >> 4, frame->address_ctl->source_id[3] & 0x0F,
-					frame->address_ctl->source_id[4] >> 4, frame->address_ctl->source_id[4] & 0x0F,
-					frame->address_ctl->source_id[5] >> 4, frame->address_ctl->source_id[5] & 0x0F,
-					frame->address_ctl->source_id[6] >> 4, frame->address_ctl->source_id[6] & 0x0F,
-					frame->address_ctl->source_id[7] >> 4, frame->address_ctl->source_id[7] & 0x0F);
-	log_print_string("RSS: %d dBm", rx_res->nwl_rx_res->dll_rx_res->rssi);
-	log_print_string("Netto Link: %d dBm", rx_res->nwl_rx_res->dll_rx_res->rssi  - frame->frame_header.tx_eirp);
-
-	switch (rx_res->d7aqp_command.command_code & 0x0F)
+	if (rx_res->nwl_rx_res->protocol_type == ProtocolTypeNetworkProtocol)
 	{
-		case D7AQP_OPCODE_ANNOUNCEMENT_FILE:
+		nwl_ff_D7ANP_t* np = (nwl_ff_D7ANP_t*) (rx_res->nwl_rx_res->data);
+		uint8_t* address_ptr = NULL;
+		uint8_t address_length = 0;
+
+		switch (np->control & NWL_CONTRL_SRC_FULL)
 		{
-			D7AQP_Single_File_Return_Template* sfr_tmpl = (D7AQP_Single_File_Return_Template*) rx_res->d7aqp_command.command_data;
-			log_print_string("D7AQP File Announcement received");
-			log_print_string(" - file 0x%x starting from byte %d", sfr_tmpl->return_file_id, sfr_tmpl->file_offset);
-			log_print_data(sfr_tmpl->file_data, sfr_tmpl->isfb_total_length - sfr_tmpl->file_offset);
+		case NWL_CONTRL_SRC_UID:
+			address_ptr = &(np->d7anp_source_access_templ[0]);
+			address_length = 8;
+			break;
+		case NWL_CONTRL_SRC_VID:
+			address_ptr = &(np->d7anp_source_access_templ[0]);
+			address_length = 2;
+			break;
+		case NWL_CONTRL_SRC_FULL:
+			address_ptr = &(np->d7anp_source_access_templ[1]);
+
+			if (np->d7anp_source_access_templ[0] & NWL_ACCESS_TEMPL_CTRL_VID)
+			{
+				address_length = 8;
+			} else {
+				address_length = 2;
+			}
 		}
+
+		if (address_length == 2)
+		{
+			log_print_string("Received Query from: %x%x%x%x",
+								address_ptr[1] >> 4, address_ptr[1] & 0x0F);
+		} else if (address_length == 8) {
+			log_print_string("Received Query from: %x%x%x%x%x%x%x%x%x%x%x%x%x%x%x",
+					address_ptr[0] >> 4, address_ptr[0] & 0x0F,
+					address_ptr[1] >> 4, address_ptr[1] & 0x0F,
+					address_ptr[2] >> 4, address_ptr[2] & 0x0F,
+					address_ptr[3] >> 4, address_ptr[3] & 0x0F,
+					address_ptr[4] >> 4, address_ptr[4] & 0x0F,
+					address_ptr[5] >> 4, address_ptr[5] & 0x0F,
+					address_ptr[6] >> 4, address_ptr[6] & 0x0F,
+					address_ptr[7] >> 4, address_ptr[7] & 0x0F);
+		}
+	log_print_string("RSS: %d dBm", rx_res->nwl_rx_res->dll_rx_res->rssi);
+	//log_print_string("Netto Link: %d dBm", rx_res->nwl_rx_res->dll_rx_res->rssi  - ((frame->control & 0x3F) - 32));
+
+	log_print_string("D7AQP received - ALP data:");
+
+	log_print_data((uint8_t*) (rx_res->alp_record.alp_templates), rx_res->alp_record.record_lenght-3);
 	}
-
-	if (rx_res->d7aqp_command.command_extension & D7AQP_COMMAND_EXTENSION_NORESPONSE)
-	{
-		// Restart channel scanning
-		start_channel_scan = true;
-	} else {
-		// send ack
-		// todo: put outside interrupt
-		// todo: use dialog template
-
-		command.command_code = D7AQP_COMMAND_CODE_EXTENSION | D7AQP_COMMAND_TYPE_RESPONSE | D7AQP_OPCODE_ANNOUNCEMENT_FILE;
-		command.command_extension = D7AQP_COMMAND_EXTENSION_NORESPONSE;
-		command.dialog_template = NULL;
-		command.command_data = NULL;
-
-		led_on(3);
-		trans_tx_query(&command, 0xFF, RECEIVE_CHANNEL, TX_EIRP);
-	}
-
-}
-
-
-void tx_callback(Trans_Tx_Result result)
-{
-	if(result == TransPacketSent)
-	{
-		#ifdef USE_LEDS
-		led_off(3);
-		#endif
-		log_print_string("ACK SEND");
-	}
-	else
-	{
-		#ifdef USE_LEDS
-		led_toggle(2);
-		#endif
-		log_print_string("TX ACK CCA FAIL");
-	}
-
-	// Restart channel scanning
 	start_channel_scan = true;
+
 }
+
 
 int main(void) {
 	// Initialize the OSS-7 Stack
-	system_init();
+	system_init(buffer, 128, buffer, 128);
 
 	// Currently we address the Transport Layer for RX, this should go to an upper layer once it is working.
 	trans_init();
-	trans_set_query_rx_callback(&rx_callback);
-	trans_set_tx_callback(&tx_callback);
+	trans_set_alp_rx_callback(&rx_callback);
 	// The initial Tca for the CSMA-CA in
-	trans_set_initial_t_ca(200);
+	dll_set_initial_t_ca(200);
 
 	start_channel_scan = true;
+
+        timer_wait_ms( 500 );
 
 	log_print_string("gateway started");
 
 	// Log the device id
 	log_print_data(device_id, 8);
 
-	// configure blinking led event
-	dim_led_event.next_event = 50;
-	dim_led_event.f = &dim_led;
 
 	system_watchdog_init(0x0020, 0x03);
 	system_watchdog_timer_start();

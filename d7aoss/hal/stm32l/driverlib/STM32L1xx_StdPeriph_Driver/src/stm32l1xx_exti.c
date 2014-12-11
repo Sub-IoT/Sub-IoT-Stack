@@ -37,7 +37,7 @@
         selection (Rising, falling or both) using EXTI_Init()
     (#) Configure NVIC IRQ channel mapped to the EXTI line using NVIC_Init()
     [..]
-	(@) SYSCFG APB clock must be enabled to get write access to SYSCFG_EXTICRx
+    (@) SYSCFG APB clock must be enabled to get write access to SYSCFG_EXTICRx
       registers using RCC_APB2PeriphClockCmd(RCC_APB2Periph_SYSCFG, ENABLE);
             
   *  @endverbatim                  

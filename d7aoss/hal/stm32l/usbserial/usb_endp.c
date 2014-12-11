@@ -118,7 +118,7 @@ void EP3_OUT_Callback(void)
   /* USB data will be immediately processed, this allow next USB traffic being 
   NAKed till the end of the USART Xfer */
   for (int i = 0 ; i < USB_Rx_Cnt; i++) {
-	  rotating_buffer_store_char(USB_Rx_Buffer[i], &usb_rx);
+      rotating_buffer_store_char(USB_Rx_Buffer[i], &usb_rx);
   }
   
 #ifndef STM32F10X_CL

@@ -12,7 +12,7 @@
  * Lesser General Public License for more details.
  *
  * Contributors:
- *     	glenn.ergeerts@uantwerpen.be
+ *         glenn.ergeerts@uantwerpen.be
  *
  */
 
@@ -20,5 +20,5 @@
 
 uint16_t crc_calculate(uint8_t* data, uint8_t length)
 {
-	return 0;
+    return 0;
 }

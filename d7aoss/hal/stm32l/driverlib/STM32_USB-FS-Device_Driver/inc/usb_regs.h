@@ -244,7 +244,7 @@ enum EP_BUF_NUM
 * Macro Name     : SetEPType
 * Description    : sets the type in the endpoint register(bits EP_TYPE[1:0])
 * Input          : bEpNum: Endpoint Number. 
-*                  wType											 
+*                  wType                                             
 * Output         : None.
 * Return         : None.
 *******************************************************************************/

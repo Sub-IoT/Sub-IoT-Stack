@@ -210,7 +210,7 @@ void Timer_startContinousMode ( unsigned int baseAddress,
     unsigned int timerclear
     )
 {
-	Timer_startContinuousMode (baseAddress,
+    Timer_startContinuousMode (baseAddress,
     clockSource,
     clockSourceDivider,
     timerInterruptEnable_TAIE,

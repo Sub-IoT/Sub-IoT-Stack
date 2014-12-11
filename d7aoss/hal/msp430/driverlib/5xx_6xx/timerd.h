@@ -52,9 +52,9 @@
 //TimerD_generatePWM() APIs as the clockSource parameter.
 //
 //*****************************************************************************
-#define TIMERD_CLOCKINGMODE_EXTERNAL_CLOCK 		    	TDCLKM_0
-#define TIMERD_CLOCKINGMODE_HIRES_LOCAL_CLOCK			TDCLKM_1
-#define TIMERD_CLOCKINGMODE_AUXILIARY_CLK			TDCLKM_2
+#define TIMERD_CLOCKINGMODE_EXTERNAL_CLOCK                 TDCLKM_0
+#define TIMERD_CLOCKINGMODE_HIRES_LOCAL_CLOCK            TDCLKM_1
+#define TIMERD_CLOCKINGMODE_AUXILIARY_CLK            TDCLKM_2
 
 //*****************************************************************************
 //
@@ -63,8 +63,8 @@
 // API as the highResMultiplyFactor parameter.
 //
 //*****************************************************************************
-#define TIMERD_HIGHRES_CLK_MULTIPLY_FACTOR_8x	TDHM_0
-#define TIMERD_HIGHRES_CLK_MULTIPLY_FACTOR_16x	TDHM_1
+#define TIMERD_HIGHRES_CLK_MULTIPLY_FACTOR_8x    TDHM_0
+#define TIMERD_HIGHRES_CLK_MULTIPLY_FACTOR_16x    TDHM_1
 
 //*****************************************************************************
 //
@@ -152,7 +152,7 @@
 #define TIMERD_HIGH_RES_FREQUENCY_UNLOCK   TDHUNLKIE
 #define TIMERD_HIGH_RES_FREQUENCY_LOCK     TDHLKIE
 #define TIMERD_HIGH_RES_FAIL_HIGH          TDHFHIE
-#define TIMERD_HIGH_RES_FAIL_LOW     	  TDHFLIE
+#define TIMERD_HIGH_RES_FAIL_LOW           TDHFLIE
 
 //*****************************************************************************
 //
@@ -291,10 +291,10 @@
 //TimerD_configureHighResGeneratorInFreeRunningMode() API
 //
 //*****************************************************************************
-#define TIMERD_HIGHRES_64MHZ	0x00
-#define TIMERD_HIGHRES_128MHZ	0x01
-#define TIMERD_HIGHRES_200MHZ	0x02
-#define TIMERD_HIGHRES_256MHZ	0x03   
+#define TIMERD_HIGHRES_64MHZ    0x00
+#define TIMERD_HIGHRES_128MHZ    0x01
+#define TIMERD_HIGHRES_200MHZ    0x02
+#define TIMERD_HIGHRES_256MHZ    0x03   
 
 //*****************************************************************************
 //
@@ -303,9 +303,9 @@
 //TimerD_combineTDCCRToGeneratePWM() API
 //
 //*****************************************************************************
-#define TIMERD_COMBINE_CCR1_CCR2	2
-#define TIMERD_COMBINE_CCR3_CCR4	4
-#define TIMERD_COMBINE_CCR5_CCR6	6
+#define TIMERD_COMBINE_CCR1_CCR2    2
+#define TIMERD_COMBINE_CCR3_CCR4    4
+#define TIMERD_COMBINE_CCR5_CCR6    6
 
 //*****************************************************************************
 //
@@ -313,9 +313,9 @@
 //parameter of  TimerD_selectHighResClockRange() API
 //
 //*****************************************************************************
-#define TIMERD_CLOCK_RANGE0 		0x0000
-#define TIMERD_CLOCK_RANGE1			0x2000
-#define TIMERD_CLOCK_RANGE2			0x4000
+#define TIMERD_CLOCK_RANGE0         0x0000
+#define TIMERD_CLOCK_RANGE1            0x2000
+#define TIMERD_CLOCK_RANGE2            0x4000
 
 //*****************************************************************************
 //
@@ -381,11 +381,11 @@ extern void TimerD_initCompare (  unsigned int baseAddress,
     );
 extern void TimerD_enableTimerInterrupt (unsigned int baseAddress);
 extern void TimerD_enableHighResInterrupt (unsigned int baseAddress,
-				unsigned int mask);
+                unsigned int mask);
 extern void TimerD_disableTimerInterrupt (unsigned int baseAddress);
 
 extern void TimerD_disableHighResInterrupt (unsigned int baseAddress,
-						unsigned int mask);
+                        unsigned int mask);
 extern unsigned long TimerD_getTimerInterruptStatus (unsigned int baseAddress);
 extern void TimerD_enableCaptureCompareInterrupt (unsigned int baseAddress,
     unsigned int captureCompareRegister
@@ -394,9 +394,9 @@ extern void TimerD_disableCaptureCompareInterrupt (unsigned int baseAddress,
     unsigned int captureCompareRegister
     );
 extern unsigned long TimerD_getCaptureCompareInterruptStatus (unsigned int baseAddress,
-	    unsigned int captureCompareRegister,
-	    unsigned int mask
-	    );
+        unsigned int captureCompareRegister,
+        unsigned int mask
+        );
 extern unsigned int TimerD_getHighResInterruptStatus (unsigned int baseAddress,
     unsigned int mask);
 
@@ -448,7 +448,7 @@ extern void TimerD_clearCaptureCompareInterruptFlag (unsigned int baseAddress,
     unsigned int captureCompareRegister
     );
 extern unsigned char TimerD_configureHighResGeneratorInFreeRunningMode
-	(unsigned int baseAddress,
+    (unsigned int baseAddress,
     unsigned char desiredHighResFrequency
     );
 extern void TimerD_configureHighResGeneratorInRegulatedMode (unsigned int baseAddress,
@@ -459,24 +459,24 @@ extern void TimerD_configureHighResGeneratorInRegulatedMode (unsigned int baseAd
      unsigned char highResClockDivider
     );
 extern void TimerD_combineTDCCRToGeneratePWM (  unsigned int baseAddress,
-	    unsigned int clockSource,
-	    unsigned int clockSourceDivider,
+        unsigned int clockSource,
+        unsigned int clockSourceDivider,
             unsigned int clockingMode,
-	    unsigned int timerPeriod,
-	    unsigned int combineCCRRegistersCombination,
-	    unsigned int compareOutputMode,
-	    unsigned int dutyCycle1,
-	    unsigned int dutyCycle2
-	    );
+        unsigned int timerPeriod,
+        unsigned int combineCCRRegistersCombination,
+        unsigned int compareOutputMode,
+        unsigned int dutyCycle1,
+        unsigned int dutyCycle2
+        );
 extern void TimerD_selectLatchingGroup(unsigned int  baseAddress,
-		unsigned int  groupLatch);
+        unsigned int  groupLatch);
 extern void TimerD_selectCounterLength (unsigned int  baseAddress,
-		unsigned int counterLength
-		);
+        unsigned int counterLength
+        );
 extern void TimerD_initCompareLatchLoadEvent(unsigned int  baseAddress,
-		unsigned int  compareRegister,
-		unsigned int  compareLatchLoadEvent
-		);
+        unsigned int  compareRegister,
+        unsigned int  compareLatchLoadEvent
+        );
 extern void TimerD_disableHighResFastWakeup (unsigned int baseAddress);
 extern void TimerD_enableHighResFastWakeup (unsigned int baseAddress);
 extern void TimerD_disableHighResClockEnhancedAccuracy (unsigned int baseAddress);
@@ -485,11 +485,11 @@ extern void TimerD_DisableHighResGeneratorForceON (unsigned int baseAddress);
 extern void TimerD_EnableHighResGeneratorForceON (unsigned int baseAddress);
 
 extern void TimerD_selectHighResCoarseClockRange (unsigned int baseAddress,
-		unsigned int highResCoarseClockRange
-		);
+        unsigned int highResCoarseClockRange
+        );
 extern void TimerD_selectHighResClockRange (unsigned int baseAddress,
-		unsigned int highResClockRange
-		);
+        unsigned int highResClockRange
+        );
 
 //*****************************************************************************
 //

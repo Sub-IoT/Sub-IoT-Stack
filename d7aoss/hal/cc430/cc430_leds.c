@@ -11,8 +11,8 @@
  * Lesser General Public License for more details.
  *
  * Contributors:
- * 		maarten.weyn@uantwerpen.be
- *     	glenn.ergeerts@uantwerpen.be
+ *         maarten.weyn@uantwerpen.be
+ *         glenn.ergeerts@uantwerpen.be
  *
  */
 
@@ -41,14 +41,14 @@ void led_on(unsigned char led_nr)
     switch (led_nr)
     {
         case 1:
-        	OUTPUT1_TYPE == 0 ? GPIO_setOutputHighOnPin(OUTPUT1_BASEADDRESS, OUTPUT1_PORT, OUTPUT1_PIN): GPIO_setOutputLowOnPin(OUTPUT1_BASEADDRESS, OUTPUT1_PORT, OUTPUT1_PIN);
+            OUTPUT1_TYPE == 0 ? GPIO_setOutputHighOnPin(OUTPUT1_BASEADDRESS, OUTPUT1_PORT, OUTPUT1_PIN): GPIO_setOutputLowOnPin(OUTPUT1_BASEADDRESS, OUTPUT1_PORT, OUTPUT1_PIN);
             break;
         case 2:
-        	OUTPUT2_TYPE == 0 ? GPIO_setOutputHighOnPin(OUTPUT2_BASEADDRESS, OUTPUT2_PORT, OUTPUT2_PIN): GPIO_setOutputLowOnPin(OUTPUT2_BASEADDRESS, OUTPUT2_PORT, OUTPUT2_PIN);
-        	 break;
+            OUTPUT2_TYPE == 0 ? GPIO_setOutputHighOnPin(OUTPUT2_BASEADDRESS, OUTPUT2_PORT, OUTPUT2_PIN): GPIO_setOutputLowOnPin(OUTPUT2_BASEADDRESS, OUTPUT2_PORT, OUTPUT2_PIN);
+             break;
         case 3:
-        	OUTPUT3_TYPE == 0 ? GPIO_setOutputHighOnPin(OUTPUT3_BASEADDRESS, OUTPUT3_PORT, OUTPUT3_PIN): GPIO_setOutputLowOnPin(OUTPUT3_BASEADDRESS, OUTPUT3_PORT, OUTPUT3_PIN);
-        	break;
+            OUTPUT3_TYPE == 0 ? GPIO_setOutputHighOnPin(OUTPUT3_BASEADDRESS, OUTPUT3_PORT, OUTPUT3_PIN): GPIO_setOutputLowOnPin(OUTPUT3_BASEADDRESS, OUTPUT3_PORT, OUTPUT3_PIN);
+            break;
     }
 }
 
@@ -56,15 +56,15 @@ void led_off(unsigned char led_nr)
 {
     switch (led_nr)
     {
-		case 1:
-			OUTPUT1_TYPE == 0 ? GPIO_setOutputLowOnPin(OUTPUT1_BASEADDRESS, OUTPUT1_PORT, OUTPUT1_PIN): GPIO_setOutputHighOnPin(OUTPUT1_BASEADDRESS, OUTPUT1_PORT, OUTPUT1_PIN);
-			break;
-		case 2:
-			OUTPUT2_TYPE == 0 ? GPIO_setOutputLowOnPin(OUTPUT2_BASEADDRESS, OUTPUT2_PORT, OUTPUT2_PIN): GPIO_setOutputHighOnPin(OUTPUT2_BASEADDRESS, OUTPUT2_PORT, OUTPUT2_PIN);
-			 break;
-		case 3:
-			OUTPUT3_TYPE == 0 ? GPIO_setOutputLowOnPin(OUTPUT3_BASEADDRESS, OUTPUT3_PORT, OUTPUT3_PIN): GPIO_setOutputHighOnPin(OUTPUT3_BASEADDRESS, OUTPUT3_PORT, OUTPUT3_PIN);
-			break;
+        case 1:
+            OUTPUT1_TYPE == 0 ? GPIO_setOutputLowOnPin(OUTPUT1_BASEADDRESS, OUTPUT1_PORT, OUTPUT1_PIN): GPIO_setOutputHighOnPin(OUTPUT1_BASEADDRESS, OUTPUT1_PORT, OUTPUT1_PIN);
+            break;
+        case 2:
+            OUTPUT2_TYPE == 0 ? GPIO_setOutputLowOnPin(OUTPUT2_BASEADDRESS, OUTPUT2_PORT, OUTPUT2_PIN): GPIO_setOutputHighOnPin(OUTPUT2_BASEADDRESS, OUTPUT2_PORT, OUTPUT2_PIN);
+             break;
+        case 3:
+            OUTPUT3_TYPE == 0 ? GPIO_setOutputLowOnPin(OUTPUT3_BASEADDRESS, OUTPUT3_PORT, OUTPUT3_PIN): GPIO_setOutputHighOnPin(OUTPUT3_BASEADDRESS, OUTPUT3_PORT, OUTPUT3_PIN);
+            break;
     }
 }
 
@@ -72,14 +72,14 @@ void led_toggle(unsigned char led_nr)
 {
     switch (led_nr)
     {
-		case 1:
-			GPIO_toggleOutputOnPin(OUTPUT1_BASEADDRESS, OUTPUT1_PORT, OUTPUT1_PIN);
-			break;
-		case 2:
-			GPIO_toggleOutputOnPin(OUTPUT2_BASEADDRESS, OUTPUT2_PORT, OUTPUT2_PIN);
-			break;
-		case 3:
-			GPIO_toggleOutputOnPin(OUTPUT3_BASEADDRESS, OUTPUT3_PORT, OUTPUT3_PIN);
-			break;
+        case 1:
+            GPIO_toggleOutputOnPin(OUTPUT1_BASEADDRESS, OUTPUT1_PORT, OUTPUT1_PIN);
+            break;
+        case 2:
+            GPIO_toggleOutputOnPin(OUTPUT2_BASEADDRESS, OUTPUT2_PORT, OUTPUT2_PIN);
+            break;
+        case 3:
+            GPIO_toggleOutputOnPin(OUTPUT3_BASEADDRESS, OUTPUT3_PORT, OUTPUT3_PIN);
+            break;
     }
 }

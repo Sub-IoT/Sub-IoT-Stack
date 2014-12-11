@@ -14,7 +14,7 @@
 #ifdef PLATFORM_MSP430
 #include "msp430.h"
 #else
-	#error No platform set
+    #error No platform set
 #endif
 
 

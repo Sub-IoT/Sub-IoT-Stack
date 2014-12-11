@@ -48,11 +48,11 @@ tr.kt { }
 td.kt { color: #000000; background-color: #E0E0E0; border-top: 1pt solid #A0A0A0; padding-left: 6pt; padding-right: 6pt; padding-top: 2pt; padding-bottom: 2pt }
 /*----------------------------------------------------------------------------------------------------------------------*/
     .style1 {
-	background-color: #E0E0E0;
+    background-color: #E0E0E0;
 }
 .O
-	{color:#1D315B;
-	font-size:149%;}
+    {color:#1D315B;
+    font-size:149%;}
     -->
   </style></head>
 <body>
@@ -69,18 +69,18 @@ td.kt { color: #000000; background-color: #E0E0E0; border-top: 1pt solid #A0A0A0
 
 <p><span style="FONT-WEIGHT: bold">Revision History</span></p>
 <ul>
-	<li>Version 1.00: initial release. </li>
-	<li>Version 1.01: added __LDREX<em>x</em>, __STREX<em>x</em>, and __CLREX.</li>
-	<li>Version 1.02: added Cortex-M0. </li>
-	<li>Version 1.10: second review. </li>
-	<li>Version 1.20: third review. </li>
-	<li>Version 1.30 PRE-RELEASE: reworked Startup Concept, additional Debug Functionality.</li>
-	<li>Version 1.30 2nd PRE-RELEASE: changed folder structure, added doxyGen comments, added Bit definitions.</li>
-	<li>Version 1.30: updated Device Support Packages.</li>
-	<li>Version 2.00: added Cortex-M4 support.</li>
-	<li>Version 2.01: internal review.</li>
-	<li>Version 2.02: updated Device Specific Defines</li>
-	<li>Version 2.10: reworked core include files</li>
+    <li>Version 1.00: initial release. </li>
+    <li>Version 1.01: added __LDREX<em>x</em>, __STREX<em>x</em>, and __CLREX.</li>
+    <li>Version 1.02: added Cortex-M0. </li>
+    <li>Version 1.10: second review. </li>
+    <li>Version 1.20: third review. </li>
+    <li>Version 1.30 PRE-RELEASE: reworked Startup Concept, additional Debug Functionality.</li>
+    <li>Version 1.30 2nd PRE-RELEASE: changed folder structure, added doxyGen comments, added Bit definitions.</li>
+    <li>Version 1.30: updated Device Support Packages.</li>
+    <li>Version 2.00: added Cortex-M4 support.</li>
+    <li>Version 2.01: internal review.</li>
+    <li>Version 2.02: updated Device Specific Defines</li>
+    <li>Version 2.10: reworked core include files</li>
 </ul>
 
 <hr>
@@ -164,7 +164,7 @@ available for various compiler implementations:</p>
   <li>For each exception/interrupt there is definition for:
   <ul>
     <li>an exception/interrupt handler with the postfix <strong>_Handler </strong>
-	(for exceptions) or <strong>_IRQHandler</strong> (for interrupts).</li>
+    (for exceptions) or <strong>_IRQHandler</strong> (for interrupts).</li>
     <li>a default exception/interrupt handler (weak definition) that contains an endless loop.</li>
     <li>a #define of the interrupt number with the postfix <strong>_IRQn</strong>.</li>
   </ul></li>
@@ -185,7 +185,7 @@ available for various compiler implementations:</p>
 <ul>
   <li>Comments use the ANSI C90 style (<em>/* comment */</em>) or C++ style 
   (<em>// comment</em>). It is assumed that the programming tools support today 
-	consistently the C++ comment style.</li>
+    consistently the C++ comment style.</li>
   <li><strong>Function Comments</strong> provide for each function the following information:
   <ul>
     <li>one-line brief function overview.</li>
@@ -363,25 +363,25 @@ available for various compiler implementations:</p>
 </p>
 <ul>
   <li>
-	<p><strong>Interrupt Number Definition</strong>: provides interrupt numbers 
-	(IRQn) for all core and device specific exceptions and interrupts.</p>
-	</li>
-	<li>
-	<p><strong>Configuration for core_cm0.h / core_cm3.h / core_cm4.h</strong>: reflects the 
-	actual configuration of the Cortex-M processor that is part of the actual 
-	device. As such the file <strong>core_cm0.h / core_cm3.h / core_cm4.h</strong> is included that 
-	implements access to processor registers and core peripherals. </p>
-	</li>
-	<li>
-	<p><strong>Device Peripheral Access Layer</strong>: provides definitions
+    <p><strong>Interrupt Number Definition</strong>: provides interrupt numbers 
+    (IRQn) for all core and device specific exceptions and interrupts.</p>
+    </li>
+    <li>
+    <p><strong>Configuration for core_cm0.h / core_cm3.h / core_cm4.h</strong>: reflects the 
+    actual configuration of the Cortex-M processor that is part of the actual 
+    device. As such the file <strong>core_cm0.h / core_cm3.h / core_cm4.h</strong> is included that 
+    implements access to processor registers and core peripherals. </p>
+    </li>
+    <li>
+    <p><strong>Device Peripheral Access Layer</strong>: provides definitions
     for all device peripherals. It contains all data structures and the address 
-	mapping for the device specific peripherals. </p>
-	</li>
+    mapping for the device specific peripherals. </p>
+    </li>
   <li><strong>Access Functions for Peripherals (optional)</strong>: provides
     additional helper functions for peripherals that are useful for programming 
-	of these peripherals. Access Functions may be provided as inline functions 
-	or can be extern references to a device specific library provided by the 
-	silicon vendor.</li>
+    of these peripherals. Access Functions may be provided as inline functions 
+    or can be extern references to a device specific library provided by the 
+    silicon vendor.</li>
 </ul>
 
 
@@ -471,8 +471,8 @@ typedef enum IRQn
       <td class="kt" nowrap="nowrap">M0, M3, M4</td>
       <td class="kt" nowrap="nowrap">0 | 1</td>
       <td class="kt">When this define is setup to 1, the <strong>SysTickConfig</strong> function 
-		in <strong>core_cm3.h</strong> is excluded. In this case the <em><strong>device.h</strong></em> 
-		file must contain a vendor specific implementation of this function.</td>
+        in <strong>core_cm3.h</strong> is excluded. In this case the <em><strong>device.h</strong></em> 
+        file must contain a vendor specific implementation of this function.</td>
     </tr>
   </tbody>
 </table>
@@ -487,7 +487,7 @@ typedef enum IRQn
   identifiers have a postfix (digit or letter). For example:
 </p>
 <ul>
-	<li>&lt;device abbreviation&gt;_UART_Type: defines the generic register layout for all UART channels in a device.
+    <li>&lt;device abbreviation&gt;_UART_Type: defines the generic register layout for all UART channels in a device.
       <pre>
 typedef struct
 {
@@ -521,7 +521,7 @@ typedef struct
   __I  uint8_t  FIFOLVL;                 /*!< Offset: 0x058 (R/ )  FIFO Level Register         */
 } LPC_UART_TypeDef;</pre>
   </li>
-	<li>&lt;device abbreviation&gt;_UART1: is a pointer to a register structure that refers to a specific UART. 
+    <li>&lt;device abbreviation&gt;_UART1: is a pointer to a register structure that refers to a specific UART. 
       For example UART1-&gt;THR is the transmit holding register of UART1.
       <pre>
 #define LPC_UART2             ((LPC_UART_TypeDef      *) LPC_UART2_BASE    )
@@ -572,14 +572,14 @@ typedef struct
 <h5>Optional Features</h5>
 <p>In addition the <em> <strong>device.h </strong></em>file may define:</p>
 <ul>
-	<li>
+    <li>
     #define constants that simplify access to the peripheral registers. 
-	  These constant define bit-positions or other specific patterns are that required for the 
+      These constant define bit-positions or other specific patterns are that required for the 
     programming of the peripheral registers. The identifiers used start with 
     <strong>&lt;device abbreviation&gt;_</strong> and <strong>&lt;peripheral name&gt;_</strong>. 
     It is recommended to use CAPITAL letters for such #define constants.
   </li>
-	<li>
+    <li>
     Functions that perform more complex functions with the peripheral (i.e. status query before 
     a sending register is accessed). Again these function start with 
     <strong>&lt;device abbreviation&gt;_</strong> and <strong>&lt;peripheral name&gt;_</strong>. 
@@ -767,16 +767,16 @@ void WWDG_IRQHandler(void)
     </tr>
     <tr>
       <td class="kt" nowrap="nowrap">uint32_t SystemCoreClock</td>
-      <td class="kt">Contains the system core clock (which is the system clock	frequency supplied 
+      <td class="kt">Contains the system core clock (which is the system clock    frequency supplied 
                      to the SysTick timer and the processor core clock). This variable can be 
                      used by the user application to setup the SysTick timer or configure other 
                      parameters. It may also be used by debugger to query the frequency of the 
                      debug timer or configure the trace clock speed.<br>
                      SystemCoreClock is initialized with a correct predefined value.<br><br>
-		                 The compiler must be configured to avoid the removal of this variable in 
-		                 case that the application program is not using it. It is important for 
-		                 debug systems that the variable is physically present in memory so that 
-		                 it can be examined to configure the debugger.</td>
+                         The compiler must be configured to avoid the removal of this variable in 
+                         case that the application program is not using it. It is important for 
+                         debug systems that the variable is physically present in memory so that 
+                         it can be examined to configure the debugger.</td>
     </tr>
   </tbody>
 </table>
@@ -784,9 +784,9 @@ void WWDG_IRQHandler(void)
 <p class="Note">Note</p>
 <ul>
   <li><p>The above definitions are the minimum requirements for the file <strong>
-	system_</strong><em><strong>device</strong></em><strong>.c</strong>. This 
-	file may export more functions or variables that provide a more flexible 
-	configuration of the microcontroller system.</p>
+    system_</strong><em><strong>device</strong></em><strong>.c</strong>. This 
+    file may export more functions or variables that provide a more flexible 
+    configuration of the microcontroller system.</p>
   </li>
 </ul>
 
@@ -811,7 +811,7 @@ void WWDG_IRQHandler(void)
       <td class="kt" nowrap="nowrap">void __enable_irq (void)</td>
       <td class="kt" nowrap="nowrap">M0, M3, M4</td>
       <td class="kt" nowrap="nowrap">PRIMASK = 0</td>
-      <td class="kt">Global Interrupt enable (using the instruction <strong>CPSIE	i</strong>)</td>
+      <td class="kt">Global Interrupt enable (using the instruction <strong>CPSIE    i</strong>)</td>
     </tr>
     <tr>
       <td class="kt" nowrap="nowrap">void __disable_irq (void)</td>
@@ -1213,8 +1213,8 @@ The functions are defined as <strong>static inline</strong>.</p>
     </tr>
     <tr>
       <td class="kt" nowrap="nowrap">void NVIC_SetPriority (<br>
-	  &nbsp;&nbsp;IRQn_Type IRQn,<br>
-	  &nbsp;&nbsp;uint32_t priority)</td>
+      &nbsp;&nbsp;IRQn_Type IRQn,<br>
+      &nbsp;&nbsp;uint32_t priority)</td>
       <td class="kt" nowrap="nowrap">M0, M3, M4</td>
       <td class="kt" nowrap="nowrap">IRQ Number, Priority</td>
       <td class="kt">Set Priority for IRQn<br>
@@ -1229,28 +1229,28 @@ The functions are defined as <strong>static inline</strong>.</p>
     <tr>
 <!--      <td class="kt" nowrap="nowrap">uint32_t NVIC_EncodePriority (uint32_t PriorityGroup, uint32_t PreemptPriority, uint32_t SubPriority)</td> -->
       <td class="kt" nowrap="nowrap">uint32_t NVIC_EncodePriority (<br>
-	  &nbsp;&nbsp;uint32_t PriorityGroup,<br>
-	  &nbsp;&nbsp;uint32_t PreemptPriority,<br>
-	  &nbsp;&nbsp;uint32_t SubPriority)</td>
+      &nbsp;&nbsp;uint32_t PriorityGroup,<br>
+      &nbsp;&nbsp;uint32_t PreemptPriority,<br>
+      &nbsp;&nbsp;uint32_t SubPriority)</td>
       <td class="kt" nowrap="nowrap">M3, M4</td>
       <td class="kt" nowrap="nowrap">IRQ Number,<br>
-	  Priority Group,<br>
-	  Preemptive Priority,<br>
-	  Sub Priority</td>
+      Priority Group,<br>
+      Preemptive Priority,<br>
+      Sub Priority</td>
       <td class="kt">Encode priority for given group, preemptive and sub priority</td>
     </tr>
 <!--      <td class="kt" nowrap="nowrap">NVIC_DecodePriority (uint32_t Priority, uint32_t PriorityGroup, uint32_t* pPreemptPriority, uint32_t* pSubPriority)</td> -->
       <td class="kt" nowrap="nowrap">void NVIC_DecodePriority (<br>
-	  &nbsp;&nbsp;uint32_t Priority,<br> 
-	  &nbsp;&nbsp;uint32_t PriorityGroup,<br> 
-	  &nbsp;&nbsp;uint32_t* pPreemptPriority,<br> 
-	  &nbsp;&nbsp;uint32_t* pSubPriority)</td>
+      &nbsp;&nbsp;uint32_t Priority,<br> 
+      &nbsp;&nbsp;uint32_t PriorityGroup,<br> 
+      &nbsp;&nbsp;uint32_t* pPreemptPriority,<br> 
+      &nbsp;&nbsp;uint32_t* pSubPriority)</td>
       <td class="kt" nowrap="nowrap">M3, M4</td>
       <td class="kt" nowrap="nowrap"><br>
-	  Priority,<br>
-	  Priority Group,<br>
-	  pointer to Preempt. Priority,<br>
-	  pointer to Sub Priority</td>
+      Priority,<br>
+      Priority Group,<br>
+      pointer to Preempt. Priority,<br>
+      pointer to Sub Priority</td>
       <td class="kt">Decode given priority to group, preemptive and sub priority</td>
     </tr>
     <tr>

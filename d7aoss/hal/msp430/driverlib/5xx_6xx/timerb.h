@@ -243,10 +243,10 @@
 //groupLatch parameter of TimerB_selectLatchingGroup(); API
 //
 //*****************************************************************************
-#define TIMERB_GROUP_NONE				TBCLGRP_0
-#define TIMERB_GROUP_CL12_CL23_CL56	TBCLGRP_1
-#define TIMERB_GROUP_CL123_CL456		TBCLGRP_2
-#define TIMERB_GROUP_ALL				TBCLGRP_3
+#define TIMERB_GROUP_NONE                TBCLGRP_0
+#define TIMERB_GROUP_CL12_CL23_CL56    TBCLGRP_1
+#define TIMERB_GROUP_CL123_CL456        TBCLGRP_2
+#define TIMERB_GROUP_ALL                TBCLGRP_3
 
 
 //*****************************************************************************
@@ -255,9 +255,9 @@
 //compareLatchLoadEvent parameter of TimerB_initCompareLatchLoadEvent(); API
 //
 //*****************************************************************************
-#define TIMERB_LATCH_ON_WRITE_TO_TBxCCRn_COMPARE_REGISTER    		CLLD_0
-#define TIMERB_LATCH_WHEN_COUNTER_COUNTS_TO_0_IN_UP_OR_CONT_MODE	CLLD_1
-#define TIMERB_LATCH_WHEN_COUNTER_COUNTS_TO_0_IN_UPDOWN_MODE 		CLLD_2
+#define TIMERB_LATCH_ON_WRITE_TO_TBxCCRn_COMPARE_REGISTER            CLLD_0
+#define TIMERB_LATCH_WHEN_COUNTER_COUNTS_TO_0_IN_UP_OR_CONT_MODE    CLLD_1
+#define TIMERB_LATCH_WHEN_COUNTER_COUNTS_TO_0_IN_UPDOWN_MODE         CLLD_2
 #define TIMERB_LATCH_WHEN_COUNTER_COUNTS_TO_CURRENT_COMPARE_LATCH_VALUE  CLLD_3
 
 
@@ -363,9 +363,9 @@ extern void TimerB_disableCaptureCompareInterrupt (unsigned int baseAddress,
     unsigned int captureCompareRegister
     );
 extern unsigned long TimerB_getCaptureCompareInterruptStatus (unsigned int baseAddress,
-		 unsigned int captureCompareRegister,
-		 unsigned int mask
-		 );
+         unsigned int captureCompareRegister,
+         unsigned int mask
+         );
 extern void TimerB_clear (unsigned int baseAddress);
 unsigned short TimerB_getSynchronizedCaptureCompareInput
     (unsigned int baseAddress,
@@ -405,14 +405,14 @@ extern void TimerB_clearCaptureCompareInterruptFlag (unsigned int baseAddress,
     unsigned int captureCompareRegister
     );
 extern void TimerB_selectCounterLength (unsigned int  baseAddress,
-		unsigned int counterLength
-		);
+        unsigned int counterLength
+        );
 extern void TimerB_selectLatchingGroup(unsigned int  baseAddress,
-		unsigned int  groupLatch);
+        unsigned int  groupLatch);
 extern void TimerB_initCompareLatchLoadEvent(unsigned int  baseAddress,
-		unsigned int  compareRegister,
-		unsigned int  compareLatchLoadEvent
-		);
+        unsigned int  compareRegister,
+        unsigned int  compareLatchLoadEvent
+        );
 
 
 #endif

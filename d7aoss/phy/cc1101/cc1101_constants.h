@@ -61,18 +61,18 @@
 // Strobe commands
 #define RF_SRES         0x30        // Reset chip.
 #define RF_SFSTXON      0x31        // Enable and calibrate frequency synthesizer (if MCSM0.FS_AUTOCAL=1).
-									// If in RX/TX: Go to a wait state where only the synthesizer is
-									// running (for quick RX / TX turnaround).
+                                    // If in RX/TX: Go to a wait state where only the synthesizer is
+                                    // running (for quick RX / TX turnaround).
 #define RF_SXOFF        0x32        // Turn off crystal oscillator.
 #define RF_SCAL         0x33        // Calibrate frequency synthesizer and turn it off
-									// (enables quick start).
+                                    // (enables quick start).
 #define RF_SRX          0x34        // Enable RX. Perform calibration first if coming from IDLE and
-									// MCSM0.FS_AUTOCAL=1.
+                                    // MCSM0.FS_AUTOCAL=1.
 #define RF_STX          0x35        // In IDLE state: Enable TX. Perform calibration first if
-									// MCSM0.FS_AUTOCAL=1. If in RX state and CCA is enabled:
-									// Only go to TX if channel is clear.
+                                    // MCSM0.FS_AUTOCAL=1. If in RX state and CCA is enabled:
+                                    // Only go to TX if channel is clear.
 #define RF_SIDLE        0x36        // Exit RX / TX, turn off frequency synthesizer and exit
-									// Wake-On-Radio mode if applicable.
+                                    // Wake-On-Radio mode if applicable.
 #define RF_SAFC         0x37        // Perform AFC adjustment of the frequency synthesizer
 #define RF_SWOR         0x38        // Start automatic RX polling sequence (Wake-on-Radio)
 #define RF_SPWD         0x39        // Enter power down mode when CSn goes high.
@@ -80,7 +80,7 @@
 #define RF_SFTX         0x3B        // Flush the TX FIFO buffer.
 #define RF_SWORRST      0x3C        // Reset real time clock.
 #define RF_SNOP         0x3D        // No operation. May be used to pad strobe commands to two
-									// bytes for simpler software.
+                                    // bytes for simpler software.
 
 //Status registers
 #define PARTNUM      0x30

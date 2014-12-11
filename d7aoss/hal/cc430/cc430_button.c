@@ -11,8 +11,8 @@
  * Lesser General Public License for more details.
  *
  * Contributors:
- * 		maarten.weyn@uantwerpen.be
- *     	glenn.ergeerts@uantwerpen.be
+ *         maarten.weyn@uantwerpen.be
+ *         glenn.ergeerts@uantwerpen.be
  *
  */
 #include <stdbool.h>
@@ -59,8 +59,8 @@ void button_disable_interrupts()
 void button_clear_interrupt_flag()
 {
     GPIO_clearInterruptFlag(INPUT1_BASEADDRESS, INPUT1_PORT, INPUT1_PIN);
-	GPIO_clearInterruptFlag(INPUT2_BASEADDRESS, INPUT2_PORT, INPUT2_PIN);
-	GPIO_clearInterruptFlag(INPUT3_BASEADDRESS, INPUT3_PORT, INPUT3_PIN);
+    GPIO_clearInterruptFlag(INPUT2_BASEADDRESS, INPUT2_PORT, INPUT2_PIN);
+    GPIO_clearInterruptFlag(INPUT3_BASEADDRESS, INPUT3_PORT, INPUT3_PIN);
 }
 
 unsigned char button_is_active(unsigned char button_nr)
@@ -74,7 +74,7 @@ unsigned char button_is_active(unsigned char button_nr)
         case 3:
             return (GPIO_INPUT_PIN_LOW == GPIO_getInputPinValue(INPUT3_BASEADDRESS, INPUT3_PORT, INPUT3_PIN));
         default:
-        	return false;
+            return false;
     }
 
 }

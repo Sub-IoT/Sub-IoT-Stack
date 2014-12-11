@@ -12,7 +12,7 @@
  * Lesser General Public License for more details.
  *
  * Contributors:
- *     	glenn.ergeerts@uantwerpen.be
+ *         glenn.ergeerts@uantwerpen.be
  *
  */
 
@@ -39,10 +39,10 @@ void uart_transmit_message(unsigned char *data, unsigned char length)
 
 unsigned char uart_tx_ready()
 {
-	return 0;
+    return 0;
 }
 
 unsigned char uart_receive_data()
 {
-	return 0;
+    return 0;
 }

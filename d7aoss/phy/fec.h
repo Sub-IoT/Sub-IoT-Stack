@@ -12,7 +12,7 @@
  *
  * \author glenn.ergeerts@uantwerpen.be
  * \author maarten.weyn@uantwerpen.be
- *	\author alexanderhoet@gmail.com
+ *    \author alexanderhoet@gmail.com
  *
  */
 
@@ -27,16 +27,16 @@ extern "C" {
 #include <stdint.h>
 
 typedef struct {
-	uint8_t cost;
-	uint16_t path;
+    uint8_t cost;
+    uint16_t path;
 } VITERBIPATH;
 
 typedef struct {
-	uint8_t path_size;
-	VITERBIPATH* old;
-	VITERBIPATH* new;
-	VITERBIPATH states1[8];
-	VITERBIPATH states2[8];
+    uint8_t path_size;
+    VITERBIPATH* old;
+    VITERBIPATH* new;
+    VITERBIPATH states1[8];
+    VITERBIPATH states2[8];
 } VITERBISTATE;
 
 

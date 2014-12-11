@@ -1,10 +1,10 @@
 /*
  *  Created on: Nov 22, 2012
  *  Authors:
- * 		maarten.weyn@artesis.be
- *  	glenn.ergeerts@artesis.be
- *  	alexanderhoet@gmail.com
- *  	armin@otheruse.nl
+ *         maarten.weyn@artesis.be
+ *      glenn.ergeerts@artesis.be
+ *      alexanderhoet@gmail.com
+ *      armin@otheruse.nl
  */
 
 #ifndef RF1A_H
@@ -18,17 +18,15 @@ extern "C" {
 
 
 typedef enum {
-	GDOLine0 = 0x2,
-	GDOLine1 = 0x1,
-	GDOLine2 = 0x0
+    GDOLine0 = 0x2,
+    GDOLine1 = 0x1,
+    GDOLine2 = 0x0
 } GDOLine;
 
 typedef enum {
-	GDOEdgeRising = 0x40,
-	GDOEdgeFalling = 0x0,
+    GDOEdgeRising = 0x40,
+    GDOEdgeFalling = 0x0,
 } GDOEdge;
-
-extern void CC1101_ISR(GDOLine gdo);
 
 typedef struct {
     uint8_t iocfg2;    // IOCFG2.GDO2_CFG output pin configuration
@@ -82,6 +80,9 @@ void ReadBurstReg(uint8_t addr, uint8_t* buffer, uint8_t count);
 void WriteBurstReg(uint8_t addr, uint8_t* buffer, uint8_t count);
 void WriteSinglePATable(uint8_t value);
 void WriteBurstPATable(uint8_t* buffer, uint8_t count);
+
+uint8_t ReadPartNum( void );
+uint8_t ReadVersion( void );
 
 #ifdef __cplusplus
 }

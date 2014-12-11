@@ -922,7 +922,7 @@ void GPIO_disbleInterrupt (unsigned int baseAddress,
 {
     GPIO_disableInterrupt (baseAddress,
         selectedPort,
-    	selectedPins
+        selectedPins
     );
 }
 

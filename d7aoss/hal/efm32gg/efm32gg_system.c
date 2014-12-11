@@ -119,7 +119,7 @@ void system_get_unique_id(unsigned char *tagId)
     unsigned char i;
     for (i = 0; i < 8; i++)
     {
-    	tagId[i] = udid[i];
+        tagId[i] = udid[i];
     }
 }
 

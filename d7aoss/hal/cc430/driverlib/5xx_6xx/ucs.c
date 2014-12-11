@@ -81,15 +81,15 @@ unsigned long UCS_XT2ClockFrequency = 0;
 //! \return None
 //
 //******************************************************************************
-void
-UCS_setExternalClockSource (unsigned int baseaddress,
-    unsigned long XT1CLK_frequency,
-    unsigned long XT2CLK_frequency
-    )
-{
-    UCS_XT1ClockFrequency = XT1CLK_frequency;
-    UCS_XT2ClockFrequency = XT2CLK_frequency;
-}
+//void
+//UCS_setExternalClockSource (unsigned int baseaddress,
+//    unsigned long XT1CLK_frequency,
+//    unsigned long XT2CLK_frequency
+//    )
+//{
+//    UCS_XT1ClockFrequency = XT1CLK_frequency;
+//    UCS_XT2ClockFrequency = XT2CLK_frequency;
+//}
 
 //******************************************************************************
 //
@@ -241,680 +241,680 @@ UCS_clockSignalInit ( unsigned int baseaddress,
 //! \return None
 //
 //******************************************************************************
-void
-UCS_LFXT1Start ( unsigned int baseAddress,
-    unsigned int xt1drive,
-    unsigned char xcap
-    )
-{
-    ASSERT((xcap == UCS_XCAP_0) ||
-        (xcap == UCS_XCAP_1) ||
-        (xcap == UCS_XCAP_2) ||
-        (xcap == UCS_XCAP_3) );
-
-    ASSERT((xt1drive == UCS_XT1_DRIVE0 ) ||
-        (xt1drive == UCS_XT1_DRIVE1 ) ||
-        (xt1drive == UCS_XT1_DRIVE2 ) ||
-        (xt1drive == UCS_XT1_DRIVE3 ));
-
-    //If the drive setting is not already set to maximum
-    //Set it to max for LFXT startup
-    if ((HWREG(baseAddress + OFS_UCSCTL6) & XT1DRIVE_3) != XT1DRIVE_3){
-        //Highest drive setting for XT1startup
-        HWREG(baseAddress + OFS_UCSCTL6_L) |= XT1DRIVE1_L + XT1DRIVE0_L;
-    }
-
-    //Enable LF mode and clear xcap and bypass
-    HWREG(baseAddress + OFS_UCSCTL6) &= ~(XTS + XCAP_3 + XT1BYPASS);
-    HWREG(baseAddress + OFS_UCSCTL6) |= xcap;
-
-    while (HWREGB(baseAddress + OFS_UCSCTL7) & XT1LFOFFG)
-    {
-        //Clear OSC flaut Flags fault flags
-        HWREGB(baseAddress + OFS_UCSCTL7) &= ~(XT1LFOFFG);
-
-        //Clear OFIFG fault flag
-        HWREGB(SFR_BASEADDRESS + OFS_SFRIFG1) &= ~OFIFG;
-    }
-
-    //set requested Drive mode
-    HWREG(baseAddress + OFS_UCSCTL6) = ( HWREG(baseAddress + OFS_UCSCTL6) &
-                                         ~(XT1DRIVE_3)
-                                         ) |
-                                       (xt1drive);
-
-
-    //Switch ON XT1 oscillator
-    HWREG(baseAddress + OFS_UCSCTL6) &= ~XT1OFF;
-}
-
-//******************************************************************************
+//void
+//UCS_LFXT1Start ( unsigned int baseAddress,
+//    unsigned int xt1drive,
+//    unsigned char xcap
+//    )
+//{
+//    ASSERT((xcap == UCS_XCAP_0) ||
+//        (xcap == UCS_XCAP_1) ||
+//        (xcap == UCS_XCAP_2) ||
+//        (xcap == UCS_XCAP_3) );
 //
-//! Initializes the XT1 crystal oscillator in high frequency mode. Loops until
-//! all oscillator fault flags are cleared, with no timeout. See the
-//! device-specific data sheet for appropriate drive settings.
-//!
-//! \param baseAddress is the base address of the UCS module.
-//! \param xt1drive is the target drive strength for the XT1 crystal oscillator.
-//!        Valid values are
-//!         \b UCS_XT1_DRIVE0 ,
-//!         \b UCS_XT1_DRIVE1,
-//!         \b UCS_XT1_DRIVE2 ,
-//!         \b UCS_XT1_DRIVE3[Default Value]
-//!
-//! Modified registers are \b UCSCTL6, \b UCSCTL7, \b SFRIFG
-//!
-//! \return None
+//    ASSERT((xt1drive == UCS_XT1_DRIVE0 ) ||
+//        (xt1drive == UCS_XT1_DRIVE1 ) ||
+//        (xt1drive == UCS_XT1_DRIVE2 ) ||
+//        (xt1drive == UCS_XT1_DRIVE3 ));
 //
-//******************************************************************************
-void
-UCS_HFXT1Start (
-    unsigned int baseAddress,
-    unsigned int xt1drive
-    )
-{
-    //Check if drive value is the expected one
-    if ((HWREG(baseAddress + OFS_UCSCTL6) & XT1DRIVE_3) != xt1drive){
-        //Clear XT1drive field
-        HWREG(baseAddress + OFS_UCSCTL6) &= ~XT1DRIVE_3;
-
-        //Set requested value
-        HWREG(baseAddress + OFS_UCSCTL6) |= xt1drive;
-    }
-
-    //Enable HF mode
-    HWREG(baseAddress + OFS_UCSCTL6) |= XTS;
-
-    HWREG(baseAddress + OFS_UCSCTL6) &= ~XT1BYPASS;
-
-    // Check XT1 fault flags
-    while((HWREGB(baseAddress + OFS_UCSCTL7) & (XT1HFOFFG))){
-        //Clear OSC flaut Flags fault flags
-        HWREGB(baseAddress + OFS_UCSCTL7) &= ~(XT1HFOFFG);
-
-        //Clear OFIFG fault flag
-        HWREGB(SFR_BASEADDRESS + OFS_SFRIFG1) &= ~OFIFG;
-    }
-
-    //Switch ON XT1 oscillator
-    HWREG(baseAddress + OFS_UCSCTL6) &= ~XT1OFF;
-}
-
-//******************************************************************************
+//    //If the drive setting is not already set to maximum
+//    //Set it to max for LFXT startup
+//    if ((HWREG(baseAddress + OFS_UCSCTL6) & XT1DRIVE_3) != XT1DRIVE_3){
+//        //Highest drive setting for XT1startup
+//        HWREG(baseAddress + OFS_UCSCTL6_L) |= XT1DRIVE1_L + XT1DRIVE0_L;
+//    }
 //
-//! Bypasses the XT1 crystal oscillator. Loops until all oscillator fault
-//! flags are cleared, with no timeout.
-//!
-//! \param baseAddress is the base address of the UCS module.
-//! \param highOrLowFrequency selects high frequency or low frequency mode for
-//!         XT1. Valid values are
-//!        \b UCS_XT1_HIGH_FREQUENCY,
-//!        \b UCS_XT1_LOW_FREQUENCY [Default Value]
-//!
-//! Modified registers are \b UCSCTL6, \b UCSCTL7, \b SFRIFG
-//! \return None
+//    //Enable LF mode and clear xcap and bypass
+//    HWREG(baseAddress + OFS_UCSCTL6) &= ~(XTS + XCAP_3 + XT1BYPASS);
+//    HWREG(baseAddress + OFS_UCSCTL6) |= xcap;
 //
-//******************************************************************************
-void
-UCS_bypassXT1 ( unsigned int baseAddress,
-    unsigned char highOrLowFrequency
-    )
-{
-    ASSERT((UCS_XT1_LOW_FREQUENCY == highOrLowFrequency) ||
-        (UCS_XT1_HIGH_FREQUENCY == highOrLowFrequency )
-        );
-
-    //Enable HF/LF mode
-    HWREG(baseAddress + OFS_UCSCTL6) &= ~XTS;
-    HWREG(baseAddress + OFS_UCSCTL6) |= highOrLowFrequency;
-
-    //Switch OFF XT1 oscillator and enable BYPASS mode
-    HWREG(baseAddress + OFS_UCSCTL6) |= (XT1BYPASS + XT1OFF);
-
-   
-    if (UCS_XT1_LOW_FREQUENCY == highOrLowFrequency){
-      while (HWREGB(baseAddress + OFS_UCSCTL7) & (XT1LFOFFG)) {
-        //Clear OSC flaut Flags fault flags
-        HWREGB(baseAddress + OFS_UCSCTL7) &= ~(XT1LFOFFG);
-        
-        // Clear the global fault flag. In case the XT1 caused the global fault 
-        // flag to get set this will clear the global error condition. If any 
-        // error condition persists, global flag will get again.
-        HWREGB(SFR_BASEADDRESS + OFS_SFRIFG1) &= ~OFIFG;
-      }
-    } else   {
-        while (HWREGB(baseAddress + OFS_UCSCTL7) & (XT1HFOFFG)) {
-          //Clear OSC flaut Flags fault flags
-          HWREGB(baseAddress + OFS_UCSCTL7) &= ~(XT1HFOFFG);
-          
-          //Clear the global fault flag. In case the XT1 caused the global fault 
-          //flag to get set this will clear the global error condition. If any 
-          //error condition persists, global flag will get again.
-          HWREGB(SFR_BASEADDRESS + OFS_SFRIFG1) &= ~OFIFG;
-        }
-      }
- 
-}
-
-//******************************************************************************
+//    while (HWREGB(baseAddress + OFS_UCSCTL7) & XT1LFOFFG)
+//    {
+//        //Clear OSC flaut Flags fault flags
+//        HWREGB(baseAddress + OFS_UCSCTL7) &= ~(XT1LFOFFG);
 //
-//! Initializes the XT1 crystal oscillator in low frequency mode with timeout.
-//! Loops until all oscillator fault flags are cleared or until a timeout
-//! counter is decremented and equals to zero. See the device-specific
-//! datasheet for appropriate drive settings.
-//!
-//! \param baseAddress is the base address of the UCS module.
-//! \param xt1drive is the target drive strength for the XT1 crystal oscillator.
-//!        Valid values are
-//!         \b UCS_XT1_DRIVE0,
-//!         \b UCS_XT1_DRIVE1,
-//!         \b UCS_XT1_DRIVE2,
-//!         \b UCS_XT1_DRIVE3[Default Value]
-//! \param xcap is the selected capactor value. Valid values are:
-//!        \b UCS_XCAP_0,
-//!        \b UCS_XCAP_1,
-//!        \b UCS_XCAP_2,
-//!        \b UCS_XCAP_3[Default Value]
-//!  This parameter selects the capacitors applied to the LF crystal
-//! (XT1) or resonator in the LF mode. The  effective capacitance
-//! (seen by the crystal) is Ceff . (CXIN + 2 pF)/2. It is assumed that
-//! CXIN = CXOUT and that a parasitic capacitance of 2 pF is added by
-//! the package and the printed circuit board. For details about the
-//! typical internal and the effective capacitors, refer to the
-//! device-specific data sheet.
-//!
-//! \param timeout is the count value that gets decremented every time the loop
-//!         that clears oscillator fault flags gets executed.
-//!
-//! Modified registers are \b UCSCTL6, \b UCSCTL7, \b SFRIFG
-//!
-//! \return STATUS_SUCCESS or STATUS_FAIL
+//        //Clear OFIFG fault flag
+//        HWREGB(SFR_BASEADDRESS + OFS_SFRIFG1) &= ~OFIFG;
+//    }
 //
-//******************************************************************************
-unsigned short
-UCS_LFXT1StartWithTimeout (
-    unsigned int baseAddress,
-    unsigned int xt1drive,
-    unsigned char xcap,
-    unsigned int timeout
-    )
-{
-    ASSERT((xcap == UCS_XCAP_0) ||
-        (xcap == UCS_XCAP_1) ||
-        (xcap == UCS_XCAP_2) ||
-        (xcap == UCS_XCAP_3) );
-
-    ASSERT((xt1drive == UCS_XT1_DRIVE0 ) ||
-        (xt1drive == UCS_XT1_DRIVE1 ) ||
-        (xt1drive == UCS_XT1_DRIVE2 ) ||
-        (xt1drive == UCS_XT1_DRIVE3 ));
-
-    //If the drive setting is not already set to maximum
-    //Set it to max for LFXT startup
-    if ((HWREG(baseAddress + OFS_UCSCTL6) & XT1DRIVE_3) != XT1DRIVE_3){
-        //Highest drive setting for XT1startup
-        HWREG(baseAddress + OFS_UCSCTL6_L) |= XT1DRIVE1_L + XT1DRIVE0_L;
-    }
-
-    //Enable LF mode
-    HWREG(baseAddress + OFS_UCSCTL6) &= ~(
-        XTS +
-        XT1BYPASS
-        );
-
-    do
-    {
-        HWREGB(baseAddress + OFS_UCSCTL7) &= ~(XT1LFOFFG);
-
-        //Clear OFIFG fault flag
-        HWREGB(SFR_BASEADDRESS + OFS_SFRIFG1) &= ~OFIFG;
-    }while ((HWREGB(baseAddress + OFS_UCSCTL7) & XT1LFOFFG) && --timeout);
-
-    if (timeout){
-        //set requested Drive mode
-        HWREG(baseAddress + OFS_UCSCTL6) = ( HWREG(baseAddress + OFS_UCSCTL6) &
-                                             ~(XT1DRIVE_3)
-                                             ) |
-                                           (xt1drive);
-        //Switch ON XT1 oscillator
-        HWREG(baseAddress + OFS_UCSCTL6) &= ~XT1OFF;
-
-        return (STATUS_SUCCESS);
-    } else   {
-        return (STATUS_FAIL);
-    }
-}
-
-//******************************************************************************
+//    //set requested Drive mode
+//    HWREG(baseAddress + OFS_UCSCTL6) = ( HWREG(baseAddress + OFS_UCSCTL6) &
+//                                         ~(XT1DRIVE_3)
+//                                         ) |
+//                                       (xt1drive);
 //
-//! Initializes the XT1 crystal oscillator in high freqquency mode with timeout.
-//! Loops until all oscillator fault flags are cleared or until a timeout
-//! counter is decremented and equals to zero. See the device-specific data
-//! sheet for appropriate drive settings.
-//!
-//! \param baseAddress is the base address of the UCS module.
-//! \param xt1drive is the target drive strength for the XT1 crystal oscillator.
-//!        Valid values are
-//!         \b UCS_XT1_DRIVE0,
-//!         \b UCS_XT1_DRIVE1,
-//!         \b UCS_XT1_DRIVE2,
-//!         \b UCS_XT1_DRIVE3 [Default Value]
-//! \param timeout is the count value that gets decremented every time the loop
-//!         that clears oscillator fault flags gets executed.
-//!
-//! Modified registers are \b UCSCTL6, \b UCSCTL7, \b SFRIFG
-//!
-//! \return STATUS_SUCCESS or STATUS_FAIL
 //
-//******************************************************************************
-unsigned short
-UCS_HFXT1StartWithTimeout (  unsigned int baseAddress,
-    unsigned int xt1drive,
-    unsigned int timeout
-    )
-{
-    ASSERT((xt1drive == UCS_XT1_DRIVE0 ) ||
-        (xt1drive == UCS_XT1_DRIVE1 ) ||
-        (xt1drive == UCS_XT1_DRIVE2 ) ||
-        (xt1drive == UCS_XT1_DRIVE3 ));
-
-
-    //Check if drive value is the expected one
-    if ((HWREG(baseAddress + OFS_UCSCTL6) & XT1DRIVE_3) != xt1drive){
-        //Clear XT1drive field
-        HWREG(baseAddress + OFS_UCSCTL6) &= ~XT1DRIVE_3;
-
-        //Set requested value
-        HWREG(baseAddress + OFS_UCSCTL6) |= xt1drive;
-    }
-
-    //Enable HF mode
-    HWREG(baseAddress + OFS_UCSCTL6) |= XTS;
-
-    HWREG(baseAddress + OFS_UCSCTL6) &= ~XT1BYPASS;
-
-    // Check XT1 fault flags
-    do
-    {
-        HWREGB(baseAddress + OFS_UCSCTL7) &= ~(XT1HFOFFG);
-
-        //Clear OFIFG fault flag
-        HWREGB(SFR_BASEADDRESS + OFS_SFRIFG1) &= ~OFIFG;
-    }while ((HWREGB(baseAddress + OFS_UCSCTL7) & ( XT1HFOFFG))
-            && --timeout); 
-
-    if (timeout){
-        //Switch ON XT1 oscillator
-        HWREG(baseAddress + OFS_UCSCTL6) &= ~XT1OFF;
-
-        return (STATUS_SUCCESS);
-    } else   {
-        return (STATUS_FAIL);
-    }
-}
-
-//******************************************************************************
+//    //Switch ON XT1 oscillator
+//    HWREG(baseAddress + OFS_UCSCTL6) &= ~XT1OFF;
+//}
 //
-//! Bypasses the XT1 crystal oscillator with time out. Loops until all
-//! oscillator fault flags are cleared or until a timeout counter is
-//! decremented and equals to zero.
-//!
-//! \param baseAddress is the base address of the UCS module.
-//! \param highOrLowFrequency selects high frequency or low frequency mode for
-//!        XT1. Valid values are
-//!        \b UCS_XT1_HIGH_FREQUENCY,
-//!        \b UCS_XT1_LOW_FREQUENCY [Default Value]
-//! \param timeout is the count value that gets decremented every time the loop
-//!         that clears oscillator fault flags gets executed.
-//!
-//! Modified registers are \b UCSCTL6, \b UCSCTL7, \b SFRIFG
-//!
-//! \return STATUS_SUCCESS or STATUS_FAIL
+////******************************************************************************
+////
+////! Initializes the XT1 crystal oscillator in high frequency mode. Loops until
+////! all oscillator fault flags are cleared, with no timeout. See the
+////! device-specific data sheet for appropriate drive settings.
+////!
+////! \param baseAddress is the base address of the UCS module.
+////! \param xt1drive is the target drive strength for the XT1 crystal oscillator.
+////!        Valid values are
+////!         \b UCS_XT1_DRIVE0 ,
+////!         \b UCS_XT1_DRIVE1,
+////!         \b UCS_XT1_DRIVE2 ,
+////!         \b UCS_XT1_DRIVE3[Default Value]
+////!
+////! Modified registers are \b UCSCTL6, \b UCSCTL7, \b SFRIFG
+////!
+////! \return None
+////
+////******************************************************************************
+//void
+//UCS_HFXT1Start (
+//    unsigned int baseAddress,
+//    unsigned int xt1drive
+//    )
+//{
+//    //Check if drive value is the expected one
+//    if ((HWREG(baseAddress + OFS_UCSCTL6) & XT1DRIVE_3) != xt1drive){
+//        //Clear XT1drive field
+//        HWREG(baseAddress + OFS_UCSCTL6) &= ~XT1DRIVE_3;
 //
-//******************************************************************************
-unsigned short
-UCS_bypassXT1WithTimeout (
-    unsigned int baseAddress,
-    unsigned char highOrLowFrequency,
-    unsigned int timeout
-    )
-{
-    ASSERT((UCS_XT1_LOW_FREQUENCY == highOrLowFrequency) ||
-        (UCS_XT1_HIGH_FREQUENCY == highOrLowFrequency )
-        );
-
-    //Enable HF/LF mode
-    HWREG(baseAddress + OFS_UCSCTL6) &= ~XTS;
-    HWREG(baseAddress + OFS_UCSCTL6) |= highOrLowFrequency;
-
-    //Switch OFF XT1 oscillator  and enable bypass
-    HWREG(baseAddress + OFS_UCSCTL6) |= (XT1BYPASS + XT1OFF);
-
-       
-    if (UCS_XT1_LOW_FREQUENCY == highOrLowFrequency){
-      do {
-        //Clear OSC flaut Flags fault flags
-        HWREGB(baseAddress + OFS_UCSCTL7) &= ~(XT1LFOFFG);
-        
-        // Clear the global fault flag. In case the XT1 caused the global fault 
-        // flag to get set this will clear the global error condition. If any 
-        // error condition persists, global flag will get again.
-        HWREGB(SFR_BASEADDRESS + OFS_SFRIFG1) &= ~OFIFG;
-      }while ((HWREGB(baseAddress + OFS_UCSCTL7) & (XT1LFOFFG)) && --timeout);
-      
-    } else   {
-        do {
-          //Clear OSC flaut Flags fault flags
-          HWREGB(baseAddress + OFS_UCSCTL7) &= ~(XT1HFOFFG);
-          
-          //Clear the global fault flag. In case the XT1 caused the global fault 
-          //flag to get set this will clear the global error condition. If any 
-          //error condition persists, global flag will get again.
-          HWREGB(SFR_BASEADDRESS + OFS_SFRIFG1) &= ~OFIFG;
-        }while ((HWREGB(baseAddress + OFS_UCSCTL7) & (XT1HFOFFG))&& --timeout);
-    }
-
-
-    if (timeout){
-        return (STATUS_SUCCESS);
-    } else {
-        return (STATUS_FAIL);
-    }
-}
-
-//******************************************************************************
+//        //Set requested value
+//        HWREG(baseAddress + OFS_UCSCTL6) |= xt1drive;
+//    }
 //
-//! Stops the XT1 oscillator using the XT1OFF bit.
-//!
-//! \param baseAddress is the base address of the UCS module.
-//!
-//! \return None
+//    //Enable HF mode
+//    HWREG(baseAddress + OFS_UCSCTL6) |= XTS;
 //
-//******************************************************************************
-void
-UCS_XT1Off (unsigned int baseAddress)
-{
-    //Switch off XT1 oscillator
-    HWREG(baseAddress + OFS_UCSCTL6) |= XT1OFF;
-}
-
-//******************************************************************************
+//    HWREG(baseAddress + OFS_UCSCTL6) &= ~XT1BYPASS;
 //
-//! Initializes the XT2 crystal oscillator, which supports crystal frequencies
-//! between 4 MHz and 32 MHz, depending on the selected drive strength. Loops
-//! until all oscillator fault flags are cleared, with no timeout. See the
-//! device-specific data sheet for appropriate drive settings.
-//!
-//! \param baseAddress is the base address of the UCS module.
-//! \param xt2drive is the target drive strength for the XT2 crystal oscillator.
-//!      Valid values are
-//!     \b UCS_XT2DRIVE_4MHZ_8MHZ,
-//!     \b UCS_XT2DRIVE_8MHZ_16MHZ,
-//!     \b UCS_XT2DRIVE_16MHZ_24MHZ,
-//!     \b UCS_XT2DRIVE_24MHZ_32MHZ [Default Value]
-//!
-//! Modified registers are \b UCSCTL6, \b UCSCTL7, \b SFRIFG
-//!
-//! \return None
+//    // Check XT1 fault flags
+//    while((HWREGB(baseAddress + OFS_UCSCTL7) & (XT1HFOFFG))){
+//        //Clear OSC flaut Flags fault flags
+//        HWREGB(baseAddress + OFS_UCSCTL7) &= ~(XT1HFOFFG);
 //
-//******************************************************************************
-void
-UCS_XT2Start (  unsigned int baseAddress,
-    unsigned int xt2drive
-    )
-{
-#if !defined (__CC430F5133__) || (__CC430F5135__) || (__CC430F5137__) || \
-            (__CC430F6125__) || (__CC430F6126__) || (__CC430F6127__) || \
-            (__CC430F6135__) || (__CC430F6137__) || (__CC430F5123__) || \
-            (__CC430F5125__) || (__CC430F5143__) || (__CC430F5145__) || \
-            (__CC430F5147__) || (__CC430F6143__) || (__CC430F6145__) || \
-            (__CC430F6147__)
-
-    //Check if drive value is the expected one
-    if ((HWREG(baseAddress + OFS_UCSCTL6) & XT2DRIVE_3) != xt2drive){
-        //Clear XT2drive field
-        HWREG(baseAddress + OFS_UCSCTL6) &= ~XT2DRIVE_3;
-
-        //Set requested value
-        HWREG(baseAddress + OFS_UCSCTL6) |= xt2drive;
-    }
-#endif     
-
-    //Enable XT2 and Switch on XT2 oscillator
-    HWREG(baseAddress + OFS_UCSCTL6) &= ~XT2BYPASS;
-    HWREG(baseAddress + OFS_UCSCTL6) &= ~XT2OFF;
-
-    while (HWREGB(baseAddress + OFS_UCSCTL7) & XT2OFFG){
-     //Clear OSC flaut Flags
-     HWREGB(baseAddress + OFS_UCSCTL7) &= ~(XT2OFFG);
-     
-#if defined (__CC430F5133__) || (__CC430F5135__) || (__CC430F5137__) || \
-            (__CC430F6125__) || (__CC430F6126__) || (__CC430F6127__) || \
-            (__CC430F6135__) || (__CC430F6137__) || (__CC430F5123__) || \
-            (__CC430F5125__) || (__CC430F5143__) || (__CC430F5145__) || \
-            (__CC430F5147__) || (__CC430F6143__) || (__CC430F6145__) || \
-            (__CC430F6147__)
-        // CC430 uses a different fault mechanism. It requires 3 VLO clock 
-        // cycles delay.If 20MHz CPU, 5000 clock cycles are required in worst 
-        // case.
-        __delay_cycles(5000);
-#endif
-
-     //Clear OFIFG fault flag
-     HWREGB(SFR_BASEADDRESS + OFS_SFRIFG1) &= ~OFIFG;
-    }
-}
-
-//******************************************************************************
+//        //Clear OFIFG fault flag
+//        HWREGB(SFR_BASEADDRESS + OFS_SFRIFG1) &= ~OFIFG;
+//    }
 //
-//! Bypasses the XT2 crystal oscillator, which supports crystal frequencies
-//! between 4 MHz and 32 MHz. Loops until all oscillator fault flags are
-//! cleared, with no timeout.
-//!
-//! \param baseAddress is the base address of the UCS module.
-//!
-//! Modified registers are \b UCSCTL6, \b UCSCTL7, \b SFRIFG
-//!
-//! \return None
+//    //Switch ON XT1 oscillator
+//    HWREG(baseAddress + OFS_UCSCTL6) &= ~XT1OFF;
+//}
 //
-//******************************************************************************
-void
-UCS_bypassXT2 (  unsigned int baseAddress )
-{
-    //Switch on XT2 oscillator
-    HWREG(baseAddress + OFS_UCSCTL6) |= ( XT2BYPASS + XT2OFF );
-
-    while (HWREGB(baseAddress + OFS_UCSCTL7) & XT2OFFG){
-     //Clear OSC flaut Flags
-     HWREGB(baseAddress + OFS_UCSCTL7) &= ~(XT2OFFG);
-     
-#if defined (__CC430F5133__) || (__CC430F5135__) || (__CC430F5137__) || \
-            (__CC430F6125__) || (__CC430F6126__) || (__CC430F6127__) || \
-            (__CC430F6135__) || (__CC430F6137__) || (__CC430F5123__) || \
-            (__CC430F5125__) || (__CC430F5143__) || (__CC430F5145__) || \
-            (__CC430F5147__) || (__CC430F6143__) || (__CC430F6145__) || \
-            (__CC430F6147__)
-        // CC430 uses a different fault mechanism. It requires 3 VLO clock 
-        // cycles delay.If 20MHz CPU, 5000 clock cycles are required in worst 
-        // case.
-        __delay_cycles(5000);
-#endif
-
-     //Clear OFIFG fault flag
-     HWREGB(SFR_BASEADDRESS + OFS_SFRIFG1) &= ~OFIFG;
-    }
-}
-
-//******************************************************************************
+////******************************************************************************
+////
+////! Bypasses the XT1 crystal oscillator. Loops until all oscillator fault
+////! flags are cleared, with no timeout.
+////!
+////! \param baseAddress is the base address of the UCS module.
+////! \param highOrLowFrequency selects high frequency or low frequency mode for
+////!         XT1. Valid values are
+////!        \b UCS_XT1_HIGH_FREQUENCY,
+////!        \b UCS_XT1_LOW_FREQUENCY [Default Value]
+////!
+////! Modified registers are \b UCSCTL6, \b UCSCTL7, \b SFRIFG
+////! \return None
+////
+////******************************************************************************
+//void
+//UCS_bypassXT1 ( unsigned int baseAddress,
+//    unsigned char highOrLowFrequency
+//    )
+//{
+//    ASSERT((UCS_XT1_LOW_FREQUENCY == highOrLowFrequency) ||
+//        (UCS_XT1_HIGH_FREQUENCY == highOrLowFrequency )
+//        );
 //
-//! Initializes the XT2 crystal oscillator, which supports crystal frequencies
-//! between 4 MHz and 32 MHz, depending on the selected drive strength. Loops
-//! until all oscillator fault flags are cleared or until a timeout counter is
-//! decremented and equals to zero. See the device-specific data sheet for
-//! appropriate drive settings.
-//!
-//! \param baseAddress is the base address of the UCS module.
-//! \param xt2drive is the target drive strength for the XT2 crystal oscillator.
-//!        Valid values are
-//!        \b UCS_XT2_4MHZ_8MHZ,
-//!        \b UCS_XT2_8MHZ_16MHZ,
-//!        \b UCS_XT2_16MHZ_24MHZ
-//!        \b UCS_XT2_24MHZ_32MHZ [Default Value]
-//! \param timeout is the count value that gets decremented every time the loop
-//!         that clears oscillator fault flags gets executed.
-//!
-//! Modified registers are \b UCSCTL6, \b UCSCTL7, \b SFRIFG
-//!
-//! \return STATUS_SUCCESS or STATUS_FAIL
+//    //Enable HF/LF mode
+//    HWREG(baseAddress + OFS_UCSCTL6) &= ~XTS;
+//    HWREG(baseAddress + OFS_UCSCTL6) |= highOrLowFrequency;
 //
-//******************************************************************************
-unsigned short
-UCS_XT2StartWithTimeout ( unsigned int baseAddress,
-    unsigned int xt2drive,
-    unsigned int timeout
-    )
-{
-  
-#if !defined (__CC430F5133__) || (__CC430F5135__) || (__CC430F5137__) || \
-            (__CC430F6125__) || (__CC430F6126__) || (__CC430F6127__) || \
-            (__CC430F6135__) || (__CC430F6137__) || (__CC430F5123__) || \
-            (__CC430F5125__) || (__CC430F5143__) || (__CC430F5145__) || \
-            (__CC430F5147__) || (__CC430F6143__) || (__CC430F6145__) || \
-            (__CC430F6147__)
-    //Check if drive value is the expected one
-    if ((HWREG(baseAddress + OFS_UCSCTL6) & XT2DRIVE_3) != xt2drive){
-        //Clear XT2drive field
-        HWREG(baseAddress + OFS_UCSCTL6) &= ~XT2DRIVE_3;
-
-        //Set requested value
-        HWREG(baseAddress + OFS_UCSCTL6) |= xt2drive;
-    }
-
-#endif
-
-    HWREG(baseAddress + OFS_UCSCTL6) &= ~XT2BYPASS;
-
-    //Switch on XT2 oscillator
-    HWREG(baseAddress + OFS_UCSCTL6) &= ~XT2OFF;
-
-    do{             
-     //Clear OSC flaut Flags
-     HWREGB(baseAddress + OFS_UCSCTL7) &= ~(XT2OFFG);
-     
-#if defined (__CC430F5133__) || (__CC430F5135__) || (__CC430F5137__) || \
-            (__CC430F6125__) || (__CC430F6126__) || (__CC430F6127__) || \
-            (__CC430F6135__) || (__CC430F6137__) || (__CC430F5123__) || \
-            (__CC430F5125__) || (__CC430F5143__) || (__CC430F5145__) || \
-            (__CC430F5147__) || (__CC430F6143__) || (__CC430F6145__) || \
-            (__CC430F6147__)
-        // CC430 uses a different fault mechanism. It requires 3 VLO clock 
-        // cycles delay.If 20MHz CPU, 5000 clock cycles are required in worst 
-        // case.
-        __delay_cycles(5000);
-#endif
-
-     //Clear OFIFG fault flag
-     HWREGB(SFR_BASEADDRESS + OFS_SFRIFG1) &= ~OFIFG;
-    }while ((HWREGB(baseAddress + OFS_UCSCTL7) & XT2OFFG) && --timeout);
-    
-    if (timeout){
-        return (STATUS_SUCCESS);
-    } else   {
-        return (STATUS_FAIL);
-    }
-}
-
-//******************************************************************************
+//    //Switch OFF XT1 oscillator and enable BYPASS mode
+//    HWREG(baseAddress + OFS_UCSCTL6) |= (XT1BYPASS + XT1OFF);
 //
-//! Bypasses the XT2 crystal oscillator, which supports crystal frequencies
-//! between 4 MHz and 32 MHz. Loops until all oscillator fault flags are
-//! cleared or until a timeout counter is decremented and equals to zero.
-//!
-//! \param baseAddress is the base address of the UCS module.
-//! \param timeout is the count value that gets decremented every time the loop
-//!         that clears oscillator fault flags gets executed.
-//!
-//! Modified registers are \b UCSCTL6, \b UCSCTL7, \b SFRIFG
-//!
-//! \return STATUS_SUCCESS or STATUS_FAIL
 //
-//******************************************************************************
-unsigned short
-UCS_bypassXT2WithTimeout ( unsigned int baseAddress,
-    unsigned int timeout
-    )
-{
-    //Switch off XT2 oscillator and enable BYPASS mode
-    HWREG(baseAddress + OFS_UCSCTL6) |= (XT2BYPASS + XT2OFF );
-
-
-    do{             
-     //Clear OSC flaut Flags
-     HWREGB(baseAddress + OFS_UCSCTL7) &= ~(XT2OFFG);
-
-#if defined (__CC430F5133__) || (__CC430F5135__) || (__CC430F5137__) || \
-            (__CC430F6125__) || (__CC430F6126__) || (__CC430F6127__) || \
-            (__CC430F6135__) || (__CC430F6137__) || (__CC430F5123__) || \
-            (__CC430F5125__) || (__CC430F5143__) || (__CC430F5145__) || \
-            (__CC430F5147__) || (__CC430F6143__) || (__CC430F6145__) || \
-            (__CC430F6147__)
-        // CC430 uses a different fault mechanism. It requires 3 VLO clock 
-        // cycles delay.If 20MHz CPU, 5000 clock cycles are required in worst 
-        // case.
-        __delay_cycles(5000);
-#endif
-        
-     //Clear OFIFG fault flag
-     HWREGB(SFR_BASEADDRESS + OFS_SFRIFG1) &= ~OFIFG;
-    }while ((HWREGB(baseAddress + OFS_UCSCTL7) & XT2OFFG) && --timeout);
-    
-    if (timeout){
-        return (STATUS_SUCCESS);
-    } else   {
-        return (STATUS_FAIL);
-    }
-}
-
-//******************************************************************************
+//    if (UCS_XT1_LOW_FREQUENCY == highOrLowFrequency){
+//      while (HWREGB(baseAddress + OFS_UCSCTL7) & (XT1LFOFFG)) {
+//        //Clear OSC flaut Flags fault flags
+//        HWREGB(baseAddress + OFS_UCSCTL7) &= ~(XT1LFOFFG);
 //
-//! Stops the XT2 oscillator using the XT2OFF bit.
-//!
-//! \param baseAddress is the base address of the UCS module.
-//!
-//! Modified registers are \b UCSCTL6
-//!
-//! \return None
+//        // Clear the global fault flag. In case the XT1 caused the global fault
+//        // flag to get set this will clear the global error condition. If any
+//        // error condition persists, global flag will get again.
+//        HWREGB(SFR_BASEADDRESS + OFS_SFRIFG1) &= ~OFIFG;
+//      }
+//    } else   {
+//        while (HWREGB(baseAddress + OFS_UCSCTL7) & (XT1HFOFFG)) {
+//          //Clear OSC flaut Flags fault flags
+//          HWREGB(baseAddress + OFS_UCSCTL7) &= ~(XT1HFOFFG);
 //
-//******************************************************************************
-void
-UCS_XT2Off (unsigned int baseAddress)
-{
-    //Switch off XT2 oscillator
-    HWREG(baseAddress + OFS_UCSCTL6) |= XT2OFF;
-}
-
-//******************************************************************************
+//          //Clear the global fault flag. In case the XT1 caused the global fault
+//          //flag to get set this will clear the global error condition. If any
+//          //error condition persists, global flag will get again.
+//          HWREGB(SFR_BASEADDRESS + OFS_SFRIFG1) &= ~OFIFG;
+//        }
+//      }
 //
-//! Initializes the DCO to operate a frequency that is a multiple of the
-//! reference frequency into the FLL. Loops until all oscillator fault flags are
-//! cleared, with a timeout. If the frequency is greater than 16 MHz,
-//! the function sets the MCLK and SMCLK source to the undivided DCO frequency.
-//! Otherwise, the function sets the MCLK and SMCLK source to the
-//! DCOCLKDIV frequency.
-//! This function executes a software delay that is proportional in length to
-//! the ratio of the target FLL frequency and the FLL reference.
-//!
-//! \param baseAddress is the base address of the UCS module.
-//! \param fsystem is the target frequency for MCLK in kHz
-//! \param ratio is the ratio x/y, where x = fsystem and
-//!         y = FLL reference frequency.
-//!
-//! Modified registers are \b UCSCTL0, \b UCSCTL1, \b UCSCTL2, \b UCSCTL4,
-//! \b UCSCTL7, \b SFRIFG1
-//!
-//! \return None
+//}
 //
-//******************************************************************************
+////******************************************************************************
+////
+////! Initializes the XT1 crystal oscillator in low frequency mode with timeout.
+////! Loops until all oscillator fault flags are cleared or until a timeout
+////! counter is decremented and equals to zero. See the device-specific
+////! datasheet for appropriate drive settings.
+////!
+////! \param baseAddress is the base address of the UCS module.
+////! \param xt1drive is the target drive strength for the XT1 crystal oscillator.
+////!        Valid values are
+////!         \b UCS_XT1_DRIVE0,
+////!         \b UCS_XT1_DRIVE1,
+////!         \b UCS_XT1_DRIVE2,
+////!         \b UCS_XT1_DRIVE3[Default Value]
+////! \param xcap is the selected capactor value. Valid values are:
+////!        \b UCS_XCAP_0,
+////!        \b UCS_XCAP_1,
+////!        \b UCS_XCAP_2,
+////!        \b UCS_XCAP_3[Default Value]
+////!  This parameter selects the capacitors applied to the LF crystal
+////! (XT1) or resonator in the LF mode. The  effective capacitance
+////! (seen by the crystal) is Ceff . (CXIN + 2 pF)/2. It is assumed that
+////! CXIN = CXOUT and that a parasitic capacitance of 2 pF is added by
+////! the package and the printed circuit board. For details about the
+////! typical internal and the effective capacitors, refer to the
+////! device-specific data sheet.
+////!
+////! \param timeout is the count value that gets decremented every time the loop
+////!         that clears oscillator fault flags gets executed.
+////!
+////! Modified registers are \b UCSCTL6, \b UCSCTL7, \b SFRIFG
+////!
+////! \return STATUS_SUCCESS or STATUS_FAIL
+////
+////******************************************************************************
+//unsigned short
+//UCS_LFXT1StartWithTimeout (
+//    unsigned int baseAddress,
+//    unsigned int xt1drive,
+//    unsigned char xcap,
+//    unsigned int timeout
+//    )
+//{
+//    ASSERT((xcap == UCS_XCAP_0) ||
+//        (xcap == UCS_XCAP_1) ||
+//        (xcap == UCS_XCAP_2) ||
+//        (xcap == UCS_XCAP_3) );
+//
+//    ASSERT((xt1drive == UCS_XT1_DRIVE0 ) ||
+//        (xt1drive == UCS_XT1_DRIVE1 ) ||
+//        (xt1drive == UCS_XT1_DRIVE2 ) ||
+//        (xt1drive == UCS_XT1_DRIVE3 ));
+//
+//    //If the drive setting is not already set to maximum
+//    //Set it to max for LFXT startup
+//    if ((HWREG(baseAddress + OFS_UCSCTL6) & XT1DRIVE_3) != XT1DRIVE_3){
+//        //Highest drive setting for XT1startup
+//        HWREG(baseAddress + OFS_UCSCTL6_L) |= XT1DRIVE1_L + XT1DRIVE0_L;
+//    }
+//
+//    //Enable LF mode
+//    HWREG(baseAddress + OFS_UCSCTL6) &= ~(
+//        XTS +
+//        XT1BYPASS
+//        );
+//
+//    do
+//    {
+//        HWREGB(baseAddress + OFS_UCSCTL7) &= ~(XT1LFOFFG);
+//
+//        //Clear OFIFG fault flag
+//        HWREGB(SFR_BASEADDRESS + OFS_SFRIFG1) &= ~OFIFG;
+//    }while ((HWREGB(baseAddress + OFS_UCSCTL7) & XT1LFOFFG) && --timeout);
+//
+//    if (timeout){
+//        //set requested Drive mode
+//        HWREG(baseAddress + OFS_UCSCTL6) = ( HWREG(baseAddress + OFS_UCSCTL6) &
+//                                             ~(XT1DRIVE_3)
+//                                             ) |
+//                                           (xt1drive);
+//        //Switch ON XT1 oscillator
+//        HWREG(baseAddress + OFS_UCSCTL6) &= ~XT1OFF;
+//
+//        return (STATUS_SUCCESS);
+//    } else   {
+//        return (STATUS_FAIL);
+//    }
+//}
+//
+////******************************************************************************
+////
+////! Initializes the XT1 crystal oscillator in high freqquency mode with timeout.
+////! Loops until all oscillator fault flags are cleared or until a timeout
+////! counter is decremented and equals to zero. See the device-specific data
+////! sheet for appropriate drive settings.
+////!
+////! \param baseAddress is the base address of the UCS module.
+////! \param xt1drive is the target drive strength for the XT1 crystal oscillator.
+////!        Valid values are
+////!         \b UCS_XT1_DRIVE0,
+////!         \b UCS_XT1_DRIVE1,
+////!         \b UCS_XT1_DRIVE2,
+////!         \b UCS_XT1_DRIVE3 [Default Value]
+////! \param timeout is the count value that gets decremented every time the loop
+////!         that clears oscillator fault flags gets executed.
+////!
+////! Modified registers are \b UCSCTL6, \b UCSCTL7, \b SFRIFG
+////!
+////! \return STATUS_SUCCESS or STATUS_FAIL
+////
+////******************************************************************************
+//unsigned short
+//UCS_HFXT1StartWithTimeout (  unsigned int baseAddress,
+//    unsigned int xt1drive,
+//    unsigned int timeout
+//    )
+//{
+//    ASSERT((xt1drive == UCS_XT1_DRIVE0 ) ||
+//        (xt1drive == UCS_XT1_DRIVE1 ) ||
+//        (xt1drive == UCS_XT1_DRIVE2 ) ||
+//        (xt1drive == UCS_XT1_DRIVE3 ));
+//
+//
+//    //Check if drive value is the expected one
+//    if ((HWREG(baseAddress + OFS_UCSCTL6) & XT1DRIVE_3) != xt1drive){
+//        //Clear XT1drive field
+//        HWREG(baseAddress + OFS_UCSCTL6) &= ~XT1DRIVE_3;
+//
+//        //Set requested value
+//        HWREG(baseAddress + OFS_UCSCTL6) |= xt1drive;
+//    }
+//
+//    //Enable HF mode
+//    HWREG(baseAddress + OFS_UCSCTL6) |= XTS;
+//
+//    HWREG(baseAddress + OFS_UCSCTL6) &= ~XT1BYPASS;
+//
+//    // Check XT1 fault flags
+//    do
+//    {
+//        HWREGB(baseAddress + OFS_UCSCTL7) &= ~(XT1HFOFFG);
+//
+//        //Clear OFIFG fault flag
+//        HWREGB(SFR_BASEADDRESS + OFS_SFRIFG1) &= ~OFIFG;
+//    }while ((HWREGB(baseAddress + OFS_UCSCTL7) & ( XT1HFOFFG))
+//            && --timeout);
+//
+//    if (timeout){
+//        //Switch ON XT1 oscillator
+//        HWREG(baseAddress + OFS_UCSCTL6) &= ~XT1OFF;
+//
+//        return (STATUS_SUCCESS);
+//    } else   {
+//        return (STATUS_FAIL);
+//    }
+//}
+//
+////******************************************************************************
+////
+////! Bypasses the XT1 crystal oscillator with time out. Loops until all
+////! oscillator fault flags are cleared or until a timeout counter is
+////! decremented and equals to zero.
+////!
+////! \param baseAddress is the base address of the UCS module.
+////! \param highOrLowFrequency selects high frequency or low frequency mode for
+////!        XT1. Valid values are
+////!        \b UCS_XT1_HIGH_FREQUENCY,
+////!        \b UCS_XT1_LOW_FREQUENCY [Default Value]
+////! \param timeout is the count value that gets decremented every time the loop
+////!         that clears oscillator fault flags gets executed.
+////!
+////! Modified registers are \b UCSCTL6, \b UCSCTL7, \b SFRIFG
+////!
+////! \return STATUS_SUCCESS or STATUS_FAIL
+////
+////******************************************************************************
+//unsigned short
+//UCS_bypassXT1WithTimeout (
+//    unsigned int baseAddress,
+//    unsigned char highOrLowFrequency,
+//    unsigned int timeout
+//    )
+//{
+//    ASSERT((UCS_XT1_LOW_FREQUENCY == highOrLowFrequency) ||
+//        (UCS_XT1_HIGH_FREQUENCY == highOrLowFrequency )
+//        );
+//
+//    //Enable HF/LF mode
+//    HWREG(baseAddress + OFS_UCSCTL6) &= ~XTS;
+//    HWREG(baseAddress + OFS_UCSCTL6) |= highOrLowFrequency;
+//
+//    //Switch OFF XT1 oscillator  and enable bypass
+//    HWREG(baseAddress + OFS_UCSCTL6) |= (XT1BYPASS + XT1OFF);
+//
+//
+//    if (UCS_XT1_LOW_FREQUENCY == highOrLowFrequency){
+//      do {
+//        //Clear OSC flaut Flags fault flags
+//        HWREGB(baseAddress + OFS_UCSCTL7) &= ~(XT1LFOFFG);
+//
+//        // Clear the global fault flag. In case the XT1 caused the global fault
+//        // flag to get set this will clear the global error condition. If any
+//        // error condition persists, global flag will get again.
+//        HWREGB(SFR_BASEADDRESS + OFS_SFRIFG1) &= ~OFIFG;
+//      }while ((HWREGB(baseAddress + OFS_UCSCTL7) & (XT1LFOFFG)) && --timeout);
+//
+//    } else   {
+//        do {
+//          //Clear OSC flaut Flags fault flags
+//          HWREGB(baseAddress + OFS_UCSCTL7) &= ~(XT1HFOFFG);
+//
+//          //Clear the global fault flag. In case the XT1 caused the global fault
+//          //flag to get set this will clear the global error condition. If any
+//          //error condition persists, global flag will get again.
+//          HWREGB(SFR_BASEADDRESS + OFS_SFRIFG1) &= ~OFIFG;
+//        }while ((HWREGB(baseAddress + OFS_UCSCTL7) & (XT1HFOFFG))&& --timeout);
+//    }
+//
+//
+//    if (timeout){
+//        return (STATUS_SUCCESS);
+//    } else {
+//        return (STATUS_FAIL);
+//    }
+//}
+//
+////******************************************************************************
+////
+////! Stops the XT1 oscillator using the XT1OFF bit.
+////!
+////! \param baseAddress is the base address of the UCS module.
+////!
+////! \return None
+////
+////******************************************************************************
+//void
+//UCS_XT1Off (unsigned int baseAddress)
+//{
+//    //Switch off XT1 oscillator
+//    HWREG(baseAddress + OFS_UCSCTL6) |= XT1OFF;
+//}
+//
+////******************************************************************************
+////
+////! Initializes the XT2 crystal oscillator, which supports crystal frequencies
+////! between 4 MHz and 32 MHz, depending on the selected drive strength. Loops
+////! until all oscillator fault flags are cleared, with no timeout. See the
+////! device-specific data sheet for appropriate drive settings.
+////!
+////! \param baseAddress is the base address of the UCS module.
+////! \param xt2drive is the target drive strength for the XT2 crystal oscillator.
+////!      Valid values are
+////!     \b UCS_XT2DRIVE_4MHZ_8MHZ,
+////!     \b UCS_XT2DRIVE_8MHZ_16MHZ,
+////!     \b UCS_XT2DRIVE_16MHZ_24MHZ,
+////!     \b UCS_XT2DRIVE_24MHZ_32MHZ [Default Value]
+////!
+////! Modified registers are \b UCSCTL6, \b UCSCTL7, \b SFRIFG
+////!
+////! \return None
+////
+////******************************************************************************
+//void
+//UCS_XT2Start (  unsigned int baseAddress,
+//    unsigned int xt2drive
+//    )
+//{
+//#if !defined (__CC430F5133__) || (__CC430F5135__) || (__CC430F5137__) || \
+//            (__CC430F6125__) || (__CC430F6126__) || (__CC430F6127__) || \
+//            (__CC430F6135__) || (__CC430F6137__) || (__CC430F5123__) || \
+//            (__CC430F5125__) || (__CC430F5143__) || (__CC430F5145__) || \
+//            (__CC430F5147__) || (__CC430F6143__) || (__CC430F6145__) || \
+//            (__CC430F6147__)
+//
+//    //Check if drive value is the expected one
+//    if ((HWREG(baseAddress + OFS_UCSCTL6) & XT2DRIVE_3) != xt2drive){
+//        //Clear XT2drive field
+//        HWREG(baseAddress + OFS_UCSCTL6) &= ~XT2DRIVE_3;
+//
+//        //Set requested value
+//        HWREG(baseAddress + OFS_UCSCTL6) |= xt2drive;
+//    }
+//#endif
+//
+//    //Enable XT2 and Switch on XT2 oscillator
+//    HWREG(baseAddress + OFS_UCSCTL6) &= ~XT2BYPASS;
+//    HWREG(baseAddress + OFS_UCSCTL6) &= ~XT2OFF;
+//
+//    while (HWREGB(baseAddress + OFS_UCSCTL7) & XT2OFFG){
+//     //Clear OSC flaut Flags
+//     HWREGB(baseAddress + OFS_UCSCTL7) &= ~(XT2OFFG);
+//
+//#if defined (__CC430F5133__) || (__CC430F5135__) || (__CC430F5137__) || \
+//            (__CC430F6125__) || (__CC430F6126__) || (__CC430F6127__) || \
+//            (__CC430F6135__) || (__CC430F6137__) || (__CC430F5123__) || \
+//            (__CC430F5125__) || (__CC430F5143__) || (__CC430F5145__) || \
+//            (__CC430F5147__) || (__CC430F6143__) || (__CC430F6145__) || \
+//            (__CC430F6147__)
+//        // CC430 uses a different fault mechanism. It requires 3 VLO clock
+//        // cycles delay.If 20MHz CPU, 5000 clock cycles are required in worst
+//        // case.
+//        __delay_cycles(5000);
+//#endif
+//
+//     //Clear OFIFG fault flag
+//     HWREGB(SFR_BASEADDRESS + OFS_SFRIFG1) &= ~OFIFG;
+//    }
+//}
+//
+////******************************************************************************
+////
+////! Bypasses the XT2 crystal oscillator, which supports crystal frequencies
+////! between 4 MHz and 32 MHz. Loops until all oscillator fault flags are
+////! cleared, with no timeout.
+////!
+////! \param baseAddress is the base address of the UCS module.
+////!
+////! Modified registers are \b UCSCTL6, \b UCSCTL7, \b SFRIFG
+////!
+////! \return None
+////
+////******************************************************************************
+//void
+//UCS_bypassXT2 (  unsigned int baseAddress )
+//{
+//    //Switch on XT2 oscillator
+//    HWREG(baseAddress + OFS_UCSCTL6) |= ( XT2BYPASS + XT2OFF );
+//
+//    while (HWREGB(baseAddress + OFS_UCSCTL7) & XT2OFFG){
+//     //Clear OSC flaut Flags
+//     HWREGB(baseAddress + OFS_UCSCTL7) &= ~(XT2OFFG);
+//
+//#if defined (__CC430F5133__) || (__CC430F5135__) || (__CC430F5137__) || \
+//            (__CC430F6125__) || (__CC430F6126__) || (__CC430F6127__) || \
+//            (__CC430F6135__) || (__CC430F6137__) || (__CC430F5123__) || \
+//            (__CC430F5125__) || (__CC430F5143__) || (__CC430F5145__) || \
+//            (__CC430F5147__) || (__CC430F6143__) || (__CC430F6145__) || \
+//            (__CC430F6147__)
+//        // CC430 uses a different fault mechanism. It requires 3 VLO clock
+//        // cycles delay.If 20MHz CPU, 5000 clock cycles are required in worst
+//        // case.
+//        __delay_cycles(5000);
+//#endif
+//
+//     //Clear OFIFG fault flag
+//     HWREGB(SFR_BASEADDRESS + OFS_SFRIFG1) &= ~OFIFG;
+//    }
+//}
+//
+////******************************************************************************
+////
+////! Initializes the XT2 crystal oscillator, which supports crystal frequencies
+////! between 4 MHz and 32 MHz, depending on the selected drive strength. Loops
+////! until all oscillator fault flags are cleared or until a timeout counter is
+////! decremented and equals to zero. See the device-specific data sheet for
+////! appropriate drive settings.
+////!
+////! \param baseAddress is the base address of the UCS module.
+////! \param xt2drive is the target drive strength for the XT2 crystal oscillator.
+////!        Valid values are
+////!        \b UCS_XT2_4MHZ_8MHZ,
+////!        \b UCS_XT2_8MHZ_16MHZ,
+////!        \b UCS_XT2_16MHZ_24MHZ
+////!        \b UCS_XT2_24MHZ_32MHZ [Default Value]
+////! \param timeout is the count value that gets decremented every time the loop
+////!         that clears oscillator fault flags gets executed.
+////!
+////! Modified registers are \b UCSCTL6, \b UCSCTL7, \b SFRIFG
+////!
+////! \return STATUS_SUCCESS or STATUS_FAIL
+////
+////******************************************************************************
+//unsigned short
+//UCS_XT2StartWithTimeout ( unsigned int baseAddress,
+//    unsigned int xt2drive,
+//    unsigned int timeout
+//    )
+//{
+//
+//#if !defined (__CC430F5133__) || (__CC430F5135__) || (__CC430F5137__) || \
+//            (__CC430F6125__) || (__CC430F6126__) || (__CC430F6127__) || \
+//            (__CC430F6135__) || (__CC430F6137__) || (__CC430F5123__) || \
+//            (__CC430F5125__) || (__CC430F5143__) || (__CC430F5145__) || \
+//            (__CC430F5147__) || (__CC430F6143__) || (__CC430F6145__) || \
+//            (__CC430F6147__)
+//    //Check if drive value is the expected one
+//    if ((HWREG(baseAddress + OFS_UCSCTL6) & XT2DRIVE_3) != xt2drive){
+//        //Clear XT2drive field
+//        HWREG(baseAddress + OFS_UCSCTL6) &= ~XT2DRIVE_3;
+//
+//        //Set requested value
+//        HWREG(baseAddress + OFS_UCSCTL6) |= xt2drive;
+//    }
+//
+//#endif
+//
+//    HWREG(baseAddress + OFS_UCSCTL6) &= ~XT2BYPASS;
+//
+//    //Switch on XT2 oscillator
+//    HWREG(baseAddress + OFS_UCSCTL6) &= ~XT2OFF;
+//
+//    do{
+//     //Clear OSC flaut Flags
+//     HWREGB(baseAddress + OFS_UCSCTL7) &= ~(XT2OFFG);
+//
+//#if defined (__CC430F5133__) || (__CC430F5135__) || (__CC430F5137__) || \
+//            (__CC430F6125__) || (__CC430F6126__) || (__CC430F6127__) || \
+//            (__CC430F6135__) || (__CC430F6137__) || (__CC430F5123__) || \
+//            (__CC430F5125__) || (__CC430F5143__) || (__CC430F5145__) || \
+//            (__CC430F5147__) || (__CC430F6143__) || (__CC430F6145__) || \
+//            (__CC430F6147__)
+//        // CC430 uses a different fault mechanism. It requires 3 VLO clock
+//        // cycles delay.If 20MHz CPU, 5000 clock cycles are required in worst
+//        // case.
+//        __delay_cycles(5000);
+//#endif
+//
+//     //Clear OFIFG fault flag
+//     HWREGB(SFR_BASEADDRESS + OFS_SFRIFG1) &= ~OFIFG;
+//    }while ((HWREGB(baseAddress + OFS_UCSCTL7) & XT2OFFG) && --timeout);
+//
+//    if (timeout){
+//        return (STATUS_SUCCESS);
+//    } else   {
+//        return (STATUS_FAIL);
+//    }
+//}
+//
+////******************************************************************************
+////
+////! Bypasses the XT2 crystal oscillator, which supports crystal frequencies
+////! between 4 MHz and 32 MHz. Loops until all oscillator fault flags are
+////! cleared or until a timeout counter is decremented and equals to zero.
+////!
+////! \param baseAddress is the base address of the UCS module.
+////! \param timeout is the count value that gets decremented every time the loop
+////!         that clears oscillator fault flags gets executed.
+////!
+////! Modified registers are \b UCSCTL6, \b UCSCTL7, \b SFRIFG
+////!
+////! \return STATUS_SUCCESS or STATUS_FAIL
+////
+////******************************************************************************
+//unsigned short
+//UCS_bypassXT2WithTimeout ( unsigned int baseAddress,
+//    unsigned int timeout
+//    )
+//{
+//    //Switch off XT2 oscillator and enable BYPASS mode
+//    HWREG(baseAddress + OFS_UCSCTL6) |= (XT2BYPASS + XT2OFF );
+//
+//
+//    do{
+//     //Clear OSC flaut Flags
+//     HWREGB(baseAddress + OFS_UCSCTL7) &= ~(XT2OFFG);
+//
+//#if defined (__CC430F5133__) || (__CC430F5135__) || (__CC430F5137__) || \
+//            (__CC430F6125__) || (__CC430F6126__) || (__CC430F6127__) || \
+//            (__CC430F6135__) || (__CC430F6137__) || (__CC430F5123__) || \
+//            (__CC430F5125__) || (__CC430F5143__) || (__CC430F5145__) || \
+//            (__CC430F5147__) || (__CC430F6143__) || (__CC430F6145__) || \
+//            (__CC430F6147__)
+//        // CC430 uses a different fault mechanism. It requires 3 VLO clock
+//        // cycles delay.If 20MHz CPU, 5000 clock cycles are required in worst
+//        // case.
+//        __delay_cycles(5000);
+//#endif
+//
+//     //Clear OFIFG fault flag
+//     HWREGB(SFR_BASEADDRESS + OFS_SFRIFG1) &= ~OFIFG;
+//    }while ((HWREGB(baseAddress + OFS_UCSCTL7) & XT2OFFG) && --timeout);
+//
+//    if (timeout){
+//        return (STATUS_SUCCESS);
+//    } else   {
+//        return (STATUS_FAIL);
+//    }
+//}
+//
+////******************************************************************************
+////
+////! Stops the XT2 oscillator using the XT2OFF bit.
+////!
+////! \param baseAddress is the base address of the UCS module.
+////!
+////! Modified registers are \b UCSCTL6
+////!
+////! \return None
+////
+////******************************************************************************
+//void
+//UCS_XT2Off (unsigned int baseAddress)
+//{
+//    //Switch off XT2 oscillator
+//    HWREG(baseAddress + OFS_UCSCTL6) |= XT2OFF;
+//}
+//
+////******************************************************************************
+////
+////! Initializes the DCO to operate a frequency that is a multiple of the
+////! reference frequency into the FLL. Loops until all oscillator fault flags are
+////! cleared, with a timeout. If the frequency is greater than 16 MHz,
+////! the function sets the MCLK and SMCLK source to the undivided DCO frequency.
+////! Otherwise, the function sets the MCLK and SMCLK source to the
+////! DCOCLKDIV frequency.
+////! This function executes a software delay that is proportional in length to
+////! the ratio of the target FLL frequency and the FLL reference.
+////!
+////! \param baseAddress is the base address of the UCS module.
+////! \param fsystem is the target frequency for MCLK in kHz
+////! \param ratio is the ratio x/y, where x = fsystem and
+////!         y = FLL reference frequency.
+////!
+////! Modified registers are \b UCSCTL0, \b UCSCTL1, \b UCSCTL2, \b UCSCTL4,
+////! \b UCSCTL7, \b SFRIFG1
+////!
+////! \return None
+////
+////******************************************************************************
 void
 UCS_initFLLSettle ( unsigned int baseAddress,
     unsigned int fsystem,
@@ -930,27 +930,27 @@ UCS_initFLLSettle ( unsigned int baseAddress,
         __delay_cycles(30);
     }
 }
-
-//******************************************************************************
 //
-//! Initializes the DCO to operate a frequency that is a multiple of the
-//! reference frequency into the FLL. Loops until all oscillator fault flags are
-//! cleared, with no timeout. If the frequency is greater than 16 MHz,
-//! the function sets the MCLK and SMCLK source to the undivided DCO frequency.
-//! Otherwise, the function sets the MCLK and SMCLK source to the
-//! DCOCLKDIV frequency.
-//!
-//! \param baseAddress is the base address of the UCS module.
-//! \param fsystem is the target frequency for MCLK in kHz
-//! \param ratio is the ratio x/y, where x = fsystem and
-//!         y = FLL reference frequency.
-//!
-//! Modified registers are \b UCSCTL0, \b UCSCTL1, \b UCSCTL2, \b UCSCTL4,
-//! \b UCSCTL7, \b SFRIFG1
-//!
-//! \return None
-//
-//******************************************************************************
+////******************************************************************************
+////
+////! Initializes the DCO to operate a frequency that is a multiple of the
+////! reference frequency into the FLL. Loops until all oscillator fault flags are
+////! cleared, with no timeout. If the frequency is greater than 16 MHz,
+////! the function sets the MCLK and SMCLK source to the undivided DCO frequency.
+////! Otherwise, the function sets the MCLK and SMCLK source to the
+////! DCOCLKDIV frequency.
+////!
+////! \param baseAddress is the base address of the UCS module.
+////! \param fsystem is the target frequency for MCLK in kHz
+////! \param ratio is the ratio x/y, where x = fsystem and
+////!         y = FLL reference frequency.
+////!
+////! Modified registers are \b UCSCTL0, \b UCSCTL1, \b UCSCTL2, \b UCSCTL4,
+////! \b UCSCTL7, \b SFRIFG1
+////!
+////! \return None
+////
+////******************************************************************************
 void
 UCS_initFLL ( unsigned int baseAddress,
     unsigned int fsystem,
@@ -985,7 +985,7 @@ UCS_initFLL ( unsigned int baseAddress,
     }
 
     // Disable FLL
-    __bis_SR_register(SCG0);                                    
+    __bis_SR_register(SCG0);
 
     //Set DCO to lowest Tap
     HWREGB(baseAddress + OFS_UCSCTL0_H) = 0x0000;
@@ -1013,8 +1013,8 @@ UCS_initFLL ( unsigned int baseAddress,
     }
 
     // Re-enable FLL
-     __bic_SR_register(SCG0);                                    
-    
+     __bic_SR_register(SCG0);
+
     while (HWREGB(baseAddress + OFS_UCSCTL7_L) & DCOFFG)
     {
         //Clear OSC flaut Flags
@@ -1025,8 +1025,8 @@ UCS_initFLL ( unsigned int baseAddress,
     }
 
     // Restore previous SCG0
-    __bis_SR_register(srRegisterState);                         
-    
+    __bis_SR_register(srRegisterState);
+
     if (mode == 1){
         //fsystem > 16000
         //Select DCOCLK
@@ -1040,146 +1040,146 @@ UCS_initFLL ( unsigned int baseAddress,
 
 }
 
-//******************************************************************************
+////******************************************************************************
+////
+////! Enables conditional module requests
+////!
+////! \param baseAddress is the base address of the UCS module.
+////! \param selectClock selects specific request enables. Valid values are
+////!        \b UCS_ACLK,
+////!        \b UCS_SMCLK,
+////!        \b UCS_MCLK,
+////!        \b UCS_MODOSC
+////!
+////! Modified registers are \b UCSCTL8
+////!
+////! \return None
+////
+////******************************************************************************
+//void
+//UCS_enableClockRequest (
+//    unsigned int baseAddress,
+//    unsigned char selectClock
+//    )
+//{
+//    HWREGB(baseAddress + OFS_UCSCTL8) |= selectClock;
+//}
 //
-//! Enables conditional module requests
-//!
-//! \param baseAddress is the base address of the UCS module.
-//! \param selectClock selects specific request enables. Valid values are
-//!        \b UCS_ACLK,
-//!        \b UCS_SMCLK,
-//!        \b UCS_MCLK,
-//!        \b UCS_MODOSC
-//!
-//! Modified registers are \b UCSCTL8
-//!
-//! \return None
+////******************************************************************************
+////
+////! Disables conditional module requests
+////!
+////! \param baseAddress is the base address of the UCS module.
+////! \param selectClock selects specific request enables. Valid values are
+////!        \b UCS_ACLK,
+////!        \b UCS_SMCLK,
+////!        \b UCS_MCLK,
+////!        \b UCS_MODOSC
+////!
+////! Modified registers are \b UCSCTL8
+////!
+////! \return None
+////
+////******************************************************************************
+//void
+//UCS_disableClockRequest (
+//    unsigned int baseAddress,
+//    unsigned char selectClock
+//    )
+//{
+//    HWREGB(baseAddress + OFS_UCSCTL8) &= ~selectClock;
+//}
 //
-//******************************************************************************
-void
-UCS_enableClockRequest (
-    unsigned int baseAddress,
-    unsigned char selectClock
-    )
-{
-    HWREGB(baseAddress + OFS_UCSCTL8) |= selectClock;
-}
-
-//******************************************************************************
+////******************************************************************************
+////
+////! Gets the current UCS fault flag status.
+////!
+////! \param baseAddress is the base address of the UCS module.
+////! \param mask is the masked interrupt flag status to be returned.
+////!      Mask parameter can be either any of the following selection.
+////!         - \b UCS_XT2OFFG - XT2 oscillator fault flag
+////!         - \b UCS_XT1HFOFFG - XT1 oscillator fault flag (HF mode)
+////!         - \b UCS_XT1LFOFFG - XT1 oscillator fault flag (LF mode)
+////!         - \b UCS_DCOFFG - DCO fault flag
+////!
+////! Modified registers are \b UCSCTL7
+////!
+////! \return The current flag status for the corresponding masked bit
+////
+////******************************************************************************
+//unsigned char
+//UCS_faultFlagStatus (
+//    unsigned int baseAddress,
+//    unsigned char mask
+//    )
+//{
+//    ASSERT(mask <= UCS_XT2OFFG );
+//    return (HWREGB(baseAddress + OFS_UCSCTL7) & mask);
+//}
 //
-//! Disables conditional module requests
-//!
-//! \param baseAddress is the base address of the UCS module.
-//! \param selectClock selects specific request enables. Valid values are
-//!        \b UCS_ACLK,
-//!        \b UCS_SMCLK,
-//!        \b UCS_MCLK,
-//!        \b UCS_MODOSC
-//!
-//! Modified registers are \b UCSCTL8
-//!
-//! \return None
+////******************************************************************************
+////
+////! Clears the current UCS fault flag status for the masked bit.
+////!
+////! \param baseAddress is the base address of the UCS module.
+////! \param mask is the masked interrupt flag status to be returned.
+////!         mask parameter can be any one of the following
+////!             - \b UCS_XT2OFFG - XT2 oscillator fault flag
+////!             - \b UCS_XT1HFOFFG - XT1 oscillator fault flag (HF mode)
+////!             - \b UCS_XT1LFOFFG - XT1 oscillator fault flag (LF mode)
+////!             - \b UCS_DCOFFG - DCO fault flag
+////!
+////! Modified registers are \b UCSCTL7
+////!
+////! \return None
+////
+////******************************************************************************
+//void
+//UCS_clearFaultFlag (
+//    unsigned int baseAddress,
+//    unsigned char mask
+//    )
+//{
+//    ASSERT(mask <= UCS_XT2OFFG );
+//    HWREGB(baseAddress + OFS_UCSCTL7) &= ~mask;
+//}
 //
-//******************************************************************************
-void
-UCS_disableClockRequest (
-    unsigned int baseAddress,
-    unsigned char selectClock
-    )
-{
-    HWREGB(baseAddress + OFS_UCSCTL8) &= ~selectClock;
-}
-
-//******************************************************************************
+////******************************************************************************
+////
+////! Turns off SMCLK using the SMCLKOFF bit
+////!
+////! \param baseAddress is the base address of the UCS module.
+////!
+////! Modified registers are UCSCTL6
+////!
+////! \return None
+////
+////******************************************************************************
+//void
+//UCS_SMCLKOff (unsigned int baseAddress)
+//{
+//    HWREG(baseAddress + OFS_UCSCTL6) |= SMCLKOFF;
+//}
 //
-//! Gets the current UCS fault flag status.
-//!
-//! \param baseAddress is the base address of the UCS module.
-//! \param mask is the masked interrupt flag status to be returned.
-//!      Mask parameter can be either any of the following selection.
-//!         - \b UCS_XT2OFFG - XT2 oscillator fault flag
-//!         - \b UCS_XT1HFOFFG - XT1 oscillator fault flag (HF mode)
-//!         - \b UCS_XT1LFOFFG - XT1 oscillator fault flag (LF mode)
-//!         - \b UCS_DCOFFG - DCO fault flag
-//!
-//! Modified registers are \b UCSCTL7
-//!
-//! \return The current flag status for the corresponding masked bit
+////******************************************************************************
+////
+////! Turns ON SMCLK using the SMCLKOFF bit
+////!
+////! \param baseAddress is the base address of the UCS module.
+////!
+////! Modified registers are \b UCSCTL6
+////!
+////! \return None
+////
+////******************************************************************************
+//void
+//UCS_SMCLKOn (unsigned int baseAddress)
+//{
+//    HWREG(baseAddress + OFS_UCSCTL6) &= ~SMCLKOFF;
+//}
 //
-//******************************************************************************
-unsigned char
-UCS_faultFlagStatus (
-    unsigned int baseAddress,
-    unsigned char mask
-    )
-{
-    ASSERT(mask <= UCS_XT2OFFG );
-    return (HWREGB(baseAddress + OFS_UCSCTL7) & mask);
-}
-
-//******************************************************************************
-//
-//! Clears the current UCS fault flag status for the masked bit.
-//!
-//! \param baseAddress is the base address of the UCS module.
-//! \param mask is the masked interrupt flag status to be returned.
-//!         mask parameter can be any one of the following
-//!             - \b UCS_XT2OFFG - XT2 oscillator fault flag
-//!             - \b UCS_XT1HFOFFG - XT1 oscillator fault flag (HF mode)
-//!             - \b UCS_XT1LFOFFG - XT1 oscillator fault flag (LF mode)
-//!             - \b UCS_DCOFFG - DCO fault flag
-//!
-//! Modified registers are \b UCSCTL7
-//!
-//! \return None
-//
-//******************************************************************************
-void
-UCS_clearFaultFlag (
-    unsigned int baseAddress,
-    unsigned char mask
-    )
-{
-    ASSERT(mask <= UCS_XT2OFFG );
-    HWREGB(baseAddress + OFS_UCSCTL7) &= ~mask;
-}
-
-//******************************************************************************
-//
-//! Turns off SMCLK using the SMCLKOFF bit
-//!
-//! \param baseAddress is the base address of the UCS module.
-//!
-//! Modified registers are UCSCTL6
-//!
-//! \return None
-//
-//******************************************************************************
-void
-UCS_SMCLKOff (unsigned int baseAddress)
-{
-    HWREG(baseAddress + OFS_UCSCTL6) |= SMCLKOFF;
-}
-
-//******************************************************************************
-//
-//! Turns ON SMCLK using the SMCLKOFF bit
-//!
-//! \param baseAddress is the base address of the UCS module.
-//!
-//! Modified registers are \b UCSCTL6
-//!
-//! \return None
-//
-//******************************************************************************
-void
-UCS_SMCLKOn (unsigned int baseAddress)
-{
-    HWREG(baseAddress + OFS_UCSCTL6) &= ~SMCLKOFF;
-}
-
-//******************************************************************************
-//
+////******************************************************************************
+////
 //Compute the clock frequency when clock is sourced from DCO
 //
 //\param baseAddress is the base address of the UCS module.
@@ -1373,34 +1373,34 @@ privateUCSComputeCLKFrequency ( unsigned int baseAddress,
     return ( CLKFrequency) ;
 }
 
-//******************************************************************************
+////******************************************************************************
+////
+////! Get the current ACLK frequency.  The user of this API must ensure that
+////! UCS_externalClockSourceInit API was invoked before in case XT1 or XT2
+////! is being used.
+////!
+////! \param baseAddress is the base address of the UCS module.
+////!
+////! \return Current ACLK frequency in Hz
+////
+////******************************************************************************
+//unsigned long
+//UCS_getACLK (unsigned int baseAddress)
+//{
+//    //Find ACLK source
+//    unsigned int ACLKSource = (HWREG(baseAddress + OFS_UCSCTL4) & SELA_7);
 //
-//! Get the current ACLK frequency.  The user of this API must ensure that
-//! UCS_externalClockSourceInit API was invoked before in case XT1 or XT2
-//! is being used.
-//!
-//! \param baseAddress is the base address of the UCS module.
-//!
-//! \return Current ACLK frequency in Hz
+//    ACLKSource = ACLKSource >> 8;
 //
-//******************************************************************************
-unsigned long
-UCS_getACLK (unsigned int baseAddress)
-{
-    //Find ACLK source
-    unsigned int ACLKSource = (HWREG(baseAddress + OFS_UCSCTL4) & SELA_7);
-
-    ACLKSource = ACLKSource >> 8;
-
-    unsigned int ACLKSourceDivider =  HWREG(baseAddress + OFS_UCSCTL5) & DIVA_7;
-    ACLKSourceDivider = ACLKSourceDivider >> 8;
-
-    return (privateUCSComputeCLKFrequency(baseAddress,
-                ACLKSource,
-                ACLKSourceDivider
-                ));
-}
-
+//    unsigned int ACLKSourceDivider =  HWREG(baseAddress + OFS_UCSCTL5) & DIVA_7;
+//    ACLKSourceDivider = ACLKSourceDivider >> 8;
+//
+//    return (privateUCSComputeCLKFrequency(baseAddress,
+//                ACLKSource,
+//                ACLKSourceDivider
+//                ));
+//}
+//
 //******************************************************************************
 //
 //! Get the current SMCLK frequency.  The user of this API must ensure that
@@ -1428,84 +1428,84 @@ UCS_getSMCLK (unsigned int baseAddress)
                 SMCLKSourceDivider )
             );
 }
-
-//******************************************************************************
 //
-//! Get the current MCLK frequency. The user of this API must ensure that
-//! UCS_externalClockSourceInit API was invoked before in case XT1 or XT2
-//! is being used.
-//!
-//! \param baseAddress is the base address of the UCS module.
-//!
-//! \return Current MCLK frequency in Hz
+////******************************************************************************
+////
+////! Get the current MCLK frequency. The user of this API must ensure that
+////! UCS_externalClockSourceInit API was invoked before in case XT1 or XT2
+////! is being used.
+////!
+////! \param baseAddress is the base address of the UCS module.
+////!
+////! \return Current MCLK frequency in Hz
+////
+////******************************************************************************
+//unsigned long
+//UCS_getMCLK (unsigned int baseAddress)
+//{
+//    //Find AMCLK source
+//    unsigned int MCLKSource = (HWREG(baseAddress + OFS_UCSCTL4) & SELM_7);
 //
-//******************************************************************************
-unsigned long
-UCS_getMCLK (unsigned int baseAddress)
-{
-    //Find AMCLK source
-    unsigned int MCLKSource = (HWREG(baseAddress + OFS_UCSCTL4) & SELM_7);
-
-    unsigned int MCLKSourceDivider =  HWREG(baseAddress + OFS_UCSCTL5) & DIVM_7;
-
-    return (privateUCSComputeCLKFrequency(baseAddress,
-                MCLKSource,
-                MCLKSourceDivider )
-            );
-}
-
-//******************************************************************************
+//    unsigned int MCLKSourceDivider =  HWREG(baseAddress + OFS_UCSCTL5) & DIVM_7;
 //
-//! Clears all the Oscillator Flags
-//!
-//! \param baseAddress is the base address of the UCS module.
-//! \param timeout is the count value that gets decremented every time the loop
-//!         that clears oscillator fault flags gets executed.
-//!
-//! \return the mask of the oscillator flag status.
+//    return (privateUCSComputeCLKFrequency(baseAddress,
+//                MCLKSource,
+//                MCLKSourceDivider )
+//            );
+//}
 //
-//******************************************************************************
-unsigned int UCS_clearAllOscFlagsWithTimeout(unsigned int baseAddress, 
-                                             unsigned int timeout
-                                             )
-{
-    do {
-      // Clear all osc fault flags
-      HWREGB(baseAddress + OFS_UCSCTL7) &= ~(DCOFFG +
-                                             XT1LFOFFG + 
-                                             XT1HFOFFG + 
-                                             XT2OFFG
-                                             ); 
-
-
-
-#if defined (__CC430F5133__) || (__CC430F5135__) || (__CC430F5137__) || \
-            (__CC430F6125__) || (__CC430F6126__) || (__CC430F6127__) || \
-            (__CC430F6135__) || (__CC430F6137__) || (__CC430F5123__) || \
-            (__CC430F5125__) || (__CC430F5143__) || (__CC430F5145__) || \
-            (__CC430F5147__) || (__CC430F6143__) || (__CC430F6145__) || \
-            (__CC430F6147__)
-        // CC430 uses a different fault mechanism. It requires 3 VLO clock 
-        // cycles delay.If 20MHz CPU, 5000 clock cycles are required in worst 
-        // case.
-        __delay_cycles(5000);
-#endif
-
-      // Clear the global osc fault flag.
-      HWREGB(SFR_BASEADDRESS + OFS_SFRIFG1) &= ~OFIFG;
-      
-      // Check XT1 fault flags
-    } while ((HWREGB(SFR_BASEADDRESS + OFS_SFRIFG1)) && --timeout);
-
-    return (HWREGB(baseAddress + OFS_UCSCTL7) & (DCOFFG +
-                                                 XT1LFOFFG + 
-                                                 XT1HFOFFG + 
-                                                 XT2OFFG)
-                                                );
-}
-//******************************************************************************
+////******************************************************************************
+////
+////! Clears all the Oscillator Flags
+////!
+////! \param baseAddress is the base address of the UCS module.
+////! \param timeout is the count value that gets decremented every time the loop
+////!         that clears oscillator fault flags gets executed.
+////!
+////! \return the mask of the oscillator flag status.
+////
+////******************************************************************************
+//unsigned int UCS_clearAllOscFlagsWithTimeout(unsigned int baseAddress,
+//                                             unsigned int timeout
+//                                             )
+//{
+//    do {
+//      // Clear all osc fault flags
+//      HWREGB(baseAddress + OFS_UCSCTL7) &= ~(DCOFFG +
+//                                             XT1LFOFFG +
+//                                             XT1HFOFFG +
+//                                             XT2OFFG
+//                                             );
 //
-//Close the Doxygen group.
-//! @}
 //
-//******************************************************************************
+//
+//#if defined (__CC430F5133__) || (__CC430F5135__) || (__CC430F5137__) || \
+//            (__CC430F6125__) || (__CC430F6126__) || (__CC430F6127__) || \
+//            (__CC430F6135__) || (__CC430F6137__) || (__CC430F5123__) || \
+//            (__CC430F5125__) || (__CC430F5143__) || (__CC430F5145__) || \
+//            (__CC430F5147__) || (__CC430F6143__) || (__CC430F6145__) || \
+//            (__CC430F6147__)
+//        // CC430 uses a different fault mechanism. It requires 3 VLO clock
+//        // cycles delay.If 20MHz CPU, 5000 clock cycles are required in worst
+//        // case.
+//        __delay_cycles(5000);
+//#endif
+//
+//      // Clear the global osc fault flag.
+//      HWREGB(SFR_BASEADDRESS + OFS_SFRIFG1) &= ~OFIFG;
+//
+//      // Check XT1 fault flags
+//    } while ((HWREGB(SFR_BASEADDRESS + OFS_SFRIFG1)) && --timeout);
+//
+//    return (HWREGB(baseAddress + OFS_UCSCTL7) & (DCOFFG +
+//                                                 XT1LFOFFG +
+//                                                 XT1HFOFFG +
+//                                                 XT2OFFG)
+//                                                );
+//}
+////******************************************************************************
+////
+////Close the Doxygen group.
+////! @}
+////
+////******************************************************************************

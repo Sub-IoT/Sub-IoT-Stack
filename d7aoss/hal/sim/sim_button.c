@@ -12,7 +12,7 @@
  * Lesser General Public License for more details.
  *
  * Contributors:
- *     	glenn.ergeerts@uantwerpen.be
+ *         glenn.ergeerts@uantwerpen.be
  *
  */
 
@@ -38,5 +38,5 @@ void button_clear_interrupt_flag()
 
 unsigned char button_is_active(unsigned char button)
 {
-	return 0;
+    return 0;
 }

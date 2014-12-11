@@ -12,8 +12,8 @@
  * Lesser General Public License for more details.
  *
  * Contributors:
- *     	glenn.ergeerts@uantwerpen.be
- *     	maarten.weyn@uantwerpen.be
+ *         glenn.ergeerts@uantwerpen.be
+ *         maarten.weyn@uantwerpen.be
  *
  */
 
@@ -28,42 +28,42 @@ extern "C" {
 #include "stdint.h"
 
 // Radio Core Interrupt Flags
-#define RFIFG_FLAG_IOCFG0        	0x0001  // RFIFG0
-#define RFIFG_FLANK_IOCFG0       	0x0000
-#define RFIFG_FLAG_IOCFG1        	0x0002  // RFIFG1
-#define RFIFG_FLANK_IOCFG1       	0x0000
-#define RFIFG_FLAG_IOCFG2        	0x0004  // RFIFG2
-#define RFIFG_FLANK_IOCFG2       	0x0000
-#define RFIFG_FLAG_RXFilled      	0x0008  // RFIFG3 Positive Edge
-#define RFIFG_FLANK_RXFilled      	0x0000
-#define RFIFG_FLAG_RXDrained  		0x0008  // RFIFG3 Negative Edge
-#define RFIFG_FLANK_RXDrained  		0x0008
-#define RFIFG_FLAG_RXFilledOrEOP 	0x0010  // RFIFG4 Positive Edge
+#define RFIFG_FLAG_IOCFG0            0x0001  // RFIFG0
+#define RFIFG_FLANK_IOCFG0           0x0000
+#define RFIFG_FLAG_IOCFG1            0x0002  // RFIFG1
+#define RFIFG_FLANK_IOCFG1           0x0000
+#define RFIFG_FLAG_IOCFG2            0x0004  // RFIFG2
+#define RFIFG_FLANK_IOCFG2           0x0000
+#define RFIFG_FLAG_RXFilled          0x0008  // RFIFG3 Positive Edge
+#define RFIFG_FLANK_RXFilled          0x0000
+#define RFIFG_FLAG_RXDrained          0x0008  // RFIFG3 Negative Edge
+#define RFIFG_FLANK_RXDrained          0x0008
+#define RFIFG_FLAG_RXFilledOrEOP     0x0010  // RFIFG4 Positive Edge
 #define RFIFG_FLANK_RXFilledOrEOP   0x0000
 #define RFIFG_FLAG_RXEmpty          0x0010  // RFIFG4 Negative Edge
-#define RFIFG_FLANK_RXEmpty    		0x0010
-#define RFIFG_FLAG_TXFilled      	0x0020  // RFIFG5 Positive Edge
-#define RFIFG_FLANK_TXFilled      	0x0000
+#define RFIFG_FLANK_RXEmpty            0x0010
+#define RFIFG_FLAG_TXFilled          0x0020  // RFIFG5 Positive Edge
+#define RFIFG_FLANK_TXFilled          0x0000
 #define RFIFG_FLAG_TXBelowThresh    0x0020  // RFIFG5 Negative Edge
 #define RFIFG_FLANK_TXBelowThresh   0x0020
 #define RFIFG_FLAG_TXFull           0x0040  // RFIFG6 Positive Edge
 #define RFIFG_FLANK_TXFull          0x0000
-#define RFIFG_FLAG_TXDrained     	0x0040  // RFIFG6 Negative Edge
-#define RFIFG_FLANK_TXDrained     	0x0040
+#define RFIFG_FLAG_TXDrained         0x0040  // RFIFG6 Negative Edge
+#define RFIFG_FLANK_TXDrained         0x0040
 #define RFIFG_FLAG_RXOverflow       0x0080  // RFIFG7 Positive Edge
 #define RFIFG_FLANK_RXOverflow      0x0000
 #define RFIFG_FLAG_RXFlushed        0x0080  // RFIFG7 Negative Edge
 #define RFIFG_FLANK_RXFlushed       0x0080
-#define RFIFG_FLAG_TXUnderflow    	0x0100  // RFIFG8 Positive Edge
-#define RFIFG_FLANK_TXUnderflow   	0x0000
+#define RFIFG_FLAG_TXUnderflow        0x0100  // RFIFG8 Positive Edge
+#define RFIFG_FLANK_TXUnderflow       0x0000
 #define RFIFG_FLAG_TXFlushed        0x0100  // RFIFG8 Negative Edge
 #define RFIFG_FLANK_TXFlushed       0x0100
 #define RFIFG_FLAG_SyncWord         0x0200  // RFIFG9 Positive Edge
 #define RFIFG_FLANK_SyncWord        0x0000
 #define RFIFG_FLAG_EndOfPacket      0x0200  // RFIFG9 Negative Edge
 #define RFIFG_FLANK_EndOfPacket     0x0200
-#define RFIFG_FLAG_CRCOK         	0x0400  // RFIFG10 Positive Edge
-#define RFIFG_FLANK_CRCOK         	0x0000
+#define RFIFG_FLAG_CRCOK             0x0400  // RFIFG10 Positive Edge
+#define RFIFG_FLANK_CRCOK             0x0000
 #define RFIFG_FLAG_RXFirstByte      0x0400  // RFIFG10 Negative Edge
 #define RFIFG_FLANK_RXFirstByte     0x0400
 #define RFIFG_FLAG_PQTReached       0x0800  // RFIFG11 Positive Edge
@@ -106,8 +106,8 @@ extern "C" {
 #define RADIO_FIFOTHR_FIFO_THR_17_48    (11)             // FIFOTHR.FIFO_THR 17B TX / 48B RX
 #define RADIO_FIFOTHR_FIFO_THR_1_64     (15)            // FIFOTHR.FIFO_THR  1B TX / 64B RX
 
-#define RADIO_SYNC1      				0xE6            // SYNC1
-#define RADIO_SYNC0      				0xD0            // SYNC0
+#define RADIO_SYNC1                      0xE6            // SYNC1
+#define RADIO_SYNC0                      0xD0            // SYNC0
 
 #define RADIO_PKTLEN                    0xFF            // PKTLEN (default)
 
@@ -138,6 +138,8 @@ extern "C" {
 #define RADIO_FREQOFF                   0               // FSCTRL0 Frequency offset
 
 #define RADIO_FREQ_433                  ((uint32_t)0x0010A900)   // pchan 1 fc = 433.164062 MHz
+#define RADIO_FREQ_868                  ((uint32_t)0x00216267)   // pchan 1 fc = 867.999994 MHz
+#define RADIO_FREQ_915                  ((uint32_t)0x0022B13B)   // pchan 1 fc = 901.999969 MHz
 #define RADIO_FREQ2                     (uint8_t)(RADIO_FREQ_433>>16 & 0xFF)
 #define RADIO_FREQ1                     (uint8_t)(RADIO_FREQ_433>>8 & 0xFF)
 #define RADIO_FREQ0                     (uint8_t)(RADIO_FREQ_433 & 0xFF)
