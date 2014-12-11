@@ -18,7 +18,7 @@
 #include "log.h"
 
 // turn on/off the debug prints
-#if 1
+#if 0
 #define DPRINT(...) log_print_stack_string(LOG_FWK, __VA_ARGS__)
 #else
 #define DPRINT(...)  
@@ -44,6 +44,7 @@ void timer_init( void )
     {
         timer_event_stack[i].f = NULL;
     }
+    DPRINT("Timer init.");
 }
 
 
@@ -178,7 +179,7 @@ static void timer_configure_next_event( void )
     if( event_time <= hal_timer_getvalue() )
     {
         // fire the event
-        DPRINT("Event fired: t: %d @%p pos: %d", event_time, timer_event_stack[event_position].f, event_position);
+        DPRINT("Event fired: t: %d @%p pos: %d", event_time, timer_event_stack[timer_next_event_position].f, timer_next_event_position);
         timer_completed();
     }
     else
@@ -187,7 +188,7 @@ static void timer_configure_next_event( void )
         hal_timer_disable_interrupt();
         hal_timer_setvalue( (uint32_t)event_time );
         hal_timer_enable_interrupt();
-        DPRINT("Event configured: t: %d @%p pos: %d", event_time, timer_event_stack[event_position].f, event_position);
+        DPRINT("Event configured: t: %d @%p pos: %d", event_time, timer_event_stack[timer_next_event_position].f, timer_next_event_position);
     }
 }
 
@@ -267,18 +268,19 @@ void timer_wait_done( void )
 
 timer_event timer_wait = { .next_event = 0, .f = timer_wait_done };
 
-void timer_wait_ms( uint16_t ms )
+void timer_wait_ms( uint32_t ms )
 {
-    /*
-	waiting = true;
-    timer_wait.next_event = ms;
+    
+    waiting = true;
+    timer_wait.next_event = (ms*1024)/1000;
     timer_add_event( &timer_wait );
     while(waiting);
-    */
+    
+    /*
     int i;
     for( i=0 ; i<ms ; i++ )
     {
             volatile uint32_t n = 32000;
             while(n--);
-    }
+    }*/
 }

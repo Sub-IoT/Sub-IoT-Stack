@@ -57,26 +57,6 @@ void hal_timer_init() {
 
     RTC_Init_TypeDef rtcInit = RTC_INIT_DEFAULT;
 
-#ifndef USE_NEW_CONFIGURATION
-
-    rtcInit.enable   = false;      /* Enable RTC after init has run */
-    rtcInit.comp0Top = true;      /* Clear counter on compare match */
-    rtcInit.debugRun = true;     /* Counter shall keep running during debug halt. */
-
-    /* Setting the reset value of the RTC counter */
-    RTC_CompareSet(0, 65536);
-
-    /* Initialize the RTC */
-    RTC_Init(&rtcInit);
-
-    /* Enable interrupts */
-    RTC_IntClear(RTC_IFC_COMP0);
-    RTC_IntClear(RTC_IFC_COMP1);
-    NVIC_EnableIRQ(RTC_IRQn);
-    RTC_IntEnable(RTC_IEN_COMP0);
-    RTC_IntDisable(RTC_IEN_COMP1);
-    INT_Enable();
-#else
     rtcInit.enable   = false;   /* Don't enable RTC after init has run */
     rtcInit.comp0Top = false;   /* Don't clear counter on compare match */
     rtcInit.debugRun = false;   /* Counter shall not keep running during debug halt. */
@@ -85,38 +65,29 @@ void hal_timer_init() {
     RTC_Init(&rtcInit);
 
     /* Enable interrupts */
-    RTC_IntClear(RTC_IFC_COMP0);
     RTC_IntDisable(RTC_IEN_COMP0);
+    RTC_IntClear(RTC_IFC_COMP0);
     NVIC_EnableIRQ(RTC_IRQn);
     INT_Enable();
-#endif
 
     /* Start Counter */
     RTC_Enable(true);
 }
 
-void hal_timer_enable_interrupt() {
+void hal_timer_enable_interrupt()
+{
     /* Enable interrupt */
-#ifndef USE_NEW_CONFIGURATION
-    RTC_IntClear(RTC_IFC_COMP1);
-    RTC_IntEnable(RTC_IEN_COMP1);
-#else
-    RTC_IntClear(RTC_IFC_COMP0);
     RTC_IntEnable(RTC_IEN_COMP0);
-#endif
-
 }
 
-void hal_timer_disable_interrupt() {
-#ifndef USE_NEW_CONFIGURATION
-    RTC_IntDisable(RTC_IEN_COMP1);
-#else
+void hal_timer_disable_interrupt()
+{
     RTC_IntDisable(RTC_IEN_COMP0);
-#endif
 }
 
-uint16_t hal_timer_getvalue() {
-    return (uint16_t)RTC->CNT;
+uint32_t hal_timer_getvalue()
+{
+    return (uint32_t)RTC->CNT;
 }
 
 void hal_timer_setvalue(uint32_t next_event) {
@@ -126,12 +97,9 @@ void hal_timer_setvalue(uint32_t next_event) {
     {
         next_event = 0x00FFFFFF;
     }
+
     /* Init counter */
-#ifndef USE_NEW_CONFIGURATION
-    RTC_CompareSet(1, next_event );
-#else
-    RTC_CompareSet(0, next_event );
-#endif
+    RTC_CompareSet( 0, next_event );
 }
 
 void hal_timer_counter_reset( void )
@@ -139,24 +107,14 @@ void hal_timer_counter_reset( void )
     RTC_CounterReset();
 }
 
+void hal_timer_clear_interrupt( void )
+{
+    RTC_IntClear(RTC_IFC_COMP0);
+}
 /******************************************************************************
  * @brief RTC Interrupt Handler.
  *****************************************************************************/
 void RTC_IRQHandler(void)
 {
-    /* Clear interrupt source */
-    if(RTC->IF&RTC_IFC_COMP0)
-    {
-#ifndef USE_NEW_CONFIGURATION
-        RTC_IntClear(RTC_IFC_COMP0);
-#else
-        RTC_IntClear(RTC_IFC_COMP0);
-        timer_completed();
-#endif
-    }
-    else if(RTC->IF&RTC_IFC_COMP1)
-    {
-        RTC_IntClear(RTC_IFC_COMP1);
-        timer_completed();
-    }
+    timer_completed();
 }

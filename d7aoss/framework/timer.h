@@ -32,22 +32,22 @@ typedef struct
     int32_t next_event;
 } timer_event;
 
-static timer_event event_array[20];
-static queue_t event_queue;
-static bool started;
+static timer_event  event_array[20];
+static              queue_t event_queue;
+static bool         started;
 
-void timer_init( void );
-void timer_completed( void );
-bool timer_add_event( timer_event* event );
-uint32_t timer_get_counter_value( void );
+void            timer_init                  ( void );
+void            timer_completed             ( void );
+bool            timer_add_event             ( timer_event* event );
+uint32_t        timer_get_counter_value     ( void );
 
-static uint8_t timer_get_next_event( void );
-static void timer_configure_next_event( void );
-static bool timer_add_event_in_stack( timer_event new_event );
-static bool timer_update_stack( void );
+static uint8_t  timer_get_next_event        ( void );
+static void     timer_configure_next_event  ( void );
+static bool     timer_add_event_in_stack    ( timer_event new_event );
+static bool     timer_update_stack          ( void );
 
-void timer_wait_done( void );
-void timer_wait_ms( uint32_t ms );
+static void     timer_wait_done             ( void );
+void            timer_wait_ms               ( uint32_t ms );
 
 void benchmarking_timer_init();
 uint32_t benchmarking_timer_getvalue();

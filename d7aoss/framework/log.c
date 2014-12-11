@@ -44,7 +44,7 @@ void log_print_string(char* format, ...)
     uart_transmit_message((unsigned char*) buffer, len);
 #else
     char buf[BUFFER_SIZE];
-    sprintf(buf, "[%03d] %s\n\r", counter, buffer);
+    sprintf(buf, "\n\r[%03d] %s", counter, buffer);
     uart_transmit_message((unsigned char*) buf, len+8);
     counter++;
 #endif
@@ -66,7 +66,7 @@ void log_print_stack_string(char type, char* format, ...)
     uart_transmit_message((unsigned char*) buffer, len);
 #else
     char buf[BUFFER_SIZE];
-    sprintf(buf, "[%03d] %s\n\r", counter, buffer);
+    sprintf(buf, "\n\r[%03d] %s", counter, buffer);
     uart_transmit_message((unsigned char*) buf, len+8);
     counter++;
 #endif
@@ -87,7 +87,7 @@ void log_print_trace(char* format, ...)
     uart_transmit_message((unsigned char*) buffer, len);
 #else
     char buf[BUFFER_SIZE];
-    sprintf(buf, "[%03d] %s\n\r", counter, buffer);
+    sprintf(buf, "\n\r[%03d] %s", counter, buffer);
     uart_transmit_message((unsigned char*) buf, len+8);
     counter++;
 #endif
@@ -102,14 +102,13 @@ void log_print_data(uint8_t* message, uint8_t length)
     uart_transmit_message((unsigned char*) message, length);
 #else
     char buf[BUFFER_SIZE], i;
-    sprintf(buf, "[%03d]", counter);
-    uart_transmit_message((unsigned char*) buf, 5);
+    sprintf(buf, "\n\r[%03d]", counter);
+    uart_transmit_message((unsigned char*) buf, 7);
     for( i=0 ; i<length ; i++ )
     {
         sprintf(buf, " %02X", message[i]);
         uart_transmit_message((unsigned char*) buf, 3);
     }
-    uart_transmit_message( "\n\r", 2);
     counter++;
 #endif
 }
