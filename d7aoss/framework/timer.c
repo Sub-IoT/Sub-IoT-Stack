@@ -38,7 +38,6 @@ static volatile bool waiting;
 static void timer_wait_done( void );
 timer_event timer_wait = { .next_event = 0, .f = &timer_wait_done };
 
-
 void timer_init( void )
 {
     hal_timer_init();
@@ -264,8 +263,6 @@ static bool timer_update_stack( void )
 }
 
 
-
-
 static void timer_wait_done( void )
 {
     waiting = false;
@@ -289,5 +286,4 @@ void timer_wait_ms( uint32_t ms )
             volatile uint32_t n = 3200;
             while(n--);
     }
-   
 }

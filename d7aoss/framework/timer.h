@@ -32,10 +32,6 @@ typedef struct
     int32_t next_event;
 } timer_event;
 
-static timer_event  event_array[20];
-static              queue_t event_queue;
-static bool         started;
-
 void            timer_init                  ( void );
 void            timer_completed             ( void );
 bool            timer_add_event             ( timer_event* event );

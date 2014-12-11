@@ -108,214 +108,214 @@ void TLV_getInfo(unsigned char tag,
   }
 }
 
-
-//******************************************************************************
 //
-//! Retrieves the unique device ID from the TLV structure.
-//!
-//! \param None
-//!
-//! \returns The device ID is returned as type unsigned int.
+////******************************************************************************
+////
+////! Retrieves the unique device ID from the TLV structure.
+////!
+////! \param None
+////!
+////! \returns The device ID is returned as type unsigned int.
+////
+////******************************************************************************
+//unsigned int TLV_getDeviceType()
+//{
+//  unsigned int *pDeviceType = (unsigned int *)DEVICE_ID_0;
+//  // Return Value from TLV Table
+//  return pDeviceType[0];
+//}
 //
-//******************************************************************************
-unsigned int TLV_getDeviceType()
-{
-  unsigned int *pDeviceType = (unsigned int *)DEVICE_ID_0;
-  // Return Value from TLV Table
-  return pDeviceType[0];                         
-}
-
-//******************************************************************************
+////******************************************************************************
+////
+////! The Peripheral Descriptor tag is split into two portions � a list of the
+////! available flash memory blocks followed by a list of available peripherals.
+////! This function is used to parse through the first portion and calculate the
+////! total flash memory available in a device. The typical usage is to call the
+////! TLV_getMemory which returns a non-zero value until the entire memory list
+////! has been parsed. When a zero is returned, it indicates that all the memory
+////! blocks have been counted and the next address holds the beginning of the
+////! device peripheral list.
+////!
+////! \param instance In some cases a specific tag may have more than one
+////! instance. This variable specifies the instance for which information is to
+////! be retrieved (0, 1 etc). When only one instance exists; 0 is passed.
+////!
+////! \returns The returned value is zero if the end of the memory list is reached.
+////
+////******************************************************************************
+//unsigned int TLV_getMemory(unsigned char instance)
+//{
+//    unsigned char *pPDTAG;
+//    unsigned char bPDTAG_bytes;
+//    unsigned int count;
 //
-//! The Peripheral Descriptor tag is split into two portions � a list of the 
-//! available flash memory blocks followed by a list of available peripherals. 
-//! This function is used to parse through the first portion and calculate the 
-//! total flash memory available in a device. The typical usage is to call the 
-//! TLV_getMemory which returns a non-zero value until the entire memory list 
-//! has been parsed. When a zero is returned, it indicates that all the memory 
-//! blocks have been counted and the next address holds the beginning of the
-//! device peripheral list.
-//!
-//! \param instance In some cases a specific tag may have more than one 
-//! instance. This variable specifies the instance for which information is to 
-//! be retrieved (0, 1 etc). When only one instance exists; 0 is passed.
-//!
-//! \returns The returned value is zero if the end of the memory list is reached.
+//    // set tag for word access comparison
+//    instance *= 2;
 //
-//******************************************************************************
-unsigned int TLV_getMemory(unsigned char instance)
-{
-    unsigned char *pPDTAG;
-    unsigned char bPDTAG_bytes;
-    unsigned int count;
-
-    // set tag for word access comparison
-    instance *= 2;                               
-    
-    // TLV access Function Call
-    // Get Peripheral data pointer
-    TLV_getInfo(TLV_PDTAG, 
-                0, 
-                &bPDTAG_bytes, 
-                (unsigned int **)&pPDTAG
-                ); 
-    
-    for (count = 0;count <= instance; count += 2)
-    {
-      if (pPDTAG[count] == 0) 
-      {
-         // Return 0 if end reached
-        return 0;         
-      }
-      if (count == instance) 
-        return (pPDTAG[count] | pPDTAG[count+1]<<8);
-    }
-    
-    // Return 0: not found
-    return 0;                                    
-}
-
-
-//******************************************************************************
+//    // TLV access Function Call
+//    // Get Peripheral data pointer
+//    TLV_getInfo(TLV_PDTAG,
+//                0,
+//                &bPDTAG_bytes,
+//                (unsigned int **)&pPDTAG
+//                );
 //
-//! The Peripheral Descriptor tag is split into two portions � a list of the 
-//! available flash memory blocks followed by a list of available peripherals. 
-//! This function is used to parse through the second portion and can be used to 
-//! check if a specific peripheral is present in a device. The function calls 
-//! TLV_getPeripheral() recursively until the end of the memory list and 
-//! consequently the beginning of the peripheral list is reached.
-//!
-//! \param tag represents represents the tag for a specific peripheral for which 
-//! the information needs to be retrieved. In the header file tlv.h 
-//! specific peripheral tags are pre-defined, for example USCIA_B and TA0 are 
-//! defined as TLV_PID_USCI_AB and TLV_PID_TA2 respectively.
-//! \param instance - In some cases a specific tag may have more than one 
-//! instance. For example a device may have more than a single USCI module, 
-//! each of which is defined by an instance number 0, 1, 2, etc. When only one 
-//! instance exists; 0 is passed.
-//!
-//! \returns The returned value is zero if the specified tag value (peripheral) 
-//! is not available in the device.
+//    for (count = 0;count <= instance; count += 2)
+//    {
+//      if (pPDTAG[count] == 0)
+//      {
+//         // Return 0 if end reached
+//        return 0;
+//      }
+//      if (count == instance)
+//        return (pPDTAG[count] | pPDTAG[count+1]<<8);
+//    }
 //
-//******************************************************************************
-unsigned int TLV_getPeripheral(unsigned char tag, 
-                               unsigned char instance
-                              )
-{
-    unsigned char *pPDTAG;
-    unsigned char bPDTAG_bytes;
-    unsigned int count = 0;
-    unsigned int pcount = 0;
-
-    // Get Peripheral data pointer
-    TLV_getInfo(TLV_PDTAG, 
-                0, 
-                &bPDTAG_bytes, 
-                (unsigned int **)&pPDTAG
-                ); 
-
-    // read memory configuration from TLV to get offset for Peripherals
-    while (TLV_getMemory(count))
-    {
-      count++;
-    }
-    // get number of Peripheral entries
-    pcount = pPDTAG[count * 2 + 1];              
-    // inc count to first Periperal
-    count++;                                     
-    // adjust point to first address of Peripheral
-    pPDTAG += count*2;                           
-    // set counter back to 0
-    count = 0;                                   
-    // align pcount for work comparision
-    pcount *= 2;                                 
-
-    // TLV access Function Call
-    for (count = 0; count <= pcount; count += 2)
-    {
-      if (pPDTAG[count+1] == tag) 
-      { 
-        // test if required Peripheral is found
-        if (instance > 0) 
-        {
-          // test if required instance is found
-          instance--;
-        }
-        else
-        {
-          // Return found data
-          return (pPDTAG[count] | pPDTAG[count + 1] << 8); 
-        }
-      }
-    }
-    
-    // Return 0: not found
-    return 0;                                    
-}
-
-//******************************************************************************
+//    // Return 0: not found
+//    return 0;
+//}
 //
-//! This function is used to retrieve information on available interrupt 
-//! vectors. It allows the user to check if a specific interrupt vector is 
-//! defined in a given device.
-//!
-//! \param tag represents the tag for the interrupt vector. Interrupt vector 
-//! tags number from 0 to N depending on the number of available interrupts. 
-//! Refer to the device datasheet for a list of available interrupts.
-//!
-//! \returns The returned value is zero is the specified interrupt vector is 
-//! not defined.
 //
-//******************************************************************************
-unsigned char TLV_getInterrupt(unsigned char tag)
-{
-    unsigned char *pPDTAG;
-    unsigned char bPDTAG_bytes;
-    unsigned int count = 0;
-    unsigned int pcount = 0;
-
-    // Get Peripheral data pointer
-    TLV_getInfo(TLV_PDTAG, 
-                0, 
-                &bPDTAG_bytes, 
-                (unsigned int **)&pPDTAG
-                ); 
-    
-    // read memory configuration from TLV to get offset for Peripherals
-    while (TLV_getMemory(count))
-    {
-      count++;
-    }
-
-    pcount = pPDTAG[count * 2 + 1];
-    // inc count to first Periperal
-    count++;                                     
-    // adjust point to first address of Peripheral
-    pPDTAG += (pcount + count) * 2;              
-    // set counter back to 0
-    count = 0;                                   
-
-    // TLV access Function Call
-    for (count = 0; count <= tag; count += 2)
-    {
-      if (pPDTAG[count] == 0) 
-      {
-        // Return 0: not found/end of table
-        return 0;          
-      }
-      if (count == tag) 
-      {
-        // Return found data
-        return (pPDTAG[count]);  
-      }
-    }
-    
-    // Return 0: not found
-    return 0;                                    
-}
-//******************************************************************************
+////******************************************************************************
+////
+////! The Peripheral Descriptor tag is split into two portions � a list of the
+////! available flash memory blocks followed by a list of available peripherals.
+////! This function is used to parse through the second portion and can be used to
+////! check if a specific peripheral is present in a device. The function calls
+////! TLV_getPeripheral() recursively until the end of the memory list and
+////! consequently the beginning of the peripheral list is reached.
+////!
+////! \param tag represents represents the tag for a specific peripheral for which
+////! the information needs to be retrieved. In the header file tlv.h
+////! specific peripheral tags are pre-defined, for example USCIA_B and TA0 are
+////! defined as TLV_PID_USCI_AB and TLV_PID_TA2 respectively.
+////! \param instance - In some cases a specific tag may have more than one
+////! instance. For example a device may have more than a single USCI module,
+////! each of which is defined by an instance number 0, 1, 2, etc. When only one
+////! instance exists; 0 is passed.
+////!
+////! \returns The returned value is zero if the specified tag value (peripheral)
+////! is not available in the device.
+////
+////******************************************************************************
+//unsigned int TLV_getPeripheral(unsigned char tag,
+//                               unsigned char instance
+//                              )
+//{
+//    unsigned char *pPDTAG;
+//    unsigned char bPDTAG_bytes;
+//    unsigned int count = 0;
+//    unsigned int pcount = 0;
 //
-//Close the Doxygen group.
-//! @}
+//    // Get Peripheral data pointer
+//    TLV_getInfo(TLV_PDTAG,
+//                0,
+//                &bPDTAG_bytes,
+//                (unsigned int **)&pPDTAG
+//                );
 //
-//******************************************************************************
+//    // read memory configuration from TLV to get offset for Peripherals
+//    while (TLV_getMemory(count))
+//    {
+//      count++;
+//    }
+//    // get number of Peripheral entries
+//    pcount = pPDTAG[count * 2 + 1];
+//    // inc count to first Periperal
+//    count++;
+//    // adjust point to first address of Peripheral
+//    pPDTAG += count*2;
+//    // set counter back to 0
+//    count = 0;
+//    // align pcount for work comparision
+//    pcount *= 2;
+//
+//    // TLV access Function Call
+//    for (count = 0; count <= pcount; count += 2)
+//    {
+//      if (pPDTAG[count+1] == tag)
+//      {
+//        // test if required Peripheral is found
+//        if (instance > 0)
+//        {
+//          // test if required instance is found
+//          instance--;
+//        }
+//        else
+//        {
+//          // Return found data
+//          return (pPDTAG[count] | pPDTAG[count + 1] << 8);
+//        }
+//      }
+//    }
+//
+//    // Return 0: not found
+//    return 0;
+//}
+//
+////******************************************************************************
+////
+////! This function is used to retrieve information on available interrupt
+////! vectors. It allows the user to check if a specific interrupt vector is
+////! defined in a given device.
+////!
+////! \param tag represents the tag for the interrupt vector. Interrupt vector
+////! tags number from 0 to N depending on the number of available interrupts.
+////! Refer to the device datasheet for a list of available interrupts.
+////!
+////! \returns The returned value is zero is the specified interrupt vector is
+////! not defined.
+////
+////******************************************************************************
+//unsigned char TLV_getInterrupt(unsigned char tag)
+//{
+//    unsigned char *pPDTAG;
+//    unsigned char bPDTAG_bytes;
+//    unsigned int count = 0;
+//    unsigned int pcount = 0;
+//
+//    // Get Peripheral data pointer
+//    TLV_getInfo(TLV_PDTAG,
+//                0,
+//                &bPDTAG_bytes,
+//                (unsigned int **)&pPDTAG
+//                );
+//
+//    // read memory configuration from TLV to get offset for Peripherals
+//    while (TLV_getMemory(count))
+//    {
+//      count++;
+//    }
+//
+//    pcount = pPDTAG[count * 2 + 1];
+//    // inc count to first Periperal
+//    count++;
+//    // adjust point to first address of Peripheral
+//    pPDTAG += (pcount + count) * 2;
+//    // set counter back to 0
+//    count = 0;
+//
+//    // TLV access Function Call
+//    for (count = 0; count <= tag; count += 2)
+//    {
+//      if (pPDTAG[count] == 0)
+//      {
+//        // Return 0: not found/end of table
+//        return 0;
+//      }
+//      if (count == tag)
+//      {
+//        // Return found data
+//        return (pPDTAG[count]);
+//      }
+//    }
+//
+//    // Return 0: not found
+//    return 0;
+//}
+////******************************************************************************
+////
+////Close the Doxygen group.
+////! @}
+////
+////******************************************************************************

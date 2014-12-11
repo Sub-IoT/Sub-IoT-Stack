@@ -21,6 +21,24 @@
 #ifndef D7STACK_H_
 #define D7STACK_H_
 
+#define UART // Uncomment if you want to use logging or uart  (6k code size increase)
+#ifdef UART
+	// Set Logging options
+	#define LOG_PHY_ENABLED
+	#define LOG_DLL_ENABLED
+	//#define LOG_NWL_ENABLED
+	//#define LOG_TRANS_ENABLED
+	//#define LOG_FWK_ENABLED
+#endif
+
+//#define BUTTONS // Uncomment if you want to use buttons (100 bytes increase)
+//#define DEBUG
+
+// Select the correct platform if necesarry
+#define PLATFORM_WIZZIMOTE
+//#define PLATFORM_AGAIDI
+//#define PLATFORM_ARTESIS
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -31,13 +49,28 @@ extern "C" {
  *  \todo Get from configure step or similar
  */
 
-#define DEBUG
+
 
 #include "phy/phy.h"
 #include "dll/dll.h"
+#include "nwl/nwl.h"
+#include "trans/trans.h"
+#include "alp/alp.h"
+#include "dae/fs.h"
+#include "hal/system.h"
+
+/*! \brief Initializes the stack and HAL
+ *
+ *  \param uint8_t* tx_buffer 		A pointer to a data array which can be used for the TX Queue
+ *  \param uint8_t 	tx_buffer_size 	The size of the TX Buffer
+ *  \param uint8_t* rx_buffer 		A pointer to a data array which can be used for the RX Queue
+ *  \paral uint8_t*	rx_buffer_size	The size of the RX Buffer
+ */
+void d7aoss_init(uint8_t* tx_buffer, uint16_t tx_buffer_size, uint8_t* rx_buffer, uint16_t rx_buffer_size);
+
 
 #ifdef __cplusplus
-extern "C" {
+extern }
 #endif
 
 #endif /* D7STACK_H_ */

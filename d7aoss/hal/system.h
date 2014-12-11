@@ -22,9 +22,12 @@
 #define __SYSTEM_H__
 
 #include "../types.h"
+#include "../framework/queue.h"
 
-#define ENTER_CRITICAL_SECTION(x)  	__disable_interrupt(); //st( x = __read_status_register(); __disable_interrupt(); )
-#define EXIT_CRITICAL_SECTION(x)    __enable_interrupt(); //__write_status_register(x)
+//#define ENTER_CRITICAL_SECTION(x)  	__disable_interrupt(); //st( x = __read_status_register(); __disable_interrupt(); )
+//#define EXIT_CRITICAL_SECTION(x)    __enable_interrupt(); //__write_status_register(x)
+#define ENTER_CRITICAL_SECTION(x)  	x = __get_interrupt_state(); __disable_interrupt()
+#define EXIT_CRITICAL_SECTION(x)    __set_interrupt_state(x)
 
 #define SWITCH_BYTES(x) (x << 8 | x >> 8)
 #define SPLITUINT16(x) (uint8_t)((x) >> 8), (uint8_t)((x) & 0x00FF)
@@ -39,8 +42,10 @@
 
 #define AUX_CLOCK	32768
 
-extern uint8_t device_id[8]; // TODO: keep this as global?
-extern uint8_t virtual_id[2];
+//extern uint8_t device_id[8]; // TODO: keep this as global?
+//extern uint8_t virtual_id[2];
+uint8_t* device_id;
+uint8_t* virtual_id;
 
 extern uint32_t clock_speed;
 
@@ -48,8 +53,11 @@ extern uint8_t vCore_level;
 extern uint16_t target_clock_speed_kHz;
 extern uint8_t init_IO;
 
+queue_t tx_queue;
+queue_t rx_queue;
+
 void PMM_SetVCore (uint8_t level);
-void system_init();
+void system_init(uint8_t* tx_buffer, uint16_t tx_buffer_size, uint8_t* rx_buffer, uint16_t rx_buffer_size);
 
 void system_watchdog_timer_stop();
 void system_watchdog_timer_start();
@@ -60,6 +68,6 @@ void system_watchdog_init(unsigned char clockSelect, unsigned char clockDivider)
 
 void system_lowpower_mode(unsigned char mode, unsigned char enableInterrupts);
 
-void system_get_unique_id(unsigned char *tagId);
+void system_check_set_unique_id();
 
 #endif // __SYSTEM_H__
