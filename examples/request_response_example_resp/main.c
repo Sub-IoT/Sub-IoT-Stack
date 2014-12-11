@@ -143,7 +143,7 @@ void tx_callback(Trans_Tx_Result result)
 }
 
 int main(void) {
-	timer_event event;
+	timer_event event = { &get_temperature, TEMPERATURE_INTERVAL_MS} ;
 	int16_t temperature_internal;
 	file_handler fh;
 
@@ -158,10 +158,6 @@ int main(void) {
 
 	start_channel_scan = true;
 
-
-	// Configure event to measure temperature
-	event.next_event = TEMPERATURE_INTERVAL_MS;
-	event.f = &get_temperature;
 
 
 	led_blink(1);

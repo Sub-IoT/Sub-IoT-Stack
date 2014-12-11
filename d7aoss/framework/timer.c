@@ -57,7 +57,7 @@ bool timer_add_event( timer_event* event )
     new_event.f = event->f;
     new_event.next_event = event->next_event;
 
-    DPRINT("Adding event: t: %ld @%p." , new_event.next_event, new_event.f );
+    DPRINT("Adding event: t: %d @%p." , new_event.next_event, new_event.f );
 
 
     // add the new event in the stack
@@ -135,7 +135,7 @@ static uint8_t timer_get_next_event( void )
             // return first event found if there is only one event
             if( timer_event_count == 1 )
             {
-                DPRINT("One event found: t: %ld @%p pos: %u.", timer_event_stack[i].next_event, timer_event_stack[i].f, i );
+                DPRINT("One event found: t: %d @%p pos: %d.", timer_event_stack[i].next_event, timer_event_stack[i].f, i );
                 return i;
             }
 
@@ -152,7 +152,7 @@ static uint8_t timer_get_next_event( void )
             event_count++;
             if( event_count >= timer_event_count )
             {
-                DPRINT("Next event found: t: %ld @%p pos: %u among %u.", timer_event_stack[next_event_position].next_event, timer_event_stack[next_event_position].f, next_event_position, event_count );
+                DPRINT("Next event found: t: %d @%p pos: %d among %d.", timer_event_stack[next_event_position].next_event, timer_event_stack[next_event_position].f, next_event_position, event_count );
                 return next_event_position;
             }
         }
@@ -179,7 +179,7 @@ static void timer_configure_next_event( void )
         if( event_time <= hal_timer_getvalue() )
         {
             // fire the event
-            DPRINT("Event fired: t: %ld @%p pos: %u.", event_time, timer_event_stack[timer_next_event_position].f, timer_next_event_position);
+            DPRINT("Event fired: t: %d @ %f pos: %d.", event_time, timer_event_stack[timer_next_event_position].f, timer_next_event_position);
             timer_completed();
         }
         else
@@ -188,7 +188,7 @@ static void timer_configure_next_event( void )
             hal_timer_disable_interrupt();
             hal_timer_setvalue( (uint32_t)event_time );
             hal_timer_enable_interrupt();
-            DPRINT("Event configured: t: %ld @%p pos: %u.", event_time, timer_event_stack[timer_next_event_position].f, timer_next_event_position);
+            DPRINT("Event configured: t: %d @ %p pos: %d.", event_time, timer_event_stack[timer_next_event_position].f, timer_next_event_position);
         }
     }
 }
@@ -211,7 +211,7 @@ static bool timer_add_event_in_stack( timer_event new_event )
             timer_event_stack[i] = new_event;
             timer_event_count++;
 
-            DPRINT("Event added in stack: t: %ld @%p pos: %u.", timer_event_stack[i].next_event, timer_event_stack[i].f, i);
+            DPRINT("Event added in stack: t: %d @%p pos: %d.", timer_event_stack[i].next_event, timer_event_stack[i].f, i);
             return true;
         }
     }
@@ -225,7 +225,7 @@ static bool timer_update_stack( void )
     // just reset counter if there is no event
     if( timer_event_count == 0 )
     {
-        DPRINT("Counter reseted: time since last: %u.", hal_timer_getvalue() );
+        DPRINT("Counter reseted: time since last: %d.", hal_timer_getvalue() );
         hal_timer_counter_reset();
         return true;
     }
@@ -250,7 +250,7 @@ static bool timer_update_stack( void )
             event_count++;
             if( event_count >= timer_event_count )
             {
-                DPRINT("Stack updated: time elapsed: %ld.", current_time);
+                DPRINT("Stack updated: time elapsed: %d.", current_time);
                 return true;
             }
         }

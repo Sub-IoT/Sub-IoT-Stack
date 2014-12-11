@@ -28,7 +28,7 @@
 static volatile uint8_t benchmarking_timer_rollover = 0;
 
 
-void hal_timer_setvalue( uint32_t next_event )
+void hal_timer_setvalue( uint16_t next_event )
 {
     // the timer counter is 16 bits
     /*
@@ -64,9 +64,10 @@ void hal_timer_init( void )
     TA1EX0 = TAIDEX_3;							// divide /4
 }
 
-uint32_t hal_timer_getvalue( void )
+uint16_t hal_timer_getvalue( void )
 {
-    return ((uint32_t)TA1R << 16); // XXX: Why is this shift needed?
+    //return ((uint32_t)TA1R << 16); // XXX: Why is this shift needed?
+	return TA1R ;
 }
 
 void hal_timer_counter_reset( void )
