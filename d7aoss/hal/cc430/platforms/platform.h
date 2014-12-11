@@ -11,9 +11,9 @@
  * Lesser General Public License for more details.
  *
  * Contributors:
- * 		maarten.weyn@uantwerpen.be
+ *         maarten.weyn@uantwerpen.be
  *
- * 	Select the correct platform in d7ass.h
+ *     Select the correct platform in d7ass.h
  *
  */
 
@@ -38,7 +38,7 @@
 #elif defined PLATFORM_MATRIX
 #include "matrix_tp1104r3.h"
 #else
-	#error No platform set
+    #error No platform set
 #endif
 
 

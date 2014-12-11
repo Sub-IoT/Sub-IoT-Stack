@@ -214,11 +214,11 @@ unsigned short UART_init ( unsigned int baseAddress,
 //!         \b UART_CLOCKSOURCE_ACLK
 //! \param clockPrescalar is the value to be written into UCBRx bits
 //! \param firstModReg  is First modulation stage register setting. This value
-//! 	is a pre-calculated value which can be obtained from the Device User�s
-//!		Guide.This value is written into UCBRFx bits of UCAxMCTLW.
+//!     is a pre-calculated value which can be obtained from the Device User�s
+//!        Guide.This value is written into UCBRFx bits of UCAxMCTLW.
 //! \param secondModReg is Second modulation stage register setting.
-//! 	This value is a pre-calculated value which can be obtained from the Device
-//! 	User�s Guide. This value is written into UCBRSx bits of UCAxMCTLW.
+//!     This value is a pre-calculated value which can be obtained from the Device
+//!     User�s Guide. This value is written into UCBRSx bits of UCAxMCTLW.
 //! \param parity is the desired parity. Valid values are
 //!        \b UART_NO_PARITY  [Default Value],
 //!        \b UART_ODD_PARITY,
@@ -335,7 +335,7 @@ unsigned short UART_initAdvance ( unsigned int baseAddress,
     //Modulation Control Registers
     HWREGB(baseAddress + OFS_UCAxBRW ) = clockPrescalar;
     HWREGB(baseAddress + OFS_UCAxMCTL) = ((firstModReg<<4) + (secondModReg <<1) +
-    									  overSampling );
+                                          overSampling );
 
     //Asynchronous mode & 8 bit character select & clear mode
     HWREGB(baseAddress + OFS_UCAxCTL0) &=  ~(UCSYNC +

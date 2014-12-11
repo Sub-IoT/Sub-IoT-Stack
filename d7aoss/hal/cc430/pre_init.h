@@ -55,7 +55,7 @@
 #include <msp430.h>
 int _system_pre_init(void)
 {
-	WDTCTL = WDTPW + WDTHOLD;
+    WDTCTL = WDTPW + WDTHOLD;
     return 1;
 }
 

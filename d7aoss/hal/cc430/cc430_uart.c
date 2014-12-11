@@ -11,8 +11,8 @@
  * Lesser General Public License for more details.
  *
  * Contributors:
- * 		maarten.weyn@uantwerpen.be
- *     	glenn.ergeerts@uantwerpen.be
+ *         maarten.weyn@uantwerpen.be
+ *         glenn.ergeerts@uantwerpen.be
  *
  */
 
@@ -26,7 +26,7 @@
 
 void uart_init()
 {
-	PMAPPWD = 0x02D52;                        // Get write-access to port mapping regs
+    PMAPPWD = 0x02D52;                        // Get write-access to port mapping regs
     PLATFORM_UCA0RXD = PM_UCA0RXD;            // Map UCA0RXD output to Px
     PLATFORM_UCA0TXD = PM_UCA0TXD;            // Map UCA0TXD output to Px
     PMAPPWD = 0;                              // Lock port mapping registers
@@ -43,24 +43,24 @@ void uart_init()
 //
 //    if (ucos16)
 //    {
-//    	n = n / 16.0;
-//    	UCA0MCTL |= UCOS16;
+//        n = n / 16.0;
+//        UCA0MCTL |= UCOS16;
 //
-//    	//UCA0BR1 = (uint8_t) (c_speed / (BAUDRATE*256.0));
-//    	//UCA0BR0 = (uint8_t) ((c_speed / BAUDRATE) - (256*UCA0BR1));
-//    	UCA0BRW = (uint16_t) n;
+//        //UCA0BR1 = (uint8_t) (c_speed / (BAUDRATE*256.0));
+//        //UCA0BR0 = (uint8_t) ((c_speed / BAUDRATE) - (256*UCA0BR1));
+//        UCA0BRW = (uint16_t) n;
 //
-//    	uint8_t ucbrf = (uint8_t) ((n - UCA0BRW) * 16 + 0.5);
+//        uint8_t ucbrf = (uint8_t) ((n - UCA0BRW) * 16 + 0.5);
 //
-//    	UCA0MCTL |= ucbrf << 4;
+//        UCA0MCTL |= ucbrf << 4;
 //    } else {
-//    	//UCA0BR1 = (uint8_t) (c_speed / (BAUDRATE*256.0));
-//    	//UCA0BR0 = (uint8_t) ((c_speed / BAUDRATE) - (256*UCA0BR1));
-//    	UCA0BRW = (uint16_t) n;
+//        //UCA0BR1 = (uint8_t) (c_speed / (BAUDRATE*256.0));
+//        //UCA0BR0 = (uint8_t) ((c_speed / BAUDRATE) - (256*UCA0BR1));
+//        UCA0BRW = (uint16_t) n;
 //
-//    	uint8_t ucbrs = (uint8_t) ((n - UCA0BRW) * 8 + 0.5);
+//        uint8_t ucbrs = (uint8_t) ((n - UCA0BRW) * 8 + 0.5);
 //
-//    	UCA0MCTL |= ucbrs << 1;
+//        UCA0MCTL |= ucbrs << 1;
 //    }
 //
 ////    UCA0BRW = 0x01b4;
@@ -94,7 +94,7 @@ void uart_enable_interrupt()
 #pragma NO_HOOKS(uart_transmit_data)
 void uart_transmit_data(unsigned char data)
 {
-	while(!uart_tx_ready());
+    while(!uart_tx_ready());
     UCA0TXBUF = data;
 }
 

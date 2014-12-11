@@ -1,8 +1,8 @@
 /*
  *  Created on: Nov 22, 2012
  *  Authors:
- * 		maarten.weyn@artesis.be
- *  	glenn.ergeerts@artesis.be
+ *         maarten.weyn@artesis.be
+ *      glenn.ergeerts@artesis.be
  */
 
 #include <stdbool.h>
@@ -56,8 +56,8 @@ void button_clear_interrupt_flag()
 {
 
     GPIO_clearInterruptFlag(INPUT1_BASEADDRESS, INPUT1_PORT, INPUT1_PIN);
-	GPIO_clearInterruptFlag(INPUT2_BASEADDRESS, INPUT2_PORT, INPUT2_PIN);
-	GPIO_clearInterruptFlag(INPUT3_BASEADDRESS, INPUT3_PORT, INPUT3_PIN);
+    GPIO_clearInterruptFlag(INPUT2_BASEADDRESS, INPUT2_PORT, INPUT2_PIN);
+    GPIO_clearInterruptFlag(INPUT3_BASEADDRESS, INPUT3_PORT, INPUT3_PIN);
 
 }
 
@@ -72,7 +72,7 @@ unsigned char button_is_active(unsigned char button_nr)
         case 3:
             return (GPIO_INPUT_PIN_LOW == GPIO_getInputPinValue(INPUT3_BASEADDRESS, INPUT3_PORT, INPUT3_PIN));
         default:
-        	return false;
+            return false;
     }
 
 }

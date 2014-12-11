@@ -13,7 +13,7 @@
  * \author maarten.weyn@uantwerpen.be
  * \author glenn.ergeerts@uantwerpen.be
  *
- *	\brief Includes all used types
+ *    \brief Includes all used types
 
  */
 

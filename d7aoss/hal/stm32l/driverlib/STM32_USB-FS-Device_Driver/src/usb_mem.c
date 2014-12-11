@@ -44,7 +44,7 @@
 *                  - wPMABufAddr: address into PMA.
 *                  - wNBytes: no. of bytes to be copied.
 * Output         : None.
-* Return         : None	.
+* Return         : None    .
 *******************************************************************************/
 void UserToPMABufferCopy(uint8_t *pbUsrBuf, uint16_t wPMABufAddr, uint16_t wNBytes)
 {

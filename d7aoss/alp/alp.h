@@ -20,57 +20,57 @@
 
 #include "../types.h"
 
-#define ALP_REC_FLG_CHUNK_CTRL_INTERMED	(0 << 6)
-#define ALP_REC_FLG_CHUNK_CTRL_FIRST	(1 << 6)
-#define ALP_REC_FLG_CHUNK_CTRL_LAST		(2 << 6)
-#define ALP_REC_FLG_CHUNK_CTRL_SINGLE	(3 << 6)
-#define ALP_REC_FLG_TYPE_RESPONSE		  (0 << 6)
-#define ALP_REC_FLG_TYPE_UNSOLICITED	  (1 << 6)
-#define ALP_REC_FLG_TYPE_COMMAND_NO_RES	  (2 << 6)
+#define ALP_REC_FLG_CHUNK_CTRL_INTERMED    (0 << 6)
+#define ALP_REC_FLG_CHUNK_CTRL_FIRST    (1 << 6)
+#define ALP_REC_FLG_CHUNK_CTRL_LAST        (2 << 6)
+#define ALP_REC_FLG_CHUNK_CTRL_SINGLE    (3 << 6)
+#define ALP_REC_FLG_TYPE_RESPONSE          (0 << 6)
+#define ALP_REC_FLG_TYPE_UNSOLICITED      (1 << 6)
+#define ALP_REC_FLG_TYPE_COMMAND_NO_RES      (2 << 6)
 #define ALP_REC_FLG_TYPE_COMMAND_RESPONSE (3 << 6)
 
-#define ALP_OP_READ_DATA	0
-#define ALP_OP_READ_HEADER	1
-#define ALP_OP_READ_ALL		2
-#define ALP_OP_WRITE_DATA	4
-#define ALP_OP_WRITE_FLUSH	5
-#define ALP_OP_WRITE_PROP	6
-#define ALP_OP_ACTION_EXIST	16
+#define ALP_OP_READ_DATA    0
+#define ALP_OP_READ_HEADER    1
+#define ALP_OP_READ_ALL        2
+#define ALP_OP_WRITE_DATA    4
+#define ALP_OP_WRITE_FLUSH    5
+#define ALP_OP_WRITE_PROP    6
+#define ALP_OP_ACTION_EXIST    16
 #define ALP_OP_ACTION_CREATE 17
 #define ALP_OP_ACTION_DELETE 18
 #define ALP_OP_ACTION_RESTORE 19
-#define ALP_OP_ACTION_FLUSH	20
-#define ALP_OP_ACTION_OPEN	21
-#define ALP_OP_ACTION_CLOSE	22
-#define ALP_OP_RESP_DATA	32
-#define ALP_OP_RESP_HEADER	33
-#define ALP_OP_RESP_ALL		34
-#define ALP_OP_RESP_ERROR	255
+#define ALP_OP_ACTION_FLUSH    20
+#define ALP_OP_ACTION_OPEN    21
+#define ALP_OP_ACTION_CLOSE    22
+#define ALP_OP_RESP_DATA    32
+#define ALP_OP_RESP_HEADER    33
+#define ALP_OP_RESP_ALL        34
+#define ALP_OP_RESP_ERROR    255
 
-#define ALP_FILE_ERROR_CODE_OK				0
-#define ALP_FILE_ERROR_CODE_NOT_EXIST		1
-#define ALP_FILE_ERROR_CODE_ALREADY_EXIST	2
-#define ALP_FILE_ERROR_CODE_NOT_RESTORABLE	3
-#define ALP_FILE_ERROR_CODE_NO_PERMISSION	4
-#define ALP_FILE_ERROR_CODE_LENGTH_TO_BIG	5
-#define ALP_FILE_ERROR_CODE_ALLOC_T0_BIG		6
-#define ALP_FILE_ERROR_CODE_OFFSET_OFB		7
-#define ALP_FILE_ERROR_CODE_DATA_TO_BIG		8
-#define ALP_FILE_ERROR_CODE_UNKOWN			255
+#define ALP_FILE_ERROR_CODE_OK                0
+#define ALP_FILE_ERROR_CODE_NOT_EXIST        1
+#define ALP_FILE_ERROR_CODE_ALREADY_EXIST    2
+#define ALP_FILE_ERROR_CODE_NOT_RESTORABLE    3
+#define ALP_FILE_ERROR_CODE_NO_PERMISSION    4
+#define ALP_FILE_ERROR_CODE_LENGTH_TO_BIG    5
+#define ALP_FILE_ERROR_CODE_ALLOC_T0_BIG        6
+#define ALP_FILE_ERROR_CODE_OFFSET_OFB        7
+#define ALP_FILE_ERROR_CODE_DATA_TO_BIG        8
+#define ALP_FILE_ERROR_CODE_UNKOWN            255
 
 
 typedef struct
 {
-	uint8_t record_flags;
-	uint8_t record_lenght;
-	uint8_t alp_id;
-	uint8_t* alp_templates;
+    uint8_t record_flags;
+    uint8_t record_lenght;
+    uint8_t alp_id;
+    uint8_t* alp_templates;
 } ALP_Record_Structure;
 
 typedef struct
 {
-	uint8_t op;
-	uint8_t* data;
+    uint8_t op;
+    uint8_t* data;
 } ALP_Template;
 
 /** @struct ALP_File_Data_Template
@@ -86,35 +86,35 @@ typedef struct
  *  **/
 
 typedef struct {
-	uint8_t file_id;
-	uint16_t start_byte_offset;
-	uint16_t bytes_accessing;
-	uint8_t* data;
+    uint8_t file_id;
+    uint16_t start_byte_offset;
+    uint16_t bytes_accessing;
+    uint8_t* data;
 } ALP_File_Data_Template;
 
 typedef struct {
-	uint8_t file_id;
-	uint8_t	start_byte_offset;
-	uint8_t bytes_accessing;
-	uint8_t* data;
+    uint8_t file_id;
+    uint8_t    start_byte_offset;
+    uint8_t bytes_accessing;
+    uint8_t* data;
 } ALP_File_Header_Template;
 
 typedef struct {
-	uint8_t file_id;
+    uint8_t file_id;
 } ALP_File_Id_Template;
 
 typedef struct {
-	uint8_t errorneous_file_id;
-	uint8_t file_error_code;
+    uint8_t errorneous_file_id;
+    uint8_t file_error_code;
 } ALP_File_Error_Template;
 
 
 /*! \brief Formats the ALP record structure and adds it to the TX Queue  (Application Layer)
  *
- *  \param uint8_t 			flags 		The Flags for the ALP record structre
- *  \param uint8_t 			id 			The ALP Id.
- *  \param uint8_t 			lenght 		The lenght of the array of ALP templates
- *  \paral ALP_Template*	templates	The array of ALP_Templates
+ *  \param uint8_t             flags         The Flags for the ALP record structre
+ *  \param uint8_t             id             The ALP Id.
+ *  \param uint8_t             lenght         The lenght of the array of ALP templates
+ *  \paral ALP_Template*    templates    The array of ALP_Templates
  */
 void alp_create_structure_for_tx(uint8_t flags, uint8_t id, uint8_t length, ALP_Template* templates);
 

@@ -11,7 +11,7 @@
  * Lesser General Public License for more details.
  *
  * Contributors:
- * 		maarten.weyn@uantwerpen.be
+ *         maarten.weyn@uantwerpen.be
  *
  */
 
@@ -40,13 +40,13 @@
  **/
 typedef struct
 {
-	uint16_t size;
-	uint16_t length;
-	uint8_t* front;
-	uint8_t* rear;
-	uint8_t* start;
-	uint8_t element_size;
-	uint8_t reserve_header;
+    uint16_t size;
+    uint16_t length;
+    uint8_t* front;
+    uint8_t* rear;
+    uint8_t* start;
+    uint8_t element_size;
+    uint8_t reserve_header;
 } queue_t;
 
 

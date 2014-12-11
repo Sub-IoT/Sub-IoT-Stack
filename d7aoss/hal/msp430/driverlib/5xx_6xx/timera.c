@@ -181,7 +181,7 @@ void TimerA_configureContinuousMode ( unsigned int baseAddress,
 
     HWREG(baseAddress +
         OFS_TAxCTL) &= ~(TIMERA_CLOCKSOURCE_INVERTED_EXTERNAL_TXCLK +
-        				 TIMERA_STOP_MODE +
+                         TIMERA_STOP_MODE +
                          TIMERA_DO_CLEAR +
                          TIMERA_TAIE_INTERRUPT_ENABLE
                          );
@@ -389,7 +389,7 @@ void TimerA_configureUpDownMode (
           );
 
     HWREG(baseAddress + OFS_TAxCTL)  |= ( clockSource +
-    									  TIMERA_STOP_MODE +
+                                          TIMERA_STOP_MODE +
                                           timerClear +
                                           timerInterruptEnable_TAIE
                                           );
@@ -569,7 +569,7 @@ void TimerA_startContinousMode ( unsigned int baseAddress,
     unsigned int timerClear
     )
 {
-	TimerA_startContinuousMode (baseAddress,
+    TimerA_startContinuousMode (baseAddress,
     clockSource,
     clockSourceDivider,
     timerInterruptEnable_TAIE,
@@ -1125,9 +1125,9 @@ void TimerA_disableCaptureCompareInterrupt (unsigned int baseAddress,
 //
 //*****************************************************************************
 unsigned long TimerA_getCaptureCompareInterruptStatus (unsigned int baseAddress,
-		 unsigned int captureCompareRegister,
-		 unsigned int mask
-		 )
+         unsigned int captureCompareRegister,
+         unsigned int mask
+         )
 {
     return ( HWREG(baseAddress + captureCompareRegister) & mask );
 }

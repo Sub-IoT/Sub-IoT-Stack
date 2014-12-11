@@ -48,7 +48,7 @@ void hal_timer_init( void )
     //set timer to ticks (=1024 Hz)
     //TA1CTL = TASSEL_1 + MC__UP + ID_3 + TACLR;           // ACLK/8, up mode, clear timer
     TA0CTL = TASSEL_1 + MC__CONTINUOUS + ID_3 + TACLR;           // ACLK/8, continuous up mode, clear timer
-    TA0EX0 = TAIDEX_3;							// divide /4
+    TA0EX0 = TAIDEX_3;                            // divide /4
 }
 
 uint32_t hal_timer_getvalue( void )
@@ -75,17 +75,17 @@ uint32_t hal_benchmarking_timer_getvalue()
 
 void hal_benchmarking_timer_start()
 {
-	//TA0CCTL0 = CCIE; // Enable interrupt for CCR0
-	//TA0CTL |= MC__CONTINUOUS;
-	//TA0CTL |= TAIE + TACLR;
-	//benchmarking_timer_rollover = 0;
+    //TA0CCTL0 = CCIE; // Enable interrupt for CCR0
+    //TA0CTL |= MC__CONTINUOUS;
+    //TA0CTL |= TAIE + TACLR;
+    //benchmarking_timer_rollover = 0;
 }
 
 void hal_benchmarking_timer_stop()
 {
-	//TA0CCTL0 &= ~CCIE; // Disable interrupt for CCR0
-	//TA0CTL &= ~MC__CONTINUOUS;
-	//TA0CTL &= ~TAIE;
+    //TA0CCTL0 &= ~CCIE; // Disable interrupt for CCR0
+    //TA0CTL &= ~MC__CONTINUOUS;
+    //TA0CTL &= ~TAIE;
 }
 
 // Timer A0 interrupt service routine
@@ -95,12 +95,12 @@ __interrupt void Timer_A_CCO (void)
     timer_completed();
 
 //    switch( TA0IV )
-//    	 {
-//    	   case  2: break;                          // CCR1 not used
-//    	   case  4: break;                          // CCR2 not used
-//    	   case 10: benchmarking_timer_rollover++;                  // overflow
-//    	            break;
-//    	 }
+//         {
+//           case  2: break;                          // CCR1 not used
+//           case  4: break;                          // CCR2 not used
+//           case 10: benchmarking_timer_rollover++;                  // overflow
+//                    break;
+//         }
 }
 
 //#pragma vector=TIMER0_A1_VECTOR
@@ -109,16 +109,16 @@ __interrupt void Timer_A_CCO (void)
 //    //timer_completed();
 //
 //    switch( TA0IV )
-//    	 {
-//    	   case 0x02: break;                          // CCR1 not used
-//    	   case 0x04: break;                          // CCR2 not used
-//    	   case 0x06: break;                          // CCR3 not used
-//    	   case 0x08: break;                          // CCR4 not used
-//    	   case 0x0A: break;                          // CCR5 not used
-//    	   case 0x0C: break;                          // CCR6 not used
-//    	   case 0x0E: benchmarking_timer_rollover++;                  // overflow
-//    	            break;
-//    	 }
+//         {
+//           case 0x02: break;                          // CCR1 not used
+//           case 0x04: break;                          // CCR2 not used
+//           case 0x06: break;                          // CCR3 not used
+//           case 0x08: break;                          // CCR4 not used
+//           case 0x0A: break;                          // CCR5 not used
+//           case 0x0C: break;                          // CCR6 not used
+//           case 0x0E: benchmarking_timer_rollover++;                  // overflow
+//                    break;
+//         }
 //}
 
 

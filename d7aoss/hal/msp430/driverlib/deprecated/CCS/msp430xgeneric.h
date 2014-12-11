@@ -11587,7 +11587,7 @@ typedef void (* __SFR_FARPTR)();
 #define TLV_ADCCAL             (0x11)         /*  ADC12 calibration */
 #define TLV_ADC12CAL           (0x11)         /*  ADC12 calibration */
 #define TLV_ADC10CAL           (0x13)         /*  ADC10 calibration */
-#define TLV_TIMERDCAL		   (0x15)	 	  /*  Timer D calibration */
+#define TLV_TIMERDCAL           (0x15)           /*  Timer D calibration */
 #define TLV_REFCAL             (0x12)         /*  REF calibration */
 #define TLV_TAGEXT             (0xFE)         /*  Tag extender */
 #define TLV_TAGEND             (0xFF)         //  Tag End of Table

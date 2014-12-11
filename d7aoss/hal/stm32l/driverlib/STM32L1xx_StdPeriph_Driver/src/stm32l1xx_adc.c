@@ -489,11 +489,11 @@ void ADC_PowerDownCmd(ADC_TypeDef* ADCx, uint32_t ADC_PowerDown, FunctionalState
   *     @arg ADC_DelayLength_None: No delay.
   *     @arg ADC_DelayLength_Freeze: Delay until the converted data has been read.
   *     @arg ADC_DelayLength_7Cycles: Delay length equal to 7 APB clock cycles.
-  *     @arg ADC_DelayLength_15Cycles: Delay length equal to 15 APB clock cycles	
-  *     @arg ADC_DelayLength_31Cycles: Delay length equal to 31 APB clock cycles	
-  *     @arg ADC_DelayLength_63Cycles: Delay length equal to 63 APB clock cycles	
-  *     @arg ADC_DelayLength_127Cycles: Delay length equal to 127 APB clock cycles	
-  *     @arg ADC_DelayLength_255Cycles: Delay length equal to 255 APB clock cycles	
+  *     @arg ADC_DelayLength_15Cycles: Delay length equal to 15 APB clock cycles    
+  *     @arg ADC_DelayLength_31Cycles: Delay length equal to 31 APB clock cycles    
+  *     @arg ADC_DelayLength_63Cycles: Delay length equal to 63 APB clock cycles    
+  *     @arg ADC_DelayLength_127Cycles: Delay length equal to 127 APB clock cycles    
+  *     @arg ADC_DelayLength_255Cycles: Delay length equal to 255 APB clock cycles    
   * @retval None
   */
 void ADC_DelaySelectionConfig(ADC_TypeDef* ADCx, uint8_t ADC_DelayLength)
@@ -559,7 +559,7 @@ void ADC_DelaySelectionConfig(ADC_TypeDef* ADCx, uint8_t ADC_DelayLength)
   *     @arg ADC_AnalogWatchdog_AllRegAllInjecEnable: Analog watchdog on all 
   *           regular and injected channels.
   *     @arg ADC_AnalogWatchdog_None: No channel guarded by the analog watchdog.
-  * @retval None	  
+  * @retval None      
   */
 void ADC_AnalogWatchdogCmd(ADC_TypeDef* ADCx, uint32_t ADC_AnalogWatchdog)
 {
@@ -812,11 +812,11 @@ void ADC_TempSensorVrefintCmd(FunctionalState NewState)
   *     @arg ADC_SampleTime_4Cycles: Sample time equal to 4 cycles
   *     @arg ADC_SampleTime_9Cycles: Sample time equal to 9 cycles
   *     @arg ADC_SampleTime_16Cycles: Sample time equal to 16 cycles
-  *     @arg ADC_SampleTime_24Cycles: Sample time equal to 24 cycles	
-  *     @arg ADC_SampleTime_48Cycles: Sample time equal to 48 cycles	
-  *     @arg ADC_SampleTime_96Cycles: Sample time equal to 96 cycles	
-  *     @arg ADC_SampleTime_192Cycles: Sample time equal to 192 cycles	
-  *     @arg ADC_SampleTime_384Cycles: Sample time equal to 384 cycles	
+  *     @arg ADC_SampleTime_24Cycles: Sample time equal to 24 cycles    
+  *     @arg ADC_SampleTime_48Cycles: Sample time equal to 48 cycles    
+  *     @arg ADC_SampleTime_96Cycles: Sample time equal to 96 cycles    
+  *     @arg ADC_SampleTime_192Cycles: Sample time equal to 192 cycles    
+  *     @arg ADC_SampleTime_384Cycles: Sample time equal to 384 cycles    
   * @retval None
   */
 void ADC_RegularChannelConfig(ADC_TypeDef* ADCx, uint8_t ADC_Channel, uint8_t Rank, uint8_t ADC_SampleTime)
@@ -1302,11 +1302,11 @@ void ADC_DMARequestAfterLastTransferCmd(ADC_TypeDef* ADCx, FunctionalState NewSt
   *     @arg ADC_SampleTime_4Cycles: Sample time equal to 4 cycles
   *     @arg ADC_SampleTime_9Cycles: Sample time equal to 9 cycles
   *     @arg ADC_SampleTime_16Cycles: Sample time equal to 16 cycles
-  *     @arg ADC_SampleTime_24Cycles: Sample time equal to 24 cycles	
-  *     @arg ADC_SampleTime_48Cycles: Sample time equal to 48 cycles	
-  *     @arg ADC_SampleTime_96Cycles: Sample time equal to 96 cycles	
-  *     @arg ADC_SampleTime_192Cycles: Sample time equal to 192 cycles	
-  *     @arg ADC_SampleTime_384Cycles: Sample time equal to 384 cycles	
+  *     @arg ADC_SampleTime_24Cycles: Sample time equal to 24 cycles    
+  *     @arg ADC_SampleTime_48Cycles: Sample time equal to 48 cycles    
+  *     @arg ADC_SampleTime_96Cycles: Sample time equal to 96 cycles    
+  *     @arg ADC_SampleTime_192Cycles: Sample time equal to 192 cycles    
+  *     @arg ADC_SampleTime_384Cycles: Sample time equal to 384 cycles    
   * @retval None
   */
 void ADC_InjectedChannelConfig(ADC_TypeDef* ADCx, uint8_t ADC_Channel, uint8_t Rank, uint8_t ADC_SampleTime)

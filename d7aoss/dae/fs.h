@@ -14,15 +14,15 @@
  *
  * \brief The File System API
  *
- *	Add following sections to the SECTIONS in .cmd linker file to use the filesystem
- *		.fs_fileinfo_bitmap : 	{} > FLASH_FS1
- *  	.fs_fileinfo: 			{} > FLASH_FS1
- *		.fs_files	: 			{} > FLASH_FS2
+ *    Add following sections to the SECTIONS in .cmd linker file to use the filesystem
+ *        .fs_fileinfo_bitmap :     {} > FLASH_FS1
+ *      .fs_fileinfo:             {} > FLASH_FS1
+ *        .fs_files    :             {} > FLASH_FS2
  *
- *	Add FLASH_FS_FI and FLASH_FS_FILES to the MEMORY section
+ *    Add FLASH_FS_FI and FLASH_FS_FILES to the MEMORY section
  *  eg.
- *  	FLASH_FS1               : origin = 0xC000, length = 0x0200 // The file headers
- *	    FLASH_FS2               : origin = 0xC200, length = 0x0400 // The file contents
+ *      FLASH_FS1               : origin = 0xC000, length = 0x0200 // The file headers
+ *        FLASH_FS2               : origin = 0xC200, length = 0x0400 // The file contents
  */
 
 #ifndef FS_H_
@@ -37,29 +37,29 @@
 
 typedef struct
 {
-	Data_Element_File_Header header;
-	uint8_t file_offset[2];
+    Data_Element_File_Header header;
+    uint8_t file_offset[2];
 } file_info;
 
 typedef struct
 {
-	file_info *info;
-	uint8_t *file;
-	uint8_t permission_mask;
+    file_info *info;
+    uint8_t *file;
+    uint8_t permission_mask;
 } file_handler;
 
 typedef enum
 {
-	file_system_user_root,
-	file_system_user_user,
-	file_system_user_guest
+    file_system_user_root,
+    file_system_user_user,
+    file_system_user_guest
 } file_system_user;
 
 typedef enum
 {
-	file_system_access_type_read,
-	file_system_access_type_write,
-	file_system_access_type_run
+    file_system_access_type_read,
+    file_system_access_type_write,
+    file_system_access_type_run
 } file_system_access_type;
 
 extern const uint8_t filesystem_info_nr_files;
@@ -71,11 +71,11 @@ extern const uint8_t filesystem_files[];
 void fs_init();
 
 /** Opens a file and gives file_handler and return code
- * 	@param fh the returned file handler
- * 	@param file_id the id of the file for file series
- * 	@param user the user (root, user or guest)
- * 	@param access_type the access type (read, write, run)
- * 	@return status variable: 0: succes, 1 file not found, 2 incorrect user rights
+ *     @param fh the returned file handler
+ *     @param file_id the id of the file for file series
+ *     @param user the user (root, user or guest)
+ *     @param access_type the access type (read, write, run)
+ *     @return status variable: 0: succes, 1 file not found, 2 incorrect user rights
  */
 uint8_t fs_open(file_handler * file_handle, uint8_t file_id, file_system_user user, file_system_access_type access_type);
 

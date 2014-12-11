@@ -39,8 +39,8 @@ void uart_transmit_message(unsigned char *data, unsigned char length) {
 }
 
 unsigned char uart_tx_ready() {
-	// FIXME How is uart_tx_ready defined??
-	return 1;
+    // FIXME How is uart_tx_ready defined??
+    return 1;
 }
 
 unsigned char uart_receive_data() {

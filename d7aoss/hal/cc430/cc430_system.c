@@ -11,8 +11,8 @@
  * Lesser General Public License for more details.
  *
  * Contributors:
- * 		maarten.weyn@uantwerpen.be
- *     	glenn.ergeerts@uantwerpen.be
+ *         maarten.weyn@uantwerpen.be
+ *         glenn.ergeerts@uantwerpen.be
  *
  */
 
@@ -110,7 +110,7 @@ void PMM_SetVCore (uint8_t level) {
 
 void system_init(uint8_t* tx_buffer, uint16_t tx_buffer_size, uint8_t* rx_buffer, uint16_t rx_buffer_size)
 {
-	system_watchdog_timer_stop();
+    system_watchdog_timer_stop();
 
     PMM_SetVCore(vCore_level);
 
@@ -120,24 +120,24 @@ void system_init(uint8_t* tx_buffer, uint16_t tx_buffer_size, uint8_t* rx_buffer
 
     if (init_IO)
     {
-    	// Init all ports
-		PADIR = 0xFF;
-		PAOUT = 0x00;
-		PBDIR = 0xFF;
-		PBOUT = 0x00;
-		PCDIR = 0xFF;
-		PCOUT = 0x00;
+        // Init all ports
+        PADIR = 0xFF;
+        PAOUT = 0x00;
+        PBDIR = 0xFF;
+        PBOUT = 0x00;
+        PCDIR = 0xFF;
+        PCOUT = 0x00;
 
-    	led_init();
+        led_init();
 
-		#ifdef BUTTONS
-    	button_init();
-		#endif
+        #ifdef BUTTONS
+        button_init();
+        #endif
 
 
-		#ifdef UART
-    	uart_init();
-		#endif
+        #ifdef UART
+        uart_init();
+        #endif
 
     }
 
@@ -150,75 +150,75 @@ void system_init(uint8_t* tx_buffer, uint16_t tx_buffer_size, uint8_t* rx_buffer
 
 void clock_init(void)
 {
-//	UCSCTL1 = DCORSEL_5; // 0x0050
-	//UCSCTL1 = DCORSEL_1;
-//	UCSCTL2 = 0x01F9;
-//	UCSCTL3 = 0x0020;
-//	UCSCTL4 = 0x0233;
-//	UCSCTL5 = 0x0040;
-//	UCSCTL6 = 0x0100;
+//    UCSCTL1 = DCORSEL_5; // 0x0050
+    //UCSCTL1 = DCORSEL_1;
+//    UCSCTL2 = 0x01F9;
+//    UCSCTL3 = 0x0020;
+//    UCSCTL4 = 0x0233;
+//    UCSCTL5 = 0x0040;
+//    UCSCTL6 = 0x0100;
 
-	//Set DCO FLL reference = REFO
-	UCS_clockSignalInit(
-			__MSP430_BASEADDRESS_UCS_RF__,
-		UCS_FLLREF,
-		UCS_REFOCLK_SELECT,
-		UCS_CLOCK_DIVIDER_1
-		);
-	//Set ACLK = REFO
-	UCS_clockSignalInit(
-			__MSP430_BASEADDRESS_UCS_RF__,
-		UCS_ACLK,
-		UCS_REFOCLK_SELECT,
-		UCS_CLOCK_DIVIDER_1
-		);
+    //Set DCO FLL reference = REFO
+    UCS_clockSignalInit(
+            __MSP430_BASEADDRESS_UCS_RF__,
+        UCS_FLLREF,
+        UCS_REFOCLK_SELECT,
+        UCS_CLOCK_DIVIDER_1
+        );
+    //Set ACLK = REFO
+    UCS_clockSignalInit(
+            __MSP430_BASEADDRESS_UCS_RF__,
+        UCS_ACLK,
+        UCS_REFOCLK_SELECT,
+        UCS_CLOCK_DIVIDER_1
+        );
 
-	//Set Ratio and Desired MCLK Frequency  and initialize DCO
-//	UCS_initFLLSettle(
-//			__MSP430_BASEADDRESS_UCS_RF__,
-//		1000, // 1000 khz
-//		31   //  1000 kHz / 32.768 Khz (Crystal)
-//		);
+    //Set Ratio and Desired MCLK Frequency  and initialize DCO
+//    UCS_initFLLSettle(
+//            __MSP430_BASEADDRESS_UCS_RF__,
+//        1000, // 1000 khz
+//        31   //  1000 kHz / 32.768 Khz (Crystal)
+//        );
 
-	_BIS_SR(SCG0);                  // Disable the FLL control loop
-	UCS_initFLLSettle(
-			__MSP430_BASEADDRESS_UCS_RF__,
-			target_clock_speed_Hz / 1000, // 10000 khz
-			(uint16_t) (target_clock_speed_Hz / 32768)   //  10000 kHz / 32.768 Khz  = 305(Crystal)
-			);
-	_BIC_SR(SCG0);                  // Enable the FLL control loop
+    _BIS_SR(SCG0);                  // Disable the FLL control loop
+    UCS_initFLLSettle(
+            __MSP430_BASEADDRESS_UCS_RF__,
+            target_clock_speed_Hz / 1000, // 10000 khz
+            (uint16_t) (target_clock_speed_Hz / 32768)   //  10000 kHz / 32.768 Khz  = 305(Crystal)
+            );
+    _BIC_SR(SCG0);                  // Enable the FLL control loop
 
 
-	clock_speed = UCS_getSMCLK(__MSP430_BASEADDRESS_UCS_RF__);
-	//unsigned long clockValueMCLK = UCS_getMCLK(__MSP430_BASEADDRESS_UCS_RF__);
-	//unsigned long clockValueCLK = UCS_getACLK(__MSP430_BASEADDRESS_UCS_RF__);
+    clock_speed = UCS_getSMCLK(__MSP430_BASEADDRESS_UCS_RF__);
+    //unsigned long clockValueMCLK = UCS_getMCLK(__MSP430_BASEADDRESS_UCS_RF__);
+    //unsigned long clockValueCLK = UCS_getACLK(__MSP430_BASEADDRESS_UCS_RF__);
 }
 
 void system_watchdog_timer_stop()
 {
     //WDT_hold();
-	unsigned char newWDTStatus = WDTCTL_L | WDTHOLD;
+    unsigned char newWDTStatus = WDTCTL_L | WDTHOLD;
     WDTCTL = WDTPW + newWDTStatus;
 }
 
 void system_watchdog_timer_start()
 {
     //WDT_hold();
-	//WDTCTL = WDTPW + WDTIS__512K + WDTSSEL__ACLK;
+    //WDTCTL = WDTPW + WDTIS__512K + WDTSSEL__ACLK;
     unsigned char newWDTStatus = WDTCTL_L & ~WDTHOLD;
     WDTCTL = WDTPW + newWDTStatus;
 }
 
 void system_watchdog_timer_reset()
 {
-	//Set Counter Clear bit
-	unsigned char newWDTStatus = ( WDTCTL_L | WDTCNTCL );
-	WDTCTL = WDTPW + newWDTStatus;
+    //Set Counter Clear bit
+    unsigned char newWDTStatus = ( WDTCTL_L | WDTCNTCL );
+    WDTCTL = WDTPW + newWDTStatus;
 }
 
 void system_watchdog_timer_enable_interrupt()
 {
-	SFRIE1 |= WDTIE;
+    SFRIE1 |= WDTIE;
 }
 
 void system_watchdog_timer_init(unsigned char clockSelect, unsigned char clockDivider)
@@ -262,53 +262,53 @@ void system_lowpower_mode(unsigned char mode, unsigned char enableInterrupts)
 
 void system_check_set_unique_id()
 {
-	file_handler fh;
-	fs_open(&fh, DA_FILE_ID_UID, file_system_user_root, file_system_access_type_read);
-	device_id = fs_get_data_pointer(&fh, 0);
+    file_handler fh;
+    fs_open(&fh, DA_FILE_ID_UID, file_system_user_root, file_system_access_type_read);
+    device_id = fs_get_data_pointer(&fh, 0);
 
-	uint8_t i = 0;
-	bool device_id_null = true;
-	for(;i<8;i++)
-	{
-		if (device_id[i] != 0x00)
-		{
-			device_id_null = false;
-			break;
-		}
-	}
+    uint8_t i = 0;
+    bool device_id_null = true;
+    for(;i<8;i++)
+    {
+        if (device_id[i] != 0x00)
+        {
+            device_id_null = false;
+            break;
+        }
+    }
 
-	if (device_id_null)
-	{
-		struct s_TLV_Die_Record * pDIEREC;
-		unsigned char bDieRecord_bytes;
+    if (device_id_null)
+    {
+        struct s_TLV_Die_Record * pDIEREC;
+        unsigned char bDieRecord_bytes;
 
-		TLV_getInfo(TLV_TAG_DIERECORD,
-			0,
-			&bDieRecord_bytes,
-			(unsigned int **)&pDIEREC
-			);
+        TLV_getInfo(TLV_TAG_DIERECORD,
+            0,
+            &bDieRecord_bytes,
+            (unsigned int **)&pDIEREC
+            );
 
-		unsigned char tagId[8];
-		unsigned char* pointer = (unsigned char*) &(pDIEREC->wafer_id);
-		tagId[0] = pointer[3];
-		tagId[1] = pointer[2];
-		tagId[2] = pointer[1];
-		tagId[3] = pointer[0];
-		pointer = (unsigned char*) &(pDIEREC->die_x_position);
-		tagId[4] = pointer[1];
-		tagId[5] = pointer[0];
+        unsigned char tagId[8];
+        unsigned char* pointer = (unsigned char*) &(pDIEREC->wafer_id);
+        tagId[0] = pointer[3];
+        tagId[1] = pointer[2];
+        tagId[2] = pointer[1];
+        tagId[3] = pointer[0];
+        pointer = (unsigned char*) &(pDIEREC->die_x_position);
+        tagId[4] = pointer[1];
+        tagId[5] = pointer[0];
 
-		pointer = (unsigned char*) &(pDIEREC->die_y_position);
-		tagId[6] = pointer[1];
-		tagId[7] = pointer[0];
+        pointer = (unsigned char*) &(pDIEREC->die_y_position);
+        tagId[6] = pointer[1];
+        tagId[7] = pointer[0];
 
-		fs_open(&fh, DA_FILE_ID_UID, file_system_user_root, file_system_access_type_write);
+        fs_open(&fh, DA_FILE_ID_UID, file_system_user_root, file_system_access_type_write);
 
-		fs_write_data(&fh, 0, (uint8_t*) tagId, 8, true);
+        fs_write_data(&fh, 0, (uint8_t*) tagId, 8, true);
 
-		//TODO: correct way to find virtual_id -> set by app layer
+        //TODO: correct way to find virtual_id -> set by app layer
 
-		//virtual_id[0] = device_id[4] ^ device_id[5];
-		//virtual_id[1] = device_id[6] ^ device_id[7];
-	}
+        //virtual_id[0] = device_id[4] ^ device_id[5];
+        //virtual_id[1] = device_id[6] ^ device_id[7];
+    }
 }

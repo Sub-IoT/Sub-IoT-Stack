@@ -1,9 +1,9 @@
 /*
  *  Created on: Nov 22, 2012
  *  Authors:
- * 		maarten.weyn@artesis.be
- *  	glenn.ergeerts@artesis.be
- *  	alexanderhoet@gmail.com
+ *         maarten.weyn@artesis.be
+ *      glenn.ergeerts@artesis.be
+ *      alexanderhoet@gmail.com
  */
 
 #ifndef CC1101_PHY_H_
@@ -50,9 +50,9 @@ typedef enum {
 typedef void (*InterruptHandler)(void);
 
 typedef struct {
-	uint8_t gdoSetting;
-	GDOEdge edge;
-	InterruptHandler handler;
+    uint8_t gdoSetting;
+    GDOEdge edge;
+    InterruptHandler handler;
 } InterruptHandlerDescriptor;
 /*
  * Phy implementation function prototypes

@@ -12,7 +12,7 @@
  * Lesser General Public License for more details.
  *
  * Contributors:
- *     	glenn.ergeerts@uantwerpen.be
+ *         glenn.ergeerts@uantwerpen.be
  *
  */
 

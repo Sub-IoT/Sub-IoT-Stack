@@ -12,7 +12,7 @@
  * Lesser General Public License for more details.
  *
  * Contributors:
- * 		maarten.weyn@uantwerpen.be
+ *         maarten.weyn@uantwerpen.be
  *
  */
 

@@ -328,9 +328,9 @@ extern void TimerA_disableCaptureCompareInterrupt (unsigned int baseAddress,
     unsigned int captureCompareRegister
     );
 extern unsigned long TimerA_getCaptureCompareInterruptStatus (unsigned int baseAddress,
-		 unsigned int captureCompareRegister,
-		 unsigned int mask
-		 );
+         unsigned int captureCompareRegister,
+         unsigned int mask
+         );
 extern void TimerA_clear (unsigned int baseAddress);
 extern unsigned short TimerA_getSynchronizedCaptureCompareInput
     (unsigned int baseAddress,

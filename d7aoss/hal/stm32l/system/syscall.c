@@ -34,7 +34,7 @@ int _write(int file, char *ptr, int len);
  */
 
 int _close(int file) {
-	return -1;
+    return -1;
 }
 
 /*
@@ -120,8 +120,8 @@ int _kill(int pid, int sig) {
  */
 /*
 int _link(char *old, char *new) {
-	errno = EMLINK;
-	return -1;
+    errno = EMLINK;
+    return -1;
 }
 */
 /*

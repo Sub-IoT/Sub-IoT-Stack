@@ -13,7 +13,7 @@
  * \author maarten.weyn@uantwerpen.be
  * \author glenn.ergeerts@uantwerpen.be
  *
- *	\brief High Level API for OSS-7
+ *    \brief High Level API for OSS-7
  *
  *  The high level API to be used by applications which use the dash7 stack
  */
@@ -23,12 +23,12 @@
 
 #define UART // Uncomment if you want to use logging or uart  (6k code size increase)
 #ifdef UART
-	// Set Logging options
-	#define LOG_PHY_ENABLED
-	#define LOG_DLL_ENABLED
-	//#define LOG_NWL_ENABLED
-	//#define LOG_TRANS_ENABLED
-	//#define LOG_FWK_ENABLED
+    // Set Logging options
+    #define LOG_PHY_ENABLED
+    #define LOG_DLL_ENABLED
+    //#define LOG_NWL_ENABLED
+    //#define LOG_TRANS_ENABLED
+    //#define LOG_FWK_ENABLED
 #endif
 
 //#define BUTTONS // Uncomment if you want to use buttons (100 bytes increase)
@@ -61,10 +61,10 @@ extern "C" {
 
 /*! \brief Initializes the stack and HAL
  *
- *  \param uint8_t* tx_buffer 		A pointer to a data array which can be used for the TX Queue
- *  \param uint8_t 	tx_buffer_size 	The size of the TX Buffer
- *  \param uint8_t* rx_buffer 		A pointer to a data array which can be used for the RX Queue
- *  \paral uint8_t*	rx_buffer_size	The size of the RX Buffer
+ *  \param uint8_t* tx_buffer         A pointer to a data array which can be used for the TX Queue
+ *  \param uint8_t     tx_buffer_size     The size of the TX Buffer
+ *  \param uint8_t* rx_buffer         A pointer to a data array which can be used for the RX Queue
+ *  \paral uint8_t*    rx_buffer_size    The size of the RX Buffer
  */
 void d7aoss_init(uint8_t* tx_buffer, uint16_t tx_buffer_size, uint8_t* rx_buffer, uint16_t rx_buffer_size);
 

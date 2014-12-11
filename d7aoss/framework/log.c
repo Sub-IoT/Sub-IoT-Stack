@@ -113,42 +113,42 @@ void log_print_data(uint8_t* message, uint8_t length)
 
 void log_phy_rx_res(phy_rx_data_t* res)
 {
-	// TODO: add channel id and frame_type
-	// transmit the log header
-	uart_transmit_data(0xDD);
-	uart_transmit_data(LOG_TYPE_PHY_RX_RES);
-	uart_transmit_data(LOG_TYPE_PHY_RX_RES_SIZE + res->length);
+    // TODO: add channel id and frame_type
+    // transmit the log header
+    uart_transmit_data(0xDD);
+    uart_transmit_data(LOG_TYPE_PHY_RX_RES);
+    uart_transmit_data(LOG_TYPE_PHY_RX_RES_SIZE + res->length);
 
-	// transmit struct member per member, so we are not dependent on packing
-	uart_transmit_data(res->rssi);
-	uart_transmit_data(res->lqi);
-	uart_transmit_data(res->spectrum_id[1]);
-	uart_transmit_data(res->spectrum_id[0]);
-	uart_transmit_data(res->sync_word_class);
-	uart_transmit_data(res->length);
+    // transmit struct member per member, so we are not dependent on packing
+    uart_transmit_data(res->rssi);
+    uart_transmit_data(res->lqi);
+    uart_transmit_data(res->spectrum_id[1]);
+    uart_transmit_data(res->spectrum_id[0]);
+    uart_transmit_data(res->sync_word_class);
+    uart_transmit_data(res->length);
 
-	// transmit the packet
-	uart_transmit_message(res->data, res->length);
+    // transmit the packet
+    uart_transmit_message(res->data, res->length);
 }
 
 void log_dll_rx_res(dll_rx_res_t* res)
 {
-	uart_transmit_data(0xDD);
-	uart_transmit_data(LOG_TYPE_DLL_RX_RES);
-	uart_transmit_data(LOG_TYPE_DLL_RX_RES_SIZE);
-	uart_transmit_data(res->frame_type);
-	uart_transmit_data(res->spectrum_id[1]);
-	uart_transmit_data(res->spectrum_id[0]);
+    uart_transmit_data(0xDD);
+    uart_transmit_data(LOG_TYPE_DLL_RX_RES);
+    uart_transmit_data(LOG_TYPE_DLL_RX_RES_SIZE);
+    uart_transmit_data(res->frame_type);
+    uart_transmit_data(res->spectrum_id[1]);
+    uart_transmit_data(res->spectrum_id[0]);
 }
 
 #ifdef LOG_TRACE_ENABLED
 void __entry_hook(const char* function_name)
 {
-	log_print_trace("> %s", function_name);
+    log_print_trace("> %s", function_name);
 }
 
 void __exit_hook(const char* function_name)
 {
-	log_print_trace("< %s", function_name);
+    log_print_trace("< %s", function_name);
 }
 #endif

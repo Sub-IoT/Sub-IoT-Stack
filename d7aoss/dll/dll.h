@@ -23,50 +23,50 @@
 #include "../phy/phy.h"
 
 typedef enum {
-	FrameTypeForegroundFrame,
-	FrameTypeBackgroundFrame
+    FrameTypeForegroundFrame,
+    FrameTypeBackgroundFrame
 } Frame_Type;
 
 typedef enum {
-	DllStateNone,
+    DllStateNone,
     DllStateScanBackgroundFrame,
     DllStateScanForegroundFrame
 } Dll_State_Enum;
 
 typedef enum {
-	DLLTxResultOK,
-	DLLTxResultCCA1Fail,
-	DLLTxResultCCA2Fail,
-	DLLTxResultCAFail,
-	DLLTxResultCCAOK,
-	DLLTxResultFail
+    DLLTxResultOK,
+    DLLTxResultCCA1Fail,
+    DLLTxResultCCA2Fail,
+    DLLTxResultCAFail,
+    DLLTxResultCCAOK,
+    DLLTxResultFail
 } Dll_Tx_Result;
 
 // Frame Control
-#define FRAME_CTRL_TARGET	1 << 7
-#define FRAME_CTRL_VID		1 << 6
-#define FRAME_EIRP(VAL)		(VAL & 0x3F)
+#define FRAME_CTRL_TARGET    1 << 7
+#define FRAME_CTRL_VID        1 << 6
+#define FRAME_EIRP(VAL)        (VAL & 0x3F)
 
-#define CHANNEL_GUARD_INTERVAL		5
-#define CHANNEL_SILENCE_INTERVAL	1
+#define CHANNEL_GUARD_INTERVAL        5
+#define CHANNEL_SILENCE_INTERVAL    1
 
 
 typedef struct {
-	uint8_t length;
-	uint8_t subnet;
-	uint8_t control;
-	uint8_t* target_address;
-	uint8_t payload_length;
-	uint8_t* payload;
+    uint8_t length;
+    uint8_t subnet;
+    uint8_t control;
+    uint8_t* target_address;
+    uint8_t payload_length;
+    uint8_t* payload;
 } dll_frame_t;
 
 
 typedef struct
 {
-	uint8_t subnet;				// Subnet
-	uint8_t spectrum_id[2];		// Spectrum ID
-	int8_t 	eirp;				// Transmission power level in dBm ranged [-39, +10]
-	Frame_Type frame_type;		// Frame Type
+    uint8_t subnet;                // Subnet
+    uint8_t spectrum_id[2];        // Spectrum ID
+    int8_t     eirp;                // Transmission power level in dBm ranged [-39, +10]
+    Frame_Type frame_type;        // Frame Type
 } dll_tx_cfg_t;
 
 
@@ -91,23 +91,23 @@ typedef struct
 
 typedef struct
 {
-	uint8_t spectrum_id[2];
-	Frame_Type scan_type; // BF / FF
-	uint16_t timeout_scan_detect; // 0-65535 ti
-	uint16_t time_next_scan; // 0-65535 ti
+    uint8_t spectrum_id[2];
+    Frame_Type scan_type; // BF / FF
+    uint16_t timeout_scan_detect; // 0-65535 ti
+    uint16_t time_next_scan; // 0-65535 ti
 } dll_channel_scan_t;
 
 typedef struct
 {
-	uint8_t length;
-	dll_channel_scan_t* values;
+    uint8_t length;
+    dll_channel_scan_t* values;
 } dll_channel_scan_series_t;
 
 
 typedef enum {
-	DllCsmaCaAind,
-	DllCsmaCaRaind,
-	DllCsmaCaRigd
+    DllCsmaCaAind,
+    DllCsmaCaRaind,
+    DllCsmaCaRigd
 } Dll_CSMA_CA_Type;
 
 

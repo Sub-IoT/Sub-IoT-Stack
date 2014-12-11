@@ -1,8 +1,8 @@
 /*
  *  Created on: Nov 22, 2012
  *  Authors:
- * 		maarten.weyn@artesis.be
- *  	glenn.ergeerts@artesis.be
+ *         maarten.weyn@artesis.be
+ *      glenn.ergeerts@artesis.be
  */
 
 #ifndef CC1101_REGISTERS_H
@@ -47,76 +47,76 @@ RFIFG15 Positive edge: WOR event 1
  */
 
 /*
-0x00	Associated to the RX FIFO: Asserts when RX FIFO is filled at or above the RX FIFO threshold. De-asserts when RX FIFO is drained below the same threshold.
-0x01	Associated to the RX FIFO: Asserts when RX FIFO is filled at or above the RX FIFO threshold or the end of packet is reached. De-asserts when the RX FIFO is empty.
-0x02	Associated to the TX FIFO: Asserts when the TX FIFO is filled at or above the TX FIFO threshold. De-asserts when the TX FIFO is below the same threshold.
-0x03	Associated to the TX FIFO: Asserts when TX FIFO is full. De-asserts when the TX FIFO is drained below the TX FIFO threshold.
-0x04	Asserts when the RX FIFO has overflowed. De-asserts when the FIFO has been flushed.
-0x05	Asserts when the TX FIFO has underflowed. De-asserts when the FIFO is flushed.
-0x06	Asserts when sync word has been sent / received, and de-asserts at the end of the packet. In RX, the pin will also de-assert when a packet is discarded due to address or maximum length filtering or when the radio enters RXFIFO_OVERFLOW state. In TX the pin will de-assert if the TX FIFO underflows.
-0x07	Asserts when a packet has been received with CRC OK. De-asserts when the first byte is read from the RX FIFO.
-0x08	Preamble Quality Reached. Asserts when the PQI is above the programmed PQT value. De-asserted when the chip re- enters RX state (MARCSTATE=0x0D) or the PQI gets below the programmed PQT value.
-0x09	Clear channel assessment. High when RSSI level is below threshold (dependent on the current CCA_MODE setting).
-0x0E	Carrier sense. High if RSSI level is above threshold. Cleared when entering IDLE mode.
-0x24	WOR_EVNT0.
-0x25	WOR_EVNT1.
-0x29	CHIP_RDYn.
-0x2B	XOSC_STABLE
+0x00    Associated to the RX FIFO: Asserts when RX FIFO is filled at or above the RX FIFO threshold. De-asserts when RX FIFO is drained below the same threshold.
+0x01    Associated to the RX FIFO: Asserts when RX FIFO is filled at or above the RX FIFO threshold or the end of packet is reached. De-asserts when the RX FIFO is empty.
+0x02    Associated to the TX FIFO: Asserts when the TX FIFO is filled at or above the TX FIFO threshold. De-asserts when the TX FIFO is below the same threshold.
+0x03    Associated to the TX FIFO: Asserts when TX FIFO is full. De-asserts when the TX FIFO is drained below the TX FIFO threshold.
+0x04    Asserts when the RX FIFO has overflowed. De-asserts when the FIFO has been flushed.
+0x05    Asserts when the TX FIFO has underflowed. De-asserts when the FIFO is flushed.
+0x06    Asserts when sync word has been sent / received, and de-asserts at the end of the packet. In RX, the pin will also de-assert when a packet is discarded due to address or maximum length filtering or when the radio enters RXFIFO_OVERFLOW state. In TX the pin will de-assert if the TX FIFO underflows.
+0x07    Asserts when a packet has been received with CRC OK. De-asserts when the first byte is read from the RX FIFO.
+0x08    Preamble Quality Reached. Asserts when the PQI is above the programmed PQT value. De-asserted when the chip re- enters RX state (MARCSTATE=0x0D) or the PQI gets below the programmed PQT value.
+0x09    Clear channel assessment. High when RSSI level is below threshold (dependent on the current CCA_MODE setting).
+0x0E    Carrier sense. High if RSSI level is above threshold. Cleared when entering IDLE mode.
+0x24    WOR_EVNT0.
+0x25    WOR_EVNT1.
+0x29    CHIP_RDYn.
+0x2B    XOSC_STABLE
  */
 
 // Radio Core Interrupt Flags
-#define GDO_SETTING_RXFilled      	0x00  // RFIFG3 Positive Edge
-#define GDO_EDGE_RXFilled      		GDOEdgeRising
-#define GDO_SETTING_RXDrained  		0x00  // RFIFG3 Negative Edge
-#define GDO_EDGE_RXDrained  		GDOEdgeFalling
-#define GDO_SETTING_RXFilledOrEOP 	0x01  // RFIFG4 Positive Edge
-#define GDO_EDGE_RXFilledOrEOP   	GDOEdgeRising
+#define GDO_SETTING_RXFilled          0x00  // RFIFG3 Positive Edge
+#define GDO_EDGE_RXFilled              GDOEdgeRising
+#define GDO_SETTING_RXDrained          0x00  // RFIFG3 Negative Edge
+#define GDO_EDGE_RXDrained          GDOEdgeFalling
+#define GDO_SETTING_RXFilledOrEOP     0x01  // RFIFG4 Positive Edge
+#define GDO_EDGE_RXFilledOrEOP       GDOEdgeRising
 #define GDO_SETTING_RXEmpty             0x01  // RFIFG4 Negative Edge
-#define GDO_EDGE_RXEmpty    		GDOEdgeFalling
-#define GDO_SETTING_TXFilled      	0x02  // RFIFG5 Positive Edge
-#define GDO_EDGE_TXFilled     	 	GDOEdgeRising
+#define GDO_EDGE_RXEmpty            GDOEdgeFalling
+#define GDO_SETTING_TXFilled          0x02  // RFIFG5 Positive Edge
+#define GDO_EDGE_TXFilled              GDOEdgeRising
 #define GDO_SETTING_TXBelowThresh       0x02  // RFIFG5 Negative Edge
-#define GDO_EDGE_TXBelowThresh  	GDOEdgeFalling
+#define GDO_EDGE_TXBelowThresh      GDOEdgeFalling
 #define GDO_SETTING_TXFull              0x03  // RFIFG6 Positive Edge
-#define GDO_EDGE_TXFull          	GDOEdgeRising
-#define GDO_SETTING_TXDrained     	0x03  // RFIFG6 Negative Edge
-#define GDO_EDGE_TXDrained     		GDOEdgeFalling
+#define GDO_EDGE_TXFull              GDOEdgeRising
+#define GDO_SETTING_TXDrained         0x03  // RFIFG6 Negative Edge
+#define GDO_EDGE_TXDrained             GDOEdgeFalling
 #define GDO_SETTING_RXOverflow          0x04  // RFIFG7 Positive Edge
-#define GDO_EDGE_RXOverflow      	GDOEdgeRising
+#define GDO_EDGE_RXOverflow          GDOEdgeRising
 #define GDO_SETTING_RXFlushed           0x04  // RFIFG7 Negative Edge
-#define GDO_EDGE_RXFlushed       	GDOEdgeFalling
-#define GDO_SETTING_TXUnderflow    	0x05  // RFIFG8 Positive Edge
-#define GDO_EDGE_TXUnderflow   		GDOEdgeRising
+#define GDO_EDGE_RXFlushed           GDOEdgeFalling
+#define GDO_SETTING_TXUnderflow        0x05  // RFIFG8 Positive Edge
+#define GDO_EDGE_TXUnderflow           GDOEdgeRising
 #define GDO_SETTING_TXFlushed           0x05  // RFIFG8 Negative Edge
-#define GDO_EDGE_TXFlushed      	GDOEdgeFalling
+#define GDO_EDGE_TXFlushed          GDOEdgeFalling
 #define GDO_SETTING_SyncWord            0x06  // RFIFG9 Positive Edge
-#define GDO_EDGE_SyncWord       	GDOEdgeRising
+#define GDO_EDGE_SyncWord           GDOEdgeRising
 #define GDO_SETTING_EndOfPacket         0x06  // RFIFG9 Negative Edge
-#define GDO_EDGE_EndOfPacket    	GDOEdgeFalling
-#define GDO_SETTING_CRCOK         	0x07  // RFIFG10 Positive Edge
-#define GDO_EDGE_CRCOK         		GDOEdgeRising
+#define GDO_EDGE_EndOfPacket        GDOEdgeFalling
+#define GDO_SETTING_CRCOK             0x07  // RFIFG10 Positive Edge
+#define GDO_EDGE_CRCOK                 GDOEdgeRising
 #define GDO_SETTING_RXFirstByte         0x07  // RFIFG10 Negative Edge
-#define GDO_EDGE_RXFirstByte    	GDOEdgeFalling
+#define GDO_EDGE_RXFirstByte        GDOEdgeFalling
 #define GDO_SETTING_PQTReached          0x08  // RFIFG11 Positive Edge
-#define GDO_EDGE_PQTReached     	GDOEdgeRising
+#define GDO_EDGE_PQTReached         GDOEdgeRising
 #define GDO_SETTING_LPW                 0x08  // RFIFG11 Negative Edge
-#define GDO_EDGE_LPW            	GDOEdgeFalling
+#define GDO_EDGE_LPW                GDOEdgeFalling
 #define GDO_SETTING_ClearChannel        0x09  // RFIFG12 Positive Edge
-#define GDO_EDGE_ClearChannel   	GDOEdgeRising
+#define GDO_EDGE_ClearChannel       GDOEdgeRising
 #define GDO_SETTING_RSSIAboveThr        0x09  // RFIFG12 Negative Edge
-#define GDO_EDGE_RSSIAboveThr   	GDOEdgeFalling
+#define GDO_EDGE_RSSIAboveThr       GDOEdgeFalling
 #define GDO_SETTING_CarrierSense        0x0E  // RFIFG13 Positive Edge
-#define GDO_EDGE_CarrierSense   	GDOEdgeRising
+#define GDO_EDGE_CarrierSense       GDOEdgeRising
 #define GDO_SETTING_CSRSSIAboveThr      0x0E  // RFIFG13 Negative Edge
-#define GDO_EDGE_CSRSSIAboveThr 	GDOEdgeFalling
+#define GDO_EDGE_CSRSSIAboveThr     GDOEdgeFalling
 #define GDO_SETTING_WOREvent0           0x24  // RFIFG14 Positive Edge
-#define GDO_EDGE_WOREvent0      	GDOEdgeRising
+#define GDO_EDGE_WOREvent0          GDOEdgeRising
 #define GDO_SETTING_WOREvent0ACLK       0x24  // RFIFG14 Negative Edge
-#define GDO_EDGE_WOREvent0ACLK  	GDOEdgeFalling
+#define GDO_EDGE_WOREvent0ACLK      GDOEdgeFalling
 #define GDO_SETTING_WORevent1           0x25  // RFIFG15 Positive Edge
-#define GDO_EDGE_WORevent1      	GDOEdgeRising
+#define GDO_EDGE_WORevent1          GDOEdgeRising
 #define GDO_SETTING_OscStable           0x25  // RFIFG15 Negative Edge
-#define GDO_EDGE_OscStable      	GDOEdgeFalling
+#define GDO_EDGE_OscStable          GDOEdgeFalling
 
 // IOCFGx.GDOx_CFG
 #define RADIO_GDO2_VALUE                0x29            // IOCFG2.GDO2_CFG - RF_RDYn
@@ -133,8 +133,8 @@ RFIFG15 Positive edge: WOR event 1
 #define RADIO_FIFOTHR_FIFO_THR_17_48    (11)             // FIFOTHR.FIFO_THR 17B TX / 48B RX
 #define RADIO_FIFOTHR_FIFO_THR_1_64     (15)            // FIFOTHR.FIFO_THR  1B TX / 64B RX
 
-#define RADIO_SYNC1      				0xE6            // SYNC1
-#define RADIO_SYNC0      				0xD0            // SYNC0
+#define RADIO_SYNC1                      0xE6            // SYNC1
+#define RADIO_SYNC0                      0xD0            // SYNC0
 
 #define RADIO_PKTLEN                    0xFF            // PKTLEN (default)
 

@@ -8,24 +8,24 @@
 
 
 </style>
-	<style type="text/css">
+    <style type="text/css">
 .style1 {
-				text-align: center;
+                text-align: center;
 }
 .style2 {
-				font-weight: normal;
+                font-weight: normal;
 }
 .style3 {
-				text-align: left;
+                text-align: left;
 }
 .style4 {
-				color: #008000;
+                color: #008000;
 }
 .style5 {
-				color: #0000FF;
+                color: #0000FF;
 }
 .style6 {
-				color: #000000;
+                color: #000000;
 }
 </style>
 </head>
@@ -46,15 +46,15 @@ Interface Standard - System View Description (CMSIS - SVD) concept and syntax.</
 
 <p><span style="FONT-WEIGHT: bold">Revision History</span></p>
 <ul>
-	<li>Version 0.91: initial proposal.</li>
-	<li>Version 0.92: revised proposal considering forum feedback (e.g. consider 
-	IP-XACT constructs and naming scheme)</li>
-	<li>Version 1.0: new elements: peripheral version, vendor specific 
-	extension section, interrupt mapping information, global peripheral disable 
-	condition, naming of register arrays, enhanced naming schemes, etc.</li>
-	<li>Version 1.0: SVD versioning and updated schema file</li>
-	<li>Version 1.01: Error corrections in the example code. "include" has been removed. Restricted to one device per file.</li>
-	<li>Version 1.02: Adding the use case of device header file generation.</li>
+    <li>Version 0.91: initial proposal.</li>
+    <li>Version 0.92: revised proposal considering forum feedback (e.g. consider 
+    IP-XACT constructs and naming scheme)</li>
+    <li>Version 1.0: new elements: peripheral version, vendor specific 
+    extension section, interrupt mapping information, global peripheral disable 
+    condition, naming of register arrays, enhanced naming schemes, etc.</li>
+    <li>Version 1.0: SVD versioning and updated schema file</li>
+    <li>Version 1.01: Error corrections in the example code. "include" has been removed. Restricted to one device per file.</li>
+    <li>Version 1.02: Adding the use case of device header file generation.</li>
 </ul>
 
 <p>&nbsp;</p>
@@ -76,48 +76,48 @@ Interface Standard - System View Description (CMSIS - SVD) concept and syntax.</
 
 <p>
   The <strong>Cortex Microcontroller Software Interface Standard - System View 
-	Description</strong> (CMSIS - SVD) answers the challenges
+    Description</strong> (CMSIS - SVD) answers the challenges
   of accurate, detailed and timely device aware peripheral debugging support for Cortex 
-	Microcontroller based devices by the software development 
-	tools vendor community.
+    Microcontroller based devices by the software development 
+    tools vendor community.
 </p>
 <p>
   Silicon vendors shall create and maintain a formalized description of the 
-	debug view for all the peripherals contained in their Cortex 
-	Microcontroller based devices. Tool vendors use such descriptions to 
-	establish device specific debug support in their debugging tools with minimal turn around times and 
-	manageable effort. Device support across many development tools&nbsp; is 
-	essential for silicon provider in order to promote new devices and device 
-	variants entering the market. Device aware debug views provide fast and 
-	convenient access to all registers and fields as well as a detailed 
-	description. This enables software developer to 
-	develop and debug code most efficiently and adopt new devices early and 
-	quickly.</p>
+    debug view for all the peripherals contained in their Cortex 
+    Microcontroller based devices. Tool vendors use such descriptions to 
+    establish device specific debug support in their debugging tools with minimal turn around times and 
+    manageable effort. Device support across many development tools&nbsp; is 
+    essential for silicon provider in order to promote new devices and device 
+    variants entering the market. Device aware debug views provide fast and 
+    convenient access to all registers and fields as well as a detailed 
+    description. This enables software developer to 
+    develop and debug code most efficiently and adopt new devices early and 
+    quickly.</p>
 <p>
   A standardized System View Description shall provide a common approach to 
-	capturing peripheral debug related information in a machine readable files. 
-	The scope of the contained information is agreed to match the level usually 
-	provided by silicon vendors in their device reference manuals, however in a 
-	formalized XML based format. There 
-	are other description languages already available. IP-XACT from the SPIRIT 
-	consortium is a prominent example. IP-XACT covers the register description 
-	sufficiently, however it comprises many other aspects of the devices like 
-	ports, bus-protocols, modeling, tool flows, etc. making a direct use of 
-	IP-XACT too complex. The design of the SVD language is 
-	taking some guidance from IP-XACT thus allowing straight forward conversion 
-	from IP-XACT to CMSIS-SVD where IP-XACT device information is already 
-	available.</p>
+    capturing peripheral debug related information in a machine readable files. 
+    The scope of the contained information is agreed to match the level usually 
+    provided by silicon vendors in their device reference manuals, however in a 
+    formalized XML based format. There 
+    are other description languages already available. IP-XACT from the SPIRIT 
+    consortium is a prominent example. IP-XACT covers the register description 
+    sufficiently, however it comprises many other aspects of the devices like 
+    ports, bus-protocols, modeling, tool flows, etc. making a direct use of 
+    IP-XACT too complex. The design of the SVD language is 
+    taking some guidance from IP-XACT thus allowing straight forward conversion 
+    from IP-XACT to CMSIS-SVD where IP-XACT device information is already 
+    available.</p>
 <p>
   In a second step the CMSIS-SVD description shall be used for automatically 
-	generating CMSIS compliant a device header file. This enables the 
-	information in the header file to be consistent with what the debugger will 
-	display and CMSIS compliant by construction. The header file generation will 
-	require some additional pieces of information and therefore a future version 
-	of the description will need to include some extensions for this purpose.</p>
+    generating CMSIS compliant a device header file. This enables the 
+    information in the header file to be consistent with what the debugger will 
+    display and CMSIS compliant by construction. The header file generation will 
+    require some additional pieces of information and therefore a future version 
+    of the description will need to include some extensions for this purpose.</p>
 <p>
   Device aware debugging support is only one aspect of device 
-	support essential to software development environments, however it is one of 
-	the most time consuming and error prone ones.</p>
+    support essential to software development environments, however it is one of 
+    the most time consuming and error prone ones.</p>
 <h2><a name="2"></a>Motivation</h2>
 <p>
 
@@ -153,15 +153,15 @@ not been made public.&nbsp; </p>
 software developers of Cortex-M based microcontroller devices</p>
 <ul>
   <li>timely and accurate device support provided by a whole range of tool providers </li>
-	<li>tool providers become more efficient in supporting a multitude of devices 
-	and device variants</li>
-	<li>less interaction required between silicon vendors and the  
-	tool providers</li>
-	<li>silicon provider has control over and maintains the System View 
-	Description during the life cycle of the device</li>
-	<li>high quality device support in terms of completeness and correctness of 
-	device aware debugging</li>
-	<li>improved productivity and user experience for the software developer</li>
+    <li>tool providers become more efficient in supporting a multitude of devices 
+    and device variants</li>
+    <li>less interaction required between silicon vendors and the  
+    tool providers</li>
+    <li>silicon provider has control over and maintains the System View 
+    Description during the life cycle of the device</li>
+    <li>high quality device support in terms of completeness and correctness of 
+    device aware debugging</li>
+    <li>improved productivity and user experience for the software developer</li>
 </ul>
 <h2><a name="3"></a>Requirements</h2>
 <p>The debug description shall capture the information about all 
@@ -183,15 +183,15 @@ executed in order to display its current value. The debugger executes a write
 access to a register when a user edits its value. For this purpose the debugger 
 needs to know about the following additional attributes: </p>
 <ul>
-				<li><em>minimal addressable unit </em>= smallest series of bits 
-				identified by a unique address (e.g. byte-addressable memory) </li>
-				<li><em>register size</em> = number of bits forming a register (ARM Cortex-M usually 
-				32 bits)</li>
-				<li><em>access permission</em> = read and write, read only, 
-				write only</li>
-				<li><em>access side effects</em> = accesses by the debugger must 
-				be avoided if it has side effects. Some side effects may be 
-				reversed by the debugger to compensate for the side effect</li>
+                <li><em>minimal addressable unit </em>= smallest series of bits 
+                identified by a unique address (e.g. byte-addressable memory) </li>
+                <li><em>register size</em> = number of bits forming a register (ARM Cortex-M usually 
+                32 bits)</li>
+                <li><em>access permission</em> = read and write, read only, 
+                write only</li>
+                <li><em>access side effects</em> = accesses by the debugger must 
+                be avoided if it has side effects. Some side effects may be 
+                reversed by the debugger to compensate for the side effect</li>
 </ul>
 <p>In many cases peripheral registers are partitioned into chunks of bits of 
 distinct functionality. In this document these chunks are referred to as <em>
@@ -201,12 +201,12 @@ of <em>uniquely named</em> fields (Note: field names are not required to be
 unique across registers). In order for a debugger to extract the 
 value of a field from the corresponding register the following attributes are required:</p>
 <ul>
-				<li><em>most significant bit </em>= highest bit position of the 
-				bit-field in the corresponding register</li>
-				<li><em>least significant bit</em> = lowest bit position of the 
-				bit-field within the corresponding register</li>
-				<li><em>access permission</em> = read and write, read only, 
-				write only</li>
+                <li><em>most significant bit </em>= highest bit position of the 
+                bit-field in the corresponding register</li>
+                <li><em>least significant bit</em> = lowest bit position of the 
+                bit-field within the corresponding register</li>
+                <li><em>access permission</em> = read and write, read only, 
+                write only</li>
 </ul>
 <p>An enumerated value maps a number to a specific descriptive string 
 representing the semantics of the value of a field. The debugger displays the 
@@ -215,56 +215,56 @@ information thus
 avoiding the necessity of a look-up in the device reference manual. Each item of 
 an enumerated value has the following attributes:</p>
 <ul>
-				<li><em>value</em> = value of the bit-field that corresponds to 
-				the string attribute</li>
-				<li><em>name</em> = short string that describes the semantics of a 
-				field when the corresponding value is set</li>
-				<li><em>description</em> = detailed description of the semantics 
-				of the field when the corresponding value is set</li>
+                <li><em>value</em> = value of the bit-field that corresponds to 
+                the string attribute</li>
+                <li><em>name</em> = short string that describes the semantics of a 
+                field when the corresponding value is set</li>
+                <li><em>description</em> = detailed description of the semantics 
+                of the field when the corresponding value is set</li>
 </ul>
 <p>The hierarchical structure of the description looks like this:</p>
 <p><strong>Device =</strong></p>
 <ul>
-	<li>
-		<p>&nbsp;<strong>Peripherals</strong></p>
-		<ul>
-						<li>
-						<p class="style2"><strong>Peripheral</strong></p>
-						<ul>
-										<li>
-										<p class="style2"><strong>Registers</strong></p>
-										<ul>
-														<li>
-														<p class="style2">
-														<strong>Register</strong></p>
-														<ul>
-																		<li>
-																		<p class="style2">
-																		<strong>Fields</strong></p>
-																		<ul>
-																						<li>
-																						<p class="style2"><strong>Field</strong></p>
-																						<ul>
-																										<li>
-																										<p class="style2"><strong>Enumerated Values</strong></p>
-																										<ul>
-																														<li>
-																														<p class="style2"><strong>Enumerated Value</strong></p>
-																														</li>
-																										</ul>
-																										</li>
-																						</ul>
-																						</li>
-																		</ul>
-																		</li>
-														</ul>
-														</li>
-										</ul>
-										</li>
-						</ul>
-						</li>
-		</ul>
-	</li>
+    <li>
+        <p>&nbsp;<strong>Peripherals</strong></p>
+        <ul>
+                        <li>
+                        <p class="style2"><strong>Peripheral</strong></p>
+                        <ul>
+                                        <li>
+                                        <p class="style2"><strong>Registers</strong></p>
+                                        <ul>
+                                                        <li>
+                                                        <p class="style2">
+                                                        <strong>Register</strong></p>
+                                                        <ul>
+                                                                        <li>
+                                                                        <p class="style2">
+                                                                        <strong>Fields</strong></p>
+                                                                        <ul>
+                                                                                        <li>
+                                                                                        <p class="style2"><strong>Field</strong></p>
+                                                                                        <ul>
+                                                                                                        <li>
+                                                                                                        <p class="style2"><strong>Enumerated Values</strong></p>
+                                                                                                        <ul>
+                                                                                                                        <li>
+                                                                                                                        <p class="style2"><strong>Enumerated Value</strong></p>
+                                                                                                                        </li>
+                                                                                                        </ul>
+                                                                                                        </li>
+                                                                                        </ul>
+                                                                                        </li>
+                                                                        </ul>
+                                                                        </li>
+                                                        </ul>
+                                                        </li>
+                                        </ul>
+                                        </li>
+                        </ul>
+                        </li>
+        </ul>
+    </li>
 </ul>
 
 <p>One file can only contain a description for a single device or device family 
@@ -299,13 +299,13 @@ visualize the contained information appropriately. The
 silicon vendor provides details about the device's peripherals that is commonly available. </p>
 <p>System View Description files need to be validated for:</p>
 <ol>
-				<li>syntactical correctness using XML-Schema checking utilities</li>
-				<li>consistency&nbsp; of the provided information (e.g. multiple registers mapped to the same address, 
-				all registers located within the specified address ranges of a 
-				peripheral, all fields are within the range of the register 
-				size, etc.) by a utility developed by ARM (SVDConv.exe)</li>
-				<li>&nbsp;semantical correctness of the System View Description 
-				against the silicon specification executed by the silicon vendor</li>
+                <li>syntactical correctness using XML-Schema checking utilities</li>
+                <li>consistency&nbsp; of the provided information (e.g. multiple registers mapped to the same address, 
+                all registers located within the specified address ranges of a 
+                peripheral, all fields are within the range of the register 
+                size, etc.) by a utility developed by ARM (SVDConv.exe)</li>
+                <li>&nbsp;semantical correctness of the System View Description 
+                against the silicon specification executed by the silicon vendor</li>
 </ol>
 <p>The SVD description format was extended by numerous elements during the 
 review period targeting version 1.0 and new extensions are expected for future 
@@ -320,16 +320,16 @@ CMSIS-SVD. <br>
 
 <p>
   The following section describes the SVD file format in detail. Each subsection 
-	defines a single hierarchy level of the description and lists all mandatory 
-	and optional language elements for that specific level including type 
-	information for each element. Each element is discussed in more detail and a 
-	brief snippet is provided as an example. The sequence of elements shown 
-	below is binding. Optional elements are highlighted in green, blue elements 
-	are mandatory unless they have been already specified globally on a higher 
-	level.</p>
+    defines a single hierarchy level of the description and lists all mandatory 
+    and optional language elements for that specific level including type 
+    information for each element. Each element is discussed in more detail and a 
+    brief snippet is provided as an example. The sequence of elements shown 
+    below is binding. Optional elements are highlighted in green, blue elements 
+    are mandatory unless they have been already specified globally on a higher 
+    level.</p>
 <p>
   An XML-schema file is provided alongside this document for syntactical 
-	checking of descriptions being developed.</p>
+    checking of descriptions being developed.</p>
 <h4>&lt;device schemaVersion=&quot;xs:decimal&quot; <span class="style2"><em>xmlns:xs=&quot;http://www.w3.org/2001/XMLSchema-instance&quot; xs:noNamespaceSchemaLocation=&quot;CMSIS-SVD_Schema_1_0.xsd</em></span>&quot;&gt;</h4>
 <p>&nbsp;&nbsp; &lt;<span class="style2">name&gt;<em>xs:Name</em>&lt;/name&gt;<br>
 &nbsp;&nbsp; &lt;version<em>&gt;xs:string&lt;</em>/version&gt;<br>
@@ -830,10 +830,10 @@ to read the field unless explicitly instructed by user.</p>
          &lt;field&gt;
            &lt;name&gt;TimerCtrl0_IntSel&lt;/name&gt;
            &lt;description&gt;Select interrupt line t<span class="style8">hat is triggered by timer overflow</span>.&lt;/description&gt;
-	   &lt;bitOffset&gt;1&lt;/bitOffset&gt;
+       &lt;bitOffset&gt;1&lt;/bitOffset&gt;
            &lt;bitWidth&gt;3&lt;/bitWidth&gt;
            &lt;access&gt;read-write&lt;/access&gt;
-	   &lt;resetValue&gt;0x0&lt;/resetValue&gt;
+       &lt;resetValue&gt;0x0&lt;/resetValue&gt;
            &lt;modifiedWriteValues&gt;oneToSet&lt;/modifiedWriteValues&gt;
            &lt;writeConstraint&gt;
               &lt;range&gt;
@@ -889,7 +889,7 @@ depending whether it is to be used for a read or a write access. If not specifie
               ...
               &lt;enumeratedValue&gt;
                 &lt;name&gt;reserved&lt;/name&gt;
-	        &lt;description&gt;reserved values. Do not use&lt;/description&gt;
+            &lt;description&gt;reserved values. Do not use&lt;/description&gt;
                 &lt;isDefault&gt;true&lt;/isDefault&gt;
               &lt;/enumeratedValue&gt;
            &lt;/enumeratedValues&gt;
@@ -940,15 +940,15 @@ of the value defined for this enumeratedValue in full detail.</p>
 <h4>Constants</h4>
 <p>Number constants shall be entered in hexadecimal, decimal or binary format.</p>
 <ul>
-				<li>hexadecimal is indicated by a leading &quot;0x&quot;</li>
-				<li>binary format is indicated by a leading&nbsp; &quot;#&quot;</li>
-				<li>all other formats are interpreted as decimal numbers</li>
-				<li>the value tag in enumeratedValue accepts do not care bits 
-				represented by &quot;x&quot;</li>
+                <li>hexadecimal is indicated by a leading &quot;0x&quot;</li>
+                <li>binary format is indicated by a leading&nbsp; &quot;#&quot;</li>
+                <li>all other formats are interpreted as decimal numbers</li>
+                <li>the value tag in enumeratedValue accepts do not care bits 
+                represented by &quot;x&quot;</li>
 </ul>
 <h4><b>Comments</b> </h4>
 <p>Comments have the standard XML format <strong>&quot;&lt;!--&quot;</strong> starts a comment
-	<strong><span class="style2">&quot;--&gt;&quot;</span></strong> terminates a comment</p>
+    <strong><span class="style2">&quot;--&gt;&quot;</span></strong> terminates a comment</p>
 <h2>Example</h2>
 <pre>
 &lt;?xml version=&quot;1.0&quot; encoding=&quot;utf-8&quot;?&gt;
@@ -1010,7 +1010,7 @@ of the value defined for this enumeratedValue in full detail.</p>
               &lt;bitOffset&gt;0&lt;/bitOffset&gt;
               &lt;bitWidth&gt;1&lt;/bitWidth&gt;
               &lt;!-- Writing 1 enables, writing 0 has no effect --&gt;
-	      &lt;modifiedWriteValues&gt;oneToSet&lt;/modifiedWriteValues&gt;
+          &lt;modifiedWriteValues&gt;oneToSet&lt;/modifiedWriteValues&gt;
               &lt;!-- The write constraint is defined to be that only the values provided by the enumeratedValues below are allowed --&gt;
               &lt;writeConstraint&gt;
                 &lt;useEnumeratedValues&gt;true&lt;/useEnumeratedValues&gt;
@@ -1040,7 +1040,7 @@ of the value defined for this enumeratedValue in full detail.</p>
               &lt;bitOffset&gt;1&lt;/bitOffset&gt;
               &lt;bitWidth&gt;1&lt;/bitWidth&gt;
               &lt;!-- Writing 1 sets, writing 0 has no effect --&gt;
-	      &lt;modifiedWriteValues&gt;oneToSet&lt;/modifiedWriteValues&gt;
+          &lt;modifiedWriteValues&gt;oneToSet&lt;/modifiedWriteValues&gt;
               &lt;!-- The write constraint is defined to be that only the values provided by the enumeratedValues below are allowed --&gt;
               &lt;writeConstraint&gt;
                 &lt;useEnumeratedValues&gt;true&lt;/useEnumeratedValues&gt;

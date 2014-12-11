@@ -1,7 +1,7 @@
 /*
  *  Created on: October 7, 2014
  *  Authors:
- *  	jeremie@wizzilab.com
+ *      jeremie@wizzilab.com
  */
 #include <stdbool.h>
 #include <stdint.h>

@@ -35,7 +35,7 @@ uint8_t Strobe(uint8_t strobe) {
 
     uint8_t statusByte = 0;
     uint8_t strobe_tmp = strobe & 0x7F;
-//	uint16_t int_state;
+//    uint16_t int_state;
 
     // Check for valid strobe command
     if ((strobe_tmp >= RF_SRES) && (strobe_tmp <= RF_SNOP))
@@ -80,7 +80,7 @@ void ResetRadioCore(void) {
 // @return      none
 // *****************************************************************************
 void WriteRfSettings(RF_SETTINGS *rfsettings) {
-	WriteBurstReg(IOCFG2, (unsigned char*) rfsettings, sizeof(RF_SETTINGS));
+    WriteBurstReg(IOCFG2, (unsigned char*) rfsettings, sizeof(RF_SETTINGS));
 }
 
 
@@ -106,14 +106,14 @@ static uint8_t readstatus(uint8_t addr)
 
     // See CC1101's Errata for SPI read errors
     while (true) {
-    	retCheck = spi_byte(addr);
+        retCheck = spi_byte(addr);
         data2 = spi_byte(0);
-    	if (ret == retCheck && data == data2)
-    		break;
-    	else {
-    		ret = retCheck;
-    		data = data2;
-    	}
+        if (ret == retCheck && data == data2)
+            break;
+        else {
+            ret = retCheck;
+            data = data2;
+        }
     }
     spi_deselect_chip();
 
@@ -202,22 +202,22 @@ void WriteBurstReg(uint8_t addr, uint8_t* buffer, uint8_t count) {
 // *****************************************************************************
 // @fn          WritePATable
 // @brief       Write data to power table
-// @param       unsigned char value		Value to write
+// @param       unsigned char value        Value to write
 // @return      none
 // *****************************************************************************
 void WriteSinglePATable(uint8_t value) {
-	WriteSingleReg(PATABLE, value);
+    WriteSingleReg(PATABLE, value);
 }
 
 // *****************************************************************************
 // @fn          WritePATable
 // @brief       Write to multiple locations in power table 
-// @param       unsigned char *buffer	Pointer to the table of values to be written 
-// @param       unsigned char count	Number of values to be written
+// @param       unsigned char *buffer    Pointer to the table of values to be written 
+// @param       unsigned char count    Number of values to be written
 // @return      none
 // *****************************************************************************
 void WriteBurstPATable(uint8_t* buffer, uint8_t count) {
-	WriteBurstReg(PATABLE, buffer, count);
+    WriteBurstReg(PATABLE, buffer, count);
 }
 
 

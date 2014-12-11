@@ -181,7 +181,7 @@ void TimerB_configureContinuousMode ( unsigned int baseAddress,
 
     HWREG(baseAddress +
         OFS_TBxCTL) &= ~(TIMERB_CLOCKSOURCE_INVERTED_EXTERNAL_TXCLK +
-        				 TIMERB_STOP_MODE +
+                         TIMERB_STOP_MODE +
                          TIMERB_DO_CLEAR +
                          TIMERB_TBIE_INTERRUPT_ENABLE +
                          CNTL_3
@@ -392,7 +392,7 @@ void TimerB_configureUpDownMode (
           );
 
     HWREG(baseAddress + OFS_TBxCTL)  |= ( clockSource +
-    									  TIMERB_STOP_MODE +
+                                          TIMERB_STOP_MODE +
                                           timerClear +
                                           timerInterruptEnable_TBIE
                                           );
@@ -571,7 +571,7 @@ void TimerB_startContinousMode ( unsigned int baseAddress,
     unsigned int timerClear
     )
 {
-	TimerB_startContinuousMode (baseAddress,
+    TimerB_startContinuousMode (baseAddress,
     clockSource,
     clockSourceDivider,
     timerInterruptEnable_TBIE,
@@ -1126,9 +1126,9 @@ void TimerB_disableCaptureCompareInterrupt (unsigned int baseAddress,
 //
 //*****************************************************************************
 unsigned long TimerB_getCaptureCompareInterruptStatus (unsigned int baseAddress,
-		 unsigned int captureCompareRegister,
-		 unsigned int mask
-		 )
+         unsigned int captureCompareRegister,
+         unsigned int mask
+         )
 {
     return ( HWREG(baseAddress + captureCompareRegister) & mask );
 }
@@ -1636,18 +1636,18 @@ void TimerB_clearCaptureCompareInterruptFlag (unsigned int baseAddress,
 //
 //*****************************************************************************
 void TimerB_selectCounterLength (unsigned int  baseAddress,
-		unsigned int counterLength
-		)
+        unsigned int counterLength
+        )
 {
-	ASSERT((TIMERB_COUNTER_8BIT == counterLength) ||
-	        (TIMERB_COUNTER_10BIT == counterLength) ||
-	        (TIMERB_COUNTER_12BIT == counterLength) ||
-	        (TIMERB_COUNTER_16BIT == counterLength)
-	        );
+    ASSERT((TIMERB_COUNTER_8BIT == counterLength) ||
+            (TIMERB_COUNTER_10BIT == counterLength) ||
+            (TIMERB_COUNTER_12BIT == counterLength) ||
+            (TIMERB_COUNTER_16BIT == counterLength)
+            );
 
 
-	HWREG(baseAddress + OFS_TBxCTL) &= ~CNTL_3;
-	HWREG(baseAddress + OFS_TBxCTL) |= counterLength;
+    HWREG(baseAddress + OFS_TBxCTL) &= ~CNTL_3;
+    HWREG(baseAddress + OFS_TBxCTL) |= counterLength;
 }
 //*****************************************************************************
 //
@@ -1667,17 +1667,17 @@ void TimerB_selectCounterLength (unsigned int  baseAddress,
 //
 //*****************************************************************************
 void TimerB_selectLatchingGroup(unsigned int  baseAddress,
-		unsigned int  groupLatch)
+        unsigned int  groupLatch)
 {
-	ASSERT((TIMERB_GROUP_NONE  == groupLatch) ||
-		   (TIMERB_GROUP_CL12_CL23_CL56 == groupLatch) ||
-		   (TIMERB_GROUP_CL123_CL456 == groupLatch) ||
-		   (TIMERB_GROUP_ALL == groupLatch)
-		   );
+    ASSERT((TIMERB_GROUP_NONE  == groupLatch) ||
+           (TIMERB_GROUP_CL12_CL23_CL56 == groupLatch) ||
+           (TIMERB_GROUP_CL123_CL456 == groupLatch) ||
+           (TIMERB_GROUP_ALL == groupLatch)
+           );
 
 
-	HWREG(baseAddress + OFS_TBxCTL) &= ~TBCLGRP_3;
-	HWREG(baseAddress + OFS_TBxCTL) |= groupLatch;
+    HWREG(baseAddress + OFS_TBxCTL) &= ~TBCLGRP_3;
+    HWREG(baseAddress + OFS_TBxCTL) |= groupLatch;
 }
 //*****************************************************************************
 //
@@ -1706,18 +1706,18 @@ void TimerB_selectLatchingGroup(unsigned int  baseAddress,
 //
 //*****************************************************************************
 void TimerB_initCompareLatchLoadEvent(unsigned int  baseAddress,
-		unsigned int  compareRegister,
-		unsigned int  compareLatchLoadEvent
-		)
+        unsigned int  compareRegister,
+        unsigned int  compareLatchLoadEvent
+        )
 {
-	ASSERT((TIMERB_LATCH_ON_WRITE_TO_TBxCCRn_COMPARE_REGISTER  == groupLatch) ||
-		(TIMERB_LATCH_WHEN_COUNTER_COUNTS_TO_0_IN_UP_OR_CONT_MODE == groupLatch) ||
-		(TIMERB_LATCH_WHEN_COUNTER_COUNTS_TO_0_IN_UPDOWN_MODE == groupLatch) ||
-		(TIMERB_LATCH_WHEN_COUNTER_COUNTS_TO_CURRENT_COMPARE_LATCH_VALUE == groupLatch)
-		);
+    ASSERT((TIMERB_LATCH_ON_WRITE_TO_TBxCCRn_COMPARE_REGISTER  == groupLatch) ||
+        (TIMERB_LATCH_WHEN_COUNTER_COUNTS_TO_0_IN_UP_OR_CONT_MODE == groupLatch) ||
+        (TIMERB_LATCH_WHEN_COUNTER_COUNTS_TO_0_IN_UPDOWN_MODE == groupLatch) ||
+        (TIMERB_LATCH_WHEN_COUNTER_COUNTS_TO_CURRENT_COMPARE_LATCH_VALUE == groupLatch)
+        );
 
-	HWREG(baseAddress + compareRegister)  &= ~CLLD_3;
-	HWREG(baseAddress + compareRegister)  |= compareLatchLoadEvent;
+    HWREG(baseAddress + compareRegister)  &= ~CLLD_3;
+    HWREG(baseAddress + compareRegister)  |= compareLatchLoadEvent;
 }
 
 //*****************************************************************************

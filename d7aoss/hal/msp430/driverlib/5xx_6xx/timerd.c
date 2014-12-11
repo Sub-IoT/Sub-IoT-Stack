@@ -89,7 +89,7 @@ void TimerD_startCounter ( unsigned int baseAddress,
 //!         \b TIMERD_CLOCKSOURCE_SMCLK
 //!         \b TIMERD_CLOCKSOURCE_INVERTED_EXTERNAL_TDCLK
 //! \param clockSourceDivider is the divider for Clock source.
-//! 	Valid values are
+//!     Valid values are
 //!        \b TIMERD_CLOCKSOURCE_DIVIDER_1 [Default value]
 //!        \b TIMERD_CLOCKSOURCE_DIVIDER_2
 //!        \b TIMERD_CLOCKSOURCE_DIVIDER_4
@@ -114,7 +114,7 @@ void TimerD_startCounter ( unsigned int baseAddress,
 //! Valid values are
 //!     \b TIMERD_CLOCKINGMODE_EXTERNAL_CLOCK [Default value]
 //!     \b TIMERD_CLOCKINGMODE_HIRES_LOCAL_CLOCK
-//!	\b TIMERD_CLOCKINGMODE_AUXILIARY_CLK
+//!    \b TIMERD_CLOCKINGMODE_AUXILIARY_CLK
 //! \param timerInterruptEnable_TDIE is to enable or disable timer interrupt
 //!        Valid values are
 //!        \b TIMERD_TDIE_INTERRUPT_ENABLE
@@ -190,7 +190,7 @@ void TimerD_configureContinuousMode ( unsigned int baseAddress,
 
     HWREG(baseAddress +
         OFS_TDxCTL0) &= ~(TIMERD_CLOCKSOURCE_INVERTED_EXTERNAL_TDCLK +
-        				 TIMERD_STOP_MODE +
+                         TIMERD_STOP_MODE +
                          TIMERD_DO_CLEAR +
                          TIMERD_TDIE_INTERRUPT_ENABLE
                          );
@@ -198,14 +198,14 @@ void TimerD_configureContinuousMode ( unsigned int baseAddress,
     HWREG(baseAddress + OFS_TDxCTL1)  &= ~(TDCLKM0 + TDCLKM1);
     
     privateTimerDProcessClockSourceDivider(baseAddress,
-    		        clockSourceDivider
-    		        );
+                    clockSourceDivider
+                    );
     HWREG(baseAddress + OFS_TDxCTL0)  |=  clockSource;
     HWREG(baseAddress + OFS_TDxCTL1) |= clockingMode;
   
     HWREG(baseAddress + OFS_TDxCTL0)  |= ( TIMERD_CONTINUOUS_MODE +
-        	                                          timerClear +
-        	                                          timerInterruptEnable_TDIE);
+                                                      timerClear +
+                                                      timerInterruptEnable_TDIE);
 
 }
 //*****************************************************************************
@@ -219,7 +219,7 @@ void TimerD_configureContinuousMode ( unsigned int baseAddress,
 //!         \b TIMERD_CLOCKSOURCE_SMCLK
 //!         \b TIMERD_CLOCKSOURCE_INVERTED_EXTERNAL_TDCLK
 //! \param clockSourceDivider is the divider for Clock source.
-//! 	Valid values are
+//!     Valid values are
 //!        \b TIMERD_CLOCKSOURCE_DIVIDER_1 [Default value]
 //!        \b TIMERD_CLOCKSOURCE_DIVIDER_2
 //!        \b TIMERD_CLOCKSOURCE_DIVIDER_4
@@ -244,7 +244,7 @@ void TimerD_configureContinuousMode ( unsigned int baseAddress,
 //! Valid values are
 //!     \b TIMERD_CLOCKINGMODE_EXTERNAL_CLOCK [Default value]
 //!     \b TIMERD_CLOCKINGMODE_HIRES_LOCAL_CLOCK
-//!	\b TIMERD_CLOCKINGMODE_AUXILIARY_CLK
+//!    \b TIMERD_CLOCKINGMODE_AUXILIARY_CLK
 //! \param timerPeriod is the specified timer period. This is the value that gets
 //!         written into the CCR0. Limited to 16 bits[unsigned int]
 //! \param timerInterruptEnable_TDIE is to enable or disable timer interrupt
@@ -331,8 +331,8 @@ void TimerD_configureUpMode (   unsigned int baseAddress,
     HWREG(baseAddress + OFS_TDxCTL1)  &= ~(TDCLKM0 + TDCLKM1);
 
     privateTimerDProcessClockSourceDivider(baseAddress,
-    		        clockSourceDivider
-    		        );
+                    clockSourceDivider
+                    );
     HWREG(baseAddress + OFS_TDxCTL0)  |=  clockSource;
     HWREG(baseAddress + OFS_TDxCTL1) |= clockingMode;
 
@@ -362,7 +362,7 @@ void TimerD_configureUpMode (   unsigned int baseAddress,
 //!         \b TIMERD_CLOCKSOURCE_SMCLK
 //!         \b TIMERD_CLOCKSOURCE_INVERTED_EXTERNAL_TDCLK
 //! \param clockSourceDivider is the divider for Clock source.
-//! 	Valid values are
+//!     Valid values are
 //!        \b TIMERD_CLOCKSOURCE_DIVIDER_1 [Default value]
 //!        \b TIMERD_CLOCKSOURCE_DIVIDER_2
 //!        \b TIMERD_CLOCKSOURCE_DIVIDER_4
@@ -387,7 +387,7 @@ void TimerD_configureUpMode (   unsigned int baseAddress,
 //! Valid values are
 //!     \b TIMERD_CLOCKINGMODE_EXTERNAL_CLOCK [Default value]
 //!     \b TIMERD_CLOCKINGMODE_HIRES_LOCAL_CLOCK
-//!	\b TIMERD_CLOCKINGMODE_AUXILIARY_CLK
+//!    \b TIMERD_CLOCKINGMODE_AUXILIARY_CLK
 //! \param timerPeriod is the specified timer period
 //! \param timerInterruptEnable_TDIE is to enable or disable timer interrupt
 //!        Valid values are
@@ -421,7 +421,7 @@ void TimerD_configureUpDownMode (
     unsigned int timerClear
     )
 {
-	
+    
     ASSERT(
         (TIMERD_DO_CLEAR == timerClear) ||
         (TIMERD_SKIP_CLEAR == timerClear)
@@ -474,8 +474,8 @@ void TimerD_configureUpDownMode (
     HWREG(baseAddress + OFS_TDxCTL1)  &= ~(TDCLKM0 + TDCLKM1);
 
     privateTimerDProcessClockSourceDivider(baseAddress,
-    		        clockSourceDivider
-    		        );
+                    clockSourceDivider
+                    );
     HWREG(baseAddress + OFS_TDxCTL0)  |=  clockSource;
     HWREG(baseAddress + OFS_TDxCTL1) |= clockingMode;
 
@@ -539,7 +539,7 @@ void TimerD_configureUpDownMode (
 //!        \b TIMERD_OUTPUTMODE_TOGGLE_SET,
 //!        \b TIMERD_OUTPUTMODE_RESET_SET
 //! \param channelCaptureMode specifies single/dual capture mode.
-//!		Valid values are
+//!        Valid values are
 //!        \b TIMERD_SINGLE_CAPTURE_MODE [Default value],
 //!        \b TIMERD_DUAL_CAPTURE_MODE
 //!
@@ -613,7 +613,7 @@ void TimerD_initCapture (unsigned int baseAddress,
     HWREG(baseAddress + captureRegister ) |=   CAP;
 
     HWREGB(baseAddress + OFS_TDxCTL2) |=
-    		(channelCaptureMode << ((captureRegister - TIMERD_CAPTURECOMPARE_REGISTER_0)/6));
+            (channelCaptureMode << ((captureRegister - TIMERD_CAPTURECOMPARE_REGISTER_0)/6));
 
     HWREG(baseAddress + captureRegister) &=
         ~(TIMERD_CAPTUREMODE_RISING_AND_FALLING_EDGE +
@@ -756,7 +756,7 @@ void TimerD_enableTimerInterrupt (unsigned int baseAddress)
 //
 //*****************************************************************************
 void TimerD_enableHighResInterrupt (unsigned int baseAddress,
-				unsigned int mask)
+                unsigned int mask)
 {
     HWREG(baseAddress + OFS_TDxHINT) &=  ~(mask >> 8);
     HWREG(baseAddress + OFS_TDxHINT) |= mask;
@@ -796,7 +796,7 @@ void TimerD_disableTimerInterrupt (unsigned int baseAddress)
 //
 //*****************************************************************************
 void TimerD_disableHighResInterrupt (unsigned int baseAddress,
-						unsigned int mask)
+                        unsigned int mask)
 {
     HWREG(baseAddress + OFS_TDxHINT) &= ~mask;
 }
@@ -888,11 +888,11 @@ void TimerD_disableCaptureCompareInterrupt (unsigned int baseAddress,
 //
 //*****************************************************************************
 unsigned long TimerD_getCaptureCompareInterruptStatus (unsigned int baseAddress,
-	    unsigned int captureCompareRegister,
-	    unsigned int mask
-	    )
+        unsigned int captureCompareRegister,
+        unsigned int mask
+        )
 {
-	return ( HWREG(baseAddress + captureCompareRegister) & mask );
+    return ( HWREG(baseAddress + captureCompareRegister) & mask );
 }
 
 //*****************************************************************************
@@ -915,7 +915,7 @@ unsigned long TimerD_getCaptureCompareInterruptStatus (unsigned int baseAddress,
 unsigned int TimerD_getHighResInterruptStatus (unsigned int baseAddress,
     unsigned int mask)
 {
-	mask = (mask >> 8);
+    mask = (mask >> 8);
     return ( (HWREG(baseAddress + OFS_TDxHINT) & mask) << 8 );
 }
 //*****************************************************************************
@@ -953,8 +953,8 @@ void TimerD_clear (unsigned int baseAddress)
 void TimerD_clearHighResInterruptStatus (unsigned int baseAddress,
     unsigned int mask)
 {
-	mask = (mask >> 8);
-	HWREG(baseAddress + OFS_TDxHINT) &= ~mask;
+    mask = (mask >> 8);
+    HWREG(baseAddress + OFS_TDxHINT) &= ~mask;
 }
 
 //*****************************************************************************
@@ -1057,7 +1057,7 @@ unsigned char TimerD_getOutputForOutputModeOutBitValue
 //!
 //! \param baseAddress is the base address of the Timer module.
 //! \param captureCompareRegister selects the Capture register being used.
-//!	Valid values are
+//!    Valid values are
 //!     \b TIMERD_CAPTURECOMPARE_REGISTER_0
 //!     \b TIMERD_CAPTURECOMPARE_REGISTER_1
 //!     \b TIMERD_CAPTURECOMPARE_REGISTER_2
@@ -1095,7 +1095,7 @@ unsigned int TimerD_getCaptureCompareCount
 //!
 //! \param baseAddress is the base address of the Timer module.
 //! \param captureCompareRegister selects the Capture register being used.
-//!	Valid values
+//!    Valid values
 //!     are
 //!     \b TIMERD_CAPTURECOMPARE_REGISTER_0
 //!     \b TIMERD_CAPTURECOMPARE_REGISTER_1
@@ -1145,7 +1145,7 @@ unsigned int TimerD_getCaptureCompareLatchCount
 //!    being used
 //!
 //! \return current input signal  as TIMERD_CAPTURECOMPARE_INPUT
-//!		or 0x00
+//!        or 0x00
 //! Modifed Registers None
 //
 //*****************************************************************************
@@ -1171,7 +1171,7 @@ unsigned char TimerD_getCaptureCompareInputSignal
 //!
 //! \param baseAddress is the base address of the Timer module.
 //! \param captureCompareRegister selects the Capture register being used.
-//!	Valid values are
+//!    Valid values are
 //!     \b TIMERD_CAPTURECOMPARE_REGISTER_0
 //!     \b TIMERD_CAPTURECOMPARE_REGISTER_1
 //!     \b TIMERD_CAPTURECOMPARE_REGISTER_2
@@ -1224,7 +1224,7 @@ void TimerD_setOutputForOutputModeOutBitValue
 //!         \b TIMERD_CLOCKSOURCE_SMCLK
 //!         \b TIMERD_CLOCKSOURCE_INVERTED_EXTERNAL_TDCLK
 //! \param clockSourceDivider is the divider for Clock source.
-//! 	Valid values are
+//!     Valid values are
 //!        \b TIMERD_CLOCKSOURCE_DIVIDER_1 [Default value]
 //!        \b TIMERD_CLOCKSOURCE_DIVIDER_2
 //!        \b TIMERD_CLOCKSOURCE_DIVIDER_4
@@ -1249,7 +1249,7 @@ void TimerD_setOutputForOutputModeOutBitValue
 //! Valid values are
 //!     \b TIMERD_CLOCKINGMODE_EXTERNAL_CLOCK [Default value]
 //!     \b TIMERD_CLOCKINGMODE_HIRES_LOCAL_CLOCK
-//!	\b TIMERD_CLOCKINGMODE_AUXILIARY_CLK
+//!    \b TIMERD_CLOCKINGMODE_AUXILIARY_CLK
 //! \param timerPeriod selects the desired timer period
 //! \param compareRegister selects the compare register being used. Valid values
 //!     are
@@ -1274,7 +1274,7 @@ void TimerD_setOutputForOutputModeOutBitValue
 //! \param dutyCycle specifies the dutycycle for the generated waveform
 //!
 //! Modified registers are \b TDxCTL0, \b TDxCTL1, \b TDxCCR0,
-//!						   \b TDxCCTL0,\b TDxCCTLn
+//!                           \b TDxCCTL0,\b TDxCCTLn
 //!
 //! \return None
 //
@@ -1356,8 +1356,8 @@ void TimerD_generatePWM (  unsigned int baseAddress,
 
 
     privateTimerDProcessClockSourceDivider(baseAddress,
-    		        clockSourceDivider
-    		        );
+                    clockSourceDivider
+                    );
     HWREG(baseAddress + OFS_TDxCTL0)  |=  clockSource;
     HWREG(baseAddress + OFS_TDxCTL1) |= clockingMode;
 
@@ -1565,68 +1565,68 @@ void TimerD_clearCaptureCompareInterruptFlag (unsigned int baseAddress,
 //
 //*****************************************************************************
 unsigned char TimerD_configureHighResGeneratorInFreeRunningMode 
-	(unsigned int baseAddress,
+    (unsigned int baseAddress,
     unsigned char desiredHighResFrequency
     )
 {
-	struct s_TLV_Timer_D_Cal_Data * pTD0CAL; 
-  	unsigned char TD0CAL_bytes;   
-  	
-  	ASSERT((TIMERD_HIGHRES_64MHZ == desiredHighResFrequency) ||
+    struct s_TLV_Timer_D_Cal_Data * pTD0CAL; 
+      unsigned char TD0CAL_bytes;   
+      
+      ASSERT((TIMERD_HIGHRES_64MHZ == desiredHighResFrequency) ||
         (TIMERD_HIGHRES_128MHZ == desiredHighResFrequency) ||
         (TIMERD_HIGHRES_200MHZ == desiredHighResFrequency) ||
         (TIMERD_HIGHRES_256MHZ == desiredHighResFrequency)        
         );
-  	
-  	// Read the TimerD TLV Data
-	TLV_getInfo(TLV_TIMER_D_CAL, 
+      
+      // Read the TimerD TLV Data
+    TLV_getInfo(TLV_TIMER_D_CAL, 
               0, 
               &TD0CAL_bytes, 
               (unsigned int **)&pTD0CAL
               );
               
-	if(0x00 == TD0CAL_bytes)
-  	{
-    	// No TimerD free running cal data found
-      	return STATUS_FAIL;
-  	}  
-  	
-	HWREG(baseAddress + OFS_TDxHCTL1) = TDHCLKTRIM6;
-  	HWREG(baseAddress + OFS_TDxCTL1) = 0x00;
-  	HWREG(baseAddress + OFS_TDxHCTL0) = 0x00;
+    if(0x00 == TD0CAL_bytes)
+      {
+        // No TimerD free running cal data found
+          return STATUS_FAIL;
+      }  
+      
+    HWREG(baseAddress + OFS_TDxHCTL1) = TDHCLKTRIM6;
+      HWREG(baseAddress + OFS_TDxCTL1) = 0x00;
+      HWREG(baseAddress + OFS_TDxHCTL0) = 0x00;
 
-  	switch( desiredHighResFrequency )
-  	{
-  		case TIMERD_HIGHRES_64MHZ:
-  			HWREG(baseAddress + OFS_TDxHCTL1) = pTD0CAL->TDH0CTL1_64; 
-  			break;
-  			
-  		case TIMERD_HIGHRES_128MHZ:
-  			HWREG(baseAddress + OFS_TDxHCTL1) = pTD0CAL->TDH0CTL1_128; 
-  			break;
-  			
-  		case TIMERD_HIGHRES_200MHZ:
-  			HWREG(baseAddress + OFS_TDxHCTL1) = pTD0CAL->TDH0CTL1_200;
-  			break;
-  			 
-  		case TIMERD_HIGHRES_256MHZ:
-  			HWREG(baseAddress + OFS_TDxHCTL1) = pTD0CAL->TDH0CTL1_256;
-  			break; 
-  	}
-  	
+      switch( desiredHighResFrequency )
+      {
+          case TIMERD_HIGHRES_64MHZ:
+              HWREG(baseAddress + OFS_TDxHCTL1) = pTD0CAL->TDH0CTL1_64; 
+              break;
+              
+          case TIMERD_HIGHRES_128MHZ:
+              HWREG(baseAddress + OFS_TDxHCTL1) = pTD0CAL->TDH0CTL1_128; 
+              break;
+              
+          case TIMERD_HIGHRES_200MHZ:
+              HWREG(baseAddress + OFS_TDxHCTL1) = pTD0CAL->TDH0CTL1_200;
+              break;
+               
+          case TIMERD_HIGHRES_256MHZ:
+              HWREG(baseAddress + OFS_TDxHCTL1) = pTD0CAL->TDH0CTL1_256;
+              break; 
+      }
+      
 
 
-	// Select Hi-res local clock
-  	HWREG(baseAddress + OFS_TDxCTL1) |= TDCLKM_1;
-  	        
+    // Select Hi-res local clock
+      HWREG(baseAddress + OFS_TDxCTL1) |= TDCLKM_1;
+              
     // CALEN=0 => free running mode; enable Hi-res mode
- 	if(TIMERD_HIGHRES_256MHZ == desiredHighResFrequency)
-  		HWREG(baseAddress + OFS_TDxHCTL0) |= TDHM_1;
-  	
-  	HWREG(baseAddress + OFS_TDxHCTL0) |= TDHEN; 
-  							
-  	   
-  	return STATUS_SUCCESS;
+     if(TIMERD_HIGHRES_256MHZ == desiredHighResFrequency)
+          HWREG(baseAddress + OFS_TDxHCTL0) |= TDHM_1;
+      
+      HWREG(baseAddress + OFS_TDxHCTL0) |= TDHEN; 
+                              
+         
+      return STATUS_SUCCESS;
     
 }
 
@@ -1641,7 +1641,7 @@ unsigned char TimerD_configureHighResGeneratorInFreeRunningMode
 //!         \b TIMERD_CLOCKSOURCE_SMCLK
 //!         \b TIMERD_CLOCKSOURCE_INVERTED_EXTERNAL_TDCLK
 //! \param clockSourceDivider is the divider for Clock source.
-//! 	Valid values are
+//!     Valid values are
 //!        \b TIMERD_CLOCKSOURCE_DIVIDER_1 [Default value]
 //!        \b TIMERD_CLOCKSOURCE_DIVIDER_2
 //!        \b TIMERD_CLOCKSOURCE_DIVIDER_4
@@ -1666,7 +1666,7 @@ unsigned char TimerD_configureHighResGeneratorInFreeRunningMode
 //! Valid values are
 //!     \b TIMERD_CLOCKINGMODE_EXTERNAL_CLOCK [Default value]
 //!     \b TIMERD_CLOCKINGMODE_HIRES_LOCAL_CLOCK
-//!	\b TIMERD_CLOCKINGMODE_AUXILIARY_CLK
+//!    \b TIMERD_CLOCKINGMODE_AUXILIARY_CLK
 //! \param highResClockMultiplyFactor selects the high resolution
 //! multiply factor.
 //!     \b TIMERD_HIGHRES_CLK_MULTIPLY_FACTOR_8x
@@ -1690,8 +1690,8 @@ void TimerD_configureHighResGeneratorInRegulatedMode (unsigned int baseAddress,
      unsigned char highResClockMultiplyFactor,
      unsigned char highResClockDivider
     )
-{	
-	ASSERT(
+{    
+    ASSERT(
         (TIMERD_CLOCKSOURCE_EXTERNAL_TXCLK == clockSource) ||
         (TIMERD_CLOCKSOURCE_ACLK == clockSource) ||
         (TIMERD_CLOCKSOURCE_SMCLK == clockSource) ||
@@ -1728,34 +1728,34 @@ void TimerD_configureHighResGeneratorInRegulatedMode (unsigned int baseAddress,
         (TIMERD_CLOCKINGMODE_AUXILIARY_CLK == clockingMode)
         );
     
-	ASSERT((TIMERD_8x == highResMultiplyFactor) ||
+    ASSERT((TIMERD_8x == highResMultiplyFactor) ||
         (TIMERD_16x == highResMultiplyFactor)
         );
 
-	ASSERT((TIMERD_HIGHRES_CLK_DIVIDER_1 == highResClockDivider) ||
-	        (TIMERD_HIGHRES_CLK_DIVIDER_2 == highResClockDivider) ||
-	        (TIMERD_HIGHRES_CLK_DIVIDER_4 == highResClockDivider) ||
-	        (TIMERD_HIGHRES_CLK_DIVIDER_8 == highResClockDivider)
-	        );
+    ASSERT((TIMERD_HIGHRES_CLK_DIVIDER_1 == highResClockDivider) ||
+            (TIMERD_HIGHRES_CLK_DIVIDER_2 == highResClockDivider) ||
+            (TIMERD_HIGHRES_CLK_DIVIDER_4 == highResClockDivider) ||
+            (TIMERD_HIGHRES_CLK_DIVIDER_8 == highResClockDivider)
+            );
 
-	/**********how abt MCx and TDCLGRPx and CNTLx*/
-	HWREG(baseAddress + OFS_TDxCTL0) &= ~(TDSSEL_3 + TDHD_3 + TDCLR);  
+    /**********how abt MCx and TDCLGRPx and CNTLx*/
+    HWREG(baseAddress + OFS_TDxCTL0) &= ~(TDSSEL_3 + TDHD_3 + TDCLR);  
         
-	HWREG(baseAddress + OFS_TDxCTL1)  &= ~(TDCLKM0 + TDCLKM1);
-	
+    HWREG(baseAddress + OFS_TDxCTL1)  &= ~(TDCLKM0 + TDCLKM1);
+    
         privateTimerDProcessClockSourceDivider(baseAddress,
-    		        clockSourceDivider
-    		        );
+                    clockSourceDivider
+                    );
         HWREG(baseAddress + OFS_TDxCTL0)  |=  clockSource;
         HWREG(baseAddress + OFS_TDxCTL1) |= clockingMode;
 
-  	// Select Hi-res local clock
-  	// Calibration and Hi-res mode enable
-  	HWREG(baseAddress + OFS_TDxCTL1) |= TDCLKM_1;                      
-  	// Select Hi-res local clock
-  	HWREG(baseAddress + OFS_TDxHCTL0) =  TDHREGEN + TDHEN ;
-  	HWREG(baseAddress + OFS_TDxHCTL0) |= highResClockMultiplyFactor +
-  					highResClockDivider;
+      // Select Hi-res local clock
+      // Calibration and Hi-res mode enable
+      HWREG(baseAddress + OFS_TDxCTL1) |= TDCLKM_1;                      
+      // Select Hi-res local clock
+      HWREG(baseAddress + OFS_TDxHCTL0) =  TDHREGEN + TDHEN ;
+      HWREG(baseAddress + OFS_TDxHCTL0) |= highResClockMultiplyFactor +
+                      highResClockDivider;
  
 }
 //*****************************************************************************
@@ -1769,7 +1769,7 @@ void TimerD_configureHighResGeneratorInRegulatedMode (unsigned int baseAddress,
 //!         \b TIMERD_CLOCKSOURCE_SMCLK
 //!         \b TIMERD_CLOCKSOURCE_INVERTED_EXTERNAL_TDCLK
 //! \param clockSourceDivider is the divider for Clock source.
-//! 	Valid values are
+//!     Valid values are
 //!        \b TIMERD_CLOCKSOURCE_DIVIDER_1 [Default value]
 //!        \b TIMERD_CLOCKSOURCE_DIVIDER_2
 //!        \b TIMERD_CLOCKSOURCE_DIVIDER_4
@@ -1794,13 +1794,13 @@ void TimerD_configureHighResGeneratorInRegulatedMode (unsigned int baseAddress,
 //! Valid values are
 //!     \b TIMERD_CLOCKINGMODE_EXTERNAL_CLOCK [Default value]
 //!     \b TIMERD_CLOCKINGMODE_HIRES_LOCAL_CLOCK
-//!	\b TIMERD_CLOCKINGMODE_AUXILIARY_CLK
+//!    \b TIMERD_CLOCKINGMODE_AUXILIARY_CLK
 //!//! \param timerPeriod selects the desired timer period
 //! \param combineCCRRegistersCombination selects desired CCR registers to
-//!			combine
-//!			\b TIMERD_COMBINE_CCR1_CCR2
-//!			\b TIMERD_COMBINE_CCR3_CCR4 (available on Timer_D5, Timer_D7)
-//!			\b TIMERD_COMBINE_CCR5_CCR6(available only on Timer_D7)
+//!            combine
+//!            \b TIMERD_COMBINE_CCR1_CCR2
+//!            \b TIMERD_COMBINE_CCR3_CCR4 (available on Timer_D5, Timer_D7)
+//!            \b TIMERD_COMBINE_CCR5_CCR6(available only on Timer_D7)
 //! \param compareOutputMode specifies the ouput mode. Valid values are
 //!        \b TIMERD_OUTPUTMODE_OUTBITVALUE,
 //!        \b TIMERD_OUTPUTMODE_SET,
@@ -1813,7 +1813,7 @@ void TimerD_configureHighResGeneratorInRegulatedMode (unsigned int baseAddress,
 //! \param dutyCycle specifies the dutycycle for the generated waveform
 //!
 //! Modified registers are \b TDxCTL0, \b TDxCTL1, \b TDxCCR0,
-//!						   \b TDxCCTL0,\b TDxCCTLn
+//!                           \b TDxCCTL0,\b TDxCCTLn
 //!
 //! \return None
 //
@@ -1829,13 +1829,13 @@ void TimerD_combineTDCCRToGeneratePWM (  unsigned int baseAddress,
     unsigned int dutyCycle2
     )
 {
-	ASSERT(
+    ASSERT(
                 (TIMERD_COMBINE_CCR1_CCR2 == combineCCRRegistersCombination) ||
                 (TIMERD_COMBINE_CCR3_CCR4 == combineCCRRegistersCombination) ||
                 (TIMERD_COMBINE_CCR5_CCR6 == combineCCRRegistersCombination)
                 );
 
-	ASSERT(
+    ASSERT(
         (TIMERD_CLOCKSOURCE_EXTERNAL_TXCLK == clockSource) ||
         (TIMERD_CLOCKSOURCE_ACLK == clockSource) ||
         (TIMERD_CLOCKSOURCE_SMCLK == clockSource) ||
@@ -1872,37 +1872,37 @@ void TimerD_combineTDCCRToGeneratePWM (  unsigned int baseAddress,
         (TIMERD_CLOCKINGMODE_AUXILIARY_CLK == clockingMode)
         );
 
-	ASSERT((TIMERD_OUTPUTMODE_OUTBITVALUE == captureOutputMode) ||
-	        (TIMERD_OUTPUTMODE_SET == captureOutputMode) ||
-	        (TIMERD_OUTPUTMODE_TOGGLE_RESET == captureOutputMode) ||
-	        (TIMERD_OUTPUTMODE_SET_RESET == captureOutputMode) ||
-	        (TIMERD_OUTPUTMODE_TOGGLE == captureOutputMode) ||
-	        (TIMERD_OUTPUTMODE_RESET == captureOutputMode) ||
-	        (TIMERD_OUTPUTMODE_TOGGLE_SET == captureOutputMode) ||
-	        (TIMERD_OUTPUTMODE_RESET_SET == captureOutputMode)
-	        );
+    ASSERT((TIMERD_OUTPUTMODE_OUTBITVALUE == captureOutputMode) ||
+            (TIMERD_OUTPUTMODE_SET == captureOutputMode) ||
+            (TIMERD_OUTPUTMODE_TOGGLE_RESET == captureOutputMode) ||
+            (TIMERD_OUTPUTMODE_SET_RESET == captureOutputMode) ||
+            (TIMERD_OUTPUTMODE_TOGGLE == captureOutputMode) ||
+            (TIMERD_OUTPUTMODE_RESET == captureOutputMode) ||
+            (TIMERD_OUTPUTMODE_TOGGLE_SET == captureOutputMode) ||
+            (TIMERD_OUTPUTMODE_RESET_SET == captureOutputMode)
+            );
 
 
-	HWREG(baseAddress + OFS_TDxCCTL2) &= ~OUTMOD_7;
-	HWREG(baseAddress + OFS_TDxCCTL2)  |= compareOutputMode;
+    HWREG(baseAddress + OFS_TDxCCTL2) &= ~OUTMOD_7;
+    HWREG(baseAddress + OFS_TDxCCTL2)  |= compareOutputMode;
 
     HWREG(baseAddress + OFS_TDxCCR0)  = timerPeriod;
     
     HWREG(baseAddress + OFS_TDxCCR1 + (0x05 *
-    		(combineCCRRegistersCombination - TIMERD_COMBINE_CCR1_CCR2))) = dutyCycle1;
+            (combineCCRRegistersCombination - TIMERD_COMBINE_CCR1_CCR2))) = dutyCycle1;
     HWREG(baseAddress + OFS_TDxCCR2 + (0x05 *
-    		(combineCCRRegistersCombination - TIMERD_COMBINE_CCR1_CCR2))) = dutyCycle2;
+            (combineCCRRegistersCombination - TIMERD_COMBINE_CCR1_CCR2))) = dutyCycle2;
     
     HWREG(baseAddress + OFS_TDxCTL1)  &= ~(TDCLKM0 + TDCLKM1);
 
     privateTimerDProcessClockSourceDivider(baseAddress,
-    		        clockSourceDivider
-    		        );
+                    clockSourceDivider
+                    );
     
     HWREG(baseAddress + OFS_TDxCTL0)  |=  clockSource;
     HWREG(baseAddress + OFS_TDxCTL1) |= clockingMode;
     HWREG(baseAddress + OFS_TDxCTL1)  |=
-    		(TD2CMB << (combineCCRRegistersCombination - TIMERD_COMBINE_CCR1_CCR2));
+            (TD2CMB << (combineCCRRegistersCombination - TIMERD_COMBINE_CCR1_CCR2));
 }
 
 //*****************************************************************************
@@ -1923,17 +1923,17 @@ void TimerD_combineTDCCRToGeneratePWM (  unsigned int baseAddress,
 //
 //*****************************************************************************
 void TimerD_selectLatchingGroup(unsigned int  baseAddress,
-		unsigned int  groupLatch)
+        unsigned int  groupLatch)
 {
-	ASSERT((TIMERD_GROUP_NONE  == groupLatch) ||
-		   (TIMERD_GROUP_CL12_CL23_CL56 == groupLatch) ||
-		   (TIMERD_GROUP_CL123_CL456 == groupLatch) ||
-		   (TIMERD_GROUP_ALL == groupLatch)
-		   );
+    ASSERT((TIMERD_GROUP_NONE  == groupLatch) ||
+           (TIMERD_GROUP_CL12_CL23_CL56 == groupLatch) ||
+           (TIMERD_GROUP_CL123_CL456 == groupLatch) ||
+           (TIMERD_GROUP_ALL == groupLatch)
+           );
 
 
-	HWREG(baseAddress + OFS_TDxCTL0) &= ~TDCLGRP_3;
-	HWREG(baseAddress + OFS_TDxCTL0) |= groupLatch;
+    HWREG(baseAddress + OFS_TDxCTL0) &= ~TDCLGRP_3;
+    HWREG(baseAddress + OFS_TDxCTL0) |= groupLatch;
 }
 
 //*****************************************************************************
@@ -1954,18 +1954,18 @@ void TimerD_selectLatchingGroup(unsigned int  baseAddress,
 //
 //*****************************************************************************
 void TimerD_selectCounterLength (unsigned int  baseAddress,
-		unsigned int counterLength
-		)
+        unsigned int counterLength
+        )
 {
-	ASSERT((TIMERD_COUNTER_8BIT == counterLength) ||
-	        (TIMERD_COUNTER_10BIT == counterLength) ||
-	        (TIMERD_COUNTER_12BIT == counterLength) ||
-	        (TIMERD_COUNTER_16BIT == counterLength)
-	        );
+    ASSERT((TIMERD_COUNTER_8BIT == counterLength) ||
+            (TIMERD_COUNTER_10BIT == counterLength) ||
+            (TIMERD_COUNTER_12BIT == counterLength) ||
+            (TIMERD_COUNTER_16BIT == counterLength)
+            );
 
 
-	HWREG(baseAddress + OFS_TDxCTL0) &= ~CNTL_3;
-	HWREG(baseAddress + OFS_TDxCTL0) |= counterLength;
+    HWREG(baseAddress + OFS_TDxCTL0) &= ~CNTL_3;
+    HWREG(baseAddress + OFS_TDxCTL0) |= counterLength;
 }
 
 //*****************************************************************************
@@ -1995,19 +1995,19 @@ void TimerD_selectCounterLength (unsigned int  baseAddress,
 //
 //*****************************************************************************
 void TimerD_initCompareLatchLoadEvent(unsigned int  baseAddress,
-		unsigned int  compareRegister,
-		unsigned int  compareLatchLoadEvent
-		)
+        unsigned int  compareRegister,
+        unsigned int  compareLatchLoadEvent
+        )
 {
-	ASSERT((TIMERD_LATCH_ON_WRITE_TO_TBxCCRn_COMPARE_REGISTER  == groupLatch) ||
-		(TIMERD_LATCH_WHEN_COUNTER_COUNTS_TO_0_IN_UP_OR_CONT_MODE == groupLatch) ||
-		(TIMERD_LATCH_WHEN_COUNTER_COUNTS_TO_0_IN_UPDOWN_MODE == groupLatch) ||
-		(TIMERD_LATCH_WHEN_COUNTER_COUNTS_TO_CURRENT_COMPARE_LATCH_VALUE
-				== groupLatch)
-		);
+    ASSERT((TIMERD_LATCH_ON_WRITE_TO_TBxCCRn_COMPARE_REGISTER  == groupLatch) ||
+        (TIMERD_LATCH_WHEN_COUNTER_COUNTS_TO_0_IN_UP_OR_CONT_MODE == groupLatch) ||
+        (TIMERD_LATCH_WHEN_COUNTER_COUNTS_TO_0_IN_UPDOWN_MODE == groupLatch) ||
+        (TIMERD_LATCH_WHEN_COUNTER_COUNTS_TO_CURRENT_COMPARE_LATCH_VALUE
+                == groupLatch)
+        );
 
-	HWREG(baseAddress + compareRegister)  &= ~CLLD_3;
-	HWREG(baseAddress + compareRegister)  |= compareLatchLoadEvent;
+    HWREG(baseAddress + compareRegister)  &= ~CLLD_3;
+    HWREG(baseAddress + compareRegister)  |= compareLatchLoadEvent;
 }
 
 //*****************************************************************************
@@ -2128,13 +2128,13 @@ void TimerD_EnableHighResGeneratorForceON (unsigned int baseAddress)
 //
 //*****************************************************************************
 void TimerD_selectHighResCoarseClockRange (unsigned int baseAddress,
-		unsigned int highResCoarseClockRange
-		)
+        unsigned int highResCoarseClockRange
+        )
 {
-	ASSERT((TIMERD_HIGHRES_BELOW_15MHz  == highResCoarseClockRange) ||
-		(TIMERD_HIGHRES_ABOVE_15MHz == highResCoarseClockRange)
-		);
-	HWREG(baseAddress + OFS_TDxHCTL1) &= ~TDHCLKCR;
+    ASSERT((TIMERD_HIGHRES_BELOW_15MHz  == highResCoarseClockRange) ||
+        (TIMERD_HIGHRES_ABOVE_15MHz == highResCoarseClockRange)
+        );
+    HWREG(baseAddress + OFS_TDxHCTL1) &= ~TDHCLKCR;
     HWREG(baseAddress + OFS_TDxHCTL1) |= highResCoarseClockRange;
 }
 
@@ -2159,14 +2159,14 @@ void TimerD_selectHighResCoarseClockRange (unsigned int baseAddress,
 //
 //*****************************************************************************
 void TimerD_selectHighResClockRange (unsigned int baseAddress,
-		unsigned int highResClockRange
-		)
+        unsigned int highResClockRange
+        )
 {
-	ASSERT((TIMERD_CLOCK_RANGE0  == highResClockRange) ||
-		(TIMERD_CLOCK_RANGE1 == highResClockRange) 	||
-		(TIMERD_CLOCK_RANGE2 == highResClockRange)
-		);
-	HWREG(baseAddress + OFS_TDxHCTL1) &= ~TDHCLKCR;
+    ASSERT((TIMERD_CLOCK_RANGE0  == highResClockRange) ||
+        (TIMERD_CLOCK_RANGE1 == highResClockRange)     ||
+        (TIMERD_CLOCK_RANGE2 == highResClockRange)
+        );
+    HWREG(baseAddress + OFS_TDxHCTL1) &= ~TDHCLKCR;
     HWREG(baseAddress + OFS_TDxHCTL1) |= highResClockRange;
 }
 

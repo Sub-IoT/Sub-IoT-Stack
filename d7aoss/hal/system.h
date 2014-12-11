@@ -24,9 +24,9 @@
 #include "../types.h"
 #include "../framework/queue.h"
 
-//#define ENTER_CRITICAL_SECTION(x)  	__disable_interrupt(); //st( x = __read_status_register(); __disable_interrupt(); )
+//#define ENTER_CRITICAL_SECTION(x)      __disable_interrupt(); //st( x = __read_status_register(); __disable_interrupt(); )
 //#define EXIT_CRITICAL_SECTION(x)    __enable_interrupt(); //__write_status_register(x)
-#define ENTER_CRITICAL_SECTION(x)  	x = __get_interrupt_state(); __disable_interrupt()
+#define ENTER_CRITICAL_SECTION(x)      x = __get_interrupt_state(); __disable_interrupt()
 #define EXIT_CRITICAL_SECTION(x)    __set_interrupt_state(x)
 
 #define SWITCH_BYTES(x) (x << 8 | x >> 8)
@@ -40,7 +40,7 @@
 #define __ISR(a,b)   __interrupt void b (void)
 #endif
 
-#define AUX_CLOCK	32768
+#define AUX_CLOCK    32768
 
 //extern uint8_t device_id[8]; // TODO: keep this as global?
 //extern uint8_t virtual_id[2];

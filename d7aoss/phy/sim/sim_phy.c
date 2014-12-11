@@ -12,7 +12,7 @@
  * Lesser General Public License for more details.
  *
  * Contributors:
- *     	glenn.ergeerts@uantwerpen.be
+ *         glenn.ergeerts@uantwerpen.be
  */
 
 #include <stdbool.h>
@@ -32,7 +32,7 @@ void phy_init(void)
 
 void phy_idle(void)
 {
-	return;
+    return;
 }
 
 bool phy_tx(phy_tx_cfg_t* cfg)
@@ -47,7 +47,7 @@ bool phy_rx(phy_rx_cfg_t* cfg)
 
 bool phy_read(phy_rx_data_t* data)
 {
-	return false;
+    return false;
 }
 
 bool phy_is_rx_in_progress(void)

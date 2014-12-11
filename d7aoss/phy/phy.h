@@ -12,9 +12,9 @@
  *
  * \author glenn.ergeerts@uantwerpen.be
  * \author maarten.weyn@uantwerpen.be
- *	\author alexanderhoet@gmail.com
+ *    \author alexanderhoet@gmail.com
  *
- *	\brief The PHY layer API
+ *    \brief The PHY layer API
  */
 
 #ifndef PHY_H
@@ -27,11 +27,11 @@ extern "C" {
 #include <stdbool.h>
 #include <stdint.h>
 
-#define CHANNEL_CODE_INDEX_CODING_PN9						0 << 6
-#define CHANNEL_CODE_INDEX_CODING_FEC_PN9					2 << 6
-#define CHANNEL_CODE_INDEX_CODING_CHANNEL_CLASS_LO_RATE		0 << 4
-#define CHANNEL_CODE_INDEX_CODING_CHANNEL_CLASS_NORMAL_RATE	1 << 4
-#define CHANNEL_CODE_INDEX_CODING_CHANNEL_CLASS_HI_RATE		2 << 4
+#define CHANNEL_CODE_INDEX_CODING_PN9                        0 << 6
+#define CHANNEL_CODE_INDEX_CODING_FEC_PN9                    2 << 6
+#define CHANNEL_CODE_INDEX_CODING_CHANNEL_CLASS_LO_RATE        0 << 4
+#define CHANNEL_CODE_INDEX_CODING_CHANNEL_CLASS_NORMAL_RATE    1 << 4
+#define CHANNEL_CODE_INDEX_CODING_CHANNEL_CLASS_HI_RATE        2 << 4
 
 //#define D7_PHY_USE_FEC //TODO move to general config file
 
@@ -39,28 +39,28 @@ extern "C" {
 #define SYNC_CLASS0_CS1     0xF498
 #define SYNC_CLASS1_CS0     0x0B67
 #define SYNC_CLASS1_CS1     0x192F
-#define INITIAL_PN9				0x01FF
-#define CCA_RSSI_THRESHOLD		-86 // TODO configurable
+#define INITIAL_PN9                0x01FF
+#define CCA_RSSI_THRESHOLD        -86 // TODO configurable
 
 
 
 //Configuration structure for packet reception
 typedef struct
 {
-	uint8_t spectrum_id[2];		//Spectrum ID
-	uint8_t sync_word_class;	//Sync word class
-	uint8_t length;				//Packet length (0 : variable)
-	uint16_t timeout;			//Timeout value (0 : continuous) in milliseconds
-	int16_t scan_minimum_energy;
+    uint8_t spectrum_id[2];        //Spectrum ID
+    uint8_t sync_word_class;    //Sync word class
+    uint8_t length;                //Packet length (0 : variable)
+    uint16_t timeout;            //Timeout value (0 : continuous) in milliseconds
+    int16_t scan_minimum_energy;
 } phy_rx_cfg_t;
 
 //Packet reception result structure
 typedef struct
 {
-    uint8_t lqi;				//Link quality indicator
-    uint8_t length;				//Packet length
-    uint8_t* data;				//Packet data
-    int16_t rssi;				//Received signal strength indicator
+    uint8_t lqi;                //Link quality indicator
+    uint8_t length;                //Packet length
+    uint8_t* data;                //Packet data
+    int16_t rssi;                //Received signal strength indicator
     uint8_t spectrum_id[2];
     uint8_t sync_word_class;
 } phy_rx_data_t;
@@ -68,11 +68,11 @@ typedef struct
 //Configuration structure for packet transmission
 typedef struct
 {
-	uint8_t spectrum_id[2];		//Spectrum ID
-	uint8_t sync_word_class;	//Sync word class
-	int8_t eirp;				//Transmission power level in dBm ranged [-39, +10]
-	//uint8_t length;				//Packet length
-	//uint8_t* data;				//Packet data
+    uint8_t spectrum_id[2];        //Spectrum ID
+    uint8_t sync_word_class;    //Sync word class
+    int8_t eirp;                //Transmission power level in dBm ranged [-39, +10]
+    //uint8_t length;                //Packet length
+    //uint8_t* data;                //Packet data
 } phy_tx_cfg_t;
 
 //Define callback funtion pointer types

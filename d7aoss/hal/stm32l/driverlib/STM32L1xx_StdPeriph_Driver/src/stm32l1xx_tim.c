@@ -258,7 +258,7 @@ void TIM_TimeBaseInit(TIM_TypeDef* TIMx, TIM_TimeBaseInitTypeDef* TIM_TimeBaseIn
   tmpcr1 = TIMx->CR1;  
 
   if(((TIMx) == TIM2) || ((TIMx) == TIM3) || ((TIMx) == TIM4) || ((TIMx) == TIM5))
-  {											
+  {                                            
     /* Select the Counter Mode */
     tmpcr1 &= (uint16_t)(~((uint16_t)(TIM_CR1_DIR | TIM_CR1_CMS)));
     tmpcr1 |= (uint32_t)TIM_TimeBaseInitStruct->TIM_CounterMode;
@@ -1903,7 +1903,7 @@ void TIM_ITConfig(TIM_TypeDef* TIMx, uint16_t TIM_IT, FunctionalState NewState)
   * @brief  Configures the TIMx event to be generate by software.
   * @param  TIMx: where x can be 2 to 11 to select the TIM peripheral.
   * @param  TIM_EventSource: specifies the event source.
-  *   This parameter can be one or more of the following values:	   
+  *   This parameter can be one or more of the following values:       
   *     @arg TIM_EventSource_Update: Timer update Event source.
   *     @arg TIM_EventSource_CC1: Timer Capture Compare 1 Event source.
   *     @arg TIM_EventSource_CC2: Timer Capture Compare 2 Event source.

@@ -1,8 +1,8 @@
 /*
  *  Created on: Nov 22, 2012
  *  Authors:
- * 		maarten.weyn@artesis.be
- *  	glenn.ergeerts@artesis.be
+ *         maarten.weyn@artesis.be
+ *      glenn.ergeerts@artesis.be
  */
 
 #include "msp430_addresses.h"

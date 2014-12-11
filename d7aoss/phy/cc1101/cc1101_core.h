@@ -1,10 +1,10 @@
 /*
  *  Created on: Nov 22, 2012
  *  Authors:
- * 		maarten.weyn@artesis.be
- *  	glenn.ergeerts@artesis.be
- *  	alexanderhoet@gmail.com
- *  	armin@otheruse.nl
+ *         maarten.weyn@artesis.be
+ *      glenn.ergeerts@artesis.be
+ *      alexanderhoet@gmail.com
+ *      armin@otheruse.nl
  */
 
 #ifndef RF1A_H
@@ -18,14 +18,14 @@ extern "C" {
 
 
 typedef enum {
-	GDOLine0 = 0x2,
-	GDOLine1 = 0x1,
-	GDOLine2 = 0x0
+    GDOLine0 = 0x2,
+    GDOLine1 = 0x1,
+    GDOLine2 = 0x0
 } GDOLine;
 
 typedef enum {
-	GDOEdgeRising = 0x40,
-	GDOEdgeFalling = 0x0,
+    GDOEdgeRising = 0x40,
+    GDOEdgeFalling = 0x0,
 } GDOEdge;
 
 typedef struct {
