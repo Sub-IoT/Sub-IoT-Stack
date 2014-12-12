@@ -25,7 +25,6 @@
 
 #define UDID_ADDRESS 0x1FF800A0
 
-uint8_t     device_id[8]; // TODO: keep this as global?
 extern char _end;                 /**< Defined by the linker */
 
 /**************************************************************************//**
@@ -59,14 +58,12 @@ caddr_t _sbrk(int incr)
 }
 
 
-void system_init()
+void system_init(uint8_t* tx_buffer, uint16_t tx_buffer_size, uint8_t* rx_buffer, uint16_t rx_buffer_size)
 {
     /* Chip errata */
     CHIP_Init();
 
     //if (SysTick_Config(CMU_ClockFreqGet(cmuClock_CORE) / 1000)) while (1) ;
-
-    system_get_unique_id(device_id);
 
     // init clock
     CMU_ClockDivSet(cmuClock_HF, cmuClkDiv_2);       // Set HF clock divider to /2 to keep core frequency < 32MHz

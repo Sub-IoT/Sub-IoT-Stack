@@ -262,14 +262,14 @@ static void rx_callback(phy_rx_data_t* res)
 	if (current_css == NULL)
 	{
 		#ifdef LOG_DLL_ENABLED
-			log_print_stack_string(LOG_DLL, ("DLL no series so stop listening"));
+			log_print_stack_string(LOG_DLL, "DLL no series so stop listening");
 		#endif
 		return;
 	}
 
 	// in current spec reset channel scan
 	#ifdef LOG_DLL_ENABLED
-		log_print_stack_string(LOG_DLL, ("DLL restart channel scan series"));
+		log_print_stack_string(LOG_DLL, "DLL restart channel scan series");
 	#endif
 
 	current_scan_id = 0;
