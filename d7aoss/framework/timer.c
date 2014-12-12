@@ -16,6 +16,7 @@
 
 #include "../hal/timer.h"
 #include "log.h"
+#include "leds.h"
 
 
 // turn on/off the debug prints
@@ -32,14 +33,17 @@ static volatile uint8_t     timer_next_event_position;
 static volatile uint8_t     timer_event_count;
 static volatile bool        timer_event_running;
 
+static volatile bool waiting;
 
-
+static void timer_wait_done( void );
+timer_event timer_wait = { .next_event = 0, .f = &timer_wait_done };
 
 void timer_init( void )
 {
     hal_timer_init();
     timer_event_count = 0;
     timer_event_running = false;
+    waiting = true;
     uint8_t i;
     for( i=0 ; i<TIMER_EVENT_STACK_SIZE ; i++ )
     {
@@ -51,19 +55,18 @@ void timer_init( void )
 
 bool timer_add_event( timer_event* event )
 {
-    hal_timer_disable_interrupt();
-
     timer_event new_event;
     new_event.f = event->f;
     new_event.next_event = event->next_event;
 
     DPRINT("Adding event: t: %d @%p." , new_event.next_event, new_event.f );
+    // TODO doesnt work on CCS compiler DPRINT("Adding event:     @0x%04x t: %ld.", new_event.f, new_event.next_event );
 
 
     // add the new event in the stack
     if( !timer_add_event_in_stack( new_event ) ) { return false; }
 
-    // configure the next event if one is not currently executed
+    // configure the next event if one is not currently executing
     if( timer_event_running == false )
     {
         // configure the interrupt
@@ -94,7 +97,7 @@ void timer_completed( void )
     // execute event
     event.f();
 
-    DPRINT("Event completed: @%p.", event.f);
+    DPRINT("Event completed:  @0x%04x t: %ld.", event.f, event_position);
     
     // end of running event
     timer_event_running = false;
@@ -136,6 +139,7 @@ static uint8_t timer_get_next_event( void )
             if( timer_event_count == 1 )
             {
                 DPRINT("One event found: t: %d @%p pos: %d.", timer_event_stack[i].next_event, timer_event_stack[i].f, i );
+                // TODO doesnt work on CCS compilerDPRINT("One event found:  @0x%04x p: %02u t: %ld.", timer_event_stack[i].f, i, timer_event_stack[i].next_event );
                 return i;
             }
 
@@ -153,6 +157,7 @@ static uint8_t timer_get_next_event( void )
             if( event_count >= timer_event_count )
             {
                 DPRINT("Next event found: t: %d @%p pos: %d among %d.", timer_event_stack[next_event_position].next_event, timer_event_stack[next_event_position].f, next_event_position, event_count );
+                // TODO doesnt work on CCS compiler DPRINT("Next event found: @0x%04x p: %02u t: %ld among %u.", timer_event_stack[next_event_position].f, next_event_position, timer_event_stack[next_event_position].next_event, event_count );
                 return next_event_position;
             }
         }
@@ -180,6 +185,7 @@ static void timer_configure_next_event( void )
         {
             // fire the event
             DPRINT("Event fired: t: %d @ %f pos: %d.", event_time, timer_event_stack[timer_next_event_position].f, timer_next_event_position);
+            // TODO doesnt work on CCS compiler DPRINT("Event fired:      @0x%04x p: %02u t: %ld.", timer_event_stack[timer_next_event_position].f, timer_next_event_position, event_time);
             timer_completed();
         }
         else
@@ -187,8 +193,10 @@ static void timer_configure_next_event( void )
             // set next interrupt
             hal_timer_disable_interrupt();
             hal_timer_setvalue( (uint32_t)event_time );
+            hal_timer_clear_interrupt();
             hal_timer_enable_interrupt();
             DPRINT("Event configured: t: %d @ %p pos: %d.", event_time, timer_event_stack[timer_next_event_position].f, timer_next_event_position);
+            // TODO doesnt work on CCS compiler DPRINT("Event configured: @0x%04x p: %02u t: %ld.", timer_event_stack[timer_next_event_position].f, timer_next_event_position, event_time);
         }
     }
 }
@@ -199,19 +207,20 @@ static bool timer_add_event_in_stack( timer_event new_event )
     uint8_t i;
     if( new_event.f == NULL )
     {
-        log_print_stack_string( LOG_FWK, "Event added no configured!" );
+        log_print_stack_string( LOG_FWK, "Event added not configured!" );
         return false;
     }
     // add event to the first free spot in the stack
     for( i=0 ; i<TIMER_EVENT_STACK_SIZE ; i++ )
     {
-        if( timer_event_stack[i].f == NULL)
+        if( timer_event_stack[i].f == NULL )
         {
             timer_update_stack();
             timer_event_stack[i] = new_event;
             timer_event_count++;
 
             DPRINT("Event added in stack: t: %d @%p pos: %d.", timer_event_stack[i].next_event, timer_event_stack[i].f, i);
+            // TODO doesnt work on CCS compiler DPRINT("Event added:      @0x%04x p: %02u t: %ld.", timer_event_stack[i].f, i, timer_event_stack[i].next_event);
             return true;
         }
     }
@@ -241,7 +250,7 @@ static bool timer_update_stack( void )
 
     for( i=0 ; i<TIMER_EVENT_STACK_SIZE ; i++ )
     {
-        if( timer_event_stack[i].f != NULL)
+        if( timer_event_stack[i].f != NULL )
         {
             // substract the elapsed time from the remaining time
             timer_event_stack[i].next_event -= current_time;
@@ -261,31 +270,27 @@ static bool timer_update_stack( void )
 }
 
 
-
-static volatile bool waiting;
-
-void timer_wait_done( void )
+static void timer_wait_done( void )
 {
     waiting = false;
 }
 
-timer_event timer_wait = { .next_event = 0, .f = timer_wait_done };
-
+/**********************************
+ * /!\ function can't be used inside an interrupt !!!
+ **********************************/
 void timer_wait_ms( uint32_t ms )
 {
-    
-    
-    waiting = true;
-    timer_wait.next_event = (int32_t)(ms*1024)/1000;
+    /*
+    timer_wait.next_event = (int32_t)((ms*1024)/1000);
     timer_add_event( &timer_wait );
     while(waiting);
+    waiting = true;
+    */
     
-   /* 
-    int i;
+    uint32_t i;
     for( i=0 ; i<ms ; i++ )
     {
-            volatile uint32_t n = 320;
+            volatile uint32_t n = 3200;
             while(n--);
     }
-    */
 }

@@ -28,8 +28,6 @@ typedef enum {
 	GDOEdgeFalling = 0x0,
 } GDOEdge;
 
-extern void CC1101_ISR(GDOLine gdo);
-
 typedef struct {
     uint8_t iocfg2;    // IOCFG2.GDO2_CFG output pin configuration
     uint8_t iofcg1;    // IOCFG1.GDO1_CFG output pin configuration
@@ -82,6 +80,9 @@ void ReadBurstReg(uint8_t addr, uint8_t* buffer, uint8_t count);
 void WriteBurstReg(uint8_t addr, uint8_t* buffer, uint8_t count);
 void WriteSinglePATable(uint8_t value);
 void WriteBurstPATable(uint8_t* buffer, uint8_t count);
+
+uint8_t ReadPartNum( void );
+uint8_t ReadVersion( void );
 
 #ifdef __cplusplus
 }
