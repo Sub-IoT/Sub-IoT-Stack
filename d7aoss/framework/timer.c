@@ -16,7 +16,6 @@
 
 #include "../hal/timer.h"
 #include "log.h"
-#include "leds.h"
 
 
 // turn on/off the debug prints
