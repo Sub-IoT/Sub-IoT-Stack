@@ -27,10 +27,10 @@ void hal_timer_init();
 //**********************************************/
 //Get the nuber of ticks from the start of the timer                      /
 //**********************************************/
-uint16_t hal_timer_getvalue();
+uint32_t hal_timer_getvalue();
 
 //**********************************************/
-//Initialize the timer value                          /
+//Initialize the timer interrupt value                          /
 //**********************************************/
 void hal_timer_setvalue(uint32_t next_event);
 

@@ -71,51 +71,51 @@ RFIFG15 Positive edge: WOR event 1
 #define GDO_EDGE_RXDrained  		GDOEdgeFalling
 #define GDO_SETTING_RXFilledOrEOP 	0x01  // RFIFG4 Positive Edge
 #define GDO_EDGE_RXFilledOrEOP   	GDOEdgeRising
-#define GDO_SETTING_RXEmpty         0x01  // RFIFG4 Negative Edge
+#define GDO_SETTING_RXEmpty             0x01  // RFIFG4 Negative Edge
 #define GDO_EDGE_RXEmpty    		GDOEdgeFalling
 #define GDO_SETTING_TXFilled      	0x02  // RFIFG5 Positive Edge
 #define GDO_EDGE_TXFilled     	 	GDOEdgeRising
-#define GDO_SETTING_TXBelowThresh   0x02  // RFIFG5 Negative Edge
-#define GDO_EDGE_TXBelowThresh  	 GDOEdgeFalling
-#define GDO_SETTING_TXFull          0x03  // RFIFG6 Positive Edge
+#define GDO_SETTING_TXBelowThresh       0x02  // RFIFG5 Negative Edge
+#define GDO_EDGE_TXBelowThresh  	GDOEdgeFalling
+#define GDO_SETTING_TXFull              0x03  // RFIFG6 Positive Edge
 #define GDO_EDGE_TXFull          	GDOEdgeRising
 #define GDO_SETTING_TXDrained     	0x03  // RFIFG6 Negative Edge
 #define GDO_EDGE_TXDrained     		GDOEdgeFalling
-#define GDO_SETTING_RXOverflow      0x04  // RFIFG7 Positive Edge
+#define GDO_SETTING_RXOverflow          0x04  // RFIFG7 Positive Edge
 #define GDO_EDGE_RXOverflow      	GDOEdgeRising
-#define GDO_SETTING_RXFlushed       0x04  // RFIFG7 Negative Edge
+#define GDO_SETTING_RXFlushed           0x04  // RFIFG7 Negative Edge
 #define GDO_EDGE_RXFlushed       	GDOEdgeFalling
 #define GDO_SETTING_TXUnderflow    	0x05  // RFIFG8 Positive Edge
 #define GDO_EDGE_TXUnderflow   		GDOEdgeRising
-#define GDO_SETTING_TXFlushed       0x05  // RFIFG8 Negative Edge
+#define GDO_SETTING_TXFlushed           0x05  // RFIFG8 Negative Edge
 #define GDO_EDGE_TXFlushed      	GDOEdgeFalling
-#define GDO_SETTING_SyncWord        0x06  // RFIFG9 Positive Edge
+#define GDO_SETTING_SyncWord            0x06  // RFIFG9 Positive Edge
 #define GDO_EDGE_SyncWord       	GDOEdgeRising
-#define GDO_SETTING_EndOfPacket     0x06  // RFIFG9 Negative Edge
+#define GDO_SETTING_EndOfPacket         0x06  // RFIFG9 Negative Edge
 #define GDO_EDGE_EndOfPacket    	GDOEdgeFalling
 #define GDO_SETTING_CRCOK         	0x07  // RFIFG10 Positive Edge
 #define GDO_EDGE_CRCOK         		GDOEdgeRising
-#define GDO_SETTING_RXFirstByte     0x07  // RFIFG10 Negative Edge
+#define GDO_SETTING_RXFirstByte         0x07  // RFIFG10 Negative Edge
 #define GDO_EDGE_RXFirstByte    	GDOEdgeFalling
-#define GDO_SETTING_PQTReached      0x08  // RFIFG11 Positive Edge
+#define GDO_SETTING_PQTReached          0x08  // RFIFG11 Positive Edge
 #define GDO_EDGE_PQTReached     	GDOEdgeRising
-#define GDO_SETTING_LPW             0x08  // RFIFG11 Negative Edge
+#define GDO_SETTING_LPW                 0x08  // RFIFG11 Negative Edge
 #define GDO_EDGE_LPW            	GDOEdgeFalling
-#define GDO_SETTING_ClearChannel    0x09  // RFIFG12 Positive Edge
+#define GDO_SETTING_ClearChannel        0x09  // RFIFG12 Positive Edge
 #define GDO_EDGE_ClearChannel   	GDOEdgeRising
-#define GDO_SETTING_RSSIAboveThr    0x09  // RFIFG12 Negative Edge
+#define GDO_SETTING_RSSIAboveThr        0x09  // RFIFG12 Negative Edge
 #define GDO_EDGE_RSSIAboveThr   	GDOEdgeFalling
-#define GDO_SETTING_CarrierSense    0x0E  // RFIFG13 Positive Edge
+#define GDO_SETTING_CarrierSense        0x0E  // RFIFG13 Positive Edge
 #define GDO_EDGE_CarrierSense   	GDOEdgeRising
-#define GDO_SETTING_CSRSSIAboveThr  0x0E  // RFIFG13 Negative Edge
+#define GDO_SETTING_CSRSSIAboveThr      0x0E  // RFIFG13 Negative Edge
 #define GDO_EDGE_CSRSSIAboveThr 	GDOEdgeFalling
-#define GDO_SETTING_WOREvent0       0x24  // RFIFG14 Positive Edge
+#define GDO_SETTING_WOREvent0           0x24  // RFIFG14 Positive Edge
 #define GDO_EDGE_WOREvent0      	GDOEdgeRising
-#define GDO_SETTING_WOREvent0ACLK   0x24  // RFIFG14 Negative Edge
+#define GDO_SETTING_WOREvent0ACLK       0x24  // RFIFG14 Negative Edge
 #define GDO_EDGE_WOREvent0ACLK  	GDOEdgeFalling
-#define GDO_SETTING_WORevent1       0x25  // RFIFG15 Positive Edge
+#define GDO_SETTING_WORevent1           0x25  // RFIFG15 Positive Edge
 #define GDO_EDGE_WORevent1      	GDOEdgeRising
-#define GDO_SETTING_OscStable       0x25  // RFIFG15 Negative Edge
+#define GDO_SETTING_OscStable           0x25  // RFIFG15 Negative Edge
 #define GDO_EDGE_OscStable      	GDOEdgeFalling
 
 // IOCFGx.GDOx_CFG
