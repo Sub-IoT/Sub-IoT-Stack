@@ -40,7 +40,6 @@
 #include <d7aoss.h>
 #include <framework/log.h>
 #include <framework/timer.h>
-#include <msp430.h>
 #include <hal/leds.h>
 
 #define SEND_INTERVAL_MS 1000

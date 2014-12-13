@@ -51,3 +51,8 @@ void led_toggle(unsigned char led_nr)
 {
     GPIO_PinOutToggle(leds[led_nr].port, leds[led_nr].pin);
 }
+
+void led_blink(unsigned char led_id)
+{
+  // TODO
+}

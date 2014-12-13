@@ -22,6 +22,7 @@
 #include <stdio.h>
 #include <stdarg.h>
 
+//#define USE_SIMPLE_TERMINAL
 
 // TODO only in debug mode?
 #define BUFFER_SIZE 100
@@ -34,11 +35,17 @@ void log_print_string(char* format, ...)
     va_start(args, format);
     uint8_t len = vsnprintf(buffer, BUFFER_SIZE, format, args);
     va_end(args);
-
+#ifndef USE_SIMPLE_TERMINAL
     uart_transmit_data(0xDD);
     uart_transmit_data(LOG_TYPE_STRING);
     uart_transmit_data(len);
     uart_transmit_message((unsigned char*) buffer, len);
+#else
+    char buf[BUFFER_SIZE];
+    sprintf(buf, "\n\r[%03d] %s", counter, buffer);
+    uart_transmit_message((unsigned char*) buf, len+8);
+    counter++;
+#endif
 }
 
 #pragma NO_HOOKS(log_print_stack_string)
@@ -49,11 +56,18 @@ void log_print_stack_string(char type, char* format, ...)
     uint8_t len = vsnprintf(buffer, BUFFER_SIZE, format, args);
     va_end(args);
 
+#ifndef USE_SIMPLE_TERMINAL
     uart_transmit_data(0xDD);
     uart_transmit_data(LOG_TYPE_STACK);
     uart_transmit_data(type);
     uart_transmit_data(len);
     uart_transmit_message((unsigned char*) buffer, len);
+#else
+    char buf[BUFFER_SIZE];
+    sprintf(buf, "\n\r[%03d] %s", counter, buffer);
+    uart_transmit_message((unsigned char*) buf, len+8);
+    counter++;
+#endif
 }
 
 #pragma NO_HOOKS(log_print_trace)
@@ -64,18 +78,37 @@ void log_print_trace(char* format, ...)
     uint8_t len = vsnprintf(buffer, BUFFER_SIZE, format, args);
     va_end(args);
 
+#ifndef USE_SIMPLE_TERMINAL
     uart_transmit_data(0xDD);
     uart_transmit_data(LOG_TYPE_FUNC_TRACE);
     uart_transmit_data(len);
     uart_transmit_message((unsigned char*) buffer, len);
+#else
+    char buf[BUFFER_SIZE];
+    sprintf(buf, "\n\r[%03d] %s", counter, buffer);
+    uart_transmit_message((unsigned char*) buf, len+8);
+    counter++;
+#endif
 }
 
 void log_print_data(uint8_t* message, uint8_t length)
 {
+#ifndef USE_SIMPLE_TERMINAL
     uart_transmit_data(0xDD);
     uart_transmit_data(LOG_TYPE_DATA);
     uart_transmit_data(length);
     uart_transmit_message((unsigned char*) message, length);
+#else
+    char buf[BUFFER_SIZE], i;
+    sprintf(buf, "\n\r[%03d]", counter);
+    uart_transmit_message((unsigned char*) buf, 7);
+    for( i=0 ; i<length ; i++ )
+    {
+        sprintf(buf, " %02X", message[i]);
+        uart_transmit_message((unsigned char*) buf, 3);
+    }
+    counter++;
+#endif
 }
 
 void log_phy_rx_res(phy_rx_data_t* res)

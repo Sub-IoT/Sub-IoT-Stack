@@ -62,17 +62,13 @@
 #define DPRINT(...)  
 #endif
 
-/* DMA Channel configuration */
-#define DMA_CHANNEL_TX      0
-#define DMA_CHANNEL_RX      1
-#define DMA_CHANNELS        2
-#define DMA_REQ_RX          DMAREQ_USART1_RXDATAV
-#define DMA_REQ_TX          DMAREQ_USART1_TXBL
+
+//#define USE_DMA
 
 
 /* SPI Channel configuration */
 #define SPI_CHANNEL         USART1                      // SPI Channel
-#define SPI_BAUDRATE        DATARATE                    // SPI Frequency
+#define SPI_BAUDRATE        9600                    // SPI Frequency
 #define SPI_CLOCK           cmuClock_USART1             // SPI Clock
 #define SPI_ROUTE_LOCATION  USART_ROUTE_LOCATION_LOC1   // SPI GPIO Routing
 
@@ -88,13 +84,22 @@
 #define SPI_PIN_CS          3
 
 
+
+#ifdef USE_DMA
+
+/* DMA Channel configuration */
+#define DMA_CHANNEL_TX      0
+#define DMA_CHANNEL_RX      1
+#define DMA_CHANNELS        2
+#define DMA_REQ_RX          DMAREQ_USART1_RXDATAV
+#define DMA_REQ_TX          DMAREQ_USART1_TXBL
+
 /* DMA Callback structure */
 DMA_CB_TypeDef spiCallback;
 
 /* Transfer Flags */
 volatile bool rxActive;
 volatile bool txActive;
-
 
 
 /**************************************************************************//**
@@ -115,58 +120,6 @@ void transferComplete(unsigned int channel, bool primary, void *user)
     rxActive = false;
   }
 }
-
-
-
-/**************************************************************************//**
- * @brief  Enabling clocks
- *****************************************************************************/
-void setupCmu(void)
-{  
-  /* Enabling clocks */
-  CMU_ClockEnable(cmuClock_DMA, true);
-  CMU_ClockEnable(cmuClock_GPIO, true);
-  CMU_ClockEnable(SPI_CLOCK, true);
-}
-
-
-
-/**************************************************************************//**
- * @brief  Setup SPI as Master
- *****************************************************************************/
-void setupSpi(void)
-{
-    USART_InitSync_TypeDef usartInit = USART_INITSYNC_DEFAULT;  
-
-    /* Initialize SPI */
-    usartInit.databits  = usartDatabits8;   /* 8 bits of data */
-    usartInit.baudrate  = SPI_BAUDRATE;     /* Clock frequency */
-    usartInit.master    = true;             /* Master mode */
-    usartInit.msbf      = true;             /* Most Significant Bit first */
-    usartInit.clockMode = usartClockMode0;  /* Clock idle low, sample on rising edge */
-
-    USART_InitSync(SPI_CHANNEL, &usartInit);
-
-    /* Turn on automatic Chip Select control */
-    SPI_CHANNEL->CTRL |= USART_CTRL_AUTOCS;
-
-    /* Enable SPI transmit and receive */
-    USART_Enable(SPI_CHANNEL, usartEnable);
-
-    /* Configure GPIO pins for SPI */
-    GPIO_PinModeSet(SPI_PORT_MOSI,  SPI_PIN_MOSI,   gpioModePushPull, 0); /* MOSI */
-    GPIO_PinModeSet(SPI_PORT_MISO,  SPI_PIN_MISO,   gpioModeInput,    0); /* MISO */
-    GPIO_PinModeSet(SPI_PORT_CLK,   SPI_PIN_CLK,    gpioModePushPull, 0); /* CLK */
-    GPIO_PinModeSet(SPI_PORT_CS,    SPI_PIN_CS,     gpioModePushPull, 1); /* CS */
-
-    /* Enable routing for SPI pins from USART to location 1 */
-    SPI_CHANNEL->ROUTE =  USART_ROUTE_TXPEN |
-                          USART_ROUTE_RXPEN |
-                          USART_ROUTE_CSPEN |
-                          USART_ROUTE_CLKPEN |
-                          SPI_ROUTE_LOCATION;
-}
-
 
 
 /**************************************************************************//**
@@ -226,7 +179,6 @@ void setupDma(void)
 }
 
 
-
 /**************************************************************************//**
  * @brief  SPI DMA Transfer
  * NULL can be input as txBuffer if tx data to transmit dummy data
@@ -240,10 +192,7 @@ void spiDmaTransfer(uint8_t *txBuffer, uint8_t *rxBuffer, unsigned int bytes)
   {
     /* Setting flag to indicate that RX is in progress
      * will be cleared by call-back function */
-    rxActive = true;void spi_auto_cs_off(void)
-{
-    SPI_CHANNEL->CTRL &= ~USART_CTRL_AUTOCS;
-}
+    rxActive = true;
     
     /* Clear RX regsiters */
     SPI_CHANNEL->CMD = USART_CMD_CLEARRX;
@@ -273,7 +222,6 @@ void spiDmaTransfer(uint8_t *txBuffer, uint8_t *rxBuffer, unsigned int bytes)
 }
 
 
-
 /**************************************************************************//**
  * @brief  Returns if an SPI transfer is active
  *****************************************************************************/
@@ -284,7 +232,6 @@ bool spiDmaIsActive(void)
   temp = temp | txActive;
   return temp;
 }
-
 
 
 /**************************************************************************//**
@@ -307,13 +254,13 @@ void sleepUntilDmaDone(void)
 
     while(1)
     {
-        //INT_Disable();
+        INT_Disable();
         isActive = spiDmaIsActive();
         if ( isActive )
         {
-            //EMU_EnterEM1();
+            EMU_EnterEM1();
         }
-        //INT_Enable();
+        INT_Enable();
 
         // Exit the loop if transfer has completed
         if ( !isActive )
@@ -322,10 +269,56 @@ void sleepUntilDmaDone(void)
             break;
         }
     }
-  
-
-    //while(spiDmaIsActive());
 }
+
+#endif
+
+/**************************************************************************//**
+ * @brief  Enabling clocks
+ *****************************************************************************/
+void setupCmu(void)
+{  
+    /* Enabling clocks */
+#ifdef USE_DMA
+    CMU_ClockEnable(cmuClock_DMA, true);
+#endif
+    CMU_ClockEnable(cmuClock_GPIO, true);
+    CMU_ClockEnable(SPI_CLOCK, true);
+}
+
+
+/**************************************************************************//**
+ * @brief  Setup SPI as Master
+ *****************************************************************************/
+void setupSpi(void)
+{
+    USART_InitSync_TypeDef usartInit = USART_INITSYNC_DEFAULT;  
+
+    /* Initialize SPI */
+    usartInit.databits  = usartDatabits8;   /* 8 bits of data */
+    usartInit.baudrate  = SPI_BAUDRATE;     /* Clock frequency */
+    usartInit.master    = true;             /* Master mode */
+    usartInit.msbf      = true;             /* Most Significant Bit first */
+    usartInit.clockMode = usartClockMode0;  /* Clock idle low, sample on rising edge */
+
+    USART_InitSync(SPI_CHANNEL, &usartInit);
+
+    /* Enable SPI transmit and receive */
+    USART_Enable(SPI_CHANNEL, usartEnable);
+
+    /* Configure GPIO pins for SPI */
+    GPIO_PinModeSet(SPI_PORT_MOSI,  SPI_PIN_MOSI,   gpioModePushPull,   0); /* MOSI */
+    GPIO_PinModeSet(SPI_PORT_MISO,  SPI_PIN_MISO,   gpioModeInput,      0); /* MISO */
+    GPIO_PinModeSet(SPI_PORT_CLK,   SPI_PIN_CLK,    gpioModePushPull,   0); /* CLK */
+    GPIO_PinModeSet(SPI_PORT_CS,    SPI_PIN_CS,     gpioModePushPull,   1); /* CS */
+
+    /* Enable routing for SPI pins from USART to location 1 */
+    SPI_CHANNEL->ROUTE =  USART_ROUTE_TXPEN |
+                          USART_ROUTE_RXPEN |
+                          USART_ROUTE_CLKPEN |
+                          SPI_ROUTE_LOCATION;
+}
+
 
 // *****************************************************************************
 // @fn          spi_init
@@ -337,7 +330,9 @@ void spi_init(void)
 {
     setupCmu();
     setupSpi();
+#ifdef USE_DMA
     setupDma();
+#endif
     DPRINT("SPI Init.");
 }
 
@@ -350,6 +345,7 @@ void spi_init(void)
 void spi_auto_cs_on(void)
 {
     SPI_CHANNEL->CTRL |= USART_CTRL_AUTOCS;
+    SPI_CHANNEL->ROUTE |= USART_ROUTE_CSPEN;
 }
 
 // *****************************************************************************
@@ -361,6 +357,7 @@ void spi_auto_cs_on(void)
 void spi_auto_cs_off(void)
 {
     SPI_CHANNEL->CTRL &= ~USART_CTRL_AUTOCS;
+    SPI_CHANNEL->ROUTE &= ~USART_ROUTE_CSPEN;
 }
 
 // *****************************************************************************
@@ -393,10 +390,14 @@ void spi_deselect_chip(void)
 // *****************************************************************************
 unsigned char spi_byte(unsigned char data)
 {
+#ifdef USE_DMA
     unsigned char receive = NULL;
     spiDmaTransfer( (uint8_t*) &data, (uint8_t*) &receive, 1 );
     sleepUntilDmaDone();
     return receive;
+#else
+    return USART_SpiTransfer( SPI_CHANNEL, data );
+#endif
 }
 
 // *****************************************************************************
@@ -409,6 +410,34 @@ unsigned char spi_byte(unsigned char data)
 // *****************************************************************************
 void spi_string(unsigned char* TxData, unsigned char* RxData, unsigned int length)
 {
+#ifdef USE_DMA
     spiDmaTransfer( (uint8_t*) TxData, (uint8_t*) RxData, length );
     sleepUntilDmaDone();
+#else
+    uint16_t i = 0;
+    if( RxData != NULL && TxData != NULL ) // two way transmition
+    {
+        while( i < length )
+        {
+            RxData[i] = spi_byte( TxData[i] );
+            i++;
+        }
+    }
+    else if( RxData == NULL && TxData != NULL ) // send only
+    {
+        while( i < length )
+        {
+            spi_byte( TxData[i] );
+            i++;
+        }
+    }
+    else if( RxData != NULL && TxData == NULL ) // recieve only
+    {
+        while( i < length )
+        {
+            RxData[i] = spi_byte( 0 );
+            i++;
+        }
+    }
+#endif
 }
