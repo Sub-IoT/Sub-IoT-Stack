@@ -136,7 +136,7 @@ uint16_t fs_read_short(file_handler *fh, uint8_t offset)
 	if (fh == NULL)
 			return 0;
 
-	if (MERGEUINT16(fh->info->header.length[0],fh->info->header.length[1]) > offset + 1)
+	if (MERGEUINT16(fh->info->header.length[0],fh->info->header.length[1]) > (uint16_t) (offset + 1))
 	{
 		uint8_t* ptr = fh->file;
 		return *(uint16_t*) (&ptr[offset]);
@@ -151,7 +151,7 @@ uint8_t fs_read_data(file_handler *fh, uint8_t *data_array, uint8_t offset, uint
 	if (fh == NULL)
 			return 0;
 
-	if (MERGEUINT16(fh->info->header.length[0],fh->info->header.length[1]) > offset + length - 1)
+	if (MERGEUINT16(fh->info->header.length[0],fh->info->header.length[1]) > (uint16_t) (offset + length - 1))
 	{
 		uint8_t* ptr = fh->file;
 		memcpy(data_array, &ptr[offset], length);
@@ -167,7 +167,7 @@ uint8_t* fs_get_data_pointer(file_handler *fh, uint8_t offset)
 	if (fh == NULL)
 		return 0;
 
-	if (MERGEUINT16(fh->info->header.length[0],fh->info->header.length[1]) > offset + 1)
+	if (MERGEUINT16(fh->info->header.length[0],fh->info->header.length[1]) > (uint16_t) (offset + 1))
 	{
 		return (uint8_t*) (&fh->file[offset]);
 	}

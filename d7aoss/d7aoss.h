@@ -35,8 +35,8 @@
 //#define DEBUG
 
 // Select the correct platform if necesarry
-#define PLATFORM_WIZZIMOTE
-//#define PLATFORM_AGAIDI
+//#define PLATFORM_WIZZIMOTE
+#define PLATFORM_AGAIDI
 //#define PLATFORM_ARTESIS
 
 #ifdef __cplusplus

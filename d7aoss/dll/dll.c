@@ -514,7 +514,7 @@ void dll_ca_callback(Dll_Tx_Result result)
 
         uint16_t new_time = timer_get_counter_value();
 		uint16_t diff = (new_time - timestamp) >> 6;
-		if (diff < (timeout_ca - 5))
+		if (diff < (uint16_t) (timeout_ca - 5))
 		{
 			timeout_ca-= diff;
 			dll_ca(timeout_ca);

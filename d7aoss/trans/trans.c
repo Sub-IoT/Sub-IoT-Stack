@@ -76,8 +76,8 @@ static void nwl_rx_callback(nwl_rx_res_t* result)
 		if ((uint8_t)(alp_result.alp_record.record_flags & ALP_REC_FLG_TYPE_COMMAND_RESPONSE) == ALP_REC_FLG_TYPE_COMMAND_RESPONSE)
 		{
 			// todo: from where to get subnet and tx_eirp, get spectrum_id, target_id from query
-			uint8_t subnet = ((dll_frame_t*)(result->dll_rx_res->frame))->subnet;
-			int8_t tx_eirp =((dll_frame_t*)(result->dll_rx_res->frame)->control && 0x3F) - 32;
+			uint8_t subnet = result->dll_rx_res->frame->subnet;
+			int8_t tx_eirp = (int8_t) (result->dll_rx_res->frame->control && 0x3F) - 32;
 
 			trans_execute_query(command.alp_data, ALP_REC_FLG_TYPE_RESPONSE, file_system_user_guest, subnet, result->dll_rx_res->spectrum_id, tx_eirp, 0, NULL);
 		}

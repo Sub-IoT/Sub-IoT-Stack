@@ -29,8 +29,8 @@ nwl_rx_res_t res;
 static nwl_background_frame_t bf;
 //static nwl_ff_D7ADP_t d7adp_frame;
 static nwl_ff_D7ANP_t d7anp_frame;
-volatile static bool process_callback = true;
-volatile static bool tx_callback_received = false;
+static volatile bool process_callback = true;
+static volatile bool tx_callback_received = false;
 static dll_channel_scan_t scan_cfg;
 static dll_channel_scan_series_t scan_series_cfg;
 

@@ -121,7 +121,7 @@ void queue_init(queue_t* q, uint8_t* buffer, uint16_t size, uint8_t element_size
 void queue_init_with_header(queue_t* q, uint8_t* buffer, uint16_t size, uint8_t element_size, uint8_t header_space)
 {
 	queue_init(q,buffer, size, element_size);
-	if (header_space * element_size < size)
+	if ((uint16_t)(header_space) * element_size < size)
 		q->reserve_header = header_space;
 }
 
