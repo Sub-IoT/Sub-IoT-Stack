@@ -27,3 +27,5 @@ settings
 targetConfigs
 *.pyc
 oss7-build
+Debug__GNU
+*.ld
