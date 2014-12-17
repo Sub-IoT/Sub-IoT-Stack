@@ -33,6 +33,7 @@ uint8_t* bufferPosition;
 uint16_t remainingBytes;
 
 bool fec;
+static uint8_t frequency_band;
 uint8_t channel_center_freq_index;
 uint8_t channel_bandwidth_index;
 uint8_t preamble_size;
@@ -82,7 +83,8 @@ void phy_init(void)
 	WriteRfSettings(&rfSettings);
 
 	last_tx_cfg.eirp=0;
-	last_tx_cfg.spectrum_id = 0;
+    last_tx_cfg.spectrum_id[0] = 0;
+    last_tx_cfg.spectrum_id[1] = 0;
 	last_tx_cfg.sync_word_class=0;
 
 }
@@ -100,7 +102,7 @@ bool phy_translate_and_set_settings(uint8_t spectrum_id, uint8_t sync_word_class
 
 	Strobe(RF_SIDLE);
 
-	if(!phy_translate_settings(spectrum_id, sync_word_class, &fec, &channel_center_freq_index, &channel_bandwidth_index, &preamble_size, &sync_word))
+    if(!phy_translate_settings(spectrum_id, sync_word_class, &fec, &frequency_band, &channel_center_freq_index, &channel_bandwidth_index, &preamble_size, &sync_word))
 	{
 		#ifdef LOG_PHY_ENABLED
 		log_print_stack_string(LOG_PHY, "PHY Cannot translate settings");
@@ -162,11 +164,11 @@ extern bool phy_tx_data(phy_tx_cfg_t* cfg)
 	#endif
 
 		//Set buffer position
-		bufferPosition = cfg->data;
+        //bufferPosition = cfg->data;
 
 		//Configure length settings
 		set_length_infinite(false);
-		remainingBytes = cfg->length;
+        remainingBytes = tx_queue.length;
 		WriteSingleReg(PKTLEN, (uint8_t)remainingBytes);
 	#ifdef D7_PHY_USE_FEC
 	}
