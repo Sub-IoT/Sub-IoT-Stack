@@ -29,3 +29,4 @@ targetConfigs
 oss7-build
 Debug__GNU
 *.ld
+Debug__GNU__TI
