@@ -30,6 +30,8 @@ SET_PROPERTY(CACHE D7AOSS_HAL_STM32L_BOARD PROPERTY STRINGS stm32l152c-discovery
 
 OPTION(D7AOSS_BUILD_TESTS BOOL "Build tests")
 
+OPTION(D7AOSS_BUILD_TEST_APPLICATIONS BOOL "Build test applications")
+
 OPTION(D7AOSS_BUILD_EXAMPLES BOOL "Build examples")
 
 #######################################
@@ -43,11 +45,9 @@ ENDIF()
 
 IF(D7AOSS_BUILD_TESTS)
     ADD_SUBDIRECTORY(tests)
-
 ENDIF()
 
-# TODO temp for testing
-IF(D7AOSS_HAL_DRIVER STREQUAL "efm32gg")
-    #ADD_SUBDIRECTORY("test applications/efm32_spi")
+IF(D7AOSS_BUILD_TEST_APPLICATIONS)
+    ADD_SUBDIRECTORY("test applications")
 ENDIF()
 
