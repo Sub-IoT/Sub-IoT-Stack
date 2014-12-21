@@ -138,7 +138,7 @@ void dll_set_initial_t_ca(uint16_t t_ca);
 void dll_set_csma_ca(Dll_CSMA_CA_Type type);
 
 void dll_initiate_csma_ca();
-//static void dll_process_csma_ca();
+void dll_process_csma_ca();
 //AIND
 void dll_aind_ccp(bool init_status);
 //RIGD
