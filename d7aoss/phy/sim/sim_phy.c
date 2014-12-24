@@ -60,7 +60,7 @@ bool phy_is_tx_in_progress(void)
     return false; // TODO
 }
 
-int16_t phy_get_rssi(uint8_t spectrum_id, uint8_t sync_word_class)
+int16_t phy_get_rssi(uint8_t spectrum_id[2], uint8_t sync_word_class)
 {
     // TODO get actuall rssi value
     // problem: we need to wait for the radio to enter RX and the RSSI to become valid before returning here.

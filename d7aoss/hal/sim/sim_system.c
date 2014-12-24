@@ -18,14 +18,12 @@
 
 #include "../system.h"
 
-uint8_t device_id[8];
-
 void PMM_SetVCore (uint8_t level)
 {
 
 }
 
-void system_init()
+void system_init(uint8_t* tx_buffer, uint16_t tx_buffer_size, uint8_t* rx_buffer, uint16_t rx_buffer_size)
 {
 
 }
