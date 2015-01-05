@@ -17,6 +17,8 @@
  */
 
 #include "../system.h"
+#include "../framework/queue.h"
+#include "../dae/fs.h"
 
 void PMM_SetVCore (uint8_t level)
 {
@@ -25,7 +27,13 @@ void PMM_SetVCore (uint8_t level)
 
 void system_init(uint8_t* tx_buffer, uint16_t tx_buffer_size, uint8_t* rx_buffer, uint16_t rx_buffer_size)
 {
+    // TODO not hardware specific
+    queue_init_with_header(&tx_queue, tx_buffer, tx_buffer_size, 1, 30);
+    queue_init(&rx_queue, rx_buffer, rx_buffer_size, 1);
 
+    file_handler fh;
+    fs_open(&fh, DA_FILE_ID_UID, file_system_user_root, file_system_access_type_read);
+    device_id = fs_get_data_pointer(&fh, 0);
 }
 
 void system_watchdog_timer_stop()

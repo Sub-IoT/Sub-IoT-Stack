@@ -23,6 +23,7 @@
 
 void hal_timer_init()
 {
+	
 }
 
 void hal_timer_enable_interrupt()
@@ -35,6 +36,11 @@ void hal_timer_disable_interrupt()
 
 }
 
+void hal_timer_clear_interrupt( void )
+{
+
+}
+
 uint16_t hal_timer_getvalue()
 {
     return 0; // TODO
@@ -43,6 +49,11 @@ uint16_t hal_timer_getvalue()
 void hal_timer_setvalue(uint16_t next_event)
 {
     set_timer(next_event);
+}
+
+void hal_timer_counter_reset()
+{
+
 }
 
 void hal_benchmarking_timer_init()
