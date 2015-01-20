@@ -93,7 +93,7 @@ void rx_callback(Trans_Rx_Alp_Result* rx_res)
 			log_print_string("Received Query from: %x%x%x%x",
 								address_ptr[1] >> 4, address_ptr[1] & 0x0F);
 		} else if (address_length == 8) {
-			log_print_string("Received Query from: %x%x%x%x%x%x%x%x%x%x%x%x%x%x%x",
+			log_print_string("Received Query from: %x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x",
 					address_ptr[0] >> 4, address_ptr[0] & 0x0F,
 					address_ptr[1] >> 4, address_ptr[1] & 0x0F,
 					address_ptr[2] >> 4, address_ptr[2] & 0x0F,

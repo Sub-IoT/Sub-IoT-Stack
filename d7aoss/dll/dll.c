@@ -449,8 +449,9 @@ static void dll_cca2()
 	bool cca2 = phy_cca(current_phy_cfg->spectrum_id, current_phy_cfg->sync_word_class);;
 	if (!cca2)
 	{
-		dll_initiate_csma_ca();
+		//dll_initiate_csma_ca();
 		//dll_tx_callback(DLLTxResultCCA2Fail);
+		dll_process_csma_ca();
 		return;
 	}
 
