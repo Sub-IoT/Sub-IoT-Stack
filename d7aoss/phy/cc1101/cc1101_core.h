@@ -28,46 +28,70 @@ typedef enum {
 	GDOEdgeFalling = 0x0,
 } GDOEdge;
 
+
+// RF settings for CC1101
 typedef struct {
-    uint8_t iocfg2;    // IOCFG2.GDO2_CFG output pin configuration
-    uint8_t iofcg1;    // IOCFG1.GDO1_CFG output pin configuration
-    uint8_t iofcg0;    // IOCFG0.GDO0_CFG output pin configuration
-    uint8_t fifothr;   // RXFIFO and TXFIFO thresholds.
-    uint8_t sync1;     // Sync word, high byte
-    uint8_t sync0;     // Sync word, low byte
-    uint8_t pktlen;    // Packet length.
-    uint8_t pktctrl1;  // Packet automation control.
-    uint8_t pktctrl0;  // Packet automation control.
-    uint8_t addr;      // Device address.
-    uint8_t channr;    // Channel number.
-    uint8_t fsctrl1;   // Frequency synthesizer control.
-    uint8_t fsctrl0;   // Frequency synthesizer control.
-    uint8_t freq2;     // Frequency control word, high byte.
-    uint8_t freq1;     // Frequency control word, middle byte.
-    uint8_t freq0;     // Frequency control word, low byte.
-    uint8_t mdmcfg4;   // Modem configuration - Channel Bandwidth and symbol rate (exponent)
-    uint8_t mdmcfg3;   // Modem configuration - Symbol rate (mantissa)
-    uint8_t mdmcfg2;   // Modem configuration.
-    uint8_t mdmcfg1;   // Modem configuration.
-    uint8_t mdmcfg0;   // Modem configuration.
-    uint8_t deviatn;   // Modem deviation setting (when FSK modulation is enabled).
-    uint8_t mcsm2;     // Main Radio Control State Machine configuration.
-    uint8_t mcsm1;     // Main Radio Control State Machine configuration.
-    uint8_t mcsm0;     // Main Radio Control State Machine configuration.
-    uint8_t foccfg;    // Frequency Offset Compensation Configuration.
-    uint8_t bscfg;     // Bit synchronization Configuration.
-    uint8_t agcctrl2;  // AGC control.
-    uint8_t agcctrl1;  // AGC control.
-    uint8_t agcctrl0;  // AGC control.
-    uint8_t worevt1;   // High byte Event0 timeout
-    uint8_t worevt0;   // Low byte Event0 timeout
-    uint8_t worctrl;   // Wake On Radio control
-    uint8_t frend1;    // Front end RX configuration
-    uint8_t frend0;    // Front end TX configuration
-    uint8_t fscal3;    // Frequency synthesizer calibration.
-    uint8_t fscal2;    // Frequency synthesizer calibration.
-    uint8_t fscal1;    // Frequency synthesizer calibration.
-    uint8_t fscal0;    // Frequency synthesizer calibration.
+    uint8_t iocfg2;           // GDO2 Output Pin Configuration
+    uint8_t iocfg1;           // GDO1 Output Pin Configuration
+    uint8_t iocfg0;           // GDO0 Output Pin Configuration
+    uint8_t fifothr;          // RX FIFO and TX FIFO Thresholds
+    uint8_t sync1;            // Sync Word, High Byte
+    uint8_t sync0;            // Sync Word, Low Byte
+    uint8_t pktlen;           // Packet Length
+    uint8_t pktctrl1;         // Packet Automation Control
+    uint8_t pktctrl0;         // Packet Automation Control
+    uint8_t addr;             // Device Address
+    uint8_t channr;           // Channel Number
+    uint8_t fsctrl1;          // Frequency Synthesizer Control
+    uint8_t fsctrl0;          // Frequency Synthesizer Control
+    uint8_t freq2;            // Frequency Control Word, High Byte
+    uint8_t freq1;            // Frequency Control Word, Middle Byte
+    uint8_t freq0;            // Frequency Control Word, Low Byte
+    uint8_t mdmcfg4;          // Modem Configuration
+    uint8_t mdmcfg3;          // Modem Configuration
+    uint8_t mdmcfg2;          // Modem Configuration
+    uint8_t mdmcfg1;          // Modem Configuration
+    uint8_t mdmcfg0;          // Modem Configuration
+    uint8_t deviatn;          // Modem Deviation Setting
+    uint8_t mcsm2;            // Main Radio Control State Machine Configuration
+    uint8_t mcsm1;            // Main Radio Control State Machine Configuration
+    uint8_t mcsm0;            // Main Radio Control State Machine Configuration
+    uint8_t foccfg;           // Frequency Offset Compensation Configuration
+    uint8_t bscfg;            // Bit Synchronization Configuration
+    uint8_t agcctrl2;         // AGC Control
+    uint8_t agcctrl1;         // AGC Control
+    uint8_t agcctrl0;         // AGC Control
+    uint8_t worevt1;          // High Byte Event0 Timeout
+    uint8_t worevt0;          // Low Byte Event0 Timeout
+    uint8_t worctrl;          // Wake On Radio Control
+    uint8_t frend1;           // Front End RX Configuration
+    uint8_t frend0;           // Front End TX Configuration
+    uint8_t fscal3;           // Frequency Synthesizer Calibration
+    uint8_t fscal2;           // Frequency Synthesizer Calibration
+    uint8_t fscal1;           // Frequency Synthesizer Calibration
+    uint8_t fscal0;           // Frequency Synthesizer Calibration
+    uint8_t rcctrl1;          // RC Oscillator Configuration
+    uint8_t rcctrl0;          // RC Oscillator Configuration
+    uint8_t fstest;           // Frequency Synthesizer Calibration Control
+    uint8_t ptest;            // Production Test
+    uint8_t agctest;          // AGC Test
+    uint8_t test2;            // Various Test Settings
+    uint8_t test1;            // Various Test Settings
+    uint8_t test0;            // Various Test Settings
+    uint8_t partnum;          // Chip ID
+    uint8_t version;          // Chip ID
+    uint8_t freqest;          // Frequency Offset Estimate from Demodulator
+    uint8_t lqi;              // Demodulator Estimate for Link Quality
+    uint8_t rssi;             // Received Signal Strength Indication
+    uint8_t marcstate;        // Main Radio Control State Machine State
+    uint8_t wortime1;         // High Byte of WOR Time
+    uint8_t wortime0;         // Low Byte of WOR Time
+    uint8_t pktstatus;        // Current GDOx Status and Packet Status
+    uint8_t vco_vc_dac;       // Current Setting from PLL Calibration Module
+    uint8_t txbytes;          // Underflow and Number of Bytes
+    uint8_t rxbytes;          // Overflow and Number of Bytes
+    uint8_t rcctrl1_status;   // Last RC Oscillator Calibration Result
+    uint8_t rcctrl0_status;   // Last RC Oscillator Calibration Result
 } RF_SETTINGS;
 
 uint8_t Strobe(unsigned char strobe);
