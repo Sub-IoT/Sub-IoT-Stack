@@ -1,2 +1,5 @@
- ADD_SUBDIRECTORY("noise_test")
- #ADD_SUBDIRECTORY("continious_tx")
+ADD_SUBDIRECTORY("noise_test")
+ 
+IF(D7AOSS_PHY_RADIO_DRIVER STREQUAL "cc1101")
+ 	ADD_SUBDIRECTORY("continious_tx")
+ENDIF()
