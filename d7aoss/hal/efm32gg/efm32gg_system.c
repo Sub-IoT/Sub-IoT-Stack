@@ -73,6 +73,10 @@ void system_init(uint8_t* tx_buffer, uint16_t tx_buffer_size, uint8_t* rx_buffer
     led_init();
     //button_init();
     uart_init();
+
+    // TODO not hardware specific
+    queue_init_with_header(&tx_queue, tx_buffer, tx_buffer_size, 1, 30);
+    queue_init(&rx_queue, rx_buffer, rx_buffer_size, 1);
 }
 
 void system_watchdog_timer_stop()
