@@ -20,28 +20,28 @@
 #include "../../d7aoss/phy/cc1101/cc1101_constants.h"
 #include "../../d7aoss/phy/cc1101/cc1101_phy.h"
 
-// Address config = No address check
-// Sync word qualifier mode = No preamble/sync
-// PA ramping = false
-// Base frequency = 433.999573
-// Data rate = 38.3835
-// RX filter BW = 101.562500
-// Packet length = 255
-// Manchester enable = false
 // Packet length mode = Infinite packet length mode
-// CRC enable = false
+// PA ramping = false
 // TX power = 0
-// Modulation format = ASK/OOK
-// Device address = 0
+// Manchester enable = false
+// Sync word qualifier mode = No preamble/sync
+// Modulation format = GFSK
+// Data rate = 55.542
+// Preamble count = 4
+// Packet length = 255
 // Whitening = false
+// CRC enable = false
+// Channel number = 0
+// Carrier frequency = 433.159698
+// Deviation = 50.781250
+// RX filter BW = 58.035714
+// Address config = No address check
+// CRC autoflush = false
 // Channel spacing = 199.951172
 // Data format = Random mode
-// Deviation = 20.629883
-// Preamble count = 4
-// CRC autoflush = false
-// Carrier frequency = 433.999573
-// Modulated = false
-// Channel number = 0
+// Modulated = true
+// Base frequency = 433.159698
+// Device address = 0
 // Rf settings for CC1101
 RF_SETTINGS rfSettings = {
     0x0B,  // IOCFG2              GDO2 Output Pin Configuration
@@ -55,31 +55,31 @@ RF_SETTINGS rfSettings = {
     0x22,  // PKTCTRL0            Packet Automation Control
     0x00,  // ADDR                Device Address
     0x00,  // CHANNR              Channel Number
-    0x08,  // FSCTRL1             Frequency Synthesizer Control
+    0x06,  // FSCTRL1             Frequency Synthesizer Control
     0x00,  // FSCTRL0             Frequency Synthesizer Control
     0x10,  // FREQ2               Frequency Control Word, High Byte
-    0xB1,  // FREQ1               Frequency Control Word, Middle Byte
-    0x3A,  // FREQ0               Frequency Control Word, Low Byte
-    0xCA,  // MDMCFG4             Modem Configuration
-    0x83,  // MDMCFG3             Modem Configuration
-    0xB0,  // MDMCFG2             Modem Configuration
+    0xA8,  // FREQ1               Frequency Control Word, Middle Byte
+    0xF5,  // FREQ0               Frequency Control Word, Low Byte
+    0xFB,  // MDMCFG4             Modem Configuration
+    0x18,  // MDMCFG3             Modem Configuration
+    0x10,  // MDMCFG2             Modem Configuration
     0x22,  // MDMCFG1             Modem Configuration
     0xF8,  // MDMCFG0             Modem Configuration
-    0x35,  // DEVIATN             Modem Deviation Setting
+    0x50,  // DEVIATN             Modem Deviation Setting
     0x07,  // MCSM2               Main Radio Control State Machine Configuration
     0x30,  // MCSM1               Main Radio Control State Machine Configuration
     0x18,  // MCSM0               Main Radio Control State Machine Configuration
     0x16,  // FOCCFG              Frequency Offset Compensation Configuration
     0x6C,  // BSCFG               Bit Synchronization Configuration
-    0x43,  // AGCCTRL2            AGC Control
+    0x03,  // AGCCTRL2            AGC Control
     0x40,  // AGCCTRL1            AGC Control
     0x91,  // AGCCTRL0            AGC Control
     0x87,  // WOREVT1             High Byte Event0 Timeout
     0x6B,  // WOREVT0             Low Byte Event0 Timeout
     0xFB,  // WORCTRL             Wake On Radio Control
     0x56,  // FREND1              Front End RX Configuration
-    0x11,  // FREND0              Front End TX Configuration
-    0xE9,  // FSCAL3              Frequency Synthesizer Calibration
+    0x10,  // FREND0              Front End TX Configuration
+    0xEA,  // FSCAL3              Frequency Synthesizer Calibration
     0x2A,  // FSCAL2              Frequency Synthesizer Calibration
     0x00,  // FSCAL1              Frequency Synthesizer Calibration
     0x1F,  // FSCAL0              Frequency Synthesizer Calibration
@@ -120,6 +120,7 @@ void main()
 	log_print_string("VERSION 0x%x", p);
 	log_print_string("started");
 
+	ResetRadioCore();
 	WriteRfSettings(&rfSettings);
 	Strobe(RF_SFTX);
 
