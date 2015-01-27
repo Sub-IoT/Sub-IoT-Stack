@@ -77,6 +77,7 @@ bool timer_add_event( timer_event* event )
 
 void timer_completed( void )
 {
+    DPRINT("timer_completed");
     // to avoid configuring annother event when one is still executing
     timer_event_running = true;
 

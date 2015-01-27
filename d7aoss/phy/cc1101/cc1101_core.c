@@ -19,7 +19,7 @@
 #include "log.h"
 
 // turn on/off the debug prints
-#if 1
+#ifdef LOG_PHY_ENABLED
 #define DPRINT(...) log_print_string(__VA_ARGS__)
 #else
 #define DPRINT(...)  
@@ -104,9 +104,9 @@ static uint8_t readstatus(uint8_t addr)
     ret = spi_byte(_addr);
     data = spi_byte(0); // send dummy byte to receive reply
 
-    // See CC1101's Errata for SPI read errors
+    // See CC1101's Errata for SPI read errors // TODO needed?
     while (true) {
-    	retCheck = spi_byte(addr);
+    	retCheck = spi_byte(_addr);
         data2 = spi_byte(0);
     	if (ret == retCheck && data == data2)
     		break;
@@ -115,6 +115,7 @@ static uint8_t readstatus(uint8_t addr)
     		data = data2;
     	}
     }
+
     spi_deselect_chip();
 
     DPRINT("READ STATUS 0x%02X @0x%02X", data, addr);

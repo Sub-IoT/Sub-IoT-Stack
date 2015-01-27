@@ -14,7 +14,7 @@ SET(HEADERS
     inc/stm32l1xx_conf.h
 )
 
-ADD_LIBRARY( DRV ${HEADERS}
+ADD_LIBRARY( DRV OBJECT ${HEADERS}
     src/stm32l1xx_crc.c
     src/stm32l1xx_rcc.c
     src/stm32l1xx_gpio.c
