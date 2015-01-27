@@ -70,28 +70,6 @@ typedef struct {
     uint8_t fscal2;           // Frequency Synthesizer Calibration
     uint8_t fscal1;           // Frequency Synthesizer Calibration
     uint8_t fscal0;           // Frequency Synthesizer Calibration
-    uint8_t rcctrl1;          // RC Oscillator Configuration
-    uint8_t rcctrl0;          // RC Oscillator Configuration
-    uint8_t fstest;           // Frequency Synthesizer Calibration Control
-    uint8_t ptest;            // Production Test
-    uint8_t agctest;          // AGC Test
-    uint8_t test2;            // Various Test Settings
-    uint8_t test1;            // Various Test Settings
-    uint8_t test0;            // Various Test Settings
-    uint8_t partnum;          // Chip ID
-    uint8_t version;          // Chip ID
-    uint8_t freqest;          // Frequency Offset Estimate from Demodulator
-    uint8_t lqi;              // Demodulator Estimate for Link Quality
-    uint8_t rssi;             // Received Signal Strength Indication
-    uint8_t marcstate;        // Main Radio Control State Machine State
-    uint8_t wortime1;         // High Byte of WOR Time
-    uint8_t wortime0;         // Low Byte of WOR Time
-    uint8_t pktstatus;        // Current GDOx Status and Packet Status
-    uint8_t vco_vc_dac;       // Current Setting from PLL Calibration Module
-    uint8_t txbytes;          // Underflow and Number of Bytes
-    uint8_t rxbytes;          // Overflow and Number of Bytes
-    uint8_t rcctrl1_status;   // Last RC Oscillator Calibration Result
-    uint8_t rcctrl0_status;   // Last RC Oscillator Calibration Result
 } RF_SETTINGS;
 
 uint8_t Strobe(unsigned char strobe);
