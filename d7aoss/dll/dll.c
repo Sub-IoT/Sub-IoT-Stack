@@ -449,8 +449,9 @@ static void dll_cca2()
 	bool cca2 = phy_cca(current_phy_cfg->spectrum_id, current_phy_cfg->sync_word_class);;
 	if (!cca2)
 	{
-		dll_initiate_csma_ca();
+		//dll_initiate_csma_ca();
 		//dll_tx_callback(DLLTxResultCCA2Fail);
+		dll_process_csma_ca();
 		return;
 	}
 
@@ -477,11 +478,13 @@ void dll_csma(bool enabled)
 		return;
 	}
 
-	bool cca1 = phy_cca(current_phy_cfg->spectrum_id, current_phy_cfg->sync_word_class);
+	volatile bool cca1 = phy_cca(current_phy_cfg->spectrum_id, current_phy_cfg->sync_word_class);
 
 	if (!cca1)
 	{
-		dll_initiate_csma_ca();//dll_tx_callback(DLLTxResultCCA1Fail);
+		//dll_initiate_csma_ca();//dll_tx_callback(DLLTxResultCCA1Fail);
+
+		dll_process_csma_ca();
 		return;
 	}
 
@@ -631,21 +634,21 @@ void dll_initiate_csma_ca()
 		break;
 	}
 }
-//
-//static void dll_process_csma_ca()
-//{
-//	switch (csma_ca_type)
-//	{
-//	case DllCsmaCaAind:
-//		dll_aind_ccp(false);
-//		break;
-//	case DllCsmaCaRaind:
-//		break;
-//	case DllCsmaCaRigd:
-//		dll_rigd_ccp(true);
-//		break;
-//	}
-//}
+
+static void dll_process_csma_ca()
+{
+	switch (csma_ca_type)
+	{
+	case DllCsmaCaAind:
+		dll_aind_ccp(false);
+		break;
+	case DllCsmaCaRaind:
+		//break;
+	case DllCsmaCaRigd:
+		dll_rigd_ccp(true);
+		break;
+	}
+}
 
 
 

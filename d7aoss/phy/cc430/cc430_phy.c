@@ -836,10 +836,16 @@ void set_eirp(int8_t eirp)
 int16_t calculate_rssi(int8_t rssi_raw)
 {
 	// CC430 RSSI is 0.5 dBm units, signed byte
-    int16_t rssi = (int16_t)rssi_raw;		//Convert to signed 16 bit
-    rssi += 128;                      		//Make it positive...
-    rssi >>= 1;                        		//...So division to 1 dBm units can be a shift...
-    rssi -= 64 + RSSI_OFFSET;     			// ...and then rescale it, including offset
+	 int16_t rssi = (int16_t)rssi_raw;		//Convert to signed 16 bit
+	 if (rssi >= 128)
+		 rssi -= 256;
+
+	 rssi >>= 1;
+	 rssi -= RSSI_OFFSET;
+
+//    rssi += 128;                      		//Make it positive...
+//    rssi >>= 1;                        		//...So division to 1 dBm units can be a shift...
+//    rssi -= 64 + RSSI_OFFSET;     			// ...and then rescale it, including offset
 
     return rssi;
 }

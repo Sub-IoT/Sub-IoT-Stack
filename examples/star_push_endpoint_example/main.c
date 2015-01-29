@@ -42,7 +42,7 @@
 #include <framework/timer.h>
 #include <hal/leds.h>
 
-#define SEND_INTERVAL_MS 1000
+#define SEND_INTERVAL_MS 500
 #define TX_EIRP 10
 
 // Macro which can be removed in production environment

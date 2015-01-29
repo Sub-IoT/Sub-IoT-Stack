@@ -83,8 +83,7 @@ const uint8_t filesystem_info_headers[] = {
 #pragma RETAIN(filesystem_files)
 const uint8_t filesystem_files[] = {
 		// 0x00: UID
-		0x46,0x93,0x21,0xAB,0x00,0x33,0x00,0x1E,
-		//0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00, // if UID = 000000000000 -> OSS-7 will create UID based on hardware (is not compliant to spec!!!)
+		0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00, // if UID = 000000000000 -> OSS-7 will create UID based on hardware (is not compliant to spec!!!)
 		// 0x01: Device Capacity
 		// - 1B: Supported Settings (Device Type: SC, Coding scheme: 0, hi rate: disabled)
 		// - 1B: Max Frame Length (128)
