@@ -1,0 +1,2 @@
+MODULE_OPTION(${MODULE_PREFIX}_use_gcc "Use GCC to compile this" ON)
+MODULE_OPTION(${MODULE_PREFIX}_use_gdb "Use GDB to debug this" OFF)

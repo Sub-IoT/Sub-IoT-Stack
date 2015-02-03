@@ -1,0 +1,1 @@
+//access functions for the buttons: implementation is usually platform-dependent

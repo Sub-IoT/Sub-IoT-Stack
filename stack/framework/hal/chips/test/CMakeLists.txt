@@ -1,0 +1,14 @@
+SET(CMAKE_INCLUDE_CURRENT_DIR ON)
+
+IF(CMAKE_BUILD_TYPE STREQUAL "Debug")
+    #note: they're two different params. This is on purpose
+#    GLOBAL_ADD_DEFINITIONS("-DDEBUG_EFM=1" "-DDEBUG=1")
+    GLOBAL_ADD_DEFINITIONS("-DDEBUG_EFM=1")
+    GLOBAL_ADD_DEFINITIONS("-DDEBUG=1")
+ENDIF()
+
+PLATFORM_INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR})
+
+#A library with this exact name must be generated
+ADD_LIBRARY(${CHIP_LIBRARY_NAME} OBJECT efm32gg.c efm32gg.h)
+
