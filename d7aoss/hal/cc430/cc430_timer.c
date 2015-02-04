@@ -25,6 +25,7 @@
 #include "cc430_addresses.h"
 #include <msp430.h>
 
+
 static volatile uint8_t benchmarking_timer_rollover = 0;
 
 
@@ -112,10 +113,22 @@ void hal_benchmarking_timer_stop()
 	#endif
 }
 
-// Timer A0 interrupt service routine
-__attribute__ ((interrupt(TIMER1_A0_VECTOR))) 
-void Timer_A_CCO (void)
+
+#if defined(__TI_COMPILER_VERSION__) || defined(__IAR_SYSTEMS_ICC__)
+#pragma vector=TIMER1_A0_VECTOR
+__interrupt void TIMER1_A0_VECTOR_ISR(void)
+#elif defined(__GNUC__)
+void __attribute__ ((interrupt(TIMER1_A0_VECTOR))) TIMER1_A0_VECTOR_ISR (void)
+#else
+#error Compiler not supported!
+#endif
 {
+// Timer A0 interrupt service routine
+//__attribute__ ((interrupt(TIMER1_A0_VECTOR))) 
+//#pragma vector=TIMER1_A0_VECTOR
+//__interrupt void Timer_A_CCO (void)
+//void Timer_A_CCO (void)
+//{
     timer_completed();
 
 //    switch( TA0IV )

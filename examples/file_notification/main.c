@@ -173,8 +173,15 @@ int main(void) {
 }
 
 
+// TODO provide macro for this
+#if defined(__TI_COMPILER_VERSION__) || defined(__IAR_SYSTEMS_ICC__)
 #pragma vector=ADC12_VECTOR
-__interrupt void ADC12ISR (void)
+__interrupt void ADC12_VECTOR_ISR(void)
+#elif defined(__GNUC__)
+void __attribute__ ((interrupt(ADC12_VECTOR))) ADC12_VECTOR_ISR (void)
+#else
+#error Compiler not supported!
+#endif
 {
   switch(__even_in_range(ADC12IV,34))
   {

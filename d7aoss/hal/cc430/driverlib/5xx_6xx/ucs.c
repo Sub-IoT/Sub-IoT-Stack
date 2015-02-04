@@ -45,7 +45,8 @@
 #include "debug.h"
 #include "../inc/sfr_sys_baseAddress.h"
 #ifdef __GNUC__
-#define __get_SR_register() READ_SR
+ // TODO not working with ti-mspgcc
+//#define __get_SR_register() READ_SR
 #endif
 
 //******************************************************************************

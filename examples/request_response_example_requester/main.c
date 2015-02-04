@@ -201,20 +201,21 @@ int main(void) {
 }
 
 
-#pragma vector=ADC12_VECTOR,RTC_VECTOR,AES_VECTOR,COMP_B_VECTOR,DMA_VECTOR,PORT1_VECTOR,PORT2_VECTOR,SYSNMI_VECTOR,UNMI_VECTOR,USCI_A0_VECTOR,USCI_B0_VECTOR,WDT_VECTOR,TIMER0_A0_VECTOR,TIMER1_A1_VECTOR
-__interrupt void ISR_trap(void)
-{
-  /* For debugging purposes, you can trap the CPU & code execution here with an
-     infinite loop */
-  //while (1);
-	__no_operation();
 
-  /* If a reset is preferred, in scenarios where you want to reset the entire system and
-     restart the application from the beginning, use one of the following lines depending
-     on your MSP430 device family, and make sure to comment out the while (1) line above */
+//#pragma vector=ADC12_VECTOR,RTC_VECTOR,AES_VECTOR,COMP_B_VECTOR,DMA_VECTOR,PORT1_VECTOR,PORT2_VECTOR,SYSNMI_VECTOR,UNMI_VECTOR,USCI_A0_VECTOR,USCI_B0_VECTOR,WDT_VECTOR,TIMER0_A0_VECTOR,TIMER1_A1_VECTOR
+//__interrupt void ISR_trap(void)
+//{
+//  /* For debugging purposes, you can trap the CPU & code execution here with an
+//     infinite loop */
+//  //while (1);
+//	__no_operation();
 
-  /* If you are using MSP430F5xx or MSP430F6xx devices, use the following line
-     to trigger a software BOR.   */
-  PMMCTL0 = PMMPW | PMMSWBOR;          // Apply PMM password and trigger SW BOR
-}
+//  /* If a reset is preferred, in scenarios where you want to reset the entire system and
+//     restart the application from the beginning, use one of the following lines depending
+//     on your MSP430 device family, and make sure to comment out the while (1) line above */
+
+//  /* If you are using MSP430F5xx or MSP430F6xx devices, use the following line
+//     to trigger a software BOR.   */
+//  PMMCTL0 = PMMPW | PMMSWBOR;          // Apply PMM password and trigger SW BOR
+//}
 

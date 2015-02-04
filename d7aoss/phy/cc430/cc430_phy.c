@@ -433,8 +433,16 @@ extern int16_t phy_get_rssi(uint8_t spectrum_id[2], uint8_t sync_word_class)
 /*
  * Interrupt functions
  */
-__attribute__((interrupt(CC1101_VECTOR)))
-void CC1101_ISR (void)
+
+// TODO provide macro for this
+#if defined(__TI_COMPILER_VERSION__) || defined(__IAR_SYSTEMS_ICC__)
+#pragma vector=CC1101_VECTOR
+__interrupt void CC1101_VECTOR_ISR(void)
+#elif defined(__GNUC__)
+void __attribute__ ((interrupt(CC1101_VECTOR))) CC1101_VECTOR_ISR (void)
+#else
+#error Compiler not supported!
+#endif
 {
 	uint16_t isr_vector = RF1AIV >> 1;
 	uint16_t edge = (1 << (isr_vector - 1)) & RF1AIES;
