@@ -433,8 +433,8 @@ extern int16_t phy_get_rssi(uint8_t spectrum_id[2], uint8_t sync_word_class)
 /*
  * Interrupt functions
  */
-#pragma vector=CC1101_VECTOR
-__interrupt void CC1101_ISR (void)
+__attribute__((interrupt(CC1101_VECTOR)))
+void CC1101_ISR (void)
 {
 	uint16_t isr_vector = RF1AIV >> 1;
 	uint16_t edge = (1 << (isr_vector - 1)) & RF1AIES;

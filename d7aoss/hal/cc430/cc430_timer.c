@@ -113,8 +113,8 @@ void hal_benchmarking_timer_stop()
 }
 
 // Timer A0 interrupt service routine
-#pragma vector=TIMER1_A0_VECTOR
-__interrupt void Timer_A_CCO (void)
+__attribute__ ((interrupt(TIMER1_A0_VECTOR))) 
+void Timer_A_CCO (void)
 {
     timer_completed();
 
@@ -130,8 +130,8 @@ __interrupt void Timer_A_CCO (void)
 }
 
 #ifdef ENABLE_BENCHMARKING_TIMER
-#pragma vector=TIMER0_A1_VECTOR
-__interrupt void Timer_A_TA (void)
+__attribute__ ((interrupt(TIMER0_A1_VECTOR))) 
+void Timer_A1 (void)
 {
     //timer_completed();
 

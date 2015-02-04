@@ -38,7 +38,7 @@ IF(D7AOSS_HAL_DRIVER STREQUAL "cc430")
         #uart_baudrate.c
         #uart.c
         cc430/driverlib/5xx_6xx/wdt.c
-        cc430/driverlib/5xx_6xx/ucs.c
+        #cc430/driverlib/5xx_6xx/ucs.c
     )
 ENDIF()
 
