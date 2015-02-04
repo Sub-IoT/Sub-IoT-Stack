@@ -1,80 +1,34 @@
-#This one's a bit complicated :)
-#GET_PROPERTY(__includes DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY INCLUDE_DIRECTORIES)
-#MESSAGE(AUTHOR_WARNING "Includes@${CMAKE_CURRENT_SOURCE_DIR}: ${__includes}")
-
-
-MACRO (GET_REQUIRED_TOOLCHAIN platform var)
-    SET(${var} "")
-    IF(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/${platform}/toolchain")
-	FILE(STRINGS "${CMAKE_CURRENT_SOURCE_DIR}/${platform}/toolchain" __toolchains REGEX "^[ 	]*toolchain[ 	]*=[ 	]*[a-zA-Z0-9-]+.*$")
-#	MESSAGE(AUTHOR_WARNING "toolchains: ${__toolchains}")
-	LIST(LENGTH __toolchains __tclen)
-	IF(${__tclen} GREATER 0)
-	    LIST(GET __toolchains 0 __tc)
-	    STRING(REGEX REPLACE "^[ 	]*toolchain[ 	]*=[ 	]*([a-zA-Z0-9-]+).*$" "\\1" __tc "${__tc}")
-	    SET(${var} "${__tc}")
-#	    MESSAGE(AUTHOR_WARNING "toolchain: ${__tc}")
-	    
-	ENDIF()
-	UNSET(__tc)
-	UNSET(__tclen)
-	UNSET(__toolchains)
-    ENDIF()
-ENDMACRO()
-
-#Scan all platforms for those that are compatible with the selected toolchain
-#And add them to the cache (for selection by the user)
+#Scan all platforms in the current directory for those that are
+#compatible with the current toolchain
 LIST_SUBDIRS(CUR_DIRS ${CMAKE_CURRENT_SOURCE_DIR})
 SET(SUPPORTED_PLATFORMS "")
 FOREACH(dir ${CUR_DIRS})
     GET_REQUIRED_TOOLCHAIN(${dir} req_tc)
-    #MESSAGE(AUTHOR_WARNING "Checking  platform ${dir} requires ${req_tc} but is ${TOOLCHAIN}")
     IF(req_tc STREQUAL "${TOOLCHAIN}")
 	LIST(APPEND SUPPORTED_PLATFORMS "${dir}")
-#    ELSE()
-#	MESSAGE(AUTHOR_WARNING "Rejecting platform ${dir} requires ${rec_tc} but is ${TOOLCHAIN}")
     ENDIF()    
 ENDFOREACH()
+#If no platforms are compatible with the current toolchain, generate an error
 IF(NOT SUPPORTED_PLATFORMS)
     MESSAGE(SEND_ERROR "There are no supported platforms for the selected toolchain ${TOOLCHAIN}")
 ELSE()
+#Otherwise add a parameter to allow the user to select the platform to use
     LIST(GET SUPPORTED_PLATFORMS 0 def_platform)
     SET (PLATFORM ${def_platform} CACHE STRING "Choose the platform to compile for.")
     SET_PROPERTY(CACHE PLATFORM PROPERTY STRINGS ${SUPPORTED_PLATFORMS})
 ENDIF()
 UNSET(CUR_DIRS)
 
-#Define MACRO's that allows individual platforms to add conditional (cache) parameters and options
-MACRO(PLATFORM_PARAM var value type doc)
-    SET(PLATFORM_PARAM_LIST "${PLATFORM_PARAM_LIST};${var}" CACHE INTERNAL "")
-    #Set entry in cache if this the platform us being used is being built
-    SETCACHE_IF(${var} ${value} ${type} ${doc} ${PLATFORM_PREFIX})
-ENDMACRO()
-MACRO(PLATFORM_OPTION option doc default)
-    PLATFORM_PARAM( ${option} ${default} BOOL ${doc})
-ENDMACRO()
-#Hide the parameters declared by the applications during the previous run
-#Applications that are enabled will re-enable their parameters during declaration (eg by calling APP_PARAM)
+#At this point 'PLATFORM' should point to a valid plaform
+#Before we include it though, we first need to:
+#1) Hide the parameters of the previous platform. 
+#   Parameters of the currently selected platform are re-enabled
+#   by the parameter-definitions of the platform itself
 HIDE_PARAMETERS(PLATFORM_PARAM_LIST)
+#2) Include helper macro's for platforms & chips
+include(${CMAKE_SOURCE_DIR}/cmake/platform_macros.cmake)
 
-
-#This MACRO allows individual platforms to include 'chip' code
-MACRO(ADD_CHIP chip)
-    GEN_PREFIX(CHIP_LIBRARY_NAME "CHIP" ${chip})
-    ADD_SUBDIRECTORY("${CMAKE_CURRENT_SOURCE_DIR}/../../chips/${chip}" "${CMAKE_CURRENT_BINARY_DIR}/../../chips/${chip}")
-    SET(PLATFORM_CHIP_LIBS "${PLATFORM_CHIP_LIBS};${CHIP_LIBRARY_NAME}" CACHE INTERNAL "")   
-    UNSET(CHIP_LIBRARY_NAME)
-ENDMACRO()
-
-MACRO(PLATFORM_INCLUDE_DIRECTORIES)
-    INCLUDE_DIRECTORIES(${ARGN})
-    SET(__platform_dir "${CMAKE_SOURCE_DIR}/framework/hal/platforms/${PLATFORM}")
-    GET_PROPERTY(__platform_props DIRECTORY "${__platform_dir}" PROPERTY INCLUDE_DIRECTORIES)
-    SET_PROPERTY(DIRECTORY "${__platform_dir}" PROPERTY INCLUDE_DIRECTORIES ${__platform_props} ${ARGN})
-    UNSET(__platform_dir)
-    UNSET(__platform_props)
-ENDMACRO()
-
+#And finally: include the platform itself (if one is selected)
 IF(NOT( PLATFORM STREQUAL "none"))
     #Finally load the actual platform
     STRING(TOUPPER ${PLATFORM} __upper_name)

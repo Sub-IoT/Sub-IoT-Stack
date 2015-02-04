@@ -210,7 +210,7 @@ ENDMACRO()
 # Usage:
 #    GLOBAL_ADD_DEFINITIONS( <definition> <definition> ...)
 #
-MACRO(GLOBAL_ADD_DEFINITIONS)
+MACRO(ADD_GLOBAL_DEFINITIONS)
     FOREACH(arg ${ARGN})
 	IF( ${arg} MATCHES "^-D[a-zA-Z0-9_]+(=.+)?$")
 	    #it's a proper definition string
@@ -231,8 +231,38 @@ ENDMACRO()
 # Usage:
 #    GLOBAL_ADD_COMPILE_OPTIONS( <option> <option> ...)
 #
-MACRO(GLOBAL_ADD_COMPILE_OPTIONS)
+MACRO(ADD_GLOBAL_COMPILE_OPTIONS)
     SET_GLOBAL_DIRECTORY_PROPERTY(COMPILE_OPTIONS ${ARGN})
+ENDMACRO()
+
+# Set a 'global' variable <var> to value <value>. 
+# Global variables are stored in the cache to make them persistent across cmake files and 
+# Automatically cleared when 'CLEAR_GLOBALS' is executed at the start of the next cmake run
+#
+# Usage:
+#    SET_GLOBAL(<var> <value>
+#
+MACRO(SET_GLOBAL var value)
+    SET(__vars ${__GLOBAL_VARS})
+    LIST(APPEND __vars ${var})
+    LIST(REMOVE_DUPLICATES __vars)
+    SET(__GLOBAL_VARS "${__vars}" CACHE INTERNAL "")
+    UNSET(__vars)
+    SET(${var} "${value}" CACHE INTERNAL "")    
+ENDMACRO()
+
+# Clear all 'global' variables. This macro must be executed as a first command at the start of the the uppermost
+# CMakeLists.txt file (before the project is defined)
+#
+# Usage:
+#    CLEAR_GLOBALS()
+#
+MACRO(CLEAR_GLOBALS)
+    FOREACH(var ${__GLOBAL_VARS})
+#	MESSAGE(AUTHOR_WARNING "Clearing ${var}")
+	UNSET(${var} CACHE)
+    ENDFOREACH()
+    UNSET (__GLOBAL_VARS CACHE)
 ENDMACRO()
 
 # Add one or more linker flags at a specific point in the link command. This MACRO adds flags by operating on 
@@ -275,6 +305,57 @@ MACRO(INSERT_LINKER_FLAGS)
     UNSET(_ILF_AFTER)
 ENDMACRO()
 
+# Add one or more flags to the compiler command. This macro differs from GLOBAL_ADD_COMPILE_OPTIONS
+# in the sense that GLOBAL_ADD_COMPILE_OPTIONS operates on the 'COMPILE_OPTIONS' property which means that 
+# flags are added at the END of all compile flags (after the '-I' flags). This MACRO however operates on the
+# 'CMAKE_C_FLAGS' variable which means that flags are added at the BEGIN of the compile command. 
+# It should be noted that this MACRO stores the CMAKE_C_FLAGS variable in the cache to make it persistent
+# across files and that this variable should be cleared explicitly at the start of the main CMakeLists.txt 
+# file
+#
+# Usage:
+#    INSERT_COMPILE_FLAGS([BEFORE <flag> <flag> ...] [AFTER <flag> <flag> ...])
+#	flags specified after 'BEFORE' are added right before the original CMAKE_C_FLAGS
+#	flags specified after 'AFTER' are added right after the original CMAKE_C_FLAGS
+#
+MACRO(INSERT_COMPILE_FLAGS)
+    cmake_parse_arguments(_ICF "" "" "BEFORE;AFTER" ${ARGN} )
+    STRING(REGEX REPLACE ";" " " _ICF_BEFORE "${_ICF_BEFORE}")
+    STRING(STRIP "${_ICF_BEFORE}" _ICF_BEFORE)
+    STRING(REGEX REPLACE ";" " " _ICF_AFTER "${_ICF_AFTER}")
+    STRING(STRIP "${_ICF_AFTER}" _ICF_AFTER)
+    SET_GLOBAL(CMAKE_C_FLAGS "${_ICF_BEFORE} ${CMAKE_C_FLAGS} ${_ICF_AFTER}")
+ENDMACRO()
 
-
+# Get the toolchain required by the code in the <subdir> of the current directory.
+# This MACRO is intended to be used mainly for platforms but may be useful in future
+# to detect the toolchain required by other components as well.
+#
+# To detect the toolchain, MACRO looks for a 'toolchain' file in the <subdir>. If it exists, this file
+# is parsed to read the toolchain required by the code in the <subdir>. The toolchain needs to be
+# specified in the toolchain file according to the following format:
+# 'toolchain=<required_toolchain>'
+#
+# If a valid toolchain file is found, the specified toolchain is stored in variable <var>
+# if not, this variable is set to the empty string
+#
+#
+# Usage:
+#    GET_REQUIRED_TOOLCHAIN(<subdir> <var>)
+#
+MACRO (GET_REQUIRED_TOOLCHAIN subdir var)
+    SET(${var} "")
+    IF(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/${subdir}/toolchain")
+	FILE(STRINGS "${CMAKE_CURRENT_SOURCE_DIR}/${subdir}/toolchain" __toolchains REGEX "^[ 	]*toolchain[ 	]*=[ 	]*[a-zA-Z0-9-]+.*$")
+	LIST(LENGTH __toolchains __tclen)
+	IF(${__tclen} GREATER 0)
+	    LIST(GET __toolchains 0 __tc)
+	    STRING(REGEX REPLACE "^[ 	]*toolchain[ 	]*=[ 	]*([a-zA-Z0-9-]+).*$" "\\1" __tc "${__tc}")
+	    SET(${var} "${__tc}")
+	ENDIF()
+	UNSET(__tc)
+	UNSET(__tclen)
+	UNSET(__toolchains)
+    ENDIF()
+ENDMACRO()
 

@@ -1,3 +1,11 @@
+IF(CMAKE_BUILD_TYPE STREQUAL "Debug")
+    #note: they're two different params. This is on purpose
+    ADD_GLOBAL_DEFINITIONS("-DDEBUG_EFM=1" "-DDEBUG=1")
+#    GLOBAL_ADD_DEFINITIONS("-DDEBUG_EFM=1")
+#    GLOBAL_ADD_DEFINITIONS("-DDEBUG=1")
+ENDIF()
+
+
 #Add the linker script to use to the linker flags
 INSERT_LINKER_FLAGS(BEFORE "-T${CMAKE_CURRENT_SOURCE_DIR}/CMSIS/device/linker/efm32gg.ld")
 

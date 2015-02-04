@@ -1,25 +1,18 @@
+include(cmake/utils.cmake)
+#First clear global variables that were stored in the cache to make them global
+CLEAR_GLOBALS()
+
 CMAKE_MINIMUM_REQUIRED (VERSION 3.0)
-INCLUDE(cmake/utils.cmake)
-#INCLUDE(CMakeDependentOption)
 #Allow the project name to be set from the cache
 SET(PROJECT_NAME "iFest" CACHE STRING "The name of the project")
 SET(CMAKE_BUILD_TYPE "Debug" CACHE STRING "Choose the type of build, options are: Debug Release")
 SET_PROPERTY( CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS "Debug;Release")
-
 PROJECT (${PROJECT_NAME} LANGUAGES C)
-ADD_COMPILE_OPTIONS("-std=c99")
 
-#LIST(APPEND CMAKE_C_FLAGS "-std=c99")
-
+#Set the c standard to use
+INSERT_COMPILE_FLAGS(BEFORE -std=c99)
+#Retrieve the selected toolchain
 GET_CURRENT_TOOLCHAIN(TOOLCHAIN)
-#MESSAGE(AUTHOR_WARNING "cur Toolchain is: ${TOOLCHAIN}")
-#ADD_DEFINITIONS("Hello")
-#GLOBAL_ADD_DEFINITIONS("-DHelloWorld")
-
-#GET_PROPERTY(__defs DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY COMPILE_DEFINITIONS)
-#GET_PROPERTY(__opts DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY COMPILE_OPTIONS)
-#MESSAGE(AUTHOR_WARNING "Definitions: ${__defs}, Options ${__opts}, raw flags ${CMAKE_C_FLAGS}")
-
 
 #Then load the Framework
 ADD_SUBDIRECTORY("framework")
@@ -27,15 +20,5 @@ ADD_SUBDIRECTORY("framework")
 ADD_SUBDIRECTORY("modules")
 #And finally the applications
 ADD_SUBDIRECTORY("apps")
-
-#GET_PROPERTY(__defs DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY COMPILE_DEFINITIONS)
-#GET_PROPERTY(__includes DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY INCLUDE_DIRECTORIES)
-#GET_PROPERTY(__opts DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY COMPILE_OPTIONS)
-#MESSAGE(AUTHOR_WARNING "Definitions: ${__defs}, Includes ${__includes}, Opts: ${__opts}")
-#    GET_PROPERTY(__cur_props DIRECTORY "${CMAKE_SOURCE_DIR}" PROPERTY ${property})
-
-
-
-
 #And tests
 #ADD_SUBDIRECTORY("tests")
