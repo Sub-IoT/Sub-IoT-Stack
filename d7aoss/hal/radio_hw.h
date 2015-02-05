@@ -10,8 +10,8 @@
 
 #include <stdint.h>
 
-#define RADIO_PORT_GDO0     gpioPortD
-#define RADIO_PIN_GDO0      7
+#define RADIO_PORT_GDO0     gpioPortC
+#define RADIO_PIN_GDO0      3
 
 #define RADIO_PORT_GDO2     gpioPortC
 #define RADIO_PIN_GDO2      6

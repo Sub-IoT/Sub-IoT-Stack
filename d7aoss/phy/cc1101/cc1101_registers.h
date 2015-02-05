@@ -119,9 +119,10 @@ RFIFG15 Positive edge: WOR event 1
 #define GDO_EDGE_OscStable      	GDOEdgeFalling
 
 // IOCFGx.GDOx_CFG
-#define RADIO_GDO2_VALUE                0x29            // IOCFG2.GDO2_CFG - RF_RDYn
-#define RADIO_GDO1_VALUE                0x1E            // IOCFG1.GDO1_CFG - RSSI Valid
-#define RADIO_GDO0_VALUE                0x1F            // IOCFG0.GDO0_CFG
+#define RADIO_GDO2_VALUE                0x29            // IOCFG2.GDO2_CFG - CHIP_RDYn (default)
+#define RADIO_GDO1_VALUE                0x2E            // IOCFG1.GDO1_CFG - high impedance, 3-state (default)
+#define RADIO_GDO0_VALUE                0x06 			// IOCFG0.GDO0_CFG - asserts when sync word has been sent/received,
+														// de-asserts at end of packet
 
 // FIFO THR
 #define RADIO_FIFOTHR_CLOSE_IN_RX_0db   (0 << 4)
@@ -165,10 +166,12 @@ RFIFG15 Positive edge: WOR event 1
 #define RADIO_FREQOFF                   0               // FSCTRL0 Frequency offset
 
 #define RADIO_FREQ_433                  ((uint32_t)0x0010A900)   // pchan 1 fc = 433.164062 MHz
+// TODO update according to draft spec ((uint32_t)0x0010A8F5)   // pchan 1 fc = 433.159698 MHz // TODO heck CC430 setting
 #define RADIO_FREQ2                     (uint8_t)(RADIO_FREQ_433>>16 & 0xFF)
 #define RADIO_FREQ1                     (uint8_t)(RADIO_FREQ_433>>8 & 0xFF)
 #define RADIO_FREQ0                     (uint8_t)(RADIO_FREQ_433 & 0xFF)
 
+// TODO update according to draft spec
 #define RADIO_MDMCFG4_CHANBW_E(VAL)     ((VAL&3)<<6)    // 2 - 162.5 Khz - MDMCFG4 Channel Bandwith Exponent BDW = fxosc / (8 x (4 + chbw_M) x 2^chbw_E)
 #define RADIO_MDMCFG4_CHANBW_M(VAL)     ((VAL&3)<<4)    // 1 - 162.5 Khz - MDMCFG4 Channel Bandwith Mantise
 #define RADIO_MDMCFG4_DRATE_E(VAL)      (VAL&15)        // 11  - MDMCFG4 - Data Rate Exponent

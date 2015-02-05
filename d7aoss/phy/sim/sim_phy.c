@@ -71,3 +71,8 @@ int16_t phy_get_rssi(uint8_t spectrum_id[2], uint8_t sync_word_class)
     // Or if the DLL would ensure the radio is switched to RX and the time needed for a valid RSSI reading is reached before calling this.
     return -120;
 }
+
+void phy_keep_radio_on(bool keep_on)
+{
+    
+}

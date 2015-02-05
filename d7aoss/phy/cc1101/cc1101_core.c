@@ -103,18 +103,17 @@ static uint8_t readstatus(uint8_t addr)
     spi_select_chip();
     ret = spi_byte(_addr);
     data = spi_byte(0); // send dummy byte to receive reply
-
     // See CC1101's Errata for SPI read errors // TODO needed?
-    while (true) {
-    	retCheck = spi_byte(_addr);
-        data2 = spi_byte(0);
-    	if (ret == retCheck && data == data2)
-    		break;
-    	else {
-    		ret = retCheck;
-    		data = data2;
-    	}
-    }
+//    while (true) {
+//    	retCheck = spi_byte(_addr);
+//        data2 = spi_byte(0);
+//    	if (ret == retCheck && data == data2)
+//    		break;
+//    	else {
+//    		ret = retCheck;
+//    		data = data2;
+//    	}
+//    }
 
     spi_deselect_chip();
 

@@ -82,6 +82,15 @@ void phy_init(void)
 	//Write configuration
 	WriteRfSettings(&rfSettings);
 
+	#ifdef LOG_PHY_ENABLED
+	log_print_stack_string(LOG_PHY, "RF settings:");
+	unsigned char const *p = &rfSettings;
+	for(uint8_t i = 0; i < sizeof(RF_SETTINGS); i++)
+	{
+		log_print_stack_string(LOG_PHY, "\t0x%02X", p[i]);
+	}
+	#endif
+
 	last_tx_cfg.eirp=0;
     last_tx_cfg.spectrum_id[0] = 0;
     last_tx_cfg.spectrum_id[1] = 0;
@@ -95,9 +104,9 @@ void phy_idle(void)
 		rxtx_finish_isr();
 }
 
-bool phy_translate_and_set_settings(uint8_t spectrum_id, uint8_t sync_word_class)
+bool phy_translate_and_set_settings(uint8_t spectrum_id[2], uint8_t sync_word_class)
 {
-	if (previous_spectrum_id == spectrum_id && previous_sync_word_class == sync_word_class)
+	if (!memcmp(previous_spectrum_id, spectrum_id, 2) && previous_sync_word_class == sync_word_class)
 		return true;
 
 	Strobe(RF_SIDLE);
@@ -111,11 +120,11 @@ bool phy_translate_and_set_settings(uint8_t spectrum_id, uint8_t sync_word_class
 		return false;
 	}
 
-	set_channel(channel_center_freq_index, channel_bandwidth_index);
+	set_channel(channel_center_freq_index, channel_bandwidth_index); // TODO freq band
 	set_preamble_size(preamble_size);
 	set_sync_word(sync_word);
 
-	previous_spectrum_id = spectrum_id;
+	memcpy(previous_spectrum_id, spectrum_id, 2);
 	previous_sync_word_class = sync_word_class;
 
 	return true;
@@ -138,7 +147,7 @@ extern bool phy_set_tx(phy_tx_cfg_t* cfg)
 	} else {
 #endif
 		//Enable hardware data whitening
-		set_data_whitening(true);
+		//set_data_whitening(true);
 #ifdef D7_PHY_USE_FEC
 	}
 	#endif
@@ -175,21 +184,58 @@ extern bool phy_tx_data(phy_tx_cfg_t* cfg)
 	#endif
 
 
+
 	//Write initial data to txfifo
 	tx_data_isr();
+
 	//Configure txfifo threshold
 	WriteSingleReg(FIFOTHR, RADIO_FIFOTHR_FIFO_THR_17_48);
-
+	//WriteSingleReg(0x17, 0x00); // TODOTMP ensure TXOFF_MODE idle
+	//WriteSingleReg(0x08, 0x60); // TODO TMP random tx mode
 	//Enable interrupts
-	radioClearInterruptPendingLines();
-	phy_set_gdo_values(GDOLine2, GDO_EDGE_TXBelowThresh, GDO_SETTING_TXBelowThresh);
+	//radioClearInterruptPendingLines();
+	//phy_set_gdo_values(GDOLine2, GDO_EDGE_TXBelowThresh, GDO_SETTING_TXBelowThresh);
 //	phy_set_gdo_values(GDOLine2, GDO_EDGE_TXUnderflow, GDO_SETTING_TXUnderflow);
-	phy_set_gdo_values(GDOLine0, GDO_EDGE_EndOfPacket, GDO_SETTING_EndOfPacket);
-	radioEnableGDO2Interrupt();
-	radioEnableGDO0Interrupt();
+	phy_set_gdo_values(GDOLine0, 0, GDO_SETTING_EndOfPacket); // TODO tmp
+    //phy_set_gdo_values(GDOLine0, GDO_EDGE_EndOfPacket, GDO_SETTING_EndOfPacket);
+	//radioEnableGDO2Interrupt();
+	//radioEnableGDO0Interrupt();
 
+
+	//ReadSingleReg(0x3A);
+    //radio_debug_pin(0);
 	//Start transmitting
+	radio_debug_pin(1);
 	Strobe(RF_STX);
+	//while(1);
+	radio_debug_pin(0);
+	//radio_debug_pin(1);
+	radio_test();
+
+//	Strobe(RF_STX);
+//	uint8_t state;
+//	do
+//	{
+//		state = Strobe(RF_SNOP);
+//	} 	while(state != 0x0F);
+    // TODO tmp
+//	uint8_t tx_bytes = 0;
+//	do
+//	{
+//		tx_bytes = ReadSingleReg(0x3A);
+//	} while(tx_bytes > 0);
+
+
+	Strobe(RF_SIDLE);
+	Strobe(RF_SFRX);
+	Strobe(RF_SFTX);
+	Strobe(RF_SPWD);
+
+	//Set radio state
+	state = Idle;
+
+    //radio_test();
+	//timer_wait_ms(100);
 
 	return true;
 }
@@ -225,12 +271,13 @@ bool phy_tx(phy_tx_cfg_t* cfg)
 		}
 
 		//if (last_tx_cfg.spectrum_id != cfg->spectrum_id || last_tx_cfg.sync_word_class != cfg->sync_word_class || last_tx_cfg.eirp != cfg->eirp)
-		if (memcmp(&last_tx_cfg, cfg, 3) != 0)
-		{
+//TODO tmp
+		//		if (memcmp(&last_tx_cfg, cfg, 3) != 0)
+//		{
 			if (!phy_set_tx(cfg))
 				return false;
-			memcpy(&last_tx_cfg, cfg, 3);
-		}
+//			memcpy(&last_tx_cfg, cfg, 3);
+//		}
 	}
 
 	return phy_tx_data(cfg);
@@ -263,6 +310,10 @@ bool phy_rx(phy_rx_cfg_t* cfg)
 	if (!phy_translate_and_set_settings(cfg->spectrum_id, cfg->sync_word_class))
 		return false;
 
+	rx_data.spectrum_id[0] = cfg->spectrum_id[0];
+	rx_data.spectrum_id[1] = cfg->spectrum_id[1];
+	rx_data.sync_word_class = cfg->sync_word_class;
+
 	set_timeout(cfg->timeout);
 
 //TODO Return error if fec not enabled but requested
@@ -293,10 +344,11 @@ bool phy_rx(phy_rx_cfg_t* cfg)
 	} else {
 #endif
 		//Enable hardware data whitening
-		set_data_whitening(true);
+		//set_data_whitening(true);
+		set_data_whitening(false); // TODO tmp
 
 		//Set buffer position
-		bufferPosition = buffer;
+		queue_clear(&rx_queue);
 
 		//Configure length settings and txfifo threshold
 		set_length_infinite(false);
@@ -327,6 +379,13 @@ bool phy_rx(phy_rx_cfg_t* cfg)
 
 	//Start receiving
 	Strobe(RF_SRX);
+
+//	radio_test();
+//	while(1)
+//	{
+//		uint8_t p = ReadSingleReg(MARCSTATE);
+//		log_print_string("MARCSTATE %d", p);
+//	}
 
 	return true;
 }
@@ -385,6 +444,9 @@ void end_of_packet_isr()
 
 void tx_data_isr()
 {
+	if (remainingBytes == 0)
+		return;
+
 	//Calculate number of free bytes in TXFIFO
 	uint8_t txBytes = 64 - ReadSingleReg(TXBYTES);
 
@@ -414,9 +476,13 @@ void tx_data_isr()
 			txBytes = remainingBytes;
 
 		//Write data to tx fifo
-		WriteBurstReg(TXFIFO, bufferPosition, txBytes);
+		#ifdef LOG_PHY_ENABLED
+		log_print_stack_string(LOG_PHY, "Data to TX Fifo:");
+		log_print_data(tx_queue.front, txBytes);
+		#endif
+
+		WriteBurstReg(TXFIFO, &tx_queue, txBytes);
 		remainingBytes -= txBytes;
-		bufferPosition += txBytes;
 #ifdef D7_PHY_USE_FEC
 	}
 #endif
@@ -470,8 +536,7 @@ void rx_data_isr()
 		WriteSingleReg(PKTLEN, packetLength);
 		WriteSingleReg(FIFOTHR, RADIO_FIFOTHR_FIFO_THR_17_48);
 		remainingBytes = packetLength - 1;
-		bufferPosition[0] = packetLength;
-		bufferPosition++;
+		queue_push_u8(&rx_queue, packetLength);
 		rxBytes--;
 #ifdef LOG_PHY_ENABLED
 		log_print_stack_string(LOG_PHY, "rx_data_isr getting packetLength (%d)", packetLength);
@@ -486,22 +551,37 @@ void rx_data_isr()
     }
 
     //Read data from buffer
-	ReadBurstReg(RXFIFO, bufferPosition, rxBytes);
+	#ifdef LOG_PHY_ENABLED
+		log_print_stack_string(LOG_PHY, "Getting %d bytes from RXFifo", rxBytes);
+	#endif
+	ReadBurstReg(RXFIFO, &rx_queue.rear[1], rxBytes);
+
+	rx_queue.length += rxBytes;
+	rx_queue.rear += rxBytes;
+
 	remainingBytes -= rxBytes;
-    bufferPosition += rxBytes;
+	#ifdef LOG_PHY_ENABLED
+		log_print_stack_string(LOG_PHY, "Received data:");
+		log_print_data(rx_queue.front, rxBytes);
+	#endif
+#ifdef LOG_PHY_ENABLED
+	log_print_stack_string(LOG_PHY, "%d bytes remaining", remainingBytes);
+#endif
 #ifdef D7_PHY_USE_FEC
 	}
 #endif
 
     //When all data has been received read rssi and lqi value and set packetreceived flag
-    if(remainingBytes == 0)
+    if(remainingBytes <= 0)
     {
     	rx_data.rssi = calculate_rssi(ReadSingleReg(RXFIFO));
     	rx_data.lqi = ReadSingleReg(RXFIFO) & 0x7F;
-		rx_data.length = *buffer;
-		rx_data.data = buffer;
+		rx_data.length = *rx_queue.front;
+		rx_data.data = rx_queue.front;
 		#ifdef LOG_PHY_ENABLED
 			log_print_stack_string(LOG_PHY, "rx_data_isr packet received");
+			log_print_data(rx_data.data, rx_data.length);
+			log_phy_rx_res(&rx_data);
 		#endif
     }
 
@@ -563,12 +643,23 @@ RadioState get_radiostate(void)
 void set_channel(uint8_t channel_center_freq_index, uint8_t channel_bandwith_index)
 {
 	//Set channel center frequency
+	#ifdef LOG_PHY_ENABLED
+		log_print_stack_string(LOG_PHY, "Set channel freq index: %d", channel_center_freq_index);
+	#endif
+
 	WriteSingleReg(CHANNR, channel_center_freq_index);
 
 	//Set channel bandwidth, modulation and symbol rate
+	#ifdef LOG_PHY_ENABLED
+	log_print_stack_string(LOG_PHY, "Set channel bandwidth index: %d", channel_bandwith_index);
+	#endif
 	switch(channel_bandwith_index)
 	{
 	case 0:
+		// TODO CC430:
+//		WriteSingleReg(MDMCFG3, RADIO_MDMCFG3_DRATE_M(131));
+//		WriteSingleReg(MDMCFG4, (RADIO_MDMCFG4_CHANBW_E(3) | RADIO_MDMCFG4_CHANBW_M(0) | RADIO_MDMCFG4_DRATE_E(8)));
+//		WriteSingleReg(DEVIATN, (RADIO_DEVIATN_E(0) | RADIO_DEVIATN_M(16)));
 		WriteSingleReg(MDMCFG3, RADIO_MDMCFG3_DRATE_M(24));
 		WriteSingleReg(MDMCFG4, (RADIO_MDMCFG4_CHANBW_E(1) | RADIO_MDMCFG4_CHANBW_M(0) | RADIO_MDMCFG4_DRATE_E(11)));
 		WriteSingleReg(DEVIATN, (RADIO_DEVIATN_E(5) | RADIO_DEVIATN_M(0)));
@@ -576,6 +667,7 @@ void set_channel(uint8_t channel_center_freq_index, uint8_t channel_bandwith_ind
 	case 1:
 		WriteSingleReg(MDMCFG3, RADIO_MDMCFG3_DRATE_M(24));
 		WriteSingleReg(MDMCFG4, (RADIO_MDMCFG4_CHANBW_E(2) | RADIO_MDMCFG4_CHANBW_M(0) | RADIO_MDMCFG4_DRATE_E(11)));
+		//WriteSingleReg(MDMCFG4, (RADIO_MDMCFG4_CHANBW_E(1) | RADIO_MDMCFG4_CHANBW_M(0) | RADIO_MDMCFG4_DRATE_E(11))); // TODO tmp 400kHz BW
 		WriteSingleReg(DEVIATN, (RADIO_DEVIATN_E(5) | RADIO_DEVIATN_M(0)));
 		break;
 	case 2:
@@ -583,12 +675,16 @@ void set_channel(uint8_t channel_center_freq_index, uint8_t channel_bandwith_ind
 		WriteSingleReg(MDMCFG4, (RADIO_MDMCFG4_CHANBW_E(1) | RADIO_MDMCFG4_CHANBW_M(0) | RADIO_MDMCFG4_DRATE_E(12)));
 		WriteSingleReg(DEVIATN, (RADIO_DEVIATN_E(5) | RADIO_DEVIATN_M(0)));
 		break;
-	case 3:
-		WriteSingleReg(MDMCFG3, RADIO_MDMCFG3_DRATE_M(248));
-		WriteSingleReg(MDMCFG4, (RADIO_MDMCFG4_CHANBW_E(0) | RADIO_MDMCFG4_CHANBW_M(1) | RADIO_MDMCFG4_DRATE_E(12)));
-		WriteSingleReg(DEVIATN, (RADIO_DEVIATN_E(5) | RADIO_DEVIATN_M(0)));
-		break;
+//	case 3:
+//		WriteSingleReg(MDMCFG3, RADIO_MDMCFG3_DRATE_M(248));
+//		WriteSingleReg(MDMCFG4, (RADIO_MDMCFG4_CHANBW_E(0) | RADIO_MDMCFG4_CHANBW_M(1) | RADIO_MDMCFG4_DRATE_E(12)));
+//		WriteSingleReg(DEVIATN, (RADIO_DEVIATN_E(5) | RADIO_DEVIATN_M(0)));
+//		break;
 	}
+
+	#ifdef LOG_PHY_ENABLED
+	log_print_stack_string(LOG_PHY, "Set frequency band: %d", frequency_band);
+	#endif
 
 	// is this the right place?
 	Strobe(RF_SCAL);
@@ -596,8 +692,8 @@ void set_channel(uint8_t channel_center_freq_index, uint8_t channel_bandwith_ind
 
 void set_sync_word(uint16_t sync_word)
 {
-	WriteSingleReg(SYNC0, (uint8_t)(sync_word >> 8));
-	WriteSingleReg(SYNC1, (uint8_t)(sync_word & 0x00FF));
+	WriteSingleReg(SYNC1, (uint8_t)(sync_word >> 8));
+	WriteSingleReg(SYNC0, (uint8_t)(sync_word & 0x00FF));
 }
 
 void set_preamble_size(uint8_t preamble_size)
@@ -657,6 +753,7 @@ void set_timeout(uint16_t timeout)
 
 void set_eirp(int8_t eirp)
 {
+	// TODO compare with CC430 implementation
 	uint8_t i;
 	for( i = 0; i < sizeof(eirp_values); i++ )
 	{

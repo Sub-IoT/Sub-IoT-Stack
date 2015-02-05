@@ -16,6 +16,15 @@
 #define ENTER_CRITICAL_SECTION(x)  	x = __get_interrupt_state(); __disable_interrupt()
 #define EXIT_CRITICAL_SECTION(x)    __set_interrupt_state(x)
 
+#include "../../framework/log.h"
+// turn on/off the debug prints
+#ifdef LOG_PHY_ENABLED
+#define DPRINT(...) log_print_string(__VA_ARGS__)
+#else
+#define DPRINT(...)
+#endif
+
+
 // *************************************************************************************************
 // @fn          Strobe
 // @brief       Send command to radio.
@@ -127,6 +136,8 @@ void WriteSingleReg(uint8_t addr, uint8_t value)
 	RF1AINSTRW = ((RF_REGWR | addr) << 8) + value;
 
 	EXIT_CRITICAL_SECTION(int_state);
+
+	DPRINT("WRITE SREG %x @ %x", value, addr);
 }
         
 // *****************************************************************************

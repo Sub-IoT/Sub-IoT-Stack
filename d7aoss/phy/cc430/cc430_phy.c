@@ -142,6 +142,16 @@ void phy_init(void)
 	//Write configuration
 	WriteRfSettings(&rfSettings);
 
+	#ifdef LOG_PHY_ENABLED
+	log_print_stack_string(LOG_PHY, "RF settings:");
+	uint8_t* p = (uint8_t*)&rfSettings;
+	uint8_t i;
+	for(i = 0; i < sizeof(RF_SETTINGS); i++)
+	{
+		log_print_data(p + i, 1);
+	}
+	#endif
+
 	last_tx_cfg.eirp=0;
 	last_tx_cfg.spectrum_id[0] = 0;
 	last_tx_cfg.spectrum_id[1] = 0;

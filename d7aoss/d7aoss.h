@@ -21,23 +21,23 @@
 #ifndef D7STACK_H_
 #define D7STACK_H_
 
-//#define UART // Uncomment if you want to use logging or uart  (6k code size increase)
+#define UART // Uncomment if you want to use logging or uart  (6k code size increase)
 #ifdef UART
 	// Set Logging options
-	//#define LOG_PHY_ENABLED
-	//#define LOG_DLL_ENABLED
-	//#define LOG_NWL_ENABLED
-	//#define LOG_TRANS_ENABLED
-	//#define LOG_FWK_ENABLED
+	#define LOG_PHY_ENABLED
+	#define LOG_DLL_ENABLED
+	#define LOG_NWL_ENABLED
+	#define LOG_TRANS_ENABLED
+	#define LOG_FWK_ENABLED
 #endif
 
 //#define BUTTONS // Uncomment if you want to use buttons (100 bytes increase)
 //#define DEBUG
 
 // Select the correct platform if necesarry
-//#define PLATFORM_WIZZIMOTE
+#define PLATFORM_WIZZIMOTE
 //#define PLATFORM_AGAIDI
-#define PLATFORM_ARTESIS
+//#define PLATFORM_ARTESIS
 
 #ifdef __cplusplus
 extern "C" {

@@ -31,6 +31,8 @@ timer_event timer = { .next_event = 512 , .f = Timer_Loop };
 
 volatile int count = 0;
 
+uint8_t buffer[128];
+
 /**************************************************************************//**
  * @brief Timer_Loop
  * Interrupt Service Routine for system tick counter
@@ -67,7 +69,7 @@ int main(void)
 { 
   /* Initialize chip */
   //CHIP_Init();
-    system_init();
+	system_init(buffer, 128, buffer, 128);
     led_init();
     timer_init();
     led_on(0);

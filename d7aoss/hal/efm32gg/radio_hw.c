@@ -71,13 +71,35 @@ void radioClearInterruptPendingLines()
 }
 
 void radioConfigureInterrupt(void)
-{    
-    GPIO_PinModeSet( RADIO_PORT_GDO0, RADIO_PIN_GDO0, gpioModeInputPullFilter, 1 ); // GDO0 Input, PullUp, Filter
-    GPIO_PinModeSet( RADIO_PORT_GDO2, RADIO_PIN_GDO2, gpioModeInputPullFilter, 1 ); // GDO2 Input, PullUp, Filter
+{
+	NVIC_EnableIRQ(GPIO_ODD_IRQn);
+	NVIC_EnableIRQ(GPIO_EVEN_IRQn);
+	GPIO_PinModeSet( gpioPortD, 6, gpioModePushPull, 0 ); // TODO temp debug
+    GPIO_PinModeSet( RADIO_PORT_GDO0, RADIO_PIN_GDO0, gpioModeInput, 0 );
+	//GPIO_PinModeSet( RADIO_PORT_GDO0, RADIO_PIN_GDO0, gpioModePushPull, 0 ); // GDO0 Input, PullUp, Filter
+	//GPIO_PinModeSet( RADIO_PORT_GDO0, RADIO_PIN_GDO0, gpioModeInputPullFilter, 1 ); // GDO0 Input, PullUp, Filter
+    //GPIO_PinModeSet( RADIO_PORT_GDO2, RADIO_PIN_GDO2, gpioModeInputPullFilter, 1 ); // GDO2 Input, PullUp, Filter
     GPIO_IntConfig( RADIO_PORT_GDO0, RADIO_PIN_GDO0, true, true, false ); // GDO0 Interrupt on rising/falling edges. Disabled by default.
-    GPIO_IntConfig( RADIO_PORT_GDO2, RADIO_PIN_GDO2, true, true, false ); // GDO2 Interrupt on rising/falling edges. Disabled by default.
+    //GPIO_IntConfig( RADIO_PORT_GDO2, RADIO_PIN_GDO2, true, true, false ); // GDO2 Interrupt on rising/falling edges. Disabled by default.
     radioClearInterruptPendingLines();
     INT_Enable();
+}
+
+void radio_test()
+{
+    while(GPIO_PinInGet(RADIO_PORT_GDO0, RADIO_PIN_GDO0) == 0);
+    radio_debug_pin(1);
+    while(GPIO_PinInGet(RADIO_PORT_GDO0, RADIO_PIN_GDO0) == 1);
+    radio_debug_pin(0);
+}
+
+// TODO tmp
+void radio_debug_pin(bool on)
+{
+	if(on)
+		GPIO_PinOutSet(gpioPortD, 6);
+	else
+		GPIO_PinOutClear(gpioPortD, 6);
 }
 
 void radio_isr(void)

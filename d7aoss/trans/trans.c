@@ -147,7 +147,6 @@ void trans_tx_foreground_frame(uint8_t* data, uint8_t length, uint8_t subnet, ui
  */
 void trans_tx_query(D7AQP_Query_Template* query,  uint8_t subnet, uint8_t spectrum_id[2], int8_t tx_eirp, bool cca)
 {
-
 	if (query != NULL)
 	{
 		#ifdef LOG_TRANS_ENABLED
@@ -164,7 +163,7 @@ void trans_tx_query(D7AQP_Query_Template* query,  uint8_t subnet, uint8_t spectr
 	if (cca)
 		dll_initiate_csma_ca();
 	else
-		dll_tx_frame();
+		dll_tx_frame();   
 
 	//uint8_t data[64];//TODO: should be dynamic or queue
 	//uint8_t pointer = 0;

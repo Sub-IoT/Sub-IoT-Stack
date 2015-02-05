@@ -34,7 +34,7 @@ static uint8_t rtcEnabled = 0;
 static uint8_t tx = 0;
 
 dll_channel_scan_t scan_cfg1 = {
-		0x1C,
+		{0x04, 0x02},
 		FrameTypeForegroundFrame,
 		1000,
 		0
@@ -61,24 +61,24 @@ void stop_rx()
 	led_off(2);
 }
 
-void start_tx()
-{
-	if (tx)
-		return;
-
-	tx = 1;
-	stop_rx();
-	led_on(3);
-
-	dll_ff_tx_cfg_t cfg;
-	cfg.eirp = 0;
-	cfg.spectrum_id = 0x1C;
-	cfg.subnet = 0xFF;
-
-	dll_create_foreground_frame((uint8_t*)&counter, sizeof(counter), &cfg);
-	//dll_csma(1);
-	dll_tx_frame();
-}
+//void start_tx()
+//{
+//	if (tx)
+//		return;
+//
+//	tx = 1;
+//	stop_rx();
+//	led_on(3);
+//
+//	dll_ff_tx_cfg_t cfg;
+//	cfg.eirp = 0;
+//	cfg.spectrum_id = 0x1C;
+//	cfg.subnet = 0xFF;
+//
+//	dll_create_foreground_frame((uint8_t*)&counter, sizeof(counter), &cfg);
+//	//dll_csma(1);
+//	dll_tx_frame();
+//}
 
 void tx_callback(Dll_Tx_Result result)
 {
@@ -113,8 +113,11 @@ void rx_callback(dll_rx_res_t* rx_res)
 	log_print_string("RX CB");
 }
 
+uint8_t tx_buffer[128];
+uint8_t rx_buffer[128];
+
 void main(void) {
-	system_init();
+	system_init(tx_buffer, sizeof(tx_buffer), rx_buffer, sizeof(rx_buffer));
 	button_enable_interrupts();
 
 	rtc_init_counter_mode();
@@ -167,7 +170,7 @@ void main(void) {
         {
         	interrupt_flags &= ~INTERRUPT_BUTTON1;
 
-        	start_tx();
+        	//start_tx();
 
         	button_clear_interrupt_flag();
         	button_enable_interrupts();
@@ -196,7 +199,7 @@ void main(void) {
         if (INTERRUPT_RTC & interrupt_flags)
 		{
         	log_print_string("rtc");
-        	start_tx();
+        	//start_tx();
 
 			interrupt_flags &= ~INTERRUPT_RTC;
 		}
@@ -261,5 +264,5 @@ __interrupt void RTC_ISR (void)
         case 8: break;  //RT0PSIFG
         case 10: break; //RT1PSIFG
         default: break;
-    }
+	}
 }
