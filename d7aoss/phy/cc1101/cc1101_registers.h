@@ -119,7 +119,7 @@ RFIFG15 Positive edge: WOR event 1
 #define GDO_EDGE_OscStable      	GDOEdgeFalling
 
 // IOCFGx.GDOx_CFG
-#define RADIO_GDO2_VALUE                0x29            // IOCFG2.GDO2_CFG - CHIP_RDYn (default)
+#define RADIO_GDO2_VALUE                0x00            // IOCFG2.GDO2_CFG - rx fifo compared to threshold
 #define RADIO_GDO1_VALUE                0x2E            // IOCFG1.GDO1_CFG - high impedance, 3-state (default)
 #define RADIO_GDO0_VALUE                0x06 			// IOCFG0.GDO0_CFG - asserts when sync word has been sent/received,
 														// de-asserts at end of packet

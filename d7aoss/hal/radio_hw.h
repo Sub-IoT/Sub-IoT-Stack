@@ -14,7 +14,7 @@
 #define RADIO_PIN_GDO0      3
 
 #define RADIO_PORT_GDO2     gpioPortC
-#define RADIO_PIN_GDO2      6
+#define RADIO_PIN_GDO2      4
 
 void CC1101_ISR                     ( GDOLine gdo, GDOEdge edge );
 

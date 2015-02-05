@@ -1,6 +1,8 @@
 
 #include <stdbool.h>
 
+#include "../framework/log.h"
+
 #include "em_gpio.h"
 #include "em_int.h"
 
@@ -8,12 +10,11 @@
 #include "../../phy/cc1101/cc1101_phy.h" // TODO refactor, don't depend on this here
 #include "radio_hw.h"
 
-
 // turn on/off the debug prints
-#if 0
-#define DPRINT(...) log_print_string(__VA_ARGS__)
+#ifdef LOG_PHY_ENABLED
+	#define DPRINT(...) log_print_stack_string(LOG_PHY, __VA_ARGS__)
 #else
-#define DPRINT(...)  
+	#define DPRINT(...)
 #endif
 
 
@@ -28,7 +29,7 @@ InterruptHandlerDescriptor interrupt_table[6] = {
 
 void CC1101_ISR(GDOLine gdo, GDOEdge edge)
 {
-    DPRINT("%s ISR %s", (gdo == GDOLine0)? "GDO0\0": "GDO2\0", (edge == GDOEdgeRising)? "EDGE_RISING\0": "EDGE_FALLING\0" );
+	DPRINT("%s ISR %s", (gdo == GDOLine0)? "GDO0\0": "GDO2\0", (edge == GDOEdgeRising)? "EDGE_RISING\0": "EDGE_FALLING\0" );
 
     uint8_t gdo_setting = ReadSingleReg(gdo) | edge;
     uint8_t index = 0;
@@ -74,12 +75,16 @@ void radioConfigureInterrupt(void)
 {
 	NVIC_EnableIRQ(GPIO_ODD_IRQn);
 	NVIC_EnableIRQ(GPIO_EVEN_IRQn);
-	GPIO_PinModeSet( gpioPortD, 6, gpioModePushPull, 0 ); // TODO temp debug
+	//GPIO_PinModeSet( gpioPortD, 6, gpioModePushPull, 0 ); // TODO temp debug
     GPIO_PinModeSet( RADIO_PORT_GDO0, RADIO_PIN_GDO0, gpioModeInput, 0 );
 	//GPIO_PinModeSet( RADIO_PORT_GDO0, RADIO_PIN_GDO0, gpioModePushPull, 0 ); // GDO0 Input, PullUp, Filter
 	//GPIO_PinModeSet( RADIO_PORT_GDO0, RADIO_PIN_GDO0, gpioModeInputPullFilter, 1 ); // GDO0 Input, PullUp, Filter
-    //GPIO_PinModeSet( RADIO_PORT_GDO2, RADIO_PIN_GDO2, gpioModeInputPullFilter, 1 ); // GDO2 Input, PullUp, Filter
+    //GPIO_PinModeSet( RADIO_PORT_GDO2, RADIO_PIN_GDO2, gpioModeInput, 0 ); // GDO2 Input, PullUp, Filter
+    GPIO_PinModeSet( RADIO_PORT_GDO2, RADIO_PIN_GDO2, gpioModeInput, 0 ); // GDO2 Input, PullUp, Filter
+
+    GPIO_PinOutSet(RADIO_PORT_GDO2, RADIO_PIN_GDO2);
     GPIO_IntConfig( RADIO_PORT_GDO0, RADIO_PIN_GDO0, true, true, false ); // GDO0 Interrupt on rising/falling edges. Disabled by default.
+    GPIO_IntConfig( RADIO_PORT_GDO2, RADIO_PIN_GDO2, true, true, false ); // GDO0 Interrupt on rising/falling edges. Disabled by default.
     //GPIO_IntConfig( RADIO_PORT_GDO2, RADIO_PIN_GDO2, true, true, false ); // GDO2 Interrupt on rising/falling edges. Disabled by default.
     radioClearInterruptPendingLines();
     INT_Enable();
@@ -104,10 +109,10 @@ void radio_debug_pin(bool on)
 
 void radio_isr(void)
 {
-    if ( GPIO_IntGet() & (1 << RADIO_PIN_GDO0) )
+    if ( GPIO_IntGetEnabled() & (1 << RADIO_PIN_GDO0) )
     {
         // get pin level to know on which edge was the interrupt
-        uint8_t Edge = (GPIO_PinInGet( RADIO_PORT_GDO0, 1 << RADIO_PIN_GDO0 ))? GDOEdgeRising : GDOEdgeFalling;
+        uint8_t Edge = (GPIO_PinInGet( RADIO_PORT_GDO0, RADIO_PIN_GDO0 ))? GDOEdgeRising : GDOEdgeFalling;
 
         // clear the interrupt flag
         GPIO_IntClear( 1 << RADIO_PIN_GDO0 );
@@ -116,10 +121,10 @@ void radio_isr(void)
         CC1101_ISR(GDOLine0, Edge);
     }
     
-    if ( GPIO_IntGet() & (1 << RADIO_PIN_GDO2) )
+    if ( GPIO_IntGetEnabled() & (1 << RADIO_PIN_GDO2) )
     {
         // get pin level to know on which edge was the interrupt
-        uint8_t Edge = (GPIO_PinInGet( RADIO_PORT_GDO2, 1 << RADIO_PIN_GDO2 ))? GDOEdgeRising : GDOEdgeFalling;
+        uint8_t Edge = (GPIO_PinInGet( RADIO_PORT_GDO2, RADIO_PIN_GDO2 ))? GDOEdgeRising : GDOEdgeFalling;
 
         // clear the interrupt flag
         GPIO_IntClear( 1 << RADIO_PIN_GDO2 );

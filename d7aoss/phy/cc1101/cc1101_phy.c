@@ -371,11 +371,11 @@ bool phy_rx(phy_rx_cfg_t* cfg)
 
 	//TODO: set minimum sync word rss to scan minimum energy
 	//Enable interrupts
-	phy_set_gdo_values(GDOLine2, GDO_EDGE_RXFilled, GDO_SETTING_RXFilled);
+	//phy_set_gdo_values(GDOLine2, GDO_EDGE_RXFilled, GDO_SETTING_RXFilled);
 	phy_set_gdo_values(GDOLine0, GDO_EDGE_EndOfPacket, GDO_SETTING_EndOfPacket);
 	radioClearInterruptPendingLines();
 	radioEnableGDO2Interrupt();
-	radioEnableGDO0Interrupt();
+	//radioEnableGDO0Interrupt();
 
 	//Start receiving
 	Strobe(RF_SRX);
