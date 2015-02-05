@@ -332,7 +332,7 @@ bool phy_rx(phy_rx_cfg_t* cfg)
 	//Set radio state
 	state = Receive;
 
-	//Flush the txfifo
+	//Flush the rxfifo
 	Strobe(RF_SIDLE);
 	Strobe(RF_SFRX);
 
@@ -550,12 +550,13 @@ void tx_data_isr()
 
 void rx_data_isr()
 {
-	#ifdef LOG_PHY_ENABLED
-	log_print_stack_string(LOG_PHY, "rx_data_isr 0");
-	#endif
-
 	//Read number of bytes in RXFIFO
 	volatile uint8_t rxBytes = ReadSingleReg(RXBYTES);
+
+	#ifdef LOG_PHY_ENABLED
+	log_print_stack_string(LOG_PHY, "rx_data_isr (%d bytes received)", rxBytes);
+	#endif
+
 
 #ifdef D7_PHY_USE_FEC
 	if(fec)
@@ -599,7 +600,7 @@ void rx_data_isr()
 		queue_push_u8(&rx_queue, packetLength);
 		rxBytes--;
 	#ifdef LOG_PHY_ENABLED
-		log_print_stack_string(LOG_PHY, "rx_data_isr getting packetLength");
+		log_print_stack_string(LOG_PHY, "rx_data_isr getting packetLength (%d)", packetLength);
 	#endif
 	}
 
@@ -615,7 +616,7 @@ void rx_data_isr()
 //    ENTER_CRITICAL_SECTION(int_state);
     //Read data from buffer
 	#ifdef LOG_PHY_ENABLED
-		log_print_stack_string(LOG_PHY, "Getting %d byte from RXFifo", rxBytes);
+		log_print_stack_string(LOG_PHY, "Getting %d bytes from RXFifo", rxBytes);
 	#endif
 	//ReadBurstRegToQueue(RXFIFO, &rx_queue, rxBytes);
 	ReadBurstReg(RXFIFO, &rx_queue.rear[1], rxBytes);

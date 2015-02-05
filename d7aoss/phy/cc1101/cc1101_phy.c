@@ -301,7 +301,7 @@ bool phy_rx(phy_rx_cfg_t* cfg)
 	//Set radio state
 	state = Receive;
 
-	//Flush the txfifo
+	//Flush the rxfifo
 	Strobe(RF_SIDLE);
 	Strobe(RF_SFRX);
 
@@ -345,7 +345,7 @@ bool phy_rx(phy_rx_cfg_t* cfg)
 #endif
 		//Enable hardware data whitening
 		//set_data_whitening(true);
-		set_data_whitening(false); // TODO tmp
+		//set_data_whitening(false); // TODO tmp
 
 		//Set buffer position
 		queue_clear(&rx_queue);

@@ -17,7 +17,7 @@
 #include <hal/system.h>
 #include <framework/log.h>
 
-//#define RX_MODE
+#define RX_MODE
 
 static uint8_t tx_data[16] = {16, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15};
 
@@ -78,12 +78,12 @@ int main(void)
 
 	#ifdef RX_MODE
 		start_rx();
-		//while(1);
+		while(1);
 		system_lowpower_mode(4,1);
 	#else
 		start_tx();
-		while(1);
-		//system_lowpower_mode(4,1);
+		//while(1);
+		system_lowpower_mode(4,1);
 	#endif
 
 	return 0;
