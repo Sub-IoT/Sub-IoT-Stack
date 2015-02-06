@@ -1,24 +1,87 @@
+/* \file
+ *
+ * This file spefifies the error codes used throughout the framework and the HAL
+ * These have been adopted from TinyOS 2.1.0
+ **/
 #ifndef ERRORS_H
 #define ERRORS_H
 
 #include "types.h"
+
+/* \brief the type of all returned errors
+ *
+ */
 typedef uint8_t error_t;
 
-//generic error codes 'borrowed' from tinyos
+/* \brief All possible error codes
+ *
+ */
 enum {
+
+  /* \brief Operation completed successfully, no errors occurred
+   *
+   */
   SUCCESS        =  0,
-  FAIL           =  1,           // Generic condition: backwards compatible
-  ESIZE          =  2,           // Parameter passed in was too big.
-  ECANCEL        =  3,           // Operation cancelled by a call.
-  EOFF           =  4,           // Subsystem is not active
-  EBUSY          =  5,           // The underlying system is busy; retry later
-  EINVAL         =  6,           // An invalid parameter was passed
-  ERETRY         =  7,           // A rare and transient failure: can retry
-  ERESERVE       =  8,           // Reservation required before usage
-  EALREADY       =  9,           // The device state you are requesting is already set
-  ENOMEM         = 10,           // Memory required not available
-  ENOACK         = 11,           // A packet was not acknowledged
-  ELAST          = 11            // Last enum value
+  
+  /* \brief Generic condition: backwards compatible
+   *
+   */
+  FAIL           =  1,
+  
+  /* \brief Parameter passed in was too big, or outside the expected range
+   *
+   */
+  ESIZE          =  2,
+  
+  /* \brief Operation cancelled by a call.
+   *
+   */
+  ECANCEL        =  3,
+  
+  /* \brief Subsystem is not active
+   *
+   */
+  EOFF           =  4,
+  
+  /* \brief The underlying system is busy; retry later
+   *
+   */
+  EBUSY          =  5,
+  
+  /* \brief An invalid parameter was passed
+   *
+   */
+  EINVAL         =  6,
+  
+  /* \brief A rare and transient failure: can retry
+   *
+   */
+  ERETRY         =  7,
+  
+  /* \brief Reservation required before usage
+   *
+   */
+  ERESERVE       =  8,
+  
+  /* \brief The device state you are requesting is already set
+   *
+   */
+  EALREADY       =  9,
+ 
+  /* \brief Memory required not available
+   *
+   */
+  ENOMEM         = 10,
+ 
+  /* \brief A packet was not acknowledged
+   *
+   */
+  ENOACK         = 11,
+ 
+  /* \brief Last enum value
+   *
+   */
+  ELAST          = 11
 };
 
 

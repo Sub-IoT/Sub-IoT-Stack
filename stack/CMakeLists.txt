@@ -10,7 +10,7 @@ SET_PROPERTY( CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS "Debug;Release")
 PROJECT (${PROJECT_NAME} LANGUAGES C)
 
 #Set the c standard to use
-INSERT_COMPILE_FLAGS(BEFORE -std=c99)
+INSERT_COMPILE_FLAGS(BEFORE -std=c99 -fno-common)
 #Retrieve the selected toolchain
 GET_CURRENT_TOOLCHAIN(TOOLCHAIN)
 
@@ -22,3 +22,4 @@ ADD_SUBDIRECTORY("modules")
 ADD_SUBDIRECTORY("apps")
 #And tests
 #ADD_SUBDIRECTORY("tests")
+

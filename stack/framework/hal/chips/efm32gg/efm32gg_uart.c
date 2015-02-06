@@ -20,14 +20,9 @@
 
 #include "hwuart.h"
 
-#define UART_CHANNEL        UART0
-#define UART_BAUDRATE       BAUDRATE
-#define UART_CLOCK          cmuClock_UART0
-#define UART_ROUTE_LOCATION UART_ROUTE_LOCATION_LOC1
+//contains the wiring for the uart
+#include "platform.h"
 
-#define UART_PORT           gpioPortE   // UART0 location #1: PE0 and PE1
-#define UART_PIN_TX         0           // PE0
-#define UART_PIN_RX         1           // PE1
 
 void __uart_init()
 {
@@ -61,18 +56,17 @@ void __uart_init()
     USART_Enable(UART_CHANNEL, usartEnable);
 }
 
-void uart_transmit_data(unsigned char data)
+void uart_transmit_data(int8_t data)
 {
     while(!(UART_CHANNEL->STATUS & (1 << 6))) {}; // wait for TX buffer to empty
     UART_CHANNEL->TXDATA = data;
 }
 
-// TODO move to generic uart, not HAL implementation specific?
-void uart_transmit_message(unsigned char *data, unsigned char length)
+void uart_transmit_message(void const *data, size_t length)
 {
     unsigned char i=0;
     for (; i<length; i++)
     {
-        uart_transmit_data(data[i]);
+        uart_transmit_data(((char const*)data)[i]);
     }
 }

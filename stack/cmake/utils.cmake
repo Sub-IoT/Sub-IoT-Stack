@@ -66,24 +66,6 @@ MACRO (HIDE_PARAMETERS param_list)
     SET(${param_list} "" CACHE INTERNAL "")
 ENDMACRO()
 
-#Moved to framework/hal/platforms/CMakeLists.txt
-#MACRO (GET_REQUIRED_TOOLCHAIN platform var)
-#    SET(${var} "")
-#    IF(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/${platform}/toolchain")
-#	FILE(STRINGS "${CMAKE_CURRENT_SOURCE_DIR}/${platform}/toolchain" __toolchains REGEX "^[ 	]*toolchain[ 	]*=[ 	]*[a-zA-Z0-9-]+.*$")
-#	MESSAGE(AUTHOR_WARNING "toolchains: ${__toolchains}")
-#	LIST(LENGTH __toolchains __tclen)
-#	IF(${__tclen} GREATER 0)
-#	    LIST(GET __toolchains 0 __tc)
-#	    STRING(REGEX REPLACE "^[ 	]*toolchain[ 	]*=[ 	]*([a-zA-Z0-9-]+).*$" "\\1" __tc "${__tc}")
-#	    SET(${var} "${__tc}")
-#	ENDIF()
-#	UNSET(__tc)
-#	UNSET(__tclen)
-#	UNSET(__toolchains)
-#    ENDIF()
-#ENDMACRO()
-
 # Store the current toolchain in <var>. The toolchain can ONLY be set by supplying -DCMAKE_TOOLCHAIN_FILE to 
 # The cmake or cmake gui tool. 
 # If ${CMAKE_TOOLCHAIN_FILE} is not defined (the default toolchain is used), <var> is set to the empty string
@@ -133,21 +115,14 @@ ENDMACRO()
 # RELATIVE_TO_ABSOLUTE(<var> <path1> [<path2> [<path3> ... ]])
 #
 MACRO(RELATIVE_TO_ABSOLUTE var)
-#    MESSAGE(AUTHOR_WARNING "rel2abs called with params ${var} ${ARGN}")
     SET(__orig_paths ${ARGN})
     FOREACH(__path ${__orig_paths})
-#	MESSAGE(AUTHOR_WARNING "processing path ${__path}")
-	IF(IS_ABSOLUTE __path)
-	    LIST(APPEND __new_paths "${__path}")
-	ELSE()
-	    LIST(APPEND __new_paths "${CMAKE_CURRENT_SOURCE_DIR}/${__path}")	
-	ENDIF()
-#	MESSAGE(AUTHOR_WARNING "current newpaths: ${__new_paths}")
+	GET_FILENAME_COMPONENT(__new_path "${__path}" ABSOLUTE)
+	LIST(APPEND __new_paths "${__new_path}")
     ENDFOREACH()
     SET(${var} "${__new_paths}")
     UNSET(__new_paths)
     UNSET(__orig_paths)
-#    MESSAGE(AUTHOR_WARNING "rel2abs finished. result: ${${var}}")
 ENDMACRO()
 
 # Add one or more <value>'s to the specified directory property <property> both for the current directory and 
@@ -165,9 +140,6 @@ MACRO(SET_GLOBAL_DIRECTORY_PROPERTY property)
     WHILE(NOT (__cur_dir STREQUAL "${CMAKE_SOURCE_DIR}"))
         GET_PROPERTY(__cur_props DIRECTORY "${__cur_dir}" PROPERTY ${property})
         SET_PROPERTY(DIRECTORY "${__cur_dir}" PROPERTY ${property} ${__cur_props} ${ARGN})
-#	SET_PROPERTY(DIRECTORY "${__cur_dir}" PROPERTY ${property} ${ARGN})
-        #GET_PROPERTY(__cur_props DIRECTORY "${__cur_dir}" PROPERTY ${property})
-        #MESSAGE(AUTHOR_WARNING "Updated property ${property} on directory ${__cur_dir} to value :'${__cur_props}'")
 	UNSET(__cur_props)
 	STRING(FIND "${__cur_dir}" "/" __dir_sep_loc REVERSE)
 	STRING(SUBSTRING "${__cur_dir}" 0 "${__dir_sep_loc}" __cur_dir)		
@@ -175,9 +147,6 @@ MACRO(SET_GLOBAL_DIRECTORY_PROPERTY property)
     UNSET(__cur_dir)
     GET_PROPERTY(__cur_props DIRECTORY "${CMAKE_SOURCE_DIR}" PROPERTY ${property})
     SET_PROPERTY(DIRECTORY "${CMAKE_SOURCE_DIR}" PROPERTY ${property} ${__cur_props} ${ARGN})
-#    SET_PROPERTY(DIRECTORY "${CMAKE_SOURCE_DIR}" PROPERTY ${property} ${ARGN})
-    #GET_PROPERTY(__cur_props DIRECTORY "${CMAKE_SOURCE_DIR}" PROPERTY ${property})
-    #MESSAGE(AUTHOR_WARNING "Updated property ${property} on directory ${CMAKE_SOURCE_DIR} to value :'${__cur_props}'")
     UNSET(__cur_props)
 ENDMACRO()
 
@@ -194,9 +163,7 @@ ENDMACRO()
 #
 MACRO(GLOBAL_INCLUDE_DIRECTORIES)
     RELATIVE_TO_ABSOLUTE(__new_dirs ${ARGN})
-    #MESSAGE(AUTHOR_WARNING "new_dirs: ${__new_dirs}")
     SET_GLOBAL_DIRECTORY_PROPERTY(INCLUDE_DIRECTORIES ${__new_dirs})
-    #INCLUDE_DIRECTORIES(${__new_dirs})
     UNSET(__new_dirs)
 ENDMACRO()
 
@@ -259,7 +226,6 @@ ENDMACRO()
 #
 MACRO(CLEAR_GLOBALS)
     FOREACH(var ${__GLOBAL_VARS})
-#	MESSAGE(AUTHOR_WARNING "Clearing ${var}")
 	UNSET(${var} CACHE)
     ENDFOREACH()
     UNSET (__GLOBAL_VARS CACHE)
@@ -274,35 +240,47 @@ ENDMACRO()
 # varliable to make it persistent across file traversal.
 #
 # Usage:
-#    INSERT_LINKER_FLAGS([BEFORE <flag> <flag> ...] [AFTER <flag> <flag> ...])
-#	flags specified after 'BEFORE' are added right before the <OBJECTS> in the linker command
-#	flags specified after 'AFTER' are added at the end of the linker command
+#    INSERT_LINKER_FLAGS(BEFORE <tag_name> FLAGS <flag> <flag> ...)
+#	Inserts the specified <flag>'s BEFORE tag <tag_name> where <tag_name>
+#	Is one of 'CMAKE_C_COMPILER', 'FLAGS', 'CMAKE_C_LINK_FLAGS', 'LINK_FLAGS', 'OBJECTS', 'TARGET' or 'LINK_LIBRARIES'
+#    INSERT_LINKER_FLAGS(AFTER  <tag_name> FLAGS <flag> <flag> ...)
+#	Inserts the specified <flag>'s AFTER tag <tag_name> where <tag_name>
+#	Is one of 'CMAKE_C_COMPILER', 'FLAGS', 'CMAKE_C_LINK_FLAGS', 'LINK_FLAGS', 'OBJECTS', 'TARGET' or 'LINK_LIBRARIES'
 #
 MACRO(INSERT_LINKER_FLAGS)
-    cmake_parse_arguments(_ILF "" "" "BEFORE;AFTER" ${ARGN} )
+    cmake_parse_arguments(_ILF "" "BEFORE;AFTER" "FLAGS" ${ARGN} )
     IF(NOT ${CMAKE_C_LINK_EXCUTABLE})	
         MESSAGE(FATAL_ERROR "INSERT_LINKER_FLAGS called before CMAKE_C_LINK_EXECUTABLE is defined")
     ENDIF()
-    IF(_ILF_BEFORE)
-	STRING(REGEX REPLACE ";" " " _ILF_BEFORE "${_ILF_BEFORE}")
-        STRING(FIND "${CMAKE_C_LINK_EXECUTABLE}" "<OBJECTS>" __pos)
+    
+    IF(_ILF_BEFORE AND _ILF_AFTER)
+	MESSAGE(FATAL_ERROR "Exactly one of 'BEFORE' or 'AFTER' must be specified")
+    ELSEIF(NOT (_ILF_BEFORE OR _ILF_AFTER))
+	MESSAGE(FATAL_ERROR "Exactly one of 'BEFORE' or 'AFTER' must be specified")
+    ELSE()
+    	STRING(REGEX REPLACE ";" " " _ILF_FLAGS "${_ILF_FLAGS}")
+    	IF(_ILF_BEFORE)
+    	    SET(__findstr "<${_ILF_BEFORE}>")
+    	ELSE()
+    	    SET(__findstr "<${_ILF_AFTER}>")
+    	ENDIF()
+        STRING(FIND "${CMAKE_C_LINK_EXECUTABLE}" "${__findstr}" __pos)
         IF(${__pos} LESS 0)
-    	    MESSAGE(FATAL_ERROR "CMAKE_C_LINK_EXECUTABLE is malformatted. Expected to find <OBJECTS>")
-	ELSE()
-	    STRING(SUBSTRING "${CMAKE_C_LINK_EXECUTABLE}" 0 ${__pos} __prefix)
-	    STRING(SUBSTRING "${CMAKE_C_LINK_EXECUTABLE}" ${__pos} -1 __postfix)
-	    SET(CMAKE_C_LINK_EXECUTABLE "${__prefix} ${_ILF_BEFORE} ${__postfix}" CACHE INTERNAL "")
-	    UNSET(__prefix)
-	    UNSET(__postfix)		
+    	    MESSAGE(FATAL_ERROR "Cannot find tag ${__findstr} in CMAKE_C_LINK_EXECUTABLE.")
+    	ENDIF()
+	IF(_ILF_AFTER)
+	    STRING(LENGTH "${__findstr}" __len)
+	    MATH(EXPR __pos "${__pos}+${__len}")
 	ENDIF()
+
+	STRING(SUBSTRING "${CMAKE_C_LINK_EXECUTABLE}" 0 ${__pos} __prefix)
+	STRING(SUBSTRING "${CMAKE_C_LINK_EXECUTABLE}" ${__pos} -1 __postfix)
+        SET_GLOBAL(CMAKE_C_LINK_EXECUTABLE "${__prefix} ${_ILF_FLAGS} ${__postfix}" CACHE INTERNAL "")
+
 	UNSET(__pos)
+	UNSET(__len)
+	UNSET(__findstr)
     ENDIF()
-    IF(_ILF_AFTER)
-	STRING(REGEX REPLACE ";" " " _ILF_AFTER "${_ILF_AFTER}")
-        SET(CMAKE_C_LINK_EXECUTABLE "${CMAKE_C_LINK_EXECUTABLE} ${_ILF_AFTER}" CACHE INTERNAL "")
-    ENDIF()
-    UNSET(_ILF_BEFORE)
-    UNSET(_ILF_AFTER)
 ENDMACRO()
 
 # Add one or more flags to the compiler command. This macro differs from GLOBAL_ADD_COMPILE_OPTIONS
@@ -358,4 +336,123 @@ MACRO (GET_REQUIRED_TOOLCHAIN subdir var)
 	UNSET(__toolchains)
     ENDIF()
 ENDMACRO()
+
+
+# Generate a C header file based on the values of the supplied variable names.
+# For each supplied variable a separate '#define' is generated. The manner in 
+# which this is done depends on the 'type' of the variable. This macro considers 
+# The following possible types:
+#
+#	STRING: the value of the variable is written as a C string. That is, for 
+#	        each variable <var> the following statement is generated (with 
+#		${<var>} the value of the variable):
+#		    #define <var> "${<var>}"
+#
+#	ID:	the value of the variable is written as a C identifier. That is, for 
+#	        each variable <var> the following statement is generated (with 
+#		${<var>} the value of the variable):
+#		    #define <var> ${<var>}
+#	    	The only difference between ID and STRING is that for identifiers
+#		no quotes (") are generated. This MACRO does not verify whether or
+#		not ${var} is a valid C identifier
+#
+#	NUMBER:	the value of the variable is written as a number. Since both ID's
+#		and numbers don't require quotes this is exactly the same as using ID.
+#
+#	BOOL:   a define statement is generated depending on whether or not <var>
+#		evaluates to TRUE acording to the cmake rules. If <var> evaluates
+#		to TRUE the following statement is generated:
+#			#define <var>
+#		otherwise, the #define statement is omitted.
+#	
+# Usage:
+#    GEN_SETTINGS_HEADER([STRING <string_var> <string_var> ...] [ID <id_var> <id_var> ...] [BOOL <bool_var> <bool_var> ...] [NUMBER <number_var> <number_var> ...])
+#
+MACRO (GEN_SETTINGS_HEADER file)
+    cmake_parse_arguments(_GSH "" "" "STRING;BOOL;ID;NUMBER" ${ARGN} )
+    GET_FILENAME_COMPONENT(_header_guard "${file}" NAME)
+    STRING(TOUPPER "${_header_guard}" _header_guard)
+    STRING(REGEX REPLACE "[^a-zA-Z0-9_]" "_" _header_guard "${_header_guard}")
+    SET(_header_guard "__${_header_guard}__")
+    
+    FILE(WRITE  "${file}" "//Warning: This file is automatically generated by CMake. Do NOT EDIT this file directly !!\r\n")
+    FILE(APPEND "${file}" "#ifndef ${_header_guard}\r\n")
+    FILE(APPEND "${file}" "#define ${_header_guard}\r\n")
+    
+    FOREACH(var ${_GSH_STRING})
+	FILE(APPEND "${file}" "#define ${var} \"${${var}}\"\r\n")	    
+    ENDFOREACH()
+    FOREACH(var ${_GSH_ID} ${_GSH_NUMBER})
+	FILE(APPEND "${file}" "#define ${var} ${${var}}\r\n")	    
+    ENDFOREACH()
+    FOREACH(var ${_GSH_BOOL})
+	IF(${var})
+	    FILE(APPEND "${file}" "#define ${var} 1\r\n")	    
+	ENDIF()
+    ENDFOREACH()
+    FILE(APPEND "${file}" "#endif //${_header_guard}\r\n")
+    UNSET(_header_guard)
+    UNSET(_GSH_BOOL)
+    UNSET(_GSH_STRING)
+    UNSET(_GSH_ID)
+    UNSET(_GSH_NUMBER)
+ENDMACRO()
+
+# Filter a list of CACHE variables based on their type
+# 
+# Usage:
+#    FILTER_CACHE_VARIABLES(<result> TYPES <type> <type> ... <VARS> <var> <var> ...)
+#	<result> is the name of the variable in which to store the list of filtered variables
+#	<type>   is one of the allowed CACHE types
+#	<var>	 is a variable to check
+#
+MACRO (FILTER_CACHE_VARIABLES result )
+    cmake_parse_arguments(_FCV "" "" "TYPES;VARS" ${ARGN} )
+    SET(${result} "")
+    FOREACH(var ${_FCV_VARS})    
+	GET_PROPERTY(__type CACHE ${var} PROPERTY TYPE)
+	LIST(FIND _FCV_TYPES "${__type}" __id)
+	IF(NOT (${__id} LESS 0))
+	    LIST(APPEND ${result} "${var}")
+	ENDIF()
+    ENDFOREACH()
+    UNSET(__type)
+    UNSET(__id)
+    UNSET(__FCV_VARS)
+    UNSET(__FCV_TYPES)
+ENDMACRO()
+
+# Helper MACRO used by (PLATFORM/FRAMEWORK)_HEADER_DEFINE
+# You should normally not have to call this MACRO directly.
+#
+# This MACRO parses the arguments passed to it in more-or-less the same 
+# fashion that GEN_SETTINGS_HEADER would and stores the parsed parameters
+# in global variables <prefix>_<type> where <prefix> is the supplied prefix and
+# <type> is the type of the variable (according to the parsing rules of 
+# GEN_SETTINGS_HEADER.
+#
+# Usage:
+#    PARSE_HEADER_VARS(<prefix> [STRING <string_var> <string_var> ...] [ID <id_var> <id_var> ...] [BOOL <bool_var> <bool_var> ...] [NUMBER <number_var> <number_var> ...])
+#
+MACRO(PARSE_HEADER_VARS prefix)
+    cmake_parse_arguments(_PHV "" "" "STRING;BOOL;ID;NUMBER" ${ARGN} )
+    IF(NOT ("${_PHV_STRING}" STREQUAL ""))
+	SET_GLOBAL(${prefix}_STRING "${${prefix}_STRING};${_PHV_STRING}")
+    ENDIF()
+    IF(NOT ("${_PHV_BOOL}" STREQUAL ""))
+	SET_GLOBAL(${prefix}_BOOL "${${prefix}_BOOL};${_PHV_BOOL}")
+    ENDIF()
+    IF(NOT ("${_PHV_NUMBER}" STREQUAL ""))
+	SET_GLOBAL(${prefix}_NUMBER "${${prefix}_NUMBER};${_PHV_NUMBER}")
+    ENDIF()
+    IF(NOT ("${_PHV_ID}" STREQUAL ""))
+	SET_GLOBAL(${prefix}_ID "${${prefix}_STRING};${_PHV_ID}")
+    ENDIF()
+
+    UNSET(_PHV_ID)
+    UNSET(_PHV_BOOL)
+    UNSET(_PHV_STRING)
+    UNSET(_PHV_NUMBER)
+ENDMACRO()
+
 

@@ -11,10 +11,12 @@
  * Lesser General Public License for more details.
  *
  *  \author glenn.ergeerts@uantwerpen.be
+ *  \author daniel.vandenakker@uantwerpen.be
  *
  */
 
 #include "hwleds.h"
+#include "platform.h"
 
 #include "em_cmu.h"
 #include "em_gpio.h"
@@ -25,34 +27,33 @@ typedef struct
   unsigned int pin;
 } leds_t;
 
-static const leds_t leds[ 2 ] = { { gpioPortE, 2 }, { gpioPortE, 3 } };
+static const leds_t leds[ HW_NUM_LEDS ] = { { gpioPortE, 2 }, { gpioPortE, 3 } };
 
 void __led_init()
 {
     CMU_ClockEnable(cmuClock_HFPER, true);
     CMU_ClockEnable(cmuClock_GPIO, true);
-    for (int i = 0; i < 2; i++)
+    for (int i = 0; i < HW_NUM_LEDS; i++)
     {
       GPIO_PinModeSet(leds[i].port, leds[i].pin, gpioModePushPull, 0);
     }
 }
 
-void led_on(unsigned char led_nr)
+void led_on(uint8_t led_nr)
 {
-    GPIO_PinOutSet(leds[led_nr].port, leds[led_nr].pin);
+    if(led_nr < HW_NUM_LEDS)
+	GPIO_PinOutSet(leds[led_nr].port, leds[led_nr].pin);
 }
 
 void led_off(unsigned char led_nr)
 {
-    GPIO_PinOutClear(leds[led_nr].port, leds[led_nr].pin);
+    if(led_nr < HW_NUM_LEDS)
+	GPIO_PinOutClear(leds[led_nr].port, leds[led_nr].pin);
 }
 
 void led_toggle(unsigned char led_nr)
 {
-    GPIO_PinOutToggle(leds[led_nr].port, leds[led_nr].pin);
+    if(led_nr < HW_NUM_LEDS)
+	GPIO_PinOutToggle(leds[led_nr].port, leds[led_nr].pin);
 }
 
-void led_blink(unsigned char led_id)
-{
-  // TODO
-}

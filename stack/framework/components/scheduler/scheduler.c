@@ -12,9 +12,11 @@
 #include <assert.h>
 #include <string.h>
 #include <stdio.h>
-#include "hwint.h"
+#include "hwatomic.h"
 #include "ng.h"
+#include "hwsystem.h"
 
+#include "framework_defs.h"
 #ifndef SCHEDULER_MAX_TASKS
     #define SCHEDULER_MAX_TASKS 64
 #endif
@@ -23,19 +25,12 @@
     #warning NODE_GLOBALS is defined when using the default scheduler. Are you sure this is what you want ?
 #endif
 
-//void do_break()
-//{
-//	printf("Assertion Failed");
-//}
-//#undef assert
-//#define assert(__e) ((__e) ? (void)0 : do_break())
-
 enum
 {
 	NUM_PRIORITIES = MIN_PRIORITY+1,
 	NUM_TASKS = SCHEDULER_MAX_TASKS,
-	NO_TASK = NUM_TASKS,
 	NOT_SCHEDULED = NUM_PRIORITIES,
+	NO_TASK = SCHEDULER_MAX_TASKS,
 };
 
 typedef struct
@@ -66,7 +61,7 @@ unsigned int NGDEF(num_registered_tasks);
 void check_structs_are_valid()
 {
 	//INT_Disable();
-	hw_disable_interrupts();
+	start_atomic();
 	//assert(scheduler_initialised == true);
 	assert(NG(num_registered_tasks) <= NUM_TASKS);
 	bool visited[NUM_TASKS];
@@ -125,8 +120,8 @@ void check_structs_are_valid()
 	assert(NG(current_priority) <= NUM_PRIORITIES);
 	for(int i = 0; i < NG(current_priority); i++)
 		assert(NG(m_head)[i] == NO_TASK);
-	hw_enable_interrupts();
 	//INT_Enable();
+	end_atomic();
 }
 #else
 void check_structs_are_valid(){}
@@ -153,7 +148,7 @@ void scheduler_init()
 	check_structs_are_valid();
 }
 
-static uint8_t get_task_id(task_t task)
+uint8_t sched_get_task_id(task_t task)
 {
 	check_structs_are_valid();
 	assert(NG(num_registered_tasks) <= NUM_TASKS);
@@ -183,7 +178,7 @@ error_t sched_register_task(task_t task)
 	error_t retVal;
 	check_structs_are_valid();
 	//INT_Disable();
-	hw_disable_interrupts();
+	start_atomic();
 	if(NG(num_registered_tasks) >= NUM_TASKS)
 		retVal = ENOMEM;
 	else if(get_task_id(task) != NO_TASK)
@@ -208,7 +203,7 @@ error_t sched_register_task(task_t task)
 		retVal = SUCCESS;
 	}
 	//INT_Enable();
-	hw_enable_interrupts();
+	end_atomic();
 	check_structs_are_valid();
 	return retVal;
 }
@@ -223,27 +218,27 @@ static inline bool is_scheduled(uint8_t id)
 bool sched_is_scheduled(task_t task)
 {
 	//INT_Disable();
-	hw_disable_interrupts();
+	start_atomic();
 	uint8_t task_id = get_task_id(task);
 	bool retVal = false;
 	if(task_id != NO_TASK)
 		retVal = is_scheduled(task_id);
 	//INT_Enable();
-	hw_enable_interrupts();
+	end_atomic();
 	return retVal;
 }
 
-error_t sched_post_task_prio(task_t task, unsigned int priority)
+error_t sched_post_task_prio(task_t task, uint8_t priority)
 {
 	error_t retVal;
 	//INT_Disable();
-	hw_disable_interrupts();
+	start_atomic();
 	check_structs_are_valid();
 	uint8_t task_id = get_task_id(task);
 	if(task_id == NO_TASK)
 		retVal = EINVAL;
 	else if(priority > MIN_PRIORITY || priority < MAX_PRIORITY)
-		retVal = FAIL;
+		retVal = ESIZE;
 	else if (is_scheduled(task_id))
 		retVal = EALREADY;
 	else
@@ -267,7 +262,7 @@ error_t sched_post_task_prio(task_t task, unsigned int priority)
 		retVal = SUCCESS;
 	}
 	//INT_Enable();
-	hw_enable_interrupts();
+	end_atomic();
 	check_structs_are_valid();
 	return retVal;
 }
@@ -278,7 +273,7 @@ error_t sched_cancel_task(task_t task)
 	error_t retVal;
 
 	//INT_Disable();
-	hw_disable_interrupts();
+	start_atomic();
 	uint8_t id = get_task_id(task);
 	if(id == NO_TASK)
 		retVal = EINVAL;
@@ -303,7 +298,7 @@ error_t sched_cancel_task(task_t task)
 		retVal = SUCCESS;
 	}
 	//INT_Enable();
-	hw_enable_interrupts();
+	end_atomic();
 	return retVal;
 }
 
@@ -313,7 +308,7 @@ static uint8_t pop_task(int priority)
 	check_structs_are_valid();
 	//assert(priority>=0 && priority < NUM_TASKS);
 	//INT_Disable();
-	hw_disable_interrupts();
+	start_atomic();
 	if (NG(m_head)[priority] != NO_TASK)
 	{
 		id = NG(m_head)[priority];
@@ -328,7 +323,7 @@ static uint8_t pop_task(int priority)
 		NG(m_info)[id].priority = NOT_SCHEDULED;
 	}
 	//INT_Enable();
-	hw_enable_interrupts();
+	end_atomic();
 	check_structs_are_valid();
 	return id;
 }
@@ -353,7 +348,7 @@ void scheduler_run()
 			//this needs to be done atomically since otherwise we risk decrementing the current priority
 			//while a higher priority task is waiting in the queues
 			//INT_Disable();
-			hw_disable_interrupts();
+			start_atomic();
 			if (!tasks_waiting(NG(current_priority)))
 				NG(current_priority)++;
 #ifndef NDEBUG
@@ -361,10 +356,9 @@ void scheduler_run()
 				assert(!tasks_waiting(i));
 #endif
 			//INT_Enable();
-			hw_enable_interrupts();
+			end_atomic();
 		}
-
-		//system_lowpower_mode(0,1);
+		hw_enter_lowpower_mode(SCHEDULER_LOWPOWER_MODE);
 	}
 
 }

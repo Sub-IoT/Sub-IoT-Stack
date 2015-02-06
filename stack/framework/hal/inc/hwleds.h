@@ -11,23 +11,57 @@
  * Lesser General Public License for more details.
  *
  * \author maarten.weyn@uantwerpen.be
- *  \author glenn.ergeerts@uantwerpen.be
+ * \author glenn.ergeerts@uantwerpen.be
+ * \author daniel.vandenakker@uantwerpen.be
  *
  */
 
 #ifndef __LEDS_H__
 #define __LEDS_H__
 
+#include "platform.h"
+
+#ifndef HW_NUM_LEDS
+    #warning the platform does not define HW_NUM_LEDS
+#endif
+
 #include "types.h"
 
-//not a user function, only to be called from the initialiser
+
+/*! \brief Initialise the uart port
+ *
+ *  This function initialises the leds of the platform. This function is NOT part of the
+ *  'user' API and should only be called from the initialisation code of the specific platform
+ *
+ */
 void __led_init();
 
-void led_on(uint8_t led_nr);
-void led_off(uint8_t led_nr);
+/*! \brief Turn a led on
+ *
+ *  \param led_id The id of the led to turn on. This must be a number between 0
+ * 		  and HW_NUM_LEDS. Out-of-range indexes are silently ignored
+ *
+ */
+void led_on(uint8_t led_id);
+
+/*! \brief Turn a led off
+ *
+ *  \param led_id The id of the led to turn off. This must be a number between 0
+ * 		  and HW_NUM_LEDS. Out-of-range indexes are silently ignored
+ *
+ */
+void led_off(uint8_t led_id);
+
+/*! \brief Toggle a led. If it was on it is turned off and vice versa.
+ *
+ *  \param led_id The id of the led to toggle. This must be a number between 0
+ * 		  and HW_NUM_LEDS. Out-of-range indexes are silently ignored
+ *
+ */
 void led_toggle(uint8_t led_nr);
-void led_blink(uint8_t led_id);
 
-
+//may be nice to have, but doesn't belong in the HAL (it's only used from applications -> can be dumped in a 
+//separate module if needed
+//void led_blink(uint8_t led_id);
 
 #endif // __LEDS_H__
