@@ -1,9 +1,22 @@
 /*
- *  Created on: Nov 22, 2012
- *  Authors:
- * 		maarten.weyn@artesis.be
- *  	glenn.ergeerts@artesis.be
- *  	alexanderhoet@gmail.com
+ * (C) Copyright 2013 University of Antwerp (http://www.cosys-lab.be) and others.
+ *
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the GNU Lesser General Public License
+ * (LGPL) version 2.1 which accompanies this distribution, and is available at
+ * http://www.gnu.org/licenses/lgpl-2.1.html
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Lesser General Public License for more details.
+ *
+ * Contributors:
+ *     	glenn.ergeerts@uantwerpen.be
+ *     	maarten.weyn@uantwerpen.be
+ *		alexanderhoet@gmail.com
+ *		armin@otheruse.nl
+ *
  */
 
 #include <stdbool.h>
@@ -40,8 +53,9 @@ uint8_t preamble_size;
 uint16_t sync_word;
 
 bool init_and_close_radio = true;
+static bool phy_initialized = false;
 
-static uint8_t previous_spectrum_id = 0xFF;
+static uint8_t previous_spectrum_id[2] = {0xFF, 0xFF};
 static uint8_t previous_sync_word_class = 0xFF;
 
 phy_rx_data_t rx_data;
@@ -101,7 +115,10 @@ void phy_init(void)
 void phy_idle(void)
 {
 	if (state != Idle)
+	{
 		rxtx_finish_isr();
+		state = Idle;
+	}
 }
 
 bool phy_translate_and_set_settings(uint8_t spectrum_id[2], uint8_t sync_word_class)
@@ -120,7 +137,7 @@ bool phy_translate_and_set_settings(uint8_t spectrum_id[2], uint8_t sync_word_cl
 		return false;
 	}
 
-	set_channel(channel_center_freq_index, channel_bandwidth_index); // TODO freq band
+	set_channel(frequency_band, channel_center_freq_index, channel_bandwidth_index); // TODO freq band
 	set_preamble_size(preamble_size);
 	set_sync_word(sync_word);
 
@@ -140,17 +157,6 @@ extern bool phy_set_tx(phy_tx_cfg_t* cfg)
 	set_eirp(cfg->eirp);
 
 	//TODO Return error if fec not enabled but requested
-	#ifdef D7_PHY_USE_FEC
-	if (fec) {
-		//Disable hardware data whitening
-		set_data_whitening(false);
-	} else {
-#endif
-		//Enable hardware data whitening
-		//set_data_whitening(true);
-#ifdef D7_PHY_USE_FEC
-	}
-	#endif
 
 	return true;
 }
@@ -183,48 +189,24 @@ extern bool phy_tx_data(phy_tx_cfg_t* cfg)
 	}
 	#endif
 
-
-
 	//Write initial data to txfifo
 	tx_data_isr();
 
 	//Configure txfifo threshold
 	WriteSingleReg(FIFOTHR, RADIO_FIFOTHR_FIFO_THR_17_48);
-	//WriteSingleReg(0x17, 0x00); // TODOTMP ensure TXOFF_MODE idle
-	//WriteSingleReg(0x08, 0x60); // TODO TMP random tx mode
+
 	//Enable interrupts
 	//radioClearInterruptPendingLines();
 	//phy_set_gdo_values(GDOLine2, GDO_EDGE_TXBelowThresh, GDO_SETTING_TXBelowThresh);
 //	phy_set_gdo_values(GDOLine2, GDO_EDGE_TXUnderflow, GDO_SETTING_TXUnderflow);
-	phy_set_gdo_values(GDOLine0, 0, GDO_SETTING_EndOfPacket); // TODO tmp
-    //phy_set_gdo_values(GDOLine0, GDO_EDGE_EndOfPacket, GDO_SETTING_EndOfPacket);
+	//phy_set_gdo_values(GDOLine0, 0, GDO_SETTING_EndOfPacket); // TODO tmp
+    phy_set_gdo_values(GDOLine0, GDO_EDGE_EndOfPacket, GDO_SETTING_EndOfPacket);
 	//radioEnableGDO2Interrupt();
 	//radioEnableGDO0Interrupt();
 
-
-	//ReadSingleReg(0x3A);
-    //radio_debug_pin(0);
 	//Start transmitting
-	radio_debug_pin(1);
+
 	Strobe(RF_STX);
-	//while(1);
-	radio_debug_pin(0);
-	//radio_debug_pin(1);
-	radio_test();
-
-//	Strobe(RF_STX);
-//	uint8_t state;
-//	do
-//	{
-//		state = Strobe(RF_SNOP);
-//	} 	while(state != 0x0F);
-    // TODO tmp
-//	uint8_t tx_bytes = 0;
-//	do
-//	{
-//		tx_bytes = ReadSingleReg(0x3A);
-//	} while(tx_bytes > 0);
-
 
 	Strobe(RF_SIDLE);
 	Strobe(RF_SFRX);
@@ -234,15 +216,13 @@ extern bool phy_tx_data(phy_tx_cfg_t* cfg)
 	//Set radio state
 	state = Idle;
 
-    //radio_test();
-	//timer_wait_ms(100);
-
 	return true;
 }
 
 bool phy_init_tx()
 {
-	if(get_radiostate() != Idle)
+    RadioState current_state = get_radiostate();
+    if (current_state != Idle && current_state != Transmit)
 	{
 		#ifdef LOG_PHY_ENABLED
 		log_print_stack_string(LOG_PHY, "PHY radio not idle");
@@ -265,19 +245,19 @@ bool phy_tx(phy_tx_cfg_t* cfg)
 {
 	if (init_and_close_radio)
 	{
-		if (!phy_init_tx())
+        if (!phy_init_tx() || !phy_initialized)
 		{
 			return false;
 		}
 
 		//if (last_tx_cfg.spectrum_id != cfg->spectrum_id || last_tx_cfg.sync_word_class != cfg->sync_word_class || last_tx_cfg.eirp != cfg->eirp)
-//TODO tmp
-		//		if (memcmp(&last_tx_cfg, cfg, 3) != 0)
-//		{
+        if (memcmp(&last_tx_cfg, cfg, 3) != 0)
+        {
 			if (!phy_set_tx(cfg))
 				return false;
-//			memcpy(&last_tx_cfg, cfg, 3);
-//		}
+
+            memcpy(&last_tx_cfg, cfg, 3);
+        }
 	}
 
 	return phy_tx_data(cfg);
@@ -293,7 +273,7 @@ bool phy_rx(phy_rx_cfg_t* cfg)
 	if(current_state != Idle && current_state != Receive)
 	{
 		#ifdef LOG_PHY_ENABLED
-		log_print_stack_string(LOG_PHY, "PHY Cannot RX, PHy not idle");
+        log_print_stack_string(LOG_PHY, "PHY Cannot RX, PHY not idle");
 		#endif
 		return false;
 	}
@@ -343,16 +323,13 @@ bool phy_rx(phy_rx_cfg_t* cfg)
 		}
 	} else {
 #endif
-		//Enable hardware data whitening
-		//set_data_whitening(true);
-		//set_data_whitening(false); // TODO tmp
 
-		//Set buffer position
 		queue_clear(&rx_queue);
 
 		//Configure length settings and txfifo threshold
 		set_length_infinite(false);
 
+        // TODO remove cfg->length, length is contained in background frames as well in draft spec so always dynamic
 		if(cfg->length == 0)
 		{
 			packetLength = 0;
@@ -379,13 +356,6 @@ bool phy_rx(phy_rx_cfg_t* cfg)
 
 	//Start receiving
 	Strobe(RF_SRX);
-
-//	radio_test();
-//	while(1)
-//	{
-//		uint8_t p = ReadSingleReg(MARCSTATE);
-//		log_print_string("MARCSTATE %d", p);
-//	}
 
 	return true;
 }
@@ -640,7 +610,7 @@ RadioState get_radiostate(void)
 	return (RadioState)state;
 }
 
-void set_channel(uint8_t channel_center_freq_index, uint8_t channel_bandwith_index)
+void set_channel(uint8_t frequency_band, uint8_t channel_center_freq_index, uint8_t channel_bandwith_index)
 {
 	//Set channel center frequency
 	#ifdef LOG_PHY_ENABLED
@@ -685,6 +655,27 @@ void set_channel(uint8_t channel_center_freq_index, uint8_t channel_bandwith_ind
 	#ifdef LOG_PHY_ENABLED
 	log_print_stack_string(LOG_PHY, "Set frequency band: %d", frequency_band);
 	#endif
+
+    /*
+    switch(frequency_band)
+        {
+        case 0:
+            WriteSingleReg(RADIO_FREQ2, (uint8_t)(RADIO_FREQ_433>>16 & 0xFF));
+            WriteSingleReg(RADIO_FREQ1, (uint8_t)(RADIO_FREQ_433>>8 & 0xFF));
+            WriteSingleReg(RADIO_FREQ0, (uint8_t)(RADIO_FREQ_433 & 0xFF));
+            break;
+        case 1:
+            WriteSingleReg(RADIO_FREQ2, (uint8_t)(RADIO_FREQ_868>>16 & 0xFF));
+            WriteSingleReg(RADIO_FREQ1, (uint8_t)(RADIO_FREQ_868>>8 & 0xFF));
+            WriteSingleReg(RADIO_FREQ0, (uint8_t)(RADIO_FREQ_868 & 0xFF));
+            break;
+        case 2:
+            WriteSingleReg(RADIO_FREQ2, (uint8_t)(RADIO_FREQ_915>>16 & 0xFF));
+            WriteSingleReg(RADIO_FREQ1, (uint8_t)(RADIO_FREQ_915>>8 & 0xFF));
+            WriteSingleReg(RADIO_FREQ0, (uint8_t)(RADIO_FREQ_915 & 0xFF));
+            break;
+        }
+    */
 
 	// is this the right place?
 	Strobe(RF_SCAL);
@@ -794,4 +785,5 @@ int16_t calculate_rssi(int8_t rssi_raw)
 void phy_keep_radio_on(bool status)
 {
 	init_and_close_radio = !status;
+    // TODO compare CC430
 }

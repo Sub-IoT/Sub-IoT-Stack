@@ -90,14 +90,6 @@ void radioConfigureInterrupt(void)
     INT_Enable();
 }
 
-void radio_test()
-{
-    while(GPIO_PinInGet(RADIO_PORT_GDO0, RADIO_PIN_GDO0) == 0);
-    radio_debug_pin(1);
-    while(GPIO_PinInGet(RADIO_PORT_GDO0, RADIO_PIN_GDO0) == 1);
-    radio_debug_pin(0);
-}
-
 // TODO tmp
 void radio_debug_pin(bool on)
 {

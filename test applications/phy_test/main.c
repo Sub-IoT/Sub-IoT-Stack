@@ -60,7 +60,7 @@ void tx_callback()
 {
 	led_toggle(1);
 	queue_clear(&tx_queue);
-	//start_tx();
+	start_tx();
 }
 
 uint8_t tx_buffer[128];
