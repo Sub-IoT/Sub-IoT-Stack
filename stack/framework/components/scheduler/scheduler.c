@@ -17,9 +17,7 @@
 #include "hwsystem.h"
 
 #include "framework_defs.h"
-#ifndef SCHEDULER_MAX_TASKS
-    #define SCHEDULER_MAX_TASKS 64
-#endif
+#define SCHEDULER_MAX_TASKS FRAMEWORK_SCHEDULER_MAX_TASKS
 
 #ifdef NODE_GLOBALS
     #warning NODE_GLOBALS is defined when using the default scheduler. Are you sure this is what you want ?
@@ -54,15 +52,12 @@ task_info_t NGDEF(m_info)[NUM_TASKS];
 
 uint8_t NGDEF(m_head)[NUM_PRIORITIES];
 uint8_t NGDEF(m_tail)[NUM_PRIORITIES];
-//bool NGDEF(scheduler_initialised) = false;
 volatile uint8_t NGDEF(current_priority);
 unsigned int NGDEF(num_registered_tasks);
 #ifdef SCHEDULER_DEBUG
 void check_structs_are_valid()
 {
-	//INT_Disable();
 	start_atomic();
-	//assert(scheduler_initialised == true);
 	assert(NG(num_registered_tasks) <= NUM_TASKS);
 	bool visited[NUM_TASKS];
 	memset(visited, false, NUM_TASKS);
@@ -72,10 +67,6 @@ void check_structs_are_valid()
 		assert(NG(m_index)[i].index != NO_TASK);
 		assert(NG(m_index)[i].index < NUM_TASKS);
 		assert(NG(m_info)[NG(m_index)[i].index].task == NG(m_index)[i].task);
-		if(!(!visited[NG(m_index)[i].index]))
-		{
-			printf("Error");
-		}
 		assert(!visited[NG(m_index)[i].index]);
 		visited[NG(m_index)[i].index] = true;
 	}
@@ -112,8 +103,6 @@ void check_structs_are_valid()
 	}
 	for(int i = 0; i < NUM_TASKS; i++)
 	{
-		if(!((visited[i]) || NG(m_info)[i].priority == NOT_SCHEDULED))
-			printf("Error");
 		assert((visited[i]) || NG(m_info)[i].priority == NOT_SCHEDULED);
 	}
 
@@ -124,12 +113,10 @@ void check_structs_are_valid()
 	end_atomic();
 }
 #else
-void check_structs_are_valid(){}
+static inline void check_structs_are_valid(){}
 #endif
 void scheduler_init()
 {
-//	if(scheduler_initialised)
-//		return;
 	for(unsigned int i = 0; i < NUM_TASKS; i++)
 	{
 		NG(m_info)[i].next = NO_TASK;
@@ -144,11 +131,10 @@ void scheduler_init()
 	memset(NG(m_tail), NO_TASK, sizeof(NG(m_tail)));
 	NG(current_priority) = NUM_PRIORITIES;
 	NG(num_registered_tasks) = 0;
-//	scheduler_initialised=true;
 	check_structs_are_valid();
 }
 
-uint8_t sched_get_task_id(task_t task)
+uint8_t get_task_id(task_t task)
 {
 	check_structs_are_valid();
 	assert(NG(num_registered_tasks) <= NUM_TASKS);
@@ -231,7 +217,6 @@ bool sched_is_scheduled(task_t task)
 error_t sched_post_task_prio(task_t task, uint8_t priority)
 {
 	error_t retVal;
-	//INT_Disable();
 	start_atomic();
 	check_structs_are_valid();
 	uint8_t task_id = get_task_id(task);
@@ -261,7 +246,6 @@ error_t sched_post_task_prio(task_t task, uint8_t priority)
 		check_structs_are_valid();
 		retVal = SUCCESS;
 	}
-	//INT_Enable();
 	end_atomic();
 	check_structs_are_valid();
 	return retVal;
@@ -272,7 +256,6 @@ error_t sched_cancel_task(task_t task)
 	check_structs_are_valid();
 	error_t retVal;
 
-	//INT_Disable();
 	start_atomic();
 	uint8_t id = get_task_id(task);
 	if(id == NO_TASK)
@@ -297,7 +280,6 @@ error_t sched_cancel_task(task_t task)
 		check_structs_are_valid();
 		retVal = SUCCESS;
 	}
-	//INT_Enable();
 	end_atomic();
 	return retVal;
 }
@@ -306,8 +288,6 @@ static uint8_t pop_task(int priority)
 {
 	uint8_t id = NO_TASK;
 	check_structs_are_valid();
-	//assert(priority>=0 && priority < NUM_TASKS);
-	//INT_Disable();
 	start_atomic();
 	if (NG(m_head)[priority] != NO_TASK)
 	{
@@ -322,7 +302,6 @@ static uint8_t pop_task(int priority)
 		NG(m_info)[id].prev = NO_TASK;
 		NG(m_info)[id].priority = NOT_SCHEDULED;
 	}
-	//INT_Enable();
 	end_atomic();
 	check_structs_are_valid();
 	return id;
@@ -346,8 +325,7 @@ void scheduler_run()
 				NG(m_info)[id].task();
 			}
 			//this needs to be done atomically since otherwise we risk decrementing the current priority
-			//while a higher priority task is waiting in the queues
-			//INT_Disable();
+			//while a higher priority task is waiting in the queue
 			start_atomic();
 			if (!tasks_waiting(NG(current_priority)))
 				NG(current_priority)++;
@@ -355,10 +333,9 @@ void scheduler_run()
 			for(int i = 0; i < NG(current_priority); i++)
 				assert(!tasks_waiting(i));
 #endif
-			//INT_Enable();
 			end_atomic();
 		}
-		hw_enter_lowpower_mode(SCHEDULER_LOWPOWER_MODE);
+		hw_enter_lowpower_mode(FRAMEWORK_SCHEDULER_LP_MODE);
 	}
 
 }

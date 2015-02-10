@@ -13,22 +13,36 @@ ADD_SUBDIRECTORY("hal")
 #add the non-hal components
 ADD_SUBDIRECTORY("components")
 
-#Add framework options && import them in the platform_defs.h file
-SET(SCHEDULER_MAX_TASKS "64" CACHE STRING "The maximum number of tasks that can be registered with the scheduler")
-FRAMEWORK_HEADER_DEFINE(NUMBER SCHEDULER_MAX_TASKS)
+#Add framework options && import them in the framework_defs.h file
+#This is NOT done seperately for each component since components can be overridden by a platform
+#And these settings should not be
+SET(FRAMEWORK_SCHEDULER_MAX_TASKS "64" CACHE STRING "The maximum number of tasks that can be registered with the scheduler")
+FRAMEWORK_HEADER_DEFINE(NUMBER FRAMEWORK_SCHEDULER_MAX_TASKS)
 
-SET(SCHEDULER_LOWPOWER_MODE "0" CACHE STRING "The low power mode to use. Only change this if you know exactly what you are doing")
-FRAMEWORK_HEADER_DEFINE(NUMBER SCHEDULER_LOWPOWER_MODE)
+SET(FRAMEWORK_SCHEDULER_LP_MODE "0" CACHE STRING "The low power mode to use. Only change this if you know exactly what you are doing")
+FRAMEWORK_HEADER_DEFINE(NUMBER FRAMEWORK_SCHEDULER_LP_MODE)
 
-SET(LOG_BINARY "FALSE" CACHE BOOL "Use binary logging (where availabe)")
-FRAMEWORK_HEADER_DEFINE(BOOL LOG_BINARY)
+SET(FRAMEWORK_LOG_BINARY "FALSE" CACHE BOOL "Use binary logging (where availabe)")
+FRAMEWORK_HEADER_DEFINE(BOOL FRAMEWORK_LOG_BINARY)
 
-SET(LOGGING_ENABLED "TRUE" CACHE BOOL "Select whether to enable or disable the generation of logs")
-FRAMEWORK_HEADER_DEFINE(BOOL LOGGING_ENABLED)
+SET(FRAMEWORK_LOG_ENABLED "TRUE" CACHE BOOL "Select whether to enable or disable the generation of logs")
+FRAMEWORK_HEADER_DEFINE(BOOL FRAMEWORK_LOG_ENABLED)
 
-SET(TIMER_STACK_SIZE "20" CACHE STRING "The number of simultaneous timer events that can be scheduled. Increase this if you have lots of concurrent timers")
-FRAMEWORK_HEADER_DEFINE(NUMBER TIMER_STACK_SIZE)
+SET(FRAMEWORK_TIMER_STACK_SIZE "20" CACHE STRING "The number of simultaneous timer events that can be scheduled. Increase this if you have lots of concurrent timers")
+FRAMEWORK_HEADER_DEFINE(NUMBER FRAMEWORK_TIMER_STACK_SIZE)
 
+SET(FRAMEWORK_TIMER_RESOLUTION "1MS" CACHE STRING "The frequency of the framework timer. One of '1MS' (1024 ticks per second) or '32K' (32768 ticks per second)")
+SET_PROPERTY( CACHE FRAMEWORK_TIMER_RESOLUTION PROPERTY STRINGS "1MS;32K")
+FRAMEWORK_HEADER_DEFINE(ID FRAMEWORK_TIMER_RESOLUTION)
+
+SET(FRAMEWORK_TIMER_MODE "Reset" CACHE STRING "The operation mode of the framework timer. One of 'Normal' or 'Reset'")
+SET_PROPERTY( CACHE FRAMEWORK_TIMER_MODE PROPERTY STRINGS "Normal;Reset")
+IF(FRAMEWORK_TIMER_MODE STREQUAL "Reset")
+    SET(FRAMEWORK_TIMER_RESET_COUNTER "TRUE")
+ELSE()
+    SET(FRAMEWORK_TIMER_RESET_COUNTER "FALSE")
+ENDIF()
+FRAMEWORK_HEADER_DEFINE(BOOL FRAMEWORK_TIMER_RESET_COUNTER)
 
 #Generate the 'framework_defs.h'
 FRAMEWORK_BUILD_SETTINGS_FILE()

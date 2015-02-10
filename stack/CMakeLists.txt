@@ -21,5 +21,5 @@ ADD_SUBDIRECTORY("modules")
 #And finally the applications
 ADD_SUBDIRECTORY("apps")
 #And tests
-#ADD_SUBDIRECTORY("tests")
+ADD_SUBDIRECTORY("tests")
 

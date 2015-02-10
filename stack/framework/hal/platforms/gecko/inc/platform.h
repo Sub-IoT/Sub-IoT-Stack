@@ -61,6 +61,14 @@
     #define DMA_REQ_TX          DMAREQ_USART1_TXBL
 #endif
 
+/*************************
+ * DEBUG PIN DEFINITIONS *
+ ************************/
+//use gpioPortD as debug port
+#define DEBUG_PORT gpioPortD
+//use the first 8 pins as debug pins
+#define DEBUG_PIN_START 0
+#define DEBUG_PIN_NUM 5
 
 
 #endif

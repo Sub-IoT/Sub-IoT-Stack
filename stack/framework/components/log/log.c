@@ -25,7 +25,7 @@
 #include <unistd.h>
 #include "framework_defs.h"
 
-#ifdef LOGGING_ENABLED
+#ifdef FRAMEWORK_LOG_ENABLED
 
 
 // generic logging functions
@@ -34,76 +34,73 @@
 #define LOG_TYPE_STACK 0x03
 
 
-
-
-#ifdef LOG_BINARY
+#ifdef FRAMEWORK_LOG_BINARY
 	#define BUFFER_SIZE 100
 	static char NGDEF(buffer)[BUFFER_SIZE];
 #else
 	static uint32_t NGDEF(counter);
-#endif //LOG_BINARY
+#endif //FRAMEWORK_LOG_BINARY
 
 void log_counter_reset()
 {
-#ifndef LOG_BINARY
+#ifndef FRAMEWORK_LOG_BINARY
 	NG(counter) = 0;
-#endif //LOG_BINARY
+#endif //FRAMEWORK_LOG_BINARY
 }
 
 void log_print_string(char* format, ...)
 {
     va_list args;
     va_start(args, format);
-#ifdef LOG_BINARY
+#ifdef FRAMEWORK_LOG_BINARY
     uint8_t len = vsnprintf(NG(buffer), BUFFER_SIZE, format, args);
     putc(0xDD,stdout);
     putc(LOG_TYPE_STRING,stdout);
     putc(len,stdout);
     fwrite(NG(buffer),len, sizeof(char), stdout);
-    fflush(stdout);
 #else
     printf("\n\r[%03d] ", NG(counter)++);
     vprintf(format, args);
-#endif //LOG_BINARY
+#endif //FRAMEWORK_LOG_BINARY
     va_end(args);
-
+    fflush(stdout);
 }
 
 void log_print_stack_string(char type, char* format, ...)
 {
     va_list args;
     va_start(args, format);
-#ifdef LOG_BINARY
+#ifdef FRAMEWORK_LOG_BINARY
     uint8_t len = vsnprintf(NG(buffer), BUFFER_SIZE, format, args);
     putc(0xDD,stdout);
     putc(LOG_TYPE_STACK,stdout);
     putc(type,stdout);
     putc(len,stdout);
     fwrite(NG(buffer),len, sizeof(char), stdout);
-    fflush(stdout);
 #else
     printf("\n\r[%03d] ", NG(counter)++);
     vprintf(format, args);
-#endif //LOG_BINARY
+#endif //FRAMEWORK_LOG_BINARY
     va_end(args);
+    fflush(stdout);
 }
 
 void log_print_data(uint8_t* message, uint8_t length)
 {
-#ifdef LOG_BINARY
+#ifdef FRAMEWORK_LOG_BINARY
     putc(0xDD,stdout);
     putc(LOG_TYPE_DATA,stdout);
     putc(length,stdout);
     fwrite(message, length, sizeof(uint8_t), stdout);
-    fflush(stdout);
 #else
     printf("\n\r[%03d]", NG(counter)++);
     for( uint8_t i=0 ; i<length ; i++ )
     {
     	printf(" %02X", message[i]);
     }
-#endif //LOG_BINARY
+#endif //FRAMEWORK_LOG_BINARY
+    fflush(stdout);
 }
 
 
-#endif //LOGGING_ENABLED
+#endif //FRAMEWORK_LOG_ENABLED

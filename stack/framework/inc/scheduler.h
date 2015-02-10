@@ -56,6 +56,10 @@ enum
 	 *
 	 */
 	MAX_PRIORITY= 0,
+	/* \brief The default priority
+	 *
+	 */
+	DEFAULT_PRIORITY = MIN_PRIORITY,
 };
 
 /* \brief Register a task with the task scheduler.
@@ -83,7 +87,7 @@ error_t sched_register_task(task_t task);
  */
 error_t sched_post_task_prio(task_t task, uint8_t priority);
 
-/* \brief Post a task at the default (lowest) priority
+/* \brief Post a task at the default priority
  *
  * \param task		The task to be executed by the scheduler
  *
@@ -92,11 +96,11 @@ error_t sched_post_task_prio(task_t task, uint8_t priority);
  *			EALREADY if the task was already scheduled. If this is the case,
  *			the task will be executed but only once.
  */
-static inline error_t sched_post_task(task_t task) { return sched_post_task_prio(task,MIN_PRIORITY);}
+static inline error_t sched_post_task(task_t task) { return sched_post_task_prio(task,DEFAULT_PRIORITY);}
 
 /* \brief Cancel an already scheduled task
  *
- * \param task		The task to cancek
+ * \param task		The task to cancel
  *
  * \return error_t	SUCCESS if the task was cancelled successfully
  * 			EINVAL if the task was not registered with the scheduler

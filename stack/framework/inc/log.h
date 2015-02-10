@@ -36,7 +36,7 @@
 #include "framework_defs.h"
 #include "types.h"
 
-#ifdef LOGGING_ENABLED
+#ifdef FRAMEWORK_LOG_ENABLED
 
 /* \brief Reset the log counter back to zero
  *

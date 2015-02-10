@@ -49,7 +49,7 @@ static bool timer_inited = false;
  *        Interrupts should be cleared and enabled.
  *        The counter should run.
  *****************************************************************************/
-error_t hw_timer_init(timer_id_t timer_id, uint8_t frequency, timer_callback_t compare_callback, timer_callback_t overflow_callback)
+error_t hw_timer_init(hwtimer_id_t timer_id, uint8_t frequency, timer_callback_t compare_callback, timer_callback_t overflow_callback)
 {
     if(timer_id >= HWTIMER_NUM)
     	return ESIZE;
@@ -89,15 +89,18 @@ error_t hw_timer_init(timer_id_t timer_id, uint8_t frequency, timer_callback_t c
     end_atomic();
 }
 
-timer_tick_t hw_timer_getvalue(timer_id_t timer_id)
+hwtimer_tick_t hw_timer_getvalue(hwtimer_id_t timer_id)
 {
 	if(timer_id >= HWTIMER_NUM || (!timer_inited))
 		return 0;
 	else
-		return (uint16_t)(RTC->CNT & 0xFFFF);
+	{
+		uint32_t value =(uint16_t)(RTC->CNT & 0xFFFF);
+		return value;
+	}
 }
 
-error_t hw_timer_schedule(timer_id_t timer_id, timer_tick_t tick )
+error_t hw_timer_schedule(hwtimer_id_t timer_id, hwtimer_tick_t tick )
 {
 	if(timer_id >= HWTIMER_NUM)
 		return ESIZE;
@@ -112,7 +115,7 @@ error_t hw_timer_schedule(timer_id_t timer_id, timer_tick_t tick )
 	end_atomic();
 }
 
-error_t hw_timer_cancel(timer_id_t timer_id)
+error_t hw_timer_cancel(hwtimer_id_t timer_id)
 {
 	if(timer_id >= HWTIMER_NUM)
 		return ESIZE;
@@ -125,7 +128,7 @@ error_t hw_timer_cancel(timer_id_t timer_id)
 	end_atomic();
 }
 
-error_t hw_timer_counter_reset(timer_id_t timer_id)
+error_t hw_timer_counter_reset(hwtimer_id_t timer_id)
 {
 	if(timer_id >= HWTIMER_NUM)
 		return ESIZE;
@@ -141,24 +144,24 @@ error_t hw_timer_counter_reset(timer_id_t timer_id)
 
 }
 
-bool hw_timer_is_overflow_pending(timer_id_t id)
+bool hw_timer_is_overflow_pending(hwtimer_id_t timer_id)
 {
     if(timer_id >= HWTIMER_NUM)
 	return false;
     start_atomic();
-	//COMP0 is used to detect overflow
+	//COMP0 is used to limit thc RTC to 16 bits -> use this one to check
 	bool is_pending = !!((RTC_IntGet() & RTC->IEN) & RTC_IFS_COMP0);
-    end_atomic()
+    end_atomic();
     return is_pending;	
 }
-bool hw_timer_is_interrupt_pending(timer_id_t id)
+bool hw_timer_is_interrupt_pending(hwtimer_id_t timer_id)
 {
     if(timer_id >= HWTIMER_NUM)
 	return false;
 
     start_atomic();
 	bool is_pending = !!((RTC_IntGet() & RTC->IEN) & RTC_IFS_COMP1);
-    end_atomic()
+    end_atomic();
     return is_pending;	
 }
 

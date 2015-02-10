@@ -3,10 +3,10 @@
 
 void start_atomic()
 {
-    INT_Disable();
+	INT_Disable();
 }
 
 void end_atomic()
 {
-    INT_Enable();
+	INT_Enable();
 }

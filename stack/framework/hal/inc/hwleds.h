@@ -28,7 +28,7 @@
 #include "types.h"
 
 
-/*! \brief Initialise the uart port
+/*! \brief Initialise the leds of the platform
  *
  *  This function initialises the leds of the platform. This function is NOT part of the
  *  'user' API and should only be called from the initialisation code of the specific platform

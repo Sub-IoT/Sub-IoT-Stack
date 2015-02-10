@@ -42,18 +42,18 @@ void __led_init()
 void led_on(uint8_t led_nr)
 {
     if(led_nr < HW_NUM_LEDS)
-	GPIO_PinOutSet(leds[led_nr].port, leds[led_nr].pin);
+    	GPIO_PinOutSet(leds[led_nr].port, leds[led_nr].pin);
 }
 
 void led_off(unsigned char led_nr)
 {
     if(led_nr < HW_NUM_LEDS)
-	GPIO_PinOutClear(leds[led_nr].port, leds[led_nr].pin);
+    	GPIO_PinOutClear(leds[led_nr].port, leds[led_nr].pin);
 }
 
 void led_toggle(unsigned char led_nr)
 {
     if(led_nr < HW_NUM_LEDS)
-	GPIO_PinOutToggle(leds[led_nr].port, leds[led_nr].pin);
+    	GPIO_PinOutToggle(leds[led_nr].port, leds[led_nr].pin);
 }
 

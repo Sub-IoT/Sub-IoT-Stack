@@ -1,3 +1,9 @@
+/*! \file
+ *
+ * Definition of various platform-dependent 'system' functions
+ *
+ */
+
 #ifndef __HW_SYSTEM_H_
 #define __HW_SYSTEM_H_
 
