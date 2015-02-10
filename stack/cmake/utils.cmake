@@ -78,7 +78,7 @@ ENDMACRO()
 #    
 #
 MACRO (GET_CURRENT_TOOLCHAIN var)
-    IF(NOT (${CMAKE_TOOLCHAIN_FILE} STREQUAL ""))
+    IF(NOT (CMAKE_TOOLCHAIN_FILE STREQUAL ""))
 	GET_FILENAME_COMPONENT(${var} "${CMAKE_TOOLCHAIN_FILE}" NAME_WE)
     ELSE()
 	SET(${var} "")
@@ -455,4 +455,21 @@ MACRO(PARSE_HEADER_VARS prefix)
     UNSET(_PHV_NUMBER)
 ENDMACRO()
 
-
+# Check if a macro with name <name> is available for the current source directory.
+# If a macro with name <name> is available <var> is set to 'TRUE' otherwise
+# it is set to 'FALSE'.
+#
+# Usage:
+#    MACRO_AVAILABLE( <name> <var> )
+#
+MACRO(MACRO_AVAILABLE name var)
+    GET_DIRECTORY_PROPERTY(__defined_macros DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} MACROS)
+    LIST(FIND __defined_macros "${name}" __macro_index)
+    IF(__macro_index EQUAL -1)
+	SET(${var} "FALSE")
+    ELSE()
+	SET(${var} "TRUE")
+    ENDIF()
+    UNSET(__defined_macros)
+    UNSET(__macro_index)
+ENDMACRO()
