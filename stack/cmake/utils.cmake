@@ -92,7 +92,7 @@ ENDMACRO()
 #
 MACRO (REQUIRE_TOOLCHAIN tc)
     GET_CURRENT_TOOLCHAIN(__toolchain)
-    IF(NOT (${tc} STREQUAL ${__toolchain}))
+    IF(NOT ( "${tc}" STREQUAL "${__toolchain}"))
 	MESSAGE(SEND_ERROR "Required toolchain not selected. Required '${tc}' but was '${__toolchain}'")
     ENDIF()
     UNSET(__toolchain)
