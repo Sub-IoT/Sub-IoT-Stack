@@ -341,6 +341,7 @@ class display_d7(threading.Thread):
 
     def run(self):
         while self.keep_running:
+            time.sleep(0.1)
             try:
                 while not self.queue.empty():
                     data = self.queue.get()
@@ -501,7 +502,7 @@ def main():
     while keep_running:
         try:
             # Sleep a very short time, we are just waiting for a keyboard intterupt really
-            time.sleep(0.0001)
+            time.sleep(0.1)
         except KeyboardInterrupt:
             print("\nCtrl-c received! Sending Kill to the threads...")
             for t in threads:
