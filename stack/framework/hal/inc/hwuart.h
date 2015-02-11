@@ -21,6 +21,10 @@
 
 #include "types.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif //__cplusplus
+
 /*! \brief Initialise the uart port
  *
  *  This function initialised the UART port of the selected MCU. This function is NOT part of the
@@ -57,5 +61,9 @@ bool uart_tx_ready();
 //these functions disabled for now (not used in dash7 code base) we'll add them when needed
 //void uart_enable_interrupt();
 //unsigned char uart_receive_data();
+
+#ifdef __cplusplus
+}
+#endif //__cplusplus
 
 #endif // __UART_H__

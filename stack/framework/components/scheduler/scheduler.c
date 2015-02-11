@@ -145,9 +145,9 @@ uint8_t get_task_id(task_t task)
 	while (begin <= end)
 	{
 		int pivot = begin + ((end - begin) / 2);
-		if (NG(m_index)[pivot].task < task)
+		if (((void*)NG(m_index)[pivot].task) < ((void*)task))
 			begin= pivot+1;
-		else if (task < NG(m_index)[pivot].task)
+		else if (((void*)task) < ((void*)NG(m_index)[pivot].task))
 			end = pivot-1;
 		else
 		{
@@ -173,7 +173,7 @@ error_t sched_register_task(task_t task)
 	{
 		for(int i = NG(num_registered_tasks); i >= 0; i--)
 		{
-			if (i == 0 || NG(m_index)[i-1].task < task)
+			if (i == 0 || ((void*)NG(m_index)[i-1].task) < ((void*)task))
 			{
 				NG(m_index)[i].task = task;
 				NG(m_index)[i].index = NG(num_registered_tasks);

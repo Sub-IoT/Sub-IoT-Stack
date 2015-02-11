@@ -10,12 +10,13 @@
 #SET_PROPERTY(CACHE ${APP_PREFIX}_<param_name> PROPERTY STRINGS "value1;value2")
 #
 
-#Each application should yield a single executable
+
+#Call the BUILD_APPLICATION to build the final executable for the specific platform
 ADD_EXECUTABLE(simple_leds app.c)
 
 #Add the framework (and one or more modules) as libraries to the application
 TARGET_LINK_LIBRARIES(simple_leds framework)
 
 #Generate IDE specific binaries (if needed) 
-GENERATE_SIMPLICITY_STUDIO_FILES(simple_leds)
+#GENERATE_SIMPLICITY_STUDIO_FILES(simple_leds)
 

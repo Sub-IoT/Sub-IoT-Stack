@@ -1,15 +1,66 @@
 include(CMakeParseArguments)
-# List all directories in the provided directory
+# List all directories in the provided directory.
+# By default, only the directories that are immediate 
+# subdirs of <directory> are returned. If RECURSE is 
+# specified, all subdirectories are recursively traversed.
 # Usage:
-#    LIST_SUBDIRS( <result_variable> <directory> )
+#    LIST_SUBDIRS( <result_variable> <directory> [RECURSE]?)
 # Based on:
 #    http://stackoverflow.com/questions/7787823/cmake-how-to-get-the-name-of-all-subdirectories-of-a-directory
 #
 MACRO(LIST_SUBDIRS result dir)
-  FILE(GLOB __children RELATIVE ${dir} ${dir}/*)
+  cmake_parse_arguments(__LS "RECURSE" "" "" ${ARGN})
+  
+  IF(__LS_RECURSE)
+    FILE(GLOB_RECURSE __children RELATIVE ${dir} ${dir}/*)
+  ELSE()
+    FILE(GLOB __children RELATIVE ${dir} ${dir}/*)
+  ENDIF()
+  UNSET(__LS_RECURSE)
   SET(${result} "")
   FOREACH(__child ${__children})
     IF(IS_DIRECTORY ${dir}/${__child})
+        LIST(APPEND ${result} ${__child})
+    ELSE()
+	GET_FILENAME_COMPONENT(__dir "${__child}" DIRECTORY)
+	STRING(STRIP "${__dir}" __dir)
+	STRING(LENGTH "${__dir}" __len)
+	IF((__len GREATER 0) AND (IS_DIRECTORY ${dir}/${__dir}))
+	    LIST(FIND ${result} ${__dir} __id)
+	    IF(__id LESS 0)
+		LIST(APPEND ${result} ${__dir})
+	    ENDIF()
+	ENDIF()
+	UNSET(__len)
+	UNSET(__dir)
+	UNSET(__id)
+    ENDIF()
+  ENDFOREACH()
+  UNSET(__children)
+ENDMACRO()
+
+# List all files in the provided directory.
+# By default, only the files that are in <directory>
+# are returned. If RECURSE is specified, all subdirectories 
+# are recursively traversed.
+# Usage:
+#    LIST_FILES( <result_variable> <directory> [RECURSE]?)
+# Based on:
+#    http://stackoverflow.com/questions/7787823/cmake-how-to-get-the-name-of-all-subdirectories-of-a-directory
+#
+MACRO(LIST_FILES result dir)
+  cmake_parse_arguments(__LS "RECURSE" "" "" ${ARGN})
+  
+  IF(__LS_RECURSE)
+    FILE(GLOB_RECURSE __children RELATIVE ${dir} ${dir}/*)
+  ELSE()
+    FILE(GLOB __children RELATIVE ${dir} ${dir}/*)
+  ENDIF()
+  UNSET(__LS_RECURSE)
+  
+  SET(${result} "")
+  FOREACH(__child ${__children})
+    IF(NOT(IS_DIRECTORY ${dir}/${__child}))
         LIST(APPEND ${result} ${__child})
     ENDIF()
   ENDFOREACH()
@@ -232,25 +283,30 @@ MACRO(CLEAR_GLOBALS)
 ENDMACRO()
 
 # Add one or more linker flags at a specific point in the link command. This MACRO adds flags by operating on 
-# the 'CMAKE_C_LINK_EXECUTABLE'. When using the 'Makefile' generator, this variable is usually equal to 
-# '<CMAKE_C_COMPILER> <FLAGS> <CMAKE_C_LINK_FLAGS> <LINK_FLAGS> <OBJECTS>  -o <TARGET> <LINK_LIBRARIES>'.
-# This MACRO adds linker flags either right BEFORE the <OBJECTS> or right AFTER the <LINK_LIBRARIES>.
+# the 'CMAKE_C_LINK_EXECUTABLE' and 'CMAKE_CXX_LINK_EXECUTABLE' variables. When using the 'Makefile' generator, 
+# these variables are usually equal to:
+# '<CMAKE_C(XX)_COMPILER> <FLAGS> <CMAKE_C_LINK_FLAGS> <LINK_FLAGS> <OBJECTS>  -o <TARGET> <LINK_LIBRARIES>'.
 #
-# This MACRO requires CMAKE_C_LINK_EXECUTABLE to be set and stores the modified value as an internal cache
-# varliable to make it persistent across file traversal.
+# This MACRO can add linkerflags either righT BEFORE or AFTER a specific <tag_name>
+#
+# This MACRO requires CMAKE_C_LINK_EXECUTABLE and CMAKE_CXX_LINK_EXECUTABLE to be set and stores the modified 
+# value as an internal cache varliable to make it persistent across file traversal.
 #
 # Usage:
-#    INSERT_LINKER_FLAGS(BEFORE <tag_name> FLAGS <flag> <flag> ...)
+#    INSERT_LINKER_FLAGS(BEFORE <tag_name> INSERT <flag> <flag> ...)
 #	Inserts the specified <flag>'s BEFORE tag <tag_name> where <tag_name>
-#	Is one of 'CMAKE_C_COMPILER', 'FLAGS', 'CMAKE_C_LINK_FLAGS', 'LINK_FLAGS', 'OBJECTS', 'TARGET' or 'LINK_LIBRARIES'
-#    INSERT_LINKER_FLAGS(AFTER  <tag_name> FLAGS <flag> <flag> ...)
+#	Is one of 'FLAGS', 'CMAKE_C_LINK_FLAGS', 'LINK_FLAGS', 'OBJECTS', 'TARGET' or 'LINK_LIBRARIES'
+#    INSERT_LINKER_FLAGS(AFTER  <tag_name> INSERT <flag> <flag> ...)
 #	Inserts the specified <flag>'s AFTER tag <tag_name> where <tag_name>
-#	Is one of 'CMAKE_C_COMPILER', 'FLAGS', 'CMAKE_C_LINK_FLAGS', 'LINK_FLAGS', 'OBJECTS', 'TARGET' or 'LINK_LIBRARIES'
+#	Is one of 'FLAGS', 'CMAKE_C_LINK_FLAGS', 'LINK_FLAGS', 'OBJECTS', 'TARGET' or 'LINK_LIBRARIES'
 #
 MACRO(INSERT_LINKER_FLAGS)
-    cmake_parse_arguments(_ILF "" "BEFORE;AFTER" "FLAGS" ${ARGN} )
+    cmake_parse_arguments(_ILF "" "BEFORE;AFTER" "INSERT" ${ARGN} )
     IF(NOT ${CMAKE_C_LINK_EXCUTABLE})	
         MESSAGE(FATAL_ERROR "INSERT_LINKER_FLAGS called before CMAKE_C_LINK_EXECUTABLE is defined")
+    ENDIF()
+    IF(NOT ${CMAKE_CXX_LINK_EXCUTABLE})	
+        MESSAGE(FATAL_ERROR "INSERT_LINKER_FLAGS called before CMAKE_CXX_LINK_EXECUTABLE is defined")
     ENDIF()
     
     IF(_ILF_BEFORE AND _ILF_AFTER)
@@ -258,45 +314,55 @@ MACRO(INSERT_LINKER_FLAGS)
     ELSEIF(NOT (_ILF_BEFORE OR _ILF_AFTER))
 	MESSAGE(FATAL_ERROR "Exactly one of 'BEFORE' or 'AFTER' must be specified")
     ELSE()
-    	STRING(REGEX REPLACE ";" " " _ILF_FLAGS "${_ILF_FLAGS}")
+    	STRING(REGEX REPLACE ";" " " _ILF_INSERT "${_ILF_INSERT}")
     	IF(_ILF_BEFORE)
+    	    IF(("${_ILF_BEFORE}" STREQUAL "CMAKE_C_COMPILER") OR ("${_ILF_BEFORE}" STREQUAL "CMAKE_CXX_COMPILER"))
+    		MESSAGE(FATAL_ERROR "${_ILF_BEFORE} is not a valid tag_name for setting linker flags")
+    	    ENDIF()
     	    SET(__findstr "<${_ILF_BEFORE}>")
     	ELSE()
+    	    IF(("${_ILF_AFTER}" STREQUAL "CMAKE_C_COMPILER") OR ("${_ILF_AFTER}" STREQUAL "CMAKE_CXX_COMPILER"))
+    		MESSAGE(FATAL_ERROR "${_ILF_AFTER} is not a valid tag_name for setting linker flags")
+    	    ENDIF()
     	    SET(__findstr "<${_ILF_AFTER}>")
     	ENDIF()
-        STRING(FIND "${CMAKE_C_LINK_EXECUTABLE}" "${__findstr}" __pos)
-        IF(${__pos} LESS 0)
-    	    MESSAGE(FATAL_ERROR "Cannot find tag ${__findstr} in CMAKE_C_LINK_EXECUTABLE.")
-    	ENDIF()
-	IF(_ILF_AFTER)
-	    STRING(LENGTH "${__findstr}" __len)
-	    MATH(EXPR __pos "${__pos}+${__len}")
-	ENDIF()
+    	
+    	FOREACH(__var CMAKE_C_LINK_EXECUTABLE CMAKE_CXX_LINK_EXECUTABLE)
+    	    STRING(FIND "${${__var}}" "${__findstr}" __pos)
+    	    IF(${__pos} LESS 0)
+    		MESSAGE(FATAL_ERROR "Cannot find tag ${__findstr} in ${__var}.")
+    	    ENDIF()
+	    IF(_ILF_AFTER)
+		STRING(LENGTH "${__findstr}" __len)
+		MATH(EXPR __pos "${__pos}+${__len}")
+	    ENDIF()
 
-	STRING(SUBSTRING "${CMAKE_C_LINK_EXECUTABLE}" 0 ${__pos} __prefix)
-	STRING(SUBSTRING "${CMAKE_C_LINK_EXECUTABLE}" ${__pos} -1 __postfix)
-        SET_GLOBAL(CMAKE_C_LINK_EXECUTABLE "${__prefix} ${_ILF_FLAGS} ${__postfix}" CACHE INTERNAL "")
+	    STRING(SUBSTRING "${${__var}}" 0 ${__pos} __prefix)
+	    STRING(SUBSTRING "${${__var}}" ${__pos} -1 __postfix)
+    	    SET_GLOBAL(${__var} "${__prefix} ${_ILF_INSERT} ${__postfix}" CACHE INTERNAL "")
 
-	UNSET(__pos)
-	UNSET(__len)
+	    UNSET(__pos)
+	    UNSET(__len)
+	ENDFOREACH()
 	UNSET(__findstr)
+	UNSET(_ILF_INSERT)
+	UNSET(_ILF_BEFORE)
+	UNSET(_ILF_AFTER)
     ENDIF()
 ENDMACRO()
 
-# Add one or more flags to the compiler command. This macro differs from GLOBAL_ADD_COMPILE_OPTIONS
+# Add one or more flags to the C compiler command. This macro differs from GLOBAL_ADD_COMPILE_OPTIONS
 # in the sense that GLOBAL_ADD_COMPILE_OPTIONS operates on the 'COMPILE_OPTIONS' property which means that 
 # flags are added at the END of all compile flags (after the '-I' flags). This MACRO however operates on the
 # 'CMAKE_C_FLAGS' variable which means that flags are added at the BEGIN of the compile command. 
-# It should be noted that this MACRO stores the CMAKE_C_FLAGS variable in the cache to make it persistent
-# across files and that this variable should be cleared explicitly at the start of the main CMakeLists.txt 
-# file
+# It should be noted that this MACRO turns CMAKE_C_FLAGS into a global variable
 #
 # Usage:
-#    INSERT_COMPILE_FLAGS([BEFORE <flag> <flag> ...] [AFTER <flag> <flag> ...])
+#    INSERT_C_FLAGS([BEFORE <flag> <flag> ...] [AFTER <flag> <flag> ...])
 #	flags specified after 'BEFORE' are added right before the original CMAKE_C_FLAGS
 #	flags specified after 'AFTER' are added right after the original CMAKE_C_FLAGS
 #
-MACRO(INSERT_COMPILE_FLAGS)
+MACRO(INSERT_C_FLAGS)
     cmake_parse_arguments(_ICF "" "" "BEFORE;AFTER" ${ARGN} )
     STRING(REGEX REPLACE ";" " " _ICF_BEFORE "${_ICF_BEFORE}")
     STRING(STRIP "${_ICF_BEFORE}" _ICF_BEFORE)
@@ -304,6 +370,27 @@ MACRO(INSERT_COMPILE_FLAGS)
     STRING(STRIP "${_ICF_AFTER}" _ICF_AFTER)
     SET_GLOBAL(CMAKE_C_FLAGS "${_ICF_BEFORE} ${CMAKE_C_FLAGS} ${_ICF_AFTER}")
 ENDMACRO()
+
+# Add one or more flags to the C++ compiler command. This macro differs from GLOBAL_ADD_COMPILE_OPTIONS
+# in the sense that GLOBAL_ADD_COMPILE_OPTIONS operates on the 'COMPILE_OPTIONS' property which means that 
+# flags are added at the END of all compile flags (after the '-I' flags). This MACRO however operates on the
+# 'CMAKE_CXX_FLAGS' variable which means that flags are added at the BEGIN of the compile command. 
+# It should be noted that this MACRO turns CMAKE_CXX_FLAGS into a global variable
+#
+# Usage:
+#    INSERT_CXX_FLAGS([BEFORE <flag> <flag> ...] [AFTER <flag> <flag> ...])
+#	flags specified after 'BEFORE' are added right before the original CMAKE_C_FLAGS
+#	flags specified after 'AFTER' are added right after the original CMAKE_C_FLAGS
+#
+MACRO(INSERT_CXX_FLAGS)
+    cmake_parse_arguments(_ICF "" "" "BEFORE;AFTER" ${ARGN} )
+    STRING(REGEX REPLACE ";" " " _ICF_BEFORE "${_ICF_BEFORE}")
+    STRING(STRIP "${_ICF_BEFORE}" _ICF_BEFORE)
+    STRING(REGEX REPLACE ";" " " _ICF_AFTER "${_ICF_AFTER}")
+    STRING(STRIP "${_ICF_AFTER}" _ICF_AFTER)
+    SET_GLOBAL(CMAKE_CXX_FLAGS "${_ICF_BEFORE} ${CMAKE_CXX_FLAGS} ${_ICF_AFTER}")
+ENDMACRO()
+
 
 # Get the toolchain required by the code in the <subdir> of the current directory.
 # This MACRO is intended to be used mainly for platforms but may be useful in future

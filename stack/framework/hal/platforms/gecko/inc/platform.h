@@ -2,6 +2,12 @@
 #define __PLATFORM_H_
 
 #include "platform_defs.h"
+
+#ifndef PLATFORM_GECKO
+    #error Mismatch between the configured platform and the actual platform. Expected PLATFORM_GECKO to be defined
+#endif
+
+
 #include "efm32gg_chip.h"
 
 /********************

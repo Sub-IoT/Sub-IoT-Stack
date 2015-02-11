@@ -8,6 +8,10 @@
 
 #include "types.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif //__cplusplus
+
 /*! \brief Get a random number.
  * 
  * The exact implementation of the random number generator is platform specific. On (real)
@@ -25,6 +29,11 @@ uint32_t get_rnd();
  *
  */
 void set_rng_seed(unsigned int seed);
+
+#ifdef __cplusplus
+}
+#endif //__cplusplus
+
 
 
 #endif // __RANDOM_H_

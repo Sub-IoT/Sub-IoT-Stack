@@ -28,6 +28,10 @@
     #error The platform should define the number of available timers
 #endif
 
+#ifdef __cplusplus
+extern "C" {
+#endif //__cplusplus
+
 enum
 {
     HWTIMER_FREQ_1MS = 0,
@@ -171,5 +175,10 @@ bool hw_timer_is_overflow_pending(hwtimer_id_t id);
  * \return bool	true if a timer interrupt is pending, false otherwise
  */
 bool hw_timer_is_interrupt_pending(hwtimer_id_t id);
+
+#ifdef __cplusplus
+}
+#endif //__cplusplus
+
 
 #endif /* HW_TIMER_H_ */

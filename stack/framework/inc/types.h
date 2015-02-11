@@ -25,6 +25,9 @@
 #include <stddef.h>
 #include <stdint.h>
 
+/* \brief the type of all returned errors
+ *
+ */
 typedef uint8_t error_t;
 
 

@@ -9,6 +9,10 @@
 
 #include "types.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif //__cplusplus
+
 /*! \brief Put the system in low power mode
  *
  * When the system is in low power mode the CPU is halted until it
@@ -50,5 +54,8 @@ void hw_enter_lowpower_mode(uint8_t mode);
  */
 uint64_t hw_get_unique_id();
 
+#ifdef __cplusplus
+}
+#endif //__cplusplus
 
 #endif //__HW_SYSTEM_H

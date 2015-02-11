@@ -36,6 +36,10 @@
 #include "framework_defs.h"
 #include "types.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif //__cplusplus
+
 #ifdef FRAMEWORK_LOG_ENABLED
 
 /* \brief Reset the log counter back to zero
@@ -59,5 +63,12 @@ static inline void log_print_data(uint8_t* message, uint8_t length) {}
 
 
 #endif
+
+#ifdef __cplusplus
+}
+#endif //__cplusplus
+
+
+
 
 #endif /* __LOG_H_ */

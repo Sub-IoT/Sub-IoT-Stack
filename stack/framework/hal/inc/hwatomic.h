@@ -38,6 +38,11 @@
 #ifndef __HW_ATOMIC_H_
 #define __HW_ATOMIC_H_
 
+#ifdef __cplusplus
+extern "C" {
+#endif //__cplusplus
+
+
 /*! \brief Start an atomic section
  *
  * See the documentation for this file for more information on the definition
@@ -53,5 +58,10 @@ void start_atomic();
  *
  */
 void end_atomic();
+
+#ifdef __cplusplus
+}
+#endif //__cplusplus
+
 
 #endif //__HW_ATOMIC_H_

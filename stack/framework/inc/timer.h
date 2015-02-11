@@ -54,6 +54,15 @@
 #include "scheduler.h"
 #include "hwtimer.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif //__cplusplus
+
+#ifdef __cplusplus
+}
+#endif //__cplusplus
+
+
 typedef struct
 {
     task_t f;
@@ -62,18 +71,18 @@ typedef struct
 } timer_event;
 
 //a bit of dirty macro evaluation to prepend HWTIMER_ to the value of 'FRAMEWORK_TIMER_RESOLUTION'
-#define __CONCAT2(a,b) a ## b
-#define __CONCAT(a, b) __CONCAT2(a,b)
+#define ___CONCAT2(a,b) a ## b
+#define ___CONCAT(a, b) ___CONCAT2(a,b)
 /*! \brief The frequency of the hardware timer used to power the framework timer
  *
  * This value can be configured by setting the 'FRAMEWORK_TIMER_RESOLUTION' CMake property
  */
-#define TIMER_RESOLUTION __CONCAT(HWTIMER_FREQ_, FRAMEWORK_TIMER_RESOLUTION)
+#define TIMER_RESOLUTION ___CONCAT(HWTIMER_FREQ_, FRAMEWORK_TIMER_RESOLUTION)
 
 /*! \brief The number of ticks the framework timer generates every second
  *
  */
-#define TIMER_TICKS_PER_SEC __CONCAT(HWTIMER_TICKS_, FRAMEWORK_TIMER_RESOLUTION)
+#define TIMER_TICKS_PER_SEC ___CONCAT(HWTIMER_TICKS_, FRAMEWORK_TIMER_RESOLUTION)
 
 
 
@@ -174,10 +183,11 @@ static inline error_t timer_post_task(task_t task, int32_t time) { return timer_
 static inline error_t timer_post_task_prio_delay(task_t task, int32_t delay, uint8_t priority)
 { 
 #ifdef FRAMEWORK_TIMER_RESET_COUNTER
-    timer_post_task_prio(task,delay,priority);
+    return timer_post_task_prio(task,delay,priority);
 #else
-    timer_post_task_prio(task,timer_get_counter_value()+delay, priority);
+    return timer_post_task_prio(task,timer_get_counter_value()+delay, priority);
 #endif //FRAMEWORK_TIMER_RESET_COUNTER
+
 }
 /*! \brief Post a task <task> to be scheduled with a certain <delay> with the default priority.
  *
@@ -225,5 +235,14 @@ static inline error_t timer_add_event( timer_event* event) { return timer_post_t
  * 
  */
 error_t timer_cancel_task(task_t task);
+
+#ifdef __cplusplus
+extern "C" {
+#endif //__cplusplus
+
+#ifdef __cplusplus
+}
+#endif //__cplusplus
+
 
 #endif /* TIMER_H_ */

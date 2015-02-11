@@ -8,6 +8,9 @@
 
 #include "scheduler.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif //__cplusplus
 
 /*! \brief callback from the HAL to initialise the framework
  *
@@ -30,5 +33,10 @@ void __framework_bootstrap();
  *
  */
 task_t bootstrap();
+
+#ifdef __cplusplus
+}
+#endif //__cplusplus
+
 
 #endif

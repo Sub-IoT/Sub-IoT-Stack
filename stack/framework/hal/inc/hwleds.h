@@ -27,6 +27,10 @@
 
 #include "types.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif //__cplusplus
+
 
 /*! \brief Initialise the leds of the platform
  *
@@ -63,5 +67,10 @@ void led_toggle(uint8_t led_nr);
 //may be nice to have, but doesn't belong in the HAL (it's only used from applications -> can be dumped in a 
 //separate module if needed
 //void led_blink(uint8_t led_id);
+
+#ifdef __cplusplus
+}
+#endif //__cplusplus
+
 
 #endif // __LEDS_H__

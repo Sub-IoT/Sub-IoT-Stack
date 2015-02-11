@@ -16,6 +16,11 @@
 
 #include "types.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif //__cplusplus
+
+
 /*! \brief Initialise the debug pins of the platform
  *
  *  This function initialises the debuh pins of the platform. This function is NOT part of the
@@ -65,5 +70,10 @@ void hw_debug_toggle(uint8_t pin_id);
  *
  */
 void hw_debug_mask(uint32_t mask);
+
+#ifdef __cplusplus
+}
+#endif //__cplusplus
+
 
 #endif /* HWDEBUG_H_ */

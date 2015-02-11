@@ -8,10 +8,9 @@
 
 #include "types.h"
 
-/* \brief the type of all returned errors
- *
- */
-typedef uint8_t error_t;
+#ifdef __cplusplus
+extern "C" {
+#endif //__cplusplus
 
 /* \brief All possible error codes
  *
@@ -84,6 +83,10 @@ enum {
   ELAST          = 11
 };
 
+
+#ifdef __cplusplus
+}
+#endif //__cplusplus
 
 
 

@@ -20,6 +20,10 @@
 #include <stdint.h>
 #include "errors.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif //__cplusplus
+
 /* \brief Type definition for tasks
  *
  */
@@ -115,6 +119,9 @@ error_t sched_cancel_task(task_t task);
 bool sched_is_scheduled(task_t task);
 
 
+#ifdef __cplusplus
+}
+#endif //__cplusplus
 
 
 #endif /* SCHEDULER_H_ */
