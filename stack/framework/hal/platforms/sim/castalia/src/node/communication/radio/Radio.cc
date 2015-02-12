@@ -227,10 +227,10 @@ void Radio::handleMessage(cMessage * msg)
 			if (endingSignal->bitErrors != ALL_ERRORS) {
 				if (endingSignal->bitErrors <= maxErrorsAllowed(endingSignal->encoding)) {
 					// decapsulate the packet and add the RSSI and LQI fields
-					MacPacket *macPkt = check_and_cast<MacPacket*>(wcMsg->decapsulate());
-					macPkt->getMacRadioInfoExchange().RSSI = readRSSI();
-					macPkt->getMacRadioInfoExchange().LQI = endingSignal->power_dBm - endingSignal->maxInterference;
-					sendDelayed(macPkt, PROCESSING_DELAY, "toMacModule");
+					RadioPacket *radioPkt = check_and_cast<RadioPacket*>(wcMsg->decapsulate());
+					radioPkt->setRSSI(readRSSI());
+					radioPkt->setLQI(endingSignal->power_dBm - endingSignal->maxInterference);
+					sendDelayed(radioPkt, PROCESSING_DELAY, "toStackModule");
 					// collect stats
 					if (endingSignal->maxInterference == RXmode->noiseFloor) {
 						stats.RxReachedNoInterference++;
@@ -308,19 +308,19 @@ void Radio::handleMessage(cMessage * msg)
 		/**************************************************************
 		 * Packet from MAC level arrived. Buffer it, if there is space
 		 **************************************************************/
-		case MAC_LAYER_PACKET:{
-			MacPacket *macPkt = check_and_cast<MacPacket*>(msg);
+		case RADIO_PACKET:{
+			RadioPacket *radioPkt = check_and_cast<RadioPacket*>(msg);
 
-			int totalSize = macPkt->getByteLength() + PhyFrameOverhead;
+			int totalSize = radioPkt->getByteLength() + PhyFrameOverhead;
 			if (maxPhyFrameSize != 0 && totalSize > maxPhyFrameSize) {
 				trace() << "WARNING: MAC sent to Radio an oversized packet (" <<
-					macPkt->getByteLength() + PhyFrameOverhead << " bytes) packet dropped";
+						radioPkt->getByteLength() + PhyFrameOverhead << " bytes) packet dropped";
 				break;
 			}
 
 			if ((int)radioBuffer.size() < bufferSize) {
-				trace() << "Buffered [" << macPkt->getName() << "] from MAC layer";
-				radioBuffer.push(macPkt);
+				trace() << "Buffered [" << radioPkt->getName() << "] from MAC layer";
+				radioBuffer.push(radioPkt);
 				// we use return instead of break that leads to message deletion at the end
 				// to avoid unnecessary message duplication
 				return;
@@ -328,9 +328,9 @@ void Radio::handleMessage(cMessage * msg)
 				RadioControlMessage *fullBuffMsg =
 						new RadioControlMessage("Radio buffer full", RADIO_CONTROL_MESSAGE);
 				fullBuffMsg->setRadioControlMessageKind(RADIO_BUFFER_FULL);
-				sendDelayed(fullBuffMsg, PROCESSING_DELAY, "toMacModule");
+				sendDelayed(fullBuffMsg, PROCESSING_DELAY, "toStackModule");
 				stats.bufferOverflow++;
-				trace() << "WARNING: Buffer FULL, discarding [" << macPkt->getName() << "] from MAC layer";
+				trace() << "WARNING: Buffer FULL, discarding [" << radioPkt->getName() << "] from MAC layer";
 			}
 			break;
 		}
@@ -361,7 +361,7 @@ void Radio::handleMessage(cMessage * msg)
 		 * to avoid message deletion in the end;
 		 ******************************************************************/
 		case RADIO_CONTROL_MESSAGE:{
-			send(msg, "toMacModule");
+			send(msg, "toStackModule");
 			return;
 		}
 
@@ -595,11 +595,11 @@ void Radio::completeStateTransition()
 
 void Radio::finishSpecific()
 {
-	MacPacket *macPkt;
+	RadioPacket *radioPkt;
 	while (!radioBuffer.empty()) {
-		macPkt = radioBuffer.front();
+		radioPkt = radioBuffer.front();
 		radioBuffer.pop();
-		cancelAndDelete(macPkt);
+		cancelAndDelete(radioPkt);
 	}
 	TxLevelList.clear();
 	RXmodeList.clear();
@@ -633,7 +633,7 @@ void Radio::finishSpecific()
  */
 double Radio::popAndSendToWirelessChannel()
 {
-	MacPacket *macPkt = radioBuffer.front();
+	RadioPacket *radioPkt = radioBuffer.front();
 	radioBuffer.pop();
 
 	//Generate begin and end tx messages
@@ -650,12 +650,12 @@ double Radio::popAndSendToWirelessChannel()
 			new WirelessChannelSignalEnd("WC_END", WC_SIGNAL_END);
 	end->setByteLength(PhyFrameOverhead);
 	end->setNodeID(self);
-	end->encapsulate(macPkt);
+	end->encapsulate(radioPkt);
 
 	//calculate the TX time based on the length of the packet
 	double txTime = ((double)(end->getByteLength() * 8.0f)) / RXmode->datarate;
-	send(begin, "toCommunicationModule");
-	sendDelayed(end, txTime, "toCommunicationModule");
+	send(begin, "toWirelessChannel");
+	sendDelayed(end, txTime, "toWirelessChannel");
 
 	// keep stats of the packets TXed
 	stats.transmissions++;

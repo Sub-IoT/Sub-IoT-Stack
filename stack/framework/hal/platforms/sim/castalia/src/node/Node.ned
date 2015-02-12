@@ -31,7 +31,6 @@ module Node {
 	// Node will become active startupOffset + random(startupRandomization) 
 	// seconds after the start of simulation
 
-	string ApplicationName;										//the name of the implemented Application Module
 	string MobilityManagerName = default ("NoMobilityManager");	//the name of the implemented Mobility Module
 
  gates:
@@ -49,15 +48,17 @@ module Node {
 		toNodeContainerModule[sizeof(toPhysicalProcess)];
 	} 
 	Communication: node.communication.CommunicationModule;
-	Application: <ApplicationName> like node.application.iApplication;
-
+	Hal: node.hal.HalModule;
+	
  connections:
-	Communication.toNodeContainerModule --> toWirelessChannel;
-	fromWirelessChannel --> Communication.fromNodeContainerModule;
-	Application.toCommunicationModule --> Communication.fromApplicationModule;
-	Application.toSensorDeviceManager --> SensorManager.fromApplicationModule;
-	Communication.toApplicationModule --> Application.fromCommunicationModule;
-	SensorManager.toApplicationModule --> Application.fromSensorDeviceManager;
+	Communication.toWirelessChannel --> toWirelessChannel;
+	fromWirelessChannel --> Communication.fromWirelessChannel;
+		
+	Hal.toCommunicationModule --> Communication.fromHalModule;
+	Communication.toHalModule --> Hal.fromCommunicationModule;
+	
+	Hal.toSensorDeviceManager --> SensorManager.fromHalModule;
+	SensorManager.toHalModule --> Hal.fromSensorDeviceManager;
 
 	for i = 0..sizeof(toPhysicalProcess) - 1 {
 		fromPhysicalProcess[i] --> SensorManager.fromNodeContainerModule[i];
@@ -65,9 +66,7 @@ module Node {
 	}
 
 	ResourceManager.toSensorDevManager --> SensorManager.fromResourceManager;
-	ResourceManager.toApplication --> Application.fromResourceManager;
-	ResourceManager.toNetwork --> Communication.fromResourceManager2Net;
-	ResourceManager.toMac --> Communication.fromResourceManager2Mac;
-	ResourceManager.toRadio --> Communication.fromResourceManager2Radio;
+	ResourceManager.toHal --> Hal.fromResourceManager;
+	ResourceManager.toCommunicationModule --> Communication.fromResourceManager;
 }
 

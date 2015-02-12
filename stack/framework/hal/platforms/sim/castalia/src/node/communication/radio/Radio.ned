@@ -50,10 +50,10 @@ simple Radio {
 	int phyFrameOverhead = default (6);	// in bytes (802.15.4. = 6 bytes)
 
  gates:
-	output toCommunicationModule;
-	output toMacModule;
-	input fromCommunicationModule;
-	input fromMacModule;
-	input fromCommModuleResourceMgr;
+	output toWirelessChannel;
+	output toStackModule;
+	input fromWirelessChannel;
+	input fromStackModule;
+	input fromResourceManager;
 }
 

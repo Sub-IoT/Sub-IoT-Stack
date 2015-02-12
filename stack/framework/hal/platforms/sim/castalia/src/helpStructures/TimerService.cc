@@ -52,7 +52,36 @@ void TimerService::setTimer(int timerIndex, simtime_t time)
 	}
 	timerMessages[timerIndex] = new TimerServiceMessage("Timer message", TIMER_SERVICE);
 	timerMessages[timerIndex]->setTimerIndex(timerIndex);
-	scheduleAt(simTime() + timerDrift * time, timerMessages[timerIndex]);
+
+	// Edit by Daniel van den Akker @ 12/2/2015
+	// Critical bugfix in the implementation of Timer Drift:
+	//
+	//  timerDrift tells us how much faster/slower we are running than the 'real' time
+	//  (with timerDrift a little bit more or less than 1)
+	//
+	//  When scheduling a timer with a delay of 'time' (according to the node clock)
+	//	The following equation however MUST hold regardless of timer drift:
+	//		clock_new = clock_old + time
+	//  with clock_old being the value of getClock() when the timer is scheduled and
+	//	clock_new being the value of getClock() when the timer fires.
+	//
+	//	Given that:
+	//		clock_old = actualTime_old*clockDrift
+	//		clock_new = actualTime_new*clockDrift
+	//  It follows that:
+	//
+	//	actualTime_new*clockDrift = actualTime_old*clockDrift + time
+	//  or
+	//  actualTime_new = actualTime_old + time/clockDrift
+	//
+	//  This means that, unlike the default implementation we need to DIVIDE instead
+	//  of multiplying 'time' by 'timerDrift' in order to get the timer to fire at the
+	//	right time
+	//
+	//  Meaning that this is false:
+	//scheduleAt(simTime() + timerDrift * time, timerMessages[timerIndex]);
+	//  And this is correct:
+	scheduleAt(simTime() + time/timerDrift, timerMessages[timerIndex]);
 }
 
 void TimerService::handleTimerMessage(cMessage * msg)

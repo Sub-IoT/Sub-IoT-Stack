@@ -51,10 +51,10 @@ simple SensorManager {
 	string devicesSaturation = default ("1000");	//holds the saturation value for each sensing device
 
  gates:
-	output toApplicationModule;
+	output toHalModule;
 	output toNodeContainerModule[];
 	input fromNodeContainerModule[];
-	input fromApplicationModule;
+	input fromHalModule;
 	input fromResourceManager;
 }
 

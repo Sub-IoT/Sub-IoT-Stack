@@ -27,7 +27,7 @@ PLATFORM_BUILD_SETTINGS_FILE()
 LIST_SUBDIRS(CASTALIA_INC "${CMAKE_CURRENT_SOURCE_DIR}" RECURSE)
 
 #Find and process all '.msg'. files so the propper Omnet++ message headers / sources are generated
-FILE(GLOB_RECURSE MSG_FILES RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} "${CMAKE_CURRENT_SOURCE_DIR}/*.msg")
+FILE(GLOB_RECURSE MSG_FILES RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} "${CMAKE_CURRENT_SOURCE_DIR}/src/*.msg")
 SET(MSG_CXX_FILES "")
 FOREACH(msg_file ${MSG_FILES})
     #retrieve the raw file prefix & directory prefix from the file name

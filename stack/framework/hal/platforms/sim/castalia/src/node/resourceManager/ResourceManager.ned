@@ -36,10 +36,8 @@ simple ResourceManager {
 
  gates:
 	output toSensorDevManager;
-	output toApplication;
-	output toNetwork;
-	output toMac;
-	output toRadio;
+	output toHal;
+	output toCommunicationModule;
 	input powerConsumption @ directIn;
 }
 

@@ -100,10 +100,10 @@ void SensorManager::handleMessage(cMessage * msg)
 				//readingMsg->setSensorType(sensorTypes[sensorIndex].c_str());
 				//readingMsg->setSensedValue(sensorLastValue[sensorIndex]);
 				//readingMsg->setSensorIndex(sensorIndex);
-				//send(readingMsg, "toApplicationModule"); //send the sensor reading to the Application module
+				//send(readingMsg, "toHalModule"); //send the sensor reading to the Application module
 				rcvPacket->setSensorType(sensorTypes[sensorIndex].c_str());
 				rcvPacket->setSensedValue(sensorLastValue[sensorIndex]);
-				send(rcvPacket, "toApplicationModule");
+				send(rcvPacket, "toHalModule");
 				return;
 			}
 
@@ -139,7 +139,7 @@ void SensorManager::handleMessage(cMessage * msg)
 			readingMsg->setSensedValue(theValue);
 			readingMsg->setSensorIndex(sensorIndex);
 
-			send(readingMsg, "toApplicationModule");	//send the sensor reading to the Application module
+			send(readingMsg, "toHalModule");	//send the sensor reading to the Application module
 
 			break;
 		}
@@ -152,7 +152,7 @@ void SensorManager::handleMessage(cMessage * msg)
 		case DESTROY_NODE:
 		{
 			disabled = 1;
-			send(msg->dup(), "toApplicationModule");
+			send(msg->dup(), "toHalModule");
 			break;
 		}
 
