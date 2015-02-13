@@ -103,26 +103,37 @@ __LINK_C timer_tick_t timer_get_counter_value();
 
 /*! \brief Post a task <task> to be scheduled at a given <time> with a given <priority>
  *
- * \param task		The task to be executed at the given time. Please note that posting a task
- *			With the framework timers does NOT automatically register them with the scheduler.
- *			If the posted task is not registered with the scheduler, the task will not be 
- *			executed.
- * \param time		The exact clocktick at which the task is to be executed. This value is interpreted
- *			differently depending on the operation mode of the timers. 
- *			    - In 'Normal mode' this is interpreted as clockticks relative to the start 
- *			      of the program. If the task is posted at time <cur>, the posted task will 
- *			      be executed with a delay of (<time> - <cur>) clock ticks. 
- *			    - In 'Reset mode', the timer counter is reset to 0 before posting the task. As a
- *			      result <time> is interpreted as clockticks relative to the CURRENT time. This 
- *			      means that the posted task will always be executed in <time> clockticks 
- *			      regardless of the current value of the counter.
- *			If the specified <time> is in the past, the task is scheduled immediately with the
- *			task scheduler.
+ * The <time> parameter denotes the clock tick at which the <task> is to be scheduled
+ * with the task scheduler. <time> may be a value that is in the future or in the past wrt.
+ * the current value of 'timer_get_counter_value()' (denoted as <cur_time>).
+ * If <time> denotes a clock tick in the future, the framework timer delays scheduling the task until
+ * <cur_time> == <time>. If <time> denotes a clock tick in the past, the task is scheduled
+ * immediately. Depending on the frequency of the timer, the priority of the task and the amount of tasks
+ * currently scheduled, another few clock ticks may pass before the task is actually executed.
+ * (If you need more precise timing, use a hardware timer)
+ *
+ * To ensure proper operation of the framework timer in the event of an overflow, <time> is
+ * interpreted in a circular fashion wrt. the current <counter> value. A specified <time> is deemed
+ * to be in the past when, using SIGNED integer arithmetic: '<time> - <cur_time> < 0'.
+ * This equates to checking whether <time> < <cur_time>, except that it also works when the timer is about
+ * to overflow.
+ *
+ * When the framework timer is operating in 'Reset mode' (as opposed to 'Normal mode') the value of the counter is
+ * reset to '0' right before the task is posted. The supplied <time> value is then treated in the normal manner,
+ * but since the counter itself is reset, <time> can also be interpreted as the number of clock ticks to wait
+ * (from posting the task) before scheduling the task with the task scheduler.
+ *
+ * Please note that posting a task with the framework timers does NOT automatically register
+ * it with the scheduler. If the posted task is not registered with the scheduler, the task
+ * will not be executed.
+ *
+ * \param task		The task to be scheduled at the given time.
+ * \param time		The time at which to schedule the task for execution.
  * \param priority	The priority with which the task should be executed
  *
  * \returns error_t	SUCCESS if the task was posted successfully
- *					ENOMEM if the task could not be posted there are already too many tasks waiting for
- * 						   execution.
+ *					ENOMEM if the task could not be posted there are already too
+ *						   many tasks waiting for execution.
  * 					EALREADY if the task was already scheduled.
  *					EINVAL if an invalid priority was specified.
  *
@@ -131,22 +142,20 @@ __LINK_C error_t timer_post_task_prio(task_t task, timer_tick_t time, uint8_t pr
 
 /*! \brief Post a task <task> to be scheduled at a given <time> with the default priority.
  *
- * This function behaves exactly the same way as
+ * This function is equivalent to
  * \code{.c}
  * 	timer_post_task_prio(task,time,DEFAULT_PRIORITY);
  * \endcode
  *
- * \param task		The task to be executed at the given time. Please note that posting a task
- *					With the framework timers does NOT automatically register them with the scheduler.
- *					If the posted task is not registered with the scheduler, the task will not be
- *					executed.
- * \param time		The exact clocktick at which the task is to be executed. See the description
- * 					of this parameter for the 'timer_post_task_prio' function for more information
- * 					regarding the operation mode of the timer.
+ * See the comments above 'timer_post_task_prio()' for a more detailed explanation.
+ *
+ * \param task		The task to be scheduled at the given time.
+ *
+ * \param time		The time at which to schedule the task.
  *
  * \returns error_t	SUCCESS if the task was posted successfully
- *					ENOMEM if the task could not be posted there are already too many tasks waiting for
- * 						   execution.
+ *					ENOMEM if the task could not be posted there are already too
+ *						   many tasks waiting for execution.
  * 					EALREADY if the task was already scheduled.
  */
 static inline error_t timer_post_task(task_t task, timer_tick_t time) { return timer_post_task_prio(task,time,DEFAULT_PRIORITY);}
@@ -155,25 +164,23 @@ static inline error_t timer_post_task(task_t task, timer_tick_t time) { return t
 /*! \brief Post a task <task> to be scheduled with a certain <delay> with a given <priority>
  *
  * This function behaves in much the same way as timer_post_task_prio, except that instead of specifying the
- * time at which a task should be executed, the task is executed with a certain <delay>.
+ * time at which a task should be scheduled, the task is always scheduled <delay> ticks into the future,
+ * regardless of the 'operation mode' of the framework timer.
  *
- * \param task		The task to be executed at the given time. Please note that posting a task
- *					With the framework timers does NOT automatically register them with the scheduler.
- *					If the posted task is not registered with the scheduler, the task will not be
- *					executed.
- * \param delay		The delay with which the task is to be executed. Unlike with the 'timer_post_task'
- * 					function, the interpretation of the delay DOES NOT depend on the operation mode of
- * 					the timers. In both operation modes, <delay> is interpreted as the number of clock
- * 					ticks to wait before executing the task relative to the time at which the task was
- * 					posted.
+ * <delay> MUST be a value between 0 and 2^31. If <delay> is outside this range, the behavior
+ * of the framework timer is undefined.
+ *
+ * See the comments above 'timer_post_task_prio()' for a more detailed explanation on the operation of the timers.
+ *
+ * \param task		The task to be executed.
+ * \param delay		The delay with which the task is to be executed.
  * \param priority	The priority with which the task should be executed
  *
  * \returns error_t	SUCCESS if the task was posted successfully
- *					ENOMEM if the task could not be posted there are already too many tasks waiting for
- * 					       execution.
+ *					ENOMEM if the task could not be posted there are already too
+ *						   many tasks waiting for execution.
  *					EINVAL if an invalid priority was specified.
  *					EALREADY if the task was already scheduled.
- *
  */
 static inline error_t timer_post_task_prio_delay(task_t task, timer_tick_t delay, uint8_t priority)
 { 
@@ -186,38 +193,32 @@ static inline error_t timer_post_task_prio_delay(task_t task, timer_tick_t delay
 }
 /*! \brief Post a task <task> to be scheduled with a certain <delay> with the default priority.
  *
- * This function behaves exactly the same way as
+ * This function is equivalent to
  * \code{.c}
  * 	timer_post_task_prio_delay(task,time,DEFAULT_PRIORITY);
  * \endcode
  *
- * \param task		The task to be executed at the given time. Please note that posting a task
- *					With the framework timers does NOT automatically register them with the scheduler.
- *					If the posted task is not registered with the scheduler, the task will not be
- *					executed.
- * \param delay		The delay with which the task is to be executed. See the description
- * 					of this parameter for the 'timer_post_task_prio_delay' function for more information
- * 					regarding the operation mode of the timer.
- * \param priority	The priority with which the task should be executed
+ * \param task		The task to be executed.
+ * \param delay		The delay with which the task is to be executed.
  *
  * \returns error_t	SUCCESS if the task was posted successfully
- *					ENOMEM if the task could not be posted there are already too many tasks waiting for
- * 					  	   execution.
+ *					ENOMEM if the task could not be posted there are already too
+ *						   many tasks waiting for execution.
  * 					EALREADY if the task was already scheduled.
  */
 static inline error_t timer_post_task_delay(task_t task, timer_tick_t time) { return timer_post_task_prio_delay(task,time,DEFAULT_PRIORITY);}
 
 /*! \brief Schedule a given <timer_event>
  *
- * This function is synonymous to calling
+ * This function is equivalent to
  * \code{.c}
- * 	timer_post_task(event->f, event->next_event, event->priority);
+ *		timer_post_task_prio(event->f, event->next_event, event->priority);
  * \endcode
  * 
  * \param event		The event to schedule
  * \returns error_t	SUCCESS if the task was posted successfully
- *					ENOMEM if the task could not be posted there are already too many tasks waiting for
- * 						   execution.
+ *					ENOMEM if the task could not be posted there are already too
+ *						   many tasks waiting for execution.
  *					EINVAL if an invalid priority was specified.
  *					EALREADY if the task was already scheduled.
  */
@@ -228,8 +229,8 @@ static inline error_t timer_add_event( timer_event* event) { return timer_post_t
  *
  * \param task	The task to cancel.
  * 
- * \return error_t	SUCCESS if the timer was successfully cancelled
- * 					EALREADY if the timer was not scheduled and therefore not cancelled
+ * \return error_t	SUCCESS if the timer was successfully canceled
+ * 					EALREADY if the timer was not scheduled and therefore not canceled
  *
  */
 __LINK_C error_t timer_cancel_task(task_t task);

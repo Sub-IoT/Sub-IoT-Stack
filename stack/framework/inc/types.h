@@ -27,7 +27,8 @@
 /* \brief the type of all returned errors
  *
  */
-typedef uint16_t error_t;
+typedef int error_t;	//use 'int' since it matches the value expected for errors from <errno.h>
+						//and the EFM32GG toolchain actually defines it as such
 
 
 

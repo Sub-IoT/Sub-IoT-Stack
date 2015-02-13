@@ -17,6 +17,8 @@ ADD_EXECUTABLE(simple_leds app.c)
 #Add the framework (and one or more modules) as libraries to the application
 TARGET_LINK_LIBRARIES(simple_leds framework)
 
-#Generate IDE specific binaries (if needed) 
-#GENERATE_SIMPLICITY_STUDIO_FILES(simple_leds)
-
+#Generate IDE specific binaries (if the required macro is available for the chosen platform)
+MACRO_AVAILABLE(GENERATE_SIMPLICITY_STUDIO_FILES SSF_AVAILABLE)
+IF(SSF_AVAILABLE)
+    GENERATE_SIMPLICITY_STUDIO_FILES(simple_leds)
+ENDIF()

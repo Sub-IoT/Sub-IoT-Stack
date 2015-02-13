@@ -5,7 +5,6 @@
 #include <assert.h>
 #include "framework_defs.h"
 
-
 #ifdef NODE_GLOBALS
     #warning Default Timer implementation used when NODE_GLOBALS is active. Are you sure this is what you want ??
 #endif
@@ -109,7 +108,19 @@ __LINK_C error_t timer_post_task_prio(task_t task, timer_tick_t fire_time, uint8
 
 		//if there is no event scheduled, this event will run before the next scheduled event
 		//or we reset the timers: trigger a reconfiguration of the next scheduled event
-		if(NG(next_event) == NO_EVENT || timers_reset || NG(timers)[NG(next_event)].next_event > fire_time)
+
+		bool do_config = NG(next_event) == NO_EVENT || timers_reset;
+		if(!do_config)
+		{
+			uint32_t counter = timer_get_counter_value();
+			//if the new event should fire sooner than the old event --> trigger reconfig
+			//this is done using signed ints (compared to the current counter)
+			//to ensure propper handling of timer overflows
+			int32_t next_fire_delay = ((int32_t)fire_time) - ((int32_t)counter);
+			int32_t old_fire_delay = ((int32_t)NG(timers)[NG(next_event)].next_event) - ((int32_t)counter);
+			do_config = next_fire_delay < old_fire_delay;
+		}
+		if(do_config)
 			configure_next_event();
 		status = SUCCESS;
     }
@@ -159,13 +170,21 @@ static uint32_t get_next_event()
 {
     //this function should only be called from an atomic context
     reset_timers();
-    int32_t next_fire_time;
+    int32_t min_delay;
     uint32_t next_fire_event = NO_EVENT;
+    uint32_t counter = timer_get_counter_value();
+
     for(uint32_t i = 0; i < FRAMEWORK_TIMER_STACK_SIZE; i++)
     {
-		if(NG(timers)[i].f != 0x0 && (next_fire_event == NO_EVENT || NG(timers)[i].next_event < next_fire_time) )
+    	if(NG(timers)[i].f == 0x0)
+    		continue;
+    	//trick borrowed from AODV: by using signed integers in this way
+    	//we know that if the event has already passed delay_ticks will be < 0
+    	// --> events are sorted from past -> future regardless of any (pending) overflows
+    	int32_t delay_ticks = ((int32_t)NG(timers)[i].next_event) - ((int32_t)counter);
+    	if(next_fire_event == NO_EVENT || delay_ticks < min_delay)
 		{
-			next_fire_time = NG(timers)[i].next_event;
+    		min_delay = delay_ticks;
 			next_fire_event = i;
 		}
     }
@@ -185,14 +204,14 @@ static void configure_next_event()
 		if(NG(next_event) != NO_EVENT)
 		{
 			next_fire_time = NG(timers)[NG(next_event)].next_event;
-			if(next_fire_time <= timer_get_counter_value())
+			if ( (((int32_t)next_fire_time) - ((int32_t)timer_get_counter_value())) < 0 )
 			{
 				sched_post_task_prio(NG(timers)[NG(next_event)].f, NG(timers)[NG(next_event)].priority);
 				NG(timers)[NG(next_event)].f = 0x0;
 			}
 		}
     }
-    while(NG(next_event) != NO_EVENT && next_fire_time <= timer_get_counter_value());
+    while(NG(next_event) != NO_EVENT && ( (((int32_t)next_fire_time) - ((int32_t)timer_get_counter_value())) < 0  ) );
 
     //at this point NG(next_event) is eiter equal to NO_EVENT (no tasks left)
     //or we have the next event we can schedule
@@ -221,7 +240,7 @@ static void configure_next_event()
 			fire_delay = (next_fire_time - timer_get_counter_value());
 			//fire_delay should be in [0,COUNTER_VERFLOW_INCREASE]. if this is not the case, it is because timer_get_counter() is
 			//now larger than next_fire_event, which means we 'missed' the event
-			assert(fire_delay < COUNTER_OVERFLOW_INCREASE);
+			assert(((int32_t)fire_delay) > 0);
 #endif
 		}
 		else

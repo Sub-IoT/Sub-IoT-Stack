@@ -1,6 +1,6 @@
 include(${CMAKE_SOURCE_DIR}/cmake/module_macros.cmake)
 #Add the 'BUILD_MODULES' option
-OPTION(BUILD_MODULES "Build Modules" ON)
+OPTION(BUILD_MODULES "Build Modules" OFF)
 LIST_SUBDIRS(CUR_DIRS ${CMAKE_CURRENT_SOURCE_DIR})
 #Add conditional options for all subdirs (which are individual modules)
 FOREACH(__dir ${CUR_DIRS})
