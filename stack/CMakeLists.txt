@@ -6,12 +6,12 @@ CLEAR_GLOBALS()
 SET_GLOBAL(CMAKE_C_LINK_EXECUTABLE "<CMAKE_C_COMPILER> <FLAGS> <CMAKE_C_LINK_FLAGS> <LINK_FLAGS> <OBJECTS> -o <TARGET> <LINK_LIBRARIES>")
 SET_GLOBAL(CMAKE_CXX_LINK_EXECUTABLE "<CMAKE_CXX_COMPILER> <FLAGS> <CMAKE_CXX_LINK_FLAGS> <LINK_FLAGS> <OBJECTS> -o <TARGET> <LINK_LIBRARIES>")
 
-CMAKE_MINIMUM_REQUIRED (VERSION 3.0)
+CMAKE_MINIMUM_REQUIRED (VERSION 2.8)
 #Allow the project name to be set from the cache
 SET(PROJECT_NAME "iFest" CACHE STRING "The name of the project")
 SET(CMAKE_BUILD_TYPE "Debug" CACHE STRING "Choose the type of build, options are: Debug Release")
 SET_PROPERTY( CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS "Debug;Release")
-#Need to enable CXX here because CMake complains when CXX is only enabled when the 'sim' platform is loaded
+
 PROJECT (${PROJECT_NAME})
 
 #Set the c standard to use
