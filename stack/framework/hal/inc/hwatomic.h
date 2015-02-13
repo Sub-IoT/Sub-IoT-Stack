@@ -38,10 +38,7 @@
 #ifndef __HW_ATOMIC_H_
 #define __HW_ATOMIC_H_
 
-#ifdef __cplusplus
-extern "C" {
-#endif //__cplusplus
-
+#include "link_c.h"
 
 /*! \brief Start an atomic section
  *
@@ -49,7 +46,7 @@ extern "C" {
  * and usage of critical sections
  *
  */
-void start_atomic();
+__LINK_C void start_atomic();
 
 /*! \brief End an atomic section
  *
@@ -57,11 +54,6 @@ void start_atomic();
  * and usage of critical sections
  *
  */
-void end_atomic();
-
-#ifdef __cplusplus
-}
-#endif //__cplusplus
-
+__LINK_C void end_atomic();
 
 #endif //__HW_ATOMIC_H_

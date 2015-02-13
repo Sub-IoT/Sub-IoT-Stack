@@ -7,10 +7,7 @@
 #define __RANDOM_H_
 
 #include "types.h"
-
-#ifdef __cplusplus
-extern "C" {
-#endif //__cplusplus
+#include "link_c.h"
 
 /*! \brief Get a random number.
  * 
@@ -21,19 +18,14 @@ extern "C" {
  *
  * \return uint32_t	a semi-random number between 0 and 2^32-1
  */
-uint32_t get_rnd();
+__LINK_C uint32_t get_rnd();
 
 /*! Set the seed for the random nuber generator
  *
  * \param	seed	The seed for the random number generator
  *
  */
-void set_rng_seed(unsigned int seed);
-
-#ifdef __cplusplus
-}
-#endif //__cplusplus
-
+__LINK_C void set_rng_seed(unsigned int seed);
 
 
 #endif // __RANDOM_H_

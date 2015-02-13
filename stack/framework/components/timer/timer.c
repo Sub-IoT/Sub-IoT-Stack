@@ -15,9 +15,9 @@
 #define COUNTER_OVERFLOW_INCREASE (1<<(8*sizeof(hwtimer_tick_t)))
 
 static timer_event NGDEF(timers)[FRAMEWORK_TIMER_STACK_SIZE];
-static volatile uint32_t NGDEF(next_event);
+static volatile timer_tick_t NGDEF(next_event);
 static volatile bool NGDEF(hw_event_scheduled);
-static volatile uint32_t NGDEF(timer_offset);
+static volatile timer_tick_t NGDEF(timer_offset);
 enum
 {
     NO_EVENT = FRAMEWORK_TIMER_STACK_SIZE,
@@ -26,7 +26,7 @@ enum
 static void timer_overflow();
 static void timer_fired();
 
-void timer_init()
+__LINK_C void timer_init()
 {
     for(uint32_t i = 0; i < FRAMEWORK_TIMER_STACK_SIZE; i++)
 	NG(timers)[i].f = 0x0;
@@ -57,21 +57,27 @@ void timer_init()
 			return true;
 		}
 
-		uint32_t cur_value = timer_get_counter_value();
+		timer_tick_t cur_value = timer_get_counter_value();
 		reset_counter();
 		for(uint32_t i = 0; i < FRAMEWORK_TIMER_STACK_SIZE; i++)
 		{
 			if(NG(timers)[i].f != 0x0)
-				NG(timers)[i].next_event -= cur_value;
+			{
+				//prevent the value from 'underflowing'
+				if(cur_value > NG(timers)[i].next_event)
+					NG(timers)[i].next_event = 0;
+				else
+					NG(timers)[i].next_event -= cur_value;
+			}
 		}
 		return true;
 	}
 #else
 	static inline bool reset_timers() {return false;}
-#endif //TIMER_RESET_COUNTER_ON_UPDATE
+#endif //FRAMEWORK_TIMER_RESET_COUNTER
 
 static void configure_next_event();
-error_t timer_post_task_prio(task_t task, int32_t fire_time, uint8_t priority)
+__LINK_C error_t timer_post_task_prio(task_t task, timer_tick_t fire_time, uint8_t priority)
 {
     error_t status = ENOMEM;
     if(priority > MIN_PRIORITY)
@@ -111,7 +117,7 @@ error_t timer_post_task_prio(task_t task, int32_t fire_time, uint8_t priority)
     return status;
 }
 
-error_t timer_cancel_task(task_t task)
+__LINK_C error_t timer_cancel_task(task_t task)
 {
     error_t status = EALREADY;
     
@@ -134,9 +140,9 @@ error_t timer_cancel_task(task_t task)
     return status;
 }
 
-uint32_t timer_get_counter_value()
+__LINK_C timer_tick_t timer_get_counter_value()
 {
-    uint32_t counter;
+	timer_tick_t counter;
     start_atomic();
 	counter = NG(timer_offset) + hw_timer_getvalue(HW_TIMER_ID);
 	//increase the counter with COUNTER_OVERFLOW_INCREASE
@@ -169,7 +175,7 @@ static uint32_t get_next_event()
 static void configure_next_event()
 {
     //this function should only be called from an atomic context
-    int32_t next_fire_time;
+	timer_tick_t next_fire_time;
     do
     {
 		//find the next event that has not yet passed, and schedule
@@ -202,7 +208,7 @@ static void configure_next_event()
 		//latest overflow time, to counteract any delays in updating counter_offset
 		//(eg when we're scheduling an event from an interrupt and thereby delaying
 		//the updating of counter_offset)
-		uint32_t fire_delay = (next_fire_time - timer_get_counter_value());
+    	timer_tick_t fire_delay = (next_fire_time - timer_get_counter_value());
 		//if the timer should fire in less ticks than supported by the HW timer --> schedule it
 		//(otherwise it is scheduled from timer_overflow when needed)
 		if(fire_delay < COUNTER_OVERFLOW_INCREASE)
@@ -212,8 +218,10 @@ static void configure_next_event()
 #ifndef NDEBUG	    
 			//check that we didn't try to schedule a timer in the past
 			//normally this shouldn't happen but it IS theoretically possible...
-			fire_delay = (hwtimer_tick_t)(next_fire_time - timer_get_counter_value());
-			assert(fire_delay < 0xFFFF0000);
+			fire_delay = (next_fire_time - timer_get_counter_value());
+			//fire_delay should be in [0,COUNTER_VERFLOW_INCREASE]. if this is not the case, it is because timer_get_counter() is
+			//now larger than next_fire_event, which means we 'missed' the event
+			assert(fire_delay < COUNTER_OVERFLOW_INCREASE);
 #endif
 		}
 		else
@@ -234,7 +242,7 @@ static void timer_overflow()
     {
 		//normally this shouldn't happen. Put an assert here just to make sure
 		assert(NG(timers)[NG(next_event)].next_event >= NG(timer_offset));
-		uint32_t fire_time = (NG(timers)[NG(next_event)].next_event - NG(timer_offset));
+		timer_tick_t fire_time = (NG(timers)[NG(next_event)].next_event - NG(timer_offset));
 
 		//fire time already passed
 		if(fire_time <= hw_timer_getvalue(HW_TIMER_ID))
@@ -253,7 +261,7 @@ static void timer_overflow()
 
 static void timer_fired()
 {
-	assert(NG(next_event) != NO_EVENT);
+    assert(NG(next_event) != NO_EVENT);
     assert(NG(timers)[NG(next_event)].f != 0x0);
     sched_post_task_prio(NG(timers)[NG(next_event)].f, NG(timers)[NG(next_event)].priority);
     NG(timers)[NG(next_event)].f = 0x0;

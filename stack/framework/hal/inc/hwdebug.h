@@ -15,11 +15,7 @@
 #define HWDEBUG_H_
 
 #include "types.h"
-
-#ifdef __cplusplus
-extern "C" {
-#endif //__cplusplus
-
+#include "link_c.h"
 
 /*! \brief Initialise the debug pins of the platform
  *
@@ -27,7 +23,7 @@ extern "C" {
  *  'user' API and should only be called from the initialisation code of the specific platform
  *
  */
-void __hw_debug_init();
+__LINK_C void __hw_debug_init();
 
 /*! \brief Set the specified debug pin.
  *
@@ -36,7 +32,7 @@ void __hw_debug_init();
  *
  *  \param pin_id	The id of the pin to set
  */
-void hw_debug_set(uint8_t pin_id);
+__LINK_C void hw_debug_set(uint8_t pin_id);
 
 /*! \brief Clear the specified debug pin.
  *
@@ -45,7 +41,7 @@ void hw_debug_set(uint8_t pin_id);
  *
  *  \param pin_id	The id of the pin to clear
  */
-void hw_debug_clr(uint8_t pin_id);
+__LINK_C void hw_debug_clr(uint8_t pin_id);
 
 /*! \brief Toggle the state of the specified debug pin.
  *
@@ -54,7 +50,7 @@ void hw_debug_clr(uint8_t pin_id);
  *
  *  \param pin_id	The id of the pin to clear
  */
-void hw_debug_toggle(uint8_t pin_id);
+__LINK_C void hw_debug_toggle(uint8_t pin_id);
 
 /*! \brief Set/Clear multiple debug pins at the same time
  *
@@ -69,11 +65,6 @@ void hw_debug_toggle(uint8_t pin_id);
  * \param mask	The mask of debug pins to set/clear. Each bit in the specified mask represent
  *
  */
-void hw_debug_mask(uint32_t mask);
-
-#ifdef __cplusplus
-}
-#endif //__cplusplus
-
+__LINK_C void hw_debug_mask(uint32_t mask);
 
 #endif /* HWDEBUG_H_ */

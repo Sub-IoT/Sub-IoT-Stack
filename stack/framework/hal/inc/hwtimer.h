@@ -23,14 +23,10 @@
 
 #include "errors.h"
 #include "platform.h"
-
+#include "link_c.h"
 #ifndef PLATFORM_NUM_TIMERS
     #error The platform should define the number of available timers
 #endif
-
-#ifdef __cplusplus
-extern "C" {
-#endif //__cplusplus
 
 enum
 {
@@ -73,7 +69,7 @@ typedef uint16_t hwtimer_tick_t;
  *				ESIZE if an invalid timer_id was specified (out of range)
  *				EINVAL if the requested frequency is not supported by the timer
  */
-error_t hw_timer_init(hwtimer_id_t timer_id, uint8_t frequency, timer_callback_t compare_callback, timer_callback_t overflow_callback);
+__LINK_C error_t hw_timer_init(hwtimer_id_t timer_id, uint8_t frequency, timer_callback_t compare_callback, timer_callback_t overflow_callback);
 
 /*! \brief Get the current timer value
  * 
@@ -82,7 +78,7 @@ error_t hw_timer_init(hwtimer_id_t timer_id, uint8_t frequency, timer_callback_t
  *  \return		the current value of the timer if the specified timer_id is valid
  *			and the corresponding timer has been initialised. 0 otherwise
  */
-hwtimer_tick_t hw_timer_getvalue(hwtimer_id_t timer_id);
+__LINK_C hwtimer_tick_t hw_timer_getvalue(hwtimer_id_t timer_id);
 
 /*! \brief Schedule a hardware timer to fire at a specific clock tick
  *
@@ -109,7 +105,7 @@ hwtimer_tick_t hw_timer_getvalue(hwtimer_id_t timer_id);
  * 						EOFF if the timer was not yet configured
  *
  */
-error_t hw_timer_schedule(hwtimer_id_t timer_id, hwtimer_tick_t tick );
+__LINK_C error_t hw_timer_schedule(hwtimer_id_t timer_id, hwtimer_tick_t tick );
 
 /*! \brief Schedule a hardware timer to fire with a specified delay
  *
@@ -134,12 +130,12 @@ static inline error_t hw_timer_schedule_delay(hwtimer_id_t timer_id, hwtimer_tic
  *
  * \param	timer_id	the id of the timer to cancel
  *
- * \return	error_t		SUCCESS if the timer was scheduled successfully
+ * \return	error_t		SUCCESS if the timer was cancelled successfully
  *		 	 	 	 	ESIZE if an invalid timer id was specified
  * 						EOFF if the timer was not yet configured
  *
  */
-error_t hw_timer_cancel(hwtimer_id_t timer_id);
+__LINK_C error_t hw_timer_cancel(hwtimer_id_t timer_id);
 
 /*! \brief Reset the counter value of the timer
  *
@@ -150,11 +146,11 @@ error_t hw_timer_cancel(hwtimer_id_t timer_id);
  *
  * \param	timer_id	the id of the timer to cancel
  *
- * \return	error_t		SUCCESS is the timer was cancelled succesfully
+ * \return	error_t		SUCCESS is the timer was reset successfully
  *						ESIZE if an invalid timer id was specified
  * 						EOFF if the timer was not yet configured
  */
-error_t hw_timer_counter_reset(hwtimer_id_t timer_id);
+__LINK_C error_t hw_timer_counter_reset(hwtimer_id_t timer_id);
 
 /*! \brief Check whether a timer overflow interrupt is pending
  *
@@ -164,7 +160,7 @@ error_t hw_timer_counter_reset(hwtimer_id_t timer_id);
  * 
  * \return bool	true if an overflow is pending, false otherwise
  */
-bool hw_timer_is_overflow_pending(hwtimer_id_t id);
+__LINK_C bool hw_timer_is_overflow_pending(hwtimer_id_t id);
 
 /*! \brief Check whether a timer interrupt is pending
  *
@@ -174,11 +170,6 @@ bool hw_timer_is_overflow_pending(hwtimer_id_t id);
  *
  * \return bool	true if a timer interrupt is pending, false otherwise
  */
-bool hw_timer_is_interrupt_pending(hwtimer_id_t id);
-
-#ifdef __cplusplus
-}
-#endif //__cplusplus
-
+__LINK_C bool hw_timer_is_interrupt_pending(hwtimer_id_t id);
 
 #endif /* HW_TIMER_H_ */

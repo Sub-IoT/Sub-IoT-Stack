@@ -20,10 +20,7 @@
 #define __UART_H__
 
 #include "types.h"
-
-#ifdef __cplusplus
-extern "C" {
-#endif //__cplusplus
+#include "link_c.h"
 
 /*! \brief Initialise the uart port
  *
@@ -31,7 +28,7 @@ extern "C" {
  *  'user' API and should only be called from the initialisation code of the specific platform
  *
  */
-void __uart_init();
+__LINK_C void __uart_init();
 
 /*! \brief Transmit a single byte over the UART.
  *
@@ -40,14 +37,14 @@ void __uart_init();
  *
  * \param data the character to transmit
  */
-void uart_transmit_data(int8_t data);
+__LINK_C void uart_transmit_data(int8_t data);
 
 /*! \brief Transmit an array of characters over the UART
  *
  * \param data 		pointer to the start of the data segment to send
  * \param length	the number of bytes to send
  */
-void uart_transmit_message(void const *data, size_t length);
+__LINK_C void uart_transmit_message(void const *data, size_t length);
 
 /*! \brief Check whether the UART is ready to send a single byte
  *
@@ -56,14 +53,6 @@ void uart_transmit_message(void const *data, size_t length);
  *
  * \returns bool	true is the UART subsystem is not busy false otherwise
  */
-bool uart_tx_ready();
-
-//these functions disabled for now (not used in dash7 code base) we'll add them when needed
-//void uart_enable_interrupt();
-//unsigned char uart_receive_data();
-
-#ifdef __cplusplus
-}
-#endif //__cplusplus
+__LINK_C bool uart_tx_ready();
 
 #endif // __UART_H__

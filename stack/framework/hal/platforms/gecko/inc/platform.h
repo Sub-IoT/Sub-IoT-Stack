@@ -75,6 +75,22 @@
 //use the first 8 pins as debug pins
 #define DEBUG_PIN_START 0
 #define DEBUG_PIN_NUM 5
+//
+//#define FIFO_PINID (PORT_E | PIN_0)
+//#define PIN_WIRING(Name, PORT,PIN)
+//
+//PIN_WIRING(FIFO_PINID, PORT_E, PIN_0)
+//
+//-->
+//
+//enum
+//{
+//    FIFO_PINID = (PORT_E | PIN_0),
+//}
+//
+//
+//gpio_cofigure(FIFO_PINID, ...)
+//
 
 
 #endif

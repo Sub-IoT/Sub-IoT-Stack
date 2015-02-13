@@ -1,92 +1,74 @@
 /* \file
  *
  * This file spefifies the error codes used throughout the framework and the HAL
- * These have been adopted from TinyOS 2.1.0
+ * These have been adopted from TinyOS 2.1.0, in combination with the ones defined in <errno.h>
  **/
 #ifndef ERRORS_H
 #define ERRORS_H
 
 #include "types.h"
+#include <errno.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif //__cplusplus
 
-/* \brief All possible error codes
+/* \brief Operation completed successfully, no errors occurred
  *
  */
-enum {
-
-  /* \brief Operation completed successfully, no errors occurred
-   *
-   */
-  SUCCESS        =  0,
+#define SUCCESS 	0
   
-  /* \brief Generic condition: backwards compatible
-   *
-   */
-  FAIL           =  1,
+/* \brief Generic failure condition
+ *
+ */
+#define FAIL		5001
   
-  /* \brief Parameter passed in was too big, or outside the expected range
-   *
-   */
-  ESIZE          =  2,
+/* \brief Parameter passed in was too big, or outside the expected range
+ *
+ */
+#define ESIZE		5002
   
-  /* \brief Operation cancelled by a call.
-   *
-   */
-  ECANCEL        =  3,
+/* \brief Operation cancelled by a call.
+ *
+ */
+#define ECANCEL		5003
   
-  /* \brief Subsystem is not active
-   *
-   */
-  EOFF           =  4,
+/* \brief Subsystem is not active
+ *
+ */
+#define EOFF		5004
   
-  /* \brief The underlying system is busy; retry later
-   *
-   */
-  EBUSY          =  5,
+/* \brief The underlying system is busy; retry later
+ *
+ */
+//#define   EBUSY	(already defined in errno.h)
   
-  /* \brief An invalid parameter was passed
-   *
-   */
-  EINVAL         =  6,
+/* \brief An invalid parameter was passed
+ *
+ */
+//#define EINVAL	(already defined in errno.h)
   
-  /* \brief A rare and transient failure: can retry
-   *
-   */
-  ERETRY         =  7,
+/* \brief A rare and transient failure: can retry
+ *
+ */
+#define ERETRY		5005
   
-  /* \brief Reservation required before usage
-   *
-   */
-  ERESERVE       =  8,
+/* \brief Reservation required before usage
+ *
+ */
+#define ERESERVE	5006
   
-  /* \brief The device state you are requesting is already set
-   *
-   */
-  EALREADY       =  9,
+/* \brief The device state you are requesting is already set
+ *
+ */
+//#define EALREADY	(already defined in errno.h)
  
-  /* \brief Memory required not available
-   *
-   */
-  ENOMEM         = 10,
+/* \brief Memory required not available
+ *
+ */
+//#define ENOMEM	(already defined in errno.h)
  
-  /* \brief A packet was not acknowledged
-   *
-   */
-  ENOACK         = 11,
- 
-  /* \brief Last enum value
-   *
-   */
-  ELAST          = 11
-};
-
-
-#ifdef __cplusplus
-}
-#endif //__cplusplus
+/* \brief A packet was not acknowledged
+ *
+ */
+#define ENOACK		5007
 
 
 

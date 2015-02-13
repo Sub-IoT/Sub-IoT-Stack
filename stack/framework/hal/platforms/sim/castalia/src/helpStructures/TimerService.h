@@ -35,6 +35,7 @@ class TimerService: public virtual cSimpleModule {
 	void cancelTimer(int index);
 	void handleTimerMessage(cMessage *);
 	virtual void timerFiredCallback(int index);
+	bool isTimerScheduled(int index);
 };
 
 #endif

@@ -107,7 +107,8 @@ class CastaliaModule: public virtual cSimpleModule {
 	}
 
 	void powerDrawn(double);
-
+ public:
+	bool traceEnabled();
 };
 
 #endif

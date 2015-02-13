@@ -87,6 +87,7 @@ error_t hw_timer_init(hwtimer_id_t timer_id, uint8_t frequency, timer_callback_t
 		NVIC_EnableIRQ(RTC_IRQn);
 		RTC_Enable(true);
     end_atomic();
+    return SUCCESS;
 }
 
 hwtimer_tick_t hw_timer_getvalue(hwtimer_id_t timer_id)

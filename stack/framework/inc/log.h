@@ -33,42 +33,32 @@
 #ifndef __LOG_H_
 #define __LOG_H_
 
+#include "link_c.h"
 #include "framework_defs.h"
 #include "types.h"
-
-#ifdef __cplusplus
-extern "C" {
-#endif //__cplusplus
 
 #ifdef FRAMEWORK_LOG_ENABLED
 
 /* \brief Reset the log counter back to zero
  *
  */
-void log_counter_reset();
+__LINK_C void log_counter_reset();
 
-void log_print_string(char* format,...);
-void log_print_stack_string(char type, char* format, ...);
-void log_print_data(uint8_t* message, uint8_t length);
+__LINK_C void log_print_string(char* format,...);
+__LINK_C void log_print_stack_string(char type, char* format, ...);
+__LINK_C void log_print_data(uint8_t* message, uint32_t length);
 
 #else
 
 //we use static inline replacements instead of 'defining them away'
 //to ensure that side-effects resulting from the evaluation of the parameters
 //are still performed
-static inline void log_counter_reset() {}
-static inline void log_print_string(char* format,...) {}
-static inline void log_print_stack_string(char type, char* format, ...) {}
-static inline void log_print_data(uint8_t* message, uint8_t length) {}
+__LINK_C static inline void log_counter_reset() {}
+__LINK_C static inline void log_print_string(char* format,...) {}
+__LINK_C static inline void log_print_stack_string(char type, char* format, ...) {}
+__LINK_C static inline void log_print_data(uint8_t* message, uint8_t length) {}
 
 
 #endif
-
-#ifdef __cplusplus
-}
-#endif //__cplusplus
-
-
-
 
 #endif /* __LOG_H_ */

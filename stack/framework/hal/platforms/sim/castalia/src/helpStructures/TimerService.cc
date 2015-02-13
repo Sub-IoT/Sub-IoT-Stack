@@ -34,6 +34,16 @@ void TimerService::cancelTimer(int timerIndex)
 		cancelAndDelete(tmp);
 	timerMessages[timerIndex] = NULL;
 }
+bool TimerService::isTimerScheduled(int timerIndex)
+{
+	if (timerIndex < 0)
+		opp_error("isTimerScheduled(): timerIndex=%i negative index is not allowed", timerIndex);
+	if (timerIndex >= TIMER_MAX_SIZE)
+		opp_error("isTimerScheduled(): timerIndex=%i is too large", timerIndex);
+	if ((unsigned int)timerIndex >= timerMessages.size())
+		return false;
+	return timerMessages[timerIndex] != 0x0 && timerMessages[timerIndex]->isScheduled();
+}
 
 void TimerService::setTimer(int timerIndex, simtime_t time)
 {

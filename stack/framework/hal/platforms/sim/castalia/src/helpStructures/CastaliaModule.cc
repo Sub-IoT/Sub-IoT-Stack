@@ -75,9 +75,18 @@ void CastaliaModule::finish()
 	histograms.clear();
 }
 
+bool CastaliaModule::traceEnabled()
+{
+	return hasPar("collectTraceInfo") && par("collectTraceInfo");
+}
+
 std::ostream & CastaliaModule::trace()
 {
-	if (hasPar("collectTraceInfo") && par("collectTraceInfo")) {
+	if (traceEnabled())
+	{
+		if(hasPar("traceToDebug") && par("traceToDebug"))
+			return debug();
+		else
 		return (ostream &) DebugInfoWriter::getStream() <<
 			"\n" << setw(16) << simTime() << setw(40) << getFullPath() << " ";
 	} else {

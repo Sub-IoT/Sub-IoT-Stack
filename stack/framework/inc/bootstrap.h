@@ -5,12 +5,9 @@
  */
 #ifndef __BOOTSTRAP_H_
 #define __BOOTSTRAP_H_
-
+#include "link_c.h"
 #include "scheduler.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif //__cplusplus
 
 /*! \brief callback from the HAL to initialise the framework
  *
@@ -21,7 +18,7 @@ extern "C" {
  * This is NOT done by the HAL, since the scheduler is part of the framework.
  *
  */
-void __framework_bootstrap();
+__LINK_C void __framework_bootstrap();
 
 /*! \brief The task scheduled to 'bootstrap' the application.
  *
@@ -32,11 +29,6 @@ void __framework_bootstrap();
  * to reschedule this task or schedule additional tasks if needed
  *
  */
-task_t bootstrap();
-
-#ifdef __cplusplus
-}
-#endif //__cplusplus
-
+__LINK_C void bootstrap();
 
 #endif

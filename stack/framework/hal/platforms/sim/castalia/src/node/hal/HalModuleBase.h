@@ -19,7 +19,7 @@
 class HalModuleBase:  public CastaliaModule, public TimerService
 {
 protected:
-
+		static HalModuleBase*	activeModule;
 		int self;								// the node's ID
 
 		ResourceManager *resMgrModule;			// a pointer to the Resource Manager module

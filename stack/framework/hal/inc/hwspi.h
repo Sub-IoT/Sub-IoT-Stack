@@ -9,30 +9,22 @@
 #define SPI_H_
 
 #include "types.h"
-
-#ifdef __cplusplus
-extern "C" {
-#endif //__cplusplus
+#include "link_c.h"
 
 #define DATARATE 115200
 
-void spi_init();
+__LINK_C void spi_init();
 
-void spi_auto_cs_on(void);
+__LINK_C void spi_auto_cs_on(void);
 
-void spi_auto_cs_off(void);
+__LINK_C void spi_auto_cs_off(void);
 
-void spi_select_chip(void);
+__LINK_C void spi_select_chip(void);
 
-void spi_deselect_chip(void);
+__LINK_C void spi_deselect_chip(void);
 
-uint8_t spi_byte(uint8_t data);
+__LINK_C uint8_t spi_byte(uint8_t data);
 
-void spi_string(uint8_t *TxData, uint8_t *RxData, size_t length);
-
-#ifdef __cplusplus
-}
-#endif //__cplusplus
-
+__LINK_C void spi_string(uint8_t *TxData, uint8_t *RxData, size_t length);
 
 #endif /* SPI_H_ */

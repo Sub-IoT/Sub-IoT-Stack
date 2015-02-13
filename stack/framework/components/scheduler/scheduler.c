@@ -115,7 +115,7 @@ void check_structs_are_valid()
 #else
 static inline void check_structs_are_valid(){}
 #endif
-void scheduler_init()
+__LINK_C void scheduler_init()
 {
 	for(unsigned int i = 0; i < NUM_TASKS; i++)
 	{
@@ -134,7 +134,7 @@ void scheduler_init()
 	check_structs_are_valid();
 }
 
-uint8_t get_task_id(task_t task)
+__LINK_C uint8_t get_task_id(task_t task)
 {
 	check_structs_are_valid();
 	assert(NG(num_registered_tasks) <= NUM_TASKS);
@@ -159,7 +159,7 @@ uint8_t get_task_id(task_t task)
 	return NO_TASK;
 }
 
-error_t sched_register_task(task_t task)
+__LINK_C error_t sched_register_task(task_t task)
 {
 	error_t retVal;
 	check_structs_are_valid();
@@ -201,7 +201,7 @@ static inline bool is_scheduled(uint8_t id)
 	return NG(m_info)[id].priority != NOT_SCHEDULED;
 }
 
-bool sched_is_scheduled(task_t task)
+__LINK_C bool sched_is_scheduled(task_t task)
 {
 	//INT_Disable();
 	start_atomic();
@@ -214,7 +214,7 @@ bool sched_is_scheduled(task_t task)
 	return retVal;
 }
 
-error_t sched_post_task_prio(task_t task, uint8_t priority)
+__LINK_C error_t sched_post_task_prio(task_t task, uint8_t priority)
 {
 	error_t retVal;
 	start_atomic();
@@ -251,7 +251,7 @@ error_t sched_post_task_prio(task_t task, uint8_t priority)
 	return retVal;
 }
 
-error_t sched_cancel_task(task_t task)
+__LINK_C error_t sched_cancel_task(task_t task)
 {
 	check_structs_are_valid();
 	error_t retVal;
@@ -312,7 +312,7 @@ static inline bool tasks_waiting(int priority)
 	return NG(m_head)[priority] != NO_TASK;
 }
 
-void scheduler_run()
+__LINK_C void scheduler_run()
 {
 	while(1)
 	{

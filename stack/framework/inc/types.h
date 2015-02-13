@@ -17,9 +17,8 @@
 
  */
 
-#ifndef __TYPES_H__
-#define __TYPES_H__
-
+#ifndef __FRM_TYPES_H__
+#define __FRM_TYPES_H__
 
 #include <stdbool.h>
 #include <stddef.h>
@@ -28,8 +27,8 @@
 /* \brief the type of all returned errors
  *
  */
-typedef uint8_t error_t;
+typedef uint16_t error_t;
 
 
 
-#endif // __TYPES_H__
+#endif // __FRM_TYPES_H__

@@ -8,6 +8,7 @@
 void __platform_init()
 {
     __efm32gg_mcu_init();
+
     __uart_init();
     __led_init();
     __hw_debug_init();

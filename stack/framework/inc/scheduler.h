@@ -14,15 +14,9 @@
 #ifndef SCHEDULER_H_
 #define SCHEDULER_H_
 
-#include <stdbool.h>
-#include <stdbool.h>
-#include <stddef.h>
-#include <stdint.h>
+#include "link_c.h"
+#include "types.h"
 #include "errors.h"
-
-#ifdef __cplusplus
-extern "C" {
-#endif //__cplusplus
 
 /* \brief Type definition for tasks
  *
@@ -35,7 +29,7 @@ typedef void (*task_t)();
  * yourself.
  *
  */
-void scheduler_init();
+__LINK_C void scheduler_init();
 
 /* \brief The main task loop of the scheduler
  *
@@ -48,7 +42,7 @@ void scheduler_init();
  * application. 
  *
  */
-void scheduler_run();
+__LINK_C void scheduler_run();
 
 enum
 {
@@ -76,20 +70,20 @@ enum
  *				 CMake parameter)
  *			EALREADY if the task was already registered
  */
-error_t sched_register_task(task_t task);
+__LINK_C error_t sched_register_task(task_t task);
 
 /* \brief Post a task with the given priority
  *
  * \param task		The task to be executed by the scheduler
  * \param priority	The priority of the task
  *
- * \return error_t	SUCCESS if the task was succesfully scheduled
+ * \return error_t	SUCCESS if the task was successfully scheduled
  *			EINVAL if the task was not registered with the scheduler
  *			ESIZE if the priority is not between MAX_PRIORITY and MIN_PRIORITY
  *			EALREADY if the task was already scheduled. If this is the case,
  *			the task will be executed but only once.
  */
-error_t sched_post_task_prio(task_t task, uint8_t priority);
+__LINK_C error_t sched_post_task_prio(task_t task, uint8_t priority);
 
 /* \brief Post a task at the default priority
  *
@@ -110,18 +104,12 @@ static inline error_t sched_post_task(task_t task) { return sched_post_task_prio
  * 			EINVAL if the task was not registered with the scheduler
  *			EALREADY if the task was not scheduled or has already been executed			
  */
-error_t sched_cancel_task(task_t task);
+__LINK_C error_t sched_cancel_task(task_t task);
 
 /* \brief Check whether a task is scheduled to be executed
  *
  * \return bool		TRUE if the task is scheduled, FALSE otherwise
  */
-bool sched_is_scheduled(task_t task);
-
-
-#ifdef __cplusplus
-}
-#endif //__cplusplus
-
+__LINK_C bool sched_is_scheduled(task_t task);
 
 #endif /* SCHEDULER_H_ */

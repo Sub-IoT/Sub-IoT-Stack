@@ -1,6 +1,6 @@
 #ifndef NG_H_
 #define NG_H_
-
+#include "link_c.h"
 #include "platform.h"
 
 #ifdef __cplusplus
@@ -20,7 +20,7 @@ enum
     __nc_max_nodes__ = NODE_GLOBALS_MAX_NODES,
 };
 extern size_t __nc_node_id__;
-void set_node_global_id(size_t node_id);
+__LINK_C void set_node_global_id(size_t node_id);
 static inline size_t get_node_global_id() { assert(__nc_node_id__ < __nc_max_nodes__); return __nc_node_id__; }
 
 #define NG(var)			(__ng_glob_ ## var ## __[(get_node_global_id())])

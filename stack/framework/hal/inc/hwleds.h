@@ -26,11 +26,7 @@
 #endif
 
 #include "types.h"
-
-#ifdef __cplusplus
-extern "C" {
-#endif //__cplusplus
-
+#include "link_c.h"
 
 /*! \brief Initialise the leds of the platform
  *
@@ -38,7 +34,7 @@ extern "C" {
  *  'user' API and should only be called from the initialisation code of the specific platform
  *
  */
-void __led_init();
+__LINK_C void __led_init();
 
 /*! \brief Turn a led on
  *
@@ -46,7 +42,7 @@ void __led_init();
  * 		  and HW_NUM_LEDS. Out-of-range indexes are silently ignored
  *
  */
-void led_on(uint8_t led_id);
+__LINK_C void led_on(uint8_t led_id);
 
 /*! \brief Turn a led off
  *
@@ -54,7 +50,7 @@ void led_on(uint8_t led_id);
  * 		  and HW_NUM_LEDS. Out-of-range indexes are silently ignored
  *
  */
-void led_off(uint8_t led_id);
+__LINK_C void led_off(uint8_t led_id);
 
 /*! \brief Toggle a led. If it was on it is turned off and vice versa.
  *
@@ -62,15 +58,6 @@ void led_off(uint8_t led_id);
  * 		  and HW_NUM_LEDS. Out-of-range indexes are silently ignored
  *
  */
-void led_toggle(uint8_t led_nr);
-
-//may be nice to have, but doesn't belong in the HAL (it's only used from applications -> can be dumped in a 
-//separate module if needed
-//void led_blink(uint8_t led_id);
-
-#ifdef __cplusplus
-}
-#endif //__cplusplus
-
+__LINK_C void led_toggle(uint8_t led_nr);
 
 #endif // __LEDS_H__

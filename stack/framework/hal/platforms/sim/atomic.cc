@@ -1,4 +1,4 @@
 #include "hwatomic.h"
 
-extern "C" void start_atomic(){}
-extern "C" void end_atomic(){}
+__LINK_C void start_atomic(){}
+__LINK_C void end_atomic(){}

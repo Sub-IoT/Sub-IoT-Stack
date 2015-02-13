@@ -1,0 +1,37 @@
+# ****************************************************************************
+# *  Copyright: National ICT Australia,  2009 - 2010                         *
+# *  Developed at the ATP lab, Networked Systems research theme              *
+# *  Author(s): Athanassios Boulis, Yuriy Tselishchev                        *
+# *  This file is distributed under the terms in the attached LICENSE file.  *
+# *  If you do not find this file, copies can be found by writing to:        *
+# *                                                                          *
+# *      NICTA, Locked Bag 9013, Alexandria, NSW 1435, Australia             *
+# *      Attention:  License Inquiry.                                        *
+# *                                                                          *
+# ***************************************************************************/
+
+RX MODES
+# Name, dataRate(kbps), modulationType, bitsPerSymbol, bandwidth(MHz), noiseBandwidth(MHz), noiseFloor(dBm), sensitivity(dBm), powerConsumed(mW)
+high, 1024, DIFFQPSK, 2, 20, 1000, -104, -87, 3.1
+low, 512, DIFFBPSK, 1, 20, 1000, -104, -91, 3.1
+IDEAL, 1024, IDEAL, 2, 20, 1000, -104, -87, 3.1
+
+TX LEVELS
+Tx_dBm -10 -12 -15 -20 -25
+Tx_mW 3.0 2.96 2.93 2.9 2.9
+
+DELAY TRANSITION MATRIX
+# State switching times (time to switch from column state to row state, in msec)
+#	RX	TX	SLEEP
+RX	-	0.02	0.194
+TX	0.02	-	0.194
+SLEEP	0.05	0.05	-
+
+POWER TRANSITION MATRIX
+#       RX      TX      SLEEP
+RX	-	3.0	3.0
+TX	3.0	-	3.0
+SLEEP	1.5	1.5	-
+
+SLEEP LEVELS
+idle 0.05, -, -, -, -

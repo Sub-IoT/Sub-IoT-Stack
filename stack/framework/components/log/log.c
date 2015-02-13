@@ -41,14 +41,15 @@
 	static uint32_t NGDEF(counter);
 #endif //FRAMEWORK_LOG_BINARY
 
-void log_counter_reset()
+__LINK_C void log_counter_reset()
 {
 #ifndef FRAMEWORK_LOG_BINARY
 	NG(counter) = 0;
 #endif //FRAMEWORK_LOG_BINARY
+
 }
 
-void log_print_string(char* format, ...)
+__LINK_C void log_print_string(char* format, ...)
 {
     va_list args;
     va_start(args, format);
@@ -66,7 +67,7 @@ void log_print_string(char* format, ...)
     fflush(stdout);
 }
 
-void log_print_stack_string(char type, char* format, ...)
+__LINK_C void log_print_stack_string(char type, char* format, ...)
 {
     va_list args;
     va_start(args, format);
@@ -85,7 +86,7 @@ void log_print_stack_string(char type, char* format, ...)
     fflush(stdout);
 }
 
-void log_print_data(uint8_t* message, uint8_t length)
+__LINK_C void log_print_data(uint8_t* message, uint32_t length)
 {
 #ifdef FRAMEWORK_LOG_BINARY
     putc(0xDD,stdout);
@@ -94,7 +95,7 @@ void log_print_data(uint8_t* message, uint8_t length)
     fwrite(message, length, sizeof(uint8_t), stdout);
 #else
     printf("\n\r[%03d]", NG(counter)++);
-    for( uint8_t i=0 ; i<length ; i++ )
+    for( uint32_t i=0 ; i<length ; i++ )
     {
     	printf(" %02X", message[i]);
     }

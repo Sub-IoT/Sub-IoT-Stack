@@ -6,7 +6,9 @@
  */
 
 #include "HalModuleBase.h"
-
+#include <assert.h>
+#include "ng.h"
+HalModuleBase* HalModuleBase::activeModule = 0x0;
 
 
 HalModuleBase::HalModuleBase():self(-1), resMgrModule(0x0), disabled(true), cpuClockDrift(0.0)
@@ -64,6 +66,10 @@ void HalModuleBase::handleMessage(cMessage * msg)
 		return;
 	}
 
+	assert(activeModule == 0x0);
+	activeModule = this;
+	set_node_global_id(self);
+
 	switch (msgKind) {
 
 		case NODE_STARTUP:
@@ -111,6 +117,10 @@ void HalModuleBase::handleMessage(cMessage * msg)
 		}
 	}
 	delete msg;
+
+	activeModule = 0x0;
+	assert(get_node_global_id() == self);
+
 }
 
 void HalModuleBase::toRadio(cMessage* msg)

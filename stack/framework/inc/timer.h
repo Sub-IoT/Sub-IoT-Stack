@@ -22,12 +22,12 @@
  * The framework provides an abstraction of the low-level hardware timers provided by the HAL. The framework
  * timer interface builds on the low-level HAL timer interface to provide more advanced capabilities. The 
  * major differences with the HAL timers are:
- *  - 32-bit instead of a 16-bit counter
+ *  - 32-bit counter instead of a 16-bit counter
  *  - Multiple timer events can be scheduled simultaneously
  *  - Events are executed by the scheduler in the main task loop and NOT during the timer interrupt
  *  - Support for multiple priorities
  *
- * The framework timer supports the same timer resulutions supported by the hal. By default
+ * The framework timer supports the same timer resolutions supported by the hal. By default
  * a binary millisecond timer interval is used (HWTIMER_FREQ_MS), but this can be changed
  * by setting the FRAMEWORK_TIMER_RESOLUTION property in CMake.
  *
@@ -50,23 +50,18 @@
 #ifndef TIMER_H_
 #define TIMER_H_
 
+#include "link_c.h"
 #include "types.h"
 #include "scheduler.h"
 #include "hwtimer.h"
+#include "framework_defs.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif //__cplusplus
-
-#ifdef __cplusplus
-}
-#endif //__cplusplus
-
+typedef uint32_t timer_tick_t;
 
 typedef struct
 {
     task_t f;
-    int32_t next_event;
+    timer_tick_t next_event;
     uint8_t priority;
 } timer_event;
 
@@ -89,7 +84,7 @@ typedef struct
 /*! \brief Initialise the timer sub system
  *
  */
-void timer_init();
+__LINK_C void timer_init();
 
 /*! \brief Retrieve the current counter value of the timer
  *
@@ -101,10 +96,10 @@ void timer_init();
  * When the timers are operating in 'Reset mode', the returned counter value is the number of 
  * clock ticks since the last time a task was posted OR the last time a posted task was scheduled.
  *
- * \return uint32_t	The current value of the counter
+ * \return timer_tick_t	The current value of the counter. Please note that
  *
  */
-uint32_t timer_get_counter_value();
+__LINK_C timer_tick_t timer_get_counter_value();
 
 /*! \brief Post a task <task> to be scheduled at a given <time> with a given <priority>
  *
@@ -132,7 +127,7 @@ uint32_t timer_get_counter_value();
  *					EINVAL if an invalid priority was specified.
  *
  */
-error_t timer_post_task_prio(task_t task, int32_t time, uint8_t priority);
+__LINK_C error_t timer_post_task_prio(task_t task, timer_tick_t time, uint8_t priority);
 
 /*! \brief Post a task <task> to be scheduled at a given <time> with the default priority.
  *
@@ -154,7 +149,7 @@ error_t timer_post_task_prio(task_t task, int32_t time, uint8_t priority);
  * 						   execution.
  * 					EALREADY if the task was already scheduled.
  */
-static inline error_t timer_post_task(task_t task, int32_t time) { return timer_post_task_prio(task,time,DEFAULT_PRIORITY);}
+static inline error_t timer_post_task(task_t task, timer_tick_t time) { return timer_post_task_prio(task,time,DEFAULT_PRIORITY);}
 
 
 /*! \brief Post a task <task> to be scheduled with a certain <delay> with a given <priority>
@@ -180,7 +175,7 @@ static inline error_t timer_post_task(task_t task, int32_t time) { return timer_
  *					EALREADY if the task was already scheduled.
  *
  */
-static inline error_t timer_post_task_prio_delay(task_t task, int32_t delay, uint8_t priority)
+static inline error_t timer_post_task_prio_delay(task_t task, timer_tick_t delay, uint8_t priority)
 { 
 #ifdef FRAMEWORK_TIMER_RESET_COUNTER
     return timer_post_task_prio(task,delay,priority);
@@ -210,7 +205,7 @@ static inline error_t timer_post_task_prio_delay(task_t task, int32_t delay, uin
  * 					  	   execution.
  * 					EALREADY if the task was already scheduled.
  */
-static inline error_t timer_post_task_delay(task_t task, int32_t time) { return timer_post_task_prio_delay(task,time,DEFAULT_PRIORITY);}
+static inline error_t timer_post_task_delay(task_t task, timer_tick_t time) { return timer_post_task_prio_delay(task,time,DEFAULT_PRIORITY);}
 
 /*! \brief Schedule a given <timer_event>
  *
@@ -233,16 +228,10 @@ static inline error_t timer_add_event( timer_event* event) { return timer_post_t
  *
  * \param task	The task to cancel.
  * 
+ * \return error_t	SUCCESS if the timer was successfully cancelled
+ * 					EALREADY if the timer was not scheduled and therefore not cancelled
+ *
  */
-error_t timer_cancel_task(task_t task);
-
-#ifdef __cplusplus
-extern "C" {
-#endif //__cplusplus
-
-#ifdef __cplusplus
-}
-#endif //__cplusplus
-
+__LINK_C error_t timer_cancel_task(task_t task);
 
 #endif /* TIMER_H_ */

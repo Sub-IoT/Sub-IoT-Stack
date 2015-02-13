@@ -8,10 +8,7 @@
 #define __HW_SYSTEM_H_
 
 #include "types.h"
-
-#ifdef __cplusplus
-extern "C" {
-#endif //__cplusplus
+#include "link_c.h"
 
 /*! \brief Put the system in low power mode
  *
@@ -35,7 +32,7 @@ extern "C" {
  * \param mode	The low power mode to enter. Defaults to 0
  *
  */
-void hw_enter_lowpower_mode(uint8_t mode);
+__LINK_C void hw_enter_lowpower_mode(uint8_t mode);
 
 /*! \brief Get a 64-bit identifier that is unique to the device on which this function is called.
  *
@@ -52,10 +49,6 @@ void hw_enter_lowpower_mode(uint8_t mode);
  *
  * \return uint64_t	A device unique identifier
  */
-uint64_t hw_get_unique_id();
-
-#ifdef __cplusplus
-}
-#endif //__cplusplus
+__LINK_C uint64_t hw_get_unique_id();
 
 #endif //__HW_SYSTEM_H
