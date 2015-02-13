@@ -14,7 +14,8 @@
 #include "ResourceManager.h"
 #include "TimerService.h"
 #include "CastaliaModule.h"
-
+#include "CRadio.h"
+#include "hwradio.h"
 
 class HalModuleBase:  public CastaliaModule, public TimerService
 {
@@ -24,7 +25,7 @@ protected:
 
 		ResourceManager *resMgrModule;			// a pointer to the Resource Manager module
 //		VirtualMobilityManager *mobilityModule;	// a pointer to the mobility Manager module
-//		Radio *radioModule;						// a pointer to the Radio module
+		Radio *radioModule;						// a pointer to the Radio module
 		bool disabled;
 		double cpuClockDrift;
 

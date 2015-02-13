@@ -17,14 +17,14 @@ extern "C" {
 
 enum
 {
-    __nc_max_nodes__ = NODE_GLOBALS_MAX_NODES,
+    __ng_max_nodes__ = NODE_GLOBALS_MAX_NODES,
 };
-extern size_t __nc_node_id__;
+extern size_t __ng_node_id__;
 __LINK_C void set_node_global_id(size_t node_id);
-static inline size_t get_node_global_id() { assert(__nc_node_id__ < __nc_max_nodes__); return __nc_node_id__; }
+static inline size_t get_node_global_id() { assert(__ng_node_id__ < __ng_max_nodes__); return __ng_node_id__; }
 
 #define NG(var)			(__ng_glob_ ## var ## __[(get_node_global_id())])
-#define NGDEF(var)		(__ng_glob_ ## var ## __[__nc_max_nodes__])
+#define NGDEF(var)		(__ng_glob_ ## var ## __[__ng_max_nodes__])
 
 #else
 

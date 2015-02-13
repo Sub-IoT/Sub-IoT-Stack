@@ -13,6 +13,5 @@ __LINK_C void hw_enter_lowpower_mode(uint8_t mode)
 
 __LINK_C uint64_t hw_get_unique_id()
 {
-	//TODO: should we add '1' to prevent nodes from having a mac address of '0' ?
-	return get_node_global_id();
+	return get_node_global_id() +1 ;
 }

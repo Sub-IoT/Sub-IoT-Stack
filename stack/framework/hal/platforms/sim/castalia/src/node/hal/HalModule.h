@@ -51,6 +51,12 @@ class HalModule: public HalModuleBase
 		//log support functions
 		inline ostream& get_log_stream() { return trace();}
 
+		//hwradio functions
+
+		error_t hw_radio_init(uint8_t* initial_rx_buffer, rx_packet_callback_t callback);
+		error_t hw_radio_setenabled(bool enabled);
+		error_t hw_radio_send_packet(uint8_t* buffer, uint8_t length);
+
 		inline double get_node_time() { return getClock().dbl();}
 		inline double get_real_time() { return simTime().dbl();}
 
@@ -96,6 +102,12 @@ class HalModule: public HalModuleBase
 		void reset_frtimer();
 		void configure_next_frtimer();
 		friend bool operator<(frtimer_info const& a, frtimer_info const& b);
+
+		uint8_t* radio_buffer;
+		bool radio_enabled;
+		rx_packet_callback_t radio_callback;
+
+
 };
 
 bool operator<(HalModule::frtimer_info const& a, HalModule::frtimer_info const& b);

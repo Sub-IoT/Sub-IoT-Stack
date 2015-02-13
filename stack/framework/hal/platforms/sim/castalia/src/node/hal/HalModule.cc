@@ -10,7 +10,7 @@
 #include "ng.h"
 #include <assert.h>
 #include <cmath>
-
+#include <string>
 #include "bootstrap.h"
 Define_Module(HalModule);
 
@@ -35,7 +35,8 @@ namespace
 
 HalModule::HalModule():interTaskDelay(),taskExecutionTime(),cur_task_priority(NUM_PRIORITIES),scheduler_inited(false),
 		frtimer_tick_length(),frtimer_reset_offset(),frtimer_inited(),hwtimers(),
-		task_queue(),tasks(),frtimers(),frtimer_tasks()
+		task_queue(),tasks(),frtimers(),frtimer_tasks(), radio_enabled(true), radio_buffer(0x0)
+
 {
 }
 
@@ -319,6 +320,44 @@ HalModule* HalModule::getActiveModule()
 	return mod;
 }
 
+
+error_t HalModule::hw_radio_init(uint8_t* initial_rx_buffer, rx_packet_callback_t callback)
+{
+	if(radio_buffer != 0x0)
+		return EALREADY;
+	if(initial_rx_buffer == 0x0 || callback == 0x0)
+		return EINVAL;
+
+	radio_buffer = initial_rx_buffer;
+	radio_callback = callback;
+	return SUCCESS;
+
+}
+error_t HalModule::hw_radio_setenabled(bool enabled)
+{
+	if(radio_enabled == enabled)
+		return EALREADY;
+	toRadio(createRadioCommand(SET_STATE, enabled ? RX:SLEEP));
+	return SUCCESS;
+}
+error_t HalModule::hw_radio_send_packet(uint8_t* buffer, uint8_t length)
+{
+	RadioPacket* packet = new RadioPacket("RadioPacket", RADIO_PACKET);
+	packet->setByteLength(length);
+	packet->setBufferArraySize(length);
+	memcpy(packet->getBufferPtr(), buffer, length);
+	toRadio(packet);
+	toRadio(createRadioCommand(SET_STATE, TX));
+	return SUCCESS;
+}
+
+
+
+
+
+
+
+
 void HalModule::startup()
 {
 	interTaskDelay = (double)par("interTaskDelay");
@@ -336,6 +375,9 @@ void HalModule::startup()
 	frtimer_tasks.clear();
 	hwtimers.clear();
 
+	radio_buffer = 0x0;
+	radio_enabled = std::string((char const*)radioModule->par("state")) == "RX";
+	radio_callback = 0x0;
 	__framework_bootstrap();
 
 }
@@ -408,7 +450,13 @@ void HalModule::finishSpecific()
 }
 void HalModule::fromRadio(RadioPacket* packet)
 {
-
+	if(radio_callback != 0x0 && radio_buffer != 0x0)
+	{
+		assert(packet->getBufferArraySize() == packet->getByteLength());
+		assert(packet->getByteLength() < 256);
+		memcpy(radio_buffer,packet->getBufferPtr(), packet->getBufferArraySize());
+		radio_buffer = radio_callback(radio_buffer, packet->getByteLength());
+	}
 }
 void HalModule::handleRadioControlMessage(RadioControlMessage* msg)
 {

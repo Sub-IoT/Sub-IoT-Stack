@@ -10,13 +10,21 @@
 #include "ng.h"
 HalModuleBase* HalModuleBase::activeModule = 0x0;
 
+static bool check_sufficient_nodes = false;
 
-HalModuleBase::HalModuleBase():self(-1), resMgrModule(0x0), disabled(true), cpuClockDrift(0.0)
+HalModuleBase::HalModuleBase():self(-1), resMgrModule(0x0), radioModule(0x0), disabled(true), cpuClockDrift(0.0)
 {}
 HalModuleBase::~HalModuleBase(){}
 
 void HalModuleBase::initialize()
 {
+	if(!check_sufficient_nodes)
+	{
+		check_sufficient_nodes = true;
+		//only need to do this once for all nodes
+		if ((int)getParentModule()->getParentModule()->par("numNodes") > PLATFORM_SIM_MAX_NODES)
+			opp_error("Current simulation uses %d nodes, while we can only support %d. Increase PLATFORM_SIM_MAX_NODES to fix this", (int)getParentModule()->getParentModule()->par("numNodes"), PLATFORM_SIM_MAX_NODES);
+	}
 	/* Get a valid references to the objects of the Resources Manager module
 	 * the Mobility module and the Radio module, so that we can make direct
 	 * calls to their public methods
@@ -24,11 +32,11 @@ void HalModuleBase::initialize()
 	cModule *parent = getParentModule();
 	resMgrModule = check_and_cast <ResourceManager*>(parent->getSubmodule("ResourceManager"));
 //	mobilityModule = check_and_cast <VirtualMobilityManager*>(parent->getSubmodule("MobilityManager"));
-//	radioModule = check_and_cast <Radio*>(parent->getSubmodule("Communication")->getSubmodule("Radio"));
+	radioModule = check_and_cast <Radio*>(parent->getSubmodule("Communication")->getSubmodule("Radio"));
 	// check that all the pointers are valid
 	//if (!resMgrModule || !mobilityModule || !radioModule)
-	if (!resMgrModule)
-		opp_error("\n Virtual App init: Error in geting a valid reference module(s).");
+	if (!resMgrModule || !radioModule)
+		opp_error("\n Virtual App init: Error in geting valid reference module(s).");
 
 	self = parent->getIndex();
 	// create the routing level address using self
@@ -130,6 +138,7 @@ void HalModuleBase::toRadio(cMessage* msg)
 
 void HalModuleBase::finish()
 {
+	check_sufficient_nodes = false;
 	CastaliaModule::finish();
 	DebugInfoWriter::closeStream();
 }
