@@ -56,6 +56,8 @@
 #include "em_emu.h"
 #include "em_int.h"
 #include "dmactrl.h"
+#include "hwgpio.h"
+#include <assert.h>
 
 #include "hwspi.h"
 #include "platform.h"
@@ -314,10 +316,18 @@ void setupSpi(void)
     USART_Enable(SPI_CHANNEL, usartEnable);
 
     /* Configure GPIO pins for SPI */
-    GPIO_PinModeSet(SPI_PORT_MOSI,  SPI_PIN_MOSI,   gpioModePushPull,   0); /* MOSI */
-    GPIO_PinModeSet(SPI_PORT_MISO,  SPI_PIN_MISO,   gpioModeInput,      0); /* MISO */
-    GPIO_PinModeSet(SPI_PORT_CLK,   SPI_PIN_CLK,    gpioModePushPull,   0); /* CLK */
-    GPIO_PinModeSet(SPI_PORT_CS,    SPI_PIN_CS,     gpioModePushPull,   1); /* CS */
+    //GPIO_PinModeSet(SPI_PORT_MOSI,  SPI_PIN_MOSI,   gpioModePushPull,   0); /* MOSI */
+    //GPIO_PinModeSet(SPI_PORT_MISO,  SPI_PIN_MISO,   gpioModeInput,      0); /* MISO */
+    //GPIO_PinModeSet(SPI_PORT_CLK,   SPI_PIN_CLK,    gpioModePushPull,   0); /* CLK */
+    //GPIO_PinModeSet(SPI_PORT_CS,    SPI_PIN_CS,     gpioModePushPull,   1); /* CS */
+    //edit: do this via the hw_gpio_configure_pin interface to signal that the pins are in use
+    //note: normally this should be done in the platform-specific initialisation code BUT, since this is a driver for a device (uart) that is
+    //an integral part of the MCU we are certain this code will NOT be used in combination with a different MCU so we can do this here
+    error_t err;
+    err = hw_gpio_configure_pin(SPI_PIN_MOSI, false,   gpioModePushPull,   0); assert(err == SUCCESS); /* MOSI */
+    err = hw_gpio_configure_pin(SPI_PIN_MISO, false,   gpioModeInput,      0); assert(err == SUCCESS); /* MISO */
+    err = hw_gpio_configure_pin(SPI_PIN_CLK, false,    gpioModePushPull,   0); assert(err == SUCCESS); /* CLK */
+    err = hw_gpio_configure_pin(SPI_PIN_CS, false,     gpioModePushPull,   1); assert(err == SUCCESS); /* CS */
 
     /* Enable routing for SPI pins from USART to location 1 */
     SPI_CHANNEL->ROUTE =  USART_ROUTE_TXPEN |
@@ -375,7 +385,8 @@ void spi_auto_cs_off(void)
 // *****************************************************************************
 void spi_select_chip(void)
 {
-    GPIO_PinOutClear( SPI_PORT_CS, SPI_PIN_CS );
+	hw_gpio_clr(SPI_PIN_CS);
+	//GPIO_PinOutClear( SPI_PORT_CS, SPI_PIN_CS );
 }
 
 // *****************************************************************************
@@ -386,7 +397,8 @@ void spi_select_chip(void)
 // *****************************************************************************
 void spi_deselect_chip(void)
 {
-    GPIO_PinOutSet( SPI_PORT_CS, SPI_PIN_CS );
+	hw_gpio_set(SPI_PIN_CS);
+    //GPIO_PinOutSet( SPI_PORT_CS, SPI_PIN_CS );
 }
 
 // *****************************************************************************

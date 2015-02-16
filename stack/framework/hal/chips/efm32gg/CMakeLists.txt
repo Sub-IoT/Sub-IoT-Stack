@@ -42,10 +42,13 @@ ADD_LIBRARY (${CHIP_LIBRARY_NAME} OBJECT
                     emlib/src/em_dma.c
                     emlib/src/em_int.c
                     kits/common/drivers/dmactrl.c
+                    kits/common/drivers/gpiointerrupt.c
                     efm32gg_mcu.c
                     efm32gg_uart.c
                     efm32gg_spi.c
                     efm32gg_atomic.c
                     efm32gg_timer.c
                     efm32gg_system.c                    
+                    efm32gg_gpio.c                    
+                    efm32gg_pins.c                    
                     )

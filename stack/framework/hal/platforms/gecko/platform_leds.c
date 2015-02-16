@@ -17,43 +17,40 @@
 
 #include "hwleds.h"
 #include "platform.h"
-
-#include "em_cmu.h"
 #include "em_gpio.h"
+#include <assert.h>
 
-typedef struct
-{
-  GPIO_Port_TypeDef port;
-  unsigned int pin;
-} leds_t;
-
-static const leds_t leds[ HW_NUM_LEDS ] = { { gpioPortE, 2 }, { gpioPortE, 3 } };
+#if HW_NUM_LEDS != 2
+	#error HW_NUM_LEDS does not match the expected value. Update platform.h or platform_leds.c
+#endif
+static pin_id_t leds[ HW_NUM_LEDS ];
 
 void __led_init()
 {
-    CMU_ClockEnable(cmuClock_HFPER, true);
-    CMU_ClockEnable(cmuClock_GPIO, true);
-    for (int i = 0; i < HW_NUM_LEDS; i++)
-    {
-      GPIO_PinModeSet(leds[i].port, leds[i].pin, gpioModePushPull, 0);
-    }
+	leds[0] = E2;
+	leds[1] = E3;
+	for(int i = 0; i < HW_NUM_LEDS; i++)
+	{
+		error_t err = hw_gpio_configure_pin(leds[i], false, gpioModePushPull, 0);
+		assert(err == SUCCESS);
+	}
 }
 
 void led_on(uint8_t led_nr)
 {
     if(led_nr < HW_NUM_LEDS)
-    	GPIO_PinOutSet(leds[led_nr].port, leds[led_nr].pin);
+    	hw_gpio_set(leds[led_nr]);
 }
 
 void led_off(unsigned char led_nr)
 {
     if(led_nr < HW_NUM_LEDS)
-    	GPIO_PinOutClear(leds[led_nr].port, leds[led_nr].pin);
+    	hw_gpio_clr(leds[led_nr]);
 }
 
 void led_toggle(unsigned char led_nr)
 {
     if(led_nr < HW_NUM_LEDS)
-    	GPIO_PinOutToggle(leds[led_nr].port, leds[led_nr].pin);
+    	hw_gpio_toggle(leds[led_nr]);
 }
 

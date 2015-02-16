@@ -17,20 +17,27 @@
 #include <em_usart.h>
 #include <em_cmu.h>
 #include <em_gpio.h>
-
+#include "hwgpio.h"
 #include "hwuart.h"
-
+#include <assert.h>
 //contains the wiring for the uart
-#include "platform.h"
-
+//#include "platform.h"
+#include "em_gpio.h"
 
 void __uart_init()
 {
     CMU_ClockEnable(cmuClock_GPIO, true);
     CMU_ClockEnable(UART_CLOCK, true);
 
-    GPIO_PinModeSet(UART_PORT, UART_PIN_TX, gpioModePushPullDrive,  1); // Configure UART TX pin as digital output, initialize high since UART TX idles high (otherwise glitches can occur)
-    GPIO_PinModeSet(UART_PORT, UART_PIN_RX, gpioModeInput,          0);    // Configure UART RX pin as input (no filter)
+    //GPIO_PinModeSet(UART_PORT, UART_PIN_TX, gpioModePushPullDrive,  1); // Configure UART TX pin as digital output, initialize high since UART TX idles high (otherwise glitches can occur)
+    //GPIO_PinModeSet(UART_PORT, UART_PIN_RX, gpioModeInput,          0);    // Configure UART RX pin as input (no filter)
+    //edit: do this via the hw_gpio_configure_pin interface to signal that the pins are in use
+    //note: normally this should be done in the platform-specific initialisation code BUT, since this is a driver for a device (uart) that is
+    //an integral part of the MCU we are certain this code will NOT be used in combination with a different MCU so we can do this here
+    error_t err;
+    err = hw_gpio_configure_pin(UART_PIN_TX, false, gpioModePushPullDrive, 1); assert(err == SUCCESS);// Configure UART TX pin as digital output, initialize high since UART TX idles high (otherwise glitches can occur)
+    err = hw_gpio_configure_pin(UART_PIN_RX, false, gpioModeInput, 0); assert(err == SUCCESS);    // Configure UART RX pin as input (no filter)
+
 
     USART_InitAsync_TypeDef uartInit =
     {

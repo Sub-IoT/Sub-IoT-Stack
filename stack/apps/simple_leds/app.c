@@ -2,6 +2,21 @@
 #include "scheduler.h"
 #include "timer.h"
 #include "log.h"
+#include <assert.h>
+#include "platform.h"
+
+#ifdef PLATFORM_GECKO
+#include "userbutton.h"
+
+void userbutton_callback(button_id_t button_id)
+{
+	log_print_string("Button PB%u pressed.", button_id);
+}
+
+#endif
+
+
+
 
 void timer0_callback()
 {
@@ -19,15 +34,22 @@ void timer1_callback()
 
 void bootstrap()
 {
-    led_on(0);
-    led_on(1);
-    log_print_string("Device booted at time: %d\n", timer_get_counter_value());
+	led_on(0);
+	led_on(1);
+
+	log_print_string("Device booted at time: %d\n", timer_get_counter_value());
 
     sched_register_task(&timer0_callback);
     sched_register_task(&timer1_callback);
 
     timer_post_task_delay(&timer0_callback, TIMER_TICKS_PER_SEC);
     timer_post_task_delay(&timer1_callback, 2*TIMER_TICKS_PER_SEC);
+
+#ifdef PLATFORM_GECKO
+    ubutton_register_callback(0, &userbutton_callback);
+    ubutton_register_callback(1, &userbutton_callback);
+#endif
+
     led_off(0);
     led_off(1);
 }

@@ -46,5 +46,6 @@ PLATFORM_BUILD_SETTINGS_FILE()
 #Define the 'platform library'. Every platform must define a 'PLATFORM' object library
 ADD_LIBRARY(PLATFORM OBJECT platform_main.c 
 			    platform_leds.c 
+			    platform_userbutton.c
 			    platform_debug.c 
 			    libc_overrides.c)

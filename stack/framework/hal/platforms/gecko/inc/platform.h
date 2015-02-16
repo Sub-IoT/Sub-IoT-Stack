@@ -27,13 +27,12 @@
 #define UART_BAUDRATE PLATFORM_GECKO_UART_BAUDRATE
 
 #define UART_CHANNEL        UART0
-//#define UART_BAUDRATE       BAUDRATE
 #define UART_CLOCK          cmuClock_UART0
 #define UART_ROUTE_LOCATION UART_ROUTE_LOCATION_LOC1
 
-#define UART_PORT           gpioPortE   // UART0 location #1: PE0 and PE1
-#define UART_PIN_TX         0           // PE0
-#define UART_PIN_RX         1           // PE1
+// UART0 location #1: PE0 and PE1
+#define UART_PIN_TX         E0           // PE0
+#define UART_PIN_RX         E1          // PE1
 
 
 /********************
@@ -48,14 +47,10 @@
 
 /* SPI Ports and Pins for the selected route location above.
  * See the datasheet for the availiable routes and corresponding GPIOs */
-#define SPI_PORT_MOSI       gpioPortD
-#define SPI_PORT_MISO       gpioPortD
-#define SPI_PORT_CLK        gpioPortD
-#define SPI_PORT_CS         gpioPortD
-#define SPI_PIN_MOSI        0
-#define SPI_PIN_MISO        1
-#define SPI_PIN_CLK         2
-#define SPI_PIN_CS          3
+#define SPI_PIN_MOSI        D0
+#define SPI_PIN_MISO        D1
+#define SPI_PIN_CLK         D2
+#define SPI_PIN_CS          D3
 
 #ifdef SPI_USE_DMA
 
@@ -70,27 +65,20 @@
 /*************************
  * DEBUG PIN DEFINITIONS *
  ************************/
-//use gpioPortD as debug port
-#define DEBUG_PORT gpioPortD
-//use the first 8 pins as debug pins
-#define DEBUG_PIN_START 0
-#define DEBUG_PIN_NUM 5
-//
-//#define FIFO_PINID (PORT_E | PIN_0)
-//#define PIN_WIRING(Name, PORT,PIN)
-//
-//PIN_WIRING(FIFO_PINID, PORT_E, PIN_0)
-//
-//-->
-//
-//enum
-//{
-//    FIFO_PINID = (PORT_E | PIN_0),
-//}
-//
-//
-//gpio_cofigure(FIFO_PINID, ...)
-//
+
+#define DEBUG_PIN_NUM 4
+#define DEBUG0	D4
+#define DEBUG1	D5
+#define DEBUG2	D6
+#define DEBUG3	D7
+
+/**************************
+ * USERBUTTON DEFINITIONS *
+ *************************/
+
+#define NUM_USERBUTTONS 	2
+#define BUTTON0				B9
+#define BUTTON1				B10
 
 
 #endif
