@@ -73,6 +73,7 @@ LIST(APPEND PLATFORM_SOURCES atomic.cc
 			     hwsystem.cc
 			     hwtimer.cc
 			     hwuart.cc
+			     hwgpio.cc
 			     sim_utils.cc)
 
 #Define the sources for the overridden framework components
