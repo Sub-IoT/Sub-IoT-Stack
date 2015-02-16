@@ -204,14 +204,14 @@ static void configure_next_event()
 		if(NG(next_event) != NO_EVENT)
 		{
 			next_fire_time = NG(timers)[NG(next_event)].next_event;
-			if ( (((int32_t)next_fire_time) - ((int32_t)timer_get_counter_value())) < 0 )
+			if ( (((int32_t)next_fire_time) - ((int32_t)timer_get_counter_value())) <= 0 )
 			{
 				sched_post_task_prio(NG(timers)[NG(next_event)].f, NG(timers)[NG(next_event)].priority);
 				NG(timers)[NG(next_event)].f = 0x0;
 			}
 		}
     }
-    while(NG(next_event) != NO_EVENT && ( (((int32_t)next_fire_time) - ((int32_t)timer_get_counter_value())) < 0  ) );
+    while(NG(next_event) != NO_EVENT && ( (((int32_t)next_fire_time) - ((int32_t)timer_get_counter_value())) <= 0  ) );
 
     //at this point NG(next_event) is eiter equal to NO_EVENT (no tasks left)
     //or we have the next event we can schedule
