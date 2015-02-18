@@ -11,6 +11,7 @@
 MACRO(OVERRIDE_COMPONENT component)
     SET_GLOBAL(FRAMEWORK_OVERRIDE_LIBS "${FRAMEWORK_OVERRIDE_LIBS};FRAMEWORK_${component}")
     ADD_LIBRARY(FRAMEWORK_${component} OBJECT ${ARGN})
+    ADD_DEPENDENCIES(FRAMEWORK_${component} PLATFORM)
 ENDMACRO()
 
 # Add one or more CMAKE variables as '#define' statements to the "framework_defs.h"

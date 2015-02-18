@@ -90,9 +90,10 @@ SET_SOURCE_FILES_PROPERTIES(${PLATFORM_SOURCES}
 			    ${LOG_SOURCES}
 			    ${RANDOM_SOURCES}
 			    PROPERTIES LANGUAGE CXX)
-
-INSERT_LINKER_FLAGS(BEFORE OBJECTS INSERT "-Wl,-rpath,${${PLATFORM_PREFIX}_OMNETPP_DIR}/lib" "-Wl,-rpath,.")
-INSERT_LINKER_FLAGS(AFTER LINK_LIBRARIES INSERT "-Wl,-all_load" 
+MESSAGE(STATUS "System name: ${CMAKE_SYSTEM_NAME}")
+IF(${CMAKE_SYSTEM_NAME} STREQUAL "Darwin")
+    INSERT_LINKER_FLAGS(BEFORE OBJECTS INSERT "-Wl,-rpath,${${PLATFORM_PREFIX}_OMNETPP_DIR}/lib" "-Wl,-rpath,.")
+    INSERT_LINKER_FLAGS(AFTER LINK_LIBRARIES INSERT "-Wl,-all_load" 
 					 "-L${${PLATFORM_PREFIX}_OMNETPP_DIR}/lib"
 					 "-loppmaind"
 					 "-Wl,-u,_cmdenv_lib"
@@ -100,6 +101,23 @@ INSERT_LINKER_FLAGS(AFTER LINK_LIBRARIES INSERT "-Wl,-all_load"
 					 "-loppenvird" 
 					 "-loppsimd" 
 					 "-lstdc++")
+ELSEIF(${CMAKE_SYSTEM_NAME} STREQUAL "Linux")
+    INSERT_LINKER_FLAGS(BEFORE OBJECTS INSERT "-Wl,-rpath,${${PLATFORM_PREFIX}_OMNETPP_DIR}/lib" "-Wl,-rpath,.")
+    INSERT_LINKER_FLAGS(AFTER LINK_LIBRARIES INSERT "-Wl,--no-as-needed"
+						    "-Wl,--whole-archive" 
+						    "-Wl,--no-whole-archive" 
+						    "-L${${PLATFORM_PREFIX}_OMNETPP_DIR}/lib"
+						    "-loppmaind" 
+						    "-Wl,-u,_cmdenv_lib" 
+						    "-Wl,--no-as-needed" 
+						    "-loppcmdenv" 
+						    "-loppenvir" 
+						    "-loppsim" 
+						    "-ldl "
+						    "-lstdc++")
+ELSE()
+    MESSAGE(FATAL_ERROR "Host OS '${CMAKE_SYSTEM_NAME}' not supported for the 'sim' platform")
+ENDIF()
 	    
 #Define the 'platform library'. 
 ADD_LIBRARY(PLATFORM OBJECT ${PLATFORM_SOURCES} ${MSG_SOURCES})
