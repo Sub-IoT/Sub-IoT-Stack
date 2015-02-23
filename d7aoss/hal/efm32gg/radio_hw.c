@@ -31,7 +31,7 @@ void CC1101_ISR(GDOLine gdo, GDOEdge edge)
 {
 	DPRINT("%s ISR %s", (gdo == GDOLine0)? "GDO0\0": "GDO2\0", (edge == GDOEdgeRising)? "EDGE_RISING\0": "EDGE_FALLING\0" );
 
-    uint8_t gdo_setting = ReadSingleReg(gdo) | edge;
+    uint8_t gdo_setting = ReadSingleReg(gdo) | edge; // TODO we need only one GDO_SETTING per GDOLine so reading this is not necessary?
     uint8_t index = 0;
     InterruptHandlerDescriptor descriptor;
 
@@ -84,8 +84,7 @@ void radioConfigureInterrupt(void)
 
     GPIO_PinOutSet(RADIO_PORT_GDO2, RADIO_PIN_GDO2);
     GPIO_IntConfig( RADIO_PORT_GDO0, RADIO_PIN_GDO0, true, true, false ); // GDO0 Interrupt on rising/falling edges. Disabled by default.
-    GPIO_IntConfig( RADIO_PORT_GDO2, RADIO_PIN_GDO2, true, true, false ); // GDO0 Interrupt on rising/falling edges. Disabled by default.
-    //GPIO_IntConfig( RADIO_PORT_GDO2, RADIO_PIN_GDO2, true, true, false ); // GDO2 Interrupt on rising/falling edges. Disabled by default.
+    GPIO_IntConfig( RADIO_PORT_GDO2, RADIO_PIN_GDO2, true, false, false ); // GDO2 Interrupt on rising edges. Disabled by default.
     radioClearInterruptPendingLines();
     INT_Enable();
 }

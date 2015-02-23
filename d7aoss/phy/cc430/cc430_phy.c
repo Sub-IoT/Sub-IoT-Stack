@@ -595,7 +595,7 @@ void rx_data_isr()
 	if (packetLength == 0) {
 		packetLength = ReadSingleReg(RXFIFO);
 		WriteSingleReg(PKTLEN, packetLength);
-		WriteSingleReg(FIFOTHR, RADIO_FIFOTHR_FIFO_THR_17_48);
+        WriteSingleReg(FIFOTHR, RADIO_FIFOTHR_FIFO_THR_17_48);
 		remainingBytes = packetLength - 1;
 		queue_push_u8(&rx_queue, packetLength);
 		rxBytes--;
@@ -604,8 +604,8 @@ void rx_data_isr()
 	#endif
 	}
 
-	//Never read the entire buffer as long as more data is going to be received
     if (remainingBytes > rxBytes) {
+    	// Never read the entire buffer as long as more data is going to be received (see datasheet)
     	rxBytes--;
     } else {
     	rxBytes = remainingBytes;

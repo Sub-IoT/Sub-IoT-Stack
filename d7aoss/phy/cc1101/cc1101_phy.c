@@ -33,6 +33,13 @@
 
 #include "cc1101_core.h"
 #include "radio_hw.h"
+
+#ifdef LOG_PHY_ENABLED
+#define DPRINT(...) log_print_stack_string(LOG_PHY, __VA_ARGS__)
+#else
+#define DPRINT(...)
+#endif
+
 /*
  * Variables
  */
@@ -97,12 +104,12 @@ void phy_init(void)
 	WriteRfSettings(&rfSettings);
 
 	#ifdef LOG_PHY_ENABLED
-	log_print_stack_string(LOG_PHY, "RF settings:");
-	unsigned char const *p = &rfSettings;
-	for(uint8_t i = 0; i < sizeof(RF_SETTINGS); i++)
-	{
-		log_print_stack_string(LOG_PHY, "\t0x%02X", p[i]);
-	}
+    log_print_stack_string(LOG_PHY, "RF settings:");
+    unsigned char const *p = &rfSettings;
+    for(uint8_t i = 0; i < sizeof(RF_SETTINGS); i++)
+    {
+        log_print_stack_string(LOG_PHY, "\t0x%02X", p[i]);
+    }
 	#endif
 
 	last_tx_cfg.eirp=0;
@@ -200,7 +207,7 @@ extern bool phy_tx_data(phy_tx_cfg_t* cfg)
 	//phy_set_gdo_values(GDOLine2, GDO_EDGE_TXBelowThresh, GDO_SETTING_TXBelowThresh);
 //	phy_set_gdo_values(GDOLine2, GDO_EDGE_TXUnderflow, GDO_SETTING_TXUnderflow);
 	//phy_set_gdo_values(GDOLine0, 0, GDO_SETTING_EndOfPacket); // TODO tmp
-    phy_set_gdo_values(GDOLine0, GDO_EDGE_EndOfPacket, GDO_SETTING_EndOfPacket);
+    //phy_set_gdo_values(GDOLine0, GDO_EDGE_EndOfPacket, GDO_SETTING_EndOfPacket);
 	//radioEnableGDO2Interrupt();
 	//radioEnableGDO0Interrupt();
 
@@ -243,9 +250,9 @@ bool phy_init_tx()
 
 bool phy_tx(phy_tx_cfg_t* cfg)
 {
-	if (init_and_close_radio)
+    if (init_and_close_radio || !phy_initialized)
 	{
-        if (!phy_init_tx() || !phy_initialized)
+        if (!phy_init_tx())
 		{
 			return false;
 		}
@@ -266,7 +273,7 @@ bool phy_tx(phy_tx_cfg_t* cfg)
 bool phy_rx(phy_rx_cfg_t* cfg)
 {
 	#ifdef LOG_PHY_ENABLED
-	log_print_stack_string(LOG_PHY, "phy_rx");
+	//log_print_stack_string(LOG_PHY, "phy_rx");
 	#endif
 
 	RadioState current_state = get_radiostate();
@@ -284,6 +291,7 @@ bool phy_rx(phy_rx_cfg_t* cfg)
 	//Flush the rxfifo
 	Strobe(RF_SIDLE);
 	Strobe(RF_SFRX);
+
 
 	//Set configuration
 
@@ -334,7 +342,8 @@ bool phy_rx(phy_rx_cfg_t* cfg)
 		{
 			packetLength = 0;
 			remainingBytes = 0;
-			WriteSingleReg(PKTLEN, 0xFF);
+			//WriteSingleReg(PKTLEN, 0xFF);
+			WriteSingleReg(PKTLEN, 16); // TODO tmp
 			WriteSingleReg(FIFOTHR, RADIO_FIFOTHR_FIFO_THR_61_4);
 		} else {
 			packetLength = cfg->length;
@@ -349,10 +358,10 @@ bool phy_rx(phy_rx_cfg_t* cfg)
 	//TODO: set minimum sync word rss to scan minimum energy
 	//Enable interrupts
 	//phy_set_gdo_values(GDOLine2, GDO_EDGE_RXFilled, GDO_SETTING_RXFilled);
-	phy_set_gdo_values(GDOLine0, GDO_EDGE_EndOfPacket, GDO_SETTING_EndOfPacket);
+    //phy_set_gdo_values(GDOLine0, GDO_EDGE_EndOfPacket, GDO_SETTING_EndOfPacket);
 	radioClearInterruptPendingLines();
 	radioEnableGDO2Interrupt();
-	//radioEnableGDO0Interrupt();
+	radioEnableGDO0Interrupt();
 
 	//Start receiving
 	Strobe(RF_SRX);
@@ -398,8 +407,10 @@ void no_interrupt_isr() { }
 
 void end_of_packet_isr()
 {
+	DPRINT("end of packet ISR");
 	if (state == Receive) {
-		rx_data_isr();
+		//rx_data_isr();
+		DPRINT("EOP ISR RXBYTES: %d)", ReadSingleReg(RXBYTES));
 		rxtx_finish_isr(); // TODO: should this be called by DLL?
 		if(phy_rx_callback != NULL)
 			phy_rx_callback(&rx_data);
@@ -506,23 +517,26 @@ void rx_data_isr()
 		WriteSingleReg(PKTLEN, packetLength);
 		WriteSingleReg(FIFOTHR, RADIO_FIFOTHR_FIFO_THR_17_48);
 		remainingBytes = packetLength - 1;
-		queue_push_u8(&rx_queue, packetLength);
+		queue_push_u8(&rx_queue, packetLength); // TODO do not put length in buffer only in rx_data->len ?
 		rxBytes--;
 #ifdef LOG_PHY_ENABLED
-		log_print_stack_string(LOG_PHY, "rx_data_isr getting packetLength (%d)", packetLength);
+//		log_print_stack_string(LOG_PHY, "rx_data_isr getting packetLength (%d)", packetLength);
 	#endif
 	}
 
 	//Never read the entire buffer as long as more data is going to be received
-    if (remainingBytes > rxBytes) {
+    if (remainingBytes > rxBytes)
+    {
     	rxBytes--;
-    } else {
-    	rxBytes = remainingBytes;
+    }
+    else
+    {
+    	rxBytes = remainingBytes; // we may have received more bytes than packetlength already (probably noise) so limit to packetlength
     }
 
     //Read data from buffer
 	#ifdef LOG_PHY_ENABLED
-		log_print_stack_string(LOG_PHY, "Getting %d bytes from RXFifo", rxBytes);
+//		log_print_stack_string(LOG_PHY, "Getting %d bytes from RXFifo", rxBytes);
 	#endif
 	ReadBurstReg(RXFIFO, &rx_queue.rear[1], rxBytes);
 
@@ -531,17 +545,18 @@ void rx_data_isr()
 
 	remainingBytes -= rxBytes;
 	#ifdef LOG_PHY_ENABLED
-		log_print_stack_string(LOG_PHY, "Received data:");
-		log_print_data(rx_queue.front, rxBytes);
+//		log_print_stack_string(LOG_PHY, "Received data:");
+//		log_print_data(rx_queue.front, rxBytes);
 	#endif
 #ifdef LOG_PHY_ENABLED
-	log_print_stack_string(LOG_PHY, "%d bytes remaining", remainingBytes);
+//	log_print_stack_string(LOG_PHY, "%d bytes remaining", remainingBytes);
 #endif
 #ifdef D7_PHY_USE_FEC
 	}
 #endif
 
     //When all data has been received read rssi and lqi value and set packetreceived flag
+	// TODO do in end_of_packet_isr()?
     if(remainingBytes <= 0)
     {
     	rx_data.rssi = calculate_rssi(ReadSingleReg(RXFIFO));
@@ -549,14 +564,14 @@ void rx_data_isr()
 		rx_data.length = *rx_queue.front;
 		rx_data.data = rx_queue.front;
 		#ifdef LOG_PHY_ENABLED
-			log_print_stack_string(LOG_PHY, "rx_data_isr packet received");
-			log_print_data(rx_data.data, rx_data.length);
-			log_phy_rx_res(&rx_data);
+//			log_print_stack_string(LOG_PHY, "rx_data_isr packet received");
+//			log_print_data(rx_data.data, rx_data.length);
+//			log_phy_rx_res(&rx_data);
 		#endif
     }
 
 	#ifdef LOG_PHY_ENABLED
-		log_print_stack_string(LOG_PHY, "rx_data_isr 1");
+//		log_print_stack_string(LOG_PHY, "rx_data_isr 1");
 	#endif
 }
 

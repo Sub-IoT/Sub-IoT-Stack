@@ -19,7 +19,7 @@
 
 #define RX_MODE
 
-static uint8_t tx_data[16] = {16, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15};
+static uint8_t data[15] = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15};
 
 /*
  */
@@ -45,13 +45,20 @@ void start_rx(void)
 void start_tx(void)
 {
 	phy_idle();
-	queue_push_u8_array(&tx_queue, tx_data, sizeof(tx_data));
+	queue_push_u8_array(&tx_queue, sizeof(data), 1);
+	queue_push_u8_array(&tx_queue, data, sizeof(data));
 	phy_tx(&tx_cfg);
 }
 
 void rx_callback(phy_rx_data_t* rx_data)
 {
-//	if(memcmp(buffer, rx_data->data, sizeof(buffer)) == 0)
+	log_print_string("RX callback");
+	if(memcmp(data, rx_data->data + 1, sizeof(data)) != 0) // first byte of rx_data->data is length (for now), skip this
+	{
+		log_print_string("ERROR Unexpected data received:");
+		log_print_data(rx_data->data + 1, rx_data->length);
+	}
+
 	led_toggle(1);
 	start_rx();
 }
@@ -79,11 +86,11 @@ int main(void)
 	#ifdef RX_MODE
 		start_rx();
 		while(1);
-		system_lowpower_mode(4,1);
+		//system_lowpower_mode(4,1);
 	#else
 		start_tx();
-		//while(1);
-		system_lowpower_mode(4,1);
+		while(1);
+		//system_lowpower_mode(4,1);
 	#endif
 
 	return 0;
