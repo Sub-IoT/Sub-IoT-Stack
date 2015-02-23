@@ -170,31 +170,15 @@ extern bool phy_set_tx(phy_tx_cfg_t* cfg)
 // send data
 extern bool phy_tx_data(phy_tx_cfg_t* cfg)
 {
-
 	//TODO Return error if fec not enabled but requested
-	#ifdef D7_PHY_USE_FEC
-	if (fec) {
-		//Initialize fec encoding
-		fec_init_encode(cfg->data);
 
-		//Configure length settings
-		set_length_infinite(true);
-		fec_set_length(cfg->length);
-		remainingBytes = ((cfg->length & 0xFE) + 2) << 1;
-		WriteSingleReg(PKTLEN, (uint8_t)(remainingBytes & 0x00FF));
-	} else {
-	#endif
+    //Set buffer position
+    //bufferPosition = cfg->data;
 
-		//Set buffer position
-        //bufferPosition = cfg->data;
-
-		//Configure length settings
-		set_length_infinite(false);
-        remainingBytes = tx_queue.length;
-		WriteSingleReg(PKTLEN, (uint8_t)remainingBytes);
-	#ifdef D7_PHY_USE_FEC
-	}
-	#endif
+    //Configure length settings
+    set_length_infinite(false);
+    remainingBytes = tx_queue.length;
+    WriteSingleReg(PKTLEN, (uint8_t)remainingBytes);
 
 	//Write initial data to txfifo
 	tx_data_isr();
@@ -305,55 +289,26 @@ bool phy_rx(phy_rx_cfg_t* cfg)
 	set_timeout(cfg->timeout);
 
 //TODO Return error if fec not enabled but requested
-#ifdef D7_PHY_USE_FEC
-	if (fec) {
-		//Disable hardware data whitening
-		set_data_whitening(false);
 
-		//Initialize fec encoding
-		fec_init_decode(buffer);
+    queue_clear(&rx_queue);
 
-		//Configure length settings
-		set_length_infinite(true);
+    //Configure length settings and txfifo threshold
+    set_length_infinite(false);
 
-		if(cfg->length == 0)
-		{
-			packetLength = 0;
-			remainingBytes = 0;
-			WriteSingleReg(PKTLEN, 0xFF);
-			WriteSingleReg(FIFOTHR, RADIO_FIFOTHR_FIFO_THR_61_4);
-		} else {
-			fec_set_length(cfg->length);
-			packetLength = ((cfg->length & 0xFE) + 2) << 1;
-			remainingBytes = packetLength;
-			WriteSingleReg(PKTLEN, (uint8_t)(packetLength & 0x00FF));
-			WriteSingleReg(FIFOTHR, RADIO_FIFOTHR_FIFO_THR_17_48);
-		}
-	} else {
-#endif
-
-		queue_clear(&rx_queue);
-
-		//Configure length settings and txfifo threshold
-		set_length_infinite(false);
-
-        // TODO remove cfg->length, length is contained in background frames as well in draft spec so always dynamic
-		if(cfg->length == 0)
-		{
-			packetLength = 0;
-			remainingBytes = 0;
-			//WriteSingleReg(PKTLEN, 0xFF);
-			WriteSingleReg(PKTLEN, 16); // TODO tmp
-			WriteSingleReg(FIFOTHR, RADIO_FIFOTHR_FIFO_THR_61_4);
-		} else {
-			packetLength = cfg->length;
-			remainingBytes = packetLength;
-			WriteSingleReg(PKTLEN, packetLength);
-			WriteSingleReg(FIFOTHR, RADIO_FIFOTHR_FIFO_THR_17_48);
-		}
-#ifdef D7_PHY_USE_FEC
-	}
-#endif
+    // TODO remove cfg->length, length is contained in background frames as well in draft spec so always dynamic
+    if(cfg->length == 0)
+    {
+        packetLength = 0;
+        remainingBytes = 0;
+        //WriteSingleReg(PKTLEN, 0xFF);
+        WriteSingleReg(PKTLEN, 16); // TODO tmp
+        WriteSingleReg(FIFOTHR, RADIO_FIFOTHR_FIFO_THR_61_4);
+    } else {
+        packetLength = cfg->length;
+        remainingBytes = packetLength;
+        WriteSingleReg(PKTLEN, packetLength);
+        WriteSingleReg(FIFOTHR, RADIO_FIFOTHR_FIFO_THR_17_48);
+    }
 
 	//TODO: set minimum sync word rss to scan minimum energy
 	//Enable interrupts
@@ -431,42 +386,18 @@ void tx_data_isr()
 	//Calculate number of free bytes in TXFIFO
 	uint8_t txBytes = 64 - ReadSingleReg(TXBYTES);
 
-#ifdef D7_PHY_USE_FEC
-	if(fec)
-	{
-		uint8_t fecbuffer[4];
+    //Limit number of bytes to remaining bytes
+    if(txBytes > remainingBytes)
+        txBytes = remainingBytes;
 
-		//If remaining bytes is equal or less than 255 - fifo size, set length to fixed
-		if(remainingBytes < 192)
-			set_length_infinite(false);
+    //Write data to tx fifo
+    #ifdef LOG_PHY_ENABLED
+    log_print_stack_string(LOG_PHY, "Data to TX Fifo:");
+    log_print_data(tx_queue.front, txBytes);
+    #endif
 
-		while (txBytes >= 4) {
-			//Get encoded data, stop when no more data available
-			if(fec_encode(fecbuffer) == false)
-				break;
-
-			//Write data to tx fifo
-			WriteBurstReg(TXFIFO, fecbuffer, 4);
-			remainingBytes -= 4;
-			txBytes -= 4;
-		}
-	} else {
-#endif
-		//Limit number of bytes to remaining bytes
-		if(txBytes > remainingBytes)
-			txBytes = remainingBytes;
-
-		//Write data to tx fifo
-		#ifdef LOG_PHY_ENABLED
-		log_print_stack_string(LOG_PHY, "Data to TX Fifo:");
-		log_print_data(tx_queue.front, txBytes);
-		#endif
-
-		WriteBurstReg(TXFIFO, &tx_queue, txBytes);
-		remainingBytes -= txBytes;
-#ifdef D7_PHY_USE_FEC
-	}
-#endif
+    WriteBurstReg(TXFIFO, &tx_queue, txBytes);
+    remainingBytes -= txBytes;
 }
 
 void rx_data_isr()
@@ -478,39 +409,6 @@ void rx_data_isr()
 		log_print_stack_string(LOG_PHY, "rx_data_isr (%d bytes received)", rxBytes);
 #endif
 
-#ifdef D7_PHY_USE_FEC
-	if(fec)
-	{
-		uint8_t fecbuffer[4];
-
-	    //If length is not set get the length from RXFIFO and set PKTLEN
-		if (packetLength == 0) {
-			ReadBurstReg(RXFIFO, fecbuffer, 4);
-			fec_decode(fecbuffer);
-			fec_set_length(*buffer);
-			packetLength = ((*buffer & 0xFE) + 2) << 1;
-			remainingBytes = packetLength - 4;
-			WriteSingleReg(PKTLEN, (uint8_t)(packetLength & 0x00FF));
-			WriteSingleReg(FIFOTHR, RADIO_FIFOTHR_FIFO_THR_17_48);
-			rxBytes -= 4;
-		}
-
-		//If remaining bytes is equal or less than 255 - fifo size, set length to fixed
-		if(remainingBytes < 192)
-			set_length_infinite(false);
-
-		//Read data from buffer and decode
-		while (rxBytes >= 4) {
-			ReadBurstReg(RXFIFO, fecbuffer, 4);
-
-			if(fec_decode(fecbuffer) == false)
-				break;
-
-			remainingBytes -= 4;
-			rxBytes -= 4;
-		}
-	} else {
-#endif
     //If length is not set get the length from RXFIFO and set PKTLEN
 	if (packetLength == 0) {
 		packetLength = ReadSingleReg(RXFIFO);
@@ -550,9 +448,6 @@ void rx_data_isr()
 	#endif
 #ifdef LOG_PHY_ENABLED
 //	log_print_stack_string(LOG_PHY, "%d bytes remaining", remainingBytes);
-#endif
-#ifdef D7_PHY_USE_FEC
-	}
 #endif
 
     //When all data has been received read rssi and lqi value and set packetreceived flag
