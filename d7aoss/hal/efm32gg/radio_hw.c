@@ -12,9 +12,9 @@
 
 // turn on/off the debug prints
 #ifdef LOG_PHY_ENABLED
-	#define DPRINT(...) log_print_stack_string(LOG_PHY, __VA_ARGS__)
+#define DPRINT(...) log_print_stack_string(LOG_PHY, __VA_ARGS__)
 #else
-	#define DPRINT(...)
+#define DPRINT(...)
 #endif
 
 
@@ -27,19 +27,19 @@ InterruptHandlerDescriptor interrupt_table[3] = {
 
 void CC1101_ISR(GDOLine gdo, GDOEdge edge)
 {
-	DPRINT("%s ISR %s", (gdo == GDOLine0)? "GDO0\0": "GDO2\0", (edge == GDOEdgeRising)? "EDGE_RISING\0": "EDGE_FALLING\0" );
+    DPRINT("%s ISR %s", (gdo == GDOLine0)? "GDO0\0": "GDO2\0", (edge == GDOEdgeRising)? "EDGE_RISING\0": "EDGE_FALLING\0" );
 
     uint8_t gdo_setting = ReadSingleReg(gdo) | edge; // TODO we need only one GDO_SETTING per GDOLine so reading this is not necessary?
     uint8_t index = 0;
     InterruptHandlerDescriptor descriptor;
 
     do {
-            descriptor = interrupt_table[index];
-            if ((gdo_setting & 0x7f) == (descriptor.gdoSetting | descriptor.edge)) {
-                    descriptor.handler();
-                    break;
-            }
-            index++;
+        descriptor = interrupt_table[index];
+        if ((gdo_setting & 0x7f) == (descriptor.gdoSetting | descriptor.edge)) {
+            descriptor.handler();
+            break;
+        }
+        index++;
     }
     while (descriptor.handler != 0);
 }
@@ -71,12 +71,12 @@ void radioClearInterruptPendingLines()
 
 void radioConfigureInterrupt(void)
 {
-	NVIC_EnableIRQ(GPIO_ODD_IRQn);
-	NVIC_EnableIRQ(GPIO_EVEN_IRQn);
-	//GPIO_PinModeSet( gpioPortD, 6, gpioModePushPull, 0 ); // TODO temp debug
+    NVIC_EnableIRQ(GPIO_ODD_IRQn);
+    NVIC_EnableIRQ(GPIO_EVEN_IRQn);
+    //GPIO_PinModeSet( gpioPortD, 6, gpioModePushPull, 0 ); // TODO temp debug
     GPIO_PinModeSet( RADIO_PORT_GDO0, RADIO_PIN_GDO0, gpioModeInput, 0 );
-	//GPIO_PinModeSet( RADIO_PORT_GDO0, RADIO_PIN_GDO0, gpioModePushPull, 0 ); // GDO0 Input, PullUp, Filter
-	//GPIO_PinModeSet( RADIO_PORT_GDO0, RADIO_PIN_GDO0, gpioModeInputPullFilter, 1 ); // GDO0 Input, PullUp, Filter
+    //GPIO_PinModeSet( RADIO_PORT_GDO0, RADIO_PIN_GDO0, gpioModePushPull, 0 ); // GDO0 Input, PullUp, Filter
+    //GPIO_PinModeSet( RADIO_PORT_GDO0, RADIO_PIN_GDO0, gpioModeInputPullFilter, 1 ); // GDO0 Input, PullUp, Filter
     //GPIO_PinModeSet( RADIO_PORT_GDO2, RADIO_PIN_GDO2, gpioModeInput, 0 ); // GDO2 Input, PullUp, Filter
     GPIO_PinModeSet( RADIO_PORT_GDO2, RADIO_PIN_GDO2, gpioModeInput, 0 ); // GDO2 Input, PullUp, Filter
 
@@ -90,10 +90,10 @@ void radioConfigureInterrupt(void)
 // TODO tmp
 void radio_debug_pin(bool on)
 {
-	if(on)
-		GPIO_PinOutSet(gpioPortD, 6);
-	else
-		GPIO_PinOutClear(gpioPortD, 6);
+    if(on)
+        GPIO_PinOutSet(gpioPortD, 6);
+    else
+        GPIO_PinOutClear(gpioPortD, 6);
 }
 
 void radio_isr(void)
