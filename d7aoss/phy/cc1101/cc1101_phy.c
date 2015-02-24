@@ -99,6 +99,129 @@ static int16_t calculate_rssi(int8_t rssi_raw)
     return rssi;
 }
 
+static void set_preamble_size(uint8_t preamble_size)
+{
+    uint8_t mdmcfg1 = ReadSingleReg(MDMCFG1) & 0x03;
+
+    if(preamble_size >= 24)
+        mdmcfg1 |= 0x70;
+    else if(preamble_size >= 16)
+        mdmcfg1 |= 0x60;
+    else if(preamble_size >= 12)
+        mdmcfg1 |= 0x50;
+    else if(preamble_size >= 8)
+        mdmcfg1 |= 0x40;
+    else if(preamble_size >= 6)
+        mdmcfg1 |= 0x30;
+    else if(preamble_size >= 4)
+        mdmcfg1 |= 0x20;
+    else if(preamble_size >= 3)
+        mdmcfg1 |= 0x10;
+
+    WriteSingleReg(MDMCFG1, mdmcfg1);
+}
+
+static void set_timeout(uint16_t timeout)
+{
+    if (timeout == 0)
+    {
+        WriteSingleReg(WORCTRL, RADIO_WORCTRL_ALCK_PD);
+        WriteSingleReg(MCSM2, RADIO_MCSM2_RX_TIME(7));
+    }
+    else
+    {
+        WriteSingleReg(WORCTRL, RADIO_WORCTRL_WOR_RES_32ms);
+        WriteSingleReg(MCSM2, RADIO_MCSM2_RX_TIME(0));
+        WriteSingleReg(WOREVT0, timeout & 0x00FF);
+        WriteSingleReg(WOREVT1, timeout >> 8);
+    }
+}
+
+static void set_eirp(int8_t eirp)
+{
+    // TODO compare with CC430 implementation
+    uint8_t i;
+    for( i = 0; i < sizeof(eirp_values); i++ )
+    {
+        if (eirp >= eirp_values[i]) //round the given eirp to a lower possible value
+        {
+            WriteSinglePATable(eirp_reg_values[i]);
+            break;
+        }
+    }
+}
+
+static void set_sync_word(uint16_t sync_word)
+{
+    WriteSingleReg(SYNC1, (uint8_t)(sync_word >> 8));
+    WriteSingleReg(SYNC0, (uint8_t)(sync_word & 0x00FF));
+}
+
+static void set_channel(uint8_t frequency_band, uint8_t channel_center_freq_index, uint8_t channel_bandwith_index)
+{
+    //Set channel center frequency
+    DPRINT("Set channel freq index: %d", channel_center_freq_index);
+
+    WriteSingleReg(CHANNR, channel_center_freq_index);
+
+    //Set channel bandwidth, modulation and symbol rate
+    DPRINT("Set channel bandwidth index: %d", channel_bandwith_index);
+
+    switch(channel_bandwith_index)
+    {
+    case 0:
+        // TODO CC430:
+        //		WriteSingleReg(MDMCFG3, RADIO_MDMCFG3_DRATE_M(131));
+        //		WriteSingleReg(MDMCFG4, (RADIO_MDMCFG4_CHANBW_E(3) | RADIO_MDMCFG4_CHANBW_M(0) | RADIO_MDMCFG4_DRATE_E(8)));
+        //		WriteSingleReg(DEVIATN, (RADIO_DEVIATN_E(0) | RADIO_DEVIATN_M(16)));
+        WriteSingleReg(MDMCFG3, RADIO_MDMCFG3_DRATE_M(24));
+        WriteSingleReg(MDMCFG4, (RADIO_MDMCFG4_CHANBW_E(1) | RADIO_MDMCFG4_CHANBW_M(0) | RADIO_MDMCFG4_DRATE_E(11)));
+        WriteSingleReg(DEVIATN, (RADIO_DEVIATN_E(5) | RADIO_DEVIATN_M(0)));
+        break;
+    case 1:
+        WriteSingleReg(MDMCFG3, RADIO_MDMCFG3_DRATE_M(24));
+        WriteSingleReg(MDMCFG4, (RADIO_MDMCFG4_CHANBW_E(2) | RADIO_MDMCFG4_CHANBW_M(0) | RADIO_MDMCFG4_DRATE_E(11)));
+        //WriteSingleReg(MDMCFG4, (RADIO_MDMCFG4_CHANBW_E(1) | RADIO_MDMCFG4_CHANBW_M(0) | RADIO_MDMCFG4_DRATE_E(11))); // TODO tmp 400kHz BW
+        WriteSingleReg(DEVIATN, (RADIO_DEVIATN_E(5) | RADIO_DEVIATN_M(0)));
+        break;
+    case 2:
+        WriteSingleReg(MDMCFG3, RADIO_MDMCFG3_DRATE_M(248));
+        WriteSingleReg(MDMCFG4, (RADIO_MDMCFG4_CHANBW_E(1) | RADIO_MDMCFG4_CHANBW_M(0) | RADIO_MDMCFG4_DRATE_E(12)));
+        WriteSingleReg(DEVIATN, (RADIO_DEVIATN_E(5) | RADIO_DEVIATN_M(0)));
+        break;
+        //	case 3:
+        //		WriteSingleReg(MDMCFG3, RADIO_MDMCFG3_DRATE_M(248));
+        //		WriteSingleReg(MDMCFG4, (RADIO_MDMCFG4_CHANBW_E(0) | RADIO_MDMCFG4_CHANBW_M(1) | RADIO_MDMCFG4_DRATE_E(12)));
+        //		WriteSingleReg(DEVIATN, (RADIO_DEVIATN_E(5) | RADIO_DEVIATN_M(0)));
+        //		break;
+    }
+
+    DPRINT("Set frequency band: %d", frequency_band);
+
+    /*
+    switch(frequency_band)
+        {
+        case 0:
+            WriteSingleReg(RADIO_FREQ2, (uint8_t)(RADIO_FREQ_433>>16 & 0xFF));
+            WriteSingleReg(RADIO_FREQ1, (uint8_t)(RADIO_FREQ_433>>8 & 0xFF));
+            WriteSingleReg(RADIO_FREQ0, (uint8_t)(RADIO_FREQ_433 & 0xFF));
+            break;
+        case 1:
+            WriteSingleReg(RADIO_FREQ2, (uint8_t)(RADIO_FREQ_868>>16 & 0xFF));
+            WriteSingleReg(RADIO_FREQ1, (uint8_t)(RADIO_FREQ_868>>8 & 0xFF));
+            WriteSingleReg(RADIO_FREQ0, (uint8_t)(RADIO_FREQ_868 & 0xFF));
+            break;
+        case 2:
+            WriteSingleReg(RADIO_FREQ2, (uint8_t)(RADIO_FREQ_915>>16 & 0xFF));
+            WriteSingleReg(RADIO_FREQ1, (uint8_t)(RADIO_FREQ_915>>8 & 0xFF));
+            WriteSingleReg(RADIO_FREQ0, (uint8_t)(RADIO_FREQ_915 & 0xFF));
+            break;
+        }
+    */
+
+    // is this the right place?
+    Strobe(RF_SCAL);
+}
 
 static bool translate_and_set_settings(uint8_t spectrum_id[2], uint8_t sync_word_class)
 {
@@ -109,10 +232,7 @@ static bool translate_and_set_settings(uint8_t spectrum_id[2], uint8_t sync_word
 
     if(!phy_translate_settings(spectrum_id, sync_word_class, &fec_enabled, &frequency_band, &channel_center_freq_index, &channel_bandwidth_index, &preamble_size, &sync_word))
     {
-#ifdef LOG_PHY_ENABLED
-        log_print_stack_string(LOG_PHY, "PHY Cannot translate settings");
-#endif
-
+        DPRINT("PHY Cannot translate settings");
         return false;
     }
 
@@ -135,10 +255,19 @@ static bool set_tx_config(phy_tx_cfg_t* cfg)
     return true;
 }
 
+static void set_length_infinite(bool infinite)
+{
+    uint8_t pktctrl0 = ReadSingleReg(PKTCTRL0) & 0xFC;
+
+    if (infinite)
+        pktctrl0 |= RADIO_PKTCTRL0_LENGTH_INF;
+
+    WriteSingleReg(PKTCTRL0, pktctrl0);
+}
+
 void phy_init(void)
 {
-    //Set radio state
-    state = Idle;
+     state = Idle;
     spi_init();
     radioConfigureInterrupt();
 
@@ -147,11 +276,11 @@ void phy_init(void)
     WriteRfSettings(&rfSettings);
 
 #ifdef LOG_PHY_ENABLED
-    log_print_stack_string(LOG_PHY, "RF settings:");
+    DPRINT("RF settings:");
     uint8_t* p = (uint8_t*) &rfSettings;
     for(uint8_t i = 0; i < sizeof(RF_SETTINGS); i++)
     {
-        log_print_stack_string(LOG_PHY, "\t0x%02X", p[i]);
+        DPRINT("\t0x%02X", p[i]);
     }
 #endif
 
@@ -159,7 +288,6 @@ void phy_init(void)
     last_tx_cfg.spectrum_id[0] = 0;
     last_tx_cfg.spectrum_id[1] = 0;
     last_tx_cfg.sync_word_class = 0;
-
 }
 
 void phy_idle(void)
@@ -200,17 +328,13 @@ bool phy_init_tx()
     RadioState current_state = get_radiostate();
     if (current_state != Idle && current_state != Transmit)
     {
-#ifdef LOG_PHY_ENABLED
-        log_print_stack_string(LOG_PHY, "PHY radio not idle");
-#endif
+        DPRINT("PHY radio not idle");
 
         return false;
     }
 
-    //Set radio state
     state = Transmit;
 
-    //Go to idle and flush the txfifo
     Strobe(RF_SIDLE);
     Strobe(RF_SFTX);
 
@@ -241,28 +365,20 @@ bool phy_tx(phy_tx_cfg_t* cfg)
 
 bool phy_rx(phy_rx_cfg_t* cfg)
 {
-#ifdef LOG_PHY_ENABLED
-    log_print_stack_string(LOG_PHY, "phy_rx");
-#endif
+    DPRINT("phy_rx");
 
     RadioState current_state = get_radiostate();
     if(current_state != Idle && current_state != Receive)
     {
-#ifdef LOG_PHY_ENABLED
-        log_print_stack_string(LOG_PHY, "PHY Cannot RX, PHY not idle");
-#endif
+        DPRINT("PHY Cannot RX, PHY not idle");
+
         return false;
     }
 
-    //Set radio state
     state = Receive;
 
-    //Flush the rxfifo
     Strobe(RF_SIDLE);
     Strobe(RF_SFRX);
-
-
-    //Set configuration
 
     if (!translate_and_set_settings(cfg->spectrum_id, cfg->sync_word_class))
         return false;
@@ -277,7 +393,7 @@ bool phy_rx(phy_rx_cfg_t* cfg)
 
     queue_clear(&rx_queue);
 
-        set_length_infinite(false);
+    set_length_infinite(false); // TODO needed?
 
     // TODO remove cfg->length, length is contained in background frames as well in draft spec so always dynamic
 
@@ -325,7 +441,8 @@ extern int16_t phy_get_rssi(uint8_t spectrum_id[2], uint8_t sync_word_class)
 void end_of_packet_isr()
 {
     DPRINT("end of packet ISR");
-    if (state == Receive) {
+    if (state == Receive)
+    {
         packet_length = ReadSingleReg(RXFIFO);
         DPRINT("EOP ISR packetLength: %d", packet_length);
         ReadBurstReg(RXFIFO, buffer, packet_length + 2); // +2 for RSSI and LQI
@@ -337,12 +454,16 @@ void end_of_packet_isr()
         rx_data.length = packet_length;
         rx_data.data = rx_queue.front;
         if(phy_rx_callback != NULL)
-            phy_rx_callback(&rx_data);
-    } else if (state == Transmit) {
+            phy_rx_callback(&rx_data);    
+    }
+    else if (state == Transmit)
+    {
         rxtx_finish_isr();
         if(phy_tx_callback != NULL)
             phy_tx_callback();
-    } else {
+    }
+    else
+    {
         rxtx_finish_isr();
     }
 }
@@ -427,9 +548,7 @@ void rx_timeout_isr()
 
 void rx_fifo_overflow_isr()
 {
-#ifdef LOG_PHY_ENABLED
-    log_print_stack_string(LOG_PHY, "rx_fifo_overflow");
-#endif
+    DPRINT("rx_fifo_overflow");
 
     rxtx_finish_isr();
     if(phy_rx_callback != NULL)
@@ -438,7 +557,6 @@ void rx_fifo_overflow_isr()
 
 void rxtx_finish_isr()
 {
-    //Disable interrupts
     radioDisableGDO0Interrupt();
     radioDisableGDO2Interrupt();
 
@@ -450,154 +568,7 @@ void rxtx_finish_isr()
         Strobe(RF_SFTX);
         Strobe(RF_SPWD);
 
-        //Set radio state
         state = Idle;
-    }
-}
-
-void set_channel(uint8_t frequency_band, uint8_t channel_center_freq_index, uint8_t channel_bandwith_index)
-{
-    //Set channel center frequency
-#ifdef LOG_PHY_ENABLED
-    log_print_stack_string(LOG_PHY, "Set channel freq index: %d", channel_center_freq_index);
-#endif
-
-    WriteSingleReg(CHANNR, channel_center_freq_index);
-
-    //Set channel bandwidth, modulation and symbol rate
-#ifdef LOG_PHY_ENABLED
-    log_print_stack_string(LOG_PHY, "Set channel bandwidth index: %d", channel_bandwith_index);
-#endif
-    switch(channel_bandwith_index)
-    {
-    case 0:
-        // TODO CC430:
-        //		WriteSingleReg(MDMCFG3, RADIO_MDMCFG3_DRATE_M(131));
-        //		WriteSingleReg(MDMCFG4, (RADIO_MDMCFG4_CHANBW_E(3) | RADIO_MDMCFG4_CHANBW_M(0) | RADIO_MDMCFG4_DRATE_E(8)));
-        //		WriteSingleReg(DEVIATN, (RADIO_DEVIATN_E(0) | RADIO_DEVIATN_M(16)));
-        WriteSingleReg(MDMCFG3, RADIO_MDMCFG3_DRATE_M(24));
-        WriteSingleReg(MDMCFG4, (RADIO_MDMCFG4_CHANBW_E(1) | RADIO_MDMCFG4_CHANBW_M(0) | RADIO_MDMCFG4_DRATE_E(11)));
-        WriteSingleReg(DEVIATN, (RADIO_DEVIATN_E(5) | RADIO_DEVIATN_M(0)));
-        break;
-    case 1:
-        WriteSingleReg(MDMCFG3, RADIO_MDMCFG3_DRATE_M(24));
-        WriteSingleReg(MDMCFG4, (RADIO_MDMCFG4_CHANBW_E(2) | RADIO_MDMCFG4_CHANBW_M(0) | RADIO_MDMCFG4_DRATE_E(11)));
-        //WriteSingleReg(MDMCFG4, (RADIO_MDMCFG4_CHANBW_E(1) | RADIO_MDMCFG4_CHANBW_M(0) | RADIO_MDMCFG4_DRATE_E(11))); // TODO tmp 400kHz BW
-        WriteSingleReg(DEVIATN, (RADIO_DEVIATN_E(5) | RADIO_DEVIATN_M(0)));
-        break;
-    case 2:
-        WriteSingleReg(MDMCFG3, RADIO_MDMCFG3_DRATE_M(248));
-        WriteSingleReg(MDMCFG4, (RADIO_MDMCFG4_CHANBW_E(1) | RADIO_MDMCFG4_CHANBW_M(0) | RADIO_MDMCFG4_DRATE_E(12)));
-        WriteSingleReg(DEVIATN, (RADIO_DEVIATN_E(5) | RADIO_DEVIATN_M(0)));
-        break;
-        //	case 3:
-        //		WriteSingleReg(MDMCFG3, RADIO_MDMCFG3_DRATE_M(248));
-        //		WriteSingleReg(MDMCFG4, (RADIO_MDMCFG4_CHANBW_E(0) | RADIO_MDMCFG4_CHANBW_M(1) | RADIO_MDMCFG4_DRATE_E(12)));
-        //		WriteSingleReg(DEVIATN, (RADIO_DEVIATN_E(5) | RADIO_DEVIATN_M(0)));
-        //		break;
-    }
-
-#ifdef LOG_PHY_ENABLED
-    log_print_stack_string(LOG_PHY, "Set frequency band: %d", frequency_band);
-#endif
-
-    /*
-    switch(frequency_band)
-        {
-        case 0:
-            WriteSingleReg(RADIO_FREQ2, (uint8_t)(RADIO_FREQ_433>>16 & 0xFF));
-            WriteSingleReg(RADIO_FREQ1, (uint8_t)(RADIO_FREQ_433>>8 & 0xFF));
-            WriteSingleReg(RADIO_FREQ0, (uint8_t)(RADIO_FREQ_433 & 0xFF));
-            break;
-        case 1:
-            WriteSingleReg(RADIO_FREQ2, (uint8_t)(RADIO_FREQ_868>>16 & 0xFF));
-            WriteSingleReg(RADIO_FREQ1, (uint8_t)(RADIO_FREQ_868>>8 & 0xFF));
-            WriteSingleReg(RADIO_FREQ0, (uint8_t)(RADIO_FREQ_868 & 0xFF));
-            break;
-        case 2:
-            WriteSingleReg(RADIO_FREQ2, (uint8_t)(RADIO_FREQ_915>>16 & 0xFF));
-            WriteSingleReg(RADIO_FREQ1, (uint8_t)(RADIO_FREQ_915>>8 & 0xFF));
-            WriteSingleReg(RADIO_FREQ0, (uint8_t)(RADIO_FREQ_915 & 0xFF));
-            break;
-        }
-    */
-
-    // is this the right place?
-    Strobe(RF_SCAL);
-}
-
-void set_sync_word(uint16_t sync_word)
-{
-    WriteSingleReg(SYNC1, (uint8_t)(sync_word >> 8));
-    WriteSingleReg(SYNC0, (uint8_t)(sync_word & 0x00FF));
-}
-
-void set_preamble_size(uint8_t preamble_size)
-{
-    uint8_t mdmcfg1 = ReadSingleReg(MDMCFG1) & 0x03;
-
-    if(preamble_size >= 24)
-        mdmcfg1 |= 0x70;
-    else if(preamble_size >= 16)
-        mdmcfg1 |= 0x60;
-    else if(preamble_size >= 12)
-        mdmcfg1 |= 0x50;
-    else if(preamble_size >= 8)
-        mdmcfg1 |= 0x40;
-    else if(preamble_size >= 6)
-        mdmcfg1 |= 0x30;
-    else if(preamble_size >= 4)
-        mdmcfg1 |= 0x20;
-    else if(preamble_size >= 3)
-        mdmcfg1 |= 0x10;
-
-    WriteSingleReg(MDMCFG1, mdmcfg1);
-}
-
-void set_data_whitening(bool white_data)
-{
-    uint8_t pktctrl0 = ReadSingleReg(PKTCTRL0) & 0xBF;
-
-    if (white_data)
-        pktctrl0 |= RADIO_PKTCTRL0_WHITE_DATA;
-
-    WriteSingleReg(PKTCTRL0, pktctrl0);
-}
-
-void set_length_infinite(bool infinite)
-{
-    uint8_t pktctrl0 = ReadSingleReg(PKTCTRL0) & 0xFC;
-
-    if (infinite)
-        pktctrl0 |= RADIO_PKTCTRL0_LENGTH_INF;
-
-    WriteSingleReg(PKTCTRL0, pktctrl0);
-}
-
-void set_timeout(uint16_t timeout)
-{
-    if (timeout == 0) {
-        WriteSingleReg(WORCTRL, RADIO_WORCTRL_ALCK_PD);
-        WriteSingleReg(MCSM2, RADIO_MCSM2_RX_TIME(7));
-    } else {
-        WriteSingleReg(WORCTRL, RADIO_WORCTRL_WOR_RES_32ms);
-        WriteSingleReg(MCSM2, RADIO_MCSM2_RX_TIME(0));
-        WriteSingleReg(WOREVT0, timeout & 0x00FF);
-        WriteSingleReg(WOREVT1, timeout >> 8);
-    }
-}
-
-void set_eirp(int8_t eirp)
-{
-    // TODO compare with CC430 implementation
-    uint8_t i;
-    for( i = 0; i < sizeof(eirp_values); i++ )
-    {
-        if (eirp >= eirp_values[i]) //round the given eirp to a lower possible value
-        {
-            WriteSinglePATable(eirp_reg_values[i]);
-            break;
-        }
     }
 }
 
