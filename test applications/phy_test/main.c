@@ -19,15 +19,7 @@
 
 #define RX_MODE
 
-static uint8_t data[15] = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15};
-
-/*
- */
-phy_tx_cfg_t tx_cfg = {
-    .spectrum_id={ 0x04, 0x00}, // TODO
-	.sync_word_class=1,
-    .eirp=0
-};
+static uint8_t data[] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15};
 
 phy_rx_cfg_t rx_cfg = {
 	.spectrum_id={ 0x04, 0x00}, // TODO
@@ -45,8 +37,14 @@ void start_rx(void)
 void start_tx(void)
 {
 	phy_idle();
-	queue_push_u8_array(&tx_queue, sizeof(data), 1);
 	queue_push_u8_array(&tx_queue, data, sizeof(data));
+	phy_tx_cfg_t tx_cfg = {
+	    .spectrum_id = { 0x04, 0x00}, // TODO
+		.sync_word_class = 1,
+	    .eirp = 0,
+	    .length = sizeof(data)
+	};
+
 	phy_tx(&tx_cfg);
 }
 
@@ -54,20 +52,19 @@ void rx_callback(phy_rx_data_t* rx_data)
 {
 	log_print_string("RX callback");
 	if(memcmp(data, rx_data->data + 1, sizeof(data)) != 0) // first byte of rx_data->data is length (for now), skip this
-	{
 		log_print_string("ERROR Unexpected data received:");
-		log_print_data(rx_data->data + 1, rx_data->length);
-	}
 
+	log_print_data(rx_data->data + 1, rx_data->length);
 	led_toggle(1);
 	start_rx();
 }
 
 void tx_callback()
 {
+	log_print_string("TX callback");
 	led_toggle(1);
 	queue_clear(&tx_queue);
-	start_tx();
+	//start_tx();
 }
 
 uint8_t tx_buffer[128];

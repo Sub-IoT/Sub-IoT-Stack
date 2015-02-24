@@ -172,40 +172,22 @@ extern bool phy_tx_data(phy_tx_cfg_t* cfg)
 {
 	//TODO Return error if fec not enabled but requested
 
-    //Set buffer position
-    //bufferPosition = cfg->data;
-
-    //Configure length settings
     set_length_infinite(false);
-    remainingBytes = tx_queue.length;
-    WriteSingleReg(PKTLEN, (uint8_t)remainingBytes);
 
-	//Write initial data to txfifo
-	tx_data_isr();
+    #ifdef LOG_PHY_ENABLED
+    log_print_stack_string(LOG_PHY, "Data to TX Fifo:");
+    log_print_data(tx_queue.front, cfg->length);
+    #endif
 
-	//Configure txfifo threshold
-	WriteSingleReg(FIFOTHR, RADIO_FIFOTHR_FIFO_THR_17_48);
+    WriteSingleReg(TXFIFO, cfg->length);
+    WriteBurstReg(TXFIFO, tx_queue.front, cfg->length);
 
 	//Enable interrupts
-	//radioClearInterruptPendingLines();
-	//phy_set_gdo_values(GDOLine2, GDO_EDGE_TXBelowThresh, GDO_SETTING_TXBelowThresh);
-//	phy_set_gdo_values(GDOLine2, GDO_EDGE_TXUnderflow, GDO_SETTING_TXUnderflow);
-	//phy_set_gdo_values(GDOLine0, 0, GDO_SETTING_EndOfPacket); // TODO tmp
-    //phy_set_gdo_values(GDOLine0, GDO_EDGE_EndOfPacket, GDO_SETTING_EndOfPacket);
-	//radioEnableGDO2Interrupt();
-	//radioEnableGDO0Interrupt();
+    radioClearInterruptPendingLines();
+	radioEnableGDO0Interrupt();
 
 	//Start transmitting
-
 	Strobe(RF_STX);
-
-	Strobe(RF_SIDLE);
-	Strobe(RF_SFRX);
-	Strobe(RF_SFTX);
-	Strobe(RF_SPWD);
-
-	//Set radio state
-	state = Idle;
 
 	return true;
 }
@@ -296,26 +278,19 @@ bool phy_rx(phy_rx_cfg_t* cfg)
     set_length_infinite(false);
 
     // TODO remove cfg->length, length is contained in background frames as well in draft spec so always dynamic
-    if(cfg->length == 0)
-    {
-        packetLength = 0;
-        remainingBytes = 0;
-        //WriteSingleReg(PKTLEN, 0xFF);
-        WriteSingleReg(PKTLEN, 16); // TODO tmp
-        WriteSingleReg(FIFOTHR, RADIO_FIFOTHR_FIFO_THR_61_4);
-    } else {
-        packetLength = cfg->length;
-        remainingBytes = packetLength;
-        WriteSingleReg(PKTLEN, packetLength);
-        WriteSingleReg(FIFOTHR, RADIO_FIFOTHR_FIFO_THR_17_48);
-    }
+
+    packetLength = 0;
+    remainingBytes = 0;
+    WriteSingleReg(PKTLEN, 0xFF);
+    //WriteSingleReg(PKTLEN, 16); // TODO tmp
+    //WriteSingleReg(FIFOTHR, RADIO_FIFOTHR_FIFO_THR_61_4); // TODO
 
 	//TODO: set minimum sync word rss to scan minimum energy
 	//Enable interrupts
 	//phy_set_gdo_values(GDOLine2, GDO_EDGE_RXFilled, GDO_SETTING_RXFilled);
     //phy_set_gdo_values(GDOLine0, GDO_EDGE_EndOfPacket, GDO_SETTING_EndOfPacket);
 	radioClearInterruptPendingLines();
-	radioEnableGDO2Interrupt();
+    //radioEnableGDO2Interrupt();
 	radioEnableGDO0Interrupt();
 
 	//Start receiving
@@ -364,9 +339,16 @@ void end_of_packet_isr()
 {
 	DPRINT("end of packet ISR");
 	if (state == Receive) {
-		//rx_data_isr();
-		DPRINT("EOP ISR RXBYTES: %d)", ReadSingleReg(RXBYTES));
-		rxtx_finish_isr(); // TODO: should this be called by DLL?
+        packetLength = ReadSingleReg(RXFIFO);
+        DPRINT("EOP ISR packetLength: %d", packetLength);
+        ReadBurstReg(RXFIFO, buffer, packetLength + 2); // +2 for RSSI and LQI
+        rxtx_finish_isr(); // TODO: should this be called by DLL?
+        queue_push_u8(&rx_queue, packetLength); // TODO do not put length in buffer only in rx_data->len ?
+        queue_push_u8_array(&rx_queue, buffer, packetLength);
+        rx_data.rssi = calculate_rssi(buffer[packetLength]);
+        rx_data.lqi = buffer[packetLength + 1] & 0x7F;
+        rx_data.length = packetLength;
+        rx_data.data = rx_queue.front;
 		if(phy_rx_callback != NULL)
 			phy_rx_callback(&rx_data);
 	} else if (state == Transmit) {
@@ -378,97 +360,76 @@ void end_of_packet_isr()
 	}
 }
 
-void tx_data_isr()
-{
-	if (remainingBytes == 0)
-		return;
 
-	//Calculate number of free bytes in TXFIFO
-	uint8_t txBytes = 64 - ReadSingleReg(TXBYTES);
-
-    //Limit number of bytes to remaining bytes
-    if(txBytes > remainingBytes)
-        txBytes = remainingBytes;
-
-    //Write data to tx fifo
-    #ifdef LOG_PHY_ENABLED
-    log_print_stack_string(LOG_PHY, "Data to TX Fifo:");
-    log_print_data(tx_queue.front, txBytes);
-    #endif
-
-    WriteBurstReg(TXFIFO, &tx_queue, txBytes);
-    remainingBytes -= txBytes;
-}
-
-void rx_data_isr()
-{
-
-	//Read number of bytes in RXFIFO
-	uint8_t rxBytes = ReadSingleReg(RXBYTES);
-#ifdef LOG_PHY_ENABLED
-		log_print_stack_string(LOG_PHY, "rx_data_isr (%d bytes received)", rxBytes);
-#endif
-
-    //If length is not set get the length from RXFIFO and set PKTLEN
-	if (packetLength == 0) {
-		packetLength = ReadSingleReg(RXFIFO);
-		WriteSingleReg(PKTLEN, packetLength);
-		WriteSingleReg(FIFOTHR, RADIO_FIFOTHR_FIFO_THR_17_48);
-		remainingBytes = packetLength - 1;
-		queue_push_u8(&rx_queue, packetLength); // TODO do not put length in buffer only in rx_data->len ?
-		rxBytes--;
-#ifdef LOG_PHY_ENABLED
-//		log_print_stack_string(LOG_PHY, "rx_data_isr getting packetLength (%d)", packetLength);
-	#endif
-	}
-
-	//Never read the entire buffer as long as more data is going to be received
-    if (remainingBytes > rxBytes)
-    {
-    	rxBytes--;
-    }
-    else
-    {
-    	rxBytes = remainingBytes; // we may have received more bytes than packetlength already (probably noise) so limit to packetlength
-    }
-
-    //Read data from buffer
-	#ifdef LOG_PHY_ENABLED
-//		log_print_stack_string(LOG_PHY, "Getting %d bytes from RXFifo", rxBytes);
-	#endif
-	ReadBurstReg(RXFIFO, &rx_queue.rear[1], rxBytes);
-
-	rx_queue.length += rxBytes;
-	rx_queue.rear += rxBytes;
-
-	remainingBytes -= rxBytes;
-	#ifdef LOG_PHY_ENABLED
-//		log_print_stack_string(LOG_PHY, "Received data:");
-//		log_print_data(rx_queue.front, rxBytes);
-	#endif
-#ifdef LOG_PHY_ENABLED
-//	log_print_stack_string(LOG_PHY, "%d bytes remaining", remainingBytes);
-#endif
-
-    //When all data has been received read rssi and lqi value and set packetreceived flag
-	// TODO do in end_of_packet_isr()?
-    if(remainingBytes <= 0)
-    {
-    	rx_data.rssi = calculate_rssi(ReadSingleReg(RXFIFO));
-    	rx_data.lqi = ReadSingleReg(RXFIFO) & 0x7F;
-		rx_data.length = *rx_queue.front;
-		rx_data.data = rx_queue.front;
-		#ifdef LOG_PHY_ENABLED
-//			log_print_stack_string(LOG_PHY, "rx_data_isr packet received");
-//			log_print_data(rx_data.data, rx_data.length);
-//			log_phy_rx_res(&rx_data);
-		#endif
-    }
-
-	#ifdef LOG_PHY_ENABLED
-//		log_print_stack_string(LOG_PHY, "rx_data_isr 1");
-	#endif
-}
+//void rx_data_isr()
+//{
+//
+//	//Read number of bytes in RXFIFO
+//	uint8_t rxBytes = ReadSingleReg(RXBYTES);
+//#ifdef LOG_PHY_ENABLED
+//		log_print_stack_string(LOG_PHY, "rx_data_isr (%d bytes received)", rxBytes);
+//#endif
+//
+//    //If length is not set get the length from RXFIFO and set PKTLEN
+//	if (packetLength == 0) {
+//		packetLength = ReadSingleReg(RXFIFO);
+//		WriteSingleReg(PKTLEN, packetLength);
+//		WriteSingleReg(FIFOTHR, RADIO_FIFOTHR_FIFO_THR_17_48);
+//		remainingBytes = packetLength - 1;
+//		queue_push_u8(&rx_queue, packetLength); // TODO do not put length in buffer only in rx_data->len ?
+//		rxBytes--;
+//#ifdef LOG_PHY_ENABLED
+////		log_print_stack_string(LOG_PHY, "rx_data_isr getting packetLength (%d)", packetLength);
+//	#endif
+//	}
+//
+//	//Never read the entire buffer as long as more data is going to be received
+//    if (remainingBytes > rxBytes)
+//    {
+//    	rxBytes--;
+//    }
+//    else
+//    {
+//    	rxBytes = remainingBytes; // we may have received more bytes than packetlength already (probably noise) so limit to packetlength
+//    }
+//
+//    //Read data from buffer
+//	#ifdef LOG_PHY_ENABLED
+////		log_print_stack_string(LOG_PHY, "Getting %d bytes from RXFifo", rxBytes);
+//	#endif
+//	ReadBurstReg(RXFIFO, &rx_queue.rear[1], rxBytes);
+//
+//	rx_queue.length += rxBytes;
+//	rx_queue.rear += rxBytes;
+//
+//	remainingBytes -= rxBytes;
+//	#ifdef LOG_PHY_ENABLED
+////		log_print_stack_string(LOG_PHY, "Received data:");
+////		log_print_data(rx_queue.front, rxBytes);
+//	#endif
+//#ifdef LOG_PHY_ENABLED
+////	log_print_stack_string(LOG_PHY, "%d bytes remaining", remainingBytes);
+//#endif
+//
+//    //When all data has been received read rssi and lqi value and set packetreceived flag
+//	// TODO do in end_of_packet_isr()?
+//    if(remainingBytes <= 0)
+//    {
+//    	rx_data.rssi = calculate_rssi(ReadSingleReg(RXFIFO));
+//    	rx_data.lqi = ReadSingleReg(RXFIFO) & 0x7F;
+//		rx_data.length = *rx_queue.front;
+//		rx_data.data = rx_queue.front;
+//		#ifdef LOG_PHY_ENABLED
+////			log_print_stack_string(LOG_PHY, "rx_data_isr packet received");
+////			log_print_data(rx_data.data, rx_data.length);
+////			log_phy_rx_res(&rx_data);
+//		#endif
+//    }
+//
+//	#ifdef LOG_PHY_ENABLED
+////		log_print_stack_string(LOG_PHY, "rx_data_isr 1");
+//	#endif
+//}
 
 void rx_timeout_isr()
 {

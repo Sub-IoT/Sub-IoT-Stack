@@ -18,12 +18,10 @@
 #endif
 
 
-InterruptHandlerDescriptor interrupt_table[6] = {
-    {.gdoSetting = GDO_SETTING_RXFilled,        .edge = GDO_EDGE_RXFilled,      .handler = rx_data_isr          },
-    {.gdoSetting = GDO_SETTING_TXBelowThresh,   .edge = GDO_EDGE_TXBelowThresh, .handler = tx_data_isr          },
-    {.gdoSetting = GDO_SETTING_TXUnderflow,     .edge = GDO_EDGE_TXUnderflow,   .handler = end_of_packet_isr    },
+InterruptHandlerDescriptor interrupt_table[3] = {
+    //{.gdoSetting = GDO_SETTING_TXUnderflow,     .edge = GDO_EDGE_TXUnderflow,   .handler = end_of_packet_isr    }, // TODO needed?
     {.gdoSetting = GDO_SETTING_EndOfPacket,     .edge = GDO_EDGE_EndOfPacket,   .handler = end_of_packet_isr    },
-    {.gdoSetting = GDO_SETTING_RXOverflow,      .edge = GDO_EDGE_RXOverflow,    .handler = rx_fifo_overflow_isr },
+    {.gdoSetting = GDO_SETTING_RXOverflow,      .edge = GDO_EDGE_RXOverflow,    .handler = rx_fifo_overflow_isr }, // TODO needed?
     {.handler = 0},
 };
 
@@ -83,7 +81,7 @@ void radioConfigureInterrupt(void)
     GPIO_PinModeSet( RADIO_PORT_GDO2, RADIO_PIN_GDO2, gpioModeInput, 0 ); // GDO2 Input, PullUp, Filter
 
     GPIO_PinOutSet(RADIO_PORT_GDO2, RADIO_PIN_GDO2);
-    GPIO_IntConfig( RADIO_PORT_GDO0, RADIO_PIN_GDO0, true, true, false ); // GDO0 Interrupt on rising/falling edges. Disabled by default.
+    GPIO_IntConfig( RADIO_PORT_GDO0, RADIO_PIN_GDO0, false, true, false ); // GDO0 Interrupt on falling edges. Disabled by default.
     GPIO_IntConfig( RADIO_PORT_GDO2, RADIO_PIN_GDO2, true, false, false ); // GDO2 Interrupt on rising edges. Disabled by default.
     radioClearInterruptPendingLines();
     INT_Enable();
