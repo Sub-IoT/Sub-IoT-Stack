@@ -73,27 +73,13 @@ void radioConfigureInterrupt(void)
 {
     NVIC_EnableIRQ(GPIO_ODD_IRQn);
     NVIC_EnableIRQ(GPIO_EVEN_IRQn);
-    //GPIO_PinModeSet( gpioPortD, 6, gpioModePushPull, 0 ); // TODO temp debug
     GPIO_PinModeSet( RADIO_PORT_GDO0, RADIO_PIN_GDO0, gpioModeInput, 0 );
-    //GPIO_PinModeSet( RADIO_PORT_GDO0, RADIO_PIN_GDO0, gpioModePushPull, 0 ); // GDO0 Input, PullUp, Filter
-    //GPIO_PinModeSet( RADIO_PORT_GDO0, RADIO_PIN_GDO0, gpioModeInputPullFilter, 1 ); // GDO0 Input, PullUp, Filter
-    //GPIO_PinModeSet( RADIO_PORT_GDO2, RADIO_PIN_GDO2, gpioModeInput, 0 ); // GDO2 Input, PullUp, Filter
-    GPIO_PinModeSet( RADIO_PORT_GDO2, RADIO_PIN_GDO2, gpioModeInput, 0 ); // GDO2 Input, PullUp, Filter
+    // GPIO_PinModeSet( RADIO_PORT_GDO2, RADIO_PIN_GDO2, gpioModeInput, 0 ); // TODO not used for now
 
-    GPIO_PinOutSet(RADIO_PORT_GDO2, RADIO_PIN_GDO2);
     GPIO_IntConfig( RADIO_PORT_GDO0, RADIO_PIN_GDO0, false, true, false ); // GDO0 Interrupt on falling edges. Disabled by default.
-    GPIO_IntConfig( RADIO_PORT_GDO2, RADIO_PIN_GDO2, true, false, false ); // GDO2 Interrupt on rising edges. Disabled by default.
+    //GPIO_IntConfig( RADIO_PORT_GDO2, RADIO_PIN_GDO2, true, false, false ); // TODO not used for now // GDO2 Interrupt on rising edges. Disabled by default.
     radioClearInterruptPendingLines();
     INT_Enable();
-}
-
-// TODO tmp
-void radio_debug_pin(bool on)
-{
-    if(on)
-        GPIO_PinOutSet(gpioPortD, 6);
-    else
-        GPIO_PinOutClear(gpioPortD, 6);
 }
 
 void radio_isr(void)

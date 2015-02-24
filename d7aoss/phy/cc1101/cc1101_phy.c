@@ -25,14 +25,14 @@
 #include <string.h>
 
 #include "phy.h"
-#include "fec.h"
 #include "cc1101_phy.h"
 #include "cc1101_registers.h"
 #include "cc1101_constants.h"
-#include "../framework/log.h"
 
 #include "cc1101_core.h"
 #include "radio_hw.h"
+#include "spi.h"
+#include "log.h"
 
 #ifdef LOG_PHY_ENABLED
 #define DPRINT(...) log_print_stack_string(LOG_PHY, __VA_ARGS__)
@@ -40,26 +40,20 @@
 #define DPRINT(...)
 #endif
 
-/*
- * Variables
- */
 extern RF_SETTINGS rfSettings;
 
-RadioState state;
+static RadioState state;
+static uint8_t buffer[255];
+static uint8_t packet_length;
 
-uint8_t buffer[255];
-uint8_t packetLength;
-uint8_t* bufferPosition;
-uint16_t remainingBytes;
-
-bool fec;
+static bool fec_enabled;
 static uint8_t frequency_band;
-uint8_t channel_center_freq_index;
-uint8_t channel_bandwidth_index;
-uint8_t preamble_size;
-uint16_t sync_word;
+static uint8_t channel_center_freq_index;
+static uint8_t channel_bandwidth_index;
+static uint8_t preamble_size;
+static uint16_t sync_word;
 
-bool init_and_close_radio = true;
+static bool init_and_close_radio = true;
 static bool phy_initialized = false;
 
 static uint8_t previous_spectrum_id[2] = {0xFF, 0xFF};
@@ -84,58 +78,36 @@ static int8_t eirp_reg_values[103]={0xC0, 0xC1, 0xC2, 0xC3, 0xC4, 0xC5, 0xC6, 0x
                                     0x6C, 0x6D, 0x28, 0x35, 0x27, 0x6E, 0x26, 0x34, 0x25, 0x33, 0x24, 0x1F, 0x1E, 0x1D, 0x6F, 0x23, 0x32, 0x1B, 0x1A, 0x19,//80
                                     0x18, 0x22, 0xF, 0x17, 0xD, 0xC, 0x31, 0xB, 0x15, 0x9, 0x14, 0x21, 0x7, 0x13, 0x5, 0x4, 0x12, 0x3, 0x11, 0x1, 0x10, 0x30, 0x0}; //103
 
-static void phy_set_gdo_values(GDOLine gdoLine, GDOEdge gdoEdge, uint8_t gdoValue) {
-    WriteSingleReg(gdoLine, gdoValue  | gdoEdge);
-}
-/*
- * Phy implementation functions
- */
-void phy_init(void)
+static RadioState get_radiostate(void)
 {
-    //Set radio state
-    state = Idle;
-    spi_init();
-    radioConfigureInterrupt();
+    uint8_t state = Strobe(RF_SNOP) >> 4;
 
-    //Reset the radio core
-    ResetRadioCore();
+    if(state > 7)
+        return Idle;
 
-    //Write configuration
-    WriteRfSettings(&rfSettings);
-
-#ifdef LOG_PHY_ENABLED
-    log_print_stack_string(LOG_PHY, "RF settings:");
-    unsigned char const *p = &rfSettings;
-    for(uint8_t i = 0; i < sizeof(RF_SETTINGS); i++)
-    {
-        log_print_stack_string(LOG_PHY, "\t0x%02X", p[i]);
-    }
-#endif
-
-    last_tx_cfg.eirp=0;
-    last_tx_cfg.spectrum_id[0] = 0;
-    last_tx_cfg.spectrum_id[1] = 0;
-    last_tx_cfg.sync_word_class=0;
-
+    return (RadioState)state;
 }
 
-void phy_idle(void)
+static int16_t calculate_rssi(int8_t rssi_raw)
 {
-    if (state != Idle)
-    {
-        rxtx_finish_isr();
-        state = Idle;
-    }
+    // CC1101 RSSI is 0.5 dBm units, signed byte
+    int16_t rssi = (int16_t)rssi_raw;		//Convert to signed 16 bit
+    rssi += 128;                      		//Make it positive...
+    rssi >>= 1;                        		//...So division to 1 dBm units can be a shift...
+    rssi -= 64 + RSSI_OFFSET;     			// ...and then rescale it, including offset
+
+    return rssi;
 }
 
-bool phy_translate_and_set_settings(uint8_t spectrum_id[2], uint8_t sync_word_class)
+
+static bool translate_and_set_settings(uint8_t spectrum_id[2], uint8_t sync_word_class)
 {
     if (!memcmp(previous_spectrum_id, spectrum_id, 2) && previous_sync_word_class == sync_word_class)
         return true;
 
     Strobe(RF_SIDLE);
 
-    if(!phy_translate_settings(spectrum_id, sync_word_class, &fec, &frequency_band, &channel_center_freq_index, &channel_bandwidth_index, &preamble_size, &sync_word))
+    if(!phy_translate_settings(spectrum_id, sync_word_class, &fec_enabled, &frequency_band, &channel_center_freq_index, &channel_bandwidth_index, &preamble_size, &sync_word))
     {
 #ifdef LOG_PHY_ENABLED
         log_print_stack_string(LOG_PHY, "PHY Cannot translate settings");
@@ -154,20 +126,51 @@ bool phy_translate_and_set_settings(uint8_t spectrum_id[2], uint8_t sync_word_cl
     return true;
 }
 
-
-// configure using cfg
-extern bool phy_set_tx(phy_tx_cfg_t* cfg)
+static bool set_tx_config(phy_tx_cfg_t* cfg)
 {
-    //General configuration
-    phy_translate_and_set_settings(cfg->spectrum_id, cfg->sync_word_class);
-
+    translate_and_set_settings(cfg->spectrum_id, cfg->sync_word_class);
     set_eirp(cfg->eirp);
 
     //TODO Return error if fec not enabled but requested
-
     return true;
 }
-// send data
+
+void phy_init(void)
+{
+    //Set radio state
+    state = Idle;
+    spi_init();
+    radioConfigureInterrupt();
+
+    ResetRadioCore();
+
+    WriteRfSettings(&rfSettings);
+
+#ifdef LOG_PHY_ENABLED
+    log_print_stack_string(LOG_PHY, "RF settings:");
+    uint8_t* p = (uint8_t*) &rfSettings;
+    for(uint8_t i = 0; i < sizeof(RF_SETTINGS); i++)
+    {
+        log_print_stack_string(LOG_PHY, "\t0x%02X", p[i]);
+    }
+#endif
+
+    last_tx_cfg.eirp = 0;
+    last_tx_cfg.spectrum_id[0] = 0;
+    last_tx_cfg.spectrum_id[1] = 0;
+    last_tx_cfg.sync_word_class = 0;
+
+}
+
+void phy_idle(void)
+{
+    if (state != Idle)
+    {
+        rxtx_finish_isr();
+        state = Idle;
+    }
+}
+
 extern bool phy_tx_data(phy_tx_cfg_t* cfg)
 {
     //TODO Return error if fec not enabled but requested
@@ -226,7 +229,7 @@ bool phy_tx(phy_tx_cfg_t* cfg)
         //if (last_tx_cfg.spectrum_id != cfg->spectrum_id || last_tx_cfg.sync_word_class != cfg->sync_word_class || last_tx_cfg.eirp != cfg->eirp)
         if (memcmp(&last_tx_cfg, cfg, 3) != 0)
         {
-            if (!phy_set_tx(cfg))
+            if (!set_tx_config(cfg))
                 return false;
 
             memcpy(&last_tx_cfg, cfg, 3);
@@ -239,7 +242,7 @@ bool phy_tx(phy_tx_cfg_t* cfg)
 bool phy_rx(phy_rx_cfg_t* cfg)
 {
 #ifdef LOG_PHY_ENABLED
-    //log_print_stack_string(LOG_PHY, "phy_rx");
+    log_print_stack_string(LOG_PHY, "phy_rx");
 #endif
 
     RadioState current_state = get_radiostate();
@@ -261,7 +264,7 @@ bool phy_rx(phy_rx_cfg_t* cfg)
 
     //Set configuration
 
-    if (!phy_translate_and_set_settings(cfg->spectrum_id, cfg->sync_word_class))
+    if (!translate_and_set_settings(cfg->spectrum_id, cfg->sync_word_class))
         return false;
 
     rx_data.spectrum_id[0] = cfg->spectrum_id[0];
@@ -274,26 +277,18 @@ bool phy_rx(phy_rx_cfg_t* cfg)
 
     queue_clear(&rx_queue);
 
-    //Configure length settings and txfifo threshold
-    set_length_infinite(false);
+        set_length_infinite(false);
 
     // TODO remove cfg->length, length is contained in background frames as well in draft spec so always dynamic
 
-    packetLength = 0;
-    remainingBytes = 0;
+    packet_length = 0;
     WriteSingleReg(PKTLEN, 0xFF);
-    //WriteSingleReg(PKTLEN, 16); // TODO tmp
-    //WriteSingleReg(FIFOTHR, RADIO_FIFOTHR_FIFO_THR_61_4); // TODO
 
     //TODO: set minimum sync word rss to scan minimum energy
-    //Enable interrupts
-    //phy_set_gdo_values(GDOLine2, GDO_EDGE_RXFilled, GDO_SETTING_RXFilled);
-    //phy_set_gdo_values(GDOLine0, GDO_EDGE_EndOfPacket, GDO_SETTING_EndOfPacket);
+
     radioClearInterruptPendingLines();
-    //radioEnableGDO2Interrupt();
     radioEnableGDO0Interrupt();
 
-    //Start receiving
     Strobe(RF_SRX);
 
     return true;
@@ -313,11 +308,9 @@ extern int16_t phy_get_rssi(uint8_t spectrum_id[2], uint8_t sync_word_class)
 {
     uint8_t rssi_raw = 0;
 
-    if (!phy_translate_and_set_settings(spectrum_id, sync_word_class))
+    if (!translate_and_set_settings(spectrum_id, sync_word_class))
         return false;
 
-
-    //Start receiving
     Strobe(RF_SRX);
 
     //FIXME wait for RSSI VALID!!!
@@ -329,25 +322,19 @@ extern int16_t phy_get_rssi(uint8_t spectrum_id[2], uint8_t sync_word_class)
     return calculate_rssi(rssi_raw);
 }
 
-/*
- * Interrupt functions
- */
-
-void no_interrupt_isr() { }
-
 void end_of_packet_isr()
 {
     DPRINT("end of packet ISR");
     if (state == Receive) {
-        packetLength = ReadSingleReg(RXFIFO);
-        DPRINT("EOP ISR packetLength: %d", packetLength);
-        ReadBurstReg(RXFIFO, buffer, packetLength + 2); // +2 for RSSI and LQI
+        packet_length = ReadSingleReg(RXFIFO);
+        DPRINT("EOP ISR packetLength: %d", packet_length);
+        ReadBurstReg(RXFIFO, buffer, packet_length + 2); // +2 for RSSI and LQI
         rxtx_finish_isr(); // TODO: should this be called by DLL?
-        queue_push_u8(&rx_queue, packetLength); // TODO do not put length in buffer only in rx_data->len ?
-        queue_push_u8_array(&rx_queue, buffer, packetLength);
-        rx_data.rssi = calculate_rssi(buffer[packetLength]);
-        rx_data.lqi = buffer[packetLength + 1] & 0x7F;
-        rx_data.length = packetLength;
+        queue_push_u8(&rx_queue, packet_length); // TODO do not put length in buffer only in rx_data->len ?
+        queue_push_u8_array(&rx_queue, buffer, packet_length);
+        rx_data.rssi = calculate_rssi(buffer[packet_length]);
+        rx_data.lqi = buffer[packet_length + 1] & 0x7F;
+        rx_data.length = packet_length;
         rx_data.data = rx_queue.front;
         if(phy_rx_callback != NULL)
             phy_rx_callback(&rx_data);
@@ -466,19 +453,6 @@ void rxtx_finish_isr()
         //Set radio state
         state = Idle;
     }
-}
-
-/*
- * Private functions
- */
-RadioState get_radiostate(void)
-{
-    uint8_t state = Strobe(RF_SNOP) >> 4;
-
-    if(state > 7)
-        return Idle;
-
-    return (RadioState)state;
 }
 
 void set_channel(uint8_t frequency_band, uint8_t channel_center_freq_index, uint8_t channel_bandwith_index)
@@ -627,16 +601,6 @@ void set_eirp(int8_t eirp)
     }
 }
 
-int16_t calculate_rssi(int8_t rssi_raw)
-{
-    // CC1101 RSSI is 0.5 dBm units, signed byte
-    int16_t rssi = (int16_t)rssi_raw;		//Convert to signed 16 bit
-    rssi += 128;                      		//Make it positive...
-    rssi >>= 1;                        		//...So division to 1 dBm units can be a shift...
-    rssi -= 64 + RSSI_OFFSET;     			// ...and then rescale it, including offset
-
-    return rssi;
-}
 
 //void dissable_autocalibration()
 //{
