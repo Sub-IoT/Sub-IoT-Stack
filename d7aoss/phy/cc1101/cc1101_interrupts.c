@@ -10,6 +10,8 @@
 #include "cc1101_phy.h"
 #include "cc1101_core.h"
 
+// TODO remove
+
 /*
 0x00	Associated to the RX FIFO: Asserts when RX FIFO is filled at or above the RX FIFO threshold. De-asserts when RX FIFO is drained below the same threshold.
 0x01	Associated to the RX FIFO: Asserts when RX FIFO is filled at or above the RX FIFO threshold or the end of packet is reached. De-asserts when the RX FIFO is empty.
@@ -27,27 +29,27 @@
 0x29	CHIP_RDYn.
 0x2B	XOSC_STABLE
  */
-InterruptHandlerDescriptor interrupt_table[6] = {
-		{.gdoSetting = 0x00, .edge = GDOEdgeRising, .handler = rx_data_isr},
-		{.gdoSetting = 0x02, .edge = GDOEdgeFalling, .handler = tx_data_isr},
-		{.gdoSetting = 0x05, .edge = GDOEdgeRising, .handler = end_of_packet_isr},
-		{.gdoSetting = 0x06, .edge = GDOEdgeFalling, .handler = end_of_packet_isr},
-		{.gdoSetting = 0x04, .edge = GDOEdgeRising, .handler = rx_fifo_overflow_isr},
-		{.handler = 0},
-};
+//InterruptHandlerDescriptor interrupt_table[6] = {
+//		{.gdoSetting = 0x00, .edge = GDOEdgeRising, .handler = rx_data_isr},
+//		{.gdoSetting = 0x02, .edge = GDOEdgeFalling, .handler = tx_data_isr},
+//		{.gdoSetting = 0x05, .edge = GDOEdgeRising, .handler = end_of_packet_isr},
+//		{.gdoSetting = 0x06, .edge = GDOEdgeFalling, .handler = end_of_packet_isr},
+//		{.gdoSetting = 0x04, .edge = GDOEdgeRising, .handler = rx_fifo_overflow_isr},
+//		{.handler = 0},
+//};
 
-void CC1101_ISR(GDOLine gdo)
-{
-	uint8_t gdo_setting = ReadSingleReg(gdo);
-	uint8_t index = 0;
-	InterruptHandlerDescriptor descriptor;
-	do {
-		descriptor = interrupt_table[index];
-		if ((gdo_setting & 0x7f) == (descriptor.gdoSetting | descriptor.edge)) {
-			descriptor.handler();
-			break;
-		}
-		index++;
-	}
-	while (descriptor.handler != 0);
-}
+//void CC1101_ISR(GDOLine gdo)
+//{
+//	uint8_t gdo_setting = ReadSingleReg(gdo);
+//	uint8_t index = 0;
+//	InterruptHandlerDescriptor descriptor;
+//	do {
+//		descriptor = interrupt_table[index];
+//		if ((gdo_setting & 0x7f) == (descriptor.gdoSetting | descriptor.edge)) {
+//			descriptor.handler();
+//			break;
+//		}
+//		index++;
+//	}
+//	while (descriptor.handler != 0);
+//}

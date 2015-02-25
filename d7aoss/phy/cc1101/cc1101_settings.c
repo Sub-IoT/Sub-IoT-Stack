@@ -1,4 +1,4 @@
-#include "cc1101_core.h"
+#include "cc1101_interface.h"
 #include "cc1101_registers.h"
 
 //RF settings

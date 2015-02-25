@@ -13,7 +13,6 @@ extern "C" {
 #endif
 
 #include "stdint.h"
-#include "cc1101_core.h"
 
 /*
 RFIFG3 Positive edge: RX FIFO filled or above the RX FIFO threshold.

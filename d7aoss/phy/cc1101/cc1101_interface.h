@@ -7,8 +7,8 @@
  *  	armin@otheruse.nl
  */
 
-#ifndef RF1A_H
-#define RF1A_H
+#ifndef CC1101_INTERFACE_H
+#define CC1101_INTERFACE_H
 
 #ifdef __cplusplus
 extern "C" {
@@ -72,6 +72,7 @@ typedef struct {
     uint8_t fscal0;           // Frequency Synthesizer Calibration
 } RF_SETTINGS;
 
+void cc1101_interface_init();
 uint8_t Strobe(unsigned char strobe);
 void ResetRadioCore(void);
 void WriteRfSettings(RF_SETTINGS *pRfSettings);
@@ -90,4 +91,4 @@ uint8_t ReadVersion( void );
 }
 #endif
 
-#endif /* RF1A_H */
+#endif /* CC1101_INTERFACE_H */

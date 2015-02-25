@@ -17,7 +17,7 @@ extern "C" {
 #include <stdint.h>
 
 #include "phy.h"
-#include "cc1101_core.h"
+#include "cc1101_interface.h"
 #include "cc1101_registers.h"
 
 #define RSSI_OFFSET 74

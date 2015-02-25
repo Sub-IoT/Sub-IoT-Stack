@@ -12,8 +12,8 @@
 #include <stdint.h>
 
 #include "cc1101_constants.h"
-//#include "radio_spi_hw.h" // TODO provide HAL SPI API
-#include "cc1101_core.h"
+
+#include "cc1101_interface.h"
 #include "spi.h"
 #include "timer.h"
 #include "log.h"
@@ -25,27 +25,43 @@
 #define DPRINT(...)  
 #endif
 
+// functions to be defined which contain CC1101 or CC430 specific implementation
+// implementation is in cc1101_interface_spi.c for cc1101 or cc1101_interface_cc430.c for cc430.
+extern void _cc1101_interface_init();
+extern uint8_t _strobe(uint8_t);
+extern void _reset_radio_core();
+extern uint8_t _read_single_reg(uint8_t);
+extern void _write_single_reg(uint8_t, uint8_t);
+extern void _read_burst_reg(uint8_t, uint8_t*, uint8_t);
+extern void _write_burst_reg(uint8_t, uint8_t*, uint8_t);
+extern void _write_single_patable(uint8_t);
+extern void _write_burst_patable(uint8_t*, uint8_t);
+
+
+void cc1101_interface_init()
+{
+    _cc1101_interface_init();
+}
+
 // *************************************************************************************************
 // @fn          Strobe
 // @brief       Send command to radio.
 // @param       none
 // @return      none
 // *************************************************************************************************
-uint8_t Strobe(uint8_t strobe) {
-
+uint8_t Strobe(uint8_t strobe_command)
+{
     uint8_t statusByte = 0;
-    uint8_t strobe_tmp = strobe & 0x7F;
+    uint8_t strobe_tmp = strobe_command & 0x7F;
 //	uint16_t int_state;
 
     // Check for valid strobe command
     if ((strobe_tmp >= RF_SRES) && (strobe_tmp <= RF_SNOP))
     {
-        spi_select_chip();
-        statusByte = spi_byte(strobe & 0x3F);
-        spi_deselect_chip();
+        statusByte = _strobe(strobe_command);
     }
 
-    DPRINT("STROBE 0x%02X STATUS: 0x%02X", strobe, statusByte);
+    DPRINT("STROBE 0x%02X STATUS: 0x%02X", strobe_command, statusByte);
 
     return statusByte;
 }
@@ -56,21 +72,10 @@ uint8_t Strobe(uint8_t strobe) {
 // @param       none
 // @return      none
 // ***********************************;******************************************
-void ResetRadioCore(void) {
-
+void ResetRadioCore(void)
+{
     DPRINT("RESET RADIO");
-
-    spi_deselect_chip();
-    //delayuS(30);
-    timer_wait_ms(1);
-    spi_select_chip();
-    //delayuS(30);
-    timer_wait_ms(1);
-    spi_deselect_chip();
-    //delayuS(45);
-    timer_wait_ms(1);
-    Strobe(RF_SRES);                          // Reset the Radio Core
-    Strobe(RF_SNOP);                          // Get Radio Status
+    _reset_radio_core();
 }
 
 // *****************************************************************************
@@ -79,47 +84,9 @@ void ResetRadioCore(void) {
 // @param       RF_SETTINGS* rfsettings  Pointer to the structure that holds the rf settings
 // @return      none
 // *****************************************************************************
-void WriteRfSettings(RF_SETTINGS *rfsettings) {
-	WriteBurstReg(IOCFG2, (unsigned char*) rfsettings, sizeof(RF_SETTINGS));
-}
-
-
-static uint8_t readreg(uint8_t addr) {
-
-    spi_select_chip();
-    spi_byte((addr & 0x3F) | READ_SINGLE);
-    uint8_t val = spi_byte(0); // send dummy byte to receive reply
-    spi_deselect_chip();
-
-    DPRINT("READ REG 0x%02X @0x%02X", val, addr);
-
-    return val;
-}
-
-static uint8_t readstatus(uint8_t addr)
+void WriteRfSettings(RF_SETTINGS *rfsettings)
 {
-    uint8_t ret, retCheck, data, data2;
-    uint8_t _addr = (addr & 0x3F) | READ_BURST;
-    spi_select_chip();
-    ret = spi_byte(_addr);
-    data = spi_byte(0); // send dummy byte to receive reply
-    // See CC1101's Errata for SPI read errors // TODO needed?
-//    while (true) {
-//    	retCheck = spi_byte(_addr);
-//        data2 = spi_byte(0);
-//    	if (ret == retCheck && data == data2)
-//    		break;
-//    	else {
-//    		ret = retCheck;
-//    		data = data2;
-//    	}
-//    }
-
-    spi_deselect_chip();
-
-    DPRINT("READ STATUS 0x%02X @0x%02X", data, addr);
-
-    return data;
+	WriteBurstReg(IOCFG2, (unsigned char*) rfsettings, sizeof(RF_SETTINGS));
 }
 
 
@@ -129,19 +96,9 @@ static uint8_t readstatus(uint8_t addr)
 // @param       unsigned char addr      Target radio register address
 // @return      unsigned char data_out  Value of byte that was read
 // *****************************************************************************
-uint8_t ReadSingleReg(uint8_t addr) {
-
-    uint8_t value;
-
-    // Check for valid configuration register address, PATABLE or FIFO
-    if ((addr<= 0x2E) || (addr>= 0x3E)) {
-            value = readreg(addr);
-    }
-    else {
-            value = readstatus(addr);
-    }
-
-    return value;
+uint8_t ReadSingleReg(uint8_t addr)
+{
+    return _read_single_reg(addr);
 }
 
 // *****************************************************************************
@@ -151,13 +108,9 @@ uint8_t ReadSingleReg(uint8_t addr) {
 // @param       unsigned char value     Value to be written
 // @return      none
 // *****************************************************************************
-void WriteSingleReg(uint8_t addr, uint8_t value) {
-
-    spi_select_chip();
-    spi_byte((addr & 0x3F));
-    spi_byte(value);
-    spi_deselect_chip();
-
+void WriteSingleReg(uint8_t addr, uint8_t value)
+{
+    _write_single_reg(addr, value);
     DPRINT("WRITE SREG 0x%02X @0x%02X", value, addr);
 }
 
@@ -169,14 +122,10 @@ void WriteSingleReg(uint8_t addr, uint8_t value) {
 // @param       unsigned char count     Number of bytes to be read
 // @return      none
 // *****************************************************************************
-void ReadBurstReg(uint8_t addr, uint8_t* buffer, uint8_t count) {
+void ReadBurstReg(uint8_t addr, uint8_t* buffer, uint8_t count)
+{
+    _read_burst_reg(addr, buffer, count);
 
-    uint8_t _addr = (addr & 0x3F) | READ_BURST;
-    spi_select_chip();
-    spi_byte(_addr);
-    spi_string( NULL, buffer, count );
-    spi_deselect_chip();
-    
     DPRINT("READ BREG %u Byte(s) @0x%02X", count, addr);
 }
 
@@ -188,13 +137,9 @@ void ReadBurstReg(uint8_t addr, uint8_t* buffer, uint8_t count) {
 // @param       unsigned char count     Number of bytes to be written
 // @return      none
 // *****************************************************************************
-void WriteBurstReg(uint8_t addr, uint8_t* buffer, uint8_t count) {
-
-    uint8_t _addr = (addr & 0x3F) | WRITE_BURST;
-    spi_select_chip();
-    spi_byte(_addr);
-    spi_string( buffer, NULL, count );
-    spi_deselect_chip();
+void WriteBurstReg(uint8_t addr, uint8_t* buffer, uint8_t count)
+{
+    _write_burst_reg(addr, buffer, count);
 
     DPRINT("WRITE BREG %u Byte(s) @0x%02X", count, addr);
 }
@@ -205,8 +150,9 @@ void WriteBurstReg(uint8_t addr, uint8_t* buffer, uint8_t count) {
 // @param       unsigned char value		Value to write
 // @return      none
 // *****************************************************************************
-void WriteSinglePATable(uint8_t value) {
-	WriteSingleReg(PATABLE, value);
+void WriteSinglePATable(uint8_t value)
+{
+    _write_single_patable(value);
 }
 
 // *****************************************************************************
@@ -216,8 +162,9 @@ void WriteSinglePATable(uint8_t value) {
 // @param       unsigned char count	Number of values to be written
 // @return      none
 // *****************************************************************************
-void WriteBurstPATable(uint8_t* buffer, uint8_t count) {
-	WriteBurstReg(PATABLE, buffer, count);
+void WriteBurstPATable(uint8_t* buffer, uint8_t count)
+{
+    _write_burst_patable(buffer, count);
 }
 
 

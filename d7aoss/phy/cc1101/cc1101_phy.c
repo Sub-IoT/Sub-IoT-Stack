@@ -29,7 +29,7 @@
 #include "cc1101_registers.h"
 #include "cc1101_constants.h"
 
-#include "cc1101_core.h"
+#include "cc1101_interface.h"
 #include "radio_hw.h"
 #include "spi.h"
 #include "log.h"
@@ -267,13 +267,13 @@ static void set_length_infinite(bool infinite)
 
 void phy_init(void)
 {
-     state = Idle;
-    spi_init();
-    radioConfigureInterrupt();
+    state = Idle;
+    cc1101_interface_init();
 
     ResetRadioCore();
 
     WriteRfSettings(&rfSettings);
+    radioConfigureInterrupt();
 
 #ifdef LOG_PHY_ENABLED
     DPRINT("RF settings:");

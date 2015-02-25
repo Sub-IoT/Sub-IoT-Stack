@@ -6,7 +6,7 @@
 #include "em_gpio.h"
 #include "em_int.h"
 
-#include "../../phy/cc1101/cc1101_core.h" // TODO refactor, don't depend on this here
+#include "../../phy/cc1101/cc1101_interface.h" // TODO refactor, don't depend on this here
 #include "../../phy/cc1101/cc1101_phy.h" // TODO refactor, don't depend on this here
 #include "radio_hw.h"
 
