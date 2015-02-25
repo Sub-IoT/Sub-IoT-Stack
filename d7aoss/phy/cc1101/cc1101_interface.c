@@ -1,10 +1,4 @@
 // *************************************************************************************************
-//
-// Actual revision: $Revision: $
-// Revision label:  $Name: $
-// Revision state:  $State: $
-//
-// *************************************************************************************************
 // Radio core access functions. Taken from TI reference code for CC430.
 // *************************************************************************************************
 
@@ -26,15 +20,15 @@
 // functions to be defined which contain CC1101 or CC430 specific implementation
 // implementation is in cc1101_interface_spi.c for cc1101 or cc1101_interface_cc430.c for cc430.
 extern void _cc1101_interface_init();
-extern void _c1101_set_interrupt_enabled(bool);
-extern uint8_t _strobe(uint8_t);
-extern void _reset_radio_core();
-extern uint8_t _read_single_reg(uint8_t);
-extern void _write_single_reg(uint8_t, uint8_t);
-extern void _read_burst_reg(uint8_t, uint8_t*, uint8_t);
-extern void _write_burst_reg(uint8_t, uint8_t*, uint8_t);
-extern void _write_single_patable(uint8_t);
-extern void _write_burst_patable(uint8_t*, uint8_t);
+extern void _c1101_interface_set_interrupts_enabled(bool);
+extern uint8_t _c1101_interface_strobe(uint8_t);
+extern void _c1101_interface_reset_radio_core();
+extern uint8_t _c1101_interface_read_single_reg(uint8_t);
+extern void _c1101_interface_write_single_reg(uint8_t, uint8_t);
+extern void _c1101_interface_read_burst_reg(uint8_t, uint8_t*, uint8_t);
+extern void _c1101_interface_write_burst_reg(uint8_t, uint8_t*, uint8_t);
+extern void _c1101_interface_write_single_patable(uint8_t);
+extern void _c1101_interface_write_burst_patable(uint8_t*, uint8_t);
 
 
 void cc1101_interface_init()
@@ -51,23 +45,22 @@ void cc1101_interface_set_interrupts_enabled(bool enabled)
 // @fn          Strobe
 // @brief       Send command to radio.
 // @param       none
-// @return      none
+// @return      status byte
 // *************************************************************************************************
-uint8_t Strobe(uint8_t strobe_command)
+uint8_t cc1101_interface_strobe(uint8_t strobe_command)
 {
-    uint8_t statusByte = 0;
+    uint8_t status = 0;
     uint8_t strobe_tmp = strobe_command & 0x7F;
-//	uint16_t int_state;
 
     // Check for valid strobe command
     if ((strobe_tmp >= RF_SRES) && (strobe_tmp <= RF_SNOP))
     {
-        statusByte = _strobe(strobe_command);
+        status = _c1101_interface_strobe(strobe_command);
     }
 
-    DPRINT("STROBE 0x%02X STATUS: 0x%02X", strobe_command, statusByte);
+    DPRINT("STROBE 0x%02X STATUS: 0x%02X", strobe_command, status);
 
-    return statusByte;
+    return status;
 }
 
 // *****************************************************************************
@@ -76,10 +69,10 @@ uint8_t Strobe(uint8_t strobe_command)
 // @param       none
 // @return      none
 // ***********************************;******************************************
-void ResetRadioCore(void)
+void cc1101_interface_reset_radio_core(void)
 {
     DPRINT("RESET RADIO");
-    _reset_radio_core();
+    _c1101_interface_reset_radio_core();
 }
 
 // *****************************************************************************
@@ -88,9 +81,9 @@ void ResetRadioCore(void)
 // @param       RF_SETTINGS* rfsettings  Pointer to the structure that holds the rf settings
 // @return      none
 // *****************************************************************************
-void WriteRfSettings(RF_SETTINGS *rfsettings)
+void cc1101_interface_write_rfsettings(RF_SETTINGS *rfsettings)
 {
-	WriteBurstReg(IOCFG2, (unsigned char*) rfsettings, sizeof(RF_SETTINGS));
+    cc1101_interface_write_burst_reg(IOCFG2, (unsigned char*) rfsettings, sizeof(RF_SETTINGS));
 }
 
 
@@ -100,9 +93,9 @@ void WriteRfSettings(RF_SETTINGS *rfsettings)
 // @param       unsigned char addr      Target radio register address
 // @return      unsigned char data_out  Value of byte that was read
 // *****************************************************************************
-uint8_t ReadSingleReg(uint8_t addr)
+uint8_t cc1101_interface_read_single_reg(uint8_t addr)
 {
-    return _read_single_reg(addr);
+    return _c1101_interface_read_single_reg(addr);
 }
 
 // *****************************************************************************
@@ -112,9 +105,9 @@ uint8_t ReadSingleReg(uint8_t addr)
 // @param       unsigned char value     Value to be written
 // @return      none
 // *****************************************************************************
-void WriteSingleReg(uint8_t addr, uint8_t value)
+void cc1101_interface_write_single_reg(uint8_t addr, uint8_t value)
 {
-    _write_single_reg(addr, value);
+    _c1101_interface_write_single_reg(addr, value);
     DPRINT("WRITE SREG 0x%02X @0x%02X", value, addr);
 }
 
@@ -126,9 +119,9 @@ void WriteSingleReg(uint8_t addr, uint8_t value)
 // @param       unsigned char count     Number of bytes to be read
 // @return      none
 // *****************************************************************************
-void ReadBurstReg(uint8_t addr, uint8_t* buffer, uint8_t count)
+void cc1101_interface_read_burst_reg(uint8_t addr, uint8_t* buffer, uint8_t count)
 {
-    _read_burst_reg(addr, buffer, count);
+    _c1101_interface_read_burst_reg(addr, buffer, count);
 
     DPRINT("READ BREG %u Byte(s) @0x%02X", count, addr);
 }
@@ -141,9 +134,9 @@ void ReadBurstReg(uint8_t addr, uint8_t* buffer, uint8_t count)
 // @param       unsigned char count     Number of bytes to be written
 // @return      none
 // *****************************************************************************
-void WriteBurstReg(uint8_t addr, uint8_t* buffer, uint8_t count)
+void cc1101_interface_write_burst_reg(uint8_t addr, uint8_t* buffer, uint8_t count)
 {
-    _write_burst_reg(addr, buffer, count);
+    _c1101_interface_write_burst_reg(addr, buffer, count);
 
     DPRINT("WRITE BREG %u Byte(s) @0x%02X", count, addr);
 }
@@ -154,9 +147,9 @@ void WriteBurstReg(uint8_t addr, uint8_t* buffer, uint8_t count)
 // @param       unsigned char value		Value to write
 // @return      none
 // *****************************************************************************
-void WriteSinglePATable(uint8_t value)
+void cc1101_interface_write_single_patable(uint8_t value)
 {
-    _write_single_patable(value);
+    _c1101_interface_write_single_patable(value);
 }
 
 // *****************************************************************************
@@ -166,22 +159,7 @@ void WriteSinglePATable(uint8_t value)
 // @param       unsigned char count	Number of values to be written
 // @return      none
 // *****************************************************************************
-void WriteBurstPATable(uint8_t* buffer, uint8_t count)
+void cc1101_interface_write_burst_patable(uint8_t* buffer, uint8_t count)
 {
-    _write_burst_patable(buffer, count);
-}
-
-
-uint8_t ReadPartNum( void )
-{
-    uint8_t reg;
-    ReadBurstReg( 0x30, &reg, 1 );
-    return reg;
-}
-
-uint8_t ReadVersion( void )
-{
-    uint8_t reg;
-    ReadBurstReg( 0x31, &reg, 1 );
-    return reg;
+    _c1101_interface_write_burst_patable(buffer, count);
 }

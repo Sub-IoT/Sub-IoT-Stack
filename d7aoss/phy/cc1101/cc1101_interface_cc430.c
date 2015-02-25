@@ -177,7 +177,7 @@ void _c1101_interface_set_interrupts_enabled(bool enable)
     }
 }
 
-uint8_t _strobe(uint8_t strobe)
+uint8_t _c1101_interface_strobe(uint8_t strobe)
 {
     uint16_t int_state;
     uint8_t strobe_tmp = strobe & 0x7F;
@@ -210,13 +210,13 @@ uint8_t _strobe(uint8_t strobe)
     return statusByte;
 }
 
-uint8_t _reset_radio_core()
+uint8_t _c1101_interface_reset_radio_core()
 {
-    _strobe(RF_SRES);                          // Reset the Radio Core
-    return _strobe(RF_SNOP);                          // Get Radio Status
+    _c1101_interface_strobe(RF_SRES);                          // Reset the Radio Core
+    return _c1101_interface_strobe(RF_SNOP);                          // Get Radio Status
 }
 
-uint8_t _read_single_reg(uint8_t addr)
+uint8_t _c1101_interface_read_single_reg(uint8_t addr)
 {
     uint8_t value;
     uint16_t int_state;
@@ -237,7 +237,7 @@ uint8_t _read_single_reg(uint8_t addr)
     return value;
 }
 
-void _write_single_reg(uint8_t addr, uint8_t value)
+void _c1101_interface_write_single_reg(uint8_t addr, uint8_t value)
 {
     uint16_t int_state;
 
@@ -249,7 +249,7 @@ void _write_single_reg(uint8_t addr, uint8_t value)
     EXIT_CRITICAL_SECTION(int_state);
 }
 
-void _read_burst_reg(uint8_t addr, uint8_t* buffer, uint8_t count)
+void _c1101_interface_read_burst_reg(uint8_t addr, uint8_t* buffer, uint8_t count)
 {
     uint8_t i;
     uint16_t int_state;
@@ -269,7 +269,7 @@ void _read_burst_reg(uint8_t addr, uint8_t* buffer, uint8_t count)
 }
 
 
-void _write_burst_reg(uint8_t addr, uint8_t* buffer, uint8_t count)
+void _c1101_interface_write_burst_reg(uint8_t addr, uint8_t* buffer, uint8_t count)
 {
     uint8_t i;
     uint16_t int_state;
@@ -287,7 +287,7 @@ void _write_burst_reg(uint8_t addr, uint8_t* buffer, uint8_t count)
     EXIT_CRITICAL_SECTION(int_state);
 }
 
-void _write_single_patable(uint8_t value)
+void _c1101_interface_write_single_patable(uint8_t value)
 {
     uint16_t int_state;
 
@@ -302,7 +302,7 @@ void _write_single_patable(uint8_t value)
     EXIT_CRITICAL_SECTION(int_state);
 }
 
-void _write_burst_patable(uint8_t* buffer, uint8_t count)
+void _c1101_interface_write_burst_patable(uint8_t* buffer, uint8_t count)
 {
     uint8_t i;
     uint16_t int_state;

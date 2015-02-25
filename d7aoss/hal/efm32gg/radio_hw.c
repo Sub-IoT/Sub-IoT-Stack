@@ -29,7 +29,7 @@ void CC1101_ISR(GDOLine gdo, GDOEdge edge)
 {
     DPRINT("%s ISR %s", (gdo == GDOLine0)? "GDO0\0": "GDO2\0", (edge == GDOEdgeRising)? "EDGE_RISING\0": "EDGE_FALLING\0" );
 
-    uint8_t gdo_setting = ReadSingleReg(gdo) | edge; // TODO we need only one GDO_SETTING per GDOLine so reading this is not necessary?
+    uint8_t gdo_setting = cc1101_interface_read_single_reg(gdo) | edge; // TODO we need only one GDO_SETTING per GDOLine so reading this is not necessary?
     uint8_t index = 0;
     InterruptHandlerDescriptor descriptor;
 

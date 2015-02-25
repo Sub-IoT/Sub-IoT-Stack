@@ -75,19 +75,15 @@ typedef struct {
 
 void cc1101_interface_init();
 void cc1101_interface_set_interrupts_enabled(bool enabled);
-uint8_t Strobe(unsigned char strobe);
-void ResetRadioCore(void);
-void WriteRfSettings(RF_SETTINGS *pRfSettings);
-
-uint8_t ReadSingleReg(uint8_t addr);
-void WriteSingleReg(uint8_t addr, uint8_t value);
-void ReadBurstReg(uint8_t addr, uint8_t* buffer, uint8_t count);
-void WriteBurstReg(uint8_t addr, uint8_t* buffer, uint8_t count);
-void WriteSinglePATable(uint8_t value);
-void WriteBurstPATable(uint8_t* buffer, uint8_t count);
-
-uint8_t ReadPartNum( void );
-uint8_t ReadVersion( void );
+uint8_t cc1101_interface_strobe(uint8_t strobe_command);
+void cc1101_interface_reset_radio_core(void);
+void cc1101_interface_write_rfsettings(RF_SETTINGS* rfsettings);
+uint8_t cc1101_interface_read_single_reg(uint8_t addr);
+void cc1101_interface_write_single_reg(uint8_t addr, uint8_t value);
+void cc1101_interface_read_burst_reg(uint8_t addr, uint8_t* buffer, uint8_t count);
+void cc1101_interface_write_burst_reg(uint8_t addr, uint8_t* buffer, uint8_t count);
+void cc1101_interface_write_single_patable(uint8_t value);
+void cc1101_interface_write_burst_patable(uint8_t* buffer, uint8_t count);
 
 #ifdef __cplusplus
 }

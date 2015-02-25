@@ -16,10 +16,9 @@ IF(D7AOSS_PHY_RADIO_DRIVER STREQUAL "cc1101" OR D7AOSS_PHY_RADIO_DRIVER STREQUAL
     INCLUDE_DIRECTORIES(../framework/)
     INCLUDE_DIRECTORIES(../hal/)
     SET(RADIOSRCS
-                    cc1101/cc1101_interface.c
-                    # TODO remove cc1101/cc1101_interrupts.c
-                    cc1101/cc1101_phy.c
-                    cc1101/cc1101_settings.c
+        cc1101/cc1101_interface.c
+        cc1101/cc1101_phy.c
+        cc1101/cc1101_settings.c
     )
 
     IF(D7AOSS_PHY_RADIO_DRIVER STREQUAL "cc1101")
@@ -31,13 +30,13 @@ ENDIF()
 
 IF(D7AOSS_PHY_RADIO_DRIVER STREQUAL "stub")
         SET(RADIOSRCS
-                        stub/stub_phy.c
+            stub/stub_phy.c 
         )
 ENDIF()
 
 IF(D7AOSS_PHY_RADIO_DRIVER STREQUAL "sim")
         SET(RADIOSRCS
-                        sim/sim_phy.c
+            sim/sim_phy.c
         )
 ENDIF()
 

@@ -42,7 +42,7 @@ void _c1101_interface_set_interrupts_enabled(bool enable)
 
 }
 
-uint8_t _strobe(uint8_t strobe)
+uint8_t _c1101_interface_strobe(uint8_t strobe)
 {
     spi_select_chip();
     uint8_t statusByte = spi_byte(strobe & 0x3F);
@@ -51,7 +51,7 @@ uint8_t _strobe(uint8_t strobe)
     return statusByte;
 }
 
-uint8_t _reset_radio_core()
+uint8_t _c1101_interface_reset_radio_core()
 {
     spi_deselect_chip();
     //delayuS(30);
@@ -63,8 +63,8 @@ uint8_t _reset_radio_core()
     //delayuS(45);
     timer_wait_ms(1);
 
-    Strobe(RF_SRES);                          // Reset the Radio Core
-    return Strobe(RF_SNOP);                          // Get Radio Status
+    cc1101_interface_strobe(RF_SRES);          // Reset the Radio Core
+    return cc1101_interface_strobe(RF_SNOP);   // Get Radio Status
 }
 
 static uint8_t readreg(uint8_t addr)
@@ -106,7 +106,7 @@ static uint8_t readstatus(uint8_t addr)
     return data;
 }
 
-uint8_t _read_single_reg(uint8_t addr)
+uint8_t _c1101_interface_read_single_reg(uint8_t addr)
 {
     // Check for valid configuration register address, PATABLE or FIFO
     if ((addr<= 0x2E) || (addr>= 0x3E))
@@ -115,7 +115,7 @@ uint8_t _read_single_reg(uint8_t addr)
         return readstatus(addr);
 }
 
-void _write_single_reg(uint8_t addr, uint8_t value)
+void _c1101_interface_write_single_reg(uint8_t addr, uint8_t value)
 {
     spi_select_chip();
     spi_byte((addr & 0x3F));
@@ -123,7 +123,7 @@ void _write_single_reg(uint8_t addr, uint8_t value)
     spi_deselect_chip();
 }
 
-void _read_burst_reg(uint8_t addr, uint8_t* buffer, uint8_t count)
+void _c1101_interface_read_burst_reg(uint8_t addr, uint8_t* buffer, uint8_t count)
 {
     uint8_t _addr = (addr & 0x3F) | READ_BURST;
     spi_select_chip();
@@ -132,7 +132,7 @@ void _read_burst_reg(uint8_t addr, uint8_t* buffer, uint8_t count)
     spi_deselect_chip();
 }
 
-void _write_burst_reg(uint8_t addr, uint8_t* buffer, uint8_t count)
+void _c1101_interface_write_burst_reg(uint8_t addr, uint8_t* buffer, uint8_t count)
 {
     uint8_t _addr = (addr & 0x3F) | WRITE_BURST;
     spi_select_chip();
@@ -141,14 +141,14 @@ void _write_burst_reg(uint8_t addr, uint8_t* buffer, uint8_t count)
     spi_deselect_chip();
 }
 
-void _write_single_patable(uint8_t value)
+void _c1101_interface_write_single_patable(uint8_t value)
 {
-    WriteSingleReg(PATABLE, value);
+    cc1101_interface_write_single_reg(PATABLE, value);
 }
 
-void _write_burst_patable(uint8_t* buffer, uint8_t count)
+void _c1101_interface_write_burst_patable(uint8_t* buffer, uint8_t count)
 {
-    WriteBurstReg(PATABLE, buffer, count);
+    cc1101_interface_write_burst_reg(PATABLE, buffer, count);
 }
 
 

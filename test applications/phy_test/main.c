@@ -83,7 +83,7 @@ int main(void)
 	#ifdef RX_MODE
 		start_rx();
 		while(1);
-		//system_lowpower_mode(4,1);
+		system_lowpower_mode(4,1);
 	#else
 		start_tx();
 		while(1);
@@ -92,4 +92,3 @@ int main(void)
 
 	return 0;
 }
-

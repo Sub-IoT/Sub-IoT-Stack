@@ -78,7 +78,7 @@ static int8_t eirp_reg_values[103]={0xC0, 0xC1, 0xC2, 0xC3, 0xC4, 0xC5, 0xC6, 0x
 
 static RadioState get_radiostate(void)
 {
-    uint8_t state = Strobe(RF_SNOP) >> 4;
+    uint8_t state = cc1101_interface_strobe(RF_SNOP) >> 4;
 
     if(state > 7)
         return Idle;
@@ -99,7 +99,7 @@ static int16_t calculate_rssi(int8_t rssi_raw)
 
 static void set_preamble_size(uint8_t preamble_size)
 {
-    uint8_t mdmcfg1 = ReadSingleReg(MDMCFG1) & 0x03;
+    uint8_t mdmcfg1 = cc1101_interface_read_single_reg(MDMCFG1) & 0x03;
 
     if(preamble_size >= 24)
         mdmcfg1 |= 0x70;
@@ -116,22 +116,22 @@ static void set_preamble_size(uint8_t preamble_size)
     else if(preamble_size >= 3)
         mdmcfg1 |= 0x10;
 
-    WriteSingleReg(MDMCFG1, mdmcfg1);
+    cc1101_interface_write_single_reg(MDMCFG1, mdmcfg1);
 }
 
 static void set_timeout(uint16_t timeout)
 {
     if (timeout == 0)
     {
-        WriteSingleReg(WORCTRL, RADIO_WORCTRL_ALCK_PD);
-        WriteSingleReg(MCSM2, RADIO_MCSM2_RX_TIME(7));
+        cc1101_interface_write_single_reg(WORCTRL, RADIO_WORCTRL_ALCK_PD);
+        cc1101_interface_write_single_reg(MCSM2, RADIO_MCSM2_RX_TIME(7));
     }
     else
     {
-        WriteSingleReg(WORCTRL, RADIO_WORCTRL_WOR_RES_32ms);
-        WriteSingleReg(MCSM2, RADIO_MCSM2_RX_TIME(0));
-        WriteSingleReg(WOREVT0, timeout & 0x00FF);
-        WriteSingleReg(WOREVT1, timeout >> 8);
+        cc1101_interface_write_single_reg(WORCTRL, RADIO_WORCTRL_WOR_RES_32ms);
+        cc1101_interface_write_single_reg(MCSM2, RADIO_MCSM2_RX_TIME(0));
+        cc1101_interface_write_single_reg(WOREVT0, timeout & 0x00FF);
+        cc1101_interface_write_single_reg(WOREVT1, timeout >> 8);
     }
 }
 
@@ -143,7 +143,7 @@ static void set_eirp(int8_t eirp)
     {
         if (eirp >= eirp_values[i]) //round the given eirp to a lower possible value
         {
-            WriteSinglePATable(eirp_reg_values[i]);
+            cc1101_interface_write_single_patable(eirp_reg_values[i]);
             break;
         }
     }
@@ -151,8 +151,8 @@ static void set_eirp(int8_t eirp)
 
 static void set_sync_word(uint16_t sync_word)
 {
-    WriteSingleReg(SYNC1, (uint8_t)(sync_word >> 8));
-    WriteSingleReg(SYNC0, (uint8_t)(sync_word & 0x00FF));
+    cc1101_interface_write_single_reg(SYNC1, (uint8_t)(sync_word >> 8));
+    cc1101_interface_write_single_reg(SYNC0, (uint8_t)(sync_word & 0x00FF));
 }
 
 static void set_channel(uint8_t frequency_band, uint8_t channel_center_freq_index, uint8_t channel_bandwith_index)
@@ -160,7 +160,7 @@ static void set_channel(uint8_t frequency_band, uint8_t channel_center_freq_inde
     //Set channel center frequency
     DPRINT("Set channel freq index: %d", channel_center_freq_index);
 
-    WriteSingleReg(CHANNR, channel_center_freq_index);
+    cc1101_interface_write_single_reg(CHANNR, channel_center_freq_index);
 
     //Set channel bandwidth, modulation and symbol rate
     DPRINT("Set channel bandwidth index: %d", channel_bandwith_index);
@@ -172,20 +172,20 @@ static void set_channel(uint8_t frequency_band, uint8_t channel_center_freq_inde
         //		WriteSingleReg(MDMCFG3, RADIO_MDMCFG3_DRATE_M(131));
         //		WriteSingleReg(MDMCFG4, (RADIO_MDMCFG4_CHANBW_E(3) | RADIO_MDMCFG4_CHANBW_M(0) | RADIO_MDMCFG4_DRATE_E(8)));
         //		WriteSingleReg(DEVIATN, (RADIO_DEVIATN_E(0) | RADIO_DEVIATN_M(16)));
-        WriteSingleReg(MDMCFG3, RADIO_MDMCFG3_DRATE_M(24));
-        WriteSingleReg(MDMCFG4, (RADIO_MDMCFG4_CHANBW_E(1) | RADIO_MDMCFG4_CHANBW_M(0) | RADIO_MDMCFG4_DRATE_E(11)));
-        WriteSingleReg(DEVIATN, (RADIO_DEVIATN_E(5) | RADIO_DEVIATN_M(0)));
+        cc1101_interface_write_single_reg(MDMCFG3, RADIO_MDMCFG3_DRATE_M(24));
+        cc1101_interface_write_single_reg(MDMCFG4, (RADIO_MDMCFG4_CHANBW_E(1) | RADIO_MDMCFG4_CHANBW_M(0) | RADIO_MDMCFG4_DRATE_E(11)));
+        cc1101_interface_write_single_reg(DEVIATN, (RADIO_DEVIATN_E(5) | RADIO_DEVIATN_M(0)));
         break;
     case 1:
-        WriteSingleReg(MDMCFG3, RADIO_MDMCFG3_DRATE_M(24));
-        WriteSingleReg(MDMCFG4, (RADIO_MDMCFG4_CHANBW_E(2) | RADIO_MDMCFG4_CHANBW_M(0) | RADIO_MDMCFG4_DRATE_E(11)));
+        cc1101_interface_write_single_reg(MDMCFG3, RADIO_MDMCFG3_DRATE_M(24));
+        cc1101_interface_write_single_reg(MDMCFG4, (RADIO_MDMCFG4_CHANBW_E(2) | RADIO_MDMCFG4_CHANBW_M(0) | RADIO_MDMCFG4_DRATE_E(11)));
         //WriteSingleReg(MDMCFG4, (RADIO_MDMCFG4_CHANBW_E(1) | RADIO_MDMCFG4_CHANBW_M(0) | RADIO_MDMCFG4_DRATE_E(11))); // TODO tmp 400kHz BW
-        WriteSingleReg(DEVIATN, (RADIO_DEVIATN_E(5) | RADIO_DEVIATN_M(0)));
+        cc1101_interface_write_single_reg(DEVIATN, (RADIO_DEVIATN_E(5) | RADIO_DEVIATN_M(0)));
         break;
     case 2:
-        WriteSingleReg(MDMCFG3, RADIO_MDMCFG3_DRATE_M(248));
-        WriteSingleReg(MDMCFG4, (RADIO_MDMCFG4_CHANBW_E(1) | RADIO_MDMCFG4_CHANBW_M(0) | RADIO_MDMCFG4_DRATE_E(12)));
-        WriteSingleReg(DEVIATN, (RADIO_DEVIATN_E(5) | RADIO_DEVIATN_M(0)));
+        cc1101_interface_write_single_reg(MDMCFG3, RADIO_MDMCFG3_DRATE_M(248));
+        cc1101_interface_write_single_reg(MDMCFG4, (RADIO_MDMCFG4_CHANBW_E(1) | RADIO_MDMCFG4_CHANBW_M(0) | RADIO_MDMCFG4_DRATE_E(12)));
+        cc1101_interface_write_single_reg(DEVIATN, (RADIO_DEVIATN_E(5) | RADIO_DEVIATN_M(0)));
         break;
         //	case 3:
         //		WriteSingleReg(MDMCFG3, RADIO_MDMCFG3_DRATE_M(248));
@@ -218,7 +218,7 @@ static void set_channel(uint8_t frequency_band, uint8_t channel_center_freq_inde
     */
 
     // is this the right place?
-    Strobe(RF_SCAL);
+    cc1101_interface_strobe(RF_SCAL);
 }
 
 static bool translate_and_set_settings(uint8_t spectrum_id[2], uint8_t sync_word_class)
@@ -226,7 +226,7 @@ static bool translate_and_set_settings(uint8_t spectrum_id[2], uint8_t sync_word
     if (!memcmp(previous_spectrum_id, spectrum_id, 2) && previous_sync_word_class == sync_word_class)
         return true;
 
-    Strobe(RF_SIDLE);
+    cc1101_interface_strobe(RF_SIDLE);
 
     if(!phy_translate_settings(spectrum_id, sync_word_class, &fec_enabled, &frequency_band, &channel_center_freq_index, &channel_bandwidth_index, &preamble_size, &sync_word))
     {
@@ -255,12 +255,12 @@ static bool set_tx_config(phy_tx_cfg_t* cfg)
 
 static void set_length_infinite(bool infinite)
 {
-    uint8_t pktctrl0 = ReadSingleReg(PKTCTRL0) & 0xFC;
+    uint8_t pktctrl0 = cc1101_interface_read_single_reg(PKTCTRL0) & 0xFC;
 
     if (infinite)
         pktctrl0 |= RADIO_PKTCTRL0_LENGTH_INF;
 
-    WriteSingleReg(PKTCTRL0, pktctrl0);
+    cc1101_interface_write_single_reg(PKTCTRL0, pktctrl0);
 }
 
 void phy_init(void)
@@ -268,9 +268,9 @@ void phy_init(void)
     state = Idle;
     cc1101_interface_init();
 
-    ResetRadioCore();
+    cc1101_interface_reset_radio_core();
 
-    WriteRfSettings(&rfSettings);
+    cc1101_interface_write_rfsettings(&rfSettings);
 
 #ifdef LOG_PHY_ENABLED
     DPRINT("RF settings:");
@@ -308,13 +308,13 @@ extern bool phy_tx_data(phy_tx_cfg_t* cfg)
     log_print_data(tx_queue.front, cfg->length);
 #endif
 
-    WriteSingleReg(TXFIFO, cfg->length);
-    WriteBurstReg(TXFIFO, tx_queue.front, cfg->length);
+    cc1101_interface_write_single_reg(TXFIFO, cfg->length);
+    cc1101_interface_write_burst_reg(TXFIFO, tx_queue.front, cfg->length);
 
     cc1101_interface_set_interrupts_enabled(true);
 
     //Start transmitting
-    Strobe(RF_STX);
+    cc1101_interface_strobe(RF_STX);
 
     return true;
 }
@@ -331,8 +331,8 @@ bool phy_init_tx()
 
     state = Transmit;
 
-    Strobe(RF_SIDLE);
-    Strobe(RF_SFTX);
+    cc1101_interface_strobe(RF_SIDLE);
+    cc1101_interface_strobe(RF_SFTX);
 
     return true;
 }
@@ -373,8 +373,8 @@ bool phy_rx(phy_rx_cfg_t* cfg)
 
     state = Receive;
 
-    Strobe(RF_SIDLE);
-    Strobe(RF_SFRX);
+    cc1101_interface_strobe(RF_SIDLE);
+    cc1101_interface_strobe(RF_SFRX);
 
     if (!translate_and_set_settings(cfg->spectrum_id, cfg->sync_word_class))
         return false;
@@ -394,13 +394,13 @@ bool phy_rx(phy_rx_cfg_t* cfg)
     // TODO remove cfg->length, length is contained in background frames as well in draft spec so always dynamic
 
     packet_length = 0;
-    WriteSingleReg(PKTLEN, 0xFF);
+    cc1101_interface_write_single_reg(PKTLEN, 0xFF);
 
     //TODO: set minimum sync word rss to scan minimum energy
 
     cc1101_interface_set_interrupts_enabled(true);
 
-    Strobe(RF_SRX);
+    cc1101_interface_strobe(RF_SRX);
 
     return true;
 }
@@ -422,12 +422,12 @@ extern int16_t phy_get_rssi(uint8_t spectrum_id[2], uint8_t sync_word_class)
     if (!translate_and_set_settings(spectrum_id, sync_word_class))
         return false;
 
-    Strobe(RF_SRX);
+    cc1101_interface_strobe(RF_SRX);
 
     //FIXME wait for RSSI VALID!!!
     // Is this possible with CC1101?
 
-    rssi_raw = ReadSingleReg(RSSI);
+    rssi_raw = cc1101_interface_read_single_reg(RSSI);
     rxtx_finish_isr();
 
     return calculate_rssi(rssi_raw);
@@ -438,9 +438,9 @@ void end_of_packet_isr()
     DPRINT("end of packet ISR");
     if (state == Receive)
     {
-        packet_length = ReadSingleReg(RXFIFO);
+        packet_length = cc1101_interface_read_single_reg(RXFIFO);
         DPRINT("EOP ISR packetLength: %d", packet_length);
-        ReadBurstReg(RXFIFO, buffer, packet_length + 2); // +2 for RSSI and LQI
+        cc1101_interface_read_burst_reg(RXFIFO, buffer, packet_length + 2); // +2 for RSSI and LQI
         rxtx_finish_isr(); // TODO: should this be called by DLL?
         queue_push_u8(&rx_queue, packet_length); // TODO do not put length in buffer only in rx_data->len ?
         queue_push_u8_array(&rx_queue, buffer, packet_length);
@@ -557,10 +557,10 @@ void rxtx_finish_isr()
     if (init_and_close_radio)
     {
         //Flush FIFOs and go to sleep
-    	Strobe(RF_SFRX);
-		Strobe(RF_SFTX);
-		Strobe(RF_SPWD);
-    	Strobe(RF_SIDLE);
+        cc1101_interface_strobe(RF_SFRX);
+        cc1101_interface_strobe(RF_SFTX);
+        cc1101_interface_strobe(RF_SPWD);
+        cc1101_interface_strobe(RF_SIDLE);
 
         state = Idle;
     }
