@@ -10,6 +10,8 @@
 #include "cc1101_constants.h"
 #include "cc1101_interface.h"
 
+#include "radio_hw.h" // TODO replace by GPIO HAL API later
+
 // turn on/off the debug prints
 #ifdef LOG_PHY_ENABLED
 #define DPRINT(...) log_print_string(__VA_ARGS__)
@@ -20,6 +22,24 @@
 void _cc1101_interface_init()
 {
     spi_init();
+    radioConfigureInterrupt();
+}
+
+void _c1101_interface_set_interrupts_enabled(bool enable)
+{
+    // TODO replace by GPIO HAL API later
+    if(enable)
+    {
+        radioClearInterruptPendingLines();
+        radioEnableGDO0Interrupt();
+        //radioEnableGDO2Interrupt();
+    }
+    else
+    {
+        radioDisableGDO0Interrupt();
+        //radioDisableGDO2Interrupt();
+    }
+
 }
 
 uint8_t _strobe(uint8_t strobe)

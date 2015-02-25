@@ -3,6 +3,8 @@
 
 
 #include <stdint.h>
+#include <stdbool.h>
+
 #include <msp430.h>
 
 #define RADIO_INST_READY_WAIT()		while(!(RF1AIFCTL1 & RFINSTRIFG))
@@ -13,11 +15,91 @@
 #define ENTER_CRITICAL_SECTION(x)  	x = __get_interrupt_state(); __disable_interrupt()
 #define EXIT_CRITICAL_SECTION(x)    __set_interrupt_state(x)
 
+// Radio Core Interrupt Flags
+#define RFIFG_FLAG_IOCFG0        	0x0001  // RFIFG0
+#define RFIFG_FLANK_IOCFG0       	0x0000
+#define RFIFG_FLAG_IOCFG1        	0x0002  // RFIFG1
+#define RFIFG_FLANK_IOCFG1       	0x0000
+#define RFIFG_FLAG_IOCFG2        	0x0004  // RFIFG2
+#define RFIFG_FLANK_IOCFG2       	0x0000
+#define RFIFG_FLAG_RXFilled      	0x0008  // RFIFG3 Positive Edge
+#define RFIFG_FLANK_RXFilled      	0x0000
+#define RFIFG_FLAG_RXDrained  		0x0008  // RFIFG3 Negative Edge
+#define RFIFG_FLANK_RXDrained  		0x0008
+#define RFIFG_FLAG_RXFilledOrEOP 	0x0010  // RFIFG4 Positive Edge
+#define RFIFG_FLANK_RXFilledOrEOP   0x0000
+#define RFIFG_FLAG_RXEmpty          0x0010  // RFIFG4 Negative Edge
+#define RFIFG_FLANK_RXEmpty    		0x0010
+#define RFIFG_FLAG_TXFilled      	0x0020  // RFIFG5 Positive Edge
+#define RFIFG_FLANK_TXFilled      	0x0000
+#define RFIFG_FLAG_TXBelowThresh    0x0020  // RFIFG5 Negative Edge
+#define RFIFG_FLANK_TXBelowThresh   0x0020
+#define RFIFG_FLAG_TXFull           0x0040  // RFIFG6 Positive Edge
+#define RFIFG_FLANK_TXFull          0x0000
+#define RFIFG_FLAG_TXDrained     	0x0040  // RFIFG6 Negative Edge
+#define RFIFG_FLANK_TXDrained     	0x0040
+#define RFIFG_FLAG_RXOverflow       0x0080  // RFIFG7 Positive Edge
+#define RFIFG_FLANK_RXOverflow      0x0000
+#define RFIFG_FLAG_RXFlushed        0x0080  // RFIFG7 Negative Edge
+#define RFIFG_FLANK_RXFlushed       0x0080
+#define RFIFG_FLAG_TXUnderflow    	0x0100  // RFIFG8 Positive Edge
+#define RFIFG_FLANK_TXUnderflow   	0x0000
+#define RFIFG_FLAG_TXFlushed        0x0100  // RFIFG8 Negative Edge
+#define RFIFG_FLANK_TXFlushed       0x0100
+#define RFIFG_FLAG_SyncWord         0x0200  // RFIFG9 Positive Edge
+#define RFIFG_FLANK_SyncWord        0x0000
+#define RFIFG_FLAG_EndOfPacket      0x0200  // RFIFG9 Negative Edge
+#define RFIFG_FLANK_EndOfPacket     0x0200
+#define RFIFG_FLAG_CRCOK         	0x0400  // RFIFG10 Positive Edge
+#define RFIFG_FLANK_CRCOK         	0x0000
+#define RFIFG_FLAG_RXFirstByte      0x0400  // RFIFG10 Negative Edge
+#define RFIFG_FLANK_RXFirstByte     0x0400
+#define RFIFG_FLAG_PQTReached       0x0800  // RFIFG11 Positive Edge
+#define RFIFG_FLANK_PQTReached      0x0000
+#define RFIFG_FLAG_LPW              0x0800  // RFIFG11 Negative Edge
+#define RFIFG_FLANK_LPW             0x0800
+#define RFIFG_FLAG_ClearChannel     0x1000  // RFIFG12 Positive Edge
+#define RFIFG_FLANK_ClearChannel    0x0000
+#define RFIFG_FLAG_RSSIAboveThr     0x1000  // RFIFG12 Negative Edge
+#define RFIFG_FLANK_RSSIAboveThr    0x1000
+#define RFIFG_FLAG_CarrierSense     0x2000  // RFIFG13 Positive Edge
+#define RFIFG_FLANK_CarrierSense    0x0000
+#define RFIFG_FLAG_CSRSSIAboveThr   0x2000  // RFIFG13 Negative Edge
+#define RFIFG_FLANK_CSRSSIAboveThr  0x2000
+#define RFIFG_FLAG_WOREvent0        0x4000  // RFIFG14 Positive Edge
+#define RFIFG_FLANK_WOREvent0       0x0000
+#define RFIFG_FLAG_WOREvent0ACLK    0x4000  // RFIFG14 Negative Edge
+#define RFIFG_FLANK_WOREvent0ACLK   0x4000
+#define RFIFG_FLAG_WORevent1        0x8000  // RFIFG15 Positive Edge
+#define RFIFG_FLANK_WORevent1       0x0000
+#define RFIFG_FLAG_OscStable        0x8000  // RFIFG15 Negative Edge
+#define RFIFG_FLANK_OscStable       0x8000
+#define RFIFG_FLAG_AllPositiveEdge  0xFFFF
+#define RFIFG_FLANK_AllPositiveEdge 0x0000
+#define RFIFG_FLAG_AllNegativeEdge  0xFFFF
+#define RFIFG_FLANK_AllNegativeEdge 0xFFFF
+
 // functions used by cc1101_interface.c when accessing the CC1101 of a CC430 SoC.
 
 void _cc1101_interface_init()
 {
 
+}
+
+void _c1101_interface_set_interrupts_enabled(bool enable)
+{
+    if(enable)
+    {
+        // TODO only end of packet needed?
+        RF1AIES = RFIFG_FLANK_TXBelowThresh | RFIFG_FLANK_TXUnderflow | RFIFG_FLANK_EndOfPacket;
+        RF1AIFG = 0;
+        RF1AIE  = RFIFG_FLAG_TXBelowThresh | RFIFG_FLAG_TXUnderflow | RFIFG_FLAG_EndOfPacket;
+    }
+    else
+    {
+        RF1AIE  = 0;
+        RF1AIFG = 0;
+    }
 }
 
 uint8_t _strobe(uint8_t strobe)

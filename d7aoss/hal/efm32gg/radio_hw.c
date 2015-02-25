@@ -73,7 +73,7 @@ void radioConfigureInterrupt(void)
 {
     NVIC_EnableIRQ(GPIO_ODD_IRQn);
     NVIC_EnableIRQ(GPIO_EVEN_IRQn);
-    GPIO_PinModeSet( RADIO_PORT_GDO0, RADIO_PIN_GDO0, gpioModeInput, 0 );
+    GPIO_PinModeSet( RADIO_PORT_GDO0, RADIO_PIN_GDO0, gpioModeInput, 0 ); // TODO pull up or pull down to prevent floating
     // GPIO_PinModeSet( RADIO_PORT_GDO2, RADIO_PIN_GDO2, gpioModeInput, 0 ); // TODO not used for now
 
     GPIO_IntConfig( RADIO_PORT_GDO0, RADIO_PIN_GDO0, false, true, false ); // GDO0 Interrupt on falling edges. Disabled by default.

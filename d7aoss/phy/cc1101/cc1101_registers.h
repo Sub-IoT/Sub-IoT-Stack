@@ -64,6 +64,7 @@ RFIFG15 Positive edge: WOR event 1
  */
 
 // Radio Core Interrupt Flags
+// TODO not needed for cc430
 #define GDO_SETTING_RXFilled      	0x00  // RFIFG3 Positive Edge
 #define GDO_EDGE_RXFilled      		GDOEdgeRising
 #define GDO_SETTING_RXDrained  		0x00  // RFIFG3 Negative Edge

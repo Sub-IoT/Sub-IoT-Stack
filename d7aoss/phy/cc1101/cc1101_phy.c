@@ -273,7 +273,6 @@ void phy_init(void)
     ResetRadioCore();
 
     WriteRfSettings(&rfSettings);
-    radioConfigureInterrupt();
 
 #ifdef LOG_PHY_ENABLED
     DPRINT("RF settings:");
@@ -313,9 +312,7 @@ extern bool phy_tx_data(phy_tx_cfg_t* cfg)
     WriteSingleReg(TXFIFO, cfg->length);
     WriteBurstReg(TXFIFO, tx_queue.front, cfg->length);
 
-    //Enable interrupts
-    radioClearInterruptPendingLines();
-    radioEnableGDO0Interrupt();
+    cc1101_interface_set_interrupts_enabled(true);
 
     //Start transmitting
     Strobe(RF_STX);
@@ -402,8 +399,7 @@ bool phy_rx(phy_rx_cfg_t* cfg)
 
     //TODO: set minimum sync word rss to scan minimum energy
 
-    radioClearInterruptPendingLines();
-    radioEnableGDO0Interrupt();
+    cc1101_interface_set_interrupts_enabled(true);
 
     Strobe(RF_SRX);
 
@@ -557,8 +553,7 @@ void rx_fifo_overflow_isr()
 
 void rxtx_finish_isr()
 {
-    radioDisableGDO0Interrupt();
-    radioDisableGDO2Interrupt();
+    cc1101_interface_set_interrupts_enabled(false);
 
     if (init_and_close_radio)
     {

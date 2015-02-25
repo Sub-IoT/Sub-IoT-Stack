@@ -15,6 +15,7 @@ extern "C" {
 #endif
 
 #include <stdint.h>
+#include <stdbool.h>
 
 
 typedef enum {
@@ -73,6 +74,7 @@ typedef struct {
 } RF_SETTINGS;
 
 void cc1101_interface_init();
+void cc1101_interface_set_interrupts_enabled(bool enabled);
 uint8_t Strobe(unsigned char strobe);
 void ResetRadioCore(void);
 void WriteRfSettings(RF_SETTINGS *pRfSettings);

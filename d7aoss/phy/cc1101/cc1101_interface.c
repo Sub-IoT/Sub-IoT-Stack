@@ -28,6 +28,7 @@
 // functions to be defined which contain CC1101 or CC430 specific implementation
 // implementation is in cc1101_interface_spi.c for cc1101 or cc1101_interface_cc430.c for cc430.
 extern void _cc1101_interface_init();
+extern void _c1101_set_interrupt_enabled(bool);
 extern uint8_t _strobe(uint8_t);
 extern void _reset_radio_core();
 extern uint8_t _read_single_reg(uint8_t);
@@ -41,6 +42,11 @@ extern void _write_burst_patable(uint8_t*, uint8_t);
 void cc1101_interface_init()
 {
     _cc1101_interface_init();
+}
+
+void cc1101_interface_set_interrupts_enabled(bool enabled)
+{
+    _c1101_interface_set_interrupts_enabled(enabled);
 }
 
 // *************************************************************************************************
