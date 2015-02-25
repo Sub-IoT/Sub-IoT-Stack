@@ -14,8 +14,6 @@
 #include "cc1101_constants.h"
 
 #include "cc1101_interface.h"
-#include "spi.h"
-#include "timer.h"
 #include "log.h"
 
 // turn on/off the debug prints

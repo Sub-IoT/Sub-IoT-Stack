@@ -43,7 +43,7 @@ typedef struct {
 	uint8_t gdoSetting;
 	GDOEdge edge;
 	InterruptHandler handler;
-} InterruptHandlerDescriptor;
+} InterruptHandlerDescriptor; // TODO not for CC430?
 
 void phy_init(void);
 void phy_idle(void);
@@ -53,6 +53,7 @@ bool phy_is_rx_in_progress(void);
 bool phy_is_tx_in_progress(void);
 int16_t phy_get_rssi(uint8_t spectrum_id[2], uint8_t sync_word_class);
 
+void no_interrupt_isr();
 void end_of_packet_isr();
 void rx_timeout_isr();
 void rx_fifo_overflow_isr();

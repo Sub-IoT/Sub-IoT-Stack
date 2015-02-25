@@ -30,8 +30,6 @@
 #include "cc1101_constants.h"
 
 #include "cc1101_interface.h"
-#include "radio_hw.h"
-#include "spi.h"
 #include "log.h"
 
 #ifdef LOG_PHY_ENABLED
@@ -277,7 +275,8 @@ void phy_init(void)
 #ifdef LOG_PHY_ENABLED
     DPRINT("RF settings:");
     uint8_t* p = (uint8_t*) &rfSettings;
-    for(uint8_t i = 0; i < sizeof(RF_SETTINGS); i++)
+    uint8_t i;
+    for(i = 0; i < sizeof(RF_SETTINGS); i++)
     {
         DPRINT("\t0x%02X", p[i]);
     }
@@ -558,10 +557,10 @@ void rxtx_finish_isr()
     if (init_and_close_radio)
     {
         //Flush FIFOs and go to sleep
-        Strobe(RF_SIDLE);
-        Strobe(RF_SFRX);
-        Strobe(RF_SFTX);
-        Strobe(RF_SPWD);
+    	Strobe(RF_SFRX);
+		Strobe(RF_SFTX);
+		Strobe(RF_SPWD);
+    	Strobe(RF_SIDLE);
 
         state = Idle;
     }

@@ -7,8 +7,8 @@
  *  	armin@otheruse.nl
  */
 
-#include "cc1101_phy.h"
-#include "cc1101_core.h"
+//#include "cc1101_phy.h"
+//#include "cc1101_core.h"
 
 // TODO remove
 
