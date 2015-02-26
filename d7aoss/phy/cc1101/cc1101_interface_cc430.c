@@ -19,7 +19,7 @@
 
 // Radio Core Interrupt Flags
 #define RFIFG_FLAG_IOCFG0        	0x0001  // RFIFG0
-#define RFIFG_FLANK_IOCFG0       	0x0000
+#define RFIFG_FLANK_IOCFG0       	0x0001	// negative edge
 #define RFIFG_FLAG_IOCFG1        	0x0002  // RFIFG1
 #define RFIFG_FLANK_IOCFG1       	0x0000
 #define RFIFG_FLAG_IOCFG2        	0x0004  // RFIFG2
@@ -89,7 +89,7 @@ void no_interrupt_isr()
 InterruptHandler interrupt_table[34] = {
 	//Rising Edges
 	no_interrupt_isr,        	// 00 No RF core interrupt pending
-	rx_timeout_isr,			    // 01 RFIFG0 - Timeout
+	no_interrupt_isr,			    // 01 RFIFG0 - end of packet
 	no_interrupt_isr,           // 02 RFIFG1 - RSSI_VALID
 	no_interrupt_isr,           // 03 RFIFG2
 	no_interrupt_isr,//TODOrx_data_isr,				// 04 RFIFG3 - RX FIFO filled or above the RX FIFO threshold
@@ -97,7 +97,7 @@ InterruptHandler interrupt_table[34] = {
 	no_interrupt_isr,		    // 06 RFIFG5 - TX FIFO filled or above the TX FIFO threshold
 	no_interrupt_isr,			// 07 RFIFG6 - TX FIFO full
 	rx_fifo_overflow_isr, 	    // 08 RFIFG7 - RX FIFO overflowed
-	rxtx_finish_isr,			// 09 RFIFG8 - TX FIFO underflowed
+	no_interrupt_isr,			// 09 RFIFG8 - TX FIFO underflowed
 	no_interrupt_isr,			// 10 RFIFG9 - Sync word sent or received
 	no_interrupt_isr,           // 11 RFIFG10 - Packet received with CRC OK
 	no_interrupt_isr,           // 12 RFIFG11 - Preamble quality reached (PQI) is above programmed PQT value
@@ -108,7 +108,7 @@ InterruptHandler interrupt_table[34] = {
 
 	//Falling Edges
 	no_interrupt_isr,        	// No RF core interrupt pending
-	no_interrupt_isr,			// 17 RFIFG0 TODO: timeout not implemented yet
+	end_of_packet_isr,			// 17 RFIFG0 - end of packet
 	no_interrupt_isr,           // 18 RFIFG1 - RSSI_VALID
 	no_interrupt_isr,           // 19 RFIFG2 -
 	no_interrupt_isr,			// 20 RFIFG3 - RX FIFO drained below RX FIFO threshold
@@ -117,7 +117,7 @@ InterruptHandler interrupt_table[34] = {
 	no_interrupt_isr,			// 23 RFIFG6 - TX FIFO below TX FIFO threshold
 	no_interrupt_isr,           // 24 RFIFG7 - RX FIFO flushed
 	no_interrupt_isr,			// 25 RFIFG8 - TX FIFO flushed
-	end_of_packet_isr,			// 26 RFIFG9 - End of packet or in RX when optional address check fails or RX FIFO overflows or in TX when TX FIFO underflows
+	no_interrupt_isr,			// 26 RFIFG9 - End of packet or in RX when optional address check fails or RX FIFO overflows or in TX when TX FIFO underflows
 	no_interrupt_isr,           // 27 RFIFG10 - First byte read from RX FIFO
 	no_interrupt_isr,           // 28 RFIFG11 - (LPW)
 	no_interrupt_isr,           // 29 RFIFG12 - RSSI level is above threshold
@@ -141,14 +141,14 @@ void __attribute__ ((interrupt(CC1101_VECTOR))) CC1101_VECTOR_ISR (void)
 	uint16_t edge = (1 << (isr_vector - 1)) & RF1AIES;
 	if(edge) isr_vector += 0x11;
 
-//	#ifdef LOG_PHY_ENABLED
-//		uart_transmit_data(0xDD);
-//		uart_transmit_data(LOG_TYPE_STRING);
-//		uart_transmit_data(13);
-//		uart_transmit_message("CC1101_ISR ", 11);
-//		uart_transmit_data(48 + (isr_vector / 10));
-//		uart_transmit_data(48 + (isr_vector - (10 * (isr_vector / 10))));
-//	#endif
+	#ifdef LOG_PHY_ENABLED
+		uart_transmit_data(0xDD);
+		uart_transmit_data(LOG_TYPE_STRING);
+		uart_transmit_data(13);
+		uart_transmit_message("CC1101_ISR ", 11);
+		uart_transmit_data(48 + (isr_vector / 10));
+		uart_transmit_data(48 + (isr_vector - (10 * (isr_vector / 10))));
+	#endif
 
 	interrupt_table[isr_vector]();
 	LPM4_EXIT;  //Todo should system call be made here?
@@ -165,10 +165,11 @@ void _c1101_interface_set_interrupts_enabled(bool enable)
 {
     if(enable)
     {
-        // TODO only end of packet needed?
-        RF1AIES = /*RFIFG_FLANK_TXBelowThresh | RFIFG_FLANK_TXUnderflow |*/ RFIFG_FLANK_EndOfPacket;
+        // interrupt on GDO0 falling edge (end of packet), similar as cc1101
+        //RF1AIES = RFIFG_FLANK_TXBelowThresh | RFIFG_FLANK_TXUnderflow | RFIFG_FLANK_EndOfPacket;
+    	RF1AIES = RFIFG_FLANK_IOCFG0;
         RF1AIFG = 0;
-        RF1AIE  = /*RFIFG_FLAG_TXBelowThresh | RFIFG_FLAG_TXUnderflow |*/ RFIFG_FLAG_EndOfPacket;
+        RF1AIE  = RFIFG_FLAG_IOCFG0 /*RFIFG_FLAG_TXBelowThresh | RFIFG_FLAG_TXUnderflow | RFIFG_FLAG_EndOfPacket */;
     }
     else
     {

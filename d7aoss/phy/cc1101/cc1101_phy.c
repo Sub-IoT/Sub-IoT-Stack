@@ -305,11 +305,11 @@ extern bool phy_tx_data(phy_tx_cfg_t* cfg)
 
 #ifdef LOG_PHY_ENABLED
     log_print_stack_string(LOG_PHY, "Data to TX Fifo:");
-    log_print_data(tx_queue.front, cfg->length);
+    log_print_data(tx_queue.front, tx_queue.length);
 #endif
 
-    cc1101_interface_write_single_reg(TXFIFO, cfg->length);
-    cc1101_interface_write_burst_reg(TXFIFO, tx_queue.front, cfg->length);
+    cc1101_interface_write_single_reg(TXFIFO, tx_queue.length);
+    cc1101_interface_write_burst_reg(TXFIFO, tx_queue.front, tx_queue.length);
 
     cc1101_interface_set_interrupts_enabled(true);
 
@@ -424,8 +424,9 @@ extern int16_t phy_get_rssi(uint8_t spectrum_id[2], uint8_t sync_word_class)
 
     cc1101_interface_strobe(RF_SRX);
 
-    //FIXME wait for RSSI VALID!!!
-    // Is this possible with CC1101?
+    // TODO wait for RSSI VALID!!!
+    // see DN505
+    timer_wait_ms(1); // TODO too long for now
 
     rssi_raw = cc1101_interface_read_single_reg(RSSI);
     rxtx_finish_isr();
@@ -559,9 +560,8 @@ void rxtx_finish_isr()
         //Flush FIFOs and go to sleep
         cc1101_interface_strobe(RF_SFRX);
         cc1101_interface_strobe(RF_SFTX);
-        cc1101_interface_strobe(RF_SPWD);
         cc1101_interface_strobe(RF_SIDLE);
-
+        cc1101_interface_strobe(RF_SPWD);
         state = Idle;
     }
 }
