@@ -104,7 +104,7 @@ IF(${CMAKE_SYSTEM_NAME} STREQUAL "Darwin")
 					 "-loppsimd" 
 					 "-lstdc++")
 ELSEIF(${CMAKE_SYSTEM_NAME} STREQUAL "Linux")
-    INSERT_LINKER_FLAGS(BEFORE OBJECTS INSERT "-Wl,-rpath,${${PLATFORM_PREFIX}_OMNETPP_DIR}/lib" "-Wl,-rpath,.")
+    INSERT_LINKER_FLAGS(BEFORE OBJECTS INSERT "-Wl,-rpath,${${PLATFORM_PREFIX}_OMNETPP_DIR}/lib" "-Wl,-rpath,." "-Wl,--whole-archive")
     INSERT_LINKER_FLAGS(AFTER LINK_LIBRARIES INSERT "-Wl,--no-as-needed"
 						    "-Wl,--whole-archive" 
 						    "-Wl,--no-whole-archive" 
