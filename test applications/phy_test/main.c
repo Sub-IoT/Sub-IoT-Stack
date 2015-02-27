@@ -17,6 +17,7 @@
 #include <hal/system.h>
 #include <framework/log.h>
 
+
 #define RX_MODE
 
 static uint8_t data[] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15};
@@ -37,12 +38,12 @@ void start_rx(void)
 void start_tx(void)
 {
 	phy_idle();
+	queue_push_u8(&tx_queue, sizeof(data)); // length byte
 	queue_push_u8_array(&tx_queue, data, sizeof(data));
 	phy_tx_cfg_t tx_cfg = {
 	    .spectrum_id = { 0x04, 0x00}, // TODO
 		.sync_word_class = 1,
 	    .eirp = 0,
-	    .length = sizeof(data)
 	};
 
 	phy_tx(&tx_cfg);
@@ -56,6 +57,7 @@ void rx_callback(phy_rx_data_t* rx_data)
 
 	log_print_data(rx_data->data + 1, rx_data->length);
 	led_toggle(1);
+
 	start_rx();
 }
 
@@ -82,8 +84,8 @@ int main(void)
 
 	#ifdef RX_MODE
 		start_rx();
-		while(1);
-		system_lowpower_mode(4,1);
+		//while(1);
+		system_lowpower_mode(0,1);
 	#else
 		start_tx();
 		while(1);

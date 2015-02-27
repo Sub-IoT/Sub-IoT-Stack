@@ -34,9 +34,9 @@ static uint8_t rtcEnabled = 0;
 static uint8_t tx = 0;
 
 dll_channel_scan_t scan_cfg1 = {
-		{0x04, 0x02},
+		{0x04, 0x00},
 		FrameTypeForegroundFrame,
-		1000,
+		0,
 		0
 };
 
@@ -61,27 +61,32 @@ void stop_rx()
 	led_off(2);
 }
 
-//void start_tx()
-//{
-//	if (tx)
-//		return;
-//
-//	tx = 1;
-//	stop_rx();
-//	led_on(3);
-//
-//	dll_ff_tx_cfg_t cfg;
-//	cfg.eirp = 0;
-//	cfg.spectrum_id = 0x1C;
-//	cfg.subnet = 0xFF;
-//
-//	dll_create_foreground_frame((uint8_t*)&counter, sizeof(counter), &cfg);
-//	//dll_csma(1);
-//	dll_tx_frame();
-//}
+void start_tx()
+{
+	if (tx)
+		return;
+
+	tx = 1;
+	stop_rx();
+	led_on(3);
+
+	dll_tx_cfg_t cfg = {
+			.eirp = 0,
+			.spectrum_id = {0x04, 0x00},
+			.subnet = 0xFF,
+			.frame_type = FrameTypeForegroundFrame
+	};
+
+	queue_push_u8_array(&tx_queue, &counter, sizeof(counter));
+	dll_create_frame(NULL, 0, &cfg);
+	//dll_create_foreground_frame((uint8_t*)&counter, sizeof(counter), &cfg);
+	//dll_csma(1);
+	dll_tx_frame();
+}
 
 void tx_callback(Dll_Tx_Result result)
 {
+	queue_clear(&tx_queue);
 	if(result == DLLTxResultOK)
 	{
 		counter++;
@@ -111,6 +116,7 @@ void rx_callback(dll_rx_res_t* rx_res)
 {
 	led_toggle(3);
 	log_print_string("RX CB");
+	start_rx();
 }
 
 uint8_t tx_buffer[128];
@@ -165,12 +171,12 @@ void main(void) {
 
 	while(1)
 	{
-
+		//start_tx();
         if(INTERRUPT_BUTTON1 & interrupt_flags)
         {
         	interrupt_flags &= ~INTERRUPT_BUTTON1;
 
-        	//start_tx();
+        	start_tx();
 
         	button_clear_interrupt_flag();
         	button_enable_interrupts();

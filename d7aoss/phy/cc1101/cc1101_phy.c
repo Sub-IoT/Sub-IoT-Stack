@@ -308,8 +308,7 @@ extern bool phy_tx_data(phy_tx_cfg_t* cfg)
     log_print_data(tx_queue.front, tx_queue.length);
 #endif
 
-    cc1101_interface_write_single_reg(TXFIFO, tx_queue.length);
-    cc1101_interface_write_burst_reg(TXFIFO, tx_queue.front, tx_queue.length);
+    cc1101_interface_write_burst_reg(TXFIFO, tx_queue.front, tx_queue.length); // tx_queue.front is length byte
 
     cc1101_interface_set_interrupts_enabled(true);
 
@@ -449,6 +448,10 @@ void end_of_packet_isr()
         rx_data.lqi = buffer[packet_length + 1] & 0x7F;
         rx_data.length = packet_length;
         rx_data.data = rx_queue.front;
+#ifdef LOG_PHY_ENABLED
+        log_phy_rx_res(&rx_data);
+#endif
+
         if(phy_rx_callback != NULL)
             phy_rx_callback(&rx_data);    
     }
@@ -558,8 +561,8 @@ void rxtx_finish_isr()
     if (init_and_close_radio)
     {
         //Flush FIFOs and go to sleep
-        cc1101_interface_strobe(RF_SFRX);
-        cc1101_interface_strobe(RF_SFTX);
+        cc1101_interface_strobe(RF_SFRX); // TODO cc1101 datasheet : Only issue SFRX in IDLE or RXFIFO_OVERFLOW states
+        cc1101_interface_strobe(RF_SFTX); // TODO cc1101 datasheet : Only issue SFTX in IDLE or TXFIFO_UNDERFLOW states.
         cc1101_interface_strobe(RF_SIDLE);
         cc1101_interface_strobe(RF_SPWD);
         state = Idle;
