@@ -146,6 +146,8 @@ void system_init(uint8_t* tx_buffer, uint16_t tx_buffer_size, uint8_t* rx_buffer
 
 
     system_check_set_unique_id();
+
+    __bis_SR_register(GIE); // enable interrupts
 }
 
 void clock_init(void)
