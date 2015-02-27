@@ -4,7 +4,7 @@ OSS-7 is an open source implementation of the [DASH7 Alliance](http://www.dash7.
 
 For more information visit the [OSS-7 site](http://oss-7.cosys.be)
 
-Copyright 2015 University of Antwerp
+Copyright 2015 University of Antwerp and others
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
