@@ -365,7 +365,6 @@ uint8_t dll_background_scan()
 	#endif
 
 	phy_rx_cfg_t rx_cfg;
-	rx_cfg.length = 0;
 	rx_cfg.timeout = background_scan_detection_timeout; // timeout
 	memcpy(rx_cfg.spectrum_id, spectrum_id, 2); // spectrum ID
 	rx_cfg.scan_minimum_energy = scan_minimum_energy;
@@ -394,7 +393,6 @@ void dll_foreground_scan()
 	dll_state = DllStateScanForegroundFrame;
 
 	phy_rx_cfg_t rx_cfg;
-	rx_cfg.length = 0;
 	rx_cfg.timeout = foreground_scan_detection_timeout; // timeout
 	memcpy(rx_cfg.spectrum_id, spectrum_id, 2); // spectrum ID
 	rx_cfg.scan_minimum_energy = scan_minimum_energy;
@@ -420,7 +418,6 @@ void dll_channel_scan_series(dll_channel_scan_series_t* css)
 	#endif
 
 	phy_rx_cfg_t rx_cfg;
-	rx_cfg.length = 0;
 	rx_cfg.timeout = css->values[current_scan_id].timeout_scan_detect; // timeout
 	//rx_cfg.multiple = 0; // multiple TODO
 	memcpy(rx_cfg.spectrum_id, css->values[current_scan_id].spectrum_id, 2); // spectrum ID

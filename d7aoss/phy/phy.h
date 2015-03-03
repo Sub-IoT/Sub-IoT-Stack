@@ -54,7 +54,6 @@ typedef struct
 {
 	uint8_t spectrum_id[2];		//Spectrum ID
 	uint8_t sync_word_class;	//Sync word class
-	uint8_t length;				//Packet length (0 : variable)
 	uint16_t timeout;			//Timeout value (0 : continuous) in milliseconds
 	int16_t scan_minimum_energy;
 } phy_rx_cfg_t;

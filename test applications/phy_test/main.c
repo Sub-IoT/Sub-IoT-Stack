@@ -33,7 +33,6 @@ static uint8_t data[] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15};
 phy_rx_cfg_t rx_cfg = {
 	.spectrum_id={ 0x04, 0x00}, // TODO
 	.sync_word_class=1,
-	.length=0,
 	.timeout=0,
 	.scan_minimum_energy = -140
 };

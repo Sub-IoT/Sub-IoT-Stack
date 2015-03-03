@@ -394,8 +394,6 @@ bool phy_rx(phy_rx_cfg_t* cfg)
 
     set_length_infinite(false); // TODO needed?
 
-    // TODO remove cfg->length, length is contained in background frames as well in draft spec so always dynamic
-
     packet_length = 0;
     cc1101_interface_write_single_reg(PKTLEN, 0xFF);
 
