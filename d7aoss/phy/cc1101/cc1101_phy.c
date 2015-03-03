@@ -33,6 +33,8 @@
 
 #include "cc1101_interface.h"
 #include "log.h"
+#include "timer.h"
+#include "system.h"
 
 #ifdef LOG_PHY_ENABLED
 #define DPRINT(...) log_print_stack_string(LOG_PHY, __VA_ARGS__)

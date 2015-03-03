@@ -51,6 +51,14 @@
 #define LED_OK	3
 #define LED_ERROR	3
 
+#ifdef UART
+#define DPRINT(str) log_print(str)
+#define DPRINTF(...) log_print(..)
+#else
+#define DPRINT(str)
+#define DPRINTF(...)
+#endif
+
 static uint8_t buffer[128];
 static volatile uint8_t add_sensor_event = 0;
 static volatile uint16_t adc12_result;
@@ -126,14 +134,16 @@ void tx_callback(Trans_Tx_Result result)
 		led_off(LED_ERROR);
 		led_blink(LED_OK);
 		#endif
-		log_print_string("TX OK");
+
+        DPRINT("TX OK");
 	}
 	else
 	{
 		#ifdef USE_LEDS
 		led_on(LED_ERROR);
 		#endif
-		log_print_string("TX CCA FAIL");
+
+        DPRINT("TX CCA FAIL");
 	}
 }
 
@@ -155,7 +165,11 @@ int main(void) {
 			add_sensor_event = false;
 			temperature_internal = temperature_measurement();
 
-			log_print_string("Updating temperature: %d mV", temperature_internal);
+#ifdef NO_PRINTF
+            DPRINT("Updating temperature");
+#else
+            DPRINTF("Updating temperature: %d mV", temperature_internal);
+#endif
 
 			fs_open(&fh, 32, file_system_user_user, file_system_access_type_write);
 

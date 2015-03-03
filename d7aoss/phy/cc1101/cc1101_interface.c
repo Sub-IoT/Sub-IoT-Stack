@@ -12,9 +12,11 @@
 
 // turn on/off the debug prints
 #ifdef LOG_PHY_ENABLED
-#define DPRINT(...) log_print_string(__VA_ARGS__)
+#define DPRINTF(...) log_printf(__VA_ARGS__)
+#define DPRINT(str) log_print(str)
 #else
-#define DPRINT(...)  
+#define DPRINTF(...)
+#define DPRINT(str)
 #endif
 
 // functions to be defined which contain CC1101 or CC430 specific implementation
@@ -58,7 +60,7 @@ uint8_t cc1101_interface_strobe(uint8_t strobe_command)
         status = _c1101_interface_strobe(strobe_command);
     }
 
-    DPRINT("STROBE 0x%02X STATUS: 0x%02X", strobe_command, status);
+    DPRINTF("STROBE 0x%02X STATUS: 0x%02X", strobe_command, status);
 
     return status;
 }
@@ -108,7 +110,7 @@ uint8_t cc1101_interface_read_single_reg(uint8_t addr)
 void cc1101_interface_write_single_reg(uint8_t addr, uint8_t value)
 {
     _c1101_interface_write_single_reg(addr, value);
-    DPRINT("WRITE SREG 0x%02X @0x%02X", value, addr);
+    DPRINTF("WRITE SREG 0x%02X @0x%02X", value, addr);
 }
 
 // *****************************************************************************
@@ -123,7 +125,7 @@ void cc1101_interface_read_burst_reg(uint8_t addr, uint8_t* buffer, uint8_t coun
 {
     _c1101_interface_read_burst_reg(addr, buffer, count);
 
-    DPRINT("READ BREG %u Byte(s) @0x%02X", count, addr);
+    DPRINTF("READ BREG %u Byte(s) @0x%02X", count, addr);
 }
 
 // *****************************************************************************
@@ -138,7 +140,7 @@ void cc1101_interface_write_burst_reg(uint8_t addr, uint8_t* buffer, uint8_t cou
 {
     _c1101_interface_write_burst_reg(addr, buffer, count);
 
-    DPRINT("WRITE BREG %u Byte(s) @0x%02X", count, addr);
+    DPRINTF("WRITE BREG %u Byte(s) @0x%02X", count, addr);
 }
 
 // *****************************************************************************

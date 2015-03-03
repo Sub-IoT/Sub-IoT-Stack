@@ -17,6 +17,14 @@
 #include <hal/system.h>
 #include <framework/log.h>
 
+#ifdef UART
+#define DPRINT(str) log_print(str)
+#define DPRINTF(...) log_print(..)
+#else
+#define DPRINT(str)
+#define DPRINTF(...)
+#endif
+
 
 #define RX_MODE
 
@@ -51,11 +59,14 @@ void start_tx(void)
 
 void rx_callback(phy_rx_data_t* rx_data)
 {
-	log_print_string("RX callback");
+    DPRINT("RX callback");
 	if(memcmp(data, rx_data->data + 1, sizeof(data)) != 0) // first byte of rx_data->data is length (for now), skip this
-		log_print_string("ERROR Unexpected data received:");
+    {
+        DPRINT("ERROR Unexpected data received:");
+    }
 
 	log_print_data(rx_data->data + 1, rx_data->length);
+
 	led_toggle(1);
 
 	start_rx();
@@ -63,7 +74,8 @@ void rx_callback(phy_rx_data_t* rx_data)
 
 void tx_callback()
 {
-	log_print_string("TX callback");
+    DPRINT("TX callback");
+
 	led_toggle(1);
 	queue_clear(&tx_queue);
 	//start_tx();
@@ -76,7 +88,7 @@ uint8_t rx_buffer[128];
 int main(void)
 {
     system_init(tx_buffer, sizeof(tx_buffer), rx_buffer, sizeof(rx_buffer));
-	log_print_string("started...");
+    DPRINT("started...");
 
 	phy_init();
 	phy_set_rx_callback(rx_callback);

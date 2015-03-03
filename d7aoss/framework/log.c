@@ -33,8 +33,32 @@
 #define BUFFER_SIZE 100
 static char buffer[BUFFER_SIZE];
 
-#pragma NO_HOOKS(log_print_string)
-void log_print_string(char* format, ...)
+
+#pragma NO_HOOKS(log_print)
+void log_print(uint8_t* message)
+{
+#ifndef USE_SIMPLE_TERMINAL
+    uart_transmit_data(0xDD);
+    uart_transmit_data(LOG_TYPE_STRING);
+    uint8_t len = strlen(message);
+    uart_transmit_data(len);
+    uart_transmit_message((unsigned char*) message, len);
+#else
+    char buf[BUFFER_SIZE], i;
+    sprintf(buf, "\n\r[%03d]", counter);
+    uart_transmit_message((unsigned char*) buf, 7);
+    for( i=0 ; i<length ; i++ )
+    {
+        sprintf(buf, " %02X", message[i]);
+        uart_transmit_message((unsigned char*) buf, 3);
+    }
+    counter++;
+#endif
+}
+
+#pragma NO_HOOKS(log_printf)
+#ifndef LOG_NO_PRINTF
+void log_printf(char* format, ...)
 {
     va_list args;
     va_start(args, format);
@@ -52,9 +76,11 @@ void log_print_string(char* format, ...)
     counter++;
 #endif
 }
+#endif
 
 #pragma NO_HOOKS(log_print_stack_string)
-void log_print_stack_string(char type, char* format, ...)
+#ifndef LOG_NO_PRINTF
+void log_printf_stack(char type, char* format, ...)
 {
     va_list args;
     va_start(args, format);
@@ -74,8 +100,10 @@ void log_print_stack_string(char type, char* format, ...)
     counter++;
 #endif
 }
+#endif
 
 #pragma NO_HOOKS(log_print_trace)
+#ifndef LOG_NO_PRINTF
 void log_print_trace(char* format, ...)
 {
     va_list args;
@@ -95,6 +123,7 @@ void log_print_trace(char* format, ...)
     counter++;
 #endif
 }
+#endif
 
 void log_print_data(uint8_t* message, uint8_t length)
 {
@@ -146,6 +175,7 @@ void log_dll_rx_res(dll_rx_res_t* res)
 	uart_transmit_data(res->spectrum_id[0]);
 }
 
+// TODO CCS only
 #ifdef LOG_TRACE_ENABLED
 void __entry_hook(const char* function_name)
 {
@@ -157,3 +187,4 @@ void __exit_hook(const char* function_name)
 	log_print_trace("< %s", function_name);
 }
 #endif
+

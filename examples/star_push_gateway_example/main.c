@@ -47,6 +47,14 @@
 #define TX_EIRP 10
 #define USE_LEDS
 
+#ifdef UART
+#define DPRINT(str) log_print(str)
+#define DPRINTF(...) log_print(..)
+#else
+#define DPRINT(str)
+#define DPRINTF(...)
+#endif
+
 static bool start_channel_scan = false;
 uint8_t buffer[128];
 
@@ -91,12 +99,17 @@ void rx_callback(Trans_Rx_Alp_Result* rx_res)
 			}
 		}
 
+#ifdef NO_PRINTF
+        DPRINT("Received Query");
+#else
 		if (address_length == 2)
 		{
-			log_print_string("Received Query from: %x%x%x%x",
-								address_ptr[1] >> 4, address_ptr[1] & 0x0F);
-		} else if (address_length == 8) {
-			log_print_string("Received Query from: %x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x",
+            DPRINTF("Received Query from: %x%x%x%x", address_ptr[1] >> 4, address_ptr[1] & 0x0F);
+        }
+        else if (address_length == 8)
+        {
+
+			log_printf("Received Query from: %x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x",
 					address_ptr[0] >> 4, address_ptr[0] & 0x0F,
 					address_ptr[1] >> 4, address_ptr[1] & 0x0F,
 					address_ptr[2] >> 4, address_ptr[2] & 0x0F,
@@ -105,14 +118,19 @@ void rx_callback(Trans_Rx_Alp_Result* rx_res)
 					address_ptr[5] >> 4, address_ptr[5] & 0x0F,
 					address_ptr[6] >> 4, address_ptr[6] & 0x0F,
 					address_ptr[7] >> 4, address_ptr[7] & 0x0F);
-		}
-	log_print_string("RSS: %d dBm", rx_res->nwl_rx_res->dll_rx_res->rssi);
+        }
+#endif
+
+#ifndef NO_PRINTF
+    DPRINTF("RSS: %d dBm", rx_res->nwl_rx_res->dll_rx_res->rssi);
+#endif
 	//log_print_string("Netto Link: %d dBm", rx_res->nwl_rx_res->dll_rx_res->rssi  - ((frame->control & 0x3F) - 32));
 
-	log_print_string("D7AQP received - ALP data:");
+    DPRINT("D7AQP received - ALP data:");
 
 	log_print_data((uint8_t*) (rx_res->alp_record.alp_templates), rx_res->alp_record.record_lenght-3);
-	}
+
+    }
 	start_channel_scan = true;
 
 }
@@ -128,12 +146,10 @@ int main(void) {
 
 	start_channel_scan = true;
 
-
-	log_print_string("gateway started");
+    DPRINT("gateway started");
 
 	// Log the device id
 	log_print_data(device_id, 8);
-
 
 	system_watchdog_init(0x0020, 0x03);
 	system_watchdog_timer_start();

@@ -17,9 +17,18 @@
 #include <hal/rtc.h>
 #include <hal/uart.h>
 #include <framework/log.h>
-
+#include <phy.h>
 
 #define CHANNEL_COUNT 1
+
+#ifdef UART
+#define DPRINT(str) log_print(str)
+#define DPRINTF(...) log_print(..)
+#else
+#define DPRINT(str)
+#define DPRINTF(...)
+#endif
+
 
 static uint8_t buffer[128];
 static uint8_t logbuffer[2];
@@ -48,6 +57,8 @@ int main(void)
 	{
         led_toggle(0);
         int16_t rssi = phy_get_rssi(0, 0);
-        log_print_string("RSSI: %d dBm", rssi);
+#ifndef NO_PRINTF
+        DPRINTF("RSSI: %d dBm", rssi);
+#endif
 	}
 }

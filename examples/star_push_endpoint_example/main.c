@@ -51,6 +51,12 @@
 // Macro which can be removed in production environment
 #define USE_LEDS
 
+#ifdef UART
+#define DPRINT(str) log_print(str)
+#else
+#define DPRINT(str)
+#endif
+
 static uint8_t tx = 0;
 static uint16_t counter = 0;
 static volatile bool add_tx_event = true;
@@ -78,7 +84,7 @@ void start_tx()
 		led_on(3);
 		#endif
 
-		log_print_string("TX...");
+        DPRINT("TX...");
 
 		data[0] = counter >> 8;
 		data[1] = counter & 0xFF;
@@ -100,14 +106,16 @@ void tx_callback(Trans_Tx_Result result)
 		#ifdef USE_LEDS
 		led_off(3);
 		#endif
-		log_print_string("TX OK");
+
+        DPRINT("TX OK");
 	}
 	else
 	{
 		#ifdef USE_LEDS
 		led_toggle(1);
 		#endif
-		log_print_string("TX CCA FAIL");
+
+        DPRINT("TX CCA FAIL");
 	}
 
 	tx = 0;
@@ -123,7 +131,8 @@ int main(void) {
 	event.next_event = SEND_INTERVAL_MS;
 	event.f = &start_tx;
 
-	log_print_string("endpoint started");
+    DPRINT("endpoint started");
+
 
 	alp_template.op = ALP_OP_RESP_DATA;
 	alp_template.data = (uint8_t*) &data_template;
@@ -136,7 +145,9 @@ int main(void) {
 	timer_add_event(&event);
 
 	// Log the device id
+    #ifdef UART
 	log_print_data(device_id, 8);
+    #endif
 
 	system_watchdog_init(0x0020, 0x03);
 	system_watchdog_timer_start();

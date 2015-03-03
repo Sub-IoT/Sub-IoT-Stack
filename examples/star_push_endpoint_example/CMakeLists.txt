@@ -7,6 +7,8 @@ ADD_EXECUTABLE(star_push_endpoint_example main.c filesystem.c)
 TARGET_LINK_LIBRARIES(star_push_endpoint_example OSS7STACK)
 
 IF(D7AOSS_HAL_DRIVER STREQUAL "efm32gg")
-SET_TARGET_PROPERTIES(star_push_endpoint_example PROPERTIES LINK_FLAGS "-T${D7AOSS_SOURCE_DIR}/d7aoss/hal/efm32gg/CMSIS/device/linker/efm32gg.ld")
+	SET_TARGET_PROPERTIES(star_push_endpoint_example PROPERTIES LINK_FLAGS "-T${D7AOSS_SOURCE_DIR}/d7aoss/hal/efm32gg/CMSIS/device/linker/efm32gg.ld")
+ELSEIF(D7AOSS_HAL_DRIVER STREQUAL "cc430")
+    SET_TARGET_PROPERTIES(star_push_endpoint_example PROPERTIES LINK_FLAGS "-Tcc430f5137.ld -Wl,--gc-sections")
 ENDIF()
 

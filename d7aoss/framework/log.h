@@ -68,8 +68,9 @@
 //bool itoa(int32_t n, char* out);
 
 // generic logging functions
-void log_print_string(char* format, ...);
-void log_print_stack_string(char type, char* format, ...);
+void log_print(uint8_t* message);
+void log_printf(char* format, ...);
+void log_printf_stack(char type, char* format, ...);
 void log_print_data(uint8_t* message, uint8_t length);
 
 // special logging functions

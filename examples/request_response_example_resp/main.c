@@ -44,6 +44,14 @@
 #define TX_EIRP 10
 #define USE_LEDS
 
+#ifdef UART
+#define DPRINT(str) log_print(str)
+#define DPRINTF(...) log_print(..)
+#else
+#define DPRINT(str)
+#define DPRINTF(...)
+#endif
+
 
 static bool start_channel_scan = false;
 static volatile uint8_t add_sensor_event = 0;
@@ -131,14 +139,16 @@ void tx_callback(Trans_Tx_Result result)
 		#ifdef USE_LEDS
 		led_off(3);
 		#endif
-		log_print_string("RESPONSE SEND");
+
+        DPRINT("RESPONSE SEND");
 	}
 	else
 	{
 		#ifdef USE_LEDS
 		led_toggle(2);
 		#endif
-		log_print_string("TX RESPONSE CCA FAIL");
+
+        DPRINT("TX RESPONSE CCA FAIL");
 	}
 
 	// Restart channel scanning
@@ -167,8 +177,7 @@ int main(void) {
 
 	timer_add_event(&event);
 
-
-	log_print_string("responder started");
+    DPRINT("responder started");
 
 	// Log the device id
 	log_print_data(device_id, 8);

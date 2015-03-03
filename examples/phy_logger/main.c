@@ -43,6 +43,14 @@
 #include <framework/log.h>
 #include <hal/leds.h>
 
+#ifdef UART
+#define DPRINT(str) log_print(str)
+#define DPRINTF(...) log_print(..)
+#else
+#define DPRINT(str)
+#define DPRINTF(...)
+#endif
+
 
 static dll_channel_scan_t scan_cfg;
 
@@ -69,7 +77,7 @@ void start_rx()
 	bool phy_rx_result = phy_rx(&rx_cfg);
 	if (!phy_rx_result)
 	{
-		log_print_string("Starting channel scan FAILED");
+        DPRINT("Starting channel scan FAILED");
 
 		led_off(2);
 		led_off(3);
@@ -86,7 +94,9 @@ void rx_callback(phy_rx_data_t* rx_res)
 	if (rx_res != NULL)
 	{
 		led_on(3);
-		log_phy_rx_res(rx_res);
+#ifdef UART
+        log_phy_rx_res(rx_res);
+#endif
 		//uint16_t eta = MERGEUINT16(rx_res->data[4], rx_res->data[5]);
 		//log_print_string("eta: %d", eta);
 		led_off(3);
@@ -112,12 +122,12 @@ int main(void) {
 
 	phy_set_rx_callback(&rx_callback);
 	
-	log_print_string("started");
+    DPRINT("started");
+
 	start_rx();
 
 	while(1)
 	{
 		system_lowpower_mode(0,1);
 	}
-
 }

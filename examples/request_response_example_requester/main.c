@@ -57,6 +57,15 @@
 // Macro which can be removed in production environment
 #define USE_LEDS
 
+#ifdef UART
+#define DPRINT(str) log_print(str)
+#define DPRINTF(...) log_print(..)
+#else
+#define DPRINT(str)
+#define DPRINTF(...)
+#endif
+
+
 static uint8_t send_channel[2] = {0x04, 0x00};
 static uint8_t tx = 0;
 static uint8_t counter = 0;
@@ -85,7 +94,7 @@ void start_tx()
 		led_on(3);
 		#endif
 
-		log_print_string("TX Request");
+        DPRINT("TX Request");
 
 		alp_template.op = ALP_OP_READ_DATA;
 		alp_template.data = (uint8_t*) &data_template;
@@ -109,8 +118,7 @@ void rx_callback(Trans_Rx_Alp_Result* rx_res)
 
 	led_on(1);
 
-
-	log_print_string("Received Query");
+    DPRINT("Received Query");
 
 	if (rx_res != NULL)
 	{
@@ -125,11 +133,15 @@ void rx_callback(Trans_Rx_Alp_Result* rx_res)
 			data.bytes_accessing =  MERGEUINT16(alp_data[3], alp_data[4]);
 			data.data = &alp_data[5];
 
-			log_print_string("D7AQP File Response Data");
-			log_print_string(" - file 0x%x starting from byte %d", data.file_id, data.start_byte_offset);
+            DPRINT("D7AQP File Response Data");
+#ifndef NO_PRINTF
+            DPRINTF(" - file 0x%x starting from byte %d", data.file_id, data.start_byte_offset);
+#endif
 			log_print_data(data.data, data.bytes_accessing - data.start_byte_offset);
-		} else {
-			log_print_string("Unexpected query received");
+        }
+        else
+        {
+            DPRINT("Unexpected query received");
 		}
 	}
 
@@ -146,16 +158,18 @@ void tx_callback(Trans_Tx_Result result)
 		#ifdef USE_LEDS
 		led_off(3);
 		#endif
-		log_print_string("TX OK");
 
-		wait_for_response = true;
+        DPRINT("TX OK");
+
+        wait_for_response = true;
 	}
 	else
 	{
 		#ifdef USE_LEDS
 		led_toggle(1);
 		#endif
-		log_print_string("TX CCA FAIL");
+
+        DPRINT("TX CCA FAIL");
 	}
 
 	tx = 0;
@@ -177,7 +191,7 @@ int main(void) {
 	event.next_event = SEND_INTERVAL_MS;
 	event.f = &start_tx;
 
-	log_print_string("Requester started");
+    DPRINT("Requester started");
 
 	timer_add_event(&event);
 
@@ -189,7 +203,9 @@ int main(void) {
 		if (wait_for_response)
 		{
 			wait_for_response = false;
-			log_print_string("Starting RX");
+
+            DPRINT("Starting RX");
+
 			trans_rx_query_start(0xFF, send_channel);
 		}
 
