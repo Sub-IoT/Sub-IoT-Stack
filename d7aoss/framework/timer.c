@@ -122,7 +122,7 @@ static uint8_t timer_get_next_event( void )
     if( timer_event_count == 0 )
     {
         // trap processor
-        log_print_stack_string(LOG_FWK, "TIMER: No events in stack!");
+        DPRINT("TIMER: No events in stack!");
         while(1);
     }
 
@@ -168,7 +168,7 @@ static uint8_t timer_get_next_event( void )
         }
     }
 
-    log_print_stack_string(LOG_FWK, "TIMER: error getting next event.");
+    DPRINT("TIMER: error getting next event.");
     while(1);
 }
 
@@ -212,7 +212,7 @@ static bool timer_add_event_in_stack( timer_event new_event )
     uint8_t i;
     if( new_event.f == NULL )
     {
-        log_print_stack_string( LOG_FWK, "Event added not configured!" );
+        DPRINT("Event added not configured!");
         return false;
     }
     // add event to the first free spot in the stack
@@ -230,7 +230,7 @@ static bool timer_add_event_in_stack( timer_event new_event )
         }
     }
 
-    log_print_stack_string(LOG_FWK, "TIMER: Stack full!");
+    DPRINT("TIMER: Stack full!");
     return false;
 }
 
@@ -270,7 +270,7 @@ static bool timer_update_stack( void )
         }
     }
 
-    log_print_stack_string(LOG_FWK, "TIMER: error updating stack.");
+    DPRINT("TIMER: error updating stack.");
     while(1);
 }
 

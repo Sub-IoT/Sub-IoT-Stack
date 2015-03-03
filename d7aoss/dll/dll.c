@@ -181,11 +181,11 @@ static void rx_callback(phy_rx_data_t* res)
 	uint16_t crc = crc_calculate(res->data, res->length - 2);
 	if ((res->data[res->length - 2] != (crc >> 8)) || (res->data[res->length - 1] != (crc & 0xFF)))
 	{
-		//#ifdef LOG_DLL_ENABLED
+        #ifdef LOG_DLL_ENABLED
 			log_print_stack_string(LOG_DLL, "DLL CRC ERROR 0x%x vs 0x%x%x", crc, res->data[res->length - 2], res->data[res->length - 1]);
-		//#endif
+        #endif
 		scan_next(); // how to re�nitiate scan on CRC Error, PHY should stay in RX
-		return;
+        return;
 	}
 	if (!check_subnet(*device_subnet, res->data[1])) // TODO: get device_subnet from datastore
 	{
