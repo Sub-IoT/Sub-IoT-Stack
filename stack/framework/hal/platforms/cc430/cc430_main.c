@@ -11,9 +11,9 @@
 void __platform_init()
 {
     // TODO
-//    __gpio_init();
+    __gpio_init();
 //    __uart_init();
-//    __led_init();
+    __led_init();
 
 #ifdef USE_CC1101
     //TODO: add calls to hw_gpio_configure_pin for the pins used by the CC1101 driver

@@ -32,8 +32,8 @@ void __led_init()
     leds[1] = P3_6;
     for(int i = 0; i < HW_NUM_LEDS; i++)
     {
-        //error_t err = hw_gpio_configure_pin(leds[i], false, gpioModePushPull, 0);
-        //assert(err == SUCCESS);
+        error_t err = hw_gpio_configure_pin(leds[i], GPIO_MODE_OUTPUT);
+        assert(err == SUCCESS);
     }
 }
 
