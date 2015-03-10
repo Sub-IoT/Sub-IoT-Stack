@@ -5,10 +5,12 @@
 #include "hwtimer.h"
 #include "hwatomic.h"
 
+#include "msp430.h"
 
 error_t hw_timer_init(hwtimer_id_t timer_id, uint8_t frequency, timer_callback_t compare_callback, timer_callback_t overflow_callback)
 {
     // TODO
+    return SUCCESS;
 }
 
 hwtimer_tick_t hw_timer_getvalue(hwtimer_id_t timer_id)

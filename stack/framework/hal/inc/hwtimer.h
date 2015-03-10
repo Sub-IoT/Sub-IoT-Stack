@@ -55,7 +55,7 @@ typedef uint16_t hwtimer_tick_t;
 /*! \brief Initialise a hardware timer.
  *
  * \param timer_id		The id of the timer to initialise. timer_id must be between 0 and HWTIMER_NUM
- * \param frequency		The frequency at which the timer shoudl run. One of the HWTIMER_FREQ_ values
+ * \param frequency		The frequency at which the timer should run. One of the HWTIMER_FREQ_ values
  * \param compare_callback	The function to call when the timer reaches the value configured with 
  *				hw_timer_set_value. If this parameter is 0x0, no callback will occur.
  * \param overflow_callback	The function to call when the timer overflows back to zero. This function is 

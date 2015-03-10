@@ -5,12 +5,14 @@
 #include "hwleds.h"
 #include "hwdebug.h"
 #include "platform.h"
+#include "cc430_mcu.h"
 //#include "userbutton.h"
 #include <assert.h>
 
 void __platform_init()
 {
     // TODO
+    __cc430_mcu_init();
     __gpio_init();
 //    __uart_init();
     __led_init();
