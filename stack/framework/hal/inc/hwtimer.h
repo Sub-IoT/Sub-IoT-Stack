@@ -88,7 +88,7 @@ __LINK_C hwtimer_tick_t hw_timer_getvalue(hwtimer_id_t timer_id);
  * timer interrupts are also disabled to ensure that the timer only fires once.
  *
  * This function however does *NOT* reset the timer counter value.
- * ( hw_counter_reset() can be used for this purpose). If the specified tick
+ * ( hw_timer_counter_reset() can be used for this purpose). If the specified tick
  * value is lower than the current value of the timer, the timer will not fire until 
  * the counter has looped around and reached the specified value
  *

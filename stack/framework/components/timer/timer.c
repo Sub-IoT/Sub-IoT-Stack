@@ -11,7 +11,7 @@
 
 #define HW_TIMER_ID 0
 
-#define COUNTER_OVERFLOW_INCREASE (1<<(8*sizeof(hwtimer_tick_t)))
+#define COUNTER_OVERFLOW_INCREASE UINT32_C(1) << (8*sizeof(hwtimer_tick_t))
 
 static timer_event NGDEF(timers)[FRAMEWORK_TIMER_STACK_SIZE];
 static volatile timer_tick_t NGDEF(next_event);
@@ -238,7 +238,7 @@ static void configure_next_event()
 			//check that we didn't try to schedule a timer in the past
 			//normally this shouldn't happen but it IS theoretically possible...
 			fire_delay = (next_fire_time - timer_get_counter_value());
-			//fire_delay should be in [0,COUNTER_VERFLOW_INCREASE]. if this is not the case, it is because timer_get_counter() is
+			//fire_delay should be in [0,COUNTER_OVERFLOW_INCREASE]. if this is not the case, it is because timer_get_counter() is
 			//now larger than next_fire_event, which means we 'missed' the event
 			assert(((int32_t)fire_delay) > 0);
 #endif
