@@ -9,27 +9,27 @@ void hw_enter_lowpower_mode(uint8_t mode)
     {
         case 0:
         {
-            LPM0;
+            __bis_SR_register(LPM0_bits | GIE);
             break;
         }
         case 1:
         {
-            LPM1;
+            __bis_SR_register(LPM1_bits | GIE);
             break;
         }
         case 2:
         {
-            LPM2;
+            __bis_SR_register(LPM2_bits | GIE);
             break;
         }
         case 3:
         {
-            LPM3;
+            __bis_SR_register(LPM3_bits | GIE);
             break;
         }
         case 4:
         {
-            LPM4;
+            __bis_SR_register(LPM4_bits | GIE);
             break;
         }
         default:
