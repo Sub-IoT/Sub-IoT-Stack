@@ -35,5 +35,7 @@ void __cc430_mcu_init()
     UCS_initFLLSettle(CLOCK_FREQ_MHZ / 1000, (uint16_t) (CLOCK_FREQ_MHZ / REF_FREQ_KHZ)); // blocks until clock settled on requested freq
 
     // uint32_t freq = UCS_getMCLK(); // for verifying
+
+    WDTCTL = WDTPW + WDTHOLD; // TODO stop WDT for now
 }
 
