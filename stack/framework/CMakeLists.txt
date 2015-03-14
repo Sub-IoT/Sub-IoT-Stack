@@ -48,6 +48,30 @@ FRAMEWORK_HEADER_DEFINE(BOOL FRAMEWORK_TIMER_RESET_COUNTER)
 FRAMEWORK_BUILD_SETTINGS_FILE()
 
 SET(FRAMEWORK_SOURCES framework_bootstrap.c)
+SET(FRAMEWORK_HEADERS
+        inc/bootstrap.h
+        inc/errors.h
+        inc/link_c.h
+        inc/log.h
+        inc/ng.h
+        inc/random.h
+        inc/scheduler.h
+        inc/timer.h
+        inc/types.h
+)
+
+SET(HAL_API_HEADERS
+        hal/inc/hwatomic.h
+        hal/inc/hwleds.h
+        hal/inc/hwgpio.h
+        hal/inc/hwradio.h
+        hal/inc/hwsystem.h
+        hal/inc/hwdebug.h
+        hal/inc/hwuart.h
+        hal/inc/hwtimer.h
+        hal/inc/hwspi.h
+)
+
 # Assemble the library
 # PLATFORM_CHIP_LIBS: Object libraries of individual chips
 # PLATFORM: Object library of the platform itself
@@ -60,4 +84,4 @@ FOREACH(libname ${LIBNAMES})
     LIST(APPEND LIBS "$<TARGET_OBJECTS:${libname}>")
 ENDFOREACH()
 #AND finally add the library
-ADD_LIBRARY(framework STATIC ${LIBS} ${FRAMEWORK_SOURCES})
+ADD_LIBRARY(framework STATIC ${LIBS} ${FRAMEWORK_SOURCES} ${FRAMEWORK_HEADERS} ${HAL_API_HEADERS})

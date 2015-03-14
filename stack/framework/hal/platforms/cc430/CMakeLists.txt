@@ -47,4 +47,5 @@ PLATFORM_BUILD_SETTINGS_FILE()
 ADD_LIBRARY(PLATFORM OBJECT 
     cc430_main.c
     cc430_leds.c
+    inc/platform.h
 )
