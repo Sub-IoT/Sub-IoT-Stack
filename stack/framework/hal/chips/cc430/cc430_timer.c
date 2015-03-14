@@ -42,7 +42,14 @@ void __attribute__ ((interrupt(TIMER0_A1_VECTOR))) TIMER0_A1_VECTOR_ISR (void)
 
 error_t hw_timer_init(hwtimer_id_t timer_id, uint8_t frequency, timer_callback_t compare_callback, timer_callback_t overflow_callback)
 {
-    // TODO check id
+    if(timer_id >= HWTIMER_NUM)
+        return ESIZE;
+
+    if(timer_inited)
+        return EALREADY;
+
+    if(frequency != HWTIMER_FREQ_1MS && frequency != HWTIMER_FREQ_32K)
+        return EINVAL;
 
     Timer_A_initContinuousModeParam param =
     {
@@ -69,13 +76,20 @@ error_t hw_timer_init(hwtimer_id_t timer_id, uint8_t frequency, timer_callback_t
 
 hwtimer_tick_t hw_timer_getvalue(hwtimer_id_t timer_id)
 {
-    // TODO check id + inited
+    if(timer_id >= HWTIMER_NUM || (!timer_inited))
+        return 0;
+
     return Timer_A_getCounterValue(CC430_TIMER_BASE_ADDRESS);
 }
 
 error_t hw_timer_schedule(hwtimer_id_t timer_id, hwtimer_tick_t tick )
 {
-    // TODO check id + inited
+    if(timer_id >= HWTIMER_NUM)
+        return ESIZE;
+
+    if(!timer_inited)
+        return EOFF;
+
     Timer_A_initCompareModeParam param =
     {
         .compareRegister = CC430_TIMER_COMPARE_REGISTER,
@@ -94,7 +108,12 @@ error_t hw_timer_schedule(hwtimer_id_t timer_id, hwtimer_tick_t tick )
 
 error_t hw_timer_cancel(hwtimer_id_t timer_id)
 {
-    // TODO check id + inited
+    if(timer_id >= HWTIMER_NUM)
+        return ESIZE;
+
+    if(!timer_inited)
+        return EOFF;
+
     start_atomic();
     {
         Timer_A_disableInterrupt(CC430_TIMER_BASE_ADDRESS);
@@ -105,7 +124,12 @@ error_t hw_timer_cancel(hwtimer_id_t timer_id)
 
 error_t hw_timer_counter_reset(hwtimer_id_t timer_id)
 {
-    // TODO check id + inited
+    if(timer_id >= HWTIMER_NUM)
+        return ESIZE;
+
+    if(!timer_inited)
+        return EOFF;
+
     start_atomic();
     {
         Timer_A_clearTimerInterruptFlag(CC430_TIMER_BASE_ADDRESS);
@@ -116,10 +140,16 @@ error_t hw_timer_counter_reset(hwtimer_id_t timer_id)
 
 bool hw_timer_is_overflow_pending(hwtimer_id_t timer_id)
 {
+    if(timer_id >= HWTIMER_NUM)
+        return false;
+
     // TODO
 }
 
 bool hw_timer_is_interrupt_pending(hwtimer_id_t timer_id)
 {
+    if(timer_id >= HWTIMER_NUM)
+        return false;
+
     // TODO
 }
