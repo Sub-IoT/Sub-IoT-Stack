@@ -11,7 +11,7 @@
 
 #define HW_TIMER_ID 0
 
-#define COUNTER_OVERFLOW_INCREASE UINT32_C(1) << (8*sizeof(hwtimer_tick_t))
+#define COUNTER_OVERFLOW_INCREASE (UINT32_C(1) << (8*sizeof(hwtimer_tick_t)))
 
 static timer_event NGDEF(timers)[FRAMEWORK_TIMER_STACK_SIZE];
 static volatile timer_tick_t NGDEF(next_event);

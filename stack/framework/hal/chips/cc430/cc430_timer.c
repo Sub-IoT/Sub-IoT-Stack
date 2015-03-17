@@ -37,6 +37,7 @@ void __attribute__ ((interrupt(TIMER0_A1_VECTOR))) TIMER0_A1_VECTOR_ISR (void)
     }
 
     Timer_A_clearTimerInterruptFlag(CC430_TIMER_BASE_ADDRESS);
+    Timer_A_enableInterrupt(CC430_TIMER_BASE_ADDRESS); // ensure interrupt enabled to allow interrupting on overflows before hw_timer_schedule is called
     __bic_SR_register_on_exit(CPUOFF); // go back to active mode to re-enter scheduler
 }
 
@@ -54,7 +55,7 @@ error_t hw_timer_init(hwtimer_id_t timer_id, uint8_t frequency, timer_callback_t
     Timer_A_initContinuousModeParam param =
     {
         .clockSource = TIMER_A_CLOCKSOURCE_ACLK,
-        .clockSourceDivider = TIMER_A_CLOCKSOURCE_DIVIDER_8, // ACLK = REFO = 32768 Hz => /8 = 1024 Hz = 1 tick
+        .clockSourceDivider = TIMER_A_CLOCKSOURCE_DIVIDER_8, // ACLK = REFO = 32768 Hz => /8 = 4096 Hz
         .timerInterruptEnable_TAIE = TIMER_A_TAIE_INTERRUPT_ENABLE,
         .timerClear = TIMER_A_DO_CLEAR,
         .startTimer = true
@@ -68,6 +69,8 @@ error_t hw_timer_init(hwtimer_id_t timer_id, uint8_t frequency, timer_callback_t
 
     	Timer_A_clearTimerInterruptFlag(CC430_TIMER_BASE_ADDRESS);
     	Timer_A_initContinuousMode(CC430_TIMER_BASE_ADDRESS, &param);
+    	TA0EX0 = TAIDEX_3; // extra division by 4: 4096 Hz / 4 = 1 tick
+    	Timer_A_clear(CC430_TIMER_BASE_ADDRESS); // reset needed to ensure proper divider logic is used after setting TA1EX0
     }
     end_atomic();
 

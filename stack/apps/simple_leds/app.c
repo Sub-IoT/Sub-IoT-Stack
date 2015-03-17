@@ -15,9 +15,6 @@ void userbutton_callback(button_id_t button_id)
 
 #endif
 
-
-
-
 void timer0_callback()
 {
 	led_toggle(0);
@@ -28,7 +25,7 @@ void timer0_callback()
 void timer1_callback()
 {
 	led_toggle(1);
-	timer_post_task_delay(&timer1_callback, 2*TIMER_TICKS_PER_SEC);
+	timer_post_task_delay(&timer1_callback, 0x0000FFFF + (uint32_t)100);
 	log_print_string("Toggled led %d", 1);
 }
 
@@ -43,7 +40,7 @@ void bootstrap()
     sched_register_task(&timer1_callback);
 
     timer_post_task_delay(&timer0_callback, TIMER_TICKS_PER_SEC);
-    timer_post_task_delay(&timer1_callback, 2*TIMER_TICKS_PER_SEC);
+    timer_post_task_delay(&timer1_callback, 0x0000FFFF + (uint32_t)100);
 
 #ifdef PLATFORM_GECKO
     ubutton_register_callback(0, &userbutton_callback);
