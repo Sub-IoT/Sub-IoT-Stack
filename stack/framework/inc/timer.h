@@ -65,7 +65,7 @@ typedef struct
     uint8_t priority;
 } timer_event;
 
-//a bit of dirty macro evaluation to prepend HWTIMER_ to the value of 'FRAMEWORK_TIMER_RESOLUTION'
+//a bit of dirty macro evaluation to prepend HWTIMER_FREQ_ to the value of 'FRAMEWORK_TIMER_RESOLUTION'
 #define ___CONCAT2(a,b) a ## b
 #define ___CONCAT(a, b) ___CONCAT2(a,b)
 /*! \brief The frequency of the hardware timer used to power the framework timer
