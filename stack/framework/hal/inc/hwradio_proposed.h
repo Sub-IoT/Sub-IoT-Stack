@@ -5,12 +5,15 @@
  * placeholders to test out the simulator. These functions WILL change
  * when we start working with the PHY
  *
+ * @author Daniel van den Akker
+ *
  */
 #ifndef __HW_RADIO_H_
 #define __HW_RADIO_H_
 
 #include "link_c.h"
 #include "errors.h"
+#include "hal_defs.h"
 
 #define HW_RSSI_INVALID 0x7FFF
 
@@ -22,16 +25,26 @@ typedef struct
 {
     union
     {	
-	uint8_t channel_header; //the raw (8-bit) channel header
+	uint8_t channel_header; 	/**< The raw (8-bit) channel header */
 	struct
 	{
-	    uint8_t ch_coding: 2; // the 'coding' field in the channel header
-    	    uint8_t ch_class: 2;  // the 'class' field in the channel header
-    	    uint8_t ch_freq_band: 4;   // the frequency 'band' field in the channel header
+	    uint8_t ch_coding: 2; 	/**< The 'coding' field in the channel header */
+    	    uint8_t ch_class: 2;  	/**< The 'class' field in the channel header */
+    	    uint8_t ch_freq_band: 4;	/**< The frequency 'band' field in the channel header */
 	};
     };
-    uint8_t center_freq_index;    // the center frequency index of the channel id
+    uint8_t center_freq_index;		/**< The center frequency index of the channel id */
 } channel_id_t;
+
+/** \brief The type for the result of a 'hardware' crc check
+ *
+ */
+typedef enum
+{
+    HW_CRC_VALID = 0,
+    HW_CRC_INVALID = 1,
+    HW_CRC_UNAVAILABLE = 2
+} hw_crc_t;
 
 /** \brief type of the 'syncword class'
  *
@@ -43,8 +56,6 @@ typedef uint8_t    syncword_class_t;
  */
 typedef int8_t	   eirp_t;
 
-
-
 /** \brief The 'RX Configuration' for the radio. 
  *
  * This struct contains various settings that are used to configure the radio (such as the spectrum_id and 
@@ -54,36 +65,8 @@ typedef int8_t	   eirp_t;
  **/
 typedef struct
 {
-    /** \brief The channel_id of the Dash 7 'channel' to which the radio is tuned
-     *
-     */
-    channel_id_t channel_id;
-    
-    /** \brief The 'threshold' RSSI value for the radio to determine the channel to be 'busy'
-     *
-     */
-    int16_t cca_rssi_threshold;
-
-    /** \brief The 'syncword' class used to designate the SFD of the frame
-     *
-     */
-    syncword_class_t syncword_class;
-    
-    /** \brief Whether or not the channel is deemed to be 'BUSY' if a packet is currently being received
-     *
-     */
-    bool busy_on_rx;    
-
-    /** \brief Whether or not the channel is deemed to be 'BUSY' if a packet is currently being transmitted
-     *
-     */
-    bool busy_on_tx;    
-    
-    /** \brief Whether or not to attach a hw_rx_metadata struct to the received packet before it is passed to 
-     * the higher layers of the stack.
-     */
-    bool report_metadata;
-    
+    channel_id_t channel_id; 		/**< The channel_id of the Dash 7 'channel' to which the radio is tuned */
+    syncword_class_t syncword_class;	/**< The 'syncword' class used to designate the SFD of the frame */        
 } hw_rx_cfg_t;
 
 /** \brief The 'TX Configuration' to use when sending a packet.
@@ -95,91 +78,114 @@ typedef struct
  */
 typedef struct
 {
-    /** \brief The channel_id of the Dash 7 'channel' to which the radio is tuned
-     *
-     */
-    channel_id_t channel_id;
-    
-    /** \brief The 'syncword' class used to designate the SFD of the frame
-     *
-     */
-    syncword_class_t syncword_class;
-    /** \brief The transmission power level measured in dBm [-39,+10]. 
-     *
-     * If the value specified is not supported by the driver, the nearest supported value is used instead.
-     *
-     */
-    eirp_t eirp;
+    channel_id_t channel_id; 		/**< The channel_id of the Dash 7 'channel' on whoch to send the packet */
+    syncword_class_t syncword_class;	/**< The 'syncword' class used to designate the SFD of the frame */        
+    eirp_t eirp;			/**< The transmission power level measured in dBm [-39,+10]. If the 
+					 *   If the value specified is not supported by the driver, 
+					 *   the nearest supported value is used instead.
+					 */    
 } hw_tx_cfg_t;
 
-/** \brief A struct defining the 'metadata' that can be attached to a received packet by the PHY driver
+/** \brief The metadata attached to a received packet.
  *
  */
 typedef struct
 {
-    /** \brief The clock_tick of the framework timer at which the first bit of the SFD was received
-     * 
-     */
-    timer_tick_t timestamp;
-    /** \brief The crc status of the packet
-     *
-     * EOFF 	if the driver does not support hardware crc checking
-     * FAIL 	if the CRC was not valid
-     * SUCCESS	if the CRC was valid
-     */
-    error_t crc_status;
-    /** \brief The 'RX Configuration' used to receive the packet
-     *
-     */
-    hw_rx_cfg_t rx_cfg;
+#ifdef HAL_RADIO_INCLUDE_TIMESTAMP
+    timer_tick_t timestamp; 	/**< The clock_tick of the framework timer at which the first bit of the SFD was received. */
+#endif
+    hw_rx_cfg_t rx_cfg;		/**< The 'RX Configuration' used to receive the packet. */
+    
+    uint8_t lqi;		/**< The link quality indicator (LQI) reported by the radio for the received packet*/	
+    int16_t rssi;		/**< The Received signal strength (RSSI) reported by the radio for the received packet. */
 
-    /** \brief The link quality indicator (LQI) reported by the radio for the received packet
-     *
-     */
-    uint8_t lqi;
-    /** \brief The Received signal strength (RSSI) reported by the radio for the received packet
-     *
-     */
-    int16_t rssi;
-    //TODO: add additional fields here as needed
-} hw_rx_metadata_t;
+    uint8_t crc_status;		/**< The crc status of the packet
+    				 *
+    				 * HW_CRC_UNAVAILABLE 	if the driver does not support hardware crc checking
+    				 * HW_CRC_INVALID 	if the CRC was not valid
+    				 * HW_CRC_VALID	if the CRC was valid 
+    				 */
 
-/** \brief A struct defining the 'metadata' that can be attached to a transmitted packet by the PHY driver
+//this struct is "packed" so it occupies minimal space
+//and to ensure that, the 'prefix' fields (including length) of hw_radio_packet_t
+//are 32-bits alligned (that is sizeof(hw_radio_packet_t)%4 == 0)
+} __attribute__ ((packed)) hw_rx_metadata_t; 
+
+/** \brief The metadata an TX settings attached to a packet ready to be transmitted / that has been 
+ *  transmitted.
+ */
+typedef struct
+{
+#ifdef HAL_RADIO_INCLUDE_TIMESTAMP
+    timer_tick_t timestamp; 	/**< The clock_tick of the framework timer at which the first bit of the SFD was sent. */
+#endif
+    hw_tx_cfg_t tx_cfg;		/**< The 'TX Configuration' used to receive the packet. */
+    
+//this struct is "packed" so it occupies minimal space
+//and to ensure that, the 'prefix' fields (including length) of hw_radio_packet_t
+//are 32-bits alligned (that is sizeof(hw_radio_packet_t)%4 == 0)
+} __attribute__ ((packed)) hw_tx_metadata_t;
+
+/** \brief A PHY layer packet that can be sent / received over the air using the HW radio interface.
+ *
+ * A hw_radio_packet_t consists of:
+ *   - <rx_meta> / <tx_meta>: 		The metadata attached to the packet that is either collected by the radio driver
+ *					upon reception of the packet or needed/returned by the radio driver upon 
+ *					transmission of the packet.
+ *   - the packet data itself:		a uint8[] of undetermined length that contains the actual packet data.
+ *					for convenience, the first byte of this data array overlaps with the 
+ *					'length' field containing the length of the data array.
+ *
+ * It should be noted that the <rx_meta> and <tx_meta> structs occupy the same memory space (unioned)
+ * And that they have been defined so the fields of these structs that have the same meaning overlap.
+ * Moreover, the fields of thw hw_radio_packet_t structure are alligned such that the 'data' of a packet
+ * is always in the same place, regardless of whether it is transmitted or received.
  *
  */
 typedef struct
 {
-    /** \brief The clock_tick of the framework timer at which the first bit of the SFD was transmitted
-     * 
-     */
-    timer_tick_t timestamp;
-    /** \brief The 'TX Configuration' used to transmit the packet
-     *
-     */
-    hw_tx_cfg_t	 tx_cfg;
-    //TODO: add additional fields here as needed
-} hw_tx_metadata_t;
+    union
+    {
+	hw_rx_metadata_t rx_meta;		/**< The TX Metadata of the packet */
+	hw_tx_metadata_t tx_meta;		/**< The RX Metadata of the packet */
+    };
+    union
+    {
+	uint8_t		length;			/**< The length of the packet. This fields overlaps with the first byte of the packet data */
+	struct
+	{
+	    uint8_t	__resv[0];		//this is ONLY here to keep the compiler happy: DO NOT USE
+	    uint8_t	data[];			/**< The packet data. data[0] overlaps with the 'length' field */
+	};
+    };    
+//this struct is "packed" so it occupies minimal space
+//and to ensure that, the 'prefix' fields (including length) of hw_radio_packet_t
+//are 32-bits alligned (that is sizeof(hw_radio_packet_t)%4 == 0)
+} __attribute__ ((packed)) hw_radio_packet_t;
+
 
 /** \brief Type definition for the 'new_packet' callback function
  *
  * The new_packet_callback_t function is called by the PHY driver each time a (new) buffer is needed to store a 
- * packet. This function is supplied with the *minimum* length this buffer is required to have (the buffer 
- * may be larger) and is expected to return a pointer to the beginning of a packet buffer that is at least 
- * <length> bytes long. If such a buffer is not available, this function MUST return NULL (0x0). 
+ * packet. This function is supplied with the *length* of the packet to be stored and is expected to 
+ * return a pointer to a 'hw_radio_packet_t' that is sufficiently large to contain a packet that is at least
+ * <length> bytes long. If no sufficiently large buffer can be allocated, this function MUST return NULL 
+ * (0x0).
  *
  * It should be noted that this function is typically called while the packet is being received and as a 
  * result it is imperative that this function does at little processing as possible. Also, this function may 
  * be called both from a 'thread' and from an interrupt context. Implementors are advised to use atomic 
  * sections (where needed) to protect against concurrency issues.
  *
- * Once the buffer has been allocated it remains under the control of the PHY driver until it is `released' 
- * by a call to the rx_packet_callback function (see rx_packet_callback_t below).
+ * Once a packet has been allocated, it remains under the control of the PHY driver until it is `released' 
+ * by a call to either the release_packet_callback or the rx_packet_callback function.
  *
- * \param length	The length of the buffer (in bytes) required
- * \return uint8_t*	A pointer to the beginning of the byte buffer. 0x0 (NULL) if no buffer of the 
- *			required size is available
+ * \param length		The length of the packet for which a buffer must be allocated
+ * \return hw_radio_packet_t*	The allocated packet buffer. The buffer MUST be large enough for the
+ *				data field to contain at least <length> bytes. If no sufficiently large 
+ *				buffer can be allocated, 0x0 is returned.
  */
-typedef uint8_t* (*new_packet_callback_t)(uint8_t length);
+typedef hw_radio_packet_t* (*new_packet_callback_t)(uint8_t length);
 
 /** \brief definition of the callback used by the PHY driver to 'release' control of a previously allocated 
  *	   packet buffer.
@@ -188,19 +194,18 @@ typedef uint8_t* (*new_packet_callback_t)(uint8_t length);
  * no longer needed (for instance because the RX was interrupted). If the packet WAS received correctly, 
  * control of the buffer is released through a call to rx_callback_packet_t.
  *
- * \param packet	A pointer to the buffer to release.
+ * As with new_packet_callback_t, this function is called from an interrupt context during 
+ * time-critical PHY layer processing. As a result, this function should do as little processing as possible.
+ *
+ * \param packet	A pointer to the hw_radio_packet to release
  * 
  */
-typedef void (*release_packet_callback_t)(uint8_t* packet);
+typedef void (*release_packet_callback_t)(hw_radio_packet_t* packet);
 
 /** \brief Type definition for the rx callback function
  *
  * The rx_packet_callback_t function is called by the PHY driver every time a new packet is received. This 
- * function is supplied with a pointer to where the packet is stored and (optionally) a pointer to where the 
- * hw_rx_metadata_t of the received packet it stored.
- *
- * The first byte of the returned packet buffer contains the length of the received packet INCLUDING the 
- * length byte itself. 
+ * function is supplied with a pointer the hw_radio_packet containing the received packet.
  *
  * It should be noted that the `packet' pointer supplied to this callback function is *ALWAYS* a pointer that 
  * was obtained through a call to the new_packet_callback (new_packet_callback_t) function. By calling this 
@@ -208,20 +213,43 @@ typedef void (*release_packet_callback_t)(uint8_t* packet);
  * This means that, from the perspective of the radio driver, calling rx_packet_callback_t has the same 
  * effect as calling release_packet_callback_t.
  *
- * If an hw_rx_metatadata_t struct is attached to the received packet (metadata != 0x0), this metadata struct 
- * is *ALWAYS* stored in the packet buffer, after the packet data itself. As a result, the metadata of the 
- * packet remains available as long as the packet buffer is not 'recycled' for a new packet. Whether or not a
- * metadata struct is attached to the packet can be controlled through the report_metadata field in the 
- * hw_rx_cfg_t struct.
+ * As with new_packet_callback_t, this function is called from an interrupt context.
+ * While this function is being executed, no other interrupts can fire and no other packets can be 
+ * received. As a result, this function should do as little processing as possible.
  *
- * The first byte of the returned packet buffer contains the length of the received packet INCLUDING the 
- * length byte itself.
- *
- * \param	packet		A pointer to where the packet is stored
- * \param	metadata	A pointer to the rx_metadata of the packet. 0x0 if this data is not available
+ * \param	packet		A pointer to the received packet
  *
  */
-typedef uint8_t* (*rx_packet_callback_t)(uint8_t* packet, hw_rx_metadata_t* metadata);
+typedef void (*rx_packet_callback_t)(hw_radio_packet_t* packet);
+
+/** \brief Type definition for the tx callback function
+ *
+ * The tx_packet_callback_t function is called by the PHY driver upon completion of a packet transmission. 
+ * This function is supplied with a pointer to the transmitted packet (the packet supplied to the 
+ * hw_radio_send_packet function)
+ *
+ * As with new_packet_callback_t, this function is called from an interrupt context and should therefore do 
+ * as little processing as possible.
+ *
+ * \param packet		A pointer to the transmitted packet
+ *
+ */
+typedef void (*tx_packet_callback_t)(hw_radio_packet_t* packet);
+
+
+/** \brief Type definition for the rssi_valid callback function.
+ *
+ * The rssi_valid callback is called by the PHY driver every time the RSSI measurements of the 
+ * radio become valid after the radio is put in RX mode (see hw_radio_set_rx).
+ *
+ * A callback to the rssi_valid function is not only triggered by a call to hw_radio_set_rx, but also
+ * but also by a call to hw_radio_send_packet. In that case, rssi_valid is called when the radio enters RX 
+ * mode after the packet has been transmitted. (Unless of course the radio was put in IDLE mode during tx).
+ *
+ * This function is called from an interrupt context and should therefore do as little processing as possible.
+ *
+ */
+typedef void (*rssi_valid_callback_t)(int16_t cur_rssi);
 
 /** \brief Initialise the radio driver. 
  *
@@ -238,16 +266,30 @@ typedef uint8_t* (*rx_packet_callback_t)(uint8_t* packet, hw_rx_metadata_t* meta
  *					call to p_callback) Please note that this function is called from an 
  *					*interrupt* context and therefore can only do minimal processing.
  *
- * \param p_callback			The rx_packet_callback_t function to call whenever a packet is received
+ * \param rx_callback			The rx_packet_callback_t function to call whenever a packet is received
  * 					please note that this function is called from an *interrupt* context and therefore
  * 					can only do minimal processing.
  *
+ * \param tx_callback			The tx_packet_callback_t function to call whenever a packet has been 
+ *					sent by the radio. Please note that this function is called from an 
+ *					*interrupt* context and therefore can only do minimal processing.
+ *
+ * \param rssi_callback			The rssi_valid_callback_t function to call whenever the RSSI value 
+ *					becomes valid after the radio enters RX mode. Please note that this 
+ *					function is called from an *interrupt* context and therefore can only do 
+ *					minimal processing.
+ *
  * \return	error_t			SUCCESS  if the radio driver was initialised successfully
- * 							EINVAL	 if p_alloc == 0x0 or p_callback == 0x0
+ * 							EINVAL	 if any of the callback functions is 0x0
  * 							EALREADY if the radio driver was already initialised
  * 							FAIL	 if the radio driver could not be initialised
  */
-__LINK_C error_t hw_radio_init(new_packet_callback_t p_alloc, release_packet_callback_t p_free, rx_packet_callback_t p_callback);
+__LINK_C error_t hw_radio_init(new_packet_callback_t p_alloc, 
+			       release_packet_callback_t p_free, 
+			       rx_packet_callback_t rx_callback,
+			       tx_packet_callback_t tx_callback,
+			       rssi_valid_callback_t rssi_callback
+			       );
 
 /** \brief Set the radio in the IDLE mode.
  *
@@ -284,9 +326,12 @@ __LINK_C bool hw_radio_is_idle();
 /** \brief Set the radio in RX mode.
  *
  * When the radio is placed in RX mode, the tranceiver is configured according to the settings in the 
- * supplied hw_tx_cfg_t struct after which it starts scanning the channel for possible packets.
+ * supplied hw_rx_cfg_t struct after which it starts scanning the channel for possible packets.
  *
- * Packets that can be correctly received are passed back to the user by calling the rx_packet_callback_t
+ * Entering RX Mode triggers the rssi_valid_callback_t function supplied to the hw_radio_init function is called
+ * once the RSSI value becomes valid.
+ *
+ * Received packets are passed back to the user by calling the rx_packet_callback_t
  * function supplied to the hw_radio_init function. 
  *
  * If the radio is already in RX mode when this function is called, any current packet receptions
@@ -295,7 +340,7 @@ __LINK_C bool hw_radio_is_idle();
  * If the radio is in TX mode when this function is called, the current packet transmission is completed 
  * before the radio is placed in RX mode.
  *
- * \param rx_cfg	A pointer the the rx settings to apply before entering RX mode
+ * \param rx_cfg	A pointer the the rx settings to apply before entering RX mode.
  *
  * \return error_t	SUCCESS if the radio was put in RX mode (or will be after the current TX has finished)
  *			EALREADY if the radio was already in RX mode.
@@ -314,16 +359,21 @@ __LINK_C error_t hw_radio_set_rx(hw_rx_cfg_t const* rx_cfg);
  */
 __LINK_C bool hw_radio_is_rx();
 
-/** \brief Send a packet over the air with the specified TX settings.
+/** \brief Initiate a packet transmission over the air with the specified TX settings.
  *
- * This function sends the packet pointed to by the <packet> parameter over the air using the 
- * TX settings specified by <tx_cfg>. The length of the specified packet MUST be stored in the 
- * FIRST byte of the buffer pointed to by <packet>.  Moreover the 'length' byte is regarded as 
- * an integral part of the packet which means that the specified  'length' MUST include the 
- * length byte itself.
+ * This function sends the packet pointed to by the <packet> parameter over the air. Packets are always 
+ * transmitted using the tx_cfg settings in the tx_meta field of the supplied <packet>. If these settings are 
+ * not valid, EINVAL is returned and the packet is not transmitted. Moreover the 'length' field of the packet 
+ * must also be properly configured. More specifically, the radio will send the first 'length' bytes of the 
+ * packet's 'data' buffer over the air. It is the responsibility of the caller to ensure that the 'length' of 
+ * the packet has been properly configured.
  *
- * Optionally, a pointer to a hw_tx_metadata_t struct may be specified. If <metadata> is not 0x0, 
- * additional metadata about the transmission will be stored in pointed to hw_tx_metadata_t struct.
+ * Packet transmission is always done *asynchronously*, that is: a packet transmission is initiated by a call 
+ * to this function, but is not completed until the tx_packet_callback_t function supplied to the 
+ * hw_radio_init function is invoked by the radio driver. The <packet> buffer supplied to this function *MUST* 
+ * remain available until the transmission has been completed. It should be noted that the tx_callback 
+ * function will ONLY be called if the hw_radio_send_packet function returns SUCCESS.
+ *
  *
  * If a transmission is initiated while the radio is in IDLE mode, the radio switches directly from IDLE mode to 
  * TX mode to transmit the packet. After the packet has been sent, it switches back to IDLE mode (unless 
@@ -335,22 +385,18 @@ __LINK_C bool hw_radio_is_rx();
  * settings used (unless either hw_radio_set_idle() or hw_radio_set_rx() with different rx parameters) is 
  * called while the TX is still in progress.)
  *
- * At this point, packet transmission is done synchronously. As a result, this function does not return until
- * the entire packet has been transmitted. Also, depending on the PHY driver implementation, sending a packet 
- * may be an 'atomic' operation (meaning that other interrupt events will be delayed until the packet has 
- * been transmitted).
  *
  * \param packet	A pointer to the start of the packet to be transmitted
  * \param tx_cfg	A pointer to the transmission settings to be used
  * \param metadata	A pointer to the location where to store the metadata. 0x0 if no metadata should be 
  *			kept.
  *
- * \return error_t	SUCCESS if the packet has been sent successfully
+ * \return error_t	SUCCESS if the packet transmission has been successfully initiated.
  *			EINVAL if the tx_cfg parameter contains invalid settings
  *			ESIZE if the packet is either too long or too small
  *			EOFF if the radio has not yet been initialised
  */
-__LINK_C error_t hw_radio_send_packet(uint8_t* packet, hw_tx_cfg_t const* tx_cfg, hw_tx_metadata_t* metadata);
+__LINK_C error_t hw_radio_send_packet(hw_radio_packet_t* packet);
 
 /** \brief Check whether or not the radio is currently transmitting a packet
  *
@@ -364,48 +410,44 @@ __LINK_C bool hw_radio_tx_busy();
  */
 __LINK_C bool hw_radio_rx_busy();
 
+/** \brief Check whether the RSSI value measured by the PHY driver is valid or not.
+ *
+ * The RSSI will only be valid if the radio has been initialised and has been in RX mode long enough
+ * for the RSSI to become valid (this is signalled by a callback to the rssi_valid_callback_t function)
+ * 
+ *  is in RX mode
+ 
+  and the rssi_valid callback has beem
+ *
+ * In general the following rule applies:
+ *  - hw_radio_rssi_valid() == (hw_radio_get_rssi() == HW_RSSI_INVALID)
+ *
+ *
+ *
+ */
+bool hw_radio_rssi_valid();
 
 /** \brief Measure the current RSSI on the channel.
  *
- * In order to read the channel RSSI, the radio must be initialised and must already be in RX mode for a
- * certain time. (How much time depends on the specific radio used). If the radio is not in RX mode, or 
- * has not yet been in RX mode for the required amount of time the special value 'HW_RSSI_INVALID' is 
- * returned. When this value is received the caller shoud ensure that the radio is actually in RX mode and,
- * if so, schedule the RSSI to be read at a later time.
+ * If the RSSI is not valid (hw_radio_rssi_valied() returns false), the special value 'HW_RSSI_INVALID' is 
+ * returned. Otherwise the current RSSI is returned. The RSSI is measured in dBm and must be rounded to the 
+ * nearest 16-bit signed integer value.
+ *
+ * If HW_RSSI_INVALID is returned, the caller shoud ensure that the radio is actually in RX mode and,
+ * if so, either schedule the RSSI to be read at a later time or wait for the rssi_valid callback to be 
+ * invoked.
  * 
  * Measuring the RSSI is done using the 'current' RX settings of the radio and does NOT interrupt any receive
  * operation currently in progress. 
  *
  * Reading the RSSI for a different RX configuration can be done by: 
  *   -# Setting the required settings by calling hw_radio_set_rx
- *   -# Scheduling the RSSI to be read after a sufficient timeout.
+ *   -# Waiting for the rssi_valid callback to be invoked.
  *
  * //NOTE: a function to set the rx_settings and then query the rssi in a busy wait until the rssi is valid 
  * is NOT included here *ON PURPOSE* because this would cause an infinite loop with the *SIM* environment
  *
  */
 __LINK_C int16_t hw_radio_get_rssi();
-
-/** \brief Perform a Clear Channel Assessment (CCA) and return the result.
- *
- * The radio must be initialised and must be in RX mode before a CCA can be performed. 
- * How a clear channel assessment is performed depends largely on the settings in the 
- * <rx_cfg> struct passed to the most recent call to hw_radio_rx. More specifically, the 
- * channel is deemed to be BUSY if at least one of the following conditions is met:
- *
- *   - <rx_cfg>.busy_on_rx && hw_radio_rx_busy()
- *   - <rx_cfg>.busy_on_tx && hw_radio_tx_busy()
- *   - <rx_cfg>.cca_rssi_threshold < hw_radio_get_rssi()
- *
- * If the channel is deemed to be clear 'SUCCESS' is returned. If the channel is deemed top be busy
- * 'EBUSY' is returned. If the CCA could not be performed, an appropriate error value is returned
- *
- * \return	SUCCESS if the CCA could be performed and the channel is clear
- *		EBUSY	if the CCA could be performed and the channel is not clear
- *		EOFF	if the radio is not in RX mode
- *		ERETRY	if the radio is in RX mode, but the RSSI value is not (yet) valid.
- *			in this case the CCA check should be rescheduled for a later time.
- */
-__LINK_C error_t hw_radio_cca();
 
 #endif //__HW_RADIO_H_
