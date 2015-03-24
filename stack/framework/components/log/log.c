@@ -67,7 +67,7 @@ __LINK_C void log_print_string(char* format, ...)
     fflush(stdout);
 }
 
-__LINK_C void log_print_stack_string(char type, char* format, ...)
+__LINK_C void log_print_stack_string(log_stack_layer_t type, char* format, ...)
 {
     va_list args;
     va_start(args, format);

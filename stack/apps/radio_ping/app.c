@@ -17,6 +17,18 @@ typedef struct __attribute__((__packed__))
 } packet_struct_t;
 
 
+hw_radio_packet_t* alloc_new_packet(uint8_t length)
+{}
+
+void release_packet(hw_radio_packet_t* packet)
+{}
+
+void packet_received(hw_radio_packet_t* packet)
+{}
+
+void packet_transmitted(hw_radio_packet_t* packet)
+{}
+
 uint8_t* rx_callback(uint8_t* buffer, uint8_t length)
 {
 	if(length < sizeof(packet_struct_t))
@@ -47,7 +59,7 @@ void bootstrap()
 {
     log_print_string("Device booted at time: %d\n", timer_get_counter_value());
 
-    hw_radio_init(NG(rx_buffer), &rx_callback);
+    hw_radio_init(&alloc_new_packet, &release_packet, &packet_received, &packet_transmitted, NULL);
     hw_radio_setenabled(true);
     NG(tx_buffer).src_node = hw_get_unique_id();
     NG(tx_buffer).dst_node = 0xFFFF;

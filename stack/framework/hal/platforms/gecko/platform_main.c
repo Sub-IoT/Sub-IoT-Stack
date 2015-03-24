@@ -20,12 +20,16 @@ void __platform_init()
 #ifdef USE_CC1101
     //TODO: add calls to hw_gpio_configure_pin for the pins used by the CC1101 driver
     //(and possibly the spi interface)
+
+    // configure the interrupt pins here, since hw_gpio_configure_pin() is MCU specific and not part of the common HAL API
+    hw_gpio_configure_pin(CC1101_GDO0_PIN, true, gpioModeInput, 0); // TODO pull up or pull down to prevent floating
+    //hw_gpio_configure_pin(CC1101_GDO2_PIN, true, gpioModeInput, 0) // TODO pull up or pull down to prevent floating // TODO not used for now
 #endif
     __hw_debug_init();
 
     error_t err;
-    err = hw_gpio_configure_pin(BUTTON0, true, gpioModeInput,0); assert(err == SUCCESS);
-    err = hw_gpio_configure_pin(BUTTON1, true, gpioModeInput,0); assert(err == SUCCESS);
+    err = hw_gpio_configure_pin(BUTTON0, true, gpioModeInput, 0); assert(err == SUCCESS); // TODO pull up or pull down to prevent floating
+    err = hw_gpio_configure_pin(BUTTON1, true, gpioModeInput, 0); assert(err == SUCCESS); // TODO pull up or pull down to prevent floating
 }
 
 void __platform_post_framework_init()

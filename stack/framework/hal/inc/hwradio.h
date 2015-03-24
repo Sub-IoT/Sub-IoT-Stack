@@ -14,8 +14,19 @@
 #include "link_c.h"
 #include "errors.h"
 #include "hal_defs.h"
+#include "timer.h"
 
 #define HW_RSSI_INVALID 0x7FFF
+
+/** \brief The possible states the radio can be in
+ *
+ */
+typedef enum
+{
+    HW_RADIO_STATE_IDLE,
+    HW_RADIO_STATE_TX,
+    HW_RADIO_STATE_RX
+} hw_radio_state_t;
 
 /** \brief spectrum id used to identify the spectrum settings
  *
@@ -25,13 +36,13 @@ typedef struct
 {
     union
     {	
-	uint8_t channel_header; 	/**< The raw (8-bit) channel header */
-	struct
-	{
-	    uint8_t ch_coding: 2; 	/**< The 'coding' field in the channel header */
-    	    uint8_t ch_class: 2;  	/**< The 'class' field in the channel header */
-    	    uint8_t ch_freq_band: 4;	/**< The frequency 'band' field in the channel header */
-	};
+        uint8_t channel_header; 	/**< The raw (8-bit) channel header */
+        struct
+        {
+            uint8_t ch_coding: 2; 	/**< The 'coding' field in the channel header */
+            uint8_t ch_class: 2;  	/**< The 'class' field in the channel header */
+            uint8_t ch_freq_band: 4;	/**< The frequency 'band' field in the channel header */
+        };
     };
     uint8_t center_freq_index;		/**< The center frequency index of the channel id */
 } channel_id_t;
@@ -65,7 +76,7 @@ typedef int8_t	   eirp_t;
  **/
 typedef struct
 {
-    channel_id_t channel_id; 		/**< The channel_id of the D7A 'channel' to which the radio is tuned */
+    channel_id_t channel_id; 		/**< The channel_id of the D7A 'channel' to which the radio is tuned */ 
     syncword_class_t syncword_class;	/**< The 'syncword' class used */
 } hw_rx_cfg_t;
 
@@ -146,21 +157,22 @@ typedef struct
 {
     union
     {
-	hw_rx_metadata_t rx_meta;		/**< The TX Metadata of the packet */
-	hw_tx_metadata_t tx_meta;		/**< The RX Metadata of the packet */
+        hw_rx_metadata_t rx_meta;		/**< The TX Metadata of the packet */
+        hw_tx_metadata_t tx_meta;		/**< The RX Metadata of the packet */
     };
+
     union
     {
-	uint8_t		length;			/**< The length of the packet. This fields overlaps with the first byte of the packet data */
-	struct
-	{
-	    uint8_t	__resv[0];		//this is ONLY here to keep the compiler happy: DO NOT USE
-	    uint8_t	data[];			/**< The packet data. data[0] overlaps with the 'length' field */
-	};
+        uint8_t		length;			/**< The length of the packet. This fields overlaps with the first byte of the packet data */
+        struct
+        {
+            uint8_t	__resv[0];		//this is ONLY here to keep the compiler happy: DO NOT USE
+            uint8_t	data[];			/**< The packet data. data[0] overlaps with the 'length' field */
+        };
     };    
-//this struct is "packed" so it occupies minimal space
-//and to ensure that, the 'prefix' fields (including length) of hw_radio_packet_t
-//are 32-bits alligned (that is sizeof(hw_radio_packet_t)%4 == 0)
+    //this struct is "packed" so it occupies minimal space
+    //and to ensure that, the 'prefix' fields (including length) of hw_radio_packet_t
+    //are 32-bits alligned (that is sizeof(hw_radio_packet_t)%4 == 0)
 } __attribute__ ((packed)) hw_radio_packet_t;
 
 
@@ -185,7 +197,7 @@ typedef struct
  *				data field to contain at least <length> bytes. If no sufficiently large 
  *				buffer can be allocated, 0x0 is returned.
  */
-typedef hw_radio_packet_t* (*new_packet_callback_t)(uint8_t length);
+typedef hw_radio_packet_t* (*alloc_packet_callback_t)(uint8_t length);
 
 /** \brief definition of the callback used by the PHY driver to 'release' control of a previously allocated 
  *	   packet buffer.
@@ -284,7 +296,7 @@ typedef void (*rssi_valid_callback_t)(int16_t cur_rssi);
  * 							EALREADY if the radio driver was already initialised
  * 							FAIL	 if the radio driver could not be initialised
  */
-__LINK_C error_t hw_radio_init(new_packet_callback_t p_alloc, 
+__LINK_C error_t hw_radio_init(alloc_packet_callback_t p_alloc,
 			       release_packet_callback_t p_free, 
 			       rx_packet_callback_t rx_callback,
 			       tx_packet_callback_t tx_callback,
