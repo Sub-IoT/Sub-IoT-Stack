@@ -58,31 +58,31 @@ typedef int8_t	   eirp_t;
 
 /** \brief The 'RX Configuration' for the radio. 
  *
- * This struct contains various settings that are used to configure the radio (such as the spectrum_id and 
- * the syncword). It must be passed as a parameter to ... and is also a part of the hw_rx_metadata attached 
+ * This struct contains various settings that are used to configure the radio.
+ * It must be passed as a parameter to hw_radio_set_rx() and is also a part of the hw_rx_metadata attached
  * to the received packets.
  *
  **/
 typedef struct
 {
-    channel_id_t channel_id; 		/**< The channel_id of the Dash 7 'channel' to which the radio is tuned */
-    syncword_class_t syncword_class;	/**< The 'syncword' class used to designate the SFD of the frame */        
+    channel_id_t channel_id; 		/**< The channel_id of the D7A 'channel' to which the radio is tuned */
+    syncword_class_t syncword_class;	/**< The 'syncword' class used */
 } hw_rx_cfg_t;
 
 /** \brief The 'TX Configuration' to use when sending a packet.
  *
  * This struct contains settings to be applied before transmitting a packet. These settings are applied
- * on a per-packet basis and must be supplied as a parameter to ... The settings used are also stored in the
+ * on a per-packet basis and must be supplied as a parameter to hw_radio_send_packet(). The settings used are also stored in the
  * hw_tx_metadata attached to the packet upon completion of the transmission
  *
  */
 typedef struct
 {
-    channel_id_t channel_id; 		/**< The channel_id of the Dash 7 'channel' on whoch to send the packet */
-    syncword_class_t syncword_class;	/**< The 'syncword' class used to designate the SFD of the frame */        
+    channel_id_t channel_id; 		/**< The channel_id of the D7A 'channel' on which to send the packet */
+    syncword_class_t syncword_class;	/**< The 'syncword' class used */
     eirp_t eirp;			/**< The transmission power level measured in dBm [-39,+10]. If the 
 					 *   If the value specified is not supported by the driver, 
-					 *   the nearest supported value is used instead.
+                                         *   the nearest supported value is used instead
 					 */    
 } hw_tx_cfg_t;
 
@@ -92,7 +92,7 @@ typedef struct
 typedef struct
 {
 #ifdef HAL_RADIO_INCLUDE_TIMESTAMP
-    timer_tick_t timestamp; 	/**< The clock_tick of the framework timer at which the first bit of the SFD was received. */
+    timer_tick_t timestamp; 	/**< The clock_tick of the framework timer at which the first bit of the sync word was received. */
 #endif
     hw_rx_cfg_t rx_cfg;		/**< The 'RX Configuration' used to receive the packet. */
     
