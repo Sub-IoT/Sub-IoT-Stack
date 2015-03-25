@@ -18,6 +18,52 @@
 
 #define HW_RSSI_INVALID 0x7FFF
 
+// TODO move generic phy types/logic to other file?
+
+/* \brief The channel bands and corresponding band indeces as defined in D7A
+ *
+ */
+typedef enum
+{
+    PHY_BAND_433 = 0x02,
+    PHY_BAND_868_1 = 0x03,
+    PHY_BAND_868_2 = 0x04,
+    PHY_BAND_915_1 = 0x05,
+    PHY_BAND_915_2 = 0x06,
+    PHY_BAND_915_3 = 0x07,
+    PHY_BAND_915_4 = 0x08,
+    PHY_BAND_915_5 = 0x09,
+} phy_channel_bands_t;
+
+/* \brief The channel classes and corresponding indeces as defined in D7A
+ *
+ */
+typedef enum
+{
+    PHY_CLASS_LO_RATE = 0x00,
+    PHY_CLASS_NORMAL_RATE = 0x02,
+    PHY_CLASS_HI_RATE = 0x03
+} phy_channel_class_t;
+
+/* \brief The coding schemes and corresponding indeces as defined in D7A
+ *
+ */
+typedef enum
+{
+    PHY_CODING_PN9 = 0x00,
+    PHY_CODING_FEC_PN9 = 0x02
+} phy_coding_t;
+
+/* \brief The syncword classes as defined in D7A
+ *
+ */
+typedef enum
+{
+    PHY_SYNCWORD_CLASS0 = 0x00,
+    PHY_SYNCWORD_CLASS1 = 0x01
+} phy_syncword_class_t;
+
+
 /** \brief The possible states the radio can be in
  *
  */

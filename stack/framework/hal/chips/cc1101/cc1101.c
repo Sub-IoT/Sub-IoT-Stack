@@ -109,6 +109,63 @@ static void end_of_packet_isr()
     switch_to_idle_mode();
 }
 
+static void configure_channel()
+{
+    // TODO compare with previous cfg, don't set when not needed
+    hw_tx_cfg_t cfg = (hw_tx_cfg_t)current_packet->tx_meta.tx_cfg;
+
+    assert(cfg.channel_id.ch_freq_band == PHY_BAND_433); // TODO implement other bands
+    assert(cfg.channel_id.ch_class == PHY_CLASS_NORMAL_RATE); // TODO implement other rates
+    assert(cfg.channel_id.ch_coding == PHY_CODING_PN9); // TODO implement other codings
+    // TODO assert valid center freq index
+
+    // TODO preamble size depends on channel class
+
+    // set freq band
+    DPRINT("Set frequency band index: %d", cfg.channel_id.ch_freq_band);
+    // TODO validate
+    /*
+    switch(frequency_band)
+        {
+        case 0:
+            WriteSingleReg(RADIO_FREQ2, (uint8_t)(RADIO_FREQ_433>>16 & 0xFF));
+            WriteSingleReg(RADIO_FREQ1, (uint8_t)(RADIO_FREQ_433>>8 & 0xFF));
+            WriteSingleReg(RADIO_FREQ0, (uint8_t)(RADIO_FREQ_433 & 0xFF));
+            break;
+        case 1:
+            WriteSingleReg(RADIO_FREQ2, (uint8_t)(RADIO_FREQ_868>>16 & 0xFF));
+            WriteSingleReg(RADIO_FREQ1, (uint8_t)(RADIO_FREQ_868>>8 & 0xFF));
+            WriteSingleReg(RADIO_FREQ0, (uint8_t)(RADIO_FREQ_868 & 0xFF));
+            break;
+        case 2:
+            WriteSingleReg(RADIO_FREQ2, (uint8_t)(RADIO_FREQ_915>>16 & 0xFF));
+            WriteSingleReg(RADIO_FREQ1, (uint8_t)(RADIO_FREQ_915>>8 & 0xFF));
+            WriteSingleReg(RADIO_FREQ0, (uint8_t)(RADIO_FREQ_915 & 0xFF));
+            break;
+        }
+    */
+
+    // set channel center frequency
+    DPRINT("Set channel freq index: %d", cfg.channel_id.center_freq_index);
+    cc1101_interface_write_single_reg(CHANNR, cfg.channel_id.center_freq_index); // TODO validate
+
+    // set modulation, symbol rate and deviation
+    switch(cfg.channel_id.ch_class)
+    {
+        case PHY_CLASS_NORMAL_RATE:
+            // TODO validate
+            cc1101_interface_write_single_reg(MDMCFG3, RADIO_MDMCFG3_DRATE_M(24));
+            cc1101_interface_write_single_reg(MDMCFG4, (RADIO_MDMCFG4_CHANBW_E(1) | RADIO_MDMCFG4_CHANBW_M(0) | RADIO_MDMCFG4_DRATE_E(11)));
+            cc1101_interface_write_single_reg(DEVIATN, (RADIO_DEVIATN_E(5) | RADIO_DEVIATN_M(0)));
+            break;
+            // TODO: other classes
+    }
+
+    // TODO set EIRP
+
+    cc1101_interface_strobe(RF_SCAL); // TODO is this the right case?
+}
+
 error_t hw_radio_init(alloc_packet_callback_t alloc_packet_cb,
                       release_packet_callback_t release_packet_cb,
                       rx_packet_callback_t rx_cb,
@@ -162,6 +219,9 @@ error_t hw_radio_send_packet(hw_radio_packet_t* packet)
     log_print_stack_string(LOG_STACK_PHY, "Data to TX Fifo:");
     log_print_data(packet->data, packet->length);
 #endif
+
+    configure_channel();
+
     cc1101_interface_write_burst_reg(TXFIFO, packet->data, packet->length); // tx_queue.front is length byte
     cc1101_interface_set_interrupts_enabled(true);
     cc1101_interface_strobe(RF_STX);
