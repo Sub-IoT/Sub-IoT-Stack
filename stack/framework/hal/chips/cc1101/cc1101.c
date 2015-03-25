@@ -8,9 +8,12 @@
  *
  */
 
+#include "assert.h"
+
 #include "log.h"
 #include "hwradio.h"
 
+#include "cc1101.h"
 #include "cc1101_interface.h"
 #include "cc1101_constants.h"
 #include "cc1101_registers.h"
@@ -29,6 +32,7 @@ static tx_packet_callback_t tx_packet_callback;
 static rssi_valid_callback_t rssi_valid_callback;
 
 static hw_radio_state_t current_state;
+static hw_radio_packet_t* current_packet;
 
 static RF_SETTINGS rf_settings = {
    RADIO_GDO2_VALUE,   			// IOCFG2    GDO2 output pin configuration.
@@ -73,6 +77,37 @@ static RF_SETTINGS rf_settings = {
    RADIO_FSCAL0(31)   				// FSCAL0    Frequency synthesizer calibration.
 };
 
+static void switch_to_idle_mode()
+{
+    //Flush FIFOs and go to sleep
+    cc1101_interface_strobe(RF_SFRX); // TODO cc1101 datasheet : Only issue SFRX in IDLE or RXFIFO_OVERFLOW states
+    cc1101_interface_strobe(RF_SFTX); // TODO cc1101 datasheet : Only issue SFTX in IDLE or TXFIFO_UNDERFLOW states.
+    cc1101_interface_strobe(RF_SIDLE);
+    cc1101_interface_strobe(RF_SPWD);
+    current_state = HW_RADIO_STATE_IDLE;
+}
+
+static void end_of_packet_isr()
+{
+    cc1101_interface_set_interrupts_enabled(false);
+    DPRINT("end of packet ISR");
+    if (current_state == HW_RADIO_STATE_RX)
+    {
+        // TODO
+    }
+    if (current_state == HW_RADIO_STATE_TX)
+    {
+        assert(tx_packet_callback != NULL);
+        // TODO fill metadata
+        tx_packet_callback(current_packet);
+    }
+    else
+    {
+        assert(false);
+    }
+
+    switch_to_idle_mode();
+}
 
 error_t hw_radio_init(alloc_packet_callback_t alloc_packet_cb,
                       release_packet_callback_t release_packet_cb,
@@ -88,7 +123,7 @@ error_t hw_radio_init(alloc_packet_callback_t alloc_packet_cb,
 
     current_state = HW_RADIO_STATE_IDLE;
 
-    cc1101_interface_init();
+    cc1101_interface_init(&end_of_packet_isr);
     cc1101_interface_reset_radio_core();
     cc1101_interface_write_rfsettings(&rf_settings);
 
@@ -119,6 +154,7 @@ error_t hw_radio_send_packet(hw_radio_packet_t* packet)
     // TODO set channel
 
     current_state = HW_RADIO_STATE_TX;
+    current_packet = packet;
     cc1101_interface_strobe(RF_SIDLE);
     cc1101_interface_strobe(RF_SFTX);
 

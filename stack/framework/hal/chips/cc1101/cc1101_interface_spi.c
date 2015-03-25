@@ -20,6 +20,7 @@
 #define DPRINT(...)
 #endif
 
+static end_of_packet_isr_t end_of_packet_isr_callback;
 
 static void wait_ms(uint32_t ms) // TODO refactor: add busy waiting in timer api or use cb?
 {
@@ -41,10 +42,15 @@ static void wait_ms(uint32_t ms) // TODO refactor: add busy waiting in timer api
 void _cc1101_gdo_isr(pin_id_t pin_id, uint8_t event_mask)
 {
     assert(hw_gpio_pin_matches(pin_id, CC1101_GDO0_PIN));
+    //assert(event_mask == GPIO_FALLING_EDGE); // only using falling edge for now // TODO flank detection not supported on efm32gg for now
+
+    end_of_packet_isr_callback();
 }
 
-void _cc1101_interface_init()
+void _cc1101_interface_init(end_of_packet_isr_t end_of_packet_isr_cb)
 {
+    end_of_packet_isr_callback = end_of_packet_isr_cb;
+
     spi_init();
 
     error_t err;

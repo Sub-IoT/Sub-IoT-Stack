@@ -17,6 +17,7 @@ extern "C" {
 #include <stdint.h>
 #include <stdbool.h>
 
+#include "cc1101.h"
 
 typedef enum {
 	GDOLine0 = 0x2,
@@ -73,7 +74,7 @@ typedef struct {
     uint8_t fscal0;           // Frequency Synthesizer Calibration
 } RF_SETTINGS;
 
-void cc1101_interface_init();
+void cc1101_interface_init(end_of_packet_isr_t end_of_packet_isr_cb);
 void cc1101_interface_set_interrupts_enabled(bool enabled);
 uint8_t cc1101_interface_strobe(uint8_t strobe_command);
 void cc1101_interface_reset_radio_core(void);

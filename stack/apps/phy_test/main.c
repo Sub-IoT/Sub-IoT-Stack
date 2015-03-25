@@ -20,6 +20,12 @@ hw_radio_packet_t* packet = (hw_radio_packet_t*)buffer;
 
 hw_radio_packet_t received_packet;
 
+void tx_packet()
+{
+    memcpy(packet->data, data, sizeof(data));
+    hw_radio_send_packet(packet);
+}
+
 hw_radio_packet_t* alloc_new_packet(uint8_t length)
 {}
 
@@ -30,12 +36,10 @@ void packet_received(hw_radio_packet_t* packet)
 {}
 
 void packet_transmitted(hw_radio_packet_t* packet)
-{}
-
-void tx_packet()
 {
-    memcpy(packet->data, data, sizeof(data));
-    hw_radio_send_packet(packet);
+	led_on(0);
+	log_print_string("packet transmitted");
+	timer_post_task(&tx_packet, 100);
 }
 
 hw_rx_cfg_t rx_cfg = {

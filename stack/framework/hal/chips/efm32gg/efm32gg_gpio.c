@@ -99,7 +99,8 @@ static void gpio_int_callback(uint8_t pin)
 	pin_id_t id = {interrupts[pin].interrupt_port, pin};
 	//report an event_mask of '0' since the only way to check which event occurred
 	//is to check the state of the pin from the interrupt handler and 
-	//since the execution of interrupt handlers may be 'delayed' this method is NOT reliable.
+    //since the execution of interrupt handlers may be 'delayed' this method is NOT reliable.
+    // TODO find out if there is no way to do this reliable on efm32gg
         interrupts[pin].callback(id,0);
     end_atomic();
 }
