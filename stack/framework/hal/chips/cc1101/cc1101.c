@@ -103,11 +103,27 @@ static void end_of_packet_isr()
     DPRINT("end of packet ISR");
     if (current_state == HW_RADIO_STATE_RX)
     {
-        // TODO
+        uint8_t packet_len = cc1101_interface_read_single_reg(RXFIFO);
+        DPRINT("EOP ISR packetLength: %d", packet_len);
+        hw_radio_packet_t* packet = alloc_packet_callback(packet_len);
+        packet->length = packet_len;
+        cc1101_interface_read_burst_reg(RXFIFO, packet->data + 1, packet->length);
+    	switch_to_idle_mode();
+        rx_packet_callback(packet);
+
+        // fill rx_meta
+        memcpy(&(packet->rx_meta.rx_cfg.channel_id), &current_channel_id, sizeof(channel_id_t));
+        packet->rx_meta.crc_status = HW_CRC_UNAVAILABLE; // TODO
+        // TODO timestamp
+        // TODO RSSI and LQI
+//        cc1101_interface_read_burst_reg(RXFIFO, buffer, 10); // +2 for RSSI and LQI
+//        rx_data.rssi = calculate_rssi(buffer[packet_length]);
+//        rx_data.lqi = buffer[packet_length + 1] & 0x7F;
+
     }
     if (current_state == HW_RADIO_STATE_TX)
     {
-        assert(tx_packet_callback != NULL);
+    	switch_to_idle_mode();
         // TODO fill metadata
         tx_packet_callback(current_packet);
     }
@@ -115,11 +131,9 @@ static void end_of_packet_isr()
     {
         assert(false);
     }
-
-    switch_to_idle_mode();
 }
 
-static void configure_channel(channel_id_t* channel_id)
+static void configure_channel(const channel_id_t* channel_id)
 {
     // only change settings is channel_id changed compared to current config
     if(!hw_radio_channel_ids_equal(channel_id, &current_channel_id))
@@ -177,7 +191,7 @@ static void configure_channel(channel_id_t* channel_id)
     cc1101_interface_strobe(RF_SCAL); // TODO is this the right case?
 }
 
-static void configure_eirp(eirp_t eirp)
+static void configure_eirp(const eirp_t eirp)
 {
     if(eirp != current_eirp)
     {
@@ -229,13 +243,35 @@ error_t hw_radio_init(alloc_packet_callback_t alloc_packet_cb,
 
 error_t hw_radio_set_rx(hw_rx_cfg_t const* rx_cfg)
 {
-    // TODO
+    // TODO error handling EINVAL, EOFF
+    assert(rx_packet_callback != NULL);
+    assert(alloc_packet_callback != NULL);
+    assert(release_packet_callback != NULL);
+    assert(rssi_valid_callback != NULL);
+
+    // if we are currently transmitting wait until TX completed
+    while(current_state == HW_RADIO_STATE_TX); // TODO can i block here or return and check if we need to go to rx after tx completed?
+
+    current_state = HW_RADIO_STATE_RX;
+
+    // TODO rssi valid callback
+
+    cc1101_interface_strobe(RF_SFRX);
+    configure_channel(&(rx_cfg->channel_id));
+    configure_syncword_class(rx_cfg->syncword_class);
+
+    cc1101_interface_write_single_reg(PKTLEN, 0xFF);
+    cc1101_interface_set_interrupts_enabled(true);
+    cc1101_interface_strobe(RF_SRX);
+
+    return SUCCESS;
 }
 
 error_t hw_radio_send_packet(hw_radio_packet_t* packet)
 {
-    // TODO error handling
+    // TODO error handling EINVAL, ESIZE, EOFF
     // TODO what if TX is already in progress?
+    assert(tx_packet_callback != NULL);
 
     current_state = HW_RADIO_STATE_TX;
     current_packet = packet;
@@ -251,7 +287,8 @@ error_t hw_radio_send_packet(hw_radio_packet_t* packet)
     configure_eirp(current_packet->tx_meta.tx_cfg.eirp);
     configure_syncword_class(current_packet->tx_meta.tx_cfg.syncword_class);
 
-    cc1101_interface_write_burst_reg(TXFIFO, packet->data, packet->length); // tx_queue.front is length byte
+    cc1101_interface_write_burst_reg(TXFIFO, packet->data, packet->length);
     cc1101_interface_set_interrupts_enabled(true);
     cc1101_interface_strobe(RF_STX);
+    return SUCCESS;
 }
