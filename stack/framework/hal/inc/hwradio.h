@@ -409,7 +409,7 @@ __LINK_C bool hw_radio_is_idle();
  * If the radio is in TX mode when this function is called, the current packet transmission is completed 
  * before the radio is placed in RX mode.
  *
- * \param rx_cfg	A pointer the the rx settings to apply before entering RX mode.
+ * \param rx_cfg	A pointer to the rx settings to apply before entering RX mode.
  *
  * \return error_t	SUCCESS if the radio was put in RX mode (or will be after the current TX has finished)
  *			EALREADY if the radio was already in RX mode.
@@ -483,15 +483,9 @@ __LINK_C bool hw_radio_rx_busy();
  *
  * The RSSI will only be valid if the radio has been initialised and has been in RX mode long enough
  * for the RSSI to become valid (this is signalled by a callback to the rssi_valid_callback_t function)
- * 
- *  is in RX mode
- 
-  and the rssi_valid callback has beem
  *
  * In general the following rule applies:
  *  - hw_radio_rssi_valid() == (hw_radio_get_rssi() == HW_RSSI_INVALID)
- *
- *
  *
  */
 bool hw_radio_rssi_valid();

@@ -9,6 +9,7 @@
  */
 
 #include "assert.h"
+#include "string.h"
 
 #include "log.h"
 #include "hwradio.h"
@@ -33,16 +34,15 @@ static rssi_valid_callback_t rssi_valid_callback;
 
 static hw_radio_state_t current_state;
 static hw_radio_packet_t* current_packet;
-static hw_tx_cfg_t current_tx_cfg = {
-    .channel_id = {
-        .ch_coding = PHY_CODING_PN9,
-        .ch_class = PHY_CLASS_NORMAL_RATE,
-        .ch_freq_band = PHY_BAND_433,
-        .center_freq_index = 0
-    },
-    .syncword_class = PHY_SYNCWORD_CLASS0,
-    .eirp = 0
+static channel_id_t current_channel_id = {
+    .ch_coding = PHY_CODING_PN9,
+    .ch_class = PHY_CLASS_NORMAL_RATE,
+    .ch_freq_band = PHY_BAND_433,
+    .center_freq_index = 0
 };
+
+static syncword_class_t current_syncword_class = PHY_SYNCWORD_CLASS0;
+static syncword_class_t current_eirp = 0;
 
 static RF_SETTINGS rf_settings = {
    RADIO_GDO2_VALUE,   			// IOCFG2    GDO2 output pin configuration.
@@ -119,22 +119,22 @@ static void end_of_packet_isr()
     switch_to_idle_mode();
 }
 
-static void configure_channel(hw_tx_cfg_t* cfg)
+static void configure_channel(channel_id_t* channel_id)
 {
     // only change settings is channel_id changed compared to current config
-    if(!hw_radio_channel_ids_equal(&cfg->channel_id, &current_tx_cfg.channel_id))
+    if(!hw_radio_channel_ids_equal(channel_id, &current_channel_id))
     {
-        assert(cfg->channel_id.ch_freq_band == PHY_BAND_433); // TODO implement other bands
-        assert(cfg->channel_id.ch_class == PHY_CLASS_NORMAL_RATE); // TODO implement other rates
-        assert(cfg->channel_id.ch_coding == PHY_CODING_PN9); // TODO implement other codings
+        assert(channel_id->ch_freq_band == PHY_BAND_433); // TODO implement other bands
+        assert(channel_id->ch_class == PHY_CLASS_NORMAL_RATE); // TODO implement other rates
+        assert(channel_id->ch_coding == PHY_CODING_PN9); // TODO implement other codings
         // TODO assert valid center freq index
 
-        current_tx_cfg.channel_id = cfg->channel_id;
+        memcpy(&current_channel_id, channel_id, sizeof(channel_id_t)); // cache new settings
 
         // TODO preamble size depends on channel class
 
         // set freq band
-        DPRINT("Set frequency band index: %d", cfg->channel_id.ch_freq_band);
+        DPRINT("Set frequency band index: %d", channel_id->ch_freq_band);
         // TODO validate
         /*
         switch(frequency_band)
@@ -158,11 +158,11 @@ static void configure_channel(hw_tx_cfg_t* cfg)
         */
 
         // set channel center frequency
-        DPRINT("Set channel freq index: %d", cfg->channel_id.center_freq_index);
-        cc1101_interface_write_single_reg(CHANNR, cfg->channel_id.center_freq_index); // TODO validate
+        DPRINT("Set channel freq index: %d", channel_id->center_freq_index);
+        cc1101_interface_write_single_reg(CHANNR, channel_id->center_freq_index); // TODO validate
 
         // set modulation, symbol rate and deviation
-        switch(cfg->channel_id.ch_class)
+        switch(channel_id->ch_class)
         {
             case PHY_CLASS_NORMAL_RATE:
                 // TODO validate
@@ -174,17 +174,25 @@ static void configure_channel(hw_tx_cfg_t* cfg)
         }
     }
 
-    if(cfg->eirp != current_tx_cfg.eirp)
+    cc1101_interface_strobe(RF_SCAL); // TODO is this the right case?
+}
+
+static void configure_eirp(eirp_t eirp)
+{
+    if(eirp != current_eirp)
     {
         // TODO set EIRP
+        current_eirp = eirp;
     }
+}
 
-    if(cfg->syncword_class != current_tx_cfg.syncword_class)
+static void configure_syncword_class(syncword_class_t syncword_class)
+{
+    if(syncword_class != current_syncword_class)
     {
         // TODO set syncword
+        current_syncword_class = syncword_class;
     }
-
-    cc1101_interface_strobe(RF_SCAL); // TODO is this the right case?
 }
 
 error_t hw_radio_init(alloc_packet_callback_t alloc_packet_cb,
@@ -213,7 +221,10 @@ error_t hw_radio_init(alloc_packet_callback_t alloc_packet_cb,
         DPRINT("\t0x%02X", p[i]);
     }
 
-    configure_channel(&current_tx_cfg); // configure default channel
+    // configure default channel, eirp and syncword
+    configure_channel(&current_channel_id);
+    configure_eirp(current_eirp);
+    configure_syncword_class(current_syncword_class);
 }
 
 error_t hw_radio_set_rx(hw_rx_cfg_t const* rx_cfg)
@@ -236,7 +247,9 @@ error_t hw_radio_send_packet(hw_radio_packet_t* packet)
     log_print_data(packet->data, packet->length);
 #endif
 
-    configure_channel((hw_tx_cfg_t*)&current_packet->tx_meta.tx_cfg);
+    configure_channel((channel_id_t*)&(current_packet->tx_meta.tx_cfg.channel_id));
+    configure_eirp(current_packet->tx_meta.tx_cfg.eirp);
+    configure_syncword_class(current_packet->tx_meta.tx_cfg.syncword_class);
 
     cc1101_interface_write_burst_reg(TXFIFO, packet->data, packet->length); // tx_queue.front is length byte
     cc1101_interface_set_interrupts_enabled(true);
