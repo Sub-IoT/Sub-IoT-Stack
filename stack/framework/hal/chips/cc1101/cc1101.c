@@ -33,6 +33,16 @@ static rssi_valid_callback_t rssi_valid_callback;
 
 static hw_radio_state_t current_state;
 static hw_radio_packet_t* current_packet;
+static hw_tx_cfg_t current_tx_cfg = {
+    .channel_id = {
+        .ch_coding = PHY_CODING_PN9,
+        .ch_class = PHY_CLASS_NORMAL_RATE,
+        .ch_freq_band = PHY_BAND_433,
+        .center_freq_index = 0
+    },
+    .syncword_class = PHY_SYNCWORD_CLASS0,
+    .eirp = 0
+};
 
 static RF_SETTINGS rf_settings = {
    RADIO_GDO2_VALUE,   			// IOCFG2    GDO2 output pin configuration.
@@ -109,59 +119,70 @@ static void end_of_packet_isr()
     switch_to_idle_mode();
 }
 
-static void configure_channel()
+static void configure_channel(hw_tx_cfg_t* cfg)
 {
-    // TODO compare with previous cfg, don't set when not needed
-    hw_tx_cfg_t cfg = (hw_tx_cfg_t)current_packet->tx_meta.tx_cfg;
-
-    assert(cfg.channel_id.ch_freq_band == PHY_BAND_433); // TODO implement other bands
-    assert(cfg.channel_id.ch_class == PHY_CLASS_NORMAL_RATE); // TODO implement other rates
-    assert(cfg.channel_id.ch_coding == PHY_CODING_PN9); // TODO implement other codings
-    // TODO assert valid center freq index
-
-    // TODO preamble size depends on channel class
-
-    // set freq band
-    DPRINT("Set frequency band index: %d", cfg.channel_id.ch_freq_band);
-    // TODO validate
-    /*
-    switch(frequency_band)
-        {
-        case 0:
-            WriteSingleReg(RADIO_FREQ2, (uint8_t)(RADIO_FREQ_433>>16 & 0xFF));
-            WriteSingleReg(RADIO_FREQ1, (uint8_t)(RADIO_FREQ_433>>8 & 0xFF));
-            WriteSingleReg(RADIO_FREQ0, (uint8_t)(RADIO_FREQ_433 & 0xFF));
-            break;
-        case 1:
-            WriteSingleReg(RADIO_FREQ2, (uint8_t)(RADIO_FREQ_868>>16 & 0xFF));
-            WriteSingleReg(RADIO_FREQ1, (uint8_t)(RADIO_FREQ_868>>8 & 0xFF));
-            WriteSingleReg(RADIO_FREQ0, (uint8_t)(RADIO_FREQ_868 & 0xFF));
-            break;
-        case 2:
-            WriteSingleReg(RADIO_FREQ2, (uint8_t)(RADIO_FREQ_915>>16 & 0xFF));
-            WriteSingleReg(RADIO_FREQ1, (uint8_t)(RADIO_FREQ_915>>8 & 0xFF));
-            WriteSingleReg(RADIO_FREQ0, (uint8_t)(RADIO_FREQ_915 & 0xFF));
-            break;
-        }
-    */
-
-    // set channel center frequency
-    DPRINT("Set channel freq index: %d", cfg.channel_id.center_freq_index);
-    cc1101_interface_write_single_reg(CHANNR, cfg.channel_id.center_freq_index); // TODO validate
-
-    // set modulation, symbol rate and deviation
-    switch(cfg.channel_id.ch_class)
+    // only change settings is channel_id changed compared to current config
+    if(!hw_radio_channel_ids_equal(&cfg->channel_id, &current_tx_cfg.channel_id))
     {
-        case PHY_CLASS_NORMAL_RATE:
-            // TODO validate
-            cc1101_interface_write_single_reg(MDMCFG3, RADIO_MDMCFG3_DRATE_M(24));
-            cc1101_interface_write_single_reg(MDMCFG4, (RADIO_MDMCFG4_CHANBW_E(1) | RADIO_MDMCFG4_CHANBW_M(0) | RADIO_MDMCFG4_DRATE_E(11)));
-            cc1101_interface_write_single_reg(DEVIATN, (RADIO_DEVIATN_E(5) | RADIO_DEVIATN_M(0)));
-            break;
-            // TODO: other classes
+        assert(cfg->channel_id.ch_freq_band == PHY_BAND_433); // TODO implement other bands
+        assert(cfg->channel_id.ch_class == PHY_CLASS_NORMAL_RATE); // TODO implement other rates
+        assert(cfg->channel_id.ch_coding == PHY_CODING_PN9); // TODO implement other codings
+        // TODO assert valid center freq index
+
+        current_tx_cfg.channel_id = cfg->channel_id;
+
+        // TODO preamble size depends on channel class
+
+        // set freq band
+        DPRINT("Set frequency band index: %d", cfg->channel_id.ch_freq_band);
+        // TODO validate
+        /*
+        switch(frequency_band)
+            {
+            case 0:
+                WriteSingleReg(RADIO_FREQ2, (uint8_t)(RADIO_FREQ_433>>16 & 0xFF));
+                WriteSingleReg(RADIO_FREQ1, (uint8_t)(RADIO_FREQ_433>>8 & 0xFF));
+                WriteSingleReg(RADIO_FREQ0, (uint8_t)(RADIO_FREQ_433 & 0xFF));
+                break;
+            case 1:
+                WriteSingleReg(RADIO_FREQ2, (uint8_t)(RADIO_FREQ_868>>16 & 0xFF));
+                WriteSingleReg(RADIO_FREQ1, (uint8_t)(RADIO_FREQ_868>>8 & 0xFF));
+                WriteSingleReg(RADIO_FREQ0, (uint8_t)(RADIO_FREQ_868 & 0xFF));
+                break;
+            case 2:
+                WriteSingleReg(RADIO_FREQ2, (uint8_t)(RADIO_FREQ_915>>16 & 0xFF));
+                WriteSingleReg(RADIO_FREQ1, (uint8_t)(RADIO_FREQ_915>>8 & 0xFF));
+                WriteSingleReg(RADIO_FREQ0, (uint8_t)(RADIO_FREQ_915 & 0xFF));
+                break;
+            }
+        */
+
+        // set channel center frequency
+        DPRINT("Set channel freq index: %d", cfg->channel_id.center_freq_index);
+        cc1101_interface_write_single_reg(CHANNR, cfg->channel_id.center_freq_index); // TODO validate
+
+        // set modulation, symbol rate and deviation
+        switch(cfg->channel_id.ch_class)
+        {
+            case PHY_CLASS_NORMAL_RATE:
+                // TODO validate
+                cc1101_interface_write_single_reg(MDMCFG3, RADIO_MDMCFG3_DRATE_M(24));
+                cc1101_interface_write_single_reg(MDMCFG4, (RADIO_MDMCFG4_CHANBW_E(1) | RADIO_MDMCFG4_CHANBW_M(0) | RADIO_MDMCFG4_DRATE_E(11)));
+                cc1101_interface_write_single_reg(DEVIATN, (RADIO_DEVIATN_E(5) | RADIO_DEVIATN_M(0)));
+                break;
+                // TODO: other classes
+        }
     }
 
-    // TODO set EIRP
+    if(cfg->eirp != current_tx_cfg.eirp)
+    {
+        // TODO set EIRP
+    }
+
+    if(cfg->syncword_class != current_tx_cfg.syncword_class)
+    {
+        // TODO set syncword
+    }
 
     cc1101_interface_strobe(RF_SCAL); // TODO is this the right case?
 }
@@ -192,11 +213,7 @@ error_t hw_radio_init(alloc_packet_callback_t alloc_packet_cb,
         DPRINT("\t0x%02X", p[i]);
     }
 
-    // TODO
-//    last_tx_cfg.eirp = 0;
-//    last_tx_cfg.spectrum_id[0] = 0;
-//    last_tx_cfg.spectrum_id[1] = 0;
-//    last_tx_cfg.sync_word_class = 0;
+    configure_channel(&current_tx_cfg); // configure default channel
 }
 
 error_t hw_radio_set_rx(hw_rx_cfg_t const* rx_cfg)
@@ -208,7 +225,6 @@ error_t hw_radio_send_packet(hw_radio_packet_t* packet)
 {
     // TODO error handling
     // TODO what if TX is already in progress?
-    // TODO set channel
 
     current_state = HW_RADIO_STATE_TX;
     current_packet = packet;
@@ -220,7 +236,7 @@ error_t hw_radio_send_packet(hw_radio_packet_t* packet)
     log_print_data(packet->data, packet->length);
 #endif
 
-    configure_channel();
+    configure_channel((hw_tx_cfg_t*)&current_packet->tx_meta.tx_cfg);
 
     cc1101_interface_write_burst_reg(TXFIFO, packet->data, packet->length); // tx_queue.front is length byte
     cc1101_interface_set_interrupts_enabled(true);

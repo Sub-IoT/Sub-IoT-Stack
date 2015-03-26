@@ -93,6 +93,17 @@ typedef struct
     uint8_t center_freq_index;		/**< The center frequency index of the channel id */
 } channel_id_t;
 
+/* \brief Utility function to check whether two channel_id_t are equal
+ *
+ * \param a	The first channel_id
+ * \param b	The second channel_id
+ * \return bool	true if the two channel_id are equak, false otherwise.
+ */
+static inline bool hw_radio_channel_ids_equal(const channel_id_t* a, const channel_id_t* b)
+{
+    return a->channel_header == b->channel_header && a->center_freq_index == b->center_freq_index;
+}
+
 /** \brief The type for the result of a 'hardware' crc check
  *
  */
