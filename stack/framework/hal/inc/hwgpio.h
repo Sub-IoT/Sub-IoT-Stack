@@ -204,6 +204,9 @@ __LINK_C error_t hw_gpio_configure_interrupt(pin_id_t pin_id, gpio_inthandler_t 
  * Please note that hw_gpio_configure_interrupt() must be called before the interrupt
  * can be enabled or disabled. Otherwise EOFF is returned and the interrupt remains disabled
  * 
+ * The corresponding interrupt flag will be cleared to ensure it will not interrupt immediately if
+ * this flag happens to be set before enabling the interrupt.
+ *
  * \param pin_id	The GPIO pin for which to enable the interrupt
  * \return error_t	SUCCESS if the interrupt was enabled successfully
  *			EOFF if the interrupt has not yet been configured

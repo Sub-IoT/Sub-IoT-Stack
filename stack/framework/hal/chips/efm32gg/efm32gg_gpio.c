@@ -101,7 +101,7 @@ static void gpio_int_callback(uint8_t pin)
 	//is to check the state of the pin from the interrupt handler and 
     //since the execution of interrupt handlers may be 'delayed' this method is NOT reliable.
     // TODO find out if there is no way to do this reliable on efm32gg
-        interrupts[pin].callback(id,0);
+    interrupts[pin].callback(id,0);
     end_atomic();
 }
 
@@ -139,6 +139,7 @@ __LINK_C error_t hw_gpio_enable_interrupt(pin_id_t pin_id)
     if(interrupts[pin_id.pin].interrupt_port != pin_id.port || interrupts[pin_id.pin].callback == 0x0)
     	return EOFF;
 
+    BITBAND_Peripheral(&(GPIO->IFC), pin_id.pin, 1);
     BITBAND_Peripheral(&(GPIO->IEN), pin_id.pin, 1);
     return SUCCESS;
 }
