@@ -85,49 +85,51 @@
 static end_of_packet_isr_t end_of_packet_isr_callback;
 
 void no_interrupt_isr()
-{}
+{
+	assert(0); // should not happen, probably interrupt enabled unnecessary
+}
 
-// TODO only end of packet ISR needed?
 // Interrupt branch table
-//InterruptHandler interrupt_table[34] = {
-//	//Rising Edges
-//	no_interrupt_isr,        	// 00 No RF core interrupt pending
-//	no_interrupt_isr,			    // 01 RFIFG0 - end of packet
-//	no_interrupt_isr,           // 02 RFIFG1 - RSSI_VALID
-//	no_interrupt_isr,           // 03 RFIFG2
-//	no_interrupt_isr,//TODOrx_data_isr,				// 04 RFIFG3 - RX FIFO filled or above the RX FIFO threshold
-//	no_interrupt_isr,           // 05 RFIFG4 - RX FIFO filled or above the RX FIFO threshold or end of packet is reached (Do not use for eop! Will not reset until rxfifo emptied)
-//	no_interrupt_isr,		    // 06 RFIFG5 - TX FIFO filled or above the TX FIFO threshold
-//	no_interrupt_isr,			// 07 RFIFG6 - TX FIFO full
-//	rx_fifo_overflow_isr, 	    // 08 RFIFG7 - RX FIFO overflowed
-//	no_interrupt_isr,			// 09 RFIFG8 - TX FIFO underflowed
-//	no_interrupt_isr,			// 10 RFIFG9 - Sync word sent or received
-//	no_interrupt_isr,           // 11 RFIFG10 - Packet received with CRC OK
-//	no_interrupt_isr,           // 12 RFIFG11 - Preamble quality reached (PQI) is above programmed PQT value
-//	no_interrupt_isr,           // 13 RFIFG12 - Clear channel assessment when RSSI level is below threshold
-//	no_interrupt_isr,           // 14 RFIFG13 - Carrier sense. RSSI level is above threshold
-//	no_interrupt_isr,           // 15 RFIFG14 - WOR event 0
-//	no_interrupt_isr,       	// 16 RFIFG15 - WOR event 1
+typedef void (*InterruptHandler)(void);
+InterruptHandler interrupt_table[34] = {
+	//Rising Edges
+	no_interrupt_isr,        	// 00 No RF core interrupt pending
+	no_interrupt_isr,			    // 01 RFIFG0 - end of packet
+	no_interrupt_isr,           // 02 RFIFG1 - RSSI_VALID
+	no_interrupt_isr,           // 03 RFIFG2
+	no_interrupt_isr,//TODOrx_data_isr,				// 04 RFIFG3 - RX FIFO filled or above the RX FIFO threshold
+	no_interrupt_isr,           // 05 RFIFG4 - RX FIFO filled or above the RX FIFO threshold or end of packet is reached (Do not use for eop! Will not reset until rxfifo emptied)
+	no_interrupt_isr,		    // 06 RFIFG5 - TX FIFO filled or above the TX FIFO threshold
+	no_interrupt_isr,			// 07 RFIFG6 - TX FIFO full
+	no_interrupt_isr, // TODO rx_fifo_overflow_isr, 	    // 08 RFIFG7 - RX FIFO overflowed
+	no_interrupt_isr,			// 09 RFIFG8 - TX FIFO underflowed
+	no_interrupt_isr,			// 10 RFIFG9 - Sync word sent or received
+	no_interrupt_isr,           // 11 RFIFG10 - Packet received with CRC OK
+	no_interrupt_isr,           // 12 RFIFG11 - Preamble quality reached (PQI) is above programmed PQT value
+	no_interrupt_isr,           // 13 RFIFG12 - Clear channel assessment when RSSI level is below threshold
+	no_interrupt_isr,           // 14 RFIFG13 - Carrier sense. RSSI level is above threshold
+	no_interrupt_isr,           // 15 RFIFG14 - WOR event 0
+	no_interrupt_isr,       	// 16 RFIFG15 - WOR event 1
 
-//	//Falling Edges
-//	no_interrupt_isr,        	// No RF core interrupt pending
-//	end_of_packet_isr,			// 17 RFIFG0 - end of packet
-//	no_interrupt_isr,           // 18 RFIFG1 - RSSI_VALID
-//	no_interrupt_isr,           // 19 RFIFG2 -
-//	no_interrupt_isr,			// 20 RFIFG3 - RX FIFO drained below RX FIFO threshold
-//	no_interrupt_isr,           // 21 RFIFG4 - RX FIFO empty
-//	no_interrupt_isr,//TODO tx_data_isr,				// 22 RFIFG5 - TX FIFO below TX FIFO threshold
-//	no_interrupt_isr,			// 23 RFIFG6 - TX FIFO below TX FIFO threshold
-//	no_interrupt_isr,           // 24 RFIFG7 - RX FIFO flushed
-//	no_interrupt_isr,			// 25 RFIFG8 - TX FIFO flushed
-//	no_interrupt_isr,			// 26 RFIFG9 - End of packet or in RX when optional address check fails or RX FIFO overflows or in TX when TX FIFO underflows
-//	no_interrupt_isr,           // 27 RFIFG10 - First byte read from RX FIFO
-//	no_interrupt_isr,           // 28 RFIFG11 - (LPW)
-//	no_interrupt_isr,           // 29 RFIFG12 - RSSI level is above threshold
-//	no_interrupt_isr,           // 30 RFIFG13 - RSSI level is below threshold
-//	no_interrupt_isr,           // 31 RFIFG14 - WOR event 0 + 1 ACLK
-//	no_interrupt_isr,       	// 32 RFIFG15 - RF oscillator stable or next WOR event0 triggered
-//};
+	//Falling Edges
+	no_interrupt_isr,        	// No RF core interrupt pending
+	no_interrupt_isr,			// 17 RFIFG0 - end of packet
+	no_interrupt_isr,           // 18 RFIFG1 - RSSI_VALID
+	no_interrupt_isr,           // 19 RFIFG2 -
+	no_interrupt_isr,			// 20 RFIFG3 - RX FIFO drained below RX FIFO threshold
+	no_interrupt_isr,           // 21 RFIFG4 - RX FIFO empty
+	no_interrupt_isr,//TODO tx_data_isr,				// 22 RFIFG5 - TX FIFO below TX FIFO threshold
+	no_interrupt_isr,			// 23 RFIFG6 - TX FIFO below TX FIFO threshold
+	no_interrupt_isr,           // 24 RFIFG7 - RX FIFO flushed
+	no_interrupt_isr,			// 25 RFIFG8 - TX FIFO flushed
+	no_interrupt_isr,			// 26 RFIFG9 - End of packet or in RX when optional address check fails or RX FIFO overflows or in TX when TX FIFO underflows
+	no_interrupt_isr,           // 27 RFIFG10 - First byte read from RX FIFO
+	no_interrupt_isr,           // 28 RFIFG11 - (LPW)
+	no_interrupt_isr,           // 29 RFIFG12 - RSSI level is above threshold
+	no_interrupt_isr,           // 30 RFIFG13 - RSSI level is below threshold
+	no_interrupt_isr,           // 31 RFIFG14 - WOR event 0 + 1 ACLK
+	no_interrupt_isr,       	// 32 RFIFG15 - RF oscillator stable or next WOR event0 triggered
+};
 
 
 // CC1101 ISR
@@ -141,14 +143,11 @@ void __attribute__ ((interrupt(CC1101_VECTOR))) CC1101_VECTOR_ISR (void)
 #endif
 {
     // TODO atomic
-    switch(__even_in_range(RF1AIV,32))
-    {
-        case 2: // RFIFG0
-            if(RF1AIES & BIT2) // negative edge
-            {
-                end_of_packet_isr_callback();
-            }
-    }
+	uint16_t isr_vector = RF1AIV >> 1;
+	uint16_t edge = (1 << (isr_vector - 1)) & RF1AIES;
+	if(edge) isr_vector += 0x11;
+
+	interrupt_table[isr_vector]();
 
     LPM4_EXIT;
 }
@@ -158,6 +157,7 @@ void _cc1101_interface_init(end_of_packet_isr_t end_of_packet_isr_cb)
 {
     end_of_packet_isr_callback = end_of_packet_isr_cb;
     assert(end_of_packet_isr_callback != 0);
+    interrupt_table[RF1AIV_RFIFG0/2 + 0x11] = end_of_packet_isr_callback; // offset for RFIFG0 negative flank
 }
 
 void _c1101_interface_set_interrupts_enabled(bool enable)
@@ -168,7 +168,7 @@ void _c1101_interface_set_interrupts_enabled(bool enable)
         //RF1AIES = RFIFG_FLANK_TXBelowThresh | RFIFG_FLANK_TXUnderflow | RFIFG_FLANK_EndOfPacket;
     	RF1AIES = RFIFG_FLANK_IOCFG0;
         RF1AIFG = 0;
-        RF1AIE  = RFIFG_FLAG_IOCFG0 /*RFIFG_FLAG_TXBelowThresh | RFIFG_FLAG_TXUnderflow | RFIFG_FLAG_EndOfPacket */;
+        RF1AIE  = RFIFG_FLAG_IOCFG0;
     }
     else
     {
