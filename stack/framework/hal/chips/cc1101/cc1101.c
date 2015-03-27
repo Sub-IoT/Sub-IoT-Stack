@@ -6,6 +6,14 @@
  *
  * @author glenn.ergeerts@uantwerpen.be
  *
+ *
+ * TODOs:
+ * - implement all possible channels (+validate)
+ * - support packet size > 64 bytes (up to 128 bytes)
+ * - RSSI measurement + callback when valid
+ * - call release_packet callback when RX interrupted
+ * - FEC not supported
+ * - CRC
  */
 
 #include "assert.h"

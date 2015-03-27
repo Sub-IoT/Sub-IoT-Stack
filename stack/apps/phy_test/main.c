@@ -74,7 +74,7 @@ void packet_transmitted(hw_radio_packet_t* packet)
     //timer_post_task(&transmit_packet, 100);
 }
 
-void rssi_measurement_done()
+void rssi_measurement_done(int16_t rssi)
 {}
 
 void bootstrap()
