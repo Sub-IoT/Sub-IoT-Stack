@@ -12,11 +12,9 @@
 
 // turn on/off the debug prints
 #ifdef FRAMEWORK_LOG_ENABLED // TODO more granular
-//#define DPRINTF(...) log_printf(__VA_ARGS__)
-#define DPRINT(...) log_print_stack_string(LOG_STACK_PHY, __VA_ARGS__)
+    #define DPRINT(...) log_print_stack_string(LOG_STACK_PHY, __VA_ARGS__)
 #else
-//#define DPRINTF(...)
-#define DPRINT(str)
+    #define DPRINT(...)
 #endif
 
 // functions to be defined which contain CC1101 or CC430 specific implementation
