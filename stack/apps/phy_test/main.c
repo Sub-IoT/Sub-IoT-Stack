@@ -46,8 +46,15 @@ hw_radio_packet_t received_packet;
 
 void transmit_packet()
 {
+    log_print_string("transmitting packet");
     memcpy(&tx_packet->data, data, sizeof(data));
     hw_radio_send_packet(tx_packet);
+}
+
+void start_rx()
+{
+	log_print_string("start RX");
+	hw_radio_set_rx(&rx_cfg);
 }
 
 hw_radio_packet_t* alloc_new_packet(uint8_t length)
@@ -65,6 +72,8 @@ void packet_received(hw_radio_packet_t* packet)
 	log_print_string("packet received");
 	if(memcmp(data, packet->data, sizeof(data)) != 0)
 		log_print_string("Unexpected data received!");
+
+	sched_post_task(&start_rx);
 }
 
 void packet_transmitted(hw_radio_packet_t* packet)
@@ -86,9 +95,10 @@ void bootstrap()
     tx_packet->tx_meta.tx_cfg = tx_cfg;
 
 	#ifdef RX_MODE
-        hw_radio_set_rx(&rx_cfg);
+    	sched_register_task(&start_rx);
+        sched_post_task(&start_rx);
 	#else
         sched_register_task(&transmit_packet);
-        timer_post_task(&transmit_packet, 0);
+        sched_post_task(&transmit_packet);
 	#endif
 }

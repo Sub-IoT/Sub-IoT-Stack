@@ -97,7 +97,8 @@ static RF_SETTINGS rf_settings = {
 
 static void switch_to_idle_mode()
 {
-    //Flush FIFOs and go to sleep
+    //Flush FIFOs and go to sleep, ensure interrupts are disabled
+    cc1101_interface_set_interrupts_enabled(false);
     cc1101_interface_strobe(RF_SFRX); // TODO cc1101 datasheet : Only issue SFRX in IDLE or RXFIFO_OVERFLOW states
     cc1101_interface_strobe(RF_SFTX); // TODO cc1101 datasheet : Only issue SFTX in IDLE or TXFIFO_UNDERFLOW states.
     cc1101_interface_strobe(RF_SIDLE);
@@ -109,35 +110,33 @@ static void end_of_packet_isr()
 {
     cc1101_interface_set_interrupts_enabled(false);
     DPRINT("end of packet ISR");
-    if (current_state == HW_RADIO_STATE_RX)
+    switch(current_state)
     {
-        uint8_t packet_len = cc1101_interface_read_single_reg(RXFIFO);
-        DPRINT("EOP ISR packetLength: %d", packet_len);
-        hw_radio_packet_t* packet = alloc_packet_callback(packet_len);
-        packet->length = packet_len;
-        cc1101_interface_read_burst_reg(RXFIFO, packet->data + 1, packet->length);
-    	switch_to_idle_mode();
-        rx_packet_callback(packet);
+        case HW_RADIO_STATE_RX: ;
+			uint8_t packet_len = cc1101_interface_read_single_reg(RXFIFO);
+			DPRINT("EOP ISR packetLength: %d", packet_len);
+			hw_radio_packet_t* packet = alloc_packet_callback(packet_len);
+			packet->length = packet_len;
+			cc1101_interface_read_burst_reg(RXFIFO, packet->data + 1, packet->length);
+			switch_to_idle_mode();
+			rx_packet_callback(packet);
 
-        // fill rx_meta
-        memcpy(&(packet->rx_meta.rx_cfg.channel_id), &current_channel_id, sizeof(channel_id_t));
-        packet->rx_meta.crc_status = HW_CRC_UNAVAILABLE; // TODO
-        // TODO timestamp
-        // TODO RSSI and LQI
-//        cc1101_interface_read_burst_reg(RXFIFO, buffer, 10); // +2 for RSSI and LQI
-//        rx_data.rssi = calculate_rssi(buffer[packet_length]);
-//        rx_data.lqi = buffer[packet_length + 1] & 0x7F;
-
-    }
-    if (current_state == HW_RADIO_STATE_TX)
-    {
-    	switch_to_idle_mode();
-        // TODO fill metadata
-        tx_packet_callback(current_packet);
-    }
-    else
-    {
-        assert(false);
+			// fill rx_meta
+			memcpy(&(packet->rx_meta.rx_cfg.channel_id), &current_channel_id, sizeof(channel_id_t));
+			packet->rx_meta.crc_status = HW_CRC_UNAVAILABLE; // TODO
+			// TODO timestamp
+			// TODO RSSI and LQI
+	//        cc1101_interface_read_burst_reg(RXFIFO, buffer, 10); // +2 for RSSI and LQI
+	//        rx_data.rssi = calculate_rssi(buffer[packet_length]);
+	//        rx_data.lqi = buffer[packet_length + 1] & 0x7F;
+			break;
+    	case HW_RADIO_STATE_TX:
+			switch_to_idle_mode();
+			// TODO fill metadata
+			tx_packet_callback(current_packet);
+			break;
+    	default:
+    		assert(false);
     }
 }
 
