@@ -20,12 +20,14 @@ GLOBAL_INCLUDE_DIRECTORIES(inc)
 GLOBAL_INCLUDE_DIRECTORIES("${CMAKE_CURRENT_BINARY_DIR}")
 
 #Set platform specific compile options
-INSERT_C_FLAGS(AFTER "")
+INSERT_C_FLAGS(AFTER "-ffunction-sections -fdata-sections -Os") # TODO minimal code size,
+                                                                # but strips debug symbols as well (regression in toolchain, should be fixed in future)
+#INSERT_C_FLAGS(AFTER "-Os")
 
 #Add platform specific linker flags
 INSERT_LINKER_FLAGS(BEFORE OBJECTS INSERT "")
 INSERT_LINKER_FLAGS(BEFORE LINK_LIBRARIES INSERT "-lcrt") # explicitly link crt again, otherwise we get an undefined reference to main()
-INSERT_LINKER_FLAGS(AFTER LINK_LIBRARIES INSERT "")
+INSERT_LINKER_FLAGS(AFTER LINK_LIBRARIES INSERT "-Wl,--gc-sections")
 
 #Include the sources for the cc430 chip
 ADD_CHIP("cc430")
