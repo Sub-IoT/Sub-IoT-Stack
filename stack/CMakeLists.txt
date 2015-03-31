@@ -1,3 +1,8 @@
+#Set CMP0054 to 'OLD'.
+#This was introduced with CMake 3.2, we're still at 2.8, so no need to update this and 
+#potentially break the entire build chain until cmake 3.2 has become mainstream
+cmake_policy(SET CMP0054 OLD)
+
 include(cmake/utils.cmake)
 #First clear global variables that were stored in the cache to make them global
 CLEAR_GLOBALS()
