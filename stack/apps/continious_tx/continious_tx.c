@@ -19,7 +19,7 @@ void bootstrap()
 {
     log_print_string("Device booted at time: %d\n", timer_get_counter_value()); // TODO not printed for some reason, debug later
 
-    hw_radio_init(NULL, NULL, NULL, NULL, NULL);
+    hw_radio_init(NULL, NULL);
 
     cc1101_interface_strobe(0x35); // strobe TX
 }

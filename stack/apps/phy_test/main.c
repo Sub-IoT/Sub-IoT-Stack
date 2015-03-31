@@ -44,53 +44,53 @@ static uint8_t data[] = {16, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14};
 
 hw_radio_packet_t received_packet;
 
+void packet_received(hw_radio_packet_t* packet);
+void packet_transmitted(hw_radio_packet_t* packet);
+
+void start_rx()
+{
+    log_print_string("start RX");
+    hw_radio_set_rx(&rx_cfg, &packet_received, NULL);
+}
+
 void transmit_packet()
 {
     log_print_string("transmitting packet");
     memcpy(&tx_packet->data, data, sizeof(data));
-    hw_radio_send_packet(tx_packet);
-}
-
-void start_rx()
-{
-	log_print_string("start RX");
-	hw_radio_set_rx(&rx_cfg);
+    hw_radio_send_packet(tx_packet, &packet_transmitted);
 }
 
 hw_radio_packet_t* alloc_new_packet(uint8_t length)
 {
-	return rx_packet;
+    return rx_packet;
 }
 
 void release_packet(hw_radio_packet_t* packet)
 {
-	memset(rx_buffer, 0, sizeof(hw_radio_packet_t) + 255);
+    memset(rx_buffer, 0, sizeof(hw_radio_packet_t) + 255);
 }
 
 void packet_received(hw_radio_packet_t* packet)
 {
-	log_print_string("packet received");
-	if(memcmp(data, packet->data, sizeof(data)) != 0)
-		log_print_string("Unexpected data received!");
+    log_print_string("packet received");
+    if(memcmp(data, packet->data, sizeof(data)) != 0)
+        log_print_string("Unexpected data received!");
 
-	sched_post_task(&start_rx);
+    sched_post_task(&start_rx);
 }
 
 void packet_transmitted(hw_radio_packet_t* packet)
 {
-	led_on(0);
-	log_print_string("packet transmitted");
-    //timer_post_task(&transmit_packet, 100);
+    led_toggle(0);
+    log_print_string("packet transmitted");
+    timer_post_task(&transmit_packet, 100);
 }
-
-void rssi_measurement_done(int16_t rssi)
-{}
 
 void bootstrap()
 {
     log_print_string("Device booted at time: %d\n", timer_get_counter_value()); // TODO not printed for some reason, debug later
 
-    hw_radio_init(&alloc_new_packet, &release_packet, &packet_received, &packet_transmitted, &rssi_measurement_done);
+    hw_radio_init(&alloc_new_packet, &release_packet);
 
     tx_packet->tx_meta.tx_cfg = tx_cfg;
 

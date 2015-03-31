@@ -100,7 +100,7 @@ typedef struct
  */
 static inline bool hw_radio_channel_ids_equal(const channel_id_t* a, const channel_id_t* b)
 {
-    return (uint16_t)(*a) == (uint16_t)(*b);
+    return memcmp(a,b, sizeof(channel_id_t)) == 0;
 }
 
 /** \brief The type for the result of a 'hardware' crc check

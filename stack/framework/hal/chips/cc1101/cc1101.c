@@ -133,7 +133,9 @@ static void end_of_packet_isr()
     	case HW_RADIO_STATE_TX:
 			switch_to_idle_mode();
 			// TODO fill metadata
-			tx_packet_callback(current_packet);
+            if(tx_packet_callback != 0)
+                tx_packet_callback(current_packet);
+
 			break;
     	default:
     		assert(false);
@@ -217,16 +219,10 @@ static void configure_syncword_class(syncword_class_t syncword_class)
 }
 
 error_t hw_radio_init(alloc_packet_callback_t alloc_packet_cb,
-                      release_packet_callback_t release_packet_cb,
-                      rx_packet_callback_t rx_cb,
-                      tx_packet_callback_t tx_cb,
-                      rssi_valid_callback_t rssi_valid_cb)
+                      release_packet_callback_t release_packet_cb)
 {
     alloc_packet_callback = alloc_packet_cb;
     release_packet_callback = release_packet_cb;
-    rx_packet_callback = rx_cb;
-    tx_packet_callback = tx_cb;
-    rssi_valid_callback = rssi_valid_cb;
 
     current_state = HW_RADIO_STATE_IDLE;
 
@@ -248,13 +244,14 @@ error_t hw_radio_init(alloc_packet_callback_t alloc_packet_cb,
     configure_syncword_class(current_syncword_class);
 }
 
-error_t hw_radio_set_rx(hw_rx_cfg_t const* rx_cfg)
+error_t hw_radio_set_rx(hw_rx_cfg_t const* rx_cfg, rx_packet_callback_t rx_cb, rssi_valid_callback_t rssi_valid_cb)
 {
-    // TODO error handling EINVAL, EOFF
-    assert(rx_packet_callback != NULL);
     assert(alloc_packet_callback != NULL);
     assert(release_packet_callback != NULL);
-    assert(rssi_valid_callback != NULL);
+
+    // TODO error handling EINVAL, EOFF
+    rx_packet_callback = rx_cb;
+    rssi_valid_callback = rssi_valid_cb;
 
     // if we are currently transmitting wait until TX completed
     while(current_state == HW_RADIO_STATE_TX); // TODO can i block here or return and check if we need to go to rx after tx completed?
@@ -268,17 +265,21 @@ error_t hw_radio_set_rx(hw_rx_cfg_t const* rx_cfg)
     configure_syncword_class(rx_cfg->syncword_class);
 
     cc1101_interface_write_single_reg(PKTLEN, 0xFF);
-    cc1101_interface_set_interrupts_enabled(true);
+    if(rx_packet_callback != 0) // when rx callback not set we ignore received packets
+        cc1101_interface_set_interrupts_enabled(true);
+
     cc1101_interface_strobe(RF_SRX);
 
     return SUCCESS;
 }
 
-error_t hw_radio_send_packet(hw_radio_packet_t* packet)
+error_t hw_radio_send_packet(hw_radio_packet_t* packet, tx_packet_callback_t tx_cb)
 {
     // TODO error handling EINVAL, ESIZE, EOFF
-    // TODO what if TX is already in progress?
-    assert(tx_packet_callback != NULL);
+    if(current_state == HW_RADIO_STATE_TX)
+        return EBUSY;
+
+    tx_packet_callback = tx_cb;
 
     current_state = HW_RADIO_STATE_TX;
     current_packet = packet;
