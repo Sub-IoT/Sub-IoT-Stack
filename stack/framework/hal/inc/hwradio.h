@@ -6,6 +6,7 @@
  * when we start working with the PHY
  *
  * @author Daniel van den Akker
+ * @author Glenn Ergeerts
  *
  */
 #ifndef __HW_RADIO_H_
@@ -17,8 +18,6 @@
 #include "timer.h"
 
 #define HW_RSSI_INVALID 0x7FFF
-
-// TODO move generic phy types/logic to other file?
 
 /* \brief The channel bands and corresponding band indeces as defined in D7A
  *
@@ -33,7 +32,7 @@ typedef enum
     PHY_BAND_915_3 = 0x07,
     PHY_BAND_915_4 = 0x08,
     PHY_BAND_915_5 = 0x09,
-} phy_channel_bands_t;
+} phy_channel_band_t;
 
 /* \brief The channel classes and corresponding indeces as defined in D7A
  *
@@ -65,7 +64,7 @@ typedef enum
 
 
 /** \brief The possible states the radio can be in
- *
+ *  \TODO: Move this struct to the C-file of the PHY driver itself
  */
 typedef enum
 {
@@ -85,9 +84,9 @@ typedef struct
         uint8_t channel_header; 	/**< The raw (8-bit) channel header */
         struct
         {
-            uint8_t ch_coding: 2; 	/**< The 'coding' field in the channel header */
-            uint8_t ch_class: 2;  	/**< The 'class' field in the channel header */
-            uint8_t ch_freq_band: 4;	/**< The frequency 'band' field in the channel header */
+            phy_coding_t ch_coding: 2; 	/**< The 'coding' field in the channel header */
+            phy_channel_class_t ch_class: 2;  	/**< The 'class' field in the channel header */
+            phy_channel_band_t ch_freq_band: 4;	/**< The frequency 'band' field in the channel header */
         };
     };
     uint8_t center_freq_index;		/**< The center frequency index of the channel id */
@@ -97,11 +96,11 @@ typedef struct
  *
  * \param a	The first channel_id
  * \param b	The second channel_id
- * \return bool	true if the two channel_id are equak, false otherwise.
+ * \return bool	true if the two channel_id are equal, false otherwise.
  */
 static inline bool hw_radio_channel_ids_equal(const channel_id_t* a, const channel_id_t* b)
 {
-    return a->channel_header == b->channel_header && a->center_freq_index == b->center_freq_index;
+    return (uint16_t)(*a) == (uint16_t)(*b);
 }
 
 /** \brief The type for the result of a 'hardware' crc check
@@ -335,30 +334,12 @@ typedef void (*rssi_valid_callback_t)(int16_t cur_rssi);
  *					call to p_callback) Please note that this function is called from an 
  *					*interrupt* context and therefore can only do minimal processing.
  *
- * \param rx_callback			The rx_packet_callback_t function to call whenever a packet is received
- * 					please note that this function is called from an *interrupt* context and therefore
- * 					can only do minimal processing.
- *
- * \param tx_callback			The tx_packet_callback_t function to call whenever a packet has been 
- *					sent by the radio. Please note that this function is called from an 
- *					*interrupt* context and therefore can only do minimal processing.
- *
- * \param rssi_callback			The rssi_valid_callback_t function to call whenever the RSSI value 
- *					becomes valid after the radio enters RX mode. Please note that this 
- *					function is called from an *interrupt* context and therefore can only do 
- *					minimal processing.
- *
  * \return	error_t			SUCCESS  if the radio driver was initialised successfully
  * 							EINVAL	 if any of the callback functions is 0x0
  * 							EALREADY if the radio driver was already initialised
  * 							FAIL	 if the radio driver could not be initialised
  */
-__LINK_C error_t hw_radio_init(alloc_packet_callback_t p_alloc,
-			       release_packet_callback_t p_free, 
-			       rx_packet_callback_t rx_callback,
-			       tx_packet_callback_t tx_callback,
-			       rssi_valid_callback_t rssi_callback
-			       );
+__LINK_C error_t hw_radio_init(alloc_packet_callback_t p_alloc, release_packet_callback_t p_free);
 
 /** \brief Set the radio in the IDLE mode.
  *
@@ -397,26 +378,44 @@ __LINK_C bool hw_radio_is_idle();
  * When the radio is placed in RX mode, the tranceiver is configured according to the settings in the 
  * supplied hw_rx_cfg_t struct after which it starts scanning the channel for possible packets.
  *
- * Entering RX Mode triggers the rssi_valid_callback_t function supplied to the hw_radio_init function is called
- * once the RSSI value becomes valid.
- *
- * Received packets are passed back to the user by calling the rx_packet_callback_t
- * function supplied to the hw_radio_init function. 
- *
  * If the radio is already in RX mode when this function is called, any current packet receptions
  * are interrupted, the new settings are applied and the radio restarts the channel scanning process.
  *
  * If the radio is in TX mode when this function is called, the current packet transmission is completed 
  * before the radio is placed in RX mode.
  *
+ * The user can also supply an rx_packet_callback_t and rssi_valid_callback_t function to the hw_radio_set_rx 
+ * function. 
+ * 
+ * If the supplied rssi_valid_callback_t function is not 0x0, this function is called once the RSSI 
+ * value becomes valid. 
+ * 
+ * If the supplied rx_packet_callback_t function is not 0x0, this function is value is 
+ * called whenever a packet is received from the radio. See the note for rx_packet_callback_t for more 
+ * information about the allocation/deallocation of packet buffers wrt. packets passed on to this function.
+ * If the supplied rx_packet_callback_t function is 0x0, the radio enters RX mode (and will be able to to 
+ * RSSI measurements) but any received packets are discarded.
+ *
  * \param rx_cfg	A pointer to the rx settings to apply before entering RX mode.
  *
+ * \param rx_callback			The rx_packet_callback_t function to call whenever a packet is received
+ * 					please note that this function is called from an *interrupt* context and therefore
+ * 					can only do minimal processing. If this function is 0x0, all received 
+ * 					packets will be dropped.
+ *
+ * \param rssi_callback			The rssi_valid_callback_t function to call whenever the RSSI value 
+ *					becomes valid after the radio enters RX mode. Please note that this 
+ *					function is called from an *interrupt* context and therefore can only do 
+ *					minimal processing. If this function is 0x0, no callback will be made 
+ *					when the RSSI becomes valid.
+ *
  * \return error_t	SUCCESS if the radio was put in RX mode (or will be after the current TX has finished)
- *			EALREADY if the radio was already in RX mode.
  *			EINVAL if the supplied rx_cfg contains invalid parameters.
  *			EOFF if the radio is not yet initialised.
  */
-__LINK_C error_t hw_radio_set_rx(hw_rx_cfg_t const* rx_cfg);
+__LINK_C error_t hw_radio_set_rx(hw_rx_cfg_t const* rx_cfg,
+				 rx_packet_callback_t rx_callback,
+				 rssi_valid_callback_t rssi_callback);
 
 /** \brief Check whether or not the radio is in RX mode.
  *
@@ -439,10 +438,11 @@ __LINK_C bool hw_radio_is_rx();
  *
  * Packet transmission is always done *asynchronously*, that is: a packet transmission is initiated by a call 
  * to this function, but is not completed until the tx_packet_callback_t function supplied to the 
- * hw_radio_init function is invoked by the radio driver. The <packet> buffer supplied to this function *MUST* 
- * remain available until the transmission has been completed. It should be noted that the tx_callback 
- * function will ONLY be called if the hw_radio_send_packet function returns SUCCESS.
- *
+ * hw_radio_init function is invoked by the radio driver. If this function is 0x0, no callback will occur. 
+ * In that case the user must check that the transmission has finished by querying the hw_radio_tx_busy 
+ * function. The <packet> buffer supplied to this function *MUST* remain available until the transmission has 
+ * been completed. It should be noted that the tx_callback function will ONLY be called if this function 
+ * pointer != 0x0 and the hw_radio_send_packet function returns SUCCESS.
  *
  * If a transmission is initiated while the radio is in IDLE mode, the radio switches directly from IDLE mode to 
  * TX mode to transmit the packet. After the packet has been sent, it switches back to IDLE mode (unless 
@@ -454,18 +454,21 @@ __LINK_C bool hw_radio_is_rx();
  * settings used (unless either hw_radio_set_idle() or hw_radio_set_rx() with different rx parameters) is 
  * called while the TX is still in progress.)
  *
- *
  * \param packet	A pointer to the start of the packet to be transmitted
- * \param tx_cfg	A pointer to the transmission settings to be used
- * \param metadata	A pointer to the location where to store the metadata. 0x0 if no metadata should be 
- *			kept.
+ *
+ * \param tx_callback	The tx_packet_callback_t function to call whenever a packet has been 
+ *			sent by the radio. Please note that this function is called from an 
+ *			*interrupt* context and therefore can only do minimal processing. If this
+ *			parameter is 0x0, no callback will be made.
  *
  * \return error_t	SUCCESS if the packet transmission has been successfully initiated.
  *			EINVAL if the tx_cfg parameter contains invalid settings
+ *			EBUSY if another TX operation is already in progress
  *			ESIZE if the packet is either too long or too small
  *			EOFF if the radio has not yet been initialised
  */
-__LINK_C error_t hw_radio_send_packet(hw_radio_packet_t* packet);
+__LINK_C error_t hw_radio_send_packet(hw_radio_packet_t* packet,
+			       tx_packet_callback_t tx_callback);
 
 /** \brief Check whether or not the radio is currently transmitting a packet
  *
@@ -506,9 +509,6 @@ bool hw_radio_rssi_valid();
  * Reading the RSSI for a different RX configuration can be done by: 
  *   -# Setting the required settings by calling hw_radio_set_rx
  *   -# Waiting for the rssi_valid callback to be invoked.
- *
- * //NOTE: a function to set the rx_settings and then query the rssi in a busy wait until the rssi is valid 
- * is NOT included here *ON PURPOSE* because this would cause an infinite loop with the *SIM* environment
  *
  */
 __LINK_C int16_t hw_radio_get_rssi();
