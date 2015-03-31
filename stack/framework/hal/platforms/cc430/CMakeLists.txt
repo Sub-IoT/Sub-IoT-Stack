@@ -51,4 +51,5 @@ ADD_LIBRARY(PLATFORM OBJECT
     cc430_leds.c
     libc_overrides.c
     inc/platform.h
+    printf/printf.c
 )

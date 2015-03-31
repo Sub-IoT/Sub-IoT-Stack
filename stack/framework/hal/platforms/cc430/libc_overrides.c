@@ -22,8 +22,7 @@ void __assert_func( const char *file, int line, const char *func, const char *fa
 	led_on(1);
 	while(1)
 	{
-        //TODO don't print for now (code size)
-        //printf("assertion failed: file \"%s\", line %d%s%s\n",failedexpr, file, line, func ? ", function: " : "", func ? func : "");
+        printf("assertion failed: file \"%s\", line %d%s%s\n",failedexpr, file, line, func ? ", function: " : "", func ? func : "");
 		for(uint32_t j = 0; j < 20; j++)
 		{
 			//blink at twice the frequency of the _exit call, so we can identify which of the two events has occurred
