@@ -27,7 +27,7 @@ INSERT_C_FLAGS(AFTER "-ffunction-sections -fdata-sections -Os") # TODO minimal c
 #Add platform specific linker flags
 INSERT_LINKER_FLAGS(BEFORE OBJECTS INSERT "")
 INSERT_LINKER_FLAGS(BEFORE LINK_LIBRARIES INSERT "-lcrt") # explicitly link crt again, otherwise we get an undefined reference to main()
-INSERT_LINKER_FLAGS(AFTER LINK_LIBRARIES INSERT "-Wl,--gc-sections")
+INSERT_LINKER_FLAGS(AFTER LINK_LIBRARIES INSERT "-Wl,--gc-sections -Xlinker -Map=map.txt")
 
 #Include the sources for the cc430 chip
 ADD_CHIP("cc430")
@@ -49,5 +49,6 @@ PLATFORM_BUILD_SETTINGS_FILE()
 ADD_LIBRARY(PLATFORM OBJECT 
     cc430_main.c
     cc430_leds.c
+    libc_overrides.c
     inc/platform.h
 )
