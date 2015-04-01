@@ -52,6 +52,11 @@ static channel_id_t current_channel_id = {
 static syncword_class_t current_syncword_class = PHY_SYNCWORD_CLASS0;
 static syncword_class_t current_eirp = 0;
 
+static bool should_rx_after_tx_completed = false;
+static hw_rx_cfg_t pending_rx_cfg;
+
+static void start_rx(hw_rx_cfg_t const* rx_cfg);
+
 static RF_SETTINGS rf_settings = {
    RADIO_GDO2_VALUE,   			// IOCFG2    GDO2 output pin configuration.
    RADIO_GDO1_VALUE,    			// IOCFG1    GDO1 output pin configuration.
@@ -131,11 +136,20 @@ static void end_of_packet_isr()
 	//        rx_data.lqi = buffer[packet_length + 1] & 0x7F;
 			break;
     	case HW_RADIO_STATE_TX:
-			switch_to_idle_mode();
+            switch_to_idle_mode();
+
 			// TODO fill metadata
             if(tx_packet_callback != 0)
                 tx_packet_callback(current_packet);
 
+            if(should_rx_after_tx_completed)
+            {
+                // RX requested while still in TX ...
+                // TODO this could probably be further optimized by not going into IDLE
+                // after RX by setting TXOFF_MODE to RX (if the cfg is the same at least)
+                should_rx_after_tx_completed = false;
+                start_rx(&pending_rx_cfg);
+            }
 			break;
     	default:
     		assert(false);
@@ -244,18 +258,8 @@ error_t hw_radio_init(alloc_packet_callback_t alloc_packet_cb,
     configure_syncword_class(current_syncword_class);
 }
 
-error_t hw_radio_set_rx(hw_rx_cfg_t const* rx_cfg, rx_packet_callback_t rx_cb, rssi_valid_callback_t rssi_valid_cb)
+static void start_rx(hw_rx_cfg_t const* rx_cfg)
 {
-    assert(alloc_packet_callback != NULL);
-    assert(release_packet_callback != NULL);
-
-    // TODO error handling EINVAL, EOFF
-    rx_packet_callback = rx_cb;
-    rssi_valid_callback = rssi_valid_cb;
-
-    // if we are currently transmitting wait until TX completed
-    while(current_state == HW_RADIO_STATE_TX); // TODO can i block here or return and check if we need to go to rx after tx completed?
-
     current_state = HW_RADIO_STATE_RX;
 
     // TODO rssi valid callback
@@ -269,6 +273,28 @@ error_t hw_radio_set_rx(hw_rx_cfg_t const* rx_cfg, rx_packet_callback_t rx_cb, r
         cc1101_interface_set_interrupts_enabled(true);
 
     cc1101_interface_strobe(RF_SRX);
+}
+
+error_t hw_radio_set_rx(hw_rx_cfg_t const* rx_cfg, rx_packet_callback_t rx_cb, rssi_valid_callback_t rssi_valid_cb)
+{
+    assert(alloc_packet_callback != NULL);
+    assert(release_packet_callback != NULL);
+
+    // TODO error handling EINVAL, EOFF
+    rx_packet_callback = rx_cb;
+    rssi_valid_callback = rssi_valid_cb;
+
+    // if we are currently transmitting wait until TX completed before entering RX
+    // we return now and go into RX when TX is completed
+    if(current_state == HW_RADIO_STATE_TX)
+    {
+        // TODO not tested yet
+        should_rx_after_tx_completed = true;
+        memcpy(&pending_rx_cfg, rx_cfg, sizeof(hw_rx_cfg_t));
+        return SUCCESS;
+    }
+
+    start_rx(rx_cfg);
 
     return SUCCESS;
 }

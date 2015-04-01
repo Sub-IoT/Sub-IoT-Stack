@@ -12,6 +12,8 @@
 #ifndef __HW_RADIO_H_
 #define __HW_RADIO_H_
 
+#include "string.h"
+
 #include "link_c.h"
 #include "errors.h"
 #include "hal_defs.h"
