@@ -34,6 +34,8 @@
 #define DPRINT(...)
 #endif
 
+#define RSSI_OFFSET 74
+
 static alloc_packet_callback_t alloc_packet_callback;
 static release_packet_callback_t release_packet_callback;
 static rx_packet_callback_t rx_packet_callback;
@@ -111,6 +113,17 @@ static void switch_to_idle_mode()
     current_state = HW_RADIO_STATE_IDLE;
 }
 
+static inline int16_t convert_rssi(int8_t rssi_raw)
+{
+    // CC1101 RSSI is 0.5 dBm units, signed byte
+    int16_t rssi = (int16_t)rssi_raw;		//Convert to signed 16 bit
+    rssi += 128;                      		//Make it positive...
+    rssi >>= 1;                        		//...So division to 1 dBm units can be a shift...
+    rssi -= 64 + RSSI_OFFSET;     			// ...and then rescale it, including offset
+
+    return rssi;
+}
+
 static void end_of_packet_isr()
 {
     cc1101_interface_set_interrupts_enabled(false);
@@ -123,17 +136,16 @@ static void end_of_packet_isr()
 			hw_radio_packet_t* packet = alloc_packet_callback(packet_len);
 			packet->length = packet_len;
 			cc1101_interface_read_burst_reg(RXFIFO, packet->data + 1, packet->length);
-			switch_to_idle_mode();
-			rx_packet_callback(packet);
 
 			// fill rx_meta
+			packet->rx_meta.rssi = convert_rssi(cc1101_interface_read_single_reg(RXFIFO));
+			packet->rx_meta.lqi = cc1101_interface_read_single_reg(RXFIFO) & 0x7F;
 			memcpy(&(packet->rx_meta.rx_cfg.channel_id), &current_channel_id, sizeof(channel_id_t));
 			packet->rx_meta.crc_status = HW_CRC_UNAVAILABLE; // TODO
 			// TODO timestamp
-			// TODO RSSI and LQI
-	//        cc1101_interface_read_burst_reg(RXFIFO, buffer, 10); // +2 for RSSI and LQI
-	//        rx_data.rssi = calculate_rssi(buffer[packet_length]);
-	//        rx_data.lqi = buffer[packet_length + 1] & 0x7F;
+
+			switch_to_idle_mode();
+			rx_packet_callback(packet);
 			break;
     	case HW_RADIO_STATE_TX:
             switch_to_idle_mode();
@@ -279,6 +291,7 @@ error_t hw_radio_set_rx(hw_rx_cfg_t const* rx_cfg, rx_packet_callback_t rx_cb, r
 {
     assert(alloc_packet_callback != NULL);
     assert(release_packet_callback != NULL);
+    assert(rssi_valid_cb == NULL); // not implemented yet
 
     // TODO error handling EINVAL, EOFF
     rx_packet_callback = rx_cb;
@@ -288,7 +301,6 @@ error_t hw_radio_set_rx(hw_rx_cfg_t const* rx_cfg, rx_packet_callback_t rx_cb, r
     // we return now and go into RX when TX is completed
     if(current_state == HW_RADIO_STATE_TX)
     {
-        // TODO not tested yet
         should_rx_after_tx_completed = true;
         memcpy(&pending_rx_cfg, rx_cfg, sizeof(hw_rx_cfg_t));
         return SUCCESS;
@@ -314,14 +326,14 @@ error_t hw_radio_send_packet(hw_radio_packet_t* packet, tx_packet_callback_t tx_
 
 #ifdef FRAMEWORK_LOG_ENABLED // TODO more granular
     log_print_stack_string(LOG_STACK_PHY, "Data to TX Fifo:");
-    log_print_data(packet->data, packet->length);
+    log_print_data(packet->data, packet->length + 1);
 #endif
 
     configure_channel((channel_id_t*)&(current_packet->tx_meta.tx_cfg.channel_id));
     configure_eirp(current_packet->tx_meta.tx_cfg.eirp);
     configure_syncword_class(current_packet->tx_meta.tx_cfg.syncword_class);
 
-    cc1101_interface_write_burst_reg(TXFIFO, packet->data, packet->length);
+    cc1101_interface_write_burst_reg(TXFIFO, packet->data, packet->length + 1);
     cc1101_interface_set_interrupts_enabled(true);
     cc1101_interface_strobe(RF_STX);
     return SUCCESS;

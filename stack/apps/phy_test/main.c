@@ -39,7 +39,7 @@ static uint8_t tx_buffer[sizeof(hw_radio_packet_t) + 255] = { 0 };
 static uint8_t rx_buffer[sizeof(hw_radio_packet_t) + 255] = { 0 };
 hw_radio_packet_t* tx_packet = (hw_radio_packet_t*)tx_buffer;
 hw_radio_packet_t* rx_packet = (hw_radio_packet_t*)rx_buffer;
-static uint8_t data[] = {16, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14};
+static uint8_t data[] = {16, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15};
 
 
 hw_radio_packet_t received_packet;
@@ -72,7 +72,7 @@ void release_packet(hw_radio_packet_t* packet)
 
 void packet_received(hw_radio_packet_t* packet)
 {
-    log_print_string("packet received");
+    log_print_string("packet received @ RSSI = %i", packet->rx_meta.rssi);
     if(memcmp(data, packet->data, sizeof(data)) != 0)
         log_print_string("Unexpected data received!");
 
