@@ -1,24 +1,23 @@
-/*! \file log.h
+/* * OSS-7 - An opensource implementation of the DASH7 Alliance Protocol for ultra
+ * lowpower wireless sensor communication
  *
- * \copyright (C) Copyright 2013 University of Antwerp (http://www.cosys-lab.be) and others.\n
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.\n
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
+ * Copyright 2015 University of Antwerp
  *
- * Contributors:
- * 		maarten.weyn@uantwerpen.be
- *     		glenn.ergeerts@uantwerpen.be
- *		daniel.vandenakker@uantwerpen.be
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 /* \file
- *
+ 
  * This file specifies the generic logging facilities of the framework.
  * A number of functions are provided to log both arbitrarily formatted data
  * (processed using the printf family of functions) and binary data (logged in a 
@@ -28,6 +27,10 @@
  * 
  * Logging can be globally enabled or disabled by setting or clearing the 
  * 'LOGGING_ENABLED' CMake option. Moreover
+ *
+ * \author maarten.weyn@uantwerpen.be
+ * \author glenn.ergeerts@uantwerpen.be
+ * \author daniel.vandenakker@uantwerpen.be
  *
  */
 #ifndef __LOG_H_

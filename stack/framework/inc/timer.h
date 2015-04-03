@@ -1,20 +1,19 @@
-/*
- * (C) Copyright 2013 University of Antwerp (http://www.cosys-lab.be) and others.
+/* * OSS-7 - An opensource implementation of the DASH7 Alliance Protocol for ultra
+ * lowpower wireless sensor communication
  *
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the GNU Lesser General Public License
- * (LGPL) version 2.1 which accompanies this distribution, and is available at
- * http://www.gnu.org/licenses/lgpl-2.1.html
+ * Copyright 2015 University of Antwerp
  *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * Lesser General Public License for more details.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
- * Contributors:
- * 		maarten.weyn@uantwerpen.be
- *		daniel.vandenakker@uantwerpen.be
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 /*! \file
@@ -44,7 +43,9 @@
  * The meta-data of the timers is updated accordingly to ensure that the timing
  * of the events is not affected by the operation. In 'Reset mode' timer_get_counter_value() returns the 
  * number of ticks since the last time since the counter was reset. 
- * THIS IS THE EXACT SAME BEHAVIOR AS THE CURRENT TIMER IMPLEMENTATION IN THE D7AOSS STACK !!
+ * 
+ * /author maarten.weyn@uantwerpen.be
+ * /author daniel.vandenakker@uantwerpen.be
  *
  */
 #ifndef TIMER_H_
