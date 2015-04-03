@@ -64,17 +64,6 @@ typedef enum
     PHY_SYNCWORD_CLASS1 = 0x01
 } phy_syncword_class_t;
 
-
-/** \brief The possible states the radio can be in
- *  \TODO: Move this struct to the C-file of the PHY driver itself
- */
-typedef enum
-{
-    HW_RADIO_STATE_IDLE,
-    HW_RADIO_STATE_TX,
-    HW_RADIO_STATE_RX
-} hw_radio_state_t;
-
 /** \brief spectrum id used to identify the spectrum settings
  *
  * This struct adheres to the 'Channel ID' format the Dash7 PHY layer. (@17/03/2015)

@@ -36,6 +36,15 @@
 
 #define RSSI_OFFSET 74
 
+/** \brief The possible states the radio can be in
+ */
+typedef enum
+{
+    HW_RADIO_STATE_IDLE,
+    HW_RADIO_STATE_TX,
+    HW_RADIO_STATE_RX
+} hw_radio_state_t;
+
 static alloc_packet_callback_t alloc_packet_callback;
 static release_packet_callback_t release_packet_callback;
 static rx_packet_callback_t rx_packet_callback;
@@ -131,26 +140,27 @@ static void end_of_packet_isr()
     switch(current_state)
     {
         case HW_RADIO_STATE_RX: ;
-			uint8_t packet_len = cc1101_interface_read_single_reg(RXFIFO);
-			DPRINT("EOP ISR packetLength: %d", packet_len);
-			hw_radio_packet_t* packet = alloc_packet_callback(packet_len);
-			packet->length = packet_len;
-			cc1101_interface_read_burst_reg(RXFIFO, packet->data + 1, packet->length);
+            uint8_t packet_len = cc1101_interface_read_single_reg(RXFIFO);
+            DPRINT("EOP ISR packetLength: %d", packet_len);
+            hw_radio_packet_t* packet = alloc_packet_callback(packet_len);
+            packet->length = packet_len;
+            assert(packet->length < 63); // long packets not yet supported
+            cc1101_interface_read_burst_reg(RXFIFO, packet->data + 1, packet->length);
 
-			// fill rx_meta
-			packet->rx_meta.rssi = convert_rssi(cc1101_interface_read_single_reg(RXFIFO));
-			packet->rx_meta.lqi = cc1101_interface_read_single_reg(RXFIFO) & 0x7F;
-			memcpy(&(packet->rx_meta.rx_cfg.channel_id), &current_channel_id, sizeof(channel_id_t));
-			packet->rx_meta.crc_status = HW_CRC_UNAVAILABLE; // TODO
-			// TODO timestamp
+            // fill rx_meta
+            packet->rx_meta.rssi = convert_rssi(cc1101_interface_read_single_reg(RXFIFO));
+            packet->rx_meta.lqi = cc1101_interface_read_single_reg(RXFIFO) & 0x7F;
+            memcpy(&(packet->rx_meta.rx_cfg.channel_id), &current_channel_id, sizeof(channel_id_t));
+            packet->rx_meta.crc_status = HW_CRC_UNAVAILABLE; // TODO
+            // TODO timestamp
 
-			switch_to_idle_mode();
-			rx_packet_callback(packet);
-			break;
-    	case HW_RADIO_STATE_TX:
+            switch_to_idle_mode();
+            rx_packet_callback(packet);
+            break;
+        case HW_RADIO_STATE_TX:
             switch_to_idle_mode();
 
-			// TODO fill metadata
+            // TODO fill metadata
             if(tx_packet_callback != 0)
                 tx_packet_callback(current_packet);
 
@@ -162,9 +172,9 @@ static void end_of_packet_isr()
                 should_rx_after_tx_completed = false;
                 start_rx(&pending_rx_cfg);
             }
-			break;
-    	default:
-    		assert(false);
+            break;
+        default:
+            assert(false);
     }
 }
 
@@ -316,6 +326,8 @@ error_t hw_radio_send_packet(hw_radio_packet_t* packet, tx_packet_callback_t tx_
     // TODO error handling EINVAL, ESIZE, EOFF
     if(current_state == HW_RADIO_STATE_TX)
         return EBUSY;
+
+    assert(packet->length < 63); // long packets not yet supported
 
     tx_packet_callback = tx_cb;
 
