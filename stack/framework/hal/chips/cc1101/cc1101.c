@@ -170,7 +170,7 @@ static void end_of_packet_isr()
             packet->rx_meta.lqi = cc1101_interface_read_single_reg(RXFIFO) & 0x7F;
             memcpy(&(packet->rx_meta.rx_cfg.channel_id), &current_channel_id, sizeof(channel_id_t));
             packet->rx_meta.crc_status = HW_CRC_UNAVAILABLE; // TODO
-            // TODO timestamp
+            packet->rx_meta.timestamp = timer_get_counter_value();
 
             switch_to_idle_mode();
             rx_packet_callback(packet);
@@ -178,7 +178,7 @@ static void end_of_packet_isr()
         case HW_RADIO_STATE_TX:
             switch_to_idle_mode();
 
-            // TODO fill metadata
+            current_packet->tx_meta.timestamp = timer_get_counter_value();
             if(tx_packet_callback != 0)
                 tx_packet_callback(current_packet);
 
@@ -198,7 +198,7 @@ static void end_of_packet_isr()
 
 static void configure_channel(const channel_id_t* channel_id)
 {
-    // only change settings is channel_id changed compared to current config
+    // only change settings if channel_id changed compared to current config
     if(!hw_radio_channel_ids_equal(channel_id, &current_channel_id))
     {
         assert(channel_id->ch_freq_band == PHY_BAND_433); // TODO implement other bands
@@ -302,24 +302,36 @@ static void start_rx(hw_rx_cfg_t const* rx_cfg)
 {
     current_state = HW_RADIO_STATE_RX;
 
-    // TODO rssi valid callback
-
     cc1101_interface_strobe(RF_SFRX);
     configure_channel(&(rx_cfg->channel_id));
     configure_syncword_class(rx_cfg->syncword_class);
-
     cc1101_interface_write_single_reg(PKTLEN, 0xFF);
+
     if(rx_packet_callback != 0) // when rx callback not set we ignore received packets
         cc1101_interface_set_interrupts_enabled(true);
 
     cc1101_interface_strobe(RF_SRX);
+
+    if(rssi_valid_callback != 0)
+    {
+        // TODO calculate/predict rssi response time (see DN505)
+        // and wait until valid. For now we callback immediately
+        rssi_valid_callback(hw_radio_get_rssi());
+    }
 }
 
 error_t hw_radio_set_rx(hw_rx_cfg_t const* rx_cfg, rx_packet_callback_t rx_cb, rssi_valid_callback_t rssi_valid_cb)
 {
-    assert(alloc_packet_callback != NULL);
-    assert(release_packet_callback != NULL);
-    assert(rssi_valid_cb == NULL); // not implemented yet
+    // TODO we stay in RX as long as no packets are received (or only rssi cb provided).
+    // Make this explicit by either adding a flag (keep_in_rx) or make this the default and
+    // require the user to set radio to idle. (Both options should be implemented in rx completed case as well)
+    if(rx_cb != NULL)
+    {
+        assert(alloc_packet_callback != NULL);
+        assert(release_packet_callback != NULL);
+    }
+
+    assert(rx_cb != NULL || rssi_valid_cb != NULL); // at least one callback should be valid
 
     // TODO error handling EINVAL, EOFF
     rx_packet_callback = rx_cb;
@@ -367,4 +379,9 @@ error_t hw_radio_send_packet(hw_radio_packet_t* packet, tx_packet_callback_t tx_
     cc1101_interface_set_interrupts_enabled(true);
     cc1101_interface_strobe(RF_STX);
     return SUCCESS;
+}
+
+int16_t hw_radio_get_rssi()
+{
+    return convert_rssi(cc1101_interface_read_single_reg(RSSI));
 }

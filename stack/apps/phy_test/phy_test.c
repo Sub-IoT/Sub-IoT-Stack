@@ -90,11 +90,11 @@ void release_packet(hw_radio_packet_t* packet)
 
 void packet_received(hw_radio_packet_t* packet)
 {
-    log_print_string("packet received @ RSSI = %i", packet->rx_meta.rssi);
+    log_print_string("packet received @ %i , RSSI = %i", packet->rx_meta.timestamp, packet->rx_meta.rssi);
     if(memcmp(data, packet->data, sizeof(data)) != 0)
         log_print_string("Unexpected data received!");
 
-    sched_post_task(&start_rx);
+    sched_post_task((&start_rx);
 }
 
 void packet_transmitted(hw_radio_packet_t* packet)
