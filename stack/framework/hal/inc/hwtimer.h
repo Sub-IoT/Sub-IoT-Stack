@@ -17,8 +17,12 @@
  */
 
 /*! \file timer.h
+ * \addtogroup timer
+ * \ingroup HAL
+ * @{
+ * \brief Hardware Timer API
  * \author maarten.weyn@uantwerpen.be
- * \daniel.vandenakker@uantwerpen.be
+ * \author daniel.vandenakker@uantwerpen.be
  *
  */
 
@@ -180,3 +184,5 @@ __LINK_C bool hw_timer_is_overflow_pending(hwtimer_id_t id);
 __LINK_C bool hw_timer_is_interrupt_pending(hwtimer_id_t id);
 
 #endif /* HW_TIMER_H_ */
+
+/** @}*/

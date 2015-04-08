@@ -17,10 +17,10 @@
  */
 
 /*! \file
- *
- * The framework provides an abstraction of the low-level hardware timers provided by the HAL. The framework
- * timer interface builds on the low-level HAL timer interface to provide more advanced capabilities. The 
- * major differences with the HAL timers are:
+ * \brief The framework provides an abstraction of the low-level hardware timers provided by the HAL. 
+ * 		The framework timer interface builds on the low-level HAL timer interface to provide more advanced capabilities. 
+ * 
+ * The major differences with the HAL timers are:
  *  - 32-bit counter instead of a 16-bit counter
  *  - Multiple timer events can be scheduled simultaneously
  *  - Events are executed by the scheduler in the main task loop and NOT during the timer interrupt
@@ -44,8 +44,8 @@
  * of the events is not affected by the operation. In 'Reset mode' timer_get_counter_value() returns the 
  * number of ticks since the last time since the counter was reset. 
  * 
- * /author maarten.weyn@uantwerpen.be
- * /author daniel.vandenakker@uantwerpen.be
+ * \author maarten.weyn@uantwerpen.be
+ * \author daniel.vandenakker@uantwerpen.be
  *
  */
 #ifndef TIMER_H_
@@ -102,26 +102,26 @@ __LINK_C void timer_init();
  */
 __LINK_C timer_tick_t timer_get_counter_value();
 
-/*! \brief Post a task <task> to be scheduled at a given <time> with a given <priority>
+/*! \brief Post a task to be scheduled at a given time with a given priority
  *
- * The <time> parameter denotes the clock tick at which the <task> is to be scheduled
- * with the task scheduler. <time> may be a value that is in the future or in the past wrt.
- * the current value of 'timer_get_counter_value()' (denoted as <cur_time>).
- * If <time> denotes a clock tick in the future, the framework timer delays scheduling the task until
- * <cur_time> == <time>. If <time> denotes a clock tick in the past, the task is scheduled
+ * The time parameter denotes the clock tick at which the task is to be scheduled
+ * with the task scheduler. time may be a value that is in the future or in the past wrt.
+ * the current value of 'timer_get_counter_value()' (denoted as cur_time).
+ * If time denotes a clock tick in the future, the framework timer delays scheduling the task until
+ * cur_time == time. If time denotes a clock tick in the past, the task is scheduled
  * immediately. Depending on the frequency of the timer, the priority of the task and the amount of tasks
  * currently scheduled, another few clock ticks may pass before the task is actually executed.
  * (If you need more precise timing, use a hardware timer)
  *
- * To ensure proper operation of the framework timer in the event of an overflow, <time> is
- * interpreted in a circular fashion wrt. the current <counter> value. A specified <time> is deemed
- * to be in the past when, using SIGNED integer arithmetic: '<time> - <cur_time> < 0'.
- * This equates to checking whether <time> < <cur_time>, except that it also works when the timer is about
+ * To ensure proper operation of the framework timer in the event of an overflow, time is
+ * interpreted in a circular fashion wrt. the current counter value. A specified time is deemed
+ * to be in the past when, using SIGNED integer arithmetic: 'time - cur_time < 0'.
+ * This equates to checking whether time < cur_time, except that it also works when the timer is about
  * to overflow.
  *
  * When the framework timer is operating in 'Reset mode' (as opposed to 'Normal mode') the value of the counter is
- * reset to '0' right before the task is posted. The supplied <time> value is then treated in the normal manner,
- * but since the counter itself is reset, <time> can also be interpreted as the number of clock ticks to wait
+ * reset to '0' right before the task is posted. The supplied time value is then treated in the normal manner,
+ * but since the counter itself is reset, time can also be interpreted as the number of clock ticks to wait
  * (from posting the task) before scheduling the task with the task scheduler.
  *
  * Please note that posting a task with the framework timers does NOT automatically register
@@ -192,7 +192,7 @@ static inline error_t timer_post_task_prio_delay(task_t task, timer_tick_t delay
 #endif //FRAMEWORK_TIMER_RESET_COUNTER
 
 }
-/*! \brief Post a task <task> to be scheduled with a certain <delay> with the default priority.
+/*! \brief Post a task to be scheduled with a certain delay> with the default priority.
  *
  * This function is equivalent to
  * \code{.c}

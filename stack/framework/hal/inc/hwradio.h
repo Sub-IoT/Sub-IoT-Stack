@@ -16,15 +16,14 @@
  * limitations under the License.
  */
 
-/* \file
+/*! \file hwradio.h
+ * \addtogroup radio
+ * \ingroup HAL
+ * @{
+ * \brief The interface specification for accessing the radio interface.
  *
- * The interface specification for accessing the radio interface.
- * Please note: the currently defined functions are nothing more than
- * placeholders to test out the simulator. These functions WILL change
- * when we start working with the PHY
- *
- * @author Daniel van den Akker
- * @author Glenn Ergeerts
+ * \author Daniel van den Akker
+ * \author Glenn Ergeerts
  *
  */
 #ifndef __HW_RADIO_H_
@@ -205,14 +204,14 @@ typedef struct
 /** \brief A PHY layer packet that can be sent / received over the air using the HW radio interface.
  *
  * A hw_radio_packet_t consists of:
- *   - <rx_meta> / <tx_meta>: 		The metadata attached to the packet that is either collected by the radio driver
+ *   - rx_meta / tx_meta: 		The metadata attached to the packet that is either collected by the radio driver
  *					upon reception of the packet or needed/returned by the radio driver upon 
  *					transmission of the packet.
  *   - the packet data itself:		a uint8[] of undetermined length that contains the actual packet data.
  *					for convenience, the first byte of this data array overlaps with the 
  *					'length' field containing the length of the data array.
  *
- * It should be noted that the <rx_meta> and <tx_meta> structs occupy the same memory space (unioned)
+ * It should be noted that the rx_meta and tx_meta structs occupy the same memory space (unioned)
  * And that they have been defined so the fields of these structs that have the same meaning overlap.
  * Moreover, the fields of thw hw_radio_packet_t structure are alligned such that the 'data' of a packet
  * is always in the same place, regardless of whether it is transmitted or received.
@@ -246,7 +245,7 @@ typedef struct
  * The new_packet_callback_t function is called by the PHY driver each time a (new) buffer is needed to store a 
  * packet. This function is supplied with the *length* of the packet to be stored and is expected to 
  * return a pointer to a 'hw_radio_packet_t' that is sufficiently large to contain a packet that is at least
- * <length> bytes long. If no sufficiently large buffer can be allocated, this function MUST return NULL 
+ * length bytes long. If no sufficiently large buffer can be allocated, this function MUST return NULL 
  * (0x0).
  *
  * It should be noted that this function is typically called while the packet is being received and as a 
@@ -259,7 +258,7 @@ typedef struct
  *
  * \param length		The length of the packet for which a buffer must be allocated
  * \return hw_radio_packet_t*	The allocated packet buffer. The buffer MUST be large enough for the
- *				data field to contain at least <length> bytes. If no sufficiently large 
+ *				data field to contain at least length bytes. If no sufficiently large 
  *				buffer can be allocated, 0x0 is returned.
  */
 typedef hw_radio_packet_t* (*alloc_packet_callback_t)(uint8_t length);
@@ -441,8 +440,8 @@ __LINK_C bool hw_radio_is_rx();
 
 /** \brief Initiate a packet transmission over the air with the specified TX settings.
  *
- * This function sends the packet pointed to by the <packet> parameter over the air. Packets are always 
- * transmitted using the tx_cfg settings in the tx_meta field of the supplied <packet>. If these settings are 
+ * This function sends the packet pointed to by the packet parameter over the air. Packets are always 
+ * transmitted using the tx_cfg settings in the tx_meta field of the supplied packet. If these settings are 
  * not valid, EINVAL is returned and the packet is not transmitted. Moreover the 'length' field of the packet 
  * must also be properly configured. More specifically, the radio will send the first 'length' bytes of the 
  * packet's 'data' buffer over the air. It is the responsibility of the caller to ensure that the 'length' of 
@@ -452,7 +451,7 @@ __LINK_C bool hw_radio_is_rx();
  * to this function, but is not completed until the tx_packet_callback_t function supplied to the 
  * hw_radio_init function is invoked by the radio driver. If this function is 0x0, no callback will occur. 
  * In that case the user must check that the transmission has finished by querying the hw_radio_tx_busy 
- * function. The <packet> buffer supplied to this function *MUST* remain available until the transmission has 
+ * function. The packet buffer supplied to this function *MUST* remain available until the transmission has 
  * been completed. It should be noted that the tx_callback function will ONLY be called if this function 
  * pointer != 0x0 and the hw_radio_send_packet function returns SUCCESS.
  *
@@ -526,3 +525,5 @@ bool hw_radio_rssi_valid();
 __LINK_C int16_t hw_radio_get_rssi();
 
 #endif //__HW_RADIO_H_
+
+/** @}*/

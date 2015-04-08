@@ -16,7 +16,11 @@
  * limitations under the License.
  */
 
-/*! \file uart.h
+/*! \file hwuart.h
+ * \addtogroup UART
+ * \ingroup HAL
+ * @{
+ * \brief UART API
  * \author maarten.weyn@uantwerpen.be
  * \author glenn.ergeerts@uantwerpen.be
  * \author daniel.vandenakker@uantwerpen.be
@@ -62,3 +66,5 @@ __LINK_C void uart_transmit_message(void const *data, size_t length);
 __LINK_C bool uart_tx_ready();
 
 #endif // __UART_H__
+
+/** @}*/

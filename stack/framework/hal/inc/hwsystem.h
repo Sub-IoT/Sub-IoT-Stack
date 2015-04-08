@@ -16,10 +16,11 @@
  * limitations under the License.
  */
 
-/*! \file
- *
- * Definition of various platform-dependent 'system' functions
- *
+/*! \file hwsystem.h
+ * \addtogroup System
+ * \ingroup HAL
+ * @{
+ * \brief Definition of various platform-dependent 'system' functions
  */
 
 #ifndef __HW_SYSTEM_H_
@@ -33,7 +34,7 @@
  * When the system is in low power mode the CPU is halted until it
  * receives an external trigger (usually an interrupt).
  *
- * The low power mode to enter is selected by supplying the <mode>
+ * The low power mode to enter is selected by supplying the mode
  * parameter. 
  *
  * In low power mode zero (mode == 0) the CPU itself is disabled but all 
@@ -61,8 +62,8 @@ __LINK_C void hw_enter_lowpower_mode(uint8_t mode);
  * By convention the bytes of the ID should be ordered in such a way as to minimise the risk of 
  * a collision in the event that the ID is truncated.
  * 
- * If, for instance, the ID is generated based on an MCU specific <part_number> and a device specific 
- * <serial_number>, the bits of the <serial_number> should be placed in the least significant bits of the 
+ * If, for instance, the ID is generated based on an MCU specific part_number and a device specific 
+ * serial_number, the bits of the serial_number should be placed in the least significant bits of the 
  * returned ID.
  *
  * \return uint64_t	A device unique identifier
@@ -78,3 +79,5 @@ __LINK_C uint64_t hw_get_unique_id();
 __LINK_C void hw_busy_wait(int16_t microseconds);
 
 #endif //__HW_SYSTEM_H
+
+/** @}*/

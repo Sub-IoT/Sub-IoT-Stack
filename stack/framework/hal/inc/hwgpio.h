@@ -16,9 +16,11 @@
  * limitations under the License.
  */
 
-/* \file
- *
- * Hardware interface to the GPIO Pins of the MCU of the platform.
+/*! \file
+ *	\addtogroup GPIO
+ * 	\ingroup HAL
+ * @{
+ * \brief Hardware interface to the GPIO Pins of the MCU of the platform.
  *
  * This header files specifies a number of generic functions for accessing 
  * and configuring individual General Purpose IO pins of the MCU.
@@ -54,7 +56,7 @@
 #include "types.h"
 #include "errors.h"
 #include "link_c.h"
-/* \brief the type for the pin_id's that identify each individual GPIO pin
+/*! \brief the type for the pin_id's that identify each individual GPIO pin
  *
  */
 typedef struct
@@ -63,7 +65,7 @@ typedef struct
     uint16_t pin;
 } pin_id_t;
 
-/* \brief Utility function to check whether two pin_id_t's refer to the same GPIO pin
+/*! \brief Utility function to check whether two pin_id_t's refer to the same GPIO pin
  *
  * \param a	The first pin_id
  * \param b	The second pin_id
@@ -73,15 +75,15 @@ static inline bool hw_gpio_pin_matches(pin_id_t a, pin_id_t b) {return a.port ==
 
 enum
 {
-    /* \brief value in the event_mask to signify a transition from low to high
+    /*! \brief value in the event_mask to signify a transition from low to high
      */
     GPIO_RISING_EDGE = 1,
-    /* \brief value in the event_mask to signify a transition from high to low
+    /*! \brief value in the event_mask to signify a transition from high to low
      */
     GPIO_FALLING_EDGE = 2,
 };
 
-/* \brief Generic callback function for GPIO events.
+/*! \brief Generic callback function for GPIO events.
  *
  * gpio_inthander's are callback functions that are called when specific events occur
  * for specific IO pins.
@@ -103,7 +105,7 @@ enum
  */
 typedef void (*gpio_inthandler_t)(pin_id_t pin_id, uint8_t event_mask);
 
-/* \brief Set the output of a GPIO pin to 'high'
+/*! \brief Set the output of a GPIO pin to 'high'
  * 
  * It should be noted that only pins that have previously been configured
  * for 'output' can be set 'high'. If the pin was not configured,
@@ -115,7 +117,7 @@ typedef void (*gpio_inthandler_t)(pin_id_t pin_id, uint8_t event_mask);
  */
 __LINK_C error_t hw_gpio_set(pin_id_t pin_id);
 
-/* \brief Set the output of a GPIO pin to 'low'
+/*! \brief Set the output of a GPIO pin to 'low'
  * 
  * It should be noted that only pins that have previously been configured
  * for 'output' can be set 'low'. If the pin was not configured,
@@ -127,7 +129,7 @@ __LINK_C error_t hw_gpio_set(pin_id_t pin_id);
  */
 __LINK_C error_t hw_gpio_clr(pin_id_t pin_id);
 
-/* \brief Toggle the output of a GPIO pin. If the pin was previously 
+/*! \brief Toggle the output of a GPIO pin. If the pin was previously 
  *	  configured as 'high' it is now configured 'low' and vice versa.
  * 
  * It should be noted that only pins that have previously been configured
@@ -140,7 +142,7 @@ __LINK_C error_t hw_gpio_clr(pin_id_t pin_id);
  */
  __LINK_C error_t hw_gpio_toggle(pin_id_t pin_id);
 
-/* \brief Retrieve the current output 'state' of the GPIO pin
+/*! \brief Retrieve the current output 'state' of the GPIO pin
  *
  * This function returns true or false depending on whether the 'output'
  * state of the GPIO pin is currently high or low. For pins that have been configured as
@@ -158,7 +160,7 @@ __LINK_C error_t hw_gpio_clr(pin_id_t pin_id);
  */
 __LINK_C bool hw_gpio_get_out(pin_id_t pin_id);
 
-/* \brief Retrieve the current input 'state' of the GPIO pin
+/*! \brief Retrieve the current input 'state' of the GPIO pin
  *
  * This function returns true or false depending on whether the 'input'
  * state of the GPIO pin is currently high or low. For pins that have been configured as
@@ -172,7 +174,7 @@ __LINK_C bool hw_gpio_get_out(pin_id_t pin_id);
  */
 __LINK_C bool hw_gpio_get_in(pin_id_t pin_id);
 
-/* \brief Configure an interrupt to occur when a rising or falling event occurs
+/*! \brief Configure an interrupt to occur when a rising or falling event occurs
  *	  on a specific GPIO pin.
  *
  * GPIO interrupts cannot be configured for all GPIO pins. Whether or not a GPIO
@@ -217,7 +219,7 @@ __LINK_C bool hw_gpio_get_in(pin_id_t pin_id);
  */
 __LINK_C error_t hw_gpio_configure_interrupt(pin_id_t pin_id, gpio_inthandler_t callback, uint8_t event_mask);
 
-/* \brief Enable the interrupts for a specific GPIO pin.
+/*! \brief Enable the interrupts for a specific GPIO pin.
  *
  * Please note that hw_gpio_configure_interrupt() must be called before the interrupt
  * can be enabled or disabled. Otherwise EOFF is returned and the interrupt remains disabled
@@ -231,7 +233,7 @@ __LINK_C error_t hw_gpio_configure_interrupt(pin_id_t pin_id, gpio_inthandler_t 
  **/
 __LINK_C error_t hw_gpio_enable_interrupt(pin_id_t pin_id);
 
-/* \brief Disable the interrupts for a specific GPIO pin.
+/*! \brief Disable the interrupts for a specific GPIO pin.
  *
  * Please note that hw_gpio_configure_interrupt() must be called before the interrupt
  * can be enabled or disabled. Otherwise EOFF is returned and the interrupt remains disabled
@@ -242,7 +244,7 @@ __LINK_C error_t hw_gpio_enable_interrupt(pin_id_t pin_id);
  **/
 __LINK_C error_t hw_gpio_disable_interrupt(pin_id_t pin_id);
 
-/* \brief Configure a specific GPIO pin of the MCU for use
+/*! \brief Configure a specific GPIO pin of the MCU for use
  *
  * This function is mainly intended to allow platform-specific initialization code to
  * configure the GPIO pins of the MCU for use by chip drivers and other modules.
@@ -268,3 +270,5 @@ __LINK_C void __gpio_init();
 
 #endif //__HW_GPIO_H_
 #include "platform.h"
+
+/** @}*/

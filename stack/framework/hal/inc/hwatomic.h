@@ -17,8 +17,10 @@
  */
 
 /*! \file
- *
- * This file contains the HAL API for critical sections.
+ * \addtogroup atomic
+ * \ingroup HAL
+ * @{
+ * \brief the HAL API for critical sections.
  *
  * A critical section in a program's flow is executed 'atomically'
  * (as if it were a single instruction). This is usually achieved by disabling the 
@@ -75,3 +77,5 @@ __LINK_C void start_atomic();
 __LINK_C void end_atomic();
 
 #endif //__HW_ATOMIC_H_
+
+/** @}*/

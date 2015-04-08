@@ -17,8 +17,12 @@
  */
 
 /*! \file
+ * \addtogroup debug
+ * \ingroup HAL
+ * @{
+ * \brief The interface to the debug pins of the device. 
  *
- * This file specifies the interface to the debug pins of the device. A debug pin is a GPIO pin that has been configured
+ * A debug pin is a GPIO pin that has been configured
  * as an output pin and whose state (up/down) can be controlled through this interface.
  *
  * The application is able to signal specific events through this interface which can then be captured
@@ -86,3 +90,5 @@ __LINK_C void hw_debug_toggle(uint8_t pin_id);
 __LINK_C void hw_debug_mask(uint32_t mask);
 
 #endif /* HWDEBUG_H_ */
+
+/** @}*/

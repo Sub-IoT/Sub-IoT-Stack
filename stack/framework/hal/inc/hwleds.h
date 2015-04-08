@@ -16,8 +16,11 @@
  * limitations under the License.
  */
 
-/*! \file leds.h
- *
+/*! \file hwleds.h
+ * \addtogroup LEDs
+ * \ingroup HAL
+ * @{
+ * \brief Provides an API for controlling LEDs
  * \author maarten.weyn@uantwerpen.be
  * \author glenn.ergeerts@uantwerpen.be
  * \author daniel.vandenakker@uantwerpen.be
@@ -66,6 +69,8 @@ __LINK_C void led_off(uint8_t led_id);
  * 		  and HW_NUM_LEDS. Out-of-range indexes are silently ignored
  *
  */
-__LINK_C void led_toggle(uint8_t led_nr);
+__LINK_C void led_toggle(uint8_t led_id);
 
 #endif // __LEDS_H__
+
+/** @}*/

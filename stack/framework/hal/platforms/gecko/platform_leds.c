@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-/*! \file efm32gg_leds.c
+/*! \file platform_leds.c
  *
  *  \author glenn.ergeerts@uantwerpen.be
  *  \author daniel.vandenakker@uantwerpen.be

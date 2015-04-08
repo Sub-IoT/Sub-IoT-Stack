@@ -16,11 +16,14 @@
  * limitations under the License.
  */
 
-/*
- * spi.h
+/*!
+ * \file hwspi.h
+ * \addtogroup SPI
+ * \ingroup HAL
+ * {@
+ * \brief HAL API for SPI
  *
- *  Created on: Sep 12, 2013
- *      Author: jan.stevens@ieee.org
+ * \author jan.stevens@ieee.org
  */
 
 #ifndef SPI_H_
@@ -46,3 +49,5 @@ __LINK_C uint8_t spi_byte(uint8_t data);
 __LINK_C void spi_string(uint8_t *TxData, uint8_t *RxData, size_t length);
 
 #endif /* SPI_H_ */
+
+/** @}*/
