@@ -69,4 +69,12 @@ __LINK_C void hw_enter_lowpower_mode(uint8_t mode);
  */
 __LINK_C uint64_t hw_get_unique_id();
 
+/*! \brief Starts a busy wait loop blocking execution for the specified number of microseconds.
+  *
+  * Note: this should only be called from drivers.
+  *
+  * \param microseconds The number of microseconds to loop.
+  */
+__LINK_C void hw_busy_wait(int16_t microseconds);
+
 #endif //__HW_SYSTEM_H

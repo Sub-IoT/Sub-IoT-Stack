@@ -25,6 +25,7 @@
 #include "hwsystem.h"
 #include "em_system.h"
 #include "em_emu.h"
+#include "em_cmu.h"
 #include <assert.h>
 
 void hw_enter_lowpower_mode(uint8_t mode)
@@ -61,4 +62,17 @@ void hw_enter_lowpower_mode(uint8_t mode)
 uint64_t hw_get_unique_id()
 {
     return SYSTEM_GetUnique();
+}
+
+void hw_busy_wait(int16_t microseconds)
+{
+    // note: uses core debugger cycle counter mechanism for now,
+    // may switch to timer later if more accuracy is needed.
+    uint32_t counter = microseconds * (CMU_ClockFreqGet(cmuClock_CORE) / 1000000);
+
+    CoreDebug->DEMCR |= CoreDebug_DEMCR_TRCENA_Msk;
+    DWT->CTRL        |= 1;
+    DWT->CYCCNT       = 0;
+
+    while (DWT->CYCCNT < counter) ;
 }

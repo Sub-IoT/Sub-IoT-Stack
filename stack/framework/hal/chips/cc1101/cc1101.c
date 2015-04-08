@@ -39,6 +39,7 @@
 
 #include "log.h"
 #include "hwradio.h"
+#include "hwsystem.h"
 
 #include "cc1101.h"
 #include "cc1101_interface.h"
@@ -315,7 +316,9 @@ static void start_rx(hw_rx_cfg_t const* rx_cfg)
     if(rssi_valid_callback != 0)
     {
         // TODO calculate/predict rssi response time (see DN505)
-        // and wait until valid. For now we callback immediately
+        // and wait until valid. For now we wait 200 us.
+
+        hw_busy_wait(200);
         rssi_valid_callback(hw_radio_get_rssi());
     }
 }
