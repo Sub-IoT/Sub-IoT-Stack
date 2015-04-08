@@ -110,7 +110,7 @@ static RF_SETTINGS rf_settings = {
    RADIO_MDMCFG0_CHANSPC_M(16),   	// MDMCFG0   Modem configuration.
    RADIO_DEVIATN_E(5) | RADIO_DEVIATN_M(0),   // DEVIATN   Modem deviation setting (when FSK modulation is enabled).
    RADIO_MCSM2_RX_TIME(7),			// MCSM2		 Main Radio Control State Machine configuration.
-   RADIO_MCSM1_CCA_RSSILOWRX | RADIO_MCSM1_RXOFF_MODE_IDLE | RADIO_MCSM1_TXOFF_MODE_IDLE,	// MCSM1 Main Radio Control State Machine configuration.
+   RADIO_MCSM1_CCA_RSSILOWRX | RADIO_MCSM1_RXOFF_MODE_RX | RADIO_MCSM1_TXOFF_MODE_IDLE,	// MCSM1 Main Radio Control State Machine configuration.
    //RADIO_MCSM0_FS_AUTOCAL_FROMIDLE,// MCSM0     Main Radio Control State Machine configuration.
    RADIO_MCSM0_FS_AUTOCAL_4THIDLE,// MCSM0     Main Radio Control State Machine configuration.
    RADIO_FOCCFG_FOC_PRE_K_3K | RADIO_FOCCFG_FOC_POST_K_HALFK | RADIO_FOCCFG_FOC_LIMIT_4THBW,   // FOCCFG    Frequency Offset Compensation Configuration.
@@ -172,8 +172,8 @@ static void end_of_packet_isr()
             packet->rx_meta.crc_status = HW_CRC_UNAVAILABLE; // TODO
             packet->rx_meta.timestamp = timer_get_counter_value();
 
-            switch_to_idle_mode();
             rx_packet_callback(packet);
+            cc1101_interface_set_interrupts_enabled(true);
             break;
         case HW_RADIO_STATE_TX:
             switch_to_idle_mode();
@@ -322,9 +322,6 @@ static void start_rx(hw_rx_cfg_t const* rx_cfg)
 
 error_t hw_radio_set_rx(hw_rx_cfg_t const* rx_cfg, rx_packet_callback_t rx_cb, rssi_valid_callback_t rssi_valid_cb)
 {
-    // TODO we stay in RX as long as no packets are received (or only rssi cb provided).
-    // Make this explicit by either adding a flag (keep_in_rx) or make this the default and
-    // require the user to set radio to idle. (Both options should be implemented in rx completed case as well)
     if(rx_cb != NULL)
     {
         assert(alloc_packet_callback != NULL);

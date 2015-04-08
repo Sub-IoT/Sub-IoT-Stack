@@ -386,6 +386,7 @@ __LINK_C bool hw_radio_is_idle();
  *
  * When the radio is placed in RX mode, the tranceiver is configured according to the settings in the 
  * supplied hw_rx_cfg_t struct after which it starts scanning the channel for possible packets.
+ * The radio will stay in RX mode until explicitly set in idle or TX mode.
  *
  * If the radio is already in RX mode when this function is called, any current packet receptions
  * are interrupted, the new settings are applied and the radio restarts the channel scanning process.
@@ -415,7 +416,9 @@ __LINK_C bool hw_radio_is_idle();
  * \param rssi_callback			The rssi_valid_callback_t function to call whenever the RSSI value 
  *					becomes valid after the radio enters RX mode. Please note that this 
  *					function is called from an *interrupt* context and therefore can only do 
- *					minimal processing. If this function is 0x0, no callback will be made 
+ *					minimal processing. Also not that this function can be called (depending on the radio chip)
+ *					before the call to hw_radio_set_rx() itself returns.
+ *					If this function is 0x0, no callback will be made
  *					when the RSSI becomes valid.
  *
  * \return error_t	SUCCESS if the radio was put in RX mode (or will be after the current TX has finished)
