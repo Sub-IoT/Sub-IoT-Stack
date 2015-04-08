@@ -16,9 +16,11 @@
  * limitations under the License.
  */
 
-/* \file
- *
- * Bootstrapping functions for the framework
+/*! \file bootstrap.h
+ * \addtogroup bootstrap
+ * \ingroup framework
+ * @{
+ * \brief Bootstrapping functions for the framework
  *
  */
 #ifndef __BOOTSTRAP_H_
@@ -50,3 +52,5 @@ __LINK_C void __framework_bootstrap();
 __LINK_C void bootstrap();
 
 #endif
+
+/** @}*/

@@ -16,9 +16,8 @@
  * limitations under the License.
  */
 
-/* \file
- *
- * This file spefifies the error codes used throughout the framework and the HAL
+/* \file errors.h
+ * \brief Specifies the error codes used throughout the framework and the HAL
  * These have been adopted from TinyOS 2.1.0, in combination with the ones defined in <errno.h>
  **/
 #ifndef ERRORS_H

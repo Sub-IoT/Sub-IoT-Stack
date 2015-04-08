@@ -16,9 +16,12 @@
  * limitations under the License.
  */
 
-/* \file
- 
- * This file specifies the generic logging facilities of the framework.
+/*! \file log.h
+ * \addtogroup logging
+ * \ingroup framework
+ * @{
+ * \brief Specifies the generic logging facilities of the framework.
+ *
  * A number of functions are provided to log both arbitrarily formatted data
  * (processed using the printf family of functions) and binary data (logged in a 
  * more or less human readable format). Moreover data can be logged in human 
@@ -52,7 +55,7 @@ typedef enum
     LOG_STACK_FWK = 0x10
 } log_stack_layer_t; // TODO stack specific, move to stack component?
 
-/* \brief Reset the log counter back to zero
+/*! \brief Reset the log counter back to zero
  *
  */
 __LINK_C void log_counter_reset();
@@ -75,3 +78,5 @@ __LINK_C static inline void log_print_data(uint8_t* message, uint8_t length) {}
 #endif
 
 #endif /* __LOG_H_ */
+
+/** @}*/

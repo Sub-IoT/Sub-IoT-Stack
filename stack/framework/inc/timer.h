@@ -16,8 +16,11 @@
  * limitations under the License.
  */
 
-/*! \file
- * \brief The framework provides an abstraction of the low-level hardware timers provided by the HAL. 
+/*! \file timer.h
+ * \defgroup frameworktimer Framework Timer
+ * \ingroup framework
+ * @{
+ * \brief The framework timer provides an abstraction of the low-level hardware timers provided by the HAL. 
  * 		The framework timer interface builds on the low-level HAL timer interface to provide more advanced capabilities. 
  * 
  * The major differences with the HAL timers are:
@@ -237,3 +240,5 @@ static inline error_t timer_add_event( timer_event* event) { return timer_post_t
 __LINK_C error_t timer_cancel_task(task_t task);
 
 #endif /* TIMER_H_ */
+
+/** @}*/

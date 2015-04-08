@@ -16,9 +16,11 @@
  * limitations under the License.
  */
 
-/* \file
- *
- * This file specifies the random number generator facilities of the framework
+/*! \file random.h
+ * \addtogroup random
+ * \ingroup framework
+ * @{
+ * \brief Specifies the random number generator facilities of the framework
  *
  */
 #ifndef __RANDOM_H_
@@ -38,7 +40,7 @@
  */
 __LINK_C uint32_t get_rnd();
 
-/*! Set the seed for the random nuber generator
+/*! \brief Set the seed for the random nuber generator
  *
  * \param	seed	The seed for the random number generator
  *
@@ -48,3 +50,4 @@ __LINK_C void set_rng_seed(unsigned int seed);
 
 #endif // __RANDOM_H_
 
+/** @}*/

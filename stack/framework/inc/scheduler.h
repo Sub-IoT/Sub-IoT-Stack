@@ -16,18 +16,14 @@
  * limitations under the License.
  */
 
-/*
- * scheduler.h
+/*! \file scheduler.h
+ * \addtogroup scheduler
+ * \ingroup framework
+ * @{
+ * \brief Specifies the API to the priority scheduler of the framework
  *
- *  Created on: 22 Jan 2015
- *      Author: Daniel van den Akker
- */
-
-/* \file
- *
- * This file specifies the API to the priority scheduler of the framework
  * TODO: add more explanations on how the scheduler works (eg FIFO, strict priority queueing), how is control is yielded to the application
- *
+ * \author daniel.vandenakker@uantwerpen.be
  */
 #ifndef SCHEDULER_H_
 #define SCHEDULER_H_
@@ -36,12 +32,12 @@
 #include "types.h"
 #include "errors.h"
 
-/* \brief Type definition for tasks
+/*! \brief Type definition for tasks
  *
  */
 typedef void (*task_t)();
 
-/* \brief Initialise the scheduler sub system. 
+/*! \brief Initialise the scheduler sub system. 
  *
  * This function is called while bootstrapping the framework. On no account should you call this function 
  * yourself.
@@ -49,7 +45,7 @@ typedef void (*task_t)();
  */
 __LINK_C void scheduler_init();
 
-/* \brief The main task loop of the scheduler
+/*! \brief The main task loop of the scheduler
  *
  * This function executes the main task loop of the scheduler. It iteratively executes tasks (according to 
  * priority) and puts the MCU to sleep when there are no tasks pending. Please note that this function
@@ -64,21 +60,21 @@ __LINK_C void scheduler_run();
 
 enum
 {
-	/* \brief The minimum allowed priority for scheduled tasks
+	/*! \brief The minimum allowed priority for scheduled tasks
 	 *
 	 */
 	MIN_PRIORITY = 7,
-	/* \brief The maximum allowed priority for scheduled tasks
+	/*! \brief The maximum allowed priority for scheduled tasks
 	 *
 	 */
 	MAX_PRIORITY= 0,
-	/* \brief The default priority
+	/*! \brief The default priority
 	 *
 	 */
 	DEFAULT_PRIORITY = MIN_PRIORITY,
 };
 
-/* \brief Register a task with the task scheduler.
+/*! \brief Register a task with the task scheduler.
  * 
  * \param task		The task to register
  *
@@ -90,7 +86,7 @@ enum
  */
 __LINK_C error_t sched_register_task(task_t task);
 
-/* \brief Post a task with the given priority
+/*! \brief Post a task with the given priority
  *
  * \param task		The task to be executed by the scheduler
  * \param priority	The priority of the task
@@ -103,7 +99,7 @@ __LINK_C error_t sched_register_task(task_t task);
  */
 __LINK_C error_t sched_post_task_prio(task_t task, uint8_t priority);
 
-/* \brief Post a task at the default priority
+/*! \brief Post a task at the default priority
  *
  * \param task		The task to be executed by the scheduler
  *
@@ -114,7 +110,7 @@ __LINK_C error_t sched_post_task_prio(task_t task, uint8_t priority);
  */
 static inline error_t sched_post_task(task_t task) { return sched_post_task_prio(task,DEFAULT_PRIORITY);}
 
-/* \brief Cancel an already scheduled task
+/*! \brief Cancel an already scheduled task
  *
  * \param task		The task to cancel
  *
@@ -124,10 +120,12 @@ static inline error_t sched_post_task(task_t task) { return sched_post_task_prio
  */
 __LINK_C error_t sched_cancel_task(task_t task);
 
-/* \brief Check whether a task is scheduled to be executed
+/*! \brief Check whether a task is scheduled to be executed
  *
  * \return bool		TRUE if the task is scheduled, FALSE otherwise
  */
 __LINK_C bool sched_is_scheduled(task_t task);
 
 #endif /* SCHEDULER_H_ */
+
+/** @}*/
