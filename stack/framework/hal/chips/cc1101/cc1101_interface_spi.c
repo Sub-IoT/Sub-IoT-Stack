@@ -25,6 +25,7 @@
 
 #include "hwspi.h"
 #include "hwgpio.h"
+#include "hwsystem.h"
 #include "timer.h"
 
 #include "cc1101_constants.h"
@@ -39,23 +40,6 @@
 #endif
 
 static end_of_packet_isr_t end_of_packet_isr_callback;
-
-static void wait_ms(uint32_t ms) // TODO refactor: add busy waiting in timer api or use cb?
-{
-    /*
-    timer_wait.next_event = (int32_t)((ms*1024)/1000);
-    timer_add_event( &timer_wait );
-    while(waiting);
-    waiting = true;
-    */
-
-    uint32_t i;
-    for( i=0 ; i<ms ; i++ )
-    {
-        volatile uint32_t n = 3200;
-        while(n--);
-    }
-}
 
 void _cc1101_gdo_isr(pin_id_t pin_id, uint8_t event_mask)
 {
@@ -103,14 +87,11 @@ uint8_t _c1101_interface_strobe(uint8_t strobe)
 uint8_t _c1101_interface_reset_radio_core()
 {
     spi_deselect_chip();
-    //delayuS(30);
-    wait_ms(1);
+    hw_busy_wait(30);
     spi_select_chip();
-    //delayuS(30);
-    wait_ms(1);
+    hw_busy_wait(30);
     spi_deselect_chip();
-    //delayuS(45);
-    wait_ms(1);
+    hw_busy_wait(45);
 
     cc1101_interface_strobe(RF_SRES);          // Reset the Radio Core
     return cc1101_interface_strobe(RF_SNOP);   // Get Radio Status
