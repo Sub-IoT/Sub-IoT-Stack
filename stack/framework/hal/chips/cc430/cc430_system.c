@@ -61,3 +61,15 @@ uint64_t hw_get_unique_id()
 {
     // TODO
 }
+
+void hw_busy_wait(int16_t microseconds)
+{
+    // TODO measure accuracy
+    while (microseconds > 0)
+    {
+        __delay_cycles(4);
+        microseconds--;
+    }
+}
+
+    
