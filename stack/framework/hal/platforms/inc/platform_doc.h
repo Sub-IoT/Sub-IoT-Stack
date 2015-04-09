@@ -15,8 +15,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
- 
-/*!
- * \defgroup framework Framework API
- * \brief Contains the generic framework modules
+
+/*! \file platform_doc.h
+ * \defgroup platform
+ *
+ * \brief A platform defines a combination of an MCU type, an RF chip, optional other chips and the wiring on the board.
+ * 	This means there is one platform defined for each type of board.
+ *
+ * The platform is responsible for initializing the MCU and other chips, bootstrapping the framework and finally start the scheduler loop.
+ * For example the pins used for UART, SPI, LEDs etc are defined here. The main() function should be implemented here.
  */

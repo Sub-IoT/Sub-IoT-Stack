@@ -5,4 +5,5 @@
 
 # except .gitignore
 !.gitignore
+!inc/*
 
