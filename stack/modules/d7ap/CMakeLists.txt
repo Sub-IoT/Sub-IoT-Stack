@@ -26,4 +26,4 @@
 
 
 #By convention, each module should generate a single 'static' library that can be included by the application
-#eg ADD_LIBRARY(d7aoss STATIC file1.c file2.c ...)
+#eg ADD_LIBRARY(d7ap STATIC file1.c file2.c ...)
