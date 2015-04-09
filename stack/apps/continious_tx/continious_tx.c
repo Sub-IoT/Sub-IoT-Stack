@@ -1,0 +1,43 @@
+/* * OSS-7 - An opensource implementation of the DASH7 Alliance Protocol for ultra
+ * lowpower wireless sensor communication
+ *
+ * Copyright 2015 University of Antwerp
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+/*! \file
+ * Test application which puts the radio in continous TX mode transmitting random data.
+ * Usefull for measuring center frequency offset on a spectrum analyzer
+ * Note: works only on cc1101 since this is not using the public hw_radio API but depends on cc1101 internal functions
+ *
+ *  Created on: Mar 24, 2015
+ *  Authors:
+ *  	glenn.ergeerts@uantwerpen.be
+ */
+
+// TODO ensure using cc1101 using cmake?
+
+#include "log.h"
+#include "hwradio.h"
+
+uint8_t cc1101_interface_strobe(uint8_t); // prototype (to prevent warning) of internal driver function which is used here.
+
+void bootstrap()
+{
+    log_print_string("Device booted at time: %d\n", timer_get_counter_value()); // TODO not printed for some reason, debug later
+
+    hw_radio_init(NULL, NULL);
+
+    cc1101_interface_strobe(0x35); // strobe TX
+}
