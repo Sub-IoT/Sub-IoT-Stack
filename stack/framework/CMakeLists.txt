@@ -41,7 +41,7 @@ FRAMEWORK_HEADER_DEFINE(NUMBER FRAMEWORK_SCHEDULER_MAX_TASKS)
 SET(FRAMEWORK_SCHEDULER_LP_MODE "0" CACHE STRING "The low power mode to use. Only change this if you know exactly what you are doing")
 FRAMEWORK_HEADER_DEFINE(NUMBER FRAMEWORK_SCHEDULER_LP_MODE)
 
-SET(FRAMEWORK_LOG_BINARY "FALSE" CACHE BOOL "Use binary logging (where availabe)")
+SET(FRAMEWORK_LOG_BINARY "TRUE" CACHE BOOL "Use binary logging format (which can be parsed by pylogger tool)")
 FRAMEWORK_HEADER_DEFINE(BOOL FRAMEWORK_LOG_BINARY)
 
 SET(FRAMEWORK_LOG_ENABLED "TRUE" CACHE BOOL "Select whether to enable or disable the generation of logs")
