@@ -26,10 +26,11 @@
  * (processed using the printf family of functions) and binary data (logged in a 
  * more or less human readable format). Moreover data can be logged in human 
  * readable format or in binary format. Which format is used is controlled through the 
- * 'LOG_BINARY' CMake option.
+ * 'FRAMEWORK_LOG_BINARY' CMake option. The binary format can be parsed with by PyLogger tool,
+ * which provides features like filtering per layer or piping to wireshark.
  * 
  * Logging can be globally enabled or disabled by setting or clearing the 
- * 'LOGGING_ENABLED' CMake option. Moreover
+ * 'FRAMEWORK_LOG_ENABLED' CMake option.
  *
  * \author maarten.weyn@uantwerpen.be
  * \author glenn.ergeerts@uantwerpen.be
@@ -42,9 +43,11 @@
 #include "link_c.h"
 #include "framework_defs.h"
 #include "types.h"
+#include "hwradio.h"
 
 #ifdef FRAMEWORK_LOG_ENABLED
 
+/*! \brief The source in the stack from which the log originates  */
 typedef enum
 {
     LOG_STACK_PHY = 0x01,
@@ -55,13 +58,26 @@ typedef enum
     LOG_STACK_FWK = 0x10
 } log_stack_layer_t; // TODO stack specific, move to stack component?
 
-/*! \brief Reset the log counter back to zero
- *
- */
+/*! \brief Reset the log counter back to zero */
 __LINK_C void log_counter_reset();
 
+/*! \brief Log a string which can be optionally formatted using printf() style
+ * format specifiers. */
 __LINK_C void log_print_string(char* format,...);
+
+/*! \brief Log a string from a specific stack layer, which can be optionally formatted using printf() style
+ * format specifiers. Note: this is only to be used from within stack code, not from application level code. */
 __LINK_C void log_print_stack_string(log_stack_layer_t type, char* format, ...);
+
+/*! \brief Log a raw packet to be transmitted or received. This is mainly used for tracing using wireshark.
+ * Note: only to be used from a radio driver.
+ *
+ * \param packet contains the payload and the packet metadata including PHY parameters.
+ * \param is_tx denotes if this is an incoming or outgoing packet
+ */
+__LINK_C void log_print_raw_phy_packet(hw_radio_packet_t* packet, bool is_tx);
+
+/*! \brief Log raw data */
 __LINK_C void log_print_data(uint8_t* message, uint32_t length);
 
 #else

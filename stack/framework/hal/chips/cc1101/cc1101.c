@@ -173,6 +173,10 @@ static void end_of_packet_isr()
             packet->rx_meta.crc_status = HW_CRC_UNAVAILABLE; // TODO
             packet->rx_meta.timestamp = timer_get_counter_value();
 
+#ifdef FRAMEWORK_LOG_ENABLED
+            log_print_raw_phy_packet(packet, false);
+#endif
+
             rx_packet_callback(packet);
             cc1101_interface_set_interrupts_enabled(true);
             break;
@@ -180,6 +184,11 @@ static void end_of_packet_isr()
             switch_to_idle_mode();
 
             current_packet->tx_meta.timestamp = timer_get_counter_value();
+
+#ifdef FRAMEWORK_LOG_ENABLED
+            log_print_raw_phy_packet(current_packet, true);
+#endif
+
             if(tx_packet_callback != 0)
                 tx_packet_callback(current_packet);
 
