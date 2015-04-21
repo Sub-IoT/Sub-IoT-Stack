@@ -30,7 +30,7 @@
 #include <hwradio.h>
 #include <log.h>
 
-#define RX_MODE
+//#define RX_MODE
 
 hw_rx_cfg_t rx_cfg = {
     .channel_id = {

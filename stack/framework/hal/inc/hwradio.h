@@ -183,7 +183,7 @@ typedef struct
 
 //this struct is "packed" so it occupies minimal space
 //and to ensure that, the 'prefix' fields (including length) of hw_radio_packet_t
-//are 32-bits alligned (that is sizeof(hw_radio_packet_t)%4 == 0)
+//are 32-bits aligned (that is sizeof(hw_radio_packet_t)%4 == 0)
 } __attribute__ ((packed)) hw_rx_metadata_t; 
 
 /** \brief The metadata an TX settings attached to a packet ready to be transmitted / that has been 
@@ -198,7 +198,7 @@ typedef struct
     
 //this struct is "packed" so it occupies minimal space
 //and to ensure that, the 'prefix' fields (including length) of hw_radio_packet_t
-//are 32-bits alligned (that is sizeof(hw_radio_packet_t)%4 == 0)
+//are 32-bits aligned (that is sizeof(hw_radio_packet_t)%4 == 0)
 } __attribute__ ((packed)) hw_tx_metadata_t;
 
 /** \brief A PHY layer packet that can be sent / received over the air using the HW radio interface.
@@ -213,7 +213,7 @@ typedef struct
  *
  * It should be noted that the rx_meta and tx_meta structs occupy the same memory space (unioned)
  * And that they have been defined so the fields of these structs that have the same meaning overlap.
- * Moreover, the fields of thw hw_radio_packet_t structure are alligned such that the 'data' of a packet
+ * Moreover, the fields of thw hw_radio_packet_t structure are aligned such that the 'data' of a packet
  * is always in the same place, regardless of whether it is transmitted or received.
  *
  */

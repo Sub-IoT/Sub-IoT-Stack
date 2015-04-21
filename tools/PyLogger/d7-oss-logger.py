@@ -40,6 +40,7 @@ import Queue
 import time
 import logging
 import argparse
+import binascii
 
 DEBUG = 0
 
@@ -212,9 +213,40 @@ class LogDllRes(Logs):
             return string + "\n"
         return ""
 
-class LogPhyRes(Logs):
+class LogPhyPacketTx(Logs):
     def __init__(self):
-        Logs.__init__(self, "phyres")
+        Logs.__init__(self, "phypackettx")
+
+    def read(self):
+        self.packet = bytearray()
+        self.timestamp = struct.unpack('I', serial_port.read(size=4))[0]
+        self.channel_header = struct.unpack('B', serial_port.read(size=1))[0]
+        self.center_freq_index = struct.unpack('B', serial_port.read(size=1))[0]
+        self.syncword_class = struct.unpack('B', serial_port.read(size=1))[0]
+        self.eirp = struct.unpack('b', serial_port.read(size=1))[0]
+        raw_packet_len = serial_port.read(size=1)
+        self.packet_len = struct.unpack('B', raw_packet_len)[0]
+        self.packet.append(raw_packet_len) # length is first byte of packet
+        self.packet.extend(serial_port.read(size=self.packet_len - 1))
+        return self
+
+    def __str__(self):
+        if settings["phyres"]:
+            #TODO format as table, this is quite ugly, there is a easier way, should look into it
+            string = formatHeader("PHY Packet TX", "GREEN", self.datetime) + "Send packet" + "\n"
+            string += " " * 22 + "timestamp: " + str(self.timestamp) + "\n"
+            string += " " * 22 + "channel header: " + hex(self.channel_header) + " center freq index: " + hex(self.center_freq_index) + "\n"
+            string += " " * 22 + "syncword class: " + hex(self.syncword_class) + "\n"
+            string += " " * 22 + "eirp: " + str(self.eirp) + " dBm   " + "packet length: " + str(self.packet_len) + "\n"
+            string += " " * 22 + "packet: " + binascii.hexlify(bytearray(self.packet))
+            string += Style.RESET_ALL
+            return string + "\n"
+        return ""
+
+
+class LogPhyPacketRx(Logs):
+    def __init__(self):
+        Logs.__init__(self, "phypacketrx")
 
     def read(self):
         self.raw_data = bytearray() # TODO refactor
@@ -298,7 +330,7 @@ class LogPhyRes(Logs):
             string += " " * 22 + "spectrum: " + str(self.spectrumID) + " SWC: " + str(self.sync_word_class) + "\n"
             string += " " * 22 + "length: " + str(self.packet_length) + "\n"
             string += " " * 22 + "tx_eirp: " + str(self.tx_eirp) + " dBm   " + "frame_ctl: " + str(self.frame_ctl) +  " "*7+ "CRC: " + str(self.crc) + "\n"
-            string += " " * 22 + "data: " + str(self.data)
+            string += " " * 22 + "data: "  + str(self.data)
             string += Style.RESET_ALL
             return string + "\n"
         return ""
@@ -324,7 +356,7 @@ class parse_d7(threading.Thread):
                 serialData = read_value_from_serial()
                 if serialData is not None:
                     self.disQueue.put(serialData)
-                    if isinstance(serialData, LogPhyRes):
+                    if isinstance(serialData, LogPhyPacketTx):
                         if self.pcap_file != None:
                             self.pcap_file.write(PCAPFormatter.build_record_data(serialData.get_raw_data()))
                             self.pcap_file.flush()
@@ -368,10 +400,6 @@ class write_d7(threading.Thread):
             except Exception as inst:
                 printError(inst)
 
-## Helper functions ##
-def dummy():
-    pass
-
 def read_value_from_serial():
     result = {}
 
@@ -384,26 +412,20 @@ def read_value_from_serial():
     # Now we can read the type of the string
     logtype = serial_port.read(size=1).encode("hex").upper()
 
-    log_string = LogString()
-    log_data = LogData()
-    log_stack = LogStack()
-    log_trace = LogTrace()
-    log_dll_res = LogDllRes()
-    log_phy_res = LogPhyRes()
-
-
     result = {
-             "01" : log_string.read,
-             "02" : log_data.read,
-             "03" : log_stack.read,
-             "FD" : log_dll_res.read,
-             "FE" : log_phy_res.read,
-             "FF" : log_trace.read, }.get(logtype, dummy)
+             "01" : LogString(),
+             "02" : LogData(),
+             "03" : LogStack(),
+             "04" : LogPhyPacketTx(),
+             "05" : LogPhyPacketRx(),
+             #"FD" : log_dll_res.read,
+             #"FE" : log_phy_res.read,
+             "FF" : LogTrace(), }.get(logtype)
 
     # See if we have found our type in the LOG_TYPES
     #print("We got logtype: %s" % logtype)
     #result = processedread[logtype]()
-    return result()
+    return result.read()
 
 def empty_serial_buffer():
     while serial_port.inWaiting() > 0:

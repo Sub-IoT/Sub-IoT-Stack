@@ -30,16 +30,18 @@
 #include <stdio.h>
 #include <stdarg.h>
 #include <unistd.h>
+#include <hwradio.h>
 #include "framework_defs.h"
 
 #ifdef FRAMEWORK_LOG_ENABLED
 
-
-// generic logging functions
-#define LOG_TYPE_STRING 0x01
-#define LOG_TYPE_DATA 0x02
-#define LOG_TYPE_STACK 0x03
-
+typedef enum {
+    LOG_TYPE_STRING = 0x01,
+    LOG_TYPE_DATA = 0x02,
+    LOG_TYPE_STACK = 0x03,
+    LOG_TYPE_PHY_PACKET_TX = 0X04,
+    LOG_TYPE_PHY_PACKET_RX = 0X05
+} log_type_t;
 
 #ifdef FRAMEWORK_LOG_BINARY
 	#define BUFFER_SIZE 100
@@ -110,5 +112,25 @@ __LINK_C void log_print_data(uint8_t* message, uint32_t length)
     fflush(stdout);
 }
 
+__LINK_C void log_print_raw_phy_packet(hw_radio_packet_t* packet, bool is_tx)
+{
+#ifdef FRAMEWORK_LOG_BINARY
+    putc(0xDD, stdout);
+    if(is_tx) {
+        putc(LOG_TYPE_PHY_PACKET_TX, stdout);
+        fwrite(&(packet->tx_meta.timestamp), sizeof(timer_tick_t), 1, stdout);
+        putc(packet->tx_meta.tx_cfg.channel_id.channel_header, stdout);
+        putc(packet->tx_meta.tx_cfg.channel_id.center_freq_index, stdout);
+        putc(packet->tx_meta.tx_cfg.syncword_class, stdout);
+        putc(packet->tx_meta.tx_cfg.eirp, stdout);
+        fwrite(packet->data, sizeof(char), packet->length, stdout);
+    } else {
+        putc(LOG_TYPE_PHY_PACKET_TX, stdout);
+        // TODO
+    }
+
+    fflush(stdout);
+#endif // FRAMEWORK_LOG_BINARY
+}
 
 #endif //FRAMEWORK_LOG_ENABLED
