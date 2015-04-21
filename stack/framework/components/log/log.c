@@ -125,8 +125,15 @@ __LINK_C void log_print_raw_phy_packet(hw_radio_packet_t* packet, bool is_tx)
         putc(packet->tx_meta.tx_cfg.eirp, stdout);
         fwrite(packet->data, sizeof(char), packet->length, stdout);
     } else {
-        putc(LOG_TYPE_PHY_PACKET_TX, stdout);
-        // TODO
+        putc(LOG_TYPE_PHY_PACKET_RX, stdout);
+        fwrite(&(packet->rx_meta.timestamp), sizeof(timer_tick_t), 1, stdout);
+        putc(packet->rx_meta.rx_cfg.channel_id.channel_header, stdout);
+        putc(packet->rx_meta.rx_cfg.channel_id.center_freq_index, stdout);
+        putc(packet->rx_meta.rx_cfg.syncword_class, stdout);
+        putc(packet->rx_meta.lqi, stdout);
+        fwrite(&(packet->rx_meta.rssi), sizeof(int16_t), 1, stdout);
+        // TODO CRC?
+        fwrite(packet->data, sizeof(char), packet->length, stdout);
     }
 
     fflush(stdout);

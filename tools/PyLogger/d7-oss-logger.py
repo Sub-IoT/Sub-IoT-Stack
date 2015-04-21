@@ -249,75 +249,28 @@ class LogPhyPacketRx(Logs):
         Logs.__init__(self, "phypacketrx")
 
     def read(self):
-        self.raw_data = bytearray() # TODO refactor
-        self.read_length()
-        raw_rssi = serial_port.read(size=1)
-        self.rssi = struct.unpack('b', raw_rssi)[0]
-        self.raw_data.append(raw_rssi)
-        raw_lqi = serial_port.read(size=1)
-        self.lqi = struct.unpack('B', raw_lqi)[0]
-        self.raw_data.append(raw_lqi)
-        raw_spectrum1 = serial_port.read(size=1)
-        raw_spectrum0 = serial_port.read(size=1)
-        self.spectrumID = "0x" + str(raw_spectrum1.encode("hex").upper()) + str(raw_spectrum0.encode("hex").upper())
-        self.raw_data.append(raw_spectrum1)			
-        self.raw_data.append(raw_spectrum0)			
-        raw_sync_word_class = serial_port.read(size=1)
-        self.sync_word_class = struct.unpack('B', raw_sync_word_class)[0]
-        self.raw_data.append(raw_sync_word_class)
-		#Length
-        raw_packet_length = serial_port.read(size=1)
-        self.packet_length = struct.unpack('B', raw_packet_length)[0]
-        #print("packet_length %s 0x%s" % (self.packet_length,  str(raw_packet_length.encode("hex").upper())))
-        self.raw_data.append(raw_packet_length)
-		#Data
-        self.data = serial_port.read(size=self.packet_length)
-        self.raw_data.extend(self.data)
-        self.subnet = "0x" + str(self.data[0].encode("hex").upper())
-        self.tx_eirp = int(struct.unpack('B', self.data[1])[0]) - 32
-        self.frame_ctl = "0x" + str(self.data[1].encode("hex").upper())
-		
-		
-        if self.sync_word_class == 1:
-			self.source_id = ""#str(self.data[6:14].encode("hex").upper())
-			self.data_length = self.packet_length - 5
-			self.data = self.dataEncoding(self.data[3:3+self.data_length])
-			self.crc = self.dataEncoding(self.data[3+self.data_length:5+self.data_length])
-        else:
-			self.source_id = ""
-			self.data_length = self.packet_length - 5
-			self.data = self.dataEncoding(self.data[3:3+self.data_length])
-			self.crc = self.dataEncoding(self.data[3+self.data_length:5+self.data_length])
-
-        #self.data = [data[i:i+2].decode("utf-8", errors='replace') for i in range(0, len(data), 2)]
-        #self.data = [data[i].encode("hex").upper() for i in range(0, len(data))]
-        #self.data = [str(struct.unpack('b', data[i])[0]) for i in range(0, len(data))]
-        #print("packet_length %s" % self.packet_length)
-        #print("dump_data: %s" % self.data)
-        #print("rssi: %s" % self.rssi)
-        #print("lqi: %s" % self.lqi)
-        #print("data_length: %s" % self.data_length)
+        self.packet = bytearray()
+        self.timestamp = struct.unpack('I', serial_port.read(size=4))[0]
+        self.channel_header = struct.unpack('B', serial_port.read(size=1))[0]
+        self.center_freq_index = struct.unpack('B', serial_port.read(size=1))[0]
+        self.syncword_class = struct.unpack('B', serial_port.read(size=1))[0]
+        self.lqi = struct.unpack('B', serial_port.read(size=1))[0]
+        self.rssi = struct.unpack('h', serial_port.read(size=2))[0]
+        raw_packet_len = serial_port.read(size=1)
+        self.packet_len = struct.unpack('B', raw_packet_len)[0]
+        self.packet.append(raw_packet_len) # length is first byte of packet
+        self.packet.extend(serial_port.read(size=self.packet_len - 1))
         return self
 
-    def dataEncoding(self, byte_str):
-        if settings["display"] == 'hex':
-            return " ".join(["0x" + byte_str[i].encode("hex").upper() for i in range(0, len(byte_str))])
-        elif settings["display"] == 'bin':
-            return " ".join([bin(int(byte_str[i].encode("hex").upper(), 16))[2:].zfill(8) for i in range(0, len(byte_str))])
-        elif settings["display"] == 'dec':
-            return " ".join([str(struct.unpack('b', byte_str[i])[0]) for i in range(0, len(byte_str))])
-        else:
-            return " ".join([byte_str[i].decode("utf-8", errors='replace') for i in range(0, len(byte_str))])
-
-    def write(self):
-        if settings["phyres"]:
-            string = "PHY RES: "
-            string += " rssi: " + str(self.rssi) + " lqi: " + str(self.lqi) + " subnet: " + str(self.subnet)
-            string += " Spectrum: " + str(self.spectrumID) + " SWC: " + str(self.sync_word_class)
-            string += " tx_eirp: " + str(self.tx_eirp) + " frame_ctl: " + str(self.frame_ctl) + " source: " + self.source_id
-            string += " data: " + str(self.data) + "\n"
-            return string
-        return ""
+    # def write(self):
+    #     if settings["phyres"]:
+    #         string = "PHY RES: "
+    #         string += " rssi: " + str(self.rssi) + " lqi: " + str(self.lqi) + " subnet: " + str(self.subnet)
+    #         string += " Spectrum: " + str(self.spectrumID) + " SWC: " + str(self.sync_word_class)
+    #         string += " tx_eirp: " + str(self.tx_eirp) + " frame_ctl: " + str(self.frame_ctl) + " source: " + self.source_id
+    #         string += " data: " + str(self.data) + "\n"
+    #         return string
+    #     return ""
 
     def get_raw_data(self):
         return self.raw_data
@@ -325,12 +278,12 @@ class LogPhyPacketRx(Logs):
     def __str__(self):
         if settings["phyres"]:
             #TODO format as table, this is quite ugly, there is a easier way, should look into it
-            string = formatHeader("PHY RES", "GREEN", self.datetime) + "Received packet from: " + self.source_id + "\n"
-            string += " " * 22 + "rssi: " + str(self.rssi) + " dBm"+ " " * 7 + "lqi: " + str(self.lqi) + " "*14 + "subnet: " + str(self.subnet) + "\n"
-            string += " " * 22 + "spectrum: " + str(self.spectrumID) + " SWC: " + str(self.sync_word_class) + "\n"
-            string += " " * 22 + "length: " + str(self.packet_length) + "\n"
-            string += " " * 22 + "tx_eirp: " + str(self.tx_eirp) + " dBm   " + "frame_ctl: " + str(self.frame_ctl) +  " "*7+ "CRC: " + str(self.crc) + "\n"
-            string += " " * 22 + "data: "  + str(self.data)
+            string = formatHeader("PHY Packet RX", "GREEN", self.datetime) + "Received packet" + "\n"
+            string += " " * 22 + "timestamp: " + str(self.timestamp) + "\n"
+            string += " " * 22 + "channel header: " + hex(self.channel_header) + " center freq index: " + hex(self.center_freq_index) + "\n"
+            string += " " * 22 + "syncword class: " + hex(self.syncword_class) + "\n"
+            string += " " * 22 + "rssi: " + str(self.rssi) + " dBm   " + "packet length: " + str(self.packet_len) + "\n"
+            string += " " * 22 + "packet: " + binascii.hexlify(bytearray(self.packet))
             string += Style.RESET_ALL
             return string + "\n"
         return ""
