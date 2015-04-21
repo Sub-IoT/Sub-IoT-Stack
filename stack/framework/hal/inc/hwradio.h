@@ -239,6 +239,15 @@ typedef struct
     //are 32-bits alligned (that is sizeof(hw_radio_packet_t)%4 == 0)
 } __attribute__ ((packed)) hw_radio_packet_t;
 
+/** \brief A convenience MACRO that calculates the minimum size of a buffer large enough to hold a single
+ * hw_radio_packet_t of the specified length
+ *
+ * This functionality is defined as a MACRO rather than a static inline function to
+ * allow it to be used for compile-time calculations.
+ *
+ * \param length		The length of the packet to be allocated (max 255)
+ */
+#define HW_PACKET_BUF_SIZE(length) (sizeof(hw_radio_packet_t) + length -1)
 
 /** \brief Type definition for the 'new_packet' callback function
  *
@@ -355,7 +364,7 @@ __LINK_C error_t hw_radio_init(alloc_packet_callback_t p_alloc, release_packet_c
  * While in this state, it is not possible to receive any packets. The tranceiver can 
  * be re-enabled by a call to hw_radio_set_rx().
  *
- * It should be noted that althoug packet reception is not possible while in IDLE mode,
+ * It should be noted that although packet reception is not possible while in IDLE mode,
  * it is possible to transmit packets (by calling hw_radio_send_packet). In that case the 
  * radio will go directly from IDLE to TX mode to transmit the packet and then go back to 
  * IDLE mode once the packet has been sent.
