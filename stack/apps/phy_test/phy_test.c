@@ -32,6 +32,13 @@
 
 //#define RX_MODE
 
+#ifdef FRAMEWORK_LOG_ENABLED
+#define DPRINT(...) log_print_string(__VA_ARGS__)
+#else
+#define DPRINT(...)
+#endif
+
+
 hw_rx_cfg_t rx_cfg = {
     .channel_id = {
         .ch_coding = PHY_CODING_PN9,
@@ -67,13 +74,13 @@ void packet_transmitted(hw_radio_packet_t* packet);
 
 void start_rx()
 {
-    log_print_string("start RX");
+    DPRINT("start RX");
     hw_radio_set_rx(&rx_cfg, &packet_received, NULL);
 }
 
 void transmit_packet()
 {
-    log_print_string("transmitting packet");
+    DPRINT("transmitting packet");
     memcpy(&tx_packet->data, data, sizeof(data));
     hw_radio_send_packet(tx_packet, &packet_transmitted);
 }
@@ -90,21 +97,23 @@ void release_packet(hw_radio_packet_t* packet)
 
 void packet_received(hw_radio_packet_t* packet)
 {
-    log_print_string("packet received @ %i , RSSI = %i", packet->rx_meta.timestamp, packet->rx_meta.rssi);
+    DPRINT("packet received @ %i , RSSI = %i", packet->rx_meta.timestamp, packet->rx_meta.rssi);
     if(memcmp(data, packet->data, sizeof(data)) != 0)
-        log_print_string("Unexpected data received!");
+        DPRINT("Unexpected data received!");
 }
 
 void packet_transmitted(hw_radio_packet_t* packet)
 {
+#if HW_NUM_LEDS > 0
     led_toggle(0);
-    log_print_string("packet transmitted");
+#endif
+    DPRINT("packet transmitted");
     timer_post_task(&transmit_packet, 100);
 }
 
 void bootstrap()
 {
-    log_print_string("Device booted at time: %d\n", timer_get_counter_value()); // TODO not printed for some reason, debug later
+    DPRINT("Device booted at time: %d\n", timer_get_counter_value()); // TODO not printed for some reason, debug later
 
     hw_radio_init(&alloc_new_packet, &release_packet);
 

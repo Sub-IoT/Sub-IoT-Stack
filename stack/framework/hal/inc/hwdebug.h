@@ -41,7 +41,7 @@
 
 /*! \brief Initialise the debug pins of the platform
  *
- *  This function initialises the debuh pins of the platform. This function is NOT part of the
+ *  This function initialises the debug pins of the platform. This function is NOT part of the
  *  'user' API and should only be called from the initialisation code of the specific platform
  *
  */
