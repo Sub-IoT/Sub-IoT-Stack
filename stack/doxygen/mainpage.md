@@ -8,7 +8,18 @@ DASH7 is an open source active RFID standard for wireless sensor networking, whi
 
 The goal of the project is to provide a reference implementation of the DASH7 Alliance Protocol. This implementation should focus on completeness, correctness and being easy to understand. Performance and code size are less important aspects. For clarity a clear separation between the ISO layers is maintained in the code.
 
-Visit the [OSS-7 website](http://cosys-lab.github.io/dash7-ap-open-source-stack/) for more info.
+## Further reading ##
+
+For more information make sure to visit the following pages:
+- [Supported hardware](hardware.md)
+- [Getting started](gettingstarted.md)
+- [OSS-7 architecture](architecture.md)
+- [Community](community.md)
+- [Resources](resources.md)
+- [OSS-7 blog](http://cosys-lab.github.io/dash7-ap-open-source-stack/)
+- [OSS-7 GitHub project](https://github.com/CoSys-Lab/dash7-ap-open-source-stack)
+
+
 
  
  
