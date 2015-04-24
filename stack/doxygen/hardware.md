@@ -12,7 +12,7 @@ Platform        | MCU                                   | Radio                 
 EFM32GG_STK3700 | EnergyMicro Giant Gecko (Cortex-M3)   | Texas Instruments CC1101      | gcc-arm-embedded  |
 wizzimote       | Texas Instruments CC430 (MSP430)      | Texas Instruments CC1101 (SoC)| msp430-gcc        |
 
-The [EFM32GG_STRK3700](https://www.silabs.com/products/mcu/lowpower/Pages/efm32gg-stk3700.aspx) is currently the most used by us, and thus the best supported.
+The [EFM32GG_STK3700](https://www.silabs.com/products/mcu/lowpower/Pages/efm32gg-stk3700.aspx) is currently the most used by us, and thus the best supported.
 A disadvantage of this platform is that you need to attach an external CC1101 manually (using a custom expansion board or by wiring).
 However, we are working on a PCB design for a devkit containing Giant Gecko and CC1101 as well, which we will opensource shortly.
 

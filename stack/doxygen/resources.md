@@ -1,7 +1,5 @@
 # Resources
 
-TODO update
-
 The following resources give an introduction to DASH7 and OSS-7:
 
 + [DASH7 Academy YouTube channel](https://www.youtube.com/channel/UCPUBPUQ-RPhY_FcYJRaCkig)
