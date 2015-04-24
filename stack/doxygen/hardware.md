@@ -1,28 +1,28 @@
 # Hardware
 
-TODO update 
+A goal of OSS-7 is to support different hardware platforms and radio's. 
+The stack provides this portability by using portable C code for the higher layers, and providing a pluggable driver system for hardware specific implementations. 
+As explained in the [architecture documentation](architecture.md) OSS-7 has the concept of chips and platforms inside the hardware abstraction layer.
+A chip implementation contains drivers for MCU peripherals or radio chips. A platform is a combination of an MCU and a radio chips and describes the board wiring and features like LEDs or buttons. 
 
-A goal of OSS-7 is to support different hardware platforms and radio's. The stack provides this portability by using portable C code for the higher layers, and providing a pluggable driver system for hardware specific implementations. There are two kind of drivers: HAL (Hardware Abstraction Layer) and radio drivers.
+Currently we support the following plaforms, in decreasing order of completeness/stability:
 
-We currently have the HAL implementations for the following microprocessors:
+Platform        | MCU                                   | Radio                         | Toolchain         | 
+--------------- | ------------------------------------- | ----------------------------- | ----------------- | 
+EFM32GG_STK3700 | EnergyMicro Giant Gecko (Cortex-M3)   | Texas Instruments CC1101      | gcc-arm-embedded  |
+wizzimote       | Texas Instruments CC430 (MSP430)      | Texas Instruments CC1101 (SoC)| msp430-gcc        |
 
-+ Texas Instruments CC430
-+ Texas Instruments MSP430
-+ STMicroelectronics STM32L (ARM Cortex-M3 based)
+The [EFM32GG_STRK3700](https://www.silabs.com/products/mcu/lowpower/Pages/efm32gg-stk3700.aspx) is currently the most used by us, and thus the best supported.
+A disadvantage of this platform is that you need to attach an external CC1101 manually (using a custom expansion board or by wiring).
+However, we are working on a PCB design for a devkit containing Giant Gecko and CC1101 as well, which we will opensource shortly.
 
-For the radio we support the following radio chips:
+Currently the only off the shelf devkit available is the WizziKit from WizziLab which can be bought [here](http://www.wizzilab.com/shop/wizzikit/).
+At the moment we are not focusing on the CC430 based platform however, mainly because Cortex-M3 based platforms gives us more flexibility with regard to code size.
+Also, in my experience, the free toolchains available for CC430 are not as robust as gcc-arm-embedded. TI's msp430-gcc (which supersedes mspgcc),
+is still a young effort and there are some known problems with code size optimization.
 
-+ Texas Instruments CC430
-+ Texas Instruments CC1101
+It is important to know that there are a number of parties who are currently in the process of designing devkits which will be commercially available, 
+so the choice should increase in the near future.
 
-There are 2 options to get hardware: either you buy an off the shelf development kit or you need to design and build your own board.
-
-Currently the off the shelf development kit which is best supported is the CC430-based WizziKit from our friends at WizziLab. This kit is available [here](http://www.wizzilab.com/shop/wizzikit/).
-
-The only other option (as far as we know) for off the shelf available devkits which includes everything on one board is the [Texas Instruments EZ430-Chronos](http://processors.wiki.ti.com/index.php/EZ430-Chronos) watch, which is CC430 based as well.
-
-Alternatively you can get started with a development kit for a microprocessor (like [this](http://www.st.com/web/catalog/tools/PF250990) one for STM32L) and attach a radio chip to it using SPI for example.
-
-Designing your own board gives you the most flexibility regarding form factor and sensors specific for you use case of course. We are glad to assist in designing a custom board.
-
-![Tags]({filename}/images/tags.png)
+Finally, it is of course possible to define your own platform. Especially if you are using an MCU and radio which is already implemented it takes very little effort to add support to OSS-7 for your platform.
+Designing your own platform gives you the most flexibility regarding form factor and sensors specific for you use case of course. We are glad to assist in designing a custom board.

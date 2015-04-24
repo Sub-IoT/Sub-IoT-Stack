@@ -758,7 +758,7 @@ WARN_LOGFILE           =
 # spaces.
 # Note: If this tag is empty the current directory is searched.
 
-INPUT                  = ../framework . 
+INPUT                  = ../framework .
 
 # This tag can be used to specify the character encoding of the source files
 # that doxygen parses. Internally doxygen uses the UTF-8 encoding. Doxygen uses
@@ -796,7 +796,9 @@ RECURSIVE              = YES
 EXCLUDE                = ../framework/hal/chips/efm32gg/CMSIS \
 						 ../framework/hal/chips/efm32gg/emlib \
 						 ../framework/hal/chips/efm32gg/kits \
-						 ../framework/hal/chips/cc430/driverlib/
+						 ../framework/hal/chips/cc430/driverlib \
+						 ../framework/hal/platforms/sim \
+						 ../framework/hal/chips/kl02z/CMSIS \
 
 # The EXCLUDE_SYMLINKS tag can be used to select whether or not files or
 # directories that are symbolic links (a Unix file system feature) are excluded
