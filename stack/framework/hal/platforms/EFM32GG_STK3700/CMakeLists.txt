@@ -63,11 +63,12 @@ PLATFORM_BUILD_SETTINGS_FILE()
 
 
 #Define the 'platform library'. Every platform must define a 'PLATFORM' object library
-ADD_LIBRARY(PLATFORM OBJECT platform_main.c 
-			    platform_leds.c 
-			    platform_userbutton.c
-			    platform_debug.c 
-                            libc_overrides.c
-                            inc/platform.h
-                            inc/userbutton.h
+ADD_LIBRARY(PLATFORM OBJECT
+    stk3700_main.c
+    stk3700_leds.c
+    stk3700_userbutton.c
+    stk3700_debug.c
+    libc_overrides.c
+    inc/platform.h
+    inc/userbutton.h
 )

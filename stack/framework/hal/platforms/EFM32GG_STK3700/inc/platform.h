@@ -21,8 +21,8 @@
 
 #include "platform_defs.h"
 
-#ifndef PLATFORM_GECKO
-    #error Mismatch between the configured platform and the actual platform. Expected PLATFORM_GECKO to be defined
+#ifndef PLATFORM_EFM32GG_STK3700
+    #error Mismatch between the configured platform and the actual platform. Expected PLATFORM_EFM32GG_STK3700 to be defined
 #endif
 
 
@@ -42,7 +42,7 @@
  * UART DEFINITIONS *
  *******************/
 
-#define UART_BAUDRATE PLATFORM_GECKO_UART_BAUDRATE
+#define UART_BAUDRATE PLATFORM_EFM32GG_STK3700_UART_BAUDRATE
 
 #define UART_CHANNEL        UART0
 #define UART_CLOCK          cmuClock_UART0
