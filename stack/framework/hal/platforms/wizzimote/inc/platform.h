@@ -22,8 +22,8 @@
 #include "platform_defs.h"
 #include "cc430_chip.h"
 
-#ifndef PLATFORM_CC430
-    #error Mismatch between the configured platform and the actual platform. Expected PLATFORM_CC430 to be defined
+#ifndef PLATFORM_WIZZIMOTE
+    #error Mismatch between the configured platform and the actual platform. Expected PLATFORM_WIZZIMOTE to be defined
 #endif
 
 /********************

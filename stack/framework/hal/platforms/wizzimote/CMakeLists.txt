@@ -22,11 +22,11 @@ REQUIRE_TOOLCHAIN(msp430-gcc)
 
 #Define platform specific options
 PLATFORM_PARAM(${PLATFORM_PREFIX}_MCU "cc430f5137" STRING "The cc430 MCU type")
-PLATFORM_PARAM(${PLATFORM_PREFIX}_RADIO "none" STRING "The radio chip used") # TODO always CC1101
+PLATFORM_PARAM(${PLATFORM_PREFIX}_RADIO "cc1101" STRING "The radio chip used")
 PLATFORM_PARAM(${PLATFORM_PREFIX}_UART_BAUDRATE "115200" STRING "The baudrate used by the UART port")
 PLATFORM_OPTION(${PLATFORM_PREFIX}_DEBUGPINS "Enable/Disable Hardware Debug Pins support (see 'hwdebug.h')" TRUE)
 #Restrict the number of possible options for the radio option in the usual manner...
-SET_PROPERTY(CACHE ${PLATFORM_PREFIX}_RADIO PROPERTY STRINGS "cc1101;none")
+SET_PROPERTY(CACHE ${PLATFORM_PREFIX}_RADIO PROPERTY STRINGS "cc1101")
 
 #Add a 'global' definition for the specific MCU and -mmcu (needed by toolchain)
 ADD_GLOBAL_DEFINITIONS("-D${${PLATFORM_PREFIX}_MCU}" "-mmcu=${${PLATFORM_PREFIX}_MCU}")
@@ -66,8 +66,8 @@ PLATFORM_BUILD_SETTINGS_FILE()
 
 #Define the 'platform library'. Every platform must define a 'PLATFORM' object library
 ADD_LIBRARY(PLATFORM OBJECT 
-    cc430_main.c
-    cc430_leds.c
+    wizzimote_main.c
+    wizzimote_leds.c
     libc_overrides.c
     inc/platform.h
     printf/printf.c
