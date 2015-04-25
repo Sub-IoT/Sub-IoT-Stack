@@ -51,6 +51,7 @@ typedef enum
     PHY_BAND_915_3 = 0x07,
     PHY_BAND_915_4 = 0x08,
     PHY_BAND_915_5 = 0x09,
+    // TODO changed in spec
 } phy_channel_band_t;
 
 /* \brief The channel classes and corresponding indeces as defined in D7A
@@ -98,6 +99,7 @@ typedef struct
         };
     };
     uint8_t center_freq_index;		/**< The center frequency index of the channel id */
+    // TODO changed to uint16_t in spec
 } channel_id_t;
 
 /* \brief Utility function to check whether two channel_id_t are equal
