@@ -67,65 +67,7 @@ You should enable one or more applications and press "Configure" again. Finally,
 
 After generating the build script in the previous step we can exit cmake-gui and build OSS-7 by issueing the make command in the build directory:
 
-    $ make
-    Scanning dependencies of target PLATFORM
-    [  2%] Building C object framework/hal/platforms/EFM32GG_STK3700/CMakeFiles/PLATFORM.dir/stk3700_main.c.obj
-    [  5%] Building C object framework/hal/platforms/EFM32GG_STK3700/CMakeFiles/PLATFORM.dir/stk3700_leds.c.obj
-    [  8%] Building C object framework/hal/platforms/EFM32GG_STK3700/CMakeFiles/PLATFORM.dir/stk3700_userbutton.c.obj
-    [ 11%] Building C object framework/hal/platforms/EFM32GG_STK3700/CMakeFiles/PLATFORM.dir/stk3700_debug.c.obj
-    [ 13%] Building C object framework/hal/platforms/EFM32GG_STK3700/CMakeFiles/PLATFORM.dir/libc_overrides.c.obj
-    [ 13%] Built target PLATFORM
-    Scanning dependencies of target CHIP_CC1101
-    [ 16%] Building C object framework/hal/chips/cc1101/CMakeFiles/CHIP_CC1101.dir/cc1101.c.obj
-    [ 19%] Building C object framework/hal/chips/cc1101/CMakeFiles/CHIP_CC1101.dir/cc1101_interface.c.obj
-    [ 22%] Building C object framework/hal/chips/cc1101/CMakeFiles/CHIP_CC1101.dir/cc1101_interface_spi.c.obj
-    [ 22%] Built target CHIP_CC1101
-    Scanning dependencies of target CHIP_EFM32GG
-    [ 25%] Building C object framework/hal/chips/efm32gg/CMakeFiles/CHIP_EFM32GG.dir/CMSIS/device/src/system_efm32gg.c.obj
-    [ 27%] Building ASM object framework/hal/chips/efm32gg/CMakeFiles/CHIP_EFM32GG.dir/CMSIS/device/src/startup_gcc_efm32gg.s.obj
-    [ 30%] Building C object framework/hal/chips/efm32gg/CMakeFiles/CHIP_EFM32GG.dir/emlib/src/em_assert.c.obj
-    [ 33%] Building C object framework/hal/chips/efm32gg/CMakeFiles/CHIP_EFM32GG.dir/emlib/src/em_system.c.obj
-    [ 36%] Building C object framework/hal/chips/efm32gg/CMakeFiles/CHIP_EFM32GG.dir/emlib/src/em_cmu.c.obj
-    [ 38%] Building C object framework/hal/chips/efm32gg/CMakeFiles/CHIP_EFM32GG.dir/emlib/src/em_emu.c.obj
-    [ 41%] Building C object framework/hal/chips/efm32gg/CMakeFiles/CHIP_EFM32GG.dir/emlib/src/em_gpio.c.obj
-    [ 44%] Building C object framework/hal/chips/efm32gg/CMakeFiles/CHIP_EFM32GG.dir/emlib/src/em_usart.c.obj
-    [ 47%] Building C object framework/hal/chips/efm32gg/CMakeFiles/CHIP_EFM32GG.dir/emlib/src/em_rtc.c.obj
-    [ 50%] Building C object framework/hal/chips/efm32gg/CMakeFiles/CHIP_EFM32GG.dir/emlib/src/em_dma.c.obj
-    [ 52%] Building C object framework/hal/chips/efm32gg/CMakeFiles/CHIP_EFM32GG.dir/emlib/src/em_int.c.obj
-    [ 55%] Building C object framework/hal/chips/efm32gg/CMakeFiles/CHIP_EFM32GG.dir/kits/common/drivers/dmactrl.c.obj
-    [ 58%] Building C object framework/hal/chips/efm32gg/CMakeFiles/CHIP_EFM32GG.dir/kits/common/drivers/gpiointerrupt.c.obj
-    [ 61%] Building C object framework/hal/chips/efm32gg/CMakeFiles/CHIP_EFM32GG.dir/efm32gg_mcu.c.obj
-    [ 63%] Building C object framework/hal/chips/efm32gg/CMakeFiles/CHIP_EFM32GG.dir/efm32gg_uart.c.obj
-    [ 66%] Building C object framework/hal/chips/efm32gg/CMakeFiles/CHIP_EFM32GG.dir/efm32gg_spi.c.obj
-    [ 69%] Building C object framework/hal/chips/efm32gg/CMakeFiles/CHIP_EFM32GG.dir/efm32gg_atomic.c.obj
-    [ 72%] Building C object framework/hal/chips/efm32gg/CMakeFiles/CHIP_EFM32GG.dir/efm32gg_timer.c.obj
-    [ 75%] Building C object framework/hal/chips/efm32gg/CMakeFiles/CHIP_EFM32GG.dir/efm32gg_system.c.obj
-    [ 77%] Building C object framework/hal/chips/efm32gg/CMakeFiles/CHIP_EFM32GG.dir/efm32gg_gpio.c.obj
-    [ 80%] Building C object framework/hal/chips/efm32gg/CMakeFiles/CHIP_EFM32GG.dir/efm32gg_pins.c.obj
-    [ 80%] Built target CHIP_EFM32GG
-    Scanning dependencies of target FRAMEWORK_random
-    [ 83%] Building C object framework/components/random/CMakeFiles/FRAMEWORK_random.dir/random.c.obj
-    [ 83%] Built target FRAMEWORK_random
-    Scanning dependencies of target FRAMEWORK_node_globals
-    [ 86%] Building C object framework/components/node_globals/CMakeFiles/FRAMEWORK_node_globals.dir/ng.c.obj
-    [ 86%] Built target FRAMEWORK_node_globals
-    Scanning dependencies of target FRAMEWORK_log
-    [ 88%] Building C object framework/components/log/CMakeFiles/FRAMEWORK_log.dir/log.c.obj
-    [ 88%] Built target FRAMEWORK_log
-    Scanning dependencies of target FRAMEWORK_scheduler
-    [ 91%] Building C object framework/components/scheduler/CMakeFiles/FRAMEWORK_scheduler.dir/scheduler.c.obj
-    [ 91%] Built target FRAMEWORK_scheduler
-    Scanning dependencies of target FRAMEWORK_timer
-    [ 94%] Building C object framework/components/timer/CMakeFiles/FRAMEWORK_timer.dir/timer.c.obj
-    [ 94%] Built target FRAMEWORK_timer
-    Scanning dependencies of target framework
-    [ 97%] Building C object framework/CMakeFiles/framework.dir/framework_bootstrap.c.obj
-    Linking C static library libframework.a
-    [ 97%] Built target framework
-    Scanning dependencies of target phy_test
-    [100%] Building C object apps/phy_test/CMakeFiles/phy_test.dir/phy_test.c.obj
-    Linking C executable phy_test
-    [100%] Built target phy_test
+![Make](make.png)
 
 ## IDE Support
 
