@@ -215,7 +215,7 @@ typedef struct
  *
  * It should be noted that the rx_meta and tx_meta structs occupy the same memory space (unioned)
  * And that they have been defined so the fields of these structs that have the same meaning overlap.
- * Moreover, the fields of thw hw_radio_packet_t structure are aligned such that the 'data' of a packet
+ * Moreover, the fields of the hw_radio_packet_t structure are aligned such that the 'data' of a packet
  * is always in the same place, regardless of whether it is transmitted or received.
  *
  */
