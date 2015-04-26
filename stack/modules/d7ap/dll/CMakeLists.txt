@@ -1,4 +1,4 @@
-# 
+#
 # OSS-7 - An opensource implementation of the DASH7 Alliance Protocol for ultra
 # lowpower wireless sensor communication
 #
@@ -17,19 +17,6 @@
 # limitations under the License.
 #
 
-#Module specific parameters and options can be defined using
-#MODULE_OPTION and MODULE_PARAMETER
-#See cmake/module_macros.cmake for more information
-
-#Export the module-specific header files to the application by using
-GLOBAL_INCLUDE_DIRECTORIES(dll .) # TODO we export lower layers now during development, later only upper should be exported
-
-ADD_SUBDIRECTORY(dll)
-
-#By convention, each module should generate a single 'static' library that can be included by the application
-ADD_LIBRARY(d7ap STATIC
-    d7ap_stack.c
-    packet_queue.c
-    packet.c
-    $<TARGET_OBJECTS:d7ap_dll>
+ADD_LIBRARY(d7ap_dll OBJECT
+    dll.c
 )
