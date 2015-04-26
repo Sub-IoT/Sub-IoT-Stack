@@ -24,28 +24,32 @@
 #include "packet_queue.h"
 #include "packet.h"
 
-hw_radio_packet_t* alloc_new_packet(uint8_t length)
+#ifdef FRAMEWORK_LOG_ENABLED
+#define DPRINT(...) log_print_stack_string(LOG_STACK_DLL, __VA_ARGS__)
+#else
+#define DPRINT(...)
+#endif
+
+static hw_radio_packet_t* alloc_new_packet(uint8_t length)
 {
     // note we don't use length because in the current implementation the packets in the queue are of
     // fixed (maximum) size
     return &(packet_queue_alloc_packet()->hw_radio_packet);
 }
 
-void release_packet(hw_radio_packet_t* hw_radio_packet)
+static void release_packet(hw_radio_packet_t* hw_radio_packet)
 {
     packet_queue_free_packet(packet_queue_find_packet(hw_radio_packet));
 }
 
-//void packet_received(hw_radio_packet_t* packet)
-//{
-//    DPRINT("packet received @ %i , RSSI = %i", packet->rx_meta.timestamp, packet->rx_meta.rssi);
-//    if(memcmp(data, packet->data, sizeof(data)) != 0)
-//        DPRINT("Unexpected data received!");
-//}
-
-void packet_transmitted(hw_radio_packet_t* hw_radio_packet)
+void packet_received(hw_radio_packet_t* packet)
 {
-    log_print_stack_string(LOG_STACK_DLL, "Transmitted packet with length = %i", hw_radio_packet->length);
+    DPRINT("packet received @ %i , RSSI = %i", packet->rx_meta.timestamp, packet->rx_meta.rssi);
+}
+
+static void packet_transmitted(hw_radio_packet_t* hw_radio_packet)
+{
+    DPRINT("Transmitted packet with length = %i", hw_radio_packet->length);
     packet_queue_free_packet(packet_queue_find_packet(hw_radio_packet));
 }
 
@@ -67,10 +71,32 @@ void dll_tx_frame()
             .ch_freq_band = PHY_BAND_433,
             .center_freq_index = 5
         },
-        .syncword_class = PHY_SYNCWORD_CLASS0,
+        .syncword_class = PHY_SYNCWORD_CLASS1,
         .eirp = 10
     };
 
     packet->hw_radio_packet.tx_meta.tx_cfg = tx_cfg;
     hw_radio_send_packet(&(packet->hw_radio_packet), &packet_transmitted);
+}
+
+void dll_start_foreground_scan()
+{
+    // TODO handle Tscan timeout
+    // TODO filter subnet
+    // TODO filter CRC
+    // TODO filter LQ
+    // TODO filter address
+
+    // TODO get rx_cfg from access profile / scan automation, hardcoded for now
+    hw_rx_cfg_t rx_cfg = {
+        .channel_id = {
+            .ch_coding = PHY_CODING_PN9,
+            .ch_class = PHY_CLASS_NORMAL_RATE,
+            .ch_freq_band = PHY_BAND_433,
+            .center_freq_index = 5
+        },
+        .syncword_class = PHY_SYNCWORD_CLASS1
+    };
+
+    hw_radio_set_rx(&rx_cfg, &packet_received, NULL);
 }

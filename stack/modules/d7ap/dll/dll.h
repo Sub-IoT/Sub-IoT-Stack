@@ -30,8 +30,8 @@
 #define OSS_7_DLL_H
 
 void dll_init();
-
 void dll_tx_frame();
+void dll_start_foreground_scan();
 
 #endif //OSS_7_DLL_H
 
