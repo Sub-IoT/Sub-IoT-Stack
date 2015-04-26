@@ -42,9 +42,31 @@ static void release_packet(hw_radio_packet_t* hw_radio_packet)
     packet_queue_free_packet(packet_queue_find_packet(hw_radio_packet));
 }
 
+
+static void process_received_messages()
+{
+    packet_t* packet = packet_queue_get_received_packet();
+    if(packet)
+    {
+        DPRINT("Processing received packet");
+        // TODO filter subnet
+        // TODO filter CRC
+        // TODO filter LQ
+        // TODO filter address
+        // TODO pass to upper layer
+        // TODO Tscan -= Trx
+    }
+
+    // TODO check if more received packets are pending
+}
+
 void packet_received(hw_radio_packet_t* packet)
 {
+    // we are in interrupt context here, so mark packet for further processing,
+    // schedule it and return
     DPRINT("packet received @ %i , RSSI = %i", packet->rx_meta.timestamp, packet->rx_meta.rssi);
+    packet_queue_mark_received(packet);
+    sched_post_task(&process_received_messages);
 }
 
 static void packet_transmitted(hw_radio_packet_t* hw_radio_packet)
@@ -55,6 +77,8 @@ static void packet_transmitted(hw_radio_packet_t* hw_radio_packet)
 
 void dll_init()
 {
+    sched_register_task(&process_received_messages);
+
     hw_radio_init(&alloc_new_packet, &release_packet);
 }
 
@@ -82,10 +106,6 @@ void dll_tx_frame()
 void dll_start_foreground_scan()
 {
     // TODO handle Tscan timeout
-    // TODO filter subnet
-    // TODO filter CRC
-    // TODO filter LQ
-    // TODO filter address
 
     // TODO get rx_cfg from access profile / scan automation, hardcoded for now
     hw_rx_cfg_t rx_cfg = {

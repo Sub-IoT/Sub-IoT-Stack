@@ -40,6 +40,15 @@ void packet_queue_free_packet(packet_t*);
 /*! Finds the packet_t corresponding to the supplied hw_radio_packet_t */
 packet_t* packet_queue_find_packet(hw_radio_packet_t*);
 
+/*! Indicates the supplied packet has been succesfully received and is ready for further processing */
+void packet_queue_mark_received(hw_radio_packet_t*);
+
+/*! Indicates the supplied packet is being processed */
+void packet_queue_mark_processing(packet_t*);
+
+/*! Get a received packet for further processing. Returns NULL if no received packet queued. */
+packet_t* packet_queue_get_received_packet();
+
 #endif //OSS_7_PACKET_QUEUE_H
 
 /** @}*/

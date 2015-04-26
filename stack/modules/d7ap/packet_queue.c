@@ -26,8 +26,10 @@
 
 typedef enum
 {
-    PACKET_QUEUE_ELEMENT_STATUS_FREE,
-    PACKET_QUEUE_ELEMENT_STATUS_ALLOCATED
+    PACKET_QUEUE_ELEMENT_STATUS_FREE,       /*! The element is free */
+    PACKET_QUEUE_ELEMENT_STATUS_ALLOCATED,  /*! The element is allocated and passed to hwradio for filling */
+    PACKET_QUEUE_ELEMENT_STATUS_RECEIVED,   /*! The element contains a succesfully received packet, ready for further processing */
+    PACKET_QUEUE_ELEMENT_STATUS_PROCESSING  /*! Indicates the supplied packet is being processed */
 } packet_queue_element_status_t;
 
 static packet_t NGDEF(_packet_queue)[PACKET_QUEUE_SIZE];
@@ -83,4 +85,46 @@ packet_t* packet_queue_find_packet(hw_radio_packet_t* hw_radio_packet)
     }
 
     return NULL;
+}
+
+void packet_queue_mark_received(hw_radio_packet_t* hw_radio_packet)
+{
+    for(uint8_t i = 0; i < PACKET_QUEUE_SIZE; i++)
+    {
+        if(&(packet_queue[i].hw_radio_packet) == hw_radio_packet)
+        {
+            assert(packet_queue_element_status[i] == PACKET_QUEUE_ELEMENT_STATUS_ALLOCATED);
+            packet_queue_element_status[i] = PACKET_QUEUE_ELEMENT_STATUS_RECEIVED;
+            return;
+        }
+    }
+
+    assert(false);
+}
+
+packet_t* packet_queue_get_received_packet()
+{
+    // note: we return the first found received packet, this may not be the oldest one
+    for(uint8_t i = 0; i < PACKET_QUEUE_SIZE; i++)
+    {
+        if(packet_queue_element_status[i] == PACKET_QUEUE_ELEMENT_STATUS_RECEIVED)
+            return &(packet_queue[i]);
+    }
+
+    return NULL;
+}
+
+void packet_queue_mark_processing(packet_t* packet)
+{
+    for(uint8_t i = 0; i < PACKET_QUEUE_SIZE; i++)
+    {
+        if(packet == &(packet_queue[i]))
+        {
+            assert(packet_queue_element_status[i] == PACKET_QUEUE_ELEMENT_STATUS_RECEIVED);
+            packet_queue_element_status[i] = PACKET_QUEUE_ELEMENT_STATUS_PROCESSING;
+            return;
+        }
+
+        assert(false);
+    }
 }
