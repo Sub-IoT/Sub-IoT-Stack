@@ -66,7 +66,7 @@ void packet_queue_free_packet(packet_t* packet)
     {
         if(packet == &(packet_queue[i]))
         {
-            assert(packet_queue_element_status[i] == PACKET_QUEUE_ELEMENT_STATUS_ALLOCATED);
+            assert(packet_queue_element_status[i] >= PACKET_QUEUE_ELEMENT_STATUS_ALLOCATED);
             packet_queue_element_status[i] = PACKET_QUEUE_ELEMENT_STATUS_FREE;
             packet_init(&(packet_queue[i]));
             return;

@@ -33,7 +33,9 @@
 typedef struct
 {
     hw_radio_packet_t hw_radio_packet; // TODO we might not need all metadata included in hw_radio_packet_t. If not copy needed data fields
+    uint8_t data[255]; // reserves space for hw_radio_packet_t.data flexible array member // TODO configure max length from cmake
 } packet_t;
+
 
 void packet_init(packet_t*);
 

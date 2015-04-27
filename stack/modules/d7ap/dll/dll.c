@@ -58,6 +58,8 @@ static void process_received_messages()
     }
 
     // TODO check if more received packets are pending
+
+    packet_queue_free_packet(packet);
 }
 
 void packet_received(hw_radio_packet_t* packet)

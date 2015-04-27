@@ -42,6 +42,7 @@ void transmit_packet()
 {
     DPRINT("transmitting packet");
     dll_tx_frame();
+    timer_post_task_delay(&transmit_packet, TIMER_TICKS_PER_SEC + (get_rnd() %TIMER_TICKS_PER_SEC));
 }
 
 void start_foreground_scan()
