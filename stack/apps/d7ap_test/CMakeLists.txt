@@ -34,4 +34,4 @@
 ADD_EXECUTABLE(d7ap_test d7ap_test.c)
 
 #Add the framework (and one or more modules) as libraries to the application
-TARGET_LINK_LIBRARIES(d7ap_test framework d7ap)
+TARGET_LINK_LIBRARIES(d7ap_test d7ap framework)
