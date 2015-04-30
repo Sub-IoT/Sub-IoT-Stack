@@ -1,4 +1,5 @@
 var searchData=
 [
-  ['frame_5ftype',['Frame_Type',['../dll_8h.html#a6c9b51a17c3f14d9a16cdc0fc381ba69',1,'dll.h']]]
+  ['gdoedge',['GDOEdge',['../cc1101__interface_8h.html#a390274bb6ebba153d9953e6355135940',1,'cc1101_interface.h']]],
+  ['gdoline',['GDOLine',['../cc1101__interface_8h.html#a27fa6bee04c99d50b30fb9ecc0800913',1,'cc1101_interface.h']]]
 ];

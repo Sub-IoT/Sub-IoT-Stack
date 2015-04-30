@@ -1,6 +1,5 @@
 var searchData=
 [
-  ['phy_5frx_5fcfg_5ft',['phy_rx_cfg_t',['../structphy__rx__cfg__t.html',1,'']]],
-  ['phy_5frx_5fdata_5ft',['phy_rx_data_t',['../structphy__rx__data__t.html',1,'']]],
-  ['phy_5ftx_5fcfg_5ft',['phy_tx_cfg_t',['../structphy__tx__cfg__t.html',1,'']]]
+  ['packet_5ft',['packet_t',['../structpacket__t.html',1,'']]],
+  ['pin_5fid_5ft',['pin_id_t',['../structpin__id__t.html',1,'']]]
 ];

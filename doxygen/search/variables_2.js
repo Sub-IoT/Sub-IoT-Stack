@@ -1,12 +1,22 @@
 var searchData=
 [
-  ['channel_5fbandwidth_5findex',['channel_bandwidth_index',['../cc430__phy_8c.html#a23dd5d27607580810c098b79a0cfd9b2',1,'cc430_phy.c']]],
-  ['channel_5fcenter_5ffreq_5findex',['channel_center_freq_index',['../cc430__phy_8c.html#a94f97a50b0e0d3ab9a883cd23b6ed610',1,'cc430_phy.c']]],
-  ['channr',['channr',['../struct_r_f___s_e_t_t_i_n_g_s.html#a4824efd09cbfd902e3a3e8ba682a5154',1,'RF_SETTINGS']]],
-  ['clock_5fspeed',['clock_speed',['../cc430__system_8c.html#a6b31cd786761f86279de4b3a2c3d839f',1,'clock_speed():&#160;cc430_system.c'],['../system_8h.html#a6b31cd786761f86279de4b3a2c3d839f',1,'clock_speed():&#160;cc430_system.c']]],
-  ['command_5fcode',['command_code',['../struct_d7_a_q_p___command.html#a0135ae6cb60cc43de6f158211ca3464b',1,'D7AQP_Command']]],
-  ['command_5fdata',['command_data',['../struct_d7_a_q_p___command.html#a9df988d1bf297cd50bfe183851b79193',1,'D7AQP_Command']]],
-  ['command_5fextension',['command_extension',['../struct_d7_a_q_p___command.html#a4ba6244f2df6bd4cda0015f30ff0895a',1,'D7AQP_Command']]],
-  ['cost',['cost',['../struct_v_i_t_e_r_b_i_p_a_t_h.html#a69cc36042ddf8af4e0c3f0bcc2f1c86a',1,'VITERBIPATH']]],
-  ['current_5fphy_5fcfg',['current_phy_cfg',['../dll_8c.html#a542c30831fa80cdb00336f961e6448eb',1,'current_phy_cfg():&#160;dll.c'],['../dll_8h.html#a542c30831fa80cdb00336f961e6448eb',1,'current_phy_cfg():&#160;dll.c']]]
+  ['b0',['B0',['../efm32gg__pins_8c.html#ac20f3d1a012ae5f5bec096ed19369c23',1,'B0():&#160;efm32gg_pins.c'],['../efm32gg__pins_8h.html#ac20f3d1a012ae5f5bec096ed19369c23',1,'B0():&#160;efm32gg_pins.c'],['../kl02z__pins_8h.html#ac20f3d1a012ae5f5bec096ed19369c23',1,'B0():&#160;efm32gg_pins.c'],['../kl02z__pins_8c.html#ac20f3d1a012ae5f5bec096ed19369c23',1,'B0():&#160;kl02z_pins.c']]],
+  ['b1',['B1',['../efm32gg__pins_8c.html#ac006891ec3022c3126f3680b9a33576e',1,'B1():&#160;efm32gg_pins.c'],['../efm32gg__pins_8h.html#ac006891ec3022c3126f3680b9a33576e',1,'B1():&#160;efm32gg_pins.c'],['../kl02z__pins_8h.html#ac006891ec3022c3126f3680b9a33576e',1,'B1():&#160;efm32gg_pins.c'],['../kl02z__pins_8c.html#ac006891ec3022c3126f3680b9a33576e',1,'B1():&#160;kl02z_pins.c']]],
+  ['b10',['B10',['../efm32gg__pins_8c.html#a64b2ce451fb5a43f8223c3e65c11667a',1,'B10():&#160;efm32gg_pins.c'],['../efm32gg__pins_8h.html#a64b2ce451fb5a43f8223c3e65c11667a',1,'B10():&#160;efm32gg_pins.c']]],
+  ['b11',['B11',['../efm32gg__pins_8c.html#ac42693ae00ebfb7eda256f633be2ce9c',1,'B11():&#160;efm32gg_pins.c'],['../efm32gg__pins_8h.html#ac42693ae00ebfb7eda256f633be2ce9c',1,'B11():&#160;efm32gg_pins.c']]],
+  ['b12',['B12',['../efm32gg__pins_8c.html#a1433b35a20959dbc84960aa39c0a2aa0',1,'B12():&#160;efm32gg_pins.c'],['../efm32gg__pins_8h.html#a1433b35a20959dbc84960aa39c0a2aa0',1,'B12():&#160;efm32gg_pins.c']]],
+  ['b13',['B13',['../efm32gg__pins_8c.html#a1b74da7ded594641722fe83542a0a328',1,'B13():&#160;efm32gg_pins.c'],['../efm32gg__pins_8h.html#a1b74da7ded594641722fe83542a0a328',1,'B13():&#160;efm32gg_pins.c']]],
+  ['b14',['B14',['../efm32gg__pins_8c.html#ace556fdb6494b890a434522dd7b002f1',1,'B14():&#160;efm32gg_pins.c'],['../efm32gg__pins_8h.html#ace556fdb6494b890a434522dd7b002f1',1,'B14():&#160;efm32gg_pins.c']]],
+  ['b15',['B15',['../efm32gg__pins_8c.html#ac58b51eb72206bc916af3e25e35a01b2',1,'B15():&#160;efm32gg_pins.c'],['../efm32gg__pins_8h.html#ac58b51eb72206bc916af3e25e35a01b2',1,'B15():&#160;efm32gg_pins.c']]],
+  ['b2',['B2',['../efm32gg__pins_8c.html#a63a9130adf0aafa5d0fd4ba4cc0811a8',1,'B2():&#160;efm32gg_pins.c'],['../efm32gg__pins_8h.html#a63a9130adf0aafa5d0fd4ba4cc0811a8',1,'B2():&#160;efm32gg_pins.c'],['../kl02z__pins_8h.html#a63a9130adf0aafa5d0fd4ba4cc0811a8',1,'B2():&#160;efm32gg_pins.c'],['../kl02z__pins_8c.html#a63a9130adf0aafa5d0fd4ba4cc0811a8',1,'B2():&#160;kl02z_pins.c']]],
+  ['b3',['B3',['../efm32gg__pins_8c.html#ade70a44836a413d22a409d8b3aed58e0',1,'B3():&#160;efm32gg_pins.c'],['../efm32gg__pins_8h.html#ade70a44836a413d22a409d8b3aed58e0',1,'B3():&#160;efm32gg_pins.c'],['../kl02z__pins_8h.html#ade70a44836a413d22a409d8b3aed58e0',1,'B3():&#160;efm32gg_pins.c'],['../kl02z__pins_8c.html#ade70a44836a413d22a409d8b3aed58e0',1,'B3():&#160;kl02z_pins.c']]],
+  ['b4',['B4',['../efm32gg__pins_8c.html#aeec0882ffc7b7c84cde78e0774336fd8',1,'B4():&#160;efm32gg_pins.c'],['../efm32gg__pins_8h.html#aeec0882ffc7b7c84cde78e0774336fd8',1,'B4():&#160;efm32gg_pins.c'],['../kl02z__pins_8h.html#aeec0882ffc7b7c84cde78e0774336fd8',1,'B4():&#160;efm32gg_pins.c'],['../kl02z__pins_8c.html#aeec0882ffc7b7c84cde78e0774336fd8',1,'B4():&#160;kl02z_pins.c']]],
+  ['b5',['B5',['../efm32gg__pins_8c.html#aed92ff46134528bc6ac7dd53127ad2f2',1,'B5():&#160;efm32gg_pins.c'],['../efm32gg__pins_8h.html#aed92ff46134528bc6ac7dd53127ad2f2',1,'B5():&#160;efm32gg_pins.c'],['../kl02z__pins_8h.html#aed92ff46134528bc6ac7dd53127ad2f2',1,'B5():&#160;efm32gg_pins.c'],['../kl02z__pins_8c.html#aed92ff46134528bc6ac7dd53127ad2f2',1,'B5():&#160;kl02z_pins.c']]],
+  ['b6',['B6',['../efm32gg__pins_8c.html#aaacce523727ee9e27b8208adc77fcd6a',1,'B6():&#160;efm32gg_pins.c'],['../efm32gg__pins_8h.html#aaacce523727ee9e27b8208adc77fcd6a',1,'B6():&#160;efm32gg_pins.c']]],
+  ['b7',['B7',['../efm32gg__pins_8c.html#a125b7e1fc4e54d32cb6d745be54d98d6',1,'B7():&#160;efm32gg_pins.c'],['../efm32gg__pins_8h.html#a125b7e1fc4e54d32cb6d745be54d98d6',1,'B7():&#160;efm32gg_pins.c']]],
+  ['b8',['B8',['../efm32gg__pins_8c.html#a722f678a588c93316f568a39feb5ba9e',1,'B8():&#160;efm32gg_pins.c'],['../efm32gg__pins_8h.html#a722f678a588c93316f568a39feb5ba9e',1,'B8():&#160;efm32gg_pins.c']]],
+  ['b9',['B9',['../efm32gg__pins_8c.html#ad66948b769373c6d243a98e7d2ed4c23',1,'B9():&#160;efm32gg_pins.c'],['../efm32gg__pins_8h.html#ad66948b769373c6d243a98e7d2ed4c23',1,'B9():&#160;efm32gg_pins.c']]],
+  ['bscfg',['bscfg',['../struct_r_f___s_e_t_t_i_n_g_s.html#a14df3563ff1e01b7e43260ac9fff92b1',1,'RF_SETTINGS']]],
+  ['button_5fid',['button_id',['../structbutton__info__t.html#a2f08efb63ae08443e16a3a49d962565b',1,'button_info_t']]],
+  ['buttons',['buttons',['../stk3700__userbutton_8c.html#a71e41f656a0958c2b402132aa24765ae',1,'stk3700_userbutton.c']]]
 ];

@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['_5f_5fsfr_5ffarptr',['__SFR_FARPTR',['../msp430xgeneric_8h.html#a9e6f5a2032fd69c81e069503a01bf9f8',1,'msp430xgeneric.h']]]
+  ['alloc_5fpacket_5fcallback_5ft',['alloc_packet_callback_t',['../group__radio.html#gaed2efbab7ef580464c95416fdbe9cd2c',1,'hwradio.h']]]
 ];

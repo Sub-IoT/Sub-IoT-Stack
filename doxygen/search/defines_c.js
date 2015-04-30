@@ -1,5 +1,6 @@
 var searchData=
 [
-  ['n',['N',['../msp430xgeneric_8h.html#a0240ac851181b84ac374872dc5434ee4',1,'msp430xgeneric.h']]],
-  ['no_5fbits',['NO_BITS',['../uart__baudrate_8c.html#a32978f006f6d66afa1e8198dc0d3bf6e',1,'uart_baudrate.c']]]
+  ['ng',['NG',['../ng_8h.html#aa25e025bae22513cd27959fe8d2b6108',1,'ng.h']]],
+  ['ngdef',['NGDEF',['../ng_8h.html#a0c90db0a437ef4e5cb6595f22c461e6f',1,'ng.h']]],
+  ['num_5fuserbuttons',['NUM_USERBUTTONS',['../_e_f_m32_g_g___s_t_k3700_2inc_2platform_8h.html#a711b79f5e2af016adea2af8f46306683',1,'NUM_USERBUTTONS():&#160;platform.h'],['../matrix__tp1089_2inc_2platform_8h.html#a711b79f5e2af016adea2af8f46306683',1,'NUM_USERBUTTONS():&#160;platform.h']]]
 ];

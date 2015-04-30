@@ -1,11 +1,23 @@
 var searchData=
 [
-  ['background_5fframe_5ftx_5fcfg',['background_frame_tx_cfg',['../dll_8c.html#a3815ec7b0a0d2da49ccc26b95ad16878',1,'dll.c']]],
-  ['background_5fscan_5fdetection_5ftimeout',['background_scan_detection_timeout',['../dll_8c.html#a87f0e6c0051e75fb6adb59cf960285f8',1,'dll.c']]],
-  ['baudrate',['baudrate',['../uart__baudrate_8c.html#a638acbde8e5ea7a758cb8ae856d0b0e7',1,'uart_baudrate.c']]],
-  ['bpid',['bpid',['../structnwl__background__frame__t.html#a29f7f520718b5f568eba714336ad9140',1,'nwl_background_frame_t']]],
-  ['brclk',['brclk',['../uart__baudrate_8c.html#af5cf8f2ec9037b08792d013d278009ea',1,'uart_baudrate.c']]],
-  ['bscfg',['bscfg',['../struct_r_f___s_e_t_t_i_n_g_s.html#a14df3563ff1e01b7e43260ac9fff92b1',1,'RF_SETTINGS']]],
-  ['buffer',['buffer',['../cc430__phy_8c.html#add67ea72ba67ecdd24474eee6d5b92b2',1,'cc430_phy.c']]],
-  ['bufferposition',['bufferPosition',['../cc430__phy_8c.html#ad64facc6dbde9285235abbdb76eb24e7',1,'cc430_phy.c']]]
+  ['a0',['A0',['../efm32gg__pins_8c.html#a88bfd922ccf9b1240a125a9c4731469d',1,'A0():&#160;efm32gg_pins.c'],['../efm32gg__pins_8h.html#a88bfd922ccf9b1240a125a9c4731469d',1,'A0():&#160;efm32gg_pins.c'],['../kl02z__pins_8h.html#a88bfd922ccf9b1240a125a9c4731469d',1,'A0():&#160;efm32gg_pins.c'],['../kl02z__pins_8c.html#a88bfd922ccf9b1240a125a9c4731469d',1,'A0():&#160;kl02z_pins.c']]],
+  ['a1',['A1',['../efm32gg__pins_8c.html#a756dc8e6e77e2458c523d71d76c710b7',1,'A1():&#160;efm32gg_pins.c'],['../efm32gg__pins_8h.html#a756dc8e6e77e2458c523d71d76c710b7',1,'A1():&#160;efm32gg_pins.c'],['../kl02z__pins_8h.html#a756dc8e6e77e2458c523d71d76c710b7',1,'A1():&#160;efm32gg_pins.c'],['../kl02z__pins_8c.html#a756dc8e6e77e2458c523d71d76c710b7',1,'A1():&#160;kl02z_pins.c']]],
+  ['a10',['A10',['../efm32gg__pins_8c.html#a5e526f854e878748dab11a806ac2e1ca',1,'A10():&#160;efm32gg_pins.c'],['../efm32gg__pins_8h.html#a5e526f854e878748dab11a806ac2e1ca',1,'A10():&#160;efm32gg_pins.c']]],
+  ['a11',['A11',['../efm32gg__pins_8c.html#ae9c3aa974c893435e638468dd3ae0225',1,'A11():&#160;efm32gg_pins.c'],['../efm32gg__pins_8h.html#ae9c3aa974c893435e638468dd3ae0225',1,'A11():&#160;efm32gg_pins.c']]],
+  ['a12',['A12',['../efm32gg__pins_8c.html#a48e348b79960b0dd57c1e94bbe255c82',1,'A12():&#160;efm32gg_pins.c'],['../efm32gg__pins_8h.html#a48e348b79960b0dd57c1e94bbe255c82',1,'A12():&#160;efm32gg_pins.c']]],
+  ['a13',['A13',['../efm32gg__pins_8c.html#a66f2ef469bb524c8057140e255271469',1,'A13():&#160;efm32gg_pins.c'],['../efm32gg__pins_8h.html#a66f2ef469bb524c8057140e255271469',1,'A13():&#160;efm32gg_pins.c']]],
+  ['a14',['A14',['../efm32gg__pins_8c.html#a102f8b12af550c82df1cd241cc16c890',1,'A14():&#160;efm32gg_pins.c'],['../efm32gg__pins_8h.html#a102f8b12af550c82df1cd241cc16c890',1,'A14():&#160;efm32gg_pins.c']]],
+  ['a15',['A15',['../efm32gg__pins_8c.html#a47ef4aba748cab8bec26b642f94a4253',1,'A15():&#160;efm32gg_pins.c'],['../efm32gg__pins_8h.html#a47ef4aba748cab8bec26b642f94a4253',1,'A15():&#160;efm32gg_pins.c']]],
+  ['a2',['A2',['../efm32gg__pins_8c.html#a723a98042c7e9c93da24f1cd6f1f74b4',1,'A2():&#160;efm32gg_pins.c'],['../efm32gg__pins_8h.html#a723a98042c7e9c93da24f1cd6f1f74b4',1,'A2():&#160;efm32gg_pins.c'],['../kl02z__pins_8h.html#a723a98042c7e9c93da24f1cd6f1f74b4',1,'A2():&#160;efm32gg_pins.c'],['../kl02z__pins_8c.html#a723a98042c7e9c93da24f1cd6f1f74b4',1,'A2():&#160;kl02z_pins.c']]],
+  ['a3',['A3',['../efm32gg__pins_8c.html#a5baa81228c17554109465fa35e66a7c0',1,'A3():&#160;efm32gg_pins.c'],['../efm32gg__pins_8h.html#a5baa81228c17554109465fa35e66a7c0',1,'A3():&#160;efm32gg_pins.c'],['../kl02z__pins_8h.html#a5baa81228c17554109465fa35e66a7c0',1,'A3():&#160;efm32gg_pins.c'],['../kl02z__pins_8c.html#a5baa81228c17554109465fa35e66a7c0',1,'A3():&#160;kl02z_pins.c']]],
+  ['a4',['A4',['../efm32gg__pins_8c.html#a428ac599e9ce27245e2b1203baf9b2e0',1,'A4():&#160;efm32gg_pins.c'],['../efm32gg__pins_8h.html#a428ac599e9ce27245e2b1203baf9b2e0',1,'A4():&#160;efm32gg_pins.c'],['../kl02z__pins_8h.html#a428ac599e9ce27245e2b1203baf9b2e0',1,'A4():&#160;efm32gg_pins.c'],['../kl02z__pins_8c.html#a428ac599e9ce27245e2b1203baf9b2e0',1,'A4():&#160;kl02z_pins.c']]],
+  ['a5',['A5',['../efm32gg__pins_8c.html#ace96411a9a41fc1c90bcba5352a14848',1,'A5():&#160;efm32gg_pins.c'],['../efm32gg__pins_8h.html#ace96411a9a41fc1c90bcba5352a14848',1,'A5():&#160;efm32gg_pins.c'],['../kl02z__pins_8h.html#ace96411a9a41fc1c90bcba5352a14848',1,'A5():&#160;efm32gg_pins.c'],['../kl02z__pins_8c.html#ace96411a9a41fc1c90bcba5352a14848',1,'A5():&#160;kl02z_pins.c']]],
+  ['a6',['A6',['../efm32gg__pins_8c.html#ac42b30fb723417a747c53bc16078d304',1,'A6():&#160;efm32gg_pins.c'],['../efm32gg__pins_8h.html#ac42b30fb723417a747c53bc16078d304',1,'A6():&#160;efm32gg_pins.c'],['../kl02z__pins_8h.html#ac42b30fb723417a747c53bc16078d304',1,'A6():&#160;efm32gg_pins.c'],['../kl02z__pins_8c.html#ac42b30fb723417a747c53bc16078d304',1,'A6():&#160;kl02z_pins.c']]],
+  ['a7',['A7',['../efm32gg__pins_8c.html#a28673c53cb1199d726220c829202bac6',1,'A7():&#160;efm32gg_pins.c'],['../efm32gg__pins_8h.html#a28673c53cb1199d726220c829202bac6',1,'A7():&#160;efm32gg_pins.c'],['../kl02z__pins_8h.html#a28673c53cb1199d726220c829202bac6',1,'A7():&#160;efm32gg_pins.c'],['../kl02z__pins_8c.html#a28673c53cb1199d726220c829202bac6',1,'A7():&#160;kl02z_pins.c']]],
+  ['a8',['A8',['../efm32gg__pins_8c.html#a669f3bc5e377a66ae7c29f8fcdd7398a',1,'A8():&#160;efm32gg_pins.c'],['../efm32gg__pins_8h.html#a669f3bc5e377a66ae7c29f8fcdd7398a',1,'A8():&#160;efm32gg_pins.c']]],
+  ['a9',['A9',['../efm32gg__pins_8c.html#a10e9c4b17225b5004efbb08250494538',1,'A9():&#160;efm32gg_pins.c'],['../efm32gg__pins_8h.html#a10e9c4b17225b5004efbb08250494538',1,'A9():&#160;efm32gg_pins.c']]],
+  ['addr',['addr',['../struct_r_f___s_e_t_t_i_n_g_s.html#a85efbee73c1208391fa80530dabddf6b',1,'RF_SETTINGS']]],
+  ['agcctrl0',['agcctrl0',['../struct_r_f___s_e_t_t_i_n_g_s.html#a2842f7b1c36bcb6f14c9f4c6b1a5b6bf',1,'RF_SETTINGS']]],
+  ['agcctrl1',['agcctrl1',['../struct_r_f___s_e_t_t_i_n_g_s.html#aa56a1b2cac5cfc95ef633f2867eafdfc',1,'RF_SETTINGS']]],
+  ['agcctrl2',['agcctrl2',['../struct_r_f___s_e_t_t_i_n_g_s.html#ad523eaee367a06f0dc745c2c8f345aa6',1,'RF_SETTINGS']]]
 ];

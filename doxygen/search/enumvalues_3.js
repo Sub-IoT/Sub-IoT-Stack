@@ -1,4 +1,5 @@
 var searchData=
 [
-  ['idle',['Idle',['../cc430__phy_8h.html#a8bf7bc59f2fe9597bd2552e2cf783996ad3fa9ae9431d6cb1772f9d9df48cab19',1,'cc430_phy.h']]]
+  ['max_5fpriority',['MAX_PRIORITY',['../group__scheduler.html#gga05589fbab0657f08285ebdfe93f5ec9ea6b8524b0a6b5872417d7d5e64a9ebf43',1,'scheduler.h']]],
+  ['min_5fpriority',['MIN_PRIORITY',['../group__scheduler.html#gga05589fbab0657f08285ebdfe93f5ec9eaaa92b2d93b02a201c180b2e543795fff',1,'scheduler.h']]]
 ];
