@@ -249,7 +249,7 @@ typedef struct
  *
  * \param length		The length of the packet to be allocated (max 255)
  */
-#define HW_PACKET_BUF_SIZE(length) (sizeof(hw_radio_packet_t) + length -1)
+#define HW_PACKET_BUF_SIZE(length) (sizeof(hw_radio_packet_t) + length)
 
 /** \brief Type definition for the 'new_packet' callback function
  *

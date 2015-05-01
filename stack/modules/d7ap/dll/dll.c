@@ -23,6 +23,8 @@
 #include "hwradio.h"
 #include "packet_queue.h"
 #include "packet.h"
+#include "crc.h"
+
 
 #ifdef FRAMEWORK_LOG_ENABLED
 #define DPRINT(...) log_print_stack_string(LOG_STACK_DLL, __VA_ARGS__)
@@ -46,9 +48,17 @@ static void release_packet(hw_radio_packet_t* hw_radio_packet)
 static void process_received_messages()
 {
     packet_t* packet = packet_queue_get_received_packet();
+    dll_header_t header;
     if(packet)
     {
         DPRINT("Processing received packet");
+        log_print_data(packet->hw_radio_packet.data, packet->hw_radio_packet.length + 1); // TODO tmp
+        uint16_t crc = crc_calculate(packet->hw_radio_packet.data, packet->hw_radio_packet.length - 2);
+        if(memcmp(&crc, packet->hw_radio_packet.data + packet->hw_radio_packet.length + 1 - 2, 2) != 0)
+        {
+            DPRINT("CRC invalid!");
+            // TODO free packet and stop processing
+        }
         // TODO filter subnet
         // TODO filter CRC
         // TODO filter LQ
@@ -86,10 +96,29 @@ void dll_init()
 
 void dll_tx_frame()
 {
-    // TODO get payload from upper layers + assemble frame, hardcoded for now
-    static uint8_t data[] = {16, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15};
-    packet_t* packet = packet_queue_alloc_packet(); // TODO free after transmission
-    memcpy(packet->hw_radio_packet.data, data, sizeof(data));
+    static uint8_t payload[] = { 0, 1, 2, 3, 4 };
+    // TODO get payload from upper layers, hardcoded for now
+    packet_t* packet = packet_queue_alloc_packet();
+
+    dll_header_t header = {
+        .subnet = 0x05, // TODO hardcoded for now
+        .control_target_address_set = false, // TODO assuming broadcast for now
+        .control_vid_used = false, // TODO hardcoded for now
+        .control_eirp_index = 0, // TODO hardcoded for now
+    };
+
+    uint8_t* data_ptr = packet->hw_radio_packet.data + 1; // skip length field for now, we fill this later
+    *data_ptr = header.subnet; data_ptr += sizeof(header.subnet);
+    *data_ptr = header.control; data_ptr += sizeof(header.control);
+    // TODO target address, assuming broadcast for now
+    uint8_t payload_size = sizeof(payload);
+    memcpy(data_ptr, payload, payload_size); data_ptr += payload_size;
+    packet->hw_radio_packet.length = data_ptr - packet->hw_radio_packet.data - 1 + 2; // exclude the length byte and add CRC bytes
+    uint16_t crc = crc_calculate(packet->hw_radio_packet.data, packet->hw_radio_packet.length - 2);
+    memcpy(data_ptr, &crc, 2);
+
+    log_print_data(packet->hw_radio_packet.data, packet->hw_radio_packet.length + 1); // TODO tmp
+
     hw_tx_cfg_t tx_cfg = {
         .channel_id = {
             .ch_coding = PHY_CODING_PN9,

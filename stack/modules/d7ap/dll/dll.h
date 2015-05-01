@@ -29,6 +29,22 @@
 #ifndef OSS_7_DLL_H
 #define OSS_7_DLL_H
 
+typedef struct
+{
+    uint8_t subnet;
+    union
+    {
+        uint8_t control;
+        struct
+        {
+            bool control_target_address_set: 1;
+            bool control_vid_used: 1;
+            int8_t control_eirp_index: 6;
+        };
+    };
+    uint8_t target_address[8]; // TODO assuming 8B UID for now
+} dll_header_t;
+
 void dll_init();
 void dll_tx_frame();
 void dll_start_foreground_scan();
