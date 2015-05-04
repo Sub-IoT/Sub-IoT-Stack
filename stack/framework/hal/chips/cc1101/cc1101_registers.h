@@ -229,7 +229,7 @@ RFIFG15 Positive edge: WOR event 1
 
 #define RADIO_MCSM2_RX_TIME_RSSI          (1 << 4)      // Direct RX termination based on RSSI measurement (carrier sense)
 #define RADIO_MCSM2_RX_TIME_QUAL          (1 << 3)
-#define RADIO_MCSM2_RX_TIME(VAL)          (VAL&3)         // Timeout for sync word search
+#define RADIO_MCSM2_RX_TIME(VAL)          (VAL & 7)         // Timeout for sync word search
 
 #define RADIO_MCSM1_CCA_ALWAYS             (0 << 4)    // MCSM1.CCA_MODE Always
 #define RADIO_MCSM1_CCA_RSSILOW            (1 << 4)    // MCSM1.CCA_MODE If RSSI below threshold
