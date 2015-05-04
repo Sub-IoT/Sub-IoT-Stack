@@ -3,7 +3,7 @@
       xmlns:og="http://ogp.me/ns#"
       xmlns:fb="https://www.facebook.com/2008/fbml">
 <head>
-    <title>Tags - OSS-7 News</title>
+    <title>Tags - OSS-7</title>
     <!-- Using the latest rendering mode for IE -->
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta charset="utf-8">
@@ -12,9 +12,9 @@
 
     <!-- Open Graph tags -->
             <meta property="og:type" content="website"/>
-            <meta property="og:title" content="OSS-7 News"/>
+            <meta property="og:title" content="OSS-7"/>
             <meta property="og:url" content="."/>
-            <meta property="og:description" content="OSS-7 News"/>
+            <meta property="og:description" content="OSS-7"/>
 
     <!-- Bootstrap -->
         <link rel="stylesheet" href="./theme/css/bootstrap.spacelab.min.css" type="text/css"/>
@@ -24,7 +24,7 @@
     <link rel="stylesheet" href="./theme/css/style.css" type="text/css"/>
 
         <link href="./feeds/all.atom.xml" type="application/atom+xml" rel="alternate"
-              title="OSS-7 News ATOM Feed"/>
+              title="OSS-7 ATOM Feed"/>
 
 </head>
 <body>
@@ -39,10 +39,13 @@
                 <span class="icon-bar"></span>
             </button>
             <a href="./" class="navbar-brand">
-OSS-7 News            </a>
+OSS-7            </a>
         </div>
         <div class="collapse navbar-collapse navbar-ex1-collapse">
             <ul class="nav navbar-nav">
+                        <li >
+                            <a href="./category/news.html">News</a>
+                        </li>
             </ul>
             <ul class="nav navbar-nav navbar-right">
                 <li><a href="./archives.html"><i class="fa fa-th-list"></i><span class="icon-label">Archives</span></a></li>
@@ -57,15 +60,28 @@ OSS-7 News            </a>
         <div class="col-sm-9">
 
     <section id="tags">
-        <h1>Tags for OSS-7 News</h1>
+        <h1>Tags for OSS-7</h1>
         <div class="panel-group" id="accordion">            <div class="panel panel-default">
                 <div class="panel-heading">
                     <h4 class="panel-title">
-                        <a data-toggle="collapse" data-parent="#accordion" href="#collapse-general">General <span class="badge pull-right">1</span></a>
+                        <a data-toggle="collapse" data-parent="#accordion" href="#collapse-d7ap">D7AP <span class="badge pull-right">1</span></a>
+                    </h4>
+                </div>
+                <div id="collapse-d7ap" class="panel-collapse collapse">
+                    <div class="panel-body">
+                        <p><span class="categories-timestamp"><time datetime="2015-05-04T12:00:00+02:00">Mon 04 May 2015</time></span> <a href="./dash7-alliance-protocol-v10.html">DASH7 Alliance Protocol v1.0</a></p>
+                    </div>
+                </div>
+            </div>
+            <div class="panel panel-default">
+                <div class="panel-heading">
+                    <h4 class="panel-title">
+                        <a data-toggle="collapse" data-parent="#accordion" href="#collapse-general">General <span class="badge pull-right">2</span></a>
                     </h4>
                 </div>
                 <div id="collapse-general" class="panel-collapse collapse">
                     <div class="panel-body">
+                        <p><span class="categories-timestamp"><time datetime="2015-05-04T12:00:00+02:00">Mon 04 May 2015</time></span> <a href="./dash7-alliance-protocol-v10.html">DASH7 Alliance Protocol v1.0</a></p>
                         <p><span class="categories-timestamp"><time datetime="2014-06-17T16:00:00+02:00">Tue 17 June 2014</time></span> <a href="./welcome-to-our-new-site.html">Welcome to our new site!</a></p>
                     </div>
                 </div>
@@ -123,13 +139,18 @@ OSS-7 News            </a>
                 <li class="list-group-item"><a href="./"><h4><i class="fa fa-tags fa-lg"></i><span class="icon-label">Tags</span></h4></a>
                     <ul class="list-group" id="tags">
                         <li class="list-group-item tag-1">
+                            <a href="./tag/general.html">
+                                General
+                            </a>
+                        </li>
+                        <li class="list-group-item tag-1">
                             <a href="./tag/tools.html">
                                 Tools
                             </a>
                         </li>
                         <li class="list-group-item tag-4">
-                            <a href="./tag/general.html">
-                                General
+                            <a href="./tag/d7ap.html">
+                                D7AP
                             </a>
                         </li>
                     </ul>
@@ -152,7 +173,7 @@ OSS-7 News            </a>
    <div class="container">
       <hr>
       <div class="row">
-         <div class="col-xs-10">&copy; 2014 CoSys-Lab
+         <div class="col-xs-10">&copy; 2015 CoSys-Lab
             &middot; Powered by <a href="https://github.com/DandyDev/pelican-bootstrap3" target="_blank">pelican-bootstrap3</a>,
             <a href="http://docs.getpelican.com/" target="_blank">Pelican</a>,
             <a href="http://getbootstrap.com" target="_blank">Bootstrap</a>         </div>

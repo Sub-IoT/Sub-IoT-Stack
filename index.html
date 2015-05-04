@@ -3,7 +3,7 @@
       xmlns:og="http://ogp.me/ns#"
       xmlns:fb="https://www.facebook.com/2008/fbml">
 <head>
-    <title>OSS-7 News</title>
+    <title>Welcome - OSS-7</title>
     <!-- Using the latest rendering mode for IE -->
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta charset="utf-8">
@@ -11,10 +11,9 @@
     
 
     <!-- Open Graph tags -->
-            <meta property="og:type" content="website"/>
-            <meta property="og:title" content="OSS-7 News"/>
-            <meta property="og:url" content="."/>
-            <meta property="og:description" content="OSS-7 News"/>
+            <meta property="og:type" content="article"/>
+            <meta property="og:title" content="Welcome"/>
+            <meta property="og:url" content="./pages/Welcome.html"/>
 
     <!-- Bootstrap -->
         <link rel="stylesheet" href="./theme/css/bootstrap.spacelab.min.css" type="text/css"/>
@@ -24,7 +23,7 @@
     <link rel="stylesheet" href="./theme/css/style.css" type="text/css"/>
 
         <link href="./feeds/all.atom.xml" type="application/atom+xml" rel="alternate"
-              title="OSS-7 News ATOM Feed"/>
+              title="OSS-7 ATOM Feed"/>
 
 </head>
 <body>
@@ -39,10 +38,13 @@
                 <span class="icon-bar"></span>
             </button>
             <a href="./" class="navbar-brand">
-OSS-7 News            </a>
+OSS-7            </a>
         </div>
         <div class="collapse navbar-collapse navbar-ex1-collapse">
             <ul class="nav navbar-nav">
+                        <li >
+                            <a href="./category/news.html">News</a>
+                        </li>
             </ul>
             <ul class="nav navbar-nav navbar-right">
                 <li><a href="./archives.html"><i class="fa fa-th-list"></i><span class="icon-label">Archives</span></a></li>
@@ -56,28 +58,21 @@ OSS-7 News            </a>
     <div class="row">
         <div class="col-sm-9">
 
-            <article>
-                <h2><a href="./live-capturing-of-dash7-traffic-in-wireshark.html">Live capturing of DASH7 traffic in wireshark</a></h2>
-                <div class="summary"><p>This post explains how to configure wireshark so it can be used capture live DASH7 traffic using a OSS-7 powered node.</p>
-                    <a class="btn btn-default btn-xs" href="./live-capturing-of-dash7-traffic-in-wireshark.html">more ...</a>
-                </div>
-            </article>
-            <hr/>
-            <article>
-                <h2><a href="./how-to-analyze-dash7-traffic-in-wireshark.html">How to analyze DASH7 traffic in wireshark</a></h2>
-                <div class="summary"><p>This post explains how to configure wireshark so it can be used to analyze DASH7 traffic captured using a OSS-7 powered node.</p>
-                    <a class="btn btn-default btn-xs" href="./how-to-analyze-dash7-traffic-in-wireshark.html">more ...</a>
-                </div>
-            </article>
-            <hr/>
-            <article>
-                <h2><a href="./welcome-to-our-new-site.html">Welcome to our new site!</a></h2>
-                <div class="summary"><p>On this site you will find all information to get started with OSS-7!</p>
-                    <a class="btn btn-default btn-xs" href="./welcome-to-our-new-site.html">more ...</a>
-                </div>
-            </article>
-            <hr/>
-
+    <section id="content" class="body">
+        <h1 class="entry-title">Welcome</h1>
+        
+        <div class="entry-content">
+            <h2 id="about-oss-7">About OSS-7</h2>
+<p><a href="https://github.com/CoSys-Lab/dash7-ap-open-source-stack">OSS-7</a> is an open source implementation of the DASH7 Alliance Protocol. The aim of the project is to provide a reference implementation of the protocol stack which allowing fast development and prototyping of DASH7 based products. This implementation focusses on completeness, correctness and being easy to use and understand. Performance and code size are less important aspects. For clarity a clear separation between the ISO layers is maintained in the code.</p>
+<p>All documentation including a getting started guide is available on our <a href="http://cosys-lab.github.io/dash7-ap-open-source-stack/doxygen">doxygen site</a>.</p>
+<h2 id="about-dash7">About DASH7</h2>
+<p>The DASH7 Alliance Protocol is an open standard which originates from ISO/IEC 18000-7 standard for active RFID in the 433 MHz band. Besides standard RFID infrastructure-to-endpoint communication, DASH7 allows endpoint-to-endpoint communication. Combined with the built-in querying support and ad-hoc synchronization this results in a very flexible protocol which is adaptable to many use cases, while still requiring low power. The protocol is available as free download, from the link at the <a href="{filename}/pages/resources.md">resources</a> page.</p>
+<p><a href="http://www.dash7.org"><img alt="DASH7 logo" src="./images/DASH7Alliance_ColorLogo_236x661.png" /></a></p>
+<h2 id="about-cosys-lab">About CoSys-Lab</h2>
+<p><a href="http://www.cosys.be">CoSys-Lab</a> is a research group of the University of Antwerp. CoSys-Lab became interested in DASH7 as part of the research off low power localisation systems and sensor networks. CoSys-Lab started the development of OSS-7 and is an active DASH7 Alliance member, participating in for example the Protocol Action Group and the University Action Group of the alliance.</p>
+<p><a href="http://www.cosys.be"><img src="images/COSYSLAB_ENG_RGB.png" width="200px" /></a></p>
+        </div>
+    </section>
         </div>
         <div class="col-sm-3 well well-sm" id="sidebar">
 
@@ -115,13 +110,18 @@ OSS-7 News            </a>
                 <li class="list-group-item"><a href="./"><h4><i class="fa fa-tags fa-lg"></i><span class="icon-label">Tags</span></h4></a>
                     <ul class="list-group" id="tags">
                         <li class="list-group-item tag-1">
+                            <a href="./tag/general.html">
+                                General
+                            </a>
+                        </li>
+                        <li class="list-group-item tag-1">
                             <a href="./tag/tools.html">
                                 Tools
                             </a>
                         </li>
                         <li class="list-group-item tag-4">
-                            <a href="./tag/general.html">
-                                General
+                            <a href="./tag/d7ap.html">
+                                D7AP
                             </a>
                         </li>
                     </ul>
@@ -144,7 +144,7 @@ OSS-7 News            </a>
    <div class="container">
       <hr>
       <div class="row">
-         <div class="col-xs-10">&copy; 2014 CoSys-Lab
+         <div class="col-xs-10">&copy; 2015 CoSys-Lab
             &middot; Powered by <a href="https://github.com/DandyDev/pelican-bootstrap3" target="_blank">pelican-bootstrap3</a>,
             <a href="http://docs.getpelican.com/" target="_blank">Pelican</a>,
             <a href="http://getbootstrap.com" target="_blank">Bootstrap</a>         </div>

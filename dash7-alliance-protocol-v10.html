@@ -3,7 +3,7 @@
       xmlns:og="http://ogp.me/ns#"
       xmlns:fb="https://www.facebook.com/2008/fbml">
 <head>
-    <title>General - OSS-7</title>
+    <title>DASH7 Alliance Protocol v1.0 - OSS-7</title>
     <!-- Using the latest rendering mode for IE -->
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta charset="utf-8">
@@ -11,19 +11,19 @@
     
 
     <!-- Open Graph tags -->
-            <meta property="og:type" content="website"/>
-            <meta property="og:title" content="OSS-7"/>
-            <meta property="og:url" content=".."/>
-            <meta property="og:description" content="OSS-7"/>
+            <meta property="og:type" content="article"/>
+            <meta property="og:title" content="DASH7 Alliance Protocol v1.0"/>
+            <meta property="og:url" content="./dash7-alliance-protocol-v10.html"/>
+            <meta property="og:description" content="Version 1.0 of the DASH7 Alliance Protocol has been voted by the alliance members during the Spring Meeting in Berlin last week. In this post we will shed some light on the current status and planning of v1.0 support in OSS-7."/>
 
     <!-- Bootstrap -->
-        <link rel="stylesheet" href="../theme/css/bootstrap.spacelab.min.css" type="text/css"/>
-    <link href="../theme/css/font-awesome.min.css" rel="stylesheet">
+        <link rel="stylesheet" href="./theme/css/bootstrap.spacelab.min.css" type="text/css"/>
+    <link href="./theme/css/font-awesome.min.css" rel="stylesheet">
 
-    <link href="../theme/css/pygments/default.css" rel="stylesheet">
-    <link rel="stylesheet" href="../theme/css/style.css" type="text/css"/>
+    <link href="./theme/css/pygments/default.css" rel="stylesheet">
+    <link rel="stylesheet" href="./theme/css/style.css" type="text/css"/>
 
-        <link href="../feeds/all.atom.xml" type="application/atom+xml" rel="alternate"
+        <link href="./feeds/all.atom.xml" type="application/atom+xml" rel="alternate"
               title="OSS-7 ATOM Feed"/>
 
 </head>
@@ -38,17 +38,17 @@
                 <span class="icon-bar"></span>
                 <span class="icon-bar"></span>
             </button>
-            <a href="../" class="navbar-brand">
+            <a href="./" class="navbar-brand">
 OSS-7            </a>
         </div>
         <div class="collapse navbar-collapse navbar-ex1-collapse">
             <ul class="nav navbar-nav">
-                        <li >
-                            <a href="../category/news.html">News</a>
+                        <li class="active">
+                            <a href="./category/news.html">News</a>
                         </li>
             </ul>
             <ul class="nav navbar-nav navbar-right">
-                <li><a href="../archives.html"><i class="fa fa-th-list"></i><span class="icon-label">Archives</span></a></li>
+                <li><a href="./archives.html"><i class="fa fa-th-list"></i><span class="icon-label">Archives</span></a></li>
             </ul>
         </div>
         <!-- /.navbar-collapse -->
@@ -59,20 +59,45 @@ OSS-7            </a>
     <div class="row">
         <div class="col-sm-9">
 
-            <article>
-                <h2><a href="../dash7-alliance-protocol-v10.html">DASH7 Alliance Protocol v1.0</a></h2>
-                <div class="summary"><p>Version 1.0 of the DASH7 Alliance Protocol has been voted by the alliance members during the Spring Meeting in Berlin last week. In this post we will shed some light on the current status and planning of v1.0 support in OSS-7.</p>
-                    <a class="btn btn-default btn-xs" href="../dash7-alliance-protocol-v10.html">more ...</a>
+    <section id="content">
+        <article>
+            <header class="page-header">
+                <h1>
+                    <a href="./dash7-alliance-protocol-v10.html"
+                       rel="bookmark"
+                       title="Permalink to DASH7 Alliance Protocol v1.0">
+                        DASH7 Alliance Protocol v1.0
+                    </a>
+                </h1>
+            </header>
+            <div class="entry-content">
+                <div class="panel">
+                    <div class="panel-body">
+<footer class="post-info">
+    <span class="label label-default">Date</span>
+    <span class="published">
+        <i class="fa fa-calendar"></i><time datetime="2015-05-04T12:00:00+02:00"> Mon 04 May 2015</time>
+    </span>
+
+
+
+<span class="label label-default">Tags</span>
+	<a href="./tag/d7ap.html">D7AP</a>
+        /
+	<a href="./tag/general.html">General</a>
+    
+</footer><!-- /.post-info -->                    </div>
                 </div>
-            </article>
-            <hr/>
-            <article>
-                <h2><a href="../welcome-to-our-new-site.html">Welcome to our new site!</a></h2>
-                <div class="summary"><p>On this site you will find all information to get started with OSS-7!</p>
-                    <a class="btn btn-default btn-xs" href="../welcome-to-our-new-site.html">more ...</a>
-                </div>
-            </article>
-            <hr/>
+                <p>Version 1.0 is a very important release for the DASH7 Alliance and concludes 18 months of hard work by the Protocol Action Group. Compared to the draft v0.2 of the spec a lot of things have been changed in the spec. The fact that we now have a voted spec is very important for OSS-7 as well. While we have been trying to incorporate changes during these past 18 months we were tracking a moving target (in the draft branch). With the final release of the spec we now have clear goal.</p>
+<p>During this period we also took the opportunity to redesign the architecture of the underlying OSS-7 framework. We now have a generic framework which has a low-power scheduler, better support for different hardware configurations (MCUs, radio chips, ...) and a flexible buildsystem.
+We keep all the documentation (including more high level documentation as opposed to pure API docs) in our <a href="http://cosys-lab.github.io/dash7-ap-open-source-stack/doxygen">doxygen site</a> now, so make sure to check this.</p>
+<p>On top of this architecture we are implementing the stack. We are currently focussing on a EFM32 Giant Gecko MCU and a TI CC1101 radio module. At this moment we have the main drivers for the MCU working and a PHY driver for the CC1101 as well. We have started building the rest of the stack on top of this new framework, starting with the DLL. To be sure we follow the v1.0 spec (instead of an in between draft) we will implement the upper layers manually, only copying code for the draft branch if we are sure this is still valid for v1.0. We realize this is currently a step back in number of layers implemented compared to the draft branch. However, this ensures we are complying to the specification and we are confident implementing the upper layers on top of this more clarified specification and framework will go smooth. Our plan is to implement some typical use cases vertically thoughout all the layers (up untill the application layer) first, instead of implementing all features layer per layer first. This has the advantage we can release examples using the full stack quicker, but has the disadvantage that not all features (like for example encryption) will be postponed for later. </p>
+<p>I merged all branches back to master today, and development will continue on master from now on.</p>
+<p>This blog has been quiet for a long time, but this should change now as well, so keep tuned.</p>
+            </div>
+            <!-- /.entry-content -->
+        </article>
+    </section>
 
         </div>
         <div class="col-sm-3 well well-sm" id="sidebar">
@@ -108,20 +133,20 @@ OSS-7            </a>
 
 
 
-                <li class="list-group-item"><a href="../"><h4><i class="fa fa-tags fa-lg"></i><span class="icon-label">Tags</span></h4></a>
+                <li class="list-group-item"><a href="./"><h4><i class="fa fa-tags fa-lg"></i><span class="icon-label">Tags</span></h4></a>
                     <ul class="list-group" id="tags">
                         <li class="list-group-item tag-1">
-                            <a href="../tag/general.html">
+                            <a href="./tag/general.html">
                                 General
                             </a>
                         </li>
                         <li class="list-group-item tag-1">
-                            <a href="../tag/tools.html">
+                            <a href="./tag/tools.html">
                                 Tools
                             </a>
                         </li>
                         <li class="list-group-item tag-4">
-                            <a href="../tag/d7ap.html">
+                            <a href="./tag/d7ap.html">
                                 D7AP
                             </a>
                         </li>
@@ -156,17 +181,17 @@ OSS-7            </a>
 <script src="//code.jquery.com/jquery.js"></script>
 
 <!-- Include all compiled plugins (below), or include individual files as needed -->
-<script src="../theme/js/bootstrap.min.js"></script>
+<script src="./theme/js/bootstrap.min.js"></script>
 
 <!-- Enable responsive features in IE8 with Respond.js (https://github.com/scottjehl/Respond) -->
-<script src="../theme/js/respond.min.js"></script>
+<script src="./theme/js/respond.min.js"></script>
 
     <script type="text/javascript">
         $(document).ready(function () {
             if (!window.jXHR) {
                 var jxhr = document.createElement('script');
                 jxhr.type = 'text/javascript';
-                jxhr.src = '../theme/js/jXHR.js';
+                jxhr.src = './theme/js/jXHR.js';
                 var s = document.getElementsByTagName('script')[0];
                 s.parentNode.insertBefore(jxhr, s);
             }
@@ -179,7 +204,7 @@ OSS-7            </a>
             });
         });
     </script>
-    <script src="../theme/js/github.js" type="text/javascript"></script>
+    <script src="./theme/js/github.js" type="text/javascript"></script>
     <script type="text/javascript">
 
         var _gaq = _gaq || [];
