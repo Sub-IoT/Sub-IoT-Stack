@@ -1,2 +1,0 @@
-ADD_SUBDIRECTORY(star_push_gateway_example)
-ADD_SUBDIRECTORY(star_push_endpoint_example)

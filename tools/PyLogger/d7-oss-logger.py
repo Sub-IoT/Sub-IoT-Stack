@@ -40,6 +40,7 @@ import Queue
 import time
 import logging
 import argparse
+import binascii
 
 DEBUG = 0
 
@@ -212,60 +213,64 @@ class LogDllRes(Logs):
             return string + "\n"
         return ""
 
-class LogPhyRes(Logs):
+class LogPhyPacketTx(Logs):
     def __init__(self):
-        Logs.__init__(self, "phyres")
+        Logs.__init__(self, "phypackettx")
 
     def read(self):
-        self.raw_data = bytearray() # TODO refactor
-        self.read_length()
-        raw_rssi = serial_port.read(size=1)
-        self.rssi = struct.unpack('b', raw_rssi)[0]
-        self.raw_data.append(raw_rssi)
-        raw_lqi = serial_port.read(size=1)
-        self.lqi = struct.unpack('B', raw_lqi)[0]
-        self.raw_data.append(raw_lqi)
-        raw_packet_length = serial_port.read(size=1)
-        self.packet_length = struct.unpack('B', raw_packet_length)[0]
-        self.raw_data.append(raw_packet_length)
-        self.data = serial_port.read(size=self.packet_length)
-        self.raw_data.extend(self.data)
-        self.subnet = "0x" + str(self.data[2].encode("hex").upper())
-        self.tx_eirp = int(struct.unpack('B', self.data[1])[0]) * 0.5 - 40
-        self.frame_ctl = "0x" + str(self.data[3].encode("hex").upper())
-        self.source_id = str(self.data[6:14].encode("hex").upper())
-        self.data_length = self.packet_length - 16
-        self.data = self.dataEncoding(self.data[14:14+self.data_length])
-        self.crc = self.dataEncoding(self.data[14+self.data_length:16+self.data_length])
-
-        #self.data = [data[i:i+2].decode("utf-8", errors='replace') for i in range(0, len(data), 2)]
-        #self.data = [data[i].encode("hex").upper() for i in range(0, len(data))]
-        #self.data = [str(struct.unpack('b', data[i])[0]) for i in range(0, len(data))]
-        #print("packet_length %s" % self.packet_length)
-        #print("dump_data: %s" % self.data)
-        #print("rssi: %s" % self.rssi)
-        #print("lqi: %s" % self.lqi)
-        #print("data_length: %s" % self.data_length)
+        self.packet = bytearray()
+        self.timestamp = struct.unpack('I', serial_port.read(size=4))[0]
+        self.channel_header = struct.unpack('B', serial_port.read(size=1))[0]
+        self.center_freq_index = struct.unpack('B', serial_port.read(size=1))[0]
+        self.syncword_class = struct.unpack('B', serial_port.read(size=1))[0]
+        self.eirp = struct.unpack('b', serial_port.read(size=1))[0]
+        raw_packet_len = serial_port.read(size=1)
+        self.packet_len = struct.unpack('B', raw_packet_len)[0]
+        self.packet.append(raw_packet_len) # length is first byte of packet
+        self.packet.extend(serial_port.read(size=self.packet_len - 1))
         return self
 
-    def dataEncoding(self, byte_str):
-        if settings["display"] == 'hex':
-            return " ".join(["0x" + byte_str[i].encode("hex").upper() for i in range(0, len(byte_str))])
-        elif settings["display"] == 'bin':
-            return " ".join([bin(int(byte_str[i].encode("hex").upper(), 16))[2:].zfill(8) for i in range(0, len(byte_str))])
-        elif settings["display"] == 'dec':
-            return " ".join([str(struct.unpack('b', byte_str[i])[0]) for i in range(0, len(byte_str))])
-        else:
-            return " ".join([byte_str[i].decode("utf-8", errors='replace') for i in range(0, len(byte_str))])
-
-    def write(self):
+    def __str__(self):
         if settings["phyres"]:
-            string = "PHY RES: "
-            string += " rssi: " + str(self.rssi) + " lqi: " + str(self.lqi) + " subnet: " + str(self.subnet)
-            string += " tx_eirp: " + str(self.tx_eirp) + " frame_ctl: " + str(self.frame_ctl) + " source: " + self.source_id
-            string += " data: " + str(self.data) + "\n"
-            return string
+            #TODO format as table, this is quite ugly, there is a easier way, should look into it
+            string = formatHeader("PHY Packet TX", "GREEN", self.datetime) + "Send packet" + "\n"
+            string += " " * 22 + "timestamp: " + str(self.timestamp) + "\n"
+            string += " " * 22 + "channel header: " + hex(self.channel_header) + " center freq index: " + hex(self.center_freq_index) + "\n"
+            string += " " * 22 + "syncword class: " + hex(self.syncword_class) + "\n"
+            string += " " * 22 + "eirp: " + str(self.eirp) + " dBm   " + "packet length: " + str(self.packet_len) + "\n"
+            string += " " * 22 + "packet: " + binascii.hexlify(bytearray(self.packet))
+            string += Style.RESET_ALL
+            return string + "\n"
         return ""
+
+
+class LogPhyPacketRx(Logs):
+    def __init__(self):
+        Logs.__init__(self, "phypacketrx")
+
+    def read(self):
+        self.packet = bytearray()
+        self.timestamp = struct.unpack('I', serial_port.read(size=4))[0]
+        self.channel_header = struct.unpack('B', serial_port.read(size=1))[0]
+        self.center_freq_index = struct.unpack('B', serial_port.read(size=1))[0]
+        self.syncword_class = struct.unpack('B', serial_port.read(size=1))[0]
+        self.lqi = struct.unpack('B', serial_port.read(size=1))[0]
+        self.rssi = struct.unpack('h', serial_port.read(size=2))[0]
+        raw_packet_len = serial_port.read(size=1)
+        self.packet_len = struct.unpack('B', raw_packet_len)[0]
+        self.packet.append(raw_packet_len) # length is first byte of packet
+        self.packet.extend(serial_port.read(size=self.packet_len - 1))
+        return self
+
+    # def write(self):
+    #     if settings["phyres"]:
+    #         string = "PHY RES: "
+    #         string += " rssi: " + str(self.rssi) + " lqi: " + str(self.lqi) + " subnet: " + str(self.subnet)
+    #         string += " Spectrum: " + str(self.spectrumID) + " SWC: " + str(self.sync_word_class)
+    #         string += " tx_eirp: " + str(self.tx_eirp) + " frame_ctl: " + str(self.frame_ctl) + " source: " + self.source_id
+    #         string += " data: " + str(self.data) + "\n"
+    #         return string
+    #     return ""
 
     def get_raw_data(self):
         return self.raw_data
@@ -273,10 +278,12 @@ class LogPhyRes(Logs):
     def __str__(self):
         if settings["phyres"]:
             #TODO format as table, this is quite ugly, there is a easier way, should look into it
-            string = formatHeader("PHY RES", "GREEN", self.datetime) + "Received packet from: " + self.source_id + "\n"
-            string += " " * 22 + "rssi: " + str(self.rssi) + " dBm"+ " " * 7 + "lqi: " + str(self.lqi) + " "*14 + "subnet: " + str(self.subnet) + "\n"
-            string += " " * 22 + "tx_eirp: " + str(self.tx_eirp) + " dBm   " + "frame_ctl: " + str(self.frame_ctl) +  " "*7+ "CRC: " + str(self.crc) + "\n"
-            string += " " * 22 + "data: " + str(self.data)
+            string = formatHeader("PHY Packet RX", "GREEN", self.datetime) + "Received packet" + "\n"
+            string += " " * 22 + "timestamp: " + str(self.timestamp) + "\n"
+            string += " " * 22 + "channel header: " + hex(self.channel_header) + " center freq index: " + hex(self.center_freq_index) + "\n"
+            string += " " * 22 + "syncword class: " + hex(self.syncword_class) + "\n"
+            string += " " * 22 + "rssi: " + str(self.rssi) + " dBm   " + "packet length: " + str(self.packet_len) + "\n"
+            string += " " * 22 + "packet: " + binascii.hexlify(bytearray(self.packet))
             string += Style.RESET_ALL
             return string + "\n"
         return ""
@@ -302,7 +309,7 @@ class parse_d7(threading.Thread):
                 serialData = read_value_from_serial()
                 if serialData is not None:
                     self.disQueue.put(serialData)
-                    if isinstance(serialData, LogPhyRes):
+                    if isinstance(serialData, LogPhyPacketTx):
                         if self.pcap_file != None:
                             self.pcap_file.write(PCAPFormatter.build_record_data(serialData.get_raw_data()))
                             self.pcap_file.flush()
@@ -319,6 +326,7 @@ class display_d7(threading.Thread):
 
     def run(self):
         while self.keep_running:
+            time.sleep(0.1)
             try:
                 while not self.queue.empty():
                     data = self.queue.get()
@@ -345,10 +353,6 @@ class write_d7(threading.Thread):
             except Exception as inst:
                 printError(inst)
 
-## Helper functions ##
-def dummy():
-    pass
-
 def read_value_from_serial():
     result = {}
 
@@ -361,26 +365,20 @@ def read_value_from_serial():
     # Now we can read the type of the string
     logtype = serial_port.read(size=1).encode("hex").upper()
 
-    log_string = LogString()
-    log_data = LogData()
-    log_stack = LogStack()
-    log_trace = LogTrace()
-    log_dll_res = LogDllRes()
-    log_phy_res = LogPhyRes()
-
-
     result = {
-             "01" : log_string.read,
-             "02" : log_data.read,
-             "03" : log_stack.read,
-             "FD" : log_dll_res.read,
-             "FE" : log_phy_res.read,
-             "FF" : log_trace.read, }.get(logtype, dummy)
+             "01" : LogString(),
+             "02" : LogData(),
+             "03" : LogStack(),
+             "04" : LogPhyPacketTx(),
+             "05" : LogPhyPacketRx(),
+             #"FD" : log_dll_res.read,
+             #"FE" : log_phy_res.read,
+             "FF" : LogTrace(), }.get(logtype)
 
     # See if we have found our type in the LOG_TYPES
     #print("We got logtype: %s" % logtype)
     #result = processedread[logtype]()
-    return result()
+    return result.read()
 
 def empty_serial_buffer():
     while serial_port.inWaiting() > 0:
@@ -415,7 +413,7 @@ def main():
 
     # Setup the console parser
     parser = argparse.ArgumentParser(description = "DASH7 logger for the OSS-7 stack. You can exit the logger using Ctrl-c, it takes some time.")
-    parser.add_argument('serial', default="COM12", metavar="serial port", help="serial port (eg COM7 or /dev/ttyUSB0)", nargs='?')
+    parser.add_argument('serial', default="COM13", metavar="serial port", help="serial port (eg COM7 or /dev/ttyUSB0)", nargs='?')
     parser.add_argument('-b', '--baud' , default=115200, metavar="baudrate", type=int, help="set the baud rate (default: 9600)")
     parser.add_argument('-v', '--version', action='version', version='DASH7 Logger 0.5', help="show the current version")
     parser.add_argument('-f', '--file', metavar="file", help="write to a pcap file", nargs='?', default=None, const=dateTime)
@@ -479,7 +477,7 @@ def main():
     while keep_running:
         try:
             # Sleep a very short time, we are just waiting for a keyboard intterupt really
-            time.sleep(0.0001)
+            time.sleep(0.1)
         except KeyboardInterrupt:
             print("\nCtrl-c received! Sending Kill to the threads...")
             for t in threads:
