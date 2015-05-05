@@ -119,7 +119,7 @@ __LINK_C void log_print_raw_phy_packet(hw_radio_packet_t* packet, bool is_tx)
     if(is_tx) {
         putc(LOG_TYPE_PHY_PACKET_TX, stdout);
         fwrite(&(packet->tx_meta.timestamp), sizeof(timer_tick_t), 1, stdout);
-        putc(packet->tx_meta.tx_cfg.channel_id.channel_header, stdout);
+        putc(packet->tx_meta.tx_cfg.channel_id.channel_header_raw, stdout);
         putc(packet->tx_meta.tx_cfg.channel_id.center_freq_index, stdout);
         putc(packet->tx_meta.tx_cfg.syncword_class, stdout);
         putc(packet->tx_meta.tx_cfg.eirp, stdout);
@@ -127,7 +127,7 @@ __LINK_C void log_print_raw_phy_packet(hw_radio_packet_t* packet, bool is_tx)
     } else {
         putc(LOG_TYPE_PHY_PACKET_RX, stdout);
         fwrite(&(packet->rx_meta.timestamp), sizeof(timer_tick_t), 1, stdout);
-        putc(packet->rx_meta.rx_cfg.channel_id.channel_header, stdout);
+        putc(packet->rx_meta.rx_cfg.channel_id.channel_header_raw, stdout);
         putc(packet->rx_meta.rx_cfg.channel_id.center_freq_index, stdout);
         putc(packet->rx_meta.rx_cfg.syncword_class, stdout);
         putc(packet->rx_meta.lqi, stdout);

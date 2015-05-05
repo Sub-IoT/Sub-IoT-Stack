@@ -73,9 +73,9 @@ static rssi_valid_callback_t rssi_valid_callback;
 static hw_radio_state_t current_state;
 static hw_radio_packet_t* current_packet;
 static channel_id_t current_channel_id = {
-    .ch_coding = PHY_CODING_PN9,
-    .ch_class = PHY_CLASS_NORMAL_RATE,
-    .ch_freq_band = PHY_BAND_433,
+    .channel_header.ch_coding = PHY_CODING_PN9,
+    .channel_header.ch_class = PHY_CLASS_NORMAL_RATE,
+    .channel_header.ch_freq_band = PHY_BAND_433,
     .center_freq_index = 0
 };
 
@@ -211,9 +211,9 @@ static void configure_channel(const channel_id_t* channel_id)
     // only change settings if channel_id changed compared to current config
     if(!hw_radio_channel_ids_equal(channel_id, &current_channel_id))
     {
-        assert(channel_id->ch_freq_band == PHY_BAND_433); // TODO implement other bands
-        assert(channel_id->ch_class == PHY_CLASS_NORMAL_RATE); // TODO implement other rates
-        assert(channel_id->ch_coding == PHY_CODING_PN9); // TODO implement other codings
+        assert(channel_id->channel_header.ch_freq_band == PHY_BAND_433); // TODO implement other bands
+        assert(channel_id->channel_header.ch_class == PHY_CLASS_NORMAL_RATE); // TODO implement other rates
+        assert(channel_id->channel_header.ch_coding == PHY_CODING_PN9); // TODO implement other codings
         // TODO assert valid center freq index
 
         memcpy(&current_channel_id, channel_id, sizeof(channel_id_t)); // cache new settings
@@ -221,7 +221,7 @@ static void configure_channel(const channel_id_t* channel_id)
         // TODO preamble size depends on channel class
 
         // set freq band
-        DPRINT("Set frequency band index: %d", channel_id->ch_freq_band);
+        DPRINT("Set frequency band index: %d", channel_id->channel_header.ch_freq_band);
         // TODO validate
         /*
         switch(frequency_band)
@@ -249,7 +249,7 @@ static void configure_channel(const channel_id_t* channel_id)
         cc1101_interface_write_single_reg(CHANNR, channel_id->center_freq_index); // TODO validate
 
         // set modulation, symbol rate and deviation
-        switch(channel_id->ch_class)
+        switch(channel_id->channel_header.ch_class)
         {
             case PHY_CLASS_NORMAL_RATE:
                 // TODO validate
