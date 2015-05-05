@@ -73,7 +73,7 @@ typedef enum
     PHY_CODING_FEC_PN9 = 0x02
 } phy_coding_t;
 
-/* \brief The syncword classes as defined in D7A
+/* \brief The syncword classes as defined in D7AP
  *
  */
 typedef enum
@@ -82,7 +82,16 @@ typedef enum
     PHY_SYNCWORD_CLASS1 = 0x01
 } phy_syncword_class_t;
 
-/** \brief spectrum id used to identify the spectrum settings
+/* \brief The channel header as defined in D7AP
+ */
+typedef struct
+{
+    phy_coding_t ch_coding: 2; 	/**< The 'coding' field in the channel header */
+    phy_channel_class_t ch_class: 2;  	/**< The 'class' field in the channel header */
+    phy_channel_band_t ch_freq_band: 4;	/**< The frequency 'band' field in the channel header */
+} phy_channel_header_t;
+
+/** \brief channel id used to identify the spectrum settings
  *
  * This struct adheres to the 'Channel ID' format the Dash7 PHY layer. (@17/03/2015)
  */
@@ -90,13 +99,8 @@ typedef struct
 {
     union
     {	
-        uint8_t channel_header; 	/**< The raw (8-bit) channel header */
-        struct
-        {
-            phy_coding_t ch_coding: 2; 	/**< The 'coding' field in the channel header */
-            phy_channel_class_t ch_class: 2;  	/**< The 'class' field in the channel header */
-            phy_channel_band_t ch_freq_band: 4;	/**< The frequency 'band' field in the channel header */
-        };
+        uint8_t channel_header_raw; 	/**< The raw (8-bit) channel header */
+        phy_channel_header_t channel_header; /**< The channel header */
     };
     uint8_t center_freq_index;		/**< The center frequency index of the channel id */
     // TODO changed to uint16_t in spec

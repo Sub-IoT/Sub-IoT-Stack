@@ -24,6 +24,8 @@
 #include "packet_queue.h"
 #include "packet.h"
 #include "crc.h"
+#include "assert.h"
+#include "ng.h"
 
 
 #ifdef FRAMEWORK_LOG_ENABLED
@@ -31,6 +33,9 @@
 #else
 #define DPRINT(...)
 #endif
+
+static dae_access_profile_t NGDEF(_current_access_class);
+#define current_access_class NG(_current_access_class)
 
 static hw_radio_packet_t* alloc_new_packet(uint8_t length)
 {
@@ -56,20 +61,44 @@ static void process_received_messages()
         uint16_t crc = crc_calculate(packet->hw_radio_packet.data, packet->hw_radio_packet.length - 2);
         if(memcmp(&crc, packet->hw_radio_packet.data + packet->hw_radio_packet.length + 1 - 2, 2) != 0)
         {
-            DPRINT("CRC invalid!");
-            // TODO free packet and stop processing
+            DPRINT("CRC invalid, skipping packet");
+            goto cleanup;
         }
-        // TODO filter subnet
-        // TODO filter CRC
+
+        header.subnet = packet->hw_radio_packet.data[1];
+        if(header.subnet != current_access_class.subnet)
+        {
+            DPRINT("Subnet does not match current access profile, skipping packet");
+            goto cleanup;
+        }
+
+        header.control = packet->hw_radio_packet.data[2];
+        if(header.control_target_address_set)
+        {
+            uint8_t address_len = 2;
+            if(!header.control_vid_used)
+                address_len = 8;
+
+            // TODO get deviceid / vid from FS and uncomment check, assert for now
+            assert(false);
+//            if(memcmp(packet->hw_radio_packet.data + 3, id, address_len) != 0)
+//            {
+//                DPRINT("Device ID filtering failed, skipping packet");
+//                goto cleanup;
+//            }
+        }
         // TODO filter LQ
-        // TODO filter address
         // TODO pass to upper layer
         // TODO Tscan -= Trx
     }
 
-    // TODO check if more received packets are pending
+    packet_queue_free_packet(packet); // TODO this should be moved to upper layers when done processing
+    return;
 
-    packet_queue_free_packet(packet);
+    // TODO check if more received packets are pending
+    cleanup:
+        packet_queue_free_packet(packet);
+        return;
 }
 
 void packet_received(hw_radio_packet_t* packet)
@@ -121,9 +150,9 @@ void dll_tx_frame()
 
     hw_tx_cfg_t tx_cfg = {
         .channel_id = {
-            .ch_coding = PHY_CODING_PN9,
-            .ch_class = PHY_CLASS_NORMAL_RATE,
-            .ch_freq_band = PHY_BAND_433,
+            .channel_header.ch_coding = PHY_CODING_PN9,
+            .channel_header.ch_class = PHY_CLASS_NORMAL_RATE,
+            .channel_header.ch_freq_band = PHY_BAND_433,
             .center_freq_index = 5
         },
         .syncword_class = PHY_SYNCWORD_CLASS1,
@@ -138,13 +167,34 @@ void dll_start_foreground_scan()
 {
     // TODO handle Tscan timeout
 
-    // TODO get rx_cfg from access profile / scan automation, hardcoded for now
-    hw_rx_cfg_t rx_cfg = {
-        .channel_id = {
+    // TODO get access profile from FS hardcoded for now
+
+    subband_t subband = {
+        .channel_header = {
             .ch_coding = PHY_CODING_PN9,
             .ch_class = PHY_CLASS_NORMAL_RATE,
-            .ch_freq_band = PHY_BAND_433,
-            .center_freq_index = 5
+            .ch_freq_band = PHY_BAND_433
+        },
+        .channel_index_start = 0,
+        .channel_index_end = 0,
+        .eirp = 0,
+        .ccao = 0
+    };
+
+    current_access_class.control_scan_type_is_foreground = true;
+    current_access_class.control_csma_ca_mode = CSMA_CA_MODE_UNC;
+    current_access_class.control_number_of_subbands = 1;
+    current_access_class.subnet = 0x05;
+    current_access_class.scan_automation_period = 0;
+    current_access_class.transmission_timeout_period = 0;
+    current_access_class.subbands[0] = subband;
+
+    // TODO only access class using 1 subband which contains 1 channel index is supported for now
+
+    hw_rx_cfg_t rx_cfg = {
+        .channel_id = {
+            .channel_header = current_access_class.subbands[0].channel_header,
+            .center_freq_index = current_access_class.subbands[0].channel_index_start
         },
         .syncword_class = PHY_SYNCWORD_CLASS1
     };

@@ -40,11 +40,14 @@ uint8_t NGDEF(rx_buffer)[HW_PACKET_BUF_SIZE(255)];
 bool NGDEF(rx_buf_used);
 packet_struct_t NGDEF(tx_buffer);
 
-static hw_rx_cfg_t rx_cfg = {.channel_id = {.ch_class = PHY_CLASS_NORMAL_RATE,
-											.ch_freq_band = PHY_BAND_868_1,
-											.center_freq_index = 0
-											},
-							 .syncword_class = PHY_SYNCWORD_CLASS0};
+static hw_rx_cfg_t rx_cfg = {
+    .channel_id = {
+        .channel_header.ch_class = PHY_CLASS_NORMAL_RATE,
+        .channel_header.ch_freq_band = PHY_BAND_868_1,
+        .center_freq_index = 0
+    },
+    .syncword_class = PHY_SYNCWORD_CLASS0
+};
 
 static hw_radio_packet_t* p_alloc(uint8_t length)
 {
