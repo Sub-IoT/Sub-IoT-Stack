@@ -31,11 +31,17 @@
 #include "log.h"
 #include "hwradio.h"
 
+#ifdef FRAMEWORK_LOG_ENABLED
+#define DPRINT(...) log_print_string(__VA_ARGS__)
+#else
+#define DPRINT(...)
+#endif
+
 uint8_t cc1101_interface_strobe(uint8_t); // prototype (to prevent warning) of internal driver function which is used here.
 
 void bootstrap()
 {
-    log_print_string("Device booted at time: %d\n", timer_get_counter_value()); // TODO not printed for some reason, debug later
+    DPRINT("Device booted at time: %d\n", timer_get_counter_value()); // TODO not printed for some reason, debug later
 
     hw_radio_init(NULL, NULL);
 
