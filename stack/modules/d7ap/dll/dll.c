@@ -121,6 +121,27 @@ void dll_init()
     sched_register_task(&process_received_messages);
 
     hw_radio_init(&alloc_new_packet, &release_packet);
+
+    // TODO get access profile from FS hardcoded for now
+    current_access_class = (dae_access_profile_t){
+        .control_scan_type_is_foreground = true,
+        .control_csma_ca_mode = CSMA_CA_MODE_UNC,
+        .control_number_of_subbands = 1,
+        .subnet = 0x05,
+        .scan_automation_period = 0,
+        .transmission_timeout_period = 0,
+        .subbands[0] = (subband_t){
+            .channel_header = {
+                .ch_coding = PHY_CODING_PN9,
+                .ch_class = PHY_CLASS_NORMAL_RATE,
+                .ch_freq_band = PHY_BAND_433
+            },
+            .channel_index_start = 0,
+            .channel_index_end = 0,
+            .eirp = 0,
+            .ccao = 0
+        }
+    };
 }
 
 void dll_tx_frame()
@@ -149,12 +170,8 @@ void dll_tx_frame()
     log_print_data(packet->hw_radio_packet.data, packet->hw_radio_packet.length + 1); // TODO tmp
 
     hw_tx_cfg_t tx_cfg = {
-        .channel_id = {
-            .channel_header.ch_coding = PHY_CODING_PN9,
-            .channel_header.ch_class = PHY_CLASS_NORMAL_RATE,
-            .channel_header.ch_freq_band = PHY_BAND_433,
-            .center_freq_index = 5
-        },
+        .channel_id.channel_header = current_access_class.subbands[0].channel_header,
+        .channel_id.center_freq_index = current_access_class.subbands[0].channel_index_start,
         .syncword_class = PHY_SYNCWORD_CLASS1,
         .eirp = 10
     };
@@ -166,28 +183,6 @@ void dll_tx_frame()
 void dll_start_foreground_scan()
 {
     // TODO handle Tscan timeout
-
-    // TODO get access profile from FS hardcoded for now
-
-    subband_t subband = {
-        .channel_header = {
-            .ch_coding = PHY_CODING_PN9,
-            .ch_class = PHY_CLASS_NORMAL_RATE,
-            .ch_freq_band = PHY_BAND_433
-        },
-        .channel_index_start = 0,
-        .channel_index_end = 0,
-        .eirp = 0,
-        .ccao = 0
-    };
-
-    current_access_class.control_scan_type_is_foreground = true;
-    current_access_class.control_csma_ca_mode = CSMA_CA_MODE_UNC;
-    current_access_class.control_number_of_subbands = 1;
-    current_access_class.subnet = 0x05;
-    current_access_class.scan_automation_period = 0;
-    current_access_class.transmission_timeout_period = 0;
-    current_access_class.subbands[0] = subband;
 
     // TODO only access class using 1 subband which contains 1 channel index is supported for now
 

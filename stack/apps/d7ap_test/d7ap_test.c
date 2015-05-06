@@ -38,6 +38,8 @@
 #define DPRINT(...)
 #endif
 
+#define RX_MODE // TODO tmp
+
 void transmit_packet()
 {
     DPRINT("transmitting packet");
@@ -57,8 +59,11 @@ void bootstrap()
 
     d7ap_stack_init();
 
+#ifdef RX_MODE
     sched_register_task(&start_foreground_scan);
     sched_post_task(&start_foreground_scan);
+#else
     sched_register_task(&transmit_packet);
     timer_post_task_delay(&transmit_packet, TIMER_TICKS_PER_SEC + (get_rnd() %TIMER_TICKS_PER_SEC));
+#endif
 }
