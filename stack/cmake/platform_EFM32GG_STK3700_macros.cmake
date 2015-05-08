@@ -36,7 +36,7 @@ MACRO(GENERATE_SIMPLICITY_STUDIO_FILES target)
     ADD_CUSTOM_COMMAND(OUTPUT ${target}.bin
     		   COMMAND ${CMAKE_OBJCOPY} -O binary ${target} ${target}.bin DEPENDS ${target})
     ADD_CUSTOM_COMMAND(OUTPUT ${target}.map
-		   COMMAND ${CMAKE_SOURCE_DIR}/tools/gcc-arm-embedded/fix_linker_map_paths.sh ${target}.mmp ${target}.map 
+		   COMMAND sh ${CMAKE_SOURCE_DIR}/tools/gcc-arm-embedded/fix_linker_map_paths.sh ${target}.mmp ${target}.map 
 		   COMMAND ${CMAKE_COMMAND} -E remove -f ${target}.mmp
 		   DEPENDS ${target})
     ADD_CUSTOM_COMMAND(OUTPUT ${target}.axf 
