@@ -38,19 +38,19 @@
 #define DPRINT(...)
 #endif
 
-#define RX_MODE // TODO tmp
-
-void transmit_packet()
-{
-    DPRINT("transmitting packet");
-    dll_tx_frame();
-    timer_post_task_delay(&transmit_packet, TIMER_TICKS_PER_SEC + (get_rnd() %TIMER_TICKS_PER_SEC));
-}
 
 void start_foreground_scan()
 {
     // TODO we start FG scan manually now, later it should be started by access profile automatically
     dll_start_foreground_scan();
+}
+
+void transmit_packet()
+{
+    DPRINT("transmitting packet");
+    led_toggle(0);
+    dll_tx_frame();
+    timer_post_task_delay(&transmit_packet, TIMER_TICKS_PER_SEC + (get_rnd() %TIMER_TICKS_PER_SEC));
 }
 
 void bootstrap()
@@ -59,11 +59,8 @@ void bootstrap()
 
     d7ap_stack_init();
 
-#ifdef RX_MODE
     sched_register_task(&start_foreground_scan);
     sched_post_task(&start_foreground_scan);
-#else
     sched_register_task(&transmit_packet);
     timer_post_task_delay(&transmit_packet, TIMER_TICKS_PER_SEC + (get_rnd() %TIMER_TICKS_PER_SEC));
-#endif
 }

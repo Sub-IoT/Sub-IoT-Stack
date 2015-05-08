@@ -370,6 +370,13 @@ error_t hw_radio_send_packet(hw_radio_packet_t* packet, tx_packet_callback_t tx_
 
     tx_packet_callback = tx_cb;
 
+    if(current_state == HW_RADIO_STATE_RX)
+    {
+        pending_rx_cfg.channel_id = current_channel_id;
+        pending_rx_cfg.syncword_class = current_syncword_class;
+        should_rx_after_tx_completed = true;
+    }
+
     current_state = HW_RADIO_STATE_TX;
     current_packet = packet;
     cc1101_interface_strobe(RF_SIDLE);
