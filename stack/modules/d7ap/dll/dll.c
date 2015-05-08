@@ -25,6 +25,7 @@
 #include "packet.h"
 #include "crc.h"
 #include "assert.h"
+#include "fs.h"
 #include "ng.h"
 
 
@@ -122,26 +123,7 @@ void dll_init()
 
     hw_radio_init(&alloc_new_packet, &release_packet);
 
-    // TODO get access profile from FS hardcoded for now
-    current_access_class = (dae_access_profile_t){
-        .control_scan_type_is_foreground = true,
-        .control_csma_ca_mode = CSMA_CA_MODE_UNC,
-        .control_number_of_subbands = 1,
-        .subnet = 0x05,
-        .scan_automation_period = 0,
-        .transmission_timeout_period = 0,
-        .subbands[0] = (subband_t){
-            .channel_header = {
-                .ch_coding = PHY_CODING_PN9,
-                .ch_class = PHY_CLASS_NORMAL_RATE,
-                .ch_freq_band = PHY_BAND_433
-            },
-            .channel_index_start = 0,
-            .channel_index_end = 0,
-            .eirp = 0,
-            .ccao = 0
-        }
-    };
+    fs_read_access_class(0, &current_access_class); // use first access class for now
 }
 
 void dll_tx_frame()
