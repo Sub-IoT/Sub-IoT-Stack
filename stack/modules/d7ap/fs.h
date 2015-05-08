@@ -27,11 +27,45 @@
 
 #include "hwradio.h" // TODO for phy_channel_header_t in subband_t, refactor
 
+typedef enum
+{
+    ALP_ACT_COND_LIST = 0,
+    ALP_ACT_COND_READ = 1,
+    ALP_ACT_COND_WRITE = 2,
+    ALP_ACT_COND_WRITEFLUSH = 3
+} alp_act_condition_t; // TODO move?
+
+typedef enum
+{
+    FS_STORAGE_TRANSIENT = 0,
+    FS_STORAGE_VOLATILE = 1,
+    FS_STORAGE_RESTORABLE = 2,
+    FS_STORAGE_PERMANENT = 3
+} fs_storage_class_t;
+
 typedef struct
 {
-    uint8_t file_properties[3];
+    uint8_t action_file_id;
+    union
+    {
+        uint8_t _flags;
+        struct
+        {
+            bool action_protocol_enabled : 1;
+            alp_act_condition_t action_condition : 3;
+            uint8_t _rfu : 2;
+            fs_storage_class_t storage_class : 2; // TODO
+        };
+        // TODO save to use bitfields here?
+    };
+    uint8_t permissions;
+} fs_file_properties_t;
+
+typedef struct
+{
+    fs_file_properties_t file_properties;
     uint32_t length;
-    uint32_t allocated_length;
+    // TODO not used for now uint32_t allocated_length;
 } fs_file_header_t;
 
 typedef enum
