@@ -30,6 +30,7 @@
 
 
 #include "d7ap_stack.h"
+#include "fs.h"
 #include "dll.h"
 
 #ifdef FRAMEWORK_LOG_ENABLED
@@ -53,6 +54,13 @@ void transmit_packet()
     timer_post_task_delay(&transmit_packet, TIMER_TICKS_PER_SEC + (get_rnd() %TIMER_TICKS_PER_SEC));
 }
 
+void execute_sensor_measurement()
+{
+    uint32_t val = timer_get_counter_value();
+    fs_write_file(0x40, 0, (uint8_t*)&val, 4);
+    timer_post_task_delay(&execute_sensor_measurement, TIMER_TICKS_PER_SEC * 5);
+}
+
 void bootstrap()
 {
     DPRINT("Device booted at time: %d\n", timer_get_counter_value());
@@ -61,6 +69,10 @@ void bootstrap()
 
     sched_register_task(&start_foreground_scan);
     sched_post_task(&start_foreground_scan);
+
     sched_register_task(&transmit_packet);
     timer_post_task_delay(&transmit_packet, TIMER_TICKS_PER_SEC + (get_rnd() %TIMER_TICKS_PER_SEC));
+
+    sched_register_task((&execute_sensor_measurement));
+    timer_post_task_delay(&execute_sensor_measurement, TIMER_TICKS_PER_SEC * 5);
 }

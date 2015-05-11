@@ -55,6 +55,7 @@ typedef enum
     LOG_STACK_MAC = 0x03,
     LOG_STACK_NWL = 0x04,
     LOG_STACK_TRANS = 0x05,
+    LOG_STACK_SESSION = 0x06,
     LOG_STACK_FWK = 0x10
 } log_stack_layer_t; // TODO stack specific, move to stack component?
 

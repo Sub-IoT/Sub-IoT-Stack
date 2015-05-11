@@ -29,6 +29,9 @@ ADD_SUBDIRECTORY(dll)
 #By convention, each module should generate a single 'static' library that can be included by the application
 ADD_LIBRARY(d7ap STATIC
     d7ap_stack.c
+    alp.c
+    d7asp.c
+    trans.c
     fs.c
     packet_queue.c
     packet.c

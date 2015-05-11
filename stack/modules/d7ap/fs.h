@@ -26,14 +26,7 @@
 #include "stdint.h"
 
 #include "hwradio.h" // TODO for phy_channel_header_t in subband_t, refactor
-
-typedef enum
-{
-    ALP_ACT_COND_LIST = 0,
-    ALP_ACT_COND_READ = 1,
-    ALP_ACT_COND_WRITE = 2,
-    ALP_ACT_COND_WRITEFLUSH = 3
-} alp_act_condition_t; // TODO move?
+#include "alp.h"
 
 typedef enum
 {
@@ -106,6 +99,8 @@ typedef struct
 
 
 void fs_init();
+void fs_write_file(uint8_t file_id, uint8_t offset, uint8_t* buffer, uint8_t length);
+void fs_write_file_offset(uint8_t file_id, uint8_t offset, uint8_t* buffer, uint8_t length);
 void fs_write_access_class(uint8_t access_class_index, dae_access_profile_t* access_class);
 void fs_read_access_class(uint8_t access_class_index, dae_access_profile_t* access_class);
 
