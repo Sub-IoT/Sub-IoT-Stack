@@ -45,8 +45,6 @@
 #include "types.h"
 #include "hwradio.h"
 
-#ifdef FRAMEWORK_LOG_ENABLED
-
 /*! \brief The source in the stack from which the log originates  */
 typedef enum
 {
@@ -58,6 +56,8 @@ typedef enum
     LOG_STACK_SESSION = 0x06,
     LOG_STACK_FWK = 0x10
 } log_stack_layer_t; // TODO stack specific, move to stack component?
+
+#ifdef FRAMEWORK_LOG_ENABLED
 
 /*! \brief Reset the log counter back to zero */
 __LINK_C void log_counter_reset();
