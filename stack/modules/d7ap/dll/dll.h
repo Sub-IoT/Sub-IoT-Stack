@@ -48,7 +48,7 @@ typedef struct
 } dll_header_t;
 
 void dll_init();
-void dll_tx_frame();
+void dll_tx_frame(uint8_t *payload, uint8_t payload_length);
 void dll_start_foreground_scan();
 
 #endif //OSS_7_DLL_H

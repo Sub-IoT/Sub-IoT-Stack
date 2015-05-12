@@ -19,12 +19,14 @@
 #include "d7ap_stack.h"
 
 #include "fs.h"
+#include "d7asp.h"
 #include "packet_queue.h"
 #include "dll.h"
 
 void d7ap_stack_init()
 {
     fs_init();
+    d7asp_init();
     packet_queue_init();
     dll_init();
 }

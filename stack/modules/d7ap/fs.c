@@ -199,6 +199,13 @@ void execute_alp_command(uint8_t command_file_id)
     d7asp_queue_alp_actions(&fifo_config, data_ptr, file_headers[command_file_id].length - (uint8_t)(data_ptr - file_start));
 }
 
+void fs_read_file(uint8_t file_id, uint8_t offset, uint8_t* buffer, uint8_t length)
+{
+    assert(is_file_defined(file_id));
+    assert(file_headers[file_id].length >= offset + length);
+    memcpy(buffer, data + file_offsets[file_id] + offset, length);
+}
+
 void fs_write_file(uint8_t file_id, uint8_t offset, uint8_t* buffer, uint8_t length)
 {
     assert(is_file_defined(file_id));

@@ -28,6 +28,8 @@
 
 #include "trans.h"
 
+#define D7ASP_FIFO_COMMAND_BUFFER_SIZE 255 // TODO define from cmake
+
 typedef enum {
     SESSION_STATE_IDLE = 0x00,
     SESSION_STATE_DORMANT = 0x01,
@@ -53,6 +55,19 @@ typedef struct {
     trans_addressee_t addressee;
 } d7asp_fifo_config_t;
 
+typedef struct {
+    d7asp_fifo_config_t config;
+    // TODO uint8_t dorm_timer;
+    // TODO uint8_t token;
+    // TODO retry_single_cnt
+    // TODO retry_total_cnt
+    // TODO progress_bitmap
+    // TODO success_bitmap
+    // TODO next_id_cnt
+    uint8_t command_buffer[D7ASP_FIFO_COMMAND_BUFFER_SIZE];
+} d7asp_fifo_t;
+
+void d7asp_init();
 void d7asp_queue_alp_actions(d7asp_fifo_config_t* d7asp_fifo_config, uint8_t* alp_payload_buffer, uint8_t alp_payload_length); // TODO return status
 
 #endif /* D7ASP_H_ */

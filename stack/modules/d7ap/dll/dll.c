@@ -126,10 +126,8 @@ void dll_init()
     fs_read_access_class(0, &current_access_class); // use first access class for now
 }
 
-void dll_tx_frame()
+void dll_tx_frame(uint8_t* payload, uint8_t payload_length)
 {
-    static uint8_t payload[] = { 0, 1, 2, 3, 4 };
-    // TODO get payload from upper layers, hardcoded for now
     packet_t* packet = packet_queue_alloc_packet();
 
     dll_header_t header = {
