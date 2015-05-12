@@ -23,6 +23,27 @@
 #ifndef D7ATP_H_
 #define D7ATP_H_
 
+#include "stdint.h"
+#include "stdbool.h"
+
+typedef struct packet packet_t;
+
+typedef struct {
+    union {
+      uint8_t ctrl_raw;
+      struct {
+          bool ctrl_is_start : 1;
+          bool ctrl_is_stop : 1;
+          bool ctrl_is_timeout_template_present : 1;
+          uint8_t _rfu : 1;
+          bool ctrl_is_ack_requested : 1;
+          bool ctrl_ack_not_void : 1;
+          bool ctrl_ack_record : 1;
+          bool ctrl_is_ack_template_present : 1;
+      };
+    };
+} d7atp_ctrl_t;
+
 typedef struct {
     union {
         uint8_t addressee_ctrl;
@@ -35,5 +56,8 @@ typedef struct {
     };
     uint8_t addressee_id[8]; // TODO assuming 8 byte id for now
 } d7atp_addressee_t;
+
+void d7atp_start_dialog(uint8_t dialog_id, uint8_t transaction_id, packet_t* packet);
+uint8_t d7atp_assemble_packet_header(packet_t* packet, uint8_t* data_ptr);
 
 #endif /* D7ATP_H_ */

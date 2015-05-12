@@ -31,6 +31,8 @@
 
 #include "hwradio.h"
 
+typedef struct packet packet_t;
+
 typedef struct
 {
     uint8_t subnet;
@@ -48,8 +50,9 @@ typedef struct
 } dll_header_t;
 
 void dll_init();
-void dll_tx_frame(uint8_t *payload, uint8_t payload_length);
+void dll_tx_frame(packet_t* packet);
 void dll_start_foreground_scan();
+uint8_t dll_assemble_packet_header(packet_t* packet, uint8_t* data_ptr);
 
 #endif //OSS_7_DLL_H
 

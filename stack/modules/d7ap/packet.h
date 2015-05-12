@@ -26,20 +26,35 @@
 #ifndef OSS_7_PACKET_H
 #define OSS_7_PACKET_H
 
-#include <hwradio.h>
+#include "stdint.h"
+#include "d7atp.h"
+#include "dll.h"
+#include "hwradio.h"
+
 
 /*! \brief A D7AP 'packet' used over all layers of the stack. Contains both the raw packet data (as transmitted over the air) as well
  * as metadata parsed or generated while moving through the different layers */
-typedef struct
+struct packet
 {
+    dll_header_t dll_header;
+    d7atp_ctrl_t d7atp_ctrl;
+    uint8_t d7atp_dialog_id;
+    uint8_t d7atp_transaction_id;
+    // TODO d7atp ack template
+    uint8_t d7atp_timeout_template;
+    uint8_t payload_length;
+    uint8_t payload[239]; // TODO make max size configurable using cmake
+                            // TODO store payload here or only pointer to file where we need to fetch it? can we assume data will not be changed in between
+
     hw_radio_packet_t hw_radio_packet; // TODO we might not need all metadata included in hw_radio_packet_t. If not copy needed data fields
     uint8_t __data[255];    // reserves space for hw_radio_packet_t.data flexible array member,
                             // do not use this directly but use hw_radio_packet_t.data instead, which contains the length byte
                             // TODO configure max length from cmake
-} packet_t;
+};
 
 
 void packet_init(packet_t*);
+void packet_assemble(packet_t*);
 
 #endif //OSS_7_PACKET_H
 

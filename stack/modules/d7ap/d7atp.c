@@ -20,5 +20,40 @@
  *
  */
 
+#include "assert.h"
+#include "d7atp.h"
+#include "packet.h"
+#include "dll.h"
 
+void d7atp_start_dialog(uint8_t dialog_id, uint8_t transaction_id, packet_t* packet)
+{
+    // TODO only supports broadcasting data now, no ack, timeout, multiple transactions, ...
 
+    packet->d7atp_ctrl = (d7atp_ctrl_t){
+        .ctrl_is_start = true,
+        .ctrl_is_stop = true,
+        .ctrl_is_timeout_template_present = false,
+        .ctrl_is_ack_requested = false,
+        .ctrl_ack_not_void = false,
+        .ctrl_ack_record = false,
+        .ctrl_is_ack_template_present = false
+    };
+
+    packet->d7atp_dialog_id = dialog_id;
+    packet->d7atp_transaction_id = transaction_id;
+
+    dll_tx_frame(packet);
+}
+
+uint8_t d7atp_assemble_packet_header(packet_t* packet, uint8_t* data_ptr)
+{
+    uint8_t* d7atp_header_start = data_ptr;
+    (*data_ptr) = packet->d7atp_ctrl.ctrl_raw; data_ptr++;
+    (*data_ptr) = packet->d7atp_dialog_id; data_ptr++;
+    (*data_ptr) = packet->d7atp_transaction_id; data_ptr++;
+
+    assert(!packet->d7atp_ctrl.ctrl_is_timeout_template_present); // TODO timeout template
+    assert(!packet->d7atp_ctrl.ctrl_is_ack_template_present); // TODO ack template
+
+    return data_ptr - d7atp_header_start;
+}

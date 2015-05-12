@@ -26,7 +26,9 @@
 #include "alp.h"
 #include "fs.h"
 #include "scheduler.h"
-#include "dll.h"
+#include "d7atp.h"
+#include "packet_queue.h"
+#include "packet.h"
 
 static d7asp_fifo_t NGDEF(_fifo); // TODO we only use 1 fifo for now, should be multiple later (1 per on unique addressee and QoS combination)
 #define fifo NG(_fifo)
@@ -38,7 +40,8 @@ static void process_fifos()
     uint8_t* data_ptr = fifo.command_buffer;
     alp_control_t alp_control = { .raw = (*data_ptr) };
     data_ptr++;
-    uint8_t payload_buffer[25]; // TODO temp buffer, save directly into packet?
+
+    packet_t* packet = packet_queue_alloc_packet();
     switch(alp_control.operation)
     {
         case ALP_OP_READ_FILE_DATA: ;
@@ -46,13 +49,15 @@ static void process_fifos()
             operand.file_offset.file_id = (*data_ptr); data_ptr++;
             operand.file_offset.offset = (*data_ptr); data_ptr++; // TODO can be 1-4 bytes, assume 1 for now
             operand.requested_data_length = (*data_ptr); data_ptr++;
-            fs_read_file(operand.file_offset.file_id, operand.file_offset.offset, payload_buffer, operand.requested_data_length);
-            dll_tx_frame(payload_buffer, operand.requested_data_length); // TODO should use trans, directly uses DLL for now
+            fs_read_file(operand.file_offset.file_id, operand.file_offset.offset, packet->payload, operand.requested_data_length);
+            packet->payload_length = operand.requested_data_length;
+            d7atp_start_dialog(0, 0, packet); // TODO dialog_id and transaction_id
             break;
         default:
             assert(false);
     }
 
+    // TODO free packet after done receiving ack, timeout, .. for now done in dll in tx callback
 }
 
 void d7asp_init()

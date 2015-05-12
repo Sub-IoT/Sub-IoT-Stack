@@ -16,9 +16,8 @@
  * limitations under the License.
  */
 
-#include <packet.h>
-#include <hwradio.h>
-#include <log.h>
+
+#include "log.h"
 #include "dll.h"
 #include "hwradio.h"
 #include "packet_queue.h"
@@ -114,7 +113,7 @@ void packet_received(hw_radio_packet_t* packet)
 static void packet_transmitted(hw_radio_packet_t* hw_radio_packet)
 {
     DPRINT("Transmitted packet with length = %i", hw_radio_packet->length);
-    packet_queue_free_packet(packet_queue_find_packet(hw_radio_packet));
+    packet_queue_free_packet(packet_queue_find_packet(hw_radio_packet)); // TODO free in upper layers
 }
 
 void dll_init()
@@ -126,37 +125,27 @@ void dll_init()
     fs_read_access_class(0, &current_access_class); // use first access class for now
 }
 
-void dll_tx_frame(uint8_t* payload, uint8_t payload_length)
+void dll_tx_frame(packet_t* packet)
 {
-    packet_t* packet = packet_queue_alloc_packet();
-
-    dll_header_t header = {
+    packet->dll_header = (dll_header_t){
         .subnet = 0x05, // TODO hardcoded for now
         .control_target_address_set = false, // TODO assuming broadcast for now
         .control_vid_used = false, // TODO hardcoded for now
         .control_eirp_index = 0, // TODO hardcoded for now
     };
 
-    uint8_t* data_ptr = packet->hw_radio_packet.data + 1; // skip length field for now, we fill this later
-    *data_ptr = header.subnet; data_ptr += sizeof(header.subnet);
-    *data_ptr = header.control; data_ptr += sizeof(header.control);
-    // TODO target address, assuming broadcast for now
-    uint8_t payload_size = sizeof(payload);
-    memcpy(data_ptr, payload, payload_size); data_ptr += payload_size;
-    packet->hw_radio_packet.length = data_ptr - packet->hw_radio_packet.data - 1 + 2; // exclude the length byte and add CRC bytes
-    uint16_t crc = crc_calculate(packet->hw_radio_packet.data, packet->hw_radio_packet.length - 2);
-    memcpy(data_ptr, &crc, 2);
+
+    packet_assemble(packet);
 
     log_print_data(packet->hw_radio_packet.data, packet->hw_radio_packet.length + 1); // TODO tmp
 
-    hw_tx_cfg_t tx_cfg = {
+    packet->hw_radio_packet.tx_meta.tx_cfg = (hw_tx_cfg_t){
         .channel_id.channel_header = current_access_class.subbands[0].channel_header,
         .channel_id.center_freq_index = current_access_class.subbands[0].channel_index_start,
         .syncword_class = PHY_SYNCWORD_CLASS1,
         .eirp = 10
     };
 
-    packet->hw_radio_packet.tx_meta.tx_cfg = tx_cfg;
     hw_radio_send_packet(&(packet->hw_radio_packet), &packet_transmitted);
 }
 
@@ -175,4 +164,13 @@ void dll_start_foreground_scan()
     };
 
     hw_radio_set_rx(&rx_cfg, &packet_received, NULL);
+}
+
+uint8_t dll_assemble_packet_header(packet_t* packet, uint8_t* data_ptr)
+{
+    uint8_t* dll_header_start = data_ptr;
+    *data_ptr = packet->dll_header.subnet; data_ptr += sizeof(packet->dll_header.subnet);
+    *data_ptr = packet->dll_header.control; data_ptr += sizeof(packet->dll_header.control);
+    // TODO target address, assuming broadcast for now
+    return data_ptr - dll_header_start;
 }

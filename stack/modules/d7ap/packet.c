@@ -17,8 +17,30 @@
  */
 
 #include "packet.h"
+#include "crc.h"
 
-void packet_init(packet_t* p)
+void packet_init(packet_t* packet)
 {
     // TODO
+}
+
+void packet_assemble(packet_t* packet)
+{
+    uint8_t* data_ptr = packet->hw_radio_packet.data + 1; // skip length field for now, we fill this later
+
+    data_ptr += dll_assemble_packet_header(packet, data_ptr);
+
+    // TODO network protocol header
+
+    data_ptr += d7atp_assemble_packet_header(packet, data_ptr);
+
+    // add payload
+    memcpy(data_ptr, packet->payload, packet->payload_length); data_ptr += packet->payload_length;
+    packet->hw_radio_packet.length = data_ptr - packet->hw_radio_packet.data - 1 + 2; // exclude the length byte and add CRC bytes
+
+    // TODO network protocol footer
+
+    // add CRC
+    uint16_t crc = crc_calculate(packet->hw_radio_packet.data, packet->hw_radio_packet.length - 2);
+    memcpy(data_ptr, &crc, 2);
 }
