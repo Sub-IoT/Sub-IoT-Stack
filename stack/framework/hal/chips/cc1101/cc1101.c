@@ -181,7 +181,8 @@ static void end_of_packet_isr()
             cc1101_interface_set_interrupts_enabled(true);
             break;
         case HW_RADIO_STATE_TX:
-            switch_to_idle_mode();
+        	if(!should_rx_after_tx_completed)
+        		switch_to_idle_mode();
 
             current_packet->tx_meta.timestamp = timer_get_counter_value();
 
