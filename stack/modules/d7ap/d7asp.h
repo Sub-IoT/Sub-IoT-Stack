@@ -26,7 +26,7 @@
 #include "stdint.h"
 #include "stdbool.h"
 
-#include "trans.h"
+#include "d7atp.h"
 
 #define D7ASP_FIFO_COMMAND_BUFFER_SIZE 255 // TODO define from cmake
 
@@ -52,7 +52,7 @@ typedef struct {
     uint32_t qos; // TODO define struct
     uint8_t dormant_timeout;
     uint8_t start_id;
-    trans_addressee_t addressee;
+    d7atp_addressee_t addressee;
 } d7asp_fifo_config_t;
 
 typedef struct {

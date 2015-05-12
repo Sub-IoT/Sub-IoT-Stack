@@ -31,7 +31,7 @@ ADD_LIBRARY(d7ap STATIC
     d7ap_stack.c
     alp.c
     d7asp.c
-    trans.c
+    d7atp.c
     fs.c
     packet_queue.c
     packet.c
