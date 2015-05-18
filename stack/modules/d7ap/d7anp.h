@@ -30,6 +30,12 @@ typedef struct packet packet_t;
 
 #define BITS_BIG_ENDIAN 1 // TODO tmp
 
+/*! \brief The D7ANP CTRL header
+ *
+ * note: bit order is important here since this is send over the air. We explicitly reverse the order to ensure BE.
+ * Although bit fields can cause portability problems it seems fine for now using gcc and the current platforms.
+ * If this poses problems in the future we must resort to bit arithmetics and flags.
+ */
 typedef struct {
     union {
         uint8_t raw;

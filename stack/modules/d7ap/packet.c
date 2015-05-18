@@ -41,6 +41,6 @@ void packet_assemble(packet_t* packet)
     // TODO network protocol footer
 
     // add CRC
-    uint16_t crc = crc_calculate(packet->hw_radio_packet.data, packet->hw_radio_packet.length - 2);
+    uint16_t crc = __builtin_bswap16(crc_calculate(packet->hw_radio_packet.data, packet->hw_radio_packet.length - 2));
     memcpy(data_ptr, &crc, 2);
 }

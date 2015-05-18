@@ -28,21 +28,28 @@
 
 typedef struct packet packet_t;
 
+/*! \brief The D7ATP CTRL header
+ *
+ * note: bit order is important here since this is send over the air. We explicitly reverse the order to ensure BE.
+ * Although bit fields can cause portability problems it seems fine for now using gcc and the current platforms.
+ * If this poses problems in the future we must resort to bit arithmetics and flags.
+ */
 typedef struct {
     union {
       uint8_t ctrl_raw;
       struct {
-          bool ctrl_is_start : 1;
-          bool ctrl_is_stop : 1;
-          bool ctrl_is_timeout_template_present : 1;
-          uint8_t _rfu : 1;
-          bool ctrl_is_ack_requested : 1;
-          bool ctrl_ack_not_void : 1;
-          bool ctrl_ack_record : 1;
           bool ctrl_is_ack_template_present : 1;
+          bool ctrl_ack_record : 1;
+          bool ctrl_ack_not_void : 1;
+          bool ctrl_is_ack_requested : 1;
+          uint8_t _rfu : 1;
+          bool ctrl_is_timeout_template_present : 1;
+          bool ctrl_is_stop : 1;
+          bool ctrl_is_start : 1;
       };
     };
 } d7atp_ctrl_t;
+
 
 typedef struct {
     union {
