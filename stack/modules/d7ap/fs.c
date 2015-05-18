@@ -72,7 +72,8 @@ void fs_init()
     };
 
     uint64_t id = hw_get_unique_id();
-    memcpy(data_ptr, &id, D7A_FILE_UID_SIZE);
+    uint64_t id_be = __builtin_bswap64(id);
+    memcpy(data_ptr, &id_be, D7A_FILE_UID_SIZE);
     data_ptr += D7A_FILE_UID_SIZE;
 
     // Access class 0
