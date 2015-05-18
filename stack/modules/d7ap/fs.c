@@ -58,6 +58,8 @@ static inline bool is_file_defined(uint8_t file_id)
 
 void fs_init()
 {
+    // TODO store as big endian!
+
     uint8_t* data_ptr = data;
 
     // UID
@@ -217,6 +219,11 @@ void fs_write_file(uint8_t file_id, uint8_t offset, uint8_t* buffer, uint8_t len
     {
         execute_alp_command(file_headers[file_id].file_properties.action_file_id);
     }
+}
+
+void fs_read_uid(uint8_t *buffer)
+{
+    fs_read_file(D7A_FILE_UID_FILE_ID, 0, buffer, D7A_FILE_UID_SIZE);
 }
 
 void fs_write_access_class(uint8_t access_class_index, dae_access_profile_t* access_class)

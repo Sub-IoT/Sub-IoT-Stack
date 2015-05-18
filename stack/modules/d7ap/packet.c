@@ -30,7 +30,7 @@ void packet_assemble(packet_t* packet)
 
     data_ptr += dll_assemble_packet_header(packet, data_ptr);
 
-    // TODO network protocol header
+    data_ptr += d7anp_assemble_packet_header(packet, data_ptr);
 
     data_ptr += d7atp_assemble_packet_header(packet, data_ptr);
 

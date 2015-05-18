@@ -42,6 +42,7 @@ static void process_fifos()
     data_ptr++;
 
     packet_t* packet = packet_queue_alloc_packet();
+    packet->d7atp_addressee = &(fifo.config.addressee);
     switch(alp_control.operation)
     {
         case ALP_OP_READ_FILE_DATA: ;

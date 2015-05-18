@@ -42,7 +42,12 @@ void d7atp_start_dialog(uint8_t dialog_id, uint8_t transaction_id, packet_t* pac
     packet->d7atp_dialog_id = dialog_id;
     packet->d7atp_transaction_id = transaction_id;
 
-    dll_tx_frame(packet);
+    bool should_include_origin_template = false;
+    if(packet->d7atp_ctrl.ctrl_is_start /*&& packet->d7atp_ctrl.ctrl_is_ack_requested*/) // TODO spec only requires this when both are true, however we MAY send origin when only first is true
+        should_include_origin_template = true;
+        // TODO also when responding to broadcast requests
+
+    d7anp_tx_foreground_frame(packet, should_include_origin_template);
 }
 
 uint8_t d7atp_assemble_packet_header(packet_t* packet, uint8_t* data_ptr)

@@ -29,6 +29,7 @@
 #include "stdint.h"
 #include "d7atp.h"
 #include "dll.h"
+#include "d7anp.h"
 #include "hwradio.h"
 
 
@@ -37,7 +38,9 @@
 struct packet
 {
     dll_header_t dll_header;
+    d7anp_ctrl_t d7anp_ctrl;
     d7atp_ctrl_t d7atp_ctrl;
+    d7atp_addressee_t* d7atp_addressee;
     uint8_t d7atp_dialog_id;
     uint8_t d7atp_transaction_id;
     // TODO d7atp ack template
