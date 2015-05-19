@@ -19,18 +19,21 @@
 /*! \file efm32gg_uart.c
  *
  *  \author jeremie@wizzilab.com
+ *  \author maarten.weyn@uantwerpen.be
  *
  */
 
 #include <em_usart.h>
 #include <em_cmu.h>
 #include <em_gpio.h>
+#include <em_usbd.h>
 #include "hwgpio.h"
 #include "hwuart.h"
 #include <assert.h>
 //contains the wiring for the uart
 //#include "platform.h"
 #include "em_gpio.h"
+
 
 void __uart_init()
 {
@@ -79,9 +82,14 @@ void uart_transmit_data(int8_t data)
 
 void uart_transmit_message(void const *data, size_t length)
 {
-    unsigned char i=0;
-    for (; i<length; i++)
-    {
-        uart_transmit_data(((char const*)data)[i]);
-    }
+	if (USEUSB)
+	{
+		USBD_Write( 0x81, data, length, NULL);
+	} else {
+		unsigned char i=0;
+		for (; i<length; i++)
+		{
+			uart_transmit_data(((char const*)data)[i]);
+		}
+	}
 }

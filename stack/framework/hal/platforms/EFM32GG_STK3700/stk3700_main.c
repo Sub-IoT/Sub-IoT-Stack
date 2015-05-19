@@ -25,6 +25,7 @@
 #include "hwdebug.h"
 #include "platform.h"
 #include "userbutton.h"
+#include "platform_sensors.h"
 #include "em_gpio.h"
 #include <assert.h>
 
@@ -53,6 +54,7 @@ void __platform_init()
 void __platform_post_framework_init()
 {
     __ubutton_init();
+    __sensors_init();
 }
 
 int main()

@@ -30,7 +30,7 @@ include (${CMAKE_SOURCE_DIR}/cmake/platform_default_macros.cmake)
 #	<target>	the <target> used to generate the 'main' executable. 
 #    	
 MACRO(GENERATE_SIMPLICITY_STUDIO_FILES target)
-    SET_TARGET_PROPERTIES(${target} PROPERTIES LINK_FLAGS "-Xlinker -Map='${target}.mmp'")
+    SET_TARGET_PROPERTIES(${target} PROPERTIES LINK_FLAGS "-Xlinker -Map=${target}.mmp")
     ADD_CUSTOM_COMMAND(OUTPUT ${target}.hex
 		   COMMAND ${CMAKE_OBJCOPY} -O ihex ${target} ${target}.hex DEPENDS ${target})
     ADD_CUSTOM_COMMAND(OUTPUT ${target}.bin

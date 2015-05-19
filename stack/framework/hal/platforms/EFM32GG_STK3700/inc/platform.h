@@ -37,12 +37,19 @@
 
 //INT_HANDLER
 
+/********************
+ *  USB SUPPORT      *
+ ********************/
+
+#define USB_DEVICE
 
 /********************
  * UART DEFINITIONS *
  *******************/
 
 #define UART_BAUDRATE PLATFORM_EFM32GG_STK3700_UART_BAUDRATE
+
+#define USEUSB				1
 
 #define UART_CHANNEL        UART0
 #define UART_CLOCK          cmuClock_UART0
