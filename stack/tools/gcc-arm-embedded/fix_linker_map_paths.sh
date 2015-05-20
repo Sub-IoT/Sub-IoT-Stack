@@ -31,17 +31,15 @@ if [ -z "$cut_no" ]
 then
     echo "Malformatted symbol map '$SOURCE'" 1>&2
     exit 1
-else
-    ((cut_no=$cut_no-1))
 fi
 
 cp "$SOURCE" "$DEST"
-head -n $cut_no "$SOURCE" | tail -n +2 | sed 's/^[     ]*//' | sed 's/[    ]*$//' | sed 's/\([^(]*\)(.*/\1/' | grep -v '^$' | sort | uniq | while read path
+head -n $cut_no "$SOURCE" | grep -v "Allocating common symbols" | tail -n +2 | sed 's/^[     ]*//' | sed 's/[    ]*$//' | sed 's/\([^(]*\)(.*/\1/' | grep -v '^$' | sort | uniq | while read path
 do
     abs_path="`cd $(dirname "$path" ) && pwd`/`basename $path`"
     esc_path=$(echo $path | sed 's/\//\\\//g' | sed 's/\./\\./g')
     esc_abs_path=$(echo $abs_path | sed 's/\//\\\//g')
-    if [ "`uname`" == "Darwin" ]
+    if [ "`uname`" = "Darwin" ]
     then
 	sed -i '' "s/$esc_path/$esc_abs_path/" "$DEST"
     else
