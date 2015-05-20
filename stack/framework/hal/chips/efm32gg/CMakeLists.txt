@@ -32,7 +32,6 @@ INCLUDE_DIRECTORIES(CMSIS/include
 		    emlib/inc
 		    kits/common/drivers
 		    kits/common/bsp
-		    kits/EFM32GG_STK3700/config
 		    usb/inc
 		    )
 
@@ -41,7 +40,6 @@ GLOBAL_INCLUDE_DIRECTORIES("inc")
 ##testing...
 GLOBAL_INCLUDE_DIRECTORIES(kits/common/drivers
 		    		kits/common/bsp
-					kits/EFM32GG_STK3700/config
 					emlib/inc
 					CMSIS/device/include
 					CMSIS/include
@@ -55,7 +53,6 @@ PLATFORM_INCLUDE_DIRECTORIES(CMSIS/include
 		    emlib/inc
 		    kits/common/drivers
 		    kits/common/bsp
-		    kits/EFM32GG_STK3700/config
 		    inc_platform
 		    inc
 		    usb/inc
