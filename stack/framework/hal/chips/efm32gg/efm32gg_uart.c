@@ -82,14 +82,13 @@ void uart_transmit_data(int8_t data)
 
 void uart_transmit_message(void const *data, size_t length)
 {
-	if (USEUSB)
-	{
-		USBD_Write( 0x81, data, length, NULL);
-	} else {
+#ifdef USE_USB_CDC
+		USBD_Write( 0x81, (void*) data, length, NULL);
+#else
 		unsigned char i=0;
 		for (; i<length; i++)
 		{
 			uart_transmit_data(((char const*)data)[i]);
 		}
-	}
+#endif
 }
