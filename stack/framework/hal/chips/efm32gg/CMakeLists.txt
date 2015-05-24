@@ -37,13 +37,6 @@ INCLUDE_DIRECTORIES(CMSIS/include
 
 ##Export the 'inc' directory globally		    
 GLOBAL_INCLUDE_DIRECTORIES("inc")
-##testing...
-GLOBAL_INCLUDE_DIRECTORIES(kits/common/drivers
-		    		kits/common/bsp
-					emlib/inc
-					CMSIS/device/include
-					CMSIS/include
-		    		usb/inc)
 
 #Export the em libs to the platform directory ONLY
 #Please note we include 'inc' here since for complicated cmake reasons directories exported 

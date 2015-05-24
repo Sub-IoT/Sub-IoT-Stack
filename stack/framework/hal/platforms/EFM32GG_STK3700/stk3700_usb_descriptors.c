@@ -12,7 +12,7 @@
  * any purpose, you must agree to the terms of that agreement.
  *
  ******************************************************************************/
-#include "descriptors.h"
+#include "usb_descriptors.h"
 
 EFM32_ALIGN(4)
 const USB_DeviceDescriptor_TypeDef USBDESC_deviceDesc __attribute__ ((aligned(4)))=

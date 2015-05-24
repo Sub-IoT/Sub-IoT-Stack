@@ -21,6 +21,8 @@
 #include "hwgpio.h"
 #include "hwuart.h"
 #include "hwleds.h"
+#include "hwlcd.h"
+#include "hwusb.h"
 #include "efm32gg_mcu.h"
 #include "hwdebug.h"
 #include "platform.h"
@@ -35,6 +37,11 @@ void __platform_init()
     __gpio_init();
     __uart_init();
     __led_init();
+    __lcd_init();
+
+#ifdef USE_USB_CDC
+    __usb_init_cbc();
+#endif
 
 #ifdef USE_CC1101
     //TODO: add calls to hw_gpio_configure_pin for the pins used by the CC1101 driver

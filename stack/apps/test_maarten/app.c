@@ -23,17 +23,13 @@
 #include "log.h"
 #include <assert.h>
 #include "platform.h"
-#include "descriptors.h"
 
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "segmentlcd.h"
+#include "hwlcd.h"
 
 #include "em_adc.h"
-#include "em_cmu.h"
-#include "cdc.h"
-#include "bsp.h"
 
 bool sensing = false;
 uint16_t counter = 0;
@@ -55,25 +51,7 @@ void userbutton_callback(button_id_t button_id)
 
 
 /// USB
-static const USBD_Callbacks_TypeDef callbacks =
-{
-  .usbReset        = NULL,
-  .usbStateChange  = CDC_StateChangeEvent,
-  .setupCmd        = CDC_SetupCmd,
-  .isSelfPowered   = NULL,
-  .sofInt          = NULL
-};
 
-const USBD_Init_TypeDef usbInitStruct =
-{
-  .deviceDescriptor    = &USBDESC_deviceDesc,
-  .configDescriptor    = USBDESC_configDesc,
-  .stringDescriptors   = USBDESC_strings,
-  .numberOfStrings     = sizeof(USBDESC_strings)/sizeof(void*),
-  .callbacks           = &callbacks,
-  .bufferingMultiplier = USBDESC_bufferingMultiplier,
-  .reserved            = 0
-};
 
 /**************************************************************************//**
  * @brief Convert ADC sample values to celsius.
@@ -162,7 +140,7 @@ void measureTemperature()
 	int i = (int)(convertToCelsius(temp) * 10);
 	char string[8];
 	snprintf(string, 8, "%2d,%1d%%C", (i/10), abs(i%10));
-	SegmentLCD_Write(string);
+	lcd_write_string(string);
 
 	log_print_string("Temperature %s", string);
 }
@@ -182,14 +160,10 @@ void timer0_callback()
 	if (sensing)
 	{
 		lightsensor_dissable();
-
-		SegmentLCD_Write("DAG");
 	}
 	else
 	{
 		lightsensor_enable();
-
-		SegmentLCD_Write("SCHATJE");
 	}
 
 	sensing = !sensing;
@@ -209,21 +183,6 @@ void bootstrap()
 	led_on(0);
 	led_on(1);
 
-
-	BSP_Init(BSP_INIT_DEFAULT);   /* Initialize DK board register access */
-
-	/* If first word of user data page is non-zero, enable eA Profiler trace */
-	//BSP_TraceProfilerSetup();
-
-	CMU_ClockSelectSet(cmuClock_HF, cmuSelect_HFXO);
-
-	/* Initialize the communication class device. */
-	CDC_Init();
-
-	/* Initialize and start USB device stack. */
-	USBD_Init(&usbInitStruct);
-
-
 	/*
 	* When using a debugger it is practical to uncomment the following three
 	* lines to force host to re-enumerate the device.
@@ -233,14 +192,6 @@ void bootstrap()
 	USBD_Connect();
 
 	log_print_string("Device booted at time: %d\n", timer_get_counter_value());
-
-	/* Initialize segment LCD. */
-	SegmentLCD_Init(false);
-	/* Turn all LCD segments off. */
-	SegmentLCD_AllOff();
-
-
-
 
 
 	/* Enable peripheral clocks */

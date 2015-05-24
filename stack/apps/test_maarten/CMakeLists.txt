@@ -31,7 +31,7 @@
 
 
 #Call the BUILD_APPLICATION to build the final executable for the specific platform
-ADD_EXECUTABLE(test_maarten app.c descriptors.c)
+ADD_EXECUTABLE(test_maarten app.c)
 
 #Add the framework (and one or more modules) as libraries to the application
 TARGET_LINK_LIBRARIES(test_maarten framework)

@@ -73,6 +73,9 @@ ADD_LIBRARY(PLATFORM OBJECT
     stk3700_userbutton.c
     stk3700_sensors.c
     stk3700_debug.c
+    stk3700_lcd.c
+    stk3700_usb_descriptors.c
+    stk3700_usb.c
     libc_overrides.c
     inc/platform.h
     inc/userbutton.h
