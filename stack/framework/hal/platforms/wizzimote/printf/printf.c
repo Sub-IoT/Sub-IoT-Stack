@@ -212,19 +212,19 @@ void tfp_format(void* putp,putcf putf,char *fmt, va_list va)
 	}
 
 
-void init_printf(void* putp,void (*putf) (void*,char))
-	{
-	stdout_putf=putf;
-	stdout_putp=putp;
-	}
+//void init_printf(void* putp,void (*putf) (void*,char))
+//	{
+//	stdout_putf=putf;
+//	stdout_putp=putp;
+//	}
 
-int printf(char *fmt, ...)
-	{
-	va_list va;
-	va_start(va,fmt);
-	tfp_format(stdout_putp,stdout_putf,fmt,va);
-	va_end(va);
-	}
+//int printf(char *fmt, ...)
+//	{
+//	va_list va;
+//	va_start(va,fmt);
+//	tfp_format(stdout_putp,stdout_putf,fmt,va);
+//	va_end(va);
+//	}
 
 static void putcp(void* p,char c)
 	{

@@ -19,6 +19,7 @@
 #include "hwuart.h"
 #include "hwatomic.h"
 #include "hwleds.h"
+#include "log.h"
 #include <stdio.h>
 
 //Overwrite _write so 'printf''s get pushed over the uart
@@ -40,7 +41,7 @@ void __assert_func( const char *file, int line, const char *func, const char *fa
 	led_on(1);
 	while(1)
 	{
-        printf("assertion failed: file \"%s\", line %d%s%s\n",failedexpr, file, line, func ? ", function: " : "", func ? func : "");
+        log_print_string("assertion failed: file \"%s\", line %d%s%s\n",failedexpr, file, line, func ? ", function: " : "", func ? func : "");
 		for(uint32_t j = 0; j < 20; j++)
 		{
 			//blink at twice the frequency of the _exit call, so we can identify which of the two events has occurred
