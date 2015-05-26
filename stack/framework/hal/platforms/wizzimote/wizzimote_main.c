@@ -31,7 +31,7 @@ void __platform_init()
 {
     __cc430_mcu_init();
     __gpio_init();
-//    __uart_init(); // TODO
+    __uart_init();
     __led_init();
 
 //    __hw_debug_init(); // TODO
