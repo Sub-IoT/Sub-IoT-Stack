@@ -32,12 +32,30 @@
 #include "types.h"
 #include "platform.h"
 
-void __sensors_init();
+/*! \brief Initialises the sensors
+ * 			- I/O for light sensor
+ */
+__LINK_C void lightsensor_init();
+__LINK_C void lightsensor_enable();
+__LINK_C void lightsensor_dissable();
+__LINK_C uint32_t lightsensor_read();
 
-void lightsensor_enable();
-void lightsensor_dissable();
 
+/*! \brief Initializes ADC to measure the internal temperature
+ */
+__LINK_C void internalTempSensor_init();
 
-uint32_t lightsensor_read();
+/*! \brief Measures the interternal temperature using the ADC and converts it to Celcius
+ *	\note It expects the user to initialise the ADC using internalTempSensor_init()
+ */
+__LINK_C float tempsensor_read_celcius();
+
+/*! \brief Convert a temperature ADC sample to temperature taking into account the factory calibration
+ * 	\note See section 2.3.4 in the reference manual for details on this calculation
+ *
+ * 	\param adcSample Raw value from ADC to be converted to Celsius
+ * 	\return The temperature in degrees Celsius.
+ */
+__LINK_C float convertAdcToCelsius(int32_t adcSample);
 
 #endif

@@ -61,7 +61,6 @@ void __platform_init()
 void __platform_post_framework_init()
 {
     __ubutton_init();
-    __sensors_init();
 }
 
 int main()
