@@ -42,7 +42,7 @@ import logging
 import argparse
 import binascii
 
-DEBUG = 0
+DEBUG = 1
 
 SYNC_WORD = "DD"
 

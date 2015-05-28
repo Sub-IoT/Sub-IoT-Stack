@@ -58,5 +58,6 @@ ADD_LIBRARY (${CHIP_LIBRARY_NAME} OBJECT
     cc430_system.c
     cc430_mcu.c
     cc430_timer.c
+    cc430_uart.c
     ${CC430_HEADERS}
 )
