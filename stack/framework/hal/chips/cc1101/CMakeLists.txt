@@ -24,7 +24,7 @@ SET(CC1101_SRC
 )
 
 # interface specific logic
-IF(PLATFORM STREQUAL "wizzimote") # TODO detect all CC430 based platform instead of only wizzimote
+IF(PLATFORM STREQUAL "wizzimote" OR PLATFORM STREQUAL "uocmote") # TODO detect all CC430 based platform instead of only wizzimote
     INCLUDE_DIRECTORIES(${TOOLCHAIN_DIR}/include)
     LIST(APPEND CC1101_SRC cc1101_interface_cc430.c)
 ELSE()
