@@ -76,8 +76,12 @@ void __uart_init()
 
 void uart_transmit_data(int8_t data)
 {
+ #ifdef USE_USB_CDC
+    USBD_Write( 0x81, (void*) &data, 1, NULL);
+ #else
     while(!(UART_CHANNEL->STATUS & (1 << 6))) {}; // wait for TX buffer to empty
     UART_CHANNEL->TXDATA = data;
+ #endif
 }
 
 void uart_transmit_message(void const *data, size_t length)
