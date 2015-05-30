@@ -53,7 +53,7 @@ const USBD_Init_TypeDef usbInitStruct =
 };
 
 
-void __usb_init_cbc()
+void __usb_init_cdc()
 {
 	BSP_Init(BSP_INIT_DEFAULT);   /* Initialize DK board register access */
 
@@ -64,4 +64,13 @@ void __usb_init_cbc()
 
 	/* Initialize and start USB device stack. */
 	USBD_Init(&usbInitStruct);
+
+	/*
+	* When using a debugger it is practical to uncomment the following three
+	* lines to force host to re-enumerate the device.
+	*/
+	//USBD_Disconnect();
+	//USBTIMER_DelayMs(1000);
+	//USBD_Connect();
+
 }

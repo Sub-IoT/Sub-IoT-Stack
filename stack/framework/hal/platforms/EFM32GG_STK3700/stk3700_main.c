@@ -39,8 +39,8 @@ void __platform_init()
     __led_init();
     __lcd_init();
 
-#ifdef USE_USB_CDC
-    __usb_init_cbc();
+#ifdef PLATFORM_USE_USB_CDC
+    __usb_init_cdc();
 #endif
 
 #ifdef USE_CC1101

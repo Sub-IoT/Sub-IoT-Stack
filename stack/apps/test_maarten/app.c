@@ -97,13 +97,7 @@ void bootstrap()
 	led_on(0);
 	led_on(1);
 
-	/*
-	* When using a debugger it is practical to uncomment the following three
-	* lines to force host to re-enumerate the device.
-	*/
-//	USBD_Disconnect();
-//	USBTIMER_DelayMs(1000);
-//	USBD_Connect();
+
 
 	log_print_string("Device booted at time: %d\n", timer_get_counter_value());
 

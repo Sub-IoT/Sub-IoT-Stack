@@ -38,7 +38,7 @@
  *  'user' API and should only be called from the initialisation code of the specific platform
  *
  */
-__LINK_C void __usb_init_cbc();
+__LINK_C void __usb_init_cdc();
 
 #endif // __USB_H__
 

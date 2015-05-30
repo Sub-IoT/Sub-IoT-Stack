@@ -42,7 +42,7 @@
  ********************/
 
 #define USB_DEVICE
-#define USE_USB_CDC
+//#define USE_USB_CDC - defined in cmake
 
 /********************
  * UART DEFINITIONS *
