@@ -69,8 +69,8 @@ void __usb_init_cdc()
 	* When using a debugger it is practical to uncomment the following three
 	* lines to force host to re-enumerate the device.
 	*/
-	//USBD_Disconnect();
-	//USBTIMER_DelayMs(1000);
-	//USBD_Connect();
+	USBD_Disconnect();
+	USBTIMER_DelayMs(1000);
+	USBD_Connect();
 
 }

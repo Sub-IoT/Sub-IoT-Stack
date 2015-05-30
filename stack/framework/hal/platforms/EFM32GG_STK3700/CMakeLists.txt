@@ -25,6 +25,7 @@ PLATFORM_PARAM(${PLATFORM_PREFIX}_MCU "EFM32GG990F1024" STRING "The MCU of the G
 PLATFORM_PARAM(${PLATFORM_PREFIX}_RADIO "none" STRING "The radio chip connected to the Gecko board")
 PLATFORM_PARAM(${PLATFORM_PREFIX}_UART_BAUDRATE "115200" STRING "The baudrate used by the UART port")
 PLATFORM_OPTION(${PLATFORM_PREFIX}_DEBUGPINS "Enable/Disable Hardware Debug Pins support (see 'hwdebug.h')" TRUE)
+PLATFORM_OPTION(PLATFORM_USE_USB_CDC "Enable/Disable the use of CDC (UART Communication using USB" FALSE)
 #Restrict the number of possible options for the radio option in the usual manner...
 SET_PROPERTY(CACHE ${PLATFORM_PREFIX}_RADIO PROPERTY STRINGS "cc1101;none")
 

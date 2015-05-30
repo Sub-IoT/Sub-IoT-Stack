@@ -107,6 +107,7 @@ class LogString(Logs):
 
     def read(self):
         # Read the length of the message
+        print ("LogString")
         self.read_length()
         self.message = serial_port.read(size=self.length)
         return self
@@ -361,10 +362,12 @@ def read_value_from_serial():
         if DEBUG:
             print("received unexpected data (%s), waiting for sync word " % data.encode("hex").upper())
         data = serial_port.read(size=1)
-
+    #if DEBUG:
+    #    print ("SYNC word received")
     # Now we can read the type of the string
     logtype = serial_port.read(size=1).encode("hex").upper()
-
+    #if DEBUG:
+    #    print ("LogType: %s" % logtype)
     result = {
              "01" : LogString(),
              "02" : LogData(),

@@ -53,7 +53,8 @@ void measureTemperature()
 
 	int i = (int)(temp * 10);
 	char string[8];
-	snprintf(string, 8, "%2d,%1d%%C", (i/10), abs(i%10));
+	snprintf(string, 8, "%2d,%1d C", (i/10), abs(i%10));
+	//fprintf(string,  "%2d,%1d C", (i/10), abs(i%10));
 	lcd_write_string(string);
 
 	log_print_string("Temperature %s", string);

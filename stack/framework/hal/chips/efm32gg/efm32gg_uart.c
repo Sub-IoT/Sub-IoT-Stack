@@ -77,9 +77,9 @@ void __uart_init()
 void uart_transmit_data(int8_t data)
 {
 #ifdef PLATFORM_USE_USB_CDC
-		while(USBD_EpIsBusy(0x81)){};
-		//word tempData = data;
-		USBD_Write( 0x81, (void*) data, 1, NULL);
+		//while(USBD_EpIsBusy(0x81)){};
+		uint32_t tempData = data;
+		USBD_Write( 0x81, (void*) &tempData, 1, NULL);
 #else
 		while(!(UART_CHANNEL->STATUS & (1 << 6))) {}; // wait for TX buffer to empty
 		UART_CHANNEL->TXDATA = data;
