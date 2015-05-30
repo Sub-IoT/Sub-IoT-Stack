@@ -76,7 +76,6 @@ void __uart_init()
 
 void uart_transmit_data(int8_t data)
 {
-
 #ifdef PLATFORM_USE_USB_CDC
 		while(USBD_EpIsBusy(0x81)){};
 		//word tempData = data;
