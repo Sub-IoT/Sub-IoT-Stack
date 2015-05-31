@@ -77,7 +77,7 @@ void __uart_init()
 void uart_transmit_data(int8_t data)
 {
 #ifdef PLATFORM_USE_USB_CDC
-		//while(USBD_EpIsBusy(0x81)){};
+		while(USBD_EpIsBusy(0x81)){};
 		uint32_t tempData = data;
 		USBD_Write( 0x81, (void*) &tempData, 1, NULL);
 #else
@@ -89,6 +89,7 @@ void uart_transmit_data(int8_t data)
 void uart_transmit_message(void const *data, size_t length)
 {
 #ifdef PLATFORM_USE_USB_CDC
+		while(USBD_EpIsBusy(0x81)){};
 		USBD_Write( 0x81, (void*) data, length, NULL);
 #else
 		unsigned char i=0;
