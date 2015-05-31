@@ -54,12 +54,12 @@ displayQueue = Queue.Queue()
 trace_pos = 0
 
 #TODO fix this ugly code... but it works
-data = [("PHY", "GREEN"), ("DLL", "RED"), ("MAC", "YELLOW"), ("NWL", "BLUE"), ("TRANS", "MAGENTA"), ("FWK", "CYAN")]
+data = [("PHY", "GREEN"), ("DLL", "RED"), ("MAC", "YELLOW"), ("NWL", "BLUE"), ("TRANS", "MAGENTA"), ("SESSION", "WHITE"), ("FWK", "CYAN")]
 stackColors = defaultdict(list)
 for layer, color in data:
     stackColors[layer].append(color)
 
-stackLayers = {'01' : "PHY", '02': "DLL", '03': "MAC", '04': "NWL", '05': "TRANS", '10': "FWK"}
+stackLayers = {'01' : "PHY", '02': "DLL", '03': "MAC", '04': "NWL", '05': "TRANS", '06': "SESSION", '10': "FWK"}
 
 
 get_input = input if sys.version_info[0] >= 3 else raw_input
@@ -118,7 +118,7 @@ class LogString(Logs):
 
     def __str__(self):
         if settings["string"]:
-            string = formatHeader("STRING", "GREEN", self.datetime) + self.message + Style.RESET_ALL
+            string = formatHeader("STRING", "GREEN", self.datetime) + " " + self.message + Style.RESET_ALL
             return string + "\n"
         return ""
 
@@ -140,7 +140,7 @@ class LogData(Logs):
 
     def __str__(self):
         if settings["data"]:
-            string = formatHeader("DATA", "BLUE", self.datetime) + str(self.data) + Style.RESET_ALL
+            string = formatHeader("DATA", "BLUE", self.datetime) + " " + str(self.data) + Style.RESET_ALL
             return string + "\n"
         return ""
 
@@ -155,7 +155,6 @@ class LogStack(Logs):
         self.color = stackColors[self.layer][0]
         self.read_length()
         self.message = serial_port.read(size=self.length)
-        #self.message = struct.unpack("I", self.message)
         return self
 
     def write(self):
@@ -165,7 +164,7 @@ class LogStack(Logs):
 
     def __str__(self):
         if settings["stack"] and settings[self.layer.lower()]:
-            string = formatHeader("STK: " + self.layer, self.color, self.datetime) + self.message + Style.RESET_ALL
+            string = formatHeader("STK: " + self.layer, self.color, self.datetime) + " " + self.message + Style.RESET_ALL
             return string + "\n"
         return ""
 
@@ -186,7 +185,7 @@ class LogTrace(Logs):
     def __str__(self):
         global trace_pos
         if settings["trace"]:
-            string = formatHeader("TRACE", "YELLOW", self.datetime) + self.message + Style.RESET_ALL
+            string = formatHeader("TRACE", "YELLOW", self.datetime) + " " + self.message + Style.RESET_ALL
 
             return string + "\n"
         return ""
@@ -209,7 +208,7 @@ class LogDllRes(Logs):
 
     def __str__(self):
         if settings["dllres"]:
-            string = formatHeader("DLL RES", "RED", self.datetime) + "frame_type " + self.frame_type + " spectrum_id " + self.spectrum_id + Style.RESET_ALL
+            string = formatHeader("DLL RES ", "RED", self.datetime) + "frame_type " + self.frame_type + " spectrum_id " + self.spectrum_id + Style.RESET_ALL
             return string + "\n"
         return ""
 
@@ -358,15 +357,18 @@ def read_value_from_serial():
 
     data = serial_port.read(size=1)
 	
-   
+    #while True:
+    #    print("%s " % data.encode("hex").upper())
+    #    data = serial_port.read(size=1)
 	
     while not data.encode("hex").upper() == SYNC_WORD:
         if DEBUG:
             print("received unexpected data (%s), waiting for sync word " % data.encode("hex").upper())
         data = serial_port.read(size=1)
-    
+		
     # Now we can read the type of the string
     logtype = serial_port.read(size=1).encode("hex").upper()
+	
     result = {
              "01" : LogString(),
              "02" : LogData(),
@@ -415,7 +417,7 @@ def main():
 
     # Setup the console parser
     parser = argparse.ArgumentParser(description = "DASH7 logger for the OSS-7 stack. You can exit the logger using Ctrl-c, it takes some time.")
-    parser.add_argument('serial', default="COM13", metavar="serial port", help="serial port (eg COM7 or /dev/ttyUSB0)", nargs='?')
+    parser.add_argument('serial', default="COM10", metavar="serial port", help="serial port (eg COM7 or /dev/ttyUSB0)", nargs='?')
     parser.add_argument('-b', '--baud' , default=115200, metavar="baudrate", type=int, help="set the baud rate (default: 9600)")
     parser.add_argument('-v', '--version', action='version', version='DASH7 Logger 0.5', help="show the current version")
     parser.add_argument('-f', '--file', metavar="file", help="write to a pcap file", nargs='?', default=None, const=dateTime)
@@ -431,6 +433,7 @@ def main():
     stack_options.add_argument('--mac', help="Disable logs for mac", action="store_false", default=True)
     stack_options.add_argument('--nwl', help="Disable logs for nwl", action="store_false", default=True)
     stack_options.add_argument('--trans', help="Disable logs for trans", action="store_false", default=True)
+    stack_options.add_argument('--session', help="Disable logs for session", action="store_false", default=True)
     stack_options.add_argument('--fwk', help="Disable logs for fwk", action="store_false", default=True)
     stack_options.add_argument('--stack', help="Disable all stack logs", action="store_false", default=True)
     special_options = parser.add_argument_group('special logging')

@@ -89,8 +89,21 @@ void uart_transmit_data(int8_t data)
 void uart_transmit_message(void const *data, size_t length)
 {
 #ifdef PLATFORM_USE_USB_CDC
-		while(USBD_EpIsBusy(0x81)){};
-		USBD_Write( 0x81, (void*) data, length, NULL);
+
+		// Print misaliged bytes first as individual bytes.
+		int8_t* tempData = (int8_t*) data;
+		while(((uint32_t)tempData & 3) && (length > 0))
+		{
+			uart_transmit_data(tempData[0]);
+			tempData++;
+			length--;
+		}
+
+		if (length > 0)
+		{
+			while(USBD_EpIsBusy(0x81)){};
+			USBD_Write( 0x81, (void*) tempData, length, NULL);
+		}
 #else
 		unsigned char i=0;
 		for (; i<length; i++)

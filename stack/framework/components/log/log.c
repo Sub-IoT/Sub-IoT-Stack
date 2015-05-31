@@ -87,6 +87,7 @@ __LINK_C void log_print_stack_string(log_stack_layer_t type, char* format, ...)
     uart_transmit_data(LOG_TYPE_STACK);
     uart_transmit_data(type);
     uart_transmit_data(len);
+    uart_transmit_message(NG(buffer),len);
 #else
     printf("\n\r[%03d] ", NG(counter)++);
     vprintf(format, args);
