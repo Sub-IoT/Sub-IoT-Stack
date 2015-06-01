@@ -24,7 +24,9 @@
 
 #include "hwlcd.h"
 #include "platform.h"
+#include "platform_lcd.h"
 #include "segmentlcd.h"
+#include "segmentlcdconfig.h"
 #include <assert.h>
 
 void __lcd_init()
@@ -48,5 +50,31 @@ void lcd_all_on()
 void lcd_write_string(char* text)
 {
 	SegmentLCD_Write(text);
+}
+
+void lcd_write_number(int value)
+{
+	SegmentLCD_Number(value);
+}
+
+void lcd_write_temperature(int temperature, bool celcius)
+{
+	SegmentLCD_Number(temperature);
+	SegmentLCD_Symbol(LCD_SYMBOL_DP10, 1);
+
+	if (celcius)
+		SegmentLCD_Symbol(LCD_SYMBOL_DEGC, 1);
+	else
+		SegmentLCD_Symbol(LCD_SYMBOL_DEGF, 1);
+}
+
+void lcd_show_battery_indication(int batteryLevel)
+{
+	SegmentLCD_Battery(batteryLevel);
+}
+
+void lcd_show_antenna(int show)
+{
+	SegmentLCD_Symbol(LCD_SYMBOL_ANT, show);
 }
 

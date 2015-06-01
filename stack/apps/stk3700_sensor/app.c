@@ -40,16 +40,17 @@
 
 #include "userbutton.h"
 #include "platform_sensors.h"
+#include "platform_lcd.h"
 
 static int16_t temperature = 0;
 
 void userbutton_callback(button_id_t button_id)
 {
 	log_print_string("Button PB%u pressed.", button_id);
-	led_toggle(1);
+	led_toggle(button_id);
 
 	char string[9];
-	snprintf(string, 7, "Butt %u", button_id);
+	snprintf(string, 7, "Btn %u", button_id);
 	lcd_write_string(string);
 
 	fs_write_file(0x40, 2, (uint8_t*)&button_id, 1); // File 0x40 is configured to use D7AActP trigger an ALP action which broadcasts this file data on Access Class 0
@@ -61,12 +62,10 @@ void measureTemperature()
 {
 	float temp = tempsensor_read_celcius();
 
-	temperature = (int)(temp * 10);
-	char string[8];
-	snprintf(string, 8, "%2d,%1d C", (temperature/10), abs(temperature%10));
-	lcd_write_string(string);
+	int i = (int)(temp * 10);
+	lcd_write_temperature(i*10, 1);
 
-	log_print_string("Temperature %s", string);
+	log_print_string("Temperature %2d,%2d C", (i/10), abs(i%10));
 }
 
 void execute_sensor_measurement()
