@@ -31,13 +31,7 @@
 
 
 #Call the BUILD_APPLICATION to build the final executable for the specific platform
-ADD_EXECUTABLE(test_maarten app.c)
+ADD_EXECUTABLE(stk3700_sensor app.c)
 
 #Add the framework (and one or more modules) as libraries to the application
-TARGET_LINK_LIBRARIES(test_maarten framework)
-
-#Generate IDE specific binaries (if the required macro is available for the chosen platform)
-MACRO_AVAILABLE(GENERATE_SIMPLICITY_STUDIO_FILES SSF_AVAILABLE)
-IF(SSF_AVAILABLE)
-    GENERATE_SIMPLICITY_STUDIO_FILES(test_maarten)
-ENDIF()
+TARGET_LINK_LIBRARIES(stk3700_sensor d7ap framework)

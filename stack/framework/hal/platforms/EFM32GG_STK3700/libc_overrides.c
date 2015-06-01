@@ -16,10 +16,12 @@
  * limitations under the License.
  */
 
+#include "em_device.h"
 #include "hwuart.h"
 #include "hwatomic.h"
 #include "hwleds.h"
 #include <stdio.h>
+#include <em_usbd.h>
 //Overwrite _write so 'printf''s get pushed over the uart
 int _write(int fd, char *ptr, int len)
 {
@@ -49,9 +51,19 @@ void __assert_func( const char *file, int line, const char *func, const char *fa
 	start_atomic();
 	led_on(0);
 	led_on(1);
+#ifdef PLATFORM_USE_USB_CDC
+	// Dissable all IRQs except the one for USB
+	for(uint32_t j=0;j < EMU_IRQn; j++)
+		NVIC_DisableIRQ(j);
+
+	NVIC_EnableIRQ( USB_IRQn );
+
+	end_atomic();
+#endif
 	while(1)
 	{
 		printf("assertion \"%s\" failed: file \"%s\", line %d%s%s\n",failedexpr, file, line, func ? ", function: " : "", func ? func : "");
+
 		for(uint32_t j = 0; j < 20; j++)
 		{
 			//blink at twice the frequency of the _exit call, so we can identify which of the two events has occurred

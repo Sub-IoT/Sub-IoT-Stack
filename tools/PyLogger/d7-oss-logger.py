@@ -42,7 +42,7 @@ import logging
 import argparse
 import binascii
 
-DEBUG = 1
+DEBUG = 0
 
 SYNC_WORD = "DD"
 
@@ -362,6 +362,7 @@ def read_value_from_serial():
     #    data = serial_port.read(size=1)
 	
     while not data.encode("hex").upper() == SYNC_WORD:
+        sys.stdout.write(data)
         if DEBUG:
             print("received unexpected data (%s), waiting for sync word " % data.encode("hex").upper())
         data = serial_port.read(size=1)

@@ -29,104 +29,70 @@
 
 #include "hwlcd.h"
 #include "hwadc.h"
+#include "d7ap_stack.h"
+#include "fs.h"
 
 
-bool sensing = false;
-uint16_t counter = 0;
+#ifndef PLATFORM_EFM32GG_STK3700
+	#error Mismatch between the configured platform and the actual platform. Expected PLATFORM_EFM32GG_STK3700 to be defined
+#endif
 
-#ifdef PLATFORM_EFM32GG_STK3700
+
 #include "userbutton.h"
 #include "platform_sensors.h"
+
+static int16_t temperature = 0;
 
 void userbutton_callback(button_id_t button_id)
 {
 	log_print_string("Button PB%u pressed.", button_id);
 	led_toggle(1);
 
+	char string[9];
+	snprintf(string, 7, "Butt %u", button_id);
+	lcd_write_string(string);
 }
 
-#endif
+
 
 void measureTemperature()
 {
 	float temp = tempsensor_read_celcius();
 
-	int i = (int)(temp * 10);
+	temperature = (int)(temp * 10);
 	char string[8];
-	snprintf(string, 8, "%2d,%1d C", (i/10), abs(i%10));
-	//fprintf(string,  "%2d,%1d C", (i/10), abs(i%10));
+	snprintf(string, 8, "%2d,%1d C", (temperature/10), abs(temperature%10));
 	lcd_write_string(string);
 
 	log_print_string("Temperature %s", string);
 }
 
-void timer0_callback()
+void execute_sensor_measurement()
 {
-	char string[8];
-	int i;
-
 	led_toggle(0);
-	timer_post_task_delay(&timer0_callback, TIMER_TICKS_PER_SEC);
-	log_print_string("Toggled led %d", 0);
+	timer_post_task_delay(&execute_sensor_measurement, TIMER_TICKS_PER_SEC * 5);
 
 	measureTemperature();
 
-	/*
-	if (sensing)
-	{
-		lightsensor_dissable();
-	}
-	else
-	{
-		lightsensor_enable();
-	}
+	fs_write_file(0x40, 0, (uint8_t*)&temperature, 2); // File 0x40 is configured to use D7AActP trigger an ALP action which broadcasts this file data on Access Class 0
 
-	sensing = !sensing;
-	*/
 }
-
-void timer1_callback()
-{
-	led_toggle(1);
-	timer_post_task_delay(&timer1_callback, 0x0000FFFF + (uint32_t)100);
-	log_print_string("Toggled led %d", 1);
-}
-
 
 void bootstrap()
 {
-	led_on(0);
-	led_on(1);
-
-
-
 	log_print_string("Device booted at time: %d\n", timer_get_counter_value());
 
-
-	/* Enable peripheral clocks */
-
+    d7ap_stack_init();
 
 	internalTempSensor_init();
+	measureTemperature();
 
-    sched_register_task(&timer0_callback);
-    //sched_register_task(&timer1_callback);
-
-    timer_post_task_delay(&timer0_callback, TIMER_TICKS_PER_SEC);
-    //timer_post_task_delay(&timer1_callback, 0x0000FFFF + (uint32_t)100);
-
-#ifdef PLATFORM_EFM32GG_STK3700
     ubutton_register_callback(0, &userbutton_callback);
     ubutton_register_callback(1, &userbutton_callback);
-#endif
 
+    sched_register_task((&execute_sensor_measurement));
+    timer_post_task_delay(&execute_sensor_measurement, TIMER_TICKS_PER_SEC * 5);
 
-    led_off(0);
-    led_off(1);
-
-    measureTemperature();
-
-
-
-
+    lcd_write_string("DASH7");
 }
 
