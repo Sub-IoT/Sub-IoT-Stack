@@ -51,6 +51,8 @@ void userbutton_callback(button_id_t button_id)
 	char string[9];
 	snprintf(string, 7, "Butt %u", button_id);
 	lcd_write_string(string);
+
+	fs_write_file(0x40, 2, (uint8_t*)&button_id, 1); // File 0x40 is configured to use D7AActP trigger an ALP action which broadcasts this file data on Access Class 0
 }
 
 
