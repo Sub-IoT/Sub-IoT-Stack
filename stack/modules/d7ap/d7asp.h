@@ -27,8 +27,7 @@
 #include "stdbool.h"
 
 #include "d7atp.h"
-
-#define D7ASP_FIFO_COMMAND_BUFFER_SIZE 255 // TODO define from cmake
+#include "MODULE_D7AP_defs.h"
 
 typedef enum {
     SESSION_STATE_IDLE = 0x00,
@@ -64,7 +63,7 @@ typedef struct {
     // TODO progress_bitmap
     // TODO success_bitmap
     // TODO next_id_cnt
-    uint8_t command_buffer[D7ASP_FIFO_COMMAND_BUFFER_SIZE];
+    uint8_t command_buffer[MODULE_D7AP_FIFO_COMMAND_BUFFER_SIZE];
 } d7asp_fifo_t;
 
 void d7asp_init();
