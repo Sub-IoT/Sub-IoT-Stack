@@ -20,8 +20,10 @@
 #include "hwuart.h"
 #include "hwatomic.h"
 #include "hwleds.h"
+#include "hwlcd.h"
 #include <stdio.h>
 #include <em_usbd.h>
+
 //Overwrite _write so 'printf''s get pushed over the uart
 int _write(int fd, char *ptr, int len)
 {
@@ -60,6 +62,9 @@ void __assert_func( const char *file, int line, const char *func, const char *fa
 
 	end_atomic();
 #endif
+
+	lcd_write_string("ERROR");
+
 	while(1)
 	{
 		printf("assertion \"%s\" failed: file \"%s\", line %d%s%s\n",failedexpr, file, line, func ? ", function: " : "", func ? func : "");
