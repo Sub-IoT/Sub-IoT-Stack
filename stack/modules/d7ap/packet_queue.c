@@ -17,12 +17,10 @@
  */
 
 #include "packet_queue.h"
-
+#include "MODULE_D7AP_defs.h"
 #include "assert.h"
 #include "packet.h"
 #include "ng.h"
-
-#define PACKET_QUEUE_SIZE 3 // TODO define from cmake
 
 typedef enum
 {
@@ -32,14 +30,14 @@ typedef enum
     PACKET_QUEUE_ELEMENT_STATUS_PROCESSING  /*! Indicates the supplied packet is being processed */
 } packet_queue_element_status_t;
 
-static packet_t NGDEF(_packet_queue)[PACKET_QUEUE_SIZE];
+static packet_t NGDEF(_packet_queue)[MODULE_D7AP_PACKET_QUEUE_SIZE];
 #define packet_queue NG(_packet_queue)
-static packet_queue_element_status_t NGDEF(_packet_queue_element_status)[PACKET_QUEUE_SIZE];
+static packet_queue_element_status_t NGDEF(_packet_queue_element_status)[MODULE_D7AP_PACKET_QUEUE_SIZE];
 #define packet_queue_element_status NG(_packet_queue_element_status)
 
 void packet_queue_init()
 {
-    for(uint8_t i = 0; i < PACKET_QUEUE_SIZE; i++)
+    for(uint8_t i = 0; i < MODULE_D7AP_PACKET_QUEUE_SIZE; i++)
     {
         packet_init(&(packet_queue[i]));
         packet_queue_element_status[i] = PACKET_QUEUE_ELEMENT_STATUS_FREE;
@@ -48,7 +46,7 @@ void packet_queue_init()
 
 packet_t* packet_queue_alloc_packet()
 {
-    for(uint8_t i = 0; i < PACKET_QUEUE_SIZE; i++)
+    for(uint8_t i = 0; i < MODULE_D7AP_PACKET_QUEUE_SIZE; i++)
     {
         if(packet_queue_element_status[i] == PACKET_QUEUE_ELEMENT_STATUS_FREE)
         {
@@ -62,7 +60,7 @@ packet_t* packet_queue_alloc_packet()
 
 void packet_queue_free_packet(packet_t* packet)
 {
-    for(uint8_t i = 0; i < PACKET_QUEUE_SIZE; i++)
+    for(uint8_t i = 0; i < MODULE_D7AP_PACKET_QUEUE_SIZE; i++)
     {
         if(packet == &(packet_queue[i]))
         {
@@ -78,7 +76,7 @@ void packet_queue_free_packet(packet_t* packet)
 
 packet_t* packet_queue_find_packet(hw_radio_packet_t* hw_radio_packet)
 {
-    for(uint8_t i = 0; i < PACKET_QUEUE_SIZE; i++)
+    for(uint8_t i = 0; i < MODULE_D7AP_PACKET_QUEUE_SIZE; i++)
     {
         if(&(packet_queue[i].hw_radio_packet) == hw_radio_packet)
             return &(packet_queue[i]);
@@ -89,7 +87,7 @@ packet_t* packet_queue_find_packet(hw_radio_packet_t* hw_radio_packet)
 
 void packet_queue_mark_received(hw_radio_packet_t* hw_radio_packet)
 {
-    for(uint8_t i = 0; i < PACKET_QUEUE_SIZE; i++)
+    for(uint8_t i = 0; i < MODULE_D7AP_PACKET_QUEUE_SIZE; i++)
     {
         if(&(packet_queue[i].hw_radio_packet) == hw_radio_packet)
         {
@@ -105,7 +103,7 @@ void packet_queue_mark_received(hw_radio_packet_t* hw_radio_packet)
 packet_t* packet_queue_get_received_packet()
 {
     // note: we return the first found received packet, this may not be the oldest one
-    for(uint8_t i = 0; i < PACKET_QUEUE_SIZE; i++)
+    for(uint8_t i = 0; i < MODULE_D7AP_PACKET_QUEUE_SIZE; i++)
     {
         if(packet_queue_element_status[i] == PACKET_QUEUE_ELEMENT_STATUS_RECEIVED)
             return &(packet_queue[i]);
@@ -116,7 +114,7 @@ packet_t* packet_queue_get_received_packet()
 
 void packet_queue_mark_processing(packet_t* packet)
 {
-    for(uint8_t i = 0; i < PACKET_QUEUE_SIZE; i++)
+    for(uint8_t i = 0; i < MODULE_D7AP_PACKET_QUEUE_SIZE; i++)
     {
         if(packet == &(packet_queue[i]))
         {
