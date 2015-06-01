@@ -21,6 +21,7 @@
 #include "hwatomic.h"
 #include "hwleds.h"
 #include "hwlcd.h"
+#include "platform_lcd.h"
 #include <stdio.h>
 #include <em_usbd.h>
 
@@ -63,7 +64,9 @@ void __assert_func( const char *file, int line, const char *func, const char *fa
 	end_atomic();
 #endif
 
+	lcd_all_off();
 	lcd_write_string("ERROR");
+	lcd_write_number(timer_get_counter_value());
 
 	while(1)
 	{
