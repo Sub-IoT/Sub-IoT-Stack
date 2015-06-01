@@ -35,7 +35,7 @@ ADD_SUBDIRECTORY("components")
 #Add framework options && import them in the framework_defs.h file
 #This is NOT done seperately for each component since components can be overridden by a platform
 #And these settings should not be
-SET(FRAMEWORK_SCHEDULER_MAX_TASKS "64" CACHE STRING "The maximum number of tasks that can be registered with the scheduler")
+SET(FRAMEWORK_SCHEDULER_MAX_TASKS "16" CACHE STRING "The maximum number of tasks that can be registered with the scheduler")
 FRAMEWORK_HEADER_DEFINE(NUMBER FRAMEWORK_SCHEDULER_MAX_TASKS)
 
 SET(FRAMEWORK_SCHEDULER_LP_MODE "0" CACHE STRING "The low power mode to use. Only change this if you know exactly what you are doing")
@@ -47,7 +47,7 @@ FRAMEWORK_HEADER_DEFINE(BOOL FRAMEWORK_LOG_BINARY)
 SET(FRAMEWORK_LOG_ENABLED "TRUE" CACHE BOOL "Select whether to enable or disable the generation of logs")
 FRAMEWORK_HEADER_DEFINE(BOOL FRAMEWORK_LOG_ENABLED)
 
-SET(FRAMEWORK_TIMER_STACK_SIZE "20" CACHE STRING "The number of simultaneous timer events that can be scheduled. Increase this if you have lots of concurrent timers")
+SET(FRAMEWORK_TIMER_STACK_SIZE "10" CACHE STRING "The number of simultaneous timer events that can be scheduled. Increase this if you have lots of concurrent timers")
 FRAMEWORK_HEADER_DEFINE(NUMBER FRAMEWORK_TIMER_STACK_SIZE)
 
 SET(FRAMEWORK_TIMER_RESOLUTION "1MS" CACHE STRING "The frequency of the framework timer. One of '1MS' (1024 ticks per second) or '32K' (32768 ticks per second)")
