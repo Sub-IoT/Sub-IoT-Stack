@@ -41,7 +41,7 @@ GLOBAL_INCLUDE_DIRECTORIES("${CMAKE_CURRENT_BINARY_DIR}")
 #Set platform specific compile options
 #INSERT_C_FLAGS(AFTER "-ffunction-sections -fdata-sections -Os") # TODO minimal code size,
                                                                 # but strips debug symbols as well (regression in toolchain, should be fixed in future)
-#INSERT_C_FLAGS(AFTER "-Os")
+INSERT_C_FLAGS(AFTER "-Os")
 
 #Add platform specific linker flags
 INSERT_LINKER_FLAGS(BEFORE OBJECTS INSERT "")
