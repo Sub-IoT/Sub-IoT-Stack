@@ -24,6 +24,7 @@
 #include "platform_lcd.h"
 #include <stdio.h>
 #include <em_usbd.h>
+#include "timer.h"
 
 //Overwrite _write so 'printf''s get pushed over the uart
 int _write(int fd, char *ptr, int len)
