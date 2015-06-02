@@ -20,7 +20,6 @@
 #include "hwatomic.h"
 #include "hwleds.h"
 #include "log.h"
-#include <stdio.h>
 
 //Overwrite _write so 'printf''s get pushed over the uart
 

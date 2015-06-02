@@ -21,6 +21,7 @@
 
 #include "platform_defs.h"
 #include "cc430_chip.h"
+#include "../printf/printf.h"
 
 #ifndef PLATFORM_WIZZIMOTE
     #error Mismatch between the configured platform and the actual platform. Expected PLATFORM_WIZZIMOTE to be defined

@@ -63,7 +63,6 @@ __LINK_C void log_print_string(char* format, ...)
     va_list args;
     va_start(args, format);
 #ifdef FRAMEWORK_LOG_BINARY
-    //uint8_t len = sprintf(NG(buffer), format, args);
     uint8_t len = vsnprintf(NG(buffer), BUFFER_SIZE, format, args);
     uart_transmit_data(0xDD);
     uart_transmit_data(LOG_TYPE_STRING);
@@ -81,7 +80,6 @@ __LINK_C void log_print_stack_string(log_stack_layer_t type, char* format, ...)
     va_list args;
     va_start(args, format);
 #ifdef FRAMEWORK_LOG_BINARY
-    //uint8_t len = sprintf(NG(buffer), format, args);
     uint8_t len = vsnprintf(NG(buffer), BUFFER_SIZE, format, args);
     uart_transmit_data(0xDD);
     uart_transmit_data(LOG_TYPE_STACK);
