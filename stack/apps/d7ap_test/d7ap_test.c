@@ -49,7 +49,9 @@ void start_foreground_scan()
 
 void execute_sensor_measurement()
 {
-	led_toggle(1);
+#if HW_NUM_LEDS > 1
+    led_toggle(1);
+#endif
     // use the counter value for now instead of 'real' sensor
     uint32_t val = timer_get_counter_value();
     fs_write_file(0x40, 0, (uint8_t*)&val, 4); // File 0x40 is configured to use D7AActP trigger an ALP action which broadcasts this file data on Access Class 0

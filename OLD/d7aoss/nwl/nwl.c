@@ -262,7 +262,7 @@ void nwl_build_network_protocol_data(uint8_t control, nwl_security* security, nw
 		{
 			nwl_full_access_template* access = (nwl_full_access_template*) source_access;
 			if (access->control & NWL_ACCESS_TEMPL_CTRL_VID)
-				access_tmpl_length = 4;
+				access_tmpl_length = 4;https://www.overleaf.com/2672884dbgqvv#/7082699/
 			else
 				access_tmpl_length = 10;
 
