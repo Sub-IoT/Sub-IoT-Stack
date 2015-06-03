@@ -101,9 +101,9 @@ static RF_SETTINGS rf_settings = {
    RADIO_CHAN,   					// CHANNR    Channel number.
    RADIO_FREQ_IF,   				// FSCTRL1   Frequency synthesizer control.
    RADIO_FREQOFF,   				// FSCTRL0   Frequency synthesizer control.
-   RADIO_FREQ2,   					// FREQ2     Frequency control word, high byte.
-   RADIO_FREQ1,   					// FREQ1     Frequency control word, middle byte.
-   RADIO_FREQ0,   					// FREQ0     Frequency control word, low byte.
+   RADIO_FREQ2,                                        // FREQ2     Frequency control word, high byte.
+   RADIO_FREQ1,                                        // FREQ1     Frequency control word, middle byte.
+   RADIO_FREQ0,                                        // FREQ0     Frequency control word, low byte.
    RADIO_MDMCFG4_CHANBW_E(1) | RADIO_MDMCFG4_CHANBW_M(0) | RADIO_MDMCFG4_DRATE_E(11),   // MDMCFG4   Modem configuration.
    RADIO_MDMCFG3_DRATE_M(24),   	// MDMCFG3   Modem configuration.
    RADIO_MDMCFG2_DEM_DCFILT_ON | RADIO_MDMCFG2_MOD_FORMAT_GFSK | RADIO_MDMCFG2_SYNC_MODE_16in16CS,   // MDMCFG2   Modem configuration.
@@ -161,9 +161,16 @@ static void end_of_packet_isr()
         case HW_RADIO_STATE_RX: ;
             uint8_t packet_len = cc1101_interface_read_single_reg(RXFIFO);
             DPRINT("EOP ISR packetLength: %d", packet_len);
+            if(packet_len >= 63)
+            {
+            	// long packets not yet supported or bit error in length byte, don't assert but flush rx
+                cc1101_interface_strobe(RF_SFRX);
+                cc1101_interface_set_interrupts_enabled(true);
+                return;
+            }
+
             hw_radio_packet_t* packet = alloc_packet_callback(packet_len);
             packet->length = packet_len;
-            assert(packet->length < 63); // long packets not yet supported
             cc1101_interface_read_burst_reg(RXFIFO, packet->data + 1, packet->length);
 
             // fill rx_meta
@@ -223,6 +230,7 @@ static void configure_channel(const channel_id_t* channel_id)
 
         // set freq band
         DPRINT("Set frequency band index: %d", channel_id->channel_header.ch_freq_band);
+
         // TODO validate
         /*
         switch(frequency_band)
