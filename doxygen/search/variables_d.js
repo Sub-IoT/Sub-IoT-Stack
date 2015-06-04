@@ -1,6 +1,8 @@
 var searchData=
 [
-  ['rssi',['rssi',['../struct____attribute____.html#ad5bab7423266e1e49ffe4b2d92abb7f3',1,'__attribute__']]],
-  ['rx_5fcfg',['rx_cfg',['../struct____attribute____.html#ad1aca644ea2b14ed7b8206252f58efc4',1,'__attribute__']]],
-  ['rx_5fmeta',['rx_meta',['../struct____attribute____.html#adedfdd6a1e1c1fd8be77cb8fab3da91a',1,'__attribute__']]]
+  ['offset',['offset',['../structalp__operand__file__offset__t.html#a07d203a50df7efb4047402e8130f023c',1,'alp_operand_file_offset_t']]],
+  ['operation',['operation',['../structalp__control__t.html#a82c90b096e2c9c205b484813c095be24',1,'alp_control_t']]],
+  ['origin_5faccess_5fclass',['origin_access_class',['../structd7anp__ctrl__t.html#a9cf0e5e12e164ad18acaf1ca820e9b3e',1,'d7anp_ctrl_t']]],
+  ['origin_5faccess_5fid_5fis_5fvid',['origin_access_id_is_vid',['../structd7anp__ctrl__t.html#a2c3f0dcbb76ba2d4c0bf51b1b57d9a3f',1,'d7anp_ctrl_t']]],
+  ['origin_5faccess_5fid_5fpresent',['origin_access_id_present',['../structd7anp__ctrl__t.html#aa172cd2778f208246aa45ac70045ff6b',1,'d7anp_ctrl_t']]]
 ];

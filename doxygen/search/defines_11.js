@@ -1,9 +1,13 @@
 var searchData=
 [
-  ['uart_5fbaudrate',['UART_BAUDRATE',['../_e_f_m32_g_g___s_t_k3700_2inc_2platform_8h.html#a2c7ed0283bd6f2f9d791860d6254ef4f',1,'UART_BAUDRATE():&#160;platform.h'],['../wizzimote_2inc_2platform_8h.html#a2c7ed0283bd6f2f9d791860d6254ef4f',1,'UART_BAUDRATE():&#160;platform.h']]],
-  ['uart_5fchannel',['UART_CHANNEL',['../_e_f_m32_g_g___s_t_k3700_2inc_2platform_8h.html#a83c524f684970472a9ae3ba181fdec80',1,'platform.h']]],
-  ['uart_5fclock',['UART_CLOCK',['../_e_f_m32_g_g___s_t_k3700_2inc_2platform_8h.html#a37ba45746e4dd0d1fbf6320bd4c0ce25',1,'platform.h']]],
-  ['uart_5fpin_5frx',['UART_PIN_RX',['../_e_f_m32_g_g___s_t_k3700_2inc_2platform_8h.html#a3aa1a02b68043877d2940b641989e8f1',1,'platform.h']]],
-  ['uart_5fpin_5ftx',['UART_PIN_TX',['../_e_f_m32_g_g___s_t_k3700_2inc_2platform_8h.html#a4df62a1f19582066fa34d18207192c8b',1,'platform.h']]],
-  ['uart_5froute_5flocation',['UART_ROUTE_LOCATION',['../_e_f_m32_g_g___s_t_k3700_2inc_2platform_8h.html#abec6a31837b0438637d50a92d9d6b80d',1,'platform.h']]]
+  ['test0',['TEST0',['../cc1101__constants_8h.html#ae898d2284301fc88393371e470f8db52',1,'cc1101_constants.h']]],
+  ['test1',['TEST1',['../cc1101__constants_8h.html#aef8471770769d5643c8d0e9d49de0678',1,'cc1101_constants.h']]],
+  ['test2',['TEST2',['../cc1101__constants_8h.html#a1b5997c11166c594b80d44bfde1cfa9c',1,'cc1101_constants.h']]],
+  ['timer_5fmax_5fsize',['TIMER_MAX_SIZE',['../_timer_service_8h.html#a06c3d88c2f7e7a06df63ecca13100459',1,'TimerService.h']]],
+  ['timer_5fmin_5fsize',['TIMER_MIN_SIZE',['../_timer_service_8h.html#aa50d8a859f952d15ef8ec4e1542f477c',1,'TimerService.h']]],
+  ['tinyprintf_5fdefine_5ftfp_5fprintf',['TINYPRINTF_DEFINE_TFP_PRINTF',['../wizzimote_2printf_2printf_8h.html#a8d50469c93c7efee0fde91bbb9a5baa3',1,'printf.h']]],
+  ['tinyprintf_5fdefine_5ftfp_5fsprintf',['TINYPRINTF_DEFINE_TFP_SPRINTF',['../wizzimote_2printf_2printf_8h.html#af07f8972d02d9c81a76e44d305d2b5d5',1,'printf.h']]],
+  ['tinyprintf_5foverride_5flibc',['TINYPRINTF_OVERRIDE_LIBC',['../wizzimote_2printf_2printf_8h.html#a2c374b75266b24d00a3d9b270b550d4e',1,'printf.h']]],
+  ['txbytes',['TXBYTES',['../cc1101__constants_8h.html#a9f180f03f3cd38aadc9e61001ba8d872',1,'cc1101_constants.h']]],
+  ['txfifo',['TXFIFO',['../cc1101__constants_8h.html#a1daa02e093ccc73ccaf55cddf7cb3732',1,'cc1101_constants.h']]]
 ];

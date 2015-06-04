@@ -98,6 +98,8 @@ $(document).ready(function(){initNavTree('group__logging.html','');});
 </div>
 
 <div class="header">
+  <div class="summary">
+<a href="#enum-members">Enumerations</a>  </div>
   <div class="headertitle">
 <div class="title">Logging<div class="ingroups"><a class="el" href="group__framework.html">Framework API</a></div></div>  </div>
 </div><!--header-->
@@ -105,6 +107,23 @@ $(document).ready(function(){initNavTree('group__logging.html','');});
 
 <p>Specifies the generic logging facilities of the framework.  
 <a href="#details">More...</a></p>
+<table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="enum-members"></a>
+Enumerations</h2></td></tr>
+<tr class="memitem:ga74f3f01cd15381ebeccd55047988c127"><td class="memItemLeft" align="right" valign="top">enum &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__logging.html#ga74f3f01cd15381ebeccd55047988c127">log_stack_layer_t</a> { <br />
+&#160;&#160;<a class="el" href="group__logging.html#gga74f3f01cd15381ebeccd55047988c127a759413fea48d3d4fca5c67995aeaf859">LOG_STACK_PHY</a> = 0x01, 
+<a class="el" href="group__logging.html#gga74f3f01cd15381ebeccd55047988c127a0be08e3a960a5a620d6ec517d66d45d5">LOG_STACK_DLL</a> = 0x02, 
+<a class="el" href="group__logging.html#gga74f3f01cd15381ebeccd55047988c127ad35d595f7a1795e52a2eede01333298c">LOG_STACK_MAC</a> = 0x03, 
+<a class="el" href="group__logging.html#gga74f3f01cd15381ebeccd55047988c127af9e4212e6208bf1ac9aa1021cce6994a">LOG_STACK_NWL</a> = 0x04, 
+<br />
+&#160;&#160;<a class="el" href="group__logging.html#gga74f3f01cd15381ebeccd55047988c127a582d7dd01ff1d3913eb5bb82bf5ab8d5">LOG_STACK_TRANS</a> = 0x05, 
+<a class="el" href="group__logging.html#gga74f3f01cd15381ebeccd55047988c127a3837bb1a5e77f910c112d38ebb094b53">LOG_STACK_SESSION</a> = 0x06, 
+<a class="el" href="group__logging.html#gga74f3f01cd15381ebeccd55047988c127ae21a5c17a292ad0b9b3af3af8a708dbc">LOG_STACK_FWK</a> = 0x10
+<br />
+ }</td></tr>
+<tr class="memdesc:ga74f3f01cd15381ebeccd55047988c127"><td class="mdescLeft">&#160;</td><td class="mdescRight">The source in the stack from which the log originates.  <a href="group__logging.html#ga74f3f01cd15381ebeccd55047988c127">More...</a><br /></td></tr>
+<tr class="separator:ga74f3f01cd15381ebeccd55047988c127"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <p>Specifies the generic logging facilities of the framework. </p>
 <p>A number of functions are provided to log both arbitrarily formatted data (processed using the printf family of functions) and binary data (logged in a more or less human readable format). Moreover data can be logged in human readable format or in binary format. Which format is used is controlled through the 'FRAMEWORK_LOG_BINARY' CMake option. The binary format can be parsed with by PyLogger tool, which provides features like filtering per layer or piping to wireshark.</p>
@@ -114,12 +133,43 @@ $(document).ready(function(){initNavTree('group__logging.html','');});
 <a href="#" onclick="location.href='mai'+'lto:'+'gle'+'nn'+'.er'+'ge'+'ert'+'s@'+'uan'+'tw'+'erp'+'en'+'.be'; return false;">glenn<span style="display: none;">.nosp@m.</span>.erg<span style="display: none;">.nosp@m.</span>eerts<span style="display: none;">.nosp@m.</span>@uan<span style="display: none;">.nosp@m.</span>twerp<span style="display: none;">.nosp@m.</span>en.b<span style="display: none;">.nosp@m.</span>e</a> </dd>
 <dd>
 <a href="#" onclick="location.href='mai'+'lto:'+'dan'+'ie'+'l.v'+'an'+'den'+'ak'+'ker'+'@u'+'ant'+'we'+'rpe'+'n.'+'be'; return false;">danie<span style="display: none;">.nosp@m.</span>l.va<span style="display: none;">.nosp@m.</span>ndena<span style="display: none;">.nosp@m.</span>kker<span style="display: none;">.nosp@m.</span>@uant<span style="display: none;">.nosp@m.</span>werp<span style="display: none;">.nosp@m.</span>en.be</a> </dd></dl>
+<h2 class="groupheader">Enumeration Type Documentation</h2>
+<a class="anchor" id="ga74f3f01cd15381ebeccd55047988c127"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">enum <a class="el" href="group__logging.html#ga74f3f01cd15381ebeccd55047988c127">log_stack_layer_t</a></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>The source in the stack from which the log originates. </p>
+<table class="fieldtable">
+<tr><th colspan="2">Enumerator</th></tr><tr><td class="fieldname"><a class="anchor" id="gga74f3f01cd15381ebeccd55047988c127a759413fea48d3d4fca5c67995aeaf859"></a>LOG_STACK_PHY&#160;</td><td class="fielddoc">
+</td></tr>
+<tr><td class="fieldname"><a class="anchor" id="gga74f3f01cd15381ebeccd55047988c127a0be08e3a960a5a620d6ec517d66d45d5"></a>LOG_STACK_DLL&#160;</td><td class="fielddoc">
+</td></tr>
+<tr><td class="fieldname"><a class="anchor" id="gga74f3f01cd15381ebeccd55047988c127ad35d595f7a1795e52a2eede01333298c"></a>LOG_STACK_MAC&#160;</td><td class="fielddoc">
+</td></tr>
+<tr><td class="fieldname"><a class="anchor" id="gga74f3f01cd15381ebeccd55047988c127af9e4212e6208bf1ac9aa1021cce6994a"></a>LOG_STACK_NWL&#160;</td><td class="fielddoc">
+</td></tr>
+<tr><td class="fieldname"><a class="anchor" id="gga74f3f01cd15381ebeccd55047988c127a582d7dd01ff1d3913eb5bb82bf5ab8d5"></a>LOG_STACK_TRANS&#160;</td><td class="fielddoc">
+</td></tr>
+<tr><td class="fieldname"><a class="anchor" id="gga74f3f01cd15381ebeccd55047988c127a3837bb1a5e77f910c112d38ebb094b53"></a>LOG_STACK_SESSION&#160;</td><td class="fielddoc">
+</td></tr>
+<tr><td class="fieldname"><a class="anchor" id="gga74f3f01cd15381ebeccd55047988c127ae21a5c17a292ad0b9b3af3af8a708dbc"></a>LOG_STACK_FWK&#160;</td><td class="fielddoc">
+</td></tr>
+</table>
+
+</div>
+</div>
 </div><!-- contents -->
 </div><!-- doc-content -->
 <!-- start footer part -->
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
-    <li class="footer">Generated on Thu Apr 30 2015 15:23:53 for OSS-7: Open Source Stack for DASH7 Alliance Protocol by
+    <li class="footer">Generated on Thu Jun 4 2015 21:59:50 for OSS-7: Open Source Stack for DASH7 Alliance Protocol by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.8.9.1 </li>
   </ul>

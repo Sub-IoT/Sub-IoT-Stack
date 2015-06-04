@@ -1,14 +1,11 @@
 var searchData=
 [
-  ['packet_5fqueue',['packet_queue',['../packet__queue_8c.html#afc3b1123bb891e34974494dd09f4856d',1,'packet_queue.c']]],
-  ['packet_5fqueue_5felement_5fstatus',['packet_queue_element_status',['../packet__queue_8c.html#a43eb97696381bb36f7392803ebf91766',1,'packet_queue.c']]],
-  ['packet_5fqueue_5fsize',['PACKET_QUEUE_SIZE',['../packet__queue_8c.html#a091999148c662f52d1f726cf82f1993e',1,'packet_queue.c']]],
-  ['partnum',['PARTNUM',['../cc1101__constants_8h.html#abf47da671d641e6da1802fd95e52e23b',1,'cc1101_constants.h']]],
-  ['patable',['PATABLE',['../cc1101__constants_8h.html#a107f2eeb5b18f9e0b6f63050ef435445',1,'cc1101_constants.h']]],
-  ['pktctrl0',['PKTCTRL0',['../cc1101__constants_8h.html#a47cb7d5d48dd0e71781409815d4fbbfa',1,'cc1101_constants.h']]],
-  ['pktctrl1',['PKTCTRL1',['../cc1101__constants_8h.html#a677bd90f5ee6fe7cf9e1388785b6b1bc',1,'cc1101_constants.h']]],
-  ['pktlen',['PKTLEN',['../cc1101__constants_8h.html#aeb4aac5f7c9599c10c864d0353cf6bce',1,'cc1101_constants.h']]],
-  ['pktstatus',['PKTSTATUS',['../cc1101__constants_8h.html#a92460c1fb268e0f30a23bb7163ffb465',1,'cc1101_constants.h']]],
-  ['platform_5fnum_5ftimers',['PLATFORM_NUM_TIMERS',['../cc430__chip_8h.html#aeb290bb716beb5b87fd535822054eccb',1,'PLATFORM_NUM_TIMERS():&#160;cc430_chip.h'],['../efm32gg__chip_8h.html#aeb290bb716beb5b87fd535822054eccb',1,'PLATFORM_NUM_TIMERS():&#160;efm32gg_chip.h'],['../kl02z__chip_8h.html#aeb290bb716beb5b87fd535822054eccb',1,'PLATFORM_NUM_TIMERS():&#160;kl02z_chip.h']]],
-  ['ptest',['PTEST',['../cc1101__constants_8h.html#a64646998088bad22debf7f6529bc9164',1,'cc1101_constants.h']]]
+  ['ng',['NG',['../ng_8h.html#aa25e025bae22513cd27959fe8d2b6108',1,'ng.h']]],
+  ['ngdef',['NGDEF',['../ng_8h.html#a0c90db0a437ef4e5cb6595f22c461e6f',1,'ng.h']]],
+  ['node_5fglobals',['NODE_GLOBALS',['../castalia-sim-platform_2inc_2platform_8h.html#a7a96dd33e80448f0d9b6e6cb64f47cdc',1,'platform.h']]],
+  ['node_5fglobals_5fmax_5fnodes',['NODE_GLOBALS_MAX_NODES',['../castalia-sim-platform_2inc_2platform_8h.html#a4d507270fd97cf8b76bf5279455db869',1,'platform.h']]],
+  ['num_5fapp_5ftimers',['NUM_APP_TIMERS',['../usbconfig_8h.html#ac53b4f7b6250b60ff7192c88137f4adc',1,'usbconfig.h']]],
+  ['num_5fep_5fused',['NUM_EP_USED',['../usbconfig_8h.html#a836fd372f59b18af5e859175624b5385',1,'usbconfig.h']]],
+  ['num_5finterfaces',['NUM_INTERFACES',['../usbconfig_8h.html#a3c741f0d1654959b591298f9c366442e',1,'usbconfig.h']]],
+  ['num_5fuserbuttons',['NUM_USERBUTTONS',['../_e_f_m32_g_g___s_t_k3700_2inc_2platform_8h.html#a711b79f5e2af016adea2af8f46306683',1,'NUM_USERBUTTONS():&#160;platform.h'],['../ifest_2inc_2platform_8h.html#a711b79f5e2af016adea2af8f46306683',1,'NUM_USERBUTTONS():&#160;platform.h'],['../matrix__tp1089_2inc_2platform_8h.html#a711b79f5e2af016adea2af8f46306683',1,'NUM_USERBUTTONS():&#160;platform.h']]]
 ];

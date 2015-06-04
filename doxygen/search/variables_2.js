@@ -16,7 +16,16 @@ var searchData=
   ['b7',['B7',['../efm32gg__pins_8c.html#a125b7e1fc4e54d32cb6d745be54d98d6',1,'B7():&#160;efm32gg_pins.c'],['../efm32gg__pins_8h.html#a125b7e1fc4e54d32cb6d745be54d98d6',1,'B7():&#160;efm32gg_pins.c']]],
   ['b8',['B8',['../efm32gg__pins_8c.html#a722f678a588c93316f568a39feb5ba9e',1,'B8():&#160;efm32gg_pins.c'],['../efm32gg__pins_8h.html#a722f678a588c93316f568a39feb5ba9e',1,'B8():&#160;efm32gg_pins.c']]],
   ['b9',['B9',['../efm32gg__pins_8c.html#ad66948b769373c6d243a98e7d2ed4c23',1,'B9():&#160;efm32gg_pins.c'],['../efm32gg__pins_8h.html#ad66948b769373c6d243a98e7d2ed4c23',1,'B9():&#160;efm32gg_pins.c']]],
+  ['bandwidth',['bandwidth',['../struct_r_xmode__type.html#a38fd6fed988fc33e2fade6a64cf3c470',1,'RXmode_type']]],
+  ['base',['base',['../structparam.html#a51d3b536883e45532d3193403ea1587a',1,'param']]],
+  ['ber',['BER',['../struct_custom_modulation_element.html#aafc840825598f6868fd5d2ba7fdb25d6',1,'CustomModulationElement']]],
+  ['bf',['bf',['../structparam.html#ab7ac8d468517918afb8be01c47c9988d',1,'param']]],
+  ['biterrors',['bitErrors',['../struct_received_signal__type.html#a873bdcccfd44be8bd3d40363bb7ce97b',1,'ReceivedSignal_type']]],
+  ['bitspersymbol',['bitsPerSymbol',['../struct_r_xmode__type.html#a1ac972ee5d809db79dd5e7f6465c5920',1,'RXmode_type']]],
   ['bscfg',['bscfg',['../struct_r_f___s_e_t_t_i_n_g_s.html#a14df3563ff1e01b7e43260ac9fff92b1',1,'RF_SETTINGS']]],
+  ['buckets',['buckets',['../structhistogram_output_type_def.html#a1e061be92932c22653afa435c2b812d1',1,'histogramOutputTypeDef']]],
+  ['bufferoverflow',['bufferOverflow',['../struct_pkt_breakdown.html#a47fa06045b176b0591a196741eda52c9',1,'PktBreakdown']]],
   ['button_5fid',['button_id',['../structbutton__info__t.html#a2f08efb63ae08443e16a3a49d962565b',1,'button_info_t']]],
-  ['buttons',['buttons',['../stk3700__userbutton_8c.html#a71e41f656a0958c2b402132aa24765ae',1,'stk3700_userbutton.c']]]
+  ['buttons',['buttons',['../stk3700__userbutton_8c.html#a71e41f656a0958c2b402132aa24765ae',1,'buttons():&#160;stk3700_userbutton.c'],['../ifest__userbutton_8c.html#a71e41f656a0958c2b402132aa24765ae',1,'buttons():&#160;ifest_userbutton.c']]],
+  ['byindex',['byIndex',['../structsimple_output_by_index.html#a6c4ee79ce294cfa4b55541bad9a9f2db',1,'simpleOutputByIndex::byIndex()'],['../structhistogram_output_by_index.html#a67aaba3db7c9f77e35d9b76ecab3487a',1,'histogramOutputByIndex::byIndex()']]]
 ];

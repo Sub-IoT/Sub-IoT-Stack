@@ -1,11 +1,14 @@
 var group__radio =
 [
+    [ "phy_channel_header_t", "structphy__channel__header__t.html", [
+      [ "ch_class", "structphy__channel__header__t.html#a7e317ffb50aef9c4da9226a348784ef0", null ],
+      [ "ch_coding", "structphy__channel__header__t.html#a90146db89c851af3a2031bde960845f7", null ],
+      [ "ch_freq_band", "structphy__channel__header__t.html#ab9ffbe7d1331fc49cbb04642fa084d06", null ]
+    ] ],
     [ "channel_id_t", "structchannel__id__t.html", [
       [ "center_freq_index", "structchannel__id__t.html#ad80170411d1c77833ddb6511972c307b", null ],
-      [ "ch_class", "structchannel__id__t.html#a92f090dbea76db3786aeb1a6c1dce7a0", null ],
-      [ "ch_coding", "structchannel__id__t.html#a3f99dd64f3426535dad0688dba9d4bac", null ],
-      [ "ch_freq_band", "structchannel__id__t.html#a46ed3aa4b5a25eeb374506b918732d47", null ],
-      [ "channel_header", "structchannel__id__t.html#a4890f4946e4109983865c83f61f28339", null ]
+      [ "channel_header", "structchannel__id__t.html#a00a5b4c9cbdc3ba107ce58e31512aa11", null ],
+      [ "channel_header_raw", "structchannel__id__t.html#a09e44fade2d2904b1026c1441334005e", null ]
     ] ],
     [ "hw_rx_cfg_t", "structhw__rx__cfg__t.html", [
       [ "channel_id", "structhw__rx__cfg__t.html#a214096f4681a8aa386cfa8af2c9f3556", null ],

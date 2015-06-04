@@ -11,9 +11,12 @@ var NAVTREE =
     [ "Data Structures", null, [
       [ "Data Structures", "annotated.html", "annotated" ],
       [ "Data Structure Index", "classes.html", null ],
+      [ "Class Hierarchy", "hierarchy.html", "hierarchy" ],
       [ "Data Fields", "functions.html", [
-        [ "All", "functions.html", null ],
-        [ "Variables", "functions_vars.html", null ]
+        [ "All", "functions.html", "functions_dup" ],
+        [ "Functions", "functions_func.html", null ],
+        [ "Variables", "functions_vars.html", "functions_vars" ],
+        [ "Related Functions", "functions_rela.html", null ]
       ] ]
     ] ],
     [ "Files", null, [
@@ -33,13 +36,18 @@ var NAVTREE =
 
 var NAVTREEINDEX =
 [
-"_e_f_m32_g_g___s_t_k3700_2inc_2platform_8h.html",
-"cc1101__interface__spi_8c.html",
-"cc1101__registers_8h.html#aea374737925eb7b7542bd668f46953e3",
-"efm32gg__pins_8c.html#ae0f6f9b7c74cf826de9b2bf1c3c21d9a",
-"group___g_p_i_o.html#ga5e53a065b2ece3da20764add74df6ca7",
-"group__scheduler.html#gga05589fbab0657f08285ebdfe93f5ec9eaaa92b2d93b02a201c180b2e543795fff",
-"struct_r_f___s_e_t_t_i_n_g_s.html"
+"_c_radio_8h.html",
+"castalia-sim-platform_2inc_2platform_8h.html",
+"cc1101__registers_8h.html#a0c69be8fbbf522e1b3eb1aedd6327316",
+"cc430__chip_8h.html#a2a349421a781f2e95c9f8d58bcdaf667",
+"class_timer_service.html#a9eb5786847a7846e57e20cf130d5e291",
+"efm32gg__pins_8c.html#aeec0882ffc7b7c84cde78e0774336fd8",
+"globals.html",
+"group___u_a_r_t.html#gad43125d70a4337b3c10d594393127596",
+"group__timer.html#ga02d1d0841163bee5d04a242b3030a81f",
+"packet_8h.html#a44779632fe674a36df8e8bbd279d5cc5",
+"struct_r_f___s_e_t_t_i_n_g_s.html#abe074c7f034ba42a977cabc26cb84456",
+"uocmote__main_8c.html#afcfc9d33c0d69dff67a4f98da43595b7"
 ];
 
 var SYNCONMSG = 'click to disable panel synchronisation';

@@ -1,11 +1,14 @@
 var searchData=
 [
-  ['wizzimote_5fleds_2ec',['wizzimote_leds.c',['../wizzimote__leds_8c.html',1,'']]],
-  ['wizzimote_5fmain_2ec',['wizzimote_main.c',['../wizzimote__main_8c.html',1,'']]],
-  ['worctrl',['worctrl',['../struct_r_f___s_e_t_t_i_n_g_s.html#a6a4a8acb99d5c07f93b98e1d8413cffd',1,'RF_SETTINGS::worctrl()'],['../cc1101__constants_8h.html#a186156bc9caf0835e59d796d768834f7',1,'WORCTRL():&#160;cc1101_constants.h']]],
-  ['worevt0',['worevt0',['../struct_r_f___s_e_t_t_i_n_g_s.html#a71d92dcc3f4617b606a9a313503f4409',1,'RF_SETTINGS::worevt0()'],['../cc1101__constants_8h.html#a2c80b405ab8435d969d16663085a35d1',1,'WOREVT0():&#160;cc1101_constants.h']]],
-  ['worevt1',['worevt1',['../struct_r_f___s_e_t_t_i_n_g_s.html#a51de4e3621704ef31c68723015ff9761',1,'RF_SETTINGS::worevt1()'],['../cc1101__constants_8h.html#a7553c7d007023e8c870cb949480a46e8',1,'WOREVT1():&#160;cc1101_constants.h']]],
-  ['wortime0',['WORTIME0',['../cc1101__constants_8h.html#a1da1e27efc55ce042befbac710370731',1,'cc1101_constants.h']]],
-  ['wortime1',['WORTIME1',['../cc1101__constants_8h.html#afceafb2c4cfe329e00aca3170cef8b55',1,'cc1101_constants.h']]],
-  ['write_5fburst',['WRITE_BURST',['../cc1101__constants_8h.html#a614ae1783616ef41f49f3000c25f3540',1,'cc1101_constants.h']]]
+  ['value',['value',['../structsource_snapshot.html#a7649eaf753d204f8e5b3fac4ba608830',1,'sourceSnapshot']]],
+  ['values',['values',['../struct_p_d_f_layer_type.html#ae1db5617d90e90859526840b2cac6599',1,'PDFLayerType']]],
+  ['vco_5fvc_5fdac',['VCO_VC_DAC',['../cc1101__constants_8h.html#a548602f9bb60705a5af3978d93786e41',1,'cc1101_constants.h']]],
+  ['version',['VERSION',['../cc1101__constants_8h.html#a1c6d5de492ac61ad29aec7aa9a436bbf',1,'cc1101_constants.h']]],
+  ['virtualmobilitymanager',['VirtualMobilityManager',['../class_virtual_mobility_manager.html',1,'']]],
+  ['virtualmobilitymanager_2ecc',['VirtualMobilityManager.cc',['../_virtual_mobility_manager_8cc.html',1,'']]],
+  ['virtualmobilitymanager_2eh',['VirtualMobilityManager.h',['../_virtual_mobility_manager_8h.html',1,'']]],
+  ['vsnprintf',['vsnprintf',['../wizzimote_2printf_2printf_8h.html#a00ba2ca988495904efc418acbf0627d7',1,'printf.h']]],
+  ['vsprintf',['vsprintf',['../wizzimote_2printf_2printf_8h.html#ab2cd44240f3a62bfed0900daf14ce58b',1,'printf.h']]],
+  ['vud_5finterface_5fno',['VUD_INTERFACE_NO',['../usbconfig_8h.html#a087e30a660ad19840a3cccfa164a1129',1,'usbconfig.h']]],
+  ['vud_5fnum_5fep_5fused',['VUD_NUM_EP_USED',['../usbconfig_8h.html#ade3bd7bff3f2453f948d9248c7f38d78',1,'usbconfig.h']]]
 ];

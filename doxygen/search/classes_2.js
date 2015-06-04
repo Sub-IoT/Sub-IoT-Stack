@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['channel_5fid_5ft',['channel_id_t',['../structchannel__id__t.html',1,'']]]
+  ['button_5finfo_5ft',['button_info_t',['../structbutton__info__t.html',1,'']]]
 ];

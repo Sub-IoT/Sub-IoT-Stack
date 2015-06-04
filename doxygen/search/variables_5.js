@@ -17,5 +17,7 @@ var searchData=
   ['e8',['E8',['../efm32gg__pins_8c.html#acfda0e20ad2e68143056f5e00816531b',1,'E8():&#160;efm32gg_pins.c'],['../efm32gg__pins_8h.html#acfda0e20ad2e68143056f5e00816531b',1,'E8():&#160;efm32gg_pins.c']]],
   ['e9',['E9',['../efm32gg__pins_8c.html#abd242703926c236a7e567cd8d1e630f3',1,'E9():&#160;efm32gg_pins.c'],['../efm32gg__pins_8h.html#abd242703926c236a7e567cd8d1e630f3',1,'E9():&#160;efm32gg_pins.c']]],
   ['edge',['edge',['../cc1101__interface__cc430_8c.html#a0d5d90cdaa8ee54bd9c8243cecafd951',1,'cc1101_interface_cc430.c']]],
-  ['eirp',['eirp',['../structhw__tx__cfg__t.html#af9d035d993654fd87b1adbb2704eb15c',1,'hw_tx_cfg_t']]]
+  ['eirp',['eirp',['../structhw__tx__cfg__t.html#af9d035d993654fd87b1adbb2704eb15c',1,'hw_tx_cfg_t::eirp()'],['../structsubband__t.html#a2b2739ac38a7ede2ba26e79639a09a08',1,'subband_t::eirp()']]],
+  ['empty',['empty',['../class_castalia_module.html#abb9cb5c6f4d9b51b5722da8d5d9b9e6a',1,'CastaliaModule']]],
+  ['encoding',['encoding',['../struct_received_signal__type.html#a12446b0e23638ff474807f5f19a86cf7',1,'ReceivedSignal_type']]]
 ];

@@ -1,5 +1,5 @@
 var searchData=
 [
-  ['packet_5ft',['packet_t',['../structpacket__t.html',1,'']]],
-  ['pin_5fid_5ft',['pin_id_t',['../structpin__id__t.html',1,'']]]
+  ['fs_5ffile_5fheader_5ft',['fs_file_header_t',['../structfs__file__header__t.html',1,'']]],
+  ['fs_5ffile_5fproperties_5ft',['fs_file_properties_t',['../structfs__file__properties__t.html',1,'']]]
 ];

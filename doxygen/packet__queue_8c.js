@@ -2,7 +2,6 @@ var packet__queue_8c =
 [
     [ "packet_queue", "packet__queue_8c.html#afc3b1123bb891e34974494dd09f4856d", null ],
     [ "packet_queue_element_status", "packet__queue_8c.html#a43eb97696381bb36f7392803ebf91766", null ],
-    [ "PACKET_QUEUE_SIZE", "packet__queue_8c.html#a091999148c662f52d1f726cf82f1993e", null ],
     [ "packet_queue_element_status_t", "packet__queue_8c.html#a844f43bb1bcbeb95d7a3af65dc1b01a9", [
       [ "PACKET_QUEUE_ELEMENT_STATUS_FREE", "packet__queue_8c.html#a844f43bb1bcbeb95d7a3af65dc1b01a9a71f41e0e70860362ad75bdf8e4a2580e", null ],
       [ "PACKET_QUEUE_ELEMENT_STATUS_ALLOCATED", "packet__queue_8c.html#a844f43bb1bcbeb95d7a3af65dc1b01a9a08b9e7b435d7ce54698f2051849ba131", null ],

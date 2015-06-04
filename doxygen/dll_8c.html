@@ -111,29 +111,49 @@ $(document).ready(function(){initNavTree('dll_8c.html','');});
 <div class="title">dll.c File Reference</div>  </div>
 </div><!--header-->
 <div class="contents">
-<div class="textblock"><code>#include &lt;<a class="el" href="packet_8h_source.html">packet.h</a>&gt;</code><br />
-<code>#include &lt;<a class="el" href="hwradio_8h_source.html">hwradio.h</a>&gt;</code><br />
-<code>#include &lt;<a class="el" href="log_8h_source.html">log.h</a>&gt;</code><br />
+<div class="textblock"><code>#include &quot;<a class="el" href="log_8h_source.html">log.h</a>&quot;</code><br />
 <code>#include &quot;<a class="el" href="dll_8h_source.html">dll.h</a>&quot;</code><br />
+<code>#include &quot;<a class="el" href="hwradio_8h_source.html">hwradio.h</a>&quot;</code><br />
 <code>#include &quot;<a class="el" href="packet__queue_8h_source.html">packet_queue.h</a>&quot;</code><br />
+<code>#include &quot;<a class="el" href="packet_8h_source.html">packet.h</a>&quot;</code><br />
+<code>#include &quot;<a class="el" href="crc_8h_source.html">crc.h</a>&quot;</code><br />
+<code>#include &quot;assert.h&quot;</code><br />
+<code>#include &quot;<a class="el" href="fs_8h_source.html">fs.h</a>&quot;</code><br />
+<code>#include &quot;<a class="el" href="ng_8h_source.html">ng.h</a>&quot;</code><br />
 </div><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="define-members"></a>
 Macros</h2></td></tr>
 <tr class="memitem:a57a35bfd7d13bdfab37a48171286ecee"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="dll_8c.html#a57a35bfd7d13bdfab37a48171286ecee">DPRINT</a>(...)</td></tr>
 <tr class="separator:a57a35bfd7d13bdfab37a48171286ecee"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a8d56fd1d7fce05dc4a8b6ddfc93b511d"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="dll_8c.html#a8d56fd1d7fce05dc4a8b6ddfc93b511d">current_access_class</a>&#160;&#160;&#160;<a class="el" href="ng_8h.html#aa25e025bae22513cd27959fe8d2b6108">NG</a>(_current_access_class)</td></tr>
+<tr class="separator:a8d56fd1d7fce05dc4a8b6ddfc93b511d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
 Functions</h2></td></tr>
-<tr class="memitem:ac9f3304b3551f03451ba7b0228e47d27"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="dll_8c.html#ac9f3304b3551f03451ba7b0228e47d27">packet_received</a> (hw_radio_packet_t *packet)</td></tr>
+<tr class="memitem:ac9f3304b3551f03451ba7b0228e47d27"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="dll_8c.html#ac9f3304b3551f03451ba7b0228e47d27">packet_received</a> (hw_radio_packet_t *<a class="el" href="structpacket.html">packet</a>)</td></tr>
 <tr class="separator:ac9f3304b3551f03451ba7b0228e47d27"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:gaff60408a8d3d73064b219c86df504218"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group___d_l_l.html#gaff60408a8d3d73064b219c86df504218">dll_init</a> ()</td></tr>
 <tr class="separator:gaff60408a8d3d73064b219c86df504218"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:gace0735e6d965016a15b018e5ee6c83bd"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group___d_l_l.html#gace0735e6d965016a15b018e5ee6c83bd">dll_tx_frame</a> ()</td></tr>
-<tr class="separator:gace0735e6d965016a15b018e5ee6c83bd"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga0f7973c0846602d05f6c895cc8d2b5da"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group___d_l_l.html#ga0f7973c0846602d05f6c895cc8d2b5da">dll_tx_frame</a> (<a class="el" href="d7anp_8h.html#a055b444e9c43fd24266b5908a7b26636">packet_t</a> *<a class="el" href="structpacket.html">packet</a>)</td></tr>
+<tr class="separator:ga0f7973c0846602d05f6c895cc8d2b5da"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ga2e0f59470f3631388d19603f83f1b219"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group___d_l_l.html#ga2e0f59470f3631388d19603f83f1b219">dll_start_foreground_scan</a> ()</td></tr>
 <tr class="separator:ga2e0f59470f3631388d19603f83f1b219"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga5b49c065d575e31ba0f0fac1ec68feb8"><td class="memItemLeft" align="right" valign="top">uint8_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group___d_l_l.html#ga5b49c065d575e31ba0f0fac1ec68feb8">dll_assemble_packet_header</a> (<a class="el" href="d7anp_8h.html#a055b444e9c43fd24266b5908a7b26636">packet_t</a> *<a class="el" href="structpacket.html">packet</a>, uint8_t *data_ptr)</td></tr>
+<tr class="separator:ga5b49c065d575e31ba0f0fac1ec68feb8"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <h2 class="groupheader">Macro Definition Documentation</h2>
+<a class="anchor" id="a8d56fd1d7fce05dc4a8b6ddfc93b511d"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">#define current_access_class&#160;&#160;&#160;<a class="el" href="ng_8h.html#aa25e025bae22513cd27959fe8d2b6108">NG</a>(_current_access_class)</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
 <a class="anchor" id="a57a35bfd7d13bdfab37a48171286ecee"></a>
 <div class="memitem">
 <div class="memproto">
@@ -172,8 +192,8 @@ Functions</h2></td></tr>
 <!-- start footer part -->
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
-    <li class="navelem"><a class="el" href="dir_e05d7e2b1ecd646af5bb94391405f3b5.html">modules</a></li><li class="navelem"><a class="el" href="dir_6b8f92aa648c158fb1e8ed54f9452f2b.html">d7ap</a></li><li class="navelem"><a class="el" href="dir_5b0bc7d5cc0396e195f63732574ee9ec.html">dll</a></li><li class="navelem"><a class="el" href="dll_8c.html">dll.c</a></li>
-    <li class="footer">Generated on Thu Apr 30 2015 15:23:53 for OSS-7: Open Source Stack for DASH7 Alliance Protocol by
+    <li class="navelem"><a class="el" href="dir_01202dae300978a231d8c522e324c86b.html">modules</a></li><li class="navelem"><a class="el" href="dir_a1cb6ca554dc1fa6f611b3062d3e2601.html">d7ap</a></li><li class="navelem"><a class="el" href="dir_682d9dd5ee667287a0fc0b56a1175fc7.html">dll</a></li><li class="navelem"><a class="el" href="dll_8c.html">dll.c</a></li>
+    <li class="footer">Generated on Thu Jun 4 2015 21:59:50 for OSS-7: Open Source Stack for DASH7 Alliance Protocol by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.8.9.1 </li>
   </ul>

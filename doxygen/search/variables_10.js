@@ -1,6 +1,19 @@
 var searchData=
 [
-  ['worctrl',['worctrl',['../struct_r_f___s_e_t_t_i_n_g_s.html#a6a4a8acb99d5c07f93b98e1d8413cffd',1,'RF_SETTINGS']]],
-  ['worevt0',['worevt0',['../struct_r_f___s_e_t_t_i_n_g_s.html#a71d92dcc3f4617b606a9a313503f4409',1,'RF_SETTINGS']]],
-  ['worevt1',['worevt1',['../struct_r_f___s_e_t_t_i_n_g_s.html#a51de4e3621704ef31c68723015ff9761',1,'RF_SETTINGS']]]
+  ['radiomodule',['radioModule',['../class_hal_module_base.html#a7a2b4e47c631c084deb1eafcefd39f2a',1,'HalModuleBase']]],
+  ['raw',['raw',['../structalp__control__t.html#a986e795af08acff4999386f2d2b5db7a',1,'alp_control_t::raw()'],['../structd7anp__ctrl__t.html#ac725f2b36a9959ec8e3618c2a076b402',1,'d7anp_ctrl_t::raw()']]],
+  ['requested_5fdata_5flength',['requested_data_length',['../structalp__operand__file__data__request__t.html#add567f0caff3125543a331f17d98a77d',1,'alp_operand_file_data_request_t']]],
+  ['resmgrmodule',['resMgrModule',['../class_hal_module_base.html#a034de91f5925540d592786935acf0a86',1,'HalModuleBase']]],
+  ['resourcemanager',['resourceManager',['../structclass_pointers_type.html#a492f09163e80ba15f567d610a712d27e',1,'classPointersType']]],
+  ['response_5frequested',['response_requested',['../structalp__control__t.html#ad1e252c41727c97b8d7b29c12e89c263',1,'alp_control_t']]],
+  ['rssi',['rssi',['../struct____attribute____.html#ad5bab7423266e1e49ffe4b2d92abb7f3',1,'__attribute__']]],
+  ['rx_5fcfg',['rx_cfg',['../struct____attribute____.html#ad1aca644ea2b14ed7b8206252f58efc4',1,'__attribute__']]],
+  ['rx_5fmeta',['rx_meta',['../struct____attribute____.html#adedfdd6a1e1c1fd8be77cb8fab3da91a',1,'__attribute__']]],
+  ['rxfailedinterference',['RxFailedInterference',['../struct_pkt_breakdown.html#a3a95ec65502a062f1be8ee73fcb595cd',1,'PktBreakdown']]],
+  ['rxfailedmodulation',['RxFailedModulation',['../struct_pkt_breakdown.html#a69a3a39e16655235efb31741646d8a74',1,'PktBreakdown']]],
+  ['rxfailednointerference',['RxFailedNoInterference',['../struct_pkt_breakdown.html#a8ac439168389f28d88ab13714dc867d4',1,'PktBreakdown']]],
+  ['rxfailednorxstate',['RxFailedNoRxState',['../struct_pkt_breakdown.html#aab07946a53c7937317ba6a443ff543f1',1,'PktBreakdown']]],
+  ['rxfailedsensitivity',['RxFailedSensitivity',['../struct_pkt_breakdown.html#a1286e1b1097017b3f528bed455a32a0f',1,'PktBreakdown']]],
+  ['rxreachedinterference',['RxReachedInterference',['../struct_pkt_breakdown.html#a7413ec3e598951994c98e192b348839f',1,'PktBreakdown']]],
+  ['rxreachednointerference',['RxReachedNoInterference',['../struct_pkt_breakdown.html#aef5b56078312e68e7ebb31a748f68807',1,'PktBreakdown']]]
 ];

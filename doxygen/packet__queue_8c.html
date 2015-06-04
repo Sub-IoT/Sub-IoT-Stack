@@ -113,14 +113,13 @@ $(document).ready(function(){initNavTree('packet__queue_8c.html','');});
 </div><!--header-->
 <div class="contents">
 <div class="textblock"><code>#include &quot;<a class="el" href="packet__queue_8h_source.html">packet_queue.h</a>&quot;</code><br />
+<code>#include &quot;MODULE_D7AP_defs.h&quot;</code><br />
 <code>#include &quot;assert.h&quot;</code><br />
 <code>#include &quot;<a class="el" href="packet_8h_source.html">packet.h</a>&quot;</code><br />
 <code>#include &quot;<a class="el" href="ng_8h_source.html">ng.h</a>&quot;</code><br />
 </div><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="define-members"></a>
 Macros</h2></td></tr>
-<tr class="memitem:a091999148c662f52d1f726cf82f1993e"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="packet__queue_8c.html#a091999148c662f52d1f726cf82f1993e">PACKET_QUEUE_SIZE</a>&#160;&#160;&#160;3</td></tr>
-<tr class="separator:a091999148c662f52d1f726cf82f1993e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:afc3b1123bb891e34974494dd09f4856d"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="packet__queue_8c.html#afc3b1123bb891e34974494dd09f4856d">packet_queue</a>&#160;&#160;&#160;<a class="el" href="ng_8h.html#aa25e025bae22513cd27959fe8d2b6108">NG</a>(_packet_queue)</td></tr>
 <tr class="separator:afc3b1123bb891e34974494dd09f4856d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a43eb97696381bb36f7392803ebf91766"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="packet__queue_8c.html#a43eb97696381bb36f7392803ebf91766">packet_queue_element_status</a>&#160;&#160;&#160;<a class="el" href="ng_8h.html#aa25e025bae22513cd27959fe8d2b6108">NG</a>(_packet_queue_element_status)</td></tr>
@@ -137,17 +136,17 @@ Enumerations</h2></td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
 Functions</h2></td></tr>
-<tr class="memitem:a8d1ffb3abbbcf657a59cf991446fb013"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structpacket__t.html">packet_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="packet__queue_8c.html#a8d1ffb3abbbcf657a59cf991446fb013">packet_queue_alloc_packet</a> ()</td></tr>
+<tr class="memitem:a8d1ffb3abbbcf657a59cf991446fb013"><td class="memItemLeft" align="right" valign="top"><a class="el" href="d7anp_8h.html#a055b444e9c43fd24266b5908a7b26636">packet_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="packet__queue_8c.html#a8d1ffb3abbbcf657a59cf991446fb013">packet_queue_alloc_packet</a> ()</td></tr>
 <tr class="separator:a8d1ffb3abbbcf657a59cf991446fb013"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a69ba1753bbb96b9679ac448ae434c7fb"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="packet__queue_8c.html#a69ba1753bbb96b9679ac448ae434c7fb">packet_queue_free_packet</a> (<a class="el" href="structpacket__t.html">packet_t</a> *packet)</td></tr>
+<tr class="memitem:a69ba1753bbb96b9679ac448ae434c7fb"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="packet__queue_8c.html#a69ba1753bbb96b9679ac448ae434c7fb">packet_queue_free_packet</a> (<a class="el" href="d7anp_8h.html#a055b444e9c43fd24266b5908a7b26636">packet_t</a> *<a class="el" href="structpacket.html">packet</a>)</td></tr>
 <tr class="separator:a69ba1753bbb96b9679ac448ae434c7fb"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aca89913585ff3bf149bc9b67bbfdac6c"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structpacket__t.html">packet_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="packet__queue_8c.html#aca89913585ff3bf149bc9b67bbfdac6c">packet_queue_find_packet</a> (hw_radio_packet_t *hw_radio_packet)</td></tr>
+<tr class="memitem:aca89913585ff3bf149bc9b67bbfdac6c"><td class="memItemLeft" align="right" valign="top"><a class="el" href="d7anp_8h.html#a055b444e9c43fd24266b5908a7b26636">packet_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="packet__queue_8c.html#aca89913585ff3bf149bc9b67bbfdac6c">packet_queue_find_packet</a> (hw_radio_packet_t *hw_radio_packet)</td></tr>
 <tr class="separator:aca89913585ff3bf149bc9b67bbfdac6c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a89272b2af2eb8c33bb1538874d3bb7d2"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="packet__queue_8c.html#a89272b2af2eb8c33bb1538874d3bb7d2">packet_queue_mark_received</a> (hw_radio_packet_t *hw_radio_packet)</td></tr>
 <tr class="separator:a89272b2af2eb8c33bb1538874d3bb7d2"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a178968f39a8abf2acb98f3c4fbc0a9ba"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structpacket__t.html">packet_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="packet__queue_8c.html#a178968f39a8abf2acb98f3c4fbc0a9ba">packet_queue_get_received_packet</a> ()</td></tr>
+<tr class="memitem:a178968f39a8abf2acb98f3c4fbc0a9ba"><td class="memItemLeft" align="right" valign="top"><a class="el" href="d7anp_8h.html#a055b444e9c43fd24266b5908a7b26636">packet_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="packet__queue_8c.html#a178968f39a8abf2acb98f3c4fbc0a9ba">packet_queue_get_received_packet</a> ()</td></tr>
 <tr class="separator:a178968f39a8abf2acb98f3c4fbc0a9ba"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a81145785b23f3e0c75da8d15f4169f46"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="packet__queue_8c.html#a81145785b23f3e0c75da8d15f4169f46">packet_queue_mark_processing</a> (<a class="el" href="structpacket__t.html">packet_t</a> *packet)</td></tr>
+<tr class="memitem:a81145785b23f3e0c75da8d15f4169f46"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="packet__queue_8c.html#a81145785b23f3e0c75da8d15f4169f46">packet_queue_mark_processing</a> (<a class="el" href="d7anp_8h.html#a055b444e9c43fd24266b5908a7b26636">packet_t</a> *<a class="el" href="structpacket.html">packet</a>)</td></tr>
 <tr class="separator:a81145785b23f3e0c75da8d15f4169f46"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <h2 class="groupheader">Macro Definition Documentation</h2>
@@ -169,18 +168,6 @@ Functions</h2></td></tr>
       <table class="memname">
         <tr>
           <td class="memname">#define packet_queue_element_status&#160;&#160;&#160;<a class="el" href="ng_8h.html#aa25e025bae22513cd27959fe8d2b6108">NG</a>(_packet_queue_element_status)</td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-</div>
-</div>
-<a class="anchor" id="a091999148c662f52d1f726cf82f1993e"></a>
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">#define PACKET_QUEUE_SIZE&#160;&#160;&#160;3</td>
         </tr>
       </table>
 </div><div class="memdoc">
@@ -220,7 +207,7 @@ Functions</h2></td></tr>
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname"><a class="el" href="structpacket__t.html">packet_t</a>* packet_queue_alloc_packet </td>
+          <td class="memname"><a class="el" href="d7anp_8h.html#a055b444e9c43fd24266b5908a7b26636">packet_t</a>* packet_queue_alloc_packet </td>
           <td>(</td>
           <td class="paramname"></td><td>)</td>
           <td></td>
@@ -236,7 +223,7 @@ Functions</h2></td></tr>
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname"><a class="el" href="structpacket__t.html">packet_t</a>* packet_queue_find_packet </td>
+          <td class="memname"><a class="el" href="d7anp_8h.html#a055b444e9c43fd24266b5908a7b26636">packet_t</a>* packet_queue_find_packet </td>
           <td>(</td>
           <td class="paramtype">hw_radio_packet_t *&#160;</td>
           <td class="paramname"></td><td>)</td>
@@ -244,7 +231,7 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Finds the <a class="el" href="structpacket__t.html" title="A D7AP &#39;packet&#39; used over all layers of the stack. Contains both the raw packet data (as transmitted ...">packet_t</a> corresponding to the supplied hw_radio_packet_t </p>
+<p>Finds the packet_t corresponding to the supplied hw_radio_packet_t </p>
 
 </div>
 </div>
@@ -255,7 +242,7 @@ Functions</h2></td></tr>
         <tr>
           <td class="memname">void packet_queue_free_packet </td>
           <td>(</td>
-          <td class="paramtype"><a class="el" href="structpacket__t.html">packet_t</a> *&#160;</td>
+          <td class="paramtype"><a class="el" href="d7anp_8h.html#a055b444e9c43fd24266b5908a7b26636">packet_t</a> *&#160;</td>
           <td class="paramname"></td><td>)</td>
           <td></td>
         </tr>
@@ -270,7 +257,7 @@ Functions</h2></td></tr>
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname"><a class="el" href="structpacket__t.html">packet_t</a>* packet_queue_get_received_packet </td>
+          <td class="memname"><a class="el" href="d7anp_8h.html#a055b444e9c43fd24266b5908a7b26636">packet_t</a>* packet_queue_get_received_packet </td>
           <td>(</td>
           <td class="paramname"></td><td>)</td>
           <td></td>
@@ -288,7 +275,7 @@ Functions</h2></td></tr>
         <tr>
           <td class="memname">void packet_queue_mark_processing </td>
           <td>(</td>
-          <td class="paramtype"><a class="el" href="structpacket__t.html">packet_t</a> *&#160;</td>
+          <td class="paramtype"><a class="el" href="d7anp_8h.html#a055b444e9c43fd24266b5908a7b26636">packet_t</a> *&#160;</td>
           <td class="paramname"></td><td>)</td>
           <td></td>
         </tr>
@@ -320,8 +307,8 @@ Functions</h2></td></tr>
 <!-- start footer part -->
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
-    <li class="navelem"><a class="el" href="dir_e05d7e2b1ecd646af5bb94391405f3b5.html">modules</a></li><li class="navelem"><a class="el" href="dir_6b8f92aa648c158fb1e8ed54f9452f2b.html">d7ap</a></li><li class="navelem"><a class="el" href="packet__queue_8c.html">packet_queue.c</a></li>
-    <li class="footer">Generated on Thu Apr 30 2015 15:23:53 for OSS-7: Open Source Stack for DASH7 Alliance Protocol by
+    <li class="navelem"><a class="el" href="dir_01202dae300978a231d8c522e324c86b.html">modules</a></li><li class="navelem"><a class="el" href="dir_a1cb6ca554dc1fa6f611b3062d3e2601.html">d7ap</a></li><li class="navelem"><a class="el" href="packet__queue_8c.html">packet_queue.c</a></li>
+    <li class="footer">Generated on Thu Jun 4 2015 21:59:50 for OSS-7: Open Source Stack for DASH7 Alliance Protocol by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.8.9.1 </li>
   </ul>

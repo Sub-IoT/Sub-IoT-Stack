@@ -99,6 +99,8 @@ $(document).ready(function(){initNavTree('group___d_l_l.html','');});
 
 <div class="header">
   <div class="summary">
+<a href="#nested-classes">Data Structures</a> &#124;
+<a href="#typedef-members">Typedefs</a> &#124;
 <a href="#func-members">Functions</a>  </div>
   <div class="headertitle">
 <div class="title">DLL<div class="ingroups"><a class="el" href="group___d7_a_p.html">D7AP</a></div></div>  </div>
@@ -108,21 +110,72 @@ $(document).ready(function(){initNavTree('group___d_l_l.html','');});
 <p>This module implements the DLL layer of the D7AP.  
 <a href="#details">More...</a></p>
 <table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="nested-classes"></a>
+Data Structures</h2></td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structdll__header__t.html">dll_header_t</a></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="typedef-members"></a>
+Typedefs</h2></td></tr>
+<tr class="memitem:ga055b444e9c43fd24266b5908a7b26636"><td class="memItemLeft" align="right" valign="top">typedef struct <a class="el" href="structpacket.html">packet</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group___d_l_l.html#ga055b444e9c43fd24266b5908a7b26636">packet_t</a></td></tr>
+<tr class="separator:ga055b444e9c43fd24266b5908a7b26636"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
 Functions</h2></td></tr>
 <tr class="memitem:gaff60408a8d3d73064b219c86df504218"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group___d_l_l.html#gaff60408a8d3d73064b219c86df504218">dll_init</a> ()</td></tr>
 <tr class="separator:gaff60408a8d3d73064b219c86df504218"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:gace0735e6d965016a15b018e5ee6c83bd"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group___d_l_l.html#gace0735e6d965016a15b018e5ee6c83bd">dll_tx_frame</a> ()</td></tr>
-<tr class="separator:gace0735e6d965016a15b018e5ee6c83bd"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga0f7973c0846602d05f6c895cc8d2b5da"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group___d_l_l.html#ga0f7973c0846602d05f6c895cc8d2b5da">dll_tx_frame</a> (<a class="el" href="d7anp_8h.html#a055b444e9c43fd24266b5908a7b26636">packet_t</a> *<a class="el" href="structpacket.html">packet</a>)</td></tr>
+<tr class="separator:ga0f7973c0846602d05f6c895cc8d2b5da"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ga2e0f59470f3631388d19603f83f1b219"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group___d_l_l.html#ga2e0f59470f3631388d19603f83f1b219">dll_start_foreground_scan</a> ()</td></tr>
 <tr class="separator:ga2e0f59470f3631388d19603f83f1b219"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga5b49c065d575e31ba0f0fac1ec68feb8"><td class="memItemLeft" align="right" valign="top">uint8_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group___d_l_l.html#ga5b49c065d575e31ba0f0fac1ec68feb8">dll_assemble_packet_header</a> (<a class="el" href="d7anp_8h.html#a055b444e9c43fd24266b5908a7b26636">packet_t</a> *<a class="el" href="structpacket.html">packet</a>, uint8_t *data_ptr)</td></tr>
+<tr class="separator:ga5b49c065d575e31ba0f0fac1ec68feb8"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <p>This module implements the DLL layer of the D7AP. </p>
 <dl class="section author"><dt>Author</dt><dd><a href="#" onclick="location.href='mai'+'lto:'+'gle'+'nn'+'.er'+'ge'+'ert'+'s@'+'uan'+'tw'+'erp'+'en'+'.be'; return false;">glenn<span style="display: none;">.nosp@m.</span>.erg<span style="display: none;">.nosp@m.</span>eerts<span style="display: none;">.nosp@m.</span>@uan<span style="display: none;">.nosp@m.</span>twerp<span style="display: none;">.nosp@m.</span>en.b<span style="display: none;">.nosp@m.</span>e</a> </dd>
 <dd>
 <a href="#" onclick="location.href='mai'+'lto:'+'maa'+'rt'+'en.'+'we'+'yn@'+'ua'+'ntw'+'er'+'pen'+'.b'+'e'; return false;">maart<span style="display: none;">.nosp@m.</span>en.w<span style="display: none;">.nosp@m.</span>eyn@u<span style="display: none;">.nosp@m.</span>antw<span style="display: none;">.nosp@m.</span>erpen<span style="display: none;">.nosp@m.</span>.be</a> </dd></dl>
+<h2 class="groupheader">Typedef Documentation</h2>
+<a class="anchor" id="ga055b444e9c43fd24266b5908a7b26636"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">typedef struct <a class="el" href="structpacket.html">packet</a> <a class="el" href="d7anp_8h.html#a055b444e9c43fd24266b5908a7b26636">packet_t</a></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
 <h2 class="groupheader">Function Documentation</h2>
+<a class="anchor" id="ga5b49c065d575e31ba0f0fac1ec68feb8"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">uint8_t dll_assemble_packet_header </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="d7anp_8h.html#a055b444e9c43fd24266b5908a7b26636">packet_t</a> *&#160;</td>
+          <td class="paramname"><em>packet</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">uint8_t *&#160;</td>
+          <td class="paramname"><em>data_ptr</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
 <a class="anchor" id="gaff60408a8d3d73064b219c86df504218"></a>
 <div class="memitem">
 <div class="memproto">
@@ -153,14 +206,15 @@ Functions</h2></td></tr>
 
 </div>
 </div>
-<a class="anchor" id="gace0735e6d965016a15b018e5ee6c83bd"></a>
+<a class="anchor" id="ga0f7973c0846602d05f6c895cc8d2b5da"></a>
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
           <td class="memname">void dll_tx_frame </td>
           <td>(</td>
-          <td class="paramname"></td><td>)</td>
+          <td class="paramtype"><a class="el" href="d7anp_8h.html#a055b444e9c43fd24266b5908a7b26636">packet_t</a> *&#160;</td>
+          <td class="paramname"><em>packet</em></td><td>)</td>
           <td></td>
         </tr>
       </table>
@@ -173,7 +227,7 @@ Functions</h2></td></tr>
 <!-- start footer part -->
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
-    <li class="footer">Generated on Thu Apr 30 2015 15:23:53 for OSS-7: Open Source Stack for DASH7 Alliance Protocol by
+    <li class="footer">Generated on Thu Jun 4 2015 21:59:50 for OSS-7: Open Source Stack for DASH7 Alliance Protocol by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.8.9.1 </li>
   </ul>

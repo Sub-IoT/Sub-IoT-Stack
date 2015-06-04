@@ -1,8 +1,6 @@
 var searchData=
 [
-  ['tfp_5fformat',['tfp_format',['../printf_8c.html#a07305de67fcaafda6276f292927a0cb0',1,'printf.c']]],
-  ['timer_5fcancel_5ftask',['timer_cancel_task',['../group__frameworktimer.html#ga9b7e8e64213b01afc03545c9c7dab08e',1,'timer_cancel_task(task_t task):&#160;timer.c'],['../group__frameworktimer.html#ga9b7e8e64213b01afc03545c9c7dab08e',1,'timer_cancel_task(task_t task):&#160;timer.c']]],
-  ['timer_5fget_5fcounter_5fvalue',['timer_get_counter_value',['../group__frameworktimer.html#gaf3aebd60468217e2d12c51e42dfe994b',1,'timer_get_counter_value():&#160;timer.c'],['../group__frameworktimer.html#gaf3aebd60468217e2d12c51e42dfe994b',1,'timer_get_counter_value():&#160;timer.c']]],
-  ['timer_5finit',['timer_init',['../group__frameworktimer.html#gaf61ac5ed52240aa92e7bc59768158fcf',1,'timer_init():&#160;timer.c'],['../group__frameworktimer.html#gaf61ac5ed52240aa92e7bc59768158fcf',1,'timer_init():&#160;timer.c']]],
-  ['timer_5fpost_5ftask_5fprio',['timer_post_task_prio',['../group__frameworktimer.html#ga83ca51669c9c4204f4c79c23fbc56183',1,'timer_post_task_prio(task_t task, timer_tick_t fire_time, uint8_t priority):&#160;timer.c'],['../group__frameworktimer.html#ga83ca51669c9c4204f4c79c23fbc56183',1,'timer_post_task_prio(task_t task, timer_tick_t time, uint8_t priority):&#160;timer.c']]]
+  ['operator_3c',['operator&lt;',['../_hal_module_8cc.html#a8d62f6aad3b8e3ef86695e1452228700',1,'operator&lt;(HalModule::frtimer_info const &amp;a, HalModule::frtimer_info const &amp;b):&#160;HalModule.cc'],['../_hal_module_8h.html#a8d62f6aad3b8e3ef86695e1452228700',1,'operator&lt;(HalModule::frtimer_info const &amp;a, HalModule::frtimer_info const &amp;b):&#160;HalModule.cc']]],
+  ['operator_3d',['operator=',['../class_radio_packet.html#af5676d21577b4b0942afad8900ced481',1,'RadioPacket']]],
+  ['overflow',['overflow',['../structnullstream_1_1nullbuf.html#a8465f9e1547b94fd53e52f7bb6534d4b',1,'nullstream::nullbuf']]]
 ];

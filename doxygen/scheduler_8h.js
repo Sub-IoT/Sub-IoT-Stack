@@ -1,9 +1,9 @@
 var scheduler_8h =
 [
     [ "task_t", "group__scheduler.html#ga78a55c2ac757b7addb3150081812288b", null ],
-    [ "MIN_PRIORITY", "group__scheduler.html#gga05589fbab0657f08285ebdfe93f5ec9eaaa92b2d93b02a201c180b2e543795fff", null ],
-    [ "MAX_PRIORITY", "group__scheduler.html#gga05589fbab0657f08285ebdfe93f5ec9ea6b8524b0a6b5872417d7d5e64a9ebf43", null ],
-    [ "DEFAULT_PRIORITY", "group__scheduler.html#gga05589fbab0657f08285ebdfe93f5ec9eadd8bc66004f384697b8c9d650871898d", null ],
+    [ "MIN_PRIORITY", "group__scheduler.html#ggac36f475ca5b446f4fde4c9b90bec77c8aaa92b2d93b02a201c180b2e543795fff", null ],
+    [ "MAX_PRIORITY", "group__scheduler.html#ggac36f475ca5b446f4fde4c9b90bec77c8a6b8524b0a6b5872417d7d5e64a9ebf43", null ],
+    [ "DEFAULT_PRIORITY", "group__scheduler.html#ggac36f475ca5b446f4fde4c9b90bec77c8add8bc66004f384697b8c9d650871898d", null ],
     [ "sched_cancel_task", "group__scheduler.html#ga9f7ebe2c1ec4254899a711a5e320ac5b", null ],
     [ "sched_is_scheduled", "group__scheduler.html#ga1a9d70c3c4d844657af0cdc8f99e1d65", null ],
     [ "sched_post_task_prio", "group__scheduler.html#gaeeb97be82fc2e73484ae1d4600e7cab8", null ],

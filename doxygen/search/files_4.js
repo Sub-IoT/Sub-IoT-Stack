@@ -1,5 +1,6 @@
 var searchData=
 [
+  ['efm32gg_5fadc_2ec',['efm32gg_adc.c',['../efm32gg__adc_8c.html',1,'']]],
   ['efm32gg_5fatomic_2ec',['efm32gg_atomic.c',['../efm32gg__atomic_8c.html',1,'']]],
   ['efm32gg_5fchip_2eh',['efm32gg_chip.h',['../efm32gg__chip_8h.html',1,'']]],
   ['efm32gg_5fgpio_2ec',['efm32gg_gpio.c',['../efm32gg__gpio_8c.html',1,'']]],
@@ -11,5 +12,19 @@ var searchData=
   ['efm32gg_5fsystem_2ec',['efm32gg_system.c',['../efm32gg__system_8c.html',1,'']]],
   ['efm32gg_5ftimer_2ec',['efm32gg_timer.c',['../efm32gg__timer_8c.html',1,'']]],
   ['efm32gg_5fuart_2ec',['efm32gg_uart.c',['../efm32gg__uart_8c.html',1,'']]],
+  ['em_5fusb_2eh',['em_usb.h',['../em__usb_8h.html',1,'']]],
+  ['em_5fusbd_2ec',['em_usbd.c',['../em__usbd_8c.html',1,'']]],
+  ['em_5fusbd_2eh',['em_usbd.h',['../em__usbd_8h.html',1,'']]],
+  ['em_5fusbdch9_2ec',['em_usbdch9.c',['../em__usbdch9_8c.html',1,'']]],
+  ['em_5fusbdep_2ec',['em_usbdep.c',['../em__usbdep_8c.html',1,'']]],
+  ['em_5fusbdint_2ec',['em_usbdint.c',['../em__usbdint_8c.html',1,'']]],
+  ['em_5fusbh_2ec',['em_usbh.c',['../em__usbh_8c.html',1,'']]],
+  ['em_5fusbh_2eh',['em_usbh.h',['../em__usbh_8h.html',1,'']]],
+  ['em_5fusbhal_2ec',['em_usbhal.c',['../em__usbhal_8c.html',1,'']]],
+  ['em_5fusbhal_2eh',['em_usbhal.h',['../em__usbhal_8h.html',1,'']]],
+  ['em_5fusbhep_2ec',['em_usbhep.c',['../em__usbhep_8c.html',1,'']]],
+  ['em_5fusbhint_2ec',['em_usbhint.c',['../em__usbhint_8c.html',1,'']]],
+  ['em_5fusbtimer_2ec',['em_usbtimer.c',['../em__usbtimer_8c.html',1,'']]],
+  ['em_5fusbtypes_2eh',['em_usbtypes.h',['../em__usbtypes_8h.html',1,'']]],
   ['errors_2eh',['errors.h',['../errors_8h.html',1,'']]]
 ];

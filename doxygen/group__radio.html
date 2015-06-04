@@ -114,8 +114,10 @@ $(document).ready(function(){initNavTree('group__radio.html','');});
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="nested-classes"></a>
 Data Structures</h2></td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structphy__channel__header__t.html">phy_channel_header_t</a></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structchannel__id__t.html">channel_id_t</a></td></tr>
-<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">spectrum id used to identify the spectrum settings  <a href="structchannel__id__t.html#details">More...</a><br /></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">channel id used to identify the spectrum settings  <a href="structchannel__id__t.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structhw__rx__cfg__t.html">hw_rx_cfg_t</a></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">The 'RX Configuration' for the radio.  <a href="structhw__rx__cfg__t.html#details">More...</a><br /></td></tr>
@@ -131,7 +133,7 @@ Data Structures</h2></td></tr>
 Macros</h2></td></tr>
 <tr class="memitem:gac55228f9ea3c257706e9316da32ce87e"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__radio.html#gac55228f9ea3c257706e9316da32ce87e">HW_RSSI_INVALID</a>&#160;&#160;&#160;0x7FFF</td></tr>
 <tr class="separator:gac55228f9ea3c257706e9316da32ce87e"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ga1ea11be8a05e4a87040bd5f0c10c911c"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__radio.html#ga1ea11be8a05e4a87040bd5f0c10c911c">HW_PACKET_BUF_SIZE</a>(length)&#160;&#160;&#160;(sizeof(hw_radio_packet_t) + length -1)</td></tr>
+<tr class="memitem:ga1ea11be8a05e4a87040bd5f0c10c911c"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__radio.html#ga1ea11be8a05e4a87040bd5f0c10c911c">HW_PACKET_BUF_SIZE</a>(length)&#160;&#160;&#160;(sizeof(hw_radio_packet_t) + length)</td></tr>
 <tr class="memdesc:ga1ea11be8a05e4a87040bd5f0c10c911c"><td class="mdescLeft">&#160;</td><td class="mdescRight">A convenience MACRO that calculates the minimum size of a buffer large enough to hold a single hw_radio_packet_t of the specified length.  <a href="#ga1ea11be8a05e4a87040bd5f0c10c911c">More...</a><br /></td></tr>
 <tr class="separator:ga1ea11be8a05e4a87040bd5f0c10c911c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
@@ -146,13 +148,13 @@ Typedefs</h2></td></tr>
 <tr class="memitem:gaed2efbab7ef580464c95416fdbe9cd2c"><td class="memItemLeft" align="right" valign="top">typedef hw_radio_packet_t *(*&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__radio.html#gaed2efbab7ef580464c95416fdbe9cd2c">alloc_packet_callback_t</a>) (uint8_t length)</td></tr>
 <tr class="memdesc:gaed2efbab7ef580464c95416fdbe9cd2c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Type definition for the 'new_packet' callback function.  <a href="#gaed2efbab7ef580464c95416fdbe9cd2c">More...</a><br /></td></tr>
 <tr class="separator:gaed2efbab7ef580464c95416fdbe9cd2c"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ga822e576af2256b03278c9945b8d6aacf"><td class="memItemLeft" align="right" valign="top">typedef void(*&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__radio.html#ga822e576af2256b03278c9945b8d6aacf">release_packet_callback_t</a>) (hw_radio_packet_t *packet)</td></tr>
+<tr class="memitem:ga822e576af2256b03278c9945b8d6aacf"><td class="memItemLeft" align="right" valign="top">typedef void(*&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__radio.html#ga822e576af2256b03278c9945b8d6aacf">release_packet_callback_t</a>) (hw_radio_packet_t *<a class="el" href="structpacket.html">packet</a>)</td></tr>
 <tr class="memdesc:ga822e576af2256b03278c9945b8d6aacf"><td class="mdescLeft">&#160;</td><td class="mdescRight">definition of the callback used by the PHY driver to 'release' control of a previously allocated packet buffer.  <a href="#ga822e576af2256b03278c9945b8d6aacf">More...</a><br /></td></tr>
 <tr class="separator:ga822e576af2256b03278c9945b8d6aacf"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:gaf118d5fc80084fae379668fd97f9719b"><td class="memItemLeft" align="right" valign="top">typedef void(*&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__radio.html#gaf118d5fc80084fae379668fd97f9719b">rx_packet_callback_t</a>) (hw_radio_packet_t *packet)</td></tr>
+<tr class="memitem:gaf118d5fc80084fae379668fd97f9719b"><td class="memItemLeft" align="right" valign="top">typedef void(*&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__radio.html#gaf118d5fc80084fae379668fd97f9719b">rx_packet_callback_t</a>) (hw_radio_packet_t *<a class="el" href="structpacket.html">packet</a>)</td></tr>
 <tr class="memdesc:gaf118d5fc80084fae379668fd97f9719b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Type definition for the rx callback function.  <a href="#gaf118d5fc80084fae379668fd97f9719b">More...</a><br /></td></tr>
 <tr class="separator:gaf118d5fc80084fae379668fd97f9719b"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:gac2f2e4e8140549c0ac3abcf7fefb9e77"><td class="memItemLeft" align="right" valign="top">typedef void(*&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__radio.html#gac2f2e4e8140549c0ac3abcf7fefb9e77">tx_packet_callback_t</a>) (hw_radio_packet_t *packet)</td></tr>
+<tr class="memitem:gac2f2e4e8140549c0ac3abcf7fefb9e77"><td class="memItemLeft" align="right" valign="top">typedef void(*&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__radio.html#gac2f2e4e8140549c0ac3abcf7fefb9e77">tx_packet_callback_t</a>) (hw_radio_packet_t *<a class="el" href="structpacket.html">packet</a>)</td></tr>
 <tr class="memdesc:gac2f2e4e8140549c0ac3abcf7fefb9e77"><td class="mdescLeft">&#160;</td><td class="mdescRight">Type definition for the tx callback function.  <a href="#gac2f2e4e8140549c0ac3abcf7fefb9e77">More...</a><br /></td></tr>
 <tr class="separator:gac2f2e4e8140549c0ac3abcf7fefb9e77"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ga0ba48debc5245ec6150ac6eb1db19766"><td class="memItemLeft" align="right" valign="top">typedef void(*&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__radio.html#ga0ba48debc5245ec6150ac6eb1db19766">rssi_valid_callback_t</a>) (int16_t cur_rssi)</td></tr>
@@ -211,7 +213,7 @@ Functions</h2></td></tr>
 <tr class="memitem:ga6bbc4103ec8a4f6a45edeabffe58990d"><td class="memItemLeft" align="right" valign="top"><a class="el" href="link__c_8h.html#ad7a35fa85166c1d1839000ac10353068">__LINK_C</a> bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__radio.html#ga6bbc4103ec8a4f6a45edeabffe58990d">hw_radio_is_rx</a> ()</td></tr>
 <tr class="memdesc:ga6bbc4103ec8a4f6a45edeabffe58990d"><td class="mdescLeft">&#160;</td><td class="mdescRight">Check whether or not the radio is in RX mode.  <a href="#ga6bbc4103ec8a4f6a45edeabffe58990d">More...</a><br /></td></tr>
 <tr class="separator:ga6bbc4103ec8a4f6a45edeabffe58990d"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ga7292dedeeb8229173201c2987811fb8f"><td class="memItemLeft" align="right" valign="top"><a class="el" href="link__c_8h.html#ad7a35fa85166c1d1839000ac10353068">__LINK_C</a> <a class="el" href="types_8h.html#a9ad6b2dc3cbff040775e79656fe8e1a3">error_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__radio.html#ga7292dedeeb8229173201c2987811fb8f">hw_radio_send_packet</a> (hw_radio_packet_t *packet, <a class="el" href="group__radio.html#gac2f2e4e8140549c0ac3abcf7fefb9e77">tx_packet_callback_t</a> tx_callback)</td></tr>
+<tr class="memitem:ga7292dedeeb8229173201c2987811fb8f"><td class="memItemLeft" align="right" valign="top"><a class="el" href="link__c_8h.html#ad7a35fa85166c1d1839000ac10353068">__LINK_C</a> <a class="el" href="types_8h.html#a9ad6b2dc3cbff040775e79656fe8e1a3">error_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__radio.html#ga7292dedeeb8229173201c2987811fb8f">hw_radio_send_packet</a> (hw_radio_packet_t *<a class="el" href="structpacket.html">packet</a>, <a class="el" href="group__radio.html#gac2f2e4e8140549c0ac3abcf7fefb9e77">tx_packet_callback_t</a> tx_callback)</td></tr>
 <tr class="memdesc:ga7292dedeeb8229173201c2987811fb8f"><td class="mdescLeft">&#160;</td><td class="mdescRight">Initiate a packet transmission over the air with the specified TX settings.  <a href="#ga7292dedeeb8229173201c2987811fb8f">More...</a><br /></td></tr>
 <tr class="separator:ga7292dedeeb8229173201c2987811fb8f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:gabc4c71396001bf829c2527e944637a07"><td class="memItemLeft" align="right" valign="top"><a class="el" href="link__c_8h.html#ad7a35fa85166c1d1839000ac10353068">__LINK_C</a> bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__radio.html#gabc4c71396001bf829c2527e944637a07">hw_radio_tx_busy</a> ()</td></tr>
@@ -242,7 +244,7 @@ Glenn Ergeerts </dd></dl>
           <td>(</td>
           <td class="paramtype">&#160;</td>
           <td class="paramname">length</td><td>)</td>
-          <td>&#160;&#160;&#160;(sizeof(hw_radio_packet_t) + length -1)</td>
+          <td>&#160;&#160;&#160;(sizeof(hw_radio_packet_t) + length)</td>
         </tr>
       </table>
 </div><div class="memdoc">
@@ -314,7 +316,7 @@ Glenn Ergeerts </dd></dl>
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">typedef void(* release_packet_callback_t) (hw_radio_packet_t *packet)</td>
+          <td class="memname">typedef void(* release_packet_callback_t) (hw_radio_packet_t *<a class="el" href="structpacket.html">packet</a>)</td>
         </tr>
       </table>
 </div><div class="memdoc">
@@ -353,7 +355,7 @@ Glenn Ergeerts </dd></dl>
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">typedef void(* rx_packet_callback_t) (hw_radio_packet_t *packet)</td>
+          <td class="memname">typedef void(* rx_packet_callback_t) (hw_radio_packet_t *<a class="el" href="structpacket.html">packet</a>)</td>
         </tr>
       </table>
 </div><div class="memdoc">
@@ -390,7 +392,7 @@ Glenn Ergeerts </dd></dl>
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">typedef void(* tx_packet_callback_t) (hw_radio_packet_t *packet)</td>
+          <td class="memname">typedef void(* tx_packet_callback_t) (hw_radio_packet_t *<a class="el" href="structpacket.html">packet</a>)</td>
         </tr>
       </table>
 </div><div class="memdoc">
@@ -788,7 +790,7 @@ Glenn Ergeerts </dd></dl>
 <!-- start footer part -->
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
-    <li class="footer">Generated on Thu Apr 30 2015 15:23:53 for OSS-7: Open Source Stack for DASH7 Alliance Protocol by
+    <li class="footer">Generated on Thu Jun 4 2015 21:59:50 for OSS-7: Open Source Stack for DASH7 Alliance Protocol by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.8.9.1 </li>
   </ul>
