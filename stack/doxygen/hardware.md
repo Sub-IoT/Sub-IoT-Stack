@@ -35,10 +35,7 @@ Currently there are two baluns available for this module, 433MHz and 868MHz.
 
 ![Gaint Gecko with CC1101 RF module](GG_CC1101.jpg)
 
-Schematics and board file are available. If there are any questions, contact us through the mailing list.
-
-* [Schematic](GG-CC1101_v1.pdf)
-* [Eagle files](GG_CC1101.zip)
+Schematics and Eagle files are available in the [git repository](https://github.com/CoSys-Lab/dash7-ap-open-source-stack/tree/master/hardware/stk3700-cc1101). If there are any questions, contact us through the mailing list.
 
 
 ##Wizzikit##
@@ -50,6 +47,6 @@ The DASH7 open software stack supports the Wizzilab platform, however this platf
 
 ![Wizzikit](WizziKit.png)
 
-[Datasheet (includes schematic)](../documents/WizziKit-Datasheet.pdf)
+[Datasheet (includes schematic)](http://www.wizzilab.com/wp-content/uploads/2013/03/WizziKit2-Datasheet.pdf)
 
 
