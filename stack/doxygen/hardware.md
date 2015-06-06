@@ -37,8 +37,8 @@ Currently there are two baluns available for this module, 433MHz and 868MHz.
 
 Schematics and board file are available. If there are any questions, contact us through the mailing list.
 
-* [Schematic](../documents/GG-CC1101_v1.pdf)
-* [Eagle files](../documents/GG_CC1101.zip)
+* [Schematic](GG-CC1101_v1.pdf)
+* [Eagle files](GG_CC1101.zip)
 
 
 ##Wizzikit##
