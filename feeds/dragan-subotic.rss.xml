@@ -12,5 +12,5 @@
 &lt;/ul&gt;
 &lt;p&gt;The RF module is based on the basic schematic from the TI CC1101 development kit. Only this board provide a connector that smoothly fits on the Gaint Gecko. Currently  two frequencies are supported, 433MHz and 868 MHz. 
 The &lt;a href="https://www.silabs.com/products/mcu/lowpower/Pages/efm32gg-stk3700.aspx"&gt;Giant Gecko STK-3700&lt;/a&gt; is available on different online electronic component shops. Such as Farnell, Mouser, Digikey, etc.
-If you have questions about the RF module you can contact use through mailing list or Github.&lt;/p&gt;
+More information about this moduke and the schema itself is available on our &lt;a href="http://cosys-lab.github.io/dash7-ap-open-source-stack/doxygen/md_hardware.html"&gt;suppoted hardware page&lt;/a&gt; If you have questions about the RF module you can contact use through mailing list or Github.&lt;/p&gt;
 &lt;p&gt;&lt;img alt="DLT" src="http://cosys-lab.github.io/dash7-ap-open-source-stack/images/GG_CC1101.jpg" /&gt;&lt;/p&gt;</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Dragan Subotic</dc:creator><pubDate>Wed, 03 Jun 2015 17:00:00 +0200</pubDate><guid>tag:cosys-lab.github.io,2015-06-03:dash7-ap-open-source-stack/checkout-our-new-rf-modules-for-the-giant-gecko.html</guid><category>Hardware</category></item></channel></rss>
