@@ -61,7 +61,7 @@
  */
 typedef struct
 {
-    uint16_t port;
+    uint32_t port;
     uint16_t pin;
 } pin_id_t;
 
