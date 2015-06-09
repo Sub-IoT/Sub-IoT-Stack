@@ -1,143 +1,132 @@
-/* KL02Z startup ARM GCC, Martin Kojtal (0xc0170)
- * Purpose: startup file for Cortex-M0 devices. Should use with
- *   GCC for ARM Embedded Processors
- * Version: V1.2
- * Date: 15 Nov 2011
- *
- * Copyright (c) 2011, ARM Limited
- * All rights reserved.
- *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
-    * Redistributions of source code must retain the above copyright
-      notice, this list of conditions and the following disclaimer.
-    * Redistributions in binary form must reproduce the above copyright
-      notice, this list of conditions and the following disclaimer in the
-      documentation and/or other materials provided with the distribution.
-    * Neither the name of the ARM Limited nor the
-      names of its contributors may be used to endorse or promote products
-      derived from this software without specific prior written permission.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
- * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
- * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL ARM LIMITED BE LIABLE FOR ANY
- * DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
- * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
- * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
- * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
- * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- */
+/* ---------------------------------------------------------------------------------------*/
+/*  @file:    startup_MKL02Z4.s                                                           */
+/*  @purpose: CMSIS Cortex-M0P Core Device Startup File                                   */
+/*            MKL02Z4                                                                     */
+/*  @version: 1.3                                                                         */
+/*  @date:    2014-10-14                                                                  */
+/*  @build:   b141023                                                                     */
+/* ---------------------------------------------------------------------------------------*/
+/*                                                                                        */
+/* Copyright (c) 1997 - 2014 , Freescale Semiconductor, Inc.                              */
+/* All rights reserved.                                                                   */
+/*                                                                                        */
+/* Redistribution and use in source and binary forms, with or without modification,       */
+/* are permitted provided that the following conditions are met:                          */
+/*                                                                                        */
+/* o Redistributions of source code must retain the above copyright notice, this list     */
+/*   of conditions and the following disclaimer.                                          */
+/*                                                                                        */
+/* o Redistributions in binary form must reproduce the above copyright notice, this       */
+/*   list of conditions and the following disclaimer in the documentation and/or          */
+/*   other materials provided with the distribution.                                      */
+/*                                                                                        */
+/* o Neither the name of Freescale Semiconductor, Inc. nor the names of its               */
+/*   contributors may be used to endorse or promote products derived from this            */
+/*   software without specific prior written permission.                                  */
+/*                                                                                        */
+/* THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND        */
+/* ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED          */
+/* WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE                 */
+/* DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR       */
+/* ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES         */
+/* (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;           */
+/* LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON         */
+/* ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT                */
+/* (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS          */
+/* SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.                           */
+/*****************************************************************************/
+/* Version: GCC for ARM Embedded Processors                                  */
+/*****************************************************************************/
     .syntax unified
     .arch armv6-m
 
-/* Memory Model
-   The HEAP starts at the end of the DATA section and grows upward.
-
-   The STACK starts at the end of the RAM and grows downward.
-
-   The HEAP and stack STACK are only checked at compile time:
-   (DATA_SIZE + HEAP_SIZE + STACK_SIZE) < RAM_SIZE
-
-   This is just a check for the bare minimum for the Heap+Stack area before
-   aborting compilation, it is not the run time limit:
-   Heap_Size + Stack_Size = 0x80 + 0x80 = 0x100
- */
-    .section .stack
-    .align 3
-#ifdef __STACK_SIZE
-    .equ    Stack_Size, __STACK_SIZE
-#else
-    .equ    Stack_Size, 0x80
-#endif
-    .globl    __StackTop
-    .globl    __StackLimit
-__StackLimit:
-    .space    Stack_Size
-    .size __StackLimit, . - __StackLimit
-__StackTop:
-    .size __StackTop, . - __StackTop
-
-    .section .heap
-    .align 3
-#ifdef __HEAP_SIZE
-    .equ    Heap_Size, __HEAP_SIZE
-#else
-    .equ    Heap_Size, 0x80
-#endif
-    .globl    __HeapBase
-    .globl    __HeapLimit
-__HeapBase:
-    .space    Heap_Size
-    .size __HeapBase, . - __HeapBase
-__HeapLimit:
-    .size __HeapLimit, . - __HeapLimit
-
-    .section .vector_table,"a",%progbits
+    .section .isr_vector, "a"
     .align 2
     .globl __isr_vector
 __isr_vector:
-    .long    __StackTop            /* Top of Stack */
-    .long    Reset_Handler         /* Reset Handler */
-    .long    NMI_Handler           /* NMI Handler */
-    .long    HardFault_Handler     /* Hard Fault Handler */
-    .long    0                     /* Reserved */
-    .long    0                     /* Reserved */
-    .long    0                     /* Reserved */
-    .long    0                     /* Reserved */
-    .long    0                     /* Reserved */
-    .long    0                     /* Reserved */
-    .long    0                     /* Reserved */
-    .long    SVC_Handler           /* SVCall Handler */
-    .long    0                     /* Reserved */
-    .long    0                     /* Reserved */
-    .long    PendSV_Handler        /* PendSV Handler */
-    .long    SysTick_Handler       /* SysTick Handler */
+    .long   __StackTop                                      /* Top of Stack */
+    .long   Reset_Handler                                   /* Reset Handler */
+    .long   NMI_Handler                                     /* NMI Handler*/
+    .long   HardFault_Handler                               /* Hard Fault Handler*/
+    .long   0                                               /* Reserved*/
+    .long   0                                               /* Reserved*/
+    .long   0                                               /* Reserved*/
+    .long   0                                               /* Reserved*/
+    .long   0                                               /* Reserved*/
+    .long   0                                               /* Reserved*/
+    .long   0                                               /* Reserved*/
+    .long   SVC_Handler                                     /* SVCall Handler*/
+    .long   0                                               /* Reserved*/
+    .long   0                                               /* Reserved*/
+    .long   PendSV_Handler                                  /* PendSV Handler*/
+    .long   SysTick_Handler                                 /* SysTick Handler*/
 
-    /* External interrupts */
-    .long   Default_Handler         /* Reserved interrupt 16 */
-    .long   Default_Handler         /* Reserved interrupt 17 */
-    .long   Default_Handler         /* Reserved interrupt 18 */
-    .long   Default_Handler         /* Reserved interrupt 19 */
-    .long   Default_Handler         /* Reserved interrupt 20 */
-    .long   FTFA_IRQHandler         /* FTFA interrupt */
-    .long   LVD_LVW_IRQHandler      /* Low Voltage Detect, Low Voltage Warning */
-    .long   Default_Handler         /* Reserved interrupt 23 */
-    .long   I2C0_IRQHandler         /* I2C0 interrupt */
-    .long   I2C1_IRQHandler         /* I2C0 interrupt 25 */
-    .long   SPI0_IRQHandler         /* SPI0 interrupt */
-    .long   Default_Handler         /* Reserved interrupt 27 */
-    .long   UART0_IRQHandler        /* UART0 status/error interrupt */
-    .long   Default_Handler         /* Reserved interrupt 29 */
-    .long   Default_Handler         /* Reserved interrupt 30 */
-    .long   ADC0_IRQHandler         /* ADC0 interrupt */
-    .long   CMP0_IRQHandler         /* CMP0 interrupt */
-    .long   TPM0_IRQHandler         /* TPM0 fault, overflow and channels interrupt */
-    .long   TPM1_IRQHandler         /* TPM1 fault, overflow and channels interrupt */
-    .long   Default_Handler         /* Reserved interrupt 35 */
-    .long   Default_Handler         /* Reserved interrupt 36 */
-    .long   Default_Handler         /* Reserved interrupt 37 */
-    .long   Default_Handler         /* Reserved interrupt 38 */
-    .long   Default_Handler         /* Reserved interrupt 39 */
-    .long   Default_Handler         /* Reserved interrupt 40 */
-    .long   Default_Handler         /* Reserved interrupt 41 */
-    .long   Default_Handler         /* Reserved interrupt 42 */
-    .long   MCG_IRQHandler          /* MCG interrupt */
-    .long   LPTimer_IRQHandler      /* LPTimer interrupt */
-    .long   Default_Handler         /* Reserved interrupt 45 */
-    .long   PORTA_IRQHandler        /* Port A interrupt */
-    .long   PORTD_IRQHandler        /* Port D interrupt */
+                                                            /* External Interrupts*/
+    .long   Reserved16_IRQHandler                           /* Reserved interrupt*/
+    .long   Reserved17_IRQHandler                           /* Reserved interrupt*/
+    .long   Reserved18_IRQHandler                           /* Reserved interrupt*/
+    .long   Reserved19_IRQHandler                           /* Reserved interrupt*/
+    .long   Reserved20_IRQHandler                           /* Reserved interrupt*/
+    .long   FTFA_IRQHandler                                 /* FTFA command complete and read collision*/
+    .long   LVD_LVW_IRQHandler                              /* Low-voltage detect, low-voltage warning*/
+    .long   Reserved23_IRQHandler                           /* Reserved interrupt*/
+    .long   I2C0_IRQHandler                                 /* I2C0 interrupt*/
+    .long   I2C1_IRQHandler                                 /* I2C1 interrupt*/
+    .long   SPI0_IRQHandler                                 /* SPI0 single interrupt vector for all sources*/
+    .long   Reserved27_IRQHandler                           /* Reserved interrupt*/
+    .long   UART0_IRQHandler                                /* UART0 status and error*/
+    .long   Reserved29_IRQHandler                           /* Reserved interrupt*/
+    .long   Reserved30_IRQHandler                           /* Reserved interrupt*/
+    .long   ADC0_IRQHandler                                 /* ADC0 interrupt*/
+    .long   CMP0_IRQHandler                                 /* CMP0 interrupt*/
+    .long   TPM0_IRQHandler                                 /* TPM0 single interrupt vector for all sources*/
+    .long   TPM1_IRQHandler                                 /* TPM1 single interrupt vector for all sources*/
+    .long   Reserved35_IRQHandler                           /* Reserved interrupt*/
+    .long   Reserved36_IRQHandler                           /* Reserved interrupt*/
+    .long   Reserved37_IRQHandler                           /* Reserved interrupt*/
+    .long   Reserved38_IRQHandler                           /* Reserved interrupt*/
+    .long   Reserved39_IRQHandler                           /* Reserved interrupt*/
+    .long   Reserved40_IRQHandler                           /* Reserved interrupt*/
+    .long   Reserved41_IRQHandler                           /* Reserved interrupt*/
+    .long   Reserved42_IRQHandler                           /* Reserved interrupt*/
+    .long   MCG_IRQHandler                                  /* MCG interrupt*/
+    .long   LPTimer_IRQHandler                              /* LPTMR0 interrupt*/
+    .long   Reserved45_IRQHandler                           /* Reserved interrupt*/
+    .long   PORTA_IRQHandler                                /* PORTA pin detect*/
+    .long   PORTB_IRQHandler                                /* PORTB pin detect*/
 
     .size    __isr_vector, . - __isr_vector
 
-    .section .text.Reset_Handler
+/* Flash Configuration */
+    .section .FlashConfig, "a"
+    .long 0xFFFFFFFF
+    .long 0xFFFFFFFF
+    .long 0xFFFFFFFF
+    .long 0xFFFFFFFE
+
+    .equ _NVIC_ICER,  0xE000E180
+    .equ _NVIC_ICPR,  0xE000E280
+    .text
     .thumb
+
+/* Reset Handler */
+
     .thumb_func
     .align 2
-    .globl    Reset_Handler
+    .globl   Reset_Handler
+    .weak    Reset_Handler
     .type    Reset_Handler, %function
 Reset_Handler:
+    cpsid   i               /* Mask interrupts */
+    ldr r0, =_NVIC_ICER    /* Disable interrupts and clear pending flags */
+    ldr r1, =_NVIC_ICPR
+    ldr r2, =0xFFFFFFFF
+    str r2, [r0]            /* NVIC_ICER - clear enable IRQ register */
+    str r2, [r1]            /* NVIC_ICPR - clear pending IRQ register */
+#ifndef __NO_SYSTEM_INIT
+    bl SystemInit
+#endif
+    cpsie   i               /* Unmask interrupts */
 /*     Loop to copy data from read only memory to RAM. The ranges
  *      of copy from/to are specified by following symbols evaluated in
  *      linker script.
@@ -150,72 +139,98 @@ Reset_Handler:
     ldr    r3, =__data_end__
 
     subs    r3, r2
-    ble    .flash_to_ram_loop_end
+    ble     .LC0
 
-    movs    r4, 0
-.flash_to_ram_loop:
-    ldr    r0, [r1,r4]
-    str    r0, [r2,r4]
-    adds    r4, 4
-    cmp    r4, r3
-    blt    .flash_to_ram_loop
-.flash_to_ram_loop_end:
+.LC1:
+    subs    r3, 4
+    ldr    r0, [r1,r3]
+    str    r0, [r2,r3]
+    bgt    .LC1
+.LC0:
 
-    ldr    r0, =SystemInit
-    blx    r0
-    ldr    r0, =_start
-    bx    r0
+#ifdef __STARTUP_CLEAR_BSS
+/*     This part of work usually is done in C library startup code. Otherwise,
+ *     define this macro to enable it in this startup.
+ *
+ *     Loop to zero out BSS section, which uses following symbols
+ *     in linker script:
+ *      __bss_start__: start of BSS section. Must align to 4
+ *      __bss_end__: end of BSS section. Must align to 4
+ */
+    ldr r1, =__bss_start__
+    ldr r2, =__bss_end__
+
+    subs    r2, r1
+    ble .LC3
+
+    movs    r0, 0
+.LC2:
+    str r0, [r1, r2]
+    subs    r2, 4
+    bge .LC2
+.LC3:
+#endif
+#ifndef __START
+#define __START _start
+#endif
+    bl    _start
     .pool
     .size Reset_Handler, . - Reset_Handler
 
-    .text
+    .align	1
+    .thumb_func
+    .weak DefaultISR
+    .type DefaultISR, %function
+DefaultISR:
+    ldr	r0, =DefaultISR
+    bx r0
+    .size DefaultISR, . - DefaultISR
+
 /*    Macro to define default handlers. Default handler
  *    will be weak symbol and just dead loops. They can be
  *    overwritten by other handlers */
-    .macro    def_default_handler    handler_name
-    .align 1
-    .thumb_func
-    .weak    \handler_name
-    .type    \handler_name, %function
-\handler_name :
-    b    .
-    .size    \handler_name, . - \handler_name
+    .macro def_irq_handler	handler_name
+    .weak \handler_name
+    .set  \handler_name, DefaultISR
     .endm
 
-    def_default_handler     NMI_Handler
-    def_default_handler     HardFault_Handler
-    def_default_handler     SVC_Handler
-    def_default_handler     PendSV_Handler
-    def_default_handler     SysTick_Handler
-    def_default_handler     Default_Handler
-
-    def_default_handler     FTFA_IRQHandler
-    def_default_handler     LVD_LVW_IRQHandler
-    def_default_handler     I2C0_IRQHandler
-    def_default_handler     I2C1_IRQHandler
-    def_default_handler     SPI0_IRQHandler
-    def_default_handler     UART0_IRQHandler
-    def_default_handler     ADC0_IRQHandler
-    def_default_handler     CMP0_IRQHandler
-    def_default_handler     TPM0_IRQHandler
-    def_default_handler     TPM1_IRQHandler
-    def_default_handler     MCG_IRQHandler
-    def_default_handler     LPTimer_IRQHandler
-    def_default_handler     PORTA_IRQHandler
-    def_default_handler     PORTD_IRQHandler
-
-    .weak   DEF_IRQHandler
-    .set    DEF_IRQHandler, Default_Handler
-
-/* Flash protection region, placed at 0x400 */
-    .text
-    .thumb
-    .align 2
-    .section .kinetis_flash_config_field,"a",%progbits
-kinetis_flash_config:
-    .long 0xffffffff
-    .long 0xffffffff
-    .long 0xffffffff
-    .long 0xfffffffe
+/* Exception Handlers */
+    def_irq_handler    NMI_Handler
+    def_irq_handler    HardFault_Handler
+    def_irq_handler    SVC_Handler
+    def_irq_handler    PendSV_Handler
+    def_irq_handler    SysTick_Handler
+    def_irq_handler    Reserved16_IRQHandler
+    def_irq_handler    Reserved17_IRQHandler
+    def_irq_handler    Reserved18_IRQHandler
+    def_irq_handler    Reserved19_IRQHandler
+    def_irq_handler    Reserved20_IRQHandler
+    def_irq_handler    FTFA_IRQHandler
+    def_irq_handler    LVD_LVW_IRQHandler
+    def_irq_handler    Reserved23_IRQHandler
+    def_irq_handler    I2C0_IRQHandler
+    def_irq_handler    I2C1_IRQHandler
+    def_irq_handler    SPI0_IRQHandler
+    def_irq_handler    Reserved27_IRQHandler
+    def_irq_handler    UART0_IRQHandler
+    def_irq_handler    Reserved29_IRQHandler
+    def_irq_handler    Reserved30_IRQHandler
+    def_irq_handler    ADC0_IRQHandler
+    def_irq_handler    CMP0_IRQHandler
+    def_irq_handler    TPM0_IRQHandler
+    def_irq_handler    TPM1_IRQHandler
+    def_irq_handler    Reserved35_IRQHandler
+    def_irq_handler    Reserved36_IRQHandler
+    def_irq_handler    Reserved37_IRQHandler
+    def_irq_handler    Reserved38_IRQHandler
+    def_irq_handler    Reserved39_IRQHandler
+    def_irq_handler    Reserved40_IRQHandler
+    def_irq_handler    Reserved41_IRQHandler
+    def_irq_handler    Reserved42_IRQHandler
+    def_irq_handler    MCG_IRQHandler
+    def_irq_handler    LPTimer_IRQHandler
+    def_irq_handler    Reserved45_IRQHandler
+    def_irq_handler    PORTA_IRQHandler
+    def_irq_handler    PORTB_IRQHandler
 
     .end
