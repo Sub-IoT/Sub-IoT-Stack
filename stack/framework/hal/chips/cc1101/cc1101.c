@@ -219,7 +219,6 @@ static void configure_channel(const channel_id_t* channel_id)
     // only change settings if channel_id changed compared to current config
     if(!hw_radio_channel_ids_equal(channel_id, &current_channel_id))
     {
-        assert(channel_id->channel_header.ch_freq_band == PHY_BAND_433); // TODO implement other bands
         assert(channel_id->channel_header.ch_class == PHY_CLASS_NORMAL_RATE); // TODO implement other rates
         assert(channel_id->channel_header.ch_coding == PHY_CODING_PN9); // TODO implement other codings
         // TODO assert valid center freq index
@@ -232,26 +231,25 @@ static void configure_channel(const channel_id_t* channel_id)
         DPRINT("Set frequency band index: %d", channel_id->channel_header.ch_freq_band);
 
         // TODO validate
-        /*
-        switch(frequency_band)
-            {
-            case 0:
-                WriteSingleReg(RADIO_FREQ2, (uint8_t)(RADIO_FREQ_433>>16 & 0xFF));
-                WriteSingleReg(RADIO_FREQ1, (uint8_t)(RADIO_FREQ_433>>8 & 0xFF));
-                WriteSingleReg(RADIO_FREQ0, (uint8_t)(RADIO_FREQ_433 & 0xFF));
-                break;
-            case 1:
-                WriteSingleReg(RADIO_FREQ2, (uint8_t)(RADIO_FREQ_868>>16 & 0xFF));
-                WriteSingleReg(RADIO_FREQ1, (uint8_t)(RADIO_FREQ_868>>8 & 0xFF));
-                WriteSingleReg(RADIO_FREQ0, (uint8_t)(RADIO_FREQ_868 & 0xFF));
-                break;
-            case 2:
-                WriteSingleReg(RADIO_FREQ2, (uint8_t)(RADIO_FREQ_915>>16 & 0xFF));
-                WriteSingleReg(RADIO_FREQ1, (uint8_t)(RADIO_FREQ_915>>8 & 0xFF));
-                WriteSingleReg(RADIO_FREQ0, (uint8_t)(RADIO_FREQ_915 & 0xFF));
-                break;
-            }
-        */
+        switch(channel_id->channel_header.ch_freq_band)
+        {
+        case PHY_BAND_433:
+            cc1101_interface_write_single_reg(RADIO_FREQ2, (uint8_t)(RADIO_FREQ_433>>16 & 0xFF));
+            cc1101_interface_write_single_reg(RADIO_FREQ1, (uint8_t)(RADIO_FREQ_433>>8 & 0xFF));
+            cc1101_interface_write_single_reg(RADIO_FREQ0, (uint8_t)(RADIO_FREQ_433 & 0xFF));
+            break;
+        case PHY_BAND_868_1: // TODO 868_2
+            cc1101_interface_write_single_reg(RADIO_FREQ2, (uint8_t)(RADIO_FREQ_868>>16 & 0xFF));
+            cc1101_interface_write_single_reg(RADIO_FREQ1, (uint8_t)(RADIO_FREQ_868>>8 & 0xFF));
+            cc1101_interface_write_single_reg(RADIO_FREQ0, (uint8_t)(RADIO_FREQ_868 & 0xFF));
+            break;
+        case PHY_BAND_915_1: // TODO 915_x
+            assert(false);
+//            WriteSingleReg(RADIO_FREQ2, (uint8_t)(RADIO_FREQ_915>>16 & 0xFF));
+//            WriteSingleReg(RADIO_FREQ1, (uint8_t)(RADIO_FREQ_915>>8 & 0xFF));
+//            WriteSingleReg(RADIO_FREQ0, (uint8_t)(RADIO_FREQ_915 & 0xFF));
+            break;
+        }
 
         // set channel center frequency
         DPRINT("Set channel freq index: %d", channel_id->center_freq_index);
