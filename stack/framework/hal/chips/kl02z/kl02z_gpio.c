@@ -27,6 +27,7 @@
 #include <stdarg.h>
 #include <assert.h>
 #include "hwatomic.h"
+#include <MKL02Z4.h>
 
 // TODO
 //typedef struct
@@ -80,6 +81,7 @@ __LINK_C error_t hw_gpio_configure_pin(pin_id_t pin_id, bool int_allowed, uint8_
 
 __LINK_C error_t hw_gpio_set(pin_id_t pin_id)
 {
+    ((GPIO_Type *)pin_id.port)->PSOR = 1 << pin_id.pin;
 // TODO
 //    if(!(gpio_pins_configured[pin_id.port] & (1<<pin_id.pin)))
 //	return EOFF;
@@ -89,6 +91,7 @@ __LINK_C error_t hw_gpio_set(pin_id_t pin_id)
 
 __LINK_C error_t hw_gpio_clr(pin_id_t pin_id)
 {
+	((GPIO_Type *)pin_id.port)->PCOR = 1 << pin_id.pin;
 // TODO
 //    if(!(gpio_pins_configured[pin_id.port] & (1<<pin_id.pin)))
 //	return EOFF;
@@ -98,6 +101,7 @@ __LINK_C error_t hw_gpio_clr(pin_id_t pin_id)
 
 __LINK_C error_t hw_gpio_toggle(pin_id_t pin_id)
 {
+	((GPIO_Type *)pin_id.port)->PTOR = 1 << pin_id.pin;
 // TODO
 //    if(!(gpio_pins_configured[pin_id.port] & (1<<pin_id.pin)))
 //	return EOFF;
@@ -117,6 +121,16 @@ __LINK_C bool hw_gpio_get_in(pin_id_t pin_id)
 // TODO
 //    return (!!(gpio_pins_configured[pin_id.port] & (1<<pin_id.pin)))
 //	&& GPIO_PinInGet(pin_id.port, pin_id.pin);
+}
+
+void PORTA_IRQHandler()
+{
+    assert(true);
+}
+
+void PORTB_IRQHandler()
+{
+    assert(true);
 }
 
 static void gpio_int_callback(uint8_t pin)

@@ -26,6 +26,7 @@
 
 #include "hwspi.h"
 #include "platform.h"
+#include <MKL02Z4.h>
 
 // turn on/off the debug prints
 #if 0
@@ -35,270 +36,78 @@
 #define DPRINT(...)  
 #endif
 
-
-
-
-#ifdef SPI_USE_DMA
-
-//moved to platform.h
-///* DMA Channel configuration */
-//#define DMA_CHANNEL_TX      0
-//#define DMA_CHANNEL_RX      1
-//#define DMA_CHANNELS        2
-//#define DMA_REQ_RX          DMAREQ_USART1_RXDATAV
-//#define DMA_REQ_TX          DMAREQ_USART1_TXBL
-
-/* DMA Callback structure */
-DMA_CB_TypeDef spiCallback;
-
-/* Transfer Flags */
-volatile bool rxActive;
-volatile bool txActive;
-
-
-/**************************************************************************//**
- * @brief  Call-back called when transfer is complete
- *****************************************************************************/
-void transferComplete(unsigned int channel, bool primary, void *user)
-{
-  (void) primary;
-  (void) user;
-  
-  /* Clear flag to indicate complete transfer */
-  if (channel == DMA_CHANNEL_TX)
-  {
-    txActive = false;  
-  }
-  else if (channel == DMA_CHANNEL_RX)
-  {
-    rxActive = false;
-  }
-}
-
-
-/**************************************************************************//**
- * @brief Configure DMA in basic mode for both TX and RX to/from USART
- *****************************************************************************/
-void setupDma(void)
-{
-  /* Initialization structs */
-  DMA_Init_TypeDef        dmaInit;
-  DMA_CfgChannel_TypeDef  rxChnlCfg;
-  DMA_CfgDescr_TypeDef    rxDescrCfg;
-  DMA_CfgChannel_TypeDef  txChnlCfg;
-  DMA_CfgDescr_TypeDef    txDescrCfg;
-  
-  /* Initializing the DMA */
-  dmaInit.hprot        = 0;
-  dmaInit.controlBlock = dmaControlBlock;
-  DMA_Init(&dmaInit);
-  
-  /* Setup call-back function */  
-  spiCallback.cbFunc  = transferComplete;
-  spiCallback.userPtr = NULL;
-  
-  /*** Setting up RX DMA ***/
-
-  /* Setting up channel */
-  rxChnlCfg.highPri   = false;
-  rxChnlCfg.enableInt = true;
-  rxChnlCfg.select    = DMA_REQ_RX;
-  rxChnlCfg.cb        = &spiCallback;
-  DMA_CfgChannel(DMA_CHANNEL_RX, &rxChnlCfg);
-
-  /* Setting up channel descriptor */
-  rxDescrCfg.dstInc  = dmaDataInc1;
-  rxDescrCfg.srcInc  = dmaDataIncNone;
-  rxDescrCfg.size    = dmaDataSize1;
-  rxDescrCfg.arbRate = dmaArbitrate1;
-  rxDescrCfg.hprot   = 0;
-  DMA_CfgDescr(DMA_CHANNEL_RX, true, &rxDescrCfg);
-  
-  /*** Setting up TX DMA ***/
-
-  /* Setting up channel */
-  txChnlCfg.highPri   = false;
-  txChnlCfg.enableInt = true;
-  txChnlCfg.select    = DMA_REQ_TX;
-  txChnlCfg.cb        = &spiCallback;
-  DMA_CfgChannel(DMA_CHANNEL_TX, &txChnlCfg);
-
-  /* Setting up channel descriptor */
-  txDescrCfg.dstInc  = dmaDataIncNone;
-  txDescrCfg.srcInc  = dmaDataInc1;
-  txDescrCfg.size    = dmaDataSize1;
-  txDescrCfg.arbRate = dmaArbitrate1;
-  txDescrCfg.hprot   = 0;
-  DMA_CfgDescr(DMA_CHANNEL_TX, true, &txDescrCfg);
-}
-
-
-/**************************************************************************//**
- * @brief  SPI DMA Transfer
- * NULL can be input as txBuffer if tx data to transmit dummy data
- * If only sending data, set rxBuffer as NULL to skip DMA activation on RX
- *****************************************************************************/
-void spiDmaTransfer(uint8_t *txBuffer, uint8_t *rxBuffer, unsigned int bytes)
-{ 
-    DPRINT("SPI WR %d bytes", bytes);
-  /* Only activate RX DMA if a receive buffer is specified */  
-  if (rxBuffer != NULL)
-  {
-    /* Setting flag to indicate that RX is in progress
-     * will be cleared by call-back function */
-    rxActive = true;
-    
-    /* Clear RX regsiters */
-    SPI_CHANNEL->CMD = USART_CMD_CLEARRX;
-    
-    /* Activate RX channel */
-    DMA_ActivateBasic(DMA_CHANNEL_RX,
-                      true,
-                      false,
-                      rxBuffer,
-                      (void *)&(SPI_CHANNEL->RXDATA),
-                      bytes - 1); 
-  }
-  /* Setting flag to indicate that TX is in progress
-   * will be cleared by call-back function */
-  txActive = true;
-  
-  /* Clear TX regsiters */
-  SPI_CHANNEL->CMD = USART_CMD_CLEARTX;
-  
-  /* Activate TX channel */
-  DMA_ActivateBasic(DMA_CHANNEL_TX,
-                    true,
-                    false,
-                    (void *)&(SPI_CHANNEL->TXDATA),
-                    txBuffer,
-                    bytes - 1); 
-}
-
-
-/**************************************************************************//**
- * @brief  Returns if an SPI transfer is active
- *****************************************************************************/
-bool spiDmaIsActive(void)
-{
-  bool temp;
-  temp = rxActive;
-  temp = temp | txActive;
-  return temp;
-}
-
-
-/**************************************************************************//**
- * @brief  Sleep in EM1 until DMA transfer is done
- *****************************************************************************/
-void sleepUntilDmaDone(void)
-{
-  /* Enter EM1 while DMA transfer is active to save power. Note that
-   * interrupts are disabled to prevent the ISR from being triggered
-   * after checking the transferActive flag, but before entering
-   * sleep. If this were to happen, there would be no interrupt to wake
-   * the core again and the MCU would be stuck in EM1. While the 
-   * core is in sleep, pending interrupts will still wake up the 
-   * core and the ISR will be triggered after interrupts are enabled
-   * again. 
-   */ 
-
-    
-    bool isActive = false;
-
-    while(1)
-    {
-        INT_Disable();
-        isActive = spiDmaIsActive();
-        if ( isActive )
-        {
-            EMU_EnterEM1();
-        }
-        INT_Enable();
-
-        // Exit the loop if transfer has completed
-        if ( !isActive )
-        {
-            DPRINT("SPI DONE");
-            break;
-        }
-    }
-}
-
-#endif
-
 /**************************************************************************//**
  * @brief  Enabling clocks
  *****************************************************************************/
-void setupCmu(void)
-{  
-// TODO
-//    /* Enabling clocks */
-//#ifdef SPI_USE_DMA
-//    CMU_ClockEnable(cmuClock_DMA, true);
-//#endif
-//    CMU_ClockEnable(cmuClock_GPIO, true);
-//    CMU_ClockEnable(SPI_CLOCK, true);
-}
+//void setupCmu(void)
+//{
+//// TODO
+////    /* Enabling clocks */
+////#ifdef SPI_USE_DMA
+////    CMU_ClockEnable(cmuClock_DMA, true);
+////#endif
+////    CMU_ClockEnable(cmuClock_GPIO, true);
+////    CMU_ClockEnable(SPI_CLOCK, true);
+//}
 
 
 /**************************************************************************//**
  * @brief  Setup SPI as Master
  *****************************************************************************/
-void setupSpi(void)
-{
-// TODO
-//    USART_InitSync_TypeDef usartInit = USART_INITSYNC_DEFAULT;
-//
-//    /* Initialize SPI */
-//    usartInit.databits  = usartDatabits8;   /* 8 bits of data */
-//    usartInit.baudrate  = SPI_BAUDRATE;     /* Clock frequency */
-//    usartInit.master    = true;             /* Master mode */
-//    usartInit.msbf      = true;             /* Most Significant Bit first */
-//    usartInit.clockMode = usartClockMode0;  /* Clock idle low, sample on rising edge */
-//
-//    USART_InitSync(SPI_CHANNEL, &usartInit);
-//
-//    /* Enable SPI transmit and receive */
-//    USART_Enable(SPI_CHANNEL, usartEnable);
-//
-//    /* Configure GPIO pins for SPI */
-//    //GPIO_PinModeSet(SPI_PORT_MOSI,  SPI_PIN_MOSI,   gpioModePushPull,   0); /* MOSI */
-//    //GPIO_PinModeSet(SPI_PORT_MISO,  SPI_PIN_MISO,   gpioModeInput,      0); /* MISO */
-//    //GPIO_PinModeSet(SPI_PORT_CLK,   SPI_PIN_CLK,    gpioModePushPull,   0); /* CLK */
-//    //GPIO_PinModeSet(SPI_PORT_CS,    SPI_PIN_CS,     gpioModePushPull,   1); /* CS */
-//    //edit: do this via the hw_gpio_configure_pin interface to signal that the pins are in use
-//    //note: normally this should be done in the platform-specific initialisation code BUT, since this is a driver for a device (uart) that is
-//    //an integral part of the MCU we are certain this code will NOT be used in combination with a different MCU so we can do this here
-//    error_t err;
-//    err = hw_gpio_configure_pin(SPI_PIN_MOSI, false,   gpioModePushPull,   0); assert(err == SUCCESS); /* MOSI */
-//    err = hw_gpio_configure_pin(SPI_PIN_MISO, false,   gpioModeInput,      0); assert(err == SUCCESS); /* MISO */
-//    err = hw_gpio_configure_pin(SPI_PIN_CLK, false,    gpioModePushPull,   0); assert(err == SUCCESS); /* CLK */
-//    err = hw_gpio_configure_pin(SPI_PIN_CS, false,     gpioModePushPull,   1); assert(err == SUCCESS); /* CS */
-//
-//    /* Enable routing for SPI pins from USART to location 1 */
-//    SPI_CHANNEL->ROUTE =  USART_ROUTE_TXPEN |
-//                          USART_ROUTE_RXPEN |
-//                          USART_ROUTE_CLKPEN |
-//                          SPI_ROUTE_LOCATION;
-}
+//void setupSpi(void)
+//{
+//// TODO
+////    USART_InitSync_TypeDef usartInit = USART_INITSYNC_DEFAULT;
+////
+////    /* Initialize SPI */
+////    usartInit.databits  = usartDatabits8;   /* 8 bits of data */
+////    usartInit.baudrate  = SPI_BAUDRATE;     /* Clock frequency */
+////    usartInit.master    = true;             /* Master mode */
+////    usartInit.msbf      = true;             /* Most Significant Bit first */
+////    usartInit.clockMode = usartClockMode0;  /* Clock idle low, sample on rising edge */
+////
+////    USART_InitSync(SPI_CHANNEL, &usartInit);
+////
+////    /* Enable SPI transmit and receive */
+////    USART_Enable(SPI_CHANNEL, usartEnable);
+////
+////    /* Configure GPIO pins for SPI */
+////    //GPIO_PinModeSet(SPI_PORT_MOSI,  SPI_PIN_MOSI,   gpioModePushPull,   0); /* MOSI */
+////    //GPIO_PinModeSet(SPI_PORT_MISO,  SPI_PIN_MISO,   gpioModeInput,      0); /* MISO */
+////    //GPIO_PinModeSet(SPI_PORT_CLK,   SPI_PIN_CLK,    gpioModePushPull,   0); /* CLK */
+////    //GPIO_PinModeSet(SPI_PORT_CS,    SPI_PIN_CS,     gpioModePushPull,   1); /* CS */
+////    //edit: do this via the hw_gpio_configure_pin interface to signal that the pins are in use
+////    //note: normally this should be done in the platform-specific initialisation code BUT, since this is a driver for a device (uart) that is
+////    //an integral part of the MCU we are certain this code will NOT be used in combination with a different MCU so we can do this here
+////    error_t err;
+////    err = hw_gpio_configure_pin(SPI_PIN_MOSI, false,   gpioModePushPull,   0); assert(err == SUCCESS); /* MOSI */
+////    err = hw_gpio_configure_pin(SPI_PIN_MISO, false,   gpioModeInput,      0); assert(err == SUCCESS); /* MISO */
+////    err = hw_gpio_configure_pin(SPI_PIN_CLK, false,    gpioModePushPull,   0); assert(err == SUCCESS); /* CLK */
+////    err = hw_gpio_configure_pin(SPI_PIN_CS, false,     gpioModePushPull,   1); assert(err == SUCCESS); /* CS */
+////
+////    /* Enable routing for SPI pins from USART to location 1 */
+////    SPI_CHANNEL->ROUTE =  USART_ROUTE_TXPEN |
+////                          USART_ROUTE_RXPEN |
+////                          USART_ROUTE_CLKPEN |
+////                          SPI_ROUTE_LOCATION;
+//}
 
+/*******************************************************************************
+ * \brief       sets Spi mode to 0-3
+ *
+ * \param 	uint8_t mode - this value sets spi mode (b0 = CPHA, b1 = CPOL)
+ * \return      none -  it is on the user not to pass a value greater than 3
+ *                      to this function
+ ******************************************************************************/
 
-// *****************************************************************************
-// @fn          spi_init
-// @brief       Initialize SPI
-// @param       none
-// @return      none
-// *****************************************************************************
 void spi_init(void)
 {
-// TODO
-//    setupCmu();
-//    setupSpi();
-//#ifdef SPI_USE_DMA
-//    setupDma();
-//#endif
-//    DPRINT("SPI Init.");
+    SPI0->C1 = (0<<SPI_C1_SPIE_SHIFT)|(1<<SPI_C1_SPE_SHIFT)|(0<<SPI_C1_SPTIE_SHIFT)|(1<<SPI_C1_MSTR_SHIFT)|(0<<SPI_C1_CPOL_SHIFT)|(0<<SPI_C1_CPHA_SHIFT)|(0<<SPI_C1_SSOE_SHIFT)|(0<<SPI_C1_LSBFE_SHIFT);
+    SPI0->C2 = (0<<SPI_C2_SPMIE_SHIFT)|(0<<SPI_C2_MODFEN_SHIFT)|(0<<SPI_C2_BIDIROE_SHIFT)|(1<<SPI_C2_SPISWAI_SHIFT)|(0<<SPI_C2_SPC0_SHIFT);
+    SPI0->BR = (0<<SPI_BR_SPPR_SHIFT)|(0<<SPI_BR_SPR_SHIFT);//.4 MHz (fastest available in VLPR-bus clock is limited to .8MHz)
+    SPI0->C1 &= ~((1<<SPI_C1_CPOL_SHIFT)|(1<<SPI_C1_CPHA_SHIFT));
+    SPI0->C1 |= (0 << SPI_C1_CPHA_SHIFT);
+    return;
 }
 
 // *****************************************************************************
@@ -359,15 +168,14 @@ void spi_deselect_chip(void)
 // *****************************************************************************
 unsigned char spi_byte(unsigned char data)
 {
-// TODO
-//#ifdef SPI_USE_DMA
-//    unsigned char receive = NULL;
-//    spiDmaTransfer( (uint8_t*) &data, (uint8_t*) &receive, 1 );
-//    sleepUntilDmaDone();
-//    return receive;
-//#else
-//    return USART_SpiTransfer( SPI_CHANNEL, data );
-//#endif
+    uint8_t retVal;
+
+    while(!(SPI0->S & SPI_S_SPTEF_MASK));
+    SPI0->D = data;
+    while(!(SPI0->S & SPI_S_SPRF_MASK));//block until clocking stops so that we cannot accidentally call spi again too soon and cause an error
+    retVal = SPI0->D;//read data register to clear SPRF
+
+    return retVal;
 }
 
 // *****************************************************************************
@@ -380,10 +188,6 @@ unsigned char spi_byte(unsigned char data)
 // *****************************************************************************
 void spi_string(unsigned char* TxData, unsigned char* RxData, unsigned int length)
 {
-#ifdef SPI_USE_DMA
-    spiDmaTransfer( (uint8_t*) TxData, (uint8_t*) RxData, length );
-    sleepUntilDmaDone();
-#else
     uint16_t i = 0;
     if( RxData != NULL && TxData != NULL ) // two way transmition
     {
@@ -409,5 +213,5 @@ void spi_string(unsigned char* TxData, unsigned char* RxData, unsigned int lengt
             i++;
         }
     }
-#endif
 }
+

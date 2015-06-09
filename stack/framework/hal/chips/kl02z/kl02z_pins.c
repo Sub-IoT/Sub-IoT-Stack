@@ -26,18 +26,18 @@
 #include "MKL02Z4.h"
 #include "hwgpio.h"
 
-pin_id_t const A0 = {.port = FPTA_BASE, .pin = 0};
-pin_id_t const A1 = {.port = FPTA, .pin = 1};
-pin_id_t const A2 = {.port = FPTA, .pin = 2};
-pin_id_t const A3 = {.port = FPTA, .pin = 3};
-pin_id_t const A4 = {.port = FPTA, .pin = 4};
-pin_id_t const A5 = {.port = FPTA, .pin = 5};
-pin_id_t const A6 = {.port = FPTA, .pin = 6};
-pin_id_t const A7 = {.port = FPTA, .pin = 7};
+pin_id_t const A0 = {.port = (uint32_t)GPIOA, .pin = 0};
+pin_id_t const A1 = {.port = (uint32_t)GPIOA, .pin = 1};
+pin_id_t const A2 = {.port = (uint32_t)GPIOA, .pin = 2};
+pin_id_t const A3 = {.port = (uint32_t)GPIOA, .pin = 3};
+pin_id_t const A4 = {.port = (uint32_t)GPIOA, .pin = 4};
+pin_id_t const A5 = {.port = (uint32_t)GPIOA, .pin = 5};
+pin_id_t const A6 = {.port = (uint32_t)GPIOA, .pin = 6};
+pin_id_t const A7 = {.port = (uint32_t)GPIOA, .pin = 7};
 
-pin_id_t const B0 = {.port = FPTB, .pin = 0};
-pin_id_t const B1 = {.port = FPTB, .pin = 1};
-pin_id_t const B2 = {.port = FPTB, .pin = 2};
-pin_id_t const B3 = {.port = FPTB, .pin = 3};
-pin_id_t const B4 = {.port = FPTB, .pin = 4};
-pin_id_t const B5 = {.port = FPTB, .pin = 5};
+pin_id_t const B0 = {.port = (uint32_t)GPIOB, .pin = 0};
+pin_id_t const B1 = {.port = (uint32_t)GPIOB, .pin = 1};
+pin_id_t const B2 = {.port = (uint32_t)GPIOB, .pin = 2};
+pin_id_t const B3 = {.port = (uint32_t)GPIOB, .pin = 3};
+pin_id_t const B4 = {.port = (uint32_t)GPIOB, .pin = 4};
+pin_id_t const B5 = {.port = (uint32_t)GPIOB, .pin = 5};

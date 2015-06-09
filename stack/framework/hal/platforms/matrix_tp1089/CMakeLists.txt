@@ -21,7 +21,7 @@
 REQUIRE_TOOLCHAIN(gcc-arm-embedded)
 
 #Define platform specific options
-#PLATFORM_PARAM(${PLATFORM_PREFIX}_MCU "" STRING "The MCU of the Matrix TP1089 board") # TODO
+PLATFORM_PARAM(${PLATFORM_PREFIX}_MCU "MKL02Z32VFG4" STRING "The MCU of the Matrix TP1089 board")
 PLATFORM_PARAM(${PLATFORM_PREFIX}_RADIO "cc1101" STRING "The radio chip connected to the TP1089 board")
 #PLATFORM_PARAM(${PLATFORM_PREFIX}_UART_BAUDRATE "115200" STRING "The baudrate used by the UART port") # TODO
 #PLATFORM_OPTION(${PLATFORM_PREFIX}_DEBUGPINS "Enable/Disable Hardware Debug Pins support (see 'hwdebug.h')" TRUE) # TODO
@@ -29,7 +29,7 @@ PLATFORM_PARAM(${PLATFORM_PREFIX}_RADIO "cc1101" STRING "The radio chip connecte
 SET_PROPERTY(CACHE ${PLATFORM_PREFIX}_RADIO PROPERTY STRINGS "cc1101")
 
 #Add a 'global' definition for the specific MCU
-# TODO ADD_GLOBAL_DEFINITIONS("-D${${PLATFORM_PREFIX}_MCU}")
+ADD_GLOBAL_DEFINITIONS("-D${${PLATFORM_PREFIX}_MCU}" "-DCPU_${${PLATFORM_PREFIX}_MCU}")
 
 #Make the 'inc' directory available so 'platform.h' can be found
 GLOBAL_INCLUDE_DIRECTORIES(inc)
@@ -39,14 +39,14 @@ GLOBAL_INCLUDE_DIRECTORIES(inc)
 GLOBAL_INCLUDE_DIRECTORIES("${CMAKE_CURRENT_BINARY_DIR}")
 
 #Set platform specific compile options
-INSERT_C_FLAGS(AFTER "-gdwarf-2" "-mcpu=cortex-m0plus" "-mthumb" "-fmessage-length=0" "-mno-sched-prolog" "-fno-builtin" "-ffunction-sections" "-fdata-sections")
+INSERT_C_FLAGS(AFTER "-O0" "-g3" "-mcpu=cortex-m0plus" "-mthumb" "-MMD" "-MP" "-fmessage-length=0" "-fno-builtin" "-mno-sched-prolog" "-ffunction-sections" "-fdata-sections")
 
 #Add platform specific linker flags
-INSERT_LINKER_FLAGS(BEFORE OBJECTS INSERT "--specs=nano.specs" "-Wl,-gc-sections")
-INSERT_LINKER_FLAGS(BEFORE LINK_LIBRARIES INSERT "-Wl,--start-group")
-INSERT_LINKER_FLAGS(AFTER LINK_LIBRARIES INSERT "-lgcc -lc -lnosys -Wl,--end-group")
+INSERT_LINKER_FLAGS(BEFORE OBJECTS INSERT "-specs=nano.specs" "-specs=nosys.specs" "-Wl,-gc-sections")
+INSERT_LINKER_FLAGS(BEFORE LINK_LIBRARIES INSERT "-Wl,--start-group -lgcc -lc -lnosys -Wl,--end-group")
+#INSERT_LINKER_FLAGS(AFTER LINK_LIBRARIES INSERT "-lgcc -lc -lnosys -Wl,--end-group")
 
-#Include the sources for the efm32gg chip
+#Include the sources for the kl02z chip
 ADD_CHIP("kl02z")
 
 #Include the sources for the radio chip, if needed
