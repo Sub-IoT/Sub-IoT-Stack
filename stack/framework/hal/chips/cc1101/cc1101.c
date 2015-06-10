@@ -166,6 +166,7 @@ static void end_of_packet_isr()
             	// long packets not yet supported or bit error in length byte, don't assert but flush rx
                 cc1101_interface_strobe(RF_SFRX);
                 cc1101_interface_set_interrupts_enabled(true);
+                cc1101_interface_strobe(RF_SRX);
                 return;
             }
 
