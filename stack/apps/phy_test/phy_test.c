@@ -30,7 +30,10 @@
 #include <hwradio.h>
 #include <log.h>
 
-//#define RX_MODE
+// configuration options
+#define RX_MODE
+#define PHY_CLASS PHY_CLASS_LO_RATE
+
 
 #ifdef FRAMEWORK_LOG_ENABLED
 #define DPRINT(...) log_print_string(__VA_ARGS__)
@@ -39,10 +42,11 @@
 #endif
 
 
+
 hw_rx_cfg_t rx_cfg = {
     .channel_id = {
         .channel_header.ch_coding = PHY_CODING_PN9,
-        .channel_header.ch_class = PHY_CLASS_NORMAL_RATE,
+        .channel_header.ch_class = PHY_CLASS,
         .channel_header.ch_freq_band = PHY_BAND_433,
         .center_freq_index = 5
     },
@@ -52,7 +56,7 @@ hw_rx_cfg_t rx_cfg = {
 hw_tx_cfg_t tx_cfg = {
     .channel_id = {
         .channel_header.ch_coding = PHY_CODING_PN9,
-        .channel_header.ch_class = PHY_CLASS_NORMAL_RATE,
+        .channel_header.ch_class = PHY_CLASS,
         .channel_header.ch_freq_band = PHY_BAND_433,
         .center_freq_index = 5
     },

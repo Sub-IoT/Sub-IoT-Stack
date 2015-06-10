@@ -220,7 +220,6 @@ static void configure_channel(const channel_id_t* channel_id)
     // only change settings if channel_id changed compared to current config
     if(!hw_radio_channel_ids_equal(channel_id, &current_channel_id))
     {
-        assert(channel_id->channel_header.ch_class == PHY_CLASS_NORMAL_RATE); // TODO implement other rates
         assert(channel_id->channel_header.ch_coding == PHY_CODING_PN9); // TODO implement other codings
         // TODO assert valid center freq index
 
@@ -265,6 +264,14 @@ static void configure_channel(const channel_id_t* channel_id)
                 cc1101_interface_write_single_reg(MDMCFG4, (RADIO_MDMCFG4_CHANBW_E(1) | RADIO_MDMCFG4_CHANBW_M(0) | RADIO_MDMCFG4_DRATE_E(11)));
                 cc1101_interface_write_single_reg(DEVIATN, (RADIO_DEVIATN_E(5) | RADIO_DEVIATN_M(0)));
                 break;
+            case PHY_CLASS_LO_RATE:
+                // TODO validate
+                cc1101_interface_write_single_reg(MDMCFG3, RADIO_MDMCFG3_DRATE_M(0x83));
+                cc1101_interface_write_single_reg(MDMCFG4, (RADIO_MDMCFG4_CHANBW_E(0x03) | RADIO_MDMCFG4_CHANBW_M(0x00) | RADIO_MDMCFG4_DRATE_E(0x08)));
+                cc1101_interface_write_single_reg(DEVIATN, (RADIO_DEVIATN_E(0x01) | RADIO_DEVIATN_M(0x04)));
+                break;
+            default:
+                assert(false);
                 // TODO: other classes
         }
     }
