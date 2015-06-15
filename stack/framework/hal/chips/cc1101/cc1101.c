@@ -189,7 +189,7 @@ static void end_of_packet_isr()
 
             rx_packet_callback(packet);
             cc1101_interface_set_interrupts_enabled(true);
-            assert(cc1101_interface_strobe(SNOP) == 0x1F); // expect to be in RX mode
+            assert(cc1101_interface_strobe(RF_SNOP) == 0x1F); // expect to be in RX mode
             break;
         case HW_RADIO_STATE_TX:
         	if(!should_rx_after_tx_completed)
