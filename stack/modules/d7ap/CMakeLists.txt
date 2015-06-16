@@ -49,6 +49,5 @@ ADD_LIBRARY(d7ap STATIC
     fs.c
     packet_queue.c
     packet.c
-    crc.c
     $<TARGET_OBJECTS:d7ap_dll>
 )
