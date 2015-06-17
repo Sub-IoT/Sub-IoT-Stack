@@ -43,7 +43,6 @@
 #endif
 
 // configuration options
-#define PHY_CLASS PHY_CLASS_LO_RATE
 #define PACKET_SIZE 16
 
 #ifdef FRAMEWORK_LOG_ENABLED
@@ -52,12 +51,18 @@
 #define DPRINT(...)
 #endif
 
+typedef enum
+{
+    STATE_CONFIG_DIRECTION,
+    STATE_CONFIG_DATARATE,
+    STATE_RUNNING
+} state_t;
 
 
 hw_rx_cfg_t rx_cfg = {
     .channel_id = {
         .channel_header.ch_coding = PHY_CODING_PN9,
-        .channel_header.ch_class = PHY_CLASS,
+        .channel_header.ch_class = PHY_CLASS_NORMAL_RATE,
         .channel_header.ch_freq_band = PHY_BAND_433,
         .center_freq_index = 5
     },
@@ -67,7 +72,7 @@ hw_rx_cfg_t rx_cfg = {
 hw_tx_cfg_t tx_cfg = {
     .channel_id = {
         .channel_header.ch_coding = PHY_CODING_PN9,
-        .channel_header.ch_class = PHY_CLASS,
+        .channel_header.ch_class = PHY_CLASS_NORMAL_RATE,
         .channel_header.ch_freq_band = PHY_BAND_433,
         .center_freq_index = 5
     },
@@ -88,25 +93,31 @@ static char lcd_msg[15];
 static char record[80];
 static uint64_t id;
 static bool is_mode_rx = true;
+static phy_channel_class_t current_channel_class = PHY_CLASS_NORMAL_RATE;
+static state_t current_state = STATE_CONFIG_DIRECTION;
 
 void packet_received(hw_radio_packet_t* packet);
 void packet_transmitted(hw_radio_packet_t* packet);
+void start();
 
 void start_rx()
 {
     DPRINT("start RX");
+    current_state = STATE_RUNNING;
     hw_radio_set_rx(&rx_cfg, &packet_received, NULL);
 }
 
 void transmit_packet()
 {
     DPRINT("transmitting packet");
+    current_state = STATE_RUNNING;
     counter++;
     memcpy(data + 1, &id, sizeof(id));
     memcpy(data + 1 + sizeof(id), &counter, sizeof(counter));
     uint16_t crc = __builtin_bswap16(crc_calculate(data, sizeof(data) - 2));
     memcpy(data + sizeof(data) - 2, &crc, 2);
     memcpy(&tx_packet->data, data, sizeof(data));
+    tx_packet->tx_meta.tx_cfg = tx_cfg;
     hw_radio_send_packet(tx_packet, &packet_transmitted);
 }
 
@@ -130,6 +141,9 @@ void packet_received(hw_radio_packet_t* packet)
     }
     else
     {
+		#if HW_NUM_LEDS > 0
+			led_toggle(0);
+		#endif
 		uint16_t msg_counter = 0;
         uint64_t msg_id;
         memcpy(&msg_id, packet->data + 1, sizeof(msg_id));
@@ -158,7 +172,7 @@ void packet_received(hw_radio_packet_t* packet)
 		}
 		else
 		{
-			start();
+            sched_post_task(&start);
 		}
 
 	    double per = 0;
@@ -181,46 +195,104 @@ void packet_transmitted(hw_radio_packet_t* packet)
     timer_post_task(&transmit_packet, TIMER_TICKS_PER_SEC / 5);
 }
 
-void start()
+void stop()
 {
     // make sure to cancel tasks which might me pending already
-    sched_cancel_task(&start_rx);
-    sched_cancel_task(&transmit_packet);
-    hw_radio_set_idle();
+	if(is_mode_rx)
+		sched_cancel_task(&start_rx);
+	else
+		sched_cancel_task(&transmit_packet);
 
+    hw_radio_set_idle();
+}
+
+void start()
+{
     counter = 0;
     missed_packets_counter = 0;
     received_packets_counter = 0;
 
-    if(is_mode_rx)
+    switch(current_state)
     {
-        sprintf(lcd_msg, "PER RX");
-        lcd_write_string(lcd_msg);
-        sprintf(record, "%s,%s,%s,%s,%s\n", "counter", "rssi", "tx_id", "rx_id", "timestamp");
-        uart_transmit_message(record, strlen(record));
-        timer_post_task(&start_rx, TIMER_TICKS_PER_SEC * 2);
+        case STATE_CONFIG_DIRECTION:
+            is_mode_rx? sprintf(lcd_msg, "PER RX") : sprintf(lcd_msg, "PER TX");
+            break;
+        case STATE_CONFIG_DATARATE:
+            switch(current_channel_class)
+            {
+                case PHY_CLASS_LO_RATE:
+                    sprintf(lcd_msg, "LO-RATE");
+                    break;
+                case PHY_CLASS_NORMAL_RATE:
+                    sprintf(lcd_msg, "NOR-RATE");
+                    break;
+                case PHY_CLASS_HI_RATE:
+                    sprintf(lcd_msg, "HI-RATE");
+                    break;
+            }
+            break;
+        case STATE_RUNNING:
+            if(is_mode_rx)
+            {
+                sprintf(lcd_msg, "RUN RX");
+                lcd_write_string(lcd_msg);
+                sprintf(record, "%s,%s,%s,%s,%s\n", "counter", "rssi", "tx_id", "rx_id", "timestamp");
+                uart_transmit_message(record, strlen(record));
+                rx_cfg.channel_id.channel_header.ch_class = current_channel_class;
+                timer_post_task(&start_rx, TIMER_TICKS_PER_SEC * 5);
+            }
+            else
+            {
+                hw_radio_set_idle();
+                sprintf(lcd_msg, "RUN TX");
+                lcd_write_string(lcd_msg);
+                timer_post_task(&transmit_packet, TIMER_TICKS_PER_SEC * 5);
+            }
+            break;
     }
-    else
-    {
-        sprintf(lcd_msg, "PER TX");
-        lcd_write_string(lcd_msg);
-        timer_post_task(&transmit_packet, TIMER_TICKS_PER_SEC * 2);
-    }
+
+    lcd_write_string(lcd_msg);
 }
 
 void userbutton_callback(button_id_t button_id)
 {
+	stop();
     switch(button_id)
     {
         case 0:
+            switch(current_state)
+            {
+                case STATE_CONFIG_DIRECTION:
+                    current_state = STATE_CONFIG_DATARATE;
+                    break;
+                case STATE_CONFIG_DATARATE:
+                    current_state = STATE_RUNNING;
+                    break;
+                case STATE_RUNNING:
+                    current_state = STATE_CONFIG_DIRECTION;
+                    break;
+            }
             break;
         case 1:
-            // toggle mode and restart
-            is_mode_rx = !is_mode_rx;
+            switch(current_state)
+            {
+                case STATE_CONFIG_DIRECTION:
+                    is_mode_rx = !is_mode_rx;
+                    break;
+                case STATE_CONFIG_DATARATE:
+                    if(current_channel_class == PHY_CLASS_NORMAL_RATE)
+                        current_channel_class = PHY_CLASS_LO_RATE;
+                    else
+                        current_channel_class = PHY_CLASS_NORMAL_RATE;
+
+                    tx_cfg.channel_id.channel_header.ch_class = current_channel_class;
+                    rx_cfg.channel_id.channel_header.ch_class = current_channel_class;
+                    break;
+            }
             break;
     }
 
-    start();
+    sched_post_task(&start);
 }
 
 void bootstrap()
@@ -232,10 +304,12 @@ void bootstrap()
     ubutton_register_callback(0, &userbutton_callback);
     ubutton_register_callback(1, &userbutton_callback);
 
-    tx_packet->tx_meta.tx_cfg = tx_cfg;
-
     sched_register_task(&start_rx);
     sched_register_task(&transmit_packet);
+    sched_register_task(&start);
 
-    start();
+    current_state = STATE_CONFIG_DIRECTION;
+    current_channel_class = PHY_CLASS_NORMAL_RATE;
+
+    sched_post_task(&start);
 }
