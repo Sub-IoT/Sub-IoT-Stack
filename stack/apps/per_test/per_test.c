@@ -28,17 +28,22 @@
 #include <stdint.h>
 #include <hwleds.h>
 #include <hwradio.h>
+#include <hwsystem.h>
+#include <hwuart.h>
 #include <log.h>
 #include <crc.h>
 #include <assert.h>
 #include "hwlcd.h"
 #include "platform_lcd.h"
 
+#ifndef PLATFORM_EFM32GG_STK3700
+    #error "assuming STK3700 for now"
+#endif
 
 // configuration options
 #define RX_MODE
 #define PHY_CLASS PHY_CLASS_LO_RATE
-
+#define PACKET_SIZE 16
 
 #ifdef FRAMEWORK_LOG_ENABLED
 #define DPRINT(...) log_print_string(__VA_ARGS__)
@@ -73,13 +78,14 @@ static uint8_t tx_buffer[sizeof(hw_radio_packet_t) + 255] = { 0 };
 static uint8_t rx_buffer[sizeof(hw_radio_packet_t) + 255] = { 0 };
 hw_radio_packet_t* tx_packet = (hw_radio_packet_t*)tx_buffer;
 hw_radio_packet_t* rx_packet = (hw_radio_packet_t*)rx_buffer;
-static uint8_t data[] = {16, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15};
+static uint8_t data[PACKET_SIZE + 1] = { [0] = PACKET_SIZE, [1 ... PACKET_SIZE]  = 0 };
 static uint16_t counter = 0;
 static uint16_t missed_packets_counter = 0;
 static uint16_t received_packets_counter = 0;
-hw_radio_packet_t received_packet;
-char lcd_msg[15];
-char record[15];
+static hw_radio_packet_t received_packet;
+static char lcd_msg[15];
+static char record[80];
+static uint64_t id;
 
 void packet_received(hw_radio_packet_t* packet);
 void packet_transmitted(hw_radio_packet_t* packet);
@@ -94,7 +100,8 @@ void transmit_packet()
 {
     DPRINT("transmitting packet");
     counter++;
-    memcpy(data + 1, &counter, sizeof(counter));
+    memcpy(data + 1, &id, sizeof(id));
+    memcpy(data + 1 + sizeof(id), &counter, sizeof(counter));
     uint16_t crc = __builtin_bswap16(crc_calculate(data, sizeof(data) - 2));
     memcpy(data + sizeof(data) - 2, &crc, 2);
     memcpy(&tx_packet->data, data, sizeof(data));
@@ -122,9 +129,11 @@ void packet_received(hw_radio_packet_t* packet)
     else
     {
 		uint16_t msg_counter = 0;
-		memcpy(&msg_counter, packet->data + 1, sizeof(msg_counter));
+        uint64_t msg_id;
+        memcpy(&msg_id, packet->data + 1, sizeof(msg_id));
+        memcpy(&msg_counter, packet->data + 1 + sizeof(msg_id), sizeof(msg_counter));
 
-		sprintf(record, "%i,%i,%i\n", msg_counter, packet->rx_meta.rssi, packet->rx_meta.timestamp);
+        sprintf(record, "%i,%i,%lu,%lu,%i\n", msg_counter, packet->rx_meta.rssi, (unsigned long)msg_id, (unsigned long)id, packet->rx_meta.timestamp);
 		uart_transmit_message(record, strlen(record));
 
 		uint16_t expected_counter = counter + 1;
@@ -167,7 +176,7 @@ void packet_transmitted(hw_radio_packet_t* packet)
 void bootstrap()
 {
     DPRINT("Device booted at time: %d\n", timer_get_counter_value()); // TODO not printed for some reason, debug later
-
+    id = hw_get_unique_id();
     hw_radio_init(&alloc_new_packet, &release_packet);
 
     tx_packet->tx_meta.tx_cfg = tx_cfg;
@@ -175,6 +184,8 @@ void bootstrap()
 	#ifdef RX_MODE
         sprintf(lcd_msg, "PER RX");
         lcd_write_string(lcd_msg);
+        sprintf(record, "%s,%s,%s,%s,%s\n", "counter", "rssi", "tx_id", "rx_id", "timestamp");
+        uart_transmit_message(record, strlen(record));
     	sched_register_task(&start_rx);
         sched_post_task(&start_rx);
 	#else
