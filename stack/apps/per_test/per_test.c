@@ -35,13 +35,14 @@
 #include <assert.h>
 #include "hwlcd.h"
 #include "platform_lcd.h"
+#include "userbutton.h"
+
 
 #ifndef PLATFORM_EFM32GG_STK3700
     #error "assuming STK3700 for now"
 #endif
 
 // configuration options
-#define RX_MODE
 #define PHY_CLASS PHY_CLASS_LO_RATE
 #define PACKET_SIZE 16
 
@@ -86,6 +87,7 @@ static hw_radio_packet_t received_packet;
 static char lcd_msg[15];
 static char record[80];
 static uint64_t id;
+static bool is_mode_rx = true;
 
 void packet_received(hw_radio_packet_t* packet);
 void packet_transmitted(hw_radio_packet_t* packet);
@@ -173,25 +175,60 @@ void packet_transmitted(hw_radio_packet_t* packet)
     timer_post_task(&transmit_packet, TIMER_TICKS_PER_SEC / 5);
 }
 
+void start()
+{
+    // make sure to cancel tasks which might me pending already
+    sched_cancel_task(&start_rx);
+    sched_cancel_task(&transmit_packet);
+    hw_radio_set_idle();
+
+    counter = 0;
+    missed_packets_counter = 0;
+    received_packets_counter = 0;
+
+    if(is_mode_rx)
+    {
+        sprintf(lcd_msg, "PER RX");
+        lcd_write_string(lcd_msg);
+        sprintf(record, "%s,%s,%s,%s,%s\n", "counter", "rssi", "tx_id", "rx_id", "timestamp");
+        uart_transmit_message(record, strlen(record));
+        timer_post_task(&start_rx, TIMER_TICKS_PER_SEC * 2);
+    }
+    else
+    {
+        sprintf(lcd_msg, "PER TX");
+        lcd_write_string(lcd_msg);
+        timer_post_task(&transmit_packet, TIMER_TICKS_PER_SEC * 2);
+    }
+}
+
+void userbutton_callback(button_id_t button_id)
+{
+    switch(button_id)
+    {
+        case 0:
+            break;
+        case 1:
+            // toggle mode and restart
+            is_mode_rx = !is_mode_rx;
+            start();
+            break;
+    }
+}
+
 void bootstrap()
 {
     DPRINT("Device booted at time: %d\n", timer_get_counter_value()); // TODO not printed for some reason, debug later
     id = hw_get_unique_id();
     hw_radio_init(&alloc_new_packet, &release_packet);
 
+    ubutton_register_callback(0, &userbutton_callback);
+    ubutton_register_callback(1, &userbutton_callback);
+
     tx_packet->tx_meta.tx_cfg = tx_cfg;
 
-	#ifdef RX_MODE
-        sprintf(lcd_msg, "PER RX");
-        lcd_write_string(lcd_msg);
-        sprintf(record, "%s,%s,%s,%s,%s\n", "counter", "rssi", "tx_id", "rx_id", "timestamp");
-        uart_transmit_message(record, strlen(record));
-    	sched_register_task(&start_rx);
-        sched_post_task(&start_rx);
-	#else
-        sprintf(lcd_msg, "PER TX");
-        lcd_write_string(lcd_msg);
-        sched_register_task(&transmit_packet);
-        timer_post_task(&transmit_packet, TIMER_TICKS_PER_SEC * 10);
-	#endif
+    sched_register_task(&start_rx);
+    sched_register_task(&transmit_packet);
+
+    start();
 }
