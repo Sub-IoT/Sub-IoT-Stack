@@ -138,6 +138,13 @@ void packet_received(hw_radio_packet_t* packet)
         sprintf(record, "%i,%i,%lu,%lu,%i\n", msg_counter, packet->rx_meta.rssi, (unsigned long)msg_id, (unsigned long)id, packet->rx_meta.timestamp);
 		uart_transmit_message(record, strlen(record));
 
+		if(counter == 0)
+		{
+			// just start, assume received all previous counters to reset PER to 0%
+			received_packets_counter = msg_counter - 1;
+			counter = msg_counter - 1;
+		}
+
 		uint16_t expected_counter = counter + 1;
 		if(msg_counter == expected_counter)
 		{
@@ -151,8 +158,7 @@ void packet_received(hw_radio_packet_t* packet)
 		}
 		else
 		{
-			lcd_write_string("restart");
-			while(1);
+			start();
 		}
 
 	    double per = 0;
@@ -211,9 +217,10 @@ void userbutton_callback(button_id_t button_id)
         case 1:
             // toggle mode and restart
             is_mode_rx = !is_mode_rx;
-            start();
             break;
     }
+
+    start();
 }
 
 void bootstrap()
