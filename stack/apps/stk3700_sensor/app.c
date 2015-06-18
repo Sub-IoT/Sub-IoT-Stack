@@ -32,11 +32,9 @@
 #include "d7ap_stack.h"
 #include "fs.h"
 
-
 #ifndef PLATFORM_EFM32GG_STK3700
 	#error Mismatch between the configured platform and the actual platform. Expected PLATFORM_EFM32GG_STK3700 to be defined
 #endif
-
 
 #include "userbutton.h"
 #include "platform_sensors.h"
@@ -56,8 +54,6 @@ void userbutton_callback(button_id_t button_id)
 	fs_write_file(0x40, 2, (uint8_t*)&button_id, 1); // File 0x40 is configured to use D7AActP trigger an ALP action which broadcasts this file data on Access Class 0
 }
 
-
-
 void measureTemperature()
 {
 	float temp = tempsensor_read_celcius();
@@ -76,7 +72,6 @@ void execute_sensor_measurement()
 	measureTemperature();
 
 	fs_write_file(0x40, 0, (uint8_t*)&temperature, 2); // File 0x40 is configured to use D7AActP trigger an ALP action which broadcasts this file data on Access Class 0
-
 }
 
 void bootstrap()

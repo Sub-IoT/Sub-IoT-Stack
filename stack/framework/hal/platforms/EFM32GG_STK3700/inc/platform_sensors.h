@@ -35,10 +35,10 @@
 /*! \brief Initialises the sensors
  * 			- I/O for light sensor
  */
-__LINK_C void lightsensor_init();
-__LINK_C void lightsensor_enable();
-__LINK_C void lightsensor_dissable();
-__LINK_C uint32_t lightsensor_read();
+//__LINK_C void lightsensor_init();
+//__LINK_C void lightsensor_enable();
+//__LINK_C void lightsensor_dissable();
+//__LINK_C uint32_t lightsensor_read();
 
 
 /*! \brief Initializes ADC to measure the internal temperature

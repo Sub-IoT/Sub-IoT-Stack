@@ -58,6 +58,10 @@ typedef enum
  */
 __LINK_C void adc_init(ADC_Reference reference, uint16_t input);
 
+/*! \brief Calibrates the ADC
+ */
+__LINK_C void adc_calibrate();
+
 /*! \brief Starts a single ADC measurements
  */
 __LINK_C void adc_start();

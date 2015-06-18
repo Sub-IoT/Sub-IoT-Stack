@@ -26,42 +26,47 @@
 #include <string.h>
 #include <assert.h>
 
-#define LIGHT_SENSOR_ENABLE_PORTPIN		D6
-#define LIGHT_SENSOR_ENABLE_PORT		gpioPortD
-#define LIGHT_SENSOR_READ_PORT			gpioPortC
-#define LIGHT_SENSOR_READ_PORTPIN		C6
+//TODO Lightsensor uses ACMP, LESENSE, PRS
+//#define LIGHT_SENSOR_ENABLE_PORTPIN		D6
+////#define LIGHT_SENSOR_ENABLE_PORT		gpioPortD
+//#define LIGHT_SENSOR_READ_PORT			gpioPortC
+//#define LIGHT_SENSOR_READ_PORTPIN		C6
 
 static uint32_t temp_offset;
 
-void lightsensor_init()
-{
-	/* Configure the drive strength of the ports for the light sensor. */
-	//GPIO_DriveModeSet(LIGHT_SENSOR_ENABLE_PORTPIN, gpioDriveModeStandard);
-	//GPIO_DriveModeSet(LIGHT_SENSOR_READ_PORT, gpioDriveModeStandard);
-
-	// LIGHT SENSOR
-	error_t err = hw_gpio_configure_pin(LIGHT_SENSOR_ENABLE_PORTPIN, false, gpioModeDisabled, 0);
-	err = hw_gpio_configure_pin(LIGHT_SENSOR_READ_PORTPIN, false, gpioModeDisabled, 0);
-	assert(err == SUCCESS);
-}
-
-void lightsensor_enable()
-{
-	hw_gpio_set(LIGHT_SENSOR_ENABLE_PORTPIN);
-}
-
-void lightsensor_dissable()
-{
-	hw_gpio_clr(LIGHT_SENSOR_ENABLE_PORTPIN);
-}
-
-uint32_t lightsensor_read()
-{
-
-}
+//void lightsensor_init()
+//{
+//	/* Configure the drive strength of the ports for the light sensor. */
+//	//GPIO_DriveModeSet(LIGHT_SENSOR_ENABLE_PORTPIN, gpioDriveModeStandard);
+//	//GPIO_DriveModeSet(LIGHT_SENSOR_READ_PORT, gpioDriveModeStandard);
+//
+//	// LIGHT SENSOR
+//	error_t err = hw_gpio_configure_pin(LIGHT_SENSOR_ENABLE_PORTPIN, false, gpioModeDisabled, 0);
+//	err = hw_gpio_configure_pin(LIGHT_SENSOR_READ_PORTPIN, false, gpioModeDisabled, 0);
+//	assert(err == SUCCESS);
+//
+//
+//}
+//
+//void lightsensor_enable()
+//{
+//	hw_gpio_set(LIGHT_SENSOR_ENABLE_PORTPIN);
+//}
+//
+//void lightsensor_dissable()
+//{
+//	hw_gpio_clr(LIGHT_SENSOR_ENABLE_PORTPIN);
+//}
+//
+//uint32_t lightsensor_read()
+//{
+//
+//}
 
 void internalTempSensor_init(void)
 {
+	adc_calibrate();
+
 	// Initialises ADC
 	adc_init(adcReference1V25, adcSingleInpTemp);
 
@@ -83,6 +88,7 @@ void internalTempSensor_init(void)
 
 float tempsensor_read_celcius()
 {
+	//todo: take into account warmup time
 	adc_start();
 
 	/* Wait in EM1 for ADC to complete */
