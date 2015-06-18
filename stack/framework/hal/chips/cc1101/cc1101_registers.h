@@ -183,8 +183,8 @@ RFIFG15 Positive edge: WOR event 1
 #define RADIO_FREQ_IF                   0x06            // FSCTRL1.FREQ_IF - (152.34375kHz) fIF = (fRFXT2/210) � FREQ_IF
 #define RADIO_FREQOFF                   0               // FSCTRL0 Frequency offset
 
-#define RADIO_FREQ_433                  ((uint32_t)0x0010A900)   // pchan 1 fc = 433.164062 MHz
-// TODO update according to draft spec ((uint32_t)0x0010A8F5)   // pchan 1 fc = 433.159698 MHz // TODO heck CC430 setting
+#define RADIO_FREQ_433                  ((uint32_t)0x0010A8F5)   // pchan 1 fc = 433.159698 MHz
+
 #define RADIO_FREQ2                     (uint8_t)(RADIO_FREQ_433>>16 & 0xFF)
 #define RADIO_FREQ1                     (uint8_t)(RADIO_FREQ_433>>8 & 0xFF)
 #define RADIO_FREQ0                     (uint8_t)(RADIO_FREQ_433 & 0xFF)
@@ -194,9 +194,12 @@ RFIFG15 Positive edge: WOR event 1
 // TODO update according to draft spec
 #define RADIO_MDMCFG4_CHANBW_E(VAL)     ((VAL&3)<<6)    // 2 - 162.5 Khz - MDMCFG4 Channel Bandwith Exponent BDW = fxosc / (8 x (4 + chbw_M) x 2^chbw_E)
 #define RADIO_MDMCFG4_CHANBW_M(VAL)     ((VAL&3)<<4)    // 1 - 162.5 Khz - MDMCFG4 Channel Bandwith Mantise
-#define RADIO_MDMCFG4_DRATE_E(VAL)      (VAL&15)        // 11  - MDMCFG4 - Data Rate Exponent
+#define RADIO_MDMCFG4_DRATE_E(VAL)      (VAL & 0x0F)    // 11  - MDMCFG4 - Data Rate Exponent
 
-#define RADIO_MDMCFG3_DRATE_M(VAL)      (VAL)           // 24 - 55.542 Kbaud - MDMCFG3 - Data Rate Mantissa DRate = ((256+DRATE_M)x2^DRATE_E) * fXosc / 2^28
+#define RADIO_MDMCFG4_NORMAL_RATE RADIO_MDMCFG4_CHANBW_E(0x03) | RADIO_MDMCFG4_CHANBW_M(0x00) | RADIO_MDMCFG4_DRATE_E(0x0B) // MDMCFG4   Modem configuration.
+// TODO channel bandwith, now 101.562500 kHz. Data rate 55.542 kBaud
+
+#define RADIO_MDMCFG3_DRATE_M_NORMAL_RATE    0x18
 
 #define RADIO_MDMCFG2_DEM_DCFILT_OFF    (1 << 7)        // Disable digital dc blocking filter before demodulator. (current optimized)
 #define RADIO_MDMCFG2_DEM_DCFILT_ON     (0 << 7)        // Enable digital dc blocking filter before demodulator. (better sensitivity)
@@ -223,11 +226,15 @@ RFIFG15 Positive edge: WOR event 1
 #define RADIO_MDMCFG1_NUM_PREAMBLE_16B    (6<<4)
 #define RADIO_MDMCFG1_NUM_PREAMBLE_24B    (7<<4)
 #define RADIO_MDMCFG1_CHANSPC_E(VAL)      (VAL&3)       // 2 - Channel spacing Exponent
+#define RADIO_MDMCFG1_CHANSPC_E_NORMAL_RATE  RADIO_MDMCFG1_CHANSPC_E(0x02)
 
 #define RADIO_MDMCFG0_CHANSPC_M(VAL)      (VAL)         // 16 - 107.910 Khz Channel spacing Mantissa, chanspc = fosxc/2^18 x (256+chansp_m) x 2 ^chansp_e
+#define RADIO_MDMCFG0_CHANSPC_M_NORMAL_RATE RADIO_MDMCFG0_CHANSPC_M(0xF8)
 
 #define RADIO_DEVIATN_E(VAL)                   ((VAL&7) << 4)// 5 - Deviation Exponent
 #define RADIO_DEVIATN_M(VAL)                   (VAL&7)       // 0 - 50.78 Khz) Deviation Mantissa - dev = fosxc/2^17 x (8+dev_m) x 2 ^dev_e
+
+#define RADIO_DEVIATN_NORMAL_RATE RADIO_DEVIATN_E(5) | RADIO_DEVIATN_M(0)
 
 #define RADIO_MCSM2_RX_TIME_RSSI          (1 << 4)      // Direct RX termination based on RSSI measurement (carrier sense)
 #define RADIO_MCSM2_RX_TIME_QUAL          (1 << 3)

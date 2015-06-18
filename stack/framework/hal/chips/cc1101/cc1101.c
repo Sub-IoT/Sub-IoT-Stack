@@ -104,12 +104,12 @@ static RF_SETTINGS rf_settings = {
    RADIO_FREQ2,                                        // FREQ2     Frequency control word, high byte.
    RADIO_FREQ1,                                        // FREQ1     Frequency control word, middle byte.
    RADIO_FREQ0,                                        // FREQ0     Frequency control word, low byte.
-   RADIO_MDMCFG4_CHANBW_E(1) | RADIO_MDMCFG4_CHANBW_M(0) | RADIO_MDMCFG4_DRATE_E(11),   // MDMCFG4   Modem configuration.
-   RADIO_MDMCFG3_DRATE_M(24),   	// MDMCFG3   Modem configuration.
+   RADIO_MDMCFG4_NORMAL_RATE,
+   RADIO_MDMCFG3_DRATE_M_NORMAL_RATE,   	// MDMCFG3   Modem configuration.
    RADIO_MDMCFG2_DEM_DCFILT_ON | RADIO_MDMCFG2_MOD_FORMAT_GFSK | RADIO_MDMCFG2_SYNC_MODE_16in16CS,   // MDMCFG2   Modem configuration.
-   RADIO_MDMCFG1_NUM_PREAMBLE_4B | RADIO_MDMCFG1_CHANSPC_E(2),   // MDMCFG1   Modem configuration.
-   RADIO_MDMCFG0_CHANSPC_M(16),   	// MDMCFG0   Modem configuration.
-   RADIO_DEVIATN_E(5) | RADIO_DEVIATN_M(0),   // DEVIATN   Modem deviation setting (when FSK modulation is enabled).
+   RADIO_MDMCFG1_NUM_PREAMBLE_4B | RADIO_MDMCFG1_CHANSPC_E_NORMAL_RATE,   // MDMCFG1   Modem configuration.
+   RADIO_MDMCFG0_CHANSPC_M_NORMAL_RATE,   	// MDMCFG0   Modem configuration.
+   RADIO_DEVIATN_NORMAL_RATE,   // DEVIATN   Modem deviation setting (when FSK modulation is enabled).
    RADIO_MCSM2_RX_TIME(7),			// MCSM2		 Main Radio Control State Machine configuration.
    RADIO_MCSM1_CCA_RSSILOWRX | RADIO_MCSM1_RXOFF_MODE_RX | RADIO_MCSM1_TXOFF_MODE_IDLE,	// MCSM1 Main Radio Control State Machine configuration.
    //RADIO_MCSM0_FS_AUTOCAL_FROMIDLE,// MCSM0     Main Radio Control State Machine configuration.
@@ -125,7 +125,7 @@ static RF_SETTINGS rf_settings = {
    RADIO_FREND1_LNA_CURRENT(1) | RADIO_FREND1_LNA2MIX_CURRENT(1) | RADIO_FREND1_LODIV_BUF_CURRENT_RX(1) | RADIO_FREND1_MIX_CURRENT(2),   // FREND1    Front end RX configuration.
    RADIO_FREND0_LODIV_BUF_CURRENT_TX(1) | RADIO_FREND0_PA_POWER(0),   // FREND0    Front end TX configuration.
    RADIO_FSCAL3_HI(3) | RADIO_FSCAL3_CHP_CURR_CAL_EN(2) | RADIO_FSCAL3_LO(10),   // FSCAL3    Frequency synthesizer calibration.
-   RADIO_FSCAL2_FSCAL2(10),   		// FSCAL2    Frequency synthesizer calibration.
+   RADIO_FSCAL2_FSCAL2(10) | RADIO_FSCAL2_VCO_CORE_H_EN,   		// FSCAL2    Frequency synthesizer calibration.
    RADIO_FSCAL1(0),   				// FSCAL1    Frequency synthesizer calibration.
    RADIO_FSCAL0(31)   				// FSCAL0    Frequency synthesizer calibration.
 };
@@ -287,15 +287,16 @@ static void configure_channel(const channel_id_t* channel_id)
         {
             case PHY_CLASS_NORMAL_RATE:
                 // TODO validate
-                cc1101_interface_write_single_reg(MDMCFG3, RADIO_MDMCFG3_DRATE_M(24));
-                cc1101_interface_write_single_reg(MDMCFG4, (RADIO_MDMCFG4_CHANBW_E(1) | RADIO_MDMCFG4_CHANBW_M(0) | RADIO_MDMCFG4_DRATE_E(11)));
-                cc1101_interface_write_single_reg(DEVIATN, (RADIO_DEVIATN_E(5) | RADIO_DEVIATN_M(0)));
+                cc1101_interface_write_single_reg(MDMCFG3, RADIO_MDMCFG3_DRATE_M_NORMAL_RATE);
+                cc1101_interface_write_single_reg(MDMCFG4, RADIO_MDMCFG4_NORMAL_RATE);
+                cc1101_interface_write_single_reg(DEVIATN, RADIO_DEVIATN_NORMAL_RATE);
                 break;
             case PHY_CLASS_LO_RATE:
                 // TODO validate
-                cc1101_interface_write_single_reg(MDMCFG3, RADIO_MDMCFG3_DRATE_M(0x83));
-                cc1101_interface_write_single_reg(MDMCFG4, (RADIO_MDMCFG4_CHANBW_E(0x03) | RADIO_MDMCFG4_CHANBW_M(0x00) | RADIO_MDMCFG4_DRATE_E(0x08)));
-                cc1101_interface_write_single_reg(DEVIATN, (RADIO_DEVIATN_E(0x01) | RADIO_DEVIATN_M(0x04)));
+// TODO
+            //                cc1101_interface_write_single_reg(MDMCFG3, RADIO_MDMCFG3_DRATE_M_LOW_RATE);
+//                cc1101_interface_write_single_reg(MDMCFG4, RADIO_MDMCFG4_LOW_RATE;
+//                cc1101_interface_write_single_reg(DEVIATN, RADIO_DEVIATN_LOW_RATE;
                 break;
             default:
                 assert(false);
