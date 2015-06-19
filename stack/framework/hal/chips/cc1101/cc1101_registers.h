@@ -183,13 +183,14 @@ RFIFG15 Positive edge: WOR event 1
 #define RADIO_FREQ_IF                   0x06            // FSCTRL1.FREQ_IF - (152.34375kHz) fIF = (fRFXT2/210) � FREQ_IF
 #define RADIO_FREQOFF                   0               // FSCTRL0 Frequency offset
 
-#define RADIO_FREQ_433                  ((uint32_t)0x0010A8F5)   // pchan 1 fc = 433.159698 MHz
+#define RADIO_FREQ_433_NORMAL_RATE      ((uint32_t)0x0010A8F5)   // 433.159698 MHz
+#define RADIO_FREQ_433_LO_RATE          ((uint32_t)0x0010A819)   // 433.072418 MHz
 
-#define RADIO_FREQ2                     (uint8_t)(RADIO_FREQ_433>>16 & 0xFF)
-#define RADIO_FREQ1                     (uint8_t)(RADIO_FREQ_433>>8 & 0xFF)
-#define RADIO_FREQ0                     (uint8_t)(RADIO_FREQ_433 & 0xFF)
+#define RADIO_FREQ2(VAL)                (uint8_t)(VAL >> 16 & 0xFF)
+#define RADIO_FREQ1(VAL)                (uint8_t)(VAL >> 8 & 0xFF)
+#define RADIO_FREQ0(VAL)                (uint8_t)(VAL & 0xFF)
 
-#define RADIO_FREQ_868                  ((uint32_t)0x00216276)   // TODO validate
+#define RADIO_FREQ_868_NORMAL_RATE           ((uint32_t)0x00216276)   // TODO validate
 
 // TODO update according to draft spec
 #define RADIO_MDMCFG4_CHANBW_E(VAL)     ((VAL&3)<<6)    // 2 - 162.5 Khz - MDMCFG4 Channel Bandwith Exponent BDW = fxosc / (8 x (4 + chbw_M) x 2^chbw_E)
@@ -199,7 +200,11 @@ RFIFG15 Positive edge: WOR event 1
 #define RADIO_MDMCFG4_NORMAL_RATE RADIO_MDMCFG4_CHANBW_E(0x03) | RADIO_MDMCFG4_CHANBW_M(0x00) | RADIO_MDMCFG4_DRATE_E(0x0B) // MDMCFG4   Modem configuration.
 // TODO channel bandwith, now 101.562500 kHz. Data rate 55.542 kBaud
 
+#define RADIO_MDMCFG4_LOW_RATE RADIO_MDMCFG4_CHANBW_E(0x03) | RADIO_MDMCFG4_CHANBW_M(0x00) | RADIO_MDMCFG4_DRATE_E(0x08) // MDMCFG4   Modem configuration.
+// TODO channel bandwith, now 101.562500 kHz. Data rate 9.6 kBaud
+
 #define RADIO_MDMCFG3_DRATE_M_NORMAL_RATE    0x18
+#define RADIO_MDMCFG3_DRATE_M_LOW_RATE       0x83
 
 #define RADIO_MDMCFG2_DEM_DCFILT_OFF    (1 << 7)        // Disable digital dc blocking filter before demodulator. (current optimized)
 #define RADIO_MDMCFG2_DEM_DCFILT_ON     (0 << 7)        // Enable digital dc blocking filter before demodulator. (better sensitivity)
@@ -235,6 +240,7 @@ RFIFG15 Positive edge: WOR event 1
 #define RADIO_DEVIATN_M(VAL)                   (VAL&7)       // 0 - 50.78 Khz) Deviation Mantissa - dev = fosxc/2^17 x (8+dev_m) x 2 ^dev_e
 
 #define RADIO_DEVIATN_NORMAL_RATE RADIO_DEVIATN_E(5) | RADIO_DEVIATN_M(0)
+#define RADIO_DEVIATN_LOW_RATE RADIO_DEVIATN_E(0x01) | RADIO_DEVIATN_M(0x04)
 
 #define RADIO_MCSM2_RX_TIME_RSSI          (1 << 4)      // Direct RX termination based on RSSI measurement (carrier sense)
 #define RADIO_MCSM2_RX_TIME_QUAL          (1 << 3)

@@ -101,9 +101,9 @@ static RF_SETTINGS rf_settings = {
    RADIO_CHAN,   					// CHANNR    Channel number.
    RADIO_FREQ_IF,   				// FSCTRL1   Frequency synthesizer control.
    RADIO_FREQOFF,   				// FSCTRL0   Frequency synthesizer control.
-   RADIO_FREQ2,                                        // FREQ2     Frequency control word, high byte.
-   RADIO_FREQ1,                                        // FREQ1     Frequency control word, middle byte.
-   RADIO_FREQ0,                                        // FREQ0     Frequency control word, low byte.
+   RADIO_FREQ2(RADIO_FREQ_433_NORMAL_RATE),                                        // FREQ2     Frequency control word, high byte.
+   RADIO_FREQ1(RADIO_FREQ_433_NORMAL_RATE),                                        // FREQ1     Frequency control word, middle byte.
+   RADIO_FREQ0(RADIO_FREQ_433_NORMAL_RATE),                                        // FREQ0     Frequency control word, low byte.
    RADIO_MDMCFG4_NORMAL_RATE,
    RADIO_MDMCFG3_DRATE_M_NORMAL_RATE,   	// MDMCFG3   Modem configuration.
    RADIO_MDMCFG2_DEM_DCFILT_ON | RADIO_MDMCFG2_MOD_FORMAT_GFSK | RADIO_MDMCFG2_SYNC_MODE_16in16CS,   // MDMCFG2   Modem configuration.
@@ -260,15 +260,16 @@ static void configure_channel(const channel_id_t* channel_id)
         // TODO validate
         switch(channel_id->channel_header.ch_freq_band)
         {
+        // TODO calculate depending on rate and channr
         case PHY_BAND_433:
-            cc1101_interface_write_single_reg(RADIO_FREQ2, (uint8_t)(RADIO_FREQ_433>>16 & 0xFF));
-            cc1101_interface_write_single_reg(RADIO_FREQ1, (uint8_t)(RADIO_FREQ_433>>8 & 0xFF));
-            cc1101_interface_write_single_reg(RADIO_FREQ0, (uint8_t)(RADIO_FREQ_433 & 0xFF));
+            cc1101_interface_write_single_reg(FREQ2, RADIO_FREQ2(RADIO_FREQ_433_NORMAL_RATE));
+            cc1101_interface_write_single_reg(FREQ1, RADIO_FREQ1(RADIO_FREQ_433_NORMAL_RATE));
+            cc1101_interface_write_single_reg(FREQ0, RADIO_FREQ0(RADIO_FREQ_433_NORMAL_RATE));
             break;
         case PHY_BAND_868_1: // TODO 868_2
-            cc1101_interface_write_single_reg(RADIO_FREQ2, (uint8_t)(RADIO_FREQ_868>>16 & 0xFF));
-            cc1101_interface_write_single_reg(RADIO_FREQ1, (uint8_t)(RADIO_FREQ_868>>8 & 0xFF));
-            cc1101_interface_write_single_reg(RADIO_FREQ0, (uint8_t)(RADIO_FREQ_868 & 0xFF));
+            cc1101_interface_write_single_reg(FREQ2, RADIO_FREQ2(RADIO_FREQ_868_NORMAL_RATE));
+            cc1101_interface_write_single_reg(FREQ1, RADIO_FREQ2(RADIO_FREQ_868_NORMAL_RATE));
+            cc1101_interface_write_single_reg(FREQ0, RADIO_FREQ2(RADIO_FREQ_868_NORMAL_RATE));
             break;
         case PHY_BAND_915_1: // TODO 915_x
             assert(false);
@@ -292,11 +293,9 @@ static void configure_channel(const channel_id_t* channel_id)
                 cc1101_interface_write_single_reg(DEVIATN, RADIO_DEVIATN_NORMAL_RATE);
                 break;
             case PHY_CLASS_LO_RATE:
-                // TODO validate
-// TODO
-            //                cc1101_interface_write_single_reg(MDMCFG3, RADIO_MDMCFG3_DRATE_M_LOW_RATE);
-//                cc1101_interface_write_single_reg(MDMCFG4, RADIO_MDMCFG4_LOW_RATE;
-//                cc1101_interface_write_single_reg(DEVIATN, RADIO_DEVIATN_LOW_RATE;
+                cc1101_interface_write_single_reg(MDMCFG3, RADIO_MDMCFG3_DRATE_M_LOW_RATE);
+                cc1101_interface_write_single_reg(MDMCFG4, RADIO_MDMCFG4_LOW_RATE);
+                cc1101_interface_write_single_reg(DEVIATN, RADIO_DEVIATN_LOW_RATE);
                 break;
             default:
                 assert(false);

@@ -10,7 +10,7 @@
         </Register>
         <Register>
             <Name>DEVIATN</Name>
-            <Value>0x50</Value>
+            <Value>0x14</Value>
         </Register>
         <Register>
             <Name>FIFOTHR</Name>
@@ -22,7 +22,7 @@
         </Register>
         <Register>
             <Name>FREQ0</Name>
-            <Value>0xf5</Value>
+            <Value>0x19</Value>
         </Register>
         <Register>
             <Name>FREQ1</Name>
@@ -46,7 +46,7 @@
         </Register>
         <Register>
             <Name>FSCAL3</Name>
-            <Value>0xea</Value>
+            <Value>0xe9</Value>
         </Register>
         <Register>
             <Name>FSCTRL1</Name>
@@ -70,23 +70,27 @@
         </Register>
         <Register>
             <Name>MCSM0</Name>
-            <Value>0x30</Value>
-        </Register>
-        <Register>
-            <Name>MCSM1</Name>
-            <Value>0x3c</Value>
-        </Register>
-        <Register>
-            <Name>MDMCFG2</Name>
-            <Value>0x16</Value>
-        </Register>
-        <Register>
-            <Name>MDMCFG3</Name>
             <Value>0x18</Value>
         </Register>
         <Register>
+            <Name>MDMCFG0</Name>
+            <Value>0x00</Value>
+        </Register>
+        <Register>
+            <Name>MDMCFG1</Name>
+            <Value>0x20</Value>
+        </Register>
+        <Register>
+            <Name>MDMCFG2</Name>
+            <Value>0x10</Value>
+        </Register>
+        <Register>
+            <Name>MDMCFG3</Name>
+            <Value>0x83</Value>
+        </Register>
+        <Register>
             <Name>MDMCFG4</Name>
-            <Value>0xcb</Value>
+            <Value>0xc8</Value>
         </Register>
         <Register>
             <Name>PA_TABLE0</Name>
@@ -94,23 +98,11 @@
         </Register>
         <Register>
             <Name>PKTCTRL0</Name>
-            <Value>0x22</Value>
-        </Register>
-        <Register>
-            <Name>PKTCTRL1</Name>
-            <Value>0x64</Value>
+            <Value>0x12</Value>
         </Register>
         <Register>
             <Name>RSSI</Name>
             <Value>0x80</Value>
-        </Register>
-        <Register>
-            <Name>SYNC0</Name>
-            <Value>0xd0</Value>
-        </Register>
-        <Register>
-            <Name>SYNC1</Name>
-            <Value>0xe6</Value>
         </Register>
         <Register>
             <Name>TEST0</Name>
@@ -151,12 +143,12 @@
     <conttx>
         <Property name="m_rbtModulated" role="45">1</Property>
         <Property name="m_rbtUnmodulated" role="45">0</Property>
-        <Property name="m_cmbDataFormat" role="46">1</Property>
+        <Property name="m_cmbDataFormat" role="46">0</Property>
         <Property name="m_chkFreqSweep" role="44">0</Property>
         <Property name="m_chkChanSweep" role="44">0</Property>
     </conttx>
     <contrx>
-        <Property name="m_cmbDataFormat" role="46">-1</Property>
+        <Property name="m_cmbDataFormat" role="46">0</Property>
         <Property name="m_chkAutoScroll" role="44">2</Property>
     </contrx>
     <packettx>
@@ -174,7 +166,7 @@
         <Property name="m_rbtText" role="45">0</Property>
         <Property name="m_rbtHex" role="45">0</Property>
         <Property name="m_chkAdvanced" role="44">2</Property>
-        <Property name="m_cmbSyncWord" role="46">6</Property>
+        <Property name="m_cmbSyncWord" role="46">0</Property>
         <Property name="m_cmbPreambleCount" role="46">2</Property>
         <Property name="m_chkAddress" role="44">0</Property>
         <Property name="m_edtAddress" role="42"></Property>
