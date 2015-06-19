@@ -64,7 +64,7 @@ hw_rx_cfg_t rx_cfg = {
         .channel_header.ch_coding = PHY_CODING_PN9,
         .channel_header.ch_class = PHY_CLASS_NORMAL_RATE,
         .channel_header.ch_freq_band = PHY_BAND_433,
-        .center_freq_index = 5
+        .center_freq_index = 0
     },
     .syncword_class = PHY_SYNCWORD_CLASS0
 };
@@ -74,7 +74,7 @@ hw_tx_cfg_t tx_cfg = {
         .channel_header.ch_coding = PHY_CODING_PN9,
         .channel_header.ch_class = PHY_CLASS_NORMAL_RATE,
         .channel_header.ch_freq_band = PHY_BAND_433,
-        .center_freq_index = 5
+        .center_freq_index = 0
     },
     .syncword_class = PHY_SYNCWORD_CLASS0,
     .eirp = 10

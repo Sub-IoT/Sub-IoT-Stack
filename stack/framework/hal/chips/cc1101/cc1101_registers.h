@@ -197,11 +197,18 @@ RFIFG15 Positive edge: WOR event 1
 #define RADIO_MDMCFG4_CHANBW_M(VAL)     ((VAL&3)<<4)    // 1 - 162.5 Khz - MDMCFG4 Channel Bandwith Mantise
 #define RADIO_MDMCFG4_DRATE_E(VAL)      (VAL & 0x0F)    // 11  - MDMCFG4 - Data Rate Exponent
 
-#define RADIO_MDMCFG4_NORMAL_RATE RADIO_MDMCFG4_CHANBW_E(0x03) | RADIO_MDMCFG4_CHANBW_M(0x00) | RADIO_MDMCFG4_DRATE_E(0x0B) // MDMCFG4   Modem configuration.
-// TODO channel bandwith, now 101.562500 kHz. Data rate 55.542 kBaud
+// channel bandwidth 162.5 kHz, data rate 55.542 kBaud
+// Carson's rule: 2 x fm + 2 x fd  = 55.555 + 2 x 50 = 155.555 kHz
+// assuming 10 ppm crystals gives max error of: 2 * 10 ppm * 433.16 = 8.66 kHz
+// => BW > 155.555 + 8.66 kHz => > 164 kHZ. Closest possible values in cc1101 are 203 and 162.5 kHz.
+// TODO testing with 162.5 kHz for max sensivity now, 203 kHz is safe option though
+#define RADIO_MDMCFG4_NORMAL_RATE RADIO_MDMCFG4_CHANBW_E(0x02) | RADIO_MDMCFG4_CHANBW_M(0x01) | RADIO_MDMCFG4_DRATE_E(0x0B) // MDMCFG4   Modem configuration.
 
-#define RADIO_MDMCFG4_LOW_RATE RADIO_MDMCFG4_CHANBW_E(0x03) | RADIO_MDMCFG4_CHANBW_M(0x00) | RADIO_MDMCFG4_DRATE_E(0x08) // MDMCFG4   Modem configuration.
-// TODO channel bandwith, now 101.562500 kHz. Data rate 9.6 kBaud
+// channel bandwidth 58 kHz, data rate 9.595 kBaud
+// Carson's rule: 2 x fm + 2 x fd  = 9.6 + 2 x 4.8 = 19.2 kHz
+// assuming 10 ppm crystals gives max error of: 2 * 10 ppm * 433.0725 = 8.66 kHz
+// => BW > 19.2 + 8.66 kHz => > 27.86 kHz. Closest possible value in cc1101 is 58 kHz (actually the smallest BW supported)
+#define RADIO_MDMCFG4_LOW_RATE RADIO_MDMCFG4_CHANBW_E(0x03) | RADIO_MDMCFG4_CHANBW_M(0x03) | RADIO_MDMCFG4_DRATE_E(0x08) // MDMCFG4   Modem configuration
 
 #define RADIO_MDMCFG3_DRATE_M_NORMAL_RATE    0x18
 #define RADIO_MDMCFG3_DRATE_M_LOW_RATE       0x83
