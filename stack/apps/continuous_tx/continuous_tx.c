@@ -50,5 +50,6 @@ void bootstrap()
     hw_radio_init(NULL, NULL);
 
     cc1101_interface_write_single_reg(0x08, 0x22); // PKTCTRL0 random PN9 mode + disable data whitening
+    //cc1101_interface_write_single_reg(0x12, 0x30); // MDMCFG2: use OOK modulation to clearly view centre freq on spectrum analyzer, comment for GFSK
     cc1101_interface_strobe(0x35); // strobe TX
 }
