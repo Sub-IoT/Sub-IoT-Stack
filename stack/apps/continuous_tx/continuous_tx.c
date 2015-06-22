@@ -42,6 +42,7 @@
 
 uint8_t cc1101_interface_strobe(uint8_t); // prototype (to prevent warning) of internal driver function which is used here.
 uint8_t cc1101_interface_write_single_reg(uint8_t, uint8_t);
+uint8_t cc1101_interface_write_single_patable(uint8_t);
 
 void bootstrap()
 {
@@ -51,5 +52,6 @@ void bootstrap()
 
     cc1101_interface_write_single_reg(0x08, 0x22); // PKTCTRL0 random PN9 mode + disable data whitening
     //cc1101_interface_write_single_reg(0x12, 0x30); // MDMCFG2: use OOK modulation to clearly view centre freq on spectrum analyzer, comment for GFSK
+    cc1101_interface_write_single_patable(0xc0); // 10dBm TX EIRP
     cc1101_interface_strobe(0x35); // strobe TX
 }

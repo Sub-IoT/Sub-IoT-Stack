@@ -310,8 +310,8 @@ static void configure_eirp(const eirp_t eirp)
 {
     if(eirp != current_eirp)
     {
-        // TODO set EIRP
         current_eirp = eirp;
+        cc1101_interface_write_single_patable(0xC0); // TODO only 10 dBm supported for now
     }
 }
 
