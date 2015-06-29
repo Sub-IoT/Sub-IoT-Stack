@@ -60,7 +60,8 @@ void measureTemperature()
 
 	int i = (int)(temp * 10);
 	lcd_write_temperature(i*10, 1);
-
+	temperature = temp * 100;
+	
 	log_print_string("Temperature %2d,%2d C", (i/10), abs(i%10));
 }
 
