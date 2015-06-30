@@ -58,10 +58,10 @@ void measureTemperature()
 {
 	float temp = tempsensor_read_celcius();
 
-	int i = (int)(temp * 10);
-	lcd_write_temperature(i*10, 1);
-
-	log_print_string("Temperature %2d,%2d C", (i/10), abs(i%10));
+	temperature = (int)(temp * 10);
+	lcd_write_temperature(temperature*10, 1);
+	
+	log_print_string("Temperature %2d,%2d C", (temperature/10), abs(temperature%10));
 }
 
 void execute_sensor_measurement()
@@ -71,7 +71,8 @@ void execute_sensor_measurement()
 
 	measureTemperature();
 
-	fs_write_file(0x40, 0, (uint8_t*)&temperature, 2); // File 0x40 is configured to use D7AActP trigger an ALP action which broadcasts this file data on Access Class 0
+	uint8_t temp_bigendian[] = {(temperature & 0xFF00) >> 8, temperature & 0x00FF};
+	fs_write_file(0x40, 0, (uint8_t*)&temp_bigendian, 2); // File 0x40 is configured to use D7AActP trigger an ALP action which broadcasts this file data on Access Class 0
 }
 
 void bootstrap()
