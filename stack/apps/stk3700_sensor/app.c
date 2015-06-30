@@ -71,7 +71,7 @@ void execute_sensor_measurement()
 
 	measureTemperature();
 
-	uint8_t temp_bigendian[] = {(temperature & 0xFF00) >> 8, temperature & 0x00FF};
+	int16_t temp_bigendian = __builtin_bswap16(temperature);
 	fs_write_file(0x40, 0, (uint8_t*)&temp_bigendian, 2); // File 0x40 is configured to use D7AActP trigger an ALP action which broadcasts this file data on Access Class 0
 }
 
