@@ -120,7 +120,7 @@ __LINK_C void log_print_raw_phy_packet(hw_radio_packet_t* packet, bool is_tx)
         uart_transmit_data(packet->tx_meta.tx_cfg.channel_id.center_freq_index);
         uart_transmit_data(packet->tx_meta.tx_cfg.syncword_class);
         uart_transmit_data(packet->tx_meta.tx_cfg.eirp);
-        uart_transmit_message(packet->data, packet->length);
+        uart_transmit_message(packet->data, packet->length+1);
     } else {
         uart_transmit_data(LOG_TYPE_PHY_PACKET_RX);
         uart_transmit_message(&(packet->rx_meta.timestamp), sizeof(timer_tick_t));
@@ -130,7 +130,7 @@ __LINK_C void log_print_raw_phy_packet(hw_radio_packet_t* packet, bool is_tx)
         uart_transmit_data(packet->rx_meta.lqi);
         uart_transmit_message(&(packet->rx_meta.rssi), sizeof(int16_t));
         // TODO CRC?
-        uart_transmit_message(packet->data, packet->length);
+        uart_transmit_message(packet->data, packet->length+1);
     }
 #endif // FRAMEWORK_LOG_BINARY
 }
