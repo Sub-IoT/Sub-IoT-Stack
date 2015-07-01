@@ -266,12 +266,12 @@ static void configure_channel(const channel_id_t* channel_id)
             cc1101_interface_write_single_reg(FREQ1, RADIO_FREQ1(RADIO_FREQ_433_NORMAL_RATE));
             cc1101_interface_write_single_reg(FREQ0, RADIO_FREQ0(RADIO_FREQ_433_NORMAL_RATE));
             break;
-        case PHY_BAND_868_1: // TODO 868_2
+        case PHY_BAND_868:
             cc1101_interface_write_single_reg(FREQ2, RADIO_FREQ2(RADIO_FREQ_868_NORMAL_RATE));
             cc1101_interface_write_single_reg(FREQ1, RADIO_FREQ2(RADIO_FREQ_868_NORMAL_RATE));
             cc1101_interface_write_single_reg(FREQ0, RADIO_FREQ2(RADIO_FREQ_868_NORMAL_RATE));
             break;
-        case PHY_BAND_915_1: // TODO 915_x
+        case PHY_BAND_915:
             assert(false);
 //            WriteSingleReg(RADIO_FREQ2, (uint8_t)(RADIO_FREQ_915>>16 & 0xFF));
 //            WriteSingleReg(RADIO_FREQ1, (uint8_t)(RADIO_FREQ_915>>8 & 0xFF));
