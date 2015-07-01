@@ -112,4 +112,6 @@
     #define CC1101_GDO2_PIN C4
 #endif
 
+#define HAS_LCD
+
 #endif

@@ -26,6 +26,7 @@
  *  	glenn.ergeerts@uantwerpen.be
  */
 
+#include "string.h"
 #include "platform_defs.h"
 #ifndef USE_CC1101
     #error "This application only works with cc1101"
@@ -36,6 +37,10 @@
 
 #if NUM_USERBUTTONS > 1
 #include "userbutton.h"
+#endif
+
+#ifdef HAS_LCD
+#include "hwlcd.h"
 #endif
 
 #ifdef FRAMEWORK_LOG_ENABLED
@@ -70,6 +75,13 @@ void rssi_valid_cb(int16_t rssi)
 void start()
 {
     rx_cfg.channel_id.center_freq_index = channel_indexes[current_channel_indexes_index];
+
+#ifdef HAS_LCD
+    char string[10] = "";
+    sprintf(string, "ch %i", rx_cfg.channel_id.center_freq_index),
+    lcd_write_string(string);
+#endif
+
     hw_radio_set_rx(&rx_cfg, NULL, &rssi_valid_cb); // we 'misuse' hw_radio_set_rx to configure the channel (using the public API)
     hw_radio_set_idle(); // go straight back to idle
 
