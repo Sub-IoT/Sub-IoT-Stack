@@ -27,6 +27,7 @@
  */
 
 #include "string.h"
+#include "stdio.h"
 #include "platform_defs.h"
 #ifndef USE_CC1101
     #error "This application only works with cc1101"
@@ -53,19 +54,21 @@ uint8_t cc1101_interface_strobe(uint8_t); // prototype (to prevent warning) of i
 uint8_t cc1101_interface_write_single_reg(uint8_t, uint8_t);
 uint8_t cc1101_interface_write_single_patable(uint8_t);
 
-#define CHANNEL_COUNT_433_NORMAL_RATE 8
-static uint8_t channel_indexes[CHANNEL_COUNT_433_NORMAL_RATE] = {0, 8, 16, 24, 32, 40, 48, 56};
-static uint8_t current_channel_indexes_index = 0;
+#define LO_RATE 0
+#define NORMAL_RATE 1
+#define HI_RATE 2
 
-static hw_rx_cfg_t rx_cfg = {
-    .channel_id = {
-        .channel_header.ch_coding = PHY_CODING_PN9,
-        .channel_header.ch_class = PHY_CLASS_NORMAL_RATE,
-        .channel_header.ch_freq_band = PHY_BAND_433,
-        .center_freq_index = 0
-    },
-    .syncword_class = PHY_SYNCWORD_CLASS0
-};
+#define CONFIG_RATE LO_RATE
+
+#if (CONFIG_RATE == NORMAL_RATE)
+    #define CHANNEL_COUNT 8
+    static uint8_t channel_indexes[CHANNEL_COUNT] = {0, 8, 16, 24, 32, 40, 48, 56};
+#elif (CONFIG_RATE == LO_RATE)
+    #define CHANNEL_COUNT 69
+    static uint8_t channel_indexes[CHANNEL_COUNT]; // initialize later
+#endif
+
+static uint8_t current_channel_indexes_index = 0;
 
 void rssi_valid_cb(int16_t rssi)
 {
@@ -74,6 +77,10 @@ void rssi_valid_cb(int16_t rssi)
 
 void start()
 {
+    hw_rx_cfg_t rx_cfg;
+    rx_cfg.channel_id.channel_header.ch_coding = PHY_CODING_PN9;
+    rx_cfg.channel_id.channel_header.ch_class = CONFIG_RATE;
+    rx_cfg.channel_id.channel_header.ch_freq_band = PHY_BAND_433;
     rx_cfg.channel_id.center_freq_index = channel_indexes[current_channel_indexes_index];
 
 #ifdef HAS_LCD
@@ -101,10 +108,10 @@ void userbutton_callback(button_id_t button_id)
             if(current_channel_indexes_index > 0)
                 current_channel_indexes_index--;
             else
-                current_channel_indexes_index = CHANNEL_COUNT_433_NORMAL_RATE - 1;
+                current_channel_indexes_index = CHANNEL_COUNT - 1;
             break;
         case 1:
-            if(current_channel_indexes_index < CHANNEL_COUNT_433_NORMAL_RATE - 1)
+            if(current_channel_indexes_index < CHANNEL_COUNT - 1)
                 current_channel_indexes_index++;
             else
                 current_channel_indexes_index = 0;
@@ -117,6 +124,11 @@ void userbutton_callback(button_id_t button_id)
 void bootstrap()
 {
     DPRINT("Device booted at time: %d\n", timer_get_counter_value()); // TODO not printed for some reason, debug later
+
+#if (CONFIG_RATE == LO_RATE)
+    for(int i = 0; i < CHANNEL_COUNT; i++)
+        channel_indexes[i] = i;
+#endif
 
 #if NUM_USERBUTTONS > 1
     ubutton_register_callback(0, &userbutton_callback);

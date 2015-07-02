@@ -240,10 +240,15 @@ RFIFG15 Positive edge: WOR event 1
 #define RADIO_MDMCFG1_CHANSPC_E(VAL)      (VAL&3)
 #define RADIO_MDMCFG0_CHANSPC_M(VAL)      (VAL)
 
-// channel spacing normal rate = 200 kHz
+// channel spacing normal rate = 200 kHz (actual value 199.951172 kHz)
 #define RADIO_MDMCFG1_CHANSPC_E_NORMAL_RATE RADIO_MDMCFG1_CHANSPC_E(0x02)
 #define RADIO_MDMCFG0_CHANSPC_M_NORMAL_RATE RADIO_MDMCFG0_CHANSPC_M(0xF8)
-// TODO other rates
+
+// channel spacing low rate = 25 kHz (actual value 25.39062 kHz)
+#define RADIO_MDMCFG1_CHANSPC_E_LO_RATE RADIO_MDMCFG1_CHANSPC_E(0x00)
+#define RADIO_MDMCFG0_CHANSPC_M_LO_RATE RADIO_MDMCFG0_CHANSPC_M(0x00)
+
+// TODO hi rate
 
 #define RADIO_DEVIATN_E(VAL)                   ((VAL&7) << 4)// 5 - Deviation Exponent
 #define RADIO_DEVIATN_M(VAL)                   (VAL&7)       // 0 - 50.78 Khz) Deviation Mantissa - dev = fosxc/2^17 x (8+dev_m) x 2 ^dev_e
