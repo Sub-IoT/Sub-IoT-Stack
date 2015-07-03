@@ -65,6 +65,30 @@ __LINK_C void uart_transmit_message(void const *data, size_t length);
  */
 __LINK_C bool uart_tx_ready();
 
+/*! \brief RX callback function pointer prototype
+ *  \param rx_data  the received byte
+ */
+typedef void (*uart_rx_inthandler_t)(char rx_data);
+
+/*! \brief Configure the callback function to be called on UART RX interrupt
+ *
+ * Please note this callback is executed in interrupt process and thus should return asap.
+ *
+ * \param cb   function pointer to the callback function to be executed
+ */
+__LINK_C void uart_set_rx_interrupt_callback(uart_rx_inthandler_t cb);
+
+
+/*! \brief Enable or disable UART RX interrupt from occuring
+ *
+ * Enabling the interrupt requires setting the callback function using uart_set_rx_interrupt_callback() beforehand.
+ *
+ * \param enabled   true if interrupt should enabled, false if interrupt should not be enabled
+ * \return error_t	SUCCESS if the interrupt was enabled/disables successfully
+ *			EOFF if the interrupt callback has not yet been configured while enabling
+ */
+__LINK_C error_t uart_rx_interrupt_enable(bool enabled);
+
 #endif // __UART_H__
 
 /** @}*/

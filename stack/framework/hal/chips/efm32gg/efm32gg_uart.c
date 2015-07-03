@@ -35,6 +35,8 @@
 #include "em_gpio.h"
 
 
+static uart_rx_inthandler_t rx_cb = NULL;
+
 void __uart_init()
 {
     CMU_ClockEnable(cmuClock_GPIO, true);
@@ -68,8 +70,8 @@ void __uart_init()
     UART_CHANNEL->ROUTE = UART_ROUTE_RXPEN | UART_ROUTE_TXPEN | UART_ROUTE_LOCATION; // Clear RX/TX buffers and shift regs, enable transmitter and receiver pins
 
     USART_IntClear(UART_CHANNEL, _UART_IF_MASK);
-    NVIC_ClearPendingIRQ(UART1_RX_IRQn);
-    NVIC_ClearPendingIRQ(UART1_TX_IRQn);
+    NVIC_ClearPendingIRQ(UART0_RX_IRQn);
+    NVIC_ClearPendingIRQ(UART0_TX_IRQn);
 
     USART_Enable(UART_CHANNEL, usartEnable);
 }
@@ -111,4 +113,43 @@ void uart_transmit_message(void const *data, size_t length)
 			uart_transmit_data(((char const*)data)[i]);
 		}
 #endif
+}
+
+void uart_set_rx_interrupt_callback(uart_rx_inthandler_t cb)
+{
+    rx_cb = cb;
+}
+
+error_t uart_rx_interrupt_enable(bool enabled)
+{
+    if(enabled)
+    {
+        if(rx_cb == NULL) return EOFF;
+
+        USART_IntClear(UART_CHANNEL, _UART_IF_MASK);
+        USART_IntEnable(UART_CHANNEL, UART_IF_RXDATAV);
+        NVIC_ClearPendingIRQ(UART0_RX_IRQn);
+        NVIC_ClearPendingIRQ(UART0_TX_IRQn);
+        NVIC_EnableIRQ(UART0_RX_IRQn);
+    }
+    else
+    {
+        USART_IntClear(UART_CHANNEL, _UART_IF_MASK);
+        USART_IntDisable(UART_CHANNEL, UART_IF_RXDATAV);
+        NVIC_ClearPendingIRQ(UART0_RX_IRQn);
+        NVIC_ClearPendingIRQ(UART0_TX_IRQn);
+        NVIC_DisableIRQ(UART0_RX_IRQn);
+    }
+
+    return SUCCESS;
+}
+
+void UART0_RX_IRQHandler(void)
+{
+    if (UART_CHANNEL->STATUS & UART_STATUS_RXDATAV)
+    {
+        uint8_t rx_data = USART_Rx(UART_CHANNEL);
+        rx_cb(rx_data);
+        USART_IntClear(UART_CHANNEL, UART_IF_RXDATAV);
+    }
 }
