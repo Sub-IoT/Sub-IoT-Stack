@@ -28,7 +28,10 @@
 
 #include "string.h"
 #include "stdio.h"
+#include "stdlib.h"
+
 #include "platform_defs.h"
+
 #ifndef USE_CC1101
     #error "This application only works with cc1101"
 #endif
@@ -54,23 +57,15 @@ uint8_t cc1101_interface_strobe(uint8_t); // prototype (to prevent warning) of i
 uint8_t cc1101_interface_write_single_reg(uint8_t, uint8_t);
 uint8_t cc1101_interface_write_single_patable(uint8_t);
 
-#define LO_RATE 0
-#define NORMAL_RATE 1
-#define HI_RATE 2
+#define NORMAL_RATE_CHANNEL_COUNT 8
+#define LO_RATE_CHANNEL_COUNT 69
 
-#define CONFIG_RATE LO_RATE
-
-#if (CONFIG_RATE == NORMAL_RATE)
-    #define CHANNEL_COUNT 8
-    static uint8_t channel_indexes[CHANNEL_COUNT] = {0, 8, 16, 24, 32, 40, 48, 56};
-#elif (CONFIG_RATE == LO_RATE)
-    #define CHANNEL_COUNT 69
-    static uint8_t channel_indexes[CHANNEL_COUNT]; // initialize later
-#endif
 
 static uint8_t current_channel_indexes_index = 0;
-static phy_channel_band_t channel_band = PHY_BAND_433;
-
+static phy_channel_band_t current_channel_band = PHY_BAND_433;
+static phy_channel_class_t current_channel_class = PHY_CLASS_LO_RATE;
+static uint8_t channel_indexes[LO_RATE_CHANNEL_COUNT] = { 0 }; // reallocated later depending on band/class
+static uint8_t channel_count = LO_RATE_CHANNEL_COUNT;
 
 void rssi_valid_cb(int16_t rssi)
 {
@@ -81,29 +76,29 @@ void start()
 {
     hw_rx_cfg_t rx_cfg;
     rx_cfg.channel_id.channel_header.ch_coding = PHY_CODING_PN9;
-    rx_cfg.channel_id.channel_header.ch_class = CONFIG_RATE;
-    rx_cfg.channel_id.channel_header.ch_freq_band = channel_band;
+    rx_cfg.channel_id.channel_header.ch_class = current_channel_class;
+    rx_cfg.channel_id.channel_header.ch_freq_band = current_channel_band;
     rx_cfg.channel_id.center_freq_index = channel_indexes[current_channel_indexes_index];
 
 #ifdef HAS_LCD
     char string[10] = "";
     char rate;
     char band[3];
-    switch(CONFIG_RATE)
+    switch(current_channel_class)
     {
-        case 0: rate = 'L'; break;
-        case 1: rate = 'N'; break;
-        case 2: rate = 'H'; break;
+        case PHY_CLASS_LO_RATE: rate = 'L'; break;
+        case PHY_CLASS_NORMAL_RATE: rate = 'N'; break;
+        case PHY_CLASS_HI_RATE: rate = 'H'; break;
     }
 
-    switch(channel_band)
+    switch(current_channel_band)
     {
         case PHY_BAND_433: strncpy(band, "433", sizeof(band)); break;
         case PHY_BAND_868: strncpy(band, "868", sizeof(band)); break;
         case PHY_BAND_915: strncpy(band, "915", sizeof(band)); break;
     }
 
-    sprintf(string, "%s%c-%i", band, rate, rx_cfg.channel_id.center_freq_index),
+    sprintf(string, "%.3s%c-%i", band, rate, rx_cfg.channel_id.center_freq_index),
     lcd_write_string(string);
 #endif
 
@@ -126,10 +121,10 @@ void userbutton_callback(button_id_t button_id)
             if(current_channel_indexes_index > 0)
                 current_channel_indexes_index--;
             else
-                current_channel_indexes_index = CHANNEL_COUNT - 1;
+                current_channel_indexes_index = channel_count - 1;
             break;
         case 1:
-            if(current_channel_indexes_index < CHANNEL_COUNT - 1)
+            if(current_channel_indexes_index < channel_count - 1)
                 current_channel_indexes_index++;
             else
                 current_channel_indexes_index = 0;
@@ -147,10 +142,24 @@ void bootstrap()
     lcd_write_string("cont tx");
 #endif
 
-#if (CONFIG_RATE == LO_RATE)
-    for(int i = 0; i < CHANNEL_COUNT; i++)
-        channel_indexes[i] = i;
-#endif
+    switch(current_channel_class)
+    {
+        // TODO only 433 for now
+        case PHY_CLASS_NORMAL_RATE:
+        	channel_count = NORMAL_RATE_CHANNEL_COUNT;
+            realloc(channel_indexes, channel_count);
+            for(int i = 0; i < channel_count; i++)
+                channel_indexes[i] = i * 8;
+
+            break;
+        case PHY_CLASS_LO_RATE:
+        	channel_count = LO_RATE_CHANNEL_COUNT;
+            realloc(channel_indexes, channel_count);
+            for(int i = 0; i < channel_count; i++)
+                channel_indexes[i] = i;
+
+            break;
+    }
 
 #if NUM_USERBUTTONS > 1
     ubutton_register_callback(0, &userbutton_callback);
