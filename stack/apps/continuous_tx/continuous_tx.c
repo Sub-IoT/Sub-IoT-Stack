@@ -69,6 +69,8 @@ uint8_t cc1101_interface_write_single_patable(uint8_t);
 #endif
 
 static uint8_t current_channel_indexes_index = 0;
+static phy_channel_band_t channel_band = PHY_BAND_433;
+
 
 void rssi_valid_cb(int16_t rssi)
 {
@@ -80,12 +82,28 @@ void start()
     hw_rx_cfg_t rx_cfg;
     rx_cfg.channel_id.channel_header.ch_coding = PHY_CODING_PN9;
     rx_cfg.channel_id.channel_header.ch_class = CONFIG_RATE;
-    rx_cfg.channel_id.channel_header.ch_freq_band = PHY_BAND_433;
+    rx_cfg.channel_id.channel_header.ch_freq_band = channel_band;
     rx_cfg.channel_id.center_freq_index = channel_indexes[current_channel_indexes_index];
 
 #ifdef HAS_LCD
     char string[10] = "";
-    sprintf(string, "ch %i", rx_cfg.channel_id.center_freq_index),
+    char rate;
+    char band[3];
+    switch(CONFIG_RATE)
+    {
+        case 0: rate = 'L'; break;
+        case 1: rate = 'N'; break;
+        case 2: rate = 'H'; break;
+    }
+
+    switch(channel_band)
+    {
+        case PHY_BAND_433: strncpy(band, "433", sizeof(band)); break;
+        case PHY_BAND_868: strncpy(band, "868", sizeof(band)); break;
+        case PHY_BAND_915: strncpy(band, "915", sizeof(band)); break;
+    }
+
+    sprintf(string, "%s%c-%i", band, rate, rx_cfg.channel_id.center_freq_index),
     lcd_write_string(string);
 #endif
 
@@ -125,6 +143,10 @@ void bootstrap()
 {
     DPRINT("Device booted at time: %d\n", timer_get_counter_value()); // TODO not printed for some reason, debug later
 
+#ifdef HAS_LCD
+    lcd_write_string("cont tx");
+#endif
+
 #if (CONFIG_RATE == LO_RATE)
     for(int i = 0; i < CHANNEL_COUNT; i++)
         channel_indexes[i] = i;
@@ -138,5 +160,5 @@ void bootstrap()
     hw_radio_init(NULL, NULL);
 
     sched_register_task(&start);
-    sched_post_task(&start);
+    timer_post_task_delay(&start, TIMER_TICKS_PER_SEC * 5);
 }
