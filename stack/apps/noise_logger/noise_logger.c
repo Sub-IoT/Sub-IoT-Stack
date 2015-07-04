@@ -30,6 +30,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <userbutton.h>
+#include <fifo.h>
 
 #define NORMAL_RATE_CHANNEL_COUNT 8
 #define LO_RATE_CHANNEL_COUNT 69
@@ -39,6 +40,9 @@ static phy_channel_band_t current_channel_band = PHY_BAND_433;
 static phy_channel_class_t current_channel_class = PHY_CLASS_LO_RATE;
 static uint8_t channel_indexes[LO_RATE_CHANNEL_COUNT] = { 0 }; // reallocated later depending on band/class
 static uint8_t channel_count = LO_RATE_CHANNEL_COUNT;
+static bool use_manual_channel_switching = false;
+static uint8_t uart_rx_buffer[10];
+static fifo_t uart_rx_fifo;
 
 typedef struct
 {
@@ -46,24 +50,40 @@ typedef struct
     int16_t rssi;
 } timestamped_rssi_t;
 
-timestamped_rssi_t rssi_measurements[4096] = { 0 }; // TODO tmp
-int16_t rssi_measurements_index = 0;
+void start_rx();
+
+static void switch_prev_channel()
+{
+    if(current_channel_indexes_index > 0)
+        current_channel_indexes_index--;
+    else
+        current_channel_indexes_index = channel_count - 1;
+}
+
+static void switch_next_channel()
+{
+    if(current_channel_indexes_index < channel_count - 1)
+        current_channel_indexes_index++;
+    else
+        current_channel_indexes_index = 0;
+}
 
 void read_rssi()
 {
     timestamped_rssi_t rssi_measurement;
     rssi_measurement.tick = timer_get_counter_value();
     rssi_measurement.rssi = hw_radio_get_rssi();
-    rssi_measurements[rssi_measurements_index] = rssi_measurement;
-    rssi_measurements_index++;
     char str[80];
-    sprintf(str, "%i,%i,%i\n", rssi_measurements_index, rssi_measurement.tick, rssi_measurement.rssi); // TODO channel
+    sprintf(str, "%i,%i,%i\n", channel_indexes[current_channel_indexes_index], rssi_measurement.tick, rssi_measurement.rssi); 
     uart_transmit_message(str, strlen(str));
-    if(rssi_measurements_index < 1000)
-        //timer_post_task_delay(&read_rssi, 5); // TODO delay
-    	sched_post_task(&read_rssi); // TODO delay
+    if(!use_manual_channel_switching)
+    {
+        switch_next_channel();
+        sched_post_task(&start_rx);
+    }
     else
-        log_print_string("done");
+        sched_post_task(&read_rssi);
+
 }
 
 void rssi_valid(int16_t cur_rssi)
@@ -110,24 +130,21 @@ void start_rx()
 void userbutton_callback(button_id_t button_id)
 {
     // change channel and restart
+    use_manual_channel_switching = true;
     switch(button_id)
     {
-        case 0:
-            if(current_channel_indexes_index > 0)
-                current_channel_indexes_index--;
-            else
-                current_channel_indexes_index = channel_count - 1;
-            break;
-        case 1:
-            if(current_channel_indexes_index < channel_count - 1)
-                current_channel_indexes_index++;
-            else
-                current_channel_indexes_index = 0;
+        case 0: switch_prev_channel(); break;
+        case 1: switch_next_channel(); break;
     }
 
     sched_post_task(&start_rx);
 }
 #endif
+
+void uart_rx_cb(char data)
+{
+    fifo_put(&uart_rx_fifo, &data, 1);
+}
 
 void bootstrap()
 {
@@ -161,7 +178,12 @@ void bootstrap()
 
     hw_radio_init(NULL, NULL);
 
+    fifo_init(&uart_rx_fifo, uart_rx_buffer, sizeof(uart_rx_buffer));
+
+    uart_set_rx_interrupt_callback(&uart_rx_cb);
+    uart_rx_interrupt_enable(true);
+
     sched_register_task(&read_rssi);
     sched_register_task(&start_rx);
-    timer_post_task_delay(&start_rx, TIMER_TICKS_PER_SEC * 3);
+    //timer_post_task_delay(&start_rx, TIMER_TICKS_PER_SEC * 3);
 }
