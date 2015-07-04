@@ -77,6 +77,7 @@ SET(FRAMEWORK_HEADERS
         inc/scheduler.h
         inc/timer.h
         inc/types.h
+        inc/fifo.h
 )
 
 SET(HAL_API_HEADERS
