@@ -56,6 +56,12 @@ __LINK_C void uart_transmit_data(int8_t data);
  */
 __LINK_C void uart_transmit_message(void const *data, size_t length);
 
+/*! \brief Transmit a terminated string over the UART
+ *
+ * \param string    pointer to the start of the terminated string to send
+ */
+__LINK_C void uart_transmit_string(char const *string);
+
 /*! \brief Check whether the UART is ready to send a single byte
  *
  * If this function returns true, a single byte can be sent without blocking.

@@ -90,7 +90,7 @@ void fifo_clear(fifo_t* fifo);
  * @param fifo      Pointer to the fifo object
  * @return Number of bytes currently in the FIFO
  */
-uint16_t fifo_get_size(fifo_t* fifo);
+int16_t fifo_get_size(fifo_t* fifo);
 
 #endif // FIFO_H
 

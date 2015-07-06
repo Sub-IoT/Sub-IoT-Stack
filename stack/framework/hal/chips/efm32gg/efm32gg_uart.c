@@ -115,6 +115,11 @@ void uart_transmit_message(void const *data, size_t length)
 #endif
 }
 
+void uart_transmit_string(const char *string)
+{
+    uart_transmit_message(string, strnlen(string, 100));
+}
+
 void uart_set_rx_interrupt_callback(uart_rx_inthandler_t cb)
 {
     rx_cb = cb;
