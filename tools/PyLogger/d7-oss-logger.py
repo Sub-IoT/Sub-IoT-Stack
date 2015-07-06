@@ -140,7 +140,7 @@ class LogData(Logs):
 
     def __str__(self):
         if settings["data"]:
-            string = formatHeader("DATA", "BLUE", self.datetime) + " " + str(self.data) + Style.RESET_ALL
+            string = formatHeader("DATA", "YELLOW", self.datetime) + " " + str(self.data) + Style.RESET_ALL
             return string + "\n"
         return ""
 

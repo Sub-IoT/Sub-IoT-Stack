@@ -262,16 +262,38 @@ static void configure_channel(const channel_id_t* channel_id)
         {
         // TODO calculate depending on rate and channr
         case PHY_BAND_433:
-            cc1101_interface_write_single_reg(FREQ2, RADIO_FREQ2(RADIO_FREQ_433_NORMAL_RATE));
-            cc1101_interface_write_single_reg(FREQ1, RADIO_FREQ1(RADIO_FREQ_433_NORMAL_RATE));
-            cc1101_interface_write_single_reg(FREQ0, RADIO_FREQ0(RADIO_FREQ_433_NORMAL_RATE));
+			if(channel_id->channel_header.ch_class == PHY_CLASS_NORMAL_RATE)
+			{
+				cc1101_interface_write_single_reg(FREQ2, RADIO_FREQ2(RADIO_FREQ_433_NORMAL_RATE));
+				cc1101_interface_write_single_reg(FREQ1, RADIO_FREQ1(RADIO_FREQ_433_NORMAL_RATE));
+				cc1101_interface_write_single_reg(FREQ0, RADIO_FREQ0(RADIO_FREQ_433_NORMAL_RATE));
+				assert(channel_id->center_freq_index % 8 == 0 && channel_id->center_freq_index <= 56);
+				DPRINT("Set channel freq index: %d", channel_id->center_freq_index);
+				cc1101_interface_write_single_reg(CHANNR, channel_id->center_freq_index / 8);
+			}
+			else if(channel_id->channel_header.ch_class == PHY_CLASS_LO_RATE)
+			{
+				cc1101_interface_write_single_reg(FREQ2, RADIO_FREQ2(RADIO_FREQ_433_LO_RATE));
+				cc1101_interface_write_single_reg(FREQ1, RADIO_FREQ1(RADIO_FREQ_433_LO_RATE));
+				cc1101_interface_write_single_reg(FREQ0, RADIO_FREQ0(RADIO_FREQ_433_LO_RATE));
+				assert(channel_id->center_freq_index <= 68);
+				DPRINT("Set channel freq index: %d", channel_id->center_freq_index);
+                cc1101_interface_write_single_reg(CHANNR, channel_id->center_freq_index);
+			}
+			else if(channel_id->channel_header.ch_class == PHY_CLASS_HI_RATE)
+			{
+                assert(false);
+			}
             break;
-        case PHY_BAND_868_1: // TODO 868_2
+        case PHY_BAND_868:
             cc1101_interface_write_single_reg(FREQ2, RADIO_FREQ2(RADIO_FREQ_868_NORMAL_RATE));
             cc1101_interface_write_single_reg(FREQ1, RADIO_FREQ2(RADIO_FREQ_868_NORMAL_RATE));
             cc1101_interface_write_single_reg(FREQ0, RADIO_FREQ2(RADIO_FREQ_868_NORMAL_RATE));
+            // set channel center frequency
+            DPRINT("Set channel freq index: %d", channel_id->center_freq_index);
+            cc1101_interface_write_single_reg(CHANNR, channel_id->center_freq_index); // TODO validate
             break;
-        case PHY_BAND_915_1: // TODO 915_x
+        case PHY_BAND_915:
             assert(false);
 //            WriteSingleReg(RADIO_FREQ2, (uint8_t)(RADIO_FREQ_915>>16 & 0xFF));
 //            WriteSingleReg(RADIO_FREQ1, (uint8_t)(RADIO_FREQ_915>>8 & 0xFF));
@@ -279,11 +301,7 @@ static void configure_channel(const channel_id_t* channel_id)
             break;
         }
 
-        // set channel center frequency
-        DPRINT("Set channel freq index: %d", channel_id->center_freq_index);
-        cc1101_interface_write_single_reg(CHANNR, channel_id->center_freq_index); // TODO validate
-
-        // set modulation, symbol rate and deviation
+        // set modulation, symbol rate, channel spacing and deviation
         switch(channel_id->channel_header.ch_class)
         {
             case PHY_CLASS_NORMAL_RATE:
@@ -291,12 +309,19 @@ static void configure_channel(const channel_id_t* channel_id)
                 cc1101_interface_write_single_reg(MDMCFG3, RADIO_MDMCFG3_DRATE_M_NORMAL_RATE);
                 cc1101_interface_write_single_reg(MDMCFG4, RADIO_MDMCFG4_NORMAL_RATE);
                 cc1101_interface_write_single_reg(DEVIATN, RADIO_DEVIATN_NORMAL_RATE);
+                cc1101_interface_write_single_reg(MDMCFG1, RADIO_MDMCFG1_NUM_PREAMBLE_4B | RADIO_MDMCFG1_CHANSPC_E_NORMAL_RATE);
+                cc1101_interface_write_single_reg(MDMCFG0, RADIO_MDMCFG0_CHANSPC_M_NORMAL_RATE);
                 break;
             case PHY_CLASS_LO_RATE:
                 cc1101_interface_write_single_reg(MDMCFG3, RADIO_MDMCFG3_DRATE_M_LOW_RATE);
                 cc1101_interface_write_single_reg(MDMCFG4, RADIO_MDMCFG4_LOW_RATE);
                 cc1101_interface_write_single_reg(DEVIATN, RADIO_DEVIATN_LOW_RATE);
-                break;
+                // TODO using channel spacing to switch channels is not accurate here since min value for spacing is 25.39 kHz instead
+                // of 25 Khz resulting in a big offset after x channels ... change center freq instead
+                cc1101_interface_write_single_reg(MDMCFG1, RADIO_MDMCFG1_NUM_PREAMBLE_4B | RADIO_MDMCFG1_CHANSPC_E_LO_RATE);
+                cc1101_interface_write_single_reg(MDMCFG0, RADIO_MDMCFG0_CHANSPC_M_LO_RATE);
+
+            break;
             default:
                 assert(false);
                 // TODO: other classes
