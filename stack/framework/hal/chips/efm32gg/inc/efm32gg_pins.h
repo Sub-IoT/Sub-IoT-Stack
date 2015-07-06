@@ -20,6 +20,7 @@
 #define __EFM32GG_PINS_H_
 #include "hwgpio.h"
 //GPIO port/pin definitions for the EFM32GG
+//TABLE 4.3 in Datasheet
 //port A
 extern pin_id_t const A0;
 extern pin_id_t const A1;

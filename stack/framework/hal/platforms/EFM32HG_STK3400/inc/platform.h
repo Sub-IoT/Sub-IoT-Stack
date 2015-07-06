@@ -21,12 +21,12 @@
 
 #include "platform_defs.h"
 
-#ifndef PLATFORM_EFM32GG_STK3700
+#ifndef PLATFORM_EFM32HG_STK3400
     #error Mismatch between the configured platform and the actual platform. Expected PLATFORM_EFM32GG_STK3700 to be defined
 #endif
 
 
-#include "efm32gg_chip.h"
+#include "efm32hg_chip.h"
 
 /********************
  * LED DEFINITIONS *
@@ -48,17 +48,17 @@
  * UART DEFINITIONS *
  *******************/
 
-#define UART_BAUDRATE PLATFORM_EFM32GG_STK3700_UART_BAUDRATE
+#define UART_BAUDRATE PLATFORM_EFM32HG_STK3400_UART_BAUDRATE
 
 
 
-#define UART_CHANNEL        UART0
-#define UART_CLOCK          cmuClock_UART0
+#define UART_CHANNEL        LEUART0
+#define UART_CLOCK          cmuClock_LEUART0
 #define UART_ROUTE_LOCATION UART_ROUTE_LOCATION_LOC1
 
-// UART0 location #1: PE0 and PE1
-#define UART_PIN_TX         E0           // PE0
-#define UART_PIN_RX         E1          // PE1
+
+#define UART_PIN_TX         D4
+#define UART_PIN_RX         D5
 
 
 /********************
@@ -66,17 +66,17 @@
  *******************/
 
 /* SPI Channel configuration */
-#define SPI_CHANNEL         USART1                      // SPI Channel
+#define SPI_CHANNEL         USART0                      // SPI Channel
 #define SPI_BAUDRATE        9600                    // SPI Frequency
-#define SPI_CLOCK           cmuClock_USART1             // SPI Clock
+#define SPI_CLOCK           cmuClock_USART0             // SPI Clock
 #define SPI_ROUTE_LOCATION  USART_ROUTE_LOCATION_LOC1   // SPI GPIO Routing
 
 /* SPI Ports and Pins for the selected route location above.
  * See the datasheet for the availiable routes and corresponding GPIOs */
-#define SPI_PIN_MOSI        D0
-#define SPI_PIN_MISO        D1
-#define SPI_PIN_CLK         D2
-#define SPI_PIN_CS          D3
+#define SPI_PIN_MOSI        E10
+#define SPI_PIN_MISO        E11
+#define SPI_PIN_CLK         E12
+#define SPI_PIN_CS          E13
 
 #ifdef SPI_USE_DMA
 
@@ -103,13 +103,13 @@
  *************************/
 
 #define NUM_USERBUTTONS 	2
-#define BUTTON0				B9
-#define BUTTON1				B10
+#define BUTTON0				C9
+#define BUTTON1				C10
 
 // CC1101 PIN definitions
 #ifdef USE_CC1101
-    #define CC1101_GDO0_PIN C0
-    #define CC1101_GDO2_PIN C1
+    #define CC1101_GDO0_PIN C3
+    #define CC1101_GDO2_PIN C4
 #endif
 
 #define HAS_LCD
