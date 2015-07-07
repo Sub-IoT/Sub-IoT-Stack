@@ -25,56 +25,41 @@
 #include "hwlcd.h"
 #include "platform.h"
 #include "platform_lcd.h"
-#include "segmentlcd.h"
-#include "segmentlcdconfig.h"
+#include "display.h"
+#include "textdisplay.h"
+#include "retargettextdisplay.h"
 #include <assert.h>
+
+static TEXTDISPLAY_Handle_t h;
 
 void __lcd_init()
 {
-	/* Initialize segment LCD. */
-	SegmentLCD_Init(false);
-	/* Turn all LCD segments off. */
-	SegmentLCD_AllOff();
+	DISPLAY_Init();
+
+	TEXTDISPLAY_Config_t config  = {0, false, true};
+	EMSTATUS status = TEXTDISPLAY_New(&config, &h);
+
+
 }
 
 void lcd_all_off()
 {
-	 SegmentLCD_AllOff();
+	 //SegmentLCD_AllOff();
 }
 
 void lcd_all_on()
 {
-	SegmentLCD_AllOn();
+	//SegmentLCD_AllOn();
 }
 
 void lcd_write_string(char* text)
 {
-	SegmentLCD_Write(text);
+	TEXTDISPLAY_WriteString(h, text);
 }
 
 void lcd_write_number(int value)
 {
-	SegmentLCD_Number(value);
+	//SegmentLCD_Number(value);
 }
 
-void lcd_write_temperature(int temperature, bool celcius)
-{
-	SegmentLCD_Number(temperature);
-	SegmentLCD_Symbol(LCD_SYMBOL_DP10, 1);
-
-	if (celcius)
-		SegmentLCD_Symbol(LCD_SYMBOL_DEGC, 1);
-	else
-		SegmentLCD_Symbol(LCD_SYMBOL_DEGF, 1);
-}
-
-void lcd_show_battery_indication(int batteryLevel)
-{
-	SegmentLCD_Battery(batteryLevel);
-}
-
-void lcd_show_antenna(int show)
-{
-	SegmentLCD_Symbol(LCD_SYMBOL_ANT, show);
-}
 

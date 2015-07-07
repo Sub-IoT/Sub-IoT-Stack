@@ -1,25 +1,7 @@
-/* * OSS-7 - An opensource implementation of the DASH7 Alliance Protocol for ultra
- * lowpower wireless sensor communication
- *
- * Copyright 2015 University of Antwerp
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 /***************************************************************************//**
  * @file em_assert.h
  * @brief EFM32 peripheral API "assert" implementation.
- * @version 3.20.7
+ * @version 3.20.13
  *
  * @details
  * By default, EFM32 library assert usage is not included in order to reduce
@@ -67,8 +49,8 @@
  ******************************************************************************/
 
 
-#ifndef __EM_ASSERT_H
-#define __EM_ASSERT_H
+#ifndef __SILICON_LABS_EM_ASSERT_H_
+#define __SILICON_LABS_EM_ASSERT_H_
 
 #ifdef __cplusplus
 extern "C" {
@@ -95,4 +77,4 @@ void assertEFM(const char *file, int line);
 }
 #endif
 
-#endif /* __EM_ASSERT_H */
+#endif /* __SILICON_LABS_EM_ASSERT_H_ */

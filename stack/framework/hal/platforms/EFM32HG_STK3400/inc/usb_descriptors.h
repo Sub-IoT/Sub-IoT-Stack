@@ -1,7 +1,7 @@
 /***************************************************************************//**
  * @file descriptors.h
- * @brief USB descriptor prototypes for composite device example project.
- * @version 3.20.12
+ * @brief USB descriptor prototypes for CDC Serial Port adapter example project.
+ * @version 3.20.13
  *******************************************************************************
  * @section License
  * <b>(C) Copyright 2014 Silicon Labs, http://www.silabs.com</b>
@@ -23,7 +23,7 @@ extern "C" {
 
 extern const USB_DeviceDescriptor_TypeDef   USBDESC_deviceDesc;
 extern const uint8_t                        USBDESC_configDesc[];
-extern const void * const                   USBDESC_strings[4];
+extern const void * const                   USBDESC_strings[3];
 extern const uint8_t                        USBDESC_bufferingMultiplier[];
 
 #ifdef __cplusplus

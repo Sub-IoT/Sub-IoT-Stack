@@ -69,10 +69,17 @@ void hw_busy_wait(int16_t microseconds)
     // note: uses core debugger cycle counter mechanism for now,
     // may switch to timer later if more accuracy is needed.
     uint32_t counter = microseconds * (CMU_ClockFreqGet(cmuClock_CORE) / 1000000);
+    uint32_t i = 0;
 
+    //Coredebug not evailable in M0+
+    //todo: implement using timer
+    /*
     CoreDebug->DEMCR |= CoreDebug_DEMCR_TRCENA_Msk;
     DWT->CTRL        |= 1;
     DWT->CYCCNT       = 0;
 
     while (DWT->CYCCNT < counter) ;
+    */
+
+    while (i<counter) i++;
 }

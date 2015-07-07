@@ -67,11 +67,11 @@ void __uart_init()
     };
 
     USART_InitAsync(UART_CHANNEL, &uartInit);
-    UART_CHANNEL->ROUTE = UART_ROUTE_RXPEN | UART_ROUTE_TXPEN | UART_ROUTE_LOCATION; // Clear RX/TX buffers and shift regs, enable transmitter and receiver pins
+    UART_CHANNEL->ROUTE = USART_ROUTE_RXPEN | USART_ROUTE_TXPEN | UART_ROUTE_LOCATION; // Clear RX/TX buffers and shift regs, enable transmitter and receiver pins
 
-    USART_IntClear(UART_CHANNEL, _UART_IF_MASK);
-    NVIC_ClearPendingIRQ(UART0_RX_IRQn);
-    NVIC_ClearPendingIRQ(UART0_TX_IRQn);
+    USART_IntClear(UART_CHANNEL, _USART_IF_MASK);
+    NVIC_ClearPendingIRQ(USART0_RX_IRQn);
+    NVIC_ClearPendingIRQ(USART0_TX_IRQn);
 
     USART_Enable(UART_CHANNEL, usartEnable);
 }
@@ -131,30 +131,30 @@ error_t uart_rx_interrupt_enable(bool enabled)
     {
         if(rx_cb == NULL) return EOFF;
 
-        USART_IntClear(UART_CHANNEL, _UART_IF_MASK);
-        USART_IntEnable(UART_CHANNEL, UART_IF_RXDATAV);
-        NVIC_ClearPendingIRQ(UART0_RX_IRQn);
-        NVIC_ClearPendingIRQ(UART0_TX_IRQn);
-        NVIC_EnableIRQ(UART0_RX_IRQn);
+        USART_IntClear(UART_CHANNEL, _USART_IF_MASK);
+        USART_IntEnable(UART_CHANNEL, USART_IF_RXDATAV);
+        NVIC_ClearPendingIRQ(USART0_RX_IRQn);
+        NVIC_ClearPendingIRQ(USART0_TX_IRQn);
+        NVIC_EnableIRQ(USART0_RX_IRQn);
     }
     else
     {
-        USART_IntClear(UART_CHANNEL, _UART_IF_MASK);
-        USART_IntDisable(UART_CHANNEL, UART_IF_RXDATAV);
-        NVIC_ClearPendingIRQ(UART0_RX_IRQn);
-        NVIC_ClearPendingIRQ(UART0_TX_IRQn);
-        NVIC_DisableIRQ(UART0_RX_IRQn);
+        USART_IntClear(UART_CHANNEL, _USART_IF_MASK);
+        USART_IntDisable(UART_CHANNEL, USART_IF_RXDATAV);
+        NVIC_ClearPendingIRQ(USART0_RX_IRQn);
+        NVIC_ClearPendingIRQ(USART0_TX_IRQn);
+        NVIC_DisableIRQ(USART0_RX_IRQn);
     }
 
     return SUCCESS;
 }
 
-void UART0_RX_IRQHandler(void)
+void USART0_RX_IRQHandler(void)
 {
-    if (UART_CHANNEL->STATUS & UART_STATUS_RXDATAV)
+    if (UART_CHANNEL->STATUS & USART_STATUS_RXDATAV)
     {
         uint8_t rx_data = USART_Rx(UART_CHANNEL);
         rx_cb(rx_data);
-        USART_IntClear(UART_CHANNEL, UART_IF_RXDATAV);
+        USART_IntClear(UART_CHANNEL, USART_IF_RXDATAV);
     }
 }

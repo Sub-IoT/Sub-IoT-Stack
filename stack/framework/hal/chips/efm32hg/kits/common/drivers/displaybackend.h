@@ -1,6 +1,6 @@
 /**************************************************************************//**
- * @file
- * @brief EFM32 Segment LCD Display driver, header file
+ * @file displaybackend.h
+ * @brief Display device backend interface
  * @version 3.20.12
  ******************************************************************************
  * @section License
@@ -14,13 +14,12 @@
  ******************************************************************************/
 
 
-#ifndef __SEGMENTLCD_H
-#define __SEGMENTLCD_H
 
-#include <stdint.h>
-#include <stdbool.h>
 
-#include "segmentlcdconfig.h"
+#ifndef _DISPLAY_BACKEND_H_
+#define _DISPLAY_BACKEND_H_
+
+#include "display.h"
 
 /***************************************************************************//**
  * @addtogroup Drivers
@@ -28,7 +27,7 @@
  ******************************************************************************/
 
 /***************************************************************************//**
- * @addtogroup SegmentLcd
+ * @addtogroup Display
  * @{
  ******************************************************************************/
 
@@ -36,28 +35,18 @@
 extern "C" {
 #endif
 
-/* Regular functions */
-void SegmentLCD_AllOff(void);
-void SegmentLCD_AllOn(void);
-void SegmentLCD_AlphaNumberOff(void);
-void SegmentLCD_ARing(int anum, int on);
-void SegmentLCD_Battery(int batteryLevel);
-void SegmentLCD_Disable(void);
-void SegmentLCD_EnergyMode(int em, int on);
-void SegmentLCD_Init(bool useBoost);
-void SegmentLCD_LowerHex( uint32_t num );
-void SegmentLCD_LowerNumber( int num );
-void SegmentLCD_Number(int value);
-void SegmentLCD_NumberOff(void);
-void SegmentLCD_Symbol(lcdSymbol s, int on);
-void SegmentLCD_UnsignedHex(uint16_t value);
-void SegmentLCD_Write(char *string);
+/*******************************************************************************
+ **************************    FUNCTION PROTOTYPES    **************************
+ ******************************************************************************/
+
+EMSTATUS DISPLAY_DeviceRegister(DISPLAY_Device_t *device);
+
 
 #ifdef __cplusplus
 }
 #endif
 
-/** @} (end group SegmentLcd) */
+/** @} (end group Display) */
 /** @} (end group Drivers) */
 
-#endif
+#endif /* _DISPLAY_BACKEND_H_ */

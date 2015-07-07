@@ -23,7 +23,7 @@ REQUIRE_TOOLCHAIN(gcc-arm-embedded)
 #Define platform specific options
 PLATFORM_PARAM(${PLATFORM_PREFIX}_MCU "EFM32HG322F64" STRING "The MCU of the Gecko board")
 PLATFORM_PARAM(${PLATFORM_PREFIX}_RADIO "none" STRING "The radio chip connected to the Gecko board")
-PLATFORM_PARAM(${PLATFORM_PREFIX}_UART_BAUDRATE "9600" STRING "The baudrate used by the UART port")
+PLATFORM_PARAM(${PLATFORM_PREFIX}_UART_BAUDRATE "115200" STRING "The baudrate used by the UART port")
 PLATFORM_OPTION(${PLATFORM_PREFIX}_DEBUGPINS "Enable/Disable Hardware Debug Pins support (see 'hwdebug.h')" TRUE)
 PLATFORM_OPTION(PLATFORM_USE_USB_CDC "Enable/Disable the use of CDC (UART Communication using USB" FALSE)
 #Restrict the number of possible options for the radio option in the usual manner...
@@ -44,7 +44,7 @@ GLOBAL_INCLUDE_DIRECTORIES(config)
 GLOBAL_INCLUDE_DIRECTORIES("${CMAKE_CURRENT_BINARY_DIR}")
 
 #Set platform specific compile options
-INSERT_C_FLAGS(AFTER "-gdwarf-2" "-mcpu=cortex-m3" "-mthumb" "-fmessage-length=0" "-mno-sched-prolog" "-fno-builtin" "-ffunction-sections" "-fdata-sections")
+INSERT_C_FLAGS(AFTER "-gdwarf-2" "-mcpu=cortex-m0plus" "-mthumb" "-fmessage-length=0" "-mno-sched-prolog" "-fno-builtin" "-ffunction-sections" "-fdata-sections")
 
 #Add platform specific linker flags
 INSERT_LINKER_FLAGS(BEFORE OBJECTS INSERT "--specs=nano.specs" "-Wl,-gc-sections")

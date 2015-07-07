@@ -1,7 +1,7 @@
 /***************************************************************************//**
  * @file em_system.c
  * @brief System Peripheral API
- * @version 3.20.7
+ * @version 3.20.13
  *******************************************************************************
  * @section License
  * <b>(C) Copyright 2014 Silicon Labs, http://www.silabs.com</b>
