@@ -130,20 +130,21 @@ void process_command_chan()
 
 void process_uart_rx_fifo()
 {
-    int16_t size = fifo_get_size(&uart_rx_fifo);
-
-    if(size < COMMAND_SIZE)
-        return;
-
-    uint8_t received_cmd[COMMAND_SIZE];
-    fifo_pop(&uart_rx_fifo, received_cmd, COMMAND_SIZE);
-    if(memcmp(received_cmd, COMMAND_CHAN, COMMAND_SIZE) == 0)
+    while(fifo_get_size(&uart_rx_fifo) >= COMMAND_SIZE)
     {
-        process_command_chan();
-    }
-    else
-    {
-        assert(false);
+        uint8_t received_cmd[COMMAND_SIZE];
+        fifo_pop(&uart_rx_fifo, received_cmd, COMMAND_SIZE);
+        if(memcmp(received_cmd, COMMAND_CHAN, COMMAND_SIZE) == 0)
+        {
+            process_command_chan();
+        }
+        else
+        {
+            char err[40];
+            snprintf(err, sizeof(err), "ERROR invalid command %.4s", received_cmd);
+            uart_transmit_string(err);
+            fifo_clear(&uart_rx_fifo);
+        }
     }
 }
 
