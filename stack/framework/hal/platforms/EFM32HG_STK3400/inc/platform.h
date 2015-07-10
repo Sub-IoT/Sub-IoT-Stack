@@ -52,13 +52,13 @@
 
 
 
-#define UART_CHANNEL        USART0
-#define UART_CLOCK          cmuClock_USART0
-#define UART_ROUTE_LOCATION USART_ROUTE_LOCATION_LOC1
+#define UART_CHANNEL        USART1
+#define UART_CLOCK          cmuClock_USART1
+#define UART_ROUTE_LOCATION USART_ROUTE_LOCATION_LOC2
 
 
-#define UART_PIN_TX         A0
-#define UART_PIN_RX         A1
+#define UART_PIN_TX         D7
+#define UART_PIN_RX         D6
 
 
 /********************
@@ -66,10 +66,10 @@
  *******************/
 
 /* SPI Channel configuration */
-#define SPI_CHANNEL         USART1                      // SPI Channel
+#define SPI_CHANNEL         USART0                      // SPI Channel
 #define SPI_BAUDRATE        9600                    // SPI Frequency
-#define SPI_CLOCK           cmuClock_USART1             // SPI Clock
-#define SPI_ROUTE_LOCATION  USART_ROUTE_LOCATION_LOC1   // SPI GPIO Routing
+#define SPI_CLOCK           cmuClock_USART0             // SPI Clock
+#define SPI_ROUTE_LOCATION  USART_ROUTE_LOCATION_LOC0   // SPI GPIO Routing
 
 /* SPI Ports and Pins for the selected route location above.
  * See the datasheet for the availiable routes and corresponding GPIOs */
