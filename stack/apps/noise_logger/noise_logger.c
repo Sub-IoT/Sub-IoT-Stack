@@ -38,8 +38,8 @@
 
 #define COMMAND_SIZE 4
 #define COMMAND_CHAN "CHAN"
-#define COMMAND_CHAN_PARAM_SIZE 7 + 1 // (including \n)
-
+#define COMMAND_CHAN_PARAM_SIZE 7
+#define COMMAND_LOOP "LOOP"
 #define UART_RX_BUFFER_SIZE 20
 
 static uint8_t current_channel_indexes_index = 0;
@@ -96,28 +96,44 @@ void process_command_chan()
     char param[COMMAND_CHAN_PARAM_SIZE];
     fifo_pop(&uart_rx_fifo, param, COMMAND_CHAN_PARAM_SIZE);
 
+    channel_id_t new_channel;
+
     if(strncmp(param, "433", 3) == 0)
-        rx_cfg.channel_id.channel_header.ch_freq_band = PHY_BAND_433;
+        new_channel.channel_header.ch_freq_band = PHY_BAND_433;
     else if(strncmp(param, "868", 3) == 0)
-        rx_cfg.channel_id.channel_header.ch_freq_band = PHY_BAND_868;
+        new_channel.channel_header.ch_freq_band = PHY_BAND_868;
     else if(strncmp(param, "915", 3) == 0)
-        rx_cfg.channel_id.channel_header.ch_freq_band = PHY_BAND_915;
+        new_channel.channel_header.ch_freq_band = PHY_BAND_915;
     else
         goto error;
 
     char channel_class = param[3];
     if(channel_class == 'L')
-        rx_cfg.channel_id.channel_header.ch_class = PHY_CLASS_LO_RATE;
+        new_channel.channel_header.ch_class = PHY_CLASS_LO_RATE;
     else if(channel_class == 'N')
-        rx_cfg.channel_id.channel_header.ch_class = PHY_CLASS_NORMAL_RATE;
+        new_channel.channel_header.ch_class = PHY_CLASS_NORMAL_RATE;
     else if(channel_class == 'H')
-        rx_cfg.channel_id.channel_header.ch_class = PHY_CLASS_HI_RATE;
+        new_channel.channel_header.ch_class = PHY_CLASS_HI_RATE;
     else
         goto error;
 
     uint16_t center_freq_index = atoi((const char*)(param + 5));
-    rx_cfg.channel_id.center_freq_index = center_freq_index;
-    // TODO validate
+    new_channel.center_freq_index = center_freq_index;
+
+    // validate
+    if(new_channel.channel_header.ch_freq_band == PHY_BAND_433)
+    {
+        if(new_channel.channel_header.ch_class == PHY_CLASS_NORMAL_RATE
+                && (new_channel.center_freq_index % 8 != 0 || new_channel.center_freq_index > 56))
+            goto error;
+        else if(new_channel.channel_header.ch_class == PHY_CLASS_LO_RATE && new_channel.center_freq_index > 68)
+            goto error;
+        else if(new_channel.channel_header.ch_class == PHY_CLASS_HI_RATE)
+            goto error;
+    } // TODO validate PHY_BAND_868
+
+    // valid band, apply ...
+    rx_cfg.channel_id = new_channel;
 
     // change channel and restart
     sched_post_task(&start_rx);
@@ -128,22 +144,35 @@ void process_command_chan()
         fifo_clear(&uart_rx_fifo);
 }
 
+
+void process_command_loop()
+{
+    use_manual_channel_switching = false;
+    sched_post_task(&start_rx);
+}
+
 void process_uart_rx_fifo()
 {
-    int16_t size = fifo_get_size(&uart_rx_fifo);
-
-    if(size < COMMAND_SIZE)
-        return;
-
-    uint8_t received_cmd[COMMAND_SIZE];
-    fifo_pop(&uart_rx_fifo, received_cmd, COMMAND_SIZE);
-    if(memcmp(received_cmd, COMMAND_CHAN, COMMAND_SIZE) == 0)
+    if(fifo_get_size(&uart_rx_fifo) >= COMMAND_SIZE)
     {
-        process_command_chan();
-    }
-    else
-    {
-        assert(false);
+        uint8_t received_cmd[COMMAND_SIZE];
+        fifo_pop(&uart_rx_fifo, received_cmd, COMMAND_SIZE);
+        if(strncmp(received_cmd, COMMAND_CHAN, COMMAND_SIZE) == 0)
+        {
+            process_command_chan();
+        }
+        else if(strncmp(received_cmd, COMMAND_LOOP, COMMAND_SIZE) == 0)
+        {
+            process_command_loop();
+        }
+        else
+        {
+            char err[40];
+            snprintf(err, sizeof(err), "ERROR invalid command %.4s\n", received_cmd);
+            uart_transmit_string(err);
+        }
+
+        fifo_clear(&uart_rx_fifo);
     }
 }
 
