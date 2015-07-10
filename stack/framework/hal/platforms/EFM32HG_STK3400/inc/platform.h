@@ -57,8 +57,8 @@
 #define UART_ROUTE_LOCATION USART_ROUTE_LOCATION_LOC1
 
 
-#define UART_PIN_TX         D4
-#define UART_PIN_RX         D5
+#define UART_PIN_TX         A0
+#define UART_PIN_RX         A1
 
 
 /********************
@@ -108,8 +108,8 @@
 
 // CC1101 PIN definitions
 #ifdef USE_CC1101
-    #define CC1101_GDO0_PIN C0
-    #define CC1101_GDO2_PIN C1
+    #define CC1101_GDO0_PIN C1
+    #define CC1101_GDO2_PIN C2
 #endif
 
 #define HAS_LCD
