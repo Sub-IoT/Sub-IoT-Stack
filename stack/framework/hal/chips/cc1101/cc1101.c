@@ -262,36 +262,42 @@ static void configure_channel(const channel_id_t* channel_id)
         {
         // TODO calculate depending on rate and channr
         case PHY_BAND_433:
-			if(channel_id->channel_header.ch_class == PHY_CLASS_NORMAL_RATE)
-			{
-				cc1101_interface_write_single_reg(FREQ2, RADIO_FREQ2(RADIO_FREQ_433_NORMAL_RATE));
-				cc1101_interface_write_single_reg(FREQ1, RADIO_FREQ1(RADIO_FREQ_433_NORMAL_RATE));
-				cc1101_interface_write_single_reg(FREQ0, RADIO_FREQ0(RADIO_FREQ_433_NORMAL_RATE));
-				assert(channel_id->center_freq_index % 8 == 0 && channel_id->center_freq_index <= 56);
-				DPRINT("Set channel freq index: %d", channel_id->center_freq_index);
-				cc1101_interface_write_single_reg(CHANNR, channel_id->center_freq_index / 8);
-			}
-			else if(channel_id->channel_header.ch_class == PHY_CLASS_LO_RATE)
-			{
-				cc1101_interface_write_single_reg(FREQ2, RADIO_FREQ2(RADIO_FREQ_433_LO_RATE));
-				cc1101_interface_write_single_reg(FREQ1, RADIO_FREQ1(RADIO_FREQ_433_LO_RATE));
-				cc1101_interface_write_single_reg(FREQ0, RADIO_FREQ0(RADIO_FREQ_433_LO_RATE));
-				assert(channel_id->center_freq_index <= 68);
-				DPRINT("Set channel freq index: %d", channel_id->center_freq_index);
+            if(channel_id->channel_header.ch_class == PHY_CLASS_NORMAL_RATE)
+            {
+                cc1101_interface_write_single_reg(FREQ2, RADIO_FREQ2(RADIO_FREQ_433_NORMAL_RATE));
+                cc1101_interface_write_single_reg(FREQ1, RADIO_FREQ1(RADIO_FREQ_433_NORMAL_RATE));
+                cc1101_interface_write_single_reg(FREQ0, RADIO_FREQ0(RADIO_FREQ_433_NORMAL_RATE));
+                assert(channel_id->center_freq_index % 8 == 0 && channel_id->center_freq_index <= 56);
+                DPRINT("Set channel freq index: %d", channel_id->center_freq_index);
+                cc1101_interface_write_single_reg(CHANNR, channel_id->center_freq_index / 8);
+            }
+            else if(channel_id->channel_header.ch_class == PHY_CLASS_LO_RATE)
+            {
+                cc1101_interface_write_single_reg(FREQ2, RADIO_FREQ2(RADIO_FREQ_433_LO_RATE));
+                cc1101_interface_write_single_reg(FREQ1, RADIO_FREQ1(RADIO_FREQ_433_LO_RATE));
+                cc1101_interface_write_single_reg(FREQ0, RADIO_FREQ0(RADIO_FREQ_433_LO_RATE));
+                assert(channel_id->center_freq_index <= 68);
+                DPRINT("Set channel freq index: %d", channel_id->center_freq_index);
                 cc1101_interface_write_single_reg(CHANNR, channel_id->center_freq_index);
-			}
-			else if(channel_id->channel_header.ch_class == PHY_CLASS_HI_RATE)
-			{
+            }
+            else if(channel_id->channel_header.ch_class == PHY_CLASS_HI_RATE)
+            {
                 assert(false);
-			}
+            }
             break;
         case PHY_BAND_868:
-            cc1101_interface_write_single_reg(FREQ2, RADIO_FREQ2(RADIO_FREQ_868_NORMAL_RATE));
-            cc1101_interface_write_single_reg(FREQ1, RADIO_FREQ1(RADIO_FREQ_868_NORMAL_RATE));
-            cc1101_interface_write_single_reg(FREQ0, RADIO_FREQ0(RADIO_FREQ_868_NORMAL_RATE));
-            // set channel center frequency
-            DPRINT("Set channel freq index: %d", channel_id->center_freq_index);
-            cc1101_interface_write_single_reg(CHANNR, channel_id->center_freq_index); // TODO validate
+            if(channel_id->channel_header.ch_class == PHY_CLASS_NORMAL_RATE)
+            {
+                cc1101_interface_write_single_reg(FREQ2, RADIO_FREQ2(RADIO_FREQ_868_NORMAL_RATE));
+                cc1101_interface_write_single_reg(FREQ1, RADIO_FREQ1(RADIO_FREQ_868_NORMAL_RATE));
+                cc1101_interface_write_single_reg(FREQ0, RADIO_FREQ0(RADIO_FREQ_868_NORMAL_RATE));
+                assert(channel_id->center_freq_index % 8 == 0 && channel_id->center_freq_index <= 152);
+                DPRINT("Set channel freq index: %d", channel_id->center_freq_index);
+                cc1101_interface_write_single_reg(CHANNR, channel_id->center_freq_index / 8);
+            }
+            else
+                assert(false);
+            // TODO lo-rate and hi-rate
             break;
         case PHY_BAND_915:
             assert(false);

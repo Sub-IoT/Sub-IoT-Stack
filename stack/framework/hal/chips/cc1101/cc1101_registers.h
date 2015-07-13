@@ -190,7 +190,8 @@ RFIFG15 Positive edge: WOR event 1
 #define RADIO_FREQ1(VAL)                (uint8_t)(VAL >> 8 & 0xFF)
 #define RADIO_FREQ0(VAL)                (uint8_t)(VAL & 0xFF)
 
-#define RADIO_FREQ_868_NORMAL_RATE           ((uint32_t)0x0021315A)   // TODO validate
+#define RADIO_FREQ_868_LO_RATE           ((uint32_t)0x0021315A)
+#define RADIO_FREQ_868_NORMAL_RATE       ((uint32_t)0x00213237)
 
 // TODO update according to draft spec
 #define RADIO_MDMCFG4_CHANBW_E(VAL)     ((VAL&3)<<6)    // 2 - 162.5 Khz - MDMCFG4 Channel Bandwith Exponent BDW = fxosc / (8 x (4 + chbw_M) x 2^chbw_E)
