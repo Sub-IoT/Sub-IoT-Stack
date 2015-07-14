@@ -26,6 +26,7 @@
 #include <string.h>
 #include <stdio.h>
 #include <stdint.h>
+#include <stdlib.h>
 #include <hwleds.h>
 #include <hwradio.h>
 #include <hwsystem.h>
@@ -36,6 +37,7 @@
 #include "hwlcd.h"
 #include "platform_lcd.h"
 #include "userbutton.h"
+#include "fifo.h"
 
 
 #ifndef PLATFORM_EFM32GG_STK3700
@@ -51,6 +53,17 @@
 #define DPRINT(...)
 #endif
 
+#define COMMAND_SIZE 4
+#define UART_RX_BUFFER_SIZE 20
+#define COMMAND_CHAN "CHAN"
+#define COMMAND_CHAN_PARAM_SIZE 7
+#define COMMAND_TRAN "TRAN"
+#define COMMAND_RECV "RECV"
+
+
+static uint8_t uart_rx_buffer[UART_RX_BUFFER_SIZE] = { 0 };
+static fifo_t uart_rx_fifo;
+
 typedef enum
 {
     STATE_CONFIG_DIRECTION,
@@ -58,32 +71,28 @@ typedef enum
     STATE_RUNNING
 } state_t;
 
+static channel_id_t current_channel_id = {
+	.channel_header.ch_coding = PHY_CODING_PN9,
+	.channel_header.ch_class = PHY_CLASS_NORMAL_RATE,
+	.channel_header.ch_freq_band = PHY_BAND_433,
+	.center_freq_index = 0
+};
 
-hw_rx_cfg_t rx_cfg = {
-    .channel_id = {
-        .channel_header.ch_coding = PHY_CODING_PN9,
-        .channel_header.ch_class = PHY_CLASS_NORMAL_RATE,
-        .channel_header.ch_freq_band = PHY_BAND_433,
-        .center_freq_index = 0
-    },
+static hw_rx_cfg_t rx_cfg = {
+	// channel_id set in bootstrap
     .syncword_class = PHY_SYNCWORD_CLASS0
 };
 
-hw_tx_cfg_t tx_cfg = {
-    .channel_id = {
-        .channel_header.ch_coding = PHY_CODING_PN9,
-        .channel_header.ch_class = PHY_CLASS_NORMAL_RATE,
-        .channel_header.ch_freq_band = PHY_BAND_433,
-        .center_freq_index = 0
-    },
+static hw_tx_cfg_t tx_cfg = {
+    // channel_id set in bootstrap
     .syncword_class = PHY_SYNCWORD_CLASS0,
     .eirp = 10
 };
 
 static uint8_t tx_buffer[sizeof(hw_radio_packet_t) + 255] = { 0 };
 static uint8_t rx_buffer[sizeof(hw_radio_packet_t) + 255] = { 0 };
-hw_radio_packet_t* tx_packet = (hw_radio_packet_t*)tx_buffer;
-hw_radio_packet_t* rx_packet = (hw_radio_packet_t*)rx_buffer;
+static hw_radio_packet_t* tx_packet = (hw_radio_packet_t*)tx_buffer;
+static hw_radio_packet_t* rx_packet = (hw_radio_packet_t*)rx_buffer;
 static uint8_t data[PACKET_SIZE + 1] = { [0] = PACKET_SIZE, [1 ... PACKET_SIZE]  = 0 };
 static uint16_t counter = 0;
 static uint16_t missed_packets_counter = 0;
@@ -93,21 +102,20 @@ static char lcd_msg[15];
 static char record[80];
 static uint64_t id;
 static bool is_mode_rx = true;
-static phy_channel_class_t current_channel_class = PHY_CLASS_NORMAL_RATE;
 static state_t current_state = STATE_CONFIG_DIRECTION;
 
-void packet_received(hw_radio_packet_t* packet);
-void packet_transmitted(hw_radio_packet_t* packet);
-void start();
+static void packet_received(hw_radio_packet_t* packet);
+static void packet_transmitted(hw_radio_packet_t* packet);
+static void start();
 
-void start_rx()
+static void start_rx()
 {
     DPRINT("start RX");
     current_state = STATE_RUNNING;
     hw_radio_set_rx(&rx_cfg, &packet_received, NULL);
 }
 
-void transmit_packet()
+static void transmit_packet()
 {
     DPRINT("transmitting packet");
     current_state = STATE_RUNNING;
@@ -117,21 +125,44 @@ void transmit_packet()
     uint16_t crc = __builtin_bswap16(crc_calculate(data, sizeof(data) - 2));
     memcpy(data + sizeof(data) - 2, &crc, 2);
     memcpy(&tx_packet->data, data, sizeof(data));
+    tx_cfg.channel_id = current_channel_id;
     tx_packet->tx_meta.tx_cfg = tx_cfg;
     hw_radio_send_packet(tx_packet, &packet_transmitted);
 }
 
-hw_radio_packet_t* alloc_new_packet(uint8_t length)
+static hw_radio_packet_t* alloc_new_packet(uint8_t length)
 {
     return rx_packet;
 }
 
-void release_packet(hw_radio_packet_t* packet)
+static void release_packet(hw_radio_packet_t* packet)
 {
     memset(rx_buffer, 0, sizeof(hw_radio_packet_t) + 255);
 }
 
-void packet_received(hw_radio_packet_t* packet)
+// TODO code duplication with noise_test, refactor later
+static void channel_id_to_string(channel_id_t* channel, char* str, size_t len)
+{
+    char rate;
+    char band[3];
+    switch(channel->channel_header.ch_class)
+    {
+        case PHY_CLASS_LO_RATE: rate = 'L'; break;
+        case PHY_CLASS_NORMAL_RATE: rate = 'N'; break;
+        case PHY_CLASS_HI_RATE: rate = 'H'; break;
+    }
+
+    switch(channel->channel_header.ch_freq_band)
+    {
+        case PHY_BAND_433: strncpy(band, "433", sizeof(band)); break;
+        case PHY_BAND_868: strncpy(band, "868", sizeof(band)); break;
+        case PHY_BAND_915: strncpy(band, "915", sizeof(band)); break;
+    }
+
+    snprintf(str, len, "%.3s%c%03i", band, rate, channel->center_freq_index);
+}
+
+static void packet_received(hw_radio_packet_t* packet)
 {
     uint16_t crc = __builtin_bswap16(crc_calculate(packet->data, packet->length + 1 - 2));
     if(memcmp(&crc, packet->data + packet->length + 1 - 2, 2) != 0)
@@ -148,8 +179,9 @@ void packet_received(hw_radio_packet_t* packet)
         uint64_t msg_id;
         memcpy(&msg_id, packet->data + 1, sizeof(msg_id));
         memcpy(&msg_counter, packet->data + 1 + sizeof(msg_id), sizeof(msg_counter));
-
-        sprintf(record, "%i,%i,%lu,%lu,%i\n", msg_counter, packet->rx_meta.rssi, (unsigned long)msg_id, (unsigned long)id, packet->rx_meta.timestamp);
+        char chan[8];
+        channel_id_to_string(&(packet->rx_meta.rx_cfg.channel_id), chan, sizeof(chan));
+        sprintf(record, "%7s,%i,%i,%lu,%lu,%i\n", chan, msg_counter, packet->rx_meta.rssi, (unsigned long)msg_id, (unsigned long)id, packet->rx_meta.timestamp);
 		uart_transmit_message(record, strlen(record));
 
 		if(counter == 0)
@@ -184,7 +216,7 @@ void packet_received(hw_radio_packet_t* packet)
     }
 }
 
-void packet_transmitted(hw_radio_packet_t* packet)
+static void packet_transmitted(hw_radio_packet_t* packet)
 {
 #if HW_NUM_LEDS > 0
     led_toggle(0);
@@ -195,7 +227,7 @@ void packet_transmitted(hw_radio_packet_t* packet)
     timer_post_task(&transmit_packet, TIMER_TICKS_PER_SEC / 5);
 }
 
-void stop()
+static void stop()
 {
     // make sure to cancel tasks which might me pending already
 	if(is_mode_rx)
@@ -206,7 +238,7 @@ void stop()
     hw_radio_set_idle();
 }
 
-void start()
+static void start()
 {
     counter = 0;
     missed_packets_counter = 0;
@@ -218,7 +250,7 @@ void start()
             is_mode_rx? sprintf(lcd_msg, "PER RX") : sprintf(lcd_msg, "PER TX");
             break;
         case STATE_CONFIG_DATARATE:
-            switch(current_channel_class)
+            switch(current_channel_id.channel_header.ch_class)
             {
                 case PHY_CLASS_LO_RATE:
                     sprintf(lcd_msg, "LO-RATE");
@@ -236,9 +268,9 @@ void start()
             {
                 sprintf(lcd_msg, "RUN RX");
                 lcd_write_string(lcd_msg);
-                sprintf(record, "%s,%s,%s,%s,%s\n", "counter", "rssi", "tx_id", "rx_id", "timestamp");
+                sprintf(record, "%s,%s,%s,%s,%s,%s\n", "channel_id", "counter", "rssi", "tx_id", "rx_id", "timestamp");
                 uart_transmit_message(record, strlen(record));
-                rx_cfg.channel_id.channel_header.ch_class = current_channel_class;
+                rx_cfg.channel_id = current_channel_id;
                 timer_post_task(&start_rx, TIMER_TICKS_PER_SEC * 5);
             }
             else
@@ -254,7 +286,7 @@ void start()
     lcd_write_string(lcd_msg);
 }
 
-void userbutton_callback(button_id_t button_id)
+static void userbutton_callback(button_id_t button_id)
 {
 	stop();
     switch(button_id)
@@ -280,13 +312,11 @@ void userbutton_callback(button_id_t button_id)
                     is_mode_rx = !is_mode_rx;
                     break;
                 case STATE_CONFIG_DATARATE:
-                    if(current_channel_class == PHY_CLASS_NORMAL_RATE)
-                        current_channel_class = PHY_CLASS_LO_RATE;
+                    if(current_channel_id.channel_header.ch_class == PHY_CLASS_NORMAL_RATE)
+                        current_channel_id.channel_header.ch_class = PHY_CLASS_LO_RATE;
                     else
-                        current_channel_class = PHY_CLASS_NORMAL_RATE;
+                        current_channel_id.channel_header.ch_class = PHY_CLASS_NORMAL_RATE;
 
-                    tx_cfg.channel_id.channel_header.ch_class = current_channel_class;
-                    rx_cfg.channel_id.channel_header.ch_class = current_channel_class;
                     break;
             }
             break;
@@ -295,21 +325,131 @@ void userbutton_callback(button_id_t button_id)
     sched_post_task(&start);
 }
 
+// TODO code duplication with noise_test, refactor later
+static void process_command_chan()
+{
+    while(fifo_get_size(&uart_rx_fifo) < COMMAND_CHAN_PARAM_SIZE);
+
+    char param[COMMAND_CHAN_PARAM_SIZE];
+    fifo_pop(&uart_rx_fifo, param, COMMAND_CHAN_PARAM_SIZE);
+
+    channel_id_t new_channel;
+
+    if(strncmp(param, "433", 3) == 0)
+        new_channel.channel_header.ch_freq_band = PHY_BAND_433;
+    else if(strncmp(param, "868", 3) == 0)
+        new_channel.channel_header.ch_freq_band = PHY_BAND_868;
+    else if(strncmp(param, "915", 3) == 0)
+        new_channel.channel_header.ch_freq_band = PHY_BAND_915;
+    else
+        goto error;
+
+    char channel_class = param[3];
+    if(channel_class == 'L')
+        new_channel.channel_header.ch_class = PHY_CLASS_LO_RATE;
+    else if(channel_class == 'N')
+        new_channel.channel_header.ch_class = PHY_CLASS_NORMAL_RATE;
+    else if(channel_class == 'H')
+        new_channel.channel_header.ch_class = PHY_CLASS_HI_RATE;
+    else
+        goto error;
+
+    uint16_t center_freq_index = atoi((const char*)(param + 5));
+    new_channel.center_freq_index = center_freq_index;
+
+    // validate
+    if(new_channel.channel_header.ch_freq_band == PHY_BAND_433)
+    {
+        if(new_channel.channel_header.ch_class == PHY_CLASS_NORMAL_RATE
+                && (new_channel.center_freq_index % 8 != 0 || new_channel.center_freq_index > 56))
+            goto error;
+        else if(new_channel.channel_header.ch_class == PHY_CLASS_LO_RATE && new_channel.center_freq_index > 68)
+            goto error;
+        else if(new_channel.channel_header.ch_class == PHY_CLASS_HI_RATE)
+            goto error;
+    } // TODO validate PHY_BAND_868
+
+    // valid band, apply ...
+    current_channel_id = new_channel;
+
+    char str[20];
+    channel_id_to_string(&current_channel_id, str, sizeof(str));
+    uart_transmit_string(str);
+    // change channel and restart
+    // TODOsched_post_task(&start_rx);
+    return;
+
+    error:
+        uart_transmit_string("Error parsing CHAN command. Expected format example: '433L001'\n");
+        fifo_clear(&uart_rx_fifo);
+}
+
+static void process_uart_rx_fifo()
+{
+    if(fifo_get_size(&uart_rx_fifo) >= COMMAND_SIZE)
+    {
+        uint8_t received_cmd[COMMAND_SIZE];
+        fifo_pop(&uart_rx_fifo, received_cmd, COMMAND_SIZE);
+        if(strncmp(received_cmd, COMMAND_CHAN, COMMAND_SIZE) == 0)
+        {
+            process_command_chan();
+        }
+        else if(strncmp(received_cmd, COMMAND_TRAN, COMMAND_SIZE) == 0)
+        {
+            is_mode_rx = false;
+            current_state = STATE_RUNNING;
+            sched_post_task(&start);
+        }
+        else if(strncmp(received_cmd, COMMAND_RECV, COMMAND_SIZE) == 0)
+        {
+            is_mode_rx = true;
+            current_state = STATE_RUNNING;
+            sched_post_task(&start);
+        }
+        else
+        {
+            char err[40];
+            snprintf(err, sizeof(err), "ERROR invalid command %.4s\n", received_cmd);
+            uart_transmit_string(err);
+        }
+
+        fifo_clear(&uart_rx_fifo);
+    }
+
+    timer_post_task_delay(&process_uart_rx_fifo, TIMER_TICKS_PER_SEC);
+}
+
+static void uart_rx_cb(char data)
+{
+    error_t err;
+    err = fifo_put(&uart_rx_fifo, &data, 1); assert(err == SUCCESS);
+    // fifo will be parsed periodically by process_uart_rx_fifo() task
+}
+
 void bootstrap()
 {
     DPRINT("Device booted at time: %d\n", timer_get_counter_value()); // TODO not printed for some reason, debug later
     id = hw_get_unique_id();
     hw_radio_init(&alloc_new_packet, &release_packet);
 
+    rx_cfg.channel_id = current_channel_id;
+    tx_cfg.channel_id = current_channel_id;
+
     ubutton_register_callback(0, &userbutton_callback);
     ubutton_register_callback(1, &userbutton_callback);
+
+    fifo_init(&uart_rx_fifo, uart_rx_buffer, sizeof(uart_rx_buffer));
+
+    uart_set_rx_interrupt_callback(&uart_rx_cb);
+    uart_rx_interrupt_enable(true);
 
     sched_register_task(&start_rx);
     sched_register_task(&transmit_packet);
     sched_register_task(&start);
+    sched_register_task(&process_uart_rx_fifo);
 
     current_state = STATE_CONFIG_DIRECTION;
-    current_channel_class = PHY_CLASS_NORMAL_RATE;
 
     sched_post_task(&start);
+    sched_post_task(&process_uart_rx_fifo);
 }
