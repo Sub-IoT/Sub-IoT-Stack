@@ -27,6 +27,7 @@
 #include <timer.h>
 #include <hwlcd.h>
 #include <hwuart.h>
+#include <hwsystem.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <userbutton.h>
@@ -40,6 +41,7 @@
 #define COMMAND_CHAN "CHAN"
 #define COMMAND_CHAN_PARAM_SIZE 7
 #define COMMAND_LOOP "LOOP"
+#define COMMAND_RSET "RSET"
 #define UART_RX_BUFFER_SIZE 20
 
 static uint8_t current_channel_indexes_index = 0;
@@ -164,6 +166,10 @@ void process_uart_rx_fifo()
         else if(strncmp(received_cmd, COMMAND_LOOP, COMMAND_SIZE) == 0)
         {
             process_command_loop();
+        }
+        else if(strncmp(received_cmd, COMMAND_RSET, COMMAND_SIZE) == 0)
+        {
+            hw_reset();
         }
         else
         {

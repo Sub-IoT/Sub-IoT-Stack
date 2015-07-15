@@ -76,3 +76,8 @@ void hw_busy_wait(int16_t microseconds)
 
     while (DWT->CYCCNT < counter) ;
 }
+
+void hw_reset()
+{
+    NVIC_SystemReset();
+}

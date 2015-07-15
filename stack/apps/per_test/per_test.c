@@ -39,7 +39,6 @@
 #include "userbutton.h"
 #include "fifo.h"
 
-
 #ifndef PLATFORM_EFM32GG_STK3700
     #error "assuming STK3700 for now"
 #endif
@@ -59,6 +58,7 @@
 #define COMMAND_CHAN_PARAM_SIZE 7
 #define COMMAND_TRAN "TRAN"
 #define COMMAND_RECV "RECV"
+#define COMMAND_RSET "RSET"
 
 
 static uint8_t uart_rx_buffer[UART_RX_BUFFER_SIZE] = { 0 };
@@ -230,12 +230,12 @@ static void packet_transmitted(hw_radio_packet_t* packet)
 static void stop()
 {
     // make sure to cancel tasks which might me pending already
+    hw_radio_set_idle();
+
 	if(is_mode_rx)
 		sched_cancel_task(&start_rx);
 	else
 		sched_cancel_task(&transmit_packet);
-
-    hw_radio_set_idle();
 }
 
 static void start()
@@ -396,15 +396,21 @@ static void process_uart_rx_fifo()
         }
         else if(strncmp(received_cmd, COMMAND_TRAN, COMMAND_SIZE) == 0)
         {
+            stop();
             is_mode_rx = false;
             current_state = STATE_RUNNING;
             sched_post_task(&start);
         }
         else if(strncmp(received_cmd, COMMAND_RECV, COMMAND_SIZE) == 0)
         {
+            stop();
             is_mode_rx = true;
             current_state = STATE_RUNNING;
             sched_post_task(&start);
+        }
+        else if(strncmp(received_cmd, COMMAND_RSET, COMMAND_SIZE) == 0)
+        {
+            hw_reset();
         }
         else
         {
