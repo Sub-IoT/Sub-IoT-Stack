@@ -52,11 +52,13 @@
 #define DPRINT(...)
 #endif
 
+// TODO document commands
 #define COMMAND_SIZE 4
 #define UART_RX_BUFFER_SIZE 20
 #define COMMAND_CHAN "CHAN"
 #define COMMAND_CHAN_PARAM_SIZE 7
 #define COMMAND_TRAN "TRAN"
+#define COMMAND_TRAN_PARAM_SIZE 3
 #define COMMAND_RECV "RECV"
 #define COMMAND_RSET "RSET"
 
@@ -97,6 +99,7 @@ static uint8_t data[PACKET_SIZE + 1] = { [0] = PACKET_SIZE, [1 ... PACKET_SIZE] 
 static uint16_t counter = 0;
 static uint16_t missed_packets_counter = 0;
 static uint16_t received_packets_counter = 0;
+static int16_t tx_packet_delay_s = 0;
 static hw_radio_packet_t received_packet;
 static char lcd_msg[15];
 static char record[80];
@@ -224,7 +227,14 @@ static void packet_transmitted(hw_radio_packet_t* packet)
     DPRINT("packet transmitted");
     sprintf(lcd_msg, "TX %i", counter);
     lcd_write_string(lcd_msg);
-    timer_post_task(&transmit_packet, TIMER_TICKS_PER_SEC / 5);
+
+    timer_tick_t delay;
+    if(tx_packet_delay_s == 0)
+        delay = TIMER_TICKS_PER_SEC / 5;
+    else
+        delay = TIMER_TICKS_PER_SEC * tx_packet_delay_s;
+
+    timer_post_task(&transmit_packet, delay);
 }
 
 static void stop()
@@ -396,6 +406,12 @@ static void process_uart_rx_fifo()
         }
         else if(strncmp(received_cmd, COMMAND_TRAN, COMMAND_SIZE) == 0)
         {
+            while(fifo_get_size(&uart_rx_fifo) < COMMAND_TRAN_PARAM_SIZE);
+
+            char param[COMMAND_TRAN_PARAM_SIZE];
+            fifo_pop(&uart_rx_fifo, param, COMMAND_TRAN_PARAM_SIZE);
+            tx_packet_delay_s = atoi(param);
+
             stop();
             is_mode_rx = false;
             current_state = STATE_RUNNING;
