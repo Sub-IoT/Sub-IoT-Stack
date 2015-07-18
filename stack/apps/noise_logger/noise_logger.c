@@ -34,8 +34,10 @@
 #include <fifo.h>
 #include <assert.h>
 
-#define NORMAL_RATE_CHANNEL_COUNT 8
-#define LO_RATE_CHANNEL_COUNT 69
+#define NORMAL_RATE_CHANNEL_COUNT_433 8
+#define LO_RATE_CHANNEL_COUNT_433 69
+#define NORMAL_RATE_CHANNEL_COUNT_868 35 // TODO not correct according to spec, spec is leaving out channels near the end of the band (not sure why)
+#define LO_RATE_CHANNEL_COUNT_868 280
 
 #define COMMAND_SIZE 4
 #define COMMAND_CHAN "CHAN"
@@ -45,18 +47,16 @@
 #define UART_RX_BUFFER_SIZE 20
 
 static uint8_t current_channel_indexes_index = 0;
-static phy_channel_band_t current_channel_band = PHY_BAND_433;
-static phy_channel_class_t current_channel_class = PHY_CLASS_NORMAL_RATE;
-static uint8_t channel_indexes[LO_RATE_CHANNEL_COUNT] = { 0 }; // reallocated later depending on band/class
-static uint8_t channel_count = LO_RATE_CHANNEL_COUNT;
+static uint16_t channel_indexes[LO_RATE_CHANNEL_COUNT_868] = { 0 }; // reallocated later depending on band/class
+static uint16_t channel_count = LO_RATE_CHANNEL_COUNT_868;
 static bool use_manual_channel_switching = false;
 static uint8_t uart_rx_buffer[UART_RX_BUFFER_SIZE] = { 0 };
 static fifo_t uart_rx_fifo;
 static hw_rx_cfg_t rx_cfg = {
     .channel_id = {
         .channel_header.ch_coding = PHY_CODING_PN9,
-        .channel_header.ch_class = PHY_BAND_433,
-        .channel_header.ch_freq_band = PHY_CLASS_NORMAL_RATE,
+        .channel_header.ch_class = PHY_CLASS_NORMAL_RATE,
+        .channel_header.ch_freq_band = PHY_BAND_868,
         .center_freq_index = 0
     },
     .syncword_class = PHY_SYNCWORD_CLASS0
@@ -90,6 +90,41 @@ static void switch_next_channel()
     rx_cfg.channel_id.center_freq_index = channel_indexes[current_channel_indexes_index];
 }
 
+static void prepare_channel_indexes()
+{
+    if(rx_cfg.channel_id.channel_header.ch_class == PHY_CLASS_NORMAL_RATE)
+    {
+        if(rx_cfg.channel_id.channel_header.ch_freq_band == PHY_BAND_433)
+        {
+            channel_count = NORMAL_RATE_CHANNEL_COUNT_433;
+            realloc(channel_indexes, channel_count);
+            for(int i = 0; i < channel_count; i++)
+                channel_indexes[i] = i * 8;
+
+            return;
+        }
+        else if(rx_cfg.channel_id.channel_header.ch_freq_band == PHY_BAND_868)
+        {
+            channel_count = NORMAL_RATE_CHANNEL_COUNT_868;
+            realloc(channel_indexes, channel_count);
+            for(int i = 0; i < channel_count; i++)
+                channel_indexes[i] = i * 8; // TODO not according to spec near the end of the band
+
+            return;
+        }
+    }
+    else if(rx_cfg.channel_id.channel_header.ch_class == PHY_CLASS_LO_RATE)
+    {
+        if(rx_cfg.channel_id.channel_header.ch_freq_band == PHY_BAND_433)
+            channel_count = LO_RATE_CHANNEL_COUNT_433;
+        else if(rx_cfg.channel_id.channel_header.ch_freq_band == PHY_BAND_868)
+            channel_count = LO_RATE_CHANNEL_COUNT_868;
+
+        realloc(channel_indexes, channel_count);
+        for(int i = 0; i < channel_count; i++)
+            channel_indexes[i] = i;
+    }
+}
 
 void process_command_chan()
 {
@@ -138,6 +173,8 @@ void process_command_chan()
     rx_cfg.channel_id = new_channel;
 
     // change channel and restart
+    prepare_channel_indexes();
+    current_channel_indexes_index = 0;
     sched_post_task(&start_rx);
     return;
 
@@ -278,24 +315,7 @@ void bootstrap()
     ubutton_register_callback(1, &userbutton_callback);
 #endif
 
-    switch(current_channel_class)
-    {
-        // TODO only 433 for now
-        case PHY_CLASS_NORMAL_RATE:
-            channel_count = NORMAL_RATE_CHANNEL_COUNT;
-            realloc(channel_indexes, channel_count);
-            for(int i = 0; i < channel_count; i++)
-                channel_indexes[i] = i * 8;
-
-            break;
-        case PHY_CLASS_LO_RATE:
-            channel_count = LO_RATE_CHANNEL_COUNT;
-            realloc(channel_indexes, channel_count);
-            for(int i = 0; i < channel_count; i++)
-                channel_indexes[i] = i;
-
-            break;
-    }
+    prepare_channel_indexes();
 
     hw_radio_init(NULL, NULL);
 

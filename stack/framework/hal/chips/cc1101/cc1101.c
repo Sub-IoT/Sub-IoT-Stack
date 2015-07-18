@@ -291,7 +291,7 @@ static void configure_channel(const channel_id_t* channel_id)
                 cc1101_interface_write_single_reg(FREQ2, RADIO_FREQ2(RADIO_FREQ_868_NORMAL_RATE));
                 cc1101_interface_write_single_reg(FREQ1, RADIO_FREQ1(RADIO_FREQ_868_NORMAL_RATE));
                 cc1101_interface_write_single_reg(FREQ0, RADIO_FREQ0(RADIO_FREQ_868_NORMAL_RATE));
-                assert(channel_id->center_freq_index % 8 == 0 && channel_id->center_freq_index <= 152);
+                assert(channel_id->center_freq_index % 8 == 0 && channel_id->center_freq_index <= 272); // TODO should be 270?
                 DPRINT("Set channel freq index: %d", channel_id->center_freq_index);
                 cc1101_interface_write_single_reg(CHANNR, channel_id->center_freq_index / 8);
             }
