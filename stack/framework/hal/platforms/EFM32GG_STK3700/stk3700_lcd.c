@@ -89,7 +89,7 @@ void lcd_show_ring(int segments)
 		SegmentLCD_ARing(i, true);
 	}
 
-	for(;i<8;i++)
+	for(i=segments;i<8;i++)
 	{
 		SegmentLCD_ARing(segments, false);
 	}
