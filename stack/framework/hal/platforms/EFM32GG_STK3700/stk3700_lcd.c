@@ -54,6 +54,9 @@ void lcd_write_string(char* text)
 
 void lcd_write_number(int value)
 {
+	SegmentLCD_Symbol(LCD_SYMBOL_DP10, 0);
+	SegmentLCD_Symbol(LCD_SYMBOL_DEGC, 0);
+	SegmentLCD_Symbol(LCD_SYMBOL_DEGF, 0);
 	SegmentLCD_Number(value);
 }
 
@@ -76,5 +79,19 @@ void lcd_show_battery_indication(int batteryLevel)
 void lcd_show_antenna(int show)
 {
 	SegmentLCD_Symbol(LCD_SYMBOL_ANT, show);
+}
+
+void lcd_show_ring(int segments)
+{
+	int i = 0;
+	for (;i<segments;i++)
+	{
+		SegmentLCD_ARing(i, true);
+	}
+
+	for(;i<8;i++)
+	{
+		SegmentLCD_ARing(segments, false);
+	}
 }
 

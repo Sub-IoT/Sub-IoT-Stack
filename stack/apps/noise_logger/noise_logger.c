@@ -33,6 +33,11 @@
 #include <userbutton.h>
 #include <fifo.h>
 #include <assert.h>
+#include <platform_sensors.h>
+
+#ifdef PLATFORM_EFM32GG_STK3700
+#include "platform_lcd.h"
+#endif
 
 #define NORMAL_RATE_CHANNEL_COUNT_433 8
 #define LO_RATE_CHANNEL_COUNT_433 69
@@ -45,6 +50,8 @@
 #define COMMAND_LOOP "LOOP"
 #define COMMAND_RSET "RSET"
 #define UART_RX_BUFFER_SIZE 20
+#define TEMPERATURE_TAG "TEMP"
+#define TEMPERATURE_PERIOD TIMER_TICKS_PER_SEC * 10
 
 static uint8_t current_channel_indexes_index = 0;
 static uint16_t channel_indexes[LO_RATE_CHANNEL_COUNT_868] = { 0 }; // reallocated later depending on band/class
@@ -262,6 +269,11 @@ void read_rssi()
         timer_post_task_delay(&read_rssi, TIMER_TICKS_PER_SEC * 2);
     }
 
+#ifdef PLATFORM_EFM32GG_STK3700
+    //lcd_all_on();
+	lcd_write_number(rssi_measurement.rssi);
+#endif
+
 }
 
 void rssi_valid(int16_t cur_rssi)
@@ -304,6 +316,34 @@ void uart_rx_cb(char data)
     use_manual_channel_switching = true;
 }
 
+void measureTemperature()
+{
+	float temp = tempsensor_read_celcius();
+
+	int temperature = (int)(temp * 10);
+
+#ifdef PLATFORM_EFM32GG_STK3700
+
+	int ring_segments = temperature/100;
+	ring_segments = ring_segments > 8 ? 8 : ring_segments;
+	lcd_show_ring(ring_segments);
+
+	lcd_write_temperature(temperature*10, 1);
+#endif
+
+	timer_tick_t tick = timer_get_counter_value();
+
+	char str[80];
+	sprintf(str, "%7s,%i,%2d.%2d\n", TEMPERATURE_TAG, tick, (temperature/10), abs(temperature%10));
+	uart_transmit_string(str);
+}
+
+void execute_sensor_measurement()
+{
+	timer_post_task_delay(&execute_sensor_measurement, TEMPERATURE_PERIOD);
+	measureTemperature();
+}
+
 void bootstrap()
 {
 #ifdef HAS_LCD
@@ -328,4 +368,11 @@ void bootstrap()
     sched_register_task(&start_rx);
     sched_register_task(&process_uart_rx_fifo);
     timer_post_task_delay(&start_rx, TIMER_TICKS_PER_SEC * 3);
+
+    internalTempSensor_init();
+
+    sched_register_task((&execute_sensor_measurement));
+    timer_post_task_delay(&execute_sensor_measurement, TEMPERATURE_PERIOD);
+
+    measureTemperature();
 }
