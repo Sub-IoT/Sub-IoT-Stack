@@ -166,7 +166,7 @@ void process_command_chan()
     else
         goto error;
 
-    uint16_t center_freq_index = atoi((const char*)(param + 5));
+    uint16_t center_freq_index = atoi((const char*)(param + 4));
     new_channel.center_freq_index = center_freq_index;
 
     // validate
