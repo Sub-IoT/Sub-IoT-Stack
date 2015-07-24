@@ -53,12 +53,23 @@
 #define TEMPERATURE_TAG "TEMP"
 #define TEMPERATURE_PERIOD TIMER_TICKS_PER_SEC * 10
 
+#define RX_MAX_WINDOW 50
+
+typedef struct
+{
+    timer_tick_t tick;
+    int16_t rssi;
+} timestamped_rssi_t;
+
 static uint8_t current_channel_indexes_index = 0;
 static uint16_t channel_indexes[LO_RATE_CHANNEL_COUNT_868] = { 0 }; // reallocated later depending on band/class
 static uint16_t channel_count = LO_RATE_CHANNEL_COUNT_868;
 static bool use_manual_channel_switching = false;
 static uint8_t uart_rx_buffer[UART_RX_BUFFER_SIZE] = { 0 };
 static fifo_t uart_rx_fifo;
+static uint16_t rx_measurement_counter = 0;
+static timestamped_rssi_t rx_measurement_max = { 0, -200};
+
 static hw_rx_cfg_t rx_cfg = {
     .channel_id = {
         .channel_header.ch_coding = PHY_CODING_PN9,
@@ -68,12 +79,6 @@ static hw_rx_cfg_t rx_cfg = {
     },
     .syncword_class = PHY_SYNCWORD_CLASS0
 };
-
-typedef struct
-{
-    timer_tick_t tick;
-    int16_t rssi;
-} timestamped_rssi_t;
 
 void start_rx();
 
@@ -252,27 +257,59 @@ void read_rssi()
     timestamped_rssi_t rssi_measurement;
     rssi_measurement.tick = timer_get_counter_value();
     rssi_measurement.rssi = hw_radio_get_rssi();
+
     char str[80];
     char channel_str[8] = "";
-    channel_id_to_string(&rx_cfg.channel_id, channel_str, sizeof(channel_str));
-    lcd_write_string(channel_str);
-    sprintf(str, "%7s,%i,%i\n", channel_str, rssi_measurement.tick, rssi_measurement.rssi);
-    uart_transmit_string(str);
+
     if(!use_manual_channel_switching)
     {
-        switch_next_channel();
-        sched_post_task(&start_rx);
-    }
-    else
-    {
-    	sched_post_task(&process_uart_rx_fifo); // check for UART commands first
-        timer_post_task_delay(&read_rssi, TIMER_TICKS_PER_SEC * 2);
-    }
+		channel_id_to_string(&rx_cfg.channel_id, channel_str, sizeof(channel_str));
+		lcd_write_string(channel_str);
+		sprintf(str, "%7s,%i,%i\n", channel_str, rssi_measurement.tick, rssi_measurement.rssi);
+		uart_transmit_string(str);
 
 #ifdef PLATFORM_EFM32GG_STK3700
     //lcd_all_on();
 	lcd_write_number(rssi_measurement.rssi);
 #endif
+
+        switch_next_channel();
+        sched_post_task(&start_rx);
+    }
+    else
+    {
+    	if (rssi_measurement.rssi > rx_measurement_max.rssi)
+    	{
+    		rx_measurement_max.rssi = rssi_measurement.rssi;
+    		rx_measurement_max.tick = rssi_measurement.tick;
+    	}
+
+    	rx_measurement_counter++;
+    	if (rx_measurement_counter > RX_MAX_WINDOW)
+    	{
+    		channel_id_to_string(&rx_cfg.channel_id, channel_str, sizeof(channel_str));
+			lcd_write_string(channel_str);
+			sprintf(str, "%7s,%i,%i\n", channel_str, rx_measurement_max.tick, rx_measurement_max.rssi);
+			uart_transmit_string(str);
+
+			//reset max
+			rx_measurement_max.rssi = -200;
+			rx_measurement_counter = 0;
+
+#ifdef PLATFORM_EFM32GG_STK3700
+    //lcd_all_on();
+	lcd_write_number(rssi_measurement.rssi);
+#endif
+    	}
+
+    	sched_post_task(&process_uart_rx_fifo); // check for UART commands first
+        //timer_post_task_delay(&read_rssi, TIMER_TICKS_PER_SEC * 2);
+    	sched_post_task(&read_rssi);
+
+
+    }
+
+
 
 }
 
