@@ -54,11 +54,12 @@
 #define TEMPERATURE_PERIOD TIMER_TICKS_PER_SEC * 10
 
 #define RX_MAX_WINDOW 50
+#define RSSI_SAMPLES_PER_MEASUREMENT 10
 
 typedef struct
 {
     timer_tick_t tick;
-    int16_t rssi;
+    int16_t rssi[RSSI_SAMPLES_PER_MEASUREMENT];
 } timestamped_rssi_t;
 
 static uint8_t current_channel_indexes_index = 0;
@@ -145,7 +146,9 @@ void process_command_chan()
     char param[COMMAND_CHAN_PARAM_SIZE];
     fifo_pop(&uart_rx_fifo, param, COMMAND_CHAN_PARAM_SIZE);
 
-    channel_id_t new_channel;
+    channel_id_t new_channel = {
+		.channel_header.ch_coding = PHY_CODING_PN9
+    };
 
     if(strncmp(param, "433", 3) == 0)
         new_channel.channel_header.ch_freq_band = PHY_BAND_433;
@@ -256,61 +259,44 @@ void read_rssi()
 {
     timestamped_rssi_t rssi_measurement;
     rssi_measurement.tick = timer_get_counter_value();
-    rssi_measurement.rssi = hw_radio_get_rssi();
+
+    char rssi_samples_str[5 * RSSI_SAMPLES_PER_MEASUREMENT] = "";
+    int16_t max_rssi_sample = -200;
+    for(int i = 0; i < RSSI_SAMPLES_PER_MEASUREMENT; i++)
+    {
+        rssi_measurement.rssi[i] = hw_radio_get_rssi();
+        if(rssi_measurement.rssi[i] > max_rssi_sample)
+            max_rssi_sample = rssi_measurement.rssi[i];
+
+        sprintf(rssi_samples_str + (i * 5), ",%04i", rssi_measurement.rssi[i]);
+        // TODO delay?
+    }
 
     char str[80];
     char channel_str[8] = "";
 
-    if(!use_manual_channel_switching)
-    {
-		channel_id_to_string(&rx_cfg.channel_id, channel_str, sizeof(channel_str));
-		lcd_write_string(channel_str);
-		sprintf(str, "%7s,%i,%i\n", channel_str, rssi_measurement.tick, rssi_measurement.rssi);
-		uart_transmit_string(str);
+
+    channel_id_to_string(&rx_cfg.channel_id, channel_str, sizeof(channel_str));
+    lcd_write_string(channel_str);
+    sprintf(str, "%7s,%i%s\n", channel_str, rssi_measurement.tick, rssi_samples_str);
+    uart_transmit_string(str);
 
 #ifdef PLATFORM_EFM32GG_STK3700
     //lcd_all_on();
-	lcd_write_number(rssi_measurement.rssi);
+    lcd_write_number(max_rssi_sample);
 #endif
 
+    if(!use_manual_channel_switching)
+    {
         switch_next_channel();
         sched_post_task(&start_rx);
     }
     else
     {
-    	if (rssi_measurement.rssi > rx_measurement_max.rssi)
-    	{
-    		rx_measurement_max.rssi = rssi_measurement.rssi;
-    		rx_measurement_max.tick = rssi_measurement.tick;
-    	}
-
-    	rx_measurement_counter++;
-    	if (rx_measurement_counter > RX_MAX_WINDOW)
-    	{
-    		channel_id_to_string(&rx_cfg.channel_id, channel_str, sizeof(channel_str));
-			lcd_write_string(channel_str);
-			sprintf(str, "%7s,%i,%i\n", channel_str, rx_measurement_max.tick, rx_measurement_max.rssi);
-			uart_transmit_string(str);
-
-			//reset max
-			rx_measurement_max.rssi = -200;
-			rx_measurement_counter = 0;
-
-#ifdef PLATFORM_EFM32GG_STK3700
-    //lcd_all_on();
-	lcd_write_number(rssi_measurement.rssi);
-#endif
-    	}
-
     	sched_post_task(&process_uart_rx_fifo); // check for UART commands first
-        //timer_post_task_delay(&read_rssi, TIMER_TICKS_PER_SEC * 2);
-    	sched_post_task(&read_rssi);
-
-
+        uint16_t delay = rand() % 5000;
+        timer_post_task_delay(&read_rssi, delay);
     }
-
-
-
 }
 
 void rssi_valid(int16_t cur_rssi)
@@ -327,7 +313,7 @@ void start_rx()
     channel_id_to_string(&rx_cfg.channel_id, channel_str, sizeof(channel_str));
     lcd_write_string(channel_str);
 #endif
-    hw_radio_set_rx(&rx_cfg, NULL, &rssi_valid);
+	hw_radio_set_rx(&rx_cfg, NULL, &rssi_valid);
 }
 
 #if NUM_USERBUTTONS > 1
