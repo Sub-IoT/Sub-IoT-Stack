@@ -36,6 +36,7 @@
 #ifdef FRAMEWORK_LOG_ENABLED
 
 typedef enum {
+	LOG_TYPE_ZERO = 0x00,
     LOG_TYPE_STRING = 0x01,
     LOG_TYPE_DATA = 0x02,
     LOG_TYPE_STACK = 0x03,
@@ -114,13 +115,21 @@ __LINK_C void log_print_raw_phy_packet(hw_radio_packet_t* packet, bool is_tx)
 #ifdef FRAMEWORK_LOG_BINARY
     uart_transmit_data(0xDD);
     if(is_tx) {
+
         uart_transmit_data(LOG_TYPE_PHY_PACKET_TX);
+
         uart_transmit_message(&(packet->tx_meta.timestamp), sizeof(timer_tick_t));
+
         uart_transmit_data(packet->tx_meta.tx_cfg.channel_id.channel_header_raw);
+
         uart_transmit_data(packet->tx_meta.tx_cfg.channel_id.center_freq_index);
+
         uart_transmit_data(packet->tx_meta.tx_cfg.syncword_class);
+
         uart_transmit_data(packet->tx_meta.tx_cfg.eirp);
+
         uart_transmit_message(packet->data, packet->length+1);
+
     } else {
         uart_transmit_data(LOG_TYPE_PHY_PACKET_RX);
         uart_transmit_message(&(packet->rx_meta.timestamp), sizeof(timer_tick_t));

@@ -18,12 +18,12 @@
 #
 
 #[[
-#TODO
-#IF(CMAKE_BUILD_TYPE STREQUAL "Debug")
+TODO
+IF(CMAKE_BUILD_TYPE STREQUAL "Debug")
     #note: they're two different params. This is on purpose
-#    ADD_GLOBAL_DEFINITIONS("-DDEBUG_EFM=1" "-DDEBUG=1")
-#ENDIF()
-#]]
+    ADD_GLOBAL_DEFINITIONS("-DDEBUG_EFM=1" "-DDEBUG=1")
+ENDIF()
+]]
 
 #Add the linker script to use to the linker flags
 INSERT_LINKER_FLAGS(BEFORE OBJECTS INSERT "-T${CMAKE_CURRENT_SOURCE_DIR}/CMSIS/MKL02Z32xxx4_flash.ld")

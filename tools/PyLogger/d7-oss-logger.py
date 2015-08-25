@@ -226,7 +226,7 @@ class LogPhyPacketTx(Logs):
         raw_packet_len = serial_port.read(size=1)
         self.packet_len = struct.unpack('B', raw_packet_len)[0]
         self.packet.append(raw_packet_len) # length is first byte of packet
-        self.packet.extend(serial_port.read(size=self.packet_len - 1))
+        self.packet.extend(serial_port.read(size=self.packet_len)) #minus 1
         return self
 
     def __str__(self):
@@ -241,6 +241,9 @@ class LogPhyPacketTx(Logs):
             string += Style.RESET_ALL
             return string + "\n"
         return ""
+
+    def get_raw_data(self):
+        return self.packet
 
 
 class LogPhyPacketRx(Logs):
@@ -257,8 +260,8 @@ class LogPhyPacketRx(Logs):
         self.rssi = struct.unpack('h', serial_port.read(size=2))[0]
         raw_packet_len = serial_port.read(size=1)
         self.packet_len = struct.unpack('B', raw_packet_len)[0]
-        self.packet.append(raw_packet_len) # length is first byte of packet
-        self.packet.extend(serial_port.read(size=self.packet_len - 1))
+        self.packet.append(raw_packet_len) # length is first byyte of packet
+        self.packet.extend(serial_port.read(size=self.packet_len))
         return self
 
     # def write(self):
@@ -309,6 +312,12 @@ class parse_d7(threading.Thread):
                 if serialData is not None:
                     self.disQueue.put(serialData)
                     if isinstance(serialData, LogPhyPacketTx):
+                        if self.pcap_file != None:
+                            self.pcap_file.write(PCAPFormatter.build_record_data(serialData.get_raw_data()))
+                            self.pcap_file.flush()
+                        if self.wireshark_logger != None:
+                            self.wireshark_logger.write(serialData)
+                    if isinstance(serialData, LogPhyPacketRx):
                         if self.pcap_file != None:
                             self.pcap_file.write(PCAPFormatter.build_record_data(serialData.get_raw_data()))
                             self.pcap_file.flush()
