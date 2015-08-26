@@ -48,6 +48,8 @@
  * UART DEFINITIONS *
  *******************/
 
+#define UART_ENABLED
+
 #define UART_BAUDRATE PLATFORM_EFM32HG_STK3400_UART_BAUDRATE
 
 

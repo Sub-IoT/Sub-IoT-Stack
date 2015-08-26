@@ -41,10 +41,12 @@
 void startLfxoForRtc(uint8_t freq)
 {
     /* Starting LFRCO and waiting until it is stable */
-    CMU_OscillatorEnable(cmuOsc_LFXO, true, true);
+    //CMU_OscillatorEnable(cmuOsc_LFXO, true, true);
+	CMU_OscillatorEnable(cmuOsc_LFRCO, true, true);
 
     /* Routing the LFRCO clock to the RTC */
-    CMU_ClockSelectSet(cmuClock_LFA,cmuSelect_LFXO);
+    //CMU_ClockSelectSet(cmuClock_LFA,cmuSelect_LFXO);
+	CMU_ClockSelectSet(cmuClock_LFA,cmuSelect_LFRCO);
     CMU_ClockEnable(cmuClock_RTC, true);
 
     /* Set Clock prescaler */

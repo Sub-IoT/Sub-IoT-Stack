@@ -12,6 +12,7 @@
  * any purpose, you must agree to the terms of that agreement.
  *
  ******************************************************************************/
+
 #include "em_device.h"
 #include "em_common.h"
 #include "em_cmu.h"
@@ -719,3 +720,4 @@ static void SerialPortInit(void)
 }
 
 /** @endcond */
+
