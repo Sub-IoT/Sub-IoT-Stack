@@ -146,6 +146,7 @@ void dll_tx_frame(packet_t* packet)
         .eirp = 10
     };
 
+    //TODO: use return value
     hw_radio_send_packet(&(packet->hw_radio_packet), &packet_transmitted);
 }
 
