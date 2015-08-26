@@ -110,7 +110,7 @@ OSS-7            </a>
                 </div>
                 <p>Version 1.0 is a very important release for the DASH7 Alliance and concludes 18 months of hard work by the Protocol Action Group. Compared to the draft v0.2 of the spec a lot of things have been changed in the spec. The fact that we now have a voted spec is very important for OSS-7 as well. While we have been trying to incorporate changes during these past 18 months we were tracking a moving target (in the draft branch). With the final release of the spec we now have clear goal.</p>
 <p>During this period we also took the opportunity to redesign the architecture of the underlying OSS-7 framework. We now have a generic framework which has a low-power scheduler, better support for different hardware configurations (MCUs, radio chips, ...) and a flexible buildsystem.
-We keep all the documentation (including more high level documentation as opposed to pure API docs) in our <a href="http://cosys-lab.github.io/dash7-ap-open-source-stack/doxygen">doxygen site</a> now, so make sure to check this.</p>
+We keep all the documentation (including more high level documentation as opposed to pure API docs) in our <a href="http://mosaic-lopow.github.io/dash7-ap-open-source-stack/doxygen">doxygen site</a> now, so make sure to check this.</p>
 <p>On top of this architecture we are implementing the stack. We are currently focussing on a EFM32 Giant Gecko MCU and a TI CC1101 radio module. At this moment we have the main drivers for the MCU working and a PHY driver for the CC1101 as well. We have started building the rest of the stack on top of this new framework, starting with the DLL. To be sure we follow the v1.0 spec (instead of an in between draft) we will implement the upper layers manually, only copying code for the draft branch if we are sure this is still valid for v1.0. We realize this is currently a step back in number of layers implemented compared to the draft branch. However, this ensures we are complying to the specification and we are confident implementing the upper layers on top of this more clarified specification and framework will go smooth. Our plan is to implement some typical use cases vertically thoughout all the layers (up untill the application layer) first, instead of implementing all features layer per layer first. This has the advantage we can release examples using the full stack quicker, but has the disadvantage that not all features (like for example encryption) will be postponed for later. </p>
 <p>I merged all branches back to master today, and development will continue on master from now on.</p>
 <p>This blog has been quiet for a long time, but this should change now as well, so keep tuned.</p>
@@ -177,18 +177,18 @@ We keep all the documentation (including more high level documentation as oppose
         <div id="gh_repos">
             <p class="list-group-item">Status updating...</p>
         </div>
-            <a href="https://github.com/CoSys-Lab">@CoSys-Lab</a> on GitHub
+            <a href="https://github.com/mosaic-lopow">@mosaic-lopow</a> on GitHub
     </li>
     <li class="list-group-item"><h4><i class="fa fa-external-link-square fa-lg"></i><span class="icon-label">Links</span></h4>
       <ul class="list-group" id="links">
         <li class="list-group-item">
-            <a href="http://cosys-lab.github.io/dash7-ap-open-source-stack/doxygen" target="_blank">
+            <a href="http://mosaic-lopow.github.io/dash7-ap-open-source-stack/doxygen" target="_blank">
                 Documentation
             </a>
         </li>
         <li class="list-group-item">
-            <a href="http://www.cosys.be/" target="_blank">
-                CoSys-Lab
+            <a href="https://www.uantwerpen.be/en/rg/mosaic/" target="_blank">
+                MOSAIC
             </a>
         </li>
         <li class="list-group-item">
@@ -197,7 +197,7 @@ We keep all the documentation (including more high level documentation as oppose
             </a>
         </li>
         <li class="list-group-item">
-            <a href="http://cosys-lab.github.io/dash7-ap-open-source-stack/feeds/all.atom.xml" target="_blank">
+            <a href="http://mosaic-lopow.github.io/dash7-ap-open-source-stack/feeds/all.atom.xml" target="_blank">
                 RSS feed
             </a>
         </li>
@@ -213,7 +213,7 @@ We keep all the documentation (including more high level documentation as oppose
    <div class="container">
       <hr>
       <div class="row">
-         <div class="col-xs-10">&copy; 2015 CoSys-Lab
+         <div class="col-xs-10">&copy; 2015 MOSAIC
             &middot; Powered by <a href="https://github.com/DandyDev/pelican-bootstrap3" target="_blank">pelican-bootstrap3</a>,
             <a href="http://docs.getpelican.com/" target="_blank">Pelican</a>,
             <a href="http://getbootstrap.com" target="_blank">Bootstrap</a>         </div>
@@ -241,7 +241,7 @@ We keep all the documentation (including more high level documentation as oppose
             }
 
             github.showRepos({
-                user: 'CoSys-Lab',
+                user: 'mosaic-lopow',
                 count: 1,
                 skip_forks: false,
                 target: '#gh_repos'

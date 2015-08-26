@@ -1,9 +1,9 @@
 var searchData=
 [
-  ['vco_5fvc_5fdac',['VCO_VC_DAC',['../cc1101__constants_8h.html#a548602f9bb60705a5af3978d93786e41',1,'cc1101_constants.h']]],
-  ['version',['VERSION',['../cc1101__constants_8h.html#a1c6d5de492ac61ad29aec7aa9a436bbf',1,'cc1101_constants.h']]],
-  ['vsnprintf',['vsnprintf',['../wizzimote_2printf_2printf_8h.html#a00ba2ca988495904efc418acbf0627d7',1,'printf.h']]],
-  ['vsprintf',['vsprintf',['../wizzimote_2printf_2printf_8h.html#ab2cd44240f3a62bfed0900daf14ce58b',1,'printf.h']]],
-  ['vud_5finterface_5fno',['VUD_INTERFACE_NO',['../usbconfig_8h.html#a087e30a660ad19840a3cccfa164a1129',1,'usbconfig.h']]],
-  ['vud_5fnum_5fep_5fused',['VUD_NUM_EP_USED',['../usbconfig_8h.html#ade3bd7bff3f2453f948d9248c7f38d78',1,'usbconfig.h']]]
+  ['worctrl',['WORCTRL',['../cc1101__constants_8h.html#a186156bc9caf0835e59d796d768834f7',1,'cc1101_constants.h']]],
+  ['worevt0',['WOREVT0',['../cc1101__constants_8h.html#a2c80b405ab8435d969d16663085a35d1',1,'cc1101_constants.h']]],
+  ['worevt1',['WOREVT1',['../cc1101__constants_8h.html#a7553c7d007023e8c870cb949480a46e8',1,'cc1101_constants.h']]],
+  ['wortime0',['WORTIME0',['../cc1101__constants_8h.html#a1da1e27efc55ce042befbac710370731',1,'cc1101_constants.h']]],
+  ['wortime1',['WORTIME1',['../cc1101__constants_8h.html#afceafb2c4cfe329e00aca3170cef8b55',1,'cc1101_constants.h']]],
+  ['write_5fburst',['WRITE_BURST',['../cc1101__constants_8h.html#a614ae1783616ef41f49f3000c25f3540',1,'cc1101_constants.h']]]
 ];

@@ -1,4 +1,5 @@
 var searchData=
 [
-  ['modulation_5ftype',['Modulation_type',['../_c_radio_8h.html#a105cb9b8c7a88ad8a3334d0f5733ab33',1,'CRadio.h']]]
+  ['lcdsymbol',['lcdSymbol',['../segmentlcdconfig_8h.html#ac2c9c608938ac875edfcfec5c75737e4',1,'segmentlcdconfig.h']]],
+  ['log_5fstack_5flayer_5ft',['log_stack_layer_t',['../group__logging.html#ga74f3f01cd15381ebeccd55047988c127',1,'log.h']]]
 ];

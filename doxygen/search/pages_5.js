@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['resources',['Resources',['../md_resources.html',1,'']]]
+  ['oss_2d7_20architecture',['OSS-7 Architecture',['../md_architecture.html',1,'']]]
 ];

@@ -1,13 +1,16 @@
 var searchData=
 [
   ['scheduler_2ec',['scheduler.c',['../scheduler_8c.html',1,'']]],
-  ['scheduler_2ecc',['scheduler.cc',['../scheduler_8cc.html',1,'']]],
   ['scheduler_2eh',['scheduler.h',['../scheduler_8h.html',1,'']]],
   ['segmentlcdconfig_2eh',['segmentlcdconfig.h',['../segmentlcdconfig_8h.html',1,'']]],
-  ['sensormanager_2ecc',['SensorManager.cc',['../_sensor_manager_8cc.html',1,'']]],
-  ['sensormanager_2eh',['SensorManager.h',['../_sensor_manager_8h.html',1,'']]],
-  ['sim_5futils_2ecc',['sim_utils.cc',['../sim__utils_8cc.html',1,'']]],
-  ['sim_5futils_2eh',['sim_utils.h',['../sim__utils_8h.html',1,'']]],
+  ['stk3400_5fdebug_2ec',['stk3400_debug.c',['../stk3400__debug_8c.html',1,'']]],
+  ['stk3400_5flcd_2ec',['stk3400_lcd.c',['../stk3400__lcd_8c.html',1,'']]],
+  ['stk3400_5fleds_2ec',['stk3400_leds.c',['../stk3400__leds_8c.html',1,'']]],
+  ['stk3400_5fmain_2ec',['stk3400_main.c',['../stk3400__main_8c.html',1,'']]],
+  ['stk3400_5fsensors_2ec',['stk3400_sensors.c',['../stk3400__sensors_8c.html',1,'']]],
+  ['stk3400_5fusb_2ec',['stk3400_usb.c',['../stk3400__usb_8c.html',1,'']]],
+  ['stk3400_5fusb_5fdescriptors_2ec',['stk3400_usb_descriptors.c',['../stk3400__usb__descriptors_8c.html',1,'']]],
+  ['stk3400_5fuserbutton_2ec',['stk3400_userbutton.c',['../stk3400__userbutton_8c.html',1,'']]],
   ['stk3700_5fdebug_2ec',['stk3700_debug.c',['../stk3700__debug_8c.html',1,'']]],
   ['stk3700_5flcd_2ec',['stk3700_lcd.c',['../stk3700__lcd_8c.html',1,'']]],
   ['stk3700_5fleds_2ec',['stk3700_leds.c',['../stk3700__leds_8c.html',1,'']]],
@@ -15,5 +18,7 @@ var searchData=
   ['stk3700_5fsensors_2ec',['stk3700_sensors.c',['../stk3700__sensors_8c.html',1,'']]],
   ['stk3700_5fusb_2ec',['stk3700_usb.c',['../stk3700__usb_8c.html',1,'']]],
   ['stk3700_5fusb_5fdescriptors_2ec',['stk3700_usb_descriptors.c',['../stk3700__usb__descriptors_8c.html',1,'']]],
-  ['stk3700_5fuserbutton_2ec',['stk3700_userbutton.c',['../stk3700__userbutton_8c.html',1,'']]]
+  ['stk3700_5fuserbutton_2ec',['stk3700_userbutton.c',['../stk3700__userbutton_8c.html',1,'']]],
+  ['system_5fefm32hg_2ec',['system_efm32hg.c',['../system__efm32hg_8c.html',1,'']]],
+  ['system_5fefm32hg_2eh',['system_efm32hg.h',['../system__efm32hg_8h.html',1,'']]]
 ];

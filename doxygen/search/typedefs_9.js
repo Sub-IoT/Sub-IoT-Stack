@@ -1,7 +1,7 @@
 var searchData=
 [
-  ['task_5ft',['task_t',['../group__scheduler.html#ga78a55c2ac757b7addb3150081812288b',1,'scheduler.h']]],
-  ['timer_5fcallback_5ft',['timer_callback_t',['../group__timer.html#ga83effb2de3d93d37825bb84a27faa588',1,'hwtimer.h']]],
-  ['timer_5ftick_5ft',['timer_tick_t',['../group__frameworktimer.html#ga77fd8f9362e4f9ee1022170189802daf',1,'timer.h']]],
-  ['tx_5fpacket_5fcallback_5ft',['tx_packet_callback_t',['../group__radio.html#gac2f2e4e8140549c0ac3abcf7fefb9e77',1,'hwradio.h']]]
+  ['q15_5ft',['q15_t',['../arm__math_8h.html#ab5a8fb21a5b3b983d5f54f31614052ea',1,'arm_math.h']]],
+  ['q31_5ft',['q31_t',['../arm__math_8h.html#adc89a3547f5324b7b3b95adec3806bc0',1,'arm_math.h']]],
+  ['q63_5ft',['q63_t',['../arm__math_8h.html#a5aea1cb12fc02d9d44c8abf217eaa5c6',1,'arm_math.h']]],
+  ['q7_5ft',['q7_t',['../arm__math_8h.html#ae541b6f232c305361e9b416fc9eed263',1,'arm_math.h']]]
 ];

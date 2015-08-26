@@ -2,11 +2,11 @@ var group___g_p_i_o =
 [
     [ "pin_id_t", "structpin__id__t.html", [
       [ "pin", "structpin__id__t.html#a6e972a30c688fc9da03cf42c186002d7", null ],
-      [ "port", "structpin__id__t.html#a01611ab9f8078dd136c1083bb556c8ed", null ]
+      [ "port", "structpin__id__t.html#a0bfe572ce5c6d14af77891a66763d61d", null ]
     ] ],
     [ "gpio_inthandler_t", "group___g_p_i_o.html#ga3ba7d68bb58b98a8bf58445cedf6dadf", [
-      [ "GPIO_RISING_EDGE", "group___g_p_i_o.html#ggadf764cbdea00d65edcd07bb9953ad2b7a6aab82123eba95f00452e865cbfe99bc", null ],
-      [ "GPIO_FALLING_EDGE", "group___g_p_i_o.html#ggadf764cbdea00d65edcd07bb9953ad2b7acc814a2ac0119c764e9320a051904eae", null ]
+      [ "GPIO_RISING_EDGE", "group___g_p_i_o.html#gga5d76b81b0ad4c19007a781d4edb8181fa6aab82123eba95f00452e865cbfe99bc", null ],
+      [ "GPIO_FALLING_EDGE", "group___g_p_i_o.html#gga5d76b81b0ad4c19007a781d4edb8181facc814a2ac0119c764e9320a051904eae", null ]
     ] ],
     [ "__gpio_init", "group___g_p_i_o.html#gaad12bbf948ed22eb482da198952b70c9", null ],
     [ "hw_gpio_clr", "group___g_p_i_o.html#ga0ffb2f1de6a023e09bb32425a75ab002", null ],

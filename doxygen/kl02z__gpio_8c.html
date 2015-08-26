@@ -114,6 +114,7 @@ $(document).ready(function(){initNavTree('kl02z__gpio_8c.html','');});
 <code>#include &lt;stdarg.h&gt;</code><br />
 <code>#include &lt;assert.h&gt;</code><br />
 <code>#include &quot;<a class="el" href="hwatomic_8h_source.html">hwatomic.h</a>&quot;</code><br />
+<code>#include &lt;MKL02Z4.h&gt;</code><br />
 </div><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
 Functions</h2></td></tr>
@@ -137,6 +138,10 @@ Functions</h2></td></tr>
 <tr class="memitem:ga6866c778c89f878d9d14281a34ec5b10"><td class="memItemLeft" align="right" valign="top"><a class="el" href="link__c_8h.html#ad7a35fa85166c1d1839000ac10353068">__LINK_C</a> bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group___g_p_i_o.html#ga6866c778c89f878d9d14281a34ec5b10">hw_gpio_get_in</a> (<a class="el" href="structpin__id__t.html">pin_id_t</a> pin_id)</td></tr>
 <tr class="memdesc:ga6866c778c89f878d9d14281a34ec5b10"><td class="mdescLeft">&#160;</td><td class="mdescRight">Retrieve the current input 'state' of the GPIO pin.  <a href="group___g_p_i_o.html#ga6866c778c89f878d9d14281a34ec5b10">More...</a><br /></td></tr>
 <tr class="separator:ga6866c778c89f878d9d14281a34ec5b10"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:afaa9ba3a3a684f1340c02a531d7b2321"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="kl02z__gpio_8c.html#afaa9ba3a3a684f1340c02a531d7b2321">PORTA_IRQHandler</a> ()</td></tr>
+<tr class="separator:afaa9ba3a3a684f1340c02a531d7b2321"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2b09e69259dd337c6929e10ec9f42e17"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="kl02z__gpio_8c.html#a2b09e69259dd337c6929e10ec9f42e17">PORTB_IRQHandler</a> ()</td></tr>
+<tr class="separator:a2b09e69259dd337c6929e10ec9f42e17"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:gaaf6c0915d25c0be3d4c795da96ce7384"><td class="memItemLeft" align="right" valign="top"><a class="el" href="link__c_8h.html#ad7a35fa85166c1d1839000ac10353068">__LINK_C</a> <a class="el" href="types_8h.html#a9ad6b2dc3cbff040775e79656fe8e1a3">error_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group___g_p_i_o.html#gaaf6c0915d25c0be3d4c795da96ce7384">hw_gpio_configure_interrupt</a> (<a class="el" href="structpin__id__t.html">pin_id_t</a> pin_id, <a class="el" href="group___g_p_i_o.html#ga3ba7d68bb58b98a8bf58445cedf6dadf">gpio_inthandler_t</a> callback, uint8_t event_mask)</td></tr>
 <tr class="memdesc:gaaf6c0915d25c0be3d4c795da96ce7384"><td class="mdescLeft">&#160;</td><td class="mdescRight">Configure an interrupt to occur when a rising or falling event occurs on a specific GPIO pin.  <a href="group___g_p_i_o.html#gaaf6c0915d25c0be3d4c795da96ce7384">More...</a><br /></td></tr>
 <tr class="separator:gaaf6c0915d25c0be3d4c795da96ce7384"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -188,13 +193,43 @@ Functions</h2></td></tr>
 
 </div>
 </div>
+<a class="anchor" id="afaa9ba3a3a684f1340c02a531d7b2321"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void PORTA_IRQHandler </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a class="anchor" id="a2b09e69259dd337c6929e10ec9f42e17"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void PORTB_IRQHandler </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
 </div><!-- contents -->
 </div><!-- doc-content -->
 <!-- start footer part -->
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
     <li class="navelem"><a class="el" href="dir_045c9c641c9dee29b59a10159c1c0f84.html">framework</a></li><li class="navelem"><a class="el" href="dir_66c871195d82ba76f4f17d0ede637125.html">hal</a></li><li class="navelem"><a class="el" href="dir_56aaa3dec31b809e334855cea8764072.html">chips</a></li><li class="navelem"><a class="el" href="dir_a2e426d0fe344b06b925f304170e5a6d.html">kl02z</a></li><li class="navelem"><a class="el" href="kl02z__gpio_8c.html">kl02z_gpio.c</a></li>
-    <li class="footer">Generated on Sat Jun 6 2015 18:15:00 for OSS-7: Open Source Stack for DASH7 Alliance Protocol by
+    <li class="footer">Generated on Wed Aug 26 2015 21:30:41 for OSS-7: Open Source Stack for DASH7 Alliance Protocol by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.8.9.1 </li>
   </ul>

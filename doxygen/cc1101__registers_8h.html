@@ -288,22 +288,34 @@ Macros</h2></td></tr>
 <tr class="separator:a19e627dc86113fde542d357fb192f69c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ad0c367b460ce411e8da930fe9cfcf94c"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="cc1101__registers_8h.html#ad0c367b460ce411e8da930fe9cfcf94c">RADIO_FREQOFF</a>&#160;&#160;&#160;0</td></tr>
 <tr class="separator:ad0c367b460ce411e8da930fe9cfcf94c"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a28c7736c5e62d2eb693a54e3b0a90c24"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="cc1101__registers_8h.html#a28c7736c5e62d2eb693a54e3b0a90c24">RADIO_FREQ_433</a>&#160;&#160;&#160;((uint32_t)0x0010A900)</td></tr>
-<tr class="separator:a28c7736c5e62d2eb693a54e3b0a90c24"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ab163091ea4a08e7b8e6f29a997f1ae27"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="cc1101__registers_8h.html#ab163091ea4a08e7b8e6f29a997f1ae27">RADIO_FREQ2</a>&#160;&#160;&#160;(uint8_t)(<a class="el" href="cc1101__registers_8h.html#a28c7736c5e62d2eb693a54e3b0a90c24">RADIO_FREQ_433</a>&gt;&gt;16 &amp; 0xFF)</td></tr>
-<tr class="separator:ab163091ea4a08e7b8e6f29a997f1ae27"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a10575e94ce1432910ff056f31c760cd3"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="cc1101__registers_8h.html#a10575e94ce1432910ff056f31c760cd3">RADIO_FREQ1</a>&#160;&#160;&#160;(uint8_t)(<a class="el" href="cc1101__registers_8h.html#a28c7736c5e62d2eb693a54e3b0a90c24">RADIO_FREQ_433</a>&gt;&gt;8 &amp; 0xFF)</td></tr>
-<tr class="separator:a10575e94ce1432910ff056f31c760cd3"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ae507166992a1d06a0d523ae2f4705641"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="cc1101__registers_8h.html#ae507166992a1d06a0d523ae2f4705641">RADIO_FREQ0</a>&#160;&#160;&#160;(uint8_t)(<a class="el" href="cc1101__registers_8h.html#a28c7736c5e62d2eb693a54e3b0a90c24">RADIO_FREQ_433</a> &amp; 0xFF)</td></tr>
-<tr class="separator:ae507166992a1d06a0d523ae2f4705641"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a1a62260fbe2c7994c2b2076a72870ddd"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="cc1101__registers_8h.html#a1a62260fbe2c7994c2b2076a72870ddd">RADIO_FREQ_433_NORMAL_RATE</a>&#160;&#160;&#160;((uint32_t)0x0010A8F5)</td></tr>
+<tr class="separator:a1a62260fbe2c7994c2b2076a72870ddd"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a03f263aee52ba7e2926475fff67fe349"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="cc1101__registers_8h.html#a03f263aee52ba7e2926475fff67fe349">RADIO_FREQ_433_LO_RATE</a>&#160;&#160;&#160;((uint32_t)0x0010A819)</td></tr>
+<tr class="separator:a03f263aee52ba7e2926475fff67fe349"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a7b503ffc3bfe62640e5cd362ab5b6298"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="cc1101__registers_8h.html#a7b503ffc3bfe62640e5cd362ab5b6298">RADIO_FREQ2</a>(VAL)&#160;&#160;&#160;(uint8_t)(VAL &gt;&gt; 16 &amp; 0xFF)</td></tr>
+<tr class="separator:a7b503ffc3bfe62640e5cd362ab5b6298"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:abaa683de8c99029de02d8696cb91cc7a"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="cc1101__registers_8h.html#abaa683de8c99029de02d8696cb91cc7a">RADIO_FREQ1</a>(VAL)&#160;&#160;&#160;(uint8_t)(VAL &gt;&gt; 8 &amp; 0xFF)</td></tr>
+<tr class="separator:abaa683de8c99029de02d8696cb91cc7a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a321111195e05196efe80e8d34b448a76"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="cc1101__registers_8h.html#a321111195e05196efe80e8d34b448a76">RADIO_FREQ0</a>(VAL)&#160;&#160;&#160;(uint8_t)(VAL &amp; 0xFF)</td></tr>
+<tr class="separator:a321111195e05196efe80e8d34b448a76"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a8870f192f31721315e49a80ddf2da5d4"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="cc1101__registers_8h.html#a8870f192f31721315e49a80ddf2da5d4">RADIO_FREQ_868_LO_RATE</a>&#160;&#160;&#160;((uint32_t)0x0021315A)</td></tr>
+<tr class="separator:a8870f192f31721315e49a80ddf2da5d4"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa0af43e42377077e4b3193cb15b46557"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="cc1101__registers_8h.html#aa0af43e42377077e4b3193cb15b46557">RADIO_FREQ_868_NORMAL_RATE</a>&#160;&#160;&#160;((uint32_t)0x00213237)</td></tr>
+<tr class="separator:aa0af43e42377077e4b3193cb15b46557"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a4144ac03252a7f757652532b742fb71b"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="cc1101__registers_8h.html#a4144ac03252a7f757652532b742fb71b">RADIO_MDMCFG4_CHANBW_E</a>(VAL)&#160;&#160;&#160;((VAL&amp;3)&lt;&lt;6)</td></tr>
 <tr class="separator:a4144ac03252a7f757652532b742fb71b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a2c4491f5a5790ffd7a09640439a49eba"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="cc1101__registers_8h.html#a2c4491f5a5790ffd7a09640439a49eba">RADIO_MDMCFG4_CHANBW_M</a>(VAL)&#160;&#160;&#160;((VAL&amp;3)&lt;&lt;4)</td></tr>
 <tr class="separator:a2c4491f5a5790ffd7a09640439a49eba"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a06e8ba46d80ee2882fe60f8b95f99982"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="cc1101__registers_8h.html#a06e8ba46d80ee2882fe60f8b95f99982">RADIO_MDMCFG4_DRATE_E</a>(VAL)&#160;&#160;&#160;(VAL&amp;15)</td></tr>
+<tr class="memitem:a06e8ba46d80ee2882fe60f8b95f99982"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="cc1101__registers_8h.html#a06e8ba46d80ee2882fe60f8b95f99982">RADIO_MDMCFG4_DRATE_E</a>(VAL)&#160;&#160;&#160;(VAL &amp; 0x0F)</td></tr>
 <tr class="separator:a06e8ba46d80ee2882fe60f8b95f99982"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a3da5754d5b3c378bbb32de7a3100427c"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="cc1101__registers_8h.html#a3da5754d5b3c378bbb32de7a3100427c">RADIO_MDMCFG3_DRATE_M</a>(VAL)&#160;&#160;&#160;(VAL)</td></tr>
-<tr class="separator:a3da5754d5b3c378bbb32de7a3100427c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a4c68245b78f54219937955bb46a6b21e"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="cc1101__registers_8h.html#a4c68245b78f54219937955bb46a6b21e">RADIO_MDMCFG4_NORMAL_RATE</a>&#160;&#160;&#160;<a class="el" href="cc1101__registers_8h.html#a4144ac03252a7f757652532b742fb71b">RADIO_MDMCFG4_CHANBW_E</a>(0x02) | RADIO_MDMCFG4_CHANBW_M(0x00) | RADIO_MDMCFG4_DRATE_E(0x0B)</td></tr>
+<tr class="separator:a4c68245b78f54219937955bb46a6b21e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:abf331be479e65600abbfb71d9775c552"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="cc1101__registers_8h.html#abf331be479e65600abbfb71d9775c552">RADIO_MDMCFG4_LOW_RATE</a>&#160;&#160;&#160;<a class="el" href="cc1101__registers_8h.html#a4144ac03252a7f757652532b742fb71b">RADIO_MDMCFG4_CHANBW_E</a>(0x03) | RADIO_MDMCFG4_CHANBW_M(0x03) | RADIO_MDMCFG4_DRATE_E(0x08)</td></tr>
+<tr class="separator:abf331be479e65600abbfb71d9775c552"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac1b61e3403eb91e944be96fd26cdf4e0"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="cc1101__registers_8h.html#ac1b61e3403eb91e944be96fd26cdf4e0">RADIO_MDMCFG3_DRATE_M_NORMAL_RATE</a>&#160;&#160;&#160;0x18</td></tr>
+<tr class="separator:ac1b61e3403eb91e944be96fd26cdf4e0"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2486fc8f2f271f77a90826bedf49c534"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="cc1101__registers_8h.html#a2486fc8f2f271f77a90826bedf49c534">RADIO_MDMCFG3_DRATE_M_LOW_RATE</a>&#160;&#160;&#160;0x83</td></tr>
+<tr class="separator:a2486fc8f2f271f77a90826bedf49c534"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a25193e0fd3ecdbbc2cffb49687ac1cce"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="cc1101__registers_8h.html#a25193e0fd3ecdbbc2cffb49687ac1cce">RADIO_MDMCFG2_DEM_DCFILT_OFF</a>&#160;&#160;&#160;(1 &lt;&lt; 7)</td></tr>
 <tr class="separator:a25193e0fd3ecdbbc2cffb49687ac1cce"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a18366656eb12b050002aa06322b26514"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="cc1101__registers_8h.html#a18366656eb12b050002aa06322b26514">RADIO_MDMCFG2_DEM_DCFILT_ON</a>&#160;&#160;&#160;(0 &lt;&lt; 7)</td></tr>
@@ -354,10 +366,22 @@ Macros</h2></td></tr>
 <tr class="separator:a508163fc511732c212e014032ffa937e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a83806d3eb16ffe061c7e93819d361336"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="cc1101__registers_8h.html#a83806d3eb16ffe061c7e93819d361336">RADIO_MDMCFG0_CHANSPC_M</a>(VAL)&#160;&#160;&#160;(VAL)</td></tr>
 <tr class="separator:a83806d3eb16ffe061c7e93819d361336"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a561c790a17a85539ac46dace02e9fd35"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="cc1101__registers_8h.html#a561c790a17a85539ac46dace02e9fd35">RADIO_MDMCFG1_CHANSPC_E_NORMAL_RATE</a>&#160;&#160;&#160;<a class="el" href="cc1101__registers_8h.html#a508163fc511732c212e014032ffa937e">RADIO_MDMCFG1_CHANSPC_E</a>(0x02)</td></tr>
+<tr class="separator:a561c790a17a85539ac46dace02e9fd35"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a0dce9f59fc0c75040ec02fca3683e191"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="cc1101__registers_8h.html#a0dce9f59fc0c75040ec02fca3683e191">RADIO_MDMCFG0_CHANSPC_M_NORMAL_RATE</a>&#160;&#160;&#160;<a class="el" href="cc1101__registers_8h.html#a83806d3eb16ffe061c7e93819d361336">RADIO_MDMCFG0_CHANSPC_M</a>(0xF8)</td></tr>
+<tr class="separator:a0dce9f59fc0c75040ec02fca3683e191"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a75943b5c85ac9d57ed614056748e6a27"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="cc1101__registers_8h.html#a75943b5c85ac9d57ed614056748e6a27">RADIO_MDMCFG1_CHANSPC_E_LO_RATE</a>&#160;&#160;&#160;<a class="el" href="cc1101__registers_8h.html#a508163fc511732c212e014032ffa937e">RADIO_MDMCFG1_CHANSPC_E</a>(0x00)</td></tr>
+<tr class="separator:a75943b5c85ac9d57ed614056748e6a27"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aca4f2da5f18137396b87a03c16757666"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="cc1101__registers_8h.html#aca4f2da5f18137396b87a03c16757666">RADIO_MDMCFG0_CHANSPC_M_LO_RATE</a>&#160;&#160;&#160;<a class="el" href="cc1101__registers_8h.html#a83806d3eb16ffe061c7e93819d361336">RADIO_MDMCFG0_CHANSPC_M</a>(0x00)</td></tr>
+<tr class="separator:aca4f2da5f18137396b87a03c16757666"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ad6d4c96978c1737f6e28293a2af1108e"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="cc1101__registers_8h.html#ad6d4c96978c1737f6e28293a2af1108e">RADIO_DEVIATN_E</a>(VAL)&#160;&#160;&#160;((VAL&amp;7) &lt;&lt; 4)</td></tr>
 <tr class="separator:ad6d4c96978c1737f6e28293a2af1108e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aa8a0e19bd965d37f6bfee55aff270742"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="cc1101__registers_8h.html#aa8a0e19bd965d37f6bfee55aff270742">RADIO_DEVIATN_M</a>(VAL)&#160;&#160;&#160;(VAL&amp;7)</td></tr>
 <tr class="separator:aa8a0e19bd965d37f6bfee55aff270742"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a141242332ce7ad91c65b7081b1914123"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="cc1101__registers_8h.html#a141242332ce7ad91c65b7081b1914123">RADIO_DEVIATN_NORMAL_RATE</a>&#160;&#160;&#160;<a class="el" href="cc1101__registers_8h.html#ad6d4c96978c1737f6e28293a2af1108e">RADIO_DEVIATN_E</a>(5) | <a class="el" href="cc1101__registers_8h.html#aa8a0e19bd965d37f6bfee55aff270742">RADIO_DEVIATN_M</a>(0)</td></tr>
+<tr class="separator:a141242332ce7ad91c65b7081b1914123"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a53638dcc7a9b6983049a8acaa8e9528e"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="cc1101__registers_8h.html#a53638dcc7a9b6983049a8acaa8e9528e">RADIO_DEVIATN_LOW_RATE</a>&#160;&#160;&#160;<a class="el" href="cc1101__registers_8h.html#ad6d4c96978c1737f6e28293a2af1108e">RADIO_DEVIATN_E</a>(0x01) | RADIO_DEVIATN_M(0x04)</td></tr>
+<tr class="separator:a53638dcc7a9b6983049a8acaa8e9528e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aff6bb0b033d16397a77a5a32034fa642"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="cc1101__registers_8h.html#aff6bb0b033d16397a77a5a32034fa642">RADIO_MCSM2_RX_TIME_RSSI</a>&#160;&#160;&#160;(1 &lt;&lt; 4)</td></tr>
 <tr class="separator:aff6bb0b033d16397a77a5a32034fa642"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a443cea56dd48fd7a6eaa58d8357e82b9"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="cc1101__registers_8h.html#a443cea56dd48fd7a6eaa58d8357e82b9">RADIO_MCSM2_RX_TIME_QUAL</a>&#160;&#160;&#160;(1 &lt;&lt; 3)</td></tr>
@@ -2174,6 +2198,18 @@ Macros</h2></td></tr>
 
 </div>
 </div>
+<a class="anchor" id="a53638dcc7a9b6983049a8acaa8e9528e"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">#define RADIO_DEVIATN_LOW_RATE&#160;&#160;&#160;<a class="el" href="cc1101__registers_8h.html#ad6d4c96978c1737f6e28293a2af1108e">RADIO_DEVIATN_E</a>(0x01) | RADIO_DEVIATN_M(0x04)</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
 <a class="anchor" id="aa8a0e19bd965d37f6bfee55aff270742"></a>
 <div class="memitem">
 <div class="memproto">
@@ -2184,6 +2220,18 @@ Macros</h2></td></tr>
           <td class="paramtype">&#160;</td>
           <td class="paramname">VAL</td><td>)</td>
           <td>&#160;&#160;&#160;(VAL&amp;7)</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a class="anchor" id="a141242332ce7ad91c65b7081b1914123"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">#define RADIO_DEVIATN_NORMAL_RATE&#160;&#160;&#160;<a class="el" href="cc1101__registers_8h.html#ad6d4c96978c1737f6e28293a2af1108e">RADIO_DEVIATN_E</a>(5) | <a class="el" href="cc1101__registers_8h.html#aa8a0e19bd965d37f6bfee55aff270742">RADIO_DEVIATN_M</a>(0)</td>
         </tr>
       </table>
 </div><div class="memdoc">
@@ -2514,48 +2562,96 @@ Macros</h2></td></tr>
 
 </div>
 </div>
-<a class="anchor" id="ae507166992a1d06a0d523ae2f4705641"></a>
+<a class="anchor" id="a321111195e05196efe80e8d34b448a76"></a>
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">#define RADIO_FREQ0&#160;&#160;&#160;(uint8_t)(<a class="el" href="cc1101__registers_8h.html#a28c7736c5e62d2eb693a54e3b0a90c24">RADIO_FREQ_433</a> &amp; 0xFF)</td>
+          <td class="memname">#define RADIO_FREQ0</td>
+          <td>(</td>
+          <td class="paramtype">&#160;</td>
+          <td class="paramname">VAL</td><td>)</td>
+          <td>&#160;&#160;&#160;(uint8_t)(VAL &amp; 0xFF)</td>
         </tr>
       </table>
 </div><div class="memdoc">
 
 </div>
 </div>
-<a class="anchor" id="a10575e94ce1432910ff056f31c760cd3"></a>
+<a class="anchor" id="abaa683de8c99029de02d8696cb91cc7a"></a>
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">#define RADIO_FREQ1&#160;&#160;&#160;(uint8_t)(<a class="el" href="cc1101__registers_8h.html#a28c7736c5e62d2eb693a54e3b0a90c24">RADIO_FREQ_433</a>&gt;&gt;8 &amp; 0xFF)</td>
+          <td class="memname">#define RADIO_FREQ1</td>
+          <td>(</td>
+          <td class="paramtype">&#160;</td>
+          <td class="paramname">VAL</td><td>)</td>
+          <td>&#160;&#160;&#160;(uint8_t)(VAL &gt;&gt; 8 &amp; 0xFF)</td>
         </tr>
       </table>
 </div><div class="memdoc">
 
 </div>
 </div>
-<a class="anchor" id="ab163091ea4a08e7b8e6f29a997f1ae27"></a>
+<a class="anchor" id="a7b503ffc3bfe62640e5cd362ab5b6298"></a>
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">#define RADIO_FREQ2&#160;&#160;&#160;(uint8_t)(<a class="el" href="cc1101__registers_8h.html#a28c7736c5e62d2eb693a54e3b0a90c24">RADIO_FREQ_433</a>&gt;&gt;16 &amp; 0xFF)</td>
+          <td class="memname">#define RADIO_FREQ2</td>
+          <td>(</td>
+          <td class="paramtype">&#160;</td>
+          <td class="paramname">VAL</td><td>)</td>
+          <td>&#160;&#160;&#160;(uint8_t)(VAL &gt;&gt; 16 &amp; 0xFF)</td>
         </tr>
       </table>
 </div><div class="memdoc">
 
 </div>
 </div>
-<a class="anchor" id="a28c7736c5e62d2eb693a54e3b0a90c24"></a>
+<a class="anchor" id="a03f263aee52ba7e2926475fff67fe349"></a>
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">#define RADIO_FREQ_433&#160;&#160;&#160;((uint32_t)0x0010A900)</td>
+          <td class="memname">#define RADIO_FREQ_433_LO_RATE&#160;&#160;&#160;((uint32_t)0x0010A819)</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a class="anchor" id="a1a62260fbe2c7994c2b2076a72870ddd"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">#define RADIO_FREQ_433_NORMAL_RATE&#160;&#160;&#160;((uint32_t)0x0010A8F5)</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a class="anchor" id="a8870f192f31721315e49a80ddf2da5d4"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">#define RADIO_FREQ_868_LO_RATE&#160;&#160;&#160;((uint32_t)0x0021315A)</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a class="anchor" id="aa0af43e42377077e4b3193cb15b46557"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">#define RADIO_FREQ_868_NORMAL_RATE&#160;&#160;&#160;((uint32_t)0x00213237)</td>
         </tr>
       </table>
 </div><div class="memdoc">
@@ -2990,6 +3086,30 @@ Macros</h2></td></tr>
 
 </div>
 </div>
+<a class="anchor" id="aca4f2da5f18137396b87a03c16757666"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">#define RADIO_MDMCFG0_CHANSPC_M_LO_RATE&#160;&#160;&#160;<a class="el" href="cc1101__registers_8h.html#a83806d3eb16ffe061c7e93819d361336">RADIO_MDMCFG0_CHANSPC_M</a>(0x00)</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a class="anchor" id="a0dce9f59fc0c75040ec02fca3683e191"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">#define RADIO_MDMCFG0_CHANSPC_M_NORMAL_RATE&#160;&#160;&#160;<a class="el" href="cc1101__registers_8h.html#a83806d3eb16ffe061c7e93819d361336">RADIO_MDMCFG0_CHANSPC_M</a>(0xF8)</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
 <a class="anchor" id="a508163fc511732c212e014032ffa937e"></a>
 <div class="memitem">
 <div class="memproto">
@@ -3000,6 +3120,30 @@ Macros</h2></td></tr>
           <td class="paramtype">&#160;</td>
           <td class="paramname">VAL</td><td>)</td>
           <td>&#160;&#160;&#160;(VAL&amp;3)</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a class="anchor" id="a75943b5c85ac9d57ed614056748e6a27"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">#define RADIO_MDMCFG1_CHANSPC_E_LO_RATE&#160;&#160;&#160;<a class="el" href="cc1101__registers_8h.html#a508163fc511732c212e014032ffa937e">RADIO_MDMCFG1_CHANSPC_E</a>(0x00)</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a class="anchor" id="a561c790a17a85539ac46dace02e9fd35"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">#define RADIO_MDMCFG1_CHANSPC_E_NORMAL_RATE&#160;&#160;&#160;<a class="el" href="cc1101__registers_8h.html#a508163fc511732c212e014032ffa937e">RADIO_MDMCFG1_CHANSPC_E</a>(0x02)</td>
         </tr>
       </table>
 </div><div class="memdoc">
@@ -3282,16 +3426,24 @@ Macros</h2></td></tr>
 
 </div>
 </div>
-<a class="anchor" id="a3da5754d5b3c378bbb32de7a3100427c"></a>
+<a class="anchor" id="a2486fc8f2f271f77a90826bedf49c534"></a>
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">#define RADIO_MDMCFG3_DRATE_M</td>
-          <td>(</td>
-          <td class="paramtype">&#160;</td>
-          <td class="paramname">VAL</td><td>)</td>
-          <td>&#160;&#160;&#160;(VAL)</td>
+          <td class="memname">#define RADIO_MDMCFG3_DRATE_M_LOW_RATE&#160;&#160;&#160;0x83</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a class="anchor" id="ac1b61e3403eb91e944be96fd26cdf4e0"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">#define RADIO_MDMCFG3_DRATE_M_NORMAL_RATE&#160;&#160;&#160;0x18</td>
         </tr>
       </table>
 </div><div class="memdoc">
@@ -3339,7 +3491,31 @@ Macros</h2></td></tr>
           <td>(</td>
           <td class="paramtype">&#160;</td>
           <td class="paramname">VAL</td><td>)</td>
-          <td>&#160;&#160;&#160;(VAL&amp;15)</td>
+          <td>&#160;&#160;&#160;(VAL &amp; 0x0F)</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a class="anchor" id="abf331be479e65600abbfb71d9775c552"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">#define RADIO_MDMCFG4_LOW_RATE&#160;&#160;&#160;<a class="el" href="cc1101__registers_8h.html#a4144ac03252a7f757652532b742fb71b">RADIO_MDMCFG4_CHANBW_E</a>(0x03) | RADIO_MDMCFG4_CHANBW_M(0x03) | RADIO_MDMCFG4_DRATE_E(0x08)</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a class="anchor" id="a4c68245b78f54219937955bb46a6b21e"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">#define RADIO_MDMCFG4_NORMAL_RATE&#160;&#160;&#160;<a class="el" href="cc1101__registers_8h.html#a4144ac03252a7f757652532b742fb71b">RADIO_MDMCFG4_CHANBW_E</a>(0x02) | RADIO_MDMCFG4_CHANBW_M(0x00) | RADIO_MDMCFG4_DRATE_E(0x0B)</td>
         </tr>
       </table>
 </div><div class="memdoc">
@@ -3836,7 +4012,7 @@ Macros</h2></td></tr>
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
     <li class="navelem"><a class="el" href="dir_045c9c641c9dee29b59a10159c1c0f84.html">framework</a></li><li class="navelem"><a class="el" href="dir_66c871195d82ba76f4f17d0ede637125.html">hal</a></li><li class="navelem"><a class="el" href="dir_56aaa3dec31b809e334855cea8764072.html">chips</a></li><li class="navelem"><a class="el" href="dir_84476f233b140830f66f8a2e282f50c3.html">cc1101</a></li><li class="navelem"><a class="el" href="cc1101__registers_8h.html">cc1101_registers.h</a></li>
-    <li class="footer">Generated on Sat Jun 6 2015 18:15:00 for OSS-7: Open Source Stack for DASH7 Alliance Protocol by
+    <li class="footer">Generated on Wed Aug 26 2015 21:30:40 for OSS-7: Open Source Stack for DASH7 Alliance Protocol by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.8.9.1 </li>
   </ul>

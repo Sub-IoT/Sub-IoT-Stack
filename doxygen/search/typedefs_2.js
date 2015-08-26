@@ -1,6 +1,8 @@
 var searchData=
 [
-  ['eirp_5ft',['eirp_t',['../group__radio.html#ga02dafdf72e21d57e731354cb6192583c',1,'hwradio.h']]],
-  ['end_5fof_5fpacket_5fisr_5ft',['end_of_packet_isr_t',['../cc1101_8h.html#aebef56d5af1914dac6280e42e9ab7fec',1,'cc1101.h']]],
-  ['error_5ft',['error_t',['../types_8h.html#a9ad6b2dc3cbff040775e79656fe8e1a3',1,'types.h']]]
+  ['display_5faddressmode_5ft',['DISPLAY_AddressMode_t',['../group___display.html#gab571f8fe6be17284fb5d7efcaa52ec3c',1,'display.h']]],
+  ['display_5fcolourmode_5ft',['DISPLAY_ColourMode_t',['../group___display.html#ga1b7a22c887a642a4dcb8660d9a12cf26',1,'display.h']]],
+  ['display_5fdevice_5ft',['DISPLAY_Device_t',['../group___display.html#gac5046812c0e14755237989656ab657e3',1,'display.h']]],
+  ['display_5fgeometry_5ft',['DISPLAY_Geometry_t',['../group___display.html#ga5defa89721853077248b4b4947ebae59',1,'display.h']]],
+  ['display_5fpixelmatrix_5ft',['DISPLAY_PixelMatrix_t',['../group___display.html#ga8a775bf2210d707628d704572d9e1c98',1,'display.h']]]
 ];

@@ -113,12 +113,19 @@ $(document).ready(function(){initNavTree('efm32gg__adc_8c.html','');});
 <div class="textblock"><code>#include &lt;stdbool.h&gt;</code><br />
 <code>#include &quot;<a class="el" href="hwadc_8h_source.html">hwadc.h</a>&quot;</code><br />
 <code>#include &lt;assert.h&gt;</code><br />
-<code>#include &quot;em_adc.h&quot;</code><br />
-<code>#include &quot;em_cmu.h&quot;</code><br />
+<code>#include &quot;<a class="el" href="em__adc_8h_source.html">em_adc.h</a>&quot;</code><br />
+<code>#include &quot;<a class="el" href="em__cmu_8h_source.html">em_cmu.h</a>&quot;</code><br />
 <code>#include &quot;platform.h&quot;</code><br />
+<code>#include &quot;<a class="el" href="log_8h_source.html">log.h</a>&quot;</code><br />
 </div><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
 Functions</h2></td></tr>
+<tr class="memitem:a7c027af9bd518c6c1597bfc327f58341"><td class="memItemLeft" align="right" valign="top">uint32_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="efm32gg__adc_8c.html#a7c027af9bd518c6c1597bfc327f58341">ADC_Calibration</a> (<a class="el" href="struct_a_d_c___type_def.html">ADC_TypeDef</a> *adc, ADC_Ref_TypeDef ref)</td></tr>
+<tr class="memdesc:a7c027af9bd518c6c1597bfc327f58341"><td class="mdescLeft">&#160;</td><td class="mdescRight">Calibrate offset and gain for the specified reference. Supports currently only single ended gain calibration. Could easily be expanded to support differential gain calibration.  <a href="#a7c027af9bd518c6c1597bfc327f58341">More...</a><br /></td></tr>
+<tr class="separator:a7c027af9bd518c6c1597bfc327f58341"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga10f34f828f72aea568297480add7a512"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group___a_d_c.html#ga10f34f828f72aea568297480add7a512">adc_calibrate</a> ()</td></tr>
+<tr class="memdesc:ga10f34f828f72aea568297480add7a512"><td class="mdescLeft">&#160;</td><td class="mdescRight">Calibrates the ADC.  <a href="group___a_d_c.html#ga10f34f828f72aea568297480add7a512">More...</a><br /></td></tr>
+<tr class="separator:ga10f34f828f72aea568297480add7a512"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ga7fbf846d3637cb56373a2d359031ee70"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group___a_d_c.html#ga7fbf846d3637cb56373a2d359031ee70">adc_init</a> (<a class="el" href="group___a_d_c.html#ga1791488ae818871ec6dbc01921d0dc8c">ADC_Reference</a> reference, uint16_t input)</td></tr>
 <tr class="memdesc:ga7fbf846d3637cb56373a2d359031ee70"><td class="mdescLeft">&#160;</td><td class="mdescRight">Initialises the ADC.  <a href="group___a_d_c.html#ga7fbf846d3637cb56373a2d359031ee70">More...</a><br /></td></tr>
 <tr class="separator:ga7fbf846d3637cb56373a2d359031ee70"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -137,13 +144,51 @@ Functions</h2></td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><dl class="section author"><dt>Author</dt><dd><a href="#" onclick="location.href='mai'+'lto:'+'maa'+'rt'+'en.'+'we'+'yn@'+'ua'+'ntw'+'er'+'pen'+'.b'+'e'; return false;">maart<span style="display: none;">.nosp@m.</span>en.w<span style="display: none;">.nosp@m.</span>eyn@u<span style="display: none;">.nosp@m.</span>antw<span style="display: none;">.nosp@m.</span>erpen<span style="display: none;">.nosp@m.</span>.be</a> </dd></dl>
-</div></div><!-- contents -->
+</div><h2 class="groupheader">Function Documentation</h2>
+<a class="anchor" id="a7c027af9bd518c6c1597bfc327f58341"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">uint32_t ADC_Calibration </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="struct_a_d_c___type_def.html">ADC_TypeDef</a> *&#160;</td>
+          <td class="paramname"><em>adc</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">ADC_Ref_TypeDef&#160;</td>
+          <td class="paramname"><em>ref</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Calibrate offset and gain for the specified reference. Supports currently only single ended gain calibration. Could easily be expanded to support differential gain calibration. </p>
+<p>The offset calibration routine measures 0 V with the ADC, and adjust the calibration register until the converted value equals 0. The gain calibration routine needs an external reference voltage equal to the top value for the selected reference. For example if the 2.5 V reference is to be calibrated, the external supply must also equal 2.5V.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">adc</td><td>Pointer to ADC peripheral register block.</td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">ref</td><td>Reference used during calibration. Can be both external and internal references.</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>The final value of the calibration register, note that the calibration register gets updated with this value during the calibration. No need to load the calibration values after the function returns. </dd></dl>
+
+</div>
+</div>
+</div><!-- contents -->
 </div><!-- doc-content -->
 <!-- start footer part -->
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
     <li class="navelem"><a class="el" href="dir_045c9c641c9dee29b59a10159c1c0f84.html">framework</a></li><li class="navelem"><a class="el" href="dir_66c871195d82ba76f4f17d0ede637125.html">hal</a></li><li class="navelem"><a class="el" href="dir_56aaa3dec31b809e334855cea8764072.html">chips</a></li><li class="navelem"><a class="el" href="dir_5114c2e5b70f7dd1a2ab6ffee13af406.html">efm32gg</a></li><li class="navelem"><a class="el" href="efm32gg__adc_8c.html">efm32gg_adc.c</a></li>
-    <li class="footer">Generated on Sat Jun 6 2015 18:15:00 for OSS-7: Open Source Stack for DASH7 Alliance Protocol by
+    <li class="footer">Generated on Wed Aug 26 2015 21:30:40 for OSS-7: Open Source Stack for DASH7 Alliance Protocol by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.8.9.1 </li>
   </ul>

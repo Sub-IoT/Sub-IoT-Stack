@@ -16,13 +16,8 @@ var hwradio_8h =
     ] ],
     [ "phy_channel_band_t", "group__radio.html#ga322511bb0837a24ade5987e2a5d8cb4d", [
       [ "PHY_BAND_433", "group__radio.html#gga322511bb0837a24ade5987e2a5d8cb4da115d4b1da052691249becafde483644c", null ],
-      [ "PHY_BAND_868_1", "group__radio.html#gga322511bb0837a24ade5987e2a5d8cb4dab7d8d034078321a90d50a84e745c5b4e", null ],
-      [ "PHY_BAND_868_2", "group__radio.html#gga322511bb0837a24ade5987e2a5d8cb4dac6e701cd1ad57be38cfb7dc702027d43", null ],
-      [ "PHY_BAND_915_1", "group__radio.html#gga322511bb0837a24ade5987e2a5d8cb4da176b68231dd7a7b51a366eac8f75e06e", null ],
-      [ "PHY_BAND_915_2", "group__radio.html#gga322511bb0837a24ade5987e2a5d8cb4da84d66cd164fc47d0d79d5d82acc196d2", null ],
-      [ "PHY_BAND_915_3", "group__radio.html#gga322511bb0837a24ade5987e2a5d8cb4dad03aa23e492832559c29d45af75a1f95", null ],
-      [ "PHY_BAND_915_4", "group__radio.html#gga322511bb0837a24ade5987e2a5d8cb4da3af3e05bc4a4c5ac4f6bb2f2316f9ed9", null ],
-      [ "PHY_BAND_915_5", "group__radio.html#gga322511bb0837a24ade5987e2a5d8cb4dacc628c22c92d91fbf2f67653b20979cd", null ]
+      [ "PHY_BAND_868", "group__radio.html#gga322511bb0837a24ade5987e2a5d8cb4da49f14703507f58b1066e8b26b319645f", null ],
+      [ "PHY_BAND_915", "group__radio.html#gga322511bb0837a24ade5987e2a5d8cb4da7d3fb444935bedb54206db2bc3c0f173", null ]
     ] ],
     [ "phy_channel_class_t", "group__radio.html#ga5237948055f92b747764c14ae1afc6c5", [
       [ "PHY_CLASS_LO_RATE", "group__radio.html#gga5237948055f92b747764c14ae1afc6c5aa92be053cf4f008cf0be7db6fae83aa3", null ],

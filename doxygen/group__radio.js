@@ -6,7 +6,7 @@ var group__radio =
       [ "ch_freq_band", "structphy__channel__header__t.html#ab9ffbe7d1331fc49cbb04642fa084d06", null ]
     ] ],
     [ "channel_id_t", "structchannel__id__t.html", [
-      [ "center_freq_index", "structchannel__id__t.html#ad80170411d1c77833ddb6511972c307b", null ],
+      [ "center_freq_index", "structchannel__id__t.html#a93e960ef2d27c57ae12b335d35e59b47", null ],
       [ "channel_header", "structchannel__id__t.html#a00a5b4c9cbdc3ba107ce58e31512aa11", null ],
       [ "channel_header_raw", "structchannel__id__t.html#a09e44fade2d2904b1026c1441334005e", null ]
     ] ],
@@ -47,13 +47,8 @@ var group__radio =
     ] ],
     [ "phy_channel_band_t", "group__radio.html#ga322511bb0837a24ade5987e2a5d8cb4d", [
       [ "PHY_BAND_433", "group__radio.html#gga322511bb0837a24ade5987e2a5d8cb4da115d4b1da052691249becafde483644c", null ],
-      [ "PHY_BAND_868_1", "group__radio.html#gga322511bb0837a24ade5987e2a5d8cb4dab7d8d034078321a90d50a84e745c5b4e", null ],
-      [ "PHY_BAND_868_2", "group__radio.html#gga322511bb0837a24ade5987e2a5d8cb4dac6e701cd1ad57be38cfb7dc702027d43", null ],
-      [ "PHY_BAND_915_1", "group__radio.html#gga322511bb0837a24ade5987e2a5d8cb4da176b68231dd7a7b51a366eac8f75e06e", null ],
-      [ "PHY_BAND_915_2", "group__radio.html#gga322511bb0837a24ade5987e2a5d8cb4da84d66cd164fc47d0d79d5d82acc196d2", null ],
-      [ "PHY_BAND_915_3", "group__radio.html#gga322511bb0837a24ade5987e2a5d8cb4dad03aa23e492832559c29d45af75a1f95", null ],
-      [ "PHY_BAND_915_4", "group__radio.html#gga322511bb0837a24ade5987e2a5d8cb4da3af3e05bc4a4c5ac4f6bb2f2316f9ed9", null ],
-      [ "PHY_BAND_915_5", "group__radio.html#gga322511bb0837a24ade5987e2a5d8cb4dacc628c22c92d91fbf2f67653b20979cd", null ]
+      [ "PHY_BAND_868", "group__radio.html#gga322511bb0837a24ade5987e2a5d8cb4da49f14703507f58b1066e8b26b319645f", null ],
+      [ "PHY_BAND_915", "group__radio.html#gga322511bb0837a24ade5987e2a5d8cb4da7d3fb444935bedb54206db2bc3c0f173", null ]
     ] ],
     [ "phy_channel_class_t", "group__radio.html#ga5237948055f92b747764c14ae1afc6c5", [
       [ "PHY_CLASS_LO_RATE", "group__radio.html#gga5237948055f92b747764c14ae1afc6c5aa92be053cf4f008cf0be7db6fae83aa3", null ],

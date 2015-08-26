@@ -1,6 +1,7 @@
 var searchData=
 [
-  ['scheduler',['Scheduler',['../group__scheduler.html',1,'']]],
-  ['spi',['SPI',['../group___s_p_i.html',1,'']]],
-  ['system',['System',['../group___system.html',1,'']]]
+  ['lcd',['LCD',['../group___l_c_d.html',1,'']]],
+  ['leds',['LEDs',['../group___l_e_ds.html',1,'']]],
+  ['linear_20interpolation',['Linear Interpolation',['../group___linear_interpolate.html',1,'']]],
+  ['logging',['Logging',['../group__logging.html',1,'']]]
 ];

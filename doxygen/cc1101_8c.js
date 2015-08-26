@@ -10,5 +10,6 @@ var cc1101_8c =
     [ "hw_radio_get_rssi", "group__radio.html#ga43ffbd2f8c0aec2f95fbdb365c39d682", null ],
     [ "hw_radio_init", "group__radio.html#gaefab8edede99183d3c557c0d37d3fb93", null ],
     [ "hw_radio_send_packet", "group__radio.html#ga7292dedeeb8229173201c2987811fb8f", null ],
+    [ "hw_radio_set_idle", "group__radio.html#gac4a7a12a95592bbb1a55532e5ddd9e6f", null ],
     [ "hw_radio_set_rx", "group__radio.html#gaeeb8ffcdd89455429d4d13caf08fb661", null ]
 ];

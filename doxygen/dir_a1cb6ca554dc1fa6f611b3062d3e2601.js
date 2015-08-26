@@ -3,8 +3,6 @@ var dir_a1cb6ca554dc1fa6f611b3062d3e2601 =
     [ "dll", "dir_682d9dd5ee667287a0fc0b56a1175fc7.html", "dir_682d9dd5ee667287a0fc0b56a1175fc7" ],
     [ "alp.c", "alp_8c.html", null ],
     [ "alp.h", "alp_8h.html", "alp_8h" ],
-    [ "crc.c", "crc_8c.html", "crc_8c" ],
-    [ "crc.h", "crc_8h.html", "crc_8h" ],
     [ "d7anp.c", "d7anp_8c.html", "d7anp_8c" ],
     [ "d7anp.h", "d7anp_8h.html", "d7anp_8h" ],
     [ "d7ap_stack.c", "d7ap__stack_8c.html", "d7ap__stack_8c" ],

@@ -110,10 +110,10 @@ $(document).ready(function(){initNavTree('efm32gg__uart_8c.html','');});
 <div class="title">efm32gg_uart.c File Reference</div>  </div>
 </div><!--header-->
 <div class="contents">
-<div class="textblock"><code>#include &lt;em_usart.h&gt;</code><br />
-<code>#include &lt;em_cmu.h&gt;</code><br />
-<code>#include &lt;em_gpio.h&gt;</code><br />
-<code>#include &lt;<a class="el" href="em__usbd_8h_source.html">em_usbd.h</a>&gt;</code><br />
+<div class="textblock"><code>#include &lt;<a class="el" href="em__usart_8h_source.html">em_usart.h</a>&gt;</code><br />
+<code>#include &lt;<a class="el" href="em__cmu_8h_source.html">em_cmu.h</a>&gt;</code><br />
+<code>#include &lt;<a class="el" href="em__gpio_8h_source.html">em_gpio.h</a>&gt;</code><br />
+<code>#include &lt;em_usbd.h&gt;</code><br />
 <code>#include &quot;<a class="el" href="hwgpio_8h_source.html">hwgpio.h</a>&quot;</code><br />
 <code>#include &quot;<a class="el" href="hwuart_8h_source.html">hwuart.h</a>&quot;</code><br />
 <code>#include &lt;assert.h&gt;</code><br />
@@ -129,18 +129,46 @@ Functions</h2></td></tr>
 <tr class="memitem:gadab99b26673fdb7a5fb99f7badd3c757"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group___u_a_r_t.html#gadab99b26673fdb7a5fb99f7badd3c757">uart_transmit_message</a> (void const *<a class="el" href="fs_8c.html#a43a278d13284fb3412e9eee1db1d967e">data</a>, size_t length)</td></tr>
 <tr class="memdesc:gadab99b26673fdb7a5fb99f7badd3c757"><td class="mdescLeft">&#160;</td><td class="mdescRight">Transmit an array of characters over the UART.  <a href="group___u_a_r_t.html#gadab99b26673fdb7a5fb99f7badd3c757">More...</a><br /></td></tr>
 <tr class="separator:gadab99b26673fdb7a5fb99f7badd3c757"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga6e55b1d14ffc7b4deb749b6fb764ede3"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group___u_a_r_t.html#ga6e55b1d14ffc7b4deb749b6fb764ede3">uart_transmit_string</a> (const char *string)</td></tr>
+<tr class="memdesc:ga6e55b1d14ffc7b4deb749b6fb764ede3"><td class="mdescLeft">&#160;</td><td class="mdescRight">Transmit a terminated string over the UART.  <a href="group___u_a_r_t.html#ga6e55b1d14ffc7b4deb749b6fb764ede3">More...</a><br /></td></tr>
+<tr class="separator:ga6e55b1d14ffc7b4deb749b6fb764ede3"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga7f19ece388b11cdfdf5ce6ea92a76d1a"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group___u_a_r_t.html#ga7f19ece388b11cdfdf5ce6ea92a76d1a">uart_set_rx_interrupt_callback</a> (<a class="el" href="group___u_a_r_t.html#gaee996d0581a66981e863c2ff4df0be96">uart_rx_inthandler_t</a> cb)</td></tr>
+<tr class="memdesc:ga7f19ece388b11cdfdf5ce6ea92a76d1a"><td class="mdescLeft">&#160;</td><td class="mdescRight">Configure the callback function to be called on UART RX interrupt.  <a href="group___u_a_r_t.html#ga7f19ece388b11cdfdf5ce6ea92a76d1a">More...</a><br /></td></tr>
+<tr class="separator:ga7f19ece388b11cdfdf5ce6ea92a76d1a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga6fc13a8da8aebe1bf088d32771aa9aa9"><td class="memItemLeft" align="right" valign="top"><a class="el" href="types_8h.html#a9ad6b2dc3cbff040775e79656fe8e1a3">error_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group___u_a_r_t.html#ga6fc13a8da8aebe1bf088d32771aa9aa9">uart_rx_interrupt_enable</a> (bool enabled)</td></tr>
+<tr class="memdesc:ga6fc13a8da8aebe1bf088d32771aa9aa9"><td class="mdescLeft">&#160;</td><td class="mdescRight">Enable or disable UART RX interrupt from occuring.  <a href="group___u_a_r_t.html#ga6fc13a8da8aebe1bf088d32771aa9aa9">More...</a><br /></td></tr>
+<tr class="separator:ga6fc13a8da8aebe1bf088d32771aa9aa9"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a3f216427c6df5e45eb0cceccee1aa5ba"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="efm32gg__uart_8c.html#a3f216427c6df5e45eb0cceccee1aa5ba">UART0_RX_IRQHandler</a> (void)</td></tr>
+<tr class="separator:a3f216427c6df5e45eb0cceccee1aa5ba"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><dl class="section author"><dt>Author</dt><dd><a href="#" onclick="location.href='mai'+'lto:'+'jer'+'em'+'ie@'+'wi'+'zzi'+'la'+'b.c'+'om'; return false;">jerem<span style="display: none;">.nosp@m.</span>ie@w<span style="display: none;">.nosp@m.</span>izzil<span style="display: none;">.nosp@m.</span>ab.c<span style="display: none;">.nosp@m.</span>om</a> </dd>
 <dd>
 <a href="#" onclick="location.href='mai'+'lto:'+'maa'+'rt'+'en.'+'we'+'yn@'+'ua'+'ntw'+'er'+'pen'+'.b'+'e'; return false;">maart<span style="display: none;">.nosp@m.</span>en.w<span style="display: none;">.nosp@m.</span>eyn@u<span style="display: none;">.nosp@m.</span>antw<span style="display: none;">.nosp@m.</span>erpen<span style="display: none;">.nosp@m.</span>.be</a> </dd></dl>
-</div></div><!-- contents -->
+</div><h2 class="groupheader">Function Documentation</h2>
+<a class="anchor" id="a3f216427c6df5e45eb0cceccee1aa5ba"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void UART0_RX_IRQHandler </td>
+          <td>(</td>
+          <td class="paramtype">void&#160;</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+</div><!-- contents -->
 </div><!-- doc-content -->
 <!-- start footer part -->
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
     <li class="navelem"><a class="el" href="dir_045c9c641c9dee29b59a10159c1c0f84.html">framework</a></li><li class="navelem"><a class="el" href="dir_66c871195d82ba76f4f17d0ede637125.html">hal</a></li><li class="navelem"><a class="el" href="dir_56aaa3dec31b809e334855cea8764072.html">chips</a></li><li class="navelem"><a class="el" href="dir_5114c2e5b70f7dd1a2ab6ffee13af406.html">efm32gg</a></li><li class="navelem"><a class="el" href="efm32gg__uart_8c.html">efm32gg_uart.c</a></li>
-    <li class="footer">Generated on Sat Jun 6 2015 18:15:00 for OSS-7: Open Source Stack for DASH7 Alliance Protocol by
+    <li class="footer">Generated on Wed Aug 26 2015 21:30:40 for OSS-7: Open Source Stack for DASH7 Alliance Protocol by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.8.9.1 </li>
   </ul>

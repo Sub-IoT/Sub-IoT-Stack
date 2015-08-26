@@ -112,7 +112,7 @@ $(document).ready(function(){initNavTree('stk3700__usb__descriptors_8c.html','')
 <div class="title">stk3700_usb_descriptors.c File Reference</div>  </div>
 </div><!--header-->
 <div class="contents">
-<div class="textblock"><code>#include &quot;<a class="el" href="usb__descriptors_8h_source.html">usb_descriptors.h</a>&quot;</code><br />
+<div class="textblock"><code>#include &quot;usb_descriptors.h&quot;</code><br />
 </div><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="define-members"></a>
 Macros</h2></td></tr>
@@ -123,7 +123,7 @@ Macros</h2></td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
 Functions</h2></td></tr>
-<tr class="memitem:a0474a5cc32f254b3bc5f2e853ecd26b2"><td class="memItemLeft" align="right" valign="top">const USB_DeviceDescriptor_TypeDef <a class="el" href="usb__descriptors_8h.html#a2221e7c63b87cff8ba03c00871691279">USBDESC_deviceDesc</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="stk3700__usb__descriptors_8c.html#a0474a5cc32f254b3bc5f2e853ecd26b2">__attribute__</a> ((aligned(4)))</td></tr>
+<tr class="memitem:a0474a5cc32f254b3bc5f2e853ecd26b2"><td class="memItemLeft" align="right" valign="top">const USB_DeviceDescriptor_TypeDef <a class="el" href="_e_f_m32_h_g___s_t_k3400_2inc_2usb__descriptors_8h.html#a2221e7c63b87cff8ba03c00871691279">USBDESC_deviceDesc</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="stk3700__usb__descriptors_8c.html#a0474a5cc32f254b3bc5f2e853ecd26b2">__attribute__</a> ((aligned(4)))</td></tr>
 <tr class="separator:a0474a5cc32f254b3bc5f2e853ecd26b2"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aa5d5ae8fc92afc6b253b7fec7207e6f6"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="stk3700__usb__descriptors_8c.html#aa5d5ae8fc92afc6b253b7fec7207e6f6">STATIC_CONST_STRING_DESC_LANGID</a> (langID, 0x04, 0x09)</td></tr>
 <tr class="separator:aa5d5ae8fc92afc6b253b7fec7207e6f6"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -138,7 +138,7 @@ Functions</h2></td></tr>
 Variables</h2></td></tr>
 <tr class="memitem:a5cb4356d2ce19394119073378069c060"><td class="memItemLeft" align="right" valign="top">const void *const&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="stk3700__usb__descriptors_8c.html#a5cb4356d2ce19394119073378069c060">USBDESC_strings</a> []</td></tr>
 <tr class="separator:a5cb4356d2ce19394119073378069c060"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a2b3d495cff3f07db443ac686ded4b352"><td class="memItemLeft" align="right" valign="top">const uint8_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="stk3700__usb__descriptors_8c.html#a2b3d495cff3f07db443ac686ded4b352">USBDESC_bufferingMultiplier</a> [<a class="el" href="usbconfig_8h.html#a836fd372f59b18af5e859175624b5385">NUM_EP_USED</a>+1]</td></tr>
+<tr class="memitem:a2b3d495cff3f07db443ac686ded4b352"><td class="memItemLeft" align="right" valign="top">const uint8_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="stk3700__usb__descriptors_8c.html#a2b3d495cff3f07db443ac686ded4b352">USBDESC_bufferingMultiplier</a> [<a class="el" href="_e_f_m32_h_g___s_t_k3400_2config_2usbconfig_8h.html#a836fd372f59b18af5e859175624b5385">NUM_EP_USED</a>+1]</td></tr>
 <tr class="separator:a2b3d495cff3f07db443ac686ded4b352"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <h2 class="groupheader">Macro Definition Documentation</h2>
@@ -169,12 +169,12 @@ Variables</h2></td></tr>
       </table>
 </div><div class="memdoc">
 <b>Value:</b><div class="fragment"><div class="line">( USB_CONFIG_DESCSIZE                         +   \</div>
-<div class="line">          ( USB_INTERFACE_DESCSIZE * <a class="code" href="usbconfig_8h.html#a3c741f0d1654959b591298f9c366442e">NUM_INTERFACES</a> ) +   \</div>
-<div class="line">          ( USB_ENDPOINT_DESCSIZE  * <a class="code" href="usbconfig_8h.html#a836fd372f59b18af5e859175624b5385">NUM_EP_USED</a> )    +   <a class="code" href="stk3700__usb__descriptors_8c.html#a091cb445e20de168cb3784ec4be78770">\</a></div>
+<div class="line">          ( USB_INTERFACE_DESCSIZE * <a class="code" href="_e_f_m32_g_g___s_t_k3700_2config_2usbconfig_8h.html#a3c741f0d1654959b591298f9c366442e">NUM_INTERFACES</a> ) +   \</div>
+<div class="line">          ( USB_ENDPOINT_DESCSIZE  * <a class="code" href="_e_f_m32_g_g___s_t_k3700_2config_2usbconfig_8h.html#a836fd372f59b18af5e859175624b5385">NUM_EP_USED</a> )    +   <a class="code" href="stk3700__usb__descriptors_8c.html#a091cb445e20de168cb3784ec4be78770">\</a></div>
 <div class="line"><a class="code" href="stk3700__usb__descriptors_8c.html#a091cb445e20de168cb3784ec4be78770">          CDC_MISC_DESCRIPTOR_LEN</a> )</div>
+<div class="ttc" id="_e_f_m32_g_g___s_t_k3700_2config_2usbconfig_8h_html_a3c741f0d1654959b591298f9c366442e"><div class="ttname"><a href="_e_f_m32_g_g___s_t_k3700_2config_2usbconfig_8h.html#a3c741f0d1654959b591298f9c366442e">NUM_INTERFACES</a></div><div class="ttdeci">#define NUM_INTERFACES</div><div class="ttdef"><b>Definition:</b> usbconfig.h:50</div></div>
 <div class="ttc" id="stk3700__usb__descriptors_8c_html_a091cb445e20de168cb3784ec4be78770"><div class="ttname"><a href="stk3700__usb__descriptors_8c.html#a091cb445e20de168cb3784ec4be78770">CDC_MISC_DESCRIPTOR_LEN</a></div><div class="ttdeci">#define CDC_MISC_DESCRIPTOR_LEN</div><div class="ttdef"><b>Definition:</b> stk3700_usb_descriptors.c:38</div></div>
-<div class="ttc" id="usbconfig_8h_html_a836fd372f59b18af5e859175624b5385"><div class="ttname"><a href="usbconfig_8h.html#a836fd372f59b18af5e859175624b5385">NUM_EP_USED</a></div><div class="ttdeci">#define NUM_EP_USED</div><div class="ttdef"><b>Definition:</b> usbconfig.h:30</div></div>
-<div class="ttc" id="usbconfig_8h_html_a3c741f0d1654959b591298f9c366442e"><div class="ttname"><a href="usbconfig_8h.html#a3c741f0d1654959b591298f9c366442e">NUM_INTERFACES</a></div><div class="ttdeci">#define NUM_INTERFACES</div><div class="ttdef"><b>Definition:</b> usbconfig.h:50</div></div>
+<div class="ttc" id="_e_f_m32_g_g___s_t_k3700_2config_2usbconfig_8h_html_a836fd372f59b18af5e859175624b5385"><div class="ttname"><a href="_e_f_m32_g_g___s_t_k3700_2config_2usbconfig_8h.html#a836fd372f59b18af5e859175624b5385">NUM_EP_USED</a></div><div class="ttdeci">#define NUM_EP_USED</div><div class="ttdef"><b>Definition:</b> usbconfig.h:30</div></div>
 </div><!-- fragment -->
 </div>
 </div>
@@ -184,7 +184,7 @@ Variables</h2></td></tr>
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">const USB_DeviceDescriptor_TypeDef <a class="el" href="usb__descriptors_8h.html#a2221e7c63b87cff8ba03c00871691279">USBDESC_deviceDesc</a> <a class="el" href="struct____attribute____.html">__attribute__</a> </td>
+          <td class="memname">const USB_DeviceDescriptor_TypeDef <a class="el" href="_e_f_m32_h_g___s_t_k3400_2inc_2usb__descriptors_8h.html#a2221e7c63b87cff8ba03c00871691279">USBDESC_deviceDesc</a> <a class="el" href="struct____attribute____.html">__attribute__</a> </td>
           <td>(</td>
           <td class="paramtype">(aligned(4))&#160;</td>
           <td class="paramname"></td><td>)</td>
@@ -671,7 +671,7 @@ Variables</h2></td></tr>
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">const uint8_t USBDESC_bufferingMultiplier[<a class="el" href="usbconfig_8h.html#a836fd372f59b18af5e859175624b5385">NUM_EP_USED</a>+1]</td>
+          <td class="memname">const uint8_t USBDESC_bufferingMultiplier[<a class="el" href="_e_f_m32_h_g___s_t_k3400_2config_2usbconfig_8h.html#a836fd372f59b18af5e859175624b5385">NUM_EP_USED</a>+1]</td>
         </tr>
       </table>
 </div><div class="memdoc">
@@ -709,7 +709,7 @@ Variables</h2></td></tr>
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
     <li class="navelem"><a class="el" href="dir_045c9c641c9dee29b59a10159c1c0f84.html">framework</a></li><li class="navelem"><a class="el" href="dir_66c871195d82ba76f4f17d0ede637125.html">hal</a></li><li class="navelem"><a class="el" href="dir_e12c735cb2f958dadd4feffa9ea66c7d.html">platforms</a></li><li class="navelem"><a class="el" href="dir_50a57afe65e4df00fe889ee209f63c73.html">EFM32GG_STK3700</a></li><li class="navelem"><a class="el" href="stk3700__usb__descriptors_8c.html">stk3700_usb_descriptors.c</a></li>
-    <li class="footer">Generated on Sat Jun 6 2015 18:15:00 for OSS-7: Open Source Stack for DASH7 Alliance Protocol by
+    <li class="footer">Generated on Wed Aug 26 2015 21:30:41 for OSS-7: Open Source Stack for DASH7 Alliance Protocol by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.8.9.1 </li>
   </ul>

@@ -1,5 +1,4 @@
 var searchData=
 [
-  ['fs_5ffile_5fheader_5ft',['fs_file_header_t',['../structfs__file__header__t.html',1,'']]],
-  ['fs_5ffile_5fproperties_5ft',['fs_file_properties_t',['../structfs__file__properties__t.html',1,'']]]
+  ['emu_5ftypedef',['EMU_TypeDef',['../struct_e_m_u___type_def.html',1,'']]]
 ];

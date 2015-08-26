@@ -1,8 +1,8 @@
 var hwgpio_8h =
 [
     [ "gpio_inthandler_t", "group___g_p_i_o.html#ga3ba7d68bb58b98a8bf58445cedf6dadf", null ],
-    [ "GPIO_RISING_EDGE", "group___g_p_i_o.html#ggadf764cbdea00d65edcd07bb9953ad2b7a6aab82123eba95f00452e865cbfe99bc", null ],
-    [ "GPIO_FALLING_EDGE", "group___g_p_i_o.html#ggadf764cbdea00d65edcd07bb9953ad2b7acc814a2ac0119c764e9320a051904eae", null ],
+    [ "GPIO_RISING_EDGE", "group___g_p_i_o.html#gga5d76b81b0ad4c19007a781d4edb8181fa6aab82123eba95f00452e865cbfe99bc", null ],
+    [ "GPIO_FALLING_EDGE", "group___g_p_i_o.html#gga5d76b81b0ad4c19007a781d4edb8181facc814a2ac0119c764e9320a051904eae", null ],
     [ "__gpio_init", "group___g_p_i_o.html#gaad12bbf948ed22eb482da198952b70c9", null ],
     [ "hw_gpio_clr", "group___g_p_i_o.html#ga0ffb2f1de6a023e09bb32425a75ab002", null ],
     [ "hw_gpio_configure_interrupt", "group___g_p_i_o.html#gaaf6c0915d25c0be3d4c795da96ce7384", null ],

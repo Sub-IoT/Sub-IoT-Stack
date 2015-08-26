@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['timer',['Timer',['../group__timer.html',1,'']]]
+  ['matrix_20functions',['Matrix Functions',['../group__group_matrix.html',1,'']]]
 ];

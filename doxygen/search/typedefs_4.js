@@ -1,6 +1,5 @@
 var searchData=
 [
-  ['histogramoutputmaptype',['histogramOutputMapType',['../_castalia_module_8h.html#a685cfdbbda19cb05cdc8c8952ffdd376',1,'CastaliaModule.h']]],
-  ['hwtimer_5fid_5ft',['hwtimer_id_t',['../group__timer.html#ga844e8f2d8eddf6ddd04f80440efe4c4f',1,'hwtimer.h']]],
-  ['hwtimer_5ftick_5ft',['hwtimer_tick_t',['../group__timer.html#gac76c087138a5a39e6bd3bbf4c3bad1d7',1,'hwtimer.h']]]
+  ['float32_5ft',['float32_t',['../arm__math_8h.html#a4611b605e45ab401f02cab15c5e38715',1,'arm_math.h']]],
+  ['float64_5ft',['float64_t',['../arm__math_8h.html#ac55f3ae81b5bc9053760baacf57e47f4',1,'arm_math.h']]]
 ];

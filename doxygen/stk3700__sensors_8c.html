@@ -105,46 +105,25 @@ $(document).ready(function(){initNavTree('stk3700__sensors_8c.html','');});
 
 <div class="header">
   <div class="summary">
-<a href="#define-members">Macros</a> &#124;
 <a href="#func-members">Functions</a>  </div>
   <div class="headertitle">
 <div class="title">stk3700_sensors.c File Reference</div>  </div>
 </div><!--header-->
 <div class="contents">
-<div class="textblock"><code>#include &quot;<a class="el" href="platform__sensors_8h_source.html">platform_sensors.h</a>&quot;</code><br />
+<div class="textblock"><code>#include &quot;platform_sensors.h&quot;</code><br />
 <code>#include &quot;<a class="el" href="hwgpio_8h_source.html">hwgpio.h</a>&quot;</code><br />
 <code>#include &quot;<a class="el" href="hwadc_8h_source.html">hwadc.h</a>&quot;</code><br />
 <code>#include &quot;<a class="el" href="hwatomic_8h_source.html">hwatomic.h</a>&quot;</code><br />
 <code>#include &quot;<a class="el" href="scheduler_8h_source.html">scheduler.h</a>&quot;</code><br />
-<code>#include &quot;em_gpio.h&quot;</code><br />
-<code>#include &quot;em_adc.h&quot;</code><br />
+<code>#include &quot;<a class="el" href="em__gpio_8h_source.html">em_gpio.h</a>&quot;</code><br />
+<code>#include &quot;<a class="el" href="em__adc_8h_source.html">em_adc.h</a>&quot;</code><br />
 <code>#include &lt;string.h&gt;</code><br />
 <code>#include &lt;assert.h&gt;</code><br />
 </div><table class="memberdecls">
-<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="define-members"></a>
-Macros</h2></td></tr>
-<tr class="memitem:a7ff3d894a1483161858337141bfca375"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="stk3700__sensors_8c.html#a7ff3d894a1483161858337141bfca375">LIGHT_SENSOR_ENABLE_PORTPIN</a>&#160;&#160;&#160;<a class="el" href="efm32gg__pins_8h.html#abe51ebd9664eae230876a282007da539">D6</a></td></tr>
-<tr class="separator:a7ff3d894a1483161858337141bfca375"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a01bd83c41da33fb35bf9abc8aa41567b"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="stk3700__sensors_8c.html#a01bd83c41da33fb35bf9abc8aa41567b">LIGHT_SENSOR_ENABLE_PORT</a>&#160;&#160;&#160;gpioPortD</td></tr>
-<tr class="separator:a01bd83c41da33fb35bf9abc8aa41567b"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a64f9ae52c0084dc1bacd08bf0d5605f7"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="stk3700__sensors_8c.html#a64f9ae52c0084dc1bacd08bf0d5605f7">LIGHT_SENSOR_READ_PORT</a>&#160;&#160;&#160;gpioPortC</td></tr>
-<tr class="separator:a64f9ae52c0084dc1bacd08bf0d5605f7"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a6b796892859ef224e1f210c6bfb71f02"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="stk3700__sensors_8c.html#a6b796892859ef224e1f210c6bfb71f02">LIGHT_SENSOR_READ_PORTPIN</a>&#160;&#160;&#160;<a class="el" href="efm32gg__pins_8h.html#ab308fe070f18a6d6f2ae866fc1a500c8">C6</a></td></tr>
-<tr class="separator:a6b796892859ef224e1f210c6bfb71f02"><td class="memSeparator" colspan="2">&#160;</td></tr>
-</table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
 Functions</h2></td></tr>
-<tr class="memitem:a954d81d6da4339726b7f93bc32ed17b7"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="stk3700__sensors_8c.html#a954d81d6da4339726b7f93bc32ed17b7">lightsensor_init</a> ()</td></tr>
-<tr class="memdesc:a954d81d6da4339726b7f93bc32ed17b7"><td class="mdescLeft">&#160;</td><td class="mdescRight">Initialises the sensors.  <a href="#a954d81d6da4339726b7f93bc32ed17b7">More...</a><br /></td></tr>
-<tr class="separator:a954d81d6da4339726b7f93bc32ed17b7"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a1838dffea9ae4f082101234aa6be7d03"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="stk3700__sensors_8c.html#a1838dffea9ae4f082101234aa6be7d03">lightsensor_enable</a> ()</td></tr>
-<tr class="separator:a1838dffea9ae4f082101234aa6be7d03"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a0c7c5993794901c844a051bcd4e5d851"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="stk3700__sensors_8c.html#a0c7c5993794901c844a051bcd4e5d851">lightsensor_dissable</a> ()</td></tr>
-<tr class="separator:a0c7c5993794901c844a051bcd4e5d851"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aa1f6c93edb7e75a1ff04a81ec12e038b"><td class="memItemLeft" align="right" valign="top">uint32_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="stk3700__sensors_8c.html#aa1f6c93edb7e75a1ff04a81ec12e038b">lightsensor_read</a> ()</td></tr>
-<tr class="separator:aa1f6c93edb7e75a1ff04a81ec12e038b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aec263d9a21b0b4ffe68d70bf2a2edfac"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="stk3700__sensors_8c.html#aec263d9a21b0b4ffe68d70bf2a2edfac">internalTempSensor_init</a> (void)</td></tr>
-<tr class="memdesc:aec263d9a21b0b4ffe68d70bf2a2edfac"><td class="mdescLeft">&#160;</td><td class="mdescRight">Initializes ADC to measure the internal temperature.  <a href="#aec263d9a21b0b4ffe68d70bf2a2edfac">More...</a><br /></td></tr>
+<tr class="memdesc:aec263d9a21b0b4ffe68d70bf2a2edfac"><td class="mdescLeft">&#160;</td><td class="mdescRight">Initialises the sensors.  <a href="#aec263d9a21b0b4ffe68d70bf2a2edfac">More...</a><br /></td></tr>
 <tr class="separator:aec263d9a21b0b4ffe68d70bf2a2edfac"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a1df8f1ac210540bed6db7d47cb64faf0"><td class="memItemLeft" align="right" valign="top">float&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="stk3700__sensors_8c.html#a1df8f1ac210540bed6db7d47cb64faf0">tempsensor_read_celcius</a> ()</td></tr>
 <tr class="memdesc:a1df8f1ac210540bed6db7d47cb64faf0"><td class="mdescLeft">&#160;</td><td class="mdescRight">Measures the interternal temperature using the ADC and converts it to Celcius.  <a href="#a1df8f1ac210540bed6db7d47cb64faf0">More...</a><br /></td></tr>
@@ -153,55 +132,6 @@ Functions</h2></td></tr>
 <tr class="memdesc:a420a212af2fbbbf2de032bae8ded0889"><td class="mdescLeft">&#160;</td><td class="mdescRight">Convert a temperature ADC sample to temperature taking into account the factory calibration.  <a href="#a420a212af2fbbbf2de032bae8ded0889">More...</a><br /></td></tr>
 <tr class="separator:a420a212af2fbbbf2de032bae8ded0889"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
-<h2 class="groupheader">Macro Definition Documentation</h2>
-<a class="anchor" id="a01bd83c41da33fb35bf9abc8aa41567b"></a>
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">#define LIGHT_SENSOR_ENABLE_PORT&#160;&#160;&#160;gpioPortD</td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-</div>
-</div>
-<a class="anchor" id="a7ff3d894a1483161858337141bfca375"></a>
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">#define LIGHT_SENSOR_ENABLE_PORTPIN&#160;&#160;&#160;<a class="el" href="efm32gg__pins_8h.html#abe51ebd9664eae230876a282007da539">D6</a></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-</div>
-</div>
-<a class="anchor" id="a64f9ae52c0084dc1bacd08bf0d5605f7"></a>
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">#define LIGHT_SENSOR_READ_PORT&#160;&#160;&#160;gpioPortC</td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-</div>
-</div>
-<a class="anchor" id="a6b796892859ef224e1f210c6bfb71f02"></a>
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">#define LIGHT_SENSOR_READ_PORTPIN&#160;&#160;&#160;<a class="el" href="efm32gg__pins_8h.html#ab308fe070f18a6d6f2ae866fc1a500c8">C6</a></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-</div>
-</div>
 <h2 class="groupheader">Function Documentation</h2>
 <a class="anchor" id="a420a212af2fbbbf2de032bae8ded0889"></a>
 <div class="memitem">
@@ -236,54 +166,6 @@ Functions</h2></td></tr>
         <tr>
           <td class="memname">void internalTempSensor_init </td>
           <td>(</td>
-          <td class="paramtype">void&#160;</td>
-          <td class="paramname"></td><td>)</td>
-          <td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-<p>Initializes ADC to measure the internal temperature. </p>
-
-</div>
-</div>
-<a class="anchor" id="a0c7c5993794901c844a051bcd4e5d851"></a>
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">void lightsensor_dissable </td>
-          <td>(</td>
-          <td class="paramname"></td><td>)</td>
-          <td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-</div>
-</div>
-<a class="anchor" id="a1838dffea9ae4f082101234aa6be7d03"></a>
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">void lightsensor_enable </td>
-          <td>(</td>
-          <td class="paramname"></td><td>)</td>
-          <td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-</div>
-</div>
-<a class="anchor" id="a954d81d6da4339726b7f93bc32ed17b7"></a>
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">void lightsensor_init </td>
-          <td>(</td>
           <td class="paramname"></td><td>)</td>
           <td></td>
         </tr>
@@ -292,23 +174,9 @@ Functions</h2></td></tr>
 
 <p>Initialises the sensors. </p>
 <ul>
-<li>I/O for light sensor </li>
+<li>I/O for light sensor</li>
 </ul>
-
-</div>
-</div>
-<a class="anchor" id="aa1f6c93edb7e75a1ff04a81ec12e038b"></a>
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">uint32_t lightsensor_read </td>
-          <td>(</td>
-          <td class="paramname"></td><td>)</td>
-          <td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
+<p>Initializes ADC to measure the internal temperature </p>
 
 </div>
 </div>
@@ -326,7 +194,7 @@ Functions</h2></td></tr>
 </div><div class="memdoc">
 
 <p>Measures the interternal temperature using the ADC and converts it to Celcius. </p>
-<dl class="section note"><dt>Note</dt><dd>It expects the user to initialise the ADC using <a class="el" href="platform__sensors_8h.html#ad12b54359f7a9d58e1142d7470e48ee6" title="Initializes ADC to measure the internal temperature. ">internalTempSensor_init()</a> </dd></dl>
+<dl class="section note"><dt>Note</dt><dd>It expects the user to initialise the ADC using <a class="el" href="_e_f_m32_g_g___s_t_k3700_2inc_2platform__sensors_8h.html#ad12b54359f7a9d58e1142d7470e48ee6" title="Initialises the sensors. ">internalTempSensor_init()</a> </dd></dl>
 
 </div>
 </div>
@@ -336,7 +204,7 @@ Functions</h2></td></tr>
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
     <li class="navelem"><a class="el" href="dir_045c9c641c9dee29b59a10159c1c0f84.html">framework</a></li><li class="navelem"><a class="el" href="dir_66c871195d82ba76f4f17d0ede637125.html">hal</a></li><li class="navelem"><a class="el" href="dir_e12c735cb2f958dadd4feffa9ea66c7d.html">platforms</a></li><li class="navelem"><a class="el" href="dir_50a57afe65e4df00fe889ee209f63c73.html">EFM32GG_STK3700</a></li><li class="navelem"><a class="el" href="stk3700__sensors_8c.html">stk3700_sensors.c</a></li>
-    <li class="footer">Generated on Sat Jun 6 2015 18:15:00 for OSS-7: Open Source Stack for DASH7 Alliance Protocol by
+    <li class="footer">Generated on Wed Aug 26 2015 21:30:41 for OSS-7: Open Source Stack for DASH7 Alliance Protocol by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.8.9.1 </li>
   </ul>

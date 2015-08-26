@@ -1,4 +1,5 @@
 var searchData=
 [
-  ['encoding_5ftype',['Encoding_type',['../_c_radio_8h.html#af729789b6ed6ee8ee140279db5914511',1,'CRadio.h']]]
+  ['display_5faddressmode_5ft',['DISPLAY_AddressMode_t',['../group___display.html#ga9bd101ffd5a8bdde4095b5b6e0f44cfc',1,'display.h']]],
+  ['display_5fcolourmode_5ft',['DISPLAY_ColourMode_t',['../group___display.html#ga582477144c2aad1388d54d6291e67107',1,'display.h']]]
 ];

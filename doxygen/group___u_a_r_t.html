@@ -99,6 +99,7 @@ $(document).ready(function(){initNavTree('group___u_a_r_t.html','');});
 
 <div class="header">
   <div class="summary">
+<a href="#typedef-members">Typedefs</a> &#124;
 <a href="#func-members">Functions</a>  </div>
   <div class="headertitle">
 <div class="title">UART<div class="ingroups"><a class="el" href="group___h_a_l.html">Hardware Abstraction Layer API</a></div></div>  </div>
@@ -108,6 +109,12 @@ $(document).ready(function(){initNavTree('group___u_a_r_t.html','');});
 <p>UART API.  
 <a href="#details">More...</a></p>
 <table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="typedef-members"></a>
+Typedefs</h2></td></tr>
+<tr class="memitem:gaee996d0581a66981e863c2ff4df0be96"><td class="memItemLeft" align="right" valign="top">typedef void(*&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group___u_a_r_t.html#gaee996d0581a66981e863c2ff4df0be96">uart_rx_inthandler_t</a>) (char rx_data)</td></tr>
+<tr class="memdesc:gaee996d0581a66981e863c2ff4df0be96"><td class="mdescLeft">&#160;</td><td class="mdescRight">RX callback function pointer prototype.  <a href="#gaee996d0581a66981e863c2ff4df0be96">More...</a><br /></td></tr>
+<tr class="separator:gaee996d0581a66981e863c2ff4df0be96"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
 Functions</h2></td></tr>
 <tr class="memitem:gad43125d70a4337b3c10d594393127596"><td class="memItemLeft" align="right" valign="top"><a class="el" href="link__c_8h.html#ad7a35fa85166c1d1839000ac10353068">__LINK_C</a> void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group___u_a_r_t.html#gad43125d70a4337b3c10d594393127596">__uart_init</a> ()</td></tr>
@@ -119,9 +126,18 @@ Functions</h2></td></tr>
 <tr class="memitem:gadab99b26673fdb7a5fb99f7badd3c757"><td class="memItemLeft" align="right" valign="top"><a class="el" href="link__c_8h.html#ad7a35fa85166c1d1839000ac10353068">__LINK_C</a> void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group___u_a_r_t.html#gadab99b26673fdb7a5fb99f7badd3c757">uart_transmit_message</a> (void const *<a class="el" href="fs_8c.html#a43a278d13284fb3412e9eee1db1d967e">data</a>, size_t length)</td></tr>
 <tr class="memdesc:gadab99b26673fdb7a5fb99f7badd3c757"><td class="mdescLeft">&#160;</td><td class="mdescRight">Transmit an array of characters over the UART.  <a href="#gadab99b26673fdb7a5fb99f7badd3c757">More...</a><br /></td></tr>
 <tr class="separator:gadab99b26673fdb7a5fb99f7badd3c757"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga6e55b1d14ffc7b4deb749b6fb764ede3"><td class="memItemLeft" align="right" valign="top"><a class="el" href="link__c_8h.html#ad7a35fa85166c1d1839000ac10353068">__LINK_C</a> void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group___u_a_r_t.html#ga6e55b1d14ffc7b4deb749b6fb764ede3">uart_transmit_string</a> (char const *string)</td></tr>
+<tr class="memdesc:ga6e55b1d14ffc7b4deb749b6fb764ede3"><td class="mdescLeft">&#160;</td><td class="mdescRight">Transmit a terminated string over the UART.  <a href="#ga6e55b1d14ffc7b4deb749b6fb764ede3">More...</a><br /></td></tr>
+<tr class="separator:ga6e55b1d14ffc7b4deb749b6fb764ede3"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ga97c725ef2b3675d45c56f830ce74daab"><td class="memItemLeft" align="right" valign="top"><a class="el" href="link__c_8h.html#ad7a35fa85166c1d1839000ac10353068">__LINK_C</a> bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group___u_a_r_t.html#ga97c725ef2b3675d45c56f830ce74daab">uart_tx_ready</a> ()</td></tr>
 <tr class="memdesc:ga97c725ef2b3675d45c56f830ce74daab"><td class="mdescLeft">&#160;</td><td class="mdescRight">Check whether the UART is ready to send a single byte.  <a href="#ga97c725ef2b3675d45c56f830ce74daab">More...</a><br /></td></tr>
 <tr class="separator:ga97c725ef2b3675d45c56f830ce74daab"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga7f19ece388b11cdfdf5ce6ea92a76d1a"><td class="memItemLeft" align="right" valign="top"><a class="el" href="link__c_8h.html#ad7a35fa85166c1d1839000ac10353068">__LINK_C</a> void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group___u_a_r_t.html#ga7f19ece388b11cdfdf5ce6ea92a76d1a">uart_set_rx_interrupt_callback</a> (<a class="el" href="group___u_a_r_t.html#gaee996d0581a66981e863c2ff4df0be96">uart_rx_inthandler_t</a> cb)</td></tr>
+<tr class="memdesc:ga7f19ece388b11cdfdf5ce6ea92a76d1a"><td class="mdescLeft">&#160;</td><td class="mdescRight">Configure the callback function to be called on UART RX interrupt.  <a href="#ga7f19ece388b11cdfdf5ce6ea92a76d1a">More...</a><br /></td></tr>
+<tr class="separator:ga7f19ece388b11cdfdf5ce6ea92a76d1a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga6fc13a8da8aebe1bf088d32771aa9aa9"><td class="memItemLeft" align="right" valign="top"><a class="el" href="link__c_8h.html#ad7a35fa85166c1d1839000ac10353068">__LINK_C</a> <a class="el" href="types_8h.html#a9ad6b2dc3cbff040775e79656fe8e1a3">error_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group___u_a_r_t.html#ga6fc13a8da8aebe1bf088d32771aa9aa9">uart_rx_interrupt_enable</a> (bool enabled)</td></tr>
+<tr class="memdesc:ga6fc13a8da8aebe1bf088d32771aa9aa9"><td class="mdescLeft">&#160;</td><td class="mdescRight">Enable or disable UART RX interrupt from occuring.  <a href="#ga6fc13a8da8aebe1bf088d32771aa9aa9">More...</a><br /></td></tr>
+<tr class="separator:ga6fc13a8da8aebe1bf088d32771aa9aa9"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <p>UART API. </p>
@@ -130,6 +146,27 @@ Functions</h2></td></tr>
 <a href="#" onclick="location.href='mai'+'lto:'+'gle'+'nn'+'.er'+'ge'+'ert'+'s@'+'uan'+'tw'+'erp'+'en'+'.be'; return false;">glenn<span style="display: none;">.nosp@m.</span>.erg<span style="display: none;">.nosp@m.</span>eerts<span style="display: none;">.nosp@m.</span>@uan<span style="display: none;">.nosp@m.</span>twerp<span style="display: none;">.nosp@m.</span>en.b<span style="display: none;">.nosp@m.</span>e</a> </dd>
 <dd>
 <a href="#" onclick="location.href='mai'+'lto:'+'dan'+'ie'+'l.v'+'an'+'den'+'ak'+'ker'+'@u'+'ant'+'we'+'rpe'+'n.'+'be'; return false;">danie<span style="display: none;">.nosp@m.</span>l.va<span style="display: none;">.nosp@m.</span>ndena<span style="display: none;">.nosp@m.</span>kker<span style="display: none;">.nosp@m.</span>@uant<span style="display: none;">.nosp@m.</span>werp<span style="display: none;">.nosp@m.</span>en.be</a> </dd></dl>
+<h2 class="groupheader">Typedef Documentation</h2>
+<a class="anchor" id="gaee996d0581a66981e863c2ff4df0be96"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">typedef void(* uart_rx_inthandler_t) (char rx_data)</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>RX callback function pointer prototype. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">rx_data</td><td>the received byte </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
 <h2 class="groupheader">Function Documentation</h2>
 <a class="anchor" id="gad43125d70a4337b3c10d594393127596"></a>
 <div class="memitem">
@@ -146,6 +183,57 @@ Functions</h2></td></tr>
 
 <p>Initialise the uart port. </p>
 <p>This function initialised the UART port of the selected MCU. This function is NOT part of the 'user' API and should only be called from the initialisation code of the specific platform </p>
+
+</div>
+</div>
+<a class="anchor" id="ga6fc13a8da8aebe1bf088d32771aa9aa9"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="link__c_8h.html#ad7a35fa85166c1d1839000ac10353068">__LINK_C</a> <a class="el" href="types_8h.html#a9ad6b2dc3cbff040775e79656fe8e1a3">error_t</a> uart_rx_interrupt_enable </td>
+          <td>(</td>
+          <td class="paramtype">bool&#160;</td>
+          <td class="paramname"><em>enabled</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Enable or disable UART RX interrupt from occuring. </p>
+<p>Enabling the interrupt requires setting the callback function using <a class="el" href="group___u_a_r_t.html#ga7f19ece388b11cdfdf5ce6ea92a76d1a" title="Configure the callback function to be called on UART RX interrupt. ">uart_set_rx_interrupt_callback()</a> beforehand.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">enabled</td><td>true if interrupt should enabled, false if interrupt should not be enabled </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>error_t SUCCESS if the interrupt was enabled/disables successfully EOFF if the interrupt callback has not yet been configured while enabling </dd></dl>
+
+</div>
+</div>
+<a class="anchor" id="ga7f19ece388b11cdfdf5ce6ea92a76d1a"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="link__c_8h.html#ad7a35fa85166c1d1839000ac10353068">__LINK_C</a> void uart_set_rx_interrupt_callback </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="group___u_a_r_t.html#gaee996d0581a66981e863c2ff4df0be96">uart_rx_inthandler_t</a>&#160;</td>
+          <td class="paramname"><em>cb</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Configure the callback function to be called on UART RX interrupt. </p>
+<p>Please note this callback is executed in interrupt process and thus should return asap.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">cb</td><td>function pointer to the callback function to be executed </td></tr>
+  </table>
+  </dd>
+</dl>
 
 </div>
 </div>
@@ -209,6 +297,30 @@ Functions</h2></td></tr>
 
 </div>
 </div>
+<a class="anchor" id="ga6e55b1d14ffc7b4deb749b6fb764ede3"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="link__c_8h.html#ad7a35fa85166c1d1839000ac10353068">__LINK_C</a> void uart_transmit_string </td>
+          <td>(</td>
+          <td class="paramtype">char const *&#160;</td>
+          <td class="paramname"><em>string</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Transmit a terminated string over the UART. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">string</td><td>pointer to the start of the terminated string to send </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
 <a class="anchor" id="ga97c725ef2b3675d45c56f830ce74daab"></a>
 <div class="memitem">
 <div class="memproto">
@@ -233,7 +345,7 @@ Functions</h2></td></tr>
 <!-- start footer part -->
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
-    <li class="footer">Generated on Sat Jun 6 2015 18:15:00 for OSS-7: Open Source Stack for DASH7 Alliance Protocol by
+    <li class="footer">Generated on Wed Aug 26 2015 21:30:45 for OSS-7: Open Source Stack for DASH7 Alliance Protocol by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.8.9.1 </li>
   </ul>

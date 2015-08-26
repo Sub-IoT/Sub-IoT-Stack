@@ -1,7 +1,9 @@
 var dir_9f9f3407a3c8662cc62d64402458fd0f =
 [
     [ "bootstrap.h", "bootstrap_8h.html", "bootstrap_8h" ],
+    [ "crc.h", "crc_8h.html", "crc_8h" ],
     [ "errors.h", "errors_8h.html", "errors_8h" ],
+    [ "fifo.h", "fifo_8h.html", "fifo_8h" ],
     [ "framework_doc.h", "framework__doc_8h.html", null ],
     [ "link_c.h", "link__c_8h.html", "link__c_8h" ],
     [ "log.h", "log_8h.html", "log_8h" ],
