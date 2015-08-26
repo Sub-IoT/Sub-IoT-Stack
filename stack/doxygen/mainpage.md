@@ -16,8 +16,8 @@ For more information make sure to visit the following pages:
 - [OSS-7 architecture](architecture.md)
 - [Community](community.md)
 - [Resources](resources.md)
-- [OSS-7 blog](http://cosys-lab.github.io/dash7-ap-open-source-stack/)
-- [OSS-7 GitHub project](https://github.com/CoSys-Lab/dash7-ap-open-source-stack)
+- [OSS-7 blog](http://mosaic-lopow.github.io/dash7-ap-open-source-stack/)
+- [OSS-7 GitHub project](https://github.com/mosaic-lopow/dash7-ap-open-source-stack)
 
 
 

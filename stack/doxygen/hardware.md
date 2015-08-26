@@ -35,7 +35,7 @@ Currently there are two baluns available for this module, 433MHz and 868MHz.
 
 ![Gaint Gecko with CC1101 RF module](GG_CC1101.jpg)
 
-Schematics and Eagle files are available in the [git repository](https://github.com/CoSys-Lab/dash7-ap-open-source-stack/tree/master/hardware/stk3700-cc1101). If there are any questions, contact us through the mailing list.
+Schematics and Eagle files are available in the [git repository](https://github.com/mosaic-lopow/dash7-ap-open-source-stack/tree/master/hardware/stk3700-cc1101). If there are any questions, contact us through the mailing list.
 
 
 ##Wizzikit##
