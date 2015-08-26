@@ -1,0 +1,28 @@
+var _e_f_m32_h_g___s_t_k3400_2inc_2platform_8h =
+[
+    [ "BUTTON0", "_e_f_m32_h_g___s_t_k3400_2inc_2platform_8h.html#ac3c25392012bbb1b3dc72e9c8847c806", null ],
+    [ "BUTTON1", "_e_f_m32_h_g___s_t_k3400_2inc_2platform_8h.html#a8b8426d5c8d4a02dc1b15353d4bc613d", null ],
+    [ "DEBUG0", "_e_f_m32_h_g___s_t_k3400_2inc_2platform_8h.html#a9be2d4c9adc21e2ad1fb440b2a52812c", null ],
+    [ "DEBUG1", "_e_f_m32_h_g___s_t_k3400_2inc_2platform_8h.html#a8a1c50884986470fb31604484158b637", null ],
+    [ "DEBUG2", "_e_f_m32_h_g___s_t_k3400_2inc_2platform_8h.html#a76f3f41704b017cd5003628dd0bc366b", null ],
+    [ "DEBUG3", "_e_f_m32_h_g___s_t_k3400_2inc_2platform_8h.html#a2f6055296691625d4d13d6bb0a77e315", null ],
+    [ "DEBUG_PIN_NUM", "_e_f_m32_h_g___s_t_k3400_2inc_2platform_8h.html#adf186612338d0298248b79a9444b28d3", null ],
+    [ "HAS_LCD", "_e_f_m32_h_g___s_t_k3400_2inc_2platform_8h.html#a5345e308a5a361beb36e466e8abcad18", null ],
+    [ "HW_NUM_LEDS", "_e_f_m32_h_g___s_t_k3400_2inc_2platform_8h.html#ae55b725f9a2456799184fe28e4f71e60", null ],
+    [ "NUM_USERBUTTONS", "_e_f_m32_h_g___s_t_k3400_2inc_2platform_8h.html#a711b79f5e2af016adea2af8f46306683", null ],
+    [ "SPI_BAUDRATE", "_e_f_m32_h_g___s_t_k3400_2inc_2platform_8h.html#a4dad4b502d445b46f33cdd159e04051a", null ],
+    [ "SPI_CHANNEL", "_e_f_m32_h_g___s_t_k3400_2inc_2platform_8h.html#aa8cbb3355883e35c18820bfa63c4ce3a", null ],
+    [ "SPI_CLOCK", "_e_f_m32_h_g___s_t_k3400_2inc_2platform_8h.html#a2088ee4b3ab36cfe1ad2c379fcbf871a", null ],
+    [ "SPI_PIN_CLK", "_e_f_m32_h_g___s_t_k3400_2inc_2platform_8h.html#af1d80bebb2ac6612ef0708dd63c50711", null ],
+    [ "SPI_PIN_CS", "_e_f_m32_h_g___s_t_k3400_2inc_2platform_8h.html#a1ac3f651965edaa13ae45f8ce3388190", null ],
+    [ "SPI_PIN_MISO", "_e_f_m32_h_g___s_t_k3400_2inc_2platform_8h.html#a8c324b7fda3d7ab955ab2e1c14e9bba1", null ],
+    [ "SPI_PIN_MOSI", "_e_f_m32_h_g___s_t_k3400_2inc_2platform_8h.html#ae92d87a045a62c81ba03225f826d0d66", null ],
+    [ "SPI_ROUTE_LOCATION", "_e_f_m32_h_g___s_t_k3400_2inc_2platform_8h.html#a54770d7ff0426fec38019d124251d39d", null ],
+    [ "UART_BAUDRATE", "_e_f_m32_h_g___s_t_k3400_2inc_2platform_8h.html#a2c7ed0283bd6f2f9d791860d6254ef4f", null ],
+    [ "UART_CHANNEL", "_e_f_m32_h_g___s_t_k3400_2inc_2platform_8h.html#a83c524f684970472a9ae3ba181fdec80", null ],
+    [ "UART_CLOCK", "_e_f_m32_h_g___s_t_k3400_2inc_2platform_8h.html#a37ba45746e4dd0d1fbf6320bd4c0ce25", null ],
+    [ "UART_PIN_RX", "_e_f_m32_h_g___s_t_k3400_2inc_2platform_8h.html#a3aa1a02b68043877d2940b641989e8f1", null ],
+    [ "UART_PIN_TX", "_e_f_m32_h_g___s_t_k3400_2inc_2platform_8h.html#a4df62a1f19582066fa34d18207192c8b", null ],
+    [ "UART_ROUTE_LOCATION", "_e_f_m32_h_g___s_t_k3400_2inc_2platform_8h.html#abec6a31837b0438637d50a92d9d6b80d", null ],
+    [ "USB_DEVICE", "_e_f_m32_h_g___s_t_k3400_2inc_2platform_8h.html#ab7858cae755a8a410d6495765def4daa", null ]
+];
