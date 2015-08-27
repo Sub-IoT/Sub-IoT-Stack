@@ -36,6 +36,7 @@
  *
  */
 #define FAIL		5001
+#define ERROR		FAIL
   
 /* \brief Parameter passed in was too big, or outside the expected range
  *
