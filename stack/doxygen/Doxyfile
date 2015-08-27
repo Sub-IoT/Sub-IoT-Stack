@@ -801,6 +801,11 @@ EXCLUDE                = ../framework/hal/chips/efm32gg/CMSIS \
 						 ../framework/hal/chips/cc430/driverlib \
 						 ../framework/hal/platforms/sim \
 						 ../framework/hal/chips/kl02z/CMSIS \
+						 ../framework/hal/chips/efm32hg/CMSIS \
+						 ../framework/hal/chips/efm32hg/emlib \
+						 ../framework/hal/chips/efm32hg/kits \
+						 ../framework/hal/chips/efm32hg/usb \
+						 ../framework/hal/platforms/EFM32HG_STK3400/config 
 
 # The EXCLUDE_SYMLINKS tag can be used to select whether or not files or
 # directories that are symbolic links (a Unix file system feature) are excluded

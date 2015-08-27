@@ -8,7 +8,7 @@ For an overview of supported hardware, [look here](hardware.md)
 
 ## Prerequisites
 
-- OSS-7 code. The code is hosted on [github](https://github.com/CoSys-Lab/dash7-ap-open-source-stack/commits/master), so either fork or clone the repository.
+- OSS-7 code. The code is hosted on [github](https://github.com/mosaic-lopow/dash7-ap-open-source-stack/commits/master), so either fork or clone the repository.
 - [CMake](http://www.cmake.org/) (v2.8.12 or greater) as a flexible build system
 - a GCC-based toolchain matching the target platform for example [GCC ARM Embedded](https://launchpad.net/gcc-arm-embedded) for ARM Cortex-M bases platforms or [Texas Instruments MSP430-GCC](http://software-dl.ti.com/msp430/msp430_public_sw/mcu/msp430/MSPGCC/latest/index_FDS.html)
 for CC430 based platforms
