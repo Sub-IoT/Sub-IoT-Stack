@@ -1,5 +1,4 @@
 var searchData=
 [
-  ['display_5faddressmode_5ft',['DISPLAY_AddressMode_t',['../group___display.html#ga9bd101ffd5a8bdde4095b5b6e0f44cfc',1,'display.h']]],
-  ['display_5fcolourmode_5ft',['DISPLAY_ColourMode_t',['../group___display.html#ga582477144c2aad1388d54d6291e67107',1,'display.h']]]
+  ['fs_5fstorage_5fclass_5ft',['fs_storage_class_t',['../fs_8h.html#aa49176044ab1e178caaa7afe83450066',1,'fs.h']]]
 ];

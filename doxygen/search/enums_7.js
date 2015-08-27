@@ -1,5 +1,4 @@
 var searchData=
 [
-  ['lcdsymbol',['lcdSymbol',['../segmentlcdconfig_8h.html#ac2c9c608938ac875edfcfec5c75737e4',1,'segmentlcdconfig.h']]],
-  ['log_5fstack_5flayer_5ft',['log_stack_layer_t',['../group__logging.html#ga74f3f01cd15381ebeccd55047988c127',1,'log.h']]]
+  ['session_5fstate_5ft',['session_state_t',['../d7asp_8h.html#afc9c467c0d8264ea38f8e80d8deab0df',1,'d7asp.h']]]
 ];

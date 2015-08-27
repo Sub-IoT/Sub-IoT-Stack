@@ -10,8 +10,6 @@ var searchData=
   ['packet_5fqueue_5fmark_5fprocessing',['packet_queue_mark_processing',['../packet__queue_8c.html#a81145785b23f3e0c75da8d15f4169f46',1,'packet_queue_mark_processing(packet_t *packet):&#160;packet_queue.c'],['../packet__queue_8h.html#aa19ab37cb2e825ca785fbc585f10d36b',1,'packet_queue_mark_processing(packet_t *):&#160;packet_queue.c']]],
   ['packet_5fqueue_5fmark_5freceived',['packet_queue_mark_received',['../packet__queue_8c.html#a89272b2af2eb8c33bb1538874d3bb7d2',1,'packet_queue_mark_received(hw_radio_packet_t *hw_radio_packet):&#160;packet_queue.c'],['../packet__queue_8h.html#a238e4acdd72f5aa0006c5eb065707e6f',1,'packet_queue_mark_received(hw_radio_packet_t *):&#160;packet_queue.c']]],
   ['packet_5freceived',['packet_received',['../dll_8c.html#ac9f3304b3551f03451ba7b0228e47d27',1,'dll.c']]],
-  ['pcnt0_5firqhandler',['PCNT0_IRQHandler',['../system__efm32hg_8h.html#afd61b5c71b995f3b66ead020bb6eb17a',1,'system_efm32hg.h']]],
-  ['pendsv_5fhandler',['PendSV_Handler',['../system__efm32hg_8h.html#a6303e1f258cbdc1f970ce579cc015623',1,'system_efm32hg.h']]],
   ['porta_5firqhandler',['PORTA_IRQHandler',['../kl02z__gpio_8c.html#afaa9ba3a3a684f1340c02a531d7b2321',1,'kl02z_gpio.c']]],
   ['portb_5firqhandler',['PORTB_IRQHandler',['../kl02z__gpio_8c.html#a2b09e69259dd337c6929e10ec9f42e17',1,'kl02z_gpio.c']]]
 ];

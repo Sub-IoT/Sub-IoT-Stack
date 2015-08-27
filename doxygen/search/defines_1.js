@@ -1,23 +1,10 @@
 var searchData=
 [
-  ['acmp_5fcapsense',['ACMP_CAPSENSE',['../capsenseconfig_8h.html#a5fbc8dfaed9063783d9622a1e95f53fe',1,'capsenseconfig.h']]],
-  ['acmp_5fcapsense_5fclken',['ACMP_CAPSENSE_CLKEN',['../capsenseconfig_8h.html#a3a0526db5529370392bc021f60be42e4',1,'capsenseconfig.h']]],
-  ['acmp_5fchannels',['ACMP_CHANNELS',['../capsenseconfig_8h.html#aa4a5fbb930ed23b1fd316eb1f60b1db1',1,'capsenseconfig.h']]],
   ['action_5ffile_5fid_5fbroadcast_5fcounter',['ACTION_FILE_ID_BROADCAST_COUNTER',['../fs_8c.html#a2d36d3b5295ce80bec446d8b683f9296',1,'fs.c']]],
   ['addr',['ADDR',['../cc1101__constants_8h.html#ac9f31f726d2933782e2efda7136a25fd',1,'cc1101_constants.h']]],
   ['agcctrl0',['AGCCTRL0',['../cc1101__constants_8h.html#a2b146a11145e2370da8db5044aba0afc',1,'cc1101_constants.h']]],
   ['agcctrl1',['AGCCTRL1',['../cc1101__constants_8h.html#a2620a8b1c9a344fb7989502946689848',1,'cc1101_constants.h']]],
   ['agcctrl2',['AGCCTRL2',['../cc1101__constants_8h.html#a617370d4b4b2a1a1368739ee172ecf19',1,'cc1101_constants.h']]],
   ['agctest',['AGCTEST',['../cc1101__constants_8h.html#ac3aaf5c3eec5b58c5be975b8b842d8e9',1,'cc1101_constants.h']]],
-  ['align4',['ALIGN4',['../arm__math_8h.html#a280a402ab28c399fcc4168f2ed631acb',1,'arm_math.h']]],
-  ['alp_5fitf_5fid_5fd7asp',['ALP_ITF_ID_D7ASP',['../alp_8h.html#a4c60a330539ba5499aef5e51aa81b507',1,'alp.h']]],
-  ['armbitrevindextable1024_5ftable_5flength',['ARMBITREVINDEXTABLE1024_TABLE_LENGTH',['../arm__common__tables_8h.html#af3b3659a55efaf414757d15e6c0ea9cc',1,'arm_common_tables.h']]],
-  ['armbitrevindextable2048_5ftable_5flength',['ARMBITREVINDEXTABLE2048_TABLE_LENGTH',['../arm__common__tables_8h.html#a1137f42be79c5941e942b58e262b5225',1,'arm_common_tables.h']]],
-  ['armbitrevindextable4096_5ftable_5flength',['ARMBITREVINDEXTABLE4096_TABLE_LENGTH',['../arm__common__tables_8h.html#af08eb635c0e1cf0ab3e29931f9bf1492',1,'arm_common_tables.h']]],
-  ['armbitrevindextable_5f128_5ftable_5flength',['ARMBITREVINDEXTABLE_128_TABLE_LENGTH',['../arm__common__tables_8h.html#abb73376f7efda869394aab2acef4291c',1,'arm_common_tables.h']]],
-  ['armbitrevindextable_5f256_5ftable_5flength',['ARMBITREVINDEXTABLE_256_TABLE_LENGTH',['../arm__common__tables_8h.html#aa7dc18c3b4f8d76f5a29f7b182007934',1,'arm_common_tables.h']]],
-  ['armbitrevindextable_5f512_5ftable_5flength',['ARMBITREVINDEXTABLE_512_TABLE_LENGTH',['../arm__common__tables_8h.html#ab21231782baf177ef3edad11aeba5a4f',1,'arm_common_tables.h']]],
-  ['armbitrevindextable_5f_5f16_5ftable_5flength',['ARMBITREVINDEXTABLE__16_TABLE_LENGTH',['../arm__common__tables_8h.html#a52289ebb691669410fbc40d1a8a1562a',1,'arm_common_tables.h']]],
-  ['armbitrevindextable_5f_5f32_5ftable_5flength',['ARMBITREVINDEXTABLE__32_TABLE_LENGTH',['../arm__common__tables_8h.html#a6e12fc7073f15899078a1b2d8f4afb4c',1,'arm_common_tables.h']]],
-  ['armbitrevindextable_5f_5f64_5ftable_5flength',['ARMBITREVINDEXTABLE__64_TABLE_LENGTH',['../arm__common__tables_8h.html#a73e1987baf5282c699168bccf635930e',1,'arm_common_tables.h']]]
+  ['alp_5fitf_5fid_5fd7asp',['ALP_ITF_ID_D7ASP',['../alp_8h.html#a4c60a330539ba5499aef5e51aa81b507',1,'alp.h']]]
 ];

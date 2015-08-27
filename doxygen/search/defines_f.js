@@ -1,7 +1,6 @@
 var searchData=
 [
   ['scheduler_5fmax_5ftasks',['SCHEDULER_MAX_TASKS',['../scheduler_8c.html#af12cab9399b7b23dbe9fe6037e633cc8',1,'scheduler.c']]],
-  ['sharp_5fmemlcd_5fdevice_5fname',['SHARP_MEMLCD_DEVICE_NAME',['../displayls013b7dh03config_8h.html#a6d1451f8201b7ba7eb1016aca6d3361f',1,'displayls013b7dh03config.h']]],
   ['snprintf',['snprintf',['../wizzimote_2printf_2printf_8h.html#aa367b75c5aed883fef5befbdf04835a4',1,'printf.h']]],
   ['spi_5fbaudrate',['SPI_BAUDRATE',['../_e_f_m32_g_g___s_t_k3700_2inc_2platform_8h.html#a4dad4b502d445b46f33cdd159e04051a',1,'SPI_BAUDRATE():&#160;platform.h'],['../_e_f_m32_h_g___s_t_k3400_2inc_2platform_8h.html#a4dad4b502d445b46f33cdd159e04051a',1,'SPI_BAUDRATE():&#160;platform.h'],['../ifest_2inc_2platform_8h.html#a4dad4b502d445b46f33cdd159e04051a',1,'SPI_BAUDRATE():&#160;platform.h'],['../matrix__tp1089_2inc_2platform_8h.html#a4dad4b502d445b46f33cdd159e04051a',1,'SPI_BAUDRATE():&#160;platform.h']]],
   ['spi_5fchannel',['SPI_CHANNEL',['../_e_f_m32_g_g___s_t_k3700_2inc_2platform_8h.html#aa8cbb3355883e35c18820bfa63c4ce3a',1,'SPI_CHANNEL():&#160;platform.h'],['../_e_f_m32_h_g___s_t_k3400_2inc_2platform_8h.html#aa8cbb3355883e35c18820bfa63c4ce3a',1,'SPI_CHANNEL():&#160;platform.h'],['../ifest_2inc_2platform_8h.html#aa8cbb3355883e35c18820bfa63c4ce3a',1,'SPI_CHANNEL():&#160;platform.h'],['../matrix__tp1089_2inc_2platform_8h.html#aa8cbb3355883e35c18820bfa63c4ce3a',1,'SPI_CHANNEL():&#160;platform.h']]],

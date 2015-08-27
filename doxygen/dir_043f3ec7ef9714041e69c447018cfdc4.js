@@ -7,5 +7,6 @@ var dir_043f3ec7ef9714041e69c447018cfdc4 =
     [ "cc430_mcu.c", "cc430__mcu_8c.html", "cc430__mcu_8c" ],
     [ "cc430_pins.c", "cc430__pins_8c.html", "cc430__pins_8c" ],
     [ "cc430_system.c", "cc430__system_8c.html", "cc430__system_8c" ],
-    [ "cc430_timer.c", "cc430__timer_8c.html", "cc430__timer_8c" ]
+    [ "cc430_timer.c", "cc430__timer_8c.html", "cc430__timer_8c" ],
+    [ "cc430_uart.c", "cc430__uart_8c.html", "cc430__uart_8c" ]
 ];

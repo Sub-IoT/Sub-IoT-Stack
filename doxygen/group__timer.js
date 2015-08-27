@@ -3,11 +3,11 @@ var group__timer =
     [ "hwtimer_id_t", "group__timer.html#ga844e8f2d8eddf6ddd04f80440efe4c4f", null ],
     [ "hwtimer_tick_t", "group__timer.html#gac76c087138a5a39e6bd3bbf4c3bad1d7", null ],
     [ "timer_callback_t", "group__timer.html#ga83effb2de3d93d37825bb84a27faa588", [
-      [ "HWTIMER_FREQ_1MS", "group__timer.html#gga1f9aebf1de3ebbf4283a4dcf73308562a1197293e3e64144d1ae9e333009f8db4", null ],
-      [ "HWTIMER_TICKS_1MS", "group__timer.html#gga1f9aebf1de3ebbf4283a4dcf73308562aaddf5eb2ef431048d3175a623c16f87a", null ],
-      [ "HWTIMER_FREQ_32K", "group__timer.html#gga1f9aebf1de3ebbf4283a4dcf73308562a2a41ff7194263e28f863e9691116f4ee", null ],
-      [ "HWTIMER_TICKS_32K", "group__timer.html#gga1f9aebf1de3ebbf4283a4dcf73308562ae1fa3454c99d62a970477be63ffd4a60", null ],
-      [ "HWTIMER_NUM", "group__timer.html#gga1f9aebf1de3ebbf4283a4dcf73308562a862ad02b06b017669c4c073fe2679e8a", null ]
+      [ "HWTIMER_FREQ_1MS", "group__timer.html#gga385c44f6fb256e5716a2302a5b940388a1197293e3e64144d1ae9e333009f8db4", null ],
+      [ "HWTIMER_TICKS_1MS", "group__timer.html#gga385c44f6fb256e5716a2302a5b940388aaddf5eb2ef431048d3175a623c16f87a", null ],
+      [ "HWTIMER_FREQ_32K", "group__timer.html#gga385c44f6fb256e5716a2302a5b940388a2a41ff7194263e28f863e9691116f4ee", null ],
+      [ "HWTIMER_TICKS_32K", "group__timer.html#gga385c44f6fb256e5716a2302a5b940388ae1fa3454c99d62a970477be63ffd4a60", null ],
+      [ "HWTIMER_NUM", "group__timer.html#gga385c44f6fb256e5716a2302a5b940388a862ad02b06b017669c4c073fe2679e8a", null ]
     ] ],
     [ "hw_timer_cancel", "group__timer.html#ga843b1f15e7ea1545cdd859d01857a4fd", null ],
     [ "hw_timer_counter_reset", "group__timer.html#ga1bb51a6e9ca8747f69c5b300a361d8c1", null ],

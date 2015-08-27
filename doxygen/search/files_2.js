@@ -1,6 +1,5 @@
 var searchData=
 [
-  ['capsenseconfig_2eh',['capsenseconfig.h',['../capsenseconfig_8h.html',1,'']]],
   ['cc1101_2ec',['cc1101.c',['../cc1101_8c.html',1,'']]],
   ['cc1101_2eh',['cc1101.h',['../cc1101_8h.html',1,'']]],
   ['cc1101_5fconstants_2eh',['cc1101_constants.h',['../cc1101__constants_8h.html',1,'']]],
@@ -19,18 +18,7 @@ var searchData=
   ['cc430_5fsystem_2ec',['cc430_system.c',['../cc430__system_8c.html',1,'']]],
   ['cc430_5ftimer_2ec',['cc430_timer.c',['../cc430__timer_8c.html',1,'']]],
   ['cc430_5fuart_2ec',['cc430_uart.c',['../cc430__uart_8c.html',1,'']]],
-  ['cdc_2ec',['cdc.c',['../cdc_8c.html',1,'']]],
-  ['cdc_2eh',['cdc.h',['../cdc_8h.html',1,'']]],
   ['community_2emd',['community.md',['../community_8md.html',1,'']]],
-  ['core_5fcm0_2eh',['core_cm0.h',['../core__cm0_8h.html',1,'']]],
-  ['core_5fcm0plus_2eh',['core_cm0plus.h',['../core__cm0plus_8h.html',1,'']]],
-  ['core_5fcm3_2eh',['core_cm3.h',['../core__cm3_8h.html',1,'']]],
-  ['core_5fcm4_2eh',['core_cm4.h',['../core__cm4_8h.html',1,'']]],
-  ['core_5fcm4_5fsimd_2eh',['core_cm4_simd.h',['../core__cm4__simd_8h.html',1,'']]],
-  ['core_5fcmfunc_2eh',['core_cmFunc.h',['../core__cm_func_8h.html',1,'']]],
-  ['core_5fcminstr_2eh',['core_cmInstr.h',['../core__cm_instr_8h.html',1,'']]],
-  ['core_5fsc000_2eh',['core_sc000.h',['../core__sc000_8h.html',1,'']]],
-  ['core_5fsc300_2eh',['core_sc300.h',['../core__sc300_8h.html',1,'']]],
   ['crc_2ec',['crc.c',['../crc_8c.html',1,'']]],
   ['crc_2eh',['crc.h',['../crc_8h.html',1,'']]]
 ];

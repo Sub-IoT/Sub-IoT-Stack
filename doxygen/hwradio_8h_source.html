@@ -242,7 +242,7 @@ $(document).ready(function(){initNavTree('hwradio_8h_source.html','');});
 <div class="line"><a name="l00183"></a><span class="lineno">  183</span>&#160;<span class="comment">//this struct is &quot;packed&quot; so it occupies minimal space</span></div>
 <div class="line"><a name="l00184"></a><span class="lineno">  184</span>&#160;<span class="comment">//and to ensure that, the &#39;prefix&#39; fields (including length) of hw_radio_packet_t</span></div>
 <div class="line"><a name="l00185"></a><span class="lineno">  185</span>&#160;<span class="comment">//are 32-bits aligned (that is sizeof(hw_radio_packet_t)%4 == 0)</span></div>
-<div class="line"><a name="l00186"></a><span class="lineno">  186</span>&#160;} <a class="code" href="group___c_o_m_m_o_n.html#gabd10f17c7b1949b576d219806aef2d43">__attribute__</a> ((packed)) hw_rx_metadata_t; </div>
+<div class="line"><a name="l00186"></a><span class="lineno">  186</span>&#160;} <a class="code" href="cc430__timer_8c.html#a95a3186fae9891fb5e606d0d842f5b51">__attribute__</a> ((packed)) hw_rx_metadata_t; </div>
 <div class="line"><a name="l00187"></a><span class="lineno">  187</span>&#160;</div>
 <div class="line"><a name="l00191"></a><span class="lineno">  191</span>&#160;typedef struct</div>
 <div class="line"><a name="l00192"></a><span class="lineno">  192</span>&#160;{</div>
@@ -253,7 +253,7 @@ $(document).ready(function(){initNavTree('hwradio_8h_source.html','');});
 <div class="line"><a name="l00198"></a><span class="lineno">  198</span>&#160;<span class="comment">//this struct is &quot;packed&quot; so it occupies minimal space</span></div>
 <div class="line"><a name="l00199"></a><span class="lineno">  199</span>&#160;<span class="comment">//and to ensure that, the &#39;prefix&#39; fields (including length) of hw_radio_packet_t</span></div>
 <div class="line"><a name="l00200"></a><span class="lineno">  200</span>&#160;<span class="comment">//are 32-bits aligned (that is sizeof(hw_radio_packet_t)%4 == 0)</span></div>
-<div class="line"><a name="l00201"></a><span class="lineno">  201</span>&#160;} <a class="code" href="group___c_o_m_m_o_n.html#gabd10f17c7b1949b576d219806aef2d43">__attribute__</a> ((packed)) hw_tx_metadata_t;</div>
+<div class="line"><a name="l00201"></a><span class="lineno">  201</span>&#160;} <a class="code" href="cc430__timer_8c.html#a95a3186fae9891fb5e606d0d842f5b51">__attribute__</a> ((packed)) hw_tx_metadata_t;</div>
 <div class="line"><a name="l00202"></a><span class="lineno">  202</span>&#160;</div>
 <div class="line"><a name="l00219"></a><span class="lineno">  219</span>&#160;typedef struct</div>
 <div class="line"><a name="l00220"></a><span class="lineno">  220</span>&#160;{</div>
@@ -275,7 +275,7 @@ $(document).ready(function(){initNavTree('hwradio_8h_source.html','');});
 <div class="line"><a name="l00236"></a><span class="lineno">  236</span>&#160;    <span class="comment">//this struct is &quot;packed&quot; so it occupies minimal space</span></div>
 <div class="line"><a name="l00237"></a><span class="lineno">  237</span>&#160;    <span class="comment">//and to ensure that, the &#39;prefix&#39; fields (including length) of hw_radio_packet_t</span></div>
 <div class="line"><a name="l00238"></a><span class="lineno">  238</span>&#160;    <span class="comment">//are 32-bits alligned (that is sizeof(hw_radio_packet_t)%4 == 0)</span></div>
-<div class="line"><a name="l00239"></a><span class="lineno">  239</span>&#160;} <a class="code" href="group___c_o_m_m_o_n.html#gabd10f17c7b1949b576d219806aef2d43">__attribute__</a> ((packed)) hw_radio_packet_t;</div>
+<div class="line"><a name="l00239"></a><span class="lineno">  239</span>&#160;} <a class="code" href="cc430__timer_8c.html#a95a3186fae9891fb5e606d0d842f5b51">__attribute__</a> ((packed)) hw_radio_packet_t;</div>
 <div class="line"><a name="l00240"></a><span class="lineno">  240</span>&#160;</div>
 <div class="line"><a name="l00249"></a><span class="lineno"><a class="line" href="group__radio.html#ga1ea11be8a05e4a87040bd5f0c10c911c">  249</a></span>&#160;<span class="preprocessor">#define HW_PACKET_BUF_SIZE(length) (sizeof(hw_radio_packet_t) + length)</span></div>
 <div class="line"><a name="l00250"></a><span class="lineno">  250</span>&#160;</div>
@@ -324,7 +324,6 @@ $(document).ready(function(){initNavTree('hwradio_8h_source.html','');});
 <div class="ttc" id="group__radio_html_gaebbaa832b63f7d77fddaaf7098ad69f0"><div class="ttname"><a href="group__radio.html#gaebbaa832b63f7d77fddaaf7098ad69f0">syncword_class_t</a></div><div class="ttdeci">uint8_t syncword_class_t</div><div class="ttdoc">type of the &#39;syncword class&#39; </div><div class="ttdef"><b>Definition:</b> hwradio.h:126</div></div>
 <div class="ttc" id="structhw__tx__cfg__t_html_a156778d26c5f1d793f3bf0215eae0205"><div class="ttname"><a href="structhw__tx__cfg__t.html#a156778d26c5f1d793f3bf0215eae0205">hw_tx_cfg_t::channel_id</a></div><div class="ttdeci">channel_id_t channel_id</div><div class="ttdef"><b>Definition:</b> hwradio.h:155</div></div>
 <div class="ttc" id="structchannel__id__t_html_a93e960ef2d27c57ae12b335d35e59b47"><div class="ttname"><a href="structchannel__id__t.html#a93e960ef2d27c57ae12b335d35e59b47">channel_id_t::center_freq_index</a></div><div class="ttdeci">uint16_t center_freq_index</div><div class="ttdef"><b>Definition:</b> hwradio.h:99</div></div>
-<div class="ttc" id="group___c_o_m_m_o_n_html_gabd10f17c7b1949b576d219806aef2d43"><div class="ttname"><a href="group___c_o_m_m_o_n.html#gabd10f17c7b1949b576d219806aef2d43">__attribute__</a></div><div class="ttdeci">#define __attribute__(...)</div><div class="ttdef"><b>Definition:</b> em_common.h:67</div></div>
 <div class="ttc" id="group__radio_html_gga290fd131fe635641e94a85f5989db8bfaea7716a0020f786fce3d527816aa0d87"><div class="ttname"><a href="group__radio.html#gga290fd131fe635641e94a85f5989db8bfaea7716a0020f786fce3d527816aa0d87">PHY_SYNCWORD_CLASS1</a></div><div class="ttdef"><b>Definition:</b> hwradio.h:76</div></div>
 <div class="ttc" id="group__radio_html_gga290fd131fe635641e94a85f5989db8bfac1d0339ffdfedce2e5c8ed412231dfd4"><div class="ttname"><a href="group__radio.html#gga290fd131fe635641e94a85f5989db8bfac1d0339ffdfedce2e5c8ed412231dfd4">PHY_SYNCWORD_CLASS0</a></div><div class="ttdef"><b>Definition:</b> hwradio.h:75</div></div>
 <div class="ttc" id="group__radio_html_ga7292dedeeb8229173201c2987811fb8f"><div class="ttname"><a href="group__radio.html#ga7292dedeeb8229173201c2987811fb8f">hw_radio_send_packet</a></div><div class="ttdeci">__LINK_C error_t hw_radio_send_packet(hw_radio_packet_t *packet, tx_packet_callback_t tx_callback)</div><div class="ttdoc">Initiate a packet transmission over the air with the specified TX settings. </div><div class="ttdef"><b>Definition:</b> cc1101.c:436</div></div>
@@ -374,6 +373,7 @@ $(document).ready(function(){initNavTree('hwradio_8h_source.html','');});
 <div class="ttc" id="structchannel__id__t_html_a09e44fade2d2904b1026c1441334005e"><div class="ttname"><a href="structchannel__id__t.html#a09e44fade2d2904b1026c1441334005e">channel_id_t::channel_header_raw</a></div><div class="ttdeci">uint8_t channel_header_raw</div><div class="ttdef"><b>Definition:</b> hwradio.h:96</div></div>
 <div class="ttc" id="group__frameworktimer_html_ga77fd8f9362e4f9ee1022170189802daf"><div class="ttname"><a href="group__frameworktimer.html#ga77fd8f9362e4f9ee1022170189802daf">timer_tick_t</a></div><div class="ttdeci">uint32_t timer_tick_t</div><div class="ttdef"><b>Definition:</b> timer.h:63</div></div>
 <div class="ttc" id="group__radio_html_ga322511bb0837a24ade5987e2a5d8cb4d"><div class="ttname"><a href="group__radio.html#ga322511bb0837a24ade5987e2a5d8cb4d">phy_channel_band_t</a></div><div class="ttdeci">phy_channel_band_t</div><div class="ttdef"><b>Definition:</b> hwradio.h:44</div></div>
+<div class="ttc" id="cc430__timer_8c_html_a95a3186fae9891fb5e606d0d842f5b51"><div class="ttname"><a href="cc430__timer_8c.html#a95a3186fae9891fb5e606d0d842f5b51">__attribute__</a></div><div class="ttdeci">void __attribute__((interrupt(TIMER0_A1_VECTOR)))</div><div class="ttdef"><b>Definition:</b> cc430_timer.c:38</div></div>
 <div class="ttc" id="group__radio_html_gga5237948055f92b747764c14ae1afc6c5a8d8dd629344f3aa20914a0ef1f900dee"><div class="ttname"><a href="group__radio.html#gga5237948055f92b747764c14ae1afc6c5a8d8dd629344f3aa20914a0ef1f900dee">PHY_CLASS_NORMAL_RATE</a></div><div class="ttdef"><b>Definition:</b> hwradio.h:57</div></div>
 <div class="ttc" id="structhw__rx__cfg__t_html_a214096f4681a8aa386cfa8af2c9f3556"><div class="ttname"><a href="structhw__rx__cfg__t.html#a214096f4681a8aa386cfa8af2c9f3556">hw_rx_cfg_t::channel_id</a></div><div class="ttdeci">channel_id_t channel_id</div><div class="ttdef"><b>Definition:</b> hwradio.h:142</div></div>
 <div class="ttc" id="group__radio_html_ggacac7e6e2d75dd8527eaf4b636ac47ebba2304cc75318ef9009908fe27d875413b"><div class="ttname"><a href="group__radio.html#ggacac7e6e2d75dd8527eaf4b636ac47ebba2304cc75318ef9009908fe27d875413b">HW_CRC_VALID</a></div><div class="ttdef"><b>Definition:</b> hwradio.h:118</div></div>
@@ -384,8 +384,8 @@ $(document).ready(function(){initNavTree('hwradio_8h_source.html','');});
 <!-- start footer part -->
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
-    <li class="navelem"><a class="el" href="dir_045c9c641c9dee29b59a10159c1c0f84.html">framework</a></li><li class="navelem"><a class="el" href="dir_66c871195d82ba76f4f17d0ede637125.html">hal</a></li><li class="navelem"><a class="el" href="dir_a78f06dd3c6ee68fd59f192333ca5c60.html">inc</a></li><li class="navelem"><a class="el" href="hwradio_8h.html">hwradio.h</a></li>
-    <li class="footer">Generated on Wed Aug 26 2015 21:30:40 for OSS-7: Open Source Stack for DASH7 Alliance Protocol by
+    <li class="navelem"><a class="el" href="dir_644e041c3a6521da7b27eba0e4eb2b95.html">framework</a></li><li class="navelem"><a class="el" href="dir_8f2c340cdabd0cab4db94c39704d70a8.html">hal</a></li><li class="navelem"><a class="el" href="dir_66efcf04cc0ac2238c9977a7e49e93f8.html">inc</a></li><li class="navelem"><a class="el" href="hwradio_8h.html">hwradio.h</a></li>
+    <li class="footer">Generated on Thu Aug 27 2015 08:44:07 for OSS-7: Open Source Stack for DASH7 Alliance Protocol by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.8.9.1 </li>
   </ul>

@@ -18,7 +18,5 @@ var searchData=
   ['stk3700_5fsensors_2ec',['stk3700_sensors.c',['../stk3700__sensors_8c.html',1,'']]],
   ['stk3700_5fusb_2ec',['stk3700_usb.c',['../stk3700__usb_8c.html',1,'']]],
   ['stk3700_5fusb_5fdescriptors_2ec',['stk3700_usb_descriptors.c',['../stk3700__usb__descriptors_8c.html',1,'']]],
-  ['stk3700_5fuserbutton_2ec',['stk3700_userbutton.c',['../stk3700__userbutton_8c.html',1,'']]],
-  ['system_5fefm32hg_2ec',['system_efm32hg.c',['../system__efm32hg_8c.html',1,'']]],
-  ['system_5fefm32hg_2eh',['system_efm32hg.h',['../system__efm32hg_8h.html',1,'']]]
+  ['stk3700_5fuserbutton_2ec',['stk3700_userbutton.c',['../stk3700__userbutton_8c.html',1,'']]]
 ];

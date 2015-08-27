@@ -1,5 +1,6 @@
 var searchData=
 [
-  ['gpio',['GPIO',['../group___g_p_i_o.html',1,'']]],
-  ['gpioint',['GPIOINT',['../group___g_p_i_o_i_n_t.html',1,'']]]
+  ['lcd',['LCD',['../group___l_c_d.html',1,'']]],
+  ['leds',['LEDs',['../group___l_e_ds.html',1,'']]],
+  ['logging',['Logging',['../group__logging.html',1,'']]]
 ];

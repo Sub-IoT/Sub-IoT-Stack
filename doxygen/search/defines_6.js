@@ -8,8 +8,6 @@ var searchData=
   ['file_5fheaders',['file_headers',['../fs_8c.html#aa918ef57e89d616c349f86cd62095af7',1,'fs.c']]],
   ['file_5foffsets',['file_offsets',['../fs_8c.html#a5ba5a1a686744366e1ff739843d4780f',1,'fs.c']]],
   ['foccfg',['FOCCFG',['../cc1101__constants_8h.html#ae24810e04beb0d2178a92e0673499496',1,'cc1101_constants.h']]],
-  ['font_5fheight',['FONT_HEIGHT',['../textdisplayconfig_8h.html#a33f4fac49f2a5e27e2857eb27f054510',1,'textdisplayconfig.h']]],
-  ['font_5fwidth',['FONT_WIDTH',['../textdisplayconfig_8h.html#a7b2e9cc063e140c50b67a4f224988a45',1,'textdisplayconfig.h']]],
   ['frend0',['FREND0',['../cc1101__constants_8h.html#a779f4559a0136208a2c990ee0ba5124f',1,'cc1101_constants.h']]],
   ['frend1',['FREND1',['../cc1101__constants_8h.html#a07c63bb610a23f75a0b3ebfef8ae65e7',1,'cc1101_constants.h']]],
   ['freq0',['FREQ0',['../cc1101__constants_8h.html#adf6c435c455a2f169dd8b0361cdcbb1c',1,'cc1101_constants.h']]],

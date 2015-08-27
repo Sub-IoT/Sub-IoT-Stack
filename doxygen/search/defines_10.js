@@ -1,20 +1,11 @@
 var searchData=
 [
-  ['table_5fsize',['TABLE_SIZE',['../arm__math_8h.html#a032503e76d6f69bc67e99e909c8125da',1,'arm_math.h']]],
-  ['table_5fspacing_5fq15',['TABLE_SPACING_Q15',['../arm__math_8h.html#a60b0142af7be007902142add27919b82',1,'arm_math.h']]],
-  ['table_5fspacing_5fq31',['TABLE_SPACING_Q31',['../arm__math_8h.html#a8407c9e1347d10e3bcf0a7014f1fb2ff',1,'arm_math.h']]],
   ['test0',['TEST0',['../cc1101__constants_8h.html#ae898d2284301fc88393371e470f8db52',1,'cc1101_constants.h']]],
   ['test1',['TEST1',['../cc1101__constants_8h.html#aef8471770769d5643c8d0e9d49de0678',1,'cc1101_constants.h']]],
   ['test2',['TEST2',['../cc1101__constants_8h.html#a1b5997c11166c594b80d44bfde1cfa9c',1,'cc1101_constants.h']]],
-  ['textdisplay_5fdevice_5f0_5fcolumns',['TEXTDISPLAY_DEVICE_0_COLUMNS',['../textdisplayconfig_8h.html#a04eccf372ee982bfb23ce30e64c1883c',1,'textdisplayconfig.h']]],
-  ['textdisplay_5fdevice_5f0_5flines',['TEXTDISPLAY_DEVICE_0_LINES',['../textdisplayconfig_8h.html#a5e80909f38f7c83a881c9c4a9924f0d2',1,'textdisplayconfig.h']]],
-  ['textdisplay_5fdevices_5fmax',['TEXTDISPLAY_DEVICES_MAX',['../textdisplayconfig_8h.html#acc23f9be19f865094ddcb1f9d4cf4921',1,'textdisplayconfig.h']]],
-  ['textdisplay_5femstatus_5fbase',['TEXTDISPLAY_EMSTATUS_BASE',['../emstatus_8h.html#a65a83bba432329e332e019bf985607ab',1,'emstatus.h']]],
-  ['textdisplay_5ffont_5f8x8',['TEXTDISPLAY_FONT_8x8',['../displayconfigapp_8h.html#ae910b3c810f06000b7cdd148b947ebe0',1,'displayconfigapp.h']]],
   ['tinyprintf_5fdefine_5ftfp_5fprintf',['TINYPRINTF_DEFINE_TFP_PRINTF',['../wizzimote_2printf_2printf_8h.html#a8d50469c93c7efee0fde91bbb9a5baa3',1,'printf.h']]],
   ['tinyprintf_5fdefine_5ftfp_5fsprintf',['TINYPRINTF_DEFINE_TFP_SPRINTF',['../wizzimote_2printf_2printf_8h.html#af07f8972d02d9c81a76e44d305d2b5d5',1,'printf.h']]],
   ['tinyprintf_5foverride_5flibc',['TINYPRINTF_OVERRIDE_LIBC',['../wizzimote_2printf_2printf_8h.html#a2c374b75266b24d00a3d9b270b550d4e',1,'printf.h']]],
-  ['twiddlecoef',['twiddleCoef',['../arm__common__tables_8h.html#a9bf8c85e4c91b9b55818b3d650d2c761',1,'arm_common_tables.h']]],
   ['txbytes',['TXBYTES',['../cc1101__constants_8h.html#a9f180f03f3cd38aadc9e61001ba8d872',1,'cc1101_constants.h']]],
   ['txfifo',['TXFIFO',['../cc1101__constants_8h.html#a1daa02e093ccc73ccaf55cddf7cb3732',1,'cc1101_constants.h']]]
 ];
