@@ -78,6 +78,7 @@ ADD_LIBRARY (${CHIP_LIBRARY_NAME} OBJECT
                     kits/common/drivers/displaypalemlib.c
                     kits/common/drivers/udelay.c
                     kits/common/drivers/cdc.c
+                    kits/common/drivers/i2cspm.c
 		    		kits/common/bsp/bsp_bcc.c
 		    		kits/common/bsp/bsp_stk.c                                      
                     efm32hg_adc.c 
