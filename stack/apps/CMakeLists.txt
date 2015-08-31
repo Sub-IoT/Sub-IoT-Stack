@@ -17,13 +17,20 @@
 # limitations under the License.
 #
 
+SET(APP_EXTRA_APPS_DIR "" CACHE STRING "Path to directory containing extra, out of tree apps (optional)")
+
 include(${CMAKE_SOURCE_DIR}/cmake/app_macros.cmake)
 
 #Add the 'BUILD_APPLICATIONS' option
 OPTION(BUILD_APPLICATIONS "Build Applications" ON)
-LIST_SUBDIRS(CUR_DIRS ${CMAKE_CURRENT_SOURCE_DIR})
+LIST_SUBDIRS(APP_DIRS ${CMAKE_CURRENT_SOURCE_DIR})
+IF(NOT(APP_EXTRA_APPS_DIR STREQUAL ""))
+    LIST_SUBDIRS(EXTRA_APP_DIRS ${APP_EXTRA_APPS_DIR})
+    LIST(APPEND APP_DIRS ${EXTRA_APP_DIRS})
+ENDIF()
+
 #Add conditional options for all subdirs (which are individual applications)
-FOREACH(__dir ${CUR_DIRS})
+FOREACH(__dir ${APP_DIRS})
     GET_FILENAME_COMPONENT(__module_name ${__dir} NAME) # strip full path keeping only app name
     STRING(TOUPPER ${__module_name} __upper_name)
     SETOPTION_IF(APP_${__upper_name} "Build Application ${__dir}" OFF BUILD_APPLICATIONS)
@@ -36,11 +43,11 @@ HIDE_PARAMETERS(APP_PARAM_LIST)
 
 
 #Finally Load the individual applications
-FOREACH(__dir ${CUR_DIRS})
+FOREACH(__dir ${APP_DIRS})
     GET_FILENAME_COMPONENT(__module_name ${__dir} NAME) # strip full path keeping only app name
     GEN_PREFIX(APP_PREFIX "APP" ${__module_name})
     IF(BUILD_APPLICATIONS AND ${APP_PREFIX})
-	ADD_SUBDIRECTORY(${__dir})
+	ADD_SUBDIRECTORY(${__dir} ${CMAKE_CURRENT_BINARY_DIR}/${__module_name})
     ENDIF()	
     UNSET(APP_PREFIX)
 ENDFOREACH()
