@@ -1,9 +1,0 @@
-# Ignore everything so we can have platforms which are not managed in (this) git tree.
-# Platforms which we do want in this git tree override this behaviour in their .gitignore
-*
-!*/
-
-# except .gitignore
-!.gitignore
-!inc/*
-
