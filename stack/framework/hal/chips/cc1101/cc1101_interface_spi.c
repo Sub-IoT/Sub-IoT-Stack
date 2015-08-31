@@ -31,6 +31,8 @@
 #include "cc1101_constants.h"
 #include "cc1101_interface.h"
 
+ #include "platform.h"
+
 
 // turn on/off the debug prints
 #ifdef LOG_PHY_ENABLED

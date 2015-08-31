@@ -19,7 +19,7 @@
 
 IF(CMAKE_BUILD_TYPE STREQUAL "Debug")
     #note: they're two different params. This is on purpose
-    ADD_GLOBAL_DEFINITIONS("-DDEBUG_EFM=1" "-DDEBUG=1")
+    EXPORT_GLOBAL_COMPILE_DEFINITIONS("-DDEBUG_EFM=1" "-DDEBUG=1")
 ENDIF()
 
 #Add the linker script to use to the linker flags
@@ -33,15 +33,16 @@ INCLUDE_DIRECTORIES(CMSIS/include
 		    kits/common/drivers
 		    kits/common/bsp
 		    usb/inc
+              inc_platform
 		    )
 
 ##Export the 'inc' directory globally		    
-GLOBAL_INCLUDE_DIRECTORIES("inc")
+EXPORT_GLOBAL_INCLUDE_DIRECTORIES(inc)
 
 #Export the em libs to the platform directory ONLY
 #Please note we include 'inc' here since for complicated cmake reasons directories exported 
 #with 'GLOBAL_INCLUDE_DIRECTORIES'from chip directories are not exported to the platform directory
-PLATFORM_INCLUDE_DIRECTORIES(CMSIS/include
+EXPORT_PLATFORM_INCLUDE_DIRECTORIES(CMSIS/include
 		    CMSIS/device/include
 		    emlib/inc
 		    kits/common/drivers
