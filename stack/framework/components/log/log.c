@@ -36,7 +36,6 @@
 #ifdef FRAMEWORK_LOG_ENABLED
 
 typedef enum {
-	LOG_TYPE_ZERO = 0x00,
     LOG_TYPE_STRING = 0x01,
     LOG_TYPE_DATA = 0x02,
     LOG_TYPE_STACK = 0x03,
