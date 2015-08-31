@@ -26,13 +26,12 @@ INCLUDE_DIRECTORIES(
     ${TOOLCHAIN_DIR}/include
 )
 
-#Export the 'inc' directory globally
-GLOBAL_INCLUDE_DIRECTORIES("inc")
+EXPORT_GLOBAL_INCLUDE_DIRECTORIES(inc)
 
 #Export the em libs to the platform directory ONLY
 #Please note we include 'inc' here since for complicated cmake reasons directories exported 
 #with 'GLOBAL_INCLUDE_DIRECTORIES'from chip directories are not exported to the platform directory
-PLATFORM_INCLUDE_DIRECTORIES(
+EXPORT_PLATFORM_INCLUDE_DIRECTORIES(
     driverlib/MSP430F5xx_6xx
     inc_platform
     inc
