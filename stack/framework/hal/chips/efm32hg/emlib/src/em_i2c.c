@@ -785,7 +785,10 @@ I2C_TransferReturn_TypeDef I2C_TransferInit(I2C_TypeDef *i2c,
   transfer->state   = i2cStateStartAddrSend;
   transfer->result  = i2cTransferInProgress;
   transfer->offset  = 0;
-  transfer->bufIndx = 0;
+  if(seq->flags == 2)  //check if READ
+     transfer->bufIndx = 1;
+    else
+     transfer->bufIndx = 0;
   transfer->seq     = seq;
 
   /* Ensure buffers are empty */
