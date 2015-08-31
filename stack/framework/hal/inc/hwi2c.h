@@ -51,9 +51,9 @@ typedef struct
 
 
 __LINK_C void i2c_master_init(I2C_Init_T* init);
-__LINK_C void i2c_write(uint8_t address, uint8_t* tx_buffer, int length);
-__LINK_C void i2c_read(uint8_t address, uint8_t* rx_buffer, int length);
-__LINK_C void i2c_write_read(uint8_t address, uint8_t* tx_buffer, int lengthtx, uint8_t* rx_buffer, int lengthrx);
+__LINK_C int8_t i2c_write(uint8_t address, uint8_t* tx_buffer, int length);
+__LINK_C int8_t i2c_read(uint8_t address, uint8_t* rx_buffer, int length);
+__LINK_C int8_t i2c_write_read(uint8_t address, uint8_t* tx_buffer, int lengthtx, uint8_t* rx_buffer, int lengthrx);
 
 
 #endif /* FRAMEWORK_HAL_INC_HWI2C_H_ */

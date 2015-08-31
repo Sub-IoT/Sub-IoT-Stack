@@ -13,6 +13,9 @@
 #include "hwi2c.h"
 #include "platform.h"
 
+#define I2C_POLLING  100
+
+
 void i2c_master_init(I2C_Init_T* init) {
 	int i;
 	CMU_Clock_TypeDef i2cClock;
@@ -75,7 +78,7 @@ void i2c_master_init(I2C_Init_T* init) {
 	I2C_Init(init->port, &i2cInit);
 }
 
-void i2c_write(uint8_t address,uint8_t* tx_buffer,int length)
+int8_t i2c_write(uint8_t address,uint8_t* tx_buffer,int length)
 {
 	I2C_TransferReturn_TypeDef ret;
 	I2C_TransferSeq_TypeDef sensor_message =
@@ -90,9 +93,11 @@ void i2c_write(uint8_t address,uint8_t* tx_buffer,int length)
 	while(ret == i2cTransferInProgress) {          // continue until all data has been sent
 	    ret = I2C_Transfer(I2C0);
 	}
+
+	return ret;
 }
 
-void i2c_read(uint8_t address, uint8_t* rx_buffer, int length)
+int8_t i2c_read(uint8_t address, uint8_t* rx_buffer, int length)
 {
 	I2C_TransferReturn_TypeDef ret;
 	I2C_TransferSeq_TypeDef sensor_message =
@@ -102,15 +107,18 @@ void i2c_read(uint8_t address, uint8_t* rx_buffer, int length)
 		.buf[1].data = rx_buffer,
 		.buf[1].len = length,
 	};
+	int16_t rtry = 0;
 	ret = I2C_TransferInit(I2C0, &sensor_message); // start I2C write transaction with sensor
-	while(ret == i2cTransferInProgress) {          // continue until all data has been sent
+	while(ret == i2cTransferInProgress && rtry < I2C_POLLING) {          // continue until all data has been sent
 		ret = I2C_Transfer(I2C0);
+		rtry++;
 	}
-	//return rx_buffer;
+
+	return ret;
 }
 
 
-void i2c_write_read(uint8_t address, uint8_t* tx_buffer,int lengthtx,uint8_t* rx_buffer,int lengthrx)
+int8_t i2c_write_read(uint8_t address, uint8_t* tx_buffer,int lengthtx,uint8_t* rx_buffer,int lengthrx)
 {
 	I2C_TransferReturn_TypeDef ret;
 	I2C_TransferSeq_TypeDef sensor_message =
@@ -127,5 +135,7 @@ void i2c_write_read(uint8_t address, uint8_t* tx_buffer,int lengthtx,uint8_t* rx
 	while(ret == i2cTransferInProgress) {          // continue until all data has been sent
 	    ret = I2C_Transfer(I2C0);
 	}
+
+	return ret;
 }
 
