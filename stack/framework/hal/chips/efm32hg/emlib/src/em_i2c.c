@@ -774,8 +774,8 @@ I2C_TransferReturn_TypeDef I2C_TransferInit(I2C_TypeDef *i2c,
   /* possible according to I2C spec, since slave will always start */
   /* sending first byte ACK on address. The read operation can */
   /* only be stopped by NACKing a received byte, ie minimum 1 byte. */
-  if (((seq->flags & I2C_FLAG_READ) && !(seq->buf[0].len)) ||
-      ((seq->flags & I2C_FLAG_WRITE_READ) && !(seq->buf[1].len))
+  if (((seq->flags & I2C_FLAG_READ) && !(seq->buf[1].len)) ||
+      ((seq->flags & I2C_FLAG_WRITE_READ) && !(seq->buf[0].len))
       )
   {
     return(i2cTransferUsageFault);
