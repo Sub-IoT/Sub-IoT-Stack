@@ -111,18 +111,23 @@ ENDMACRO()
 #	<chip>		The chip directory to include
 #
 MACRO(ADD_CHIP chip)
+    # TODO support out of tree chip directories
     GEN_PREFIX(CHIP_LIBRARY_NAME "CHIP" ${chip})
     STRING(TOUPPER "${chip}" __uchip)
     SET(USE_${__uchip} TRUE)
     PLATFORM_HEADER_DEFINE(BOOL USE_${__uchip})
     UNSET(__uchip)
-    ADD_SUBDIRECTORY("${CMAKE_CURRENT_SOURCE_DIR}/../../chips/${chip}" "${CMAKE_CURRENT_BINARY_DIR}/../../chips/${chip}")
+    ADD_SUBDIRECTORY("${CMAKE_SOURCE_DIR}/framework/hal/chips/${chip}" "${CMAKE_CURRENT_BINARY_DIR}/framework/hal/chips/${chip}")
+    ADD_DEPENDENCIES(PLATFORM ${CHIP_LIBRARY_NAME})
+    GET_PROPERTY(__global_include_dirs GLOBAL PROPERTY GLOBAL_INCLUDE_DIRECTORIES)
+    TARGET_INCLUDE_DIRECTORIES(${CHIP_LIBRARY_NAME} PUBLIC ${__global_include_dirs})
+    GET_PROPERTY(__global_compile_definitions GLOBAL PROPERTY GLOBAL_COMPILE_DEFINITIONS) 
+    TARGET_COMPILE_DEFINITIONS(${CHIP_LIBRARY_NAME} PUBLIC ${__global_compile_definitions}) 
     SET_GLOBAL(PLATFORM_CHIP_LIBS "${PLATFORM_CHIP_LIBS};${CHIP_LIBRARY_NAME}")   
     UNSET(CHIP_LIBRARY_NAME)
 ENDMACRO()
 
-# Add directories to the 'INCLUDE_DIRECTORIES' property of the directory 
-# containing the platform specific code. This MACRO is intended to be used 
+# Export directories to be included by the platform target. This MACRO is intended to be used 
 # in the CMakeLists.txt file of individual chips and allows each indiviual chip to 
 # export interfaces to the platform code (but NOT the entire source tree). 
 #
@@ -130,17 +135,11 @@ ENDMACRO()
 # chip-specific headers.
 #
 # Usage:
-#    PLATFORM_INCLUDE_DIRECTORIES(<dir> <dir> ...)
+#    EXPORT_PLATFORM_INCLUDE_DIRECTORIES(<dir> <dir> ...)
 #
-MACRO(PLATFORM_INCLUDE_DIRECTORIES)
+MACRO(EXPORT_PLATFORM_INCLUDE_DIRECTORIES)
     RELATIVE_TO_ABSOLUTE(__paths ${ARGN})
-    INCLUDE_DIRECTORIES(${__paths})
-    SET(__platform_dir "${CMAKE_SOURCE_DIR}/framework/hal/platforms/${PLATFORM}")
-    GET_PROPERTY(__platform_props DIRECTORY "${__platform_dir}" PROPERTY INCLUDE_DIRECTORIES)
-    SET_PROPERTY(DIRECTORY "${__platform_dir}" PROPERTY INCLUDE_DIRECTORIES ${__platform_props} ${__paths})
-    UNSET(__platform_dir)
-    UNSET(__platform_props)
-    UNSET(__paths)
+    SET_PROPERTY(GLOBAL APPEND PROPERTY PLATFORM_INCLUDE_DIRECTORIES ${__paths})
 ENDMACRO()
 
 # Add one or more CMAKE variables as '#define' statements to the "platform_defs.h"

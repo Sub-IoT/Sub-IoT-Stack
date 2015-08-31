@@ -23,8 +23,9 @@ OPTION(BUILD_MODULES "Build Modules" ON)
 LIST_SUBDIRS(CUR_DIRS ${CMAKE_CURRENT_SOURCE_DIR})
 #Add conditional options for all subdirs (which are individual modules)
 FOREACH(__dir ${CUR_DIRS})
-    STRING(TOUPPER ${__dir} __upper_name)
-    SETOPTION_IF(MODULE_${__upper_name} "Build Module ${__dir}" ON BUILD_MODULES)
+    GET_FILENAME_COMPONENT(__module_name ${__dir} NAME) # strip full path keeping only module name
+    STRING(TOUPPER ${__module_name} __upper_name)
+    SETOPTION_IF(MODULE_${__upper_name} "Build Module ${__module_name}" ON BUILD_MODULES)
     UNSET(__upper_name)
 ENDFOREACH()
 
@@ -34,7 +35,8 @@ HIDE_PARAMETERS(MODULE_PARAM_LIST)
 
 #Finally Load the individual modules
 FOREACH(__dir ${CUR_DIRS})
-    GEN_PREFIX(MODULE_PREFIX "MODULE" ${__dir})
+    GET_FILENAME_COMPONENT(__module_name ${__dir} NAME) # strip full path keeping only module name
+    GEN_PREFIX(MODULE_PREFIX "MODULE" ${__module_name})
     IF(BUILD_MODULES AND ${MODULE_PREFIX})
 	ADD_SUBDIRECTORY(${__dir})
     ENDIF()	

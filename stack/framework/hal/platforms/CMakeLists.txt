@@ -17,14 +17,19 @@
 # limitations under the License.
 #
 
+SET(PLATFORM_EXTRA_PLATFORMS_DIR "" CACHE STRING "Path to directory containing extra, out of tree platform implementations (optional)")
 #Scan all platforms in the current directory for those that are
 #compatible with the current toolchain
-LIST_SUBDIRS(CUR_DIRS ${CMAKE_CURRENT_SOURCE_DIR})
+LIST_SUBDIRS(PLATFORM_DIRS ${CMAKE_CURRENT_SOURCE_DIR})
+LIST_SUBDIRS(EXTRA_PLATFORM_DIRS ${PLATFORM_EXTRA_PLATFORMS_DIR})
+LIST(APPEND PLATFORM_DIRS ${EXTRA_PLATFORM_DIRS})
 SET(SUPPORTED_PLATFORMS "")
-FOREACH(dir ${CUR_DIRS})
+FOREACH(dir ${PLATFORM_DIRS})
     GET_REQUIRED_TOOLCHAIN(${dir} req_tc)
     IF(req_tc STREQUAL "${TOOLCHAIN}")
-	LIST(APPEND SUPPORTED_PLATFORMS "${dir}")
+    GET_FILENAME_COMPONENT(__platform_name "${dir}" NAME)
+    LIST(APPEND SUPPORTED_PLATFORMS "${__platform_name}")
+    SET(PLATFORM_PATH_${__platform_name} ${dir})
     ENDIF()    
 ENDFOREACH()
 #If no platforms are compatible with the current toolchain, generate an error
@@ -32,11 +37,12 @@ IF(NOT SUPPORTED_PLATFORMS)
     MESSAGE(SEND_ERROR "There are no supported platforms for the selected toolchain ${TOOLCHAIN}")
 ELSE()
 #Otherwise add a parameter to allow the user to select the platform to use
+    MESSAGE(STATUS "detected supported platforms: " ${SUPPORTED_PLATFORMS})
     LIST(GET SUPPORTED_PLATFORMS 0 def_platform)
     SET (PLATFORM ${def_platform} CACHE STRING "Choose the platform to compile for.")
     SET_PROPERTY(CACHE PLATFORM PROPERTY STRINGS ${SUPPORTED_PLATFORMS})
 ENDIF()
-UNSET(CUR_DIRS)
+UNSET(PLATFORM_DIRS)
 
 #At this point 'PLATFORM' should point to a valid plaform
 #Before we include it though, we first need to:
@@ -49,9 +55,10 @@ include(${CMAKE_SOURCE_DIR}/cmake/platform_macros.cmake)
 
 #And finally: include the platform itself (if one is selected)
 IF(NOT( PLATFORM STREQUAL "none"))
+    MESSAGE(STATUS "selected platform: " ${PLATFORM})
     #Finally load the actual platform
     STRING(TOUPPER ${PLATFORM} __upper_name)
     SET(PLATFORM_PREFIX "PLATFORM_${__upper_name}")
     SET(${PLATFORM_PREFIX} ON)
-    ADD_SUBDIRECTORY(${PLATFORM})
+    ADD_SUBDIRECTORY(${PLATFORM_PATH_${PLATFORM}} ${CMAKE_CURRENT_BINARY_DIR}/platform)
 ENDIF()

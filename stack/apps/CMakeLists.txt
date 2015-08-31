@@ -24,7 +24,8 @@ OPTION(BUILD_APPLICATIONS "Build Applications" ON)
 LIST_SUBDIRS(CUR_DIRS ${CMAKE_CURRENT_SOURCE_DIR})
 #Add conditional options for all subdirs (which are individual applications)
 FOREACH(__dir ${CUR_DIRS})
-    STRING(TOUPPER ${__dir} __upper_name)
+    GET_FILENAME_COMPONENT(__module_name ${__dir} NAME) # strip full path keeping only app name
+    STRING(TOUPPER ${__module_name} __upper_name)
     SETOPTION_IF(APP_${__upper_name} "Build Application ${__dir}" OFF BUILD_APPLICATIONS)
     UNSET(__upper_name)
 ENDFOREACH()
@@ -33,9 +34,11 @@ ENDFOREACH()
 #Applications that are enabled will re-enable their parameters during declaration (eg by calling APP_PARAM)
 HIDE_PARAMETERS(APP_PARAM_LIST)
 
+
 #Finally Load the individual applications
 FOREACH(__dir ${CUR_DIRS})
-    GEN_PREFIX(APP_PREFIX "APP" ${__dir})
+    GET_FILENAME_COMPONENT(__module_name ${__dir} NAME) # strip full path keeping only app name
+    GEN_PREFIX(APP_PREFIX "APP" ${__module_name})
     IF(BUILD_APPLICATIONS AND ${APP_PREFIX})
 	ADD_SUBDIRECTORY(${__dir})
     ENDIF()	

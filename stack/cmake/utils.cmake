@@ -29,30 +29,30 @@ include(CMakeParseArguments)
 #
 MACRO(LIST_SUBDIRS result dir)
   cmake_parse_arguments(__LS "RECURSE" "" "" ${ARGN})
-  
+
   IF(__LS_RECURSE)
-    FILE(GLOB_RECURSE __children RELATIVE ${dir} ${dir}/*)
+    FILE(GLOB_RECURSE __children ${dir}/*)
   ELSE()
-    FILE(GLOB __children RELATIVE ${dir} ${dir}/*)
+    FILE(GLOB __children ${dir}/*)
   ENDIF()
   UNSET(__LS_RECURSE)
   SET(${result} "")
   FOREACH(__child ${__children})
-    IF(IS_DIRECTORY ${dir}/${__child})
+    IF(IS_DIRECTORY ${__child})
         LIST(APPEND ${result} ${__child})
     ELSE()
-	GET_FILENAME_COMPONENT(__dir "${__child}" PATH)
-	STRING(STRIP "${__dir}" __dir)
-	STRING(LENGTH "${__dir}" __len)
-	IF((__len GREATER 0) AND (IS_DIRECTORY ${dir}/${__dir}))
-	    LIST(FIND ${result} ${__dir} __id)
-	    IF(__id LESS 0)
-		LIST(APPEND ${result} ${__dir})
-	    ENDIF()
-	ENDIF()
-	UNSET(__len)
-	UNSET(__dir)
-	UNSET(__id)
+    	GET_FILENAME_COMPONENT(__dir "${__child}" PATH)
+    	STRING(STRIP "${__dir}" __dir)
+    	STRING(LENGTH "${__dir}" __len)
+    	IF((__len GREATER 0) AND (IS_DIRECTORY ${dir}/${__dir}))
+    	    LIST(FIND ${result} ${__dir} __id)
+    	    IF(__id LESS 0)
+    	       	LIST(APPEND ${result} ${__dir})
+    	    ENDIF()
+    	ENDIF()
+    	UNSET(__len)
+    	UNSET(__dir)
+    	UNSET(__id)
     ENDIF()
   ENDFOREACH()
   UNSET(__children)
@@ -195,8 +195,7 @@ MACRO(RELATIVE_TO_ABSOLUTE var)
     UNSET(__orig_paths)
 ENDMACRO()
 
-# Add one or more <value>'s to the specified directory property <property> both for the current directory and 
-# all directories above it (stopping at the cmake source root directory). It should be noted that, by cmake 
+# Add one or more <value>'s to the ${CMAKE_SOURCE_DIR} directory property <property>. It should be noted that, by cmake 
 # directory traversion rules, the new values are automatically propagated to any directories that are added 
 # (using ADD_SUBDIRECTORY) AFTER the property has been set.  Directories that were included BEFORE the 
 # property was set are NOT altered. This means that the added <value>'s are 'global' to the source 
@@ -206,35 +205,30 @@ ENDMACRO()
 #    SET_GLOBAL_DIRECTORY_PROPERTY( <property> <value> <value> ...)
 #
 MACRO(SET_GLOBAL_DIRECTORY_PROPERTY property)
-    SET(__cur_dir "${CMAKE_CURRENT_SOURCE_DIR}")
-    WHILE(NOT (__cur_dir STREQUAL "${CMAKE_SOURCE_DIR}"))
-        GET_PROPERTY(__cur_props DIRECTORY "${__cur_dir}" PROPERTY ${property})
-        SET_PROPERTY(DIRECTORY "${__cur_dir}" PROPERTY ${property} ${__cur_props} ${ARGN})
-	UNSET(__cur_props)
-	STRING(FIND "${__cur_dir}" "/" __dir_sep_loc REVERSE)
-	STRING(SUBSTRING "${__cur_dir}" 0 "${__dir_sep_loc}" __cur_dir)		
-    ENDWHILE()
-    UNSET(__cur_dir)
     GET_PROPERTY(__cur_props DIRECTORY "${CMAKE_SOURCE_DIR}" PROPERTY ${property})
     SET_PROPERTY(DIRECTORY "${CMAKE_SOURCE_DIR}" PROPERTY ${property} ${__cur_props} ${ARGN})
     UNSET(__cur_props)
 ENDMACRO()
 
 
-# Add one or more include <path>'s for the current directory and all directories above it. The specified 
-# paths become 'global' paths (according to the traversing rules specified by 'SET_GLOBAL_DIRECTORY_PROPERTY').
-# Paths are converted to absolute paths to ensure that they are interpreted correctly by the build system.
-#
-# It should also be noted that unlike the 'INCLUDE_DIRECTORIES' command, this MACRO does NOT automatically 
-# add the binary path to the include directories. Only the paths specified are added.
+# Register directories which can be included globally, used for instance for the public API of the framework 
 #
 # Usage:
-#    GLOBAL_INCLUDE_DIRECTORIES( <path> <path> ...)
+#    EXPORT_GLOBAL_INCLUDE_DIRECTORIES(<dir> <dir> ...)
 #
-MACRO(GLOBAL_INCLUDE_DIRECTORIES)
+MACRO(EXPORT_GLOBAL_INCLUDE_DIRECTORIES)
     RELATIVE_TO_ABSOLUTE(__new_dirs ${ARGN})
-    SET_GLOBAL_DIRECTORY_PROPERTY(INCLUDE_DIRECTORIES ${__new_dirs})
-    UNSET(__new_dirs)
+    SET_PROPERTY(GLOBAL APPEND PROPERTY GLOBAL_INCLUDE_DIRECTORIES ${__new_dirs})
+ENDMACRO()
+
+# Export compile definitions which are used globally, used for example in an out-of-tree platform or chip
+# to ensure the rest of the framework will be build with the correct definition
+#
+# Usage:
+#    EXPORT_GLOBAL_COMPILE_DEFINITIONS(<dir> <dir> ...)
+#
+MACRO(EXPORT_GLOBAL_COMPILE_DEFINITIONS)
+    SET_PROPERTY(GLOBAL APPEND PROPERTY GLOBAL_COMPILE_DEFINITIONS ${ARGN})
 ENDMACRO()
 
 # Add one or more compile <definitions>'s for the current directory and all directories above it. 
@@ -411,12 +405,12 @@ MACRO(INSERT_CXX_FLAGS)
 ENDMACRO()
 
 
-# Get the toolchain required by the code in the <subdir> of the current directory.
+# Get the toolchain required by the code in the specified <dir>.
 # This MACRO is intended to be used mainly for platforms but may be useful in future
 # to detect the toolchain required by other components as well.
 #
-# To detect the toolchain, MACRO looks for a 'toolchain' file in the <subdir>. If it exists, this file
-# is parsed to read the toolchain required by the code in the <subdir>. The toolchain needs to be
+# To detect the toolchain, MACRO looks for a 'toolchain' file in the <dir>. If it exists, this file
+# is parsed to read the toolchain required by the code in the <dir>. The toolchain needs to be
 # specified in the toolchain file according to the following format:
 # 'toolchain=<required_toolchain>'
 #
@@ -425,12 +419,12 @@ ENDMACRO()
 #
 #
 # Usage:
-#    GET_REQUIRED_TOOLCHAIN(<subdir> <var>)
+#    GET_REQUIRED_TOOLCHAIN(<dir> <var>)
 #
-MACRO (GET_REQUIRED_TOOLCHAIN subdir var)
+MACRO (GET_REQUIRED_TOOLCHAIN dir var)
     SET(${var} "")
-    IF(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/${subdir}/toolchain")
-	FILE(STRINGS "${CMAKE_CURRENT_SOURCE_DIR}/${subdir}/toolchain" __toolchains REGEX "^[ 	]*toolchain[ 	]*=[ 	]*[a-zA-Z0-9-]+.*$")
+    IF(EXISTS "${dir}/toolchain")
+	FILE(STRINGS "${dir}/toolchain" __toolchains REGEX "^[ 	]*toolchain[ 	]*=[ 	]*[a-zA-Z0-9-]+.*$")
 	LIST(LENGTH __toolchains __tclen)
 	IF(${__tclen} GREATER 0)
 	    LIST(GET __toolchains 0 __tc)
