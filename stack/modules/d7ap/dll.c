@@ -37,6 +37,8 @@
 static dae_access_profile_t NGDEF(_current_access_class);
 #define current_access_class NG(_current_access_class)
 
+static dll_packet_received_callback dll_rx_callback = NULL;
+
 static hw_radio_packet_t* alloc_new_packet(uint8_t length)
 {
     // note we don't use length because in the current implementation the packets in the queue are of
@@ -92,7 +94,10 @@ static void process_received_messages()
         // TODO Tscan -= Trx
     }
 
-    packet_queue_free_packet(packet); // TODO this should be moved to upper layers when done processing
+
+    if (dll_rx_callback != NULL) dll_rx_callback();
+    else packet_queue_free_packet(packet); // TODO this should be moved to upper layers when done processing
+
     return;
 
     // TODO check if more received packets are pending
@@ -174,4 +179,9 @@ uint8_t dll_assemble_packet_header(packet_t* packet, uint8_t* data_ptr)
     *data_ptr = packet->dll_header.control; data_ptr += sizeof(packet->dll_header.control);
     // TODO target address, assuming broadcast for now
     return data_ptr - dll_header_start;
+}
+
+void dll_register_rx_callback(dll_packet_received_callback callback)
+{
+	dll_rx_callback = callback;
 }
