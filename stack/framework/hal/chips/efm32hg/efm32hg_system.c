@@ -83,3 +83,9 @@ void hw_busy_wait(int16_t microseconds)
 
     while (i<counter) i++;
 }
+
+void hw_reset()
+{
+    NVIC_SystemReset();
+}
+
