@@ -22,6 +22,28 @@
 #include "em_gpio.h"
 #include <assert.h>
 
+__attribute__((naked)) void HardFault_Handler(void);
+void HardFault_Handler(void) {
+    __asm volatile (
+        "    mov r0,sp\n\t"
+        "    ldr r1,=__StackTop\n\t"
+        "    cmp r0,r1\n\t"
+        "    bcs stack_ok\n\t"
+        "    ldr r0,=__StackLimit\n\t"
+        "    mov sp,r0\n\t"
+        "    ldr r0,=str_overflow\n\t"
+        "    mov r1,#1\n\t"
+        "stack_ok:\n\t"
+        "    ldr r0,=str_hardfault\n\t"
+        "    mov r1,#2\n\t"
+        "str_overflow: \n\t"
+    	"	 .asciz \"StackOverflow\"\n\t"
+		"    BKPT\n\t"
+        "str_hardfault: \n\t"
+    	"	.asciz \"HardFault\"\n\t"
+    );
+}
+
 #ifdef PLATFORM_GECKO_DEBUGPINS
 
 #if DEBUG_PIN_NUM != 4
