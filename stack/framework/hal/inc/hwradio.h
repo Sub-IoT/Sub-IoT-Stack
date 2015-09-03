@@ -180,10 +180,8 @@ typedef struct
     				 * HW_CRC_VALID	if the CRC was valid 
     				 */
 
-//this struct is "packed" so it occupies minimal space
-//and to ensure that, the 'prefix' fields (including length) of hw_radio_packet_t
-//are 32-bits aligned (that is sizeof(hw_radio_packet_t)%4 == 0)
-} __attribute__ ((packed)) hw_rx_metadata_t; 
+// TODO optimize struct for size. This was packed but resulted in alignment issues on Cortex-M0 so removed for now.
+} hw_rx_metadata_t;
 
 /** \brief The metadata an TX settings attached to a packet ready to be transmitted / that has been 
  *  transmitted.
@@ -195,10 +193,8 @@ typedef struct
 #endif
     hw_tx_cfg_t tx_cfg;		/**< The 'TX Configuration' used to receive the packet. */
     
-//this struct is "packed" so it occupies minimal space
-//and to ensure that, the 'prefix' fields (including length) of hw_radio_packet_t
-//are 32-bits aligned (that is sizeof(hw_radio_packet_t)%4 == 0)
-} __attribute__ ((packed)) hw_tx_metadata_t;
+// TODO optimize struct for size. This was packed but resulted in alignment issues on Cortex-M0 so removed for now.
+} hw_tx_metadata_t;
 
 /** \brief A PHY layer packet that can be sent / received over the air using the HW radio interface.
  *
@@ -233,10 +229,8 @@ typedef struct
             uint8_t	data[];			/**< The packet data. data[0] overlaps with the 'length' field */
         };
     };    
-    //this struct is "packed" so it occupies minimal space
-    //and to ensure that, the 'prefix' fields (including length) of hw_radio_packet_t
-    //are 32-bits alligned (that is sizeof(hw_radio_packet_t)%4 == 0)
-} __attribute__ ((packed)) hw_radio_packet_t;
+    // TODO optimize struct for size. This was packed but resulted in alignment issues on Cortex-M0 so removed for now.
+} hw_radio_packet_t;
 
 /** \brief A convenience MACRO that calculates the minimum size of a buffer large enough to hold a single
  * hw_radio_packet_t of the specified length
