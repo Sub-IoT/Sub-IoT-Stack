@@ -31,9 +31,19 @@
 
 void send_message()
 {
-	led_toggle(0);
-	timer_post_task_delay(&send_message, TIMER_TICKS_PER_SEC * 5);
+	led_on(0);
+	timer_post_task_delay(&send_message, TIMER_TICKS_PER_SEC);
+
+	uint32_t time = timer_get_counter_value();
+	fs_write_file(0x40, 0, (uint8_t*)&time, 2);
 	log_print_string("sending message");
+}
+
+
+void dll_packet_transmitted()
+{
+	led_off(0);
+	log_print_string("message send");
 }
 
 void start_foreground_scan()
@@ -63,10 +73,11 @@ void bootstrap()
 
     sched_register_task(&send_message);
     sched_register_task(&start_foreground_scan);
-    sched_post_task(&start_foreground_scan);
+    //sched_post_task(&start_foreground_scan);
     dll_register_rx_callback(&dll_packet_received);
+    dll_register_tx_callback(&dll_packet_transmitted);
 
-    timer_post_task_delay(&send_message, TIMER_TICKS_PER_SEC  * 5);
+    timer_post_task_delay(&send_message, TIMER_TICKS_PER_SEC);
 
 }
 

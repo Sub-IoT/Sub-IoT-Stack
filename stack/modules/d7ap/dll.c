@@ -38,6 +38,7 @@ static dae_access_profile_t NGDEF(_current_access_class);
 #define current_access_class NG(_current_access_class)
 
 static dll_packet_received_callback dll_rx_callback = NULL;
+static dll_packet_transmitted_callback dll_tx_callback = NULL;
 
 static hw_radio_packet_t* alloc_new_packet(uint8_t length)
 {
@@ -119,6 +120,8 @@ static void packet_transmitted(hw_radio_packet_t* hw_radio_packet)
 {
     DPRINT("Transmitted packet with length = %i", hw_radio_packet->length);
     packet_queue_free_packet(packet_queue_find_packet(hw_radio_packet)); // TODO free in upper layers
+
+    if (dll_tx_callback != NULL) dll_tx_callback();
 }
 
 void dll_init()
@@ -184,4 +187,10 @@ uint8_t dll_assemble_packet_header(packet_t* packet, uint8_t* data_ptr)
 void dll_register_rx_callback(dll_packet_received_callback callback)
 {
 	dll_rx_callback = callback;
+}
+
+
+void dll_register_tx_callback(dll_packet_transmitted_callback callback)
+{
+	dll_tx_callback = callback;
 }
