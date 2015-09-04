@@ -73,7 +73,7 @@ void bootstrap()
 
     sched_register_task(&send_message);
     sched_register_task(&start_foreground_scan);
-    //sched_post_task(&start_foreground_scan);
+    sched_post_task(&start_foreground_scan);
     dll_register_rx_callback(&dll_packet_received);
     dll_register_tx_callback(&dll_packet_transmitted);
 
