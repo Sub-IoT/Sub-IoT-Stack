@@ -182,7 +182,7 @@ void fs_init()
     assert(data_ptr - data <= FILE_DATA_SIZE);
 }
 
-void execute_alp_command(uint8_t command_file_id)
+static void execute_alp_command(uint8_t command_file_id)
 {
     assert(is_file_defined(command_file_id));
     uint8_t* data_ptr = (uint8_t*)(data + file_offsets[command_file_id]);

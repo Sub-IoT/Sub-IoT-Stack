@@ -63,13 +63,20 @@ typedef enum {
     ALP_OP_LOGIC = 49,
 } alp_operation_t;
 
+
+/*! \brief The ALP CTRL header
+ *
+ * note: bit order is important here since this is send over the air. We explicitly reverse the order to ensure BE.
+ * Although bit fields can cause portability problems it seems fine for now using gcc and the current platforms.
+ * If this poses problems in the future we must resort to bit arithmetics and flags.
+ */
 typedef struct {
     union {
         uint8_t raw;
         struct {
-            bool group : 1;
-            bool response_requested : 1;
             alp_operation_t operation : 6;
+            bool response_requested : 1;
+            bool group : 1;
         };
     };
 } alp_control_t;
