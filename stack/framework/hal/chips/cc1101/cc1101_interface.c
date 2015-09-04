@@ -27,6 +27,7 @@
 
 #include "cc1101_interface.h"
 #include "log.h"
+#include "assert.h"
 
 // turn on/off the debug prints
 #ifdef FRAMEWORK_LOG_ENABLED // TODO more granular
@@ -40,7 +41,7 @@
 extern void _cc1101_interface_init(end_of_packet_isr_t end_of_packet_isr_cb);
 extern void _c1101_interface_set_interrupts_enabled(bool);
 extern uint8_t _c1101_interface_strobe(uint8_t);
-extern void _c1101_interface_reset_radio_core();
+extern uint8_t _c1101_interface_reset_radio_core();
 extern uint8_t _c1101_interface_read_single_reg(uint8_t);
 extern void _c1101_interface_write_single_reg(uint8_t, uint8_t);
 extern void _c1101_interface_read_burst_reg(uint8_t, uint8_t*, uint8_t);
@@ -90,7 +91,9 @@ uint8_t cc1101_interface_strobe(uint8_t strobe_command)
 void cc1101_interface_reset_radio_core(void)
 {
     DPRINT("RESET RADIO");
-    _c1101_interface_reset_radio_core();
+    uint8_t status = _c1101_interface_reset_radio_core();
+
+    assert(status < 0xFF);
 }
 
 // *****************************************************************************

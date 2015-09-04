@@ -385,6 +385,14 @@ static void start_rx(hw_rx_cfg_t const* rx_cfg)
 {
     current_state = HW_RADIO_STATE_RX;
 
+//    uint8_t status = 0x80;
+//
+//    while (status == 0x80)
+//    {
+    	// Should not be 0x80 -> means Chip not ready
+//    	status = cc1101_interface_strobe(RF_SNOP) & 0x80;
+//    }
+
     cc1101_interface_strobe(RF_SFRX);
     configure_channel(&(rx_cfg->channel_id));
     configure_syncword_class(rx_cfg->syncword_class);

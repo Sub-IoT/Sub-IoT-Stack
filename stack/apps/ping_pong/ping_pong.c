@@ -50,6 +50,7 @@ void start_foreground_scan()
 {
     // TODO we start FG scan manually now, later it should be started by access profile automatically
     dll_start_foreground_scan();
+    led_on(1);
 }
 
 void dll_packet_received()

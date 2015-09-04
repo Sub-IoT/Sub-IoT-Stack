@@ -33,14 +33,14 @@ void __efm32hg_mcu_init()
     CHIP_Init();
 
     // init clock with HFXO (external)
-    CMU_ClockDivSet(cmuClock_HF, cmuClkDiv_1);		// 24 MHZ
-    CMU_OscillatorEnable(cmuOsc_HFXO, true, true);   // Enable XTAL Osc and wait to stabilize
-    CMU_ClockSelectSet(cmuClock_HF, cmuSelect_HFXO); // Select HF XTAL osc as system clock source. 48MHz XTAL, but we divided the system clock by 2, therefore our HF clock will be 24MHz
+//    CMU_ClockDivSet(cmuClock_HF, cmuClkDiv_1);		// 24 MHZ
+//    CMU_OscillatorEnable(cmuOsc_HFXO, true, true);   // Enable XTAL Osc and wait to stabilize
+//    CMU_ClockSelectSet(cmuClock_HF, cmuSelect_HFXO); // Select HF XTAL osc as system clock source. 48MHz XTAL, but we divided the system clock by 2, therefore our HF clock will be 24MHz
 
     // init clock with HFRCO (internal)
-//    CMU_HFRCOBandSet(cmuHFRCOBand_21MHz);
-//    CMU_OscillatorEnable(cmuOsc_HFRCO, true, true);
-//    CMU_ClockSelectSet(cmuClock_HF, cmuSelect_HFRCO);
+    CMU_HFRCOBandSet(cmuHFRCOBand_21MHz);
+    CMU_OscillatorEnable(cmuOsc_HFRCO, true, true);
+    CMU_ClockSelectSet(cmuClock_HF, cmuSelect_HFRCO);
 
 
     uint32_t hf = CMU_ClockFreqGet(cmuClock_HF);
