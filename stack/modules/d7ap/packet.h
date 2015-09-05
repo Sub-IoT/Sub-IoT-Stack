@@ -39,6 +39,7 @@ struct packet
 {
     dll_header_t dll_header;
     d7anp_ctrl_t d7anp_ctrl;
+    uint8_t origin_access_id[8];
     d7atp_ctrl_t d7atp_ctrl;
     d7atp_addressee_t* d7atp_addressee;
     uint8_t d7atp_dialog_id;
@@ -58,6 +59,7 @@ struct packet
 
 void packet_init(packet_t*);
 void packet_assemble(packet_t*);
+void packet_disassemble(packet_t*);
 
 #endif //OSS_7_PACKET_H
 
