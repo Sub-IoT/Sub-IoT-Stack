@@ -495,6 +495,8 @@ __LINK_C bool hw_radio_tx_busy();
  */
 __LINK_C bool hw_radio_rx_busy();
 
+void hw_radio_settle();
+
 /** \brief Check whether the RSSI value measured by the PHY driver is valid or not.
  *
  * The RSSI will only be valid if the radio has been initialised and has been in RX mode long enough
