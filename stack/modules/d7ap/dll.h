@@ -55,7 +55,9 @@ typedef void (*dll_packet_transmitted_callback)();
 void dll_init();
 void dll_tx_frame(packet_t* packet);
 void dll_start_foreground_scan();
+
 uint8_t dll_assemble_packet_header(packet_t* packet, uint8_t* data_ptr);
+bool dll_disassemble_packet_header(packet_t* packet, uint8_t* data_idx);
 
 void dll_register_rx_callback(dll_packet_received_callback callback);
 void dll_register_tx_callback(dll_packet_transmitted_callback callback);

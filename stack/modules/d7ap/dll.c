@@ -53,58 +53,16 @@ static void release_packet(hw_radio_packet_t* hw_radio_packet)
 }
 
 
-static void process_received_messages()
+static void process_received_packets()
 {
     packet_t* packet = packet_queue_get_received_packet();
-    dll_header_t header;
-    if(packet)
-    {
-        DPRINT("Processing received packet");
-        log_print_data(packet->hw_radio_packet.data, packet->hw_radio_packet.length + 1); // TODO tmp
-        uint16_t crc = __builtin_bswap16(crc_calculate(packet->hw_radio_packet.data, packet->hw_radio_packet.length - 2));
-        if(memcmp(&crc, packet->hw_radio_packet.data + packet->hw_radio_packet.length + 1 - 2, 2) != 0)
-        {
-            DPRINT("CRC invalid, skipping packet");
-            goto cleanup;
-        }
-
-        header.subnet = packet->hw_radio_packet.data[1];
-        if(header.subnet != current_access_class.subnet)
-        {
-            DPRINT("Subnet does not match current access profile, skipping packet");
-            goto cleanup;
-        }
-
-        header.control = packet->hw_radio_packet.data[2];
-        if(header.control_target_address_set)
-        {
-            uint8_t address_len = 2;
-            if(!header.control_vid_used)
-                address_len = 8;
-
-            // TODO get deviceid / vid from FS and uncomment check, assert for now
-            assert(false);
-//            if(memcmp(packet->hw_radio_packet.data + 3, id, address_len) != 0)
-//            {
-//                DPRINT("Device ID filtering failed, skipping packet");
-//                goto cleanup;
-//            }
-        }
-        // TODO filter LQ
-        // TODO pass to upper layer
-        // TODO Tscan -= Trx
-    }
-
-
-    if (dll_rx_callback != NULL) dll_rx_callback();
-    else packet_queue_free_packet(packet); // TODO this should be moved to upper layers when done processing
+    assert(packet != NULL);
+    DPRINT("Processing received packet");
+    packet_disassemble(packet);
 
     return;
 
     // TODO check if more received packets are pending
-    cleanup:
-        packet_queue_free_packet(packet);
-        return;
 }
 
 void packet_received(hw_radio_packet_t* packet)
@@ -113,7 +71,7 @@ void packet_received(hw_radio_packet_t* packet)
     // schedule it and return
     DPRINT("packet received @ %i , RSSI = %i", packet->rx_meta.timestamp, packet->rx_meta.rssi);
     packet_queue_mark_received(packet);
-    sched_post_task(&process_received_messages);
+    sched_post_task(&process_received_packets);
 }
 
 static void packet_transmitted(hw_radio_packet_t* hw_radio_packet)
@@ -126,7 +84,7 @@ static void packet_transmitted(hw_radio_packet_t* hw_radio_packet)
 
 void dll_init()
 {
-    sched_register_task(&process_received_messages);
+    sched_register_task(&process_received_packets);
 
     hw_radio_init(&alloc_new_packet, &release_packet);
 
@@ -182,6 +140,41 @@ uint8_t dll_assemble_packet_header(packet_t* packet, uint8_t* data_ptr)
     *data_ptr = packet->dll_header.control; data_ptr += sizeof(packet->dll_header.control);
     // TODO target address, assuming broadcast for now
     return data_ptr - dll_header_start;
+}
+
+bool dll_disassemble_packet_header(packet_t* packet, uint8_t* data_idx)
+{
+    packet->dll_header.subnet = packet->hw_radio_packet.data[(*data_idx)]; (*data_idx)++;
+    if(packet->dll_header.subnet != current_access_class.subnet)
+    {
+        DPRINT("Subnet does not match current access profile, skipping packet");
+        return false;
+    }
+
+    packet->dll_header.control = packet->hw_radio_packet.data[(*data_idx)]; (*data_idx)++;
+    if(packet->dll_header.control_target_address_set)
+    {
+        uint8_t address_len = 2;
+        if(!packet->dll_header.control_vid_used)
+            address_len = 8;
+
+        // TODO get deviceid / vid from FS and uncomment check, assert for now
+        assert(false);
+//            if(memcmp(packet->hw_radio_packet.data + 3, id, address_len) != 0)
+//            {
+//                DPRINT("Device ID filtering failed, skipping packet");
+//                goto cleanup;
+//            }
+    }
+    // TODO filter LQ
+    // TODO pass to upper layer
+    // TODO Tscan -= Trx
+
+
+    if (dll_rx_callback != NULL)
+        dll_rx_callback(); // TODO tmp upper layer should callback to app
+
+    return true;
 }
 
 void dll_register_rx_callback(dll_packet_received_callback callback)

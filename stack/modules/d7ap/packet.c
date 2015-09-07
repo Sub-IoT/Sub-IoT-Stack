@@ -17,7 +17,15 @@
  */
 
 #include "packet.h"
+#include "packet_queue.h"
 #include "crc.h"
+#include "log.h"
+
+#ifdef FRAMEWORK_LOG_ENABLED
+#define DPRINT(...) log_print_stack_string(__VA_ARGS__)
+#else
+#define DPRINT(...)
+#endif
 
 void packet_init(packet_t* packet)
 {
@@ -43,4 +51,40 @@ void packet_assemble(packet_t* packet)
     // add CRC
     uint16_t crc = __builtin_bswap16(crc_calculate(packet->hw_radio_packet.data, packet->hw_radio_packet.length - 2));
     memcpy(data_ptr, &crc, 2);
+}
+
+void packet_disassemble(packet_t* packet)
+{
+    log_print_data(packet->hw_radio_packet.data, packet->hw_radio_packet.length + 1); // TODO tmp
+
+    uint16_t crc = __builtin_bswap16(crc_calculate(packet->hw_radio_packet.data, packet->hw_radio_packet.length - 2));
+    if(memcmp(&crc, packet->hw_radio_packet.data + packet->hw_radio_packet.length + 1 - 2, 2) != 0)
+    {
+        DPRINT(LOG_STACK_DLL, "CRC invalid");
+        goto cleanup;
+    }
+
+    uint8_t data_idx = 1;
+
+    if(!dll_disassemble_packet_header(packet, &data_idx))
+    {
+        DPRINT(LOG_STACK_DLL, "DLL disassemble header failed");
+        goto cleanup;
+    }
+
+    // TODO assuming D7ANP for now
+    if(!d7anp_disassemble_packet_header(packet, &data_idx))
+    {
+        DPRINT(LOG_STACK_NWL, "NWL disassemble header failed");
+        goto cleanup;
+    }
+
+    packet_queue_free_packet(packet);
+    DPRINT(LOG_STACK_FWK, "Done disassembling packet");
+    return;
+
+    cleanup:
+        DPRINT(LOG_STACK_FWK, "Skipping packet");
+        packet_queue_free_packet(packet);
+        return;
 }

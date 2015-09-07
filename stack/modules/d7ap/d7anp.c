@@ -60,3 +60,23 @@ uint8_t d7anp_assemble_packet_header(packet_t *packet, uint8_t *data_ptr)
     return data_ptr - d7anp_header_start;
 }
 
+bool d7anp_disassemble_packet_header(packet_t* packet, uint8_t* data_idx)
+{
+    packet->d7anp_ctrl.raw = packet->hw_radio_packet.data[(*data_idx)]; (*data_idx)++;
+    assert(!packet->d7anp_ctrl.nls_enabled); // TODO NLS not yet supported
+    assert(!packet->d7anp_ctrl.hop_enabled); // TODO hopping not yet supported
+
+    // TODO hopping ctrl
+    // TODO intermediary access ID
+    // TODO destination access ID
+
+    if(packet->d7anp_ctrl.origin_access_id_present)
+    {
+        uint8_t origin_access_id_size = packet->d7anp_ctrl.origin_access_id_is_vid? 2 : 8;
+        memcpy(packet->origin_access_id, packet->hw_radio_packet.data + (*data_idx), origin_access_id_size); (*data_idx) += origin_access_id_size;
+    }
+
+    // TODO security
+
+    return true;
+}
