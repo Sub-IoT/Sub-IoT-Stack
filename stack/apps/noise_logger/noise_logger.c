@@ -65,17 +65,17 @@ typedef struct
 static uint8_t current_channel_indexes_index = 0;
 static uint16_t channel_indexes[LO_RATE_CHANNEL_COUNT_868] = { 0 }; // reallocated later depending on band/class
 static uint16_t channel_count = LO_RATE_CHANNEL_COUNT_868;
-static bool use_manual_channel_switching = false;
+static bool use_manual_channel_switching = true;
 static uint8_t uart_rx_buffer[UART_RX_BUFFER_SIZE] = { 0 };
 static fifo_t uart_rx_fifo;
 static uint16_t rx_measurement_counter = 0;
-static timestamped_rssi_t rx_measurement_max = { 0, -200};
+static timestamped_rssi_t rssi_measurement;
 
 static hw_rx_cfg_t rx_cfg = {
     .channel_id = {
         .channel_header.ch_coding = PHY_CODING_PN9,
         .channel_header.ch_class = PHY_CLASS_NORMAL_RATE,
-        .channel_header.ch_freq_band = PHY_BAND_868,
+        .channel_header.ch_freq_band = PHY_BAND_433,
         .center_freq_index = 0
     },
     .syncword_class = PHY_SYNCWORD_CLASS0
@@ -257,14 +257,14 @@ static void channel_id_to_string(channel_id_t* channel, char* str, size_t len)
 
 void read_rssi()
 {
-    timestamped_rssi_t rssi_measurement;
     rssi_measurement.tick = timer_get_counter_value();
 
     char rssi_samples_str[5 * RSSI_SAMPLES_PER_MEASUREMENT] = "";
     int16_t max_rssi_sample = -200;
     for(int i = 0; i < RSSI_SAMPLES_PER_MEASUREMENT; i++)
     {
-        rssi_measurement.rssi[i] = hw_radio_get_rssi();
+    	if (i >= rx_measurement_counter)
+    		rssi_measurement.rssi[i] = hw_radio_get_rssi();
         if(rssi_measurement.rssi[i] > max_rssi_sample)
             max_rssi_sample = rssi_measurement.rssi[i];
 
@@ -272,18 +272,24 @@ void read_rssi()
         // TODO delay?
     }
 
+    rx_measurement_counter = 0;
+
     char str[80];
     char channel_str[8] = "";
 
 
     channel_id_to_string(&rx_cfg.channel_id, channel_str, sizeof(channel_str));
-    lcd_write_string(channel_str);
+
     sprintf(str, "%7s,%i%s\n", channel_str, rssi_measurement.tick, rssi_samples_str);
     uart_transmit_string(str);
 
 #ifdef PLATFORM_EFM32GG_STK3700
     //lcd_all_on();
+    lcd_write_string(channel_str);
     lcd_write_number(max_rssi_sample);
+#else
+    sprintf(str, "%7s,%i\n", channel_str, max_rssi_sample);
+    lcd_write_string(str);
 #endif
 
     if(!use_manual_channel_switching)
@@ -301,6 +307,7 @@ void read_rssi()
 
 void rssi_valid(int16_t cur_rssi)
 {
+	rssi_measurement.rssi[rx_measurement_counter++] = cur_rssi;
     sched_post_task(&read_rssi);
 }
 

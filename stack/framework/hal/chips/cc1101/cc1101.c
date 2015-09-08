@@ -158,61 +158,77 @@ static void end_of_packet_isr()
     DPRINT("end of packet ISR");
     switch(current_state)
     {
-        case HW_RADIO_STATE_RX: ;
-            uint8_t packet_len = cc1101_interface_read_single_reg(RXFIFO);
-            DPRINT("EOP ISR packetLength: %d", packet_len);
-            if(packet_len >= 63)
-            {
-            	// long packets not yet supported or bit error in length byte, don't assert but flush rx
-                DPRINT("Packet size too big, flushing RX");
-                uint8_t status = (cc1101_interface_strobe(RF_SNOP) & 0xF0);
-                if(status == 0x60)
-                {
-                    // RX overflow
-                    cc1101_interface_strobe(RF_SFRX);
-                }
-                else if(status == 0x10)
-                {
-                    // still in RX, switch to idle first
-                    cc1101_interface_strobe(RF_SIDLE);
-                }
+        case HW_RADIO_STATE_RX:
+        	// Only handle packet when RX Callback is set
+			if (rx_packet_callback != NULL)
+			{
+				uint8_t packet_len = cc1101_interface_read_single_reg(RXFIFO);
+				DPRINT("EOP ISR packetLength: %d", packet_len);
+				if(packet_len >= 63)
+				{
+					// long packets not yet supported or bit error in length byte, don't assert but flush rx
+					DPRINT("Packet size too big, flushing RX");
+					uint8_t status = (cc1101_interface_strobe(RF_SNOP) & 0xF0);
+					if(status == 0x60)
+					{
+						// RX overflow
+						cc1101_interface_strobe(RF_SFRX);
+					}
+					else if(status == 0x10)
+					{
+						// still in RX, switch to idle first
+						cc1101_interface_strobe(RF_SIDLE);
+					}
 
-                while(cc1101_interface_strobe(RF_SNOP) != 0x0F); // wait until in idle state
-                cc1101_interface_strobe(RF_SRX);
-                while(cc1101_interface_strobe(RF_SNOP) != 0x1F); // wait until in RX state
-                cc1101_interface_set_interrupts_enabled(true);
-                return;
-            }
+					while(cc1101_interface_strobe(RF_SNOP) != 0x0F); // wait until in idle state
+					cc1101_interface_strobe(RF_SRX);
+					while(cc1101_interface_strobe(RF_SNOP) != 0x1F); // wait until in RX state
+					cc1101_interface_set_interrupts_enabled(true);
+					return;
+				}
 
-            hw_radio_packet_t* packet = alloc_packet_callback(packet_len);
-            packet->length = packet_len;
-            cc1101_interface_read_burst_reg(RXFIFO, packet->data + 1, packet->length);
+				hw_radio_packet_t* packet = alloc_packet_callback(packet_len);
+				packet->length = packet_len;
+				cc1101_interface_read_burst_reg(RXFIFO, packet->data + 1, packet->length);
 
-            // fill rx_meta
-            packet->rx_meta.rssi = convert_rssi(cc1101_interface_read_single_reg(RXFIFO));
-            packet->rx_meta.lqi = cc1101_interface_read_single_reg(RXFIFO) & 0x7F;
-            memcpy(&(packet->rx_meta.rx_cfg.channel_id), &current_channel_id, sizeof(channel_id_t));
-            packet->rx_meta.crc_status = HW_CRC_UNAVAILABLE; // TODO
-            packet->rx_meta.timestamp = timer_get_counter_value();
+				// fill rx_meta
+				packet->rx_meta.rssi = convert_rssi(cc1101_interface_read_single_reg(RXFIFO));
+				packet->rx_meta.lqi = cc1101_interface_read_single_reg(RXFIFO) & 0x7F;
+				memcpy(&(packet->rx_meta.rx_cfg.channel_id), &current_channel_id, sizeof(channel_id_t));
+				packet->rx_meta.crc_status = HW_CRC_UNAVAILABLE; // TODO
+				packet->rx_meta.timestamp = timer_get_counter_value();
 
-#ifdef FRAMEWORK_LOG_ENABLED
-            log_print_raw_phy_packet(packet, false);
-#endif
+	#ifdef FRAMEWORK_LOG_ENABLED
+				log_print_raw_phy_packet(packet, false);
+	#endif
 
-            rx_packet_callback(packet);
+				rx_packet_callback(packet);
+			}
+
+			if(rssi_valid_callback != NULL)
+			{
+				rssi_valid_callback(hw_radio_get_rssi());
+			}
+
             if(current_state == HW_RADIO_STATE_RX) // check still in RX, could be modified by upper layer while in callback
             {
                 uint8_t status = (cc1101_interface_strobe(RF_SNOP) & 0xF0);
-                if(status == 0x60) // RX overflow
+                while (status != 0x10)
                 {
-                    cc1101_interface_strobe(RF_SFRX);
-                    while(cc1101_interface_strobe(RF_SNOP) != 0x0F); // wait until in idle state
-                    cc1101_interface_strobe(RF_SRX);
-                    while(cc1101_interface_strobe(RF_SNOP) != 0x1F); // wait until in RX state
+					if(status == 0x60) // RX overflow
+					{
+						cc1101_interface_strobe(RF_SFRX);
+						while(cc1101_interface_strobe(RF_SNOP) != 0x0F); // wait until in idle state
+						cc1101_interface_strobe(RF_SRX);
+						while(cc1101_interface_strobe(RF_SNOP) != 0x1F); // wait until in RX state
+					}
+					status = (cc1101_interface_strobe(RF_SNOP)  & 0xF0);
                 }
 
+
+                //assert(status == 0x10); // expect to be in RX mode
+
                 cc1101_interface_set_interrupts_enabled(true);
-                assert(cc1101_interface_strobe(RF_SNOP) == 0x1F); // expect to be in RX mode
             }
             break;
         case HW_RADIO_STATE_TX:
@@ -393,13 +409,14 @@ static void start_rx(hw_rx_cfg_t const* rx_cfg)
 //    	status = cc1101_interface_strobe(RF_SNOP) & 0x80;
 //    }
 
-    cc1101_interface_strobe(RF_SFRX);
+    cc1101_interface_strobe(RF_SFRX); // Flush RX FiFo
     configure_channel(&(rx_cfg->channel_id));
     configure_syncword_class(rx_cfg->syncword_class);
     cc1101_interface_write_single_reg(PKTLEN, 0xFF);
 
-    if(rx_packet_callback != 0) // when rx callback not set we ignore received packets
-        cc1101_interface_set_interrupts_enabled(true);
+    //if(rx_packet_callback != 0) // when rx callback not set we ignore received packets
+    // Changed: always received interrupts otherwise RX Overflow not handled
+    cc1101_interface_set_interrupts_enabled(true);
 
     cc1101_interface_strobe(RF_SRX);
 
