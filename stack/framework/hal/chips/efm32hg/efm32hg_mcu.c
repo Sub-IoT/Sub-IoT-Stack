@@ -20,11 +20,13 @@
  *
  *  \author glenn.ergeerts@uantwerpen.be
  *  \author daniel.vandenakker@uantwerpen.be
+ *  \author maarten.weyn@uantwerpen.be
  *
  */
 
 #include "em_cmu.h"
 #include "em_chip.h"
+#include "platform.h"
 
 
 void __efm32hg_mcu_init()
@@ -32,16 +34,18 @@ void __efm32hg_mcu_init()
     /* Chip errata */
     CHIP_Init();
 
-    // init clock with HFXO (external)
-//    CMU_ClockDivSet(cmuClock_HF, cmuClkDiv_1);		// 24 MHZ
-//    CMU_OscillatorEnable(cmuOsc_HFXO, true, true);   // Enable XTAL Osc and wait to stabilize
-//    CMU_ClockSelectSet(cmuClock_HF, cmuSelect_HFXO); // Select HF XTAL osc as system clock source. 48MHz XTAL, but we divided the system clock by 2, therefore our HF clock will be 24MHz
 
+#ifdef HW_USE_HFXO
+    // init clock with HFXO (external)
+    CMU_ClockDivSet(cmuClock_HF, cmuClkDiv_1);		// 24 MHZ
+    CMU_OscillatorEnable(cmuOsc_HFXO, true, true);   // Enable XTAL Osc and wait to stabilize
+    CMU_ClockSelectSet(cmuClock_HF, cmuSelect_HFXO); // Select HF XTAL osc as system clock source. 48MHz XTAL, but we divided the system clock by 2, therefore our HF clock will be 24MHz
+#else
     // init clock with HFRCO (internal)
     CMU_HFRCOBandSet(cmuHFRCOBand_21MHz);
     CMU_OscillatorEnable(cmuOsc_HFRCO, true, true);
     CMU_ClockSelectSet(cmuClock_HF, cmuSelect_HFRCO);
-
+#endif
 
     uint32_t hf = CMU_ClockFreqGet(cmuClock_HF);
 }
