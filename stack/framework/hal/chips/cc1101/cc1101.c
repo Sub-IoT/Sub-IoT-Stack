@@ -152,6 +152,17 @@ static inline int16_t convert_rssi(int8_t rssi_raw)
     return rssi;
 }
 
+
+static void ensure_settling_and_calibration_done()
+{
+    uint8_t status = (cc1101_interface_strobe(RF_SNOP)) & 0x70;
+    while ((status == 0x40) || (status == 0x50))
+    {
+        hw_busy_wait(10);
+        status = cc1101_interface_strobe(RF_SNOP);
+    }
+}
+
 static void end_of_packet_isr()
 {
     cc1101_interface_set_interrupts_enabled(false);
@@ -426,7 +437,7 @@ static void start_rx(hw_rx_cfg_t const* rx_cfg)
         // and wait until valid. For now we wait 200 us.
 
         hw_busy_wait(200);
-        hw_radio_settle();
+        ensure_settling_and_calibration_done();
         rssi_valid_callback(hw_radio_get_rssi());
     }
 }
@@ -496,25 +507,9 @@ error_t hw_radio_send_packet(hw_radio_packet_t* packet, tx_packet_callback_t tx_
     return SUCCESS;
 }
 
-void hw_radio_settle()
-{
-	uint8_t status = (cc1101_interface_strobe(RF_SNOP)) & 0x70;
-	while ((status == 0x40) || (status == 0x50))
-	{
-		hw_busy_wait(10);
-		status = cc1101_interface_strobe(RF_SNOP);
-	}
-}
-
 int16_t hw_radio_get_rssi()
 {
-	uint8_t raw = cc1101_interface_read_single_reg(RSSI);
-	int16_t rssi = convert_rssi(raw);
-
-	uint8_t status = cc1101_interface_strobe(RF_SNOP);
-    return rssi;
-
-    // return convert_rssi(cc1101_interface_read_single_reg(RSSI));
+    return convert_rssi(cc1101_interface_read_single_reg(RSSI));
 }
 
 error_t hw_radio_set_idle()
