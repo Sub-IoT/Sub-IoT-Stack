@@ -66,5 +66,6 @@ typedef struct {
 
 void d7atp_start_dialog(uint8_t dialog_id, uint8_t transaction_id, packet_t* packet);
 uint8_t d7atp_assemble_packet_header(packet_t* packet, uint8_t* data_ptr);
+bool d7atp_disassemble_packet_header(packet_t* packet, uint8_t* data_idx);
 
 #endif /* D7ATP_H_ */

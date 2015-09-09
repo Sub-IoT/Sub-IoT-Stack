@@ -20,6 +20,7 @@
 #include "packet_queue.h"
 #include "crc.h"
 #include "log.h"
+#include "d7asp.h"
 
 #ifdef FRAMEWORK_LOG_ENABLED
 #define DPRINT(...) log_print_stack_string(__VA_ARGS__)
@@ -68,18 +69,32 @@ void packet_disassemble(packet_t* packet)
 
     if(!dll_disassemble_packet_header(packet, &data_idx))
     {
-        DPRINT(LOG_STACK_DLL, "DLL disassemble header failed");
+        DPRINT(LOG_STACK_DLL, "disassemble header failed");
         goto cleanup;
     }
 
     // TODO assuming D7ANP for now
     if(!d7anp_disassemble_packet_header(packet, &data_idx))
     {
-        DPRINT(LOG_STACK_NWL, "NWL disassemble header failed");
+        DPRINT(LOG_STACK_NWL, "disassemble header failed");
         goto cleanup;
     }
 
-    packet_queue_free_packet(packet);
+    if(!d7atp_disassemble_packet_header(packet, &data_idx))
+    {
+        DPRINT(LOG_STACK_TRANS, "disassemble header failed");
+        goto cleanup;
+    }
+
+    // TODO footers
+
+    // extract payload
+    packet->payload_length = packet->hw_radio_packet.length + 1 - data_idx - 2; // exclude the headers CRC bytes // TODO exclude footers
+    memcpy(packet->payload, packet->hw_radio_packet.data + data_idx, packet->payload_length);
+
+    d7asp_process_received_packet(packet);
+
+    packet_queue_free_packet(packet); // TODO inside d7asp_process_received_packet?
     DPRINT(LOG_STACK_FWK, "Done disassembling packet");
     return;
 

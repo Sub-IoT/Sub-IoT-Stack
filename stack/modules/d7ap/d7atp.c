@@ -62,3 +62,15 @@ uint8_t d7atp_assemble_packet_header(packet_t* packet, uint8_t* data_ptr)
 
     return data_ptr - d7atp_header_start;
 }
+
+bool d7atp_disassemble_packet_header(packet_t *packet, uint8_t *data_idx)
+{
+    packet->d7atp_ctrl.ctrl_raw = packet->hw_radio_packet.data[(*data_idx)]; (*data_idx)++;
+    packet->d7atp_dialog_id = packet->hw_radio_packet.data[(*data_idx)]; (*data_idx)++;
+    packet->d7atp_transaction_id = packet->hw_radio_packet.data[(*data_idx)]; (*data_idx)++;
+
+    assert(!packet->d7atp_ctrl.ctrl_is_timeout_template_present); // TODO timeout template
+    assert(!packet->d7atp_ctrl.ctrl_is_ack_template_present); // TODO ack template
+
+    return true;
+}

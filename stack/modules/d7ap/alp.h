@@ -26,6 +26,8 @@
 #include "stdint.h"
 #include "stdbool.h"
 
+#include "d7asp.h"
+
 #define ALP_ITF_ID_D7ASP 0xD7
 
 typedef enum
@@ -90,5 +92,10 @@ typedef struct {
     alp_operand_file_offset_t file_offset;
     uint8_t requested_data_length;
 } alp_operand_file_data_request_t;
+
+typedef void (*alp_unhandled_action_callback)(d7asp_result_t d7asp_result, uint8_t *alp_command, uint8_t alp_command_size);
+
+void alp_init(alp_unhandled_action_callback cb);
+bool alp_process_received_command_d7asp(d7asp_result_t d7asp_result, uint8_t* alp_command, uint8_t alp_command_size);
 
 #endif /* ALP_H_ */

@@ -79,7 +79,7 @@ void bootstrap()
 {
  	log_print_string("Device booted at time: %d\n", timer_get_counter_value());
 
-    d7ap_stack_init();
+    d7ap_stack_init(NULL);
 
 	internalTempSensor_init();
 	measureTemperature();

@@ -19,3 +19,34 @@
  *  \author maarten.weyn@uantwerpen.be
  *
  */
+
+#include "assert.h"
+#include "ng.h"
+
+#include "alp.h"
+
+
+static alp_unhandled_action_callback NGDEF(_unhandled_action_cb);
+#define unhandled_action_cb NG(_unhandled_action_cb)
+
+static alp_operation_t get_operation(uint8_t* alp_command)
+{
+    alp_control_t alp_ctrl;
+    alp_ctrl.raw = (*alp_command);
+    return alp_ctrl.operation;
+}
+
+void alp_init(alp_unhandled_action_callback cb)
+{
+    unhandled_action_cb = cb;
+}
+
+bool alp_process_received_command_d7asp(d7asp_result_t d7asp_result, uint8_t *alp_command, uint8_t alp_command_size)
+{
+    // TODO split into actions
+
+    assert(get_operation(alp_command) == ALP_OP_RETURN_FILE_DATA); // TODO other operations not supported yet
+
+    if(unhandled_action_cb)
+        unhandled_action_cb(d7asp_result, alp_command, alp_command_size);
+}

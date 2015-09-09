@@ -59,11 +59,16 @@ void execute_sensor_measurement()
 
 }
 
+void on_alp_unhandled_action(d7asp_result_t d7asp_result, uint8_t *alp_command, uint8_t alp_command_size)
+{
+
+}
+
 void bootstrap()
 {
     DPRINT("Device booted at time: %d\n", timer_get_counter_value());
 
-    d7ap_stack_init();
+    d7ap_stack_init(&on_alp_unhandled_action);
 
     sched_register_task(&start_foreground_scan);
     sched_post_task(&start_foreground_scan);

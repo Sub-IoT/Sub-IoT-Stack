@@ -66,7 +66,28 @@ typedef struct {
     uint8_t command_buffer[MODULE_D7AP_FIFO_COMMAND_BUFFER_SIZE];
 } d7asp_fifo_t;
 
+typedef struct {
+    union {
+        uint8_t raw;
+        struct {
+            session_state_t session_state : 3;
+            uint8_t _rfu : 2;
+            bool retry : 1;
+            bool missed : 1;
+            bool nls : 1;
+        };
+    };
+} d7asp_state_t;
+
+typedef struct {
+    d7asp_state_t status;
+    uint8_t fifo_token;
+    uint8_t request_id;
+    uint8_t response_to;
+    d7atp_addressee_t addressee;
+} d7asp_result_t;
+
 void d7asp_init();
 void d7asp_queue_alp_actions(d7asp_fifo_config_t* d7asp_fifo_config, uint8_t* alp_payload_buffer, uint8_t alp_payload_length); // TODO return status
-
+void d7asp_process_received_packet(packet_t* packet);
 #endif /* D7ASP_H_ */

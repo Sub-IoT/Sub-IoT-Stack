@@ -23,8 +23,9 @@
 #include "packet_queue.h"
 #include "dll.h"
 
-void d7ap_stack_init()
+void d7ap_stack_init(alp_unhandled_action_callback alp_unhandled_action_cb)
 {
+    alp_init(alp_unhandled_action_cb);
     fs_init();
     d7asp_init();
     packet_queue_init();

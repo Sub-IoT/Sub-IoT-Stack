@@ -98,3 +98,27 @@ void d7asp_queue_alp_actions(d7asp_fifo_config_t* d7asp_fifo_config, uint8_t* al
 
     sched_post_task(&process_fifos);
 }
+
+void d7asp_process_received_packet(packet_t* packet)
+{
+    d7asp_result_t result = {
+        .status = {
+            .session_state = SESSION_STATE_DONE, // TODO slave session state can be active as well, assuming done now
+            .nls = packet->d7anp_ctrl.nls_enabled,
+            .retry = false, // TODO
+            .missed = false, // TODO
+        },
+        .fifo_token = packet->d7atp_dialog_id,
+        .request_id = packet->d7atp_transaction_id,
+        .response_to = 0, // TODO
+        .addressee = {
+            .addressee_ctrl_unicast = packet->dll_header.control_target_address_set,
+            .addressee_ctrl_virtual_id = packet->dll_header.control_vid_used,
+            .addressee_ctrl_access_class = packet->d7anp_ctrl.origin_access_class,
+        },
+    };
+
+    memcpy(result.addressee.addressee_id, packet->origin_access_id, 8);
+
+    alp_process_received_command_d7asp(result, packet->payload, packet->payload_length);
+}
