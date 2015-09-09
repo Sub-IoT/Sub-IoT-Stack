@@ -412,6 +412,8 @@ static void start_rx(hw_rx_cfg_t const* rx_cfg)
     if(rx_packet_callback != 0) // when rx callback not set we ignore received packets
         cc1101_interface_set_interrupts_enabled(true);
 
+    // TODO when only rssi callback set the packet handler is still active and we enter in RXFIFOOVERFLOW, find a way to around this
+
     cc1101_interface_strobe(RF_SRX);
 
     if(rssi_valid_callback != 0)
