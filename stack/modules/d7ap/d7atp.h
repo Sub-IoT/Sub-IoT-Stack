@@ -56,7 +56,7 @@ typedef struct {
         uint8_t addressee_ctrl;
         struct {
             uint8_t _rfu : 2;
-            bool addressee_ctrl_unicast : 1;
+            bool addressee_ctrl_has_id : 1; // TODO: in spec v1.0 this is defined as UCAST but will be changed in next revision
             bool addressee_ctrl_virtual_id : 1;
             uint8_t addressee_ctrl_access_class : 2;
         };

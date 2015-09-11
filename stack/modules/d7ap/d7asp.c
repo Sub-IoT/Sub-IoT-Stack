@@ -62,10 +62,8 @@ static void process_fifos()
             d7atp_start_dialog(0, 0, packet); // TODO dialog_id and transaction_id
             break;
         default:
-            assert(false);
+            assert(false); // TODO implement other operations
     }
-
-    // TODO free packet after done receiving ack, timeout, .. for now done in dll in tx callback
 }
 
 void d7asp_init()
@@ -112,7 +110,7 @@ void d7asp_process_received_packet(packet_t* packet)
         .request_id = packet->d7atp_transaction_id,
         .response_to = 0, // TODO
         .addressee = {
-            .addressee_ctrl_unicast = packet->dll_header.control_target_address_set,
+            .addressee_ctrl_has_id = packet->d7anp_ctrl.origin_access_id_present? true : false,
             .addressee_ctrl_virtual_id = packet->dll_header.control_vid_used,
             .addressee_ctrl_access_class = packet->d7anp_ctrl.origin_access_class,
         },

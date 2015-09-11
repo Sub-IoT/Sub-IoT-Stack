@@ -118,7 +118,7 @@ void init_user_files()
         .dormant_timeout = 0,
         .start_id = 0, // TODO
         .addressee = {
-            .addressee_ctrl_unicast = false,
+            .addressee_ctrl_has_id = false,
             .addressee_ctrl_virtual_id = false,
             .addressee_ctrl_access_class = 0,
             .addressee_id = 0
