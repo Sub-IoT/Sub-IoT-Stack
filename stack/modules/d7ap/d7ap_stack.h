@@ -28,9 +28,10 @@
 #define OSS_7_D7AP_STACK_H
 
 #include "alp.h"
+#include "fs.h"
 
 /*! \brief Initializes the D7AP stack, should be called by all applications making use of the D7AP stack */
-void d7ap_stack_init(alp_unhandled_action_callback);
+void d7ap_stack_init(fs_init_args_t*, alp_unhandled_action_callback);
 
 #endif //OSS_7_D7AP_STACK_H
 

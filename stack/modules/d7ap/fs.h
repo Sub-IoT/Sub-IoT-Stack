@@ -97,12 +97,29 @@ typedef struct
     subband_t subbands[1]; // TODO only support 1 subband for now
 } dae_access_profile_t; // TODO move to dae header?
 
+/**
+ * \brief Initialize the user files in this callback.
+ *
+ * The application should call fs_init_file() for all user files so the stack can
+ * register these files in the filesystem
+ */
+typedef void (*fs_user_files_init_callback)(void);
 
-void fs_init();
+
+/**
+ * \brief Arguments used by the stack for filesystem initialization
+ */
+typedef struct {
+    fs_user_files_init_callback fs_user_files_init_cb; /**< Initialize the user files in this callback */
+    uint8_t access_profiles_count; /**< The number of access profiles used (and passed in the access_profiles member).  */
+    dae_access_profile_t* access_profiles; /**< The access profiles to be written to the filesystem (using increasing fileID starting from0x20) during init.  */
+} fs_init_args_t;
+
+void fs_init(fs_init_args_t* init_args);
+void fs_init_file(uint8_t file_id, const fs_file_header_t* file_header, const uint8_t* initial_data);
+void fs_init_file_with_D7AActP(uint8_t file_id, const d7asp_fifo_config_t* fifo_config, const alp_control_t* alp_control, const uint8_t* alp_operand);
 void fs_read_file(uint8_t file_id, uint8_t offset, uint8_t* buffer, uint8_t length);
-void fs_write_file(uint8_t file_id, uint8_t offset, uint8_t* buffer, uint8_t length);
-void fs_write_file_offset(uint8_t file_id, uint8_t offset, uint8_t* buffer, uint8_t length);
-void fs_write_access_class(uint8_t access_class_index, dae_access_profile_t* access_class);
+void fs_write_file(uint8_t file_id, uint8_t offset, const uint8_t* buffer, uint8_t length);
 void fs_read_access_class(uint8_t access_class_index, dae_access_profile_t* access_class);
 void fs_read_uid(uint8_t* buffer);
 #endif /* FS_H_ */

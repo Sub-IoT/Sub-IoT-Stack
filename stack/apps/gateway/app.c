@@ -45,7 +45,7 @@ static void start_foreground_scan()
 static void on_alp_unhandled_action(d7asp_result_t d7asp_result, uint8_t *alp_command, uint8_t alp_command_size)
 {
 	// TODO move this to log module so we can reuse this for other applications?
-    uart_transmit_data(0xD7);
+    uart_transmit_data(ALP_ITF_ID_D7ASP);
     uart_transmit_data(d7asp_result.status.raw);
     uart_transmit_data(d7asp_result.fifo_token);
     uart_transmit_data(d7asp_result.request_id);
@@ -58,7 +58,36 @@ static void on_alp_unhandled_action(d7asp_result_t d7asp_result, uint8_t *alp_co
 
 void bootstrap()
 {
-    d7ap_stack_init(&on_alp_unhandled_action);
+    dae_access_profile_t access_classes[1] = {
+        {
+            .control_scan_type_is_foreground = true,
+            .control_csma_ca_mode = CSMA_CA_MODE_UNC,
+            .control_number_of_subbands = 1,
+            .subnet = 0x05,
+            .scan_automation_period = 0,
+            .transmission_timeout_period = 0,
+            .subbands[0] = (subband_t){
+                .channel_header = {
+                    .ch_coding = PHY_CODING_PN9,
+                    .ch_class = PHY_CLASS_NORMAL_RATE,
+                    .ch_freq_band = PHY_BAND_433
+                },
+                .channel_index_start = 0,
+                .channel_index_end = 0,
+                .eirp = 0,
+                .ccao = 0
+            }
+        }
+    };
+
+    fs_init_args_t fs_init_args = (fs_init_args_t){
+        .fs_user_files_init_cb = NULL,
+        .access_profiles_count = 1,
+        .access_profiles = access_classes
+    };
+
+    d7ap_stack_init(&fs_init_args, &on_alp_unhandled_action);
+
     sched_register_task(&start_foreground_scan);
     sched_post_task(&start_foreground_scan);
 
