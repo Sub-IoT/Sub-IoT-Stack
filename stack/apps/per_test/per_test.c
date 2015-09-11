@@ -167,7 +167,7 @@ static void channel_id_to_string(channel_id_t* channel, char* str, size_t len)
 
 static void packet_received(hw_radio_packet_t* packet)
 {
-    uint16_t crc = __builtin_bswap16(crc_calculate(packet->data, packet->length + 1 - 2));
+    uint16_t crc = __builtin_bswap16(crc_calculate(packet->data, packet->length - 2));
     if(memcmp(&crc, packet->data + packet->length + 1 - 2, 2) != 0)
     {
         DPRINT("CRC error");
