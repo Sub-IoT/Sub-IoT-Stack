@@ -170,7 +170,8 @@ void fs_init_file_with_D7AActP(uint8_t file_id, const d7asp_fifo_config_t* fifo_
     switch(alp_ctrl->operation)
     {
         case ALP_OP_READ_FILE_DATA:
-            alp_operand_len = 2; // TODO can be 2-5 bytes actually, depending on File Offset Field Length, see spec
+            alp_operand_len = 3; // File Offset Operand + requested Data Length
+                //TODO File Offset Operand can be 2-5 bytes actually, depending on File Offset Field Length, see spec
             break;
         default:
             assert(false);
