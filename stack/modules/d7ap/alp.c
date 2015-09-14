@@ -24,7 +24,8 @@
 #include "ng.h"
 
 #include "alp.h"
-
+#include "packet.h"
+#include "fs.h"
 
 static alp_unhandled_action_callback NGDEF(_unhandled_action_cb);
 #define unhandled_action_cb NG(_unhandled_action_cb)
@@ -41,8 +42,36 @@ void alp_init(alp_unhandled_action_callback cb)
     unhandled_action_cb = cb;
 }
 
+void alp_process_command(const uint8_t* alp_command_ptr, packet_t* packet)
+{
+    alp_control_t alp_control = { .raw = (*alp_command_ptr) }; alp_command_ptr++;
+
+    switch(alp_control.operation)
+    {
+        case ALP_OP_READ_FILE_DATA: ;
+            alp_operand_file_data_request_t operand;
+            operand.file_offset.file_id = (*alp_command_ptr); alp_command_ptr++;
+            operand.file_offset.offset = (*alp_command_ptr); alp_command_ptr++; // TODO can be 1-4 bytes, assume 1 for now
+            operand.requested_data_length = (*alp_command_ptr); alp_command_ptr++;
+
+            // fill response
+            uint8_t* resp_data_ptr = packet->payload;
+            (*resp_data_ptr) = ALP_OP_RETURN_FILE_DATA; resp_data_ptr++;
+            (*resp_data_ptr) = operand.file_offset.file_id; resp_data_ptr++;
+            (*resp_data_ptr) = operand.file_offset.offset; resp_data_ptr++;
+            (*resp_data_ptr) = operand.requested_data_length; resp_data_ptr++;
+            fs_read_file(operand.file_offset.file_id, operand.file_offset.offset, resp_data_ptr, operand.requested_data_length);
+            packet->payload_length = resp_data_ptr - packet->payload + operand.requested_data_length;
+            break;
+        default:
+            assert(false); // TODO implement other operations
+    }
+
+}
+
 bool alp_process_received_command_d7asp(d7asp_result_t d7asp_result, uint8_t *alp_command, uint8_t alp_command_size)
 {
+    // TODO merge with alp_process_command() ?
     // TODO split into actions
 
     assert(get_operation(alp_command) == ALP_OP_RETURN_FILE_DATA); // TODO other operations not supported yet

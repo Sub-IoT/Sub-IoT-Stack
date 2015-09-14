@@ -37,33 +37,12 @@ static void process_fifos()
 {
     log_print_stack_string(LOG_STACK_SESSION, "Processing FIFOs");
 
-    uint8_t* data_ptr = fifo.command_buffer;
-    alp_control_t alp_control = { .raw = (*data_ptr) };
-    data_ptr++;
-
     packet_t* packet = packet_queue_alloc_packet();
     packet->d7atp_addressee = &(fifo.config.addressee);
-    switch(alp_control.operation)
-    {
-        case ALP_OP_READ_FILE_DATA: ;
-            alp_operand_file_data_request_t operand;
-            operand.file_offset.file_id = (*data_ptr); data_ptr++;
-            operand.file_offset.offset = (*data_ptr); data_ptr++; // TODO can be 1-4 bytes, assume 1 for now
-            operand.requested_data_length = (*data_ptr); data_ptr++;
 
-            // fill response
-            uint8_t* resp_data_ptr = packet->payload;
-            (*resp_data_ptr) = ALP_OP_RETURN_FILE_DATA; resp_data_ptr++;
-            (*resp_data_ptr) = operand.file_offset.file_id; resp_data_ptr++;
-            (*resp_data_ptr) = operand.file_offset.offset; resp_data_ptr++;
-            (*resp_data_ptr) = operand.requested_data_length; resp_data_ptr++;
-            fs_read_file(operand.file_offset.file_id, operand.file_offset.offset, resp_data_ptr, operand.requested_data_length);
-            packet->payload_length = resp_data_ptr - packet->payload + operand.requested_data_length;
-            d7atp_start_dialog(0, 0, packet); // TODO dialog_id and transaction_id
-            break;
-        default:
-            assert(false); // TODO implement other operations
-    }
+    alp_process_command(fifo.command_buffer, packet);
+
+    d7atp_start_dialog(0, 0, packet); // TODO dialog_id and transaction_id
 }
 
 void d7asp_init()

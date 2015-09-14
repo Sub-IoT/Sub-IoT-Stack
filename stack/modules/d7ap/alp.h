@@ -96,6 +96,10 @@ typedef struct {
 typedef void (*alp_unhandled_action_callback)(d7asp_result_t d7asp_result, uint8_t *alp_command, uint8_t alp_command_size);
 
 void alp_init(alp_unhandled_action_callback cb);
+
+/*! \brief Process a received ALP command and fills the packet with the result */
+void alp_process_command(const uint8_t* alp_command, packet_t* packet);
+
 bool alp_process_received_command_d7asp(d7asp_result_t d7asp_result, uint8_t* alp_command, uint8_t alp_command_size);
 
 #endif /* ALP_H_ */
