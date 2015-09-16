@@ -22,6 +22,7 @@
 #include "assert.h"
 #include "ng.h"
 #include "log.h"
+#include "bitmap.h"
 #include "d7asp.h"
 #include "alp.h"
 #include "fs.h"
@@ -33,25 +34,50 @@
 static d7asp_fifo_t NGDEF(_fifo); // TODO we only use 1 fifo for now, should be multiple later (1 per on unique addressee and QoS combination)
 #define fifo NG(_fifo)
 
-static void process_fifos()
+static uint8_t NGDEF(_active_request_id); // TODO move ?
+#define active_request_id NG(_active_request_id)
+
+static void init_fifo()
 {
-    log_print_stack_string(LOG_STACK_SESSION, "Processing FIFOs");
+    fifo = (d7asp_fifo_t){
+        .progress_bitmap = { 0x00 },
+        .next_request_id = 0,
+        .request_buffer_tail_idx = 0,
+        .requests_indices = { 0x00 },
+        .request_buffer = { 0x00 }
+    };
+}
+
+static void flush_fifos()
+{
+    log_print_stack_string(LOG_STACK_SESSION, "Flushing FIFOs");
+
+    // find first request which is not acked or dropped
+    uint8_t found_next_req_index = bitmap_search(fifo.progress_bitmap, false, MODULE_D7AP_FIFO_MAX_REQUESTS_COUNT);
+    if(found_next_req_index == -1 || found_next_req_index == fifo.next_request_id)
+    {
+        // we handled all requests ...
+        log_print_stack_string(LOG_STACK_SESSION, "FIFO flush completed");
+        // TODO notify upper layer
+        init_fifo();
+        return;
+    }
+
+    active_request_id = found_next_req_index;
 
     packet_t* packet = packet_queue_alloc_packet();
     packet->d7atp_addressee = &(fifo.config.addressee);
 
-    alp_process_command(fifo.command_buffer, packet);
+    alp_process_command(fifo.request_buffer + fifo.requests_indices[active_request_id], packet);
 
     d7atp_start_dialog(0, 0, packet); // TODO dialog_id and transaction_id
 }
 
 void d7asp_init()
 {
-    fifo = (d7asp_fifo_t){
-        .command_buffer = { 0x00 }
-    };
+    init_fifo();
 
-    sched_register_task(&process_fifos);
+    sched_register_task(&flush_fifos);
 }
 
 // TODO we assume a fifo contains only ALP commands, but according to spec this can be any kind of "Request"
@@ -59,6 +85,9 @@ void d7asp_init()
 void d7asp_queue_alp_actions(d7asp_fifo_config_t* d7asp_fifo_config, uint8_t* alp_payload_buffer, uint8_t alp_payload_length)
 {
     log_print_stack_string(LOG_STACK_SESSION, "Queuing ALP actions");
+
+    assert(fifo.request_buffer_tail_idx + alp_payload_length < MODULE_D7AP_FIFO_COMMAND_BUFFER_SIZE);
+    assert(fifo.next_request_id < MODULE_D7AP_FIFO_MAX_REQUESTS_COUNT); // TODO do not assert but let upper layer handle this
 
     // TODO the actions should be queued in a fifo based on combination of addressee and Qos
     // for now we use only 1 queue and overwrite the config
@@ -69,11 +98,13 @@ void d7asp_queue_alp_actions(d7asp_fifo_config_t* d7asp_fifo_config, uint8_t* al
     fifo.config.addressee.addressee_ctrl = d7asp_fifo_config->addressee.addressee_ctrl;
     memcpy(fifo.config.addressee.addressee_id, d7asp_fifo_config->addressee.addressee_id, sizeof(fifo.config.addressee.addressee_id));
 
-    // TODO we assume there is only one ALP command in the buffer and this is transmitted before a new command is queued for now
-    // we will use a fifo_t instead of a buffer later
-    memcpy(fifo.command_buffer, alp_payload_buffer, alp_payload_length);
+    // add request to buffer
+    fifo.requests_indices[fifo.next_request_id] = fifo.request_buffer_tail_idx;
+    memcpy(fifo.request_buffer + fifo.request_buffer_tail_idx, alp_payload_buffer, alp_payload_length);
+    fifo.request_buffer_tail_idx += alp_payload_length + 1;
+    fifo.next_request_id++;
 
-    sched_post_task(&process_fifos);
+    sched_post_task(&flush_fifos);
 }
 
 void d7asp_process_received_packet(packet_t* packet)
@@ -98,4 +129,10 @@ void d7asp_process_received_packet(packet_t* packet)
     memcpy(result.addressee.addressee_id, packet->origin_access_id, 8);
 
     alp_process_received_command_d7asp(result, packet->payload, packet->payload_length);
+}
+
+void d7asp_ack_current_request()
+{
+    bitmap_set(fifo.progress_bitmap, active_request_id); // TODO only when acked or dropped
+    sched_post_task(&flush_fifos); // keep flushing until all request handled ...
 }

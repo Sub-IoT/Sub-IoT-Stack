@@ -54,16 +54,21 @@ typedef struct {
     d7atp_addressee_t addressee;
 } d7asp_fifo_config_t;
 
+/**
+ * /brief The state of a session FIFO
+ */
 typedef struct {
     d7asp_fifo_config_t config;
     // TODO uint8_t dorm_timer;
     // TODO uint8_t token;
     // TODO retry_single_cnt
     // TODO retry_total_cnt
-    // TODO progress_bitmap
+    uint8_t progress_bitmap[(MODULE_D7AP_FIFO_MAX_REQUESTS_COUNT + 7) / 8];
     // TODO success_bitmap
-    // TODO next_id_cnt
-    uint8_t command_buffer[MODULE_D7AP_FIFO_COMMAND_BUFFER_SIZE];
+    uint8_t next_request_id;
+    uint8_t request_buffer_tail_idx;
+    uint8_t requests_indices[MODULE_D7AP_FIFO_MAX_REQUESTS_COUNT]; /**< Contains for every request ID the index in command_buffer where the request begins */
+    uint8_t request_buffer[MODULE_D7AP_FIFO_COMMAND_BUFFER_SIZE];
 } d7asp_fifo_t;
 
 typedef struct {
@@ -90,4 +95,5 @@ typedef struct {
 void d7asp_init();
 void d7asp_queue_alp_actions(d7asp_fifo_config_t* d7asp_fifo_config, uint8_t* alp_payload_buffer, uint8_t alp_payload_length); // TODO return status
 void d7asp_process_received_packet(packet_t* packet);
+void d7asp_ack_current_request();
 #endif /* D7ASP_H_ */

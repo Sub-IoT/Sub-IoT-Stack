@@ -37,8 +37,8 @@
  * A pointer to this is passed to alle functions of the fifo module
  **/
 typedef struct {
-    uint16_t head_idx;      /**< The offset in buffer to the headof the FIFO */
-    uint16_t tail_idx;      /**< The offset in buffer to the headof the FIFO */
+    uint16_t head_idx;      /**< The offset in buffer to the head of the FIFO */
+    uint16_t tail_idx;      /**< The offset in buffer to the head of the FIFO */
     uint16_t max_size;      /**< The maximum size of bytes contained in the FIFO */
     uint8_t* buffer;        /**< The buffer where the data is stored*/
 } fifo_t;
