@@ -112,8 +112,12 @@ void dll_tx_frame(packet_t* packet)
         .eirp = 10
     };
 
-    //TODO: use return value
-    hw_radio_send_packet(&(packet->hw_radio_packet), &packet_transmitted);
+    // TODO CSMA/CA
+
+    error_t err = hw_radio_send_packet(&(packet->hw_radio_packet), &packet_transmitted);
+    assert(err == SUCCESS);
+
+    d7asp_ack_current_request(); // TODO ack request when CSMA/CA succeeds and only for for QoS == None
 }
 
 void dll_start_foreground_scan()

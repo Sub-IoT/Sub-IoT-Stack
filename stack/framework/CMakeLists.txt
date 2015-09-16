@@ -78,6 +78,7 @@ SET(FRAMEWORK_HEADERS
         inc/timer.h
         inc/types.h
         inc/fifo.h
+        inc/bitmap.h
 )
 
 SET(HAL_API_HEADERS
