@@ -100,6 +100,9 @@ void alp_init(alp_unhandled_action_callback cb);
 /*! \brief Process a received ALP command and fills the packet with the result */
 void alp_process_command(const uint8_t* alp_command, packet_t* packet);
 
-bool alp_process_received_command_d7asp(d7asp_result_t d7asp_result, uint8_t* alp_command, uint8_t alp_command_size);
+/*! \brief Process a received request and replaces the packet's payload with the response payload.
+ *  ALP commands which cannot be handled by the stack are vectored to the application layer
+ */
+bool alp_process_received_request(d7asp_result_t d7asp_result, packet_t* packet);
 
 #endif /* ALP_H_ */
