@@ -101,7 +101,13 @@ void init_user_files()
         .fifo_ctrl_stop_on_error = false,
         .fifo_ctrl_preferred = false,
         .fifo_ctrl_state = SESSION_STATE_PENDING,
-        .qos = 0, // TODO
+        .qos = {
+            .qos_ctrl_resp_mode = SESSION_RESP_MODE_ANYCAST,
+            .qos_ctrl_ack_not_void = false,
+            .qos_ack_period = 1,
+            .qos_retry_single = 3,
+            .qos_retry_total = 0
+        },
         .dormant_timeout = 0,
         .start_id = 0, // TODO
         .addressee = {
@@ -115,6 +121,7 @@ void init_user_files()
     // finally, register D7AActP file
     fs_init_file_with_D7AActP(ACTION_FILE_ID, &d7asp_fifo_config, &alp_ctrl, (uint8_t*)&file_data_request_operand);
 }
+
 
 void bootstrap()
 {
