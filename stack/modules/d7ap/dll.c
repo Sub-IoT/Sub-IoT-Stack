@@ -45,10 +45,12 @@ static dae_access_profile_t NGDEF(_current_access_class);
 #define current_access_class NG(_current_access_class)
 
 static cca_type cca_status;
-static hw_radio_packet_t* current_packet;
+static hw_radio_packet_t* current_packet = NULL;
 
 static dll_packet_received_callback dll_rx_callback = NULL;
 static dll_packet_transmitted_callback dll_tx_callback = NULL;
+
+static void dll_cca();
 
 static hw_radio_packet_t* alloc_new_packet(uint8_t length)
 {
@@ -101,13 +103,14 @@ static void cca_rssi_valid(int16_t cur_rssi)
     	if (cca_status == CCA1)
     	{
     		cca_status = CCA2;
-    		timer_post_task_delay(&cca, 5);
+    		timer_post_task_delay(&dll_cca, 5);
     	} else if (cca_status == CCA2)
     	{
     		// OK, send packet
     		error_t err = hw_radio_send_packet(current_packet, &packet_transmitted);
 			assert(err == SUCCESS);
 
+			current_packet = NULL;
 			d7asp_ack_current_request(); // TODO ack request when CSMA/CA succeeds and only for for QoS == None
     	}
 
@@ -116,11 +119,12 @@ static void cca_rssi_valid(int16_t cur_rssi)
     {
     	// TODO: handle CCA FAIL
     	//dll_process_csma_ca();
+    	current_packet = NULL;
     }
 
 }
 
-static void cca()
+static void dll_cca()
 {
 	hw_rx_cfg_t rx_cfg =(hw_rx_cfg_t){
         .channel_id.channel_header = current_access_class.subbands[0].channel_header,
@@ -141,6 +145,8 @@ void dll_init()
 
 void dll_tx_frame(packet_t* packet)
 {
+	asser(current_packet == NULL);
+
     packet->dll_header = (dll_header_t){
         .subnet = 0x05, // TODO hardcoded for now
         .control_target_address_set = false, // TODO assuming broadcast for now
@@ -160,11 +166,13 @@ void dll_tx_frame(packet_t* packet)
         .eirp = 10
     };
 
+    current_packet = &(packet->hw_radio_packet);
+
     // TODO CSMA/CA
     cca_status = CCA1;
-    cca();
+    dll_cca();
 
-    current_packet = &(packet->hw_radio_packet);
+
 }
 
 void dll_start_foreground_scan()
