@@ -34,8 +34,18 @@
 #define DPRINT(...)
 #endif
 
+typedef enum
+{
+	CCA1,
+	CCA2,
+	CCA_FAIL
+} cca_type;
+
 static dae_access_profile_t NGDEF(_current_access_class);
 #define current_access_class NG(_current_access_class)
+
+static cca_type cca_status;
+static hw_radio_packet_t* current_packet;
 
 static dll_packet_received_callback dll_rx_callback = NULL;
 static dll_packet_transmitted_callback dll_tx_callback = NULL;
@@ -82,6 +92,44 @@ static void packet_transmitted(hw_radio_packet_t* hw_radio_packet)
     if (dll_tx_callback != NULL) dll_tx_callback();
 }
 
+
+
+static void cca_rssi_valid(int16_t cur_rssi)
+{
+    if (cur_rssi <= E_CCA)
+    {
+    	if (cca_status == CCA1)
+    	{
+    		cca_status = CCA2;
+    		timer_post_task_delay(&cca, 5);
+    	} else if (cca_status == CCA2)
+    	{
+    		// OK, send packet
+    		error_t err = hw_radio_send_packet(current_packet, &packet_transmitted);
+			assert(err == SUCCESS);
+
+			d7asp_ack_current_request(); // TODO ack request when CSMA/CA succeeds and only for for QoS == None
+    	}
+
+    }
+    else
+    {
+    	// TODO: handle CCA FAIL
+    	//dll_process_csma_ca();
+    }
+
+}
+
+static void cca()
+{
+	hw_rx_cfg_t rx_cfg =(hw_rx_cfg_t){
+        .channel_id.channel_header = current_access_class.subbands[0].channel_header,
+        .channel_id.center_freq_index = current_access_class.subbands[0].channel_index_start,
+        .syncword_class = PHY_SYNCWORD_CLASS1,
+    };
+	hw_radio_set_rx(&rx_cfg, NULL, &cca_rssi_valid);
+}
+
 void dll_init()
 {
     sched_register_task(&process_received_packets);
@@ -113,11 +161,10 @@ void dll_tx_frame(packet_t* packet)
     };
 
     // TODO CSMA/CA
+    cca_status = CCA1;
+    cca();
 
-    error_t err = hw_radio_send_packet(&(packet->hw_radio_packet), &packet_transmitted);
-    assert(err == SUCCESS);
-
-    d7asp_ack_current_request(); // TODO ack request when CSMA/CA succeeds and only for for QoS == None
+    current_packet = &(packet->hw_radio_packet);
 }
 
 void dll_start_foreground_scan()

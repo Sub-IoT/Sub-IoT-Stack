@@ -31,6 +31,8 @@
 
 #include "hwradio.h"
 
+#define E_CCA	-86 //TODO: get from file
+
 typedef struct packet packet_t;
 
 typedef struct
