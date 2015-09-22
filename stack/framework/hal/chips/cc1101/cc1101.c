@@ -186,6 +186,7 @@ static void end_of_packet_isr()
                 {
                     // still in RX, switch to idle first
                     cc1101_interface_strobe(RF_SIDLE);
+                    cc1101_interface_strobe(RF_SFRX);
                 }
 
                 while(cc1101_interface_strobe(RF_SNOP) != 0x0F); // wait until in idle state
@@ -404,17 +405,22 @@ static void start_rx(hw_rx_cfg_t const* rx_cfg)
 //    	status = cc1101_interface_strobe(RF_SNOP) & 0x80;
 //    }
 
-    cc1101_interface_strobe(RF_SFRX);
     configure_channel(&(rx_cfg->channel_id));
     configure_syncword_class(rx_cfg->syncword_class);
     cc1101_interface_write_single_reg(PKTLEN, 0xFF);
 
+    // cc1101_interface_strobe(RF_SFRX); TODO only when in idle or overflow state
+
+    uint8_t status;
+    do
+    {
+    	status = cc1101_interface_strobe(RF_SRX);
+    } while(status != 0x1F);
+
     if(rx_packet_callback != 0) // when rx callback not set we ignore received packets
-        cc1101_interface_set_interrupts_enabled(true);
+		cc1101_interface_set_interrupts_enabled(true);
 
-    // TODO when only rssi callback set the packet handler is still active and we enter in RXFIFOOVERFLOW, find a way to around this
-
-    cc1101_interface_strobe(RF_SRX);
+	// TODO when only rssi callback set the packet handler is still active and we enter in RXFIFOOVERFLOW, find a way to around this
 
     if(rssi_valid_callback != 0)
     {
