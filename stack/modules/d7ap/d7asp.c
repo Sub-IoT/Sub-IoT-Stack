@@ -30,12 +30,33 @@
 #include "d7atp.h"
 #include "packet_queue.h"
 #include "packet.h"
+#include "hwdebug.h"
 
 static d7asp_fifo_t NGDEF(_fifo); // TODO we only use 1 fifo for now, should be multiple later (1 per on unique addressee and QoS combination)
 #define fifo NG(_fifo)
 
 static uint8_t NGDEF(_active_request_id); // TODO move ?
 #define active_request_id NG(_active_request_id)
+
+static dae_access_profile_t NGDEF(_current_access_profile);
+#define current_access_profile NG(_current_access_profile)
+
+static uint8_t NGDEF(_current_access_class);
+#define current_access_class NG(_current_access_class)
+
+#define ACCESS_CLASS_NOT_SET 0xFF
+
+typedef enum {
+    D7ASP_STATE_IDLE,
+    D7ASP_STATE_SLAVE,
+    D7ASP_STATE_MASTER,
+    D7ASP_STATE_SLAVE_PENDING_MASTER
+} state_t;
+
+static state_t NGDEF(_state);
+#define state NG(_state)
+
+static void switch_state(state_t new_state);
 
 static void init_fifo()
 {
@@ -60,6 +81,7 @@ static void flush_fifos()
         log_print_stack_string(LOG_STACK_SESSION, "FIFO flush completed");
         // TODO notify upper layer
         init_fifo();
+        switch_state(D7ASP_STATE_IDLE);
         return;
     }
 
@@ -70,11 +92,74 @@ static void flush_fifos()
 
     alp_process_command(fifo.request_buffer + fifo.requests_indices[active_request_id], packet);
 
-    d7atp_start_dialog(0, 0, packet); // TODO dialog_id and transaction_id
+    uint8_t access_class = fifo.config.addressee.addressee_ctrl_access_class;
+    if(access_class != current_access_class)
+        fs_read_access_class(access_class, &current_access_profile);
+
+    d7atp_start_dialog(0, 0, packet, &fifo.config.qos, &current_access_profile); // TODO dialog_id and transaction_id
+    // TODO retries, dialog timeout
+}
+
+static void ack_current_request()
+{
+    bitmap_set(fifo.progress_bitmap, active_request_id);
+    sched_post_task(&flush_fifos); // continue flushing until all request handled ...
+}
+
+
+// TODO document state diagram
+static void switch_state(state_t new_state)
+{
+    switch(new_state)
+    {
+        case D7ASP_STATE_MASTER:
+            switch(state)
+            {
+                case D7ASP_STATE_IDLE:
+                case D7ASP_STATE_SLAVE_PENDING_MASTER:
+                    state = new_state;
+                    sched_post_task(&flush_fifos);
+                    log_print_stack_string(LOG_STACK_SESSION, "Switching to state D7ASP_STATE_MASTER");
+                    break;
+                case D7ASP_STATE_SLAVE:
+                    state = D7ASP_STATE_SLAVE_PENDING_MASTER;
+                    log_print_stack_string(LOG_STACK_SESSION, "Switching to state D7ASP_STATE_SLAVE_PENDING_MASTER");
+                    break;
+                case D7ASP_STATE_MASTER:
+                    // new requests in fifo, reschedule for later flushing
+                    // TODO sched_post_task(&flush_fifos);
+                    break;
+                default:
+                    assert(false);
+            }
+
+            break;
+        case D7ASP_STATE_SLAVE:
+            switch(state)
+            {
+                case D7ASP_STATE_IDLE:
+                    state = new_state;
+                    log_print_stack_string(LOG_STACK_SESSION, "Switching to state D7ASP_STATE_SLAVE");
+                    break;
+                default:
+                    assert(false);
+            }
+
+            break;
+        case D7ASP_STATE_IDLE:
+            state = new_state;
+            log_print_stack_string(LOG_STACK_SESSION, "Switching to state D7ASP_STATE_IDLE");
+            break;
+        default:
+            assert(false);
+    }
 }
 
 void d7asp_init()
 {
+    state = D7ASP_STATE_IDLE;
+    current_access_class = ACCESS_CLASS_NOT_SET;
+
     init_fifo();
 
     sched_register_task(&flush_fifos);
@@ -104,35 +189,80 @@ void d7asp_queue_alp_actions(d7asp_fifo_config_t* d7asp_fifo_config, uint8_t* al
     fifo.request_buffer_tail_idx += alp_payload_length + 1;
     fifo.next_request_id++;
 
-    sched_post_task(&flush_fifos);
+    switch_state(D7ASP_STATE_MASTER);
 }
 
 void d7asp_process_received_packet(packet_t* packet)
 {
-    d7asp_result_t result = {
-        .status = {
-            .session_state = SESSION_STATE_DONE, // TODO slave session state can be active as well, assuming done now
-            .nls = packet->d7anp_ctrl.nls_enabled,
-            .retry = false, // TODO
-            .missed = false, // TODO
-        },
-        .fifo_token = packet->d7atp_dialog_id,
-        .request_id = packet->d7atp_transaction_id,
-        .response_to = 0, // TODO
-        .addressee = {
-            .addressee_ctrl_has_id = packet->d7anp_ctrl.origin_access_id_present? true : false,
-            .addressee_ctrl_virtual_id = packet->dll_header.control_vid_used,
-            .addressee_ctrl_access_class = packet->d7anp_ctrl.origin_access_class,
-        },
-    };
+    if(state == D7ASP_STATE_MASTER)
+    {
+        // received ack
+        log_print_stack_string(LOG_STACK_SESSION, "Received ACK");
+        ack_current_request();
+        // TODO notify upper layer
+        packet_queue_free_packet(packet);
+    }
+    else if(state == D7ASP_STATE_IDLE)
+    {
+        // received a request, start slave session, process and respond
+        switch_state(D7ASP_STATE_SLAVE);
+        d7asp_result_t result = {
+            .status = {
+                .session_state = SESSION_STATE_DONE, // TODO slave session state can be active as well, assuming done now
+                .nls = packet->d7anp_ctrl.nls_enabled,
+                .retry = false, // TODO
+                .missed = false, // TODO
+            },
+            .fifo_token = packet->d7atp_dialog_id,
+            .request_id = packet->d7atp_transaction_id,
+            .response_to = 0, // TODO
+            .addressee = {
+                .addressee_ctrl_has_id = packet->d7anp_ctrl.origin_access_id_present? true : false,
+                .addressee_ctrl_virtual_id = packet->dll_header.control_vid_used,
+                .addressee_ctrl_access_class = packet->d7anp_ctrl.origin_access_class,
+            },
+        };
 
-    memcpy(result.addressee.addressee_id, packet->origin_access_id, 8);
+        memcpy(result.addressee.addressee_id, packet->origin_access_id, 8);
 
-    alp_process_received_command_d7asp(result, packet->payload, packet->payload_length);
+        // build response, we will reuse the same packet for this
+        alp_process_received_request(result, packet);
+
+        // execute slave transaction
+        if(packet->payload == 0 && !packet->d7atp_ctrl.ctrl_is_ack_requested)
+        {
+            // no need to respond, clean up
+            packet_queue_free_packet(packet);
+            return;
+        }
+
+        log_print_stack_string(LOG_STACK_SESSION, "Sending response");
+        d7atp_respond_dialog(packet);
+    }
+    else
+        assert(false);
 }
 
-void d7asp_ack_current_request()
+// TODO should not trigger on packet transmitted but get event from TP after resp period expires
+void d7asp_signal_packet_transmitted(packet_t *packet)
 {
-    bitmap_set(fifo.progress_bitmap, active_request_id); // TODO only when acked or dropped
-    sched_post_task(&flush_fifos); // keep flushing until all request handled ...
+    log_print_stack_string(LOG_STACK_SESSION, "Packet transmitted");
+
+    packet_queue_free_packet(packet);
+
+    if(state == D7ASP_STATE_SLAVE)
+    {
+        switch_state(D7ASP_STATE_IDLE); // TODO don't go to idle directly, wait for timeout or stop transaction
+    }
+//    if(state == D7ASP_STATE_MASTER)
+//        sched_post_task(&dll_start_foreground_scan); // TODO move to TL (manage dialog timeout etc)
+}
+
+void d7asp_signal_packet_csma_ca_insertion_completed()
+{
+    // for the lowest QoS level the packet is ack-ed when CSMA/CA process succeeded
+    if(fifo.config.qos.qos_ctrl_resp_mode == SESSION_RESP_MODE_NONE)
+        ack_current_request();
+
+    //dll_start_foreground_scan(); // TODO move to TL (manage dialog timeout etc)
 }

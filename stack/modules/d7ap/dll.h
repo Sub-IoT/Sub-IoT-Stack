@@ -46,7 +46,7 @@ typedef struct
             int8_t control_eirp_index: 6;
         };
     };
-    uint8_t target_address[8]; // TODO assuming 8B UID for now
+    //uint8_t target_address[8]; // TODO assuming 8B UID for now
 } dll_header_t;
 
 typedef void (*dll_packet_received_callback)();

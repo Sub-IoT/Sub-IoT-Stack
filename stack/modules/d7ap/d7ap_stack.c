@@ -20,11 +20,6 @@
 
 #include "assert.h"
 
-#include "fs.h"
-#include "d7asp.h"
-#include "packet_queue.h"
-#include "dll.h"
-
 void d7ap_stack_init(fs_init_args_t* fs_init_args, alp_unhandled_action_callback alp_unhandled_action_cb)
 {
     assert(fs_init_args != NULL);
@@ -33,6 +28,7 @@ void d7ap_stack_init(fs_init_args_t* fs_init_args, alp_unhandled_action_callback
     alp_init(alp_unhandled_action_cb);
     fs_init(fs_init_args);
     d7asp_init();
+    d7atp_init();
     packet_queue_init();
     dll_init();
 }

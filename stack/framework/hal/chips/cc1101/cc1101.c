@@ -40,6 +40,7 @@
 #include "log.h"
 #include "hwradio.h"
 #include "hwsystem.h"
+#include "hwdebug.h"
 
 #include "cc1101.h"
 #include "cc1101_interface.h"
@@ -54,6 +55,18 @@
 #endif
 
 #define RSSI_OFFSET 74
+
+#if DEBUG_PIN_NUM >= 2
+    #define DEBUG_TX_START() hw_debug_set(0);
+    #define DEBUG_TX_END() hw_debug_clr(0);
+    #define DEBUG_RX_START() hw_debug_set(1);
+    #define DEBUG_RX_END() hw_debug_clr(1);
+#else
+    #define DEBUG_TX_START()
+    #define DEBUG_TX_END()
+    #define DEBUG_RX_START()
+    #define DEBUG_RX_END()
+#endif
 
 /** \brief The possible states the radio can be in
  */
@@ -186,6 +199,7 @@ static void end_of_packet_isr()
                 {
                     // still in RX, switch to idle first
                     cc1101_interface_strobe(RF_SIDLE);
+                    cc1101_interface_strobe(RF_SFRX);
                 }
 
                 while(cc1101_interface_strobe(RF_SNOP) != 0x0F); // wait until in idle state
@@ -209,7 +223,7 @@ static void end_of_packet_isr()
 #ifdef FRAMEWORK_LOG_ENABLED
             log_print_raw_phy_packet(packet, false);
 #endif
-
+            DEBUG_RX_END();
             rx_packet_callback(packet);
             if(current_state == HW_RADIO_STATE_RX) // check still in RX, could be modified by upper layer while in callback
             {
@@ -227,6 +241,7 @@ static void end_of_packet_isr()
             }
             break;
         case HW_RADIO_STATE_TX:
+            DEBUG_TX_END();
         	if(!should_rx_after_tx_completed)
         		switch_to_idle_mode();
 
@@ -235,7 +250,6 @@ static void end_of_packet_isr()
 #ifdef FRAMEWORK_LOG_ENABLED
             log_print_raw_phy_packet(current_packet, true);
 #endif
-
             if(tx_packet_callback != 0)
                 tx_packet_callback(current_packet);
 
@@ -404,17 +418,23 @@ static void start_rx(hw_rx_cfg_t const* rx_cfg)
 //    	status = cc1101_interface_strobe(RF_SNOP) & 0x80;
 //    }
 
-    cc1101_interface_strobe(RF_SFRX);
     configure_channel(&(rx_cfg->channel_id));
     configure_syncword_class(rx_cfg->syncword_class);
     cc1101_interface_write_single_reg(PKTLEN, 0xFF);
 
+    // cc1101_interface_strobe(RF_SFRX); TODO only when in idle or overflow state
+
+    uint8_t status;
+    do
+    {
+    	status = cc1101_interface_strobe(RF_SRX);
+    } while(status != 0x1F);
+
+    DEBUG_RX_START();
     if(rx_packet_callback != 0) // when rx callback not set we ignore received packets
-        cc1101_interface_set_interrupts_enabled(true);
+		cc1101_interface_set_interrupts_enabled(true);
 
-    // TODO when only rssi callback set the packet handler is still active and we enter in RXFIFOOVERFLOW, find a way to around this
-
-    cc1101_interface_strobe(RF_SRX);
+	// TODO when only rssi callback set the packet handler is still active and we enter in RXFIFOOVERFLOW, find a way to around this
 
     if(rssi_valid_callback != 0)
     {
@@ -488,6 +508,7 @@ error_t hw_radio_send_packet(hw_radio_packet_t* packet, tx_packet_callback_t tx_
 
     cc1101_interface_write_burst_reg(TXFIFO, packet->data, packet->length + 1);
     cc1101_interface_set_interrupts_enabled(true);
+    DEBUG_TX_START();
     cc1101_interface_strobe(RF_STX);
     return SUCCESS;
 }

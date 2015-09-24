@@ -26,7 +26,7 @@
 #include "assert.h"
 #include "fs.h"
 #include "ng.h"
-
+#include "hwdebug.h"
 
 #ifdef FRAMEWORK_LOG_ENABLED
 #define DPRINT(...) log_print_stack_string(LOG_STACK_DLL, __VA_ARGS__)
@@ -77,14 +77,22 @@ void packet_received(hw_radio_packet_t* packet)
 static void packet_transmitted(hw_radio_packet_t* hw_radio_packet)
 {
     DPRINT("Transmitted packet with length = %i", hw_radio_packet->length);
-    packet_queue_free_packet(packet_queue_find_packet(hw_radio_packet)); // TODO free in upper layers
+    packet_t* packet = packet_queue_find_packet(hw_radio_packet);
 
-    if (dll_tx_callback != NULL) dll_tx_callback();
+    if(dll_tx_callback != NULL)
+        dll_tx_callback();
+
+    // TODO move to CSMA
+    if(packet->d7atp_ctrl.ctrl_is_start) // do not execute CSMA for guarded response (and thus do not ack) TODO validate
+        d7asp_signal_packet_csma_ca_insertion_completed(); // TODO ack request when CSMA/CA succeeds and only for for QoS == None
+
+    d7asp_signal_packet_transmitted(packet);
 }
 
 void dll_init()
 {
     sched_register_task(&process_received_packets);
+    sched_register_task(&dll_start_foreground_scan);
 
     hw_radio_init(&alloc_new_packet, &release_packet);
 
@@ -100,9 +108,18 @@ void dll_tx_frame(packet_t* packet)
         .control_eirp_index = 0, // TODO hardcoded for now
     };
 
+    dll_header_t* dll_header = &(packet->dll_header);
+    dll_header->subnet = 0x05; // TODO hardcoded for now
+    dll_header->control_eirp_index = 0; // TODO hardcoded for now
+    if(packet->d7atp_addressee != NULL)
+    {
+        dll_header->control_target_address_set = packet->d7atp_addressee->addressee_ctrl_has_id;
+        dll_header->control_vid_used = packet->d7atp_addressee->addressee_ctrl_virtual_id;
+    }
 
     packet_assemble(packet);
 
+    log_print_stack_string(LOG_STACK_DLL, "TX: ");
     log_print_data(packet->hw_radio_packet.data, packet->hw_radio_packet.length + 1); // TODO tmp
 
     packet->hw_radio_packet.tx_meta.tx_cfg = (hw_tx_cfg_t){
@@ -116,12 +133,11 @@ void dll_tx_frame(packet_t* packet)
 
     error_t err = hw_radio_send_packet(&(packet->hw_radio_packet), &packet_transmitted);
     assert(err == SUCCESS);
-
-    d7asp_ack_current_request(); // TODO ack request when CSMA/CA succeeds and only for for QoS == None
 }
 
 void dll_start_foreground_scan()
 {
+    DPRINT("Start foreground scan");
     // TODO handle Tscan timeout
 
     // TODO only access class using 1 subband which contains 1 channel index is supported for now
@@ -142,7 +158,12 @@ uint8_t dll_assemble_packet_header(packet_t* packet, uint8_t* data_ptr)
     uint8_t* dll_header_start = data_ptr;
     *data_ptr = packet->dll_header.subnet; data_ptr += sizeof(packet->dll_header.subnet);
     *data_ptr = packet->dll_header.control; data_ptr += sizeof(packet->dll_header.control);
-    // TODO target address, assuming broadcast for now
+    if(packet->dll_header.control_target_address_set)
+    {
+        uint8_t addr_len = packet->dll_header.control_vid_used? 2 : 8;
+        memcpy(data_ptr, packet->d7atp_addressee->addressee_id, addr_len); data_ptr += addr_len;
+    }
+
     return data_ptr - dll_header_start;
 }
 
@@ -162,13 +183,15 @@ bool dll_disassemble_packet_header(packet_t* packet, uint8_t* data_idx)
         if(!packet->dll_header.control_vid_used)
             address_len = 8;
 
-        // TODO get deviceid / vid from FS and uncomment check, assert for now
-        assert(false);
-//            if(memcmp(packet->hw_radio_packet.data + 3, id, address_len) != 0)
-//            {
-//                DPRINT("Device ID filtering failed, skipping packet");
-//                goto cleanup;
-//            }
+        uint8_t uid[8];
+        fs_read_uid(uid); // TODO cache
+        if(memcmp(packet->hw_radio_packet.data + (*data_idx), uid, address_len) != 0)
+        {
+            DPRINT("Device ID filtering failed, skipping packet");
+            return false;
+        }
+
+        (*data_idx) += address_len;
     }
     // TODO filter LQ
     // TODO pass to upper layer
