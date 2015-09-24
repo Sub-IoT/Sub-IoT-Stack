@@ -229,9 +229,10 @@ void d7asp_process_received_packet(packet_t* packet)
         alp_process_received_request(result, packet);
 
         // execute slave transaction
-        if(packet->payload == 0 && !packet->d7atp_ctrl.ctrl_is_ack_requested)
+        if(packet->payload_length == 0 && !packet->d7atp_ctrl.ctrl_is_ack_requested)
         {
             // no need to respond, clean up
+            switch_state(D7ASP_STATE_IDLE); // TODO don't go to idle directly, wait for timeout or stop transaction
             packet_queue_free_packet(packet);
             return;
         }
