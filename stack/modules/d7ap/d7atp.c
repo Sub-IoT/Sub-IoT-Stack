@@ -23,6 +23,7 @@
 #include "assert.h"
 #include "d7atp.h"
 #include "packet.h"
+#include "d7asp.h"
 #include "dll.h"
 #include "ng.h"
 #include "log.h"
@@ -54,20 +55,34 @@ static void switch_state(state_t new_state)
         // TODO assert(current_state == D7ATP_STATE_IDLE);
         current_state = new_state;
         break;
+    case D7ATP_STATE_IDLE:
+        log_print_stack_string(LOG_STACK_TRANS, "Switching to D7ATP_STATE_IDLE");
+        assert(current_state == D7ATP_STATE_IN_MASTER_TRANSACTION || current_state ==  D7ATP_STATE_IN_SLAVE_TRANSACTION);
+        current_state = new_state;
+        break;
     default:
         assert(false);
     }
 }
 
+static void transaction_response_period_expired()
+{
+    log_print_stack_string(LOG_STACK_TRANS, "Transaction response period expired");
+    switch_state(D7ATP_STATE_IDLE);
+    dll_stop_foreground_scan();
+    d7asp_signal_transaction_request_period_elapsed();
+}
+
 void d7atp_init()
 {
     current_state = D7ATP_STATE_IDLE;
+    sched_register_task(&transaction_response_period_expired);
 }
 
 void d7atp_start_dialog(uint8_t dialog_id, uint8_t transaction_id, packet_t* packet, session_qos_t* qos_settings, dae_access_profile_t* access_profile)
 {
     // TODO only supports broadcasting data now, no ack, timeout, multiple transactions, ...
-
+    switch_state(D7ATP_STATE_IN_MASTER_TRANSACTION);
     packet->d7atp_ctrl = (d7atp_ctrl_t){
         .ctrl_is_start = true,
         .ctrl_is_stop = true,
@@ -87,6 +102,10 @@ void d7atp_start_dialog(uint8_t dialog_id, uint8_t transaction_id, packet_t* pac
         // TODO also when responding to broadcast requests
 
     d7anp_tx_foreground_frame(packet, should_include_origin_template);
+
+    // TODO find out difference between dialog timeout and transaction response period
+    timer_post_task_delay(&transaction_response_period_expired, 10); // TODO hardcoded period for now
+    // TODO should be canceled by upper layer or if CSMA-CA fails
 
     sched_post_task(&dll_start_foreground_scan); // TODO do here?
 }

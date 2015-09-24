@@ -103,7 +103,6 @@ static void flush_fifos()
 static void ack_current_request()
 {
     bitmap_set(fifo.progress_bitmap, active_request_id);
-    sched_post_task(&flush_fifos); // continue flushing until all request handled ...
 }
 
 
@@ -266,4 +265,10 @@ void d7asp_signal_packet_csma_ca_insertion_completed()
         ack_current_request();
 
     //dll_start_foreground_scan(); // TODO move to TL (manage dialog timeout etc)
+}
+
+void d7asp_signal_transaction_request_period_elapsed()
+{
+    assert(state == D7ASP_STATE_MASTER);
+    sched_post_task(&flush_fifos); // continue flushing until all request handled ...
 }

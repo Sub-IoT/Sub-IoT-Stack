@@ -153,6 +153,12 @@ void dll_start_foreground_scan()
     hw_radio_set_rx(&rx_cfg, &packet_received, NULL);
 }
 
+void dll_stop_foreground_scan()
+{
+    // TODO assert state
+    hw_radio_set_idle();
+}
+
 uint8_t dll_assemble_packet_header(packet_t* packet, uint8_t* data_ptr)
 {
     uint8_t* dll_header_start = data_ptr;

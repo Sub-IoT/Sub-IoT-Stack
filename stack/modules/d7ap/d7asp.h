@@ -101,4 +101,10 @@ void d7asp_signal_packet_transmitted(packet_t* packet);
  * @brief Called by DLL to signal the CSMA/CA process completed succesfully and packet can be ack-ed for QoS = None
  */
 void d7asp_signal_packet_csma_ca_insertion_completed();
+
+
+/**
+ * @brief Called by TP to signal the transaction request period has elapsed
+ */
+void d7asp_signal_transaction_request_period_elapsed();
 #endif /* D7ASP_H_ */
