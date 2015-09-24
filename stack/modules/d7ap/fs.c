@@ -73,7 +73,10 @@ static void execute_alp_command(uint8_t command_file_id)
     assert((*data_ptr) == ALP_ITF_ID_D7ASP); // only D7ASP supported for now
     data_ptr++;
     fifo_config.fifo_ctrl = (*data_ptr); data_ptr++;
-    memcpy(&(fifo_config.qos), data_ptr, 4); data_ptr += 4;
+    fifo_config.qos.qos_ctrl = (*data_ptr); data_ptr++;
+    fifo_config.qos.qos_ack_period = (*data_ptr); data_ptr++;
+    fifo_config.qos.qos_retry_single = (*data_ptr); data_ptr++;
+    fifo_config.qos.qos_retry_total = (*data_ptr); data_ptr++;
     fifo_config.dormant_timeout = (*data_ptr); data_ptr++;
     fifo_config.start_id = (*data_ptr); data_ptr++;
     fifo_config.addressee.addressee_ctrl = (*data_ptr); data_ptr++;
@@ -172,7 +175,10 @@ void fs_init_file_with_D7AActP(uint8_t file_id, const d7asp_fifo_config_t* fifo_
     uint8_t* ptr = alp_command_buffer;
     (*ptr) = ALP_ITF_ID_D7ASP; ptr++;
     (*ptr) = fifo_config->fifo_ctrl; ptr++;
-    memcpy(ptr, &(fifo_config->qos), 4); ptr += 4;
+    (*ptr) = fifo_config->qos.qos_ctrl; ptr++;
+    (*ptr) = fifo_config->qos.qos_ack_period; ptr++;
+    (*ptr) = fifo_config->qos.qos_retry_single; ptr++;
+    (*ptr) = fifo_config->qos.qos_retry_total; ptr++;
     (*ptr) = fifo_config->dormant_timeout; ptr++;
     (*ptr) = fifo_config->start_id; ptr++;
     (*ptr) = fifo_config->addressee.addressee_ctrl; ptr++;

@@ -29,13 +29,8 @@
 #include "d7atp.h"
 #include "MODULE_D7AP_defs.h"
 
-typedef enum {
-    SESSION_STATE_IDLE = 0x00,
-    SESSION_STATE_DORMANT = 0x01,
-    SESSION_STATE_PENDING = 0x02,
-    SESSION_STATE_ACTIVE = 0x03,
-    SESSION_STATE_DONE = 0x04,
-} session_state_t; // TODO move to session
+#include "session.h"
+
 
 typedef struct {
     union {
@@ -48,7 +43,7 @@ typedef struct {
             uint8_t fifo_ctrl_state : 2; // TODO using session_state_t results in "'state' is narrower than value of its type" warning
         };
     };
-    uint32_t qos; // TODO define struct
+    session_qos_t qos;
     uint8_t dormant_timeout;
     uint8_t start_id;
     d7atp_addressee_t addressee;
@@ -95,5 +90,15 @@ typedef struct {
 void d7asp_init();
 void d7asp_queue_alp_actions(d7asp_fifo_config_t* d7asp_fifo_config, uint8_t* alp_payload_buffer, uint8_t alp_payload_length); // TODO return status
 void d7asp_process_received_packet(packet_t* packet);
-void d7asp_ack_current_request();
+
+/**
+ * @brief Called by DLL to signal the packet has been transmitted
+ */
+void d7asp_signal_packet_transmitted(packet_t* packet);
+
+
+/**
+ * @brief Called by DLL to signal the CSMA/CA process completed succesfully and packet can be ack-ed for QoS = None
+ */
+void d7asp_signal_packet_csma_ca_insertion_completed();
 #endif /* D7ASP_H_ */

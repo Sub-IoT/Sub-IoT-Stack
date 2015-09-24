@@ -22,7 +22,7 @@
 #include "em_gpio.h"
 #include <assert.h>
 
-#ifdef PLATFORM_GECKO_DEBUGPINS
+#ifdef PLATFORM_EFM32GG_STK3700_DEBUGPINS
 
 #if DEBUG_PIN_NUM != 4
 	#error DEBUG_PIN_NUM does not match the expected value. Update platform.h or platform_debug.c

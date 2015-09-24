@@ -25,7 +25,7 @@
 
 #include "stdint.h"
 
-#include "hwradio.h" // TODO for phy_channel_header_t in subband_t, refactor
+#include "dae.h"
 #include "alp.h"
 
 typedef enum
@@ -60,42 +60,6 @@ typedef struct
     uint32_t length;
     // TODO not used for now uint32_t allocated_length;
 } fs_file_header_t;
-
-typedef enum
-{
-    CSMA_CA_MODE_UNC = 0,
-    CSMA_CA_MODE_AIND = 1,
-    CSMA_CA_MODE_RAIND = 2,
-    CSMA_CA_MODE_RIGD = 3
-} csma_ca_mode_t; // TODO move
-
-typedef struct
-{
-    phy_channel_header_t channel_header;
-    uint16_t channel_index_start;
-    uint16_t channel_index_end;
-    int8_t eirp;
-    uint8_t ccao;
-} subband_t; // TODO move?
-
-typedef struct
-{
-    union
-    {
-        uint8_t control;
-        struct
-        {
-            bool control_scan_type_is_foreground: 1;
-            csma_ca_mode_t control_csma_ca_mode: 3;
-            uint8_t control_number_of_subbands: 2;
-        };
-    };
-    uint8_t subnet;
-    uint8_t scan_automation_period;
-    uint8_t transmission_timeout_period;
-    uint8_t _rfu;
-    subband_t subbands[1]; // TODO only support 1 subband for now
-} dae_access_profile_t; // TODO move to dae header?
 
 /**
  * \brief Initialize the user files in this callback.
