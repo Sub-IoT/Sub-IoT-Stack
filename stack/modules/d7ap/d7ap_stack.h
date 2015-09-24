@@ -39,7 +39,7 @@
  * @param alp_unhandled_action_cb   This callback (when not NULL) will be called when the stack receives an ALP action which should be
  *                                  handled by the application. Note: when the callback returns the ALP payload will be cleaned by the stack.
  */
-void d7ap_stack_init(fs_init_args_t* fs_init_args, alp_unhandled_action_callback alp_unhandled_action_cb);
+void d7ap_stack_init(fs_init_args_t* fs_init_args, alp_unhandled_action_callback alp_unhandled_action_cb, d7asp_init_args_t* d7asp_init_args);
 
 #endif //OSS_7_D7AP_STACK_H
 

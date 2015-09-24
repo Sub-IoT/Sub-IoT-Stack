@@ -87,7 +87,13 @@ typedef struct {
     d7atp_addressee_t addressee;
 } d7asp_result_t;
 
-void d7asp_init();
+typedef void (*d7asp_fifo_flush_completed_callback)(d7asp_fifo_config_t* d7asp_fifo_config, uint8_t* progress_bitmap); // TODO SUCCESS_BITMAP
+
+typedef struct {
+    d7asp_fifo_flush_completed_callback d7asp_fifo_flush_completed_cb;
+} d7asp_init_args_t; // TODO workaround: NG does not support function pointer so store in struct (for now)
+
+void d7asp_init(d7asp_init_args_t* init_arfs);
 void d7asp_queue_alp_actions(d7asp_fifo_config_t* d7asp_fifo_config, uint8_t* alp_payload_buffer, uint8_t alp_payload_length); // TODO return status
 void d7asp_process_received_packet(packet_t* packet);
 

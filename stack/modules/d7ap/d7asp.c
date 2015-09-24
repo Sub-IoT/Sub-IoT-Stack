@@ -46,6 +46,9 @@ static uint8_t NGDEF(_current_access_class);
 
 #define ACCESS_CLASS_NOT_SET 0xFF
 
+static d7asp_init_args_t* NGDEF(_d7asp_init_args);
+#define d7asp_init_args NG(_d7asp_init_args)
+
 typedef enum {
     D7ASP_STATE_IDLE,
     D7ASP_STATE_SLAVE,
@@ -79,7 +82,9 @@ static void flush_fifos()
     {
         // we handled all requests ...
         log_print_stack_string(LOG_STACK_SESSION, "FIFO flush completed");
-        // TODO notify upper layer
+        if(d7asp_init_args != NULL && d7asp_init_args->d7asp_fifo_flush_completed_cb != NULL)
+            d7asp_init_args->d7asp_fifo_flush_completed_cb(NULL, NULL); //TODO (&fifo.config, fifo.progress_bitmap);
+
         init_fifo();
         switch_state(D7ASP_STATE_IDLE);
         return;
@@ -154,10 +159,11 @@ static void switch_state(state_t new_state)
     }
 }
 
-void d7asp_init()
+void d7asp_init(d7asp_init_args_t* init_args)
 {
     state = D7ASP_STATE_IDLE;
     current_access_class = ACCESS_CLASS_NOT_SET;
+    d7asp_init_args = init_args;
 
     init_fifo();
 
