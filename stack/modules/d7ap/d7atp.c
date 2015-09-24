@@ -25,11 +25,46 @@
 #include "packet.h"
 #include "dll.h"
 #include "ng.h"
+#include "log.h"
 
 static d7atp_addressee_t NGDEF(_current_addressee);
 #define current_addressee NG(_current_addressee)
 
-void d7atp_start_dialog(uint8_t dialog_id, uint8_t transaction_id, packet_t* packet, session_qos_t* qos_settings)
+typedef enum {
+    D7ATP_STATE_IDLE = 0x00,
+    D7ATP_STATE_IN_MASTER_TRANSACTION = 0x01,
+    D7ATP_STATE_IN_SLAVE_TRANSACTION = 0x02,
+    D7ATP_STATE_TERMINATED = 0x03,
+} state_t;
+
+static state_t NGDEF(_current_state);
+#define current_state NG(_current_state)
+
+static void switch_state(state_t new_state)
+{
+    switch(new_state)
+    {
+    case D7ATP_STATE_IN_MASTER_TRANSACTION:
+        log_print_stack_string(LOG_STACK_TRANS, "Switching to D7ATP_STATE_IN_MASTER_TRANSACTION");
+        assert(current_state == D7ATP_STATE_IDLE);
+        current_state = new_state;
+        break;
+    case D7ATP_STATE_IN_SLAVE_TRANSACTION:
+        log_print_stack_string(LOG_STACK_TRANS, "Switching to D7ATP_STATE_IN_SLAVE_TRANSACTION");
+        // TODO assert(current_state == D7ATP_STATE_IDLE);
+        current_state = new_state;
+        break;
+    default:
+        assert(false);
+    }
+}
+
+void d7atp_init()
+{
+    current_state = D7ATP_STATE_IDLE;
+}
+
+void d7atp_start_dialog(uint8_t dialog_id, uint8_t transaction_id, packet_t* packet, session_qos_t* qos_settings, dae_access_profile_t* access_profile)
 {
     // TODO only supports broadcasting data now, no ack, timeout, multiple transactions, ...
 
@@ -52,10 +87,14 @@ void d7atp_start_dialog(uint8_t dialog_id, uint8_t transaction_id, packet_t* pac
         // TODO also when responding to broadcast requests
 
     d7anp_tx_foreground_frame(packet, should_include_origin_template);
+
+    sched_post_task(&dll_start_foreground_scan); // TODO do here?
 }
 
 void d7atp_respond_dialog(packet_t* packet)
 {
+    switch_state(D7ATP_STATE_IN_SLAVE_TRANSACTION);
+
     // modify the request headers and turn this into a response
     d7atp_ctrl_t* d7atp = &(packet->d7atp_ctrl);
     d7atp->ctrl_is_start = 0;

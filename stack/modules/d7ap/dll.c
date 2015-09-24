@@ -26,7 +26,7 @@
 #include "assert.h"
 #include "fs.h"
 #include "ng.h"
-
+#include "hwdebug.h"
 
 #ifdef FRAMEWORK_LOG_ENABLED
 #define DPRINT(...) log_print_stack_string(LOG_STACK_DLL, __VA_ARGS__)
@@ -92,6 +92,7 @@ static void packet_transmitted(hw_radio_packet_t* hw_radio_packet)
 void dll_init()
 {
     sched_register_task(&process_received_packets);
+    sched_register_task(&dll_start_foreground_scan);
 
     hw_radio_init(&alloc_new_packet, &release_packet);
 
@@ -118,6 +119,7 @@ void dll_tx_frame(packet_t* packet)
 
     packet_assemble(packet);
 
+    log_print_stack_string(LOG_STACK_DLL, "TX: ");
     log_print_data(packet->hw_radio_packet.data, packet->hw_radio_packet.length + 1); // TODO tmp
 
     packet->hw_radio_packet.tx_meta.tx_cfg = (hw_tx_cfg_t){
@@ -135,6 +137,7 @@ void dll_tx_frame(packet_t* packet)
 
 void dll_start_foreground_scan()
 {
+    DPRINT("Start foreground scan");
     // TODO handle Tscan timeout
 
     // TODO only access class using 1 subband which contains 1 channel index is supported for now

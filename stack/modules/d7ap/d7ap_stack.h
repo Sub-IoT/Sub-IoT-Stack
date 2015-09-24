@@ -27,9 +27,12 @@
 #ifndef OSS_7_D7AP_STACK_H
 #define OSS_7_D7AP_STACK_H
 
-#include "alp.h"
 #include "fs.h"
-
+#include "alp.h"
+#include "d7atp.h"
+#include "d7asp.h"
+#include "packet_queue.h"
+#include "dll.h"
 /**
  * @brief d7ap_stack_init
  * @param fs_init_args              Initializes the D7AP stack, should be called by all applications making use of the D7AP stack

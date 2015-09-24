@@ -30,12 +30,21 @@
 #include "d7atp.h"
 #include "packet_queue.h"
 #include "packet.h"
+#include "hwdebug.h"
 
 static d7asp_fifo_t NGDEF(_fifo); // TODO we only use 1 fifo for now, should be multiple later (1 per on unique addressee and QoS combination)
 #define fifo NG(_fifo)
 
 static uint8_t NGDEF(_active_request_id); // TODO move ?
 #define active_request_id NG(_active_request_id)
+
+static dae_access_profile_t NGDEF(_current_access_profile);
+#define current_access_profile NG(_current_access_profile)
+
+static uint8_t NGDEF(_current_access_class);
+#define current_access_class NG(_current_access_class)
+
+#define ACCESS_CLASS_NOT_SET 0xFF
 
 typedef enum {
     D7ASP_STATE_IDLE,
@@ -83,7 +92,11 @@ static void flush_fifos()
 
     alp_process_command(fifo.request_buffer + fifo.requests_indices[active_request_id], packet);
 
-    d7atp_start_dialog(0, 0, packet, &fifo.config.qos); // TODO dialog_id and transaction_id
+    uint8_t access_class = fifo.config.addressee.addressee_ctrl_access_class;
+    if(access_class != current_access_class)
+        fs_read_access_class(access_class, &current_access_profile);
+
+    d7atp_start_dialog(0, 0, packet, &fifo.config.qos, &current_access_profile); // TODO dialog_id and transaction_id
     // TODO retries, dialog timeout
 }
 
@@ -111,6 +124,10 @@ static void switch_state(state_t new_state)
                 case D7ASP_STATE_SLAVE:
                     state = D7ASP_STATE_SLAVE_PENDING_MASTER;
                     log_print_stack_string(LOG_STACK_SESSION, "Switching to state D7ASP_STATE_SLAVE_PENDING_MASTER");
+                    break;
+                case D7ASP_STATE_MASTER:
+                    // new requests in fifo, reschedule for later flushing
+                    // TODO sched_post_task(&flush_fifos);
                     break;
                 default:
                     assert(false);
@@ -141,6 +158,7 @@ static void switch_state(state_t new_state)
 void d7asp_init()
 {
     state = D7ASP_STATE_IDLE;
+    current_access_class = ACCESS_CLASS_NOT_SET;
 
     init_fifo();
 
@@ -179,6 +197,7 @@ void d7asp_process_received_packet(packet_t* packet)
     if(state == D7ASP_STATE_MASTER)
     {
         // received ack
+        log_print_stack_string(LOG_STACK_SESSION, "Received ACK");
         ack_current_request();
         // TODO notify upper layer
         packet_queue_free_packet(packet);
@@ -224,6 +243,7 @@ void d7asp_process_received_packet(packet_t* packet)
         assert(false);
 }
 
+// TODO should not trigger on packet transmitted but get event from TP after resp period expires
 void d7asp_signal_packet_transmitted(packet_t *packet)
 {
     log_print_stack_string(LOG_STACK_SESSION, "Packet transmitted");
@@ -231,8 +251,11 @@ void d7asp_signal_packet_transmitted(packet_t *packet)
     packet_queue_free_packet(packet);
 
     if(state == D7ASP_STATE_SLAVE)
+    {
         switch_state(D7ASP_STATE_IDLE); // TODO don't go to idle directly, wait for timeout or stop transaction
-    // for master session we switch to idle in d7asp_ack_current_request()
+    }
+//    if(state == D7ASP_STATE_MASTER)
+//        sched_post_task(&dll_start_foreground_scan); // TODO move to TL (manage dialog timeout etc)
 }
 
 void d7asp_signal_packet_csma_ca_insertion_completed()
@@ -240,4 +263,6 @@ void d7asp_signal_packet_csma_ca_insertion_completed()
     // for the lowest QoS level the packet is ack-ed when CSMA/CA process succeeded
     if(fifo.config.qos.qos_ctrl_resp_mode == SESSION_RESP_MODE_NONE)
         ack_current_request();
+
+    //dll_start_foreground_scan(); // TODO move to TL (manage dialog timeout etc)
 }
