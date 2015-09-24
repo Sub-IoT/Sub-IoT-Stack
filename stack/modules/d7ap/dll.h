@@ -41,9 +41,9 @@ typedef struct
         uint8_t control;
         struct
         {
-            bool control_target_address_set: 1;
-            bool control_vid_used: 1;
             int8_t control_eirp_index: 6;
+            bool control_vid_used: 1;
+            bool control_target_address_set: 1;
         };
     };
     //uint8_t target_address[8]; // TODO assuming 8B UID for now
