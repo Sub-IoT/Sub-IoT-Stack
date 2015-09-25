@@ -124,10 +124,18 @@ void init_user_files()
     fs_init_file_with_D7AActP(ACTION_FILE_ID, &d7asp_fifo_config, &alp_ctrl, (uint8_t*)&file_data_request_operand);
 }
 
-void on_d7asp_fifo_flush_completed(d7asp_fifo_config_t* fifo_config, uint8_t* progress_bitmap) // TODO bitmap byte count
+void on_d7asp_fifo_flush_completed(d7asp_fifo_config_t* fifo_config, uint8_t* progress_bitmap, uint8_t* success_bitmap, uint8_t bitmap_byte_count)
 {
-    DPRINT("Fifo flush completed"); // TODO check progress
+    if(memcmp(success_bitmap, progress_bitmap, bitmap_byte_count) == 0)
+    {
+        DPRINT("All requests acknowledged");
+    }
+    else
+    {
+        DPRINT("Not all requests acknowledged");
+    }
 }
+
 
 void bootstrap()
 {
@@ -161,7 +169,7 @@ void bootstrap()
         .access_profiles = access_classes
     };
 
-     d7asp_init_args.d7asp_fifo_flush_completed_cb = &on_d7asp_fifo_flush_completed;
+    d7asp_init_args.d7asp_fifo_flush_completed_cb = &on_d7asp_fifo_flush_completed;
 
     d7ap_stack_init(&fs_init_args, &on_alp_unhandled_action, &d7asp_init_args);
 

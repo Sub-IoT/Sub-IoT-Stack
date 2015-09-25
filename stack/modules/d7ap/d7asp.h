@@ -49,6 +49,8 @@ typedef struct {
     d7atp_addressee_t addressee;
 } d7asp_fifo_config_t;
 
+#define REQUESTS_BITMAP_BYTE_COUNT ((MODULE_D7AP_FIFO_MAX_REQUESTS_COUNT + 7) / 8)
+
 /**
  * /brief The state of a session FIFO
  */
@@ -58,8 +60,8 @@ typedef struct {
     // TODO uint8_t token;
     // TODO retry_single_cnt
     // TODO retry_total_cnt
-    uint8_t progress_bitmap[(MODULE_D7AP_FIFO_MAX_REQUESTS_COUNT + 7) / 8];
-    // TODO success_bitmap
+    uint8_t progress_bitmap[REQUESTS_BITMAP_BYTE_COUNT];
+    uint8_t success_bitmap[REQUESTS_BITMAP_BYTE_COUNT];
     uint8_t next_request_id;
     uint8_t request_buffer_tail_idx;
     uint8_t requests_indices[MODULE_D7AP_FIFO_MAX_REQUESTS_COUNT]; /**< Contains for every request ID the index in command_buffer where the request begins */
@@ -87,7 +89,7 @@ typedef struct {
     d7atp_addressee_t addressee;
 } d7asp_result_t;
 
-typedef void (*d7asp_fifo_flush_completed_callback)(d7asp_fifo_config_t* d7asp_fifo_config, uint8_t* progress_bitmap); // TODO SUCCESS_BITMAP
+typedef void (*d7asp_fifo_flush_completed_callback)(d7asp_fifo_config_t* d7asp_fifo_config, uint8_t* progress_bitmap, uint8_t* success_bitmap, uint8_t bitmap_byte_count);
 
 typedef struct {
     d7asp_fifo_flush_completed_callback d7asp_fifo_flush_completed_cb;
