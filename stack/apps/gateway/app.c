@@ -86,7 +86,7 @@ void bootstrap()
         .access_profiles = access_classes
     };
 
-    d7ap_stack_init(&fs_init_args, &on_alp_unhandled_action);
+    d7ap_stack_init(&fs_init_args, &on_alp_unhandled_action, NULL);
 
     sched_register_task(&start_foreground_scan);
     sched_post_task(&start_foreground_scan);

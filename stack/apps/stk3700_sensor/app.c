@@ -161,7 +161,7 @@ void bootstrap()
         .access_profiles = access_classes
     };
 
-    d7ap_stack_init(&fs_init_args, NULL);
+    d7ap_stack_init(&fs_init_args, NULL, NULL);
 
 	internalTempSensor_init();
 	measureTemperature();
