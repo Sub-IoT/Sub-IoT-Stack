@@ -301,22 +301,8 @@ void d7asp_signal_packet_transmitted(packet_t *packet)
     }
 }
 
-void d7asp_signal_packet_csma_ca_insertion_completed()
-{
-    if(state == D7ASP_STATE_MASTER) // TODO only relevant for master sessions?
-    {
-        // for the lowest QoS level the packet is ack-ed when CSMA/CA process succeeded
-        if(fifo.config.qos.qos_ctrl_resp_mode == SESSION_RESP_MODE_NONE)
-        {
-            mark_current_request_done();
-            bitmap_set(fifo.success_bitmap, active_request_id);
-        }
-    }
 
-    //dll_start_foreground_scan(); // TODO move to TL (manage dialog timeout etc)
-}
-
-void d7asp_signal_transaction_request_period_elapsed()
+static void on_request_failed()
 {
     assert(state == D7ASP_STATE_MASTER);
     if(!bitmap_get(fifo.progress_bitmap, active_request_id))
@@ -325,4 +311,28 @@ void d7asp_signal_transaction_request_period_elapsed()
     }
 
     sched_post_task(&flush_fifos); // continue flushing until all request handled ...
+}
+
+void d7asp_signal_packet_csma_ca_insertion_completed(bool succeeded)
+{
+    if(state == D7ASP_STATE_MASTER) // TODO only relevant for master sessions?
+    {
+        if(!succeeded)
+        {
+            on_request_failed();
+            return;
+        }
+
+        // for the lowest QoS level the packet is ack-ed when CSMA/CA process succeeded
+        if(fifo.config.qos.qos_ctrl_resp_mode == SESSION_RESP_MODE_NONE)
+        {
+            mark_current_request_done();
+            bitmap_set(fifo.success_bitmap, active_request_id);
+        }
+    }
+}
+
+void d7asp_signal_transaction_request_period_elapsed()
+{
+    on_request_failed();
 }

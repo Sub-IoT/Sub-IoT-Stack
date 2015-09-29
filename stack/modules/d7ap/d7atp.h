@@ -78,4 +78,5 @@ void d7atp_respond_dialog(packet_t* packet);
 uint8_t d7atp_assemble_packet_header(packet_t* packet, uint8_t* data_ptr);
 bool d7atp_disassemble_packet_header(packet_t* packet, uint8_t* data_idx);
 void d7atp_signal_packet_transmitted(packet_t* packet);
+void d7atp_signal_packet_csma_ca_insertion_completed(bool succeeded);
 #endif /* D7ATP_H_ */

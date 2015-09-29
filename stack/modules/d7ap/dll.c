@@ -40,6 +40,7 @@ typedef enum
     DLL_STATE_CSMA_CA_STARTED,
     DLL_STATE_CCA1,
     DLL_STATE_CCA2,
+    DLL_STATE_CCA_FAIL,
     DLL_STATE_FOREGROUND_SCAN,
     DLL_STATE_BACKGROUND_SCAN,
     DLL_STATE_TX_FOREGROUND,
@@ -109,6 +110,11 @@ static void switch_state(dll_state_t next_state)
         dll_state = DLL_STATE_TX_FOREGROUND_COMPLETED;
         DPRINT("Switched to DLL_STATE_TX_FOREGROUND_COMPLETED");
         break;
+    case DLL_STATE_CCA_FAIL:
+        assert(dll_state == DLL_STATE_CCA1 || dll_state == DLL_STATE_CCA2);
+        dll_state = DLL_STATE_IDLE;
+        DPRINT("Switched to DLL_STATE_IDLE");
+        break;DPRINT("Switched to DLL_STATE_TX_FOREGROUND_COMPLETED");
     default:
         assert(false);
     }
@@ -145,11 +151,7 @@ static void packet_transmitted(hw_radio_packet_t* hw_radio_packet)
     if(dll_tx_callback != NULL)
         dll_tx_callback();
 
-    // TODO move to CSMA
-  //  if(packet->d7atp_ctrl.ctrl_is_start) // do not execute CSMA for guarded response (and thus do not ack) TODO validate
- //       d7asp_signal_packet_csma_ca_insertion_completed(); // TODO ack request when CSMA/CA succeeds and only for for QoS == None
-
-    d7asp_signal_packet_transmitted(packet);
+    d7atp_signal_packet_transmitted(packet);
 
     // depending on state before TX the radio goes to RX or IDLE state
     if(hw_radio_is_rx())
@@ -189,12 +191,15 @@ static void cca_rssi_valid(int16_t cur_rssi)
             error_t err = hw_radio_send_packet(current_packet, &packet_transmitted);
             assert(err == SUCCESS);
 
-            d7asp_signal_packet_csma_ca_insertion_completed(); // TODO ack request when CSMA/CA succeeds and only for for QoS == None
+            d7atp_signal_packet_csma_ca_insertion_completed(true);
             return;
         }
     }
     else
     {
+        DPRINT("Channel not clear, RSSI: %i", cur_rssi);
+        switch_state(DLL_STATE_CCA_FAIL);
+        d7atp_signal_packet_csma_ca_insertion_completed(false);
         // TODO: handle CCA FAIL
         //dll_process_csma_ca();
     }
