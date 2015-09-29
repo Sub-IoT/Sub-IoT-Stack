@@ -94,7 +94,7 @@ void packet_disassemble(packet_t* packet)
 
     DPRINT(LOG_STACK_FWK, "Done disassembling packet");
 
-    d7asp_process_received_packet(packet); // TODO move to TP
+    d7atp_process_received_packet(packet);
 
     return;
 

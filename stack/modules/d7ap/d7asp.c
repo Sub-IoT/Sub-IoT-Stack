@@ -93,6 +93,7 @@ static void mark_current_request_done()
 
 static void flush_fifos()
 {
+    assert(state == D7ASP_STATE_MASTER);
     log_print_stack_string(LOG_STACK_SESSION, "Flushing FIFOs");
 
     if(active_request_id == NO_ACTIVE_REQUEST_ID)
@@ -154,7 +155,12 @@ static void switch_state(state_t new_state)
             switch(state)
             {
                 case D7ASP_STATE_IDLE:
+                    state = new_state;
+                    sched_post_task(&flush_fifos);
+                    log_print_stack_string(LOG_STACK_SESSION, "Switching to state D7ASP_STATE_MASTER");
+                    break;
                 case D7ASP_STATE_SLAVE_PENDING_MASTER:
+                    assert(false);
                     state = new_state;
                     sched_post_task(&flush_fifos);
                     log_print_stack_string(LOG_STACK_SESSION, "Switching to state D7ASP_STATE_MASTER");
@@ -183,7 +189,11 @@ static void switch_state(state_t new_state)
                 default:
                     assert(false);
             }
-
+            break;
+        case D7ASP_STATE_SLAVE_PENDING_MASTER:
+            assert(state == D7ASP_STATE_SLAVE);
+            state = D7ASP_STATE_SLAVE_PENDING_MASTER;
+            log_print_stack_string(LOG_STACK_SESSION, "Switching to state D7ASP_STATE_SLAVE_PENDING_MASTER");
             break;
         case D7ASP_STATE_IDLE:
             state = new_state;
@@ -231,7 +241,12 @@ void d7asp_queue_alp_actions(d7asp_fifo_config_t* d7asp_fifo_config, uint8_t* al
     fifo.request_buffer_tail_idx += alp_payload_length + 1;
     fifo.next_request_id++;
 
-    switch_state(D7ASP_STATE_MASTER);
+    if(state == D7ASP_STATE_IDLE)
+        switch_state(D7ASP_STATE_MASTER);
+    else if(state == D7ASP_STATE_SLAVE)
+        switch_state(D7ASP_STATE_SLAVE_PENDING_MASTER);
+    else
+        assert(false);
 }
 
 void d7asp_process_received_packet(packet_t* packet)
@@ -247,10 +262,12 @@ void d7asp_process_received_packet(packet_t* packet)
         packet_queue_free_packet(packet); // ACK can be cleaned
         // TODO notify upper layer
     }
-    else if(state == D7ASP_STATE_IDLE)
+    else if(state == D7ASP_STATE_IDLE || state == D7ASP_STATE_SLAVE)
     {
         // received a request, start slave session, process and respond
-        switch_state(D7ASP_STATE_SLAVE);
+        if(state == D7ASP_STATE_IDLE)
+            switch_state(D7ASP_STATE_SLAVE); // don't switch when already in slave state
+
         d7asp_result_t result = {
             .status = {
                 .session_state = SESSION_STATE_DONE, // TODO slave session state can be active as well, assuming done now
@@ -277,7 +294,7 @@ void d7asp_process_received_packet(packet_t* packet)
         if(packet->payload_length == 0 && !packet->d7atp_ctrl.ctrl_is_ack_requested)
         {
             // no need to respond, clean up
-            switch_state(D7ASP_STATE_IDLE); // TODO don't go to idle directly, wait for timeout or stop transaction
+            //switch_state(D7ASP_STATE_IDLE); // TODO don't go to idle directly, wait for timeout or stop transaction
             packet_queue_free_packet(packet);
             return;
         }
@@ -297,7 +314,7 @@ void d7asp_signal_packet_transmitted(packet_t *packet)
     if(state == D7ASP_STATE_SLAVE)
     {
         packet_queue_free_packet(packet);
-        switch_state(D7ASP_STATE_IDLE); // TODO don't go to idle directly, wait for timeout or stop transaction
+        //switch_state(D7ASP_STATE_IDLE); // TODO don't go to idle directly, wait for timeout or stop transaction
     }
 }
 
@@ -332,7 +349,15 @@ void d7asp_signal_packet_csma_ca_insertion_completed(bool succeeded)
     }
 }
 
-void d7asp_signal_transaction_request_period_elapsed()
+void d7asp_signal_transaction_response_period_elapsed()
 {
-    on_request_failed();
+    if(state == D7ASP_STATE_MASTER)
+        on_request_failed();
+    else if(state == D7ASP_STATE_SLAVE)
+        switch_state(D7ASP_STATE_IDLE);
+    else if(state == D7ASP_STATE_SLAVE_PENDING_MASTER)
+    {
+        switch_state(D7ASP_STATE_MASTER);
+        sched_post_task(&flush_fifos);
+    }
 }

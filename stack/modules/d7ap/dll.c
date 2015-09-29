@@ -200,8 +200,6 @@ static void cca_rssi_valid(int16_t cur_rssi)
         DPRINT("Channel not clear, RSSI: %i", cur_rssi);
         switch_state(DLL_STATE_CCA_FAIL);
         d7atp_signal_packet_csma_ca_insertion_completed(false);
-        // TODO: handle CCA FAIL
-        //dll_process_csma_ca();
     }
 }
 
@@ -214,6 +212,7 @@ static void execute_cca()
         .channel_id.center_freq_index = current_access_class.subbands[0].channel_index_start,
         .syncword_class = PHY_SYNCWORD_CLASS1,
     };
+
     hw_radio_set_rx(&rx_cfg, NULL, &cca_rssi_valid);
 }
 

@@ -22,6 +22,7 @@
 
 #include "assert.h"
 #include "d7atp.h"
+#include "packet_queue.h"
 #include "packet.h"
 #include "d7asp.h"
 #include "dll.h"
@@ -35,7 +36,8 @@ typedef enum {
     D7ATP_STATE_IDLE,
     D7ATP_STATE_MASTER_TRANSACTION_REQUEST_PERIOD,
     D7ATP_STATE_MASTER_TRANSACTION_RESPONSE_PERIOD,
-    D7ATP_STATE_SLAVE_TRANSACTION,
+    D7ATP_STATE_SLAVE_TRANSACTION_SENDING_RESPONSE,
+    D7ATP_STATE_SLAVE_TRANSACTION_RESPONSE_PERIOD,
     D7ATP_STATE_TERMINATED ,
 } state_t;
 
@@ -56,16 +58,22 @@ static void switch_state(state_t new_state)
         assert(d7atp_state == D7ATP_STATE_MASTER_TRANSACTION_REQUEST_PERIOD);
         d7atp_state = new_state;
         break;
-    case D7ATP_STATE_SLAVE_TRANSACTION:
-        log_print_stack_string(LOG_STACK_TRANS, "Switching to D7ATP_STATE_SLAVE_TRANSACTION");
-        // TODO assert(d7atp_state == D7ATP_STATE_IDLE);
+    case D7ATP_STATE_SLAVE_TRANSACTION_SENDING_RESPONSE:
+        log_print_stack_string(LOG_STACK_TRANS, "Switching to D7ATP_STATE_SLAVE_TRANSACTION_SENDING_RESPONSE");
+        assert(d7atp_state == D7ATP_STATE_IDLE || D7ATP_STATE_SLAVE_TRANSACTION_RESPONSE_PERIOD);
+        d7atp_state = new_state;
+        break;
+    case D7ATP_STATE_SLAVE_TRANSACTION_RESPONSE_PERIOD:
+        log_print_stack_string(LOG_STACK_TRANS, "Switching to D7ATP_STATE_SLAVE_TRANSACTION_RESPONSE_PERIOD");
+        assert(d7atp_state == D7ATP_STATE_SLAVE_TRANSACTION_SENDING_RESPONSE);
         d7atp_state = new_state;
         break;
     case D7ATP_STATE_IDLE:
         log_print_stack_string(LOG_STACK_TRANS, "Switching to D7ATP_STATE_IDLE");
         assert(d7atp_state == D7ATP_STATE_MASTER_TRANSACTION_REQUEST_PERIOD
                || d7atp_state == D7ATP_STATE_MASTER_TRANSACTION_RESPONSE_PERIOD
-               || d7atp_state ==  D7ATP_STATE_SLAVE_TRANSACTION);
+               || d7atp_state ==  D7ATP_STATE_SLAVE_TRANSACTION_SENDING_RESPONSE
+               || d7atp_state ==  D7ATP_STATE_SLAVE_TRANSACTION_RESPONSE_PERIOD);
         d7atp_state = new_state;
         break;
     default:
@@ -75,10 +83,13 @@ static void switch_state(state_t new_state)
 
 static void transaction_response_period_expired()
 {
+    assert(d7atp_state == D7ATP_STATE_SLAVE_TRANSACTION_RESPONSE_PERIOD
+           || d7atp_state == D7ATP_STATE_MASTER_TRANSACTION_RESPONSE_PERIOD);
+
     log_print_stack_string(LOG_STACK_TRANS, "Transaction response period expired");
     switch_state(D7ATP_STATE_IDLE);
     dll_stop_foreground_scan();
-    d7asp_signal_transaction_request_period_elapsed();
+    d7asp_signal_transaction_response_period_elapsed();
 }
 
 void d7atp_init()
@@ -114,7 +125,7 @@ void d7atp_start_dialog(uint8_t dialog_id, uint8_t transaction_id, packet_t* pac
 
 void d7atp_respond_dialog(packet_t* packet)
 {
-    switch_state(D7ATP_STATE_SLAVE_TRANSACTION);
+    switch_state(D7ATP_STATE_SLAVE_TRANSACTION_SENDING_RESPONSE);
 
     // modify the request headers and turn this into a response
     d7atp_ctrl_t* d7atp = &(packet->d7atp_ctrl);
@@ -176,14 +187,15 @@ bool d7atp_disassemble_packet_header(packet_t *packet, uint8_t *data_idx)
 void d7atp_signal_packet_transmitted(packet_t* packet)
 {
     if(d7atp_state == D7ATP_STATE_MASTER_TRANSACTION_REQUEST_PERIOD)
-    {
         switch_state(D7ATP_STATE_MASTER_TRANSACTION_RESPONSE_PERIOD);
+    else if(d7atp_state == D7ATP_STATE_SLAVE_TRANSACTION_SENDING_RESPONSE)
+        switch_state(D7ATP_STATE_SLAVE_TRANSACTION_RESPONSE_PERIOD);
+    else
+        assert(false);
 
-        // TODO find out difference between dialog timeout and transaction response period
-        timer_post_task_delay(&transaction_response_period_expired, 10); // TODO hardcoded period for now
-
-        //sched_post_task(&dll_start_foreground_scan); // TODO do here?
-    }
+    log_print_stack_string(LOG_STACK_DLL, "Packet transmitted, starting response period timer");
+    // TODO find out difference between dialog timeout and transaction response period
+    timer_post_task_delay(&transaction_response_period_expired, 50); // TODO hardcoded period for now
 
     d7asp_signal_packet_transmitted(packet);
 }
@@ -197,4 +209,24 @@ void d7atp_signal_packet_csma_ca_insertion_completed(bool succeeded)
     }
 
     d7asp_signal_packet_csma_ca_insertion_completed(succeeded);
+}
+
+void d7atp_process_received_packet(packet_t* packet)
+{
+    assert(d7atp_state == D7ATP_STATE_MASTER_TRANSACTION_RESPONSE_PERIOD
+           || d7atp_state == D7ATP_STATE_SLAVE_TRANSACTION_RESPONSE_PERIOD
+           || d7atp_state == D7ATP_STATE_IDLE); // IDLE: when doing channel scanning outside of transaction
+
+    if(d7atp_state == D7ATP_STATE_MASTER_TRANSACTION_RESPONSE_PERIOD)
+    {
+        if(!packet->dll_header.control_target_address_set)
+        {
+            // new transaction start while transaction already in progress!
+            log_print_stack_string(LOG_STACK_DLL, "Expecting ACK but received packet has not target address set, skipping");  // TODO assert later
+            packet_queue_free_packet(packet);
+            return;
+        }
+    }
+
+    d7asp_process_received_packet(packet);
 }
