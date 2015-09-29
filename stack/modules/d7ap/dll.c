@@ -34,10 +34,14 @@
 #define DPRINT(...)
 #endif
 
+
+
 typedef enum
 {
     DLL_STATE_IDLE,
     DLL_STATE_CSMA_CA_STARTED,
+	DLL_STATE_CSMA_CA_WAITING,
+	DLL_STATE_CSMA_CA_RETRY,
     DLL_STATE_CCA1,
     DLL_STATE_CCA2,
     DLL_STATE_CCA_FAIL,
@@ -58,6 +62,26 @@ static hw_radio_packet_t* NGDEF(_current_packet);
 
 static dll_packet_received_callback dll_rx_callback = NULL;
 static dll_packet_transmitted_callback dll_tx_callback = NULL;
+
+
+// CSMA-CA parameters
+static int16_t NGDEF(_dll_tca);
+#define dll_tca NG(_dll_tca)
+
+static int16_t NGDEF(_dll_tca0);
+#define dll_tca0 NG(_dll_tca0)
+
+static int16_t NGDEF(_dll_to);
+#define dll_to NG(_dll_to)
+
+static uint16_t NGDEF(_dll_slot_duration);
+#define dll_slot_duration NG(_dll_slot_duration)
+
+static uint16_t NGDEF(_dll_rigd_n);
+#define dll_rigd_n NG(_dll_rigd_n)
+
+// TODO defined somewhere?
+#define t_g	5
 
 static hw_radio_packet_t* alloc_new_packet(uint8_t length)
 {
@@ -80,6 +104,16 @@ static void switch_state(dll_state_t next_state)
         dll_state = DLL_STATE_CSMA_CA_STARTED;
         DPRINT("Switched to DLL_STATE_CSMA_CA_STARTED");
         break;
+    case DLL_STATE_CSMA_CA_WAITING:
+		assert(dll_state == DLL_STATE_CSMA_CA_STARTED);
+		dll_state = DLL_STATE_CSMA_CA_WAITING;
+		DPRINT("Switched to DLL_STATE_CSMA_CA_WAITING");
+		break;
+    case DLL_STATE_CSMA_CA_RETRY:
+    	assert(dll_state == DLL_STATE_CCA1 || dll_state == DLL_STATE_CCA2);
+		dll_state = DLL_STATE_CSMA_CA_RETRY;
+		DPRINT("Switched to DLL_STATE_CSMA_CA_RETRY");
+		break;
     case DLL_STATE_CCA1:
         assert(dll_state == DLL_STATE_CSMA_CA_STARTED);
         dll_state = DLL_STATE_CCA1;
@@ -111,10 +145,11 @@ static void switch_state(dll_state_t next_state)
         DPRINT("Switched to DLL_STATE_TX_FOREGROUND_COMPLETED");
         break;
     case DLL_STATE_CCA_FAIL:
-        assert(dll_state == DLL_STATE_CCA1 || dll_state == DLL_STATE_CCA2);
+        assert(dll_state == DLL_STATE_CCA1 || dll_state == DLL_STATE_CCA2
+        		|| dll_state == DLL_STATE_CSMA_CA_STARTED || dll_state == DLL_STATE_CSMA_CA_RETRY);
         dll_state = DLL_STATE_IDLE;
         DPRINT("Switched to DLL_STATE_IDLE");
-        break;DPRINT("Switched to DLL_STATE_TX_FOREGROUND_COMPLETED");
+        break;
     default:
         assert(false);
     }
@@ -154,18 +189,19 @@ static void packet_transmitted(hw_radio_packet_t* hw_radio_packet)
     d7atp_signal_packet_transmitted(packet);
 
     // depending on state before TX the radio goes to RX or IDLE state
-    if(hw_radio_is_rx())
-    {
-        dll_start_foreground_scan();
-    }
-    else
-    {
+//    if(hw_radio_is_rx())
+//    {
+//        dll_start_foreground_scan();
+//    }
+//    else
+//    {
         switch_state(DLL_STATE_IDLE);
         hw_radio_set_idle();
-    }
+//    }
 }
 
 static void execute_cca();
+static void execute_csma_ca();
 
 static void cca_rssi_valid(int16_t cur_rssi)
 {
@@ -198,8 +234,11 @@ static void cca_rssi_valid(int16_t cur_rssi)
     else
     {
         DPRINT("Channel not clear, RSSI: %i", cur_rssi);
-        switch_state(DLL_STATE_CCA_FAIL);
-        d7atp_signal_packet_csma_ca_insertion_completed(false);
+        switch_state(DLL_STATE_CSMA_CA_RETRY);
+        execute_csma_ca();
+
+        //switch_state(DLL_STATE_CCA_FAIL);
+        //d7atp_signal_packet_csma_ca_insertion_completed(false);
     }
 }
 
@@ -216,16 +255,147 @@ static void execute_cca()
     hw_radio_set_rx(&rx_cfg, NULL, &cca_rssi_valid);
 }
 
+static uint16_t calculate_tx_duration()
+{
+	int data_rate = 6; // Normal rate: 6.9 bytes/tick
+	// TODO select correct subband
+	switch (current_access_class.subbands[0].channel_header.ch_class)
+	{
+	case PHY_CLASS_LO_RATE:
+		data_rate = 1; // Lo Rate: 1.2 bytes/tick
+		break;
+	case PHY_CLASS_HI_RATE:
+		data_rate = 20; // High rate: 20.83 byte/tick
+	}
+
+	uint16_t duration = (current_packet->length / data_rate) + 1;
+	return duration;
+}
+
 static void execute_csma_ca()
 {
-    switch_state(DLL_STATE_CSMA_CA_STARTED);
-    // TODO compute offset and wait
+	// TODO generate random channel queue
 
-    // TODO generate random channel queue
+    switch (dll_state)
+    {
+		case DLL_STATE_CSMA_CA_STARTED:
+		{
+		    uint16_t tx_duration = calculate_tx_duration();
+			dll_tca = current_access_class.transmission_timeout_period - tx_duration;
+			DPRINT("Tca= %i = %i - %i", dll_tca, current_access_class.transmission_timeout_period, tx_duration);
 
-    // execute CCA
-    switch_state(DLL_STATE_CCA1);
-    execute_cca();
+			if (ll_tca <= 0)
+			{
+				switch_state(DLL_STATE_CCA_FAIL);
+				sched_post_task(&execute_csma_ca);
+				break;
+			}
+
+			uint16_t t_offset = 0;
+
+			switch(current_access_class.control_csma_ca_mode)
+			{
+				case CSMA_CA_MODE_UNC:
+					// no delay
+					break;
+				case CSMA_CA_MODE_AIND: // TODO implement AIND
+				{
+					dll_slot_duration = tx_duration;
+					// no initial delay
+					break;
+				}
+				case CSMA_CA_MODE_RAIND: // TODO implement RAIND
+				{
+					dll_slot_duration = tx_duration;
+					uint16_t max_nr_slots = dll_tca / tx_duration;
+					uint16_t slots_wait = rand() % max_nr_slots;
+					t_offset = slots_wait * tx_duration;
+					break;
+				}
+				case CSMA_CA_MODE_RIGD: // TODO implement RAIND
+				{
+					dll_rigd_n = 0;
+					dll_tca0 = dll_tca;
+					dll_slot_duration = (uint16_t) ((double)dll_tca0) / (2 << (dll_rigd_n+1));
+					t_offset = rand() % dll_slot_duration;
+					break;
+				}
+			}
+			DPRINT("slot duration: %i", dll_slot_duration);
+			DPRINT("t_offset: %i", t_offset);
+
+			dll_to = dll_tca - t_offset;
+
+			if (t_offset > 0)
+			{
+				switch_state(DLL_STATE_CSMA_CA_WAITING);
+				timer_post_task_delay(&execute_csma_ca, t_offset);
+			} else {
+				switch_state(DLL_STATE_CCA1);
+				sched_post_task(&execute_csma_ca);
+			}
+
+			break;
+		}
+		case DLL_STATE_CSMA_CA_RETRY:
+		{
+			if (dll_to < t_g)
+			{
+				switch_state(DLL_STATE_CCA_FAIL);
+				sched_post_task(&execute_csma_ca);
+				break;
+			}
+
+			dll_tca = dll_to;
+			uint16_t t_offset = 0;
+
+			switch(current_access_class.control_csma_ca_mode)
+			{
+				case CSMA_CA_MODE_AIND: // TODO implement AIND
+				case CSMA_CA_MODE_RAIND: // TODO implement RAIND
+				{
+					uint16_t max_nr_slots = dll_tca / tx_duration;
+					uint16_t slots_wait = rand() % max_nr_slots;
+					t_offset = slots_wait * tx_duration;
+					break;
+				}
+				case CSMA_CA_MODE_RIGD: // TODO implement RAIND
+				{
+					dll_rigd_n++;
+					dll_slot_duration = (uint16_t) ((double)dll_tca0) / (2 << (dll_rigd_n+1));
+					t_offset = rand() % dll_slot_duration;
+					DPRINT("slot duration: %i", dll_slot_duration);
+					break;
+				}
+			}
+
+			DPRINT("t_offset: %i", t_offset);
+
+			dll_to = dll_tca - t_offset;
+
+			if (t_offset > 0)
+			{
+				switch_state(DLL_STATE_CSMA_CA_WAITING);
+				timer_post_task_delay(&execute_csma_ca, t_offset);
+			} else {
+				switch_state(DLL_STATE_CCA1);
+				sched_post_task(&execute_csma_ca);
+			}
+
+			break;
+		}
+		case DLL_STATE_CCA1:
+		{
+			// execute CCA
+			execute_cca();
+			break;
+		}
+		case DLL_STATE_CCA_FAIL:
+		{
+			d7atp_signal_packet_csma_ca_insertion_completed(false);
+			break;
+		}
+    }
 }
 
 void dll_init()
@@ -270,6 +440,7 @@ void dll_tx_frame(packet_t* packet)
 
     current_packet = &(packet->hw_radio_packet);
 
+    switch_state(DLL_STATE_CSMA_CA_STARTED);
     execute_csma_ca();
 }
 
