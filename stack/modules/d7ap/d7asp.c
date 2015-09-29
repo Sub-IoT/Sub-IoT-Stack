@@ -30,6 +30,7 @@
 #include "d7atp.h"
 #include "packet_queue.h"
 #include "packet.h"
+#include "hwdebug.h"
 
 static d7asp_fifo_t NGDEF(_fifo); // TODO we only use 1 fifo for now, should be multiple later (1 per on unique addressee and QoS combination)
 #define fifo NG(_fifo)
@@ -37,10 +38,45 @@ static d7asp_fifo_t NGDEF(_fifo); // TODO we only use 1 fifo for now, should be 
 static uint8_t NGDEF(_active_request_id); // TODO move ?
 #define active_request_id NG(_active_request_id)
 
+#define NO_ACTIVE_REQUEST_ID 0xFF
+
+static uint8_t NGDEF(_current_request_retry_count);
+#define current_request_retry_count NG(_current_request_retry_count)
+
+static packet_t* NGDEF(_current_request_packet);
+#define current_request_packet NG(_current_request_packet)
+
+static uint8_t NGDEF(_single_request_retry_limit);
+#define single_request_retry_limit NG(_single_request_retry_limit)
+
+static dae_access_profile_t NGDEF(_current_access_profile);
+#define current_access_profile NG(_current_access_profile)
+
+static uint8_t NGDEF(_current_access_class);
+#define current_access_class NG(_current_access_class)
+
+#define ACCESS_CLASS_NOT_SET 0xFF
+
+static d7asp_init_args_t* NGDEF(_d7asp_init_args);
+#define d7asp_init_args NG(_d7asp_init_args)
+
+typedef enum {
+    D7ASP_STATE_IDLE,
+    D7ASP_STATE_SLAVE,
+    D7ASP_STATE_MASTER,
+    D7ASP_STATE_SLAVE_PENDING_MASTER
+} state_t;
+
+static state_t NGDEF(_state);
+#define state NG(_state)
+
+static void switch_state(state_t new_state);
+
 static void init_fifo()
 {
     fifo = (d7asp_fifo_t){
         .progress_bitmap = { 0x00 },
+        .success_bitmap = { 0x00 },
         .next_request_id = 0,
         .request_buffer_tail_idx = 0,
         .requests_indices = { 0x00 },
@@ -48,33 +84,123 @@ static void init_fifo()
     };
 }
 
+static void mark_current_request_done()
+{
+    bitmap_set(fifo.progress_bitmap, active_request_id);
+    active_request_id = NO_ACTIVE_REQUEST_ID;
+    packet_queue_free_packet(current_request_packet);
+}
+
 static void flush_fifos()
 {
     log_print_stack_string(LOG_STACK_SESSION, "Flushing FIFOs");
 
-    // find first request which is not acked or dropped
-    uint8_t found_next_req_index = bitmap_search(fifo.progress_bitmap, false, MODULE_D7AP_FIFO_MAX_REQUESTS_COUNT);
-    if(found_next_req_index == -1 || found_next_req_index == fifo.next_request_id)
+    if(active_request_id == NO_ACTIVE_REQUEST_ID)
     {
-        // we handled all requests ...
-        log_print_stack_string(LOG_STACK_SESSION, "FIFO flush completed");
-        // TODO notify upper layer
-        init_fifo();
-        return;
+        // find first request which is not acked or dropped
+        uint8_t found_next_req_index = bitmap_search(fifo.progress_bitmap, false, MODULE_D7AP_FIFO_MAX_REQUESTS_COUNT);
+        if(found_next_req_index == -1 || found_next_req_index == fifo.next_request_id)
+        {
+            // we handled all requests ...
+            log_print_stack_string(LOG_STACK_SESSION, "FIFO flush completed");
+            if(d7asp_init_args != NULL && d7asp_init_args->d7asp_fifo_flush_completed_cb != NULL)
+                d7asp_init_args->d7asp_fifo_flush_completed_cb(&fifo.config, fifo.progress_bitmap, fifo.success_bitmap, REQUESTS_BITMAP_BYTE_COUNT);
+
+            init_fifo();
+            switch_state(D7ASP_STATE_IDLE);
+            return;
+        }
+
+        active_request_id = found_next_req_index;
+        current_request_retry_count = 0;
+
+        current_request_packet = packet_queue_alloc_packet();
+        current_request_packet->d7atp_addressee = &(fifo.config.addressee);
+
+        alp_process_command(fifo.request_buffer + fifo.requests_indices[active_request_id], current_request_packet);
+
+        uint8_t access_class = fifo.config.addressee.addressee_ctrl_access_class;
+        if(access_class != current_access_class)
+            fs_read_access_class(access_class, &current_access_profile);
+    }
+    else
+    {
+        // retrying request ...
+        log_print_stack_string(LOG_STACK_SESSION, "Current request retry count: %i", current_request_retry_count);
+        if(current_request_retry_count == single_request_retry_limit)
+        {
+            // mark request as failed and pop
+            mark_current_request_done();
+            log_print_stack_string(LOG_STACK_SESSION, "Request reached single request retry limit (%i), skipping request", single_request_retry_limit);
+            sched_post_task(&flush_fifos); // continue flushing until all request handled ...
+            return;
+        }
+
+        // TODO retry total cnt
+        // TODO stop on error
     }
 
-    active_request_id = found_next_req_index;
-
-    packet_t* packet = packet_queue_alloc_packet();
-    packet->d7atp_addressee = &(fifo.config.addressee);
-
-    alp_process_command(fifo.request_buffer + fifo.requests_indices[active_request_id], packet);
-
-    d7atp_start_dialog(0, 0, packet); // TODO dialog_id and transaction_id
+    d7atp_start_dialog(0, 0, current_request_packet, &fifo.config.qos, &current_access_profile); // TODO dialog_id and transaction_id
 }
 
-void d7asp_init()
+
+
+// TODO document state diagram
+static void switch_state(state_t new_state)
 {
+    switch(new_state)
+    {
+        case D7ASP_STATE_MASTER:
+            switch(state)
+            {
+                case D7ASP_STATE_IDLE:
+                case D7ASP_STATE_SLAVE_PENDING_MASTER:
+                    state = new_state;
+                    sched_post_task(&flush_fifos);
+                    log_print_stack_string(LOG_STACK_SESSION, "Switching to state D7ASP_STATE_MASTER");
+                    break;
+                case D7ASP_STATE_SLAVE:
+                    state = D7ASP_STATE_SLAVE_PENDING_MASTER;
+                    log_print_stack_string(LOG_STACK_SESSION, "Switching to state D7ASP_STATE_SLAVE_PENDING_MASTER");
+                    break;
+                case D7ASP_STATE_MASTER:
+                    // new requests in fifo, reschedule for later flushing
+                    // TODO sched_post_task(&flush_fifos);
+                    break;
+                default:
+                    assert(false);
+            }
+
+            break;
+        case D7ASP_STATE_SLAVE:
+            switch(state)
+            {
+                case D7ASP_STATE_IDLE:
+                    state = new_state;
+                    active_request_id = NO_ACTIVE_REQUEST_ID;
+                    log_print_stack_string(LOG_STACK_SESSION, "Switching to state D7ASP_STATE_SLAVE");
+                    break;
+                default:
+                    assert(false);
+            }
+
+            break;
+        case D7ASP_STATE_IDLE:
+            state = new_state;
+            log_print_stack_string(LOG_STACK_SESSION, "Switching to state D7ASP_STATE_IDLE");
+            break;
+        default:
+            assert(false);
+    }
+}
+
+void d7asp_init(d7asp_init_args_t* init_args)
+{
+    state = D7ASP_STATE_IDLE;
+    current_access_class = ACCESS_CLASS_NOT_SET;
+    d7asp_init_args = init_args;
+    active_request_id = NO_ACTIVE_REQUEST_ID;
+
     init_fifo();
 
     sched_register_task(&flush_fifos);
@@ -97,6 +223,7 @@ void d7asp_queue_alp_actions(d7asp_fifo_config_t* d7asp_fifo_config, uint8_t* al
     fifo.config.start_id = d7asp_fifo_config->start_id;
     fifo.config.addressee.addressee_ctrl = d7asp_fifo_config->addressee.addressee_ctrl;
     memcpy(fifo.config.addressee.addressee_id, d7asp_fifo_config->addressee.addressee_id, sizeof(fifo.config.addressee.addressee_id));
+    single_request_retry_limit = fifo.config.qos.qos_retry_single;
 
     // add request to buffer
     fifo.requests_indices[fifo.next_request_id] = fifo.request_buffer_tail_idx;
@@ -104,35 +231,98 @@ void d7asp_queue_alp_actions(d7asp_fifo_config_t* d7asp_fifo_config, uint8_t* al
     fifo.request_buffer_tail_idx += alp_payload_length + 1;
     fifo.next_request_id++;
 
-    sched_post_task(&flush_fifos);
+    switch_state(D7ASP_STATE_MASTER);
 }
 
 void d7asp_process_received_packet(packet_t* packet)
 {
-    d7asp_result_t result = {
-        .status = {
-            .session_state = SESSION_STATE_DONE, // TODO slave session state can be active as well, assuming done now
-            .nls = packet->d7anp_ctrl.nls_enabled,
-            .retry = false, // TODO
-            .missed = false, // TODO
-        },
-        .fifo_token = packet->d7atp_dialog_id,
-        .request_id = packet->d7atp_transaction_id,
-        .response_to = 0, // TODO
-        .addressee = {
-            .addressee_ctrl_has_id = packet->d7anp_ctrl.origin_access_id_present? true : false,
-            .addressee_ctrl_virtual_id = packet->dll_header.control_vid_used,
-            .addressee_ctrl_access_class = packet->d7anp_ctrl.origin_access_class,
-        },
-    };
+    if(state == D7ASP_STATE_MASTER)
+    {
+        assert(fifo.config.qos.qos_ctrl_resp_mode > SESSION_RESP_MODE_NONE);
 
-    memcpy(result.addressee.addressee_id, packet->origin_access_id, 8);
+        // received ack
+        log_print_stack_string(LOG_STACK_SESSION, "Received ACK");
+        bitmap_set(fifo.success_bitmap, active_request_id);
+        mark_current_request_done();
+        packet_queue_free_packet(packet); // ACK can be cleaned
+        // TODO notify upper layer
+    }
+    else if(state == D7ASP_STATE_IDLE)
+    {
+        // received a request, start slave session, process and respond
+        switch_state(D7ASP_STATE_SLAVE);
+        d7asp_result_t result = {
+            .status = {
+                .session_state = SESSION_STATE_DONE, // TODO slave session state can be active as well, assuming done now
+                .nls = packet->d7anp_ctrl.nls_enabled,
+                .retry = false, // TODO
+                .missed = false, // TODO
+            },
+            .fifo_token = packet->d7atp_dialog_id,
+            .request_id = packet->d7atp_transaction_id,
+            .response_to = 0, // TODO
+            .addressee = {
+                .addressee_ctrl_has_id = packet->d7anp_ctrl.origin_access_id_present? true : false,
+                .addressee_ctrl_virtual_id = packet->dll_header.control_vid_used,
+                .addressee_ctrl_access_class = packet->d7anp_ctrl.origin_access_class,
+            },
+        };
 
-    alp_process_received_command_d7asp(result, packet->payload, packet->payload_length);
+        memcpy(result.addressee.addressee_id, packet->origin_access_id, 8);
+
+        // build response, we will reuse the same packet for this
+        alp_process_received_request(result, packet);
+
+        // execute slave transaction
+        if(packet->payload_length == 0 && !packet->d7atp_ctrl.ctrl_is_ack_requested)
+        {
+            // no need to respond, clean up
+            switch_state(D7ASP_STATE_IDLE); // TODO don't go to idle directly, wait for timeout or stop transaction
+            packet_queue_free_packet(packet);
+            return;
+        }
+
+        log_print_stack_string(LOG_STACK_SESSION, "Sending response");
+        d7atp_respond_dialog(packet);
+    }
+    else
+        assert(false);
 }
 
-void d7asp_ack_current_request()
+// TODO should not trigger on packet transmitted but get event from TP after termination of dialog
+void d7asp_signal_packet_transmitted(packet_t *packet)
 {
-    bitmap_set(fifo.progress_bitmap, active_request_id); // TODO only when acked or dropped
-    sched_post_task(&flush_fifos); // keep flushing until all request handled ...
+    log_print_stack_string(LOG_STACK_SESSION, "Packet transmitted");
+
+    if(state == D7ASP_STATE_SLAVE)
+    {
+        packet_queue_free_packet(packet);
+        switch_state(D7ASP_STATE_IDLE); // TODO don't go to idle directly, wait for timeout or stop transaction
+    }
+}
+
+void d7asp_signal_packet_csma_ca_insertion_completed()
+{
+    if(state == D7ASP_STATE_MASTER) // TODO only relevant for master sessions?
+    {
+        // for the lowest QoS level the packet is ack-ed when CSMA/CA process succeeded
+        if(fifo.config.qos.qos_ctrl_resp_mode == SESSION_RESP_MODE_NONE)
+        {
+            mark_current_request_done();
+            bitmap_set(fifo.success_bitmap, active_request_id);
+        }
+    }
+
+    //dll_start_foreground_scan(); // TODO move to TL (manage dialog timeout etc)
+}
+
+void d7asp_signal_transaction_request_period_elapsed()
+{
+    assert(state == D7ASP_STATE_MASTER);
+    if(!bitmap_get(fifo.progress_bitmap, active_request_id))
+    {
+        current_request_retry_count++;
+    }
+
+    sched_post_task(&flush_fifos); // continue flushing until all request handled ...
 }

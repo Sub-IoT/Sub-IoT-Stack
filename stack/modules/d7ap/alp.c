@@ -69,13 +69,18 @@ void alp_process_command(const uint8_t* alp_command_ptr, packet_t* packet)
 
 }
 
-bool alp_process_received_command_d7asp(d7asp_result_t d7asp_result, uint8_t *alp_command, uint8_t alp_command_size)
+bool alp_process_received_request(d7asp_result_t d7asp_result, packet_t* packet)
 {
     // TODO merge with alp_process_command() ?
     // TODO split into actions
 
-    assert(get_operation(alp_command) == ALP_OP_RETURN_FILE_DATA); // TODO other operations not supported yet
+    assert(get_operation(packet->payload) == ALP_OP_RETURN_FILE_DATA); // TODO other operations not supported yet
 
     if(unhandled_action_cb)
-        unhandled_action_cb(d7asp_result, alp_command, alp_command_size);
+        unhandled_action_cb(d7asp_result, packet->payload, packet->payload_length);
+
+
+    packet->payload_length = 0;
+
+    return true;
 }

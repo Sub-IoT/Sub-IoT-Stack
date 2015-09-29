@@ -92,10 +92,10 @@ void packet_disassemble(packet_t* packet)
     packet->payload_length = packet->hw_radio_packet.length + 1 - data_idx - 2; // exclude the headers CRC bytes // TODO exclude footers
     memcpy(packet->payload, packet->hw_radio_packet.data + data_idx, packet->payload_length);
 
-    d7asp_process_received_packet(packet);
-
-    packet_queue_free_packet(packet); // TODO inside d7asp_process_received_packet?
     DPRINT(LOG_STACK_FWK, "Done disassembling packet");
+
+    d7asp_process_received_packet(packet); // TODO move to TP
+
     return;
 
     cleanup:

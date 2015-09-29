@@ -27,11 +27,19 @@
 #ifndef OSS_7_D7AP_STACK_H
 #define OSS_7_D7AP_STACK_H
 
-#include "alp.h"
 #include "fs.h"
-
-/*! \brief Initializes the D7AP stack, should be called by all applications making use of the D7AP stack */
-void d7ap_stack_init(fs_init_args_t*, alp_unhandled_action_callback);
+#include "alp.h"
+#include "d7atp.h"
+#include "d7asp.h"
+#include "packet_queue.h"
+#include "dll.h"
+/**
+ * @brief d7ap_stack_init
+ * @param fs_init_args              Initializes the D7AP stack, should be called by all applications making use of the D7AP stack
+ * @param alp_unhandled_action_cb   This callback (when not NULL) will be called when the stack receives an ALP action which should be
+ *                                  handled by the application. Note: when the callback returns the ALP payload will be cleaned by the stack.
+ */
+void d7ap_stack_init(fs_init_args_t* fs_init_args, alp_unhandled_action_callback alp_unhandled_action_cb, d7asp_init_args_t* d7asp_init_args);
 
 #endif //OSS_7_D7AP_STACK_H
 

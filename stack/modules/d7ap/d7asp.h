@@ -29,13 +29,8 @@
 #include "d7atp.h"
 #include "MODULE_D7AP_defs.h"
 
-typedef enum {
-    SESSION_STATE_IDLE = 0x00,
-    SESSION_STATE_DORMANT = 0x01,
-    SESSION_STATE_PENDING = 0x02,
-    SESSION_STATE_ACTIVE = 0x03,
-    SESSION_STATE_DONE = 0x04,
-} session_state_t; // TODO move to session
+#include "session.h"
+
 
 typedef struct {
     union {
@@ -48,11 +43,13 @@ typedef struct {
             uint8_t fifo_ctrl_state : 2; // TODO using session_state_t results in "'state' is narrower than value of its type" warning
         };
     };
-    uint32_t qos; // TODO define struct
+    session_qos_t qos;
     uint8_t dormant_timeout;
     uint8_t start_id;
     d7atp_addressee_t addressee;
 } d7asp_fifo_config_t;
+
+#define REQUESTS_BITMAP_BYTE_COUNT ((MODULE_D7AP_FIFO_MAX_REQUESTS_COUNT + 7) / 8)
 
 /**
  * /brief The state of a session FIFO
@@ -63,8 +60,8 @@ typedef struct {
     // TODO uint8_t token;
     // TODO retry_single_cnt
     // TODO retry_total_cnt
-    uint8_t progress_bitmap[(MODULE_D7AP_FIFO_MAX_REQUESTS_COUNT + 7) / 8];
-    // TODO success_bitmap
+    uint8_t progress_bitmap[REQUESTS_BITMAP_BYTE_COUNT];
+    uint8_t success_bitmap[REQUESTS_BITMAP_BYTE_COUNT];
     uint8_t next_request_id;
     uint8_t request_buffer_tail_idx;
     uint8_t requests_indices[MODULE_D7AP_FIFO_MAX_REQUESTS_COUNT]; /**< Contains for every request ID the index in command_buffer where the request begins */
@@ -92,8 +89,30 @@ typedef struct {
     d7atp_addressee_t addressee;
 } d7asp_result_t;
 
-void d7asp_init();
+typedef void (*d7asp_fifo_flush_completed_callback)(d7asp_fifo_config_t* d7asp_fifo_config, uint8_t* progress_bitmap, uint8_t* success_bitmap, uint8_t bitmap_byte_count);
+
+typedef struct {
+    d7asp_fifo_flush_completed_callback d7asp_fifo_flush_completed_cb;
+} d7asp_init_args_t; // TODO workaround: NG does not support function pointer so store in struct (for now)
+
+void d7asp_init(d7asp_init_args_t* init_arfs);
 void d7asp_queue_alp_actions(d7asp_fifo_config_t* d7asp_fifo_config, uint8_t* alp_payload_buffer, uint8_t alp_payload_length); // TODO return status
 void d7asp_process_received_packet(packet_t* packet);
-void d7asp_ack_current_request();
+
+/**
+ * @brief Called by DLL to signal the packet has been transmitted
+ */
+void d7asp_signal_packet_transmitted(packet_t* packet);
+
+
+/**
+ * @brief Called by DLL to signal the CSMA/CA process completed succesfully and packet can be ack-ed for QoS = None
+ */
+void d7asp_signal_packet_csma_ca_insertion_completed();
+
+
+/**
+ * @brief Called by TP to signal the transaction request period has elapsed
+ */
+void d7asp_signal_transaction_request_period_elapsed();
 #endif /* D7ASP_H_ */

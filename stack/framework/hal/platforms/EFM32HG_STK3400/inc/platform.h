@@ -75,7 +75,7 @@
 
 /* SPI Channel configuration */
 #define SPI_CHANNEL         USART0                      // SPI Channel
-#define SPI_BAUDRATE        9600                    // SPI Frequency
+#define SPI_BAUDRATE        6000000                    // SPI Frequency
 #define SPI_CLOCK           cmuClock_USART0             // SPI Clock
 #define SPI_ROUTE_LOCATION  USART_ROUTE_LOCATION_LOC0   // SPI GPIO Routing
 

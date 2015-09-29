@@ -26,7 +26,7 @@
 #include "assert.h"
 #include "fs.h"
 #include "ng.h"
-
+#include "hwdebug.h"
 
 #ifdef FRAMEWORK_LOG_ENABLED
 #define DPRINT(...) log_print_stack_string(LOG_STACK_DLL, __VA_ARGS__)
@@ -36,21 +36,27 @@
 
 typedef enum
 {
-	CCA1,
-	CCA2,
-	CCA_FAIL
-} cca_type;
+    DLL_STATE_IDLE,
+    DLL_STATE_CSMA_CA_STARTED,
+    DLL_STATE_CCA1,
+    DLL_STATE_CCA2,
+    DLL_STATE_FOREGROUND_SCAN,
+    DLL_STATE_BACKGROUND_SCAN,
+    DLL_STATE_TX_FOREGROUND,
+    DLL_STATE_TX_FOREGROUND_COMPLETED
+} dll_state_t;
 
 static dae_access_profile_t NGDEF(_current_access_class);
 #define current_access_class NG(_current_access_class)
 
-static cca_type cca_status;
-static hw_radio_packet_t* current_packet = NULL;
+static dll_state_t NGDEF(_dll_state);
+#define dll_state NG(_dll_state)
+
+static hw_radio_packet_t* NGDEF(_current_packet);
+#define current_packet NG(_current_packet)
 
 static dll_packet_received_callback dll_rx_callback = NULL;
 static dll_packet_transmitted_callback dll_tx_callback = NULL;
-
-static void dll_cca();
 
 static hw_radio_packet_t* alloc_new_packet(uint8_t length)
 {
@@ -64,6 +70,49 @@ static void release_packet(hw_radio_packet_t* hw_radio_packet)
     packet_queue_free_packet(packet_queue_find_packet(hw_radio_packet));
 }
 
+static void switch_state(dll_state_t next_state)
+{
+    switch(next_state)
+    {
+    case DLL_STATE_CSMA_CA_STARTED:
+        assert(dll_state == DLL_STATE_IDLE || dll_state == DLL_STATE_FOREGROUND_SCAN);
+        dll_state = DLL_STATE_CSMA_CA_STARTED;
+        DPRINT("Switched to DLL_STATE_CSMA_CA_STARTED");
+        break;
+    case DLL_STATE_CCA1:
+        assert(dll_state == DLL_STATE_CSMA_CA_STARTED);
+        dll_state = DLL_STATE_CCA1;
+        DPRINT("Switched to DLL_STATE_CCA1");
+        break;
+    case DLL_STATE_CCA2:
+        assert(dll_state == DLL_STATE_CCA1);
+        dll_state = DLL_STATE_CCA2;
+        DPRINT("Switched to DLL_STATE_CCA2");
+        break;
+    case DLL_STATE_FOREGROUND_SCAN:
+        assert(dll_state == DLL_STATE_IDLE || dll_state == DLL_STATE_TX_FOREGROUND_COMPLETED);
+        dll_state = DLL_STATE_FOREGROUND_SCAN;
+        DPRINT("Switched to DLL_STATE_FOREGROUND_SCAN");
+        break;
+    case DLL_STATE_IDLE:
+        assert(dll_state == DLL_STATE_FOREGROUND_SCAN);
+        dll_state = DLL_STATE_IDLE;
+        DPRINT("Switched to DLL_STATE_IDLE");
+        break;
+    case DLL_STATE_TX_FOREGROUND:
+        assert(dll_state == DLL_STATE_CCA2);
+        dll_state = DLL_STATE_TX_FOREGROUND;
+        DPRINT("Switched to DLL_STATE_TX_FOREGROUND");
+        break;
+    case DLL_STATE_TX_FOREGROUND_COMPLETED:
+        assert(dll_state == DLL_STATE_TX_FOREGROUND);
+        dll_state = DLL_STATE_TX_FOREGROUND_COMPLETED;
+        DPRINT("Switched to DLL_STATE_TX_FOREGROUND_COMPLETED");
+        break;
+    default:
+        assert(false);
+    }
+}
 
 static void process_received_packets()
 {
@@ -88,65 +137,108 @@ void packet_received(hw_radio_packet_t* packet)
 
 static void packet_transmitted(hw_radio_packet_t* hw_radio_packet)
 {
+    assert(dll_state == DLL_STATE_TX_FOREGROUND);
+    switch_state(DLL_STATE_TX_FOREGROUND_COMPLETED);
     DPRINT("Transmitted packet with length = %i", hw_radio_packet->length);
-    packet_queue_free_packet(packet_queue_find_packet(hw_radio_packet)); // TODO free in upper layers
+    packet_t* packet = packet_queue_find_packet(hw_radio_packet);
 
-    if (dll_tx_callback != NULL) dll_tx_callback();
-}
+    if(dll_tx_callback != NULL)
+        dll_tx_callback();
 
+    // TODO move to CSMA
+  //  if(packet->d7atp_ctrl.ctrl_is_start) // do not execute CSMA for guarded response (and thus do not ack) TODO validate
+ //       d7asp_signal_packet_csma_ca_insertion_completed(); // TODO ack request when CSMA/CA succeeds and only for for QoS == None
 
+    d7asp_signal_packet_transmitted(packet);
 
-static void cca_rssi_valid(int16_t cur_rssi)
-{
-    if (cur_rssi <= E_CCA)
+    // depending on state before TX the radio goes to RX or IDLE state
+    if(hw_radio_is_rx())
     {
-    	if (cca_status == CCA1)
-    	{
-    		cca_status = CCA2;
-    		timer_post_task_delay(&dll_cca, 5);
-    	} else if (cca_status == CCA2)
-    	{
-    		// OK, send packet
-    		error_t err = hw_radio_send_packet(current_packet, &packet_transmitted);
-			assert(err == SUCCESS);
-
-			current_packet = NULL;
-			d7asp_ack_current_request(); // TODO ack request when CSMA/CA succeeds and only for for QoS == None
-    	}
-
+        dll_start_foreground_scan();
     }
     else
     {
-    	// TODO: handle CCA FAIL
-    	//dll_process_csma_ca();
-    	current_packet = NULL;
+        switch_state(DLL_STATE_IDLE);
+        hw_radio_set_idle();
     }
-
 }
 
-static void dll_cca()
+static void execute_cca();
+
+static void cca_rssi_valid(int16_t cur_rssi)
 {
-	hw_rx_cfg_t rx_cfg =(hw_rx_cfg_t){
+    assert(dll_state == DLL_STATE_CCA1 || dll_state == DLL_STATE_CCA2);
+
+    if (cur_rssi <= E_CCA)
+    {
+        if(dll_state == DLL_STATE_CCA1)
+        {
+            switch_state(DLL_STATE_CCA2);
+            timer_post_task_delay(&execute_cca, 5);
+            return;
+        }
+        else if(dll_state == DLL_STATE_CCA2)
+        {
+            // OK, send packet
+
+            log_print_stack_string(LOG_STACK_DLL, "TX: ");
+            log_print_data(current_packet->data, current_packet->length + 1); // TODO tmp
+
+            switch_state(DLL_STATE_TX_FOREGROUND);
+
+            error_t err = hw_radio_send_packet(current_packet, &packet_transmitted);
+            assert(err == SUCCESS);
+
+            d7asp_signal_packet_csma_ca_insertion_completed(); // TODO ack request when CSMA/CA succeeds and only for for QoS == None
+            return;
+        }
+    }
+    else
+    {
+        // TODO: handle CCA FAIL
+        //dll_process_csma_ca();
+    }
+}
+
+static void execute_cca()
+{
+    assert(dll_state == DLL_STATE_CCA1 || dll_state == DLL_STATE_CCA2);
+
+    hw_rx_cfg_t rx_cfg =(hw_rx_cfg_t){
         .channel_id.channel_header = current_access_class.subbands[0].channel_header,
         .channel_id.center_freq_index = current_access_class.subbands[0].channel_index_start,
         .syncword_class = PHY_SYNCWORD_CLASS1,
     };
-	hw_radio_set_rx(&rx_cfg, NULL, &cca_rssi_valid);
+    hw_radio_set_rx(&rx_cfg, NULL, &cca_rssi_valid);
+}
+
+static void execute_csma_ca()
+{
+    switch_state(DLL_STATE_CSMA_CA_STARTED);
+    // TODO compute offset and wait
+
+    // TODO generate random channel queue
+
+    // execute CCA
+    switch_state(DLL_STATE_CCA1);
+    execute_cca();
 }
 
 void dll_init()
 {
     sched_register_task(&process_received_packets);
+    sched_register_task(&dll_start_foreground_scan);
+    sched_register_task(&execute_cca);
 
     hw_radio_init(&alloc_new_packet, &release_packet);
 
     fs_read_access_class(0, &current_access_class); // use first access class for now
+
+    dll_state = DLL_STATE_IDLE;
 }
 
 void dll_tx_frame(packet_t* packet)
 {
-	asser(current_packet == NULL);
-
     packet->dll_header = (dll_header_t){
         .subnet = 0x05, // TODO hardcoded for now
         .control_target_address_set = false, // TODO assuming broadcast for now
@@ -154,10 +246,16 @@ void dll_tx_frame(packet_t* packet)
         .control_eirp_index = 0, // TODO hardcoded for now
     };
 
+    dll_header_t* dll_header = &(packet->dll_header);
+    dll_header->subnet = 0x05; // TODO hardcoded for now
+    dll_header->control_eirp_index = 0; // TODO hardcoded for now
+    if(packet->d7atp_addressee != NULL)
+    {
+        dll_header->control_target_address_set = packet->d7atp_addressee->addressee_ctrl_has_id;
+        dll_header->control_vid_used = packet->d7atp_addressee->addressee_ctrl_virtual_id;
+    }
 
     packet_assemble(packet);
-
-    log_print_data(packet->hw_radio_packet.data, packet->hw_radio_packet.length + 1); // TODO tmp
 
     packet->hw_radio_packet.tx_meta.tx_cfg = (hw_tx_cfg_t){
         .channel_id.channel_header = current_access_class.subbands[0].channel_header,
@@ -168,15 +266,12 @@ void dll_tx_frame(packet_t* packet)
 
     current_packet = &(packet->hw_radio_packet);
 
-    // TODO CSMA/CA
-    cca_status = CCA1;
-    dll_cca();
-
-
+    execute_csma_ca();
 }
 
 void dll_start_foreground_scan()
 {
+    switch_state(DLL_STATE_FOREGROUND_SCAN);
     // TODO handle Tscan timeout
 
     // TODO only access class using 1 subband which contains 1 channel index is supported for now
@@ -192,12 +287,24 @@ void dll_start_foreground_scan()
     hw_radio_set_rx(&rx_cfg, &packet_received, NULL);
 }
 
+void dll_stop_foreground_scan()
+{
+    assert(dll_state == DLL_STATE_FOREGROUND_SCAN);
+    switch_state(DLL_STATE_IDLE);
+    hw_radio_set_idle();
+}
+
 uint8_t dll_assemble_packet_header(packet_t* packet, uint8_t* data_ptr)
 {
     uint8_t* dll_header_start = data_ptr;
     *data_ptr = packet->dll_header.subnet; data_ptr += sizeof(packet->dll_header.subnet);
     *data_ptr = packet->dll_header.control; data_ptr += sizeof(packet->dll_header.control);
-    // TODO target address, assuming broadcast for now
+    if(packet->dll_header.control_target_address_set)
+    {
+        uint8_t addr_len = packet->dll_header.control_vid_used? 2 : 8;
+        memcpy(data_ptr, packet->d7atp_addressee->addressee_id, addr_len); data_ptr += addr_len;
+    }
+
     return data_ptr - dll_header_start;
 }
 
@@ -217,13 +324,15 @@ bool dll_disassemble_packet_header(packet_t* packet, uint8_t* data_idx)
         if(!packet->dll_header.control_vid_used)
             address_len = 8;
 
-        // TODO get deviceid / vid from FS and uncomment check, assert for now
-        assert(false);
-//            if(memcmp(packet->hw_radio_packet.data + 3, id, address_len) != 0)
-//            {
-//                DPRINT("Device ID filtering failed, skipping packet");
-//                goto cleanup;
-//            }
+        uint8_t uid[8];
+        fs_read_uid(uid); // TODO cache
+        if(memcmp(packet->hw_radio_packet.data + (*data_idx), uid, address_len) != 0)
+        {
+            DPRINT("Device ID filtering failed, skipping packet");
+            return false;
+        }
+
+        (*data_idx) += address_len;
     }
     // TODO filter LQ
     // TODO pass to upper layer

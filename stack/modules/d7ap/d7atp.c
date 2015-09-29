@@ -23,18 +23,72 @@
 #include "assert.h"
 #include "d7atp.h"
 #include "packet.h"
+#include "d7asp.h"
 #include "dll.h"
+#include "ng.h"
+#include "log.h"
 
-void d7atp_start_dialog(uint8_t dialog_id, uint8_t transaction_id, packet_t* packet)
+static d7atp_addressee_t NGDEF(_current_addressee);
+#define current_addressee NG(_current_addressee)
+
+typedef enum {
+    D7ATP_STATE_IDLE = 0x00,
+    D7ATP_STATE_IN_MASTER_TRANSACTION = 0x01,
+    D7ATP_STATE_IN_SLAVE_TRANSACTION = 0x02,
+    D7ATP_STATE_TERMINATED = 0x03,
+} state_t;
+
+static state_t NGDEF(_current_state);
+#define current_state NG(_current_state)
+
+static void switch_state(state_t new_state)
+{
+    switch(new_state)
+    {
+    case D7ATP_STATE_IN_MASTER_TRANSACTION:
+        log_print_stack_string(LOG_STACK_TRANS, "Switching to D7ATP_STATE_IN_MASTER_TRANSACTION");
+        assert(current_state == D7ATP_STATE_IDLE);
+        current_state = new_state;
+        break;
+    case D7ATP_STATE_IN_SLAVE_TRANSACTION:
+        log_print_stack_string(LOG_STACK_TRANS, "Switching to D7ATP_STATE_IN_SLAVE_TRANSACTION");
+        // TODO assert(current_state == D7ATP_STATE_IDLE);
+        current_state = new_state;
+        break;
+    case D7ATP_STATE_IDLE:
+        log_print_stack_string(LOG_STACK_TRANS, "Switching to D7ATP_STATE_IDLE");
+        assert(current_state == D7ATP_STATE_IN_MASTER_TRANSACTION || current_state ==  D7ATP_STATE_IN_SLAVE_TRANSACTION);
+        current_state = new_state;
+        break;
+    default:
+        assert(false);
+    }
+}
+
+static void transaction_response_period_expired()
+{
+    log_print_stack_string(LOG_STACK_TRANS, "Transaction response period expired");
+    switch_state(D7ATP_STATE_IDLE);
+    dll_stop_foreground_scan();
+    d7asp_signal_transaction_request_period_elapsed();
+}
+
+void d7atp_init()
+{
+    current_state = D7ATP_STATE_IDLE;
+    sched_register_task(&transaction_response_period_expired);
+}
+
+void d7atp_start_dialog(uint8_t dialog_id, uint8_t transaction_id, packet_t* packet, session_qos_t* qos_settings, dae_access_profile_t* access_profile)
 {
     // TODO only supports broadcasting data now, no ack, timeout, multiple transactions, ...
-
+    switch_state(D7ATP_STATE_IN_MASTER_TRANSACTION);
     packet->d7atp_ctrl = (d7atp_ctrl_t){
         .ctrl_is_start = true,
         .ctrl_is_stop = true,
         .ctrl_is_timeout_template_present = false,
-        .ctrl_is_ack_requested = false,
-        .ctrl_ack_not_void = false,
+        .ctrl_is_ack_requested = qos_settings->qos_ctrl_resp_mode == SESSION_RESP_MODE_NONE? false : true,
+        .ctrl_ack_not_void = qos_settings->qos_ctrl_ack_not_void,
         .ctrl_ack_record = false,
         .ctrl_is_ack_template_present = false
     };
@@ -48,6 +102,37 @@ void d7atp_start_dialog(uint8_t dialog_id, uint8_t transaction_id, packet_t* pac
         // TODO also when responding to broadcast requests
 
     d7anp_tx_foreground_frame(packet, should_include_origin_template);
+
+    // TODO find out difference between dialog timeout and transaction response period
+    timer_post_task_delay(&transaction_response_period_expired, 10); // TODO hardcoded period for now
+    // TODO should be canceled by upper layer or if CSMA-CA fails
+
+    //sched_post_task(&dll_start_foreground_scan); // TODO do here?
+}
+
+void d7atp_respond_dialog(packet_t* packet)
+{
+    switch_state(D7ATP_STATE_IN_SLAVE_TRANSACTION);
+
+    // modify the request headers and turn this into a response
+    d7atp_ctrl_t* d7atp = &(packet->d7atp_ctrl);
+    d7atp->ctrl_is_start = 0;
+    d7atp->ctrl_is_ack_template_present = d7atp->ctrl_is_ack_requested? true : false;
+    d7atp->ctrl_is_ack_requested = false;
+    d7atp->ctrl_ack_not_void = false; // TODO validate
+    d7atp->ctrl_ack_record = false; // TODO validate
+    d7atp->ctrl_is_timeout_template_present = false;  // TODO validate
+
+    // dialog and transaction id remain the same
+
+    // copy addressee from NP origin
+    current_addressee.addressee_ctrl_has_id = packet->d7anp_ctrl.origin_access_id_present;
+    current_addressee.addressee_ctrl_virtual_id = packet->d7anp_ctrl.origin_access_id_is_vid;
+    current_addressee.addressee_ctrl_access_class = packet->d7anp_ctrl.origin_access_class;
+    memcpy(current_addressee.addressee_id, packet->origin_access_id, 8);
+    packet->d7atp_addressee = &current_addressee;
+
+    d7anp_tx_foreground_frame(packet, true);
 }
 
 uint8_t d7atp_assemble_packet_header(packet_t* packet, uint8_t* data_ptr)
@@ -58,7 +143,13 @@ uint8_t d7atp_assemble_packet_header(packet_t* packet, uint8_t* data_ptr)
     (*data_ptr) = packet->d7atp_transaction_id; data_ptr++;
 
     assert(!packet->d7atp_ctrl.ctrl_is_timeout_template_present); // TODO timeout template
-    assert(!packet->d7atp_ctrl.ctrl_is_ack_template_present); // TODO ack template
+
+    if(packet->d7atp_ctrl.ctrl_is_ack_template_present)
+    {
+        // add ACK template
+        (*data_ptr) = packet->d7atp_transaction_id; data_ptr++; // transaction ID start
+        // TODO ACK bitmap, support for multiple segments to ack not implemented yet
+    }
 
     return data_ptr - d7atp_header_start;
 }
@@ -70,7 +161,12 @@ bool d7atp_disassemble_packet_header(packet_t *packet, uint8_t *data_idx)
     packet->d7atp_transaction_id = packet->hw_radio_packet.data[(*data_idx)]; (*data_idx)++;
 
     assert(!packet->d7atp_ctrl.ctrl_is_timeout_template_present); // TODO timeout template
-    assert(!packet->d7atp_ctrl.ctrl_is_ack_template_present); // TODO ack template
+
+    if(packet->d7atp_ctrl.ctrl_is_ack_template_present)
+    {
+        packet->d7atp_ack_template.ack_transaction_id_start = packet->hw_radio_packet.data[(*data_idx)]; (*data_idx)++;
+        // TODO ACK bitmap, support for multiple segments to ack not implemented yet
+    }
 
     return true;
 }

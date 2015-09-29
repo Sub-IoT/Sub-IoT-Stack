@@ -29,7 +29,7 @@
 #include "d7asp.h"
 
 #define FILE_COUNT 0x42 // TODO define from cmake (D7AP module specific)
-#define FILE_DATA_SIZE 45 // TODO define from cmake (D7AP module specific)
+#define FILE_DATA_SIZE 60 // TODO define from cmake (D7AP module specific)
 
 static fs_file_header_t NGDEF(_file_headers)[FILE_COUNT] = { 0 };
 #define file_headers NG(_file_headers)
@@ -48,6 +48,9 @@ static uint16_t NGDEF(_is_fs_init_completed);
 
 #define D7A_FILE_UID_FILE_ID 0x00
 #define D7A_FILE_UID_SIZE 8
+
+#define D7A_FILE_DLL_CONF_FILE_ID	0x0A
+#define D7A_FILE_DLL_CONF_SIZE		6
 
 #define D7A_FILE_ACCESS_PROFILE_ID 0x20 // the first access class file
 #define D7A_FILE_ACCESS_PROFILE_SIZE 12 // TODO assuming 1 subband
@@ -70,7 +73,10 @@ static void execute_alp_command(uint8_t command_file_id)
     assert((*data_ptr) == ALP_ITF_ID_D7ASP); // only D7ASP supported for now
     data_ptr++;
     fifo_config.fifo_ctrl = (*data_ptr); data_ptr++;
-    memcpy(&(fifo_config.qos), data_ptr, 4); data_ptr += 4;
+    fifo_config.qos.qos_ctrl = (*data_ptr); data_ptr++;
+    fifo_config.qos.qos_ack_period = (*data_ptr); data_ptr++;
+    fifo_config.qos.qos_retry_single = (*data_ptr); data_ptr++;
+    fifo_config.qos.qos_retry_total = (*data_ptr); data_ptr++;
     fifo_config.dormant_timeout = (*data_ptr); data_ptr++;
     fifo_config.start_id = (*data_ptr); data_ptr++;
     fifo_config.addressee.addressee_ctrl = (*data_ptr); data_ptr++;
@@ -116,6 +122,17 @@ void fs_init(fs_init_args_t* init_args)
     memcpy(data + current_data_offset, &id_be, D7A_FILE_UID_SIZE);
     current_data_offset += D7A_FILE_UID_SIZE;
 
+    file_offsets[D7A_FILE_DLL_CONF_FILE_ID] = current_data_offset;
+	file_headers[D7A_FILE_DLL_CONF_FILE_ID] = (fs_file_header_t){
+		.file_properties.action_protocol_enabled = 0,
+		.file_properties.storage_class = FS_STORAGE_RESTORABLE,
+		.file_properties.permissions = 0, // TODO
+		.length = D7A_FILE_UID_SIZE
+	};
+
+	memset(data + current_data_offset, 0, D7A_FILE_DLL_CONF_SIZE);
+	current_data_offset += D7A_FILE_DLL_CONF_SIZE;
+
     // access profiles
     assert(init_args->access_profiles_count > 0 && init_args->access_profiles_count < 16);
     dae_access_profile_t* access_class = init_args->access_profiles;
@@ -158,7 +175,10 @@ void fs_init_file_with_D7AActP(uint8_t file_id, const d7asp_fifo_config_t* fifo_
     uint8_t* ptr = alp_command_buffer;
     (*ptr) = ALP_ITF_ID_D7ASP; ptr++;
     (*ptr) = fifo_config->fifo_ctrl; ptr++;
-    memcpy(ptr, &(fifo_config->qos), 4); ptr += 4;
+    (*ptr) = fifo_config->qos.qos_ctrl; ptr++;
+    (*ptr) = fifo_config->qos.qos_ack_period; ptr++;
+    (*ptr) = fifo_config->qos.qos_retry_single; ptr++;
+    (*ptr) = fifo_config->qos.qos_retry_total; ptr++;
     (*ptr) = fifo_config->dormant_timeout; ptr++;
     (*ptr) = fifo_config->start_id; ptr++;
     (*ptr) = fifo_config->addressee.addressee_ctrl; ptr++;
