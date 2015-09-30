@@ -189,16 +189,7 @@ static void packet_transmitted(hw_radio_packet_t* hw_radio_packet)
 
     d7atp_signal_packet_transmitted(packet);
 
-    // depending on state before TX the radio goes to RX or IDLE state
-//    if(hw_radio_is_rx())
-//    {
-//        dll_start_foreground_scan();
-//    }
-//    else
-//    {
-        switch_state(DLL_STATE_IDLE);
-        hw_radio_set_idle();
-//    }
+    dll_start_foreground_scan(); // we stay in foreground scan until TP signal transaction response period is over
 }
 
 static void execute_cca();
@@ -220,7 +211,7 @@ static void cca_rssi_valid(int16_t cur_rssi)
         {
             // OK, send packet
 
-            log_print_stack_string(LOG_STACK_DLL, "TX: ");
+            log_print_stack_string(LOG_STACK_DLL, "CCA2 succeeded, transmitting ...");
             log_print_data(current_packet->data, current_packet->length + 1); // TODO tmp
 
             switch_state(DLL_STATE_TX_FOREGROUND);
@@ -286,6 +277,8 @@ static void execute_csma_ca()
 
             if (dll_tca <= 0)
 			{
+                // TODO how to handle this? signal upper layer?
+                DPRINT("Tca negative, CCA failed");
 				switch_state(DLL_STATE_CCA_FAIL);
 				sched_post_task(&execute_csma_ca);
 				break;
@@ -297,6 +290,7 @@ static void execute_csma_ca()
 			{
 				case CSMA_CA_MODE_UNC:
 					// no delay
+                    dll_slot_duration = 0;
 					break;
 				case CSMA_CA_MODE_AIND: // TODO implement AIND
 				{
@@ -321,6 +315,7 @@ static void execute_csma_ca()
 					break;
 				}
 			}
+
 			DPRINT("slot duration: %i", dll_slot_duration);
 			DPRINT("t_offset: %i", t_offset);
 
@@ -330,9 +325,11 @@ static void execute_csma_ca()
 			{
 				switch_state(DLL_STATE_CSMA_CA_WAITING);
 				timer_post_task_delay(&execute_csma_ca, t_offset);
-			} else {
+            }
+            else
+            {
 				switch_state(DLL_STATE_CCA1);
-				sched_post_task(&execute_csma_ca);
+                sched_post_task(&execute_cca);
 			}
 
 			break;
@@ -384,12 +381,6 @@ static void execute_csma_ca()
 
 			break;
 		}
-		case DLL_STATE_CCA1:
-		{
-			// execute CCA
-			execute_cca();
-			break;
-		}
 		case DLL_STATE_CCA_FAIL:
 		{
 			d7atp_signal_packet_csma_ca_insertion_completed(false);
@@ -403,6 +394,7 @@ void dll_init()
     sched_register_task(&process_received_packets);
     sched_register_task(&dll_start_foreground_scan);
     sched_register_task(&execute_cca);
+    sched_register_task(&execute_csma_ca);
 
     hw_radio_init(&alloc_new_packet, &release_packet);
 
