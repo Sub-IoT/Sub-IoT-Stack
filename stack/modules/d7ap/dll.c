@@ -27,6 +27,7 @@
 #include "fs.h"
 #include "ng.h"
 #include "hwdebug.h"
+#include "random.h"
 
 #ifdef FRAMEWORK_LOG_ENABLED
 #define DPRINT(...) log_print_stack_string(LOG_STACK_DLL, __VA_ARGS__)
@@ -275,16 +276,15 @@ static uint16_t calculate_tx_duration()
 static void execute_csma_ca()
 {
 	// TODO generate random channel queue
-
+    uint16_t tx_duration = calculate_tx_duration();
     switch (dll_state)
     {
 		case DLL_STATE_CSMA_CA_STARTED:
 		{
-		    uint16_t tx_duration = calculate_tx_duration();
 			dll_tca = current_access_class.transmission_timeout_period - tx_duration;
 			DPRINT("Tca= %i = %i - %i", dll_tca, current_access_class.transmission_timeout_period, tx_duration);
 
-			if (ll_tca <= 0)
+            if (dll_tca <= 0)
 			{
 				switch_state(DLL_STATE_CCA_FAIL);
 				sched_post_task(&execute_csma_ca);
@@ -308,7 +308,7 @@ static void execute_csma_ca()
 				{
 					dll_slot_duration = tx_duration;
 					uint16_t max_nr_slots = dll_tca / tx_duration;
-					uint16_t slots_wait = rand() % max_nr_slots;
+                    uint16_t slots_wait = get_rnd() % max_nr_slots;
 					t_offset = slots_wait * tx_duration;
 					break;
 				}
@@ -317,7 +317,7 @@ static void execute_csma_ca()
 					dll_rigd_n = 0;
 					dll_tca0 = dll_tca;
 					dll_slot_duration = (uint16_t) ((double)dll_tca0) / (2 << (dll_rigd_n+1));
-					t_offset = rand() % dll_slot_duration;
+                    t_offset = get_rnd() % dll_slot_duration;
 					break;
 				}
 			}
@@ -355,7 +355,7 @@ static void execute_csma_ca()
 				case CSMA_CA_MODE_RAIND: // TODO implement RAIND
 				{
 					uint16_t max_nr_slots = dll_tca / tx_duration;
-					uint16_t slots_wait = rand() % max_nr_slots;
+                    uint16_t slots_wait = get_rnd() % max_nr_slots;
 					t_offset = slots_wait * tx_duration;
 					break;
 				}
@@ -363,7 +363,7 @@ static void execute_csma_ca()
 				{
 					dll_rigd_n++;
 					dll_slot_duration = (uint16_t) ((double)dll_tca0) / (2 << (dll_rigd_n+1));
-					t_offset = rand() % dll_slot_duration;
+                    t_offset = get_rnd() % dll_slot_duration;
 					DPRINT("slot duration: %i", dll_slot_duration);
 					break;
 				}
