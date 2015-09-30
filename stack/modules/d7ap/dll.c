@@ -110,7 +110,7 @@ static void switch_state(dll_state_t next_state)
 		DPRINT("Switched to DLL_STATE_CSMA_CA_RETRY");
 		break;
     case DLL_STATE_CCA1:
-        assert(dll_state == DLL_STATE_CSMA_CA_STARTED);
+        assert(dll_state == DLL_STATE_CSMA_CA_STARTED || dll_state == DLL_STATE_CSMA_CA_RETRY);
         dll_state = DLL_STATE_CCA1;
         DPRINT("Switched to DLL_STATE_CCA1");
         break;

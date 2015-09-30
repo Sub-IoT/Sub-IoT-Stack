@@ -31,7 +31,7 @@
 
 
 #Call the BUILD_APPLICATION to build the final executable for the specific platform
-ADD_EXECUTABLE(stk3700_sensor app.c)
+ADD_EXECUTABLE(stk3700_sensor.elf app.c)
 
 #Add the framework (and one or more modules) as libraries to the application
-TARGET_LINK_LIBRARIES(stk3700_sensor d7ap framework)
+TARGET_LINK_LIBRARIES(stk3700_sensor.elf d7ap framework)

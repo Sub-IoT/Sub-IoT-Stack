@@ -245,8 +245,6 @@ void d7asp_queue_alp_actions(d7asp_fifo_config_t* d7asp_fifo_config, uint8_t* al
         switch_state(D7ASP_STATE_MASTER);
     else if(state == D7ASP_STATE_SLAVE)
         switch_state(D7ASP_STATE_SLAVE_PENDING_MASTER);
-    else
-        assert(false);
 }
 
 void d7asp_process_received_packet(packet_t* packet)
