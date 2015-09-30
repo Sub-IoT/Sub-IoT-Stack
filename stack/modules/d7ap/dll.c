@@ -41,7 +41,6 @@ typedef enum
 {
     DLL_STATE_IDLE,
     DLL_STATE_CSMA_CA_STARTED,
-	DLL_STATE_CSMA_CA_WAITING,
 	DLL_STATE_CSMA_CA_RETRY,
     DLL_STATE_CCA1,
     DLL_STATE_CCA2,
@@ -105,11 +104,6 @@ static void switch_state(dll_state_t next_state)
         dll_state = DLL_STATE_CSMA_CA_STARTED;
         DPRINT("Switched to DLL_STATE_CSMA_CA_STARTED");
         break;
-    case DLL_STATE_CSMA_CA_WAITING:
-		assert(dll_state == DLL_STATE_CSMA_CA_STARTED);
-		dll_state = DLL_STATE_CSMA_CA_WAITING;
-		DPRINT("Switched to DLL_STATE_CSMA_CA_WAITING");
-		break;
     case DLL_STATE_CSMA_CA_RETRY:
     	assert(dll_state == DLL_STATE_CCA1 || dll_state == DLL_STATE_CCA2);
 		dll_state = DLL_STATE_CSMA_CA_RETRY;
@@ -310,7 +304,7 @@ static void execute_csma_ca()
 				{
 					dll_rigd_n = 0;
 					dll_tca0 = dll_tca;
-					dll_slot_duration = (uint16_t) ((double)dll_tca0) / (2 << (dll_rigd_n+1));
+                    dll_slot_duration = (uint16_t) ((double)dll_tca0) / (2 << (dll_rigd_n));
                     t_offset = get_rnd() % dll_slot_duration;
 					break;
 				}
@@ -323,8 +317,8 @@ static void execute_csma_ca()
 
 			if (t_offset > 0)
 			{
-				switch_state(DLL_STATE_CSMA_CA_WAITING);
-				timer_post_task_delay(&execute_csma_ca, t_offset);
+                switch_state(DLL_STATE_CCA1);
+                timer_post_task_delay(&execute_cca, t_offset);
             }
             else
             {
@@ -372,9 +366,10 @@ static void execute_csma_ca()
 
 			if (t_offset > 0)
 			{
-				switch_state(DLL_STATE_CSMA_CA_WAITING);
-				timer_post_task_delay(&execute_csma_ca, t_offset);
-			} else {
+                timer_post_task_delay(&execute_csma_ca, t_offset);
+            }
+            else
+            {
 				switch_state(DLL_STATE_CCA1);
 				sched_post_task(&execute_csma_ca);
 			}
