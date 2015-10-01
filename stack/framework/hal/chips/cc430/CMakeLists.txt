@@ -51,6 +51,8 @@ ADD_LIBRARY (${CHIP_LIBRARY_NAME} OBJECT
     driverlib/MSP430F5xx_6xx/ucs.h
     driverlib/MSP430F5xx_6xx/timer_a.c
     driverlib/MSP430F5xx_6xx/timer_a.h
+    driverlib/MSP430F5xx_6xx/tlv.c
+    driverlib/MSP430F5xx_6xx/tlv.h
     cc430_pins.c
     cc430_gpio.c
     cc430_atomic.c
