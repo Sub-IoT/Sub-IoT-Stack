@@ -19,6 +19,8 @@
 #include "hwsystem.h"
 
 #include <msp430.h>
+ #include <tlv.h>
+ 
 #include <assert.h>
 
 void hw_enter_lowpower_mode(uint8_t mode)
@@ -59,7 +61,28 @@ void hw_enter_lowpower_mode(uint8_t mode)
 
 uint64_t hw_get_unique_id()
 {
-    // TODO
+    struct s_TLV_Die_Record * pDIEREC;
+    unsigned char bDieRecord_bytes;
+
+    TLV_getInfo(TLV_TAG_DIERECORD,
+        0,
+        &bDieRecord_bytes,
+        (unsigned int **)&pDIEREC
+        );
+
+    unsigned char tagId[8];
+    unsigned char* pointer = (unsigned char*) &(pDIEREC->wafer_id);
+    tagId[0] = pointer[3];
+    tagId[1] = pointer[2];
+    tagId[2] = pointer[1];
+    tagId[3] = pointer[0];
+    pointer = (unsigned char*) &(pDIEREC->die_x_position);
+    tagId[4] = pointer[1];
+    tagId[5] = pointer[0];
+
+    pointer = (unsigned char*) &(pDIEREC->die_y_position);
+    tagId[6] = pointer[1];
+    tagId[7] = pointer[0];
 }
 
 void hw_busy_wait(int16_t microseconds)
