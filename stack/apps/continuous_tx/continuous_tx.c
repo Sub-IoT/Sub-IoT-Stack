@@ -63,9 +63,9 @@ uint8_t cc1101_interface_write_single_patable(uint8_t);
 
 static uint8_t current_channel_indexes_index = 0;
 static phy_channel_band_t current_channel_band = PHY_BAND_433;
-static phy_channel_class_t current_channel_class = PHY_CLASS_LO_RATE;
-static uint8_t channel_indexes[LO_RATE_CHANNEL_COUNT] = { 0 }; // reallocated later depending on band/class
-static uint8_t channel_count = LO_RATE_CHANNEL_COUNT;
+static phy_channel_class_t current_channel_class = PHY_CLASS_NORMAL_RATE;
+static uint8_t channel_indexes[NORMAL_RATE_CHANNEL_COUNT] = { 0 }; // reallocated later depending on band/class
+static uint8_t channel_count = NORMAL_RATE_CHANNEL_COUNT;
 
 void rssi_valid_cb(int16_t rssi)
 {

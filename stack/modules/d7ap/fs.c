@@ -29,7 +29,7 @@
 #include "d7asp.h"
 
 #define FILE_COUNT 0x42 // TODO define from cmake (D7AP module specific)
-#define FILE_DATA_SIZE 60 // TODO define from cmake (D7AP module specific)
+#define FILE_DATA_SIZE 80 // TODO define from cmake (D7AP module specific)
 
 static fs_file_header_t NGDEF(_file_headers)[FILE_COUNT] = { 0 };
 #define file_headers NG(_file_headers)
@@ -135,9 +135,9 @@ void fs_init(fs_init_args_t* init_args)
 
     // access profiles
     assert(init_args->access_profiles_count > 0 && init_args->access_profiles_count < 16);
-    dae_access_profile_t* access_class = init_args->access_profiles;
     for(uint8_t i = 0; i < init_args->access_profiles_count; i++)
     {
+    	dae_access_profile_t* access_class = &(init_args->access_profiles[i]);
         file_offsets[D7A_FILE_ACCESS_PROFILE_ID + i] = current_data_offset;
         write_access_class(i, access_class);
         file_headers[D7A_FILE_ACCESS_PROFILE_ID + i] = (fs_file_header_t){
@@ -146,8 +146,6 @@ void fs_init(fs_init_args_t* init_args)
             .file_properties.permissions = 0, // TODO
             .length = D7A_FILE_ACCESS_PROFILE_SIZE
         };
-
-        access_class += sizeof(dae_access_profile_t);
     }
 
     // init user files

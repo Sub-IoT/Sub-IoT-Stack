@@ -44,6 +44,7 @@ static void start_foreground_scan()
 
 static void on_alp_unhandled_action(d7asp_result_t d7asp_result, uint8_t *alp_command, uint8_t alp_command_size)
 {
+	led_on(0);
 	// TODO move this to log module so we can reuse this for other applications?
     uart_transmit_data(ALP_ITF_ID_D7ASP);
     uart_transmit_data(d7asp_result.status.raw);
@@ -58,6 +59,8 @@ static void on_alp_unhandled_action(d7asp_result_t d7asp_result, uint8_t *alp_co
 
 void bootstrap()
 {
+
+
     dae_access_profile_t access_classes[1] = {
         {
             .control_scan_type_is_foreground = true,
@@ -72,8 +75,8 @@ void bootstrap()
                     .ch_class = PHY_CLASS_NORMAL_RATE,
                     .ch_freq_band = PHY_BAND_433
                 },
-                .channel_index_start = 0,
-                .channel_index_end = 0,
+                .channel_index_start = 16,
+                .channel_index_end = 16,
                 .eirp = 0,
                 .ccao = 0
             }
