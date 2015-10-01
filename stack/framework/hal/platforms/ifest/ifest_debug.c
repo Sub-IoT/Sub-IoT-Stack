@@ -20,7 +20,7 @@
 #include "platform.h"
 #include "hwgpio.h"
 #include "em_gpio.h"
-#include <assert.h>
+#include <debug.h>
 
 #ifdef PLATFORM_IFEST_DEBUGPINS
 

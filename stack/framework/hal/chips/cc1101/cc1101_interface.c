@@ -27,7 +27,7 @@
 
 #include "cc1101_interface.h"
 #include "log.h"
-#include "assert.h"
+#include "debug.h"
 
 // turn on/off the debug prints
 #ifdef FRAMEWORK_LOG_ENABLED // TODO more granular

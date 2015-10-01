@@ -29,7 +29,7 @@
 #include "userbutton.h"
 #include "platform_sensors.h"
 #include "em_gpio.h"
-#include <assert.h>
+#include <debug.h>
 
 void __platform_init()
 {

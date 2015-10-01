@@ -21,7 +21,7 @@
 // when using CCS instead of cmake make sure to exclude this file from the build
 
 #include "stdint.h"
-#include "assert.h"
+#include "debug.h"
 
 #include "hwspi.h"
 #include "hwgpio.h"

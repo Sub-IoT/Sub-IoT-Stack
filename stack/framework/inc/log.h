@@ -91,7 +91,6 @@ __LINK_C static inline void log_print_string(char* format,...) {}
 __LINK_C static inline void log_print_stack_string(char type, char* format, ...) {}
 __LINK_C static inline void log_print_data(uint8_t* message, uint8_t length) {}
 
-
 #endif
 
 #endif /* __LOG_H_ */

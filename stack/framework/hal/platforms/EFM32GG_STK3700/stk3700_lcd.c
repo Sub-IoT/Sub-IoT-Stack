@@ -27,7 +27,7 @@
 #include "platform_lcd.h"
 #include "segmentlcd.h"
 #include "segmentlcdconfig.h"
-#include <assert.h>
+#include <debug.h>
 
 void __lcd_init()
 {

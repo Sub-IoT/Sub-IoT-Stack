@@ -27,7 +27,7 @@ extern "C" {
 
 #if defined(NODE_GLOBALS)
 #include <stddef.h>
-#include <assert.h>
+#include <debug.h>
 #ifndef NODE_GLOBALS_MAX_NODES
     #warning NODE_GLOBALS_MAX_NODES is not defined. Using default value of 256
     #define NODE_GLOBALS_MAX_NODES 256

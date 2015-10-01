@@ -20,7 +20,7 @@
 #include "scheduler.h"
 #include "timer.h"
 #include "log.h"
-#include <assert.h>
+#include <debug.h>
 #include "platform.h"
 
 #include "d7ap_stack.h"

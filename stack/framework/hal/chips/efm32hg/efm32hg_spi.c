@@ -35,7 +35,7 @@
 #include "em_int.h"
 #include "dmactrl.h"
 #include "hwgpio.h"
-#include <assert.h>
+#include <debug.h>
 
 #include "hwspi.h"
 #include "platform.h"

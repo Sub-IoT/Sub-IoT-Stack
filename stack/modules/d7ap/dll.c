@@ -23,7 +23,7 @@
 #include "packet_queue.h"
 #include "packet.h"
 #include "crc.h"
-#include "assert.h"
+#include "debug.h"
 #include "fs.h"
 #include "ng.h"
 #include "hwdebug.h"
@@ -107,7 +107,7 @@ static void switch_state(dll_state_t next_state)
         DPRINT("Switched to DLL_STATE_CSMA_CA_STARTED");
         break;
     case DLL_STATE_CSMA_CA_RETRY:
-    	assert(dll_state == DLL_STATE_CCA1 || dll_state == DLL_STATE_CCA2);
+        assert(dll_state == DLL_STATE_CCA1 || dll_state == DLL_STATE_CCA2);
 		dll_state = DLL_STATE_CSMA_CA_RETRY;
 		DPRINT("Switched to DLL_STATE_CSMA_CA_RETRY");
 		break;
@@ -160,6 +160,7 @@ static void switch_state(dll_state_t next_state)
 
 static void process_received_packets()
 {
+    hw_radio_set_idle();
     packet_t* packet = packet_queue_get_received_packet();
     assert(packet != NULL);
     DPRINT("Processing received packet");
@@ -386,7 +387,7 @@ static void execute_csma_ca()
             else
             {
 				switch_state(DLL_STATE_CCA1);
-				sched_post_task(&execute_csma_ca);
+                sched_post_task(&execute_cca);
 			}
 
 			break;

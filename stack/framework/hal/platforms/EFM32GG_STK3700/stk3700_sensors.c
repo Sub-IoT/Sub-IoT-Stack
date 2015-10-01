@@ -24,7 +24,7 @@
 #include "em_gpio.h"
 #include "em_adc.h"
 #include <string.h>
-#include <assert.h>
+#include <debug.h>
 
 //TODO Lightsensor uses ACMP, LESENSE, PRS
 //#define LIGHT_SENSOR_ENABLE_PORTPIN		D6

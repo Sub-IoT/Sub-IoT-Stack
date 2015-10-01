@@ -20,7 +20,7 @@
 #include "ng.h"
 #include "hwtimer.h"
 #include "hwatomic.h"
-#include <assert.h>
+#include "debug.h"
 #include "framework_defs.h"
 
 #ifdef NODE_GLOBALS

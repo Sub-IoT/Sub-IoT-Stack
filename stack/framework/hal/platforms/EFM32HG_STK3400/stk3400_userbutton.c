@@ -21,7 +21,7 @@
 #include "hwatomic.h"
 #include "scheduler.h"
 #include <string.h>
-#include <assert.h>
+#include <debug.h>
 
 #if NUM_USERBUTTONS != 2
 	#error "NUM_USERBUTTONS does not match the expected value. Update platform.h or platform_userbutton.c"

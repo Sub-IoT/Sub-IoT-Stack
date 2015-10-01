@@ -23,7 +23,7 @@
 
 
 #include "hwsystem.h"
-#include <assert.h>
+#include "debug.h"
 
 void hw_enter_lowpower_mode(uint8_t mode)
 {

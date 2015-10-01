@@ -30,7 +30,7 @@
 #include <em_cmu.h>
 #include <gpiointerrupt.h>
 #include <stdarg.h>
-#include <assert.h>
+#include <debug.h>
 #include "hwatomic.h"
 
 typedef struct

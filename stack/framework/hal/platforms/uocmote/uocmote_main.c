@@ -25,7 +25,7 @@
 #include "platform.h"
 #include "cc430_mcu.h"
 //#include "userbutton.h"
-#include <assert.h>
+#include <debug.h>
 
 void __platform_init()
 {

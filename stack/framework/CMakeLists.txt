@@ -47,6 +47,9 @@ FRAMEWORK_HEADER_DEFINE(BOOL FRAMEWORK_LOG_BINARY)
 SET(FRAMEWORK_LOG_ENABLED "TRUE" CACHE BOOL "Select whether to enable or disable the generation of logs")
 FRAMEWORK_HEADER_DEFINE(BOOL FRAMEWORK_LOG_ENABLED)
 
+SET(FRAMEWORK_DEBUG_ASSERT_MINIMAL "FALSE" CACHE BOOL "Enabling this strips file, line functin and condition information from asserts, to save ROM")
+FRAMEWORK_HEADER_DEFINE(BOOL FRAMEWORK_DEBUG_ASSERT_MINIMAL)
+
 SET(FRAMEWORK_TIMER_STACK_SIZE "10" CACHE STRING "The number of simultaneous timer events that can be scheduled. Increase this if you have lots of concurrent timers")
 FRAMEWORK_HEADER_DEFINE(NUMBER FRAMEWORK_TIMER_STACK_SIZE)
 
@@ -79,6 +82,7 @@ SET(FRAMEWORK_HEADERS
         inc/types.h
         inc/fifo.h
         inc/bitmap.h
+        inc/debug.h
 )
 
 SET(HAL_API_HEADERS

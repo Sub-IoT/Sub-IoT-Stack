@@ -22,7 +22,7 @@
 
 
 #include <stdbool.h>
-#include <assert.h>
+#include "debug.h"
 
 #include "hwspi.h"
 #include "platform.h"

@@ -21,7 +21,7 @@
 #include "scheduler.h"
 #include "timer.h"
 #include "log.h"
-#include <assert.h>
+#include "assert.h"
 #include "platform.h"
 
 #include <stdio.h>

@@ -27,7 +27,7 @@
 #include "scheduler.h"
 
 //needs to be decoupled
-#include <assert.h>
+#include "debug.h"
 #include <string.h>
 #include <stdio.h>
 #include "hwatomic.h"

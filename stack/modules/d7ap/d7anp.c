@@ -19,7 +19,7 @@
  *
  */
 
-#include "assert.h"
+#include "debug.h"
 #include "d7anp.h"
 #include "packet.h"
 #include "fs.h"

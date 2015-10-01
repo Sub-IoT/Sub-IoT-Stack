@@ -21,7 +21,7 @@
  */
 
 #include "string.h"
-#include "assert.h"
+#include "debug.h"
 #include "fs.h"
 #include "ng.h"
 #include "hwsystem.h"

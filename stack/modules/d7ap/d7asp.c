@@ -19,7 +19,7 @@
  */
 
 #include "string.h"
-#include "assert.h"
+#include "debug.h"
 #include "ng.h"
 #include "log.h"
 #include "bitmap.h"
@@ -134,6 +134,7 @@ static void flush_fifos()
             mark_current_request_done();
             log_print_stack_string(LOG_STACK_SESSION, "Request reached single request retry limit (%i), skipping request", single_request_retry_limit);
             packet_queue_free_packet(current_request_packet);
+            active_request_id = NO_ACTIVE_REQUEST_ID;
             sched_post_task(&flush_fifos); // continue flushing until all request handled ...
             return;
         }
@@ -161,7 +162,6 @@ static void switch_state(state_t new_state)
                     log_print_stack_string(LOG_STACK_SESSION, "Switching to state D7ASP_STATE_MASTER");
                     break;
                 case D7ASP_STATE_SLAVE_PENDING_MASTER:
-                    assert(false);
                     state = new_state;
                     sched_post_task(&flush_fifos);
                     log_print_stack_string(LOG_STACK_SESSION, "Switching to state D7ASP_STATE_MASTER");
@@ -295,6 +295,7 @@ void d7asp_process_received_packet(packet_t* packet)
         {
             // no need to respond, clean up
             packet_queue_free_packet(packet);
+            switch_state(D7ASP_STATE_IDLE);
             return;
         }
 

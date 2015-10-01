@@ -33,7 +33,7 @@
 #include <hwuart.h>
 #include <log.h>
 #include <crc.h>
-#include <assert.h>
+#include <debug.h>
 #include "hwlcd.h"
 #include "platform_lcd.h"
 #include "userbutton.h"

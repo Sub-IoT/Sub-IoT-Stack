@@ -29,7 +29,7 @@
 #include "cdc.h"
 #include "em_cmu.h"
 #include <string.h>
-#include <assert.h>
+#include <debug.h>
 
 
 static const USBD_Callbacks_TypeDef callbacks =

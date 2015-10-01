@@ -18,7 +18,7 @@
 
 #include "packet_queue.h"
 #include "MODULE_D7AP_defs.h"
-#include "assert.h"
+#include "debug.h"
 #include "packet.h"
 #include "ng.h"
 #include "log.h"

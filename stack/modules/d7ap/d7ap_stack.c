@@ -18,7 +18,7 @@
 
 #include "d7ap_stack.h"
 
-#include "assert.h"
+#include "debug.h"
 
 void d7ap_stack_init(fs_init_args_t* fs_init_args, alp_unhandled_action_callback alp_unhandled_action_cb, d7asp_init_args_t* d7asp_init_args)
 {

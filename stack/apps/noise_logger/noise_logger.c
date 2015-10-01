@@ -32,7 +32,7 @@
 #include <stdlib.h>
 #include <userbutton.h>
 #include <fifo.h>
-#include <assert.h>
+#include <debug.h>
 #include <platform_sensors.h>
 
 #ifdef PLATFORM_EFM32GG_STK3700

@@ -6,7 +6,7 @@
 #include "em_emu.h"
 #include "em_gpio.h"
 #include "em_i2c.h"
-#include <assert.h>
+#include <debug.h>
 #include "hwgpio.h"
 
 

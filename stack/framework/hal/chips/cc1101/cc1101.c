@@ -34,7 +34,7 @@
  * - CRC
  */
 
-#include "assert.h"
+#include "debug.h"
 #include "string.h"
 
 #include "log.h"
@@ -145,6 +145,7 @@ static RF_SETTINGS rf_settings = {
 
 static void switch_to_idle_mode()
 {
+    DPRINT("Switching to HW_RADIO_STATE_IDLE");
     //Flush FIFOs and go to sleep, ensure interrupts are disabled
     current_state = HW_RADIO_STATE_IDLE;
     cc1101_interface_set_interrupts_enabled(false);

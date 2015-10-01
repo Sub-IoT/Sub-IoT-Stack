@@ -20,7 +20,7 @@
  *
  */
 
-#include "assert.h"
+#include "debug.h"
 #include "d7atp.h"
 #include "packet_queue.h"
 #include "packet.h"

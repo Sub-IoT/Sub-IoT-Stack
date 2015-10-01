@@ -28,7 +28,7 @@
 #include "display.h"
 #include "textdisplay.h"
 #include "retargettextdisplay.h"
-#include <assert.h>
+#include <debug.h>
 
 static TEXTDISPLAY_Handle_t h;
 

@@ -25,7 +25,7 @@
 #include "ng.h"
 #include "random.h"
 #include "types.h"
-#include "assert.h"
+#include "debug.h"
 
 
 typedef struct __attribute__((__packed__))

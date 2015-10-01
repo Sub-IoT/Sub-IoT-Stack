@@ -25,7 +25,7 @@
 
 #include <stdbool.h>
 #include "hwadc.h"
-#include <assert.h>
+#include <debug.h>
 
 #include "em_adc.h"
 #include "em_cmu.h"

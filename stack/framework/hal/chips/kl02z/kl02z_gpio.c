@@ -25,7 +25,7 @@
 
 #include "hwgpio.h"
 #include <stdarg.h>
-#include <assert.h>
+#include "debug.h"
 #include "hwatomic.h"
 #include <MKL02Z4.h>
 

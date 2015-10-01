@@ -22,7 +22,7 @@
 #include "msp430.h"
 #include "hw_regaccess.h"
 
-#include "assert.h"
+#include "debug.h"
 
 
 static uint16_t port_to_base_address(uint16_t port)

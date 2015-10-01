@@ -20,7 +20,7 @@
  *
  */
 
-#include "assert.h"
+#include "debug.h"
 #include "ng.h"
 
 #include "alp.h"

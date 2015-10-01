@@ -26,7 +26,7 @@
 #include "hwleds.h"
 #include "platform.h"
 #include "em_gpio.h"
-#include <assert.h>
+#include <debug.h>
 
 #if HW_NUM_LEDS != 3
 	#error HW_NUM_LEDS does not match the expected value. Update platform.h or platform_leds.c

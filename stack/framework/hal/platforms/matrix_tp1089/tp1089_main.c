@@ -25,7 +25,7 @@
 #include "platform.h"
 #include "kl02z_mcu.h"
 // TODO #include "em_gpio.h"
-#include <assert.h>
+#include <debug.h>
 #include <MKL02Z4.h>
 
 static void SetSIMRegisters()

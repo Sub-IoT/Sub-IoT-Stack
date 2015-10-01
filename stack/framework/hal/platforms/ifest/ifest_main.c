@@ -26,7 +26,7 @@
 #include "platform.h"
 #include "userbutton.h"
 #include "em_gpio.h"
-#include <assert.h>
+#include <debug.h>
 
 void __platform_init()
 {
