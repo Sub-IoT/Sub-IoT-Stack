@@ -83,10 +83,10 @@ static void switch_state(state_t new_state)
 
 static void transaction_response_period_expired()
 {
+    log_print_stack_string(LOG_STACK_TRANS, "Transaction response period expired");
     assert(d7atp_state == D7ATP_STATE_SLAVE_TRANSACTION_RESPONSE_PERIOD
            || d7atp_state == D7ATP_STATE_MASTER_TRANSACTION_RESPONSE_PERIOD);
 
-    log_print_stack_string(LOG_STACK_TRANS, "Transaction response period expired");
     switch_state(D7ATP_STATE_IDLE);
     dll_stop_foreground_scan();
     d7asp_signal_transaction_response_period_elapsed();
@@ -126,6 +126,7 @@ void d7atp_start_dialog(uint8_t dialog_id, uint8_t transaction_id, packet_t* pac
 void d7atp_respond_dialog(packet_t* packet)
 {
     switch_state(D7ATP_STATE_SLAVE_TRANSACTION_SENDING_RESPONSE);
+    assert(!sched_is_scheduled(&transaction_response_period_expired));
 
     // modify the request headers and turn this into a response
     d7atp_ctrl_t* d7atp = &(packet->d7atp_ctrl);
@@ -193,10 +194,11 @@ void d7atp_signal_packet_transmitted(packet_t* packet)
     else
         assert(false);
 
-    log_print_stack_string(LOG_STACK_DLL, "Packet transmitted, starting response period timer");
+    int8_t transaction_response_period = 50; // TODO get from upper layer
+    log_print_stack_string(LOG_STACK_DLL, "Packet transmitted, starting response period timer (%i ticks)", transaction_response_period);
     // TODO find out difference between dialog timeout and transaction response period
-    timer_post_task_delay(&transaction_response_period_expired, 50); // TODO hardcoded period for now
-
+    error_t e = timer_post_task_delay(&transaction_response_period_expired, transaction_response_period); // TODO hardcoded period for now
+    assert(e == SUCCESS); // should not be scheduled already, something wrong..
     d7asp_signal_packet_transmitted(packet);
 }
 

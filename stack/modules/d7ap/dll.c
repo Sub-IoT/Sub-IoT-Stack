@@ -208,6 +208,7 @@ static void cca_rssi_valid(int16_t cur_rssi)
     {
         if(dll_state == DLL_STATE_CCA1)
         {
+            log_print_stack_string(LOG_STACK_DLL, "CCA1 RSSI: %d", cur_rssi);
             switch_state(DLL_STATE_CCA2);
             timer_post_task_delay(&execute_cca, 5);
             return;
@@ -215,7 +216,7 @@ static void cca_rssi_valid(int16_t cur_rssi)
         else if(dll_state == DLL_STATE_CCA2)
         {
             // OK, send packet
-
+            log_print_stack_string(LOG_STACK_DLL, "CCA2 RSSI: %d", cur_rssi);
             log_print_stack_string(LOG_STACK_DLL, "CCA2 succeeded, transmitting ...");
             log_print_data(current_packet->data, current_packet->length + 1); // TODO tmp
 
