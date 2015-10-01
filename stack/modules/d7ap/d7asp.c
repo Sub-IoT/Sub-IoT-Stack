@@ -87,8 +87,7 @@ static void init_fifo()
 static void mark_current_request_done()
 {
     bitmap_set(fifo.progress_bitmap, active_request_id);
-    active_request_id = NO_ACTIVE_REQUEST_ID;
-    packet_queue_free_packet(current_request_packet);
+    // current_request_packet will be free-ed in the packet_queue when the transaction is completed
 }
 
 static void flush_fifos()
@@ -116,6 +115,7 @@ static void flush_fifos()
         current_request_retry_count = 0;
 
         current_request_packet = packet_queue_alloc_packet();
+        packet_queue_mark_processing(current_request_packet);
         current_request_packet->d7atp_addressee = &(fifo.config.addressee);
 
         alp_process_command(fifo.request_buffer + fifo.requests_indices[active_request_id], current_request_packet);
@@ -133,6 +133,7 @@ static void flush_fifos()
             // mark request as failed and pop
             mark_current_request_done();
             log_print_stack_string(LOG_STACK_SESSION, "Request reached single request retry limit (%i), skipping request", single_request_retry_limit);
+            packet_queue_free_packet(current_request_packet);
             sched_post_task(&flush_fifos); // continue flushing until all request handled ...
             return;
         }
@@ -257,6 +258,7 @@ void d7asp_process_received_packet(packet_t* packet)
         log_print_stack_string(LOG_STACK_SESSION, "Received ACK");
         bitmap_set(fifo.success_bitmap, active_request_id);
         mark_current_request_done();
+        assert(packet != current_request_packet);
         packet_queue_free_packet(packet); // ACK can be cleaned
         // TODO notify upper layer
     }
@@ -292,7 +294,6 @@ void d7asp_process_received_packet(packet_t* packet)
         if(packet->payload_length == 0 && !packet->d7atp_ctrl.ctrl_is_ack_requested)
         {
             // no need to respond, clean up
-            //switch_state(D7ASP_STATE_IDLE); // TODO don't go to idle directly, wait for timeout or stop transaction
             packet_queue_free_packet(packet);
             return;
         }
@@ -317,13 +318,21 @@ void d7asp_signal_packet_transmitted(packet_t *packet)
 }
 
 
-static void on_request_failed()
+static void on_request_completed()
 {
     assert(state == D7ASP_STATE_MASTER);
     if(!bitmap_get(fifo.progress_bitmap, active_request_id))
     {
         current_request_retry_count++;
+        // the request may be retransmitted, don't free yet (this will be done in flush_fifo() when failed)
     }
+    else
+    {
+        // request completed, no retries needed so we can free the packet
+        active_request_id = NO_ACTIVE_REQUEST_ID;
+        packet_queue_free_packet(current_request_packet);
+    }
+
 
     sched_post_task(&flush_fifos); // continue flushing until all request handled ...
 }
@@ -334,7 +343,7 @@ void d7asp_signal_packet_csma_ca_insertion_completed(bool succeeded)
     {
         if(!succeeded)
         {
-            on_request_failed();
+            on_request_completed();
             return;
         }
 
@@ -350,7 +359,7 @@ void d7asp_signal_packet_csma_ca_insertion_completed(bool succeeded)
 void d7asp_signal_transaction_response_period_elapsed()
 {
     if(state == D7ASP_STATE_MASTER)
-        on_request_failed();
+        on_request_completed();
     else if(state == D7ASP_STATE_SLAVE)
         switch_state(D7ASP_STATE_IDLE);
     else if(state == D7ASP_STATE_SLAVE_PENDING_MASTER)

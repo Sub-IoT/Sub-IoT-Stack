@@ -21,6 +21,7 @@
 #include "assert.h"
 #include "packet.h"
 #include "ng.h"
+#include "log.h"
 
 typedef enum
 {
@@ -51,6 +52,7 @@ packet_t* packet_queue_alloc_packet()
         if(packet_queue_element_status[i] == PACKET_QUEUE_ELEMENT_STATUS_FREE)
         {
             packet_queue_element_status[i] = PACKET_QUEUE_ELEMENT_STATUS_ALLOCATED;
+            log_print_stack_string(LOG_STACK_FWK, "Packet queue alloc %p", &(packet_queue[i]));
             return &(packet_queue[i]);
         }
     }
@@ -60,6 +62,7 @@ packet_t* packet_queue_alloc_packet()
 
 void packet_queue_free_packet(packet_t* packet)
 {
+    log_print_stack_string(LOG_STACK_FWK, "Packet queue mark free %p", packet);
     for(uint8_t i = 0; i < MODULE_D7AP_PACKET_QUEUE_SIZE; i++)
     {
         if(packet == &(packet_queue[i]))
@@ -92,6 +95,7 @@ void packet_queue_mark_received(hw_radio_packet_t* hw_radio_packet)
         if(&(packet_queue[i].hw_radio_packet) == hw_radio_packet)
         {
             assert(packet_queue_element_status[i] == PACKET_QUEUE_ELEMENT_STATUS_ALLOCATED);
+            log_print_stack_string(LOG_STACK_FWK, "Packet queue mark received %p", &(packet_queue[i].hw_radio_packet));
             packet_queue_element_status[i] = PACKET_QUEUE_ELEMENT_STATUS_RECEIVED;
             return;
         }
@@ -114,15 +118,18 @@ packet_t* packet_queue_get_received_packet()
 
 void packet_queue_mark_processing(packet_t* packet)
 {
+    log_print_stack_string(LOG_STACK_FWK, "Packet queue mark processing %p", packet);
     for(uint8_t i = 0; i < MODULE_D7AP_PACKET_QUEUE_SIZE; i++)
     {
         if(packet == &(packet_queue[i]))
         {
-            assert(packet_queue_element_status[i] == PACKET_QUEUE_ELEMENT_STATUS_RECEIVED);
+            assert(packet_queue_element_status[i] == PACKET_QUEUE_ELEMENT_STATUS_RECEIVED
+                   || packet_queue_element_status[i] == PACKET_QUEUE_ELEMENT_STATUS_ALLOCATED);
+
             packet_queue_element_status[i] = PACKET_QUEUE_ELEMENT_STATUS_PROCESSING;
             return;
         }
-
-        assert(false);
     }
+
+    assert(false);
 }

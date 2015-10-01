@@ -40,6 +40,7 @@
 typedef enum
 {
     DLL_STATE_IDLE,
+    DLL_STATE_SCAN_AUTOMATION,
     DLL_STATE_CSMA_CA_STARTED,
 	DLL_STATE_CSMA_CA_RETRY,
     DLL_STATE_CCA1,
@@ -100,7 +101,8 @@ static void switch_state(dll_state_t next_state)
     switch(next_state)
     {
     case DLL_STATE_CSMA_CA_STARTED:
-        assert(dll_state == DLL_STATE_IDLE || dll_state == DLL_STATE_FOREGROUND_SCAN);
+        assert(dll_state == DLL_STATE_IDLE || dll_state == DLL_STATE_SCAN_AUTOMATION
+               || dll_state == DLL_STATE_FOREGROUND_SCAN);
         dll_state = DLL_STATE_CSMA_CA_STARTED;
         DPRINT("Switched to DLL_STATE_CSMA_CA_STARTED");
         break;
@@ -120,7 +122,8 @@ static void switch_state(dll_state_t next_state)
         DPRINT("Switched to DLL_STATE_CCA2");
         break;
     case DLL_STATE_FOREGROUND_SCAN:
-        assert(dll_state == DLL_STATE_IDLE || dll_state == DLL_STATE_TX_FOREGROUND_COMPLETED);
+        assert(dll_state == DLL_STATE_IDLE || dll_state == DLL_STATE_SCAN_AUTOMATION
+               || dll_state == DLL_STATE_TX_FOREGROUND_COMPLETED);
         dll_state = DLL_STATE_FOREGROUND_SCAN;
         DPRINT("Switched to DLL_STATE_FOREGROUND_SCAN");
         break;
@@ -128,6 +131,11 @@ static void switch_state(dll_state_t next_state)
         assert(dll_state == DLL_STATE_FOREGROUND_SCAN);
         dll_state = DLL_STATE_IDLE;
         DPRINT("Switched to DLL_STATE_IDLE");
+        break;
+    case DLL_STATE_SCAN_AUTOMATION:
+        assert(dll_state == DLL_STATE_FOREGROUND_SCAN || dll_state == DLL_STATE_IDLE);
+        dll_state = DLL_STATE_SCAN_AUTOMATION;
+        DPRINT("Switched to DLL_STATE_SCAN_AUTOMATION");
         break;
     case DLL_STATE_TX_FOREGROUND:
         assert(dll_state == DLL_STATE_CCA2);
@@ -155,6 +163,7 @@ static void process_received_packets()
     packet_t* packet = packet_queue_get_received_packet();
     assert(packet != NULL);
     DPRINT("Processing received packet");
+    packet_queue_mark_processing(packet);
     packet_disassemble(packet);
 
     return;
@@ -164,6 +173,8 @@ static void process_received_packets()
 
 void packet_received(hw_radio_packet_t* packet)
 {
+    assert(dll_state == DLL_STATE_FOREGROUND_SCAN || dll_state == DLL_STATE_SCAN_AUTOMATION);
+
     // we are in interrupt context here, so mark packet for further processing,
     // schedule it and return
     DPRINT("packet received @ %i , RSSI = %i", packet->rx_meta.timestamp, packet->rx_meta.rssi);
@@ -261,6 +272,8 @@ static uint16_t calculate_tx_duration()
 static void execute_csma_ca()
 {
 	// TODO generate random channel queue
+    hw_radio_set_rx(NULL, NULL, NULL); // put radio in RX but disable callbacks to make sure we don't receive packets when in this state
+                                        // TODO use correct rx cfg + it might be interesting to switch to idle first depending on calculated offset
     uint16_t tx_duration = calculate_tx_duration();
     switch (dll_state)
     {
@@ -384,18 +397,45 @@ static void execute_csma_ca()
     }
 }
 
+static void execute_scan_automation()
+{
+    if(current_access_class.control_number_of_subbands > 0)
+    {
+        assert(current_access_class.control_number_of_subbands == 1); // TODO multiple not supported
+        switch_state(DLL_STATE_SCAN_AUTOMATION);
+        hw_rx_cfg_t rx_cfg = {
+            .channel_id = {
+                .channel_header = current_access_class.subbands[0].channel_header,
+                .center_freq_index = current_access_class.subbands[0].channel_index_start
+            },
+            .syncword_class = PHY_SYNCWORD_CLASS1
+        };
+
+        hw_radio_set_rx(&rx_cfg, &packet_received, NULL);
+
+        assert(current_access_class.scan_automation_period == 0); // scan automation period, assuming 0 for now
+    }
+    else
+    {
+        switch_state(DLL_STATE_IDLE);
+        hw_radio_set_idle();
+    }
+}
+
 void dll_init()
 {
     sched_register_task(&process_received_packets);
     sched_register_task(&dll_start_foreground_scan);
     sched_register_task(&execute_cca);
     sched_register_task(&execute_csma_ca);
+    sched_register_task(&execute_scan_automation);
 
     hw_radio_init(&alloc_new_packet, &release_packet);
 
     fs_read_access_class(0, &current_access_class); // use first access class for now
 
     dll_state = DLL_STATE_IDLE;
+    sched_post_task(&execute_scan_automation);
 }
 
 void dll_tx_frame(packet_t* packet)
@@ -452,8 +492,7 @@ void dll_start_foreground_scan()
 void dll_stop_foreground_scan()
 {
     assert(dll_state == DLL_STATE_FOREGROUND_SCAN);
-    switch_state(DLL_STATE_IDLE);
-    hw_radio_set_idle();
+    execute_scan_automation();
 }
 
 uint8_t dll_assemble_packet_header(packet_t* packet, uint8_t* data_ptr)
