@@ -224,7 +224,11 @@ static void end_of_packet_isr()
             log_print_raw_phy_packet(packet, false);
 #endif
             DEBUG_RX_END();
-            rx_packet_callback(packet);
+            if(rx_packet_callback != NULL) // TODO this can happen while doing CCA but we should not be interrupting here (disable packet handler?)
+                rx_packet_callback(packet);
+            else
+                release_packet_callback(packet);
+
             if(current_state == HW_RADIO_STATE_RX) // check still in RX, could be modified by upper layer while in callback
             {
                 uint8_t status = (cc1101_interface_strobe(RF_SNOP) & 0xF0);
@@ -455,7 +459,7 @@ error_t hw_radio_set_rx(hw_rx_cfg_t const* rx_cfg, rx_packet_callback_t rx_cb, r
         assert(release_packet_callback != NULL);
     }
 
-    assert(rx_cb != NULL || rssi_valid_cb != NULL); // at least one callback should be valid
+    // assert(rx_cb != NULL || rssi_valid_cb != NULL); // at least one callback should be valid
 
     // TODO error handling EINVAL, EOFF
     rx_packet_callback = rx_cb;
