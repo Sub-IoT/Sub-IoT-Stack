@@ -287,8 +287,9 @@ static void execute_csma_ca()
 			{
                 // TODO how to handle this? signal upper layer?
                 DPRINT("Tca negative, CCA failed");
-				switch_state(DLL_STATE_CCA_FAIL);
-				sched_post_task(&execute_csma_ca);
+                assert(false);
+//				switch_state(DLL_STATE_CCA_FAIL);
+//				sched_post_task(&execute_csma_ca);
 				break;
 			}
 
