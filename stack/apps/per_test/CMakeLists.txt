@@ -31,7 +31,7 @@
 
 
 #Call the BUILD_APPLICATION to build the final executable for the specific platform
-ADD_EXECUTABLE(per_test per_test.c)
+ADD_EXECUTABLE(per_test.elf per_test.c)
 
 #Add the framework (and one or more modules) as libraries to the application
-TARGET_LINK_LIBRARIES(per_test framework)
+TARGET_LINK_LIBRARIES(per_test.elf framework)

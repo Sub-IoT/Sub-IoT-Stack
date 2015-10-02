@@ -31,7 +31,7 @@
 
 
 #Call the BUILD_APPLICATION to build the final executable for the specific platform
-ADD_EXECUTABLE(radio_ping app.c)
+ADD_EXECUTABLE(radio_ping.elf app.c)
 
 #Add the framework (and one or more modules) as libraries to the application
-TARGET_LINK_LIBRARIES(radio_ping framework)
+TARGET_LINK_LIBRARIES(radio_ping.elf framework)

@@ -31,7 +31,7 @@
 
 
 #Call the BUILD_APPLICATION to build the final executable for the specific platform
-ADD_EXECUTABLE(d7ap_test d7ap_test.c)
+ADD_EXECUTABLE(d7ap_test.elf d7ap_test.c)
 
 #Add the framework (and one or more modules) as libraries to the application
-TARGET_LINK_LIBRARIES(d7ap_test d7ap framework)
+TARGET_LINK_LIBRARIES(d7ap_test.elf d7ap framework)

@@ -31,10 +31,10 @@
 
 
 #Call the BUILD_APPLICATION to build the final executable for the specific platform
-ADD_EXECUTABLE(simple_leds app.c)
+ADD_EXECUTABLE(simple_leds.elf app.c)
 
 #Add the framework (and one or more modules) as libraries to the application
-TARGET_LINK_LIBRARIES(simple_leds framework)
+TARGET_LINK_LIBRARIES(simple_leds.elf framework)
 
 #Generate IDE specific binaries (if the required macro is available for the chosen platform)
 #MACRO_AVAILABLE(GENERATE_SIMPLICITY_STUDIO_FILES SSF_AVAILABLE)

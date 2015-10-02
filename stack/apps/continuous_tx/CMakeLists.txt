@@ -31,7 +31,7 @@
 
 
 #Call the BUILD_APPLICATION to build the final executable for the specific platform
-ADD_EXECUTABLE(continuous_tx continuous_tx.c)
+ADD_EXECUTABLE(continuous_tx.elf continuous_tx.c)
 
 #Add the framework (and one or more modules) as libraries to the application
-TARGET_LINK_LIBRARIES(continuous_tx framework)
+TARGET_LINK_LIBRARIES(continuous_tx.elf framework)

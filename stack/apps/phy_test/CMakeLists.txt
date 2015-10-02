@@ -31,7 +31,7 @@
 
 
 #Call the BUILD_APPLICATION to build the final executable for the specific platform
-ADD_EXECUTABLE(phy_test phy_test.c)
+ADD_EXECUTABLE(phy_test.elf phy_test.c)
 
 #Add the framework (and one or more modules) as libraries to the application
-TARGET_LINK_LIBRARIES(phy_test framework)
+TARGET_LINK_LIBRARIES(phy_test.elf framework)

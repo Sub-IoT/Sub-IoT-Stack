@@ -31,10 +31,10 @@
 
 
 #Call the BUILD_APPLICATION to build the final executable for the specific platform
-ADD_EXECUTABLE(ping_pong ping_pong.c)
+ADD_EXECUTABLE(ping_pong.elf ping_pong.c)
 
 #Add the framework (and one or more modules) as libraries to the application
-TARGET_LINK_LIBRARIES(ping_pong d7ap framework)
+TARGET_LINK_LIBRARIES(ping_pong.elf d7ap framework)
 
 #Generate IDE specific binaries (if the required macro is available for the chosen platform)
 #MACRO_AVAILABLE(GENERATE_SIMPLICITY_STUDIO_FILES SSF_AVAILABLE)
