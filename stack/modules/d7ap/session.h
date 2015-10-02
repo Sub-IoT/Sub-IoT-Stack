@@ -41,9 +41,6 @@ typedef enum  {
 } session_resp_mode_t;
 
 typedef struct {
-    uint8_t qos_retry_total;
-    uint8_t qos_retry_single;
-    uint8_t qos_ack_period;
     union {
         uint8_t qos_ctrl;
         struct {
@@ -53,6 +50,10 @@ typedef struct {
             uint8_t _rfu2 : 3;
         };
     };
+
+    uint8_t qos_ack_period;
+    uint8_t qos_retry_single;
+    uint8_t qos_retry_total;
 } session_qos_t;
 
 

@@ -48,7 +48,8 @@ void alp_process_command(const uint8_t* alp_command_ptr, packet_t* packet)
 
     switch(alp_control.operation)
     {
-        case ALP_OP_READ_FILE_DATA: ;
+        case ALP_OP_READ_FILE_DATA:
+        {
             alp_operand_file_data_request_t operand;
             operand.file_offset.file_id = (*alp_command_ptr); alp_command_ptr++;
             operand.file_offset.offset = (*alp_command_ptr); alp_command_ptr++; // TODO can be 1-4 bytes, assume 1 for now
@@ -63,6 +64,24 @@ void alp_process_command(const uint8_t* alp_command_ptr, packet_t* packet)
             fs_read_file(operand.file_offset.file_id, operand.file_offset.offset, resp_data_ptr, operand.requested_data_length);
             packet->payload_length = resp_data_ptr - packet->payload + operand.requested_data_length;
             break;
+        }
+        case ALP_OP_RETURN_FILE_DATA:
+        {
+            alp_operand_file_data_t operand;
+            operand.file_offset.file_id = (*alp_command_ptr); alp_command_ptr++;
+            operand.file_offset.offset = (*alp_command_ptr); alp_command_ptr++; // TODO can be 1-4 bytes, assume 1 for now
+            operand.provided_data_length = (*alp_command_ptr); alp_command_ptr++;
+
+            // fill response
+            uint8_t* resp_data_ptr = packet->payload;
+            (*resp_data_ptr) = ALP_OP_RETURN_FILE_DATA; resp_data_ptr++;
+            (*resp_data_ptr) = operand.file_offset.file_id; resp_data_ptr++;
+            (*resp_data_ptr) = operand.file_offset.offset; resp_data_ptr++;
+            (*resp_data_ptr) = operand.provided_data_length; resp_data_ptr++;
+            memcpy(resp_data_ptr, alp_command_ptr, operand.provided_data_length);
+            packet->payload_length = resp_data_ptr - packet->payload + operand.provided_data_length;
+            break;
+        }
         default:
             assert(false); // TODO implement other operations
     }

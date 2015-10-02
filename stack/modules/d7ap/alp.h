@@ -93,6 +93,12 @@ typedef struct {
     uint8_t requested_data_length;
 } alp_operand_file_data_request_t;
 
+typedef struct {
+    alp_operand_file_offset_t file_offset;
+    uint8_t provided_data_length;
+    // data
+} alp_operand_file_data_t;
+
 typedef void (*alp_unhandled_action_callback)(d7asp_result_t d7asp_result, uint8_t *alp_command, uint8_t alp_command_size);
 
 void alp_init(alp_unhandled_action_callback cb);

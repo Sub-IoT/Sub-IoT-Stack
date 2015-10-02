@@ -35,6 +35,62 @@
 #include "hwlcd.h"
 #include "d7ap_stack.h"
 #include "dll.h"
+#include "hwuart.h"
+#include "fifo.h"
+
+#define UART_RX_BUFFER_SIZE 50
+
+static uint8_t uart_rx_buffer[UART_RX_BUFFER_SIZE] = { 0 };
+static fifo_t uart_rx_fifo;
+
+static void process_uart_rx_fifo()
+{
+    // expected: <0xCE> <Length byte> <0xD7> <D7ASP fifo config> <ALP command>
+    // where length is the length of D7ASP fifo config and ALP command
+    if(fifo_get_size(&uart_rx_fifo) > 3)
+    {
+        uint8_t alp_command[MODULE_D7AP_FIFO_COMMAND_BUFFER_SIZE] = { 0x00 };
+        fifo_peek(&uart_rx_fifo, alp_command, 0, 3);
+        if(alp_command[0] != 0xCE)
+        {
+            // unexpected data, pop and return
+            fifo_pop(&uart_rx_fifo, alp_command, 1);
+            return;
+        }
+
+        assert(alp_command[2] == ALP_ITF_ID_D7ASP);
+        uint8_t length = alp_command[1];
+        if(fifo_get_size(&uart_rx_fifo) >= 3 + length)
+        {
+            // complete command received
+            fifo_pop(&uart_rx_fifo, alp_command, 3); // we don't need the header anymore
+
+            // first pop D7ASP fifo config
+            fifo_pop(&uart_rx_fifo, alp_command, D7ASP_FIFO_CONFIG_SIZE);
+            d7asp_fifo_config_t fifo_config;
+            fifo_config.fifo_ctrl = alp_command[0];
+            memcpy(&(fifo_config.qos), alp_command + 1, 4);
+            fifo_config.dormant_timeout = alp_command[5];
+            fifo_config.start_id = alp_command[6];
+            memcpy(&(fifo_config.addressee), alp_command + 7, 9);
+
+            // and now ALP command
+            uint8_t alp_command_length = length - D7ASP_FIFO_CONFIG_SIZE;
+            fifo_pop(&uart_rx_fifo, alp_command, alp_command_length);
+            d7asp_queue_alp_actions(&fifo_config, alp_command, alp_command_length);
+        }
+
+        sched_post_task(&process_uart_rx_fifo);
+    }
+}
+
+static void uart_rx_cb(char data)
+{
+    error_t err;
+    err = fifo_put(&uart_rx_fifo, &data, 1); assert(err == SUCCESS);
+    if(!sched_is_scheduled(&process_uart_rx_fifo))
+        sched_post_task(&process_uart_rx_fifo);
+}
 
 static void on_alp_unhandled_action(d7asp_result_t d7asp_result, uint8_t *alp_command, uint8_t alp_command_size)
 {
@@ -82,6 +138,13 @@ void bootstrap()
     };
 
     d7ap_stack_init(&fs_init_args, &on_alp_unhandled_action, NULL);
+
+    fifo_init(&uart_rx_fifo, uart_rx_buffer, sizeof(uart_rx_buffer));
+
+    uart_set_rx_interrupt_callback(&uart_rx_cb);
+    uart_rx_interrupt_enable(true);
+
+    sched_register_task(&process_uart_rx_fifo);
 
     lcd_write_string("started");
 }

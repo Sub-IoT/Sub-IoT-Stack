@@ -98,9 +98,9 @@ error_t fifo_peek(fifo_t* fifo, uint8_t* buffer, uint16_t offset, uint16_t len)
 int16_t fifo_get_size(fifo_t* fifo)
 {
     if(fifo->head_idx <= fifo->tail_idx)
-        return fifo->tail_idx - fifo->head_idx;
+        return fifo->tail_idx - fifo->head_idx + 1;
     else
-        return fifo->tail_idx + (fifo->max_size - fifo->head_idx);
+        return fifo->tail_idx + (fifo->max_size - fifo->head_idx) + 1;
 }
 
 void fifo_clear(fifo_t* fifo)
