@@ -31,6 +31,12 @@
 #include "assert.h" // start from assert.h which defines __ASSERT_FUNCT and then redefine assert
 #undef assert
 
+#ifdef __ASSERT_FUNCTION  // some systems define __ASSERT_FUNCTION ..
+#   define __ASSERT_FUNC __ASSERT_FUNCTION
+void __assert_func(const char *, int, const char *, const char *);
+
+#endif
+
 #ifdef NDEBUG           /* required by ANSI standard */
 # define assert(__e) ((void)0)
 #elif defined FRAMEWORK_DEBUG_ASSERT_MINIMAL
