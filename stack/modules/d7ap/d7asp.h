@@ -31,16 +31,18 @@
 
 #include "session.h"
 
+#define D7ASP_FIFO_CONFIG_SIZE 16
 
 typedef struct {
     union {
         uint8_t fifo_ctrl;
         struct {
-            bool fifo_ctrl_nls : 1;
+            uint8_t fifo_ctrl_state : 3; // TODO using session_state_t results in "'state' is narrower than value of its type" warning
             uint8_t _rfu : 1;
-            bool fifo_ctrl_stop_on_error : 1;
             bool fifo_ctrl_preferred : 1;
-            uint8_t fifo_ctrl_state : 2; // TODO using session_state_t results in "'state' is narrower than value of its type" warning
+            bool fifo_ctrl_stop_on_error : 1;
+            uint8_t _rfu2 : 1;
+            bool fifo_ctrl_nls : 1;
         };
     };
     session_qos_t qos;
