@@ -36,12 +36,6 @@
 #include "d7ap_stack.h"
 #include "dll.h"
 
-static void start_foreground_scan()
-{
-    // TODO we start FG scan manually now, later it should be started by access profile automatically
-    dll_start_foreground_scan();
-}
-
 static void on_alp_unhandled_action(d7asp_result_t d7asp_result, uint8_t *alp_command, uint8_t alp_command_size)
 {
 	led_on(0);
@@ -59,8 +53,6 @@ static void on_alp_unhandled_action(d7asp_result_t d7asp_result, uint8_t *alp_co
 
 void bootstrap()
 {
-
-
     dae_access_profile_t access_classes[1] = {
         {
             .control_scan_type_is_foreground = true,
@@ -90,9 +82,6 @@ void bootstrap()
     };
 
     d7ap_stack_init(&fs_init_args, &on_alp_unhandled_action, NULL);
-
-    sched_register_task(&start_foreground_scan);
-    sched_post_task(&start_foreground_scan);
 
     lcd_write_string("started");
 }

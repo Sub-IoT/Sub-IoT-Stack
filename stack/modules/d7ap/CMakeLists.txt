@@ -34,7 +34,7 @@ MODULE_HEADER_DEFINE(NUMBER ${MODULE_PREFIX}_FIFO_MAX_REQUESTS_COUNT)
 MODULE_BUILD_SETTINGS_FILE()
 
 #Export the module-specific header files to the application by using
-EXPORT_GLOBAL_INCLUDE_DIRECTORIES(dll .) # TODO we export lower layers now during development, later only upper should be exported
+EXPORT_GLOBAL_INCLUDE_DIRECTORIES(.)
 
 #By convention, each module should generate a single 'static' library that can be included by the application
 ADD_LIBRARY(d7ap STATIC
