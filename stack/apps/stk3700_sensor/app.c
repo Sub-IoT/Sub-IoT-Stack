@@ -55,7 +55,7 @@ void userbutton_callback(button_id_t button_id)
 	snprintf(string, 7, "Btn %u", button_id);
 	lcd_write_string(string);
 
-	fs_write_file(0x40, 2, (uint8_t*)&button_id, 1); // File 0x40 is configured to use D7AActP trigger an ALP action which broadcasts this file data on Access Class 0
+    fs_write_file(SENSOR_FILE_ID, 2, (uint8_t*)&button_id, 1); // File 0x40 is configured to use D7AActP trigger an ALP action which broadcasts this file data on Access Class 0
 }
 
 void measureTemperature()
@@ -76,7 +76,7 @@ void execute_sensor_measurement()
 	measureTemperature();
 
 	int16_t temp_bigendian = __builtin_bswap16(temperature);
-	fs_write_file(0x40, 0, (uint8_t*)&temp_bigendian, 2); // File 0x40 is configured to use D7AActP trigger an ALP action which broadcasts this file data on Access Class 0
+    fs_write_file(SENSOR_FILE_ID, 0, (uint8_t*)&temp_bigendian, 2); // File 0x40 is configured to use D7AActP trigger an ALP action which broadcasts this file data on Access Class 0
 }
 
 void init_user_files()
