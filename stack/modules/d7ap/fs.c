@@ -27,23 +27,21 @@
 #include "hwsystem.h"
 #include "alp.h"
 #include "d7asp.h"
+#include "MODULE_D7AP_defs.h"
 
-#define FILE_COUNT 0x42 // TODO define from cmake (D7AP module specific)
-#define FILE_DATA_SIZE 80 // TODO define from cmake (D7AP module specific)
-
-static fs_file_header_t NGDEF(_file_headers)[FILE_COUNT] = { 0 };
+static fs_file_header_t NGDEF(_file_headers)[MODULE_D7AP_FS_FILE_COUNT] = { 0 };
 #define file_headers NG(_file_headers)
 
-static uint8_t NGDEF(_data)[FILE_DATA_SIZE] = { 0 };
+static uint8_t NGDEF(_data)[MODULE_D7AP_FS_FILESYSTEM_SIZE] = { 0 };
 #define data NG(_data)
 
 static uint8_t NGDEF(_current_data_offset); // TODO we are using offset here instead of pointer because NG does not support pointers, fix later when NG is replaced
 #define current_data_offset NG(_current_data_offset)
 
-static uint16_t NGDEF(_file_offsets)[FILE_COUNT] = { 0 };
+static uint16_t NGDEF(_file_offsets)[MODULE_D7AP_FS_FILE_COUNT] = { 0 };
 #define file_offsets NG(_file_offsets)
 
-static uint16_t NGDEF(_is_fs_init_completed);
+static bool NGDEF(_is_fs_init_completed);
 #define is_fs_init_completed NG(_is_fs_init_completed)
 
 #define D7A_FILE_UID_FILE_ID 0x00
@@ -152,13 +150,14 @@ void fs_init(fs_init_args_t* init_args)
     if(init_args->fs_user_files_init_cb)
         init_args->fs_user_files_init_cb();
 
-    assert(current_data_offset <= FILE_DATA_SIZE);
+    assert(current_data_offset <= MODULE_D7AP_FS_FILESYSTEM_SIZE);
     is_fs_init_completed = true;
 }
 
 void fs_init_file(uint8_t file_id, const fs_file_header_t* file_header, const uint8_t* initial_data)
 {
     assert(!is_fs_init_completed); // initing files not allowed after fs_init() completed (for now?)
+    assert(file_id < MODULE_D7AP_FS_FILE_COUNT);
     file_offsets[file_id] = current_data_offset;
     memcpy(file_headers + file_id, file_header, sizeof(fs_file_header_t));
     memset(data + current_data_offset, 0, file_header->length);
