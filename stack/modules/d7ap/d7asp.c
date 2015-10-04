@@ -306,15 +306,16 @@ void d7asp_process_received_packet(packet_t* packet)
         assert(false);
 }
 
-// TODO should not trigger on packet transmitted but get event from TP after termination of dialog
+
 void d7asp_signal_packet_transmitted(packet_t *packet)
 {
     log_print_stack_string(LOG_STACK_SESSION, "Packet transmitted");
 
-    if(state == D7ASP_STATE_SLAVE)
+    if(state == D7ASP_STATE_SLAVE || state == D7ASP_STATE_SLAVE_PENDING_MASTER)
     {
+        // when in slave session we can immediately cleanup the transmitted response.
+        // requests (in master sessions) will be cleanup upon termination of the dialog.
         packet_queue_free_packet(packet);
-        //switch_state(D7ASP_STATE_IDLE); // TODO don't go to idle directly, wait for timeout or stop transaction
     }
 }
 

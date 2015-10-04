@@ -160,7 +160,6 @@ static void switch_state(dll_state_t next_state)
 
 static void process_received_packets()
 {
-    hw_radio_set_idle();
     packet_t* packet = packet_queue_get_received_packet();
     assert(packet != NULL);
     DPRINT("Processing received packet");
@@ -529,7 +528,7 @@ bool dll_disassemble_packet_header(packet_t* packet, uint8_t* data_idx)
             address_len = 8;
 
         uint8_t uid[8];
-        fs_read_uid(uid); // TODO cache
+        fs_read_uid(uid);
         if(memcmp(packet->hw_radio_packet.data + (*data_idx), uid, address_len) != 0)
         {
             DPRINT("Device ID filtering failed, skipping packet");

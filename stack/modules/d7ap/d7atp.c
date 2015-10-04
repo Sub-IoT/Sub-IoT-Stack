@@ -44,6 +44,8 @@ typedef enum {
 static state_t NGDEF(_d7atp_state);
 #define d7atp_state NG(_d7atp_state)
 
+static void transaction_response_period_expired();
+
 static void switch_state(state_t new_state)
 {
     switch(new_state)
@@ -59,6 +61,7 @@ static void switch_state(state_t new_state)
         d7atp_state = new_state;
         break;
     case D7ATP_STATE_SLAVE_TRANSACTION_SENDING_RESPONSE:
+        assert(!sched_is_scheduled(&transaction_response_period_expired));
         log_print_stack_string(LOG_STACK_TRANS, "Switching to D7ATP_STATE_SLAVE_TRANSACTION_SENDING_RESPONSE");
         assert(d7atp_state == D7ATP_STATE_IDLE || D7ATP_STATE_SLAVE_TRANSACTION_RESPONSE_PERIOD);
         d7atp_state = new_state;
@@ -193,11 +196,13 @@ void d7atp_signal_packet_transmitted(packet_t* packet)
     else
         assert(false);
 
-    int8_t transaction_response_period = 50; // TODO get from upper layer
+    uint8_t transaction_response_period = 0xFF; // TODO get from upper layer, hardcoded period for now
     log_print_stack_string(LOG_STACK_DLL, "Packet transmitted, starting response period timer (%i ticks)", transaction_response_period);
     // TODO find out difference between dialog timeout and transaction response period
-    error_t e = timer_post_task_delay(&transaction_response_period_expired, transaction_response_period); // TODO hardcoded period for now
-    assert(e == SUCCESS); // should not be scheduled already, something wrong..
+
+    if(!sched_is_scheduled(&transaction_response_period_expired)) // TODO or should prev transaction resp period be stopped by now and should we start a new one?
+        timer_post_task_delay(&transaction_response_period_expired, transaction_response_period);
+
     d7asp_signal_packet_transmitted(packet);
 }
 
