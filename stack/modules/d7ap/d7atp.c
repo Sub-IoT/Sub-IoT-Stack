@@ -230,7 +230,7 @@ void d7atp_process_received_packet(packet_t* packet)
             // new transaction start while transaction already in progress!
             log_print_stack_string(LOG_STACK_TRANS, "Expecting ACK but received packet has not target address set, skipping");  // TODO assert later
             packet_queue_free_packet(packet);
-            assert(false); // TODO switch state?
+            // TODO tmp assert(false); // TODO switch state?
             return;
         }
     }

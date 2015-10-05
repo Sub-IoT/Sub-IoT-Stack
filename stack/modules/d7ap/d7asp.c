@@ -98,7 +98,7 @@ static void flush_fifos()
     if(active_request_id == NO_ACTIVE_REQUEST_ID)
     {
         // find first request which is not acked or dropped
-        uint8_t found_next_req_index = bitmap_search(fifo.progress_bitmap, false, MODULE_D7AP_FIFO_MAX_REQUESTS_COUNT);
+        int8_t found_next_req_index = bitmap_search(fifo.progress_bitmap, false, MODULE_D7AP_FIFO_MAX_REQUESTS_COUNT);
         if(found_next_req_index == -1 || found_next_req_index == fifo.next_request_id)
         {
             // we handled all requests ...

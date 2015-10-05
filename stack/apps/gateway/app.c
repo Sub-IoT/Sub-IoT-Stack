@@ -123,8 +123,8 @@ void bootstrap()
                     .ch_class = PHY_CLASS_NORMAL_RATE,
                     .ch_freq_band = PHY_BAND_433
                 },
-                .channel_index_start = 16,
-                .channel_index_end = 16,
+                .channel_index_start = 24,
+                .channel_index_end = 24,
                 .eirp = 0,
                 .ccao = 0
             }

@@ -69,7 +69,7 @@ static bool bitmap_get(uint8_t* bitmap, uint8_t pos)
  * @param size      The max number of bits to search
  * @return The index of the first occurance of flag, or -1 when not found
  */
-static uint8_t bitmap_search(uint8_t* bitmap, bool flag, uint8_t size)
+static int8_t bitmap_search(uint8_t* bitmap, bool flag, uint8_t size)
 {
     uint8_t i;
     for(i = 0; i < size; i++)
