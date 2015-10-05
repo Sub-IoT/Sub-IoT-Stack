@@ -197,7 +197,7 @@ void d7atp_signal_packet_transmitted(packet_t* packet)
         assert(false);
 
     uint8_t transaction_response_period = 0xFF; // TODO get from upper layer, hardcoded period for now
-    log_print_stack_string(LOG_STACK_DLL, "Packet transmitted, starting response period timer (%i ticks)", transaction_response_period);
+    log_print_stack_string(LOG_STACK_TRANS, "Packet transmitted, starting response period timer (%i ticks)", transaction_response_period);
     // TODO find out difference between dialog timeout and transaction response period
 
     if(!sched_is_scheduled(&transaction_response_period_expired)) // TODO or should prev transaction resp period be stopped by now and should we start a new one?
@@ -210,7 +210,7 @@ void d7atp_signal_packet_csma_ca_insertion_completed(bool succeeded)
 {
     if(!succeeded)
     {
-        log_print_stack_string(LOG_STACK_DLL, "CSMA-CA insertion failed, stopping transaction");
+        log_print_stack_string(LOG_STACK_TRANS, "CSMA-CA insertion failed, stopping transaction");
         switch_state(D7ATP_STATE_IDLE);
     }
 
@@ -228,7 +228,7 @@ void d7atp_process_received_packet(packet_t* packet)
         if(!packet->dll_header.control_target_address_set)
         {
             // new transaction start while transaction already in progress!
-            log_print_stack_string(LOG_STACK_DLL, "Expecting ACK but received packet has not target address set, skipping");  // TODO assert later
+            log_print_stack_string(LOG_STACK_TRANS, "Expecting ACK but received packet has not target address set, skipping");  // TODO assert later
             packet_queue_free_packet(packet);
             assert(false); // TODO switch state?
             return;
