@@ -179,33 +179,30 @@ __LINK_C uint8_t get_task_id(task_t task)
 
 __LINK_C error_t sched_register_task(task_t task)
 {
+    assert(NG(num_registered_tasks) <= NUM_TASKS);
+    assert(get_task_id(task) == NO_TASK);
 	error_t retVal;
 	check_structs_are_valid();
 	//INT_Disable();
 	start_atomic();
-	if(NG(num_registered_tasks) >= NUM_TASKS)
-		retVal = ENOMEM;
-	else if(get_task_id(task) != NO_TASK)
-		retVal = EALREADY;
-	else
-	{
-		for(int i = NG(num_registered_tasks); i >= 0; i--)
-		{
-			if (i == 0 || ((void*)NG(m_index)[i-1].task) < ((void*)task))
-			{
-				NG(m_index)[i].task = task;
-				NG(m_index)[i].index = NG(num_registered_tasks);
-				NG(m_info)[NG(m_index)[i].index].task = task;
-				break;
-			}
-			else
-			{
-				NG(m_index)[i] = NG(m_index)[i-1];
-			}
-		}
-		NG(num_registered_tasks)++;
-		retVal = SUCCESS;
-	}
+
+    for(int i = NG(num_registered_tasks); i >= 0; i--)
+    {
+        if (i == 0 || ((void*)NG(m_index)[i-1].task) < ((void*)task))
+        {
+            NG(m_index)[i].task = task;
+            NG(m_index)[i].index = NG(num_registered_tasks);
+            NG(m_info)[NG(m_index)[i].index].task = task;
+            break;
+        }
+        else
+        {
+            NG(m_index)[i] = NG(m_index)[i-1];
+        }
+    }
+    NG(num_registered_tasks)++;
+    retVal = SUCCESS;
+
 	//INT_Enable();
 	end_atomic();
 	check_structs_are_valid();

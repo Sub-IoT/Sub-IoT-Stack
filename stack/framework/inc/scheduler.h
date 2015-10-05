@@ -75,14 +75,13 @@ enum
 };
 
 /*! \brief Register a task with the task scheduler.
- * 
+ *
+ *  If the task could not be registered due to memory constraints (This problem can be alleviated by increasing the SCHEDULER_MAX_TASKS CMake parameter) this will assert
+ *	Also, when the task was already registered this function will assert.
+ *
  * \param task		The task to register
  *
  * \return error_t 	SUCCESS if the task was registered successfully
- *			ENOMEM if the task could not be registered due to memory constraints.
- *				(This problem can be alleviated by increasing the SCHEDULER_MAX_TASKS 
- *				 CMake parameter)
- *			EALREADY if the task was already registered
  */
 __LINK_C error_t sched_register_task(task_t task);
 
