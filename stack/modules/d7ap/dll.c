@@ -419,7 +419,9 @@ static void execute_scan_automation()
     }
     else
     {
-        switch_state(DLL_STATE_IDLE);
+        if(dll_state != DLL_STATE_IDLE)
+            switch_state(DLL_STATE_IDLE);
+
         hw_radio_set_idle();
     }
 }
