@@ -255,151 +255,151 @@ static void execute_cca()
 
 static uint16_t calculate_tx_duration()
 {
-	int data_rate = 6; // Normal rate: 6.9 bytes/tick
-	// TODO select correct subband
-	switch (current_access_class.subbands[0].channel_header.ch_class)
-	{
-	case PHY_CLASS_LO_RATE:
-		data_rate = 1; // Lo Rate: 1.2 bytes/tick
-		break;
-	case PHY_CLASS_HI_RATE:
-		data_rate = 20; // High rate: 20.83 byte/tick
-	}
+    int data_rate = 6; // Normal rate: 6.9 bytes/tick
+    // TODO select correct subband
+    switch (current_access_class.subbands[0].channel_header.ch_class)
+    {
+    case PHY_CLASS_LO_RATE:
+        data_rate = 1; // Lo Rate: 1.2 bytes/tick
+        break;
+    case PHY_CLASS_HI_RATE:
+        data_rate = 20; // High rate: 20.83 byte/tick
+    }
 
-	uint16_t duration = (current_packet->length / data_rate) + 1;
-	return duration;
+    uint16_t duration = (current_packet->length / data_rate) + 1;
+    return duration;
 }
 
 static void execute_csma_ca()
 {
-	// TODO generate random channel queue
+    // TODO generate random channel queue
     hw_radio_set_rx(NULL, NULL, NULL); // put radio in RX but disable callbacks to make sure we don't receive packets when in this state
                                         // TODO use correct rx cfg + it might be interesting to switch to idle first depending on calculated offset
     uint16_t tx_duration = calculate_tx_duration();
     switch (dll_state)
     {
-		case DLL_STATE_CSMA_CA_STARTED:
-		{
-			dll_tca = current_access_class.transmission_timeout_period - tx_duration;
-			DPRINT("Tca= %i = %i - %i", dll_tca, current_access_class.transmission_timeout_period, tx_duration);
+        case DLL_STATE_CSMA_CA_STARTED:
+        {
+            dll_tca = current_access_class.transmission_timeout_period - tx_duration;
+            DPRINT("Tca= %i = %i - %i", dll_tca, current_access_class.transmission_timeout_period, tx_duration);
 
             if (dll_tca <= 0)
-			{
+            {
                 // TODO how to handle this? signal upper layer?
                 DPRINT("Tca negative, CCA failed");
                 assert(false);
 //				switch_state(DLL_STATE_CCA_FAIL);
 //				sched_post_task(&execute_csma_ca);
-				break;
-			}
+                break;
+            }
 
-			uint16_t t_offset = 0;
+            uint16_t t_offset = 0;
 
-			switch(current_access_class.control_csma_ca_mode)
-			{
-				case CSMA_CA_MODE_UNC:
-					// no delay
+            switch(current_access_class.control_csma_ca_mode)
+            {
+                case CSMA_CA_MODE_UNC:
+                    // no delay
                     dll_slot_duration = 0;
-					break;
-				case CSMA_CA_MODE_AIND: // TODO implement AIND
-				{
-					dll_slot_duration = tx_duration;
-					// no initial delay
-					break;
-				}
-				case CSMA_CA_MODE_RAIND: // TODO implement RAIND
-				{
-					dll_slot_duration = tx_duration;
-					uint16_t max_nr_slots = dll_tca / tx_duration;
+                    break;
+                case CSMA_CA_MODE_AIND: // TODO implement AIND
+                {
+                    dll_slot_duration = tx_duration;
+                    // no initial delay
+                    break;
+                }
+                case CSMA_CA_MODE_RAIND: // TODO implement RAIND
+                {
+                    dll_slot_duration = tx_duration;
+                    uint16_t max_nr_slots = dll_tca / tx_duration;
                     uint16_t slots_wait = get_rnd() % max_nr_slots;
-					t_offset = slots_wait * tx_duration;
-					break;
-				}
-				case CSMA_CA_MODE_RIGD: // TODO implement RAIND
-				{
-					dll_rigd_n = 0;
-					dll_tca0 = dll_tca;
+                    t_offset = slots_wait * tx_duration;
+                    break;
+                }
+                case CSMA_CA_MODE_RIGD: // TODO implement RAIND
+                {
+                    dll_rigd_n = 0;
+                    dll_tca0 = dll_tca;
                     dll_slot_duration = (uint16_t) ((double)dll_tca0) / (2 << (dll_rigd_n));
                     t_offset = get_rnd() % dll_slot_duration;
-					break;
-				}
-			}
+                    break;
+                }
+            }
 
-			DPRINT("slot duration: %i", dll_slot_duration);
-			DPRINT("t_offset: %i", t_offset);
+            DPRINT("slot duration: %i", dll_slot_duration);
+            DPRINT("t_offset: %i", t_offset);
 
-			dll_to = dll_tca - t_offset;
+            dll_to = dll_tca - t_offset;
 
-			if (t_offset > 0)
-			{
+            if (t_offset > 0)
+            {
                 switch_state(DLL_STATE_CCA1);
                 timer_post_task_delay(&execute_cca, t_offset);
             }
             else
             {
-				switch_state(DLL_STATE_CCA1);
+                switch_state(DLL_STATE_CCA1);
                 sched_post_task(&execute_cca);
-			}
+            }
 
-			break;
-		}
-		case DLL_STATE_CSMA_CA_RETRY:
-		{
-			if (dll_to < t_g)
-			{
-				switch_state(DLL_STATE_CCA_FAIL);
-				sched_post_task(&execute_csma_ca);
-				break;
-			}
+            break;
+        }
+        case DLL_STATE_CSMA_CA_RETRY:
+        {
+            if (dll_to < t_g)
+            {
+                switch_state(DLL_STATE_CCA_FAIL);
+                sched_post_task(&execute_csma_ca);
+                break;
+            }
 
-			dll_tca = dll_to;
-			uint16_t t_offset = 0;
+            dll_tca = dll_to;
+            uint16_t t_offset = 0;
 
-			switch(current_access_class.control_csma_ca_mode)
-			{
-				case CSMA_CA_MODE_AIND: // TODO implement AIND
-				case CSMA_CA_MODE_RAIND: // TODO implement RAIND
-				{
-					uint16_t max_nr_slots = dll_tca / tx_duration;
+            switch(current_access_class.control_csma_ca_mode)
+            {
+                case CSMA_CA_MODE_AIND: // TODO implement AIND
+                case CSMA_CA_MODE_RAIND: // TODO implement RAIND
+                {
+                    uint16_t max_nr_slots = dll_tca / tx_duration;
                     uint16_t slots_wait = get_rnd() % max_nr_slots;
-					t_offset = slots_wait * tx_duration;
-					break;
-				}
-				case CSMA_CA_MODE_RIGD: // TODO implement RAIND
-				{
-					dll_rigd_n++;
-					dll_slot_duration = (uint16_t) ((double)dll_tca0) / (2 << (dll_rigd_n+1));
+                    t_offset = slots_wait * tx_duration;
+                    break;
+                }
+                case CSMA_CA_MODE_RIGD: // TODO implement RAIND
+                {
+                    dll_rigd_n++;
+                    dll_slot_duration = (uint16_t) ((double)dll_tca0) / (2 << (dll_rigd_n+1));
                     if(dll_slot_duration != 0) // TODO can be 0, validate
                         t_offset = get_rnd() % dll_slot_duration;
                     else
                         t_offset = 0;
 
-					DPRINT("slot duration: %i", dll_slot_duration);
-					break;
-				}
-			}
+                    DPRINT("slot duration: %i", dll_slot_duration);
+                    break;
+                }
+            }
 
-			DPRINT("t_offset: %i", t_offset);
+            DPRINT("t_offset: %i", t_offset);
 
-			dll_to = dll_tca - t_offset;
+            dll_to = dll_tca - t_offset;
 
-			if (t_offset > 0)
-			{
+            if (t_offset > 0)
+            {
                 timer_post_task_delay(&execute_csma_ca, t_offset);
             }
             else
             {
-				switch_state(DLL_STATE_CCA1);
+                switch_state(DLL_STATE_CCA1);
                 sched_post_task(&execute_cca);
-			}
+            }
 
-			break;
-		}
-		case DLL_STATE_CCA_FAIL:
-		{
-			d7atp_signal_packet_csma_ca_insertion_completed(false);
-			break;
-		}
+            break;
+        }
+        case DLL_STATE_CCA_FAIL:
+        {
+            d7atp_signal_packet_csma_ca_insertion_completed(false);
+            break;
+        }
     }
 }
 
@@ -556,11 +556,11 @@ bool dll_disassemble_packet_header(packet_t* packet, uint8_t* data_idx)
 
 void dll_register_rx_callback(dll_packet_received_callback callback)
 {
-	dll_rx_callback = callback;
+    dll_rx_callback = callback;
 }
 
 
 void dll_register_tx_callback(dll_packet_transmitted_callback callback)
 {
-	dll_tx_callback = callback;
+    dll_tx_callback = callback;
 }
