@@ -61,10 +61,6 @@ static dll_state_t NGDEF(_dll_state);
 static hw_radio_packet_t* NGDEF(_current_packet);
 #define current_packet NG(_current_packet)
 
-static dll_packet_received_callback dll_rx_callback = NULL;
-static dll_packet_transmitted_callback dll_tx_callback = NULL;
-
-
 // CSMA-CA parameters
 static int16_t NGDEF(_dll_tca);
 #define dll_tca NG(_dll_tca)
@@ -188,12 +184,7 @@ static void packet_transmitted(hw_radio_packet_t* hw_radio_packet)
     switch_state(DLL_STATE_TX_FOREGROUND_COMPLETED);
     DPRINT("Transmitted packet with length = %i", hw_radio_packet->length);
     packet_t* packet = packet_queue_find_packet(hw_radio_packet);
-
-    if(dll_tx_callback != NULL)
-        dll_tx_callback();
-
     d7atp_signal_packet_transmitted(packet);
-
     dll_start_foreground_scan(); // we stay in foreground scan until TP signal transaction response period is over
 }
 
@@ -546,21 +537,6 @@ bool dll_disassemble_packet_header(packet_t* packet, uint8_t* data_idx)
     // TODO filter LQ
     // TODO pass to upper layer
     // TODO Tscan -= Trx
-
-
-    if (dll_rx_callback != NULL)
-        dll_rx_callback(); // TODO tmp upper layer should callback to app
-
     return true;
 }
 
-void dll_register_rx_callback(dll_packet_received_callback callback)
-{
-    dll_rx_callback = callback;
-}
-
-
-void dll_register_tx_callback(dll_packet_transmitted_callback callback)
-{
-    dll_tx_callback = callback;
-}
