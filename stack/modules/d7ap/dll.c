@@ -401,7 +401,7 @@ static void execute_csma_ca()
 
 static void execute_scan_automation()
 {
-    if(current_access_class.control_number_of_subbands > 0)
+    if(current_access_class.control_scan_type_is_foreground && current_access_class.control_number_of_subbands > 0) // TODO background scan
     {
         assert(current_access_class.control_number_of_subbands == 1); // TODO multiple not supported
         switch_state(DLL_STATE_SCAN_AUTOMATION);
