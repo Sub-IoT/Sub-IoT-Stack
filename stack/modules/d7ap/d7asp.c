@@ -106,7 +106,7 @@ static void flush_fifos()
             // we handled all requests ...
             log_print_stack_string(LOG_STACK_SESSION, "FIFO flush completed");
             if(d7asp_init_args != NULL && d7asp_init_args->d7asp_fifo_flush_completed_cb != NULL)
-                d7asp_init_args->d7asp_fifo_flush_completed_cb(&fifo.config, fifo.progress_bitmap, fifo.success_bitmap, REQUESTS_BITMAP_BYTE_COUNT);
+                d7asp_init_args->d7asp_fifo_flush_completed_cb(fifo.token, fifo.progress_bitmap, fifo.success_bitmap, REQUESTS_BITMAP_BYTE_COUNT);
 
             init_fifo();
             switch_state(D7ASP_STATE_IDLE);
@@ -221,7 +221,7 @@ void d7asp_init(d7asp_init_args_t* init_args)
 
 // TODO we assume a fifo contains only ALP commands, but according to spec this can be any kind of "Request"
 // we will see later what this means. For instance how to add a request which starts D7AAdvP etc
-void d7asp_queue_alp_actions(d7asp_fifo_config_t* d7asp_fifo_config, uint8_t* alp_payload_buffer, uint8_t alp_payload_length)
+d7asp_queue_result_t d7asp_queue_alp_actions(d7asp_fifo_config_t* d7asp_fifo_config, uint8_t* alp_payload_buffer, uint8_t alp_payload_length)
 {
     log_print_stack_string(LOG_STACK_SESSION, "Queuing ALP actions");
 
@@ -240,7 +240,8 @@ void d7asp_queue_alp_actions(d7asp_fifo_config_t* d7asp_fifo_config, uint8_t* al
 
     // add request to buffer
     // TODO request can contain 1 or more ALP commands, find a way to group commands in requests instead of dumping all requests in one buffer
-    fifo.requests_indices[fifo.next_request_id] = fifo.request_buffer_tail_idx;
+    uint8_t request_id = fifo.next_request_id;
+    fifo.requests_indices[request_id] = fifo.request_buffer_tail_idx;
     memcpy(fifo.request_buffer + fifo.request_buffer_tail_idx, alp_payload_buffer, alp_payload_length);
     fifo.request_buffer_tail_idx += alp_payload_length + 1;
     fifo.next_request_id++;
@@ -249,6 +250,8 @@ void d7asp_queue_alp_actions(d7asp_fifo_config_t* d7asp_fifo_config, uint8_t* al
         switch_state(D7ASP_STATE_MASTER);
     else if(state == D7ASP_STATE_SLAVE)
         switch_state(D7ASP_STATE_SLAVE_PENDING_MASTER);
+
+    return (d7asp_queue_result_t){ .fifo_token = fifo.token, .request_id = request_id };
 }
 
 void d7asp_process_received_packet(packet_t* packet)

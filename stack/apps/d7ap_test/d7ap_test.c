@@ -124,7 +124,7 @@ void init_user_files()
     fs_init_file_with_D7AActP(ACTION_FILE_ID, &d7asp_fifo_config, &alp_ctrl, (uint8_t*)&file_data_request_operand);
 }
 
-void on_d7asp_fifo_flush_completed(d7asp_fifo_config_t* fifo_config, uint8_t* progress_bitmap, uint8_t* success_bitmap, uint8_t bitmap_byte_count)
+void on_d7asp_fifo_flush_completed(uint8_t fifo_token, uint8_t* progress_bitmap, uint8_t* success_bitmap, uint8_t bitmap_byte_count)
 {
     if(memcmp(success_bitmap, progress_bitmap, bitmap_byte_count) == 0)
     {
