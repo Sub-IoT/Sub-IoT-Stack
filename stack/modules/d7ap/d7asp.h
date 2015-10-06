@@ -59,7 +59,7 @@ typedef struct {
 typedef struct {
     d7asp_fifo_config_t config;
     // TODO uint8_t dorm_timer;
-    // TODO uint8_t token;
+    uint8_t token;
     // TODO retry_single_cnt
     // TODO retry_total_cnt
     uint8_t progress_bitmap[REQUESTS_BITMAP_BYTE_COUNT];

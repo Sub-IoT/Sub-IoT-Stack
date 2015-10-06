@@ -369,7 +369,11 @@ static void execute_csma_ca()
 				{
 					dll_rigd_n++;
 					dll_slot_duration = (uint16_t) ((double)dll_tca0) / (2 << (dll_rigd_n+1));
-                    t_offset = get_rnd() % dll_slot_duration;
+                    if(dll_slot_duration != 0) // TODO can be 0, validate
+                        t_offset = get_rnd() % dll_slot_duration;
+                    else
+                        t_offset = 0;
+
 					DPRINT("slot duration: %i", dll_slot_duration);
 					break;
 				}

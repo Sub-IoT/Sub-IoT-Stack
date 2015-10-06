@@ -31,6 +31,7 @@
 #include "packet_queue.h"
 #include "packet.h"
 #include "hwdebug.h"
+#include "random.h"
 
 static d7asp_fifo_t NGDEF(_fifo); // TODO we only use 1 fifo for now, should be multiple later (1 per on unique addressee and QoS combination)
 #define fifo NG(_fifo)
@@ -75,6 +76,7 @@ static void switch_state(state_t new_state);
 static void init_fifo()
 {
     fifo = (d7asp_fifo_t){
+        .token = get_rnd() % 0xFF,
         .progress_bitmap = { 0x00 },
         .success_bitmap = { 0x00 },
         .next_request_id = 0,
@@ -143,7 +145,7 @@ static void flush_fifos()
         // TODO stop on error
     }
 
-    d7atp_start_dialog(0, 0, current_request_packet, &fifo.config.qos, &current_access_profile); // TODO dialog_id and transaction_id
+    d7atp_start_dialog(fifo.token, active_request_id, true, current_request_packet, &fifo.config.qos, &current_access_profile); // TODO dialog_id and transaction_id
 }
 
 
@@ -237,6 +239,7 @@ void d7asp_queue_alp_actions(d7asp_fifo_config_t* d7asp_fifo_config, uint8_t* al
     single_request_retry_limit = fifo.config.qos.qos_retry_single;
 
     // add request to buffer
+    // TODO request can contain 1 or more ALP commands, find a way to group commands in requests instead of dumping all requests in one buffer
     fifo.requests_indices[fifo.next_request_id] = fifo.request_buffer_tail_idx;
     memcpy(fifo.request_buffer + fifo.request_buffer_tail_idx, alp_payload_buffer, alp_payload_length);
     fifo.request_buffer_tail_idx += alp_payload_length + 1;

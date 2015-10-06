@@ -32,17 +32,25 @@
 static d7atp_addressee_t NGDEF(_current_addressee);
 #define current_addressee NG(_current_addressee)
 
+static uint8_t NGDEF(_current_dialog_id);
+#define current_dialog_id NG(_current_dialog_id)
+
+static uint8_t NGDEF(_current_transaction_id);
+#define current_transaction_id NG(_current_transaction_id)
+
 typedef enum {
     D7ATP_STATE_IDLE,
     D7ATP_STATE_MASTER_TRANSACTION_REQUEST_PERIOD,
     D7ATP_STATE_MASTER_TRANSACTION_RESPONSE_PERIOD,
+    D7ATP_STATE_SLAVE_TRANSACTION_RECEIVED_REQUEST,
     D7ATP_STATE_SLAVE_TRANSACTION_SENDING_RESPONSE,
     D7ATP_STATE_SLAVE_TRANSACTION_RESPONSE_PERIOD,
-    D7ATP_STATE_TERMINATED ,
 } state_t;
 
 static state_t NGDEF(_d7atp_state);
 #define d7atp_state NG(_d7atp_state)
+
+#define IS_IN_TRANSACTION() (d7atp_state != D7ATP_STATE_IDLE)
 
 static void transaction_response_period_expired();
 
@@ -60,10 +68,14 @@ static void switch_state(state_t new_state)
         assert(d7atp_state == D7ATP_STATE_MASTER_TRANSACTION_REQUEST_PERIOD);
         d7atp_state = new_state;
         break;
+    case D7ATP_STATE_SLAVE_TRANSACTION_RECEIVED_REQUEST:
+        log_print_stack_string(LOG_STACK_TRANS, "Switching to D7ATP_STATE_SLAVE_TRANSACTION_RECEIVED_REQUEST");
+        assert(d7atp_state == D7ATP_STATE_IDLE);
+        d7atp_state = new_state;
     case D7ATP_STATE_SLAVE_TRANSACTION_SENDING_RESPONSE:
         assert(!sched_is_scheduled(&transaction_response_period_expired));
         log_print_stack_string(LOG_STACK_TRANS, "Switching to D7ATP_STATE_SLAVE_TRANSACTION_SENDING_RESPONSE");
-        assert(d7atp_state == D7ATP_STATE_IDLE || D7ATP_STATE_SLAVE_TRANSACTION_RESPONSE_PERIOD);
+        assert(d7atp_state == D7ATP_STATE_SLAVE_TRANSACTION_RECEIVED_REQUEST || D7ATP_STATE_SLAVE_TRANSACTION_RESPONSE_PERIOD);
         d7atp_state = new_state;
         break;
     case D7ATP_STATE_SLAVE_TRANSACTION_RESPONSE_PERIOD:
@@ -101,13 +113,13 @@ void d7atp_init()
     sched_register_task(&transaction_response_period_expired);
 }
 
-void d7atp_start_dialog(uint8_t dialog_id, uint8_t transaction_id, packet_t* packet, session_qos_t* qos_settings, dae_access_profile_t* access_profile)
+void d7atp_start_dialog(uint8_t dialog_id, uint8_t transaction_id, bool is_last_transaction, packet_t* packet, session_qos_t* qos_settings, dae_access_profile_t* access_profile)
 {
-    // TODO only supports broadcasting data now, no ack, timeout, multiple transactions, ...
+    assert(is_last_transaction); // multiple transactions in one dialog not supported yet
     switch_state(D7ATP_STATE_MASTER_TRANSACTION_REQUEST_PERIOD);
     packet->d7atp_ctrl = (d7atp_ctrl_t){
         .ctrl_is_start = true,
-        .ctrl_is_stop = true,
+        .ctrl_is_stop = is_last_transaction,
         .ctrl_is_timeout_template_present = false,
         .ctrl_is_ack_requested = qos_settings->qos_ctrl_resp_mode == SESSION_RESP_MODE_NONE? false : true,
         .ctrl_ack_not_void = qos_settings->qos_ctrl_ack_not_void,
@@ -115,8 +127,10 @@ void d7atp_start_dialog(uint8_t dialog_id, uint8_t transaction_id, packet_t* pac
         .ctrl_is_ack_template_present = false
     };
 
-    packet->d7atp_dialog_id = dialog_id;
-    packet->d7atp_transaction_id = transaction_id;
+    current_dialog_id = dialog_id;
+    current_transaction_id = transaction_id;
+    packet->d7atp_dialog_id = current_dialog_id;
+    packet->d7atp_transaction_id = current_transaction_id;
 
     bool should_include_origin_template = false;
     if(packet->d7atp_ctrl.ctrl_is_start /*&& packet->d7atp_ctrl.ctrl_is_ack_requested*/) // TODO spec only requires this when both are true, however we MAY send origin when only first is true
@@ -223,16 +237,24 @@ void d7atp_process_received_packet(packet_t* packet)
            || d7atp_state == D7ATP_STATE_SLAVE_TRANSACTION_RESPONSE_PERIOD
            || d7atp_state == D7ATP_STATE_IDLE); // IDLE: when doing channel scanning outside of transaction
 
-    if(d7atp_state == D7ATP_STATE_MASTER_TRANSACTION_RESPONSE_PERIOD)
+    if(IS_IN_TRANSACTION())
     {
-        if(!packet->dll_header.control_target_address_set)
+        if(packet->d7atp_dialog_id != current_dialog_id || packet->d7atp_transaction_id != current_transaction_id)
         {
-            // new transaction start while transaction already in progress!
-            log_print_stack_string(LOG_STACK_TRANS, "Expecting ACK but received packet has not target address set, skipping");  // TODO assert later
+            log_print_stack_string(LOG_STACK_TRANS, "Unexpected dialog ID or transaction ID received, skipping segment");
             packet_queue_free_packet(packet);
-            assert(false); // TODO switch state?
             return;
         }
+
+        assert(!packet->d7atp_ctrl.ctrl_is_start); // start dialog not allowed when in master transaction state
+    }
+    else
+    {
+        // not in a transaction, start a new slave transaction
+        switch_state(D7ATP_STATE_SLAVE_TRANSACTION_RECEIVED_REQUEST);
+        current_dialog_id = packet->d7atp_dialog_id;
+        current_transaction_id = packet->d7atp_transaction_id;
+        log_print_stack_string(LOG_STACK_TRANS, "Dialog id %i transaction id %i", current_dialog_id, current_transaction_id);
     }
 
     d7asp_process_received_packet(packet);
