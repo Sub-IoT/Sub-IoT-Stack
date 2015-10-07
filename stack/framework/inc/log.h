@@ -82,15 +82,10 @@ __LINK_C void log_print_raw_phy_packet(hw_radio_packet_t* packet, bool is_tx);
 __LINK_C void log_print_data(uint8_t* message, uint32_t length);
 
 #else
-
-//we use static inline replacements instead of 'defining them away'
-//to ensure that side-effects resulting from the evaluation of the parameters
-//are still performed
-__LINK_C static inline void log_counter_reset() {}
-__LINK_C static inline void log_print_string(char* format,...) {}
-__LINK_C static inline void log_print_stack_string(char type, char* format, ...) {}
-__LINK_C static inline void log_print_data(uint8_t* message, uint8_t length) {}
-
+    #define log_counter_reset() ((void)0)
+    #define log_print_string(...) ((void)0)
+    #define log_print_stack_string(...) ((void)0)
+    #define log_print_data(...) ((void)0)
 #endif
 
 #endif /* __LOG_H_ */
