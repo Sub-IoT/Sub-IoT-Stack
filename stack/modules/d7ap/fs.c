@@ -35,7 +35,7 @@ static fs_file_header_t NGDEF(_file_headers)[MODULE_D7AP_FS_FILE_COUNT] = { 0 };
 static uint8_t NGDEF(_data)[MODULE_D7AP_FS_FILESYSTEM_SIZE] = { 0 };
 #define data NG(_data)
 
-static uint8_t NGDEF(_current_data_offset); // TODO we are using offset here instead of pointer because NG does not support pointers, fix later when NG is replaced
+static uint16_t NGDEF(_current_data_offset); // TODO we are using offset here instead of pointer because NG does not support pointers, fix later when NG is replaced
 #define current_data_offset NG(_current_data_offset)
 
 static uint16_t NGDEF(_file_offsets)[MODULE_D7AP_FS_FILE_COUNT] = { 0 };
@@ -158,6 +158,8 @@ void fs_init_file(uint8_t file_id, const fs_file_header_t* file_header, const ui
 {
     assert(!is_fs_init_completed); // initing files not allowed after fs_init() completed (for now?)
     assert(file_id < MODULE_D7AP_FS_FILE_COUNT);
+    assert(current_data_offset + file_header->length <= MODULE_D7AP_FS_FILESYSTEM_SIZE);
+
     file_offsets[file_id] = current_data_offset;
     memcpy(file_headers + file_id, file_header, sizeof(fs_file_header_t));
     memset(data + current_data_offset, 0, file_header->length);
