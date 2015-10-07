@@ -42,8 +42,9 @@ void alp_init(alp_unhandled_action_callback cb)
     unhandled_action_cb = cb;
 }
 
-void alp_process_command(const uint8_t* alp_command_ptr, packet_t* packet)
+void alp_process_command(packet_t* packet)
 {
+    uint8_t* alp_command_ptr = packet->payload;
     alp_control_t alp_control = { .raw = (*alp_command_ptr) }; alp_command_ptr++;
 
     switch(alp_control.operation)
@@ -86,20 +87,22 @@ void alp_process_command(const uint8_t* alp_command_ptr, packet_t* packet)
             assert(false); // TODO implement other operations
     }
 
+    // TODO multiple commands in one request
 }
 
-bool alp_process_received_request(d7asp_result_t d7asp_result, packet_t* packet)
-{
-    // TODO merge with alp_process_command() ?
-    // TODO split into actions
+// TODO remove?
+//bool alp_process_received_request(d7asp_result_t d7asp_result, packet_t* packet)
+//{
+//    // TODO merge with alp_process_command() ?
+//    // TODO split into actions
 
-    assert(get_operation(packet->payload) == ALP_OP_RETURN_FILE_DATA); // TODO other operations not supported yet
+//    assert(get_operation(packet->payload) == ALP_OP_RETURN_FILE_DATA); // TODO other operations not supported yet
 
-    if(unhandled_action_cb)
-        unhandled_action_cb(d7asp_result, packet->payload, packet->payload_length);
+//    if(unhandled_action_cb)
+//        unhandled_action_cb(d7asp_result, packet->payload, packet->payload_length);
 
 
-    packet->payload_length = 0;
+//    packet->payload_length = 0;
 
-    return true;
-}
+//    return true;
+//}

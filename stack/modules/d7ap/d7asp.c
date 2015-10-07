@@ -36,8 +36,8 @@
 static d7asp_fifo_t NGDEF(_fifo); // TODO we only use 1 fifo for now, should be multiple later (1 per on unique addressee and QoS combination)
 #define fifo NG(_fifo)
 
-static uint8_t NGDEF(_active_request_id); // TODO move ?
-#define active_request_id NG(_active_request_id)
+static uint8_t NGDEF(_current_request_id); // TODO move ?
+#define current_request_id NG(_current_request_id)
 
 #define NO_ACTIVE_REQUEST_ID 0xFF
 
@@ -82,13 +82,14 @@ static void init_fifo()
         .next_request_id = 0,
         .request_buffer_tail_idx = 0,
         .requests_indices = { 0x00 },
+        .requests_lengths = { 0x00 },
         .request_buffer = { 0x00 }
     };
 }
 
 static void mark_current_request_done()
 {
-    bitmap_set(fifo.progress_bitmap, active_request_id);
+    bitmap_set(fifo.progress_bitmap, current_request_id);
     // current_request_packet will be free-ed in the packet_queue when the transaction is completed
 }
 
@@ -97,7 +98,7 @@ static void flush_fifos()
     assert(state == D7ASP_STATE_MASTER);
     log_print_stack_string(LOG_STACK_SESSION, "Flushing FIFOs");
 
-    if(active_request_id == NO_ACTIVE_REQUEST_ID)
+    if(current_request_id == NO_ACTIVE_REQUEST_ID)
     {
         // find first request which is not acked or dropped
         int8_t found_next_req_index = bitmap_search(fifo.progress_bitmap, false, MODULE_D7AP_FIFO_MAX_REQUESTS_COUNT);
@@ -113,14 +114,15 @@ static void flush_fifos()
             return;
         }
 
-        active_request_id = found_next_req_index;
+        current_request_id = found_next_req_index;
         current_request_retry_count = 0;
 
         current_request_packet = packet_queue_alloc_packet();
         packet_queue_mark_processing(current_request_packet);
         current_request_packet->d7atp_addressee = &(fifo.config.addressee);
 
-        alp_process_command(fifo.request_buffer + fifo.requests_indices[active_request_id], current_request_packet);
+        memcpy(current_request_packet->payload, fifo.request_buffer + fifo.requests_indices[current_request_id], fifo.requests_lengths[current_request_id]);
+        current_request_packet->payload_length = fifo.requests_lengths[current_request_id];
 
         uint8_t access_class = fifo.config.addressee.addressee_ctrl_access_class;
         if(access_class != current_access_class)
@@ -136,7 +138,7 @@ static void flush_fifos()
             mark_current_request_done();
             log_print_stack_string(LOG_STACK_SESSION, "Request reached single request retry limit (%i), skipping request", single_request_retry_limit);
             packet_queue_free_packet(current_request_packet);
-            active_request_id = NO_ACTIVE_REQUEST_ID;
+            current_request_id = NO_ACTIVE_REQUEST_ID;
             sched_post_task(&flush_fifos); // continue flushing until all request handled ...
             return;
         }
@@ -145,7 +147,7 @@ static void flush_fifos()
         // TODO stop on error
     }
 
-    d7atp_start_dialog(fifo.token, active_request_id, true, current_request_packet, &fifo.config.qos, &current_access_profile); // TODO dialog_id and transaction_id
+    d7atp_start_dialog(fifo.token, current_request_id, true, current_request_packet, &fifo.config.qos, &current_access_profile);
 }
 
 
@@ -186,7 +188,7 @@ static void switch_state(state_t new_state)
             {
                 case D7ASP_STATE_IDLE:
                     state = new_state;
-                    active_request_id = NO_ACTIVE_REQUEST_ID;
+                    current_request_id = NO_ACTIVE_REQUEST_ID;
                     log_print_stack_string(LOG_STACK_SESSION, "Switching to state D7ASP_STATE_SLAVE");
                     break;
                 default:
@@ -212,7 +214,7 @@ void d7asp_init(d7asp_init_args_t* init_args)
     state = D7ASP_STATE_IDLE;
     current_access_class = ACCESS_CLASS_NOT_SET;
     d7asp_init_args = init_args;
-    active_request_id = NO_ACTIVE_REQUEST_ID;
+    current_request_id = NO_ACTIVE_REQUEST_ID;
 
     init_fifo();
 
@@ -242,6 +244,7 @@ d7asp_queue_result_t d7asp_queue_alp_actions(d7asp_fifo_config_t* d7asp_fifo_con
     // TODO request can contain 1 or more ALP commands, find a way to group commands in requests instead of dumping all requests in one buffer
     uint8_t request_id = fifo.next_request_id;
     fifo.requests_indices[request_id] = fifo.request_buffer_tail_idx;
+    fifo.requests_lengths[request_id] = alp_payload_length;
     memcpy(fifo.request_buffer + fifo.request_buffer_tail_idx, alp_payload_buffer, alp_payload_length);
     fifo.request_buffer_tail_idx += alp_payload_length + 1;
     fifo.next_request_id++;
@@ -256,17 +259,36 @@ d7asp_queue_result_t d7asp_queue_alp_actions(d7asp_fifo_config_t* d7asp_fifo_con
 
 void d7asp_process_received_packet(packet_t* packet)
 {
+    d7asp_result_t result = {
+        .status = {
+            .session_state = SESSION_STATE_DONE, // TODO
+            .nls = packet->d7anp_ctrl.nls_enabled,
+            .retry = false, // TODO
+            .missed = false, // TODO
+        },
+        .response_to = 0, // TODO
+        .addressee = packet->d7atp_addressee
+        // .fifo_token and .request_id filled below
+    };
+
     if(state == D7ASP_STATE_MASTER)
     {
         assert(fifo.config.qos.qos_ctrl_resp_mode > SESSION_RESP_MODE_NONE);
+        assert(packet->d7atp_dialog_id == fifo.token);
+        assert(packet->d7atp_transaction_id == current_request_id);
 
         // received ack
+        result.fifo_token = fifo.token;
+        result.request_id = current_request_id;
         log_print_stack_string(LOG_STACK_SESSION, "Received ACK");
-        bitmap_set(fifo.success_bitmap, active_request_id);
+        bitmap_set(fifo.success_bitmap, current_request_id);
         mark_current_request_done();
         assert(packet != current_request_packet);
+
+        if(d7asp_init_args->d7asp_fifo_request_completed_cb)
+            d7asp_init_args->d7asp_fifo_request_completed_cb(result, packet->payload, packet->payload_length);
+
         packet_queue_free_packet(packet); // ACK can be cleaned
-        // TODO notify upper layer
     }
     else if(state == D7ASP_STATE_IDLE || state == D7ASP_STATE_SLAVE)
     {
@@ -274,27 +296,13 @@ void d7asp_process_received_packet(packet_t* packet)
         if(state == D7ASP_STATE_IDLE)
             switch_state(D7ASP_STATE_SLAVE); // don't switch when already in slave state
 
-        d7asp_result_t result = {
-            .status = {
-                .session_state = SESSION_STATE_DONE, // TODO slave session state can be active as well, assuming done now
-                .nls = packet->d7anp_ctrl.nls_enabled,
-                .retry = false, // TODO
-                .missed = false, // TODO
-            },
-            .fifo_token = packet->d7atp_dialog_id,
-            .request_id = packet->d7atp_transaction_id,
-            .response_to = 0, // TODO
-            .addressee = {
-                .addressee_ctrl_has_id = packet->d7anp_ctrl.origin_access_id_present? true : false,
-                .addressee_ctrl_virtual_id = packet->dll_header.control_vid_used,
-                .addressee_ctrl_access_class = packet->d7anp_ctrl.origin_access_class,
-            },
-        };
+        result.fifo_token = packet->d7atp_dialog_id;
+        result.request_id = packet->d7atp_transaction_id;
 
-        memcpy(result.addressee.addressee_id, packet->origin_access_id, 8);
+        // TODO notify upper layer?
 
         // build response, we will reuse the same packet for this
-        alp_process_received_request(result, packet);
+        alp_process_command(packet);
 
         // execute slave transaction
         if(packet->payload_length == 0 && !packet->d7atp_ctrl.ctrl_is_ack_requested)
@@ -329,7 +337,7 @@ void d7asp_signal_packet_transmitted(packet_t *packet)
 static void on_request_completed()
 {
     assert(state == D7ASP_STATE_MASTER);
-    if(!bitmap_get(fifo.progress_bitmap, active_request_id))
+    if(!bitmap_get(fifo.progress_bitmap, current_request_id))
     {
         current_request_retry_count++;
         // the request may be retransmitted, don't free yet (this will be done in flush_fifo() when failed)
@@ -337,7 +345,7 @@ static void on_request_completed()
     else
     {
         // request completed, no retries needed so we can free the packet
-        active_request_id = NO_ACTIVE_REQUEST_ID;
+        current_request_id = NO_ACTIVE_REQUEST_ID;
         packet_queue_free_packet(current_request_packet);
     }
 
@@ -359,7 +367,7 @@ void d7asp_signal_packet_csma_ca_insertion_completed(bool succeeded)
         if(fifo.config.qos.qos_ctrl_resp_mode == SESSION_RESP_MODE_NONE)
         {
             mark_current_request_done();
-            bitmap_set(fifo.success_bitmap, active_request_id);
+            bitmap_set(fifo.success_bitmap, current_request_id);
         }
     }
 }

@@ -104,7 +104,7 @@ typedef void (*alp_unhandled_action_callback)(d7asp_result_t d7asp_result, uint8
 void alp_init(alp_unhandled_action_callback cb);
 
 /*! \brief Process a received ALP command and fills the packet with the result */
-void alp_process_command(const uint8_t* alp_command, packet_t* packet);
+void alp_process_command(packet_t* packet);
 
 /*! \brief Process a received request and replaces the packet's payload with the response payload.
  *  ALP commands which cannot be handled by the stack are vectored to the application layer

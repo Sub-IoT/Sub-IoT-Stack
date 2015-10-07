@@ -66,7 +66,8 @@ typedef struct {
     uint8_t success_bitmap[REQUESTS_BITMAP_BYTE_COUNT];
     uint8_t next_request_id;
     uint8_t request_buffer_tail_idx;
-    uint8_t requests_indices[MODULE_D7AP_FIFO_MAX_REQUESTS_COUNT]; /**< Contains for every request ID the index in command_buffer where the request begins */
+    uint8_t requests_indices[MODULE_D7AP_FIFO_MAX_REQUESTS_COUNT]; /**< Contains for every request ID the index in command_buffer the index where the request begins */
+    uint8_t requests_lengths[MODULE_D7AP_FIFO_MAX_REQUESTS_COUNT]; /**< Contains for every request ID the index in command_buffer the length of the ALP payload in that request */
     uint8_t request_buffer[MODULE_D7AP_FIFO_COMMAND_BUFFER_SIZE];
 } d7asp_fifo_t;
 
@@ -93,14 +94,17 @@ typedef struct {
     uint8_t fifo_token;
     uint8_t request_id;
     uint8_t response_to;
-    d7atp_addressee_t addressee;
+    d7atp_addressee_t* addressee;
 } d7asp_result_t;
 
 typedef void (*d7asp_fifo_flush_completed_callback)(uint8_t fifo_token, uint8_t* progress_bitmap, uint8_t* success_bitmap, uint8_t bitmap_byte_count);
+typedef void (*d7asp_fifo_request_completed_callback)(d7asp_result_t result, uint8_t* payload, uint8_t payload_length);
+
 
 typedef struct {
     d7asp_fifo_flush_completed_callback d7asp_fifo_flush_completed_cb;
-} d7asp_init_args_t; // TODO workaround: NG does not support function pointer so store in struct (for now)
+    d7asp_fifo_request_completed_callback d7asp_fifo_request_completed_cb;
+} d7asp_init_args_t;
 
 void d7asp_init(d7asp_init_args_t* init_arfs);
 d7asp_queue_result_t d7asp_queue_alp_actions(d7asp_fifo_config_t* d7asp_fifo_config, uint8_t* alp_payload_buffer, uint8_t alp_payload_length); // TODO return status
