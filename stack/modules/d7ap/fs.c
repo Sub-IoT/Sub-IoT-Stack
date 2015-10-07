@@ -158,6 +158,7 @@ void fs_init_file(uint8_t file_id, const fs_file_header_t* file_header, const ui
 {
     assert(!is_fs_init_completed); // initing files not allowed after fs_init() completed (for now?)
     assert(file_id < MODULE_D7AP_FS_FILE_COUNT);
+    assert(file_id >= 0x40); // system files may not be inited
     assert(current_data_offset + file_header->length <= MODULE_D7AP_FS_FILESYSTEM_SIZE);
 
     file_offsets[file_id] = current_data_offset;
