@@ -58,7 +58,7 @@ static dae_access_profile_t NGDEF(_current_access_class);
 static dll_state_t NGDEF(_dll_state);
 #define dll_state NG(_dll_state)
 
-static hw_radio_packet_t* NGDEF(_current_packet);
+static packet_t* NGDEF(_current_packet);
 #define current_packet NG(_current_packet)
 
 // CSMA-CA parameters
@@ -209,11 +209,11 @@ static void cca_rssi_valid(int16_t cur_rssi)
             // OK, send packet
             log_print_stack_string(LOG_STACK_DLL, "CCA2 RSSI: %d", cur_rssi);
             log_print_stack_string(LOG_STACK_DLL, "CCA2 succeeded, transmitting ...");
-            log_print_data(current_packet->data, current_packet->length + 1); // TODO tmp
+            log_print_data(current_packet->hw_radio_packet.data, current_packet->hw_radio_packet.length + 1); // TODO tmp
 
             switch_state(DLL_STATE_TX_FOREGROUND);
 
-            error_t err = hw_radio_send_packet(current_packet, &packet_transmitted);
+            error_t err = hw_radio_send_packet(&current_packet->hw_radio_packet, &packet_transmitted);
             assert(err == SUCCESS);
 
             d7atp_signal_packet_csma_ca_insertion_completed(true);
@@ -257,7 +257,7 @@ static uint16_t calculate_tx_duration()
         data_rate = 20; // High rate: 20.83 byte/tick
     }
 
-    uint16_t duration = (current_packet->length / data_rate) + 1;
+    uint16_t duration = (current_packet->hw_radio_packet.length / data_rate) + 1;
     return duration;
 }
 
@@ -286,7 +286,11 @@ static void execute_csma_ca()
 
             uint16_t t_offset = 0;
 
-            switch(current_access_class.control_csma_ca_mode)
+            csma_ca_mode_t csma_ca_mode = current_access_class.control_csma_ca_mode;
+            if(!current_packet->d7atp_ctrl.ctrl_is_start)
+                csma_ca_mode = CSMA_CA_MODE_UNC; // overrule mode to UNC // TODO validate
+
+            switch(csma_ca_mode)
             {
                 case CSMA_CA_MODE_UNC:
                     // no delay
@@ -316,8 +320,7 @@ static void execute_csma_ca()
                 }
             }
 
-            DPRINT("slot duration: %i", dll_slot_duration);
-            DPRINT("t_offset: %i", t_offset);
+            DPRINT("slot duration: %i t_offset: %i csma ca mode: %i", dll_slot_duration, t_offset, csma_ca_mode);
 
             dll_to = dll_tca - t_offset;
 
@@ -464,7 +467,7 @@ void dll_tx_frame(packet_t* packet)
         .eirp = 10
     };
 
-    current_packet = &(packet->hw_radio_packet);
+    current_packet = packet;
 
     switch_state(DLL_STATE_CSMA_CA_STARTED);
     execute_csma_ca();
