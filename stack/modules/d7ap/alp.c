@@ -98,15 +98,8 @@ void alp_process_command(packet_t* packet)
 
 //    assert(get_operation(packet->payload) == ALP_OP_RETURN_FILE_DATA); // TODO other operations not supported yet
 
-<<<<<<< Updated upstream
 //    if(unhandled_action_cb)
-//        unhandled_action_cb(d7asp_result, packet->payload, packet->payload_length);
-=======
-    if(unhandled_action_cb)
-        unhandled_action_cb(d7asp_result, packet->payload, packet->payload_length, &packet->hw_radio_packet.rx_meta);
->>>>>>> Stashed changes
-
-
+//        unhandled_action_cb(d7asp_result, packet->payload, packet->payload_length); // TODO &packet->hw_radio_packet.rx_meta
 //    packet->payload_length = 0;
 
 //    return true;
