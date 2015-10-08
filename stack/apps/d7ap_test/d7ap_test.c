@@ -63,9 +63,9 @@ void execute_sensor_measurement()
 
 }
 
-void on_alp_unhandled_action(d7asp_result_t d7asp_result, uint8_t *alp_command, uint8_t alp_command_size)
+void on_unsollicited_response_received(d7asp_result_t d7asp_result, uint8_t *alp_command, uint8_t alp_command_size)
 {
-    log_print_string("Received ALP action");
+    log_print_string("Received unsollicited response");
 }
 
 void init_user_files()
@@ -170,8 +170,9 @@ void bootstrap()
     };
 
     d7asp_init_args.d7asp_fifo_flush_completed_cb = &on_d7asp_fifo_flush_completed;
+    d7asp_init_args.d7asp_received_unsollicited_data_cb = &on_unsollicited_response_received;
 
-    d7ap_stack_init(&fs_init_args, &on_alp_unhandled_action, &d7asp_init_args);
+    d7ap_stack_init(&fs_init_args, &d7asp_init_args);
 
     sched_register_task(&start_foreground_scan);
     sched_post_task(&start_foreground_scan);

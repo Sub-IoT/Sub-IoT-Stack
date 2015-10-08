@@ -43,6 +43,8 @@
 static uint8_t uart_rx_buffer[UART_RX_BUFFER_SIZE] = { 0 };
 static fifo_t uart_rx_fifo;
 
+static d7asp_init_args_t d7asp_init_args;
+
 static void process_uart_rx_fifo()
 {
     // expected: <0xCE> <Length byte> <0xD7> <D7ASP fifo config> <ALP command>
@@ -92,7 +94,7 @@ static void uart_rx_cb(char data)
         sched_post_task(&process_uart_rx_fifo);
 }
 
-static void on_alp_unhandled_action(d7asp_result_t d7asp_result, uint8_t *alp_command, uint8_t alp_command_size)
+static void on_unsollicited_response_received(d7asp_result_t d7asp_result, uint8_t *alp_command, uint8_t alp_command_size)
 {
     //led_on(0);
 	// TODO move this to log module so we can reuse this for other applications?
@@ -137,7 +139,9 @@ void bootstrap()
         .access_profiles = access_classes
     };
 
-    d7ap_stack_init(&fs_init_args, &on_alp_unhandled_action, NULL);
+    d7asp_init_args.d7asp_received_unsollicited_data_cb = &on_unsollicited_response_received;
+
+    d7ap_stack_init(&fs_init_args, &d7asp_init_args);
 
     fifo_init(&uart_rx_fifo, uart_rx_buffer, sizeof(uart_rx_buffer));
 
