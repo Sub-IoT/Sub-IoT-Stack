@@ -29,7 +29,13 @@ void d7anp_tx_foreground_frame(packet_t* packet, bool should_include_origin_temp
     packet->d7anp_ctrl.nls_enabled = false;
     packet->d7anp_ctrl.hop_enabled = false;
     packet->d7anp_ctrl.origin_access_id_present = should_include_origin_template;
-    packet->d7anp_ctrl.origin_access_id_is_vid = false;// TODO where to get this from? from DLL config file ?
+    uint8_t vid[2];
+    fs_read_vid(vid);
+    if(memcmp(vid, (uint8_t[2]){0x00, 0x00},2) == 0)
+        packet->d7anp_ctrl.origin_access_id_is_vid = false;
+    else
+        packet->d7anp_ctrl.origin_access_id_is_vid = true;
+
     packet->d7anp_ctrl.origin_access_class = packet->d7atp_addressee->addressee_ctrl_access_class; // TODO validate
 
     dll_tx_frame(packet);
@@ -54,7 +60,9 @@ uint8_t d7anp_assemble_packet_header(packet_t *packet, uint8_t *data_ptr)
             fs_read_uid(data_ptr); data_ptr += 8;
         }
         else
-            assert(false); // TODO read VID
+        {
+            fs_read_vid(data_ptr); data_ptr += 2;
+        }
     }
 
     return data_ptr - d7anp_header_start;

@@ -239,6 +239,16 @@ void fs_read_uid(uint8_t *buffer)
     fs_read_file(D7A_FILE_UID_FILE_ID, 0, buffer, D7A_FILE_UID_SIZE);
 }
 
+void fs_read_vid(uint8_t *buffer)
+{
+    fs_read_file(D7A_FILE_DLL_CONF_FILE_ID, 1, buffer, 2);
+}
+
+void fs_write_vid(uint8_t* buffer)
+{
+    fs_write_file(D7A_FILE_DLL_CONF_FILE_ID, 1, buffer, 2);
+}
+
 void fs_read_access_class(uint8_t access_class_index, dae_access_profile_t *access_class)
 {
     assert(access_class_index < 16);

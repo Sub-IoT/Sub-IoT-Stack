@@ -442,13 +442,6 @@ void dll_init()
 
 void dll_tx_frame(packet_t* packet)
 {
-    packet->dll_header = (dll_header_t){
-        .subnet = 0x05, // TODO hardcoded for now
-        .control_target_address_set = false, // TODO assuming broadcast for now
-        .control_vid_used = false, // TODO hardcoded for now
-        .control_eirp_index = 0, // TODO hardcoded for now
-    };
-
     dll_header_t* dll_header = &(packet->dll_header);
     dll_header->subnet = 0x05; // TODO hardcoded for now
     dll_header->control_eirp_index = 0; // TODO hardcoded for now

@@ -63,7 +63,7 @@ void execute_sensor_measurement()
 
 }
 
-void on_unsollicited_response_received(d7asp_result_t d7asp_result, uint8_t *alp_command, uint8_t alp_command_size)
+void on_unsollicited_response_received(d7asp_result_t d7asp_result, uint8_t *alp_command, uint8_t alp_command_size, hw_rx_metadata_t* rx_meta)
 {
     log_print_string("Received unsollicited response");
 }
