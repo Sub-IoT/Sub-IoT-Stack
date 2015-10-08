@@ -99,7 +99,7 @@ typedef struct {
     // data
 } alp_operand_file_data_t;
 
-typedef void (*alp_unhandled_action_callback)(d7asp_result_t d7asp_result, uint8_t *alp_command, uint8_t alp_command_size);
+typedef void (*alp_unhandled_action_callback)(d7asp_result_t d7asp_result, uint8_t *alp_command, uint8_t alp_command_size, hw_rx_metadata_t rx_meta[0]);
 
 void alp_init(alp_unhandled_action_callback cb);
 
