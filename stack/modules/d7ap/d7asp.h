@@ -99,16 +99,17 @@ typedef struct {
 
 typedef void (*d7asp_fifo_flush_completed_callback)(uint8_t fifo_token, uint8_t* progress_bitmap, uint8_t* success_bitmap, uint8_t bitmap_byte_count);
 typedef void (*d7asp_fifo_request_completed_callback)(d7asp_result_t result, uint8_t* payload, uint8_t payload_length);
-
+typedef void (*d7asp_received_unsollicited_data_callback)(d7asp_result_t d7asp_result, uint8_t *alp_command, uint8_t alp_command_size, hw_rx_metadata_t* rx_metadata);
 
 typedef struct {
     d7asp_fifo_flush_completed_callback d7asp_fifo_flush_completed_cb;
     d7asp_fifo_request_completed_callback d7asp_fifo_request_completed_cb;
+    d7asp_received_unsollicited_data_callback d7asp_received_unsollicited_data_cb;
 } d7asp_init_args_t;
 
 void d7asp_init(d7asp_init_args_t* init_arfs);
 d7asp_queue_result_t d7asp_queue_alp_actions(d7asp_fifo_config_t* d7asp_fifo_config, uint8_t* alp_payload_buffer, uint8_t alp_payload_length); // TODO return status
-void d7asp_process_received_packet(packet_t* packet);
+bool d7asp_process_received_packet(packet_t* packet);
 
 /**
  * @brief Called by DLL to signal the packet has been transmitted

@@ -80,7 +80,11 @@ static void execute_alp_command(uint8_t command_file_id)
     fifo_config.addressee.addressee_ctrl = (*data_ptr); data_ptr++;
     memcpy(&(fifo_config.addressee.addressee_id), data_ptr, 8); data_ptr += 8; // TODO assume 8 for now
 
-    d7asp_queue_alp_actions(&fifo_config, data_ptr, file_headers[command_file_id].length - (uint8_t)(data_ptr - file_start));
+    uint8_t alp_response[ALP_PAYLOAD_MAX_SIZE] = { 0 };
+    uint8_t alp_response_length = 0;
+    alp_process_command(data_ptr, file_headers[command_file_id].length - (uint8_t)(data_ptr - file_start), alp_response, &alp_response_length);
+
+    d7asp_queue_alp_actions(&fifo_config, alp_response, alp_response_length);
 }
 
 static void write_access_class(uint8_t access_class_index, dae_access_profile_t* access_class)

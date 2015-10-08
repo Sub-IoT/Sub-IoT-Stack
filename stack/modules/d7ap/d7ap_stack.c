@@ -20,12 +20,11 @@
 
 #include "debug.h"
 
-void d7ap_stack_init(fs_init_args_t* fs_init_args, alp_unhandled_action_callback alp_unhandled_action_cb, d7asp_init_args_t* d7asp_init_args)
+void d7ap_stack_init(fs_init_args_t* fs_init_args, d7asp_init_args_t* d7asp_init_args)
 {
     assert(fs_init_args != NULL);
     assert(fs_init_args->access_profiles_count > 0); // there should be at least one access profile defined
 
-    alp_init(alp_unhandled_action_cb);
     fs_init(fs_init_args);
     d7asp_init(d7asp_init_args);
     d7atp_init();

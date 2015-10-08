@@ -31,6 +31,8 @@
 #define ALP_ITF_ID_D7ASP 0xD7
 #define ALP_ITF_ID_FS 0x00 // not part of the spec
 
+#define ALP_PAYLOAD_MAX_SIZE 32 // TODO configurable?
+
 typedef enum
 {
     ALP_ACT_COND_LIST = 0,
@@ -100,13 +102,12 @@ typedef struct {
     // data
 } alp_operand_file_data_t;
 
-typedef void (*alp_unhandled_action_callback)(d7asp_result_t d7asp_result, uint8_t *alp_command, uint8_t alp_command_size, hw_rx_metadata_t* rx_meta);
-
-void alp_init(alp_unhandled_action_callback cb);
-
-/*! \brief
- *  \
+/*!
+ * \brief Returns the ALP operation type contained in alp_command
+ * \param alp_command
+ * \return the ALP operation type
  */
+alp_operation_t alp_get_operation(uint8_t* alp_command);
 
 /*!
  * \brief Process the ALP command

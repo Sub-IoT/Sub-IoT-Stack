@@ -257,7 +257,7 @@ d7asp_queue_result_t d7asp_queue_alp_actions(d7asp_fifo_config_t* d7asp_fifo_con
     return (d7asp_queue_result_t){ .fifo_token = fifo.token, .request_id = request_id };
 }
 
-void d7asp_process_received_packet(packet_t* packet)
+bool d7asp_process_received_packet(packet_t* packet)
 {
     d7asp_result_t result = {
         .status = {
@@ -285,10 +285,11 @@ void d7asp_process_received_packet(packet_t* packet)
         mark_current_request_done();
         assert(packet != current_request_packet);
 
-        if(d7asp_init_args->d7asp_fifo_request_completed_cb)
+        if(d7asp_init_args != NULL && d7asp_init_args->d7asp_fifo_request_completed_cb != NULL)
             d7asp_init_args->d7asp_fifo_request_completed_cb(result, packet->payload, packet->payload_length);
 
         packet_queue_free_packet(packet); // ACK can be cleaned
+        return true;
     }
     else if(state == D7ASP_STATE_IDLE || state == D7ASP_STATE_SLAVE)
     {
@@ -299,25 +300,37 @@ void d7asp_process_received_packet(packet_t* packet)
         result.fifo_token = packet->d7atp_dialog_id;
         result.request_id = packet->d7atp_transaction_id;
 
-        // TODO notify upper layer?
+
+        if(alp_get_operation(packet->payload) == ALP_OP_RETURN_FILE_DATA)
+        {
+            // received unsollicited data, notify appl and discard
+            log_print_stack_string(LOG_STACK_SESSION, "Received unsollicited data");
+            if(d7asp_init_args != NULL && d7asp_init_args->d7asp_received_unsollicited_data_cb != NULL)
+                d7asp_init_args->d7asp_received_unsollicited_data_cb(result, packet->payload, packet->payload_length, &packet->hw_radio_packet.rx_meta);
+
+            goto discard_request;
+        }
 
         // build response, we will reuse the same packet for this
         alp_process_command(packet->payload, packet->payload_length, packet->payload, &packet->payload_length);
 
+        // TODO notify upper layer?
+
         // execute slave transaction
         if(packet->payload_length == 0 && !packet->d7atp_ctrl.ctrl_is_ack_requested)
-        {
-            // no need to respond, clean up
-            packet_queue_free_packet(packet);
-            switch_state(D7ASP_STATE_IDLE);
-            return;
-        }
+            goto discard_request; // no need to respond, clean up
 
         log_print_stack_string(LOG_STACK_SESSION, "Sending response");
         d7atp_respond_dialog(packet);
+        return true;
     }
     else
         assert(false);
+
+    discard_request:
+        packet_queue_free_packet(packet);
+        switch_state(D7ASP_STATE_IDLE);
+        return false;
 }
 
 

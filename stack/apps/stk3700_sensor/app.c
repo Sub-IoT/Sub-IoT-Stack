@@ -40,9 +40,9 @@
 #include "platform_sensors.h"
 #include "platform_lcd.h"
 
-#define SENSOR_FILE_ID 0x40
+#define SENSOR_FILE_ID 0x50
 #define SENSOR_FILE_SIZE 4
-#define ACTION_FILE_ID 0x41
+#define ACTION_FILE_ID 0x51
 
 static int16_t temperature = 0;
 
@@ -71,7 +71,7 @@ void measureTemperature()
 void execute_sensor_measurement()
 {
 	led_toggle(0);
-	timer_post_task_delay(&execute_sensor_measurement, TIMER_TICKS_PER_SEC * 5);
+    timer_post_task_delay(&execute_sensor_measurement, TIMER_TICKS_PER_SEC * 60);
 
 	measureTemperature();
 
@@ -147,8 +147,8 @@ void bootstrap()
                     .ch_class = PHY_CLASS_NORMAL_RATE,
                     .ch_freq_band = PHY_BAND_433
                 },
-                .channel_index_start = 0,
-                .channel_index_end = 0,
+                .channel_index_start = 16,
+                .channel_index_end = 16,
                 .eirp = 0,
                 .ccao = 0
             }
@@ -161,7 +161,7 @@ void bootstrap()
         .access_profiles = access_classes
     };
 
-    d7ap_stack_init(&fs_init_args, NULL, NULL);
+    d7ap_stack_init(&fs_init_args, NULL);
 
 	internalTempSensor_init();
 	measureTemperature();
@@ -170,7 +170,7 @@ void bootstrap()
     ubutton_register_callback(1, &userbutton_callback);
 
     sched_register_task((&execute_sensor_measurement));
-    timer_post_task_delay(&execute_sensor_measurement, TIMER_TICKS_PER_SEC * 5);
+    //timer_post_task_delay(&execute_sensor_measurement, TIMER_TICKS_PER_SEC * 5);
 
     lcd_write_string("DASH7");
 }

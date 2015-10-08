@@ -87,8 +87,9 @@ static void switch_state(state_t new_state)
         log_print_stack_string(LOG_STACK_TRANS, "Switching to D7ATP_STATE_IDLE");
         assert(d7atp_state == D7ATP_STATE_MASTER_TRANSACTION_REQUEST_PERIOD
                || d7atp_state == D7ATP_STATE_MASTER_TRANSACTION_RESPONSE_PERIOD
-               || d7atp_state ==  D7ATP_STATE_SLAVE_TRANSACTION_SENDING_RESPONSE
-               || d7atp_state ==  D7ATP_STATE_SLAVE_TRANSACTION_RESPONSE_PERIOD);
+               || d7atp_state == D7ATP_STATE_SLAVE_TRANSACTION_SENDING_RESPONSE
+               || d7atp_state == D7ATP_STATE_SLAVE_TRANSACTION_RESPONSE_PERIOD
+               || d7atp_state == D7ATP_STATE_SLAVE_TRANSACTION_RECEIVED_REQUEST);
         d7atp_state = new_state;
         break;
     default:
@@ -263,5 +264,6 @@ void d7atp_process_received_packet(packet_t* packet)
         log_print_stack_string(LOG_STACK_TRANS, "Dialog id %i transaction id %i", current_dialog_id, current_transaction_id);
     }
 
-    d7asp_process_received_packet(packet);
+    if(!d7asp_process_received_packet(packet))
+        switch_state(D7ATP_STATE_IDLE);
 }

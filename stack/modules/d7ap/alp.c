@@ -27,24 +27,18 @@
 #include "packet.h"
 #include "fs.h"
 
-static alp_unhandled_action_callback NGDEF(_unhandled_action_cb);
-#define unhandled_action_cb NG(_unhandled_action_cb)
-
-static alp_operation_t get_operation(uint8_t* alp_command)
+alp_operation_t alp_get_operation(uint8_t* alp_command)
 {
     alp_control_t alp_ctrl;
     alp_ctrl.raw = (*alp_command);
     return alp_ctrl.operation;
 }
 
-void alp_init(alp_unhandled_action_callback cb)
-{
-    unhandled_action_cb = cb;
-}
-
 void alp_process_command(uint8_t* alp_command, uint8_t alp_command_length, uint8_t* alp_response, uint8_t* alp_response_length)
 {
+    // TODO check response length
     alp_control_t alp_control = { .raw = (*alp_command) }; alp_command++;
+    (*alp_response_length) = 0;
 
     switch(alp_control.operation)
     {
@@ -63,7 +57,6 @@ void alp_process_command(uint8_t* alp_command, uint8_t alp_command_length, uint8
             alp_response[(*alp_response_length)] = operand.requested_data_length; (*alp_response_length)++;
             fs_read_file(operand.file_offset.file_id, operand.file_offset.offset, alp_response + (*alp_response_length), operand.requested_data_length);
             (*alp_response_length) += operand.requested_data_length;
-
             break;
         }
         case ALP_OP_WRITE_FILE_DATA:
@@ -75,24 +68,6 @@ void alp_process_command(uint8_t* alp_command, uint8_t alp_command_length, uint8
             fs_write_file(operand.file_offset.file_id, operand.file_offset.offset, alp_command, operand.provided_data_length);
             break;
         }
-        case ALP_OP_RETURN_FILE_DATA:
-        {
-// TODO
-//            alp_operand_file_data_t operand;
-//            operand.file_offset.file_id = (*alp_command); alp_command++;
-//            operand.file_offset.offset = (*alp_command); alp_command++; // TODO can be 1-4 bytes, assume 1 for now
-//            operand.provided_data_length = (*alp_command); alp_command++;
-
-//            // fill response
-//            (*alp_response_length) = 0;
-//            alp_response[(*alp_response_length)] = ALP_OP_RETURN_FILE_DATA; (*alp_response_length)++;
-//            alp_response[(*alp_response_length)] = operand.file_offset.file_id; (*alp_response_length)++;
-//            alp_response[(*alp_response_length)] = operand.file_offset.offset; (*alp_response_length)++;
-//            alp_response[(*alp_response_length)] = operand.provided_data_length; (*alp_response_length)++;
-//            memcpy(resp_data_ptr, alp_command_ptr, operand.provided_data_length);
-//            packet->payload_length = resp_data_ptr - packet->payload + operand.provided_data_length;
-//            break;
-        }
         default:
             assert(false); // TODO implement other operations
     }
@@ -100,17 +75,3 @@ void alp_process_command(uint8_t* alp_command, uint8_t alp_command_length, uint8
     // TODO multiple commands in one request
 }
 
-// TODO remove?
-//bool alp_process_received_request(d7asp_result_t d7asp_result, packet_t* packet)
-//{
-//    // TODO merge with alp_process_command() ?
-//    // TODO split into actions
-
-//    assert(get_operation(packet->payload) == ALP_OP_RETURN_FILE_DATA); // TODO other operations not supported yet
-
-//    if(unhandled_action_cb)
-//        unhandled_action_cb(d7asp_result, packet->payload, packet->payload_length); // TODO &packet->hw_radio_packet.rx_meta
-//    packet->payload_length = 0;
-
-//    return true;
-//}
