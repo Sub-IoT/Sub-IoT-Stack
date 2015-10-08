@@ -287,8 +287,7 @@ static void execute_csma_ca()
             uint16_t t_offset = 0;
 
             csma_ca_mode_t csma_ca_mode = current_access_class.control_csma_ca_mode;
-            if(!current_packet->d7atp_ctrl.ctrl_is_start)
-                csma_ca_mode = CSMA_CA_MODE_UNC; // overrule mode to UNC // TODO validate
+            // TODO overrule mode to UNC for subsequent requests by the requester, or a single response to a unicast request
 
             switch(csma_ca_mode)
             {
@@ -391,6 +390,7 @@ static void execute_csma_ca()
         }
         case DLL_STATE_CCA_FAIL:
         {
+            // TODO hw_radio_set_idle();
             d7atp_signal_packet_csma_ca_insertion_completed(false);
             break;
         }
