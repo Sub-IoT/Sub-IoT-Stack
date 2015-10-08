@@ -210,7 +210,7 @@ void d7atp_signal_packet_transmitted(packet_t* packet)
     else
         assert(false);
 
-    uint8_t transaction_response_period = 25; // TODO get from upper layer, hardcoded period for now
+    uint8_t transaction_response_period = 0xFF; // TODO get from upper layer, hardcoded period for now
     log_print_stack_string(LOG_STACK_TRANS, "Packet transmitted, starting response period timer (%i ticks)", transaction_response_period);
     // TODO find out difference between dialog timeout and transaction response period
 
