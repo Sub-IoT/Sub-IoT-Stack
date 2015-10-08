@@ -246,7 +246,13 @@ void d7atp_process_received_packet(packet_t* packet)
             return;
         }
 
-        assert(!packet->d7atp_ctrl.ctrl_is_start); // start dialog not allowed when in master transaction state
+        // TODO assert(!packet->d7atp_ctrl.ctrl_is_start); // start dialog not allowed when in master transaction state
+        if(packet->d7atp_ctrl.ctrl_is_start)
+        {
+            log_print_stack_string(LOG_STACK_TRANS, "Start dialog not allowed when in master transaction state, skipping segment");
+            packet_queue_free_packet(packet);
+            return;
+        }
     }
     else
     {
