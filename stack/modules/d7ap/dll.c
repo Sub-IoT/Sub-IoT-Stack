@@ -516,13 +516,20 @@ bool dll_disassemble_packet_header(packet_t* packet, uint8_t* data_idx)
     packet->dll_header.control = packet->hw_radio_packet.data[(*data_idx)]; (*data_idx)++;
     if(packet->dll_header.control_target_address_set)
     {
-        uint8_t address_len = 2;
+        uint8_t address_len;
+        uint8_t id[8];
         if(!packet->dll_header.control_vid_used)
+        {
+            fs_read_uid(id);
             address_len = 8;
+        }
+        else
+        {
+            fs_read_vid(id);
+            address_len = 2;
+        }
 
-        uint8_t uid[8];
-        fs_read_uid(uid);
-        if(memcmp(packet->hw_radio_packet.data + (*data_idx), uid, address_len) != 0)
+        if(memcmp(packet->hw_radio_packet.data + (*data_idx), id, address_len) != 0)
         {
             DPRINT("Device ID filtering failed, skipping packet");
             return false;
