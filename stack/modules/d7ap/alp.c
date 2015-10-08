@@ -66,6 +66,15 @@ void alp_process_command(uint8_t* alp_command, uint8_t alp_command_length, uint8
 
             break;
         }
+        case ALP_OP_WRITE_FILE_DATA:
+        {
+            alp_operand_file_data_t operand;
+            operand.file_offset.file_id = (*alp_command); alp_command++;
+            operand.file_offset.offset = (*alp_command); alp_command++; // TODO can be 1-4 bytes, assume 1 for now
+            operand.provided_data_length = (*alp_command); alp_command++;
+            fs_write_file(operand.file_offset.file_id, operand.file_offset.offset, alp_command, operand.provided_data_length);
+            break;
+        }
         case ALP_OP_RETURN_FILE_DATA:
         {
 // TODO
