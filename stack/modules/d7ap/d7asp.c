@@ -302,7 +302,7 @@ void d7asp_process_received_packet(packet_t* packet)
         // TODO notify upper layer?
 
         // build response, we will reuse the same packet for this
-        alp_process_command(packet);
+        alp_process_command(packet->payload, packet->payload_length, packet->payload, &packet->payload_length);
 
         // execute slave transaction
         if(packet->payload_length == 0 && !packet->d7atp_ctrl.ctrl_is_ack_requested)

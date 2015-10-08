@@ -29,6 +29,7 @@
 #include "d7asp.h"
 
 #define ALP_ITF_ID_D7ASP 0xD7
+#define ALP_ITF_ID_FS 0x00 // not part of the spec
 
 typedef enum
 {
@@ -99,12 +100,24 @@ typedef struct {
     // data
 } alp_operand_file_data_t;
 
-typedef void (*alp_unhandled_action_callback)(d7asp_result_t d7asp_result, uint8_t *alp_command, uint8_t alp_command_size, hw_rx_metadata_t rx_meta[0]);
+typedef void (*alp_unhandled_action_callback)(d7asp_result_t d7asp_result, uint8_t *alp_command, uint8_t alp_command_size, hw_rx_metadata_t* rx_meta);
 
 void alp_init(alp_unhandled_action_callback cb);
 
-/*! \brief Process a received ALP command and fills the packet with the result */
-void alp_process_command(packet_t* packet);
+/*! \brief
+ *  \
+ */
+
+/*!
+ * \brief Process the ALP command
+ *
+ * Note: alp_command and alp_response may point to the same buffer
+ * \param alp_command   The raw command
+ * \param alp_command_length The length of the command
+ * \param alp_response Pointer to a buffer where a possible response will be written
+ * \param alp_response_length The length of the response
+ */
+void alp_process_command(uint8_t* alp_command, uint8_t alp_command_length, uint8_t* alp_response, uint8_t* alp_response_length);
 
 /*! \brief Process a received request and replaces the packet's payload with the response payload.
  *  ALP commands which cannot be handled by the stack are vectored to the application layer
