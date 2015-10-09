@@ -94,7 +94,7 @@ static void uart_rx_cb(char data)
         sched_post_task(&process_uart_rx_fifo);
 }
 
-static void on_unsollicited_response_received(d7asp_result_t d7asp_result, uint8_t *alp_command, uint8_t alp_command_size)
+static void on_unsollicited_response_received(d7asp_result_t d7asp_result, uint8_t *alp_command, uint8_t alp_command_size, hw_rx_metadata_t* rx_meta)
 {
     //led_on(0);
 	// TODO move this to log module so we can reuse this for other applications?

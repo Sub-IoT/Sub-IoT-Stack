@@ -350,15 +350,15 @@ static void execute_csma_ca()
 
             switch(current_access_class.control_csma_ca_mode)
             {
-                case CSMA_CA_MODE_AIND: // TODO implement AIND
-                case CSMA_CA_MODE_RAIND: // TODO implement RAIND
+                case CSMA_CA_MODE_AIND:
+                case CSMA_CA_MODE_RAIND:
                 {
                     uint16_t max_nr_slots = dll_tca / tx_duration;
                     uint16_t slots_wait = get_rnd() % max_nr_slots;
                     t_offset = slots_wait * tx_duration;
                     break;
                 }
-                case CSMA_CA_MODE_RIGD: // TODO implement RAIND
+                case CSMA_CA_MODE_RIGD:
                 {
                     dll_rigd_n++;
                     dll_slot_duration = (uint16_t) ((double)dll_tca0) / (2 << (dll_rigd_n+1));
