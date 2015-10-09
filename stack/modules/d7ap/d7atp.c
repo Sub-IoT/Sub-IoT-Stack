@@ -72,6 +72,7 @@ static void switch_state(state_t new_state)
         log_print_stack_string(LOG_STACK_TRANS, "Switching to D7ATP_STATE_SLAVE_TRANSACTION_RECEIVED_REQUEST");
         assert(d7atp_state == D7ATP_STATE_IDLE);
         d7atp_state = new_state;
+        break;
     case D7ATP_STATE_SLAVE_TRANSACTION_SENDING_RESPONSE:
         assert(!sched_is_scheduled(&transaction_response_period_expired));
         log_print_stack_string(LOG_STACK_TRANS, "Switching to D7ATP_STATE_SLAVE_TRANSACTION_SENDING_RESPONSE");
