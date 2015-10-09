@@ -153,6 +153,8 @@ static void switch_to_idle_mode()
     cc1101_interface_strobe(RF_SFTX); // TODO cc1101 datasheet : Only issue SFTX in IDLE or TXFIFO_UNDERFLOW states.
     cc1101_interface_strobe(RF_SIDLE);
     cc1101_interface_strobe(RF_SPWD);
+    DEBUG_TX_END();
+    DEBUG_RX_END();
 }
 
 static inline int16_t convert_rssi(int8_t rssi_raw)
@@ -514,6 +516,7 @@ error_t hw_radio_send_packet(hw_radio_packet_t* packet, tx_packet_callback_t tx_
     cc1101_interface_write_burst_reg(TXFIFO, packet->data, packet->length + 1);
     cc1101_interface_set_interrupts_enabled(true);
     DEBUG_TX_START();
+    DEBUG_RX_END();
     cc1101_interface_strobe(RF_STX);
     return SUCCESS;
 }
