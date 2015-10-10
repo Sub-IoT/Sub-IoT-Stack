@@ -212,7 +212,7 @@ void d7atp_signal_packet_transmitted(packet_t* packet)
     else
         assert(false);
 
-    uint8_t transaction_response_period = 0xFF; // TODO get from upper layer, hardcoded period for now
+    uint8_t transaction_response_period = 120; // TODO get from upper layer, hardcoded period for now
     log_print_stack_string(LOG_STACK_TRANS, "Packet transmitted, starting response period timer (%i ticks)", transaction_response_period);
     // TODO find out difference between dialog timeout and transaction response period
 
@@ -224,6 +224,7 @@ void d7atp_signal_packet_transmitted(packet_t* packet)
 
 void d7atp_signal_packet_csma_ca_insertion_completed(bool succeeded)
 {
+    hw_debug_clr(2); // TODO tmp
     if(!succeeded)
     {
         log_print_stack_string(LOG_STACK_TRANS, "CSMA-CA insertion failed, stopping transaction");

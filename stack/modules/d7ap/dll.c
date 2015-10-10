@@ -194,7 +194,7 @@ static void execute_csma_ca();
 static void cca_rssi_valid(int16_t cur_rssi)
 {
     assert(dll_state == DLL_STATE_CCA1 || dll_state == DLL_STATE_CCA2);
-
+    hw_debug_set(2); // TODO tmp
     if (cur_rssi <= E_CCA)
     {
         if(dll_state == DLL_STATE_CCA1)
@@ -234,6 +234,7 @@ static void cca_rssi_valid(int16_t cur_rssi)
 static void execute_cca()
 {
     assert(dll_state == DLL_STATE_CCA1 || dll_state == DLL_STATE_CCA2);
+    hw_debug_clr(2); // TODO tmp
 
     hw_rx_cfg_t rx_cfg =(hw_rx_cfg_t){
         .channel_id.channel_header = current_access_class.subbands[0].channel_header,
@@ -264,6 +265,7 @@ static uint16_t calculate_tx_duration()
 static void execute_csma_ca()
 {
     // TODO generate random channel queue
+    hw_debug_set(2); // TODO tmp
     hw_radio_set_rx(NULL, NULL, NULL); // put radio in RX but disable callbacks to make sure we don't receive packets when in this state
                                         // TODO use correct rx cfg + it might be interesting to switch to idle first depending on calculated offset
     uint16_t tx_duration = calculate_tx_duration();
@@ -417,10 +419,11 @@ static void execute_scan_automation()
     }
     else
     {
+        hw_radio_set_idle();
+
+        // TODO wait until radio idle
         if(dll_state != DLL_STATE_IDLE)
             switch_state(DLL_STATE_IDLE);
-
-        hw_radio_set_idle();
     }
 }
 
