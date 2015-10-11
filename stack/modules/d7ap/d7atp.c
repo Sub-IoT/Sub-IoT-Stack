@@ -21,6 +21,7 @@
  */
 
 #include "debug.h"
+#include "hwdebug.h"
 #include "d7atp.h"
 #include "packet_queue.h"
 #include "packet.h"
