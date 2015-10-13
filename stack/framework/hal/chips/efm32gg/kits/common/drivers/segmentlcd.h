@@ -51,7 +51,7 @@ void SegmentLCD_Number(int value);
 void SegmentLCD_NumberOff(void);
 void SegmentLCD_Symbol(lcdSymbol s, int on);
 void SegmentLCD_UnsignedHex(uint16_t value);
-void SegmentLCD_Write(char *string);
+void SegmentLCD_Write(const char *string);
 
 #ifdef __cplusplus
 }

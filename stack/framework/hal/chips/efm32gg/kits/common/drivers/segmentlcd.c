@@ -746,7 +746,7 @@ void SegmentLCD_UnsignedHex(uint16_t value)
  * @brief Write text on LCD display
  * @param string Text string to show on display
  *****************************************************************************/
-void SegmentLCD_Write(char *string)
+void SegmentLCD_Write(const char *string)
 {
   int      data, length, index;
   uint16_t bitfield;
