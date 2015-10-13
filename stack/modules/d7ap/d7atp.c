@@ -225,7 +225,7 @@ void d7atp_signal_packet_transmitted(packet_t* packet)
 
 void d7atp_signal_packet_csma_ca_insertion_completed(bool succeeded)
 {
-    hw_debug_clr(2); // TODO tmp
+    DEBUG_PIN_CLR(2); // TODO tmp
     if(!succeeded)
     {
         log_print_stack_string(LOG_STACK_TRANS, "CSMA-CA insertion failed, stopping transaction");
