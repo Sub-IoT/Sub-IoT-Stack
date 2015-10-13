@@ -158,13 +158,6 @@ void d7atp_respond_dialog(packet_t* packet)
 
     // dialog and transaction id remain the same
 
-    // copy addressee from NP origin
-    current_addressee.addressee_ctrl_has_id = packet->d7anp_ctrl.origin_access_id_present;
-    current_addressee.addressee_ctrl_virtual_id = packet->d7anp_ctrl.origin_access_id_is_vid;
-    current_addressee.addressee_ctrl_access_class = packet->d7anp_ctrl.origin_access_class;
-    memcpy(current_addressee.addressee_id, packet->origin_access_id, 8);
-    packet->d7atp_addressee = &current_addressee;
-
     d7anp_tx_foreground_frame(packet, true);
 }
 
@@ -265,6 +258,13 @@ void d7atp_process_received_packet(packet_t* packet)
         current_dialog_id = packet->d7atp_dialog_id;
         current_transaction_id = packet->d7atp_transaction_id;
         log_print_stack_string(LOG_STACK_TRANS, "Dialog id %i transaction id %i", current_dialog_id, current_transaction_id);
+
+        // copy addressee from NP origin
+        current_addressee.addressee_ctrl_has_id = packet->d7anp_ctrl.origin_access_id_present;
+        current_addressee.addressee_ctrl_virtual_id = packet->d7anp_ctrl.origin_access_id_is_vid;
+        current_addressee.addressee_ctrl_access_class = packet->d7anp_ctrl.origin_access_class;
+        memcpy(current_addressee.addressee_id, packet->origin_access_id, 8);
+        packet->d7atp_addressee = &current_addressee;
     }
 
     if(!d7asp_process_received_packet(packet))
