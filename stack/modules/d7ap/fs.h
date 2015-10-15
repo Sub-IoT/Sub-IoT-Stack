@@ -28,6 +28,18 @@
 #include "dae.h"
 #include "alp.h"
 
+#define D7A_FILE_UID_FILE_ID 0x00
+#define D7A_FILE_UID_SIZE 8
+
+#define D7A_FILE_FIRMWARE_VERSION_FILE_ID 0x02
+#define D7A_FILE_FIRMWARE_VERSION_SIZE 4
+
+#define D7A_FILE_DLL_CONF_FILE_ID	0x0A
+#define D7A_FILE_DLL_CONF_SIZE		6
+
+#define D7A_FILE_ACCESS_PROFILE_ID 0x20 // the first access class file
+#define D7A_FILE_ACCESS_PROFILE_SIZE 12 // TODO assuming 1 subband
+
 typedef enum
 {
     FS_STORAGE_TRANSIENT = 0,

@@ -44,17 +44,6 @@ static uint16_t NGDEF(_file_offsets)[MODULE_D7AP_FS_FILE_COUNT] = { 0 };
 static bool NGDEF(_is_fs_init_completed);
 #define is_fs_init_completed NG(_is_fs_init_completed)
 
-#define D7A_FILE_UID_FILE_ID 0x00
-#define D7A_FILE_UID_SIZE 8
-
-#define D7A_FILE_DLL_CONF_FILE_ID	0x0A
-#define D7A_FILE_DLL_CONF_SIZE		6
-
-#define D7A_FILE_ACCESS_PROFILE_ID 0x20 // the first access class file
-#define D7A_FILE_ACCESS_PROFILE_SIZE 12 // TODO assuming 1 subband
-
-#define ACTION_FILE_ID_BROADCAST_COUNTER 0x41
-
 static inline bool is_file_defined(uint8_t file_id)
 {
     return file_headers[file_id].length != 0;
@@ -110,7 +99,7 @@ void fs_init(fs_init_args_t* init_args)
     is_fs_init_completed = false;
     current_data_offset = 0;
 
-    // UID
+    // 0x00 - UID
     file_offsets[D7A_FILE_UID_FILE_ID] = current_data_offset;
     file_headers[D7A_FILE_UID_FILE_ID] = (fs_file_header_t){
         .file_properties.action_protocol_enabled = 0,
@@ -124,18 +113,32 @@ void fs_init(fs_init_args_t* init_args)
     memcpy(data + current_data_offset, &id_be, D7A_FILE_UID_SIZE);
     current_data_offset += D7A_FILE_UID_SIZE;
 
+
+    // 0x02 - Firmware version
+    file_offsets[D7A_FILE_FIRMWARE_VERSION_FILE_ID] = current_data_offset;
+    file_headers[D7A_FILE_FIRMWARE_VERSION_FILE_ID] = (fs_file_header_t){
+        .file_properties.action_protocol_enabled = 0,
+        .file_properties.storage_class = FS_STORAGE_PERMANENT,
+        .file_properties.permissions = 0, // TODO
+        .length = D7A_FILE_FIRMWARE_VERSION_SIZE
+    };
+
+    memset(data + current_data_offset, 0x00, D7A_FILE_FIRMWARE_VERSION_SIZE);
+    current_data_offset += D7A_FILE_FIRMWARE_VERSION_SIZE;
+
+    // 0x0A - DLL Configuration
     file_offsets[D7A_FILE_DLL_CONF_FILE_ID] = current_data_offset;
-	file_headers[D7A_FILE_DLL_CONF_FILE_ID] = (fs_file_header_t){
-		.file_properties.action_protocol_enabled = 0,
-		.file_properties.storage_class = FS_STORAGE_RESTORABLE,
-		.file_properties.permissions = 0, // TODO
-		.length = D7A_FILE_UID_SIZE
-	};
+    file_headers[D7A_FILE_DLL_CONF_FILE_ID] = (fs_file_header_t){
+        .file_properties.action_protocol_enabled = 0,
+        .file_properties.storage_class = FS_STORAGE_RESTORABLE,
+        .file_properties.permissions = 0, // TODO
+        .length = D7A_FILE_UID_SIZE
+    };
 
-	memset(data + current_data_offset, 0, D7A_FILE_DLL_CONF_SIZE);
-	current_data_offset += D7A_FILE_DLL_CONF_SIZE;
+    memset(data + current_data_offset, 0, D7A_FILE_DLL_CONF_SIZE);
+    current_data_offset += D7A_FILE_DLL_CONF_SIZE;
 
-    // access profiles
+    // 0x20+n - Access Profiles
     assert(init_args->access_profiles_count > 0 && init_args->access_profiles_count < 16);
     for(uint8_t i = 0; i < init_args->access_profiles_count; i++)
     {
