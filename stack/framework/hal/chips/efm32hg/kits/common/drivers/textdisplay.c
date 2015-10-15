@@ -452,7 +452,7 @@ EMSTATUS TEXTDISPLAY_WriteChar(TEXTDISPLAY_Handle_t  handle,
  * @return  EMSTATUS code of the operation.
  *****************************************************************************/
 EMSTATUS TEXTDISPLAY_WriteString(TEXTDISPLAY_Handle_t  handle,
-                                 char*                 str)
+                                 const char*                 str)
 {
   TEXTDISPLAY_Device_t*  textdisplay = (TEXTDISPLAY_Device_t*) handle;
   EMSTATUS               status;

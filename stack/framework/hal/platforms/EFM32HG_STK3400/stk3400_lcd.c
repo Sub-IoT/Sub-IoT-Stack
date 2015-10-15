@@ -52,7 +52,7 @@ void lcd_all_on()
 	//SegmentLCD_AllOn();
 }
 
-void lcd_write_string(char* text)
+void lcd_write_string(const char* text)
 {
 	TEXTDISPLAY_WriteString(h, text);
 }

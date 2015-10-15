@@ -93,7 +93,7 @@ EMSTATUS TEXTDISPLAY_Delete      (TEXTDISPLAY_Handle_t  handle);
 EMSTATUS TEXTDISPLAY_WriteChar   (TEXTDISPLAY_Handle_t  handle,
                                   char                  c);
 EMSTATUS TEXTDISPLAY_WriteString (TEXTDISPLAY_Handle_t  handle,
-                                  char*                 str);
+                                  const char*                 str);
 EMSTATUS TEXTDISPLAY_LfToCrLf    (TEXTDISPLAY_Handle_t  handle,
                                   bool                  on);
 
