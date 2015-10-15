@@ -100,5 +100,6 @@ void fs_read_access_class(uint8_t access_class_index, dae_access_profile_t* acce
 void fs_read_uid(uint8_t* buffer);
 void fs_read_vid(uint8_t* buffer);
 void fs_write_vid(uint8_t* buffer);
+uint8_t fs_get_file_length(uint8_t file_id);
 
 #endif /* FS_H_ */

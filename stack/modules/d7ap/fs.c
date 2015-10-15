@@ -269,3 +269,8 @@ void fs_read_access_class(uint8_t access_class_index, dae_access_profile_t *acce
     access_class->subbands[0].eirp = (*data_ptr); data_ptr++;
     access_class->subbands[0].ccao = (*data_ptr); data_ptr++;
 }
+
+uint8_t fs_get_file_length(uint8_t file_id) {
+  // assert(is_file_defined(file_id));
+  return file_headers[file_id].length;
+}
