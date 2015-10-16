@@ -303,16 +303,16 @@ bool d7asp_process_received_packet(packet_t* packet)
 
         if(alp_get_operation(packet->payload) == ALP_OP_RETURN_FILE_DATA)
         {
-            // received unsollicited data, notify appl and discard
+            // received unsollicited data, notify appl
             log_print_stack_string(LOG_STACK_SESSION, "Received unsollicited data");
             if(d7asp_init_args != NULL && d7asp_init_args->d7asp_received_unsollicited_data_cb != NULL)
                 d7asp_init_args->d7asp_received_unsollicited_data_cb(result, packet->payload, packet->payload_length, &packet->hw_radio_packet.rx_meta);
-
-            goto discard_request;
         }
-
-        // build response, we will reuse the same packet for this
-        alp_process_command(packet->payload, packet->payload_length, packet->payload, &packet->payload_length);
+        else
+        {
+            // build response, we will reuse the same packet for this
+            alp_process_command(packet->payload, packet->payload_length, packet->payload, &packet->payload_length);
+        }
 
         // TODO notify upper layer?
 
