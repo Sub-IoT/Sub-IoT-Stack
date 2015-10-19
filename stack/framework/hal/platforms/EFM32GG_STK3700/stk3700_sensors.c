@@ -23,6 +23,7 @@
 #include "scheduler.h"
 #include "em_gpio.h"
 #include "em_adc.h"
+#include "em_cmu.h"
 #include <string.h>
 #include <debug.h>
 
@@ -68,7 +69,7 @@ void internalTempSensor_init(void)
 	adc_calibrate();
 
 	// Initialises ADC
-	adc_init(adcReference1V25, adcSingleInpTemp);
+	adc_init(adcReference1V25, adcInputSingleTemp, 100);
 
 
 	/* This is a work around for Chip Rev.D Errata, Revision 0.6. */
@@ -121,8 +122,4 @@ float convertAdcToCelsius(int32_t adcSample)
 
   return temp;
 }
-
-
-
-
 

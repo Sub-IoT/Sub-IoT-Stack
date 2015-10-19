@@ -58,4 +58,13 @@ __LINK_C float tempsensor_read_celcius();
  */
 __LINK_C float convertAdcToCelsius(int32_t adcSample);
 
+
+__LINK_C void init_external_adc();
+
+__LINK_C void adc_start_scan();
+
+__LINK_C void adc_clear_scan_interupt();
+
+__LINK_C uint32_t adc_get_scan_result();
+
 #endif

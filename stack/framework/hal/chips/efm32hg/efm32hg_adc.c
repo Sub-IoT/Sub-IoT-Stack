@@ -230,7 +230,7 @@ void adc_calibrate()
 }
 
 
-void adc_init(ADC_Reference reference, uint16_t input)
+void adc_init(ADC_Reference reference, ADC_Input input, uint32_t adc_frequency)
 {
 	// Initialises clocks
 	CMU_ClockEnable(cmuClock_HFPER, true);
@@ -242,7 +242,7 @@ void adc_init(ADC_Reference reference, uint16_t input)
 
 	/* Initialize timebases */
 	init.timebase = ADC_TimebaseCalc(0);
-	init.prescale = ADC_PrescaleCalc(400000,0);
+	init.prescale = ADC_PrescaleCalc(adc_frequency,0);
 	ADC_Init(ADC0, &init);
 
 	switch (reference)
@@ -283,7 +283,19 @@ void adc_init(ADC_Reference reference, uint16_t input)
 		break;
 	}
 
-	sInit.input = input;
+	switch (input)
+		{
+			/** Temperature reference. */
+		case adcInputSingleTemp:
+			sInit.input = adcSingleInpTemp;
+			break;
+			/** Positive Ch4, negative Ch5. */
+		case adcInputSingleCh4Ch5:
+			sInit.input = adcSingleInpCh4Ch5;
+			sInit.diff = true;
+			break;
+		}
+
 	ADC_InitSingle(ADC0, &sInit);
 
 	/* Setup interrupt generation on completed conversion. */

@@ -65,7 +65,7 @@ void measureTemperature()
 	temperature = (int)(temp * 10);
 	lcd_write_temperature(temperature*10, 1);
 	
-	log_print_string("Temperature %2d,%2d C", (temperature/10), abs(temperature%10));
+	log_print_string("Temperature %2d.%2d C", (temperature/10), abs(temperature%10));
 }
 
 void execute_sensor_measurement()

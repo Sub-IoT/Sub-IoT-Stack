@@ -95,3 +95,15 @@ void lcd_show_ring(int segments)
 	}
 }
 
+void lcd_show_ring_segments(uint8_t segments)
+{
+	int i = 0;
+	for (;i<8;i++)
+	{
+		if (segments & 1 << i)
+			SegmentLCD_ARing(i, true);
+		else
+			SegmentLCD_ARing(i, false);
+	}
+}
+

@@ -38,6 +38,7 @@ void lcd_show_battery_indication(int batteryLevel); // 0 to 4
 void lcd_show_antenna(int show);
 
 void lcd_show_ring(int segments);
+void lcd_show_ring_segments(uint8_t segments);
 
 void lcd_write_temperature(int temperature, bool celcius); // temperature in centi degrees
 

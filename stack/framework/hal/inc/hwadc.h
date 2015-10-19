@@ -51,12 +51,20 @@ typedef enum
   adcReference2xVDD
 } ADC_Reference;
 
+typedef enum
+{
+	/** Temperature reference. */
+	adcInputSingleTemp,
+	/** Positive Ch4, negative Ch5. */
+	adcInputSingleCh4Ch5
+} ADC_Input;
+
 
 /*! \brief Initialises the ADC
  * 	\param reference selects the reference voltage used by the ADC
  * 	\param input selects the input used by the ADC
  */
-__LINK_C void adc_init(ADC_Reference reference, uint16_t input);
+__LINK_C void adc_init(ADC_Reference reference, ADC_Input input, uint32_t adc_frequency);
 
 /*! \brief Calibrates the ADC
  */

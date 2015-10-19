@@ -33,8 +33,8 @@ INCLUDE_DIRECTORIES(CMSIS/include
 		    kits/common/drivers
 		    kits/common/bsp
 		    usb/inc
-              glib
-              inc_platform
+			glib
+			inc_platform
 		    )
 
 ##Export the 'inc' directory globally		    
