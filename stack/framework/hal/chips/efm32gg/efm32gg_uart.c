@@ -20,7 +20,7 @@
  *
  *  \author jeremie@wizzilab.com
  *  \author maarten.weyn@uantwerpen.be
- *
+ *  \author contact@christophe.vg
  */
 
 #include <em_usart.h>
@@ -30,131 +30,159 @@
 #include "hwgpio.h"
 #include "hwuart.h"
 #include <assert.h>
-//contains the wiring for the uart
-//#include "platform.h"
 #include "em_gpio.h"
 
+typedef struct uart_defition {
+  CMU_Clock_TypeDef    clock;
+  USART_TypeDef*       channel;
+  IRQn_Type            tx_irqn;
+  IRQn_Type            rx_irqn;
+  uart_rx_inthandler_t rx_handler;
+  pin_id_t             tx_pin;
+  pin_id_t             rx_pin;
+  uint32_t             baud;
+  uint32_t             location;
+} uart_definition_t;
 
-static uart_rx_inthandler_t rx_cb = NULL;
+// support for two uarts
+static uart_definition_t uart[2] = {
+  {
+    .clock      = cmuClock_UART0,
+    .channel    = UART0,
+    .location   = UART_ROUTE_LOCATION_LOC1,
+    .tx_irqn    = UART0_TX_IRQn,
+    .rx_irqn    = UART0_RX_IRQn,
+    .rx_handler = NULL,
+    .baud       = 4800,
+  },
+  {
+    .clock      = cmuClock_UART1,
+    .channel    = UART1,
+    .location   = UART_ROUTE_LOCATION_LOC3,
+    .tx_irqn    = UART1_TX_IRQn,
+    .rx_irqn    = UART1_RX_IRQn,
+    .rx_handler = NULL,
+    .baud       = 4800,
+  }
+};
 
-void __uart_init()
-{
-    CMU_ClockEnable(cmuClock_GPIO, true);
-    CMU_ClockEnable(UART_CLOCK, true);
+void __uart_init() {
+  uart[0].tx_pin = E0;
+  uart[0].rx_pin = E1;
+  uart[1].tx_pin = E2;
+  uart[1].rx_pin = E3;
 
-    //GPIO_PinModeSet(UART_PORT, UART_PIN_TX, gpioModePushPullDrive,  1); // Configure UART TX pin as digital output, initialize high since UART TX idles high (otherwise glitches can occur)
-    //GPIO_PinModeSet(UART_PORT, UART_PIN_RX, gpioModeInput,          0);    // Configure UART RX pin as input (no filter)
-    //edit: do this via the hw_gpio_configure_pin interface to signal that the pins are in use
-    //note: normally this should be done in the platform-specific initialisation code BUT, since this is a driver for a device (uart) that is
-    //an integral part of the MCU we are certain this code will NOT be used in combination with a different MCU so we can do this here
-    error_t err;
-    err = hw_gpio_configure_pin(UART_PIN_TX, false, gpioModePushPullDrive, 1); assert(err == SUCCESS);// Configure UART TX pin as digital output, initialize high since UART TX idles high (otherwise glitches can occur)
-    err = hw_gpio_configure_pin(UART_PIN_RX, false, gpioModeInput, 0); assert(err == SUCCESS);    // Configure UART RX pin as input (no filter)
+  CMU_ClockEnable(cmuClock_GPIO, true);
 
-
-    USART_InitAsync_TypeDef uartInit =
-    {
-      .enable       = usartDisable,   // Wait to enable the transmitter and receiver
-      .refFreq      = 0,              // Setting refFreq to 0 will invoke the CMU_ClockFreqGet() function and measure the HFPER clock
-      .baudrate     = UART_BAUDRATE,  // Desired baud rate
-      .oversampling = usartOVS16,     // Set oversampling value to x16
-      .databits     = usartDatabits8, // 8 data bits
-      .parity       = usartNoParity,  // No parity bits
-      .stopbits     = usartStopbits1, // 1 stop bit
-      .mvdis        = false,          // Use majority voting
-      .prsRxEnable  = false,          // Not using PRS input
-      .prsRxCh      = usartPrsRxCh0,  // Doesn't matter which channel we select
-    };
-
-    USART_InitAsync(UART_CHANNEL, &uartInit);
-    UART_CHANNEL->ROUTE = UART_ROUTE_RXPEN | UART_ROUTE_TXPEN | UART_ROUTE_LOCATION; // Clear RX/TX buffers and shift regs, enable transmitter and receiver pins
-
-    USART_IntClear(UART_CHANNEL, _UART_IF_MASK);
-    NVIC_ClearPendingIRQ(UART0_RX_IRQn);
-    NVIC_ClearPendingIRQ(UART0_TX_IRQn);
-
-    USART_Enable(UART_CHANNEL, usartEnable);
+  __uart_init_port(1);
+  __uart_init_port(0);
 }
 
-void uart_transmit_data(int8_t data)
-{
+void __uart_init_port(uint8_t idx) {
+  CMU_ClockEnable(uart[idx].clock, true);
+
+  error_t err;
+  // configure UART TX pin as digital output, initialize high since UART TX
+  // idles high (otherwise glitches can occur)
+  err = hw_gpio_configure_pin(uart[idx].tx_pin, false, gpioModePushPullDrive, 1);
+  assert(err == SUCCESS);
+  // configure UART RX pin as input (no filter)
+  err = hw_gpio_configure_pin(uart[idx].rx_pin, false, gpioModeInput, 0);
+  assert(err == SUCCESS);
+
+  USART_InitAsync_TypeDef uartInit = {
+    .enable       = usartDisable,   // wait to enable the transceiver
+    .refFreq      = 0,              // setting refFreq to 0 will invoke the
+                                    // CMU_ClockFreqGet() function and measure
+                                    // the HFPER clock
+    .baudrate     = uart[idx].baud, // desired baud rate
+    .oversampling = usartOVS16,     // set oversampling value to x16
+    .databits     = usartDatabits8, // 8 data bits
+    .parity       = usartNoParity,  // no parity bits
+    .stopbits     = usartStopbits1, // 1 stop bit
+    .mvdis        = false,          // use majority voting
+    .prsRxEnable  = false,          // not using PRS input
+    .prsRxCh      = usartPrsRxCh0,  // doesn't matter which channel we select
+  };
+
+  USART_InitAsync(uart[idx].channel, &uartInit);
+  // clear RX/TX buffers and shift regs, enable transmitter and receiver pins
+  uart[idx].channel->ROUTE = UART_ROUTE_RXPEN | UART_ROUTE_TXPEN | uart[idx].location;
+  USART_IntClear(uart[idx].channel, _UART_IF_MASK);
+  NVIC_ClearPendingIRQ(uart[idx].rx_irqn);
+  NVIC_ClearPendingIRQ(uart[idx].tx_irqn);
+
+  USART_Enable(uart[idx].channel, usartEnable);
+}
+
+void uart_set_rx_interrupt_callback(uint8_t idx, uart_rx_inthandler_t rx_handler) {
+  uart[idx].rx_handler = rx_handler;
+}
+
+void uart_send_byte(uint8_t idx, uint8_t data) {
 #ifdef PLATFORM_USE_USB_CDC
 		while(USBD_EpIsBusy(0x81)){};
 		uint32_t tempData = data;
-		USBD_Write( 0x81, (void*) &tempData, 1, NULL);
+		USBD_Write(0x81, (void*)&tempData, 1, NULL);
 #else
-		while(!(UART_CHANNEL->STATUS & (1 << 6))) {}; // wait for TX buffer to empty
-		UART_CHANNEL->TXDATA = data;
+		while(!(uart[idx].channel->STATUS & (1 << 6))); // wait for TX buffer to empty
+		uart[idx].channel->TXDATA = data;
 #endif
 }
 
-void uart_transmit_message(void const *data, size_t length)
-{
+void uart_send_bytes(uint8_t idx, void const *data, size_t length) {
 #ifdef PLATFORM_USE_USB_CDC
-
-		// Print misaliged bytes first as individual bytes.
+    // print misaliged bytes first as individual bytes.
 		int8_t* tempData = (int8_t*) data;
-		while(((uint32_t)tempData & 3) && (length > 0))
-		{
-			uart_transmit_data(tempData[0]);
+		while(((uint32_t)tempData & 3) && (length > 0)) {
+			uart_send_byte(uart, tempData[0]);
 			tempData++;
 			length--;
 		}
 
-		if (length > 0)
-		{
-			while(USBD_EpIsBusy(0x81)){};
-			USBD_Write( 0x81, (void*) tempData, length, NULL);
+		if(length > 0) {
+			while(USBD_EpIsBusy(0x81));
+			USBD_Write(0x81, (void*)tempData, length, NULL);
 		}
 #else
-		unsigned char i=0;
-		for (; i<length; i++)
-		{
-			uart_transmit_data(((char const*)data)[i]);
+		for(uint8_t i=0; i<length; i++)	{
+			uart_send_byte(idx, ((uint8_t const*)data)[i]);
 		}
 #endif
 }
 
-void uart_transmit_string(const char *string)
-{
-    uart_transmit_message(string, strnlen(string, 100));
+void uart_send_string(uint8_t idx, const char *string) {
+  uart_send_bytes(idx, string, strnlen(string, 100));
 }
 
-void uart_set_rx_interrupt_callback(uart_rx_inthandler_t cb)
-{
-    rx_cb = cb;
+error_t uart_rx_interrupt_enable(uint8_t idx) {
+  if(uart[idx].rx_handler == NULL) { return EOFF; }
+  USART_IntClear(uart[idx].channel, _UART_IF_MASK);
+  USART_IntEnable(uart[idx].channel, UART_IF_RXDATAV);
+  NVIC_ClearPendingIRQ(uart[idx].tx_irqn);
+  NVIC_ClearPendingIRQ(uart[idx].rx_irqn);
+  NVIC_EnableIRQ(uart[idx].rx_irqn);
+  return SUCCESS;
 }
 
-error_t uart_rx_interrupt_enable(bool enabled)
-{
-    if(enabled)
-    {
-        if(rx_cb == NULL) return EOFF;
-
-        USART_IntClear(UART_CHANNEL, _UART_IF_MASK);
-        USART_IntEnable(UART_CHANNEL, UART_IF_RXDATAV);
-        NVIC_ClearPendingIRQ(UART0_RX_IRQn);
-        NVIC_ClearPendingIRQ(UART0_TX_IRQn);
-        NVIC_EnableIRQ(UART0_RX_IRQn);
-    }
-    else
-    {
-        USART_IntClear(UART_CHANNEL, _UART_IF_MASK);
-        USART_IntDisable(UART_CHANNEL, UART_IF_RXDATAV);
-        NVIC_ClearPendingIRQ(UART0_RX_IRQn);
-        NVIC_ClearPendingIRQ(UART0_TX_IRQn);
-        NVIC_DisableIRQ(UART0_RX_IRQn);
-    }
-
-    return SUCCESS;
+void uart_rx_interrupt_disable(uint8_t idx) {
+  USART_IntClear(uart[idx].channel, _UART_IF_MASK);
+  USART_IntDisable(uart[idx].channel, UART_IF_RXDATAV);
+  NVIC_ClearPendingIRQ(uart[idx].rx_irqn);
+  NVIC_ClearPendingIRQ(uart[idx].tx_irqn);
+  NVIC_DisableIRQ(uart[idx].rx_irqn);
 }
 
-void UART0_RX_IRQHandler(void)
-{
-    if (UART_CHANNEL->STATUS & UART_STATUS_RXDATAV)
-    {
-        uint8_t rx_data = USART_Rx(UART_CHANNEL);
-        rx_cb(rx_data);
-        USART_IntClear(UART_CHANNEL, UART_IF_RXDATAV);
-    }
+void UART0_RX_IRQHandler(void) {
+  if(uart[0].channel->STATUS & UART_STATUS_RXDATAV) {
+    uart[0].rx_handler(USART_Rx(uart[0].channel));
+    USART_IntClear(uart[0].channel, UART_IF_RXDATAV);
+  }
+}
+
+void UART1_RX_IRQHandler(void) {
+  if(uart[1].channel->STATUS & UART_STATUS_RXDATAV) {
+    uart[1].rx_handler(USART_Rx(uart[1].channel));
+    USART_IntClear(uart[1].channel, UART_IF_RXDATAV);
+  }
 }
