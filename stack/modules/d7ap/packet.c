@@ -50,7 +50,7 @@ void packet_assemble(packet_t* packet)
     // TODO network protocol footer
 
     // add CRC
-    uint16_t crc = __builtin_bswap16(crc_calculate(packet->hw_radio_packet.data, packet->hw_radio_packet.length - 2));
+    uint16_t crc = __builtin_bswap16(crc_calculate(packet->hw_radio_packet.data, packet->hw_radio_packet.length + 1 - 2));
     memcpy(data_ptr, &crc, 2);
 }
 
@@ -58,7 +58,7 @@ void packet_disassemble(packet_t* packet)
 {
     log_print_data(packet->hw_radio_packet.data, packet->hw_radio_packet.length + 1); // TODO tmp
 
-    uint16_t crc = __builtin_bswap16(crc_calculate(packet->hw_radio_packet.data, packet->hw_radio_packet.length - 2));
+    uint16_t crc = __builtin_bswap16(crc_calculate(packet->hw_radio_packet.data, packet->hw_radio_packet.length + 1 - 2));
     if(memcmp(&crc, packet->hw_radio_packet.data + packet->hw_radio_packet.length + 1 - 2, 2) != 0)
     {
         DPRINT(LOG_STACK_DLL, "CRC invalid");
