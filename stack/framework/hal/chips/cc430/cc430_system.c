@@ -95,4 +95,8 @@ void hw_busy_wait(int16_t microseconds)
     }
 }
 
+void hw_reset()
+{
+    WDTCTL = 0xDEAD; // wrong password will result in reset
+}
     
