@@ -29,6 +29,7 @@
 #include "dll.h"
 #include "ng.h"
 #include "log.h"
+#include "fs.h"
 
 static d7atp_addressee_t NGDEF(_current_addressee);
 #define current_addressee NG(_current_addressee)
@@ -38,6 +39,14 @@ static uint8_t NGDEF(_current_dialog_id);
 
 static uint8_t NGDEF(_current_transaction_id);
 #define current_transaction_id NG(_current_transaction_id)
+
+static uint8_t NGDEF(_current_access_class);
+#define current_access_class NG(_current_access_class)
+
+#define ACCESS_CLASS_NOT_SET 0xFF
+
+static dae_access_profile_t NGDEF(_active_addressee_access_profile);
+#define active_addressee_access_profile NG(_active_addressee_access_profile)
 
 typedef enum {
     D7ATP_STATE_IDLE,
@@ -114,9 +123,10 @@ void d7atp_init()
 {
     d7atp_state = D7ATP_STATE_IDLE;
     sched_register_task(&transaction_response_period_expired);
+    current_access_class = ACCESS_CLASS_NOT_SET;
 }
 
-void d7atp_start_dialog(uint8_t dialog_id, uint8_t transaction_id, bool is_last_transaction, packet_t* packet, session_qos_t* qos_settings, dae_access_profile_t* access_profile)
+void d7atp_start_dialog(uint8_t dialog_id, uint8_t transaction_id, bool is_last_transaction, packet_t* packet, session_qos_t* qos_settings)
 {
     assert(is_last_transaction); // multiple transactions in one dialog not supported yet
     switch_state(D7ATP_STATE_MASTER_TRANSACTION_REQUEST_PERIOD);
@@ -135,12 +145,16 @@ void d7atp_start_dialog(uint8_t dialog_id, uint8_t transaction_id, bool is_last_
     packet->d7atp_dialog_id = current_dialog_id;
     packet->d7atp_transaction_id = current_transaction_id;
 
+    uint8_t access_class = packet->d7atp_addressee->addressee_ctrl_access_class;
+    if(access_class != current_access_class)
+        fs_read_access_class(access_class, &active_addressee_access_profile);
+
     bool should_include_origin_template = false;
     if(packet->d7atp_ctrl.ctrl_is_start /*&& packet->d7atp_ctrl.ctrl_is_ack_requested*/) // TODO spec only requires this when both are true, however we MAY send origin when only first is true
         should_include_origin_template = true;
         // TODO also when responding to broadcast requests
 
-    d7anp_tx_foreground_frame(packet, should_include_origin_template);
+    d7anp_tx_foreground_frame(packet, should_include_origin_template, &active_addressee_access_profile);
 }
 
 void d7atp_respond_dialog(packet_t* packet)
@@ -158,7 +172,7 @@ void d7atp_respond_dialog(packet_t* packet)
 
     // dialog and transaction id remain the same
 
-    d7anp_tx_foreground_frame(packet, true);
+    d7anp_tx_foreground_frame(packet, true, &active_addressee_access_profile);
 }
 
 uint8_t d7atp_assemble_packet_header(packet_t* packet, uint8_t* data_ptr)

@@ -52,8 +52,11 @@ typedef enum
     DLL_STATE_TX_FOREGROUND_COMPLETED
 } dll_state_t;
 
-static dae_access_profile_t NGDEF(_current_access_class);
-#define current_access_class NG(_current_access_class)
+static dae_access_profile_t NGDEF(_scan_access_profile);
+#define scan_access_profile NG(_scan_access_profile)
+
+static dae_access_profile_t* NGDEF(_current_access_profile);
+#define current_access_profile NG(_current_access_profile)
 
 static dll_state_t NGDEF(_dll_state);
 #define dll_state NG(_dll_state)
@@ -237,8 +240,8 @@ static void execute_cca()
     DEBUG_PIN_CLR(2); // TODO tmp
 
     hw_rx_cfg_t rx_cfg =(hw_rx_cfg_t){
-        .channel_id.channel_header = current_access_class.subbands[0].channel_header,
-        .channel_id.center_freq_index = current_access_class.subbands[0].channel_index_start,
+        .channel_id.channel_header = current_access_profile->subbands[0].channel_header,
+        .channel_id.center_freq_index = current_access_profile->subbands[0].channel_index_start,
         .syncword_class = PHY_SYNCWORD_CLASS1,
     };
 
@@ -249,7 +252,7 @@ static uint16_t calculate_tx_duration()
 {
     int data_rate = 6; // Normal rate: 6.9 bytes/tick
     // TODO select correct subband
-    switch (current_access_class.subbands[0].channel_header.ch_class)
+    switch (current_access_profile->subbands[0].channel_header.ch_class)
     {
     case PHY_CLASS_LO_RATE:
         data_rate = 1; // Lo Rate: 1.2 bytes/tick
@@ -273,8 +276,8 @@ static void execute_csma_ca()
     {
         case DLL_STATE_CSMA_CA_STARTED:
         {
-            dll_tca = current_access_class.transmission_timeout_period - tx_duration;
-            DPRINT("Tca= %i = %i - %i", dll_tca, current_access_class.transmission_timeout_period, tx_duration);
+            dll_tca = current_access_profile->transmission_timeout_period - tx_duration;
+            DPRINT("Tca= %i = %i - %i", dll_tca, current_access_profile->transmission_timeout_period, tx_duration);
 
             if (dll_tca <= 0)
             {
@@ -288,7 +291,7 @@ static void execute_csma_ca()
 
             uint16_t t_offset = 0;
 
-            csma_ca_mode_t csma_ca_mode = current_access_class.control_csma_ca_mode;
+            csma_ca_mode_t csma_ca_mode = current_access_profile->control_csma_ca_mode;
             // TODO overrule mode to UNC for subsequent requests by the requester, or a single response to a unicast request
 
             switch(csma_ca_mode)
@@ -350,7 +353,7 @@ static void execute_csma_ca()
             dll_tca = dll_to;
             uint16_t t_offset = 0;
 
-            switch(current_access_class.control_csma_ca_mode)
+            switch(current_access_profile->control_csma_ca_mode)
             {
                 case CSMA_CA_MODE_AIND:
                 case CSMA_CA_MODE_RAIND:
@@ -401,21 +404,21 @@ static void execute_csma_ca()
 
 static void execute_scan_automation()
 {
-    if(current_access_class.control_scan_type_is_foreground && current_access_class.control_number_of_subbands > 0) // TODO background scan
+    if(current_access_profile->control_scan_type_is_foreground && current_access_profile->control_number_of_subbands > 0) // TODO background scan
     {
-        assert(current_access_class.control_number_of_subbands == 1); // TODO multiple not supported
+        assert(current_access_profile->control_number_of_subbands == 1); // TODO multiple not supported
         switch_state(DLL_STATE_SCAN_AUTOMATION);
         hw_rx_cfg_t rx_cfg = {
             .channel_id = {
-                .channel_header = current_access_class.subbands[0].channel_header,
-                .center_freq_index = current_access_class.subbands[0].channel_index_start
+                .channel_header = current_access_profile->subbands[0].channel_header,
+                .center_freq_index = current_access_profile->subbands[0].channel_index_start
             },
             .syncword_class = PHY_SYNCWORD_CLASS1
         };
 
         hw_radio_set_rx(&rx_cfg, &packet_received, NULL);
 
-        assert(current_access_class.scan_automation_period == 0); // scan automation period, assuming 0 for now
+        assert(current_access_profile->scan_automation_period == 0); // scan automation period, assuming 0 for now
     }
     else
     {
@@ -437,16 +440,18 @@ void dll_init()
 
     hw_radio_init(&alloc_new_packet, &release_packet);
 
-    fs_read_access_class(0, &current_access_class); // use first access class for now
+    fs_read_access_class(0, &scan_access_profile); // use first access class for now
+    current_access_profile = &scan_access_profile;
 
     dll_state = DLL_STATE_IDLE;
     sched_post_task(&execute_scan_automation);
 }
 
-void dll_tx_frame(packet_t* packet)
+void dll_tx_frame(packet_t* packet, dae_access_profile_t* access_profile)
 {
+    current_access_profile = access_profile;
     dll_header_t* dll_header = &(packet->dll_header);
-    dll_header->subnet = 0x05; // TODO hardcoded for now
+    dll_header->subnet = access_profile->subnet;
     dll_header->control_eirp_index = 0; // TODO hardcoded for now
     if(packet->d7atp_addressee != NULL)
     {
@@ -457,8 +462,8 @@ void dll_tx_frame(packet_t* packet)
     packet_assemble(packet);
 
     packet->hw_radio_packet.tx_meta.tx_cfg = (hw_tx_cfg_t){
-        .channel_id.channel_header = current_access_class.subbands[0].channel_header,
-        .channel_id.center_freq_index = current_access_class.subbands[0].channel_index_start,
+        .channel_id.channel_header = current_access_profile->subbands[0].channel_header,
+        .channel_id.center_freq_index = current_access_profile->subbands[0].channel_index_start,
         .syncword_class = PHY_SYNCWORD_CLASS1,
         .eirp = 10
     };
@@ -478,8 +483,8 @@ void dll_start_foreground_scan()
 
     hw_rx_cfg_t rx_cfg = {
         .channel_id = {
-            .channel_header = current_access_class.subbands[0].channel_header,
-            .center_freq_index = current_access_class.subbands[0].channel_index_start
+            .channel_header = current_access_profile->subbands[0].channel_header,
+            .center_freq_index = current_access_profile->subbands[0].channel_index_start
         },
         .syncword_class = PHY_SYNCWORD_CLASS1
     };
@@ -510,7 +515,7 @@ uint8_t dll_assemble_packet_header(packet_t* packet, uint8_t* data_ptr)
 bool dll_disassemble_packet_header(packet_t* packet, uint8_t* data_idx)
 {
     packet->dll_header.subnet = packet->hw_radio_packet.data[(*data_idx)]; (*data_idx)++;
-    if(packet->dll_header.subnet != current_access_class.subnet)
+    if(packet->dll_header.subnet != current_access_profile->subnet)
     {
         DPRINT("Subnet does not match current access profile, skipping packet");
         return false;

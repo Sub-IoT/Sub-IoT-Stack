@@ -25,6 +25,7 @@
 #include "stdint.h"
 #include "stdbool.h"
 
+#include "dae.h"
 
 typedef struct packet packet_t;
 
@@ -49,7 +50,7 @@ typedef struct {
     };
 } d7anp_ctrl_t;
 
-void d7anp_tx_foreground_frame(packet_t* packet, bool should_include_origin_template);
+void d7anp_tx_foreground_frame(packet_t* packet, bool should_include_origin_template, dae_access_profile_t* access_profile);
 uint8_t d7anp_assemble_packet_header(packet_t* packet, uint8_t* data_ptr);
 bool d7anp_disassemble_packet_header(packet_t* packet, uint8_t* packet_idx);
 

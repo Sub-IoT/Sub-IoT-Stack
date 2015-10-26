@@ -31,6 +31,8 @@
 
 #include "hwradio.h"
 
+#include "dae.h"
+
 #define E_CCA	-86 //TODO: get from file
 
 typedef struct packet packet_t;
@@ -52,7 +54,7 @@ typedef struct
 } dll_header_t;
 
 void dll_init();
-void dll_tx_frame(packet_t* packet);
+void dll_tx_frame(packet_t* packet, dae_access_profile_t* access_profile);
 void dll_start_foreground_scan();
 void dll_stop_foreground_scan();
 

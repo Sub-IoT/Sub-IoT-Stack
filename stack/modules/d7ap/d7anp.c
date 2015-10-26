@@ -24,7 +24,7 @@
 #include "packet.h"
 #include "fs.h"
 
-void d7anp_tx_foreground_frame(packet_t* packet, bool should_include_origin_template)
+void d7anp_tx_foreground_frame(packet_t* packet, bool should_include_origin_template, dae_access_profile_t* access_profile)
 {
     packet->d7anp_ctrl.nls_enabled = false;
     packet->d7anp_ctrl.hop_enabled = false;
@@ -38,7 +38,7 @@ void d7anp_tx_foreground_frame(packet_t* packet, bool should_include_origin_temp
 
     packet->d7anp_ctrl.origin_access_class = packet->d7atp_addressee->addressee_ctrl_access_class; // TODO validate
 
-    dll_tx_frame(packet);
+    dll_tx_frame(packet, access_profile);
 }
 
 uint8_t d7anp_assemble_packet_header(packet_t *packet, uint8_t *data_ptr)

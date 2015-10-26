@@ -50,14 +50,6 @@ static packet_t* NGDEF(_current_request_packet);
 static uint8_t NGDEF(_single_request_retry_limit);
 #define single_request_retry_limit NG(_single_request_retry_limit)
 
-static dae_access_profile_t NGDEF(_current_access_profile);
-#define current_access_profile NG(_current_access_profile)
-
-static uint8_t NGDEF(_current_access_class);
-#define current_access_class NG(_current_access_class)
-
-#define ACCESS_CLASS_NOT_SET 0xFF
-
 static d7asp_init_args_t* NGDEF(_d7asp_init_args);
 #define d7asp_init_args NG(_d7asp_init_args)
 
@@ -119,14 +111,10 @@ static void flush_fifos()
 
         current_request_packet = packet_queue_alloc_packet();
         packet_queue_mark_processing(current_request_packet);
-        current_request_packet->d7atp_addressee = &(fifo.config.addressee);
+        current_request_packet->d7atp_addressee = &(fifo.config.addressee); // TODO explicitly pass addressee down the stack layers?
 
         memcpy(current_request_packet->payload, fifo.request_buffer + fifo.requests_indices[current_request_id], fifo.requests_lengths[current_request_id]);
         current_request_packet->payload_length = fifo.requests_lengths[current_request_id];
-
-        uint8_t access_class = fifo.config.addressee.addressee_ctrl_access_class;
-        if(access_class != current_access_class)
-            fs_read_access_class(access_class, &current_access_profile);
     }
     else
     {
@@ -147,7 +135,7 @@ static void flush_fifos()
         // TODO stop on error
     }
 
-    d7atp_start_dialog(fifo.token, current_request_id, true, current_request_packet, &fifo.config.qos, &current_access_profile);
+    d7atp_start_dialog(fifo.token, current_request_id, true, current_request_packet, &fifo.config.qos);
 }
 
 
@@ -212,7 +200,6 @@ static void switch_state(state_t new_state)
 void d7asp_init(d7asp_init_args_t* init_args)
 {
     state = D7ASP_STATE_IDLE;
-    current_access_class = ACCESS_CLASS_NOT_SET;
     d7asp_init_args = init_args;
     current_request_id = NO_ACTIVE_REQUEST_ID;
 
@@ -307,6 +294,8 @@ bool d7asp_process_received_packet(packet_t* packet)
             log_print_stack_string(LOG_STACK_SESSION, "Received unsollicited data");
             if(d7asp_init_args != NULL && d7asp_init_args->d7asp_received_unsollicited_data_cb != NULL)
                 d7asp_init_args->d7asp_received_unsollicited_data_cb(result, packet->payload, packet->payload_length, &packet->hw_radio_packet.rx_meta);
+
+            packet->payload_length = 0; // no response payload
         }
         else
         {
