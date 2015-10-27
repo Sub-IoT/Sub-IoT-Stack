@@ -52,11 +52,15 @@ typedef enum
     DLL_STATE_TX_FOREGROUND_COMPLETED
 } dll_state_t;
 
+static dae_access_profile_t* NGDEF(_current_access_profile);
+#define current_access_profile NG(_current_access_profile)
+
 static dae_access_profile_t NGDEF(_scan_access_profile);
 #define scan_access_profile NG(_scan_access_profile)
 
-static dae_access_profile_t* NGDEF(_current_access_profile);
-#define current_access_profile NG(_current_access_profile)
+#define NO_ACTIVE_ACCESS_CLASS 0xFF
+static uint8_t NGDEF(_active_access_class) = NO_ACTIVE_ACCESS_CLASS;
+#define active_access_class NG(_active_access_class)
 
 static dll_state_t NGDEF(_dll_state);
 #define dll_state NG(_dll_state)
@@ -404,6 +408,15 @@ static void execute_csma_ca()
 
 static void execute_scan_automation()
 {
+    uint8_t scan_access_class = fs_read_dll_conf_active_access_class();
+    if(active_access_class != scan_access_class)
+    {
+        fs_read_access_class(scan_access_class, &scan_access_profile);
+        active_access_class = scan_access_class;
+    }
+
+    current_access_profile = &scan_access_profile;
+
     if(current_access_profile->control_scan_type_is_foreground && current_access_profile->control_number_of_subbands > 0) // TODO background scan
     {
         assert(current_access_profile->control_number_of_subbands == 1); // TODO multiple not supported
@@ -439,9 +452,6 @@ void dll_init()
     sched_register_task(&execute_scan_automation);
 
     hw_radio_init(&alloc_new_packet, &release_packet);
-
-    fs_read_access_class(0, &scan_access_profile); // use first access class for now
-    current_access_profile = &scan_access_profile;
 
     dll_state = DLL_STATE_IDLE;
     sched_post_task(&execute_scan_automation);

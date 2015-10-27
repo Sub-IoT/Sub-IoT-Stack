@@ -96,52 +96,73 @@ static void uart_rx_cb(char data)
 
 static void on_unsollicited_response_received(d7asp_result_t d7asp_result, uint8_t *alp_command, uint8_t alp_command_size, hw_rx_metadata_t* rx_meta)
 {
-    //led_on(0);
-	// TODO move this to log module so we can reuse this for other applications?
-//    uart_transmit_data(ALP_ITF_ID_D7ASP);
-//    uart_transmit_data(d7asp_result.status.raw);
-//    uart_transmit_data(d7asp_result.fifo_token);
-//    uart_transmit_data(d7asp_result.request_id);
-//    uart_transmit_data(d7asp_result.response_to);
-//    uart_transmit_data(d7asp_result.addressee.addressee_ctrl);
-//    uint8_t address_len = d7asp_result.addressee.addressee_ctrl_virtual_id? 2 : 8; // TODO according to spec this can be 1 byte as well?
-//    uart_transmit_message(d7asp_result.addressee.addressee_id, address_len);
-//    uart_transmit_message(alp_command, alp_command_size);
+    // TODO move this to separate module so we can reuse this for other applications?
+    uart_transmit_data(ALP_ITF_ID_D7ASP);
+    uart_transmit_data(d7asp_result.status.raw);
+    uart_transmit_data(d7asp_result.fifo_token);
+    uart_transmit_data(d7asp_result.request_id);
+    uart_transmit_data(d7asp_result.response_to);
+    uart_transmit_data(d7asp_result.addressee->addressee_ctrl);
+    uint8_t address_len = d7asp_result.addressee->addressee_ctrl_virtual_id? 2 : 8; // TODO according to spec this can be 1 byte as well?
+    uart_transmit_message(d7asp_result.addressee->addressee_id, address_len);
+    uart_transmit_message(alp_command, alp_command_size);
 }
 
 void bootstrap()
 {
-    dae_access_profile_t access_classes[1] = {
+    dae_access_profile_t access_classes[2] = {
         {
             .control_scan_type_is_foreground = true,
             .control_csma_ca_mode = CSMA_CA_MODE_UNC,
             .control_number_of_subbands = 1,
             .subnet = 0x05,
             .scan_automation_period = 0,
-            .transmission_timeout_period = 0xFF, // TODO compressed ticks value
+            .transmission_timeout_period = 0xFF,
             .subbands[0] = (subband_t){
                 .channel_header = {
                     .ch_coding = PHY_CODING_PN9,
                     .ch_class = PHY_CLASS_NORMAL_RATE,
                     .ch_freq_band = PHY_BAND_433
                 },
+                .channel_index_start = 0, // TODO tmp
+                .channel_index_end = 0, // TODO tmp
+                .eirp = 0,
+                .ccao = 0
+            }
+        },
+
+        {
+            .control_scan_type_is_foreground = true,
+            .control_csma_ca_mode = CSMA_CA_MODE_AIND, // TODO RIGD
+            .control_number_of_subbands = 1,
+            .subnet = 0x05,
+            .scan_automation_period = 0,
+            .transmission_timeout_period = 120,
+            .subbands[0] = (subband_t){
+                .channel_header = {
+                        .ch_coding = PHY_CODING_PN9,
+                        .ch_class = PHY_CLASS_NORMAL_RATE,
+                        .ch_freq_band = PHY_BAND_433
+                },
                 .channel_index_start = 16,
                 .channel_index_end = 16,
                 .eirp = 0,
                 .ccao = 0
-            }
+             }
         }
     };
 
     fs_init_args_t fs_init_args = (fs_init_args_t){
         .fs_user_files_init_cb = NULL,
-        .access_profiles_count = 1,
+        .access_profiles_count = 2,
         .access_profiles = access_classes
     };
 
     d7asp_init_args.d7asp_received_unsollicited_data_cb = &on_unsollicited_response_received;
 
     d7ap_stack_init(&fs_init_args, &d7asp_init_args);
+
+    fs_write_dll_conf_active_access_class(1); // use access class 1 for scan automation
 
     fifo_init(&uart_rx_fifo, uart_rx_buffer, sizeof(uart_rx_buffer));
 

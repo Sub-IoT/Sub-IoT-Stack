@@ -270,7 +270,20 @@ void fs_read_access_class(uint8_t access_class_index, dae_access_profile_t *acce
     access_class->subbands[0].ccao = (*data_ptr); data_ptr++;
 }
 
-uint8_t fs_get_file_length(uint8_t file_id) {
-  // assert(is_file_defined(file_id));
+uint8_t fs_read_dll_conf_active_access_class()
+{
+    uint8_t access_class;
+    fs_read_file(D7A_FILE_DLL_CONF_FILE_ID, 0, &access_class, 1);
+    return access_class;
+}
+
+void fs_write_dll_conf_active_access_class(uint8_t access_class)
+{
+    fs_write_file(D7A_FILE_DLL_CONF_FILE_ID, 0, &access_class, 1);
+}
+
+uint8_t fs_get_file_length(uint8_t file_id)
+{
+  assert(is_file_defined(file_id));
   return file_headers[file_id].length;
 }

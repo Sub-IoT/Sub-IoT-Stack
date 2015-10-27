@@ -220,7 +220,7 @@ void d7atp_signal_packet_transmitted(packet_t* packet)
     else
         assert(false);
 
-    uint8_t transaction_response_period = 120; // TODO get from upper layer, hardcoded period for now
+    uint8_t transaction_response_period = active_addressee_access_profile.transmission_timeout_period;
     log_print_stack_string(LOG_STACK_TRANS, "Packet transmitted, starting response period timer (%i ticks)", transaction_response_period);
     // TODO find out difference between dialog timeout and transaction response period
 
@@ -279,6 +279,14 @@ void d7atp_process_received_packet(packet_t* packet)
         current_addressee.addressee_ctrl_access_class = packet->d7anp_ctrl.origin_access_class;
         memcpy(current_addressee.addressee_id, packet->origin_access_id, 8);
         packet->d7atp_addressee = &current_addressee;
+
+        // set active_addressee_access_profile to the access_profile we received the request on
+        uint8_t access_class_received = fs_read_dll_conf_active_access_class();
+        if(current_access_class != access_class_received)
+        {
+            fs_read_access_class(access_class_received, &active_addressee_access_profile);
+            current_access_class = access_class_received;
+        }
     }
 
     if(!d7asp_process_received_packet(packet))
