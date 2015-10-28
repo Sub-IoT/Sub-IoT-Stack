@@ -141,7 +141,7 @@ void bootstrap()
             .subbands[0] = (subband_t){
                 .channel_header = {
                         .ch_coding = PHY_CODING_PN9,
-                        .ch_class = PHY_CLASS_NORMAL_RATE,
+                        .ch_class = PHY_CLASS_LO_RATE,
                         .ch_freq_band = PHY_BAND_433
                 },
                 .channel_index_start = 16,
