@@ -72,6 +72,7 @@ ADD_LIBRARY (${CHIP_LIBRARY_NAME} OBJECT
                     emlib/src/em_timer.c
                     emlib/src/em_prs.c
                     emlib/src/em_i2c.c
+                    emlib/src/em_wdog.c
                     kits/common/drivers/dmactrl.c
                     kits/common/drivers/gpiointerrupt.c
                     kits/common/drivers/display.c
@@ -93,6 +94,7 @@ ADD_LIBRARY (${CHIP_LIBRARY_NAME} OBJECT
                     efm32hg_gpio.c                    
                     efm32hg_pins.c                   
                     efm32hg_i2c.c 
+                    efm32hg_watchdog.c
 		    		usb/src/em_usbd.c  
 		    		usb/src/em_usbdch9.c 
 		    		usb/src/em_usbdep.c 
