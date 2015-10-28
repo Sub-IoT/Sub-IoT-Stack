@@ -133,7 +133,7 @@ void bootstrap()
 
         {
             .control_scan_type_is_foreground = true,
-            .control_csma_ca_mode = CSMA_CA_MODE_AIND, // TODO RIGD
+            .control_csma_ca_mode = CSMA_CA_MODE_RIGD,
             .control_number_of_subbands = 1,
             .subnet = 0x05,
             .scan_automation_period = 0,

@@ -83,6 +83,7 @@ uint64_t hw_get_unique_id()
     pointer = (unsigned char*) &(pDIEREC->die_y_position);
     tagId[6] = pointer[1];
     tagId[7] = pointer[0];
+    return (uint64_t) tagId;
 }
 
 void hw_busy_wait(int16_t microseconds)

@@ -32,6 +32,7 @@
 #include "packet.h"
 #include "hwdebug.h"
 #include "random.h"
+#include "hwwatchdog.h"
 
 static d7asp_fifo_t NGDEF(_fifo); // TODO we only use 1 fifo for now, should be multiple later (1 per on unique addressee and QoS combination)
 #define fifo NG(_fifo)
@@ -89,6 +90,7 @@ static void flush_fifos()
 {
     assert(state == D7ASP_STATE_MASTER);
     log_print_stack_string(LOG_STACK_SESSION, "Flushing FIFOs");
+    hw_watchdog_feed(); // TODO do here?
 
     if(current_request_id == NO_ACTIVE_REQUEST_ID)
     {
@@ -246,6 +248,7 @@ d7asp_queue_result_t d7asp_queue_alp_actions(d7asp_fifo_config_t* d7asp_fifo_con
 
 bool d7asp_process_received_packet(packet_t* packet)
 {
+    hw_watchdog_feed(); // TODO do here?
     d7asp_result_t result = {
         .status = {
             .session_state = SESSION_STATE_DONE, // TODO

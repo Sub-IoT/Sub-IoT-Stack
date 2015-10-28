@@ -25,6 +25,7 @@
 #include "hwusb.h"
 #include "efm32gg_mcu.h"
 #include "hwdebug.h"
+#include "hwwatchdog.h"
 #include "platform.h"
 #include "userbutton.h"
 #include "platform_sensors.h"
@@ -56,6 +57,8 @@ void __platform_init()
     error_t err;
     err = hw_gpio_configure_pin(BUTTON0, true, gpioModeInput, 0); assert(err == SUCCESS); // TODO pull up or pull down to prevent floating
     err = hw_gpio_configure_pin(BUTTON1, true, gpioModeInput, 0); assert(err == SUCCESS); // TODO pull up or pull down to prevent floating
+
+    __watchdog_init(); // TODO configure from cmake?
 }
 
 void __platform_post_framework_init()

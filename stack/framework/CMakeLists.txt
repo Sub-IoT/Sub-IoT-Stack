@@ -98,6 +98,7 @@ SET(HAL_API_HEADERS
         hal/inc/hwuart.h
         hal/inc/hwtimer.h
         hal/inc/hwspi.h
+        hal/inc/hwwatchdog.h
 )
 
 # Assemble the library
