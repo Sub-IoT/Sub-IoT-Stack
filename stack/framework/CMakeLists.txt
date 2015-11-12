@@ -44,7 +44,7 @@ FRAMEWORK_HEADER_DEFINE(NUMBER FRAMEWORK_SCHEDULER_LP_MODE)
 SET(FRAMEWORK_LOG_BINARY "TRUE" CACHE BOOL "Use binary logging format (which can be parsed by pylogger tool)")
 FRAMEWORK_HEADER_DEFINE(BOOL FRAMEWORK_LOG_BINARY)
 
-SET(FRAMEWORK_LOG_ENABLED "TRUE" CACHE BOOL "Select whether to enable or disable the generation of logs")
+SET(FRAMEWORK_LOG_ENABLED "FALSE" CACHE BOOL "Select whether to enable or disable the generation of logs")
 FRAMEWORK_HEADER_DEFINE(BOOL FRAMEWORK_LOG_ENABLED)
 
 SET(FRAMEWORK_DEBUG_ASSERT_MINIMAL "FALSE" CACHE BOOL "Enabling this strips file, line functino and condition information from asserts, to save ROM")
