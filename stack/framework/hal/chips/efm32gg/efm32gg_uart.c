@@ -53,7 +53,7 @@ static uart_definition_t uart[2] = {
     .tx_irqn    = UART0_TX_IRQn,
     .rx_irqn    = UART0_RX_IRQn,
     .rx_handler = NULL,
-    .baud       = 9600,
+    .baud       = UART0_BAUDRATE,
   },
   {
     .clock      = cmuClock_UART1,
@@ -62,7 +62,7 @@ static uart_definition_t uart[2] = {
     .tx_irqn    = UART1_TX_IRQn,
     .rx_irqn    = UART1_RX_IRQn,
     .rx_handler = NULL,
-    .baud       = 9600,
+    .baud       = UART1_BAUDRATE,
   }
 };
 
