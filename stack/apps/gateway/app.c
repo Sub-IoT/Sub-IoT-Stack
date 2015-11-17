@@ -37,66 +37,13 @@
 #include "dll.h"
 #include "hwuart.h"
 #include "fifo.h"
-
-#define UART_RX_BUFFER_SIZE 50
-
-static uint8_t uart_rx_buffer[UART_RX_BUFFER_SIZE] = { 0 };
-static fifo_t uart_rx_fifo;
+#include "uart_alp_interface.h"
 
 static d7asp_init_args_t d7asp_init_args;
 
-static void process_uart_rx_fifo()
-{
-    // expected: <0xCE> <Length byte> <0xD7> <D7ASP fifo config> <ALP command>
-    // where length is the length of D7ASP fifo config and ALP command
-    if(fifo_get_size(&uart_rx_fifo) > 3)
-    {
-        uint8_t alp_command[MODULE_D7AP_FIFO_COMMAND_BUFFER_SIZE] = { 0x00 };
-        fifo_peek(&uart_rx_fifo, alp_command, 0, 3);
-        if(alp_command[0] != 0xCE)
-        {
-            // unexpected data, pop and return
-            fifo_pop(&uart_rx_fifo, alp_command, 1);
-            return;
-        }
-
-        assert(alp_command[2] == ALP_ITF_ID_D7ASP);
-        uint8_t length = alp_command[1];
-        if(fifo_get_size(&uart_rx_fifo) >= 3 + length)
-        {
-            // complete command received
-            fifo_pop(&uart_rx_fifo, alp_command, 3); // we don't need the header anymore
-
-            // first pop D7ASP fifo config
-            fifo_pop(&uart_rx_fifo, alp_command, D7ASP_FIFO_CONFIG_SIZE);
-            d7asp_fifo_config_t fifo_config;
-            fifo_config.fifo_ctrl = alp_command[0];
-            memcpy(&(fifo_config.qos), alp_command + 1, 4);
-            fifo_config.dormant_timeout = alp_command[5];
-            fifo_config.start_id = alp_command[6];
-            memcpy(&(fifo_config.addressee), alp_command + 7, 9);
-
-            // and now ALP command
-            uint8_t alp_command_length = length - D7ASP_FIFO_CONFIG_SIZE;
-            fifo_pop(&uart_rx_fifo, alp_command, alp_command_length);
-            d7asp_queue_alp_actions(&fifo_config, alp_command, alp_command_length);
-        }
-
-        sched_post_task(&process_uart_rx_fifo);
-    }
-}
-
-static void uart_rx_cb(char data)
-{
-    error_t err;
-    err = fifo_put(&uart_rx_fifo, &data, 1); assert(err == SUCCESS);
-    if(!sched_is_scheduled(&process_uart_rx_fifo))
-        sched_post_task(&process_uart_rx_fifo);
-}
-
 static void on_unsollicited_response_received(d7asp_result_t d7asp_result, uint8_t *alp_command, uint8_t alp_command_size, hw_rx_metadata_t* rx_meta)
 {
-    // TODO move this to separate module so we can reuse this for other applications?
+    // TODO move to uart_alp_interface module
     uart_transmit_data(ALP_ITF_ID_D7ASP);
     uart_transmit_data(d7asp_result.status.raw);
     uart_transmit_data(d7asp_result.fifo_token);
@@ -106,6 +53,12 @@ static void on_unsollicited_response_received(d7asp_result_t d7asp_result, uint8
     uint8_t address_len = d7asp_result.addressee->addressee_ctrl_virtual_id? 2 : 8; // TODO according to spec this can be 1 byte as well?
     uart_transmit_message(d7asp_result.addressee->addressee_id, address_len);
     uart_transmit_message(alp_command, alp_command_size);
+}
+
+static void notify_booted()
+{
+    uint8_t alp_command[] = { 0x01, D7A_FILE_FIRMWARE_VERSION_FILE_ID, 0, D7A_FILE_FIRMWARE_VERSION_SIZE };
+    uart_alp_interface_process_command(alp_command, sizeof(alp_command));
 }
 
 void bootstrap()
@@ -164,13 +117,10 @@ void bootstrap()
 
     fs_write_dll_conf_active_access_class(1); // use access class 1 for scan automation
 
-    fifo_init(&uart_rx_fifo, uart_rx_buffer, sizeof(uart_rx_buffer));
-
-    uart_set_rx_interrupt_callback(&uart_rx_cb);
-    uart_rx_interrupt_enable(true);
-
-    sched_register_task(&process_uart_rx_fifo);
+    uart_alp_interface_init();
 
     lcd_write_string("started");
+
+    notify_booted();
 }
 
