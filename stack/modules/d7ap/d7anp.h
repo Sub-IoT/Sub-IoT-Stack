@@ -29,8 +29,6 @@
 
 typedef struct packet packet_t;
 
-#define BITS_BIG_ENDIAN 1 // TODO tmp
-
 /*! \brief The D7ANP CTRL header
  *
  * note: bit order is important here since this is send over the air. We explicitly reverse the order to ensure BE.

@@ -59,7 +59,7 @@ static dae_access_profile_t NGDEF(_scan_access_profile);
 #define scan_access_profile NG(_scan_access_profile)
 
 #define NO_ACTIVE_ACCESS_CLASS 0xFF
-static uint8_t NGDEF(_active_access_class) = NO_ACTIVE_ACCESS_CLASS;
+static uint8_t NGDEF(_active_access_class);
 #define active_access_class NG(_active_access_class)
 
 static dll_state_t NGDEF(_dll_state);
@@ -454,6 +454,7 @@ void dll_init()
     hw_radio_init(&alloc_new_packet, &release_packet);
 
     dll_state = DLL_STATE_IDLE;
+    active_access_class = NO_ACTIVE_ACCESS_CLASS;
     sched_post_task(&execute_scan_automation);
 }
 
