@@ -24,29 +24,39 @@
  * \brief HAL API for SPI
  *
  * \author jan.stevens@ieee.org
+ * \author contact@christophe.vg
  */
 
 #ifndef SPI_H_
 #define SPI_H_
 
+#include "hwgpio.h"
+
 #include "types.h"
 #include "link_c.h"
 
-#define DATARATE 115200
+typedef struct spi_definition {
+  uint8_t   usart;
+  uint32_t  baudrate;
+  uint8_t   databits;
+  uint8_t   location;
+} spi_definition_t;
 
-__LINK_C void spi_init();
+__LINK_C void spi_init(spi_definition_t spi);
+
+__LINK_C void spi_init_slave(pin_id_t slave);
 
 __LINK_C void spi_auto_cs_on(void);
 
 __LINK_C void spi_auto_cs_off(void);
 
-__LINK_C void spi_select_chip(void);
+#define spi_select(slave)   hw_gpio_clr(slave)
+#define spi_deselect(slave) hw_gpio_set(slave);
 
-__LINK_C void spi_deselect_chip(void);
+__LINK_C uint8_t spi_byte(uint8_t channel, uint8_t data); // bi-dir transfer
+__LINK_C void    spi_send(uint8_t channel, uint16_t data); // send only
 
-__LINK_C uint8_t spi_byte(uint8_t data);
-
-__LINK_C void spi_string(uint8_t *TxData, uint8_t *RxData, size_t length);
+__LINK_C void spi_string(uint8_t channel, uint8_t *TxData, uint8_t *RxData, size_t length);
 
 #endif /* SPI_H_ */
 
