@@ -45,37 +45,51 @@ typedef struct uart_defition {
 } uart_definition_t;
 
 // support for two uarts
-static uart_definition_t uart[2] = {
+static uart_definition_t uart[3] = {
+  // UART0
   {
     .clock      = cmuClock_UART0,
     .channel    = UART0,
-    .location   = UART_ROUTE_LOCATION_LOC1,
     .tx_irqn    = UART0_TX_IRQn,
     .rx_irqn    = UART0_RX_IRQn,
     .rx_handler = NULL,
+    .location   = UART_ROUTE_LOCATION_LOC1,
+    .tx_pin     = { .port = gpioPortE, .pin = 0 },
+    .rx_pin     = { .port = gpioPortE, .pin = 1 },
     .baud       = UART0_BAUDRATE,
   },
+  // UART1
   {
     .clock      = cmuClock_UART1,
     .channel    = UART1,
-    .location   = UART_ROUTE_LOCATION_LOC3,
     .tx_irqn    = UART1_TX_IRQn,
     .rx_irqn    = UART1_RX_IRQn,
     .rx_handler = NULL,
-    .baud       = UART1_BAUDRATE,
+    .location   = UART_ROUTE_LOCATION_LOC3,
+    .tx_pin     = { .port = gpioPortE, .pin = 2 },
+    .rx_pin     = { .port = gpioPortE, .pin = 3 },
+    .baud       = UART1_BAUDRATE
+  },
+  // U_S_ART2
+  {
+    .clock      = cmuClock_USART2,
+    .channel    = USART2,
+    .tx_irqn    = USART2_TX_IRQn,
+    .rx_irqn    = USART2_RX_IRQn,
+    .rx_handler = NULL,
+    .location   = USART_ROUTE_LOCATION_LOC0,
+    .tx_pin     = { .port = gpioPortC, .pin = 2 },
+    .rx_pin     = { .port = gpioPortC, .pin = 3 },
+    .baud       = USART2_BAUDRATE
   }
 };
 
 void __uart_init() {
-  uart[0].tx_pin = E0;
-  uart[0].rx_pin = E1;
-  uart[1].tx_pin = E2;
-  uart[1].rx_pin = E3;
-
   CMU_ClockEnable(cmuClock_GPIO, true);
 
-  __uart_init_port(1);
   __uart_init_port(0);
+  __uart_init_port(1);
+  __uart_init_port(2);
 }
 
 void __uart_init_port(uint8_t idx) {
