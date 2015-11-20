@@ -16,17 +16,24 @@
  * limitations under the License.
  */
 
-/*
- * \author	glenn.ergeerts@uantwerpen.be
+/*!
+ * \file shell.h
+ * \addtogroup shell
+ * \ingroup framework
+ * @{
+ * \brief Implements a shell interface
+ * \author glenn.ergeerts@uantwerpen.be
  */
+#ifndef SHELL_H_
+#define SHELL_H_
 
-#ifndef UART_ALP_INTERFACE_H
-#define UART_ALP_INTERFACE_H
-
+#include "link_c.h"
 #include "types.h"
+#include "errors.h"
 
-void uart_alp_interface_init();
+void shell_init();
+void shell_register_handler();
 
-void uart_alp_interface_process_command(uint8_t* alp_command, uint8_t alp_command_length);
+#endif /* SHELL_H_ */
 
-#endif // UART_ALP_INTERFACE_H
+/** @}*/

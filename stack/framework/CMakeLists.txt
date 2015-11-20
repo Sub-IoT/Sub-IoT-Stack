@@ -86,6 +86,7 @@ SET(FRAMEWORK_HEADERS
         inc/fifo.h
         inc/bitmap.h
         inc/debug.h
+        inc/shell.h
 )
 
 SET(HAL_API_HEADERS
