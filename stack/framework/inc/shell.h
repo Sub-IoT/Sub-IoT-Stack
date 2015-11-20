@@ -27,12 +27,21 @@
 #ifndef SHELL_H_
 #define SHELL_H_
 
+#define SHELL_CMD_HEADER_SIZE 4
+
 #include "link_c.h"
 #include "types.h"
 #include "errors.h"
+#include "fifo.h"
+
+typedef void (*cmd_handler_t)(fifo_t* cmd_fifo);
+typedef struct {
+    int8_t id;
+    cmd_handler_t cmd_handler_callback;
+} cmd_handler_registration_t;
 
 void shell_init();
-void shell_register_handler();
+void shell_register_handler(cmd_handler_registration_t handler_registration);
 
 #endif /* SHELL_H_ */
 

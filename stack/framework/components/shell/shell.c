@@ -26,26 +26,16 @@
 
 
 #define CMD_BUFFER_SIZE 256
-#define CMD_HEADER_SIZE 4
 #define CMD_HANDLER_REGISTRATIONS_COUNT 3 // TODO configurable using cmake
 
-#include "types.h"
-#include "fifo.h"
 #include "hwuart.h"
-#include "debug.h"
 #include "scheduler.h"
 #include "hwsystem.h"
+#include "debug.h"
 
 
 static uint8_t cmd_buffer[CMD_BUFFER_SIZE] = { 0 };
 static fifo_t cmd_fifo;
-
-typedef void (*cmd_handler_t)(fifo_t* cmd_fifo);
-typedef struct {
-    int8_t id;
-    cmd_handler_t cmd_handler_callback;
-} cmd_handler_registration_t;
-
 static cmd_handler_registration_t cmd_handler_registrations[CMD_HANDLER_REGISTRATIONS_COUNT];
 
 static void process_shell_cmd(char cmd)
@@ -61,6 +51,17 @@ static void process_shell_cmd(char cmd)
     }
 }
 
+static cmd_handler_t get_cmd_handler_callback(int8_t id)
+{
+    for(uint8_t i = 0; i < CMD_HANDLER_REGISTRATIONS_COUNT; i++)
+    {
+        if(cmd_handler_registrations[i].id == id)
+            return cmd_handler_registrations[i].cmd_handler_callback;
+    }
+
+    assert(false);
+}
+
 // TODO doc
 // ATx\r : shell command, where x is a char which maps to a command.
 // List of supported commands:
@@ -73,8 +74,8 @@ static void process_cmd_fifo()
 {
     if(fifo_get_size(&cmd_fifo) > 2)
     {
-        uint8_t cmd_header[CMD_HEADER_SIZE];
-        fifo_peek(&cmd_fifo, cmd_header, 0, CMD_HEADER_SIZE);
+        uint8_t cmd_header[SHELL_CMD_HEADER_SIZE];
+        fifo_peek(&cmd_fifo, cmd_header, 0, SHELL_CMD_HEADER_SIZE);
         if(cmd_header[0] != 'A' || cmd_header[1] != 'T')
         {
             // unexpected data, pop and return
@@ -87,19 +88,11 @@ static void process_cmd_fifo()
         if(cmd_header[2] != '$')
         {
             process_shell_cmd(cmd_header[2]);
-            fifo_pop(&cmd_fifo, cmd_header, CMD_HEADER_SIZE);
+            fifo_pop(&cmd_fifo, cmd_header, SHELL_CMD_HEADER_SIZE);
         }
         else
         {
-            uint8_t handler_id = cmd_header[3];
-            for(int i = 0; i < CMD_HANDLER_REGISTRATIONS_COUNT; i++)
-            {
-                if(cmd_handler_registrations[i].id == handler_id)
-                {
-                    cmd_handler_registrations[i].cmd_handler_callback(&cmd_fifo);
-                    break;
-                }
-            }
+            get_cmd_handler_callback(cmd_header[3])(&cmd_fifo);
         }
 
         sched_post_task(&process_cmd_fifo);
@@ -128,4 +121,25 @@ void shell_init()
     uart_rx_interrupt_enable(true);
 
     sched_register_task(&process_cmd_fifo);
+}
+
+void shell_register_handler(cmd_handler_registration_t handler_registration)
+{
+    assert(handler_registration.id < 64);
+    assert(handler_registration.cmd_handler_callback != NULL);
+
+    int8_t empty_index = -1;
+    for(uint8_t i = 0; i < CMD_HANDLER_REGISTRATIONS_COUNT; i++)
+    {
+        // always loop over all values to check if already registered
+        int8_t current_id = cmd_handler_registrations[i].id;
+        if(current_id == -1 && empty_index == -1)
+            empty_index = i;
+
+        assert(current_id != handler_registration.id); // already registered
+    }
+
+    assert(empty_index != -1); // no empty spot found
+
+    cmd_handler_registrations[empty_index] = handler_registration;
 }
