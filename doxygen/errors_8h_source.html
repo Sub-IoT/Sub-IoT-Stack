@@ -146,60 +146,61 @@ $(document).ready(function(){initNavTree('errors_8h_source.html','');});
 <div class="line"><a name="l00036"></a><span class="lineno">   36</span>&#160;<span class="comment"> *</span></div>
 <div class="line"><a name="l00037"></a><span class="lineno">   37</span>&#160;<span class="comment"> */</span></div>
 <div class="line"><a name="l00038"></a><span class="lineno"><a class="line" href="errors_8h.html#abb508ea8227673f419e9fe3a86c30d8e">   38</a></span>&#160;<span class="preprocessor">#define FAIL        5001</span></div>
-<div class="line"><a name="l00039"></a><span class="lineno">   39</span>&#160;  </div>
-<div class="line"><a name="l00040"></a><span class="lineno">   40</span>&#160;<span class="comment">/* \brief Parameter passed in was too big, or outside the expected range</span></div>
-<div class="line"><a name="l00041"></a><span class="lineno">   41</span>&#160;<span class="comment"> *</span></div>
-<div class="line"><a name="l00042"></a><span class="lineno">   42</span>&#160;<span class="comment"> */</span></div>
-<div class="line"><a name="l00043"></a><span class="lineno"><a class="line" href="errors_8h.html#acb09eefda9ef228712245d1104fe9c89">   43</a></span>&#160;<span class="preprocessor">#define ESIZE       5002</span></div>
-<div class="line"><a name="l00044"></a><span class="lineno">   44</span>&#160;  </div>
-<div class="line"><a name="l00045"></a><span class="lineno">   45</span>&#160;<span class="comment">/* \brief Operation cancelled by a call.</span></div>
-<div class="line"><a name="l00046"></a><span class="lineno">   46</span>&#160;<span class="comment"> *</span></div>
-<div class="line"><a name="l00047"></a><span class="lineno">   47</span>&#160;<span class="comment"> */</span></div>
-<div class="line"><a name="l00048"></a><span class="lineno"><a class="line" href="errors_8h.html#aa1605b10172e0c8572546710ed9e2fd0">   48</a></span>&#160;<span class="preprocessor">#define ECANCEL     5003</span></div>
-<div class="line"><a name="l00049"></a><span class="lineno">   49</span>&#160;  </div>
-<div class="line"><a name="l00050"></a><span class="lineno">   50</span>&#160;<span class="comment">/* \brief Subsystem is not active</span></div>
-<div class="line"><a name="l00051"></a><span class="lineno">   51</span>&#160;<span class="comment"> *</span></div>
-<div class="line"><a name="l00052"></a><span class="lineno">   52</span>&#160;<span class="comment"> */</span></div>
-<div class="line"><a name="l00053"></a><span class="lineno"><a class="line" href="errors_8h.html#af160ef97ab3d528fdc5d444e2570f1c8">   53</a></span>&#160;<span class="preprocessor">#define EOFF        5004</span></div>
-<div class="line"><a name="l00054"></a><span class="lineno">   54</span>&#160;  </div>
-<div class="line"><a name="l00055"></a><span class="lineno">   55</span>&#160;<span class="comment">/* \brief The underlying system is busy; retry later</span></div>
-<div class="line"><a name="l00056"></a><span class="lineno">   56</span>&#160;<span class="comment"> *</span></div>
-<div class="line"><a name="l00057"></a><span class="lineno">   57</span>&#160;<span class="comment"> */</span></div>
-<div class="line"><a name="l00058"></a><span class="lineno">   58</span>&#160;<span class="comment">//#define   EBUSY   (already defined in errno.h)</span></div>
-<div class="line"><a name="l00059"></a><span class="lineno">   59</span>&#160;  </div>
-<div class="line"><a name="l00060"></a><span class="lineno">   60</span>&#160;<span class="comment">/* \brief An invalid parameter was passed</span></div>
-<div class="line"><a name="l00061"></a><span class="lineno">   61</span>&#160;<span class="comment"> *</span></div>
-<div class="line"><a name="l00062"></a><span class="lineno">   62</span>&#160;<span class="comment"> */</span></div>
-<div class="line"><a name="l00063"></a><span class="lineno">   63</span>&#160;<span class="comment">//#define EINVAL    (already defined in errno.h)</span></div>
-<div class="line"><a name="l00064"></a><span class="lineno">   64</span>&#160;  </div>
-<div class="line"><a name="l00065"></a><span class="lineno">   65</span>&#160;<span class="comment">/* \brief A rare and transient failure: can retry</span></div>
-<div class="line"><a name="l00066"></a><span class="lineno">   66</span>&#160;<span class="comment"> *</span></div>
-<div class="line"><a name="l00067"></a><span class="lineno">   67</span>&#160;<span class="comment"> */</span></div>
-<div class="line"><a name="l00068"></a><span class="lineno"><a class="line" href="errors_8h.html#adffc922b872fbd90d24e3db45c96cc7c">   68</a></span>&#160;<span class="preprocessor">#define ERETRY      5005</span></div>
-<div class="line"><a name="l00069"></a><span class="lineno">   69</span>&#160;  </div>
-<div class="line"><a name="l00070"></a><span class="lineno">   70</span>&#160;<span class="comment">/* \brief Reservation required before usage</span></div>
-<div class="line"><a name="l00071"></a><span class="lineno">   71</span>&#160;<span class="comment"> *</span></div>
-<div class="line"><a name="l00072"></a><span class="lineno">   72</span>&#160;<span class="comment"> */</span></div>
-<div class="line"><a name="l00073"></a><span class="lineno"><a class="line" href="errors_8h.html#a881774b43d1bf8842ade7ecfd30556c2">   73</a></span>&#160;<span class="preprocessor">#define ERESERVE    5006</span></div>
-<div class="line"><a name="l00074"></a><span class="lineno">   74</span>&#160;  </div>
-<div class="line"><a name="l00075"></a><span class="lineno">   75</span>&#160;<span class="comment">/* \brief The device state you are requesting is already set</span></div>
-<div class="line"><a name="l00076"></a><span class="lineno">   76</span>&#160;<span class="comment"> *</span></div>
-<div class="line"><a name="l00077"></a><span class="lineno">   77</span>&#160;<span class="comment"> */</span></div>
-<div class="line"><a name="l00078"></a><span class="lineno">   78</span>&#160;<span class="comment">//#define EALREADY  (already defined in errno.h)</span></div>
-<div class="line"><a name="l00079"></a><span class="lineno">   79</span>&#160; </div>
-<div class="line"><a name="l00080"></a><span class="lineno">   80</span>&#160;<span class="comment">/* \brief Memory required not available</span></div>
-<div class="line"><a name="l00081"></a><span class="lineno">   81</span>&#160;<span class="comment"> *</span></div>
-<div class="line"><a name="l00082"></a><span class="lineno">   82</span>&#160;<span class="comment"> */</span></div>
-<div class="line"><a name="l00083"></a><span class="lineno">   83</span>&#160;<span class="comment">//#define ENOMEM    (already defined in errno.h)</span></div>
-<div class="line"><a name="l00084"></a><span class="lineno">   84</span>&#160; </div>
-<div class="line"><a name="l00085"></a><span class="lineno">   85</span>&#160;<span class="comment">/* \brief A packet was not acknowledged</span></div>
-<div class="line"><a name="l00086"></a><span class="lineno">   86</span>&#160;<span class="comment"> *</span></div>
-<div class="line"><a name="l00087"></a><span class="lineno">   87</span>&#160;<span class="comment"> */</span></div>
-<div class="line"><a name="l00088"></a><span class="lineno"><a class="line" href="errors_8h.html#a3e0224f65ae26af579988c1c44aa2635">   88</a></span>&#160;<span class="preprocessor">#define ENOACK      5007</span></div>
-<div class="line"><a name="l00089"></a><span class="lineno">   89</span>&#160;</div>
+<div class="line"><a name="l00039"></a><span class="lineno"><a class="line" href="errors_8h.html#a8fe83ac76edc595f6b98cd4a4127aed5">   39</a></span>&#160;<span class="preprocessor">#define ERROR       FAIL</span></div>
+<div class="line"><a name="l00040"></a><span class="lineno">   40</span>&#160;  </div>
+<div class="line"><a name="l00041"></a><span class="lineno">   41</span>&#160;<span class="comment">/* \brief Parameter passed in was too big, or outside the expected range</span></div>
+<div class="line"><a name="l00042"></a><span class="lineno">   42</span>&#160;<span class="comment"> *</span></div>
+<div class="line"><a name="l00043"></a><span class="lineno">   43</span>&#160;<span class="comment"> */</span></div>
+<div class="line"><a name="l00044"></a><span class="lineno"><a class="line" href="errors_8h.html#acb09eefda9ef228712245d1104fe9c89">   44</a></span>&#160;<span class="preprocessor">#define ESIZE       5002</span></div>
+<div class="line"><a name="l00045"></a><span class="lineno">   45</span>&#160;  </div>
+<div class="line"><a name="l00046"></a><span class="lineno">   46</span>&#160;<span class="comment">/* \brief Operation cancelled by a call.</span></div>
+<div class="line"><a name="l00047"></a><span class="lineno">   47</span>&#160;<span class="comment"> *</span></div>
+<div class="line"><a name="l00048"></a><span class="lineno">   48</span>&#160;<span class="comment"> */</span></div>
+<div class="line"><a name="l00049"></a><span class="lineno"><a class="line" href="errors_8h.html#aa1605b10172e0c8572546710ed9e2fd0">   49</a></span>&#160;<span class="preprocessor">#define ECANCEL     5003</span></div>
+<div class="line"><a name="l00050"></a><span class="lineno">   50</span>&#160;  </div>
+<div class="line"><a name="l00051"></a><span class="lineno">   51</span>&#160;<span class="comment">/* \brief Subsystem is not active</span></div>
+<div class="line"><a name="l00052"></a><span class="lineno">   52</span>&#160;<span class="comment"> *</span></div>
+<div class="line"><a name="l00053"></a><span class="lineno">   53</span>&#160;<span class="comment"> */</span></div>
+<div class="line"><a name="l00054"></a><span class="lineno"><a class="line" href="errors_8h.html#af160ef97ab3d528fdc5d444e2570f1c8">   54</a></span>&#160;<span class="preprocessor">#define EOFF        5004</span></div>
+<div class="line"><a name="l00055"></a><span class="lineno">   55</span>&#160;  </div>
+<div class="line"><a name="l00056"></a><span class="lineno">   56</span>&#160;<span class="comment">/* \brief The underlying system is busy; retry later</span></div>
+<div class="line"><a name="l00057"></a><span class="lineno">   57</span>&#160;<span class="comment"> *</span></div>
+<div class="line"><a name="l00058"></a><span class="lineno">   58</span>&#160;<span class="comment"> */</span></div>
+<div class="line"><a name="l00059"></a><span class="lineno">   59</span>&#160;<span class="comment">//#define   EBUSY   (already defined in errno.h)</span></div>
+<div class="line"><a name="l00060"></a><span class="lineno">   60</span>&#160;  </div>
+<div class="line"><a name="l00061"></a><span class="lineno">   61</span>&#160;<span class="comment">/* \brief An invalid parameter was passed</span></div>
+<div class="line"><a name="l00062"></a><span class="lineno">   62</span>&#160;<span class="comment"> *</span></div>
+<div class="line"><a name="l00063"></a><span class="lineno">   63</span>&#160;<span class="comment"> */</span></div>
+<div class="line"><a name="l00064"></a><span class="lineno">   64</span>&#160;<span class="comment">//#define EINVAL    (already defined in errno.h)</span></div>
+<div class="line"><a name="l00065"></a><span class="lineno">   65</span>&#160;  </div>
+<div class="line"><a name="l00066"></a><span class="lineno">   66</span>&#160;<span class="comment">/* \brief A rare and transient failure: can retry</span></div>
+<div class="line"><a name="l00067"></a><span class="lineno">   67</span>&#160;<span class="comment"> *</span></div>
+<div class="line"><a name="l00068"></a><span class="lineno">   68</span>&#160;<span class="comment"> */</span></div>
+<div class="line"><a name="l00069"></a><span class="lineno"><a class="line" href="errors_8h.html#adffc922b872fbd90d24e3db45c96cc7c">   69</a></span>&#160;<span class="preprocessor">#define ERETRY      5005</span></div>
+<div class="line"><a name="l00070"></a><span class="lineno">   70</span>&#160;  </div>
+<div class="line"><a name="l00071"></a><span class="lineno">   71</span>&#160;<span class="comment">/* \brief Reservation required before usage</span></div>
+<div class="line"><a name="l00072"></a><span class="lineno">   72</span>&#160;<span class="comment"> *</span></div>
+<div class="line"><a name="l00073"></a><span class="lineno">   73</span>&#160;<span class="comment"> */</span></div>
+<div class="line"><a name="l00074"></a><span class="lineno"><a class="line" href="errors_8h.html#a881774b43d1bf8842ade7ecfd30556c2">   74</a></span>&#160;<span class="preprocessor">#define ERESERVE    5006</span></div>
+<div class="line"><a name="l00075"></a><span class="lineno">   75</span>&#160;  </div>
+<div class="line"><a name="l00076"></a><span class="lineno">   76</span>&#160;<span class="comment">/* \brief The device state you are requesting is already set</span></div>
+<div class="line"><a name="l00077"></a><span class="lineno">   77</span>&#160;<span class="comment"> *</span></div>
+<div class="line"><a name="l00078"></a><span class="lineno">   78</span>&#160;<span class="comment"> */</span></div>
+<div class="line"><a name="l00079"></a><span class="lineno">   79</span>&#160;<span class="comment">//#define EALREADY  (already defined in errno.h)</span></div>
+<div class="line"><a name="l00080"></a><span class="lineno">   80</span>&#160; </div>
+<div class="line"><a name="l00081"></a><span class="lineno">   81</span>&#160;<span class="comment">/* \brief Memory required not available</span></div>
+<div class="line"><a name="l00082"></a><span class="lineno">   82</span>&#160;<span class="comment"> *</span></div>
+<div class="line"><a name="l00083"></a><span class="lineno">   83</span>&#160;<span class="comment"> */</span></div>
+<div class="line"><a name="l00084"></a><span class="lineno">   84</span>&#160;<span class="comment">//#define ENOMEM    (already defined in errno.h)</span></div>
+<div class="line"><a name="l00085"></a><span class="lineno">   85</span>&#160; </div>
+<div class="line"><a name="l00086"></a><span class="lineno">   86</span>&#160;<span class="comment">/* \brief A packet was not acknowledged</span></div>
+<div class="line"><a name="l00087"></a><span class="lineno">   87</span>&#160;<span class="comment"> *</span></div>
+<div class="line"><a name="l00088"></a><span class="lineno">   88</span>&#160;<span class="comment"> */</span></div>
+<div class="line"><a name="l00089"></a><span class="lineno"><a class="line" href="errors_8h.html#a3e0224f65ae26af579988c1c44aa2635">   89</a></span>&#160;<span class="preprocessor">#define ENOACK      5007</span></div>
 <div class="line"><a name="l00090"></a><span class="lineno">   90</span>&#160;</div>
 <div class="line"><a name="l00091"></a><span class="lineno">   91</span>&#160;</div>
-<div class="line"><a name="l00092"></a><span class="lineno">   92</span>&#160;<span class="preprocessor">#endif</span></div>
+<div class="line"><a name="l00092"></a><span class="lineno">   92</span>&#160;</div>
+<div class="line"><a name="l00093"></a><span class="lineno">   93</span>&#160;<span class="preprocessor">#endif</span></div>
 <div class="ttc" id="types_8h_html"><div class="ttname"><a href="types_8h.html">types.h</a></div><div class="ttdoc">Includes all used types. </div></div>
 </div><!-- fragment --></div><!-- contents -->
 </div><!-- doc-content -->
@@ -207,7 +208,7 @@ $(document).ready(function(){initNavTree('errors_8h_source.html','');});
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
     <li class="navelem"><a class="el" href="dir_644e041c3a6521da7b27eba0e4eb2b95.html">framework</a></li><li class="navelem"><a class="el" href="dir_50492bb8b74f3c17cee2d1133202ac44.html">inc</a></li><li class="navelem"><a class="el" href="errors_8h.html">errors.h</a></li>
-    <li class="footer">Generated on Thu Aug 27 2015 08:44:07 for OSS-7: Open Source Stack for DASH7 Alliance Protocol by
+    <li class="footer">Generated on Sun Nov 22 2015 10:16:09 for OSS-7: Open Source Stack for DASH7 Alliance Protocol by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.8.9.1 </li>
   </ul>

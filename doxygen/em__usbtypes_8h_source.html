@@ -250,7 +250,7 @@ $(document).ready(function(){initNavTree('em__usbtypes_8h_source.html','');});
 <div class="line"><a name="l00156"></a><span class="lineno">  156</span>&#160;  uint32_t                    xferred;</div>
 <div class="line"><a name="l00157"></a><span class="lineno">  157</span>&#160;  uint32_t                    hwXferSize;</div>
 <div class="line"><a name="l00158"></a><span class="lineno">  158</span>&#160;  uint32_t                    fifoSize;</div>
-<div class="line"><a name="l00159"></a><span class="lineno">  159</span>&#160;  USBD_EpState_TypeDef        state;</div>
+<div class="line"><a name="l00159"></a><span class="lineno">  159</span>&#160;  USBD_EpState_TypeDef        <a class="code" href="d7asp_8c.html#a17ba9d3d3f420182822febf73adca0a4">state</a>;</div>
 <div class="line"><a name="l00160"></a><span class="lineno">  160</span>&#160;  USB_XferCompleteCb_TypeDef  xferCompleteCb;</div>
 <div class="line"><a name="l00161"></a><span class="lineno">  161</span>&#160;} USBD_Ep_TypeDef;</div>
 <div class="line"><a name="l00162"></a><span class="lineno">  162</span>&#160;</div>
@@ -262,7 +262,7 @@ $(document).ready(function(){initNavTree('em__usbtypes_8h_source.html','');});
 <div class="line"><a name="l00168"></a><span class="lineno">  168</span>&#160;  <span class="keywordtype">bool</span>                                  remoteWakeupEnabled;</div>
 <div class="line"><a name="l00169"></a><span class="lineno">  169</span>&#160;  uint8_t                               numberOfStrings;</div>
 <div class="line"><a name="l00170"></a><span class="lineno">  170</span>&#160;  uint8_t                               numberOfInterfaces;</div>
-<div class="line"><a name="l00171"></a><span class="lineno">  171</span>&#160;  USBD_State_TypeDef                    state;</div>
+<div class="line"><a name="l00171"></a><span class="lineno">  171</span>&#160;  USBD_State_TypeDef                    <a class="code" href="d7asp_8c.html#a17ba9d3d3f420182822febf73adca0a4">state</a>;</div>
 <div class="line"><a name="l00172"></a><span class="lineno">  172</span>&#160;  USBD_State_TypeDef                    savedState;</div>
 <div class="line"><a name="l00173"></a><span class="lineno">  173</span>&#160;  USBD_State_TypeDef                    lastState;</div>
 <div class="line"><a name="l00174"></a><span class="lineno">  174</span>&#160;  <span class="keyword">const</span> USB_DeviceDescriptor_TypeDef    *deviceDescriptor;</div>
@@ -312,6 +312,7 @@ $(document).ready(function(){initNavTree('em__usbtypes_8h_source.html','');});
 <div class="line"><a name="l00220"></a><span class="lineno">  220</span>&#160;<span class="preprocessor">#endif </span><span class="comment">/* defined( USB_DEVICE ) || defined( USB_HOST ) */</span><span class="preprocessor"></span></div>
 <div class="line"><a name="l00221"></a><span class="lineno">  221</span>&#160;<span class="preprocessor">#endif </span><span class="comment">/* defined( USB_PRESENT ) &amp;&amp; ( USB_COUNT == 1 ) */</span><span class="preprocessor"></span></div>
 <div class="line"><a name="l00222"></a><span class="lineno">  222</span>&#160;<span class="preprocessor">#endif </span><span class="comment">/* __EM_USBTYPES_H */</span><span class="preprocessor"></span></div>
+<div class="ttc" id="d7asp_8c_html_a17ba9d3d3f420182822febf73adca0a4"><div class="ttname"><a href="d7asp_8c.html#a17ba9d3d3f420182822febf73adca0a4">state</a></div><div class="ttdeci">#define state</div><div class="ttdef"><b>Definition:</b> d7asp.c:65</div></div>
 <div class="ttc" id="usbconfig_8h_html_a836fd372f59b18af5e859175624b5385"><div class="ttname"><a href="usbconfig_8h.html#a836fd372f59b18af5e859175624b5385">NUM_EP_USED</a></div><div class="ttdeci">#define NUM_EP_USED</div><div class="ttdef"><b>Definition:</b> usbconfig.h:30</div></div>
 <div class="ttc" id="em__usb_8h_html"><div class="ttname"><a href="em__usb_8h.html">em_usb.h</a></div><div class="ttdoc">USB protocol stack library API for EFM32. </div></div>
 </div><!-- fragment --></div><!-- contents -->
@@ -320,7 +321,7 @@ $(document).ready(function(){initNavTree('em__usbtypes_8h_source.html','');});
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
     <li class="navelem"><a class="el" href="dir_644e041c3a6521da7b27eba0e4eb2b95.html">framework</a></li><li class="navelem"><a class="el" href="dir_8f2c340cdabd0cab4db94c39704d70a8.html">hal</a></li><li class="navelem"><a class="el" href="dir_e53dcac4adbcec177c678c0d8c8c3e7c.html">chips</a></li><li class="navelem"><a class="el" href="dir_8b9647ac80bab5b612e6e51a18f43f10.html">efm32gg</a></li><li class="navelem"><a class="el" href="dir_63c0e4f02b95710eac415d19917eac30.html">usb</a></li><li class="navelem"><a class="el" href="dir_2e95a8d2088a7b4a9e23f9fc568f891d.html">inc</a></li><li class="navelem"><a class="el" href="em__usbtypes_8h.html">em_usbtypes.h</a></li>
-    <li class="footer">Generated on Thu Aug 27 2015 08:44:07 for OSS-7: Open Source Stack for DASH7 Alliance Protocol by
+    <li class="footer">Generated on Sun Nov 22 2015 10:16:09 for OSS-7: Open Source Stack for DASH7 Alliance Protocol by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.8.9.1 </li>
   </ul>

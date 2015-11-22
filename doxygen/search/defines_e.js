@@ -227,6 +227,7 @@ var searchData=
   ['read_5fburst',['READ_BURST',['../cc1101__constants_8h.html#a49bb249f0a97c0bbfdcb2f8c54c0a41f',1,'cc1101_constants.h']]],
   ['read_5fsingle',['READ_SINGLE',['../cc1101__constants_8h.html#a549850eb399ab873a7a7c37696adcd5a',1,'cc1101_constants.h']]],
   ['ref_5ffreq_5fkhz',['REF_FREQ_KHZ',['../cc430__mcu_8c.html#a82953c9fa62bdbb318e75b249e454071',1,'cc430_mcu.c']]],
+  ['requests_5fbitmap_5fbyte_5fcount',['REQUESTS_BITMAP_BYTE_COUNT',['../d7asp_8h.html#abea92ba7a2a52f6cfb7db7ed838ebf5a',1,'d7asp.h']]],
   ['rf_5fsafc',['RF_SAFC',['../cc1101__constants_8h.html#ad051432e4a67f10fca84fcd876d93db2',1,'cc1101_constants.h']]],
   ['rf_5fscal',['RF_SCAL',['../cc1101__constants_8h.html#adbfba203a65d2c158a5719a34534b472',1,'cc1101_constants.h']]],
   ['rf_5fsfrx',['RF_SFRX',['../cc1101__constants_8h.html#a8a0b9afbb8d954ffa83f4e76664a4573',1,'cc1101_constants.h']]],

@@ -1,7 +1,6 @@
 var searchData=
 [
   ['baudrate',['BAUDRATE',['../cc430__uart_8c.html#a734bbab06e1a9fd2e5522db0221ff6e3',1,'cc430_uart.c']]],
-  ['bits_5fbig_5fendian',['BITS_BIG_ENDIAN',['../d7anp_8h.html#acc571c45be1d13993cf2973884325af9',1,'d7anp.h']]],
   ['bscfg',['BSCFG',['../cc1101__constants_8h.html#a9ad1a221b397cdae7cebcf1c248b2b30',1,'cc1101_constants.h']]],
   ['bsp_5fbcc_5fclk',['BSP_BCC_CLK',['../bspconfig_8h.html#ab70655b7a80263e8b60fc52fa1a89af4',1,'bspconfig.h']]],
   ['bsp_5fbcc_5fenable_5fpin',['BSP_BCC_ENABLE_PIN',['../bspconfig_8h.html#ac94cdcb4a83b5da84f1acc2f7c3884ee',1,'bspconfig.h']]],

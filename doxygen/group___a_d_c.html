@@ -123,12 +123,16 @@ Enumerations</h2></td></tr>
 <br />
  }</td></tr>
 <tr class="separator:ga1791488ae818871ec6dbc01921d0dc8c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga2d56278915683d00a45b9b1ede13c307"><td class="memItemLeft" align="right" valign="top">enum &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group___a_d_c.html#ga2d56278915683d00a45b9b1ede13c307">ADC_Input</a> { <a class="el" href="group___a_d_c.html#gga2d56278915683d00a45b9b1ede13c307ae7978052918296d63cd3cc6c7f11e489">adcInputSingleTemp</a>, 
+<a class="el" href="group___a_d_c.html#gga2d56278915683d00a45b9b1ede13c307ab2f1582c5db9b1bccfdc9d9996de61fc">adcInputSingleCh4Ch5</a>
+ }</td></tr>
+<tr class="separator:ga2d56278915683d00a45b9b1ede13c307"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
 Functions</h2></td></tr>
-<tr class="memitem:ga7fbf846d3637cb56373a2d359031ee70"><td class="memItemLeft" align="right" valign="top"><a class="el" href="link__c_8h.html#ad7a35fa85166c1d1839000ac10353068">__LINK_C</a> void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group___a_d_c.html#ga7fbf846d3637cb56373a2d359031ee70">adc_init</a> (<a class="el" href="group___a_d_c.html#ga1791488ae818871ec6dbc01921d0dc8c">ADC_Reference</a> reference, uint16_t input)</td></tr>
-<tr class="memdesc:ga7fbf846d3637cb56373a2d359031ee70"><td class="mdescLeft">&#160;</td><td class="mdescRight">Initialises the ADC.  <a href="#ga7fbf846d3637cb56373a2d359031ee70">More...</a><br /></td></tr>
-<tr class="separator:ga7fbf846d3637cb56373a2d359031ee70"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:gad60a716673da829df81f21f02a99d169"><td class="memItemLeft" align="right" valign="top"><a class="el" href="link__c_8h.html#ad7a35fa85166c1d1839000ac10353068">__LINK_C</a> void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group___a_d_c.html#gad60a716673da829df81f21f02a99d169">adc_init</a> (<a class="el" href="group___a_d_c.html#ga1791488ae818871ec6dbc01921d0dc8c">ADC_Reference</a> reference, <a class="el" href="group___a_d_c.html#ga2d56278915683d00a45b9b1ede13c307">ADC_Input</a> input, uint32_t adc_frequency)</td></tr>
+<tr class="memdesc:gad60a716673da829df81f21f02a99d169"><td class="mdescLeft">&#160;</td><td class="mdescRight">Initialises the ADC.  <a href="#gad60a716673da829df81f21f02a99d169">More...</a><br /></td></tr>
+<tr class="separator:gad60a716673da829df81f21f02a99d169"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ga10f34f828f72aea568297480add7a512"><td class="memItemLeft" align="right" valign="top"><a class="el" href="link__c_8h.html#ad7a35fa85166c1d1839000ac10353068">__LINK_C</a> void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group___a_d_c.html#ga10f34f828f72aea568297480add7a512">adc_calibrate</a> ()</td></tr>
 <tr class="memdesc:ga10f34f828f72aea568297480add7a512"><td class="mdescLeft">&#160;</td><td class="mdescRight">Calibrates the ADC.  <a href="#ga10f34f828f72aea568297480add7a512">More...</a><br /></td></tr>
 <tr class="separator:ga10f34f828f72aea568297480add7a512"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -149,6 +153,26 @@ Functions</h2></td></tr>
 <p>Provides an API for controlling ADC. </p>
 <dl class="section author"><dt>Author</dt><dd><a href="#" onclick="location.href='mai'+'lto:'+'maa'+'rt'+'en.'+'we'+'yn@'+'ua'+'ntw'+'er'+'pen'+'.b'+'e'; return false;">maart<span style="display: none;">.nosp@m.</span>en.w<span style="display: none;">.nosp@m.</span>eyn@u<span style="display: none;">.nosp@m.</span>antw<span style="display: none;">.nosp@m.</span>erpen<span style="display: none;">.nosp@m.</span>.be</a> </dd></dl>
 <h2 class="groupheader">Enumeration Type Documentation</h2>
+<a class="anchor" id="ga2d56278915683d00a45b9b1ede13c307"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">enum <a class="el" href="group___a_d_c.html#ga2d56278915683d00a45b9b1ede13c307">ADC_Input</a></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<table class="fieldtable">
+<tr><th colspan="2">Enumerator</th></tr><tr><td class="fieldname"><a class="anchor" id="gga2d56278915683d00a45b9b1ede13c307ae7978052918296d63cd3cc6c7f11e489"></a>adcInputSingleTemp&#160;</td><td class="fielddoc">
+<p>Temperature reference. </p>
+</td></tr>
+<tr><td class="fieldname"><a class="anchor" id="gga2d56278915683d00a45b9b1ede13c307ab2f1582c5db9b1bccfdc9d9996de61fc"></a>adcInputSingleCh4Ch5&#160;</td><td class="fielddoc">
+<p>Positive Ch4, negative Ch5. </p>
+</td></tr>
+</table>
+
+</div>
+</div>
 <a class="anchor" id="ga1791488ae818871ec6dbc01921d0dc8c"></a>
 <div class="memitem">
 <div class="memproto">
@@ -237,7 +261,7 @@ Functions</h2></td></tr>
 
 </div>
 </div>
-<a class="anchor" id="ga7fbf846d3637cb56373a2d359031ee70"></a>
+<a class="anchor" id="gad60a716673da829df81f21f02a99d169"></a>
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
@@ -250,8 +274,14 @@ Functions</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">uint16_t&#160;</td>
-          <td class="paramname"><em>input</em>&#160;</td>
+          <td class="paramtype"><a class="el" href="group___a_d_c.html#ga2d56278915683d00a45b9b1ede13c307">ADC_Input</a>&#160;</td>
+          <td class="paramname"><em>input</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">uint32_t&#160;</td>
+          <td class="paramname"><em>adc_frequency</em>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -276,13 +306,17 @@ Functions</h2></td></tr>
 <p>Single ended ext. ref. from 1 pin.</p>
 <p>Differential ext. ref. from 2 pins</p>
 <p>Unbuffered 2xVDD.</p>
+<p>Temperature reference.</p>
+<p>Positive Ch4, negative Ch5.</p>
 <p>Internal 1.25V reference.</p>
 <p>Internal 2.5V reference.</p>
 <p>Buffered VDD.</p>
 <p>Internal differential 5V reference.</p>
 <p>Single ended ext. ref. from 1 pin.</p>
 <p>Differential ext. ref. from 2 pins</p>
-<p>Unbuffered 2xVDD. </p>
+<p>Unbuffered 2xVDD.</p>
+<p>Temperature reference.</p>
+<p>Positive Ch4, negative Ch5. </p>
 
 </div>
 </div>
@@ -326,7 +360,7 @@ Functions</h2></td></tr>
 <!-- start footer part -->
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
-    <li class="footer">Generated on Thu Aug 27 2015 08:44:08 for OSS-7: Open Source Stack for DASH7 Alliance Protocol by
+    <li class="footer">Generated on Sun Nov 22 2015 10:16:09 for OSS-7: Open Source Stack for DASH7 Alliance Protocol by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.8.9.1 </li>
   </ul>

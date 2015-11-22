@@ -112,6 +112,9 @@ $(document).ready(function(){initNavTree('structalp__control__t.html','');});
 </div><!--header-->
 <div class="contents">
 
+<p>The ALP CTRL header.  
+ <a href="structalp__control__t.html#details">More...</a></p>
+
 <p><code>#include &lt;<a class="el" href="alp_8h_source.html">alp.h</a>&gt;</code></p>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-attribs"></a>
@@ -120,18 +123,21 @@ Data Fields</h2></td></tr>
 <tr class="memitem:a828742e9cfa90476a0d1af228b35ed7c"><td class="memItemLeft" >&#160;&#160;&#160;uint8_t&#160;&#160;&#160;<a class="el" href="structalp__control__t.html#a986e795af08acff4999386f2d2b5db7a">raw</a></td></tr>
 <tr class="separator:a828742e9cfa90476a0d1af228b35ed7c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:af7faa488ab194f282909f7675304f482"><td class="memItemLeft" >&#160;&#160;&#160;struct {</td></tr>
-<tr class="memitem:a940e5dcdb71fd061647ed2778153cb75"><td class="memItemLeft" >&#160;&#160;&#160;&#160;&#160;&#160;bool&#160;&#160;&#160;<a class="el" href="structalp__control__t.html#a51bc9c93c3bb37995a95a4e92bc3ea80">group</a>: 1</td></tr>
-<tr class="separator:a940e5dcdb71fd061647ed2778153cb75"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a18e5a805c1d088ef4d722057a0e7d53e"><td class="memItemLeft" >&#160;&#160;&#160;&#160;&#160;&#160;bool&#160;&#160;&#160;<a class="el" href="structalp__control__t.html#ad1e252c41727c97b8d7b29c12e89c263">response_requested</a>: 1</td></tr>
-<tr class="separator:a18e5a805c1d088ef4d722057a0e7d53e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a18320c09c38bbf1939d865f864b7d7bf"><td class="memItemLeft" >&#160;&#160;&#160;&#160;&#160;&#160;<a class="el" href="alp_8h.html#a08bf92ab688fcb3849046af0fd1458b2">alp_operation_t</a>&#160;&#160;&#160;<a class="el" href="structalp__control__t.html#a82c90b096e2c9c205b484813c095be24">operation</a>: 6</td></tr>
 <tr class="separator:a18320c09c38bbf1939d865f864b7d7bf"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a18e5a805c1d088ef4d722057a0e7d53e"><td class="memItemLeft" >&#160;&#160;&#160;&#160;&#160;&#160;bool&#160;&#160;&#160;<a class="el" href="structalp__control__t.html#ad1e252c41727c97b8d7b29c12e89c263">response_requested</a>: 1</td></tr>
+<tr class="separator:a18e5a805c1d088ef4d722057a0e7d53e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a940e5dcdb71fd061647ed2778153cb75"><td class="memItemLeft" >&#160;&#160;&#160;&#160;&#160;&#160;bool&#160;&#160;&#160;<a class="el" href="structalp__control__t.html#a51bc9c93c3bb37995a95a4e92bc3ea80">group</a>: 1</td></tr>
+<tr class="separator:a940e5dcdb71fd061647ed2778153cb75"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:af7faa488ab194f282909f7675304f482"><td class="memItemLeft" valign="top">&#160;&#160;&#160;}&#160;</td><td class="memItemRight" valign="bottom"></td></tr>
 <tr class="separator:af7faa488ab194f282909f7675304f482"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aae71f1324fa2fb07a478c4396a3e4e6e"><td class="memItemLeft" valign="top">};&#160;</td><td class="memItemRight" valign="bottom"></td></tr>
 <tr class="separator:aae71f1324fa2fb07a478c4396a3e4e6e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
-<h2 class="groupheader">Field Documentation</h2>
+<a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
+<div class="textblock"><p>The ALP CTRL header. </p>
+<p>note: bit order is important here since this is send over the air. We explicitly reverse the order to ensure BE. Although bit fields can cause portability problems it seems fine for now using gcc and the current platforms. If this poses problems in the future we must resort to bit arithmetics and flags. </p>
+</div><h2 class="groupheader">Field Documentation</h2>
 <a class="anchor" id="aae71f1324fa2fb07a478c4396a3e4e6e"></a>
 <div class="memitem">
 <div class="memproto">
@@ -201,7 +207,7 @@ Data Fields</h2></td></tr>
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
     <li class="navelem"><a class="el" href="structalp__control__t.html">alp_control_t</a></li>
-    <li class="footer">Generated on Thu Aug 27 2015 08:44:08 for OSS-7: Open Source Stack for DASH7 Alliance Protocol by
+    <li class="footer">Generated on Sun Nov 22 2015 10:16:09 for OSS-7: Open Source Stack for DASH7 Alliance Protocol by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.8.9.1 </li>
   </ul>

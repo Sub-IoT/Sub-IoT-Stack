@@ -12,8 +12,8 @@ var NAVTREE =
       [ "Data Structures", "annotated.html", "annotated" ],
       [ "Data Structure Index", "classes.html", null ],
       [ "Data Fields", "functions.html", [
-        [ "All", "functions.html", null ],
-        [ "Variables", "functions_vars.html", null ]
+        [ "All", "functions.html", "functions_dup" ],
+        [ "Variables", "functions_vars.html", "functions_vars" ]
       ] ]
     ] ],
     [ "Files", null, [
@@ -34,15 +34,17 @@ var NAVTREE =
 var NAVTREEINDEX =
 [
 "_e_f_m32_g_g___s_t_k3700_2inc_2platform_8h.html",
-"cc1101__constants_8h.html#ae24810e04beb0d2178a92e0673499496",
-"cc1101__registers_8h.html#a61c85de60e122dc1a8c406de7f46cbd5",
-"cc430__pins_8h.html#ae800480c67173eb65696bbcb1c262bac",
-"efm32gg__pins_8h.html#a428ac599e9ce27245e2b1203baf9b2e0",
-"fs_8c.html#afa42c5a67a9f439168246be41e707d4d",
-"group___l_e_ds.html#ga8edf4307b49e53b2d63965ab03af0549",
-"group__random.html#ga0fa9d9c6c2b9ca0e6eaef0528f55a8d3",
-"matrix__tp1089_2inc_2platform_8h.html#af1d80bebb2ac6612ef0708dd63c50711",
-"structalp__control__t.html"
+"cc1101__constants_8h.html#a9292d9ebfb8f431c47ebbad31fab0b6c",
+"cc1101__registers_8h.html#a4a36e9a66a8deddac2053519d479cf0c",
+"cc430__pins_8h.html#a50091d06dfa271ff33587f28594fd00c",
+"efm32gg__pins_8c.html#a0e05524a734e4a74ba87c20ba9308245",
+"efm32hg__pins_8c.html#ae0f6f9b7c74cf826de9b2bf1c3c21d9a",
+"globals_u.html",
+"group___u_a_r_t.html#ga6fc13a8da8aebe1bf088d32771aa9aa9",
+"group__scheduler.html#ga1a9d70c3c4d844657af0cdc8f99e1d65",
+"kl02z__spi_8c.html#ae909944aa85ae98323073c628be541aa",
+"struct_r_f___s_e_t_t_i_n_g_s.html#a4824efd09cbfd902e3a3e8ba682a5154",
+"tp1089__main_8c.html#afcfc9d33c0d69dff67a4f98da43595b7"
 ];
 
 var SYNCONMSG = 'click to disable panel synchronisation';

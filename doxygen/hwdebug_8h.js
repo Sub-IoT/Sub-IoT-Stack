@@ -1,5 +1,7 @@
 var hwdebug_8h =
 [
+    [ "DEBUG_PIN_CLR", "group__debug.html#ga9329497aab2aa16e11ec80933b40213e", null ],
+    [ "DEBUG_PIN_SET", "group__debug.html#ga084dad42a7cb2292ab4ef71d1b23f1eb", null ],
     [ "__hw_debug_init", "group__debug.html#gac73486723752c64244bc729a593b0f3e", null ],
     [ "hw_debug_clr", "group__debug.html#ga8c70a05bebf7ef18989c43d775f7329d", null ],
     [ "hw_debug_mask", "group__debug.html#gaee8fff8c85ffcaeddd0cbb4465b2130e", null ],

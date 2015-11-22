@@ -3,7 +3,10 @@ var alp_8h =
     [ "alp_control_t", "structalp__control__t.html", "structalp__control__t" ],
     [ "alp_operand_file_offset_t", "structalp__operand__file__offset__t.html", "structalp__operand__file__offset__t" ],
     [ "alp_operand_file_data_request_t", "structalp__operand__file__data__request__t.html", "structalp__operand__file__data__request__t" ],
+    [ "alp_operand_file_data_t", "structalp__operand__file__data__t.html", "structalp__operand__file__data__t" ],
     [ "ALP_ITF_ID_D7ASP", "alp_8h.html#a4c60a330539ba5499aef5e51aa81b507", null ],
+    [ "ALP_ITF_ID_FS", "alp_8h.html#ae425b557b6ac2531bd3647ac2fbeef29", null ],
+    [ "ALP_PAYLOAD_MAX_SIZE", "alp_8h.html#ac6344231d481b0aecc5d222f55b0d96b", null ],
     [ "alp_act_condition_t", "alp_8h.html#ad8ae3d9fcb6789f76da94fc857c03f02", [
       [ "ALP_ACT_COND_LIST", "alp_8h.html#ad8ae3d9fcb6789f76da94fc857c03f02a6b3b1efcc27602bbc1a321b97eb33c4e", null ],
       [ "ALP_ACT_COND_READ", "alp_8h.html#ad8ae3d9fcb6789f76da94fc857c03f02a9c8d7ced206cba44b8cfb476831789d8", null ],
@@ -35,5 +38,8 @@ var alp_8h =
       [ "ALP_OP_RETURN_STATUS", "alp_8h.html#a08bf92ab688fcb3849046af0fd1458b2a08cce56107e9f9047f87c97478f86253", null ],
       [ "ALP_OP_CHUNK", "alp_8h.html#a08bf92ab688fcb3849046af0fd1458b2ab0bb2a4048b0e85191aba5f17f5ff83a", null ],
       [ "ALP_OP_LOGIC", "alp_8h.html#a08bf92ab688fcb3849046af0fd1458b2a1a6dca26b87649c0d626f12d76de4bed", null ]
-    ] ]
+    ] ],
+    [ "alp_get_operation", "alp_8h.html#a7a6f7658a2206d0ddc11c69b15a20e3d", null ],
+    [ "alp_process_command", "alp_8h.html#a92cd1135f4d820d7c3d2dabfb51e1559", null ],
+    [ "alp_process_received_request", "alp_8h.html#a813cb9718d26d7140495c0225e11b021", null ]
 ];

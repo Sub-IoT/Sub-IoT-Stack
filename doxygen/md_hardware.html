@@ -102,7 +102,8 @@ $(document).ready(function(){initNavTree('md_hardware.html','');});
 <div class="title">Hardware </div>  </div>
 </div><!--header-->
 <div class="contents">
-<div class="textblock"><p>A goal of OSS-7 is to support different hardware platforms and radio's. The stack provides this portability by using portable C code for the higher layers, and providing a pluggable driver system for hardware specific implementations. As explained in the <a class="el" href="md_architecture.html">architecture documentation</a> OSS-7 has the concept of chips and platforms inside the hardware abstraction layer. A chip implementation contains drivers for MCU peripherals or radio chips. A platform is a combination of an MCU and a radio chips and describes the board wiring and features like LEDs or buttons.</p>
+<div class="textblock"><h2>Platforms</h2>
+<p>A goal of OSS-7 is to support different hardware platforms and radio's. The stack provides this portability by using portable C code for the higher layers, and providing a pluggable driver system for hardware specific implementations. As explained in the <a class="el" href="md_architecture.html">architecture documentation</a> OSS-7 has the concept of chips and platforms inside the hardware abstraction layer. A chip implementation contains drivers for MCU peripherals or radio chips. A platform is a combination of an MCU and a radio chips and describes the board wiring and features like LEDs or buttons.</p>
 <p>Currently we support the following plaforms, in decreasing order of completeness/stability:</p>
 <table class="doxtable">
 <tr>
@@ -110,11 +111,14 @@ $(document).ready(function(){initNavTree('md_hardware.html','');});
 <tr>
 <td>EFM32GG_STK3700 </td><td>EnergyMicro Giant Gecko (Cortex-M3) </td><td>Texas Instruments CC1101 </td><td>gcc-arm-embedded </td></tr>
 <tr>
+<td>EFM32HG_STK3400 </td><td>EnergyMicro Happy Gecko (Cortex-M0+) </td><td>Texas Instruments CC1101 </td><td>gcc-arm-embedded </td></tr>
+<tr>
 <td>wizzimote </td><td>Texas Instruments CC430 (MSP430) </td><td>Texas Instruments CC1101 (SoC)</td><td>msp430-gcc </td></tr>
 </table>
 <p>The <a href="https://www.silabs.com/products/mcu/lowpower/Pages/efm32gg-stk3700.aspx">EFM32GG_STK3700</a> is currently the most used by us, and thus the best supported. A disadvantage of this platform is that you need to attach an external CC1101. We designed a CC1101-based module which can be plugged in the expansion port of the devkit, see below for the schematics. Next to this, we are working on a PCB design for a devkit containing Giant Gecko and CC1101 as well, which we will opensource shortly.</p>
-<p>At the moment we are not focusing on the CC430 based platform however, mainly because Cortex-M3 based platforms gives us more flexibility with regard to code size. Also, in my experience, the free toolchains available for CC430 are not as robust as gcc-arm-embedded. TI's msp430-gcc (which supersedes mspgcc), is still a young effort and there are some known problems with code size optimization.</p>
+<p>The <a href="https://www.silabs.com/products/mcu/32-bit/Pages/efm32hg-stk3400.aspx">EFM32HG_STK3400</a> is very similar to the STK3700 but instead has a Cortex-M0+ instead of Cortex-M3 and a more capable LCD screen. The same CC1101 module as used for the STK3700 can be plugged into the expansion header.</p>
 <p>It is important to know that there are a number of parties who are currently in the process of designing devkits which will be commercially available, so the choice should increase in the near future.</p>
+<p>At the moment we are not focusing on the CC430 based platform however, mainly because ARM Cortex based platforms gives us more flexibility with regard to code size. Also, in my experience, the free toolchains available for CC430 are not as robust as gcc-arm-embedded. TI's msp430-gcc (which supersedes mspgcc), is still a young effort and there are some known problems with code size optimization. While OSS7 has a HAL implementation to supports the Wizzilab platform, this platform is not teste by us anymore since we stopped using cc430 based hardware for our projects. Furthermore, we are aware of crashes when running the current OSS7 stack on cc430. Only the PHY layer is validated to work on cc430 for now. We currently lack time to look into this and would like to focus on EFM32, but we would ofcourse welcome patches fro people who would still like to use cc430.</p>
 <p>Finally, it is of course possible to define your own platform. Especially if you are using an MCU and radio which is already implemented it takes very little effort to add support to OSS-7 for your platform. Designing your own platform gives you the most flexibility regarding form factor and sensors specific for you use case of course. We are glad to assist in designing a custom board.</p>
 <h2>CC1101 RF module for Giant Gecko</h2>
 <p>The RF module is a plug-in module for the <a href="https://www.silabs.com/products/mcu/lowpower/Pages/efm32gg-stk3700.aspx">Giant Gecko starter kit</a> and is developed by University of Antwerp. The STK3700 is a development kit from Silicon Labs, which contains a Cortex M3 chip and several sensors. An advantage is that a JLink programmer is already included on the board, making this is a cheap option (currently around 25 euro!). The setup on picture is all you need to start working with the DASH7 open software stack. The RF module is based on the Texas Instruments (TI) CC1101 radio. The RF module has two options: First option is to plug it in on a GG, the second option is to plug it in a SmartRF evaluation board from TI . Currently there are two baluns available for this module, 433MHz and 868MHz.</p>
@@ -124,7 +128,7 @@ $(document).ready(function(){initNavTree('md_hardware.html','');});
 Gaint Gecko with CC1101 RF module</div></div>
 <p> Schematics and Eagle files are available in the <a href="https://github.com/mosaic-lopow/dash7-ap-open-source-stack/tree/master/hardware/stk3700-cc1101">git repository</a>. If there are any questions, contact us through the mailing list.</p>
 <h2>Wizzikit</h2>
-<p>The Wizzikit is developed by WizziLab and is already few years on the market. The package contains two different boards, Wizzibase and two Wizzimote. The boards are based on the CC430F5137, this is a System on Chip (SoC), that integrates an MSP430 microcontroller and the CC1101 radio chip in one IC. The programmer is not included in the wizzikit, we recommend to use the TI MSP-FET430UIF programmer or the OLimex MSP430-JTAG-TINY-V2 programmer. The DASH7 open software stack supports the Wizzilab platform, however this platform receives less testing since we are not focusing on this platform.</p>
+<p>The Wizzikit is developed by WizziLab and is already few years on the market. The package contains two different boards, Wizzibase and two Wizzimote. The boards are based on the CC430F5137, this is a System on Chip (SoC), that integrates an MSP430 microcontroller and the CC1101 radio chip in one IC. The programmer is not included in the wizzikit, we recommend to use the TI MSP-FET430UIF programmer or the OLimex MSP430-JTAG-TINY-V2 programmer.</p>
 <div class="image">
 <img src="WizziKit.png" alt="WizziKit.png"/>
 <div class="caption">
@@ -135,7 +139,7 @@ Wizzikit</div></div>
 <!-- start footer part -->
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
-    <li class="footer">Generated on Thu Aug 27 2015 08:44:08 for OSS-7: Open Source Stack for DASH7 Alliance Protocol by
+    <li class="footer">Generated on Sun Nov 22 2015 10:16:09 for OSS-7: Open Source Stack for DASH7 Alliance Protocol by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.8.9.1 </li>
   </ul>

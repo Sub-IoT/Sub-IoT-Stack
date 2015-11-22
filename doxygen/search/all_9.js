@@ -1,11 +1,23 @@
 var searchData=
 [
+  ['i2c',['I2C',['../group___i2_c.html',1,'']]],
+  ['i2c_5finit_5ft',['I2C_Init_T',['../struct_i2_c___init___t.html',1,'']]],
+  ['i2c_5fmaster_5finit',['i2c_master_init',['../group___i2_c.html#gae8edbd9bb19b59fea526534ae29a0c59',1,'i2c_master_init(I2C_Init_T *init):&#160;efm32gg_i2c.c'],['../group___i2_c.html#gae8edbd9bb19b59fea526534ae29a0c59',1,'i2c_master_init(I2C_Init_T *init):&#160;efm32hg_i2c.c'],['../group___i2_c.html#gae8edbd9bb19b59fea526534ae29a0c59',1,'i2c_master_init(I2C_Init_T *init):&#160;efm32gg_i2c.c']]],
+  ['i2c_5fpolling',['I2C_POLLING',['../efm32gg__i2c_8c.html#aefbc2f83b70296e6da143e2f0283ddaa',1,'I2C_POLLING():&#160;efm32gg_i2c.c'],['../efm32hg__i2c_8c.html#aefbc2f83b70296e6da143e2f0283ddaa',1,'I2C_POLLING():&#160;efm32hg_i2c.c']]],
+  ['i2c_5fread',['i2c_read',['../group___i2_c.html#ga56444c86621de14ac84a39fdc3c54021',1,'i2c_read(uint8_t address, uint8_t *rx_buffer, int length):&#160;efm32gg_i2c.c'],['../group___i2_c.html#ga56444c86621de14ac84a39fdc3c54021',1,'i2c_read(uint8_t address, uint8_t *rx_buffer, int length):&#160;efm32hg_i2c.c'],['../group___i2_c.html#ga56444c86621de14ac84a39fdc3c54021',1,'i2c_read(uint8_t address, uint8_t *rx_buffer, int length):&#160;efm32gg_i2c.c']]],
+  ['i2c_5fwrite',['i2c_write',['../group___i2_c.html#gab49fa98b30a9009524a495c035f67dd2',1,'i2c_write(uint8_t address, uint8_t *tx_buffer, int length):&#160;efm32gg_i2c.c'],['../group___i2_c.html#gab49fa98b30a9009524a495c035f67dd2',1,'i2c_write(uint8_t address, uint8_t *tx_buffer, int length):&#160;efm32hg_i2c.c'],['../group___i2_c.html#gab49fa98b30a9009524a495c035f67dd2',1,'i2c_write(uint8_t address, uint8_t *tx_buffer, int length):&#160;efm32gg_i2c.c']]],
+  ['i2c_5fwrite_5fread',['i2c_write_read',['../group___i2_c.html#ga83d43a00698789c29146077d2acc3119',1,'i2c_write_read(uint8_t address, uint8_t *tx_buffer, int lengthtx, uint8_t *rx_buffer, int lengthrx):&#160;efm32gg_i2c.c'],['../group___i2_c.html#ga83d43a00698789c29146077d2acc3119',1,'i2c_write_read(uint8_t address, uint8_t *tx_buffer, int lengthtx, uint8_t *rx_buffer, int lengthrx):&#160;efm32hg_i2c.c'],['../group___i2_c.html#ga83d43a00698789c29146077d2acc3119',1,'i2c_write_read(uint8_t address, uint8_t *tx_buffer, int lengthtx, uint8_t *rx_buffer, int lengthrx):&#160;efm32gg_i2c.c']]],
+  ['i2cclhr',['i2cClhr',['../group___i2_c.html#ga80c0951ce883da2e50ca9b6ac0296ecc',1,'I2C_Init_T']]],
+  ['i2cmaxfreq',['i2cMaxFreq',['../group___i2_c.html#ga5af6a17f405c9dea3126db1e285e7ff0',1,'I2C_Init_T']]],
+  ['i2creffreq',['i2cRefFreq',['../group___i2_c.html#gafef2fb3593f930344a7efa3010524eec',1,'I2C_Init_T']]],
+  ['id',['id',['../structcmd__handler__registration__t.html#af033a0d920ba42998d7db39caa0c8bd7',1,'cmd_handler_registration_t']]],
   ['if',['if',['../cc1101__interface__cc430_8c.html#a7582fcfbed769c9aa7aa5e6f2268251c',1,'cc1101_interface_cc430.c']]],
   ['ifest_5fdebug_2ec',['ifest_debug.c',['../ifest__debug_8c.html',1,'']]],
   ['ifest_5fleds_2ec',['ifest_leds.c',['../ifest__leds_8c.html',1,'']]],
   ['ifest_5fmain_2ec',['ifest_main.c',['../ifest__main_8c.html',1,'']]],
   ['ifest_5fuserbutton_2ec',['ifest_userbutton.c',['../ifest__userbutton_8c.html',1,'']]],
   ['index',['index',['../structtaskindex__info__t.html#a9b8d9759925ec5c961b8d1b1678887ed',1,'taskindex_info_t']]],
+  ['init_5fexternal_5fadc',['init_external_adc',['../_e_f_m32_g_g___s_t_k3700_2inc_2platform__sensors_8h.html#a1a4703f0fb58005a97f6c2b76d1367ee',1,'platform_sensors.h']]],
   ['init_5fprintf',['init_printf',['../uocmote_2printf_2printf_8h.html#a79b6d69a9f1f0b990c3297d3b9289086',1,'printf.h']]],
   ['int_5fhandler',['INT_HANDLER',['../efm32gg__mcu_8h.html#a1493bdbf8dee8ca32a5f43370e336632',1,'INT_HANDLER():&#160;efm32gg_mcu.h'],['../efm32hg__mcu_8h.html#a1493bdbf8dee8ca32a5f43370e336632',1,'INT_HANDLER():&#160;efm32hg_mcu.h'],['../efm32gg__timer_8c.html#a08828dc1194077c81a4c9e46d9fb4878',1,'INT_HANDLER(RTC_IRQHandler):&#160;efm32gg_timer.c'],['../efm32hg__timer_8c.html#a08828dc1194077c81a4c9e46d9fb4878',1,'INT_HANDLER(RTC_IRQHandler):&#160;efm32hg_timer.c']]],
   ['internaltempsensor_5finit',['internalTempSensor_init',['../_e_f_m32_g_g___s_t_k3700_2inc_2platform__sensors_8h.html#ad12b54359f7a9d58e1142d7470e48ee6',1,'internalTempSensor_init():&#160;stk3700_sensors.c'],['../stk3700__sensors_8c.html#aec263d9a21b0b4ffe68d70bf2a2edfac',1,'internalTempSensor_init(void):&#160;stk3700_sensors.c'],['../_e_f_m32_h_g___s_t_k3400_2inc_2platform__sensors_8h.html#ad12b54359f7a9d58e1142d7470e48ee6',1,'internalTempSensor_init():&#160;stk3700_sensors.c'],['../stk3400__sensors_8c.html#aec263d9a21b0b4ffe68d70bf2a2edfac',1,'internalTempSensor_init(void):&#160;stk3400_sensors.c']]],
@@ -14,5 +26,7 @@ var searchData=
   ['interrupthandler',['InterruptHandler',['../cc1101__interface__cc430_8c.html#add63f3cbc405f46bb9fbd1eb1b98b5ac',1,'cc1101_interface_cc430.c']]],
   ['iocfg0',['iocfg0',['../struct_r_f___s_e_t_t_i_n_g_s.html#a546411f54bf74752d4a0743ebfbfacb1',1,'RF_SETTINGS::iocfg0()'],['../cc1101__constants_8h.html#aa05cfcf3fc75713dc691d1ead9e05736',1,'IOCFG0():&#160;cc1101_constants.h']]],
   ['iocfg1',['iocfg1',['../struct_r_f___s_e_t_t_i_n_g_s.html#ab9d4200beacb45750b24ce17ebe06a39',1,'RF_SETTINGS::iocfg1()'],['../cc1101__constants_8h.html#a53a1d054e4f61a08fce122ac0fbd520e',1,'IOCFG1():&#160;cc1101_constants.h']]],
-  ['iocfg2',['iocfg2',['../struct_r_f___s_e_t_t_i_n_g_s.html#abe074c7f034ba42a977cabc26cb84456',1,'RF_SETTINGS::iocfg2()'],['../cc1101__constants_8h.html#a9da836dbbf177b6f1912355cf62cb73d',1,'IOCFG2():&#160;cc1101_constants.h']]]
+  ['iocfg2',['iocfg2',['../struct_r_f___s_e_t_t_i_n_g_s.html#abe074c7f034ba42a977cabc26cb84456',1,'RF_SETTINGS::iocfg2()'],['../cc1101__constants_8h.html#a9da836dbbf177b6f1912355cf62cb73d',1,'IOCFG2():&#160;cc1101_constants.h']]],
+  ['is_5ffs_5finit_5fcompleted',['is_fs_init_completed',['../fs_8c.html#a7080831c16657c2f818093e1cd4c1303',1,'fs.c']]],
+  ['is_5fin_5ftransaction',['IS_IN_TRANSACTION',['../d7atp_8c.html#ae8ffa2364849b1437bca121516c976a4',1,'d7atp.c']]]
 ];

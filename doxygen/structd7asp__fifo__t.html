@@ -118,28 +118,130 @@ $(document).ready(function(){initNavTree('structd7asp__fifo__t.html','');});
 Data Fields</h2></td></tr>
 <tr class="memitem:a9b3750988a94f0573b842731f4e0ca66"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structd7asp__fifo__config__t.html">d7asp_fifo_config_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structd7asp__fifo__t.html#a9b3750988a94f0573b842731f4e0ca66">config</a></td></tr>
 <tr class="separator:a9b3750988a94f0573b842731f4e0ca66"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a72f73e7df02511772e35b24942a0624d"><td class="memItemLeft" align="right" valign="top">uint8_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structd7asp__fifo__t.html#a72f73e7df02511772e35b24942a0624d">command_buffer</a> [MODULE_D7AP_FIFO_COMMAND_BUFFER_SIZE]</td></tr>
-<tr class="separator:a72f73e7df02511772e35b24942a0624d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a08bfe204c84288afdccffeb3c7e9d970"><td class="memItemLeft" align="right" valign="top">uint8_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structd7asp__fifo__t.html#a08bfe204c84288afdccffeb3c7e9d970">token</a></td></tr>
+<tr class="separator:a08bfe204c84288afdccffeb3c7e9d970"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab6766a1f4639a38ab7200d19f5ab3ca2"><td class="memItemLeft" align="right" valign="top">uint8_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structd7asp__fifo__t.html#ab6766a1f4639a38ab7200d19f5ab3ca2">progress_bitmap</a> [<a class="el" href="d7asp_8h.html#abea92ba7a2a52f6cfb7db7ed838ebf5a">REQUESTS_BITMAP_BYTE_COUNT</a>]</td></tr>
+<tr class="separator:ab6766a1f4639a38ab7200d19f5ab3ca2"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a8eb92fb3b15828a44bcd9748e1e47504"><td class="memItemLeft" align="right" valign="top">uint8_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structd7asp__fifo__t.html#a8eb92fb3b15828a44bcd9748e1e47504">success_bitmap</a> [<a class="el" href="d7asp_8h.html#abea92ba7a2a52f6cfb7db7ed838ebf5a">REQUESTS_BITMAP_BYTE_COUNT</a>]</td></tr>
+<tr class="separator:a8eb92fb3b15828a44bcd9748e1e47504"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a4068489be054cc9e314a8c7c6ac6f8e1"><td class="memItemLeft" align="right" valign="top">uint8_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structd7asp__fifo__t.html#a4068489be054cc9e314a8c7c6ac6f8e1">next_request_id</a></td></tr>
+<tr class="separator:a4068489be054cc9e314a8c7c6ac6f8e1"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae9cfcffcdbe440fb51d9e11075061fc7"><td class="memItemLeft" align="right" valign="top">uint8_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structd7asp__fifo__t.html#ae9cfcffcdbe440fb51d9e11075061fc7">request_buffer_tail_idx</a></td></tr>
+<tr class="separator:ae9cfcffcdbe440fb51d9e11075061fc7"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad7460d198c347eaa1e795c2248e76035"><td class="memItemLeft" align="right" valign="top">uint8_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structd7asp__fifo__t.html#ad7460d198c347eaa1e795c2248e76035">requests_indices</a> [MODULE_D7AP_FIFO_MAX_REQUESTS_COUNT]</td></tr>
+<tr class="separator:ad7460d198c347eaa1e795c2248e76035"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aab1df30eaf74618014f897061b1f94fe"><td class="memItemLeft" align="right" valign="top">uint8_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structd7asp__fifo__t.html#aab1df30eaf74618014f897061b1f94fe">requests_lengths</a> [MODULE_D7AP_FIFO_MAX_REQUESTS_COUNT]</td></tr>
+<tr class="separator:aab1df30eaf74618014f897061b1f94fe"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab25563c09ec68f6ac05e55f1d9a001fa"><td class="memItemLeft" align="right" valign="top">uint8_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structd7asp__fifo__t.html#ab25563c09ec68f6ac05e55f1d9a001fa">request_buffer</a> [MODULE_D7AP_FIFO_COMMAND_BUFFER_SIZE]</td></tr>
+<tr class="separator:ab25563c09ec68f6ac05e55f1d9a001fa"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
-<h2 class="groupheader">Field Documentation</h2>
-<a class="anchor" id="a72f73e7df02511772e35b24942a0624d"></a>
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">uint8_t d7asp_fifo_t::command_buffer[MODULE_D7AP_FIFO_COMMAND_BUFFER_SIZE]</td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-</div>
-</div>
+<a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
+<div class="textblock"><p>/brief The state of a session FIFO </p>
+</div><h2 class="groupheader">Field Documentation</h2>
 <a class="anchor" id="a9b3750988a94f0573b842731f4e0ca66"></a>
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
           <td class="memname"><a class="el" href="structd7asp__fifo__config__t.html">d7asp_fifo_config_t</a> d7asp_fifo_t::config</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a class="anchor" id="a4068489be054cc9e314a8c7c6ac6f8e1"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">uint8_t d7asp_fifo_t::next_request_id</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a class="anchor" id="ab6766a1f4639a38ab7200d19f5ab3ca2"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">uint8_t d7asp_fifo_t::progress_bitmap[<a class="el" href="d7asp_8h.html#abea92ba7a2a52f6cfb7db7ed838ebf5a">REQUESTS_BITMAP_BYTE_COUNT</a>]</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a class="anchor" id="ab25563c09ec68f6ac05e55f1d9a001fa"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">uint8_t d7asp_fifo_t::request_buffer[MODULE_D7AP_FIFO_COMMAND_BUFFER_SIZE]</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a class="anchor" id="ae9cfcffcdbe440fb51d9e11075061fc7"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">uint8_t d7asp_fifo_t::request_buffer_tail_idx</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a class="anchor" id="ad7460d198c347eaa1e795c2248e76035"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">uint8_t d7asp_fifo_t::requests_indices[MODULE_D7AP_FIFO_MAX_REQUESTS_COUNT]</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Contains for every request ID the index in command_buffer the index where the request begins </p>
+
+</div>
+</div>
+<a class="anchor" id="aab1df30eaf74618014f897061b1f94fe"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">uint8_t d7asp_fifo_t::requests_lengths[MODULE_D7AP_FIFO_MAX_REQUESTS_COUNT]</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Contains for every request ID the index in command_buffer the length of the ALP payload in that request </p>
+
+</div>
+</div>
+<a class="anchor" id="a8eb92fb3b15828a44bcd9748e1e47504"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">uint8_t d7asp_fifo_t::success_bitmap[<a class="el" href="d7asp_8h.html#abea92ba7a2a52f6cfb7db7ed838ebf5a">REQUESTS_BITMAP_BYTE_COUNT</a>]</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a class="anchor" id="a08bfe204c84288afdccffeb3c7e9d970"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">uint8_t d7asp_fifo_t::token</td>
         </tr>
       </table>
 </div><div class="memdoc">
@@ -155,7 +257,7 @@ Data Fields</h2></td></tr>
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
     <li class="navelem"><a class="el" href="structd7asp__fifo__t.html">d7asp_fifo_t</a></li>
-    <li class="footer">Generated on Thu Aug 27 2015 08:44:08 for OSS-7: Open Source Stack for DASH7 Alliance Protocol by
+    <li class="footer">Generated on Sun Nov 22 2015 10:16:09 for OSS-7: Open Source Stack for DASH7 Alliance Protocol by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.8.9.1 </li>
   </ul>

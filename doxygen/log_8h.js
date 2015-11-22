@@ -1,5 +1,9 @@
 var log_8h =
 [
+    [ "log_counter_reset", "group__logging.html#ga98348b53ec420fe4968856cc02253ea8", null ],
+    [ "log_print_data", "group__logging.html#ga3929818cbe34f81d65d4a64d979ca23f", null ],
+    [ "log_print_stack_string", "group__logging.html#ga53bc6ac620163135ce81ac5333fe966a", null ],
+    [ "log_print_string", "group__logging.html#gaf53fd0698999d4f73e5b26ac10cb2f55", null ],
     [ "log_stack_layer_t", "group__logging.html#ga74f3f01cd15381ebeccd55047988c127", [
       [ "LOG_STACK_PHY", "group__logging.html#gga74f3f01cd15381ebeccd55047988c127a759413fea48d3d4fca5c67995aeaf859", null ],
       [ "LOG_STACK_DLL", "group__logging.html#gga74f3f01cd15381ebeccd55047988c127a0be08e3a960a5a620d6ec517d66d45d5", null ],

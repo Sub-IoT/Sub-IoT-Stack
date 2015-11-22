@@ -106,7 +106,6 @@ $(document).ready(function(){initNavTree('d7anp_8h.html','');});
 <div class="header">
   <div class="summary">
 <a href="#nested-classes">Data Structures</a> &#124;
-<a href="#define-members">Macros</a> &#124;
 <a href="#typedef-members">Typedefs</a> &#124;
 <a href="#func-members">Functions</a>  </div>
   <div class="headertitle">
@@ -115,6 +114,7 @@ $(document).ready(function(){initNavTree('d7anp_8h.html','');});
 <div class="contents">
 <div class="textblock"><code>#include &quot;stdint.h&quot;</code><br />
 <code>#include &quot;stdbool.h&quot;</code><br />
+<code>#include &quot;<a class="el" href="dae_8h_source.html">dae.h</a>&quot;</code><br />
 </div>
 <p><a href="d7anp_8h_source.html">Go to the source code of this file.</a></p>
 <table class="memberdecls">
@@ -124,11 +124,6 @@ Data Structures</h2></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">The D7ANP CTRL header.  <a href="structd7anp__ctrl__t.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
-<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="define-members"></a>
-Macros</h2></td></tr>
-<tr class="memitem:acc571c45be1d13993cf2973884325af9"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="d7anp_8h.html#acc571c45be1d13993cf2973884325af9">BITS_BIG_ENDIAN</a>&#160;&#160;&#160;1</td></tr>
-<tr class="separator:acc571c45be1d13993cf2973884325af9"><td class="memSeparator" colspan="2">&#160;</td></tr>
-</table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="typedef-members"></a>
 Typedefs</h2></td></tr>
 <tr class="memitem:a055b444e9c43fd24266b5908a7b26636"><td class="memItemLeft" align="right" valign="top">typedef struct <a class="el" href="structpacket.html">packet</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="d7anp_8h.html#a055b444e9c43fd24266b5908a7b26636">packet_t</a></td></tr>
@@ -136,30 +131,19 @@ Typedefs</h2></td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
 Functions</h2></td></tr>
-<tr class="memitem:a59801acd5942bfddc543b5abf3af322e"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="d7anp_8h.html#a59801acd5942bfddc543b5abf3af322e">d7anp_tx_foreground_frame</a> (<a class="el" href="d7anp_8h.html#a055b444e9c43fd24266b5908a7b26636">packet_t</a> *<a class="el" href="structpacket.html">packet</a>, bool should_include_origin_template)</td></tr>
-<tr class="separator:a59801acd5942bfddc543b5abf3af322e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa03f66f871cb0182246d608db0b43dc6"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="d7anp_8h.html#aa03f66f871cb0182246d608db0b43dc6">d7anp_tx_foreground_frame</a> (<a class="el" href="d7anp_8h.html#a055b444e9c43fd24266b5908a7b26636">packet_t</a> *<a class="el" href="structpacket.html">packet</a>, bool should_include_origin_template, <a class="el" href="structdae__access__profile__t.html">dae_access_profile_t</a> *access_profile)</td></tr>
+<tr class="separator:aa03f66f871cb0182246d608db0b43dc6"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:adb701a9e9417a2da5afac4f6d91b50b9"><td class="memItemLeft" align="right" valign="top">uint8_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="d7anp_8h.html#adb701a9e9417a2da5afac4f6d91b50b9">d7anp_assemble_packet_header</a> (<a class="el" href="d7anp_8h.html#a055b444e9c43fd24266b5908a7b26636">packet_t</a> *<a class="el" href="structpacket.html">packet</a>, uint8_t *data_ptr)</td></tr>
 <tr class="separator:adb701a9e9417a2da5afac4f6d91b50b9"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a08e0adbbab43d5201f7be22827e90d38"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="d7anp_8h.html#a08e0adbbab43d5201f7be22827e90d38">d7anp_disassemble_packet_header</a> (<a class="el" href="d7anp_8h.html#a055b444e9c43fd24266b5908a7b26636">packet_t</a> *<a class="el" href="structpacket.html">packet</a>, uint8_t *packet_idx)</td></tr>
+<tr class="separator:a08e0adbbab43d5201f7be22827e90d38"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><dl class="section copyright"><dt>Copyright</dt><dd>(C) Copyright 2015 University of Antwerp and others (<a href="http://oss-7.cosys.be">http://oss-7.cosys.be</a>)</dd></dl>
 <p>Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the License. You may obtain a copy of the License at </p><pre class="fragment">http://www.apache.org/licenses/LICENSE-2.0
 </pre><p>Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.</p>
 <dl class="section author"><dt>Author</dt><dd><a href="#" onclick="location.href='mai'+'lto:'+'gle'+'nn'+'.er'+'ge'+'ert'+'s@'+'uan'+'tw'+'erp'+'en'+'.be'; return false;">glenn<span style="display: none;">.nosp@m.</span>.erg<span style="display: none;">.nosp@m.</span>eerts<span style="display: none;">.nosp@m.</span>@uan<span style="display: none;">.nosp@m.</span>twerp<span style="display: none;">.nosp@m.</span>en.b<span style="display: none;">.nosp@m.</span>e</a> </dd></dl>
-</div><h2 class="groupheader">Macro Definition Documentation</h2>
-<a class="anchor" id="acc571c45be1d13993cf2973884325af9"></a>
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">#define BITS_BIG_ENDIAN&#160;&#160;&#160;1</td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-</div>
-</div>
-<h2 class="groupheader">Typedef Documentation</h2>
+</div><h2 class="groupheader">Typedef Documentation</h2>
 <a class="anchor" id="a055b444e9c43fd24266b5908a7b26636"></a>
 <div class="memitem">
 <div class="memproto">
@@ -199,7 +183,33 @@ Functions</h2></td></tr>
 
 </div>
 </div>
-<a class="anchor" id="a59801acd5942bfddc543b5abf3af322e"></a>
+<a class="anchor" id="a08e0adbbab43d5201f7be22827e90d38"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool d7anp_disassemble_packet_header </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="d7anp_8h.html#a055b444e9c43fd24266b5908a7b26636">packet_t</a> *&#160;</td>
+          <td class="paramname"><em>packet</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">uint8_t *&#160;</td>
+          <td class="paramname"><em>packet_idx</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a class="anchor" id="aa03f66f871cb0182246d608db0b43dc6"></a>
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
@@ -213,7 +223,13 @@ Functions</h2></td></tr>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">bool&#160;</td>
-          <td class="paramname"><em>should_include_origin_template</em>&#160;</td>
+          <td class="paramname"><em>should_include_origin_template</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="structdae__access__profile__t.html">dae_access_profile_t</a> *&#160;</td>
+          <td class="paramname"><em>access_profile</em>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -231,7 +247,7 @@ Functions</h2></td></tr>
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
     <li class="navelem"><a class="el" href="dir_e05d7e2b1ecd646af5bb94391405f3b5.html">modules</a></li><li class="navelem"><a class="el" href="dir_6b8f92aa648c158fb1e8ed54f9452f2b.html">d7ap</a></li><li class="navelem"><a class="el" href="d7anp_8h.html">d7anp.h</a></li>
-    <li class="footer">Generated on Thu Aug 27 2015 08:44:08 for OSS-7: Open Source Stack for DASH7 Alliance Protocol by
+    <li class="footer">Generated on Sun Nov 22 2015 10:16:09 for OSS-7: Open Source Stack for DASH7 Alliance Protocol by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.8.9.1 </li>
   </ul>

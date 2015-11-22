@@ -1,5 +1,7 @@
 var searchData=
 [
+  ['adcinputsinglech4ch5',['adcInputSingleCh4Ch5',['../group___a_d_c.html#gga2d56278915683d00a45b9b1ede13c307ab2f1582c5db9b1bccfdc9d9996de61fc',1,'hwadc.h']]],
+  ['adcinputsingletemp',['adcInputSingleTemp',['../group___a_d_c.html#gga2d56278915683d00a45b9b1ede13c307ae7978052918296d63cd3cc6c7f11e489',1,'hwadc.h']]],
   ['adcreference1v25',['adcReference1V25',['../group___a_d_c.html#gga1791488ae818871ec6dbc01921d0dc8caa3227653b9b359b58fb7ace54aa08fa1',1,'hwadc.h']]],
   ['adcreference2v5',['adcReference2V5',['../group___a_d_c.html#gga1791488ae818871ec6dbc01921d0dc8ca9762347d244b554e25fda3515d71937a',1,'hwadc.h']]],
   ['adcreference2xextdiff',['adcReference2xExtDiff',['../group___a_d_c.html#gga1791488ae818871ec6dbc01921d0dc8caee4d7eace8b8b146b04238252ea5415f',1,'hwadc.h']]],

@@ -1,6 +1,5 @@
 var searchData=
 [
-  ['release_5fpacket_5fcallback_5ft',['release_packet_callback_t',['../group__radio.html#ga822e576af2256b03278c9945b8d6aacf',1,'hwradio.h']]],
-  ['rssi_5fvalid_5fcallback_5ft',['rssi_valid_callback_t',['../group__radio.html#ga0ba48debc5245ec6150ac6eb1db19766',1,'hwradio.h']]],
-  ['rx_5fpacket_5fcallback_5ft',['rx_packet_callback_t',['../group__radio.html#gaf118d5fc80084fae379668fd97f9719b',1,'hwradio.h']]]
+  ['hwtimer_5fid_5ft',['hwtimer_id_t',['../group__timer.html#ga844e8f2d8eddf6ddd04f80440efe4c4f',1,'hwtimer.h']]],
+  ['hwtimer_5ftick_5ft',['hwtimer_tick_t',['../group__timer.html#gac76c087138a5a39e6bd3bbf4c3bad1d7',1,'hwtimer.h']]]
 ];

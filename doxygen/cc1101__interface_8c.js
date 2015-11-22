@@ -3,7 +3,7 @@ var cc1101__interface_8c =
     [ "DPRINT", "cc1101__interface_8c.html#a57a35bfd7d13bdfab37a48171286ecee", null ],
     [ "_c1101_interface_read_burst_reg", "cc1101__interface_8c.html#a53b119906b753e8bed5f935ef1e70821", null ],
     [ "_c1101_interface_read_single_reg", "cc1101__interface_8c.html#a8db3c67120cefcbccf9bc625d293384f", null ],
-    [ "_c1101_interface_reset_radio_core", "cc1101__interface_8c.html#a21ba1acaf78e31d410b16a134a57ae8a", null ],
+    [ "_c1101_interface_reset_radio_core", "cc1101__interface_8c.html#a689efbd66487e4816849841f9ac049d4", null ],
     [ "_c1101_interface_set_interrupts_enabled", "cc1101__interface_8c.html#aa908aa40fddeb929275e35996b9cba97", null ],
     [ "_c1101_interface_strobe", "cc1101__interface_8c.html#a3f384aaceb96592a62c7ca87e0f5c611", null ],
     [ "_c1101_interface_write_burst_patable", "cc1101__interface_8c.html#a3f7d6d896eebf18faa15991bbfbb2817", null ],

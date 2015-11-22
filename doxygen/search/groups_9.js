@@ -1,6 +1,5 @@
 var searchData=
 [
-  ['scheduler',['Scheduler',['../group__scheduler.html',1,'']]],
-  ['spi',['SPI',['../group___s_p_i.html',1,'']]],
-  ['system',['System',['../group___system.html',1,'']]]
+  ['radio',['Radio',['../group__radio.html',1,'']]],
+  ['random',['Random',['../group__random.html',1,'']]]
 ];

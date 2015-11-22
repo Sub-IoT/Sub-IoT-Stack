@@ -137,7 +137,7 @@ $(document).ready(function(){initNavTree('ng_8h_source.html','');});
 <div class="line"><a name="l00027"></a><span class="lineno">   27</span>&#160;</div>
 <div class="line"><a name="l00028"></a><span class="lineno">   28</span>&#160;<span class="preprocessor">#if defined(NODE_GLOBALS)</span></div>
 <div class="line"><a name="l00029"></a><span class="lineno">   29</span>&#160;<span class="preprocessor">#include &lt;stddef.h&gt;</span></div>
-<div class="line"><a name="l00030"></a><span class="lineno">   30</span>&#160;<span class="preprocessor">#include &lt;assert.h&gt;</span></div>
+<div class="line"><a name="l00030"></a><span class="lineno">   30</span>&#160;<span class="preprocessor">#include &lt;<a class="code" href="debug_8h.html">debug.h</a>&gt;</span></div>
 <div class="line"><a name="l00031"></a><span class="lineno">   31</span>&#160;<span class="preprocessor">#ifndef NODE_GLOBALS_MAX_NODES</span></div>
 <div class="line"><a name="l00032"></a><span class="lineno">   32</span>&#160;<span class="preprocessor">    #warning NODE_GLOBALS_MAX_NODES is not defined. Using default value of 256</span></div>
 <div class="line"><a name="l00033"></a><span class="lineno">   33</span>&#160;<span class="preprocessor">    #define NODE_GLOBALS_MAX_NODES 256</span></div>
@@ -149,7 +149,7 @@ $(document).ready(function(){initNavTree('ng_8h_source.html','');});
 <div class="line"><a name="l00039"></a><span class="lineno">   39</span>&#160;};</div>
 <div class="line"><a name="l00040"></a><span class="lineno">   40</span>&#160;<span class="keyword">extern</span> <span class="keywordtype">size_t</span> __ng_node_id__;</div>
 <div class="line"><a name="l00041"></a><span class="lineno">   41</span>&#160;<a class="code" href="link__c_8h.html#ad7a35fa85166c1d1839000ac10353068">__LINK_C</a> <span class="keywordtype">void</span> set_node_global_id(<span class="keywordtype">size_t</span> node_id);</div>
-<div class="line"><a name="l00042"></a><span class="lineno">   42</span>&#160;<span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">size_t</span> get_node_global_id() { assert(__ng_node_id__ &lt; __ng_max_nodes__); <span class="keywordflow">return</span> __ng_node_id__; }</div>
+<div class="line"><a name="l00042"></a><span class="lineno">   42</span>&#160;<span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">size_t</span> get_node_global_id() { <a class="code" href="group__debug.html#ga7bbc469eb189fd98eead7ce1691dce53">assert</a>(__ng_node_id__ &lt; __ng_max_nodes__); <span class="keywordflow">return</span> __ng_node_id__; }</div>
 <div class="line"><a name="l00043"></a><span class="lineno">   43</span>&#160;</div>
 <div class="line"><a name="l00044"></a><span class="lineno">   44</span>&#160;<span class="preprocessor">#define NG(var)         (__ng_glob_ ## var ## __[(get_node_global_id())])</span></div>
 <div class="line"><a name="l00045"></a><span class="lineno">   45</span>&#160;<span class="preprocessor">#define NGDEF(var)      (__ng_glob_ ## var ## __[__ng_max_nodes__])</span></div>
@@ -169,6 +169,8 @@ $(document).ready(function(){initNavTree('ng_8h_source.html','');});
 <div class="line"><a name="l00059"></a><span class="lineno">   59</span>&#160;</div>
 <div class="line"><a name="l00060"></a><span class="lineno">   60</span>&#160;</div>
 <div class="line"><a name="l00061"></a><span class="lineno">   61</span>&#160;<span class="preprocessor">#endif //NG_H_</span></div>
+<div class="ttc" id="debug_8h_html"><div class="ttname"><a href="debug_8h.html">debug.h</a></div></div>
+<div class="ttc" id="group__debug_html_ga7bbc469eb189fd98eead7ce1691dce53"><div class="ttname"><a href="group__debug.html#ga7bbc469eb189fd98eead7ce1691dce53">assert</a></div><div class="ttdeci">#define assert(__e)</div><div class="ttdef"><b>Definition:</b> debug.h:48</div></div>
 <div class="ttc" id="link__c_8h_html_ad7a35fa85166c1d1839000ac10353068"><div class="ttname"><a href="link__c_8h.html#ad7a35fa85166c1d1839000ac10353068">__LINK_C</a></div><div class="ttdeci">#define __LINK_C</div><div class="ttdef"><b>Definition:</b> link_c.h:23</div></div>
 <div class="ttc" id="link__c_8h_html"><div class="ttname"><a href="link__c_8h.html">link_c.h</a></div></div>
 </div><!-- fragment --></div><!-- contents -->
@@ -177,7 +179,7 @@ $(document).ready(function(){initNavTree('ng_8h_source.html','');});
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
     <li class="navelem"><a class="el" href="dir_644e041c3a6521da7b27eba0e4eb2b95.html">framework</a></li><li class="navelem"><a class="el" href="dir_50492bb8b74f3c17cee2d1133202ac44.html">inc</a></li><li class="navelem"><a class="el" href="ng_8h.html">ng.h</a></li>
-    <li class="footer">Generated on Thu Aug 27 2015 08:44:07 for OSS-7: Open Source Stack for DASH7 Alliance Protocol by
+    <li class="footer">Generated on Sun Nov 22 2015 10:16:09 for OSS-7: Open Source Stack for DASH7 Alliance Protocol by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.8.9.1 </li>
   </ul>

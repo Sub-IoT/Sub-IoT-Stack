@@ -19,17 +19,21 @@ var group__radio =
       [ "eirp", "structhw__tx__cfg__t.html#af9d035d993654fd87b1adbb2704eb15c", null ],
       [ "syncword_class", "structhw__tx__cfg__t.html#aa563bc598dac3f7688ba45394606af77", null ]
     ] ],
-    [ "__attribute__", "struct____attribute____.html", [
-      [ "__resv", "struct____attribute____.html#aa641220908de6f2070a7b7a1203aaf9b", null ],
-      [ "crc_status", "struct____attribute____.html#a704e2d3fb4c755460ef81adf5469ffab", null ],
-      [ "data", "struct____attribute____.html#ad2756f63cf6e8e68ec06443c2a8d789e", null ],
-      [ "length", "struct____attribute____.html#a3ddd0091402d85a50cf9eb63ff2c7d71", null ],
-      [ "lqi", "struct____attribute____.html#af76a8d0846b7e5e9a155c2af75d215d6", null ],
-      [ "rssi", "struct____attribute____.html#ad5bab7423266e1e49ffe4b2d92abb7f3", null ],
-      [ "rx_cfg", "struct____attribute____.html#ad1aca644ea2b14ed7b8206252f58efc4", null ],
-      [ "rx_meta", "struct____attribute____.html#adedfdd6a1e1c1fd8be77cb8fab3da91a", null ],
-      [ "tx_cfg", "struct____attribute____.html#aee87c0f201aa9238eef8487e00c52631", null ],
-      [ "tx_meta", "struct____attribute____.html#aefd56b530e94e28676d62767abbd434a", null ]
+    [ "hw_rx_metadata_t", "structhw__rx__metadata__t.html", [
+      [ "crc_status", "structhw__rx__metadata__t.html#a3deb5b54c2847059abc4629aeb4ee31a", null ],
+      [ "lqi", "structhw__rx__metadata__t.html#a5dca4cb219c51b62801ae4e6e63bc2d3", null ],
+      [ "rssi", "structhw__rx__metadata__t.html#a1fadff09303a314dd15b4cf4e2f2c090", null ],
+      [ "rx_cfg", "structhw__rx__metadata__t.html#a5fdf5dcfa4be63a3f34ebae8e42d88fb", null ]
+    ] ],
+    [ "hw_tx_metadata_t", "structhw__tx__metadata__t.html", [
+      [ "tx_cfg", "structhw__tx__metadata__t.html#af2b1475e84f222a67f98cc295fdc8844", null ]
+    ] ],
+    [ "hw_radio_packet_t", "structhw__radio__packet__t.html", [
+      [ "__resv", "structhw__radio__packet__t.html#a9c424ae1a51298bc00915000d58f1142", null ],
+      [ "data", "structhw__radio__packet__t.html#a985d73246175e12345ac813b6946e6e9", null ],
+      [ "length", "structhw__radio__packet__t.html#a80c81b2803962162b04045da6a855775", null ],
+      [ "rx_meta", "structhw__radio__packet__t.html#a0eea240a84cbfce46a7791adca885229", null ],
+      [ "tx_meta", "structhw__radio__packet__t.html#aa815545b0a2dfcb47598a334e1f938ee", null ]
     ] ],
     [ "HW_PACKET_BUF_SIZE", "group__radio.html#ga1ea11be8a05e4a87040bd5f0c10c911c", null ],
     [ "HW_RSSI_INVALID", "group__radio.html#gac55228f9ea3c257706e9316da32ce87e", null ],

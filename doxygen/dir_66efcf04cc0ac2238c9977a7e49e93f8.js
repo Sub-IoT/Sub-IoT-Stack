@@ -5,6 +5,7 @@ var dir_66efcf04cc0ac2238c9977a7e49e93f8 =
     [ "hwatomic.h", "hwatomic_8h.html", "hwatomic_8h" ],
     [ "hwdebug.h", "hwdebug_8h.html", "hwdebug_8h" ],
     [ "hwgpio.h", "hwgpio_8h.html", "hwgpio_8h" ],
+    [ "hwi2c.h", "hwi2c_8h.html", "hwi2c_8h" ],
     [ "hwlcd.h", "hwlcd_8h.html", "hwlcd_8h" ],
     [ "hwleds.h", "hwleds_8h.html", "hwleds_8h" ],
     [ "hwradio.h", "hwradio_8h.html", "hwradio_8h" ],
@@ -12,5 +13,6 @@ var dir_66efcf04cc0ac2238c9977a7e49e93f8 =
     [ "hwsystem.h", "hwsystem_8h.html", "hwsystem_8h" ],
     [ "hwtimer.h", "hwtimer_8h.html", "hwtimer_8h" ],
     [ "hwuart.h", "hwuart_8h.html", "hwuart_8h" ],
-    [ "hwusb.h", "hwusb_8h.html", "hwusb_8h" ]
+    [ "hwusb.h", "hwusb_8h.html", "hwusb_8h" ],
+    [ "hwwatchdog.h", "hwwatchdog_8h.html", "hwwatchdog_8h" ]
 ];

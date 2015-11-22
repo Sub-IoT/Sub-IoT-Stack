@@ -6,6 +6,7 @@ var searchData=
   ['hwatomic_2eh',['hwatomic.h',['../hwatomic_8h.html',1,'']]],
   ['hwdebug_2eh',['hwdebug.h',['../hwdebug_8h.html',1,'']]],
   ['hwgpio_2eh',['hwgpio.h',['../hwgpio_8h.html',1,'']]],
+  ['hwi2c_2eh',['hwi2c.h',['../hwi2c_8h.html',1,'']]],
   ['hwlcd_2eh',['hwlcd.h',['../hwlcd_8h.html',1,'']]],
   ['hwleds_2eh',['hwleds.h',['../hwleds_8h.html',1,'']]],
   ['hwradio_2eh',['hwradio.h',['../hwradio_8h.html',1,'']]],
@@ -13,5 +14,6 @@ var searchData=
   ['hwsystem_2eh',['hwsystem.h',['../hwsystem_8h.html',1,'']]],
   ['hwtimer_2eh',['hwtimer.h',['../hwtimer_8h.html',1,'']]],
   ['hwuart_2eh',['hwuart.h',['../hwuart_8h.html',1,'']]],
-  ['hwusb_2eh',['hwusb.h',['../hwusb_8h.html',1,'']]]
+  ['hwusb_2eh',['hwusb.h',['../hwusb_8h.html',1,'']]],
+  ['hwwatchdog_2eh',['hwwatchdog.h',['../hwwatchdog_8h.html',1,'']]]
 ];

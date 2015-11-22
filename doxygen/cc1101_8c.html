@@ -112,11 +112,12 @@ $(document).ready(function(){initNavTree('cc1101_8c.html','');});
 <div class="title">cc1101.c File Reference</div>  </div>
 </div><!--header-->
 <div class="contents">
-<div class="textblock"><code>#include &quot;assert.h&quot;</code><br />
+<div class="textblock"><code>#include &quot;<a class="el" href="debug_8h_source.html">debug.h</a>&quot;</code><br />
 <code>#include &quot;string.h&quot;</code><br />
 <code>#include &quot;<a class="el" href="log_8h_source.html">log.h</a>&quot;</code><br />
 <code>#include &quot;<a class="el" href="hwradio_8h_source.html">hwradio.h</a>&quot;</code><br />
 <code>#include &quot;<a class="el" href="hwsystem_8h_source.html">hwsystem.h</a>&quot;</code><br />
+<code>#include &quot;<a class="el" href="hwdebug_8h_source.html">hwdebug.h</a>&quot;</code><br />
 <code>#include &quot;<a class="el" href="cc1101_8h_source.html">cc1101.h</a>&quot;</code><br />
 <code>#include &quot;<a class="el" href="cc1101__interface_8h_source.html">cc1101_interface.h</a>&quot;</code><br />
 <code>#include &quot;<a class="el" href="cc1101__constants_8h_source.html">cc1101_constants.h</a>&quot;</code><br />
@@ -128,6 +129,14 @@ Macros</h2></td></tr>
 <tr class="separator:a57a35bfd7d13bdfab37a48171286ecee"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a2749202671e6c83693acbddba7257782"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="cc1101_8c.html#a2749202671e6c83693acbddba7257782">RSSI_OFFSET</a>&#160;&#160;&#160;74</td></tr>
 <tr class="separator:a2749202671e6c83693acbddba7257782"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:affd64e202e476716ffe48d354f51d0a6"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="cc1101_8c.html#affd64e202e476716ffe48d354f51d0a6">DEBUG_TX_START</a>()</td></tr>
+<tr class="separator:affd64e202e476716ffe48d354f51d0a6"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a91a99623bbe19c0f33ae1a0f2e05b221"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="cc1101_8c.html#a91a99623bbe19c0f33ae1a0f2e05b221">DEBUG_TX_END</a>()</td></tr>
+<tr class="separator:a91a99623bbe19c0f33ae1a0f2e05b221"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac69660a876d94bb5f21f5ee74bd19999"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="cc1101_8c.html#ac69660a876d94bb5f21f5ee74bd19999">DEBUG_RX_START</a>()</td></tr>
+<tr class="separator:ac69660a876d94bb5f21f5ee74bd19999"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a785b3c835255bb475e65b6fe25015758"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="cc1101_8c.html#a785b3c835255bb475e65b6fe25015758">DEBUG_RX_END</a>()</td></tr>
+<tr class="separator:a785b3c835255bb475e65b6fe25015758"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="enum-members"></a>
 Enumerations</h2></td></tr>
@@ -146,7 +155,7 @@ Functions</h2></td></tr>
 <tr class="memitem:gaeeb8ffcdd89455429d4d13caf08fb661"><td class="memItemLeft" align="right" valign="top"><a class="el" href="types_8h.html#a9ad6b2dc3cbff040775e79656fe8e1a3">error_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__radio.html#gaeeb8ffcdd89455429d4d13caf08fb661">hw_radio_set_rx</a> (<a class="el" href="structhw__rx__cfg__t.html">hw_rx_cfg_t</a> const *rx_cfg, <a class="el" href="group__radio.html#gaf118d5fc80084fae379668fd97f9719b">rx_packet_callback_t</a> rx_cb, <a class="el" href="group__radio.html#ga0ba48debc5245ec6150ac6eb1db19766">rssi_valid_callback_t</a> rssi_valid_cb)</td></tr>
 <tr class="memdesc:gaeeb8ffcdd89455429d4d13caf08fb661"><td class="mdescLeft">&#160;</td><td class="mdescRight">Set the radio in RX mode.  <a href="group__radio.html#gaeeb8ffcdd89455429d4d13caf08fb661">More...</a><br /></td></tr>
 <tr class="separator:gaeeb8ffcdd89455429d4d13caf08fb661"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ga7292dedeeb8229173201c2987811fb8f"><td class="memItemLeft" align="right" valign="top"><a class="el" href="types_8h.html#a9ad6b2dc3cbff040775e79656fe8e1a3">error_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__radio.html#ga7292dedeeb8229173201c2987811fb8f">hw_radio_send_packet</a> (hw_radio_packet_t *<a class="el" href="structpacket.html">packet</a>, <a class="el" href="group__radio.html#gac2f2e4e8140549c0ac3abcf7fefb9e77">tx_packet_callback_t</a> tx_cb)</td></tr>
+<tr class="memitem:ga7292dedeeb8229173201c2987811fb8f"><td class="memItemLeft" align="right" valign="top"><a class="el" href="types_8h.html#a9ad6b2dc3cbff040775e79656fe8e1a3">error_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__radio.html#ga7292dedeeb8229173201c2987811fb8f">hw_radio_send_packet</a> (<a class="el" href="structhw__radio__packet__t.html">hw_radio_packet_t</a> *<a class="el" href="structpacket.html">packet</a>, <a class="el" href="group__radio.html#gac2f2e4e8140549c0ac3abcf7fefb9e77">tx_packet_callback_t</a> tx_cb)</td></tr>
 <tr class="memdesc:ga7292dedeeb8229173201c2987811fb8f"><td class="mdescLeft">&#160;</td><td class="mdescRight">Initiate a packet transmission over the air with the specified TX settings.  <a href="group__radio.html#ga7292dedeeb8229173201c2987811fb8f">More...</a><br /></td></tr>
 <tr class="separator:ga7292dedeeb8229173201c2987811fb8f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ga43ffbd2f8c0aec2f95fbdb365c39d682"><td class="memItemLeft" align="right" valign="top">int16_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__radio.html#ga43ffbd2f8c0aec2f95fbdb365c39d682">hw_radio_get_rssi</a> ()</td></tr>
@@ -157,6 +166,66 @@ Functions</h2></td></tr>
 <tr class="separator:gac4a7a12a95592bbb1a55532e5ddd9e6f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <h2 class="groupheader">Macro Definition Documentation</h2>
+<a class="anchor" id="a785b3c835255bb475e65b6fe25015758"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">#define DEBUG_RX_END</td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a class="anchor" id="ac69660a876d94bb5f21f5ee74bd19999"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">#define DEBUG_RX_START</td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a class="anchor" id="a91a99623bbe19c0f33ae1a0f2e05b221"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">#define DEBUG_TX_END</td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a class="anchor" id="affd64e202e476716ffe48d354f51d0a6"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">#define DEBUG_TX_START</td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
 <a class="anchor" id="a57a35bfd7d13bdfab37a48171286ecee"></a>
 <div class="memitem">
 <div class="memproto">
@@ -214,7 +283,7 @@ Functions</h2></td></tr>
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
     <li class="navelem"><a class="el" href="dir_644e041c3a6521da7b27eba0e4eb2b95.html">framework</a></li><li class="navelem"><a class="el" href="dir_8f2c340cdabd0cab4db94c39704d70a8.html">hal</a></li><li class="navelem"><a class="el" href="dir_e53dcac4adbcec177c678c0d8c8c3e7c.html">chips</a></li><li class="navelem"><a class="el" href="dir_1966db521c08592bea343a4b0b9536f9.html">cc1101</a></li><li class="navelem"><a class="el" href="cc1101_8c.html">cc1101.c</a></li>
-    <li class="footer">Generated on Thu Aug 27 2015 08:44:07 for OSS-7: Open Source Stack for DASH7 Alliance Protocol by
+    <li class="footer">Generated on Sun Nov 22 2015 10:16:09 for OSS-7: Open Source Stack for DASH7 Alliance Protocol by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.8.9.1 </li>
   </ul>

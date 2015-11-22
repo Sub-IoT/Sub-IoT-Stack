@@ -6,10 +6,12 @@ var dir_8b9647ac80bab5b612e6e51a18f43f10 =
     [ "efm32gg_adc.c", "efm32gg__adc_8c.html", "efm32gg__adc_8c" ],
     [ "efm32gg_atomic.c", "efm32gg__atomic_8c.html", "efm32gg__atomic_8c" ],
     [ "efm32gg_gpio.c", "efm32gg__gpio_8c.html", "efm32gg__gpio_8c" ],
+    [ "efm32gg_i2c.c", "efm32gg__i2c_8c.html", "efm32gg__i2c_8c" ],
     [ "efm32gg_mcu.c", "efm32gg__mcu_8c.html", "efm32gg__mcu_8c" ],
     [ "efm32gg_pins.c", "efm32gg__pins_8c.html", "efm32gg__pins_8c" ],
     [ "efm32gg_spi.c", "efm32gg__spi_8c.html", "efm32gg__spi_8c" ],
     [ "efm32gg_system.c", "efm32gg__system_8c.html", "efm32gg__system_8c" ],
     [ "efm32gg_timer.c", "efm32gg__timer_8c.html", "efm32gg__timer_8c" ],
-    [ "efm32gg_uart.c", "efm32gg__uart_8c.html", "efm32gg__uart_8c" ]
+    [ "efm32gg_uart.c", "efm32gg__uart_8c.html", "efm32gg__uart_8c" ],
+    [ "efm32gg_watchdog.c", "efm32gg__watchdog_8c.html", "efm32gg__watchdog_8c" ]
 ];

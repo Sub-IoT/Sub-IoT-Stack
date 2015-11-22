@@ -1,5 +1,6 @@
 var stk3400__debug_8c =
 [
+    [ "__attribute__", "stk3400__debug_8c.html#a2804a023941a956288c32ad08b2cf59e", null ],
     [ "__hw_debug_init", "group__debug.html#gac73486723752c64244bc729a593b0f3e", null ],
     [ "hw_debug_clr", "group__debug.html#ga8c70a05bebf7ef18989c43d775f7329d", null ],
     [ "hw_debug_mask", "group__debug.html#gaee8fff8c85ffcaeddd0cbb4465b2130e", null ],

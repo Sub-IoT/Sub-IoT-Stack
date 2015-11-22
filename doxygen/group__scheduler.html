@@ -283,13 +283,14 @@ Functions</h2></td></tr>
 </div><div class="memdoc">
 
 <p>Register a task with the task scheduler. </p>
+<p>If the task could not be registered due to memory constraints (This problem can be alleviated by increasing the SCHEDULER_MAX_TASKS CMake parameter) this will assert Also, when the task was already registered this function will assert.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">task</td><td>The task to register</td></tr>
   </table>
   </dd>
 </dl>
-<dl class="section return"><dt>Returns</dt><dd>error_t SUCCESS if the task was registered successfully ENOMEM if the task could not be registered due to memory constraints. (This problem can be alleviated by increasing the SCHEDULER_MAX_TASKS CMake parameter) EALREADY if the task was already registered </dd></dl>
+<dl class="section return"><dt>Returns</dt><dd>error_t SUCCESS if the task was registered successfully </dd></dl>
 
 </div>
 </div>
@@ -335,7 +336,7 @@ Functions</h2></td></tr>
 <!-- start footer part -->
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
-    <li class="footer">Generated on Thu Aug 27 2015 08:44:08 for OSS-7: Open Source Stack for DASH7 Alliance Protocol by
+    <li class="footer">Generated on Sun Nov 22 2015 10:16:09 for OSS-7: Open Source Stack for DASH7 Alliance Protocol by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.8.9.1 </li>
   </ul>

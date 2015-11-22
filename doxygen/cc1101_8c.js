@@ -1,5 +1,9 @@
 var cc1101_8c =
 [
+    [ "DEBUG_RX_END", "cc1101_8c.html#a785b3c835255bb475e65b6fe25015758", null ],
+    [ "DEBUG_RX_START", "cc1101_8c.html#ac69660a876d94bb5f21f5ee74bd19999", null ],
+    [ "DEBUG_TX_END", "cc1101_8c.html#a91a99623bbe19c0f33ae1a0f2e05b221", null ],
+    [ "DEBUG_TX_START", "cc1101_8c.html#affd64e202e476716ffe48d354f51d0a6", null ],
     [ "DPRINT", "cc1101_8c.html#a57a35bfd7d13bdfab37a48171286ecee", null ],
     [ "RSSI_OFFSET", "cc1101_8c.html#a2749202671e6c83693acbddba7257782", null ],
     [ "hw_radio_state_t", "cc1101_8c.html#a653b17c0ef11443105658b04113f95e3", [
