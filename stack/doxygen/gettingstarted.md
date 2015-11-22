@@ -6,84 +6,90 @@
 
 For an overview of supported hardware, [look here](hardware.md)
 
-## Prerequisites
+## Building
+
+### Get prerequisites
 
 - OSS-7 code. The code is hosted on [github](https://github.com/mosaic-lopow/dash7-ap-open-source-stack/commits/master), so either fork or clone the repository.
 - [CMake](http://www.cmake.org/) (v2.8.12 or greater) as a flexible build system
 - a GCC-based toolchain matching the target platform for example [GCC ARM Embedded](https://launchpad.net/gcc-arm-embedded) for ARM Cortex-M bases platforms or [Texas Instruments MSP430-GCC](http://software-dl.ti.com/msp430/msp430_public_sw/mcu/msp430/MSPGCC/latest/index_FDS.html)
 for CC430 based platforms
 
-## Configuring the build
+### Run cmake
 
-OSS-7 uses [CMake](http://www.cmake.org/) to configure the buildproces settings and toolchain.
-This can be done using the cmake command, using the ccmake commandline GUI tool, or using the cmake-gui tool.
-We will use the cmake-gui tool for now.
-Note: the following steps are executed on a Linux system, but should be applicable to MS Windows or Mac OS X as well.
+We will create a build directory and run cmake to generate the buildscript for an ARM EFM32GG based platform in this case:
 
-### Configure source and build paths
+	$ mkdir build
+	$ cd build
+	$ cmake ../dash7-ap-open-source-stack/stack/ \
+	        -DTOOLCHAIN_DIR=../gcc-arm-none-eabi-4_9-2015q3/ \
+	        -DCMAKE_TOOLCHAIN_FILE=../dash7-ap-open-source-stack/stack/cmake/toolchains/gcc-arm-embedded.cmake \
+	        -DPLATFORM=EFM32GG_STK3700 \
+	        -DPLATFORM_EFM32GG_STK3700_RADIO=cc1101 \
+	        -DAPP_D7AP_TEST=on
+	-- Cross-compiling using gcc-arm-embedded toolchain
+	-- Cross-compiling using gcc-arm-embedded toolchain
+	-- detected supported platforms: EFM32GG_STK3700EFM32HG_STK3400ifestmatrix_tp1089
+	-- selected platform: EFM32GG_STK3700
+	-- The ASM compiler identification is GNU
+	-- Found assembler: /Users/xtof/Workspace/tmp/gcc-arm-none-eabi-4_9-2015q3/bin/arm-none-eabi-gcc
+	-- Configuring done
+	-- Generating done
+	-- Build files have been written to: /Users/xtof/Workspace/tmp/build
 
-After starting cmake-gui you first have to provide the path to the source directory and to the build directory.
-The source directory should be set to <0SS7 clone dir>/stack .
-The build directory can be anywhere you prefer, as long as it is outside of the source directory.
+A quick run-down of the different arguments:
+* we point cmake to the open source stack implementation: `../dash7-ap-open-source-stack/stack/`
+* `TOOLCHAIN_DIR` points to our gcc cross compiler
+* `CMAKE_TOOLCHAIN_FILE` points to the cmake configuration for our gcc cross compiler. In this case we are using the ARM cross compiler. If you are on a MSP430 based platform you can use `msp430-gcc.cmake` in the same directory.
+* `PLATFORM` is one of the supported platforms (see: `dash7-ap-open-source-stack/stack/framework/hal/platforms`). Note that the build system will enable platforms based on the selected toolchain so make sure you have select the right toolchain for your target platform.
+* `PLATFORM_<insert chosen platform here in capitals>_RADIO` identifies the radio we want to use (see: also `dash7-ap-open-source-stack/stack/framework/hal/chips`).
+* turn on compilation of chosen app(s): `APP_<insert chosen application here in capitals>` (see:  `dash7-ap-open-source-stack/stack/apps`).
 
-![Configuring the source and build paths](cmake-1.png)
+For example configuring a buildscript for the cc430 based wizzimote platform can be done like this:
 
-### Configuring the toolchain
+	$ cmake ../dash7-ap-open-source-stack/stack/ \
+	        -DTOOLCHAIN_DIR=../msp430-gcc-3.5.0.0/ \
+	        -DCMAKE_TOOLCHAIN_FILE=../dash7-ap-open-source-stack/stack/cmake/toolchains/msp430-gcc.cmake \
+	        -DPLATFORM=wizzimote \
+	        -DAPP_PHY_TEST=on
 
-After configuring the paths as described above you need to push the "Configure" button.
-The following dialog will popup:
+### Build it!
 
-![Configuring the toolchain](cmake-2.png)
+If your toolchain is setup correctly you should be able to build the stack and the configured application(s) now:
 
-Here you should select "Specify toolchain for cross-compiling" and click "Next".
-In the next step you should provide the path to the toolchain definition file.
-These files are located in <OSS7 clone dir>/stack/cmake/toolchains.
-Select the correct toolchain file and press "Finish".
-After finishing cmake will return an error, unless the toolchain directory happens to be in your PATH.
-You can specify the toolchain directory by locating the TOOLCHAIN_DIR variable in the list of cmake variables,
-and entering the correct path to the toolchain installation. In this case i entered the path to the gcc-arm-none-eabi-4_9-2014q4 
-toolchain on my machine. If you press "Configure" again the error should be gone and you should see something like this:
+	$ make
+	Scanning dependencies of target CHIP_CC1101
+	[  1%] Building C object framework/hal/platforms/platform/framework/hal/chips/cc1101/CMakeFiles/CHIP_CC1101.dir/cc1101.c.obj
+	[  2%] Building C object framework/hal/platforms/platform/framework/hal/chips/cc1101/CMakeFiles/CHIP_CC1101.dir/cc1101_interface.c.obj
+	[  3%] Building C object framework/hal/platforms/platform/framework/hal/chips/cc1101/CMakeFiles/CHIP_CC1101.dir/cc1101_interface_spi.c.obj
+	[  3%] Built target CHIP_CC1101
+	Scanning dependencies of target CHIP_EFM32GG
+	...
+	[ 97%] Built target d7ap
+	Scanning dependencies of target d7ap_test.elf
+	[ 98%] Building C object apps/d7ap_test/CMakeFiles/d7ap_test.elf.dir/d7ap_test.c.obj
+	[100%] Linking C executable d7ap_test.elf
+	[100%] Built target d7ap_test.elf
 
-![Configuring the toolchain path](cmake-3.png)
+### Build options
 
-### Configure the OSS-7 build settings
-
-After the toolchain configuration is completed we can continue with specifying the OSS7 settings.
-First you should select the platform you are going to use. This is done with the PLATFORM variable,
-where you can select the platform using the dropdown menu. This dropdown is automatically filled with all possible platforms,
-supported by the selected toolchain. In this example i'm using the EFM32GG_STK3700 platform.
-Next we should select the radio chip to use. This in turn depends on the selected platform. 
-You can select the radio chip using the dropdown in the PLATFORM_<platform name>_RADIO variable (PLATFORM_EFM32GG_STK3700_RADIO in my case), 
-we select the cc1101 radio driver here.
-
-By now we have configured the basic setting to build the OSS7 framework. More tuning can be done by setting other variables like FRAMEWORK_LOG_ENABLED etc,
-but we will keep these settings to default for now. Finally, we need to select the applications which we want to build.
-All available applications in the parameter lists are present as boolean values named ass APP_<name>.
-You should enable one or more applications and press "Configure" again. Finally, we should press "Generate" after which cmake generates the build script.
-
-![Configuring the OSS-7 build settings](cmake-4.png)
-
-## Building
-
-After generating the build script in the previous step we can exit cmake-gui and build OSS-7 by issueing the make command in the build directory:
-
-![Make](make.png)
+More build options to for example tweak parameters of the stack or platform specific settings can be configured through cmake. This can be done by passing -D options on the commandline (as above) or using the ccmake interactive console interface of the cmake-gui interface as shown below. 
 
 ## IDE Support
 
 The OSS-7 buildsystem and code does not require a specific IDE. The user can choose which IDE to use, if any.
-CMake supports generating project files for Eclipse CDT, CodeBlocks etc, instead of plain makefiles.
-Alternatively you can use an IDE which natively uses cmake files like Qt Creator or JetBrain's CLion.
+CMake supports generating project files for Eclipse CDT, CodeBlocks etc, instead of plain makefiles using the -G option.
+Alternatively you can use an IDE which natively uses cmake projects like Qt Creator or JetBrain's CLion.
 
 For debugging most toolchains come with a GDB client which you can attach to a GDB server which is compatible with your programmer.
-For instance ARM Cortex-M platforms can use Segger's JLink programmers which come with JLinkGDBServer. The arm-gcc-embedded toolchain
-can then be used to connect with the JLinkGDBServer for flashing and debugging. 
+For instance ARM Cortex-M platforms can use Segger's JLink programmers which comes with JLinkGDBServer. The arm-gcc-embedded toolchain
+can then be used to connect with the JLinkGDBServer for flashing and debugging. Segger also provides the JLinkDebugger GUI tool for debugging.
 
 For Eclipse user: [here](http://gnuarmeclipse.livius.net/) you can find an Eclipse plugin to integrate JLink debugging in Eclipse. 
 Similarly, [EmbSysRegView](http://embsysregview.sourceforge.net/) is an Eclipse addin to view the registers of different MCU's.
 
-We don't go into more detail about this here since this dependents a lot on your favorite tools and the platform you are using.
+We don't go into more detail about this here since this depends a lot on your favorite tools and the platform you are using.
 
-## Logging
+## MS Windows support
 
-You can use the d7-oss-logger.py script in tools\PyLogger to log debug or application data.
+While the above is written for Unix OS's (GNU/Linux and Mac OS X) it works on MS Windows as well. On MS Windows you should install the mingw32 compiler and use the "MinGW32 Makefiles" generator option when running cmake. Finally, you should use the `mingw32-make` command instead of `make`.
