@@ -56,8 +56,8 @@ ADD_LIBRARY(d7ap STATIC
     packet_queue.c
     packet.c
     dll.c
-    uart_alp_interface.c
-    uart_alp_interface.h
+    alp_cmd_handler.c
+    alp_cmd_handler.h
 )
 
 GET_PROPERTY(__global_include_dirs GLOBAL PROPERTY GLOBAL_INCLUDE_DIRECTORIES)

@@ -17,10 +17,11 @@
  */
 
 #include "d7ap_stack.h"
-
+#include "shell.h"
 #include "debug.h"
+#include "alp_cmd_handler.h"
 
-void d7ap_stack_init(fs_init_args_t* fs_init_args, d7asp_init_args_t* d7asp_init_args)
+void d7ap_stack_init(fs_init_args_t* fs_init_args, d7asp_init_args_t* d7asp_init_args, bool enable_shell)
 {
     assert(fs_init_args != NULL);
     assert(fs_init_args->access_profiles_count > 0); // there should be at least one access profile defined
@@ -30,4 +31,9 @@ void d7ap_stack_init(fs_init_args_t* fs_init_args, d7asp_init_args_t* d7asp_init
     d7atp_init();
     packet_queue_init();
     dll_init();
+    if(enable_shell)
+    {
+        shell_init();
+        shell_register_handler((cmd_handler_registration_t){ .id = SHELL_CMD_HANDLER_ID_ALP, .cmd_handler_callback = &alp_cmd_handler });
+    }
 }

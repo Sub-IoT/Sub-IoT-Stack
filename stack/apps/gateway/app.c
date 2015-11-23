@@ -37,7 +37,7 @@
 #include "dll.h"
 #include "hwuart.h"
 #include "fifo.h"
-#include "uart_alp_interface.h"
+#include "alp_cmd_handler.h"
 
 static d7asp_init_args_t d7asp_init_args;
 
@@ -57,8 +57,9 @@ static void on_unsollicited_response_received(d7asp_result_t d7asp_result, uint8
 
 static void notify_booted()
 {
-    uint8_t alp_command[] = { 0x01, D7A_FILE_FIRMWARE_VERSION_FILE_ID, 0, D7A_FILE_FIRMWARE_VERSION_SIZE };
-    uart_alp_interface_process_command(alp_command, sizeof(alp_command));
+    // TODO refactor
+    //uint8_t alp_command[] = { 0x01, D7A_FILE_FIRMWARE_VERSION_FILE_ID, 0, D7A_FILE_FIRMWARE_VERSION_SIZE };
+    //uart_alp_interface_process_command(alp_command, sizeof(alp_command));
 }
 
 void bootstrap()
@@ -113,11 +114,9 @@ void bootstrap()
 
     d7asp_init_args.d7asp_received_unsollicited_data_cb = &on_unsollicited_response_received;
 
-    d7ap_stack_init(&fs_init_args, &d7asp_init_args);
+    d7ap_stack_init(&fs_init_args, &d7asp_init_args, true);
 
     fs_write_dll_conf_active_access_class(1); // use access class 1 for scan automation
-
-    uart_alp_interface_init();
 
     lcd_write_string("started");
 

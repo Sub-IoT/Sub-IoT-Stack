@@ -72,7 +72,7 @@ static cmd_handler_t get_cmd_handler_callback(int8_t id)
 // called again later when more data is received.
 static void process_cmd_fifo()
 {
-    if(fifo_get_size(&cmd_fifo) > 2)
+    if(fifo_get_size(&cmd_fifo) >= SHELL_CMD_HEADER_SIZE)
     {
         uint8_t cmd_header[SHELL_CMD_HEADER_SIZE];
         fifo_peek(&cmd_fifo, cmd_header, 0, SHELL_CMD_HEADER_SIZE);

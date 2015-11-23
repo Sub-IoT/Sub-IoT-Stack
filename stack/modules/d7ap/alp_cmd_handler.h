@@ -20,13 +20,12 @@
  * \author	glenn.ergeerts@uantwerpen.be
  */
 
-#ifndef UART_ALP_INTERFACE_H
-#define UART_ALP_INTERFACE_H
+#ifndef ALP_CMD_HANDLER_H
+#define ALP_CMD_HANDLER_H
 
 #include "types.h"
+#include "fifo.h"
 
-void uart_alp_interface_init();
+void alp_cmd_handler(fifo_t* cmd_fifo);
 
-void uart_alp_interface_process_command(uint8_t* alp_command, uint8_t alp_command_length);
-
-#endif // UART_ALP_INTERFACE_H
+#endif // ALP_CMD_HANDLER_H

@@ -172,7 +172,7 @@ void bootstrap()
     d7asp_init_args.d7asp_fifo_flush_completed_cb = &on_d7asp_fifo_flush_completed;
     d7asp_init_args.d7asp_received_unsollicited_data_cb = &on_unsollicited_response_received;
 
-    d7ap_stack_init(&fs_init_args, &d7asp_init_args);
+    d7ap_stack_init(&fs_init_args, &d7asp_init_args, false);
 
     sched_register_task(&start_foreground_scan);
     sched_post_task(&start_foreground_scan);

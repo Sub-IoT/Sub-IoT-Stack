@@ -34,11 +34,12 @@
 #include "packet_queue.h"
 #include "dll.h"
 /**
- * @brief d7ap_stack_init
- * @param fs_init_args              Initializes the D7AP stack, should be called by all applications making use of the D7AP stack
+ * @brief Initializes the D7AP stack, should be called by all applications making use of the D7AP stack
+ * @param fs_init_args
  * @param d7asp_init_args
+ * @param enable_shell
  */
-void d7ap_stack_init(fs_init_args_t* fs_init_args, d7asp_init_args_t* d7asp_init_args);
+void d7ap_stack_init(fs_init_args_t* fs_init_args, d7asp_init_args_t* d7asp_init_args, bool enable_shell);
 
 #endif //OSS_7_D7AP_STACK_H
 
