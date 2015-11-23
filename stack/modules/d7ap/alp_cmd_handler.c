@@ -32,20 +32,6 @@
 #include "MODULE_D7AP_defs.h"
 
 
-static void process_alp_command(uint8_t* alp_command, uint8_t alp_command_length)
-{
-    uint8_t alp_response[128] = { 0 };
-    uint8_t alp_reponse_length = 0;
-    alp_process_command(alp_command, alp_command_length, alp_response, &alp_reponse_length);
-
-    // TODO refactor
-//    uart_transmit_data(UART_SYNC_BYTE);
-//    uart_transmit_data(alp_reponse_length + 1);
-//    uart_transmit_data(ALP_ITF_ID_FS);
-//    if(alp_reponse_length > 0)
-//        uart_transmit_message(alp_response, alp_reponse_length);
-}
-
 void alp_cmd_handler(fifo_t* cmd_fifo)
 {
     // AT$\xD7<ALP interface ID><Length byte><ALP interface config><ALP command>
@@ -80,8 +66,35 @@ void alp_cmd_handler(fifo_t* cmd_fifo)
         }
         else if(alp_interface_id == ALP_ITF_ID_FS)
         {
-            process_alp_command(alp_command + SHELL_CMD_HEADER_SIZE + ALP_CMD_HANDLER_HEADER_SIZE, length);
+            alp_cmd_handler_process_fs_itf(alp_command + SHELL_CMD_HEADER_SIZE + ALP_CMD_HANDLER_HEADER_SIZE, length);
         }
     }
 }
 
+void alp_cmd_handler_process_fs_itf(uint8_t* alp_command, uint8_t alp_command_length)
+{
+    uint8_t alp_response[128] = { 0 };
+    uint8_t alp_reponse_length = 0;
+    alp_process_command(alp_command, alp_command_length, alp_response, &alp_reponse_length);
+
+    if(alp_reponse_length > 0)
+        shell_return_output(SHELL_CMD_HANDLER_ID_ALP, alp_response, alp_reponse_length); // TODO transmit ALP interface ID as well?
+}
+
+void alp_cmd_handler_output_unsollicited_response(d7asp_result_t d7asp_result, uint8_t *alp_command, uint8_t alp_command_size, hw_rx_metadata_t* rx_meta)
+{
+    uint8_t data[1 + sizeof(hw_rx_metadata_t) + MODULE_D7AP_FIFO_COMMAND_BUFFER_SIZE] = { 0x00 };
+    uint8_t* ptr = data;
+    // TODO transmit ALP interface ID as well?
+    // TODO rx meta
+    (*ptr) = d7asp_result.status.raw; ptr++;
+    (*ptr) = d7asp_result.fifo_token; ptr++;
+    (*ptr) = d7asp_result.request_id; ptr++;
+    (*ptr) = d7asp_result.response_to; ptr++;
+    (*ptr) = d7asp_result.addressee->addressee_ctrl; ptr++;
+    uint8_t address_len = d7asp_result.addressee->addressee_ctrl_virtual_id? 2 : 8; // TODO according to spec this can be 1 byte as well?
+    memcpy(ptr, d7asp_result.addressee->addressee_id, address_len); ptr += address_len;
+    memcpy(ptr, alp_command, alp_command_size); ptr+= alp_command_size;
+
+    shell_return_output(SHELL_CMD_HANDLER_ID_ALP, data, ptr - data);
+}

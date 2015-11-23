@@ -25,7 +25,28 @@
 
 #include "types.h"
 #include "fifo.h"
+#include "d7asp.h"
 
+///
+/// \brief Shell command handler for ALP interface
+/// \param cmd_fifo
+///
 void alp_cmd_handler(fifo_t* cmd_fifo);
+
+///
+/// \brief Process the ALP command against the local FS and returns the output using the shell interface.
+/// \param alp_command
+/// \param alp_command_length
+///
+void alp_cmd_handler_process_fs_itf(uint8_t* alp_command, uint8_t alp_command_length);
+
+///
+/// \brief Output received unsollicited response to the shell interface
+/// \param d7asp_result
+/// \param alp_command
+/// \param alp_command_size
+/// \param rx_meta
+///
+void alp_cmd_handler_output_unsollicited_response(d7asp_result_t d7asp_result, uint8_t *alp_command, uint8_t alp_command_size, hw_rx_metadata_t* rx_meta);
 
 #endif // ALP_CMD_HANDLER_H

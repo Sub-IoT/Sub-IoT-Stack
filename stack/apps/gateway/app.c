@@ -43,23 +43,7 @@ static d7asp_init_args_t d7asp_init_args;
 
 static void on_unsollicited_response_received(d7asp_result_t d7asp_result, uint8_t *alp_command, uint8_t alp_command_size, hw_rx_metadata_t* rx_meta)
 {
-    // TODO move to uart_alp_interface module
-    uart_transmit_data(ALP_ITF_ID_D7ASP);
-    uart_transmit_data(d7asp_result.status.raw);
-    uart_transmit_data(d7asp_result.fifo_token);
-    uart_transmit_data(d7asp_result.request_id);
-    uart_transmit_data(d7asp_result.response_to);
-    uart_transmit_data(d7asp_result.addressee->addressee_ctrl);
-    uint8_t address_len = d7asp_result.addressee->addressee_ctrl_virtual_id? 2 : 8; // TODO according to spec this can be 1 byte as well?
-    uart_transmit_message(d7asp_result.addressee->addressee_id, address_len);
-    uart_transmit_message(alp_command, alp_command_size);
-}
-
-static void notify_booted()
-{
-    // TODO refactor
-    //uint8_t alp_command[] = { 0x01, D7A_FILE_FIRMWARE_VERSION_FILE_ID, 0, D7A_FILE_FIRMWARE_VERSION_SIZE };
-    //uart_alp_interface_process_command(alp_command, sizeof(alp_command));
+    alp_cmd_handler_output_unsollicited_response(d7asp_result, alp_command, alp_command_size, rx_meta);
 }
 
 void bootstrap()
@@ -119,7 +103,5 @@ void bootstrap()
     fs_write_dll_conf_active_access_class(1); // use access class 1 for scan automation
 
     lcd_write_string("started");
-
-    notify_booted();
 }
 

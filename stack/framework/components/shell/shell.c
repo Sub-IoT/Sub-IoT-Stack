@@ -66,7 +66,7 @@ static cmd_handler_t get_cmd_handler_callback(int8_t id)
 // ATx\r : shell command, where x is a char which maps to a command.
 // List of supported commands:
 // - R: reboot device
-// AT$<command handler id> : command to be handled by the command handler specificied. The command handler id is a byte < 65 (non ASCII)
+// AT$<command handler id> : command to be handled by the command handler specified. The command handler id is a byte < 65 (non ASCII)
 // The handlers are passed the command fifo (including the header) and are responsible for pop()-ing the bytes which are processed by the handler.
 // When the fifo does not yet contain a full command which can be processed by the specific handler nothing should be popped and the handler will
 // called again later when more data is received.
@@ -142,4 +142,11 @@ void shell_register_handler(cmd_handler_registration_t handler_registration)
     assert(empty_index != -1); // no empty spot found
 
     cmd_handler_registrations[empty_index] = handler_registration;
+}
+
+void shell_return_output(shell_cmd_handler_id_t origin, uint8_t *data, uint8_t length)
+{
+    // TODO queue and shedule a task to do the actual transmit
+    uart_transmit_data(origin);
+    uart_transmit_message(data, length);
 }
