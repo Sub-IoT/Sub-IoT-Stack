@@ -16,11 +16,10 @@
  * limitations under the License.
  */
 
-/*! \file efm32gg_uart.c
+/*! \file ezr32_uart.c
  *
  *  \author jeremie@wizzilab.com
  *  \author maarten.weyn@uantwerpen.be
- *
  */
 
 #include <em_usart.h>
@@ -29,16 +28,17 @@
 #include <em_usbd.h>
 #include "hwgpio.h"
 #include "hwuart.h"
-#include <assert.h>
+#include <debug.h>
 //contains the wiring for the uart
 //#include "platform.h"
 #include "em_gpio.h"
-
+#ifdef UART_ENABLED
 
 static uart_rx_inthandler_t rx_cb = NULL;
 
 void __uart_init()
 {
+
     CMU_ClockEnable(cmuClock_GPIO, true);
     CMU_ClockEnable(UART_CLOCK, true);
 
@@ -67,17 +67,21 @@ void __uart_init()
     };
 
     USART_InitAsync(UART_CHANNEL, &uartInit);
-    UART_CHANNEL->ROUTE = UART_ROUTE_RXPEN | UART_ROUTE_TXPEN | UART_ROUTE_LOCATION; // Clear RX/TX buffers and shift regs, enable transmitter and receiver pins
+    UART_CHANNEL->ROUTE = USART_ROUTE_RXPEN | USART_ROUTE_TXPEN | UART_ROUTE_LOCATION; // Clear RX/TX buffers and shift regs, enable transmitter and receiver pins
 
-    USART_IntClear(UART_CHANNEL, _UART_IF_MASK);
+    USART_IntClear(UART_CHANNEL, _USART_IF_MASK);
     NVIC_ClearPendingIRQ(UART0_RX_IRQn);
     NVIC_ClearPendingIRQ(UART0_TX_IRQn);
 
     USART_Enable(UART_CHANNEL, usartEnable);
+
 }
+
+#endif
 
 void uart_transmit_data(int8_t data)
 {
+#ifdef UART_ENABLED
 #ifdef PLATFORM_USE_USB_CDC
 		while(USBD_EpIsBusy(0x81)){};
 		uint32_t tempData = data;
@@ -86,10 +90,12 @@ void uart_transmit_data(int8_t data)
 		while(!(UART_CHANNEL->STATUS & (1 << 6))) {}; // wait for TX buffer to empty
 		UART_CHANNEL->TXDATA = data;
 #endif
+#endif
 }
 
 void uart_transmit_message(void const *data, size_t length)
 {
+#ifdef UART_ENABLED
 #ifdef PLATFORM_USE_USB_CDC
 
 		// Print misaliged bytes first as individual bytes.
@@ -113,48 +119,58 @@ void uart_transmit_message(void const *data, size_t length)
 			uart_transmit_data(((char const*)data)[i]);
 		}
 #endif
+#endif
 }
 
 void uart_transmit_string(const char *string)
 {
+#ifdef UART_ENABLED
     uart_transmit_message(string, strnlen(string, 100));
+#endif
 }
 
 void uart_set_rx_interrupt_callback(uart_rx_inthandler_t cb)
 {
+#ifdef UART_ENABLED
     rx_cb = cb;
+#endif
 }
 
 error_t uart_rx_interrupt_enable(bool enabled)
 {
+#ifdef UART_ENABLED
     if(enabled)
     {
         if(rx_cb == NULL) return EOFF;
 
-        USART_IntClear(UART_CHANNEL, _UART_IF_MASK);
-        USART_IntEnable(UART_CHANNEL, UART_IF_RXDATAV);
+        USART_IntClear(UART_CHANNEL, _USART_IF_MASK);
+        USART_IntEnable(UART_CHANNEL, USART_IF_RXDATAV);
         NVIC_ClearPendingIRQ(UART0_RX_IRQn);
         NVIC_ClearPendingIRQ(UART0_TX_IRQn);
         NVIC_EnableIRQ(UART0_RX_IRQn);
     }
     else
     {
-        USART_IntClear(UART_CHANNEL, _UART_IF_MASK);
-        USART_IntDisable(UART_CHANNEL, UART_IF_RXDATAV);
+        USART_IntClear(UART_CHANNEL, _USART_IF_MASK);
+        USART_IntDisable(UART_CHANNEL, USART_IF_RXDATAV);
         NVIC_ClearPendingIRQ(UART0_RX_IRQn);
         NVIC_ClearPendingIRQ(UART0_TX_IRQn);
         NVIC_DisableIRQ(UART0_RX_IRQn);
     }
 
     return SUCCESS;
+#endif
 }
 
-void UART0_RX_IRQHandler(void)
+void USART0_RX_IRQHandler(void)
 {
-    if (UART_CHANNEL->STATUS & UART_STATUS_RXDATAV)
+#ifdef UART_ENABLED
+    if (UART_CHANNEL->STATUS & USART_STATUS_RXDATAV)
     {
         uint8_t rx_data = USART_Rx(UART_CHANNEL);
         rx_cb(rx_data);
-        USART_IntClear(UART_CHANNEL, UART_IF_RXDATAV);
+        USART_IntClear(UART_CHANNEL, USART_IF_RXDATAV);
     }
+#endif
 }
+

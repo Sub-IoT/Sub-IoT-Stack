@@ -32,7 +32,7 @@
 
 #include "hwtimer.h"
 #include "hwatomic.h"
-#include "efm32gg_mcu.h"
+#include "ezr32wg_mcu.h"
 
 /**************************************************************************//**
  * @brief  Start LFRCO for RTC

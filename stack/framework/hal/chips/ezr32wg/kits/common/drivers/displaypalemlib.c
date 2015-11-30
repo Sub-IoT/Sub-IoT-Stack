@@ -28,7 +28,7 @@
 #include "bsp.h"
 #include "udelay.h"
 
-/* DISPLAY driver inclustions */
+/* DISPLAY driver inclusions */
 #include "displayconfigall.h"
 #include "displaypal.h"
 

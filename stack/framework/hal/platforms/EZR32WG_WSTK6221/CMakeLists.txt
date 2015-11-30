@@ -43,7 +43,7 @@ EXPORT_GLOBAL_INCLUDE_DIRECTORIES(config)
 EXPORT_GLOBAL_INCLUDE_DIRECTORIES(${CMAKE_CURRENT_BINARY_DIR})
 
 #Set platform specific compile options
-INSERT_C_FLAGS(AFTER "-gdwarf-2" "-mcpu=cortex-m3" "-mthumb" "-fmessage-length=0" "-mno-sched-prolog" "-fno-builtin" "-ffunction-sections" "-fdata-sections")
+INSERT_C_FLAGS(AFTER "-gdwarf-2" "-mcpu=cortex-m4" "-mthumb" "-fmessage-length=0" "-mno-sched-prolog" "-fno-builtin" "-ffunction-sections" "-fdata-sections")
 
 #Add platform specific linker flags
 INSERT_LINKER_FLAGS(BEFORE OBJECTS INSERT "--specs=nano.specs" "-Wl,-gc-sections")
@@ -63,8 +63,8 @@ ADD_LIBRARY(PLATFORM OBJECT
     wstk6221_sensors.c
     wstk6221_debug.c
     wstk6221_lcd.c
-    wstk6221_usb_descriptors.c
-    wstk6221_usb.c
+    #wstk6221_usb_descriptors.c
+    #wstk6221_usb.c
     libc_overrides.c
     inc/userbutton.h
     inc/platform_sensors.h

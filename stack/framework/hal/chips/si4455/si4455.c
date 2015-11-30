@@ -101,3 +101,33 @@ static hw_rx_cfg_t pending_rx_cfg;
 static void start_rx(hw_rx_cfg_t const* rx_cfg);
 
 
+error_t hw_radio_init(alloc_packet_callback_t alloc_packet_cb,
+                      release_packet_callback_t release_packet_cb)
+{
+
+}
+
+error_t hw_radio_set_rx(hw_rx_cfg_t const* rx_cfg, rx_packet_callback_t rx_cb, rssi_valid_callback_t rssi_valid_cb)
+{
+
+
+    return ERROR;
+}
+
+
+error_t hw_radio_send_packet(hw_radio_packet_t* packet, tx_packet_callback_t tx_cb)
+{
+	  return ERROR;
+
+}
+
+int16_t hw_radio_get_rssi()
+{
+	  return ERROR;
+}
+
+error_t hw_radio_set_idle()
+{
+	  return ERROR;
+}
+

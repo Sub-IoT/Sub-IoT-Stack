@@ -25,19 +25,19 @@
 #include "hwlcd.h"
 #include "platform.h"
 #include "platform_lcd.h"
-#include "display.h"
-#include "textdisplay.h"
-#include "retargettextdisplay.h"
+//#include "display.h"
+//#include "textdisplay.h"
+//#include "retargettextdisplay.h"
 #include <debug.h>
 
-static TEXTDISPLAY_Handle_t h;
+//static TEXTDISPLAY_Handle_t h;
 
 void __lcd_init()
 {
-	DISPLAY_Init();
-
-	TEXTDISPLAY_Config_t config  = {0, false, true};
-	EMSTATUS status = TEXTDISPLAY_New(&config, &h);
+//	DISPLAY_Init();
+//
+//	TEXTDISPLAY_Config_t config  = {0, false, true};
+//	EMSTATUS status = TEXTDISPLAY_New(&config, &h);
 
 
 }
@@ -54,7 +54,7 @@ void lcd_all_on()
 
 void lcd_write_string(const char* text)
 {
-	TEXTDISPLAY_WriteString(h, text);
+	//TEXTDISPLAY_WriteString(h, text);
 }
 
 void lcd_write_number(int value)
