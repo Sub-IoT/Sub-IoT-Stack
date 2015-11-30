@@ -1,10 +1,10 @@
 /***************************************************************************//**
  * @file em_i2c.c
  * @brief Inter-integrated Circuit (I2C) Peripheral API
- * @version 3.20.13
+ * @version 4.1.0
  *******************************************************************************
  * @section License
- * <b>(C) Copyright 2014 Silicon Labs, http://www.silabs.com</b>
+ * <b>(C) Copyright 2015 Silicon Labs, http://www.silabs.com</b>
  *******************************************************************************
  *
  * Permission is granted to anyone to use this software for any purpose,
@@ -30,12 +30,11 @@
  *
  ******************************************************************************/
 
-
 #include "em_i2c.h"
 #if defined(I2C_COUNT) && (I2C_COUNT > 0)
 
 #include "em_cmu.h"
-#include "em_bitband.h"
+#include "em_bus.h"
 #include "em_assert.h"
 
 /***************************************************************************//**
@@ -55,13 +54,13 @@
 
 /** @cond DO_NOT_INCLUDE_WITH_DOXYGEN */
 
+/** Validation of I2C register block pointer reference for assert statements. */
 #if (I2C_COUNT == 1)
-/** Validation of I2C register block pointer reference for assert statements. */
 #define I2C_REF_VALID(ref)    ((ref) == I2C0)
-
 #elif (I2C_COUNT == 2)
-/** Validation of I2C register block pointer reference for assert statements. */
 #define I2C_REF_VALID(ref)    ((ref == I2C0) || (ref == I2C1))
+#elif (I2C_COUNT == 3)
+#define I2C_REF_VALID(ref)    ((ref == I2C0) || (ref == I2C1)|| (ref == I2C2))
 #endif
 
 /** Error flags indicating I2C transfer has failed somehow. */
@@ -267,7 +266,7 @@ void I2C_Enable(I2C_TypeDef *i2c, bool enable)
 {
   EFM_ASSERT(I2C_REF_VALID(i2c));
 
-  BITBAND_Peripheral(&(i2c->CTRL), _I2C_CTRL_EN_SHIFT, (unsigned int)enable);
+  BUS_RegBitWrite(&(i2c->CTRL), _I2C_CTRL_EN_SHIFT, enable);
 }
 
 
@@ -289,15 +288,11 @@ void I2C_Init(I2C_TypeDef *i2c, const I2C_Init_TypeDef *init)
   i2c->IFC = _I2C_IFC_MASK;
 
   /* Set SLAVE select mode */
-  BITBAND_Peripheral(&(i2c->CTRL),
-                     _I2C_CTRL_SLAVE_SHIFT,
-                     init->master ? 0 : 1);
+  BUS_RegBitWrite(&(i2c->CTRL), _I2C_CTRL_SLAVE_SHIFT, init->master ? 0 : 1);
 
   I2C_BusFreqSet(i2c, init->refFreq, init->freq, init->clhr);
 
-  BITBAND_Peripheral(&(i2c->CTRL),
-                     _I2C_CTRL_EN_SHIFT,
-                     (unsigned int)(init->enable));
+  BUS_RegBitWrite(&(i2c->CTRL), _I2C_CTRL_EN_SHIFT, init->enable);
 }
 
 
@@ -774,8 +769,8 @@ I2C_TransferReturn_TypeDef I2C_TransferInit(I2C_TypeDef *i2c,
   /* possible according to I2C spec, since slave will always start */
   /* sending first byte ACK on address. The read operation can */
   /* only be stopped by NACKing a received byte, ie minimum 1 byte. */
-  if (((seq->flags & I2C_FLAG_READ) && !(seq->buf[1].len)) ||
-      ((seq->flags & I2C_FLAG_WRITE_READ) && !(seq->buf[0].len))
+  if (((seq->flags & I2C_FLAG_READ) && !(seq->buf[0].len)) ||
+      ((seq->flags & I2C_FLAG_WRITE_READ) && !(seq->buf[1].len))
       )
   {
     return(i2cTransferUsageFault);
@@ -785,10 +780,7 @@ I2C_TransferReturn_TypeDef I2C_TransferInit(I2C_TypeDef *i2c,
   transfer->state   = i2cStateStartAddrSend;
   transfer->result  = i2cTransferInProgress;
   transfer->offset  = 0;
-  if(seq->flags == 2)  //check if READ
-     transfer->bufIndx = 1;
-    else
-     transfer->bufIndx = 0;
+  transfer->bufIndx = 0;
   transfer->seq     = seq;
 
   /* Ensure buffers are empty */

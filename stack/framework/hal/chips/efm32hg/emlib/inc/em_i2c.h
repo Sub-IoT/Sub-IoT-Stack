@@ -1,10 +1,10 @@
 /***************************************************************************//**
  * @file em_i2c.h
  * @brief Inter-intergrated circuit (I2C) peripheral API
- * @version 3.20.13
+ * @version 4.1.0
  *******************************************************************************
  * @section License
- * <b>(C) Copyright 2014 Silicon Labs, http://www.silabs.com</b>
+ * <b>(C) Copyright 2015 Silicon Labs, http://www.silabs.com</b>
  *******************************************************************************
  *
  * Permission is granted to anyone to use this software for any purpose,
@@ -30,9 +30,8 @@
  *
  ******************************************************************************/
 
-
-#ifndef __SILICON_LABS_EM_I2C_H_
-#define __SILICON_LABS_EM_I2C_H_
+#ifndef __SILICON_LABS_EM_I2C_H__
+#define __SILICON_LABS_EM_I2C_H__
 
 #include "em_device.h"
 #if defined(I2C_COUNT) && (I2C_COUNT > 0)
@@ -72,10 +71,12 @@ extern "C" {
 #if defined(_EFM32_GECKO_FAMILY) || defined(_EFM32_TINY_FAMILY) \
     || defined(_EFM32_ZERO_FAMILY) || defined(_EFM32_HAPPY_FAMILY)
 #define I2C_FREQ_STANDARD_MAX    93000
-
 #elif defined(_EFM32_GIANT_FAMILY) || defined(_EFM32_WONDER_FAMILY)
 #define I2C_FREQ_STANDARD_MAX    92000
-
+#elif defined(_SILICON_LABS_32B_PLATFORM_2)
+// None of the chips on this platform has been characterized on this parameter.
+// Use same value as on Wonder until further notice.
+#define I2C_FREQ_STANDARD_MAX    92000
 #else
 #error "Unknown device family."
 #endif
@@ -90,7 +91,7 @@ extern "C" {
  *
  *   1/(Tlow + Thigh + 0.3us + 0.3us) = 1/(1.3 + 0.65 + 0.6)us = 392157Hz
  */
-#define I2C_FREQ_FAST_MAX        392500
+#define I2C_FREQ_FAST_MAX        392157
 
 
 /**
@@ -103,7 +104,7 @@ extern "C" {
  *
  *   1/(Tlow + Thigh + 0.12us + 0.12us) = 1/(0.5 + 0.273 + 0.24)us = 987167Hz
  */
-#define I2C_FREQ_FASTPLUS_MAX    987500
+#define I2C_FREQ_FASTPLUS_MAX    987167
 
 
 /**
@@ -218,14 +219,15 @@ typedef struct
 } I2C_Init_TypeDef;
 
 /** Suggested default config for I2C init structure. */
-#define I2C_INIT_DEFAULT                                                    \
-  { true,                    /* Enable when init done */                    \
-    true,                    /* Set to master mode */                       \
-    0,                       /* Use currently configured reference clock */ \
-    I2C_FREQ_STANDARD_MAX,   /* Set to standard rate assuring being */      \
-                             /* within I2C spec */                          \
-    i2cClockHLRStandard      /* Set to use 4:4 low/high duty cycle */       \
-  }
+#define I2C_INIT_DEFAULT                                                  \
+{                                                                         \
+  true,                    /* Enable when init done */                    \
+  true,                    /* Set to master mode */                       \
+  0,                       /* Use currently configured reference clock */ \
+  I2C_FREQ_STANDARD_MAX,   /* Set to standard rate assuring being */      \
+                           /* within I2C spec */                          \
+  i2cClockHLRStandard      /* Set to use 4:4 low/high duty cycle */       \
+}
 
 
 /**
@@ -500,4 +502,4 @@ I2C_TransferReturn_TypeDef I2C_TransferInit(I2C_TypeDef *i2c,
 #endif
 
 #endif /* defined(I2C_COUNT) && (I2C_COUNT > 0) */
-#endif /* __SILICON_LABS_EM_I2C_H_ */
+#endif /* __SILICON_LABS_EM_I2C_H__ */

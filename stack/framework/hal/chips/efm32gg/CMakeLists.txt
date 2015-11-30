@@ -25,6 +25,9 @@ ENDIF()
 #Add the linker script to use to the linker flags
 INSERT_LINKER_FLAGS(BEFORE OBJECTS INSERT "-T${CMAKE_CURRENT_SOURCE_DIR}/CMSIS/device/linker/efm32gg.ld")
 
+
+INSERT_LINKER_FLAGS(AFTER OBJECTS INSERT "-Xlinker  -Map=.map")
+
 ENABLE_LANGUAGE(ASM)
 SET_PROPERTY(SOURCE efm32gg/CMSIS/device/src/startup_gcc_efm32gg.s PROPERTY LANGUAGE ASM)
 INCLUDE_DIRECTORIES(CMSIS/include

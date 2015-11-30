@@ -32,6 +32,9 @@
 #include "em_gpio.h"
 #include <debug.h>
 
+#include "em_cmu.h"
+#include "em_chip.h"
+
 void __platform_init()
 {
     __efm32gg_mcu_init();
@@ -68,6 +71,9 @@ void __platform_post_framework_init()
 
 int main()
 {
+    // Only when using bootloader
+	//SCB->VTOR=0x4000;
+
     //initialise the platform itself
 	__platform_init();
     //do not initialise the scheduler, this is done by __framework_bootstrap()
