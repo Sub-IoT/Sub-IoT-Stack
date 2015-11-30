@@ -40,7 +40,7 @@ void __platform_init()
     __efm32gg_mcu_init();
     __gpio_init();
     __uart_init();
-    // __led_init();    // uses ports assigned to USART1
+    __led_init();
     __lcd_init();
 
 #ifdef PLATFORM_USE_USB_CDC
