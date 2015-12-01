@@ -53,7 +53,7 @@ __LINK_C void lcd_all_on();
  *  \param text The string to be written to the LCD
  *
  */
-__LINK_C void lcd_write_string(const char* text);
+__LINK_C void lcd_write_string(char* format, ...);
 
 #endif // __LCD_H__
 

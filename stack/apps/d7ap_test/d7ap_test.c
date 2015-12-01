@@ -18,6 +18,7 @@
 
 /*
  * \author	glenn.ergeerts@uantwerpen.be
+ * \author  maarten.weyn@uantwerpen.be
  */
 
 
@@ -33,10 +34,23 @@
 #include "d7ap_stack.h"
 #include "dll.h"
 
+#ifdef HAS_LCD
+#include "hwlcd.h"
+#endif
+
 #ifdef FRAMEWORK_LOG_ENABLED
-#define DPRINT(...) log_print_string(__VA_ARGS__)
+#ifdef HAS_LCD
+		#define DPRINT(...) log_print_string(__VA_ARGS__); lcd_write_string(__VA_ARGS__)
+	#else
+		#define DPRINT(...) log_print_string(__VA_ARGS__)
+	#endif
+
 #else
-#define DPRINT(...)
+	#ifdef HAS_LCD
+		#define DPRINT(...) lcd_write_string(__VA_ARGS__)
+	#else
+		#define DPRINT(...)
+	#endif
 #endif
 
 #define SENSOR_FILE_ID 0x40
@@ -65,7 +79,7 @@ void execute_sensor_measurement()
 
 void on_unsollicited_response_received(d7asp_result_t d7asp_result, uint8_t *alp_command, uint8_t alp_command_size, hw_rx_metadata_t* rx_meta)
 {
-    log_print_string("Received unsollicited response");
+	DPRINT("Received unsollicited response");
 }
 
 void init_user_files()

@@ -37,6 +37,8 @@
 #ifndef _EZRADIO_API_LIB_H_
 #define _EZRADIO_API_LIB_H_
 
+#include "ezradio_cmd.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif

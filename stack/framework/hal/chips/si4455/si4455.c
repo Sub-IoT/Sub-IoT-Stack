@@ -23,6 +23,7 @@
  * an external cc1101 versus using registers for cc430. The specifics parts are contained in cc1101_interface{spi/cc430}.c
  *
  * @author glenn.ergeerts@uantwerpen.be
+ * @author maarten.weyn@uantwerpen.be
  *
  *
  * TODOs:
@@ -43,16 +44,20 @@
 #include "hwdebug.h"
 
 #include "si4455.h"
-#include "si4455_interface.h"
+#include "ezradio_api_lib.h"
+#include "ezradio_plugin_manager.h"
+
+#ifdef FRAMEWORK_LOG_ENABLED // TODO more granular
+    #define DPRINT(...) log_print_stack_string(LOG_STACK_PHY, __VA_ARGS__)
+#else
+    #define DPRINT(...)
+#endif
+
+
+//#include "si4455_interface.h"
 //#include "cc1101_constants.h"
 //#include "cc1101_registers.h"
 
-// turn on/off the debug prints
-#ifdef FRAMEWORK_LOG_ENABLED // TODO more granular (LOG_PHY_ENABLED)
-#define DPRINT(...) log_print_string(__VA_ARGS__)
-#else
-#define DPRINT(...)
-#endif
 
 #define RSSI_OFFSET 74
 
@@ -101,10 +106,112 @@ static hw_rx_cfg_t pending_rx_cfg;
 static void start_rx(hw_rx_cfg_t const* rx_cfg);
 
 
+/* Rx packet data array */
+static uint8_t radioRxPkt[EZRADIO_FIFO_SIZE];
+
+static void appPacketReceivedCallback ( EZRADIODRV_Handle_t handle, Ecode_t status )
+{
+  //Silent warning.
+  (void)handle;
+
+  if ( status == ECODE_EMDRV_EZRADIODRV_OK )
+  {
+    /* Read out and print received packet data:
+     *  - print 'ACK' in case of ACK was received
+     *  - print the data if some other data was received. */
+//    if ( (radioRxPkt[APP_PKT_DATA_START] == 'A') &&
+//         (radioRxPkt[APP_PKT_DATA_START + 1] == 'C') &&
+//         (radioRxPkt[APP_PKT_DATA_START + 2] == 'K') )
+//    {
+//      printf("-->Data RX: ACK\n");
+//    }
+//    else
+//    {
+//      uint16_t rxData = *(uint16_t *)(radioRxPkt + APP_PKT_DATA_START);
+//      printf("-->Data RX: %05d\n", rxData);
+//    }
+  }
+}
+
+static void appPacketTransmittedCallback ( EZRADIODRV_Handle_t handle, Ecode_t status )
+{
+  if ( status == ECODE_EMDRV_EZRADIODRV_OK )
+  {
+    /* Sign tx passive state */
+    //appTxActive = false;
+
+    /* Change to RX state */
+    ezradioStartRx( handle );
+  }
+}
+
+static void appPacketCrcErrorCallback ( EZRADIODRV_Handle_t handle, Ecode_t status )
+{
+  if ( status == ECODE_EMDRV_EZRADIODRV_OK )
+  {
+	  DPRINT("-->Pkt  RX: CRC Error\n");
+
+    /* Change to RX state */
+    ezradioStartRx( handle );
+  }
+}
+
+static void configure_channel(const channel_id_t* channel_id)
+{
+
+}
+
+static void configure_eirp(const eirp_t eirp)
+{
+
+}
+
+static void configure_syncword_class(syncword_class_t syncword_class)
+{
+
+}
+
 error_t hw_radio_init(alloc_packet_callback_t alloc_packet_cb,
                       release_packet_callback_t release_packet_cb)
 {
+	alloc_packet_callback = alloc_packet_cb;
+	release_packet_callback = release_packet_cb;
 
+	current_state = HW_RADIO_STATE_IDLE;
+
+	/* EZRadio driver init data and handler */
+	EZRADIODRV_HandleData_t appRadioInitData = EZRADIODRV_INIT_DEFAULT;
+	EZRADIODRV_Handle_t appRadioHandle = &appRadioInitData;
+
+	/* EZRadio response structure union */
+	ezradio_cmd_reply_t ezradioReply;
+
+	/* Configure packet transmitted callback. */
+	appRadioInitData.packetTx.userCallback = &appPacketTransmittedCallback;
+
+	/* Configure packet received buffer and callback. */
+	appRadioInitData.packetRx.userCallback = &appPacketReceivedCallback;
+	appRadioInitData.packetRx.pktBuf = radioRxPkt;
+
+	/* Configure packet received with CRC error callback. */
+	appRadioInitData.packetCrcError.userCallback = &appPacketCrcErrorCallback;
+
+	/* Initialize EZRadio device. */
+	ezradioInit( appRadioHandle );
+
+	/* Reset radio fifos and start reception. */
+	ezradioResetTRxFifo();
+
+	//cc1101_interface_init(&end_of_packet_isr);
+	//cc1101_interface_reset_radio_core();
+	//cc1101_interface_write_rfsettings(&rf_settings);
+
+
+
+	// configure default channel, eirp and syncword
+	configure_channel(&current_channel_id);
+	configure_eirp(current_eirp);
+	configure_syncword_class(current_syncword_class);
 }
 
 error_t hw_radio_set_rx(hw_rx_cfg_t const* rx_cfg, rx_packet_callback_t rx_cb, rssi_valid_callback_t rssi_valid_cb)

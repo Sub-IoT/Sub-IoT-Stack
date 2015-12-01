@@ -37,7 +37,7 @@
 #include "ecode.h"
 
 // Include the generated EzRadio application configuration file.
-#include "app-config.h"
+#include "appconfig.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -69,27 +69,7 @@ extern "C" {
  * #define RADIO_USE_GENERATED_CONFIGURATION
  */
 
-#if ( (defined RADIO_USE_GENERATED_CONFIGURATION) && (RADIO_USE_GENERATED_CONFIGURATION == 1) )
-/* Include the generated radio configuration */
-#include "radio-config-wds-gen.h"
-#else
-/* Include the default radio configuration for the board */
-#if   ( (defined SL_WSTK6200A) || (defined SL_WSTK6220A) )
-#include "radio-config-wds-gen_R60-868MHz-13dBm.h"
-#elif   (defined SL_WSTK6240A)
-#include "radio-config-wds-gen_R61-868MHz-16dBm.h"
-#elif ( (defined SL_WSTK6201A) || (defined SL_WSTK6221A) || (defined SL_WSTK6241A) )
-#include "radio-config-wds-gen_R55-434MHz-10dBm.h"
-#elif ( (defined SL_WSTK6202A) || (defined SL_WSTK6222A) || (defined SL_WSTK6242A) )
-#include "radio-config-wds-gen_R63-915MHz-20dBm.h"
-#elif ( (defined SL_WSTK6223A) || (defined SL_WSTK6243A) )
-#include "radio-config-wds-gen_R63-490MHz-20dBm.h"
-#elif ( (defined SL_WSTK6224A) || (defined SL_WSTK6244A)  )
-#include "radio-config-wds-gen_R63-169MHz-20dBm.h"
-#else
-#error No radio configuration is defined! Create your own radio configuration or define your kit properly!
-#endif
-#endif
+#include "si4455_configuration.h"
 
 /***************************************************************************//**
  * @addtogroup EM_Drivers
