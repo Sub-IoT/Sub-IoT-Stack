@@ -18,41 +18,18 @@
 #
 
 INCLUDE_DIRECTORIES(	./
-						CMSIS/device/include
-						CMSIS/include
-						kits/common/drivers
-						emlib/inc
-						plugins/inc
-						common/inc
-						common/inc/si4x55
-						si4455/inc
-						emdrv/ustimer/inc
-						emdrv/spidrv/inc
-						emdrv/rtcdrv/inc
-						emdrv/dmadrv/inc)
+						inc)
 
 SET(si4455_SRC
         si4455.c
         si4455.h
         #si4455_interface.c		
         #si4455_interface_spi.c
-        #plugins/src/ezradio_auto_ack_plugin.c
-        plugins/src/ezradio_crcerror_plugin.c
-        plugins/src/ezradio_direct_receive_plugin.c
-        plugins/src/ezradio_direct_transmit_plugin.c
-        plugins/src/ezradio_plugin_manager.c
-        plugins/src/ezradio_pn9_plugin.c
-        plugins/src/ezradio_receive_plugin.c
-        plugins/src/ezradio_transmit_plugin.c
-        plugins/src/ezradio_unmod_carrier_plugin.c
-        common/src/si4x55/ezradio_api_lib_add.c
-        common/src/ezradio_api_lib.c
-        common/src/ezradio_comm.c
-        common/src/ezradio_hal.c
-        emdrv/ustimer/src/ustimer.c
-        emdrv/spidrv/src/spidrv.c
-        emdrv/rtcdrv/src/rtcdriver.c
-        emdrv/dmadrv/src/dmadrv.c
+        src/ezradio_api_lib_add.c
+        src/ezradio_api_lib.c
+        src/ezradio_comm.c
+        src/ezradio_hal.c
+        
 )
 
 
