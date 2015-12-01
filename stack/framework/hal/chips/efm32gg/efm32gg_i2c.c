@@ -13,7 +13,7 @@
 #include "hwi2c.h"
 #include "platform.h"
 
-#define I2C_POLLING  100
+#define I2C_POLLING  1000
 
 
 void i2c_master_init(I2C_Init_T* init) {
