@@ -36,6 +36,7 @@
 #include "hwsystem.h"
 #include "debug.h"
 
+#include "platform.h"
 
 static uint8_t cmd_buffer[CMD_BUFFER_SIZE] = { 0 };
 static fifo_t cmd_fifo;
@@ -102,7 +103,7 @@ static void process_cmd_fifo()
     }
 }
 
-static void uart_rx_cb(char data)
+static void uart_rx_cb(uint8_t data)
 {
     error_t err;
     err = fifo_put(&cmd_fifo, &data, 1); assert(err == SUCCESS);
@@ -120,8 +121,8 @@ void shell_init()
 
     fifo_init(&cmd_fifo, cmd_buffer, sizeof(cmd_buffer));
 
-    uart_set_rx_interrupt_callback(&uart_rx_cb);
-    uart_rx_interrupt_enable(true);
+    uart_set_rx_interrupt_callback(CONSOLE_UART, &uart_rx_cb);
+    uart_rx_interrupt_enable(CONSOLE_UART);
 
     sched_register_task(&process_cmd_fifo);
 }
@@ -150,8 +151,8 @@ void shell_register_handler(cmd_handler_registration_t handler_registration)
 void shell_return_output(shell_cmd_handler_id_t origin, uint8_t *data, uint8_t length)
 {
     // TODO queue and shedule a task to do the actual transmit
-    uart_transmit_data(origin);
-    uart_transmit_message(data, length);
+    uart_send_byte(CONSOLE_UART, origin);
+    uart_send_bytes(CONSOLE_UART, data, length);
 }
 
 #endif

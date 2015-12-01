@@ -15,8 +15,38 @@
 
 #define I2C_POLLING  1000
 
+typedef struct
+{
+  I2C_TypeDef           *port;          /**< Peripheral port */
+  GPIO_Port_TypeDef     sclPort;        /**< SCL pin port number */
+  uint8_t               sclPin;         /**< SCL pin number */
+  GPIO_Port_TypeDef     sdaPort;        /**< SDA pin port number */
+  uint8_t               sdaPin;         /**< SDA pin number */
+  uint8_t               portLocation;   /**< Port location */
+  uint32_t              i2cRefFreq;     /**< I2C reference clock */
+  uint32_t              i2cMaxFreq;     /**< I2C max bus frequency to use */
+  I2C_ClockHLR_TypeDef  i2cClhr;        /**< Clock low/high ratio control */
+} I2C_Init_T;
 
-void i2c_master_init(I2C_Init_T* init) {
+void _i2c_init(I2C_Init_T* init);
+
+// platform independent init maps to internal _i2c_init
+void i2c_master_init() {
+	I2C_Init_T i2cInit = {
+    .port         = I2C0,
+		.sclPort      = I2C_SCL.port,
+		.sclPin       = I2C_SCL.pin,
+		.sdaPort      = I2C_SDA.port,
+		.sdaPin       = I2C_SDA.pin,
+		.portLocation = I2C_LOCATION,    
+		.i2cRefFreq   = 0,                     // currently configured clock
+		.i2cMaxFreq   = I2C_FREQ_STANDARD_MAX, // Set to standard rate
+		.i2cClhr      = i2cClockHLRStandard    // Set to use 4:4 low/high duty cycle
+  };
+  _i2c_init(&i2cInit);
+}
+
+void _i2c_init(I2C_Init_T* init) {
 	int i;
 	CMU_Clock_TypeDef i2cClock;
 	I2C_Init_TypeDef i2cInit;
