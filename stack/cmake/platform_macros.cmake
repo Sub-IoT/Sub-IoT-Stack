@@ -100,10 +100,9 @@ MACRO(PLATFORM_OPTION option doc default)
 ENDMACRO()
 
 # Include drivers for a chip <chip> into the current platform. 
-# Code for individual chips are stored in the 'framework/hal/chips' 
-# directory where each chip is a separate subdirectory.
-
-# Each chip directory must contain a 'CMakeLists.txt' file that defines 
+# If CHIP_EXTRA_CHIPS_DIR is set the driver implementation will be searched in 
+# the specified path first. If not found the default path 'framework/hal/chips' 
+# will be searched. Each chip is in a separate subdirectory which must contain a 'CMakeLists.txt' file that defines 
 # an object library with name '${CHIP_LIBRARY_NAME}'.
 ##
 # Usage:
@@ -111,13 +110,22 @@ ENDMACRO()
 #	<chip>		The chip directory to include
 #
 MACRO(ADD_CHIP chip)
-    # TODO support out of tree chip directories
     GEN_PREFIX(CHIP_LIBRARY_NAME "CHIP" ${chip})
     STRING(TOUPPER "${chip}" __uchip)
     SET(USE_${__uchip} TRUE)
     PLATFORM_HEADER_DEFINE(BOOL USE_${__uchip})
     UNSET(__uchip)
-    ADD_SUBDIRECTORY("${CMAKE_SOURCE_DIR}/framework/hal/chips/${chip}" "${CMAKE_CURRENT_BINARY_DIR}/framework/hal/chips/${chip}")
+    UNSET(CHIP_DIR)
+    IF(NOT(CHIP_EXTRA_CHIPS_DIR STREQUAL ""))
+        IF(EXISTS ${CHIP_EXTRA_CHIPS_DIR}/${chip} AND IS_DIRECTORY ${CHIP_EXTRA_CHIPS_DIR}/${chip})
+            SET(CHIP_DIR ${CHIP_EXTRA_CHIPS_DIR}/${chip})
+        ENDIF()
+    ENDIF()
+    IF(NOT CHIP_DIR)
+        SET(CHIP_DIR ${CMAKE_SOURCE_DIR}/framework/hal/chips/${chip})
+    ENDIF()
+    message("adding chip dir " ${CHIP_DIR})
+    ADD_SUBDIRECTORY("${CHIP_DIR}" "${CMAKE_CURRENT_BINARY_DIR}/chips/${chip}")
     ADD_DEPENDENCIES(PLATFORM ${CHIP_LIBRARY_NAME})
     GET_PROPERTY(__global_include_dirs GLOBAL PROPERTY GLOBAL_INCLUDE_DIRECTORIES)
     TARGET_INCLUDE_DIRECTORIES(${CHIP_LIBRARY_NAME} PUBLIC ${__global_include_dirs})
