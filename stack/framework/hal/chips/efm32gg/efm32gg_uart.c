@@ -33,9 +33,13 @@
 #include "em_gpio.h"
 #include "hwsystem.h"
 
+#include "efm32gg_pins.h"
+
+#include "platform.h"
+
 typedef struct uart_defition {
-  CMU_Clock_TypeDef    clock;
   USART_TypeDef*       channel;
+  CMU_Clock_TypeDef    clock;
   IRQn_Type            tx_irqn;
   IRQn_Type            rx_irqn;
   uart_rx_inthandler_t rx_handler;
@@ -45,52 +49,73 @@ typedef struct uart_defition {
   uint32_t             location;
 } uart_definition_t;
 
-// support for two uarts
-static uart_definition_t uart[3] = {
-  // UART0
-  {
-    .clock      = cmuClock_UART0,
-    .channel    = UART0,
-    .tx_irqn    = UART0_TX_IRQn,
-    .rx_irqn    = UART0_RX_IRQn,
+#ifndef UARTS
+#define UARTS 0
+#endif
+
+// array of available configurations for U(S)ART used
+static uart_definition_t uart[UARTS];
+
+static void _setup_uarts(void) {
+#ifdef UART0_CHANNEL
+  uart[0] = (uart_definition_t){
+    .channel    = UART0_CHANNEL,
+    .clock      = UART0_CLOCK,
+    .tx_irqn    = UART0_IRQ_TX,
+    .rx_irqn    = UART0_IRQ_RX,
     .rx_handler = NULL,
-    .location   = UART_ROUTE_LOCATION_LOC1,
-    .tx_pin     = { .port = gpioPortE, .pin = 0 },
-    .rx_pin     = { .port = gpioPortE, .pin = 1 },
+    .location   = UART0_LOCATION,
+    .tx_pin     = UART0_TX_PIN,
+    .rx_pin     = UART0_RX_PIN,
     .baud       = UART0_BAUDRATE,
-  },
-  // UART1
-  {
-    .clock      = cmuClock_UART1,
-    .channel    = UART1,
-    .tx_irqn    = UART1_TX_IRQn,
-    .rx_irqn    = UART1_RX_IRQn,
+  };
+#endif
+#ifdef UART1_CHANNEL
+  uart[1] = (uart_definition_t){
+    .channel    = UART1_CHANNEL,
+    .clock      = UART1_CLOCK,
+    .tx_irqn    = UART1_IRQ_TX,
+    .rx_irqn    = UART1_IRQ_RX,
     .rx_handler = NULL,
-    .location   = UART_ROUTE_LOCATION_LOC3,
-    .tx_pin     = { .port = gpioPortE, .pin = 2 },
-    .rx_pin     = { .port = gpioPortE, .pin = 3 },
-    .baud       = UART1_BAUDRATE
-  },
-  // U_S_ART2
-  {
-    .clock      = cmuClock_USART2,
-    .channel    = USART2,
-    .tx_irqn    = USART2_TX_IRQn,
-    .rx_irqn    = USART2_RX_IRQn,
+    .location   = UART1_LOCATION,
+    .tx_pin     = UART1_TX_PIN,
+    .rx_pin     = UART1_RX_PIN,
+    .baud       = UART1_BAUDRATE,
+  };
+#endif  
+#ifdef UART2_CHANNEL
+  uart[2] = (uart_definition_t){
+    .channel    = UART2_CHANNEL,
+    .clock      = UART2_CLOCK,
+    .tx_irqn    = UART2_IRQ_TX,
+    .rx_irqn    = UART2_IRQ_RX,
     .rx_handler = NULL,
-    .location   = USART_ROUTE_LOCATION_LOC0,
-    .tx_pin     = { .port = gpioPortC, .pin = 2 },
-    .rx_pin     = { .port = gpioPortC, .pin = 3 },
-    .baud       = USART2_BAUDRATE
+    .location   = UART2_LOCATION,
+    .tx_pin     = UART2_TX_PIN,
+    .rx_pin     = UART2_RX_PIN,
+    .baud       = UART2_BAUDRATE,
+  };
+#endif
+#ifdef UART3_CHANNEL
+  uart[3] = (uart_definition_t){
+    .channel    = UART3_CHANNEL,
+    .clock      = UART3_CLOCK,
+    .tx_irqn    = UART3_IRQ_TX,
+    .rx_irqn    = UART3_IRQ_RX,
+    .rx_handler = NULL,
+    .location   = UART3_LOCATION,
+    .tx_pin     = UART3_TX_PIN,
+    .rx_pin     = UART3_RX_PIN,
+    .baud       = UART3_BAUDRATE,
   }
+#endif
 };
 
 void __uart_init() {
   CMU_ClockEnable(cmuClock_GPIO, true);
 
-  __uart_init_port(0);
-  __uart_init_port(1);
-  __uart_init_port(2);
+  _setup_uarts();
+  for(uint8_t i=0; i<UARTS; i++) { __uart_init_port(i); }
 }
 
 void __uart_init_port(uint8_t idx) {
