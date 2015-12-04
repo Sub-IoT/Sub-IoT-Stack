@@ -49,7 +49,15 @@ typedef struct uart_defition {
   uint32_t             location;
 } uart_definition_t;
 
-#ifndef UARTS
+#if defined(UART0_IN_USE) && defined(UART1_IN_USE) && defined(UART2_IN_USE) && defined(UART3_IN_USE) 
+#define UARTS 4
+#elif defined(UART0_IN_USE) && defined(UART1_IN_USE) && defined(UART2_IN_USE)
+#define UARTS 3
+#elif defined(UART0_IN_USE) && defined(UART1_IN_USE)
+#define UARTS 2
+#elif defined(UART0_IN_USE)
+#define UARTS 1
+#else
 #define UARTS 0
 #endif
 
@@ -57,7 +65,7 @@ typedef struct uart_defition {
 static uart_definition_t uart[UARTS];
 
 static void _setup_uarts(void) {
-#ifdef UART0_CHANNEL
+#ifdef UART0_IN_USE
   uart[0] = (uart_definition_t){
     .channel    = UART0_CHANNEL,
     .clock      = UART0_CLOCK,
@@ -70,7 +78,7 @@ static void _setup_uarts(void) {
     .baud       = UART0_BAUDRATE,
   };
 #endif
-#ifdef UART1_CHANNEL
+#ifdef UART1_IN_USE
   uart[1] = (uart_definition_t){
     .channel    = UART1_CHANNEL,
     .clock      = UART1_CLOCK,
@@ -83,7 +91,8 @@ static void _setup_uarts(void) {
     .baud       = UART1_BAUDRATE,
   };
 #endif  
-#ifdef UART2_CHANNEL
+#ifdef UART2_IN_USE
+#pragma message "CONSOLE"
   uart[2] = (uart_definition_t){
     .channel    = UART2_CHANNEL,
     .clock      = UART2_CLOCK,
@@ -96,7 +105,7 @@ static void _setup_uarts(void) {
     .baud       = UART2_BAUDRATE,
   };
 #endif
-#ifdef UART3_CHANNEL
+#ifdef UART3_IN_USE
   uart[3] = (uart_definition_t){
     .channel    = UART3_CHANNEL,
     .clock      = UART3_CLOCK,
