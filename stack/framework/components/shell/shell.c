@@ -106,8 +106,14 @@ static void process_cmd_fifo()
     }
 }
 
+static bool echo = false;
+
 static void uart_rx_cb(uint8_t data)
 {
+    if( echo ) {
+      console_print_byte(data);
+      if( data == '\r' ) { console_print_byte('\n'); }
+    }
     error_t err;
     err = fifo_put(&cmd_fifo, &data, 1); assert(err == SUCCESS);
     if(!sched_is_scheduled(&process_cmd_fifo))
@@ -128,6 +134,14 @@ void shell_init()
     console_rx_interrupt_enable();
 
     sched_register_task(&process_cmd_fifo);
+}
+
+void shell_echo_enable() {
+  echo = true;
+}
+
+void shell_echo_disable() {
+  echo = false;
 }
 
 void shell_register_handler(cmd_handler_registration_t handler_registration)

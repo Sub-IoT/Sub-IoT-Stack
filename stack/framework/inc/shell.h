@@ -45,6 +45,8 @@ typedef enum {
 } shell_cmd_handler_id_t;
 
 void shell_init();
+void shell_echo_enable();
+void shell_echo_disable();
 void shell_register_handler(cmd_handler_registration_t handler_registration);
 void shell_return_output(shell_cmd_handler_id_t origin, uint8_t* data, uint8_t length);
 
