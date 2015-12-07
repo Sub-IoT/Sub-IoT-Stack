@@ -66,7 +66,12 @@ static cmd_handler_t get_cmd_handler_callback(int8_t id)
             return cmd_handler_registrations[i].cmd_handler_callback;
     }
 
-    assert(false);
+    console_printf("ERROR: unknown command handler %d\r\n", id);
+    console_print(" possible ids are: ");
+    for(uint8_t i = 0; i < CMD_HANDLER_REGISTRATIONS_COUNT; i++) {
+      console_printf("%d:%d ", i, cmd_handler_registrations[i].id);
+    }
+    console_print("\r\n");
 }
 
 // TODO doc
