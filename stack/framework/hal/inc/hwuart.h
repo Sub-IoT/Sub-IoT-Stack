@@ -32,20 +32,28 @@
 #define __UART_H__
 
 #include <stdlib.h>
-#include "types.h"
 
+#include "types.h"
+#include "link_c.h"
+
+// expose uart_handle with unknown internals
+typedef struct uart_handle uart_handle_t;
+
+// callback handler for received byte
 typedef void (*uart_rx_inthandler_t)(uint8_t byte);
 
-void    __uart_init();
-void    __uart_init_port(uint8_t idx);
-void    uart_send_byte(uint8_t idx, uint8_t data);
-void    uart_send_bytes(uint8_t idx, void const *data, size_t length);
-void    uart_send_string(uint8_t idx, const char *string);
-error_t uart_rx_interrupt_enable(uint8_t idx);
-void    uart_rx_interrupt_disable(uint8_t idx);
-void    uart_set_rx_interrupt_callback(uint8_t idx, uart_rx_inthandler_t rx_handler);
+__LINK_C uart_handle_t* uart_init(uint8_t channel, uint32_t baudrate, uint8_t pins);
 
+__LINK_C void           uart_send_byte(uart_handle_t* uart, uint8_t data);
+__LINK_C void           uart_send_bytes(uart_handle_t* uart, void const *data, size_t length);
+__LINK_C void           uart_send_string(uart_handle_t* uart, const char *string);
 
-#endif // __UART_H__
+__LINK_C error_t        uart_rx_interrupt_enable(uart_handle_t* uart);
+__LINK_C void           uart_rx_interrupt_disable(uart_handle_t* uart);
+
+__LINK_C void           uart_set_rx_interrupt_callback(uart_handle_t* uart,
+                                                       uart_rx_inthandler_t rx_handler);
+
+#endif
 
 /** @}*/

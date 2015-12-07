@@ -35,7 +35,7 @@ void __platform_init()
 {
     __efm32hg_mcu_init();
     __gpio_init();
-    __uart_init();
+    uart_init();
     __led_init();
     __lcd_init();
 

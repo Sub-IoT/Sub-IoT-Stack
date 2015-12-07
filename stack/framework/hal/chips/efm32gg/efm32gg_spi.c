@@ -40,27 +40,18 @@
 
 #include "platform.h"
 
-static USART_TypeDef* usart[3] = {
-  USART0,
-  USART1,
-  USART2
-};
-
-static CMU_Clock_TypeDef clock[3] = {
-  cmuClock_USART0,
-  cmuClock_USART1,
-  cmuClock_USART2
-};
+#define USARTS    3
+#define LOCATIONS 2
 
 typedef struct {
   uint32_t location;
   pin_id_t mosi;
   pin_id_t miso;
   pin_id_t clk;
-} spi_location_t;
+} spi_pins_t;
 
-// TODO to be completed
-static spi_location_t location[2][2] = {
+// TODO to be completed with all documented locations
+static spi_pins_t location[USARTS][LOCATIONS] = {
   {
     // USART 0
     {
@@ -90,73 +81,125 @@ static spi_location_t location[2][2] = {
       .miso     = { .port = gpioPortD, .pin = 1 },
       .clk      = { .port = gpioPortD, .pin = 2 }
     }
+  },
+  {
+    // USART 2
+    {
+      .location = USART_ROUTE_LOCATION_LOC0,
+      .mosi     = { .port = gpioPortC, .pin = 2 },
+      .miso     = { .port = gpioPortC, .pin = 3 },
+      .clk      = { .port = gpioPortC, .pin = 4 }
+    },
+    {
+      .location = USART_ROUTE_LOCATION_LOC1,
+      .mosi     = { .port = gpioPortB, .pin = 3 },
+      .miso     = { .port = gpioPortB, .pin = 4 },
+      .clk      = { .port = gpioPortB, .pin = 5 }
+    }
   }
 };
-  
-void spi_init(spi_definition_t spi) {
-  assert(spi.databits == 8 || spi.databits == 9);
-  assert(spi.usart < 3);
 
-  assert(spi.location < 2); // TODO: not more implemented yet
+// private implementation of handle struct
+struct spi_handle {
+  USART_TypeDef*    channel;
+  CMU_Clock_TypeDef clock;
+  spi_pins_t*       pins;
+};
+
+// private storage for handles, pointers to these records are passed around
+static spi_handle_t handle[USARTS] = {
+  {
+    .channel = USART0,
+    .clock   = cmuClock_USART0
+  },
+  {
+    .channel = USART1,
+    .clock   = cmuClock_USART1
+  },
+  {
+    .channel = USART2,
+    .clock   = cmuClock_USART2
+  },
+};
+  
+spi_handle_t* spi_init(uint8_t idx, uint32_t baudrate, uint8_t databits,
+                      uint8_t pins)
+{
+  // assert what is supported by HW and emlib
+  assert(databits == 8 || databits == 9);
+  assert(idx < USARTS);
+  assert(pins < LOCATIONS); // TODO: not more implemented yet
+
+  // complete handle with pin info
+  handle[idx].pins = &location[idx][pins];
   
   CMU_ClockEnable(cmuClock_GPIO,    true);
-  CMU_ClockEnable(clock[spi.usart], true);
+  CMU_ClockEnable(handle[idx].clock, true);
 
 	USART_InitSync_TypeDef usartInit = USART_INITSYNC_DEFAULT;
 
-  if(spi.databits == 9) {
+  if(databits == 9) {
     usartInit.databits = usartDatabits9;
   } else {
     usartInit.databits = usartDatabits8;
   }
-  usartInit.baudrate  = spi.baudrate;
+  usartInit.baudrate  = baudrate;
   usartInit.master    = true;
   usartInit.msbf      = true;
   usartInit.clockMode = usartClockMode0;
   
-  USART_InitSync(usart[spi.usart], &usartInit);
-  USART_Enable  (usart[spi.usart], usartEnable);
+  USART_InitSync(handle[idx].channel, &usartInit);
+  USART_Enable  (handle[idx].channel, usartEnable);
 
-  assert( hw_gpio_configure_pin(location[spi.usart][spi.location].mosi, false, gpioModePushPull, 0) == SUCCESS);
-  assert( hw_gpio_configure_pin(location[spi.usart][spi.location].miso, false, gpioModeInput,    0) == SUCCESS);
-  assert( hw_gpio_configure_pin(location[spi.usart][spi.location].clk,  false, gpioModePushPull, 0) == SUCCESS);
+  assert( hw_gpio_configure_pin(handle[idx].pins->mosi, false, gpioModePushPull, 0) == SUCCESS);
+  assert( hw_gpio_configure_pin(handle[idx].pins->miso, false, gpioModeInput,    0) == SUCCESS);
+  assert( hw_gpio_configure_pin(handle[idx].pins->clk,  false, gpioModePushPull, 0) == SUCCESS);
 
-  usart[spi.usart]->ROUTE = USART_ROUTE_TXPEN
-                          | USART_ROUTE_RXPEN
-                          | USART_ROUTE_CLKPEN
-                          | location[spi.usart][spi.location].location;
+  handle[idx].channel->ROUTE = USART_ROUTE_TXPEN
+                             | USART_ROUTE_RXPEN
+                             | USART_ROUTE_CLKPEN
+                             | handle[idx].pins->location;
+  
+  return &handle[idx];
 }
 
 void spi_init_slave(pin_id_t slave) {
   assert( hw_gpio_configure_pin(slave, false, gpioModePushPull, 1) == SUCCESS);
 }
 
-unsigned char spi_byte(uint8_t channel, unsigned char data) {
-  return USART_SpiTransfer(usart[channel], data);
+void spi_select(pin_id_t slave) {
+  hw_gpio_set(slave);
 }
 
-void spi_send(uint8_t channel, uint16_t data) {
-  USART_TxExt(usart[channel], data);
+void spi_deselect(pin_id_t slave) {
+  hw_gpio_clr(slave);
 }
 
-void spi_string(uint8_t channel,
-                unsigned char* TxData, unsigned char* RxData,
-                unsigned int length)
+unsigned char spi_exchange_byte(spi_handle_t* spi, unsigned char data) {
+  return USART_SpiTransfer(spi->channel, data);
+}
+
+void spi_send_byte_with_control(spi_handle_t* spi, uint16_t data) {
+  USART_TxExt(spi->channel, data);
+}
+
+void spi_exchange_bytes(spi_handle_t* spi,
+                        uint8_t* TxData, uint8_t* RxData, unsigned int length)
 {
   uint16_t i = 0;
   if( RxData != NULL && TxData != NULL ) {           // two way transmition
     while( i < length ) {
-      RxData[i] = spi_byte(channel, TxData[i]);
+      RxData[i] = spi_exchange_byte(spi, TxData[i]);
       i++;
     }
   } else if( RxData == NULL && TxData != NULL ) {    // send only
     while( i < length ) {
-      spi_byte(channel, TxData[i]);
+      spi_exchange_byte(spi, TxData[i]);
       i++;
     }
-  } else if( RxData != NULL && TxData == NULL ) { // recieve only
+  } else if( RxData != NULL && TxData == NULL ) {   // recieve only
     while( i < length ) {
-      RxData[i] = spi_byte(channel, 0);
+      RxData[i] = spi_exchange_byte(spi, 0);
       i++;
     }
   }

@@ -35,29 +35,26 @@
 #include "types.h"
 #include "link_c.h"
 
-typedef struct spi_definition {
-  uint8_t   usart;
-  uint32_t  baudrate;
-  uint8_t   databits;
-  uint8_t   location;
-} spi_definition_t;
+// expose spi_handle with unknown internals
+typedef struct spi_handle spi_handle_t;
 
-__LINK_C void spi_init(spi_definition_t spi);
+// create handle from basic & minimal parameters
+__LINK_C spi_handle_t* spi_init(uint8_t uart,     uint32_t baudrate,
+                                uint8_t databits, uint8_t  pins);
 
-__LINK_C void spi_init_slave(pin_id_t slave);
+// initializes a pin to be used as Chip Select pin
+__LINK_C void         spi_init_slave(pin_id_t slave);
 
-__LINK_C void spi_auto_cs_on(void);
+// (de)selection of a slave
+__LINK_C void         spi_select(pin_id_t slave);
+__LINK_C void         spi_deselect(pin_id_t slave);
 
-__LINK_C void spi_auto_cs_off(void);
+__LINK_C uint8_t      spi_exchange_byte(spi_handle_t* spi, uint8_t data);
+__LINK_C void         spi_send_byte_with_control(spi_handle_t* spi, uint16_t data);
 
-#define spi_select(slave)   hw_gpio_clr(slave)
-#define spi_deselect(slave) hw_gpio_set(slave);
+__LINK_C void         spi_exchange_bytes(spi_handle_t* spi, uint8_t *TxData,
+                                         uint8_t *RxData, size_t length);
 
-__LINK_C uint8_t spi_byte(uint8_t channel, uint8_t data); // bi-dir transfer
-__LINK_C void    spi_send(uint8_t channel, uint16_t data); // send only
-
-__LINK_C void spi_string(uint8_t channel, uint8_t *TxData, uint8_t *RxData, size_t length);
-
-#endif /* SPI_H_ */
+#endif
 
 /** @}*/

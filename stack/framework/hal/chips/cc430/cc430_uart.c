@@ -39,7 +39,7 @@
 #define BAUDRATE 115200
 #define clock_speed 4000000
 
-void __uart_init()
+void uart_init()
 {
     PMAPPWD = 0x02D52;                        // Get write-access to port mapping regs
     PLATFORM_UCA0RXD = PM_UCA0RXD;            // Map UCA0RXD output to Px

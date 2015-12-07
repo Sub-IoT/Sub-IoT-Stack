@@ -51,16 +51,13 @@ void _cc1101_gdo_isr(pin_id_t pin_id, uint8_t event_mask)
     end_of_packet_isr_callback();
 }
 
+static spi_handle_t* spi;
+
 void _cc1101_interface_init(end_of_packet_isr_t end_of_packet_isr_cb)
 {
     end_of_packet_isr_callback = end_of_packet_isr_cb;
 
-    spi_init((spi_definition_t){
-      .usart     = CC1101_SPI_USART,
-      .baudrate  = CC1101_SPI_BAUDRATE,
-      .databits  = 8,
-      .location  = CC1101_SPI_LOCATION
-    });
+    spi = spi_init(CC1101_SPI_USART, CC1101_SPI_BAUDRATE, 8, CC1101_SPI_LOCATION);
 
     error_t err;
     err = hw_gpio_configure_interrupt(CC1101_GDO0_PIN, &_cc1101_gdo_isr, GPIO_FALLING_EDGE); assert(err == SUCCESS);
@@ -85,7 +82,7 @@ void _c1101_interface_set_interrupts_enabled(bool enable)
 uint8_t _c1101_interface_strobe(uint8_t strobe)
 {
     spi_select(CC1101_SPI_PIN_CS);
-    uint8_t statusByte = spi_byte(CC1101_SPI_USART, strobe & 0x3F);
+    uint8_t statusByte = spi_exchange_byte(spi, strobe & 0x3F);
     spi_deselect(CC1101_SPI_PIN_CS);
 
     return statusByte;
@@ -108,8 +105,8 @@ static uint8_t readreg(uint8_t addr)
 {
 
     spi_select(CC1101_SPI_PIN_CS);
-    spi_byte(CC1101_SPI_USART, (addr & 0x3F) | READ_SINGLE);
-    uint8_t val = spi_byte(CC1101_SPI_USART, 0); // send dummy byte to receive reply
+    spi_exchange_byte(spi, (addr & 0x3F) | READ_SINGLE);
+    uint8_t val = spi_exchange_byte(spi, 0); // send dummy byte to receive reply
     spi_deselect(CC1101_SPI_PIN_CS);
 
     DPRINT("READ REG 0x%02X @0x%02X", val, addr);
@@ -122,12 +119,12 @@ static uint8_t readstatus(uint8_t addr)
     uint8_t ret, retCheck, data, data2;
     uint8_t _addr = (addr & 0x3F) | READ_BURST;
     spi_select(CC1101_SPI_PIN_CS);
-    ret = spi_byte(CC1101_SPI_USART, _addr);
-    data = spi_byte(CC1101_SPI_USART, 0); // send dummy byte to receive reply
+    ret = spi_exchange_byte(spi, _addr);
+    data = spi_exchange_byte(spi, 0); // send dummy byte to receive reply
     // See CC1101's Errata for SPI read errors // TODO needed?
 //    while (true) {
-//    	retCheck = spi_byte(CC1101_SPI_USART, _addr);
-//        data2 = spi_byte(CC1101_SPI_USART, 0);
+//    	retCheck = spi_exchange_byte(CC1101_SPI_USART, _addr);
+//        data2 = spi_exchange_byte(CC1101_SPI_USART, 0);
 //    	if (ret == retCheck && data == data2)
 //    		break;
 //    	else {
@@ -155,8 +152,8 @@ uint8_t _c1101_interface_read_single_reg(uint8_t addr)
 void _c1101_interface_write_single_reg(uint8_t addr, uint8_t value)
 {
     spi_select(CC1101_SPI_PIN_CS);
-    spi_byte(CC1101_SPI_USART, (addr & 0x3F));
-    spi_byte(CC1101_SPI_USART, value);
+    spi_exchange_byte(spi, (addr & 0x3F));
+    spi_exchange_byte(spi, value);
     spi_deselect(CC1101_SPI_PIN_CS);
 }
 
@@ -164,8 +161,8 @@ void _c1101_interface_read_burst_reg(uint8_t addr, uint8_t* buffer, uint8_t coun
 {
     uint8_t _addr = (addr & 0x3F) | READ_BURST;
     spi_select(CC1101_SPI_PIN_CS);
-    spi_byte(CC1101_SPI_USART, _addr);
-    spi_string(CC1101_SPI_USART,  NULL, buffer, count );
+    spi_exchange_byte(spi, _addr);
+    spi_exchange_bytes(spi,  NULL, buffer, count );
     spi_deselect(CC1101_SPI_PIN_CS);
 }
 
@@ -173,8 +170,8 @@ void _c1101_interface_write_burst_reg(uint8_t addr, uint8_t* buffer, uint8_t cou
 {
     uint8_t _addr = (addr & 0x3F) | WRITE_BURST;
     spi_select(CC1101_SPI_PIN_CS);
-    spi_byte(CC1101_SPI_USART, _addr);
-    spi_string(CC1101_SPI_USART,  buffer, NULL, count );
+    spi_exchange_byte(spi, _addr);
+    spi_exchange_bytes(spi,  buffer, NULL, count );
     spi_deselect(CC1101_SPI_PIN_CS);
 }
 

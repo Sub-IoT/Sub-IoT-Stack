@@ -37,7 +37,7 @@
 
 static uart_rx_inthandler_t rx_cb = NULL;
 
-void __uart_init()
+void uart_init()
 {
 
     CMU_ClockEnable(cmuClock_GPIO, true);

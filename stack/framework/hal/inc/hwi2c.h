@@ -23,6 +23,7 @@
  * \brief Provides an API for I2C
  * \author maarten.weyn@uantwerpen.be
  * \author jens.vanhooydonck@student.uantwerpen.be
+ * \author contact@christophe.vg
  */
 
 
@@ -32,11 +33,14 @@
 #include "types.h"
 #include "link_c.h"
 
-__LINK_C void i2c_master_init();
+// expose i2c_handle with unknown internals
+typedef struct i2c_handle i2c_handle_t;
 
-__LINK_C int8_t i2c_write(uint8_t address, uint8_t* tx_buffer, int length);
-__LINK_C int8_t i2c_read(uint8_t address, uint8_t* rx_buffer, int length);
-__LINK_C int8_t i2c_write_read(uint8_t address, uint8_t* tx_buffer, int lengthtx, uint8_t* rx_buffer, int lengthrx);
+__LINK_C i2c_handle_t* i2c_init(uint8_t idx, uint8_t pins);
+
+__LINK_C int8_t        i2c_write(i2c_handle_t* i2c,      uint8_t address, uint8_t* tx_buffer, int length);
+__LINK_C int8_t        i2c_read(i2c_handle_t* i2c,       uint8_t address, uint8_t* rx_buffer, int length);
+__LINK_C int8_t        i2c_write_read(i2c_handle_t* i2c, uint8_t address, uint8_t* tx_buffer, int lengthtx, uint8_t* rx_buffer, int lengthrx);
 
 
-#endif /* FRAMEWORK_HAL_INC_HWI2C_H_ */
+#endif

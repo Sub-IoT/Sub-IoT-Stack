@@ -385,7 +385,7 @@ void spi_deselect_chip(void)
 // @param       unsigned char data      Byte to send
 // @return      unsigned char           Recieved byte
 // *****************************************************************************
-unsigned char spi_byte(unsigned char data)
+unsigned char spi_exchange_byte(unsigned char data)
 {
 #ifdef SPI_USE_DMA
     unsigned char receive = NULL;
@@ -405,7 +405,7 @@ unsigned char spi_byte(unsigned char data)
 // @param       unsigned int length     Length of the string
 // @return      none
 // *****************************************************************************
-void spi_string(unsigned char* TxData, unsigned char* RxData, unsigned int length)
+void spi_exchange_bytes(unsigned char* TxData, unsigned char* RxData, unsigned int length)
 {
 #ifdef SPI_USE_DMA
     spiDmaTransfer( (uint8_t*) TxData, (uint8_t*) RxData, length );
@@ -416,7 +416,7 @@ void spi_string(unsigned char* TxData, unsigned char* RxData, unsigned int lengt
     {
         while( i < length )
         {
-            RxData[i] = spi_byte( TxData[i] );
+            RxData[i] = spi_exchange_byte( TxData[i] );
             i++;
         }
     }
@@ -424,7 +424,7 @@ void spi_string(unsigned char* TxData, unsigned char* RxData, unsigned int lengt
     {
         while( i < length )
         {
-            spi_byte( TxData[i] );
+            spi_exchange_byte( TxData[i] );
             i++;
         }
     }
@@ -432,7 +432,7 @@ void spi_string(unsigned char* TxData, unsigned char* RxData, unsigned int lengt
     {
         while( i < length )
         {
-            RxData[i] = spi_byte( 0 );
+            RxData[i] = spi_exchange_byte( 0 );
             i++;
         }
     }
