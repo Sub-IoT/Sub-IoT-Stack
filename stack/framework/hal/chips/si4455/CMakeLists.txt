@@ -18,17 +18,17 @@
 #
 
 INCLUDE_DIRECTORIES(	./
-						inc)
+						ezradiodrv/inc)
 
 SET(si4455_SRC
         si4455.c
         si4455.h
-        #si4455_interface.c		
+        si4455_interface.c		
         #si4455_interface_spi.c
-        src/ezradio_api_lib_add.c
-        src/ezradio_api_lib.c
-        src/ezradio_comm.c
-        src/ezradio_hal.c
+        ezradiodrv/src/ezradio_api_lib_add.c
+        ezradiodrv/src/ezradio_api_lib.c
+        ezradiodrv/src/ezradio_comm.c
+        ezradiodrv/src/ezradio_hal.c
         
 )
 

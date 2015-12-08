@@ -37,9 +37,11 @@ void __ezr32wg_mcu_init()
     //BSP_TraceProfilerSetup();
 
     // init clock
-    CMU_ClockDivSet(cmuClock_HF, cmuClkDiv_2);       // HFXO 48MHz: Set HF clock divider to /2 to keep core frequency < 32MHz
-    CMU_OscillatorEnable(cmuOsc_HFXO, true, true);   // Enable XTAL Osc and wait to stabilize
-    CMU_ClockSelectSet(cmuClock_HF, cmuSelect_HFXO); // Select HF XTAL osc as system clock source. 48MHz XTAL, but we divided the system clock by 2, therefore our HF clock will be 24MHz
+    /* HFXO 48MHz, divided by 1 */
+    CMU_ClockSelectSet(cmuClock_HF, cmuSelect_HFXO);
+//    CMU_ClockDivSet(cmuClock_HF, cmuClkDiv_2);       // HFXO 48MHz: Set HF clock divider to /2 to keep core frequency < 32MHz
+//    CMU_OscillatorEnable(cmuOsc_HFXO, true, true);   // Enable XTAL Osc and wait to stabilize
+//    CMU_ClockSelectSet(cmuClock_HF, cmuSelect_HFXO); // Select HF XTAL osc as system clock source. 48MHz XTAL, but we divided the system clock by 2, therefore our HF clock will be 24MHz
     //CMU_ClockDivSet(cmuClock_HFPER, cmuClkDiv_4); // TODO set HFPER clock divider (used for SPI) + disable gate clock when not used?
 }
 

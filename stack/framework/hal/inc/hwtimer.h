@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-/*! \file timer.h
+/*! \file hwtimer.h
  * \addtogroup timer
  * \ingroup HAL
  * @{

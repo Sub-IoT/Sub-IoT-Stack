@@ -30,15 +30,28 @@
 #include <hwradio.h>
 #include <log.h>
 
+#ifdef HAS_LCD
+#include "hwlcd.h"
+#endif
+
 // configuration options
 #define RX_MODE
 #define PHY_CLASS PHY_CLASS_LO_RATE
 
 
 #ifdef FRAMEWORK_LOG_ENABLED
-#define DPRINT(...) log_print_string(__VA_ARGS__)
+#ifdef HAS_LCD
+		#define DPRINT(...) log_print_string(__VA_ARGS__); lcd_write_string(__VA_ARGS__)
+	#else
+		#define DPRINT(...) log_print_string(__VA_ARGS__)
+	#endif
+
 #else
-#define DPRINT(...)
+	#ifdef HAS_LCD
+		#define DPRINT(...) lcd_write_string(__VA_ARGS__)
+	#else
+		#define DPRINT(...)
+	#endif
 #endif
 
 
@@ -78,13 +91,13 @@ void packet_transmitted(hw_radio_packet_t* packet);
 
 void start_rx()
 {
-    DPRINT("start RX");
+    DPRINT("start RX\n");
     hw_radio_set_rx(&rx_cfg, &packet_received, NULL);
 }
 
 void transmit_packet()
 {
-    DPRINT("transmitting packet");
+    DPRINT("transmitting packet\n");
     memcpy(&tx_packet->data, data, sizeof(data));
     hw_radio_send_packet(tx_packet, &packet_transmitted);
 }
@@ -101,9 +114,9 @@ void release_packet(hw_radio_packet_t* packet)
 
 void packet_received(hw_radio_packet_t* packet)
 {
-    DPRINT("packet received @ %i , RSSI = %i", packet->rx_meta.timestamp, packet->rx_meta.rssi);
+    DPRINT("packet received @ %i , RSSI = %i\n", packet->rx_meta.timestamp, packet->rx_meta.rssi);
     if(memcmp(data, packet->data, sizeof(data)) != 0)
-        DPRINT("Unexpected data received!");
+        DPRINT("Unexpected data received!\n");
 }
 
 void packet_transmitted(hw_radio_packet_t* packet)
@@ -111,8 +124,8 @@ void packet_transmitted(hw_radio_packet_t* packet)
 #if HW_NUM_LEDS > 0
     led_toggle(0);
 #endif
-    DPRINT("packet transmitted");
-    timer_post_task(&transmit_packet, 100);
+    DPRINT("packet transmitted\n");
+    timer_post_task(&transmit_packet, 1000);
 }
 
 void bootstrap()

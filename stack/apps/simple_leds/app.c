@@ -23,6 +23,8 @@
 #include "debug.h"
 #include "platform.h"
 
+#define INPUT_PORT D8
+
 #ifdef PLATFORM_GECKO
 #include "userbutton.h"
 
@@ -47,6 +49,11 @@ void timer1_callback()
 	log_print_string("Toggled led %d", 1);
 }
 
+static void led_callback(pin_id_t pin_id, uint8_t event_mask)
+{
+	led_toggle(1);
+}
+
 void bootstrap()
 {
 	led_on(0);
@@ -57,8 +64,19 @@ void bootstrap()
     sched_register_task(&timer0_callback);
     sched_register_task(&timer1_callback);
 
-    timer_post_task_delay(&timer0_callback, TIMER_TICKS_PER_SEC);
-    timer_post_task_delay(&timer1_callback, 0x0000FFFF + (uint32_t)100);
+    //timer_post_task_delay(&timer0_callback, TIMER_TICKS_PER_SEC);
+    //timer_post_task_delay(&timer1_callback, 0x0000FFFF + (uint32_t)100);
+
+    error_t ret = hw_gpio_configure_pin(INPUT_PORT, 1, 1, 0);
+    assert(ret == SUCCESS);
+
+    ret = hw_gpio_configure_interrupt(INPUT_PORT, &led_callback, GPIO_RISING_EDGE | GPIO_FALLING_EDGE);
+    assert(ret == SUCCESS);
+
+    ret = hw_gpio_enable_interrupt(INPUT_PORT);
+    assert(ret == SUCCESS);
+
+
 
 #ifdef PLATFORM_GECKO
     ubutton_register_callback(0, &userbutton_callback);
