@@ -14,7 +14,8 @@
 
 #include "platform.h"
 
-#define I2C_POLLING  1000
+// TODO use other ways to avoid long polling
+#define I2C_POLLING  10000
 
 #define I2CS       2
 #define LOCATIONS  5
