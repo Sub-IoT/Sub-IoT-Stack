@@ -123,7 +123,7 @@ static spi_handle_t handle[USARTS] = {
 };
   
 spi_handle_t* spi_init(uint8_t idx, uint32_t baudrate, uint8_t databits,
-                      uint8_t pins)
+                       uint8_t pins)
 {
   // assert what is supported by HW and emlib
   assert(databits == 8 || databits == 9);
@@ -168,11 +168,11 @@ void spi_init_slave(pin_id_t slave) {
 }
 
 void spi_select(pin_id_t slave) {
-  hw_gpio_set(slave);
+  hw_gpio_clr(slave);
 }
 
 void spi_deselect(pin_id_t slave) {
-  hw_gpio_clr(slave);
+  hw_gpio_set(slave);
 }
 
 unsigned char spi_exchange_byte(spi_handle_t* spi, unsigned char data) {
