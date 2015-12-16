@@ -60,7 +60,7 @@ hw_rx_cfg_t rx_cfg = {
     .channel_id = {
         .channel_header.ch_coding = PHY_CODING_PN9,
         .channel_header.ch_class = PHY_CLASS,
-        .channel_header.ch_freq_band = PHY_BAND_433,
+        .channel_header.ch_freq_band = PHY_BAND_868,
         .center_freq_index = 5
     },
     .syncword_class = PHY_SYNCWORD_CLASS0

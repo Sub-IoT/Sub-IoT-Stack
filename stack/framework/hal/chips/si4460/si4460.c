@@ -18,7 +18,7 @@
 
 /* \file
  *
- * Driver for si4455
+ * Driver for si4460
  *
  * @author maarten.weyn@uantwerpen.be
  *
@@ -537,7 +537,7 @@ static void ezradio_int_callback()
 
 				if(current_state == HW_RADIO_STATE_RX)
 				{
-					start_rx(&pending_rx_cfg);
+					//start_rx(&pending_rx_cfg);
 				}
 
 	//			if(current_state == HW_RADIO_STATE_RX) // check still in RX, could be modified by upper layer while in callback
