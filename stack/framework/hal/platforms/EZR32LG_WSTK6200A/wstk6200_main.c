@@ -37,7 +37,7 @@
 
 void __platform_init()
 {
-	__ezr32wg_mcu_init();
+	__ezr32lg_mcu_init();
     __gpio_init();
     __uart_init();
     __led_init();

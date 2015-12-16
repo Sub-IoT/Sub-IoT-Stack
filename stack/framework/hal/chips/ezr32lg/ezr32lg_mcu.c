@@ -28,7 +28,7 @@
 #include "em_chip.h"
 
 
-void __ezr32wg_mcu_init()
+void __ezr32lg_mcu_init()
 {
     /* Chip errata */
     CHIP_Init();
