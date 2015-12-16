@@ -53,7 +53,7 @@ void bootstrap()
             .control_scan_type_is_foreground = true,
             .control_csma_ca_mode = CSMA_CA_MODE_UNC,
             .control_number_of_subbands = 1,
-            .subnet = 0x05,
+            .subnet = 0,
             .scan_automation_period = 0,
             .transmission_timeout_period = 0xFF,
             .subbands[0] = (subband_t){
@@ -100,7 +100,7 @@ void bootstrap()
 
     d7ap_stack_init(&fs_init_args, &d7asp_init_args, true);
 
-    fs_write_dll_conf_active_access_class(1); // use access class 1 for scan automation
+    fs_write_dll_conf_active_access_class(0); // use access class 0 for scan automation
 
     lcd_write_string("started");
 }

@@ -64,3 +64,5 @@ IF(NOT( PLATFORM STREQUAL "none"))
     SET(${PLATFORM_PREFIX} ON)
     ADD_SUBDIRECTORY(${PLATFORM_PATH_${PLATFORM}} ${CMAKE_CURRENT_BINARY_DIR}/platform)
 ENDIF()
+
+SET(CHIP_EXTRA_CHIPS_DIR "" CACHE STRING "Path to directory containing extra, out of tree chips implementations (optional)")
