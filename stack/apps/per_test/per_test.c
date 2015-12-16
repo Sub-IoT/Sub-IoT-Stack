@@ -39,7 +39,7 @@
 #include "userbutton.h"
 #include "fifo.h"
 
-#ifndef PLATFORM_EFM32GG_STK3700
+#if !defined(PLATFORM_EFM32GG_STK3700) && !defined(PLATFORM_EZR32LG_WSTK6200A)
     #error "assuming STK3700 for now"
 #endif
 

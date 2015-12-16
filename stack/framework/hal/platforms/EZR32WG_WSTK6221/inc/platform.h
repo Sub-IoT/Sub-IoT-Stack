@@ -26,7 +26,7 @@
 #endif
 
 
-#include "ezr32wg_chip.h"
+#include <ezr32lg_chip.h>
 
 /********************
  * LED DEFINITIONS *

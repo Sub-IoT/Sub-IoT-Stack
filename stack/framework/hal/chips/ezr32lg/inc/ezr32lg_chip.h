@@ -18,8 +18,8 @@
 
 #ifndef __EZR32WG_CHIP_H_
 #define __EZR32WG_CHIP_H_
+#include <ezr32lg_pins.h>
 #include "hwgpio.h"
-#include "ezr32wg_pins.h"
 
 #define PLATFORM_NUM_TIMERS 1
 

@@ -25,13 +25,13 @@
 
 
 #include "hwgpio.h"
-#include "ezr32wg_chip.h"
 #include <em_gpio.h>
 #include <em_cmu.h>
 #include <em_bitband.h>
 #include <gpiointerrupt.h>
 #include <stdarg.h>
 #include <assert.h>
+#include <ezr32lg_chip.h>
 #include "hwatomic.h"
 
 typedef struct

@@ -38,7 +38,7 @@
 
 #define HW_RSSI_INVALID 0x7FFF
 
-/* \brief The channel bands and corresponding band indeces as defined in D7A
+/* \brief The channel bands and corresponding band indices as defined in D7A
  *
  */
 typedef enum
@@ -48,7 +48,7 @@ typedef enum
     PHY_BAND_915 = 0x04,
 } phy_channel_band_t;
 
-/* \brief The channel classes and corresponding indeces as defined in D7A
+/* \brief The channel classes and corresponding indices as defined in D7A
  *
  */
 typedef enum
@@ -58,7 +58,7 @@ typedef enum
     PHY_CLASS_HI_RATE = 0x03
 } phy_channel_class_t;
 
-/* \brief The coding schemes and corresponding indeces as defined in D7A
+/* \brief The coding schemes and corresponding indices as defined in D7A
  *
  */
 typedef enum
