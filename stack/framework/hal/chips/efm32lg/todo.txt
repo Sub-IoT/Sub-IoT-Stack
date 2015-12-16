@@ -1,0 +1,2 @@
+only cmsis differs for lg and gg
+change build systems so we do not need to copy the files
