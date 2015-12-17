@@ -60,6 +60,20 @@ static void ezradioPowerUp(void);
 
 static void GPIO_EZRadio_INT_IRQHandler( uint8_t pin );
 
+const char *byte_to_binary(uint8_t x)
+{
+    static char b[9];
+    b[0] = '\0';
+
+    uint8_t z;
+    for (z = 128; z > 0; z >>= 1)
+    {
+        strcat(b, ((x & z) == z) ? "1" : "0");
+    }
+
+    return b;
+}
+
 
 void ezradioInit(task_t cb)
 {
@@ -109,10 +123,13 @@ void ezradioResetTRxFifo(void)
 
 Ecode_t ezradioStartRx(uint8_t channel)
 {
+	ezradio_get_int_status(0u, 0u, 0u, NULL);
+
   /* Start Receiving packet, channel 0, START immediately, Packet n bytes long */
     ezradio_start_rx(channel, 0u, 0u,
                   EZRADIO_CMD_START_RX_ARG_NEXT_STATE1_RXTIMEOUT_STATE_ENUM_NOCHANGE,
-                  EZRADIO_CMD_START_RX_ARG_NEXT_STATE2_RXVALID_STATE_ENUM_READY,
+                  //EZRADIO_CMD_START_RX_ARG_NEXT_STATE2_RXVALID_STATE_ENUM_READY,
+                  EZRADIO_CMD_START_RX_ARG_NEXT_STATE3_RXINVALID_STATE_ENUM_RX,
                   EZRADIO_CMD_START_RX_ARG_NEXT_STATE3_RXINVALID_STATE_ENUM_RX );
 
     return ECODE_OK;
@@ -130,13 +147,13 @@ Ecode_t ezradioStartTx(hw_radio_packet_t* packet, uint8_t channel_id, bool rx_af
 	    return ECODE_EMDRV_EZRADIODRV_TRANSMIT_FAILED;
 	}
 
-	/* Fill the TX fifo with datas */
-	ezradio_write_tx_fifo(packet->length+1, packet->data);
+	/* Fill the TX fifo with datas + CRC is added by HW*/
+	ezradio_write_tx_fifo(packet->length-1, packet->data);
 
 	/* Start sending packet*/
 	// RX state or idle state
 	uint8_t next_state = rx_after ? 8 << 4 : 1 << 4;
-	ezradio_start_tx(channel_id, next_state,  packet->length+1);
+	ezradio_start_tx(channel_id, next_state,  packet->length-1);
 
 	return ECODE_EMDRV_EZRADIODRV_OK;
 }

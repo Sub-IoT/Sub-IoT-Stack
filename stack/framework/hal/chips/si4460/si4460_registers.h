@@ -602,5 +602,18 @@
   0x00 /* DATA3                                             */\
 
 
+#define RADIO_CONFIG_SET_PROPERTY_MODEM_RSSI_CONTROL \
+  0x20 /* GROUP: Modem                                                        */,\
+  0x01 /* NUM_PROPS                                                           */,\
+  0x4C /* START_PROP                                                          */,\
+  0x02 /* MODEM_RSSI_CONTROL,CHECK_THRESH_AT_LATCH[5],AVERAGE[4:3],LATCH[2:0] */\
+
+
+#define RADIO_CONFIG_SET_PROPERTY_MODEM_RSSI_CONTROL2 \
+  0x20 /* GROUP: Modem                                                                          */,\
+  0x01 /* NUM_PROPS                                                                             */,\
+  0x4D /* START_PROP                                                                            */,\
+  0x00 /* MODEM_RSSI_CONTROL2,RSSIJMP_DWN[5],RSSIJMP_UP[4],ENRSSIJMP[3],JMPDLYLEN[2],ENJMPRX[1] */\
+
 
 #endif /* FRAMEWORK_HAL_CHIPS_SI4460_EZRADIODRV_SI4460_REGISTERS_H_ */

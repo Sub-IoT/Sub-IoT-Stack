@@ -48,7 +48,7 @@
     #define DPRINT(...)
 #endif
 
-#define RSSI_OFFSET 0
+#define RSSI_OFFSET 64 // if this is changed also change radio register 0x20,0x4e
 
 #if DEBUG_PIN_NUM >= 2
     #define DEBUG_TX_START() hw_debug_set(0);
@@ -82,8 +82,8 @@ static hw_radio_state_t current_state;
 static hw_radio_packet_t* current_packet;
 static channel_id_t current_channel_id = {
     .channel_header.ch_coding = PHY_CODING_PN9,
-    .channel_header.ch_class = PHY_CLASS_NORMAL_RATE,
-    .channel_header.ch_freq_band = PHY_BAND_433,
+    .channel_header.ch_class = PHY_CLASS_HI_RATE,
+    .channel_header.ch_freq_band = PHY_BAND_868,
     .center_freq_index = 0
 };
 static uint8_t ez_channel_id = 0;
@@ -279,20 +279,6 @@ static void switch_to_idle_mode()
 	DPRINT("switch_to_idle_mode not implemented");
 }
 
-static const char *byte_to_binary(uint8_t x)
-{
-    static char b[9];
-    b[0] = '\0';
-
-    uint8_t z;
-    for (z = 128; z > 0; z >>= 1)
-    {
-        strcat(b, ((x & z) == z) ? "1" : "0");
-    }
-
-    return b;
-}
-
 error_t hw_radio_init(alloc_packet_callback_t alloc_packet_cb,
                       release_packet_callback_t release_packet_cb)
 {
@@ -313,6 +299,14 @@ error_t hw_radio_init(alloc_packet_callback_t alloc_packet_cb,
 	DPRINT("INIT ezradio_part_info");
 	ezradio_part_info(&ezradioReply);
 	DPRINT("   Device: Si%04x\n\n", ezradioReply.PART_INFO.PART);
+
+
+	/* Fix registers not correct set by radio configurator */
+	// latch on sync word detect - currently no threshold comparison (todo: optimize)
+	//ezradio_set_property(RADIO_CONFIG_SET_PROPERTY_MODEM_RSSI_CONTROL);
+
+	// disable jump detection (todo: optimize)
+	//ezradio_set_property(RADIO_CONFIG_SET_PROPERTY_MODEM_RSSI_CONTROL2);
 
 	/* Reset radio fifos. */
 	DPRINT("INIT ezradioResetTRxFifo");
@@ -379,7 +373,7 @@ error_t hw_radio_send_packet(hw_radio_packet_t* packet, tx_packet_callback_t tx_
 
 #ifdef FRAMEWORK_LOG_ENABLED // TODO more granular
 	log_print_stack_string(LOG_STACK_PHY, "Data to TX Fifo:");
-	log_print_data(packet->data, packet->length + 1);
+	log_print_data(packet->data, packet->length -1 );
 #endif
 
 	configure_channel((channel_id_t*)&(current_packet->tx_meta.tx_cfg.channel_id));
@@ -412,7 +406,7 @@ int16_t hw_radio_get_latched_rssi()
 {
 	ezradio_cmd_reply_t ezradioReply;
 	ezradio_get_modem_status(0, &ezradioReply);
-	return convert_rssi(ezradioReply.GET_MODEM_STATUS.CURR_RSSI);
+	return convert_rssi(ezradioReply.GET_MODEM_STATUS.LATCH_RSSI);
 
 //	ezradio_frr_d_read(1, &ezradioReply);
 //
@@ -461,7 +455,7 @@ static void start_rx(hw_rx_cfg_t const* rx_cfg)
 
 static inline int16_t convert_rssi(uint8_t rssi_raw)
 {
-	return ((int16_t)(rssi_raw >> 1)) - (130 + RSSI_OFFSET);
+	return ((int16_t)(rssi_raw >> 1)) - (70 + RSSI_OFFSET);
 }
 
 static void ezradio_int_callback()
@@ -494,10 +488,13 @@ static void ezradio_int_callback()
 		{
 			case HW_RADIO_STATE_RX:
 				if (ezradioReply.GET_INT_STATUS.PH_PEND & EZRADIO_CMD_GET_INT_STATUS_REP_PH_PEND_PACKET_RX_PEND_BIT)
+				//if (ezradioReply.GET_INT_STATUS.PH_STATUS & EZRADIO_CMD_GET_INT_STATUS_REP_PH_STATUS_PACKET_RX_BIT)
 					DPRINT("PACKET_RX IRQ");
+				//else
+				//	return;
 
 				/* Check how many bytes we received. */
-				ezradio_fifo_info(0u, &radioReplyLocal);
+				ezradio_fifo_info(0, &radioReplyLocal);
 
 
 				DPRINT("RX ISR packetLength: %d", radioReplyLocal.FIFO_INFO.RX_FIFO_COUNT);

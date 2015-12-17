@@ -60,6 +60,8 @@ void ezradioResetTRxFifo(void);
 Ecode_t ezradioStartRx(uint8_t channel);
 Ecode_t ezradioStartTx(hw_radio_packet_t* packet, uint8_t channel_id, bool rx_after);
 
+const char *byte_to_binary(uint8_t x);
+
 
 #ifdef __cplusplus
 }
