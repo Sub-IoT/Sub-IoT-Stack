@@ -3,7 +3,10 @@ APP             ?= gateway
 BUILD            = Debug
 
 BUILD_DIR        = ../build/$(APP)
-TARGET           = $(BUILD_DIR)/apps/$(APP)/$(APP).bin
+
+TARGET           = $(BUILD_DIR)/apps/$(APP)/$(APP)
+BIN              = $(TARGET).bin
+ELF              = $(TARGET).elf
 
 CMAKE            = cmake
 
@@ -25,11 +28,12 @@ OBJCOPY          = arm-none-eabi-objcopy -O binary
 
 -include $(APP_DIR)/Makefile
 
-all: $(TARGET)
+all: $(ELF)
 
 $(BUILD_DIR):
+	@echo "*** preparing $@"
 	@mkdir -p $@
-	( cd $@; \
+	@( cd $@; \
   	$(CMAKE) $(OSS) \
 		 -DCMAKE_BUILD_TYPE=$(BUILD) \
 		 -DTOOLCHAIN_DIR=$(TOOLCHAIN_DIR) \
@@ -42,13 +46,15 @@ $(BUILD_DIR):
 		 -DFRAMEWORK_LOG_ENABLED=n \
 	)
 
-$(TARGET): $(BUILD_DIR)
-	(make -C $(BUILD_DIR))
+$(ELF): $(BUILD_DIR)
+	@echo "*** building $@"
+	@(make -C $(BUILD_DIR))
 
-size: $(TARGET)
-	$(SIZE) $(TARGET)
+size: $(ELF)
+	@echo "*** sizing $<"
+	@$(SIZE) $<
 
-program: $(TARGET)
+program: $(BIN)
 	@echo "device $(DEVICE)" 	>  $(FLASH_SCRIPT)
 	@echo "loadfile $<" 			>> $(FLASH_SCRIPT)
 	@echo "verifybin $<, 0x0" >> $(FLASH_SCRIPT)
