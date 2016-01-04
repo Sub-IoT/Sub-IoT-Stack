@@ -50,17 +50,14 @@
  *******************/
 
 #define UART_BAUDRATE PLATFORM_EFM32GG_STK3700_UART_BAUDRATE
-
-
-
 #define UART_CHANNEL        UART0
 #define UART_CLOCK          cmuClock_UART0
 #define UART_ROUTE_LOCATION UART_ROUTE_LOCATION_LOC1
 
-// UART0 location #1: PE0 and PE1
-#define UART_PIN_TX         E0           // PE0
-#define UART_PIN_RX         E1          // PE1
-
+// console configuration
+#define CONSOLE_UART        PLATFORM_EFM32GG_STK3700_CONSOLE_UART
+#define CONSOLE_LOCATION    PLATFORM_EFM32GG_STK3700_CONSOLE_LOCATION
+#define CONSOLE_BAUDRATE    PLATFORM_EFM32GG_STK3700_CONSOLE_BAUDRATE
 
 /********************
  * SPI DEFINITIONS *
@@ -109,8 +106,12 @@
 
 // CC1101 PIN definitions
 #ifdef USE_CC1101
-    #define CC1101_GDO0_PIN C3
-    #define CC1101_GDO2_PIN C4
+#define CC1101_SPI_USART    1
+#define CC1101_SPI_BAUDRATE 1500000
+#define CC1101_SPI_LOCATION 1
+#define CC1101_SPI_PIN_CS   D3
+#define CC1101_GDO0_PIN     C3
+#define CC1101_GDO2_PIN     C4
 #endif
 
 #define HAS_LCD

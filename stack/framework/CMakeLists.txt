@@ -89,6 +89,7 @@ SET(FRAMEWORK_HEADERS
         inc/fifo.h
         inc/bitmap.h
         inc/debug.h
+        inc/console.h
         inc/shell.h
 )
 
