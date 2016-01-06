@@ -1,4 +1,5 @@
 APP             ?= gateway
+PLATFORM        ?= EFM32GG_STK3700
 
 BUILD            = Debug
 
@@ -13,7 +14,6 @@ CMAKE            = cmake
 OSS             := $(realpath stack)
 TOOLCHAIN_DIR    = ../../gcc-arm-none-eabi-4_9-2015q3
 TOOLCHAIN_FILE   = $(OSS)/cmake/toolchains/gcc-arm-embedded.cmake
-PLATFORM         = EFM32GG_STK3700
 PLATFORM_UC     := $(shell echo $(PLATFORM) | tr a-z A-Z)
 PLATFORM_RADIO   = cc1101
 APP_DIR          = $(OSS)/apps/$(APP)

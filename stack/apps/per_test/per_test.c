@@ -43,6 +43,8 @@
     #error "assuming STK3700 for now"
 #endif
 
+#include "console.h"
+
 // configuration options
 #define PACKET_SIZE 16
 
@@ -184,8 +186,8 @@ static void packet_received(hw_radio_packet_t* packet)
         memcpy(&msg_counter, packet->data + 1 + sizeof(msg_id), sizeof(msg_counter));
         char chan[8];
         channel_id_to_string(&(packet->rx_meta.rx_cfg.channel_id), chan, sizeof(chan));
-        sprintf(record, "%7s,%i,%i,%lu,%lu,%i\n", chan, msg_counter, packet->rx_meta.rssi, (unsigned long)msg_id, (unsigned long)id, packet->rx_meta.timestamp);
-		uart_transmit_message(record, strlen(record));
+        console_printf("%7s,%i,%i,%lu,%lu,%i\n", chan, msg_counter, packet->rx_meta.rssi, (unsigned long)msg_id, (unsigned long)id, packet->rx_meta.timestamp);
+    
 
 		if(counter == 0)
 		{
@@ -278,8 +280,7 @@ static void start()
             {
                 sprintf(lcd_msg, "RUN RX");
                 lcd_write_string(lcd_msg);
-                sprintf(record, "%s,%s,%s,%s,%s,%s\n", "channel_id", "counter", "rssi", "tx_id", "rx_id", "timestamp");
-                uart_transmit_message(record, strlen(record));
+                console_printf("%s,%s,%s,%s,%s,%s\n", "channel_id", "counter", "rssi", "tx_id", "rx_id", "timestamp");
                 rx_cfg.channel_id = current_channel_id;
                 timer_post_task(&start_rx, TIMER_TICKS_PER_SEC * 5);
             }
@@ -384,13 +385,13 @@ static void process_command_chan()
 
     char str[20];
     channel_id_to_string(&current_channel_id, str, sizeof(str));
-    uart_transmit_string(str);
+    console_print(str);
     // change channel and restart
     // TODOsched_post_task(&start_rx);
     return;
 
     error:
-        uart_transmit_string("Error parsing CHAN command. Expected format example: '433L001'\n");
+        console_print("Error parsing CHAN command. Expected format example: '433L001'\n");
         fifo_clear(&uart_rx_fifo);
 }
 
@@ -431,8 +432,7 @@ static void process_uart_rx_fifo()
         else
         {
             char err[40];
-            snprintf(err, sizeof(err), "ERROR invalid command %.4s\n", received_cmd);
-            uart_transmit_string(err);
+            console_printf("ERROR invalid command %.4s\n", received_cmd);
         }
 
         fifo_clear(&uart_rx_fifo);
@@ -441,7 +441,7 @@ static void process_uart_rx_fifo()
     timer_post_task_delay(&process_uart_rx_fifo, TIMER_TICKS_PER_SEC);
 }
 
-static void uart_rx_cb(char data)
+static void uart_rx_cb(uint8_t data)
 {
     error_t err;
     err = fifo_put(&uart_rx_fifo, &data, 1); assert(err == SUCCESS);
@@ -462,8 +462,8 @@ void bootstrap()
 
     fifo_init(&uart_rx_fifo, uart_rx_buffer, sizeof(uart_rx_buffer));
 
-    uart_set_rx_interrupt_callback(&uart_rx_cb);
-    uart_rx_interrupt_enable(true);
+    uart_set_rx_interrupt_callback(CONSOLE_UART, &uart_rx_cb);
+    uart_rx_interrupt_enable(CONSOLE_UART);
 
     sched_register_task(&start_rx);
     sched_register_task(&transmit_packet);

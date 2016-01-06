@@ -29,7 +29,8 @@
 //Overwrite _write so 'printf''s get pushed over the uart
 int _write(int fd, char *ptr, int len)
 {
-  uart_transmit_message(ptr, len);
+  // by default on UART0, which should be the console
+  uart_send_bytes(0, ptr, len);
   return len;
 }
 

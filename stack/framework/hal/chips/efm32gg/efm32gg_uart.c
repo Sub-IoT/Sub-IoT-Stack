@@ -179,7 +179,6 @@ struct uart_handle {
 };
 
 // private storage of handles, pointers to these records are passed around
-// malloc would be nicer here ;-)
 static uart_handle_t handle[UARTS] = {
   {
     .idx     = 0,
