@@ -43,9 +43,11 @@
 #if DEBUG_PIN_NUM > 0
     #define DEBUG_PIN_SET(pin) hw_debug_set(pin)
     #define DEBUG_PIN_CLR(pin) hw_debug_clr(pin)
+    #define DEBUG_PIN_TOGGLE(pin) hw_debug_toggle(pin)
 #else
     #define DEBUG_PIN_SET(pin) ((void)0)
     #define DEBUG_PIN_CLR(pin) ((void)0)
+    #define DEBUG_PIN_TOGGLE(pin) ((void)0)
 #endif
 
 /*! \brief Initialise the debug pins of the platform
