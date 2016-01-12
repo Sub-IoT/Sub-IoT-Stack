@@ -58,6 +58,7 @@ ADD_LIBRARY (${CHIP_LIBRARY_NAME} OBJECT
 	kl02z_gpio.c
 	kl02z_timer.c
 	kl02z_atomic.c
+        kl02z_watchdog.c
 	CMSIS/system_MKL02Z4.c
 	CMSIS/startup_MKL02Z4.s
         CMSIS/startup.c
