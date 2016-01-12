@@ -24,6 +24,9 @@
 
 #include "shell.h"
 
+#include "framework_defs.h"
+#ifdef FRAMEWORK_SHELL_ENABLED
+
 
 #define CMD_BUFFER_SIZE 256
 #define CMD_HANDLER_REGISTRATIONS_COUNT 3 // TODO configurable using cmake
@@ -150,3 +153,5 @@ void shell_return_output(shell_cmd_handler_id_t origin, uint8_t *data, uint8_t l
     uart_transmit_data(origin);
     uart_transmit_message(data, length);
 }
+
+#endif

@@ -28,7 +28,7 @@
 
 #include "hwtimer.h"
 #include "hwatomic.h"
-#include "kl02z_mcu.h"
+//#include "kl02z_mcu.h"
 
 /**************************************************************************//**
  * @brief  Start LFRCO for RTC
