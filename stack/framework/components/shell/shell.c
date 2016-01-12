@@ -22,6 +22,7 @@
  * \author contact@christophe.vg
  */
 
+#ifdef HAS_CONSOLE
 
 #include "shell.h"
 
