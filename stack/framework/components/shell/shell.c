@@ -22,8 +22,6 @@
  * \author contact@christophe.vg
  */
 
-#ifdef HAS_CONSOLE
-
 #include "shell.h"
 
 #include "framework_defs.h"
@@ -176,5 +174,4 @@ void shell_return_output(shell_cmd_handler_id_t origin, uint8_t *data, uint8_t l
     console_print_byte(origin);
     console_print_bytes(data, length);
 }
-
 #endif
