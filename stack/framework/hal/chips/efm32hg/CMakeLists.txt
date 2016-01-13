@@ -82,8 +82,8 @@ ADD_LIBRARY (${CHIP_LIBRARY_NAME} OBJECT
                     kits/common/drivers/displaypalemlib.c
                     kits/common/drivers/udelay.c
                     kits/common/drivers/cdc.c
-		    		kits/common/bsp/bsp_bcc.c
-		    		kits/common/bsp/bsp_stk.c                                      
+		    		#kits/common/bsp/bsp_bcc.c
+		    		#kits/common/bsp/bsp_stk.c                                      
                     efm32hg_adc.c 
                     efm32hg_mcu.c
                     efm32hg_uart.c
@@ -95,6 +95,7 @@ ADD_LIBRARY (${CHIP_LIBRARY_NAME} OBJECT
                     efm32hg_pins.c                   
                     efm32hg_i2c.c 
                     efm32hg_watchdog.c
+
 		    		usb/src/em_usbd.c  
 		    		usb/src/em_usbdch9.c 
 		    		usb/src/em_usbdep.c 

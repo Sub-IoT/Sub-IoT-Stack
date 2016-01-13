@@ -33,6 +33,7 @@
  *******************/
 
 #define HW_USE_HFXO
+#define HW_USE_LFXO
 
 /********************
  * LED DEFINITIONS *
