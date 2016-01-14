@@ -174,10 +174,11 @@ void bootstrap()
 
     d7ap_stack_init(&fs_init_args, &d7asp_init_args, false);
 
-    sched_register_task(&start_foreground_scan);
-    sched_post_task(&start_foreground_scan);
+//    sched_register_task(&start_foreground_scan);
+//    sched_post_task(&start_foreground_scan);
 
     sched_register_task((&execute_sensor_measurement));
-    timer_post_task_delay(&execute_sensor_measurement, TIMER_TICKS_PER_SEC * 5);
+    sched_post_task(&execute_sensor_measurement);
+//    timer_post_task_delay(&execute_sensor_measurement, TIMER_TICKS_PER_SEC * 5);
 }
 

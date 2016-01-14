@@ -34,6 +34,8 @@ SET_PROPERTY(SOURCE CMSIS/startup_MKL02Z4.s PROPERTY LANGUAGE ASM)
 INCLUDE_DIRECTORIES(
 	CMSIS
 	inc
+        ksdk/hal/inc
+        ksdk/drivers/inc
 )
 
 ##Export the 'inc' directory globally		    
@@ -46,6 +48,8 @@ EXPORT_PLATFORM_INCLUDE_DIRECTORIES(
 	CMSIS
 	inc_platform
 	inc
+        ksdk/hal/inc
+        ksdk/drivers/inc
 )
 
 
@@ -60,8 +64,10 @@ ADD_LIBRARY (${CHIP_LIBRARY_NAME} OBJECT
 	kl02z_atomic.c
         kl02z_watchdog.c
 	CMSIS/system_MKL02Z4.c
-	CMSIS/startup_MKL02Z4.s
+        CMSIS/startup_MKL02Z4.s
         CMSIS/startup.c
+        ksdk/hal/src/gpio/fsl_gpio_hal.c
+        ksdk/drivers/src/gpio/fsl_gpio_common.c
 #                    CMSIS/device/src/system_efm32gg.c
 #                    CMSIS/device/src/startup_gcc_efm32gg.s
 #                    emlib/src/em_assert.c

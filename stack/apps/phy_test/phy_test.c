@@ -31,7 +31,7 @@
 #include <log.h>
 
 // configuration options
-#define RX_MODE
+//#define RX_MODE
 #define PHY_CLASS PHY_CLASS_LO_RATE
 
 

@@ -32,9 +32,9 @@
 
 #include "platform_defs.h"
 
-#ifndef USE_CC1101
-    #error "This application only works with cc1101"
-#endif
+//#ifndef USE_CC1101
+//    #error "This application only works with cc1101"
+//#endif
 
 #include "log.h"
 #include "hwradio.h"

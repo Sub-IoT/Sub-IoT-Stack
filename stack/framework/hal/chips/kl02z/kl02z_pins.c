@@ -26,18 +26,21 @@
 #include "MKL02Z4.h"
 #include "hwgpio.h"
 
-pin_id_t const A0 = {.port = (uint32_t)GPIOA, .pin = 0};
-pin_id_t const A1 = {.port = (uint32_t)GPIOA, .pin = 1};
-pin_id_t const A2 = {.port = (uint32_t)GPIOA, .pin = 2};
-pin_id_t const A3 = {.port = (uint32_t)GPIOA, .pin = 3};
-pin_id_t const A4 = {.port = (uint32_t)GPIOA, .pin = 4};
-pin_id_t const A5 = {.port = (uint32_t)GPIOA, .pin = 5};
-pin_id_t const A6 = {.port = (uint32_t)GPIOA, .pin = 6};
-pin_id_t const A7 = {.port = (uint32_t)GPIOA, .pin = 7};
+#define PORTA_INDEX 0
+#define PORTB_INDEX 1
 
-pin_id_t const B0 = {.port = (uint32_t)GPIOB, .pin = 0};
-pin_id_t const B1 = {.port = (uint32_t)GPIOB, .pin = 1};
-pin_id_t const B2 = {.port = (uint32_t)GPIOB, .pin = 2};
-pin_id_t const B3 = {.port = (uint32_t)GPIOB, .pin = 3};
-pin_id_t const B4 = {.port = (uint32_t)GPIOB, .pin = 4};
-pin_id_t const B5 = {.port = (uint32_t)GPIOB, .pin = 5};
+pin_id_t const A0 = {.port = PORTA_INDEX, .pin = 0};
+pin_id_t const A1 = {.port = PORTA_INDEX, .pin = 1};
+pin_id_t const A2 = {.port = PORTA_INDEX, .pin = 2};
+pin_id_t const A3 = {.port = PORTA_INDEX, .pin = 3};
+pin_id_t const A4 = {.port = PORTA_INDEX, .pin = 4};
+pin_id_t const A5 = {.port = PORTA_INDEX, .pin = 5};
+pin_id_t const A6 = {.port = PORTA_INDEX, .pin = 6};
+pin_id_t const A7 = {.port = PORTA_INDEX, .pin = 7};
+
+pin_id_t const B0 = {.port = PORTB_INDEX, .pin = 0};
+pin_id_t const B1 = {.port = PORTB_INDEX, .pin = 1};
+pin_id_t const B2 = {.port = PORTB_INDEX, .pin = 2};
+pin_id_t const B3 = {.port = PORTB_INDEX, .pin = 3};
+pin_id_t const B4 = {.port = PORTB_INDEX, .pin = 4};
+pin_id_t const B5 = {.port = PORTB_INDEX, .pin = 5};
