@@ -178,7 +178,6 @@ void bootstrap()
 //    sched_post_task(&start_foreground_scan);
 
     sched_register_task((&execute_sensor_measurement));
-    sched_post_task(&execute_sensor_measurement);
-//    timer_post_task_delay(&execute_sensor_measurement, TIMER_TICKS_PER_SEC * 5);
+    timer_post_task_delay(&execute_sensor_measurement, TIMER_TICKS_PER_SEC * 5);
 }
 
