@@ -43,6 +43,7 @@
 #define __SILICON_LABS_EM_DEVICE_H__
 
 
+
 #if defined(EFM32HG108F32)
 #include "efm32hg108f32.h"
 

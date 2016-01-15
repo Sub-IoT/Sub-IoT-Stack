@@ -32,6 +32,12 @@
 #include <debug.h>
 
 
+#include "em_usbd.h"
+#include "em_usb.h"
+
+extern void USB_IRQHandler( void );
+
+
 static const USBD_Callbacks_TypeDef callbacks =
 {
   .usbReset        = NULL,

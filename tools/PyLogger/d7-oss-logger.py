@@ -76,7 +76,7 @@ def formatHeader(header, color, datetime):
 
 # Shortcut for printing errors
 def printError(error):
-    print(formatHeader("ERROR", "RED", datetime.datetime.now()) + Back.RED  + Style.BRIGHT + Fore.WHITE + str(error) + Style.RESET_ALL)
+    print(formatHeader("ERROR", "RED", datetime.datetime.now()) + Back.RED  + Style.BRIGHT + Fore.WHITE + " " + str(error) + Style.RESET_ALL)
 
 ###
 # The different logs classes, every class has its own read, write and print function for costumization
@@ -323,7 +323,14 @@ class parse_d7(threading.Thread):
                             self.pcap_file.flush()
                         if self.wireshark_logger != None:
                             self.wireshark_logger.write(serialData)
-            except Exception as inst:
+            except serial.serialutil.SerialException as inst:
+                if (str(inst) == "call to ClearCommError failed"):
+					printError("lost COM port, retrying...")
+					time.sleep(5)
+					relaunch()
+                else:
+					printError(inst)
+            except Exception as inst:                
                 printError(inst)
 
 class display_d7(threading.Thread):
@@ -501,6 +508,12 @@ def main():
 
     print("The logger is stopping, please wait")
     sys.exit()
+	
+def relaunch():
+    args = "" # must declare first
+    for i in sys.argv:
+        args = args + " " + str(i) # force casting to strings with str() to concatenate
+    os.system("python" + args) # do it!
 
 if __name__ == "__main__":
     main()
