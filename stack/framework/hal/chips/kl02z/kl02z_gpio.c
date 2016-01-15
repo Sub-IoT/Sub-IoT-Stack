@@ -27,34 +27,32 @@
 #include <stdarg.h>
 #include "debug.h"
 #include "hwatomic.h"
-#include <MKL02Z4.h>
+#include "MKL02Z4.h"
+#include "fsl_port_hal.h"
+#include "fsl_gpio_hal.h"
+#include "fsl_gpio_driver.h"
 
-// TODO
-//typedef struct
-//{
-//    gpio_inthandler_t callback;
-//    GPIO_Port_TypeDef interrupt_port;
-//} gpio_interrupt_t;
-//the list of configured interrupts
-//static gpio_interrupt_t interrupts[16];
+#define GPIO_BASE(port) g_gpioBase[port]
+#define PORT_BASE(port) g_portBase[port]
 
-static uint16_t gpio_pins_configured[6];
+typedef struct
+{
+    gpio_inthandler_t callback;
+    int8_t pin;
+    port_interrupt_config_t interrupt_config;
+} gpio_interrupt_t;
+
+static gpio_interrupt_t portb_interrupt_config[8];
+static uint8_t portb_interrupts = 0x00;
 
 __LINK_C void __gpio_init()
 {
-// TODO
-//    for(int i = 0; i < 16; i++)
-//    {
-//    	interrupts[i].callback = 0x0;
-//    	interrupts[i].interrupt_port = 0xFF; //signal that a port has not yet been chosen
-//    }
-//    for(int i = 0; i < 6; i++)
-//    	gpio_pins_configured[i] = 0;
-//    CMU_ClockEnable(cmuClock_GPIO, true);
-//
-//    /* Initialize GPIO interrupt dispatcher */
-//    GPIOINT_Init();
-
+    for(int i = 0; i < 8; i++)
+    {
+        portb_interrupt_config[i].callback = 0x0;
+        portb_interrupt_config[i].pin = 0xFF;
+        portb_interrupt_config[i].interrupt_config = kPortIntDisabled;
+    }
 }
 
 __LINK_C error_t hw_gpio_configure_pin(pin_id_t pin_id, bool int_allowed, uint8_t mode, unsigned int out)
@@ -81,32 +79,20 @@ __LINK_C error_t hw_gpio_configure_pin(pin_id_t pin_id, bool int_allowed, uint8_
 
 __LINK_C error_t hw_gpio_set(pin_id_t pin_id)
 {
-    ((GPIO_Type *)pin_id.port)->PSOR = 1 << pin_id.pin;
-// TODO
-//    if(!(gpio_pins_configured[pin_id.port] & (1<<pin_id.pin)))
-//	return EOFF;
-//    GPIO_PinOutSet(pin_id.port, pin_id.pin);
-//    return SUCCESS;
+    GPIO_HAL_WritePinOutput(GPIO_BASE(pin_id.port), pin_id.pin, 1);
+    return SUCCESS;
 }
 
 __LINK_C error_t hw_gpio_clr(pin_id_t pin_id)
 {
-	((GPIO_Type *)pin_id.port)->PCOR = 1 << pin_id.pin;
-// TODO
-//    if(!(gpio_pins_configured[pin_id.port] & (1<<pin_id.pin)))
-//	return EOFF;
-//    GPIO_PinOutClear(pin_id.port, pin_id.pin);
-//    return SUCCESS;
+    GPIO_HAL_WritePinOutput(GPIO_BASE(pin_id.port), pin_id.pin, 0);
+    return SUCCESS;
 }
 
 __LINK_C error_t hw_gpio_toggle(pin_id_t pin_id)
 {
-	((GPIO_Type *)pin_id.port)->PTOR = 1 << pin_id.pin;
-// TODO
-//    if(!(gpio_pins_configured[pin_id.port] & (1<<pin_id.pin)))
-//	return EOFF;
-//    GPIO_PinOutToggle(pin_id.port, pin_id.pin);
-//    return SUCCESS;
+    GPIO_HAL_TogglePinOutput(GPIO_BASE(pin_id.port), pin_id.pin);
+    return SUCCESS;
 }
 
 __LINK_C bool hw_gpio_get_out(pin_id_t pin_id)
@@ -118,19 +104,20 @@ __LINK_C bool hw_gpio_get_out(pin_id_t pin_id)
 
 __LINK_C bool hw_gpio_get_in(pin_id_t pin_id)
 {
-// TODO
-//    return (!!(gpio_pins_configured[pin_id.port] & (1<<pin_id.pin)))
-//	&& GPIO_PinInGet(pin_id.port, pin_id.pin);
+    return GPIO_HAL_ReadPinInput(GPIO_BASE(pin_id.port), pin_id.pin);
 }
 
-void PORTA_IRQHandler()
-{
-    assert(true);
-}
+
 
 void PORTB_IRQHandler()
 {
-    assert(true);
+    // TODO we only check for GDO0, hardcoded for now
+    if(PORT_HAL_IsPinIntPending(PORTB, CC1101_GDO0_PIN.pin))
+    {
+        PORT_HAL_ClearPinIntFlag(PORTB, CC1101_GDO0_PIN.pin);
+        if(portb_interrupt_config[CC1101_GDO0_PIN.pin].callback)
+            portb_interrupt_config[CC1101_GDO0_PIN.pin].callback(CC1101_GDO0_PIN, 0); // TODO edge
+    }
 }
 
 static void gpio_int_callback(uint8_t pin)
@@ -151,55 +138,35 @@ static void gpio_int_callback(uint8_t pin)
 
 __LINK_C error_t hw_gpio_configure_interrupt(pin_id_t pin_id, gpio_inthandler_t callback, uint8_t event_mask)
 {
+    assert(PORT_BASE(pin_id.port) == PORTB); // TODO multiple ports not supported yet
+    assert(callback != NULL);
+
+    portb_interrupt_config[pin_id.pin].callback = callback;
+
+    port_interrupt_config_t interrupt_config;
+    if(event_mask == 0)
+        interrupt_config = kPortIntDisabled;
+    else if(event_mask & GPIO_FALLING_EDGE && event_mask & GPIO_FALLING_EDGE)
+        interrupt_config = kPortIntEitherEdge;
+    else if(event_mask & GPIO_FALLING_EDGE)
+        interrupt_config = kPortIntFallingEdge;
+    else if(event_mask & GPIO_RISING_EDGE)
+        interrupt_config = kPortIntRisingEdge;
+
+    portb_interrupt_config[pin_id.pin].interrupt_config = interrupt_config;
+    portb_interrupts &= 1 << pin_id.port;
+    PORT_HAL_SetPinIntMode(PORT_BASE(pin_id.port), pin_id.pin, kPortIntDisabled);
     return SUCCESS;
-// TODO
-//    if(interrupts[pin_id.pin].interrupt_port != pin_id.port)
-//    	return EOFF;
-//    else if(callback == 0x0 || event_mask > (GPIO_RISING_EDGE | GPIO_FALLING_EDGE))
-//    	return EINVAL;
-//
-//    error_t err;
-//    start_atomic();
-//	//do this check atomically: interrupts[..] callback is altered by this function
-//	//so the check belongs in the critical section as well
-//    if(interrupts[pin_id.pin].callback != 0x0 && interrupts[pin_id.pin].callback != callback)
-//	    err = EBUSY;
-//	else
-//	{
-//	    interrupts[pin_id.pin].callback = callback;
-//    	GPIOINT_CallbackRegister(pin_id.pin, &gpio_int_callback);
-//	    GPIO_IntConfig(pin_id.port, pin_id.pin,
-//			!!(event_mask & GPIO_RISING_EDGE),
-//			!!(event_mask & GPIO_FALLING_EDGE),
-//			false);
-//	    err = SUCCESS;
-//	}
-//    end_atomic();
-//    return err;
 }
 __LINK_C error_t hw_gpio_enable_interrupt(pin_id_t pin_id)
 {
-// TODO
-//    //to be absolutely safe we should put atomic blocks around this fuction but:
-//    //interrupts[..].interrupt_port && interrupts[..].callback will never change once they've
-//    //been properly set so I think we can risk it and avoid the overhead
-//    if(interrupts[pin_id.pin].interrupt_port != pin_id.port || interrupts[pin_id.pin].callback == 0x0)
-//    	return EOFF;
-//
-//    BITBAND_Peripheral(&(GPIO->IFC), pin_id.pin, 1);
-//    BITBAND_Peripheral(&(GPIO->IEN), pin_id.pin, 1);
-//    return SUCCESS;
+    assert(portb_interrupt_config[pin_id.pin].callback != NULL);
+    PORT_HAL_SetPinIntMode(PORT_BASE(pin_id.port), pin_id.pin, portb_interrupt_config[pin_id.pin].interrupt_config);
+    return SUCCESS;
 }
 
 __LINK_C error_t hw_gpio_disable_interrupt(pin_id_t pin_id)
 {
-// TODO
-//    //to be absolutely safe we should put atomic blocks around this fuction but:
-//    //interrupts[..].interrupt_port && interrupts[..].callback will never change once they've
-//    //been properly set so I think we can risk it and avoid the overhead
-//    if(interrupts[pin_id.pin].interrupt_port != pin_id.port || interrupts[pin_id.pin].callback == 0x0)
-//	return EOFF;
-//
-//    BITBAND_Peripheral(&(GPIO->IEN), pin_id.pin, 0);
-//    return SUCCESS;
+    PORT_HAL_SetPinIntMode(PORT_BASE(pin_id.port), pin_id.pin, kPortIntDisabled);
+    return SUCCESS;
 }
