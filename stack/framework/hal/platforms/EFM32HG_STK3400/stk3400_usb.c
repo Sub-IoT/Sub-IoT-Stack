@@ -25,11 +25,17 @@
 #include "usb_descriptors.h"
 
 
-#include "bsp.h"
+//#include "bsp.h"
 #include "cdc.h"
 #include "em_cmu.h"
 #include <string.h>
 #include <debug.h>
+
+
+#include "em_usbd.h"
+#include "em_usb.h"
+
+extern void USB_IRQHandler( void );
 
 
 static const USBD_Callbacks_TypeDef callbacks =
@@ -55,9 +61,9 @@ const USBD_Init_TypeDef usbInitStruct =
 
 void __usb_init_cdc()
 {
-	BSP_Init(BSP_INIT_DEFAULT);   /* Initialize DK board register access */
+	//BSP_Init(BSP_INIT_DEFAULT);   /* Initialize DK board register access */
 
-	CMU_ClockSelectSet(cmuClock_HF, cmuSelect_HFXO);
+	//CMU_ClockSelectSet(cmuClock_HF, cmuSelect_HFXO);
 
 	/* Initialize the communication class device. */
 	CDC_Init();

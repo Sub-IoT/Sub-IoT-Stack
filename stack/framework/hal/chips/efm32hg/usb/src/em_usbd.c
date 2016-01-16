@@ -225,32 +225,32 @@ int USBD_Init( const USBD_Init_TypeDef *p )
   USB_InterfaceDescriptor_TypeDef *id;
   uint32_t totalRxFifoSize, totalTxFifoSize, numInEps, numOutEps;
 
-#if !defined( USB_CORECLK_HFRCO ) || !defined( CMU_OSCENCMD_USHFRCOEN )
-  /* Devices supporting crystal-less USB can use HFRCO or HFXO as core clock. */
-  /* All other devices must use HFXO as core clock.                           */
-  if ( CMU_ClockSelectGet( cmuClock_HF ) != cmuSelect_HFXO )
-  {
-    CMU_ClockSelectSet( cmuClock_HF, cmuSelect_HFXO );
-  }
-#endif
+//#if !defined( USB_CORECLK_HFRCO ) || !defined( CMU_OSCENCMD_USHFRCOEN )
+//  /* Devices supporting crystal-less USB can use HFRCO or HFXO as core clock. */
+//  /* All other devices must use HFXO as core clock.                           */
+//  if ( CMU_ClockSelectGet( cmuClock_HF ) != cmuSelect_HFXO )
+//  {
+//    CMU_ClockSelectSet( cmuClock_HF, cmuSelect_HFXO );
+//  }
+//#endif
 
-#if !defined( CMU_OSCENCMD_USHFRCOEN )
-#if ( USB_USBC_32kHz_CLK == USB_USBC_32kHz_CLK_LFXO )
-  CMU_OscillatorEnable(cmuOsc_LFXO, true, false);
-#else
-  CMU_OscillatorEnable(cmuOsc_LFRCO, true, false);
-#endif
-
-#else
-  CMU_ClockEnable(cmuClock_CORELE, true);
-  /* LFC clock is needed to detect USB suspend when LEMIDLE is activated. */
-#if ( USB_USBC_32kHz_CLK == USB_USBC_32kHz_CLK_LFXO )
-  CMU_ClockSelectSet(cmuClock_LFC, cmuSelect_LFXO);
-#else
-  CMU_ClockSelectSet(cmuClock_LFC, cmuSelect_LFRCO);
-#endif
-  CMU_ClockEnable(cmuClock_USBLE, true);
-#endif
+//#if !defined( CMU_OSCENCMD_USHFRCOEN )
+//#if ( USB_USBC_32kHz_CLK == USB_USBC_32kHz_CLK_LFXO )
+//  CMU_OscillatorEnable(cmuOsc_LFXO, true, false);
+//#else
+//  CMU_OscillatorEnable(cmuOsc_LFRCO, true, false);
+//#endif
+//
+//#else
+//  CMU_ClockEnable(cmuClock_CORELE, true);
+//  /* LFC clock is needed to detect USB suspend when LEMIDLE is activated. */
+//#if ( USB_USBC_32kHz_CLK == USB_USBC_32kHz_CLK_LFXO )
+//  CMU_ClockSelectSet(cmuClock_LFC, cmuSelect_LFXO);
+//#else
+//  CMU_ClockSelectSet(cmuClock_LFC, cmuSelect_LFRCO);
+//#endif
+//  CMU_ClockEnable(cmuClock_USBLE, true);
+//#endif
 
   USBTIMER_Init();
 

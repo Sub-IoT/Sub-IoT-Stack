@@ -35,8 +35,9 @@
 #endif
 
 // configuration options
-#define RX_MODE
-#define PHY_CLASS PHY_CLASS_HI_RATE
+//#define RX_MODE
+#define PHY_CLASS PHY_CLASS_LO_RATE
+
 
 
 #ifdef FRAMEWORK_LOG_ENABLED

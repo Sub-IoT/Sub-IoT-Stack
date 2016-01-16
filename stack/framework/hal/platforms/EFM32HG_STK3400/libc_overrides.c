@@ -57,7 +57,7 @@ void __assert_func( const char *file, int line, const char *func, const char *fa
 	led_on(1);
 #ifdef PLATFORM_USE_USB_CDC
 	// Dissable all IRQs except the one for USB
-	for(uint32_t j=0;j < EMU_IRQn; j++)
+	for(uint32_t j=0;j < TIMER2_IRQn; j++)
 		NVIC_DisableIRQ(j);
 
 	NVIC_EnableIRQ( USB_IRQn );

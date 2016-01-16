@@ -25,13 +25,16 @@
 #include <em_usart.h>
 #include <em_cmu.h>
 #include <em_gpio.h>
-#include <em_usbd.h>
 #include "hwgpio.h"
 #include "hwuart.h"
 #include <debug.h>
+#include <string.h>
 //contains the wiring for the uart
 //#include "platform.h"
 #include "em_gpio.h"
+#include "hwsystem.h"
+
+
 #ifdef UART_ENABLED
 
 static uart_rx_inthandler_t rx_cb = NULL;
@@ -83,13 +86,24 @@ void uart_transmit_data(int8_t data)
 {
 #ifdef UART_ENABLED
 #ifdef PLATFORM_USE_USB_CDC
-		while(USBD_EpIsBusy(0x81)){};
+		uint16_t timeout = 0;
+		while(USBD_EpIsBusy(0x81) && timeout < 100){
+			timeout++;
+			hw_busy_wait(1000);
+		};
 		uint32_t tempData = data;
-		USBD_Write( 0x81, (void*) &tempData, 1, NULL);
+		int ret = USBD_Write( 0x81, (void*) &tempData, 1, NULL);
 #else
 		while(!(UART_CHANNEL->STATUS & (1 << 6))) {}; // wait for TX buffer to empty
 		UART_CHANNEL->TXDATA = data;
+
+
 #endif
+
+#ifdef PLATFORM_USE_SWO
+		ITM_SendChar (data);
+#endif
+
 #endif
 }
 
@@ -109,16 +123,27 @@ void uart_transmit_message(void const *data, size_t length)
 
 		if (length > 0)
 		{
-			while(USBD_EpIsBusy(0x81)){};
-			USBD_Write( 0x81, (void*) tempData, length, NULL);
+			uint16_t timeout = 0;
+			while(USBD_EpIsBusy(0x81) && timeout < 100){
+				timeout++;
+				hw_busy_wait(1000);
+			};
+			int ret = USBD_Write( 0x81, (void*) tempData, length, NULL);
+
 		}
 #else
 		unsigned char i=0;
 		for (; i<length; i++)
-		{
 			uart_transmit_data(((char const*)data)[i]);
-		}
 #endif
+
+#ifdef PLATFORM_USE_SWO
+		int x;
+		for (x = 0; x < length; x++)
+			ITM_SendChar (*(char const*)data++);
+#endif
+
+
 #endif
 }
 

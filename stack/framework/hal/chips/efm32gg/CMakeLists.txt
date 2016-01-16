@@ -40,7 +40,10 @@ INCLUDE_DIRECTORIES(CMSIS/include
 		    )
 
 ##Export the 'inc' directory globally		    
-EXPORT_GLOBAL_INCLUDE_DIRECTORIES(inc)
+EXPORT_GLOBAL_INCLUDE_DIRECTORIES(inc
+			CMSIS/include
+			CMSIS/device/include							
+		    emlib/inc)
 
 #Export the em libs to the platform directory ONLY
 #Please note we include 'inc' here since for complicated cmake reasons directories exported 
@@ -95,9 +98,9 @@ ADD_LIBRARY (${CHIP_LIBRARY_NAME} OBJECT
 		    		usb/src/em_usbdch9.c 
 		    		usb/src/em_usbdep.c 
 		    		usb/src/em_usbdint.c 
-		    		usb/src/em_usbh.c 
+		    		#usb/src/em_usbh.c 
 		    		usb/src/em_usbhal.c 
-		    		usb/src/em_usbhep.c 
-		    		usb/src/em_usbhint.c 
+		    		#usb/src/em_usbhep.c 
+		    		#usb/src/em_usbhint.c 
 		    		usb/src/em_usbtimer.c                  
                     )

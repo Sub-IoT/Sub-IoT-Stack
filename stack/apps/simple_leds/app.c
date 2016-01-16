@@ -23,7 +23,7 @@
 #include "debug.h"
 #include "platform.h"
 
-#ifdef PLATFORM_GECKO
+#if NUM_USERBUTTONS > 0
 #include "userbutton.h"
 
 void userbutton_callback(button_id_t button_id)
@@ -38,6 +38,7 @@ void timer0_callback()
 	led_toggle(0);
 	timer_post_task_delay(&timer0_callback, TIMER_TICKS_PER_SEC);
 	log_print_string("Toggled led %d", 0);
+
 }
 
 void timer1_callback()
@@ -60,14 +61,20 @@ void bootstrap()
     timer_post_task_delay(&timer0_callback, TIMER_TICKS_PER_SEC);
     timer_post_task_delay(&timer1_callback, 0x0000FFFF + (uint32_t)100);
 
-
-#ifdef PLATFORM_GECKO
+#if NUM_USERBUTTONS > 0
     ubutton_register_callback(0, &userbutton_callback);
     ubutton_register_callback(1, &userbutton_callback);
 #endif
 
     led_off(0);
     led_off(1);
+
+    while (1)
+    {
+    	//log_print_string("hello world\n");
+    	uart_transmit_string("hello world\n");
+	  led_toggle(1);
+    }
 
 }
 

@@ -43,10 +43,6 @@ void __platform_init()
     __led_init();
     __lcd_init();
 
-#ifdef PLATFORM_USE_USB_CDC
-    __usb_init_cdc();
-#endif
-
 #ifdef USE_CC1101
     //TODO: add calls to hw_gpio_configure_pin for the pins used by the CC1101 driver
     //(and possibly the spi interface)
@@ -67,6 +63,11 @@ void __platform_init()
 void __platform_post_framework_init()
 {
     __ubutton_init();
+	#ifdef PLATFORM_USE_USB_CDC
+
+    //Moved here to make sure LF XO is set in timer.
+    __usb_init_cdc();
+	#endif
 }
 
 int main()

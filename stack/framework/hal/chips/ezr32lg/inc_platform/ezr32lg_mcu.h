@@ -26,6 +26,6 @@
     void handler(){INT_Disable();__ ## handler();INT_Enable();}\
     static inline void __ ## handler()
 
-void __ezr32wg_mcu_init();
+void __ezr32lg_mcu_init();
 
 #endif

@@ -40,11 +40,21 @@
  *****************************************************************************/
 void startLfxoForRtc(uint8_t freq)
 {
-    /* Starting LFRCO and waiting until it is stable */
-    CMU_OscillatorEnable(cmuOsc_LFXO, true, true);
-
-    /* Routing the LFRCO clock to the RTC */
+#ifdef HW_USE_LFXO
+	/* Starting LFXO and waiting until it is stable */
+	CMU_OscillatorEnable(cmuOsc_LFXO, true, true);
+	/* Routing the LFRCO clock to the RTC */
     CMU_ClockSelectSet(cmuClock_LFA,cmuSelect_LFXO);
+#else
+    // init clock with LFRCO (internal)
+	/* Starting LFRCO and waiting until it is stable */
+	CMU_OscillatorEnable(cmuOsc_LFRCO, true, true);
+	/* Routing the LFRCO clock to the RTC */
+	CMU_ClockSelectSet(cmuClock_LFA,cmuSelect_LFRCO);
+#endif
+
+    uint32_t lf = CMU_ClockFreqGet(cmuClock_LFA);
+
     CMU_ClockEnable(cmuClock_RTC, true);
 
     /* Set Clock prescaler */
@@ -55,6 +65,8 @@ void startLfxoForRtc(uint8_t freq)
 
     /* Enabling clock to the interface of the low energy modules */
     CMU_ClockEnable(cmuClock_CORELE, true);
+
+    uint32_t rtc = CMU_ClockFreqGet(cmuClock_RTC);
 }
 
 static timer_callback_t compare_f = 0x0;

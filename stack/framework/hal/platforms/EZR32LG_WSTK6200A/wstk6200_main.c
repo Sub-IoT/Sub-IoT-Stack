@@ -35,6 +35,50 @@
 #include "em_cmu.h"
 #include "em_chip.h"
 
+void SWO_SetupForPrint(void)
+{
+  /* Enable GPIO clock. */
+  CMU->HFPERCLKEN0 |= CMU_HFPERCLKEN0_GPIO;
+
+  /* Enable Serial wire output pin */
+  GPIO->ROUTE |= GPIO_ROUTE_SWOPEN;
+
+#if defined(_EFM32_GIANT_FAMILY) || defined(_EFM32_LEOPARD_FAMILY) || defined(_EFM32_WONDER_FAMILY)
+  /* Set location 0 */
+  GPIO->ROUTE = (GPIO->ROUTE & ~(_GPIO_ROUTE_SWLOCATION_MASK)) | GPIO_ROUTE_SWLOCATION_LOC0;
+
+  /* Enable output on pin - GPIO Port F, Pin 2 */
+  GPIO->P[5].MODEL &= ~(_GPIO_P_MODEL_MODE2_MASK);
+  GPIO->P[5].MODEL |= GPIO_P_MODEL_MODE2_PUSHPULL;
+#else
+  /* Set location 1 */
+  GPIO->ROUTE = (GPIO->ROUTE & ~(_GPIO_ROUTE_SWLOCATION_MASK)) |GPIO_ROUTE_SWLOCATION_LOC1;
+  /* Enable output on pin */
+  GPIO->P[2].MODEH &= ~(_GPIO_P_MODEH_MODE15_MASK);
+  GPIO->P[2].MODEH |= GPIO_P_MODEH_MODE15_PUSHPULL;
+#endif
+
+  /* Enable debug clock AUXHFRCO */
+  CMU->OSCENCMD = CMU_OSCENCMD_AUXHFRCOEN;
+
+  /* Wait until clock is ready */
+  while (!(CMU->STATUS & CMU_STATUS_AUXHFRCORDY));
+
+  /* Enable trace in core debug */
+  CoreDebug->DEMCR |= CoreDebug_DEMCR_TRCENA_Msk;
+  ITM->LAR  = 0xC5ACCE55;
+  ITM->TER  = 0x0;
+  ITM->TCR  = 0x0;
+  TPI->SPPR = 2;
+  TPI->ACPR = 0xf;
+  ITM->TPR  = 0x0;
+  DWT->CTRL = 0x400003FF;
+  ITM->TCR  = 0x0001000D;
+  TPI->FFCR = 0x00000100;
+  ITM->TER  = 0x1;
+}
+
+
 void __platform_init()
 {
 	__ezr32lg_mcu_init();
@@ -43,9 +87,7 @@ void __platform_init()
     __led_init();
     __lcd_init();
 
-#ifdef PLATFORM_USE_USB_CDC
-    __usb_init_cdc();
-#endif
+
 
 //#ifdef USE_CC1101
     //TODO: add calls to hw_gpio_configure_pin for the pins used by the CC1101 driver
@@ -63,6 +105,15 @@ void __platform_init()
 void __platform_post_framework_init()
 {
     __ubutton_init();
+
+#ifdef PLATFORM_USE_USB_CDC
+    __usb_init_cdc();
+#endif
+
+#ifdef PLATFORM_USE_SWO
+
+    SWO_SetupForPrint();
+#endif
 }
 
 int main()

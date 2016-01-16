@@ -28,6 +28,8 @@
 
 #include <ezr32lg_chip.h>
 
+#define HW_USE_HFXO
+
 /********************
  * LED DEFINITIONS *
  *******************/

@@ -25,6 +25,8 @@
     #error Mismatch between the configured platform and the actual platform. Expected PLATFORM_EFM32GG_STK3700 to be defined
 #endif
 
+#define HW_USE_HFXO
+#define HW_USE_LFXO
 
 #include "efm32gg_chip.h"
 
@@ -42,7 +44,6 @@
  ********************/
 
 #define USB_DEVICE
-//#define USE_USB_CDC - defined in cmake
 
 /********************
  * UART DEFINITIONS *

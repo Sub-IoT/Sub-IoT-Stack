@@ -33,6 +33,7 @@ int _write(int fd, char *ptr, int len)
   return len;
 }
 
+
 //Overwrite _exit so we don't get a fault that's impossible to debug
 void _exit(int exit)
 {

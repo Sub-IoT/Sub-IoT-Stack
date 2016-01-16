@@ -41,3 +41,8 @@ TARGET_LINK_LIBRARIES(simple_leds.elf framework)
 #IF(SSF_AVAILABLE)
 #    GENERATE_SIMPLICITY_STUDIO_FILES(simple_leds)
 #ENDIF()
+
+ADD_CUSTOM_COMMAND(TARGET simple_leds.elf POST_BUILD
+	COMMAND arm-none-eabi-objcopy -O binary simple_leds.elf simple_leds.bin
+)
+
