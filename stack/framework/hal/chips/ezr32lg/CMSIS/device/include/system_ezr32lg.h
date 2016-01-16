@@ -1,10 +1,10 @@
 /***************************************************************************//**
  * @file system_ezr32lg.h
  * @brief CMSIS Cortex-M3 System Layer for EZR32LG devices.
- * @version 4.1.0
+ * @version 4.2.1
  ******************************************************************************
  * @section License
- * <b>(C) Copyright 2015 Silicon Laboratories, Inc. http://www.silabs.com</b>
+ * <b>Copyright 2015 Silicon Laboratories, Inc. http://www.silabs.com</b>
  ******************************************************************************
  *
  * Permission is granted to anyone to use this software for any purpose,
@@ -30,8 +30,8 @@
  *
  *****************************************************************************/
 
-#ifndef __SILICON_LABS_SYSTEM_EZR32LG_H__
-#define __SILICON_LABS_SYSTEM_EZR32LG_H__
+#ifndef SYSTEM_EZR32LG_H
+#define SYSTEM_EZR32LG_H
 
 #ifdef __cplusplus
 extern "C" {
@@ -133,5 +133,5 @@ void SystemLFXOClockSet(uint32_t freq);
 #ifdef __cplusplus
 }
 #endif
-#endif /* __SILICON_LABS_SYSTEM_EZR32LG_H__ */
+#endif /* SYSTEM_EZR32LG_H */
 

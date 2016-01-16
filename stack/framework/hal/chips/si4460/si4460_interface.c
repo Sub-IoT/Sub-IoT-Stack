@@ -158,6 +158,14 @@ Ecode_t ezradioStartTx(hw_radio_packet_t* packet, uint8_t channel_id, bool rx_af
 	return ECODE_EMDRV_EZRADIODRV_OK;
 }
 
+Ecode_t ezradioStartTxUnmodelated(uint8_t channel_id)
+{
+	ezradio_get_int_status(0u, 0u, 0u, NULL);
+
+	/* Start sending packet, channel 0, START immediately, Packet n bytes long, go READY when done */
+	ezradio_start_tx(channel_id, 0u,  0u);
+}
+
 
 static void ezradioPowerUp(void)
 {

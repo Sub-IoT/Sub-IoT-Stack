@@ -22,6 +22,7 @@
 #include "log.h"
 #include "debug.h"
 #include "platform.h"
+#include "hwwatchdog.h"
 
 #if NUM_USERBUTTONS > 0
 #include "userbutton.h"
@@ -38,6 +39,8 @@ void timer0_callback()
 	led_toggle(0);
 	timer_post_task_delay(&timer0_callback, TIMER_TICKS_PER_SEC);
 	log_print_string("Toggled led %d", 0);
+
+	hw_watchdog_feed();
 
 }
 
@@ -69,12 +72,6 @@ void bootstrap()
     led_off(0);
     led_off(1);
 
-    while (1)
-    {
-    	//log_print_string("hello world\n");
-    	uart_transmit_string("hello world\n");
-	  led_toggle(1);
-    }
 
 }
 

@@ -1,10 +1,10 @@
 /**************************************************************************//**
  * @file ezr32lg_emu.h
  * @brief EZR32LG_EMU register and bit field definitions
- * @version 4.1.0
+ * @version 4.2.1
  ******************************************************************************
  * @section License
- * <b>(C) Copyright 2015 Silicon Laboratories, Inc. http://www.silabs.com</b>
+ * <b>Copyright 2015 Silicon Laboratories, Inc. http://www.silabs.com</b>
  ******************************************************************************
  *
  * Permission is granted to anyone to use this software for any purpose,
@@ -29,6 +29,10 @@
  * any third party, arising from your use of this Software.
  *
  *****************************************************************************/
+/**************************************************************************//**
+* @addtogroup Parts
+* @{
+******************************************************************************/
 /**************************************************************************//**
  * @defgroup EZR32LG_EMU
  * @{
@@ -335,5 +339,5 @@ typedef struct
 #define EMU_BUBODUNREGCAL_RANGE_DEFAULT     (_EMU_BUBODUNREGCAL_RANGE_DEFAULT << 3) /**< Shifted mode DEFAULT for EMU_BUBODUNREGCAL */
 
 /** @} End of group EZR32LG_EMU */
-
+/** @} End of group Parts */
 

@@ -1,10 +1,10 @@
 /**************************************************************************//**
  * @file ezr32lg_af_ports.h
  * @brief EZR32LG_AF_PORTS register and bit field definitions
- * @version 4.1.0
+ * @version 4.2.1
  ******************************************************************************
  * @section License
- * <b>(C) Copyright 2015 Silicon Laboratories, Inc. http://www.silabs.com</b>
+ * <b>Copyright 2015 Silicon Laboratories, Inc. http://www.silabs.com</b>
  ******************************************************************************
  *
  * Permission is granted to anyone to use this software for any purpose,
@@ -29,6 +29,10 @@
  * any third party, arising from your use of this Software.
  *
  *****************************************************************************/
+/**************************************************************************//**
+* @addtogroup Parts
+* @{
+******************************************************************************/
 /**************************************************************************//**
  * @defgroup EZR32LG_AF_Ports
  * @{
@@ -121,5 +125,5 @@
 #define AF_ETM_TD3_PORT(i)          ((i) == 0 ? 3 : (i) == 1 ? -1 : (i) == 2 ? 3 : (i) == 3 ? -1 :  -1)
 
 /** @} End of group EZR32LG_AF_Ports */
-
+/** @} End of group Parts */
 

@@ -111,7 +111,6 @@ void __platform_post_framework_init()
 #endif
 
 #ifdef PLATFORM_USE_SWO
-
     SWO_SetupForPrint();
 #endif
 }

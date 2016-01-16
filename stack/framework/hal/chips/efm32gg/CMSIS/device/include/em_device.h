@@ -1,6 +1,21 @@
 /**************************************************************************//**
+ * @file em_device.h
+ * @brief CMSIS Cortex-M Peripheral Access Layer for Silicon Laboratories
+ *        microcontroller devices
+ *
+ * This is a convenience header file for defining the part number on the
+ * build command line, instead of specifying the part specific header file.
+ *
+ * @verbatim
+ * Example: Add "-DEFM32G890F128" to your build options, to define part
+ *          Add "#include "em_device.h" to your source files
+ *
+ *
+ * @endverbatim
+ * @version 4.2.1
+ ******************************************************************************
  * @section License
- * <b>(C) Copyright 2014 Silicon Laboratories, Inc. http://www.silabs.com</b>
+ * <b>Copyright 2015 Silicon Laboratories, Inc. http://www.silabs.com</b>
  ******************************************************************************
  *
  * Permission is granted to anyone to use this software for any purpose,
@@ -23,24 +38,11 @@
  * Silicon Laboratories, Inc. will not be liable for any consequential,
  * incidental, or special damages, or any other relief, or for any claim by
  * any third party, arising from your use of this Software.
- *******************************************************************************
- * @file em_device.h
- * @brief CMSIS Cortex-M Peripheral Access Layer for Silicon Laboratories
- *        microcontroller devices
  *
- * This is a convenience header file for defining the part number on the
- * build command line, instead of specifying the part specific header file.
- *
- * @verbatim
- * Example: Add "-DEFM32G890F128" to your build options, to define part
- *          Add "#include "em_device.h" to your source files
- * @endverbatim
- * @version 3.20.7
  *****************************************************************************/
 
-#ifndef __EM_DEVICE_H
-#define __EM_DEVICE_H
-
+#ifndef EM_DEVICE_H
+#define EM_DEVICE_H
 
 #if defined(EFM32GG230F1024)
 #include "efm32gg230f1024.h"
@@ -168,9 +170,7 @@
 #elif defined(EFM32GG995F512)
 #include "efm32gg995f512.h"
 
-
 #else
 #error "em_device.h: PART NUMBER undefined"
 #endif
-
-#endif
+#endif /* EM_DEVICE_H */

@@ -2,10 +2,10 @@
  * @file efm32hg321f64.h
  * @brief CMSIS Cortex-M Peripheral Access Layer Header File
  *        for EFM32HG321F64
- * @version 3.20.13
+ * @version 4.2.1
  ******************************************************************************
  * @section License
- * <b>(C) Copyright 2015 Silicon Laboratories, Inc. http://www.silabs.com</b>
+ * <b>Copyright 2015 Silicon Laboratories, Inc. http://www.silabs.com</b>
  ******************************************************************************
  *
  * Permission is granted to anyone to use this software for any purpose,
@@ -31,8 +31,8 @@
  *
  *****************************************************************************/
 
-#ifndef __SILICON_LABS_EFM32HG321F64_H__
-#define __SILICON_LABS_EFM32HG321F64_H__
+#ifndef EFM32HG321F64_H
+#define EFM32HG321F64_H
 
 #ifdef __cplusplus
 extern "C" {
@@ -2406,4 +2406,4 @@ typedef struct
 #ifdef __cplusplus
 }
 #endif
-#endif /* __SILICON_LABS_EFM32HG321F64_H__ */
+#endif /* EFM32HG321F64_H */

@@ -1,10 +1,10 @@
 /**************************************************************************//**
  * @file ezr32lg_leuart.h
  * @brief EZR32LG_LEUART register and bit field definitions
- * @version 4.1.0
+ * @version 4.2.1
  ******************************************************************************
  * @section License
- * <b>(C) Copyright 2015 Silicon Laboratories, Inc. http://www.silabs.com</b>
+ * <b>Copyright 2015 Silicon Laboratories, Inc. http://www.silabs.com</b>
  ******************************************************************************
  *
  * Permission is granted to anyone to use this software for any purpose,
@@ -29,6 +29,10 @@
  * any third party, arising from your use of this Software.
  *
  *****************************************************************************/
+/**************************************************************************//**
+* @addtogroup Parts
+* @{
+******************************************************************************/
 /**************************************************************************//**
  * @defgroup EZR32LG_LEUART
  * @{
@@ -695,5 +699,5 @@ typedef struct
 #define LEUART_INPUT_RXPRS_DEFAULT               (_LEUART_INPUT_RXPRS_DEFAULT << 4)    /**< Shifted mode DEFAULT for LEUART_INPUT */
 
 /** @} End of group EZR32LG_LEUART */
-
+/** @} End of group Parts */
 

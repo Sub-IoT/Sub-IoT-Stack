@@ -2,10 +2,10 @@
  * @file ezr32lg230f128r60.h
  * @brief CMSIS Cortex-M Peripheral Access Layer Header File
  *        for EZR32LG230F128R60
- * @version 4.1.0
+ * @version 4.2.1
  ******************************************************************************
  * @section License
- * <b>(C) Copyright 2015 Silicon Laboratories, Inc. http://www.silabs.com</b>
+ * <b>Copyright 2015 Silicon Laboratories, Inc. http://www.silabs.com</b>
  ******************************************************************************
  *
  * Permission is granted to anyone to use this software for any purpose,
@@ -31,8 +31,8 @@
  *
  *****************************************************************************/
 
-#ifndef __SILICON_LABS_EZR32LG230F128R60_H__
-#define __SILICON_LABS_EZR32LG230F128R60_H__
+#ifndef EZR32LG230F128R60_H
+#define EZR32LG230F128R60_H
 
 #ifdef __cplusplus
 extern "C" {
@@ -2089,4 +2089,4 @@ typedef struct
 #ifdef __cplusplus
 }
 #endif
-#endif /* __SILICON_LABS_EZR32LG230F128R60_H__ */
+#endif /* EZR32LG230F128R60_H */

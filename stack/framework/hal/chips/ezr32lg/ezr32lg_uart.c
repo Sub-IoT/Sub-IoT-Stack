@@ -137,11 +137,6 @@ void uart_transmit_message(void const *data, size_t length)
 			uart_transmit_data(((char const*)data)[i]);
 #endif
 
-#ifdef PLATFORM_USE_SWO
-		int x;
-		for (x = 0; x < length; x++)
-			ITM_SendChar (*(char const*)data++);
-#endif
 
 
 #endif

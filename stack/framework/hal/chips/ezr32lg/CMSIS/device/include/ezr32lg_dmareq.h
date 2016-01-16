@@ -1,10 +1,10 @@
 /**************************************************************************//**
  * @file ezr32lg_dmareq.h
  * @brief EZR32LG_DMAREQ register and bit field definitions
- * @version 4.1.0
+ * @version 4.2.1
  ******************************************************************************
  * @section License
- * <b>(C) Copyright 2015 Silicon Laboratories, Inc. http://www.silabs.com</b>
+ * <b>Copyright 2015 Silicon Laboratories, Inc. http://www.silabs.com</b>
  ******************************************************************************
  *
  * Permission is granted to anyone to use this software for any purpose,
@@ -29,6 +29,10 @@
  * any third party, arising from your use of this Software.
  *
  *****************************************************************************/
+/**************************************************************************//**
+* @addtogroup Parts
+* @{
+******************************************************************************/
 
 /**************************************************************************//**
  * @defgroup EZR32LG_DMAREQ_BitFields
@@ -91,5 +95,5 @@
 #define DMAREQ_LESENSE_BUFDATAV       ((50 << 16) + 0) /**< DMA channel select for LESENSE_BUFDATAV */
 
 /** @} End of group EZR32LG_DMAREQ */
-
+/** @} End of group Parts */
 
