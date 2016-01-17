@@ -127,15 +127,15 @@ Files</h2></td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
 Functions</h2></td></tr>
-<tr class="memitem:ga72a82c649c6dfec21d6d0c47b693a802"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group___d7_a_p.html#ga72a82c649c6dfec21d6d0c47b693a802">d7ap_stack_init</a> (<a class="el" href="structfs__init__args__t.html">fs_init_args_t</a> *fs_init_args, <a class="el" href="structd7asp__init__args__t.html">d7asp_init_args_t</a> *<a class="el" href="d7asp_8c.html#aff901b68a4c9fcdd55f7ac68a2b09199">d7asp_init_args</a>)</td></tr>
-<tr class="memdesc:ga72a82c649c6dfec21d6d0c47b693a802"><td class="mdescLeft">&#160;</td><td class="mdescRight">d7ap_stack_init  <a href="#ga72a82c649c6dfec21d6d0c47b693a802">More...</a><br /></td></tr>
-<tr class="separator:ga72a82c649c6dfec21d6d0c47b693a802"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga1a9b20b99657bd01863f05548706f8bc"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group___d7_a_p.html#ga1a9b20b99657bd01863f05548706f8bc">d7ap_stack_init</a> (<a class="el" href="structfs__init__args__t.html">fs_init_args_t</a> *fs_init_args, <a class="el" href="structd7asp__init__args__t.html">d7asp_init_args_t</a> *<a class="el" href="d7asp_8c.html#aff901b68a4c9fcdd55f7ac68a2b09199">d7asp_init_args</a>, bool enable_shell)</td></tr>
+<tr class="memdesc:ga1a9b20b99657bd01863f05548706f8bc"><td class="mdescLeft">&#160;</td><td class="mdescRight">Initializes the D7AP stack, should be called by all applications making use of the D7AP stack.  <a href="#ga1a9b20b99657bd01863f05548706f8bc">More...</a><br /></td></tr>
+<tr class="separator:ga1a9b20b99657bd01863f05548706f8bc"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <p>The D7AP stack implementation. </p>
 <dl class="section author"><dt>Author</dt><dd><a href="#" onclick="location.href='mai'+'lto:'+'gle'+'nn'+'.er'+'ge'+'ert'+'s@'+'uan'+'tw'+'erp'+'en'+'.be'; return false;">glenn<span style="display: none;">.nosp@m.</span>.erg<span style="display: none;">.nosp@m.</span>eerts<span style="display: none;">.nosp@m.</span>@uan<span style="display: none;">.nosp@m.</span>twerp<span style="display: none;">.nosp@m.</span>en.b<span style="display: none;">.nosp@m.</span>e</a> </dd></dl>
 <h2 class="groupheader">Function Documentation</h2>
-<a class="anchor" id="ga72a82c649c6dfec21d6d0c47b693a802"></a>
+<a class="anchor" id="ga1a9b20b99657bd01863f05548706f8bc"></a>
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
@@ -149,7 +149,13 @@ Functions</h2></td></tr>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype"><a class="el" href="structd7asp__init__args__t.html">d7asp_init_args_t</a> *&#160;</td>
-          <td class="paramname"><em>d7asp_init_args</em>&#160;</td>
+          <td class="paramname"><em>d7asp_init_args</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">bool&#160;</td>
+          <td class="paramname"><em>enable_shell</em>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -159,11 +165,12 @@ Functions</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p>d7ap_stack_init </p>
+<p>Initializes the D7AP stack, should be called by all applications making use of the D7AP stack. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">fs_init_args</td><td>Initializes the D7AP stack, should be called by all applications making use of the D7AP stack </td></tr>
+    <tr><td class="paramname">fs_init_args</td><td></td></tr>
     <tr><td class="paramname">d7asp_init_args</td><td></td></tr>
+    <tr><td class="paramname">enable_shell</td><td></td></tr>
   </table>
   </dd>
 </dl>
@@ -175,7 +182,7 @@ Functions</h2></td></tr>
 <!-- start footer part -->
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
-    <li class="footer">Generated on Sun Nov 22 2015 10:16:09 for OSS-7: Open Source Stack for DASH7 Alliance Protocol by
+    <li class="footer">Generated on Sun Jan 17 2016 07:39:12 for OSS-7: Open Source Stack for DASH7 Alliance Protocol by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.8.9.1 </li>
   </ul>

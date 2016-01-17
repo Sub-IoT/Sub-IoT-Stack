@@ -105,6 +105,8 @@ $(document).ready(function(){initNavTree('kl02z__gpio_8c.html','');});
 
 <div class="header">
   <div class="summary">
+<a href="#nested-classes">Data Structures</a> &#124;
+<a href="#define-members">Macros</a> &#124;
 <a href="#func-members">Functions</a>  </div>
   <div class="headertitle">
 <div class="title">kl02z_gpio.c File Reference</div>  </div>
@@ -114,8 +116,23 @@ $(document).ready(function(){initNavTree('kl02z__gpio_8c.html','');});
 <code>#include &lt;stdarg.h&gt;</code><br />
 <code>#include &quot;<a class="el" href="debug_8h_source.html">debug.h</a>&quot;</code><br />
 <code>#include &quot;<a class="el" href="hwatomic_8h_source.html">hwatomic.h</a>&quot;</code><br />
-<code>#include &lt;MKL02Z4.h&gt;</code><br />
+<code>#include &quot;MKL02Z4.h&quot;</code><br />
+<code>#include &quot;<a class="el" href="fsl__port__hal_8h_source.html">fsl_port_hal.h</a>&quot;</code><br />
+<code>#include &quot;<a class="el" href="fsl__gpio__hal_8h_source.html">fsl_gpio_hal.h</a>&quot;</code><br />
+<code>#include &quot;<a class="el" href="fsl__gpio__driver_8h_source.html">fsl_gpio_driver.h</a>&quot;</code><br />
 </div><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="nested-classes"></a>
+Data Structures</h2></td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structgpio__interrupt__t.html">gpio_interrupt_t</a></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="define-members"></a>
+Macros</h2></td></tr>
+<tr class="memitem:a22f21455b8c3d0e5ca06e3ddb16d5298"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="kl02z__gpio_8c.html#a22f21455b8c3d0e5ca06e3ddb16d5298">GPIO_BASE</a>(port)&#160;&#160;&#160;<a class="el" href="group__gpio__driver.html#ga6e6139b3705f8067d2964cbf73851092">g_gpioBase</a>[port]</td></tr>
+<tr class="separator:a22f21455b8c3d0e5ca06e3ddb16d5298"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a86d40a491b8a81006c34a41d57c533fd"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="kl02z__gpio_8c.html#a86d40a491b8a81006c34a41d57c533fd">PORT_BASE</a>(port)&#160;&#160;&#160;<a class="el" href="group__gpio__driver.html#ga72de1c6ffe9640f9d520866ba8633dd6">g_portBase</a>[port]</td></tr>
+<tr class="separator:a86d40a491b8a81006c34a41d57c533fd"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
 Functions</h2></td></tr>
 <tr class="memitem:gaad12bbf948ed22eb482da198952b70c9"><td class="memItemLeft" align="right" valign="top"><a class="el" href="link__c_8h.html#ad7a35fa85166c1d1839000ac10353068">__LINK_C</a> void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group___g_p_i_o.html#gaad12bbf948ed22eb482da198952b70c9">__gpio_init</a> ()</td></tr>
@@ -138,8 +155,6 @@ Functions</h2></td></tr>
 <tr class="memitem:ga6866c778c89f878d9d14281a34ec5b10"><td class="memItemLeft" align="right" valign="top"><a class="el" href="link__c_8h.html#ad7a35fa85166c1d1839000ac10353068">__LINK_C</a> bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group___g_p_i_o.html#ga6866c778c89f878d9d14281a34ec5b10">hw_gpio_get_in</a> (<a class="el" href="structpin__id__t.html">pin_id_t</a> pin_id)</td></tr>
 <tr class="memdesc:ga6866c778c89f878d9d14281a34ec5b10"><td class="mdescLeft">&#160;</td><td class="mdescRight">Retrieve the current input 'state' of the GPIO pin.  <a href="group___g_p_i_o.html#ga6866c778c89f878d9d14281a34ec5b10">More...</a><br /></td></tr>
 <tr class="separator:ga6866c778c89f878d9d14281a34ec5b10"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:afaa9ba3a3a684f1340c02a531d7b2321"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="kl02z__gpio_8c.html#afaa9ba3a3a684f1340c02a531d7b2321">PORTA_IRQHandler</a> ()</td></tr>
-<tr class="separator:afaa9ba3a3a684f1340c02a531d7b2321"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a2b09e69259dd337c6929e10ec9f42e17"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="kl02z__gpio_8c.html#a2b09e69259dd337c6929e10ec9f42e17">PORTB_IRQHandler</a> ()</td></tr>
 <tr class="separator:a2b09e69259dd337c6929e10ec9f42e17"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:gaaf6c0915d25c0be3d4c795da96ce7384"><td class="memItemLeft" align="right" valign="top"><a class="el" href="link__c_8h.html#ad7a35fa85166c1d1839000ac10353068">__LINK_C</a> <a class="el" href="types_8h.html#a9ad6b2dc3cbff040775e79656fe8e1a3">error_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group___g_p_i_o.html#gaaf6c0915d25c0be3d4c795da96ce7384">hw_gpio_configure_interrupt</a> (<a class="el" href="structpin__id__t.html">pin_id_t</a> pin_id, <a class="el" href="group___g_p_i_o.html#ga3ba7d68bb58b98a8bf58445cedf6dadf">gpio_inthandler_t</a> callback, uint8_t event_mask)</td></tr>
@@ -154,7 +169,40 @@ Functions</h2></td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><dl class="section author"><dt>Author</dt><dd><a href="#" onclick="location.href='mai'+'lto:'+'gle'+'nn'+'.er'+'ge'+'ert'+'s@'+'uan'+'tw'+'erp'+'en'+'.be'; return false;">glenn<span style="display: none;">.nosp@m.</span>.erg<span style="display: none;">.nosp@m.</span>eerts<span style="display: none;">.nosp@m.</span>@uan<span style="display: none;">.nosp@m.</span>twerp<span style="display: none;">.nosp@m.</span>en.b<span style="display: none;">.nosp@m.</span>e</a> </dd></dl>
-</div><h2 class="groupheader">Function Documentation</h2>
+</div><h2 class="groupheader">Macro Definition Documentation</h2>
+<a class="anchor" id="a22f21455b8c3d0e5ca06e3ddb16d5298"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">#define GPIO_BASE</td>
+          <td>(</td>
+          <td class="paramtype">&#160;</td>
+          <td class="paramname">port</td><td>)</td>
+          <td>&#160;&#160;&#160;<a class="el" href="group__gpio__driver.html#ga6e6139b3705f8067d2964cbf73851092">g_gpioBase</a>[port]</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a class="anchor" id="a86d40a491b8a81006c34a41d57c533fd"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">#define PORT_BASE</td>
+          <td>(</td>
+          <td class="paramtype">&#160;</td>
+          <td class="paramname">port</td><td>)</td>
+          <td>&#160;&#160;&#160;<a class="el" href="group__gpio__driver.html#ga72de1c6ffe9640f9d520866ba8633dd6">g_portBase</a>[port]</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<h2 class="groupheader">Function Documentation</h2>
 <a class="anchor" id="ada55e454ce1c20de24ca53d9772bb286"></a>
 <div class="memitem">
 <div class="memproto">
@@ -193,21 +241,6 @@ Functions</h2></td></tr>
 
 </div>
 </div>
-<a class="anchor" id="afaa9ba3a3a684f1340c02a531d7b2321"></a>
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">void PORTA_IRQHandler </td>
-          <td>(</td>
-          <td class="paramname"></td><td>)</td>
-          <td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-</div>
-</div>
 <a class="anchor" id="a2b09e69259dd337c6929e10ec9f42e17"></a>
 <div class="memitem">
 <div class="memproto">
@@ -228,8 +261,8 @@ Functions</h2></td></tr>
 <!-- start footer part -->
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
-    <li class="navelem"><a class="el" href="dir_644e041c3a6521da7b27eba0e4eb2b95.html">framework</a></li><li class="navelem"><a class="el" href="dir_8f2c340cdabd0cab4db94c39704d70a8.html">hal</a></li><li class="navelem"><a class="el" href="dir_e53dcac4adbcec177c678c0d8c8c3e7c.html">chips</a></li><li class="navelem"><a class="el" href="dir_a6c034a80bce7676a98ad99e193bff92.html">kl02z</a></li><li class="navelem"><a class="el" href="kl02z__gpio_8c.html">kl02z_gpio.c</a></li>
-    <li class="footer">Generated on Sun Nov 22 2015 10:16:09 for OSS-7: Open Source Stack for DASH7 Alliance Protocol by
+    <li class="navelem"><a class="el" href="dir_045c9c641c9dee29b59a10159c1c0f84.html">framework</a></li><li class="navelem"><a class="el" href="dir_66c871195d82ba76f4f17d0ede637125.html">hal</a></li><li class="navelem"><a class="el" href="dir_56aaa3dec31b809e334855cea8764072.html">chips</a></li><li class="navelem"><a class="el" href="dir_a2e426d0fe344b06b925f304170e5a6d.html">kl02z</a></li><li class="navelem"><a class="el" href="kl02z__gpio_8c.html">kl02z_gpio.c</a></li>
+    <li class="footer">Generated on Sun Jan 17 2016 07:39:05 for OSS-7: Open Source Stack for DASH7 Alliance Protocol by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.8.9.1 </li>
   </ul>

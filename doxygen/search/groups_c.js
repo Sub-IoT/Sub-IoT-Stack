@@ -1,5 +1,6 @@
 var searchData=
 [
-  ['uart',['UART',['../group___u_a_r_t.html',1,'']]],
-  ['usb',['USB',['../group___u_s_b.html',1,'']]]
+  ['radio',['Radio',['../group__radio.html',1,'']]],
+  ['random',['Random',['../group__random.html',1,'']]],
+  ['rtc_5fdriver',['Rtc_driver',['../group__rtc__driver.html',1,'']]]
 ];

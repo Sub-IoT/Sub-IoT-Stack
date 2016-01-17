@@ -93,6 +93,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
       <li><a href="functions_g.html#index_g"><span>g</span></a></li>
       <li><a href="functions_h.html#index_h"><span>h</span></a></li>
       <li><a href="functions_i.html#index_i"><span>i</span></a></li>
+      <li><a href="functions_k.html#index_k"><span>k</span></a></li>
       <li><a href="functions_l.html#index_l"><span>l</span></a></li>
       <li><a href="functions_m.html#index_m"><span>m</span></a></li>
       <li><a href="functions_n.html#index_n"><span>n</span></a></li>
@@ -103,7 +104,9 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
       <li><a href="functions_s.html#index_s"><span>s</span></a></li>
       <li class="current"><a href="functions_t.html#index_t"><span>t</span></a></li>
       <li><a href="functions_u.html#index_u"><span>u</span></a></li>
+      <li><a href="functions_v.html#index_v"><span>v</span></a></li>
       <li><a href="functions_w.html#index_w"><span>w</span></a></li>
+      <li><a href="functions_x.html#index_x"><span>x</span></a></li>
     </ul>
   </div>
 </div><!-- top -->
@@ -139,6 +142,12 @@ $(document).ready(function(){initNavTree('functions_t.html','');});
 <div class="textblock">Here is a list of all struct and union fields with links to the structures/unions they belong to:</div>
 
 <h3><a class="anchor" id="index_t"></a>- t -</h3><ul>
+<li>t0Indicated
+: <a class="el" href="struct_card_params.html#a55b50abadf451e2f3d9db8805c69d3e5">CardParams</a>
+</li>
+<li>t1Indicated
+: <a class="el" href="struct_card_params.html#ac721d9da3cd2a8c4bb779f46c3d69de4">CardParams</a>
+</li>
 <li>tail_idx
 : <a class="el" href="structfifo__t.html#a514f1ae91e041b154165c77da1a87f01">fifo_t</a>
 </li>
@@ -146,11 +155,30 @@ $(document).ready(function(){initNavTree('functions_t.html','');});
 : <a class="el" href="structtask__info__t.html#a0c8fcbb799699ee04861ad31b46ad5a2">task_info_t</a>
 , <a class="el" href="structtaskindex__info__t.html#ad22df4d2311d8fbc63b6735bada38da6">taskindex_info_t</a>
 </li>
+<li>timerIdx
+: <a class="el" href="structflexio__spi__dev__t.html#ac74225881f0a327504a9d1a7c486278d">flexio_spi_dev_t</a>
+, <a class="el" href="structflexio__spi__hwconfig.html#a89f5e9b3413ac8c37c4f16a3f0ff2a40">flexio_spi_hwconfig</a>
+</li>
+<li>timersState
+: <a class="el" href="struct_smartcard_state.html#a939ef2365ed51c0039f752b8b98caf69">SmartcardState</a>
+</li>
 <li>token
 : <a class="el" href="structd7asp__fifo__t.html#a08bfe204c84288afdccffeb3c7e9d970">d7asp_fifo_t</a>
 </li>
 <li>transmission_timeout_period
 : <a class="el" href="structdae__access__profile__t.html#a7e5e185c07d9ea2453136f44b2bbe2c7">dae_access_profile_t</a>
+</li>
+<li>transState
+: <a class="el" href="struct_smartcard_state.html#a3d96fb0fb855f0fe3bb189317f43cff1">SmartcardState</a>
+</li>
+<li>trim
+: <a class="el" href="struct_slcd_user_config.html#ad1f4898a5d0067bfbebf869c38a6491e">SlcdUserConfig</a>
+</li>
+<li>tsTimerId
+: <a class="el" href="struct_smartcard_ext_timer_config.html#a52ee0738239a64d0d4e9805053b56138">SmartcardExtTimerConfig</a>
+</li>
+<li>tType
+: <a class="el" href="struct_smartcard_state.html#a97a7999858010362946fdd62178ebd8e">SmartcardState</a>
 </li>
 <li>tx_cfg
 : <a class="el" href="structhw__tx__metadata__t.html#af2b1475e84f222a67f98cc295fdc8844">hw_tx_metadata_t</a>
@@ -158,13 +186,62 @@ $(document).ready(function(){initNavTree('functions_t.html','');});
 <li>tx_meta
 : <a class="el" href="structhw__radio__packet__t.html#aa815545b0a2dfcb47598a334e1f938ee">hw_radio_packet_t</a>
 </li>
+<li>txBuff
+: <a class="el" href="structflexio__spi__state.html#a5f1fe8b713e797d9cba3d98c9adac137">flexio_spi_state</a>
+, <a class="el" href="struct_i2_c_master_state.html#ada5e32caa5892c5e90932456ca424a45">I2CMasterState</a>
+, <a class="el" href="struct_i2_c_slave_state.html#adf74efecc6c4805df5412f805cc875af">I2CSlaveState</a>
+, <a class="el" href="struct_lpsci_state.html#a8e4c2667942290cc43d23aee6812eac1">LpsciState</a>
+, <a class="el" href="struct_lpuart_state.html#aedfb01eabd66b4e9c5261362a93a1073">LpuartState</a>
+, <a class="el" href="struct_smartcard_state.html#a4e2f904e208c1e84b05c9d6ab53843bc">SmartcardState</a>
+, <a class="el" href="struct_uart_state.html#a7a4a254d0f882581f3dedb6a081d2f34">UartState</a>
+</li>
+<li>txCallback
+: <a class="el" href="struct_lpsci_state.html#a2601e954b2e83e97d0f680f3646d8305">LpsciState</a>
+, <a class="el" href="struct_lpuart_state.html#ad82cdd97829437c350f26737129dc08d">LpuartState</a>
+, <a class="el" href="struct_uart_state.html#a46fa900e5ab50c5d442725c9b45215b5">UartState</a>
+</li>
+<li>txCallbackParam
+: <a class="el" href="struct_lpsci_state.html#af978c4a7c13daad81002b13a9139a48e">LpsciState</a>
+, <a class="el" href="struct_lpuart_state.html#a6a03bbbc6be0b5c1f61b00a431db1696">LpuartState</a>
+, <a class="el" href="struct_uart_state.html#ac27cb1c081d447a7d22d585f47f9259e">UartState</a>
+</li>
+<li>txFifoEntryCount
+: <a class="el" href="struct_lpuart_state.html#a726a3d35da11c381262095aa168f3249">LpuartState</a>
+, <a class="el" href="struct_smartcard_state.html#a503f9f269631bb1166aa50f87f64c4c3">SmartcardState</a>
+, <a class="el" href="struct_uart_state.html#a4fda25a60403c830cb8461757a76f39f">UartState</a>
+</li>
+<li>txIrqSync
+: <a class="el" href="structflexio__spi__state.html#aa668032e5188332283253b22ece00653">flexio_spi_state</a>
+, <a class="el" href="struct_lpsci_dma_state.html#a123e4226abc19685dfc7b4599b65f488">LpsciDmaState</a>
+, <a class="el" href="struct_lpsci_state.html#a390afa02cdef78b903fc61a28957da91">LpsciState</a>
+, <a class="el" href="struct_lpuart_dma_state.html#a8df32a12f64789446365a1db25f6612e">LpuartDmaState</a>
+, <a class="el" href="struct_lpuart_edma_state.html#aa5348d6d351a448862fddecad6c81e05">LpuartEdmaState</a>
+, <a class="el" href="struct_lpuart_state.html#ab5d9af7c4d560011fc9f028ae65ba248">LpuartState</a>
+, <a class="el" href="struct_smartcard_state.html#aceffdf0455e3d338d51aba446b2a327a">SmartcardState</a>
+, <a class="el" href="struct_uart_state.html#a32c42690898e3ec411a7ee9ea398993a">UartState</a>
+</li>
+<li>txPinIdx
+: <a class="el" href="structflexio__spi__dev__t.html#ab26643d5ccf2770bf2b322d97a9f2294">flexio_spi_dev_t</a>
+</li>
+<li>txSize
+: <a class="el" href="structflexio__spi__state.html#ab485391b34b652d162c17a440b1108e8">flexio_spi_state</a>
+, <a class="el" href="struct_i2_c_master_state.html#a616898918c24104971ae23885d5eb4a5">I2CMasterState</a>
+, <a class="el" href="struct_i2_c_slave_state.html#a00f2f8015421e6dd32f69f4c730d044e">I2CSlaveState</a>
+, <a class="el" href="struct_lpsci_state.html#a99102f7fc966b42ba54c04e049ca8d39">LpsciState</a>
+, <a class="el" href="struct_lpuart_state.html#a06dba87ba8b9d1c028fc4dba2830d265">LpuartState</a>
+, <a class="el" href="struct_smartcard_state.html#a051c300b22b653f07800f26b450ba2d2">SmartcardState</a>
+, <a class="el" href="struct_uart_state.html#a5f4c7c788f88d5d1f62c17d5ca654bc8">UartState</a>
+</li>
+<li>txtCrossed
+: <a class="el" href="struct_smartcard_state.html#ace5da5ec0674852236be856276ad24e9">SmartcardState</a>
+</li>
 </ul>
 </div><!-- contents -->
 </div><!-- doc-content -->
 <!-- start footer part -->
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
-    <li class="footer">Generated on Sun Nov 22 2015 10:16:09 for OSS-7: Open Source Stack for DASH7 Alliance Protocol by
+    <li class="footer">Generated on Sun Jan 17 2016 07:39:22 for OSS-7: Open Source Stack for DASH7 Alliance Protocol by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.8.9.1 </li>
   </ul>

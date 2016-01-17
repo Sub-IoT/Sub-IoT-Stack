@@ -1,6 +1,8 @@
 var searchData=
 [
-  ['session_5fresp_5fmode_5ft',['session_resp_mode_t',['../session_8h.html#a4c071663f296f6eed9040f43504e7563',1,'session.h']]],
-  ['session_5fstate_5ft',['session_state_t',['../session_8h.html#afc9c467c0d8264ea38f8e80d8deab0df',1,'session.h']]],
-  ['state_5ft',['state_t',['../d7asp_8c.html#aa0aafed44fec19806d8f9ad834be1248',1,'state_t():&#160;d7asp.c'],['../d7atp_8c.html#aa0aafed44fec19806d8f9ad834be1248',1,'state_t():&#160;d7atp.c']]]
+  ['packet_5fqueue_5felement_5fstatus_5ft',['packet_queue_element_status_t',['../packet__queue_8c.html#a844f43bb1bcbeb95d7a3af65dc1b01a9',1,'packet_queue.c']]],
+  ['phy_5fchannel_5fband_5ft',['phy_channel_band_t',['../group__radio.html#ga322511bb0837a24ade5987e2a5d8cb4d',1,'hwradio.h']]],
+  ['phy_5fchannel_5fclass_5ft',['phy_channel_class_t',['../group__radio.html#ga5237948055f92b747764c14ae1afc6c5',1,'hwradio.h']]],
+  ['phy_5fcoding_5ft',['phy_coding_t',['../group__radio.html#ga11cd6e8bdbe5df40f17f84c35a0da08b',1,'hwradio.h']]],
+  ['phy_5fsyncword_5fclass_5ft',['phy_syncword_class_t',['../group__radio.html#ga290fd131fe635641e94a85f5989db8bf',1,'hwradio.h']]]
 ];

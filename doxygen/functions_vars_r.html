@@ -93,6 +93,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
       <li><a href="functions_vars_g.html#index_g"><span>g</span></a></li>
       <li><a href="functions_vars_h.html#index_h"><span>h</span></a></li>
       <li><a href="functions_vars_i.html#index_i"><span>i</span></a></li>
+      <li><a href="functions_vars_k.html#index_k"><span>k</span></a></li>
       <li><a href="functions_vars_l.html#index_l"><span>l</span></a></li>
       <li><a href="functions_vars_m.html#index_m"><span>m</span></a></li>
       <li><a href="functions_vars_n.html#index_n"><span>n</span></a></li>
@@ -103,7 +104,9 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
       <li><a href="functions_vars_s.html#index_s"><span>s</span></a></li>
       <li><a href="functions_vars_t.html#index_t"><span>t</span></a></li>
       <li><a href="functions_vars_u.html#index_u"><span>u</span></a></li>
+      <li><a href="functions_vars_v.html#index_v"><span>v</span></a></li>
       <li><a href="functions_vars_w.html#index_w"><span>w</span></a></li>
+      <li><a href="functions_vars_x.html#index_x"><span>x</span></a></li>
     </ul>
   </div>
 </div><!-- top -->
@@ -144,6 +147,9 @@ $(document).ready(function(){initNavTree('functions_vars_r.html','');});
 , <a class="el" href="structd7anp__ctrl__t.html#ac725f2b36a9959ec8e3618c2a076b402">d7anp_ctrl_t</a>
 , <a class="el" href="structd7asp__state__t.html#ab0ce8e7b018e41304491890c9bbac42b">d7asp_state_t</a>
 </li>
+<li>refreshTime
+: <a class="el" href="struct_s_d_r_a_m_refresh_config.html#acc207dc3dd949233632638282456d4e5">SDRAMRefreshConfig</a>
+</li>
 <li>request_buffer
 : <a class="el" href="structd7asp__fifo__t.html#ab25563c09ec68f6ac05e55f1d9a001fa">d7asp_fifo_t</a>
 </li>
@@ -163,6 +169,15 @@ $(document).ready(function(){initNavTree('functions_vars_r.html','');});
 <li>requests_lengths
 : <a class="el" href="structd7asp__fifo__t.html#aab1df30eaf74618014f897061b1f94fe">d7asp_fifo_t</a>
 </li>
+<li>resetPin
+: <a class="el" href="struct_interface_config.html#a560348e7420a89730be2a99252cdaacb">InterfaceConfig</a>
+</li>
+<li>resetPort
+: <a class="el" href="struct_interface_config.html#aab0632ce921d7a14ba343501fbef98b9">InterfaceConfig</a>
+</li>
+<li>resetType
+: <a class="el" href="struct_smartcard_state.html#a304065e446351668e864cca84e9c70f2">SmartcardState</a>
+</li>
 <li>response_requested
 : <a class="el" href="structalp__control__t.html#ad1e252c41727c97b8d7b29c12e89c263">alp_control_t</a>
 </li>
@@ -181,13 +196,62 @@ $(document).ready(function(){initNavTree('functions_vars_r.html','');});
 <li>rx_meta
 : <a class="el" href="structhw__radio__packet__t.html#a0eea240a84cbfce46a7791adca885229">hw_radio_packet_t</a>
 </li>
+<li>rxBuff
+: <a class="el" href="structflexio__spi__state.html#a10b3a881302bd7daca56913f27dc8254">flexio_spi_state</a>
+, <a class="el" href="struct_i2_c_master_state.html#aa0112dc7ae477f9d15d2f74a475d71bf">I2CMasterState</a>
+, <a class="el" href="struct_i2_c_slave_state.html#aabd75d1ee09672e1cf1f861e31fe0e08">I2CSlaveState</a>
+, <a class="el" href="struct_lpsci_state.html#aa89e488b537f8a75f8a3be5371177e4d">LpsciState</a>
+, <a class="el" href="struct_lpuart_state.html#ae8b88a5e06c92420fb41600aa57e8265">LpuartState</a>
+, <a class="el" href="struct_smartcard_state.html#aa987d7db77c1b6df10fcd762fd01c25a">SmartcardState</a>
+, <a class="el" href="struct_uart_state.html#a26fba85976752b48d127fa03a7e77c78">UartState</a>
+</li>
+<li>rxCallback
+: <a class="el" href="structflexio__spi__state.html#a0f688c77a3d48be060b783feab0a6f98">flexio_spi_state</a>
+, <a class="el" href="struct_lpsci_state.html#a19abe5225194b8ce1ee6ee420df6e706">LpsciState</a>
+, <a class="el" href="struct_lpuart_state.html#a47bf957dd805d39c4b020383e1bc0cf2">LpuartState</a>
+, <a class="el" href="struct_uart_state.html#a9e1ff9f30b5f5c4b148fb47ce1fe0d33">UartState</a>
+</li>
+<li>rxCallbackParam
+: <a class="el" href="structflexio__spi__state.html#a321c9ad88bbd0c84560ffa4178554c4b">flexio_spi_state</a>
+, <a class="el" href="struct_lpsci_state.html#ae5a7261f1b38101537528918960290ae">LpsciState</a>
+, <a class="el" href="struct_lpuart_state.html#a66172bcbb28d2a6d44f8bbb6fbdfbd72">LpuartState</a>
+, <a class="el" href="struct_uart_state.html#a833b55474a04bf573b8a772065dbb880">UartState</a>
+</li>
+<li>rxIrqSync
+: <a class="el" href="structflexio__spi__state.html#aaf9c6a844996966fda5a64c44dce6c5a">flexio_spi_state</a>
+, <a class="el" href="struct_lpsci_dma_state.html#ac5cb9ce68b92d90365c2022c43d584f2">LpsciDmaState</a>
+, <a class="el" href="struct_lpsci_state.html#a1b27195c749c472d7e1e403136df9694">LpsciState</a>
+, <a class="el" href="struct_lpuart_dma_state.html#a7219090c56542b52127a13bd185f69ad">LpuartDmaState</a>
+, <a class="el" href="struct_lpuart_edma_state.html#a786a608eed4376a700335f2282efcb43">LpuartEdmaState</a>
+, <a class="el" href="struct_lpuart_state.html#a9bc3d3fa7a7cab38d0192d4f435d2baf">LpuartState</a>
+, <a class="el" href="struct_smartcard_state.html#a37119c23c23d567a225742f39003dca2">SmartcardState</a>
+, <a class="el" href="struct_uart_state.html#a28319e608157576c2fab594801e09c4f">UartState</a>
+</li>
+<li>rxPinIdx
+: <a class="el" href="structflexio__spi__dev__t.html#a66559d393fa7b242d3531238ec235cf6">flexio_spi_dev_t</a>
+</li>
+<li>rxSize
+: <a class="el" href="structflexio__spi__state.html#ad241e9eb94055a05abefeff1ee2801d4">flexio_spi_state</a>
+, <a class="el" href="struct_i2_c_master_state.html#a042975105cc18b97f9d5441c06fe5d6f">I2CMasterState</a>
+, <a class="el" href="struct_i2_c_slave_state.html#a3720a901d1de98b2286b85a6e541ee1f">I2CSlaveState</a>
+, <a class="el" href="struct_lpsci_state.html#ad8aeeb5ae0d3ac96dea43df1c9bc89f7">LpsciState</a>
+, <a class="el" href="struct_lpuart_state.html#a2ade3a23cf8b7ade73770d8f5f5214aa">LpuartState</a>
+, <a class="el" href="struct_smartcard_state.html#a6c15f1175b8d778a9f5e51f555914647">SmartcardState</a>
+, <a class="el" href="struct_uart_state.html#ae8537bc7f778dd73945ac03e60bea5c5">UartState</a>
+</li>
+<li>rxtCrossed
+: <a class="el" href="struct_smartcard_state.html#a4de7573efe0e0d7250094e88cebc5008">SmartcardState</a>
+</li>
+<li>rxWakeIdleDetect
+: <a class="el" href="struct_lpuart_idle_line_config.html#a4d7e56d998779cad6657bacbe6f11c16">LpuartIdleLineConfig</a>
+</li>
 </ul>
 </div><!-- contents -->
 </div><!-- doc-content -->
 <!-- start footer part -->
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
-    <li class="footer">Generated on Sun Nov 22 2015 10:16:09 for OSS-7: Open Source Stack for DASH7 Alliance Protocol by
+    <li class="footer">Generated on Sun Jan 17 2016 07:39:22 for OSS-7: Open Source Stack for DASH7 Alliance Protocol by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.8.9.1 </li>
   </ul>

@@ -1,4 +1,19 @@
 var searchData=
 [
+  ['flash_5fssd_5fconfig',['FLASH_SSD_CONFIG',['../group__c90tfs__flash__driver.html#gaa4a128c845fceadc160f055d57005e7a',1,'SSD_Types.h']]],
+  ['flexio_5fspi_5fclock_5fphase_5ft',['flexio_spi_clock_phase_t',['../group__flexio__spi__driver.html#ga7c28094147cd5c026db3cfb0b409d1bc',1,'fsl_flexio_spi_driver.h']]],
+  ['flexio_5fspi_5fdata_5fbitcount_5fmode_5ft',['flexio_spi_data_bitcount_mode_t',['../group__flexio__spi__driver.html#ga86e3e06256427b40dd9c1b4275d6e01b',1,'fsl_flexio_spi_driver.h']]],
+  ['flexio_5fspi_5fhwconfig_5ft',['flexio_spi_hwconfig_t',['../group__flexio__spi__driver.html#ga2f4478e9bf8e608dc404266fa27031e0',1,'fsl_flexio_spi_driver.h']]],
+  ['flexio_5fspi_5fmaster_5fslave_5fmode_5ft',['flexio_spi_master_slave_mode_t',['../group__flexio__spi__driver.html#gac79fb8d2ae6444f04d074b452aaeaa87',1,'fsl_flexio_spi_driver.h']]],
+  ['flexio_5fspi_5frx_5fcallback_5ft',['flexio_spi_rx_callback_t',['../group__flexio__spi__driver.html#ga633fc7e8966716abe86ac36decacfaaa',1,'fsl_flexio_spi_driver.h']]],
+  ['flexio_5fspi_5fshift_5fdirection_5ft',['flexio_spi_shift_direction_t',['../group__flexio__spi__driver.html#gaa50bc737612d28ce50b082fbf94d52f0',1,'fsl_flexio_spi_driver.h']]],
+  ['flexio_5fspi_5fstate_5ft',['flexio_spi_state_t',['../group__flexio__spi__driver.html#ga7187fe6ebc2846db7ebaeda61be85d99',1,'fsl_flexio_spi_driver.h']]],
+  ['flexio_5fspi_5fstatus_5ft',['flexio_spi_status_t',['../group__flexio__spi__driver.html#ga379cdd56ac7db66648a1fdc48890c90d',1,'fsl_flexio_spi_driver.h']]],
+  ['flexio_5fspi_5fuserconfig_5ft',['flexio_spi_userconfig_t',['../group__flexio__spi__driver.html#ga71e60a34c5d7eb2646b0ca31779061dd',1,'fsl_flexio_spi_driver.h']]],
+  ['frac16_5ft',['frac16_t',['../group__basic__data__types.html#ga1194b184bba2a48c860a2c1a0903d105',1,'fsl_mmau_ins.h']]],
+  ['frac24_5ft',['frac24_t',['../group__basic__data__types.html#ga40afb1e7a81214c405cc01bb0ea3cd0c',1,'fsl_mmau_ins.h']]],
+  ['frac32_5ft',['frac32_t',['../group__basic__data__types.html#gadab40794d0076f90468941f319a23769',1,'fsl_mmau_ins.h']]],
+  ['frac48_5ft',['frac48_t',['../group__basic__data__types.html#ga2229806b69689948d9967a69d14cc42e',1,'fsl_mmau_ins.h']]],
+  ['frac64_5ft',['frac64_t',['../group__basic__data__types.html#ga8e999f08f126ac07dbbc760e4144ac81',1,'fsl_mmau_ins.h']]],
   ['fs_5fuser_5ffiles_5finit_5fcallback',['fs_user_files_init_callback',['../fs_8h.html#ada9be3b7a365accb1a70f2c98317834e',1,'fs.h']]]
 ];

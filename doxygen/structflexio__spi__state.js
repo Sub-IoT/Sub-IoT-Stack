@@ -1,0 +1,26 @@
+var structflexio__spi__state =
+[
+    [ "bitDirection", "structflexio__spi__state.html#ac7d15ade824fb77c6dbb30aef4dfed17", null ],
+    [ "dataSize", "structflexio__spi__state.html#ae0de38944381d662608fbb45d947d7f7", null ],
+    [ "dmaSpiRx", "structflexio__spi__state.html#ac16c17a884d0c8b53777c4a5618b0fa3", null ],
+    [ "dmaSpiTx", "structflexio__spi__state.html#ab4366daee4f86cb1b4f7ceb30e768462", null ],
+    [ "isRxBlocking", "structflexio__spi__state.html#a822008ea073f400cb81e167c7b7f1489", null ],
+    [ "isRxBusy", "structflexio__spi__state.html#a77b5abcd44427fea246447a1c9648d0a", null ],
+    [ "isRxUseDma", "structflexio__spi__state.html#a0b44a0a1bcc4aa62415b544f06980700", null ],
+    [ "isTxBlocking", "structflexio__spi__state.html#a11a5996eb192d15a0e0e7253fab078a6", null ],
+    [ "isTxBusy", "structflexio__spi__state.html#a05e48424c2072f9c22daff27a5b4cebe", null ],
+    [ "isTxUseDma", "structflexio__spi__state.html#a2644064c22d42b72b7e17d481e3c9172", null ],
+    [ "isXBlocking", "structflexio__spi__state.html#a75180d4263e9c070edfcb6b5266fb199", null ],
+    [ "isXBusy", "structflexio__spi__state.html#ace6c38ec17a7b09c77e8b5a69a108082", null ],
+    [ "mode", "structflexio__spi__state.html#ab0aaa9215543e6a5c0ae336a7ba48d91", null ],
+    [ "rxBuff", "structflexio__spi__state.html#a10b3a881302bd7daca56913f27dc8254", null ],
+    [ "rxCallback", "structflexio__spi__state.html#a0f688c77a3d48be060b783feab0a6f98", null ],
+    [ "rxCallbackParam", "structflexio__spi__state.html#a321c9ad88bbd0c84560ffa4178554c4b", null ],
+    [ "rxIrqSync", "structflexio__spi__state.html#aaf9c6a844996966fda5a64c44dce6c5a", null ],
+    [ "rxSize", "structflexio__spi__state.html#ad241e9eb94055a05abefeff1ee2801d4", null ],
+    [ "spiDev", "structflexio__spi__state.html#a4039e19f372e28dd355a108b5d6ac520", null ],
+    [ "txBuff", "structflexio__spi__state.html#a5f1fe8b713e797d9cba3d98c9adac137", null ],
+    [ "txIrqSync", "structflexio__spi__state.html#aa668032e5188332283253b22ece00653", null ],
+    [ "txSize", "structflexio__spi__state.html#ab485391b34b652d162c17a440b1108e8", null ],
+    [ "xIrqSync", "structflexio__spi__state.html#af6edaced72e1017a716bf2d05d758fbb", null ]
+];

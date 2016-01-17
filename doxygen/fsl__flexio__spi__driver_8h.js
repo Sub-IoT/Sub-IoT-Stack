@@ -1,0 +1,75 @@
+var fsl__flexio__spi__driver_8h =
+[
+    [ "flexio_spi_clock_phase_t", "group__flexio__spi__driver.html#ga7c28094147cd5c026db3cfb0b409d1bc", null ],
+    [ "flexio_spi_data_bitcount_mode_t", "group__flexio__spi__driver.html#ga86e3e06256427b40dd9c1b4275d6e01b", null ],
+    [ "flexio_spi_hwconfig_t", "group__flexio__spi__driver.html#ga2f4478e9bf8e608dc404266fa27031e0", null ],
+    [ "flexio_spi_master_slave_mode_t", "group__flexio__spi__driver.html#gac79fb8d2ae6444f04d074b452aaeaa87", null ],
+    [ "flexio_spi_rx_callback_t", "group__flexio__spi__driver.html#ga633fc7e8966716abe86ac36decacfaaa", null ],
+    [ "flexio_spi_shift_direction_t", "group__flexio__spi__driver.html#gaa50bc737612d28ce50b082fbf94d52f0", null ],
+    [ "flexio_spi_state_t", "group__flexio__spi__driver.html#ga7187fe6ebc2846db7ebaeda61be85d99", null ],
+    [ "flexio_spi_status_t", "group__flexio__spi__driver.html#ga379cdd56ac7db66648a1fdc48890c90d", null ],
+    [ "flexio_spi_userconfig_t", "group__flexio__spi__driver.html#ga71e60a34c5d7eb2646b0ca31779061dd", null ],
+    [ "flexio_spi_clock_phase", "group__flexio__spi__driver.html#ga6cf3c47fd61f8b92fd6088fbf1ce08e2", [
+      [ "kFlexIOSpiClockPhase_FirstEdge", "group__flexio__spi__driver.html#gga6cf3c47fd61f8b92fd6088fbf1ce08e2a422631f18458dd5d42c47a159bc9344f", null ],
+      [ "kFlexIOSpiClockPhase_SecondEdge", "group__flexio__spi__driver.html#gga6cf3c47fd61f8b92fd6088fbf1ce08e2a23816505d8bcb5eea6bfbc6879e1e15b", null ]
+    ] ],
+    [ "flexio_spi_data_bitcount_mode", "group__flexio__spi__driver.html#ga476e715e8470424a137e2b710ea40742", [
+      [ "kFlexIOSpi8BitMode", "group__flexio__spi__driver.html#gga476e715e8470424a137e2b710ea40742abbdc8880ede508bf84c461262216d3d3", null ],
+      [ "kFlexIOSpi16BitMode", "group__flexio__spi__driver.html#gga476e715e8470424a137e2b710ea40742adf4986705f46fe51eaf84aca0978f0ae", null ]
+    ] ],
+    [ "flexio_spi_master_slave_mode", "group__flexio__spi__driver.html#ga2f172d9ff3b721526b5047891b850fc2", [
+      [ "kFlexIOSpiMaster", "group__flexio__spi__driver.html#gga2f172d9ff3b721526b5047891b850fc2aa396416e2f74ddf7832520c0baca8633", null ],
+      [ "kFlexIOSpiSlave", "group__flexio__spi__driver.html#gga2f172d9ff3b721526b5047891b850fc2a852ff088d819e2c2654b3632b13c6c1e", null ]
+    ] ],
+    [ "flexio_spi_shift_direction", "group__flexio__spi__driver.html#ga6505565e0e65b411e09e0d2191cfa1ac", [
+      [ "kFlexIOSpiMsbFirst", "group__flexio__spi__driver.html#gga6505565e0e65b411e09e0d2191cfa1aca84359f3b93ba2e3083f3b24566f275fe", null ],
+      [ "kFlexIOSpiLsbFirst", "group__flexio__spi__driver.html#gga6505565e0e65b411e09e0d2191cfa1aca3e1396388d905fa37c40d67a3a9f6e54", null ]
+    ] ],
+    [ "flexio_spi_status", "group__flexio__spi__driver.html#gab42d745ac2046c964f820659b7256aa5", [
+      [ "kStatus_FlexIO_SPI_Success", "group__flexio__spi__driver.html#ggab42d745ac2046c964f820659b7256aa5a0343fdf56b1934f3d59aaea42818933d", null ],
+      [ "kStatus_FlexIO_SPI_TxBusy", "group__flexio__spi__driver.html#ggab42d745ac2046c964f820659b7256aa5abb59e72d0f9f28c24ffda77eb69a1d69", null ],
+      [ "kStatus_FlexIO_SPI_RxBusy", "group__flexio__spi__driver.html#ggab42d745ac2046c964f820659b7256aa5a395c657df15082a6c47c5d0ba8ed5d55", null ],
+      [ "kStatus_FlexIO_SPI_XBusy", "group__flexio__spi__driver.html#ggab42d745ac2046c964f820659b7256aa5a8d994d0f045cb465967aa2251f386536", null ],
+      [ "kStatus_FlexIO_SPI_NoTransmitInProgress", "group__flexio__spi__driver.html#ggab42d745ac2046c964f820659b7256aa5a66e6850d7511e882ca4658324e7440ab", null ],
+      [ "kStatus_FlexIO_SPI_NoReceiveInProgress", "group__flexio__spi__driver.html#ggab42d745ac2046c964f820659b7256aa5aea9f7ed4b26fc16254b033a9cf6ad685", null ],
+      [ "kStatus_FlexIO_SPI_NoTransferInProgress", "group__flexio__spi__driver.html#ggab42d745ac2046c964f820659b7256aa5ab12a2f4f4ea0678f7ba54277303220a6", null ],
+      [ "kStatus_FlexIO_SPI_Timeout", "group__flexio__spi__driver.html#ggab42d745ac2046c964f820659b7256aa5a96aa682cb58d935d253b92e3e12e53a7", null ],
+      [ "kStatus_FlexIO_SPI_NoDataToDeal", "group__flexio__spi__driver.html#ggab42d745ac2046c964f820659b7256aa5acb9552a019046a8687797d905c57414e", null ],
+      [ "kStatus_FlexIO_SPI_InvalidParam", "group__flexio__spi__driver.html#ggab42d745ac2046c964f820659b7256aa5a635b48ffd88a01f2df62eca32007fb83", null ],
+      [ "kStatus_FlexIO_SPI_DmaRequestFail", "group__flexio__spi__driver.html#ggab42d745ac2046c964f820659b7256aa5aa62cd3009000bf46ac98880eb01fdd35", null ]
+    ] ],
+    [ "FLEXIO_SPI_DRV_AbortDmaReceivingData", "group__flexio__spi__driver.html#gafa9f6a24c637bb2a5944d7be77aba378", null ],
+    [ "FLEXIO_SPI_DRV_AbortReceivingData", "group__flexio__spi__driver.html#gaeaf879ed0c5d89453d7090ebefa43a3c", null ],
+    [ "FLEXIO_SPI_DRV_AbortSendingData", "group__flexio__spi__driver.html#gafb6d5807f38f827b11ddbd9e44acc7f4", null ],
+    [ "FLEXIO_SPI_DRV_Deinit", "group__flexio__spi__driver.html#gae18c77babc9b0dfc204d2baaf977f25a", null ],
+    [ "FLEXIO_SPI_DRV_DmaAbortSendingData", "group__flexio__spi__driver.html#ga289c1463ff720bb18625f4d7edb780f2", null ],
+    [ "FLEXIO_SPI_DRV_DmaGetReceiveStatus", "group__flexio__spi__driver.html#gac4bead0f8260d4a142db165a1bb03324", null ],
+    [ "FLEXIO_SPI_DRV_DmaGetTransmitStatus", "group__flexio__spi__driver.html#gad052722c7b17a16f90aa8bb36a2d878d", null ],
+    [ "FLEXIO_SPI_DRV_DmaReceiveData", "group__flexio__spi__driver.html#ga10d3a55bb2e9110a7c94681b98567e45", null ],
+    [ "FLEXIO_SPI_DRV_DmaReceiveDataBlocking", "group__flexio__spi__driver.html#gaddb546f281d2cf4120c298d5de13af25", null ],
+    [ "FLEXIO_SPI_DRV_DmaSendData", "group__flexio__spi__driver.html#gab7262f639a03f62055b86233cc79233a", null ],
+    [ "FLEXIO_SPI_DRV_DmaSendDataBlocking", "group__flexio__spi__driver.html#ga218329e088c02f72914d8ee84cdf1b47", null ],
+    [ "FLEXIO_SPI_DRV_DmaTransferData", "group__flexio__spi__driver.html#ga94177c55cb25ac1991701d4bcb11e873", null ],
+    [ "FLEXIO_SPI_DRV_DmaTransferDataBlocking", "group__flexio__spi__driver.html#ga7f0129cafb8a805e1fd9f8a60d9a1c06", null ],
+    [ "FLEXIO_SPI_DRV_EdmaAbortReceivingData", "group__flexio__spi__driver.html#ga0a4918e0a59bc4f11f89ab1e64717ab1", null ],
+    [ "FLEXIO_SPI_DRV_EdmaAbortSendingData", "group__flexio__spi__driver.html#gaf95cfd4a3969084c6d233d26a3742632", null ],
+    [ "FLEXIO_SPI_DRV_EdmaGetReceiveStatus", "group__flexio__spi__driver.html#gaac977ab7a35d63e39c5d46a1393b93cf", null ],
+    [ "FLEXIO_SPI_DRV_EdmaGetTransmitStatus", "group__flexio__spi__driver.html#ga0ece9c9548a8a026d2266707d5d95c1e", null ],
+    [ "FLEXIO_SPI_DRV_EdmaReceiveData", "group__flexio__spi__driver.html#ga1806e60b0f77a0f5bd879fbb041cfcd7", null ],
+    [ "FLEXIO_SPI_DRV_EdmaReceiveDataBlocking", "group__flexio__spi__driver.html#ga9817d863bba5a68924cf2f1fff24a00b", null ],
+    [ "FLEXIO_SPI_DRV_EdmaSendData", "group__flexio__spi__driver.html#gad409616a034658dc2e3b4e30b3dac7fe", null ],
+    [ "FLEXIO_SPI_DRV_EdmaSendDataBlocking", "group__flexio__spi__driver.html#ga9e8252cc6d1bb043621dda9fe2963f8c", null ],
+    [ "FLEXIO_SPI_DRV_EdmaTransferData", "group__flexio__spi__driver.html#gaf40f029a1d289d083abb6b01126b559e", null ],
+    [ "FLEXIO_SPI_DRV_EdmaTransferDataBlocking", "group__flexio__spi__driver.html#gab0b8b1ceca2e8970c422ce46a0b442c7", null ],
+    [ "FLEXIO_SPI_DRV_GetReceiveStatus", "group__flexio__spi__driver.html#gada0772656e5e9b3d89d8ee76a8d96de4", null ],
+    [ "FLEXIO_SPI_DRV_GetTransmitStatus", "group__flexio__spi__driver.html#ga35919a9d64ed5d714080397504613589", null ],
+    [ "FLEXIO_SPI_DRV_Init", "group__flexio__spi__driver.html#gabf61aad1d2a5ec0485c1342cc854ebf9", null ],
+    [ "FLEXIO_SPI_DRV_ReceiveData", "group__flexio__spi__driver.html#ga2ea759f7e078717203138b2f2d2f45a8", null ],
+    [ "FLEXIO_SPI_DRV_ReceiveDataBlocking", "group__flexio__spi__driver.html#ga288c92900f50765b11721c3af30f83bc", null ],
+    [ "FLEXIO_SPI_DRV_RX_IRQHandler", "group__flexio__spi__driver.html#ga3d46b29fb409f53a44654cd018fabf5a", null ],
+    [ "FLEXIO_SPI_DRV_SendData", "group__flexio__spi__driver.html#ga2c87a2473aea4f5806f4acb4ea089fa2", null ],
+    [ "FLEXIO_SPI_DRV_SendDataBlocking", "group__flexio__spi__driver.html#gaf23ea8afbaa1375ee4fd66fa96ea1f18", null ],
+    [ "FLEXIO_SPI_DRV_TransferData", "group__flexio__spi__driver.html#ga8d808c479551c0bf37690a7f893c3867", null ],
+    [ "FLEXIO_SPI_DRV_TransferDataBlocking", "group__flexio__spi__driver.html#gaa8a68e4010aa1fed3296b63feaf070ee", null ],
+    [ "FLEXIO_SPI_DRV_TX_IRQHandler", "group__flexio__spi__driver.html#gac3331a6f8058eb95f9843cc059ee13db", null ]
+];

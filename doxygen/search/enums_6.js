@@ -1,5 +1,5 @@
 var searchData=
 [
-  ['lcdsymbol',['lcdSymbol',['../segmentlcdconfig_8h.html#ac2c9c608938ac875edfcfec5c75737e4',1,'segmentlcdconfig.h']]],
-  ['log_5fstack_5flayer_5ft',['log_stack_layer_t',['../group__logging.html#ga74f3f01cd15381ebeccd55047988c127',1,'log.h']]]
+  ['hw_5fcrc_5ft',['hw_crc_t',['../group__radio.html#gacac7e6e2d75dd8527eaf4b636ac47ebb',1,'hwradio.h']]],
+  ['hw_5fradio_5fstate_5ft',['hw_radio_state_t',['../cc1101_8c.html#a653b17c0ef11443105658b04113f95e3',1,'cc1101.c']]]
 ];

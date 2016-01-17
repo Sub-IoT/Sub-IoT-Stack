@@ -9,5 +9,6 @@ var searchData=
   ['kl02z_5fpins_2eh',['kl02z_pins.h',['../kl02z__pins_8h.html',1,'']]],
   ['kl02z_5fspi_2ec',['kl02z_spi.c',['../kl02z__spi_8c.html',1,'']]],
   ['kl02z_5fsystem_2ec',['kl02z_system.c',['../kl02z__system_8c.html',1,'']]],
-  ['kl02z_5ftimer_2ec',['kl02z_timer.c',['../kl02z__timer_8c.html',1,'']]]
+  ['kl02z_5ftimer_2ec',['kl02z_timer.c',['../kl02z__timer_8c.html',1,'']]],
+  ['kl02z_5fwatchdog_2ec',['kl02z_watchdog.c',['../kl02z__watchdog_8c.html',1,'']]]
 ];

@@ -1,6 +1,5 @@
 var searchData=
 [
-  ['lcd',['LCD',['../group___l_c_d.html',1,'']]],
-  ['leds',['LEDs',['../group___l_e_ds.html',1,'']]],
-  ['logging',['Logging',['../group__logging.html',1,'']]]
+  ['hardware_20abstraction_20layer_20api',['Hardware Abstraction Layer API',['../group___h_a_l.html',1,'']]],
+  ['htwint',['Htwint',['../group__htwint.html',1,'']]]
 ];

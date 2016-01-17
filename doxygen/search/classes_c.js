@@ -1,6 +1,4 @@
 var searchData=
 [
-  ['task_5finfo_5ft',['task_info_t',['../structtask__info__t.html',1,'']]],
-  ['taskindex_5finfo_5ft',['taskindex_info_t',['../structtaskindex__info__t.html',1,'']]],
-  ['timer_5fevent',['timer_event',['../structtimer__event.html',1,'']]]
+  ['rf_5fsettings',['RF_SETTINGS',['../struct_r_f___s_e_t_t_i_n_g_s.html',1,'']]]
 ];

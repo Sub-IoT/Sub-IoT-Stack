@@ -1,7 +1,10 @@
 var searchData=
 [
-  ['width',['width',['../structparam.html#a059f9d4f5cb0e99d403498cd68da2dba',1,'param']]],
-  ['worctrl',['worctrl',['../struct_r_f___s_e_t_t_i_n_g_s.html#a6a4a8acb99d5c07f93b98e1d8413cffd',1,'RF_SETTINGS']]],
-  ['worevt0',['worevt0',['../struct_r_f___s_e_t_t_i_n_g_s.html#a71d92dcc3f4617b606a9a313503f4409',1,'RF_SETTINGS']]],
-  ['worevt1',['worevt1',['../struct_r_f___s_e_t_t_i_n_g_s.html#a51de4e3621704ef31c68723015ff9761',1,'RF_SETTINGS']]]
+  ['uc',['uc',['../structparam.html#ae97f88ed92df4269e1a75810d5d4851f',1,'param']]],
+  ['usbdesc_5fbufferingmultiplier',['USBDESC_bufferingMultiplier',['../_e_f_m32_g_g___s_t_k3700_2inc_2usb__descriptors_8h.html#adfeb9e57e8199c3c887117679351d172',1,'USBDESC_bufferingMultiplier():&#160;stk3700_usb_descriptors.c'],['../stk3700__usb__descriptors_8c.html#a2b3d495cff3f07db443ac686ded4b352',1,'USBDESC_bufferingMultiplier():&#160;stk3700_usb_descriptors.c'],['../_e_f_m32_h_g___s_t_k3400_2inc_2usb__descriptors_8h.html#adfeb9e57e8199c3c887117679351d172',1,'USBDESC_bufferingMultiplier():&#160;stk3700_usb_descriptors.c'],['../stk3400__usb__descriptors_8c.html#a2b3d495cff3f07db443ac686ded4b352',1,'USBDESC_bufferingMultiplier():&#160;stk3400_usb_descriptors.c']]],
+  ['usbdesc_5fconfigdesc',['USBDESC_configDesc',['../_e_f_m32_g_g___s_t_k3700_2inc_2usb__descriptors_8h.html#af63445ae316eee904da72780eb906827',1,'USBDESC_configDesc():&#160;usb_descriptors.h'],['../_e_f_m32_h_g___s_t_k3400_2inc_2usb__descriptors_8h.html#a18e16a203c43ceb3bf292d4b8c456bce',1,'USBDESC_configDesc():&#160;usb_descriptors.h']]],
+  ['usbdesc_5fdevicedesc',['USBDESC_deviceDesc',['../_e_f_m32_g_g___s_t_k3700_2inc_2usb__descriptors_8h.html#a2221e7c63b87cff8ba03c00871691279',1,'USBDESC_deviceDesc():&#160;usb_descriptors.h'],['../_e_f_m32_h_g___s_t_k3400_2inc_2usb__descriptors_8h.html#a2221e7c63b87cff8ba03c00871691279',1,'USBDESC_deviceDesc():&#160;usb_descriptors.h']]],
+  ['usbdesc_5fstrings',['USBDESC_strings',['../_e_f_m32_g_g___s_t_k3700_2inc_2usb__descriptors_8h.html#a7ac932f15ba97e3ffb5b55afb6fca084',1,'USBDESC_strings():&#160;stk3700_usb_descriptors.c'],['../stk3700__usb__descriptors_8c.html#a5cb4356d2ce19394119073378069c060',1,'USBDESC_strings():&#160;stk3700_usb_descriptors.c'],['../_e_f_m32_h_g___s_t_k3400_2inc_2usb__descriptors_8h.html#a2fbffac52062957bd1e3a241d7770482',1,'USBDESC_strings():&#160;stk3700_usb_descriptors.c'],['../stk3400__usb__descriptors_8c.html#a5cb4356d2ce19394119073378069c060',1,'USBDESC_strings():&#160;stk3400_usb_descriptors.c']]],
+  ['usbinitstruct',['usbInitStruct',['../stk3700__usb_8c.html#acacb985fa5a03375f2c076d7a5345c7c',1,'usbInitStruct():&#160;stk3700_usb.c'],['../stk3400__usb_8c.html#acacb985fa5a03375f2c076d7a5345c7c',1,'usbInitStruct():&#160;stk3400_usb.c']]],
+  ['usedma',['useDMA',['../struct_smartcard_state.html#afa6c91945d7e416e8c9e35784b2cf6a9',1,'SmartcardState']]]
 ];

@@ -9,6 +9,8 @@ var _e_f_m32_g_g___s_t_k3700_2inc_2platform_8h =
     [ "DEBUG_PIN_NUM", "_e_f_m32_g_g___s_t_k3700_2inc_2platform_8h.html#adf186612338d0298248b79a9444b28d3", null ],
     [ "HAS_LCD", "_e_f_m32_g_g___s_t_k3700_2inc_2platform_8h.html#a5345e308a5a361beb36e466e8abcad18", null ],
     [ "HW_NUM_LEDS", "_e_f_m32_g_g___s_t_k3700_2inc_2platform_8h.html#ae55b725f9a2456799184fe28e4f71e60", null ],
+    [ "HW_USE_HFXO", "_e_f_m32_g_g___s_t_k3700_2inc_2platform_8h.html#a933bbffc211e76049c8f43dbff857f49", null ],
+    [ "HW_USE_LFXO", "_e_f_m32_g_g___s_t_k3700_2inc_2platform_8h.html#a629871ae410b6977364af8133592a117", null ],
     [ "NUM_USERBUTTONS", "_e_f_m32_g_g___s_t_k3700_2inc_2platform_8h.html#a711b79f5e2af016adea2af8f46306683", null ],
     [ "SPI_BAUDRATE", "_e_f_m32_g_g___s_t_k3700_2inc_2platform_8h.html#a4dad4b502d445b46f33cdd159e04051a", null ],
     [ "SPI_CHANNEL", "_e_f_m32_g_g___s_t_k3700_2inc_2platform_8h.html#aa8cbb3355883e35c18820bfa63c4ce3a", null ],

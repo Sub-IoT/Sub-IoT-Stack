@@ -109,14 +109,17 @@ $(document).ready(function(){initNavTree('md_hardware.html','');});
 <tr>
 <th>Platform </th><th>MCU </th><th>Radio </th><th>Toolchain  </th></tr>
 <tr>
-<td>EFM32GG_STK3700 </td><td>EnergyMicro Giant Gecko (Cortex-M3) </td><td>Texas Instruments CC1101 </td><td>gcc-arm-embedded </td></tr>
+<td>EFM32GG_STK3700 </td><td>Silicon Labs Giant Gecko (Cortex-M3) </td><td>Texas Instruments CC1101 </td><td>gcc-arm-embedded </td></tr>
 <tr>
-<td>EFM32HG_STK3400 </td><td>EnergyMicro Happy Gecko (Cortex-M0+) </td><td>Texas Instruments CC1101 </td><td>gcc-arm-embedded </td></tr>
+<td>EFM32HG_STK3400 </td><td>Silicon Labs Happy Gecko (Cortex-M0+) </td><td>Texas Instruments CC1101 </td><td>gcc-arm-embedded </td></tr>
 <tr>
 <td>wizzimote </td><td>Texas Instruments CC430 (MSP430) </td><td>Texas Instruments CC1101 (SoC)</td><td>msp430-gcc </td></tr>
+<tr>
+<td>EZR32WG_WSTK6221</td><td>Silicon Labs EZR32WG SoC (Cortex-M4) </td><td>Silicon Labs EZR32WG </td><td>gcc-arm-embedded </td></tr>
 </table>
 <p>The <a href="https://www.silabs.com/products/mcu/lowpower/Pages/efm32gg-stk3700.aspx">EFM32GG_STK3700</a> is currently the most used by us, and thus the best supported. A disadvantage of this platform is that you need to attach an external CC1101. We designed a CC1101-based module which can be plugged in the expansion port of the devkit, see below for the schematics. Next to this, we are working on a PCB design for a devkit containing Giant Gecko and CC1101 as well, which we will opensource shortly.</p>
 <p>The <a href="https://www.silabs.com/products/mcu/32-bit/Pages/efm32hg-stk3400.aspx">EFM32HG_STK3400</a> is very similar to the STK3700 but instead has a Cortex-M0+ instead of Cortex-M3 and a more capable LCD screen. The same CC1101 module as used for the STK3700 can be plugged into the expansion header.</p>
+<p>The <a href="https://www.silabs.com/products/wireless/wirelessmcu/Pages/ezr32wg-starter-kits.aspx">EZR32WG_WSTK6221</a> platform is a starter kit based on the EZR32 Wonder Gecko Wireless MCU. This SoC contains a Wonder Gecko Cortex-M4 combined with an RF chip. The port to this platform is currently ongoing.</p>
 <p>It is important to know that there are a number of parties who are currently in the process of designing devkits which will be commercially available, so the choice should increase in the near future.</p>
 <p>At the moment we are not focusing on the CC430 based platform however, mainly because ARM Cortex based platforms gives us more flexibility with regard to code size. Also, in my experience, the free toolchains available for CC430 are not as robust as gcc-arm-embedded. TI's msp430-gcc (which supersedes mspgcc), is still a young effort and there are some known problems with code size optimization. While OSS7 has a HAL implementation to supports the Wizzilab platform, this platform is not teste by us anymore since we stopped using cc430 based hardware for our projects. Furthermore, we are aware of crashes when running the current OSS7 stack on cc430. Only the PHY layer is validated to work on cc430 for now. We currently lack time to look into this and would like to focus on EFM32, but we would ofcourse welcome patches fro people who would still like to use cc430.</p>
 <p>Finally, it is of course possible to define your own platform. Especially if you are using an MCU and radio which is already implemented it takes very little effort to add support to OSS-7 for your platform. Designing your own platform gives you the most flexibility regarding form factor and sensors specific for you use case of course. We are glad to assist in designing a custom board.</p>
@@ -139,7 +142,7 @@ Wizzikit</div></div>
 <!-- start footer part -->
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
-    <li class="footer">Generated on Sun Nov 22 2015 10:16:09 for OSS-7: Open Source Stack for DASH7 Alliance Protocol by
+    <li class="footer">Generated on Sun Jan 17 2016 07:39:12 for OSS-7: Open Source Stack for DASH7 Alliance Protocol by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.8.9.1 </li>
   </ul>

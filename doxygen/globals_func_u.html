@@ -101,6 +101,8 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
       <li><a href="globals_func_m.html#index_m"><span>m</span></a></li>
       <li><a href="globals_func_n.html#index_n"><span>n</span></a></li>
       <li><a href="globals_func_p.html#index_p"><span>p</span></a></li>
+      <li><a href="globals_func_q.html#index_q"><span>q</span></a></li>
+      <li><a href="globals_func_r.html#index_r"><span>r</span></a></li>
       <li><a href="globals_func_s.html#index_s"><span>s</span></a></li>
       <li><a href="globals_func_t.html#index_t"><span>t</span></a></li>
       <li class="current"><a href="globals_func_u.html#index_u"><span>u</span></a></li>
@@ -139,71 +141,168 @@ $(document).ready(function(){initNavTree('globals_func_u.html','');});
 &#160;
 
 <h3><a class="anchor" id="index_u"></a>- u -</h3><ul>
+<li>UART0_IRQHandler()
+: <a class="el" href="fsl__lpsci__irq_8c.html#a1c0544b06d54b198d8c50f507e399a91">fsl_lpsci_irq.c</a>
+</li>
 <li>UART0_RX_IRQHandler()
 : <a class="el" href="efm32gg__uart_8c.html#a3f216427c6df5e45eb0cceccee1aa5ba">efm32gg_uart.c</a>
+, <a class="el" href="efm32lg__uart_8c.html#a3f216427c6df5e45eb0cceccee1aa5ba">efm32lg_uart.c</a>
 </li>
-<li>uart_alp_interface_init()
-: <a class="el" href="uart__alp__interface_8c.html#ade2ed088a2dea08f73fcde1dbefde28a">uart_alp_interface.c</a>
-, <a class="el" href="uart__alp__interface_8h.html#ade2ed088a2dea08f73fcde1dbefde28a">uart_alp_interface.h</a>
+<li>uart_cm_callback()
+: <a class="el" href="fsl__uart__lpm__callback_8c.html#a261d4166836740a41b6da04a75acdf92">fsl_uart_lpm_callback.c</a>
 </li>
-<li>uart_alp_interface_process_command()
-: <a class="el" href="uart__alp__interface_8c.html#a5ca935a607e7e619ec357f3f40d98f40">uart_alp_interface.c</a>
-, <a class="el" href="uart__alp__interface_8h.html#a5ca935a607e7e619ec357f3f40d98f40">uart_alp_interface.h</a>
+<li>UART_DRV_AbortReceivingData()
+: <a class="el" href="group__uart__driver.html#gaf501580a6eb4f3cfde1e104bebecc40d">fsl_uart_driver.h</a>
+</li>
+<li>UART_DRV_AbortSendingData()
+: <a class="el" href="group__uart__driver.html#ga830585043a238d7226335d90c7bce1e4">fsl_uart_driver.h</a>
+</li>
+<li>UART_DRV_Deinit()
+: <a class="el" href="group__uart__driver.html#gab0a444cd862937003328e8e320a18457">fsl_uart_driver.h</a>
+</li>
+<li>UART_DRV_GetReceiveStatus()
+: <a class="el" href="group__uart__driver.html#gaa83d6037e5223abbe7d2e29cfbe48d75">fsl_uart_driver.h</a>
+</li>
+<li>UART_DRV_GetTransmitStatus()
+: <a class="el" href="group__uart__driver.html#ga167b2ec289daf07812e0cd72dec5fe72">fsl_uart_driver.h</a>
+</li>
+<li>UART_DRV_Init()
+: <a class="el" href="group__uart__driver.html#ga588680e1275ab5b98aacfbb90aee8f99">fsl_uart_driver.h</a>
+</li>
+<li>UART_DRV_InstallRxCallback()
+: <a class="el" href="group__uart__driver.html#ga46806b62148493d3841610b441346408">fsl_uart_driver.h</a>
+</li>
+<li>UART_DRV_InstallTxCallback()
+: <a class="el" href="group__uart__driver.html#gaa4828e0398d6e281e26d595ec3dbfde1">fsl_uart_driver.h</a>
+</li>
+<li>UART_DRV_IRQHandler()
+: <a class="el" href="fsl__smartcard__irq_8c.html#aa0655fadd68ef35fb79d5754e09da3e4">fsl_smartcard_irq.c</a>
+, <a class="el" href="fsl__uart__irq_8c.html#aa0655fadd68ef35fb79d5754e09da3e4">fsl_uart_irq.c</a>
+</li>
+<li>UART_DRV_ReceiveData()
+: <a class="el" href="group__uart__driver.html#ga4cca3b5bb78a8d7ff120762e1667c144">fsl_uart_driver.h</a>
+</li>
+<li>UART_DRV_ReceiveDataBlocking()
+: <a class="el" href="group__uart__driver.html#gae54d95d43b1a338eb16b16c424f665c0">fsl_uart_driver.h</a>
+</li>
+<li>UART_DRV_SendData()
+: <a class="el" href="group__uart__driver.html#ga0eae402145cd798e8173148aa50dc5a4">fsl_uart_driver.h</a>
+</li>
+<li>UART_DRV_SendDataBlocking()
+: <a class="el" href="group__uart__driver.html#ga2278d7864b7381973f5cf45e63f1248b">fsl_uart_driver.h</a>
 </li>
 <li>uart_enable_interrupt()
 : <a class="el" href="cc430__uart_8c.html#af3e47fba13adaa4f3fd91ba943fc644e">cc430_uart.c</a>
 </li>
+<li>UART_HAL_ClearStatusFlag()
+: <a class="el" href="group__uart__hal.html#gadfa538ebba0365d5480021e8b9abf07a">fsl_uart_hal.h</a>
+</li>
+<li>UART_HAL_ConfigIdleLineDetect()
+: <a class="el" href="group__uart__hal.html#gae032bd60adabfe550533467ee6fbec70">fsl_uart_hal.h</a>
+</li>
+<li>UART_HAL_Getchar()
+: <a class="el" href="group__uart__hal.html#gab1d05b425846e8c7efe0b238d7873f37">fsl_uart_hal.h</a>
+</li>
+<li>UART_HAL_Getchar9()
+: <a class="el" href="group__uart__hal.html#gaeda41db4209b4587b51da85396d1eaba">fsl_uart_hal.h</a>
+</li>
+<li>UART_HAL_GetIntMode()
+: <a class="el" href="group__uart__hal.html#ga53444ddd41537d439921aec8afd80264">fsl_uart_hal.h</a>
+</li>
+<li>UART_HAL_GetStatusFlag()
+: <a class="el" href="group__uart__hal.html#gaa6485c490ecd09d0ec42303536baa599">fsl_uart_hal.h</a>
+</li>
+<li>UART_HAL_Init()
+: <a class="el" href="group__uart__hal.html#gaa17d9f21508fb0fed1804f1a07d4fe72">fsl_uart_hal.h</a>
+</li>
+<li>UART_HAL_Putchar()
+: <a class="el" href="group__uart__hal.html#ga242f62e5ce130b7a9d03cd6ccfbb4759">fsl_uart_hal.h</a>
+</li>
+<li>UART_HAL_Putchar9()
+: <a class="el" href="group__uart__hal.html#gadeeef90d515b827c99355005a2000604">fsl_uart_hal.h</a>
+</li>
+<li>UART_HAL_PutReceiverInStandbyMode()
+: <a class="el" href="group__uart__hal.html#gaca0ade16fc256388ef51513bdd5c89e3">fsl_uart_hal.h</a>
+</li>
+<li>UART_HAL_ReceiveDataPolling()
+: <a class="el" href="group__uart__hal.html#ga99c75a7e88940b286c233bc6412da334">fsl_uart_hal.h</a>
+</li>
+<li>UART_HAL_SendDataPolling()
+: <a class="el" href="group__uart__hal.html#gaf932d0b46b6e10a2a053b175326322ce">fsl_uart_hal.h</a>
+</li>
+<li>UART_HAL_SetBaudRate()
+: <a class="el" href="group__uart__hal.html#ga11a93d335f97424a285be32fec925c2c">fsl_uart_hal.h</a>
+</li>
+<li>UART_HAL_SetBaudRateDivisor()
+: <a class="el" href="group__uart__hal.html#ga2a0d0078aa82155875cc30f46df7f005">fsl_uart_hal.h</a>
+</li>
+<li>UART_HAL_SetIntMode()
+: <a class="el" href="group__uart__hal.html#gad6906bc4d2d6877f6ac64863410972b2">fsl_uart_hal.h</a>
+</li>
+<li>UART_HAL_SetMatchAddress()
+: <a class="el" href="group__uart__hal.html#gaaf5db8c2310688cac4203a46eef8e4ae">fsl_uart_hal.h</a>
+</li>
+<li>UART_HAL_SetParityMode()
+: <a class="el" href="group__uart__hal.html#ga802ad49c6b5ab21f4e4967df9a009995">fsl_uart_hal.h</a>
+</li>
+<li>uart_pm_callback()
+: <a class="el" href="fsl__uart__lpm__callback_8c.html#a806034c15b028ff734b444031487e58a">fsl_uart_lpm_callback.c</a>
+</li>
 <li>uart_rx_interrupt_enable()
-: <a class="el" href="group___u_a_r_t.html#ga6fc13a8da8aebe1bf088d32771aa9aa9">efm32hg_uart.c</a>
+: <a class="el" href="group___u_a_r_t.html#ga6fc13a8da8aebe1bf088d32771aa9aa9">efm32gg_uart.c</a>
+, <a class="el" href="group___u_a_r_t.html#ga6fc13a8da8aebe1bf088d32771aa9aa9">efm32hg_uart.c</a>
+, <a class="el" href="group___u_a_r_t.html#ga6fc13a8da8aebe1bf088d32771aa9aa9">efm32lg_uart.c</a>
 , <a class="el" href="group___u_a_r_t.html#ga6fc13a8da8aebe1bf088d32771aa9aa9">hwuart.h</a>
-, <a class="el" href="group___u_a_r_t.html#ga6fc13a8da8aebe1bf088d32771aa9aa9">efm32gg_uart.c</a>
 </li>
 <li>uart_set_rx_interrupt_callback()
-: <a class="el" href="group___u_a_r_t.html#ga7f19ece388b11cdfdf5ce6ea92a76d1a">efm32gg_uart.c</a>
-, <a class="el" href="group___u_a_r_t.html#ga7f19ece388b11cdfdf5ce6ea92a76d1a">efm32hg_uart.c</a>
+: <a class="el" href="group___u_a_r_t.html#ga7f19ece388b11cdfdf5ce6ea92a76d1a">efm32hg_uart.c</a>
+, <a class="el" href="group___u_a_r_t.html#ga7f19ece388b11cdfdf5ce6ea92a76d1a">efm32gg_uart.c</a>
+, <a class="el" href="group___u_a_r_t.html#ga7f19ece388b11cdfdf5ce6ea92a76d1a">efm32lg_uart.c</a>
 , <a class="el" href="group___u_a_r_t.html#ga7f19ece388b11cdfdf5ce6ea92a76d1a">hwuart.h</a>
 </li>
 <li>uart_transmit_data()
-: <a class="el" href="group___u_a_r_t.html#gadb5f057f77deb63265f8c381009d24de">hwuart.h</a>
+: <a class="el" href="group___u_a_r_t.html#gadb5f057f77deb63265f8c381009d24de">efm32gg_uart.c</a>
 , <a class="el" href="group___u_a_r_t.html#gadb5f057f77deb63265f8c381009d24de">cc430_uart.c</a>
-, <a class="el" href="group___u_a_r_t.html#gadb5f057f77deb63265f8c381009d24de">efm32gg_uart.c</a>
 , <a class="el" href="group___u_a_r_t.html#gadb5f057f77deb63265f8c381009d24de">efm32hg_uart.c</a>
+, <a class="el" href="group___u_a_r_t.html#gadb5f057f77deb63265f8c381009d24de">efm32lg_uart.c</a>
+, <a class="el" href="group___u_a_r_t.html#gadb5f057f77deb63265f8c381009d24de">hwuart.h</a>
 </li>
 <li>uart_transmit_message()
-: <a class="el" href="group___u_a_r_t.html#gadab99b26673fdb7a5fb99f7badd3c757">cc430_uart.c</a>
+: <a class="el" href="group___u_a_r_t.html#gadab99b26673fdb7a5fb99f7badd3c757">hwuart.h</a>
 , <a class="el" href="group___u_a_r_t.html#gadab99b26673fdb7a5fb99f7badd3c757">efm32gg_uart.c</a>
 , <a class="el" href="group___u_a_r_t.html#gadab99b26673fdb7a5fb99f7badd3c757">efm32hg_uart.c</a>
-, <a class="el" href="group___u_a_r_t.html#gadab99b26673fdb7a5fb99f7badd3c757">hwuart.h</a>
+, <a class="el" href="group___u_a_r_t.html#gadab99b26673fdb7a5fb99f7badd3c757">efm32lg_uart.c</a>
+, <a class="el" href="group___u_a_r_t.html#gadab99b26673fdb7a5fb99f7badd3c757">cc430_uart.c</a>
 </li>
 <li>uart_transmit_string()
-: <a class="el" href="group___u_a_r_t.html#ga6e55b1d14ffc7b4deb749b6fb764ede3">efm32gg_uart.c</a>
+: <a class="el" href="group___u_a_r_t.html#ga6e55b1d14ffc7b4deb749b6fb764ede3">hwuart.h</a>
+, <a class="el" href="group___u_a_r_t.html#ga6e55b1d14ffc7b4deb749b6fb764ede3">efm32gg_uart.c</a>
+, <a class="el" href="group___u_a_r_t.html#ga6e55b1d14ffc7b4deb749b6fb764ede3">efm32lg_uart.c</a>
 , <a class="el" href="group___u_a_r_t.html#ga6e55b1d14ffc7b4deb749b6fb764ede3">efm32hg_uart.c</a>
-, <a class="el" href="group___u_a_r_t.html#ga6e55b1d14ffc7b4deb749b6fb764ede3">hwuart.h</a>
 </li>
 <li>uart_tx_ready()
 : <a class="el" href="group___u_a_r_t.html#ga97c725ef2b3675d45c56f830ce74daab">hwuart.h</a>
 </li>
 <li>ubutton_deregister_callback()
 : <a class="el" href="_e_f_m32_h_g___s_t_k3400_2inc_2userbutton_8h.html#a518b72d84097b04cfc06717cac1f4d5a">userbutton.h</a>
-, <a class="el" href="stk3700__userbutton_8c.html#a518b72d84097b04cfc06717cac1f4d5a">stk3700_userbutton.c</a>
 , <a class="el" href="stk3400__userbutton_8c.html#a518b72d84097b04cfc06717cac1f4d5a">stk3400_userbutton.c</a>
-, <a class="el" href="ifest__userbutton_8c.html#a518b72d84097b04cfc06717cac1f4d5a">ifest_userbutton.c</a>
 , <a class="el" href="ifest_2inc_2userbutton_8h.html#a518b72d84097b04cfc06717cac1f4d5a">userbutton.h</a>
+, <a class="el" href="ifest__userbutton_8c.html#a518b72d84097b04cfc06717cac1f4d5a">ifest_userbutton.c</a>
+, <a class="el" href="stk3700__userbutton_8c.html#a518b72d84097b04cfc06717cac1f4d5a">stk3700_userbutton.c</a>
 </li>
 <li>ubutton_pressed()
-: <a class="el" href="stk3700__userbutton_8c.html#a739f170d4881526699fba96bce3780bc">stk3700_userbutton.c</a>
-, <a class="el" href="_e_f_m32_h_g___s_t_k3400_2inc_2userbutton_8h.html#a739f170d4881526699fba96bce3780bc">userbutton.h</a>
-, <a class="el" href="stk3400__userbutton_8c.html#a739f170d4881526699fba96bce3780bc">stk3400_userbutton.c</a>
-, <a class="el" href="ifest_2inc_2userbutton_8h.html#a739f170d4881526699fba96bce3780bc">userbutton.h</a>
-, <a class="el" href="ifest__userbutton_8c.html#a739f170d4881526699fba96bce3780bc">ifest_userbutton.c</a>
+: <a class="el" href="stk3400__userbutton_8c.html#a739f170d4881526699fba96bce3780bc">stk3400_userbutton.c</a>
 , <a class="el" href="_e_f_m32_g_g___s_t_k3700_2inc_2userbutton_8h.html#a739f170d4881526699fba96bce3780bc">userbutton.h</a>
+, <a class="el" href="stk3700__userbutton_8c.html#a739f170d4881526699fba96bce3780bc">stk3700_userbutton.c</a>
+, <a class="el" href="ifest__userbutton_8c.html#a739f170d4881526699fba96bce3780bc">ifest_userbutton.c</a>
+, <a class="el" href="_e_f_m32_h_g___s_t_k3400_2inc_2userbutton_8h.html#a739f170d4881526699fba96bce3780bc">userbutton.h</a>
 </li>
 <li>ubutton_register_callback()
-: <a class="el" href="stk3700__userbutton_8c.html#a844870ddd6f7334cdefb5fa73a13728d">stk3700_userbutton.c</a>
-, <a class="el" href="_e_f_m32_g_g___s_t_k3700_2inc_2userbutton_8h.html#a844870ddd6f7334cdefb5fa73a13728d">userbutton.h</a>
+: <a class="el" href="_e_f_m32_g_g___s_t_k3700_2inc_2userbutton_8h.html#a844870ddd6f7334cdefb5fa73a13728d">userbutton.h</a>
+, <a class="el" href="stk3700__userbutton_8c.html#a844870ddd6f7334cdefb5fa73a13728d">stk3700_userbutton.c</a>
 , <a class="el" href="ifest__userbutton_8c.html#a844870ddd6f7334cdefb5fa73a13728d">ifest_userbutton.c</a>
-, <a class="el" href="ifest_2inc_2userbutton_8h.html#a844870ddd6f7334cdefb5fa73a13728d">userbutton.h</a>
 , <a class="el" href="stk3400__userbutton_8c.html#a844870ddd6f7334cdefb5fa73a13728d">stk3400_userbutton.c</a>
+, <a class="el" href="_e_f_m32_h_g___s_t_k3400_2inc_2userbutton_8h.html#a844870ddd6f7334cdefb5fa73a13728d">userbutton.h</a>
 </li>
 <li>USART0_RX_IRQHandler()
 : <a class="el" href="efm32hg__uart_8c.html#a8ef4dfd53f8b518acaeddcda2b159c61">efm32hg_uart.c</a>
@@ -214,7 +313,7 @@ $(document).ready(function(){initNavTree('globals_func_u.html','');});
 <!-- start footer part -->
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
-    <li class="footer">Generated on Sun Nov 22 2015 10:16:09 for OSS-7: Open Source Stack for DASH7 Alliance Protocol by
+    <li class="footer">Generated on Sun Jan 17 2016 07:39:23 for OSS-7: Open Source Stack for DASH7 Alliance Protocol by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.8.9.1 </li>
   </ul>

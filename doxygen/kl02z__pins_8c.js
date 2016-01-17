@@ -1,5 +1,7 @@
 var kl02z__pins_8c =
 [
+    [ "PORTA_INDEX", "kl02z__pins_8c.html#a35f72e55d8efcec9ff4eaf71f26f1c17", null ],
+    [ "PORTB_INDEX", "kl02z__pins_8c.html#a48fb75ab95f5ec7c5ecab15a0508d3a6", null ],
     [ "A0", "kl02z__pins_8c.html#a88bfd922ccf9b1240a125a9c4731469d", null ],
     [ "A1", "kl02z__pins_8c.html#a756dc8e6e77e2458c523d71d76c710b7", null ],
     [ "A2", "kl02z__pins_8c.html#a723a98042c7e9c93da24f1cd6f1f74b4", null ],
