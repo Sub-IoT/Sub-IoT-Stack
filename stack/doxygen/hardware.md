@@ -11,15 +11,18 @@ Currently we support the following plaforms, in decreasing order of completeness
 
 Platform        | MCU                                   | Radio                         | Toolchain         | 
 --------------- | ------------------------------------- | ----------------------------- | ----------------- | 
-EFM32GG_STK3700 | EnergyMicro Giant Gecko (Cortex-M3)   | Texas Instruments CC1101      | gcc-arm-embedded  |
-EFM32HG_STK3400 | EnergyMicro Happy Gecko (Cortex-M0+)  | Texas Instruments CC1101      | gcc-arm-embedded  |
+EFM32GG_STK3700 | Silicon Labs Giant Gecko (Cortex-M3)  | Texas Instruments CC1101      | gcc-arm-embedded  |
+EFM32HG_STK3400 | Silicon Labs Happy Gecko (Cortex-M0+) | Texas Instruments CC1101      | gcc-arm-embedded  |
 wizzimote       | Texas Instruments CC430 (MSP430)      | Texas Instruments CC1101 (SoC)| msp430-gcc        |
+EZR32WG_WSTK6221| Silicon Labs EZR32WG SoC (Cortex-M4)	| Silicon Labs EZR32WG 			| gcc-arm-embedded  |
 
 The [EFM32GG_STK3700](https://www.silabs.com/products/mcu/lowpower/Pages/efm32gg-stk3700.aspx) is currently the most used by us, and thus the best supported.
 A disadvantage of this platform is that you need to attach an external CC1101. We designed a CC1101-based module which can be plugged in the expansion port of the devkit, see below for the schematics.
 Next to this, we are working on a PCB design for a devkit containing Giant Gecko and CC1101 as well, which we will opensource shortly.
 
 The [EFM32HG_STK3400](https://www.silabs.com/products/mcu/32-bit/Pages/efm32hg-stk3400.aspx) is very similar to the STK3700 but instead has a Cortex-M0+ instead of Cortex-M3 and a more capable LCD screen. The same CC1101 module as used for the STK3700 can be plugged into the expansion header.
+
+The [EZR32WG_WSTK6221](https://www.silabs.com/products/wireless/wirelessmcu/Pages/ezr32wg-starter-kits.aspx) platform is a starter kit based on the EZR32 Wonder Gecko Wireless MCU. This SoC contains a Wonder Gecko Cortex-M4 combined with an RF chip. The port to this platform is currently ongoing.
 
 It is important to know that there are a number of parties who are currently in the process of designing devkits which will be commercially available, 
 so the choice should increase in the near future.
