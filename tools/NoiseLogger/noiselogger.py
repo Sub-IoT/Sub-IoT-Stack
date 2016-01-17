@@ -6,6 +6,7 @@ from collections import deque
 import matplotlib.pyplot as plt 
 import matplotlib.animation as animation
 
+
 # 868N016,3929,-080,-076,-075,-079,-076,-077,-074,-077,-077,-076
 
 	
@@ -31,10 +32,8 @@ class AnalogPlot:
 	def add(self, data):
 		assert(len(data) == 12)
 		channel = int(data[0][4:])
-		rss = 0
-		for x in range (2, 12):
-			rss += float(data[x])
-		rss /= 10
+		rss_values = [float(val) for val in data[2:12]]
+		rss = np.amax(rss_values)
 		
 		self.addToBuf(self.ax, channel, rss)	
 		#self.addToBuf(self.ay, float(data[2]))
