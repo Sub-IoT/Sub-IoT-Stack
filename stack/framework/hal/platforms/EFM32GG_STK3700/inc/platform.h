@@ -30,6 +30,7 @@
 
 #include "efm32gg_chip.h"
 
+
 /********************
  * LED DEFINITIONS *
  *******************/
@@ -49,9 +50,8 @@
  * UART DEFINITIONS *
  *******************/
 
+#define UART_ENABLED
 #define UART_BAUDRATE PLATFORM_EFM32GG_STK3700_UART_BAUDRATE
-
-
 
 #define UART_CHANNEL        UART0
 #define UART_CLOCK          cmuClock_UART0

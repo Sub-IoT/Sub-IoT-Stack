@@ -28,6 +28,7 @@
 #include "efm32gg_chip.h"
 #include <em_gpio.h>
 #include <em_cmu.h>
+#include <em_bitband.h>
 #include <gpiointerrupt.h>
 #include <stdarg.h>
 #include <assert.h>
