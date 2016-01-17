@@ -32,10 +32,11 @@ class AnalogPlot:
 	def add(self, data):
 		assert(len(data) == 12)
 		channel = int(data[0][4:])
-		rss = 0
-		for x in range (2, 12):
-			rss += float(data[x])
-		rss /= 10
+		rss_values = [float(val) for val in data[2:12]]
+		rss = np.amax(rss_values)
+		#for x in range (2, 12):
+		#	rss += float(data[x])
+		#rss /= 10
 		
 		self.addToBuf(self.ax, channel, rss)	
 		#self.addToBuf(self.ay, float(data[2]))
