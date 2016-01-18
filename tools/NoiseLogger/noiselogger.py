@@ -17,23 +17,26 @@ global analogPlot
 # plot class
 class AnalogPlot:
 	# constr
-	def __init__(self, strPort, maxLen, axes, a0):
+	def __init__(self, strPort, maxLen, axes, a0, a1):
 		# open serial port
 		self.ser = serial.Serial(strPort, 115200)
 
 		self.ax = deque([-130.0]*maxLen)
+		self.max = deque([-130.0]*maxLen)
 		self.maxLen = maxLen
 		self.previousChannel = -1
 		self.rolling = False #rolling -> same channel, otherwise x-axis= channels
 		self.index = 0
 		self.axes = axes
 		self.a0 = a0
+		self.a1 = a1
 
 	# add to buffer
 	def addToBuf(self, buf, index, val):
 		#print "index %d len(buf) %d" % (index, len(buf))
 		while (len(buf) < index):
 			buf.extend([-130.0]*(index+1-len(buf)))
+			self.max.extend([-130.0]*(index+1-len(buf)))
 			#print "index %d len(buf) %d" % (index, len(buf))
 			
 		
@@ -44,8 +47,11 @@ class AnalogPlot:
 		
 		if (len(buf) < self.maxLen):
 			buf.append(index, val)
+			self.max.append(index, val)
 		else:
 			buf[index] = val
+			if self.max[index] < val:
+				self.max[index]= val
 
 	# add data
 	def add(self, data):
@@ -102,6 +108,7 @@ class AnalogPlot:
 				self.add(data)				
 				#print "xlen %d ylen %d" % (len(range(self.maxLen)), len(self.ax))
 				self.a0.set_data(range(self.maxLen), self.ax)
+				self.a1.set_data(range(self.maxLen), self.max)
 		except serial.serialutil.SerialException as inst:
 			if (str(inst) == "call to ClearCommError failed"):
 				print("lost COM port, retrying...")
@@ -146,6 +153,7 @@ def main():
 	fig = plt.figure()
 	ax = plt.axes(xlim=(0, maxValue), ylim=(-120, 30))
 	a0, = ax.plot([], [], '.')
+	a1, = ax.plot([], [], '.')
 	ax.set_title("Noise logger")
 	ax.set_xlabel('Channel Number')
 	ax.set_ylabel('RSS (dBm)')
@@ -154,7 +162,7 @@ def main():
 	print('plotting data...')
 	
 	# plot parameters
-	analogPlot = AnalogPlot(strPort, maxValue, ax, a0)
+	analogPlot = AnalogPlot(strPort, maxValue, ax, a0, a1)
 	anim = animation.FuncAnimation(fig, analogPlot.update, interval=5, blit=False)
 								
 	
