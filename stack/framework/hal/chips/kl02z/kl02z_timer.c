@@ -28,7 +28,8 @@
 
 #include "hwtimer.h"
 #include "hwatomic.h"
-//#include "kl02z_mcu.h"
+#include "MKL02Z4.h"
+#include "fsl_tpm_hal.h"
 
 /**************************************************************************//**
  * @brief  Start LFRCO for RTC
@@ -72,7 +73,6 @@ error_t hw_timer_init(hwtimer_id_t timer_id, uint8_t frequency, timer_callback_t
 //    	return EALREADY;
 //    if(frequency != HWTIMER_FREQ_1MS && frequency != HWTIMER_FREQ_32K)
 //    	return EINVAL;
-//
 //    start_atomic();
 //		compare_f = compare_callback;
 //		overflow_f = overflow_callback;
@@ -102,65 +102,67 @@ error_t hw_timer_init(hwtimer_id_t timer_id, uint8_t frequency, timer_callback_t
 //		NVIC_EnableIRQ(RTC_IRQn);
 //		RTC_Enable(true);
 //    end_atomic();
+
+    if(timer_id >= HWTIMER_NUM) return ESIZE;
+    if(timer_inited) return EALREADY;
+    if(frequency != HWTIMER_FREQ_1MS) return EINVAL;
+
+    overflow_f = overflow_callback;
+    compare_f = compare_callback;
+
+    SIM_SOPT2 = (SIM_SOPT2&~SIM_SOPT2_TPMSRC_MASK)|SIM_SOPT2_TPMSRC(3);//select MCGIRCLK to reference (4MHz) // TODO use 1 kHz LPO input clock instead
+    SIM_SCGC6 |= (1<<SIM_SCGC6_TPM0_SHIFT);//enable bus clock to module
+    TPM0_CNT = 0x00;//clear count register
+    TPM0_MOD = 0xFFFF;
+    TPM0_SC = (1<<TPM_SC_TOF_SHIFT)|(0<<TPM_SC_TOIE_SHIFT)|(0<<TPM_SC_CPWMS_SHIFT)|(TPM_SC_CMOD(1)|TPM_SC_PS(5));//TOF cleared, interrupt disable, clock references "module clock,"
+                                                                                                                 //prescale 4 MHz to 125000 Hz, timer counts up
+    TPM_HAL_SetCpwms(TPM0, 1);
+    TPM_HAL_EnableChnInt(TPM0, 0);
+    MCG_C1 |= (1<<MCG_C1_IRCLKEN_SHIFT);//start reference clock
+
+    NVIC_ClearPendingIRQ(TPM0_IRQn);
+    NVIC_DisableIRQ(TPM0_IRQn);
+
+    timer_inited = true;
+
     return SUCCESS;
 }
 
 hwtimer_tick_t hw_timer_getvalue(hwtimer_id_t timer_id)
 {
-// TODO
-//	if(timer_id >= HWTIMER_NUM || (!timer_inited))
-//		return 0;
-//	else
-//	{
-//		uint32_t value =(uint16_t)(RTC->CNT & 0xFFFF);
-//		return value;
-//	}
+    if(timer_id >= HWTIMER_NUM || (!timer_inited)) return 0;
+
+    return TPM0_CNT;
 }
 
 error_t hw_timer_schedule(hwtimer_id_t timer_id, hwtimer_tick_t tick )
 {
-// TODO
-//	if(timer_id >= HWTIMER_NUM)
-//		return ESIZE;
-//	if(!timer_inited)
-//		return EOFF;
-//
-//	start_atomic();
-//	   RTC_IntDisable(RTC_IEN_COMP1);
-//	   RTC_CompareSet( 1, tick );
-//	   RTC_IntClear(RTC_IEN_COMP1);
-//	   RTC_IntEnable(RTC_IEN_COMP1);
-//	end_atomic();
+    if(timer_id >= HWTIMER_NUM) return ESIZE;
+    if(!timer_inited) return EOFF;
+
+    TPM0_CNT = 0x00;    //clear count register
+    TPM_HAL_SetChnCountVal(TPM0, 0, 125 /** tick*/); // TODO validate + test overflow
+    NVIC_EnableIRQ(TPM0_IRQn);
+    TPM_HAL_EnableTimerOverflowInt(TPM0);
 }
 
 error_t hw_timer_cancel(hwtimer_id_t timer_id)
 {
-// TODO
-//	if(timer_id >= HWTIMER_NUM)
-//		return ESIZE;
-//	if(!timer_inited)
-//		return EOFF;
-//
-//	start_atomic();
-//	   RTC_IntDisable(RTC_IEN_COMP1);
-//	   RTC_IntClear(RTC_IEN_COMP1);
-//	end_atomic();
+    if(timer_id >= HWTIMER_NUM) return ESIZE;
+    if(!timer_inited) return EOFF;
+
+    NVIC_DisableIRQ(TPM0_IRQn);
+    TPM_HAL_EnableTimerOverflowInt(TPM0);
 }
 
 error_t hw_timer_counter_reset(hwtimer_id_t timer_id)
 {
-// TODO
-//	if(timer_id >= HWTIMER_NUM)
-//		return ESIZE;
-//	if(!timer_inited)
-//		return EOFF;
-//
-//	start_atomic();
-//		RTC_IntDisable(RTC_IEN_COMP0 | RTC_IEN_COMP1);
-//		RTC_IntClear(RTC_IEN_COMP0 | RTC_IEN_COMP1);
-//		RTC_CounterReset();
-//		RTC_IntEnable(RTC_IEN_COMP0);
-//	end_atomic();
+    if(timer_id >= HWTIMER_NUM) return ESIZE;
+    if(!timer_inited) return EOFF;
+
+    NVIC_DisableIRQ(TPM0_IRQn);
+    TPM0_CNT = 0x00;    //clear count register
+    NVIC_EnableIRQ(TPM0_IRQn);
 }
 
 bool hw_timer_is_overflow_pending(hwtimer_id_t timer_id)
@@ -184,6 +186,22 @@ bool hw_timer_is_interrupt_pending(hwtimer_id_t timer_id)
 //	bool is_pending = !!((RTC_IntGet() & RTC->IEN) & RTC_IFS_COMP1);
 //    end_atomic();
 //    return is_pending;
+}
+
+void TPM0_IRQHandler()
+{
+    NVIC_DisableIRQ(TPM0_IRQn);
+    if(TPM_HAL_GetTimerOverflowStatus(TPM0) && overflow_f != 0)
+    {
+        TPM_HAL_ClearTimerOverflowFlag(TPM0);
+        overflow_f();
+    }
+    else if(compare_f != 0)
+    {
+        TPM_HAL_ClearChnInt(TPM0, 0);
+        compare_f();
+    }
+
 }
 
 

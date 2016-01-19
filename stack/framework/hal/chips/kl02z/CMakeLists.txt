@@ -68,6 +68,8 @@ ADD_LIBRARY (${CHIP_LIBRARY_NAME} OBJECT
         CMSIS/startup.c
         ksdk/hal/src/gpio/fsl_gpio_hal.c
         ksdk/drivers/src/gpio/fsl_gpio_common.c
+        ksdk/hal/inc/fsl_tpm_hal.h
+        ksdk/hal/src/tpm/fsl_tpm_hal.c
 #                    CMSIS/device/src/system_efm32gg.c
 #                    CMSIS/device/src/startup_gcc_efm32gg.s
 #                    emlib/src/em_assert.c

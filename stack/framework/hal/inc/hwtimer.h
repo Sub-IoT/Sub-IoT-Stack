@@ -122,7 +122,7 @@ __LINK_C error_t hw_timer_schedule(hwtimer_id_t timer_id, hwtimer_tick_t tick );
  *
  * This is a shorthand for calling
  * \code{.c}
- * 	hw_timer_schedule_at(timer_id, hw_timer_getvalue(timer_id) + delay);
+ * 	hw_timer_schedule(timer_id, hw_timer_getvalue(timer_id) + delay);
  * \endcode
  * \param	timer_id	the id of the timer to schedule
  * \param	delay		the delay before the timer fires
