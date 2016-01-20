@@ -82,8 +82,8 @@ void ezradioInit(task_t cb)
   //(void)handle;
 
   /* Initialize radio GPIOs and SPI port */
-  //ezradio_hal_GpioInit( GPIO_EZRadio_INT_IRQHandler, true );
-  ezradio_hal_GpioInit( GPIO_EZRadio_INT_IRQHandler, false );
+  ezradio_hal_GpioInit( GPIO_EZRadio_INT_IRQHandler, true );
+  //ezradio_hal_GpioInit( GPIO_EZRadio_INT_IRQHandler, false );
   ezradio_hal_SpiInit();
 
   /* Power Up the radio chip */

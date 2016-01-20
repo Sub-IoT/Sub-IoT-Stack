@@ -616,4 +616,14 @@
   0x00 /* MODEM_RSSI_CONTROL2,RSSIJMP_DWN[5],RSSIJMP_UP[4],ENRSSIJMP[3],JMPDLYLEN[2],ENJMPRX[1] */\
 
 
+
+#define  RADIO_CONFIG_SET_PROPERTY_PTI_ENABLE \
+  0xF0 /* GROUP: PTI                                                                          	*/,\
+  0x04 /* NUM_PROPS                                                                             */,\
+  0x00 /* START_PROP                                                                            */,\
+  0x80 /* PTI_EN                                                                            	*/,\
+  0x13 /* BAUD 0x13            -> 500 kbaud                    									*/,\
+  0x88 /* BAUD 0x88                                           									*/,\
+  0x60 /* PTI_LOG_EN: RX_EN, TX_EN                             									*/\
+
 #endif /* FRAMEWORK_HAL_CHIPS_SI4460_EZRADIODRV_SI4460_REGISTERS_H_ */

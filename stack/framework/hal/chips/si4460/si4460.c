@@ -300,6 +300,9 @@ error_t hw_radio_init(alloc_packet_callback_t alloc_packet_cb,
 	ezradio_part_info(&ezradioReply);
 	DPRINT("   Device: Si%04x\n\n", ezradioReply.PART_INFO.PART);
 
+	/* Enable Packet Trace Interface */
+	//ezradio_set_property(RADIO_CONFIG_SET_PROPERTY_PTI_ENABLE);
+
 
 	/* Fix registers not correct set by radio configurator */
 	// latch on sync word detect - currently no threshold comparison (todo: optimize)
@@ -376,9 +379,9 @@ error_t hw_radio_send_packet(hw_radio_packet_t* packet, tx_packet_callback_t tx_
 	log_print_data(packet->data, packet->length -1 );
 #endif
 
-	configure_channel((channel_id_t*)&(current_packet->tx_meta.tx_cfg.channel_id));
-	configure_eirp(current_packet->tx_meta.tx_cfg.eirp);
-	configure_syncword_class(current_packet->tx_meta.tx_cfg.syncword_class);
+	//configure_channel((channel_id_t*)&(current_packet->tx_meta.tx_cfg.channel_id));
+	//configure_eirp(current_packet->tx_meta.tx_cfg.eirp);
+	//configure_syncword_class(current_packet->tx_meta.tx_cfg.syncword_class);
 
 	//cc1101_interface_write_burst_reg(TXFIFO, packet->data, packet->length + 1);
 	//cc1101_interface_set_interrupts_enabled(true);
