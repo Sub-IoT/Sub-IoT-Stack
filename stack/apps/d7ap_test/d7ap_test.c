@@ -167,7 +167,7 @@ void bootstrap()
                 .channel_header = {
                     .ch_coding = PHY_CODING_PN9,
                     .ch_class = PHY_CLASS_NORMAL_RATE,
-                    .ch_freq_band = PHY_BAND_433
+                    .ch_freq_band = PHY_BAND_868
                 },
                 .channel_index_start = 0,
                 .channel_index_end = 0,

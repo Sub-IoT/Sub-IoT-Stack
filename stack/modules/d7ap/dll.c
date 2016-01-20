@@ -84,6 +84,9 @@ static uint16_t NGDEF(_dll_slot_duration);
 static uint16_t NGDEF(_dll_rigd_n);
 #define dll_rigd_n NG(_dll_rigd_n)
 
+static uint32_t NGDEF(_dll_cca_started);
+#define dll_cca_started NG(_dll_cca_started)
+
 // TODO defined somewhere?
 #define t_g	5
 
@@ -106,55 +109,55 @@ static void switch_state(dll_state_t next_state)
     case DLL_STATE_CSMA_CA_STARTED:
         assert(dll_state == DLL_STATE_IDLE || dll_state == DLL_STATE_SCAN_AUTOMATION
                || dll_state == DLL_STATE_FOREGROUND_SCAN);
-        dll_state = DLL_STATE_CSMA_CA_STARTED;
+        dll_state = next_state;
         DPRINT("Switched to DLL_STATE_CSMA_CA_STARTED");
         break;
     case DLL_STATE_CSMA_CA_RETRY:
         assert(dll_state == DLL_STATE_CCA1 || dll_state == DLL_STATE_CCA2);
-		dll_state = DLL_STATE_CSMA_CA_RETRY;
+		dll_state = next_state;
 		DPRINT("Switched to DLL_STATE_CSMA_CA_RETRY");
 		break;
     case DLL_STATE_CCA1:
         assert(dll_state == DLL_STATE_CSMA_CA_STARTED || dll_state == DLL_STATE_CSMA_CA_RETRY);
-        dll_state = DLL_STATE_CCA1;
+        dll_state = next_state;
         DPRINT("Switched to DLL_STATE_CCA1");
         break;
     case DLL_STATE_CCA2:
         assert(dll_state == DLL_STATE_CCA1);
-        dll_state = DLL_STATE_CCA2;
+        dll_state = next_state;
         DPRINT("Switched to DLL_STATE_CCA2");
         break;
     case DLL_STATE_FOREGROUND_SCAN:
         assert(dll_state == DLL_STATE_IDLE || dll_state == DLL_STATE_SCAN_AUTOMATION
                || dll_state == DLL_STATE_TX_FOREGROUND_COMPLETED);
-        dll_state = DLL_STATE_FOREGROUND_SCAN;
+        dll_state = next_state;
         DPRINT("Switched to DLL_STATE_FOREGROUND_SCAN");
         break;
     case DLL_STATE_IDLE:
-        assert(dll_state == DLL_STATE_FOREGROUND_SCAN);
-        dll_state = DLL_STATE_IDLE;
+        assert(dll_state == DLL_STATE_FOREGROUND_SCAN || dll_state == DLL_STATE_CCA_FAIL);
+        dll_state = next_state;
         DPRINT("Switched to DLL_STATE_IDLE");
         break;
     case DLL_STATE_SCAN_AUTOMATION:
         assert(dll_state == DLL_STATE_FOREGROUND_SCAN || dll_state == DLL_STATE_IDLE);
-        dll_state = DLL_STATE_SCAN_AUTOMATION;
+        dll_state = next_state;
         DPRINT("Switched to DLL_STATE_SCAN_AUTOMATION");
         break;
     case DLL_STATE_TX_FOREGROUND:
         assert(dll_state == DLL_STATE_CCA2);
-        dll_state = DLL_STATE_TX_FOREGROUND;
+        dll_state = next_state;
         DPRINT("Switched to DLL_STATE_TX_FOREGROUND");
         break;
     case DLL_STATE_TX_FOREGROUND_COMPLETED:
         assert(dll_state == DLL_STATE_TX_FOREGROUND);
-        dll_state = DLL_STATE_TX_FOREGROUND_COMPLETED;
+        dll_state = next_state;
         DPRINT("Switched to DLL_STATE_TX_FOREGROUND_COMPLETED");
         break;
     case DLL_STATE_CCA_FAIL:
         assert(dll_state == DLL_STATE_CCA1 || dll_state == DLL_STATE_CCA2
         		|| dll_state == DLL_STATE_CSMA_CA_STARTED || dll_state == DLL_STATE_CSMA_CA_RETRY);
-        dll_state = DLL_STATE_IDLE;
-        DPRINT("Switched to DLL_STATE_IDLE");
+        dll_state = next_state;
+        DPRINT("Switched to DLL_STATE_CCA_FAIL");
         break;
     default:
         assert(false);
@@ -281,6 +284,7 @@ static void execute_csma_ca()
         case DLL_STATE_CSMA_CA_STARTED:
         {
             dll_tca = current_access_profile->transmission_timeout_period - tx_duration;
+            dll_cca_started = timer_get_counter_value();
             DPRINT("Tca= %i = %i - %i", dll_tca, current_access_profile->transmission_timeout_period, tx_duration);
 
             if (dll_tca <= 0)
@@ -347,6 +351,12 @@ static void execute_csma_ca()
         }
         case DLL_STATE_CSMA_CA_RETRY:
         {
+        	int32_t cca_duration = timer_get_counter_value() - dll_cca_started;
+        	dll_to -= cca_duration;
+
+
+            DPRINT("RETRY dll_to = %i < %i ", dll_to, t_g);
+
             if (dll_to < t_g)
             {
                 switch_state(DLL_STATE_CCA_FAIL);
@@ -355,6 +365,7 @@ static void execute_csma_ca()
             }
 
             dll_tca = dll_to;
+            dll_cca_started = timer_get_counter_value();
             uint16_t t_offset = 0;
 
             switch(current_access_profile->control_csma_ca_mode)
@@ -400,6 +411,7 @@ static void execute_csma_ca()
         case DLL_STATE_CCA_FAIL:
         {
             // TODO hw_radio_set_idle();
+        	switch_state(DLL_STATE_IDLE);
             d7atp_signal_packet_csma_ca_insertion_completed(false);
             break;
         }
