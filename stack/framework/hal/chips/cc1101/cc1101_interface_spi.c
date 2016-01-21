@@ -33,9 +33,9 @@
 
  #include "platform.h"
 
-
 // turn on/off the debug prints
 #ifdef LOG_PHY_ENABLED
+#include "log.h"
 #define DPRINT(...) log_print_string(__VA_ARGS__)
 #else
 #define DPRINT(...)
@@ -61,6 +61,8 @@ void _cc1101_interface_init(end_of_packet_isr_t end_of_packet_isr_cb)
 
     error_t err;
     err = hw_gpio_configure_interrupt(CC1101_GDO0_PIN, &_cc1101_gdo_isr, GPIO_FALLING_EDGE); assert(err == SUCCESS);
+
+    DPRINT("CC1101 SPI initialised\r\n");
 }
 
 void _c1101_interface_set_interrupts_enabled(bool enable)
