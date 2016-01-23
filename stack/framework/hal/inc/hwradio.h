@@ -329,9 +329,9 @@ typedef void (*tx_packet_callback_t)(hw_radio_packet_t* packet);
  */
 typedef void (*rssi_valid_callback_t)(int16_t cur_rssi);
 
-/** \brief Initialise the radio driver. 
+/** \brief Initialize the radio driver.
  *
- * After initialisation, the radio is in IDLE state. The RX must be explicitly enabled by a call to
+ * After initialization, the radio is in IDLE state. The RX must be explicitly enabled by a call to
  * hw_radio_set_rx(...) before any packets can be received.
  *
  * \param p_alloc			The new_packet_callback_t function to call whenever a buffer is 
@@ -497,8 +497,8 @@ __LINK_C bool hw_radio_rx_busy();
 
 /** \brief Check whether the RSSI value measured by the PHY driver is valid or not.
  *
- * The RSSI will only be valid if the radio has been initialised and has been in RX mode long enough
- * for the RSSI to become valid (this is signalled by a callback to the rssi_valid_callback_t function)
+ * The RSSI will only be valid if the radio has been initialized and has been in RX mode long enough
+ * for the RSSI to become valid (this is signaled by a callback to the rssi_valid_callback_t function)
  *
  * In general the following rule applies:
  *  - hw_radio_rssi_valid() == (hw_radio_get_rssi() == HW_RSSI_INVALID)

@@ -17,14 +17,16 @@
 # limitations under the License.
 #
 
+
+SET(HAL_RADIO_USE_HW_CRC "TRUE" CACHE BOOL "Enable/Disable the use of HW CRC")
+
 INCLUDE_DIRECTORIES(	./
 						ezradiodrv/inc)
 
 SET(si4460_SRC
         si4460.c
         si4460.h
-        si4460_interface.c		
-        #si4460_interface_spi.c
+        si4460_interface.c	
         ezradiodrv/src/ezradio_api_lib_add.c
         ezradiodrv/src/ezradio_api_lib.c
         ezradiodrv/src/ezradio_comm.c

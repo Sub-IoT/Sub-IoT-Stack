@@ -301,7 +301,7 @@ void read_rssi()
     {
     	sched_post_task(&process_uart_rx_fifo); // check for UART commands first
         uint16_t delay = rand() % 5000;
-        timer_post_task_delay(&read_rssi, delay+100);
+        timer_post_task_delay(&read_rssi, delay);
     }
 
     hw_watchdog_feed();

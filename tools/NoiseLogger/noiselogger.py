@@ -21,8 +21,8 @@ class AnalogPlot:
 		# open serial port
 		self.ser = serial.Serial(strPort, 115200)
 
-		self.ax = deque([-130.0]*maxLen)
-		self.max = deque([-130.0]*maxLen)
+		self.ax = deque([-140.0]*maxLen)
+		self.max = deque([-140.0]*maxLen)
 		self.maxLen = maxLen
 		self.previousChannel = -1
 		self.rolling = False #rolling -> same channel, otherwise x-axis= channels
@@ -35,8 +35,9 @@ class AnalogPlot:
 	def addToBuf(self, buf, index, val):
 		#print "index %d len(buf) %d" % (index, len(buf))
 		while (len(buf) < index):
-			buf.extend([-130.0]*(index+1-len(buf)))
-			self.max.extend([-130.0]*(index+1-len(buf)))
+			extra = index+1-len(buf)
+			buf.extend([-140.0]*extra)
+			self.max.extend([-140.0]*extra)
 			#print "index %d len(buf) %d" % (index, len(buf))
 			
 		
@@ -50,6 +51,7 @@ class AnalogPlot:
 			self.max.append(index, val)
 		else:
 			buf[index] = val
+			#print "self.max %d len(buf) %d index %d" % (len(self.max), len(buf), index)
 			if self.max[index] < val:
 				self.max[index]= val
 
@@ -151,7 +153,7 @@ def main():
 
 	# set up animation
 	fig = plt.figure()
-	ax = plt.axes(xlim=(0, maxValue), ylim=(-120, 30))
+	ax = plt.axes(xlim=(0, maxValue), ylim=(-140, 30))
 	a0, = ax.plot([], [], '.')
 	a1, = ax.plot([], [], '.')
 	ax.set_title("Noise logger")

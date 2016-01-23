@@ -32,7 +32,7 @@
 
 #include "platform_defs.h"
 
-#if !defined (USE_CC1101) && !defined (USE_SI4460)
+#if !defined (USE_CC1101) //&& !defined (USE_SI4460)
     #error "This application only works with cc1101"
 #endif
 
@@ -117,7 +117,7 @@ void start()
     cc1101_interface_write_single_patable(0xc0); // 10dBm TX EIRP
     cc1101_interface_strobe(0x35); // strobe TX
 #elif defined USE_SI4460
-    ezradioStartTxUnmodelated(rx_cfg.channel_id.center_freq_index);
+    //ezradioStartTxUnmodelated(rx_cfg.channel_id.center_freq_index);
 #endif
 }
 

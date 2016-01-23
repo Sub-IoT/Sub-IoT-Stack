@@ -532,7 +532,7 @@ static void ezradio_int_callback()
 						packet->rx_meta.rssi = hw_radio_get_latched_rssi();
 						packet->rx_meta.lqi = 0;
 						memcpy(&(packet->rx_meta.rx_cfg.channel_id), &current_channel_id, sizeof(channel_id_t));
-						packet->rx_meta.crc_status = HW_CRC_UNAVAILABLE; // TODO
+						packet->rx_meta.crc_status = HW_CRC_VALID;
 						packet->rx_meta.timestamp = timer_get_counter_value();
 
 						ezradio_fifo_info(EZRADIO_CMD_FIFO_INFO_ARG_FIFO_RX_BIT, NULL);

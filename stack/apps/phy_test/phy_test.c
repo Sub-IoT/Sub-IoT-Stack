@@ -36,7 +36,7 @@
 #endif
 
 // configuration options
-#define RX_MODE
+//define RX_MODE
 #define PHY_CLASS PHY_CLASS_NORMAL_RATE
 
 
@@ -101,7 +101,7 @@ void start_rx()
 void transmit_packet()
 {
     DPRINT("transmitting packet\n");
-    data[1]++;
+    //data[1]++;
     memcpy(&tx_packet->data, data, sizeof(data));
     hw_radio_send_packet(tx_packet, &packet_transmitted);
 }
