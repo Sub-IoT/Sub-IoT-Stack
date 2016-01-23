@@ -17,7 +17,7 @@
 # limitations under the License.
 #
 
-SET(HAL_RADIO_USE_HW_CRC "FALSE" CACHE BOOL "Enable/Disable the use of HW CRC")
+#SET(HAL_RADIO_USE_HW_CRC "FALSE" CACHE BOOL "Enable/Disable the use of HW CRC")
 
 SET(CC1101_SRC
         cc1101.c

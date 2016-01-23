@@ -380,7 +380,11 @@ error_t hw_radio_send_packet(hw_radio_packet_t* packet, tx_packet_callback_t tx_
 
 #ifdef FRAMEWORK_LOG_ENABLED // TODO more granular
 	log_print_stack_string(LOG_STACK_PHY, "Data to TX Fifo:");
-	log_print_data(packet->data, packet->length -1 );
+#ifdef HAL_RADIO_USE_HW_CRC
+	log_print_data(packet->data, packet->length - 1 );
+#else
+	log_print_data(packet->data, packet->length + 1 );
+#endif
 #endif
 
 	//configure_channel((channel_id_t*)&(current_packet->tx_meta.tx_cfg.channel_id));
@@ -512,7 +516,6 @@ static void ezradio_int_callback()
 						/* Check how many bytes we received. */
 						ezradio_fifo_info(0, &radioReplyLocal);
 
-
 						DPRINT("RX ISR packetLength: %d", radioReplyLocal.FIFO_INFO.RX_FIFO_COUNT);
 
 						ezradio_cmd_reply_t radioReplyLocal2;
@@ -532,7 +535,11 @@ static void ezradio_int_callback()
 						packet->rx_meta.rssi = hw_radio_get_latched_rssi();
 						packet->rx_meta.lqi = 0;
 						memcpy(&(packet->rx_meta.rx_cfg.channel_id), &current_channel_id, sizeof(channel_id_t));
+#ifdef HAL_RADIO_USE_HW_CRC
 						packet->rx_meta.crc_status = HW_CRC_VALID;
+#else
+						packet->rx_meta.crc_status = HW_CRC_UNAVAILABLE;
+#endif
 						packet->rx_meta.timestamp = timer_get_counter_value();
 
 						ezradio_fifo_info(EZRADIO_CMD_FIFO_INFO_ARG_FIFO_RX_BIT, NULL);
