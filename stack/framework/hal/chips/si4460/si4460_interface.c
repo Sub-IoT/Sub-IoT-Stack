@@ -125,12 +125,19 @@ Ecode_t ezradioStartRx(uint8_t channel)
 {
 	ezradio_get_int_status(0u, 0u, 0u, NULL);
 
+	// reset length of first field (can be corrupted by TX)
+	ezradio_set_property(0x12, 0x02, 0x0D, 0x00, 0x01);
+
   /* Start Receiving packet, channel 0, START immediately, Packet n bytes long */
+	//timeout: nochange
+	//valid: go to ready state, if rx -> latched rssi can be overwritten or reset
+	//invalid: = CRC error, ready state handled here or upper layer?
     ezradio_start_rx(channel, 0u, 0u,
                   EZRADIO_CMD_START_RX_ARG_NEXT_STATE1_RXTIMEOUT_STATE_ENUM_NOCHANGE,
-                  //EZRADIO_CMD_START_RX_ARG_NEXT_STATE2_RXVALID_STATE_ENUM_READY,
-                  EZRADIO_CMD_START_RX_ARG_NEXT_STATE3_RXINVALID_STATE_ENUM_RX,
-                  EZRADIO_CMD_START_RX_ARG_NEXT_STATE3_RXINVALID_STATE_ENUM_RX );
+                  //EZRADIO_CMD_START_RX_ARG_NEXT_STATE2_RXVALID_STATE_ENUM_RX,
+                  EZRADIO_CMD_START_RX_ARG_NEXT_STATE2_RXVALID_STATE_ENUM_READY,
+                  //EZRADIO_CMD_START_RX_ARG_NEXT_STATE3_RXINVALID_STATE_ENUM_RX,
+                  EZRADIO_CMD_START_RX_ARG_NEXT_STATE3_RXINVALID_STATE_ENUM_READY);
 
     return ECODE_OK;
 }

@@ -97,6 +97,7 @@ static hw_rx_cfg_t pending_rx_cfg;
 static inline int16_t convert_rssi(uint8_t rssi_raw);
 static void start_rx(hw_rx_cfg_t const* rx_cfg);
 static void ezradio_int_callback();
+static void report_rssi();
 
 
 static void configure_channel(const channel_id_t* channel_id)
@@ -316,14 +317,17 @@ error_t hw_radio_init(alloc_packet_callback_t alloc_packet_cb,
 	ezradioResetTRxFifo();
 
 	// configure default channel, eirp and syncword
-	configure_channel(&current_channel_id);
-	configure_eirp(current_eirp);
-	configure_syncword_class(current_syncword_class);
+	//configure_channel(&current_channel_id);
+	//configure_eirp(current_eirp);
+	//configure_syncword_class(current_syncword_class);
+
+	sched_register_task((&report_rssi));
 
 }
 
 error_t hw_radio_set_rx(hw_rx_cfg_t const* rx_cfg, rx_packet_callback_t rx_cb, rssi_valid_callback_t rssi_valid_cb)
 {
+	DPRINT("hw_radio_set_rx rx_cb %p rssi_valid_cb %p", rx_cb, rssi_valid_cb);
 	if(rx_cb != NULL)
 	{
 		assert(alloc_packet_callback != NULL);
@@ -398,22 +402,28 @@ int16_t hw_radio_get_rssi()
 {
 	ezradio_cmd_reply_t ezradioReply;
 	ezradio_get_modem_status(0, &ezradioReply);
-	return convert_rssi(ezradioReply.GET_MODEM_STATUS.CURR_RSSI);
 
+	//return -120;
+
+//	DPRINT("CURR_RSSI    %d", convert_rssi(ezradioReply.GET_MODEM_STATUS.CURR_RSSI));
+//	DPRINT("LATCH_RSSI    %d", convert_rssi(ezradioReply.GET_MODEM_STATUS.LATCH_RSSI));
+//	DPRINT("ANT1_RSSI    %d", convert_rssi(ezradioReply.GET_MODEM_STATUS.ANT1_RSSI));
+//	DPRINT("ANT2_RSSI    %d", convert_rssi(ezradioReply.GET_MODEM_STATUS.ANT2_RSSI));
 //	ezradio_frr_d_read(1, &ezradioReply);
-//
-//	return convert_rssi(ezradioReply.FRR_D_READ.FRR_D_VALUE);
+//	DPRINT("FRR_D_VALUE    %d", convert_rssi(ezradioReply.FRR_D_READ.FRR_D_VALUE));
+
+	uint8_t rss = ezradioReply.GET_MODEM_STATUS.CURR_RSSI > ezradioReply.GET_MODEM_STATUS.LATCH_RSSI ? ezradioReply.GET_MODEM_STATUS.CURR_RSSI : ezradioReply.GET_MODEM_STATUS.LATCH_RSSI;
+	return convert_rssi(rss);
 }
 
 int16_t hw_radio_get_latched_rssi()
 {
 	ezradio_cmd_reply_t ezradioReply;
-	ezradio_get_modem_status(0, &ezradioReply);
-	return convert_rssi(ezradioReply.GET_MODEM_STATUS.LATCH_RSSI);
+	//ezradio_get_modem_status(0, &ezradioReply);
+	//return convert_rssi(ezradioReply.GET_MODEM_STATUS.LATCH_RSSI);
 
-//	ezradio_frr_d_read(1, &ezradioReply);
-//
-//	return convert_rssi(ezradioReply.FRR_D_READ.FRR_D_VALUE);
+	ezradio_frr_d_read(1, &ezradioReply);
+	return convert_rssi(ezradioReply.FRR_D_READ.FRR_D_VALUE);
 }
 
 error_t hw_radio_set_idle()
@@ -421,21 +431,22 @@ error_t hw_radio_set_idle()
 	  return ERROR;
 }
 
+static void report_rssi()
+{
+	int16_t rss = hw_radio_get_rssi();
+	rssi_valid_callback(rss);
+}
+
 static void start_rx(hw_rx_cfg_t const* rx_cfg)
 {
+	DPRINT("start_rx");
+
     current_state = HW_RADIO_STATE_RX;
 
-    configure_channel(&(rx_cfg->channel_id));
-    configure_syncword_class(rx_cfg->syncword_class);
+    //configure_channel(&(rx_cfg->channel_id));
+    //configure_syncword_class(rx_cfg->syncword_class);
     //cc1101_interface_write_single_reg(PKTLEN, 0xFF);
 
-    // cc1101_interface_strobe(RF_SFRX); TODO only when in idle or overflow state
-
-//    uint8_t status;
-//    do
-//    {
-//    	status = cc1101_interface_strobe(RF_SRX);
-//    } while(status != 0x1F);
 
     ezradioStartRx((uint8_t) (current_channel_id.center_freq_index));
 
@@ -443,16 +454,17 @@ static void start_rx(hw_rx_cfg_t const* rx_cfg)
 //    if(rx_packet_callback != 0) // when rx callback not set we ignore received packets
 //		cc1101_interface_set_interrupts_enabled(true);
 
-	// TODO when only rssi callback set the packet handler is still active and we enter in RXFIFOOVERFLOW, find a way to around this
 
     if(rssi_valid_callback != 0)
     {
+    	timer_post_task_delay(&report_rssi, TIMER_TICKS_PER_SEC / 5000);
         // TODO calculate/predict rssi response time (see DN505)
         // and wait until valid. For now we wait 200 us.
 
-        hw_busy_wait(200);
-//        ensure_settling_and_calibration_done();
-        rssi_valid_callback(hw_radio_get_rssi());
+//        hw_busy_wait(200);
+////        ensure_settling_and_calibration_done();
+//        rssi_valid_callback(0);
+        //
     }
 }
 
@@ -490,70 +502,62 @@ static void ezradio_int_callback()
 		switch(current_state)
 		{
 			case HW_RADIO_STATE_RX:
-				if (ezradioReply.GET_INT_STATUS.PH_PEND & EZRADIO_CMD_GET_INT_STATUS_REP_PH_PEND_PACKET_RX_PEND_BIT)
-				//if (ezradioReply.GET_INT_STATUS.PH_STATUS & EZRADIO_CMD_GET_INT_STATUS_REP_PH_STATUS_PACKET_RX_BIT)
+				//if (ezradioReply.GET_INT_STATUS.PH_PEND & EZRADIO_CMD_GET_INT_STATUS_REP_PH_PEND_PACKET_RX_PEND_BIT)
+				if (ezradioReply.GET_INT_STATUS.PH_STATUS & EZRADIO_CMD_GET_INT_STATUS_REP_PH_STATUS_PACKET_RX_BIT)
+				{
 					DPRINT("PACKET_RX IRQ");
-				//else
-				//	return;
 
-				/* Check how many bytes we received. */
-				ezradio_fifo_info(0, &radioReplyLocal);
+					if(rx_packet_callback != NULL)
+					{
+						/* Check how many bytes we received. */
+						ezradio_fifo_info(0, &radioReplyLocal);
 
 
-				DPRINT("RX ISR packetLength: %d", radioReplyLocal.FIFO_INFO.RX_FIFO_COUNT);
+						DPRINT("RX ISR packetLength: %d", radioReplyLocal.FIFO_INFO.RX_FIFO_COUNT);
 
-				ezradio_cmd_reply_t radioReplyLocal2;
-				ezradio_get_packet_info(0, 0, 0, &radioReplyLocal2);
+						ezradio_cmd_reply_t radioReplyLocal2;
+						ezradio_get_packet_info(0, 0, 0, &radioReplyLocal2);
 
-				hw_radio_packet_t* packet = alloc_packet_callback(radioReplyLocal.FIFO_INFO.RX_FIFO_COUNT);
-				packet->length = radioReplyLocal.FIFO_INFO.RX_FIFO_COUNT;
+						hw_radio_packet_t* packet = alloc_packet_callback(radioReplyLocal.FIFO_INFO.RX_FIFO_COUNT);
+						packet->length = radioReplyLocal.FIFO_INFO.RX_FIFO_COUNT;
 
-	//            hw_radio_packet_t* packet = alloc_packet_callback(radioReplyLocal2.PACKET_INFO.LENGTH);
-	//            packet->length = radioReplyLocal2.PACKET_INFO.LENGTH;
+			//            hw_radio_packet_t* packet = alloc_packet_callback(radioReplyLocal2.PACKET_INFO.LENGTH);
+			//            packet->length = radioReplyLocal2.PACKET_INFO.LENGTH;
 
-				/* Read out the RX FIFO content. */
-				ezradio_read_rx_fifo(radioReplyLocal.FIFO_INFO.RX_FIFO_COUNT, packet->data);
-				//ezradio_read_rx_fifo(radioReplyLocal2.PACKET_INFO.LENGTH, packet->data);
+						/* Read out the RX FIFO content. */
+						ezradio_read_rx_fifo(radioReplyLocal.FIFO_INFO.RX_FIFO_COUNT, packet->data);
+						//ezradio_read_rx_fifo(radioReplyLocal2.PACKET_INFO.LENGTH, packet->data);
 
-				// fill rx_meta
-				packet->rx_meta.rssi = hw_radio_get_latched_rssi();
-				packet->rx_meta.lqi = 0;
-				memcpy(&(packet->rx_meta.rx_cfg.channel_id), &current_channel_id, sizeof(channel_id_t));
-				packet->rx_meta.crc_status = HW_CRC_UNAVAILABLE; // TODO
-				packet->rx_meta.timestamp = timer_get_counter_value();
+						// fill rx_meta
+						packet->rx_meta.rssi = hw_radio_get_latched_rssi();
+						packet->rx_meta.lqi = 0;
+						memcpy(&(packet->rx_meta.rx_cfg.channel_id), &current_channel_id, sizeof(channel_id_t));
+						packet->rx_meta.crc_status = HW_CRC_UNAVAILABLE; // TODO
+						packet->rx_meta.timestamp = timer_get_counter_value();
 
-				ezradio_fifo_info(EZRADIO_CMD_FIFO_INFO_ARG_FIFO_RX_BIT, NULL);
+						ezradio_fifo_info(EZRADIO_CMD_FIFO_INFO_ARG_FIFO_RX_BIT, NULL);
 
-	#ifdef FRAMEWORK_LOG_ENABLED
-				log_print_raw_phy_packet(packet, false);
-	#endif
+			#ifdef FRAMEWORK_LOG_ENABLED
+						log_print_raw_phy_packet(packet, false);
+			#endif
 
-				DEBUG_RX_END();
+						DEBUG_RX_END();
 
-				if(rx_packet_callback != NULL) // TODO this can happen while doing CCA but we should not be interrupting here (disable packet handler?)
-					rx_packet_callback(packet);
-				else
-					release_packet_callback(packet);
+//					if(rx_packet_callback != NULL) // TODO this can happen while doing CCA but we should not be interrupting here (disable packet handler?)
+						rx_packet_callback(packet);
+//					else
+//						release_packet_callback(packet);
+					}
+				}
+
+				if ( ezradioReply.GET_INT_STATUS.PH_PEND & EZRADIO_CMD_GET_INT_STATUS_REP_PH_PEND_CRC_ERROR_PEND_BIT)
+					DPRINT("PACKET_RX CRC_ERROR");
 
 				if(current_state == HW_RADIO_STATE_RX)
 				{
-					//start_rx(&pending_rx_cfg);
+					start_rx(&pending_rx_cfg);
 				}
 
-	//			if(current_state == HW_RADIO_STATE_RX) // check still in RX, could be modified by upper layer while in callback
-	//			{
-	//				uint8_t status = (cc1101_interface_strobe(RF_SNOP) & 0xF0);
-	//				if(status == 0x60) // RX overflow
-	//				{
-	//					cc1101_interface_strobe(RF_SFRX);
-	//					while(cc1101_interface_strobe(RF_SNOP) != 0x0F); // wait until in idle state
-	//					cc1101_interface_strobe(RF_SRX);
-	//					while(cc1101_interface_strobe(RF_SNOP) != 0x1F); // wait until in RX state
-	//				}
-	//
-	//				cc1101_interface_set_interrupts_enabled(true);
-	//				assert(cc1101_interface_strobe(RF_SNOP) == 0x1F); // expect to be in RX mode
-	//			}
 				break;
 			case HW_RADIO_STATE_TX:
 				if (ezradioReply.GET_INT_STATUS.PH_PEND & EZRADIO_CMD_GET_INT_STATUS_REP_PH_PEND_PACKET_SENT_PEND_BIT)
