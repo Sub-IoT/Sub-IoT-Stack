@@ -239,15 +239,11 @@ static void configure_channel(const channel_id_t* channel_id)
 			break;
 		case PHY_BAND_915:
 			assert(false);
-//            WriteSingleReg(RADIO_FREQ2, (uint8_t)(RADIO_FREQ_915>>16 & 0xFF));
-//            WriteSingleReg(RADIO_FREQ1, (uint8_t)(RADIO_FREQ_915>>8 & 0xFF));
-//            WriteSingleReg(RADIO_FREQ0, (uint8_t)(RADIO_FREQ_915 & 0xFF));
 			break;
 
 		}
 	}
 
-	//cc1101_interface_strobe(RF_SCAL); // TODO is this the right case?
 }
 
 static void configure_eirp(const eirp_t eirp)
@@ -375,9 +371,6 @@ error_t hw_radio_send_packet(hw_radio_packet_t* packet, tx_packet_callback_t tx_
 	current_state = HW_RADIO_STATE_TX;
 	current_packet = packet;
 
-	//cc1101_interface_strobe(RF_SIDLE);
-	//cc1101_interface_strobe(RF_SFTX);
-
 #ifdef FRAMEWORK_LOG_ENABLED // TODO more granular
 	log_print_stack_string(LOG_STACK_PHY, "Data to TX Fifo:");
 #ifdef HAL_RADIO_USE_HW_CRC
@@ -391,13 +384,10 @@ error_t hw_radio_send_packet(hw_radio_packet_t* packet, tx_packet_callback_t tx_
 	//configure_eirp(current_packet->tx_meta.tx_cfg.eirp);
 	//configure_syncword_class(current_packet->tx_meta.tx_cfg.syncword_class);
 
-	//cc1101_interface_write_burst_reg(TXFIFO, packet->data, packet->length + 1);
-	//cc1101_interface_set_interrupts_enabled(true);
 	DEBUG_TX_START();
 	DEBUG_RX_END();
 
 	ezradioStartTx(packet, (uint8_t) current_channel_id.center_freq_index, should_rx_after_tx_completed);
-	//cc1101_interface_strobe(RF_STX);
 	return SUCCESS;
 
 }
@@ -449,26 +439,16 @@ static void start_rx(hw_rx_cfg_t const* rx_cfg)
 
     //configure_channel(&(rx_cfg->channel_id));
     //configure_syncword_class(rx_cfg->syncword_class);
-    //cc1101_interface_write_single_reg(PKTLEN, 0xFF);
 
 
     ezradioStartRx((uint8_t) (current_channel_id.center_freq_index));
 
     DEBUG_RX_START();
-//    if(rx_packet_callback != 0) // when rx callback not set we ignore received packets
-//		cc1101_interface_set_interrupts_enabled(true);
 
 
     if(rssi_valid_callback != 0)
     {
     	timer_post_task_delay(&report_rssi, TIMER_TICKS_PER_SEC / 5000);
-        // TODO calculate/predict rssi response time (see DN505)
-        // and wait until valid. For now we wait 200 us.
-
-//        hw_busy_wait(200);
-////        ensure_settling_and_calibration_done();
-//        rssi_valid_callback(0);
-        //
     }
 }
 
@@ -480,7 +460,6 @@ static inline int16_t convert_rssi(uint8_t rssi_raw)
 static void ezradio_int_callback()
 {
 	DPRINT("ezradio ISR");
-	//cc1101_interface_set_interrupts_enabled(false);
 
 	ezradio_cmd_reply_t ezradioReply;
 	ezradio_cmd_reply_t radioReplyLocal;

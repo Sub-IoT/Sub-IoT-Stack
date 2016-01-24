@@ -18,7 +18,7 @@
 #
 
 
-#SET(HAL_RADIO_USE_HW_CRC "FALSE" CACHE BOOL "Enable/Disable the use of HW CRC")
+SET(HAL_RADIO_USE_HW_CRC "TRUE" CACHE BOOL "Enable/Disable the use of HW CRC")
 
 INCLUDE_DIRECTORIES(	./
 						ezradiodrv/inc)
