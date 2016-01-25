@@ -26,7 +26,6 @@
 #include <log.h>
 #include <timer.h>
 #include <hwlcd.h>
-#include <hwuart.h>
 #include <hwsystem.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -38,6 +37,8 @@
 #ifdef PLATFORM_EFM32GG_STK3700
 #include "platform_lcd.h"
 #endif
+
+#include "console.h"
 
 #define NORMAL_RATE_CHANNEL_COUNT_433 8
 #define LO_RATE_CHANNEL_COUNT_433 69
@@ -194,7 +195,7 @@ void process_command_chan()
     return;
 
     error:
-        uart_transmit_string("Error parsing CHAN command. Expected format example: '433L001'\n");
+        console_print("Error parsing CHAN command. Expected format example: '433L001'\n");
         fifo_clear(&uart_rx_fifo);
 }
 
@@ -227,7 +228,7 @@ void process_uart_rx_fifo()
         {
             char err[40];
             snprintf(err, sizeof(err), "ERROR invalid command %.4s\n", received_cmd);
-            uart_transmit_string(err);
+            console_print(err);
         }
 
         fifo_clear(&uart_rx_fifo);
@@ -279,7 +280,7 @@ void read_rssi()
     channel_id_to_string(&rx_cfg.channel_id, channel_str, sizeof(channel_str));
     lcd_write_string(channel_str);
     sprintf(str, "%7s,%i%s\n", channel_str, rssi_measurement.tick, rssi_samples_str);
-    uart_transmit_string(str);
+    console_print(str);
 
 #ifdef PLATFORM_EFM32GG_STK3700
     //lcd_all_on();
@@ -331,7 +332,7 @@ void userbutton_callback(button_id_t button_id)
 }
 #endif
 
-void uart_rx_cb(char data)
+void uart_rx_cb(uint8_t data)
 {
     error_t err;
     err = fifo_put(&uart_rx_fifo, &data, 1); assert(err == SUCCESS);
@@ -358,7 +359,7 @@ void measureTemperature()
 
 	char str[80];
 	sprintf(str, "%7s,%i,%2d.%2d\n", TEMPERATURE_TAG, tick, (temperature/10), abs(temperature%10));
-	uart_transmit_string(str);
+	console_print(str);
 }
 
 void execute_sensor_measurement()
@@ -384,8 +385,8 @@ void bootstrap()
 
     fifo_init(&uart_rx_fifo, uart_rx_buffer, sizeof(uart_rx_buffer));
 
-    uart_set_rx_interrupt_callback(&uart_rx_cb);
-    uart_rx_interrupt_enable(true);
+    console_set_rx_interrupt_callback(&uart_rx_cb);
+    console_rx_interrupt_enable(true);
 
     sched_register_task(&read_rssi);
     sched_register_task(&start_rx);
