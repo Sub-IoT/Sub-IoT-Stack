@@ -1,30 +1,32 @@
-APP             ?= gateway
-PLATFORM        ?= EFM32GG_STK3700
+APP                    ?= gateway
+PLATFORM               ?= EFM32GG_STK3700
+FRAMEWORK_LOG_ENABLED  ?= no
+FRAMEWORK_LOG_BINARY   ?= no
 
-BUILD            = Debug
+BUILD                  ?= Debug
 
-BUILD_DIR        = ../build/$(APP)
+BUILD_DIR               = ../build/$(APP)
 
-TARGET           = $(BUILD_DIR)/apps/$(APP)/$(APP)
-BIN              = $(TARGET).bin
-ELF              = $(TARGET).elf
+TARGET                  = $(BUILD_DIR)/apps/$(APP)/$(APP)
+BIN                     = $(TARGET).bin
+ELF                     = $(TARGET).elf
 
-CMAKE            = cmake
+CMAKE                   = cmake
 
-OSS             := $(realpath stack)
-TOOLCHAIN_DIR    = ../../gcc-arm-none-eabi-4_9-2015q3
-TOOLCHAIN_FILE   = $(OSS)/cmake/toolchains/gcc-arm-embedded.cmake
-PLATFORM_UC     := $(shell echo $(PLATFORM) | tr a-z A-Z)
-PLATFORM_RADIO   = cc1101
-APP_DIR          = $(OSS)/apps/$(APP)
-APP_UC          := $(shell echo $(APP) | tr a-z A-Z)
+OSS                    := $(realpath stack)
+TOOLCHAIN_DIR           = ../../gcc-arm-none-eabi-4_9-2015q3
+TOOLCHAIN_FILE          = $(OSS)/cmake/toolchains/gcc-arm-embedded.cmake
+PLATFORM_UC            := $(shell echo $(PLATFORM) | tr a-z A-Z)
+PLATFORM_RADIO          = cc1101
+APP_DIR                 = $(OSS)/apps/$(APP)
+APP_UC                 := $(shell echo $(APP) | tr a-z A-Z)
 
-JLINK            = JLinkExe
-DEVICE           = EFM32GG230F1024
-FLASH_SCRIPT     = script.gdb
+JLINK                   = JLinkExe
+DEVICE                  = EFM32GG230F1024
+FLASH_SCRIPT            = script.gdb
 
-SIZE             = arm-none-eabi-size
-OBJCOPY          = arm-none-eabi-objcopy -O binary
+SIZE                    = arm-none-eabi-size
+OBJCOPY                 = arm-none-eabi-objcopy -O binary
 
 -include $(APP_DIR)/Makefile
 
@@ -43,8 +45,8 @@ $(BUILD_DIR):
 		 -DAPP_$(APP_UC)=on \
 		 $(APP_SPECIFIC_VARIABLE_OVERRIDES) \
 		 -DFRAMEWORK_DEBUG_ASSERT_MINIMAL=y \
-		 -DFRAMEWORK_LOG_ENABLED=y \
-		 -DFRAMEWORK_LOG_BINARY=n \
+		 -DFRAMEWORK_LOG_ENABLED=$(FRAMEWORK_LOG_ENABLED) \
+		 -DFRAMEWORK_LOG_BINARY=$(FRAMEOWRK_LOG_BINARY) \
 	)
 
 $(ELF): $(BUILD_DIR)
