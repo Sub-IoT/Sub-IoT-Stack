@@ -271,7 +271,6 @@ void uart_send_byte(uart_handle_t* uart, uint8_t data) {
   while(!(uart->channel->STATUS & (1 << 6))); // wait for TX buffer to empty
 	uart->channel->TXDATA = data;
 #endif
-#endif
 }
 
 void uart_send_bytes(uart_handle_t* uart, void const *data, size_t length) {
@@ -297,7 +296,6 @@ void uart_send_bytes(uart_handle_t* uart, void const *data, size_t length) {
 	for(uint8_t i=0; i<length; i++)	{
 		uart_send_byte(uart, ((uint8_t const*)data)[i]);
 	}
-#endif
 #endif
 }
 
