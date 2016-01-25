@@ -63,6 +63,10 @@ void packet_disassemble(packet_t* packet)
     if (packet->hw_radio_packet.rx_meta.crc_status == HW_CRC_UNAVAILABLE)
     {
 		uint16_t crc = __builtin_bswap16(crc_calculate(packet->hw_radio_packet.data, packet->hw_radio_packet.length + 1 - 2));
+		DPRINT(LOG_STACK_DLL, "CRC check RX %x%x == CALC: %x ?",
+							packet->hw_radio_packet.data[packet->hw_radio_packet.length],
+							packet->hw_radio_packet.data[packet->hw_radio_packet.length - 1 ],
+							crc);
 		if(memcmp(&crc, packet->hw_radio_packet.data + packet->hw_radio_packet.length + 1 - 2, 2) != 0)
 		{
 			DPRINT(LOG_STACK_DLL, "CRC invalid");
