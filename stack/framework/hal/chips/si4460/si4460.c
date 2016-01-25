@@ -313,9 +313,9 @@ error_t hw_radio_init(alloc_packet_callback_t alloc_packet_cb,
 	ezradioResetTRxFifo();
 
 	// configure default channel, eirp and syncword
-	//configure_channel(&current_channel_id);
-	//configure_eirp(current_eirp);
-	//configure_syncword_class(current_syncword_class);
+	configure_channel(&current_channel_id);
+	configure_eirp(current_eirp);
+	configure_syncword_class(current_syncword_class);
 
 	sched_register_task((&report_rssi));
 
