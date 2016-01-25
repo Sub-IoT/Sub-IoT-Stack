@@ -162,7 +162,7 @@ void bootstrap() {
             .control_scan_type_is_foreground = true,
             .control_csma_ca_mode = CSMA_CA_MODE_UNC,
             .control_number_of_subbands = 1,
-            .subnet = 0x05,
+            .subnet = 0x00,
             .scan_automation_period = 0,
             .transmission_timeout_period = 0xFF,
             .subbands[0] = (subband_t){
@@ -194,7 +194,6 @@ void bootstrap() {
     timer_post_task_delay(&execute_sensor_measurement, REPORTING_INTERVAL_TICKS);
 }
 
-<<<<<<< HEAD
 void debugHardfault(uint32_t *sp)
 {
     uint32_t cfsr  = SCB->CFSR;
@@ -265,12 +264,3 @@ void UsageFault_Handler(void)
 	__asm__("BKPT");
 	while(1);
 }
-
-
-
-=======
-void HardFault_Handler(void) {
-	__asm__("BKPT");
-	while(1);
-}
->>>>>>> master

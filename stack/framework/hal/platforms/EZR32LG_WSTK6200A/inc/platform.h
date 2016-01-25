@@ -49,15 +49,10 @@
  * UART DEFINITIONS *
  *******************/
 
-#define UART_ENABLED
-
-#define UART_BAUDRATE PLATFORM_EZR32LG_WSTK6200A_UART_BAUDRATE
-
-
-
-#define UART_CHANNEL        UART0
-#define UART_CLOCK          cmuClock_UART0
-#define UART_ROUTE_LOCATION UART_ROUTE_LOCATION_LOC1
+// console configuration
+#define CONSOLE_UART        PLATFORM_EZR32LG_WSTK6200A_CONSOLE_UART
+#define CONSOLE_LOCATION    PLATFORM_EZR32LG_WSTK6200A_CONSOLE_LOCATION
+#define CONSOLE_BAUDRATE    PLATFORM_EZR32LG_WSTK6200A_CONSOLE_BAUDRATE
 
 // UART0 location #1: PE0 and PE1
 #define UART_PIN_TX         E0           // PE0
@@ -68,35 +63,10 @@
  * SPI RF DEFINITIONS *
  *******************/
 
-/* SPI Channel configuration */
-//#define SPI_CHANNEL         USART0                      // SPI Channel
-//#define SPI_BAUDRATE        6000000                    // SPI Frequency
-//#define SPI_CLOCK           cmuClock_USART0             // SPI Clock
-//#define SPI_ROUTE_LOCATION  USART_ROUTE_LOCATION_LOC0   // SPI GPIO Routing
 
-/* SPI Ports and Pins for the selected route location above.
- * See the datasheet for the availiable routes and corresponding GPIOs */
-//#define SPI_PIN_MOSI        E10
-//#define SPI_PIN_MISO        E11
-//#define SPI_PIN_CLK         E12
-//#define SPI_PIN_CS          E9
-
-// si4455 PIN definitions
-//#ifdef USE_si4455
     #define si4455_GDO0_PIN A15
     #define si4455_GDO1_PIN E14
     #define si4455_SDN_PIN  E8
-//#endif
-
-//#ifdef SPI_USE_DMA
-//
-//    /* DMA Channel configuration */
-//    #define DMA_CHANNEL_TX      0
-//    #define DMA_CHANNEL_RX      1
-//    #define DMA_CHANNELS        2
-//    #define DMA_REQ_RX          DMAREQ_USART1_RXDATAV
-//    #define DMA_REQ_TX          DMAREQ_USART1_TXBL
-//#endif
 
 /*************************
  * DEBUG PIN DEFINITIONS *

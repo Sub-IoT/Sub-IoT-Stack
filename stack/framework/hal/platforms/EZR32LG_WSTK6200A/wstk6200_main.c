@@ -35,6 +35,9 @@
 #include "em_cmu.h"
 #include "em_chip.h"
 
+
+#include "console.h"
+
 void SWO_SetupForPrint(void)
 {
   /* Enable GPIO clock. */
@@ -83,9 +86,9 @@ void __platform_init()
 {
 	__ezr32lg_mcu_init();
     __gpio_init();
-    __uart_init();
     __led_init();
     __lcd_init();
+    console_init();
 
 
 
