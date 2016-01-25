@@ -24,77 +24,36 @@
  * \author maarten.weyn@uantwerpen.be
  * \author glenn.ergeerts@uantwerpen.be
  * \author daniel.vandenakker@uantwerpen.be
+ * \author contact@christophe.vg
  */
+
 
 #ifndef __UART_H__
 #define __UART_H__
 
+#include <stdlib.h>
+
 #include "types.h"
 #include "link_c.h"
 
-/*! \brief Initialise the uart port
- *
- *  This function initialised the UART port of the selected MCU. This function is NOT part of the
- *  'user' API and should only be called from the initialisation code of the specific platform
- *
- */
-__LINK_C void __uart_init();
+// expose uart_handle with unknown internals
+typedef struct uart_handle uart_handle_t;
 
-/*! \brief Transmit a single byte over the UART.
- *
- *  if another UART transfer is still in progress ( uart_tx_ready() returns true)
- *  this function call blocks until that transfer is completed.
- *
- * \param data the character to transmit
- */
-__LINK_C void uart_transmit_data(int8_t data);
+// callback handler for received byte
+typedef void (*uart_rx_inthandler_t)(uint8_t byte);
 
-/*! \brief Transmit an array of characters over the UART
- *
- * \param data 		pointer to the start of the data segment to send
- * \param length	the number of bytes to send
- */
-__LINK_C void uart_transmit_message(void const *data, size_t length);
+__LINK_C uart_handle_t* uart_init(uint8_t channel, uint32_t baudrate, uint8_t pins);
 
-/*! \brief Transmit a terminated string over the UART
- *
- * \param string    pointer to the start of the terminated string to send
- */
-__LINK_C void uart_transmit_string(char const *string);
+__LINK_C void           uart_send_byte(uart_handle_t* uart, uint8_t data);
+__LINK_C void           uart_send_bytes(uart_handle_t* uart, void const *data, size_t length);
+__LINK_C void           uart_send_string(uart_handle_t* uart, const char *string);
 
-/*! \brief Check whether the UART is ready to send a single byte
- *
- * If this function returns true, a single byte can be sent without blocking.
- * If uart_tx_ready() returns false, the uart is still busy sending the previous byte.
- *
- * \returns bool	true is the UART subsystem is not busy false otherwise
- */
-__LINK_C bool uart_tx_ready();
+__LINK_C error_t        uart_rx_interrupt_enable(uart_handle_t* uart);
+__LINK_C void           uart_rx_interrupt_disable(uart_handle_t* uart);
 
-/*! \brief RX callback function pointer prototype
- *  \param rx_data  the received byte
- */
-typedef void (*uart_rx_inthandler_t)(char rx_data);
+__LINK_C void           uart_set_rx_interrupt_callback(uart_handle_t* uart,
+                                                       uart_rx_inthandler_t rx_handler);
 
-/*! \brief Configure the callback function to be called on UART RX interrupt
- *
- * Please note this callback is executed in interrupt process and thus should return asap.
- *
- * \param cb   function pointer to the callback function to be executed
- */
-__LINK_C void uart_set_rx_interrupt_callback(uart_rx_inthandler_t cb);
-
-
-/*! \brief Enable or disable UART RX interrupt from occuring
- *
- * Enabling the interrupt requires setting the callback function using uart_set_rx_interrupt_callback() beforehand.
- *
- * \param enabled   true if interrupt should enabled, false if interrupt should not be enabled
- * \return error_t	SUCCESS if the interrupt was enabled/disables successfully
- *			EOFF if the interrupt callback has not yet been configured while enabling
- */
-__LINK_C error_t uart_rx_interrupt_enable(bool enabled);
-
-#endif // __UART_H__
+#endif
 
 /** @}*/

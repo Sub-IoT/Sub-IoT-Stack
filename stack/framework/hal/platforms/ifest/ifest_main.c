@@ -32,7 +32,7 @@ void __platform_init()
 {
     __efm32gg_mcu_init();
     __gpio_init();
-    __uart_init();
+    uart_init();
     __led_init();
 
 #ifdef USE_CC1101

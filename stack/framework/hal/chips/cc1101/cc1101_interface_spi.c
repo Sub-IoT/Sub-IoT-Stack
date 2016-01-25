@@ -33,9 +33,9 @@
 
  #include "platform.h"
 
-
 // turn on/off the debug prints
 #ifdef LOG_PHY_ENABLED
+#include "log.h"
 #define DPRINT(...) log_print_string(__VA_ARGS__)
 #else
 #define DPRINT(...)
@@ -51,14 +51,18 @@ void _cc1101_gdo_isr(pin_id_t pin_id, uint8_t event_mask)
     end_of_packet_isr_callback();
 }
 
+static spi_handle_t* spi;
+
 void _cc1101_interface_init(end_of_packet_isr_t end_of_packet_isr_cb)
 {
     end_of_packet_isr_callback = end_of_packet_isr_cb;
 
-    spi_init();
+    spi = spi_init(CC1101_SPI_USART, CC1101_SPI_BAUDRATE, 8, CC1101_SPI_LOCATION);
 
     error_t err;
     err = hw_gpio_configure_interrupt(CC1101_GDO0_PIN, &_cc1101_gdo_isr, GPIO_FALLING_EDGE); assert(err == SUCCESS);
+
+    DPRINT("CC1101 SPI initialised\r\n");
 }
 
 void _c1101_interface_set_interrupts_enabled(bool enable)
@@ -79,20 +83,20 @@ void _c1101_interface_set_interrupts_enabled(bool enable)
 
 uint8_t _c1101_interface_strobe(uint8_t strobe)
 {
-    spi_select_chip();
-    uint8_t statusByte = spi_byte(strobe & 0x3F);
-    spi_deselect_chip();
+    spi_select(CC1101_SPI_PIN_CS);
+    uint8_t statusByte = spi_exchange_byte(spi, strobe & 0x3F);
+    spi_deselect(CC1101_SPI_PIN_CS);
 
     return statusByte;
 }
 
 uint8_t _c1101_interface_reset_radio_core()
 {
-    spi_deselect_chip();
+    spi_deselect(CC1101_SPI_PIN_CS);
     hw_busy_wait(30);
-    spi_select_chip();
+    spi_select(CC1101_SPI_PIN_CS);
     hw_busy_wait(30);
-    spi_deselect_chip();
+    spi_deselect(CC1101_SPI_PIN_CS);
     hw_busy_wait(45);
 
     cc1101_interface_strobe(RF_SRES);          // Reset the Radio Core
@@ -102,10 +106,10 @@ uint8_t _c1101_interface_reset_radio_core()
 static uint8_t readreg(uint8_t addr)
 {
 
-    spi_select_chip();
-    spi_byte((addr & 0x3F) | READ_SINGLE);
-    uint8_t val = spi_byte(0); // send dummy byte to receive reply
-    spi_deselect_chip();
+    spi_select(CC1101_SPI_PIN_CS);
+    spi_exchange_byte(spi, (addr & 0x3F) | READ_SINGLE);
+    uint8_t val = spi_exchange_byte(spi, 0); // send dummy byte to receive reply
+    spi_deselect(CC1101_SPI_PIN_CS);
 
     DPRINT("READ REG 0x%02X @0x%02X", val, addr);
 
@@ -116,13 +120,13 @@ static uint8_t readstatus(uint8_t addr)
 {
     uint8_t ret, retCheck, data, data2;
     uint8_t _addr = (addr & 0x3F) | READ_BURST;
-    spi_select_chip();
-    ret = spi_byte(_addr);
-    data = spi_byte(0); // send dummy byte to receive reply
+    spi_select(CC1101_SPI_PIN_CS);
+    ret = spi_exchange_byte(spi, _addr);
+    data = spi_exchange_byte(spi, 0); // send dummy byte to receive reply
     // See CC1101's Errata for SPI read errors // TODO needed?
 //    while (true) {
-//    	retCheck = spi_byte(_addr);
-//        data2 = spi_byte(0);
+//    	retCheck = spi_exchange_byte(CC1101_SPI_USART, _addr);
+//        data2 = spi_exchange_byte(CC1101_SPI_USART, 0);
 //    	if (ret == retCheck && data == data2)
 //    		break;
 //    	else {
@@ -131,7 +135,7 @@ static uint8_t readstatus(uint8_t addr)
 //    	}
 //    }
 
-    spi_deselect_chip();
+    spi_deselect(CC1101_SPI_PIN_CS);
 
     DPRINT("READ STATUS 0x%02X @0x%02X", data, addr);
 
@@ -149,28 +153,28 @@ uint8_t _c1101_interface_read_single_reg(uint8_t addr)
 
 void _c1101_interface_write_single_reg(uint8_t addr, uint8_t value)
 {
-    spi_select_chip();
-    spi_byte((addr & 0x3F));
-    spi_byte(value);
-    spi_deselect_chip();
+    spi_select(CC1101_SPI_PIN_CS);
+    spi_exchange_byte(spi, (addr & 0x3F));
+    spi_exchange_byte(spi, value);
+    spi_deselect(CC1101_SPI_PIN_CS);
 }
 
 void _c1101_interface_read_burst_reg(uint8_t addr, uint8_t* buffer, uint8_t count)
 {
     uint8_t _addr = (addr & 0x3F) | READ_BURST;
-    spi_select_chip();
-    spi_byte(_addr);
-    spi_string( NULL, buffer, count );
-    spi_deselect_chip();
+    spi_select(CC1101_SPI_PIN_CS);
+    spi_exchange_byte(spi, _addr);
+    spi_exchange_bytes(spi,  NULL, buffer, count );
+    spi_deselect(CC1101_SPI_PIN_CS);
 }
 
 void _c1101_interface_write_burst_reg(uint8_t addr, uint8_t* buffer, uint8_t count)
 {
     uint8_t _addr = (addr & 0x3F) | WRITE_BURST;
-    spi_select_chip();
-    spi_byte(_addr);
-    spi_string( buffer, NULL, count );
-    spi_deselect_chip();
+    spi_select(CC1101_SPI_PIN_CS);
+    spi_exchange_byte(spi, _addr);
+    spi_exchange_bytes(spi,  buffer, NULL, count );
+    spi_deselect(CC1101_SPI_PIN_CS);
 }
 
 void _c1101_interface_write_single_patable(uint8_t value)

@@ -19,6 +19,7 @@
 /*
  * \author	glenn.ergeerts@uantwerpen.be
  * \author  maarten.weyn@uantwerpen.be
+ * \author  contact@christophe.vg
  */
 
 
@@ -29,7 +30,6 @@
 #include "hwleds.h"
 #include "log.h"
 #include "random.h"
-
 
 #include "d7ap_stack.h"
 #include "dll.h"
@@ -57,106 +57,104 @@
 	#endif
 #endif
 
-#define SENSOR_FILE_ID 0x40
-#define SENSOR_FILE_SIZE 4
-#define ACTION_FILE_ID 0x41
+#define SENSOR_FILE_ID           0x40
+#define SENSOR_FILE_SIZE         4
+#define ACTION_FILE_ID           0x41
 
-static d7asp_init_args_t d7asp_init_args;
+#define REPORTING_INTERVAL       5 // seconds
+#define REPORTING_INTERVAL_TICKS TIMER_TICKS_PER_SEC * REPORTING_INTERVAL
 
-void start_foreground_scan()
-{
-    // TODO we start FG scan manually now, later it should be started by access profile automatically
-    dll_start_foreground_scan();
-}
-
-void execute_sensor_measurement()
-{
+void execute_sensor_measurement() {
 #if HW_NUM_LEDS > 1
     led_toggle(1);
 #endif
     // use the counter value for now instead of 'real' sensor
     uint32_t val = timer_get_counter_value();
-    fs_write_file(0x40, 0, (uint8_t*)&val, 4); // File 0x40 is configured to use D7AActP trigger an ALP action which broadcasts this file data on Access Class 0
-    timer_post_task_delay(&execute_sensor_measurement, TIMER_TICKS_PER_SEC * 5);
-
+    // file 0x40 is configured to use D7AActP trigger an ALP action which 
+    // broadcasts this file data on Access Class 0
+    fs_write_file(0x40, 0, (uint8_t*)&val, 4);
+    timer_post_task_delay(&execute_sensor_measurement, REPORTING_INTERVAL_TICKS);
 }
 
-void on_unsollicited_response_received(d7asp_result_t d7asp_result, uint8_t *alp_command, uint8_t alp_command_size, hw_rx_metadata_t* rx_meta)
+void on_unsollicited_response_received(d7asp_result_t d7asp_result,
+                                      uint8_t *alp_command, uint8_t alp_command_size,
+                                      hw_rx_metadata_t* rx_meta)
 {
 	DPRINT("Received unsolicited response\n");
 }
 
-void init_user_files()
-{
-    // file 0x40: contains our sensor data + configure an action file to be executed upon write
+void init_user_files() {
+    // file 0x40: contains our sensor data + configure an action file to be 
+    // executed upon write
     fs_file_header_t file_header = (fs_file_header_t){
-        .file_properties.action_protocol_enabled = 1,
-        .file_properties.action_file_id = ACTION_FILE_ID,
-        .file_properties.action_condition = ALP_ACT_COND_WRITE,
-        .file_properties.storage_class = FS_STORAGE_VOLATILE,
-        .file_properties.permissions = 0, // TODO
+        .file_properties.action_protocol_enabled  = 1,
+        .file_properties.action_file_id           = ACTION_FILE_ID,
+        .file_properties.action_condition         = ALP_ACT_COND_WRITE,
+        .file_properties.storage_class            = FS_STORAGE_VOLATILE,
+        .file_properties.permissions              = 0, // TODO
         .length = SENSOR_FILE_SIZE
     };
 
     fs_init_file(SENSOR_FILE_ID, &file_header, NULL);
 
-    // configure file notification using D7AActP: write ALP command to broadcast changes made to file 0x40 in file 0x41
-    // first generate ALP command consisting of ALP Control header, ALP File Data Request operand and D7ASP interface configuration
+    // configure file notification using D7AActP: write ALP command to 
+    // broadcast changes made to file 0x40 in file 0x41
+    // first generate ALP command consisting of ALP Control header, ALP File 
+    // Data Request operand and D7ASP interface configuration
     alp_control_t alp_ctrl = {
-        .group = false,
-        .response_requested = false,
-        .operation = ALP_OP_READ_FILE_DATA
+        .group                            = false,
+        .response_requested               = false,
+        .operation                        = ALP_OP_READ_FILE_DATA
     };
 
     alp_operand_file_data_request_t file_data_request_operand = {
         .file_offset = {
-            .file_id = SENSOR_FILE_ID,
-            .offset = 0
+            .file_id                      = SENSOR_FILE_ID,
+            .offset                       = 0
         },
-        .requested_data_length = SENSOR_FILE_SIZE,
+        .requested_data_length            = SENSOR_FILE_SIZE,
     };
 
     d7asp_fifo_config_t d7asp_fifo_config = {
-        .fifo_ctrl_nls = false,
-        .fifo_ctrl_stop_on_error = false,
-        .fifo_ctrl_preferred = false,
-        .fifo_ctrl_state = SESSION_STATE_PENDING,
+        .fifo_ctrl_nls                    = false,
+        .fifo_ctrl_stop_on_error          = false,
+        .fifo_ctrl_preferred              = false,
+        .fifo_ctrl_state                  = SESSION_STATE_PENDING,
         .qos = {
-            .qos_ctrl_resp_mode = SESSION_RESP_MODE_ANYCAST,
-            .qos_ctrl_ack_not_void = false,
-            .qos_ack_period = 1,
-            .qos_retry_single = 3,
-            .qos_retry_total = 0
+            .qos_ctrl_resp_mode           = SESSION_RESP_MODE_ANYCAST,
+            .qos_ctrl_ack_not_void        = false,
+            .qos_ack_period               = 1,
+            .qos_retry_single             = 3,
+            .qos_retry_total              = 0
         },
-        .dormant_timeout = 0,
-        .start_id = 0, // TODO
+        .dormant_timeout                  = 0,
+        .start_id                         = 0, // TODO
         .addressee = {
-            .addressee_ctrl_has_id = false,
-            .addressee_ctrl_virtual_id = false,
-            .addressee_ctrl_access_class = 0,
-            .addressee_id = 0
+            .addressee_ctrl_has_id        = false,
+            .addressee_ctrl_virtual_id    = false,
+            .addressee_ctrl_access_class  = 0,
+            .addressee_id                 = 0
         }
     };
 
     // finally, register D7AActP file
-    fs_init_file_with_D7AActP(ACTION_FILE_ID, &d7asp_fifo_config, &alp_ctrl, (uint8_t*)&file_data_request_operand);
+    fs_init_file_with_D7AActP(ACTION_FILE_ID, &d7asp_fifo_config, &alp_ctrl,
+                              (uint8_t*)&file_data_request_operand);
 }
 
-void on_d7asp_fifo_flush_completed(uint8_t fifo_token, uint8_t* progress_bitmap, uint8_t* success_bitmap, uint8_t bitmap_byte_count)
+void on_d7asp_fifo_flush_completed(uint8_t fifo_token, uint8_t* progress_bitmap,
+                                   uint8_t* success_bitmap, uint8_t bitmap_byte_count)
 {
-    if(memcmp(success_bitmap, progress_bitmap, bitmap_byte_count) == 0)
-    {
-        DPRINT("All requests acknowledged\n");
-    }
-    else
-    {
-        DPRINT("Not all requests acknowledged\n");
+    if(memcmp(success_bitmap, progress_bitmap, bitmap_byte_count) == 0) {
+        DPRINT("All requests acknowledged");
+    } else {
+        DPRINT("Not all requests acknowledged");
     }
 }
 
+static d7asp_init_args_t d7asp_init_args;
 
-void bootstrap()
-{
+void bootstrap() {
     DPRINT("Device booted at time: %d\n", timer_get_counter_value());
 
     dae_access_profile_t access_classes[1] = {
@@ -192,13 +190,11 @@ void bootstrap()
 
     d7ap_stack_init(&fs_init_args, &d7asp_init_args, false);
 
-//    sched_register_task(&start_foreground_scan);
-//    sched_post_task(&start_foreground_scan);
-
     sched_register_task((&execute_sensor_measurement));
-    timer_post_task_delay(&execute_sensor_measurement, TIMER_TICKS_PER_SEC * 5);
+    timer_post_task_delay(&execute_sensor_measurement, REPORTING_INTERVAL_TICKS);
 }
 
+<<<<<<< HEAD
 void debugHardfault(uint32_t *sp)
 {
     uint32_t cfsr  = SCB->CFSR;
@@ -272,3 +268,9 @@ void UsageFault_Handler(void)
 
 
 
+=======
+void HardFault_Handler(void) {
+	__asm__("BKPT");
+	while(1);
+}
+>>>>>>> master
