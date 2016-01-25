@@ -56,7 +56,6 @@
 #define DPRINT(...)
 #endif
 
-// TODO document commands
 #define COMMAND_SIZE 4
 #define UART_RX_BUFFER_SIZE 20
 #define COMMAND_CHAN "CHAN"
@@ -455,7 +454,8 @@ void bootstrap() {
     console_print("               r   rate      : L(ow) N(ormal) H(igh)\r\n");
     console_print("               iii center_freq_index\r\n");
     console_print("  TRANsss      transmit a packet every sss seconds.\r\n");
-    console_print("  RECV\r\n");
+    console_print("  RECV         receive packets\r\n");
+    console_print("  RSET         reset module\r\n");
 #endif
 
     id = hw_get_unique_id();
