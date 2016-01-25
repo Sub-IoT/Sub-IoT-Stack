@@ -119,7 +119,7 @@ __LINK_C void log_print_raw_phy_packet(hw_radio_packet_t* packet, bool is_tx)
 
         console_print_byte(LOG_TYPE_PHY_PACKET_TX);
 
-        console_print_bytes(&(packet->tx_meta.timestamp), sizeof(timer_tick_t));
+        console_print_bytes((uint8_t*)&(packet->tx_meta.timestamp), sizeof(timer_tick_t));
 
         console_print_byte(packet->tx_meta.tx_cfg.channel_id.channel_header_raw);
 
@@ -133,12 +133,12 @@ __LINK_C void log_print_raw_phy_packet(hw_radio_packet_t* packet, bool is_tx)
 
     } else {
         console_print_byte(LOG_TYPE_PHY_PACKET_RX);
-        console_print_bytes(&(packet->rx_meta.timestamp), sizeof(timer_tick_t));
+        console_print_bytes((uint8_t*)&(packet->rx_meta.timestamp), sizeof(timer_tick_t));
         console_print_byte(packet->rx_meta.rx_cfg.channel_id.channel_header_raw);
         console_print_byte(packet->rx_meta.rx_cfg.channel_id.center_freq_index);
         console_print_byte(packet->rx_meta.rx_cfg.syncword_class);
         console_print_byte(packet->rx_meta.lqi);
-        console_print_bytes(&(packet->rx_meta.rssi), sizeof(int16_t));
+        console_print_bytes((uint8_t*)&(packet->rx_meta.rssi), sizeof(int16_t));
         // TODO CRC?
         console_print_bytes(packet->data, packet->length+1);
     }
