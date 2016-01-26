@@ -151,9 +151,15 @@ spi_handle_t* spi_init(uint8_t idx, uint32_t baudrate, uint8_t databits,
   USART_InitSync(handle[idx].channel, &usartInit);
   USART_Enable  (handle[idx].channel, usartEnable);
 
-  assert( hw_gpio_configure_pin(handle[idx].pins->mosi, false, gpioModePushPull, 0) == SUCCESS);
-  assert( hw_gpio_configure_pin(handle[idx].pins->miso, false, gpioModeInput,    0) == SUCCESS);
-  assert( hw_gpio_configure_pin(handle[idx].pins->clk,  false, gpioModePushPull, 0) == SUCCESS);
+  error_t err;
+  err = hw_gpio_configure_pin(handle[idx].pins->mosi, false, gpioModePushPull, 0);
+  assert(err == SUCCESS || err == EALREADY);
+  
+  err = hw_gpio_configure_pin(handle[idx].pins->miso, false, gpioModeInput,    0);
+  assert(err == SUCCESS || err == EALREADY);
+  
+  err = hw_gpio_configure_pin(handle[idx].pins->clk,  false, gpioModePushPull, 0);
+  assert(err == SUCCESS || err == EALREADY);
 
   handle[idx].channel->ROUTE = USART_ROUTE_TXPEN
                              | USART_ROUTE_RXPEN
@@ -164,7 +170,8 @@ spi_handle_t* spi_init(uint8_t idx, uint32_t baudrate, uint8_t databits,
 }
 
 void spi_init_slave(pin_id_t slave) {
-  assert( hw_gpio_configure_pin(slave, false, gpioModePushPull, 1) == SUCCESS);
+  error_t err = hw_gpio_configure_pin(slave, false, gpioModePushPull, 1);
+  assert(err == SUCCESS || err == EALREADY);
 }
 
 void spi_select(pin_id_t slave) {
