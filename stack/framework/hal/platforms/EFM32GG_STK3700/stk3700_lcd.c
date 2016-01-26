@@ -28,6 +28,12 @@
 #include "segmentlcd.h"
 #include "segmentlcdconfig.h"
 #include <debug.h>
+#include "ng.h"
+#include <stdarg.h>
+#include <stdio.h>
+
+#define BUFFER_SIZE 12
+static char NGDEF(buffer)[BUFFER_SIZE];
 
 void __lcd_init()
 {
@@ -47,9 +53,13 @@ void lcd_all_on()
 	SegmentLCD_AllOn();
 }
 
-void lcd_write_string(const char* text)
+void lcd_write_string(char* format, ...)
 {
-	SegmentLCD_Write(text);
+	va_list args;
+	va_start(args, format);
+	uint8_t len = vsnprintf(NG(buffer), BUFFER_SIZE, format, args);
+	va_end(args);
+	SegmentLCD_Write(NG(buffer));
 }
 
 void lcd_write_number(int value)

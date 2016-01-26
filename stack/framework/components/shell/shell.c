@@ -19,8 +19,8 @@
 /*!
  * \file shell.c
  * \author glenn.ergeerts@uantwerpen.be
+ * \author contact@christophe.vg
  */
-
 
 #include "shell.h"
 
@@ -36,6 +36,9 @@
 #include "hwsystem.h"
 #include "debug.h"
 
+#include "console.h"
+
+#include "platform.h"
 
 static uint8_t cmd_buffer[CMD_BUFFER_SIZE] = { 0 };
 static fifo_t cmd_fifo;
@@ -62,7 +65,12 @@ static cmd_handler_t get_cmd_handler_callback(int8_t id)
             return cmd_handler_registrations[i].cmd_handler_callback;
     }
 
-    assert(false);
+    console_printf("ERROR: unknown command handler %d\r\n", id);
+    console_print(" possible ids are: ");
+    for(uint8_t i = 0; i < CMD_HANDLER_REGISTRATIONS_COUNT; i++) {
+      console_printf("%d:%d ", i, cmd_handler_registrations[i].id);
+    }
+    console_print("\r\n");
 }
 
 // TODO doc
@@ -102,8 +110,14 @@ static void process_cmd_fifo()
     }
 }
 
-static void uart_rx_cb(char data)
+static bool echo = false;
+
+static void uart_rx_cb(uint8_t data)
 {
+    if( echo ) {
+      console_print_byte(data);
+      if( data == '\r' ) { console_print_byte('\n'); }
+    }
     error_t err;
     err = fifo_put(&cmd_fifo, &data, 1); assert(err == SUCCESS);
     if(!sched_is_scheduled(&process_cmd_fifo))
@@ -120,10 +134,18 @@ void shell_init()
 
     fifo_init(&cmd_fifo, cmd_buffer, sizeof(cmd_buffer));
 
-    uart_set_rx_interrupt_callback(&uart_rx_cb);
-    uart_rx_interrupt_enable(true);
+    console_set_rx_interrupt_callback(&uart_rx_cb);
+    console_rx_interrupt_enable();
 
     sched_register_task(&process_cmd_fifo);
+}
+
+void shell_echo_enable() {
+  echo = true;
+}
+
+void shell_echo_disable() {
+  echo = false;
 }
 
 void shell_register_handler(cmd_handler_registration_t handler_registration)
@@ -149,9 +171,7 @@ void shell_register_handler(cmd_handler_registration_t handler_registration)
 
 void shell_return_output(shell_cmd_handler_id_t origin, uint8_t *data, uint8_t length)
 {
-    // TODO queue and shedule a task to do the actual transmit
-    uart_transmit_data(origin);
-    uart_transmit_message(data, length);
+    console_print_byte(origin);
+    console_print_bytes(data, length);
 }
-
 #endif

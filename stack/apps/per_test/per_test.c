@@ -20,24 +20,27 @@
  *  Created on: Jun 16, 2015
  *  Authors:
  *  	glenn.ergeerts@uantwerpen.be
+ *    contact@christophe.vg
  */
-
 
 #include <string.h>
 #include <stdio.h>
 #include <stdint.h>
 #include <stdlib.h>
-#include <hwleds.h>
-#include <hwradio.h>
-#include <hwsystem.h>
-#include <hwuart.h>
-#include <log.h>
-#include <crc.h>
-#include <debug.h>
+
+#include "hwleds.h"
+#include "hwradio.h"
+#include "hwsystem.h"
 #include "hwlcd.h"
+
+#include "crc.h"
+#include "debug.h"
+
 #include "platform_lcd.h"
 #include "userbutton.h"
 #include "fifo.h"
+
+#include "console.h"
 
 #ifndef PLATFORM_EFM32GG_STK3700
     #error "assuming STK3700 for now"
@@ -47,12 +50,12 @@
 #define PACKET_SIZE 16
 
 #ifdef FRAMEWORK_LOG_ENABLED
+#include "log.h"
 #define DPRINT(...) log_print_string(__VA_ARGS__)
 #else
 #define DPRINT(...)
 #endif
 
-// TODO document commands
 #define COMMAND_SIZE 4
 #define UART_RX_BUFFER_SIZE 20
 #define COMMAND_CHAN "CHAN"
@@ -61,7 +64,6 @@
 #define COMMAND_TRAN_PARAM_SIZE 3
 #define COMMAND_RECV "RECV"
 #define COMMAND_RSET "RSET"
-
 
 static uint8_t uart_rx_buffer[UART_RX_BUFFER_SIZE] = { 0 };
 static fifo_t uart_rx_fifo;
@@ -111,15 +113,13 @@ static void packet_received(hw_radio_packet_t* packet);
 static void packet_transmitted(hw_radio_packet_t* packet);
 static void start();
 
-static void start_rx()
-{
+static void start_rx() {
     DPRINT("start RX");
     current_state = STATE_RUNNING;
     hw_radio_set_rx(&rx_cfg, &packet_received, NULL);
 }
 
-static void transmit_packet()
-{
+static void transmit_packet() {
     DPRINT("transmitting packet");
     current_state = STATE_RUNNING;
     counter++;
@@ -133,19 +133,16 @@ static void transmit_packet()
     hw_radio_send_packet(tx_packet, &packet_transmitted);
 }
 
-static hw_radio_packet_t* alloc_new_packet(uint8_t length)
-{
+static hw_radio_packet_t* alloc_new_packet(uint8_t length) {
     return rx_packet;
 }
 
-static void release_packet(hw_radio_packet_t* packet)
-{
+static void release_packet(hw_radio_packet_t* packet) {
     memset(rx_buffer, 0, sizeof(hw_radio_packet_t) + 255);
 }
 
 // TODO code duplication with noise_test, refactor later
-static void channel_id_to_string(channel_id_t* channel, char* str, size_t len)
-{
+static void channel_id_to_string(channel_id_t* channel, char* str, size_t len) {
     char rate;
     char band[3];
     switch(channel->channel_header.ch_class)
@@ -165,8 +162,7 @@ static void channel_id_to_string(channel_id_t* channel, char* str, size_t len)
     snprintf(str, len, "%.3s%c%03i", band, rate, channel->center_freq_index);
 }
 
-static void packet_received(hw_radio_packet_t* packet)
-{
+static void packet_received(hw_radio_packet_t* packet) {
     uint16_t crc = __builtin_bswap16(crc_calculate(packet->data, packet->length - 2));
     if(memcmp(&crc, packet->data + packet->length + 1 - 2, 2) != 0)
     {
@@ -184,8 +180,8 @@ static void packet_received(hw_radio_packet_t* packet)
         memcpy(&msg_counter, packet->data + 1 + sizeof(msg_id), sizeof(msg_counter));
         char chan[8];
         channel_id_to_string(&(packet->rx_meta.rx_cfg.channel_id), chan, sizeof(chan));
-        sprintf(record, "%7s,%i,%i,%lu,%lu,%i\n", chan, msg_counter, packet->rx_meta.rssi, (unsigned long)msg_id, (unsigned long)id, packet->rx_meta.timestamp);
-		uart_transmit_message(record, strlen(record));
+        console_printf("%7s,%i,%i,%lu,%lu,%i\n", chan, msg_counter, packet->rx_meta.rssi, (unsigned long)msg_id, (unsigned long)id, packet->rx_meta.timestamp);
+    
 
 		if(counter == 0)
 		{
@@ -219,8 +215,7 @@ static void packet_received(hw_radio_packet_t* packet)
     }
 }
 
-static void packet_transmitted(hw_radio_packet_t* packet)
-{
+static void packet_transmitted(hw_radio_packet_t* packet) {
 #if HW_NUM_LEDS > 0
     led_toggle(0);
 #endif
@@ -237,19 +232,18 @@ static void packet_transmitted(hw_radio_packet_t* packet)
     timer_post_task(&transmit_packet, delay);
 }
 
-static void stop()
-{
-    // make sure to cancel tasks which might me pending already
-    hw_radio_set_idle();
+static void stop() {
+  // make sure to cancel tasks which might me pending already
+  hw_radio_set_idle();
 
-	if(is_mode_rx)
+	if(is_mode_rx) {
 		sched_cancel_task(&start_rx);
-	else
+  }	else {
 		sched_cancel_task(&transmit_packet);
+  }
 }
 
-static void start()
-{
+static void start() {
     counter = 0;
     missed_packets_counter = 0;
     received_packets_counter = 0;
@@ -278,8 +272,7 @@ static void start()
             {
                 sprintf(lcd_msg, "RUN RX");
                 lcd_write_string(lcd_msg);
-                sprintf(record, "%s,%s,%s,%s,%s,%s\n", "channel_id", "counter", "rssi", "tx_id", "rx_id", "timestamp");
-                uart_transmit_message(record, strlen(record));
+                console_printf("%s,%s,%s,%s,%s,%s\n", "channel_id", "counter", "rssi", "tx_id", "rx_id", "timestamp");
                 rx_cfg.channel_id = current_channel_id;
                 timer_post_task(&start_rx, TIMER_TICKS_PER_SEC * 5);
             }
@@ -384,13 +377,13 @@ static void process_command_chan()
 
     char str[20];
     channel_id_to_string(&current_channel_id, str, sizeof(str));
-    uart_transmit_string(str);
+    console_print(str);
     // change channel and restart
     // TODOsched_post_task(&start_rx);
     return;
 
     error:
-        uart_transmit_string("Error parsing CHAN command. Expected format example: '433L001'\n");
+        console_print("Error parsing CHAN command. Expected format example: '433L001'\n");
         fifo_clear(&uart_rx_fifo);
 }
 
@@ -411,6 +404,8 @@ static void process_uart_rx_fifo()
             char param[COMMAND_TRAN_PARAM_SIZE];
             fifo_pop(&uart_rx_fifo, param, COMMAND_TRAN_PARAM_SIZE);
             tx_packet_delay_s = atoi(param);
+            DPRINT("performing TRAN command with %d tx_packet_delay_s\r\n",
+                   tx_packet_delay_s);
 
             stop();
             is_mode_rx = false;
@@ -419,6 +414,7 @@ static void process_uart_rx_fifo()
         }
         else if(strncmp(received_cmd, COMMAND_RECV, COMMAND_SIZE) == 0)
         {
+            DPRINT("entering RECV mode\r\n");
             stop();
             is_mode_rx = true;
             current_state = STATE_RUNNING;
@@ -426,13 +422,13 @@ static void process_uart_rx_fifo()
         }
         else if(strncmp(received_cmd, COMMAND_RSET, COMMAND_SIZE) == 0)
         {
+            DPRINT("resetting...\r\n");
             hw_reset();
         }
         else
         {
             char err[40];
-            snprintf(err, sizeof(err), "ERROR invalid command %.4s\n", received_cmd);
-            uart_transmit_string(err);
+            DPRINT("ERROR invalid command %.4s\n\r", received_cmd);
         }
 
         fifo_clear(&uart_rx_fifo);
@@ -441,16 +437,27 @@ static void process_uart_rx_fifo()
     timer_post_task_delay(&process_uart_rx_fifo, TIMER_TICKS_PER_SEC);
 }
 
-static void uart_rx_cb(char data)
-{
+static void uart_rx_cb(uint8_t data) {
     error_t err;
     err = fifo_put(&uart_rx_fifo, &data, 1); assert(err == SUCCESS);
+    console_print_byte(data); // echo
     // fifo will be parsed periodically by process_uart_rx_fifo() task
 }
 
-void bootstrap()
-{
-    DPRINT("Device booted at time: %d\n", timer_get_counter_value()); // TODO not printed for some reason, debug later
+void bootstrap() {
+    DPRINT("Device booted at time: %d\n", timer_get_counter_value());
+
+#ifndef FRAMEWORK_LOG_BINARY
+    console_print("\r\nPER TEST - commands:\r\n");
+    console_print("  CHANfffriii  channel settings:\r\n");
+    console_print("               fff frequency : 433, 868, 915\r\n");
+    console_print("               r   rate      : L(ow) N(ormal) H(igh)\r\n");
+    console_print("               iii center_freq_index\r\n");
+    console_print("  TRANsss      transmit a packet every sss seconds.\r\n");
+    console_print("  RECV         receive packets\r\n");
+    console_print("  RSET         reset module\r\n");
+#endif
+
     id = hw_get_unique_id();
     hw_radio_init(&alloc_new_packet, &release_packet);
 
@@ -462,8 +469,8 @@ void bootstrap()
 
     fifo_init(&uart_rx_fifo, uart_rx_buffer, sizeof(uart_rx_buffer));
 
-    uart_set_rx_interrupt_callback(&uart_rx_cb);
-    uart_rx_interrupt_enable(true);
+    console_set_rx_interrupt_callback(&uart_rx_cb);
+    console_rx_interrupt_enable();
 
     sched_register_task(&start_rx);
     sched_register_task(&transmit_packet);

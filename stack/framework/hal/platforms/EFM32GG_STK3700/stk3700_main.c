@@ -32,21 +32,21 @@
 #include "em_gpio.h"
 #include <debug.h>
 
+#include "console.h"
+
 void __platform_init()
 {
     __efm32gg_mcu_init();
     __gpio_init();
-    __uart_init();
-    __led_init();
+    // __led_init();    // uses ports assigned to USART1
     __lcd_init();
+    console_init();
 
 #ifdef USE_CC1101
-    //TODO: add calls to hw_gpio_configure_pin for the pins used by the CC1101 driver
-    //(and possibly the spi interface)
-
-    // configure the interrupt pins here, since hw_gpio_configure_pin() is MCU specific and not part of the common HAL API
-    hw_gpio_configure_pin(CC1101_GDO0_PIN, true, gpioModeInput, 0); // TODO pull up or pull down to prevent floating
-    //hw_gpio_configure_pin(CC1101_GDO2_PIN, true, gpioModeInput, 0) // TODO pull up or pull down to prevent floating // TODO not used for now
+    // configure the interrupt pins here, since hw_gpio_configure_pin() is MCU
+    // specific and not part of the common HAL API
+    hw_gpio_configure_pin(CC1101_GDO0_PIN, true, gpioModeInput, 0);
+    hw_gpio_configure_pin(CC1101_SPI_PIN_CS, false, gpioModePushPull, 1);
 #endif
     __hw_debug_init();
 
@@ -69,6 +69,9 @@ void __platform_post_framework_init()
 
 int main()
 {
+    // Only when using bootloader
+	//SCB->VTOR=0x4000;
+
     //initialise the platform itself
 	__platform_init();
     //do not initialise the scheduler, this is done by __framework_bootstrap()

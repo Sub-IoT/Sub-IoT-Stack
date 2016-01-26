@@ -2,10 +2,10 @@
  * @file efm32hg110f32.h
  * @brief CMSIS Cortex-M Peripheral Access Layer Header File
  *        for EFM32HG110F32
- * @version 3.20.13
+ * @version 4.2.1
  ******************************************************************************
  * @section License
- * <b>(C) Copyright 2015 Silicon Laboratories, Inc. http://www.silabs.com</b>
+ * <b>Copyright 2015 Silicon Laboratories, Inc. http://www.silabs.com</b>
  ******************************************************************************
  *
  * Permission is granted to anyone to use this software for any purpose,
@@ -31,8 +31,8 @@
  *
  *****************************************************************************/
 
-#ifndef __SILICON_LABS_EFM32HG110F32_H__
-#define __SILICON_LABS_EFM32HG110F32_H__
+#ifndef EFM32HG110F32_H
+#define EFM32HG110F32_H
 
 #ifdef __cplusplus
 extern "C" {
@@ -919,83 +919,103 @@ typedef struct
 #define CMU_LFCLKSEL_LFBE_ULFRCO                    (_CMU_LFCLKSEL_LFBE_ULFRCO << 20)        /**< Shifted mode ULFRCO for CMU_LFCLKSEL */
 
 /* Bit fields for CMU STATUS */
-#define _CMU_STATUS_RESETVALUE                      0x00000403UL                           /**< Default value for CMU_STATUS */
-#define _CMU_STATUS_MASK                            0x00007FFFUL                           /**< Mask for CMU_STATUS */
-#define CMU_STATUS_HFRCOENS                         (0x1UL << 0)                           /**< HFRCO Enable Status */
-#define _CMU_STATUS_HFRCOENS_SHIFT                  0                                      /**< Shift value for CMU_HFRCOENS */
-#define _CMU_STATUS_HFRCOENS_MASK                   0x1UL                                  /**< Bit mask for CMU_HFRCOENS */
-#define _CMU_STATUS_HFRCOENS_DEFAULT                0x00000001UL                           /**< Mode DEFAULT for CMU_STATUS */
-#define CMU_STATUS_HFRCOENS_DEFAULT                 (_CMU_STATUS_HFRCOENS_DEFAULT << 0)    /**< Shifted mode DEFAULT for CMU_STATUS */
-#define CMU_STATUS_HFRCORDY                         (0x1UL << 1)                           /**< HFRCO Ready */
-#define _CMU_STATUS_HFRCORDY_SHIFT                  1                                      /**< Shift value for CMU_HFRCORDY */
-#define _CMU_STATUS_HFRCORDY_MASK                   0x2UL                                  /**< Bit mask for CMU_HFRCORDY */
-#define _CMU_STATUS_HFRCORDY_DEFAULT                0x00000001UL                           /**< Mode DEFAULT for CMU_STATUS */
-#define CMU_STATUS_HFRCORDY_DEFAULT                 (_CMU_STATUS_HFRCORDY_DEFAULT << 1)    /**< Shifted mode DEFAULT for CMU_STATUS */
-#define CMU_STATUS_HFXOENS                          (0x1UL << 2)                           /**< HFXO Enable Status */
-#define _CMU_STATUS_HFXOENS_SHIFT                   2                                      /**< Shift value for CMU_HFXOENS */
-#define _CMU_STATUS_HFXOENS_MASK                    0x4UL                                  /**< Bit mask for CMU_HFXOENS */
-#define _CMU_STATUS_HFXOENS_DEFAULT                 0x00000000UL                           /**< Mode DEFAULT for CMU_STATUS */
-#define CMU_STATUS_HFXOENS_DEFAULT                  (_CMU_STATUS_HFXOENS_DEFAULT << 2)     /**< Shifted mode DEFAULT for CMU_STATUS */
-#define CMU_STATUS_HFXORDY                          (0x1UL << 3)                           /**< HFXO Ready */
-#define _CMU_STATUS_HFXORDY_SHIFT                   3                                      /**< Shift value for CMU_HFXORDY */
-#define _CMU_STATUS_HFXORDY_MASK                    0x8UL                                  /**< Bit mask for CMU_HFXORDY */
-#define _CMU_STATUS_HFXORDY_DEFAULT                 0x00000000UL                           /**< Mode DEFAULT for CMU_STATUS */
-#define CMU_STATUS_HFXORDY_DEFAULT                  (_CMU_STATUS_HFXORDY_DEFAULT << 3)     /**< Shifted mode DEFAULT for CMU_STATUS */
-#define CMU_STATUS_AUXHFRCOENS                      (0x1UL << 4)                           /**< AUXHFRCO Enable Status */
-#define _CMU_STATUS_AUXHFRCOENS_SHIFT               4                                      /**< Shift value for CMU_AUXHFRCOENS */
-#define _CMU_STATUS_AUXHFRCOENS_MASK                0x10UL                                 /**< Bit mask for CMU_AUXHFRCOENS */
-#define _CMU_STATUS_AUXHFRCOENS_DEFAULT             0x00000000UL                           /**< Mode DEFAULT for CMU_STATUS */
-#define CMU_STATUS_AUXHFRCOENS_DEFAULT              (_CMU_STATUS_AUXHFRCOENS_DEFAULT << 4) /**< Shifted mode DEFAULT for CMU_STATUS */
-#define CMU_STATUS_AUXHFRCORDY                      (0x1UL << 5)                           /**< AUXHFRCO Ready */
-#define _CMU_STATUS_AUXHFRCORDY_SHIFT               5                                      /**< Shift value for CMU_AUXHFRCORDY */
-#define _CMU_STATUS_AUXHFRCORDY_MASK                0x20UL                                 /**< Bit mask for CMU_AUXHFRCORDY */
-#define _CMU_STATUS_AUXHFRCORDY_DEFAULT             0x00000000UL                           /**< Mode DEFAULT for CMU_STATUS */
-#define CMU_STATUS_AUXHFRCORDY_DEFAULT              (_CMU_STATUS_AUXHFRCORDY_DEFAULT << 5) /**< Shifted mode DEFAULT for CMU_STATUS */
-#define CMU_STATUS_LFRCOENS                         (0x1UL << 6)                           /**< LFRCO Enable Status */
-#define _CMU_STATUS_LFRCOENS_SHIFT                  6                                      /**< Shift value for CMU_LFRCOENS */
-#define _CMU_STATUS_LFRCOENS_MASK                   0x40UL                                 /**< Bit mask for CMU_LFRCOENS */
-#define _CMU_STATUS_LFRCOENS_DEFAULT                0x00000000UL                           /**< Mode DEFAULT for CMU_STATUS */
-#define CMU_STATUS_LFRCOENS_DEFAULT                 (_CMU_STATUS_LFRCOENS_DEFAULT << 6)    /**< Shifted mode DEFAULT for CMU_STATUS */
-#define CMU_STATUS_LFRCORDY                         (0x1UL << 7)                           /**< LFRCO Ready */
-#define _CMU_STATUS_LFRCORDY_SHIFT                  7                                      /**< Shift value for CMU_LFRCORDY */
-#define _CMU_STATUS_LFRCORDY_MASK                   0x80UL                                 /**< Bit mask for CMU_LFRCORDY */
-#define _CMU_STATUS_LFRCORDY_DEFAULT                0x00000000UL                           /**< Mode DEFAULT for CMU_STATUS */
-#define CMU_STATUS_LFRCORDY_DEFAULT                 (_CMU_STATUS_LFRCORDY_DEFAULT << 7)    /**< Shifted mode DEFAULT for CMU_STATUS */
-#define CMU_STATUS_LFXOENS                          (0x1UL << 8)                           /**< LFXO Enable Status */
-#define _CMU_STATUS_LFXOENS_SHIFT                   8                                      /**< Shift value for CMU_LFXOENS */
-#define _CMU_STATUS_LFXOENS_MASK                    0x100UL                                /**< Bit mask for CMU_LFXOENS */
-#define _CMU_STATUS_LFXOENS_DEFAULT                 0x00000000UL                           /**< Mode DEFAULT for CMU_STATUS */
-#define CMU_STATUS_LFXOENS_DEFAULT                  (_CMU_STATUS_LFXOENS_DEFAULT << 8)     /**< Shifted mode DEFAULT for CMU_STATUS */
-#define CMU_STATUS_LFXORDY                          (0x1UL << 9)                           /**< LFXO Ready */
-#define _CMU_STATUS_LFXORDY_SHIFT                   9                                      /**< Shift value for CMU_LFXORDY */
-#define _CMU_STATUS_LFXORDY_MASK                    0x200UL                                /**< Bit mask for CMU_LFXORDY */
-#define _CMU_STATUS_LFXORDY_DEFAULT                 0x00000000UL                           /**< Mode DEFAULT for CMU_STATUS */
-#define CMU_STATUS_LFXORDY_DEFAULT                  (_CMU_STATUS_LFXORDY_DEFAULT << 9)     /**< Shifted mode DEFAULT for CMU_STATUS */
-#define CMU_STATUS_HFRCOSEL                         (0x1UL << 10)                          /**< HFRCO Selected */
-#define _CMU_STATUS_HFRCOSEL_SHIFT                  10                                     /**< Shift value for CMU_HFRCOSEL */
-#define _CMU_STATUS_HFRCOSEL_MASK                   0x400UL                                /**< Bit mask for CMU_HFRCOSEL */
-#define _CMU_STATUS_HFRCOSEL_DEFAULT                0x00000001UL                           /**< Mode DEFAULT for CMU_STATUS */
-#define CMU_STATUS_HFRCOSEL_DEFAULT                 (_CMU_STATUS_HFRCOSEL_DEFAULT << 10)   /**< Shifted mode DEFAULT for CMU_STATUS */
-#define CMU_STATUS_HFXOSEL                          (0x1UL << 11)                          /**< HFXO Selected */
-#define _CMU_STATUS_HFXOSEL_SHIFT                   11                                     /**< Shift value for CMU_HFXOSEL */
-#define _CMU_STATUS_HFXOSEL_MASK                    0x800UL                                /**< Bit mask for CMU_HFXOSEL */
-#define _CMU_STATUS_HFXOSEL_DEFAULT                 0x00000000UL                           /**< Mode DEFAULT for CMU_STATUS */
-#define CMU_STATUS_HFXOSEL_DEFAULT                  (_CMU_STATUS_HFXOSEL_DEFAULT << 11)    /**< Shifted mode DEFAULT for CMU_STATUS */
-#define CMU_STATUS_LFRCOSEL                         (0x1UL << 12)                          /**< LFRCO Selected */
-#define _CMU_STATUS_LFRCOSEL_SHIFT                  12                                     /**< Shift value for CMU_LFRCOSEL */
-#define _CMU_STATUS_LFRCOSEL_MASK                   0x1000UL                               /**< Bit mask for CMU_LFRCOSEL */
-#define _CMU_STATUS_LFRCOSEL_DEFAULT                0x00000000UL                           /**< Mode DEFAULT for CMU_STATUS */
-#define CMU_STATUS_LFRCOSEL_DEFAULT                 (_CMU_STATUS_LFRCOSEL_DEFAULT << 12)   /**< Shifted mode DEFAULT for CMU_STATUS */
-#define CMU_STATUS_LFXOSEL                          (0x1UL << 13)                          /**< LFXO Selected */
-#define _CMU_STATUS_LFXOSEL_SHIFT                   13                                     /**< Shift value for CMU_LFXOSEL */
-#define _CMU_STATUS_LFXOSEL_MASK                    0x2000UL                               /**< Bit mask for CMU_LFXOSEL */
-#define _CMU_STATUS_LFXOSEL_DEFAULT                 0x00000000UL                           /**< Mode DEFAULT for CMU_STATUS */
-#define CMU_STATUS_LFXOSEL_DEFAULT                  (_CMU_STATUS_LFXOSEL_DEFAULT << 13)    /**< Shifted mode DEFAULT for CMU_STATUS */
-#define CMU_STATUS_CALBSY                           (0x1UL << 14)                          /**< Calibration Busy */
-#define _CMU_STATUS_CALBSY_SHIFT                    14                                     /**< Shift value for CMU_CALBSY */
-#define _CMU_STATUS_CALBSY_MASK                     0x4000UL                               /**< Bit mask for CMU_CALBSY */
-#define _CMU_STATUS_CALBSY_DEFAULT                  0x00000000UL                           /**< Mode DEFAULT for CMU_STATUS */
-#define CMU_STATUS_CALBSY_DEFAULT                   (_CMU_STATUS_CALBSY_DEFAULT << 14)     /**< Shifted mode DEFAULT for CMU_STATUS */
+#define _CMU_STATUS_RESETVALUE                      0x00000403UL                               /**< Default value for CMU_STATUS */
+#define _CMU_STATUS_MASK                            0x04E07FFFUL                               /**< Mask for CMU_STATUS */
+#define CMU_STATUS_HFRCOENS                         (0x1UL << 0)                               /**< HFRCO Enable Status */
+#define _CMU_STATUS_HFRCOENS_SHIFT                  0                                          /**< Shift value for CMU_HFRCOENS */
+#define _CMU_STATUS_HFRCOENS_MASK                   0x1UL                                      /**< Bit mask for CMU_HFRCOENS */
+#define _CMU_STATUS_HFRCOENS_DEFAULT                0x00000001UL                               /**< Mode DEFAULT for CMU_STATUS */
+#define CMU_STATUS_HFRCOENS_DEFAULT                 (_CMU_STATUS_HFRCOENS_DEFAULT << 0)        /**< Shifted mode DEFAULT for CMU_STATUS */
+#define CMU_STATUS_HFRCORDY                         (0x1UL << 1)                               /**< HFRCO Ready */
+#define _CMU_STATUS_HFRCORDY_SHIFT                  1                                          /**< Shift value for CMU_HFRCORDY */
+#define _CMU_STATUS_HFRCORDY_MASK                   0x2UL                                      /**< Bit mask for CMU_HFRCORDY */
+#define _CMU_STATUS_HFRCORDY_DEFAULT                0x00000001UL                               /**< Mode DEFAULT for CMU_STATUS */
+#define CMU_STATUS_HFRCORDY_DEFAULT                 (_CMU_STATUS_HFRCORDY_DEFAULT << 1)        /**< Shifted mode DEFAULT for CMU_STATUS */
+#define CMU_STATUS_HFXOENS                          (0x1UL << 2)                               /**< HFXO Enable Status */
+#define _CMU_STATUS_HFXOENS_SHIFT                   2                                          /**< Shift value for CMU_HFXOENS */
+#define _CMU_STATUS_HFXOENS_MASK                    0x4UL                                      /**< Bit mask for CMU_HFXOENS */
+#define _CMU_STATUS_HFXOENS_DEFAULT                 0x00000000UL                               /**< Mode DEFAULT for CMU_STATUS */
+#define CMU_STATUS_HFXOENS_DEFAULT                  (_CMU_STATUS_HFXOENS_DEFAULT << 2)         /**< Shifted mode DEFAULT for CMU_STATUS */
+#define CMU_STATUS_HFXORDY                          (0x1UL << 3)                               /**< HFXO Ready */
+#define _CMU_STATUS_HFXORDY_SHIFT                   3                                          /**< Shift value for CMU_HFXORDY */
+#define _CMU_STATUS_HFXORDY_MASK                    0x8UL                                      /**< Bit mask for CMU_HFXORDY */
+#define _CMU_STATUS_HFXORDY_DEFAULT                 0x00000000UL                               /**< Mode DEFAULT for CMU_STATUS */
+#define CMU_STATUS_HFXORDY_DEFAULT                  (_CMU_STATUS_HFXORDY_DEFAULT << 3)         /**< Shifted mode DEFAULT for CMU_STATUS */
+#define CMU_STATUS_AUXHFRCOENS                      (0x1UL << 4)                               /**< AUXHFRCO Enable Status */
+#define _CMU_STATUS_AUXHFRCOENS_SHIFT               4                                          /**< Shift value for CMU_AUXHFRCOENS */
+#define _CMU_STATUS_AUXHFRCOENS_MASK                0x10UL                                     /**< Bit mask for CMU_AUXHFRCOENS */
+#define _CMU_STATUS_AUXHFRCOENS_DEFAULT             0x00000000UL                               /**< Mode DEFAULT for CMU_STATUS */
+#define CMU_STATUS_AUXHFRCOENS_DEFAULT              (_CMU_STATUS_AUXHFRCOENS_DEFAULT << 4)     /**< Shifted mode DEFAULT for CMU_STATUS */
+#define CMU_STATUS_AUXHFRCORDY                      (0x1UL << 5)                               /**< AUXHFRCO Ready */
+#define _CMU_STATUS_AUXHFRCORDY_SHIFT               5                                          /**< Shift value for CMU_AUXHFRCORDY */
+#define _CMU_STATUS_AUXHFRCORDY_MASK                0x20UL                                     /**< Bit mask for CMU_AUXHFRCORDY */
+#define _CMU_STATUS_AUXHFRCORDY_DEFAULT             0x00000000UL                               /**< Mode DEFAULT for CMU_STATUS */
+#define CMU_STATUS_AUXHFRCORDY_DEFAULT              (_CMU_STATUS_AUXHFRCORDY_DEFAULT << 5)     /**< Shifted mode DEFAULT for CMU_STATUS */
+#define CMU_STATUS_LFRCOENS                         (0x1UL << 6)                               /**< LFRCO Enable Status */
+#define _CMU_STATUS_LFRCOENS_SHIFT                  6                                          /**< Shift value for CMU_LFRCOENS */
+#define _CMU_STATUS_LFRCOENS_MASK                   0x40UL                                     /**< Bit mask for CMU_LFRCOENS */
+#define _CMU_STATUS_LFRCOENS_DEFAULT                0x00000000UL                               /**< Mode DEFAULT for CMU_STATUS */
+#define CMU_STATUS_LFRCOENS_DEFAULT                 (_CMU_STATUS_LFRCOENS_DEFAULT << 6)        /**< Shifted mode DEFAULT for CMU_STATUS */
+#define CMU_STATUS_LFRCORDY                         (0x1UL << 7)                               /**< LFRCO Ready */
+#define _CMU_STATUS_LFRCORDY_SHIFT                  7                                          /**< Shift value for CMU_LFRCORDY */
+#define _CMU_STATUS_LFRCORDY_MASK                   0x80UL                                     /**< Bit mask for CMU_LFRCORDY */
+#define _CMU_STATUS_LFRCORDY_DEFAULT                0x00000000UL                               /**< Mode DEFAULT for CMU_STATUS */
+#define CMU_STATUS_LFRCORDY_DEFAULT                 (_CMU_STATUS_LFRCORDY_DEFAULT << 7)        /**< Shifted mode DEFAULT for CMU_STATUS */
+#define CMU_STATUS_LFXOENS                          (0x1UL << 8)                               /**< LFXO Enable Status */
+#define _CMU_STATUS_LFXOENS_SHIFT                   8                                          /**< Shift value for CMU_LFXOENS */
+#define _CMU_STATUS_LFXOENS_MASK                    0x100UL                                    /**< Bit mask for CMU_LFXOENS */
+#define _CMU_STATUS_LFXOENS_DEFAULT                 0x00000000UL                               /**< Mode DEFAULT for CMU_STATUS */
+#define CMU_STATUS_LFXOENS_DEFAULT                  (_CMU_STATUS_LFXOENS_DEFAULT << 8)         /**< Shifted mode DEFAULT for CMU_STATUS */
+#define CMU_STATUS_LFXORDY                          (0x1UL << 9)                               /**< LFXO Ready */
+#define _CMU_STATUS_LFXORDY_SHIFT                   9                                          /**< Shift value for CMU_LFXORDY */
+#define _CMU_STATUS_LFXORDY_MASK                    0x200UL                                    /**< Bit mask for CMU_LFXORDY */
+#define _CMU_STATUS_LFXORDY_DEFAULT                 0x00000000UL                               /**< Mode DEFAULT for CMU_STATUS */
+#define CMU_STATUS_LFXORDY_DEFAULT                  (_CMU_STATUS_LFXORDY_DEFAULT << 9)         /**< Shifted mode DEFAULT for CMU_STATUS */
+#define CMU_STATUS_HFRCOSEL                         (0x1UL << 10)                              /**< HFRCO Selected */
+#define _CMU_STATUS_HFRCOSEL_SHIFT                  10                                         /**< Shift value for CMU_HFRCOSEL */
+#define _CMU_STATUS_HFRCOSEL_MASK                   0x400UL                                    /**< Bit mask for CMU_HFRCOSEL */
+#define _CMU_STATUS_HFRCOSEL_DEFAULT                0x00000001UL                               /**< Mode DEFAULT for CMU_STATUS */
+#define CMU_STATUS_HFRCOSEL_DEFAULT                 (_CMU_STATUS_HFRCOSEL_DEFAULT << 10)       /**< Shifted mode DEFAULT for CMU_STATUS */
+#define CMU_STATUS_HFXOSEL                          (0x1UL << 11)                              /**< HFXO Selected */
+#define _CMU_STATUS_HFXOSEL_SHIFT                   11                                         /**< Shift value for CMU_HFXOSEL */
+#define _CMU_STATUS_HFXOSEL_MASK                    0x800UL                                    /**< Bit mask for CMU_HFXOSEL */
+#define _CMU_STATUS_HFXOSEL_DEFAULT                 0x00000000UL                               /**< Mode DEFAULT for CMU_STATUS */
+#define CMU_STATUS_HFXOSEL_DEFAULT                  (_CMU_STATUS_HFXOSEL_DEFAULT << 11)        /**< Shifted mode DEFAULT for CMU_STATUS */
+#define CMU_STATUS_LFRCOSEL                         (0x1UL << 12)                              /**< LFRCO Selected */
+#define _CMU_STATUS_LFRCOSEL_SHIFT                  12                                         /**< Shift value for CMU_LFRCOSEL */
+#define _CMU_STATUS_LFRCOSEL_MASK                   0x1000UL                                   /**< Bit mask for CMU_LFRCOSEL */
+#define _CMU_STATUS_LFRCOSEL_DEFAULT                0x00000000UL                               /**< Mode DEFAULT for CMU_STATUS */
+#define CMU_STATUS_LFRCOSEL_DEFAULT                 (_CMU_STATUS_LFRCOSEL_DEFAULT << 12)       /**< Shifted mode DEFAULT for CMU_STATUS */
+#define CMU_STATUS_LFXOSEL                          (0x1UL << 13)                              /**< LFXO Selected */
+#define _CMU_STATUS_LFXOSEL_SHIFT                   13                                         /**< Shift value for CMU_LFXOSEL */
+#define _CMU_STATUS_LFXOSEL_MASK                    0x2000UL                                   /**< Bit mask for CMU_LFXOSEL */
+#define _CMU_STATUS_LFXOSEL_DEFAULT                 0x00000000UL                               /**< Mode DEFAULT for CMU_STATUS */
+#define CMU_STATUS_LFXOSEL_DEFAULT                  (_CMU_STATUS_LFXOSEL_DEFAULT << 13)        /**< Shifted mode DEFAULT for CMU_STATUS */
+#define CMU_STATUS_CALBSY                           (0x1UL << 14)                              /**< Calibration Busy */
+#define _CMU_STATUS_CALBSY_SHIFT                    14                                         /**< Shift value for CMU_CALBSY */
+#define _CMU_STATUS_CALBSY_MASK                     0x4000UL                                   /**< Bit mask for CMU_CALBSY */
+#define _CMU_STATUS_CALBSY_DEFAULT                  0x00000000UL                               /**< Mode DEFAULT for CMU_STATUS */
+#define CMU_STATUS_CALBSY_DEFAULT                   (_CMU_STATUS_CALBSY_DEFAULT << 14)         /**< Shifted mode DEFAULT for CMU_STATUS */
+#define CMU_STATUS_USHFRCOENS                       (0x1UL << 21)                              /**< USHFRCO Enable Status */
+#define _CMU_STATUS_USHFRCOENS_SHIFT                21                                         /**< Shift value for CMU_USHFRCOENS */
+#define _CMU_STATUS_USHFRCOENS_MASK                 0x200000UL                                 /**< Bit mask for CMU_USHFRCOENS */
+#define _CMU_STATUS_USHFRCOENS_DEFAULT              0x00000000UL                               /**< Mode DEFAULT for CMU_STATUS */
+#define CMU_STATUS_USHFRCOENS_DEFAULT               (_CMU_STATUS_USHFRCOENS_DEFAULT << 21)     /**< Shifted mode DEFAULT for CMU_STATUS */
+#define CMU_STATUS_USHFRCORDY                       (0x1UL << 22)                              /**< USHFRCO Ready */
+#define _CMU_STATUS_USHFRCORDY_SHIFT                22                                         /**< Shift value for CMU_USHFRCORDY */
+#define _CMU_STATUS_USHFRCORDY_MASK                 0x400000UL                                 /**< Bit mask for CMU_USHFRCORDY */
+#define _CMU_STATUS_USHFRCORDY_DEFAULT              0x00000000UL                               /**< Mode DEFAULT for CMU_STATUS */
+#define CMU_STATUS_USHFRCORDY_DEFAULT               (_CMU_STATUS_USHFRCORDY_DEFAULT << 22)     /**< Shifted mode DEFAULT for CMU_STATUS */
+#define CMU_STATUS_USHFRCOSUSPEND                   (0x1UL << 23)                              /**< USHFRCO is suspended */
+#define _CMU_STATUS_USHFRCOSUSPEND_SHIFT            23                                         /**< Shift value for CMU_USHFRCOSUSPEND */
+#define _CMU_STATUS_USHFRCOSUSPEND_MASK             0x800000UL                                 /**< Bit mask for CMU_USHFRCOSUSPEND */
+#define _CMU_STATUS_USHFRCOSUSPEND_DEFAULT          0x00000000UL                               /**< Mode DEFAULT for CMU_STATUS */
+#define CMU_STATUS_USHFRCOSUSPEND_DEFAULT           (_CMU_STATUS_USHFRCOSUSPEND_DEFAULT << 23) /**< Shifted mode DEFAULT for CMU_STATUS */
+#define CMU_STATUS_USHFRCODIV2SEL                   (0x1UL << 26)                              /**< USHFRCODIV2 Selected */
+#define _CMU_STATUS_USHFRCODIV2SEL_SHIFT            26                                         /**< Shift value for CMU_USHFRCODIV2SEL */
+#define _CMU_STATUS_USHFRCODIV2SEL_MASK             0x4000000UL                                /**< Bit mask for CMU_USHFRCODIV2SEL */
+#define _CMU_STATUS_USHFRCODIV2SEL_DEFAULT          0x00000000UL                               /**< Mode DEFAULT for CMU_STATUS */
+#define CMU_STATUS_USHFRCODIV2SEL_DEFAULT           (_CMU_STATUS_USHFRCODIV2SEL_DEFAULT << 26) /**< Shifted mode DEFAULT for CMU_STATUS */
 
 /* Bit fields for CMU IF */
 #define _CMU_IF_RESETVALUE                          0x00000001UL                       /**< Default value for CMU_IF */
@@ -1847,4 +1867,4 @@ typedef struct
 #ifdef __cplusplus
 }
 #endif
-#endif /* __SILICON_LABS_EFM32HG110F32_H__ */
+#endif /* EFM32HG110F32_H */

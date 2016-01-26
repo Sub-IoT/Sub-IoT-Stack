@@ -50,19 +50,32 @@ void packet_assemble(packet_t* packet)
     // TODO network protocol footer
 
     // add CRC
+#ifndef HAL_RADIO_USE_HW_CRC
     uint16_t crc = __builtin_bswap16(crc_calculate(packet->hw_radio_packet.data, packet->hw_radio_packet.length + 1 - 2));
     memcpy(data_ptr, &crc, 2);
+#endif
 }
 
 void packet_disassemble(packet_t* packet)
 {
     log_print_data(packet->hw_radio_packet.data, packet->hw_radio_packet.length + 1); // TODO tmp
 
-    uint16_t crc = __builtin_bswap16(crc_calculate(packet->hw_radio_packet.data, packet->hw_radio_packet.length + 1 - 2));
-    if(memcmp(&crc, packet->hw_radio_packet.data + packet->hw_radio_packet.length + 1 - 2, 2) != 0)
+    if (packet->hw_radio_packet.rx_meta.crc_status == HW_CRC_UNAVAILABLE)
     {
-        DPRINT(LOG_STACK_DLL, "CRC invalid");
-        goto cleanup;
+		uint16_t crc = __builtin_bswap16(crc_calculate(packet->hw_radio_packet.data, packet->hw_radio_packet.length + 1 - 2));
+		DPRINT(LOG_STACK_DLL, "CRC check RX %x%x == CALC: %x ?",
+							packet->hw_radio_packet.data[packet->hw_radio_packet.length],
+							packet->hw_radio_packet.data[packet->hw_radio_packet.length - 1 ],
+							crc);
+		if(memcmp(&crc, packet->hw_radio_packet.data + packet->hw_radio_packet.length + 1 - 2, 2) != 0)
+		{
+			DPRINT(LOG_STACK_DLL, "CRC invalid");
+			goto cleanup;
+		}
+    } else if (packet->hw_radio_packet.rx_meta.crc_status == HW_CRC_INVALID)
+    {
+    	DPRINT(LOG_STACK_DLL, "CRC invalid");
+    	goto cleanup;
     }
 
     uint8_t data_idx = 1;

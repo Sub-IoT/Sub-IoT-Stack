@@ -2,10 +2,10 @@
  * @file efm32gg395f1024.h
  * @brief CMSIS Cortex-M Peripheral Access Layer Header File
  *        for EFM32GG395F1024
- * @version 3.20.7
+ * @version 4.2.1
  ******************************************************************************
  * @section License
- * <b>(C) Copyright 2014 Silicon Laboratories, Inc. http://www.silabs.com</b>
+ * <b>Copyright 2015 Silicon Laboratories, Inc. http://www.silabs.com</b>
  ******************************************************************************
  *
  * Permission is granted to anyone to use this software for any purpose,
@@ -31,8 +31,8 @@
  *
  *****************************************************************************/
 
-#ifndef __EFM32GG395F1024_H
-#define __EFM32GG395F1024_H
+#ifndef EFM32GG395F1024_H
+#define EFM32GG395F1024_H
 
 #ifdef __cplusplus
 extern "C" {
@@ -52,7 +52,7 @@ extern "C" {
 typedef enum IRQn
 {
 /******  Cortex-M3 Processor Exceptions Numbers *******************************************/
-  NonMaskableInt_IRQn   = -14,              /*!< 2 Non Maskable Interrupt                 */
+  NonMaskableInt_IRQn   = -14,              /*!< 2 Cortex-M3 Non Maskable Interrupt       */
   HardFault_IRQn        = -13,              /*!< 3 Cortex-M3 Hard Fault Interrupt         */
   MemoryManagement_IRQn = -12,              /*!< 4 Cortex-M3 Memory Management Interrupt  */
   BusFault_IRQn         = -11,              /*!< 5 Cortex-M3 Bus Fault Interrupt          */
@@ -120,8 +120,10 @@ typedef enum IRQn
 ******************************************************************************/
 
 /** Part family */
-#define _EFM32_GIANT_FAMILY    1 /**< Giant/Leopard Gecko EFM32LG/GG MCU Family */
-#define _EFM_DEVICE              /**< Silicon Labs EFM-type microcontroller */
+#define _EFM32_GIANT_FAMILY             1 /**< Giant/Leopard Gecko EFM32LG/GG MCU Family */
+#define _EFM_DEVICE                       /**< Silicon Labs EFM-type microcontroller */
+#define _SILICON_LABS_32B_PLATFORM_1      /**< Silicon Labs platform name */
+#define _SILICON_LABS_32B_PLATFORM      1 /**< Silicon Labs platform name */
 
 /* If part number is not defined as compiler option, define it */
 #if !defined(EFM32GG395F1024)
@@ -311,6 +313,7 @@ typedef struct
   __IO uint32_t LFACLKEN0;    /**< Low Frequency A Clock Enable Register 0  (Async Reg)  */
   uint32_t      RESERVED1[1]; /**< Reserved for future use **/
   __IO uint32_t LFBCLKEN0;    /**< Low Frequency B Clock Enable Register 0 (Async Reg)  */
+
   uint32_t      RESERVED2[1]; /**< Reserved for future use **/
   __IO uint32_t LFAPRESC0;    /**< Low Frequency A Prescaler Register 0 (Async Reg)  */
   uint32_t      RESERVED3[1]; /**< Reserved for future use **/
@@ -470,7 +473,7 @@ typedef struct
 
 /* Bit fields for CMU CTRL */
 #define _CMU_CTRL_RESETVALUE                        0x000C062CUL                                /**< Default value for CMU_CTRL */
-#define _CMU_CTRL_MASK                              0x53FFFEEFUL                                /**< Mask for CMU_CTRL */
+#define _CMU_CTRL_MASK                              0x57FFFEEFUL                                /**< Mask for CMU_CTRL */
 #define _CMU_CTRL_HFXOMODE_SHIFT                    0                                           /**< Shift value for CMU_HFXOMODE */
 #define _CMU_CTRL_HFXOMODE_MASK                     0x3UL                                       /**< Bit mask for CMU_HFXOMODE */
 #define _CMU_CTRL_HFXOMODE_DEFAULT                  0x00000000UL                                /**< Mode DEFAULT for CMU_CTRL */
@@ -579,7 +582,7 @@ typedef struct
 #define CMU_CTRL_CLKOUTSEL0_ULFRCO                  (_CMU_CTRL_CLKOUTSEL0_ULFRCO << 20)         /**< Shifted mode ULFRCO for CMU_CTRL */
 #define CMU_CTRL_CLKOUTSEL0_AUXHFRCO                (_CMU_CTRL_CLKOUTSEL0_AUXHFRCO << 20)       /**< Shifted mode AUXHFRCO for CMU_CTRL */
 #define _CMU_CTRL_CLKOUTSEL1_SHIFT                  23                                          /**< Shift value for CMU_CLKOUTSEL1 */
-#define _CMU_CTRL_CLKOUTSEL1_MASK                   0x3800000UL                                 /**< Bit mask for CMU_CLKOUTSEL1 */
+#define _CMU_CTRL_CLKOUTSEL1_MASK                   0x7800000UL                                 /**< Bit mask for CMU_CLKOUTSEL1 */
 #define _CMU_CTRL_CLKOUTSEL1_DEFAULT                0x00000000UL                                /**< Mode DEFAULT for CMU_CTRL */
 #define _CMU_CTRL_CLKOUTSEL1_LFRCO                  0x00000000UL                                /**< Mode LFRCO for CMU_CTRL */
 #define _CMU_CTRL_CLKOUTSEL1_LFXO                   0x00000001UL                                /**< Mode LFXO for CMU_CTRL */
@@ -846,7 +849,7 @@ typedef struct
 
 /* Bit fields for CMU CMD */
 #define _CMU_CMD_RESETVALUE                         0x00000000UL                          /**< Default value for CMU_CMD */
-#define _CMU_CMD_MASK                               0x0000007FUL                          /**< Mask for CMU_CMD */
+#define _CMU_CMD_MASK                               0x000000FFUL                          /**< Mask for CMU_CMD */
 #define _CMU_CMD_HFCLKSEL_SHIFT                     0                                     /**< Shift value for CMU_HFCLKSEL */
 #define _CMU_CMD_HFCLKSEL_MASK                      0x7UL                                 /**< Bit mask for CMU_HFCLKSEL */
 #define _CMU_CMD_HFCLKSEL_DEFAULT                   0x00000000UL                          /**< Mode DEFAULT for CMU_CMD */
@@ -870,7 +873,7 @@ typedef struct
 #define _CMU_CMD_CALSTOP_DEFAULT                    0x00000000UL                          /**< Mode DEFAULT for CMU_CMD */
 #define CMU_CMD_CALSTOP_DEFAULT                     (_CMU_CMD_CALSTOP_DEFAULT << 4)       /**< Shifted mode DEFAULT for CMU_CMD */
 #define _CMU_CMD_USBCCLKSEL_SHIFT                   5                                     /**< Shift value for CMU_USBCCLKSEL */
-#define _CMU_CMD_USBCCLKSEL_MASK                    0x60UL                                /**< Bit mask for CMU_USBCCLKSEL */
+#define _CMU_CMD_USBCCLKSEL_MASK                    0xE0UL                                /**< Bit mask for CMU_USBCCLKSEL */
 #define _CMU_CMD_USBCCLKSEL_DEFAULT                 0x00000000UL                          /**< Mode DEFAULT for CMU_CMD */
 #define _CMU_CMD_USBCCLKSEL_HFCLKNODIV              0x00000001UL                          /**< Mode HFCLKNODIV for CMU_CMD */
 #define _CMU_CMD_USBCCLKSEL_LFXO                    0x00000002UL                          /**< Mode LFXO for CMU_CMD */
@@ -1638,4 +1641,4 @@ typedef struct
 #ifdef __cplusplus
 }
 #endif
-#endif /* __EFM32GG395F1024_H */
+#endif /* EFM32GG395F1024_H */

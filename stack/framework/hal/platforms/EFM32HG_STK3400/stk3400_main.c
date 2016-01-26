@@ -35,7 +35,6 @@ void __platform_init()
 {
     __efm32hg_mcu_init();
     __gpio_init();
-    __uart_init();
     __led_init();
     __lcd_init();
 
@@ -57,7 +56,8 @@ void __platform_init()
     err = hw_gpio_configure_pin(BUTTON0, true, gpioModeInput, 0); assert(err == SUCCESS); // TODO pull up or pull down to prevent floating
     err = hw_gpio_configure_pin(BUTTON1, true, gpioModeInput, 0); assert(err == SUCCESS); // TODO pull up or pull down to prevent floating
 
-    __watchdog_init(); // TODO configure from cmake?
+    // TODO: only for cc430?
+    // __watchdog_init(); // TODO configure from cmake?
 }
 
 void __platform_post_framework_init()

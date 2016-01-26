@@ -24,30 +24,37 @@
  * \brief HAL API for SPI
  *
  * \author jan.stevens@ieee.org
+ * \author contact@christophe.vg
  */
 
 #ifndef SPI_H_
 #define SPI_H_
 
+#include "hwgpio.h"
+
 #include "types.h"
 #include "link_c.h"
 
-#define DATARATE 115200
+// expose spi_handle with unknown internals
+typedef struct spi_handle spi_handle_t;
 
-__LINK_C void spi_init();
+// create handle from basic & minimal parameters
+__LINK_C spi_handle_t* spi_init(uint8_t uart,     uint32_t baudrate,
+                                uint8_t databits, uint8_t  pins);
 
-__LINK_C void spi_auto_cs_on(void);
+// initializes a pin to be used as Chip Select pin
+__LINK_C void         spi_init_slave(pin_id_t slave);
 
-__LINK_C void spi_auto_cs_off(void);
+// (de)selection of a slave
+__LINK_C void         spi_select(pin_id_t slave);
+__LINK_C void         spi_deselect(pin_id_t slave);
 
-__LINK_C void spi_select_chip(void);
+__LINK_C uint8_t      spi_exchange_byte(spi_handle_t* spi, uint8_t data);
+__LINK_C void         spi_send_byte_with_control(spi_handle_t* spi, uint16_t data);
 
-__LINK_C void spi_deselect_chip(void);
+__LINK_C void         spi_exchange_bytes(spi_handle_t* spi, uint8_t *TxData,
+                                         uint8_t *RxData, size_t length);
 
-__LINK_C uint8_t spi_byte(uint8_t data);
-
-__LINK_C void spi_string(uint8_t *TxData, uint8_t *RxData, size_t length);
-
-#endif /* SPI_H_ */
+#endif
 
 /** @}*/

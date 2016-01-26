@@ -20,6 +20,7 @@
  *
  *  \author glenn.ergeerts@uantwerpen.be
  *  \author daniel.vandenakker@uantwerpen.be
+ *  \author maarten.weyn@uantwerpen.be
  *
  */
 

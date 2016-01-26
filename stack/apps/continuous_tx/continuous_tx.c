@@ -32,9 +32,9 @@
 
 #include "platform_defs.h"
 
-//#ifndef USE_CC1101
-//    #error "This application only works with cc1101"
-//#endif
+#if !defined (USE_CC1101) //&& !defined (USE_SI4460)
+    #error "This application only works with cc1101"
+#endif
 
 #include "log.h"
 #include "hwradio.h"
@@ -53,16 +53,20 @@
 #define DPRINT(...)
 #endif
 
+#if defined USE_CC1101
 uint8_t cc1101_interface_strobe(uint8_t); // prototype (to prevent warning) of internal driver function which is used here.
 uint8_t cc1101_interface_write_single_reg(uint8_t, uint8_t);
 uint8_t cc1101_interface_write_single_patable(uint8_t);
+#elif defined USE_SI4460
+#endif
+
 
 #define NORMAL_RATE_CHANNEL_COUNT 8
 #define LO_RATE_CHANNEL_COUNT 69
 
 
 static uint8_t current_channel_indexes_index = 0;
-static phy_channel_band_t current_channel_band = PHY_BAND_433;
+static phy_channel_band_t current_channel_band = PHY_BAND_868;
 static phy_channel_class_t current_channel_class = PHY_CLASS_NORMAL_RATE;
 static uint8_t channel_indexes[NORMAL_RATE_CHANNEL_COUNT] = { 0 }; // reallocated later depending on band/class
 static uint8_t channel_count = NORMAL_RATE_CHANNEL_COUNT;
@@ -102,6 +106,9 @@ void start()
     lcd_write_string(string);
 #endif
 
+
+
+#if defined USE_CC1101
     hw_radio_set_rx(&rx_cfg, NULL, &rssi_valid_cb); // we 'misuse' hw_radio_set_rx to configure the channel (using the public API)
     hw_radio_set_idle(); // go straight back to idle
 
@@ -109,6 +116,9 @@ void start()
     //cc1101_interface_write_single_reg(0x12, 0x30); // MDMCFG2: use OOK modulation to clearly view centre freq on spectrum analyzer, comment for GFSK
     cc1101_interface_write_single_patable(0xc0); // 10dBm TX EIRP
     cc1101_interface_strobe(0x35); // strobe TX
+#elif defined USE_SI4460
+    //ezradioStartTxUnmodelated(rx_cfg.channel_id.center_freq_index);
+#endif
 }
 
 #if NUM_USERBUTTONS > 1

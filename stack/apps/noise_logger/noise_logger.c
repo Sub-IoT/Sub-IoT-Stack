@@ -26,7 +26,6 @@
 #include <log.h>
 #include <timer.h>
 #include <hwlcd.h>
-#include <hwuart.h>
 #include <hwsystem.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -34,10 +33,13 @@
 #include <fifo.h>
 #include <debug.h>
 #include <platform_sensors.h>
+#include <hwwatchdog.h>
 
 #ifdef PLATFORM_EFM32GG_STK3700
 #include "platform_lcd.h"
 #endif
+
+#include "console.h"
 
 #define NORMAL_RATE_CHANNEL_COUNT_433 8
 #define LO_RATE_CHANNEL_COUNT_433 69
@@ -194,7 +196,7 @@ void process_command_chan()
     return;
 
     error:
-        uart_transmit_string("Error parsing CHAN command. Expected format example: '433L001'\n");
+        console_print("Error parsing CHAN command. Expected format example: '433L001'\n");
         fifo_clear(&uart_rx_fifo);
 }
 
@@ -227,7 +229,7 @@ void process_uart_rx_fifo()
         {
             char err[40];
             snprintf(err, sizeof(err), "ERROR invalid command %.4s\n", received_cmd);
-            uart_transmit_string(err);
+            console_print(err);
         }
 
         fifo_clear(&uart_rx_fifo);
@@ -279,11 +281,14 @@ void read_rssi()
     channel_id_to_string(&rx_cfg.channel_id, channel_str, sizeof(channel_str));
     lcd_write_string(channel_str);
     sprintf(str, "%7s,%i%s\n", channel_str, rssi_measurement.tick, rssi_samples_str);
-    uart_transmit_string(str);
+    console_print(str);
 
 #ifdef PLATFORM_EFM32GG_STK3700
     //lcd_all_on();
     lcd_write_number(max_rssi_sample);
+#elif defined HAS_LCD
+    sprintf(str, "%7s,%d\n", channel_str, max_rssi_sample);
+    lcd_write_string(str);
 #endif
 
     if(!use_manual_channel_switching)
@@ -297,6 +302,8 @@ void read_rssi()
         uint16_t delay = rand() % 5000;
         timer_post_task_delay(&read_rssi, delay);
     }
+
+    hw_watchdog_feed();
 }
 
 void rssi_valid(int16_t cur_rssi)
@@ -331,7 +338,7 @@ void userbutton_callback(button_id_t button_id)
 }
 #endif
 
-void uart_rx_cb(char data)
+void uart_rx_cb(uint8_t data)
 {
     error_t err;
     err = fifo_put(&uart_rx_fifo, &data, 1); assert(err == SUCCESS);
@@ -358,7 +365,7 @@ void measureTemperature()
 
 	char str[80];
 	sprintf(str, "%7s,%i,%2d.%2d\n", TEMPERATURE_TAG, tick, (temperature/10), abs(temperature%10));
-	uart_transmit_string(str);
+	console_print(str);
 }
 
 void execute_sensor_measurement()
@@ -384,8 +391,8 @@ void bootstrap()
 
     fifo_init(&uart_rx_fifo, uart_rx_buffer, sizeof(uart_rx_buffer));
 
-    uart_set_rx_interrupt_callback(&uart_rx_cb);
-    uart_rx_interrupt_enable(true);
+    console_set_rx_interrupt_callback(&uart_rx_cb);
+    console_rx_interrupt_enable(true);
 
     sched_register_task(&read_rssi);
     sched_register_task(&start_rx);
@@ -399,3 +406,77 @@ void bootstrap()
 
     measureTemperature();
 }
+
+void debugHardfault(uint32_t *sp)
+{
+//    uint32_t cfsr  = SCB->CFSR;
+//    uint32_t hfsr  = SCB->HFSR;
+//    uint32_t mmfar = SCB->MMFAR;
+//    uint32_t bfar  = SCB->BFAR;
+//
+//    uint32_t r0  = sp[0];
+//    uint32_t r1  = sp[1];
+//    uint32_t r2  = sp[2];
+//    uint32_t r3  = sp[3];
+//    uint32_t r12 = sp[4];
+//    uint32_t lr  = sp[5];
+//    uint32_t pc  = sp[6];
+//    uint32_t psr = sp[7];
+//
+//    printf("HardFault:\n");
+//    printf("SCB->CFSR   0x%08lx\n", cfsr);
+//    printf("SCB->HFSR   0x%08lx\n", hfsr);
+//    printf("SCB->MMFAR  0x%08lx\n", mmfar);
+//    printf("SCB->BFAR   0x%08lx\n", bfar);
+//    printf("\n");
+//
+//    printf("SP          0x%08lx\n", (uint32_t)sp);
+//    printf("R0          0x%08lx\n", r0);
+//    printf("R1          0x%08lx\n", r1);
+//    printf("R2          0x%08lx\n", r2);
+//    printf("R3          0x%08lx\n", r3);
+//    printf("R12         0x%08lx\n", r12);
+//    printf("LR          0x%08lx\n", lr);
+//    printf("PC          0x%08lx\n", pc);
+//    printf("PSR         0x%08lx\n", psr);
+
+	__asm__("BKPT");
+	while(1);
+}
+
+__attribute__( (naked) )
+void HardFault_Handler(void)
+{
+	 __asm volatile
+	    (
+	        "tst lr, #4                                    \n"
+	        "ite eq                                        \n"
+	        "mrseq r0, msp                                 \n"
+	        "mrsne r0, psp                                 \n"
+	        "ldr r1, debugHardfault_address                \n"
+	        "bx r1                                         \n"
+	        "debugHardfault_address: .word debugHardfault  \n"
+	    );
+}
+
+/*      Hard Fault Handler        */
+void MemManage_Handler(void)
+{
+	__asm__("BKPT");
+	while(1);
+}
+
+void BusFault_Handler(void)
+{
+	__asm__("BKPT");
+	while(1);
+}
+
+void UsageFault_Handler(void)
+{
+	__asm__("BKPT");
+	while(1);
+}
+
+
+

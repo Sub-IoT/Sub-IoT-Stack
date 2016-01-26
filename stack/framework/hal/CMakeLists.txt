@@ -33,8 +33,13 @@ ADD_SUBDIRECTORY("platforms")
 #include hal-specific helper MACRO's
 include(${CMAKE_SOURCE_DIR}/cmake/hal_macros.cmake)
 
-SET(HAL_RADIO_INCLUDE_TIMESTAMP "TRUE" CACHE BOOL "Include a timestamp in the metadata attached to a packet")
 HAL_HEADER_DEFINE(BOOL HAL_RADIO_INCLUDE_TIMESTAMP)
+HAL_HEADER_DEFINE(BOOL HAL_RADIO_USE_HW_CRC)
+
+SET(HAL_RADIO_INCLUDE_TIMESTAMP "TRUE" CACHE BOOL "Include a timestamp in the metadata attached to a packet")
+#SET(HAL_RADIO_USE_HW_CRC "FALSE" CACHE BOOL "Enable/Disable the use of HW CRC")
+
+
 
 #Generate the 'hal_defs.h'
 HAL_BUILD_SETTINGS_FILE()

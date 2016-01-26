@@ -33,6 +33,8 @@
 #include <hwradio.h>
 #include "framework_defs.h"
 
+#include "console.h"
+
 #ifdef FRAMEWORK_LOG_ENABLED
 
 typedef enum {
@@ -64,10 +66,10 @@ __LINK_C void log_print_string(char* format, ...)
     va_start(args, format);
 #ifdef FRAMEWORK_LOG_BINARY
     uint8_t len = vsnprintf(NG(buffer), BUFFER_SIZE, format, args);
-    uart_transmit_data(0xDD);
-    uart_transmit_data(LOG_TYPE_STRING);
-    uart_transmit_data(len);
-    uart_transmit_message(NG(buffer),len);
+    console_print_byte(0xDD);
+    console_print_byte(LOG_TYPE_STRING);
+    console_print_byte(len);
+    console_print_bytes(NG(buffer),len);
 #else
     printf("\n\r[%03d] ", NG(counter)++);
     vprintf(format, args);
@@ -81,11 +83,11 @@ __LINK_C void log_print_stack_string(log_stack_layer_t type, char* format, ...)
     va_start(args, format);
 #ifdef FRAMEWORK_LOG_BINARY
     uint8_t len = vsnprintf(NG(buffer), BUFFER_SIZE, format, args);
-    uart_transmit_data(0xDD);
-    uart_transmit_data(LOG_TYPE_STACK);
-    uart_transmit_data(type);
-    uart_transmit_data(len);
-    uart_transmit_message(NG(buffer),len);
+    console_print_byte(0xDD);
+    console_print_byte(LOG_TYPE_STACK);
+    console_print_byte(type);
+    console_print_byte(len);
+    console_print_bytes(NG(buffer),len);
 #else
     printf("\n\r[%03d] ", NG(counter)++);
     vprintf(format, args);
@@ -96,10 +98,10 @@ __LINK_C void log_print_stack_string(log_stack_layer_t type, char* format, ...)
 __LINK_C void log_print_data(uint8_t* message, uint32_t length)
 {
 #ifdef FRAMEWORK_LOG_BINARY
-    uart_transmit_data(0xDD);
-    uart_transmit_data(LOG_TYPE_DATA);
-    uart_transmit_data(length);
-    uart_transmit_message(message, length);
+    console_print_byte(0xDD);
+    console_print_byte(LOG_TYPE_DATA);
+    console_print_byte(length);
+    console_print_bytes(message, length);
 #else
     printf("\n\r[%03d]", NG(counter)++);
     for( uint32_t i=0 ; i<length ; i++ )
@@ -112,33 +114,33 @@ __LINK_C void log_print_data(uint8_t* message, uint32_t length)
 __LINK_C void log_print_raw_phy_packet(hw_radio_packet_t* packet, bool is_tx)
 {
 #ifdef FRAMEWORK_LOG_BINARY
-    uart_transmit_data(0xDD);
+    console_print_byte(0xDD);
     if(is_tx) {
 
-        uart_transmit_data(LOG_TYPE_PHY_PACKET_TX);
+        console_print_byte(LOG_TYPE_PHY_PACKET_TX);
 
-        uart_transmit_message(&(packet->tx_meta.timestamp), sizeof(timer_tick_t));
+        console_print_bytes((uint8_t*)&(packet->tx_meta.timestamp), sizeof(timer_tick_t));
 
-        uart_transmit_data(packet->tx_meta.tx_cfg.channel_id.channel_header_raw);
+        console_print_byte(packet->tx_meta.tx_cfg.channel_id.channel_header_raw);
 
-        uart_transmit_data(packet->tx_meta.tx_cfg.channel_id.center_freq_index);
+        console_print_byte(packet->tx_meta.tx_cfg.channel_id.center_freq_index);
 
-        uart_transmit_data(packet->tx_meta.tx_cfg.syncword_class);
+        console_print_byte(packet->tx_meta.tx_cfg.syncword_class);
 
-        uart_transmit_data(packet->tx_meta.tx_cfg.eirp);
+        console_print_byte(packet->tx_meta.tx_cfg.eirp);
 
-        uart_transmit_message(packet->data, packet->length+1);
+        console_print_bytes(packet->data, packet->length+1);
 
     } else {
-        uart_transmit_data(LOG_TYPE_PHY_PACKET_RX);
-        uart_transmit_message(&(packet->rx_meta.timestamp), sizeof(timer_tick_t));
-        uart_transmit_data(packet->rx_meta.rx_cfg.channel_id.channel_header_raw);
-        uart_transmit_data(packet->rx_meta.rx_cfg.channel_id.center_freq_index);
-        uart_transmit_data(packet->rx_meta.rx_cfg.syncword_class);
-        uart_transmit_data(packet->rx_meta.lqi);
-        uart_transmit_message(&(packet->rx_meta.rssi), sizeof(int16_t));
+        console_print_byte(LOG_TYPE_PHY_PACKET_RX);
+        console_print_bytes((uint8_t*)&(packet->rx_meta.timestamp), sizeof(timer_tick_t));
+        console_print_byte(packet->rx_meta.rx_cfg.channel_id.channel_header_raw);
+        console_print_byte(packet->rx_meta.rx_cfg.channel_id.center_freq_index);
+        console_print_byte(packet->rx_meta.rx_cfg.syncword_class);
+        console_print_byte(packet->rx_meta.lqi);
+        console_print_bytes((uint8_t*)&(packet->rx_meta.rssi), sizeof(int16_t));
         // TODO CRC?
-        uart_transmit_message(packet->data, packet->length+1);
+        console_print_bytes(packet->data, packet->length+1);
     }
 #endif // FRAMEWORK_LOG_BINARY
 }

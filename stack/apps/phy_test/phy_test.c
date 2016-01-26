@@ -29,16 +29,31 @@
 #include <hwleds.h>
 #include <hwradio.h>
 #include <log.h>
+#include <hwwatchdog.h>
+
+#ifdef HAS_LCD
+#include "hwlcd.h"
+#endif
 
 // configuration options
-//#define RX_MODE
-#define PHY_CLASS PHY_CLASS_LO_RATE
+#define RX_MODE
+#define PHY_CLASS PHY_CLASS_NORMAL_RATE
+
 
 
 #ifdef FRAMEWORK_LOG_ENABLED
-#define DPRINT(...) log_print_string(__VA_ARGS__)
+#ifdef HAS_LCD
+		#define DPRINT(...) log_print_string(__VA_ARGS__); lcd_write_string(__VA_ARGS__)
+	#else
+		#define DPRINT(...) log_print_string(__VA_ARGS__)
+	#endif
+
 #else
-#define DPRINT(...)
+	#ifdef HAS_LCD
+		#define DPRINT(...) lcd_write_string(__VA_ARGS__)
+	#else
+		#define DPRINT(...)
+	#endif
 #endif
 
 
@@ -47,8 +62,8 @@ hw_rx_cfg_t rx_cfg = {
     .channel_id = {
         .channel_header.ch_coding = PHY_CODING_PN9,
         .channel_header.ch_class = PHY_CLASS,
-        .channel_header.ch_freq_band = PHY_BAND_433,
-        .center_freq_index = 5
+        .channel_header.ch_freq_band = PHY_BAND_868,
+        .center_freq_index = 0
     },
     .syncword_class = PHY_SYNCWORD_CLASS0
 };
@@ -57,8 +72,8 @@ hw_tx_cfg_t tx_cfg = {
     .channel_id = {
         .channel_header.ch_coding = PHY_CODING_PN9,
         .channel_header.ch_class = PHY_CLASS,
-        .channel_header.ch_freq_band = PHY_BAND_433,
-        .center_freq_index = 5
+        .channel_header.ch_freq_band = PHY_BAND_868,
+        .center_freq_index = 0
     },
     .syncword_class = PHY_SYNCWORD_CLASS0,
     .eirp = 10
@@ -68,7 +83,8 @@ static uint8_t tx_buffer[sizeof(hw_radio_packet_t) + 255] = { 0 };
 static uint8_t rx_buffer[sizeof(hw_radio_packet_t) + 255] = { 0 };
 hw_radio_packet_t* tx_packet = (hw_radio_packet_t*)tx_buffer;
 hw_radio_packet_t* rx_packet = (hw_radio_packet_t*)rx_buffer;
-static uint8_t data[] = {16, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15};
+//static uint8_t data[] = {16, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15};
+static uint8_t data[] = {10, 0x00, 0xBB, 0xCC, 0xDD, 0xEE, 0xFF, 0xAA, 0xBB, 0xCC, 0xDD, 0xEE, 0xFF, 0xAA, 0xBB, 0xCC, 0xDD, 0xEE, 0xFF, 0xAA, 0xBB, 0xCC, 0xDD, 0xEE, 0xFF, 0xBB, 0xCC, 0xDD, 0xEE, 0xFF, 0xAA, 0xBB, 0xCC, 0xDD, 0xEE, 0xFF};
 
 
 hw_radio_packet_t received_packet;
@@ -78,13 +94,14 @@ void packet_transmitted(hw_radio_packet_t* packet);
 
 void start_rx()
 {
-    DPRINT("start RX");
+    DPRINT("start RX\n");
     hw_radio_set_rx(&rx_cfg, &packet_received, NULL);
 }
 
 void transmit_packet()
 {
-    DPRINT("transmitting packet");
+    DPRINT("transmitting packet\n");
+    //data[1]++;
     memcpy(&tx_packet->data, data, sizeof(data));
     hw_radio_send_packet(tx_packet, &packet_transmitted);
 }
@@ -101,9 +118,11 @@ void release_packet(hw_radio_packet_t* packet)
 
 void packet_received(hw_radio_packet_t* packet)
 {
-    DPRINT("packet received @ %i , RSSI = %i", packet->rx_meta.timestamp, packet->rx_meta.rssi);
+    DPRINT("packet received @ %i , RSSI = %i\n", packet->rx_meta.timestamp, packet->rx_meta.rssi);
     if(memcmp(data, packet->data, sizeof(data)) != 0)
-        DPRINT("Unexpected data received!");
+        DPRINT("Unexpected data received!\n");
+
+    hw_watchdog_feed();
 }
 
 void packet_transmitted(hw_radio_packet_t* packet)
@@ -111,8 +130,10 @@ void packet_transmitted(hw_radio_packet_t* packet)
 #if HW_NUM_LEDS > 0
     led_toggle(0);
 #endif
-    DPRINT("packet transmitted");
-    timer_post_task(&transmit_packet, 100);
+    DPRINT("packet transmitted\n");
+    timer_post_task(&transmit_packet, 1000);
+
+    hw_watchdog_feed();
 }
 
 void bootstrap()
