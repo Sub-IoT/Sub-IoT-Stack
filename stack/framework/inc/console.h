@@ -43,7 +43,6 @@ void console_rx_interrupt_enable();
 #define console_printf(...) printf(__VA_ARGS__); fflush(stdout)
 
 #define TRY(msg, cmd) \
-console_print("+++ "msg"... "); if( ! cmd ) { console_print("FAIL\r\n"); return; } \
-console_print("OK\r\n");
+  console_print("+++ "msg"... "); console_print( cmd ? "OK\r\n" : "FAIL\r\n" );
 
 #endif
