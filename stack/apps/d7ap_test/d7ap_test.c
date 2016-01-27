@@ -77,7 +77,7 @@ void on_unsollicited_response_received(d7asp_result_t d7asp_result,
                                       uint8_t *alp_command, uint8_t alp_command_size,
                                       hw_rx_metadata_t* rx_meta)
 {
-	DPRINT("Received unsolicited response\n");
+	DPRINT("Received unsolicited response: %d dBm\n", rx_meta->rssi);
 }
 
 void init_user_files() {
@@ -143,9 +143,9 @@ void on_d7asp_fifo_flush_completed(uint8_t fifo_token, uint8_t* progress_bitmap,
                                    uint8_t* success_bitmap, uint8_t bitmap_byte_count)
 {
     if(memcmp(success_bitmap, progress_bitmap, bitmap_byte_count) == 0) {
-        DPRINT("All requests acknowledged");
+        DPRINT("All requests acknowledged\n");
     } else {
-        DPRINT("Not all requests acknowledged");
+        DPRINT("Not all requests acknowledged\n");
     }
 }
 

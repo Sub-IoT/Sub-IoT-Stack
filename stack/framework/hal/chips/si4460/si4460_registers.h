@@ -561,13 +561,13 @@
 
 
  // SYNC WORD
-
+//Although the Sync Word byte(s) are transmitted/received in descending order (i.e., Byte 3 first, followed by Byte 2, etc.), each byte is transmitted/received in little-endian fashion (i.e., least significant bit first).
 #define RADIO_CONFIG_SET_PROPERTY_SYNC_BITS_CS0_0  \
   0x11 /* GROUP: Sync                                       */,\
   0x04 /* NUM_PROPS                                         */,\
   0x01 /* START_PROP                                        */,\
-  0xE6 /* SYNC_BITS,BITS[7:0],BITS[7:0],BITS[7:0],BITS[7:0] */,\
-  0xD0 /* DATA1                                             */,\
+  0x67 /* SYNC_BITS,BITS[7:0],BITS[7:0],BITS[7:0],BITS[7:0] */,\
+  0x0B /* DATA1                                             */,\
   0x00 /* DATA2                                             */,\
   0x00 /* DATA3                                             */\
 
@@ -576,18 +576,17 @@
   0x11 /* GROUP: Sync                                       */,\
   0x04 /* NUM_PROPS                                         */,\
   0x01 /* START_PROP                                        */,\
-  0x0B /* SYNC_BITS,BITS[7:0],BITS[7:0],BITS[7:0],BITS[7:0] */,\
-  0x67 /* DATA1                                             */,\
+  0xD0 /* SYNC_BITS,BITS[7:0],BITS[7:0],BITS[7:0],BITS[7:0] */,\
+  0xE6 /* DATA1                                             */,\
   0x00 /* DATA2                                             */,\
   0x00 /* DATA3                                             */\
-
 
 #define RADIO_CONFIG_SET_PROPERTY_SYNC_BITS_CS1_0  \
   0x11 /* GROUP: Sync                                       */,\
   0x04 /* NUM_PROPS                                         */,\
   0x01 /* START_PROP                                        */,\
-  0xF4 /* SYNC_BITS,BITS[7:0],BITS[7:0],BITS[7:0],BITS[7:0] */,\
-  0x98 /* DATA1                                             */,\
+  0x2F /* SYNC_BITS,BITS[7:0],BITS[7:0],BITS[7:0],BITS[7:0] */,\
+  0x19 /* DATA1                                             */,\
   0x00 /* DATA2                                             */,\
   0x00 /* DATA3                                             */\
 
@@ -596,8 +595,8 @@
   0x11 /* GROUP: Sync                                       */,\
   0x04 /* NUM_PROPS                                         */,\
   0x01 /* START_PROP                                        */,\
-  0x19 /* SYNC_BITS,BITS[7:0],BITS[7:0],BITS[7:0],BITS[7:0] */,\
-  0x2F /* DATA1                                             */,\
+  0x98 /* SYNC_BITS,BITS[7:0],BITS[7:0],BITS[7:0],BITS[7:0] */,\
+  0xF4 /* DATA1                                             */,\
   0x00 /* DATA2                                             */,\
   0x00 /* DATA3                                             */\
 
