@@ -36,6 +36,12 @@
 #define DPRINT(...)  
 #endif
 
+// private implementation of handle struct
+struct spi_handle {
+    // TODO empty for now, add needed fields when supporting multiple SPI channels
+};
+
+
 /**************************************************************************//**
  * @brief  Enabling clocks
  *****************************************************************************/
@@ -92,82 +98,32 @@
 ////                          SPI_ROUTE_LOCATION;
 //}
 
-/*******************************************************************************
- * \brief       sets Spi mode to 0-3
- *
- * \param 	uint8_t mode - this value sets spi mode (b0 = CPHA, b1 = CPOL)
- * \return      none -  it is on the user not to pass a value greater than 3
- *                      to this function
- ******************************************************************************/
 
-void spi_init(void)
+spi_handle_t* spi_init(uint8_t uart, uint32_t baudrate, uint8_t databits, uint8_t pins)
 {
     SPI0->C1 = (0<<SPI_C1_SPIE_SHIFT)|(1<<SPI_C1_SPE_SHIFT)|(0<<SPI_C1_SPTIE_SHIFT)|(1<<SPI_C1_MSTR_SHIFT)|(0<<SPI_C1_CPOL_SHIFT)|(0<<SPI_C1_CPHA_SHIFT)|(0<<SPI_C1_SSOE_SHIFT)|(0<<SPI_C1_LSBFE_SHIFT);
     SPI0->C2 = (0<<SPI_C2_SPMIE_SHIFT)|(0<<SPI_C2_MODFEN_SHIFT)|(0<<SPI_C2_BIDIROE_SHIFT)|(1<<SPI_C2_SPISWAI_SHIFT)|(0<<SPI_C2_SPC0_SHIFT);
     SPI0->BR = (0<<SPI_BR_SPPR_SHIFT)|(0<<SPI_BR_SPR_SHIFT);//.4 MHz (fastest available in VLPR-bus clock is limited to .8MHz)
     SPI0->C1 &= ~((1<<SPI_C1_CPOL_SHIFT)|(1<<SPI_C1_CPHA_SHIFT));
     SPI0->C1 |= (0 << SPI_C1_CPHA_SHIFT);
-    return;
+    return NULL;
 }
 
-// *****************************************************************************
-// @fn          spi_auto_cs_on
-// @brief       Enable auto Chip Select
-// @param       none
-// @return      none
-// *****************************************************************************
-void spi_auto_cs_on(void)
+void spi_select(pin_id_t slave)
 {
-// TODO
-//    SPI_CHANNEL->CTRL |= USART_CTRL_AUTOCS;
-//    SPI_CHANNEL->ROUTE |= USART_ROUTE_CSPEN;
-}
-
-// *****************************************************************************
-// @fn          spi_auto_cs_off
-// @brief       Disable auto Chip Select
-// @param       none
-// @return      none
-// *****************************************************************************
-void spi_auto_cs_off(void)
-{
-    // TODO
-//    SPI_CHANNEL->CTRL &= ~USART_CTRL_AUTOCS;
-//    SPI_CHANNEL->ROUTE &= ~USART_ROUTE_CSPEN;
-}
-
-// *****************************************************************************
-// @fn          spi_select_chip
-// @brief       Select the chip
-// @param       none
-// @return      none
-// *****************************************************************************
-void spi_select_chip(void)
-{
+    // TODO support multiple slaves
 	hw_gpio_clr(SPI_PIN_CS);
-	//GPIO_PinOutClear( SPI_PORT_CS, SPI_PIN_CS );
 }
 
-// *****************************************************************************
-// @fn          spi_deselect_chip
-// @brief       Deselect the chip
-// @param       none
-// @return      none
-// *****************************************************************************
-void spi_deselect_chip(void)
+void spi_deselect(pin_id_t slave)
 {
+    // TODO support multiple slaves
 	hw_gpio_set(SPI_PIN_CS);
-    //GPIO_PinOutSet( SPI_PORT_CS, SPI_PIN_CS );
 }
 
-// *****************************************************************************
-// @fn          spi_byte
-// @brief       Write a byte through SPI
-// @param       unsigned char data      Byte to send
-// @return      unsigned char           Recieved byte
-// *****************************************************************************
-unsigned char spi_byte(unsigned char data)
+uint8_t spi_exchange_byte(spi_handle_t* handle, uint8_t data)
 {
+    // TODO support multiple slaves
     uint8_t retVal;
 
     while(!(SPI0->S & SPI_S_SPTEF_MASK));
@@ -178,22 +134,15 @@ unsigned char spi_byte(unsigned char data)
     return retVal;
 }
 
-// *****************************************************************************
-// @fn          spi_string
-// @brief       Write a string through SPI
-// @param       unsigned char* TxData   String to send
-// @param       unsigned char* RxData   Reception buffer
-// @param       unsigned int length     Length of the string
-// @return      none
-// *****************************************************************************
-void spi_string(unsigned char* TxData, unsigned char* RxData, unsigned int length)
+void spi_exchange_bytes(spi_handle_t* handle, uint8_t* TxData, uint8_t* RxData, size_t length)
 {
+    // TODO support multiple slaves
     uint16_t i = 0;
     if( RxData != NULL && TxData != NULL ) // two way transmition
     {
         while( i < length )
         {
-            RxData[i] = spi_byte( TxData[i] );
+            RxData[i] = spi_exchange_byte(handle, TxData[i]);
             i++;
         }
     }
@@ -201,15 +150,15 @@ void spi_string(unsigned char* TxData, unsigned char* RxData, unsigned int lengt
     {
         while( i < length )
         {
-            spi_byte( TxData[i] );
+            spi_exchange_byte(handle, TxData[i]);
             i++;
         }
     }
-    else if( RxData != NULL && TxData == NULL ) // recieve only
+    else if( RxData != NULL && TxData == NULL ) // receive only
     {
         while( i < length )
         {
-            RxData[i] = spi_byte( 0 );
+            RxData[i] = spi_exchange_byte(handle, 0);
             i++;
         }
     }
