@@ -5,6 +5,7 @@
 #define __CONSOLE_H
 
 #include <stdio.h>
+#include <string.h>
 
 #include "hwuart.h"
 
@@ -42,7 +43,13 @@ void console_rx_interrupt_enable();
 
 #define console_printf(...) printf(__VA_ARGS__); fflush(stdout)
 
+#define TRY_LABEL_LENGTH 25
+
 #define TRY(msg, cmd) \
-  console_print("+++ "msg"... "); console_print( cmd ? "OK\r\n" : "FAIL\r\n" );
+  console_print("+++ "msg"... ");                           \
+  for(uint8_t i=0; i<TRY_LABEL_LENGTH-strlen(msg); i++) {   \
+    console_print_byte(' ');                                \
+  }                                                         \
+  console_print( cmd ? "OK\r\n" : "FAIL\r\n" );
 
 #endif
