@@ -157,7 +157,8 @@ int8_t _perform_i2c_transfer(i2c_handle_t* i2c, I2C_TransferSeq_TypeDef msg) {
   	rtry++;
   }
 
-  if(ret != i2cTransferDone) {
+  // report everything below NACK, which else will pollute when polling
+  if(ret < i2cTransferNack) {
     printf("WARNING: I2C problem: code:%d, retries:%u\r\n", ret, rtry);
   }
 
