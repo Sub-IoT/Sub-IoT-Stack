@@ -1,4 +1,5 @@
 #include <debug.h>
+#include <stdio.h>
 
 #include "em_device.h"
 #include "em_system.h"
@@ -15,7 +16,7 @@
 #include "platform.h"
 
 // TODO use other ways to avoid long polling
-#define I2C_POLLING  10000
+#define I2C_POLLING  100000
 
 #define I2CS       2
 #define LOCATIONS  5
@@ -154,6 +155,10 @@ int8_t _perform_i2c_transfer(i2c_handle_t* i2c, I2C_TransferSeq_TypeDef msg) {
   while(ret == i2cTransferInProgress && rtry < I2C_POLLING) {
   	ret = I2C_Transfer(i2c->channel);
   	rtry++;
+  }
+
+  if(ret != i2cTransferDone) {
+    printf("WARNING: I2C problem: code:%d, retries:%u\r\n", ret, rtry);
   }
 
   return ret;
