@@ -255,19 +255,19 @@ static void configure_eirp(const eirp_t eirp)
 
 static void configure_syncword_class(syncword_class_t syncword_class)
 {
-//	if(syncword_class != current_syncword_class)
-//	{
-//		current_syncword_class = syncword_class;
-//		switch (syncword_class)
-//		{
-//			case PHY_SYNCWORD_CLASS0:
-//				ezradio_set_property(RADIO_CONFIG_SET_PROPERTY_SYNC_BITS_CS0_0);
-//				break;
-//			case PHY_SYNCWORD_CLASS1:
-//				ezradio_set_property(RADIO_CONFIG_SET_PROPERTY_SYNC_BITS_CS0_1);
-//				break;
-//		}
-//	}
+	if(syncword_class != current_syncword_class)
+	{
+		current_syncword_class = syncword_class;
+		switch (syncword_class)
+		{
+			case PHY_SYNCWORD_CLASS0:
+				ezradio_set_property(RADIO_CONFIG_SET_PROPERTY_SYNC_BITS_CS0_0);
+				break;
+			case PHY_SYNCWORD_CLASS1:
+				ezradio_set_property(RADIO_CONFIG_SET_PROPERTY_SYNC_BITS_CS0_1);
+				break;
+		}
+	}
 }
 
 static void switch_to_idle_mode()
@@ -346,7 +346,16 @@ error_t hw_radio_set_rx(hw_rx_cfg_t const* rx_cfg, rx_packet_callback_t rx_cb, r
 		return SUCCESS;
 	}
 
-	start_rx(rx_cfg);
+	if (rx_cfg != NULL)
+	{
+		start_rx(rx_cfg);
+	}
+	else
+	{
+		hw_rx_cfg_t cfg = {current_channel_id, current_syncword_class};
+		start_rx(&cfg);
+	}
+
 
 	return SUCCESS;
 }
