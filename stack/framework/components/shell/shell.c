@@ -150,7 +150,7 @@ void shell_echo_disable() {
 
 void shell_register_handler(cmd_handler_registration_t handler_registration)
 {
-    assert(handler_registration.id < 64);
+    assert(handler_registration.id >= ' ');
     assert(handler_registration.cmd_handler_callback != NULL);
 
     int8_t empty_index = -1;
