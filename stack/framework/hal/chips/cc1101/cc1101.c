@@ -397,6 +397,7 @@ error_t hw_radio_init(alloc_packet_callback_t alloc_packet_cb,
 
     cc1101_interface_init(&end_of_packet_isr);
     cc1101_interface_reset_radio_core();
+    cc1101_interface_set_interrupts_enabled(false);
     cc1101_interface_write_rfsettings(&rf_settings);
 
     DPRINT("RF settings:");
