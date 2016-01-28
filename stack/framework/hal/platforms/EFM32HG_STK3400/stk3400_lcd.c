@@ -30,6 +30,9 @@
 #include "retargettextdisplay.h"
 #include <debug.h>
 
+#define BUFFER_SIZE 100
+static char NGDEF(buffer)[BUFFER_SIZE];
+
 static TEXTDISPLAY_Handle_t h;
 
 void __lcd_init()
@@ -52,9 +55,13 @@ void lcd_all_on()
 	//SegmentLCD_AllOn();
 }
 
-void lcd_write_string(const char* text)
+void lcd_write_string(char* format, ...)
 {
-	TEXTDISPLAY_WriteString(h, text);
+	va_list args;
+	va_start(args, format);
+	uint8_t len = vsnprintf(NG(buffer), BUFFER_SIZE, format, args);
+	va_end(args);
+	TEXTDISPLAY_WriteString(h, NG(buffer));
 }
 
 void lcd_write_number(int value)
