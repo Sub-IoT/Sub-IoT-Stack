@@ -75,24 +75,36 @@ error_t fifo_pop(fifo_t* fifo, uint8_t* buffer, uint16_t len)
     return SUCCESS;
 }
 
-error_t fifo_peek(fifo_t* fifo, uint8_t* buffer, uint16_t offset, uint16_t len)
-{
-    if(len > fifo_get_size(fifo)) return ESIZE;
+error_t fifo_peek(fifo_t* fifo, uint8_t* buffer, uint16_t offset, uint16_t len) {
+  // quickly bail out if requested length is zero, nothing to do
+  if(len == 0) { return SUCCESS; }
 
-    uint16_t start_idx = fifo->head_idx + offset;
-    if(fifo->head_idx + offset + len < fifo->max_size)
-    {
-        memcpy(buffer, fifo->buffer + start_idx, len);
-        return SUCCESS;
-    }
+  // quick check if requested len doesn't exceed available data
+  if(len > fifo_get_size(fifo)) { return ESIZE; }
 
-    if(start_idx > fifo->max_size)
-        start_idx -= fifo->max_size;
+  // determine start/end index (in circular buffer)
+  uint16_t start_idx = (fifo->head_idx + offset) % fifo->max_size;
+  uint16_t end_idx   = (start_idx      + len   ) % fifo->max_size;
 
-    uint16_t space_before_max_size = fifo->max_size - start_idx;
-    memcpy(buffer, fifo->buffer + start_idx, space_before_max_size);
-    memcpy(buffer + space_before_max_size, fifo->buffer, len - space_before_max_size);
+  // simple case: the end doesn't wrap...
+  // .............
+  //     S-len->E
+  if(end_idx >= start_idx) {
+    memcpy(buffer, fifo->buffer + start_idx, len);
     return SUCCESS;
+  }
+
+  // the end does wrap...
+  // .............
+  // ->E S--len-->
+  //      <--p1-->
+  uint16_t part1 = fifo->max_size - start_idx;
+  // copy first part from start up to the end of the buffer
+  memcpy(buffer,         fifo->buffer + start_idx, part1);
+  // copy remaining (wrapped) bytes from start
+  memcpy(buffer + part1, fifo->buffer,             len - part1);
+
+  return SUCCESS;
 }
 
 int16_t fifo_get_size(fifo_t* fifo)
