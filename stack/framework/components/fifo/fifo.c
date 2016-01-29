@@ -55,26 +55,6 @@ error_t fifo_put(fifo_t *fifo, uint8_t *data, uint16_t len)
         return ESIZE;
 }
 
-error_t fifo_pop(fifo_t* fifo, uint8_t* buffer, uint16_t len)
-{
-    if(len > fifo_get_size(fifo)) return ESIZE;
-
-    if(fifo->head_idx + len < fifo->max_size)
-    {
-        memcpy(buffer, fifo->buffer + fifo->head_idx, len);
-        fifo->head_idx += len;
-        return SUCCESS;
-    }
-
-    // wrap
-    uint16_t len_until_max_size = fifo->max_size - fifo->head_idx;
-    uint16_t len_after_wrap = len - len_until_max_size;
-    memcpy(buffer, fifo->buffer + fifo->head_idx, len_until_max_size);
-    memcpy(buffer + len_until_max_size, fifo->buffer, len_after_wrap);
-    fifo->head_idx = len_after_wrap;
-    return SUCCESS;
-}
-
 error_t fifo_peek(fifo_t* fifo, uint8_t* buffer, uint16_t offset, uint16_t len) {
   // quickly bail out if requested length is zero, nothing to do
   if(len == 0) { return SUCCESS; }
@@ -103,6 +83,17 @@ error_t fifo_peek(fifo_t* fifo, uint8_t* buffer, uint16_t offset, uint16_t len) 
   memcpy(buffer,         fifo->buffer + start_idx, part1);
   // copy remaining (wrapped) bytes from start
   memcpy(buffer + part1, fifo->buffer,             len - part1);
+
+  return SUCCESS;
+}
+
+error_t fifo_pop(fifo_t* fifo, uint8_t* buffer, uint16_t len) {
+  // use peek logic to retrieve data
+  error_t err = fifo_peek(fifo, buffer, 0, len);
+  if( err != SUCCESS ) { return err; }
+
+  // progress head to implement popping behaviour
+  fifo->head_idx = (fifo->head_idx + len) % fifo->max_size;
 
   return SUCCESS;
 }
