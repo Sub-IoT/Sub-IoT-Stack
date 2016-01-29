@@ -146,7 +146,7 @@ __LINK_C error_t hw_gpio_configure_interrupt(pin_id_t pin_id, gpio_inthandler_t 
     port_interrupt_config_t interrupt_config;
     if(event_mask == 0)
         interrupt_config = kPortIntDisabled;
-    else if(event_mask & GPIO_FALLING_EDGE && event_mask & GPIO_FALLING_EDGE)
+    else if(event_mask & GPIO_FALLING_EDGE && event_mask & GPIO_RISING_EDGE)
         interrupt_config = kPortIntEitherEdge;
     else if(event_mask & GPIO_FALLING_EDGE)
         interrupt_config = kPortIntFallingEdge;
