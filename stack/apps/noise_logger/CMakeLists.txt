@@ -32,6 +32,8 @@
 
 #Call the BUILD_APPLICATION to build the final executable for the specific platform
 ADD_EXECUTABLE(noise_logger.elf noise_logger.c)
+ADD_EXECUTABLE(noise_logger.axf noise_logger.c)
 
 #Add the framework (and one or more modules) as libraries to the application
 TARGET_LINK_LIBRARIES(noise_logger.elf framework)
+TARGET_LINK_LIBRARIES(noise_logger.axf framework)

@@ -32,6 +32,8 @@
 
 #Call the BUILD_APPLICATION to build the final executable for the specific platform
 ADD_EXECUTABLE(gateway.elf app.c)
+ADD_EXECUTABLE(gateway.axf app.c)
 
 #Add the framework (and one or more modules) as libraries to the application
 TARGET_LINK_LIBRARIES(gateway.elf d7ap framework)
+TARGET_LINK_LIBRARIES(gateway.axf d7ap framework)
