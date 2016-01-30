@@ -23,6 +23,7 @@ SET(CC1101_SRC
         cc1101.c
         cc1101.h
         cc1101_interface.c
+        cc1101_registers.h
 )
 
 # interface specific logic
