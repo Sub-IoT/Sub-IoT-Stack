@@ -32,6 +32,23 @@
 
 #Call the BUILD_APPLICATION to build the final executable for the specific platform
 ADD_EXECUTABLE(d7ap_test.elf d7ap_test.c)
+ADD_EXECUTABLE(d7ap_test.axf d7ap_test.c)
 
 #Add the framework (and one or more modules) as libraries to the application
 TARGET_LINK_LIBRARIES(d7ap_test.elf d7ap framework)
+TARGET_LINK_LIBRARIES(d7ap_test.axf d7ap framework)
+
+
+#Generate IDE specific binaries (if the required macro is available for the chosen platform)
+#MACRO_AVAILABLE(GENERATE_SIMPLICITY_STUDIO_FILES SSF_AVAILABLE)
+#IF(SSF_AVAILABLE)
+#    GENERATE_SIMPLICITY_STUDIO_FILES(d7ap_test)
+#    ADD_EXECUTABLE(d7ap_test.axf d7ap_test.c)
+#    TARGET_LINK_LIBRARIES(d7ap_test.axf d7ap framework)
+#ENDIF()
+
+#ADD_CUSTOM_COMMAND(TARGET d7ap_test.elf POST_BUILD
+#	COMMAND arm-none-eabi-objcopy -O binary d7ap_test.elf d7ap_test.bin
+#)
+
+
