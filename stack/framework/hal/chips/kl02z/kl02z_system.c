@@ -27,52 +27,16 @@
 
 void hw_enter_lowpower_mode(uint8_t mode)
 {
-// TODO
-//    switch(mode)
-//    {
-//	case 0:
-//	{
-//	    EMU_EnterEM1();
-//	    break;
-//	}
-//	case 1:
-//	{
-//	    EMU_EnterEM2(true);
-//	    break;
-//	}
-//	case 2:
-//	{
-//	    EMU_EnterEM3(true);
-//	    break;
-//	}
-//	case 4:
-//	{
-//	    EMU_EnterEM4();
-//	    break;
-//	}
-//	default:
-//	{
-//	    assert(0);
-//	}
-//    }
+    // TODO
 }
 
 uint64_t hw_get_unique_id()
 {
     // TODO
-//    return SYSTEM_GetUnique();
+    return 0;
 }
 
 void hw_busy_wait(int16_t microseconds)
 {
-    // note: uses core debugger cycle counter mechanism for now,
-    // may switch to timer later if more accuracy is needed.
-//    uint32_t counter = microseconds * (CMU_ClockFreqGet(cmuClock_CORE) / 1000000);
-//
-//    CoreDebug->DEMCR |= CoreDebug_DEMCR_TRCENA_Msk;
-//    DWT->CTRL        |= 1;
-//    DWT->CYCCNT       = 0;
-//
-//    while (DWT->CYCCNT < counter) ;
     // TODO
 }

@@ -41,64 +41,6 @@ struct spi_handle {
     // TODO empty for now, add needed fields when supporting multiple SPI channels
 };
 
-
-/**************************************************************************//**
- * @brief  Enabling clocks
- *****************************************************************************/
-//void setupCmu(void)
-//{
-//// TODO
-////    /* Enabling clocks */
-////#ifdef SPI_USE_DMA
-////    CMU_ClockEnable(cmuClock_DMA, true);
-////#endif
-////    CMU_ClockEnable(cmuClock_GPIO, true);
-////    CMU_ClockEnable(SPI_CLOCK, true);
-//}
-
-
-/**************************************************************************//**
- * @brief  Setup SPI as Master
- *****************************************************************************/
-//void setupSpi(void)
-//{
-//// TODO
-////    USART_InitSync_TypeDef usartInit = USART_INITSYNC_DEFAULT;
-////
-////    /* Initialize SPI */
-////    usartInit.databits  = usartDatabits8;   /* 8 bits of data */
-////    usartInit.baudrate  = SPI_BAUDRATE;     /* Clock frequency */
-////    usartInit.master    = true;             /* Master mode */
-////    usartInit.msbf      = true;             /* Most Significant Bit first */
-////    usartInit.clockMode = usartClockMode0;  /* Clock idle low, sample on rising edge */
-////
-////    USART_InitSync(SPI_CHANNEL, &usartInit);
-////
-////    /* Enable SPI transmit and receive */
-////    USART_Enable(SPI_CHANNEL, usartEnable);
-////
-////    /* Configure GPIO pins for SPI */
-////    //GPIO_PinModeSet(SPI_PORT_MOSI,  SPI_PIN_MOSI,   gpioModePushPull,   0); /* MOSI */
-////    //GPIO_PinModeSet(SPI_PORT_MISO,  SPI_PIN_MISO,   gpioModeInput,      0); /* MISO */
-////    //GPIO_PinModeSet(SPI_PORT_CLK,   SPI_PIN_CLK,    gpioModePushPull,   0); /* CLK */
-////    //GPIO_PinModeSet(SPI_PORT_CS,    SPI_PIN_CS,     gpioModePushPull,   1); /* CS */
-////    //edit: do this via the hw_gpio_configure_pin interface to signal that the pins are in use
-////    //note: normally this should be done in the platform-specific initialisation code BUT, since this is a driver for a device (uart) that is
-////    //an integral part of the MCU we are certain this code will NOT be used in combination with a different MCU so we can do this here
-////    error_t err;
-////    err = hw_gpio_configure_pin(SPI_PIN_MOSI, false,   gpioModePushPull,   0); assert(err == SUCCESS); /* MOSI */
-////    err = hw_gpio_configure_pin(SPI_PIN_MISO, false,   gpioModeInput,      0); assert(err == SUCCESS); /* MISO */
-////    err = hw_gpio_configure_pin(SPI_PIN_CLK, false,    gpioModePushPull,   0); assert(err == SUCCESS); /* CLK */
-////    err = hw_gpio_configure_pin(SPI_PIN_CS, false,     gpioModePushPull,   1); assert(err == SUCCESS); /* CS */
-////
-////    /* Enable routing for SPI pins from USART to location 1 */
-////    SPI_CHANNEL->ROUTE =  USART_ROUTE_TXPEN |
-////                          USART_ROUTE_RXPEN |
-////                          USART_ROUTE_CLKPEN |
-////                          SPI_ROUTE_LOCATION;
-//}
-
-
 spi_handle_t* spi_init(uint8_t uart, uint32_t baudrate, uint8_t databits, uint8_t pins)
 {
     SPI0->C1 = (0<<SPI_C1_SPIE_SHIFT)|(1<<SPI_C1_SPE_SHIFT)|(0<<SPI_C1_SPTIE_SHIFT)|(1<<SPI_C1_MSTR_SHIFT)|(0<<SPI_C1_CPOL_SHIFT)|(0<<SPI_C1_CPHA_SHIFT)|(0<<SPI_C1_SSOE_SHIFT)|(0<<SPI_C1_LSBFE_SHIFT);

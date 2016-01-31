@@ -26,10 +26,10 @@
 
 void start_atomic()
 {
-	// TODO INT_Disable();
+    // TODO
 }
 
 void end_atomic()
 {
-	// TODO INT_Enable();
+    // TODO
 }
