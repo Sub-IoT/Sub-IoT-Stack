@@ -29,6 +29,9 @@
 #include "textdisplay.h"
 #include "retargettextdisplay.h"
 #include <debug.h>
+#include "ng.h"
+#include "stdio.h"
+#include "stdarg.h"
 
 #define BUFFER_SIZE 100
 static char NGDEF(buffer)[BUFFER_SIZE];
