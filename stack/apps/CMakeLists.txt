@@ -19,7 +19,7 @@
 
 SET(APP_EXTRA_APPS_DIR "" CACHE STRING "Path to directory containing extra, out of tree apps (optional)")
 
-include(${CMAKE_SOURCE_DIR}/cmake/app_macros.cmake)
+include(${PROJECT_SOURCE_DIR}/cmake/app_macros.cmake)
 
 #Add the 'BUILD_APPLICATIONS' option
 OPTION(BUILD_APPLICATIONS "Build Applications" ON)

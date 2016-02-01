@@ -17,7 +17,7 @@
 # limitations under the License.
 #
 
-include(${CMAKE_SOURCE_DIR}/cmake/module_macros.cmake)
+include(${PROJECT_SOURCE_DIR}/cmake/module_macros.cmake)
 #Add the 'BUILD_MODULES' option
 OPTION(BUILD_MODULES "Build Modules" ON)
 LIST_SUBDIRS(CUR_DIRS ${CMAKE_CURRENT_SOURCE_DIR})

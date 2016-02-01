@@ -25,7 +25,7 @@ EXPORT_GLOBAL_INCLUDE_DIRECTORIES(inc)
 EXPORT_GLOBAL_INCLUDE_DIRECTORIES(${CMAKE_CURRENT_BINARY_DIR})
 
 #Include framework-specific helper MACRO's
-include(${CMAKE_SOURCE_DIR}/cmake/framework_macros.cmake)
+include(${PROJECT_SOURCE_DIR}/cmake/framework_macros.cmake)
 
 #add the hal
 ADD_SUBDIRECTORY("hal")
