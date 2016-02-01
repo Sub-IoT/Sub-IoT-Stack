@@ -55,8 +55,8 @@
 #define CONSOLE_BAUDRATE    PLATFORM_EZR32LG_WSTK6200A_CONSOLE_BAUDRATE
 
 // UART0 location #1: PE0 and PE1
-#define UART_PIN_TX         E0           // PE0
-#define UART_PIN_RX         E1          // PE1
+//#define UART_PIN_TX         E0           // PE0
+//#define UART_PIN_RX         E1          // PE1
 
 
 /********************

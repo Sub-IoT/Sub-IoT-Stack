@@ -107,7 +107,9 @@ typedef struct
  */
 static inline bool hw_radio_channel_ids_equal(const channel_id_t* a, const channel_id_t* b)
 {
-    return memcmp(a,b, sizeof(channel_id_t)) == 0;
+    //return memcmp(a,b, sizeof(channel_id_t)) == 0; //not working since channel_id_t not packed
+	return (a->channel_header_raw == b->channel_header_raw) && (a->center_freq_index == b->center_freq_index);
+
 }
 
 /** \brief The type for the result of a 'hardware' crc check

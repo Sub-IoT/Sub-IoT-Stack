@@ -103,147 +103,148 @@ static void report_rssi();
 
 static void configure_channel(const channel_id_t* channel_id)
 {
+	DPRINT("configure_channel: %s", byte_to_binary(channel_id->channel_header_raw));
 	// only change settings if channel_id changed compared to current config
 	// TODO: check if only channel number changes
-//	if(!hw_radio_channel_ids_equal(channel_id, &current_channel_id))
-//	{
-//		assert(channel_id->channel_header.ch_coding == PHY_CODING_PN9); // TODO implement other codings
-//		// TODO assert valid center freq index
-//
-//		memcpy(&current_channel_id, channel_id, sizeof(channel_id_t)); // cache new settings
-//
-//		// TODO preamble size depends on channel class
-//
-//		// set freq band
-//		DPRINT("Set frequency band index: %d", channel_id->channel_header.ch_freq_band);
-//
-//		// TODO validate
-//		switch(channel_id->channel_header.ch_freq_band)
-//		{
-//		// TODO calculate depending on rate and channr
-//		case PHY_BAND_433:
-//			assert(false);
-//
-//			if(channel_id->channel_header.ch_class == PHY_CLASS_LO_RATE)
-//			{
-//				assert(channel_id->center_freq_index <= 68);
-//			}
-//			else
-//			{
-//				assert(channel_id->center_freq_index % 8 == 0 && channel_id->center_freq_index <= 56);
-//			}
-//
-//			DPRINT("Set channel freq index: %d", channel_id->center_freq_index);
-//			break;
-//		case PHY_BAND_868:
-//
-//			if(channel_id->channel_header.ch_class == PHY_CLASS_LO_RATE)
-//			{
-//				assert(channel_id->center_freq_index <= 279);
-//
-//				ezradio_set_property(RADIO_CONFIG_SET_PROPERTY_SYNTH_PFDCP_CPFF_868_LR);
-//				ezradio_set_property(RADIO_CONFIG_SET_PROPERTY_SYNTH_PFDCP_CPINT_868_LR);
-//				ezradio_set_property(RADIO_CONFIG_SET_PROPERTY_SYNTH_LPFILT3_868_LR);
-//				ezradio_set_property(RADIO_CONFIG_SET_PROPERTY_SYNTH_LPFILT2_868_LR);
-//				ezradio_set_property(RADIO_CONFIG_SET_PROPERTY_SYNTH_LPFILT1_868_LR);
-//				ezradio_set_property(RADIO_CONFIG_SET_PROPERTY_MODEM_DATA_RATE_868_LR);
-//				ezradio_set_property(RADIO_CONFIG_SET_PROPERTY_MODEM_TX_NCO_MODE_868_LR);
-//				ezradio_set_property(RADIO_CONFIG_SET_PROPERTY_MODEM_FREQ_DEV_868_LR);
-//				ezradio_set_property(RADIO_CONFIG_SET_PROPERTY_PA_TC_868_LR);
-//
-//				ez_channel_id = channel_id->center_freq_index % 255;
-//				if ((uint8_t) (channel_id->center_freq_index / 255) == 0)
-//				{
-//					ezradio_set_property(RADIO_CONFIG_SET_PROPERTY_FREQ_CONTROL_FRAC_868_LR_01);
-//				} else
-//				{
-//					ezradio_set_property(RADIO_CONFIG_SET_PROPERTY_FREQ_CONTROL_FRAC_868_LR_02);
-//				}
-//
-//				ezradio_set_property(RADIO_CONFIG_SET_PROPERTY_MODEM_DECIMATION_CFG1_868_LR);
-//				ezradio_set_property(RADIO_CONFIG_SET_PROPERTY_MODEM_BCR_OSR_868_LR);
-//				ezradio_set_property(RADIO_CONFIG_SET_PROPERTY_MODEM_BCR_NCO_OFFSET_868_LR);
-//				ezradio_set_property(RADIO_CONFIG_SET_PROPERTY_MODEM_BCR_GAIN_868_LR);
-//				ezradio_set_property(RADIO_CONFIG_SET_PROPERTY_MODEM_AFC_WAIT_868_LR);
-//				ezradio_set_property(RADIO_CONFIG_SET_PROPERTY_MODEM_AFC_GAIN_868_LR);
-//				ezradio_set_property(RADIO_CONFIG_SET_PROPERTY_MODEM_AFC_LIMITER_868_LR);
-//				ezradio_set_property(RADIO_CONFIG_SET_PROPERTY_MODEM_AGC_RFPD_DECAY_868_LR);
-//				ezradio_set_property(RADIO_CONFIG_SET_PROPERTY_MODEM_AGC_IFPD_DECAY_868_LR);
-//				ezradio_set_property(RADIO_CONFIG_SET_PROPERTY_MODEM_RAW_EYE_868_LR);
-//				ezradio_set_property(RADIO_CONFIG_SET_PROPERTY_MODEM_CHFLT_RX1_CHFLT_COE_0_868_LR);
-//				ezradio_set_property(RADIO_CONFIG_SET_PROPERTY_MODEM_CHFLT_RX1_CHFLT_COE_1_868_LR);
-//				ezradio_set_property(RADIO_CONFIG_SET_PROPERTY_MODEM_CHFLT_RX2_CHFLT_COE_0_868_LR);
-//				ezradio_set_property(RADIO_CONFIG_SET_PROPERTY_MODEM_CHFLT_RX2_CHFLT_COE_1_868_LR);
-//				ezradio_set_property(RADIO_CONFIG_SET_PROPERTY_MODEM_SPIKE_DET_868_LR);
-//				ezradio_set_property(RADIO_CONFIG_SET_PROPERTY_MODEM_DSA_QUAL_868_LR);
-//			}
-//			else if(channel_id->channel_header.ch_class == PHY_CLASS_NORMAL_RATE)
-//			{
-//				assert(channel_id->center_freq_index % 8 == 0 && channel_id->center_freq_index <= 270);
-//				ez_channel_id = channel_id->center_freq_index / 8;
-//
-//				ezradio_set_property(RADIO_CONFIG_SET_PROPERTY_SYNTH_PFDCP_CPFF_868_NR);
-//				ezradio_set_property(RADIO_CONFIG_SET_PROPERTY_SYNTH_PFDCP_CPINT_868_NR);
-//				ezradio_set_property(RADIO_CONFIG_SET_PROPERTY_SYNTH_LPFILT3_868_NR);
-//				ezradio_set_property(RADIO_CONFIG_SET_PROPERTY_SYNTH_LPFILT2_868_NR);
-//				ezradio_set_property(RADIO_CONFIG_SET_PROPERTY_SYNTH_LPFILT1_868_NR);
-//				ezradio_set_property(RADIO_CONFIG_SET_PROPERTY_MODEM_DATA_RATE_868_NR);
-//				ezradio_set_property(RADIO_CONFIG_SET_PROPERTY_MODEM_TX_NCO_MODE_868_NR);
-//				ezradio_set_property(RADIO_CONFIG_SET_PROPERTY_MODEM_FREQ_DEV_868_NR);
-//				ezradio_set_property(RADIO_CONFIG_SET_PROPERTY_PA_TC_868_NR);
-//				ezradio_set_property(RADIO_CONFIG_SET_PROPERTY_MODEM_DECIMATION_CFG1_868_NR);
-//				ezradio_set_property(RADIO_CONFIG_SET_PROPERTY_MODEM_BCR_OSR_868_NR);
-//				ezradio_set_property(RADIO_CONFIG_SET_PROPERTY_MODEM_BCR_NCO_OFFSET_868_NR);
-//				ezradio_set_property(RADIO_CONFIG_SET_PROPERTY_MODEM_BCR_GAIN_868_NR);
-//				ezradio_set_property(RADIO_CONFIG_SET_PROPERTY_MODEM_AFC_WAIT_868_NR);
-//				ezradio_set_property(RADIO_CONFIG_SET_PROPERTY_MODEM_AFC_GAIN_868_NR);
-//				ezradio_set_property(RADIO_CONFIG_SET_PROPERTY_MODEM_AFC_LIMITER_868_NR);
-//				ezradio_set_property(RADIO_CONFIG_SET_PROPERTY_MODEM_AGC_RFPD_DECAY_868_NR);
-//				ezradio_set_property(RADIO_CONFIG_SET_PROPERTY_MODEM_AGC_IFPD_DECAY_868_NR);
-//				ezradio_set_property(RADIO_CONFIG_SET_PROPERTY_MODEM_RAW_EYE_868_NR);
-//				ezradio_set_property(RADIO_CONFIG_SET_PROPERTY_MODEM_CHFLT_RX1_CHFLT_COE_0_868_NR);
-//				ezradio_set_property(RADIO_CONFIG_SET_PROPERTY_MODEM_CHFLT_RX1_CHFLT_COE_1_868_NR);
-//				ezradio_set_property(RADIO_CONFIG_SET_PROPERTY_MODEM_CHFLT_RX2_CHFLT_COE_0_868_NR);
-//				ezradio_set_property(RADIO_CONFIG_SET_PROPERTY_MODEM_CHFLT_RX2_CHFLT_COE_1_868_NR);
-//				ezradio_set_property(RADIO_CONFIG_SET_PROPERTY_MODEM_SPIKE_DET_868_NR);
-//			} else {
-//				assert(channel_id->center_freq_index % 8 == 0 && channel_id->center_freq_index <= 270);
-//				ez_channel_id = channel_id->center_freq_index / 8;
-//
-//				ezradio_set_property(RADIO_CONFIG_SET_PROPERTY_SYNTH_PFDCP_CPFF_868_HR);
-//				ezradio_set_property(RADIO_CONFIG_SET_PROPERTY_SYNTH_PFDCP_CPINT_868_HR);
-//				ezradio_set_property(RADIO_CONFIG_SET_PROPERTY_SYNTH_LPFILT3_868_HR);
-//				ezradio_set_property(RADIO_CONFIG_SET_PROPERTY_SYNTH_LPFILT2_868_HR);
-//				ezradio_set_property(RADIO_CONFIG_SET_PROPERTY_SYNTH_LPFILT1_868_HR);
-//				ezradio_set_property(RADIO_CONFIG_SET_PROPERTY_MODEM_DATA_RATE_868_HR);
-//				ezradio_set_property(RADIO_CONFIG_SET_PROPERTY_MODEM_TX_NCO_MODE_868_HR);
-//				ezradio_set_property(RADIO_CONFIG_SET_PROPERTY_MODEM_FREQ_DEV_868_HR);
-//				ezradio_set_property(RADIO_CONFIG_SET_PROPERTY_PA_TC_868_HR);
-//				ezradio_set_property(RADIO_CONFIG_SET_PROPERTY_MODEM_DECIMATION_CFG1_868_HR);
-//				ezradio_set_property(RADIO_CONFIG_SET_PROPERTY_MODEM_BCR_OSR_868_HR);
-//				ezradio_set_property(RADIO_CONFIG_SET_PROPERTY_MODEM_BCR_NCO_OFFSET_868_HR);
-//				ezradio_set_property(RADIO_CONFIG_SET_PROPERTY_MODEM_BCR_GAIN_868_HR);
-//				ezradio_set_property(RADIO_CONFIG_SET_PROPERTY_MODEM_AFC_WAIT_868_HR);
-//				ezradio_set_property(RADIO_CONFIG_SET_PROPERTY_MODEM_AFC_GAIN_868_HR);
-//				ezradio_set_property(RADIO_CONFIG_SET_PROPERTY_MODEM_AFC_LIMITER_868_HR);
-//				ezradio_set_property(RADIO_CONFIG_SET_PROPERTY_MODEM_AGC_RFPD_DECAY_868_HR);
-//				ezradio_set_property(RADIO_CONFIG_SET_PROPERTY_MODEM_AGC_IFPD_DECAY_868_HR);
-//				ezradio_set_property(RADIO_CONFIG_SET_PROPERTY_MODEM_RAW_EYE_868_HR);
-//				ezradio_set_property(RADIO_CONFIG_SET_PROPERTY_MODEM_CHFLT_RX1_CHFLT_COE_0_868_HR);
-//				ezradio_set_property(RADIO_CONFIG_SET_PROPERTY_MODEM_CHFLT_RX1_CHFLT_COE_1_868_HR);
-//				ezradio_set_property(RADIO_CONFIG_SET_PROPERTY_MODEM_CHFLT_RX2_CHFLT_COE_0_868_HR);
-//				ezradio_set_property(RADIO_CONFIG_SET_PROPERTY_MODEM_CHFLT_RX2_CHFLT_COE_1_868_HR);
-//				ezradio_set_property(RADIO_CONFIG_SET_PROPERTY_MODEM_SPIKE_DET_868_HR);
-//			}
-//
-//			DPRINT("Set channel freq index: %d", channel_id->center_freq_index);
-//			break;
-//		case PHY_BAND_915:
-//			assert(false);
-//			break;
-//
-//		}
-//	}
+	if(!hw_radio_channel_ids_equal(channel_id, &current_channel_id))
+	{
+		assert(channel_id->channel_header.ch_coding == PHY_CODING_PN9); // TODO implement other codings
+		// TODO assert valid center freq index
+
+		memcpy(&current_channel_id, channel_id, sizeof(channel_id_t)); // cache new settings
+
+		// TODO preamble size depends on channel class
+
+		// set freq band
+		DPRINT("Set frequency band index: %d", channel_id->channel_header.ch_freq_band);
+
+		// TODO validate
+		switch(channel_id->channel_header.ch_freq_band)
+		{
+		// TODO calculate depending on rate and channr
+		case PHY_BAND_433:
+			assert(false);
+
+			if(channel_id->channel_header.ch_class == PHY_CLASS_LO_RATE)
+			{
+				assert(channel_id->center_freq_index <= 68);
+			}
+			else
+			{
+				assert(channel_id->center_freq_index % 8 == 0 && channel_id->center_freq_index <= 56);
+			}
+
+			DPRINT("Set channel freq index: %d", channel_id->center_freq_index);
+			break;
+		case PHY_BAND_868:
+
+			if(channel_id->channel_header.ch_class == PHY_CLASS_LO_RATE)
+			{
+				assert(channel_id->center_freq_index <= 279);
+
+				ezradio_set_property(RADIO_CONFIG_SET_PROPERTY_SYNTH_PFDCP_CPFF_868_LR);
+				ezradio_set_property(RADIO_CONFIG_SET_PROPERTY_SYNTH_PFDCP_CPINT_868_LR);
+				ezradio_set_property(RADIO_CONFIG_SET_PROPERTY_SYNTH_LPFILT3_868_LR);
+				ezradio_set_property(RADIO_CONFIG_SET_PROPERTY_SYNTH_LPFILT2_868_LR);
+				ezradio_set_property(RADIO_CONFIG_SET_PROPERTY_SYNTH_LPFILT1_868_LR);
+				ezradio_set_property(RADIO_CONFIG_SET_PROPERTY_MODEM_DATA_RATE_868_LR);
+				ezradio_set_property(RADIO_CONFIG_SET_PROPERTY_MODEM_TX_NCO_MODE_868_LR);
+				ezradio_set_property(RADIO_CONFIG_SET_PROPERTY_MODEM_FREQ_DEV_868_LR);
+				ezradio_set_property(RADIO_CONFIG_SET_PROPERTY_PA_TC_868_LR);
+
+				ez_channel_id = channel_id->center_freq_index % 255;
+				if ((uint8_t) (channel_id->center_freq_index / 255) == 0)
+				{
+					ezradio_set_property(RADIO_CONFIG_SET_PROPERTY_FREQ_CONTROL_FRAC_868_LR_01);
+				} else
+				{
+					ezradio_set_property(RADIO_CONFIG_SET_PROPERTY_FREQ_CONTROL_FRAC_868_LR_02);
+				}
+
+				ezradio_set_property(RADIO_CONFIG_SET_PROPERTY_MODEM_DECIMATION_CFG1_868_LR);
+				ezradio_set_property(RADIO_CONFIG_SET_PROPERTY_MODEM_BCR_OSR_868_LR);
+				ezradio_set_property(RADIO_CONFIG_SET_PROPERTY_MODEM_BCR_NCO_OFFSET_868_LR);
+				ezradio_set_property(RADIO_CONFIG_SET_PROPERTY_MODEM_BCR_GAIN_868_LR);
+				ezradio_set_property(RADIO_CONFIG_SET_PROPERTY_MODEM_AFC_WAIT_868_LR);
+				ezradio_set_property(RADIO_CONFIG_SET_PROPERTY_MODEM_AFC_GAIN_868_LR);
+				ezradio_set_property(RADIO_CONFIG_SET_PROPERTY_MODEM_AFC_LIMITER_868_LR);
+				ezradio_set_property(RADIO_CONFIG_SET_PROPERTY_MODEM_AGC_RFPD_DECAY_868_LR);
+				ezradio_set_property(RADIO_CONFIG_SET_PROPERTY_MODEM_AGC_IFPD_DECAY_868_LR);
+				ezradio_set_property(RADIO_CONFIG_SET_PROPERTY_MODEM_RAW_EYE_868_LR);
+				ezradio_set_property(RADIO_CONFIG_SET_PROPERTY_MODEM_CHFLT_RX1_CHFLT_COE_0_868_LR);
+				ezradio_set_property(RADIO_CONFIG_SET_PROPERTY_MODEM_CHFLT_RX1_CHFLT_COE_1_868_LR);
+				ezradio_set_property(RADIO_CONFIG_SET_PROPERTY_MODEM_CHFLT_RX2_CHFLT_COE_0_868_LR);
+				ezradio_set_property(RADIO_CONFIG_SET_PROPERTY_MODEM_CHFLT_RX2_CHFLT_COE_1_868_LR);
+				ezradio_set_property(RADIO_CONFIG_SET_PROPERTY_MODEM_SPIKE_DET_868_LR);
+				ezradio_set_property(RADIO_CONFIG_SET_PROPERTY_MODEM_DSA_QUAL_868_LR);
+			}
+			else if(channel_id->channel_header.ch_class == PHY_CLASS_NORMAL_RATE)
+			{
+				assert(channel_id->center_freq_index % 8 == 0 && channel_id->center_freq_index <= 270);
+				ez_channel_id = channel_id->center_freq_index / 8;
+
+				ezradio_set_property(RADIO_CONFIG_SET_PROPERTY_SYNTH_PFDCP_CPFF_868_NR);
+				ezradio_set_property(RADIO_CONFIG_SET_PROPERTY_SYNTH_PFDCP_CPINT_868_NR);
+				ezradio_set_property(RADIO_CONFIG_SET_PROPERTY_SYNTH_LPFILT3_868_NR);
+				ezradio_set_property(RADIO_CONFIG_SET_PROPERTY_SYNTH_LPFILT2_868_NR);
+				ezradio_set_property(RADIO_CONFIG_SET_PROPERTY_SYNTH_LPFILT1_868_NR);
+				ezradio_set_property(RADIO_CONFIG_SET_PROPERTY_MODEM_DATA_RATE_868_NR);
+				ezradio_set_property(RADIO_CONFIG_SET_PROPERTY_MODEM_TX_NCO_MODE_868_NR);
+				ezradio_set_property(RADIO_CONFIG_SET_PROPERTY_MODEM_FREQ_DEV_868_NR);
+				ezradio_set_property(RADIO_CONFIG_SET_PROPERTY_PA_TC_868_NR);
+				ezradio_set_property(RADIO_CONFIG_SET_PROPERTY_MODEM_DECIMATION_CFG1_868_NR);
+				ezradio_set_property(RADIO_CONFIG_SET_PROPERTY_MODEM_BCR_OSR_868_NR);
+				ezradio_set_property(RADIO_CONFIG_SET_PROPERTY_MODEM_BCR_NCO_OFFSET_868_NR);
+				ezradio_set_property(RADIO_CONFIG_SET_PROPERTY_MODEM_BCR_GAIN_868_NR);
+				ezradio_set_property(RADIO_CONFIG_SET_PROPERTY_MODEM_AFC_WAIT_868_NR);
+				ezradio_set_property(RADIO_CONFIG_SET_PROPERTY_MODEM_AFC_GAIN_868_NR);
+				ezradio_set_property(RADIO_CONFIG_SET_PROPERTY_MODEM_AFC_LIMITER_868_NR);
+				ezradio_set_property(RADIO_CONFIG_SET_PROPERTY_MODEM_AGC_RFPD_DECAY_868_NR);
+				ezradio_set_property(RADIO_CONFIG_SET_PROPERTY_MODEM_AGC_IFPD_DECAY_868_NR);
+				ezradio_set_property(RADIO_CONFIG_SET_PROPERTY_MODEM_RAW_EYE_868_NR);
+				ezradio_set_property(RADIO_CONFIG_SET_PROPERTY_MODEM_CHFLT_RX1_CHFLT_COE_0_868_NR);
+				ezradio_set_property(RADIO_CONFIG_SET_PROPERTY_MODEM_CHFLT_RX1_CHFLT_COE_1_868_NR);
+				ezradio_set_property(RADIO_CONFIG_SET_PROPERTY_MODEM_CHFLT_RX2_CHFLT_COE_0_868_NR);
+				ezradio_set_property(RADIO_CONFIG_SET_PROPERTY_MODEM_CHFLT_RX2_CHFLT_COE_1_868_NR);
+				ezradio_set_property(RADIO_CONFIG_SET_PROPERTY_MODEM_SPIKE_DET_868_NR);
+			} else {
+				assert(channel_id->center_freq_index % 8 == 0 && channel_id->center_freq_index <= 270);
+				ez_channel_id = channel_id->center_freq_index / 8;
+
+				ezradio_set_property(RADIO_CONFIG_SET_PROPERTY_SYNTH_PFDCP_CPFF_868_HR);
+				ezradio_set_property(RADIO_CONFIG_SET_PROPERTY_SYNTH_PFDCP_CPINT_868_HR);
+				ezradio_set_property(RADIO_CONFIG_SET_PROPERTY_SYNTH_LPFILT3_868_HR);
+				ezradio_set_property(RADIO_CONFIG_SET_PROPERTY_SYNTH_LPFILT2_868_HR);
+				ezradio_set_property(RADIO_CONFIG_SET_PROPERTY_SYNTH_LPFILT1_868_HR);
+				ezradio_set_property(RADIO_CONFIG_SET_PROPERTY_MODEM_DATA_RATE_868_HR);
+				ezradio_set_property(RADIO_CONFIG_SET_PROPERTY_MODEM_TX_NCO_MODE_868_HR);
+				ezradio_set_property(RADIO_CONFIG_SET_PROPERTY_MODEM_FREQ_DEV_868_HR);
+				ezradio_set_property(RADIO_CONFIG_SET_PROPERTY_PA_TC_868_HR);
+				ezradio_set_property(RADIO_CONFIG_SET_PROPERTY_MODEM_DECIMATION_CFG1_868_HR);
+				ezradio_set_property(RADIO_CONFIG_SET_PROPERTY_MODEM_BCR_OSR_868_HR);
+				ezradio_set_property(RADIO_CONFIG_SET_PROPERTY_MODEM_BCR_NCO_OFFSET_868_HR);
+				ezradio_set_property(RADIO_CONFIG_SET_PROPERTY_MODEM_BCR_GAIN_868_HR);
+				ezradio_set_property(RADIO_CONFIG_SET_PROPERTY_MODEM_AFC_WAIT_868_HR);
+				ezradio_set_property(RADIO_CONFIG_SET_PROPERTY_MODEM_AFC_GAIN_868_HR);
+				ezradio_set_property(RADIO_CONFIG_SET_PROPERTY_MODEM_AFC_LIMITER_868_HR);
+				ezradio_set_property(RADIO_CONFIG_SET_PROPERTY_MODEM_AGC_RFPD_DECAY_868_HR);
+				ezradio_set_property(RADIO_CONFIG_SET_PROPERTY_MODEM_AGC_IFPD_DECAY_868_HR);
+				ezradio_set_property(RADIO_CONFIG_SET_PROPERTY_MODEM_RAW_EYE_868_HR);
+				ezradio_set_property(RADIO_CONFIG_SET_PROPERTY_MODEM_CHFLT_RX1_CHFLT_COE_0_868_HR);
+				ezradio_set_property(RADIO_CONFIG_SET_PROPERTY_MODEM_CHFLT_RX1_CHFLT_COE_1_868_HR);
+				ezradio_set_property(RADIO_CONFIG_SET_PROPERTY_MODEM_CHFLT_RX2_CHFLT_COE_0_868_HR);
+				ezradio_set_property(RADIO_CONFIG_SET_PROPERTY_MODEM_CHFLT_RX2_CHFLT_COE_1_868_HR);
+				ezradio_set_property(RADIO_CONFIG_SET_PROPERTY_MODEM_SPIKE_DET_868_HR);
+			}
+
+			DPRINT("Set channel freq index: %d", channel_id->center_freq_index);
+			break;
+		case PHY_BAND_915:
+			assert(false);
+			break;
+
+		}
+	}
 
 }
 
@@ -274,7 +275,7 @@ static void configure_syncword_class(syncword_class_t syncword_class)
 static void switch_to_idle_mode()
 {
 	current_state = HW_RADIO_STATE_IDLE;
-	DPRINT("switch_to_idle_mode not implemented");
+	ezradio_change_state(EZRADIO_CMD_CHANGE_STATE_ARG_NEXT_STATE1_NEW_STATE_ENUM_SLEEP); //sleep or ready?
 }
 
 error_t hw_radio_init(alloc_packet_callback_t alloc_packet_cb,
@@ -343,7 +344,7 @@ error_t hw_radio_set_rx(hw_rx_cfg_t const* rx_cfg, rx_packet_callback_t rx_cb, r
 	if(current_state == HW_RADIO_STATE_TX)
 	{
 		should_rx_after_tx_completed = true;
-		memcpy(&current_rx_cfg, rx_cfg, sizeof(hw_rx_cfg_t));
+
 		return SUCCESS;
 	} else {
 
@@ -353,6 +354,7 @@ error_t hw_radio_set_rx(hw_rx_cfg_t const* rx_cfg, rx_packet_callback_t rx_cb, r
 	{
 
 		start_rx(rx_cfg);
+		memcpy(&current_rx_cfg, rx_cfg, sizeof(hw_rx_cfg_t));
 	}
 	else
 	{
@@ -509,8 +511,8 @@ static void ezradio_int_callback()
 
 						DPRINT("RX ISR packetLength: %d", radioReplyLocal.FIFO_INFO.RX_FIFO_COUNT);
 
-						ezradio_cmd_reply_t radioReplyLocal2;
-						ezradio_get_packet_info(0, 0, 0, &radioReplyLocal2);
+						//ezradio_cmd_reply_t radioReplyLocal2;
+						//ezradio_get_packet_info(0, 0, 0, &radioReplyLocal2);
 
 						hw_radio_packet_t* packet = alloc_packet_callback(radioReplyLocal.FIFO_INFO.RX_FIFO_COUNT);
 						packet->length = radioReplyLocal.FIFO_INFO.RX_FIFO_COUNT;
@@ -555,8 +557,8 @@ static void ezradio_int_callback()
 					ezradio_fifo_info(0, &radioReplyLocal);
 					DPRINT("RX ISR packetLength: %d", radioReplyLocal.FIFO_INFO.RX_FIFO_COUNT);
 
-					ezradio_cmd_reply_t radioReplyLocal2;
-					ezradio_get_packet_info(0, 0, 0, &radioReplyLocal2);
+					//ezradio_cmd_reply_t radioReplyLocal2;
+					//ezradio_get_packet_info(0, 0, 0, &radioReplyLocal2);
 
 					hw_radio_packet_t* packet = alloc_packet_callback(radioReplyLocal.FIFO_INFO.RX_FIFO_COUNT);
 					packet->length = radioReplyLocal.FIFO_INFO.RX_FIFO_COUNT;

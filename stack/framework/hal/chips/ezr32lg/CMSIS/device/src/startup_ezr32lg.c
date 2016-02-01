@@ -331,6 +331,7 @@ void Reset_Handler(void) {
  *----------------------------------------------------------------------------*/
 void Default_Handler(void)
 {
+  __asm__("BKPT");
   while(1);
 }
 

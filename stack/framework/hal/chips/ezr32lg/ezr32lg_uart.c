@@ -271,7 +271,7 @@ void uart_send_bytes(uart_handle_t* uart, void const *data, size_t length) {
 }
 
 void uart_send_string(uart_handle_t* uart, const char *string) {
-  uart_send_bytes(uart, string, strnlen(string, 100));
+	uart_send_bytes(uart, string, strnlen(string, 100));
 }
 
 error_t uart_rx_interrupt_enable(uart_handle_t* uart) {
