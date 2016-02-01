@@ -17,7 +17,9 @@
 # limitations under the License.
 #
 
+message("platform extra " ${PLATFORM_EXTRA_PLATFORMS_DIR})
 SET(PLATFORM_EXTRA_PLATFORMS_DIR "" CACHE STRING "Path to directory containing extra, out of tree platform implementations (optional)")
+message("platform extra " ${PLATFORM_EXTRA_PLATFORMS_DIR})
 #Scan all platforms in the current directory for those that are
 #compatible with the current toolchain
 LIST_SUBDIRS(PLATFORM_DIRS ${CMAKE_CURRENT_SOURCE_DIR})
@@ -54,7 +56,7 @@ UNSET(PLATFORM_DIRS)
 #   by the parameter-definitions of the platform itself
 HIDE_PARAMETERS(PLATFORM_PARAM_LIST)
 #2) Include helper macro's for platforms & chips
-include(${CMAKE_SOURCE_DIR}/cmake/platform_macros.cmake)
+include(${PROJECT_SOURCE_DIR}/cmake/platform_macros.cmake)
 
 #And finally: include the platform itself (if one is selected)
 IF(NOT( PLATFORM STREQUAL "none"))

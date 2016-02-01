@@ -20,7 +20,7 @@
 #This file contains additional MACRO's that are only available for the 'gecko' platform
 
 #Always include 'platform_default.cmake' so non-overriden macro's default to the 'default' implementation
-include (${CMAKE_SOURCE_DIR}/cmake/platform_default_macros.cmake)
+include (${PROJECT_SOURCE_DIR}/cmake/platform_default_macros.cmake)
 
 # Generate files needed to debug the application in Simplicity Studio from the files generated
 # for the specified <target>. 
@@ -36,7 +36,7 @@ MACRO(GENERATE_SIMPLICITY_STUDIO_FILES target)
     ADD_CUSTOM_COMMAND(OUTPUT ${target}.bin
     		   COMMAND ${CMAKE_OBJCOPY} -O binary ${target} ${target}.bin DEPENDS ${target})
     ADD_CUSTOM_COMMAND(OUTPUT ${target}.map
-		   COMMAND sh ${CMAKE_SOURCE_DIR}/tools/gcc-arm-embedded/fix_linker_map_paths.sh ${target}.mmp ${target}.map 
+		   COMMAND sh ${PROJECT_SOURCE_DIR}/tools/gcc-arm-embedded/fix_linker_map_paths.sh ${target}.mmp ${target}.map 
 		   COMMAND ${CMAKE_COMMAND} -E remove -f ${target}.mmp
 		   DEPENDS ${target})
     ADD_CUSTOM_COMMAND(OUTPUT ${target}.axf 

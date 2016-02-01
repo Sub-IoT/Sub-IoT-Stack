@@ -31,7 +31,7 @@ ADD_SUBDIRECTORY("chips")
 ADD_SUBDIRECTORY("platforms")
 
 #include hal-specific helper MACRO's
-include(${CMAKE_SOURCE_DIR}/cmake/hal_macros.cmake)
+include(${PROJECT_SOURCE_DIR}/cmake/hal_macros.cmake)
 
 HAL_HEADER_DEFINE(BOOL HAL_RADIO_INCLUDE_TIMESTAMP)
 HAL_HEADER_DEFINE(BOOL HAL_RADIO_USE_HW_CRC)

@@ -49,7 +49,7 @@ GET_CURRENT_TOOLCHAIN(TOOLCHAIN)
 ADD_SUBDIRECTORY("framework")
 
 #Load the file with platform-specific build commands
-IF(EXISTS "${CMAKE_SOURCE_DIR}/cmake/platform_${PLATFORM}_macros.cmake")
+IF(EXISTS "${PROJECT_SOURCE_DIR}/cmake/platform_${PLATFORM}_macros.cmake")
     include ("cmake/platform_${PLATFORM}_macros.cmake")
 ELSE()
     include ("cmake/platform_default_macros.cmake")
