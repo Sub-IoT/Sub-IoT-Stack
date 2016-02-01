@@ -17,9 +17,8 @@
 # limitations under the License.
 #
 
-message("platform extra " ${PLATFORM_EXTRA_PLATFORMS_DIR})
 SET(PLATFORM_EXTRA_PLATFORMS_DIR "" CACHE STRING "Path to directory containing extra, out of tree platform implementations (optional)")
-message("platform extra " ${PLATFORM_EXTRA_PLATFORMS_DIR})
+
 #Scan all platforms in the current directory for those that are
 #compatible with the current toolchain
 LIST_SUBDIRS(PLATFORM_DIRS ${CMAKE_CURRENT_SOURCE_DIR})
