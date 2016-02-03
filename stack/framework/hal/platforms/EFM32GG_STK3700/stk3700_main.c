@@ -38,7 +38,7 @@ void __platform_init()
 {
     __efm32gg_mcu_init();
     __gpio_init();
-    // __led_init();    // uses ports assigned to USART1
+    __led_init();    // uses ports assigned to UART1 LOC3
     __lcd_init();
     console_init();
 
