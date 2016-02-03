@@ -48,7 +48,7 @@ TARGET_LINK_LIBRARIES(d7ap_test.axf d7ap framework)
 #ENDIF()
 
 ADD_CUSTOM_COMMAND(TARGET d7ap_test.elf POST_BUILD
-	COMMAND arm-none-eabi-objcopy -O binary d7ap_test.elf d7ap_test.bin
+	COMMAND ${CMAKE_OBJCOPY} -O binary d7ap_test.elf d7ap_test.bin
 )
 
 

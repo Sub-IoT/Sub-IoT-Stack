@@ -45,6 +45,6 @@ TARGET_LINK_LIBRARIES(simple_leds.axf framework)
 #ENDIF()
 
 ADD_CUSTOM_COMMAND(TARGET simple_leds.elf POST_BUILD
-	COMMAND arm-none-eabi-objcopy -O binary simple_leds.elf simple_leds.bin
+	COMMAND ${CMAKE_OBJCOPY} -O binary simple_leds.elf simple_leds.bin
 )
 
