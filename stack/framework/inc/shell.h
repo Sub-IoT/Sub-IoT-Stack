@@ -40,15 +40,11 @@ typedef struct {
     cmd_handler_t cmd_handler_callback;
 } cmd_handler_registration_t;
 
-typedef enum {
-    SHELL_CMD_HANDLER_ID_ALP = 0xD7
-} shell_cmd_handler_id_t;
-
 void shell_init();
 void shell_echo_enable();
 void shell_echo_disable();
 void shell_register_handler(cmd_handler_registration_t handler_registration);
-void shell_return_output(shell_cmd_handler_id_t origin, uint8_t* data, uint8_t length);
+void shell_return_output(uint8_t origin, uint8_t* data, uint8_t length);
 
 #endif /* SHELL_H_ */
 

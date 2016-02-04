@@ -169,7 +169,7 @@ void shell_register_handler(cmd_handler_registration_t handler_registration)
     cmd_handler_registrations[empty_index] = handler_registration;
 }
 
-void shell_return_output(shell_cmd_handler_id_t origin, uint8_t *data, uint8_t length)
+void shell_return_output(uint8_t origin, uint8_t *data, uint8_t length)
 {
     console_print_byte(origin);
     console_print_bytes(data, length);

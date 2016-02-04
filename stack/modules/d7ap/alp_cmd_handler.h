@@ -27,6 +27,10 @@
 #include "fifo.h"
 #include "d7asp.h"
 
+
+#define ALP_CMD_HANDLER_ID 'D'
+
+
 ///
 /// \brief Shell command handler for ALP interface
 /// \param cmd_fifo

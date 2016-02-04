@@ -36,7 +36,7 @@ void d7ap_stack_init(fs_init_args_t* fs_init_args, d7asp_init_args_t* d7asp_init
     {
 #ifdef FRAMEWORK_SHELL_ENABLED
         shell_init();
-        shell_register_handler((cmd_handler_registration_t){ .id = SHELL_CMD_HANDLER_ID_ALP, .cmd_handler_callback = &alp_cmd_handler });
+        shell_register_handler((cmd_handler_registration_t){ .id = ALP_CMD_HANDLER_ID, .cmd_handler_callback = &alp_cmd_handler });
 
         // notify booted
         uint8_t alp_command[] = { 0x01, D7A_FILE_FIRMWARE_VERSION_FILE_ID, 0, D7A_FILE_FIRMWARE_VERSION_SIZE };

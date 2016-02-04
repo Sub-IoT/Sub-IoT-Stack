@@ -34,7 +34,7 @@
 
 void alp_cmd_handler(fifo_t* cmd_fifo)
 {
-    // AT$\xD7<ALP interface ID><Length byte><ALP interface config><ALP command>
+    // AT$D<ALP interface ID><Length byte><ALP interface config><ALP command>
     // interface: 0xD7 = D7ASP, 0x00 = own filesystem
     // interface config: D7ASP fifo config in case of interface 0xD7, void for interface 0x00
     // where length is the length of interface config and ALP command
@@ -78,7 +78,7 @@ void alp_cmd_handler_process_fs_itf(uint8_t* alp_command, uint8_t alp_command_le
     alp_process_command(alp_command, alp_command_length, alp_response, &alp_reponse_length);
 
     if(alp_reponse_length > 0)
-        shell_return_output(SHELL_CMD_HANDLER_ID_ALP, alp_response, alp_reponse_length); // TODO transmit ALP interface ID as well?
+        shell_return_output(ALP_CMD_HANDLER_ID, alp_response, alp_reponse_length); // TODO transmit ALP interface ID as well?
 }
 
 void alp_cmd_handler_output_unsollicited_response(d7asp_result_t d7asp_result, uint8_t *alp_command, uint8_t alp_command_size, hw_rx_metadata_t* rx_meta)
@@ -96,5 +96,5 @@ void alp_cmd_handler_output_unsollicited_response(d7asp_result_t d7asp_result, u
     memcpy(ptr, d7asp_result.addressee->addressee_id, address_len); ptr += address_len;
     memcpy(ptr, alp_command, alp_command_size); ptr+= alp_command_size;
 
-    shell_return_output(SHELL_CMD_HANDLER_ID_ALP, data, ptr - data);
+    shell_return_output(ALP_CMD_HANDLER_ID, data, ptr - data);
 }
