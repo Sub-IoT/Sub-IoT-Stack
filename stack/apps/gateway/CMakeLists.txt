@@ -37,3 +37,16 @@ ADD_EXECUTABLE(gateway.axf app.c)
 #Add the framework (and one or more modules) as libraries to the application
 TARGET_LINK_LIBRARIES(gateway.elf d7ap framework)
 TARGET_LINK_LIBRARIES(gateway.axf d7ap framework)
+
+SET(BINARY "gateway.bin")
+CONFIGURE_FILE(${PROJECT_SOURCE_DIR}/cmake/jlink-flash.in ${CMAKE_CURRENT_BINARY_DIR}/jlink-flash.script)
+
+ADD_CUSTOM_COMMAND(TARGET gateway.elf POST_BUILD
+    COMMAND ${CMAKE_OBJCOPY} -O binary gateway.elf gateway.bin
+)
+
+message("bin " ${BINARY})
+ADD_CUSTOM_TARGET(flash-gateway
+    COMMAND JLinkExe -speed 4000 -if SWD -CommandFile ${CMAKE_CURRENT_BINARY_DIR}/jlink-flash.script
+    DEPENDS gateway.elf
+)

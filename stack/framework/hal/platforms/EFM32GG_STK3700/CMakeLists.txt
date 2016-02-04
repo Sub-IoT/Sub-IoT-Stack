@@ -23,6 +23,7 @@ REQUIRE_TOOLCHAIN(gcc-arm-embedded)
 #Define platform specific options
 PLATFORM_PARAM(${PLATFORM_PREFIX}_MCU "EFM32GG990F1024" STRING "The MCU of the Gecko board")
 PLATFORM_PARAM(${PLATFORM_PREFIX}_RADIO "none" STRING "The radio chip connected to the Gecko board")
+SET(JLINK_DEVICE ${${PLATFORM_PREFIX}_MCU} CACHE STRING "The device passed to JLinkExe for flashing")
 
 # CONSOLE
 # uses UART0, location 1
