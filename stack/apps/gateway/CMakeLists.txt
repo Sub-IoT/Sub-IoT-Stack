@@ -45,7 +45,6 @@ ADD_CUSTOM_COMMAND(TARGET gateway.elf POST_BUILD
     COMMAND ${CMAKE_OBJCOPY} -O binary gateway.elf gateway.bin
 )
 
-message("bin " ${BINARY})
 ADD_CUSTOM_TARGET(flash-gateway
     COMMAND JLinkExe -speed 4000 -if SWD -CommandFile ${CMAKE_CURRENT_BINARY_DIR}/jlink-flash.script
     DEPENDS gateway.elf
