@@ -98,4 +98,38 @@ MACRO(APP_OPTION option doc default)
     APP_PARAM( ${option} ${default} BOOL ${doc})
 ENDMACRO()
 
+MACRO(APP_BUILD)
+    SET(options "")
+    SET(oneValueArgs "NAME")
+    SET(multiValueArgs SOURCES LIBS)
+    CMAKE_PARSE_ARGUMENTS(__APP_BUILD "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
 
+    SET(ELF ${__APP_BUILD_NAME}.elf)
+    SET(BIN ${__APP_BUILD_NAME}.bin)
+    ADD_EXECUTABLE(${ELF} ${__APP_BUILD_SOURCES})
+    ADD_EXECUTABLE(${__APP_BUILD_NAME}.axf ${__APP_BUILD_SOURCES}) # TODO for simplicity studio, still needed? make optional
+
+    TARGET_LINK_LIBRARIES(${ELF} ${__APP_BUILD_LIBS})
+    TARGET_LINK_LIBRARIES(${__APP_BUILD_NAME}.axf ${__APP_BUILD_LIBS})
+
+    # TODO, still needed?
+    #Generate IDE specific binaries (if the required macro is available for the chosen platform)
+    #MACRO_AVAILABLE(GENERATE_SIMPLICITY_STUDIO_FILES SSF_AVAILABLE)
+    #IF(SSF_AVAILABLE)
+    #    GENERATE_SIMPLICITY_STUDIO_FILES(d7ap_test)
+    #    ADD_EXECUTABLE(d7ap_test.axf d7ap_test.c)
+    #    TARGET_LINK_LIBRARIES(d7ap_test.axf d7ap framework)
+    #ENDIF()
+
+    # extract bin file
+    ADD_CUSTOM_COMMAND(TARGET ${ELF} POST_BUILD COMMAND ${CMAKE_OBJCOPY} -O binary ${ELF} ${BIN})
+
+    # generate target for flashing application using jlink
+    # TODO optional depending on platform?
+    CONFIGURE_FILE(${PROJECT_SOURCE_DIR}/cmake/jlink-flash.in ${CMAKE_CURRENT_BINARY_DIR}/jlink-flash.script)
+    ADD_CUSTOM_TARGET(
+        flash-${__APP_BUILD_NAME}
+        COMMAND JLinkExe -speed 4000 -if SWD -CommandFile ${CMAKE_CURRENT_BINARY_DIR}/jlink-flash.script
+        DEPENDS ${ELF}
+    )
+ENDMACRO()

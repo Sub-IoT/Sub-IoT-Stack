@@ -29,9 +29,4 @@
 #SET_PROPERTY(CACHE ${APP_PREFIX}_<param_name> PROPERTY STRINGS "value1;value2")
 #
 
-
-#Call the BUILD_APPLICATION to build the final executable for the specific platform
-ADD_EXECUTABLE(continuous_tx.elf continuous_tx.c)
-
-#Add the framework (and one or more modules) as libraries to the application
-TARGET_LINK_LIBRARIES(continuous_tx.elf framework)
+APP_BUILD(NAME ${APP_NAME} SOURCES continuous_tx.c LIBS framework)

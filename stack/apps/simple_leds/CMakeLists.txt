@@ -29,22 +29,4 @@
 #SET_PROPERTY(CACHE ${APP_PREFIX}_<param_name> PROPERTY STRINGS "value1;value2")
 #
 
-
-#Call the BUILD_APPLICATION to build the final executable for the specific platform
-ADD_EXECUTABLE(simple_leds.elf app.c)
-ADD_EXECUTABLE(simple_leds.axf app.c)
-
-#Add the framework (and one or more modules) as libraries to the application
-TARGET_LINK_LIBRARIES(simple_leds.elf framework)
-TARGET_LINK_LIBRARIES(simple_leds.axf framework)
-
-#Generate IDE specific binaries (if the required macro is available for the chosen platform)
-#MACRO_AVAILABLE(GENERATE_SIMPLICITY_STUDIO_FILES SSF_AVAILABLE)
-#IF(SSF_AVAILABLE)
-#    GENERATE_SIMPLICITY_STUDIO_FILES(simple_leds)
-#ENDIF()
-
-ADD_CUSTOM_COMMAND(TARGET simple_leds.elf POST_BUILD
-	COMMAND ${CMAKE_OBJCOPY} -O binary simple_leds.elf simple_leds.bin
-)
-
+APP_BUILD(NAME ${APP_NAME} SOURCES app.c LIBS framework)

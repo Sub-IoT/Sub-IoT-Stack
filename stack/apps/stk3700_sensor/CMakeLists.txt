@@ -29,9 +29,4 @@
 #SET_PROPERTY(CACHE ${APP_PREFIX}_<param_name> PROPERTY STRINGS "value1;value2")
 #
 
-
-#Call the BUILD_APPLICATION to build the final executable for the specific platform
-ADD_EXECUTABLE(stk3700_sensor.elf app.c)
-
-#Add the framework (and one or more modules) as libraries to the application
-TARGET_LINK_LIBRARIES(stk3700_sensor.elf d7ap framework)
+APP_BUILD(NAME ${APP_NAME} SOURCES app.c LIBS d7ap framework)

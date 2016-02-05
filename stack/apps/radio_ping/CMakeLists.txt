@@ -30,8 +30,5 @@
 #
 
 
-#Call the BUILD_APPLICATION to build the final executable for the specific platform
-ADD_EXECUTABLE(radio_ping.elf app.c)
+APP_BUILD(NAME ${APP_NAME} SOURCES app.c LIBS framework)
 
-#Add the framework (and one or more modules) as libraries to the application
-TARGET_LINK_LIBRARIES(radio_ping.elf framework)

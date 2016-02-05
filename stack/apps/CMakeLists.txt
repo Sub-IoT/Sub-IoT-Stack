@@ -31,8 +31,8 @@ ENDIF()
 
 #Add conditional options for all subdirs (which are individual applications)
 FOREACH(__dir ${APP_DIRS})
-    GET_FILENAME_COMPONENT(__module_name ${__dir} NAME) # strip full path keeping only app name
-    STRING(TOUPPER ${__module_name} __upper_name)
+    GET_FILENAME_COMPONENT(APP_NAME ${__dir} NAME) # strip full path keeping only app name
+    STRING(TOUPPER ${APP_NAME} __upper_name)
     SETOPTION_IF(APP_${__upper_name} "Build Application ${__dir}" OFF BUILD_APPLICATIONS)
     UNSET(__upper_name)
 ENDFOREACH()
@@ -44,10 +44,10 @@ HIDE_PARAMETERS(APP_PARAM_LIST)
 
 #Finally Load the individual applications
 FOREACH(__dir ${APP_DIRS})
-    GET_FILENAME_COMPONENT(__module_name ${__dir} NAME) # strip full path keeping only app name
-    GEN_PREFIX(APP_PREFIX "APP" ${__module_name})
+    GET_FILENAME_COMPONENT(APP_NAME ${__dir} NAME) # strip full path keeping only app name
+    GEN_PREFIX(APP_PREFIX "APP" ${APP_NAME})
     IF(BUILD_APPLICATIONS AND ${APP_PREFIX})
-	ADD_SUBDIRECTORY(${__dir} ${CMAKE_CURRENT_BINARY_DIR}/${__module_name})
+        ADD_SUBDIRECTORY(${__dir} ${CMAKE_CURRENT_BINARY_DIR}/${APP_NAME})
     ENDIF()	
     UNSET(APP_PREFIX)
 ENDFOREACH()

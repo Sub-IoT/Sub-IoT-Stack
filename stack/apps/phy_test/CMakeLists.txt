@@ -29,11 +29,4 @@
 #SET_PROPERTY(CACHE ${APP_PREFIX}_<param_name> PROPERTY STRINGS "value1;value2")
 #
 
-
-#Call the BUILD_APPLICATION to build the final executable for the specific platform
-ADD_EXECUTABLE(phy_test.elf phy_test.c)
-ADD_EXECUTABLE(phy_test.axf phy_test.c)
-
-#Add the framework (and one or more modules) as libraries to the application
-TARGET_LINK_LIBRARIES(phy_test.elf framework)
-TARGET_LINK_LIBRARIES(phy_test.axf framework)
+APP_BUILD(NAME ${APP_NAME} SOURCES phy_test.c LIBS framework d7ap)

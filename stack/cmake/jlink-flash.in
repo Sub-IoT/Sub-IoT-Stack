@@ -1,7 +1,7 @@
 device ${JLINK_DEVICE}
 h
-loadfile ${BINARY}, 0x0
-verifybin ${BINARY}, 0x0
+loadfile ${BIN}, 0x0
+verifybin ${BIN}, 0x0
 r
 g
 qc
