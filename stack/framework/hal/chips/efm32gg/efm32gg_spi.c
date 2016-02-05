@@ -172,6 +172,8 @@ spi_handle_t* spi_init(uint8_t idx, uint32_t baudrate, uint8_t databits,
 void spi_init_slave(pin_id_t slave) {
   error_t err = hw_gpio_configure_pin(slave, false, gpioModePushPull, 1);
   assert(err == SUCCESS || err == EALREADY);
+  // make sure the pin is set/changed to high, even when EALREADY
+  hw_gpio_set(slave);
 }
 
 void spi_select(pin_id_t slave) {
