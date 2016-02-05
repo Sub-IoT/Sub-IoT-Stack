@@ -100,6 +100,7 @@ uint8_t _c1101_interface_reset_radio_core()
     hw_busy_wait(45);
 
     cc1101_interface_strobe(RF_SRES);          // Reset the Radio Core
+    // TODO wait until completed
     return cc1101_interface_strobe(RF_SNOP);   // Get Radio Status
 }
 
@@ -118,22 +119,22 @@ static uint8_t readreg(uint8_t addr)
 
 static uint8_t readstatus(uint8_t addr)
 {
-    uint8_t ret, retCheck, data, data2;
+    uint8_t ret, ret2, data, data2;
     uint8_t _addr = (addr & 0x3F) | READ_BURST;
     spi_select(CC1101_SPI_PIN_CS);
     ret = spi_exchange_byte(spi, _addr);
     data = spi_exchange_byte(spi, 0); // send dummy byte to receive reply
-    // See CC1101's Errata for SPI read errors // TODO needed?
-//    while (true) {
-//    	retCheck = spi_exchange_byte(CC1101_SPI_USART, _addr);
-//        data2 = spi_exchange_byte(CC1101_SPI_USART, 0);
-//    	if (ret == retCheck && data == data2)
-//    		break;
-//    	else {
-//    		ret = retCheck;
-//    		data = data2;
-//    	}
-//    }
+    // Read value again until this matches previous reead (See CC1101's Errata for SPI read errors)
+    while (true) {
+        ret2 = spi_exchange_byte(spi, _addr);
+        data2 = spi_exchange_byte(spi, 0); // send dummy byte to receive reply
+        if (ret == ret2 && data == data2)
+            break;
+        else {
+            ret = ret2;
+            data = data2;
+        }
+    }
 
     spi_deselect(CC1101_SPI_PIN_CS);
 

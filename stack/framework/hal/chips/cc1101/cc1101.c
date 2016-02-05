@@ -274,6 +274,14 @@ static void end_of_packet_isr()
     }
 }
 
+static inline void wait_for_chip_state(cc1101_chipstate_t expected_state)
+{
+    uint8_t chipstate;
+    do {
+        chipstate = cc1101_interface_read_single_reg(MARCSTATE);
+    } while (chipstate != expected_state);
+}
+
 static void configure_channel(const channel_id_t* channel_id)
 {
     // only change settings if channel_id changed compared to current config
@@ -366,7 +374,8 @@ static void configure_channel(const channel_id_t* channel_id)
         }
     }
 
-    cc1101_interface_strobe(RF_SCAL); // TODO is this the right case?
+    cc1101_interface_strobe(RF_SCAL); // TODO use autocalibration instead of manual?
+    wait_for_chip_state(CC1101_CHIPSTATE_IDLE);
 }
 
 static void configure_eirp(const eirp_t eirp)
@@ -501,8 +510,12 @@ error_t hw_radio_send_packet(hw_radio_packet_t* packet, tx_packet_callback_t tx_
 
     current_state = HW_RADIO_STATE_TX;
     current_packet = packet;
-    cc1101_interface_strobe(RF_SIDLE);
-    cc1101_interface_strobe(RF_SFTX);
+
+//    DEBUG_TX_START();
+    wait_for_chip_state(CC1101_CHIPSTATE_IDLE); // TODO reading state sometimes returns illegal values such as 0x1F.
+                                                // polling for this seems to take 50-200us after a quick test, not sure why yet
+//    DEBUG_TX_END();
+
 
 #ifdef FRAMEWORK_LOG_ENABLED // TODO more granular
     log_print_stack_string(LOG_STACK_PHY, "Data to TX Fifo:");

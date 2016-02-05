@@ -124,4 +124,10 @@
 #define READ_SINGLE      0x80
 #define READ_BURST       0xC0
 
+typedef enum {
+    CC1101_CHIPSTATE_SLEEP  = 0,
+    CC1101_CHIPSTATE_IDLE   = 1,
+    // TODO other states not used for now
+} cc1101_chipstate_t;
+
 #endif /* CONSTANTS_H_ */
