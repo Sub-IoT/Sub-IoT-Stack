@@ -372,10 +372,11 @@ static void configure_channel(const channel_id_t* channel_id)
                 assert(false);
                 // TODO: other classes
         }
+
+        cc1101_interface_strobe(RF_SCAL); // TODO use autocalibration instead of manual?
+        wait_for_chip_state(CC1101_CHIPSTATE_IDLE);
     }
 
-    cc1101_interface_strobe(RF_SCAL); // TODO use autocalibration instead of manual?
-    wait_for_chip_state(CC1101_CHIPSTATE_IDLE);
 }
 
 static void configure_eirp(const eirp_t eirp)
@@ -506,15 +507,17 @@ error_t hw_radio_send_packet(hw_radio_packet_t* packet, tx_packet_callback_t tx_
         pending_rx_cfg.channel_id = current_channel_id;
         pending_rx_cfg.syncword_class = current_syncword_class;
         should_rx_after_tx_completed = true;
+        // when in RX state we can directly strobe TX and do not need to wait until in IDLE
+    }
+    else
+    {
+        wait_for_chip_state(CC1101_CHIPSTATE_IDLE); // TODO reading state sometimes returns illegal values such as 0x1F.
+                                                // polling for this seems to take 50-200us after a quick test, not sure why yet
     }
 
     current_state = HW_RADIO_STATE_TX;
     current_packet = packet;
 
-//    DEBUG_TX_START();
-    wait_for_chip_state(CC1101_CHIPSTATE_IDLE); // TODO reading state sometimes returns illegal values such as 0x1F.
-                                                // polling for this seems to take 50-200us after a quick test, not sure why yet
-//    DEBUG_TX_END();
 
 
 #ifdef FRAMEWORK_LOG_ENABLED // TODO more granular
