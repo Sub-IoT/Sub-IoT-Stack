@@ -276,7 +276,7 @@ static void execute_csma_ca()
 {
     // TODO generate random channel queue
     DEBUG_PIN_SET(2); // TODO tmp
-    hw_radio_set_rx(NULL, NULL, NULL); // put radio in RX but disable callbacks to make sure we don't receive packets when in this state
+    //hw_radio_set_rx(NULL, NULL, NULL); // put radio in RX but disable callbacks to make sure we don't receive packets when in this state
                                         // TODO use correct rx cfg + it might be interesting to switch to idle first depending on calculated offset
     uint16_t tx_duration = calculate_tx_duration();
     switch (dll_state)
