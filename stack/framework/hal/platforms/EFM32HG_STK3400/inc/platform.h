@@ -81,11 +81,10 @@
 // CC1101 PIN definitions
 #ifdef USE_CC1101
 #define CC1101_SPI_USART    0
-#define CC1101_SPI_BAUDRATE 1500000
+#define CC1101_SPI_BAUDRATE 6000000
 #define CC1101_SPI_LOCATION 0
 #define CC1101_SPI_PIN_CS   E13
-#define CC1101_GDO0_PIN     F3
-#define CC1101_GDO2_PIN     F2
+#define CC1101_GDO0_PIN     C1
 
 #endif
 
