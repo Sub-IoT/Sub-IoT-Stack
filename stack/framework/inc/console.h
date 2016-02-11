@@ -16,7 +16,6 @@
 void console_init(void);
 
 // the elementary console actions
-
 void console_print_byte(uint8_t byte);
 void console_print_bytes(uint8_t* bytes, uint8_t length);
 void console_print(char* string);

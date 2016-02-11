@@ -32,6 +32,7 @@
 #include <unistd.h>
 #include <hwradio.h>
 #include "framework_defs.h"
+#include "hwsystem.h"
 
 #include "console.h"
 
@@ -44,6 +45,8 @@ typedef enum {
     LOG_TYPE_PHY_PACKET_TX = 0X04,
     LOG_TYPE_PHY_PACKET_RX = 0X05
 } log_type_t;
+
+static const uint16_t microsec_byte = 2*8000000/CONSOLE_BAUDRATE;
 
 #ifdef FRAMEWORK_LOG_BINARY
 	#define BUFFER_SIZE 100
@@ -75,6 +78,7 @@ __LINK_C void log_print_string(char* format, ...)
     vprintf(format, args);
 #endif //FRAMEWORK_LOG_BINARY
     va_end(args);
+    hw_busy_wait(microsec_byte);
 }
 
 __LINK_C void log_print_stack_string(log_stack_layer_t type, char* format, ...)
@@ -93,6 +97,7 @@ __LINK_C void log_print_stack_string(log_stack_layer_t type, char* format, ...)
     vprintf(format, args);
 #endif //FRAMEWORK_LOG_BINARY
     va_end(args);
+    hw_busy_wait(microsec_byte);
 }
 
 __LINK_C void log_print_data(uint8_t* message, uint32_t length)
@@ -109,6 +114,7 @@ __LINK_C void log_print_data(uint8_t* message, uint32_t length)
         printf(" %02X", message[i]);
     }
 #endif //FRAMEWORK_LOG_BINARY
+    hw_busy_wait(microsec_byte);
 }
 
 __LINK_C void log_print_raw_phy_packet(hw_radio_packet_t* packet, bool is_tx)
@@ -143,6 +149,8 @@ __LINK_C void log_print_raw_phy_packet(hw_radio_packet_t* packet, bool is_tx)
         console_print_bytes(packet->data, packet->length+1);
     }
 #endif // FRAMEWORK_LOG_BINARY
+
+    hw_busy_wait(microsec_byte);
 }
 
 #endif //FRAMEWORK_LOG_ENABLED

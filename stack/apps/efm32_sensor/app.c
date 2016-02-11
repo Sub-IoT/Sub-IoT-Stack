@@ -32,17 +32,17 @@
 #include "d7ap_stack.h"
 #include "fs.h"
 
-#ifndef PLATFORM_EFM32GG_STK3700
-	#error Mismatch between the configured platform and the actual platform. Expected PLATFORM_EFM32GG_STK3700 to be defined
+#if (!defined PLATFORM_EFM32GG_STK3700 && !defined PLATFORM_EZR32LG_WSTK6200A)
+	#error Mismatch between the configured platform and the actual platform.
 #endif
 
 #include "userbutton.h"
 #include "platform_sensors.h"
 #include "platform_lcd.h"
 
-#define SENSOR_FILE_ID 0x50
-#define SENSOR_FILE_SIZE 4
-#define ACTION_FILE_ID 0x51
+#define SENSOR_FILE_ID           0x40
+#define SENSOR_FILE_SIZE         4
+#define ACTION_FILE_ID           0x41
 
 static int16_t temperature = 0;
 
@@ -63,7 +63,11 @@ void measureTemperature()
 	float temp = tempsensor_read_celcius();
 
 	temperature = (int)(temp * 10);
+#ifdef PLATFORM_EFM32GG_STK3700
 	lcd_write_temperature(temperature*10, 1);
+#else
+	lcd_write_string("Temperature %2d.%2d C", (temperature/10), abs(temperature%10));
+#endif
 	
 	log_print_string("Temperature %2d.%2d C", (temperature/10), abs(temperature%10));
 }
@@ -71,7 +75,7 @@ void measureTemperature()
 void execute_sensor_measurement()
 {
 	led_toggle(0);
-    timer_post_task_delay(&execute_sensor_measurement, TIMER_TICKS_PER_SEC * 60);
+    timer_post_task_delay(&execute_sensor_measurement, TIMER_TICKS_PER_SEC * 10);
 
 	measureTemperature();
 
@@ -135,7 +139,7 @@ void bootstrap()
 
     dae_access_profile_t access_classes[1] = {
         {
-            .control_scan_type_is_foreground = true,
+            .control_scan_type_is_foreground = false,
             .control_csma_ca_mode = CSMA_CA_MODE_UNC,
             .control_number_of_subbands = 1,
             .subnet = 0x05,
@@ -170,7 +174,7 @@ void bootstrap()
     ubutton_register_callback(1, &userbutton_callback);
 
     sched_register_task((&execute_sensor_measurement));
-    //timer_post_task_delay(&execute_sensor_measurement, TIMER_TICKS_PER_SEC * 5);
+    timer_post_task_delay(&execute_sensor_measurement, TIMER_TICKS_PER_SEC * 10);
 
     lcd_write_string("DASH7");
 }

@@ -102,6 +102,7 @@ ADD_LIBRARY (${CHIP_LIBRARY_NAME} OBJECT
                     #kits/common/drivers/cdc.c
                     kits/common/bsp/bsp_bcc.c
                     kits/common/bsp/bsp_stk.c
+                    kits/common/bsp/bsp_trace.c
                     ezr32lg_adc.c 
                     ezr32lg_mcu.c
                     ezr32lg_uart.c

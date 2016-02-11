@@ -34,15 +34,25 @@ void userbutton_callback(button_id_t button_id)
 
 #endif
 
-void timer0_callback()
+void led_off_callback()
 {
-	led_toggle(0);
-	timer_post_task_delay(&timer0_callback, TIMER_TICKS_PER_SEC);
-	log_print_string("Toggled led %d", 0);
+	led_off(0);
+	log_print_string("Toggled off %d", 0);
+
+}
+
+void led_on_callback()
+{
+	led_on(0);
+	timer_post_task_delay(&led_on_callback, TIMER_TICKS_PER_SEC);
+	timer_post_task_delay(&led_off_callback, TIMER_TICKS_PER_SEC*0.050);
+	log_print_string("Toggled on %d", 0);
 
 	hw_watchdog_feed();
 
 }
+
+
 
 void timer1_callback()
 {
@@ -58,10 +68,11 @@ void bootstrap()
 
 	log_print_string("Device booted at time: %d\n", timer_get_counter_value());
 
-    sched_register_task(&timer0_callback);
+    sched_register_task(&led_on_callback);
+    sched_register_task(&led_off_callback);
     sched_register_task(&timer1_callback);
 
-    timer_post_task_delay(&timer0_callback, TIMER_TICKS_PER_SEC);
+    timer_post_task_delay(&led_on_callback, TIMER_TICKS_PER_SEC);
     timer_post_task_delay(&timer1_callback, 0x0000FFFF + (uint32_t)100);
 
 #if NUM_USERBUTTONS > 0

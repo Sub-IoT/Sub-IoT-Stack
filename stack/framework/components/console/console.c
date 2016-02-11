@@ -15,23 +15,23 @@ void console_init(void) {
   uart = uart_init(CONSOLE_UART, CONSOLE_BAUDRATE, CONSOLE_LOCATION);
 }
 
-void console_print_byte(uint8_t byte) {
+inline void console_print_byte(uint8_t byte) {
   uart_send_byte(uart, byte);
 }
 
-void console_print_bytes(uint8_t* bytes, uint8_t length) {
+inline void console_print_bytes(uint8_t* bytes, uint8_t length) {
   uart_send_bytes(uart, bytes, length);
 }
 
-void console_print(char* string) {
+inline void console_print(char* string) {
   uart_send_string(uart, string);
 }
 
-void console_set_rx_interrupt_callback(uart_rx_inthandler_t uart_rx_cb) {
+inline void console_set_rx_interrupt_callback(uart_rx_inthandler_t uart_rx_cb) {
   uart_set_rx_interrupt_callback(uart, uart_rx_cb);
 }
 
-void console_rx_interrupt_enable() {
+inline void console_rx_interrupt_enable() {
   uart_rx_interrupt_enable(uart);
 }
 

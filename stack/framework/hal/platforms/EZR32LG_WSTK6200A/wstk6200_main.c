@@ -38,6 +38,9 @@
 
 #include "console.h"
 
+
+#include "bsp_trace.h"
+
 void SWO_SetupForPrint(void)
 {
   /* Enable GPIO clock. */
@@ -120,6 +123,7 @@ void __platform_post_framework_init()
 
 int main()
 {
+	BSP_TraceProfilerSetup();
     // Only when using bootloader
 	//SCB->VTOR=0x4000;
 
