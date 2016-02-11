@@ -27,12 +27,12 @@
 #include <em_cmu.h>
 #include <em_gpio.h>
 #include <em_usbd.h>
+#include <string.h>
 #include "hwgpio.h"
 #include "hwuart.h"
 #include <assert.h>
 #include "em_gpio.h"
 #include "hwsystem.h"
-
 #include "efm32gg_pins.h"
 
 #include "platform.h"

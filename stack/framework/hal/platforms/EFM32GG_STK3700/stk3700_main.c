@@ -32,6 +32,9 @@
 #include "em_gpio.h"
 #include <debug.h>
 
+
+#include "bsp_trace.h"
+
 #include "console.h"
 
 void __platform_init()
@@ -69,6 +72,7 @@ void __platform_post_framework_init()
 
 int main()
 {
+	BSP_TraceProfilerSetup();
     // Only when using bootloader
 	//SCB->VTOR=0x4000;
 

@@ -81,8 +81,9 @@ ADD_LIBRARY (${CHIP_LIBRARY_NAME} OBJECT
                     kits/common/drivers/gpiointerrupt.c
                     kits/common/drivers/segmentlcd.c
                     kits/common/drivers/cdc.c
-                                kits/common/bsp/bsp_bcc.c
-                                kits/common/bsp/bsp_stk.c
+                    kits/common/bsp/bsp_bcc.c
+                    kits/common/bsp/bsp_stk.c
+                    kits/common/bsp/bsp_trace.c
                     efm32gg_adc.c 
                     efm32gg_mcu.c
                     efm32gg_uart.c
