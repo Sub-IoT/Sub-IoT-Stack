@@ -28,8 +28,9 @@
 #include "ng.h"
 #include "hwdebug.h"
 #include "random.h"
+#include "MODULE_D7AP_defs.h"
 
-#ifdef FRAMEWORK_LOG_ENABLED
+#if defined(FRAMEWORK_LOG_ENABLED) && defined(MODULE_D7AP_DLL_LOG_ENABLED)
 #define DPRINT(...) log_print_stack_string(LOG_STACK_DLL, __VA_ARGS__)
 #else
 #define DPRINT(...)

@@ -30,7 +30,7 @@
 #include <em_usbd.h>
 #include "hwgpio.h"
 #include "hwuart.h"
-#include <assert.h>
+#include <debug.h>
 #include "em_gpio.h"
 
 #include "efm32hg_pins.h"

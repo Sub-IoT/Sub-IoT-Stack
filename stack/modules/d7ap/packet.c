@@ -21,11 +21,18 @@
 #include "crc.h"
 #include "log.h"
 #include "d7asp.h"
+#include "MODULE_D7AP_defs.h"
 
-#ifdef FRAMEWORK_LOG_ENABLED
-#define DPRINT(...) log_print_stack_string(__VA_ARGS__)
+#if defined(FRAMEWORK_LOG_ENABLED) && defined(MODULE_D7AP_FWK_LOG_ENABLED)
+#define DPRINT_FWK(...) log_print_stack_string(LOG_STACK_FWK, __VA_ARGS__)
 #else
-#define DPRINT(...)
+#define DPRINT_FWK(...)
+#endif
+
+#if defined(FRAMEWORK_LOG_ENABLED) && defined(MODULE_D7AP_DLL_LOG_ENABLED)
+#define DPRINT_DLL(...) log_print_stack_string(LOG_STACK_DLL, __VA_ARGS__)
+#else
+#define DPRINT_DLL(...)
 #endif
 
 void packet_init(packet_t* packet)
@@ -63,41 +70,28 @@ void packet_disassemble(packet_t* packet)
     if (packet->hw_radio_packet.rx_meta.crc_status == HW_CRC_UNAVAILABLE)
     {
 		uint16_t crc = __builtin_bswap16(crc_calculate(packet->hw_radio_packet.data, packet->hw_radio_packet.length + 1 - 2));
-		DPRINT(LOG_STACK_DLL, "CRC check RX %x%x == CALC: %x ?",
-							packet->hw_radio_packet.data[packet->hw_radio_packet.length],
-							packet->hw_radio_packet.data[packet->hw_radio_packet.length - 1 ],
-							crc);
 		if(memcmp(&crc, packet->hw_radio_packet.data + packet->hw_radio_packet.length + 1 - 2, 2) != 0)
 		{
-			DPRINT(LOG_STACK_DLL, "CRC invalid");
+            DPRINT_DLL("CRC invalid");
 			goto cleanup;
 		}
     } else if (packet->hw_radio_packet.rx_meta.crc_status == HW_CRC_INVALID)
     {
-    	DPRINT(LOG_STACK_DLL, "CRC invalid");
+        DPRINT_DLL("CRC invalid");
     	goto cleanup;
     }
 
     uint8_t data_idx = 1;
 
     if(!dll_disassemble_packet_header(packet, &data_idx))
-    {
-        DPRINT(LOG_STACK_DLL, "disassemble header failed");
         goto cleanup;
-    }
 
     // TODO assuming D7ANP for now
     if(!d7anp_disassemble_packet_header(packet, &data_idx))
-    {
-        DPRINT(LOG_STACK_NWL, "disassemble header failed");
         goto cleanup;
-    }
 
     if(!d7atp_disassemble_packet_header(packet, &data_idx))
-    {
-        DPRINT(LOG_STACK_TRANS, "disassemble header failed");
         goto cleanup;
-    }
 
     // TODO footers
 
@@ -105,14 +99,14 @@ void packet_disassemble(packet_t* packet)
     packet->payload_length = packet->hw_radio_packet.length + 1 - data_idx - 2; // exclude the headers CRC bytes // TODO exclude footers
     memcpy(packet->payload, packet->hw_radio_packet.data + data_idx, packet->payload_length);
 
-    DPRINT(LOG_STACK_FWK, "Done disassembling packet");
+    DPRINT_FWK("Done disassembling packet");
 
     d7atp_process_received_packet(packet);
 
     return;
 
     cleanup:
-        DPRINT(LOG_STACK_FWK, "Skipping packet");
+        DPRINT_FWK("Skipping packet");
         packet_queue_free_packet(packet);
         return;
 }

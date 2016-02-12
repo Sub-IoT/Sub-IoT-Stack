@@ -30,6 +30,14 @@
 #include "ng.h"
 #include "log.h"
 #include "fs.h"
+#include "MODULE_D7AP_defs.h"
+
+#if defined(FRAMEWORK_LOG_ENABLED) && defined(MODULE_D7AP_TP_LOG_ENABLED)
+#define DPRINT(...) log_print_stack_string(LOG_STACK_TRANS, __VA_ARGS__)
+#else
+#define DPRINT(...)
+#endif
+
 
 static d7atp_addressee_t NGDEF(_current_addressee);
 #define current_addressee NG(_current_addressee)
@@ -69,33 +77,33 @@ static void switch_state(state_t new_state)
     switch(new_state)
     {
     case D7ATP_STATE_MASTER_TRANSACTION_REQUEST_PERIOD:
-        log_print_stack_string(LOG_STACK_TRANS, "Switching to D7ATP_STATE_MASTER_TRANSACTION_REQUEST_PERIOD");
+        DPRINT("Switching to D7ATP_STATE_MASTER_TRANSACTION_REQUEST_PERIOD");
         assert(d7atp_state == D7ATP_STATE_IDLE);
         d7atp_state = new_state;
         break;
     case D7ATP_STATE_MASTER_TRANSACTION_RESPONSE_PERIOD:
-        log_print_stack_string(LOG_STACK_TRANS, "Switching to D7ATP_STATE_MASTER_TRANSACTION_RESPONSE_PERIOD");
+        DPRINT("Switching to D7ATP_STATE_MASTER_TRANSACTION_RESPONSE_PERIOD");
         assert(d7atp_state == D7ATP_STATE_MASTER_TRANSACTION_REQUEST_PERIOD);
         d7atp_state = new_state;
         break;
     case D7ATP_STATE_SLAVE_TRANSACTION_RECEIVED_REQUEST:
-        log_print_stack_string(LOG_STACK_TRANS, "Switching to D7ATP_STATE_SLAVE_TRANSACTION_RECEIVED_REQUEST");
+        DPRINT("Switching to D7ATP_STATE_SLAVE_TRANSACTION_RECEIVED_REQUEST");
         assert(d7atp_state == D7ATP_STATE_IDLE);
         d7atp_state = new_state;
         break;
     case D7ATP_STATE_SLAVE_TRANSACTION_SENDING_RESPONSE:
         assert(!sched_is_scheduled(&transaction_response_period_expired));
-        log_print_stack_string(LOG_STACK_TRANS, "Switching to D7ATP_STATE_SLAVE_TRANSACTION_SENDING_RESPONSE");
+        DPRINT("Switching to D7ATP_STATE_SLAVE_TRANSACTION_SENDING_RESPONSE");
         assert(d7atp_state == D7ATP_STATE_SLAVE_TRANSACTION_RECEIVED_REQUEST || D7ATP_STATE_SLAVE_TRANSACTION_RESPONSE_PERIOD);
         d7atp_state = new_state;
         break;
     case D7ATP_STATE_SLAVE_TRANSACTION_RESPONSE_PERIOD:
-        log_print_stack_string(LOG_STACK_TRANS, "Switching to D7ATP_STATE_SLAVE_TRANSACTION_RESPONSE_PERIOD");
+        DPRINT("Switching to D7ATP_STATE_SLAVE_TRANSACTION_RESPONSE_PERIOD");
         assert(d7atp_state == D7ATP_STATE_SLAVE_TRANSACTION_SENDING_RESPONSE);
         d7atp_state = new_state;
         break;
     case D7ATP_STATE_IDLE:
-        log_print_stack_string(LOG_STACK_TRANS, "Switching to D7ATP_STATE_IDLE");
+        DPRINT("Switching to D7ATP_STATE_IDLE");
         assert(d7atp_state == D7ATP_STATE_MASTER_TRANSACTION_REQUEST_PERIOD
                || d7atp_state == D7ATP_STATE_MASTER_TRANSACTION_RESPONSE_PERIOD
                || d7atp_state == D7ATP_STATE_SLAVE_TRANSACTION_SENDING_RESPONSE
@@ -110,7 +118,7 @@ static void switch_state(state_t new_state)
 
 static void transaction_response_period_expired()
 {
-    log_print_stack_string(LOG_STACK_TRANS, "Transaction response period expired");
+    DPRINT("Transaction response period expired");
     assert(d7atp_state == D7ATP_STATE_SLAVE_TRANSACTION_RESPONSE_PERIOD
            || d7atp_state == D7ATP_STATE_MASTER_TRANSACTION_RESPONSE_PERIOD);
 
@@ -221,7 +229,7 @@ void d7atp_signal_packet_transmitted(packet_t* packet)
         assert(false);
 
     uint8_t transaction_response_period = active_addressee_access_profile.transmission_timeout_period;
-    log_print_stack_string(LOG_STACK_TRANS, "Packet transmitted, starting response period timer (%i ticks)", transaction_response_period);
+    DPRINT("Packet transmitted, starting response period timer (%i ticks)", transaction_response_period);
     // TODO find out difference between dialog timeout and transaction response period
 
     if(!sched_is_scheduled(&transaction_response_period_expired)) // TODO or should prev transaction resp period be stopped by now and should we start a new one?
@@ -235,7 +243,7 @@ void d7atp_signal_packet_csma_ca_insertion_completed(bool succeeded)
     DEBUG_PIN_CLR(2); // TODO tmp
     if(!succeeded)
     {
-        log_print_stack_string(LOG_STACK_TRANS, "CSMA-CA insertion failed, stopping transaction");
+        DPRINT("CSMA-CA insertion failed, stopping transaction");
         switch_state(D7ATP_STATE_IDLE);
     }
 
@@ -252,7 +260,7 @@ void d7atp_process_received_packet(packet_t* packet)
     {
         if(packet->d7atp_dialog_id != current_dialog_id || packet->d7atp_transaction_id != current_transaction_id)
         {
-            log_print_stack_string(LOG_STACK_TRANS, "Unexpected dialog ID or transaction ID received, skipping segment");
+            DPRINT("Unexpected dialog ID or transaction ID received, skipping segment");
             packet_queue_free_packet(packet);
             return;
         }
@@ -260,7 +268,7 @@ void d7atp_process_received_packet(packet_t* packet)
         // TODO assert(!packet->d7atp_ctrl.ctrl_is_start); // start dialog not allowed when in master transaction state
         if(packet->d7atp_ctrl.ctrl_is_start)
         {
-            log_print_stack_string(LOG_STACK_TRANS, "Start dialog not allowed when in master transaction state, skipping segment");
+            DPRINT("Start dialog not allowed when in master transaction state, skipping segment");
             packet_queue_free_packet(packet);
             return;
         }
@@ -271,7 +279,7 @@ void d7atp_process_received_packet(packet_t* packet)
         switch_state(D7ATP_STATE_SLAVE_TRANSACTION_RECEIVED_REQUEST);
         current_dialog_id = packet->d7atp_dialog_id;
         current_transaction_id = packet->d7atp_transaction_id;
-        log_print_stack_string(LOG_STACK_TRANS, "Dialog id %i transaction id %i", current_dialog_id, current_transaction_id);
+        DPRINT("Dialog id %i transaction id %i", current_dialog_id, current_transaction_id);
 
         // copy addressee from NP origin
         current_addressee.addressee_ctrl_has_id = packet->d7anp_ctrl.origin_access_id_present;
