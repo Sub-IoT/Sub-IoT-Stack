@@ -30,7 +30,7 @@
 #include "debug.h"
 
 // turn on/off the debug prints
-#ifdef FRAMEWORK_LOG_ENABLED // TODO more granular
+#if defined(FRAMEWORK_LOG_ENABLED) && defined(FRAMEWORK_LOG_PHY_ENABLED)
     #define DPRINT(...) log_print_stack_string(LOG_STACK_PHY, __VA_ARGS__)
 #else
     #define DPRINT(...)
