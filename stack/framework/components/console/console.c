@@ -13,6 +13,7 @@ static uart_handle_t* uart;
 
 void console_init(void) {
   uart = uart_init(CONSOLE_UART, CONSOLE_BAUDRATE, CONSOLE_LOCATION);
+  uart_enable(uart);
 }
 
 void console_enable(void)

@@ -23,15 +23,18 @@
  *  \author contact@christophe.vg
  */
 
-#include <em_usart.h>
-#include <em_cmu.h>
-#include <em_gpio.h>
-#include <em_usbd.h>
 #include <string.h>
+
+#include "em_usart.h"
+#include "em_cmu.h"
+#include "em_gpio.h"
+#include "em_usbd.h"
+
+#include "em_gpio.h"
+
 #include "hwgpio.h"
 #include "hwuart.h"
 #include <assert.h>
-#include "em_gpio.h"
 #include "hwsystem.h"
 #include "efm32gg_pins.h"
 
@@ -83,11 +86,7 @@ static uart_pins_t location[UARTS][LOCATIONS] = {
   {
     // UART 1
     // no LOCATION 0
-    {
-      .location = 0,
-      .tx       = { .port = 0,         .pin =  0 },
-      .rx       = { .port = 0,         .pin =  0 }
-    },
+    UNDEFINED_LOCATION,
     {
       .location = UART_ROUTE_LOCATION_LOC1,
       .tx       = { .port = gpioPortF, .pin = 10 },
@@ -176,6 +175,7 @@ struct uart_handle {
   CMU_Clock_TypeDef    clock;
   uart_irq_t           irq;
   uart_pins_t*         pins;
+  uint32_t             baudrate;
 };
 
 // private storage of handles, pointers to these records are passed around
@@ -213,24 +213,27 @@ static uart_handle_t handle[UARTS] = {
 };
 
 uart_handle_t* uart_init(uint8_t idx, uint32_t baudrate, uint8_t pins) {
-  CMU_ClockEnable(cmuClock_GPIO, true);
+  // configure pins
+  handle[idx].pins     = &location[idx][pins];
+  handle[idx].baudrate = baudrate;
   
-  handle[idx].pins = &location[idx][pins];
-  
-  CMU_ClockEnable(handle[idx].clock, true);
-
-  // configure UART TX pin as digital output, initialize high since UART TX
-  // idles high (otherwise glitches can occur)
-  assert(hw_gpio_configure_pin(handle[idx].pins->tx, false, gpioModePushPullDrive, 1) == SUCCESS);
+  // configure UART TX pin as digital output
+  hw_gpio_configure_pin(handle[idx].pins->tx, false, gpioModePushPullDrive, 0);
   // configure UART RX pin as input (no filter)
-  assert(hw_gpio_configure_pin(handle[idx].pins->rx, false, gpioModeInput, 0) == SUCCESS);
+  hw_gpio_configure_pin(handle[idx].pins->rx, false, gpioModeInput, 0);
+
+  return &handle[idx];
+}
+
+bool uart_enable(uart_handle_t* uart) {
+  CMU_ClockEnable(uart->clock, true);
 
   USART_InitAsync_TypeDef uartInit = {
     .enable       = usartDisable,   // wait to enable the transceiver
     .refFreq      = 0,              // setting refFreq to 0 will invoke the
                                     // CMU_ClockFreqGet() function and measure
                                     // the HFPER clock
-    .baudrate     = baudrate,       // desired baud rate
+    .baudrate     = uart->baudrate, // desired baud rate
     .oversampling = usartOVS16,     // set oversampling value to x16
     .databits     = usartDatabits8, // 8 data bits
     .parity       = usartNoParity,  // no parity bits
@@ -240,16 +243,29 @@ uart_handle_t* uart_init(uint8_t idx, uint32_t baudrate, uint8_t pins) {
     .prsRxCh      = usartPrsRxCh0,  // doesn't matter which channel we select
   };
 
-  USART_InitAsync(handle[idx].channel, &uartInit);
-  // clear RX/TX buffers and shift regs, enable transmitter and receiver pins
-  handle[idx].channel->ROUTE = UART_ROUTE_RXPEN | UART_ROUTE_TXPEN | handle[idx].pins->location;
-  USART_IntClear(handle[idx].channel, _UART_IF_MASK);
-  NVIC_ClearPendingIRQ(handle[idx].irq.rx);
-  NVIC_ClearPendingIRQ(handle[idx].irq.tx);
-
-  USART_Enable(handle[idx].channel, usartEnable);
+  USART_InitAsync(uart->channel, &uartInit);
   
-  return &handle[idx];
+  // clear RX/TX buffers and shift regs, enable transmitter and receiver pins
+  uart->channel->ROUTE = UART_ROUTE_RXPEN
+                       | UART_ROUTE_TXPEN
+                       | uart->pins->location;
+  USART_IntClear(uart->channel, _UART_IF_MASK);
+  NVIC_ClearPendingIRQ(uart->irq.rx);
+  NVIC_ClearPendingIRQ(uart->irq.tx);
+
+  USART_Enable(uart->channel, usartEnable);
+
+  return true;
+}
+
+bool uart_disable(uart_handle_t* uart) {
+  // reset route to make sure that TX pin will become low after disable
+  uart->channel->ROUTE = _UART_ROUTE_RESETVALUE;
+
+  USART_Enable(uart->channel, usartDisable);
+  CMU_ClockEnable(uart->clock, false);
+
+  return true;
 }
 
 bool uart_disable(uart_handle_t* uart) {
