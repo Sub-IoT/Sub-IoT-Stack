@@ -68,7 +68,8 @@ typedef enum
 {
     HW_RADIO_STATE_IDLE,
     HW_RADIO_STATE_TX,
-    HW_RADIO_STATE_RX
+    HW_RADIO_STATE_RX,
+    HW_RADIO_STATE_OFF
 } hw_radio_state_t;
 
 
@@ -274,8 +275,8 @@ static void configure_syncword_class(syncword_class_t syncword_class)
 
 static void switch_to_idle_mode()
 {
-	current_state = HW_RADIO_STATE_IDLE;
 	ezradio_change_state(EZRADIO_CMD_CHANGE_STATE_ARG_NEXT_STATE1_NEW_STATE_ENUM_SLEEP); //sleep or ready?
+	current_state = HW_RADIO_STATE_IDLE;
 }
 
 error_t hw_radio_init(alloc_packet_callback_t alloc_packet_cb,
@@ -322,6 +323,7 @@ error_t hw_radio_init(alloc_packet_callback_t alloc_packet_cb,
 
 	sched_register_task((&report_rssi));
 
+	switch_to_idle_mode();
 }
 
 error_t hw_radio_set_rx(hw_rx_cfg_t const* rx_cfg, rx_packet_callback_t rx_cb, rssi_valid_callback_t rssi_valid_cb)
@@ -437,7 +439,14 @@ int16_t hw_radio_get_latched_rssi()
 
 error_t hw_radio_set_idle()
 {
-	  return ERROR;
+	switch_to_idle_mode();
+}
+
+error_t hw_radio_poweroff()
+{
+	ezradio_hal_AssertShutdown();
+	current_state = HW_RADIO_STATE_OFF;
+	return SUCCESS;
 }
 
 static void report_rssi()
@@ -449,6 +458,9 @@ static void report_rssi()
 static void start_rx(hw_rx_cfg_t const* rx_cfg)
 {
 	DPRINT("start_rx");
+
+	if (current_state == HW_RADIO_STATE_OFF)
+		ezradio_hal_DeassertShutdown();
 
     current_state = HW_RADIO_STATE_RX;
 

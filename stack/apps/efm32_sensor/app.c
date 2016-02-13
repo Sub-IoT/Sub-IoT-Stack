@@ -60,13 +60,14 @@ void userbutton_callback(button_id_t button_id)
 
 void measureTemperature()
 {
-	float temp = tempsensor_read_celcius();
+	//float temp = tempsensor_read_celcius();
 
-	temperature = (int)(temp * 10);
+	//temperature = (int)(temp * 10);
+	 temperature = hw_timer_getvalue(0);
 #ifdef PLATFORM_EFM32GG_STK3700
 	lcd_write_temperature(temperature*10, 1);
 #else
-	lcd_write_string("Temperature %2d.%2d C", (temperature/10), abs(temperature%10));
+	lcd_write_string("Temp: %2d.%2d C\n", (temperature/10), abs(temperature%10));
 #endif
 	
 	log_print_string("Temperature %2d.%2d C", (temperature/10), abs(temperature%10));
@@ -74,10 +75,11 @@ void measureTemperature()
 
 void execute_sensor_measurement()
 {
-	led_toggle(0);
+	//led_toggle(0);
     timer_post_task_delay(&execute_sensor_measurement, TIMER_TICKS_PER_SEC * 10);
 
 	measureTemperature();
+
 
 	int16_t temp_bigendian = __builtin_bswap16(temperature);
     fs_write_file(SENSOR_FILE_ID, 0, (uint8_t*)&temp_bigendian, 2); // File 0x40 is configured to use D7AActP trigger an ALP action which broadcasts this file data on Access Class 0
@@ -149,7 +151,7 @@ void bootstrap()
                 .channel_header = {
                     .ch_coding = PHY_CODING_PN9,
                     .ch_class = PHY_CLASS_NORMAL_RATE,
-                    .ch_freq_band = PHY_BAND_433
+                    .ch_freq_band = PHY_BAND_868
                 },
                 .channel_index_start = 0,
                 .channel_index_end = 0,
@@ -167,8 +169,8 @@ void bootstrap()
 
     d7ap_stack_init(&fs_init_args, NULL, false);
 
-	internalTempSensor_init();
-	measureTemperature();
+	//internalTempSensor_init();
+	//measureTemperature();
 
     ubutton_register_callback(0, &userbutton_callback);
     ubutton_register_callback(1, &userbutton_callback);

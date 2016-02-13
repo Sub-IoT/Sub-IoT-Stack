@@ -40,13 +40,12 @@
  */
 __LINK_C void __lcd_init();
 
-/*! \brief Turns of all lcd segments
+/*! \brief Turns on/off the display
  */
-__LINK_C void lcd_all_off();
+__LINK_C void lcd_enable(bool);
 
-/*! \brief Turn on all lcd segments
- */
-__LINK_C void lcd_all_on();
+
+__LINK_C void lcd_clear();
 
 /*! \brief Write a string to the LCD
  *
