@@ -240,8 +240,8 @@ void bootstrap()
 
     d7ap_stack_init(&fs_init_args, NULL, false);
 
-	//internalTempSensor_init();
-	//measureTemperature();
+	internalTempSensor_init();
+	measureTemperature();
 
     ubutton_register_callback(0, &userbutton_callback);
     ubutton_register_callback(1, &userbutton_callback);

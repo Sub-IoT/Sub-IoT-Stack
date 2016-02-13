@@ -279,22 +279,7 @@ static void switch_to_idle_mode()
 	if (current_state == HW_RADIO_STATE_IDLE)
 		return;
 
-	ezradio_cmd_reply_t radioReplyLocal;
-
-	ezradio_request_device_state(&radioReplyLocal);
-	DPRINT(" - Current State %d", radioReplyLocal.REQUEST_DEVICE_STATE.CURR_STATE);
-	DPRINT(" - Current channel %d", radioReplyLocal.REQUEST_DEVICE_STATE.CURRENT_CHANNEL);
-
-	ezradio_change_state(EZRADIO_CMD_CHANGE_STATE_ARG_NEXT_STATE1_NEW_STATE_ENUM_SLEEP); //sleep or ready?
-	current_state = HW_RADIO_STATE_IDLE;
-
-	ezradio_request_device_state(&radioReplyLocal);
-	DPRINT(" - Current State %d", radioReplyLocal.REQUEST_DEVICE_STATE.CURR_STATE);
-	DPRINT(" - Current channel %d", radioReplyLocal.REQUEST_DEVICE_STATE.CURRENT_CHANNEL);
-
-
-
-	ezradio_change_state(EZRADIO_CMD_CHANGE_STATE_ARG_NEXT_STATE1_NEW_STATE_ENUM_SLEEP); //sleep or ready?
+	ezradio_change_state(EZRADIO_CMD_CHANGE_STATE_ARG_NEXT_STATE1_NEW_STATE_ENUM_SLEEP);
 	current_state = HW_RADIO_STATE_IDLE;
 }
 
