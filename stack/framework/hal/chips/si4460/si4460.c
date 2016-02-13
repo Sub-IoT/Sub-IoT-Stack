@@ -69,7 +69,8 @@ typedef enum
     HW_RADIO_STATE_IDLE,
     HW_RADIO_STATE_TX,
     HW_RADIO_STATE_RX,
-    HW_RADIO_STATE_OFF
+    HW_RADIO_STATE_OFF,
+    HW_RADIO_STATE_UNKOWN
 } hw_radio_state_t;
 
 
@@ -275,6 +276,24 @@ static void configure_syncword_class(syncword_class_t syncword_class)
 
 static void switch_to_idle_mode()
 {
+	if (current_state == HW_RADIO_STATE_IDLE)
+		return;
+
+	ezradio_cmd_reply_t radioReplyLocal;
+
+	ezradio_request_device_state(&radioReplyLocal);
+	DPRINT(" - Current State %d", radioReplyLocal.REQUEST_DEVICE_STATE.CURR_STATE);
+	DPRINT(" - Current channel %d", radioReplyLocal.REQUEST_DEVICE_STATE.CURRENT_CHANNEL);
+
+	ezradio_change_state(EZRADIO_CMD_CHANGE_STATE_ARG_NEXT_STATE1_NEW_STATE_ENUM_SLEEP); //sleep or ready?
+	current_state = HW_RADIO_STATE_IDLE;
+
+	ezradio_request_device_state(&radioReplyLocal);
+	DPRINT(" - Current State %d", radioReplyLocal.REQUEST_DEVICE_STATE.CURR_STATE);
+	DPRINT(" - Current channel %d", radioReplyLocal.REQUEST_DEVICE_STATE.CURRENT_CHANNEL);
+
+
+
 	ezradio_change_state(EZRADIO_CMD_CHANGE_STATE_ARG_NEXT_STATE1_NEW_STATE_ENUM_SLEEP); //sleep or ready?
 	current_state = HW_RADIO_STATE_IDLE;
 }
@@ -288,7 +307,7 @@ error_t hw_radio_init(alloc_packet_callback_t alloc_packet_cb,
 	alloc_packet_callback = alloc_packet_cb;
 	release_packet_callback = release_packet_cb;
 
-	current_state = HW_RADIO_STATE_IDLE;
+	current_state = HW_RADIO_STATE_UNKOWN;
 
 
 	/* Initialize EZRadio device. */

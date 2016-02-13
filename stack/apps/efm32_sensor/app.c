@@ -30,9 +30,10 @@
 #include "hwadc.h"
 #include "d7ap_stack.h"
 #include "fs.h"
+#include "log.h"
 
 
-#include "console.h"
+//#include "console.h"
 
 #if (!defined PLATFORM_EFM32GG_STK3700 && !defined PLATFORM_EFM32HG_STK3400 && !defined PLATFORM_EZR32LG_WSTK6200A)
 	#error Mismatch between the configured platform and the actual platform.
@@ -77,12 +78,12 @@ void update_app_mode()
 
 	if (app_mode_status_changed & APP_MODE_CONSOLE == APP_MODE_CONSOLE)
 	{
-		if (app_mode_status & APP_MODE_CONSOLE == 0)
-		{
-			console_disable();
-		} else {
-			console_enable();
-		}
+//		if (app_mode_status & APP_MODE_CONSOLE == 0)
+//		{
+//			console_disable();
+//		} else {
+//			console_enable();
+//		}
 	}
 }
 
@@ -123,24 +124,24 @@ void userbutton_callback(button_id_t button_id)
 
 		sched_post_task(&update_app_mode);
 
-		if (app_mode_status & APP_MODE_CONSOLE) console_printf("Mode %d", app_mode);
+		if (app_mode_status & APP_MODE_CONSOLE) log_print_string("Mode %d", app_mode);
 		if (app_mode_status & APP_MODE_LCD) lcd_write_string("Mode %d", app_mode);
 	}
 }
 
 void measureTemperature()
 {
-	//float temp = tempsensor_read_celcius();
+	float temp = tempsensor_read_celcius();
 
-	//temperature = (int)(temp * 10);
-	 temperature = hw_timer_getvalue(0);
+	temperature = (int)(temp * 10);
+
 #ifdef PLATFORM_EFM32GG_STK3700
 	lcd_write_temperature(temperature*10, 1);
 #else
 	lcd_write_string("Temp: %2d.%2d C\n", (temperature/10), abs(temperature%10));
 #endif
 	
-	console_printf("Temperature %2d.%2d C", (temperature/10), abs(temperature%10));
+	log_print_string("Temperature %2d.%2d C", (temperature/10), abs(temperature%10));
 }
 
 void execute_sensor_measurement()
@@ -152,7 +153,7 @@ void execute_sensor_measurement()
 
 
 	int16_t temp_bigendian = __builtin_bswap16(temperature);
-    //fs_write_file(SENSOR_FILE_ID, 0, (uint8_t*)&temp_bigendian, 2); // File 0x40 is configured to use D7AActP trigger an ALP action which broadcasts this file data on Access Class 0
+    fs_write_file(SENSOR_FILE_ID, 0, (uint8_t*)&temp_bigendian, 2); // File 0x40 is configured to use D7AActP trigger an ALP action which broadcasts this file data on Access Class 0
 }
 
 void init_user_files()
@@ -207,7 +208,7 @@ void init_user_files()
 
 void bootstrap()
 {
-	console_print("Device booted\n");
+	log_print_string("Device booted\n");
 
     dae_access_profile_t access_classes[1] = {
         {

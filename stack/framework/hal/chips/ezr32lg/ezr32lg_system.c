@@ -39,8 +39,8 @@ void hw_enter_lowpower_mode(uint8_t mode)
 	}
 	case 1:
 	{
-	    //EMU_EnterEM2(true);
-		EMU_EnterEM2(false);
+	    EMU_EnterEM2(true);
+		//EMU_EnterEM2(false);
 	    break;
 	}
 	case 2:
