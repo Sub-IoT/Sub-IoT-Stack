@@ -28,6 +28,7 @@
 #include "display.h"
 #include "textdisplay.h"
 #include "retargettextdisplay.h"
+#include "displaypal.h"
 #include <debug.h>
 #include "ng.h"
 #include "stdio.h"
@@ -44,19 +45,43 @@ void __lcd_init()
 
 	TEXTDISPLAY_Config_t config  = {0, false, true};
 	EMSTATUS status = TEXTDISPLAY_New(&config, &h);
-
-
 }
 
-void lcd_all_off()
+
+void lcd_enable(bool enable)
 {
-	 //SegmentLCD_AllOff();
+	if (enable)
+	  {
+	#if defined( LCD_PORT_DISP_SEL )
+	    /* Set EFM_DISP_SELECT pin. */
+	    PAL_GpioPinOutSet(LCD_PORT_DISP_SEL, LCD_PIN_DISP_SEL);
+	#endif
+
+	#if defined( LCD_PORT_DISP_PWR )
+	    /* Drive voltage on EFM_DISP_PWR_EN pin. */
+	    PAL_GpioPinOutSet(LCD_PORT_DISP_PWR, LCD_PIN_DISP_PWR);
+	#endif
+	  }
+	  else
+	  {
+	#if defined( LCD_PORT_DISP_PWR )
+	    /* Stop driving voltage on EFM_DISP_PWR_EN pin. */
+	    PAL_GpioPinOutClear(LCD_PORT_DISP_PWR, LCD_PIN_DISP_PWR);
+	#endif
+
+	#if defined( LCD_PORT_DISP_SEL )
+	    /* Clear EFM_DISP_SELECT pin. */
+	    PAL_GpioPinOutClear(LCD_PORT_DISP_SEL, LCD_PIN_DISP_SEL);
+	#endif
+	  }
 }
 
-void lcd_all_on()
+
+void lcd_clear()
 {
-	//SegmentLCD_AllOn();
+	TEXTDISPLAY_WriteChar(h, '\f');
 }
+
 
 void lcd_write_string(char* format, ...)
 {

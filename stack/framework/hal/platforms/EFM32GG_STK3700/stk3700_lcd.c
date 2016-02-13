@@ -43,14 +43,17 @@ void __lcd_init()
 	SegmentLCD_AllOff();
 }
 
-void lcd_all_off()
+void lcd_enable(bool enable)
 {
-	 SegmentLCD_AllOff();
+	if (enable)
+		__lcd_init();
+	else
+		SegmentLCD_Disable();
 }
 
-void lcd_all_on()
+void lcd_clear()
 {
-	SegmentLCD_AllOn();
+	SegmentLCD_AllOff();
 }
 
 void lcd_write_string(char* format, ...)

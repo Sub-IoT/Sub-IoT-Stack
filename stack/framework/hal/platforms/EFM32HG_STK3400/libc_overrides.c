@@ -66,7 +66,7 @@ void __assert_func( const char *file, int line, const char *func, const char *fa
 	end_atomic();
 #endif
 
-	lcd_all_off();
+	lcd_clear();
 	lcd_write_string("ERROR");
 	lcd_write_number(timer_get_counter_value());
 

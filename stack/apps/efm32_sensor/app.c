@@ -32,7 +32,7 @@
 #include "d7ap_stack.h"
 #include "fs.h"
 
-#if (!defined PLATFORM_EFM32GG_STK3700 && !defined PLATFORM_EZR32LG_WSTK6200A)
+#if (!defined PLATFORM_EFM32GG_STK3700 && !defined PLATFORM_EFM32HG_STK3400 && !defined PLATFORM_EZR32LG_WSTK6200A)
 	#error Mismatch between the configured platform and the actual platform.
 #endif
 
