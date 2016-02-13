@@ -223,6 +223,25 @@ uart_handle_t* uart_init(uint8_t idx, uint32_t baudrate, uint8_t pins) {
   return &handle[idx];
 }
 
+bool uart_disable(uart_handle_t* uart) {
+  // reset route to make sure that TX pin will become low after disable
+  uart->channel->ROUTE = _UART_ROUTE_RESETVALUE;
+
+  USART_Enable(uart->channel, usartDisable);
+  CMU_ClockEnable(uart->clock, false);
+
+  return true;
+}
+
+bool uart_enable(uart_handle_t* uart) {
+  uart->channel->ROUTE = UART_ROUTE_RXPEN | UART_ROUTE_TXPEN | uart->pins->location;
+
+  USART_Enable(uart->channel, usartEnable);
+  CMU_ClockEnable(uart->clock, true);
+
+  return true;
+}
+
 void uart_set_rx_interrupt_callback(uart_handle_t* uart,
                                     uart_rx_inthandler_t rx_handler)
 {
@@ -273,6 +292,9 @@ void uart_send_bytes(uart_handle_t* uart, void const *data, size_t length) {
 void uart_send_string(uart_handle_t* uart, const char *string) {
 	uart_send_bytes(uart, string, strnlen(string, 100));
 }
+
+
+
 
 error_t uart_rx_interrupt_enable(uart_handle_t* uart) {
   if(handler[uart->idx] == NULL) { return EOFF; }

@@ -20,7 +20,6 @@
 #include "hwsystem.h"
 #include "scheduler.h"
 #include "timer.h"
-#include "log.h"
 #include "assert.h"
 #include "platform.h"
 
@@ -31,6 +30,9 @@
 #include "hwadc.h"
 #include "d7ap_stack.h"
 #include "fs.h"
+
+
+#include "console.h"
 
 #if (!defined PLATFORM_EFM32GG_STK3700 && !defined PLATFORM_EFM32HG_STK3400 && !defined PLATFORM_EZR32LG_WSTK6200A)
 	#error Mismatch between the configured platform and the actual platform.
@@ -44,18 +46,86 @@
 #define SENSOR_FILE_SIZE         4
 #define ACTION_FILE_ID           0x41
 
+#define APP_MODE_LEDS		1
+#define APP_MODE_LCD		1 << 1
+#define APP_MODE_CONSOLE	1 << 2
+
 static int16_t temperature = 0;
 
+uint8_t app_mode_status = 0xFF;
+uint8_t app_mode_status_changed = 0x00;
+uint8_t app_mode = 0;
+
+void update_app_mode();
+
+void update_app_mode()
+{
+	if (app_mode_status_changed & APP_MODE_LEDS == APP_MODE_LEDS)
+	{
+		if (app_mode_status & APP_MODE_LEDS == 0)
+		{
+			uint8_t led = 0;
+			for (;led<HW_NUM_LEDS;led++)
+				led_off(led);
+		}
+	}
+
+	if (app_mode_status_changed & APP_MODE_LCD == APP_MODE_LCD)
+	{
+		lcd_enable(app_mode_status & APP_MODE_LCD);
+	}
+
+	if (app_mode_status_changed & APP_MODE_CONSOLE == APP_MODE_CONSOLE)
+	{
+		if (app_mode_status & APP_MODE_CONSOLE == 0)
+		{
+			console_disable();
+		} else {
+			console_enable();
+		}
+	}
+}
+
+// Toggle different operational modes
 void userbutton_callback(button_id_t button_id)
 {
-	log_print_string("Button PB%u pressed.", button_id);
-	led_toggle(button_id);
+	if (button_id == 1)
+	{
+		app_mode == 4 ? app_mode = 0 : app_mode++;
 
-	char string[9];
-	snprintf(string, 7, "Btn %u", button_id);
-	lcd_write_string(string);
+		switch (app_mode)
+		{
+		case 0:
+			app_mode_status = APP_MODE_LEDS | APP_MODE_LCD | APP_MODE_CONSOLE;
+			app_mode_status_changed = APP_MODE_LEDS | APP_MODE_LCD | APP_MODE_CONSOLE;
+			break;
+		case 1:
+			app_mode_status &= ~APP_MODE_LEDS;
+			app_mode_status_changed |= APP_MODE_LEDS;
+			break;
+		case 2:
+			app_mode_status &= ~APP_MODE_LCD;
+			app_mode_status |= APP_MODE_LEDS;
 
-    fs_write_file(SENSOR_FILE_ID, 2, (uint8_t*)&button_id, 1); // File 0x40 is configured to use D7AActP trigger an ALP action which broadcasts this file data on Access Class 0
+			app_mode_status_changed |= APP_MODE_LCD;
+			break;
+		case 3:
+			app_mode_status &= ~APP_MODE_CONSOLE;
+			app_mode_status |= APP_MODE_LCD;
+
+			app_mode_status_changed |= APP_MODE_CONSOLE;
+			break;
+		case 4:
+			app_mode_status = 0;
+			app_mode_status_changed = APP_MODE_LEDS | APP_MODE_LCD | APP_MODE_CONSOLE;
+			break;
+		}
+
+		sched_post_task(&update_app_mode);
+
+		if (app_mode_status & APP_MODE_CONSOLE) console_printf("Mode %d", app_mode);
+		if (app_mode_status & APP_MODE_LCD) lcd_write_string("Mode %d", app_mode);
+	}
 }
 
 void measureTemperature()
@@ -70,7 +140,7 @@ void measureTemperature()
 	lcd_write_string("Temp: %2d.%2d C\n", (temperature/10), abs(temperature%10));
 #endif
 	
-	log_print_string("Temperature %2d.%2d C", (temperature/10), abs(temperature%10));
+	console_printf("Temperature %2d.%2d C", (temperature/10), abs(temperature%10));
 }
 
 void execute_sensor_measurement()
@@ -82,7 +152,7 @@ void execute_sensor_measurement()
 
 
 	int16_t temp_bigendian = __builtin_bswap16(temperature);
-    fs_write_file(SENSOR_FILE_ID, 0, (uint8_t*)&temp_bigendian, 2); // File 0x40 is configured to use D7AActP trigger an ALP action which broadcasts this file data on Access Class 0
+    //fs_write_file(SENSOR_FILE_ID, 0, (uint8_t*)&temp_bigendian, 2); // File 0x40 is configured to use D7AActP trigger an ALP action which broadcasts this file data on Access Class 0
 }
 
 void init_user_files()
@@ -137,7 +207,7 @@ void init_user_files()
 
 void bootstrap()
 {
- 	log_print_string("Device booted at time: %d\n", timer_get_counter_value());
+	console_print("Device booted\n");
 
     dae_access_profile_t access_classes[1] = {
         {
@@ -176,8 +246,11 @@ void bootstrap()
     ubutton_register_callback(1, &userbutton_callback);
 
     sched_register_task((&execute_sensor_measurement));
-    timer_post_task_delay(&execute_sensor_measurement, TIMER_TICKS_PER_SEC * 10);
+    timer_post_task_delay(&execute_sensor_measurement, TIMER_TICKS_PER_SEC * 5);
 
-    lcd_write_string("DASH7");
+
+    sched_register_task((&update_app_mode));
+
+    lcd_write_string("EFM32 Sensor\n");
 }
 

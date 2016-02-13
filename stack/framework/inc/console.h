@@ -14,6 +14,8 @@
 #ifdef CONSOLE_UART
 
 void console_init(void);
+void console_enable(void);
+void console_disable(void);
 
 // the elementary console actions
 void console_print_byte(uint8_t byte);
@@ -30,6 +32,8 @@ void console_rx_interrupt_enable();
 #pragma message "WARNING: no console configuration found !!!"
 
 #define console_init()
+#define console_enable()
+#define console_dissable()
 #define console_print_byte(...)
 #define console_print_bytes(...)
 #define console_print(...)

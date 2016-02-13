@@ -15,6 +15,16 @@ void console_init(void) {
   uart = uart_init(CONSOLE_UART, CONSOLE_BAUDRATE, CONSOLE_LOCATION);
 }
 
+void console_enable(void)
+{
+	uart_enable(uart);
+}
+
+void console_disable(void)
+{
+	uart_disable(uart);
+}
+
 inline void console_print_byte(uint8_t byte) {
   uart_send_byte(uart, byte);
 }
