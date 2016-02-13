@@ -33,6 +33,14 @@
 #include "hwdebug.h"
 #include "random.h"
 #include "hwwatchdog.h"
+#include "MODULE_D7AP_defs.h"
+
+#if defined(FRAMEWORK_LOG_ENABLED) && defined(MODULE_D7AP_SP_LOG_ENABLED)
+#define DPRINT(...) log_print_stack_string(LOG_STACK_SESSION, __VA_ARGS__)
+#else
+#define DPRINT(...)
+#endif
+
 
 static d7asp_fifo_t NGDEF(_fifo); // TODO we only use 1 fifo for now, should be multiple later (1 per on unique addressee and QoS combination)
 #define fifo NG(_fifo)
@@ -89,7 +97,7 @@ static void mark_current_request_done()
 static void flush_fifos()
 {
     assert(state == D7ASP_STATE_MASTER);
-    log_print_stack_string(LOG_STACK_SESSION, "Flushing FIFOs");
+    DPRINT("Flushing FIFOs");
     hw_watchdog_feed(); // TODO do here?
 
     if(current_request_id == NO_ACTIVE_REQUEST_ID)
@@ -99,7 +107,7 @@ static void flush_fifos()
         if(found_next_req_index == -1 || found_next_req_index == fifo.next_request_id)
         {
             // we handled all requests ...
-            log_print_stack_string(LOG_STACK_SESSION, "FIFO flush completed");
+            DPRINT("FIFO flush completed");
             if(d7asp_init_args != NULL && d7asp_init_args->d7asp_fifo_flush_completed_cb != NULL)
                 d7asp_init_args->d7asp_fifo_flush_completed_cb(fifo.token, fifo.progress_bitmap, fifo.success_bitmap, REQUESTS_BITMAP_BYTE_COUNT);
 
@@ -121,12 +129,12 @@ static void flush_fifos()
     else
     {
         // retrying request ...
-        log_print_stack_string(LOG_STACK_SESSION, "Current request retry count: %i", current_request_retry_count);
+        DPRINT("Current request retry count: %i", current_request_retry_count);
         if(current_request_retry_count == single_request_retry_limit)
         {
             // mark request as failed and pop
             mark_current_request_done();
-            log_print_stack_string(LOG_STACK_SESSION, "Request reached single request retry limit (%i), skipping request", single_request_retry_limit);
+            DPRINT("Request reached single request retry limit (%i), skipping request", single_request_retry_limit);
             packet_queue_free_packet(current_request_packet);
             current_request_id = NO_ACTIVE_REQUEST_ID;
             sched_post_task(&flush_fifos); // continue flushing until all request handled ...
@@ -153,16 +161,16 @@ static void switch_state(state_t new_state)
                 case D7ASP_STATE_IDLE:
                     state = new_state;
                     sched_post_task(&flush_fifos);
-                    log_print_stack_string(LOG_STACK_SESSION, "Switching to state D7ASP_STATE_MASTER");
+                    DPRINT("Switching to state D7ASP_STATE_MASTER");
                     break;
                 case D7ASP_STATE_SLAVE_PENDING_MASTER:
                     state = new_state;
                     sched_post_task(&flush_fifos);
-                    log_print_stack_string(LOG_STACK_SESSION, "Switching to state D7ASP_STATE_MASTER");
+                    DPRINT("Switching to state D7ASP_STATE_MASTER");
                     break;
                 case D7ASP_STATE_SLAVE:
                     state = D7ASP_STATE_SLAVE_PENDING_MASTER;
-                    log_print_stack_string(LOG_STACK_SESSION, "Switching to state D7ASP_STATE_SLAVE_PENDING_MASTER");
+                    DPRINT("Switching to state D7ASP_STATE_SLAVE_PENDING_MASTER");
                     break;
                 case D7ASP_STATE_MASTER:
                     // new requests in fifo, reschedule for later flushing
@@ -179,7 +187,7 @@ static void switch_state(state_t new_state)
                 case D7ASP_STATE_IDLE:
                     state = new_state;
                     current_request_id = NO_ACTIVE_REQUEST_ID;
-                    log_print_stack_string(LOG_STACK_SESSION, "Switching to state D7ASP_STATE_SLAVE");
+                    DPRINT("Switching to state D7ASP_STATE_SLAVE");
                     break;
                 default:
                     assert(false);
@@ -188,11 +196,11 @@ static void switch_state(state_t new_state)
         case D7ASP_STATE_SLAVE_PENDING_MASTER:
             assert(state == D7ASP_STATE_SLAVE);
             state = D7ASP_STATE_SLAVE_PENDING_MASTER;
-            log_print_stack_string(LOG_STACK_SESSION, "Switching to state D7ASP_STATE_SLAVE_PENDING_MASTER");
+            DPRINT("Switching to state D7ASP_STATE_SLAVE_PENDING_MASTER");
             break;
         case D7ASP_STATE_IDLE:
             state = new_state;
-            log_print_stack_string(LOG_STACK_SESSION, "Switching to state D7ASP_STATE_IDLE");
+            DPRINT("Switching to state D7ASP_STATE_IDLE");
             break;
         default:
             assert(false);
@@ -214,7 +222,7 @@ void d7asp_init(d7asp_init_args_t* init_args)
 // we will see later what this means. For instance how to add a request which starts D7AAdvP etc
 d7asp_queue_result_t d7asp_queue_alp_actions(d7asp_fifo_config_t* d7asp_fifo_config, uint8_t* alp_payload_buffer, uint8_t alp_payload_length)
 {
-    log_print_stack_string(LOG_STACK_SESSION, "Queuing ALP actions");
+    DPRINT("Queuing ALP actions");
 
     assert(fifo.request_buffer_tail_idx + alp_payload_length < MODULE_D7AP_FIFO_COMMAND_BUFFER_SIZE);
     assert(fifo.next_request_id < MODULE_D7AP_FIFO_MAX_REQUESTS_COUNT); // TODO do not assert but let upper layer handle this
@@ -270,7 +278,7 @@ bool d7asp_process_received_packet(packet_t* packet)
         // received ack
         result.fifo_token = fifo.token;
         result.request_id = current_request_id;
-        log_print_stack_string(LOG_STACK_SESSION, "Received ACK");
+        DPRINT("Received ACK");
         bitmap_set(fifo.success_bitmap, current_request_id);
         mark_current_request_done();
         assert(packet != current_request_packet);
@@ -294,7 +302,7 @@ bool d7asp_process_received_packet(packet_t* packet)
         if(alp_get_operation(packet->payload) == ALP_OP_RETURN_FILE_DATA)
         {
             // received unsollicited data, notify appl
-            log_print_stack_string(LOG_STACK_SESSION, "Received unsollicited data");
+            DPRINT("Received unsollicited data");
             if(d7asp_init_args != NULL && d7asp_init_args->d7asp_received_unsollicited_data_cb != NULL)
                 d7asp_init_args->d7asp_received_unsollicited_data_cb(result, packet->payload, packet->payload_length, &packet->hw_radio_packet.rx_meta);
 
@@ -312,7 +320,7 @@ bool d7asp_process_received_packet(packet_t* packet)
         if(packet->payload_length == 0 && !packet->d7atp_ctrl.ctrl_is_ack_requested)
             goto discard_request; // no need to respond, clean up
 
-        log_print_stack_string(LOG_STACK_SESSION, "Sending response");
+        DPRINT("Sending response");
         d7atp_respond_dialog(packet);
         return true;
     }
@@ -328,7 +336,7 @@ bool d7asp_process_received_packet(packet_t* packet)
 
 void d7asp_signal_packet_transmitted(packet_t *packet)
 {
-    log_print_stack_string(LOG_STACK_SESSION, "Packet transmitted");
+    DPRINT("Packet transmitted");
 
     if(state == D7ASP_STATE_SLAVE || state == D7ASP_STATE_SLAVE_PENDING_MASTER)
     {

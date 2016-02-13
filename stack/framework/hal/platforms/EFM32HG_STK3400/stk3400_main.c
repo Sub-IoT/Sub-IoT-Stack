@@ -30,6 +30,7 @@
 #include "platform_sensors.h"
 #include "em_gpio.h"
 #include <debug.h>
+#include "console.h"
 
 void __platform_init()
 {
@@ -41,6 +42,8 @@ void __platform_init()
 #ifdef PLATFORM_USE_USB_CDC
     __usb_init_cdc();
 #endif
+
+    console_init();
 
 #ifdef USE_CC1101
     // configure the interrupt pins here, since hw_gpio_configure_pin() is MCU specific and not part of the common HAL API

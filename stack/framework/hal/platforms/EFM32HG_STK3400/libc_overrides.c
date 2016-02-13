@@ -25,12 +25,12 @@
 #include <stdio.h>
 #include <em_usbd.h>
 #include "timer.h"
+#include "console.h"
 
 //Overwrite _write so 'printf''s get pushed over the uart
 int _write(int fd, char *ptr, int len)
 {
-  // by default on UART0, which should be the console
-  uart_send_bytes(0, ptr, len);
+  console_print_bytes(ptr, len);
   return len;
 }
 

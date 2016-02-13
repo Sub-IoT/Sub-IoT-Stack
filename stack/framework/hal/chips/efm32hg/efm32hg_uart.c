@@ -30,7 +30,7 @@
 #include <em_usbd.h>
 #include "hwgpio.h"
 #include "hwuart.h"
-#include <assert.h>
+#include <debug.h>
 #include "em_gpio.h"
 
 #include "efm32hg_pins.h"
@@ -82,13 +82,13 @@ static uart_pins_t location[UARTS][LOCATIONS] = {
     },
     {
       .location = USART_ROUTE_LOCATION_LOC4,
-      .tx       = { .port = gpioPortA, .pin =  3 },
-      .rx       = { .port = gpioPortA, .pin =  4 }
+      .tx       = { .port = gpioPortF, .pin =  2 },
+      .rx       = { .port = gpioPortA, .pin =  0 }
     },
     {
       .location = USART_ROUTE_LOCATION_LOC5,
-      .tx       = { .port = gpioPortA, .pin =  3 },
-      .rx       = { .port = gpioPortA, .pin =  4 }
+      .tx       = { .port = gpioPortC, .pin =  2 },
+      .rx       = { .port = gpioPortC, .pin =  1 }
     },
   }
 };

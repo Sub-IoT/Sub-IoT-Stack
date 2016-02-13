@@ -28,8 +28,9 @@
 #include "ng.h"
 #include "hwdebug.h"
 #include "random.h"
+#include "MODULE_D7AP_defs.h"
 
-#ifdef FRAMEWORK_LOG_ENABLED
+#if defined(FRAMEWORK_LOG_ENABLED) && defined(MODULE_D7AP_DLL_LOG_ENABLED)
 #define DPRINT(...) log_print_stack_string(LOG_STACK_DLL, __VA_ARGS__)
 #else
 #define DPRINT(...)
@@ -209,7 +210,7 @@ static void cca_rssi_valid(int16_t cur_rssi)
     {
         if(dll_state == DLL_STATE_CCA1)
         {
-            log_print_stack_string(LOG_STACK_DLL, "CCA1 RSSI: %d", cur_rssi);
+            DPRINT("CCA1 RSSI: %d", cur_rssi);
             switch_state(DLL_STATE_CCA2);
             timer_post_task_delay(&execute_cca, 5);
             return;
@@ -217,9 +218,9 @@ static void cca_rssi_valid(int16_t cur_rssi)
         else if(dll_state == DLL_STATE_CCA2)
         {
             // OK, send packet
-            log_print_stack_string(LOG_STACK_DLL, "CCA2 RSSI: %d", cur_rssi);
-            log_print_stack_string(LOG_STACK_DLL, "CCA2 succeeded, transmitting ...");
-            log_print_data(current_packet->hw_radio_packet.data, current_packet->hw_radio_packet.length + 1); // TODO tmp
+            DPRINT("CCA2 RSSI: %d", cur_rssi);
+            DPRINT("CCA2 succeeded, transmitting ...");
+            // log_print_data(current_packet->hw_radio_packet.data, current_packet->hw_radio_packet.length + 1); // TODO tmp
 
             switch_state(DLL_STATE_TX_FOREGROUND);
 

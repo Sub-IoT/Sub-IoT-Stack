@@ -48,10 +48,14 @@
 #include "cc1101_registers.h"
 
 // turn on/off the debug prints
-#ifdef FRAMEWORK_LOG_ENABLED // TODO more granular (LOG_PHY_ENABLED)
-#define DPRINT(...) log_print_string(__VA_ARGS__)
+#if defined(FRAMEWORK_LOG_ENABLED) && defined(FRAMEWORK_PHY_LOG_ENABLED) // TODO more granular (LOG_PHY_ENABLED)
+#define DPRINT(...) log_print_stack_string(LOG_STACK_PHY, __VA_ARGS__)
+#define DPRINT_PACKET(...) log_print_raw_phy_packet(__VA_ARGS__)
+#define DPRINT_DATA(...) log_print_data(__VA_ARGS__)
 #else
 #define DPRINT(...)
+#define DPRINT_PACKET(...)
+#define DPRINT_DATA(...)
 #endif
 
 #define RSSI_OFFSET 74
@@ -223,9 +227,8 @@ static void end_of_packet_isr()
             packet->rx_meta.crc_status = HW_CRC_UNAVAILABLE; // TODO
             packet->rx_meta.timestamp = timer_get_counter_value();
 
-#ifdef FRAMEWORK_LOG_ENABLED
-            log_print_raw_phy_packet(packet, false);
-#endif
+            DPRINT_PACKET(packet, false);
+
             DEBUG_RX_END();
             if(rx_packet_callback != NULL) // TODO this can happen while doing CCA but we should not be interrupting here (disable packet handler?)
                 rx_packet_callback(packet);
@@ -254,9 +257,8 @@ static void end_of_packet_isr()
 
             current_packet->tx_meta.timestamp = timer_get_counter_value();
 
-#ifdef FRAMEWORK_LOG_ENABLED
-            log_print_raw_phy_packet(current_packet, true);
-#endif
+            DPRINT_PACKET(current_packet, true);
+
             if(tx_packet_callback != 0)
                 tx_packet_callback(current_packet);
 
@@ -520,10 +522,8 @@ error_t hw_radio_send_packet(hw_radio_packet_t* packet, tx_packet_callback_t tx_
 
 
 
-#ifdef FRAMEWORK_LOG_ENABLED // TODO more granular
-    log_print_stack_string(LOG_STACK_PHY, "Data to TX Fifo:");
-    log_print_data(packet->data, packet->length + 1);
-#endif
+    DPRINT("Data to TX Fifo:");
+    DPRINT_DATA(packet->data, packet->length + 1);
 
     configure_channel((channel_id_t*)&(current_packet->tx_meta.tx_cfg.channel_id));
     configure_eirp(current_packet->tx_meta.tx_cfg.eirp);
