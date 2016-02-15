@@ -24,6 +24,7 @@
  */
 
 #include <stdbool.h>
+#include <stdint.h>
 #include <assert.h>
 
 #include "em_device.h"
@@ -99,15 +100,13 @@ static spi_pins_t location[USARTS][LOCATIONS] = {
   }
 };
 
-// private implementation of handle struct
-struct spi_handle {
+typedef struct spi_usart {
   USART_TypeDef*    channel;
   CMU_Clock_TypeDef clock;
-  spi_pins_t*       pins;
-};
+} spi_usart_t;
 
-// private storage for handles, pointers to these records are passed around
-static spi_handle_t handle[USARTS] = {
+// private storage for usarts, pointers to these records are passed around
+static spi_usart_t usart[USARTS] = {
   {
     .channel = USART0,
     .clock   = cmuClock_USART0
@@ -121,94 +120,162 @@ static spi_handle_t handle[USARTS] = {
     .clock   = cmuClock_USART2
   },
 };
-  
+
+// private implementation of handle structs
+struct spi_handle {
+  spi_usart_t* usart;
+  spi_pins_t*  pins;
+  uint32_t     baudrate;
+  uint8_t      databits;
+  bool         msbf;
+  uint8_t      users;   // for reference counting
+};
+
+// private storage to spi handles, pointers to these are passed around
+#define MAX_SPI_HANDLES 4              // TODO expose this in chip configuration
+uint8_t      next_spi_handle = 0;
+spi_handle_t handle[MAX_SPI_HANDLES];
+
+struct spi_slave_handle {
+  spi_handle_t* spi;
+  pin_id_t      cs;
+  bool          selected;
+};
+
+// private storage to spi slave handles, pointers to these are passed around
+#define MAX_SPI_SLAVE_HANDLES 4        // TODO expose this in chip configuration
+uint8_t            next_spi_slave_handle = 0;
+spi_slave_handle_t slave_handle[MAX_SPI_SLAVE_HANDLES];
+
 spi_handle_t* spi_init(uint8_t idx, uint32_t baudrate, uint8_t databits,
-                       uint8_t pins)
+                       bool msbf, uint8_t pins)
 {
+  // limit pre-allocated handles
+  assert(next_spi_handle < MAX_SPI_HANDLES);
+
   // assert what is supported by HW and emlib
   assert(databits == 8 || databits == 9);
   assert(idx < USARTS);
   assert(pins < LOCATIONS); // TODO: not more implemented yet
 
-  // complete handle with pin info
-  handle[idx].pins = &location[idx][pins];
-  
-  CMU_ClockEnable(cmuClock_GPIO,    true);
-  CMU_ClockEnable(handle[idx].clock, true);
+  // configure new handle
+  handle[next_spi_handle] = (spi_handle_t){
+    .usart    = &usart[idx],
+    .pins     = &location[idx][pins],
+    .baudrate = baudrate,
+    .databits = databits,
+    .msbf     = msbf,
+    .users    = 0
+  };
+ 
+  // pins can be reused, e.g. same configuration, different baudrate
+  error_t err;
+  err = hw_gpio_configure_pin(handle[next_spi_handle].pins->mosi, false, gpioModePushPull, 0);
+  assert( err == SUCCESS || err == EALREADY );
+  err = hw_gpio_configure_pin(handle[next_spi_handle].pins->miso, false, gpioModeInput,    0);
+  assert( err == SUCCESS || err == EALREADY );
+  err = hw_gpio_configure_pin(handle[next_spi_handle].pins->clk,  false, gpioModePushPull, 0);
+  assert( err == SUCCESS || err == EALREADY );
+
+  next_spi_handle++;
+  return &handle[next_spi_handle-1];
+}
+
+static bool spi_enable(spi_handle_t* spi) {
+  // basic reference counting
+  spi->users++;
+  if(spi->users > 1) { return false; } // should already be enabled
+    
+  // CMU_ClockEnable(cmuClock_GPIO,    true); // TODO future use: hw_gpio_enable
+  CMU_ClockEnable(spi->usart->clock, true);
 
 	USART_InitSync_TypeDef usartInit = USART_INITSYNC_DEFAULT;
 
-  if(databits == 9) {
-    usartInit.databits = usartDatabits9;
-  } else {
-    usartInit.databits = usartDatabits8;
-  }
-  usartInit.baudrate  = baudrate;
+  usartInit.databits  = spi->databits == 9 ? usartDatabits9 : usartDatabits8;
+  usartInit.baudrate  = spi->baudrate;
   usartInit.master    = true;
-  usartInit.msbf      = true;
+  usartInit.msbf      = spi->msbf;
   usartInit.clockMode = usartClockMode0;
   
-  USART_InitSync(handle[idx].channel, &usartInit);
-  USART_Enable  (handle[idx].channel, usartEnable);
+  USART_InitSync(spi->usart->channel, &usartInit);
+  USART_Enable  (spi->usart->channel, usartEnable);
 
-  error_t err;
-  err = hw_gpio_configure_pin(handle[idx].pins->mosi, false, gpioModePushPull, 0);
-  assert(err == SUCCESS || err == EALREADY);
-  
-  err = hw_gpio_configure_pin(handle[idx].pins->miso, false, gpioModeInput,    0);
-  assert(err == SUCCESS || err == EALREADY);
-  
-  err = hw_gpio_configure_pin(handle[idx].pins->clk,  false, gpioModePushPull, 0);
-  assert(err == SUCCESS || err == EALREADY);
-
-  handle[idx].channel->ROUTE = USART_ROUTE_TXPEN
+  spi->usart->channel->ROUTE = USART_ROUTE_TXPEN
                              | USART_ROUTE_RXPEN
                              | USART_ROUTE_CLKPEN
-                             | handle[idx].pins->location;
+                             | spi->pins->location;
   
-  return &handle[idx];
+  return true;
 }
 
-void spi_init_slave(pin_id_t slave) {
-  error_t err = hw_gpio_configure_pin(slave, false, gpioModePushPull, 1);
-  assert(err == SUCCESS || err == EALREADY);
-  // make sure the pin is set/changed to high, even when EALREADY
-  hw_gpio_set(slave);
+static bool spi_disable(spi_handle_t* spi) {
+  // basic reference counting
+  if(spi->users < 1) { return false; }  // should already be disabled
+  spi->users--;
+  if(spi->users > 0) { return false; }  // don't disable, still other users
+
+  // reset route to make sure that TX pin will become low after disable
+  spi->usart->channel->ROUTE = _USART_ROUTE_RESETVALUE;
+
+  USART_Enable(spi->usart->channel, usartDisable);
+  CMU_ClockEnable(spi->usart->clock, false);
+  // CMU_ClockEnable(cmuClock_GPIO, false); // TODO future use: hw_gpio_disable
+
+  return true;
 }
 
-void spi_select(pin_id_t slave) {
-  hw_gpio_clr(slave);
+spi_slave_handle_t* spi_init_slave(spi_handle_t* spi, pin_id_t slave) {
+  assert(hw_gpio_configure_pin(slave, false, gpioModePushPull, 0) == SUCCESS);
+
+  slave_handle[next_spi_slave_handle] = (spi_slave_handle_t){
+    .spi      = spi,
+    .cs       = slave,
+    .selected = false
+  };
+  
+  next_spi_slave_handle++;
+  return &slave_handle[next_spi_slave_handle-1];
 }
 
-void spi_deselect(pin_id_t slave) {
-  hw_gpio_set(slave);
+void spi_select(spi_slave_handle_t* slave) {
+  if( slave->selected ) { return; }
+  spi_enable(slave->spi);
+  hw_gpio_clr(slave->cs);
+  slave->selected = true;
 }
 
-unsigned char spi_exchange_byte(spi_handle_t* spi, unsigned char data) {
-  return USART_SpiTransfer(spi->channel, data);
+void spi_deselect(spi_slave_handle_t* slave) {
+  if( ! slave->selected ) { return; }
+  hw_gpio_set(slave->cs);
+  spi_disable(slave->spi);
+  slave->selected = false;
 }
 
-void spi_send_byte_with_control(spi_handle_t* spi, uint16_t data) {
-  USART_TxExt(spi->channel, data);
+unsigned char spi_exchange_byte(spi_slave_handle_t* slave, unsigned char data) {
+  return USART_SpiTransfer(slave->spi->usart->channel, data);
 }
 
-void spi_exchange_bytes(spi_handle_t* spi,
+void spi_send_byte_with_control(spi_slave_handle_t* slave, uint16_t data) {
+  USART_TxExt(slave->spi->usart->channel, data);
+}
+
+void spi_exchange_bytes(spi_slave_handle_t* slave,
                         uint8_t* TxData, uint8_t* RxData, unsigned int length)
 {
   uint16_t i = 0;
   if( RxData != NULL && TxData != NULL ) {           // two way transmition
     while( i < length ) {
-      RxData[i] = spi_exchange_byte(spi, TxData[i]);
+      RxData[i] = spi_exchange_byte(slave, TxData[i]);
       i++;
     }
   } else if( RxData == NULL && TxData != NULL ) {    // send only
     while( i < length ) {
-      spi_exchange_byte(spi, TxData[i]);
+      spi_exchange_byte(slave, TxData[i]);
       i++;
     }
   } else if( RxData != NULL && TxData == NULL ) {   // recieve only
     while( i < length ) {
-      RxData[i] = spi_exchange_byte(spi, 0);
+      RxData[i] = spi_exchange_byte(slave, 0);
       i++;
     }
   }
