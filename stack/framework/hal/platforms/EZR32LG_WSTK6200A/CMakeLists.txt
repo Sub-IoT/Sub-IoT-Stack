@@ -49,6 +49,8 @@ EXPORT_GLOBAL_INCLUDE_DIRECTORIES(config)
 
 INCLUDE_DIRECTORIES(inc
 		    Drivers
+		    kits/common/drivers
+		    kits/common/bsp
 		    )
 
 #Make the 'binary platform dir' available so the 'platform_defs.h' file
@@ -85,10 +87,19 @@ ADD_LIBRARY(PLATFORM OBJECT
     libc_overrides.c
     inc/userbutton.h
     inc/platform_sensors.h
-    Drivers/si7013.c
-    Drivers/i2cspm.c
-    #Drivers/cdc.c
-	
+    Drivers/si7013.c #also in kits/common/drivers
+    Drivers/i2cspm.c #also in kits/common/drivers
+    kits/common/drivers/dmactrl.c
+    kits/common/drivers/display.c
+    kits/common/drivers/textdisplay.c
+    #kits/common/drivers/retargettextdisplay.c
+    kits/common/drivers/displayls013b7dh03.c
+    kits/common/drivers/displaypalemlib.c
+    kits/common/drivers/udelay.c
+    #kits/common/drivers/cdc.c
+    kits/common/bsp/bsp_bcc.c
+    kits/common/bsp/bsp_stk.c
+    kits/common/bsp/bsp_trace.c
 )
 
 #Include the sources for the EZR32LG330 chip

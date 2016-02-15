@@ -34,8 +34,8 @@ INCLUDE_DIRECTORIES(CMSIS/include
 		    CMSIS/device/include
 		    emlib/inc
 		    glib
-		    kits/common/drivers
-		    kits/common/bsp
+		    #kits/common/drivers
+		    #kits/common/bsp
 		    usb/inc
             inc_platform
 		    emdrv/spidrv/inc
@@ -61,8 +61,8 @@ EXPORT_PLATFORM_INCLUDE_DIRECTORIES(CMSIS/include
 		    CMSIS/device/include
 		    emlib/inc
 		    glib
-		    kits/common/drivers
-		    kits/common/bsp
+		    #kits/common/drivers
+		    #kits/common/bsp
 		    inc_platform
 		    inc
 		    usb/inc
@@ -92,17 +92,17 @@ ADD_LIBRARY (${CHIP_LIBRARY_NAME} OBJECT
                     emlib/src/em_wdog.c
                     #emlib/inc/em_wdog.h
                     emlib/src/em_prs.c
-                    kits/common/drivers/dmactrl.c
-                    kits/common/drivers/display.c
-                    kits/common/drivers/textdisplay.c
+           #         kits/common/drivers/dmactrl.c
+           #         kits/common/drivers/display.c
+           #         kits/common/drivers/textdisplay.c
                     #kits/common/drivers/retargettextdisplay.c
-                    kits/common/drivers/displayls013b7dh03.c
-                    kits/common/drivers/displaypalemlib.c
-                    kits/common/drivers/udelay.c
+           #         kits/common/drivers/displayls013b7dh03.c
+           #         kits/common/drivers/displaypalemlib.c
+           #         kits/common/drivers/udelay.c
                     #kits/common/drivers/cdc.c
-                    kits/common/bsp/bsp_bcc.c
-                    kits/common/bsp/bsp_stk.c
-                    kits/common/bsp/bsp_trace.c
+           #         kits/common/bsp/bsp_bcc.c
+           #         kits/common/bsp/bsp_stk.c
+           #         kits/common/bsp/bsp_trace.c
                     ezr32lg_adc.c 
                     ezr32lg_mcu.c
                     ezr32lg_uart.c
