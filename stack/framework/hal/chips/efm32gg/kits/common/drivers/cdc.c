@@ -20,7 +20,7 @@
 #include "em_gpio.h"
 #include "em_usart.h"
 #include "em_usb.h"
-#include "bsp.h"
+// #include "bsp.h"
 #include "dmactrl.h"
 #include "cdc.h"
 

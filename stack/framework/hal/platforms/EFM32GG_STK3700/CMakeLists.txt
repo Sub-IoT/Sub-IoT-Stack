@@ -25,6 +25,11 @@ PLATFORM_PARAM(${PLATFORM_PREFIX}_MCU "EFM32GG990F1024" STRING "The MCU of the G
 PLATFORM_PARAM(${PLATFORM_PREFIX}_RADIO "none" STRING "The radio chip connected to the Gecko board")
 SET(JLINK_DEVICE ${${PLATFORM_PREFIX}_MCU} CACHE STRING "The device passed to JLinkExe for flashing")
 
+INCLUDE_DIRECTORIES(
+  inc
+  kits/common/bsp
+)
+
 # CONSOLE
 # uses UART0, location 1
 PLATFORM_PARAM(${PLATFORM_PREFIX}_CONSOLE_UART     "0"      STRING "The UART channel used by the console UART configuration."   )
@@ -40,7 +45,10 @@ SET_PROPERTY(CACHE ${PLATFORM_PREFIX}_RADIO PROPERTY STRINGS "cc1101;none")
 EXPORT_GLOBAL_COMPILE_DEFINITIONS("-D${${PLATFORM_PREFIX}_MCU}")
 
 #Make the 'inc' directory available so 'platform.h' can be found
-EXPORT_GLOBAL_INCLUDE_DIRECTORIES(inc)
+EXPORT_GLOBAL_INCLUDE_DIRECTORIES(
+  inc
+  kits/common/bsp
+)
 
 ##testing...
 EXPORT_GLOBAL_INCLUDE_DIRECTORIES(config)
@@ -79,6 +87,9 @@ ADD_LIBRARY(PLATFORM OBJECT
     libc_overrides.c
     inc/userbutton.h
     inc/platform_sensors.h
+    kits/common/bsp/bsp_bcc.c
+    kits/common/bsp/bsp_stk.c
+    kits/common/bsp/bsp_trace.c
 )
 
 #Include the sources for the efm32gg chip
