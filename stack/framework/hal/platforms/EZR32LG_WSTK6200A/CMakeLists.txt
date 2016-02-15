@@ -78,6 +78,8 @@ ADD_LIBRARY(PLATFORM OBJECT
     libc_overrides.c
     inc/userbutton.h
     inc/platform_sensors.h
+    Drivers/si7013.c
+    Drivers/i2cspm.c
 )
 
 #Include the sources for the EZR32LG330 chip

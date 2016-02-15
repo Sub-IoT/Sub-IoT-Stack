@@ -45,6 +45,8 @@ typedef enum
   adcReference5VDIFF ,
   /** Single ended ext. ref. from 1 pin. */
   adcReferenceExtSingle,
+  /** VDD / 3 */
+  adcReferenceVDDDiv3,
   /** Differential ext. ref. from 2 pins */
   adcReference2xExtDiff,
   /** Unbuffered 2xVDD. */
@@ -65,6 +67,12 @@ typedef enum
  * 	\param input selects the input used by the ADC
  */
 __LINK_C void adc_init(ADC_Reference reference, ADC_Input input, uint32_t adc_frequency);
+
+/*! \brief Reinitializes  the ADC after init has already been done to change reference or input for a single conversion
+ * 	\param reference selects the reference voltage used by the ADC
+ * 	\param input selects the input used by the ADC
+ */
+__LINK_C void adc_init_single(ADC_Reference reference, ADC_Input input);
 
 /*! \brief Calibrates the ADC
  */

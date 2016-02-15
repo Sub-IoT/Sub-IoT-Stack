@@ -32,9 +32,6 @@
 #include "fs.h"
 #include "log.h"
 
-
-//#include "console.h"
-
 #if (!defined PLATFORM_EFM32GG_STK3700 && !defined PLATFORM_EFM32HG_STK3400 && !defined PLATFORM_EZR32LG_WSTK6200A)
 	#error Mismatch between the configured platform and the actual platform.
 #endif
@@ -44,7 +41,7 @@
 #include "platform_lcd.h"
 
 #define SENSOR_FILE_ID           0x40
-#define SENSOR_FILE_SIZE         4
+#define SENSOR_FILE_SIZE         6
 #define ACTION_FILE_ID           0x41
 
 #define APP_MODE_LEDS		1
@@ -149,11 +146,26 @@ void execute_sensor_measurement()
 	//led_toggle(0);
     timer_post_task_delay(&execute_sensor_measurement, TIMER_TICKS_PER_SEC * 10);
 
-	measureTemperature();
+	uint32_t battery = getBattery();
+
+	lcd_write_string("Bat: %d\n", (battery));
+	log_print_string("Bat: %d\n", (battery));
+
+	uint32_t rhData;
+	uint32_t tData;
+
+	getHumidityAndTemperature(&rhData, &tData);
 
 
-	int16_t temp_bigendian = __builtin_bswap16(temperature);
-    fs_write_file(SENSOR_FILE_ID, 0, (uint8_t*)&temp_bigendian, 2); // File 0x40 is configured to use D7AActP trigger an ALP action which broadcasts this file data on Access Class 0
+	lcd_write_string("Temp: %2d.2d C\n", (tData/1000), tData%1000);
+	log_print_string("Temp: %2d.2d C\n", (tData/1000), tData%1000);
+	lcd_write_string("Hum: %2d.2d\n", (rhData/1000), rhData%1000);
+	log_print_string("Hum: %2d.2d\n", (rhData/1000), rhData%1000);
+
+	uint8_t sensor_values[6];
+
+
+    fs_write_file(SENSOR_FILE_ID, 0, (uint8_t*)&sensor_values, 6); // File 0x40 is configured to use D7AActP trigger an ALP action which broadcasts this file data on Access Class 0
 }
 
 void init_user_files()
@@ -240,8 +252,7 @@ void bootstrap()
 
     d7ap_stack_init(&fs_init_args, NULL, false);
 
-	internalTempSensor_init();
-	measureTemperature();
+    initSensors();
 
     ubutton_register_callback(0, &userbutton_callback);
     ubutton_register_callback(1, &userbutton_callback);

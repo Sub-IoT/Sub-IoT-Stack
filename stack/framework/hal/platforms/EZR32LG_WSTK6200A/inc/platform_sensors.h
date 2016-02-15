@@ -37,6 +37,10 @@
 #include "platform.h"
 
 
+void initSensors();
+uint32_t getBattery(void);
+void getHumidityAndTemperature(uint32_t *rhData, int32_t *tData);
+
 /*! \brief Initializes ADC to measure the internal temperature
  */
 __LINK_C void internalTempSensor_init();
