@@ -268,25 +268,6 @@ bool uart_disable(uart_handle_t* uart) {
   return true;
 }
 
-bool uart_disable(uart_handle_t* uart) {
-  // reset route to make sure that TX pin will become low after disable
-  uart->channel->ROUTE = _UART_ROUTE_RESETVALUE;
-
-  USART_Enable(uart->channel, usartDisable);
-  CMU_ClockEnable(uart->clock, false);
-
-  return true;
-}
-
-bool uart_enable(uart_handle_t* uart) {
-  uart->channel->ROUTE = UART_ROUTE_RXPEN | UART_ROUTE_TXPEN | uart->pins->location;
-
-  USART_Enable(uart->channel, usartEnable);
-  CMU_ClockEnable(uart->clock, true);
-
-  return true;
-}
-
 void uart_set_rx_interrupt_callback(uart_handle_t* uart,
                                     uart_rx_inthandler_t rx_handler)
 {
