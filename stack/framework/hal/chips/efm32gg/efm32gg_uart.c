@@ -226,6 +226,7 @@ uart_handle_t* uart_init(uint8_t idx, uint32_t baudrate, uint8_t pins) {
 }
 
 bool uart_enable(uart_handle_t* uart) {
+  // CMU_ClockEnable(cmuClock_GPIO,    true); // TODO future use: hw_gpio_enable
   CMU_ClockEnable(uart->clock, true);
 
   USART_InitAsync_TypeDef uartInit = {
@@ -264,6 +265,7 @@ bool uart_disable(uart_handle_t* uart) {
 
   USART_Enable(uart->channel, usartDisable);
   CMU_ClockEnable(uart->clock, false);
+  // CMU_ClockEnable(cmuClock_GPIO, false); // TODO future use: hw_gpio_disable
 
   return true;
 }
