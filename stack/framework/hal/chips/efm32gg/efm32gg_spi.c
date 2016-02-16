@@ -143,6 +143,7 @@ spi_handle_t handle[MAX_SPI_HANDLES];
 struct spi_slave_handle {
   spi_handle_t* spi;
   pin_id_t      cs;
+  bool          cs_is_active_low;
   bool          selected;
 };
 
@@ -190,9 +191,12 @@ static bool spi_enable(spi_handle_t* spi) {
   spi->users++;
   if(spi->users > 1) { return false; } // should already be enabled
   
-  // make sure all slaves of this bus are high (because they are active low)
+  // make sure all slaves of this bus are high for active low slaves and vice versa
   for(uint8_t s=0; s<spi->slaves; s++) {
-    hw_gpio_set(spi->slave[s]->cs);
+    if(spi->slave[s]->cs_is_active_low)
+      hw_gpio_set(spi->slave[s]->cs);
+    else
+      hw_gpio_clr(spi->slave[s]->cs);
   }
     
   // CMU_ClockEnable(cmuClock_GPIO,    true); // TODO future use: hw_gpio_enable
@@ -238,15 +242,23 @@ static bool spi_disable(spi_handle_t* spi) {
   return true;
 }
 
-spi_slave_handle_t* spi_init_slave(spi_handle_t* spi, pin_id_t slave) {
+spi_slave_handle_t* spi_init_slave(spi_handle_t* spi, pin_id_t cs_pin, bool cs_is_active_low) {
   // limit pre-allocated handles
   assert(next_spi_slave_handle < MAX_SPI_SLAVE_HANDLES);
 
-  assert(hw_gpio_configure_pin(slave, false, gpioModePushPull, 0) == SUCCESS);
+  // configure CS pin as output. If the bus is already active and we have an active low slave
+  // we pull CS high to prevent the slave from starting. If the bus is not already active (powered down)
+  // we keep CS low (selected) to prevent current flowing to the slave.
+  bool initial_level = 0;
+  if(spi->users > 0 && cs_is_active_low)
+    initial_level = 1;
+
+  assert(hw_gpio_configure_pin(cs_pin, false, gpioModePushPull, initial_level) == SUCCESS);
 
   slave_handle[next_spi_slave_handle] = (spi_slave_handle_t){
     .spi      = spi,
-    .cs       = slave,
+    .cs       = cs_pin,
+    .cs_is_active_low = cs_is_active_low,
     .selected = false
   };
   
@@ -261,13 +273,21 @@ spi_slave_handle_t* spi_init_slave(spi_handle_t* spi, pin_id_t slave) {
 void spi_select(spi_slave_handle_t* slave) {
   if( slave->selected ) { return; }
   spi_enable(slave->spi);
-  hw_gpio_clr(slave->cs);
+  if(slave->cs_is_active_low)
+    hw_gpio_clr(slave->cs);
+  else
+    hw_gpio_set(slave->cs);
+
   slave->selected = true;
 }
 
 void spi_deselect(spi_slave_handle_t* slave) {
   if( ! slave->selected ) { return; }
-  hw_gpio_set(slave->cs);  // deselect slave
+  if(slave->cs_is_active_low)
+    hw_gpio_set(slave->cs);
+  else
+    hw_gpio_clr(slave->cs);
+
   spi_disable(slave->spi);
   slave->selected = false;
 }

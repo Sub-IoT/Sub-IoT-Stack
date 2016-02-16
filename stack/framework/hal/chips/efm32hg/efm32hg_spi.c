@@ -146,9 +146,12 @@ static bool spi_enable(spi_handle_t* spi) {
   spi->users++;
   if(spi->users > 1) { return false; } // should already be enabled
 
-  // make sure all slaves of this bus are high (because they are active low)
+  // make sure all slaves of this bus are high for active low slaves and vice versa
   for(uint8_t s=0; s<spi->slaves; s++) {
-    hw_gpio_set(spi->slave[s]->cs);
+    if(spi->slave[s]->cs_is_active_low)
+      hw_gpio_set(spi->slave[s]->cs);
+    else
+      hw_gpio_clr(spi->slave[s]->cs);
   }
 
   // CMU_ClockEnable(cmuClock_GPIO,    true); // TODO future use: hw_gpio_enable
