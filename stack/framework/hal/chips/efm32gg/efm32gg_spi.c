@@ -121,18 +121,22 @@ static spi_usart_t usart[USARTS] = {
   },
 };
 
+#define MAX_SPI_HANDLES 4              // TODO expose this in chip configuration
+#define MAX_SPI_SLAVE_HANDLES 4        // TODO expose this in chip configuration
+
 // private implementation of handle structs
 struct spi_handle {
-  spi_usart_t* usart;
-  spi_pins_t*  pins;
-  uint32_t     baudrate;
-  uint8_t      databits;
-  bool         msbf;
-  uint8_t      users;   // for reference counting
+  spi_usart_t*        usart;
+  spi_pins_t*         pins;
+  uint32_t            baudrate;
+  uint8_t             databits;
+  bool                msbf;
+  spi_slave_handle_t* slave[MAX_SPI_SLAVE_HANDLES];
+  uint8_t             slaves;  // number of slaves for array mgmt
+  uint8_t             users;   // for reference counting of active slaves
 };
 
 // private storage to spi handles, pointers to these are passed around
-#define MAX_SPI_HANDLES 4              // TODO expose this in chip configuration
 uint8_t      next_spi_handle = 0;
 spi_handle_t handle[MAX_SPI_HANDLES];
 
@@ -143,7 +147,6 @@ struct spi_slave_handle {
 };
 
 // private storage to spi slave handles, pointers to these are passed around
-#define MAX_SPI_SLAVE_HANDLES 4        // TODO expose this in chip configuration
 uint8_t            next_spi_slave_handle = 0;
 spi_slave_handle_t slave_handle[MAX_SPI_SLAVE_HANDLES];
 
@@ -165,6 +168,7 @@ spi_handle_t* spi_init(uint8_t idx, uint32_t baudrate, uint8_t databits,
     .baudrate = baudrate,
     .databits = databits,
     .msbf     = msbf,
+    .slaves   = 0,
     .users    = 0
   };
  
@@ -185,6 +189,11 @@ static bool spi_enable(spi_handle_t* spi) {
   // basic reference counting
   spi->users++;
   if(spi->users > 1) { return false; } // should already be enabled
+  
+  // make sure all slaves of this bus are high (because they are active low)
+  for(uint8_t s=0; s<spi->slaves; s++) {
+    hw_gpio_set(spi->slave[s]->cs);
+  }
     
   // CMU_ClockEnable(cmuClock_GPIO,    true); // TODO future use: hw_gpio_enable
   CMU_ClockEnable(spi->usart->clock, true);
@@ -221,10 +230,18 @@ static bool spi_disable(spi_handle_t* spi) {
   CMU_ClockEnable(spi->usart->clock, false);
   // CMU_ClockEnable(cmuClock_GPIO, false); // TODO future use: hw_gpio_disable
 
+  // turn off all CS lines, because bus is down
+  for(uint8_t s=0; s<spi->slaves; s++) {
+    hw_gpio_clr(spi->slave[s]->cs);
+  }
+
   return true;
 }
 
 spi_slave_handle_t* spi_init_slave(spi_handle_t* spi, pin_id_t slave) {
+  // limit pre-allocated handles
+  assert(next_spi_slave_handle < MAX_SPI_SLAVE_HANDLES);
+
   assert(hw_gpio_configure_pin(slave, false, gpioModePushPull, 0) == SUCCESS);
 
   slave_handle[next_spi_slave_handle] = (spi_slave_handle_t){
@@ -232,6 +249,10 @@ spi_slave_handle_t* spi_init_slave(spi_handle_t* spi, pin_id_t slave) {
     .cs       = slave,
     .selected = false
   };
+  
+  // add slave to spi for back-reference
+  spi->slave[spi->slaves] = &slave_handle[next_spi_slave_handle];
+  spi->slaves++;
   
   next_spi_slave_handle++;
   return &slave_handle[next_spi_slave_handle-1];
@@ -246,7 +267,7 @@ void spi_select(spi_slave_handle_t* slave) {
 
 void spi_deselect(spi_slave_handle_t* slave) {
   if( ! slave->selected ) { return; }
-  hw_gpio_set(slave->cs);
+  hw_gpio_set(slave->cs);  // deselect slave
   spi_disable(slave->spi);
   slave->selected = false;
 }
