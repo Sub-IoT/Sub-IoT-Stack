@@ -58,8 +58,8 @@ void _cc1101_interface_init(end_of_packet_isr_t end_of_packet_isr_cb)
 {
     end_of_packet_isr_callback = end_of_packet_isr_cb;
 
-    spi = spi_init(CC1101_SPI_USART, CC1101_SPI_BAUDRATE, 8, CC1101_SPI_MSBF, CC1101_SPI_LOCATION);
-    spi_slave = spi_init_slave(spi, CC1101_SPI_PIN_CS);
+    spi = spi_init(CC1101_SPI_USART, CC1101_SPI_BAUDRATE, 8, true, CC1101_SPI_LOCATION);
+    spi_slave = spi_init_slave(spi, CC1101_SPI_PIN_CS, true);
 
     error_t err;
     err = hw_gpio_configure_interrupt(CC1101_GDO0_PIN, &_cc1101_gdo_isr, GPIO_FALLING_EDGE); assert(err == SUCCESS);
