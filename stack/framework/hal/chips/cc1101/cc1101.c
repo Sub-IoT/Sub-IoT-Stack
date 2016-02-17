@@ -423,6 +423,9 @@ error_t hw_radio_init(alloc_packet_callback_t alloc_packet_cb,
     configure_channel(&current_channel_id);
     configure_eirp(current_eirp);
     configure_syncword_class(current_syncword_class);
+
+    cc1101_interface_strobe(RF_SCAL); // TODO use autocalibration instead of manual?
+    wait_for_chip_state(CC1101_CHIPSTATE_IDLE);
 }
 
 static void start_rx(hw_rx_cfg_t const* rx_cfg)
