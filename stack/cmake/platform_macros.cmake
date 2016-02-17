@@ -132,6 +132,7 @@ MACRO(ADD_CHIP chip)
     TARGET_COMPILE_DEFINITIONS(${CHIP_LIBRARY_NAME} PUBLIC ${__global_compile_definitions}) 
     SET_GLOBAL(PLATFORM_CHIP_LIBS "${PLATFORM_CHIP_LIBS};${CHIP_LIBRARY_NAME}")   
     UNSET(CHIP_LIBRARY_NAME)
+    MESSAGE("Added chip " ${chip})
 ENDMACRO()
 
 # Export directories to be included by the platform target. This MACRO is intended to be used 
