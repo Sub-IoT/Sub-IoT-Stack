@@ -1,6 +1,0 @@
-<RCC>
-    <qresource prefix="/icons">
-        <file>resources/system-reboot.png</file>
-        <file>resources/network-wired.png</file>
-    </qresource>
-</RCC>
