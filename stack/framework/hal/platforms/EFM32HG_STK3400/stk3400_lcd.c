@@ -83,7 +83,7 @@ void lcd_clear()
 }
 
 
-void lcd_write_string(char* format, ...)
+void lcd_write_string(const char* format, ...)
 {
 	va_list args;
 	va_start(args, format);
