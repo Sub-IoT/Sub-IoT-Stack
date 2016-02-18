@@ -30,6 +30,7 @@
 
 #define CMD_BUFFER_SIZE 256
 #define CMD_HANDLER_REGISTRATIONS_COUNT 3 // TODO configurable using cmake
+#define CMD_HANDLER_ID_NOT_SET -1
 
 #include "hwuart.h"
 #include "scheduler.h"
@@ -68,7 +69,8 @@ static cmd_handler_t get_cmd_handler_callback(int8_t id)
     console_printf("ERROR: unknown command handler %d\r\n", id);
     console_print(" possible ids are: ");
     for(uint8_t i = 0; i < CMD_HANDLER_REGISTRATIONS_COUNT; i++) {
-      console_printf("%d:%d ", i, cmd_handler_registrations[i].id);
+      if(cmd_handler_registrations[i].id != CMD_HANDLER_ID_NOT_SET)
+        console_printf("%d:%d ", i, cmd_handler_registrations[i].id);
     }
     console_print("\r\n");
 }
@@ -128,7 +130,7 @@ void shell_init()
 {
     for(uint8_t i = 0; i < CMD_HANDLER_REGISTRATIONS_COUNT; i++)
     {
-        cmd_handler_registrations[i].id = -1;
+        cmd_handler_registrations[i].id = CMD_HANDLER_ID_NOT_SET;
         cmd_handler_registrations[i].cmd_handler_callback = NULL;
     }
 
@@ -158,7 +160,7 @@ void shell_register_handler(cmd_handler_registration_t handler_registration)
     {
         // always loop over all values to check if already registered
         int8_t current_id = cmd_handler_registrations[i].id;
-        if(current_id == -1 && empty_index == -1)
+        if(current_id == CMD_HANDLER_ID_NOT_SET && empty_index == -1)
             empty_index = i;
 
         assert(current_id != handler_registration.id); // already registered
