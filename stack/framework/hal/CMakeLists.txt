@@ -27,12 +27,10 @@ EXPORT_GLOBAL_INCLUDE_DIRECTORIES(${CMAKE_CURRENT_BINARY_DIR})
 #include hal-specific helper MACRO's
 include(${PROJECT_SOURCE_DIR}/cmake/hal_macros.cmake)
 
-# add selected chips
-# note that chips can add define statements in hal_defs.h for optional features.
-# this can be done by adding HAL_HEADER_DEFINE(BOOL HAL_<features>) statements in the chip's CMakeLists.txt.
-# Following features are used by the framework and should be set in the chip if needed:
-# - HAL_RADIO_INCLUDE_TIMESTAMP : if defined include a timestamp in the metadata attached to a packet
-# - HAL_RADIO_USE_HW_CRC : if defined the radio chip will process CRC in hardware and software CRC is disabled
+# HAL parameters (might be forcefully overruled by chip, which is why HAL_HEADER_DEFINE() is only called after adding chips)
+SET(HAL_RADIO_INCLUDE_TIMESTAMP "TRUE" CACHE BOOL "Include a timestamp in the metadata attached to a packet")
+SET(HAL_RADIO_USE_HW_CRC "FALSE" CACHE BOOL "Enable/Disable the use of HW CRC")
+
 #note: this does not include any chip code. 
 #see note in 'chips' directory in the CMakeLists.txt in the 'chips' directory
 ADD_SUBDIRECTORY("chips")
@@ -41,6 +39,8 @@ ADD_SUBDIRECTORY("chips")
 ADD_SUBDIRECTORY("platforms")
 
 #Generate the 'hal_defs.h'
+HAL_HEADER_DEFINE(BOOL HAL_RADIO_INCLUDE_TIMESTAMP)
+HAL_HEADER_DEFINE(BOOL HAL_RADIO_USE_HW_CRC)
 HAL_BUILD_SETTINGS_FILE()
 
 

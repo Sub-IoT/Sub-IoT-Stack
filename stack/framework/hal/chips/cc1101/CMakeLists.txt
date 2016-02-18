@@ -17,10 +17,10 @@
 # limitations under the License.
 #
 
-# add HAL defines
-HAL_HEADER_DEFINE(BOOL HAL_RADIO_INCLUDE_TIMESTAMP)
-# we do not set HAL_RADIO_USE_HW_CRC for cc1101
-
+IF(HAL_RADIO_USE_HW_CRC)
+    MESSAGE("CC1101 driver does not support hardware CRC, forcing HAL_RADIO_USE_HW_CRC to FALSE")
+    SET(HAL_RADIO_USE_HW_CRC "FALSE" CACHE BOOL "Enable/Disable the use of HW CRC" FORCE)
+ENDIF()
 
 SET(CC1101_SRC
         cc1101.c
