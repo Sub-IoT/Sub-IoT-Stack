@@ -58,7 +58,7 @@ typedef void (*ezradio_int_callback_t)();
 void ezradioInit(ezradio_int_callback_t cb);
 void ezradioResetTRxFifo(void);
 Ecode_t ezradioStartRx(uint8_t channel);
-Ecode_t ezradioStartTx(hw_radio_packet_t* packet, uint8_t channel_id, bool rx_after);
+Ecode_t ezradioStartTx(hw_radio_packet_t* packet, uint8_t channel_id, bool rx_after, uint8_t data_length);
 Ecode_t ezradioStartTxUnmodelated(uint8_t channel_id);
 
 const char *byte_to_binary(uint8_t x);
