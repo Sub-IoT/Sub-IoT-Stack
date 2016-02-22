@@ -127,6 +127,7 @@ static void configure_channel(const channel_id_t* channel_id)
 
 	if((channel_id->channel_header_raw != current_channel_id.channel_header_raw))
 	{
+<<<<<<< HEAD
 		if (channel_id->channel_header.ch_coding != current_channel_id.channel_header.ch_coding)
 		{
 			if (channel_id->channel_header.ch_coding == PHY_CODING_PN9)
@@ -141,6 +142,14 @@ static void configure_channel(const channel_id_t* channel_id)
 				ezradio_set_property(RADIO_CONFIG_SET_PROPERTY_PKT_FIELD_1_CRC_CONFIG_SW_CRC);
 				ezradio_set_property(RADIO_CONFIG_SET_PROPERTY_PKT_FIELD_2_CRC_CONFIG_SW_CRC);
 			}
+=======
+		if (channel_id->channel_header.ch_coding == PHY_CODING_PN9)
+		{
+			// TODO use HW CRC
+		} else {
+			//TODO: switch off HW CRC
+			assert(false);
+>>>>>>> adapting phy to integreate fec
 		}
 		// TODO assert valid center freq index
 
@@ -575,7 +584,6 @@ error_t hw_radio_send_packet(hw_radio_packet_t* packet, tx_packet_callback_t tx_
 	current_state = HW_RADIO_STATE_TX;
 	current_packet = packet;
 
-
 #ifdef FRAMEWORK_LOG_ENABLED // TODO more granular
 	log_print_stack_string(LOG_STACK_PHY, "Data to TX Fifo:");
 	log_print_data(packet->data, data_length);
@@ -588,7 +596,7 @@ error_t hw_radio_send_packet(hw_radio_packet_t* packet, tx_packet_callback_t tx_
 	DEBUG_TX_START();
 	DEBUG_RX_END();
 
-	ezradioStartTx(packet, ez_channel_id, should_rx_after_tx_completed, data_length);
+	ezradioStartTx(packet, ez_channel_id, should_rx_after_tx_completed, data_lenght);
 	return SUCCESS;
 }
 

@@ -69,11 +69,11 @@ void packet_assemble(packet_t* packet)
     	memcpy(data_ptr, &crc, 2);
     }
 
+
 //    if (packet->hw_radio_packet.rx_meta.rx_cfg.channel_id.channel_header.ch_coding == PHY_CODING_FEC_PN9)
 //    {
 //    	packet->length = fec_encode(packet->data, packet->length);
 //    }
-
 }
 
 void packet_disassemble(packet_t* packet)
