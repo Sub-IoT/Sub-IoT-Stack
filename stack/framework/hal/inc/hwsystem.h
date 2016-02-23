@@ -79,8 +79,13 @@ __LINK_C uint64_t hw_get_unique_id();
 __LINK_C void hw_busy_wait(int16_t microseconds);
 
 /*! \brief Resets the MCU.
-S  */
+  */
 __LINK_C void hw_reset();
+
+/*!
+ * /brief Returns the internal temperature of the MCU
+ */
+__LINK_C float hw_get_internal_temperature();
 
 #endif //__HW_SYSTEM_H
 

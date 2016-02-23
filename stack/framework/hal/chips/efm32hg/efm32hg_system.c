@@ -23,6 +23,7 @@
 
 
 #include "hwsystem.h"
+#include "hwadc.h"
 #include "em_system.h"
 #include "em_emu.h"
 #include "em_cmu.h"
@@ -89,3 +90,23 @@ void hw_reset()
     NVIC_SystemReset();
 }
 
+// Factory calibration temperature (from device information page)
+#define CAL_TEMP_0 (float)((DEVINFO->CAL & _DEVINFO_CAL_TEMP_MASK) >> _DEVINFO_CAL_TEMP_SHIFT)
+
+// Factory ADC readout at CAL_TEMP_0 temperature (from device information page)
+#define ADC_TEMP_0_READ_1V25 (float)((DEVINFO->ADC0CAL2 & _DEVINFO_ADC0CAL2_TEMP1V25_MASK) >> _DEVINFO_ADC0CAL2_TEMP1V25_SHIFT)
+
+// temperature gradient (from datasheet)
+#define T_GRAD -6.3f
+
+float hw_get_internal_temperature()
+{
+  adc_init(adcReference1V25, adcInputSingleTemp, 100);
+
+  // TODO take into account warmup time
+  adc_start();
+
+  while(!adc_ready()) {};
+
+  return (CAL_TEMP_0 - ((ADC_TEMP_0_READ_1V25 - adc_get_value())  / T_GRAD));
+}
