@@ -60,58 +60,19 @@ void bootstrap()
                 .channel_header = {
                     .ch_coding = PHY_CODING_PN9,
                     .ch_class = PHY_CLASS_NORMAL_RATE,
-                    .ch_freq_band = PHY_BAND_868
-                },
-                .channel_index_start = 0, // TODO tmp
-                .channel_index_end = 0, // TODO tmp
-                .eirp = 0,
-                .ccao = 0
-            }
-        },
-        {
-            .control_scan_type_is_foreground = true,
-            .control_csma_ca_mode = CSMA_CA_MODE_RIGD,
-            .control_number_of_subbands = 1,
-            .subnet = 0x05,
-            .scan_automation_period = 0,
-            .transmission_timeout_period = 120,
-            .subbands[0] = (subband_t){
-                .channel_header = {
-                        .ch_coding = PHY_CODING_PN9,
-                        .ch_class = PHY_CLASS_LO_RATE,
-                        .ch_freq_band = PHY_BAND_868
+                    .ch_freq_band = PHY_BAND_433
                 },
                 .channel_index_start = 16,
                 .channel_index_end = 16,
                 .eirp = 0,
                 .ccao = 0
-             }
-        },
-        // 868 / channel 0 / subnet 0
-        {
-            .control_scan_type_is_foreground = true,
-            .control_csma_ca_mode            = CSMA_CA_MODE_UNC,
-            .control_number_of_subbands      = 1,
-            .subnet                          = 0,
-            .scan_automation_period          = 0,
-            .transmission_timeout_period     = 0xff,
-            .subbands[0] = (subband_t){
-                .channel_header = {
-                        .ch_coding           = PHY_CODING_PN9,
-                        .ch_class            = PHY_CLASS_NORMAL_RATE,
-                        .ch_freq_band        = PHY_BAND_868
-                },
-                .channel_index_start         = 0,
-                .channel_index_end           = 0,
-                .eirp                        = 0,
-                .ccao                        = 0
-             }
+            }
         }
     };
 
     fs_init_args_t fs_init_args = (fs_init_args_t){
         .fs_user_files_init_cb = NULL,
-        .access_profiles_count = 3,
+        .access_profiles_count = 1,
         .access_profiles = access_classes
     };
 

@@ -48,8 +48,6 @@
 #define APP_MODE_LCD		1 << 1
 #define APP_MODE_CONSOLE	1 << 2
 
-static int16_t temperature = 0;
-
 uint8_t app_mode_status = 0xFF;
 uint8_t app_mode_status_changed = 0x00;
 uint8_t app_mode = 0;
@@ -126,46 +124,19 @@ void userbutton_callback(button_id_t button_id)
 	}
 }
 
-void measureTemperature()
-{
-	float temp = tempsensor_read_celcius();
-
-	temperature = (int)(temp * 10);
-
-#ifdef PLATFORM_EFM32GG_STK3700
-	lcd_write_temperature(temperature*10, 1);
-#else
-	lcd_write_string("Temp: %2d.%2d C\n", (temperature/10), abs(temperature%10));
-#endif
-	
-	log_print_string("Temperature %2d.%2d C", (temperature/10), abs(temperature%10));
-}
-
 void execute_sensor_measurement()
 {
-	//led_toggle(0);
-    timer_post_task_delay(&execute_sensor_measurement, TIMER_TICKS_PER_SEC * 10);
+  float internal_temp = hw_get_internal_temperature();
 
-	uint32_t battery = getBattery();
+#ifdef PLATFORM_EFM32GG_STK3700
+  lcd_write_temperature(internal_temp*10, 1);
+#else
+  lcd_write_string("int temp: %2d.%d C\n", (int)internal_temp, (int)(internal_temp*10)%10);
+#endif
 
-	lcd_write_string("Bat: %d\n", (battery));
-	log_print_string("Bat: %d\n", (battery));
+  fs_write_file(SENSOR_FILE_ID, 0, (uint8_t*)&internal_temp, sizeof(internal_temp)); // File 0x40 is configured to use D7AActP trigger an ALP action which broadcasts this file data on Access Class 0
 
-	uint32_t rhData;
-	uint32_t tData;
-
-	getHumidityAndTemperature(&rhData, &tData);
-
-
-	lcd_write_string("Temp: %2d.2d C\n", (tData/1000), tData%1000);
-	log_print_string("Temp: %2d.2d C\n", (tData/1000), tData%1000);
-	lcd_write_string("Hum: %2d.2d\n", (rhData/1000), rhData%1000);
-	log_print_string("Hum: %2d.2d\n", (rhData/1000), rhData%1000);
-
-	uint8_t sensor_values[6];
-
-
-    fs_write_file(SENSOR_FILE_ID, 0, (uint8_t*)&sensor_values, 6); // File 0x40 is configured to use D7AActP trigger an ALP action which broadcasts this file data on Access Class 0
+  timer_post_task_delay(&execute_sensor_measurement, TIMER_TICKS_PER_SEC * 5);
 }
 
 void init_user_files()
@@ -203,9 +174,11 @@ void init_user_files()
         .fifo_ctrl_stop_on_error = false,
         .fifo_ctrl_preferred = false,
         .fifo_ctrl_state = SESSION_STATE_PENDING,
-        .qos = 0, // TODO
+        .qos = {
+            .qos_ctrl_resp_mode = SESSION_RESP_MODE_NONE
+        },
         .dormant_timeout = 0,
-        .start_id = 0, // TODO
+        .start_id = 0,
         .addressee = {
             .addressee_ctrl_has_id = false,
             .addressee_ctrl_virtual_id = false,
@@ -227,18 +200,18 @@ void bootstrap()
             .control_scan_type_is_foreground = false,
             .control_csma_ca_mode = CSMA_CA_MODE_UNC,
             .control_number_of_subbands = 1,
-            .subnet = 0x05,
+            .subnet = 0x00,
             .scan_automation_period = 0,
             .transmission_timeout_period = 0xFF, // TODO compressed time value
             .subbands[0] = (subband_t){
                 .channel_header = {
                     .ch_coding = PHY_CODING_PN9,
                     .ch_class = PHY_CLASS_NORMAL_RATE,
-                    .ch_freq_band = PHY_BAND_868
+                    .ch_freq_band = PHY_BAND_433
                 },
-                .channel_index_start = 0,
-                .channel_index_end = 0,
-                .eirp = 0,
+                .channel_index_start = 16,
+                .channel_index_end = 16,
+                .eirp = 10,
                 .ccao = 0
             }
         }
@@ -252,7 +225,7 @@ void bootstrap()
 
     d7ap_stack_init(&fs_init_args, NULL, false);
 
-    initSensors();
+    //initSensors();
 
     ubutton_register_callback(0, &userbutton_callback);
     ubutton_register_callback(1, &userbutton_callback);
