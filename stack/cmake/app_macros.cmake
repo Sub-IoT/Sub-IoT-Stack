@@ -112,6 +112,9 @@ MACRO(APP_BUILD)
     TARGET_LINK_LIBRARIES(${ELF} ${__APP_BUILD_LIBS})
     TARGET_LINK_LIBRARIES(${__APP_BUILD_NAME}.axf ${__APP_BUILD_LIBS})
 
+    GET_PROPERTY(__global_compile_definitions GLOBAL PROPERTY GLOBAL_COMPILE_DEFINITIONS)
+    TARGET_COMPILE_DEFINITIONS(${ELF} PUBLIC ${__global_compile_definitions})
+    TARGET_COMPILE_DEFINITIONS(${__APP_BUILD_NAME}.axf PUBLIC ${__global_compile_definitions})
     # TODO, still needed?
     #Generate IDE specific binaries (if the required macro is available for the chosen platform)
     #MACRO_AVAILABLE(GENERATE_SIMPLICITY_STUDIO_FILES SSF_AVAILABLE)
