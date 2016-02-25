@@ -49,6 +49,9 @@ static void process_shell_cmd(char cmd)
 {
     switch(cmd)
     {
+        case '\r':
+            console_print("OK\r\n");
+            break;
         case 'R':
             hw_reset();
             break;
