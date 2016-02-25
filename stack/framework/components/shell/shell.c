@@ -49,9 +49,6 @@ static void process_shell_cmd(char cmd)
 {
     switch(cmd)
     {
-        case '\r':
-            console_print("OK\r\n");
-            break;
         case 'R':
             hw_reset();
             break;
@@ -112,6 +109,16 @@ static void process_cmd_fifo()
         }
 
         sched_post_task(&process_cmd_fifo);
+    } else if(fifo_get_size(&cmd_fifo) >= 3) {
+      // AT[\r|\n]
+      uint8_t cmd_header[3];
+      fifo_peek(&cmd_fifo, cmd_header, 0, 3);
+      if( cmd_header[0] == 'A' && cmd_header[1] == 'T'
+          && ( cmd_header[2] == '\r' || cmd_header[2] == '\n' ) )
+      {
+        console_print("OK\r\n");
+        fifo_pop(&cmd_fifo, cmd_header, 3);
+      }
     }
 }
 
