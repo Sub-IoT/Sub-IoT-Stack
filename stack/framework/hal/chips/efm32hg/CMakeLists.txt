@@ -37,10 +37,13 @@ INCLUDE_DIRECTORIES(CMSIS/include
 			inc_platform
 		    )
 
-##Export the 'inc' directory globally		    
-EXPORT_GLOBAL_INCLUDE_DIRECTORIES(inc)
+EXPORT_GLOBAL_INCLUDE_DIRECTORIES(
+    inc
+    emlib/inc
+    CMSIS/device/include
+    CMSIS/include
+)
 
-#Export the em libs to the platform directory ONLY
 #Please note we include 'inc' here since for complicated cmake reasons directories exported 
 #with 'GLOBAL_INCLUDE_DIRECTORIES'from chip directories are not exported to the platform directory
 EXPORT_PLATFORM_INCLUDE_DIRECTORIES(CMSIS/include
