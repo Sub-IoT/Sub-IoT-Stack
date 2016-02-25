@@ -45,10 +45,17 @@ static uint8_t cmd_buffer[CMD_BUFFER_SIZE] = { 0 };
 static fifo_t cmd_fifo;
 static cmd_handler_registration_t cmd_handler_registrations[CMD_HANDLER_REGISTRATIONS_COUNT];
 
+static bool echo = false;
+
 static void process_shell_cmd(char cmd)
 {
     switch(cmd)
     {
+        case 'E':
+            echo = ! echo;
+            if(echo) { console_print("echo is on\r\n");  }
+            else     { console_print("echo is off\r\n"); }
+            break;
         case 'R':
             hw_reset();
             break;
@@ -121,8 +128,6 @@ static void process_cmd_fifo()
       }
     }
 }
-
-static bool echo = false;
 
 static void uart_rx_cb(uint8_t data)
 {
