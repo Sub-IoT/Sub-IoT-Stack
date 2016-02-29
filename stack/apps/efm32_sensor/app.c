@@ -52,89 +52,45 @@ uint8_t app_mode_status = 0xFF;
 uint8_t app_mode_status_changed = 0x00;
 uint8_t app_mode = 0;
 
-void update_app_mode();
-
-void update_app_mode()
-{
-	if (app_mode_status_changed & APP_MODE_LEDS == APP_MODE_LEDS)
-	{
-		if (app_mode_status & APP_MODE_LEDS == 0)
-		{
-			uint8_t led = 0;
-			for (;led<HW_NUM_LEDS;led++)
-				led_off(led);
-		}
-	}
-
-	if (app_mode_status_changed & APP_MODE_LCD == APP_MODE_LCD)
-	{
-		lcd_enable(app_mode_status & APP_MODE_LCD);
-	}
-
-	if (app_mode_status_changed & APP_MODE_CONSOLE == APP_MODE_CONSOLE)
-	{
-//		if (app_mode_status & APP_MODE_CONSOLE == 0)
-//		{
-//			console_disable();
-//		} else {
-//			console_enable();
-//		}
-	}
-}
 
 // Toggle different operational modes
 void userbutton_callback(button_id_t button_id)
 {
-	if (button_id == 1)
-	{
-		app_mode == 4 ? app_mode = 0 : app_mode++;
-
-		switch (app_mode)
-		{
-		case 0:
-			app_mode_status = APP_MODE_LEDS | APP_MODE_LCD | APP_MODE_CONSOLE;
-			app_mode_status_changed = APP_MODE_LEDS | APP_MODE_LCD | APP_MODE_CONSOLE;
-			break;
-		case 1:
-			app_mode_status &= ~APP_MODE_LEDS;
-			app_mode_status_changed |= APP_MODE_LEDS;
-			break;
-		case 2:
-			app_mode_status &= ~APP_MODE_LCD;
-			app_mode_status |= APP_MODE_LEDS;
-
-			app_mode_status_changed |= APP_MODE_LCD;
-			break;
-		case 3:
-			app_mode_status &= ~APP_MODE_CONSOLE;
-			app_mode_status |= APP_MODE_LCD;
-
-			app_mode_status_changed |= APP_MODE_CONSOLE;
-			break;
-		case 4:
-			app_mode_status = 0;
-			app_mode_status_changed = APP_MODE_LEDS | APP_MODE_LCD | APP_MODE_CONSOLE;
-			break;
-		}
-
-		sched_post_task(&update_app_mode);
-
-		if (app_mode_status & APP_MODE_CONSOLE) log_print_string("Mode %d", app_mode);
-		if (app_mode_status & APP_MODE_LCD) lcd_write_string("Mode %d", app_mode);
-	}
+	#ifdef PLATFORM_EFM32GG_STK3700
+	lcd_write_string("Butt %d", button_id);
+	#else
+	  lcd_write_string("button: %d\n", button_id);
+	#endif
 }
 
 void execute_sensor_measurement()
 {
-  float internal_temp = hw_get_internal_temperature();
-
 #ifdef PLATFORM_EFM32GG_STK3700
+  float internal_temp = hw_get_internal_temperature();
   lcd_write_temperature(internal_temp*10, 1);
-#else
-  lcd_write_string("int temp: %2d.%d C\n", (int)internal_temp, (int)(internal_temp*10)%10);
+  fs_write_file(SENSOR_FILE_ID, 0, (uint8_t*)&internal_temp, sizeof(internal_temp)); // File 0x40 is configured to use D7AActP trigger an ALP action which broadcasts this file data on Access Class 0
 #endif
 
-  fs_write_file(SENSOR_FILE_ID, 0, (uint8_t*)&internal_temp, sizeof(internal_temp)); // File 0x40 is configured to use D7AActP trigger an ALP action which broadcasts this file data on Access Class 0
+#ifdef PLATFORM_EFM32HG_STK3400
+  float internal_temp = hw_get_internal_temperature();
+  lcd_write_string("Int T: %2d.%d C\n", (int)internal_temp, (int)(internal_temp*10)%10);
+  log_print_string("Int T: %2d.%d C\n", (int)internal_temp, (int)(internal_temp*10)%10);
+#endif
+
+#if (defined PLATFORM_EFM32HG_STK3400  || defined PLATFORM_EZR32LG_WSTK6200A)
+  uint32_t rhData;
+  uint32_t tData;
+  getHumidityAndTemperature(&rhData, &tData);
+
+  lcd_write_string("Ext T: %2d.%2d C\n", (tData/1000), tData%1000);
+  log_print_string("Temp: %2d.%2d C\n", (tData/1000), tData%1000);
+
+  lcd_write_string("Ext H: %2d.%2d\n", (rhData/1000), rhData%1000);
+  log_print_string("Hum: %2d.%2d\n", (rhData/1000), rhData%1000);
+
+  uint8_t sensor_values[6];
+  fs_write_file(SENSOR_FILE_ID, 0, (uint8_t*)&sensor_values, 6);
+#endif
 
   timer_post_task_delay(&execute_sensor_measurement, TIMER_TICKS_PER_SEC * 5);
 }
@@ -207,7 +163,11 @@ void bootstrap()
                 .channel_header = {
                     .ch_coding = PHY_CODING_PN9,
                     .ch_class = PHY_CLASS_NORMAL_RATE,
+#ifdef PLATFORM_EZR32LG_WSTK6200A
+                    .ch_freq_band = PHY_BAND_868
+#else
                     .ch_freq_band = PHY_BAND_433
+#endif
                 },
                 .channel_index_start = 16,
                 .channel_index_end = 16,
@@ -225,16 +185,13 @@ void bootstrap()
 
     d7ap_stack_init(&fs_init_args, NULL, false);
 
-    //initSensors();
+    initSensors();
 
     ubutton_register_callback(0, &userbutton_callback);
     ubutton_register_callback(1, &userbutton_callback);
 
     sched_register_task((&execute_sensor_measurement));
     timer_post_task_delay(&execute_sensor_measurement, TIMER_TICKS_PER_SEC * 5);
-
-
-    sched_register_task((&update_app_mode));
 
     lcd_write_string("EFM32 Sensor\n");
 }

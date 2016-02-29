@@ -53,14 +53,14 @@ static volatile bool adcConversionComplete = false;
 
 void initSensors()
 {
-	// ADC init for batttery monitor
+	// ADC init for battery monitor
 	adc_init(adcReference1V25, adcReferenceVDDDiv3, 100);
 
 	/* Manually set some calibration values */
 	ADC0->CAL = (0x7C << _ADC_CAL_SINGLEOFFSET_SHIFT) | (0x1F << _ADC_CAL_SINGLEGAIN_SHIFT);
 
 
-	//Humitidy/temp
+	//Humidity/temp
 	CMU_ClockEnable(cmuClock_GPIO, true);
 	/* Enable si7021 sensor isolation switch */
 	GPIO_PinModeSet(gpioPortF, 8, gpioModePushPull, 1);

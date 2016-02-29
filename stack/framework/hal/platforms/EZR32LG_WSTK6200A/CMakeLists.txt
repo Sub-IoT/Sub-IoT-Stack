@@ -13,8 +13,7 @@
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific lang
-uage governing permissions and
+# See the License for the specific language governing permissions and
 # limitations under the License.
 #
 
@@ -26,7 +25,7 @@ PLATFORM_PARAM(${PLATFORM_PREFIX}_MCU "EZR32LG330F256R60" STRING "The MCU of the
 SET(JLINK_DEVICE ${${PLATFORM_PREFIX}_MCU} CACHE STRING "The device passed to JLinkExe for flashing")
 PLATFORM_PARAM(${PLATFORM_PREFIX}_RADIO "si4460" STRING "The radio chip connected to the Gecko board")
 PLATFORM_OPTION(${PLATFORM_PREFIX}_DEBUGPINS "Enable/Disable Hardware Debug Pins support (see 'hwdebug.h')" TRUE)
-PLATFORM_OPTION(PLATFORM_USE_SWO "Enable/Disable SWO Uart output" TRUE)
+PLATFORM_OPTION(PLATFORM_USE_SWO "Enable/Disable SWO Uart output" FALSE)
 #Restrict the number of possible options for the radio option in the usual manner...
 SET_PROPERTY(CACHE ${PLATFORM_PREFIX}_RADIO PROPERTY STRINGS "si4460")
 PLATFORM_OPTION(PLATFORM_USE_USB_CDC "Enable/Disable the use of CDC (UART Communication using USB" FALSE)
@@ -48,8 +47,7 @@ EXPORT_GLOBAL_INCLUDE_DIRECTORIES(inc)
 EXPORT_GLOBAL_INCLUDE_DIRECTORIES(config)
 
 INCLUDE_DIRECTORIES(inc
-		    kits/common/drivers
-		    kits/common/bsp
+		    Drivers
 		    )
 
 #Make the 'binary platform dir' available so the 'platform_defs.h' file
@@ -86,17 +84,17 @@ ADD_LIBRARY(PLATFORM OBJECT
     inc/platform_sensors.h
     Drivers/si7013.c
     Drivers/i2cspm.c
-    kits/common/drivers/dmactrl.c
-    kits/common/drivers/display.c
-    kits/common/drivers/textdisplay.c
+    #kits/common/drivers/dmactrl.c
+    #kits/common/drivers/display.c
+    #kits/common/drivers/textdisplay.c
     #kits/common/drivers/retargettextdisplay.c
-    kits/common/drivers/displayls013b7dh03.c
-    kits/common/drivers/displaypalemlib.c
-    kits/common/drivers/udelay.c
+    #kits/common/drivers/displayls013b7dh03.c
+    #kits/common/drivers/displaypalemlib.c
+    #kits/common/drivers/udelay.c
     #kits/common/drivers/cdc.c
-    kits/common/bsp/bsp_bcc.c
-    kits/common/bsp/bsp_stk.c
-    kits/common/bsp/bsp_trace.c
+    #kits/common/bsp/bsp_bcc.c
+    #kits/common/bsp/bsp_stk.c
+    #kits/common/bsp/bsp_trace.c
 )
 
 #Include the sources for the EZR32LG330 chip

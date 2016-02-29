@@ -32,6 +32,10 @@
 #include "types.h"
 #include "platform.h"
 
+
+__LINK_C void initSensors();
+
+__LINK_C  void getHumidityAndTemperature(uint32_t *rhData, int32_t *tData);
 /*! \brief Initialises the sensors
  * 			- I/O for light sensor
  */

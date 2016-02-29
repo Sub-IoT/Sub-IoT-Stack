@@ -25,6 +25,28 @@
 #include "em_adc.h"
 #include <string.h>
 #include <debug.h>
+#include "em_cmu.h"
+
+
+#include "hwi2c.h"
+
+#include "si7013.h"
+
+
+typedef struct {
+  uint32_t location;
+  pin_id_t sda;
+  pin_id_t scl;
+} i2c_pins_t;
+
+typedef struct i2c_handle {
+  uint8_t           idx;
+  I2C_TypeDef*      channel;
+  CMU_Clock_TypeDef clock;
+  i2c_pins_t*       pins;
+} i2c_handle_t;
+
+static i2c_handle_t* i2c = NULL;
 
 //TODO Lightsensor uses ACMP, LESENSE, PRS
 //#define LIGHT_SENSOR_ENABLE_PORTPIN		D6
@@ -76,6 +98,25 @@ float tempsensor_read_celcius()
 float convertAdcToCelsius(int32_t adcSample)
 {
 
+}
+
+void initSensors()
+{
+	///Humidity/temp
+	CMU_ClockEnable(cmuClock_GPIO, true);
+	/* Enable si7021 sensor isolation switch */
+	GPIO_PinModeSet(gpioPortC, 8, gpioModePushPull, 1);
+
+	i2c = i2c_init(0, 1);
+	bool si7013_status = Si7013_Detect((I2C_TypeDef*) (i2c->channel), SI7021_ADDR, NULL);
+	GPIO_PinOutClear(gpioPortC, 8);
+}
+
+void getHumidityAndTemperature(uint32_t *rhData, int32_t *tData)
+{
+	GPIO_PinOutSet(gpioPortC, 8);
+	Si7013_MeasureRHAndTemp((I2C_TypeDef*) (i2c->channel), SI7021_ADDR, rhData, tData);
+	GPIO_PinOutClear(gpioPortC, 8);
 }
 
 
