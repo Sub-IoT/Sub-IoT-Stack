@@ -191,7 +191,11 @@ void bootstrap()
     ubutton_register_callback(1, &userbutton_callback);
 
     sched_register_task((&execute_sensor_measurement));
+<<<<<<< HEAD
     timer_post_task_delay(&execute_sensor_measurement, TIMER_TICKS_PER_SEC * 1);
+=======
+    timer_post_task_delay(&execute_sensor_measurement, TIMER_TICKS_PER_SEC * 5);
+>>>>>>> implementing si7021 on HG
 
     lcd_write_string("EFM32 Sensor\n");
 }
