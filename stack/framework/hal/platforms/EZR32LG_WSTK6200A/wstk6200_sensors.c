@@ -45,22 +45,15 @@ typedef struct i2c_handle {
   i2c_pins_t*       pins;
 } i2c_handle_t;
 
-static uint32_t temp_offset = 0;
+//static uint32_t temp_offset = 0;
 static i2c_handle_t* i2c = NULL;
 
 /** Flag used to indicate ADC is finished */
-static volatile bool adcConversionComplete = false;
+//static volatile bool adcConversionComplete = false;
 
 void initSensors()
 {
-	// ADC init for battery monitor
-	adc_init(adcReference1V25, adcReferenceVDDDiv3, 100);
-
-	/* Manually set some calibration values */
-	ADC0->CAL = (0x7C << _ADC_CAL_SINGLEOFFSET_SHIFT) | (0x1F << _ADC_CAL_SINGLEGAIN_SHIFT);
-
-
-	//Humidity/temp
+		//Humidity/temp
 	CMU_ClockEnable(cmuClock_GPIO, true);
 	/* Enable si7021 sensor isolation switch */
 	GPIO_PinModeSet(gpioPortF, 8, gpioModePushPull, 1);
@@ -70,80 +63,6 @@ void initSensors()
 }
 
 
-//Internal Temp Chip
- void internalTempSensor_init(void)
-{
-	//adc_calibrate();
-
-	// Initialises ADC
-	adc_init(adcReference1V25, adcInputSingleTemp, 100);
-
-
-	/* This is a work around for Chip Rev.D Errata, Revision 0.6. */
-	/* Check for product revision 16 and 17 and set the offset */
-	/* for ADC0_TEMP_0_READ_1V25. */
-	uint8_t prod_rev = (DEVINFO->PART & _DEVINFO_PART_PROD_REV_MASK) >> _DEVINFO_PART_PROD_REV_SHIFT;
-
-	if( (prod_rev == 16) || (prod_rev == 17) )
-	{
-		temp_offset = 112;
-	}
-	else
-	{
-		temp_offset = 0;
-	}
-}
-
-float tempsensor_read_celcius()
-{
-	//todo: take into account warmup time
-	adc_start();
-
-	/* Wait in EM1 for ADC to complete */
-	while (!adcConversionComplete) EMU_EnterEM1();
-	adc_clear_interrupt();
-
-	/* Read sensor value */
-	/* According to rev. D errata ADC0_TEMP_0_READ_1V25 should be decreased */
-	/* by the offset  but it is the same if ADC reading is increased - */
-	/* reference manual 28.3.4.2. */
-	uint32_t temp = adc_get_value() + temp_offset;
-	return convertAdcToCelsius(temp);
-}
-
-float convertAdcToCelsius(int32_t adcSample)
-{
-  float temp;
-  /* Factory calibration temperature from device information page. */
-  float cal_temp_0 = (float)((DEVINFO->CAL & _DEVINFO_CAL_TEMP_MASK)
-                             >> _DEVINFO_CAL_TEMP_SHIFT);
-
-  float cal_value_0 = (float)((DEVINFO->ADC0CAL2
-                               & _DEVINFO_ADC0CAL2_TEMP1V25_MASK)
-                              >> _DEVINFO_ADC0CAL2_TEMP1V25_SHIFT);
-
-  /* Temperature gradient (from datasheet) */
-  float t_grad = -6.27;
-
-  temp = (cal_temp_0 - ((cal_value_0 - adcSample)  / t_grad));
-
-  return temp;
-}
-
-//Battery
-uint32_t getBattery(void)
-{
-  uint32_t vData;
-  /* Sample ADC */
-  adcConversionComplete = false;
-  ADC_Start(ADC0, adcStartSingle);
-  while (!adcConversionComplete) EMU_EnterEM1();
-  vData = ADC_DataSingleGet( ADC0 );
-
-  vData = 3 * 1250 * (vData / 4095.0);
-  return vData;
-}
-
 void getHumidityAndTemperature(uint32_t *rhData, int32_t *tData)
 {
 	Si7013_MeasureRHAndTemp((I2C_TypeDef*) (i2c->channel), SI7021_ADDR, rhData, tData);
@@ -151,14 +70,14 @@ void getHumidityAndTemperature(uint32_t *rhData, int32_t *tData)
 
 
 // ADC IRQ
-void ADC0_IRQHandler(void)
-{
-   uint32_t flags;
-
-   /* Clear interrupt flags */
-   flags = ADC_IntGet( ADC0 );
-   ADC_IntClear( ADC0, flags );
-
-   adcConversionComplete = true;
-}
+//void ADC0_IRQHandler(void)
+//{
+//   uint32_t flags;
+//
+//   /* Clear interrupt flags */
+//   flags = ADC_IntGet( ADC0 );
+//   ADC_IntClear( ADC0, flags );
+//
+//   adcConversionComplete = true;
+//}
 

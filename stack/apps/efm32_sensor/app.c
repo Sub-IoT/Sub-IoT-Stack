@@ -75,14 +75,12 @@ void execute_sensor_measurement()
   fs_write_file(SENSOR_FILE_ID, 0, (uint8_t*)&internal_temp, sizeof(internal_temp)); // File 0x40 is configured to use D7AActP trigger an ALP action which broadcasts this file data on Access Class 0
 #endif
 
-#ifdef PLATFORM_EFM32HG_STK3400
+#if (defined PLATFORM_EFM32HG_STK3400  || defined PLATFORM_EZR32LG_WSTK6200A)
   lcd_clear();
   float internal_temp = hw_get_internal_temperature();
   lcd_write_string("Int T: %2d.%d C\n", (int)internal_temp, (int)(internal_temp*10)%10);
   log_print_string("Int T: %2d.%d C\n", (int)internal_temp, (int)(internal_temp*10)%10);
-#endif
 
-#if (defined PLATFORM_EFM32HG_STK3400  || defined PLATFORM_EZR32LG_WSTK6200A)
   uint32_t rhData;
   uint32_t tData;
   getHumidityAndTemperature(&rhData, &tData);

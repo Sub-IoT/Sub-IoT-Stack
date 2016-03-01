@@ -23,6 +23,7 @@
 
 
 #include "hwsystem.h"
+#include "hwadc.h"
 #include "em_system.h"
 #include "em_emu.h"
 #include "em_cmu.h"
