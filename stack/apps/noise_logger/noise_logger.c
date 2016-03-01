@@ -348,7 +348,7 @@ void uart_rx_cb(uint8_t data)
 
 void measureTemperature()
 {
-	float temp = tempsensor_read_celcius();
+	float temp = hw_get_internal_temperature();
 
 	int temperature = (int)(temp * 10);
 
@@ -398,8 +398,6 @@ void bootstrap()
     sched_register_task(&start_rx);
     sched_register_task(&process_uart_rx_fifo);
     timer_post_task_delay(&start_rx, TIMER_TICKS_PER_SEC * 3);
-
-    internalTempSensor_init();
 
     sched_register_task((&execute_sensor_measurement));
     timer_post_task_delay(&execute_sensor_measurement, TEMPERATURE_PERIOD);
