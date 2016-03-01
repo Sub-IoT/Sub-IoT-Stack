@@ -62,7 +62,11 @@ hw_rx_cfg_t rx_cfg = {
     .channel_id = {
         .channel_header.ch_coding = PHY_CODING_PN9,
         .channel_header.ch_class = PHY_CLASS,
+#ifdef PLATFORM_EZR32LG_WSTK6200A
+        .channel_header.ch_freq_band = PHY_BAND_868,
+#else
         .channel_header.ch_freq_band = PHY_BAND_433,
+#endif
         .center_freq_index = 0
     },
     .syncword_class = PHY_SYNCWORD_CLASS0
@@ -72,7 +76,12 @@ hw_tx_cfg_t tx_cfg = {
     .channel_id = {
         .channel_header.ch_coding = PHY_CODING_PN9,
         .channel_header.ch_class = PHY_CLASS,
+#ifdef PLATFORM_EZR32LG_WSTK6200A
+        .channel_header.ch_freq_band = PHY_BAND_868,
+#else
         .channel_header.ch_freq_band = PHY_BAND_433,
+#endif
+
         .center_freq_index = 0
     },
     .syncword_class = PHY_SYNCWORD_CLASS0,
