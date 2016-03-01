@@ -68,6 +68,10 @@ void execute_sensor_measurement()
 #ifdef PLATFORM_EFM32GG_STK3700
   float internal_temp = hw_get_internal_temperature();
   lcd_write_temperature(internal_temp*10, 1);
+
+  uint32_t vdd = hw_get_battery();
+
+
   fs_write_file(SENSOR_FILE_ID, 0, (uint8_t*)&internal_temp, sizeof(internal_temp)); // File 0x40 is configured to use D7AActP trigger an ALP action which broadcasts this file data on Access Class 0
 #endif
 
@@ -94,6 +98,7 @@ void execute_sensor_measurement()
   lcd_write_string("Batt %d mV\n", vdd);
   log_print_string("Batt: %d mV\n", vdd);
 
+  //TODO: put sensor values in array
   uint8_t sensor_values[6];
   fs_write_file(SENSOR_FILE_ID, 0, (uint8_t*)&sensor_values, 6);
 #endif

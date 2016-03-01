@@ -37,7 +37,6 @@ static uint32_t temp_offset;
 
 void initSensors()
 {
-	void internalTempSensor_init(void);
 }
 
 //void lightsensor_init()
@@ -68,63 +67,3 @@ void initSensors()
 //{
 //
 //}
-
-void internalTempSensor_init(void)
-{
-	adc_calibrate();
-
-	// Initialises ADC
-	adc_init(adcReference1V25, adcInputSingleTemp, 100);
-
-
-	/* This is a work around for Chip Rev.D Errata, Revision 0.6. */
-	/* Check for product revision 16 and 17 and set the offset */
-	/* for ADC0_TEMP_0_READ_1V25. */
-	uint8_t prod_rev = (DEVINFO->PART & _DEVINFO_PART_PROD_REV_MASK) >> _DEVINFO_PART_PROD_REV_SHIFT;
-
-	if( (prod_rev == 16) || (prod_rev == 17) )
-	{
-		temp_offset = 112;
-	}
-	else
-	{
-		temp_offset = 0;
-	}
-}
-
-float hw_get_internal_temperature()
-{
-	//todo: take into account warmup time
-	adc_start();
-
-	/* Wait in EM1 for ADC to complete */
-	while(!adc_ready){};
-	adc_clear_interrupt();
-
-	/* Read sensor value */
-	/* According to rev. D errata ADC0_TEMP_0_READ_1V25 should be decreased */
-	/* by the offset  but it is the same if ADC reading is increased - */
-	/* reference manual 28.3.4.2. */
-	uint32_t temp = adc_get_value() + temp_offset;
-	return convertAdcToCelsius(temp);
-}
-
-float convertAdcToCelsius(int32_t adcSample)
-{
-  float temp;
-  /* Factory calibration temperature from device information page. */
-  float cal_temp_0 = (float)((DEVINFO->CAL & _DEVINFO_CAL_TEMP_MASK)
-                             >> _DEVINFO_CAL_TEMP_SHIFT);
-
-  float cal_value_0 = (float)((DEVINFO->ADC0CAL2
-                               & _DEVINFO_ADC0CAL2_TEMP1V25_MASK)
-                              >> _DEVINFO_ADC0CAL2_TEMP1V25_SHIFT);
-
-  /* Temperature gradient (from datasheet) */
-  float t_grad = -6.27;
-
-  temp = (cal_temp_0 - ((cal_value_0 - adcSample)  / t_grad));
-
-  return temp;
-}
-
