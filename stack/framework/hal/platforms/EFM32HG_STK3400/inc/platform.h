@@ -64,11 +64,9 @@
  * DEBUG PIN DEFINITIONS *
  ************************/
 
-#define DEBUG_PIN_NUM 4
+#define DEBUG_PIN_NUM 2
 #define DEBUG0	D4
 #define DEBUG1	D5
-#define DEBUG2	D6
-#define DEBUG3	D7
 
 /**************************
  * USERBUTTON DEFINITIONS *

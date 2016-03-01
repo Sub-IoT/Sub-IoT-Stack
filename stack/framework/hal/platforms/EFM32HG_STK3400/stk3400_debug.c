@@ -44,9 +44,9 @@ void HardFault_Handler(void) {
     );
 }
 
-#ifdef PLATFORM_GECKO_DEBUGPINS
+#ifdef PLATFORM_EFM32HG_STK3400_DEBUGPINS
 
-#if DEBUG_PIN_NUM != 4
+#if DEBUG_PIN_NUM != 2
 	#error DEBUG_PIN_NUM does not match the expected value. Update platform.h or platform_debug.c
 #endif
 
@@ -59,8 +59,6 @@ void __hw_debug_init()
 {
 	debug_pins[0] = DEBUG0;
 	debug_pins[1] = DEBUG1;
-	debug_pins[2] = DEBUG2;
-	debug_pins[3] = DEBUG3;
 	for(int i = 0; i < DEBUG_PIN_NUM; i++)
 	{
 		error_t err = hw_gpio_configure_pin(debug_pins[i], false, gpioModePushPull, 0);
