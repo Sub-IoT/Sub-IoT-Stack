@@ -135,7 +135,8 @@ static void switch_state(dll_state_t next_state)
         DPRINT("Switched to DLL_STATE_FOREGROUND_SCAN");
         break;
     case DLL_STATE_IDLE:
-        assert(dll_state == DLL_STATE_FOREGROUND_SCAN || dll_state == DLL_STATE_CCA_FAIL);
+        assert(dll_state == DLL_STATE_FOREGROUND_SCAN || dll_state == DLL_STATE_CCA_FAIL
+               || dll_state == DLL_STATE_TX_FOREGROUND_COMPLETED);
         dll_state = next_state;
         DPRINT("Switched to DLL_STATE_IDLE");
         break;
@@ -196,7 +197,6 @@ static void packet_transmitted(hw_radio_packet_t* hw_radio_packet)
     DPRINT("Transmitted packet with length = %i", hw_radio_packet->length);
     packet_t* packet = packet_queue_find_packet(hw_radio_packet);
     d7atp_signal_packet_transmitted(packet);
-    dll_start_foreground_scan(); // we stay in foreground scan until TP signal transaction response period is over
 }
 
 static void execute_cca();
@@ -226,6 +226,8 @@ static void cca_rssi_valid(int16_t cur_rssi)
 
             error_t err = hw_radio_send_packet(&current_packet->hw_radio_packet, &packet_transmitted);
             assert(err == SUCCESS);
+
+            hw_radio_set_idle(); // ensure radio goes back to IDLE after transmission instead of to RX (which was previous state because of CCA)
 
             d7atp_signal_packet_csma_ca_insertion_completed(true);
             return;
@@ -419,7 +421,7 @@ static void execute_csma_ca()
     }
 }
 
-static void execute_scan_automation()
+void dll_execute_scan_automation()
 {
     uint8_t scan_access_class = fs_read_dll_conf_active_access_class();
     if(active_access_class != scan_access_class)
@@ -462,13 +464,13 @@ void dll_init()
     sched_register_task(&dll_start_foreground_scan);
     sched_register_task(&execute_cca);
     sched_register_task(&execute_csma_ca);
-    sched_register_task(&execute_scan_automation);
+    sched_register_task(&dll_execute_scan_automation);
 
     hw_radio_init(&alloc_new_packet, &release_packet);
 
     dll_state = DLL_STATE_IDLE;
     active_access_class = NO_ACTIVE_ACCESS_CLASS;
-    sched_post_task(&execute_scan_automation);
+    sched_post_task(&dll_execute_scan_automation);
 }
 
 void dll_tx_frame(packet_t* packet, dae_access_profile_t* access_profile)
@@ -519,7 +521,7 @@ void dll_start_foreground_scan()
 void dll_stop_foreground_scan()
 {
     assert(dll_state == DLL_STATE_FOREGROUND_SCAN);
-    execute_scan_automation();
+    dll_execute_scan_automation();
 }
 
 uint8_t dll_assemble_packet_header(packet_t* packet, uint8_t* data_ptr)

@@ -222,7 +222,20 @@ bool d7atp_disassemble_packet_header(packet_t *packet, uint8_t *data_idx)
 void d7atp_signal_packet_transmitted(packet_t* packet)
 {
     if(d7atp_state == D7ATP_STATE_MASTER_TRANSACTION_REQUEST_PERIOD)
+    {
+      if(!packet->d7atp_ctrl.ctrl_is_ack_requested)
+      {
+        // transaction is done now, we do not need to wait for transaction_response_period, instead go back to scan automation  // TODO validate/clarify against spec
+        DPRINT("Transaction done, no response period required");
+        switch_state(D7ATP_STATE_IDLE);
+        d7asp_signal_transaction_response_period_elapsed();
+        dll_execute_scan_automation();
+      }
+      else
+      {
         switch_state(D7ATP_STATE_MASTER_TRANSACTION_RESPONSE_PERIOD);
+      }
+    }
     else if(d7atp_state == D7ATP_STATE_SLAVE_TRANSACTION_SENDING_RESPONSE)
         switch_state(D7ATP_STATE_SLAVE_TRANSACTION_RESPONSE_PERIOD);
     else
@@ -232,8 +245,13 @@ void d7atp_signal_packet_transmitted(packet_t* packet)
     DPRINT("Packet transmitted, starting response period timer (%i ticks)", transaction_response_period);
     // TODO find out difference between dialog timeout and transaction response period
 
-    if(!sched_is_scheduled(&transaction_response_period_expired)) // TODO or should prev transaction resp period be stopped by now and should we start a new one?
-        timer_post_task_delay(&transaction_response_period_expired, transaction_response_period);
+    if(packet->d7atp_ctrl.ctrl_is_ack_requested)
+    {
+      if(!sched_is_scheduled(&transaction_response_period_expired)) // TODO or should prev transaction resp period be stopped by now and should we start a new one?
+          timer_post_task_delay(&transaction_response_period_expired, transaction_response_period);
+
+      dll_start_foreground_scan(); // we stay in foreground scan until TP signal transaction response period is over
+    }
 
     d7asp_signal_packet_transmitted(packet);
 }

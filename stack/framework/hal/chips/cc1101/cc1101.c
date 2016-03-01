@@ -250,8 +250,14 @@ static void end_of_packet_isr()
             }
             break;
         case HW_RADIO_STATE_TX:
-        	if(!should_rx_after_tx_completed)
-        		switch_to_idle_mode();
+          DEBUG_TX_END();
+
+          // going to IDLE is the default unless we where in RX when starting transmission or we were put in RX during
+          // transmission. We can also be forced to go back to IDLE after starting TX from RX state (for instance during CCA)
+          if(!should_rx_after_tx_completed)
+          {
+            switch_to_idle_mode();
+          }
 
           current_packet->tx_meta.timestamp = timer_get_counter_value();
 
@@ -543,6 +549,14 @@ int16_t hw_radio_get_rssi()
 
 error_t hw_radio_set_idle()
 {
+  // if we are currently transmitting wait until TX completed before entering IDLE
+  // we return now and go into IDLE when TX is completed
+  if(current_state == HW_RADIO_STATE_TX)
+  {
+      should_rx_after_tx_completed = false;
+      return SUCCESS;
+  }
+
     switch_to_idle_mode();
     return SUCCESS;
 }
