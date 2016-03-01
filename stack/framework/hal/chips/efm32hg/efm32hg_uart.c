@@ -37,8 +37,8 @@
 
 #include "platform.h"
 
-#define UARTS     1   // basic port of single USART implementation
-#define LOCATIONS 6   // TODO: implement LEUART? and both USARTS
+#define UARTS     2   // basic port of single USART implementation
+#define LOCATIONS 7   // TODO: implement LEUART? and both USARTS
 
 
 typedef struct {
@@ -61,7 +61,39 @@ typedef struct {
 // configuration of uart/location mapping to tx and rx pins
 // TODO to be completed with all documented locations
 static uart_pins_t location[UARTS][LOCATIONS] = {
-  {
+	{
+		// USART 0
+		{
+		  .location = USART_ROUTE_LOCATION_LOC0,
+		  .tx       = { .port = gpioPortE, .pin =  10 },
+		  .rx       = { .port = gpioPortE, .pin =  11 }
+		},
+		// no LOCATION 1
+		UNDEFINED_LOCATION,
+		// no LOCATION 12
+		UNDEFINED_LOCATION,
+		{
+		  .location = USART_ROUTE_LOCATION_LOC3,
+		  .tx       = { .port = gpioPortE, .pin =  13 },
+		  .rx       = { .port = gpioPortE, .pin =  12 }
+		},
+		{
+		  .location = USART_ROUTE_LOCATION_LOC4,
+		  .tx       = { .port = gpioPortB, .pin =  7 },
+		  .rx       = { .port = gpioPortB, .pin =  8 }
+		},
+		{
+		  .location = USART_ROUTE_LOCATION_LOC5,
+		  .tx       = { .port = gpioPortC, .pin =  1 },
+		  .rx       = { .port = gpioPortC, .pin =  0 }
+		},
+		{
+		  .location = USART_ROUTE_LOCATION_LOC5,
+		  .tx       = { .port = gpioPortC, .pin =  1 },
+		  .rx       = { .port = gpioPortC, .pin =  0 }
+		}
+	},
+	{
     // USART 1
     {
       .location = USART_ROUTE_LOCATION_LOC0,
@@ -87,9 +119,11 @@ static uart_pins_t location[UARTS][LOCATIONS] = {
     },
     {
       .location = USART_ROUTE_LOCATION_LOC5,
-      .tx       = { .port = gpioPortC, .pin =  2 },
-      .rx       = { .port = gpioPortC, .pin =  1 }
+      .tx       = { .port = gpioPortC, .pin =  1 },
+      .rx       = { .port = gpioPortC, .pin =  2 }
     },
+    // no LOCATION 6
+    UNDEFINED_LOCATION
   }
 };
 
@@ -109,10 +143,16 @@ struct uart_handle {
 static uart_handle_t handle[UARTS] = {
   {
     .idx     = 0,
-    .channel = USART1,
-    .clock   = cmuClock_USART1,
-    .irq     = { .tx = USART1_TX_IRQn,  .rx = USART1_RX_IRQn  }
-  }
+    .channel = USART0,
+    .clock   = cmuClock_USART0,
+    .irq     = { .tx = USART0_TX_IRQn,  .rx = USART0_RX_IRQn  }
+  },
+  {
+      .idx     = 1,
+      .channel = USART1,
+      .clock   = cmuClock_USART1,
+      .irq     = { .tx = USART1_TX_IRQn,  .rx = USART1_RX_IRQn  }
+    }
 };
 
 uart_handle_t* uart_init(uint8_t idx, uint32_t baudrate, uint8_t pins) {

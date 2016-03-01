@@ -82,11 +82,11 @@ void execute_sensor_measurement()
   uint32_t tData;
   getHumidityAndTemperature(&rhData, &tData);
 
-  lcd_write_string("Ext T: %2d.%1d C\n", (tData/1000), tData%1000);
-  log_print_string("Temp: %2d.%1d C\n", (tData/1000), tData%1000);
+  lcd_write_string("Ext T: %2d.%d C\n", (tData/1000), (tData%1000)/100);
+  log_print_string("Temp: %2d.%d C\n", (tData/1000), (tData%1000)/100);
 
-  lcd_write_string("Ext H: %2d.%1d\n", (rhData/1000), rhData%1000);
-  log_print_string("Hum: %2d.%1d\n", (rhData/1000), rhData%1000);
+  lcd_write_string("Ext H: %2d.%d\n", (rhData/1000), (rData%1000)/100);
+  log_print_string("Hum: %2d.%d\n", (rhData/1000), (rData%1000)/100);
 
   uint8_t sensor_values[6];
   fs_write_file(SENSOR_FILE_ID, 0, (uint8_t*)&sensor_values, 6);
