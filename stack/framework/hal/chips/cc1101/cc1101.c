@@ -185,7 +185,6 @@ static void ensure_settling_and_calibration_done()
 
 static void end_of_packet_isr()
 {
-    cc1101_interface_set_interrupts_enabled(false);
     DPRINT("end of packet ISR");
     switch(current_state)
     {
@@ -251,26 +250,25 @@ static void end_of_packet_isr()
             }
             break;
         case HW_RADIO_STATE_TX:
-            DEBUG_TX_END();
         	if(!should_rx_after_tx_completed)
         		switch_to_idle_mode();
 
-            current_packet->tx_meta.timestamp = timer_get_counter_value();
+          current_packet->tx_meta.timestamp = timer_get_counter_value();
 
-            DPRINT_PACKET(current_packet, true);
+          DPRINT_PACKET(current_packet, true);
 
-            if(tx_packet_callback != 0)
-                tx_packet_callback(current_packet);
+          if(tx_packet_callback != 0)
+              tx_packet_callback(current_packet);
 
-            if(should_rx_after_tx_completed)
-            {
-                // RX requested while still in TX ...
-                // TODO this could probably be further optimized by not going into IDLE
-                // after RX by setting TXOFF_MODE to RX (if the cfg is the same at least)
-                should_rx_after_tx_completed = false;
-                start_rx(&pending_rx_cfg);
-            }
-            break;
+          if(should_rx_after_tx_completed)
+          {
+              // RX requested while still in TX ...
+              // TODO this could probably be further optimized by not going into IDLE
+              // after RX by setting TXOFF_MODE to RX (if the cfg is the same at least)
+              should_rx_after_tx_completed = false;
+              start_rx(&pending_rx_cfg);
+          }
+          break;
         default:
             assert(false);
     }
@@ -523,11 +521,8 @@ error_t hw_radio_send_packet(hw_radio_packet_t* packet, tx_packet_callback_t tx_
     current_state = HW_RADIO_STATE_TX;
     current_packet = packet;
 
-
-
     DPRINT("Data to TX Fifo:");
     DPRINT_DATA(packet->data, packet->length + 1);
-
     configure_channel((channel_id_t*)&(current_packet->tx_meta.tx_cfg.channel_id));
     configure_eirp(current_packet->tx_meta.tx_cfg.eirp);
     configure_syncword_class(current_packet->tx_meta.tx_cfg.syncword_class);
@@ -537,6 +532,7 @@ error_t hw_radio_send_packet(hw_radio_packet_t* packet, tx_packet_callback_t tx_
     DEBUG_TX_START();
     DEBUG_RX_END();
     cc1101_interface_strobe(RF_STX);
+
     return SUCCESS;
 }
 
