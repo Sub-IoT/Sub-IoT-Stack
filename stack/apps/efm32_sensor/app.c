@@ -41,7 +41,7 @@
 #include "platform_lcd.h"
 
 #define SENSOR_FILE_ID           0x40
-#define SENSOR_FILE_SIZE         6
+#define SENSOR_FILE_SIZE         8
 #define ACTION_FILE_ID           0x41
 
 #define APP_MODE_LEDS		1
@@ -97,8 +97,15 @@ void execute_sensor_measurement()
   log_print_string("Batt: %d mV\n", vdd);
 
   //TODO: put sensor values in array
-  uint8_t sensor_values[6];
-  fs_write_file(SENSOR_FILE_ID, 0, (uint8_t*)&sensor_values, 6);
+
+  uint8_t sensor_values[8];
+  uint16_t *pointer =  (uint16_t*) sensor_values;
+  *pointer++ = (uint16_t) (internal_temp * 10);
+  *pointer++ = (uint16_t) (tData /100);
+  *pointer++ = (uint16_t) (rhData /100);
+  *pointer++ = (uint16_t) (vdd /10);
+
+  fs_write_file(SENSOR_FILE_ID, 0, (uint8_t*)&sensor_values,8);
 #endif
 
   timer_post_task_delay(&execute_sensor_measurement, TIMER_TICKS_PER_SEC * 1);
