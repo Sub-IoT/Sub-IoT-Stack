@@ -35,6 +35,9 @@
 /*! \brief Initialises the sensors
  * 			- I/O for light sensor
  */
+
+__LINK_C void initSensors();
+
 //__LINK_C void lightsensor_init();
 //__LINK_C void lightsensor_enable();
 //__LINK_C void lightsensor_dissable();
@@ -48,7 +51,7 @@ __LINK_C void internalTempSensor_init();
 /*! \brief Measures the interternal temperature using the ADC and converts it to Celcius
  *	\note It expects the user to initialise the ADC using internalTempSensor_init()
  */
-__LINK_C float tempsensor_read_celcius();
+__LINK_C float hw_get_internal_temperature();
 
 /*! \brief Convert a temperature ADC sample to temperature taking into account the factory calibration
  * 	\note See section 2.3.4 in the reference manual for details on this calculation

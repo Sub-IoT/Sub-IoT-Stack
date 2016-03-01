@@ -35,6 +35,11 @@
 
 static uint32_t temp_offset;
 
+void initSensors()
+{
+	void internalTempSensor_init(void);
+}
+
 //void lightsensor_init()
 //{
 //	/* Configure the drive strength of the ports for the light sensor. */
@@ -87,7 +92,7 @@ void internalTempSensor_init(void)
 	}
 }
 
-float tempsensor_read_celcius()
+float hw_get_internal_temperature()
 {
 	//todo: take into account warmup time
 	adc_start();

@@ -86,33 +86,33 @@ i2c_handle_t* i2c_init(uint8_t idx, uint8_t pins) {
 	CMU_ClockEnable(cmuClock_HFPER, true);
 	CMU_ClockEnable(handle[idx].clock, true);
 
-  handle[idx].pins = &location[idx][pins];
+	handle[idx].pins = &location[idx][pins];
 
 	// Output value must be set to 1 to not drive lines low.
 	// Set SCL first, to ensure it is high before changing SDA.
-  assert(hw_gpio_configure_pin(handle[idx].pins->scl, false, gpioModeWiredAndPullUp, 1) == SUCCESS);
-  assert(hw_gpio_configure_pin(handle[idx].pins->sda, false, gpioModeWiredAndPullUp, 1) == SUCCESS);
+	assert(hw_gpio_configure_pin(handle[idx].pins->scl, false, gpioModeWiredAndPullUp, 1) == SUCCESS);
+	assert(hw_gpio_configure_pin(handle[idx].pins->sda, false, gpioModeWiredAndPullUp, 1) == SUCCESS);
 
 	// In some situations, after a reset during an I2C transfer, the slave
 	// device may be left in an unknown state. Send 9 clock pulses to
 	// set slave in a defined state.
 	for(uint8_t i = 0; i < 9; i++)	{
-    hw_gpio_set(handle[idx].pins->scl);
-    hw_gpio_clr(handle[idx].pins->scl);
+		hw_gpio_set(handle[idx].pins->scl);
+		hw_gpio_clr(handle[idx].pins->scl);
 	}
 
 	// enable pins and set location
 	handle[idx].channel->ROUTE = I2C_ROUTE_SDAPEN
                              | I2C_ROUTE_SCLPEN
                              | handle[idx].pins->location;
-  
-  I2C_Init_TypeDef i2cInit = {
-    .enable  = true,
-    .master  = true,
-    .freq    = I2C_FREQ_STANDARD_MAX,   // set to standard rate
-    .refFreq = 0,                       // currently configured clock
-    .clhr    = i2cClockHLRStandard      // Set to use 4:4 low/high duty cycle
-  };
+
+	I2C_Init_TypeDef i2cInit = {
+		.enable  = true,
+		.master  = true,
+		.freq    = I2C_FREQ_STANDARD_MAX,   // set to standard rate
+		.refFreq = 0,                       // currently configured clock
+		.clhr    = i2cClockHLRStandard      // Set to use 4:4 low/high duty cycle
+	};
 
 	I2C_Init(handle[idx].channel, &i2cInit);
   

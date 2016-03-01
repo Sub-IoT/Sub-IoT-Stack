@@ -109,14 +109,14 @@ void initSensors()
 
 	i2c = i2c_init(0, 1);
 	bool si7013_status = Si7013_Detect((I2C_TypeDef*) (i2c->channel), SI7021_ADDR, NULL);
-	GPIO_PinOutClear(gpioPortC, 8);
+	//GPIO_PinOutClear(gpioPortC, 8);
 }
 
 void getHumidityAndTemperature(uint32_t *rhData, int32_t *tData)
 {
-	GPIO_PinOutSet(gpioPortC, 8);
-	Si7013_MeasureRHAndTemp((I2C_TypeDef*) (i2c->channel), SI7021_ADDR, rhData, tData);
-	GPIO_PinOutClear(gpioPortC, 8);
+	//GPIO_PinOutSet(gpioPortC, 8);
+	//Si7013_MeasureRHAndTemp((I2C_TypeDef*) (i2c->channel), SI7021_ADDR, rhData, tData);
+	//GPIO_PinOutClear(gpioPortC, 8);
 }
 
 

@@ -82,17 +82,17 @@ void execute_sensor_measurement()
   uint32_t tData;
   getHumidityAndTemperature(&rhData, &tData);
 
-  lcd_write_string("Ext T: %2d.%2d C\n", (tData/1000), tData%1000);
-  log_print_string("Temp: %2d.%2d C\n", (tData/1000), tData%1000);
+  lcd_write_string("Ext T: %2d.%1d C\n", (tData/1000), tData%1000);
+  log_print_string("Temp: %2d.%1d C\n", (tData/1000), tData%1000);
 
-  lcd_write_string("Ext H: %2d.%2d\n", (rhData/1000), rhData%1000);
-  log_print_string("Hum: %2d.%2d\n", (rhData/1000), rhData%1000);
+  lcd_write_string("Ext H: %2d.%1d\n", (rhData/1000), rhData%1000);
+  log_print_string("Hum: %2d.%1d\n", (rhData/1000), rhData%1000);
 
   uint8_t sensor_values[6];
   fs_write_file(SENSOR_FILE_ID, 0, (uint8_t*)&sensor_values, 6);
 #endif
 
-  timer_post_task_delay(&execute_sensor_measurement, TIMER_TICKS_PER_SEC * 5);
+  timer_post_task_delay(&execute_sensor_measurement, TIMER_TICKS_PER_SEC * 1);
 }
 
 void init_user_files()
@@ -191,7 +191,7 @@ void bootstrap()
     ubutton_register_callback(1, &userbutton_callback);
 
     sched_register_task((&execute_sensor_measurement));
-    timer_post_task_delay(&execute_sensor_measurement, TIMER_TICKS_PER_SEC * 5);
+    timer_post_task_delay(&execute_sensor_measurement, TIMER_TICKS_PER_SEC * 1);
 
     lcd_write_string("EFM32 Sensor\n");
 }

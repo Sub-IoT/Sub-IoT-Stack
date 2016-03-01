@@ -72,7 +72,7 @@ void __platform_post_framework_init()
 
 int main()
 {
-	BSP_TraceProfilerSetup();
+	//BSP_TraceProfilerSetup();
     // Only when using bootloader
 	//SCB->VTOR=0x4000;
 
