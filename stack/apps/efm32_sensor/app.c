@@ -72,6 +72,7 @@ void execute_sensor_measurement()
 #endif
 
 #ifdef PLATFORM_EFM32HG_STK3400
+  lcd_clear();
   float internal_temp = hw_get_internal_temperature();
   lcd_write_string("Int T: %2d.%d C\n", (int)internal_temp, (int)(internal_temp*10)%10);
   log_print_string("Int T: %2d.%d C\n", (int)internal_temp, (int)(internal_temp*10)%10);
@@ -82,11 +83,16 @@ void execute_sensor_measurement()
   uint32_t tData;
   getHumidityAndTemperature(&rhData, &tData);
 
-  lcd_write_string("Ext T: %2d.%d C\n", (tData/1000), (tData%1000)/100);
-  log_print_string("Temp: %2d.%d C\n", (tData/1000), (tData%1000)/100);
+  lcd_write_string("Ext T: %d.%d C\n", (tData/1000), (tData%1000)/100);
+  log_print_string("Temp: %d.%d C\n", (tData/1000), (tData%1000)/100);
 
-  lcd_write_string("Ext H: %2d.%d\n", (rhData/1000), (rData%1000)/100);
-  log_print_string("Hum: %2d.%d\n", (rhData/1000), (rData%1000)/100);
+  lcd_write_string("Ext H: %d.%d\n", (rhData/1000), (rhData%1000)/100);
+  log_print_string("Hum: %d.%d\n", (rhData/1000), (rhData%1000)/100);
+
+  uint32_t vdd = hw_get_battery();
+
+  lcd_write_string("Batt %d mV\n", vdd);
+  log_print_string("Batt: %d mV\n", vdd);
 
   uint8_t sensor_values[6];
   fs_write_file(SENSOR_FILE_ID, 0, (uint8_t*)&sensor_values, 6);

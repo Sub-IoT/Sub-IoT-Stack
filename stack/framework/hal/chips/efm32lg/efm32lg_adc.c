@@ -290,6 +290,10 @@ void adc_init(ADC_Reference reference, ADC_Input input, uint32_t adc_frequency)
 	case adcInputSingleTemp:
 		sInit.input = adcSingleInpTemp;
 		break;
+	/** VDD / 3. */
+	case adcInputSingleVDDDiv3:
+		sInit.input = adcSingleInpVDDDiv3;
+		break;
 		/** Positive Ch4, negative Ch5. */
 	case adcInputSingleCh4Ch5:
 		sInit.input = adcSingleInpCh4Ch5;
@@ -312,6 +316,14 @@ uint32_t adc_get_value()
 {
 	return ADC_DataSingleGet(ADC0);
 }
+
+uint32_t adc_read_single( void )
+{
+  ADC_Start(ADC0, adcStartSingle);
+  while ( ( ADC0->STATUS & ADC_STATUS_SINGLEDV ) == 0 ){}
+  return ADC_DataSingleGet(ADC0);
+}
+
 
 bool adc_ready()
 {

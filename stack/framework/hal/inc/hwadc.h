@@ -45,8 +45,6 @@ typedef enum
   adcReference5VDIFF ,
   /** Single ended ext. ref. from 1 pin. */
   adcReferenceExtSingle,
-  /** VDD / 3 */
-  adcReferenceVDDDiv3,
   /** Differential ext. ref. from 2 pins */
   adcReference2xExtDiff,
   /** Unbuffered 2xVDD. */
@@ -57,6 +55,8 @@ typedef enum
 {
 	/** Temperature reference. */
 	adcInputSingleTemp,
+	 /** VDD / 3 */
+	adcInputSingleVDDDiv3,
 	/** Positive Ch4, negative Ch5. */
 	adcInputSingleCh4Ch5
 } ADC_Input;
@@ -91,6 +91,11 @@ __LINK_C uint32_t adc_get_value();
  * 	\return value of status flag
  */
 __LINK_C bool adc_ready();
+
+/*! \brief Starts a single ADC measurement and gets the value
+ * 	\return ADC register value
+ */
+__LINK_C uint32_t adc_read_single();
 
 /*! \brief Clears the ADC interrupt flag
  */

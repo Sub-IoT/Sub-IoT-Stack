@@ -101,12 +101,25 @@ void hw_reset()
 
 float hw_get_internal_temperature()
 {
-  adc_init(adcReference1V25, adcInputSingleTemp, 100);
+  adc_init(adcReference1V25, adcInputSingleTemp, 400000);
 
   // TODO take into account warmup time
-  adc_start();
+  uint32_t value = adc_read_single();
 
-  while(!adc_ready()) {};
+  return (CAL_TEMP_0 - ((ADC_TEMP_0_READ_1V25 - value)  / T_GRAD));
+}
 
-  return (CAL_TEMP_0 - ((ADC_TEMP_0_READ_1V25 - adc_get_value())  / T_GRAD));
+uint32_t hw_get_battery(void)
+{
+	adc_init(adcReference1V25, adcInputSingleVDDDiv3, 100);
+
+	/* Manually set some calibration values */
+	//ADC0->CAL = (0x7C << _ADC_CAL_SINGLEOFFSET_SHIFT) | (0x1F << _ADC_CAL_SINGLEGAIN_SHIFT);
+
+	uint32_t vData;
+	/* Sample ADC */
+	uint32_t value = adc_read_single();
+
+	vData = 3 * 1250 * (value / 4095.0);
+	return vData;
 }

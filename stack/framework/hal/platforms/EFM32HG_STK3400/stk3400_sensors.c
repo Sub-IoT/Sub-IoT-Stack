@@ -48,6 +48,8 @@ typedef struct i2c_handle {
 
 static i2c_handle_t* i2c = NULL;
 
+
+
 //TODO Lightsensor uses ACMP, LESENSE, PRS
 //#define LIGHT_SENSOR_ENABLE_PORTPIN		D6
 ////#define LIGHT_SENSOR_ENABLE_PORT		gpioPortD
@@ -84,21 +86,6 @@ static uint32_t temp_offset;
 //{
 //
 //}
-
-void internalTempSensor_init(void)
-{
-
-}
-
-float tempsensor_read_celcius()
-{
-	return 0;
-}
-
-float convertAdcToCelsius(int32_t adcSample)
-{
-
-}
 
 void initSensors()
 {

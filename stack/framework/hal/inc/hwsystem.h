@@ -87,6 +87,11 @@ __LINK_C void hw_reset();
  */
 __LINK_C float hw_get_internal_temperature();
 
+/*!
+ * /brief Returns the battery voltage in mV (VDD)
+ */
+__LINK_C uint32_t hw_get_battery();
+
 #endif //__HW_SYSTEM_H
 
 /** @}*/
