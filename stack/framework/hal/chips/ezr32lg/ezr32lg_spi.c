@@ -25,7 +25,6 @@
 
 #include <stdbool.h>
 #include <stdint.h>
-#include <assert.h>
 
 #include "em_device.h"
 #include "em_chip.h"
@@ -39,6 +38,7 @@
 #include "hwgpio.h"
 #include "hwspi.h"
 
+#include "debug.h"
 #include "platform.h"
 
 #define USARTS    3
@@ -182,18 +182,22 @@ spi_handle_t* spi_init(uint8_t idx, uint32_t baudrate, uint8_t databits,
   return &handle[next_spi_handle-1];
 }
 
-static bool spi_enable(spi_handle_t* spi) {
-  // basic reference counting
-  spi->users++;
-  if(spi->users > 1) { return false; } // should already be enabled
-  
-  // make sure all slaves of this bus are high for active low slaves and vice versa
+static bool ensure_slaves_deselected(spi_handle_t* spi) {
+  // make sure CS lines for all slaves of this bus are high for active low slaves and vice versa
   for(uint8_t s=0; s<spi->slaves; s++) {
     if(spi->slave[s]->cs_is_active_low)
       hw_gpio_set(spi->slave[s]->cs);
     else
       hw_gpio_clr(spi->slave[s]->cs);
   }
+}
+
+static bool spi_enable(spi_handle_t* spi) {
+  // basic reference counting
+  spi->users++;
+  if(spi->users > 1) { return false; } // should already be enabled
+  
+  ensure_slaves_deselected(spi);
 
   // CMU_ClockEnable(cmuClock_GPIO,    true); // TODO future use: hw_gpio_enable
   CMU_ClockEnable(spi->usart->clock, true);
@@ -230,10 +234,7 @@ static bool spi_disable(spi_handle_t* spi) {
   CMU_ClockEnable(spi->usart->clock, false);
   // CMU_ClockEnable(cmuClock_GPIO, false); // TODO future use: hw_gpio_disable
 
-  // turn off all CS lines, because bus is down
-  for(uint8_t s=0; s<spi->slaves; s++) {
-    hw_gpio_clr(spi->slave[s]->cs);
-  }
+  ensure_slaves_deselected(spi); // turn off all CS lines, because bus is down
 
   return true;
 }
