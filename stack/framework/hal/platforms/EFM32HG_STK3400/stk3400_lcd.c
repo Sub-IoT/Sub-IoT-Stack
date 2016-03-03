@@ -34,6 +34,14 @@
 #include "stdio.h"
 #include "stdarg.h"
 
+#ifndef PLATFORM_EFM32HG_STK3400_LCD_ENABLED
+  void __lcd_init() {}
+  void lcd_enable(bool enable) {}
+  void lcd_clear() {}
+  void lcd_write_string(const char* format, ...) {}
+  void lcd_write_number(int val) {}
+#else
+
 #define BUFFER_SIZE 100
 static char NGDEF(buffer)[BUFFER_SIZE];
 
@@ -97,4 +105,4 @@ void lcd_write_number(int value)
 	//SegmentLCD_Number(value);
 }
 
-
+#endif

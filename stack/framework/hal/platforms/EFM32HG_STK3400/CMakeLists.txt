@@ -32,7 +32,9 @@ PLATFORM_PARAM(${PLATFORM_PREFIX}_CONSOLE_LOCATION "4"      STRING "The route lo
 PLATFORM_PARAM(${PLATFORM_PREFIX}_CONSOLE_BAUDRATE "115200" STRING "The baudrate used by the second console configuration."       )
 
 PLATFORM_OPTION(${PLATFORM_PREFIX}_DEBUGPINS "Enable/Disable Hardware Debug Pins support (see 'hwdebug.h')" TRUE)
-PLATFORM_OPTION(PLATFORM_USE_USB_CDC "Enable/Disable the use of CDC (UART Communication using USB" FALSE)
+PLATFORM_OPTION(${PLATFORM_PREFIX}_PLATFORM_USE_USB_CDC "Enable/Disable the use of CDC (UART Communication using USB" FALSE)
+PLATFORM_OPTION(${PLATFORM_PREFIX}_LCD_ENABLED "Enable/Disable LCD usage" TRUE)
+
 #Restrict the number of possible options for the radio option in the usual manner...
 SET_PROPERTY(CACHE ${PLATFORM_PREFIX}_RADIO PROPERTY STRINGS "cc1101;none")
 
@@ -94,7 +96,8 @@ PLATFORM_HEADER_DEFINE(
          ${PLATFORM_PREFIX}_CONSOLE_LOCATION
          ${PLATFORM_PREFIX}_CONSOLE_BAUDRATE
   BOOL   ${PLATFORM_PREFIX}_DEBUGPINS
-         PLATFORM_USE_USB_CDC
+         ${PLATFORM_PREFIX}_USE_USB_CDC
+         ${PLATFORM_PREFIX}_LCD_ENABLED
 )
 
 #Build the 'platform_defs.h' settings file
