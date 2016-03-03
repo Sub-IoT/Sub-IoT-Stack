@@ -127,6 +127,7 @@
 typedef enum {
     CC1101_CHIPSTATE_SLEEP  = 0,
     CC1101_CHIPSTATE_IDLE   = 1,
+    CC1101_CHIPSTATE_TX     = 19
     // TODO other states not used for now
 } cc1101_chipstate_t;
 
