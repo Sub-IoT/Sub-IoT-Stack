@@ -450,6 +450,7 @@ void dll_execute_scan_automation()
     }
     else
     {
+        // TODO should already be idle, remove?
         hw_radio_set_idle();
 
         // TODO wait until radio idle
