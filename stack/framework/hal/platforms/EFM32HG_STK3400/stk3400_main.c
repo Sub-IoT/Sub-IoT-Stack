@@ -31,6 +31,7 @@
 #include "em_gpio.h"
 #include <debug.h>
 #include "console.h"
+#include "framework_defs.h"
 
 void __platform_init()
 {
@@ -43,7 +44,10 @@ void __platform_init()
     __usb_init_cdc();
 #endif
 
+#if defined(FRAMEWORK_LOG_ENABLED) || defined(FRAMEWORK_SHELL_ENABLED)
+    // framework does not need console, if app needs it app should init this
     console_init();
+#endif
 
 #ifdef USE_CC1101
     // configure the interrupt pins here, since hw_gpio_configure_pin() is MCU specific and not part of the common HAL API
