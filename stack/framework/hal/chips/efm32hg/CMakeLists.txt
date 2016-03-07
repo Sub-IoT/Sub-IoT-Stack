@@ -80,7 +80,6 @@ ADD_LIBRARY (${CHIP_LIBRARY_NAME} OBJECT
                     kits/common/drivers/gpiointerrupt.c
                     kits/common/drivers/display.c
                     kits/common/drivers/textdisplay.c
-                    kits/common/drivers/retargettextdisplay.c
                     kits/common/drivers/displayls013b7dh03.c
                     kits/common/drivers/displaypalemlib.c
                     kits/common/drivers/udelay.c

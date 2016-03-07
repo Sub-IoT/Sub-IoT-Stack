@@ -44,14 +44,6 @@
 #define SENSOR_FILE_SIZE         8
 #define ACTION_FILE_ID           0x41
 
-#define APP_MODE_LEDS		1
-#define APP_MODE_LCD		1 << 1
-#define APP_MODE_CONSOLE	1 << 2
-
-static uint8_t* uid;
-
-
-
 // Toggle different operational modes
 void userbutton_callback(button_id_t button_id)
 {
@@ -75,24 +67,30 @@ void execute_sensor_measurement()
 #endif
 
 #if (defined PLATFORM_EFM32HG_STK3400  || defined PLATFORM_EZR32LG_WSTK6200A)
+  char str[30];
+
   float internal_temp = hw_get_internal_temperature();
-  lcd_write_line(2,"Int T: %2d.%d C\n", (int)internal_temp, (int)(internal_temp*10)%10);
-  log_print_string("Int T: %2d.%d C\n", (int)internal_temp, (int)(internal_temp*10)%10);
+  sprintf(str, "Int T: %2d.%d C", (int)internal_temp, (int)(internal_temp*10)%10);
+  lcd_write_line(2,str);
+  log_print_string(str);
 
   uint32_t rhData;
   uint32_t tData;
   getHumidityAndTemperature(&rhData, &tData);
 
-  lcd_write_line(3,"Ext T: %d.%d C\n", (tData/1000), (tData%1000)/100);
-  log_print_string("Temp: %d.%d C\n", (tData/1000), (tData%1000)/100);
+  sprintf(str, "Ext T: %d.%d C", (tData/1000), (tData%1000)/100);
+  lcd_write_line(3,str);
+  log_print_string(str);
 
-  lcd_write_line(4,"Ext H: %d.%d\n", (rhData/1000), (rhData%1000)/100);
-  log_print_string("Hum: %d.%d\n", (rhData/1000), (rhData%1000)/100);
+  sprintf(str, "Ext H: %d.%d", (rhData/1000), (rhData%1000)/100);
+  lcd_write_line(4,str);
+  log_print_string(str);
 
   uint32_t vdd = hw_get_battery();
 
-  lcd_write_line(5,"Batt %d mV\n", vdd);
-  log_print_string("Batt: %d mV\n", vdd);
+  sprintf(str, "Batt %d mV", vdd);
+  lcd_write_line(5,str);
+  log_print_string(str);
 
   //TODO: put sensor values in array
 
@@ -201,9 +199,6 @@ void bootstrap()
 
     initSensors();
 
-    fs_read_uid(uid);
-    log_print_data(uid, 8);
-
     ubutton_register_callback(0, &userbutton_callback);
     ubutton_register_callback(1, &userbutton_callback);
 
@@ -212,6 +207,5 @@ void bootstrap()
     timer_post_task_delay(&execute_sensor_measurement, TIMER_TICKS_PER_SEC * 1);
 
     lcd_write_string("EFM32 Sensor\n");
-    lcd_write_string("%02x%02x%02x%02x%02x%02x%02x%02x\n",uid[7],uid[6],uid[5],uid[4],uid[3],uid[2],uid[1],uid[0]);
 }
 

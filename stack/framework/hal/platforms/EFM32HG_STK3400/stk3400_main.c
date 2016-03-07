@@ -72,8 +72,8 @@ void __platform_post_framework_init()
 #ifdef PLATFORM_EFM32HG_STK3400_LCD_ENABLED
     char id_hex[17];
     uint64_t id = hw_get_unique_id();
-    snprintf(id_hex, 17, "%.8x%.8x", id, id << 8); // nano spec of newlib does not support 64bit ...
-    lcd_write_string("%s", id_hex);
+    sprintf(id_hex, "%.8x%.8x", id, id << 8); // nano spec of newlib does not support 64bit ...
+    lcd_write_string(id_hex);
 #endif
 }
 

@@ -27,7 +27,6 @@
 #include "platform_lcd.h"
 #include "display.h"
 #include "textdisplay.h"
-#include "retargettextdisplay.h"
 #include "displaypal.h"
 #include <debug.h>
 #include "ng.h"
