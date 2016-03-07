@@ -28,6 +28,7 @@
 #include "alp.h"
 #include "d7asp.h"
 #include "MODULE_D7AP_defs.h"
+#include "version.h"
 
 static fs_file_header_t NGDEF(_file_headers)[MODULE_D7AP_FS_FILE_COUNT] = { 0 };
 #define file_headers NG(_file_headers)
@@ -123,8 +124,10 @@ void fs_init(fs_init_args_t* init_args)
         .length = D7A_FILE_FIRMWARE_VERSION_SIZE
     };
 
-    memset(data + current_data_offset, 0x00, D7A_FILE_FIRMWARE_VERSION_SIZE);
-    current_data_offset += D7A_FILE_FIRMWARE_VERSION_SIZE;
+    memcpy(data + current_data_offset, _APP_NAME, D7A_FILE_FIRMWARE_VERSION_APP_NAME_SIZE);
+    current_data_offset += D7A_FILE_FIRMWARE_VERSION_APP_NAME_SIZE;
+    memcpy(data + current_data_offset, _GIT_SHA1, D7A_FILE_FIRMWARE_VERSION_GIT_SHA1_SIZE);
+    current_data_offset += D7A_FILE_FIRMWARE_VERSION_GIT_SHA1_SIZE;
 
     // 0x0A - DLL Configuration
     file_offsets[D7A_FILE_DLL_CONF_FILE_ID] = current_data_offset;

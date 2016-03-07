@@ -104,6 +104,12 @@ MACRO(APP_BUILD)
     SET(multiValueArgs SOURCES LIBS)
     CMAKE_PARSE_ARGUMENTS(__APP_BUILD "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
 
+    # define git revision so it can be used in the application
+    INCLUDE(${PROJECT_SOURCE_DIR}/cmake/GetGitRevisionDescription.cmake)
+    GET_GIT_HEAD_REVISION(GIT_REFSPEC GIT_SHA1)
+    CONFIGURE_FILE("${PROJECT_SOURCE_DIR}/cmake/version.c.in" "${CMAKE_CURRENT_BINARY_DIR}/version.c")
+    LIST(APPEND __APP_BUILD_SOURCES "${CMAKE_CURRENT_BINARY_DIR}/version.c")
+
     SET(ELF ${__APP_BUILD_NAME}.elf)
     SET(BIN ${__APP_BUILD_NAME}.bin)
     ADD_EXECUTABLE(${ELF} ${__APP_BUILD_SOURCES})
@@ -115,6 +121,7 @@ MACRO(APP_BUILD)
     GET_PROPERTY(__global_compile_definitions GLOBAL PROPERTY GLOBAL_COMPILE_DEFINITIONS)
     TARGET_COMPILE_DEFINITIONS(${ELF} PUBLIC ${__global_compile_definitions})
     TARGET_COMPILE_DEFINITIONS(${__APP_BUILD_NAME}.axf PUBLIC ${__global_compile_definitions})
+
     # TODO, still needed?
     #Generate IDE specific binaries (if the required macro is available for the chosen platform)
     #MACRO_AVAILABLE(GENERATE_SIMPLICITY_STUDIO_FILES SSF_AVAILABLE)
