@@ -32,15 +32,46 @@ void d7ap_stack_init(fs_init_args_t* fs_init_args, d7asp_init_args_t* d7asp_init
     d7atp_init();
     packet_queue_init();
     dll_init();
+
+    uint8_t read_firmware_version_alp_command[] = { 0x01, D7A_FILE_FIRMWARE_VERSION_FILE_ID, 0, D7A_FILE_FIRMWARE_VERSION_SIZE };
+
     if(enable_shell)
     {
 #ifdef FRAMEWORK_SHELL_ENABLED
         shell_init();
         shell_register_handler((cmd_handler_registration_t){ .id = ALP_CMD_HANDLER_ID, .cmd_handler_callback = &alp_cmd_handler });
 
-        // notify booted
-        uint8_t alp_command[] = { 0x01, D7A_FILE_FIRMWARE_VERSION_FILE_ID, 0, D7A_FILE_FIRMWARE_VERSION_SIZE };
-        alp_cmd_handler_process_fs_itf(alp_command, sizeof(alp_command));
+        // notify booted to serial
+        alp_cmd_handler_process_fs_itf(read_firmware_version_alp_command, sizeof(read_firmware_version_alp_command));
 #endif
+    }
+    else
+    {
+      // notify booted by broadcasting and retrying 3 times (for diagnostics ie to detect reboots)
+      // TODO: default access class
+      d7asp_fifo_config_t broadcast_fifo_config = {
+          .fifo_ctrl_nls = false,
+          .fifo_ctrl_stop_on_error = false,
+          .fifo_ctrl_preferred = false,
+          .fifo_ctrl_state = SESSION_STATE_PENDING,
+          .qos = {
+            .qos_ctrl_resp_mode = SESSION_RESP_MODE_ANYCAST,
+            .qos_retry_single = 3
+          },
+          .dormant_timeout = 0,
+          .start_id = 0,
+          .addressee = {
+            .addressee_ctrl_has_id = false,
+            .addressee_ctrl_virtual_id = false,
+            .addressee_ctrl_access_class = 0,
+            .addressee_id = 0
+          }
+      };
+
+      uint8_t alp_response[ALP_PAYLOAD_MAX_SIZE] = { 0 };
+      uint8_t alp_response_length = 0;
+      alp_process_command(read_firmware_version_alp_command, sizeof(read_firmware_version_alp_command), alp_response, &alp_response_length);
+
+      d7asp_queue_alp_actions(&broadcast_fifo_config, alp_response, alp_response_length);
     }
 }
