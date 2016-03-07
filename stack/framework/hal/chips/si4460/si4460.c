@@ -42,10 +42,15 @@
 
 #include "ezradio_hal.h"
 
-#ifdef FRAMEWORK_LOG_ENABLED // TODO more granular
-    #define DPRINT(...) log_print_stack_string(LOG_STACK_PHY, __VA_ARGS__)
+
+#if defined(FRAMEWORK_LOG_ENABLED) && defined(FRAMEWORK_PHY_LOG_ENABLED) // TODO more granular (LOG_PHY_ENABLED)
+#define DPRINT(...) log_print_stack_string(LOG_STACK_PHY, __VA_ARGS__)
+#define DPRINT_PACKET(...) log_print_raw_phy_packet(__VA_ARGS__)
+#define DPRINT_DATA(...) log_print_data(__VA_ARGS__)
 #else
-    #define DPRINT(...)
+#define DPRINT(...)
+#define DPRINT_PACKET(...)
+#define DPRINT_DATA(...)
 #endif
 
 #define RSSI_OFFSET 64 // if this is changed also change radio register 0x20,0x4e
@@ -443,7 +448,16 @@ int16_t hw_radio_get_latched_rssi()
 
 error_t hw_radio_set_idle()
 {
+	// if we are currently transmitting wait until TX completed before entering IDLE
+	// we return now and go into IDLE when TX is completed
+	if(current_state == HW_RADIO_STATE_TX)
+	{
+	  should_rx_after_tx_completed = false;
+	  return SUCCESS;
+	}
+
 	switch_to_idle_mode();
+	return SUCCESS;
 }
 
 error_t hw_radio_poweroff()
