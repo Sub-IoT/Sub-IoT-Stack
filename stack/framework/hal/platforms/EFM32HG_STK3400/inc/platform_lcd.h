@@ -33,11 +33,13 @@
 
 void lcd_write_number(int value);
 
-void lcd_show_battery_indication(int batteryLevel); // 0 to 4
+void lcd_write_line(int line_nr, const char* format, ...);
 
-void lcd_show_antenna(int show);
-
-void lcd_write_temperature(int temperature, bool celcius); // temperature in centi degrees
+//void lcd_show_battery_indication(int batteryLevel); // 0 to 4
+//
+//void lcd_show_antenna(int show);
+//
+//void lcd_write_temperature(int temperature, bool celcius); // temperature in centi degrees
 
 
 #endif

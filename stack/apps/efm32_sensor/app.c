@@ -48,9 +48,8 @@
 #define APP_MODE_LCD		1 << 1
 #define APP_MODE_CONSOLE	1 << 2
 
-uint8_t app_mode_status = 0xFF;
-uint8_t app_mode_status_changed = 0x00;
-uint8_t app_mode = 0;
+static uint8_t* uid;
+
 
 
 // Toggle different operational modes
@@ -76,24 +75,23 @@ void execute_sensor_measurement()
 #endif
 
 #if (defined PLATFORM_EFM32HG_STK3400  || defined PLATFORM_EZR32LG_WSTK6200A)
-  lcd_clear();
   float internal_temp = hw_get_internal_temperature();
-  lcd_write_string("Int T: %2d.%d C\n", (int)internal_temp, (int)(internal_temp*10)%10);
+  lcd_write_line(2,"Int T: %2d.%d C\n", (int)internal_temp, (int)(internal_temp*10)%10);
   log_print_string("Int T: %2d.%d C\n", (int)internal_temp, (int)(internal_temp*10)%10);
 
   uint32_t rhData;
   uint32_t tData;
   getHumidityAndTemperature(&rhData, &tData);
 
-  lcd_write_string("Ext T: %d.%d C\n", (tData/1000), (tData%1000)/100);
+  lcd_write_line(3,"Ext T: %d.%d C\n", (tData/1000), (tData%1000)/100);
   log_print_string("Temp: %d.%d C\n", (tData/1000), (tData%1000)/100);
 
-  lcd_write_string("Ext H: %d.%d\n", (rhData/1000), (rhData%1000)/100);
+  lcd_write_line(4,"Ext H: %d.%d\n", (rhData/1000), (rhData%1000)/100);
   log_print_string("Hum: %d.%d\n", (rhData/1000), (rhData%1000)/100);
 
   uint32_t vdd = hw_get_battery();
 
-  lcd_write_string("Batt %d mV\n", vdd);
+  lcd_write_line(5,"Batt %d mV\n", vdd);
   log_print_string("Batt: %d mV\n", vdd);
 
   //TODO: put sensor values in array
@@ -203,6 +201,9 @@ void bootstrap()
 
     initSensors();
 
+    fs_read_uid(uid);
+    log_print_data(uid, 8);
+
     ubutton_register_callback(0, &userbutton_callback);
     ubutton_register_callback(1, &userbutton_callback);
 
@@ -211,5 +212,6 @@ void bootstrap()
     timer_post_task_delay(&execute_sensor_measurement, TIMER_TICKS_PER_SEC * 1);
 
     lcd_write_string("EFM32 Sensor\n");
+    lcd_write_string("%02x%02x%02x%02x%02x%02x%02x%02x\n",uid[7],uid[6],uid[5],uid[4],uid[3],uid[2],uid[1],uid[0]);
 }
 

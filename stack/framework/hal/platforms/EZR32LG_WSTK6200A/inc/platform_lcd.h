@@ -32,6 +32,8 @@
 #include "platform.h"
 
 void lcd_write_number(int value);
+
+void lcd_write_line(int line_nr, const char* format, ...);
 //
 //void lcd_show_battery_indication(int batteryLevel); // 0 to 4
 //

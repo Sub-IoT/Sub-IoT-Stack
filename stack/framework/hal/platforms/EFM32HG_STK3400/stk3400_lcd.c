@@ -102,7 +102,22 @@ void lcd_write_string(const char* format, ...)
 
 void lcd_write_number(int value)
 {
-	//SegmentLCD_Number(value);
+	lcd_write_string("%d", value);
+}
+
+void lcd_write_line(int line_nr, const char* format, ...)
+{
+	TEXTDISPLAY_WriteString(h, TEXTDISPLAY_ESC_SEQ_CURSOR_HOME_VT100);
+
+	int i= 0;
+	for (;i<line_nr;i++)
+		TEXTDISPLAY_WriteString(h, TEXTDISPLAY_ESC_SEQ_CURSOR_DOWN_ONE_LINE);
+
+	va_list args;
+	va_start(args, format);
+	uint8_t len = vsnprintf(NG(buffer), BUFFER_SIZE, format, args);
+	va_end(args);
+	TEXTDISPLAY_WriteString(h, NG(buffer));
 }
 
 #endif
