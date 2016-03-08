@@ -44,6 +44,8 @@
 #define SENSOR_FILE_SIZE         8
 #define ACTION_FILE_ID           0x41
 
+#define SENSOR_UPDATE	TIMER_TICKS_PER_SEC * 1
+
 // Toggle different operational modes
 void userbutton_callback(button_id_t button_id)
 {
@@ -104,7 +106,7 @@ void execute_sensor_measurement()
   fs_write_file(SENSOR_FILE_ID, 0, (uint8_t*)&sensor_values,8);
 #endif
 
-  timer_post_task_delay(&execute_sensor_measurement, TIMER_TICKS_PER_SEC * 1);
+  timer_post_task_delay(&execute_sensor_measurement, SENSOR_UPDATE);
 }
 
 void init_user_files()
@@ -204,7 +206,7 @@ void bootstrap()
 
     sched_register_task((&execute_sensor_measurement));
 
-    timer_post_task_delay(&execute_sensor_measurement, TIMER_TICKS_PER_SEC * 1);
+    timer_post_task_delay(&execute_sensor_measurement, SENSOR_UPDATE);
 
     lcd_write_string("EFM32 Sensor\n");
 }
