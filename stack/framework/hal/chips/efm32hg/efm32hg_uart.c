@@ -254,9 +254,16 @@ void uart_rx_interrupt_disable(uart_handle_t* uart) {
   NVIC_DisableIRQ(uart->irq.rx);
 }
 
+void USART0_RX_IRQHandler(void) {
+  if(handle[0].channel->STATUS & USART_STATUS_RXDATAV) {
+    handler[0](USART_Rx(handle[0].channel));
+    USART_IntClear(handle[0].channel, USART_IF_RXDATAV);
+  }
+}
+
 void USART1_RX_IRQHandler(void) {
-  if(handle[3].channel->STATUS & USART_STATUS_RXDATAV) {
-    handler[3](USART_Rx(handle[3].channel));
-    USART_IntClear(handle[3].channel, USART_IF_RXDATAV);
+  if(handle[1].channel->STATUS & USART_STATUS_RXDATAV) {
+    handler[1](USART_Rx(handle[1].channel));
+    USART_IntClear(handle[1].channel, USART_IF_RXDATAV);
   }
 }
