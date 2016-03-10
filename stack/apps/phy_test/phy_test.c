@@ -36,7 +36,7 @@
 #endif
 
 // configuration options
-#define RX_MODE
+//#define RX_MODE
 #define PHY_CLASS PHY_CLASS_NORMAL_RATE
 
 
@@ -63,7 +63,7 @@ hw_rx_cfg_t rx_cfg = {
         .channel_header.ch_coding = PHY_CODING_PN9,
         .channel_header.ch_class = PHY_CLASS,
 #ifdef PLATFORM_EZR32LG_WSTK6200A
-        .channel_header.ch_freq_band = PHY_BAND_868,
+        .channel_header.ch_freq_band = PHY_BAND_433,
 #else
         .channel_header.ch_freq_band = PHY_BAND_433,
 #endif
@@ -77,7 +77,7 @@ hw_tx_cfg_t tx_cfg = {
         .channel_header.ch_coding = PHY_CODING_PN9,
         .channel_header.ch_class = PHY_CLASS,
 #ifdef PLATFORM_EZR32LG_WSTK6200A
-        .channel_header.ch_freq_band = PHY_BAND_868,
+        .channel_header.ch_freq_band = PHY_BAND_433,
 #else
         .channel_header.ch_freq_band = PHY_BAND_433,
 #endif

@@ -81,74 +81,7 @@
   0x01 /* SYNTH_LPFILT1,LPF_FF_C1[6:4],LPF_FF_C1_CODE[3:2],LPF_FF_C3[1:0] */\
 
 
-#define RADIO_CONFIG_SET_PROPERTY_MODEM_DATA_RATE_868_LR  \
-  0x20 /* GROUP: Modem                                                 */,\
-  0x03 /* NUM_PROPS                                                    */,\
-  0x03 /* START_PROP                                                   */,\
-  0x05 /* MODEM_DATA_RATE,DATA_RATE[7:0],DATA_RATE[7:0],DATA_RATE[7:0] */,\
-  0xDC /* DATA1                                                        */,\
-  0x00 /* DATA2                                                        */\
-
-#define RADIO_CONFIG_SET_PROPERTY_MODEM_DATA_RATE_868_NR  \
-  0x20 /* GROUP: Modem                                                 */,\
-  0x03 /* NUM_PROPS                                                    */,\
-  0x03 /* START_PROP                                                   */,\
-  0x10 /* MODEM_DATA_RATE,DATA_RATE[7:0],DATA_RATE[7:0],DATA_RATE[7:0] */,\
-  0xF4 /* DATA1                                                        */,\
-  0x3C /* DATA2                                                        */\
-
-#define RADIO_CONFIG_SET_PROPERTY_MODEM_DATA_RATE_868_HR  \
-  0x20 /* GROUP: Modem                                                 */,\
-  0x03 /* NUM_PROPS                                                    */,\
-  0x03 /* START_PROP                                                   */,\
-  0x32 /* MODEM_DATA_RATE,DATA_RATE[7:0],DATA_RATE[7:0],DATA_RATE[7:0] */,\
-  0xDC /* DATA1                                                        */,\
-  0xDC /* DATA2                                                        */\
-
-
-#define RADIO_CONFIG_SET_PROPERTY_MODEM_TX_NCO_MODE_868_LR  \
-  0x20 /* GROUP: Modem                                                                 */,\
-  0x04 /* NUM_PROPS                                                                    */,\
-  0x06 /* START_PROP                                                                   */,\
-  0x05 /* MODEM_TX_NCO_MODE,TXOSR[3:2],NCOMOD[1:0],NCOMOD[7:0],NCOMOD[7:0],NCOMOD[7:0] */,\
-  0x8C /* DATA1                                                                        */,\
-  0xBA /* DATA2                                                                        */,\
-  0x80 /* DATA3                                                                        */\
-
-#define RADIO_CONFIG_SET_PROPERTY_MODEM_TX_NCO_MODE_868_NR  \
-  0x20 /* GROUP: Modem                                                                 */,\
-  0x04 /* NUM_PROPS                                                                    */,\
-  0x06 /* START_PROP                                                                   */,\
-  0x09 /* MODEM_TX_NCO_MODE,TXOSR[3:2],NCOMOD[1:0],NCOMOD[7:0],NCOMOD[7:0],NCOMOD[7:0] */,\
-  0x8C /* DATA1                                                                        */,\
-  0xBA /* DATA2                                                                        */,\
-  0x80 /* DATA3                                                                        */\
-
-#define RADIO_CONFIG_SET_PROPERTY_MODEM_TX_NCO_MODE_868_HR RADIO_CONFIG_SET_PROPERTY_MODEM_TX_NCO_MODE_868_NR
-
-#define RADIO_CONFIG_SET_PROPERTY_MODEM_FREQ_DEV_868_LR  \
-  0x20 /* GROUP: Modem                                        */,\
-  0x03 /* NUM_PROPS                                           */,\
-  0x0A /* START_PROP                                          */,\
-  0x00 /* MODEM_FREQ_DEV,FREQDEV[0],FREQDEV[7:0],FREQDEV[7:0] */,\
-  0x00 /* DATA1                                               */,\
-  0xC2 /* DATA2                                               */\
-
-#define RADIO_CONFIG_SET_PROPERTY_MODEM_FREQ_DEV_868_NR  \
-  0x20 /* GROUP: Modem                                        */,\
-  0x03 /* NUM_PROPS                                           */,\
-  0x0A /* START_PROP                                          */,\
-  0x00 /* MODEM_FREQ_DEV,FREQDEV[0],FREQDEV[7:0],FREQDEV[7:0] */,\
-  0x07 /* DATA1                                               */,\
-  0xE0 /* DATA2                                               */\
-
-#define RADIO_CONFIG_SET_PROPERTY_MODEM_FREQ_DEV_868_HR  \
-  0x20 /* GROUP: Modem                                        */,\
-  0x03 /* NUM_PROPS                                           */,\
-  0x0A /* START_PROP                                          */,\
-  0x00 /* MODEM_FREQ_DEV,FREQDEV[0],FREQDEV[7:0],FREQDEV[7:0] */,\
-  0x06 /* DATA1                                               */,\
-  0x90 /* DATA2                                               */\
+                                   */\
 
 
 #define RADIO_CONFIG_SET_PROPERTY_PA_TC_868_LR  \
@@ -558,9 +491,141 @@
   0x5D /* START_PROP                                  */,\
   0x04 /* MODEM_DSA_QUAL,EYE_QUAL_SEL[7],ARRQUAL[6:0] */\
 
+/*******************************************************************
+				FREQUENCY
+********************************************************************/
+
+#define RADIO_CONFIG_SET_PROPERTY_MODEM_CLKGEN_BAND_868  \
+0x20 /* GROUP: Modem                                            */,\
+0x01 /* NUM_PROPS                                               */,\
+0x51 /* START_PROP                                              */,\
+0x08/* MODEM_CLKGEN_BAND,FORCE_SY_RECAL[4],SY_SEL[3],BAND[2:0] */\
+
+#define RADIO_CONFIG_SET_PROPERTY_MODEM_CLKGEN_BAND_434  \
+0x20 /* GROUP: Modem                                            */,\
+0x01 /* NUM_PROPS                                               */,\
+0x51 /* START_PROP                                              */,\
+0x0A /* MODEM_CLKGEN_BAND,FORCE_SY_RECAL[4],SY_SEL[3],BAND[2:0] */\
+
+/*******************************************************************
+					DATA RATE
+********************************************************************/
+
+#define RADIO_CONFIG_SET_PROPERTY_MODEM_DATA_RATE_LR  \
+  0x20 /* GROUP: Modem                                                 */,\
+  0x03 /* NUM_PROPS                                                    */,\
+  0x03 /* START_PROP                                                   */,\
+  0x05 /* MODEM_DATA_RATE,DATA_RATE[7:0],DATA_RATE[7:0],DATA_RATE[7:0] */,\
+  0xDC /* DATA1                                                        */,\
+  0x00 /* DATA2                                                        */\
+
+#define RADIO_CONFIG_SET_PROPERTY_MODEM_DATA_RATE_NR  \
+  0x20 /* GROUP: Modem                                                 */,\
+  0x03 /* NUM_PROPS                                                    */,\
+  0x03 /* START_PROP                                                   */,\
+  0x10 /* MODEM_DATA_RATE,DATA_RATE[7:0],DATA_RATE[7:0],DATA_RATE[7:0] */,\
+  0xF4 /* DATA1                                                        */,\
+  0x3C /* DATA2                                                        */\
+
+#define RADIO_CONFIG_SET_PROPERTY_MODEM_DATA_RATE_HR  \
+  0x20 /* GROUP: Modem                                                 */,\
+  0x03 /* NUM_PROPS                                                    */,\
+  0x03 /* START_PROP                                                   */,\
+  0x32 /* MODEM_DATA_RATE,DATA_RATE[7:0],DATA_RATE[7:0],DATA_RATE[7:0] */,\
+  0xDC /* DATA1                                                        */,\
+  0xDC /* DATA2                                                        */\
 
 
- // SYNC WORD
+#define RADIO_CONFIG_SET_PROPERTY_MODEM_TX_NCO_MODE_LR  \
+  0x20 /* GROUP: Modem                                                                 */,\
+  0x04 /* NUM_PROPS                                                                    */,\
+  0x06 /* START_PROP                                                                   */,\
+  0x05 /* MODEM_TX_NCO_MODE,TXOSR[3:2],NCOMOD[1:0],NCOMOD[7:0],NCOMOD[7:0],NCOMOD[7:0] */,\
+  0x8C /* DATA1                                                                        */,\
+  0xBA /* DATA2                                                                        */,\
+  0x80 /* DATA3                                                                        */\
+
+#define RADIO_CONFIG_SET_PROPERTY_MODEM_TX_NCO_MODE_NR  \
+  0x20 /* GROUP: Modem                                                                 */,\
+  0x04 /* NUM_PROPS                                                                    */,\
+  0x06 /* START_PROP                                                                   */,\
+  0x09 /* MODEM_TX_NCO_MODE,TXOSR[3:2],NCOMOD[1:0],NCOMOD[7:0],NCOMOD[7:0],NCOMOD[7:0] */,\
+  0x8C /* DATA1                                                                        */,\
+  0xBA /* DATA2                                                                        */,\
+  0x80 /* DATA3                                                                        */\
+
+#define RADIO_CONFIG_SET_PROPERTY_MODEM_TX_NCO_MODE_HR RADIO_CONFIG_SET_PROPERTY_MODEM_TX_NCO_MODE_NR
+
+#define RADIO_CONFIG_SET_PROPERTY_MODEM_DECIMATION_CFG1_LR \
+  0x20 /* GROUP: Modem                                           */,\
+  0x01 /* NUM_PROPS                                              */,\
+  0x1E /* START_PROP                                             */,\
+  0x20 /* MODEM_DECIMATION_CFG1,NDEC2[7:6],NDEC1[5:4],NDEC0[3:1] */\
+
+#define RADIO_CONFIG_SET_PROPERTY_MODEM_DECIMATION_CFG1_NR \
+  0x20 /* GROUP: Modem                                           */,\
+  0x01 /* NUM_PROPS                                              */,\
+  0x1E /* START_PROP                                             */,\
+  0x10 /* MODEM_DECIMATION_CFG1,NDEC2[7:6],NDEC1[5:4],NDEC0[3:1] */\
+
+
+/*******************************************************************
+  				FREQUENCY DEPENDENT	DATA RATE
+********************************************************************/
+
+
+#define RADIO_CONFIG_SET_PROPERTY_MODEM_FREQ_DEV_868_LR  \
+  0x20 /* GROUP: Modem                                        */,\
+  0x03 /* NUM_PROPS                                           */,\
+  0x0A /* START_PROP                                          */,\
+  0x00 /* MODEM_FREQ_DEV,FREQDEV[0],FREQDEV[7:0],FREQDEV[7:0] */,\
+  0x00 /* DATA1                                               */,\
+  0xC1 /* DATA2                                               */\
+
+#define RADIO_CONFIG_SET_PROPERTY_MODEM_FREQ_DEV_868_NR  \
+  0x20 /* GROUP: Modem                                        */,\
+  0x03 /* NUM_PROPS                                           */,\
+  0x0A /* START_PROP                                          */,\
+  0x00 /* MODEM_FREQ_DEV,FREQDEV[0],FREQDEV[7:0],FREQDEV[7:0] */,\
+  0x07 /* DATA1                                               */,\
+  0xE0 /* DATA2                                               */\
+
+#define RADIO_CONFIG_SET_PROPERTY_MODEM_FREQ_DEV_868_HR  \
+  0x20 /* GROUP: Modem                                        */,\
+  0x03 /* NUM_PROPS                                           */,\
+  0x0A /* START_PROP                                          */,\
+  0x00 /* MODEM_FREQ_DEV,FREQDEV[0],FREQDEV[7:0],FREQDEV[7:0] */,\
+  0x06 /* DATA1                                               */,\
+  0x90 /* DATA2                                               */\
+
+#define RADIO_CONFIG_SET_PROPERTY_MODEM_FREQ_DEV_433_LR  \
+  0x20 /* GROUP: Modem                                        */,\
+  0x03 /* NUM_PROPS                                           */,\
+  0x0A /* START_PROP                                          */,\
+  0x00 /* MODEM_FREQ_DEV,FREQDEV[0],FREQDEV[7:0],FREQDEV[7:0] */,\
+  0x01 /* DATA1                                               */,\
+  0x22 /* DATA2                                               */\
+
+#define RADIO_CONFIG_SET_PROPERTY_MODEM_FREQ_DEV_433_NR  \
+  0x20 /* GROUP: Modem                                        */,\
+  0x03 /* NUM_PROPS                                           */,\
+  0x0A /* START_PROP                                          */,\
+  0x00 /* MODEM_FREQ_DEV,FREQDEV[0],FREQDEV[7:0],FREQDEV[7:0] */,\
+  0x0B /* DATA1                                               */,\
+  0xD0 /* DATA2                                               */\
+
+#define RADIO_CONFIG_SET_PROPERTY_MODEM_FREQ_DEV_433_HR  \
+  0x20 /* GROUP: Modem                                        */,\
+  0x03 /* NUM_PROPS                                           */,\
+  0x0A /* START_PROP                                          */,\
+  0x00 /* MODEM_FREQ_DEV,FREQDEV[0],FREQDEV[7:0],FREQDEV[7:0] */,\
+  0x09 /* DATA1                                               */,\
+  0xD8 /* DATA2
+
+/*******************************************************************
+  				SYNC WORD
+********************************************************************/
+
 //Although the Sync Word byte(s) are transmitted/received in descending order (i.e., Byte 3 first, followed by Byte 2, etc.), each byte is transmitted/received in little-endian fashion (i.e., least significant bit first).
 #define RADIO_CONFIG_SET_PROPERTY_SYNC_BITS_CS0_0  \
   0x11 /* GROUP: Sync                                       */,\

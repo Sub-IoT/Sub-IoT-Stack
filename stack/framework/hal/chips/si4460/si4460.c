@@ -22,6 +22,9 @@
  *
  * @author maarten.weyn@uantwerpen.be
  *
+ * Currently implemented for 26 MHZ RF Xtal
+ * TODO: SYNTH_LPFILTx is dependent on hardware define in platform
+ *
  *
  */
 
@@ -125,38 +128,98 @@ static void configure_channel(const channel_id_t* channel_id)
 		// set freq band
 		DPRINT("Set frequency band index: %d", channel_id->channel_header.ch_freq_band);
 
+		switch(channel_id->channel_header.ch_class)
+		{
+		case PHY_CLASS_LO_RATE:
+			ezradio_set_property(RADIO_CONFIG_SET_PROPERTY_MODEM_DATA_RATE_LR);
+			ezradio_set_property(RADIO_CONFIG_SET_PROPERTY_MODEM_TX_NCO_MODE_LR);
+			ezradio_set_property(RADIO_CONFIG_SET_PROPERTY_MODEM_DECIMATION_CFG1_LR);
+
+//#define RF_SET_PROPERTY_MODEM_MDM_CTRL 0x11, 0x20, 0x01, 0x19, 0x00
+#define RF_SET_PROPERTY_MODEM_BCR_OSR 0x11, 0x20, 0x02, 0x22, 0x01, 0x53
+#define RF_SET_PROPERTY_MODEM_BCR_NCO_OFFSET 0x11, 0x20, 0x03, 0x24, 0x01, 0x83, 0x2B
+#define RF_SET_PROPERTY_MODEM_BCR_GAIN 0x11, 0x20, 0x02, 0x27, 0x01, 0x83
+#define RF_SET_PROPERTY_MODEM_BCR_MISC1 0x11, 0x20, 0x01, 0x2A, 0x00
+#define RF_SET_PROPERTY_MODEM_AFC_GEAR 0x11, 0x20, 0x01, 0x2C, 0x00
+#define RF_SET_PROPERTY_MODEM_AFC_WAIT 0x11, 0x20, 0x01, 0x2D, 0x12
+#define RF_SET_PROPERTY_MODEM_AFC_GAIN 0x11, 0x20, 0x02, 0x2E, 0x80, 0x30
+#define RF_SET_PROPERTY_MODEM_AFC_LIMITER 0x11, 0x20, 0x02, 0x30, 0x07, 0x5A
+#define RF_SET_PROPERTY_MODEM_AFC_MISC 0x11, 0x20, 0x01, 0x32, 0xA0
+#define RF_SET_PROPERTY_MODEM_AGC_RFPD_DECAY 0x11, 0x20, 0x01, 0x39, 0x4A
+#define RF_SET_PROPERTY_MODEM_AGC_IFPD_DECAY 0x11, 0x20, 0x01, 0x3A, 0x4A
+
+#define RF_SET_PROPERTY_MODEM_SPIKE_DET 0x11, 0x20, 0x01, 0x54, 0x03
+#define RF_SET_PROPERTY_MODEM_DSA_QUAL 0x11, 0x20, 0x01, 0x5D, 0x05
+			break;
+		case PHY_CLASS_NORMAL_RATE:
+			ezradio_set_property(RADIO_CONFIG_SET_PROPERTY_MODEM_DATA_RATE_NR);
+			ezradio_set_property(RADIO_CONFIG_SET_PROPERTY_MODEM_TX_NCO_MODE_NR);
+			ezradio_set_property(RADIO_CONFIG_SET_PROPERTY_MODEM_DECIMATION_CFG1_NR);
+
+
+#define RF_SET_PROPERTY_MODEM_BCR_OSR 0x11, 0x20, 0x02, 0x22, 0x00, 0x75
+
+#define RF_SET_PROPERTY_MODEM_BCR_NCO_OFFSET 0x11, 0x20, 0x03, 0x24, 0x04, 0x60, 0x43
+
+#define RF_SET_PROPERTY_MODEM_BCR_GAIN 0x11, 0x20, 0x02, 0x27, 0x02, 0x6E
+#define RF_SET_PROPERTY_MODEM_AFC_GAIN 0x11, 0x20, 0x02, 0x2E, 0x81, 0x18
+
+#define RF_SET_PROPERTY_MODEM_AFC_LIMITER 0x11, 0x20, 0x02, 0x30, 0x02, 0x80
+#define RF_SET_PROPERTY_MODEM_AGC_RFPD_DECAY 0x11, 0x20, 0x01, 0x39, 0x1A
+
+#define RF_SET_PROPERTY_MODEM_AGC_IFPD_DECAY 0x11, 0x20, 0x01, 0x3A, 0x1A
+#define RF_SET_PROPERTY_MODEM_SPIKE_DET 0x11, 0x20, 0x01, 0x54, 0x04
+#define RF_SET_PROPERTY_MODEM_DSA_QUAL 0x11, 0x20, 0x01, 0x5D, 0x09
+
+			break;
+		case PHY_CLASS_HI_RATE:
+			ezradio_set_property(RADIO_CONFIG_SET_PROPERTY_MODEM_DATA_RATE_HR);
+			ezradio_set_property(RADIO_CONFIG_SET_PROPERTY_MODEM_TX_NCO_MODE_HR);
+			assert(false);
+			break;
+		}
+
 		// TODO validate
 		switch(channel_id->channel_header.ch_freq_band)
 		{
 		// TODO calculate depending on rate and channr
 		case PHY_BAND_433:
+			ezradio_set_property(RADIO_CONFIG_SET_PROPERTY_MODEM_CLKGEN_BAND_434);
 			assert(false);
+
+#define RF_SET_PROPERTY_FREQ_CONTROL_FRAC 0x11, 0x40, 0x03, 0x01, 0x0D, 0x1E, 0xB8
+
+#define RF_SET_PROPERTY_FREQ_CONTROL_CHANNEL_STEP_SIZE 0x11, 0x40, 0x02, 0x04, 0x4E, 0xC5
+#define RF_SET_PROPERTY_FREQ_CONTROL_VCOCNT_RX_ADJ 0x11, 0x40, 0x01, 0x07, 0xFE
+#define RF_SET_PROPERTY_MODEM_IF_FREQ 0x11, 0x20, 0x03, 0x1B, 0x03, 0x80, 0x00
+#define RF_SET_PROPERTY_MODEM_AFC_GAIN 0x11, 0x20, 0x02, 0x2E, 0x82, 0x30
 
 			if(channel_id->channel_header.ch_class == PHY_CLASS_LO_RATE)
 			{
 				assert(channel_id->center_freq_index <= 68);
+				ezradio_set_property(RADIO_CONFIG_SET_PROPERTY_MODEM_FREQ_DEV_433_LR);
+			}
+			else if(channel_id->channel_header.ch_class == PHY_CLASS_NORMAL_RATE)
+			{
+#define RF_SET_PROPERTY_MODEM_FREQ_DEV 0x11, 0x20, 0x03, 0x0A, 0x00, 0x0F, 0xC1
+				ezradio_set_property(RADIO_CONFIG_SET_PROPERTY_MODEM_FREQ_DEV_433_NR);
 			}
 			else
 			{
 				assert(channel_id->center_freq_index % 8 == 0 && channel_id->center_freq_index <= 56);
+				ezradio_set_property(RADIO_CONFIG_SET_PROPERTY_MODEM_FREQ_DEV_433_HR);
 			}
 
 			DPRINT("Set channel freq index: %d", channel_id->center_freq_index);
 			break;
 		case PHY_BAND_868:
-
+			ezradio_set_property(RADIO_CONFIG_SET_PROPERTY_MODEM_CLKGEN_BAND_868);
 			if(channel_id->channel_header.ch_class == PHY_CLASS_LO_RATE)
 			{
 				assert(channel_id->center_freq_index <= 279);
 
-				ezradio_set_property(RADIO_CONFIG_SET_PROPERTY_SYNTH_PFDCP_CPFF_868_LR);
-				ezradio_set_property(RADIO_CONFIG_SET_PROPERTY_SYNTH_PFDCP_CPINT_868_LR);
-				ezradio_set_property(RADIO_CONFIG_SET_PROPERTY_SYNTH_LPFILT3_868_LR);
-				ezradio_set_property(RADIO_CONFIG_SET_PROPERTY_SYNTH_LPFILT2_868_LR);
-				ezradio_set_property(RADIO_CONFIG_SET_PROPERTY_SYNTH_LPFILT1_868_LR);
-				ezradio_set_property(RADIO_CONFIG_SET_PROPERTY_MODEM_DATA_RATE_868_LR);
-				ezradio_set_property(RADIO_CONFIG_SET_PROPERTY_MODEM_TX_NCO_MODE_868_LR);
 				ezradio_set_property(RADIO_CONFIG_SET_PROPERTY_MODEM_FREQ_DEV_868_LR);
+
 				ezradio_set_property(RADIO_CONFIG_SET_PROPERTY_PA_TC_868_LR);
 
 				ez_channel_id = channel_id->center_freq_index % 255;
@@ -190,14 +253,9 @@ static void configure_channel(const channel_id_t* channel_id)
 				assert(channel_id->center_freq_index % 8 == 0 && channel_id->center_freq_index <= 270);
 				ez_channel_id = channel_id->center_freq_index / 8;
 
-				ezradio_set_property(RADIO_CONFIG_SET_PROPERTY_SYNTH_PFDCP_CPFF_868_NR);
-				ezradio_set_property(RADIO_CONFIG_SET_PROPERTY_SYNTH_PFDCP_CPINT_868_NR);
-				ezradio_set_property(RADIO_CONFIG_SET_PROPERTY_SYNTH_LPFILT3_868_NR);
-				ezradio_set_property(RADIO_CONFIG_SET_PROPERTY_SYNTH_LPFILT2_868_NR);
-				ezradio_set_property(RADIO_CONFIG_SET_PROPERTY_SYNTH_LPFILT1_868_NR);
-				ezradio_set_property(RADIO_CONFIG_SET_PROPERTY_MODEM_DATA_RATE_868_NR);
-				ezradio_set_property(RADIO_CONFIG_SET_PROPERTY_MODEM_TX_NCO_MODE_868_NR);
+
 				ezradio_set_property(RADIO_CONFIG_SET_PROPERTY_MODEM_FREQ_DEV_868_NR);
+
 				ezradio_set_property(RADIO_CONFIG_SET_PROPERTY_PA_TC_868_NR);
 				ezradio_set_property(RADIO_CONFIG_SET_PROPERTY_MODEM_DECIMATION_CFG1_868_NR);
 				ezradio_set_property(RADIO_CONFIG_SET_PROPERTY_MODEM_BCR_OSR_868_NR);
@@ -218,14 +276,8 @@ static void configure_channel(const channel_id_t* channel_id)
 				assert(channel_id->center_freq_index % 8 == 0 && channel_id->center_freq_index <= 270);
 				ez_channel_id = channel_id->center_freq_index / 8;
 
-				ezradio_set_property(RADIO_CONFIG_SET_PROPERTY_SYNTH_PFDCP_CPFF_868_HR);
-				ezradio_set_property(RADIO_CONFIG_SET_PROPERTY_SYNTH_PFDCP_CPINT_868_HR);
-				ezradio_set_property(RADIO_CONFIG_SET_PROPERTY_SYNTH_LPFILT3_868_HR);
-				ezradio_set_property(RADIO_CONFIG_SET_PROPERTY_SYNTH_LPFILT2_868_HR);
-				ezradio_set_property(RADIO_CONFIG_SET_PROPERTY_SYNTH_LPFILT1_868_HR);
-				ezradio_set_property(RADIO_CONFIG_SET_PROPERTY_MODEM_DATA_RATE_868_HR);
-				ezradio_set_property(RADIO_CONFIG_SET_PROPERTY_MODEM_TX_NCO_MODE_868_HR);
 				ezradio_set_property(RADIO_CONFIG_SET_PROPERTY_MODEM_FREQ_DEV_868_HR);
+
 				ezradio_set_property(RADIO_CONFIG_SET_PROPERTY_PA_TC_868_HR);
 				ezradio_set_property(RADIO_CONFIG_SET_PROPERTY_MODEM_DECIMATION_CFG1_868_HR);
 				ezradio_set_property(RADIO_CONFIG_SET_PROPERTY_MODEM_BCR_OSR_868_HR);
