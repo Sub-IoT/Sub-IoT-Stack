@@ -80,10 +80,6 @@
   0x05 /* START_PROP                                                      */,\
   0x01 /* SYNTH_LPFILT1,LPF_FF_C1[6:4],LPF_FF_C1_CODE[3:2],LPF_FF_C3[1:0] */\
 
-
-                                   */\
-
-
 #define RADIO_CONFIG_SET_PROPERTY_PA_TC_868_LR  \
   0x11 /* CMD: Set property              */,\
   0x22 /* GROUP: Pa                      */,\
@@ -98,218 +94,6 @@
   0x03 /* START_PROP                     */,\
   0x3D /* PA_TC,FSK_MOD_DLY[7:5],TC[4:0] */\
 
-
-#define RADIO_CONFIG_SET_PROPERTY_FREQ_CONTROL_FRAC_868_LR_01  \
-  0x40 /* GROUP: Freq control                             */,\
-  0x03 /* NUM_PROPS                                       */,\
-  0x01 /* START_PROP                                      */,\
-  0x0B /* FREQ_CONTROL_FRAC,FRAC[3:0],FRAC[7:0],FRAC[7:0] */,\
-  0x15 /* DATA1                                           */,\
-  0xA9 /* DATA2                                           */\
-
-#define RADIO_CONFIG_SET_PROPERTY_FREQ_CONTROL_FRAC_868_LR_02  \
-  0x11 /* CMD: Set property                               */,\
-  0x40 /* GROUP: Freq control                             */,\
-  0x03 /* NUM_PROPS                                       */,\
-  0x01 /* START_PROP                                      */,\
-  0x0F /* FREQ_CONTROL_FRAC,FRAC[3:0],FRAC[7:0],FRAC[7:0] */,\
-  0x01 /* DATA1                                           */,\
-  0xF8 /* DATA2                                           */\
-
-#define RADIO_CONFIG_SET_PROPERTY_FREQ_CONTROL_FRAC_868_NR  \
-  0x40 /* GROUP: Freq control                             */,\
-  0x03 /* NUM_PROPS                                       */,\
-  0x01 /* START_PROP                                      */,\
-  0x0B /* FREQ_CONTROL_FRAC,FRAC[3:0],FRAC[7:0],FRAC[7:0] */,\
-  0x23 /* DATA1                                           */,\
-  0x72 /* DATA2                                           */\
-
-#define RADIO_CONFIG_SET_PROPERTY_FREQ_CONTROL_FRAC_868_HR RADIO_CONFIG_SET_PROPERTY_FREQ_CONTROL_FRAC_868_NR
-
-
-#define RADIO_CONFIG_SET_PROPERTY_MODEM_DECIMATION_CFG1_868_LR  \
-  0x20 /* GROUP: Modem                                           */,\
-  0x01 /* NUM_PROPS                                              */,\
-  0x1E /* START_PROP                                             */,\
-  0x20 /* MODEM_DECIMATION_CFG1,NDEC2[7:6],NDEC1[5:4],NDEC0[3:1] */\
-
-#define RADIO_CONFIG_SET_PROPERTY_MODEM_DECIMATION_CFG1_868_NR  \
-  0x20 /* GROUP: Modem                                           */,\
-  0x01 /* NUM_PROPS                                              */,\
-  0x1E /* START_PROP                                             */,\
-  0x10 /* MODEM_DECIMATION_CFG1,NDEC2[7:6],NDEC1[5:4],NDEC0[3:1] */\
-
-#define RADIO_CONFIG_SET_PROPERTY_MODEM_DECIMATION_CFG1_868_HR  \
-  0x20 /* GROUP: Modem                                           */,\
-  0x01 /* NUM_PROPS                                              */,\
-  0x1E /* START_PROP                                             */,\
-  0x00 /* MODEM_DECIMATION_CFG1,NDEC2[7:6],NDEC1[5:4],NDEC0[3:1] */\
-
-
-#define RADIO_CONFIG_SET_PROPERTY_MODEM_BCR_OSR_868_LR  \
-  0x20 /* GROUP: Modem                        */,\
-  0x02 /* NUM_PROPS                           */,\
-  0x22 /* START_PROP                          */,\
-  0x01 /* MODEM_BCR_OSR,RXOSR[3:0],RXOSR[7:0] */,\
-  0x53 /* DATA1                               */\
-
-#define RADIO_CONFIG_SET_PROPERTY_MODEM_BCR_OSR_868_NR  \
-  0x20 /* GROUP: Modem                        */,\
-  0x02 /* NUM_PROPS                           */,\
-  0x22 /* START_PROP                          */,\
-  0x00 /* MODEM_BCR_OSR,RXOSR[3:0],RXOSR[7:0] */,\
-  0x75 /* DATA1                               */\
-
-#define RADIO_CONFIG_SET_PROPERTY_MODEM_BCR_OSR_868_HR  \
-  0x11 /* CMD: Set property                   */,\
-  0x20 /* GROUP: Modem                        */,\
-  0x02 /* NUM_PROPS                           */,\
-  0x22 /* START_PROP                          */,\
-  0x00 /* MODEM_BCR_OSR,RXOSR[3:0],RXOSR[7:0] */,\
-  0x4E /* DATA1                               */\
-
-
-#define RADIO_CONFIG_SET_PROPERTY_MODEM_BCR_NCO_OFFSET_868_LR  \
-  0x20 /* GROUP: Modem                                          */,\
-  0x03 /* NUM_PROPS                                             */,\
-  0x24 /* START_PROP                                            */,\
-  0x01 /* MODEM_BCR_NCO_OFFSET,NCOFF[5:0],NCOFF[7:0],NCOFF[7:0] */,\
-  0x83 /* DATA1                                                 */,\
-  0x2B /* DATA2                                                 */\
-
-#define RADIO_CONFIG_SET_PROPERTY_MODEM_BCR_NCO_OFFSET_868_NR  \
-  0x20 /* GROUP: Modem                                          */,\
-  0x03 /* NUM_PROPS                                             */,\
-  0x24 /* START_PROP                                            */,\
-  0x04 /* MODEM_BCR_NCO_OFFSET,NCOFF[5:0],NCOFF[7:0],NCOFF[7:0] */,\
-  0x60 /* DATA1                                                 */,\
-  0x43 /* DATA2                                                 */\
-
-#define RADIO_CONFIG_SET_PROPERTY_MODEM_BCR_NCO_OFFSET_868_HR  \
-  0x20 /* GROUP: Modem                                          */,\
-  0x03 /* NUM_PROPS                                             */,\
-  0x24 /* START_PROP                                            */,\
-  0x06 /* MODEM_BCR_NCO_OFFSET,NCOFF[5:0],NCOFF[7:0],NCOFF[7:0] */,\
-  0x90 /* DATA1                                                 */,\
-  0x6A /* DATA2                                                 */\
-
-
-#define RADIO_CONFIG_SET_PROPERTY_MODEM_BCR_GAIN_868_LR  \
-  0x20 /* GROUP: Modem                           */,\
-  0x02 /* NUM_PROPS                              */,\
-  0x27 /* START_PROP                             */,\
-  0x01 /* MODEM_BCR_GAIN,CRGAIN[2:0],CRGAIN[7:0] */,\
-  0x83 /* DATA1                                  */\
-
-#define RADIO_CONFIG_SET_PROPERTY_MODEM_BCR_GAIN_868_NR  \
-  0x20 /* GROUP: Modem                           */,\
-  0x02 /* NUM_PROPS                              */,\
-  0x27 /* START_PROP                             */,\
-  0x02 /* MODEM_BCR_GAIN,CRGAIN[2:0],CRGAIN[7:0] */,\
-  0x6E /* DATA1                                  */\
-
-#define RADIO_CONFIG_SET_PROPERTY_MODEM_BCR_GAIN_868_HR  \
-  0x20 /* GROUP: Modem                           */,\
-  0x02 /* NUM_PROPS                              */,\
-  0x27 /* START_PROP                             */,\
-  0x07 /* MODEM_BCR_GAIN,CRGAIN[2:0],CRGAIN[7:0] */,\
-  0xFF /* DATA1                                  */\
-
-
-#define RADIO_CONFIG_SET_PROPERTY_MODEM_AFC_WAIT_868_LR  \
-  0x20 /* GROUP: Modem                           */,\
-  0x01 /* NUM_PROPS                              */,\
-  0x2D /* START_PROP                             */,\
-  0x12 /* MODEM_AFC_WAIT,SHWAIT[7:4],LGWAIT[3:0] */\
-
-#define RADIO_CONFIG_SET_PROPERTY_MODEM_AFC_WAIT_868_NR RADIO_CONFIG_SET_PROPERTY_MODEM_AFC_WAIT_868_LR
-#define RADIO_CONFIG_SET_PROPERTY_MODEM_AFC_WAIT_868_HR  \
-  0x20 /* GROUP: Modem                           */,\
-  0x01 /* NUM_PROPS                              */,\
-  0x2D /* START_PROP                             */,\
-  0x23 /* MODEM_AFC_WAIT,SHWAIT[7:4],LGWAIT[3:0] */\
-
-
-#define RADIO_CONFIG_SET_PROPERTY_MODEM_AFC_GAIN_868_LR  \
-  0x20 /* GROUP: Modem                                                               */,\
-  0x02 /* NUM_PROPS                                                                  */,\
-  0x2E /* START_PROP                                                                 */,\
-  0x80 /* MODEM_AFC_GAIN,ENAFC[7],AFCBD[6],AFC_GAIN_DIV[5],AFCGAIN[4:0],AFCGAIN[7:0] */,\
-  0x30 /* DATA1                                                                      */\
-
-#define RADIO_CONFIG_SET_PROPERTY_MODEM_AFC_GAIN_868_NR  \
-  0x20 /* GROUP: Modem                                                               */,\
-  0x02 /* NUM_PROPS                                                                  */,\
-  0x2E /* START_PROP                                                                 */,\
-  0x81 /* MODEM_AFC_GAIN,ENAFC[7],AFCBD[6],AFC_GAIN_DIV[5],AFCGAIN[4:0],AFCGAIN[7:0] */,\
-  0x18 /* DATA1                                                                      */\
-
-#define RADIO_CONFIG_SET_PROPERTY_MODEM_AFC_GAIN_868_HR  \
-  0x20 /* GROUP: Modem                                                               */,\
-  0x02 /* NUM_PROPS                                                                  */,\
-  0x2E /* START_PROP                                                                 */,\
-  0x86 /* MODEM_AFC_GAIN,ENAFC[7],AFCBD[6],AFC_GAIN_DIV[5],AFCGAIN[4:0],AFCGAIN[7:0] */,\
-  0x90 /* DATA1                                                                      */\
-
-
-#define RADIO_CONFIG_SET_PROPERTY_MODEM_AFC_LIMITER_868_LR  \
-  0x20 /* GROUP: Modem                              */,\
-  0x02 /* NUM_PROPS                                 */,\
-  0x30 /* START_PROP                                */,\
-  0x07 /* MODEM_AFC_LIMITER,AFCLIM[6:0],AFCLIM[7:0] */,\
-  0x5A /* DATA1                                     */\
-
-#define RADIO_CONFIG_SET_PROPERTY_MODEM_AFC_LIMITER_868_NR  \
-  0x20 /* GROUP: Modem                              */,\
-  0x02 /* NUM_PROPS                                 */,\
-  0x30 /* START_PROP                                */,\
-  0x02 /* MODEM_AFC_LIMITER,AFCLIM[6:0],AFCLIM[7:0] */,\
-  0x80 /* DATA1                                     */\
-
-#define RADIO_CONFIG_SET_PROPERTY_MODEM_AFC_LIMITER_868_HR  \
-  0x20 /* GROUP: Modem                              */,\
-  0x02 /* NUM_PROPS                                 */,\
-  0x30 /* START_PROP                                */,\
-  0x00 /* MODEM_AFC_LIMITER,AFCLIM[6:0],AFCLIM[7:0] */,\
-  0x9E /* DATA1                                     */\
-
-
-#define RADIO_CONFIG_SET_PROPERTY_MODEM_AGC_RFPD_DECAY_868_LR  \
-  0x20 /* GROUP: Modem                         */,\
-  0x01 /* NUM_PROPS                            */,\
-  0x39 /* START_PROP                           */,\
-  0x4A /* MODEM_AGC_RFPD_DECAY,RFPD_DECAY[7:0] */\
-
-#define RADIO_CONFIG_SET_PROPERTY_MODEM_AGC_RFPD_DECAY_868_NR  \
-  0x20 /* GROUP: Modem                         */,\
-  0x01 /* NUM_PROPS                            */,\
-  0x39 /* START_PROP                           */,\
-  0x1A /* MODEM_AGC_RFPD_DECAY,RFPD_DECAY[7:0] */\
-
-#define RADIO_CONFIG_SET_PROPERTY_MODEM_AGC_RFPD_DECAY_868_HR  \
-  0x20 /* GROUP: Modem                         */,\
-  0x01 /* NUM_PROPS                            */,\
-  0x39 /* START_PROP                           */,\
-  0x11 /* MODEM_AGC_RFPD_DECAY,RFPD_DECAY[7:0] */\
-
-
-#define RADIO_CONFIG_SET_PROPERTY_MODEM_AGC_IFPD_DECAY_868_LR  \
-  0x20 /* GROUP: Modem                         */,\
-  0x01 /* NUM_PROPS                            */,\
-  0x3A /* START_PROP                           */,\
-  0x4A /* MODEM_AGC_IFPD_DECAY,IFPD_DECAY[7:0] */\
-
-#define RADIO_CONFIG_SET_PROPERTY_MODEM_AGC_IFPD_DECAY_868_NR  \
-  0x20 /* GROUP: Modem                         */,\
-  0x01 /* NUM_PROPS                            */,\
-  0x3A /* START_PROP                           */,\
-  0x1A /* MODEM_AGC_IFPD_DECAY,IFPD_DECAY[7:0] */\
-
-#define RADIO_CONFIG_SET_PROPERTY_MODEM_AGC_IFPD_DECAY_868_HR  \
-  0x20 /* GROUP: Modem                         */,\
-  0x01 /* NUM_PROPS                            */,\
-  0x3A /* START_PROP                           */,\
-  0x11 /* MODEM_AGC_IFPD_DECAY,IFPD_DECAY[7:0] */\
 
 
 #define RADIO_CONFIG_SET_PROPERTY_MODEM_RAW_EYE_868_LR  \
@@ -454,24 +238,6 @@
   0x00 /* DATA5              */\
 
 
-#define RADIO_CONFIG_SET_PROPERTY_MODEM_SPIKE_DET_868_LR  \
-  0x20 /* GROUP: Modem                                            */,\
-  0x01 /* NUM_PROPS                                               */,\
-  0x54 /* START_PROP                                              */,\
-  0x03 /* MODEM_SPIKE_DET,SPIKE_DETECT_EN[7],SPIKE_THRESHOLD[6:0] */\
-
-#define RADIO_CONFIG_SET_PROPERTY_MODEM_SPIKE_DET_868_NR  \
-  0x20 /* GROUP: Modem                                            */,\
-  0x01 /* NUM_PROPS                                               */,\
-  0x54 /* START_PROP                                              */,\
-  0x04 /* MODEM_SPIKE_DET,SPIKE_DETECT_EN[7],SPIKE_THRESHOLD[6:0] */\
-
-#define RADIO_CONFIG_SET_PROPERTY_MODEM_SPIKE_DET_868_HR  \
-  0x20 /* GROUP: Modem                                            */,\
-  0x01 /* NUM_PROPS                                               */,\
-  0x54 /* START_PROP                                              */,\
-  0x03 /* MODEM_SPIKE_DET,SPIKE_DETECT_EN[7],SPIKE_THRESHOLD[6:0] */\
-
 
 #define RADIO_CONFIG_SET_PROPERTY_MODEM_DSA_QUAL_868_LR  \
   0x20 /* GROUP: Modem                                */,\
@@ -568,6 +334,177 @@
   0x1E /* START_PROP                                             */,\
   0x10 /* MODEM_DECIMATION_CFG1,NDEC2[7:6],NDEC1[5:4],NDEC0[3:1] */\
 
+#define RADIO_CONFIG_SET_PROPERTY_MODEM_DECIMATION_CFG1_HR  \
+  0x20 /* GROUP: Modem                                           */,\
+  0x01 /* NUM_PROPS                                              */,\
+  0x1E /* START_PROP                                             */,\
+  0x00 /* MODEM_DECIMATION_CFG1,NDEC2[7:6],NDEC1[5:4],NDEC0[3:1] */\
+
+#define RADIO_CONFIG_SET_PROPERTY_MODEM_BCR_OSR_LR  \
+  0x20 /* GROUP: Modem                        */,\
+  0x02 /* NUM_PROPS                           */,\
+  0x22 /* START_PROP                          */,\
+  0x01 /* MODEM_BCR_OSR,RXOSR[3:0],RXOSR[7:0] */,\
+  0x53 /* DATA1                               */\
+
+#define RADIO_CONFIG_SET_PROPERTY_MODEM_BCR_OSR_NR  \
+  0x20 /* GROUP: Modem                        */,\
+  0x02 /* NUM_PROPS                           */,\
+  0x22 /* START_PROP                          */,\
+  0x00 /* MODEM_BCR_OSR,RXOSR[3:0],RXOSR[7:0] */,\
+  0x75 /* DATA1                               */\
+
+#define RADIO_CONFIG_SET_PROPERTY_MODEM_BCR_OSR_HR  \
+  0x11 /* CMD: Set property                   */,\
+  0x20 /* GROUP: Modem                        */,\
+  0x02 /* NUM_PROPS                           */,\
+  0x22 /* START_PROP                          */,\
+  0x00 /* MODEM_BCR_OSR,RXOSR[3:0],RXOSR[7:0] */,\
+  0x4E /* DATA1                               */\
+
+#define RADIO_CONFIG_SET_PROPERTY_MODEM_BCR_NCO_OFFSET_LR  \
+  0x20 /* GROUP: Modem                                          */,\
+  0x03 /* NUM_PROPS                                             */,\
+  0x24 /* START_PROP                                            */,\
+  0x01 /* MODEM_BCR_NCO_OFFSET,NCOFF[5:0],NCOFF[7:0],NCOFF[7:0] */,\
+  0x83 /* DATA1                                                 */,\
+  0x2B /* DATA2                                                 */\
+
+#define RADIO_CONFIG_SET_PROPERTY_MODEM_BCR_NCO_OFFSET_NR  \
+  0x20 /* GROUP: Modem                                          */,\
+  0x03 /* NUM_PROPS                                             */,\
+  0x24 /* START_PROP                                            */,\
+  0x04 /* MODEM_BCR_NCO_OFFSET,NCOFF[5:0],NCOFF[7:0],NCOFF[7:0] */,\
+  0x60 /* DATA1                                                 */,\
+  0x43 /* DATA2                                                 */\
+
+#define RADIO_CONFIG_SET_PROPERTY_MODEM_BCR_NCO_OFFSET_HR  \
+  0x20 /* GROUP: Modem                                          */,\
+  0x03 /* NUM_PROPS                                             */,\
+  0x24 /* START_PROP                                            */,\
+  0x06 /* MODEM_BCR_NCO_OFFSET,NCOFF[5:0],NCOFF[7:0],NCOFF[7:0] */,\
+  0x90 /* DATA1                                                 */,\
+  0x6A /* DATA2                                                 */\
+
+#define RADIO_CONFIG_SET_PROPERTY_MODEM_BCR_GAIN_LR  \
+  0x20 /* GROUP: Modem                           */,\
+  0x02 /* NUM_PROPS                              */,\
+  0x27 /* START_PROP                             */,\
+  0x01 /* MODEM_BCR_GAIN,CRGAIN[2:0],CRGAIN[7:0] */,\
+  0x83 /* DATA1                                  */\
+
+#define RADIO_CONFIG_SET_PROPERTY_MODEM_BCR_GAIN_NR  \
+  0x20 /* GROUP: Modem                           */,\
+  0x02 /* NUM_PROPS                              */,\
+  0x27 /* START_PROP                             */,\
+  0x02 /* MODEM_BCR_GAIN,CRGAIN[2:0],CRGAIN[7:0] */,\
+  0x6E /* DATA1                                  */\
+
+#define RADIO_CONFIG_SET_PROPERTY_MODEM_BCR_GAIN_HR  \
+  0x20 /* GROUP: Modem                           */,\
+  0x02 /* NUM_PROPS                              */,\
+  0x27 /* START_PROP                             */,\
+  0x07 /* MODEM_BCR_GAIN,CRGAIN[2:0],CRGAIN[7:0] */,\
+  0xFF /* DATA1                                  */\
+
+#define RADIO_CONFIG_SET_PROPERTY_MODEM_AFC_WAIT_LR  \
+  0x20 /* GROUP: Modem                           */,\
+  0x01 /* NUM_PROPS                              */,\
+  0x2D /* START_PROP                             */,\
+  0x12 /* MODEM_AFC_WAIT,SHWAIT[7:4],LGWAIT[3:0] */\
+
+#define RADIO_CONFIG_SET_PROPERTY_MODEM_AFC_WAIT_NR RADIO_CONFIG_SET_PROPERTY_MODEM_AFC_WAIT_LR
+#define RADIO_CONFIG_SET_PROPERTY_MODEM_AFC_WAIT_HR  \
+  0x20 /* GROUP: Modem                           */,\
+  0x01 /* NUM_PROPS                              */,\
+  0x2D /* START_PROP                             */,\
+  0x23 /* MODEM_AFC_WAIT,SHWAIT[7:4],LGWAIT[3:0] */\
+
+
+
+#define RADIO_CONFIG_SET_PROPERTY_MODEM_AFC_LIMITER_LR  \
+  0x20 /* GROUP: Modem                              */,\
+  0x02 /* NUM_PROPS                                 */,\
+  0x30 /* START_PROP                                */,\
+  0x07 /* MODEM_AFC_LIMITER,AFCLIM[6:0],AFCLIM[7:0] */,\
+  0x5A /* DATA1                                     */\
+
+#define RADIO_CONFIG_SET_PROPERTY_MODEM_AFC_LIMITER_NR  \
+  0x20 /* GROUP: Modem                              */,\
+  0x02 /* NUM_PROPS                                 */,\
+  0x30 /* START_PROP                                */,\
+  0x02 /* MODEM_AFC_LIMITER,AFCLIM[6:0],AFCLIM[7:0] */,\
+  0x80 /* DATA1                                     */\
+
+#define RADIO_CONFIG_SET_PROPERTY_MODEM_AFC_LIMITER_HR  \
+  0x20 /* GROUP: Modem                              */,\
+  0x02 /* NUM_PROPS                                 */,\
+  0x30 /* START_PROP                                */,\
+  0x00 /* MODEM_AFC_LIMITER,AFCLIM[6:0],AFCLIM[7:0] */,\
+  0x9E /* DATA1                                     */\
+
+#define RADIO_CONFIG_SET_PROPERTY_MODEM_AGC_RFPD_DECAY_LR  \
+  0x20 /* GROUP: Modem                         */,\
+  0x01 /* NUM_PROPS                            */,\
+  0x39 /* START_PROP                           */,\
+  0x4A /* MODEM_AGC_RFPD_DECAY,RFPD_DECAY[7:0] */\
+
+#define RADIO_CONFIG_SET_PROPERTY_MODEM_AGC_RFPD_DECAY_NR  \
+  0x20 /* GROUP: Modem                         */,\
+  0x01 /* NUM_PROPS                            */,\
+  0x39 /* START_PROP                           */,\
+  0x1A /* MODEM_AGC_RFPD_DECAY,RFPD_DECAY[7:0] */\
+
+#define RADIO_CONFIG_SET_PROPERTY_MODEM_AGC_RFPD_DECAY_HR  \
+  0x20 /* GROUP: Modem                         */,\
+  0x01 /* NUM_PROPS                            */,\
+  0x39 /* START_PROP                           */,\
+  0x11 /* MODEM_AGC_RFPD_DECAY,RFPD_DECAY[7:0] */\
+
+#define RADIO_CONFIG_SET_PROPERTY_MODEM_AGC_IFPD_DECAY_LR  \
+  0x20 /* GROUP: Modem                         */,\
+  0x01 /* NUM_PROPS                            */,\
+  0x3A /* START_PROP                           */,\
+  0x4A /* MODEM_AGC_IFPD_DECAY,IFPD_DECAY[7:0] */\
+
+#define RADIO_CONFIG_SET_PROPERTY_MODEM_AGC_IFPD_DECAY_NR  \
+  0x20 /* GROUP: Modem                         */,\
+  0x01 /* NUM_PROPS                            */,\
+  0x3A /* START_PROP                           */,\
+  0x1A /* MODEM_AGC_IFPD_DECAY,IFPD_DECAY[7:0] */\
+
+#define RADIO_CONFIG_SET_PROPERTY_MODEM_AGC_IFPD_DECAY_HR  \
+  0x20 /* GROUP: Modem                         */,\
+  0x01 /* NUM_PROPS                            */,\
+  0x3A /* START_PROP                           */,\
+  0x11 /* MODEM_AGC_IFPD_DECAY,IFPD_DECAY[7:0] */\
+
+
+#define RADIO_CONFIG_SET_PROPERTY_MODEM_SPIKE_DET_LR  \
+  0x20 /* GROUP: Modem                                            */,\
+  0x01 /* NUM_PROPS                                               */,\
+  0x54 /* START_PROP                                              */,\
+  0x03 /* MODEM_SPIKE_DET,SPIKE_DETECT_EN[7],SPIKE_THRESHOLD[6:0] */\
+
+#define RADIO_CONFIG_SET_PROPERTY_MODEM_SPIKE_DET_NR  \
+  0x20 /* GROUP: Modem                                            */,\
+  0x01 /* NUM_PROPS                                               */,\
+  0x54 /* START_PROP                                              */,\
+  0x04 /* MODEM_SPIKE_DET,SPIKE_DETECT_EN[7],SPIKE_THRESHOLD[6:0] */\
+
+#define RADIO_CONFIG_SET_PROPERTY_MODEM_SPIKE_DET_HR  \
+  0x20 /* GROUP: Modem                                            */,\
+  0x01 /* NUM_PROPS                                               */,\
+  0x54 /* START_PROP                                              */,\
+  0x03 /* MODEM_SPIKE_DET,SPIKE_DETECT_EN[7],SPIKE_THRESHOLD[6:0] */\
+
+#define RADIO_CONFIG_SET_PROPERTY_FREQ_CONTROL_CHANNEL_STEP_SIZE_LR  \
+  0x40 /* GROUP: Freq control                                                          */,\
+  0x02 /* NUM_PROPS                                                                    */,\
+  0x04 /* START_PROP                                                                   */,\
+  0x27 /* FREQ_CONTROL_CHANNEL_STEP_SIZE,CHANNEL_STEP_SIZE[7:0],CHANNEL_STEP_SIZE[7:0] */,\
+  0x62 /* DATA1                                                                        */\
+
 
 /*******************************************************************
   				FREQUENCY DEPENDENT	DATA RATE
@@ -580,7 +517,7 @@
   0x0A /* START_PROP                                          */,\
   0x00 /* MODEM_FREQ_DEV,FREQDEV[0],FREQDEV[7:0],FREQDEV[7:0] */,\
   0x00 /* DATA1                                               */,\
-  0xC1 /* DATA2                                               */\
+  0xC2 /* DATA2                                               */\
 
 #define RADIO_CONFIG_SET_PROPERTY_MODEM_FREQ_DEV_868_NR  \
   0x20 /* GROUP: Modem                                        */,\
@@ -620,7 +557,78 @@
   0x0A /* START_PROP                                          */,\
   0x00 /* MODEM_FREQ_DEV,FREQDEV[0],FREQDEV[7:0],FREQDEV[7:0] */,\
   0x09 /* DATA1                                               */,\
-  0xD8 /* DATA2
+  0xD8 /* DATA2												  */\
+
+#define RADIO_CONFIG_SET_PROPERTY_MODEM_AFC_GAIN_868_LR  \
+  0x20 /* GROUP: Modem                                                               */,\
+  0x02 /* NUM_PROPS                                                                  */,\
+  0x2E /* START_PROP                                                                 */,\
+  0x80 /* MODEM_AFC_GAIN,ENAFC[7],AFCBD[6],AFC_GAIN_DIV[5],AFCGAIN[4:0],AFCGAIN[7:0] */,\
+  0x30 /* DATA1                                                                      */\
+
+#define RADIO_CONFIG_SET_PROPERTY_MODEM_AFC_GAIN_868_NR  \
+  0x20 /* GROUP: Modem                                                               */,\
+  0x02 /* NUM_PROPS                                                                  */,\
+  0x2E /* START_PROP                                                                 */,\
+  0x81 /* MODEM_AFC_GAIN,ENAFC[7],AFCBD[6],AFC_GAIN_DIV[5],AFCGAIN[4:0],AFCGAIN[7:0] */,\
+  0x18 /* DATA1                                                                      */\
+
+#define RADIO_CONFIG_SET_PROPERTY_MODEM_AFC_GAIN_868_HR  \
+  0x20 /* GROUP: Modem                                                               */,\
+  0x02 /* NUM_PROPS                                                                  */,\
+  0x2E /* START_PROP                                                                 */,\
+  0x86 /* MODEM_AFC_GAIN,ENAFC[7],AFCBD[6],AFC_GAIN_DIV[5],AFCGAIN[4:0],AFCGAIN[7:0] */,\
+  0x90 /* DATA1                                                                      */\
+
+#define RADIO_CONFIG_SET_PROPERTY_MODEM_AFC_GAIN_433_LR  \
+  0x20 /* GROUP: Modem                                                               */,\
+  0x02 /* NUM_PROPS                                                                  */,\
+  0x2E /* START_PROP                                                                 */,\
+  0x82 /* MODEM_AFC_GAIN,ENAFC[7],AFCBD[6],AFC_GAIN_DIV[5],AFCGAIN[4:0],AFCGAIN[7:0] */,\
+  0x30 /* DATA1                                                                      */\
+
+#define RADIO_CONFIG_SET_PROPERTY_MODEM_AFC_GAIN_433_NR  \
+  0x20 /* GROUP: Modem                                                               */,\
+  0x02 /* NUM_PROPS                                                                  */,\
+  0x2E /* START_PROP                                                                 */,\
+  0x81 /* MODEM_AFC_GAIN,ENAFC[7],AFCBD[6],AFC_GAIN_DIV[5],AFCGAIN[4:0],AFCGAIN[7:0] */,\
+  0x18 /* DATA1                                                                      */\
+
+#define RADIO_CONFIG_SET_PROPERTY_MODEM_AFC_GAIN_433_HR  \
+  0x20 /* GROUP: Modem                                                               */,\
+  0x02 /* NUM_PROPS                                                                  */,\
+  0x2E /* START_PROP                                                                 */,\
+  0x86 /* MODEM_AFC_GAIN,ENAFC[7],AFCBD[6],AFC_GAIN_DIV[5],AFCGAIN[4:0],AFCGAIN[7:0] */,\
+  0x90 /* DATA1                                                                      */\
+
+
+#define RADIO_CONFIG_SET_PROPERTY_FREQ_CONTROL_FRAC_868_LR_01  \
+  0x40 /* GROUP: Freq control                             */,\
+  0x03 /* NUM_PROPS                                       */,\
+  0x01 /* START_PROP                                      */,\
+  0x0B /* FREQ_CONTROL_FRAC,FRAC[3:0],FRAC[7:0],FRAC[7:0] */,\
+  0x15 /* DATA1                                           */,\
+  0xA9 /* DATA2                                           */\
+
+#define RADIO_CONFIG_SET_PROPERTY_FREQ_CONTROL_FRAC_868_LR_02  \
+  0x11 /* CMD: Set property                               */,\
+  0x40 /* GROUP: Freq control                             */,\
+  0x03 /* NUM_PROPS                                       */,\
+  0x01 /* START_PROP                                      */,\
+  0x0F /* FREQ_CONTROL_FRAC,FRAC[3:0],FRAC[7:0],FRAC[7:0] */,\
+  0x01 /* DATA1                                           */,\
+  0xF8 /* DATA2                                           */\
+
+#define RADIO_CONFIG_SET_PROPERTY_FREQ_CONTROL_FRAC_868_NR  \
+  0x40 /* GROUP: Freq control                             */,\
+  0x03 /* NUM_PROPS                                       */,\
+  0x01 /* START_PROP                                      */,\
+  0x0B /* FREQ_CONTROL_FRAC,FRAC[3:0],FRAC[7:0],FRAC[7:0] */,\
+  0x23 /* DATA1                                           */,\
+  0x72 /* DATA2                                           */\
+
+#define RADIO_CONFIG_SET_PROPERTY_FREQ_CONTROL_FRAC_868_HR RADIO_CONFIG_SET_PROPERTY_FREQ_CONTROL_FRAC_868_NR
+
 
 /*******************************************************************
   				SYNC WORD
