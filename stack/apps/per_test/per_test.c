@@ -42,8 +42,9 @@
 
 #include "console.h"
 
-#ifndef PLATFORM_EFM32GG_STK3700
-    #error "assuming STK3700 for now"
+
+#if (!defined PLATFORM_EFM32GG_STK3700  && !defined PLATFORM_EZR32LG_WSTK6200A)
+	#error Mismatch between the configured platform and the actual platform.
 #endif
 
 // configuration options
@@ -211,7 +212,13 @@ static void packet_received(hw_radio_packet_t* packet) {
 	        per = 100.0 - ((double)received_packets_counter / (double)msg_counter) * 100.0;
 
 	    sprintf(lcd_msg, "%i %i", (int)per, packet->rx_meta.rssi);
+
+#ifdef PLATFORM_EFM32GG_STK3700
 	    lcd_write_string(lcd_msg);
+#else
+	    lcd_write_line(4, lcd_msg);
+#endif
+
     }
 }
 
@@ -221,7 +228,11 @@ static void packet_transmitted(hw_radio_packet_t* packet) {
 #endif
     DPRINT("packet transmitted");
     sprintf(lcd_msg, "TX %i", counter);
-    lcd_write_string(lcd_msg);
+#ifdef PLATFORM_EFM32GG_STK3700
+	    lcd_write_string(lcd_msg);
+#else
+	    lcd_write_line(4, lcd_msg);
+#endif
 
     timer_tick_t delay;
     if(tx_packet_delay_s == 0)
@@ -247,6 +258,7 @@ static void start() {
     counter = 0;
     missed_packets_counter = 0;
     received_packets_counter = 0;
+    uint8_t lcd_line = 0;
 
     switch(current_state)
     {
@@ -254,6 +266,7 @@ static void start() {
             is_mode_rx? sprintf(lcd_msg, "PER RX") : sprintf(lcd_msg, "PER TX");
             break;
         case STATE_CONFIG_DATARATE:
+        	lcd_line = 1;
             switch(current_channel_id.channel_header.ch_class)
             {
                 case PHY_CLASS_LO_RATE:
@@ -268,10 +281,11 @@ static void start() {
             }
             break;
         case STATE_RUNNING:
+        	lcd_line = 2;
             if(is_mode_rx)
             {
                 sprintf(lcd_msg, "RUN RX");
-                lcd_write_string(lcd_msg);
+                //lcd_write_string(lcd_msg);
                 console_printf("%s,%s,%s,%s,%s,%s\n", "channel_id", "counter", "rssi", "tx_id", "rx_id", "timestamp");
                 rx_cfg.channel_id = current_channel_id;
                 timer_post_task(&start_rx, TIMER_TICKS_PER_SEC * 5);
@@ -280,13 +294,18 @@ static void start() {
             {
                 hw_radio_set_idle();
                 sprintf(lcd_msg, "RUN TX");
-                lcd_write_string(lcd_msg);
+                //lcd_write_string(lcd_msg);
                 timer_post_task(&transmit_packet, TIMER_TICKS_PER_SEC * 5);
             }
             break;
     }
 
+#ifdef PLATFORM_EFM32GG_STK3700
     lcd_write_string(lcd_msg);
+#else
+    lcd_write_line(lcd_line, lcd_msg);
+#endif
+
 }
 
 static void userbutton_callback(button_id_t button_id)
@@ -321,6 +340,22 @@ static void userbutton_callback(button_id_t button_id)
                         current_channel_id.channel_header.ch_class = PHY_CLASS_NORMAL_RATE;
 
                     break;
+
+                case STATE_RUNNING:
+                	if (current_channel_id.channel_header.ch_class == PHY_CLASS_NORMAL_RATE)
+                	{
+                		current_channel_id.center_freq_index = (current_channel_id.center_freq_index == 56) ? 0 : current_channel_id.center_freq_index + 8;
+                	}
+
+
+
+                	#ifdef PLATFORM_EZR32LG_WSTK6200A
+                		char str[20];
+                		channel_id_to_string(&current_channel_id, str, sizeof(str));
+                		console_print(str);
+                		lcd_write_line(6, str);
+                	#endif
+                    break;
             }
             break;
     }
@@ -329,6 +364,7 @@ static void userbutton_callback(button_id_t button_id)
 }
 
 // TODO code duplication with noise_test, refactor later
+// Eg. 433L001
 static void process_command_chan()
 {
     while(fifo_get_size(&uart_rx_fifo) < COMMAND_CHAN_PARAM_SIZE);
@@ -378,6 +414,12 @@ static void process_command_chan()
     char str[20];
     channel_id_to_string(&current_channel_id, str, sizeof(str));
     console_print(str);
+
+#ifdef PLATFORM_EFM32GG_STK3700
+#else
+	    lcd_write_line(6, str);
+#endif
+
     // change channel and restart
     // TODOsched_post_task(&start_rx);
     return;
@@ -481,4 +523,13 @@ void bootstrap() {
 
     sched_post_task(&start);
     sched_post_task(&process_uart_rx_fifo);
+
+
+#ifdef PLATFORM_EFM32GG_STK3700
+#else
+    	char str[20];
+    	channel_id_to_string(&current_channel_id, str, sizeof(str));
+    	lcd_write_line(6, str);
+#endif
+
 }

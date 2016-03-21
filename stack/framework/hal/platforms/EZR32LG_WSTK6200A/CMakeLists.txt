@@ -79,11 +79,14 @@ ADD_LIBRARY(PLATFORM OBJECT
     wstk6200_sensors.c
     wstk6200_debug.c
     wstk6200_lcd.c
+    #wstk6200_usb.c
+    #wstk6200_usb_descriptors.c
     libc_overrides.c
     inc/userbutton.h
     inc/platform_sensors.h
     Drivers/si7013.c
     Drivers/i2cspm.c
+    #Drivers/cdc.c
 	
 )
 

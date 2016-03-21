@@ -154,7 +154,6 @@ static void configure_channel(const channel_id_t* channel_id)
 			ezradio_set_property(RADIO_CONFIG_SET_PROPERTY_PA_TC_NR);
 			ezradio_set_property(RADIO_CONFIG_SET_PROPERTY_MODEM_AFC_WAIT_NR);
 			ezradio_set_property(RADIO_CONFIG_SET_PROPERTY_MODEM_SPIKE_DET_NR);
-
 			ezradio_set_property(RADIO_CONFIG_SET_PROPERTY_MODEM_DECIMATION_CFG1_NR);
 			ezradio_set_property(RADIO_CONFIG_SET_PROPERTY_MODEM_BCR_OSR_NR);
 			ezradio_set_property(RADIO_CONFIG_SET_PROPERTY_MODEM_BCR_GAIN_NR);
@@ -175,7 +174,6 @@ static void configure_channel(const channel_id_t* channel_id)
 			ezradio_set_property(RADIO_CONFIG_SET_PROPERTY_PA_TC_HR);
 			ezradio_set_property(RADIO_CONFIG_SET_PROPERTY_MODEM_AFC_WAIT_HR);
 			ezradio_set_property(RADIO_CONFIG_SET_PROPERTY_MODEM_SPIKE_DET_HR);
-
 			ezradio_set_property(RADIO_CONFIG_SET_PROPERTY_MODEM_DECIMATION_CFG1_HR);
 			ezradio_set_property(RADIO_CONFIG_SET_PROPERTY_MODEM_BCR_OSR_HR);
 			ezradio_set_property(RADIO_CONFIG_SET_PROPERTY_MODEM_BCR_GAIN_HR);
@@ -184,8 +182,6 @@ static void configure_channel(const channel_id_t* channel_id)
 			ezradio_set_property(RADIO_CONFIG_SET_PROPERTY_MODEM_AGC_IFPD_DECAY_HR);
 			ezradio_set_property(RADIO_CONFIG_SET_PROPERTY_MODEM_RAW_EYE_HR);
 			ezradio_set_property(RADIO_CONFIG_SET_PROPERTY_MODEM_DSA_QUAL_HR);
-
-
 			//assert(false);
 			break;
 		default:
@@ -491,7 +487,7 @@ error_t hw_radio_send_packet(hw_radio_packet_t* packet, tx_packet_callback_t tx_
 	DEBUG_TX_START();
 	DEBUG_RX_END();
 
-	ezradioStartTx(packet, (uint8_t) current_channel_id.center_freq_index, should_rx_after_tx_completed);
+	ezradioStartTx(packet, ez_channel_id, should_rx_after_tx_completed);
 	return SUCCESS;
 
 }
