@@ -97,6 +97,7 @@ void lcd_show_antenna(int show)
 void lcd_show_ring(int segments)
 {
 	int i = 0;
+	if (segments > 7) segments = 7;
 	for (;i<segments;i++)
 	{
 		SegmentLCD_ARing(i, true);
