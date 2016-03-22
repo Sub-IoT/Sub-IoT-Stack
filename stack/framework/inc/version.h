@@ -30,6 +30,8 @@
 extern const char _GIT_SHA1[];
 extern const char _APP_NAME[];
 
+#define VERSION _GIT_SHA1
+
 #endif // VERSION_H
 
 /** @}*/
