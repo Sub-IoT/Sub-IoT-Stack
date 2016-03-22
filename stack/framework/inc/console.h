@@ -13,17 +13,17 @@
 
 #ifdef CONSOLE_UART
 
-void console_init(void);
-void console_enable(void);
-void console_disable(void);
+__LINK_C void console_init(void);
+__LINK_C void console_enable(void);
+__LINK_C void console_disable(void);
 
 // the elementary console actions
-void console_print_byte(uint8_t byte);
-void console_print_bytes(uint8_t* bytes, uint8_t length);
-void console_print(char* string);
+__LINK_C void console_print_byte(uint8_t byte);
+__LINK_C void console_print_bytes(uint8_t* bytes, uint8_t length);
+__LINK_C void console_print(char* string);
 
-void console_set_rx_interrupt_callback(uart_rx_inthandler_t handler);
-void console_rx_interrupt_enable();
+__LINK_C void console_set_rx_interrupt_callback(uart_rx_inthandler_t handler);
+__LINK_C void console_rx_interrupt_enable();
 
 #else
 
