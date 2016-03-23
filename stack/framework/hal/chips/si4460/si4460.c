@@ -92,8 +92,8 @@ static hw_radio_state_t current_state;
 static hw_radio_packet_t* current_packet;
 static channel_id_t current_channel_id = {
     .channel_header.ch_coding = PHY_CODING_PN9,
-    .channel_header.ch_class = PHY_CLASS_HI_RATE,
-    .channel_header.ch_freq_band = PHY_BAND_868,
+    .channel_header.ch_class = PHY_CLASS_NORMAL_RATE,
+    .channel_header.ch_freq_band = PHY_BAND_433,
     .center_freq_index = 0
 };
 
@@ -104,6 +104,7 @@ static eirp_t current_eirp = 0;
 static bool should_rx_after_tx_completed = false;
 
 static hw_rx_cfg_t current_rx_cfg = {0x0000, PHY_SYNCWORD_CLASS0};
+static syncword_class_t current_syncword_class = PHY_SYNCWORD_CLASS0;
 
 static inline int16_t convert_rssi(uint8_t rssi_raw);
 static void start_rx(hw_rx_cfg_t const* rx_cfg);
@@ -299,25 +300,30 @@ static void configure_channel(const channel_id_t* channel_id)
 
 static void configure_eirp(const eirp_t eirp)
 {
+	if (eirp == current_eirp)
+		return;
+
+
 	DPRINT("configure_eirp not implemented using max");
 	uint8_t ddac = 0x7F; // max
 	ezradio_set_property(0x22, 0x01, 0x01, ddac);
+	current_eirp = eirp;
 }
 
 static void configure_syncword_class(syncword_class_t syncword_class)
 {
-	if(syncword_class != current_rx_cfg.syncword_class)
+	if(syncword_class == current_syncword_class)
+		return;
+
+	current_syncword_class = syncword_class;
+	switch (syncword_class)
 	{
-		current_rx_cfg.syncword_class = syncword_class;
-		switch (syncword_class)
-		{
-			case PHY_SYNCWORD_CLASS0:
-				ezradio_set_property(RADIO_CONFIG_SET_PROPERTY_SYNC_BITS_CS0_0);
-				break;
-			case PHY_SYNCWORD_CLASS1:
-				ezradio_set_property(RADIO_CONFIG_SET_PROPERTY_SYNC_BITS_CS0_1);
-				break;
-		}
+		case PHY_SYNCWORD_CLASS0:
+			ezradio_set_property(RADIO_CONFIG_SET_PROPERTY_SYNC_BITS_CS0_0);
+			break;
+		case PHY_SYNCWORD_CLASS1:
+			ezradio_set_property(RADIO_CONFIG_SET_PROPERTY_SYNC_BITS_CS0_1);
+			break;
 	}
 }
 
@@ -370,7 +376,7 @@ error_t hw_radio_init(alloc_packet_callback_t alloc_packet_cb,
 	// configure default channel, eirp and syncword
 	configure_channel(&current_channel_id);
 	configure_eirp(current_eirp);
-	configure_syncword_class(current_rx_cfg.syncword_class);
+	configure_syncword_class(current_syncword_class);
 
 	sched_register_task((&report_rssi));
 
