@@ -107,12 +107,13 @@ static hw_radio_packet_t received_packet;
 static char lcd_msg[15];
 static char record[80];
 static uint64_t id;
-static bool is_mode_rx = true;
+static bool is_mode_rx = false;
 static state_t current_state = STATE_CONFIG_DIRECTION;
 
 static void packet_received(hw_radio_packet_t* packet);
 static void packet_transmitted(hw_radio_packet_t* packet);
 static void start();
+static void increase_channel();
 
 static void start_rx() {
     DPRINT("start RX");
@@ -240,6 +241,7 @@ static void packet_transmitted(hw_radio_packet_t* packet) {
     else
         delay = TIMER_TICKS_PER_SEC * tx_packet_delay_s;
 
+    //increase_channel();
     timer_post_task(&transmit_packet, delay);
 }
 
@@ -252,6 +254,39 @@ static void stop() {
   }	else {
 		sched_cancel_task(&transmit_packet);
   }
+}
+
+static void increase_channel() {
+	if (current_channel_id.channel_header.ch_freq_band == PHY_BAND_433)
+	{
+		if (current_channel_id.channel_header.ch_class == PHY_CLASS_LO_RATE)
+		{
+			current_channel_id.center_freq_index = (current_channel_id.center_freq_index == 68) ? 0 : current_channel_id.center_freq_index + 1;
+		}
+		else
+		{
+			current_channel_id.center_freq_index = (current_channel_id.center_freq_index == 56) ? 0 : current_channel_id.center_freq_index + 8;
+		}
+	}else if (current_channel_id.channel_header.ch_freq_band == PHY_BAND_868)
+	{
+		if (current_channel_id.channel_header.ch_class == PHY_CLASS_LO_RATE)
+		{
+			current_channel_id.center_freq_index = (current_channel_id.center_freq_index == 279) ? 0 : current_channel_id.center_freq_index + 1;
+		}
+		else
+		{
+			current_channel_id.center_freq_index = (current_channel_id.center_freq_index == 272) ? 0 : current_channel_id.center_freq_index + 8;
+		}
+	}
+
+
+
+	#ifdef PLATFORM_EZR32LG_WSTK6200A
+		char str[20];
+		channel_id_to_string(&current_channel_id, str, sizeof(str));
+		console_print(str);
+		lcd_write_line(6, str);
+	#endif
 }
 
 static void start() {
@@ -342,19 +377,7 @@ static void userbutton_callback(button_id_t button_id)
                     break;
 
                 case STATE_RUNNING:
-                	if (current_channel_id.channel_header.ch_class == PHY_CLASS_NORMAL_RATE)
-                	{
-                		current_channel_id.center_freq_index = (current_channel_id.center_freq_index == 56) ? 0 : current_channel_id.center_freq_index + 8;
-                	}
-
-
-
-                	#ifdef PLATFORM_EZR32LG_WSTK6200A
-                		char str[20];
-                		channel_id_to_string(&current_channel_id, str, sizeof(str));
-                		console_print(str);
-                		lcd_write_line(6, str);
-                	#endif
+                	increase_channel();
                     break;
             }
             break;
@@ -531,5 +554,7 @@ void bootstrap() {
     	channel_id_to_string(&current_channel_id, str, sizeof(str));
     	lcd_write_line(6, str);
 #endif
+
+    timer_post_task(&transmit_packet, TIMER_TICKS_PER_SEC * 1);
 
 }
