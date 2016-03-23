@@ -15,13 +15,18 @@
 // Command:                  RF_POWER_UP
 // Description:              Command to power-up the device and select the operational mode and functionality.
 */
-#define RF_POWER_UP 0x02, 0x81, 0x01, 0x01, 0x8C, 0xBA, 0x80
+//#define RF_POWER_UP 0x02, 0x81, 0x01, 0x01, 0x8C, 0xBA, 0x80 //use patch
+//#define RF_POWER_UP 0x02, 0x01, 0x01, 0x01, 0x8C, 0xBA, 0x80  // no patch - TCXO
+
+#define RF_POWER_UP 0x02, 0x01, 0x00, 0x01, 0x8C, 0xBA, 0x80  // no patch - interal xtal
 
 /*
 // Command:                  RF_GPIO_PIN_CFG
 // Description:              Configures the GPIO pins.
 */
-#define RF_GPIO_PIN_CFG 0x13, 0x00, 0x00, 0x20, 0x21, 0x00, 0x00, 0x00
+//#define RF_GPIO_PIN_CFG 0x13, 0x00, 0x00, 0x20, 0x21, 0x00, 0x00, 0x00
+
+#define RF_GPIO_PIN_CFG 0x13, 0x1D, 0x1D, 0x20, 0x21, 0x00, 0x00, 0x00
 
 /*
 // Set properties:           RF_GLOBAL_XO_TUNE_2
@@ -34,6 +39,7 @@
 //   GLOBAL_CLK_CFG - Clock configuration options.
 */
 #define RF_GLOBAL_XO_TUNE_2 0x11, 0x00, 0x02, 0x00, 0x50, 0x00
+//#define RF_GLOBAL_XO_TUNE_2 0x11, 0x00, 0x01, 0x00, 0x45
 
 /*
 // Set properties:           RF_GLOBAL_CONFIG_1
@@ -45,6 +51,7 @@
 //   GLOBAL_CONFIG - Global configuration settings.
 */
 #define RF_GLOBAL_CONFIG_1 0x11, 0x00, 0x01, 0x03, 0x20
+//???
 
 /*
 // Set properties:           RF_INT_CTL_ENABLE_2
@@ -329,5 +336,5 @@
 #define RADIO_CONFIGURATION_DATA_ARRAY { 0 }
 #endif
 
-#endif /
+#endif
 
