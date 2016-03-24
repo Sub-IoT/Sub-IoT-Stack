@@ -35,7 +35,6 @@
 #define __SILICON_LABS_EM_LEUART_H__
 #include "em_device.h"
 #if defined(LEUART_COUNT) && (LEUART_COUNT > 0)
-
 #include <stdbool.h>
 
 #ifdef __cplusplus
