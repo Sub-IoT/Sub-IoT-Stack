@@ -25,7 +25,8 @@
  * Currently implemented for 26 MHZ RF Xtal
  * TODO: SYNTH_LPFILTx is dependent on hardware define in platform
  *
- *
+ * TODO: PKT_RX_THRESHOLD -> IRQ when Rx fifo almost full
+ * TODO: PKT_TX_THRESHOLD
  */
 
 #include "debug.h"
@@ -128,6 +129,7 @@ static void configure_channel(const channel_id_t* channel_id)
 	{
 		if (channel_id->channel_header.ch_coding != current_channel_id.channel_header.ch_coding)
 		{
+			//if (channel_id->channel_header.ch_coding == PHY_CODING_PN9 && channel_id->channel_header.ch_coding != PHY_CODING_FEC_PN9)
 			if (has_hardware_crc && channel_id->channel_header.ch_coding != PHY_CODING_FEC_PN9)
 			{
 				// use HW CRC
@@ -140,7 +142,7 @@ static void configure_channel(const channel_id_t* channel_id)
 				ezradio_set_property(RADIO_CONFIG_SET_PROPERTY_PKT_FIELD_1_CRC_CONFIG_SW_CRC);
 				ezradio_set_property(RADIO_CONFIG_SET_PROPERTY_PKT_FIELD_2_CRC_CONFIG_SW_CRC);
 			}
-		}
+
 		// TODO assert valid center freq index
 
 		memcpy(&current_channel_id, channel_id, sizeof(channel_id_t)); // cache new settings
@@ -223,7 +225,6 @@ static void configure_channel(const channel_id_t* channel_id)
 			if(channel_id->channel_header.ch_class == PHY_CLASS_LO_RATE)
 			{
 				assert(channel_id->center_freq_index <= 68);
-				ez_channel_id = channel_id->center_freq_index;
 				ezradio_set_property(RADIO_CONFIG_SET_PROPERTY_MODEM_FREQ_DEV_433_LR);
 				ezradio_set_property(RADIO_CONFIG_SET_PROPERTY_FREQ_CONTROL_FRAC_433_LR);
 				ezradio_set_property(RADIO_CONFIG_SET_PROPERTY_MODEM_DECIMATION_CFG1_433_LR);
@@ -261,7 +262,7 @@ static void configure_channel(const channel_id_t* channel_id)
 			else if(channel_id->channel_header.ch_class == PHY_CLASS_HI_RATE)
 			{
 				assert(channel_id->center_freq_index % 8 == 0 && channel_id->center_freq_index <= 56);
-				ez_channel_id = channel_id->center_freq_index / 8;
+
 				ezradio_set_property(RADIO_CONFIG_SET_PROPERTY_MODEM_DATA_RATE_433_HR);
 				ezradio_set_property(RADIO_CONFIG_SET_PROPERTY_MODEM_FREQ_DEV_433_HR);
 				ezradio_set_property(RADIO_CONFIG_SET_PROPERTY_FREQ_CONTROL_FRAC_433_HR);
@@ -553,7 +554,9 @@ error_t hw_radio_send_packet(hw_radio_packet_t* packet, tx_packet_callback_t tx_
 
 	if (packet->tx_meta.tx_cfg.channel_id.channel_header.ch_coding == PHY_CODING_FEC_PN9)
 	{
-		packet->length = fec_encode(packet->data, packet->length);
+		uint8_t buffer[32];
+		memcpy(buffer, packet->data, packet->length);
+		packet->length = fec_encode(packet->data, buffer, packet->length);
 		data_length = packet->length;
 	} else {
 		if (!has_hardware_crc)
@@ -577,14 +580,14 @@ error_t hw_radio_send_packet(hw_radio_packet_t* packet, tx_packet_callback_t tx_
 	log_print_data(packet->data, data_length);
 #endif
 
-	configure_channel((channel_id_t*)&(packet->tx_meta.tx_cfg.channel_id));
-	configure_eirp(packet->tx_meta.tx_cfg.eirp);
+	configure_channel((channel_id_t*)&(current_packet->tx_meta.tx_cfg.channel_id));
+	configure_eirp(current_packet->tx_meta.tx_cfg.eirp);
 	configure_syncword_class(current_packet->tx_meta.tx_cfg.syncword_class, current_packet->tx_meta.tx_cfg.channel_id.channel_header.ch_coding);
 
 	DEBUG_TX_START();
 	DEBUG_RX_END();
 
-	ezradioStartTx(packet, ez_channel_id, should_rx_after_tx_completed, data_length);
+	ezradioStartTx(packet, ez_channel_id, should_rx_after_tx_completed, data_lenght);
 	return SUCCESS;
 }
 
@@ -656,7 +659,7 @@ static void start_rx(hw_rx_cfg_t const* rx_cfg)
     configure_syncword_class(rx_cfg->syncword_class, rx_cfg->channel_id.channel_header.ch_coding);
 
     rx_fifo_data_lenght = 0;
-    ezradioStartRx(ez_channel_id);
+    ezradioStartRx((uint8_t) (current_channel_id.center_freq_index));
 
     DEBUG_RX_START();
 

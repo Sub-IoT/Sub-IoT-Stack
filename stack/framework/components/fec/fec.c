@@ -56,22 +56,22 @@ static uint16_t pn9;
 static uint16_t fecstate;
 static VITERBISTATE vstate;
 
+static bool fec_decode(uint8_t* input);
 
-
-void print_array(uint8_t* buffer, uint8_t length)
-{
-	int i = 0;
-	for (; i < length; i++)
-	{
-	    printf("%02X", buffer[i]);
-	}
-	printf(" ");
-
-	for (i = 0; i < length; i++)
-	{
-		printf("%s", byte_to_binary(buffer[i]));
-	}
-}
+//void print_array(uint8_t* buffer, uint8_t length)
+//{
+//	int i = 0;
+//	for (; i < length; i++)
+//	{
+//	    printf("%02X", buffer[i]);
+//	}
+//	printf(" ");
+//
+//	for (i = 0; i < length; i++)
+//	{
+//		printf("%s", byte_to_binary(buffer[i]));
+//	}
+//}
 
 const char *int_to_binary(uint16_t x)
 {
@@ -237,7 +237,7 @@ uint8_t fec_decode_packet(uint8_t* data, uint8_t packet_length, uint8_t output_l
 	{
 		//printf("FEC encoding i = %d\n", i);
 
-		bool err = fec_decode(&input[i]);
+		bool err = fec_decode(&data[i]);
 		decoded_length+=2;
 		if (!err)
 			printf("FEC encoding error\n");
@@ -248,7 +248,7 @@ uint8_t fec_decode_packet(uint8_t* data, uint8_t packet_length, uint8_t output_l
 	return decoded_length;
 }
 
-bool fec_decode(uint8_t* input)
+static bool fec_decode(uint8_t* input)
 {
 	uint8_t i, k;
 	int8_t j;

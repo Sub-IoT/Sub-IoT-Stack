@@ -163,20 +163,15 @@ Ecode_t ezradioStartTx(hw_radio_packet_t* packet, uint8_t channel_id, bool rx_af
 	//Reset TX FIFO
 	ezradio_fifo_info(EZRADIO_CMD_FIFO_INFO_ARG_FIFO_TX_BIT, NULL);
 
-<<<<<<< HEAD
 	uint16_t chunck_lenght = data_lenght;
 	if (chunck_lenght > 64) chunck_lenght = 64;
 
 	/* Fill the TX fifo with data, CRC is added by HW*/
 	ezradio_write_tx_fifo(chunck_lenght, packet->data);
-=======
-	ezradio_write_tx_fifo(data_lenght, packet->data);
->>>>>>> adapting phy to integreate fec
 
 	/* Start sending packet*/
 	// RX state or idle state
 	uint8_t next_state = rx_after ? 8 << 4 : 1 << 4;
-<<<<<<< HEAD
 	ezradio_start_tx(channel_id, next_state,  data_lenght);
 
 
@@ -190,9 +185,6 @@ Ecode_t ezradioStartTx(hw_radio_packet_t* packet, uint8_t channel_id, bool rx_af
 		chunck_lenght += new_length;
 		DPRINT ("%d added -> %d", chunck_lenght, data_lenght);
 	}
-=======
-	ezradio_start_tx(channel_id, next_state, data_lenght);
->>>>>>> adapting phy to integreate fec
 
 	return ECODE_EMDRV_EZRADIODRV_OK;
 }
