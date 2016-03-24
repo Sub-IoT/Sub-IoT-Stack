@@ -26,6 +26,7 @@
 
 #include "em_cmu.h"
 #include "em_chip.h"
+#include "platform.h"
 
 
 void __efm32lg_mcu_init()

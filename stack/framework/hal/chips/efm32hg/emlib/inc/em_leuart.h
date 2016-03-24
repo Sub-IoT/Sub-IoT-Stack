@@ -33,7 +33,7 @@
 
 #ifndef __SILICON_LABS_EM_LEUART_H__
 #define __SILICON_LABS_EM_LEUART_H__
-
+#define LEUART_COUNT 1
 #include "em_device.h"
 #if defined(LEUART_COUNT) && (LEUART_COUNT > 0)
 

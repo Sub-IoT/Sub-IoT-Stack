@@ -95,6 +95,5 @@ void alp_cmd_handler_output_unsollicited_response(d7asp_result_t d7asp_result, u
     uint8_t address_len = d7asp_result.addressee->addressee_ctrl_virtual_id? 2 : 8; // TODO according to spec this can be 1 byte as well?
     memcpy(ptr, d7asp_result.addressee->addressee_id, address_len); ptr += address_len;
     memcpy(ptr, alp_command, alp_command_size); ptr+= alp_command_size;
-
     shell_return_output(ALP_CMD_HANDLER_ID, data, ptr - data);
 }
