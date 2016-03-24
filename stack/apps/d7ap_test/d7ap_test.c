@@ -164,7 +164,8 @@ void bootstrap() {
             .transmission_timeout_period = 0xFF,
             .subbands[0] = (subband_t){
                 .channel_header = {
-                    .ch_coding = PHY_CODING_PN9,
+                    //.ch_coding = PHY_CODING_PN9,
+                	  .ch_coding = PHY_CODING_FEC_PN9,
                     .ch_class = PHY_CLASS_NORMAL_RATE,
                     .ch_freq_band = PHY_BAND_433
                 },

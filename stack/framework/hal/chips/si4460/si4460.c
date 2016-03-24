@@ -44,6 +44,7 @@
 #include "ezradio_api_lib.h"
 
 #include "ezradio_hal.h"
+#include "fec.h"
 
 
 #if defined(FRAMEWORK_LOG_ENABLED) && defined(FRAMEWORK_PHY_LOG_ENABLED) // TODO more granular (LOG_PHY_ENABLED)
@@ -125,12 +126,20 @@ static void configure_channel(const channel_id_t* channel_id)
 
 	if((channel_id->channel_header_raw != current_channel_id.channel_header_raw))
 	{
-		if (channel_id->channel_header.ch_coding == PHY_CODING_PN9)
+		if (channel_id->channel_header.ch_coding != current_channel_id.channel_header.ch_coding)
 		{
-			// TODO use HW CRC
-		} else {
-			//TODO: switch off HW CRC
-			assert(false);
+			if (channel_id->channel_header.ch_coding == PHY_CODING_PN9)
+			{
+				// use HW CRC
+				ezradio_set_property(RADIO_CONFIG_SET_PROPERTY_PKT_LEN_ADJUST_HW_CRC);
+				ezradio_set_property(RADIO_CONFIG_SET_PROPERTY_PKT_FIELD_1_CRC_CONFIG_HW_CRC);
+				ezradio_set_property(RADIO_CONFIG_SET_PROPERTY_PKT_FIELD_2_CRC_CONFIG_HW_CRC);
+			} else {
+				// use SW CRC
+				ezradio_set_property(RADIO_CONFIG_SET_PROPERTY_PKT_LEN_ADJUST_SW_CRC);
+				ezradio_set_property(RADIO_CONFIG_SET_PROPERTY_PKT_FIELD_1_CRC_CONFIG_SW_CRC);
+				ezradio_set_property(RADIO_CONFIG_SET_PROPERTY_PKT_FIELD_2_CRC_CONFIG_SW_CRC);
+			}
 		}
 		// TODO assert valid center freq index
 
@@ -403,19 +412,35 @@ static void configure_eirp(const eirp_t eirp)
 	current_eirp = eirp;
 }
 
-static void configure_syncword_class(syncword_class_t syncword_class)
+static void configure_syncword_class(syncword_class_t syncword_class, phy_coding_t coding)
 {
 	if(syncword_class == current_syncword_class)
 		return;
 
 	current_syncword_class = syncword_class;
-	switch (syncword_class)
+	switch (coding)
 	{
-		case PHY_SYNCWORD_CLASS0:
-			ezradio_set_property(RADIO_CONFIG_SET_PROPERTY_SYNC_BITS_CS0_0);
+		case PHY_CODING_PN9:
+			switch (syncword_class)
+			{
+				case PHY_SYNCWORD_CLASS0:
+					ezradio_set_property(RADIO_CONFIG_SET_PROPERTY_SYNC_BITS_CS0_0);
+					break;
+				case PHY_SYNCWORD_CLASS1:
+					ezradio_set_property(RADIO_CONFIG_SET_PROPERTY_SYNC_BITS_CS0_1);
+					break;
+			}
 			break;
-		case PHY_SYNCWORD_CLASS1:
-			ezradio_set_property(RADIO_CONFIG_SET_PROPERTY_SYNC_BITS_CS0_1);
+		case PHY_CODING_FEC_PN9:
+			switch (syncword_class)
+			{
+				case PHY_SYNCWORD_CLASS0:
+					ezradio_set_property(RADIO_CONFIG_SET_PROPERTY_SYNC_BITS_CS1_0);
+					break;
+				case PHY_SYNCWORD_CLASS1:
+					ezradio_set_property(RADIO_CONFIG_SET_PROPERTY_SYNC_BITS_CS1_1);
+					break;
+			}
 			break;
 	}
 }
@@ -469,7 +494,7 @@ error_t hw_radio_init(alloc_packet_callback_t alloc_packet_cb,
 	// configure default channel, eirp and syncword
 	configure_channel(&current_channel_id);
 	configure_eirp(current_eirp);
-	configure_syncword_class(current_rx_cfg.syncword_class);
+	configure_syncword_class(current_rx_cfg.syncword_class, current_channel_id.channel_header.ch_coding);
 
 	sched_register_task((&report_rssi));
 
@@ -528,7 +553,10 @@ error_t hw_radio_send_packet(hw_radio_packet_t* packet, tx_packet_callback_t tx_
 
 	if (packet->tx_meta.tx_cfg.channel_id.channel_header.ch_coding == PHY_CODING_FEC_PN9)
 	{
-		data_length += 2;
+		uint8_t buffer[32];
+		memcpy(buffer, packet->data, packet->length);
+		packet->length = fec_encode(packet->data, buffer, packet->length);
+		data_length = packet->length;
 	} else {
 		if (!has_hardware_crc)
 			data_length += 2;
@@ -554,7 +582,7 @@ error_t hw_radio_send_packet(hw_radio_packet_t* packet, tx_packet_callback_t tx_
 
 	configure_channel((channel_id_t*)&(packet->tx_meta.tx_cfg.channel_id));
 	configure_eirp(packet->tx_meta.tx_cfg.eirp);
-	configure_syncword_class(packet->tx_meta.tx_cfg.syncword_class);
+	configure_syncword_class(current_packet->tx_meta.tx_cfg.syncword_class, current_packet->tx_meta.tx_cfg.channel_id.channel_header.ch_coding);
 
 	DEBUG_TX_START();
 	DEBUG_RX_END();
@@ -628,7 +656,7 @@ static void start_rx(hw_rx_cfg_t const* rx_cfg)
     current_state = HW_RADIO_STATE_RX;
 
     configure_channel(&(rx_cfg->channel_id));
-    configure_syncword_class(rx_cfg->syncword_class);
+    configure_syncword_class(rx_cfg->syncword_class, rx_cfg->channel_id.channel_header.ch_coding);
 
     rx_fifo_data_lenght = 0;
     ezradioStartRx(ez_channel_id);

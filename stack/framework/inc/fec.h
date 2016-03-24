@@ -14,8 +14,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *
- * \author glenn.ergeerts@uantwerpen.be
  * \author maarten.weyn@uantwerpen.be
+ * \author glenn.ergeerts@uantwerpen.be
  * \author alexanderhoet@gmail.com
  *
  */
@@ -43,11 +43,13 @@ typedef struct {
 	VITERBIPATH states2[8];
 } VITERBISTATE;
 
+void print_array(uint8_t* buffer, uint8_t length);
 
-void fec_init_encode(uint8_t* input);
-void fec_init_decode(uint8_t* output);
-void fec_set_length(uint8_t length);
-bool fec_encode(uint8_t* output);
+uint16_t fec_encode(uint8_t *output, uint8_t *input, uint16_t nbytes);
+
+// decode whole packet
+uint8_t fec_decode_packet(uint8_t* input, uint8_t packet_length, uint8_t* output, uint8_t output_length);
+//encode 4 bytes
 bool fec_decode(uint8_t* input);
 
 #ifdef __cplusplus
