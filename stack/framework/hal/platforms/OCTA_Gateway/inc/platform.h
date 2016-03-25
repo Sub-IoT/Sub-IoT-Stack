@@ -74,6 +74,13 @@
 #define BUTTON0				A7
 #define BUTTON1				A11
 
+/*************************
+ * DEBUG PIN DEFINITIONS *
+ ************************/
 
+#define DEBUG_PIN_NUM 3
+#define DEBUG0	0
+#define DEBUG1	0
+#define DEBUG2	0
 
 #endif
