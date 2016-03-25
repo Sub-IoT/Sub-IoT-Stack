@@ -21,7 +21,7 @@
  * Interface to the hardware buttons of the gecko board. This file is NOT a part of the
  * 'HAL' interface since not every platform will have buttons
  *
- * The EFM32GG 'Giant Geck' board has two userbuttons. PB0 and PB1.
+ * The OCTA GATEWAY board has two userbuttons. PB0 and PB1.
  * These buttons are identified using a button_id_t.
  *  - PB0 is identified with button id '0'
  *  - PB1 is identified with button id '1'
