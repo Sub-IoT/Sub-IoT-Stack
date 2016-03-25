@@ -54,6 +54,7 @@
 /********************
  * UART DEFINITIONS *
  *******************/
+ 
 // console configuration
 #define CONSOLE_UART        PLATFORM_EFM32HG_STK3400_CONSOLE_UART
 #define CONSOLE_LOCATION    PLATFORM_EFM32HG_STK3400_CONSOLE_LOCATION
