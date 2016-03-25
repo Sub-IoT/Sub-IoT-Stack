@@ -50,7 +50,7 @@ void __led_init()
 
 void led_on(uint8_t led_nr)
 {
-#ifndef PLATFORM_EFM32HG_BADGE_DEBUGPINS
+#ifndef PLATFORM_OCTA-GATEWAY_DEBUGPINS
     if(led_nr < HW_NUM_LEDS)
     	hw_gpio_set(leds[led_nr]);
 #endif
@@ -58,7 +58,7 @@ void led_on(uint8_t led_nr)
 
 void led_off(unsigned char led_nr)
 {
-#ifndef PLATFORM_EFM32HG_BADGE_DEBUGPINS
+#ifndef PLATFORM_OCTA-GATEWAY_DEBUGPINS
     if(led_nr < HW_NUM_LEDS)
     	hw_gpio_clr(leds[led_nr]);
 #endif
@@ -66,7 +66,7 @@ void led_off(unsigned char led_nr)
 
 void led_toggle(unsigned char led_nr)
 {
-#ifndef PLATFORM_EFM32HG_BADGE_DEBUGPINS
+#ifndef PLATFORM_OCTA-GATEWAY_DEBUGPINS
     if(led_nr < HW_NUM_LEDS)
     	hw_gpio_toggle(leds[led_nr]);
 #endif
