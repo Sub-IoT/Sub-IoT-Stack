@@ -78,9 +78,9 @@
  * DEBUG PIN DEFINITIONS *
  ************************/
 
-#define DEBUG_PIN_NUM 3
-#define DEBUG0	0
-#define DEBUG1	0
-#define DEBUG2	0
+#define DEBUG_PIN_NUM 0
+//#define DEBUG0	0
+//#define DEBUG1	0
+//#define DEBUG2	0
 
 #endif
