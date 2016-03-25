@@ -36,7 +36,7 @@ static pin_id_t leds[ HW_NUM_LEDS ];
 
 void __led_init()
 {
-#ifndef PLATFORM_EFM32HG_BADGE_DEBUGPINS
+#ifndef PLATFORM_OCTA-GATEWAY_DEBUGPINS
 	leds[0] = LED0;
 	leds[1] = LED1;
 	leds[2] = LED2;
