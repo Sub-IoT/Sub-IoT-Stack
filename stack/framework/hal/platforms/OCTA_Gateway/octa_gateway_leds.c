@@ -36,7 +36,6 @@ static pin_id_t leds[ HW_NUM_LEDS ];
 
 void __led_init()
 {
-#ifndef PLATFORM_OCTA_GATEWAY_DEBUGPINS
 	leds[0] = LED0;
 	leds[1] = LED1;
 	leds[2] = LED2;
@@ -45,30 +44,23 @@ void __led_init()
 		error_t err = hw_gpio_configure_pin(leds[i], false, gpioModePushPull, 0);
 		assert(err == SUCCESS);
 	}
-#endif
 }
 
 void led_on(uint8_t led_nr)
 {
-#ifndef PLATFORM_OCTA_GATEWAY_DEBUGPINS
     if(led_nr < HW_NUM_LEDS)
     	hw_gpio_set(leds[led_nr]);
-#endif
 }
 
 void led_off(unsigned char led_nr)
 {
-#ifndef PLATFORM_OCTA_GATEWAY_DEBUGPINS
     if(led_nr < HW_NUM_LEDS)
     	hw_gpio_clr(leds[led_nr]);
-#endif
 }
 
 void led_toggle(unsigned char led_nr)
 {
-#ifndef PLATFORM_OCTA_GATEWAY_DEBUGPINS
     if(led_nr < HW_NUM_LEDS)
     	hw_gpio_toggle(leds[led_nr]);
-#endif
 }
 
