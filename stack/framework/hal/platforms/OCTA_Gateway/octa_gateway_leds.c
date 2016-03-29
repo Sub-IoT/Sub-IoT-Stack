@@ -29,7 +29,7 @@
 #include "em_gpio.h"
 #include <assert.h>
 
-#if HW_NUM_LEDS != 2
+#if HW_NUM_LEDS != 3
 	#error HW_NUM_LEDS does not match the expected value. Update platform.h or platform_leds.c
 #endif
 static pin_id_t leds[ HW_NUM_LEDS ];
@@ -38,9 +38,10 @@ void __led_init()
 {
 	leds[0] = LED0;
 	leds[1] = LED1;
+	leds[2] = LED2;
 	for(int i = 0; i < HW_NUM_LEDS; i++)
 	{
-		error_t err = hw_gpio_configure_pin(leds[i], false, gpioModePushPull, 1);
+		error_t err = hw_gpio_configure_pin(leds[i], false, gpioModePushPull, 0);
 		assert(err == SUCCESS);
 	}
 }
