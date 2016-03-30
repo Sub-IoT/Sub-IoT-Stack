@@ -69,16 +69,17 @@ void packet_disassemble(packet_t* packet)
 
     if (packet->hw_radio_packet.rx_meta.crc_status == HW_CRC_UNAVAILABLE)
     {
-		uint16_t crc = __builtin_bswap16(crc_calculate(packet->hw_radio_packet.data, packet->hw_radio_packet.length + 1 - 2));
-		if(memcmp(&crc, packet->hw_radio_packet.data + packet->hw_radio_packet.length + 1 - 2, 2) != 0)
-		{
+        uint16_t crc = __builtin_bswap16(crc_calculate(packet->hw_radio_packet.data, packet->hw_radio_packet.length + 1 - 2));
+        if(memcmp(&crc, packet->hw_radio_packet.data + packet->hw_radio_packet.length + 1 - 2, 2) != 0)
+        {
             DPRINT_DLL("CRC invalid");
-			goto cleanup;
-		}
-    } else if (packet->hw_radio_packet.rx_meta.crc_status == HW_CRC_INVALID)
+            goto cleanup;
+        }
+    }
+    else if (packet->hw_radio_packet.rx_meta.crc_status == HW_CRC_INVALID)
     {
         DPRINT_DLL("CRC invalid");
-    	goto cleanup;
+        goto cleanup;
     }
 
     uint8_t data_idx = 1;
