@@ -115,7 +115,7 @@ typedef struct {
     d7asp_received_unhandled_alp_command_callback d7asp_received_unhandled_alp_command_cb;
 } d7asp_init_args_t;
 
-void d7asp_init(d7asp_init_args_t* init_arfs);
+void d7asp_init(d7asp_init_args_t* init_args);
 d7asp_queue_result_t d7asp_queue_alp_actions(d7asp_fifo_config_t* d7asp_fifo_config, uint8_t* alp_payload_buffer, uint8_t alp_payload_length); // TODO return status
 bool d7asp_process_received_packet(packet_t* packet);
 

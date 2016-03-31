@@ -28,6 +28,7 @@
 #include "types.h"
 #include "alp.h"
 #include "shell.h"
+#include "console.h"
 #include "debug.h"
 #include "MODULE_D7AP_defs.h"
 #include "ng.h"
@@ -85,30 +86,37 @@ void alp_cmd_handler(fifo_t* cmd_fifo)
 
 void alp_cmd_handler_process_fs_itf(uint8_t* alp_command, uint8_t alp_command_length)
 {
-    uint8_t alp_response[128] = { 0 };
+    uint8_t serial_interface_frame[128] = { 0x00 };
+    uint8_t* ptr = serial_interface_frame;
+
+    (*ptr) = 0xC0; ptr++;               // serial interface sync byte
+    (*ptr) = 0x00; ptr++;               // serial interface version
+
     uint8_t alp_reponse_length = 0;
-    alp_process_command_fs_itf(alp_command, alp_command_length, alp_response, &alp_reponse_length);
+    alp_process_command(alp_command, alp_command_length, ptr + 1, &alp_reponse_length);
 
     if(alp_reponse_length > 0)
-        shell_return_output(ALP_CMD_HANDLER_ID, alp_response, alp_reponse_length); // TODO transmit ALP interface ID as well?
+    {
+        (*ptr) = alp_reponse_length;
+        console_print_bytes(serial_interface_frame, alp_reponse_length + 3);
+    }
 }
 
 void alp_cmd_handler_output_unsollicited_response(d7asp_result_t d7asp_result, uint8_t *alp_command, uint8_t alp_command_size, hw_rx_metadata_t* rx_meta)
 {
-    uint8_t data[1 + sizeof(hw_rx_metadata_t) + MODULE_D7AP_FIFO_COMMAND_BUFFER_SIZE] = { 0x00 };
+    uint8_t data[MODULE_D7AP_FIFO_COMMAND_BUFFER_SIZE] = { 0x00 };
     uint8_t* ptr = data;
-    // TODO transmit ALP interface ID as well?
-    // TODO rx meta
-    (*ptr) = d7asp_result.status.raw; ptr++;
-    (*ptr) = d7asp_result.fifo_token; ptr++;
-    (*ptr) = d7asp_result.request_id; ptr++;
-    (*ptr) = d7asp_result.response_to; ptr++;
-    (*ptr) = d7asp_result.addressee->addressee_ctrl; ptr++;
-    uint8_t address_len = d7asp_result.addressee->addressee_ctrl_virtual_id? 2 : 8; // TODO according to spec this can be 1 byte as well?
-    memcpy(ptr, d7asp_result.addressee->addressee_id, address_len); ptr += address_len;
+
+    (*ptr) = 0xC0; ptr++;               // serial interface sync byte
+    (*ptr) = 0x00; ptr++;               // serial interface version
+    (*ptr) = alp_command_size; ptr++;
+
+    // the actual received data ...
     memcpy(ptr, alp_command, alp_command_size); ptr+= alp_command_size;
 
-    shell_return_output(ALP_CMD_HANDLER_ID, data, ptr - data);
+    // TODO interface status
+
+    console_print_bytes(data, ptr - data);
 }
 
 void alp_cmd_handler_set_appl_itf_callback(alp_cmd_handler_appl_itf_callback cb)
