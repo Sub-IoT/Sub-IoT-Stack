@@ -33,7 +33,7 @@
 
 #include "d7ap_stack.h"
 #include "dll.h"
-
+#include "alp_cmd_handler.h"
 
 #ifdef HAS_LCD
 #include "hwlcd.h"
@@ -75,10 +75,10 @@ void execute_sensor_measurement() {
 
 
 void on_unsollicited_response_received(d7asp_result_t d7asp_result,
-                                      uint8_t *alp_command, uint8_t alp_command_size,
-                                      hw_rx_metadata_t* rx_meta)
+                                      uint8_t *alp_command, uint8_t alp_command_size)
 {
-	DPRINT("Unsol resp %d\n", rx_meta->rssi);
+  alp_cmd_handler_output_unsollicited_response(d7asp_result, alp_command, alp_command_size);
+  DPRINT("Unsol resp %d\n", d7asp_result.rssi);
 #ifdef PLATFORM_EFM32GG_STK3700
 	lcd_write_number(rx_meta->rssi);
 #endif
@@ -197,8 +197,3 @@ void bootstrap() {
 
     sched_register_task((&execute_sensor_measurement));
     timer_post_task_delay(&execute_sensor_measurement, REPORTING_INTERVAL_TICKS);
-
-#if HW_NUM_LEDS >= 3
-    led_toggle(2);
-#endif
-}

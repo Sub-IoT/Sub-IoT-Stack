@@ -102,7 +102,7 @@ typedef struct {
 
 typedef void (*d7asp_fifo_flush_completed_callback)(uint8_t fifo_token, uint8_t* progress_bitmap, uint8_t* success_bitmap, uint8_t bitmap_byte_count);
 typedef void (*d7asp_fifo_request_completed_callback)(d7asp_result_t result, uint8_t* payload, uint8_t payload_length);
-typedef void (*d7asp_received_unsollicited_data_callback)(d7asp_result_t d7asp_result, uint8_t *alp_command, uint8_t alp_command_size, hw_rx_metadata_t* rx_metadata);
+typedef void (*d7asp_received_unsollicited_data_callback)(d7asp_result_t d7asp_result, uint8_t *alp_command, uint8_t alp_command_size);
 typedef void (*d7asp_received_unhandled_alp_command_callback)(uint8_t* alp_command, uint8_t alp_command_length, uint8_t* alp_response, uint8_t* alp_response_length);
 
 typedef struct {

@@ -50,9 +50,8 @@ void alp_cmd_handler_process_fs_itf(uint8_t* alp_command, uint8_t alp_command_le
 /// \param d7asp_result
 /// \param alp_command
 /// \param alp_command_size
-/// \param rx_meta
 ///
-void alp_cmd_handler_output_unsollicited_response(d7asp_result_t d7asp_result, uint8_t *alp_command, uint8_t alp_command_size, hw_rx_metadata_t* rx_meta);
+void alp_cmd_handler_output_unsollicited_response(d7asp_result_t d7asp_result, uint8_t *alp_command, uint8_t alp_command_size);
 
 ///
 /// \brief Set the callback which will be called when an ALP command is received for the application interface

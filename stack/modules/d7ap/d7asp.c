@@ -258,8 +258,8 @@ bool d7asp_process_received_packet(packet_t* packet)
 {
     hw_watchdog_feed(); // TODO do here?
     d7asp_result_t result = {
-        .channel = &packet->hw_radio_packet.rx_meta.rx_cfg.channel_id,
-        .rssi =  &packet->hw_radio_packet.rx_meta.rssi,
+        .channel = packet->hw_radio_packet.rx_meta.rx_cfg.channel_id,
+        .rssi =  packet->hw_radio_packet.rx_meta.rssi,
         .link_budget = 0, // TODO
         .status = {
             .session_state = SESSION_STATE_DONE, // TODO
@@ -307,7 +307,7 @@ bool d7asp_process_received_packet(packet_t* packet)
             // received unsollicited data, notify appl
             DPRINT("Received unsollicited data");
             if(d7asp_init_args != NULL && d7asp_init_args->d7asp_received_unsollicited_data_cb != NULL)
-                d7asp_init_args->d7asp_received_unsollicited_data_cb(result, packet->payload, packet->payload_length, &packet->hw_radio_packet.rx_meta);
+                d7asp_init_args->d7asp_received_unsollicited_data_cb(result, packet->payload, packet->payload_length);
 
             packet->payload_length = 0; // no response payload
         }

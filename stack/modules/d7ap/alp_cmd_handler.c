@@ -102,7 +102,7 @@ void alp_cmd_handler_process_fs_itf(uint8_t* alp_command, uint8_t alp_command_le
     }
 }
 
-void alp_cmd_handler_output_unsollicited_response(d7asp_result_t d7asp_result, uint8_t *alp_command, uint8_t alp_command_size, hw_rx_metadata_t* rx_meta)
+void alp_cmd_handler_output_unsollicited_response(d7asp_result_t d7asp_result, uint8_t *alp_command, uint8_t alp_command_size)
 {
     uint8_t data[MODULE_D7AP_FIFO_COMMAND_BUFFER_SIZE] = { 0x00 };
     uint8_t* ptr = data;
