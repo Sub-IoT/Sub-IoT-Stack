@@ -258,6 +258,9 @@ bool d7asp_process_received_packet(packet_t* packet)
 {
     hw_watchdog_feed(); // TODO do here?
     d7asp_result_t result = {
+        .channel = &packet->hw_radio_packet.rx_meta.rx_cfg.channel_id,
+        .rssi =  &packet->hw_radio_packet.rx_meta.rssi,
+        .link_budget = 0, // TODO
         .status = {
             .session_state = SESSION_STATE_DONE, // TODO
             .nls = packet->d7anp_ctrl.nls_enabled,

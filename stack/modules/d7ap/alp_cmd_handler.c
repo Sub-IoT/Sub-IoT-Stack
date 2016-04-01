@@ -109,12 +109,26 @@ void alp_cmd_handler_output_unsollicited_response(d7asp_result_t d7asp_result, u
 
     (*ptr) = 0xC0; ptr++;               // serial interface sync byte
     (*ptr) = 0x00; ptr++;               // serial interface version
-    (*ptr) = alp_command_size; ptr++;
+    ptr++;                              // payload length byte, skip for now and fll later
 
     // the actual received data ...
     memcpy(ptr, alp_command, alp_command_size); ptr+= alp_command_size;
 
-    // TODO interface status
+    // add interface status action
+    (*ptr) = ALP_OP_INTERFACE_STATUS; ptr++;
+    (*ptr) = ALP_ITF_ID_D7ASP; ptr++;
+    memcpy(ptr, &d7asp_result.channel, 3); ptr += 3; // TODO current spec draft has size=2
+    memcpy(ptr, &d7asp_result.rssi, 2); ptr += 2; // TODO current spec draft has size=1
+    (*ptr) = d7asp_result.link_budget; ptr++;
+    (*ptr) = d7asp_result.status.raw; ptr++;
+    (*ptr) = d7asp_result.fifo_token; ptr++;
+    (*ptr) = d7asp_result.request_id; ptr++;
+    (*ptr) = d7asp_result.response_to; ptr++;
+    (*ptr) = d7asp_result.addressee->addressee_ctrl; ptr++;
+    uint8_t address_len = d7asp_result.addressee->addressee_ctrl_virtual_id? 2 : 8; // TODO according to spec this can be 1 byte as
+    memcpy(ptr, d7asp_result.addressee->addressee_id, address_len); ptr += address_len;
+
+    data[2] = ptr - (data + 3);       // fill length byte
 
     console_print_bytes(data, ptr - data);
 }

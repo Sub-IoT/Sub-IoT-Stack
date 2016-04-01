@@ -90,6 +90,9 @@ typedef struct {
 } d7asp_queue_result_t;
 
 typedef struct {
+    channel_id_t channel;
+    uint16_t rssi;
+    uint8_t link_budget;
     d7asp_state_t status;
     uint8_t fifo_token;
     uint8_t request_id;

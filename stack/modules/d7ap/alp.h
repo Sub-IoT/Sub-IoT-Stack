@@ -67,6 +67,8 @@ typedef enum {
     ALP_OP_RETURN_STATUS = 34,
     ALP_OP_CHUNK = 48,
     ALP_OP_LOGIC = 49,
+    ALP_OP_FORWARD = 50,
+    ALP_OP_INTERFACE_STATUS = 51
 } alp_operation_t;
 
 typedef enum {
