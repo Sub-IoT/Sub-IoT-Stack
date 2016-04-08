@@ -2,8 +2,9 @@ APP                    ?= gateway
 PLATFORM               ?= EFM32GG_STK3700
 FRAMEWORK_LOG_ENABLED  ?= no
 FRAMEWORK_LOG_BINARY   ?= no
-
+TOOLCHAIN_DIR          ?= ../../gcc-arm-none-eabi-4_9-2015q3
 BUILD                  ?= Debug
+
 
 BUILD_DIR               = ../build/$(APP)
 
@@ -14,7 +15,7 @@ ELF                     = $(TARGET).elf
 CMAKE                   = cmake
 
 OSS                    := $(realpath stack)
-TOOLCHAIN_DIR           = ../../gcc-arm-none-eabi-4_9-2015q3
+TOOLCHAIN_ABS_DIR       = $(realpath $(TOOLCHAIN_DIR))
 TOOLCHAIN_FILE          = $(OSS)/cmake/toolchains/gcc-arm-embedded.cmake
 PLATFORM_UC            := $(shell echo $(PLATFORM) | tr a-z A-Z)
 PLATFORM_RADIO          = cc1101
@@ -25,8 +26,8 @@ JLINK                   = JLinkExe
 DEVICE                  = EFM32GG230F1024
 FLASH_SCRIPT            = script.gdb
 
-SIZE                    = arm-none-eabi-size
-OBJCOPY                 = arm-none-eabi-objcopy -O binary
+SIZE                    = $(TOOLCHAIN_ABS_DIR)/bin/arm-none-eabi-size
+OBJCOPY                 = $(TOOLCHAIN_ABS_DIR)/bin/arm-none-eabi-objcopy -O binary
 
 -include $(APP_DIR)/Makefile
 
@@ -35,10 +36,10 @@ all: $(ELF)
 $(BUILD_DIR):
 	@echo "*** preparing $@"
 	@mkdir -p $@
-	@( cd $@; \
+	( cd $@; \
   	$(CMAKE) $(OSS) \
 		 -DCMAKE_BUILD_TYPE=$(BUILD) \
-		 -DTOOLCHAIN_DIR=$(TOOLCHAIN_DIR) \
+		 -DTOOLCHAIN_DIR=$(TOOLCHAIN_ABS_DIR) \
 		 -DCMAKE_TOOLCHAIN_FILE=$(TOOLCHAIN_FILE) \
 		 -DPLATFORM=$(PLATFORM) \
 		 -DPLATFORM_$(PLATFORM_UC)_RADIO=$(PLATFORM_RADIO) \
