@@ -29,7 +29,9 @@ __LINK_C void console_rx_interrupt_enable();
 
 // no uart config
 
+#ifndef NO_CONSOLE
 #pragma message "WARNING: no console configuration found !!!"
+#endif
 
 #define console_init()
 #define console_enable()
