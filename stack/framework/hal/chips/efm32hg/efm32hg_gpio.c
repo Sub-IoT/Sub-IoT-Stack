@@ -20,136 +20,164 @@
  *
  *  \author daniel.vandenakker@uantwerpen.be
  *  \author glenn.ergeerts@uantwerpen.be
- *  \author contact@christophe.vg
  *
  */
 
-#include <stdint.h>
-#include <debug.h>
-
-#include "em_gpio.h"
-#include "em_cmu.h"
-#include "em_bitband.h"
 
 #include "hwgpio.h"
+#include "efm32hg_chip.h"
+#include <em_gpio.h>
+#include <em_cmu.h>
+#include <em_bitband.h>
+#include <gpiointerrupt.h>
+#include <stdarg.h>
+#include <debug.h>
 #include "hwatomic.h"
 
-#include "gpiointerrupt.h"
-
-#include "efm32hg_chip.h"
-
-// interrupt callbacks : [gpioPortA(0)-gpioPortH(7)][0-15] = 8*16 = 128
-static gpio_inthandler_t interrupts[128] = { NULL };
-#define pin2index(p) ((p.port * 16) + p.pin)
-
-// for each port (8) a bitfield with 16 bits represents all pins
-static uint16_t gpio_pins_configured[8] = { 0 };
-#define is_configured(p) (gpio_pins_configured[p.port] & (1<<p.pin))
-
-__LINK_C void __gpio_init() {
-  CMU_ClockEnable(cmuClock_GPIO, true);
-
-  // Initialize GPIO interrupt dispatcher
-  GPIOINT_Init();
-}
-
-__LINK_C error_t hw_gpio_configure_pin(pin_id_t pin_id, bool int_allowed,
-                                       uint8_t mode, unsigned int out)
+typedef struct
 {
-  // notify if pin was already configured, don't reconfigure
-  if(is_configured(pin_id)) {	return EALREADY; }
+    gpio_inthandler_t callback;
+    GPIO_Port_TypeDef interrupt_port;
+} gpio_interrupt_t;
+//the list of configured interrupts
+static gpio_interrupt_t interrupts[16];
 
-  // mark the pin to as configured
-  gpio_pins_configured[pin_id.port] |= (1<<pin_id.pin);
-  
-  // configure the pin itself
-  GPIO_PinModeSet(pin_id.port, pin_id.pin, mode, out);
-  
-  return SUCCESS;    
-}
+static uint16_t gpio_pins_configured[6];
 
-__LINK_C error_t hw_gpio_set(pin_id_t pin_id) {
-  if( ! is_configured(pin_id) ) { return EOFF; }
-  GPIO_PinOutSet(pin_id.port, pin_id.pin);
-  return SUCCESS;
-}
-
-__LINK_C error_t hw_gpio_clr(pin_id_t pin_id) {
-  if( ! is_configured(pin_id) ) { return EOFF; }
-  GPIO_PinOutClear(pin_id.port, pin_id.pin);
-  return SUCCESS;
-}
-
-__LINK_C error_t hw_gpio_toggle(pin_id_t pin_id) {
-  if( ! is_configured(pin_id) ) { return EOFF; }
-  GPIO_PinOutToggle(pin_id.port, pin_id.pin);
-  return SUCCESS;
-}
-
-__LINK_C bool hw_gpio_get_out(pin_id_t pin_id) {
-  return is_configured(pin_id) && GPIO_PinOutGet(pin_id.port, pin_id.pin);
-}
-
-__LINK_C bool hw_gpio_get_in(pin_id_t pin_id) {
-  return is_configured(pin_id) && GPIO_PinInGet(pin_id.port, pin_id.pin);
-}
-
-static void gpio_int_callback(uint8_t index) {
-  // we use emlib's GPIO interrupt handler which does NOT disable the interrupts
-  // by default --> disable them here to get the same behavior !!
-  start_atomic();
-  assert(interrupts[index] != NULL);
-	pin_id_t pin = { port: index / 16, pin: index % 16 };
-  interrupts[index](pin, 0);
-  end_atomic();
-}
-
-__LINK_C error_t hw_gpio_configure_interrupt(pin_id_t pin_id,
-                                             gpio_inthandler_t callback,
-                                             uint8_t event_mask)
+__LINK_C void __gpio_init()
 {
-  if(callback == NULL || event_mask > (GPIO_RISING_EDGE | GPIO_FALLING_EDGE)) {
-  	return EINVAL;
-  }
+    for(int i = 0; i < 16; i++)
+    {
+    	interrupts[i].callback = 0x0;
+    	interrupts[i].interrupt_port = 0xFF; //signal that a port has not yet been chosen
+    }
+    for(int i = 0; i < 6; i++)
+    	gpio_pins_configured[i] = 0;
+    CMU_ClockEnable(cmuClock_GPIO, true);
 
-  error_t err;
-  start_atomic();
-  // do this check atomically: interrupts[..] callback is altered by this
-  // function. so the check belongs in the critical section as well
-  if(interrupts[pin2index(pin_id)] == callback) {
-    // we already have this one, shouldn't we return EALREADY ?
-    // keep existing behaviour, success, and don't change anyting
-    // err = EALREADY
-    err = SUCCESS;
-  } else if(interrupts[pin2index(pin_id)] != NULL ) {
-    // whoops, already configured with another callback
-    err = EBUSY;
-  }	else {
-    // configure the interrupt handler
-    interrupts[pin2index(pin_id)] = callback;
-  	GPIOINT_CallbackRegister(pin2index(pin_id), &gpio_int_callback);
-    GPIO_IntConfig(
-      pin_id.port, pin_id.pin, 
-		  event_mask & GPIO_RISING_EDGE,
-		  event_mask & GPIO_FALLING_EDGE,
-		  false
-    );			
-    err = SUCCESS;
+    /* Initialize GPIO interrupt dispatcher */
+    GPIOINT_Init();
+}
+
+__LINK_C error_t hw_gpio_configure_pin(pin_id_t pin_id, bool int_allowed, uint8_t mode, unsigned int out)
+{
+    //do early-stop error checking
+    if((gpio_pins_configured[pin_id.port] & (1<<pin_id.pin)))
+    	return EALREADY;
+    else if(int_allowed && (interrupts[pin_id.pin].interrupt_port != 0xFF))
+    	return EBUSY;
+
+    //set the pin to be configured
+    gpio_pins_configured[pin_id.port] |= (1<<pin_id.pin);
+    
+    //configure the pin itself
+    GPIO_PinModeSet(pin_id.port, pin_id.pin, mode, out);
+    
+    //if interrupts are allowed: set the port to use
+    if(int_allowed)
+    	interrupts[pin_id.pin].interrupt_port = pin_id.port;
+    
+    return SUCCESS;    
+}
+
+__LINK_C error_t hw_gpio_set(pin_id_t pin_id)
+{
+    if(!(gpio_pins_configured[pin_id.port] & (1<<pin_id.pin)))
+	return EOFF;
+    GPIO_PinOutSet(pin_id.port, pin_id.pin);
+    return SUCCESS;
+}
+
+__LINK_C error_t hw_gpio_clr(pin_id_t pin_id)
+{
+    if(!(gpio_pins_configured[pin_id.port] & (1<<pin_id.pin)))
+	return EOFF;
+    GPIO_PinOutClear(pin_id.port, pin_id.pin);
+    return SUCCESS;
+}
+
+__LINK_C error_t hw_gpio_toggle(pin_id_t pin_id)
+{
+    if(!(gpio_pins_configured[pin_id.port] & (1<<pin_id.pin)))
+	return EOFF;
+    GPIO_PinOutToggle(pin_id.port, pin_id.pin);
+    return SUCCESS;
+}
+
+__LINK_C bool hw_gpio_get_out(pin_id_t pin_id)
+{
+    return (!!(gpio_pins_configured[pin_id.port] & (1<<pin_id.pin))) 
+	&& GPIO_PinOutGet(pin_id.port, pin_id.pin);
+}
+
+__LINK_C bool hw_gpio_get_in(pin_id_t pin_id)
+{
+    return (!!(gpio_pins_configured[pin_id.port] & (1<<pin_id.pin))) 
+	&& GPIO_PinInGet(pin_id.port, pin_id.pin);
+}
+
+static void gpio_int_callback(uint8_t pin)
+{
+    //we use emlib's GPIO interrupt handler which does NOT
+    //disable the interrupts by default --> disable them here to get the same behavior !!
+    start_atomic();
+	assert(interrupts[pin].callback != 0x0);
+	pin_id_t id = {interrupts[pin].interrupt_port, pin};
+	//report an event_mask of '0' since the only way to check which event occurred
+	//is to check the state of the pin from the interrupt handler and 
+    //since the execution of interrupt handlers may be 'delayed' this method is NOT reliable.
+    // TODO find out if there is no way to do this reliable on efm32gg
+    interrupts[pin].callback(id,0);
+    end_atomic();
+}
+
+__LINK_C error_t hw_gpio_configure_interrupt(pin_id_t pin_id, gpio_inthandler_t callback, uint8_t event_mask)
+{
+    if(interrupts[pin_id.pin].interrupt_port != pin_id.port)
+    	return EOFF;
+    else if(callback == 0x0 || event_mask > (GPIO_RISING_EDGE | GPIO_FALLING_EDGE))
+    	return EINVAL;
+
+    error_t err;
+    start_atomic();
+	//do this check atomically: interrupts[..] callback is altered by this function
+	//so the check belongs in the critical section as well
+    if(interrupts[pin_id.pin].callback != 0x0 && interrupts[pin_id.pin].callback != callback)
+	    err = EBUSY;
+	else
+	{
+	    interrupts[pin_id.pin].callback = callback;
+    	GPIOINT_CallbackRegister(pin_id.pin, &gpio_int_callback);
+	    GPIO_IntConfig(pin_id.port, pin_id.pin, 
+			!!(event_mask & GPIO_RISING_EDGE),
+			!!(event_mask & GPIO_FALLING_EDGE),
+			false);			
+	    err = SUCCESS;
 	}
-  end_atomic();
-  return err;
+    end_atomic();
+    return err;
 }
+__LINK_C error_t hw_gpio_enable_interrupt(pin_id_t pin_id)
+{
+    //to be absolutely safe we should put atomic blocks around this fuction but:
+    //interrupts[..].interrupt_port && interrupts[..].callback will never change once they've
+    //been properly set so I think we can risk it and avoid the overhead
+    if(interrupts[pin_id.pin].interrupt_port != pin_id.port || interrupts[pin_id.pin].callback == 0x0)
+    	return EOFF;
 
-__LINK_C error_t hw_gpio_enable_interrupt(pin_id_t pin_id) {
-  if(interrupts[pin2index(pin_id)] == NULL) {	return EOFF; }
-  BITBAND_Peripheral(&(GPIO->IFC), pin_id.pin, 1);
-  BITBAND_Peripheral(&(GPIO->IEN), pin_id.pin, 1);
-  return SUCCESS;
+    BITBAND_Peripheral(&(GPIO->IFC), pin_id.pin, 1);
+    BITBAND_Peripheral(&(GPIO->IEN), pin_id.pin, 1);
+    return SUCCESS;
 }
 
 __LINK_C error_t hw_gpio_disable_interrupt(pin_id_t pin_id)
 {
-  if(interrupts[pin2index(pin_id)] == NULL) { return EOFF; }
-  BITBAND_Peripheral(&(GPIO->IEN), pin_id.pin, 0);
-  return SUCCESS;
+    //to be absolutely safe we should put atomic blocks around this fuction but:
+    //interrupts[..].interrupt_port && interrupts[..].callback will never change once they've
+    //been properly set so I think we can risk it and avoid the overhead
+    if(interrupts[pin_id.pin].interrupt_port != pin_id.port || interrupts[pin_id.pin].callback == 0x0)
+	return EOFF;
+
+    BITBAND_Peripheral(&(GPIO->IEN), pin_id.pin, 0);
+    return SUCCESS;
 }
