@@ -90,8 +90,10 @@ i2c_handle_t* i2c_init(uint8_t idx, uint8_t pins) {
 
 	// Output value must be set to 1 to not drive lines low.
 	// Set SCL first, to ensure it is high before changing SDA.
-	assert(hw_gpio_configure_pin(handle[idx].pins->scl, false, gpioModeWiredAndPullUp, 1) == SUCCESS);
-	assert(hw_gpio_configure_pin(handle[idx].pins->sda, false, gpioModeWiredAndPullUp, 1) == SUCCESS);
+	error_t err = hw_gpio_configure_pin(handle[idx].pins->scl, false, gpioModeWiredAndPullUp, 1);
+  assert(err == SUCCESS | err == EALREADY);
+	err = hw_gpio_configure_pin(handle[idx].pins->sda, false, gpioModeWiredAndPullUp, 1);
+  assert(err == SUCCESS | err == EALREADY);
 
 	// In some situations, after a reset during an I2C transfer, the slave
 	// device may be left in an unknown state. Send 9 clock pulses to
