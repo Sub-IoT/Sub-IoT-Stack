@@ -148,8 +148,8 @@ int8_t i2c_read(i2c_handle_t* i2c, uint8_t to, uint8_t* payload, int length) {
 	return _perform_i2c_transfer(i2c, (I2C_TransferSeq_TypeDef) {
 		.addr        = to,
 		.flags       = I2C_FLAG_READ,
-		.buf[1].data = payload,
-		.buf[1].len  = length,
+		.buf[0].data = payload,
+		.buf[0].len  = length,
 	});
 }
 
