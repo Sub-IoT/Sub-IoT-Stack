@@ -67,13 +67,13 @@ uint8_t cc1101_interface_write_single_patable(uint8_t);
 
 static uint8_t current_channel_indexes_index = 0;
 static phy_channel_band_t current_channel_band = PHY_BAND_433;
-static phy_channel_class_t current_channel_class = PHY_CLASS_NORMAL_RATE;
+static phy_channel_class_t current_channel_class = PHY_CLASS_LO_RATE;
 static uint8_t channel_indexes[NORMAL_RATE_CHANNEL_COUNT] = { 0 }; // reallocated later depending on band/class
 static uint8_t channel_count = NORMAL_RATE_CHANNEL_COUNT;
 
 void rssi_valid_cb(int16_t rssi)
 {
-	// dummy, we are not staying in rx
+  // dummy, we are not staying in rx
 }
 
 void start()
@@ -113,8 +113,10 @@ void start()
     hw_radio_set_idle(); // go straight back to idle
 
     cc1101_interface_write_single_reg(0x08, 0x22); // PKTCTRL0 random PN9 mode + disable data whitening
+    //cc1101_interface_write_single_reg(0x08, 0x02); // PKTCTRL0 disable data whitening, continious preamble
     //cc1101_interface_write_single_reg(0x12, 0x30); // MDMCFG2: use OOK modulation to clearly view centre freq on spectrum analyzer, comment for GFSK
     cc1101_interface_write_single_patable(0xc0); // 10dBm TX EIRP
+    cc1101_interface_strobe(0x32); // strobe calibrate
     cc1101_interface_strobe(0x35); // strobe TX
 #elif defined USE_SI4460
     //ezradioStartTxUnmodelated(rx_cfg.channel_id.center_freq_index);
@@ -156,14 +158,14 @@ void bootstrap()
     {
         // TODO only 433 for now
         case PHY_CLASS_NORMAL_RATE:
-        	channel_count = NORMAL_RATE_CHANNEL_COUNT;
+          channel_count = NORMAL_RATE_CHANNEL_COUNT;
             realloc(channel_indexes, channel_count);
             for(int i = 0; i < channel_count; i++)
                 channel_indexes[i] = i * 8;
 
             break;
         case PHY_CLASS_LO_RATE:
-        	channel_count = LO_RATE_CHANNEL_COUNT;
+          channel_count = LO_RATE_CHANNEL_COUNT;
             realloc(channel_indexes, channel_count);
             for(int i = 0; i < channel_count; i++)
                 channel_indexes[i] = i;
