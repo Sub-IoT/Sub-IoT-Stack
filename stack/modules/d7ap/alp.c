@@ -34,11 +34,13 @@ alp_operation_t alp_get_operation(uint8_t* alp_command)
     return alp_ctrl.operation;
 }
 
-void alp_process_command(uint8_t* alp_command, uint8_t alp_command_length, uint8_t* alp_response, uint8_t* alp_response_length)
+bool alp_process_command_fs_itf(uint8_t* alp_command, uint8_t alp_command_length, uint8_t* alp_response, uint8_t* alp_response_length)
 {
     // TODO check response length
     alp_control_t alp_control = { .raw = (*alp_command) }; alp_command++;
     (*alp_response_length) = 0;
+
+    alp_status_codes_t alp_status;
 
     switch(alp_control.operation)
     {
@@ -55,7 +57,7 @@ void alp_process_command(uint8_t* alp_command, uint8_t alp_command_length, uint8
             alp_response[(*alp_response_length)] = operand.file_offset.file_id; (*alp_response_length)++;
             alp_response[(*alp_response_length)] = operand.file_offset.offset; (*alp_response_length)++;
             alp_response[(*alp_response_length)] = operand.requested_data_length; (*alp_response_length)++;
-            fs_read_file(operand.file_offset.file_id, operand.file_offset.offset, alp_response + (*alp_response_length), operand.requested_data_length);
+            alp_status = fs_read_file(operand.file_offset.file_id, operand.file_offset.offset, alp_response + (*alp_response_length), operand.requested_data_length);
             (*alp_response_length) += operand.requested_data_length;
             break;
         }
@@ -65,13 +67,22 @@ void alp_process_command(uint8_t* alp_command, uint8_t alp_command_length, uint8
             operand.file_offset.file_id = (*alp_command); alp_command++;
             operand.file_offset.offset = (*alp_command); alp_command++; // TODO can be 1-4 bytes, assume 1 for now
             operand.provided_data_length = (*alp_command); alp_command++;
-            fs_write_file(operand.file_offset.file_id, operand.file_offset.offset, alp_command, operand.provided_data_length);
+            alp_status = fs_write_file(operand.file_offset.file_id, operand.file_offset.offset, alp_command, operand.provided_data_length);
             break;
         }
         default:
-            assert(false); // TODO implement other operations
+            alp_status = ALP_STATUS_UNKNOWN_OPERATION;
+
+            // TODO implement other operations
     }
 
     // TODO multiple commands in one request
+
+    // TODO return ALP status if requested
+
+    if(alp_status != ALP_STATUS_OK)
+      return false;
+
+    return true;
 }
 

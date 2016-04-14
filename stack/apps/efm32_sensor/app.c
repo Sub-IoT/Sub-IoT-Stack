@@ -197,14 +197,14 @@ void bootstrap()
         .access_profiles = access_classes
     };
 
-    d7ap_stack_init(&fs_init_args, NULL, false);
+    d7ap_stack_init(&fs_init_args, NULL, false, NULL);
 
     initSensors();
 
     ubutton_register_callback(0, &userbutton_callback);
     ubutton_register_callback(1, &userbutton_callback);
 
-    sched_register_task((&execute_sensor_measurement));
+    sched_register_task(&execute_sensor_measurement);
 
     timer_post_task_delay(&execute_sensor_measurement, TIMER_TICKS_PER_SEC);
 

@@ -28,8 +28,9 @@
 
 #include "d7asp.h"
 
-#define ALP_ITF_ID_D7ASP 0xD7
-#define ALP_ITF_ID_FS 0x00 // not part of the spec
+#define ALP_ITF_ID_D7ASP  0xD7
+#define ALP_ITF_ID_FS     0x00 // not part of the spec
+#define ALP_ITF_ID_APP    0x01 // not part of the spec
 
 #define ALP_PAYLOAD_MAX_SIZE 32 // TODO configurable?
 
@@ -67,6 +68,17 @@ typedef enum {
     ALP_OP_CHUNK = 48,
     ALP_OP_LOGIC = 49,
 } alp_operation_t;
+
+typedef enum {
+  ALP_STATUS_OK = 0x00,
+  ALP_STATUS_PARTIALLY_COMPLETED = 0x01,
+  ALP_STATUS_UNKNOWN_ERROR = 0x80,
+  ALP_STATUS_UNKNOWN_OPERATION = 0xF6,
+  ALP_STATUS_INSUFFICIENT_PERMISSIONS = 0xFC,
+  // TODO others
+  ALP_STATUS_FILE_ID_ALREADY_EXISTS = 0xFE,
+  ALP_STATUS_FILE_ID_NOT_EXISTS = 0xFF,
+} alp_status_codes_t;
 
 
 /*! \brief The ALP CTRL header
@@ -110,15 +122,16 @@ typedef struct {
 alp_operation_t alp_get_operation(uint8_t* alp_command);
 
 /*!
- * \brief Process the ALP command
+ * \brief Process the ALP command against the local FS
  *
  * Note: alp_command and alp_response may point to the same buffer
  * \param alp_command   The raw command
  * \param alp_command_length The length of the command
  * \param alp_response Pointer to a buffer where a possible response will be written
  * \param alp_response_length The length of the response
+ * \return If the ALP command was processed correctly or not
  */
-void alp_process_command(uint8_t* alp_command, uint8_t alp_command_length, uint8_t* alp_response, uint8_t* alp_response_length);
+bool alp_process_command_fs_itf(uint8_t* alp_command, uint8_t alp_command_length, uint8_t* alp_response, uint8_t* alp_response_length);
 
 /*! \brief Process a received request and replaces the packet's payload with the response payload.
  *  ALP commands which cannot be handled by the stack are vectored to the application layer

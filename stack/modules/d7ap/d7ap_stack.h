@@ -29,17 +29,20 @@
 
 #include "fs.h"
 #include "alp.h"
+#include "alp_cmd_handler.h"
 #include "d7atp.h"
 #include "d7asp.h"
 #include "packet_queue.h"
 #include "dll.h"
+
 /**
  * @brief Initializes the D7AP stack, should be called by all applications making use of the D7AP stack
  * @param fs_init_args
  * @param d7asp_init_args
  * @param enable_shell
+ * @param Called when the shell receives ALP commands for interface ID application.
  */
-void d7ap_stack_init(fs_init_args_t* fs_init_args, d7asp_init_args_t* d7asp_init_args, bool enable_shell);
+void d7ap_stack_init(fs_init_args_t* fs_init_args, d7asp_init_args_t* d7asp_init_args, bool enable_shell, alp_cmd_handler_appl_itf_callback cb);
 
 #endif //OSS_7_D7AP_STACK_H
 

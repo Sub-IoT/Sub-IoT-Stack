@@ -78,7 +78,7 @@ void bootstrap()
 
     d7asp_init_args.d7asp_received_unsollicited_data_cb = &on_unsollicited_response_received;
 
-    d7ap_stack_init(&fs_init_args, &d7asp_init_args, true);
+    d7ap_stack_init(&fs_init_args, &d7asp_init_args, true, NULL);
 
     fs_write_dll_conf_active_access_class(0); // use access class 0 for scan automation
 

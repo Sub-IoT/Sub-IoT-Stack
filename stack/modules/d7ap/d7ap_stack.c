@@ -19,10 +19,9 @@
 #include "d7ap_stack.h"
 #include "shell.h"
 #include "debug.h"
-#include "alp_cmd_handler.h"
 #include "framework_defs.h"
 
-void d7ap_stack_init(fs_init_args_t* fs_init_args, d7asp_init_args_t* d7asp_init_args, bool enable_shell)
+void d7ap_stack_init(fs_init_args_t* fs_init_args, d7asp_init_args_t* d7asp_init_args, bool enable_shell, alp_cmd_handler_appl_itf_callback alp_cmd_handler_appl_itf_cb)
 {
     assert(fs_init_args != NULL);
     assert(fs_init_args->access_profiles_count > 0); // there should be at least one access profile defined
@@ -40,6 +39,7 @@ void d7ap_stack_init(fs_init_args_t* fs_init_args, d7asp_init_args_t* d7asp_init
 #ifdef FRAMEWORK_SHELL_ENABLED
         shell_init();
         shell_register_handler((cmd_handler_registration_t){ .id = ALP_CMD_HANDLER_ID, .cmd_handler_callback = &alp_cmd_handler });
+        alp_cmd_handler_set_appl_itf_callback(alp_cmd_handler_appl_itf_cb);
 
         // notify booted to serial
         alp_cmd_handler_process_fs_itf(read_firmware_version_alp_command, sizeof(read_firmware_version_alp_command));
@@ -70,7 +70,7 @@ void d7ap_stack_init(fs_init_args_t* fs_init_args, d7asp_init_args_t* d7asp_init
 
       uint8_t alp_response[ALP_PAYLOAD_MAX_SIZE] = { 0 };
       uint8_t alp_response_length = 0;
-      alp_process_command(read_firmware_version_alp_command, sizeof(read_firmware_version_alp_command), alp_response, &alp_response_length);
+      assert(alp_process_command_fs_itf(read_firmware_version_alp_command, sizeof(read_firmware_version_alp_command), alp_response, &alp_response_length));
 
       d7asp_queue_alp_actions(&broadcast_fifo_config, alp_response, alp_response_length);
     }

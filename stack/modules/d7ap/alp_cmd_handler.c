@@ -30,29 +30,36 @@
 #include "shell.h"
 #include "debug.h"
 #include "MODULE_D7AP_defs.h"
+#include "ng.h"
 
+static alp_cmd_handler_appl_itf_callback NGDEF(_alp_cmd_handler_appl_itf_cb);
+#define alp_cmd_handler_appl_itf_cb NG(_alp_cmd_handler_appl_itf_cb)
 
 void alp_cmd_handler(fifo_t* cmd_fifo)
 {
     // AT$D<ALP interface ID><Length byte><ALP interface config><ALP command>
-    // interface: 0xD7 = D7ASP, 0x00 = own filesystem
-    // interface config: D7ASP fifo config in case of interface 0xD7, void for interface 0x00
+    // interface: 0xD7 = D7ASP, 0x00 = own filesystem, 0x01 = application
+    // interface config: D7ASP fifo config in case of interface 0xD7, void for interface 0x00 and 0x01
     // where length is the length of interface config and ALP command
     if(fifo_get_size(cmd_fifo) > SHELL_CMD_HEADER_SIZE + 2)
     {
         uint8_t alp_command[ALP_CMD_HANDLER_HEADER_SIZE + MODULE_D7AP_FIFO_COMMAND_BUFFER_SIZE] = { 0x00 };
         fifo_peek(cmd_fifo, alp_command, SHELL_CMD_HEADER_SIZE, ALP_CMD_HANDLER_HEADER_SIZE);
         uint8_t alp_interface_id = alp_command[0];
-        assert(alp_interface_id == ALP_ITF_ID_FS || alp_interface_id == ALP_ITF_ID_D7ASP);
+        assert(alp_interface_id == ALP_ITF_ID_FS
+               || alp_interface_id == ALP_ITF_ID_D7ASP
+               || alp_interface_id == ALP_ITF_ID_APP);
+
         uint8_t length = alp_command[1];
         if(fifo_get_size(cmd_fifo) < SHELL_CMD_HEADER_SIZE + ALP_CMD_HANDLER_HEADER_SIZE + length)
             return; // ALP command not complete yet, don't pop
 
         fifo_pop(cmd_fifo, alp_command, SHELL_CMD_HEADER_SIZE + ALP_CMD_HANDLER_HEADER_SIZE + length);
+        uint8_t* payload = alp_command + SHELL_CMD_HEADER_SIZE + ALP_CMD_HANDLER_HEADER_SIZE;
         if(alp_interface_id == ALP_ITF_ID_D7ASP)
         {
             // parse D7ASP fifo config
-            uint8_t* ptr = alp_command + SHELL_CMD_HEADER_SIZE + ALP_CMD_HANDLER_HEADER_SIZE;
+            uint8_t* ptr = payload;
             d7asp_fifo_config_t fifo_config;
             fifo_config.fifo_ctrl = (*ptr); ptr++;
             memcpy(&(fifo_config.qos), ptr, 4); ptr += 4;
@@ -66,7 +73,12 @@ void alp_cmd_handler(fifo_t* cmd_fifo)
         }
         else if(alp_interface_id == ALP_ITF_ID_FS)
         {
-            alp_cmd_handler_process_fs_itf(alp_command + SHELL_CMD_HEADER_SIZE + ALP_CMD_HANDLER_HEADER_SIZE, length);
+            alp_cmd_handler_process_fs_itf(payload, length);
+        }
+        else if(alp_interface_id == ALP_ITF_ID_APP)
+        {
+            if(alp_cmd_handler_appl_itf_cb != NULL)
+              alp_cmd_handler_appl_itf_cb(payload, length);
         }
     }
 }
@@ -75,7 +87,7 @@ void alp_cmd_handler_process_fs_itf(uint8_t* alp_command, uint8_t alp_command_le
 {
     uint8_t alp_response[128] = { 0 };
     uint8_t alp_reponse_length = 0;
-    alp_process_command(alp_command, alp_command_length, alp_response, &alp_reponse_length);
+    alp_process_command_fs_itf(alp_command, alp_command_length, alp_response, &alp_reponse_length);
 
     if(alp_reponse_length > 0)
         shell_return_output(ALP_CMD_HANDLER_ID, alp_response, alp_reponse_length); // TODO transmit ALP interface ID as well?
@@ -97,4 +109,9 @@ void alp_cmd_handler_output_unsollicited_response(d7asp_result_t d7asp_result, u
     memcpy(ptr, alp_command, alp_command_size); ptr+= alp_command_size;
 
     shell_return_output(ALP_CMD_HANDLER_ID, data, ptr - data);
+}
+
+void alp_cmd_handler_set_appl_itf_callback(alp_cmd_handler_appl_itf_callback cb)
+{
+    alp_cmd_handler_appl_itf_cb = cb;
 }

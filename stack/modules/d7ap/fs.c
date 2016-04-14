@@ -72,7 +72,7 @@ static void execute_alp_command(uint8_t command_file_id)
 
     uint8_t alp_response[ALP_PAYLOAD_MAX_SIZE] = { 0 };
     uint8_t alp_response_length = 0;
-    alp_process_command(data_ptr, file_headers[command_file_id].length - (uint8_t)(data_ptr - file_start), alp_response, &alp_response_length);
+    alp_process_command_fs_itf(data_ptr, file_headers[command_file_id].length - (uint8_t)(data_ptr - file_start), alp_response, &alp_response_length);
 
     d7asp_queue_alp_actions(&fifo_config, alp_response, alp_response_length);
 }
@@ -220,17 +220,20 @@ void fs_init_file_with_D7AActP(uint8_t file_id, const d7asp_fifo_config_t* fifo_
     fs_init_file(file_id, &action_file_header, alp_command_buffer);
 }
 
-void fs_read_file(uint8_t file_id, uint8_t offset, uint8_t* buffer, uint8_t length)
+alp_status_codes_t fs_read_file(uint8_t file_id, uint8_t offset, uint8_t* buffer, uint8_t length)
 {
-    assert(is_file_defined(file_id));
-    assert(file_headers[file_id].length >= offset + length);
+    if(!is_file_defined(file_id)) return ALP_STATUS_FILE_ID_NOT_EXISTS;
+    if(file_headers[file_id].length < offset + length) return ALP_STATUS_UNKNOWN_ERROR; // TODO more specific error (wait for spec discussion)
+
     memcpy(buffer, data + file_offsets[file_id] + offset, length);
+    return ALP_STATUS_OK;
 }
 
-void fs_write_file(uint8_t file_id, uint8_t offset, const uint8_t* buffer, uint8_t length)
+alp_status_codes_t fs_write_file(uint8_t file_id, uint8_t offset, const uint8_t* buffer, uint8_t length)
 {
-    assert(is_file_defined(file_id));
-    assert(file_headers[file_id].length >= offset + length);
+    if(!is_file_defined(file_id)) return ALP_STATUS_FILE_ID_NOT_EXISTS;
+    if(file_headers[file_id].length < offset + length) return ALP_STATUS_UNKNOWN_ERROR; // TODO more specific error (wait for spec discussion)
+
     memcpy(data + file_offsets[file_id] + offset, buffer, length);
 
     if(file_headers[file_id].file_properties.action_protocol_enabled == true
@@ -238,6 +241,8 @@ void fs_write_file(uint8_t file_id, uint8_t offset, const uint8_t* buffer, uint8
     {
         execute_alp_command(file_headers[file_id].file_properties.action_file_id);
     }
+
+    return ALP_STATUS_OK;
 }
 
 void fs_read_uid(uint8_t *buffer)
