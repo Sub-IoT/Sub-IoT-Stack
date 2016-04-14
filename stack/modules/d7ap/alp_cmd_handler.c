@@ -93,7 +93,7 @@ void alp_cmd_handler_process_fs_itf(uint8_t* alp_command, uint8_t alp_command_le
     (*ptr) = 0x00; ptr++;               // serial interface version
 
     uint8_t alp_reponse_length = 0;
-    alp_process_command(alp_command, alp_command_length, ptr + 1, &alp_reponse_length);
+    alp_process_command_fs_itf(alp_command, alp_command_length, ptr + 1, &alp_reponse_length);
 
     if(alp_reponse_length > 0)
     {
