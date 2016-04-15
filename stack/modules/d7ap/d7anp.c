@@ -25,6 +25,7 @@
 #include "fs.h"
 #include "ng.h"
 #include "log.h"
+#include "math.h"
 
 #if defined(FRAMEWORK_LOG_ENABLED) && defined(MODULE_D7AP_NP_LOG_ENABLED)
 #define DPRINT(...) log_print_stack_string(LOG_STACK_NWL, __VA_ARGS__)
@@ -78,10 +79,11 @@ static void foreground_scan_expired()
     d7atp_signal_foreground_scan_expired();
 }
 
-static void schedule_foreground_scan_expired_timer(uint8_t timeout) // TODO compressed time?
+static void schedule_foreground_scan_expired_timer(uint8_t timeout_ct)
 {
-    DPRINT("starting foreground scan expired timer (%i ticks)", timeout);
-    timer_post_task_delay(&foreground_scan_expired, timeout);
+    uint32_t timeout_ticks = pow(4, timeout_ct >> 5) * (timeout_ct & 0b11111);
+    DPRINT("starting foreground scan expired timer (%i ticks)", timeout_ticks);
+    timer_post_task_delay(&foreground_scan_expired, timeout_ticks);
 }
 
 void d7anp_init()
