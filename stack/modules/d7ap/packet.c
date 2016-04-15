@@ -76,6 +76,11 @@ void packet_disassemble(packet_t* packet)
 {
     log_print_data(packet->hw_radio_packet.data, packet->hw_radio_packet.length + 1); // TODO tmp
 
+    if (packet->hw_radio_packet.rx_meta.rx_cfg.channel_id.channel_header.ch_coding == PHY_CODING_FEC_PN9)
+    {
+    	packet->hw_radio_packet.length = fec_decode_packet(packet->hw_radio_packet.data, packet->hw_radio_packet.length, packet->hw_radio_packet.length);
+    }
+
     if (packet->hw_radio_packet.rx_meta.crc_status == HW_CRC_UNAVAILABLE)
     {
         uint16_t crc = __builtin_bswap16(crc_calculate(packet->hw_radio_packet.data, packet->hw_radio_packet.length + 1 - 2));
