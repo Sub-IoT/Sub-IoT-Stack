@@ -123,9 +123,15 @@ void __platform_post_framework_init()
 
 int main()
 {
-	BSP_TraceProfilerSetup();
+	//BSP_TraceProfilerSetup();
     // Only when using bootloader
 	//SCB->VTOR=0x4000;
+
+	//activate VCOM
+#ifdef PLATFORM_USE_VCOM
+	hw_gpio_configure_pin(A12, false, gpioModePushPull, 1);
+	hw_gpio_set(A12);
+#endif
 
     //initialise the platform itself
 	__platform_init();

@@ -25,6 +25,7 @@ PLATFORM_PARAM(${PLATFORM_PREFIX}_MCU "EZR32LG330F256R60" STRING "The MCU of the
 SET(JLINK_DEVICE ${${PLATFORM_PREFIX}_MCU} CACHE STRING "The device passed to JLinkExe for flashing")
 PLATFORM_PARAM(${PLATFORM_PREFIX}_RADIO "si4460" STRING "The radio chip connected to the Gecko board")
 PLATFORM_OPTION(${PLATFORM_PREFIX}_DEBUGPINS "Enable/Disable Hardware Debug Pins support (see 'hwdebug.h')" TRUE)
+PLATFORM_OPTION(PLATFORM_USE_VCOM "Enable/Disable VCOM support" FALSE)
 PLATFORM_OPTION(PLATFORM_USE_SWO "Enable/Disable SWO Uart output" FALSE)
 #Restrict the number of possible options for the radio option in the usual manner...
 SET_PROPERTY(CACHE ${PLATFORM_PREFIX}_RADIO PROPERTY STRINGS "si4460")

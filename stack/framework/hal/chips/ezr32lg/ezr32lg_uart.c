@@ -61,7 +61,7 @@ typedef struct {
 // TODO to be completed with all documented locations
 static uart_pins_t location[UARTS][LOCATIONS] = {
   {
-    // UART 0
+    // 0: UART 0
     {
       .location = UART_ROUTE_LOCATION_LOC0,
       .tx       = { .port = gpioPortF, .pin =  6 },
@@ -81,10 +81,10 @@ static uart_pins_t location[UARTS][LOCATIONS] = {
     UNDEFINED_LOCATION
   },
   {
-    // UART 1
+    // 1: UART 1
     // no LOCATION 0
     {
-      .location = 0,
+      .location = UART_ROUTE_LOCATION_LOC0,
       .tx       = { .port = 0,         .pin =  0 },
       .rx       = { .port = 0,         .pin =  0 }
     },
@@ -105,19 +105,16 @@ static uart_pins_t location[UARTS][LOCATIONS] = {
     }
   },
   {
-    // USART 1
+    // 2: USART 1
+		  // no LOCATION 0
+		  UNDEFINED_LOCATION,
     {
-      .location = USART_ROUTE_LOCATION_LOC0,
-      .tx       = { .port = gpioPortC, .pin =  0 },
-      .rx       = { .port = gpioPortC, .pin =  1 }
-    },
-    {
-      .location = USART_ROUTE_LOCATION_LOC1,
+      .location = UART_ROUTE_LOCATION_LOC1,
       .tx       = { .port = gpioPortD, .pin =  0 },
       .rx       = { .port = gpioPortD, .pin =  1 }
     },
     {
-      .location = USART_ROUTE_LOCATION_LOC2,
+      .location = UART_ROUTE_LOCATION_LOC2,
       .tx       = { .port = gpioPortD, .pin =  7 },
       .rx       = { .port = gpioPortD, .pin =  6 }
     },
@@ -125,19 +122,16 @@ static uart_pins_t location[UARTS][LOCATIONS] = {
     UNDEFINED_LOCATION
   },
   {
-    // USART 2
+    // 3: USART 2
+	// no LOCATION 0
+	UNDEFINED_LOCATION,
     {
-      .location = UART_ROUTE_LOCATION_LOC0,
-      .tx       = { .port = gpioPortC, .pin =  2 },
-      .rx       = { .port = gpioPortC, .pin =  3 }
-    },
-    {
-      .location = UART_ROUTE_LOCATION_LOC1,
+      .location = USART_ROUTE_LOCATION_LOC1,
       .tx       = { .port = gpioPortB, .pin =  3 },
       .rx       = { .port = gpioPortB, .pin =  4 }
     },
-    // no LOCATION 2
-    UNDEFINED_LOCATION,
+    	//no LOCATION 2
+       UNDEFINED_LOCATION,
     // no LOCATION 3
     UNDEFINED_LOCATION
   }
