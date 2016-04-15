@@ -31,6 +31,7 @@
 
 #define INITIAL_FECSTATE 0x00
 #define TRELLIS_TERMINATOR 0x0B
+#define FEC_BUFFER_SIZE 128
 
 #define INTERLEAVING
 
@@ -40,6 +41,7 @@ const static uint8_t fec_lut[16] = {0, 3, 1, 2, 3, 0, 2, 1, 3, 0, 2, 1, 0, 3, 1,
 const static uint8_t trellis0_lut[8] = {0, 1, 3, 2, 3, 2, 0, 1};
 const static uint8_t trellis1_lut[8] = {3, 2, 0, 1, 0, 1, 3, 2};
 
+static uint8_t data_buffer[FEC_BUFFER_SIZE];
 static uint8_t* input_buffer;
 static uint8_t* output_buffer;
 
@@ -53,6 +55,8 @@ static uint16_t fecprocessedbytes;
 static uint16_t pn9;
 static uint16_t fecstate;
 static VITERBISTATE vstate;
+
+
 
 void print_array(uint8_t* buffer, uint8_t length)
 {
@@ -110,94 +114,93 @@ static void print_vstate()
 
 
 /* Convolutional encoder */
-uint16_t fec_encode(uint8_t *output, uint8_t *input, uint16_t nbytes)
+uint16_t fec_encode(uint8_t *data, uint16_t nbytes)
 {
-        unsigned int encstate = 0;
-        int i;
+	memcpy(data_buffer, data, nbytes);
+	uint8_t *input = data_buffer;
+	unsigned int encstate = 0;
+	int i;
 
-        int termintor_bytes = 2 + nbytes%2;
-        //printf("Length %d -> terminator %d\n", nbytes, termintor_bytes);
-        nbytes+=termintor_bytes;
-        uint16_t length = 0;
-        uint8_t fecbuffer[4] = {0,0,0,0};
+	int termintor_bytes = 2 + nbytes%2;
+	//printf("Length %d -> terminator %d\n", nbytes, termintor_bytes);
+	nbytes+=termintor_bytes;
+	uint16_t length = 0;
+	uint8_t fecbuffer[4] = {0,0,0,0};
 
-    	int8_t buffer_pointer = 0;
-        while(nbytes-- > 0){
-        	if (nbytes < termintor_bytes) *input = TRELLIS_TERMINATOR;
+	int8_t buffer_pointer = 0;
+	while(nbytes-- > 0){
+		if (nbytes < termintor_bytes) *input = TRELLIS_TERMINATOR;
 
-            //printf("%02X:", *input);
+		//printf("%02X:", *input);
 
-        	int j = 6;
-			for(i=7;i>=0;i--){
-					encstate = (encstate << 1) | ((*input >> i) & 1);
-					fecbuffer[buffer_pointer] |= fec_lut[encstate & 0x0F] << j;
-					j -=2;
+		int j = 6;
+		for(i=7;i>=0;i--){
+				encstate = (encstate << 1) | ((*input >> i) & 1);
+				fecbuffer[buffer_pointer] |= fec_lut[encstate & 0x0F] << j;
+				j -=2;
 
-					//printf("%d: %d - %d -> %s\n",j+2, ((*input >> i) & 1), encstate & 0x0F, byte_to_binary(fec_lut[encstate & 0x0F]));
-					if (j < 0)
-					{
+				//printf("%d: %d - %d -> %s\n",j+2, ((*input >> i) & 1), encstate & 0x0F, byte_to_binary(fec_lut[encstate & 0x0F]));
+				if (j < 0)
+				{
 //						//fecbuffer[buffer_pointer] = 0;
-						buffer_pointer++;
-						j = 6;
+					buffer_pointer++;
+					j = 6;
 //						length++;
-					}
-			}
+				}
+		}
 
-			if (buffer_pointer == 4)
-			{
+		if (buffer_pointer == 4)
+		{
 #ifdef INTERLEAVING
-				//printf("Non: "); print_array(fecbuffer, 4); printf("\n");
-				//Interleaving and write to output buffer
-				*output++ = ((fecbuffer[0] & 0x03)) |\
-							((fecbuffer[1] & 0x03) << 2) |\
-							((fecbuffer[2] & 0x03) << 4) |\
-							((fecbuffer[3] & 0x03) << 6);
-				*output++ = (((fecbuffer[0] >> 2) & 0x03)) |\
-								(((fecbuffer[1] >> 2) & 0x03) << 2) |\
-								(((fecbuffer[2] >> 2) & 0x03) << 4) |\
-								(((fecbuffer[3] >> 2) & 0x03) << 6);
-				*output++ = (((fecbuffer[0] >> 4) & 0x03)) |\
-								(((fecbuffer[1] >> 4) & 0x03) << 2) |\
-								(((fecbuffer[2] >> 4) & 0x03) << 4) |\
-								(((fecbuffer[3] >> 4) & 0x03) << 6);
-				*output++ = (((fecbuffer[0] >> 6) & 0x03)) |\
-								(((fecbuffer[1] >> 6) & 0x03) << 2) |\
-								(((fecbuffer[2] >> 6) & 0x03) << 4) |\
-								(((fecbuffer[3] >> 6) & 0x03) << 6);
-				//printf("Int: "); print_array(output-4, 4); printf("\n");
+			//printf("Non: "); print_array(fecbuffer, 4); printf("\n");
+			//Interleaving and write to output buffer
+			*data++ = ((fecbuffer[0] & 0x03)) |\
+						((fecbuffer[1] & 0x03) << 2) |\
+						((fecbuffer[2] & 0x03) << 4) |\
+						((fecbuffer[3] & 0x03) << 6);
+			*data++ = (((fecbuffer[0] >> 2) & 0x03)) |\
+							(((fecbuffer[1] >> 2) & 0x03) << 2) |\
+							(((fecbuffer[2] >> 2) & 0x03) << 4) |\
+							(((fecbuffer[3] >> 2) & 0x03) << 6);
+			*data++ = (((fecbuffer[0] >> 4) & 0x03)) |\
+							(((fecbuffer[1] >> 4) & 0x03) << 2) |\
+							(((fecbuffer[2] >> 4) & 0x03) << 4) |\
+							(((fecbuffer[3] >> 4) & 0x03) << 6);
+			*data++ = (((fecbuffer[0] >> 6) & 0x03)) |\
+							(((fecbuffer[1] >> 6) & 0x03) << 2) |\
+							(((fecbuffer[2] >> 6) & 0x03) << 4) |\
+							(((fecbuffer[3] >> 6) & 0x03) << 6);
+			//printf("Int: "); print_array(output-4, 4); printf("\n");
 #else
-				*output++ = fecbuffer[0];
-				*output++ = fecbuffer[1];
-				*output++ = fecbuffer[2];
-				*output++ = fecbuffer[3];
+			*output++ = fecbuffer[0];
+			*output++ = fecbuffer[1];
+			*output++ = fecbuffer[2];
+			*output++ = fecbuffer[3];
 
 #endif
-				buffer_pointer=0;
-				fecbuffer[0] = 0;
-				fecbuffer[1] = 0;
-				fecbuffer[2] = 0;
-				fecbuffer[3] = 0;
-				length+=4;
-			}
+			buffer_pointer=0;
+			fecbuffer[0] = 0;
+			fecbuffer[1] = 0;
+			fecbuffer[2] = 0;
+			fecbuffer[3] = 0;
+			length+=4;
+		}
 
 
-			//printf("%02X%02X ", *(output-2), *(output-1));
+		//printf("%02X%02X ", *(output-2), *(output-1));
 
-			input++;
+		input++;
 
-
-        }
-
+	}
 
 
-        //printf("\n");
-        return length;
-
-
+	//printf("\n");
+	return length;
 }
 
-uint8_t fec_decode_packet(uint8_t* input, uint8_t packet_length, uint8_t* output, uint8_t output_length)
+uint8_t fec_decode_packet(uint8_t* data, uint8_t packet_length, uint8_t output_length)
 {
+	uint8_t* output = data_buffer;
 	if(output_length < packet_length)
 	{
 		printf("FEC decoding error: buffer to small\n");
@@ -228,8 +231,6 @@ uint8_t fec_decode_packet(uint8_t* input, uint8_t packet_length, uint8_t* output
 	vstate.old = vstate.states1;
 	vstate.new = vstate.states2;
 
-
-
 	uint8_t decoded_length = 0;
 
 	for(i = 0; i < packet_length; i =i+4)
@@ -241,6 +242,8 @@ uint8_t fec_decode_packet(uint8_t* input, uint8_t packet_length, uint8_t* output
 		if (!err)
 			printf("FEC encoding error\n");
 	}
+
+	memcpy(data, data_buffer, decoded_length);
 
 	return decoded_length;
 }
@@ -379,6 +382,8 @@ bool fec_decode(uint8_t* input)
 	}
 
 	//print_vstate();
+
+
 
 	return true;
 }

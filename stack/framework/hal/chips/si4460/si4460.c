@@ -25,7 +25,8 @@
  * Currently implemented for 26 MHZ RF Xtal
  * TODO: SYNTH_LPFILTx is dependent on hardware define in platform
  *
- *
+ * TODO: PKT_RX_THRESHOLD -> IRQ when Rx fifo almost full
+ * TODO: PKT_TX_THRESHOLD
  */
 
 #include "debug.h"

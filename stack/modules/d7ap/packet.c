@@ -68,6 +68,12 @@ void packet_assemble(packet_t* packet)
     	uint16_t crc = __builtin_bswap16(crc_calculate(packet->hw_radio_packet.data, packet->hw_radio_packet.length + 1 - 2));
     	memcpy(data_ptr, &crc, 2);
     }
+
+//    if (packet->hw_radio_packet.rx_meta.rx_cfg.channel_id.channel_header.ch_coding == PHY_CODING_FEC_PN9)
+//    {
+//    	packet->length = fec_encode(packet->data, packet->length);
+//    }
+
 }
 
 void packet_disassemble(packet_t* packet)
