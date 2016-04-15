@@ -129,8 +129,8 @@ int main()
 
 	//activate VCOM
 #ifdef PLATFORM_USE_VCOM
-	hw_gpio_configure_pin(A12, false, gpioModePushPull, 1);
-	hw_gpio_set(A12);
+	hw_gpio_configure_pin(VCOM_ENABLE, false, gpioModePushPull, 1);
+	hw_gpio_set(VCOM_ENABLE);
 #endif
 
     //initialise the platform itself

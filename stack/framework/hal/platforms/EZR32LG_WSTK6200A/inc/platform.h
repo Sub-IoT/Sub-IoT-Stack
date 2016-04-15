@@ -58,6 +58,13 @@
 //#define UART_PIN_TX         E0           // PE0
 //#define UART_PIN_RX         E1          // PE1
 
+/*******************
+ *   VCOM          *
+ ******************/
+
+#define VCOM_ENABLE	A12
+// USE CONSOLE_UART 3 / LOCATION 1
+
 
 /********************
  * SPI RF DEFINITIONS *
