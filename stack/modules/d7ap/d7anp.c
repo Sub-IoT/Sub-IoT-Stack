@@ -47,6 +47,7 @@ uint8_t d7anp_assemble_packet_header(packet_t *packet, uint8_t *data_ptr)
     assert(!packet->d7anp_ctrl.hop_enabled); // TODO hopping not yet supported
 
     uint8_t* d7anp_header_start = data_ptr;
+    (*data_ptr) = packet->d7anp_timeout; data_ptr++;
     (*data_ptr) = packet->d7anp_ctrl.raw; data_ptr++;
 
     // TODO hopping ctrl
@@ -70,6 +71,7 @@ uint8_t d7anp_assemble_packet_header(packet_t *packet, uint8_t *data_ptr)
 
 bool d7anp_disassemble_packet_header(packet_t* packet, uint8_t* data_idx)
 {
+    packet->d7anp_timeout = packet->hw_radio_packet.data[(*data_idx)]; (*data_idx)++;
     packet->d7anp_ctrl.raw = packet->hw_radio_packet.data[(*data_idx)]; (*data_idx)++;
     assert(!packet->d7anp_ctrl.nls_enabled); // TODO NLS not yet supported
     assert(!packet->d7anp_ctrl.hop_enabled); // TODO hopping not yet supported

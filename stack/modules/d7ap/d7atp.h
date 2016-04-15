@@ -45,8 +45,7 @@ typedef struct {
           bool ctrl_ack_record : 1;
           bool ctrl_ack_not_void : 1;
           bool ctrl_is_ack_requested : 1;
-          uint8_t _rfu : 1;
-          bool ctrl_is_timeout_template_present : 1;
+          uint8_t _rfu : 2;
           bool ctrl_is_stop : 1;
           bool ctrl_is_start : 1;
       };
