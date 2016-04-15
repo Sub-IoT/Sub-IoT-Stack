@@ -117,7 +117,7 @@ void packet_disassemble(packet_t* packet)
 
     DPRINT_FWK("Done disassembling packet");
 
-    d7atp_process_received_packet(packet);
+    d7anp_process_received_packet(packet);
 
     return;
 

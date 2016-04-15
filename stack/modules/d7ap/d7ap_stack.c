@@ -29,6 +29,7 @@ void d7ap_stack_init(fs_init_args_t* fs_init_args, d7asp_init_args_t* d7asp_init
     fs_init(fs_init_args);
     d7asp_init(d7asp_init_args);
     d7atp_init();
+    d7anp_init();
     packet_queue_init();
     dll_init();
 

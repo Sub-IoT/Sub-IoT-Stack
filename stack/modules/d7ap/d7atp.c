@@ -70,8 +70,6 @@ static state_t NGDEF(_d7atp_state);
 
 #define IS_IN_TRANSACTION() (d7atp_state != D7ATP_STATE_IDLE)
 
-static void transaction_response_period_expired();
-
 static void switch_state(state_t new_state)
 {
     switch(new_state)
@@ -92,7 +90,6 @@ static void switch_state(state_t new_state)
         d7atp_state = new_state;
         break;
     case D7ATP_STATE_SLAVE_TRANSACTION_SENDING_RESPONSE:
-        assert(!sched_is_scheduled(&transaction_response_period_expired));
         DPRINT("Switching to D7ATP_STATE_SLAVE_TRANSACTION_SENDING_RESPONSE");
         assert(d7atp_state == D7ATP_STATE_SLAVE_TRANSACTION_RECEIVED_REQUEST || D7ATP_STATE_SLAVE_TRANSACTION_RESPONSE_PERIOD);
         d7atp_state = new_state;
@@ -116,21 +113,19 @@ static void switch_state(state_t new_state)
     }
 }
 
-static void transaction_response_period_expired()
+void d7atp_signal_foreground_scan_expired()
 {
-    DPRINT("Transaction response period expired");
     assert(d7atp_state == D7ATP_STATE_SLAVE_TRANSACTION_RESPONSE_PERIOD
            || d7atp_state == D7ATP_STATE_MASTER_TRANSACTION_RESPONSE_PERIOD);
 
     switch_state(D7ATP_STATE_IDLE);
-    dll_stop_foreground_scan();
+    DPRINT("Dialog terminated");
     d7asp_signal_transaction_response_period_elapsed();
 }
 
 void d7atp_init()
 {
     d7atp_state = D7ATP_STATE_IDLE;
-    sched_register_task(&transaction_response_period_expired);
     current_access_class = ACCESS_CLASS_NOT_SET;
 }
 
@@ -213,42 +208,25 @@ bool d7atp_disassemble_packet_header(packet_t *packet, uint8_t *data_idx)
     return true;
 }
 
-static void schedule_transaction_response_period_expired_timer()
-{
-  uint8_t transaction_response_period = active_addressee_access_profile.transmission_timeout_period;
-  DPRINT("Packet transmitted, starting response period timer (%i ticks)", transaction_response_period);
-  if(!sched_is_scheduled(&transaction_response_period_expired)) // TODO or should prev transaction resp period be stopped by now and should we start a new one?
-      timer_post_task_delay(&transaction_response_period_expired, transaction_response_period);
-}
-
 void d7atp_signal_packet_transmitted(packet_t* packet)
 {
     if(d7atp_state == D7ATP_STATE_MASTER_TRANSACTION_REQUEST_PERIOD)
     {
-      if(!packet->d7atp_ctrl.ctrl_is_ack_requested)
-      {
-        // transaction is done now, we do not need to wait for transaction_response_period, instead go back to scan automation  // TODO validate/clarify against spec
-        DPRINT("Transaction done, no response period required");
-        switch_state(D7ATP_STATE_IDLE);
-        d7asp_signal_transaction_response_period_elapsed();
-        dll_execute_scan_automation();
-      }
-      else
-      {
-        switch_state(D7ATP_STATE_MASTER_TRANSACTION_RESPONSE_PERIOD);       
-        schedule_transaction_response_period_expired_timer();
-        // TODO find out difference between dialog timeout and transaction response period
+      // TODO
+//      if(!packet->d7atp_ctrl.ctrl_is_ack_requested)
+//      {
+//        // transaction is done now, we do not need to wait for transaction_response_period, instead go back to scan automation  // TODO validate/clarify against spec
+//        DPRINT("Transaction done, no response period required");
+//        switch_state(D7ATP_STATE_IDLE);
+//        d7asp_signal_transaction_response_period_elapsed();
+//        dll_execute_scan_automation();
+//      }
 
-        // TODO only wait for new response for allcast session type?
-        dll_start_foreground_scan(); // we stay in foreground scan until TP signal transaction response period is over
-      }
+        switch_state(D7ATP_STATE_MASTER_TRANSACTION_RESPONSE_PERIOD);       
     }
     else if(d7atp_state == D7ATP_STATE_SLAVE_TRANSACTION_SENDING_RESPONSE)
     {
         switch_state(D7ATP_STATE_SLAVE_TRANSACTION_RESPONSE_PERIOD);
-
-        schedule_transaction_response_period_expired_timer();
-        dll_start_foreground_scan(); // we stay in foreground scan until TP signal transaction response period is over
     }
     else
         assert(false);
@@ -258,7 +236,6 @@ void d7atp_signal_packet_transmitted(packet_t* packet)
 
 void d7atp_signal_packet_csma_ca_insertion_completed(bool succeeded)
 {
-    DEBUG_PIN_CLR(2); // TODO tmp
     if(!succeeded)
     {
         DPRINT("CSMA-CA insertion failed, stopping transaction");

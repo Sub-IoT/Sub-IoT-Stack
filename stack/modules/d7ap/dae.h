@@ -57,7 +57,7 @@ typedef struct
     };
     uint8_t subnet;
     uint8_t scan_automation_period;
-    uint8_t transmission_timeout_period;
+    uint8_t transmission_timeout_period;  // Tc
     uint8_t _rfu;
     subband_t subbands[1]; // TODO only support 1 subband for now
 } dae_access_profile_t;

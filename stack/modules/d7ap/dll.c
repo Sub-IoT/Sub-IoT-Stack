@@ -226,7 +226,7 @@ static void packet_transmitted(hw_radio_packet_t* hw_radio_packet)
     switch_state(DLL_STATE_TX_FOREGROUND_COMPLETED);
     DPRINT("Transmitted packet with length = %i", hw_radio_packet->length);
     packet_t* packet = packet_queue_find_packet(hw_radio_packet);
-    d7atp_signal_packet_transmitted(packet);
+    d7anp_signal_packet_transmitted(packet);
 
     if(process_received_packets_after_tx)
     {
@@ -265,7 +265,7 @@ static void cca_rssi_valid(int16_t cur_rssi)
 
             hw_radio_set_idle(); // ensure radio goes back to IDLE after transmission instead of to RX (which was previous state because of CCA)
 
-            d7atp_signal_packet_csma_ca_insertion_completed(true);
+            d7anp_signal_packet_csma_ca_insertion_completed(true);
             return;
         }
     }
@@ -322,7 +322,7 @@ static void execute_csma_ca()
     {
         case DLL_STATE_CSMA_CA_STARTED:
         {
-            dll_tca = current_access_profile->transmission_timeout_period - tx_duration;
+            dll_tca = current_access_profile->transmission_timeout_period - tx_duration; // TODO d7anp_timeout
             dll_cca_started = timer_get_counter_value();
             DPRINT("Tca= %i = %i - %i", dll_tca, current_access_profile->transmission_timeout_period, tx_duration);
 
@@ -451,7 +451,7 @@ static void execute_csma_ca()
         {
             // TODO hw_radio_set_idle();
             switch_state(DLL_STATE_IDLE);
-            d7atp_signal_packet_csma_ca_insertion_completed(false);
+            d7anp_signal_packet_csma_ca_insertion_completed(false);
             if(process_received_packets_after_tx)
             {
                 sched_post_task(&process_received_packets);
