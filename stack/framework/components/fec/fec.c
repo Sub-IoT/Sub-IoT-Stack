@@ -58,8 +58,8 @@ static VITERBISTATE vstate;
 
 static bool fec_decode(uint8_t* input);
 
-
-
+//void print_array(uint8_t* buffer, uint8_t length)
+//	for (i = 0; i < length; i++)
 //void print_array(uint8_t* buffer, uint8_t length)
 //{
 //	int i = 0;
@@ -112,8 +112,6 @@ static void print_vstate()
 		printf(" - states - %d: %03d - %s\n", i, vstate.old[i].cost, int_to_binary(vstate.old[i].path));
 
 }
-
-
 
 /* Convolutional encoder */
 uint16_t fec_encode(uint8_t *data, uint16_t nbytes)

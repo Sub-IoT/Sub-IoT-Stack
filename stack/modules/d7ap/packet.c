@@ -21,6 +21,7 @@
 #include "crc.h"
 #include "log.h"
 #include "d7asp.h"
+#include "fec.h"
 #include "MODULE_D7AP_defs.h"
 
 #if defined(FRAMEWORK_LOG_ENABLED) && defined(MODULE_D7AP_FWK_LOG_ENABLED)
