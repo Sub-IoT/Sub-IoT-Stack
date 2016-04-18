@@ -48,6 +48,7 @@ void d7ap_stack_init(fs_init_args_t* fs_init_args, d7asp_init_args_t* d7asp_init
     }
     else
     {
+#ifdef D7AP_BROADCAST_VERSION_ON_BOOT_ENABLED
       // notify booted by broadcasting and retrying 3 times (for diagnostics ie to detect reboots)
       // TODO: default access class
       d7asp_fifo_config_t broadcast_fifo_config = {
@@ -74,5 +75,6 @@ void d7ap_stack_init(fs_init_args_t* fs_init_args, d7asp_init_args_t* d7asp_init
       assert(alp_process_command_fs_itf(read_firmware_version_alp_command, sizeof(read_firmware_version_alp_command), alp_response, &alp_response_length));
 
       d7asp_queue_alp_actions(&broadcast_fifo_config, alp_response, alp_response_length);
+#endif
     }
 }
