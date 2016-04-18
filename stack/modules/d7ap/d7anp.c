@@ -49,7 +49,8 @@ static void switch_state(state_t next_state)
     switch(next_state)
     {
         case D7ANP_STATE_TRANSMIT:
-          assert(d7anp_state == D7ANP_STATE_IDLE);
+          assert(d7anp_state == D7ANP_STATE_IDLE ||
+                 d7anp_state == D7ANP_STATE_FOREGROUND_SCAN);
           d7anp_state = next_state;
           DPRINT("Switched to D7ANP_STATE_TRANSMIT");
           break;
@@ -82,7 +83,7 @@ static void foreground_scan_expired()
 static void schedule_foreground_scan_expired_timer(uint8_t timeout_ct)
 {
     uint32_t timeout_ticks = pow(4, timeout_ct >> 5) * (timeout_ct & 0b11111);
-    DPRINT("starting foreground scan expired timer (%i ticks)", timeout_ticks);
+    DPRINT("starting foreground scan expiration timer (%i ticks)", timeout_ticks);
     timer_post_task_delay(&foreground_scan_expired, timeout_ticks);
 }
 
@@ -94,7 +95,7 @@ void d7anp_init()
 
 void d7anp_tx_foreground_frame(packet_t* packet, bool should_include_origin_template, dae_access_profile_t* access_profile)
 {
-    packet->d7anp_timeout = access_profile->transmission_timeout_period;
+    packet->d7anp_timeout = access_profile->transmission_timeout_period; // TODO get calculated value from SP
     packet->d7anp_ctrl.nls_enabled = false;
     packet->d7anp_ctrl.hop_enabled = false;
     packet->d7anp_ctrl.origin_access_id_present = should_include_origin_template;
@@ -174,9 +175,11 @@ void d7anp_signal_packet_csma_ca_insertion_completed(bool succeeded)
 
 void d7anp_signal_packet_transmitted(packet_t* packet)
 {
-    // TODO for lowest QoS level (expecting no ack), should we still enter FG scan here (and let upper layer terminate this?)
+    // even when no ack is requested we still need to wait for a possible dormant session which might have been waiting
+    // for us on the other side.
+    // TODO if we only want to beacon without listening afterwards we can configure our own Tc to be 0
     switch_state(D7ANP_STATE_FOREGROUND_SCAN);
-    schedule_foreground_scan_expired_timer(packet->d7anp_timeout);
+    schedule_foreground_scan_expired_timer(packet->d7anp_timeout); // TODO ensure > own Tc
     dll_start_foreground_scan();
     d7atp_signal_packet_transmitted(packet);
 }

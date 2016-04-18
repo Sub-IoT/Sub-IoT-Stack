@@ -145,6 +145,7 @@ static void flush_fifos()
         // TODO stop on error
     }
 
+    // TODO calculate D7ANP timeout (and update during transaction lifetime) (based on Tc, channel, cs, payload size, # msgs, # retries)
     d7atp_start_dialog(fifo.token, current_request_id, true, current_request_packet, &fifo.config.qos);
 }
 
@@ -322,8 +323,12 @@ bool d7asp_process_received_packet(packet_t* packet)
             // if the application fails to handle the request as well the ALP status operand supplied by alp_process_command_fs_itf() will be transmitted (if requested)
             if(!handled)
             {
+              DPRINT("ALP command could not be processed by local FS");
               if(d7asp_init_args != NULL && d7asp_init_args->d7asp_received_unhandled_alp_command_cb != NULL)
-                d7asp_init_args->d7asp_received_unhandled_alp_command_cb(packet->payload, packet->payload_length, packet->payload, &packet->payload_length);
+              {
+                  DPRINT("ALP command passed to application for processing");
+                  d7asp_init_args->d7asp_received_unhandled_alp_command_cb(packet->payload, packet->payload_length, packet->payload, &packet->payload_length);
+              }
             }
         }
 

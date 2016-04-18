@@ -212,16 +212,6 @@ void d7atp_signal_packet_transmitted(packet_t* packet)
 {
     if(d7atp_state == D7ATP_STATE_MASTER_TRANSACTION_REQUEST_PERIOD)
     {
-      // TODO
-//      if(!packet->d7atp_ctrl.ctrl_is_ack_requested)
-//      {
-//        // transaction is done now, we do not need to wait for transaction_response_period, instead go back to scan automation  // TODO validate/clarify against spec
-//        DPRINT("Transaction done, no response period required");
-//        switch_state(D7ATP_STATE_IDLE);
-//        d7asp_signal_transaction_response_period_elapsed();
-//        dll_execute_scan_automation();
-//      }
-
         switch_state(D7ATP_STATE_MASTER_TRANSACTION_RESPONSE_PERIOD);       
     }
     else if(d7atp_state == D7ATP_STATE_SLAVE_TRANSACTION_SENDING_RESPONSE)
