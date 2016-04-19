@@ -123,7 +123,6 @@ uint8_t d7anp_assemble_packet_header(packet_t *packet, uint8_t *data_ptr)
 
     // TODO hopping ctrl
     // TODO intermediary access ID
-    // TODO destination access ID
 
     if(packet->d7anp_ctrl.origin_access_id_present)
     {
@@ -149,7 +148,6 @@ bool d7anp_disassemble_packet_header(packet_t* packet, uint8_t* data_idx)
 
     // TODO hopping ctrl
     // TODO intermediary access ID
-    // TODO destination access ID
 
     if(packet->d7anp_ctrl.origin_access_id_present)
     {
