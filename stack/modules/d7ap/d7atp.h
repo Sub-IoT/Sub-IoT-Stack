@@ -54,6 +54,7 @@ typedef struct {
 
 typedef struct {
     uint8_t ack_transaction_id_start;
+    uint8_t ack_transaction_id_stop;
     // TODO ACK bitmap
 } d7atp_ack_template_t;
 

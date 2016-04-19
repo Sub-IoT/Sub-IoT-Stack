@@ -187,6 +187,7 @@ uint8_t d7atp_assemble_packet_header(packet_t* packet, uint8_t* data_ptr)
     {
         // add ACK template
         (*data_ptr) = packet->d7atp_transaction_id; data_ptr++; // transaction ID start
+        (*data_ptr) = packet->d7atp_transaction_id; data_ptr++; // transaction ID stop
         // TODO ACK bitmap, support for multiple segments to ack not implemented yet
     }
 
@@ -202,6 +203,7 @@ bool d7atp_disassemble_packet_header(packet_t *packet, uint8_t *data_idx)
     if(packet->d7atp_ctrl.ctrl_is_ack_template_present)
     {
         packet->d7atp_ack_template.ack_transaction_id_start = packet->hw_radio_packet.data[(*data_idx)]; (*data_idx)++;
+        packet->d7atp_ack_template.ack_transaction_id_stop = packet->hw_radio_packet.data[(*data_idx)]; (*data_idx)++;
         // TODO ACK bitmap, support for multiple segments to ack not implemented yet
     }
 
