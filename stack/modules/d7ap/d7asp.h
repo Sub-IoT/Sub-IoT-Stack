@@ -26,6 +26,7 @@
 #include "stdint.h"
 #include "stdbool.h"
 
+#include "d7anp.h"
 #include "d7atp.h"
 #include "MODULE_D7AP_defs.h"
 
@@ -48,7 +49,7 @@ typedef struct {
     session_qos_t qos;
     uint8_t dormant_timeout;
     uint8_t start_id;
-    d7atp_addressee_t addressee;
+    d7anp_addressee_t addressee;
 } d7asp_fifo_config_t;
 
 #define REQUESTS_BITMAP_BYTE_COUNT ((MODULE_D7AP_FIFO_MAX_REQUESTS_COUNT + 7) / 8)
@@ -97,7 +98,7 @@ typedef struct {
     uint8_t fifo_token;
     uint8_t request_id;
     uint8_t response_to;
-    d7atp_addressee_t* addressee;
+    d7anp_addressee_t* addressee;
 } d7asp_result_t;
 
 typedef void (*d7asp_fifo_flush_completed_callback)(uint8_t fifo_token, uint8_t* progress_bitmap, uint8_t* success_bitmap, uint8_t bitmap_byte_count);

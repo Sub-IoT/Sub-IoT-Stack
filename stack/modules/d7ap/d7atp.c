@@ -39,7 +39,7 @@
 #endif
 
 
-static d7atp_addressee_t NGDEF(_current_addressee);
+static d7anp_addressee_t NGDEF(_current_addressee);
 #define current_addressee NG(_current_addressee)
 
 static uint8_t NGDEF(_current_dialog_id);
@@ -147,7 +147,7 @@ void d7atp_start_dialog(uint8_t dialog_id, uint8_t transaction_id, bool is_last_
     packet->d7atp_dialog_id = current_dialog_id;
     packet->d7atp_transaction_id = current_transaction_id;
 
-    uint8_t access_class = packet->d7atp_addressee->addressee_ctrl_access_class;
+    uint8_t access_class = packet->d7anp_addressee->ctrl.access_class;
     if(access_class != current_access_class)
         fs_read_access_class(access_class, &active_addressee_access_profile);
 
@@ -267,11 +267,11 @@ void d7atp_process_received_packet(packet_t* packet)
         DPRINT("Dialog id %i transaction id %i", current_dialog_id, current_transaction_id);
 
         // copy addressee from NP origin
-        current_addressee.addressee_ctrl_has_id = packet->d7anp_ctrl.origin_access_id_present;
-        current_addressee.addressee_ctrl_virtual_id = packet->d7anp_ctrl.origin_access_id_is_vid;
-        current_addressee.addressee_ctrl_access_class = packet->d7anp_ctrl.origin_access_class;
-        memcpy(current_addressee.addressee_id, packet->origin_access_id, 8);
-        packet->d7atp_addressee = &current_addressee;
+        current_addressee.ctrl.has_id = packet->d7anp_ctrl.origin_access_id_present;
+        current_addressee.ctrl.virtual_id = packet->d7anp_ctrl.origin_access_id_is_vid;
+        current_addressee.ctrl.access_class = packet->d7anp_ctrl.origin_access_class;
+        memcpy(current_addressee.id, packet->origin_access_id, 8);
+        packet->d7anp_addressee = &current_addressee;
 
         // set active_addressee_access_profile to the access_profile we received the request on
         uint8_t access_class_received = fs_read_dll_conf_active_access_class();

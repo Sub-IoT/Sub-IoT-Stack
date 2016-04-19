@@ -532,10 +532,10 @@ void dll_tx_frame(packet_t* packet, dae_access_profile_t* access_profile)
     dll_header_t* dll_header = &(packet->dll_header);
     dll_header->subnet = access_profile->subnet;
     dll_header->control_eirp_index = 0; // TODO hardcoded for now
-    if(packet->d7atp_addressee != NULL)
+    if(packet->d7anp_addressee != NULL)
     {
-        dll_header->control_target_address_set = packet->d7atp_addressee->addressee_ctrl_has_id;
-        dll_header->control_vid_used = packet->d7atp_addressee->addressee_ctrl_virtual_id;
+        dll_header->control_target_address_set = packet->d7anp_addressee->ctrl.has_id;
+        dll_header->control_vid_used = packet->d7anp_addressee->ctrl.virtual_id;
     }
 
     packet->hw_radio_packet.tx_meta.tx_cfg = (hw_tx_cfg_t){
@@ -585,7 +585,7 @@ uint8_t dll_assemble_packet_header(packet_t* packet, uint8_t* data_ptr)
     if(packet->dll_header.control_target_address_set)
     {
         uint8_t addr_len = packet->dll_header.control_vid_used? 2 : 8;
-        memcpy(data_ptr, packet->d7atp_addressee->addressee_id, addr_len); data_ptr += addr_len;
+        memcpy(data_ptr, packet->d7anp_addressee->id, addr_len); data_ptr += addr_len;
     }
 
     return data_ptr - dll_header_start;

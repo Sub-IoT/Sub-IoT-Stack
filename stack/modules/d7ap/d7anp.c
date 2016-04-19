@@ -106,7 +106,7 @@ void d7anp_tx_foreground_frame(packet_t* packet, bool should_include_origin_temp
     else
         packet->d7anp_ctrl.origin_access_id_is_vid = true;
 
-    packet->d7anp_ctrl.origin_access_class = packet->d7atp_addressee->addressee_ctrl_access_class; // TODO validate
+    packet->d7anp_ctrl.origin_access_class = packet->d7anp_addressee->ctrl.access_class; // TODO validate
 
     switch_state(D7ANP_STATE_TRANSMIT);
     dll_tx_frame(packet, access_profile);

@@ -52,20 +52,6 @@ typedef struct {
     };
 } d7atp_ctrl_t;
 
-
-typedef struct {
-    union {
-        uint8_t addressee_ctrl;
-        struct {
-            uint8_t addressee_ctrl_access_class : 4;
-            bool addressee_ctrl_virtual_id : 1;
-            bool addressee_ctrl_has_id : 1; // TODO: in spec v1.0 this is defined as UCAST but will be changed in next revision
-            uint8_t _rfu : 2;
-        };
-    };
-    uint8_t addressee_id[8]; // TODO assuming 8 byte id for now
-} d7atp_addressee_t;
-
 typedef struct {
     uint8_t ack_transaction_id_start;
     // TODO ACK bitmap

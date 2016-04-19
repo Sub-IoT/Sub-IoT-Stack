@@ -29,6 +29,22 @@
 
 typedef struct packet packet_t;
 
+typedef struct {
+    uint8_t raw;
+    struct {
+        uint8_t access_class : 4;
+        bool virtual_id : 1;
+        bool has_id : 1;
+        uint8_t _rfu : 2;
+    };
+} d7anp_addressee_ctrl;
+
+typedef struct {
+    d7anp_addressee_ctrl ctrl;
+    uint8_t id[8]; // TODO assuming 8 byte id for now
+} d7anp_addressee_t;
+
+
 /*! \brief The D7ANP CTRL header
  *
  * note: bit order is important here since this is send over the air. We explicitly reverse the order to ensure BE.
@@ -38,6 +54,7 @@ typedef struct packet packet_t;
 typedef struct {
     union {
         uint8_t raw;
+        d7anp_addressee_ctrl addressee_ctrl;
         struct {
             uint8_t origin_access_class : 4;
             bool origin_access_id_is_vid : 1;

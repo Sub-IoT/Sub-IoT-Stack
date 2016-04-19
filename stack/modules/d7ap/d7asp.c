@@ -121,7 +121,7 @@ static void flush_fifos()
 
         current_request_packet = packet_queue_alloc_packet();
         packet_queue_mark_processing(current_request_packet);
-        current_request_packet->d7atp_addressee = &(fifo.config.addressee); // TODO explicitly pass addressee down the stack layers?
+        current_request_packet->d7anp_addressee = &(fifo.config.addressee); // TODO explicitly pass addressee down the stack layers?
 
         memcpy(current_request_packet->payload, fifo.request_buffer + fifo.requests_indices[current_request_id], fifo.requests_lengths[current_request_id]);
         current_request_packet->payload_length = fifo.requests_lengths[current_request_id];
@@ -234,8 +234,8 @@ d7asp_queue_result_t d7asp_queue_alp_actions(d7asp_fifo_config_t* d7asp_fifo_con
     fifo.config.qos = d7asp_fifo_config->qos;
     fifo.config.dormant_timeout = d7asp_fifo_config->dormant_timeout;
     fifo.config.start_id = d7asp_fifo_config->start_id;
-    fifo.config.addressee.addressee_ctrl = d7asp_fifo_config->addressee.addressee_ctrl;
-    memcpy(fifo.config.addressee.addressee_id, d7asp_fifo_config->addressee.addressee_id, sizeof(fifo.config.addressee.addressee_id));
+    fifo.config.addressee.ctrl = d7asp_fifo_config->addressee.ctrl;
+    memcpy(fifo.config.addressee.id, d7asp_fifo_config->addressee.id, sizeof(fifo.config.addressee.id));
     single_request_retry_limit = fifo.config.qos.qos_retry_single;
 
     // add request to buffer
@@ -269,7 +269,7 @@ bool d7asp_process_received_packet(packet_t* packet)
             .missed = false, // TODO
         },
         .response_to = 0, // TODO
-        .addressee = packet->d7atp_addressee
+        .addressee = packet->d7anp_addressee
         // .fifo_token and .request_id filled below
     };
 

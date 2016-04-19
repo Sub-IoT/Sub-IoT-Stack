@@ -124,9 +124,9 @@ void alp_cmd_handler_output_unsollicited_response(d7asp_result_t d7asp_result, u
     (*ptr) = d7asp_result.fifo_token; ptr++;
     (*ptr) = d7asp_result.request_id; ptr++;
     (*ptr) = d7asp_result.response_to; ptr++;
-    (*ptr) = d7asp_result.addressee->addressee_ctrl; ptr++;
-    uint8_t address_len = d7asp_result.addressee->addressee_ctrl_virtual_id? 2 : 8; // TODO according to spec this can be 1 byte as
-    memcpy(ptr, d7asp_result.addressee->addressee_id, address_len); ptr += address_len;
+    (*ptr) = d7asp_result.addressee->ctrl.raw; ptr++;
+    uint8_t address_len = d7asp_result.addressee->ctrl.virtual_id? 2 : 8; // TODO according to spec this can be 1 byte as
+    memcpy(ptr, d7asp_result.addressee->id, address_len); ptr += address_len;
 
     data[2] = ptr - (data + 3);       // fill length byte
 
