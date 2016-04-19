@@ -83,3 +83,5 @@ target_include_directories(d7ap PUBLIC
 	${CMAKE_BINARY_DIR}/framework/ #framework_defs.h
 	${CMAKE_CURRENT_BINARY_DIR} # MODULE_D7AP_defs.h
 )
+
+TARGET_LINK_LIBRARIES(d7ap m)
