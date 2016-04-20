@@ -525,18 +525,22 @@ error_t hw_radio_send_packet(hw_radio_packet_t* packet, tx_packet_callback_t tx_
 	current_state = HW_RADIO_STATE_TX;
 	current_packet = packet;
 
-#ifdef HAL_RADIO_USE_HW_CRC
-	tx_fifo_data_length = packet->length-1;
-#else
-	tx_fifo_data_length = packet->length-1;
-#endif
+//#ifdef HAL_RADIO_USE_HW_CRC
+//	tx_fifo_data_length = packet->length-1;
+//#else
+//	tx_fifo_data_length = packet->length-1;
+//#endif
 
 #ifdef FRAMEWORK_LOG_ENABLED // TODO more granular
 	log_print_stack_string(LOG_STACK_PHY, "Data to TX Fifo:");
-	log_print_data(packet->data, tx_fifo_data_length);
+#ifdef HAL_RADIO_USE_HW_CRC
+	log_print_data(packet->data, packet->length-1);
+#else
+	log_print_data(packet->data, packet->length+1);
+#endif
 #endif
 
-	if (tx_fifo_data_length > 63) tx_fifo_data_length = 63;
+	//if (tx_fifo_data_length > 63) tx_fifo_data_length = 63;
 
 	configure_channel((channel_id_t*)&(current_packet->tx_meta.tx_cfg.channel_id));
 	configure_eirp(current_packet->tx_meta.tx_cfg.eirp);
@@ -547,7 +551,7 @@ error_t hw_radio_send_packet(hw_radio_packet_t* packet, tx_packet_callback_t tx_
 	DEBUG_TX_START();
 	DEBUG_RX_END();
 
-	ezradioStartTx(packet, tx_fifo_data_length, ez_channel_id, should_rx_after_tx_completed);
+	ezradioStartTx(packet, ez_channel_id, should_rx_after_tx_completed);
 	return SUCCESS;
 
 }
@@ -647,11 +651,11 @@ static void ezradio_int_callback()
 	//ezradio_get_int_status(0x0, 0x0, 0x0, &ezradioReply);
 	ezradio_frr_a_read(3, &ezradioReply);
 
-	DPRINT(" - INT_PEND     %s", byte_to_binary(ezradioReply.FRR_A_READ.FRR_A_VALUE));
+	//DPRINT(" - INT_PEND     %s", byte_to_binary(ezradioReply.FRR_A_READ.FRR_A_VALUE));
 //	DPRINT(" - INT_PEND     %s", byte_to_binary(ezradioReply.GET_INT_STATUS.INT_PEND));
 //	DPRINT(" - INT_STATUS   %s", byte_to_binary(ezradioReply.GET_INT_STATUS.INT_STATUS));
 //	DPRINT(" - PH_PEND      %s", byte_to_binary(ezradioReply.GET_INT_STATUS.PH_PEND));
-//	DPRINT(" - PH_STATUS    %s", byte_to_binary(ezradioReply.GET_INT_STATUS.PH_STATUS));
+	DPRINT(" - PH_STATUS    %s", byte_to_binary(ezradioReply.FRR_A_READ.FRR_B_VALUE));
 //	DPRINT(" - MODEM_PEND   %s", byte_to_binary(ezradioReply.GET_INT_STATUS.MODEM_PEND));
 //	DPRINT(" - MODEM_STATUS %s", byte_to_binary(ezradioReply.GET_INT_STATUS.MODEM_STATUS));
 //	DPRINT(" - CHIP_PEND    %s", byte_to_binary(ezradioReply.GET_INT_STATUS.CHIP_PEND));
@@ -719,30 +723,30 @@ static void ezradio_int_callback()
 							start_rx(&current_rx_cfg);
 						}
 					}
-				} else if (ezradioReply.FRR_A_READ.FRR_B_VALUE & EZRADIO_CMD_GET_INT_STATUS_REP_PH_STATUS_RX_FIFO_ALMOST_FULL_BIT)
-				{
-					DPRINT("- RX FIFO almost full IRQ");
-
-					if (rx_fifo_data_lenght == 0)
-					{
-						rx_packet = alloc_packet_callback(255);
-						//ezradio_read_rx_fifo(32, temp_data);
-						//rx_packet->data[rx_fifo_data_lenght++] = temp_data[0];
-					}
-					ezradio_fifo_info(0, &radioReplyLocal);
-					while (radioReplyLocal.FIFO_INFO.RX_FIFO_COUNT > 16)
-					{
-						DPRINT("RX FIFO: %d", radioReplyLocal.FIFO_INFO.RX_FIFO_COUNT);
-						/* Read out the FIFO Count bytes of RX FIFO */
-						ezradio_read_rx_fifo(16, &(rx_packet->data[rx_fifo_data_lenght]));
-						rx_fifo_data_lenght += 16;
-						DPRINT("%d of %d bytes collected", rx_fifo_data_lenght, rx_packet->data[0]+1);
-						ezradio_fifo_info(0, &radioReplyLocal);
-					}
-
-
-
-					return;
+//				} else if (ezradioReply.FRR_A_READ.FRR_B_VALUE & EZRADIO_CMD_GET_INT_STATUS_REP_PH_STATUS_RX_FIFO_ALMOST_FULL_BIT)
+//				{
+//					DPRINT("- RX FIFO almost full IRQ");
+//
+//					if (rx_fifo_data_lenght == 0)
+//					{
+//						rx_packet = alloc_packet_callback(255);
+//						//ezradio_read_rx_fifo(32, temp_data);
+//						//rx_packet->data[rx_fifo_data_lenght++] = temp_data[0];
+//					}
+//					ezradio_fifo_info(0, &radioReplyLocal);
+//					while (radioReplyLocal.FIFO_INFO.RX_FIFO_COUNT > 16)
+//					{
+//						DPRINT("RX FIFO: %d", radioReplyLocal.FIFO_INFO.RX_FIFO_COUNT);
+//						/* Read out the FIFO Count bytes of RX FIFO */
+//						ezradio_read_rx_fifo(16, &(rx_packet->data[rx_fifo_data_lenght]));
+//						rx_fifo_data_lenght += 16;
+//						DPRINT("%d of %d bytes collected", rx_fifo_data_lenght, rx_packet->data[0]+1);
+//						ezradio_fifo_info(0, &radioReplyLocal);
+//					}
+//
+//
+//
+//					return;
 
 				} else if ( ezradioReply.FRR_A_READ.FRR_B_VALUE & EZRADIO_CMD_GET_INT_STATUS_REP_PH_STATUS_CRC_ERROR_BIT)
 				{
