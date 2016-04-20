@@ -727,11 +727,16 @@ static void ezradio_int_callback()
 				{
 					DPRINT("- RX FIFO almost full IRQ");
 
+					ezradio_fifo_info(0, &radioReplyLocal);
 					if (rx_fifo_data_lenght == 0)
 					{
-						rx_packet = alloc_packet_callback(255);
+						DPRINT("RX FIFO: %d", radioReplyLocal.FIFO_INFO.RX_FIFO_COUNT);
+						uint8_t buffer[1];
+						ezradio_read_rx_fifo(1, buffer);
+						rx_packet = alloc_packet_callback(buffer[0]+1);
+						rx_packet->data[rx_fifo_data_lenght++] = buffer[0];
+						radioReplyLocal.FIFO_INFO.RX_FIFO_COUNT--;
 					}
-					ezradio_fifo_info(0, &radioReplyLocal);
 					while (radioReplyLocal.FIFO_INFO.RX_FIFO_COUNT > 0)
 					{
 						DPRINT("RX FIFO: %d", radioReplyLocal.FIFO_INFO.RX_FIFO_COUNT);

@@ -59,10 +59,6 @@ __LINK_C void __gpio_init()
 
     /* Initialize GPIO interrupt dispatcher */
     GPIOINT_Init();
-
-    NVIC_SetPriority(GPIO_EVEN_IRQn, 7);
-    uint32_t prio = NVIC_GetPriority(GPIO_EVEN_IRQn);
-
 }
 
 __LINK_C error_t hw_gpio_configure_pin(pin_id_t pin_id, bool int_allowed, uint8_t mode, unsigned int out)
