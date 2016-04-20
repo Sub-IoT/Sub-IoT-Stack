@@ -38,6 +38,7 @@
 // configuration options
 //#define RX_MODE
 #define PHY_CLASS PHY_CLASS_NORMAL_RATE
+#define PACKET_LENGTH 100
 
 
 
@@ -92,12 +93,15 @@ static uint8_t tx_buffer[sizeof(hw_radio_packet_t) + 255] = { 0 };
 static uint8_t rx_buffer[sizeof(hw_radio_packet_t) + 255] = { 0 };
 hw_radio_packet_t* tx_packet = (hw_radio_packet_t*)tx_buffer;
 hw_radio_packet_t* rx_packet = (hw_radio_packet_t*)rx_buffer;
-static uint8_t data[] = {16, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15};
+static uint8_t data[256];
 
 hw_radio_packet_t received_packet;
 
+static uint8_t counter = 0;
+
 void packet_received(hw_radio_packet_t* packet);
 void packet_transmitted(hw_radio_packet_t* packet);
+
 
 void start_rx()
 {
@@ -107,8 +111,9 @@ void start_rx()
 
 void transmit_packet()
 {
-    DPRINT("transmitting packet\n");
-    memcpy(&tx_packet->data, data, sizeof(data));
+	counter++;
+    DPRINT("%d tx %d bytes\n", counter, PACKET_LENGTH);
+    memcpy(&tx_packet->data, data, PACKET_LENGTH);
     hw_radio_send_packet(tx_packet, &packet_transmitted);
 }
 
@@ -125,10 +130,13 @@ void release_packet(hw_radio_packet_t* packet)
 void packet_received(hw_radio_packet_t* packet)
 {
     DPRINT("packet received @ %i , RSSI = %i\n", packet->rx_meta.timestamp, packet->rx_meta.rssi);
-    if(memcmp(data, packet->data, sizeof(data)) != 0)
-        DPRINT("Unexpected data received!\n");
+    int cmp = memcmp(data, packet->data, packet->length);
+    if(cmp != 0)
+        DPRINT("Unexpected data received! %d\n", cmp);
 
     hw_watchdog_feed();
+
+    memset(packet->data, 0, packet->length);
 }
 
 void packet_transmitted(hw_radio_packet_t* packet)
@@ -136,7 +144,7 @@ void packet_transmitted(hw_radio_packet_t* packet)
 #if HW_NUM_LEDS > 0
     led_toggle(0);
 #endif
-    DPRINT("packet transmitted\n");
+    DPRINT("%d tx ok\n", counter);
     timer_post_task(&transmit_packet, 1000);
 
     hw_watchdog_feed();
@@ -145,6 +153,11 @@ void packet_transmitted(hw_radio_packet_t* packet)
 void bootstrap()
 {
     DPRINT("Device booted at time: %d\n", timer_get_counter_value()); // TODO not printed for some reason, debug later
+
+    data[0] = PACKET_LENGTH-1;
+    int i = 1;
+    for (;i<PACKET_LENGTH;i++)
+    	data[i] = i;
 
     hw_radio_init(&alloc_new_packet, &release_packet);
 

@@ -26,6 +26,7 @@
 
 #include "em_cmu.h"
 #include "em_chip.h"
+#include "platform.h"
 
 
 void __ezr32lg_mcu_init()
@@ -38,9 +39,9 @@ void __ezr32lg_mcu_init()
 
 #ifdef HW_USE_HFXO
     // init clock with HFXO (external)
-    CMU_ClockDivSet(cmuClock_HF, cmuClkDiv_1);		// 24 MHZ
+    CMU_ClockDivSet(cmuClock_HF, cmuClkDiv_1);		// 48 MHZ
     CMU_OscillatorEnable(cmuOsc_HFXO, true, true);   // Enable XTAL Osc and wait to stabilize
-    CMU_ClockSelectSet(cmuClock_HF, cmuSelect_HFXO); // Select HF XTAL osc as system clock source. 48MHz XTAL, but we divided the system clock by 2, therefore our HF clock will be 24MHz
+    CMU_ClockSelectSet(cmuClock_HF, cmuSelect_HFXO); // Select HF XTAL osc as system clock source. 48MHz XTAL, but we divided the system clock by 1, therefore our HF clock will be 48MHz
     //CMU_ClockDivSet(cmuClock_HFPER, cmuClkDiv_4); // TODO set HFPER clock divider (used for SPI) + disable gate clock when not used?
 #else
     // init clock with HFRCO (internal)

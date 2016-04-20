@@ -102,7 +102,7 @@ __LINK_C error_t sched_post_task_prio(task_t task, uint8_t priority);
  *
  * \param task		The task to be executed by the scheduler
  *
- * \return error_t	SUCCESS if the task was succesfully scheduled
+ * \return error_t	SUCCESS if the task was successfully scheduled
  *			EINVAL if the task was not registered with the scheduler
  *			EALREADY if the task was already scheduled. If this is the case,
  *			the task will be executed but only once.

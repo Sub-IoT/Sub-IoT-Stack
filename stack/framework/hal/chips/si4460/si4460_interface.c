@@ -110,7 +110,7 @@ void ezradioInit(task_t cb)
   if (cb != NULL)
   {
 	  int_callback = cb;
-	  sched_register_task(int_callback);
+	  //sched_register_task(int_callback);
   }
 }
 
@@ -142,7 +142,7 @@ Ecode_t ezradioStartRx(uint8_t channel)
     return ECODE_OK;
 }
 
-Ecode_t ezradioStartTx(hw_radio_packet_t* packet, uint8_t channel_id, bool rx_after)
+Ecode_t ezradioStartTx(hw_radio_packet_t* packet, uint8_t length, uint8_t channel_id, bool rx_after)
 {
 	ezradio_cmd_reply_t ezradioReply;
 
@@ -164,11 +164,8 @@ Ecode_t ezradioStartTx(hw_radio_packet_t* packet, uint8_t channel_id, bool rx_af
 	ezradio_fifo_info(EZRADIO_CMD_FIFO_INFO_ARG_FIFO_TX_BIT, NULL);
 
 	/* Fill the TX fifo with data, CRC is added by HW*/
-#ifdef HAL_RADIO_USE_HW_CRC
-	ezradio_write_tx_fifo(packet->length-1, packet->data);
-#else
-	ezradio_write_tx_fifo(packet->length+1, packet->data);
-#endif
+	ezradio_write_tx_fifo(length, packet->data);
+
 	/* Start sending packet*/
 	// RX state or idle state
 	uint8_t next_state = rx_after ? 8 << 4 : 1 << 4;
@@ -208,7 +205,8 @@ static void GPIO_EZRadio_INT_IRQHandler( uint8_t pin )
   ezradioIrqReceived = true;
 
   if (int_callback)
-	  sched_post_task(int_callback);
+	  //sched_post_task_prio(int_callback, MAX_PRIORITY);
+	  int_callback();
 
 
 

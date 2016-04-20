@@ -14,7 +14,7 @@ Platform        | MCU                                   | Radio                 
 EFM32GG_STK3700 | Silicon Labs Giant Gecko (Cortex-M3)  | Texas Instruments CC1101      | gcc-arm-embedded  |
 EFM32HG_STK3400 | Silicon Labs Happy Gecko (Cortex-M0+) | Texas Instruments CC1101      | gcc-arm-embedded  |
 wizzimote       | Texas Instruments CC430 (MSP430)      | Texas Instruments CC1101 (SoC)| msp430-gcc        |
-EZR32WG_WSTK6221| Silicon Labs EZR32WG SoC (Cortex-M4)	| Silicon Labs EZR32WG 			| gcc-arm-embedded  |
+EZR32LG_WSTK6200| Silicon Labs EZR32LG SoC (Cortex-M3)	| EZradio si4460 			| gcc-arm-embedded  |
 
 The [EFM32GG_STK3700](https://www.silabs.com/products/mcu/lowpower/Pages/efm32gg-stk3700.aspx) is currently the most used by us, and thus the best supported.
 A disadvantage of this platform is that you need to attach an external CC1101. We designed a CC1101-based module which can be plugged in the expansion port of the devkit, see below for the schematics.
@@ -22,7 +22,32 @@ Next to this, we are working on a PCB design for a devkit containing Giant Gecko
 
 The [EFM32HG_STK3400](https://www.silabs.com/products/mcu/32-bit/Pages/efm32hg-stk3400.aspx) is very similar to the STK3700 but instead has a Cortex-M0+ instead of Cortex-M3 and a more capable LCD screen. The same CC1101 module as used for the STK3700 can be plugged into the expansion header.
 
-The [EZR32WG_WSTK6221](https://www.silabs.com/products/wireless/wirelessmcu/Pages/ezr32wg-starter-kits.aspx) platform is a starter kit based on the EZR32 Wonder Gecko Wireless MCU. This SoC contains a Wonder Gecko Cortex-M4 combined with an RF chip. The port to this platform is currently ongoing.
+##EZR32LG_WSTK6200##
+The [EZR32LG_WSTK6200](https://www.silabs.com/products/wireless/wirelessmcu/Pages/ezr32lg-starter-kits.aspx) platform is a starter kit based on the EZR32 Leopard Gecko Wireless MCU. This SoC contains a Wonder Gecko Cortex-M3 combined with an RF chip (si4460). 
+
+![The EZR32LG devkit](wstk6200.png)
+
+CMAKE Settings
+
+To use the default UART using Breakout pad P4 (TX) and P6 (RX):
+* PLATFORM_EZ32LG_WSTK6200A_CONSOLE_UART		0
+* PLATFORM_EZ32LG_WSTK6200A_CONSOLE_LOCATION	1
+
+Connect P4 to Yellow wire of FTDI connector
+Connect P6 to Red wire of FTDI connector (if this wire is connected, make sure you keep the board powered)
+Connect GND to Black wire of the FTDI connector
+You can power the boad using the Red wire of the FTID using the 5V!!! pin of the dev kit.
+
+To use the VCOM (use ethernet port and telnet (port 4901)):
+* PLATFORM_EZ32LG_WSTK6200A_CONSOLE_UART		3
+* PLATFORM_EZ32LG_WSTK6200A_CONSOLE_LOCATION	1
+* PLATFORM_USE_VCOM								ENABLE
+
+Sensors
+initSensors() will initialize the Humidity and Temperature sensor on the devkit.
+After initialization the values can be read using getHumidityAndTemperature()
+
+## Other
 
 It is important to know that there are a number of parties who are currently in the process of designing devkits which will be commercially available, 
 so the choice should increase in the near future.
@@ -33,6 +58,10 @@ is still a young effort and there are some known problems with code size optimiz
 
 Finally, it is of course possible to define your own platform. Especially if you are using an MCU and radio which is already implemented it takes very little effort to add support to OSS-7 for your platform.
 Designing your own platform gives you the most flexibility regarding form factor and sensors specific for you use case of course. We are glad to assist in designing a custom board.
+
+
+
+
 
 ##CC1101 RF module for Giant Gecko##
 

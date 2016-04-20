@@ -34,6 +34,8 @@
 #include <ezr32lg_chip.h>
 #include "hwatomic.h"
 
+#include "em_gpio.h"
+
 typedef struct
 {
     gpio_inthandler_t callback;
@@ -57,6 +59,9 @@ __LINK_C void __gpio_init()
 
     /* Initialize GPIO interrupt dispatcher */
     GPIOINT_Init();
+
+    NVIC_SetPriority(GPIO_EVEN_IRQn, 7);
+    uint32_t prio = NVIC_GetPriority(GPIO_EVEN_IRQn);
 
 }
 

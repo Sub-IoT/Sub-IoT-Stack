@@ -68,6 +68,8 @@ static Ecode_t  TransferApiBlockingPrologue( SPIDRV_Handle_t handle,
 
 static void     WaitForTransferCompletion( SPIDRV_Handle_t handle );
 
+static uint16_t max_counter = 0;
+
 #if defined( EMDRV_SPIDRV_INCLUDE_SLAVE )
 static Ecode_t  WaitForIdleLine(  SPIDRV_Handle_t handle );
 #endif
@@ -1900,7 +1902,14 @@ static void WaitForTransferCompletion( SPIDRV_Handle_t handle )
   else
   {
     INT_Enable();
-    while ( handle->blockingCompleted == false );
+    uint16_t counter = 0;
+    while ( handle->blockingCompleted == false )
+    {
+    	if (DMA->IF & (1 << handle->rxDMACh))
+    		DMA_IRQHandler();
+    }
+    //while (!(DMA->IF & (1 << handle->txDMACh)));
+    if (max_counter < counter) max_counter = counter;
   }
 }
 
