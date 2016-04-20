@@ -36,7 +36,7 @@
 #endif
 
 // configuration options
-//#define RX_MODE
+#define RX_MODE
 #define PHY_CLASS PHY_CLASS_NORMAL_RATE
 #define PACKET_LENGTH 100
 
@@ -130,7 +130,11 @@ void release_packet(hw_radio_packet_t* packet)
 void packet_received(hw_radio_packet_t* packet)
 {
     DPRINT("packet received @ %i , RSSI = %i\n", packet->rx_meta.timestamp, packet->rx_meta.rssi);
-    int cmp = memcmp(data, packet->data, packet->length);
+#ifdef HAL_RADIO_USE_HW_CRC
+    int cmp = memcmp(data, packet->data, packet->length-2);
+#else
+		int cmp = memcmp(data, packet->data, packet->length);
+#endif
     if(cmp != 0)
         DPRINT("Unexpected data received! %d\n", cmp);
 

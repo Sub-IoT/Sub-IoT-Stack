@@ -723,30 +723,28 @@ static void ezradio_int_callback()
 							start_rx(&current_rx_cfg);
 						}
 					}
-//				} else if (ezradioReply.FRR_A_READ.FRR_B_VALUE & EZRADIO_CMD_GET_INT_STATUS_REP_PH_STATUS_RX_FIFO_ALMOST_FULL_BIT)
-//				{
-//					DPRINT("- RX FIFO almost full IRQ");
-//
-//					if (rx_fifo_data_lenght == 0)
-//					{
-//						rx_packet = alloc_packet_callback(255);
-//						//ezradio_read_rx_fifo(32, temp_data);
-//						//rx_packet->data[rx_fifo_data_lenght++] = temp_data[0];
-//					}
-//					ezradio_fifo_info(0, &radioReplyLocal);
-//					while (radioReplyLocal.FIFO_INFO.RX_FIFO_COUNT > 16)
-//					{
-//						DPRINT("RX FIFO: %d", radioReplyLocal.FIFO_INFO.RX_FIFO_COUNT);
-//						/* Read out the FIFO Count bytes of RX FIFO */
-//						ezradio_read_rx_fifo(16, &(rx_packet->data[rx_fifo_data_lenght]));
-//						rx_fifo_data_lenght += 16;
-//						DPRINT("%d of %d bytes collected", rx_fifo_data_lenght, rx_packet->data[0]+1);
-//						ezradio_fifo_info(0, &radioReplyLocal);
-//					}
-//
-//
-//
-//					return;
+				} else if (ezradioReply.FRR_A_READ.FRR_B_VALUE & EZRADIO_CMD_GET_INT_STATUS_REP_PH_STATUS_RX_FIFO_ALMOST_FULL_BIT)
+				{
+					DPRINT("- RX FIFO almost full IRQ");
+
+					if (rx_fifo_data_lenght == 0)
+					{
+						rx_packet = alloc_packet_callback(255);
+					}
+					ezradio_fifo_info(0, &radioReplyLocal);
+					while (radioReplyLocal.FIFO_INFO.RX_FIFO_COUNT > 0)
+					{
+						DPRINT("RX FIFO: %d", radioReplyLocal.FIFO_INFO.RX_FIFO_COUNT);
+						/* Read out the FIFO Count bytes of RX FIFO */
+						ezradio_read_rx_fifo(radioReplyLocal.FIFO_INFO.RX_FIFO_COUNT, &(rx_packet->data[rx_fifo_data_lenght]));
+						rx_fifo_data_lenght += radioReplyLocal.FIFO_INFO.RX_FIFO_COUNT;
+						DPRINT("%d of %d bytes collected", rx_fifo_data_lenght, rx_packet->data[0]+1);
+						ezradio_fifo_info(0, &radioReplyLocal);
+					}
+
+					ezradio_int_callback();
+
+					return;
 
 				} else if ( ezradioReply.FRR_A_READ.FRR_B_VALUE & EZRADIO_CMD_GET_INT_STATUS_REP_PH_STATUS_CRC_ERROR_BIT)
 				{
@@ -817,44 +815,43 @@ static void ezradio_int_callback()
 						should_rx_after_tx_completed = false;
 						start_rx(&current_rx_cfg);
 					}
-				}
-				else if (ezradioReply.FRR_A_READ.FRR_C_VALUE & EZRADIO_CMD_GET_INT_STATUS_REP_PH_PEND_TX_FIFO_ALMOST_EMPTY_PEND_BIT)
-				{
-					DPRINT(" - TX FIFO Almost empty IRQ ");
-
-					ezradio_fifo_info(0, &radioReplyLocal);
-					DPRINT("TX FIFO Space: %d", radioReplyLocal.FIFO_INFO.TX_FIFO_SPACE);
-
-					//Fill fifo
-					#ifdef HAL_RADIO_USE_HW_CRC
-						int16_t new_length = current_packet->length-1 - tx_fifo_data_length;
-					#else
-						int16_t new_length = current_packet->length+1 - tx_fifo_data_length;
-					#endif
-					if (new_length > radioReplyLocal.FIFO_INFO.TX_FIFO_SPACE) new_length = radioReplyLocal.FIFO_INFO.TX_FIFO_SPACE;
-
-					while (new_length > 0)
-					{
-						ezradio_write_tx_fifo(new_length, &(current_packet->data[tx_fifo_data_length]));
-						tx_fifo_data_length += new_length;
-						DPRINT ("%d added -> %d", new_length, tx_fifo_data_length);
-
-					#ifdef HAL_RADIO_USE_HW_CRC
-						new_length = current_packet->length-1 - tx_fifo_data_length;
-					#else
-						new_length = current_packet->length+1 - tx_fifo_data_length;
-					#endif
-						if (new_length > radioReplyLocal.FIFO_INFO.TX_FIFO_SPACE) new_length = radioReplyLocal.FIFO_INFO.TX_FIFO_SPACE;
-					}
-
-					if (new_length == 0)
-					{
-						DPRINT("reprocess callback");
-						ezradio_int_callback();
-						return;
-					}
-
-					DPRINT ("%d added -> %d", new_length, tx_fifo_data_length);
+//				} else if (ezradioReply.FRR_A_READ.FRR_C_VALUE & EZRADIO_CMD_GET_INT_STATUS_REP_PH_PEND_TX_FIFO_ALMOST_EMPTY_PEND_BIT)
+//				{
+//					DPRINT(" - TX FIFO Almost empty IRQ ");
+//
+//					ezradio_fifo_info(0, &radioReplyLocal);
+//					DPRINT("TX FIFO Space: %d", radioReplyLocal.FIFO_INFO.TX_FIFO_SPACE);
+//
+//					//Fill fifo
+//					#ifdef HAL_RADIO_USE_HW_CRC
+//						int16_t new_length = current_packet->length-1 - tx_fifo_data_length;
+//					#else
+//						int16_t new_length = current_packet->length+1 - tx_fifo_data_length;
+//					#endif
+//					if (new_length > radioReplyLocal.FIFO_INFO.TX_FIFO_SPACE) new_length = radioReplyLocal.FIFO_INFO.TX_FIFO_SPACE;
+//
+//					while (new_length > 0)
+//					{
+//						ezradio_write_tx_fifo(new_length, &(current_packet->data[tx_fifo_data_length]));
+//						tx_fifo_data_length += new_length;
+//						DPRINT ("%d added -> %d", new_length, tx_fifo_data_length);
+//
+//					#ifdef HAL_RADIO_USE_HW_CRC
+//						new_length = current_packet->length-1 - tx_fifo_data_length;
+//					#else
+//						new_length = current_packet->length+1 - tx_fifo_data_length;
+//					#endif
+//						if (new_length > radioReplyLocal.FIFO_INFO.TX_FIFO_SPACE) new_length = radioReplyLocal.FIFO_INFO.TX_FIFO_SPACE;
+//					}
+//
+//					if (new_length == 0)
+//					{
+//						DPRINT("reprocess callback");
+//						ezradio_int_callback();
+//						return;
+//					}
+//
+//					DPRINT ("%d added -> %d", new_length, tx_fifo_data_length);
 				} else {
 					DPRINT(" - OTHER IRQ");
 				}
