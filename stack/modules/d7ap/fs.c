@@ -289,7 +289,7 @@ uint8_t fs_read_dll_conf_active_access_class()
 void fs_write_dll_conf_active_access_class(uint8_t access_class)
 {
     fs_write_file(D7A_FILE_DLL_CONF_FILE_ID, 0, &access_class, 1);
-    sched_post_task(&dll_execute_scan_automation); // restart scan automation to make sure DLL rereads DLL conf file
+    dll_notify_dll_conf_file_changed();
 }
 
 uint8_t fs_get_file_length(uint8_t file_id)

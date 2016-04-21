@@ -462,6 +462,15 @@ void dll_execute_scan_automation()
     }
 }
 
+void dll_notify_dll_conf_file_changed()
+{
+    // when doing scan automation restart this
+    if(dll_state == DLL_STATE_SCAN_AUTOMATION)
+    {
+        dll_execute_scan_automation();
+    }
+}
+
 void dll_init()
 {
     sched_register_task(&process_received_packets);
