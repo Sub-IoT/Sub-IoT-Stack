@@ -29,6 +29,7 @@
 #include "d7asp.h"
 #include "MODULE_D7AP_defs.h"
 #include "version.h"
+#include "dll.h"
 
 static fs_file_header_t NGDEF(_file_headers)[MODULE_D7AP_FS_FILE_COUNT] = { 0 };
 #define file_headers NG(_file_headers)
@@ -288,6 +289,7 @@ uint8_t fs_read_dll_conf_active_access_class()
 void fs_write_dll_conf_active_access_class(uint8_t access_class)
 {
     fs_write_file(D7A_FILE_DLL_CONF_FILE_ID, 0, &access_class, 1);
+    sched_post_task(&dll_execute_scan_automation); // restart scan automation to make sure DLL rereads DLL conf file
 }
 
 uint8_t fs_get_file_length(uint8_t file_id)

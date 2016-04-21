@@ -141,7 +141,10 @@ static void switch_state(dll_state_t next_state)
         DPRINT("Switched to DLL_STATE_IDLE");
         break;
     case DLL_STATE_SCAN_AUTOMATION:
-        assert(dll_state == DLL_STATE_FOREGROUND_SCAN || dll_state == DLL_STATE_IDLE || dll_state == DLL_STATE_TX_FOREGROUND_COMPLETED);
+        assert(dll_state == DLL_STATE_FOREGROUND_SCAN
+               || dll_state == DLL_STATE_IDLE
+               || dll_state == DLL_STATE_TX_FOREGROUND_COMPLETED
+               || dll_state == DLL_STATE_SCAN_AUTOMATION);
         dll_state = next_state;
         DPRINT("Switched to DLL_STATE_SCAN_AUTOMATION");
         break;
