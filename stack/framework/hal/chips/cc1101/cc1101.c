@@ -296,6 +296,9 @@ static void configure_channel(const channel_id_t* channel_id)
         assert(channel_id->channel_header.ch_coding == PHY_CODING_PN9); // TODO implement other codings
         // TODO assert valid center freq index
 
+        cc1101_interface_strobe(RF_SIDLE); // we need to be in IDLE state before starting calibration
+        wait_for_chip_state(CC1101_CHIPSTATE_IDLE);
+        
         memcpy(&current_channel_id, channel_id, sizeof(channel_id_t)); // cache new settings
 
         // TODO preamble size depends on channel class
