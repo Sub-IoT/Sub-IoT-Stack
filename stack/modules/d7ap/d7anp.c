@@ -95,6 +95,11 @@ void d7anp_init()
 
 void d7anp_tx_foreground_frame(packet_t* packet, bool should_include_origin_template, dae_access_profile_t* access_profile)
 {
+    if(d7anp_state == D7ANP_STATE_FOREGROUND_SCAN)
+    {
+        timer_cancel_task(&foreground_scan_expired);
+    }
+
     packet->d7anp_timeout = access_profile->transmission_timeout_period; // TODO get calculated value from SP
     packet->d7anp_ctrl.nls_enabled = false;
     packet->d7anp_ctrl.hop_enabled = false;
