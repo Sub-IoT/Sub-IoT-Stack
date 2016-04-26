@@ -303,32 +303,35 @@ bool d7asp_process_received_packet(packet_t* packet)
         result.request_id = packet->d7atp_transaction_id;
 
 
-        if(alp_get_operation(packet->payload) == ALP_OP_RETURN_FILE_DATA)
+        if(packet->payload_length > 0)
         {
-            // received unsollicited data, notify appl
-            DPRINT("Received unsollicited data");
-            if(d7asp_init_args != NULL && d7asp_init_args->d7asp_received_unsollicited_data_cb != NULL)
-                d7asp_init_args->d7asp_received_unsollicited_data_cb(result, packet->payload, packet->payload_length);
-
-            packet->payload_length = 0; // no response payload
-        }
-        else
-        {
-            // build response, we will reuse the same packet for this
-            // we will first try to process the command against the local FS
-            // if the FS handler cannot process this, and a status response is requested, a status operand will be present in the response payload
-            bool handled = alp_process_command_fs_itf(packet->payload, packet->payload_length, packet->payload, &packet->payload_length);
-
-            // ... and if not handled we'll give the application a chance to handle this by returning an ALP response.
-            // if the application fails to handle the request as well the ALP status operand supplied by alp_process_command_fs_itf() will be transmitted (if requested)
-            if(!handled)
+            if(alp_get_operation(packet->payload) == ALP_OP_RETURN_FILE_DATA)
             {
-              DPRINT("ALP command could not be processed by local FS");
-              if(d7asp_init_args != NULL && d7asp_init_args->d7asp_received_unhandled_alp_command_cb != NULL)
-              {
-                  DPRINT("ALP command passed to application for processing");
-                  d7asp_init_args->d7asp_received_unhandled_alp_command_cb(packet->payload, packet->payload_length, packet->payload, &packet->payload_length);
-              }
+                // received unsollicited data, notify appl
+                DPRINT("Received unsollicited data");
+                if(d7asp_init_args != NULL && d7asp_init_args->d7asp_received_unsollicited_data_cb != NULL)
+                    d7asp_init_args->d7asp_received_unsollicited_data_cb(result, packet->payload, packet->payload_length);
+
+                packet->payload_length = 0; // no response payload
+            }
+            else
+            {
+                // build response, we will reuse the same packet for this
+                // we will first try to process the command against the local FS
+                // if the FS handler cannot process this, and a status response is requested, a status operand will be present in the response payload
+                bool handled = alp_process_command_fs_itf(packet->payload, packet->payload_length, packet->payload, &packet->payload_length);
+
+                // ... and if not handled we'll give the application a chance to handle this by returning an ALP response.
+                // if the application fails to handle the request as well the ALP status operand supplied by alp_process_command_fs_itf() will be transmitted (if requested)
+                if(!handled)
+                {
+                  DPRINT("ALP command could not be processed by local FS");
+                  if(d7asp_init_args != NULL && d7asp_init_args->d7asp_received_unhandled_alp_command_cb != NULL)
+                  {
+                      DPRINT("ALP command passed to application for processing");
+                      d7asp_init_args->d7asp_received_unhandled_alp_command_cb(packet->payload, packet->payload_length, packet->payload, &packet->payload_length);
+                  }
+                }
             }
         }
 
