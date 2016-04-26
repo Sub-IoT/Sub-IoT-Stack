@@ -48,7 +48,7 @@ void d7ap_stack_init(fs_init_args_t* fs_init_args, d7asp_init_args_t* d7asp_init
     }
     else
     {
-#ifdef D7AP_BROADCAST_VERSION_ON_BOOT_ENABLED
+#ifdef MODULE_D7AP_BROADCAST_VERSION_ON_BOOT_ENABLED
       // notify booted by broadcasting and retrying 3 times (for diagnostics ie to detect reboots)
       // TODO: default access class
       d7asp_fifo_config_t broadcast_fifo_config = {
@@ -63,10 +63,12 @@ void d7ap_stack_init(fs_init_args_t* fs_init_args, d7asp_init_args_t* d7asp_init
           .dormant_timeout = 0,
           .start_id = 0,
           .addressee = {
-            .addressee_ctrl_has_id = false,
-            .addressee_ctrl_virtual_id = false,
-            .addressee_ctrl_access_class = 0,
-            .addressee_id = 0
+            .ctrl = {
+              .has_id = false,
+              .virtual_id = false,
+              .access_class = 0,
+            },
+            .id = 0
           }
       };
 
