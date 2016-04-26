@@ -152,8 +152,10 @@ RFIFG15 Positive edge: WOR event 1
 #define RADIO_FIFOTHR_FIFO_THR_17_48    (11)             // FIFOTHR.FIFO_THR 17B TX / 48B RX
 #define RADIO_FIFOTHR_FIFO_THR_1_64     (15)            // FIFOTHR.FIFO_THR  1B TX / 64B RX
 
-#define RADIO_SYNC1      				0xE6            // SYNC1
-#define RADIO_SYNC0      				0xD0            // SYNC0
+// TODO use class 1 for now, change class in driver when needed
+#define RADIO_SYNC1      				0x0B            // SYNC1
+#define RADIO_SYNC0      				0x67            // SYNC0
+
 
 #define RADIO_PKTLEN                    0xFF            // PKTLEN (default)
 
