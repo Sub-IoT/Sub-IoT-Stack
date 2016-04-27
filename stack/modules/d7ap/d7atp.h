@@ -41,7 +41,7 @@ typedef struct {
     union {
       uint8_t ctrl_raw;
       struct {
-          bool ctrl_is_ack_template_present : 1;
+          uint8_t _rfu2 : 1;
           bool ctrl_ack_record : 1;
           bool ctrl_ack_not_void : 1;
           bool ctrl_is_ack_requested : 1;

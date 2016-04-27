@@ -138,8 +138,7 @@ void d7atp_start_dialog(uint8_t dialog_id, uint8_t transaction_id, bool is_last_
         .ctrl_is_stop = is_last_transaction,
         .ctrl_is_ack_requested = qos_settings->qos_ctrl_resp_mode == SESSION_RESP_MODE_NONE? false : true,
         .ctrl_ack_not_void = qos_settings->qos_ctrl_ack_not_void,
-        .ctrl_ack_record = false,
-        .ctrl_is_ack_template_present = false
+        .ctrl_ack_record = false
     };
 
     current_dialog_id = dialog_id;
@@ -166,9 +165,8 @@ void d7atp_respond_dialog(packet_t* packet)
     // modify the request headers and turn this into a response
     d7atp_ctrl_t* d7atp = &(packet->d7atp_ctrl);
     d7atp->ctrl_is_start = 0;
-    d7atp->ctrl_is_ack_template_present = d7atp->ctrl_is_ack_requested? true : false;
-    d7atp->ctrl_is_ack_requested = false;
-    d7atp->ctrl_ack_not_void = false; // TODO validate
+    // leave ctrl_is_ack_requested as is, keep the requester value
+    d7atp->ctrl_ack_not_void = false; // TODO
     d7atp->ctrl_ack_record = false; // TODO validate
 
     // dialog and transaction id remain the same
@@ -182,7 +180,7 @@ uint8_t d7atp_assemble_packet_header(packet_t* packet, uint8_t* data_ptr)
     (*data_ptr) = packet->d7atp_dialog_id; data_ptr++;
     (*data_ptr) = packet->d7atp_transaction_id; data_ptr++;
 
-    if(packet->d7atp_ctrl.ctrl_is_ack_template_present)
+    if(packet->d7atp_ctrl.ctrl_is_ack_requested && packet->d7atp_ctrl.ctrl_ack_not_void)
     {
         // add ACK template
         (*data_ptr) = packet->d7atp_transaction_id; data_ptr++; // transaction ID start
@@ -199,7 +197,7 @@ bool d7atp_disassemble_packet_header(packet_t *packet, uint8_t *data_idx)
     packet->d7atp_dialog_id = packet->hw_radio_packet.data[(*data_idx)]; (*data_idx)++;
     packet->d7atp_transaction_id = packet->hw_radio_packet.data[(*data_idx)]; (*data_idx)++;
 
-    if(packet->d7atp_ctrl.ctrl_is_ack_template_present)
+    if(packet->d7atp_ctrl.ctrl_is_ack_requested && packet->d7atp_ctrl.ctrl_ack_not_void)
     {
         packet->d7atp_ack_template.ack_transaction_id_start = packet->hw_radio_packet.data[(*data_idx)]; (*data_idx)++;
         packet->d7atp_ack_template.ack_transaction_id_stop = packet->hw_radio_packet.data[(*data_idx)]; (*data_idx)++;
