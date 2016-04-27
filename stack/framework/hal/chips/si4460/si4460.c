@@ -202,6 +202,7 @@ static void configure_channel(const channel_id_t* channel_id)
 			if(channel_id->channel_header.ch_class == PHY_CLASS_LO_RATE)
 			{
 				assert(channel_id->center_freq_index <= 68);
+				ez_channel_id = channel_id->center_freq_index;
 				ezradio_set_property(RADIO_CONFIG_SET_PROPERTY_MODEM_FREQ_DEV_433_LR);
 				ezradio_set_property(RADIO_CONFIG_SET_PROPERTY_FREQ_CONTROL_FRAC_433_LR);
 				ezradio_set_property(RADIO_CONFIG_SET_PROPERTY_MODEM_DECIMATION_CFG1_433_LR);
@@ -239,7 +240,7 @@ static void configure_channel(const channel_id_t* channel_id)
 			else if(channel_id->channel_header.ch_class == PHY_CLASS_HI_RATE)
 			{
 				assert(channel_id->center_freq_index % 8 == 0 && channel_id->center_freq_index <= 56);
-
+				ez_channel_id = channel_id->center_freq_index / 8;
 				ezradio_set_property(RADIO_CONFIG_SET_PROPERTY_MODEM_DATA_RATE_433_HR);
 				ezradio_set_property(RADIO_CONFIG_SET_PROPERTY_MODEM_FREQ_DEV_433_HR);
 				ezradio_set_property(RADIO_CONFIG_SET_PROPERTY_FREQ_CONTROL_FRAC_433_HR);
@@ -542,9 +543,9 @@ error_t hw_radio_send_packet(hw_radio_packet_t* packet, tx_packet_callback_t tx_
 
 	//if (tx_fifo_data_length > 63) tx_fifo_data_length = 63;
 
-	configure_channel((channel_id_t*)&(current_packet->tx_meta.tx_cfg.channel_id));
-	configure_eirp(current_packet->tx_meta.tx_cfg.eirp);
-	configure_syncword_class(current_packet->tx_meta.tx_cfg.syncword_class);
+	configure_channel((channel_id_t*)&(packet->tx_meta.tx_cfg.channel_id));
+	configure_eirp(packet->tx_meta.tx_cfg.eirp);
+	configure_syncword_class(packet->tx_meta.tx_cfg.syncword_class);
 
 
 
@@ -624,7 +625,7 @@ static void start_rx(hw_rx_cfg_t const* rx_cfg)
     configure_syncword_class(rx_cfg->syncword_class);
 
     rx_fifo_data_lenght = 0;
-    ezradioStartRx((uint8_t) (current_channel_id.center_freq_index));
+    ezradioStartRx(ez_channel_id);
 
     DEBUG_RX_START();
 
