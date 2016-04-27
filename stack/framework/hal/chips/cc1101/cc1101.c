@@ -395,7 +395,20 @@ static void configure_eirp(const eirp_t eirp)
     if(eirp != current_eirp)
     {
         current_eirp = eirp;
-        cc1101_interface_write_single_patable(0xC0); // TODO only 10 dBm supported for now
+        uint8_t register_value = 0xC0;
+        switch(eirp) // TODO band dependent!
+        {
+          case 0:
+            register_value = 0x60;
+            break;
+          case 10:
+            register_value = 0xC0;
+            break;
+          default:
+            assert(false);
+        }
+
+        cc1101_interface_write_single_patable(register_value); // TODO only 10 dBm supported for now
     }
 }
 
