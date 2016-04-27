@@ -542,7 +542,7 @@ void dll_tx_frame(packet_t* packet, dae_access_profile_t* access_profile)
         .channel_id.channel_header = current_access_profile->subbands[0].channel_header,
         .channel_id.center_freq_index = current_access_profile->subbands[0].channel_index_start,
         .syncword_class = PHY_SYNCWORD_CLASS1,
-        .eirp = 10
+        .eirp = current_access_profile->subbands[0].eirp
     };
 
     packet_assemble(packet);
