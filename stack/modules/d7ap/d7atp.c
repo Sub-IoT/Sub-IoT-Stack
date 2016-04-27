@@ -172,7 +172,6 @@ void d7atp_respond_dialog(packet_t* packet)
     d7atp->ctrl_ack_record = false; // TODO validate
 
     // dialog and transaction id remain the same
-
     d7anp_tx_foreground_frame(packet, true, &active_addressee_access_profile);
 }
 
@@ -275,12 +274,11 @@ void d7atp_process_received_packet(packet_t* packet)
         memcpy(current_addressee.id, packet->origin_access_id, 8);
         packet->d7anp_addressee = &current_addressee;
 
-        // set active_addressee_access_profile to the access_profile we received the request on
-        uint8_t access_class_received = fs_read_dll_conf_active_access_class();
-        if(current_access_class != access_class_received)
+        // set active_addressee_access_profile to the access_profile supplied by the requester
+        if(current_access_class != current_addressee.ctrl.access_class)
         {
-            fs_read_access_class(access_class_received, &active_addressee_access_profile);
-            current_access_class = access_class_received;
+            fs_read_access_class(current_addressee.ctrl.access_class, &active_addressee_access_profile);
+            current_access_class = current_addressee.ctrl.access_class;
         }
     }
 
