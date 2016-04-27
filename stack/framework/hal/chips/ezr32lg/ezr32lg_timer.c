@@ -33,18 +33,22 @@
 #include "hwtimer.h"
 #include "hwatomic.h"
 #include "ezr32lg_mcu.h"
+#include "platform.h"
 
 /**************************************************************************//**
- * @brief  Start LFRCO for RTC
- * Starts the low frequency RC oscillator (LFRCO) and routes it to the RTC
+ * @brief  Start oscillator for RTC
+ * Starts the low frequency oscillator and routes it to the RTC
  *****************************************************************************/
-void startLfxoForRtc(uint8_t freq)
+void startOscForRtc(uint8_t freq)
 {
-    /* Starting LFRCO and waiting until it is stable */
+    /* Start the oscillator, wait until stable, then route it to the RTC */
+#ifdef HW_USE_LFXO
     CMU_OscillatorEnable(cmuOsc_LFXO, true, true);
-
-    /* Routing the LFRCO clock to the RTC */
     CMU_ClockSelectSet(cmuClock_LFA,cmuSelect_LFXO);
+#else
+    CMU_OscillatorEnable(cmuOsc_LFRCO, true, true);
+    CMU_ClockSelectSet(cmuClock_LFA,cmuSelect_LFRCO);
+#endif
     CMU_ClockEnable(cmuClock_RTC, true);
 
     /* Set Clock prescaler */
@@ -82,7 +86,7 @@ error_t hw_timer_init(hwtimer_id_t timer_id, uint8_t frequency, timer_callback_t
 		timer_inited = true;
 
 		/* Configuring clocks in the Clock Management Unit (CMU) */
-		startLfxoForRtc(frequency);
+		startOscForRtc(frequency);
 
 		RTC_Init_TypeDef rtcInit = RTC_INIT_DEFAULT;
 		rtcInit.enable   = false;   /* Don't enable RTC after init has run */
