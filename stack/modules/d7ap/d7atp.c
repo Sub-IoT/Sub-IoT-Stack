@@ -274,12 +274,19 @@ void d7atp_process_received_packet(packet_t* packet)
         memcpy(current_addressee.id, packet->origin_access_id, 8);
         packet->d7anp_addressee = &current_addressee;
 
+        channel_id_t rx_channel = packet->hw_radio_packet.rx_meta.rx_cfg.channel_id;
+
         // set active_addressee_access_profile to the access_profile supplied by the requester
         if(current_access_class != current_addressee.ctrl.access_class)
         {
             fs_read_access_class(current_addressee.ctrl.access_class, &active_addressee_access_profile);
             current_access_class = current_addressee.ctrl.access_class;
         }
+
+        // but respond on the channel where we received the request on
+        active_addressee_access_profile.subbands[0].channel_header = rx_channel.channel_header;
+        active_addressee_access_profile.subbands[0].channel_index_start = rx_channel.center_freq_index;
+        active_addressee_access_profile.subbands[0].channel_index_end = rx_channel.center_freq_index;
     }
 
     if(!d7asp_process_received_packet(packet))
