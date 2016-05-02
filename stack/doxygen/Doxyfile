@@ -795,23 +795,33 @@ RECURSIVE              = YES
 # Note that relative paths are relative to the directory from which doxygen is
 # run.
 
-EXCLUDE                = ../framework/hal/chips/efm32gg/CMSIS \
-						 ../framework/hal/chips/efm32gg/emlib \
-						 ../framework/hal/chips/efm32gg/kits \
-						 ../framework/hal/chips/cc430/driverlib \
-						 ../framework/hal/platforms/sim \
-						 ../framework/hal/chips/kl02z/CMSIS \
-						 ../framework/hal/chips/efm32hg/CMSIS \
-						 ../framework/hal/chips/efm32hg/emlib \
-						 ../framework/hal/chips/efm32hg/kits \
-						 ../framework/hal/chips/efm32hg/usb \
- 						 ../framework/hal/chips/efm32lg/CMSIS \
-						 ../framework/hal/chips/efm32lg/emlib \
-						 ../framework/hal/chips/efm32lg/kits \
-						 ../framework/hal/chips/efm32lg/usb \
-						 ../framework/hal/platforms/EFM32HG_STK3400/config  \
-						 ../framework/hal/chips/kl02z/CMSIS
-						 ../framework/hal/chips/kl02z/ksdk
+EXCLUDE =	../framework/hal/chips/efm32gg/CMSIS/device/include/
+EXCLUDE +=	../framework/hal/chips/efm32gg/emlib
+EXCLUDE +=	../framework/hal/chips/efm32gg/kits
+EXCLUDE +=	../framework/hal/chips/efm32gg/usb
+EXCLUDE +=	../framework/hal/chips/efm32gg/CMSIS
+EXCLUDE +=	../framework/hal/chips/cc430/driverlib
+EXCLUDE +=	../framework/hal/platforms/sim
+EXCLUDE +=	../framework/hal/chips/kl02z/CMSIS
+EXCLUDE +=	../framework/hal/chips/efm32hg/CMSIS
+EXCLUDE +=	../framework/hal/chips/efm32hg/emlib
+EXCLUDE +=	../framework/hal/chips/efm32hg/kits
+EXCLUDE +=	../framework/hal/chips/efm32hg/usb
+EXCLUDE +=	../framework/hal/chips/efm32hg/glib
+EXCLUDE +=	../framework/hal/chips/efm32lg/CMSIS
+EXCLUDE +=	../framework/hal/chips/efm32lg/emlib
+EXCLUDE +=	../framework/hal/chips/efm32lg/kits
+EXCLUDE +=	../framework/hal/chips/efm32lg/usb
+EXCLUDE +=	../framework/hal/platforms/EFM32HG_STK3400/config
+EXCLUDE +=	../framework/hal/chips/kl02z/CMSIS
+EXCLUDE +=	../framework/hal/chips/kl02z/ksdk
+EXCLUDE +=	../framework/hal/chips/kl02z/hal
+EXCLUDE +=	../framework/hal/chips/si4460/ezradiodrv
+EXCLUDE +=	../framework/hal/chips/stm32f4/CMSIS
+EXCLUDE +=	../framework/hal/chips/ezr32lg/emdrv
+EXCLUDE +=	../framework/hal/chips/ezr32lg/CMSIS
+EXCLUDE +=  ../framework/hal/chips/ezr32lg/kits/common/drivers
+EXCLUDE +=  ../framework/hal/chips/ezr32lg/kits/common/bsp
 
 # The EXCLUDE_SYMLINKS tag can be used to select whether or not files or
 # directories that are symbolic links (a Unix file system feature) are excluded
