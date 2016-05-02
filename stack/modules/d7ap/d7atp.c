@@ -150,12 +150,7 @@ void d7atp_start_dialog(uint8_t dialog_id, uint8_t transaction_id, bool is_last_
     if(access_class != current_access_class)
         fs_read_access_class(access_class, &active_addressee_access_profile);
 
-    bool should_include_origin_template = false;
-    if(packet->d7atp_ctrl.ctrl_is_start /*&& packet->d7atp_ctrl.ctrl_is_ack_requested*/) // TODO spec only requires this when both are true, however we MAY send origin when only first is true
-        should_include_origin_template = true;
-        // TODO also when responding to broadcast requests
-
-    d7anp_tx_foreground_frame(packet, should_include_origin_template, &active_addressee_access_profile);
+    d7anp_tx_foreground_frame(packet, true, &active_addressee_access_profile);
 }
 
 void d7atp_respond_dialog(packet_t* packet)
@@ -169,8 +164,13 @@ void d7atp_respond_dialog(packet_t* packet)
     d7atp->ctrl_ack_not_void = false; // TODO
     d7atp->ctrl_ack_record = false; // TODO validate
 
+    bool should_include_origin_template = false; // we don't need to send origin ID, receivers will filter based on dialogID, but ...
+
+    if(!packet->dll_header.control_target_address_set) // ... when request was broadcast we do need to send origin template
+        should_include_origin_template = true;
+
     // dialog and transaction id remain the same
-    d7anp_tx_foreground_frame(packet, true, &active_addressee_access_profile);
+    d7anp_tx_foreground_frame(packet, should_include_origin_template, &active_addressee_access_profile);
 }
 
 uint8_t d7atp_assemble_packet_header(packet_t* packet, uint8_t* data_ptr)
