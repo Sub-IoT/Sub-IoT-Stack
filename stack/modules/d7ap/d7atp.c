@@ -259,7 +259,15 @@ void d7atp_process_received_packet(packet_t* packet)
     }
     else
     {
-        // not in a transaction, start a new slave transaction
+        // not in a transaction, start slave transaction when receiving a START
+        if(!packet->d7atp_ctrl.ctrl_is_start)
+        {
+            DPRINT("Filtered frame with START cleared");
+            packet_queue_free_packet(packet);
+            return;
+        }
+
+
         switch_state(D7ATP_STATE_SLAVE_TRANSACTION_RECEIVED_REQUEST);
         current_dialog_id = packet->d7atp_dialog_id;
         current_transaction_id = packet->d7atp_transaction_id;
