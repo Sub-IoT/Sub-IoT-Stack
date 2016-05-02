@@ -7,6 +7,7 @@ var d7atp_8c =
     [ "current_dialog_id", "d7atp_8c.html#ad3efb28fd99250a0cc71870a0772fea1", null ],
     [ "current_transaction_id", "d7atp_8c.html#a0eacdb76abb83c2b6ff0c73138dbae8d", null ],
     [ "d7atp_state", "d7atp_8c.html#a7fc0e3b6634bfd2d9245a3307949e458", null ],
+    [ "DPRINT", "d7atp_8c.html#a57a35bfd7d13bdfab37a48171286ecee", null ],
     [ "IS_IN_TRANSACTION", "d7atp_8c.html#ae8ffa2364849b1437bca121516c976a4", null ],
     [ "state_t", "d7atp_8c.html#aa0aafed44fec19806d8f9ad834be1248", [
       [ "D7ASP_STATE_IDLE", "d7asp_8c.html#aa0aafed44fec19806d8f9ad834be1248adcb34c9e988933f0fed47f1afbcab9a5", null ],

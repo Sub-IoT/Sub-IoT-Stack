@@ -1,5 +1,7 @@
 var searchData=
 [
-  ['max_5fpriority',['MAX_PRIORITY',['../group__scheduler.html#ggabc5c98fcc1211af2b80116dd6e0a035da6b8524b0a6b5872417d7d5e64a9ebf43',1,'scheduler.h']]],
-  ['min_5fpriority',['MIN_PRIORITY',['../group__scheduler.html#ggabc5c98fcc1211af2b80116dd6e0a035daaa92b2d93b02a201c180b2e543795fff',1,'scheduler.h']]]
+  ['no_5ftask',['NO_TASK',['../scheduler_8c.html#a06fc87d81c62e9abb8790b6e5713c55baf1a2b164c6a01dd1290f3e79171a8f11',1,'scheduler.c']]],
+  ['not_5fscheduled',['NOT_SCHEDULED',['../scheduler_8c.html#a06fc87d81c62e9abb8790b6e5713c55ba6d3980ac02cb2920474893302106b496',1,'scheduler.c']]],
+  ['num_5fpriorities',['NUM_PRIORITIES',['../scheduler_8c.html#a06fc87d81c62e9abb8790b6e5713c55ba67d35d8917ef5d8c7bc8730a936350f9',1,'scheduler.c']]],
+  ['num_5ftasks',['NUM_TASKS',['../scheduler_8c.html#a06fc87d81c62e9abb8790b6e5713c55ba8cdfc7f243944ba8d91c14d194862fd9',1,'scheduler.c']]]
 ];

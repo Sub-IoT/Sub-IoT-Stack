@@ -8,8 +8,8 @@ var cc430__uart_8c =
     [ "PLATFORM_PxSELBIT", "cc430__uart_8c.html#a0902e4b60f02dbd99db626dbd7c3c538", null ],
     [ "PLATFORM_UCA0RXD", "cc430__uart_8c.html#a62df27ad4e14c44d51b9c853472743f0", null ],
     [ "PLATFORM_UCA0TXD", "cc430__uart_8c.html#a46723b61037a2b3792d5ed9a7c6b1e35", null ],
-    [ "__uart_init", "group___u_a_r_t.html#gad43125d70a4337b3c10d594393127596", null ],
     [ "uart_enable_interrupt", "cc430__uart_8c.html#af3e47fba13adaa4f3fd91ba943fc644e", null ],
-    [ "uart_transmit_data", "group___u_a_r_t.html#gadb5f057f77deb63265f8c381009d24de", null ],
-    [ "uart_transmit_message", "group___u_a_r_t.html#gadab99b26673fdb7a5fb99f7badd3c757", null ]
+    [ "uart_init", "cc430__uart_8c.html#a01f5996cfbcef121abc486e732b208c7", null ],
+    [ "uart_transmit_data", "cc430__uart_8c.html#a4eb49d0983c64b355c44203b8d34eb66", null ],
+    [ "uart_transmit_message", "cc430__uart_8c.html#a6ddee7136044f1764363e413cdf917bf", null ]
 ];

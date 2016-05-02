@@ -1,5 +1,6 @@
 var efm32lg__pins_8h =
 [
+    [ "__EFM32LGPINS_H_", "efm32lg__pins_8h.html#a58c6d863ba00e7f843c750a156fcb370", null ],
     [ "A0", "efm32lg__pins_8h.html#a88bfd922ccf9b1240a125a9c4731469d", null ],
     [ "A1", "efm32lg__pins_8h.html#a756dc8e6e77e2458c523d71d76c710b7", null ],
     [ "A10", "efm32lg__pins_8h.html#a5e526f854e878748dab11a806ac2e1ca", null ],

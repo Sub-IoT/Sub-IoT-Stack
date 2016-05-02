@@ -1,11 +1,6 @@
 var searchData=
 [
-  ['i2c_5finit_5ft',['I2C_Init_T',['../struct_i2_c___init___t.html',1,'']]],
-  ['i2cdevice',['I2CDevice',['../struct_i2_c_device.html',1,'']]],
-  ['i2cmasterstate',['I2CMasterState',['../struct_i2_c_master_state.html',1,'']]],
-  ['i2cslavestate',['I2CSlaveState',['../struct_i2_c_slave_state.html',1,'']]],
-  ['i2cslaveuserconfig',['I2CSlaveUserConfig',['../struct_i2_c_slave_user_config.html',1,'']]],
-  ['interfaceconfig',['InterfaceConfig',['../struct_interface_config.html',1,'']]],
-  ['interfaceslotparams',['InterfaceSlotParams',['../struct_interface_slot_params.html',1,'']]],
-  ['interfacestate',['InterfaceState',['../struct_interface_state.html',1,'']]]
+  ['i2c_5fhandle',['i2c_handle',['../structi2c__handle.html',1,'']]],
+  ['i2c_5fpins_5ft',['i2c_pins_t',['../structi2c__pins__t.html',1,'']]],
+  ['i2cspm_5finit_5ftypedef',['I2CSPM_Init_TypeDef',['../struct_i2_c_s_p_m___init___type_def.html',1,'']]]
 ];

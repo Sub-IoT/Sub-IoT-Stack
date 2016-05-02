@@ -1,0 +1,26 @@
+var _o_c_t_a___mini_2config_2bspconfig_8h =
+[
+    [ "BSP_BCC_CLK", "_o_c_t_a___mini_2config_2bspconfig_8h.html#ab70655b7a80263e8b60fc52fa1a89af4", null ],
+    [ "BSP_BCC_ENABLE_PIN", "_o_c_t_a___mini_2config_2bspconfig_8h.html#ac94cdcb4a83b5da84f1acc2f7c3884ee", null ],
+    [ "BSP_BCC_ENABLE_PORT", "_o_c_t_a___mini_2config_2bspconfig_8h.html#af66984f3d35fa091dd0791aff99e3f28", null ],
+    [ "BSP_BCC_LOCATION", "_o_c_t_a___mini_2config_2bspconfig_8h.html#acbba61376a7b7f6b9d7a88bea86f26ae", null ],
+    [ "BSP_BCC_RXPIN", "_o_c_t_a___mini_2config_2bspconfig_8h.html#a1147a51ca50a358de34e4d89ffb62285", null ],
+    [ "BSP_BCC_RXPORT", "_o_c_t_a___mini_2config_2bspconfig_8h.html#ae5ee8fd8346d9569b69e83d60385b146", null ],
+    [ "BSP_BCC_TXPIN", "_o_c_t_a___mini_2config_2bspconfig_8h.html#abbdcf8b6ae95a8e0401b933b9cae90d0", null ],
+    [ "BSP_BCC_TXPORT", "_o_c_t_a___mini_2config_2bspconfig_8h.html#a4e8989738cf18250cf8a621c244eb288", null ],
+    [ "BSP_BCC_USART", "_o_c_t_a___mini_2config_2bspconfig_8h.html#aaf6ca49d9e791347be75214467c47259", null ],
+    [ "BSP_BCP_VERSION", "_o_c_t_a___mini_2config_2bspconfig_8h.html#a7b5646739ca337c3ce7b2e37f54c20dc", null ],
+    [ "BSP_GPIO_BUTTONARRAY_INIT", "_o_c_t_a___mini_2config_2bspconfig_8h.html#af96e25d331c1574f0358a0c9aa3b265a", null ],
+    [ "BSP_GPIO_BUTTONS", "_o_c_t_a___mini_2config_2bspconfig_8h.html#ac6c06fd225856014fec8f161dfb227ca", null ],
+    [ "BSP_GPIO_LEDARRAY_INIT", "_o_c_t_a___mini_2config_2bspconfig_8h.html#a58d6330b84ca91f025707a25e60066f1", null ],
+    [ "BSP_GPIO_LEDS", "_o_c_t_a___mini_2config_2bspconfig_8h.html#a5be65d28d8a296bf35e35c249a6039e8", null ],
+    [ "BSP_GPIO_PB0_PIN", "_o_c_t_a___mini_2config_2bspconfig_8h.html#a6b36a9142ec7ec872d41e769190d7e6f", null ],
+    [ "BSP_GPIO_PB0_PORT", "_o_c_t_a___mini_2config_2bspconfig_8h.html#ae5356cbe6b5f5e8d6442ba1ce183be0e", null ],
+    [ "BSP_GPIO_PB1_PIN", "_o_c_t_a___mini_2config_2bspconfig_8h.html#ad994cec66523fa8a2797abb0bb84a444", null ],
+    [ "BSP_GPIO_PB1_PORT", "_o_c_t_a___mini_2config_2bspconfig_8h.html#a665d46f9bc5f548d2aca02f935ef1f5c", null ],
+    [ "BSP_INIT_DEFAULT", "_o_c_t_a___mini_2config_2bspconfig_8h.html#a90c897faf377dd24b6ae6d0a849f53ca", null ],
+    [ "BSP_NO_OF_BUTTONS", "_o_c_t_a___mini_2config_2bspconfig_8h.html#aeed3a515c8ba28c717e6bbd851679e99", null ],
+    [ "BSP_NO_OF_LEDS", "_o_c_t_a___mini_2config_2bspconfig_8h.html#a452f5663a5bf61faa158b735555a6f98", null ],
+    [ "BSP_STK", "_o_c_t_a___mini_2config_2bspconfig_8h.html#a2c6abff735cb86a447f70e0e606aa252", null ],
+    [ "BSP_STK_2011", "_o_c_t_a___mini_2config_2bspconfig_8h.html#a638e37e9dc06afcadf198863bd4b9832", null ]
+];

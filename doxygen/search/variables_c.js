@@ -1,9 +1,8 @@
 var searchData=
 [
-  ['markcount',['markCount',['../struct_cmt_modulate_config.html#ad5df7552f078c70510c0b14785386861',1,'CmtModulateConfig']]],
-  ['markone',['markOne',['../struct_cmt_modulate_data.html#a1518e1cee7d6ba085130be34d88334ac',1,'CmtModulateData']]],
-  ['markzero',['markZero',['../struct_cmt_modulate_data.html#ac118506df429844381184331b8a4fb60',1,'CmtModulateData']]],
+  ['major',['major',['../struct_s_y_s_t_e_m___chip_revision___type_def.html#a79ebea0f9a0321ec622d9098afe5bdd1',1,'SYSTEM_ChipRevision_TypeDef']]],
   ['max_5fsize',['max_size',['../structfifo__t.html#a26933f60f1ff25f60a7754565cc324f0',1,'fifo_t']]],
+  ['may',['MAY',['../efm32gg_2_silabs___license___agreement_8txt.html#ad401dd633f4f438c155ef1bb89ee0fa4',1,'MAY():&#160;Silabs_License_Agreement.txt'],['../efm32hg_2_silabs___license___agreement_8txt.html#ad401dd633f4f438c155ef1bb89ee0fa4',1,'MAY():&#160;Silabs_License_Agreement.txt'],['../efm32lg_2_silabs___license___agreement_8txt.html#ad401dd633f4f438c155ef1bb89ee0fa4',1,'MAY():&#160;Silabs_License_Agreement.txt'],['../ezr32lg_2_silabs___license___agreement_8txt.html#ad401dd633f4f438c155ef1bb89ee0fa4',1,'MAY():&#160;Silabs_License_Agreement.txt'],['../ezr32lg_2usb_2_silabs___license___agreement_8txt.html#ad401dd633f4f438c155ef1bb89ee0fa4',1,'MAY():&#160;Silabs_License_Agreement.txt']]],
   ['mcsm0',['mcsm0',['../struct_r_f___s_e_t_t_i_n_g_s.html#ac1374acf58bb87637b4fde16266f60d6',1,'RF_SETTINGS']]],
   ['mcsm1',['mcsm1',['../struct_r_f___s_e_t_t_i_n_g_s.html#af2c69fcc0f58cd374a40fd98476b7d97',1,'RF_SETTINGS']]],
   ['mcsm2',['mcsm2',['../struct_r_f___s_e_t_t_i_n_g_s.html#a31d877db74c4faa33182e6aaae2d8457',1,'RF_SETTINGS']]],
@@ -12,10 +11,11 @@ var searchData=
   ['mdmcfg2',['mdmcfg2',['../struct_r_f___s_e_t_t_i_n_g_s.html#abe1ea340f3e1bbb58fd60c1e5a13db06',1,'RF_SETTINGS']]],
   ['mdmcfg3',['mdmcfg3',['../struct_r_f___s_e_t_t_i_n_g_s.html#ae1b48fca15f71acae8c78215a0f01d3b',1,'RF_SETTINGS']]],
   ['mdmcfg4',['mdmcfg4',['../struct_r_f___s_e_t_t_i_n_g_s.html#acc3553d200c34f85626c81add9cdcdf0',1,'RF_SETTINGS']]],
+  ['merchantability',['MERCHANTABILITY',['../efm32gg_2_silabs___license___agreement_8txt.html#a3c290bce3622b48e9fb7dc779cab8eef',1,'MERCHANTABILITY():&#160;Silabs_License_Agreement.txt'],['../efm32hg_2_silabs___license___agreement_8txt.html#a3c290bce3622b48e9fb7dc779cab8eef',1,'MERCHANTABILITY():&#160;Silabs_License_Agreement.txt'],['../efm32lg_2_silabs___license___agreement_8txt.html#a3c290bce3622b48e9fb7dc779cab8eef',1,'MERCHANTABILITY():&#160;Silabs_License_Agreement.txt'],['../ezr32lg_2_silabs___license___agreement_8txt.html#a3c290bce3622b48e9fb7dc779cab8eef',1,'MERCHANTABILITY():&#160;Silabs_License_Agreement.txt'],['../ezr32lg_2usb_2_silabs___license___agreement_8txt.html#a3c290bce3622b48e9fb7dc779cab8eef',1,'MERCHANTABILITY():&#160;Silabs_License_Agreement.txt']]],
+  ['minor',['minor',['../struct_s_y_s_t_e_m___chip_revision___type_def.html#a4c191c69987d7029a7f2ec9510a99898',1,'SYSTEM_ChipRevision_TypeDef']]],
+  ['miso',['miso',['../structspi__pins__t.html#ab3daa186db56661dd7282885517b43e9',1,'spi_pins_t']]],
   ['missed',['missed',['../structd7asp__state__t.html#a6be04fd1d459cbd35bf3b8d2ea3d5455',1,'d7asp_state_t']]],
-  ['mmauaccess',['mmauAccess',['../struct_mmau_user_config.html#ac2c5ac6100f6ed630f3f89f702d81e98',1,'MmauUserConfig']]],
-  ['mmaudmareq',['mmauDmaReq',['../struct_mmau_user_config.html#a408630daee1dbd599b2d869b82a73d77',1,'MmauUserConfig']]],
-  ['mmauintreqmask',['mmauIntReqMask',['../struct_mmau_user_config.html#af6fa01b01e3771cfc65ef64e24e3f24b',1,'MmauUserConfig']]],
-  ['mode',['mode',['../struct_cmt_modulate_config.html#a5a93cc55d0cd69fe9824a39cca7ba087',1,'CmtModulateConfig::mode()'],['../structflexio__spi__state.html#ab0aaa9215543e6a5c0ae336a7ba48d91',1,'flexio_spi_state::mode()']]],
-  ['modenegotiable',['modeNegotiable',['../struct_card_params.html#a13209164e74428dd843320f4244416f5',1,'CardParams']]]
+  ['mosi',['mosi',['../structspi__pins__t.html#a343b208c92ce68d88403ad5e85126135',1,'spi_pins_t']]],
+  ['msbf',['msbf',['../structspi__handle.html#a76b28f7ab12f6a39da21a84f7bbc5b6e',1,'spi_handle']]],
+  ['msc',['MSC',['../_changes__emlib_8txt.html#a699076fbccb1f2280611a9c195d105bd',1,'Changes_emlib.txt']]]
 ];

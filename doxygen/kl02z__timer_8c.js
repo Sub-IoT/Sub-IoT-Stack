@@ -6,5 +6,6 @@ var kl02z__timer_8c =
     [ "hw_timer_init", "group__timer.html#ga890471b78dce93f25cbd53d932f1e7d9", null ],
     [ "hw_timer_is_interrupt_pending", "group__timer.html#ga3c5a978becc566b5faf0eb37625ac3d4", null ],
     [ "hw_timer_is_overflow_pending", "group__timer.html#ga415ea5aded2efc53222b351b0cda6d2d", null ],
-    [ "hw_timer_schedule", "group__timer.html#ga2d09291d159326e455aef19920224fc7", null ]
+    [ "hw_timer_schedule", "group__timer.html#ga2d09291d159326e455aef19920224fc7", null ],
+    [ "TPM0_IRQHandler", "kl02z__timer_8c.html#a1bdae61dd9f5e17df8eaf6356044ea92", null ]
 ];

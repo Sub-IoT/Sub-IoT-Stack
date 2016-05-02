@@ -1,5 +1,4 @@
 var searchData=
 [
-  ['kslcdenableindozemode',['kSLCDEnableInDozeMode',['../struct__slcd__work__mode.html#acf803077c709bc9b2b8a915e64f22806',1,'_slcd_work_mode']]],
-  ['kslcdenableinstopmode',['kSLCDEnableInStopMode',['../struct__slcd__work__mode.html#a90441c10ad8e19535c0ed2538a620664',1,'_slcd_work_mode']]]
+  ['korea',['Korea',['../efm32gg_2_silabs___license___agreement_8txt.html#a98a95964061dfbe0e59d87650247c606',1,'Korea():&#160;Silabs_License_Agreement.txt'],['../efm32hg_2_silabs___license___agreement_8txt.html#a98a95964061dfbe0e59d87650247c606',1,'Korea():&#160;Silabs_License_Agreement.txt'],['../efm32lg_2_silabs___license___agreement_8txt.html#a98a95964061dfbe0e59d87650247c606',1,'Korea():&#160;Silabs_License_Agreement.txt'],['../ezr32lg_2_silabs___license___agreement_8txt.html#a98a95964061dfbe0e59d87650247c606',1,'Korea():&#160;Silabs_License_Agreement.txt'],['../ezr32lg_2usb_2_silabs___license___agreement_8txt.html#a98a95964061dfbe0e59d87650247c606',1,'Korea():&#160;Silabs_License_Agreement.txt']]]
 ];

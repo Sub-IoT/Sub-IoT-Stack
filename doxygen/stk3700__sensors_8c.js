@@ -1,6 +1,4 @@
 var stk3700__sensors_8c =
 [
-    [ "convertAdcToCelsius", "stk3700__sensors_8c.html#a420a212af2fbbbf2de032bae8ded0889", null ],
-    [ "internalTempSensor_init", "stk3700__sensors_8c.html#aec263d9a21b0b4ffe68d70bf2a2edfac", null ],
-    [ "tempsensor_read_celcius", "stk3700__sensors_8c.html#a1df8f1ac210540bed6db7d47cb64faf0", null ]
+    [ "initSensors", "stk3700__sensors_8c.html#a223f4d2c33370aa8108c10626cd0bb8e", null ]
 ];

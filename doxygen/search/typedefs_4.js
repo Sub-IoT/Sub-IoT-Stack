@@ -2,23 +2,7 @@ var searchData=
 [
   ['eirp_5ft',['eirp_t',['../group__radio.html#ga02dafdf72e21d57e731354cb6192583c',1,'hwradio.h']]],
   ['emstatus',['EMSTATUS',['../em__types_8h.html#a7427a068b2df71eb9c15ec5e7651f716',1,'em_types.h']]],
-  ['emvsim_5fcard_5fclock_5fstop_5fpolarity_5ft',['emvsim_card_clock_stop_polarity_t',['../group__emvsim__hal.html#ga8f43d9ef53e57d51a3514e8c58312ef6',1,'fsl_emvsim_hal.h']]],
-  ['emvsim_5fcharacter_5fmode_5ft',['emvsim_character_mode_t',['../group__emvsim__hal.html#ga7e6f61e74fa2b4a72214dd35a7f44da3',1,'fsl_emvsim_hal.h']]],
-  ['emvsim_5fcontrol_5ft',['emvsim_control_t',['../group__emvsim__hal.html#ga7749c0d222ea27758d1e265c33903e79',1,'fsl_emvsim_hal.h']]],
-  ['emvsim_5fcrc_5fflip_5fcontrol_5ft',['emvsim_crc_flip_control_t',['../group__emvsim__hal.html#gac14d9aa79f343193f61c445f31c9269f',1,'fsl_emvsim_hal.h']]],
-  ['emvsim_5fcrc_5finv_5fcontrol_5ft',['emvsim_crc_inv_control_t',['../group__emvsim__hal.html#ga6c9e8c9a1ebe69804f76e52d1c12aa46',1,'fsl_emvsim_hal.h']]],
-  ['emvsim_5fdata_5fconvention_5ft',['emvsim_data_convention_t',['../group__emvsim__hal.html#ga3f8705e71a1bd221152f72ca0232343e',1,'fsl_emvsim_hal.h']]],
-  ['emvsim_5fdoze_5fclock_5fcontrol_5ft',['emvsim_doze_clock_control_t',['../group__emvsim__hal.html#ga9333d48ba0c3539ac3aaef0e00556d34',1,'fsl_emvsim_hal.h']]],
-  ['emvsim_5fgpc_5fclock_5fselect_5ft',['emvsim_gpc_clock_select_t',['../group__emvsim__hal.html#ga97046ce136a41a0705510a23c5a3e595',1,'fsl_emvsim_hal.h']]],
-  ['emvsim_5finterrupt_5ft',['emvsim_interrupt_t',['../group__emvsim__hal.html#ga067bd749ec66954c385cdb8fd5032841',1,'fsl_emvsim_hal.h']]],
-  ['emvsim_5fmodule_5fparam_5ft',['emvsim_module_param_t',['../group__emvsim__hal.html#ga9270ec0449aeec0e9358a8af5a61acb3',1,'fsl_emvsim_hal.h']]],
-  ['emvsim_5fpresence_5fdetect_5fedge_5ft',['emvsim_presence_detect_edge_t',['../group__emvsim__hal.html#ga6cf792867f8cd03cb5f72aefbcc95a50',1,'fsl_emvsim_hal.h']]],
-  ['emvsim_5fpresence_5fdetect_5fstatus_5ft',['emvsim_presence_detect_status_t',['../group__emvsim__hal.html#ga637b7bcb57edf8379bec3c3315fcb84d',1,'fsl_emvsim_hal.h']]],
-  ['emvsim_5freset_5fcard_5ft',['emvsim_reset_card_t',['../group__emvsim__hal.html#ga96581a31e8d1bfd9c32f32aa306b544c',1,'fsl_emvsim_hal.h']]],
-  ['emvsim_5frx_5fstatus_5ft',['emvsim_rx_status_t',['../group__emvsim__hal.html#gaf0dfb2e5030bf63e7cc58fe010d86b95',1,'fsl_emvsim_hal.h']]],
-  ['emvsim_5fstop_5fclock_5fcontrol_5ft',['emvsim_stop_clock_control_t',['../group__emvsim__hal.html#gae302be1995ac31acc6b4cb230aed4eba',1,'fsl_emvsim_hal.h']]],
-  ['emvsim_5ftx_5fstatus_5ft',['emvsim_tx_status_t',['../group__emvsim__hal.html#gaf6b295daab1a97ce69e30a5d9c343fed',1,'fsl_emvsim_hal.h']]],
-  ['emvsim_5fvcc_5fen_5fpolarity_5ft',['emvsim_vcc_en_polarity_t',['../group__emvsim__hal.html#ga00f265e289625fdf7474ab8ff9d086c4',1,'fsl_emvsim_hal.h']]],
-  ['end_5fof_5fpacket_5fisr_5ft',['end_of_packet_isr_t',['../cc1101_8h.html#aebef56d5af1914dac6280e42e9ab7fec',1,'cc1101.h']]],
-  ['error_5ft',['error_t',['../types_8h.html#a9ad6b2dc3cbff040775e79656fe8e1a3',1,'types.h']]]
+  ['end_5fof_5fpacket_5fisr_5ft',['end_of_packet_isr_t',['../cc1101_8h.html#aebef56d5af1914dac6280e42e9ab7fec',1,'end_of_packet_isr_t():&#160;cc1101.h'],['../si4460_8h.html#aebef56d5af1914dac6280e42e9ab7fec',1,'end_of_packet_isr_t():&#160;si4460.h']]],
+  ['error_5ft',['error_t',['../types_8h.html#a9ad6b2dc3cbff040775e79656fe8e1a3',1,'types.h']]],
+  ['ezradio_5fint_5fcallback_5ft',['ezradio_int_callback_t',['../si4460__interface_8h.html#ac80dbe54811b5d7d2235f5cc30b4c408',1,'si4460_interface.h']]]
 ];

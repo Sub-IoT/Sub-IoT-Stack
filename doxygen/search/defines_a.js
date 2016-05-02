@@ -1,6 +1,5 @@
 var searchData=
 [
-  ['launch_5fcommand_5foffset',['LAUNCH_COMMAND_OFFSET',['../_s_s_d___f_t_fx___internal_8h.html#aa21d53f5c610051cde4d140758dccf18',1,'SSD_FTFx_Internal.h']]],
   ['lcd_5fall_5fsegments_5foff',['LCD_ALL_SEGMENTS_OFF',['../segmentlcdconfig_8h.html#a009a377fbb0ca8394caad132b850cee0',1,'segmentlcdconfig.h']]],
   ['lcd_5fall_5fsegments_5fon',['LCD_ALL_SEGMENTS_ON',['../segmentlcdconfig_8h.html#a4fe49567edcd832f5252637b42ba10b3',1,'segmentlcdconfig.h']]],
   ['lcd_5falpha_5fnumber_5foff',['LCD_ALPHA_NUMBER_OFF',['../segmentlcdconfig_8h.html#ac1117edace99d712136297230b2fef86',1,'segmentlcdconfig.h']]],
@@ -10,6 +9,20 @@ var searchData=
   ['lcd_5fdisplay_5fenable',['LCD_DISPLAY_ENABLE',['../segmentlcdconfig_8h.html#a150cb17530c73a424691a195c2bab1ce',1,'segmentlcdconfig.h']]],
   ['lcd_5finit_5fdef',['LCD_INIT_DEF',['../segmentlcdconfig_8h.html#aac38fc76de8d6487deab76ab421346fb',1,'segmentlcdconfig.h']]],
   ['lcd_5fnumber_5foff',['LCD_NUMBER_OFF',['../segmentlcdconfig_8h.html#af94cd3760076e0eb367f77029a6212a5',1,'segmentlcdconfig.h']]],
+  ['lcd_5fpin_5fdisp_5fpwr',['LCD_PIN_DISP_PWR',['../displayls013b7dh03config_8h.html#ae0781bac88a3467fb3f1c466f0280746',1,'displayls013b7dh03config.h']]],
+  ['lcd_5fpin_5fdisp_5fsel',['LCD_PIN_DISP_SEL',['../displayls013b7dh03config_8h.html#a79677f300d38ee99295b9428dcda8afb',1,'displayls013b7dh03config.h']]],
+  ['lcd_5fpin_5fextcomin',['LCD_PIN_EXTCOMIN',['../displayls013b7dh03config_8h.html#a2253f10f14920dc912c19685350c8133',1,'displayls013b7dh03config.h']]],
+  ['lcd_5fpin_5fextmode',['LCD_PIN_EXTMODE',['../displayls013b7dh03config_8h.html#a0d83bec5689cacb2e5628619c0728db7',1,'displayls013b7dh03config.h']]],
+  ['lcd_5fpin_5fsclk',['LCD_PIN_SCLK',['../displayls013b7dh03config_8h.html#adc30f19f509b9e81e7bfdb259c945e31',1,'displayls013b7dh03config.h']]],
+  ['lcd_5fpin_5fscs',['LCD_PIN_SCS',['../displayls013b7dh03config_8h.html#af5891cfb30117ae3dfe050bc26717545',1,'displayls013b7dh03config.h']]],
+  ['lcd_5fpin_5fsi',['LCD_PIN_SI',['../displayls013b7dh03config_8h.html#aa1b533b5999c41a1fa55ed1b72e458ab',1,'displayls013b7dh03config.h']]],
+  ['lcd_5fport_5fdisp_5fpwr',['LCD_PORT_DISP_PWR',['../displayls013b7dh03config_8h.html#a73936069f3b56181b493d3a5a85710e1',1,'displayls013b7dh03config.h']]],
+  ['lcd_5fport_5fdisp_5fsel',['LCD_PORT_DISP_SEL',['../displayls013b7dh03config_8h.html#aa5139e042fc3ca2bb381a304f26e1c77',1,'displayls013b7dh03config.h']]],
+  ['lcd_5fport_5fextcomin',['LCD_PORT_EXTCOMIN',['../displayls013b7dh03config_8h.html#a8dd1ef193c2d813e70b5c49bef6c0c37',1,'displayls013b7dh03config.h']]],
+  ['lcd_5fport_5fextmode',['LCD_PORT_EXTMODE',['../displayls013b7dh03config_8h.html#ad258a6e626d9ec081b43e6e881b13c9f',1,'displayls013b7dh03config.h']]],
+  ['lcd_5fport_5fsclk',['LCD_PORT_SCLK',['../displayls013b7dh03config_8h.html#aa4195f0ba96ee4a8fc2525321f34ce88',1,'displayls013b7dh03config.h']]],
+  ['lcd_5fport_5fscs',['LCD_PORT_SCS',['../displayls013b7dh03config_8h.html#a21afdddf3b9f98daed1f497fcce68697',1,'displayls013b7dh03config.h']]],
+  ['lcd_5fport_5fsi',['LCD_PORT_SI',['../displayls013b7dh03config_8h.html#afa23877677036d2089612b87cff40b9d',1,'displayls013b7dh03config.h']]],
   ['lcd_5fsegments_5fenable',['LCD_SEGMENTS_ENABLE',['../segmentlcdconfig_8h.html#a007ab761fe384847f70ffeb9020ff91d',1,'segmentlcdconfig.h']]],
   ['lcd_5fsymbol_5fant_5fcom',['LCD_SYMBOL_ANT_COM',['../segmentlcdconfig_8h.html#ac4f9544c07b6140c9304e55c3212fcf7',1,'segmentlcdconfig.h']]],
   ['lcd_5fsymbol_5fant_5fseg',['LCD_SYMBOL_ANT_SEG',['../segmentlcdconfig_8h.html#aae3c4dd502fd3f8f4bafd0dd9e03f513',1,'segmentlcdconfig.h']]],
@@ -45,6 +58,10 @@ var searchData=
   ['lcd_5fsymbol_5fpad0_5fseg',['LCD_SYMBOL_PAD0_SEG',['../segmentlcdconfig_8h.html#a3fce37b7cacf9230c62c10bcfa0fd5e6',1,'segmentlcdconfig.h']]],
   ['lcd_5fsymbol_5fpad1_5fcom',['LCD_SYMBOL_PAD1_COM',['../segmentlcdconfig_8h.html#a6535b24ad3c26681b893ff5a43270c66',1,'segmentlcdconfig.h']]],
   ['lcd_5fsymbol_5fpad1_5fseg',['LCD_SYMBOL_PAD1_SEG',['../segmentlcdconfig_8h.html#a3b4fb02bec8d6fbb6f0e2fcf3acd158f',1,'segmentlcdconfig.h']]],
-  ['little_5fendian',['LITTLE_ENDIAN',['../_s_s_d___f_t_fx___common_8h.html#a8782a401fbf55261460863fc2f8df1ce',1,'SSD_FTFx_Common.h']]],
-  ['lqi',['LQI',['../cc1101__constants_8h.html#a78336b0d46d50c8312a6b29044554ab3',1,'cc1101_constants.h']]]
+  ['led0',['LED0',['../_e_z_r32_l_g___w_s_t_k6200_a_2inc_2platform_8h.html#ae8d5b4e7e2d9d21caaa4744d385d7cc7',1,'LED0():&#160;platform.h'],['../_o_c_t_a___gateway_2inc_2platform_8h.html#ae8d5b4e7e2d9d21caaa4744d385d7cc7',1,'LED0():&#160;platform.h'],['../_o_c_t_a___mini_2inc_2platform_8h.html#ae8d5b4e7e2d9d21caaa4744d385d7cc7',1,'LED0():&#160;platform.h']]],
+  ['led1',['LED1',['../_e_z_r32_l_g___w_s_t_k6200_a_2inc_2platform_8h.html#a8aa85ae9867fabf70ec72cd3bf6fb6b9',1,'LED1():&#160;platform.h'],['../_o_c_t_a___gateway_2inc_2platform_8h.html#a8aa85ae9867fabf70ec72cd3bf6fb6b9',1,'LED1():&#160;platform.h'],['../_o_c_t_a___mini_2inc_2platform_8h.html#a8aa85ae9867fabf70ec72cd3bf6fb6b9',1,'LED1():&#160;platform.h']]],
+  ['led2',['LED2',['../_o_c_t_a___gateway_2inc_2platform_8h.html#ad09fe5bf321b9a2de26bd5e5b9af6424',1,'platform.h']]],
+  ['locations',['LOCATIONS',['../efm32gg__i2c_8c.html#a9e07bbe7431477b51ae00b33032f0771',1,'LOCATIONS():&#160;efm32gg_i2c.c'],['../efm32gg__spi_8c.html#a9e07bbe7431477b51ae00b33032f0771',1,'LOCATIONS():&#160;efm32gg_spi.c'],['../efm32gg__uart_8c.html#a9e07bbe7431477b51ae00b33032f0771',1,'LOCATIONS():&#160;efm32gg_uart.c'],['../efm32hg__i2c_8c.html#a9e07bbe7431477b51ae00b33032f0771',1,'LOCATIONS():&#160;efm32hg_i2c.c'],['../efm32hg__spi_8c.html#a9e07bbe7431477b51ae00b33032f0771',1,'LOCATIONS():&#160;efm32hg_spi.c'],['../efm32hg__uart_8c.html#a9e07bbe7431477b51ae00b33032f0771',1,'LOCATIONS():&#160;efm32hg_uart.c'],['../efm32lg__i2c_8c.html#a9e07bbe7431477b51ae00b33032f0771',1,'LOCATIONS():&#160;efm32lg_i2c.c'],['../efm32lg__spi_8c.html#a9e07bbe7431477b51ae00b33032f0771',1,'LOCATIONS():&#160;efm32lg_spi.c'],['../efm32lg__uart_8c.html#a9e07bbe7431477b51ae00b33032f0771',1,'LOCATIONS():&#160;efm32lg_uart.c'],['../ezr32lg__i2c_8c.html#a9e07bbe7431477b51ae00b33032f0771',1,'LOCATIONS():&#160;ezr32lg_i2c.c'],['../ezr32lg__spi_8c.html#a9e07bbe7431477b51ae00b33032f0771',1,'LOCATIONS():&#160;ezr32lg_spi.c'],['../ezr32lg__uart_8c.html#a9e07bbe7431477b51ae00b33032f0771',1,'LOCATIONS():&#160;ezr32lg_uart.c']]],
+  ['lqi',['LQI',['../cc1101__constants_8h.html#a78336b0d46d50c8312a6b29044554ab3',1,'cc1101_constants.h']]],
+  ['ls013b7dh03_5fpolarity_5finversion_5ffrequency',['LS013B7DH03_POLARITY_INVERSION_FREQUENCY',['../displayls013b7dh03config_8h.html#a181167569e010a0c47bdce04cec43bd7',1,'displayls013b7dh03config.h']]]
 ];

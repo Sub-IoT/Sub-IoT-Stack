@@ -1,7 +1,5 @@
 var _e_f_m32_h_g___s_t_k3400_2inc_2platform__lcd_8h =
 [
-    [ "lcd_show_antenna", "_e_f_m32_h_g___s_t_k3400_2inc_2platform__lcd_8h.html#aa60183f92e7f059b2e974d05778070b0", null ],
-    [ "lcd_show_battery_indication", "_e_f_m32_h_g___s_t_k3400_2inc_2platform__lcd_8h.html#a6a740aa10ebcdaa591e900f552fc41a6", null ],
-    [ "lcd_write_number", "_e_f_m32_h_g___s_t_k3400_2inc_2platform__lcd_8h.html#a5ed9af41d9adf37b98f22c0c20c88168", null ],
-    [ "lcd_write_temperature", "_e_f_m32_h_g___s_t_k3400_2inc_2platform__lcd_8h.html#abf6293640efdba766df53040e3d3f55a", null ]
+    [ "lcd_write_line", "_e_f_m32_h_g___s_t_k3400_2inc_2platform__lcd_8h.html#a2f0caabec33af2136051977a3d3a047b", null ],
+    [ "lcd_write_number", "_e_f_m32_h_g___s_t_k3400_2inc_2platform__lcd_8h.html#a5ed9af41d9adf37b98f22c0c20c88168", null ]
 ];

@@ -1,11 +1,12 @@
 var hwspi_8h =
 [
-    [ "DATARATE", "hwspi_8h.html#a6e3511acbf8184c2b874c1175f86f7fd", null ],
-    [ "spi_auto_cs_off", "hwspi_8h.html#ad1357925c7349d7adb22c5985645ccca", null ],
-    [ "spi_auto_cs_on", "hwspi_8h.html#af58e8777819e0d80e6f8ee9973da40de", null ],
-    [ "spi_byte", "hwspi_8h.html#a34254077b37f1db1daa311635c388a6f", null ],
-    [ "spi_deselect_chip", "hwspi_8h.html#ae59cd4824abc72589ad7f779041ade7d", null ],
-    [ "spi_init", "hwspi_8h.html#a264d1ad33827685fe128c86be0f81190", null ],
-    [ "spi_select_chip", "hwspi_8h.html#afe6a54000811848df727cca1e2b652eb", null ],
-    [ "spi_string", "hwspi_8h.html#abcdff92305682b69ac0a15bb1c775954", null ]
+    [ "spi_handle_t", "hwspi_8h.html#a624976677b1458a655084160ac11ee55", null ],
+    [ "spi_slave_handle_t", "hwspi_8h.html#ae4d9fd016ca9d21b32d133929c8c662c", null ],
+    [ "spi_deselect", "hwspi_8h.html#a6eb693a2219cf0b03bbfc4de98d2f8a7", null ],
+    [ "spi_exchange_byte", "hwspi_8h.html#a36c65860e4ac3602395172a531666784", null ],
+    [ "spi_exchange_bytes", "hwspi_8h.html#a070529cbb57a1f7739b9de6ec40afe0b", null ],
+    [ "spi_init", "hwspi_8h.html#ab1f7a5202ea3c2430f3e6948fc2a92e9", null ],
+    [ "spi_init_slave", "hwspi_8h.html#a60f8e0339fbdb93f7685769248b8fc23", null ],
+    [ "spi_select", "hwspi_8h.html#a6a0e01622cab2baa39831a8f15ab1746", null ],
+    [ "spi_send_byte_with_control", "hwspi_8h.html#aaa23cee9edbfd992e719d9c806c85288", null ]
 ];

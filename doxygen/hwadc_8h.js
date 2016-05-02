@@ -2,6 +2,7 @@ var hwadc_8h =
 [
     [ "ADC_Input", "group___a_d_c.html#ga2d56278915683d00a45b9b1ede13c307", [
       [ "adcInputSingleTemp", "group___a_d_c.html#gga2d56278915683d00a45b9b1ede13c307ae7978052918296d63cd3cc6c7f11e489", null ],
+      [ "adcInputSingleVDDDiv3", "group___a_d_c.html#gga2d56278915683d00a45b9b1ede13c307ad43eadc38ed5fc1d67dad18f4da41e56", null ],
       [ "adcInputSingleCh4Ch5", "group___a_d_c.html#gga2d56278915683d00a45b9b1ede13c307ab2f1582c5db9b1bccfdc9d9996de61fc", null ]
     ] ],
     [ "ADC_Reference", "group___a_d_c.html#ga1791488ae818871ec6dbc01921d0dc8c", [
@@ -17,6 +18,8 @@ var hwadc_8h =
     [ "adc_clear_interrupt", "group___a_d_c.html#ga66fad262cfee6cadec5a8f5d2731772e", null ],
     [ "adc_get_value", "group___a_d_c.html#ga829952f3291cc0a0f5cf92fb43697c0a", null ],
     [ "adc_init", "group___a_d_c.html#gad60a716673da829df81f21f02a99d169", null ],
+    [ "adc_init_single", "group___a_d_c.html#gaaa60dbd19b1875e1ad68e1b04f2119ce", null ],
+    [ "adc_read_single", "group___a_d_c.html#gad34148ea21cc1945849acc6f1d751995", null ],
     [ "adc_ready", "group___a_d_c.html#ga298654b9377ffcf72ac54f085a20e223", null ],
     [ "adc_start", "group___a_d_c.html#gaf4e7f8736c9904fef0c02805c61ef5f9", null ]
 ];

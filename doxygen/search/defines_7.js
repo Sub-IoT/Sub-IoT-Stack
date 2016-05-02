@@ -52,9 +52,5 @@ var searchData=
   ['gdo_5fsetting_5fworevent0',['GDO_SETTING_WOREvent0',['../cc1101__registers_8h.html#a47ceaec463d3a3a59ad8507a236c89c9',1,'cc1101_registers.h']]],
   ['gdo_5fsetting_5fworevent0aclk',['GDO_SETTING_WOREvent0ACLK',['../cc1101__registers_8h.html#a6d3c69d7f3c91e4364af7da1e4e4b061',1,'cc1101_registers.h']]],
   ['gdo_5fsetting_5fworevent1',['GDO_SETTING_WORevent1',['../cc1101__registers_8h.html#aa994f5b026b78bb0fda74927552dee57',1,'cc1101_registers.h']]],
-  ['get_5fbit_5f0_5f7',['GET_BIT_0_7',['../_s_s_d___f_t_fx___common_8h.html#a2579d513ba6389ad007f4df52466d22f',1,'SSD_FTFx_Common.h']]],
-  ['get_5fbit_5f16_5f23',['GET_BIT_16_23',['../_s_s_d___f_t_fx___common_8h.html#a4cfd7a8b1428e580343d8d8db6728c69',1,'SSD_FTFx_Common.h']]],
-  ['get_5fbit_5f24_5f31',['GET_BIT_24_31',['../_s_s_d___f_t_fx___common_8h.html#a8a1d31bb5399565cc4fb0b6afc8db5ab',1,'SSD_FTFx_Common.h']]],
-  ['get_5fbit_5f8_5f15',['GET_BIT_8_15',['../_s_s_d___f_t_fx___common_8h.html#a4445b628a6b8ace6924d3fed6b90ae35',1,'SSD_FTFx_Common.h']]],
   ['gpio_5fbase',['GPIO_BASE',['../kl02z__gpio_8c.html#a22f21455b8c3d0e5ca06e3ddb16d5298',1,'kl02z_gpio.c']]]
 ];

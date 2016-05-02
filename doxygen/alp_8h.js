@@ -4,6 +4,7 @@ var alp_8h =
     [ "alp_operand_file_offset_t", "structalp__operand__file__offset__t.html", "structalp__operand__file__offset__t" ],
     [ "alp_operand_file_data_request_t", "structalp__operand__file__data__request__t.html", "structalp__operand__file__data__request__t" ],
     [ "alp_operand_file_data_t", "structalp__operand__file__data__t.html", "structalp__operand__file__data__t" ],
+    [ "ALP_ITF_ID_APP", "alp_8h.html#a86ce06384b728a832b0c3874bd88875f", null ],
     [ "ALP_ITF_ID_D7ASP", "alp_8h.html#a4c60a330539ba5499aef5e51aa81b507", null ],
     [ "ALP_ITF_ID_FS", "alp_8h.html#ae425b557b6ac2531bd3647ac2fbeef29", null ],
     [ "ALP_PAYLOAD_MAX_SIZE", "alp_8h.html#ac6344231d481b0aecc5d222f55b0d96b", null ],
@@ -39,7 +40,16 @@ var alp_8h =
       [ "ALP_OP_CHUNK", "alp_8h.html#a08bf92ab688fcb3849046af0fd1458b2ab0bb2a4048b0e85191aba5f17f5ff83a", null ],
       [ "ALP_OP_LOGIC", "alp_8h.html#a08bf92ab688fcb3849046af0fd1458b2a1a6dca26b87649c0d626f12d76de4bed", null ]
     ] ],
+    [ "alp_status_codes_t", "alp_8h.html#a67740cd779fd5bfd17c0e11f1dfeee1a", [
+      [ "ALP_STATUS_OK", "alp_8h.html#a67740cd779fd5bfd17c0e11f1dfeee1aaf2b547a8e6ae69a2f4fb9667b1c22c64", null ],
+      [ "ALP_STATUS_PARTIALLY_COMPLETED", "alp_8h.html#a67740cd779fd5bfd17c0e11f1dfeee1aaea7c6604fd51e1f6cb2d6efce8c2c407", null ],
+      [ "ALP_STATUS_UNKNOWN_ERROR", "alp_8h.html#a67740cd779fd5bfd17c0e11f1dfeee1aa956f906fac573dcd61d5363242e4211f", null ],
+      [ "ALP_STATUS_UNKNOWN_OPERATION", "alp_8h.html#a67740cd779fd5bfd17c0e11f1dfeee1aabcc7dac446b3e5e760642299b246bf70", null ],
+      [ "ALP_STATUS_INSUFFICIENT_PERMISSIONS", "alp_8h.html#a67740cd779fd5bfd17c0e11f1dfeee1aaf0373c8a00d8fd795aa23c44a6d08493", null ],
+      [ "ALP_STATUS_FILE_ID_ALREADY_EXISTS", "alp_8h.html#a67740cd779fd5bfd17c0e11f1dfeee1aab6e19ac616bc5d35daf35e346fbe1c2f", null ],
+      [ "ALP_STATUS_FILE_ID_NOT_EXISTS", "alp_8h.html#a67740cd779fd5bfd17c0e11f1dfeee1aa9e06fb7b788d42546aee3f56f18049e6", null ]
+    ] ],
     [ "alp_get_operation", "alp_8h.html#a7a6f7658a2206d0ddc11c69b15a20e3d", null ],
-    [ "alp_process_command", "alp_8h.html#a92cd1135f4d820d7c3d2dabfb51e1559", null ],
+    [ "alp_process_command_fs_itf", "alp_8h.html#ad6c6243a9e45e7b00526b71e1c10dfd5", null ],
     [ "alp_process_received_request", "alp_8h.html#a813cb9718d26d7140495c0225e11b021", null ]
 ];

@@ -7,7 +7,9 @@ var fs_8h =
     [ "D7A_FILE_ACCESS_PROFILE_SIZE", "fs_8h.html#a887ea14be29acfe1a26a48b41a53d74a", null ],
     [ "D7A_FILE_DLL_CONF_FILE_ID", "fs_8h.html#a6d6ff8795edc38b06c1ec3cc2b542acd", null ],
     [ "D7A_FILE_DLL_CONF_SIZE", "fs_8h.html#ad4f505844966fa5e90669e2fe09228a0", null ],
+    [ "D7A_FILE_FIRMWARE_VERSION_APP_NAME_SIZE", "fs_8h.html#ac70da3f787c0d6d8de15320d769bdb01", null ],
     [ "D7A_FILE_FIRMWARE_VERSION_FILE_ID", "fs_8h.html#a377cbceadbbd7dc7aa2464659a88f784", null ],
+    [ "D7A_FILE_FIRMWARE_VERSION_GIT_SHA1_SIZE", "fs_8h.html#a050d1be9a50910484da599ca7aca02a9", null ],
     [ "D7A_FILE_FIRMWARE_VERSION_SIZE", "fs_8h.html#a6699a98a47dcfc5a496a3e2956c60336", null ],
     [ "D7A_FILE_UID_FILE_ID", "fs_8h.html#a412de16673a6ed8132a54ea4be5773e7", null ],
     [ "D7A_FILE_UID_SIZE", "fs_8h.html#a3a0450f0c4532589bb70835794049f49", null ],
@@ -24,10 +26,10 @@ var fs_8h =
     [ "fs_init_file_with_D7AActP", "fs_8h.html#aaa8bd677288a17539d0f79dd89a52b99", null ],
     [ "fs_read_access_class", "fs_8h.html#aab55136ca1c9654b7711eae2ab4a1e13", null ],
     [ "fs_read_dll_conf_active_access_class", "fs_8h.html#ac236ecd95cad68122ee6b7180e41e7ed", null ],
-    [ "fs_read_file", "fs_8h.html#a7b1ca91fff08265570afd352c9b0b9fa", null ],
+    [ "fs_read_file", "fs_8h.html#ae20504a834db405a362e0fda451d950b", null ],
     [ "fs_read_uid", "fs_8h.html#afa42c5a67a9f439168246be41e707d4d", null ],
     [ "fs_read_vid", "fs_8h.html#a934f02e302bd17dc9fe6c0a771d91dc4", null ],
     [ "fs_write_dll_conf_active_access_class", "fs_8h.html#a3d3e471087bf007c9f4f5733c921c127", null ],
-    [ "fs_write_file", "fs_8h.html#a2bd8d4a948d8bdf7140bdb41c008f281", null ],
+    [ "fs_write_file", "fs_8h.html#a05964d90dbbf8fb7580e7aa782dc58c2", null ],
     [ "fs_write_vid", "fs_8h.html#a4a686633d0d053c8adef7920870696d4", null ]
 ];

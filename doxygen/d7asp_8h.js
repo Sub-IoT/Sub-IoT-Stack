@@ -10,6 +10,7 @@ var d7asp_8h =
     [ "REQUESTS_BITMAP_BYTE_COUNT", "d7asp_8h.html#abea92ba7a2a52f6cfb7db7ed838ebf5a", null ],
     [ "d7asp_fifo_flush_completed_callback", "d7asp_8h.html#a0f77bca36fc416dfd7faea0f89b49323", null ],
     [ "d7asp_fifo_request_completed_callback", "d7asp_8h.html#aa1a8ee1e48376feffaef778caa9d8be9", null ],
+    [ "d7asp_received_unhandled_alp_command_callback", "d7asp_8h.html#afedeaf322c10b2c11ecb3ed735a76abe", null ],
     [ "d7asp_received_unsollicited_data_callback", "d7asp_8h.html#a64d037b74e6e07670f7dd3f3e41ed6b9", null ],
     [ "d7asp_init", "d7asp_8h.html#a7f0a0704bd641ef7f62420c2db56f188", null ],
     [ "d7asp_process_received_packet", "d7asp_8h.html#a22856cb53162e60ee439cd6d6bb11d66", null ],

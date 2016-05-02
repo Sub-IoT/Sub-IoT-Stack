@@ -1,6 +1,8 @@
 var stk3400__sensors_8c =
 [
-    [ "convertAdcToCelsius", "stk3400__sensors_8c.html#a420a212af2fbbbf2de032bae8ded0889", null ],
-    [ "internalTempSensor_init", "stk3400__sensors_8c.html#aec263d9a21b0b4ffe68d70bf2a2edfac", null ],
-    [ "tempsensor_read_celcius", "stk3400__sensors_8c.html#a1df8f1ac210540bed6db7d47cb64faf0", null ]
+    [ "i2c_pins_t", "structi2c__pins__t.html", "structi2c__pins__t" ],
+    [ "i2c_handle", "structi2c__handle.html", "structi2c__handle" ],
+    [ "i2c_handle_t", "stk3400__sensors_8c.html#ac852a074b9f379ba9d08ee5c0bf8a1bd", null ],
+    [ "getHumidityAndTemperature", "stk3400__sensors_8c.html#a8e9dafc759abfe2f75c665e327d7356d", null ],
+    [ "initSensors", "stk3400__sensors_8c.html#a223f4d2c33370aa8108c10626cd0bb8e", null ]
 ];

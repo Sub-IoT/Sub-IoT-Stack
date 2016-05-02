@@ -78,5 +78,10 @@ var cc1101__constants_8h =
     [ "WOREVT1", "cc1101__constants_8h.html#a7553c7d007023e8c870cb949480a46e8", null ],
     [ "WORTIME0", "cc1101__constants_8h.html#a1da1e27efc55ce042befbac710370731", null ],
     [ "WORTIME1", "cc1101__constants_8h.html#afceafb2c4cfe329e00aca3170cef8b55", null ],
-    [ "WRITE_BURST", "cc1101__constants_8h.html#a614ae1783616ef41f49f3000c25f3540", null ]
+    [ "WRITE_BURST", "cc1101__constants_8h.html#a614ae1783616ef41f49f3000c25f3540", null ],
+    [ "cc1101_chipstate_t", "cc1101__constants_8h.html#acec54205a3c359db27f0f8d36f3f88d6", [
+      [ "CC1101_CHIPSTATE_SLEEP", "cc1101__constants_8h.html#acec54205a3c359db27f0f8d36f3f88d6a4e059516ba6968fc79a2e1fb6f5d2fa0", null ],
+      [ "CC1101_CHIPSTATE_IDLE", "cc1101__constants_8h.html#acec54205a3c359db27f0f8d36f3f88d6aea9a6bd334b26b76ecb6824a11343c54", null ],
+      [ "CC1101_CHIPSTATE_TX", "cc1101__constants_8h.html#acec54205a3c359db27f0f8d36f3f88d6a511a2167210f550a92fe3e45190e3d9e", null ]
+    ] ]
 ];

@@ -2,6 +2,7 @@ var searchData=
 [
   ['adcinputsinglech4ch5',['adcInputSingleCh4Ch5',['../group___a_d_c.html#gga2d56278915683d00a45b9b1ede13c307ab2f1582c5db9b1bccfdc9d9996de61fc',1,'hwadc.h']]],
   ['adcinputsingletemp',['adcInputSingleTemp',['../group___a_d_c.html#gga2d56278915683d00a45b9b1ede13c307ae7978052918296d63cd3cc6c7f11e489',1,'hwadc.h']]],
+  ['adcinputsinglevdddiv3',['adcInputSingleVDDDiv3',['../group___a_d_c.html#gga2d56278915683d00a45b9b1ede13c307ad43eadc38ed5fc1d67dad18f4da41e56',1,'hwadc.h']]],
   ['adcreference1v25',['adcReference1V25',['../group___a_d_c.html#gga1791488ae818871ec6dbc01921d0dc8caa3227653b9b359b58fb7ace54aa08fa1',1,'hwadc.h']]],
   ['adcreference2v5',['adcReference2V5',['../group___a_d_c.html#gga1791488ae818871ec6dbc01921d0dc8ca9762347d244b554e25fda3515d71937a',1,'hwadc.h']]],
   ['adcreference2xextdiff',['adcReference2xExtDiff',['../group___a_d_c.html#gga1791488ae818871ec6dbc01921d0dc8caee4d7eace8b8b146b04238252ea5415f',1,'hwadc.h']]],
@@ -36,5 +37,12 @@ var searchData=
   ['alp_5fop_5fverify_5fchecksum',['ALP_OP_VERIFY_CHECKSUM',['../alp_8h.html#a08bf92ab688fcb3849046af0fd1458b2a3e926a6c5d1c8874dcb376c5d64648de',1,'alp.h']]],
   ['alp_5fop_5fwrite_5ffile_5fdata',['ALP_OP_WRITE_FILE_DATA',['../alp_8h.html#a08bf92ab688fcb3849046af0fd1458b2aa7880d961dcdb10c4ea89731e4245b60',1,'alp.h']]],
   ['alp_5fop_5fwrite_5ffile_5fdata_5fflush',['ALP_OP_WRITE_FILE_DATA_FLUSH',['../alp_8h.html#a08bf92ab688fcb3849046af0fd1458b2a4ddfc540fda60647d89d525d1eb81136',1,'alp.h']]],
-  ['alp_5fop_5fwrite_5ffile_5fproperties',['ALP_OP_WRITE_FILE_PROPERTIES',['../alp_8h.html#a08bf92ab688fcb3849046af0fd1458b2a60b7a63e266938a80b4d6a130ed3d759',1,'alp.h']]]
+  ['alp_5fop_5fwrite_5ffile_5fproperties',['ALP_OP_WRITE_FILE_PROPERTIES',['../alp_8h.html#a08bf92ab688fcb3849046af0fd1458b2a60b7a63e266938a80b4d6a130ed3d759',1,'alp.h']]],
+  ['alp_5fstatus_5ffile_5fid_5falready_5fexists',['ALP_STATUS_FILE_ID_ALREADY_EXISTS',['../alp_8h.html#a67740cd779fd5bfd17c0e11f1dfeee1aab6e19ac616bc5d35daf35e346fbe1c2f',1,'alp.h']]],
+  ['alp_5fstatus_5ffile_5fid_5fnot_5fexists',['ALP_STATUS_FILE_ID_NOT_EXISTS',['../alp_8h.html#a67740cd779fd5bfd17c0e11f1dfeee1aa9e06fb7b788d42546aee3f56f18049e6',1,'alp.h']]],
+  ['alp_5fstatus_5finsufficient_5fpermissions',['ALP_STATUS_INSUFFICIENT_PERMISSIONS',['../alp_8h.html#a67740cd779fd5bfd17c0e11f1dfeee1aaf0373c8a00d8fd795aa23c44a6d08493',1,'alp.h']]],
+  ['alp_5fstatus_5fok',['ALP_STATUS_OK',['../alp_8h.html#a67740cd779fd5bfd17c0e11f1dfeee1aaf2b547a8e6ae69a2f4fb9667b1c22c64',1,'alp.h']]],
+  ['alp_5fstatus_5fpartially_5fcompleted',['ALP_STATUS_PARTIALLY_COMPLETED',['../alp_8h.html#a67740cd779fd5bfd17c0e11f1dfeee1aaea7c6604fd51e1f6cb2d6efce8c2c407',1,'alp.h']]],
+  ['alp_5fstatus_5funknown_5ferror',['ALP_STATUS_UNKNOWN_ERROR',['../alp_8h.html#a67740cd779fd5bfd17c0e11f1dfeee1aa956f906fac573dcd61d5363242e4211f',1,'alp.h']]],
+  ['alp_5fstatus_5funknown_5foperation',['ALP_STATUS_UNKNOWN_OPERATION',['../alp_8h.html#a67740cd779fd5bfd17c0e11f1dfeee1aabcc7dac446b3e5e760642299b246bf70',1,'alp.h']]]
 ];

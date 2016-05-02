@@ -1,16 +1,20 @@
 var searchData=
 [
   ['t_5fg',['t_g',['../dll_8c.html#a48814e1cb6fe9e54d4f06ab61606837b',1,'dll.c']]],
+  ['t_5fgrad',['T_GRAD',['../efm32gg__system_8c.html#a209e9a5eca108da955ac5214acab80cc',1,'T_GRAD():&#160;efm32gg_system.c'],['../efm32hg__system_8c.html#a209e9a5eca108da955ac5214acab80cc',1,'T_GRAD():&#160;efm32hg_system.c'],['../efm32lg__system_8c.html#a209e9a5eca108da955ac5214acab80cc',1,'T_GRAD():&#160;efm32lg_system.c'],['../ezr32lg__system_8c.html#a209e9a5eca108da955ac5214acab80cc',1,'T_GRAD():&#160;ezr32lg_system.c']]],
   ['test0',['TEST0',['../cc1101__constants_8h.html#ae898d2284301fc88393371e470f8db52',1,'cc1101_constants.h']]],
   ['test1',['TEST1',['../cc1101__constants_8h.html#aef8471770769d5643c8d0e9d49de0678',1,'cc1101_constants.h']]],
-  ['test16',['TEST16',['../_s_s_d___f_t_fx___common_8h.html#aa264e0e7c77bed16e00b72c01e2aa1d6',1,'SSD_FTFx_Common.h']]],
   ['test2',['TEST2',['../cc1101__constants_8h.html#a1b5997c11166c594b80d44bfde1cfa9c',1,'cc1101_constants.h']]],
-  ['test32',['TEST32',['../_s_s_d___f_t_fx___common_8h.html#ac764ad10e2c4a36017a52a047d017a7c',1,'SSD_FTFx_Common.h']]],
-  ['test8',['TEST8',['../_s_s_d___f_t_fx___common_8h.html#a105ddfcc1701555a3a210c0f48bc8b95',1,'SSD_FTFx_Common.h']]],
+  ['textdisplay_5fdevice_5f0_5fcolumns',['TEXTDISPLAY_DEVICE_0_COLUMNS',['../textdisplayconfig_8h.html#a04eccf372ee982bfb23ce30e64c1883c',1,'textdisplayconfig.h']]],
+  ['textdisplay_5fdevice_5f0_5flines',['TEXTDISPLAY_DEVICE_0_LINES',['../textdisplayconfig_8h.html#a5e80909f38f7c83a881c9c4a9924f0d2',1,'textdisplayconfig.h']]],
+  ['textdisplay_5fdevices_5fmax',['TEXTDISPLAY_DEVICES_MAX',['../textdisplayconfig_8h.html#acc23f9be19f865094ddcb1f9d4cf4921',1,'textdisplayconfig.h']]],
+  ['textdisplay_5ffont_5f8x8',['TEXTDISPLAY_FONT_8x8',['../displayconfigapp_8h.html#ae910b3c810f06000b7cdd148b947ebe0',1,'displayconfigapp.h']]],
   ['tinyprintf_5fdefine_5ftfp_5fprintf',['TINYPRINTF_DEFINE_TFP_PRINTF',['../wizzimote_2printf_2printf_8h.html#a8d50469c93c7efee0fde91bbb9a5baa3',1,'printf.h']]],
   ['tinyprintf_5fdefine_5ftfp_5fsprintf',['TINYPRINTF_DEFINE_TFP_SPRINTF',['../wizzimote_2printf_2printf_8h.html#af07f8972d02d9c81a76e44d305d2b5d5',1,'printf.h']]],
   ['tinyprintf_5foverride_5flibc',['TINYPRINTF_OVERRIDE_LIBC',['../wizzimote_2printf_2printf_8h.html#a2c374b75266b24d00a3d9b270b550d4e',1,'printf.h']]],
-  ['true',['TRUE',['../_s_s_d___types_8h.html#aa8cecfc5c5c054d2875c03e77b7be15d',1,'SSD_Types.h']]],
+  ['trace_5fenable_5fpins',['TRACE_ENABLE_PINS',['../_e_f_m32_g_g___s_t_k3700_2config_2traceconfig_8h.html#aed44fced3445509156b7e2659f056886',1,'TRACE_ENABLE_PINS():&#160;traceconfig.h'],['../_e_z_r32_l_g___w_s_t_k6200_a_2config_2traceconfig_8h.html#aed44fced3445509156b7e2659f056886',1,'TRACE_ENABLE_PINS():&#160;traceconfig.h']]],
+  ['try',['TRY',['../console_8h.html#a091d75e6bf644f55ce24698b7c1d0dc7',1,'console.h']]],
+  ['try_5flabel_5flength',['TRY_LABEL_LENGTH',['../console_8h.html#ad7a847e713bc46dbe6ba71966c4d0969',1,'console.h']]],
   ['txbytes',['TXBYTES',['../cc1101__constants_8h.html#a9f180f03f3cd38aadc9e61001ba8d872',1,'cc1101_constants.h']]],
   ['txfifo',['TXFIFO',['../cc1101__constants_8h.html#a1daa02e093ccc73ccaf55cddf7cb3732',1,'cc1101_constants.h']]]
 ];

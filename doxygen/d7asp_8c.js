@@ -4,6 +4,7 @@ var d7asp_8c =
     [ "current_request_packet", "d7asp_8c.html#ab27d77922bca40dc33228fd14a179ff9", null ],
     [ "current_request_retry_count", "d7asp_8c.html#a3690a9709e67bf63acce1e4be42677fa", null ],
     [ "d7asp_init_args", "d7asp_8c.html#aff901b68a4c9fcdd55f7ac68a2b09199", null ],
+    [ "DPRINT", "d7asp_8c.html#a57a35bfd7d13bdfab37a48171286ecee", null ],
     [ "fifo", "d7asp_8c.html#af15466f92fbbc85cbc7efd371fd3dfd8", null ],
     [ "NO_ACTIVE_REQUEST_ID", "d7asp_8c.html#afb3f7bd27a344658c676e67f4840e19f", null ],
     [ "single_request_retry_limit", "d7asp_8c.html#a2c83584833d5fdb2d431be9c3aaa8955", null ],

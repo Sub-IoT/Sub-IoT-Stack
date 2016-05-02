@@ -2,20 +2,6 @@ var searchData=
 [
   ['get_5frnd',['get_rnd',['../group__random.html#ga0fa9d9c6c2b9ca0e6eaef0528f55a8d3',1,'get_rnd():&#160;random.c'],['../group__random.html#ga0fa9d9c6c2b9ca0e6eaef0528f55a8d3',1,'get_rnd():&#160;random.c']]],
   ['get_5ftask_5fid',['get_task_id',['../scheduler_8c.html#a90b15645b66e99902266d9d420c28011',1,'scheduler.c']]],
-  ['gpio_5fcm_5fcallback',['gpio_cm_callback',['../fsl__gpio__lpm__callback_8c.html#a3a6a25a40cd9bc6a24bf2e79944cfc3b',1,'fsl_gpio_lpm_callback.c']]],
-  ['gpio_5fdrv_5fclearpinintflag',['GPIO_DRV_ClearPinIntFlag',['../group__gpio__driver.html#ga1747d6c587b11739eb4146d62ca71fa2',1,'fsl_gpio_driver.h']]],
-  ['gpio_5fdrv_5fclearpinoutput',['GPIO_DRV_ClearPinOutput',['../group__gpio__driver.html#ga135e6b616e1e5f5f4d11536dc0471301',1,'fsl_gpio_driver.h']]],
-  ['gpio_5fdrv_5fgetpindir',['GPIO_DRV_GetPinDir',['../group__gpio__driver.html#ga6a3d3963b0e96e170dd665c75a2d85b4',1,'fsl_gpio_driver.h']]],
-  ['gpio_5fdrv_5finit',['GPIO_DRV_Init',['../group__gpio__driver.html#ga9534ea8266bc449c534a406a7dc0a7ac',1,'fsl_gpio_driver.h']]],
-  ['gpio_5fdrv_5finputpininit',['GPIO_DRV_InputPinInit',['../group__gpio__driver.html#gab5eb8dab16ae7be3d8a2d77f514fe959',1,'fsl_gpio_driver.h']]],
-  ['gpio_5fdrv_5fispinintpending',['GPIO_DRV_IsPinIntPending',['../group__gpio__driver.html#ga68adc8a76570f1adf6018b6bd1800fc0',1,'fsl_gpio_driver.h']]],
-  ['gpio_5fdrv_5foutputpininit',['GPIO_DRV_OutputPinInit',['../group__gpio__driver.html#gaeeacdc15820b5689024eed02ed8c94b6',1,'fsl_gpio_driver.h']]],
-  ['gpio_5fdrv_5freadpininput',['GPIO_DRV_ReadPinInput',['../group__gpio__driver.html#ga92f2f72d3de59489976009b1629223f2',1,'fsl_gpio_driver.h']]],
-  ['gpio_5fdrv_5fsetpindir',['GPIO_DRV_SetPinDir',['../group__gpio__driver.html#ga7a058a7f94fdce91104c63ede1546bc9',1,'fsl_gpio_driver.h']]],
-  ['gpio_5fdrv_5fsetpinoutput',['GPIO_DRV_SetPinOutput',['../group__gpio__driver.html#gae56e29dc05c29f53e2961b4a3af39b3a',1,'fsl_gpio_driver.h']]],
-  ['gpio_5fdrv_5ftogglepinoutput',['GPIO_DRV_TogglePinOutput',['../group__gpio__driver.html#ga2acd89462efb8418341fe8337081414d',1,'fsl_gpio_driver.h']]],
-  ['gpio_5fdrv_5fwritepinoutput',['GPIO_DRV_WritePinOutput',['../group__gpio__driver.html#ga83e07292f50ab5afe9a1b81f64678ac8',1,'fsl_gpio_driver.h']]],
-  ['gpio_5fhal_5fsetpindir',['GPIO_HAL_SetPinDir',['../group__gpio__hal.html#gab775560f8288d7e1ced931b5eaf38650',1,'fsl_gpio_hal.h']]],
-  ['gpio_5fhal_5fwritepinoutput',['GPIO_HAL_WritePinOutput',['../group__gpio__hal.html#ga456972e7e9901d49991b7a05027d90d5',1,'fsl_gpio_hal.h']]],
-  ['gpio_5fpm_5fcallback',['gpio_pm_callback',['../fsl__gpio__lpm__callback_8c.html#aa9b98f5f22bf141db3ac48ecf5a3850e',1,'fsl_gpio_lpm_callback.c']]]
+  ['getbattery',['getBattery',['../_e_z_r32_l_g___w_s_t_k6200_a_2inc_2platform__sensors_8h.html#a72ea89845d0cdcc58702379353c0ae8c',1,'platform_sensors.h']]],
+  ['gethumidityandtemperature',['getHumidityAndTemperature',['../_e_f_m32_h_g___s_t_k3400_2inc_2platform__sensors_8h.html#ac867dc089f71e710c2a26163ce930467',1,'getHumidityAndTemperature(uint32_t *rhData, int32_t *tData):&#160;stk3400_sensors.c'],['../stk3400__sensors_8c.html#a8e9dafc759abfe2f75c665e327d7356d',1,'getHumidityAndTemperature(uint32_t *rhData, int32_t *tData):&#160;stk3400_sensors.c'],['../_e_z_r32_l_g___w_s_t_k6200_a_2inc_2platform__sensors_8h.html#a8e9dafc759abfe2f75c665e327d7356d',1,'getHumidityAndTemperature(uint32_t *rhData, int32_t *tData):&#160;stk3400_sensors.c'],['../wstk6200__sensors_8c.html#a8e9dafc759abfe2f75c665e327d7356d',1,'getHumidityAndTemperature(uint32_t *rhData, int32_t *tData):&#160;wstk6200_sensors.c']]]
 ];
