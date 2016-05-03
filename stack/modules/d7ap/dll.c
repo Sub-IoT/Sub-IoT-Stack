@@ -170,6 +170,20 @@ static void switch_state(dll_state_t next_state)
     default:
         assert(false);
     }
+
+    // output state on debug pins
+    switch(dll_state)
+    {
+        case DLL_STATE_CSMA_CA_STARTED:
+        case DLL_STATE_CCA1:
+        case DLL_STATE_CCA2:
+        case DLL_STATE_CSMA_CA_RETRY:
+        case DLL_STATE_CCA_FAIL:
+          DEBUG_PIN_SET(2);
+          break;
+        default:
+          DEBUG_PIN_CLR(2);
+    }
 }
 
 static bool is_tx_busy()
@@ -241,7 +255,6 @@ static void execute_csma_ca();
 static void cca_rssi_valid(int16_t cur_rssi)
 {
     assert(dll_state == DLL_STATE_CCA1 || dll_state == DLL_STATE_CCA2);
-    DEBUG_PIN_SET(2); // TODO tmp
     if (cur_rssi <= E_CCA)
     {
         if(dll_state == DLL_STATE_CCA1)
@@ -283,7 +296,6 @@ static void cca_rssi_valid(int16_t cur_rssi)
 static void execute_cca()
 {
     assert(dll_state == DLL_STATE_CCA1 || dll_state == DLL_STATE_CCA2);
-    DEBUG_PIN_CLR(2); // TODO tmp
 
     hw_rx_cfg_t rx_cfg =(hw_rx_cfg_t){
         .channel_id.channel_header = current_access_profile->subbands[0].channel_header,
@@ -314,7 +326,6 @@ static uint16_t calculate_tx_duration()
 static void execute_csma_ca()
 {
     // TODO generate random channel queue
-    DEBUG_PIN_SET(2); // TODO tmp
     //hw_radio_set_rx(NULL, NULL, NULL); // put radio in RX but disable callbacks to make sure we don't receive packets when in this state
                                         // TODO use correct rx cfg + it might be interesting to switch to idle first depending on calculated offset
     uint16_t tx_duration = calculate_tx_duration();

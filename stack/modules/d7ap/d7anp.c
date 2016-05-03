@@ -26,6 +26,7 @@
 #include "ng.h"
 #include "log.h"
 #include "math.h"
+#include "hwdebug.h"
 
 #if defined(FRAMEWORK_LOG_ENABLED) && defined(MODULE_D7AP_NP_LOG_ENABLED)
 #define DPRINT(...) log_print_stack_string(LOG_STACK_NWL, __VA_ARGS__)
@@ -68,6 +69,9 @@ static void switch_state(state_t next_state)
           DPRINT("Switched to D7ANP_STATE_FOREGROUND_SCAN");
           break;
     }
+
+    // output state on debug pins
+    d7anp_state == D7ANP_STATE_FOREGROUND_SCAN? DEBUG_PIN_SET(3) : DEBUG_PIN_CLR(3);
 }
 
 static void foreground_scan_expired()
@@ -85,6 +89,13 @@ static void schedule_foreground_scan_expired_timer(uint8_t timeout_ct)
     uint32_t timeout_ticks = pow(4, timeout_ct >> 5) * (timeout_ct & 0b11111);
     DPRINT("starting foreground scan expiration timer (%i ticks)", timeout_ticks);
     timer_post_task_delay(&foreground_scan_expired, timeout_ticks);
+}
+
+static void start_foreground_scan(uint8_t timeout_ct)
+{
+    switch_state(D7ANP_STATE_FOREGROUND_SCAN);
+    schedule_foreground_scan_expired_timer(timeout_ct); // TODO ensure > own Tc
+    dll_start_foreground_scan();
 }
 
 void d7anp_init()
@@ -178,9 +189,7 @@ void d7anp_signal_packet_transmitted(packet_t* packet)
     // even when no ack is requested we still need to wait for a possible dormant session which might have been waiting
     // for us on the other side.
     // TODO if we only want to beacon without listening afterwards we can configure our own Tc to be 0
-    switch_state(D7ANP_STATE_FOREGROUND_SCAN);
-    schedule_foreground_scan_expired_timer(packet->d7anp_timeout); // TODO ensure > own Tc
-    dll_start_foreground_scan();
+    start_foreground_scan(packet->d7anp_timeout);
     d7atp_signal_packet_transmitted(packet);
 }
 
@@ -195,9 +204,7 @@ void d7anp_process_received_packet(packet_t* packet)
     else
     {
         DPRINT("Received packet while in D7ANP_STATE_IDLE (scan automation), start foreground scan");
-        switch_state(D7ANP_STATE_FOREGROUND_SCAN);
-        schedule_foreground_scan_expired_timer(packet->d7anp_timeout);
-        dll_start_foreground_scan();
+        start_foreground_scan(packet->d7anp_timeout);
     }
 
     d7atp_process_received_packet(packet);
