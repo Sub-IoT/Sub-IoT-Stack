@@ -102,6 +102,24 @@ void alp_cmd_handler_process_fs_itf(uint8_t* alp_command, uint8_t alp_command_le
     }
 }
 
+static uint8_t append_interface_status_action(d7asp_result_t* d7asp_result, uint8_t* ptr)
+{
+  uint8_t* ptr_start = ptr;
+  (*ptr) = ALP_OP_RETURN_STATUS + (1 << 6); ptr++;
+  (*ptr) = ALP_ITF_ID_D7ASP; ptr++;
+  memcpy(ptr, &(d7asp_result->channel), 3); ptr += 3; // TODO might need to reorder fields in channel_id
+  memcpy(ptr, &(d7asp_result->rx_level), 1); ptr += 1;
+  (*ptr) = d7asp_result->link_budget; ptr++;
+  (*ptr) = d7asp_result->status.raw; ptr++;
+  (*ptr) = d7asp_result->fifo_token; ptr++;
+  (*ptr) = d7asp_result->seqnr; ptr++;
+  (*ptr) = d7asp_result->response_to; ptr++;
+  (*ptr) = d7asp_result->addressee->ctrl.raw; ptr++;
+  uint8_t address_len = d7asp_result->addressee->ctrl.id_type == ID_TYPE_VID? 2 : 8; // TODO according to spec this can be 1 byte as
+  memcpy(ptr, d7asp_result->addressee->id, address_len); ptr += address_len;
+  return ptr - ptr_start;
+}
+
 void alp_cmd_handler_output_unsollicited_response(d7asp_result_t d7asp_result, uint8_t *alp_command, uint8_t alp_command_size)
 {
     uint8_t data[MODULE_D7AP_FIFO_COMMAND_BUFFER_SIZE] = { 0x00 };
@@ -109,24 +127,12 @@ void alp_cmd_handler_output_unsollicited_response(d7asp_result_t d7asp_result, u
 
     (*ptr) = 0xC0; ptr++;               // serial interface sync byte
     (*ptr) = 0x00; ptr++;               // serial interface version
-    ptr++;                              // payload length byte, skip for now and fll later
+    ptr++;                              // payload length byte, skip for now and fill later
+
+    ptr += append_interface_status_action(&d7asp_result, ptr);
 
     // the actual received data ...
     memcpy(ptr, alp_command, alp_command_size); ptr+= alp_command_size;
-
-    // add interface status action
-    (*ptr) = ALP_OP_INTERFACE_STATUS; ptr++;
-    (*ptr) = ALP_ITF_ID_D7ASP; ptr++;
-    memcpy(ptr, &d7asp_result.channel, 3); ptr += 3; // TODO current spec draft has size=2
-    memcpy(ptr, &d7asp_result.rx_level, 1); ptr += 1; // TODO current spec draft has size=1
-    (*ptr) = d7asp_result.link_budget; ptr++;
-    (*ptr) = d7asp_result.status.raw; ptr++;
-    (*ptr) = d7asp_result.fifo_token; ptr++;
-    (*ptr) = d7asp_result.seqnr; ptr++;
-    (*ptr) = d7asp_result.response_to; ptr++;
-    (*ptr) = d7asp_result.addressee->ctrl.raw; ptr++;
-    uint8_t address_len = d7asp_result.addressee->ctrl.virtual_id? 2 : 8; // TODO according to spec this can be 1 byte as
-    memcpy(ptr, d7asp_result.addressee->id, address_len); ptr += address_len;
 
     data[2] = ptr - (data + 3);       // fill length byte
 

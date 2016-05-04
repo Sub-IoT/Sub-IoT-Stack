@@ -545,8 +545,12 @@ void dll_tx_frame(packet_t* packet, dae_access_profile_t* access_profile)
     dll_header->control_eirp_index = access_profile->subbands[0].eirp + 32;
     if(packet->d7atp_ctrl.ctrl_is_start && packet->d7anp_addressee != NULL) // when responding in a transaction we MAY skip targetID
     {
-        dll_header->control_target_address_set = packet->d7anp_addressee->ctrl.has_id;
-        dll_header->control_vid_used = packet->d7anp_addressee->ctrl.virtual_id;
+        if(packet->d7anp_addressee->ctrl.id_type != ID_TYPE_BCAST)
+        {
+            // TODO dll_header needs to adapted to use id_type_t
+            dll_header->control_target_address_set = true;
+            dll_header->control_vid_used = packet->d7anp_addressee->ctrl.id_type == ID_TYPE_VID;
+        }
     }
 
     packet->hw_radio_packet.tx_meta.tx_cfg = (hw_tx_cfg_t){

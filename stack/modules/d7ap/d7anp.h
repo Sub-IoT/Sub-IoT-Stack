@@ -29,13 +29,20 @@
 
 typedef struct packet packet_t;
 
+typedef enum {
+    ID_TYPE_BCAST = 1,
+    ID_TYPE_UID   = 2,
+    ID_TYPE_VID   = 3
+} id_type_t;
+
 typedef struct {
-    uint8_t raw;
-    struct {
-        uint8_t access_class : 4;
-        bool virtual_id : 1;
-        bool has_id : 1;
-        uint8_t _rfu : 2;
+    union {
+      uint8_t raw;
+      struct {
+          uint8_t access_class : 4;
+          id_type_t id_type : 2;
+          uint8_t _rfu : 2;
+      };
     };
 } d7anp_addressee_ctrl;
 
@@ -54,13 +61,12 @@ typedef struct {
 typedef struct {
     union {
         uint8_t raw;
-        d7anp_addressee_ctrl addressee_ctrl;
+        d7anp_addressee_ctrl origin_addressee_ctrl;
         struct {
-            uint8_t origin_access_class : 4;
-            bool origin_access_id_is_vid : 1;
-            bool origin_access_id_present : 1;
-            bool hop_enabled : 1;
-            bool nls_enabled : 1;
+            uint8_t origin_addressee_ctrl_access_class : 4;
+            id_type_t origin_addressee_ctrl_id_type : 2;
+            bool origin_addressee_ctrl_hop_enabled : 1;
+            bool origin_addressee_ctrl_nls_enabled : 1;
         };
     };
 } d7anp_ctrl_t;

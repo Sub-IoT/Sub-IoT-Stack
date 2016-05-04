@@ -151,8 +151,7 @@ void init_user_files()
         .start_id = 0,
         .addressee = {
             .ctrl = {
-              .has_id = false,
-              .virtual_id = false,
+              .id_type = ID_TYPE_BCAST,
               .access_class = 0
             },
             .id = 0

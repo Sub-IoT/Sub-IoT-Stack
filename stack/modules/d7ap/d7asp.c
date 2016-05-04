@@ -264,7 +264,7 @@ bool d7asp_process_received_packet(packet_t* packet)
         .link_budget = (packet->dll_header.control_eirp_index + 32) - packet->hw_radio_packet.rx_meta.rssi,
         .status = {
             .ucast = 0, // TODO
-            .nls = packet->d7anp_ctrl.nls_enabled,
+            .nls = packet->d7anp_ctrl.origin_addressee_ctrl_nls_enabled,
             .retry = false, // TODO
             .missed = false, // TODO
         },

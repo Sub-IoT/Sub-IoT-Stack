@@ -135,8 +135,7 @@ void init_user_files() {
         .start_id                         = 0, // TODO
         .addressee = {
             .ctrl = {
-                .has_id                   = false,
-                .virtual_id               = false,
+                .id_type                  = ID_TYPE_BCAST,
                 .access_class             = 0
             },
             .id                 = 0
@@ -195,7 +194,7 @@ void bootstrap() {
     d7asp_init_args.d7asp_fifo_flush_completed_cb = &on_d7asp_fifo_flush_completed;
     d7asp_init_args.d7asp_received_unsollicited_data_cb = &on_unsollicited_response_received;
 
-    d7ap_stack_init(&fs_init_args, &d7asp_init_args, false, NULL);
+    d7ap_stack_init(&fs_init_args, &d7asp_init_args, true, NULL);
 
     sched_register_task((&execute_sensor_measurement));
     timer_post_task_delay(&execute_sensor_measurement, REPORTING_INTERVAL_TICKS);

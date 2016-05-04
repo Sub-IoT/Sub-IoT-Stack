@@ -275,9 +275,8 @@ void d7atp_process_received_packet(packet_t* packet)
         DPRINT("Dialog id %i transaction id %i", current_dialog_id, current_transaction_id);
 
         // copy addressee from NP origin
-        current_addressee.ctrl.has_id = packet->d7anp_ctrl.origin_access_id_present;
-        current_addressee.ctrl.virtual_id = packet->d7anp_ctrl.origin_access_id_is_vid;
-        current_addressee.ctrl.access_class = packet->d7anp_ctrl.origin_access_class;
+        current_addressee.ctrl.id_type = packet->d7anp_ctrl.origin_addressee_ctrl_id_type;
+        current_addressee.ctrl.access_class = packet->d7anp_ctrl.origin_addressee_ctrl_access_class;
         memcpy(current_addressee.id, packet->origin_access_id, 8);
         packet->d7anp_addressee = &current_addressee;
 
