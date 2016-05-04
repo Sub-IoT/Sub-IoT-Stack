@@ -66,7 +66,7 @@ void execute_sensor_measurement() {
     led_toggle(1);
 #endif
     // use the counter value for now instead of 'real' sensor
-    uint32_t val = timer_get_counter_value();
+    uint32_t val = 0; //timer_get_counter_value();
     // file 0x40 is configured to use D7AActP trigger an ALP action which 
     // broadcasts this file data on Access Class 0
     fs_write_file(0x40, 0, (uint8_t*)&val, 4);
@@ -166,8 +166,8 @@ void bootstrap() {
                 .channel_header = {
                     //.ch_coding = PHY_CODING_PN9,
                 	  .ch_coding = PHY_CODING_FEC_PN9,
-                    .ch_class = PHY_CLASS_NORMAL_RATE,
-                    .ch_freq_band = PHY_BAND_433
+                    .ch_class = PHY_CLASS_LO_RATE,
+                    .ch_freq_band = PHY_BAND_868
                 },
                 .channel_index_start = 0,
                 .channel_index_end = 0,

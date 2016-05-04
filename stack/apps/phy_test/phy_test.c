@@ -36,9 +36,9 @@
 #endif
 
 // configuration options
-#define RX_MODE
-#define PHY_CLASS PHY_CLASS_NORMAL_RATE
-#define PACKET_LENGTH 100
+//#define RX_MODE
+#define PHY_CLASS PHY_CLASS_LO_RATE
+#define PACKET_LENGTH 10
 
 
 
@@ -61,10 +61,10 @@
 
 hw_rx_cfg_t rx_cfg = {
     .channel_id = {
-        .channel_header.ch_coding = PHY_CODING_PN9,
+        .channel_header.ch_coding = PHY_CODING_FEC_PN9,
         .channel_header.ch_class = PHY_CLASS,
 #ifdef PLATFORM_EZR32LG_WSTK6200A
-        .channel_header.ch_freq_band = PHY_BAND_433,
+        .channel_header.ch_freq_band = PHY_BAND_868,
 #else
         .channel_header.ch_freq_band = PHY_BAND_433,
 #endif
@@ -75,10 +75,10 @@ hw_rx_cfg_t rx_cfg = {
 
 hw_tx_cfg_t tx_cfg = {
     .channel_id = {
-        .channel_header.ch_coding = PHY_CODING_PN9,
+        .channel_header.ch_coding = PHY_CODING_FEC_PN9,
         .channel_header.ch_class = PHY_CLASS,
 #ifdef PLATFORM_EZR32LG_WSTK6200A
-        .channel_header.ch_freq_band = PHY_BAND_433,
+        .channel_header.ch_freq_band = PHY_BAND_868,
 #else
         .channel_header.ch_freq_band = PHY_BAND_433,
 #endif
@@ -114,6 +114,7 @@ void transmit_packet()
 	counter++;
     DPRINT("%d tx %d bytes\n", counter, PACKET_LENGTH);
     memcpy(&tx_packet->data, data, PACKET_LENGTH);
+    tx_packet->length = PACKET_LENGTH;
     hw_radio_send_packet(tx_packet, &packet_transmitted);
 }
 
@@ -136,7 +137,9 @@ void packet_received(hw_radio_packet_t* packet)
 		int cmp = memcmp(data, packet->data, packet->length);
 #endif
     if(cmp != 0)
+    {
         DPRINT("Unexpected data received! %d\n", cmp);
+    }
 
     hw_watchdog_feed();
 

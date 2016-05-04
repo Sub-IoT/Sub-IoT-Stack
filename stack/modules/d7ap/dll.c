@@ -498,14 +498,14 @@ void dll_tx_frame(packet_t* packet, dae_access_profile_t* access_profile)
         dll_header->control_vid_used = packet->d7atp_addressee->addressee_ctrl_virtual_id;
     }
 
-    packet_assemble(packet);
-
     packet->hw_radio_packet.tx_meta.tx_cfg = (hw_tx_cfg_t){
         .channel_id.channel_header = current_access_profile->subbands[0].channel_header,
         .channel_id.center_freq_index = current_access_profile->subbands[0].channel_index_start,
         .syncword_class = PHY_SYNCWORD_CLASS1,
         .eirp = 10
     };
+
+    packet_assemble(packet);
 
     current_packet = packet;
 

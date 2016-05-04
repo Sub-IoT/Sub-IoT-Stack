@@ -222,15 +222,15 @@ typedef struct
         hw_tx_metadata_t tx_meta;		/**< The RX Metadata of the packet */
     };
 
-    union
-    {
+    //union
+    //{
         uint8_t		length;			/**< The length of the packet. This fields overlaps with the first byte of the packet data */
-        struct
-        {
-            uint8_t	__resv[0];		//this is ONLY here to keep the compiler happy: DO NOT USE
+    //    struct
+     //   {
+     //       uint8_t	__resv[0];		//this is ONLY here to keep the compiler happy: DO NOT USE
             uint8_t	data[];			/**< The packet data. data[0] overlaps with the 'length' field */
-        };
-    };    
+    //    };
+    //};
     // TODO optimize struct for size. This was packed but resulted in alignment issues on Cortex-M0 so removed for now.
 } hw_radio_packet_t;
 

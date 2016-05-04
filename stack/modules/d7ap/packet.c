@@ -60,14 +60,17 @@ void packet_assemble(packet_t* packet)
     // add payload
     memcpy(data_ptr, packet->payload, packet->payload_length); data_ptr += packet->payload_length;
     packet->hw_radio_packet.length = data_ptr - packet->hw_radio_packet.data - 1 + 2; // exclude the length byte and add CRC bytes
+    packet->hw_radio_packet.data[0] = packet->hw_radio_packet.length;
 
     // TODO network protocol footer
 
     // add CRC - SW CRC when using FEC
-    if (!has_hardware_crc || packet->hw_radio_packet.rx_meta.rx_cfg.channel_id.channel_header.ch_coding == PHY_CODING_FEC_PN9)
+    if (!has_hardware_crc || packet->hw_radio_packet.tx_meta.tx_cfg.channel_id.channel_header.ch_coding == PHY_CODING_FEC_PN9)
     {
+    	log_print_data(packet->hw_radio_packet.data, packet->hw_radio_packet.length + 1); // TODO tmp
     	uint16_t crc = __builtin_bswap16(crc_calculate(packet->hw_radio_packet.data, packet->hw_radio_packet.length + 1 - 2));
     	memcpy(data_ptr, &crc, 2);
+    	log_print_data(packet->hw_radio_packet.data, packet->hw_radio_packet.length + 1); // TODO tmp
     }
 
 }
@@ -76,17 +79,13 @@ void packet_disassemble(packet_t* packet)
 {
     log_print_data(packet->hw_radio_packet.data, packet->hw_radio_packet.length + 1); // TODO tmp
 
-    if (packet->hw_radio_packet.rx_meta.rx_cfg.channel_id.channel_header.ch_coding == PHY_CODING_FEC_PN9)
-    {
-    	packet->hw_radio_packet.length = fec_decode_packet(packet->hw_radio_packet.data, packet->hw_radio_packet.length, packet->hw_radio_packet.length);
-    }
-
     if (packet->hw_radio_packet.rx_meta.crc_status == HW_CRC_UNAVAILABLE)
     {
         uint16_t crc = __builtin_bswap16(crc_calculate(packet->hw_radio_packet.data, packet->hw_radio_packet.length + 1 - 2));
         if(memcmp(&crc, packet->hw_radio_packet.data + packet->hw_radio_packet.length + 1 - 2, 2) != 0)
         {
             DPRINT_DLL("CRC invalid");
+            log_print_data(&crc, 2);
             goto cleanup;
         }
     }
