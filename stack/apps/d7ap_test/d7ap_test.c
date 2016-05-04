@@ -78,7 +78,7 @@ void on_unsollicited_response_received(d7asp_result_t d7asp_result,
                                       uint8_t *alp_command, uint8_t alp_command_size)
 {
   alp_cmd_handler_output_unsollicited_response(d7asp_result, alp_command, alp_command_size);
-  DPRINT("Unsol resp %d\n", d7asp_result.rssi);
+  DPRINT("Unsol resp %d dBm, LB %d dB\n", d7asp_result.rx_level, d7asp_result.link_budget);
 #ifdef PLATFORM_EFM32GG_STK3700
 	lcd_write_number(rx_meta->rssi);
 #endif
@@ -170,7 +170,7 @@ void bootstrap() {
             .control_number_of_subbands = 1,
             .subnet = 0x00,
             .scan_automation_period = 0,
-            .transmission_timeout_period = 0xFF,
+            .transmission_timeout_period = 20,
             .subbands[0] = (subband_t){
                 .channel_header = {
                     .ch_coding = PHY_CODING_PN9,
@@ -180,7 +180,7 @@ void bootstrap() {
                 },
                 .channel_index_start = 0,
                 .channel_index_end = 0,
-                .eirp = 0,
+                .eirp = 10,
                 .ccao = 0
             }
         }

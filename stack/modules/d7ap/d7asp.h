@@ -76,8 +76,8 @@ typedef struct {
     union {
         uint8_t raw;
         struct {
-            session_state_t session_state : 3;
-            uint8_t _rfu : 2;
+            uint8_t _rfu : 4;
+            bool ucast : 1;
             bool retry : 1;
             bool missed : 1;
             bool nls : 1;
@@ -92,11 +92,11 @@ typedef struct {
 
 typedef struct {
     channel_id_t channel;
-    uint16_t rssi;
+    int8_t rx_level;
     uint8_t link_budget;
     d7asp_state_t status;
     uint8_t fifo_token;
-    uint8_t request_id;
+    uint8_t seqnr;
     uint8_t response_to;
     d7anp_addressee_t* addressee;
 } d7asp_result_t;

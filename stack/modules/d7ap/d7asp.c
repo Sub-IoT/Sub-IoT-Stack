@@ -260,17 +260,17 @@ bool d7asp_process_received_packet(packet_t* packet)
     hw_watchdog_feed(); // TODO do here?
     d7asp_result_t result = {
         .channel = packet->hw_radio_packet.rx_meta.rx_cfg.channel_id,
-        .rssi =  packet->hw_radio_packet.rx_meta.rssi,
-        .link_budget = 0, // TODO
+        .rx_level =  packet->hw_radio_packet.rx_meta.rssi,
+        .link_budget = (packet->dll_header.control_eirp_index + 32) - packet->hw_radio_packet.rx_meta.rssi,
         .status = {
-            .session_state = SESSION_STATE_DONE, // TODO
+            .ucast = 0, // TODO
             .nls = packet->d7anp_ctrl.nls_enabled,
             .retry = false, // TODO
             .missed = false, // TODO
         },
-        .response_to = 0, // TODO
+        .response_to = packet->d7anp_timeout,
         .addressee = packet->d7anp_addressee
-        // .fifo_token and .request_id filled below
+        // .fifo_token and .seqnr filled below
     };
 
     if(state == D7ASP_STATE_MASTER)
@@ -281,7 +281,7 @@ bool d7asp_process_received_packet(packet_t* packet)
 
         // received ack
         result.fifo_token = fifo.token;
-        result.request_id = current_request_id;
+        result.seqnr = current_request_id;
         DPRINT("Received ACK");
         bitmap_set(fifo.success_bitmap, current_request_id);
         mark_current_request_done();
@@ -300,7 +300,7 @@ bool d7asp_process_received_packet(packet_t* packet)
             switch_state(D7ASP_STATE_SLAVE); // don't switch when already in slave state
 
         result.fifo_token = packet->d7atp_dialog_id;
-        result.request_id = packet->d7atp_transaction_id;
+        result.seqnr = packet->d7atp_transaction_id;
 
 
         if(packet->payload_length > 0)

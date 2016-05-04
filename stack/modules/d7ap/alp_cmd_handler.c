@@ -118,11 +118,11 @@ void alp_cmd_handler_output_unsollicited_response(d7asp_result_t d7asp_result, u
     (*ptr) = ALP_OP_INTERFACE_STATUS; ptr++;
     (*ptr) = ALP_ITF_ID_D7ASP; ptr++;
     memcpy(ptr, &d7asp_result.channel, 3); ptr += 3; // TODO current spec draft has size=2
-    memcpy(ptr, &d7asp_result.rssi, 2); ptr += 2; // TODO current spec draft has size=1
+    memcpy(ptr, &d7asp_result.rx_level, 1); ptr += 1; // TODO current spec draft has size=1
     (*ptr) = d7asp_result.link_budget; ptr++;
     (*ptr) = d7asp_result.status.raw; ptr++;
     (*ptr) = d7asp_result.fifo_token; ptr++;
-    (*ptr) = d7asp_result.request_id; ptr++;
+    (*ptr) = d7asp_result.seqnr; ptr++;
     (*ptr) = d7asp_result.response_to; ptr++;
     (*ptr) = d7asp_result.addressee->ctrl.raw; ptr++;
     uint8_t address_len = d7asp_result.addressee->ctrl.virtual_id? 2 : 8; // TODO according to spec this can be 1 byte as

@@ -267,6 +267,7 @@ void d7atp_process_received_packet(packet_t* packet)
             return;
         }
 
+        // TODO when STOP bit set stop NP foreground scan?
 
         switch_state(D7ATP_STATE_SLAVE_TRANSACTION_RECEIVED_REQUEST);
         current_dialog_id = packet->d7atp_dialog_id;
