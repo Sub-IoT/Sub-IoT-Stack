@@ -121,7 +121,7 @@ void init_user_files() {
             .qos_ctrl_resp_mode           = SESSION_RESP_MODE_ANYCAST,
             .qos_ctrl_ack_not_void        = false,
             .qos_ack_period               = 1,
-            .qos_retry_single             = 3,
+            .qos_retry_single             = 1,
             .qos_retry_total              = 0
         },
         .dormant_timeout                  = 0,

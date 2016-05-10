@@ -278,7 +278,7 @@ void test_interleaver()
 int main(int argc, char *argv[])
 {
 	test_interleaver();
-	uint8_t input[] = {0xAB, 0x02, 0x03, 0x04};
+	uint8_t input[] = {0x19,0x00,0x80,0x00,0x0B,0x57,0x00,0x00,0x07,0x8C,0x63,0x20,0x00,0x0B,0x57,0x00,0x00,0x07,0x8F,0x52,0x41,0x36,0x00,0x00,0x22,0x0B}; //14
 	uint8_t input_length = sizeof(input);
 	uint8_t encoded[255];
 	uint8_t decoded[255];
@@ -291,13 +291,18 @@ int main(int argc, char *argv[])
 	print_array(input, input_length);
 	printf("\n");
 
-	uint16_t lenght_encoded = fec_encode(encoded, input, input_length);
+	memcpy(encoded, input, input_length);
+
+	uint16_t lenght_encoded = fec_encode(encoded, input_length);
 
 	printf("Encoded: ");
 	print_array(encoded, lenght_encoded);
 	printf("\n");
 
-	uint8_t length_decoded =  fec_decode_packet(encoded, lenght_encoded, decoded, 255);
+	memcpy(decoded, encoded, lenght_encoded);
+
+
+	uint8_t length_decoded =  fec_decode_packet(decoded, lenght_encoded, 255);
 
 	printf("Decoded: ");
 	print_array(decoded, length_decoded);

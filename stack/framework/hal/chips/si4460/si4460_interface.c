@@ -125,6 +125,8 @@ Ecode_t ezradioStartRx(uint8_t channel, bool packet_handler)
 {
 	ezradio_get_int_status(0u, 0u, 0u, NULL);
 
+	ezradio_fifo_info(EZRADIO_CMD_FIFO_INFO_ARG_FIFO_RX_BIT, NULL);
+
 	// reset length of first field (can be corrupted by TX)
 	ezradio_set_property(0x12, 0x02, 0x0D, 0x00, 0x01);
 	if (packet_handler)

@@ -122,12 +122,13 @@ static void report_rssi();
 
 static void configure_channel(const channel_id_t* channel_id)
 {
-	DPRINT("configure_channel: %s", byte_to_binary(channel_id->channel_header_raw));
+
 	// only change settings if channel_id changed compared to current config
 	// TODO: check if only channel number changes
 
 	if((channel_id->channel_header_raw != current_channel_id.channel_header_raw))
 	{
+		DPRINT("configure_channel: %s", byte_to_binary(channel_id->channel_header_raw));
 		if (channel_id->channel_header.ch_coding != current_channel_id.channel_header.ch_coding)
 		{
 			if (has_hardware_crc && channel_id->channel_header.ch_coding != PHY_CODING_FEC_PN9)
@@ -352,6 +353,7 @@ static void configure_channel(const channel_id_t* channel_id)
 		}
 	} else 	if (channel_id->center_freq_index != current_channel_id.center_freq_index)
 	{
+		DPRINT("configure center_freq_index: %d", channel_id->center_freq_index);
 		switch(channel_id->channel_header.ch_freq_band)
 		{
 		// TODO calculate depending on rate and channr
@@ -555,15 +557,14 @@ error_t hw_radio_send_packet(hw_radio_packet_t* packet, tx_packet_callback_t tx_
 
 	if (packet->tx_meta.tx_cfg.channel_id.channel_header.ch_coding == PHY_CODING_FEC_PN9)
 	{
-#ifdef FRAMEWORK_LOG_ENABLED // TODO more granular
-	log_print_stack_string(LOG_STACK_PHY, "Original packet: %d", data_length);
-	log_print_data(packet->data, data_length);
-#endif
+
+		DPRINT(LOG_STACK_PHY, "Original packet: %d", data_length);
+		DPRINT_DATA(packet->data, data_length);
+
 		data_length = fec_encode(packet->data, data_length);
-#ifdef FRAMEWORK_LOG_ENABLED // TODO more granular
-	log_print_stack_string(LOG_STACK_PHY, "Encoded packet: %d", data_length);
-	log_print_data(packet->data, data_length);
-#endif
+		DPRINT(LOG_STACK_PHY, "Encoded packet: %d", data_length);
+		DPRINT_DATA(packet->data, data_length);
+
 	} else {
 		if (has_hardware_crc)
 			data_length -= 2;
@@ -581,10 +582,10 @@ error_t hw_radio_send_packet(hw_radio_packet_t* packet, tx_packet_callback_t tx_
 	current_state = HW_RADIO_STATE_TX;
 	current_packet = packet;
 
-#ifdef FRAMEWORK_LOG_ENABLED // TODO more granular
-	log_print_stack_string(LOG_STACK_PHY, "Data to TX Fifo:");
-	log_print_data(packet->data, data_length);
-#endif
+
+	DPRINT(LOG_STACK_PHY, "Data to TX Fifo:");
+	DPRINT_DATA(packet->data, data_length);
+
 
 	configure_channel((channel_id_t*)&(packet->tx_meta.tx_cfg.channel_id));
 	configure_eirp(packet->tx_meta.tx_cfg.eirp);
@@ -707,9 +708,9 @@ static void ezradio_handle_end_of_packet()
 
 	ezradio_fifo_info(EZRADIO_CMD_FIFO_INFO_ARG_FIFO_RX_BIT, NULL);
 
-#ifdef FRAMEWORK_LOG_ENABLED
+
 	DPRINT_DATA(rx_packet->data, rx_packet->length+1);
-#endif
+
 
 	if (current_rx_cfg.channel_id.channel_header.ch_coding == PHY_CODING_FEC_PN9)
 	{
@@ -717,9 +718,9 @@ static void ezradio_handle_end_of_packet()
 		//assert length and data[0] can only differ 1
 		rx_packet->length =  rx_packet->data[0];
 	}
-#ifdef FRAMEWORK_LOG_ENABLED
-	log_print_raw_phy_packet(rx_packet, false);
-#endif
+
+	DPRINT_PACKET(rx_packet, false);
+
 
 	DEBUG_RX_END();
 
@@ -736,7 +737,7 @@ static void ezradio_handle_end_of_packet()
 
 static void ezradio_int_callback()
 {
-	DPRINT("ezradio ISR");
+	//DPRINT("ezradio ISR");
 
 	ezradio_cmd_reply_t ezradioReply;
 	ezradio_cmd_reply_t radioReplyLocal;
@@ -747,7 +748,7 @@ static void ezradio_int_callback()
 //	DPRINT(" - INT_PEND     %s", byte_to_binary(ezradioReply.GET_INT_STATUS.INT_PEND));
 //	DPRINT(" - INT_STATUS   %s", byte_to_binary(ezradioReply.GET_INT_STATUS.INT_STATUS));
 //	DPRINT(" - PH_PEND      %s", byte_to_binary(ezradioReply.GET_INT_STATUS.PH_PEND));
-	DPRINT(" - PH_STATUS    %s", byte_to_binary(ezradioReply.GET_INT_STATUS.PH_STATUS));
+	//DPRINT(" - PH_STATUS    %s", byte_to_binary(ezradioReply.GET_INT_STATUS.PH_STATUS));
 	//DPRINT(" - PH_STATUS    %s", byte_to_binary(ezradioReply.FRR_A_READ.FRR_B_VALUE));
 //	DPRINT(" - MODEM_PEND   %s", byte_to_binary(ezradioReply.GET_INT_STATUS.MODEM_PEND));
 //	DPRINT(" - MODEM_STATUS %s", byte_to_binary(ezradioReply.GET_INT_STATUS.MODEM_STATUS));
@@ -757,7 +758,7 @@ static void ezradio_int_callback()
 	//if (ezradioReply.FRR_A_READ.FRR_A_VALUE & EZRADIO_CMD_GET_INT_STATUS_REP_INT_PEND_PH_INT_PEND_BIT)
 	if (ezradioReply.GET_INT_STATUS.INT_PEND & EZRADIO_CMD_GET_INT_STATUS_REP_INT_PEND_PH_INT_PEND_BIT)
 	{
-		DPRINT("PH ISR");
+		//DPRINT("PH ISR");
 		switch(current_state)
 		{
 			case HW_RADIO_STATE_RX:
@@ -791,52 +792,56 @@ static void ezradio_int_callback()
 
 					}
 				} else if (ezradioReply.GET_INT_STATUS.PH_STATUS & EZRADIO_CMD_GET_INT_STATUS_REP_PH_STATUS_RX_FIFO_ALMOST_FULL_BIT)
-
-				//} else if (ezradioReply.FRR_A_READ.FRR_B_VALUE & EZRADIO_CMD_GET_INT_STATUS_REP_PH_STATUS_RX_FIFO_ALMOST_FULL_BIT)
-				{
-					DPRINT("- RX FIFO almost full IRQ");
-
-					ezradio_fifo_info(0, &radioReplyLocal);
-					if (rx_fifo_data_lenght == 0)
+						//} else if (ezradioReply.FRR_A_READ.FRR_B_VALUE & EZRADIO_CMD_GET_INT_STATUS_REP_PH_STATUS_RX_FIFO_ALMOST_FULL_BIT)
 					{
-						DPRINT("RX FIFO: %d", radioReplyLocal.FIFO_INFO.RX_FIFO_COUNT);
-						uint8_t buffer[4];
-						ezradio_read_rx_fifo(4, buffer);
-						uint8_t length = buffer[0];
-						if (current_rx_cfg.channel_id.channel_header.ch_coding == PHY_CODING_FEC_PN9)
-						{
-							uint8_t fec_buffer[4];
-							memcpy(fec_buffer, buffer, 4);
-							fec_decode_packet(fec_buffer, 4, 4);
-							length = fec_buffer[0]*2;
-							length += 4 - (length % 4);
-							DPRINT("RX Packet Length: %d / %d", fec_buffer[0], length);
-						}
-						rx_packet = alloc_packet_callback(length+1);
-						rx_packet->length = length;
-						memcpy(rx_packet->data, buffer, 4);
-						rx_fifo_data_lenght += 4;
-						radioReplyLocal.FIFO_INFO.RX_FIFO_COUNT-=4;
-					}
-					while (radioReplyLocal.FIFO_INFO.RX_FIFO_COUNT > 0)
-					{
-						DPRINT("RX FIFO: %d", radioReplyLocal.FIFO_INFO.RX_FIFO_COUNT);
-						/* Read out the FIFO Count bytes of RX FIFO */
-						ezradio_read_rx_fifo(radioReplyLocal.FIFO_INFO.RX_FIFO_COUNT, &(rx_packet->data[rx_fifo_data_lenght]));
-						rx_fifo_data_lenght += radioReplyLocal.FIFO_INFO.RX_FIFO_COUNT;
-						//DPRINT("%d of %d bytes collected", rx_fifo_data_lenght, rx_packet->data[0]+1);
+						//DPRINT("- RX FIFO almost full IRQ");
+
 						ezradio_fifo_info(0, &radioReplyLocal);
-
-						if (rx_fifo_data_lenght >= rx_packet->length + 1)
+						if (rx_fifo_data_lenght == 0)
 						{
-							ezradio_handle_end_of_packet();
-							return;
+							DPRINT("RX FIFO: %d", radioReplyLocal.FIFO_INFO.RX_FIFO_COUNT);
+							if (radioReplyLocal.FIFO_INFO.RX_FIFO_COUNT == 80)
+							{
+								ezradio_fifo_info(0, &radioReplyLocal);
+								DPRINT("RX FIFO: %d", radioReplyLocal.FIFO_INFO.RX_FIFO_COUNT);
+							}
+							uint8_t buffer[4];
+							ezradio_read_rx_fifo(4, buffer);
+							uint8_t length = buffer[0];
+							if (current_rx_cfg.channel_id.channel_header.ch_coding == PHY_CODING_FEC_PN9)
+							{
+								uint8_t fec_buffer[4];
+								memcpy(fec_buffer, buffer, 4);
+								fec_decode_packet(fec_buffer, 4, 4);
+								length = fec_buffer[0]*2;
+								length += 4 - (length % 4);
+								DPRINT("RX Packet Length: %d / %d", fec_buffer[0], length);
+							}
+							rx_packet = alloc_packet_callback(length+1);
+							rx_packet->length = length;
+							memcpy(rx_packet->data, buffer, 4);
+							rx_fifo_data_lenght += 4;
+							radioReplyLocal.FIFO_INFO.RX_FIFO_COUNT-=4;
 						}
-					}
+						while (radioReplyLocal.FIFO_INFO.RX_FIFO_COUNT > 0)
+						{
+							DPRINT("RX FIFO: %d", radioReplyLocal.FIFO_INFO.RX_FIFO_COUNT);
+							/* Read out the FIFO Count bytes of RX FIFO */
+							ezradio_read_rx_fifo(radioReplyLocal.FIFO_INFO.RX_FIFO_COUNT, &(rx_packet->data[rx_fifo_data_lenght]));
+							rx_fifo_data_lenght += radioReplyLocal.FIFO_INFO.RX_FIFO_COUNT;
+							//DPRINT("%d of %d bytes collected", rx_fifo_data_lenght, rx_packet->data[0]+1);
+							ezradio_fifo_info(0, &radioReplyLocal);
 
-					ezradio_int_callback();
+							if (rx_fifo_data_lenght >= rx_packet->length + 1)
+							{
+								ezradio_handle_end_of_packet();
+								return;
+							}
+						}
 
-					return;
+						ezradio_int_callback();
+
+						return;
 				} else if (ezradioReply.GET_INT_STATUS.PH_STATUS & EZRADIO_CMD_GET_INT_STATUS_REP_PH_STATUS_CRC_ERROR_BIT)
 
 				//} else if ( ezradioReply.FRR_A_READ.FRR_B_VALUE & EZRADIO_CMD_GET_INT_STATUS_REP_PH_STATUS_CRC_ERROR_BIT)
@@ -860,9 +865,9 @@ static void ezradio_int_callback()
 					rx_packet->rx_meta.crc_status = HW_CRC_INVALID;
 					rx_packet->length = rx_packet->data[0] + 1;
 
-					#ifdef FRAMEWORK_LOG_ENABLED
-						log_print_raw_phy_packet(rx_packet, false);
-					#endif
+
+					DPRINT_PACKET(rx_packet, false);
+
 
 					DEBUG_RX_END();
 
@@ -895,9 +900,9 @@ static void ezradio_int_callback()
 
 					current_packet->tx_meta.timestamp = timer_get_counter_value();
 
-		#ifdef FRAMEWORK_LOG_ENABLED
-					log_print_raw_phy_packet(current_packet, true);
-		#endif
+
+					DPRINT_PACKET(current_packet, true);
+
 					if(tx_packet_callback != 0)
 						tx_packet_callback(current_packet);
 

@@ -32,8 +32,10 @@
 
 #if defined(FRAMEWORK_LOG_ENABLED) && defined(MODULE_D7AP_DLL_LOG_ENABLED)
 #define DPRINT_DLL(...) log_print_stack_string(LOG_STACK_DLL, __VA_ARGS__)
+#define DPRINT_DATA_DLL(...) log_print_data(__VA_ARGS__)
 #else
 #define DPRINT_DLL(...)
+#define DPRINT_DATA_DLL(...)
 #endif
 
 #ifdef HAL_RADIO_USE_HW_CRC
@@ -67,17 +69,17 @@ void packet_assemble(packet_t* packet)
     // add CRC - SW CRC when using FEC
     if (!has_hardware_crc || packet->hw_radio_packet.tx_meta.tx_cfg.channel_id.channel_header.ch_coding == PHY_CODING_FEC_PN9)
     {
-    	log_print_data(packet->hw_radio_packet.data, packet->hw_radio_packet.length + 1); // TODO tmp
+    	DPRINT_DATA_DLL(packet->hw_radio_packet.data, packet->hw_radio_packet.length + 1); // TODO tmp
     	uint16_t crc = __builtin_bswap16(crc_calculate(packet->hw_radio_packet.data, packet->hw_radio_packet.length + 1 - 2));
     	memcpy(data_ptr, &crc, 2);
-    	log_print_data(packet->hw_radio_packet.data, packet->hw_radio_packet.length + 1); // TODO tmp
+    	DPRINT_DATA_DLL(packet->hw_radio_packet.data, packet->hw_radio_packet.length + 1); // TODO tmp
     }
 
 }
 
 void packet_disassemble(packet_t* packet)
 {
-    log_print_data(packet->hw_radio_packet.data, packet->hw_radio_packet.length + 1); // TODO tmp
+	DPRINT_DATA_DLL(packet->hw_radio_packet.data, packet->hw_radio_packet.length + 1); // TODO tmp
 
     if (packet->hw_radio_packet.rx_meta.crc_status == HW_CRC_UNAVAILABLE)
     {
@@ -85,8 +87,8 @@ void packet_disassemble(packet_t* packet)
         if(memcmp(&crc, packet->hw_radio_packet.data + packet->hw_radio_packet.length + 1 - 2, 2) != 0)
         {
             DPRINT_DLL("CRC invalid");
-            log_print_data(&crc, 2);
-            goto cleanup;
+            DPRINT_DATA_DLL(&crc, 2);
+            //goto cleanup;
         }
     }
     else if (packet->hw_radio_packet.rx_meta.crc_status == HW_CRC_INVALID)

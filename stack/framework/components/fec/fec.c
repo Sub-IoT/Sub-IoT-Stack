@@ -58,6 +58,14 @@ static VITERBISTATE vstate;
 
 static bool fec_decode(uint8_t* input);
 
+#if defined(FRAMEWORK_LOG_ENABLED) && defined(FRAMEWORK_PHY_LOG_ENABLED) // TODO more granular (LOG_PHY_ENABLED)
+#define DPRINT(...) log_print_stack_string(LOG_STACK_PHY, __VA_ARGS__)
+#define DPRINT_DATA(...) log_print_data(__VA_ARGS__)
+#else
+#define DPRINT(...)
+#define DPRINT_DATA(...)
+#endif
+
 //void print_array(uint8_t* buffer, uint8_t length)
 //	for (i = 0; i < length; i++)
 //void print_array(uint8_t* buffer, uint8_t length)
@@ -203,13 +211,13 @@ uint8_t fec_decode_packet(uint8_t* data, uint8_t packet_length, uint8_t output_l
 	uint8_t* output = data_buffer;
 	if(output_length < packet_length)
 	{
-		printf("FEC decoding error: buffer to small\n");
+		DPRINT("FEC decoding error: buffer to small\n");
 		return 0;
 	}
 
 	if(packet_length % 4 != 0)
 	{
-		printf("FEC decoding error: data 32 bit aligned\n");
+		DPRINT("FEC decoding error: data 32 bit aligned\n");
 		return 0;
 	}
 
@@ -240,7 +248,7 @@ uint8_t fec_decode_packet(uint8_t* data, uint8_t packet_length, uint8_t output_l
 		bool err = fec_decode(&data[i]);
 		decoded_length+=2;
 		if (!err)
-			printf("FEC encoding error\n");
+			DPRINT("FEC encoding error\n");
 	}
 
 	memcpy(data, data_buffer, decoded_length);
