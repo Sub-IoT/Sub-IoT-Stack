@@ -666,17 +666,13 @@ static void start_rx(hw_rx_cfg_t const* rx_cfg)
     configure_syncword_class(rx_cfg->syncword_class, rx_cfg->channel_id.channel_header.ch_coding);
 
     rx_fifo_data_lenght = 0;
-<<<<<<< HEAD
-    ezradioStartRx(ez_channel_id);
-=======
     if (rx_cfg->channel_id.channel_header.ch_coding == PHY_CODING_FEC_PN9)
     {
-    	ezradioStartRx((uint8_t) (current_channel_id.center_freq_index), false);
+    	ezradioStartRx(ez_channel_id, false);
     } else {
 
-    	ezradioStartRx((uint8_t) (current_channel_id.center_freq_index), true);
+    	ezradioStartRx(ez_channel_id, true);
     }
->>>>>>> fec working for most messages, ack is not received
 
     DEBUG_RX_START();
 
