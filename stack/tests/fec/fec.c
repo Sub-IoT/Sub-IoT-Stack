@@ -61,18 +61,22 @@ static bool fec_decode(uint8_t* input);
 #define DPRINT(...) printf(__VA_ARGS__)
 #define DPRINT_DATA(...) print_array(__VA_ARGS__)
 
-void print_array(uint8_t* buffer, uint8_t length)
+void print_array(uint8_t* buffer, uint8_t length, uint8_t binary)
 {
 	int i = 0;
 	for (; i < length; i++)
 	{
 	    printf("%02X", buffer[i]);
 	}
-	printf(" ");
 
-	for (i = 0; i < length; i++)
+	if (binary)
 	{
-		printf("%s", byte_to_binary(buffer[i]));
+		printf(" ");
+
+		for (i = 0; i < length; i++)
+		{
+			printf("%s", byte_to_binary(buffer[i]));
+		}
 	}
 }
 

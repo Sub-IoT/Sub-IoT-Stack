@@ -43,10 +43,11 @@ typedef struct {
 	VITERBIPATH states2[8];
 } VITERBISTATE;
 
-void print_array(uint8_t* buffer, uint8_t length);
+void print_array(uint8_t* buffer, uint8_t length, uint8_t binary);
 
 uint16_t fec_encode(uint8_t *data, uint16_t nbytes);
 uint8_t fec_decode_packet(uint8_t* data, uint8_t packet_length, uint8_t output_length);
+uint16_t fec_calculated_decoded_length(uint8_t packet_length);
 
 #ifdef __cplusplus
 }

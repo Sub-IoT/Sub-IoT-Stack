@@ -88,7 +88,7 @@ void packet_disassemble(packet_t* packet)
         {
             DPRINT_DLL("CRC invalid");
             DPRINT_DATA_DLL(&crc, 2);
-            //goto cleanup;
+            goto cleanup;
         }
     }
     else if (packet->hw_radio_packet.rx_meta.crc_status == HW_CRC_INVALID)

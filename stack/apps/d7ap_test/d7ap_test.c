@@ -66,7 +66,7 @@ void execute_sensor_measurement() {
     led_toggle(1);
 #endif
     // use the counter value for now instead of 'real' sensor
-    uint32_t val = 0; //timer_get_counter_value();
+    uint32_t val = timer_get_counter_value();
     // file 0x40 is configured to use D7AActP trigger an ALP action which 
     // broadcasts this file data on Access Class 0
     fs_write_file(0x40, 0, (uint8_t*)&val, 4);
@@ -121,7 +121,7 @@ void init_user_files() {
             .qos_ctrl_resp_mode           = SESSION_RESP_MODE_ANYCAST,
             .qos_ctrl_ack_not_void        = false,
             .qos_ack_period               = 1,
-            .qos_retry_single             = 1,
+            .qos_retry_single             = 3,
             .qos_retry_total              = 0
         },
         .dormant_timeout                  = 0,

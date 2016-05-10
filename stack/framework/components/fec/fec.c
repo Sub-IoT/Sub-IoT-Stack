@@ -121,6 +121,12 @@ static void print_vstate()
 
 }
 
+
+uint16_t fec_calculated_decoded_length(uint8_t packet_length)
+{
+	return 2* (packet_length + 2 - (packet_length % 2));
+}
+
 /* Convolutional encoder */
 uint16_t fec_encode(uint8_t *data, uint16_t nbytes)
 {

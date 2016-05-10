@@ -800,11 +800,6 @@ static void ezradio_int_callback()
 						if (rx_fifo_data_lenght == 0)
 						{
 							DPRINT("RX FIFO: %d", radioReplyLocal.FIFO_INFO.RX_FIFO_COUNT);
-							if (radioReplyLocal.FIFO_INFO.RX_FIFO_COUNT == 80)
-							{
-								ezradio_fifo_info(0, &radioReplyLocal);
-								DPRINT("RX FIFO: %d", radioReplyLocal.FIFO_INFO.RX_FIFO_COUNT);
-							}
 							uint8_t buffer[4];
 							ezradio_read_rx_fifo(4, buffer);
 							uint8_t length = buffer[0];
@@ -813,8 +808,7 @@ static void ezradio_int_callback()
 								uint8_t fec_buffer[4];
 								memcpy(fec_buffer, buffer, 4);
 								fec_decode_packet(fec_buffer, 4, 4);
-								length = fec_buffer[0]*2;
-								length += 4 - (length % 4);
+								length = fec_calculated_decoded_length(fec_buffer[0]+1);
 								DPRINT("RX Packet Length: %d / %d", fec_buffer[0], length);
 							}
 							rx_packet = alloc_packet_callback(length+1);
