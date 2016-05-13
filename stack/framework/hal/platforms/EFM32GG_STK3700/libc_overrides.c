@@ -54,6 +54,10 @@ void _exit(int exit)
 //and to repeat the error message repeatedly (so we have a chance to attach the device to a serial console before the error message is gone)
 void __assert_func( const char *file, int line, const char *func, const char *failedexpr)
 {
+#if defined FRAMEWORK_DEBUG_ASSERT_REBOOT // make sure this parameter is used also when including assert.h instead of debug.h
+        hw_reset();
+#endif
+
 	start_atomic();
 	led_on(0);
 	led_on(1);
