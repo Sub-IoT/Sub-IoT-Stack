@@ -84,13 +84,13 @@ static uart_pins_t location[UARTS][LOCATIONS] = {
 		},
 		{
 		  .location = USART_ROUTE_LOCATION_LOC5,
-		  .tx       = { .port = gpioPortC, .pin =  1 },
-		  .rx       = { .port = gpioPortC, .pin =  0 }
+		  .tx       = { .port = gpioPortC, .pin =  0 },
+		  .rx       = { .port = gpioPortC, .pin =  1 }
 		},
 		{
-		  .location = USART_ROUTE_LOCATION_LOC5,
-		  .tx       = { .port = gpioPortC, .pin =  1 },
-		  .rx       = { .port = gpioPortC, .pin =  0 }
+		  .location = USART_ROUTE_LOCATION_LOC6,
+		  .tx       = { .port = gpioPortC, .pin =  0 },
+		  .rx       = { .port = gpioPortC, .pin =  1 }
 		}
 	},
 	{
