@@ -776,6 +776,9 @@ static void ezradio_int_callback()
 						if (rx_fifo_data_lenght == 0)
 						{
 							rx_packet = alloc_packet_callback(radioReplyLocal.FIFO_INFO.RX_FIFO_COUNT);
+							ezradio_read_rx_fifo(1, &rx_packet->length);			
+							rx_packet->data[0] = buffer;							
+							rx_fifo_data_lenght++;
 						}
 
 			//            hw_radio_packet_t* packet = alloc_packet_callback(radioReplyLocal2.PACKET_INFO.LENGTH);
