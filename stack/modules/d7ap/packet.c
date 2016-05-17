@@ -87,7 +87,7 @@ void packet_disassemble(packet_t* packet)
         if(memcmp(&crc, packet->hw_radio_packet.data + packet->hw_radio_packet.length + 1 - 2, 2) != 0)
         {
             DPRINT_DLL("CRC invalid");
-            DPRINT_DATA_DLL(&crc, 2);
+            DPRINT_DATA_DLL((uint8_t*)&crc, 2);
             goto cleanup;
         }
     }
