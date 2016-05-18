@@ -227,7 +227,8 @@ int USBD_Init( const USBD_Init_TypeDef *p )
 
 #if !defined( USB_CORECLK_HFRCO ) || !defined( CMU_OSCENCMD_USHFRCOEN )
   /* Devices supporting crystal-less USB can use HFRCO or HFXO as core clock. */
-  /* All other devices must use HFXO as core clock.                           */
+  /* All other devices must use HFXO as core clock.
+                           */
   if ( CMU_ClockSelectGet( cmuClock_HF ) != cmuSelect_HFXO )
   {
     CMU_ClockSelectSet( cmuClock_HF, cmuSelect_HFXO );
