@@ -51,7 +51,7 @@ void _cc1101_gdo_isr(pin_id_t pin_id, uint8_t event_mask)
     //assert(event_mask == GPIO_FALLING_EDGE); // only using falling edge for now // TODO flank detection not supported on efm32gg for now
 
     _c1101_interface_set_interrupts_enabled(false);
-    sched_post_task(end_of_packet_isr_callback);
+    end_of_packet_isr_callback();
 }
 
 static spi_handle_t* spi;
@@ -61,8 +61,6 @@ static spi_slave_handle_t* spi_slave;
 void _cc1101_interface_init(end_of_packet_isr_t end_of_packet_isr_cb)
 {
     end_of_packet_isr_callback = end_of_packet_isr_cb;
-
-    sched_register_task(end_of_packet_isr_cb);
 
     spi = spi_init(CC1101_SPI_USART, CC1101_SPI_BAUDRATE, 8, true, CC1101_SPI_LOCATION);
     spi_slave = spi_init_slave(spi, CC1101_SPI_PIN_CS, true);
