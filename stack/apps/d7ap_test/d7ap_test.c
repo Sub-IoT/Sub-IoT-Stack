@@ -62,8 +62,8 @@
 #define REPORTING_INTERVAL_TICKS TIMER_TICKS_PER_SEC * REPORTING_INTERVAL
 
 void execute_sensor_measurement() {
-#if HW_NUM_LEDS > 1
-    led_toggle(1);
+#if HW_NUM_LEDS > 0
+    led_toggle(0);
 #endif
     // use the counter value for now instead of 'real' sensor
     uint32_t val = timer_get_counter_value();
@@ -72,6 +72,7 @@ void execute_sensor_measurement() {
     fs_write_file(0x40, 0, (uint8_t*)&val, 4);
     timer_post_task_delay(&execute_sensor_measurement, REPORTING_INTERVAL_TICKS);
 }
+
 
 void on_unsollicited_response_received(d7asp_result_t d7asp_result,
                                       uint8_t *alp_command, uint8_t alp_command_size,
