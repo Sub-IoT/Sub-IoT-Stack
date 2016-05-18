@@ -109,12 +109,12 @@ static uart_pins_t location[UARTS][LOCATIONS] = {
 		  // no LOCATION 0
 		  UNDEFINED_LOCATION,
     {
-      .location = UART_ROUTE_LOCATION_LOC1,
+      .location = USART_ROUTE_LOCATION_LOC1,
       .tx       = { .port = gpioPortD, .pin =  0 },
       .rx       = { .port = gpioPortD, .pin =  1 }
     },
     {
-      .location = UART_ROUTE_LOCATION_LOC2,
+      .location = USART_ROUTE_LOCATION_LOC2,
       .tx       = { .port = gpioPortD, .pin =  7 },
       .rx       = { .port = gpioPortD, .pin =  6 }
     },
@@ -322,23 +322,16 @@ void UART1_RX_IRQHandler(void) {
   }
 }
 
-void USART0_RX_IRQHandler(void) {
-  if(handle[2].channel->STATUS & UART_STATUS_RXDATAV) {
-    handler[2](USART_Rx(handle[2].channel));
-    USART_IntClear(handle[2].channel, UART_IF_RXDATAV);
-  }
-}
-
 void USART1_RX_IRQHandler(void) {
-  if(handle[3].channel->STATUS & UART_STATUS_RXDATAV) {
-    handler[3](USART_Rx(handle[3].channel));
-    USART_IntClear(handle[3].channel, UART_IF_RXDATAV);
+  if(handle[2].channel->STATUS & USART_STATUS_RXDATAV) {
+    handler[2](USART_Rx(handle[2].channel));
+    USART_IntClear(handle[2].channel, USART_IF_RXDATAV);
   }
 }
 
 void USART2_RX_IRQHandler(void) {
-  if(handle[4].channel->STATUS & UART_STATUS_RXDATAV) {
-    handler[4](USART_Rx(handle[4].channel));
-    USART_IntClear(handle[4].channel, UART_IF_RXDATAV);
+  if(handle[3].channel->STATUS & USART_STATUS_RXDATAV) {
+    handler[3](USART_Rx(handle[3].channel));
+    USART_IntClear(handle[3].channel, USART_IF_RXDATAV);
   }
 }
