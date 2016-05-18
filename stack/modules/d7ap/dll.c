@@ -488,6 +488,7 @@ void dll_init()
 
 void dll_tx_frame(packet_t* packet, dae_access_profile_t* access_profile)
 {
+    hw_radio_set_idle();
     current_access_profile = access_profile;
     dll_header_t* dll_header = &(packet->dll_header);
     dll_header->subnet = access_profile->subnet;

@@ -151,8 +151,8 @@ static void switch_to_idle_mode()
 {
     DPRINT("Switching to HW_RADIO_STATE_IDLE");
     //Flush FIFOs and go to sleep, ensure interrupts are disabled
-    current_state = HW_RADIO_STATE_IDLE;
     cc1101_interface_set_interrupts_enabled(false);
+    current_state = HW_RADIO_STATE_IDLE;
     cc1101_interface_strobe(RF_SFRX); // TODO cc1101 datasheet : Only issue SFRX in IDLE or RXFIFO_OVERFLOW states
     cc1101_interface_strobe(RF_SFTX); // TODO cc1101 datasheet : Only issue SFTX in IDLE or TXFIFO_UNDERFLOW states.
     cc1101_interface_strobe(RF_SIDLE);
@@ -461,7 +461,9 @@ static void start_rx(hw_rx_cfg_t const* rx_cfg)
 
     DEBUG_RX_START();
     if(rx_packet_callback != 0) // when rx callback not set we ignore received packets
-		cc1101_interface_set_interrupts_enabled(true);
+      cc1101_interface_set_interrupts_enabled(true);
+    else
+      cc1101_interface_set_interrupts_enabled(false);
 
 	// TODO when only rssi callback set the packet handler is still active and we enter in RXFIFOOVERFLOW, find a way to around this
 
