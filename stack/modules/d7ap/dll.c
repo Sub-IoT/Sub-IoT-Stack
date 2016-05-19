@@ -43,7 +43,7 @@ typedef enum
     DLL_STATE_IDLE,
     DLL_STATE_SCAN_AUTOMATION,
     DLL_STATE_CSMA_CA_STARTED,
-	DLL_STATE_CSMA_CA_RETRY,
+    DLL_STATE_CSMA_CA_RETRY,
     DLL_STATE_CCA1,
     DLL_STATE_CCA2,
     DLL_STATE_CCA_FAIL,
@@ -87,6 +87,9 @@ static uint16_t NGDEF(_dll_rigd_n);
 
 static uint32_t NGDEF(_dll_cca_started);
 #define dll_cca_started NG(_dll_cca_started)
+
+static bool NGDEF(_process_received_packets_after_tx);
+#define process_received_packets_after_tx NG(_process_received_packets_after_tx)
 
 // TODO defined somewhere?
 #define t_g	5
@@ -169,15 +172,39 @@ static void switch_state(dll_state_t next_state)
     }
 }
 
+static bool is_tx_busy()
+{
+    switch(dll_state)
+    {
+        case DLL_STATE_CSMA_CA_STARTED:
+        case DLL_STATE_CSMA_CA_RETRY:
+        case DLL_STATE_CCA1:
+        case DLL_STATE_CCA2:
+        case DLL_STATE_CCA_FAIL:
+        case DLL_STATE_TX_FOREGROUND:
+        case DLL_STATE_TX_FOREGROUND_COMPLETED:
+            return true;
+        default:
+            return false;
+    }
+}
+
 static void process_received_packets()
 {
+    if(is_tx_busy())
+    {
+        // this task might be scheduled while a TX is busy (for example after scheduling an execute_cca()).
+        // make sure we don't start processing this packet before the TX is completed.
+        // will be rescheduled by packet_transmitted() or an CSMA failed.
+        process_received_packets_after_tx = true;
+        return;
+    }
+
     packet_t* packet = packet_queue_get_received_packet();
     assert(packet != NULL);
     DPRINT("Processing received packet");
     packet_queue_mark_processing(packet);
     packet_disassemble(packet);
-
-    return;
 
     // TODO check if more received packets are pending
 }
@@ -200,6 +227,12 @@ static void packet_transmitted(hw_radio_packet_t* hw_radio_packet)
     DPRINT("Transmitted packet with length = %i", hw_radio_packet->length);
     packet_t* packet = packet_queue_find_packet(hw_radio_packet);
     d7atp_signal_packet_transmitted(packet);
+
+    if(process_received_packets_after_tx)
+    {
+        sched_post_task(&process_received_packets);
+        process_received_packets_after_tx = false;
+    }
 }
 
 static void execute_cca();
@@ -417,8 +450,13 @@ static void execute_csma_ca()
         case DLL_STATE_CCA_FAIL:
         {
             // TODO hw_radio_set_idle();
-        	switch_state(DLL_STATE_IDLE);
+            switch_state(DLL_STATE_IDLE);
             d7atp_signal_packet_csma_ca_insertion_completed(false);
+            if(process_received_packets_after_tx)
+            {
+                sched_post_task(&process_received_packets);
+                process_received_packets_after_tx = false;
+            }
             break;
         }
     }
@@ -483,6 +521,7 @@ void dll_init()
 
     dll_state = DLL_STATE_IDLE;
     active_access_class = NO_ACTIVE_ACCESS_CLASS;
+    process_received_packets_after_tx = false;
     sched_post_task(&dll_execute_scan_automation);
 }
 
