@@ -466,7 +466,7 @@ static void start_rx(hw_rx_cfg_t const* rx_cfg)
           cc1101_interface_strobe(RF_SFRX);
       }
 
-      assert(counter++ < 100) // TODO measure value in normal case
+      assert(counter++ < 100); // TODO measure value in normal case
     } while(status != 0x1F);
 
     DEBUG_RX_START();
