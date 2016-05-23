@@ -176,8 +176,10 @@ static inline int16_t convert_rssi(int8_t rssi_raw)
 static void ensure_settling_and_calibration_done()
 {
     uint8_t status = (cc1101_interface_strobe(RF_SNOP)) & 0x70;
+    uint8_t counter = 0;
     while ((status == 0x40) || (status == 0x50))
     {
+        assert(counter++ < 100); // TODO measure in normal case
         hw_busy_wait(10);
         status = cc1101_interface_strobe(RF_SNOP);
     }
@@ -454,9 +456,17 @@ static void start_rx(hw_rx_cfg_t const* rx_cfg)
     // cc1101_interface_strobe(RF_SFRX); TODO only when in idle or overflow state
 
     uint8_t status;
+    uint8_t counter = 0;
     do
     {
     	status = cc1101_interface_strobe(RF_SRX);
+      if(status == 0x6F)
+      {
+          // RX FIFO overflow, flush first
+          cc1101_interface_strobe(RF_SFRX);
+      }
+
+      assert(counter++ < 100) // TODO measure value in normal case
     } while(status != 0x1F);
 
     DEBUG_RX_START();
