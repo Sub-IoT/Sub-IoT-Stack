@@ -27,6 +27,8 @@
 #ifndef SHELL_H_
 #define SHELL_H_
 
+#include "framework_defs.h"
+
 #define SHELL_CMD_HEADER_SIZE 4
 
 #include "link_c.h"
@@ -40,11 +42,23 @@ typedef struct {
     cmd_handler_t cmd_handler_callback;
 } cmd_handler_registration_t;
 
+#ifdef FRAMEWORK_SHELL_ENABLED
+
 void shell_init();
 void shell_echo_enable();
 void shell_echo_disable();
 void shell_register_handler(cmd_handler_registration_t handler_registration);
 void shell_return_output(uint8_t origin, uint8_t* data, uint8_t length);
+
+#else
+
+#define shell_init()                  ((void)0)
+#define shell_echo_enable()           ((void)0)
+#define shell_echo_disable()          ((void)0)
+#define shell_register_handler(...)   ((void)0)
+#define shell_return_output(...)      ((void)0)
+
+#endif
 
 #endif /* SHELL_H_ */
 
