@@ -9,9 +9,10 @@
 
 #include "hwuart.h"
 
+#include "framework_defs.h"
 #include "platform.h"
 
-#ifdef CONSOLE_UART
+#ifdef FRAMEWORK_CONSOLE_ENABLED
 
 __LINK_C void console_init(void);
 __LINK_C void console_enable(void);
@@ -25,25 +26,6 @@ __LINK_C void console_print(char* string);
 __LINK_C void console_set_rx_interrupt_callback(uart_rx_inthandler_t handler);
 __LINK_C void console_rx_interrupt_enable();
 
-#else
-
-// no uart config
-
-#ifndef NO_CONSOLE
-#pragma message "WARNING: no console configuration found !!!"
-#endif
-
-#define console_init()
-#define console_enable()
-#define console_dissable()
-#define console_print_byte(...)
-#define console_print_bytes(...)
-#define console_print(...)
-#define console_set_rx_interrupt_callback(...);
-#define console_rx_interrupt_enable();
-
-#endif
-
 // a few utilty wrappers
 
 #define console_printf(...) printf(__VA_ARGS__); fflush(stdout)
@@ -51,10 +33,33 @@ __LINK_C void console_rx_interrupt_enable();
 #define TRY_LABEL_LENGTH 25
 
 #define TRY(msg, cmd) \
+{\
   console_print("+++ "msg"... ");                           \
   for(uint8_t i=0; i<TRY_LABEL_LENGTH-strlen(msg); i++) {   \
     console_print_byte(' ');                                \
-  }                                                         \
-  console_print( cmd ? "OK\r\n" : "FAIL\r\n" );
+  } \
+  bool outcome = cmd;                                       \
+  console_print( outcome ? "OK\r\n" : "FAIL\r\n" );\
+}
+#else
+
+// no uart config
+#pragma message "WARNING: no console configuration found !!!"
+
+#define console_init()                         ((void)0)
+#define console_enable()                       ((void)0)
+#define console_dissable()                     ((void)0)
+
+#define console_print_byte(...)                ((void)0)
+#define console_print_bytes(...)               ((void)0)
+#define console_print(...)                     ((void)0)
+
+#define console_set_rx_interrupt_callback(...) ((void)0)
+#define console_rx_interrupt_enable()          ((void)0)
+
+#define console_printf(...)                    ((void)0)
+#define TRY(msg, cmd) cmd
+
+#endif
 
 #endif

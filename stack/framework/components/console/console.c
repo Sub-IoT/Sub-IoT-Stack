@@ -3,11 +3,12 @@
 
 #include "hwuart.h"
 
+#include "framework_defs.h"
 #include "platform.h"
 
 #include "console.h"
 
-#ifdef CONSOLE_UART
+#ifdef FRAMEWORK_CONSOLE_ENABLED
 
 static uart_handle_t* uart;
 
@@ -16,14 +17,12 @@ void console_init(void) {
   uart_enable(uart);
 }
 
-void console_enable(void)
-{
-	uart_enable(uart);
+void console_enable(void) {
+  uart_enable(uart);
 }
 
-void console_disable(void)
-{
-	uart_disable(uart);
+void console_disable(void) {
+  uart_disable(uart);
 }
 
 inline void console_print_byte(uint8_t byte) {
@@ -45,6 +44,5 @@ inline void console_set_rx_interrupt_callback(uart_rx_inthandler_t uart_rx_cb) {
 inline void console_rx_interrupt_enable() {
   uart_rx_interrupt_enable(uart);
 }
-
 
 #endif
