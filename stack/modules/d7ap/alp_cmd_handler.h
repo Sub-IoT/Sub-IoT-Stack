@@ -39,11 +39,11 @@ typedef void (*alp_cmd_handler_appl_itf_callback)(uint8_t* alp_command, uint8_t 
 void alp_cmd_handler(fifo_t* cmd_fifo);
 
 ///
-/// \brief Process the ALP command against the local FS and returns the output using the shell interface.
+/// \brief Output ALP command to the shell interface
 /// \param alp_command
-/// \param alp_command_length
+/// \param alp_command_len
 ///
-void alp_cmd_handler_process_fs_itf(uint8_t* alp_command, uint8_t alp_command_length);
+void alp_cmd_handler_output_alp_command(uint8_t *alp_command, uint8_t alp_command_len);
 
 ///
 /// \brief Output received unsollicited response to the shell interface

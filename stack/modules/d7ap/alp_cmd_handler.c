@@ -23,7 +23,7 @@
 #include "alp_cmd_handler.h"
 
 #define ALP_CMD_HANDLER_HEADER_SIZE 2 // <ALP interface ID> <Length byte>
-
+#define ALP_CMD_MAX_SIZE 0xFF
 
 #include "types.h"
 #include "alp.h"
@@ -36,70 +36,59 @@
 static alp_cmd_handler_appl_itf_callback NGDEF(_alp_cmd_handler_appl_itf_cb);
 #define alp_cmd_handler_appl_itf_cb NG(_alp_cmd_handler_appl_itf_cb)
 
+#define SERIAL_ALP_FRAME_SYNC_BYTE 0xC0
+#define SERIAL_ALP_FRAME_VERSION   0x00
+
 void alp_cmd_handler(fifo_t* cmd_fifo)
 {
-    // AT$D<ALP interface ID><Length byte><ALP interface config><ALP command>
-    // interface: 0xD7 = D7ASP, 0x00 = own filesystem, 0x01 = application
-    // interface config: D7ASP fifo config in case of interface 0xD7, void for interface 0x00 and 0x01
-    // where length is the length of interface config and ALP command
+    // AT$D<serial ALP command>
+    // where <serial ALP command> is constructed as follows:
+    // <sync byte (0xC0)><version (0x00)><length of ALP command (1 byte)><ALP command> // TODO CRC
+    // TODO other commands (AT$D to return ALP status)
     if(fifo_get_size(cmd_fifo) > SHELL_CMD_HEADER_SIZE + 2)
     {
-        uint8_t alp_command[ALP_CMD_HANDLER_HEADER_SIZE + MODULE_D7AP_FIFO_COMMAND_BUFFER_SIZE] = { 0x00 };
-        fifo_peek(cmd_fifo, alp_command, SHELL_CMD_HEADER_SIZE, ALP_CMD_HANDLER_HEADER_SIZE);
-        uint8_t alp_interface_id = alp_command[0];
-        assert(alp_interface_id == ALP_ITF_ID_FS
-               || alp_interface_id == ALP_ITF_ID_D7ASP
-               || alp_interface_id == ALP_ITF_ID_APP);
-
-        uint8_t length = alp_command[1];
-        if(fifo_get_size(cmd_fifo) < SHELL_CMD_HEADER_SIZE + ALP_CMD_HANDLER_HEADER_SIZE + length)
-            return; // ALP command not complete yet, don't pop
-
-        fifo_pop(cmd_fifo, alp_command, SHELL_CMD_HEADER_SIZE + ALP_CMD_HANDLER_HEADER_SIZE + length);
-        uint8_t* payload = alp_command + SHELL_CMD_HEADER_SIZE + ALP_CMD_HANDLER_HEADER_SIZE;
-        if(alp_interface_id == ALP_ITF_ID_D7ASP)
+        uint8_t byte;
+        fifo_peek(cmd_fifo, &byte, SHELL_CMD_HEADER_SIZE, 1);
+        if(byte == SERIAL_ALP_FRAME_SYNC_BYTE)
         {
-            // parse D7ASP fifo config
-            uint8_t* ptr = payload;
-            d7asp_fifo_config_t fifo_config;
-            fifo_config.fifo_ctrl = (*ptr); ptr++;
-            memcpy(&(fifo_config.qos), ptr, 4); ptr += 4;
-            fifo_config.dormant_timeout = (*ptr); ptr++;
-            fifo_config.start_id = (*ptr); ptr++;
-            memcpy(&(fifo_config.addressee), ptr, 9); ptr += 9;
-            uint8_t alp_command_length = length - D7ASP_FIFO_CONFIG_SIZE;
+            fifo_peek(cmd_fifo, &byte, SHELL_CMD_HEADER_SIZE + 1, 1);
+            assert(byte == SERIAL_ALP_FRAME_VERSION); // only version 0 implemented for now // TODO pop and return error
+            uint8_t alp_command_len;
+            fifo_peek(cmd_fifo, &alp_command_len, SHELL_CMD_HEADER_SIZE + 2, 1);
+            if(fifo_get_size(cmd_fifo) < SHELL_CMD_HEADER_SIZE + 2 + alp_command_len)
+                return; // ALP command not complete yet, don't pop
 
-            // queue ALP command
-            d7asp_queue_alp_actions(&fifo_config, ptr, alp_command_length);
+            uint8_t alp_command[ALP_CMD_MAX_SIZE] = { 0x00 };
+            fifo_pop(cmd_fifo, alp_command, SHELL_CMD_HEADER_SIZE + 3); // pop header
+            fifo_pop(cmd_fifo, alp_command, alp_command_len); // pop full ALP command
+
+            uint8_t alp_response[ALP_CMD_MAX_SIZE] = { 0x00 };
+            uint8_t alp_response_len = 0;
+            alp_process_command_host(alp_command, alp_command_len, alp_response, &alp_response_len);
+            // TODO assuming FS now, refactor to general ALP handler
+
+            alp_cmd_handler_output_alp_command(alp_response, alp_response_len);
         }
-        else if(alp_interface_id == ALP_ITF_ID_FS)
+        else
         {
-            alp_cmd_handler_process_fs_itf(payload, length);
+            assert(false); // TODO
         }
-        else if(alp_interface_id == ALP_ITF_ID_APP)
-        {
-            if(alp_cmd_handler_appl_itf_cb != NULL)
-              alp_cmd_handler_appl_itf_cb(payload, length);
-        }
+
+//        else if(alp_interface_id == ALP_ITF_ID_APP)
+//        {
+//            if(alp_cmd_handler_appl_itf_cb != NULL)
+//              alp_cmd_handler_appl_itf_cb(payload, length);
+//        }
     }
 }
 
-void alp_cmd_handler_process_fs_itf(uint8_t* alp_command, uint8_t alp_command_length)
+void alp_cmd_handler_output_alp_command(uint8_t *alp_command, uint8_t alp_command_len)
 {
-    uint8_t serial_interface_frame[128] = { 0x00 };
-    uint8_t* ptr = serial_interface_frame;
-
-    (*ptr) = 0xC0; ptr++;               // serial interface sync byte
-    (*ptr) = 0x00; ptr++;               // serial interface version
-
-    uint8_t alp_reponse_length = 0;
-    alp_process_command_fs_itf(alp_command, alp_command_length, ptr + 1, &alp_reponse_length);
-
-    if(alp_reponse_length > 0)
-    {
-        (*ptr) = alp_reponse_length;
-        console_print_bytes(serial_interface_frame, alp_reponse_length + 3);
-    }
+    console_print_byte(SERIAL_ALP_FRAME_SYNC_BYTE);
+    console_print_byte(SERIAL_ALP_FRAME_VERSION);
+    console_print_byte(alp_command_len);
+    console_print_bytes(alp_command, alp_command_len);
+    // TODO crc?
 }
 
 static uint8_t append_interface_status_action(d7asp_result_t* d7asp_result, uint8_t* ptr)
@@ -122,6 +111,7 @@ static uint8_t append_interface_status_action(d7asp_result_t* d7asp_result, uint
 
 void alp_cmd_handler_output_unsollicited_response(d7asp_result_t d7asp_result, uint8_t *alp_command, uint8_t alp_command_size)
 {
+    // TODO refactor, move partly to alp + call from SP when shell enabled instead of from app
     uint8_t data[MODULE_D7AP_FIFO_COMMAND_BUFFER_SIZE] = { 0x00 };
     uint8_t* ptr = data;
 

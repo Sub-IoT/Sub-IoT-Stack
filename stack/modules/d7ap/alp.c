@@ -34,11 +34,11 @@ alp_operation_t alp_get_operation(uint8_t* alp_command)
     return alp_ctrl.operation;
 }
 
-bool alp_process_command_fs_itf(uint8_t* alp_command, uint8_t alp_command_length, uint8_t* alp_response, uint8_t* alp_response_length)
+bool alp_process_command_host(uint8_t* alp_command, uint8_t alp_command_length, uint8_t* alp_response, uint8_t* alp_response_length)
 {
     (*alp_response_length) = 0;
-    if(alp_command_length ==0)
-      return;
+    if(alp_command_length == 0)
+      return false;
 
     // TODO check response length
     alp_control_t alp_control = { .raw = (*alp_command) }; alp_command++;

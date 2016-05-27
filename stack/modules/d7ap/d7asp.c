@@ -319,7 +319,7 @@ bool d7asp_process_received_packet(packet_t* packet)
                 // build response, we will reuse the same packet for this
                 // we will first try to process the command against the local FS
                 // if the FS handler cannot process this, and a status response is requested, a status operand will be present in the response payload
-                bool handled = alp_process_command_fs_itf(packet->payload, packet->payload_length, packet->payload, &packet->payload_length);
+                bool handled = alp_process_command_host(packet->payload, packet->payload_length, packet->payload, &packet->payload_length);
 
                 // ... and if not handled we'll give the application a chance to handle this by returning an ALP response.
                 // if the application fails to handle the request as well the ALP status operand supplied by alp_process_command_fs_itf() will be transmitted (if requested)

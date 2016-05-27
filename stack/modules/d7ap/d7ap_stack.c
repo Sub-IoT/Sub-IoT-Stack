@@ -43,7 +43,10 @@ void d7ap_stack_init(fs_init_args_t* fs_init_args, d7asp_init_args_t* d7asp_init
         alp_cmd_handler_set_appl_itf_callback(alp_cmd_handler_appl_itf_cb);
 
         // notify booted to serial
-        alp_cmd_handler_process_fs_itf(read_firmware_version_alp_command, sizeof(read_firmware_version_alp_command));
+        uint8_t alp_response[20];
+        uint8_t alp_response_len = 0;
+        alp_process_command_host(read_firmware_version_alp_command, sizeof(read_firmware_version_alp_command), alp_response, &alp_response_len);
+        alp_cmd_handler_output_alp_command(alp_response, alp_response_len);
 #endif
     }
     else

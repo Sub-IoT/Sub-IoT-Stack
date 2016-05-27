@@ -123,7 +123,7 @@ typedef struct {
 alp_operation_t alp_get_operation(uint8_t* alp_command);
 
 /*!
- * \brief Process the ALP command against the local FS
+ * \brief Process the ALP command against the local host FS
  *
  * Note: alp_command and alp_response may point to the same buffer
  * \param alp_command   The raw command
@@ -132,7 +132,7 @@ alp_operation_t alp_get_operation(uint8_t* alp_command);
  * \param alp_response_length The length of the response
  * \return If the ALP command was processed correctly or not
  */
-bool alp_process_command_fs_itf(uint8_t* alp_command, uint8_t alp_command_length, uint8_t* alp_response, uint8_t* alp_response_length);
+bool alp_process_command_host(uint8_t* alp_command, uint8_t alp_command_length, uint8_t* alp_response, uint8_t* alp_response_length);
 
 /*! \brief Process a received request and replaces the packet's payload with the response payload.
  *  ALP commands which cannot be handled by the stack are vectored to the application layer
