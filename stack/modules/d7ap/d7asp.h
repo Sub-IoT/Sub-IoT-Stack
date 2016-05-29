@@ -92,7 +92,7 @@ typedef struct {
 
 typedef struct {
     channel_id_t channel;
-    int8_t rx_level;
+    uint8_t rx_level;
     uint8_t link_budget;
     d7asp_state_t status;
     uint8_t fifo_token;
