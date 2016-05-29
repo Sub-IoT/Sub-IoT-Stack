@@ -40,10 +40,16 @@
 #include "console.h"
 
 #include "platform.h"
+#include "ng.h"
 
-static uint8_t cmd_buffer[CMD_BUFFER_SIZE] = { 0 };
-static fifo_t cmd_fifo;
-static cmd_handler_registration_t cmd_handler_registrations[CMD_HANDLER_REGISTRATIONS_COUNT];
+static uint8_t NGDEF(_cmd_buffer)[CMD_BUFFER_SIZE] = { 0 };
+#define cmd_buffer NG(_cmd_buffer)
+
+static fifo_t NGDEF(_cmd_fifo);
+#define cmd_fifo NG(_cmd_fifo)
+
+static cmd_handler_registration_t NGDEF(_cmd_handler_registrations)[CMD_HANDLER_REGISTRATIONS_COUNT];
+#define cmd_handler_registrations NG(_cmd_handler_registrations)
 
 static bool echo = false;
 
