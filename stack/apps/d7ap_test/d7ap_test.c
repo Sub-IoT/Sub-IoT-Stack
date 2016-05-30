@@ -62,8 +62,8 @@
 #define REPORTING_INTERVAL_TICKS TIMER_TICKS_PER_SEC * REPORTING_INTERVAL
 
 void execute_sensor_measurement() {
-#if HW_NUM_LEDS > 0
-    led_toggle(0);
+#if HW_NUM_LEDS > 1
+    led_toggle(1);
 #endif
     // use the counter value for now instead of 'real' sensor
     uint32_t val = timer_get_counter_value();
