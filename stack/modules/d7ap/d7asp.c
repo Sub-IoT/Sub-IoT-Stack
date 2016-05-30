@@ -262,6 +262,7 @@ bool d7asp_process_received_packet(packet_t* packet)
         .channel = packet->hw_radio_packet.rx_meta.rx_cfg.channel_id,
         .rx_level =  - packet->hw_radio_packet.rx_meta.rssi,
         .link_budget = (packet->dll_header.control_eirp_index + 32) - packet->hw_radio_packet.rx_meta.rssi,
+        .target_rx_level = 80, // TODO not implemented yet, use default for now
         .status = {
             .ucast = 0, // TODO
             .nls = packet->d7anp_ctrl.origin_addressee_ctrl_nls_enabled,

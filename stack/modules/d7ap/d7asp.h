@@ -94,6 +94,7 @@ typedef struct {
     channel_id_t channel;
     uint8_t rx_level;
     uint8_t link_budget;
+    uint8_t target_rx_level;
     d7asp_state_t status;
     uint8_t fifo_token;
     uint8_t seqnr;
