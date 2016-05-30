@@ -1,0 +1,42 @@
+################################################################################
+# This confidential and proprietary software may be used only as authorized 
+#                      by a licensing agreement from                           
+#                               Cortus S.A.
+#
+#                    (C) Copyright 2006, 2013 Cortus S.A.
+#                          ALL RIGHTS RESERVED
+#
+# The entire notice above must be reproduced on all authorized copies
+# and any such reproduction must be pursuant to a licensing agreement 
+# from Cortus S.A. (http://www.cortus.com)
+#
+# $CortusRelease$
+# $FileName$
+#
+################################################################################
+
+OBJDIR 	?= ../Release/.o
+CFLAGS 	?= -g -Wall -Os
+INCLUDES ?= -I../../include
+
+CSRCS = $(wildcard *.c)
+ASRCS = $(wildcard *.S)
+
+COBJS = $(patsubst %.c,$(OBJDIR)/%.o,$(CSRCS))
+AOBJS = $(patsubst %.S,$(OBJDIR)/%.o,$(ASRCS))
+
+all: .depends $(OBJDIR) $(AOBJS) $(COBJS)
+
+.depends depends: ${CSRCS} ${ASRCS}
+	${CC} -MM ${CSRCS} ${ASRCS} >.depends
+
+$(OBJDIR):
+	mkdir -p $(OBJDIR)
+
+$(OBJDIR)/%.o: %.S
+	$(CC) $(CFLAGS) $(INCLUDES) -c -o $@ $<
+
+$(OBJDIR)/%.o: %.c
+	$(CC) $(CFLAGS) $(INCLUDES) -c -o $@ $<
+
+

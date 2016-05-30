@@ -1,0 +1,50 @@
+################################################################################
+# This confidential and proprietary software may be used only as authorized 
+#                      by a licensing agreement from                           
+#                               Cortus S.A.
+#
+#                    (C) Copyright 2006, 2013 Cortus S.A.
+#                          ALL RIGHTS RESERVED
+#
+# The entire notice above must be reproduced on all authorized copies
+# and any such reproduction must be pursuant to a licensing agreement 
+# from Cortus S.A. (http://www.cortus.com)
+#
+################################################################################
+
+################################################################################
+#
+# Main top level Makefile for Cortus mini clib for use outside Eclipse
+#   Variables which have to be defined:-
+#     CC       
+# 
+# Variables for which may be overriden, but reasonable defaults are provided
+#     LIBDIR   .
+#     CFLAGS   -g -Wall -Os -fno-lto
+#     AR       aps-ar
+#
+################################################################################
+
+# Subdirectories making up libc
+DIRS = errno stdio stdlib string unistd setjmp
+
+# These are expected to be overriden
+export LIBDIR	?= ../Release
+export CFLAGS   ?= -g -Wall -Os -fno-lto
+export AR      	?= aps-ar
+
+# These should be OK
+export OBJDIR   = ../Release/.o
+export INCLUDES = -I../../include
+
+all: 
+	@for dir in ${DIRS} ; do (cd $$dir && ${MAKE} -f ../Make.subdir "OBJDIR=../$${LIBDIR}/.o" $@); done
+	cd ${LIBDIR}; ${AR} rs libg.a .o/*.o
+	cd ${LIBDIR}; cp -a libg.a libc.a; 
+
+clean:
+	rm -rf ${LIBDIR}/.o
+
+distclean: 
+	rm -rf ../Release
+
