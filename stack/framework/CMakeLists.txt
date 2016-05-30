@@ -56,7 +56,10 @@ FRAMEWORK_HEADER_DEFINE(BOOL FRAMEWORK_DEBUG_ASSERT_MINIMAL)
 SET(FRAMEWORK_DEBUG_ASSERT_REBOOT "FALSE" CACHE BOOL "When enabled the system will reboot upon assert")
 FRAMEWORK_HEADER_DEFINE(BOOL FRAMEWORK_DEBUG_ASSERT_REBOOT)
 
-SET(FRAMEWORK_SHELL_ENABLED "TRUE" CACHE BOOL "Configures if the serial console is enabled")
+SET(FRAMEWORK_CONSOLE_ENABLED "TRUE" CACHE BOOL "Configures if the serial console is enabled")
+FRAMEWORK_HEADER_DEFINE(BOOL FRAMEWORK_CONSOLE_ENABLED)
+
+SET(FRAMEWORK_SHELL_ENABLED "TRUE" CACHE BOOL "Configures if the shell over console is enabled")
 FRAMEWORK_HEADER_DEFINE(BOOL FRAMEWORK_SHELL_ENABLED)
 
 SET(FRAMEWORK_TIMER_STACK_SIZE "10" CACHE STRING "The number of simultaneous timer events that can be scheduled. Increase this if you have lots of concurrent timers")
