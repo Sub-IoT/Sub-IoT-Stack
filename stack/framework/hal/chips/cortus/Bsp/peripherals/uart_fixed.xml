@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--DOCTYPE peripheral SYSTEM "Peripheral.dtd"-->
+<peripheral type="uart_fixed">
+	<folder name="Transmission">
+		<register offset="0x00" name="tx_data" property="w" display="i" description="Transmit data fifo"/>
+		<register offset="0x04" name="tx_status" property="r" display="b6" description=""/>
+		<register offset="0x08" name="tx_mask" property="rw" display="b6" description="Transmit interrupt mask"/>
+	</folder>
+	<folder name="Reception">
+		<register offset="0x10" name="rx_data" property="r" display="i" description="Receive data fifo"/>
+		<register offset="0x14" name="rx_status" property="r" display="b6" description=""/>
+		<register offset="0x18" name="rx_mask" property="rw" display="b6" description="Receive interrupt mask"/>
+		<register offset="0x1c" name="rx_timeout" property="rw" display="i" description="Timeout value"/>
+	</folder>
+</peripheral>

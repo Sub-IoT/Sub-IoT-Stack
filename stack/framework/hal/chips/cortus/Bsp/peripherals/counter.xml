@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--DOCTYPE peripheral SYSTEM "Peripheral.dtd"-->
+<peripheral type="counter">
+	<register offset="0x08" name="expired" property="rw" display="b1" description="Has the counter expired (reached zero and been reloaded) since last time this was reset?"/>
+	<register offset="0x0c" name="mask" property="rw" display="b2" description="Interrupt mask/interrupt enable"/>
+	<register offset="0x00" name="value" property="rw" display="i" description="Current value - counts down once each clock tick"/>
+	<register offset="0x04" name="reload" property="rw" display="i" description="Reload value"/>
+</peripheral>

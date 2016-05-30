@@ -1,0 +1,35 @@
+################################################################################
+#
+#                    (C) Copyright 2006, Cortus S.A.
+#                          ALL RIGHTS RESERVED
+#                         http://www.cortus.com
+#
+# $CortusRelease$
+# $FileName$
+#
+################################################################################
+
+# This is intended to be used by the debugger to 
+# reset various hardware registers
+
+# Limit backtrace
+set backtrace limit 10
+
+# Reset interrupt controller [0..7] inclusive
+set *(unsigned*)0x40000000=0
+set *(unsigned*)0x40000004=0
+set *(unsigned*)0x40000008=0
+set *(unsigned*)0x4000000c=0
+set *(unsigned*)0x40000010=0
+set *(unsigned*)0x40000014=0
+set *(unsigned*)0x40000018=0
+set *(unsigned*)0x4000001c=0
+
+# Reset timer: value, reload, expired, mask
+set *(unsigned*)0x40002000=0xffffffff
+set *(unsigned*)0x40002004=0xffffffff
+set *(unsigned*)0x40002008=0
+set *(unsigned*)0x4000200c=0
+
+# Clear jtag debug control register
+set *(unsigned*)0x50000000=0

@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--DOCTYPE peripheral SYSTEM "Peripheral.dtd"-->
+<peripheral type="timer">
+	<register offset="0x00" name="period" property="rw" display="i" description="Limit value"/>
+	<register offset="0x04" name="prescaler" property="rw" display="b2" description=""/>
+	<register offset="0x08" name="tclk_sel" property="rw" display="b2" />
+	<register offset="0x0C" name="enable" property="rw" display="b1" description="Is the timer enabled?"/>
+	<register offset="0x10" name="status" property="rw" display="x" description="Has the timer expired since last time this was reset?"/>
+	<register offset="0x14" name="mask" property="rw" display="x" description="Interrupt mask/interrupt enable"/>
+</peripheral>

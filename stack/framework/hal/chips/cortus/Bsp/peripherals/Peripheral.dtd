@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!ATTLIST peripheral type CDATA #REQUIRED>
+<!ELEMENT peripheral (folder*,register*)>
+
+<!ELEMENT folder (register*)>
+<!ATTLIST folder name CDATA #REQUIRED>
+
+<!ELEMENT register (bit*)>
+<!ATTLIST register 
+		offset 		CDATA #REQUIRED
+		name		CDATA #REQUIRED
+		property 	CDATA #REQUIRED
+		display 	CDATA #REQUIRED
+		description CDATA #IMPLIED>
+		
+<!ELEMENT bit (#PCDATA)>
+<!ATTLIST bit
+		number		CDATA #IMPLIED
+		description	CDATA #IMPLIED
+		true		CDATA #IMPLIED
+		false		CDATA #IMPLIED
+		values		CDATA #IMPLIED>

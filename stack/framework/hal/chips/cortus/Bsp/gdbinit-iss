@@ -1,0 +1,195 @@
+################################################################################
+#
+#                   (C) Copyright 2006, 2008 Cortus S.A.
+#                          ALL RIGHTS RESERVED
+#                         http://www.cortus.com
+#
+# $CortusRelease$
+# $FileName$
+#
+################################################################################
+
+# GDB initialization file for instruction set simulator in command line mode
+#
+# The sockser-addr sets up a socket for the input/output of the uart model.
+#
+# Once the target sim command has been executed you should connect to
+# the socket with hyperterminal or telnet. (e.g. telnet localhost 35000)
+# A convenient place to do this is when the breakpoint on main has been reached.
+#
+
+#set logging file gdb.log
+#set logging on
+
+target sim --sockser-addr localhost:35000
+
+# This file should be sourced after connecting to the simulator and before 
+# downloading the program.
+#
+# I.e. immediately after the "target sim" command
+
+#
+# This configuration sends uart output to TCP.
+# This means that the simulator should be invoked within gdb by
+#      target sim --sockser-addr localhost:35000
+# If your are using the GUI debugger than add
+#                 --sockser-addr localhost:35000
+# to the target options.
+#
+# Then you can connect using telnet or hyperterminal to the socket.
+# e.g. telnet localhost 35000
+
+# This file can be used for both aps2-gdb and aps3-gdb
+# This set up here, reflects the configuration used on the xstart evaluation board
+
+# For simulator HW device model debug enable this
+
+# Limit backtrace
+set backtrace limit 20
+
+set print entry-values no
+
+################################################################################
+# Dump out gmon data structure.
+# This is used for profiling.
+################################################################################
+# 
+# NB the format here has to correspond to that used by the gmon_conv program
+define dump_gmon
+    dump   binary value  gmon.raw gmonparam
+    append binary memory gmon.raw gmonparam.arcs   &gmonparam.arcs[gmonparam.narcs]
+    append binary memory gmon.raw gmonparam.counts &gmonparam.counts[gmonparam.ncounts]
+    printf "Number of arcs %d/%d\n", gmonparam.narcs, gmonparam.maxarcs
+    printf "Memory used %dK bytes\n", (sizeof(gmonparam) + gmonparam.ncounts * sizeof(unsigned short) + gmonparam.maxarcs * sizeof(struct rawarc))/1024
+end
+document dump_gmon
+    Dump out the profiling data for further processing.
+    (Only works if profiling was enabled!)
+end
+
+################################################################################
+# Memory regions
+################################################################################
+
+# data memory 
+sim memory region 0x00000000,0x7e000
+
+# xdata_memory
+sim memory region 0x7e000,0x1000
+
+# ydata_memory 
+sim memory region 0x7f000,0x1000
+
+# program memory
+sim memory region 0x80000000,0x80000
+
+# jtag debug registers
+sim memory region 0x50000000,0x10
+
+# gpio 
+sim memory region 0x40004000,0x10
+
+# ifs
+sim memory region 0x40008000,0xC
+
+#dcache
+sim memory region 0x4000a000,0x2C
+
+################################################################################
+# Cpu parameters
+################################################################################
+
+# Number of cpus. Must be defined before the aps hw-device
+sim nr_cpus 1
+
+# Just one CPU
+# Set the value of the CPU0 ID register. 
+# Must be defined before the other aps@0 hw-device
+sim hw-device "/aps@0/cpu_id 0"
+
+# Condition code forwarding enabled?
+# This corresponds to the HW configuration parameter enable_cc_forwarding_for_branch
+sim hw-device "/aps@0/cc_forwarding 1"
+
+# Is strict alignment of data accesses enforced? 
+sim hw-device "/aps@0/strict_alignment 1"
+
+# Dsp coprocessor parameters
+sim hw-device "/aps@0/dsp_en 0"
+sim hw-device "/aps@0/dsp_en_saturating 1"
+sim hw-device "/aps@0/dsp_xoff 0x7e000"
+sim hw-device "/aps@0/dsp_yoff 0x7f000"
+
+# Cache parameters
+sim hw-device "/aps@0/cache_en 0"
+
+# "cache_nways" must be 1, 2 or 4
+sim hw-device "/aps@0/cache_nways 4"
+
+# "cache_nlines" must be strictly greater than zero
+sim hw-device "/aps@0/cache_nlines 64" 
+
+# "cache_nwords" must be 4 or 8
+sim hw-device "/aps@0/cache_nword_per_lines 8" 
+
+# "cache_burst" must be 0 or 1
+# Set to 1 to enable burst mode cache
+sim hw-device "/aps@0/cache_burst 0" 
+
+# Instruction memory wait_state
+sim hw-device "/aps@0/imem_wait_state 0" 
+
+################################################################################
+# Peripherals
+# NB: a peripheral is only implemented when you connect one of its port to 
+# another device.
+################################################################################
+
+# Define a uart
+# Note that HW devices will not get instantiated unless something gets connected.
+sim hw-device "/uart@0/reg 0x40001000 0x100"
+
+# Run the input/output through the socket 
+# [ requires --sockser-add localhost:<portno> option to target sim command ]
+sim hw-device "/uart@0/backend tcp"
+
+# This corresponds value corresponds to the prescaler used on the board for 115200 bps
+# when the system is run at 12.5 MHZ.
+sim hw-device "/uart@0/prescaler 14" 
+
+# Define a timer/counter
+sim hw-device "/timer@0/reg 0x40002000 0x100"
+
+# Define an interrupt controller
+sim hw-device "/ic@0/reg 0x40000000 0x100"
+
+# Connect the interrupt controller outputs to the relevant CPU0 inputs.
+sim hw-device "/aps@0 > int_ack cpu_int_ack /ic@0"
+sim hw-device "/ic@0 >  cpu_int_req int_req /aps@0"
+sim hw-device "/ic@0 >  cpu_int_vec int_vec /aps@0"
+
+# Connect a port from the uarts to something so they really get instantiated
+sim hw-device "/uart@0 > tx_irq irq5 /ic@0"
+sim hw-device "/uart@0 > rx_irq irq6 /ic@0"
+
+# Connect the interrupt request output of the timer to the irq5 
+# input for the interrupt controller.
+sim hw-device "/timer@0 > irq irq7 /ic@0"
+
+
+################################################################################
+# Uncomment the following lines to enable instruction tracing
+################################################################################
+# Write trace info to trace.dat
+#sim trace-file trace.dat
+
+# Trace instructions (slows things down a lot and generates a lot of data!)
+#sim trace-insn on
+#
+################################################################################
+# After simulation post process the trace file like this
+#${CORTUS_ROOT}/tools/bin/trace.rb aps3-objdump xprintf.jtag < trace.dat > trace.log
+
+
+################################################################################
+################################################################################

@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--DOCTYPE peripheral SYSTEM "Peripheral.dtd"-->
+<peripheral type="uart">
+	<folder name="Transmission">
+		<register offset="0x00" name="tx_data" property="w" display="i" description="Transmit data fifo"/>
+		<register offset="0x04" name="tx_status" property="r" display="b6" description="">
+			<bit description="fifo not full" true="Space in the fifo" false="No space in the fifo"/>
+			<bit description="fifo 1/4 empty" true="fifo 1/4 empty" />
+			<bit description="fifo 1/2 empty" true="fifo 1/2 empty" />
+			<bit description="fifo 3/4 empty" true="fifo 3/4 empty" />
+			<bit description="fifo empty" true="fifo empty" />
+			<bit description="clear to send" true="cts asserted" false="cts not asserted" />
+		</register>
+		<register offset="0x08" name="tx_mask" property="rw" display="b5" description="Transmit interrupt mask">
+			<bit description="fifo not full" true="Space in the fifo" false="No space in the fifo"/>
+			<bit description="fifo 1/4 empty" true="fifo 1/4 empty" />
+			<bit description="fifo 1/2 empty" true="fifo 1/2 empty" />
+			<bit description="fifo 3/4 empty" true="fifo 3/4 empty" />
+			<bit description="fifo empty" true="fifo empty" />
+		</register>
+	</folder>
+	<folder name="Reception">
+		<register offset="0x10" name="rx_data" property="r" display="i" description="Receive data fifo"/>
+		<register offset="0x14" name="rx_status" property="r" display="b8" description="">
+			<bit description="fifo not full" true="Data available in fifo" false="No data available in fifo"/>
+			<bit description="fifo 1/4 empty" true="fifo 1/4 empty" />
+			<bit description="fifo 1/2 empty" true="fifo 1/2 empty" />
+			<bit description="fifo 3/4 empty" true="fifo 3/4 empty" />
+			<bit description="timeout" true="timer still running" false="timer reached zero" />
+			<bit description="fifo overrun" number="6" true="fifo overrun" false="fifo ok" />
+			<bit description="framing error" true="stop bit not received" false="framing ok" />
+		</register>
+		<register offset="0x18" name="rx_mask" property="rw" display="b8" description="Receive interrupt mask">
+			<bit description="fifo not full" true="Data available in fifo" false="No data available in fifo"/>
+			<bit description="fifo 1/4 empty" true="fifo 1/4 empty" />
+			<bit description="fifo 1/2 empty" true="fifo 1/2 empty" />
+			<bit description="fifo 3/4 empty" true="fifo 3/4 empty" />
+			<bit description="timeout" true="timer still running" false="timer reached zero" />
+			<bit description="fifo overrun" number="6" true="fifo overrun" false="fifo ok" />
+			<bit description="framing error" true="stop bit not received" false="framing ok" />
+		</register>
+		<register offset="0x1c" name="rx_timeout" property="rw" display="i" description="Timeout value"/>
+	</folder>
+	<folder name="Configuration">
+		<register offset="0x20" name="config" property="rw" display="b6" description="">
+			<bit description="length" true="7 bits" false="8 bits" />
+			<bit description="parity enable" true="parity" false="no parity" />
+			<bit description="parity type" number="2-3" values="Even parity;Odd parity;Parity bit is space;Parity bit is mark" />
+			<bit description="stop bits" false="1 stop bits" true="2 stop bits"/>
+		</register>
+		<register offset="0x24" name="divider" property="rw" display="x" description=""/>
+		<register offset="0x28" name="selclk" property="rw" display="b2" description="Clock source selection "/>
+	</folder>
+</peripheral>

@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--DOCTYPE peripheral SYSTEM "Peripheral.dtd"-->
+<peripheral type="i2c">
+	<register offset="0x00" name="tx_data" property="w" display="i" description="" />
+	<register offset="0x04" name="rx_data" property="r" display="i" description="" />
+	<register offset="0x08" name="tx_status" property="r" display="b5" description="" />
+	<register offset="0x0c" name="rx_status" property="r" display="b5" description="" />
+	<register offset="0x10" name="selclk" property="rw" display="b2" description="" />
+	<register offset="0x14" name="clk_en" property="rw" display="b1" description="" />
+	<register offset="0x18" name="divider" property="rw" display="i" description="" />
+	<register offset="0x1c" name="master" property="rw" display="b1" description="" />
+	<register offset="0x20" name="onbus" property="rw" display="b1" description="" />
+	<register offset="0x24" name="address" property="rw" display="x" description="" />
+	<register offset="0x28" name="activity" property="r" display="b1" description="" />
+	<register offset="0x2c" name="tx_mask" property="rw" display="b5" description="" />
+	<register offset="0x30" name="rx_mask" property="rw" display="b6" description="" />
+	<register offset="0x34" name="flush" property="w" display="i" description="" />
+</peripheral>

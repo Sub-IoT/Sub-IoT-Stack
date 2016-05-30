@@ -1,0 +1,159 @@
+################################################################################
+# This confidential and proprietary software may be used only as authorized 
+#                      by a licensing agreement from                           
+#                               Cortus S.A.
+#
+#                  (C) Copyright 2006, 2010 Cortus S.A.
+#                          ALL RIGHTS RESERVED
+#
+# The entire notice above must be reproduced on all authorized copies
+# and any such reproduction must be pursuant to a licensing agreement 
+# from Cortus S.A. (http://www.cortus.com)
+#
+# $CortusRelease$
+# $FileName$
+#
+################################################################################
+# Print gdbserver debug information
+# debug = 1
+
+################################################################################
+# TAP controller parameters
+################################################################################
+
+# Number of TAP controllers necessary to debug all the target CPUs.
+nr_taps = 1
+
+# Setup for Spartan 3 starter kit board
+
+# Scan chain has two devices (from tdi to tdo)
+#     FPGA
+#     platform flash
+
+devices_before_tap0 = 0
+devices_after_tap0 = 1
+
+ir_bits_before_tap0 = 0
+ir_bits_after_tap0 = 8
+
+ir_len_tap0 = 6
+
+# Data register opcode of each CPU in its correponding TAP controller
+debug_opcode_cpu0 = 0x2
+#debug_opcode_cpu1 = 0x2
+
+# ID of each CPU seen by its data register 
+dr_cpu_id_for_cpu0 = 0
+#dr_cpu_id_for_cpu1 = 1
+
+# Associated TAP controller for each CPU
+tap_id_for_cpu0 = 0
+#tap_id_for_cpu1 = 0
+
+# Set this to 0 if the speed of the system is reasonably fast with respect to the JTAG
+# and that a JTAG command can be guaranteed to be completed before we have shifted in
+# the next command. 
+# Exceptions are when the JTAG is at 16MHZ, the CPU is at 32khz....
+jtag_poll_wait_tap0 = 0
+
+################################################################################
+# CABLE parameters
+################################################################################
+
+# Number of CABLEs necessary for the debbugging of all the target CPUs. We can 
+# have more than 1 cable if all the target CPUs are not on the same JTAG chain
+nr_cables = 1
+
+# Associated CABLE for each CPU
+cable_id_for_cpu0 = 0;
+#cable_id_for_cpu1 = 0;
+
+# Type of interface per cable (digilent, parallel, uart)
+type_cable0 = digilent
+#type_cable0 = parallel
+#type_cable0 = uart
+
+# Use Digilent USB cable interface with the name 'DCabUsb' (old cable) or 'JtagUsbFs' (new cable),
+# or JtagHs1 for the even newer one.
+# One of these names needs to correspond to that configured with the Digilent Adept suite
+# This option is not used if we use the parallel port cable
+digilent_cable0 = DCabUsb:JtagUsbFs:JtagHs1:JtagHs2:JTAG-USB
+
+# Parallel port location	
+pport_cable0 = /dev/parport0
+
+# For Windows, name of the parallel port
+pport_name0 = LP3
+
+# Uart port name
+# On windows, this is typically COM1, COM2...
+# For Linux system, this should be like /dev/ttyS0...
+uart_port0 = COM5
+#uart_port0 = /dev/ttyS4
+
+# Speed of UART
+uart_bauds0 = 115200
+
+################################################################################
+# CPU parameters
+################################################################################
+
+# Select the number of processors to debug
+processors = 1
+
+# Should the CPU be reset on intialization?
+reset_on_init_cpu0 = 1
+
+# Which cpu architechtural's options to use
+isa_cpu0 = apsv1
+#isa_cpu0 = apsv2
+#isa_cpu0 = aps3cd
+#isa_cpu1 = apsv1
+#isa_cpu1 = apsv2
+#isa_cpu1 = aps3cd
+
+# Opcode of software breakpoint
+sw_brkpt_opcode_cpu0 = 0x0371
+#sw_brkpt_opcode_cpu0 = 0x03f7
+#sw_brkpt_opcode_cpu0 = 0x03e7
+
+# Where crt0-jtag.c saves the registers
+register_save_area_address_cpu0 = 0x20
+#register_save_area_address_cpu1 = 0x68
+
+# Select number of hardware breakpoints available per CPU
+nr_hw_brkpts_cpu0 = 3
+#nr_hw_brkpts_cpu1 = 3
+
+# Select hardware breakpoint box address of each CPU 
+hw_brkpt_box_ad_cpu0 = 0x50000000
+#hw_brkpt_box_ad_cpu1 = 0x50001000
+
+# Name of the flash if implemented (name of the dll without extension)
+flash_name = cortus_flash16
+#flash_name = altera_flash16
+
+################################################################################
+# GDB parameters
+################################################################################
+
+# For multiprocessors, you can have to use multiple GDBs for debug depending
+# the hardware implementation because each GDB can only debug a group of CPUs
+# which share the same program memory. Each group of CPUs per GDB must have 
+# a common data register for jtag accesses. 
+nr_gdbs = 1
+
+# Associated GDB for each CPU
+gdb_id_for_cpu0 = 0
+#gdb_id_for_cpu1 = 0
+
+# ID of each CPU seen by its GDB
+gdb_cpu_id_for_cpu0 = 0
+#gdb_cpu_id_for_cpu1 = 1
+
+# TCP port gdbserver uses to communicate with GDB.
+# If we have multiple GDBs, each GDB will use a different TCP port for
+# communication and gdbserver will start a first thread on port "tcp_port" 
+# for GDB with ID equal to 0, a second thread on port "tcp_port + 1" for 
+# GDB with ID equal to 1, etc ... 
+tcp_port = 38000

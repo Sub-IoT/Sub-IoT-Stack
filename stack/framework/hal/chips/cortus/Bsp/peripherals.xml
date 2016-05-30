@@ -1,0 +1,5 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<system name='Bsp'>
+	<peripheral type='counter' name='counter1' sfradr='0x40002000'/>
+	<peripheral type='uart' name='uart1' sfradr='0x40001000'/>
+</system>

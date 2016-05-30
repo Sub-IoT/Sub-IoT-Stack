@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!ELEMENT system (link?,peripheral*)>
+<!ATTLIST system name CDATA #REQUIRED>
+
+<!ELEMENT link (#PCDATA) >
+<!ATTLIST link path CDATA #REQUIRED>
+
+<!ELEMENT peripheral (register*)>
+<!ATTLIST peripheral 	name 	CDATA #REQUIRED
+						type 	CDATA #REQUIRED
+						sfradr 	CDATA #REQUIRED>
+						
+<!ELEMENT register (#PCDATA) >
+<!ATTLIST register 		name 	CDATA #REQUIRED
+						display	CDATA #REQUIRED>
