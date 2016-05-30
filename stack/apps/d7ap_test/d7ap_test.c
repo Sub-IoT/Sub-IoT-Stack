@@ -62,7 +62,7 @@
 #define REPORTING_INTERVAL_TICKS TIMER_TICKS_PER_SEC * REPORTING_INTERVAL
 
 void execute_sensor_measurement() {
-#if HW_NUM_LEDS > 0
+#if HW_NUM_LEDS >= 1
     led_toggle(0);
 #endif
     // use the counter value for now instead of 'real' sensor
@@ -79,6 +79,12 @@ void on_unsollicited_response_received(d7asp_result_t d7asp_result,
                                       hw_rx_metadata_t* rx_meta)
 {
 	DPRINT("Unsol resp %d\n", rx_meta->rssi);
+#ifdef PLATFORM_EFM32GG_STK3700
+	lcd_write_number(rx_meta->rssi);
+#endif
+#if HW_NUM_LEDS >= 2
+    led_toggle(1);
+#endif
 }
 
 void init_user_files() {
@@ -190,4 +196,8 @@ void bootstrap() {
 
     sched_register_task((&execute_sensor_measurement));
     timer_post_task_delay(&execute_sensor_measurement, REPORTING_INTERVAL_TICKS);
+
+#if HW_NUM_LEDS >= 3
+    led_toggle(2);
+#endif
 }

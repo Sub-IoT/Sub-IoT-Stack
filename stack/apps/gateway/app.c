@@ -58,9 +58,9 @@ void bootstrap()
             .transmission_timeout_period = 0xFF,
             .subbands[0] = (subband_t){
                 .channel_header = {
-                    .ch_coding = PHY_CODING_FEC_PN9,
-                    .ch_class = PHY_CLASS_LO_RATE,
-                    .ch_freq_band = PHY_BAND_868
+                    .ch_coding = PHY_CODING_PN9,
+                    .ch_class = PHY_CLASS_NORMAL_RATE,
+                    .ch_freq_band = PHY_BAND_433
                 },
                 .channel_index_start = 0,
                 .channel_index_end = 0,
@@ -81,7 +81,8 @@ void bootstrap()
     d7ap_stack_init(&fs_init_args, &d7asp_init_args, true, NULL);
 
     fs_write_dll_conf_active_access_class(0); // use access class 0 for scan automation
-
+#ifdef HAS_LCD
     lcd_write_string("started");
+#endif
 }
 
