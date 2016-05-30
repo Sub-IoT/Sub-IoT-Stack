@@ -35,20 +35,8 @@
 #define D7ASP_FIFO_CONFIG_SIZE 16
 
 typedef struct {
-    union {
-        uint8_t fifo_ctrl;
-        struct {
-            uint8_t fifo_ctrl_state : 3; // TODO using session_state_t results in "'state' is narrower than value of its type" warning
-            uint8_t _rfu : 1;
-            bool fifo_ctrl_preferred : 1;
-            bool fifo_ctrl_stop_on_error : 1;
-            uint8_t _rfu2 : 1;
-            bool fifo_ctrl_nls : 1;
-        };
-    };
     session_qos_t qos;
     uint8_t dormant_timeout;
-    uint8_t start_id;
     d7anp_addressee_t addressee;
 } d7asp_fifo_config_t;
 
@@ -61,8 +49,6 @@ typedef struct {
     d7asp_fifo_config_t config;
     // TODO uint8_t dorm_timer;
     uint8_t token;
-    // TODO retry_single_cnt
-    // TODO retry_total_cnt
     uint8_t progress_bitmap[REQUESTS_BITMAP_BYTE_COUNT];
     uint8_t success_bitmap[REQUESTS_BITMAP_BYTE_COUNT];
     uint8_t next_request_id;

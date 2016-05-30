@@ -35,25 +35,25 @@ typedef enum {
 } session_state_t;
 
 typedef enum  {
-    SESSION_RESP_MODE_NONE = 0,
-    SESSION_RESP_MODE_ALLCAST = 1,
-    SESSION_RESP_MODE_ANYCAST = 2,
+    SESSION_RESP_MODE_NO = 0,
+    SESSION_RESP_MODE_ALL = 1,
+    SESSION_RESP_MODE_ANY = 2,
+    SESSION_RESP_MODE_NO_RPT = 4,
+    SESSION_RESP_MODE_ON_ERR = 5,
+    SESSION_RESP_MODE_PREFERRED = 6,
 } session_resp_mode_t;
 
 typedef struct {
     union {
-        uint8_t qos_ctrl;
+        uint8_t raw;
         struct {
-            session_resp_mode_t qos_ctrl_resp_mode : 2;
+            session_resp_mode_t qos_resp_mode : 3;
             uint8_t _rfu : 2;
-            bool qos_ctrl_ack_not_void : 1;
-            uint8_t _rfu2 : 3;
+            bool qos_record : 1;
+            bool qos_stop_on_error : 1;
+            bool qos_nls : 1;
         };
     };
-
-    uint8_t qos_ack_period;
-    uint8_t qos_retry_single;
-    uint8_t qos_retry_total;
 } session_qos_t;
 
 

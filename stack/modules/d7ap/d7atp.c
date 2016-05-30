@@ -136,8 +136,8 @@ void d7atp_start_dialog(uint8_t dialog_id, uint8_t transaction_id, bool is_last_
     packet->d7atp_ctrl = (d7atp_ctrl_t){
         .ctrl_is_start = true,
         .ctrl_is_stop = is_last_transaction,
-        .ctrl_is_ack_requested = qos_settings->qos_ctrl_resp_mode == SESSION_RESP_MODE_NONE? false : true,
-        .ctrl_ack_not_void = qos_settings->qos_ctrl_ack_not_void,
+        .ctrl_is_ack_requested = qos_settings->qos_resp_mode == SESSION_RESP_MODE_NO? false : true, // TODO in other cases as well?
+        .ctrl_ack_not_void = qos_settings->qos_resp_mode == SESSION_RESP_MODE_ON_ERR? true : false,
         .ctrl_ack_record = false
     };
 

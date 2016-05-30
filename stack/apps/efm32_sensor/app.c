@@ -140,15 +140,13 @@ void init_user_files()
     };
 
     d7asp_fifo_config_t d7asp_fifo_config = {
-        .fifo_ctrl_nls = false,
-        .fifo_ctrl_stop_on_error = false,
-        .fifo_ctrl_preferred = false,
-        .fifo_ctrl_state = SESSION_STATE_PENDING,
         .qos = {
-            .qos_ctrl_resp_mode = SESSION_RESP_MODE_NONE
+            .qos_resp_mode = SESSION_RESP_MODE_NO,
+            .qos_nls                 = false,
+            .qos_stop_on_error       = false,
+            .qos_record              = false
         },
         .dormant_timeout = 0,
-        .start_id = 0,
         .addressee = {
             .ctrl = {
               .id_type = ID_TYPE_BCAST,

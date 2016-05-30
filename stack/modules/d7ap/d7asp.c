@@ -141,7 +141,6 @@ static void flush_fifos()
             return;
         }
 
-        // TODO retry total cnt
         // TODO stop on error
     }
 
@@ -230,13 +229,11 @@ d7asp_queue_result_t d7asp_queue_alp_actions(d7asp_fifo_config_t* d7asp_fifo_con
 
     // TODO the actions should be queued in a fifo based on combination of addressee and Qos
     // for now we use only 1 queue and overwrite the config
-    fifo.config.fifo_ctrl = d7asp_fifo_config->fifo_ctrl;
     fifo.config.qos = d7asp_fifo_config->qos;
     fifo.config.dormant_timeout = d7asp_fifo_config->dormant_timeout;
-    fifo.config.start_id = d7asp_fifo_config->start_id;
     fifo.config.addressee.ctrl = d7asp_fifo_config->addressee.ctrl;
     memcpy(fifo.config.addressee.id, d7asp_fifo_config->addressee.id, sizeof(fifo.config.addressee.id));
-    single_request_retry_limit = fifo.config.qos.qos_retry_single;
+    single_request_retry_limit = 3; // TODO read from SEL config file
 
     // add request to buffer
     // TODO request can contain 1 or more ALP commands, find a way to group commands in requests instead of dumping all requests in one buffer
@@ -276,7 +273,7 @@ bool d7asp_process_received_packet(packet_t* packet)
 
     if(state == D7ASP_STATE_MASTER)
     {
-        assert(fifo.config.qos.qos_ctrl_resp_mode > SESSION_RESP_MODE_NONE);
+        assert(fifo.config.qos.qos_resp_mode > SESSION_RESP_MODE_NO);
         assert(packet->d7atp_dialog_id == fifo.token);
         assert(packet->d7atp_transaction_id == current_request_id);
 
@@ -399,7 +396,7 @@ void d7asp_signal_packet_csma_ca_insertion_completed(bool succeeded)
         }
 
         // for the lowest QoS level the packet is ack-ed when CSMA/CA process succeeded
-        if(fifo.config.qos.qos_ctrl_resp_mode == SESSION_RESP_MODE_NONE)
+        if(fifo.config.qos.qos_resp_mode == SESSION_RESP_MODE_NO)
         {
             mark_current_request_done();
             bitmap_set(fifo.success_bitmap, current_request_id);

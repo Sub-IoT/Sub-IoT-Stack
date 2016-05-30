@@ -120,19 +120,13 @@ void init_user_files() {
     };
 
     d7asp_fifo_config_t d7asp_fifo_config = {
-        .fifo_ctrl_nls                    = false,
-        .fifo_ctrl_stop_on_error          = false,
-        .fifo_ctrl_preferred              = false,
-        .fifo_ctrl_state                  = SESSION_STATE_PENDING,
         .qos = {
-            .qos_ctrl_resp_mode           = SESSION_RESP_MODE_ANYCAST,
-            .qos_ctrl_ack_not_void        = false,
-            .qos_ack_period               = 1,
-            .qos_retry_single             = 3,
-            .qos_retry_total              = 0
+            .qos_resp_mode                = SESSION_RESP_MODE_ANY,
+            .qos_nls                      = false,
+            .qos_record                   = false,
+            .qos_stop_on_error            = false
         },
         .dormant_timeout                  = 0,
-        .start_id                         = 0, // TODO
         .addressee = {
             .ctrl = {
                 .id_type                  = ID_TYPE_BCAST,
