@@ -27,6 +27,13 @@
 #include "packet.h"
 #include "fs.h"
 #include "fifo.h"
+#include "log.h"
+
+#if defined(FRAMEWORK_LOG_ENABLED) && defined(MODULE_D7AP_ALP_LOG_ENABLED)
+#define DPRINT(...) log_print_stack_string(LOG_STACK_ALP, __VA_ARGS__)
+#else
+#define DPRINT(...)
+#endif
 
 alp_operation_t alp_get_operation(uint8_t* alp_command)
 {
@@ -46,6 +53,7 @@ static uint8_t process_op_read_file_data(fifo_t* alp_command_fifo, fifo_t* alp_r
   err = fifo_pop(alp_command_fifo, &operand.file_offset.file_id, 1); assert(err == SUCCESS);
   err = fifo_pop(alp_command_fifo, &operand.file_offset.offset, 1); assert(err == SUCCESS); // TODO can be 1-4 bytes, assume 1 for now
   err = fifo_pop(alp_command_fifo, &operand.requested_data_length, 1); assert(err == SUCCESS);
+  DPRINT("READ FILE %i LEN %i", operand.file_offset.file_id, operand.requested_data_length);
 
   // fill response
   fifo_put_byte(alp_response_fifo, ALP_OP_RETURN_FILE_DATA);
@@ -63,6 +71,8 @@ static uint8_t process_op_write_file_data(fifo_t* alp_command_fifo, fifo_t* alp_
   err = fifo_pop(alp_command_fifo, &operand.file_offset.file_id, 1); assert(err == SUCCESS);
   err = fifo_pop(alp_command_fifo, &operand.file_offset.offset, 1); assert(err == SUCCESS); // TODO can be 1-4 bytes, assume 1 for now
   err = fifo_pop(alp_command_fifo, &operand.provided_data_length, 1); assert(err == SUCCESS);
+  DPRINT("WRITE FILE %i LEN %i", operand.file_offset.file_id, operand.provided_data_length);
+
   uint8_t data[operand.provided_data_length];
   err = fifo_pop(alp_command_fifo, data, operand.provided_data_length);
   alp_status_codes_t alp_status = fs_write_file(operand.file_offset.file_id, operand.file_offset.offset, data, operand.provided_data_length); // TODO status
@@ -78,6 +88,7 @@ static uint8_t process_op_forward(fifo_t* alp_command_fifo, fifo_t* alp_response
   err = fifo_pop(alp_command_fifo, &fifo_config->addressee.ctrl.raw, 1); assert(err == SUCCESS);
   uint8_t id_length = d7anp_addressee_id_length(fifo_config->addressee.ctrl.id_type);
   err = fifo_pop(alp_command_fifo, fifo_config->addressee.id, id_length); assert(err == SUCCESS);
+  DPRINT("FORWARD");
 }
 
 bool alp_process_command(uint8_t* alp_command, uint8_t alp_command_length, uint8_t* alp_response, uint8_t* alp_response_length)

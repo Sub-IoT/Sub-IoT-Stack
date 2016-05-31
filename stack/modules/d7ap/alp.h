@@ -135,9 +135,4 @@ alp_operation_t alp_get_operation(uint8_t* alp_command);
  */
 bool alp_process_command(uint8_t* alp_command, uint8_t alp_command_length, uint8_t* alp_response, uint8_t* alp_response_length);
 
-/*! \brief Process a received request and replaces the packet's payload with the response payload.
- *  ALP commands which cannot be handled by the stack are vectored to the application layer
- */
-bool alp_process_received_request(d7asp_result_t d7asp_result, packet_t* packet);
-
 #endif /* ALP_H_ */
