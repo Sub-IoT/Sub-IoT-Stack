@@ -64,8 +64,7 @@ void alp_cmd_handler(fifo_t* cmd_fifo)
 
             uint8_t alp_response[ALP_CMD_MAX_SIZE] = { 0x00 };
             uint8_t alp_response_len = 0;
-            alp_process_command_host(alp_command, alp_command_len, alp_response, &alp_response_len);
-            // TODO assuming FS now, refactor to general ALP handler
+            alp_process_command(alp_command, alp_command_len, alp_response, &alp_response_len);
 
             alp_cmd_handler_output_alp_command(alp_response, alp_response_len);
         }

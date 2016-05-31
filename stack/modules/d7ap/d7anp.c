@@ -213,3 +213,18 @@ void d7anp_process_received_packet(packet_t* packet)
 
     d7atp_process_received_packet(packet);
 }
+
+uint8_t d7anp_addressee_id_length(id_type_t id_type)
+{
+    switch(id_type)
+    {
+        case ID_TYPE_BCAST:
+          return ID_TYPE_BCAST_ID_LENGTH;
+        case ID_TYPE_UID:
+          return ID_TYPE_UID_ID_LENGTH;
+        case ID_TYPE_VID:
+          return ID_TYPE_VID_LENGTH;
+        default:
+          assert(false);
+    }
+}

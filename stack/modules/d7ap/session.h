@@ -25,7 +25,6 @@
 #include "stdint.h"
 #include "stdbool.h"
 
-
 typedef enum {
     SESSION_STATE_IDLE = 0x00,
     SESSION_STATE_DORMANT = 0x01,

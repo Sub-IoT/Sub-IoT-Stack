@@ -35,6 +35,10 @@ typedef enum {
     ID_TYPE_VID   = 3
 } id_type_t;
 
+#define ID_TYPE_BCAST_ID_LENGTH 0
+#define ID_TYPE_UID_ID_LENGTH   8
+#define ID_TYPE_VID_LENGTH      3
+
 typedef struct {
     union {
       uint8_t raw;
@@ -50,7 +54,6 @@ typedef struct {
     d7anp_addressee_ctrl ctrl;
     uint8_t id[8]; // TODO assuming 8 byte id for now
 } d7anp_addressee_t;
-
 
 /*! \brief The D7ANP CTRL header
  *
@@ -78,5 +81,6 @@ bool d7anp_disassemble_packet_header(packet_t* packet, uint8_t* packet_idx);
 void d7anp_signal_packet_csma_ca_insertion_completed(bool succeeded);
 void d7anp_signal_packet_transmitted(packet_t* packet);
 void d7anp_process_received_packet(packet_t* packet);
+uint8_t d7anp_addressee_id_length(id_type_t);
 
 #endif /* D7ANP_H_ */

@@ -273,20 +273,26 @@ bool d7asp_process_received_packet(packet_t* packet)
 
     if(state == D7ASP_STATE_MASTER)
     {
-        assert(fifo.config.qos.qos_resp_mode > SESSION_RESP_MODE_NO);
         assert(packet->d7atp_dialog_id == fifo.token);
         assert(packet->d7atp_transaction_id == current_request_id);
 
         // received ack
-        result.fifo_token = fifo.token;
-        result.seqnr = current_request_id;
         DPRINT("Received ACK");
-        bitmap_set(fifo.success_bitmap, current_request_id);
-        mark_current_request_done();
-        assert(packet != current_request_packet);
+        if(fifo.config.qos.qos_resp_mode != SESSION_RESP_MODE_NO
+           && fifo.config.qos.qos_resp_mode != SESSION_RESP_MODE_NO_RPT)
+        {
+          // for SESSION_RESP_MODE_NO and SESSION_RESP_MODE_NO_RPT the request was already marked as done
+          // upon successfull CSMA insertion. We don't care about response in these cases.
 
-        if(d7asp_init_args != NULL && d7asp_init_args->d7asp_fifo_request_completed_cb != NULL)
-            d7asp_init_args->d7asp_fifo_request_completed_cb(result, packet->payload, packet->payload_length);
+          result.fifo_token = fifo.token;
+          result.seqnr = current_request_id;
+          bitmap_set(fifo.success_bitmap, current_request_id);
+          mark_current_request_done();
+          assert(packet != current_request_packet);
+
+          if(d7asp_init_args != NULL && d7asp_init_args->d7asp_fifo_request_completed_cb != NULL)
+              d7asp_init_args->d7asp_fifo_request_completed_cb(result, packet->payload, packet->payload_length); // TODO notify ALP
+        }
 
         packet_queue_free_packet(packet); // ACK can be cleaned
         return true;
@@ -317,7 +323,7 @@ bool d7asp_process_received_packet(packet_t* packet)
                 // build response, we will reuse the same packet for this
                 // we will first try to process the command against the local FS
                 // if the FS handler cannot process this, and a status response is requested, a status operand will be present in the response payload
-                bool handled = alp_process_command_host(packet->payload, packet->payload_length, packet->payload, &packet->payload_length);
+                bool handled = alp_process_command(packet->payload, packet->payload_length, packet->payload, &packet->payload_length);
 
                 // ... and if not handled we'll give the application a chance to handle this by returning an ALP response.
                 // if the application fails to handle the request as well the ALP status operand supplied by alp_process_command_fs_itf() will be transmitted (if requested)
