@@ -52,13 +52,30 @@ typedef struct {
 void fifo_init(fifo_t* fifo, uint8_t* buffer, uint16_t max_size);
 
 /**
- * @brief Put bytes in tothe FIFO
+ * @brief Initializes the fifo with a pre-filled buffer
+ * @param fifo          Fifo state, initialized by this function
+ * @param buffer        The buffer used for the fifo, the caller is responsible for allocating this to be big enough for max_size
+ * @param filled_size   The length of the pre-filled buffer
+ * @param max_size      The maximum size of bytes contained in the FIFO
+ */
+void fifo_init_filled(fifo_t *fifo, uint8_t *buffer, uint16_t filled_size, uint16_t max_size);
+
+/**
+ * @brief Put bytes in to the FIFO
  * @param fifo  Pointer to the fifo object
  * @param data  Pointer to the data to be put in the FIFO
  * @param len   Number of bytes to put in the FIFO
  * @returns SUCCESS or ESIZE when data would overwrite head of FIFO
  */
 error_t fifo_put(fifo_t* fifo, uint8_t* data, uint16_t len);
+
+/**
+ * @brief Put byte in to the FIFO
+ * @param fifo  Pointer to the fifo object
+ * @param byte  Byte to be put in the FIFO
+ * @returns SUCCESS or ESIZE when data would overwrite head of FIFO
+ */
+error_t fifo_put_byte(fifo_t* fifo, uint8_t byte);
 
 /**
  * @brief Peek at the FIFO contents without popping. Fills buffer with the data in the FIFO starting from head_idx + offset for len bytes

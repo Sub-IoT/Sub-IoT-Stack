@@ -26,10 +26,15 @@
 
 void fifo_init(fifo_t *fifo, uint8_t *buffer, uint16_t max_size)
 {
+    fifo_init_filled(fifo, buffer, 0, max_size);
+}
+
+void fifo_init_filled(fifo_t *fifo, uint8_t *buffer, uint16_t filled_size, uint16_t max_size)
+{
     fifo->buffer = buffer;
     fifo->head_idx = 0;
-    fifo->tail_idx = 0;
     fifo->max_size = max_size;
+    fifo->tail_idx = filled_size;
 }
 
 error_t fifo_put(fifo_t *fifo, uint8_t *data, uint16_t len)
@@ -53,6 +58,11 @@ error_t fifo_put(fifo_t *fifo, uint8_t *data, uint16_t len)
     }
     else
         return ESIZE;
+}
+
+error_t fifo_put_byte(fifo_t* fifo, uint8_t byte)
+{
+    return fifo_put(fifo, &byte, 1);
 }
 
 error_t fifo_peek(fifo_t* fifo, uint8_t* buffer, uint16_t offset, uint16_t len) {
@@ -93,7 +103,9 @@ error_t fifo_pop(fifo_t* fifo, uint8_t* buffer, uint16_t len) {
   if( err != SUCCESS ) { return err; }
 
   // progress head to implement popping behaviour
-  fifo->head_idx = (fifo->head_idx + len) % fifo->max_size;
+  fifo->head_idx = (fifo->head_idx + len);
+  if(fifo->head_idx > fifo->max_size)
+    fifo->head_idx = fifo->head_idx % fifo->max_size; // when head_idx == max_size we do not want to point to 0 since size will not be correct then
 
   return SUCCESS;
 }
