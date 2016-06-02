@@ -40,21 +40,30 @@ typedef struct spi_handle spi_handle_t;
 typedef struct spi_slave_handle spi_slave_handle_t;
 
 // create handle from basic & minimal parameters
-__LINK_C spi_handle_t* spi_init(uint8_t uart,     uint32_t baudrate,
-                                uint8_t databits, bool     msbf, uint8_t  pins);
+__LINK_C spi_handle_t*       spi_init(uint8_t uart,     uint32_t baudrate,
+                                      uint8_t databits, bool     msbf,
+                                      uint8_t pins);
+
+// manual power mgmt
+__LINK_C void                spi_enable(spi_handle_t* spi);
+__LINK_C void                spi_disable(spi_handle_t* spi);
 
 // initializes a pin to be used as Chip Select pin
-__LINK_C spi_slave_handle_t* spi_init_slave(spi_handle_t* spi, pin_id_t cs_pin, bool cs_is_active_low);
+__LINK_C spi_slave_handle_t* spi_init_slave(spi_handle_t* spi, pin_id_t cs_pin,
+                                            bool          cs_is_active_low);
 
 // (de)selection of a slave
-__LINK_C void         spi_select(spi_slave_handle_t* slave);
-__LINK_C void         spi_deselect(spi_slave_handle_t* slave);
+__LINK_C void                spi_select(spi_slave_handle_t* slave);
+__LINK_C void                spi_deselect(spi_slave_handle_t* slave);
 
-__LINK_C uint8_t      spi_exchange_byte(spi_slave_handle_t* spi, uint8_t data);
-__LINK_C void         spi_send_byte_with_control(spi_slave_handle_t* spi, uint16_t data);
+__LINK_C uint8_t             spi_exchange_byte(spi_slave_handle_t* spi,
+                                               uint8_t data);
+__LINK_C void                spi_send_byte_with_control(spi_slave_handle_t* spi,
+                                                        uint16_t data);
 
-__LINK_C void         spi_exchange_bytes(spi_slave_handle_t* spi, uint8_t *TxData,
-                                         uint8_t *RxData, size_t length);
+__LINK_C void                spi_exchange_bytes(spi_slave_handle_t* spi,
+                                                uint8_t *TxData,
+                                                uint8_t *RxData, size_t length);
 
 #endif
 
