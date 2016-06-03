@@ -27,14 +27,14 @@ extern "C" {
 ** Specify total number of endpoints used (in addition to EP0).            **
 **                                                                         **
 *****************************************************************************/
-#define NUM_EP_USED 5
+#define NUM_EP_USED 3
 
 /****************************************************************************
 **                                                                         **
 ** Specify number of application timers you need.                          **
 **                                                                         **
 *****************************************************************************/
-#define NUM_APP_TIMERS 2
+#define NUM_APP_TIMERS 1
 
 /****************************************************************************
 **                                                                         **
@@ -43,15 +43,13 @@ extern "C" {
 *****************************************************************************/
 
 /* Define interface numbers */
-#define VUD_INTERFACE_NO        ( 0 )
-#define MSD_INTERFACE_NO        ( 1 )
-#define CDC_CTRL_INTERFACE_NO   ( 2 )
-#define CDC_DATA_INTERFACE_NO   ( 3 )
-#define NUM_INTERFACES          ( 4 )
+#define CDC_CTRL_INTERFACE_NO   ( 0 )
+#define CDC_DATA_INTERFACE_NO   ( 1 )
 
-#define MSD_NUM_EP_USED         ( 2 ) /* Number of EP's used by MSD function */
-#define VUD_NUM_EP_USED         ( 0 ) /* Number of EP's used by VUD function */
-#define CDC_NUM_EP_USED         ( 3 ) /* Number of EP's used by CDC function */
+
+#define EP_DATA_OUT  0x01       /* Endpoint for USB data reception.       */
+#define EP_DATA_IN   0x81       /* Endpoint for USB data transmission.    */
+#define EP_NOTIFY    0x82       /* The notification endpoint (not used).  */
 
 /* Define USB endpoint addresses for the interfaces */
 #define CDC_EP_DATA_OUT   ( 0x01 ) /* Endpoint for CDC data reception.       */

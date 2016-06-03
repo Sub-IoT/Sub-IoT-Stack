@@ -1,7 +1,7 @@
 /***************************************************************************//**
  * @file descriptors.c
  * @brief USB descriptors for CDC Serial Port adapter example project.
- * @version 3.20.13
+ * @version 4.2.1
  *******************************************************************************
  * @section License
  * <b>(C) Copyright 2014 Silicon Labs, http://www.silabs.com</b>
@@ -15,7 +15,7 @@
 #include "usb_descriptors.h"
 
 EFM32_ALIGN(4)
-const USB_DeviceDescriptor_TypeDef USBDESC_deviceDesc __attribute__ ((aligned(4)))=
+static const USB_DeviceDescriptor_TypeDef deviceDesc __attribute__ ((aligned(4)))=
 {
   .bLength            = USB_DEVICE_DESCSIZE,
   .bDescriptorType    = USB_DEVICE_DESCRIPTOR,
@@ -42,13 +42,13 @@ const USB_DeviceDescriptor_TypeDef USBDESC_deviceDesc __attribute__ ((aligned(4)
                           5 )
 
 EFM32_ALIGN(4)
-const uint8_t USBDESC_configDesc[] __attribute__ ((aligned(4)))=
+static const uint8_t configDesc[] __attribute__ ((aligned(4)))=
 {
   /*** Configuration descriptor ***/
   USB_CONFIG_DESCSIZE,    /* bLength                                   */
   USB_CONFIG_DESCRIPTOR,  /* bDescriptorType                           */
   CONFIG_DESCSIZE,        /* wTotalLength (LSB)                        */
-  CONFIG_DESCSIZE>>8,     /* wTotalLength (MSB)                        */
+  USB_CONFIG_DESCSIZE>>8, /* wTotalLength (MSB)                        */
   2,                      /* bNumInterfaces                            */
   1,                      /* bConfigurationValue                       */
   0,                      /* iConfiguration                            */
@@ -106,7 +106,7 @@ const uint8_t USBDESC_configDesc[] __attribute__ ((aligned(4)))=
   /*** CDC Notification endpoint descriptor ***/
   USB_ENDPOINT_DESCSIZE,  /* bLength               */
   USB_ENDPOINT_DESCRIPTOR,/* bDescriptorType       */
-  CDC_EP_NOTIFY,          /* bEndpointAddress (IN) */
+  EP_NOTIFY,              /* bEndpointAddress (IN) */
   USB_EPTYPE_INTR,        /* bmAttributes          */
   USB_FS_INTR_EP_MAXSIZE, /* wMaxPacketSize (LSB)  */
   0,                      /* wMaxPacketSize (MSB)  */
@@ -126,7 +126,7 @@ const uint8_t USBDESC_configDesc[] __attribute__ ((aligned(4)))=
   /*** CDC Data interface endpoint descriptors ***/
   USB_ENDPOINT_DESCSIZE,  /* bLength               */
   USB_ENDPOINT_DESCRIPTOR,/* bDescriptorType       */
-  CDC_EP_DATA_IN,         /* bEndpointAddress (IN) */
+  EP_DATA_IN,             /* bEndpointAddress (IN) */
   USB_EPTYPE_BULK,        /* bmAttributes          */
   USB_FS_BULK_EP_MAXSIZE, /* wMaxPacketSize (LSB)  */
   0,                      /* wMaxPacketSize (MSB)  */
@@ -134,7 +134,7 @@ const uint8_t USBDESC_configDesc[] __attribute__ ((aligned(4)))=
 
   USB_ENDPOINT_DESCSIZE,  /* bLength               */
   USB_ENDPOINT_DESCRIPTOR,/* bDescriptorType       */
-  CDC_EP_DATA_OUT,        /* bEndpointAddress (OUT)*/
+  EP_DATA_OUT,            /* bEndpointAddress (OUT)*/
   USB_EPTYPE_BULK,        /* bmAttributes          */
   USB_FS_BULK_EP_MAXSIZE, /* wMaxPacketSize (LSB)  */
   0,                      /* wMaxPacketSize (MSB)  */
@@ -145,13 +145,19 @@ STATIC_CONST_STRING_DESC_LANGID( langID, 0x04, 0x09 );
 STATIC_CONST_STRING_DESC( iManufacturer, 'S','i','l','i','c','o','n',' ','L', \
                                          'a','b','o','r','a','t','o','r','i', \
                                          'e','s',' ','I','n','c','.' );
-STATIC_CONST_STRING_DESC( iProduct     , 'E','F','M','3','2',' ','H','a','p', \
-                                         'p','y',' ','G','e','c','k','o',' ', \
-                                         'U','S','B',' ','C','D','C',' ','s', \
-                                         'e','r','i','a','l',' ','p','o','r', \
-                                         't',' ','d','e','v','i','c','e' );
+#if defined( _EZR_DEVICE )
+STATIC_CONST_STRING_DESC( iProduct     , 'E','Z','R','3','2',' ','U','S','B', \
+                                         ' ','C','D','C',' ','s','e','r','i', \
+                                         'a','l',' ','p','o','r','t',' ','d', \
+                                         'e','v','i','c','e' );
+#else
+STATIC_CONST_STRING_DESC( iProduct     , 'E','F','M','3','2',' ','U','S','B', \
+                                         ' ','C','D','C',' ','s','e','r','i', \
+                                         'a','l',' ','p','o','r','t',' ','d', \
+                                         'e','v','i','c','e' );
+#endif
 
-const void * const USBDESC_strings[] =
+static const void * const strings[] =
 {
   &langID,
   &iManufacturer,
@@ -161,4 +167,23 @@ const void * const USBDESC_strings[] =
 /* Endpoint buffer sizes */
 /* 1 = single buffer, 2 = double buffering, 3 = triple buffering ...  */
 /* Use double buffering on the BULK endpoints.                        */
-const uint8_t USBDESC_bufferingMultiplier[ NUM_EP_USED + 1 ] = { 1, 1, 2, 2 };
+static uint8_t bufferingMultiplier[ NUM_EP_USED + 1 ] = { 1, 1, 2, 2 };
+
+static const USBD_Callbacks_TypeDef callbacks =
+{
+  .usbReset        = NULL,
+  .usbStateChange  = CDC_StateChange,
+  .setupCmd        = CDC_SetupCmd,
+  .isSelfPowered   = NULL,
+  .sofInt          = NULL
+};
+
+static const USBD_Init_TypeDef initstruct =
+{
+  .deviceDescriptor    = &deviceDesc,
+  .configDescriptor    = configDesc,
+  .stringDescriptors   = strings,
+  .numberOfStrings     = sizeof(strings)/sizeof(void*),
+  .callbacks           = &callbacks,
+  .bufferingMultiplier = bufferingMultiplier
+};

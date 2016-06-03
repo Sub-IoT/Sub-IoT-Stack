@@ -24,8 +24,6 @@
 
 #include "usb_descriptors.h"
 
-
-//#include "bsp.h"
 #include "cdc.h"
 #include "em_cmu.h"
 #include <string.h>
@@ -63,7 +61,7 @@ void __usb_init_cdc()
 {
 	//BSP_Init(BSP_INIT_DEFAULT);   /* Initialize DK board register access */
 
-	//CMU_ClockSelectSet(cmuClock_HF, cmuSelect_HFXO);
+	//CMU_ClockSelectSet(cmuClock_HF, cmuSelect_HFRCO);
 
 	/* Initialize the communication class device. */
 	CDC_Init();
