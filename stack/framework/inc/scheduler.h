@@ -125,6 +125,10 @@ __LINK_C error_t sched_cancel_task(task_t task);
  */
 __LINK_C bool sched_is_scheduled(task_t task);
 
+
+__LINK_C uint8_t sched_get_low_power_mode(void);
+__LINK_C void    sched_set_low_power_mode(uint8_t mode);
+
 #endif /* SCHEDULER_H_ */
 
 /** @}*/

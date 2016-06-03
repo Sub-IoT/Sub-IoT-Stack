@@ -327,6 +327,16 @@ static inline bool tasks_waiting(int priority)
 	return NG(m_head)[priority] != NO_TASK;
 }
 
+static uint8_t low_power_mode = FRAMEWORK_SCHEDULER_LP_MODE;
+
+uint8_t sched_get_low_power_mode(void) {
+  return low_power_mode;
+}
+
+void sched_set_low_power_mode(uint8_t mode) {
+  low_power_mode = mode;
+}
+
 __LINK_C void scheduler_run()
 {
 	while(1)
@@ -350,7 +360,7 @@ __LINK_C void scheduler_run()
 #endif
 			end_atomic();
 		}
-		hw_enter_lowpower_mode(FRAMEWORK_SCHEDULER_LP_MODE);
+		hw_enter_lowpower_mode(low_power_mode);
 	}
 
 }
