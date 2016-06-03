@@ -19,7 +19,7 @@
 #ifndef __EZR32WG_PINS_H_
 #define __EZR32WG_PINS_H_
 #include "hwgpio.h"
-//GPIO port/pin definitions for the EZR32WG
+//GPIO port/pin definitions for the EZR32LG
 //port A
 extern pin_id_t const A0; // RADIO
 extern pin_id_t const A1; // RADIO
@@ -58,6 +58,8 @@ extern pin_id_t const E3;
 extern pin_id_t const F0;
 extern pin_id_t const F1;
 extern pin_id_t const F2;
+extern pin_id_t const F3;
+extern pin_id_t const F4;
 extern pin_id_t const F5;
 extern pin_id_t const F6;
 extern pin_id_t const F7;
