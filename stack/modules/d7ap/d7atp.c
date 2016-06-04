@@ -116,7 +116,8 @@ static void switch_state(state_t new_state)
 void d7atp_signal_foreground_scan_expired()
 {
     assert(d7atp_state == D7ATP_STATE_SLAVE_TRANSACTION_RESPONSE_PERIOD
-           || d7atp_state == D7ATP_STATE_MASTER_TRANSACTION_RESPONSE_PERIOD);
+           || d7atp_state == D7ATP_STATE_MASTER_TRANSACTION_RESPONSE_PERIOD
+           || d7atp_state == D7ATP_STATE_SLAVE_TRANSACTION_RECEIVED_REQUEST);
 
     switch_state(D7ATP_STATE_IDLE);
     DPRINT("Dialog terminated");
@@ -240,6 +241,12 @@ void d7atp_process_received_packet(packet_t* packet)
            || d7atp_state == D7ATP_STATE_SLAVE_TRANSACTION_RESPONSE_PERIOD
            || d7atp_state == D7ATP_STATE_IDLE); // IDLE: when doing channel scanning outside of transaction
 
+    // copy addressee from NP origin
+    current_addressee.ctrl.id_type = packet->d7anp_ctrl.origin_addressee_ctrl_id_type;
+    current_addressee.ctrl.access_class = packet->d7anp_ctrl.origin_addressee_ctrl_access_class;
+    memcpy(current_addressee.id, packet->origin_access_id, 8);
+    packet->d7anp_addressee = &current_addressee;
+
     if(IS_IN_TRANSACTION())
     {
         if(packet->d7atp_dialog_id != current_dialog_id || packet->d7atp_transaction_id != current_transaction_id)
@@ -274,12 +281,6 @@ void d7atp_process_received_packet(packet_t* packet)
         current_transaction_id = packet->d7atp_transaction_id;
         DPRINT("Dialog id %i transaction id %i", current_dialog_id, current_transaction_id);
 
-        // copy addressee from NP origin
-        current_addressee.ctrl.id_type = packet->d7anp_ctrl.origin_addressee_ctrl_id_type;
-        current_addressee.ctrl.access_class = packet->d7anp_ctrl.origin_addressee_ctrl_access_class;
-        memcpy(current_addressee.id, packet->origin_access_id, 8);
-        packet->d7anp_addressee = &current_addressee;
-
         channel_id_t rx_channel = packet->hw_radio_packet.rx_meta.rx_cfg.channel_id;
 
         // set active_addressee_access_profile to the access_profile supplied by the requester
@@ -295,6 +296,5 @@ void d7atp_process_received_packet(packet_t* packet)
         active_addressee_access_profile.subbands[0].channel_index_end = rx_channel.center_freq_index;
     }
 
-    if(!d7asp_process_received_packet(packet))
-        switch_state(D7ATP_STATE_IDLE);
+    d7asp_process_received_packet(packet);
 }

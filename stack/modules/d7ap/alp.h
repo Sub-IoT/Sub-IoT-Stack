@@ -36,6 +36,14 @@
 
 typedef enum
 {
+    ALP_CMD_ORIGIN_APP,
+    ALP_CMD_ORIGIN_SERIAL_CONSOLE,
+    ALP_CMD_ORIGIN_D7AACTP,
+    ALP_CMD_ORIGIN_D7ASP,
+} alp_command_origin_t;
+
+typedef enum
+{
     ALP_ACT_COND_LIST = 0,
     ALP_ACT_COND_READ = 1,
     ALP_ACT_COND_WRITE = 2,
@@ -131,8 +139,13 @@ alp_operation_t alp_get_operation(uint8_t* alp_command);
  * \param alp_command_length The length of the command
  * \param alp_response Pointer to a buffer where a possible response will be written
  * \param alp_response_length The length of the response
+ * \param origin Where the ALP command originates from, determines where response will go to
  * \return If the ALP command was processed correctly or not
  */
-bool alp_process_command(uint8_t* alp_command, uint8_t alp_command_length, uint8_t* alp_response, uint8_t* alp_response_length);
+bool alp_process_command(uint8_t* alp_command, uint8_t alp_command_length, uint8_t* alp_response, uint8_t* alp_response_length, alp_command_origin_t origin);
+
+void alp_process_command_console_output(uint8_t* alp_command, uint8_t alp_command_length);
+
+void alp_d7asp_request_completed(d7asp_result_t result, uint8_t* payload, uint8_t payload_length);
 
 #endif /* ALP_H_ */

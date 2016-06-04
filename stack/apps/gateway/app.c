@@ -43,7 +43,7 @@ static d7asp_init_args_t d7asp_init_args;
 
 static void on_unsollicited_response_received(d7asp_result_t d7asp_result, uint8_t *alp_command, uint8_t alp_command_size)
 {
-    alp_cmd_handler_output_unsollicited_response(d7asp_result, alp_command, alp_command_size);
+    alp_cmd_handler_output_d7asp_response(d7asp_result, alp_command, alp_command_size);
 }
 
 void bootstrap()

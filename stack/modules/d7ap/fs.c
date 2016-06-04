@@ -57,6 +57,7 @@ static void execute_alp_command(uint8_t command_file_id)
     uint8_t* data_ptr = (uint8_t*)(data + file_offsets[command_file_id]);
     uint8_t* file_start = data_ptr;
 
+    // TODO refactor
     // parse ALP command
     d7asp_fifo_config_t fifo_config;
     assert((*data_ptr) == ALP_ITF_ID_D7ASP); // only D7ASP supported for now
@@ -68,9 +69,10 @@ static void execute_alp_command(uint8_t command_file_id)
 
     uint8_t alp_response[ALP_PAYLOAD_MAX_SIZE] = { 0 };
     uint8_t alp_response_length = 0;
-    alp_process_command(data_ptr, file_headers[command_file_id].length - (uint8_t)(data_ptr - file_start), alp_response, &alp_response_length);
+//    alp_process_command(data_ptr, file_headers[command_file_id].length - (uint8_t)(data_ptr - file_start), alp_response, &alp_response_length);
 
-    d7asp_queue_alp_actions(&fifo_config, alp_response, alp_response_length);
+//    d7asp_queue_alp_actions(&fifo_config, alp_response, alp_response_length);
+    assert(false); // TODO broken for now refactor, move to ALP layer
 }
 
 static void write_access_class(uint8_t access_class_index, dae_access_profile_t* access_class)

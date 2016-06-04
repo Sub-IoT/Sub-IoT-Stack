@@ -28,12 +28,16 @@
 #include "fs.h"
 #include "fifo.h"
 #include "log.h"
+#include "alp_cmd_handler.h"
 
 #if defined(FRAMEWORK_LOG_ENABLED) && defined(MODULE_D7AP_ALP_LOG_ENABLED)
 #define DPRINT(...) log_print_stack_string(LOG_STACK_ALP, __VA_ARGS__)
 #else
 #define DPRINT(...)
 #endif
+
+static alp_command_origin_t NGDEF(_current_command_origin);
+#define current_command_origin NG(_current_command_origin)
 
 alp_operation_t alp_get_operation(uint8_t* alp_command)
 {
@@ -91,8 +95,15 @@ static uint8_t process_op_forward(fifo_t* alp_command_fifo, fifo_t* alp_response
   DPRINT("FORWARD");
 }
 
-bool alp_process_command(uint8_t* alp_command, uint8_t alp_command_length, uint8_t* alp_response, uint8_t* alp_response_length)
+void alp_process_command_console_output(uint8_t* alp_command, uint8_t alp_command_length) {
+  uint8_t alp_response[ALP_PAYLOAD_MAX_SIZE];
+  uint8_t alp_response_length = 0;
+  alp_process_command(alp_command, alp_command_length, alp_response, &alp_response_length, ALP_CMD_ORIGIN_SERIAL_CONSOLE);
+}
+
+bool alp_process_command(uint8_t* alp_command, uint8_t alp_command_length, uint8_t* alp_response, uint8_t* alp_response_length, alp_command_origin_t origin)
 {
+  current_command_origin = origin; // TODO support more than 1 active cmd
   (*alp_response_length) = 0;
   d7asp_fifo_config_t d7asp_fifo_config;
   bool do_forward = false;
@@ -132,11 +143,36 @@ bool alp_process_command(uint8_t* alp_command, uint8_t alp_command_length, uint8
 
   (*alp_response_length) = fifo_get_size(&alp_response_fifo);
 
+  if((*alp_response_length) > 0) {
+    if(current_command_origin == ALP_CMD_ORIGIN_SERIAL_CONSOLE)
+      alp_cmd_handler_output_alp_command(alp_response, (*alp_response_length));
+
+    // TODO APP
+  }
+
     // TODO return ALP status if requested
 
 //    if(alp_status != ALP_STATUS_OK)
 //      return false;
 
     return true;
+}
+
+void alp_d7asp_request_completed(d7asp_result_t result, uint8_t* payload, uint8_t payload_length) {
+  switch(current_command_origin) {
+    case ALP_CMD_ORIGIN_SERIAL_CONSOLE:
+      alp_cmd_handler_output_d7asp_response(result, payload, payload_length);
+      break;
+    case ALP_CMD_ORIGIN_APP:
+      // TODO callback
+      break;
+    case ALP_CMD_ORIGIN_D7AACTP:
+      // do nothing?
+      break;
+    default:
+      assert(false); // ALP_CMD_ORIGIN_D7ASP this would imply a slave session
+  }
+
+  // TODO further bookkeeping
 }
 

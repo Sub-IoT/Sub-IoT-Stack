@@ -64,9 +64,7 @@ void alp_cmd_handler(fifo_t* cmd_fifo)
 
             uint8_t alp_response[ALP_CMD_MAX_SIZE] = { 0x00 };
             uint8_t alp_response_len = 0;
-            alp_process_command(alp_command, alp_command_len, alp_response, &alp_response_len);
-
-            alp_cmd_handler_output_alp_command(alp_response, alp_response_len);
+            alp_process_command_console_output(alp_command, alp_command_len);
         }
         else
         {
@@ -104,19 +102,19 @@ static uint8_t append_interface_status_action(d7asp_result_t* d7asp_result, uint
   (*ptr) = d7asp_result->seqnr; ptr++;
   (*ptr) = d7asp_result->response_to; ptr++;
   (*ptr) = d7asp_result->addressee->ctrl.raw; ptr++;
-  uint8_t address_len = d7asp_result->addressee->ctrl.id_type == ID_TYPE_VID? 2 : 8; // TODO according to spec this can be 1 byte as
+  uint8_t address_len = d7anp_addressee_id_length(d7asp_result->addressee->ctrl.id_type);
   memcpy(ptr, d7asp_result->addressee->id, address_len); ptr += address_len;
   return ptr - ptr_start;
 }
 
-void alp_cmd_handler_output_unsollicited_response(d7asp_result_t d7asp_result, uint8_t *alp_command, uint8_t alp_command_size)
+void alp_cmd_handler_output_d7asp_response(d7asp_result_t d7asp_result, uint8_t *alp_command, uint8_t alp_command_size)
 {
     // TODO refactor, move partly to alp + call from SP when shell enabled instead of from app
     uint8_t data[MODULE_D7AP_FIFO_COMMAND_BUFFER_SIZE] = { 0x00 };
     uint8_t* ptr = data;
 
-    (*ptr) = 0xC0; ptr++;               // serial interface sync byte
-    (*ptr) = 0x00; ptr++;               // serial interface version
+    (*ptr) = SERIAL_ALP_FRAME_SYNC_BYTE; ptr++;               // serial interface sync byte
+    (*ptr) = SERIAL_ALP_FRAME_VERSION; ptr++;               // serial interface version
     ptr++;                              // payload length byte, skip for now and fill later
 
     ptr += append_interface_status_action(&d7asp_result, ptr);
