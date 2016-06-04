@@ -69,10 +69,7 @@ static void execute_alp_command(uint8_t command_file_id)
 
     uint8_t alp_response[ALP_PAYLOAD_MAX_SIZE] = { 0 };
     uint8_t alp_response_length = 0;
-//    alp_process_command(data_ptr, file_headers[command_file_id].length - (uint8_t)(data_ptr - file_start), alp_response, &alp_response_length);
-
-//    d7asp_queue_alp_actions(&fifo_config, alp_response, alp_response_length);
-    assert(false); // TODO broken for now refactor, move to ALP layer
+    alp_process_command_result_on_d7asp(&fifo_config, data_ptr, file_headers[command_file_id].length - (uint8_t)(data_ptr - file_start), ALP_CMD_ORIGIN_D7AACTP);
 }
 
 static void write_access_class(uint8_t access_class_index, dae_access_profile_t* access_class)

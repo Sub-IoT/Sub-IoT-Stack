@@ -95,6 +95,14 @@ static uint8_t process_op_forward(fifo_t* alp_command_fifo, fifo_t* alp_response
   DPRINT("FORWARD");
 }
 
+void alp_process_command_result_on_d7asp(d7asp_fifo_config_t* d7asp_fifo_config, uint8_t* alp_command, uint8_t alp_command_length, alp_command_origin_t origin)
+{
+  uint8_t alp_response[ALP_PAYLOAD_MAX_SIZE];
+  uint8_t alp_response_length = 0;
+  alp_process_command(alp_command, alp_command_length, alp_response, &alp_response_length, origin);
+  d7asp_queue_alp_actions(d7asp_fifo_config, alp_response, alp_response_length);
+}
+
 void alp_process_command_console_output(uint8_t* alp_command, uint8_t alp_command_length) {
   uint8_t alp_response[ALP_PAYLOAD_MAX_SIZE];
   uint8_t alp_response_length = 0;
