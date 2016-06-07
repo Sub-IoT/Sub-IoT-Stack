@@ -41,8 +41,8 @@
 #include "debug.h"
 #include "platform.h"
 
-#define USARTS    3
-#define LOCATIONS 2
+#define USARTS    3 // only 1 and 2 available
+#define LOCATIONS 3 // only 1 and (2) available
 
 typedef struct {
   uint32_t location;
@@ -51,52 +51,46 @@ typedef struct {
   pin_id_t clk;
 } spi_pins_t;
 
-// TODO to be completed with all documented locations
+#define UNDEFINED_LOCATION {                     \
+ .location = 0,                                  \
+ .mosi     = { .port = 0,         .pin =  0 },   \
+ .miso     = { .port = 0,         .pin =  0 },   \
+ .clk      = { .port = 0,         .pin =  0 }    \
+}
+
 static spi_pins_t location[USARTS][LOCATIONS] = {
   {
-    // USART 0
-    {
-      .location = USART_ROUTE_LOCATION_LOC0,
-      .mosi     = { .port = gpioPortE, .pin = 10 },
-      .miso     = { .port = gpioPortE, .pin = 11 },
-      .clk      = { .port = gpioPortE, .pin = 12 }
-    },
-    {
-      .location = USART_ROUTE_LOCATION_LOC1,
-      .mosi     = { .port = gpioPortE, .pin = 7 },
-      .miso     = { .port = gpioPortE, .pin = 6 },
-      .clk      = { .port = gpioPortE, .pin = 5 }
-    }
+    // USART0
+    UNDEFINED_LOCATION, // LOC0
+    UNDEFINED_LOCATION, // LOC1
+    UNDEFINED_LOCATION  // LOC2
   },
   {
     // USART 1
-    {
-      .location = USART_ROUTE_LOCATION_LOC0,
-      .mosi     = { .port = gpioPortC, .pin = 0 },
-      .miso     = { .port = gpioPortC, .pin = 1 },
-      .clk      = { .port = gpioPortB, .pin = 7 }
-    },
+    UNDEFINED_LOCATION, // LOC0
     {
       .location = USART_ROUTE_LOCATION_LOC1,
       .mosi     = { .port = gpioPortD, .pin = 0 },
       .miso     = { .port = gpioPortD, .pin = 1 },
       .clk      = { .port = gpioPortD, .pin = 2 }
+    },
+    {
+      .location = USART_ROUTE_LOCATION_LOC2,
+      .mosi     = { .port = gpioPortD, .pin = 7 },
+      .miso     = { .port = gpioPortD, .pin = 6 },
+      .clk      = { .port = gpioPortF, .pin = 0 }
     }
   },
   {
     // USART 2
-    {
-      .location = USART_ROUTE_LOCATION_LOC0,
-      .mosi     = { .port = gpioPortC, .pin = 2 },
-      .miso     = { .port = gpioPortC, .pin = 3 },
-      .clk      = { .port = gpioPortC, .pin = 4 }
-    },
+    UNDEFINED_LOCATION,  // LOC0
     {
       .location = USART_ROUTE_LOCATION_LOC1,
       .mosi     = { .port = gpioPortB, .pin = 3 },
       .miso     = { .port = gpioPortB, .pin = 4 },
       .clk      = { .port = gpioPortB, .pin = 5 }
-    }
+    },
+    UNDEFINED_LOCATION  // LOC2
   }
 };
 
@@ -107,6 +101,10 @@ typedef struct spi_usart {
 
 // private storage for usarts, pointers to these records are passed around
 static spi_usart_t usart[USARTS] = {
+  {
+    .channel = USARTRF0,
+    .clock   = cmuClock_USARTRF0
+  },
   {
     .channel = USART1,
     .clock   = cmuClock_USART1
