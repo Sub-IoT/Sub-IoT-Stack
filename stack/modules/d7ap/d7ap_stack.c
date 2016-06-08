@@ -52,21 +52,17 @@ void d7ap_stack_init(fs_init_args_t* fs_init_args, d7asp_init_args_t* d7asp_init
       // notify booted by broadcasting and retrying 3 times (for diagnostics ie to detect reboots)
       // TODO: default access class
       d7asp_fifo_config_t broadcast_fifo_config = {
-          .fifo_ctrl_nls = false,
-          .fifo_ctrl_stop_on_error = false,
-          .fifo_ctrl_preferred = false,
-          .fifo_ctrl_state = SESSION_STATE_PENDING,
           .qos = {
-            .qos_ctrl_resp_mode = SESSION_RESP_MODE_ANYCAST,
-            .qos_retry_single = 3
+            .qos_resp_mode                = SESSION_RESP_MODE_ANY,
+            .qos_nls                      = false,
+            .qos_record                   = false,
+            .qos_stop_on_error            = false
           },
           .dormant_timeout = 0,
-          .start_id = 0,
           .addressee = {
             .ctrl = {
-              .has_id = false,
-              .virtual_id = false,
-              .access_class = 0,
+              .id_type                  = ID_TYPE_BCAST,
+              .access_class             = 0
             },
             .id = 0
           }
@@ -74,9 +70,7 @@ void d7ap_stack_init(fs_init_args_t* fs_init_args, d7asp_init_args_t* d7asp_init
 
       uint8_t alp_response[ALP_PAYLOAD_MAX_SIZE] = { 0 };
       uint8_t alp_response_length = 0;
-      assert(alp_process_command_fs_itf(read_firmware_version_alp_command, sizeof(read_firmware_version_alp_command), alp_response, &alp_response_length));
-
-      d7asp_queue_alp_actions(&broadcast_fifo_config, alp_response, alp_response_length);
+      alp_process_command_result_on_d7asp(&broadcast_fifo_config, read_firmware_version_alp_command, sizeof(read_firmware_version_alp_command), ALP_CMD_ORIGIN_APP); // TODO origin stack?
 #endif
     }
 }
