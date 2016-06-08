@@ -105,7 +105,6 @@ void packet_transmitted(hw_radio_packet_t* packet);
 
 void start_rx()
 {
-    DPRINT("start RX\n");
     hw_radio_set_rx(&rx_cfg, &packet_received, NULL);
 }
 
@@ -114,7 +113,6 @@ void transmit_packet()
 	counter++;
     DPRINT("%d tx %d bytes\n", counter, PACKET_LENGTH);
     memcpy(&tx_packet->data, data, PACKET_LENGTH);
-    tx_packet->length = PACKET_LENGTH;
     hw_radio_send_packet(tx_packet, &packet_transmitted);
 }
 
@@ -134,16 +132,18 @@ void packet_received(hw_radio_packet_t* packet)
 #ifdef HAL_RADIO_USE_HW_CRC
     int cmp = memcmp(data, packet->data, packet->length-2);
 #else
-		int cmp = memcmp(data, packet->data, packet->length);
+    int cmp = memcmp(data, packet->data, packet->length);
 #endif
     if(cmp != 0)
     {
         DPRINT("Unexpected data received! %d\n", cmp);
     }
+    else
+    {
+        DPRINT("RX OK!\n");
+    }
 
     hw_watchdog_feed();
-
-    memset(packet->data, 0, packet->length);
 }
 
 void packet_transmitted(hw_radio_packet_t* packet)
