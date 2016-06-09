@@ -244,10 +244,10 @@ static bool ensure_slaves_deselected(spi_handle_t* spi) {
   }
 }
 
-static bool spi_enable(spi_handle_t* spi) {
+void spi_enable(spi_handle_t* spi) {
   // basic reference counting
   spi->users++;
-  if(spi->users > 1) { return false; } // should already be enabled
+  if(spi->users > 1) { return ; } // should already be enabled
   
   ensure_slaves_deselected(spi);
 
@@ -270,14 +270,13 @@ static bool spi_enable(spi_handle_t* spi) {
                              | USART_ROUTE_CLKPEN
                              | spi->pins->location;
   
-  return true;
 }
 
-static bool spi_disable(spi_handle_t* spi) {
+void spi_disable(spi_handle_t* spi) {
   // basic reference counting
-  if(spi->users < 1) { return false; }  // should already be disabled
+  if(spi->users < 1) { return ; }  // should already be disabled
   spi->users--;
-  if(spi->users > 0) { return false; }  // don't disable, still other users
+  if(spi->users > 0) { return ; }  // don't disable, still other users
 
   // reset route to make sure that TX pin will become low after disable
   spi->usart->channel->ROUTE = _USART_ROUTE_RESETVALUE;
@@ -287,8 +286,6 @@ static bool spi_disable(spi_handle_t* spi) {
   // CMU_ClockEnable(cmuClock_GPIO, false); // TODO future use: hw_gpio_disable
 
   ensure_slaves_deselected(spi); // turn off all CS lines, because bus is down
-
-  return true;
 }
 
 spi_slave_handle_t* spi_init_slave(spi_handle_t* spi, pin_id_t cs_pin, bool cs_is_active_low) {
