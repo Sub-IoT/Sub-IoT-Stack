@@ -174,6 +174,8 @@ struct spi_handle {
   spi_slave_handle_t* slave[MAX_SPI_SLAVE_HANDLES];
   uint8_t             slaves;  // number of slaves for array mgmt
   uint8_t             users;   // for reference counting
+  bool                auto_power;
+  bool                active;
 };
 
 // private storage to spi handles, pointers to these are passed around
@@ -210,7 +212,8 @@ spi_handle_t* spi_init(uint8_t idx, uint32_t baudrate, uint8_t databits,
     .databits = databits,
     .slaves   = 0,
     .msbf     = msbf,
-    .users    = 0
+    .users    = 0,
+    .active   = false
   };
 
   // pins can be reused, e.g. same configuration, different baudrate
@@ -221,6 +224,11 @@ spi_handle_t* spi_init(uint8_t idx, uint32_t baudrate, uint8_t databits,
   assert( err == SUCCESS || err == EALREADY );
   err = hw_gpio_configure_pin(handle[next_spi_handle].pins->clk,  false, gpioModePushPull, 0);
   assert( err == SUCCESS || err == EALREADY );
+
+  // enable SPI bus if we're not doing auto power mgmgt
+  if( ! handle[next_spi_handle].auto_power ) {
+    spi_enable(&handle[next_spi_handle]);
+  }
 
   next_spi_handle++;
   return &handle[next_spi_handle-1];
@@ -236,10 +244,10 @@ static bool ensure_slaves_deselected(spi_handle_t* spi) {
   }
 }
 
-static bool spi_enable(spi_handle_t* spi) {
-  // basic reference counting
-  spi->users++;
-  if(spi->users > 1) { return false; } // should already be enabled
+void spi_enable(spi_handle_t* spi) {
+  // already active?
+  if(spi->active) { return; }
+
 
   ensure_slaves_deselected(spi);
 
@@ -262,14 +270,12 @@ static bool spi_enable(spi_handle_t* spi) {
                        | USART_ROUTE_CLKPEN
                        | spi->pins->location;
 
-  return true;
+  spi->active = true;
 }
 
-static bool spi_disable(spi_handle_t* spi) {
-  // basic reference counting
-  if(spi->users < 1) { return false; }  // should already be disabled
-  spi->users--;
-  if(spi->users > 0) { return false; }  // don't disable, still other users
+void spi_disable(spi_handle_t* spi) {
+  // already inactive?
+  if( ! spi->active ) { return; }
 
   // reset route to make sure that TX pin will become low after disable
   spi->usart->channel->ROUTE = _USART_ROUTE_RESETVALUE;
@@ -278,21 +284,25 @@ static bool spi_disable(spi_handle_t* spi) {
   CMU_ClockEnable(spi->usart->clock, false);
   // CMU_ClockEnable(cmuClock_GPIO, false); // TODO future use: hw_gpio_disable
 
-  ensure_slaves_deselected(spi); // turn off all CS lines, because bus is down
+  // turn off all CS lines, because bus is down
+  // clients should be powered down also
+  for(uint8_t s=0; s<spi->slaves; s++) {
+    hw_gpio_clr(spi->slave[s]->cs);
+  }
 
-  return true;
+  spi->active = false;
 }
 
 spi_slave_handle_t* spi_init_slave(spi_handle_t* spi, pin_id_t cs_pin, bool cs_is_active_low) {
   // limit pre-allocated handles
   assert(next_spi_slave_handle < MAX_SPI_SLAVE_HANDLES);
 
-  // configure CS pin as output. If the bus is already active and we have an active low slave
-  // we pull CS high to prevent the slave from starting. If the bus is not already active (powered down)
-  // we keep CS low (selected) to prevent current flowing to the slave.
-  bool initial_level = 0;
-  if(spi->users > 0 && cs_is_active_low)
-    initial_level = 1;
+  // Configure CS pin as output.
+  // If the bus is already active and we have an active low slave we pull CS
+  // high to prevent the slave from starting.
+  // If the bus is not already active (powered down) we keep CS low (selected)
+  // to prevent current flowing to the slave.
+  bool initial_level = spi->active > 0 && cs_is_active_low;
 
   assert(hw_gpio_configure_pin(cs_pin, false, gpioModePushPull, initial_level) == SUCCESS);
 

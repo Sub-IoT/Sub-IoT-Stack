@@ -165,7 +165,7 @@ EMSTATUS DISPLAY_Ls013b7dh03Init(void)
   PAL_TimerInit(); // TODO
 
   spi_handle = spi_init(0, PAL_SPI_BAUDRATE, 8, false, 0); // TODO defines from platform
-  spi_enable(spi);
+  spi_enable(spi_handle);
   lcd_spi_handle = spi_init_slave(spi_handle, A10, false);
 
 #if defined( LCD_PORT_DISP_PWR )
@@ -254,7 +254,7 @@ static EMSTATUS DriverRefresh(DISPLAY_Device_t* device)
   PAL_TimerInit();
 
   spi_handle = spi_init(0, PAL_SPI_BAUDRATE, 8, false, 0); // TODO defines from platform
-  spi_enable(spi);
+  spi_enable(spi_handle);
   lcd_spi_handle = spi_init_slave(spi_handle, A10, false);
 
   return status;
