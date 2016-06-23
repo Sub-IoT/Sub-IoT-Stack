@@ -26,8 +26,7 @@ PLATFORM_PARAM(${PLATFORM_PREFIX}_RADIO "none" STRING "The radio chip connected 
 
 INCLUDE_DIRECTORIES(inc)
 
-#LINK_LIBRARIES(libc.a)
-#LINK_LIBRARIES(libc)
+
 
 #Restrict the number of possible options for the radio option in the usual manner...
 SET_PROPERTY(CACHE ${PLATFORM_PREFIX}_RADIO PROPERTY STRINGS "cc1101;none")
@@ -49,7 +48,7 @@ INSERT_C_FLAGS(AFTER "-Os -Wall -Wcast-align -g3 -MMD -MP -fmessage-length=0")
 
 #Add platform specific linker flags
 INSERT_LINKER_FLAGS(BEFORE OBJECTS INSERT "")
-INSERT_LINKER_FLAGS(BEFORE LINK_LIBRARIES INSERT "-nostartfiles")
+#INSERT_LINKER_FLAGS(BEFORE LINK_LIBRARIES INSERT "-nostartfiles")
 INSERT_LINKER_FLAGS(AFTER LINK_LIBRARIES INSERT "-fno-lto -Os -g3 -Wl,-q -Wl,--noinhibit-exec -Wl,-Map,cortus.map -fno-exceptions")
 #INSERT_LINKER_FLAGS(AFTER LINK_LIBRARIES INSERT "-lc -L. -fno-lto -Os -g3 -Wl,-q -Wl,--noinhibit-exec -Wl,-Map,cortus.map -fno-exceptions")
 
