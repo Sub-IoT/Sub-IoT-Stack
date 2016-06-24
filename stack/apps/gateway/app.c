@@ -56,7 +56,7 @@ void bootstrap()
             .control_number_of_subbands = 1,
             .subnet = 0,
             .scan_automation_period = 0,
-            .transmission_timeout_period = 20,
+            .transmission_timeout_period = 50,
             .subbands[0] = (subband_t){
                 .channel_header = {
                     .ch_coding = PHY_CODING_PN9,
