@@ -22,7 +22,6 @@
 
 #include "alp_cmd_handler.h"
 
-#define ALP_CMD_HANDLER_HEADER_SIZE 2 // <ALP interface ID> <Length byte>
 #define ALP_CMD_MAX_SIZE 0xFF
 
 #include "types.h"
@@ -48,19 +47,20 @@ void alp_cmd_handler(fifo_t* cmd_fifo)
     if(fifo_get_size(cmd_fifo) > SHELL_CMD_HEADER_SIZE + 2)
     {
         uint8_t byte;
+        error_t err;
         fifo_peek(cmd_fifo, &byte, SHELL_CMD_HEADER_SIZE, 1);
         if(byte == SERIAL_ALP_FRAME_SYNC_BYTE)
         {
-            fifo_peek(cmd_fifo, &byte, SHELL_CMD_HEADER_SIZE + 1, 1);
+            err = fifo_peek(cmd_fifo, &byte, SHELL_CMD_HEADER_SIZE + 1, 1); assert(err == SUCCESS);
             assert(byte == SERIAL_ALP_FRAME_VERSION); // only version 0 implemented for now // TODO pop and return error
             uint8_t alp_command_len;
-            fifo_peek(cmd_fifo, &alp_command_len, SHELL_CMD_HEADER_SIZE + 2, 1);
-            if(fifo_get_size(cmd_fifo) < SHELL_CMD_HEADER_SIZE + 2 + alp_command_len)
+            err = fifo_peek(cmd_fifo, &alp_command_len, SHELL_CMD_HEADER_SIZE + 2, 1); assert(err == SUCCESS);
+            if(fifo_get_size(cmd_fifo) < SHELL_CMD_HEADER_SIZE + 3 + alp_command_len)
                 return; // ALP command not complete yet, don't pop
 
             uint8_t alp_command[ALP_CMD_MAX_SIZE] = { 0x00 };
-            fifo_pop(cmd_fifo, alp_command, SHELL_CMD_HEADER_SIZE + 3); // pop header
-            fifo_pop(cmd_fifo, alp_command, alp_command_len); // pop full ALP command
+            err = fifo_pop(cmd_fifo, alp_command, SHELL_CMD_HEADER_SIZE + 3); assert(err == SUCCESS); // pop header
+            err = fifo_pop(cmd_fifo, alp_command, alp_command_len); assert(err == SUCCESS); // pop full ALP command
 
             uint8_t alp_response[ALP_CMD_MAX_SIZE] = { 0x00 };
             uint8_t alp_response_len = 0;
