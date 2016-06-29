@@ -1,0 +1,107 @@
+/* * OSS-7 - An opensource implementation of the DASH7 Alliance Protocol for ultra
+ * lowpower wireless sensor communication
+ *
+ * Copyright 2015 University of Antwerp
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+
+# GDB Initialization file when using debugger in command line mode via jtag server
+#
+
+#set logging file gdb.log
+#set logging on
+
+target remote:3333
+
+# When analyzing code from .text use .exe file instead of reading it from the target
+# This improves the responsiveness when debugging over a slow link (e.g USB).
+set trust-readonly on
+
+# Limit backtrace
+set backtrace limit 20
+
+set print entry-values no
+
+# Long time out for slow RTL simulators
+set remotetimeout 240
+
+# Turn instruction tracing off or on (0 or 1) in RTL and System C HW/SW Cosimulations
+define itrace
+    monitor ethtag_insn_trace_en $arg0
+end
+
+################################################################################
+# Dump trace buffer in form suitable for analysis by aps3-tracebuf
+################################################################################
+define dump_trace
+  set $size = *(unsigned*)0x50001008
+  dump binary value trace_buf.raw $size
+  append binary value trace_buf.raw *(unsigned*)0x50001004
+  append binary value trace_buf.raw $r0
+  append binary value trace_buf.raw $r1
+  append binary value trace_buf.raw $r2
+  append binary value trace_buf.raw $r3
+  append binary value trace_buf.raw $r4
+  append binary value trace_buf.raw $r5
+  append binary value trace_buf.raw $r6
+  append binary value trace_buf.raw $r7
+  append binary value trace_buf.raw $r8
+  append binary value trace_buf.raw $r9
+  append binary value trace_buf.raw $r10
+  append binary value trace_buf.raw $r11
+  append binary value trace_buf.raw $r12
+  append binary value trace_buf.raw $r13
+  append binary value trace_buf.raw $r14
+  append binary value trace_buf.raw $r15
+  append binary memory trace_buf.raw (0x51000000) (0x51000000+($size*8))
+  printf "Finished dumping trace buffer to trace_buf.raw\n"
+end
+document dump_trace
+  Dump out the trace buffer to trace_buf-raw
+  suitable for further postprocessing with the trace_buf program.
+end
+define show_trace
+  printf "ptr = %d (0x%x)\n", *(unsigned*)(0x50001004), *(unsigned*)(0x50001004)
+  set $i = 0
+  set $size = *(unsigned*)0x50001008
+  while $i < $size
+    printf "%5d:  %3d  %08x\n", $i, *(unsigned*)(0x51000004 + $i*8), *(unsigned*)(0x51000000 + $i*8)
+    set $i = $i + 1
+  end
+end
+document show_trace
+  Display the raw contents of the trace buffer.
+end  
+
+#################################################################################
+# Reset various bits of HW
+################################################################################
+
+# Reset interrupt controller interrupts [0..7] inclusive
+set *(unsigned*)0x40000000=0
+set *(unsigned*)0x40000004=0
+set *(unsigned*)0x40000008=0
+set *(unsigned*)0x4000000c=0
+set *(unsigned*)0x40000010=0
+set *(unsigned*)0x40000014=0
+set *(unsigned*)0x40000018=0
+set *(unsigned*)0x4000001c=0
+
+# Reset counter: value, reload, expired, mask
+set *(unsigned*)0x40002000=0xffffffff
+set *(unsigned*)0x40002004=0xffffffff
+set *(unsigned*)0x40002008=0
+set *(unsigned*)0x4000200c=0
+
