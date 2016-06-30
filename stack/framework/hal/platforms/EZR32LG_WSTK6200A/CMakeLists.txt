@@ -102,7 +102,6 @@ SET(PLATFORM_SRCS
 IF(${PLATFORM_PREFIX}_USE_USB_CDC)
     LIST(APPEND PLATFORM_SRCS
         wstk6200_usb.c
-        wstk6200_usb_descriptors.c
         kits/common/drivers/cdc.c
     )
 ENDIF()
