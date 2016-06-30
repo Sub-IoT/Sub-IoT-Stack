@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-/*! \file hwlcd.h
+/*! \file hwusb.h
  * \addtogroup USB
  * \ingroup HAL
  * @{

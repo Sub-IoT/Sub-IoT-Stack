@@ -75,15 +75,13 @@ PLATFORM_HEADER_DEFINE(
 )
 
 #Define the 'platform library'. Every platform must define a 'PLATFORM' object library
-ADD_LIBRARY(PLATFORM OBJECT
+SET(PLATFORM_SRCS
     wstk6200_main.c
     wstk6200_leds.c
     wstk6200_userbutton.c
     wstk6200_sensors.c
     wstk6200_debug.c
     wstk6200_lcd.c
-    #wstk6200_usb.c
-    #wstk6200_usb_descriptors.c
     libc_overrides.c
     inc/userbutton.h
     inc/platform_sensors.h
@@ -96,11 +94,20 @@ ADD_LIBRARY(PLATFORM OBJECT
     kits/common/drivers/displayls013b7dh03.c
     kits/common/drivers/displaypalemlib.c
     kits/common/drivers/udelay.c
-    #kits/common/drivers/cdc.c
     kits/common/bsp/bsp_bcc.c
     kits/common/bsp/bsp_stk.c
     kits/common/bsp/bsp_trace.c
 )
+
+IF(${PLATFORM_PREFIX}_USE_USB_CDC)
+    LIST(APPEND PLATFORM_SRCS
+        wstk6200_usb.c
+        wstk6200_usb_descriptors.c
+        kits/common/drivers/cdc.c
+    )
+ENDIF()
+
+ADD_LIBRARY(PLATFORM OBJECT ${PLATFORM_SRCS})
 
 #Include the sources for the EZR32LG330 chip
 ADD_CHIP("ezr32lg")
