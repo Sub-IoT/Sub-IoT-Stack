@@ -135,7 +135,7 @@ void d7anp_tx_foreground_frame(packet_t* packet, bool should_include_origin_temp
 uint8_t d7anp_assemble_packet_header(packet_t *packet, uint8_t *data_ptr)
 {
     assert(!packet->d7anp_ctrl.origin_addressee_ctrl_nls_enabled); // TODO NLS not yet supported
-    assert(!packet->d7anp_ctrl.origin_addressee_ctrl_access_class); // TODO hopping not yet supported
+    assert(!packet->d7anp_ctrl.origin_addressee_ctrl_hop_enabled); // TODO hopping not yet supported
 
     uint8_t* d7anp_header_start = data_ptr;
     (*data_ptr) = packet->d7anp_timeout; data_ptr++;
