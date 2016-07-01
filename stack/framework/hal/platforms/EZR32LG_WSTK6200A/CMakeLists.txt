@@ -99,7 +99,7 @@ SET(PLATFORM_SRCS
     kits/common/bsp/bsp_trace.c
 )
 
-IF(${PLATFORM_PREFIX}_USE_USB_CDC)
+IF(PLATFORM_USE_USB_CDC)
     LIST(APPEND PLATFORM_SRCS
         wstk6200_usb.c
         kits/common/drivers/cdc.c
