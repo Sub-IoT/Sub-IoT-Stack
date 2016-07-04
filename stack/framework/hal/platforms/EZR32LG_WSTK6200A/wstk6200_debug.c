@@ -22,7 +22,7 @@
 #include "em_gpio.h"
 #include <debug.h>
 
-#ifdef PLATFORM_EZR32WG_WSTK6221_DEBUGPINS
+#ifdef PLATFORM_EZR32LG_WSTK6200A_DEBUGPINS
 
 #if DEBUG_PIN_NUM != 4
 	#error DEBUG_PIN_NUM does not match the expected value. Update platform.h or platform_debug.c

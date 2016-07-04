@@ -80,10 +80,10 @@
  ************************/
 
 #define DEBUG_PIN_NUM 4
-#define DEBUG0	D6
-#define DEBUG1	D3
-#define DEBUG2	D4
-#define DEBUG3	D5
+#define DEBUG0	C6      // P0
+#define DEBUG1	C7      // P2
+#define DEBUG2	B11     // P8
+#define DEBUG3	F3      // P10
 
 /**************************
  * USERBUTTON DEFINITIONS *
