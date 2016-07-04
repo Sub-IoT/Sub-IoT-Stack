@@ -356,7 +356,6 @@ bool d7asp_process_received_packet(packet_t* packet)
 
     discard_request:
         packet_queue_free_packet(packet);
-        switch_state(D7ASP_STATE_IDLE);
         return false;
 }
 
