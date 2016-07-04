@@ -98,6 +98,13 @@ static void start_foreground_scan(uint8_t timeout_ct)
     dll_start_foreground_scan();
 }
 
+static void cancel_foreground_scan_task()
+{
+    // task can be scheduled now or in the future, try to cancel both // TODO refactor scheduler API
+    timer_cancel_task(&foreground_scan_expired);
+    sched_cancel_task(&foreground_scan_expired);
+}
+
 void d7anp_init()
 {
     d7anp_state = D7ANP_STATE_IDLE;
@@ -108,9 +115,7 @@ void d7anp_tx_foreground_frame(packet_t* packet, bool should_include_origin_temp
 {
     if(d7anp_state == D7ANP_STATE_FOREGROUND_SCAN)
     {
-        // task can be scheduled now or in the future, try to cancel both // TODO refactor scheduler API
-        timer_cancel_task(&foreground_scan_expired);
-        sched_cancel_task(&foreground_scan_expired);
+        cancel_foreground_scan_task();
     }
 
     packet->d7anp_timeout = access_profile->transmission_timeout_period; // TODO get calculated value from SP
@@ -204,7 +209,7 @@ void d7anp_process_received_packet(packet_t* packet)
     if(d7anp_state == D7ANP_STATE_FOREGROUND_SCAN)
     {
         DPRINT("Received packet while in D7ANP_STATE_FOREGROUND_SCAN, extending foreground scan period");
-        assert(timer_cancel_task(&foreground_scan_expired) == SUCCESS);
+        cancel_foreground_scan_task();
         schedule_foreground_scan_expired_timer(packet->d7anp_timeout);
     }
     else
