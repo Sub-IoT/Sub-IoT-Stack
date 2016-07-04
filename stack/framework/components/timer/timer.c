@@ -154,15 +154,16 @@ __LINK_C error_t timer_cancel_task(task_t task)
 
     for(uint32_t i = 0; i < FRAMEWORK_TIMER_STACK_SIZE; i++)
     {
-		if(NG(timers)[i].f == task)
-		{
-			NG(timers)[i].f = 0x0;
-			//if we were the first event to fire --> trigger a reconfiguration
-			if(NG(next_event) == i)
-				configure_next_event();
-			status = SUCCESS;
-			break;
-		}
+      if(NG(timers)[i].f == task)
+      {
+        NG(timers)[i].f = 0x0;
+        //if we were the first event to fire --> trigger a reconfiguration
+        if(NG(next_event) == i)
+          configure_next_event();
+
+        status = SUCCESS;
+        break;
+      }
     }
     end_atomic();
 
