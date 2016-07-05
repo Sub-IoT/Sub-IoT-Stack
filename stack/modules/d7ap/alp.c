@@ -123,6 +123,7 @@ bool alp_process_command(uint8_t* alp_command, uint8_t alp_command_length, uint8
   while(fifo_get_size(&alp_command_fifo) > 0) {
     if(do_forward) {
       // forward rest of the actions over the D7ASP interface
+      // TODO support multiple FIFOs
       uint8_t forwarded_alp_size = fifo_get_size(&alp_command_fifo);
       uint8_t forwarded_alp_actions[forwarded_alp_size];
       fifo_pop(&alp_command_fifo, forwarded_alp_actions, forwarded_alp_size);
@@ -184,3 +185,18 @@ void alp_d7asp_request_completed(d7asp_result_t result, uint8_t* payload, uint8_
   // TODO further bookkeeping
 }
 
+void alp_d7asp_fifo_flush_completed(uint8_t fifo_token, uint8_t* progress_bitmap, uint8_t* success_bitmap, uint8_t bitmap_byte_count) {
+  switch(current_command_origin) {
+    case ALP_CMD_ORIGIN_SERIAL_CONSOLE:
+      alp_cmd_handler_output_d7asp_flush_result(fifo_token, progress_bitmap, success_bitmap, bitmap_byte_count);
+      break;
+    case ALP_CMD_ORIGIN_APP:
+      // TODO callback
+      break;
+    case ALP_CMD_ORIGIN_D7AACTP:
+      // do nothing?
+      break;
+    default:
+      assert(false); // ALP_CMD_ORIGIN_D7ASP this would imply a slave session
+  }
+}

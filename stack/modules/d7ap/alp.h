@@ -166,4 +166,6 @@ void alp_process_command_console_output(uint8_t* alp_command, uint8_t alp_comman
 
 void alp_d7asp_request_completed(d7asp_result_t result, uint8_t* payload, uint8_t payload_length);
 
+void alp_d7asp_fifo_flush_completed(uint8_t fifo_token, uint8_t* progress_bitmap, uint8_t* success_bitmap, uint8_t bitmap_byte_count);
+
 #endif /* ALP_H_ */

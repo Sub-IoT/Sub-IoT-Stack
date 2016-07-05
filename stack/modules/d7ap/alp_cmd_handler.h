@@ -54,6 +54,15 @@ void alp_cmd_handler_output_alp_command(uint8_t *alp_command, uint8_t alp_comman
 void alp_cmd_handler_output_d7asp_response(d7asp_result_t d7asp_result, uint8_t *alp_command, uint8_t alp_command_size);
 
 ///
+/// \brief Output the result of a D7ASP FIFO flush to the shell interface
+/// \param fifo_token
+/// \param progress_bitmap
+/// \param success_bitmap
+/// \param bitmap_byte_count
+///
+void alp_cmd_handler_output_d7asp_flush_result(uint8_t fifo_token, uint8_t* progress_bitmap, uint8_t* success_bitmap, uint8_t bitmap_byte_count);
+
+///
 /// \brief Set the callback which will be called when an ALP command is received for the application interface
 /// \param cb
 ///

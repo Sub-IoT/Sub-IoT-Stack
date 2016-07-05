@@ -108,8 +108,11 @@ static void flush_fifos()
         {
             // we handled all requests ...
             DPRINT("FIFO flush completed");
-            if(d7asp_init_args != NULL && d7asp_init_args->d7asp_fifo_flush_completed_cb != NULL)
-                d7asp_init_args->d7asp_fifo_flush_completed_cb(fifo.token, fifo.progress_bitmap, fifo.success_bitmap, REQUESTS_BITMAP_BYTE_COUNT);
+            alp_d7asp_fifo_flush_completed(fifo.token, fifo.progress_bitmap, fifo.success_bitmap, REQUESTS_BITMAP_BYTE_COUNT);
+            // TODO move callback to ALP?
+//            if(d7asp_init_args != NULL && d7asp_init_args->d7asp_fifo_flush_completed_cb != NULL)
+//                d7asp_init_args->d7asp_fifo_flush_completed_cb(fifo.token, fifo.progress_bitmap, fifo.success_bitmap, REQUESTS_BITMAP_BYTE_COUNT);
+
 
             init_fifo();
             switch_state(D7ASP_STATE_IDLE);

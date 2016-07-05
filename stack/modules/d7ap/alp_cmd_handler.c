@@ -127,6 +127,27 @@ void alp_cmd_handler_output_d7asp_response(d7asp_result_t d7asp_result, uint8_t 
     console_print_bytes(data, ptr - data);
 }
 
+void alp_cmd_handler_output_d7asp_flush_result(uint8_t fifo_token, uint8_t* progress_bitmap, uint8_t* success_bitmap, uint8_t bitmap_byte_count)
+{
+  // TODO refactor, move partly to alp + call from SP when shell enabled instead of from app
+  uint8_t data[MODULE_D7AP_FIFO_COMMAND_BUFFER_SIZE] = { 0x00 };
+  uint8_t* ptr = data;
+
+  (*ptr) = SERIAL_ALP_FRAME_SYNC_BYTE; ptr++;               // serial interface sync byte
+  (*ptr) = SERIAL_ALP_FRAME_VERSION; ptr++;               // serial interface version
+  ptr++;                              // payload length byte, skip for now and fill later
+
+  (*ptr) = ALP_OP_RETURN_STATUS + (2 << 6); ptr++; // TODO this is not yet in spec, propose for changing
+  (*ptr) = fifo_token; ptr++;
+  (*ptr) = bitmap_byte_count; ptr++;
+  memcpy(ptr, progress_bitmap, bitmap_byte_count); ptr += bitmap_byte_count;
+  memcpy(ptr, success_bitmap, bitmap_byte_count); ptr += bitmap_byte_count;
+
+  data[2] = ptr - (data + 3);       // fill length byte
+
+  console_print_bytes(data, ptr - data);
+}
+
 void alp_cmd_handler_set_appl_itf_callback(alp_cmd_handler_appl_itf_callback cb)
 {
     alp_cmd_handler_appl_itf_cb = cb;
