@@ -25,6 +25,9 @@ ENDIF()
 #Add the linker script to use to the linker flags
 INSERT_LINKER_FLAGS(BEFORE OBJECTS INSERT "-T${CMAKE_CURRENT_SOURCE_DIR}/CMSIS/device/linker/ezr32lg.ld")
 
+##if bootloader  enabled
+#INSERT_LINKER_FLAGS(BEFORE OBJECTS INSERT "-T${CMAKE_CURRENT_SOURCE_DIR}/CMSIS/device/linker/ezr32lg_bootloader.ld")
+
 
 INSERT_LINKER_FLAGS(AFTER OBJECTS INSERT "-Xlinker  -Map=.map")
 
