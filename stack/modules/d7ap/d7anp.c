@@ -199,8 +199,13 @@ void d7anp_signal_packet_transmitted(packet_t* packet)
 {
     // even when no ack is requested we still need to wait for a possible dormant session which might have been waiting
     // for us on the other side.
-    // TODO if we only want to beacon without listening afterwards we can configure our own Tc to be 0
-    start_foreground_scan(packet->d7anp_timeout);
+    // we listen for the timeout defined in our own access profile
+
+    dae_access_profile_t own_access_profile;
+    uint8_t scan_access_class = fs_read_dll_conf_active_access_class();
+    fs_read_access_class(scan_access_class, &own_access_profile);
+
+    start_foreground_scan(own_access_profile.transmission_timeout_period);
     d7atp_signal_packet_transmitted(packet);
 }
 
