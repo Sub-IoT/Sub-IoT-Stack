@@ -44,6 +44,8 @@ typedef enum {
 static state_t NGDEF(_d7anp_state);
 #define d7anp_state NG(_d7anp_state)
 
+static dae_access_profile_t NGDEF(_own_access_profile);
+#define own_access_profile NG(_own_access_profile)
 
 static void switch_state(state_t next_state)
 {
@@ -118,7 +120,10 @@ void d7anp_tx_foreground_frame(packet_t* packet, bool should_include_origin_temp
         cancel_foreground_scan_task();
     }
 
-    packet->d7anp_timeout = access_profile->transmission_timeout_period; // TODO get calculated value from SP
+    uint8_t own_access_class = fs_read_dll_conf_active_access_class();
+    fs_read_access_class(own_access_class, &own_access_profile);
+
+    packet->d7anp_timeout = own_access_profile.transmission_timeout_period; // TODO get calculated value from SP
     packet->d7anp_ctrl.origin_addressee_ctrl_nls_enabled = false;
     packet->d7anp_ctrl.origin_addressee_ctrl_hop_enabled = false;
     if(!should_include_origin_template)
@@ -200,10 +205,6 @@ void d7anp_signal_packet_transmitted(packet_t* packet)
     // even when no ack is requested we still need to wait for a possible dormant session which might have been waiting
     // for us on the other side.
     // we listen for the timeout defined in our own access profile
-
-    dae_access_profile_t own_access_profile;
-    uint8_t scan_access_class = fs_read_dll_conf_active_access_class();
-    fs_read_access_class(scan_access_class, &own_access_profile);
 
     start_foreground_scan(own_access_profile.transmission_timeout_period);
     d7atp_signal_packet_transmitted(packet);
