@@ -292,11 +292,11 @@ bool d7asp_process_received_packet(packet_t* packet)
           bitmap_set(fifo.success_bitmap, current_request_id);
           mark_current_request_done();
           assert(packet != current_request_packet);
+        }
 
-          alp_d7asp_request_completed(result, packet->payload, packet->payload_length);
+        alp_d7asp_request_completed(result, packet->payload, packet->payload_length);
 //          if(d7asp_init_args != NULL && d7asp_init_args->d7asp_fifo_request_completed_cb != NULL)
 //              d7asp_init_args->d7asp_fifo_request_completed_cb(result, packet->payload, packet->payload_length); // TODO ALP should notify app if needed, refactor
-        }
 
         packet_queue_free_packet(packet); // ACK can be cleaned
         return true;
