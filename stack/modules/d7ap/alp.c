@@ -59,6 +59,9 @@ static uint8_t process_op_read_file_data(fifo_t* alp_command_fifo, fifo_t* alp_r
   err = fifo_pop(alp_command_fifo, &operand.requested_data_length, 1); assert(err == SUCCESS);
   DPRINT("READ FILE %i LEN %i", operand.file_offset.file_id, operand.requested_data_length);
 
+  if(operand.requested_data_length <= 0)
+    return 0; // TODO status
+
   // fill response
   fifo_put_byte(alp_response_fifo, ALP_OP_RETURN_FILE_DATA);
   fifo_put_byte(alp_response_fifo, operand.file_offset.file_id);
