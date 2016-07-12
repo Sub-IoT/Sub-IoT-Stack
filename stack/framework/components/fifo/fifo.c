@@ -37,7 +37,7 @@ error_t fifo_put(fifo_t *fifo, uint8_t *data, uint16_t len)
     if(fifo->tail_idx + len <= fifo->max_size)
     {
         memcpy(fifo->buffer + fifo->tail_idx, data, len);
-        fifo->tail_idx += len;
+        fifo->tail_idx = (fifo->tail_idx + len) % fifo->max_size;
         return SUCCESS;
     }
 
