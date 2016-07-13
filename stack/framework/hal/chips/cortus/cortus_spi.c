@@ -102,8 +102,6 @@ void spi_enable(spi_handle_t* spi) {
 
    //while ((spi2->bus_active & 0x1)) {}
    spi2->clk_en = 1;
-
-   //return true;
 }
 
 void spi_disable(spi_handle_t* spi) {
@@ -111,8 +109,6 @@ void spi_disable(spi_handle_t* spi) {
    spi2->clk_en = 0;
 
    ensure_slaves_deselected(spi);
-
-   //return true;
 }
 
 spi_slave_handle_t* spi_init_slave(spi_handle_t* spi, pin_id_t cs_pin, bool cs_is_active_low) {
@@ -187,7 +183,7 @@ void spi_exchange_bytes(spi_slave_handle_t* slave,
       spi_exchange_byte(slave, TxData[i]);
       i++;
     }
-  } else if( RxData != NULL && TxData == NULL ) {   // recieve only
+  } else if( RxData != NULL && TxData == NULL ) {   // receive only
     while( i < length ) {
       RxData[i] = spi_exchange_byte(slave, 0);
       i++;

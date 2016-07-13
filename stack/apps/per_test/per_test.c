@@ -37,14 +37,16 @@
 #include "crc.h"
 #include "debug.h"
 
+#ifdef PLATFORM_EFM32GG_STK3700
 #include "platform_lcd.h"
+#endif
 #include "userbutton.h"
 #include "fifo.h"
 
 #include "console.h"
 
 
-#if (!defined PLATFORM_EFM32GG_STK3700  && !defined PLATFORM_EZR32LG_WSTK6200A)
+#if (!defined PLATFORM_EFM32GG_STK3700  && !defined PLATFORM_EZR32LG_WSTK6200A && !defined PLATFORM_CORTUS_FPGA)
 	#error Mismatch between the configured platform and the actual platform.
 #endif
 
@@ -104,9 +106,7 @@ static uint16_t counter = 0;
 static uint16_t missed_packets_counter = 0;
 static uint16_t received_packets_counter = 0;
 static int16_t tx_packet_delay_s = 0;
-static hw_radio_packet_t received_packet;
 static char lcd_msg[15];
-static char record[80];
 static uint64_t id;
 static bool is_mode_rx = false;
 static state_t current_state = STATE_CONFIG_DIRECTION;
@@ -186,8 +186,7 @@ static void packet_received(hw_radio_packet_t* packet) {
         memcpy(&msg_counter, packet->data + 1 + sizeof(msg_id), sizeof(msg_counter));
         char chan[8];
         channel_id_to_string(&(packet->rx_meta.rx_cfg.channel_id), chan, sizeof(chan));
-        console_printf("%7s,%i,%i,%lu,%lu,%i\n", chan, msg_counter, packet->rx_meta.rssi, (unsigned long)msg_id, (unsigned long)id, packet->rx_meta.timestamp);
-    
+        console_printf("%7s, counter <%i>, rssi <%idBm>, msgId <%lu>, Id <%lu>, timestamp <%lu>\n", chan, msg_counter, packet->rx_meta.rssi, (unsigned long)msg_id, (unsigned long)id, packet->rx_meta.timestamp);
 
 		if(counter == 0)
 		{
@@ -217,10 +216,11 @@ static void packet_received(hw_radio_packet_t* packet) {
 	        per = 100.0 - ((double)received_packets_counter / (double)msg_counter) * 100.0;
 
 	    sprintf(lcd_msg, "%i %i", (int)per, packet->rx_meta.rssi);
+	    console_printf("RX failure rate = %i %%", (int)per);
 
 #ifdef PLATFORM_EFM32GG_STK3700
 	    lcd_write_string(lcd_msg);
-#else
+#elif defined HAS_LCD
 	    lcd_write_line(4, lcd_msg);
 #endif
 
@@ -236,7 +236,7 @@ static void packet_transmitted(hw_radio_packet_t* packet) {
     sprintf(lcd_msg, "TX %i", counter);
 #ifdef PLATFORM_EFM32GG_STK3700
 	    lcd_write_string(lcd_msg);
-#else
+#elif defined HAS_LCD
 	    lcd_write_line(4, lcd_msg);
 #endif
 
@@ -252,8 +252,8 @@ static void packet_transmitted(hw_radio_packet_t* packet) {
 }
 
 static void stop() {
-  // make sure to cancel tasks which might me pending already
-  hw_radio_set_idle();
+	// make sure to cancel tasks which might me pending already
+	hw_radio_set_idle();
 
 	if(is_mode_rx) {
 		sched_cancel_task(&start_rx);
@@ -300,7 +300,9 @@ static void start() {
     counter = 0;
     missed_packets_counter = 0;
     received_packets_counter = 0;
+#ifdef HAS_LCD
     uint8_t lcd_line = 0;
+#endif
 
     switch(current_state)
     {
@@ -308,7 +310,9 @@ static void start() {
             is_mode_rx? sprintf(lcd_msg, "PER RX") : sprintf(lcd_msg, "PER TX");
             break;
         case STATE_CONFIG_DATARATE:
+#ifdef HAS_LCD
         	lcd_line = 1;
+#endif
             switch(current_channel_id.channel_header.ch_class)
             {
                 case PHY_CLASS_LO_RATE:
@@ -323,7 +327,9 @@ static void start() {
             }
             break;
         case STATE_RUNNING:
+#ifdef HAS_LCD
         	lcd_line = 2;
+#endif
             if(is_mode_rx)
             {
                 sprintf(lcd_msg, "RUN RX");
@@ -343,9 +349,9 @@ static void start() {
     }
 
 #ifdef PLATFORM_EFM32GG_STK3700
-    lcd_write_string(lcd_msg);
-#else
-    lcd_write_line(lcd_line, lcd_msg);
+	lcd_write_string(lcd_msg);
+#elif defined HAS_LCD
+	lcd_write_line(lcd_line, lcd_msg);
 #endif
 
 }
@@ -399,16 +405,16 @@ static void process_command_chan()
 {
     while(fifo_get_size(&uart_rx_fifo) < COMMAND_CHAN_PARAM_SIZE);
 
-    char param[COMMAND_CHAN_PARAM_SIZE];
+    uint8_t param[COMMAND_CHAN_PARAM_SIZE];
     fifo_pop(&uart_rx_fifo, param, COMMAND_CHAN_PARAM_SIZE);
 
     channel_id_t new_channel;
 
-    if(strncmp(param, "433", 3) == 0)
+    if(strncmp((const char*)param, "433", 3) == 0)
         new_channel.channel_header.ch_freq_band = PHY_BAND_433;
-    else if(strncmp(param, "868", 3) == 0)
+    else if(strncmp((const char*)param, "868", 3) == 0)
         new_channel.channel_header.ch_freq_band = PHY_BAND_868;
-    else if(strncmp(param, "915", 3) == 0)
+    else if(strncmp((const char*)param, "915", 3) == 0)
         new_channel.channel_header.ch_freq_band = PHY_BAND_915;
     else
         goto error;
@@ -446,8 +452,8 @@ static void process_command_chan()
     console_print(str);
 
 #ifdef PLATFORM_EFM32GG_STK3700
-#else
-	    lcd_write_line(6, str);
+#elif HAS_LCD
+	lcd_write_line(6, str);
 #endif
 
     // change channel and restart
@@ -465,17 +471,17 @@ static void process_uart_rx_fifo()
     {
         uint8_t received_cmd[COMMAND_SIZE];
         fifo_pop(&uart_rx_fifo, received_cmd, COMMAND_SIZE);
-        if(strncmp(received_cmd, COMMAND_CHAN, COMMAND_SIZE) == 0)
+        if(strncmp((const char*)received_cmd, COMMAND_CHAN, COMMAND_SIZE) == 0)
         {
             process_command_chan();
         }
-        else if(strncmp(received_cmd, COMMAND_TRAN, COMMAND_SIZE) == 0)
+        else if(strncmp((const char*)received_cmd, COMMAND_TRAN, COMMAND_SIZE) == 0)
         {
             while(fifo_get_size(&uart_rx_fifo) < COMMAND_TRAN_PARAM_SIZE);
 
-            char param[COMMAND_TRAN_PARAM_SIZE];
+            uint8_t param[COMMAND_TRAN_PARAM_SIZE];
             fifo_pop(&uart_rx_fifo, param, COMMAND_TRAN_PARAM_SIZE);
-            tx_packet_delay_s = atoi(param);
+            tx_packet_delay_s = atoi((const char*)param);
             DPRINT("performing TRAN command with %d tx_packet_delay_s\r\n",
                    tx_packet_delay_s);
 
@@ -484,7 +490,7 @@ static void process_uart_rx_fifo()
             current_state = STATE_RUNNING;
             sched_post_task(&start);
         }
-        else if(strncmp(received_cmd, COMMAND_RECV, COMMAND_SIZE) == 0)
+        else if(strncmp((const char*)received_cmd, COMMAND_RECV, COMMAND_SIZE) == 0)
         {
             DPRINT("entering RECV mode\r\n");
             stop();
@@ -492,14 +498,13 @@ static void process_uart_rx_fifo()
             current_state = STATE_RUNNING;
             sched_post_task(&start);
         }
-        else if(strncmp(received_cmd, COMMAND_RSET, COMMAND_SIZE) == 0)
+        else if(strncmp((const char*)received_cmd, COMMAND_RSET, COMMAND_SIZE) == 0)
         {
             DPRINT("resetting...\r\n");
             hw_reset();
         }
         else
         {
-            char err[40];
             DPRINT("ERROR invalid command %.4s\n\r", received_cmd);
         }
 
@@ -556,7 +561,7 @@ void bootstrap() {
 
 
 #ifdef PLATFORM_EFM32GG_STK3700
-#else
+#elif defined HAS_LCD
     	char str[20];
     	channel_id_to_string(&current_channel_id, str, sizeof(str));
     	lcd_write_line(6, str);
