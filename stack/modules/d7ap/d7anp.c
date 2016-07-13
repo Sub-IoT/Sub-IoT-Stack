@@ -132,7 +132,7 @@ void d7anp_tx_foreground_frame(packet_t* packet, bool should_include_origin_temp
     {
         uint8_t vid[2];
         fs_read_vid(vid);
-        if(memcmp(vid, (uint8_t[2]){0x00, 0x00},2) == 0)
+        if(memcmp(vid, (uint8_t[2]){ 0xFF, 0xFF }, 2) == 0)
             packet->d7anp_ctrl.origin_addressee_ctrl_id_type = ID_TYPE_UID;
         else
             packet->d7anp_ctrl.origin_addressee_ctrl_id_type = ID_TYPE_VID;
@@ -159,9 +159,13 @@ uint8_t d7anp_assemble_packet_header(packet_t *packet, uint8_t *data_ptr)
         {
             fs_read_uid(data_ptr); data_ptr += 8;
         }
-        else
+        else if(packet->d7anp_ctrl.origin_addressee_ctrl_id_type == ID_TYPE_VID)
         {
             fs_read_vid(data_ptr); data_ptr += 2;
+        }
+        else
+        {
+            assert(false);
         }
     }
 
