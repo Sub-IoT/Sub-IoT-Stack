@@ -232,6 +232,11 @@ alp_status_codes_t fs_write_file(uint8_t file_id, uint8_t offset, const uint8_t*
         execute_alp_command(file_headers[file_id].file_properties.action_file_id);
     }
 
+    if(file_id == D7A_FILE_DLL_CONF_FILE_ID)
+    {
+        dll_notify_dll_conf_file_changed();
+    }
+
     return ALP_STATUS_OK;
 }
 
@@ -278,7 +283,6 @@ uint8_t fs_read_dll_conf_active_access_class()
 void fs_write_dll_conf_active_access_class(uint8_t access_class)
 {
     fs_write_file(D7A_FILE_DLL_CONF_FILE_ID, 0, &access_class, 1);
-    dll_notify_dll_conf_file_changed();
 }
 
 uint8_t fs_get_file_length(uint8_t file_id)
