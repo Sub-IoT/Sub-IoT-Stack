@@ -37,7 +37,7 @@ typedef enum {
 
 #define ID_TYPE_BCAST_ID_LENGTH 0
 #define ID_TYPE_UID_ID_LENGTH   8
-#define ID_TYPE_VID_LENGTH      3
+#define ID_TYPE_VID_LENGTH      2
 
 typedef struct {
     union {
