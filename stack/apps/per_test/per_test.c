@@ -51,7 +51,7 @@
 #endif
 
 // configuration options
-#define PACKET_SIZE 16
+#define PACKET_SIZE 255
 
 #ifdef FRAMEWORK_LOG_ENABLED
 #include "log.h"
@@ -60,17 +60,25 @@
 #define DPRINT(...)
 #endif
 
+#define MIN(a,b) (((a)<(b))?(a):(b))
+
 #define COMMAND_SIZE 4
-#define UART_RX_BUFFER_SIZE 20
 #define COMMAND_CHAN "CHAN"
 #define COMMAND_CHAN_PARAM_SIZE 7
 #define COMMAND_TRAN "TRAN"
 #define COMMAND_TRAN_PARAM_SIZE 3
 #define COMMAND_RECV "RECV"
 #define COMMAND_RSET "RSET"
+#define COMMAND_DATA "DATA"
 
+// Define the maximum length of the user data according the size occupied already by the parameters length, counter, id and crc
+#define DATA_MAX_LEN PACKET_SIZE - 2*sizeof(uint16_t) /* word for crc + counter */  - sizeof(uint64_t) /* id */ - 1 /*byte length*/
+
+#define UART_RX_BUFFER_SIZE COMMAND_SIZE + DATA_MAX_LEN
 static uint8_t uart_rx_buffer[UART_RX_BUFFER_SIZE] = { 0 };
 static fifo_t uart_rx_fifo;
+static char TX_DATA[DATA_MAX_LEN+1];
+
 
 typedef enum
 {
@@ -101,7 +109,7 @@ static uint8_t tx_buffer[sizeof(hw_radio_packet_t) + 255] = { 0 };
 static uint8_t rx_buffer[sizeof(hw_radio_packet_t) + 255] = { 0 };
 static hw_radio_packet_t* tx_packet = (hw_radio_packet_t*)tx_buffer;
 static hw_radio_packet_t* rx_packet = (hw_radio_packet_t*)rx_buffer;
-static uint8_t data[PACKET_SIZE + 1] = { [0] = PACKET_SIZE, [1 ... PACKET_SIZE]  = 0 };
+static uint8_t data[PACKET_SIZE] = { [0 ... PACKET_SIZE-1]  = 0 };
 static uint16_t counter = 0;
 static uint16_t missed_packets_counter = 0;
 static uint16_t received_packets_counter = 0;
@@ -126,13 +134,15 @@ static void transmit_packet() {
     DPRINT("transmitting packet");
     current_state = STATE_RUNNING;
     counter++;
-    data[0] = sizeof(id) + sizeof(counter) + sizeof(uint16_t); /* CRC is an uint16_t */
+    data[0] = sizeof(id) + sizeof(counter) + strlen(TX_DATA) + sizeof(uint16_t); /* CRC is an uint16_t */
     memcpy(data + 1, &id, sizeof(id));
     memcpy(data + 1 + sizeof(id), &counter, sizeof(counter));
     /* the CRC calculation shall include all the bytes of the frame including the byte for the length*/
+    memcpy(data + 1 + sizeof(id) + sizeof(counter), TX_DATA, strlen(TX_DATA));
     uint16_t crc = __builtin_bswap16(crc_calculate(data, data[0] + 1 - 2));
-    memcpy(data + 1 + sizeof(id) + sizeof(counter), &crc, 2);
+    memcpy(data + 1 + sizeof(id) + sizeof(counter) + strlen(TX_DATA), &crc, 2);
     memcpy(&tx_packet->data, data, sizeof(data));
+
     tx_cfg.channel_id = current_channel_id;
     tx_packet->tx_meta.tx_cfg = tx_cfg;
     hw_radio_send_packet(tx_packet, &packet_transmitted);
@@ -182,11 +192,17 @@ static void packet_received(hw_radio_packet_t* packet) {
 		#endif
 		uint16_t msg_counter = 0;
         uint64_t msg_id;
+        uint16_t data_len = packet->length - sizeof(msg_id) - sizeof(msg_counter) - 2;
+
+        char rx_data[DATA_MAX_LEN+1];
         memcpy(&msg_id, packet->data + 1, sizeof(msg_id));
         memcpy(&msg_counter, packet->data + 1 + sizeof(msg_id), sizeof(msg_counter));
+        memcpy(rx_data, packet->data + 1 + sizeof(msg_id) + sizeof(msg_counter), data_len);
+        rx_data[data_len] = '\0';
         char chan[8];
         channel_id_to_string(&(packet->rx_meta.rx_cfg.channel_id), chan, sizeof(chan));
-        console_printf("%7s, counter <%i>, rssi <%idBm>, msgId <%lu>, Id <%lu>, timestamp <%lu>\n", chan, msg_counter, packet->rx_meta.rssi, (unsigned long)msg_id, (unsigned long)id, packet->rx_meta.timestamp);
+		console_printf("DATA received: %s\n", rx_data);
+		console_printf("%7s, counter <%i>, rssi <%idBm>, msgId <%lu>, Id <%lu>, timestamp <%lu>\n", chan, msg_counter, packet->rx_meta.rssi, (unsigned long)msg_id, (unsigned long)id, packet->rx_meta.timestamp);
 
 		if(counter == 0)
 		{
@@ -403,8 +419,6 @@ static void userbutton_callback(button_id_t button_id)
 // Eg. 433L001
 static void process_command_chan()
 {
-    while(fifo_get_size(&uart_rx_fifo) < COMMAND_CHAN_PARAM_SIZE);
-
     uint8_t param[COMMAND_CHAN_PARAM_SIZE];
     fifo_pop(&uart_rx_fifo, param, COMMAND_CHAN_PARAM_SIZE);
 
@@ -473,22 +487,24 @@ static void process_uart_rx_fifo()
         fifo_pop(&uart_rx_fifo, received_cmd, COMMAND_SIZE);
         if(strncmp((const char*)received_cmd, COMMAND_CHAN, COMMAND_SIZE) == 0)
         {
-            process_command_chan();
+            if (fifo_get_size(&uart_rx_fifo) == COMMAND_CHAN_PARAM_SIZE)
+                process_command_chan();
         }
         else if(strncmp((const char*)received_cmd, COMMAND_TRAN, COMMAND_SIZE) == 0)
         {
-            while(fifo_get_size(&uart_rx_fifo) < COMMAND_TRAN_PARAM_SIZE);
+            if (fifo_get_size(&uart_rx_fifo)  == COMMAND_TRAN_PARAM_SIZE)
+            {
+                uint8_t param[COMMAND_TRAN_PARAM_SIZE];
+                fifo_pop(&uart_rx_fifo, param, COMMAND_TRAN_PARAM_SIZE);
+                tx_packet_delay_s = atoi((const char*)param);
+                DPRINT("performing TRAN command with %d tx_packet_delay_s\r\n",
+                        tx_packet_delay_s);
 
-            uint8_t param[COMMAND_TRAN_PARAM_SIZE];
-            fifo_pop(&uart_rx_fifo, param, COMMAND_TRAN_PARAM_SIZE);
-            tx_packet_delay_s = atoi((const char*)param);
-            DPRINT("performing TRAN command with %d tx_packet_delay_s\r\n",
-                   tx_packet_delay_s);
-
-            stop();
-            is_mode_rx = false;
-            current_state = STATE_RUNNING;
-            sched_post_task(&start);
+                stop();
+                is_mode_rx = false;
+                current_state = STATE_RUNNING;
+                sched_post_task(&start);
+			}
         }
         else if(strncmp((const char*)received_cmd, COMMAND_RECV, COMMAND_SIZE) == 0)
         {
@@ -503,6 +519,20 @@ static void process_uart_rx_fifo()
             DPRINT("resetting...\r\n");
             hw_reset();
         }
+        else if(strncmp((const char*)received_cmd, COMMAND_DATA, COMMAND_SIZE) == 0)
+        {
+            DPRINT("New DATA to be sent \r\n");
+            int16_t data_len = MIN(DATA_MAX_LEN, fifo_get_size(&uart_rx_fifo));
+
+            fifo_pop(&uart_rx_fifo, TX_DATA, data_len);
+            TX_DATA[data_len] = '\0'; // null terminate the data string
+            DPRINT("DATA <%s> \r\n", TX_DATA);
+
+            stop();
+            is_mode_rx = false;
+            current_state = STATE_RUNNING;
+            sched_post_task(&start);
+        }
         else
         {
             DPRINT("ERROR invalid command %.4s\n\r", received_cmd);
@@ -510,15 +540,19 @@ static void process_uart_rx_fifo()
 
         fifo_clear(&uart_rx_fifo);
     }
-
-    timer_post_task_delay(&process_uart_rx_fifo, TIMER_TICKS_PER_SEC);
 }
 
 static void uart_rx_cb(uint8_t data) {
     error_t err;
-    err = fifo_put(&uart_rx_fifo, &data, 1); assert(err == SUCCESS);
+
+    /* Process command if Enter key is pressed or UART RX buffer is full */
+    if ((data == '\r') || (fifo_get_size(&uart_rx_fifo) == UART_RX_BUFFER_SIZE)) {
+        timer_post_task_delay(&process_uart_rx_fifo, TIMER_TICKS_PER_SEC);
+    }
+    else {
+        err = fifo_put(&uart_rx_fifo, &data, 1); assert(err == SUCCESS);
+    }
     console_print_byte(data); // echo
-    // fifo will be parsed periodically by process_uart_rx_fifo() task
 }
 
 void bootstrap() {
@@ -536,6 +570,7 @@ void bootstrap() {
 #endif
 
     id = hw_get_unique_id();
+    strcpy(TX_DATA, "TEST");
     hw_radio_init(&alloc_new_packet, &release_packet);
 
     rx_cfg.channel_id = current_channel_id;
