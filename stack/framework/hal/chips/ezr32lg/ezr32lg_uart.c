@@ -247,7 +247,7 @@ void uart_send_byte(uart_handle_t* uart, uint8_t data) {
 		uint16_t timeout = 0;
 		while(USBD_EpIsBusy(0x81) && timeout < 100){
 			timeout++;
-			hw_busy_wait(1000);
+      //hw_busy_wait(1000); // TODO validate, commented for now
 		};
 		uint32_t tempData = data;
 		int ret = USBD_Write( 0x81, (void*) &tempData, 1, NULL);
