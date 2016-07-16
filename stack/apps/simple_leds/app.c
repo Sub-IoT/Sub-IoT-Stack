@@ -76,8 +76,11 @@ void bootstrap()
     timer_post_task_delay(&timer1_callback, 0x0000FFFF + (uint32_t)100);
 
 #if NUM_USERBUTTONS > 0
-    ubutton_register_callback(0, &userbutton_callback);
-    ubutton_register_callback(1, &userbutton_callback);
+    int i= 0;
+    for (i=0;i<NUM_USERBUTTONS;i++)
+	{
+    	ubutton_register_callback(i, &userbutton_callback);
+	}
 #endif
 
     led_off(0);

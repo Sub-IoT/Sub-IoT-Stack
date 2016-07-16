@@ -38,7 +38,11 @@ inline void console_print(char* string) {
 }
 
 inline void console_set_rx_interrupt_callback(uart_rx_inthandler_t uart_rx_cb) {
+#ifdef PLATFORM_USE_USB_CDC
+	cdc_set_rx_interrupt_callback(uart_rx_cb);
+#else
   uart_set_rx_interrupt_callback(uart, uart_rx_cb);
+#endif
 }
 
 inline void console_rx_interrupt_enable() {
