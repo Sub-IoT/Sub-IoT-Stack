@@ -34,11 +34,11 @@
 static fs_file_header_t NGDEF(_file_headers)[MODULE_D7AP_FS_FILE_COUNT] = { 0 };
 #define file_headers NG(_file_headers)
 
-static uint8_t NGDEF(_data)[MODULE_D7AP_FS_FILESYSTEM_SIZE] = { 0 };
-#define data NG(_data)
-
 static uint16_t NGDEF(_current_data_offset); // TODO we are using offset here instead of pointer because NG does not support pointers, fix later when NG is replaced
 #define current_data_offset NG(_current_data_offset)
+
+static uint8_t NGDEF(_data)[MODULE_D7AP_FS_FILESYSTEM_SIZE] = { 0 };
+#define data NG(_data)
 
 static uint16_t NGDEF(_file_offsets)[MODULE_D7AP_FS_FILE_COUNT] = { 0 };
 #define file_offsets NG(_file_offsets)
