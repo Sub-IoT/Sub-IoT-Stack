@@ -35,7 +35,7 @@
  #include "platform.h"
 
 // turn on/off the debug prints
-#ifdef LOG_PHY_ENABLED
+#ifdef FRAMEWORK_PHY_LOG_ENABLED
 #include "log.h"
 #define DPRINT(...) log_print_string(__VA_ARGS__)
 #else

@@ -18,7 +18,7 @@
 #
 
 #######################################
-# Toolchain setup gcc-arm-embedded
+# Toolchain setup aps-gcc
 #######################################
 
 include(CMakeForceCompiler)
