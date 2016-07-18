@@ -32,6 +32,7 @@
 #include "hwradio.h"
 #include "hwsystem.h"
 #include "hwlcd.h"
+#include <hwwatchdog.h>
 
 #include "crc.h"
 #include "debug.h"
@@ -125,10 +126,12 @@ static void transmit_packet() {
     DPRINT("transmitting packet");
     current_state = STATE_RUNNING;
     counter++;
+    data[0] = sizeof(id) + sizeof(counter) + sizeof(uint16_t); /* CRC is an uint16_t */
     memcpy(data + 1, &id, sizeof(id));
     memcpy(data + 1 + sizeof(id), &counter, sizeof(counter));
-    uint16_t crc = __builtin_bswap16(crc_calculate(data, sizeof(data) - 2));
-    memcpy(data + sizeof(data) - 2, &crc, 2);
+    /* the CRC calculation shall include all the bytes of the frame including the byte for the length*/
+    uint16_t crc = __builtin_bswap16(crc_calculate(data, data[0] + 1 - 2));
+    memcpy(data + 1 + sizeof(id) + sizeof(counter), &crc, 2);
     memcpy(&tx_packet->data, data, sizeof(data));
     tx_cfg.channel_id = current_channel_id;
     tx_packet->tx_meta.tx_cfg = tx_cfg;
@@ -165,7 +168,8 @@ static void channel_id_to_string(channel_id_t* channel, char* str, size_t len) {
 }
 
 static void packet_received(hw_radio_packet_t* packet) {
-    uint16_t crc = __builtin_bswap16(crc_calculate(packet->data, packet->length - 2));
+    uint16_t crc = __builtin_bswap16(crc_calculate(packet->data, packet->length + 1 - 2));
+
     if(memcmp(&crc, packet->data + packet->length + 1 - 2, 2) != 0)
     {
         DPRINT("CRC error");
@@ -221,6 +225,7 @@ static void packet_received(hw_radio_packet_t* packet) {
 #endif
 
     }
+    hw_watchdog_feed();
 }
 
 static void packet_transmitted(hw_radio_packet_t* packet) {
@@ -243,6 +248,7 @@ static void packet_transmitted(hw_radio_packet_t* packet) {
 
     //increase_channel();
     timer_post_task(&transmit_packet, delay);
+    hw_watchdog_feed();
 }
 
 static void stop() {
@@ -251,9 +257,10 @@ static void stop() {
 
 	if(is_mode_rx) {
 		sched_cancel_task(&start_rx);
-  }	else {
+	} else {
+		timer_cancel_task(&transmit_packet);
 		sched_cancel_task(&transmit_packet);
-  }
+	}
 }
 
 static void increase_channel() {
