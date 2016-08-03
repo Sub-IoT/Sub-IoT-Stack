@@ -115,6 +115,11 @@ static void cancel_foreground_scan_task()
 
 void d7anp_init()
 {
+    uint8_t own_access_class = fs_read_dll_conf_active_access_class();
+
+    // set early our own acces profile since this information may be needed when receiving a frame
+    fs_read_access_class(own_access_class, &own_access_profile);
+
     d7anp_state = D7ANP_STATE_IDLE;
     sched_register_task(&foreground_scan_expired);
 }
@@ -151,6 +156,19 @@ void d7anp_tx_foreground_frame(packet_t* packet, bool should_include_origin_temp
 
     switch_state(D7ANP_STATE_TRANSMIT);
     dll_tx_frame(packet, access_profile);
+}
+
+void start_foreground_scan_after_D7AAdvP()
+{
+    d7atp_start_dialog_timeout_timer();
+    switch_state(D7ANP_STATE_RESPONDER_FOREGROUND_SCAN);
+    dll_start_foreground_scan();
+}
+
+static void schedule_foreground_scan_after_D7AAdvP(timer_tick_t eta)
+{
+    DPRINT("Perform a dll foreground scan at the end of the delay period (%i ticks)", eta);
+    assert(timer_post_task_delay(&start_foreground_scan_after_D7AAdvP, eta) == SUCCESS);
 }
 
 void d7anp_start_responder_foreground_scan()
@@ -266,6 +284,22 @@ void d7anp_process_received_packet(packet_t* packet)
         DPRINT("Received packet while in D7ANP_STATE_RESPONDER_FOREGROUND_SCAN");
         switch_state(D7ANP_STATE_IDLE);
         // switch the radio to idle now or let the radio to be set to idle after transmitting the response ?
+    }
+     else // To confirm whether this should be handled here or in the data link layer
+    {
+        DPRINT("Received packet while in D7ANP_STATE_IDLE (scan automation)");
+
+        // check if DLL was performing a background scan
+        if(!own_access_profile.control_scan_type_is_foreground) {
+            timer_tick_t eta;
+
+            DPRINT("Received a background frame)");
+            //TODO decode the D7A Background Network Protocols Frame in order to trigger the foreground scan after the advertising period
+            schedule_foreground_scan_after_D7AAdvP(eta);
+            return;
+        }
+
+        //TODO switch the radio to idle hw_radio_set_idle() ?
     }
 
     d7atp_process_received_packet(packet);
