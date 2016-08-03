@@ -294,10 +294,18 @@ void d7atp_respond_dialog(packet_t* packet)
     d7atp->ctrl_ack_not_void = false; // TODO
     d7atp->ctrl_ack_record = false; // TODO validate
 
-    bool should_include_origin_template = false; // we don't need to send origin ID, receivers will filter based on dialogID, but ...
+    bool should_include_origin_template = false; // we don't need to send origin ID, the requester will filter based on dialogID, but ...
 
-    if(!packet->dll_header.control_target_address_set) // ... when request was broadcast we do need to send origin template
+    if ((!packet->dll_header.control_target_address_set)
+            || (packet->d7atp_ctrl.ctrl_is_start
+            && packet->d7atp_ctrl.ctrl_is_ack_requested))
+    {
+        /*
+         * origin template is provided in all requests in which the START flag is set to 1
+         * and requesting responses, and in all responses to broadcast requests
+         */
         should_include_origin_template = true;
+    }
 
     if (d7atp_is_response_period_expired())
     {
@@ -317,9 +325,14 @@ uint8_t d7atp_assemble_packet_header(packet_t* packet, uint8_t* data_ptr)
     (*data_ptr) = packet->d7atp_dialog_id; data_ptr++;
     (*data_ptr) = packet->d7atp_transaction_id; data_ptr++;
 
-    if(packet->d7atp_ctrl.ctrl_is_ack_requested && packet->d7atp_ctrl.ctrl_ack_not_void)
+    // Provide the Responder or Requester ACK template when requested
+    if ((d7atp_state == D7ATP_STATE_MASTER_TRANSACTION_REQUEST_PERIOD) && (packet->d7atp_ctrl.ctrl_is_ack_requested)) {
+        //TODO check if at least one Responder has set the ACK_REQ flag
+        //TODO aggregate the Device IDs of the Responders that set their ACK_REQ flags.
+    }
+    else if(packet->d7atp_ctrl.ctrl_is_ack_requested && packet->d7atp_ctrl.ctrl_ack_not_void)
     {
-        // add ACK template
+        // add Responder ACK template
         (*data_ptr) = packet->d7atp_transaction_id; data_ptr++; // transaction ID start
         (*data_ptr) = packet->d7atp_transaction_id; data_ptr++; // transaction ID stop
         // TODO ACK bitmap, support for multiple segments to ack not implemented yet
