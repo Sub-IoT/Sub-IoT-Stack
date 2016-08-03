@@ -70,4 +70,6 @@ void d7atp_process_received_packet(packet_t* packet);
 void d7atp_signal_transaction_response_period_elapsed();
 bool d7atp_is_response_period_expired();
 void d7atp_cancel_response_period_timeout_handler();
+void d7atp_signal_dialog_termination();
+void d7atp_start_dialog_timeout_timer();
 #endif /* D7ATP_H_ */

@@ -118,6 +118,7 @@ static void flush_fifos()
 
 
             init_fifo();
+            d7atp_signal_dialog_termination();
             switch_state(D7ASP_STATE_IDLE);
             return;
         }
@@ -151,7 +152,7 @@ static void flush_fifos()
     }
 
     // TODO calculate D7ANP timeout (and update during transaction lifetime) (based on Tc, channel, cs, payload size, # msgs, # retries)
-    d7atp_start_dialog(fifo.token, current_request_id, true, current_request_packet, &fifo.config.qos);
+    d7atp_start_dialog(fifo.token, current_request_id, (current_request_id == fifo.next_request_id - 1), current_request_packet, &fifo.config.qos);
 }
 
 // TODO document state diagram
@@ -204,6 +205,7 @@ static void switch_state(state_t new_state)
             break;
         case D7ASP_STATE_IDLE:
             state = new_state;
+            current_request_id = NO_ACTIVE_REQUEST_ID;
             DPRINT("Switching to state D7ASP_STATE_IDLE");
             break;
         default:
@@ -393,8 +395,22 @@ static void on_request_completed()
     else
     {
         // request completed, no retries needed so we can free the packet
-        current_request_id = NO_ACTIVE_REQUEST_ID;
         packet_queue_free_packet(current_request_packet);
+
+        // terminate the dialog if all request handled
+        // we need to switch to the state idle otherwise we may receive a new packet before the task flush_fifos is handled
+        // in this case, we may assert since the state remains MASTER
+        if (current_request_id == fifo.next_request_id - 1)
+        {
+            DPRINT("FIFO flush completed");
+            alp_d7asp_fifo_flush_completed(fifo.token, fifo.progress_bitmap,
+                             fifo.success_bitmap, REQUESTS_BITMAP_BYTE_COUNT);
+            init_fifo();
+            d7atp_signal_dialog_termination();
+            switch_state(D7ASP_STATE_IDLE);
+            return;
+        }
+        current_request_id = NO_ACTIVE_REQUEST_ID;
     }
 
     sched_post_task(&flush_fifos); // continue flushing until all request handled ...
@@ -414,6 +430,8 @@ void d7asp_signal_packet_csma_ca_insertion_completed(bool succeeded)
         {
             mark_current_request_done();
             bitmap_set(fifo.success_bitmap, current_request_id);
+            // As we don't wait a response, the request can be completed
+            on_request_completed();
         }
     }
     else if ((!succeeded) && ((state == D7ASP_STATE_SLAVE) ||
