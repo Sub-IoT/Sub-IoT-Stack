@@ -72,6 +72,9 @@ static packet_t* NGDEF(_current_request_packet);
 static uint8_t NGDEF(_single_request_retry_limit);
 #define single_request_retry_limit NG(_single_request_retry_limit)
 
+static packet_t* NGDEF(_current_response_packet);
+#define current_response_packet NG(_current_response_packet)
+
 static d7asp_init_args_t* NGDEF(_d7asp_init_args);
 #define d7asp_init_args NG(_d7asp_init_args)
 
@@ -160,8 +163,6 @@ static void flush_fifos()
     // TODO calculate D7ANP timeout (and update during transaction lifetime) (based on Tc, channel, cs, payload size, # msgs, # retries)
     d7atp_start_dialog(current_master_session.token, current_request_id, true, current_request_packet, &current_master_session.config.qos);
 }
-
-
 
 // TODO document state diagram
 static void switch_state(state_t new_state)
@@ -381,6 +382,8 @@ bool d7asp_process_received_packet(packet_t* packet)
             goto discard_request; // no need to respond, clean up
 
         DPRINT("Sending response");
+
+        current_response_packet = packet;
         d7atp_respond_dialog(packet);
         return true;
     }
@@ -399,8 +402,11 @@ void d7asp_signal_packet_transmitted(packet_t *packet)
 
     if(d7asp_state == D7ASP_STATE_SLAVE || d7asp_state == D7ASP_STATE_SLAVE_PENDING_MASTER)
     {
+        assert(current_response_packet == packet);
+
         // when in slave session we can immediately cleanup the transmitted response.
         // requests (in master sessions) will be cleanup upon termination of the dialog.
+        current_response_packet = NULL;
         packet_queue_free_packet(packet);
     }
 }
@@ -421,20 +427,18 @@ static void on_request_completed()
         packet_queue_free_packet(current_request_packet);
     }
 
-
     sched_post_task(&flush_fifos); // continue flushing until all request handled ...
 }
 
 void d7asp_signal_packet_csma_ca_insertion_completed(bool succeeded)
 {
-    if(d7asp_state == D7ASP_STATE_MASTER) // TODO only relevant for master sessions?
+    if(d7asp_state == D7ASP_STATE_MASTER)
     {
         if(!succeeded)
         {
             on_request_completed();
             return;
         }
-
         // for the lowest QoS level the packet is ack-ed when CSMA/CA process succeeded
         if(current_master_session.config.qos.qos_resp_mode == SESSION_RESP_MODE_NO)
         {
@@ -442,17 +446,35 @@ void d7asp_signal_packet_csma_ca_insertion_completed(bool succeeded)
             bitmap_set(current_master_session.success_bitmap, current_request_id);
         }
     }
+    else if ((!succeeded) && ((d7asp_state == D7ASP_STATE_SLAVE) ||
+                (d7asp_state == D7ASP_STATE_SLAVE_PENDING_MASTER)))
+    {
+        packet_queue_free_packet(current_response_packet);
+        current_response_packet = NULL;
+    }
 }
 
 void d7asp_signal_transaction_response_period_elapsed()
 {
     if(d7asp_state == D7ASP_STATE_MASTER)
         on_request_completed();
-    else if(d7asp_state == D7ASP_STATE_SLAVE)
-        switch_state(D7ASP_STATE_IDLE);
-    else if(d7asp_state == D7ASP_STATE_SLAVE_PENDING_MASTER)
+    else if((d7asp_state == D7ASP_STATE_SLAVE) ||
+            (d7asp_state == D7ASP_STATE_SLAVE_PENDING_MASTER))
     {
-        switch_state(D7ASP_STATE_MASTER);
-        sched_post_task(&flush_fifos);
+        if (current_response_packet)
+        {
+            DPRINT("Discard the response since the response period is expired");
+            packet_queue_free_packet(current_response_packet);
+            current_response_packet = NULL;
+        }
+
+        if (d7asp_state == D7ASP_STATE_SLAVE)
+            switch_state(D7ASP_STATE_IDLE);
+        else if(d7asp_state == D7ASP_STATE_SLAVE_PENDING_MASTER)
+        {
+            switch_state(D7ASP_STATE_MASTER);
+            DPRINT("Schedule task to flush the fifo");
+            sched_post_task(&flush_fifos);
+        }
     }
 }
