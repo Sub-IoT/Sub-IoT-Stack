@@ -258,7 +258,7 @@ d7asp_queue_result_t d7asp_queue_alp_actions(d7asp_fifo_config_t* d7asp_fifo_con
     return (d7asp_queue_result_t){ .fifo_token = fifo.token, .request_id = request_id };
 }
 
-bool d7asp_process_received_packet(packet_t* packet)
+bool d7asp_process_received_packet(packet_t* packet, bool extension)
 {
     hw_watchdog_feed(); // TODO do here?
     d7asp_result_t result = {
@@ -302,6 +302,17 @@ bool d7asp_process_received_packet(packet_t* packet)
 //              d7asp_init_args->d7asp_fifo_request_completed_cb(result, packet->payload, packet->payload_length); // TODO ALP should notify app if needed, refactor
 
         packet_queue_free_packet(packet); // ACK can be cleaned
+
+        // switch to the state slave when the D7ATP Dialog Extension Procedure is initiated
+        if (extension)
+        {
+            DPRINT("Dialog Extension Procedure is initiated, mark the FIFO flush"
+                    " completed before switching to a responder state");
+            alp_d7asp_fifo_flush_completed(fifo.token, fifo.progress_bitmap,
+                               fifo.success_bitmap, REQUESTS_BITMAP_BYTE_COUNT);
+            init_fifo();
+            switch_state(D7ASP_STATE_SLAVE);
+        }
         return true;
     }
     else if(state == D7ASP_STATE_IDLE || state == D7ASP_STATE_SLAVE)
@@ -356,6 +367,17 @@ bool d7asp_process_received_packet(packet_t* packet)
         DPRINT("Sending response");
 
         current_response_packet = packet;
+
+        /*
+         * activate the dialog extension procedure in the unicast response if the dialog is terminated
+         * and a master session is pending
+         */
+        if((packet->dll_header.control_target_address_set) && (packet->d7atp_ctrl.ctrl_is_stop)
+                && (state == D7ASP_STATE_SLAVE_PENDING_MASTER))
+            packet->d7atp_ctrl.ctrl_is_start = true;
+        else
+            packet->d7atp_ctrl.ctrl_is_start = 0;
+
         d7atp_respond_dialog(packet);
         return true;
     }

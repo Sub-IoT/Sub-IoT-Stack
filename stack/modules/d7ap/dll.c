@@ -111,8 +111,13 @@ static void switch_state(dll_state_t next_state)
     switch(next_state)
     {
     case DLL_STATE_CSMA_CA_STARTED:
+        /*
+         * In case of extension, a request can follow the response, so the
+         * current state can be DLL_STATE_TX_FOREGROUND_COMPLETED
+         */
         assert(dll_state == DLL_STATE_IDLE || dll_state == DLL_STATE_SCAN_AUTOMATION
-               || dll_state == DLL_STATE_FOREGROUND_SCAN);
+               || dll_state == DLL_STATE_FOREGROUND_SCAN
+               || dll_state == DLL_STATE_TX_FOREGROUND_COMPLETED);
         dll_state = next_state;
         DPRINT("Switched to DLL_STATE_CSMA_CA_STARTED");
         break;
