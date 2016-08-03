@@ -107,23 +107,45 @@ static void cancel_foreground_scan_task()
     sched_cancel_task(&foreground_scan_expired);
 }
 
+static void resume_foreground_scan()
+{
+    if (!sched_is_scheduled(&foreground_scan_expired))
+    {
+        switch_state(D7ANP_STATE_FOREGROUND_SCAN);
+        dll_start_foreground_scan();
+    }
+}
+
+static void suspend_foreground_scan()
+{
+    // Tl timer is still ongoing but the foreground scan is disabled
+    switch_state(D7ANP_STATE_IDLE);
+    dll_stop_foreground_scan();
+}
+
 void d7anp_init()
 {
     d7anp_state = D7ANP_STATE_IDLE;
     sched_register_task(&foreground_scan_expired);
 }
 
+bool is_foreground_scan_suspended()
+{
+  return timer_is_task_scheduled(&foreground_scan_expired);
+}
+
 void d7anp_tx_foreground_frame(packet_t* packet, bool should_include_origin_template, dae_access_profile_t* access_profile)
 {
     if(d7anp_state == D7ANP_STATE_FOREGROUND_SCAN)
     {
-        cancel_foreground_scan_task();
+        // Stop the FG scan and the corresponding timer if the packet to transmit is a request
+        if (packet->d7atp_ctrl.ctrl_tc)
+            cancel_foreground_scan_task();
+        // Suspend only the FG scan and keep FG scan timer ongoing during the response transmission
+        else
+            suspend_foreground_scan();
     }
 
-    uint8_t own_access_class = fs_read_dll_conf_active_access_class();
-    fs_read_access_class(own_access_class, &own_access_profile);
-
-    packet->d7anp_timeout = own_access_profile.transmission_timeout_period; // TODO get calculated value from SP
     packet->d7anp_ctrl.origin_addressee_ctrl_nls_enabled = false;
     packet->d7anp_ctrl.origin_addressee_ctrl_hop_enabled = false;
     if(!should_include_origin_template)
@@ -150,7 +172,7 @@ uint8_t d7anp_assemble_packet_header(packet_t *packet, uint8_t *data_ptr)
     assert(!packet->d7anp_ctrl.origin_addressee_ctrl_hop_enabled); // TODO hopping not yet supported
 
     uint8_t* d7anp_header_start = data_ptr;
-    (*data_ptr) = packet->d7anp_timeout; data_ptr++;
+    (*data_ptr) = packet->d7anp_listen_timeout; data_ptr++;
     (*data_ptr) = packet->d7anp_ctrl.raw; data_ptr++;
 
     if(packet->d7anp_ctrl.origin_addressee_ctrl_id_type != ID_TYPE_BCAST)
@@ -176,7 +198,7 @@ uint8_t d7anp_assemble_packet_header(packet_t *packet, uint8_t *data_ptr)
 
 bool d7anp_disassemble_packet_header(packet_t* packet, uint8_t* data_idx)
 {
-    packet->d7anp_timeout = packet->hw_radio_packet.data[(*data_idx)]; (*data_idx)++;
+    packet->d7anp_listen_timeout = packet->hw_radio_packet.data[(*data_idx)]; (*data_idx)++;
     packet->d7anp_ctrl.raw = packet->hw_radio_packet.data[(*data_idx)]; (*data_idx)++;
     assert(!packet->d7anp_ctrl.origin_addressee_ctrl_nls_enabled); // TODO NLS not yet supported
     assert(!packet->d7anp_ctrl.origin_addressee_ctrl_hop_enabled); // TODO hopping not yet supported
@@ -197,8 +219,12 @@ void d7anp_signal_packet_csma_ca_insertion_completed(bool succeeded)
 {
     if(!succeeded)
     {
-        DPRINT("CSMA-CA insertion failed, not entering foreground scan");
-        switch_state(D7ANP_STATE_IDLE);
+        DPRINT("CSMA-CA insertion failed");
+        // resume the FG scan in order to receive a new request (Retry or New)
+        if (is_foreground_scan_suspended())
+            resume_foreground_scan();
+        else
+            switch_state(D7ANP_STATE_IDLE);
     }
 
     d7atp_signal_packet_csma_ca_insertion_completed(succeeded);
@@ -206,11 +232,14 @@ void d7anp_signal_packet_csma_ca_insertion_completed(bool succeeded)
 
 void d7anp_signal_packet_transmitted(packet_t* packet)
 {
-    // even when no ack is requested we still need to wait for a possible dormant session which might have been waiting
-    // for us on the other side.
-    // we listen for the timeout defined in our own access profile
+    assert(d7anp_state == D7ANP_STATE_TRANSMIT);
 
-    start_foreground_scan(own_access_profile.transmission_timeout_period);
+    // TO CONFIRM : can we assume that tc is necessary provided when the packet is a request?
+    if (packet->d7atp_ctrl.ctrl_tc)
+        start_foreground_scan(packet->d7atp_tc);
+    else if (is_foreground_scan_suspended())
+        resume_foreground_scan();
+
     d7atp_signal_packet_transmitted(packet);
 }
 
@@ -218,15 +247,37 @@ void d7anp_process_received_packet(packet_t* packet)
 {
     if(d7anp_state == D7ANP_STATE_FOREGROUND_SCAN)
     {
-        DPRINT("Received packet while in D7ANP_STATE_FOREGROUND_SCAN, extending foreground scan period");
-        cancel_foreground_scan_task();
-        schedule_foreground_scan_expired_timer(packet->d7anp_timeout);
+        DPRINT("Received packet while in D7ANP_STATE_FOREGROUND_SCAN");
+
+        // update the foreground scan timer if Tl is not null
+        if (packet->d7anp_listen_timeout)
+        {
+            DPRINT("Update the foreground scan timeout with Tl <%d>", packet->d7anp_listen_timeout);
+            cancel_foreground_scan_task();
+            schedule_foreground_scan_expired_timer(packet->d7anp_listen_timeout);
+        }
     }
     else
     {
-        DPRINT("Received packet while in D7ANP_STATE_IDLE (scan automation), start foreground scan");
-        start_foreground_scan(packet->d7anp_timeout);
+        DPRINT("Received packet while in D7ANP_STATE_IDLE (scan automation)");
+        if (packet->d7anp_listen_timeout)
+        {
+            DPRINT("Start foreground scan for the duration Tl = %d", packet->d7anp_listen_timeout);
+            start_foreground_scan(packet->d7anp_listen_timeout);
+        }
     }
+
+#ifdef RESPONDER_USE_FG_SCAN_OUTSIDE_TRANSACTION
+    /*
+     * In case of broadcast request, it may be reasonable for power saving consideration
+     * to perform the FG scan outside the transaction period,
+     * For that purpose, we decide to stop the FG scan and resume it when the
+     * response period expires. The radio remains idle until expiration of the response
+     * period but it means also that we are not able to sniff any other concurrent responses
+     */
+    if(!packet->dll_header.control_target_address_set)
+        suspend_foreground_scan();
+#endif
 
     d7atp_process_received_packet(packet);
 }

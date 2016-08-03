@@ -278,7 +278,9 @@ static void cca_rssi_valid(int16_t cur_rssi)
 
             hw_radio_set_idle(); // ensure radio goes back to IDLE after transmission instead of to RX (which was previous state because of CCA)
 
-            d7anp_signal_packet_csma_ca_insertion_completed(true);
+            // it may happen that the callback packet_transmitted is invoked before the csma_ca_insertion_completed
+            if (dll_state == DLL_STATE_TX_FOREGROUND)
+                d7anp_signal_packet_csma_ca_insertion_completed(true);
             return;
         }
     }

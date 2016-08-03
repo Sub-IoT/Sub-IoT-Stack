@@ -170,6 +170,25 @@ __LINK_C error_t timer_cancel_task(task_t task)
     return status;
 }
 
+__LINK_C bool timer_is_task_scheduled(task_t task)
+{
+    bool present = false;
+
+    start_atomic();
+
+     for(uint32_t i = 0; i < FRAMEWORK_TIMER_STACK_SIZE; i++)
+     {
+       if(NG(timers)[i].f == task)
+       {
+          present = true;
+          break;
+       }
+     }
+     end_atomic();
+
+     return present;
+}
+
 __LINK_C timer_tick_t timer_get_counter_value()
 {
 	timer_tick_t counter;

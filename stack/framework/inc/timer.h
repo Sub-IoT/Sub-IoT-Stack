@@ -233,11 +233,21 @@ static inline error_t timer_add_event( timer_event* event) { return timer_post_t
  *
  * \param task	The task to cancel.
  * 
- * \return error_t	SUCCESS if the timer was successfully canceled
- * 					EALREADY if the timer was not scheduled and therefore not canceled
+ * \return error_t	SUCCESS if the task was successfully canceled
+ * 					EALREADY if the task was not scheduled and therefore not canceled
  *
  */
 __LINK_C error_t timer_cancel_task(task_t task);
+
+/*! \brief check if a task is already scheduled with a delay
+ *
+ * \param task	The task to verify.
+ *
+ * \return bool	true if the task is present in the timer event queue
+ * 				false if the task was not scheduled
+ *
+ */
+__LINK_C bool timer_is_task_scheduled(task_t task);
 
 #endif /* TIMER_H_ */
 

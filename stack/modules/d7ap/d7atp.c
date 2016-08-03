@@ -68,7 +68,8 @@ typedef enum {
 static state_t NGDEF(_d7atp_state);
 #define d7atp_state NG(_d7atp_state)
 
-#define IS_IN_TRANSACTION() (d7atp_state != D7ATP_STATE_IDLE)
+#define IS_IN_MASTER_TRANSACTION() (d7atp_state == D7ATP_STATE_MASTER_TRANSACTION_REQUEST_PERIOD || \
+                                    d7atp_state == D7ATP_STATE_MASTER_TRANSACTION_RESPONSE_PERIOD)
 
 static void switch_state(state_t new_state)
 {
@@ -101,11 +102,6 @@ static void switch_state(state_t new_state)
         break;
     case D7ATP_STATE_IDLE:
         DPRINT("Switching to D7ATP_STATE_IDLE");
-        assert(d7atp_state == D7ATP_STATE_MASTER_TRANSACTION_REQUEST_PERIOD
-               || d7atp_state == D7ATP_STATE_MASTER_TRANSACTION_RESPONSE_PERIOD
-               || d7atp_state == D7ATP_STATE_SLAVE_TRANSACTION_SENDING_RESPONSE
-               || d7atp_state == D7ATP_STATE_SLAVE_TRANSACTION_RESPONSE_PERIOD
-               || d7atp_state == D7ATP_STATE_SLAVE_TRANSACTION_RECEIVED_REQUEST);
         d7atp_state = new_state;
         break;
     default:
@@ -115,13 +111,17 @@ static void switch_state(state_t new_state)
 
 void d7atp_signal_foreground_scan_expired()
 {
-    assert(d7atp_state == D7ATP_STATE_SLAVE_TRANSACTION_RESPONSE_PERIOD
-           || d7atp_state == D7ATP_STATE_MASTER_TRANSACTION_RESPONSE_PERIOD
-           || d7atp_state == D7ATP_STATE_SLAVE_TRANSACTION_RECEIVED_REQUEST);
+    bool responder;
+
+    if (d7atp_state != D7ATP_STATE_MASTER_TRANSACTION_RESPONSE_PERIOD)
+        responder = true;
 
     switch_state(D7ATP_STATE_IDLE);
     DPRINT("Dialog terminated");
-    d7asp_signal_transaction_response_period_elapsed();
+
+    current_dialog_id = 0;
+    if (responder)
+        d7asp_signal_transaction_response_period_elapsed();
 }
 
 void d7atp_init()
@@ -164,11 +164,15 @@ void d7atp_respond_dialog(packet_t* packet)
     // leave ctrl_is_ack_requested as is, keep the requester value
     d7atp->ctrl_ack_not_void = false; // TODO
     d7atp->ctrl_ack_record = false; // TODO validate
+    packet->d7atp_ctrl.ctrl_tc = false;
 
     bool should_include_origin_template = false; // we don't need to send origin ID, receivers will filter based on dialogID, but ...
 
     if(!packet->dll_header.control_target_address_set) // ... when request was broadcast we do need to send origin template
         should_include_origin_template = true;
+
+    packet->d7anp_listen_timeout = 0;
+    packet->d7atp_ctrl.ctrl_tc = false;
 
     // dialog and transaction id remain the same
     d7anp_tx_foreground_frame(packet, should_include_origin_template, &active_addressee_access_profile);
@@ -178,6 +182,8 @@ uint8_t d7atp_assemble_packet_header(packet_t* packet, uint8_t* data_ptr)
 {
     uint8_t* d7atp_header_start = data_ptr;
     (*data_ptr) = packet->d7atp_ctrl.ctrl_raw; data_ptr++;
+    if (packet->d7atp_ctrl.ctrl_tc)
+        (*data_ptr) = packet->d7atp_tc; data_ptr++;
     (*data_ptr) = packet->d7atp_dialog_id; data_ptr++;
     (*data_ptr) = packet->d7atp_transaction_id; data_ptr++;
 
@@ -195,6 +201,10 @@ uint8_t d7atp_assemble_packet_header(packet_t* packet, uint8_t* data_ptr)
 bool d7atp_disassemble_packet_header(packet_t *packet, uint8_t *data_idx)
 {
     packet->d7atp_ctrl.ctrl_raw = packet->hw_radio_packet.data[(*data_idx)]; (*data_idx)++;
+
+    if (packet->d7atp_ctrl.ctrl_tc)
+        packet->d7atp_tc = packet->hw_radio_packet.data[(*data_idx)]; (*data_idx)++;
+
     packet->d7atp_dialog_id = packet->hw_radio_packet.data[(*data_idx)]; (*data_idx)++;
     packet->d7atp_transaction_id = packet->hw_radio_packet.data[(*data_idx)]; (*data_idx)++;
 
@@ -212,7 +222,7 @@ void d7atp_signal_packet_transmitted(packet_t* packet)
 {
     if(d7atp_state == D7ATP_STATE_MASTER_TRANSACTION_REQUEST_PERIOD)
     {
-        switch_state(D7ATP_STATE_MASTER_TRANSACTION_RESPONSE_PERIOD);       
+        switch_state(D7ATP_STATE_MASTER_TRANSACTION_RESPONSE_PERIOD);
     }
     else if(d7atp_state == D7ATP_STATE_SLAVE_TRANSACTION_SENDING_RESPONSE)
     {
@@ -226,6 +236,9 @@ void d7atp_signal_packet_transmitted(packet_t* packet)
 
 void d7atp_signal_packet_csma_ca_insertion_completed(bool succeeded)
 {
+	assert((d7atp_state == D7ATP_STATE_MASTER_TRANSACTION_REQUEST_PERIOD) ||
+            (d7atp_state == D7ATP_STATE_SLAVE_TRANSACTION_SENDING_RESPONSE));
+
     if(!succeeded)
     {
         DPRINT("CSMA-CA insertion failed, stopping transaction");
@@ -247,7 +260,7 @@ void d7atp_process_received_packet(packet_t* packet)
     memcpy(current_addressee.id, packet->origin_access_id, 8);
     packet->d7anp_addressee = &current_addressee;
 
-    if(IS_IN_TRANSACTION())
+    if(IS_IN_MASTER_TRANSACTION())
     {
         if(packet->d7atp_dialog_id != current_dialog_id || packet->d7atp_transaction_id != current_transaction_id)
         {
@@ -273,8 +286,6 @@ void d7atp_process_received_packet(packet_t* packet)
             packet_queue_free_packet(packet);
             return;
         }
-
-        // TODO when STOP bit set stop NP foreground scan?
 
         switch_state(D7ATP_STATE_SLAVE_TRANSACTION_RECEIVED_REQUEST);
         current_dialog_id = packet->d7atp_dialog_id;
