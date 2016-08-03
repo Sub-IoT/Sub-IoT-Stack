@@ -68,7 +68,7 @@ typedef enum {
 static state_t NGDEF(_d7atp_state);
 #define d7atp_state NG(_d7atp_state)
 
-#define IS_IN_TRANSACTION() (d7atp_state != D7ATP_STATE_IDLE)
+#define IS_IN_MASTER_TRANSACTION() (d7atp_state == D7ATP_STATE_MASTER_TRANSACTION_RESPONSE_PERIOD)
 
 static void switch_state(state_t new_state)
 {
@@ -115,12 +115,10 @@ static void switch_state(state_t new_state)
 
 void d7atp_signal_foreground_scan_expired()
 {
-    assert(d7atp_state == D7ATP_STATE_SLAVE_TRANSACTION_RESPONSE_PERIOD
-           || d7atp_state == D7ATP_STATE_MASTER_TRANSACTION_RESPONSE_PERIOD
-           || d7atp_state == D7ATP_STATE_SLAVE_TRANSACTION_RECEIVED_REQUEST);
+    assert(d7atp_state == D7ATP_STATE_MASTER_TRANSACTION_RESPONSE_PERIOD);
 
     switch_state(D7ATP_STATE_IDLE);
-    DPRINT("Dialog terminated");
+    DPRINT("Transaction as master is terminated");
     d7asp_signal_transaction_response_period_elapsed();
 }
 
@@ -238,8 +236,7 @@ void d7atp_signal_packet_csma_ca_insertion_completed(bool succeeded)
 void d7atp_process_received_packet(packet_t* packet)
 {
     assert(d7atp_state == D7ATP_STATE_MASTER_TRANSACTION_RESPONSE_PERIOD
-           || d7atp_state == D7ATP_STATE_SLAVE_TRANSACTION_RESPONSE_PERIOD
-           || d7atp_state == D7ATP_STATE_IDLE); // IDLE: when doing channel scanning outside of transaction
+            || d7atp_state == D7ATP_STATE_IDLE); // IDLE: when doing channel scanning outside of transaction
 
     // copy addressee from NP origin
     current_addressee.ctrl.id_type = packet->d7anp_ctrl.origin_addressee_ctrl_id_type;
@@ -247,7 +244,7 @@ void d7atp_process_received_packet(packet_t* packet)
     memcpy(current_addressee.id, packet->origin_access_id, 8);
     packet->d7anp_addressee = &current_addressee;
 
-    if(IS_IN_TRANSACTION())
+    if(IS_IN_MASTER_TRANSACTION())
     {
         if(packet->d7atp_dialog_id != current_dialog_id || packet->d7atp_transaction_id != current_transaction_id)
         {
@@ -273,8 +270,6 @@ void d7atp_process_received_packet(packet_t* packet)
             packet_queue_free_packet(packet);
             return;
         }
-
-        // TODO when STOP bit set stop NP foreground scan?
 
         switch_state(D7ATP_STATE_SLAVE_TRANSACTION_RECEIVED_REQUEST);
         current_dialog_id = packet->d7atp_dialog_id;

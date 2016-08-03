@@ -115,13 +115,8 @@ void d7anp_init()
 
 void d7anp_tx_foreground_frame(packet_t* packet, bool should_include_origin_template, dae_access_profile_t* access_profile)
 {
-    if(d7anp_state == D7ANP_STATE_FOREGROUND_SCAN)
-    {
-        cancel_foreground_scan_task();
-    }
-
-    uint8_t own_access_class = fs_read_dll_conf_active_access_class();
-    fs_read_access_class(own_access_class, &own_access_profile);
+    // when sending a foreground frame, the foreground scan is not supposed to be in progress
+    assert(d7anp_state == D7ANP_STATE_IDLE);
 
     packet->d7anp_timeout = own_access_profile.transmission_timeout_period; // TODO get calculated value from SP
     packet->d7anp_ctrl.origin_addressee_ctrl_nls_enabled = false;
@@ -197,7 +192,7 @@ void d7anp_signal_packet_csma_ca_insertion_completed(bool succeeded)
 {
     if(!succeeded)
     {
-        DPRINT("CSMA-CA insertion failed, not entering foreground scan");
+        DPRINT("CSMA-CA insertion failed");
         switch_state(D7ANP_STATE_IDLE);
     }
 
@@ -206,11 +201,15 @@ void d7anp_signal_packet_csma_ca_insertion_completed(bool succeeded)
 
 void d7anp_signal_packet_transmitted(packet_t* packet)
 {
-    // even when no ack is requested we still need to wait for a possible dormant session which might have been waiting
-    // for us on the other side.
-    // we listen for the timeout defined in our own access profile
+    assert(d7anp_state == D7ANP_STATE_TRANSMIT);
 
-    start_foreground_scan(own_access_profile.transmission_timeout_period);
+    // the requester is scanning for responses during its own Tc
+    if (packet->request)
+        start_foreground_scan(own_access_profile.transmission_timeout_period);
+    else
+    // the responder shall wait response period expiration to initiate a new DLL foreground scan
+        switch_state(D7ANP_STATE_IDLE);
+
     d7atp_signal_packet_transmitted(packet);
 }
 
@@ -218,9 +217,15 @@ void d7anp_process_received_packet(packet_t* packet)
 {
     if(d7anp_state == D7ANP_STATE_FOREGROUND_SCAN)
     {
-        DPRINT("Received packet while in D7ANP_STATE_FOREGROUND_SCAN, extending foreground scan period");
-        cancel_foreground_scan_task();
-        schedule_foreground_scan_expired_timer(packet->d7anp_timeout);
+        DPRINT("Received packet while in D7ANP_STATE_FOREGROUND_SCAN");
+
+        // We may receive several responses for a broadcast request.
+        // Therefore, I recommend not to extend the foreground scan period
+        // otherwise the response period is extended whereas the CSMA-CA timeout
+        // used by the responder is always set to the requester TC
+
+        //cancel_foreground_scan_task();
+        //schedule_foreground_scan_expired_timer(packet->d7anp_timeout);
     }
     else
     {
