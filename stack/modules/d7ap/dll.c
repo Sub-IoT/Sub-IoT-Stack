@@ -390,21 +390,21 @@ static void execute_csma_ca()
     //hw_radio_set_rx(NULL, NULL, NULL); // put radio in RX but disable callbacks to make sure we don't receive packets when in this state
                                         // TODO use correct rx cfg + it might be interesting to switch to idle first depending on calculated offset
     uint16_t tx_duration = calculate_tx_duration();
+    timer_tick_t Tc = CONVERT_TO_TI(current_packet->d7atp_tc);
     switch (dll_state)
     {
         case DLL_STATE_CSMA_CA_STARTED:
         {
-            dll_tca = current_access_profile->transmission_timeout_period - tx_duration; // TODO d7anp_timeout
+            dll_tca = Tc - tx_duration;
             dll_cca_started = timer_get_counter_value();
-            DPRINT("Tca= %i = %i - %i", dll_tca, current_access_profile->transmission_timeout_period, tx_duration);
+            DPRINT("Tca= %i = %i - %i", dll_tca, Tc, tx_duration);
 
             if (dll_tca <= 0)
             {
-                // TODO how to handle this? signal upper layer?
                 DPRINT("Tca negative, CCA failed");
-                assert(false);
-//				switch_state(DLL_STATE_CCA_FAIL);
-//				sched_post_task(&execute_csma_ca);
+                // Let the upper layer decide eventually to change the channel in order to get a chance a send this frame
+                switch_state(DLL_STATE_IDLE);
+                d7anp_signal_packet_csma_ca_insertion_completed(false);
                 break;
             }
 
@@ -573,7 +573,11 @@ void dll_execute_scan_automation()
 
         hw_radio_set_rx(&rx_cfg, &packet_received, NULL);
 
-        assert(current_access_profile->scan_automation_period == 0); // scan automation period, assuming 0 for now
+        /*
+         * As stated by the specification, if the scan type is set to foreground,
+         * the scan automation period (To) should be set to 0.
+         */
+        assert(current_access_profile->scan_automation_period == 0);
     }
     else
     {
