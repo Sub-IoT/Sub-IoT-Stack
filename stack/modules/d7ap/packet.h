@@ -37,6 +37,7 @@
  * as metadata parsed or generated while moving through the different layers */
 struct packet
 {
+    bool request;
     dll_header_t dll_header;
     uint8_t d7anp_timeout;
     d7anp_ctrl_t d7anp_ctrl;

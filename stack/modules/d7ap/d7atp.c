@@ -68,6 +68,9 @@ typedef enum {
 static state_t NGDEF(_d7atp_state);
 #define d7atp_state NG(_d7atp_state)
 
+static bool NGDEF(_d7atp_response_period_expired);
+#define d7atp_response_period_expired NG(_d7atp_response_period_expired)
+
 #define IS_IN_MASTER_TRANSACTION() (d7atp_state == D7ATP_STATE_MASTER_TRANSACTION_RESPONSE_PERIOD)
 
 static void switch_state(state_t new_state)
@@ -113,6 +116,76 @@ static void switch_state(state_t new_state)
     }
 }
 
+void d7atp_signal_transaction_response_period_elapsed()
+{
+	switch_state(D7ATP_STATE_IDLE);
+
+    /*
+     * The Slave transaction terminates after expiration of the Response Period
+     * It is  specified that the responders perform DLL foreground scan outside
+     * the Transaction Periods
+     */
+
+	// TODO support multiple transaction in a dialog, in this case we should
+	// initiate a new foreground scan since the previous transaction is terminated
+	DPRINT("Transaction as responder is terminated");
+	d7asp_signal_transaction_response_period_elapsed();
+}
+
+static void response_period_timeout_handler()
+{
+    assert(d7atp_state == D7ATP_STATE_SLAVE_TRANSACTION_RESPONSE_PERIOD
+              || d7atp_state == D7ATP_STATE_SLAVE_TRANSACTION_SENDING_RESPONSE);
+
+    DPRINT("Expiration of the response period");
+
+    /*
+     * This timeout means that we can cancel the response sending if not yet
+     * transmitted. This timeout means also that the transaction is terminated
+     * and we can initiate a new foreground scan if the dialog is still ongoing
+     */
+
+    if ( d7atp_state == D7ATP_STATE_SLAVE_TRANSACTION_SENDING_RESPONSE)
+    /*
+     * The CSMA-CA routine or the Tx phase is still ongoing
+     * let this task finalize and detect that the response time is expired.
+     */
+    {
+        DPRINT("Wait completion of the Tx task before signaling that the response period is expired");
+        d7atp_response_period_expired = true;
+    }
+    else
+        d7atp_signal_transaction_response_period_elapsed();
+}
+
+static bool schedule_response_period_timeout_handler(uint8_t timeout_ct, timer_tick_t timestamp)
+{
+    timer_tick_t timeout_ticks = CONVERT_TO_TI(timeout_ct);
+    DPRINT("Starting response_period timer (%i ticks) timestamp %lu", timeout_ticks, timestamp);
+
+    d7atp_response_period_expired = false;
+
+    // Adjust the timeout value according the time already elapsed
+    timeout_ticks -= timer_get_counter_value() - timestamp;
+    if (timeout_ticks <= 0)
+        return false;
+
+    return (timer_post_task_delay(&response_period_timeout_handler, timeout_ticks) == SUCCESS);
+}
+
+bool d7atp_is_response_period_expired()
+{
+    return (sched_is_scheduled(response_period_timeout_handler)
+                || (d7atp_response_period_expired));
+}
+
+void d7atp_cancel_response_period_timeout_handler()
+{
+    timer_cancel_task(&response_period_timeout_handler);
+    sched_cancel_task(&response_period_timeout_handler);
+    d7atp_response_period_expired = false;
+}
+
 void d7atp_signal_foreground_scan_expired()
 {
     assert(d7atp_state == D7ATP_STATE_MASTER_TRANSACTION_RESPONSE_PERIOD);
@@ -126,12 +199,20 @@ void d7atp_init()
 {
     d7atp_state = D7ATP_STATE_IDLE;
     current_access_class = ACCESS_CLASS_NOT_SET;
+    current_dialog_id = 0;
+
+    sched_register_task(&response_period_timeout_handler);
 }
 
 void d7atp_start_dialog(uint8_t dialog_id, uint8_t transaction_id, bool is_last_transaction, packet_t* packet, session_qos_t* qos_settings)
 {
     assert(is_last_transaction); // multiple transactions in one dialog not supported yet
     switch_state(D7ATP_STATE_MASTER_TRANSACTION_REQUEST_PERIOD);
+
+
+    // This is a request
+    packet->request = true;
+
     packet->d7atp_ctrl = (d7atp_ctrl_t){
         .ctrl_is_start = true,
         .ctrl_is_stop = is_last_transaction,
@@ -156,6 +237,9 @@ void d7atp_respond_dialog(packet_t* packet)
 {
     switch_state(D7ATP_STATE_SLAVE_TRANSACTION_SENDING_RESPONSE);
 
+    // This is a response
+    packet->request = false;
+
     // modify the request headers and turn this into a response
     d7atp_ctrl_t* d7atp = &(packet->d7atp_ctrl);
     d7atp->ctrl_is_start = 0;
@@ -168,8 +252,15 @@ void d7atp_respond_dialog(packet_t* packet)
     if(!packet->dll_header.control_target_address_set) // ... when request was broadcast we do need to send origin template
         should_include_origin_template = true;
 
-    // dialog and transaction id remain the same
-    d7anp_tx_foreground_frame(packet, should_include_origin_template, &active_addressee_access_profile);
+    if (d7atp_is_response_period_expired())
+    {
+        // handle the response period expiration here
+        d7atp_cancel_response_period_timeout_handler();
+        d7atp_signal_transaction_response_period_elapsed();
+    }
+    else
+        // dialog and transaction id remain the same
+       d7anp_tx_foreground_frame(packet, should_include_origin_template, &active_addressee_access_profile);
 }
 
 uint8_t d7atp_assemble_packet_header(packet_t* packet, uint8_t* data_ptr)
@@ -210,11 +301,19 @@ void d7atp_signal_packet_transmitted(packet_t* packet)
 {
     if(d7atp_state == D7ATP_STATE_MASTER_TRANSACTION_REQUEST_PERIOD)
     {
-        switch_state(D7ATP_STATE_MASTER_TRANSACTION_RESPONSE_PERIOD);       
+        switch_state(D7ATP_STATE_MASTER_TRANSACTION_RESPONSE_PERIOD);
     }
     else if(d7atp_state == D7ATP_STATE_SLAVE_TRANSACTION_SENDING_RESPONSE)
     {
-        switch_state(D7ATP_STATE_SLAVE_TRANSACTION_RESPONSE_PERIOD);
+        if (d7atp_is_response_period_expired())
+        {
+            // signal the response period expiration here
+            d7atp_cancel_response_period_timeout_handler();
+            d7atp_signal_transaction_response_period_elapsed();
+            return;
+        }
+        else
+            switch_state(D7ATP_STATE_SLAVE_TRANSACTION_RESPONSE_PERIOD);
     }
     else
         assert(false);
@@ -224,10 +323,20 @@ void d7atp_signal_packet_transmitted(packet_t* packet)
 
 void d7atp_signal_packet_csma_ca_insertion_completed(bool succeeded)
 {
+    assert((d7atp_state == D7ATP_STATE_MASTER_TRANSACTION_REQUEST_PERIOD) ||
+            (d7atp_state == D7ATP_STATE_SLAVE_TRANSACTION_SENDING_RESPONSE));
+
     if(!succeeded)
     {
-        DPRINT("CSMA-CA insertion failed, stopping transaction");
-        switch_state(D7ATP_STATE_IDLE);
+        if (d7atp_state == D7ATP_STATE_MASTER_TRANSACTION_REQUEST_PERIOD)
+            switch_state(D7ATP_STATE_IDLE);
+        else if (d7atp_is_response_period_expired())
+        {
+            // signal the response period expiration here
+            d7atp_cancel_response_period_timeout_handler();
+            d7atp_signal_transaction_response_period_elapsed();
+            return;
+        }
     }
 
     d7asp_signal_packet_csma_ca_insertion_completed(succeeded);
@@ -272,6 +381,20 @@ void d7atp_process_received_packet(packet_t* packet)
         }
 
         switch_state(D7ATP_STATE_SLAVE_TRANSACTION_RECEIVED_REQUEST);
+
+        /*
+         * Start the response period timer in order to make sure that the response
+         * is sent within this time frame (if ACK requested)
+         * or to discard others transactions during the response period
+         */
+        if (!schedule_response_period_timeout_handler(packet->d7anp_timeout,
+                                   packet->hw_radio_packet.rx_meta.timestamp))
+        {
+            DPRINT("Discard the request since the response period is expired");
+            packet_queue_free_packet(packet);
+            return;
+        }
+
         current_dialog_id = packet->d7atp_dialog_id;
         current_transaction_id = packet->d7atp_transaction_id;
         DPRINT("Dialog id %i transaction id %i", current_dialog_id, current_transaction_id);

@@ -231,7 +231,8 @@ void packet_received(hw_radio_packet_t* packet)
     // schedule it and return
     DPRINT("packet received @ %i , RSSI = %i", packet->rx_meta.timestamp, packet->rx_meta.rssi);
     packet_queue_mark_received(packet);
-    sched_post_task(&process_received_packets);
+    /* the received packet needs to be handled in priority */
+    sched_post_task_prio(&process_received_packets, MAX_PRIORITY);
 }
 
 static void packet_transmitted(hw_radio_packet_t* hw_radio_packet)
@@ -345,6 +346,19 @@ static void execute_csma_ca()
 //				switch_state(DLL_STATE_CCA_FAIL);
 //				sched_post_task(&execute_csma_ca);
                 break;
+            }
+
+            if (current_packet->request == false) {
+                int32_t response_period_elapsed = dll_cca_started - current_packet->hw_radio_packet.rx_meta.timestamp;
+                dll_tca -= response_period_elapsed;
+                DPRINT("Response Tca= %i = %i - %i - %i", dll_tca, Tc, tx_duration, response_period_elapsed);
+                if (dll_tca <= 0)
+                {
+                    DPRINT("Tca negative, CCA failed");
+                    switch_state(DLL_STATE_IDLE);
+                    d7anp_signal_packet_csma_ca_insertion_completed(false);
+                    break;
+                }
             }
 
             uint16_t t_offset = 0;

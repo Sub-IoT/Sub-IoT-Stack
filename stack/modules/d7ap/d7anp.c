@@ -135,6 +135,14 @@ void d7anp_tx_foreground_frame(packet_t* packet, bool should_include_origin_temp
 
     packet->d7anp_ctrl.origin_addressee_ctrl_access_class = packet->d7anp_addressee->ctrl.access_class; // TODO validate
 
+    // In case of response, check if the response period is not expired before calling dll API
+    if ((packet->request == false) && (d7atp_is_response_period_expired()))
+    {
+        d7atp_cancel_response_period_timeout_handler();
+        d7atp_signal_transaction_response_period_elapsed();
+        return;
+    }
+
     switch_state(D7ANP_STATE_TRANSMIT);
     dll_tx_frame(packet, access_profile);
 }
