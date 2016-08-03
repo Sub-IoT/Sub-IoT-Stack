@@ -30,6 +30,7 @@
 #define OSS_7_DLL_H
 
 #include "hwradio.h"
+#include "math.h"
 
 #include "dae.h"
 
@@ -52,6 +53,8 @@ typedef struct
     };
     //uint8_t target_address[8]; // TODO assuming 8B UID for now
 } dll_header_t;
+
+#define CONVERT_TO_TI(timeout_ct) (pow(4, timeout_ct >> 5) * (timeout_ct & 0b11111))
 
 void dll_init();
 void dll_tx_frame(packet_t* packet, dae_access_profile_t* access_profile);
