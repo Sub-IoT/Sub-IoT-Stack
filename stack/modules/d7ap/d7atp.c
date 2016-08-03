@@ -186,7 +186,7 @@ void d7atp_respond_dialog(packet_t* packet)
 
     // modify the request headers and turn this into a response
     d7atp_ctrl_t* d7atp = &(packet->d7atp_ctrl);
-    d7atp->ctrl_is_start = 0;
+
     // leave ctrl_is_ack_requested as is, keep the requester value
     d7atp->ctrl_ack_not_void = false; // TODO
     d7atp->ctrl_ack_record = false; // TODO validate
@@ -197,7 +197,8 @@ void d7atp_respond_dialog(packet_t* packet)
     if(!packet->dll_header.control_target_address_set) // ... when request was broadcast we do need to send origin template
         should_include_origin_template = true;
 
-    packet->d7anp_listen_timeout = 0;
+    if (!packet->d7atp_ctrl.ctrl_is_start)
+        packet->d7anp_listen_timeout = 0;
     packet->d7atp_ctrl.ctrl_tc = false;
 
     // dialog and transaction id remain the same
@@ -276,6 +277,8 @@ void d7atp_signal_packet_csma_ca_insertion_completed(bool succeeded)
 
 void d7atp_process_received_packet(packet_t* packet)
 {
+    bool extension = false;
+
     assert(d7atp_state == D7ATP_STATE_MASTER_TRANSACTION_RESPONSE_PERIOD
            || d7atp_state == D7ATP_STATE_SLAVE_TRANSACTION_RESPONSE_PERIOD
            || d7atp_state == D7ATP_STATE_IDLE); // IDLE: when doing channel scanning outside of transaction
@@ -295,12 +298,22 @@ void d7atp_process_received_packet(packet_t* packet)
             return;
         }
 
-        // TODO assert(!packet->d7atp_ctrl.ctrl_is_start); // start dialog not allowed when in master transaction state
         if(packet->d7atp_ctrl.ctrl_is_start)
         {
-            DPRINT("Start dialog not allowed when in master transaction state, skipping segment");
-            packet_queue_free_packet(packet);
-            return;
+            // if this is the last transaction, it means that the extension procedure is initiated by the responder
+            if (packet->d7atp_ctrl.ctrl_is_stop)
+            {
+                DPRINT("Dialog terminated, we need to start a new dialog this time as a responder");
+                current_dialog_id = 0;
+                switch_state(D7ATP_STATE_IDLE);
+                extension = true;
+            }
+            else
+            {
+                DPRINT("Start dialog not allowed when in master transaction state, skipping segment");
+                packet_queue_free_packet(packet);
+                return;
+            }
         }
     }
     else
@@ -345,5 +358,5 @@ void d7atp_process_received_packet(packet_t* packet)
         active_addressee_access_profile.subbands[0].channel_index_end = rx_channel.center_freq_index;
     }
 
-    d7asp_process_received_packet(packet);
+    d7asp_process_received_packet(packet, extension);
 }

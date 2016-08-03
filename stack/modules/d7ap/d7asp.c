@@ -288,7 +288,7 @@ d7asp_queue_result_t d7asp_queue_alp_actions(d7asp_master_session_t* session, ui
     return (d7asp_queue_result_t){ .fifo_token = session->token, .request_id = request_id };
 }
 
-bool d7asp_process_received_packet(packet_t* packet)
+bool d7asp_process_received_packet(packet_t* packet, bool extension)
 {
     hw_watchdog_feed(); // TODO do here?
     d7asp_result_t result = {
@@ -332,6 +332,18 @@ bool d7asp_process_received_packet(packet_t* packet)
 //              d7asp_init_args->d7asp_fifo_request_completed_cb(result, packet->payload, packet->payload_length); // TODO ALP should notify app if needed, refactor
 
         packet_queue_free_packet(packet); // ACK can be cleaned
+
+        // switch to the state slave when the D7ATP Dialog Extension Procedure is initiated and all request are handled
+        if ((extension) && (current_request_id == current_master_session.next_request_id - 1))
+        {
+            DPRINT("Dialog Extension Procedure is initiated, mark the FIFO flush"
+                    " completed before switching to a responder state");
+            alp_d7asp_fifo_flush_completed(current_master_session.token, current_master_session.progress_bitmap,
+                                           current_master_session.success_bitmap, REQUESTS_BITMAP_BYTE_COUNT);
+            current_master_session.state = D7ASP_MASTER_SESSION_IDLE;
+            d7atp_signal_dialog_termination();
+            switch_state(D7ASP_STATE_SLAVE);
+        }
         return true;
     }
     else if(d7asp_state == D7ASP_STATE_IDLE || d7asp_state == D7ASP_STATE_SLAVE)
@@ -386,6 +398,21 @@ bool d7asp_process_received_packet(packet_t* packet)
         DPRINT("Sending response");
 
         current_response_packet = packet;
+
+        /*
+         * activate the dialog extension procedure in the unicast response if the dialog is terminated
+         * and a master session is pending
+         */
+        if((packet->dll_header.control_target_address_set) && (packet->d7atp_ctrl.ctrl_is_stop)
+                && (d7asp_state == D7ASP_STATE_SLAVE_PENDING_MASTER))
+        {
+            packet->d7atp_ctrl.ctrl_is_start = true;
+            // TODO set packet->d7anp_listen_timeout according the time remaining in the current transaction
+            // + the maximum time to send the first request of the pending session.
+        }
+        else
+            packet->d7atp_ctrl.ctrl_is_start = 0;
+
         d7atp_respond_dialog(packet);
         return true;
     }
