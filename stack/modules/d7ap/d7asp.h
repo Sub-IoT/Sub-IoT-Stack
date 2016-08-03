@@ -105,7 +105,7 @@ typedef struct {
 void d7asp_init(d7asp_init_args_t* init_args);
 d7asp_master_session_t* d7asp_master_session_create(d7asp_master_session_config_t* d7asp_master_session_config);
 d7asp_queue_result_t d7asp_queue_alp_actions(d7asp_master_session_t* session, uint8_t* alp_payload_buffer, uint8_t alp_payload_length); // TODO return status
-bool d7asp_process_received_packet(packet_t* packet);
+bool d7asp_process_received_packet(packet_t* packet, bool extension);
 
 /**
  * @brief Called by DLL to signal the packet has been transmitted
