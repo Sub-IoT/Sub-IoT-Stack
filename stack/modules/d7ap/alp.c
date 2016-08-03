@@ -211,7 +211,7 @@ void alp_d7asp_request_completed(d7asp_result_t result, uint8_t* payload, uint8_
 
 void alp_d7asp_fifo_flush_completed(uint8_t fifo_token, uint8_t* progress_bitmap, uint8_t* success_bitmap, uint8_t bitmap_byte_count) {
   // TODO end session
-  DPRINT("D7ASP flush completed", operand.file_offset.file_id, operand.requested_data_length);
+  DPRINT("D7ASP flush completed");
   switch(current_command.origin) {
     case ALP_CMD_ORIGIN_SERIAL_CONSOLE:
       if(current_command.respond_when_completed) {
