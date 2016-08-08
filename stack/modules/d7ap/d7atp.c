@@ -56,6 +56,9 @@ static uint8_t NGDEF(_current_access_class);
 static dae_access_profile_t NGDEF(_active_addressee_access_profile);
 #define active_addressee_access_profile NG(_active_addressee_access_profile)
 
+static dae_access_profile_t NGDEF(_own_access_profile);
+#define own_access_profile NG(_own_access_profile)
+
 typedef enum {
     D7ATP_STATE_IDLE,
     D7ATP_STATE_MASTER_TRANSACTION_REQUEST_PERIOD,
@@ -68,7 +71,10 @@ typedef enum {
 static state_t NGDEF(_d7atp_state);
 #define d7atp_state NG(_d7atp_state)
 
-#define IS_IN_TRANSACTION() (d7atp_state != D7ATP_STATE_IDLE)
+static bool NGDEF(_d7atp_response_period_expired);
+#define d7atp_response_period_expired NG(_d7atp_response_period_expired)
+
+#define IS_IN_MASTER_TRANSACTION() (d7atp_state == D7ATP_STATE_MASTER_TRANSACTION_RESPONSE_PERIOD)
 
 static void switch_state(state_t new_state)
 {
@@ -107,20 +113,125 @@ static void switch_state(state_t new_state)
                || d7atp_state == D7ATP_STATE_SLAVE_TRANSACTION_RESPONSE_PERIOD
                || d7atp_state == D7ATP_STATE_SLAVE_TRANSACTION_RECEIVED_REQUEST);
         d7atp_state = new_state;
+        // When d7atp_state is set to idle, it means that the transaction is
+        // terminated but it doesn't mean that the dialog is necessary terminated.
         break;
     default:
         assert(false);
     }
 }
 
-void d7atp_signal_foreground_scan_expired()
+static void dialog_timeout_handler()
+{
+    DPRINT("Expiration of the dialog period");
+
+    current_dialog_id = 0;
+
+    // stop eventually the DLL foreground scan initiated by the responder outside the transaction
+    d7anp_stop_responder_foreground_scan();
+}
+
+void d7atp_signal_dialog_termination()
+{
+    DPRINT("Dialog is terminated by upper layer");
+
+    // It means that we are not participating in a dialog and we can accept
+    // segments marked with START flag set to 1.
+
+    current_dialog_id = 0;
+
+    timer_cancel_task(&dialog_timeout_handler);
+    sched_cancel_task(&dialog_timeout_handler);
+
+    // stop eventually the DLL foreground scan initiated by the responder outside the transaction
+    d7anp_stop_responder_foreground_scan();
+}
+
+void d7atp_start_dialog_timeout_timer()
+{
+    DPRINT("Start Dialog timer");
+    timer_post_task_delay(&dialog_timeout_handler, own_access_profile.dialog_to);
+}
+
+void d7atp_signal_transaction_response_period_elapsed()
+{
+    switch_state(D7ATP_STATE_IDLE);
+    DPRINT("Transaction as responder is terminated");
+
+    /*
+     * The Slave transaction terminates after expiration of the Response Period
+     * It is  specified that the responders perform DLL foreground scan outside
+     * the Transaction Periods
+     */
+
+    // To support multiple transaction in a dialog, we need to initiate a new
+    // foreground scan since the previous transaction is terminated
+    if (current_dialog_id)
+        d7anp_start_responder_foreground_scan();
+
+    d7asp_signal_transaction_response_period_elapsed();
+}
+
+static void response_period_timeout_handler()
 {
     assert(d7atp_state == D7ATP_STATE_SLAVE_TRANSACTION_RESPONSE_PERIOD
-           || d7atp_state == D7ATP_STATE_MASTER_TRANSACTION_RESPONSE_PERIOD
-           || d7atp_state == D7ATP_STATE_SLAVE_TRANSACTION_RECEIVED_REQUEST);
+              || d7atp_state == D7ATP_STATE_SLAVE_TRANSACTION_SENDING_RESPONSE);
+
+    DPRINT("Expiration of the response period");
+
+    /*
+     * This timeout means that we can cancel the response sending if not yet
+     * transmitted. This timeout means also that the transaction is terminated
+     * and we can initiate a new foreground scan if the dialog is still ongoing
+     */
+
+    if ( d7atp_state == D7ATP_STATE_SLAVE_TRANSACTION_SENDING_RESPONSE)
+    /*
+     * The CSMA-CA routine or the Tx phase is still ongoing
+     * let this task finalize and detect that the response time is expired.
+     */
+    {
+        DPRINT("Wait completion of the Tx task before signaling that the response period is expired");
+        d7atp_response_period_expired = true;
+    }
+    else
+        d7atp_signal_transaction_response_period_elapsed();
+}
+
+static bool schedule_response_period_timeout_handler(uint8_t timeout_ct, timer_tick_t timestamp)
+{
+    timer_tick_t timeout_ticks = CONVERT_TO_TI(timeout_ct);
+    DPRINT("Starting response_period timer (%i ticks) timestamp %lu", timeout_ticks, timestamp);
+
+    d7atp_response_period_expired = false;
+
+    // Adjust the timeout value according the time already elapsed
+    timeout_ticks -= timer_get_counter_value() - timestamp;
+    if (timeout_ticks <= 0)
+        return false;
+
+    return (timer_post_task_delay(&response_period_timeout_handler, timeout_ticks) == SUCCESS);
+}
+
+bool d7atp_is_response_period_expired()
+{
+    return (sched_is_scheduled(response_period_timeout_handler)
+                || (d7atp_response_period_expired));
+}
+
+void d7atp_cancel_response_period_timeout_handler()
+{
+    timer_cancel_task(&response_period_timeout_handler);
+    sched_cancel_task(&response_period_timeout_handler);
+    d7atp_response_period_expired = false;
+}
+
+void d7atp_signal_foreground_scan_expired()
+{
+    assert(d7atp_state == D7ATP_STATE_MASTER_TRANSACTION_RESPONSE_PERIOD);
 
     switch_state(D7ATP_STATE_IDLE);
-    DPRINT("Dialog terminated");
+    DPRINT("Transaction as master is terminated");
     d7asp_signal_transaction_response_period_elapsed();
 }
 
@@ -128,15 +239,27 @@ void d7atp_init()
 {
     d7atp_state = D7ATP_STATE_IDLE;
     current_access_class = ACCESS_CLASS_NOT_SET;
+    current_dialog_id = 0;
+    uint8_t own_access_class = fs_read_dll_conf_active_access_class();
+
+    fs_read_access_class(own_access_class, &own_access_profile);
+    sched_register_task(&response_period_timeout_handler);
 }
 
 void d7atp_start_dialog(uint8_t dialog_id, uint8_t transaction_id, bool is_last_transaction, packet_t* packet, session_qos_t* qos_settings)
 {
     assert(is_last_transaction); // multiple transactions in one dialog not supported yet
     switch_state(D7ATP_STATE_MASTER_TRANSACTION_REQUEST_PERIOD);
+
+    // This is a request
+    packet->request = true;
+
     packet->d7atp_ctrl = (d7atp_ctrl_t){
         .ctrl_is_start = true,
         .ctrl_is_stop = is_last_transaction,
+
+        // TODO set the timeout template flag according the upper layer context
+
         .ctrl_is_ack_requested = qos_settings->qos_resp_mode == SESSION_RESP_MODE_NO? false : true, // TODO in other cases as well?
         .ctrl_ack_not_void = qos_settings->qos_resp_mode == SESSION_RESP_MODE_ON_ERR? true : false,
         .ctrl_ack_record = false
@@ -151,6 +274,9 @@ void d7atp_start_dialog(uint8_t dialog_id, uint8_t transaction_id, bool is_last_
     if(access_class != current_access_class)
         fs_read_access_class(access_class, &active_addressee_access_profile);
 
+    // TODO requester starts also the dialog timeout timer
+    // d7atp_start_dialog_timeout_timer();
+
     d7anp_tx_foreground_frame(packet, true, &active_addressee_access_profile);
 }
 
@@ -158,20 +284,38 @@ void d7atp_respond_dialog(packet_t* packet)
 {
     switch_state(D7ATP_STATE_SLAVE_TRANSACTION_SENDING_RESPONSE);
 
+    // This is a response
+    packet->request = false;
+
     // modify the request headers and turn this into a response
     d7atp_ctrl_t* d7atp = &(packet->d7atp_ctrl);
-    d7atp->ctrl_is_start = 0;
+
     // leave ctrl_is_ack_requested as is, keep the requester value
     d7atp->ctrl_ack_not_void = false; // TODO
     d7atp->ctrl_ack_record = false; // TODO validate
 
-    bool should_include_origin_template = false; // we don't need to send origin ID, receivers will filter based on dialogID, but ...
+    bool should_include_origin_template = false; // we don't need to send origin ID, the requester will filter based on dialogID, but ...
 
-    if(!packet->dll_header.control_target_address_set) // ... when request was broadcast we do need to send origin template
+    if ((!packet->dll_header.control_target_address_set)
+            || (packet->d7atp_ctrl.ctrl_is_start
+            && packet->d7atp_ctrl.ctrl_is_ack_requested))
+    {
+        /*
+         * origin template is provided in all requests in which the START flag is set to 1
+         * and requesting responses, and in all responses to broadcast requests
+         */
         should_include_origin_template = true;
+    }
 
-    // dialog and transaction id remain the same
-    d7anp_tx_foreground_frame(packet, should_include_origin_template, &active_addressee_access_profile);
+    if (d7atp_is_response_period_expired())
+    {
+        // handle the response period expiration here
+        d7atp_cancel_response_period_timeout_handler();
+        d7atp_signal_transaction_response_period_elapsed();
+    }
+    else
+        // dialog and transaction id remain the same
+       d7anp_tx_foreground_frame(packet, should_include_origin_template, &active_addressee_access_profile);
 }
 
 uint8_t d7atp_assemble_packet_header(packet_t* packet, uint8_t* data_ptr)
@@ -181,9 +325,14 @@ uint8_t d7atp_assemble_packet_header(packet_t* packet, uint8_t* data_ptr)
     (*data_ptr) = packet->d7atp_dialog_id; data_ptr++;
     (*data_ptr) = packet->d7atp_transaction_id; data_ptr++;
 
-    if(packet->d7atp_ctrl.ctrl_is_ack_requested && packet->d7atp_ctrl.ctrl_ack_not_void)
+    // Provide the Responder or Requester ACK template when requested
+    if ((d7atp_state == D7ATP_STATE_MASTER_TRANSACTION_REQUEST_PERIOD) && (packet->d7atp_ctrl.ctrl_is_ack_requested)) {
+        //TODO check if at least one Responder has set the ACK_REQ flag
+        //TODO aggregate the Device IDs of the Responders that set their ACK_REQ flags.
+    }
+    else if(packet->d7atp_ctrl.ctrl_is_ack_requested && packet->d7atp_ctrl.ctrl_ack_not_void)
     {
-        // add ACK template
+        // add Responder ACK template
         (*data_ptr) = packet->d7atp_transaction_id; data_ptr++; // transaction ID start
         (*data_ptr) = packet->d7atp_transaction_id; data_ptr++; // transaction ID stop
         // TODO ACK bitmap, support for multiple segments to ack not implemented yet
@@ -197,6 +346,8 @@ bool d7atp_disassemble_packet_header(packet_t *packet, uint8_t *data_idx)
     packet->d7atp_ctrl.ctrl_raw = packet->hw_radio_packet.data[(*data_idx)]; (*data_idx)++;
     packet->d7atp_dialog_id = packet->hw_radio_packet.data[(*data_idx)]; (*data_idx)++;
     packet->d7atp_transaction_id = packet->hw_radio_packet.data[(*data_idx)]; (*data_idx)++;
+
+    // TODO extract the timeout template and reload this value in the the dialog timeout timer
 
     if(packet->d7atp_ctrl.ctrl_is_ack_requested && packet->d7atp_ctrl.ctrl_ack_not_void)
     {
@@ -212,11 +363,19 @@ void d7atp_signal_packet_transmitted(packet_t* packet)
 {
     if(d7atp_state == D7ATP_STATE_MASTER_TRANSACTION_REQUEST_PERIOD)
     {
-        switch_state(D7ATP_STATE_MASTER_TRANSACTION_RESPONSE_PERIOD);       
+        switch_state(D7ATP_STATE_MASTER_TRANSACTION_RESPONSE_PERIOD);
     }
     else if(d7atp_state == D7ATP_STATE_SLAVE_TRANSACTION_SENDING_RESPONSE)
     {
-        switch_state(D7ATP_STATE_SLAVE_TRANSACTION_RESPONSE_PERIOD);
+        if (d7atp_is_response_period_expired())
+        {
+            // signal the response period expiration here
+            d7atp_cancel_response_period_timeout_handler();
+            d7atp_signal_transaction_response_period_elapsed();
+            return;
+        }
+        else
+            switch_state(D7ATP_STATE_SLAVE_TRANSACTION_RESPONSE_PERIOD);
     }
     else
         assert(false);
@@ -226,10 +385,20 @@ void d7atp_signal_packet_transmitted(packet_t* packet)
 
 void d7atp_signal_packet_csma_ca_insertion_completed(bool succeeded)
 {
+    assert((d7atp_state == D7ATP_STATE_MASTER_TRANSACTION_REQUEST_PERIOD) ||
+            (d7atp_state == D7ATP_STATE_SLAVE_TRANSACTION_SENDING_RESPONSE));
+
     if(!succeeded)
     {
-        DPRINT("CSMA-CA insertion failed, stopping transaction");
-        switch_state(D7ATP_STATE_IDLE);
+        if (d7atp_state == D7ATP_STATE_MASTER_TRANSACTION_REQUEST_PERIOD)
+            switch_state(D7ATP_STATE_IDLE);
+        else if (d7atp_is_response_period_expired())
+        {
+            // signal the response period expiration here
+            d7atp_cancel_response_period_timeout_handler();
+            d7atp_signal_transaction_response_period_elapsed();
+            return;
+        }
     }
 
     d7asp_signal_packet_csma_ca_insertion_completed(succeeded);
@@ -237,9 +406,10 @@ void d7atp_signal_packet_csma_ca_insertion_completed(bool succeeded)
 
 void d7atp_process_received_packet(packet_t* packet)
 {
+    bool extension = false;
+
     assert(d7atp_state == D7ATP_STATE_MASTER_TRANSACTION_RESPONSE_PERIOD
-           || d7atp_state == D7ATP_STATE_SLAVE_TRANSACTION_RESPONSE_PERIOD
-           || d7atp_state == D7ATP_STATE_IDLE); // IDLE: when doing channel scanning outside of transaction
+            || d7atp_state == D7ATP_STATE_IDLE); // IDLE: when doing channel scanning outside of transaction
 
     // copy addressee from NP origin
     current_addressee.ctrl.id_type = packet->d7anp_ctrl.origin_addressee_ctrl_id_type;
@@ -247,7 +417,7 @@ void d7atp_process_received_packet(packet_t* packet)
     memcpy(current_addressee.id, packet->origin_access_id, 8);
     packet->d7anp_addressee = &current_addressee;
 
-    if(IS_IN_TRANSACTION())
+    if(IS_IN_MASTER_TRANSACTION())
     {
         if(packet->d7atp_dialog_id != current_dialog_id || packet->d7atp_transaction_id != current_transaction_id)
         {
@@ -256,28 +426,81 @@ void d7atp_process_received_packet(packet_t* packet)
             return;
         }
 
-        // TODO assert(!packet->d7atp_ctrl.ctrl_is_start); // start dialog not allowed when in master transaction state
         if(packet->d7atp_ctrl.ctrl_is_start)
         {
-            DPRINT("Start dialog not allowed when in master transaction state, skipping segment");
-            packet_queue_free_packet(packet);
-            return;
+            // if this is the last transaction, it means that the extension procedure is initiated by the responder
+            if (packet->d7atp_ctrl.ctrl_is_stop)
+            {
+                DPRINT("Dialog terminated, we need to start a new dialog this time as a responder");
+                current_dialog_id = 0;
+                switch_state(D7ATP_STATE_IDLE);
+                d7atp_start_dialog_timeout_timer();
+                d7anp_start_responder_foreground_scan();
+                extension = true;
+            }
+            else
+            {
+                DPRINT("Start dialog not allowed when in master transaction state, skipping segment");
+                packet_queue_free_packet(packet);
+                return;
+            }
         }
     }
     else
     {
-        // not in a transaction, start slave transaction when receiving a START
-        if(!packet->d7atp_ctrl.ctrl_is_start)
+         /*
+          * when participating in a Dialog, responder discards segments with Dialog ID
+          * not matching the recorded Dialog ID
+          */
+        if ((current_dialog_id) && (current_dialog_id != packet->d7atp_dialog_id))
         {
-            DPRINT("Filtered frame with START cleared");
+            DPRINT("Filtered frame with Dialog ID not matching the recorded Dialog ID");
             packet_queue_free_packet(packet);
             return;
         }
 
-        // TODO when STOP bit set stop NP foreground scan?
+        // When not participating in a Dialog
+        if (!current_dialog_id)
+        {
+            // Start the Dialog timeout timer if START flag set to 1 and if multiple transaction is expected
+            if (packet->d7atp_ctrl.ctrl_is_start)
+            {
+                if (!packet->d7atp_ctrl.ctrl_is_stop)
+                    d7atp_start_dialog_timeout_timer();
+                else
+                    // The dialog will terminate after the end of this transaction
+                    DPRINT("Dialog with one transaction only");
+            }
+            else
+            {
+            //Responders discard segments marked with START flag set to 0 until they receive a segment with START flag set to 1
+                DPRINT("Filtered frame with START cleared");
+                packet_queue_free_packet(packet);
+                return;
+            }
+        }
 
         switch_state(D7ATP_STATE_SLAVE_TRANSACTION_RECEIVED_REQUEST);
-        current_dialog_id = packet->d7atp_dialog_id;
+
+        /*
+         * Start the response period timer in order to make sure that the response
+         * is sent within this time frame (if ACK requested)
+         * or to discard others transactions during the response period
+         */
+        if (!schedule_response_period_timeout_handler(packet->d7anp_timeout,
+                                   packet->hw_radio_packet.rx_meta.timestamp))
+        {
+            DPRINT("Discard the request since the response period is expired");
+            packet_queue_free_packet(packet);
+            return;
+        }
+
+        // if the STOP bit is set, the dialog terminates after this last transaction, don't record the dialog ID
+         if (packet->d7atp_ctrl.ctrl_is_stop)
+             current_dialog_id = 0;
+         else
+             current_dialog_id = packet->d7atp_dialog_id;
+
         current_transaction_id = packet->d7atp_transaction_id;
         DPRINT("Dialog id %i transaction id %i", current_dialog_id, current_transaction_id);
 
@@ -296,5 +519,5 @@ void d7atp_process_received_packet(packet_t* packet)
         active_addressee_access_profile.subbands[0].channel_index_end = rx_channel.center_freq_index;
     }
 
-    d7asp_process_received_packet(packet);
+    d7asp_process_received_packet(packet, extension);
 }

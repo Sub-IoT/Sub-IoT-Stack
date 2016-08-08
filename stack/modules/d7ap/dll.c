@@ -111,8 +111,13 @@ static void switch_state(dll_state_t next_state)
     switch(next_state)
     {
     case DLL_STATE_CSMA_CA_STARTED:
+        /*
+         * In case of extension, a request can follow the response, so the
+         * current state can be DLL_STATE_TX_FOREGROUND_COMPLETED
+         */
         assert(dll_state == DLL_STATE_IDLE || dll_state == DLL_STATE_SCAN_AUTOMATION
-               || dll_state == DLL_STATE_FOREGROUND_SCAN);
+               || dll_state == DLL_STATE_FOREGROUND_SCAN
+               || dll_state == DLL_STATE_TX_FOREGROUND_COMPLETED);
         dll_state = next_state;
         DPRINT("Switched to DLL_STATE_CSMA_CA_STARTED");
         break;
@@ -139,7 +144,8 @@ static void switch_state(dll_state_t next_state)
         break;
     case DLL_STATE_IDLE:
         assert(dll_state == DLL_STATE_FOREGROUND_SCAN || dll_state == DLL_STATE_CCA_FAIL
-               || dll_state == DLL_STATE_TX_FOREGROUND_COMPLETED);
+               || dll_state == DLL_STATE_TX_FOREGROUND_COMPLETED
+               || dll_state == DLL_STATE_CSMA_CA_STARTED);
         dll_state = next_state;
         DPRINT("Switched to DLL_STATE_IDLE");
         break;
@@ -231,7 +237,8 @@ void packet_received(hw_radio_packet_t* packet)
     // schedule it and return
     DPRINT("packet received @ %i , RSSI = %i", packet->rx_meta.timestamp, packet->rx_meta.rssi);
     packet_queue_mark_received(packet);
-    sched_post_task(&process_received_packets);
+    /* the received packet needs to be handled in priority */
+    sched_post_task_prio(&process_received_packets, MAX_PRIORITY);
 }
 
 static void packet_transmitted(hw_radio_packet_t* hw_radio_packet)
@@ -329,22 +336,37 @@ static void execute_csma_ca()
     //hw_radio_set_rx(NULL, NULL, NULL); // put radio in RX but disable callbacks to make sure we don't receive packets when in this state
                                         // TODO use correct rx cfg + it might be interesting to switch to idle first depending on calculated offset
     uint16_t tx_duration = calculate_tx_duration();
+    timer_tick_t Tc = CONVERT_TO_TI(current_access_profile->transmission_timeout_period);
     switch (dll_state)
     {
         case DLL_STATE_CSMA_CA_STARTED:
         {
-            dll_tca = current_access_profile->transmission_timeout_period - tx_duration; // TODO d7anp_timeout
+            dll_tca = Tc - tx_duration; // TODO d7anp_timeout
             dll_cca_started = timer_get_counter_value();
-            DPRINT("Tca= %i = %i - %i", dll_tca, current_access_profile->transmission_timeout_period, tx_duration);
+            DPRINT("Tca= %i = %i - %i", dll_tca, Tc, tx_duration);
 
             if (dll_tca <= 0)
             {
-                // TODO how to handle this? signal upper layer?
                 DPRINT("Tca negative, CCA failed");
-                assert(false);
-//				switch_state(DLL_STATE_CCA_FAIL);
-//				sched_post_task(&execute_csma_ca);
+                // Repeating this procedure is useless since Tca keeps the same value.
+                // Let the upper layer decide eventually to change the channel in order to get
+                // a chance a send this frame
+                switch_state(DLL_STATE_IDLE);
+                d7anp_signal_packet_csma_ca_insertion_completed(false);
                 break;
+            }
+
+            if (current_packet->request == false) {
+                int32_t response_period_elapsed = dll_cca_started - current_packet->hw_radio_packet.rx_meta.timestamp;
+                dll_tca -= response_period_elapsed;
+                DPRINT("Response Tca= %i = %i - %i - %i", dll_tca, Tc, tx_duration, response_period_elapsed);
+                if (dll_tca <= 0)
+                {
+                    DPRINT("Tca negative, CCA failed");
+                    switch_state(DLL_STATE_IDLE);
+                    d7anp_signal_packet_csma_ca_insertion_completed(false);
+                    break;
+                }
             }
 
             uint16_t t_offset = 0;
@@ -498,7 +520,11 @@ void dll_execute_scan_automation()
 
         hw_radio_set_rx(&rx_cfg, &packet_received, NULL);
 
-        assert(current_access_profile->scan_automation_period == 0); // scan automation period, assuming 0 for now
+        /*
+         * As stated by the specification, if the scan type is set to foreground,
+         * the scan automation period (To) should be set to 0.
+         */
+        assert(current_access_profile->scan_automation_period == 0);
     }
     else
     {

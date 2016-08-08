@@ -60,6 +60,7 @@ typedef struct
     uint8_t transmission_timeout_period;  // Tc
     uint8_t _rfu;
     subband_t subbands[1]; // TODO only support 1 subband for now
+    uint8_t dialog_to;
 } dae_access_profile_t;
 
 #endif /* DAE_H_ */

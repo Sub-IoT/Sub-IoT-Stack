@@ -38,7 +38,8 @@
 typedef enum {
     D7ANP_STATE_IDLE,
     D7ANP_STATE_TRANSMIT,
-    D7ANP_STATE_FOREGROUND_SCAN,
+    D7ANP_STATE_REQUESTER_FOREGROUND_SCAN,
+    D7ANP_STATE_RESPONDER_FOREGROUND_SCAN,
 } state_t;
 
 static state_t NGDEF(_d7anp_state);
@@ -52,34 +53,39 @@ static void switch_state(state_t next_state)
     switch(next_state)
     {
         case D7ANP_STATE_TRANSMIT:
-          assert(d7anp_state == D7ANP_STATE_IDLE ||
-                 d7anp_state == D7ANP_STATE_FOREGROUND_SCAN);
+          assert(d7anp_state == D7ANP_STATE_IDLE);
           d7anp_state = next_state;
           DPRINT("Switched to D7ANP_STATE_TRANSMIT");
           break;
         case D7ANP_STATE_IDLE:
           assert(d7anp_state == D7ANP_STATE_TRANSMIT ||
-                 d7anp_state == D7ANP_STATE_FOREGROUND_SCAN);
+                 d7anp_state == D7ANP_STATE_REQUESTER_FOREGROUND_SCAN ||
+                 d7anp_state == D7ANP_STATE_RESPONDER_FOREGROUND_SCAN);
           d7anp_state = next_state;
           DPRINT("Switched to D7ANP_STATE_IDLE");
           break;
-        case D7ANP_STATE_FOREGROUND_SCAN:
+        case D7ANP_STATE_REQUESTER_FOREGROUND_SCAN:
           assert(d7anp_state == D7ANP_STATE_TRANSMIT ||
                  d7anp_state == D7ANP_STATE_IDLE);
-
           d7anp_state = next_state;
-          DPRINT("Switched to D7ANP_STATE_FOREGROUND_SCAN");
+          DPRINT("Switched to D7ANP_STATE_REQUESTER_FOREGROUND_SCAN");
+          break;
+        case D7ANP_STATE_RESPONDER_FOREGROUND_SCAN:
+          assert(d7anp_state == D7ANP_STATE_TRANSMIT ||
+                 d7anp_state == D7ANP_STATE_IDLE);
+          d7anp_state = next_state;
+          DPRINT("Switched to D7ANP_STATE_RESPONDER_FOREGROUND_SCAN");
           break;
     }
 
     // output state on debug pins
-    d7anp_state == D7ANP_STATE_FOREGROUND_SCAN? DEBUG_PIN_SET(3) : DEBUG_PIN_CLR(3);
+    ((d7anp_state == D7ANP_STATE_REQUESTER_FOREGROUND_SCAN) || (d7anp_state == D7ANP_STATE_RESPONDER_FOREGROUND_SCAN)) ? DEBUG_PIN_SET(3) : DEBUG_PIN_CLR(3);
 }
 
 static void foreground_scan_expired()
 {
-    assert(d7anp_state == D7ANP_STATE_FOREGROUND_SCAN);
-    DPRINT("Foreground scan expired");
+    assert(d7anp_state == D7ANP_STATE_REQUESTER_FOREGROUND_SCAN);
+    DPRINT("Requester foreground scan expired");
 
     switch_state(D7ANP_STATE_IDLE);
     dll_stop_foreground_scan();
@@ -95,7 +101,7 @@ static void schedule_foreground_scan_expired_timer(uint8_t timeout_ct)
 
 static void start_foreground_scan(uint8_t timeout_ct)
 {
-    switch_state(D7ANP_STATE_FOREGROUND_SCAN);
+    switch_state(D7ANP_STATE_REQUESTER_FOREGROUND_SCAN);
     schedule_foreground_scan_expired_timer(timeout_ct); // TODO ensure > own Tc
     dll_start_foreground_scan();
 }
@@ -109,19 +115,19 @@ static void cancel_foreground_scan_task()
 
 void d7anp_init()
 {
+    uint8_t own_access_class = fs_read_dll_conf_active_access_class();
+
+    // set early our own acces profile since this information may be needed when receiving a frame
+    fs_read_access_class(own_access_class, &own_access_profile);
+
     d7anp_state = D7ANP_STATE_IDLE;
     sched_register_task(&foreground_scan_expired);
 }
 
 void d7anp_tx_foreground_frame(packet_t* packet, bool should_include_origin_template, dae_access_profile_t* access_profile)
 {
-    if(d7anp_state == D7ANP_STATE_FOREGROUND_SCAN)
-    {
-        cancel_foreground_scan_task();
-    }
-
-    uint8_t own_access_class = fs_read_dll_conf_active_access_class();
-    fs_read_access_class(own_access_class, &own_access_profile);
+    // when sending a foreground frame, the foreground scan is not supposed to be in progress
+    assert(d7anp_state == D7ANP_STATE_IDLE);
 
     packet->d7anp_timeout = own_access_profile.transmission_timeout_period; // TODO get calculated value from SP
     packet->d7anp_ctrl.origin_addressee_ctrl_nls_enabled = false;
@@ -140,8 +146,49 @@ void d7anp_tx_foreground_frame(packet_t* packet, bool should_include_origin_temp
 
     packet->d7anp_ctrl.origin_addressee_ctrl_access_class = packet->d7anp_addressee->ctrl.access_class; // TODO validate
 
+    // In case of response, check if the response period is not expired before calling dll API
+    if ((packet->request == false) && (d7atp_is_response_period_expired()))
+    {
+        d7atp_cancel_response_period_timeout_handler();
+        d7atp_signal_transaction_response_period_elapsed();
+        return;
+    }
+
     switch_state(D7ANP_STATE_TRANSMIT);
     dll_tx_frame(packet, access_profile);
+}
+
+void start_foreground_scan_after_D7AAdvP()
+{
+    d7atp_start_dialog_timeout_timer();
+    switch_state(D7ANP_STATE_RESPONDER_FOREGROUND_SCAN);
+    dll_start_foreground_scan();
+}
+
+static void schedule_foreground_scan_after_D7AAdvP(timer_tick_t eta)
+{
+    DPRINT("Perform a dll foreground scan at the end of the delay period (%i ticks)", eta);
+    assert(timer_post_task_delay(&start_foreground_scan_after_D7AAdvP, eta) == SUCCESS);
+}
+
+void d7anp_start_responder_foreground_scan()
+{
+    if(d7anp_state == D7ANP_STATE_REQUESTER_FOREGROUND_SCAN) {
+        cancel_foreground_scan_task();
+    }
+
+    switch_state(D7ANP_STATE_RESPONDER_FOREGROUND_SCAN);
+    dll_start_foreground_scan();
+}
+
+void d7anp_stop_responder_foreground_scan()
+{
+    if (d7anp_state == D7ANP_STATE_RESPONDER_FOREGROUND_SCAN)
+    {
+        // stop the foreground scan and switch to the automation scan
+        dll_stop_foreground_scan();
+        switch_state(D7ANP_STATE_IDLE);
+    }
 }
 
 uint8_t d7anp_assemble_packet_header(packet_t *packet, uint8_t *data_ptr)
@@ -197,7 +244,7 @@ void d7anp_signal_packet_csma_ca_insertion_completed(bool succeeded)
 {
     if(!succeeded)
     {
-        DPRINT("CSMA-CA insertion failed, not entering foreground scan");
+        DPRINT("CSMA-CA insertion failed");
         switch_state(D7ANP_STATE_IDLE);
     }
 
@@ -206,26 +253,53 @@ void d7anp_signal_packet_csma_ca_insertion_completed(bool succeeded)
 
 void d7anp_signal_packet_transmitted(packet_t* packet)
 {
-    // even when no ack is requested we still need to wait for a possible dormant session which might have been waiting
-    // for us on the other side.
-    // we listen for the timeout defined in our own access profile
+    assert(d7anp_state == D7ANP_STATE_TRANSMIT);
 
-    start_foreground_scan(own_access_profile.transmission_timeout_period);
+    // the requester is scanning for responses during its own Tc
+    if (packet->request)
+        start_foreground_scan(own_access_profile.transmission_timeout_period);
+    else
+    // the responder shall wait response period expiration to initiate a new DLL foreground scan
+        switch_state(D7ANP_STATE_IDLE);
+
     d7atp_signal_packet_transmitted(packet);
 }
 
 void d7anp_process_received_packet(packet_t* packet)
 {
-    if(d7anp_state == D7ANP_STATE_FOREGROUND_SCAN)
+    if(d7anp_state == D7ANP_STATE_REQUESTER_FOREGROUND_SCAN)
     {
-        DPRINT("Received packet while in D7ANP_STATE_FOREGROUND_SCAN, extending foreground scan period");
-        cancel_foreground_scan_task();
-        schedule_foreground_scan_expired_timer(packet->d7anp_timeout);
+        DPRINT("Received packet while in D7ANP_STATE_REQUESTER_FOREGROUND_SCAN");
+
+        // We may receive several responses for a broadcast request.
+        // Therefore, I recommend not to extend the foreground scan period
+        // otherwise the response period is extended whereas the CSMA-CA timeout
+        // used by the responder is always set to the initial requester TC
+
+        //cancel_foreground_scan_task();
+        //schedule_foreground_scan_expired_timer(packet->d7anp_timeout);
     }
-    else
+    else if(d7anp_state == D7ANP_STATE_RESPONDER_FOREGROUND_SCAN)
     {
-        DPRINT("Received packet while in D7ANP_STATE_IDLE (scan automation), start foreground scan");
-        start_foreground_scan(packet->d7anp_timeout);
+        DPRINT("Received packet while in D7ANP_STATE_RESPONDER_FOREGROUND_SCAN");
+        switch_state(D7ANP_STATE_IDLE);
+        // switch the radio to idle now or let the radio to be set to idle after transmitting the response ?
+    }
+     else // To confirm whether this should be handled here or in the data link layer
+    {
+        DPRINT("Received packet while in D7ANP_STATE_IDLE (scan automation)");
+
+        // check if DLL was performing a background scan
+        if(!own_access_profile.control_scan_type_is_foreground) {
+            timer_tick_t eta;
+
+            DPRINT("Received a background frame)");
+            //TODO decode the D7A Background Network Protocols Frame in order to trigger the foreground scan after the advertising period
+            schedule_foreground_scan_after_D7AAdvP(eta);
+            return;
+        }
+
+        //TODO switch the radio to idle hw_radio_set_idle() ?
     }
 
     d7atp_process_received_packet(packet);
