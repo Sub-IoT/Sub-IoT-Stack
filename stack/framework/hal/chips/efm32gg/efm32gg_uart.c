@@ -311,7 +311,7 @@ void uart_send_bytes(uart_handle_t* uart, void const *data, size_t length) {
 			int ret = USBD_Write( 0x81, (void*) tempData, length, NULL);
 		}
 #else
-	for(uint8_t i=0; i<length; i++)	{
+  for(size_t i = 0; i < length; i++)	{
 		uart_send_byte(uart, ((uint8_t const*)data)[i]);
 	}
 #endif
