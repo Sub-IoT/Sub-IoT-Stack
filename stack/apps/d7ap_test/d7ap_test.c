@@ -103,7 +103,7 @@ void init_user_files() {
     // broadcast changes made to file 0x40 in file 0x41
     // first generate ALP command consisting of ALP Control header, ALP File 
     // Data Request operand and D7ASP interface configuration
-    alp_control_t alp_ctrl = {
+    alp_control_regular_t alp_ctrl = {
         .group                            = false,
         .response_requested               = false,
         .operation                        = ALP_OP_READ_FILE_DATA
@@ -135,7 +135,7 @@ void init_user_files() {
     };
 
     // finally, register D7AActP file
-    fs_init_file_with_D7AActP(ACTION_FILE_ID, &d7asp_fifo_config, &alp_ctrl,
+    fs_init_file_with_D7AActP(ACTION_FILE_ID, &d7asp_fifo_config, (alp_control_t*)&alp_ctrl,
                               (uint8_t*)&file_data_request_operand);
 }
 
@@ -166,7 +166,6 @@ void bootstrap() {
                 .channel_header = {
                     .ch_coding = PHY_CODING_PN9,
                     .ch_class = PHY_CLASS_NORMAL_RATE,
-                    //.ch_freq_band = PHY_BAND_868
                     .ch_freq_band = PHY_BAND_433
                 },
                 .channel_index_start = 0,

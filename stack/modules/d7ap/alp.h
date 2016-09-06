@@ -26,13 +26,15 @@
 #include "stdint.h"
 #include "stdbool.h"
 
+#include "fifo.h"
+
 #include "d7asp.h"
 
 #define ALP_ITF_ID_D7ASP  0xD7
 #define ALP_ITF_ID_FS     0x00 // not part of the spec
 #define ALP_ITF_ID_APP    0x01 // not part of the spec
 
-#define ALP_PAYLOAD_MAX_SIZE 32 // TODO configurable?
+#define ALP_PAYLOAD_MAX_SIZE 128 // TODO configurable?
 
 typedef enum
 {
@@ -73,9 +75,11 @@ typedef enum {
     ALP_OP_RETURN_FILE_DATA = 32,
     ALP_OP_RETURN_FILE_PROPERTIES = 33,
     ALP_OP_RETURN_STATUS = 34,
+    ALP_OP_RETURN_TAG = 35,
     ALP_OP_CHUNK = 48,
     ALP_OP_LOGIC = 49,
     ALP_OP_FORWARD = 50,
+    ALP_OP_REQUEST_TAG = 52
 } alp_operation_t;
 
 typedef enum {
@@ -101,11 +105,51 @@ typedef struct {
         uint8_t raw;
         struct {
             alp_operation_t operation : 6;
+            bool b6 : 1;
+            bool b7 : 1;
+        };
+    };
+} alp_control_t;
+
+/*! \brief The ALP CTRL header, for 'regular' operations, where b6 and b7 are overloaded with response_requested and group flags respectively
+ */
+typedef struct {
+    union {
+        uint8_t raw;
+        struct {
+            alp_operation_t operation : 6;
             bool response_requested : 1;
             bool group : 1;
         };
     };
-} alp_control_t;
+} alp_control_regular_t;
+
+/*! \brief The ALP CTRL header, for tag request operation
+ */
+typedef struct {
+    union {
+        uint8_t raw;
+        struct {
+            alp_operation_t operation : 6;
+            bool _rfu : 1;
+            bool respond_when_completed : 1;
+        };
+    };
+} alp_control_tag_request_t;
+
+/*! \brief The ALP CTRL header, for tag response operation
+ */
+typedef struct {
+    union {
+        uint8_t raw;
+        struct {
+            alp_operation_t operation : 6;
+            bool error : 1;
+            bool _rfu : 1;
+        };
+    };
+} alp_control_tag_response_t;
+
 
 typedef struct {
     uint8_t file_id;
@@ -122,6 +166,18 @@ typedef struct {
     uint8_t provided_data_length;
     // data
 } alp_operand_file_data_t;
+
+
+typedef struct {
+  uint8_t fifo_token;
+  uint8_t tag_id;
+  bool respond_when_completed;
+  alp_command_origin_t origin;
+  fifo_t alp_command_fifo;
+  fifo_t alp_response_fifo;
+  uint8_t alp_command[ALP_PAYLOAD_MAX_SIZE];
+  uint8_t alp_response[ALP_PAYLOAD_MAX_SIZE];
+} alp_command_t;
 
 /*!
  * \brief Returns the ALP operation type contained in alp_command

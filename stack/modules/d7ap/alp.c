@@ -36,8 +36,8 @@
 #define DPRINT(...)
 #endif
 
-static alp_command_origin_t NGDEF(_current_command_origin);
-#define current_command_origin NG(_current_command_origin)
+static alp_command_t NGDEF(_current_command); // TODO support multiple active commands
+#define current_command NG(_current_command)
 
 alp_operation_t alp_get_operation(uint8_t* alp_command)
 {
@@ -98,6 +98,11 @@ static uint8_t process_op_forward(fifo_t* alp_command_fifo, fifo_t* alp_response
   DPRINT("FORWARD");
 }
 
+static void process_op_request_tag(fifo_t* alp_command_fifo, bool respond_when_completed) {
+  fifo_pop(alp_command_fifo, &current_command.tag_id, 1);
+  current_command.respond_when_completed = respond_when_completed;
+}
+
 void alp_process_command_result_on_d7asp(d7asp_fifo_config_t* d7asp_fifo_config, uint8_t* alp_command, uint8_t alp_command_length, alp_command_origin_t origin)
 {
   uint8_t alp_response[ALP_PAYLOAD_MAX_SIZE];
@@ -114,7 +119,14 @@ void alp_process_command_console_output(uint8_t* alp_command, uint8_t alp_comman
 
 bool alp_process_command(uint8_t* alp_command, uint8_t alp_command_length, uint8_t* alp_response, uint8_t* alp_response_length, alp_command_origin_t origin)
 {
-  current_command_origin = origin; // TODO support more than 1 active cmd
+  assert(alp_command_length <= ALP_PAYLOAD_MAX_SIZE);
+
+  // TODO support more than 1 active cmd
+  memcpy(current_command.alp_command, alp_command, alp_command_length);
+  fifo_init_filled(&(current_command.alp_command_fifo), current_command.alp_command, alp_command_length, ALP_PAYLOAD_MAX_SIZE);
+  fifo_init(&(current_command.alp_response_fifo), current_command.alp_response, ALP_PAYLOAD_MAX_SIZE);
+  current_command.origin = origin;
+
   (*alp_response_length) = 0;
   d7asp_fifo_config_t d7asp_fifo_config;
   bool do_forward = false;
@@ -147,6 +159,10 @@ bool alp_process_command(uint8_t* alp_command, uint8_t alp_command_length, uint8
         process_op_forward(&alp_command_fifo, &alp_response_fifo, &d7asp_fifo_config);
         do_forward = true;
         break;
+      case ALP_OP_REQUEST_TAG: ;
+        alp_control_tag_request_t* tag_request = (alp_control_tag_request_t*)&control;
+        process_op_request_tag(&alp_command_fifo, tag_request->respond_when_completed);
+        break;
       default:
         assert(false); // TODO return error
         //alp_status = ALP_STATUS_UNKNOWN_OPERATION;
@@ -156,7 +172,7 @@ bool alp_process_command(uint8_t* alp_command, uint8_t alp_command_length, uint8
   (*alp_response_length) = fifo_get_size(&alp_response_fifo);
 
   if((*alp_response_length) > 0) {
-    if(current_command_origin == ALP_CMD_ORIGIN_SERIAL_CONSOLE)
+    if(current_command.origin == ALP_CMD_ORIGIN_SERIAL_CONSOLE)
       alp_cmd_handler_output_alp_command(alp_response, (*alp_response_length));
 
     // TODO APP
@@ -171,7 +187,7 @@ bool alp_process_command(uint8_t* alp_command, uint8_t alp_command_length, uint8
 }
 
 void alp_d7asp_request_completed(d7asp_result_t result, uint8_t* payload, uint8_t payload_length) {
-  switch(current_command_origin) {
+  switch(current_command.origin) {
     case ALP_CMD_ORIGIN_SERIAL_CONSOLE:
       alp_cmd_handler_output_d7asp_response(result, payload, payload_length);
       break;
@@ -189,9 +205,13 @@ void alp_d7asp_request_completed(d7asp_result_t result, uint8_t* payload, uint8_
 }
 
 void alp_d7asp_fifo_flush_completed(uint8_t fifo_token, uint8_t* progress_bitmap, uint8_t* success_bitmap, uint8_t bitmap_byte_count) {
-  switch(current_command_origin) {
+  switch(current_command.origin) {
     case ALP_CMD_ORIGIN_SERIAL_CONSOLE:
-      alp_cmd_handler_output_d7asp_flush_result(fifo_token, progress_bitmap, success_bitmap, bitmap_byte_count);
+      if(current_command.respond_when_completed) {
+        bool error = memcmp(success_bitmap, progress_bitmap, bitmap_byte_count) != 0;
+        alp_cmd_handler_output_command_completed(current_command.tag_id, error);
+      }
+
       break;
     case ALP_CMD_ORIGIN_APP:
       // TODO callback
