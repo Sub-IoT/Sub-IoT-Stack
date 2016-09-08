@@ -243,6 +243,11 @@ void d7anp_signal_packet_transmitted(packet_t* packet)
     d7atp_signal_packet_transmitted(packet);
 }
 
+void d7anp_signal_response_period_termination()
+{
+  d7atp_signal_response_period_termination();
+}
+
 void d7anp_process_received_packet(packet_t* packet)
 {
     if(d7anp_state == D7ANP_STATE_FOREGROUND_SCAN)

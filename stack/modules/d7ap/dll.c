@@ -91,6 +91,9 @@ static uint32_t NGDEF(_dll_cca_started);
 static bool NGDEF(_process_received_packets_after_tx);
 #define process_received_packets_after_tx NG(_process_received_packets_after_tx)
 
+static timer_tick_t NGDEF(_tc_starting_time);
+#define tc_starting_time NG(_tc_starting_time)
+
 // TODO defined somewhere?
 #define t_g	5
 
@@ -224,15 +227,47 @@ static void process_received_packets()
     // TODO check if more received packets are pending
 }
 
-void packet_received(hw_radio_packet_t* packet)
+static void response_period_timeout_handler()
+{
+    DPRINT("Expiration of the response period");
+
+#ifndef FRAMEWORK_TIMER_RESET_COUNTER
+    tc_starting_time = 0;
+#endif
+
+    d7anp_signal_response_period_termination();
+}
+
+static bool schedule_response_period_timeout_handler(uint8_t timeout_tc)
+{
+    timer_tick_t timeout_ticks = CONVERT_TO_TI(timeout_tc);
+
+    if (!timer_is_task_scheduled(response_period_timeout_handler))
+    {
+        DPRINT("Starting response_period timer (%i ticks)", timeout_ticks);
+#ifndef FRAMEWORK_TIMER_RESET_COUNTER
+        tc_starting_time = timer_get_counter_value();
+#endif
+        return (timer_post_task_delay(&response_period_timeout_handler, timeout_ticks) == SUCCESS);
+    }
+}
+
+void packet_received(hw_radio_packet_t* hw_radio_packet)
 {
     assert(dll_state == DLL_STATE_FOREGROUND_SCAN || dll_state == DLL_STATE_SCAN_AUTOMATION);
 
     // we are in interrupt context here, so mark packet for further processing,
     // schedule it and return
-    DPRINT("packet received @ %i , RSSI = %i", packet->rx_meta.timestamp, packet->rx_meta.rssi);
-    packet_queue_mark_received(packet);
-    sched_post_task(&process_received_packets);
+    DPRINT("packet received @ %i , RSSI = %i", hw_radio_packet->rx_meta.timestamp, hw_radio_packet->rx_meta.rssi);
+    packet_queue_mark_received(hw_radio_packet);
+
+    packet_t* packet = packet_queue_find_packet(hw_radio_packet);
+    // start the Tc timer to determine the end of the response period
+    if (packet->d7atp_ctrl.ctrl_tc)
+        schedule_response_period_timeout_handler(packet->d7atp_tc);
+
+    /* the received packet needs to be handled in priority */
+    sched_post_task_prio(&process_received_packets, MAX_PRIORITY);
 }
 
 static void packet_transmitted(hw_radio_packet_t* hw_radio_packet)
@@ -241,6 +276,10 @@ static void packet_transmitted(hw_radio_packet_t* hw_radio_packet)
     switch_state(DLL_STATE_TX_FOREGROUND_COMPLETED);
     DPRINT("Transmitted packet with length = %i", hw_radio_packet->length);
     packet_t* packet = packet_queue_find_packet(hw_radio_packet);
+    // start the Tc timer to determine the end of the response period
+    if (packet->d7atp_ctrl.ctrl_tc)
+        schedule_response_period_timeout_handler(packet->d7atp_tc);
+
     d7anp_signal_packet_transmitted(packet);
 
     if(process_received_packets_after_tx)
@@ -340,6 +379,15 @@ static void execute_csma_ca()
             dll_tca = Tc - tx_duration;
             dll_cca_started = timer_get_counter_value();
             DPRINT("Tca= %i = %i - %i", dll_tca, Tc, tx_duration);
+
+#ifndef FRAMEWORK_TIMER_RESET_COUNTER
+            // Adjust TCA value according the time already elapsed in the response period
+            if (tc_starting_time)
+            {
+                dll_tca -= dll_cca_started - tc_starting_time;
+                DPRINT("Adjusted Tca= %i = %i - %i", dll_tca, dll_cca_started, tc_starting_time);
+            }
+#endif
 
             if (dll_tca <= 0)
             {
@@ -534,10 +582,12 @@ void dll_init()
     sched_register_task(&execute_cca);
     sched_register_task(&execute_csma_ca);
     sched_register_task(&dll_execute_scan_automation);
+    sched_register_task(&response_period_timeout_handler);
 
     hw_radio_init(&alloc_new_packet, &release_packet);
 
     dll_state = DLL_STATE_IDLE;
+    tc_starting_time = 0;
     active_access_class = NO_ACTIVE_ACCESS_CLASS;
     process_received_packets_after_tx = false;
     sched_post_task(&dll_execute_scan_automation);

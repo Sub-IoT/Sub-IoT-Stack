@@ -80,6 +80,7 @@ uint8_t d7anp_assemble_packet_header(packet_t* packet, uint8_t* data_ptr);
 bool d7anp_disassemble_packet_header(packet_t* packet, uint8_t* packet_idx);
 void d7anp_signal_packet_csma_ca_insertion_completed(bool succeeded);
 void d7anp_signal_packet_transmitted(packet_t* packet);
+void d7anp_signal_response_period_termination();
 void d7anp_process_received_packet(packet_t* packet);
 uint8_t d7anp_addressee_id_length(id_type_t);
 

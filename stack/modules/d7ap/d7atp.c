@@ -109,6 +109,18 @@ static void switch_state(state_t new_state)
     }
 }
 
+void d7atp_signal_response_period_termination()
+{
+    assert(d7atp_state == D7ATP_STATE_SLAVE_TRANSACTION_RESPONSE_PERIOD
+           || d7atp_state == D7ATP_STATE_MASTER_TRANSACTION_RESPONSE_PERIOD
+           || d7atp_state == D7ATP_STATE_SLAVE_TRANSACTION_RECEIVED_REQUEST);
+
+    switch_state(D7ATP_STATE_IDLE);
+    DPRINT("Transaction is terminated");
+    d7asp_signal_transaction_response_period_elapsed();
+}
+
+
 void d7atp_signal_foreground_scan_expired()
 {
     bool responder;
@@ -236,7 +248,7 @@ void d7atp_signal_packet_transmitted(packet_t* packet)
 
 void d7atp_signal_packet_csma_ca_insertion_completed(bool succeeded)
 {
-	assert((d7atp_state == D7ATP_STATE_MASTER_TRANSACTION_REQUEST_PERIOD) ||
+    assert((d7atp_state == D7ATP_STATE_MASTER_TRANSACTION_REQUEST_PERIOD) ||
             (d7atp_state == D7ATP_STATE_SLAVE_TRANSACTION_SENDING_RESPONSE));
 
     if(!succeeded)
