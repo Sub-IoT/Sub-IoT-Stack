@@ -109,6 +109,18 @@ static void switch_state(state_t new_state)
     }
 }
 
+void d7atp_signal_response_period_termination()
+{
+    assert(d7atp_state == D7ATP_STATE_SLAVE_TRANSACTION_RESPONSE_PERIOD
+           || d7atp_state == D7ATP_STATE_MASTER_TRANSACTION_RESPONSE_PERIOD
+           || d7atp_state == D7ATP_STATE_SLAVE_TRANSACTION_RECEIVED_REQUEST);
+
+    switch_state(D7ATP_STATE_IDLE);
+    DPRINT("Transaction is terminated");
+    d7asp_signal_transaction_response_period_elapsed();
+}
+
+
 void d7atp_signal_foreground_scan_expired()
 {
     switch_state(D7ATP_STATE_IDLE);
@@ -225,8 +237,14 @@ void d7atp_signal_packet_transmitted(packet_t* packet)
     {
         switch_state(D7ATP_STATE_MASTER_TRANSACTION_RESPONSE_PERIOD);
 
-        // start the FG scan for the response period duration
-        d7anp_start_foreground_scan(packet->d7atp_tc);
+        if (packet->d7atp_ctrl.ctrl_tc)
+        {
+            // start the Tc timer to determine the end of the response period
+            dll_start_response_period_timer(packet->d7atp_tc);
+
+            // start the FG scan for the response period duration
+            d7anp_start_foreground_scan(packet->d7atp_tc);
+        }
     }
     else if(d7atp_state == D7ATP_STATE_SLAVE_TRANSACTION_SENDING_RESPONSE)
     {
@@ -240,7 +258,7 @@ void d7atp_signal_packet_transmitted(packet_t* packet)
 
 void d7atp_signal_packet_csma_ca_insertion_completed(bool succeeded)
 {
-	assert((d7atp_state == D7ATP_STATE_MASTER_TRANSACTION_REQUEST_PERIOD) ||
+    assert((d7atp_state == D7ATP_STATE_MASTER_TRANSACTION_REQUEST_PERIOD) ||
             (d7atp_state == D7ATP_STATE_SLAVE_TRANSACTION_SENDING_RESPONSE));
 
     if(!succeeded)

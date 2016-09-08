@@ -391,20 +391,6 @@ bool d7asp_process_received_packet(packet_t* packet)
         return false;
 }
 
-
-void d7asp_signal_packet_transmitted(packet_t *packet)
-{
-    DPRINT("Packet transmitted");
-
-    if(d7asp_state == D7ASP_STATE_SLAVE || d7asp_state == D7ASP_STATE_SLAVE_PENDING_MASTER)
-    {
-        // when in slave session we can immediately cleanup the transmitted response.
-        // requests (in master sessions) will be cleanup upon termination of the dialog.
-        packet_queue_free_packet(packet);
-    }
-}
-
-
 static void on_request_completed()
 {
     assert(d7asp_state == D7ASP_STATE_MASTER);
@@ -422,6 +408,21 @@ static void on_request_completed()
 
 
     sched_post_task(&flush_fifos); // continue flushing until all request handled ...
+}
+
+void d7asp_signal_packet_transmitted(packet_t *packet)
+{
+    DPRINT("Packet transmitted");
+
+    // if Tc is not provided, the signal transaction_response_period_elapsed is not expected
+    if ((d7asp_state == D7ASP_STATE_MASTER) && (!packet->d7atp_ctrl.ctrl_tc))
+        on_request_completed();
+    else if(d7asp_state == D7ASP_STATE_SLAVE || d7asp_state == D7ASP_STATE_SLAVE_PENDING_MASTER)
+    {
+        // when in slave session we can immediately cleanup the transmitted response.
+        // requests (in master sessions) will be cleanup upon termination of the dialog.
+        packet_queue_free_packet(packet);
+    }
 }
 
 void d7asp_signal_packet_csma_ca_insertion_completed(bool succeeded)
