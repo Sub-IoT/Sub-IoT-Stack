@@ -134,10 +134,24 @@ void d7atp_signal_foreground_scan_expired()
     }
 }
 
+void d7atp_signal_dialog_termination()
+{
+    DPRINT("Dialog is terminated by upper layer");
+
+    // It means that we are not participating in a dialog and we can accept
+    // segments marked with START flag set to 1.
+    switch_state(D7ATP_STATE_IDLE);
+    current_dialog_id = 0;
+
+    // stop eventually the DLL foreground scan
+    d7anp_stop_foreground_scan();
+}
+
 void d7atp_init()
 {
     d7atp_state = D7ATP_STATE_IDLE;
     current_access_class = ACCESS_CLASS_NOT_SET;
+    current_dialog_id = 0;
 }
 
 void d7atp_start_dialog(uint8_t dialog_id, uint8_t transaction_id, bool is_last_transaction, packet_t* packet, session_qos_t* qos_settings)
@@ -301,9 +315,21 @@ void d7atp_process_received_packet(packet_t* packet)
     }
     else
     {
-        // not in a transaction, start slave transaction when receiving a START
-        if(!packet->d7atp_ctrl.ctrl_is_start)
+         /*
+          * when participating in a Dialog, responder discards segments with Dialog ID
+          * not matching the recorded Dialog ID
+          */
+        if ((current_dialog_id) && (current_dialog_id != packet->d7atp_dialog_id))
         {
+            DPRINT("Filtered frame with Dialog ID not matching the recorded Dialog ID");
+            packet_queue_free_packet(packet);
+            return;
+        }
+
+        // When not participating in a Dialog
+        if ((!current_dialog_id) && (!packet->d7atp_ctrl.ctrl_is_start))
+        {
+            //Responders discard segments marked with START flag set to 0 until they receive a segment with START flag set to 1
             DPRINT("Filtered frame with START cleared");
             packet_queue_free_packet(packet);
             return;

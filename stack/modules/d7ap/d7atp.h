@@ -69,4 +69,5 @@ void d7atp_signal_packet_csma_ca_insertion_completed(bool succeeded);
 void d7atp_signal_foreground_scan_expired();
 void d7atp_process_received_packet(packet_t* packet);
 void d7atp_signal_response_period_termination();
+void d7atp_signal_dialog_termination();
 #endif /* D7ATP_H_ */
