@@ -117,6 +117,7 @@ static void flush_fifos()
 
 
             current_master_session.state = D7ASP_MASTER_SESSION_IDLE;
+            d7atp_signal_dialog_termination();
             switch_state(D7ASP_STATE_IDLE);
             return;
         }
@@ -161,7 +162,7 @@ static void flush_fifos()
     }
 
     // TODO calculate D7ANP timeout (and update during transaction lifetime) (based on Tc, channel, cs, payload size, # msgs, # retries)
-    d7atp_start_dialog(current_master_session.token, current_request_id, true, current_request_packet, &current_master_session.config.qos);
+    d7atp_start_dialog(current_master_session.token, current_request_id, (current_request_id == current_master_session.next_request_id - 1), current_request_packet, &current_master_session.config.qos);
 }
 
 // TODO document state diagram
@@ -214,6 +215,7 @@ static void switch_state(state_t new_state)
             break;
         case D7ASP_STATE_IDLE:
             d7asp_state = new_state;
+            current_request_id = NO_ACTIVE_REQUEST_ID;
             DPRINT("Switching to state D7ASP_STATE_IDLE");
             break;
         default:
@@ -423,8 +425,22 @@ static void on_request_completed()
     else
     {
         // request completed, no retries needed so we can free the packet
-        current_request_id = NO_ACTIVE_REQUEST_ID;
         packet_queue_free_packet(current_request_packet);
+
+        // terminate the dialog if all request handled
+        // we need to switch to the state idle otherwise we may receive a new packet before the task flush_fifos is handled
+        // in this case, we may assert since the state remains MASTER
+        if (current_request_id == current_master_session.next_request_id - 1)
+        {
+            DPRINT("FIFO flush completed");
+            alp_d7asp_fifo_flush_completed(current_master_session.token, current_master_session.progress_bitmap,
+                                           current_master_session.success_bitmap, REQUESTS_BITMAP_BYTE_COUNT);
+            current_master_session.state = D7ASP_MASTER_SESSION_IDLE;
+            d7atp_signal_dialog_termination();
+            switch_state(D7ASP_STATE_IDLE);
+            return;
+        }
+        current_request_id = NO_ACTIVE_REQUEST_ID;
     }
 
     sched_post_task(&flush_fifos); // continue flushing until all request handled ...
@@ -444,6 +460,8 @@ void d7asp_signal_packet_csma_ca_insertion_completed(bool succeeded)
         {
             mark_current_request_done();
             bitmap_set(current_master_session.success_bitmap, current_request_id);
+            // As we don't wait a response, the request can be completed
+            on_request_completed();
         }
     }
     else if ((!succeeded) && ((d7asp_state == D7ASP_STATE_SLAVE) ||

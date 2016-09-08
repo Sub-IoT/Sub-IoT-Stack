@@ -83,5 +83,6 @@ void d7anp_signal_packet_transmitted(packet_t* packet);
 void d7anp_signal_response_period_termination();
 void d7anp_process_received_packet(packet_t* packet);
 uint8_t d7anp_addressee_id_length(id_type_t);
+void d7anp_stop_foreground_scan();
 
 #endif /* D7ANP_H_ */

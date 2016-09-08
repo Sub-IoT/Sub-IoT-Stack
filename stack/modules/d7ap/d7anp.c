@@ -166,6 +166,17 @@ void d7anp_tx_foreground_frame(packet_t* packet, bool should_include_origin_temp
     dll_tx_frame(packet, access_profile);
 }
 
+void d7anp_stop_foreground_scan()
+{
+    if (d7anp_state == D7ANP_STATE_FOREGROUND_SCAN)
+    {
+        // stop the foreground scan and switch to the automation scan
+        cancel_foreground_scan_task();
+        dll_stop_foreground_scan();
+        switch_state(D7ANP_STATE_IDLE);
+    }
+}
+
 uint8_t d7anp_assemble_packet_header(packet_t *packet, uint8_t *data_ptr)
 {
     assert(!packet->d7anp_ctrl.origin_addressee_ctrl_nls_enabled); // TODO NLS not yet supported
