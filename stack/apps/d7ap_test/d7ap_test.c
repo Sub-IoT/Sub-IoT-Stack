@@ -117,7 +117,7 @@ void init_user_files() {
         .requested_data_length            = SENSOR_FILE_SIZE,
     };
 
-    d7asp_fifo_config_t d7asp_fifo_config = {
+    d7asp_master_session_config_t session_config = {
         .qos = {
             .qos_resp_mode                = SESSION_RESP_MODE_ANY,
             .qos_nls                      = false,
@@ -135,7 +135,7 @@ void init_user_files() {
     };
 
     // finally, register D7AActP file
-    fs_init_file_with_D7AActP(ACTION_FILE_ID, &d7asp_fifo_config, (alp_control_t*)&alp_ctrl,
+    fs_init_file_with_D7AActP(ACTION_FILE_ID, &session_config, (alp_control_t*)&alp_ctrl,
                               (uint8_t*)&file_data_request_operand);
 }
 

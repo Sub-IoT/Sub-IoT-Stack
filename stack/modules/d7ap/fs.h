@@ -95,7 +95,7 @@ typedef struct {
 
 void fs_init(fs_init_args_t* init_args);
 void fs_init_file(uint8_t file_id, const fs_file_header_t* file_header, const uint8_t* initial_data);
-void fs_init_file_with_D7AActP(uint8_t file_id, const d7asp_fifo_config_t* fifo_config, const alp_control_t* alp_control, const uint8_t* alp_operand);
+void fs_init_file_with_D7AActP(uint8_t file_id, const d7asp_master_session_config_t* fifo_config, const alp_control_t* alp_control, const uint8_t* alp_operand);
 alp_status_codes_t fs_read_file(uint8_t file_id, uint8_t offset, uint8_t* buffer, uint8_t length);
 alp_status_codes_t fs_write_file(uint8_t file_id, uint8_t offset, const uint8_t* buffer, uint8_t length);
 void fs_read_access_class(uint8_t access_class_index, dae_access_profile_t* access_class);

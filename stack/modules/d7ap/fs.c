@@ -59,7 +59,7 @@ static void execute_alp_command(uint8_t command_file_id)
 
     // TODO refactor
     // parse ALP command
-    d7asp_fifo_config_t fifo_config;
+    d7asp_master_session_config_t fifo_config;
     assert((*data_ptr) == ALP_ITF_ID_D7ASP); // only D7ASP supported for now
     data_ptr++;
     fifo_config.qos.raw = (*data_ptr); data_ptr++;
@@ -174,7 +174,7 @@ void fs_init_file(uint8_t file_id, const fs_file_header_t* file_header, const ui
         fs_write_file(file_id, 0, initial_data, file_header->length);
 }
 
-void fs_init_file_with_D7AActP(uint8_t file_id, const d7asp_fifo_config_t* fifo_config, const alp_control_t* alp_ctrl, const uint8_t* alp_operand)
+void fs_init_file_with_D7AActP(uint8_t file_id, const d7asp_master_session_config_t* fifo_config, const alp_control_t* alp_ctrl, const uint8_t* alp_operand)
 {
     uint8_t alp_command_buffer[40] = { 0 };
     uint8_t* ptr = alp_command_buffer;

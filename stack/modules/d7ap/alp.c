@@ -85,16 +85,16 @@ static uint8_t process_op_write_file_data(fifo_t* alp_command_fifo, fifo_t* alp_
   alp_status_codes_t alp_status = fs_write_file(operand.file_offset.file_id, operand.file_offset.offset, data, operand.provided_data_length); // TODO status
 }
 
-static uint8_t process_op_forward(fifo_t* alp_command_fifo, fifo_t* alp_response_fifo, d7asp_fifo_config_t* fifo_config) {
+static uint8_t process_op_forward(fifo_t* alp_command_fifo, fifo_t* alp_response_fifo, d7asp_master_session_config_t* session_config) {
   uint8_t interface_id;
   error_t err;
   err = fifo_pop(alp_command_fifo, &interface_id, 1); assert(err == SUCCESS);
   assert(interface_id == ALP_ITF_ID_D7ASP); // only D7ASP supported for now // TODO return error instead of asserting
-  err = fifo_pop(alp_command_fifo, &fifo_config->qos.raw, 1); assert(err == SUCCESS);
-  err = fifo_pop(alp_command_fifo, &fifo_config->dormant_timeout, 1); assert(err == SUCCESS);
-  err = fifo_pop(alp_command_fifo, &fifo_config->addressee.ctrl.raw, 1); assert(err == SUCCESS);
-  uint8_t id_length = d7anp_addressee_id_length(fifo_config->addressee.ctrl.id_type);
-  err = fifo_pop(alp_command_fifo, fifo_config->addressee.id, id_length); assert(err == SUCCESS);
+  err = fifo_pop(alp_command_fifo, &session_config->qos.raw, 1); assert(err == SUCCESS);
+  err = fifo_pop(alp_command_fifo, &session_config->dormant_timeout, 1); assert(err == SUCCESS);
+  err = fifo_pop(alp_command_fifo, &session_config->addressee.ctrl.raw, 1); assert(err == SUCCESS);
+  uint8_t id_length = d7anp_addressee_id_length(session_config->addressee.ctrl.id_type);
+  err = fifo_pop(alp_command_fifo, session_config->addressee.id, id_length); assert(err == SUCCESS);
   DPRINT("FORWARD");
 }
 
@@ -103,12 +103,13 @@ static void process_op_request_tag(fifo_t* alp_command_fifo, bool respond_when_c
   current_command.respond_when_completed = respond_when_completed;
 }
 
-void alp_process_command_result_on_d7asp(d7asp_fifo_config_t* d7asp_fifo_config, uint8_t* alp_command, uint8_t alp_command_length, alp_command_origin_t origin)
+void alp_process_command_result_on_d7asp(d7asp_master_session_config_t* session_config, uint8_t* alp_command, uint8_t alp_command_length, alp_command_origin_t origin)
 {
   uint8_t alp_response[ALP_PAYLOAD_MAX_SIZE];
   uint8_t alp_response_length = 0;
   alp_process_command(alp_command, alp_command_length, alp_response, &alp_response_length, origin);
-  d7asp_queue_alp_actions(d7asp_fifo_config, alp_response, alp_response_length);
+  d7asp_master_session_t* session = d7asp_master_session_create(session_config);
+  d7asp_queue_alp_actions(session, alp_response, alp_response_length);
 }
 
 void alp_process_command_console_output(uint8_t* alp_command, uint8_t alp_command_length) {
@@ -128,7 +129,7 @@ bool alp_process_command(uint8_t* alp_command, uint8_t alp_command_length, uint8
   current_command.origin = origin;
 
   (*alp_response_length) = 0;
-  d7asp_fifo_config_t d7asp_fifo_config;
+  d7asp_master_session_config_t d7asp_session_config;
   bool do_forward = false;
 
   fifo_t alp_command_fifo, alp_response_fifo;
@@ -142,7 +143,11 @@ bool alp_process_command(uint8_t* alp_command, uint8_t alp_command_length, uint8
       uint8_t forwarded_alp_size = fifo_get_size(&alp_command_fifo);
       uint8_t forwarded_alp_actions[forwarded_alp_size];
       fifo_pop(&alp_command_fifo, forwarded_alp_actions, forwarded_alp_size);
-      d7asp_queue_alp_actions(&d7asp_fifo_config, forwarded_alp_actions, forwarded_alp_size); // TODO pass fifo directly?
+      d7asp_master_session_t* session = d7asp_master_session_create(&d7asp_session_config);
+      // TODO current_command.fifo_token = session->token;
+      d7asp_queue_result_t queue_result = d7asp_queue_alp_actions(session, forwarded_alp_actions, forwarded_alp_size); // TODO pass fifo directly?
+      current_command.fifo_token = queue_result.fifo_token;
+
       break; // TODO return response
     }
 
@@ -156,7 +161,7 @@ bool alp_process_command(uint8_t* alp_command, uint8_t alp_command_length, uint8
         process_op_write_file_data(&alp_command_fifo, &alp_response_fifo);
         break;
       case ALP_OP_FORWARD:
-        process_op_forward(&alp_command_fifo, &alp_response_fifo, &d7asp_fifo_config);
+        process_op_forward(&alp_command_fifo, &alp_response_fifo, &d7asp_session_config);
         do_forward = true;
         break;
       case ALP_OP_REQUEST_TAG: ;
@@ -205,6 +210,8 @@ void alp_d7asp_request_completed(d7asp_result_t result, uint8_t* payload, uint8_
 }
 
 void alp_d7asp_fifo_flush_completed(uint8_t fifo_token, uint8_t* progress_bitmap, uint8_t* success_bitmap, uint8_t bitmap_byte_count) {
+  // TODO end session
+  DPRINT("D7ASP flush completed", operand.file_offset.file_id, operand.requested_data_length);
   switch(current_command.origin) {
     case ALP_CMD_ORIGIN_SERIAL_CONSOLE:
       if(current_command.respond_when_completed) {

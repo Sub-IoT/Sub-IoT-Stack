@@ -51,7 +51,7 @@ void d7ap_stack_init(fs_init_args_t* fs_init_args, d7asp_init_args_t* d7asp_init
 #ifdef MODULE_D7AP_BROADCAST_VERSION_ON_BOOT_ENABLED
       // notify booted by broadcasting and retrying 3 times (for diagnostics ie to detect reboots)
       // TODO: default access class
-      d7asp_fifo_config_t broadcast_fifo_config = {
+      d7asp_master_session_config_t broadcast_fifo_config = {
           .qos = {
             .qos_resp_mode                = SESSION_RESP_MODE_ANY,
             .qos_nls                      = false,

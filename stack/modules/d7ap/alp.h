@@ -208,7 +208,7 @@ bool alp_process_command(uint8_t* alp_command, uint8_t alp_command_length, uint8
  * \param alp_command_length The length of the command
  * \param origin Where the ALP command originates from, determines where response will go to
  */
-void alp_process_command_result_on_d7asp(d7asp_fifo_config_t* d7asp_fifo_config, uint8_t* alp_command, uint8_t alp_command_length, alp_command_origin_t origin);
+void alp_process_command_result_on_d7asp(d7asp_master_session_config_t* d7asp_fifo_config, uint8_t* alp_command, uint8_t alp_command_length, alp_command_origin_t origin);
 
 /*!
  * \brief Process the ALP command and output the result on the console.
