@@ -73,6 +73,8 @@ ADD_LIBRARY (${CHIP_LIBRARY_NAME} OBJECT
                     emlib/src/em_i2c.c
                     emlib/src/em_wdog.c
                     emlib/inc/em_wdog.h
+                    emlib/src/em_prs.c
+                    emlib/inc/em_prs.h
                     efm32gg_adc.c 
                     efm32gg_mcu.c
                     efm32gg_uart.c
