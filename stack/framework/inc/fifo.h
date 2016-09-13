@@ -109,6 +109,13 @@ void fifo_clear(fifo_t* fifo);
  */
 int16_t fifo_get_size(fifo_t* fifo);
 
+/**
+ * @brief Returns if the FIFO is completely full or if there is still space left
+ * @param fifo      Pointer to the fifo object
+ * @return Flag indicating if FIFO is full
+ */
+bool fifo_is_full(fifo_t* fifo);
+
 #endif // FIFO_H
 
 /** @}*/

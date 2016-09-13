@@ -123,3 +123,7 @@ void fifo_clear(fifo_t* fifo)
     fifo->head_idx = 0;
     fifo->tail_idx = 0;
 }
+
+bool fifo_is_full(fifo_t* fifo) {
+    return fifo_get_size(fifo) == fifo->max_size;
+}
