@@ -311,6 +311,7 @@ void adc_init(ADC_Reference reference, ADC_Input input, uint32_t adc_frequency)
 
 	/* Setup interrupt generation on completed conversion. */
   ADC_IntEnable(ADC0, ADC_IF_SINGLE);
+  NVIC_EnableIRQ(ADC0_IRQn);
 }
 
 void adc_start()
@@ -338,6 +339,6 @@ bool adc_ready()
 
 void adc_clear_interrupt()
 {
-	ADC_IntClear(ADC0, ADC_IFC_SINGLEOF);
+  ADC_IntClear(ADC0, ADC_IF_SINGLE);
 }
 
