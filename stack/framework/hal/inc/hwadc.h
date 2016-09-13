@@ -32,6 +32,7 @@
 #include "types.h"
 #include "link_c.h"
 
+// TODO refactor: is now tied to EFM32, either make more generic or just use emlib directly
 
 typedef enum
 {
@@ -58,7 +59,9 @@ typedef enum
 	 /** VDD / 3 */
 	adcInputSingleVDDDiv3,
 	/** Positive Ch4, negative Ch5. */
-	adcInputSingleCh4Ch5
+        adcInputSingleCh4Ch5,
+        adcInputSingleInputCh2,
+        adcInputSingleInputCh6
 } ADC_Input;
 
 
@@ -67,12 +70,6 @@ typedef enum
  * 	\param input selects the input used by the ADC
  */
 __LINK_C void adc_init(ADC_Reference reference, ADC_Input input, uint32_t adc_frequency);
-
-/*! \brief Reinitializes  the ADC after init has already been done to change reference or input for a single conversion
- * 	\param reference selects the reference voltage used by the ADC
- * 	\param input selects the input used by the ADC
- */
-__LINK_C void adc_init_single(ADC_Reference reference, ADC_Input input);
 
 /*! \brief Calibrates the ADC
  */
