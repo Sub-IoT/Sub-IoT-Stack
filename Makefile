@@ -1,10 +1,15 @@
+# override sensible defaults in a local Makefile
+-include Makefile.local
+
+# these variable have sensible defaults if no prior value was assigned to them
 APP                    ?= gateway
 PLATFORM               ?= EFM32GG_STK3700
+PLATFORM_RADIO         ?= cc1101
 FRAMEWORK_LOG_ENABLED  ?= no
 FRAMEWORK_LOG_BINARY   ?= no
-TOOLCHAIN_DIR          ?= ../../gcc-arm-none-eabi-4_9-2015q3
+TOOLCHAIN_DIR          ?= 
+DEVICE                 ?= EFM32GG230F1024
 BUILD                  ?= Debug
-
 
 BUILD_DIR               = ../build/$(APP)
 
@@ -18,18 +23,20 @@ OSS                    := $(realpath stack)
 TOOLCHAIN_ABS_DIR       = $(realpath $(TOOLCHAIN_DIR))
 TOOLCHAIN_FILE          = $(OSS)/cmake/toolchains/gcc-arm-embedded.cmake
 PLATFORM_UC            := $(shell echo $(PLATFORM) | tr a-z A-Z)
-PLATFORM_RADIO          = cc1101
 APP_DIR                 = $(OSS)/apps/$(APP)
 APP_UC                 := $(shell echo $(APP) | tr a-z A-Z)
 
 JLINK                   = JLinkExe
-DEVICE                  = EFM32GG230F1024
 FLASH_SCRIPT            = script.gdb
 
-SIZE                    = $(TOOLCHAIN_ABS_DIR)/bin/arm-none-eabi-size
-OBJCOPY                 = $(TOOLCHAIN_ABS_DIR)/bin/arm-none-eabi-objcopy -O binary
+SIZE                    = arm-none-eabi-size
+OBJCOPY                 = arm-none-eabi-objcopy -O binary
 
 -include $(APP_DIR)/Makefile
+
+# these local Makefiles are ignored by git, but allow for local overrides
+-include $(APP_DIR)/Makefile.local
+-include $(EXTRA_APPS)/Makefile.local
 
 all: $(ELF)
 
@@ -59,12 +66,15 @@ size: $(ELF)
 	@$(SIZE) $<
 
 program: $(BIN)
-	@echo "device $(DEVICE)" 	>  $(FLASH_SCRIPT)
-	@echo "loadfile $<" 			>> $(FLASH_SCRIPT)
-	@echo "verifybin $<, 0x0" >> $(FLASH_SCRIPT)
-	@echo "r"									>> $(FLASH_SCRIPT)
-	@echo "g"									>> $(FLASH_SCRIPT)
-	@echo "exit"							>> $(FLASH_SCRIPT)
+	@echo "SelectEmuBySN $(PROGRAMMER)"  > $(FLASH_SCRIPT)
+	@echo "si SWD"                      >> $(FLASH_SCRIPT)
+	@echo "speed 4000"                  >> $(FLASH_SCRIPT)
+	@echo "device $(DEVICE)"            >> $(FLASH_SCRIPT)
+	@echo "loadfile $<"                 >> $(FLASH_SCRIPT)
+	@echo "verifybin $<, 0x0"           >> $(FLASH_SCRIPT)
+	@echo "r"                           >> $(FLASH_SCRIPT)
+	@echo "g"                           >> $(FLASH_SCRIPT)
+	@echo "exit"                        >> $(FLASH_SCRIPT)
 	@echo "*** programming..."
 	@$(JLINK) < $(FLASH_SCRIPT)
 	@rm -f $(FLASH_SCRIPT)
