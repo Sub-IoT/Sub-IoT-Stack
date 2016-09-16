@@ -26,7 +26,7 @@
 
 #include "em_cmu.h"
 #include "em_chip.h"
-
+#include "platform.h"
 
 void __efm32gg_mcu_init()
 {
@@ -46,7 +46,5 @@ void __efm32gg_mcu_init()
     CMU_OscillatorEnable(cmuOsc_HFRCO, true, true);
     CMU_ClockSelectSet(cmuClock_HF, cmuSelect_HFRCO);
 #endif
-
-    uint32_t hf = CMU_ClockFreqGet(cmuClock_HF);
 }
 
