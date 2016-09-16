@@ -23,8 +23,18 @@
 
 include(CMakeForceCompiler)
 
-CMAKE_FORCE_C_COMPILER(arm-none-eabi-gcc GNU)
-CMAKE_FORCE_CXX_COMPILER(arm-none-eabi-g++ GNU)
+if("${CMAKE_VERSION}" VERSION_GREATER 3.6.0)
+	set(CMAKE_C_COMPILER   "arm-none-eabi-gcc")
+	set(CMAKE_CXX_COMPILER "arm-none-eabi-g++")
+	# without these cmake tries to compile/link a test and fails on _exit
+	# this _was_ suppressed by the now deprecated FORCE versions
+	set(CMAKE_C_COMPILER_WORKS   1)
+	set(CMAKE_CXX_COMPILER_WORKS 1)
+else()
+	# the _force_ macro's are deprecated as of 3.6
+	CMAKE_FORCE_C_COMPILER(arm-none-eabi-gcc GNU)
+	CMAKE_FORCE_CXX_COMPILER(arm-none-eabi-g++ GNU)
+endif()
 
 SET(CMAKE_SYSTEM_NAME Generic)
 SET(CMAKE_SYSTEM_VERSION 1)
