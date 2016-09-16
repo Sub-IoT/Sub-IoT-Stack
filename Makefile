@@ -1,14 +1,20 @@
 # override sensible defaults in a local Makefile
 -include Makefile.local
 
+# if we're targetting the EZR-USB dongle, the RADIO and DEVICE are known
+ifeq ($(PLATFORM),EZR32LG_USB01)
+PLATFORM_RADIO          = si4460
+DEVICE                  = EZR32LG330F256R60
+endif
+
 # these variable have sensible defaults if no prior value was assigned to them
 APP                    ?= gateway
 PLATFORM               ?= EFM32GG_STK3700
+DEVICE                 ?= EFM32GG230F1024
 PLATFORM_RADIO         ?= cc1101
 FRAMEWORK_LOG_ENABLED  ?= no
 FRAMEWORK_LOG_BINARY   ?= no
 TOOLCHAIN_DIR          ?= 
-DEVICE                 ?= EFM32GG230F1024
 BUILD                  ?= Debug
 
 BUILD_DIR               = ../build/$(APP)
@@ -32,9 +38,11 @@ FLASH_SCRIPT            = script.gdb
 SIZE                    = arm-none-eabi-size
 OBJCOPY                 = arm-none-eabi-objcopy -O binary
 
+# applications can specify aplication-specific variable overrides
 -include $(APP_DIR)/Makefile
 
 # these local Makefiles are ignored by git, but allow for local overrides
+# via APP_SPECIFIC_VARIABLE_OVERRIDES
 -include $(APP_DIR)/Makefile.local
 -include $(EXTRA_APPS)/Makefile.local
 
@@ -51,11 +59,11 @@ $(BUILD_DIR):
 		 -DPLATFORM=$(PLATFORM) \
 		 -DPLATFORM_$(PLATFORM_UC)_RADIO=$(PLATFORM_RADIO) \
 		 -DAPP_$(APP_UC)=on \
-		 $(APP_SPECIFIC_VARIABLE_OVERRIDES) \
 		 -DFRAMEWORK_DEBUG_ASSERT_MINIMAL=y \
 		 -DFRAMEWORK_LOG_ENABLED=$(FRAMEWORK_LOG_ENABLED) \
 		 -DFRAMEWORK_LOG_BINARY=$(FRAMEOWRK_LOG_BINARY) \
 		 -DPLATFORM_USE_USB_CDC=$(PLATFORM_USE_USB_CDC) \
+		 $(APP_SPECIFIC_VARIABLE_OVERRIDES) \
 	)
 
 $(ELF): $(BUILD_DIR)
