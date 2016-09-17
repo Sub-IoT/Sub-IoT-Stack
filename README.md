@@ -133,29 +133,25 @@ The `Makefile` also provides basic support for flashing your device on Giant Gec
 
 ```bash
 $ JLinkExe 
-SEGGER J-Link Commander V5.02f ('?' for help)
-Compiled Oct  2 2015 20:55:08
-DLL version V5.02f, compiled Oct  2 2015 20:55:03
-Firmware: Energy Micro EFM32 compiled Sep 18 2015 17:49:12
-Hardware: V1.00
-S/N: 440040000 
-Emulator has Trace capability
-VTarget = 3.265V
-Info: Found SWD-DP with ID 0x2BA01477
-Info: Found Cortex-M3 r2p1, Little endian.
-Info: FPUnit: 6 code (BP) slots and 2 literal slots
-Info: CoreSight components:
-Info: ROMTbl 0 @ E00FF000
-Info: ROMTbl 0 [0]: FFF0F000, CID: B105E00D, PID: 000BB000 SCS
-Info: ROMTbl 0 [1]: FFF02000, CID: B105E00D, PID: 003BB002 DWT
-Info: ROMTbl 0 [2]: FFF03000, CID: B105E00D, PID: 002BB003 FPB
-Info: ROMTbl 0 [3]: FFF01000, CID: B105E00D, PID: 003BB001 ITM
-Info: ROMTbl 0 [4]: FFF41000, CID: B105900D, PID: 003BB923 TPIU-Lite
-Info: ROMTbl 0 [5]: FFF42000, CID: B105900D, PID: 003BB924 ETM-M3
-Found 1 JTAG device, Total IRLen = 4:
-Cortex-M3 identified.
-Target interface speed: 100 kHz
+SEGGER J-Link Commander V6.00g (Compiled Aug 17 2016 13:22:19)
+DLL version V6.00g, compiled Aug 17 2016 13:22:04
+
+Connecting to J-Link via USB...O.K.
+Firmware: J-Link Lite-Cortex-M V8 compiled Aug 20 2015 17:57:19
+Hardware version: V8.00
+S/N: 518007303
+License(s): GDB
+VTref = 0.000V
+
+
+Type "connect" to establish a target connection, '?' for help
 J-Link>
+```
+
+Take note of your `S/N` serial number. The `Makefile` requires it to identify your programmer (in case you have multiple active at the same time). You can lock it in you `Makefile.local`:
+
+```
+PROGRAMMER            = 518007303
 ```
 
 To flash the program to the device, simply issue `make program`:
@@ -163,13 +159,18 @@ To flash the program to the device, simply issue `make program`:
 ```bash
 $ APP=d7ap_test make program
 *** programming...
-SEGGER J-Link Commander V5.02f ('?' for help)
+SEGGER J-Link Commander V6.00g (Compiled Aug 17 2016 13:22:19)
+DLL version V6.00g, compiled Aug 17 2016 13:22:04
 ...
-Downloading file [../build/d7ap_test/apps/d7ap_test/d7ap_test.bin]...Info: J-Link: Flash download: Flash programming performed for 1 range (49152 bytes)
-Info: J-Link: Flash download: Total time needed: 9.579s (Prepare: 0.878s, Compare: 0.064s, Erase: 0.396s, Program: 8.159s, Verify: 0.006s, Restore: 0.073s)
+Comparing flash   [100%] Done.
+Erasing flash     [100%] Done.
+Programming flash [100%] Done.
+Verifying flash   [100%] Done.
+J-Link: Flash download: Flash programming performed for 1 range (67584 bytes)
+J-Link: Flash download: Total time needed: 1.013s (Prepare: 0.048s, Compare: 0.011s, Erase: 0.173s, Program: 0.770s, Verify: 0.002s, Restore: 0.007s)
 O.K.
 Loading binary file ../build/d7ap_test/apps/d7ap_test/d7ap_test.bin
-Reading 46004 bytes data from target memory @ 0x00000000.
+Reading 66704 bytes data from target memory @ 0x00000000.
 Verify successful.
 Reset delay: 0 ms
 Reset type NORMAL: Resets core & peripherals via SYSRESETREQ & VECTRESET bit.
@@ -244,3 +245,36 @@ $ ./tools/scat.py -s /dev/tty.usbserial-FTGCT0F9 -b 115200 | grep "requests"
 
 Although still not all, we now see that the second device acknowledges requests, showing the interaction between both devices. Your first Dash7 network is up and running!
 
+### Trying the EZR-USB platform
+
+A recent addition to the supported platforms is the EZR-USB dongle platform. It is developed by the MOSAIC team as an easy to deploy and use solution to apply Dash7 in various situations.
+
+![EZR-USB](resources/images/ezr-usb.jpg)
+
+To program it with the `d7ap_test` application, just add these overrides to your `Makefile.local` (or pass them on the command line just before `make clean all program`):
+
+```
+APP                   = d7ap_test
+PLATFORM              = EZR32LG_USB01
+PLATFORM_USE_USB_CDC  = yes
+FRAMEWORK_LOG_ENABLED = yes
+```
+
+Program two and plug them into a USB port and notice a new serial device popping up. You can connect to it and read it, like before using `scat.py`:
+
+```
+$ ./tools/scat.py -s /dev/tty.usbmodemFD121 -b 115200
+[000] Device booted at time: 0
+d7ap_t73b2f3?b?(!+P(2 
+                      W	? @
+[001] Unsol resp -33 dBm, LB 43 dB
+?b?(",P%2 
+          W	? @
+[002] Unsol resp -34 dBm, LB 44 dB
+?b?(",P?2 
+          W	? @
+...
+```
+
+The two dongles will notice each others' messages, which they didn't expect and report them as unsolicited received messages.
+ 
