@@ -18,7 +18,9 @@
   #define ECB 1
 #endif
 
-
+#ifndef CTR
+  #define CTR 1
+#endif
 
 #if defined(ECB) && ECB
 
@@ -36,6 +38,10 @@ void AES128_CBC_decrypt_buffer(uint8_t *output, uint8_t *input, uint32_t length,
 
 #endif // #if defined(CBC) && CBC
 
+#if defined(CTR) && CTR
+void AES128_CTR_encrypt(uint8_t *output, uint8_t *input, uint32_t length, const uint8_t *key, uint8_t* ctr_blk);
+// Decryption is exactly the same operation as encryption
 
+#endif // #if defined(CTR) && CTR
 
 #endif //_AES_H_
