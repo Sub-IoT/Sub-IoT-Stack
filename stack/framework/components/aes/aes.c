@@ -592,3 +592,68 @@ void AES128_CBC_decrypt_buffer(uint8_t *output, uint8_t *input, uint32_t length,
 
 
 #endif // #if defined(CBC) && CBC
+
+#if defined(CTR) && CTR
+
+/*
+ * As specified in the RFC3686,  The encryption of n plaintext blocks can be
+ * summarized as:
+ *      CTRBLK := NONCE || IV || ONE
+ *      FOR i := 1 to n-1 DO
+ *        CT[i] := PT[i] XOR AES(CTRBLK)
+ *        CTRBLK := CTRBLK + 1
+ *      END
+ *      CT[n] := PT[n] XOR TRUNC(AES(CTRBLK))
+ *
+ * The AES() function performs AES encryption with the fresh key.
+ *
+ * The TRUNC() function truncates the output of the AES encrypt
+ * operation to the same length as the final plaintext block, returning
+ * the most significant bits.
+ */
+
+void AES128_CTR_encrypt(uint8_t *output, uint8_t *input, uint32_t length, const uint8_t *key, uint8_t *ctr_blk)
+{
+    uintptr_t i, j;
+    uint8_t remainders = length % KEYLEN; /* Remaining bytes in the last non-full block */
+    uint8_t ctr[KEYLEN];
+
+    BlockCopy(ctr, ctr_blk);
+    state = (state_t *)ctr;
+
+    // Skip the key expansion if key is passed as 0
+    if(0 != key)
+    {
+        Key = key;
+        KeyExpansion();
+    }
+
+    for(i = KEYLEN; i <= length; i += KEYLEN)
+    {
+        Cipher();
+        BlockCopy(output, input);
+        for (j = 0; j < KEYLEN; j++)
+            output[j] ^= ctr[j];
+
+        /* Increment block counter */
+        for (j = KEYLEN - 1; j >= 0; j--)
+        {
+            ctr_blk[j]++;
+            if (ctr_blk[j])
+                break;
+        }
+
+        input += KEYLEN;
+        output += KEYLEN;
+        BlockCopy(ctr, ctr_blk);
+    }
+
+    if(remainders)
+    {
+        Cipher();
+        for (i=0; i < remainders; ++i)
+            output[i] = input[i] ^ ctr[i];
+    }
+}
+
+#endif // #if defined(CTR) && CTR
