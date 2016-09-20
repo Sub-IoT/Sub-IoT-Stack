@@ -91,8 +91,14 @@ static uint32_t NGDEF(_dll_cca_started);
 static bool NGDEF(_process_received_packets_after_tx);
 #define process_received_packets_after_tx NG(_process_received_packets_after_tx)
 
+static bool NGDEF(_resume_fg_scan);
+#define resume_fg_scan NG(_resume_fg_scan)
+
 // TODO defined somewhere?
 #define t_g	5
+
+static void execute_cca();
+static void execute_csma_ca();
 
 static hw_radio_packet_t* alloc_new_packet(uint8_t length)
 {
@@ -139,7 +145,11 @@ static void switch_state(dll_state_t next_state)
         break;
     case DLL_STATE_IDLE:
         assert(dll_state == DLL_STATE_FOREGROUND_SCAN || dll_state == DLL_STATE_CCA_FAIL
-               || dll_state == DLL_STATE_TX_FOREGROUND_COMPLETED);
+               || dll_state == DLL_STATE_TX_FOREGROUND_COMPLETED
+               || dll_state == DLL_STATE_CSMA_CA_STARTED
+               || dll_state == DLL_STATE_CCA1
+               || dll_state == DLL_STATE_CCA2
+               || dll_state == DLL_STATE_CSMA_CA_RETRY);
         dll_state = next_state;
         DPRINT("Switched to DLL_STATE_IDLE");
         break;
@@ -223,6 +233,21 @@ static void process_received_packets()
     // TODO check if more received packets are pending
 }
 
+static void discard_tx()
+{
+    if ((dll_state == DLL_STATE_CCA1) || (dll_state == DLL_STATE_CCA2))
+    {
+        timer_cancel_task(&execute_cca);
+        sched_cancel_task(&execute_cca);
+    }
+    else if ((dll_state == DLL_STATE_CCA_FAIL) || (dll_state == DLL_STATE_CSMA_CA_RETRY))
+    {
+        timer_cancel_task(&execute_csma_ca);
+        sched_cancel_task(&execute_csma_ca);
+    }
+    switch_state(DLL_STATE_IDLE);
+}
+
 void packet_received(hw_radio_packet_t* packet)
 {
     assert(dll_state == DLL_STATE_FOREGROUND_SCAN || dll_state == DLL_STATE_SCAN_AUTOMATION);
@@ -240,6 +265,7 @@ static void packet_transmitted(hw_radio_packet_t* hw_radio_packet)
     switch_state(DLL_STATE_TX_FOREGROUND_COMPLETED);
     DPRINT("Transmitted packet with length = %i", hw_radio_packet->length);
     packet_t* packet = packet_queue_find_packet(hw_radio_packet);
+
     d7anp_signal_packet_transmitted(packet);
 
     if(process_received_packets_after_tx)
@@ -247,14 +273,49 @@ static void packet_transmitted(hw_radio_packet_t* hw_radio_packet)
         sched_post_task(&process_received_packets);
         process_received_packets_after_tx = false;
     }
-}
 
-static void execute_cca();
-static void execute_csma_ca();
+#ifdef RESPONDER_USE_FG_SCAN_OUTSIDE_TRANSACTION
+    /*
+     * Resume the FG scan only after an unicast packet, otherwise, wait the
+     * response period expiration.
+     */
+    if (resume_fg_scan && packet->dll_header.control_target_address_set)
+    {
+        switch_state(DLL_STATE_FOREGROUND_SCAN);
+
+        hw_rx_cfg_t rx_cfg = (hw_rx_cfg_t){
+            .channel_id.channel_header = current_access_profile->subbands[0].channel_header,
+            .channel_id.center_freq_index = current_access_profile->subbands[0].channel_index_start,
+            .syncword_class = PHY_SYNCWORD_CLASS1,
+        };
+
+        hw_radio_set_rx(&rx_cfg, &packet_received, NULL);
+        resume_fg_scan = false;
+    }
+#else
+    if (resume_fg_scan)
+    {
+        switch_state(DLL_STATE_FOREGROUND_SCAN);
+
+        hw_rx_cfg_t rx_cfg = (hw_rx_cfg_t){
+            .channel_id.channel_header = current_access_profile->subbands[0].channel_header,
+            .channel_id.center_freq_index = current_access_profile->subbands[0].channel_index_start,
+            .syncword_class = PHY_SYNCWORD_CLASS1,
+        };
+
+        hw_radio_set_rx(&rx_cfg, &packet_received, NULL);
+        resume_fg_scan = false;
+    }
+#endif
+
+}
 
 static void cca_rssi_valid(int16_t cur_rssi)
 {
-    assert(dll_state == DLL_STATE_CCA1 || dll_state == DLL_STATE_CCA2);
+    // When the radio goes back to Rx state, the rssi_valid callback may be still set. Skip it in this case
+    if (dll_state != DLL_STATE_CCA1 && dll_state != DLL_STATE_CCA2)
+        return;
+
     if (cur_rssi <= E_CCA)
     {
         if(dll_state == DLL_STATE_CCA1)
@@ -273,12 +334,12 @@ static void cca_rssi_valid(int16_t cur_rssi)
 
             switch_state(DLL_STATE_TX_FOREGROUND);
 
+            d7anp_signal_packet_csma_ca_insertion_completed(true);
             error_t err = hw_radio_send_packet(&current_packet->hw_radio_packet, &packet_transmitted);
             assert(err == SUCCESS);
 
-            hw_radio_set_idle(); // ensure radio goes back to IDLE after transmission instead of to RX (which was previous state because of CCA)
-
-            d7anp_signal_packet_csma_ca_insertion_completed(true);
+            if (!resume_fg_scan)
+                hw_radio_set_idle(); // ensure radio goes back to IDLE after transmission instead of to RX
             return;
         }
     }
@@ -463,10 +524,24 @@ static void execute_csma_ca()
             // TODO hw_radio_set_idle();
             switch_state(DLL_STATE_IDLE);
             d7anp_signal_packet_csma_ca_insertion_completed(false);
-            if(process_received_packets_after_tx)
+            if (process_received_packets_after_tx)
             {
                 sched_post_task(&process_received_packets);
                 process_received_packets_after_tx = false;
+            }
+
+            if (resume_fg_scan)
+            {
+                switch_state(DLL_STATE_FOREGROUND_SCAN);
+
+                hw_rx_cfg_t rx_cfg = (hw_rx_cfg_t){
+                    .channel_id.channel_header = current_access_profile->subbands[0].channel_header,
+                    .channel_id.center_freq_index = current_access_profile->subbands[0].channel_index_start,
+                    .syncword_class = PHY_SYNCWORD_CLASS1,
+                };
+
+                hw_radio_set_rx(&rx_cfg, &packet_received, NULL);
+                resume_fg_scan = false;
             }
             break;
         }
@@ -533,12 +608,34 @@ void dll_init()
     dll_state = DLL_STATE_IDLE;
     active_access_class = NO_ACTIVE_ACCESS_CLASS;
     process_received_packets_after_tx = false;
+    resume_fg_scan = false;
     sched_post_task(&dll_execute_scan_automation);
 }
 
 void dll_tx_frame(packet_t* packet, dae_access_profile_t* access_profile)
 {
-    hw_radio_set_idle();
+    if (dll_state != DLL_STATE_FOREGROUND_SCAN)
+    {
+        hw_radio_set_idle();
+        resume_fg_scan = false;
+    }
+    else
+        resume_fg_scan = true;
+
+#ifdef RESPONDER_USE_FG_SCAN_OUTSIDE_TRANSACTION
+    /*
+     * In case of broadcast request, it may be reasonable for power saving
+     * consideration to not perform the FG scan outside the transaction period.
+     * For that purpose, we decide to force the radio to go back to IDLE after
+     * starting TX from RX state.
+     * The FG scan will be resumed when the response period expires.
+     * With this procedure, we are not able to sniff any other concurrent responses
+     */
+    if (resume_fg_scan && !packet->dll_header.control_target_address_set)
+        hw_radio_set_idle();
+#endif
+
+
     current_access_profile = access_profile;
     dll_header_t* dll_header = &(packet->dll_header);
     dll_header->subnet = access_profile->subnet;
@@ -588,7 +685,10 @@ void dll_start_foreground_scan()
 
 void dll_stop_foreground_scan()
 {
-    assert(dll_state == DLL_STATE_FOREGROUND_SCAN);
+    // Discard Tx if still ongoing
+    if (is_tx_busy())
+        discard_tx();
+
     dll_execute_scan_automation();
 }
 

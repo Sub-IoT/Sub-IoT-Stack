@@ -44,6 +44,9 @@ typedef enum {
 static state_t NGDEF(_d7anp_state);
 #define d7anp_state NG(_d7anp_state)
 
+static state_t NGDEF(_d7anp_prev_state);
+#define d7anp_prev_state NG(_d7anp_prev_state)
+
 static dae_access_profile_t NGDEF(_own_access_profile);
 #define own_access_profile NG(_own_access_profile)
 
@@ -60,7 +63,7 @@ static void switch_state(state_t next_state)
         case D7ANP_STATE_IDLE:
           assert(d7anp_state == D7ANP_STATE_TRANSMIT ||
                  d7anp_state == D7ANP_STATE_FOREGROUND_SCAN);
-          d7anp_state = next_state;
+          d7anp_state = d7anp_prev_state = next_state;
           DPRINT("Switched to D7ANP_STATE_IDLE");
           break;
         case D7ANP_STATE_FOREGROUND_SCAN:
@@ -78,7 +81,8 @@ static void switch_state(state_t next_state)
 
 static void foreground_scan_expired()
 {
-    assert(d7anp_state == D7ANP_STATE_FOREGROUND_SCAN);
+    // the FG scan expiration may also happen while Tx is busy (d7anp_state = D7ANP_STATE_TRANSMIT)
+    // assert(d7anp_state == D7ANP_STATE_FOREGROUND_SCAN);
     DPRINT("Foreground scan expired");
 
     switch_state(D7ANP_STATE_IDLE);
@@ -93,11 +97,19 @@ static void schedule_foreground_scan_expired_timer(uint8_t timeout_ct)
     assert(timer_post_task_delay(&foreground_scan_expired, timeout_ticks) == SUCCESS);
 }
 
-static void start_foreground_scan(uint8_t timeout_ct)
+void d7anp_start_foreground_scan(uint8_t timeout_ct)
 {
-    switch_state(D7ANP_STATE_FOREGROUND_SCAN);
-    schedule_foreground_scan_expired_timer(timeout_ct); // TODO ensure > own Tc
-    dll_start_foreground_scan();
+    if (d7anp_state == D7ANP_STATE_FOREGROUND_SCAN)
+    {
+        // Update the Tl timeout value
+        schedule_foreground_scan_expired_timer(timeout_ct);
+    }
+    else
+    {
+        switch_state(D7ANP_STATE_FOREGROUND_SCAN);
+        schedule_foreground_scan_expired_timer(timeout_ct);
+        dll_start_foreground_scan();
+    }
 }
 
 static void cancel_foreground_scan_task()
@@ -105,6 +117,17 @@ static void cancel_foreground_scan_task()
     // task can be scheduled now or in the future, try to cancel both // TODO refactor scheduler API
     timer_cancel_task(&foreground_scan_expired);
     sched_cancel_task(&foreground_scan_expired);
+}
+
+void d7anp_stop_foreground_scan()
+{
+    if (d7anp_state == D7ANP_STATE_FOREGROUND_SCAN)
+    {
+        // stop the foreground scan and switch to the automation scan
+        cancel_foreground_scan_task();
+        dll_stop_foreground_scan();
+        switch_state(D7ANP_STATE_IDLE);
+    }
 }
 
 void d7anp_init()
@@ -115,15 +138,11 @@ void d7anp_init()
 
 void d7anp_tx_foreground_frame(packet_t* packet, bool should_include_origin_template, dae_access_profile_t* access_profile)
 {
-    if(d7anp_state == D7ANP_STATE_FOREGROUND_SCAN)
-    {
-        cancel_foreground_scan_task();
-    }
+    assert(d7anp_state == D7ANP_STATE_IDLE || d7anp_state == D7ANP_STATE_FOREGROUND_SCAN);
 
-    uint8_t own_access_class = fs_read_dll_conf_active_access_class();
-    fs_read_access_class(own_access_class, &own_access_profile);
+    // we need to switch back to the current state after the transmission procedure
+    d7anp_prev_state = d7anp_state;
 
-    packet->d7anp_timeout = own_access_profile.transmission_timeout_period; // TODO get calculated value from SP
     packet->d7anp_ctrl.origin_addressee_ctrl_nls_enabled = false;
     packet->d7anp_ctrl.origin_addressee_ctrl_hop_enabled = false;
     if(!should_include_origin_template)
@@ -150,7 +169,7 @@ uint8_t d7anp_assemble_packet_header(packet_t *packet, uint8_t *data_ptr)
     assert(!packet->d7anp_ctrl.origin_addressee_ctrl_hop_enabled); // TODO hopping not yet supported
 
     uint8_t* d7anp_header_start = data_ptr;
-    (*data_ptr) = packet->d7anp_timeout; data_ptr++;
+    (*data_ptr) = packet->d7anp_listen_timeout; data_ptr++;
     (*data_ptr) = packet->d7anp_ctrl.raw; data_ptr++;
 
     if(packet->d7anp_ctrl.origin_addressee_ctrl_id_type != ID_TYPE_BCAST)
@@ -176,7 +195,7 @@ uint8_t d7anp_assemble_packet_header(packet_t *packet, uint8_t *data_ptr)
 
 bool d7anp_disassemble_packet_header(packet_t* packet, uint8_t* data_idx)
 {
-    packet->d7anp_timeout = packet->hw_radio_packet.data[(*data_idx)]; (*data_idx)++;
+    packet->d7anp_listen_timeout = packet->hw_radio_packet.data[(*data_idx)]; (*data_idx)++;
     packet->d7anp_ctrl.raw = packet->hw_radio_packet.data[(*data_idx)]; (*data_idx)++;
     assert(!packet->d7anp_ctrl.origin_addressee_ctrl_nls_enabled); // TODO NLS not yet supported
     assert(!packet->d7anp_ctrl.origin_addressee_ctrl_hop_enabled); // TODO hopping not yet supported
@@ -197,8 +216,9 @@ void d7anp_signal_packet_csma_ca_insertion_completed(bool succeeded)
 {
     if(!succeeded)
     {
-        DPRINT("CSMA-CA insertion failed, not entering foreground scan");
-        switch_state(D7ANP_STATE_IDLE);
+        DPRINT("CSMA-CA insertion failed");
+        // switch back to the previous state before the transmission
+        switch_state(d7anp_prev_state);
     }
 
     d7atp_signal_packet_csma_ca_insertion_completed(succeeded);
@@ -206,11 +226,11 @@ void d7anp_signal_packet_csma_ca_insertion_completed(bool succeeded)
 
 void d7anp_signal_packet_transmitted(packet_t* packet)
 {
-    // even when no ack is requested we still need to wait for a possible dormant session which might have been waiting
-    // for us on the other side.
-    // we listen for the timeout defined in our own access profile
+    assert(d7anp_state == D7ANP_STATE_TRANSMIT);
 
-    start_foreground_scan(own_access_profile.transmission_timeout_period);
+    // switch back to the previous state before the transmission
+    switch_state(d7anp_prev_state);
+
     d7atp_signal_packet_transmitted(packet);
 }
 
@@ -218,14 +238,24 @@ void d7anp_process_received_packet(packet_t* packet)
 {
     if(d7anp_state == D7ANP_STATE_FOREGROUND_SCAN)
     {
-        DPRINT("Received packet while in D7ANP_STATE_FOREGROUND_SCAN, extending foreground scan period");
-        cancel_foreground_scan_task();
-        schedule_foreground_scan_expired_timer(packet->d7anp_timeout);
+        DPRINT("Received packet while in D7ANP_STATE_FOREGROUND_SCAN");
+
+        // Start the foreground scan timer if Tl is not null and no timer is already pending
+        if ((packet->d7anp_listen_timeout) && (!timer_is_task_scheduled(&foreground_scan_expired)))
+        {
+            DPRINT("Start the foreground scan timeout with Tl <%d>", packet->d7anp_listen_timeout);
+            cancel_foreground_scan_task();
+            schedule_foreground_scan_expired_timer(packet->d7anp_listen_timeout);
+        }
     }
     else
     {
-        DPRINT("Received packet while in D7ANP_STATE_IDLE (scan automation), start foreground scan");
-        start_foreground_scan(packet->d7anp_timeout);
+        DPRINT("Received packet while in D7ANP_STATE_IDLE (scan automation)");
+        if (packet->d7anp_listen_timeout)
+        {
+            DPRINT("Start foreground scan for the duration Tl = %d", packet->d7anp_listen_timeout);
+            d7anp_start_foreground_scan(packet->d7anp_listen_timeout);
+        }
     }
 
     d7atp_process_received_packet(packet);

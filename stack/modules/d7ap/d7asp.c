@@ -127,6 +127,16 @@ static void flush_fifos()
 
         memcpy(current_request_packet->payload, current_master_session.request_buffer + current_master_session.requests_indices[current_request_id], current_master_session.requests_lengths[current_request_id]);
         current_request_packet->payload_length = current_master_session.requests_lengths[current_request_id];
+
+        // TODO calculate Tl and Tc
+        // Tc(NB, LEN, CH) = (SFC  * NB  + 1) * TTX(CH, LEN) + TG with NB the number of concurrent devices and SF the collision Avoidance Spreading Factor
+        // Tl should correspond to the maximum time needed to send the remaining requests in the FIFO including the RETRY parameter
+
+        // For now, set Tc and Tl according the transmission_timeout_period set in the access profile
+        dae_access_profile_t active_addressee_access_profile;
+        fs_read_access_class(current_request_packet->d7anp_addressee->ctrl.access_class, &active_addressee_access_profile);
+        current_request_packet->d7atp_tc = active_addressee_access_profile.transmission_timeout_period;
+        current_request_packet->d7anp_listen_timeout = active_addressee_access_profile.transmission_timeout_period;
     }
     else
     {
@@ -288,7 +298,7 @@ bool d7asp_process_received_packet(packet_t* packet)
             .retry = false, // TODO
             .missed = false, // TODO
         },
-        .response_to = packet->d7anp_timeout,
+        .response_to = packet->d7atp_tc,
         .addressee = packet->d7anp_addressee
         // .fifo_token and .seqnr filled below
     };
