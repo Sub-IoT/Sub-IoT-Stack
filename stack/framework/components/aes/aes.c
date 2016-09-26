@@ -58,8 +58,9 @@ NOTE:   String length must be evenly divisible by 16byte (str_len % 16 == 0)
 /*****************************************************************************/
 #include <stdint.h>
 #include <string.h> // CBC mode, for memset
+#include "stdbool.h"
 #include "aes.h"
-
+#include "hwaes.h"
 
 /*****************************************************************************/
 /* Defines:                                                                  */
@@ -80,6 +81,10 @@ NOTE:   String length must be evenly divisible by 16byte (str_len % 16 == 0)
     #define MULTIPLY_AS_A_FUNCTION 0
 #endif
 
+
+#if (defined PLATFORM_EFM32GG_STK3700 || defined PLATFORM_EFM32HG_STK3400 || defined PLATFORM_EZR32LG_WSTK6200A)
+    #define AES_HARDWARE_SUPPORT
+#endif
 
 /*****************************************************************************/
 /* Private variables:                                                        */
@@ -482,6 +487,10 @@ static void BlockCopy(uint8_t *output, uint8_t *input)
 
 void AES128_ECB_encrypt(uint8_t *input, const uint8_t *key, uint8_t *output)
 {
+#ifdef AES_HARDWARE_SUPPORT
+    // Hardware AES support for CBC through the low level peripheral library EMLIB
+    hw_aes_ecb128(output, input, 128, key, true);
+#else
     // Copy input to output, and work in-memory on output
     BlockCopy(output, input);
     state = (state_t *)output;
@@ -491,10 +500,15 @@ void AES128_ECB_encrypt(uint8_t *input, const uint8_t *key, uint8_t *output)
 
     // The next function call encrypts the PlainText with the Key using AES algorithm.
     Cipher();
+#endif // AES_HARDWARE_SUPPORT
 }
 
 void AES128_ECB_decrypt(uint8_t *input, const uint8_t *key, uint8_t *output)
 {
+#ifdef AES_HARDWARE_SUPPORT
+    // Hardware AES support for CBC through the low level peripheral library EMLIB
+    hw_aes_ecb128(output, input, 128, key, false);
+#else
     // Copy input to output, and work in-memory on output
     BlockCopy(output, input);
     state = (state_t *)output;
@@ -504,6 +518,7 @@ void AES128_ECB_decrypt(uint8_t *input, const uint8_t *key, uint8_t *output)
     KeyExpansion();
 
     InvCipher();
+#endif // AES_HARDWARE_SUPPORT
 }
 
 
@@ -525,6 +540,10 @@ static void XorWithIv(uint8_t *buf)
 
 void AES128_CBC_encrypt_buffer(uint8_t *output, uint8_t *input, uint32_t length, const uint8_t *key, const uint8_t *iv)
 {
+#ifdef AES_HARDWARE_SUPPORT
+    // This platform contains an AES HW module, so make use of it !
+    hw_aes_cbc128(output, input, length, key, iv, true);
+#else
     uintptr_t i;
     uint8_t remainders = length % KEYLEN; /* Remaining bytes in the last non-full block */
 
@@ -559,10 +578,15 @@ void AES128_CBC_encrypt_buffer(uint8_t *output, uint8_t *input, uint32_t length,
         state = (state_t *)output;
         Cipher();
     }
+#endif // AES_HARDWARE_SUPPORT
 }
 
 void AES128_CBC_decrypt_buffer(uint8_t *output, uint8_t *input, uint32_t length, const uint8_t *key, const uint8_t *iv)
 {
+#ifdef AES_HARDWARE_SUPPORT
+    // Hardware AES support for CBC through the low level peripheral library EMLIB
+    hw_aes_cbc128(output, input, length, key, iv, false);
+#else
     uintptr_t i;
 
     // Skip the key expansion if key is passed as 0
@@ -588,6 +612,7 @@ void AES128_CBC_decrypt_buffer(uint8_t *output, uint8_t *input, uint32_t length,
         input += KEYLEN;
         output += KEYLEN;
     }
+#endif // AES_HARDWARE_SUPPORT
 }
 
 
@@ -614,6 +639,10 @@ void AES128_CBC_decrypt_buffer(uint8_t *output, uint8_t *input, uint32_t length,
 
 void AES128_CTR_encrypt(uint8_t *output, uint8_t *input, uint32_t length, const uint8_t *key, uint8_t *ctr_blk)
 {
+#ifdef AES_HARDWARE_SUPPORT
+    // Hardware AES support for CTR through the low level peripheral library EMLIB
+    hw_aes_ctr128(output, input, length, key, ctr_blk);
+#else
     uintptr_t i, j;
     uint8_t remainders = length % KEYLEN; /* Remaining bytes in the last non-full block */
     uint8_t ctr[KEYLEN];
@@ -654,6 +683,7 @@ void AES128_CTR_encrypt(uint8_t *output, uint8_t *input, uint32_t length, const 
         for (i=0; i < remainders; ++i)
             output[i] = input[i] ^ ctr[i];
     }
+#endif
 }
 
 #endif // #if defined(CTR) && CTR
