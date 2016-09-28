@@ -528,9 +528,6 @@ void AES128_CBC_encrypt_buffer(uint8_t *output, uint8_t *input, uint32_t length,
     uintptr_t i;
     uint8_t remainders = length % KEYLEN; /* Remaining bytes in the last non-full block */
 
-    BlockCopy(output, input);
-    state = (state_t *)output;
-
   // Skip the key expansion if key is passed as 0
     if (0 != key)
     {
@@ -543,10 +540,10 @@ void AES128_CBC_encrypt_buffer(uint8_t *output, uint8_t *input, uint32_t length,
         Iv = (uint8_t *)iv;
     }
 
-    for (i = 0; i < length; i += KEYLEN)
+    for(i = KEYLEN; i <= length; i += KEYLEN)
     {
-        XorWithIv(input);
         BlockCopy(output, input);
+        XorWithIv(output);
         state = (state_t *)output;
         Cipher();
         Iv = output;
@@ -558,6 +555,7 @@ void AES128_CBC_encrypt_buffer(uint8_t *output, uint8_t *input, uint32_t length,
     {
         BlockCopy(output, input);
         memset(output + remainders, 0, KEYLEN - remainders); /* add 0-padding */
+        XorWithIv(output);
         state = (state_t *)output;
         Cipher();
     }
@@ -566,10 +564,6 @@ void AES128_CBC_encrypt_buffer(uint8_t *output, uint8_t *input, uint32_t length,
 void AES128_CBC_decrypt_buffer(uint8_t *output, uint8_t *input, uint32_t length, const uint8_t *key, const uint8_t *iv)
 {
     uintptr_t i;
-    uint8_t remainders = length % KEYLEN; /* Remaining bytes in the last non-full block */
-
-    BlockCopy(output, input);
-    state = (state_t *)output;
 
     // Skip the key expansion if key is passed as 0
     if (0 != key)
@@ -584,7 +578,7 @@ void AES128_CBC_decrypt_buffer(uint8_t *output, uint8_t *input, uint32_t length,
         Iv = (uint8_t *)iv;
     }
 
-    for (i = 0; i < length; i += KEYLEN)
+    for(i = KEYLEN; i <= length; i += KEYLEN)
     {
         BlockCopy(output, input);
         state = (state_t *)output;
@@ -593,14 +587,6 @@ void AES128_CBC_decrypt_buffer(uint8_t *output, uint8_t *input, uint32_t length,
         Iv = input;
         input += KEYLEN;
         output += KEYLEN;
-    }
-
-    if (remainders)
-    {
-        BlockCopy(output, input);
-        memset(output+remainders, 0, KEYLEN - remainders); /* add 0-padding */
-        state = (state_t *)output;
-        InvCipher();
     }
 }
 
