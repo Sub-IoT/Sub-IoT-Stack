@@ -22,6 +22,14 @@
 #include "hwatomic.h"
 #include "debug.h"
 #include "framework_defs.h"
+#include "log.h"
+
+#if defined(FRAMEWORK_LOG_ENABLED) && defined(FRAMEWORK_TIMER_LOG_ENABLED)
+  #define DPRINT(...) log_print_stack_string(LOG_STACK_FWK, __VA_ARGS__)
+#else
+  #define DPRINT(...)
+#endif
+
 
 #ifdef NODE_GLOBALS
     #warning Default Timer implementation used when NODE_GLOBALS is active. Are you sure this is what you want ??
