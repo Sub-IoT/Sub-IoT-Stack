@@ -366,10 +366,13 @@ static uint16_t calculate_tx_duration()
     switch (current_access_profile->subbands[0].channel_header.ch_class)
     {
     case PHY_CLASS_LO_RATE:
-        data_rate = 1; // Lo Rate: 1.2 bytes/tick
+        data_rate = 1; // Lo Rate 9.6 kbps: 1.2 bytes/tick
+        break;
+    case PHY_CLASS_NORMAL_RATE:
+        data_rate = 6; // Normal Rate 55.555 kbps: 6.94 bytes/tick
         break;
     case PHY_CLASS_HI_RATE:
-        data_rate = 20; // High rate: 20.83 byte/tick
+        data_rate = 20; // High rate 166.667 kbps: 20.83 byte/tick
     }
 
     uint16_t duration = (current_packet->hw_radio_packet.length / data_rate) + 1;

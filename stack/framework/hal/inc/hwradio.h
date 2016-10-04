@@ -53,9 +53,9 @@ typedef enum
  */
 typedef enum
 {
-    PHY_CLASS_LO_RATE = 0x00,
-    PHY_CLASS_NORMAL_RATE = 0x02,
-    PHY_CLASS_HI_RATE = 0x03
+    PHY_CLASS_LO_RATE = 0x00, // 9.6 kbps
+    PHY_CLASS_NORMAL_RATE = 0x02, // 55.555 kbps
+    PHY_CLASS_HI_RATE = 0x03 // 166.667 kbps
 } phy_channel_class_t;
 
 /* \brief The coding schemes and corresponding indices as defined in D7A
