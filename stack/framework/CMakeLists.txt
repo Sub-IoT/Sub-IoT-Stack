@@ -78,11 +78,15 @@ ELSE()
 ENDIF()
 FRAMEWORK_HEADER_DEFINE(BOOL FRAMEWORK_TIMER_RESET_COUNTER)
 
+SET(FRAMEWORK_AES_LOG_ENABLED "FALSE" CACHE BOOL "Select whether to enable or disable the generation of logs in the AES algorithms")
+FRAMEWORK_HEADER_DEFINE(BOOL FRAMEWORK_AES_LOG_ENABLED)
+
 #Generate the 'framework_defs.h'
 FRAMEWORK_BUILD_SETTINGS_FILE()
 
 SET(FRAMEWORK_SOURCES framework_bootstrap.c)
 SET(FRAMEWORK_HEADERS
+        inc/aes.h
         inc/bootstrap.h
         inc/errors.h
         inc/link_c.h
@@ -110,6 +114,7 @@ SET(HAL_API_HEADERS
         hal/inc/hwtimer.h
         hal/inc/hwspi.h
         hal/inc/hwwatchdog.h
+        hal/inc/hwaes.h
 )
 
 # Assemble the library
