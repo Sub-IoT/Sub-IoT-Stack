@@ -1,8 +1,10 @@
 #ifndef _AES_H_
 #define _AES_H_
 
-#include <stdint.h>
+#include <types.h>
 
+
+#define AES_BLOCK_SIZE 16
 
 // #define the macros below to 1/0 to enable/disable the mode of operation.
 //
@@ -43,5 +45,18 @@ void AES128_CTR_encrypt(uint8_t *output, uint8_t *input, uint32_t length, const 
 // Decryption is exactly the same operation as encryption
 
 #endif // #if defined(CTR) && CTR
+
+error_t AES128_CBC_MAC( uint8_t *auth, uint8_t *input, uint32_t length,
+                        const uint8_t *key, const uint8_t *iv, uint32_t iv_len,
+                        const uint8_t *add, uint32_t add_len, uint8_t auth_len );
+
+error_t AES128_CCM_encrypt( uint8_t *output, uint8_t *input, uint32_t length,
+                            const uint8_t *key, const uint8_t *iv, uint32_t iv_len,
+                            const uint8_t *add, uint32_t add_len, uint8_t auth_len );
+
+error_t AES128_CCM_decrypt( uint8_t *output, uint8_t *input, uint32_t length,
+                        const uint8_t *key, const uint8_t *iv, uint32_t iv_len,
+                        const uint8_t *add, uint32_t add_len, const uint8_t *auth,
+                        uint8_t auth_len );
 
 #endif //_AES_H_
