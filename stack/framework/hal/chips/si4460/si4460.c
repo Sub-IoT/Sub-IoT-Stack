@@ -501,8 +501,6 @@ error_t hw_radio_init(alloc_packet_callback_t alloc_packet_cb,
 	configure_eirp(current_eirp);
 	configure_syncword_class(current_rx_cfg.syncword_class, current_channel_id.channel_header.ch_coding);
 
-	sched_register_task((&report_rssi));
-
 	switch_to_idle_mode();
 }
 
@@ -648,12 +646,6 @@ error_t hw_radio_poweroff()
 	return SUCCESS;
 }
 
-static void report_rssi()
-{
-	int16_t rss = hw_radio_get_rssi();
-	rssi_valid_callback(rss);
-}
-
 static void start_rx(hw_rx_cfg_t const* rx_cfg)
 {
 	DPRINT("start_rx");
@@ -680,7 +672,10 @@ static void start_rx(hw_rx_cfg_t const* rx_cfg)
 
     if(rssi_valid_callback != 0)
     {
-    	timer_post_task_delay(&report_rssi, TIMER_TICKS_PER_SEC / 5000);
+      // TODO calculate/predict rssi response time and wait until valid. For now we wait 200 us.
+
+      hw_busy_wait(200);
+      rssi_valid_callback(hw_radio_get_rssi());
     }
 }
 
