@@ -123,15 +123,16 @@ void d7atp_signal_response_period_termination()
 
 void d7atp_signal_foreground_scan_expired()
 {
-    switch_state(D7ATP_STATE_IDLE);
-
     // In case of slave, we can consider that the dialog is terminated
-    if (d7atp_state != D7ATP_STATE_MASTER_TRANSACTION_RESPONSE_PERIOD)
+    if (d7atp_state == D7ATP_STATE_SLAVE_TRANSACTION_RESPONSE_PERIOD
+        || (d7atp_state == D7ATP_STATE_SLAVE_TRANSACTION_RECEIVED_REQUEST))
     {
         DPRINT("Dialog terminated");
         current_dialog_id = 0;
         d7asp_signal_transaction_response_period_elapsed();
     }
+
+    switch_state(D7ATP_STATE_IDLE);
 }
 
 void d7atp_signal_dialog_termination()
