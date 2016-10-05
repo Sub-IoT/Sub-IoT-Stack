@@ -278,8 +278,8 @@ void d7atp_signal_packet_transmitted(packet_t* packet)
     {
         switch_state(D7ATP_STATE_SLAVE_TRANSACTION_RESPONSE_PERIOD);
     }
-    else
-        assert(false);
+    else if(d7atp_state == D7ATP_STATE_IDLE)
+        assert(!packet->d7atp_ctrl.ctrl_is_ack_requested); // can only occur in this case
 
     d7asp_signal_packet_transmitted(packet);
 }
