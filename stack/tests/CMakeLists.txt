@@ -2,7 +2,7 @@
 # OSS-7 - An opensource implementation of the DASH7 Alliance Protocol for ultra
 # lowpower wireless sensor communication
 #
-# Copyright 2015 University of Antwerp
+# Copyright 2016 University of Antwerp
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -17,3 +17,24 @@
 # limitations under the License.
 #
 
+#Add the 'BUILD_UNIT_TESTS' option
+OPTION(BUILD_UNIT_TESTS "Build unit tests applications" ON)
+LIST_SUBDIRS(TEST_DIRS ${CMAKE_CURRENT_SOURCE_DIR})
+
+#Add conditional options for all subdirs (which are individual applications)
+FOREACH(__dir ${TEST_DIRS})
+    GET_FILENAME_COMPONENT(TEST_NAME ${__dir} NAME) # strip full path keeping only test name
+    STRING(TOUPPER ${TEST_NAME} __upper_name)
+    SETOPTION_IF(TEST_${__upper_name} "Build unit test application ${__dir}" OFF BUILD_UNIT_TESTS)
+    UNSET(__upper_name)
+ENDFOREACH()
+
+#Finally Load the individual applications
+FOREACH(__dir ${TEST_DIRS})
+    GET_FILENAME_COMPONENT(TEST_NAME ${__dir} NAME) # strip full path keeping only test name
+    GEN_PREFIX(TEST_PREFIX "TEST" ${TEST_NAME})
+    IF(BUILD_UNIT_TESTS AND ${TEST_PREFIX})
+        ADD_SUBDIRECTORY(${__dir} ${CMAKE_CURRENT_BINARY_DIR}/${TEST_NAME})
+    ENDIF()
+    UNSET(TEST_PREFIX)
+ENDFOREACH()
