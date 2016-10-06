@@ -1,0 +1,341 @@
+/* * OSS-7 - An opensource implementation of the DASH7 Alliance Protocol for ultra
+ * lowpower wireless sensor communication
+ *
+ * Copyright 2016 University of Antwerp
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+/*
+ * This is an implementation of the Counter with CBC-MAC (CCM) with AES.
+ */
+
+
+/*****************************************************************************/
+/* Includes:                                                                 */
+/*****************************************************************************/
+#include <stdint.h>
+#include <string.h> // CBC mode, for memset
+#include "stdbool.h"
+#include "aes.h"
+#include "types.h"
+#include "errors.h"
+#include "log.h"
+#include "framework_defs.h"
+
+
+#if defined(FRAMEWORK_LOG_ENABLED) && defined(FRAMEWORK_AES_LOG_ENABLED)
+#define DPRINT(...) log_print_stack_string(LOG_STACK_PHY, __VA_ARGS__)
+#define DPRINT_DATA(...) log_print_data(__VA_ARGS__)
+#else
+#define DPRINT(...)
+#define DPRINT_DATA(...)
+#endif
+
+#define AES_CCM_L 2 /* For Dash 7, the message length field is encoded in 2 bytes */
+
+/* Implementation according RFC 3610: Counter with CBC-MAC (CCM)
+ * Counter with CBC-MAC (CCM) is a generic authenticated encryption
+ * block cipher mode
+ */
+
+/*
+ * The additional authenticated data is used to authenticate plaintext packet
+ * header. For DASH7, this additional data consists in the AES-CBC-MAC header as
+ * described in table 7.6.4.1
+ */
+
+
+static void xor_aes_block(uint8_t *dst, const uint8_t *src)
+{
+    uint8_t i;
+
+    for (i = 0; i < AES_BLOCK_SIZE; ++i)
+    {
+        dst[i] ^= src[i];
+    }
+}
+
+/*
+ * Authentication
+ * The first step is to compute the authentication field T.  This is
+ * done using CBC-MAC [MAC].  We first define a sequence of blocks B_0,
+ * B_1, ..., B_n and then apply CBC-MAC to these blocks.
+ *
+ *
+ * First block B_0:
+ * 0        .. 0        flags
+ * 1        .. iv_len   nonce (aka iv)
+ * iv_len+1 .. 15       length
+ *
+ * With flags as (bits):
+ * 7        0
+ * 6        Adata present?
+ * 5 .. 3   (M - 2) / 2
+ * 2 .. 0   L - 1
+ *
+ * with
+ * M     Number of octets in authentication field
+ * L     Number of octets in length field
+ *
+ */
+error_t AES128_CBC_MAC( uint8_t *auth, uint8_t *input, uint32_t length,
+                           const uint8_t *key, const uint8_t *iv, uint32_t iv_len,
+                           const uint8_t *add, uint32_t add_len, uint8_t auth_len )
+{
+    uint8_t blk[AES_BLOCK_SIZE];
+    uint8_t i;
+    uint8_t remainders;
+    uint8_t L = AES_CCM_L; /* For Dash 7, the message length field is encoded in 2 bytes */
+    uint8_t tag[AES_BLOCK_SIZE];
+
+    /* sanity checks */
+    if (auth_len != 4 && auth_len != 8 && auth_len != 16)
+        return EINVAL;
+
+    if (iv_len > (AES_BLOCK_SIZE - 1 - L))
+        return EINVAL;
+
+    /* For DASH7, the length shall be encoded in a field of 2 bytes */
+    if (length > 0x10000) // 0x10000 = 2^16
+        return EINVAL;
+
+    /* B_0: Flags | Nonce N | l(m) */
+    blk[0] = 0;
+    blk[0] |= ( add_len > 0 ) << 6;
+    blk[0] |= ( ( auth_len - 2 ) / 2 ) << 3;
+    blk[0] |= L - 1;
+
+    memcpy(blk + 1, iv, iv_len);
+    memset(blk + 1 + iv_len, 0, AES_BLOCK_SIZE - 1 - iv_len);
+
+    // the length field is encoded as two octets which contain the value length
+    // in most-significant-byte first order.
+    blk[AES_BLOCK_SIZE - 2] = length >> 8;
+    blk[AES_BLOCK_SIZE - 1] = length & 0xff;
+
+    /* The CBC-MAC is computed by:
+     *
+     * X_1 := E( K, B_0 )
+     * X_i+1 := E( K, X_i XOR B_i )  for i=1, ..., n
+     * T := first-M-bytes( X_n+1 )
+    */
+
+    /* X_1 = E(K, B_0) */
+    DPRINT("Blk0");
+    DPRINT_DATA(blk, AES_BLOCK_SIZE);
+    AES128_ECB_encrypt(blk, key, tag);
+    DPRINT("X_1 = AES(B_0)");
+    DPRINT_DATA(tag, AES_BLOCK_SIZE);
+
+    // if add_len > 0, add more blocks of authentication data
+    if (add_len > 0)
+    {
+        uint8_t use_len = add_len < AES_BLOCK_SIZE - 2 ? add_len : AES_BLOCK_SIZE - 2;
+        uint8_t remainders = add_len - use_len;
+
+        memset(blk, 0, AES_BLOCK_SIZE);
+        //since add_len < 16, the length shall be encoded in a field of 2 octets.
+        blk[0] = (uint8_t)( ( add_len >> 8 ) & 0xFF );
+        blk[1] = (uint8_t)( ( add_len      ) & 0xFF );
+
+        memcpy( blk + 2, add, use_len );
+
+        DPRINT("Blk1");
+        DPRINT_DATA(blk, AES_BLOCK_SIZE);
+
+        xor_aes_block(blk, tag);
+        DPRINT("X_1 XOR B_1");
+        DPRINT_DATA(blk, AES_BLOCK_SIZE);
+        /* X_2 = E(K, X_1 XOR B_1) */
+        AES128_ECB_encrypt(blk, key, tag);
+        DPRINT("X_2 = AES(X_1 XOR B_1)");
+        DPRINT_DATA(tag, AES_BLOCK_SIZE);
+
+        if (remainders)
+        {
+            memset(blk, 0, AES_BLOCK_SIZE);
+            memcpy(blk, add + use_len, remainders);
+
+            DPRINT("blk2");
+            DPRINT_DATA(blk, AES_BLOCK_SIZE);
+
+            DPRINT("X_2 XOR B_2");
+            xor_aes_block(blk, tag);
+             /* X_3 = E(K, X_2 XOR B_2) */
+            AES128_ECB_encrypt(blk, key, tag);
+            DPRINT("X_3 = AES(X_1 XOR B_1)");
+            DPRINT_DATA(tag, AES_BLOCK_SIZE);
+        }
+    }
+
+    remainders = length % AES_BLOCK_SIZE; /* Remaining bytes in the last non-full block */
+    DPRINT("Remainders %d length %d", remainders, length);
+
+    for (i = 0; i < length / AES_BLOCK_SIZE; i++)
+    {
+        DPRINT("Xi");
+        DPRINT_DATA(tag, AES_BLOCK_SIZE);
+
+        /* X_i+1 = E(K, X_i XOR B_i) */
+        xor_aes_block(tag, input);
+        DPRINT("X_i XOR B_i");
+        DPRINT_DATA(tag, AES_BLOCK_SIZE);
+
+        input += AES_BLOCK_SIZE;
+
+        AES128_ECB_encrypt(tag, key, tag);
+        DPRINT("X_i+1 = E(K, X_i XOR B_i)");
+        DPRINT_DATA(tag, AES_BLOCK_SIZE);
+    }
+
+    if (remainders)
+    {
+        /* XOR zero-padded last block */
+        DPRINT("Xi");
+        DPRINT_DATA(tag, AES_BLOCK_SIZE);
+
+        for (i = 0; i < remainders; i++)
+            tag[i] ^= *input++;
+        DPRINT("X_i XOR B_i");
+        DPRINT_DATA(tag, AES_BLOCK_SIZE);
+
+        AES128_ECB_encrypt(tag, key, tag);
+        DPRINT("X_i+1 = E(K, X_i XOR B_i)");
+        DPRINT_DATA(tag, AES_BLOCK_SIZE);
+    }
+
+    memcpy(auth, tag, auth_len);
+
+    return SUCCESS;
+}
+
+/*
+ * Authenticated encryption
+ *
+ * Ensure that the output is sized to contain the encrypted message payload
+ * + the encrypted authentication Tag.
+ */
+error_t AES128_CCM_encrypt( uint8_t *output, uint8_t *input, uint32_t length,
+                        const uint8_t *key, const uint8_t *iv, uint32_t iv_len,
+                        const uint8_t *add, uint32_t add_len, uint8_t auth_len )
+{
+    uint8_t auth[AES_BLOCK_SIZE];
+    uint8_t ctr[AES_BLOCK_SIZE];
+    uint8_t auth_crypted[AES_BLOCK_SIZE];
+    uint8_t L = AES_CCM_L;
+    error_t ret;
+
+    /* sanity checks */
+    if (auth_len != 4 && auth_len != 8 && auth_len != 16)
+        return EINVAL;
+
+    if (iv_len > (AES_BLOCK_SIZE - 1 - L))
+        return EINVAL;
+
+    /* For DASH7, the length shall be encoded in a field of 2 bytes */
+    if (length > 0x10000) // 0x10000 = 2^16
+        return EINVAL;
+
+    /* Authentication */
+    ret = AES128_CBC_MAC(auth, input, length, key, iv, iv_len, add, add_len, auth_len);
+    if (ret != SUCCESS)
+        return ret;
+
+    DPRINT("Authentication tag:");
+    DPRINT_DATA(auth, auth_len);
+
+    /* Encryption with Counter (CTR) mode*/
+
+    /*
+     * Prepare counter block for encryption:
+     * 0              Flags
+     * 1 ... 15-L     Nonce N
+     * 16-L ... 15    Counter i
+     * *
+     * * With flags as (bits):
+     * * 7 .. 3   0
+     * * 2 .. 0   L - 1
+     * */
+
+    ctr[0] = L - 1;
+    memcpy(ctr + 1, iv, iv_len);
+    memset(ctr + 1 + iv_len, 0, AES_BLOCK_SIZE - 1 - iv_len);
+
+    /* Encryption of the message payload, counter set to 1 */
+    ctr[15] = 1;
+    DPRINT("ctr0");
+    DPRINT_DATA(ctr, AES_BLOCK_SIZE);
+
+    AES128_CTR_encrypt(output, input, length, key, ctr);
+    DPRINT("CTR output:");
+    DPRINT_DATA(output, length);
+
+    /* Encryption of the authentication tag , reset counter to 0*/
+    memset(ctr + 1 + iv_len, 0, AES_BLOCK_SIZE - 1 - iv_len);
+    AES128_CTR_encrypt(auth_crypted, auth, auth_len, key, ctr);
+    DPRINT("Encrypted authentication tag:");
+    DPRINT_DATA(auth_crypted, auth_len);
+    memcpy(output + length, auth_crypted, auth_len);
+
+    return SUCCESS;
+}
+
+/*
+ * Authenticated decryption
+ */
+error_t AES128_CCM_decrypt( uint8_t *output, uint8_t *input, uint32_t length,
+                        const uint8_t *key, const uint8_t *iv, uint32_t iv_len,
+                        const uint8_t *add, uint32_t add_len, const uint8_t *auth,
+                        uint8_t auth_len )
+{
+    uint8_t T[AES_BLOCK_SIZE];
+    uint8_t ctr[AES_BLOCK_SIZE];
+    uint8_t auth_decrypted[AES_BLOCK_SIZE];
+    uint8_t L = AES_CCM_L;
+
+    /* sanity checks */
+    if (auth_len != 4 && auth_len != 8 && auth_len != 16)
+        return EINVAL;
+
+    if (iv_len > (AES_BLOCK_SIZE - 1 - L))
+        return EINVAL;
+
+    if (length > 0x10000)
+        return EINVAL;
+
+    ctr[0] = L - 1;
+    memcpy(ctr + 1, iv, iv_len);
+    memset(ctr + 1 + iv_len, 0, AES_BLOCK_SIZE - 1 - iv_len);
+    /* Decryption of the encrypted authentication Tag */
+    AES128_CTR_encrypt(auth_decrypted, (uint8_t *)auth, auth_len, key, ctr);
+    DPRINT("Decrypted authentication tag:");
+    DPRINT_DATA(auth_decrypted, auth_len);
+
+    /* Decryption of the message payload, counter set to 1 */
+    ctr[15] = 1;
+    AES128_CTR_encrypt(output, input, length, key, ctr);
+
+    /* Recompute the CBC-MAC and check the authentication Tag */
+    AES128_CBC_MAC(T, output, length, key, iv, iv_len, add, add_len, auth_len);
+    DPRINT("Computed authentication tag:");
+    DPRINT_DATA(T, auth_len);
+
+    if (memcmp(T, auth_decrypted, auth_len) != 0)
+    {
+        DPRINT("CCM: Auth mismatch");
+        return -1;
+    }
+
+    return SUCCESS;
+}
