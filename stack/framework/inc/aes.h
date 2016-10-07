@@ -24,39 +24,71 @@
   #define CTR 1
 #endif
 
+void AES128_init(const uint8_t *key);
+
 #if defined(ECB) && ECB
 
 // The two functions AES128_ECB_xxcrypt() do most of the work, and they expect inputs of 128 bit length.
-void AES128_ECB_encrypt(uint8_t *input, const uint8_t *key, uint8_t *output);
-void AES128_ECB_decrypt(uint8_t *input, const uint8_t *key, uint8_t *output);
+void AES128_ECB_encrypt(uint8_t *input, uint8_t *output);
+void AES128_ECB_decrypt(uint8_t *input, uint8_t *output);
 
 #endif // #if defined(ECB) && ECB
 
 
 #if defined(CBC) && CBC
 
-void AES128_CBC_encrypt_buffer(uint8_t *output, uint8_t *input, uint32_t length, const uint8_t *key, const uint8_t *iv);
-void AES128_CBC_decrypt_buffer(uint8_t *output, uint8_t *input, uint32_t length, const uint8_t *key, const uint8_t *iv);
+void AES128_CBC_encrypt_buffer(uint8_t *output, uint8_t *input, uint32_t length, const uint8_t *iv);
+void AES128_CBC_decrypt_buffer(uint8_t *output, uint8_t *input, uint32_t length, const uint8_t *iv);
 
 #endif // #if defined(CBC) && CBC
 
 #if defined(CTR) && CTR
-void AES128_CTR_encrypt(uint8_t *output, uint8_t *input, uint32_t length, const uint8_t *key, uint8_t* ctr_blk);
+void AES128_CTR_encrypt(uint8_t *output, uint8_t *input, uint32_t length, uint8_t* ctr_blk);
 // Decryption is exactly the same operation as encryption
 
 #endif // #if defined(CTR) && CTR
 
-error_t AES128_CBC_MAC( uint8_t *auth, uint8_t *input, uint32_t length,
-                        const uint8_t *key, const uint8_t *iv, uint32_t iv_len,
-                        const uint8_t *add, uint32_t add_len, uint8_t auth_len );
+/*! \brief AES CBC-MAC.
+ *
+ * \param auth		Buffer to place the MAC. Must be at least @p auth_len long.
+ * \param payload	Buffer to place the text to authenticate.
+ * \param length	Number of bytes to encrypt. Must be a multiple of 16.
+ * \param iv		Initialization vector to be used as the first block by CBC-MAC
+ * \param add		Buffer to place the Additional authenticated data.
+ * \param add_len	Length of the additional authentication data
+ * \param ctr_blk	128 bit initial counter block to be used for the CTR encryption.
+ * \param auth_len	MIC length of 0, 4, 8 or 16 bytes are allowed
+ */
+error_t AES128_CBC_MAC( uint8_t *auth, uint8_t *payload, uint8_t length, const uint8_t *iv,
+                        const uint8_t *add, uint8_t add_len, uint8_t auth_len );
 
-error_t AES128_CCM_encrypt( uint8_t *output, uint8_t *input, uint32_t length,
-                            const uint8_t *key, const uint8_t *iv, uint32_t iv_len,
-                            const uint8_t *add, uint32_t add_len, uint8_t auth_len );
 
-error_t AES128_CCM_decrypt( uint8_t *output, uint8_t *input, uint32_t length,
-                        const uint8_t *key, const uint8_t *iv, uint32_t iv_len,
-                        const uint8_t *add, uint32_t add_len, const uint8_t *auth,
-                        uint8_t auth_len );
+/*! \brief AES Counter with CBC-MAC (CCM), 128 bit key.
+ *
+ * \param payload	Buffer to place the plain text. The encrypted data is overwritten on this buffer. Must be at least @p len long.
+ * \param length	Number of bytes to encrypt. Must be a multiple of 16.
+ * \param iv		Initialization vector to be used as the first block by CBC-MAC
+ * \param add		Buffer to place the Additional authenticated data.
+ * \param add_len	Length of the additional authentication data
+ * \param ctr_blk	128 bit initial counter block to be used for the CTR encryption.
+ * \param auth_len	MIC length of 0, 4, 8 or 16 bytes are allowed
+ */
+error_t AES128_CCM_encrypt( uint8_t *payload, uint8_t length, const uint8_t *iv,
+                            const uint8_t *add, uint8_t add_len, uint8_t *ctr_blk,
+                            uint8_t auth_len );
+
+/*! \brief AES Counter with CBC-MAC (CCM), 128 bit key.
+ *
+ * \param payload	Buffer to place the encrypted text. The decrypted data is overwritten on this buffer. Must be at least @p len long.
+ * \param length	Number of bytes to decrypt. Must be a multiple of 16.
+ * \param iv		Initialization vector to be used as the first block by CBC-MAC
+ * \param add		Buffer to place the Additional authenticated data.
+ * \param add_len	Length of the additional authentication data
+ * \param ctr_blk	128 bit initial counter block to be used for the CTR encryption.
+ * \param auth_len	MIC length of 0, 4, 8 or 16 bytes are allowed
+ */
+error_t AES128_CCM_decrypt( uint8_t *payload, uint8_t length, const uint8_t *iv,
+                            const uint8_t *add, uint8_t add_len, uint8_t *ctr_blk,
+                            const uint8_t *auth, uint8_t auth_len );
 
 #endif //_AES_H_

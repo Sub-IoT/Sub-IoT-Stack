@@ -42,6 +42,12 @@
 #define D7A_FILE_ACCESS_PROFILE_ID 0x20 // the first access class file
 #define D7A_FILE_ACCESS_PROFILE_SIZE 65
 
+#define D7A_FILE_NWL_SECURITY		0x0D
+#define D7A_FILE_NWL_SECURITY_SIZE	5
+
+#define D7A_FILE_NWL_SECURITY_KEY		0x0E
+#define D7A_FILE_NWL_SECURITY_KEY_SIZE	16
+
 typedef enum
 {
     FS_STORAGE_TRANSIENT = 0,
@@ -106,6 +112,9 @@ void fs_read_vid(uint8_t* buffer);
 void fs_write_vid(uint8_t* buffer);
 uint8_t fs_read_dll_conf_active_access_class();
 void fs_write_dll_conf_active_access_class(uint8_t access_class);
+alp_status_codes_t fs_read_nwl_security_key(uint8_t* key);
+alp_status_codes_t fs_read_nwl_security(d7anp_security_t *nwl_security);
+alp_status_codes_t fs_write_nwl_security(d7anp_security_t *nwl_security);
 uint8_t fs_get_file_length(uint8_t file_id);
 
 #endif /* FS_H_ */

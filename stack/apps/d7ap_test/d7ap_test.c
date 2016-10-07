@@ -143,7 +143,7 @@ void init_user_files() {
         .dormant_timeout                  = 0,
         .addressee = {
             .ctrl = {
-                .nls_method               = 0,
+                .nls_method               = AES_CCM_128,
                 .id_type                  = ID_TYPE_NOID,
             },
             .access_class                 = 0x01,

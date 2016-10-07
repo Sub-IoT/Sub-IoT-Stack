@@ -53,18 +53,25 @@ void packet_assemble(packet_t* packet)
 {
     uint8_t* data_ptr = packet->hw_radio_packet.data + 1; // skip length field for now, we fill this later
     bool background_frame = (packet->hw_radio_packet.tx_meta.tx_cfg.syncword_class == PHY_SYNCWORD_CLASS0);
+    uint8_t* nwl_payload;
 
     data_ptr += dll_assemble_packet_header(packet, data_ptr, background_frame);
 
     if (!background_frame)
     {
         data_ptr += d7anp_assemble_packet_header(packet, data_ptr);
+        nwl_payload = data_ptr;
 
         data_ptr += d7atp_assemble_packet_header(packet, data_ptr);
+
+        // add payload
+        memcpy(data_ptr, packet->payload, packet->payload_length); data_ptr += packet->payload_length;
+
+        /* Encrypt/authenticate nwl_payload if needed */
+        if (packet->d7anp_ctrl.nls_method)
+            data_ptr += d7anp_secure_payload(packet, nwl_payload, data_ptr - nwl_payload);
     }
 
-    // add payload
-    memcpy(data_ptr, packet->payload, packet->payload_length); data_ptr += packet->payload_length;
     packet->hw_radio_packet.length = data_ptr - packet->hw_radio_packet.data - 1 + 2; // exclude the length byte and add CRC bytes
     packet->hw_radio_packet.data[0] = packet->hw_radio_packet.length;
 
@@ -73,8 +80,8 @@ void packet_assemble(packet_t* packet)
     // add CRC - SW CRC when using FEC
     if (!has_hardware_crc || packet->hw_radio_packet.tx_meta.tx_cfg.channel_id.channel_header.ch_coding == PHY_CODING_FEC_PN9)
     {
-    	uint16_t crc = __builtin_bswap16(crc_calculate(packet->hw_radio_packet.data, packet->hw_radio_packet.length + 1 - 2));
-    	memcpy(data_ptr, &crc, 2);
+        uint16_t crc = __builtin_bswap16(crc_calculate(packet->hw_radio_packet.data, packet->hw_radio_packet.length + 1 - 2));
+        memcpy(data_ptr, &crc, 2);
     }
 
 }

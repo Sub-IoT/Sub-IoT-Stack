@@ -76,20 +76,36 @@ static const uint8_t ccm_key[] = {
 	0xC8, 0xC9, 0xCA, 0xCB, 0xCC, 0xCD, 0xCE, 0xCF
 };
 
-static const uint8_t iv[CCM_TEST_VECTORS_NB][CCM_IV_LENGTH] = {
-    { 0x00, 0x00, 0x00, 0x03, 0x02, 0x01, 0x00, 0xA0,
-      0xA1, 0xA2, 0xA3, 0xA4, 0xA5 },
-    { 0x00, 0x00, 0x00, 0x04, 0x03, 0x02, 0x01, 0xA0,
-      0xA1, 0xA2, 0xA3, 0xA4, 0xA5 },
-    { 0x00, 0x00, 0x00, 0x05, 0x04, 0x03, 0x02, 0xA0,
-      0xA1, 0xA2, 0xA3, 0xA4, 0xA5 },
-    { 0x00, 0x00, 0x00, 0x06, 0x05, 0x04, 0x03, 0xA0,
-      0xA1, 0xA2, 0xA3, 0xA4, 0xA5 },
-    { 0x00, 0x00, 0x00, 0x07, 0x06, 0x05, 0x04, 0xA0,
-      0xA1, 0xA2, 0xA3, 0xA4, 0xA5 },
-    { 0x00, 0x00, 0x00, 0x08, 0x07, 0x06, 0x05, 0xA0,
-      0xA1, 0xA2, 0xA3, 0xA4, 0xA5 },
+static const uint8_t ccm_iv[CCM_TEST_VECTORS_NB][AES_BLOCK_SIZE] = {
+    { 0x59, 0x00, 0x00, 0x00, 0x03, 0x02, 0x01, 0x00,
+      0xA0, 0xA1, 0xA2, 0xA3, 0xA4, 0xA5, 0x00, 0x17 },
+    { 0x59, 0x00, 0x00, 0x00, 0x04, 0x03, 0x02, 0x01,
+      0xA0, 0xA1, 0xA2, 0xA3, 0xA4, 0xA5, 0x00, 0x18 },
+    { 0x59, 0x00, 0x00, 0x00, 0x05, 0x04, 0x03, 0x02,
+      0xA0, 0xA1, 0xA2, 0xA3, 0xA4, 0xA5, 0x00, 0x19 },
+    { 0x59, 0x00, 0x00, 0x00, 0x06, 0x05, 0x04, 0x03,
+      0xA0, 0xA1, 0xA2, 0xA3, 0xA4, 0xA5, 0x00, 0x13 },
+    { 0x59, 0x00, 0x00, 0x00, 0x07, 0x06, 0x05, 0x04,
+      0xA0, 0xA1, 0xA2, 0xA3, 0xA4, 0xA5, 0x00, 0x14 },
+    { 0x59, 0x00, 0x00, 0x00, 0x08, 0x07, 0x06, 0x05,
+      0xA0, 0xA1, 0xA2, 0xA3, 0xA4, 0xA5, 0x00, 0x15 },
 };
+
+static const uint8_t ccm_ctr[CCM_TEST_VECTORS_NB][AES_BLOCK_SIZE] = {
+    { 0x01, 0x00, 0x00, 0x00, 0x03, 0x02, 0x01, 0x00,
+      0xA0, 0xA1, 0xA2, 0xA3, 0xA4, 0xA5, 0x00, 0x01 },
+    { 0x01, 0x00, 0x00, 0x00, 0x04, 0x03, 0x02, 0x01,
+      0xA0, 0xA1, 0xA2, 0xA3, 0xA4, 0xA5, 0x00, 0x01 },
+    { 0x01, 0x00, 0x00, 0x00, 0x05, 0x04, 0x03, 0x02,
+      0xA0, 0xA1, 0xA2, 0xA3, 0xA4, 0xA5, 0x00, 0x01 },
+    { 0x01, 0x00, 0x00, 0x00, 0x06, 0x05, 0x04, 0x03,
+      0xA0, 0xA1, 0xA2, 0xA3, 0xA4, 0xA5, 0x00, 0x01 },
+    { 0x01, 0x00, 0x00, 0x00, 0x07, 0x06, 0x05, 0x04,
+      0xA0, 0xA1, 0xA2, 0xA3, 0xA4, 0xA5, 0x00, 0x01 },
+    { 0x01, 0x00, 0x00, 0x00, 0x08, 0x07, 0x06, 0x05,
+      0xA0, 0xA1, 0xA2, 0xA3, 0xA4, 0xA5, 0x00, 0x01 },
+};
+
 
 /*
  * The cleartext header length is set to 8 octets for the 3 first vectors and
@@ -199,8 +215,7 @@ int main(int argc, char *argv[])
     int i;
     error_t ret;
     uint8_t ctr[AES_BLOCK_SIZE];
-    uint8_t cypher_text[AES_BLOCK_SIZE * 3];
-    uint8_t plain_text[AES_BLOCK_SIZE * 3];
+    uint8_t payload[AES_BLOCK_SIZE * 3];
 
     DPRINT("Unit-tests for AES-CTR / AES-CCM mode \n");
 
@@ -211,13 +226,16 @@ int main(int argc, char *argv[])
     /* test AES-CTR mode*/
     for (i = 0; i < CTR_TEST_VECTORS_NB; i++)
     {
+        AES128_init(ctr_key[i]);
+
+        memcpy(payload, ctr_pt[i], ctr_len[i]);
         memcpy(ctr, ctr_blk[i], AES_BLOCK_SIZE);
 
-        AES128_CTR_encrypt(cypher_text, (uint8_t *)ctr_pt[i], ctr_len[i], ctr_key[i], ctr);
-        if (memcmp(cypher_text, ctr_ct[i], ctr_len[i] ) != 0)
+        AES128_CTR_encrypt(payload, payload, ctr_len[i], ctr);
+        if (memcmp(payload, ctr_ct[i], ctr_len[i] ) != 0)
         {
             DPRINT("AES-CTR encryption output \n");
-            DPRINT_DATA(cypher_text, ctr_len[i]);
+            DPRINT_DATA(payload, ctr_len[i]);
             DPRINT("AES-CTR encryption #%d failed", i + 1 );
             return -1;
         }
@@ -225,11 +243,11 @@ int main(int argc, char *argv[])
         /* ctr has been incremented by the previous encryption, recover the original ctr block */
         memcpy(ctr, ctr_blk[i], AES_BLOCK_SIZE);
 
-        AES128_CTR_encrypt(plain_text, cypher_text, ctr_len[i], ctr_key[i], ctr);
-        if (memcmp(plain_text, ctr_pt[i], ctr_len[i]) != 0)
+        AES128_CTR_encrypt(payload, payload, ctr_len[i], ctr);
+        if (memcmp(payload, ctr_pt[i], ctr_len[i]) != 0)
         {
             DPRINT("AES-CTR encryption output \n");
-            DPRINT_DATA(plain_text, ctr_len[i]);
+            DPRINT_DATA(payload, ctr_len[i]);
             DPRINT("AES-CTR decryption #%d failed", i + 1);
             return -1;
         }
@@ -237,27 +255,35 @@ int main(int argc, char *argv[])
         DPRINT("AES-CTR test vector #%d passed\n", i + 1);
     }
 
+    // The key is the same for all the ccm test vectors */
+    AES128_init(ccm_key);
+
     /* test AES-CCM mode*/
     for (i = 0; i < CCM_TEST_VECTORS_NB; i++)
     {
+        memcpy(payload, ccm_pt + ccm_offset[i], ccm_len[i]);
+        memcpy(ctr, ccm_ctr[i], AES_BLOCK_SIZE);
+
         // the auth_len is always set to 32 bits and the IV length is fixed to 13
-        ret = AES128_CCM_encrypt(cypher_text, (uint8_t *)(ccm_pt + ccm_offset[i]), ccm_len[i],
-                                 ccm_key, iv[i], CCM_IV_LENGTH, ad, add_len[i], CCM_AUTH_LEN);
-        if (ret != 0 || memcmp(cypher_text, ccm_ct[i], ccm_len[i] + CCM_AUTH_LEN) != 0)
+        ret = AES128_CCM_encrypt(payload, ccm_len[i], ccm_iv[i], ad, add_len[i],
+                                 ctr, CCM_AUTH_LEN);
+        if (ret != 0 || memcmp(payload, ccm_ct[i], ccm_len[i] + CCM_AUTH_LEN) != 0)
         {
             DPRINT("AES-CCM encryption output \n");
-            DPRINT_DATA(cypher_text, ccm_len[i]);
+            DPRINT_DATA(payload, ccm_len[i]);
             DPRINT("AES-CCM encryption #%d failed\n", i + 1);
             return -1;
         }
 
-        ret = AES128_CCM_decrypt(plain_text, cypher_text, ccm_len[i],
-                                 ccm_key, iv[i], CCM_IV_LENGTH, ad, add_len[i],
-                                 cypher_text + ccm_len[i], CCM_AUTH_LEN);
-        if (ret != 0 || memcmp(plain_text, ccm_pt + ccm_offset[i], ccm_len[i]) != 0)
+        /* ctr has been incremented by the previous encryption, recover the original ctr block */
+        memcpy(ctr, ccm_ctr[i], AES_BLOCK_SIZE);
+
+        ret = AES128_CCM_decrypt(payload, ccm_len[i], ccm_iv[i], ad, add_len[i],
+                                 ctr, payload + ccm_len[i], CCM_AUTH_LEN);
+        if (ret != 0 || memcmp(payload, ccm_pt + ccm_offset[i], ccm_len[i]) != 0)
         {
             DPRINT("AES-CCM encryption output \n");
-            DPRINT_DATA(plain_text, ccm_len[i]);
+            DPRINT_DATA(payload, ccm_len[i]);
             DPRINT("AES-CCM decryption #%d failed\n", i + 1);
             return -1;
         }

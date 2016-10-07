@@ -30,6 +30,7 @@
 #include "MODULE_D7AP_defs.h"
 #include "version.h"
 #include "dll.h"
+#include "key.h"
 
 #define D7A_PROTOCOL_VERSION_MAJOR 1
 #define D7A_PROTOCOL_VERSION_MINOR 1
@@ -141,6 +142,33 @@ void fs_init(fs_init_args_t* init_args)
         };
     }
 
+    // 0x0D- Network security
+    file_offsets[D7A_FILE_NWL_SECURITY] = current_data_offset;
+    file_headers[D7A_FILE_NWL_SECURITY] = (fs_file_header_t){
+        .file_properties.action_protocol_enabled = 0,
+        .file_properties.storage_class = FS_STORAGE_PERMANENT,
+        .file_properties.permissions = 0, // TODO
+        .length = D7A_FILE_NWL_SECURITY_SIZE
+    };
+
+    memset(data + current_data_offset, 0, D7A_FILE_NWL_SECURITY_SIZE);
+    current_data_offset += D7A_FILE_NWL_SECURITY_SIZE;
+
+    // 0x0E - Network security key
+    file_offsets[D7A_FILE_NWL_SECURITY_KEY] = current_data_offset;
+    file_headers[D7A_FILE_NWL_SECURITY_KEY] = (fs_file_header_t){
+        .file_properties.action_protocol_enabled = 0,
+        .file_properties.storage_class = FS_STORAGE_PERMANENT,
+        .file_properties.permissions = 0, // TODO
+        .length = D7A_FILE_NWL_SECURITY_KEY_SIZE
+    };
+
+    /* It doesn't matter if the key is not stored in MSB first order since this
+     * key is not expected to be transmitted.
+     */
+    memcpy(data + current_data_offset, AES128_key, D7A_FILE_NWL_SECURITY_KEY_SIZE);
+    current_data_offset += D7A_FILE_NWL_SECURITY_KEY_SIZE;
+
     // init user files
     if(init_args->fs_user_files_init_cb)
         init_args->fs_user_files_init_cb();
@@ -248,6 +276,37 @@ void fs_read_vid(uint8_t *buffer)
 void fs_write_vid(uint8_t* buffer)
 {
     fs_write_file(D7A_FILE_DLL_CONF_FILE_ID, 1, buffer, 2);
+}
+
+alp_status_codes_t fs_read_nwl_security_key(uint8_t* buffer)
+{
+    return fs_read_file(D7A_FILE_NWL_SECURITY_KEY, 0, buffer, D7A_FILE_NWL_SECURITY_KEY_SIZE);
+}
+
+alp_status_codes_t fs_read_nwl_security(d7anp_security_t *nwl_security)
+{
+    uint8_t* data_ptr = data + file_offsets[D7A_FILE_NWL_SECURITY];
+    uint32_t frame_counter;
+
+    if(!is_file_defined(D7A_FILE_NWL_SECURITY)) return ALP_STATUS_FILE_ID_NOT_EXISTS;
+
+    nwl_security->key_counter = (*data_ptr); data_ptr++;
+    memcpy(&frame_counter, data_ptr, sizeof(uint32_t));
+    nwl_security->frame_counter = (uint32_t)__builtin_bswap32(frame_counter);
+    return ALP_STATUS_OK;
+}
+
+alp_status_codes_t fs_write_nwl_security(d7anp_security_t *nwl_security)
+{
+    uint8_t* data_ptr = data + file_offsets[D7A_FILE_NWL_SECURITY];
+    uint32_t frame_counter;
+
+    if(!is_file_defined(D7A_FILE_NWL_SECURITY)) return ALP_STATUS_FILE_ID_NOT_EXISTS;
+
+    (*data_ptr) = nwl_security->key_counter; data_ptr++;
+    frame_counter = __builtin_bswap32(nwl_security->frame_counter);
+    memcpy(data_ptr, &frame_counter, sizeof(uint32_t));
+    return ALP_STATUS_OK;
 }
 
 void fs_read_access_class(uint8_t access_class_index, dae_access_profile_t *access_class)

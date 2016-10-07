@@ -96,6 +96,9 @@ static state_t *state;
 // The array that stores the round keys.
 static uint8_t RoundKey[176];
 
+// The array that stores the 128 bits key
+static uint8_t AES128_key[16];
+
 // The Key input to the AES Program
 static const uint8_t *Key;
 
@@ -482,40 +485,47 @@ static void BlockCopy(uint8_t *output, uint8_t *input)
 /*****************************************************************************/
 /* Public functions:                                                         */
 /*****************************************************************************/
+
+void AES128_init(const uint8_t *key)
+{
+    memcpy(AES128_key, key, KEYLEN);
+    Key = AES128_key;
+    KeyExpansion();
+}
+
 #if defined(ECB) && ECB
 
 
-void AES128_ECB_encrypt(uint8_t *input, const uint8_t *key, uint8_t *output)
+void AES128_ECB_encrypt(uint8_t *input, uint8_t *output)
 {
 #ifdef AES_HARDWARE_SUPPORT
-    // Hardware AES support for CBC through the low level peripheral library EMLIB
-    hw_aes_ecb128(output, input, 128, key, true);
+    /*
+     * Hardware AES support for ECB through the low level peripheral library EMLIB
+     * The functions AES128_ECB_encrypt() expects inputs of 128 bit length = 16 bytes.
+     */
+    hw_aes_ecb128(output, input, 16, Key, true);
 #else
     // Copy input to output, and work in-memory on output
     BlockCopy(output, input);
     state = (state_t *)output;
-
-    Key = key;
-    KeyExpansion();
 
     // The next function call encrypts the PlainText with the Key using AES algorithm.
     Cipher();
 #endif // AES_HARDWARE_SUPPORT
 }
 
-void AES128_ECB_decrypt(uint8_t *input, const uint8_t *key, uint8_t *output)
+void AES128_ECB_decrypt(uint8_t *input, uint8_t *output)
 {
 #ifdef AES_HARDWARE_SUPPORT
-    // Hardware AES support for CBC through the low level peripheral library EMLIB
-    hw_aes_ecb128(output, input, 128, key, false);
+    /*
+     * Hardware AES support for ECB through the low level peripheral library EMLIB
+     * The functions AES128_ECB_decrypt() expects inputs of 128 bit length = 16 bytes.
+     */
+    hw_aes_ecb128(output, input, 16, Key, false);
 #else
     // Copy input to output, and work in-memory on output
     BlockCopy(output, input);
     state = (state_t *)output;
-
-    // The KeyExpansion routine must be called before encryption.
-    Key = key;
-    KeyExpansion();
 
     InvCipher();
 #endif // AES_HARDWARE_SUPPORT
@@ -538,21 +548,14 @@ static void XorWithIv(uint8_t *buf)
     }
 }
 
-void AES128_CBC_encrypt_buffer(uint8_t *output, uint8_t *input, uint32_t length, const uint8_t *key, const uint8_t *iv)
+void AES128_CBC_encrypt_buffer(uint8_t *output, uint8_t *input, uint32_t length, const uint8_t *iv)
 {
 #ifdef AES_HARDWARE_SUPPORT
-    // This platform contains an AES HW module, so make use of it !
-    hw_aes_cbc128(output, input, length, key, iv, true);
+    // Hardware AES support for CBC through the low level peripheral library EMLIB
+    hw_aes_cbc128(output, input, length, Key, iv, true);
 #else
     uintptr_t i;
     uint8_t remainders = length % KEYLEN; /* Remaining bytes in the last non-full block */
-
-  // Skip the key expansion if key is passed as 0
-    if (0 != key)
-    {
-        Key = key;
-        KeyExpansion();
-    }
 
     if (iv != 0)
     {
@@ -581,20 +584,13 @@ void AES128_CBC_encrypt_buffer(uint8_t *output, uint8_t *input, uint32_t length,
 #endif // AES_HARDWARE_SUPPORT
 }
 
-void AES128_CBC_decrypt_buffer(uint8_t *output, uint8_t *input, uint32_t length, const uint8_t *key, const uint8_t *iv)
+void AES128_CBC_decrypt_buffer(uint8_t *output, uint8_t *input, uint32_t length, const uint8_t *iv)
 {
 #ifdef AES_HARDWARE_SUPPORT
     // Hardware AES support for CBC through the low level peripheral library EMLIB
-    hw_aes_cbc128(output, input, length, key, iv, false);
+    hw_aes_cbc128(output, input, length, Key, iv, false);
 #else
     uintptr_t i;
-
-    // Skip the key expansion if key is passed as 0
-    if (0 != key)
-    {
-        Key = key;
-        KeyExpansion();
-    }
 
     // If iv is passed as 0, we continue to encrypt without re-setting the Iv
     if (iv != 0)
@@ -637,11 +633,11 @@ void AES128_CBC_decrypt_buffer(uint8_t *output, uint8_t *input, uint32_t length,
  * the most significant bits.
  */
 
-void AES128_CTR_encrypt(uint8_t *output, uint8_t *input, uint32_t length, const uint8_t *key, uint8_t *ctr_blk)
+void AES128_CTR_encrypt(uint8_t *output, uint8_t *input, uint32_t length, uint8_t *ctr_blk)
 {
 #ifdef AES_HARDWARE_SUPPORT
     // Hardware AES support for CTR through the low level peripheral library EMLIB
-    hw_aes_ctr128(output, input, length, key, ctr_blk);
+    hw_aes_ctr128(output, input, length, Key, ctr_blk);
 #else
     uintptr_t i, j;
     uint8_t remainders = length % KEYLEN; /* Remaining bytes in the last non-full block */
@@ -649,13 +645,6 @@ void AES128_CTR_encrypt(uint8_t *output, uint8_t *input, uint32_t length, const 
 
     BlockCopy(ctr, ctr_blk);
     state = (state_t *)ctr;
-
-    // Skip the key expansion if key is passed as 0
-    if(0 != key)
-    {
-        Key = key;
-        KeyExpansion();
-    }
 
     for(i = KEYLEN; i <= length; i += KEYLEN)
     {
