@@ -63,6 +63,7 @@ ADD_LIBRARY (${CHIP_LIBRARY_NAME} OBJECT
     CMSIS/device/src/startup_efm32lg.S
     emlib/src/em_assert.c
     emlib/src/em_adc.c
+    emlib/src/em_aes.c
     emlib/src/em_system.c
     emlib/src/em_cmu.c
     emlib/src/em_emu.c
@@ -77,6 +78,7 @@ ADD_LIBRARY (${CHIP_LIBRARY_NAME} OBJECT
     emlib/src/em_wdog.c
     emlib/inc/em_wdog.h
     efm32lg_adc.c
+    efm32lg_aes.c
     efm32lg_mcu.c
     efm32lg_uart.c
     efm32lg_spi.c
