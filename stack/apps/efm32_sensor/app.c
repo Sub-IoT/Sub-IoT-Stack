@@ -125,7 +125,7 @@ void init_user_files()
 
     // configure file notification using D7AActP: write ALP command to broadcast changes made to file 0x40 in file 0x41
     // first generate ALP command consisting of ALP Control header, ALP File Data Request operand and D7ASP interface configuration
-    alp_control_t alp_ctrl = {
+    alp_control_regular_t alp_ctrl = {
         .group = false,
         .response_requested = false,
         .operation = ALP_OP_READ_FILE_DATA
@@ -139,7 +139,7 @@ void init_user_files()
         .requested_data_length = SENSOR_FILE_SIZE,
     };
 
-    d7asp_fifo_config_t d7asp_fifo_config = {
+    d7asp_master_session_config_t session_config = {
         .qos = {
             .qos_resp_mode = SESSION_RESP_MODE_NO,
             .qos_nls                 = false,
@@ -157,7 +157,7 @@ void init_user_files()
     };
 
     // finally, register D7AActP file
-    fs_init_file_with_D7AActP(ACTION_FILE_ID, &d7asp_fifo_config, &alp_ctrl, (uint8_t*)&file_data_request_operand);
+    fs_init_file_with_D7AActP(ACTION_FILE_ID, &session_config, (alp_control_t*)&alp_ctrl, (uint8_t*)&file_data_request_operand);
 }
 
 void bootstrap()
