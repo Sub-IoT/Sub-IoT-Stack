@@ -76,14 +76,14 @@ PLATFORM_HEADER_DEFINE(
 
 #Define the 'platform library'. Every platform must define a 'PLATFORM' object library
 ADD_LIBRARY(PLATFORM OBJECT
-    ezr32lgusb_main.c
-    ezr32lgusb_leds.c
-    ezr32lgusb_userbutton.c
-    ezr32lgusb_debug.c
-    ezr32lgusb_usb.c
-    #ezr32lgusb_usb_descriptors.c
+    platf_main.c
+    platf_leds.c
+    platf_button.c
+    platf_debug.c
+    platf_usb.c
+    #platf_usb_descriptors.c
     libc_overrides.c
-    inc/userbutton.h
+    inc/button.h
     kits/common/drivers/dmactrl.c
     kits/common/drivers/udelay.c
     kits/common/drivers/cdc.c

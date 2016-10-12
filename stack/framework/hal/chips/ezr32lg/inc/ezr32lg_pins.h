@@ -16,8 +16,8 @@
  * limitations under the License.
  */
 
-#ifndef __EZR32WG_PINS_H_
-#define __EZR32WG_PINS_H_
+#ifndef __EZR32LG_PINS_H_
+#define __EZR32LG_PINS_H_
 #include "hwgpio.h"
 //GPIO port/pin definitions for the EZR32LG
 //port A

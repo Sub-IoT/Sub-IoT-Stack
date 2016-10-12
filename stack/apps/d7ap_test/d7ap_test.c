@@ -58,7 +58,7 @@
 #define SENSOR_FILE_SIZE         4
 #define ACTION_FILE_ID           0x41
 
-#define REPORTING_INTERVAL       5 // seconds
+#define REPORTING_INTERVAL       1 // seconds
 #define REPORTING_INTERVAL_TICKS TIMER_TICKS_PER_SEC * REPORTING_INTERVAL
 
 void execute_sensor_measurement() {

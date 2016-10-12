@@ -25,7 +25,7 @@
 #include "hwwatchdog.h"
 
 #if NUM_USERBUTTONS > 0
-#include "userbutton.h"
+#include "button.h"
 
 void userbutton_callback(button_id_t button_id)
 {

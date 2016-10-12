@@ -76,5 +76,4 @@ void __usb_init_cdc()
 	USBD_Disconnect();
 	USBTIMER_DelayMs(1000);
 	USBD_Connect();
-
 }

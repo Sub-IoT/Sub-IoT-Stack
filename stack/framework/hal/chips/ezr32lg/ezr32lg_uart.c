@@ -30,12 +30,14 @@
 #include "hwgpio.h"
 #include "hwuart.h"
 #include <assert.h>
+#include <string.h>
 #include "em_gpio.h"
 #include "hwsystem.h"
 
 #include "ezr32lg_pins.h"
 
 #include "platform.h"
+
 
 #define UARTS     4   // 2 UARTs + 3 USARTs
 #define LOCATIONS 4
