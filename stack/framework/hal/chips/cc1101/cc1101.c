@@ -577,13 +577,13 @@ int16_t hw_radio_get_rssi()
 
 error_t hw_radio_set_idle()
 {
-  // if we are currently transmitting wait until TX completed before entering IDLE
-  // we return now and go into IDLE when TX is completed
-  if(current_state == HW_RADIO_STATE_TX)
-  {
-      should_rx_after_tx_completed = false;
-      return SUCCESS;
-  }
+    // if we are currently transmitting wait until TX completed before entering IDLE
+    // we return now and go into IDLE when TX is completed
+    if(current_state == HW_RADIO_STATE_TX)
+    {
+        should_rx_after_tx_completed = false;
+        return SUCCESS;
+    }
 
     switch_to_idle_mode();
     return SUCCESS;

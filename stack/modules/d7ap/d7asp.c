@@ -72,6 +72,9 @@ static packet_t* NGDEF(_current_request_packet);
 static uint8_t NGDEF(_single_request_retry_limit);
 #define single_request_retry_limit NG(_single_request_retry_limit)
 
+static packet_t* NGDEF(_current_response_packet);
+#define current_response_packet NG(_current_response_packet)
+
 static d7asp_init_args_t* NGDEF(_d7asp_init_args);
 #define d7asp_init_args NG(_d7asp_init_args)
 
@@ -114,6 +117,7 @@ static void flush_fifos()
 
 
             current_master_session.state = D7ASP_MASTER_SESSION_IDLE;
+            d7atp_signal_dialog_termination();
             switch_state(D7ASP_STATE_IDLE);
             return;
         }
@@ -127,6 +131,16 @@ static void flush_fifos()
 
         memcpy(current_request_packet->payload, current_master_session.request_buffer + current_master_session.requests_indices[current_request_id], current_master_session.requests_lengths[current_request_id]);
         current_request_packet->payload_length = current_master_session.requests_lengths[current_request_id];
+
+        // TODO calculate Tl and Tc
+        // Tc(NB, LEN, CH) = (SFC  * NB  + 1) * TTX(CH, LEN) + TG with NB the number of concurrent devices and SF the collision Avoidance Spreading Factor
+        // Tl should correspond to the maximum time needed to send the remaining requests in the FIFO including the RETRY parameter
+
+        // For now, set Tc and Tl according the transmission_timeout_period set in the access profile
+        dae_access_profile_t active_addressee_access_profile;
+        fs_read_access_class(current_request_packet->d7anp_addressee->ctrl.access_class, &active_addressee_access_profile);
+        current_request_packet->d7atp_tc = active_addressee_access_profile.transmission_timeout_period;
+        current_request_packet->d7anp_listen_timeout = active_addressee_access_profile.transmission_timeout_period;
     }
     else
     {
@@ -147,10 +161,8 @@ static void flush_fifos()
     }
 
     // TODO calculate D7ANP timeout (and update during transaction lifetime) (based on Tc, channel, cs, payload size, # msgs, # retries)
-    d7atp_start_dialog(current_master_session.token, current_request_id, true, current_request_packet, &current_master_session.config.qos);
+    d7atp_start_dialog(current_master_session.token, current_request_id, (current_request_id == current_master_session.next_request_id - 1), current_request_packet, &current_master_session.config.qos);
 }
-
-
 
 // TODO document state diagram
 static void switch_state(state_t new_state)
@@ -202,6 +214,7 @@ static void switch_state(state_t new_state)
             break;
         case D7ASP_STATE_IDLE:
             d7asp_state = new_state;
+            current_request_id = NO_ACTIVE_REQUEST_ID;
             DPRINT("Switching to state D7ASP_STATE_IDLE");
             break;
         default:
@@ -274,7 +287,7 @@ d7asp_queue_result_t d7asp_queue_alp_actions(d7asp_master_session_t* session, ui
     return (d7asp_queue_result_t){ .fifo_token = session->token, .request_id = request_id };
 }
 
-bool d7asp_process_received_packet(packet_t* packet)
+bool d7asp_process_received_packet(packet_t* packet, bool extension)
 {
     hw_watchdog_feed(); // TODO do here?
     d7asp_result_t result = {
@@ -288,7 +301,7 @@ bool d7asp_process_received_packet(packet_t* packet)
             .retry = false, // TODO
             .missed = false, // TODO
         },
-        .response_to = packet->d7anp_timeout,
+        .response_to = packet->d7atp_tc,
         .addressee = packet->d7anp_addressee
         // .fifo_token and .seqnr filled below
     };
@@ -318,6 +331,18 @@ bool d7asp_process_received_packet(packet_t* packet)
 //              d7asp_init_args->d7asp_fifo_request_completed_cb(result, packet->payload, packet->payload_length); // TODO ALP should notify app if needed, refactor
 
         packet_queue_free_packet(packet); // ACK can be cleaned
+
+        // switch to the state slave when the D7ATP Dialog Extension Procedure is initiated and all request are handled
+        if ((extension) && (current_request_id == current_master_session.next_request_id - 1))
+        {
+            DPRINT("Dialog Extension Procedure is initiated, mark the FIFO flush"
+                    " completed before switching to a responder state");
+            alp_d7asp_fifo_flush_completed(current_master_session.token, current_master_session.progress_bitmap,
+                                           current_master_session.success_bitmap, REQUESTS_BITMAP_BYTE_COUNT);
+            current_master_session.state = D7ASP_MASTER_SESSION_IDLE;
+            d7atp_signal_dialog_termination();
+            switch_state(D7ASP_STATE_SLAVE);
+        }
         return true;
     }
     else if(d7asp_state == D7ASP_STATE_IDLE || d7asp_state == D7ASP_STATE_SLAVE)
@@ -370,6 +395,23 @@ bool d7asp_process_received_packet(packet_t* packet)
             goto discard_request; // no need to respond, clean up
 
         DPRINT("Sending response");
+
+        current_response_packet = packet;
+
+        /*
+         * activate the dialog extension procedure in the unicast response if the dialog is terminated
+         * and a master session is pending
+         */
+        if((packet->dll_header.control_target_address_set) && (packet->d7atp_ctrl.ctrl_is_stop)
+                && (d7asp_state == D7ASP_STATE_SLAVE_PENDING_MASTER))
+        {
+            packet->d7atp_ctrl.ctrl_is_start = true;
+            // TODO set packet->d7anp_listen_timeout according the time remaining in the current transaction
+            // + the maximum time to send the first request of the pending session.
+        }
+        else
+            packet->d7atp_ctrl.ctrl_is_start = 0;
+
         d7atp_respond_dialog(packet);
         return true;
     }
@@ -380,20 +422,6 @@ bool d7asp_process_received_packet(packet_t* packet)
         packet_queue_free_packet(packet);
         return false;
 }
-
-
-void d7asp_signal_packet_transmitted(packet_t *packet)
-{
-    DPRINT("Packet transmitted");
-
-    if(d7asp_state == D7ASP_STATE_SLAVE || d7asp_state == D7ASP_STATE_SLAVE_PENDING_MASTER)
-    {
-        // when in slave session we can immediately cleanup the transmitted response.
-        // requests (in master sessions) will be cleanup upon termination of the dialog.
-        packet_queue_free_packet(packet);
-    }
-}
-
 
 static void on_request_completed()
 {
@@ -406,30 +434,68 @@ static void on_request_completed()
     else
     {
         // request completed, no retries needed so we can free the packet
-        current_request_id = NO_ACTIVE_REQUEST_ID;
         packet_queue_free_packet(current_request_packet);
-    }
 
+        // terminate the dialog if all request handled
+        // we need to switch to the state idle otherwise we may receive a new packet before the task flush_fifos is handled
+        // in this case, we may assert since the state remains MASTER
+        if (current_request_id == current_master_session.next_request_id - 1)
+        {
+            DPRINT("FIFO flush completed");
+            alp_d7asp_fifo_flush_completed(current_master_session.token, current_master_session.progress_bitmap,
+                                           current_master_session.success_bitmap, REQUESTS_BITMAP_BYTE_COUNT);
+            current_master_session.state = D7ASP_MASTER_SESSION_IDLE;
+            d7atp_signal_dialog_termination();
+            switch_state(D7ASP_STATE_IDLE);
+            return;
+        }
+        current_request_id = NO_ACTIVE_REQUEST_ID;
+    }
 
     sched_post_task(&flush_fifos); // continue flushing until all request handled ...
 }
 
+void d7asp_signal_packet_transmitted(packet_t *packet)
+{
+    DPRINT("Packet transmitted");
+
+    // if Tc is not provided, the signal transaction_response_period_elapsed is not expected
+    if ((d7asp_state == D7ASP_STATE_MASTER) && (!packet->d7atp_ctrl.ctrl_tc))
+        on_request_completed();
+    else if(d7asp_state == D7ASP_STATE_SLAVE || d7asp_state == D7ASP_STATE_SLAVE_PENDING_MASTER)
+    {
+        assert(current_response_packet == packet);
+
+        // when in slave session we can immediately cleanup the transmitted response.
+        // requests (in master sessions) will be cleanup upon termination of the dialog.
+        current_response_packet = NULL;
+        packet_queue_free_packet(packet);
+    }
+}
+
 void d7asp_signal_packet_csma_ca_insertion_completed(bool succeeded)
 {
-    if(d7asp_state == D7ASP_STATE_MASTER) // TODO only relevant for master sessions?
+    if(d7asp_state == D7ASP_STATE_MASTER)
     {
         if(!succeeded)
         {
             on_request_completed();
             return;
         }
-
         // for the lowest QoS level the packet is ack-ed when CSMA/CA process succeeded
         if(current_master_session.config.qos.qos_resp_mode == SESSION_RESP_MODE_NO)
         {
             mark_current_request_done();
             bitmap_set(current_master_session.success_bitmap, current_request_id);
+            // As we don't wait a response, the request can be completed
+            on_request_completed();
         }
+    }
+    else if ((!succeeded) && ((d7asp_state == D7ASP_STATE_SLAVE) ||
+                (d7asp_state == D7ASP_STATE_SLAVE_PENDING_MASTER)))
+    {
+        packet_queue_free_packet(current_response_packet);
+        current_response_packet = NULL;
     }
 }
 
@@ -437,11 +503,23 @@ void d7asp_signal_transaction_response_period_elapsed()
 {
     if(d7asp_state == D7ASP_STATE_MASTER)
         on_request_completed();
-    else if(d7asp_state == D7ASP_STATE_SLAVE)
-        switch_state(D7ASP_STATE_IDLE);
-    else if(d7asp_state == D7ASP_STATE_SLAVE_PENDING_MASTER)
+    else if((d7asp_state == D7ASP_STATE_SLAVE) ||
+            (d7asp_state == D7ASP_STATE_SLAVE_PENDING_MASTER))
     {
-        switch_state(D7ASP_STATE_MASTER);
-        sched_post_task(&flush_fifos);
+        if (current_response_packet)
+        {
+            DPRINT("Discard the response since the response period is expired");
+            packet_queue_free_packet(current_response_packet);
+            current_response_packet = NULL;
+        }
+
+        if (d7asp_state == D7ASP_STATE_SLAVE)
+            switch_state(D7ASP_STATE_IDLE);
+        else if(d7asp_state == D7ASP_STATE_SLAVE_PENDING_MASTER)
+        {
+            switch_state(D7ASP_STATE_MASTER);
+            DPRINT("Schedule task to flush the fifo");
+            sched_post_task(&flush_fifos);
+        }
     }
 }

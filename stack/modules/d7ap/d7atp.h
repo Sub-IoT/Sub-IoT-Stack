@@ -41,11 +41,12 @@ typedef struct {
     union {
       uint8_t ctrl_raw;
       struct {
-          uint8_t _rfu2 : 1;
+          uint8_t ctrl_agc : 1;
           bool ctrl_ack_record : 1;
           bool ctrl_ack_not_void : 1;
           bool ctrl_is_ack_requested : 1;
-          uint8_t _rfu : 2;
+          bool ctrl_tc : 1;
+          uint8_t _rfu : 1;
           bool ctrl_is_stop : 1;
           bool ctrl_is_start : 1;
       };
@@ -67,4 +68,5 @@ void d7atp_signal_packet_transmitted(packet_t* packet);
 void d7atp_signal_packet_csma_ca_insertion_completed(bool succeeded);
 void d7atp_signal_foreground_scan_expired();
 void d7atp_process_received_packet(packet_t* packet);
+void d7atp_signal_dialog_termination();
 #endif /* D7ATP_H_ */

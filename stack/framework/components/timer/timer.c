@@ -22,6 +22,14 @@
 #include "hwatomic.h"
 #include "debug.h"
 #include "framework_defs.h"
+#include "log.h"
+
+#if defined(FRAMEWORK_LOG_ENABLED) && defined(FRAMEWORK_TIMER_LOG_ENABLED)
+  #define DPRINT(...) log_print_stack_string(LOG_STACK_FWK, __VA_ARGS__)
+#else
+  #define DPRINT(...)
+#endif
+
 
 #ifdef NODE_GLOBALS
     #warning Default Timer implementation used when NODE_GLOBALS is active. Are you sure this is what you want ??
@@ -97,51 +105,77 @@ static void configure_next_event();
 __LINK_C error_t timer_post_task_prio(task_t task, timer_tick_t fire_time, uint8_t priority)
 {
     error_t status = ENOMEM;
-    if(priority > MIN_PRIORITY)
-    	return EINVAL;
+    bool timers_reset = reset_timers();
+    if (priority > MIN_PRIORITY)
+        return EINVAL;
+
+    DPRINT("fire_time  <%lu>" , fire_time);
 
     start_atomic();
     uint32_t empty_index = FRAMEWORK_TIMER_STACK_SIZE;
-    for(uint32_t i = 0; i < FRAMEWORK_TIMER_STACK_SIZE; i++)
+    for (uint32_t i = 0; i < FRAMEWORK_TIMER_STACK_SIZE; i++)
     {
-		if(NG(timers)[i].f == 0x0 && empty_index == FRAMEWORK_TIMER_STACK_SIZE)
-		{
-			empty_index = i;
-		}
-		else if(NG(timers)[i].f == task)
-		{
-			//for now: do not allow an event to be scheduled more than once
-			//otherwise we risk having the same task being scheduled twice and only executed once
-			//because the scheduler disallows the same task to be scheduled multiple times
-			status = EALREADY;
-			break;
-		}
+        if (NG(timers)[i].f == 0x0 && empty_index == FRAMEWORK_TIMER_STACK_SIZE)
+        {
+            empty_index = i;
+        }
+        else if (NG(timers)[i].f == task)
+        {
+            // it is allowed to update only the fire time
+            if (NG(timers)[i].priority == priority)
+            {
+                NG(timers)[empty_index].next_event = fire_time;
+                goto config;
+            }
+            else
+            //for now: do not allow an event to be scheduled more than once
+            //otherwise we risk having the same task being scheduled twice and only executed once
+            //because the scheduler disallows the same task to be scheduled multiple times
+                status = EALREADY;
+            break;
+        }
     }
-    if(status != EALREADY && empty_index != FRAMEWORK_TIMER_STACK_SIZE)
+
+    if (status != EALREADY && empty_index != FRAMEWORK_TIMER_STACK_SIZE)
     {
-    	bool timers_reset = reset_timers();
-		NG(timers)[empty_index].f = task;
-		NG(timers)[empty_index].next_event = fire_time;
-		NG(timers)[empty_index].priority = priority;
-
-		//if there is no event scheduled, this event will run before the next scheduled event
-		//or we reset the timers: trigger a reconfiguration of the next scheduled event
-
-		bool do_config = NG(next_event) == NO_EVENT || timers_reset;
-		if(!do_config)
-		{
-			uint32_t counter = timer_get_counter_value();
-			//if the new event should fire sooner than the old event --> trigger reconfig
-			//this is done using signed ints (compared to the current counter)
-			//to ensure propper handling of timer overflows
-			int32_t next_fire_delay = ((int32_t)fire_time) - ((int32_t)counter);
-			int32_t old_fire_delay = ((int32_t)NG(timers)[NG(next_event)].next_event) - ((int32_t)counter);
-			do_config = next_fire_delay < old_fire_delay;
-		}
-		if(do_config)
-			configure_next_event();
-		status = SUCCESS;
+        NG(timers)[empty_index].f = task;
+        NG(timers)[empty_index].next_event = fire_time;
+        NG(timers)[empty_index].priority = priority;
     }
+    else
+        goto end;
+
+config:
+
+    //if there is no event scheduled, this event will run before the next scheduled event
+    //or we reset the timers: trigger a reconfiguration of the next scheduled event
+    {
+        bool do_config = NG(next_event) == NO_EVENT || timers_reset;
+
+        if (!do_config)
+        {
+            uint32_t counter = timer_get_counter_value();
+
+            DPRINT("timer_post_task_prio counter value <%lu>" , counter);
+
+            //if the new event should fire sooner than the old event --> trigger reconfig
+            //this is done using signed ints (compared to the current counter)
+            //to ensure propper handling of timer overflows
+            int32_t next_fire_delay = ((int32_t)fire_time) - ((int32_t)counter);
+
+            DPRINT("next_fire_delay <%lu>" , next_fire_delay);
+
+            int32_t old_fire_delay = ((int32_t)NG(timers)[NG(next_event)].next_event) - ((int32_t)counter);
+            do_config = next_fire_delay < old_fire_delay;
+        }
+
+        if (do_config)
+            configure_next_event();
+
+        status = SUCCESS;
+    }
+
+end:
     end_atomic();
     return status;
 }
@@ -168,6 +202,25 @@ __LINK_C error_t timer_cancel_task(task_t task)
     end_atomic();
 
     return status;
+}
+
+__LINK_C bool timer_is_task_scheduled(task_t task)
+{
+    bool present = false;
+
+    start_atomic();
+
+     for (uint32_t i = 0; i < FRAMEWORK_TIMER_STACK_SIZE; i++)
+     {
+       if (NG(timers)[i].f == task)
+       {
+          present = true;
+          break;
+       }
+     }
+     end_atomic();
+
+     return present;
 }
 
 __LINK_C timer_tick_t timer_get_counter_value()
