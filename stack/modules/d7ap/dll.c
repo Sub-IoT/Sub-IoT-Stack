@@ -94,6 +94,9 @@ static bool NGDEF(_process_received_packets_after_tx);
 static bool NGDEF(_resume_fg_scan);
 #define resume_fg_scan NG(_resume_fg_scan)
 
+static timer_tick_t NGDEF(_tc_starting_time);
+#define tc_starting_time NG(_tc_starting_time)
+
 // TODO defined somewhere?
 #define t_g	5
 
@@ -397,7 +400,7 @@ static void execute_csma_ca()
 
 #ifndef FRAMEWORK_TIMER_RESET_COUNTER
             // Adjust TCA value according the time already elapsed in the response period
-            if (tc_starting_time)
+            if (tc_starting_time) // TODO how do manage tc_starting_time? not set for now
             {
                 dll_tca -= dll_cca_started - tc_starting_time;
                 DPRINT("Adjusted Tca= %i = %i - %i", dll_tca, dll_cca_started, tc_starting_time);
