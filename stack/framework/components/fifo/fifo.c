@@ -110,7 +110,7 @@ error_t fifo_pop(fifo_t* fifo, uint8_t* buffer, uint16_t len) {
   return SUCCESS;
 }
 
-int16_t fifo_get_size(fifo_t* fifo)
+uint16_t fifo_get_size(fifo_t* fifo)
 {
     if(fifo->head_idx <= fifo->tail_idx)
         return fifo->tail_idx - fifo->head_idx;

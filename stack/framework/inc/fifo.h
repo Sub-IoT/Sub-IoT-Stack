@@ -107,7 +107,7 @@ void fifo_clear(fifo_t* fifo);
  * @param fifo      Pointer to the fifo object
  * @return Number of bytes currently in the FIFO
  */
-int16_t fifo_get_size(fifo_t* fifo);
+uint16_t fifo_get_size(fifo_t* fifo);
 
 /**
  * @brief Returns if the FIFO is completely full or if there is still space left
