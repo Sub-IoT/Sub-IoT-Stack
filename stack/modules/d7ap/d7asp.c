@@ -97,17 +97,15 @@ static void mark_current_request_done()
 }
 
 static void init_master_session(d7asp_master_session_t* session) {
-    (*session) = (d7asp_master_session_t){
-        .state = D7ASP_MASTER_SESSION_IDLE,
-        .token = get_rnd() % 0xFF,
-        .progress_bitmap = { 0x00 },
-        .success_bitmap = { 0x00 },
-        .next_request_id = 0,
-        .request_buffer_tail_idx = 0,
-        .requests_indices = { 0x00 },
-        .requests_lengths = { 0x00 },
-        .request_buffer = { 0x00 }
-    };
+    session->state = D7ASP_MASTER_SESSION_IDLE;
+    session->token = get_rnd() % 0xFF;
+    memset(session->progress_bitmap, 0x00, REQUESTS_BITMAP_BYTE_COUNT);
+    memset(session->success_bitmap, 0x00, REQUESTS_BITMAP_BYTE_COUNT);
+    session->next_request_id = 0;
+    session->request_buffer_tail_idx = 0;
+    memset(session->requests_indices, 0x00, MODULE_D7AP_FIFO_MAX_REQUESTS_COUNT);
+    memset(session->requests_lengths, 0x00, MODULE_D7AP_FIFO_MAX_REQUESTS_COUNT);
+    memset(session->request_buffer, 0x00, MODULE_D7AP_FIFO_COMMAND_BUFFER_SIZE);
 }
 
 static void flush_completed() {
