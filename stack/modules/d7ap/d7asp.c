@@ -110,6 +110,16 @@ static void init_master_session(d7asp_master_session_t* session) {
     };
 }
 
+static void flush_completed() {
+    DPRINT("FIFO flush completed");
+    alp_d7asp_fifo_flush_completed(current_master_session.token, current_master_session.progress_bitmap,
+                                   current_master_session.success_bitmap, REQUESTS_BITMAP_BYTE_COUNT);
+    init_master_session(&current_master_session);
+    current_master_session.state = D7ASP_MASTER_SESSION_IDLE;
+    d7atp_signal_dialog_termination();
+    switch_state(D7ASP_STATE_IDLE);
+}
+
 static void flush_fifos()
 {
     assert(d7asp_state == D7ASP_STATE_MASTER);
@@ -123,17 +133,12 @@ static void flush_fifos()
         if(found_next_req_index == -1 || found_next_req_index == current_master_session.next_request_id)
         {
             // we handled all requests ...
-            DPRINT("FIFO flush completed");
-            alp_d7asp_fifo_flush_completed(current_master_session.token, current_master_session.progress_bitmap, current_master_session.success_bitmap, REQUESTS_BITMAP_BYTE_COUNT);
-            init_master_session(&current_master_session);
+            flush_completed();
+
             // TODO move callback to ALP?
 //            if(d7asp_init_args != NULL && d7asp_init_args->d7asp_fifo_flush_completed_cb != NULL)
 //                d7asp_init_args->d7asp_fifo_flush_completed_cb(fifo.token, fifo.progress_bitmap, fifo.success_bitmap, REQUESTS_BITMAP_BYTE_COUNT);
 
-
-            current_master_session.state = D7ASP_MASTER_SESSION_IDLE;
-            d7atp_signal_dialog_termination();
-            switch_state(D7ASP_STATE_IDLE);
             return;
         }
 
@@ -446,12 +451,7 @@ static void on_request_completed()
         // in this case, we may assert since the state remains MASTER
         if (current_request_id == current_master_session.next_request_id - 1)
         {
-            DPRINT("FIFO flush completed");
-            alp_d7asp_fifo_flush_completed(current_master_session.token, current_master_session.progress_bitmap,
-                                           current_master_session.success_bitmap, REQUESTS_BITMAP_BYTE_COUNT);
-            current_master_session.state = D7ASP_MASTER_SESSION_IDLE;
-            d7atp_signal_dialog_termination();
-            switch_state(D7ASP_STATE_IDLE);
+            flush_completed();
             return;
         }
         current_request_id = NO_ACTIVE_REQUEST_ID;
