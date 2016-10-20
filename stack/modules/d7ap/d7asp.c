@@ -175,6 +175,7 @@ static void flush_fifos()
             return;
         }
 
+        packet_queue_mark_processing(current_request_packet);
         // TODO stop on error
     }
 
@@ -253,9 +254,13 @@ void d7asp_init(d7asp_init_args_t* init_args)
 
 d7asp_master_session_t* d7asp_master_session_create(d7asp_master_session_config_t* d7asp_master_session_config) {
     // TODO for now we assume only one concurrent session, in the future we should dynamically allocate (or return from pool) a session
-    assert(current_master_session.state == D7ASP_MASTER_SESSION_IDLE);
+
+    if (current_master_session.state != D7ASP_MASTER_SESSION_IDLE)
+        return &current_master_session;
 
     init_master_session(&current_master_session);
+
+    DPRINT("Create master session %d", current_master_session.token);
 
     current_master_session.config.qos = d7asp_master_session_config->qos;
     current_master_session.config.dormant_timeout = d7asp_master_session_config->dormant_timeout;
@@ -291,6 +296,8 @@ d7asp_queue_result_t d7asp_queue_alp_actions(d7asp_master_session_t* session, ui
         switch_state(D7ASP_STATE_MASTER);
     else if(d7asp_state == D7ASP_STATE_SLAVE)
         switch_state(D7ASP_STATE_SLAVE_PENDING_MASTER);
+
+    current_master_session.state = D7ASP_MASTER_SESSION_ACTIVE;
 
     return (d7asp_queue_result_t){ .fifo_token = session->token, .request_id = request_id };
 }

@@ -82,6 +82,8 @@ void d7anp_signal_packet_csma_ca_insertion_completed(bool succeeded);
 void d7anp_signal_packet_transmitted(packet_t* packet);
 void d7anp_process_received_packet(packet_t* packet);
 uint8_t d7anp_addressee_id_length(id_type_t);
-void d7anp_set_foreground_scan_timeout(uint8_t timeout_ct);
+void d7anp_set_foreground_scan_timeout(timer_tick_t timeout);
+void d7anp_start_foreground_scan();
+void d7anp_stop_foreground_scan(bool auto_scan);
 
 #endif /* D7ANP_H_ */

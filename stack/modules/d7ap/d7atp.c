@@ -77,7 +77,8 @@ static void switch_state(state_t new_state)
     {
     case D7ATP_STATE_MASTER_TRANSACTION_REQUEST_PERIOD:
         DPRINT("Switching to D7ATP_STATE_MASTER_TRANSACTION_REQUEST_PERIOD");
-        assert(d7atp_state == D7ATP_STATE_IDLE);
+        assert(d7atp_state == D7ATP_STATE_IDLE ||
+               d7atp_state == D7ATP_STATE_MASTER_TRANSACTION_RESPONSE_PERIOD);
         d7atp_state = new_state;
         break;
     case D7ATP_STATE_MASTER_TRANSACTION_RESPONSE_PERIOD:
@@ -87,12 +88,12 @@ static void switch_state(state_t new_state)
         break;
     case D7ATP_STATE_SLAVE_TRANSACTION_RECEIVED_REQUEST:
         DPRINT("Switching to D7ATP_STATE_SLAVE_TRANSACTION_RECEIVED_REQUEST");
-        assert(d7atp_state == D7ATP_STATE_IDLE);
+        assert(d7atp_state == D7ATP_STATE_IDLE || d7atp_state == D7ATP_STATE_SLAVE_TRANSACTION_RESPONSE_PERIOD);
         d7atp_state = new_state;
         break;
     case D7ATP_STATE_SLAVE_TRANSACTION_SENDING_RESPONSE:
         DPRINT("Switching to D7ATP_STATE_SLAVE_TRANSACTION_SENDING_RESPONSE");
-        assert(d7atp_state == D7ATP_STATE_SLAVE_TRANSACTION_RECEIVED_REQUEST || D7ATP_STATE_SLAVE_TRANSACTION_RESPONSE_PERIOD);
+        assert(d7atp_state == D7ATP_STATE_SLAVE_TRANSACTION_RECEIVED_REQUEST);
         d7atp_state = new_state;
         break;
     case D7ATP_STATE_SLAVE_TRANSACTION_RESPONSE_PERIOD:
@@ -115,42 +116,57 @@ static void response_period_timeout_handler()
     DPRINT("Expiration of the response period");
 
     assert(d7atp_state == D7ATP_STATE_SLAVE_TRANSACTION_RESPONSE_PERIOD
-           || d7atp_state == D7ATP_STATE_MASTER_TRANSACTION_RESPONSE_PERIOD
            || d7atp_state == D7ATP_STATE_SLAVE_TRANSACTION_RECEIVED_REQUEST
            || d7atp_state == D7ATP_STATE_SLAVE_TRANSACTION_SENDING_RESPONSE);
 
+    current_transaction_id = 0;
     switch_state(D7ATP_STATE_IDLE);
 
     DPRINT("Transaction is terminated");
-    d7asp_signal_transaction_response_period_elapsed();
+
+    d7anp_start_foreground_scan();
 }
 
+static timer_tick_t adjust_timeout_value(uint8_t timeout_tc, timer_tick_t timestamp)
+{
+    timer_tick_t timeout_ticks = CONVERT_TO_TI(timeout_tc);
 
-static bool schedule_response_period_timeout_handler(uint8_t timeout_tc)
+    // Adjust the timeout value according the time passed since reception
+    timeout_ticks -= timer_get_counter_value() - timestamp;
+    return timeout_ticks;
+}
+
+static void schedule_response_period_timeout_handler(timer_tick_t timeout_ticks)
 {
     DEBUG_PIN_SET(2);
 
-    timer_tick_t timeout_ticks = CONVERT_TO_TI(timeout_tc); // TODO take into account time passed since reception
-
     DPRINT("Starting response_period timer (%i ticks)", timeout_ticks);
 
-    return (timer_post_task_delay(&response_period_timeout_handler, timeout_ticks) == SUCCESS);
+    assert(timer_post_task_delay(&response_period_timeout_handler, timeout_ticks) == SUCCESS);
 }
 
 
 void d7atp_signal_foreground_scan_expired()
 {
+    // Reset the transaction Id
+    current_transaction_id = 0;
+
     // In case of slave, we can consider that the dialog is terminated
     if (d7atp_state == D7ATP_STATE_SLAVE_TRANSACTION_RESPONSE_PERIOD
-        || (d7atp_state == D7ATP_STATE_SLAVE_TRANSACTION_RECEIVED_REQUEST))
+        || d7atp_state == D7ATP_STATE_SLAVE_TRANSACTION_RECEIVED_REQUEST
+        || d7atp_state == D7ATP_STATE_SLAVE_TRANSACTION_SENDING_RESPONSE
+        || d7atp_state == D7ATP_STATE_IDLE )
     {
         DPRINT("Dialog terminated");
         current_dialog_id = 0;
-        d7asp_signal_transaction_response_period_elapsed();
-        switch_state(D7ATP_STATE_IDLE);
+        // For a master, the dialog terminates when it is signaled by the upper layer
     }
 
-    // for a master the dialog terminates when the response period times out
+    d7asp_signal_transaction_response_period_elapsed();
+
+    /* D7ATP remains in master state until the dialog is explicitly terminated by upper layer */
+    if (d7atp_state != D7ATP_STATE_MASTER_TRANSACTION_RESPONSE_PERIOD)
+        switch_state(D7ATP_STATE_IDLE);
 }
 
 void d7atp_signal_dialog_termination()
@@ -161,9 +177,14 @@ void d7atp_signal_dialog_termination()
     // segments marked with START flag set to 1.
     switch_state(D7ATP_STATE_IDLE);
     current_dialog_id = 0;
+    current_transaction_id = 0;
 
-    // stop eventually the DLL foreground scan
-    // TODO d7anp_stop_foreground_scan();
+    // Discard eventually the Tc timer
+    timer_cancel_task(&response_period_timeout_handler);
+    sched_cancel_task(&response_period_timeout_handler);
+
+    // stop the DLL foreground scan
+    d7anp_stop_foreground_scan(true);
 }
 
 void d7atp_init()
@@ -177,8 +198,11 @@ void d7atp_init()
 
 void d7atp_start_dialog(uint8_t dialog_id, uint8_t transaction_id, bool is_last_transaction, packet_t* packet, session_qos_t* qos_settings)
 {
-    assert(is_last_transaction); // multiple transactions in one dialog not supported yet
-    DPRINT("Start dialog %i tx %i", dialog_id, transaction_id);
+    /* check that we are not initiating a different dialog if a dialog is still ongoing */
+    if (current_dialog_id)
+        assert( dialog_id == current_dialog_id);
+
+    DPRINT("Start dialog Id <%i> transID <%i>", dialog_id, transaction_id);
     switch_state(D7ATP_STATE_MASTER_TRANSACTION_REQUEST_PERIOD);
     packet->d7atp_ctrl = (d7atp_ctrl_t){
         .ctrl_is_start = true,
@@ -199,7 +223,7 @@ void d7atp_start_dialog(uint8_t dialog_id, uint8_t transaction_id, bool is_last_
         fs_read_access_class(access_class, &active_addressee_access_profile);
 
     uint8_t slave_listen_timeout = packet->d7atp_tc; // TODO for now we keep this the same as Tc (ie don't cater for transaction retries) this probably needs to be managed from upper layer
-    d7anp_set_foreground_scan_timeout(packet->d7atp_tc); // only slave nodes need to be locked on the NWL channel longer than Tc, requester only used Tc timer
+    d7anp_set_foreground_scan_timeout(CONVERT_TO_TI(packet->d7atp_tc)); // only slave nodes need to be locked on the NWL channel longer than Tc, requester only used Tc timer
 
     d7anp_tx_foreground_frame(packet, true, &active_addressee_access_profile, slave_listen_timeout);
 }
@@ -292,7 +316,9 @@ void d7atp_signal_packet_transmitted(packet_t* packet)
 
         if (packet->d7atp_ctrl.ctrl_tc)
         {
-            schedule_response_period_timeout_handler(packet->d7atp_tc);
+            timer_tick_t Tc = adjust_timeout_value(packet->d7atp_tc, packet->hw_radio_packet.tx_meta.timestamp);
+            d7anp_set_foreground_scan_timeout(Tc);
+            d7anp_start_foreground_scan();
         }
     }
     else if(d7atp_state == D7ATP_STATE_SLAVE_TRANSACTION_SENDING_RESPONSE)
@@ -386,11 +412,44 @@ void d7atp_process_received_packet(packet_t* packet)
             return;
         }
 
-        switch_state(D7ATP_STATE_SLAVE_TRANSACTION_RECEIVED_REQUEST);
-
-        // we are in a dialog, update the FG scan timer value according the proposed value in the received frame
         if (packet->d7anp_listen_timeout)
-            d7anp_set_foreground_scan_timeout(packet->d7anp_listen_timeout);
+        {
+            timer_tick_t Tl;
+
+            /*
+             * In case of broadcast request, it may be reasonable for power saving
+             * consideration to not perform the FG scan inside the transaction period.
+             * The FG scan is only started when the response period expires.
+             * With this procedure, we are not able to sniff any other concurrent responses
+             */
+            if (!packet->dll_header.control_target_address_set && packet->d7atp_ctrl.ctrl_tc)
+            {
+                timer_tick_t Tc = adjust_timeout_value(packet->d7atp_tc, packet->hw_radio_packet.rx_meta.timestamp);
+
+                if (Tc <= 0)
+                {
+                    DPRINT("Discard the request since the response period is expired");
+                    packet_queue_free_packet(packet);
+                    return;
+                }
+
+                Tl = CONVERT_TO_TI(packet->d7anp_listen_timeout) - CONVERT_TO_TI(packet->d7atp_tc);
+                assert(Tl >= 0);
+
+                schedule_response_period_timeout_handler(Tc);
+                d7anp_set_foreground_scan_timeout(Tl);
+                /* stop eventually the FG scan and force the radio to go back to IDLE */
+                d7anp_stop_foreground_scan(false);
+            }
+            else
+            {
+                Tl = adjust_timeout_value(packet->d7anp_listen_timeout, packet->hw_radio_packet.rx_meta.timestamp);
+                d7anp_set_foreground_scan_timeout(Tl);
+                d7anp_start_foreground_scan();
+            }
+        }
+
+        switch_state(D7ATP_STATE_SLAVE_TRANSACTION_RECEIVED_REQUEST);
 
         current_dialog_id = packet->d7atp_dialog_id;
         current_transaction_id = packet->d7atp_transaction_id;

@@ -167,20 +167,16 @@ typedef struct
  */
 typedef struct
 {
-#ifdef HAL_RADIO_INCLUDE_TIMESTAMP
-    timer_tick_t timestamp; 	/**< The clock_tick of the framework timer at which the first bit of the sync word was received. */
-#endif
+    timer_tick_t timestamp;	/**< The clock_tick of the framework timer at which the whole frame was received. */
     hw_rx_cfg_t rx_cfg;		/**< The 'RX Configuration' used to receive the packet. */
-    
-    uint8_t lqi;		/**< The link quality indicator (LQI) reported by the radio for the received packet*/	
-    int16_t rssi;		/**< The Received signal strength (RSSI) reported by the radio for the received packet. */
-
+    uint8_t lqi;			/**< The link quality indicator (LQI) reported by the radio for the received packet*/
+    int16_t rssi;			/**< The Received signal strength (RSSI) reported by the radio for the received packet. */
     uint8_t crc_status;		/**< The crc status of the packet
-    				 *
-    				 * HW_CRC_UNAVAILABLE 	if the driver does not support hardware crc checking
-    				 * HW_CRC_INVALID 	if the CRC was not valid
-    				 * HW_CRC_VALID	if the CRC was valid 
-    				 */
+                             *
+                             * HW_CRC_UNAVAILABLE 	if the driver does not support hardware crc checking
+                             * HW_CRC_INVALID 	if the CRC was not valid
+                             * HW_CRC_VALID	if the CRC was valid
+                             */
 
 // TODO optimize struct for size. This was packed but resulted in alignment issues on Cortex-M0 so removed for now.
 } hw_rx_metadata_t;
@@ -190,11 +186,9 @@ typedef struct
  */
 typedef struct
 {
-#ifdef HAL_RADIO_INCLUDE_TIMESTAMP
-    timer_tick_t timestamp; 	/**< The clock_tick of the framework timer at which the first bit of the SFD was sent. */
-#endif
+    timer_tick_t timestamp;	/**< The clock_tick of the framework timer at which the whole frame is transmitted. */
     hw_tx_cfg_t tx_cfg;		/**< The 'TX Configuration' used to receive the packet. */
-    
+
 // TODO optimize struct for size. This was packed but resulted in alignment issues on Cortex-M0 so removed for now.
 } hw_tx_metadata_t;
 
