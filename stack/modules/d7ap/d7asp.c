@@ -96,6 +96,20 @@ static void mark_current_request_done()
     // current_request_packet will be free-ed in the packet_queue when the transaction is completed
 }
 
+static void init_master_session(d7asp_master_session_t* session) {
+    (*session) = (d7asp_master_session_t){
+        .state = D7ASP_MASTER_SESSION_IDLE,
+        .token = get_rnd() % 0xFF,
+        .progress_bitmap = { 0x00 },
+        .success_bitmap = { 0x00 },
+        .next_request_id = 0,
+        .request_buffer_tail_idx = 0,
+        .requests_indices = { 0x00 },
+        .requests_lengths = { 0x00 },
+        .request_buffer = { 0x00 }
+    };
+}
+
 static void flush_fifos()
 {
     assert(d7asp_state == D7ASP_STATE_MASTER);
@@ -111,6 +125,7 @@ static void flush_fifos()
             // we handled all requests ...
             DPRINT("FIFO flush completed");
             alp_d7asp_fifo_flush_completed(current_master_session.token, current_master_session.progress_bitmap, current_master_session.success_bitmap, REQUESTS_BITMAP_BYTE_COUNT);
+            init_master_session(&current_master_session);
             // TODO move callback to ALP?
 //            if(d7asp_init_args != NULL && d7asp_init_args->d7asp_fifo_flush_completed_cb != NULL)
 //                d7asp_init_args->d7asp_fifo_flush_completed_cb(fifo.token, fifo.progress_bitmap, fifo.success_bitmap, REQUESTS_BITMAP_BYTE_COUNT);
@@ -237,17 +252,7 @@ d7asp_master_session_t* d7asp_master_session_create(d7asp_master_session_config_
     // TODO for now we assume only one concurrent session, in the future we should dynamically allocate (or return from pool) a session
     assert(current_master_session.state == D7ASP_MASTER_SESSION_IDLE);
 
-    current_master_session = (d7asp_master_session_t){
-        .state = D7ASP_MASTER_SESSION_IDLE,
-        .token = get_rnd() % 0xFF,
-        .progress_bitmap = { 0x00 },
-        .success_bitmap = { 0x00 },
-        .next_request_id = 0,
-        .request_buffer_tail_idx = 0,
-        .requests_indices = { 0x00 },
-        .requests_lengths = { 0x00 },
-        .request_buffer = { 0x00 }
-    };
+    init_master_session(&current_master_session);
 
     current_master_session.config.qos = d7asp_master_session_config->qos;
     current_master_session.config.dormant_timeout = d7asp_master_session_config->dormant_timeout;
