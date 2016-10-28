@@ -33,20 +33,11 @@
  * a binary millisecond timer interval is used (HWTIMER_FREQ_MS), but this can be changed
  * by setting the FRAMEWORK_TIMER_RESOLUTION property in CMake.
  *
- * The framework timers have two modes of operation 'Reset mode' and 'Normal mode'. 
- * In 'Normal mode' the 32-bit counter of the timer (see timer_get_counter()) counts from 0 to MAX_INT
- * and only then loops back to zero. Depending on the selected frequency this yield a loop time between 
- * 1,5 days (32KHz timer) and 48 days (1MS ticks). In 'Normal mode' timer_get_counter_value() therefore always 
+ * The 32-bit counter of the timer (see timer_get_counter()) counts from 0 to MAX_INT
+ * and then loops back to zero. Depending on the selected frequency this yield a loop time between
+ * 1,5 days (32KHz timer) and 48 days (1MS ticks). timer_get_counter_value() therefore always
  * returns the time since system bootup (or since the last overflow)
  *
- * When FRAMEWORK_TIMER_RESET_COUNTER is defined the timers operate in 'Reset Mode'.
- * In 'Reset Mode' the timer counter is reset every time:
- *  - A new event is scheduled
- *  - A timer event fires.
- * The meta-data of the timers is updated accordingly to ensure that the timing
- * of the events is not affected by the operation. In 'Reset mode' timer_get_counter_value() returns the 
- * number of ticks since the last time since the counter was reset. 
- * 
  * \author maarten.weyn@uantwerpen.be
  * \author daniel.vandenakker@uantwerpen.be
  *
@@ -92,15 +83,11 @@ __LINK_C void timer_init();
 
 /*! \brief Retrieve the current counter value of the timer
  *
- * When the timers are operating in 'Normal mode', the returned counter value
- * is the number of clock ticks since the device booted or since the last overflow.
+ * The returned counter value is the number of clock ticks since the device booted or since the last overflow.
  * (As discussed above an overflow takes between 1,5 days and 48 days to occur depending on the 
  * frequence of the timer)
  *
- * When the timers are operating in 'Reset mode', the returned counter value is the number of 
- * clock ticks since the last time a task was posted OR the last time a posted task was scheduled.
- *
- * \return timer_tick_t	The current value of the counter. Please note that
+ * \return timer_tick_t	The current value of the counter.
  *
  */
 __LINK_C timer_tick_t timer_get_counter_value();
@@ -121,11 +108,6 @@ __LINK_C timer_tick_t timer_get_counter_value();
  * to be in the past when, using SIGNED integer arithmetic: 'time - cur_time < 0'.
  * This equates to checking whether time < cur_time, except that it also works when the timer is about
  * to overflow.
- *
- * When the framework timer is operating in 'Reset mode' (as opposed to 'Normal mode') the value of the counter is
- * reset to '0' right before the task is posted. The supplied time value is then treated in the normal manner,
- * but since the counter itself is reset, time can also be interpreted as the number of clock ticks to wait
- * (from posting the task) before scheduling the task with the task scheduler.
  *
  * Please note that posting a task with the framework timers does NOT automatically register
  * it with the scheduler. If the posted task is not registered with the scheduler, the task
@@ -188,12 +170,7 @@ static inline error_t timer_post_task(task_t task, timer_tick_t time) { return t
  */
 static inline error_t timer_post_task_prio_delay(task_t task, timer_tick_t delay, uint8_t priority)
 { 
-#ifdef FRAMEWORK_TIMER_RESET_COUNTER
-    return timer_post_task_prio(task,delay,priority);
-#else
     return timer_post_task_prio(task,timer_get_counter_value()+delay, priority);
-#endif //FRAMEWORK_TIMER_RESET_COUNTER
-
 }
 /*! \brief Post a task to be scheduled with a certain delay> with the default priority.
  *
