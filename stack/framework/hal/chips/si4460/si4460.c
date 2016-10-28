@@ -632,6 +632,8 @@ error_t hw_radio_set_idle()
 	if(current_state == HW_RADIO_STATE_TX)
 	{
 	  should_rx_after_tx_completed = false;
+    // Check if it is more safe to remove the callback or to disable the Tx interrupt
+    tx_packet_callback = NULL;
 	  return SUCCESS;
 	}
 
@@ -871,27 +873,20 @@ static void ezradio_int_callback()
 				//if (ezradioReply.FRR_A_READ.FRR_C_VALUE & EZRADIO_CMD_GET_INT_STATUS_REP_PH_PEND_PACKET_SENT_PEND_BIT)
 				{
 					DPRINT("PACKET_SENT IRQ");
-
 					DEBUG_TX_END();
-					if(!should_rx_after_tx_completed)
-						switch_to_idle_mode();
-
-					current_packet->tx_meta.timestamp = timer_get_counter_value();
-
-
-					DPRINT_PACKET(current_packet, true);
 
 					if(tx_packet_callback != 0)
-						tx_packet_callback(current_packet);
+          {
+              current_packet->tx_meta.timestamp = timer_get_counter_value();
+              DPRINT_PACKET(current_packet, true);
+              tx_packet_callback(current_packet);
+          }
 
-					if(should_rx_after_tx_completed)
-					{
-						// RX requested while still in TX ...
-						// TODO this could probably be further optimized by not going into IDLE
-						// after RX by setting TXOFF_MODE to RX (if the cfg is the same at least)
-						should_rx_after_tx_completed = false;
-						start_rx(&current_rx_cfg);
-					}
+          /* We can't switch back to Rx since the Rx callbacks are modified
+           * during CCA, so we systematically go to idle
+          */
+          switch_to_idle_mode();
+
 //				} else if (ezradioReply.FRR_A_READ.FRR_C_VALUE & EZRADIO_CMD_GET_INT_STATUS_REP_PH_PEND_TX_FIFO_ALMOST_EMPTY_PEND_BIT)
 //				{
 //					DPRINT(" - TX FIFO Almost empty IRQ ");

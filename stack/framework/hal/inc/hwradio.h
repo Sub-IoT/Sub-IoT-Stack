@@ -459,9 +459,8 @@ __LINK_C bool hw_radio_is_rx();
  *
  * If a transmission is initiated while the radio is in RX mode, the radio switches immediately to TX mode to 
  * transmit the packet. If a packet reception is in progress while this function is called, this packet is 
- * dropped. Once the packet has been sent, the radio switches back to RX mode with the original hw_rx_cfg_t 
- * settings used (unless either hw_radio_set_idle() or hw_radio_set_rx() with different rx parameters) is 
- * called while the TX is still in progress.)
+ * dropped. Once the packet has been sent, the radio switches back to IDLE mode , unless hw_radio_set_rx() is
+ * called while the TX is still in progress.
  *
  * \param packet	A pointer to the start of the packet to be transmitted
  *
