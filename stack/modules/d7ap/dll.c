@@ -51,7 +51,8 @@ typedef enum
     DLL_STATE_FOREGROUND_SCAN,
     DLL_STATE_BACKGROUND_SCAN,
     DLL_STATE_TX_FOREGROUND,
-    DLL_STATE_TX_FOREGROUND_COMPLETED
+    DLL_STATE_TX_FOREGROUND_COMPLETED,
+    DLL_STATE_TX_FOREGROUND_DISCARDED
 } dll_state_t;
 
 static dae_access_profile_t* NGDEF(_current_access_profile);
@@ -150,7 +151,9 @@ static void switch_state(dll_state_t next_state)
         DPRINT("Switched to DLL_STATE_FOREGROUND_SCAN");
         break;
     case DLL_STATE_IDLE:
-        assert(dll_state == DLL_STATE_FOREGROUND_SCAN || dll_state == DLL_STATE_CCA_FAIL
+        assert(dll_state == DLL_STATE_FOREGROUND_SCAN
+               || dll_state == DLL_STATE_CCA_FAIL
+               || dll_state == DLL_STATE_TX_FOREGROUND_DISCARDED
                || dll_state == DLL_STATE_TX_FOREGROUND_COMPLETED
                || dll_state == DLL_STATE_CSMA_CA_STARTED
                || dll_state == DLL_STATE_CCA1
@@ -176,6 +179,11 @@ static void switch_state(dll_state_t next_state)
         assert(dll_state == DLL_STATE_TX_FOREGROUND);
         dll_state = next_state;
         DPRINT("Switched to DLL_STATE_TX_FOREGROUND_COMPLETED");
+        break;
+    case DLL_STATE_TX_FOREGROUND_DISCARDED:
+        assert(dll_state == DLL_STATE_TX_FOREGROUND);
+        dll_state = next_state;
+        DPRINT("Switched to DLL_STATE_TX_FOREGROUND_DISCARDED");
         break;
     case DLL_STATE_CCA_FAIL:
         assert(dll_state == DLL_STATE_CCA1 || dll_state == DLL_STATE_CCA2
@@ -288,6 +296,16 @@ void packet_transmitted(hw_radio_packet_t* hw_radio_packet)
 
 static void discard_tx()
 {
+    start_atomic();
+    if (dll_state == DLL_STATE_TX_FOREGROUND)
+    {
+        /* wait until TX completed but Tx callback is removed */
+        hw_radio_set_idle();
+        switch_state(DLL_STATE_TX_FOREGROUND_DISCARDED);
+    }
+    end_atomic();
+
+
     if ((dll_state == DLL_STATE_CCA1) || (dll_state == DLL_STATE_CCA2))
     {
         timer_cancel_task(&execute_cca);
@@ -327,7 +345,6 @@ static void cca_rssi_valid(int16_t cur_rssi)
             // log_print_data(current_packet->hw_radio_packet.data, current_packet->hw_radio_packet.length + 1); // TODO tmp
 
             switch_state(DLL_STATE_TX_FOREGROUND);
-
             d7anp_signal_packet_csma_ca_insertion_completed(true);
             error_t err = hw_radio_send_packet(&current_packet->hw_radio_packet, &packet_transmitted);
             assert(err == SUCCESS);
@@ -669,15 +686,7 @@ void dll_start_foreground_scan()
 void dll_stop_foreground_scan(bool auto_scan)
 {
     if(is_tx_busy())
-    {
-        start_atomic();
-        if (dll_state == DLL_STATE_TX_FOREGROUND)
-            /* wait until TX completed but Tx callback is removed */
-            hw_radio_set_idle();
-        end_atomic();
-
         discard_tx();
-    }
 
     if (auto_scan && dll_state == DLL_STATE_SCAN_AUTOMATION)
         return;
