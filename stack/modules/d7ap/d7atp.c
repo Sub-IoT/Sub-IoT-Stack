@@ -339,7 +339,9 @@ void d7atp_signal_packet_csma_ca_insertion_completed(bool succeeded)
     if(!succeeded)
     {
         DPRINT("CSMA-CA insertion failed, stopping transaction");
-        switch_state(D7ATP_STATE_IDLE);
+        /* For Slaves, wait for FG scan or response period termination before switching to idle state */
+        if (d7atp_state == D7ATP_STATE_MASTER_TRANSACTION_REQUEST_PERIOD)
+            switch_state(D7ATP_STATE_IDLE);
     }
 
     d7asp_signal_packet_csma_ca_insertion_completed(succeeded);

@@ -485,15 +485,15 @@ static void execute_csma_ca()
         	int32_t cca_duration = timer_get_counter_value() - dll_cca_started;
         	dll_to -= cca_duration;
 
-
-            DPRINT("RETRY dll_to = %i < %i ", dll_to, t_g);
-
             if (dll_to < t_g)
             {
+                DPRINT("CCA fail because dll_to = %i < %i ", dll_to, t_g);
                 switch_state(DLL_STATE_CCA_FAIL);
                 sched_post_task(&execute_csma_ca);
                 break;
             }
+
+            DPRINT("RETRY dll_to = %i >= %i ", dll_to, t_g);
 
             dll_tca = dll_to;
             dll_cca_started = timer_get_counter_value();
