@@ -101,6 +101,7 @@ static bool NGDEF(_resume_fg_scan);
 
 static void execute_cca();
 static void execute_csma_ca();
+static void start_foreground_scan();
 
 static hw_radio_packet_t* alloc_new_packet(uint8_t length)
 {
@@ -271,13 +272,13 @@ static void notify_transmitted_packet()
 
     if(process_received_packets_after_tx)
     {
-        sched_post_task(&process_received_packets);
+        sched_post_task_prio(&process_received_packets, MAX_PRIORITY);
         process_received_packets_after_tx = false;
     }
 
     if (resume_fg_scan)
     {
-        dll_start_foreground_scan();
+        start_foreground_scan();
         resume_fg_scan = false;
     }
 }
@@ -304,7 +305,6 @@ static void discard_tx()
         switch_state(DLL_STATE_TX_FOREGROUND_DISCARDED);
     }
     end_atomic();
-
 
     if ((dll_state == DLL_STATE_CCA1) || (dll_state == DLL_STATE_CCA2))
     {
@@ -546,13 +546,13 @@ static void execute_csma_ca()
             d7anp_signal_packet_csma_ca_insertion_completed(false);
             if (process_received_packets_after_tx)
             {
-                sched_post_task(&process_received_packets);
+                sched_post_task_prio(&process_received_packets, MAX_PRIORITY);
                 process_received_packets_after_tx = false;
             }
 
             if (resume_fg_scan)
             {
-                dll_start_foreground_scan();
+                start_foreground_scan();
                 resume_fg_scan = false;
             }
             break;
@@ -615,7 +615,6 @@ void dll_init()
 {
     sched_register_task(&process_received_packets);
     sched_register_task(&notify_transmitted_packet);
-    sched_register_task(&dll_start_foreground_scan);
     sched_register_task(&execute_cca);
     sched_register_task(&execute_csma_ca);
     sched_register_task(&dll_execute_scan_automation);
@@ -668,7 +667,7 @@ void dll_tx_frame(packet_t* packet, dae_access_profile_t* access_profile)
     execute_csma_ca();
 }
 
-void dll_start_foreground_scan()
+static void start_foreground_scan()
 {
     switch_state(DLL_STATE_FOREGROUND_SCAN);
 
@@ -681,6 +680,15 @@ void dll_start_foreground_scan()
             };
 
     hw_radio_set_rx(&rx_cfg, &packet_received, NULL);
+}
+
+
+void dll_start_foreground_scan()
+{
+    if(is_tx_busy())
+        discard_tx();
+
+    start_foreground_scan();
 }
 
 void dll_stop_foreground_scan(bool auto_scan)
