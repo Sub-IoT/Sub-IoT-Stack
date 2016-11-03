@@ -34,7 +34,7 @@
 #define ALP_ITF_ID_FS     0x00 // not part of the spec
 #define ALP_ITF_ID_APP    0x01 // not part of the spec
 
-#define ALP_PAYLOAD_MAX_SIZE 128 // TODO configurable?
+#define ALP_PAYLOAD_MAX_SIZE 239 // TODO configurable?
 
 typedef enum
 {
