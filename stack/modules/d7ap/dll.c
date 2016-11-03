@@ -345,9 +345,9 @@ static void cca_rssi_valid(int16_t cur_rssi)
             // log_print_data(current_packet->hw_radio_packet.data, current_packet->hw_radio_packet.length + 1); // TODO tmp
 
             switch_state(DLL_STATE_TX_FOREGROUND);
-            d7anp_signal_packet_csma_ca_insertion_completed(true);
             error_t err = hw_radio_send_packet(&current_packet->hw_radio_packet, &packet_transmitted);
             assert(err == SUCCESS);
+            d7anp_signal_packet_csma_ca_insertion_completed(true);
 
             return;
         }

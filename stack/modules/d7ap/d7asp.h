@@ -118,9 +118,9 @@ void d7asp_signal_packet_transmitted(packet_t* packet);
  */
 void d7asp_signal_packet_csma_ca_insertion_completed(bool succeeded);
 
-
 /**
- * @brief Called by TP to signal the transaction request period has elapsed
+ * @brief Called by TP to signal the dialog is terminated
  */
-void d7asp_signal_transaction_response_period_elapsed();
+void d7asp_signal_dialog_terminated();
+
 #endif /* D7ASP_H_ */

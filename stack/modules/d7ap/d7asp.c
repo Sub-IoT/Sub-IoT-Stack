@@ -114,7 +114,6 @@ static void flush_completed() {
                                    current_master_session.success_bitmap, REQUESTS_BITMAP_BYTE_COUNT);
     init_master_session(&current_master_session);
     current_master_session.state = D7ASP_MASTER_SESSION_IDLE;
-    d7atp_signal_dialog_termination();
     switch_state(D7ASP_STATE_IDLE);
 }
 
@@ -355,12 +354,13 @@ bool d7asp_process_received_packet(packet_t* packet, bool extension)
             alp_d7asp_fifo_flush_completed(current_master_session.token, current_master_session.progress_bitmap,
                                            current_master_session.success_bitmap, REQUESTS_BITMAP_BYTE_COUNT);
             current_master_session.state = D7ASP_MASTER_SESSION_IDLE;
-            d7atp_signal_dialog_termination();
             switch_state(D7ASP_STATE_SLAVE);
         }
         return true;
     }
-    else if(d7asp_state == D7ASP_STATE_IDLE || d7asp_state == D7ASP_STATE_SLAVE)
+    else if(d7asp_state == D7ASP_STATE_IDLE
+            || d7asp_state == D7ASP_STATE_SLAVE
+            || d7asp_state == D7ASP_STATE_SLAVE_PENDING_MASTER)
     {
         // received a request, start slave session, process and respond
         if(d7asp_state == D7ASP_STATE_IDLE)
@@ -450,19 +450,8 @@ static void on_request_completed()
     {
         // request completed, no retries needed so we can free the packet
         packet_queue_free_packet(current_request_packet);
-
-        // terminate the dialog if all request handled
-        // we need to switch to the state idle otherwise we may receive a new packet before the task flush_fifos is handled
-        // in this case, we may assert since the state remains MASTER
-        if (current_request_id == current_master_session.next_request_id - 1)
-        {
-            flush_completed();
-            return;
-        }
         current_request_id = NO_ACTIVE_REQUEST_ID;
     }
-
-    sched_post_task(&flush_fifos); // continue flushing until all request handled ...
 }
 
 void d7asp_signal_packet_transmitted(packet_t *packet)
@@ -497,8 +486,7 @@ void d7asp_signal_packet_csma_ca_insertion_completed(bool succeeded)
         {
             mark_current_request_done();
             bitmap_set(current_master_session.success_bitmap, current_request_id);
-            // As we don't wait a response, the request can be completed
-            on_request_completed();
+            // the request will be free-ed when the dialog terminates
         }
     }
     else if ((!succeeded) && ((d7asp_state == D7ASP_STATE_SLAVE) ||
@@ -509,27 +497,11 @@ void d7asp_signal_packet_csma_ca_insertion_completed(bool succeeded)
     }
 }
 
-void d7asp_signal_transaction_response_period_elapsed()
+void d7asp_signal_dialog_terminated()
 {
     if(d7asp_state == D7ASP_STATE_MASTER)
-        on_request_completed();
-    else if((d7asp_state == D7ASP_STATE_SLAVE) ||
-            (d7asp_state == D7ASP_STATE_SLAVE_PENDING_MASTER))
     {
-        if (current_response_packet)
-        {
-            DPRINT("Discard the response since the response period is expired");
-            packet_queue_free_packet(current_response_packet);
-            current_response_packet = NULL;
-        }
-
-        if (d7asp_state == D7ASP_STATE_SLAVE)
-            switch_state(D7ASP_STATE_IDLE);
-        else if(d7asp_state == D7ASP_STATE_SLAVE_PENDING_MASTER)
-        {
-            switch_state(D7ASP_STATE_MASTER);
-            DPRINT("Schedule task to flush the fifo");
-            sched_post_task(&flush_fifos);
-        }
+        on_request_completed(); // TODO all requests in dialog should be marked completed
+        sched_post_task(&flush_fifos);
     }
 }
