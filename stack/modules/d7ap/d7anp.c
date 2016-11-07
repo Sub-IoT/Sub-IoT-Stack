@@ -249,16 +249,16 @@ bool d7anp_disassemble_packet_header(packet_t* packet, uint8_t* data_idx)
     return true;
 }
 
-void d7anp_signal_packet_csma_ca_insertion_completed(bool succeeded)
+void d7anp_signal_transmission_failure()
 {
-    if(!succeeded)
-    {
-        DPRINT("CSMA-CA insertion failed");
-        // switch back to the previous state before the transmission
-        switch_state(D7ANP_STATE_IDLE);
-    }
+    assert(d7anp_state == D7ANP_STATE_TRANSMIT);
 
-    d7atp_signal_packet_csma_ca_insertion_completed(succeeded);
+    DPRINT("CSMA-CA insertion failed");
+
+    // switch back to the previous state before the transmission
+    switch_state(d7anp_prev_state);
+
+    d7atp_signal_transmission_failure();
 }
 
 void d7anp_signal_packet_transmitted(packet_t* packet)

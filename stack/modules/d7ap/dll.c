@@ -347,8 +347,6 @@ static void cca_rssi_valid(int16_t cur_rssi)
             switch_state(DLL_STATE_TX_FOREGROUND);
             error_t err = hw_radio_send_packet(&current_packet->hw_radio_packet, &packet_transmitted);
             assert(err == SUCCESS);
-            d7anp_signal_packet_csma_ca_insertion_completed(true);
-
             return;
         }
     }
@@ -357,9 +355,6 @@ static void cca_rssi_valid(int16_t cur_rssi)
         DPRINT("Channel not clear, RSSI: %i", cur_rssi);
         switch_state(DLL_STATE_CSMA_CA_RETRY);
         execute_csma_ca();
-
-        //switch_state(DLL_STATE_CCA_FAIL);
-        //d7atp_signal_packet_csma_ca_insertion_completed(false);
     }
 }
 
@@ -424,7 +419,7 @@ static void execute_csma_ca()
                 // Let the upper layer decide eventually to change the channel in order to get a chance a send this frame
                 switch_state(DLL_STATE_IDLE);
                 resume_fg_scan = false;
-                d7anp_signal_packet_csma_ca_insertion_completed(false);
+                d7anp_signal_transmission_failure();
                 break;
             }
 
@@ -543,7 +538,7 @@ static void execute_csma_ca()
         {
             // TODO hw_radio_set_idle();
             switch_state(DLL_STATE_IDLE);
-            d7anp_signal_packet_csma_ca_insertion_completed(false);
+            d7anp_signal_transmission_failure();
             if (process_received_packets_after_tx)
             {
                 sched_post_task_prio(&process_received_packets, MAX_PRIORITY);
