@@ -54,16 +54,33 @@
 	#endif
 #endif
 
+#if HW_NUM_LEDS > 0
+#include "hwleds.h"
+
+void led_blink_off()
+{
+	led_off(0);
+}
+
+void led_blink()
+{
+	led_on(0);
+
+	timer_post_task_delay(&led_blink_off, TIMER_TICKS_PER_SEC * 0.2);
+}
+
+#endif
+
 #define SENSOR_FILE_ID           0x40
 #define SENSOR_FILE_SIZE         4
 #define ACTION_FILE_ID           0x41
 
-#define REPORTING_INTERVAL       1 // seconds
+#define REPORTING_INTERVAL       5 // seconds
 #define REPORTING_INTERVAL_TICKS TIMER_TICKS_PER_SEC * REPORTING_INTERVAL
 
 void execute_sensor_measurement() {
 #if HW_NUM_LEDS >= 1
-    led_toggle(0);
+	led_blink();
 #endif
     // use the counter value for now instead of 'real' sensor
     uint32_t val = timer_get_counter_value();
@@ -189,4 +206,8 @@ void bootstrap() {
 
     sched_register_task(&execute_sensor_measurement);
     timer_post_task_delay(&execute_sensor_measurement, REPORTING_INTERVAL_TICKS);
+
+#if HW_NUM_LEDS > 0
+    sched_register_task(&led_blink_off);
+#endif
 }

@@ -40,11 +40,32 @@
 #include "alp_cmd_handler.h"
 #include "version.h"
 
+#if HW_NUM_LEDS > 0
+#include "hwleds.h"
+
+void led_blink_off()
+{
+	led_off(0);
+}
+
+void led_blink()
+{
+	led_on(0);
+
+	timer_post_task_delay(&led_blink_off, TIMER_TICKS_PER_SEC * 0.2);
+}
+
+#endif
+
 static d7asp_init_args_t d7asp_init_args;
 
 static void on_unsollicited_response_received(d7asp_result_t d7asp_result, uint8_t *alp_command, uint8_t alp_command_size)
 {
     alp_cmd_handler_output_d7asp_response(d7asp_result, alp_command, alp_command_size);
+
+#if HW_NUM_LEDS > 0
+	led_blink();
+#endif
 }
 
 void bootstrap()
@@ -84,6 +105,10 @@ void bootstrap()
     fs_write_dll_conf_active_access_class(0); // use access class 0 for scan automation
 #ifdef HAS_LCD
     lcd_write_string("GW %s", _GIT_SHA1);
+#endif
+
+#if HW_NUM_LEDS > 0
+    sched_register_task(&led_blink_off);
 #endif
 }
 
