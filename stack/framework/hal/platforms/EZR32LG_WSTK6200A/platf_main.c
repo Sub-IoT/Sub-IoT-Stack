@@ -27,7 +27,7 @@
 #include "hwdebug.h"
 #include "hwwatchdog.h"
 #include "platform.h"
-#include "userbutton.h"
+#include "button.h"
 #include "platform_sensors.h"
 #include "em_gpio.h"
 #include <debug.h>

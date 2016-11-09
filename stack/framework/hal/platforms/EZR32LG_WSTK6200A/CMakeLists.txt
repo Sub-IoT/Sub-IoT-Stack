@@ -77,14 +77,14 @@ PLATFORM_HEADER_DEFINE(
 
 #Define the 'platform library'. Every platform must define a 'PLATFORM' object library
 SET(PLATFORM_SRCS
-    wstk6200_main.c
-    wstk6200_leds.c
-    wstk6200_userbutton.c
-    wstk6200_sensors.c
-    wstk6200_debug.c
-    wstk6200_lcd.c
+    platf_main.c
+    platf_leds.c
+    platf_button.c
+    platf_sensors.c
+    platf_debug.c
+    platf_lcd.c
     libc_overrides.c
-    inc/userbutton.h
+    inc/button.h
     inc/platform_sensors.h
     Drivers/si7013.c #also in kits/common/drivers
     Drivers/i2cspm.c #also in kits/common/drivers
@@ -102,7 +102,7 @@ SET(PLATFORM_SRCS
 
 IF(PLATFORM_USE_USB_CDC)
     LIST(APPEND PLATFORM_SRCS
-        wstk6200_usb.c
+        platf_usb.c
         kits/common/drivers/cdc.c
     )
 ENDIF()

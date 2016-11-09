@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-#include "userbutton.h"
+#include "button.h"
 #include "hwgpio.h"
 #include "hwatomic.h"
 #include "scheduler.h"
