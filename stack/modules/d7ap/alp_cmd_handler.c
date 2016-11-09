@@ -24,6 +24,7 @@
 
 #define ALP_CMD_MAX_SIZE 0xFF
 
+#include "hwatomic.h"
 #include "types.h"
 #include "alp.h"
 #include "shell.h"
@@ -55,16 +56,19 @@ void alp_cmd_handler(fifo_t* cmd_fifo)
             assert(byte == SERIAL_ALP_FRAME_VERSION); // only version 0 implemented for now // TODO pop and return error
             uint8_t alp_command_len;
             err = fifo_peek(cmd_fifo, &alp_command_len, SHELL_CMD_HEADER_SIZE + 2, 1); assert(err == SUCCESS);
-            if(fifo_get_size(cmd_fifo) < SHELL_CMD_HEADER_SIZE + 3 + alp_command_len)
-                return; // ALP command not complete yet, don't pop
+            start_atomic();
+                uint16_t volatile s = fifo_get_size(cmd_fifo); // TODO tmp
+                if(fifo_get_size(cmd_fifo) >= SHELL_CMD_HEADER_SIZE + 3 + alp_command_len)
+                {
+                    uint8_t alp_command[ALP_CMD_MAX_SIZE] = { 0x00 };
+                    err = fifo_pop(cmd_fifo, alp_command, SHELL_CMD_HEADER_SIZE + 3); assert(err == SUCCESS); // pop header
+                    err = fifo_pop(cmd_fifo, alp_command, alp_command_len); assert(err == SUCCESS); // pop full ALP command
 
-            uint8_t alp_command[ALP_CMD_MAX_SIZE] = { 0x00 };
-            err = fifo_pop(cmd_fifo, alp_command, SHELL_CMD_HEADER_SIZE + 3); assert(err == SUCCESS); // pop header
-            err = fifo_pop(cmd_fifo, alp_command, alp_command_len); assert(err == SUCCESS); // pop full ALP command
-
-            uint8_t alp_response[ALP_CMD_MAX_SIZE] = { 0x00 };
-            uint8_t alp_response_len = 0;
-            alp_process_command_console_output(alp_command, alp_command_len);
+                    uint8_t alp_response[ALP_CMD_MAX_SIZE] = { 0x00 };
+                    uint8_t alp_response_len = 0;
+                    alp_process_command_console_output(alp_command, alp_command_len);
+                }
+            end_atomic();
         }
         else
         {
