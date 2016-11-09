@@ -63,13 +63,13 @@ static uint8_t process_op_read_file_data(fifo_t* alp_command_fifo, fifo_t* alp_r
     return 0; // TODO status
 
   // fill response
-  fifo_put_byte(alp_response_fifo, ALP_OP_RETURN_FILE_DATA);
-  fifo_put_byte(alp_response_fifo, operand.file_offset.file_id);
-  fifo_put_byte(alp_response_fifo, operand.file_offset.offset); // TODO can be 1-4 bytes, assume 1 for now
-  fifo_put_byte(alp_response_fifo, operand.requested_data_length);
+  err = fifo_put_byte(alp_response_fifo, ALP_OP_RETURN_FILE_DATA); assert(err == SUCCESS);
+  err = fifo_put_byte(alp_response_fifo, operand.file_offset.file_id); assert(err == SUCCESS);
+  err = fifo_put_byte(alp_response_fifo, operand.file_offset.offset); assert(err == SUCCESS); // TODO can be 1-4 bytes, assume 1 for now
+  err = fifo_put_byte(alp_response_fifo, operand.requested_data_length); assert(err == SUCCESS);
   uint8_t data[operand.requested_data_length];
   alp_status_codes_t alp_status = fs_read_file(operand.file_offset.file_id, operand.file_offset.offset, data, operand.requested_data_length); // TODO status
-  fifo_put(alp_response_fifo, data, operand.requested_data_length);
+  err = fifo_put(alp_response_fifo, data, operand.requested_data_length); assert(err == SUCCESS);
 }
 
 static uint8_t process_op_write_file_data(fifo_t* alp_command_fifo, fifo_t* alp_response_fifo) {

@@ -114,6 +114,7 @@ static void flush_completed() {
                                    current_master_session.success_bitmap, REQUESTS_BITMAP_BYTE_COUNT);
     init_master_session(&current_master_session);
     current_master_session.state = D7ASP_MASTER_SESSION_IDLE;
+    d7atp_signal_dialog_termination();
     switch_state(D7ASP_STATE_IDLE);
 }
 
@@ -179,7 +180,7 @@ static void flush_fifos()
     }
 
     // TODO calculate D7ANP timeout (and update during transaction lifetime) (based on Tc, channel, cs, payload size, # msgs, # retries)
-    d7atp_start_dialog(current_master_session.token, current_request_id, (current_request_id == current_master_session.next_request_id - 1), current_request_packet, &current_master_session.config.qos);
+    d7atp_send_request(current_master_session.token, current_request_id, (current_request_id == current_master_session.next_request_id - 1), current_request_packet, &current_master_session.config.qos);
 }
 
 // TODO document state diagram
@@ -292,7 +293,7 @@ d7asp_queue_result_t d7asp_queue_alp_actions(d7asp_master_session_t* session, ui
 
     // TODO for master only set to pending when asked by upper layer (ie new function call)
     if(d7asp_state == D7ASP_STATE_IDLE)
-        switch_state(D7ASP_STATE_MASTER);
+        switch_state(D7ASP_STATE_MASTER); // TODO signal D7ATP that a new dialog is ongoing to prevent a received packet to assert in D7ASP
     else if(d7asp_state == D7ASP_STATE_SLAVE)
         switch_state(D7ASP_STATE_SLAVE_PENDING_MASTER);
 
@@ -330,14 +331,14 @@ bool d7asp_process_received_packet(packet_t* packet, bool extension)
         if(current_master_session.config.qos.qos_resp_mode != SESSION_RESP_MODE_NO
            && current_master_session.config.qos.qos_resp_mode != SESSION_RESP_MODE_NO_RPT)
         {
-          // for SESSION_RESP_MODE_NO and SESSION_RESP_MODE_NO_RPT the request was already marked as done
-          // upon successfull CSMA insertion. We don't care about response in these cases.
+            // for SESSION_RESP_MODE_NO and SESSION_RESP_MODE_NO_RPT the request was already marked as done
+            // upon successfull CSMA insertion. We don't care about response in these cases.
 
-          result.fifo_token = current_master_session.token;
-          result.seqnr = current_request_id;
-          bitmap_set(current_master_session.success_bitmap, current_request_id);
-          mark_current_request_done();
-          assert(packet != current_request_packet);
+            result.fifo_token = current_master_session.token;
+            result.seqnr = current_request_id;
+            bitmap_set(current_master_session.success_bitmap, current_request_id);
+            mark_current_request_done();
+            assert(packet != current_request_packet);
         }
 
         alp_d7asp_request_completed(result, packet->payload, packet->payload_length);
@@ -346,8 +347,27 @@ bool d7asp_process_received_packet(packet_t* packet, bool extension)
 
         packet_queue_free_packet(packet); // ACK can be cleaned
 
+        /* In case of unicast session, it is acceptable to switch to the next request before the expiration of Tc */
+        if (current_master_session.config.addressee.ctrl.id_type != ID_TYPE_BCAST)
+        {
+            DPRINT("Request completed, don't wait end of transaction");
+            packet_queue_free_packet(current_request_packet);
+
+            // terminate the dialog if all request handled
+            // we need to switch to the state idle otherwise we may receive a new packet before the task flush_fifos is handled
+            // in this case, we may assert since the state remains MASTER
+            if (current_request_id == current_master_session.next_request_id - 1)
+            {
+                flush_completed();
+                return;
+            }
+            current_request_id = NO_ACTIVE_REQUEST_ID;
+            sched_post_task(&flush_fifos); // continue flushing until all request handled ...
+            // stop the current transaction
+            d7atp_stop_transaction();
+        }
         // switch to the state slave when the D7ATP Dialog Extension Procedure is initiated and all request are handled
-        if ((extension) && (current_request_id == current_master_session.next_request_id - 1))
+        else if ((extension) && (current_request_id == current_master_session.next_request_id - 1))
         {
             DPRINT("Dialog Extension Procedure is initiated, mark the FIFO flush"
                     " completed before switching to a responder state");
@@ -427,7 +447,7 @@ bool d7asp_process_received_packet(packet_t* packet, bool extension)
         else
             packet->d7atp_ctrl.ctrl_is_start = 0;
 
-        d7atp_respond_dialog(packet);
+        d7atp_send_response(packet);
         return true;
     }
     else
@@ -450,17 +470,39 @@ static void on_request_completed()
     {
         // request completed, no retries needed so we can free the packet
         packet_queue_free_packet(current_request_packet);
+
+        // terminate the dialog if all request handled
+        // we need to switch to the state idle otherwise we may receive a new packet before the task flush_fifos is handled
+        // in this case, we may assert since the state remains MASTER
+        if (current_request_id == current_master_session.next_request_id - 1)
+        {
+            flush_completed();
+            return;
+        }
         current_request_id = NO_ACTIVE_REQUEST_ID;
     }
+
+    sched_post_task(&flush_fifos); // continue flushing until all request handled ...
 }
 
 void d7asp_signal_packet_transmitted(packet_t *packet)
 {
     DPRINT("Packet transmitted");
 
-    // if Tc is not provided, the signal transaction_response_period_elapsed is not expected
-    if ((d7asp_state == D7ASP_STATE_MASTER) && (!packet->d7atp_ctrl.ctrl_tc))
-        on_request_completed();
+    if (d7asp_state == D7ASP_STATE_MASTER)
+    {
+        // for the lowest QoS level the packet is ack-ed when CSMA/CA process succeeded
+        if(current_master_session.config.qos.qos_resp_mode == SESSION_RESP_MODE_NO ||
+           current_master_session.config.qos.qos_resp_mode == SESSION_RESP_MODE_NO_RPT)
+        {
+            mark_current_request_done();
+            bitmap_set(current_master_session.success_bitmap, current_request_id);
+        }
+
+        // if Tc is not provided, the signal transaction terminated is not expected
+        if (!packet->d7atp_ctrl.ctrl_tc)
+            on_request_completed();
+    }
     else if(d7asp_state == D7ASP_STATE_SLAVE || d7asp_state == D7ASP_STATE_SLAVE_PENDING_MASTER)
     {
         assert(current_response_packet == packet);
@@ -472,36 +514,43 @@ void d7asp_signal_packet_transmitted(packet_t *packet)
     }
 }
 
-void d7asp_signal_packet_csma_ca_insertion_completed(bool succeeded)
+void d7asp_signal_transmission_failure()
 {
     if(d7asp_state == D7ASP_STATE_MASTER)
-    {
-        if(!succeeded)
-        {
-            on_request_completed();
-            return;
-        }
-        // for the lowest QoS level the packet is ack-ed when CSMA/CA process succeeded
-        if(current_master_session.config.qos.qos_resp_mode == SESSION_RESP_MODE_NO)
-        {
-            mark_current_request_done();
-            bitmap_set(current_master_session.success_bitmap, current_request_id);
-            // the request will be free-ed when the dialog terminates
-        }
-    }
-    else if ((!succeeded) && ((d7asp_state == D7ASP_STATE_SLAVE) ||
-                (d7asp_state == D7ASP_STATE_SLAVE_PENDING_MASTER)))
+        on_request_completed();
+    else if (d7asp_state == D7ASP_STATE_SLAVE ||
+             d7asp_state == D7ASP_STATE_SLAVE_PENDING_MASTER)
     {
         packet_queue_free_packet(current_response_packet);
         current_response_packet = NULL;
     }
 }
 
+void d7asp_signal_transaction_terminated()
+{
+    assert(d7asp_state == D7ASP_STATE_MASTER);
+
+    on_request_completed();
+}
+
 void d7asp_signal_dialog_terminated()
 {
-    if(d7asp_state == D7ASP_STATE_MASTER)
+    assert(d7asp_state == D7ASP_STATE_SLAVE ||
+           d7asp_state == D7ASP_STATE_SLAVE_PENDING_MASTER);
+
+    if (current_response_packet)
     {
-        on_request_completed(); // TODO all requests in dialog should be marked completed
-        sched_post_task(&flush_fifos);
+        DPRINT("Discard the response since the dialog is now terminated");
+        packet_queue_free_packet(current_response_packet);
+        current_response_packet = NULL;
+    }
+
+    if (d7asp_state == D7ASP_STATE_SLAVE)
+        switch_state(D7ASP_STATE_IDLE);
+    else if(d7asp_state == D7ASP_STATE_SLAVE_PENDING_MASTER)
+    {
+        switch_state(D7ASP_STATE_MASTER);  // TODO signal D7ATP that a new dialog is ongoing to prevent a received packet to assert in D7ASP
+        DPRINT("Schedule task to flush the fifo");
+        //sched_post_task(&flush_fifos); // already done in the switch_state()
     }
 }

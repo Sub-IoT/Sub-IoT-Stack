@@ -17,6 +17,7 @@
  *
  *  \author glenn.ergeerts@uantwerpen.be
  *  \author maarten.weyn@uantwerpen.be
+ *  \author philippe.nunes@cortus.com
  *
  */
 
@@ -169,13 +170,42 @@ void d7atp_signal_foreground_scan_expired()
     }
     else if(d7atp_state == D7ATP_STATE_MASTER_TRANSACTION_RESPONSE_PERIOD)
     {
-        // TODO transmit other transactions in dialog before terminating
-        terminate_dialog();
+        current_transaction_id = 0;
+        d7asp_signal_transaction_terminated();
     }
     else
     {
         assert(false);
     }
+}
+
+void d7atp_signal_dialog_termination()
+{
+    DPRINT("Dialog is terminated by upper layer");
+
+    // It means that we are not participating in a dialog and we can accept
+    // segments marked with START flag set to 1.
+    switch_state(D7ATP_STATE_IDLE);
+    current_dialog_id = 0;
+    current_transaction_id = 0;
+
+    // Discard eventually the Tc timer
+    timer_cancel_task(&response_period_timeout_handler);
+    sched_cancel_task(&response_period_timeout_handler);
+
+    // stop the DLL foreground scan
+    d7anp_stop_foreground_scan(true);
+}
+
+void d7atp_stop_transaction()
+{
+    DPRINT("Current transaction is stopped by upper layer");
+
+    assert(d7atp_state == D7ATP_STATE_MASTER_TRANSACTION_RESPONSE_PERIOD);
+    current_transaction_id = 0;
+
+    // stop the DLL foreground scan
+    d7anp_stop_foreground_scan(false);
 }
 
 void d7atp_init()
@@ -187,7 +217,7 @@ void d7atp_init()
     sched_register_task(&response_period_timeout_handler);
 }
 
-void d7atp_start_dialog(uint8_t dialog_id, uint8_t transaction_id, bool is_last_transaction, packet_t* packet, session_qos_t* qos_settings)
+void d7atp_send_request(uint8_t dialog_id, uint8_t transaction_id, bool is_last_transaction, packet_t* packet, session_qos_t* qos_settings)
 {
     /* check that we are not initiating a different dialog if a dialog is still ongoing */
     if (current_dialog_id)
@@ -219,7 +249,7 @@ void d7atp_start_dialog(uint8_t dialog_id, uint8_t transaction_id, bool is_last_
     d7anp_tx_foreground_frame(packet, true, &active_addressee_access_profile, slave_listen_timeout);
 }
 
-void d7atp_respond_dialog(packet_t* packet)
+void d7atp_send_response(packet_t* packet)
 {
     switch_state(D7ATP_STATE_SLAVE_TRANSACTION_SENDING_RESPONSE);
 
@@ -313,8 +343,10 @@ void d7atp_signal_packet_transmitted(packet_t* packet)
             d7anp_set_foreground_scan_timeout(Tc);
             d7anp_start_foreground_scan();
         }
-        else
-            terminate_dialog(); // TODO not tested yet
+        else {
+            current_transaction_id = 0;
+            d7asp_signal_transaction_terminated();
+        }
     }
     else if(d7atp_state == D7ATP_STATE_SLAVE_TRANSACTION_SENDING_RESPONSE)
     {
@@ -324,20 +356,18 @@ void d7atp_signal_packet_transmitted(packet_t* packet)
         assert(!packet->d7atp_ctrl.ctrl_is_ack_requested); // can only occur in this case
 }
 
-void d7atp_signal_packet_csma_ca_insertion_completed(bool succeeded)
+void d7atp_signal_transmission_failure()
 {
     assert((d7atp_state == D7ATP_STATE_MASTER_TRANSACTION_REQUEST_PERIOD) ||
-            (d7atp_state == D7ATP_STATE_SLAVE_TRANSACTION_SENDING_RESPONSE));
+           (d7atp_state == D7ATP_STATE_SLAVE_TRANSACTION_SENDING_RESPONSE));
 
-    if(!succeeded)
-    {
-        DPRINT("CSMA-CA insertion failed, stopping transaction");
-        /* For Slaves, wait for FG scan or response period termination before switching to idle state */
-        if (d7atp_state == D7ATP_STATE_MASTER_TRANSACTION_REQUEST_PERIOD)
-            switch_state(D7ATP_STATE_IDLE);
-    }
+    DPRINT("CSMA-CA insertion failed, stopping transaction");
 
-    d7asp_signal_packet_csma_ca_insertion_completed(succeeded);
+    /* For Slaves, wait for FG scan or response period termination before switching to idle state */
+    if (d7atp_state == D7ATP_STATE_MASTER_TRANSACTION_REQUEST_PERIOD)
+        switch_state(D7ATP_STATE_IDLE);
+
+    d7asp_signal_transmission_failure();
 }
 
 void d7atp_process_received_packet(packet_t* packet)
@@ -371,8 +401,12 @@ void d7atp_process_received_packet(packet_t* packet)
             // if this is the last transaction, it means that the extension procedure is initiated by the responder
             if (packet->d7atp_ctrl.ctrl_is_stop)
             {
-                DPRINT("Dialog terminated, we need to start a new dialog this time as a responder");
-                // TODO check Tl and set NP FG scan timeout to allow for dormant sessions
+                timer_tick_t Tl;
+
+                Tl = adjust_timeout_value(packet->d7anp_listen_timeout, packet->hw_radio_packet.rx_meta.timestamp);
+                DPRINT("Responder wants to append a new dialog");
+                d7anp_set_foreground_scan_timeout(Tl);
+                d7anp_start_foreground_scan();
                 current_dialog_id = 0;
                 switch_state(D7ATP_STATE_IDLE);
                 extension = true;

@@ -108,19 +108,23 @@ d7asp_queue_result_t d7asp_queue_alp_actions(d7asp_master_session_t* session, ui
 bool d7asp_process_received_packet(packet_t* packet, bool extension);
 
 /**
- * @brief Called by DLL to signal the packet has been transmitted
+ * @brief Called by DLL to signal the CSMA/CA process completed succesfully and packet can be ack-ed for QoS = None
  */
 void d7asp_signal_packet_transmitted(packet_t* packet);
 
-
 /**
- * @brief Called by DLL to signal the CSMA/CA process completed succesfully and packet can be ack-ed for QoS = None
+ * @brief Called by DLL to signal the CSMA/CA process failed
  */
-void d7asp_signal_packet_csma_ca_insertion_completed(bool succeeded);
+void d7asp_signal_transmission_failure();
 
 /**
  * @brief Called by TP to signal the dialog is terminated
  */
 void d7asp_signal_dialog_terminated();
+
+/**
+ * @brief Called by TP to signal the transaction is terminated
+ */
+void d7asp_signal_transaction_terminated();
 
 #endif /* D7ASP_H_ */
