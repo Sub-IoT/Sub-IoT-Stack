@@ -57,7 +57,6 @@ void alp_cmd_handler(fifo_t* cmd_fifo)
             uint8_t alp_command_len;
             err = fifo_peek(cmd_fifo, &alp_command_len, SHELL_CMD_HEADER_SIZE + 2, 1); assert(err == SUCCESS);
             start_atomic();
-                uint16_t volatile s = fifo_get_size(cmd_fifo); // TODO tmp
                 if(fifo_get_size(cmd_fifo) >= SHELL_CMD_HEADER_SIZE + 3 + alp_command_len)
                 {
                     uint8_t alp_command[ALP_CMD_MAX_SIZE] = { 0x00 };
