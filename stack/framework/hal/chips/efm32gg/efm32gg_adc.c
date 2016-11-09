@@ -302,6 +302,9 @@ void adc_init(ADC_Reference reference, ADC_Input input, uint32_t adc_frequency)
   case adcInputSingleInputCh2:
     sInit.input = adcSingleInputCh2;
     break;
+  case adcInputSingleInputCh5:
+        sInit.input = adcSingleInputCh5;
+        break;
   case adcInputSingleInputCh6:
     sInit.input = adcSingleInputCh6;
     break;
@@ -341,4 +344,10 @@ void adc_clear_interrupt()
 {
   ADC_IntClear(ADC0, ADC_IF_SINGLE);
 }
+
+void ADC0_IRQHandler(void)
+{
+	ADC_IntClear(ADC0, ADC_IF_SINGLE);
+}
+
 

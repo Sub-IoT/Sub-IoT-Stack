@@ -76,16 +76,16 @@ PLATFORM_HEADER_DEFINE(
 
 #Define the 'platform library'. Every platform must define a 'PLATFORM' object library
 ADD_LIBRARY(PLATFORM OBJECT
-    stk3700_main.c
-    stk3700_leds.c
-    stk3700_userbutton.c
-    stk3700_sensors.c
-    stk3700_debug.c
-    stk3700_lcd.c
-    stk3700_usb_descriptors.c
-    stk3700_usb.c
+    platf_main.c
+    platf_leds.c
+    platf_button.c
+    platf_sensors.c
+    platf_debug.c
+    platf_lcd.c
+    platf_usb_descriptors.c
+    platf_usb.c
     libc_overrides.c
-    inc/userbutton.h
+    inc/button.h
     inc/platform_sensors.h
     kits/common/bsp/bsp_bcc.c
     kits/common/bsp/bsp_stk.c
