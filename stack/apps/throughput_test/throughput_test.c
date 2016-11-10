@@ -128,7 +128,7 @@ void bootstrap()
 
     d7ap_stack_init(&fs_init_args, &d7asp_init_args, true, NULL);
 
-    fs_write_dll_conf_active_access_class(5);
+    fs_write_dll_conf_active_access_class(2);
 #ifdef HAS_LCD
     lcd_write_string("%s %s", _APP_NAME, _GIT_SHA1);
 #endif
