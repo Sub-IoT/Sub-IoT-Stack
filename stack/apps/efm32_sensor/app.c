@@ -36,7 +36,7 @@
 	#error Mismatch between the configured platform and the actual platform.
 #endif
 
-#include "userbutton.h"
+#include "button.h"
 #include "platform_sensors.h"
 #include "platform_lcd.h"
 
@@ -171,7 +171,7 @@ void bootstrap()
             .control_number_of_subbands = 1,
             .subnet = 0x00,
             .scan_automation_period = 0,
-            .transmission_timeout_period = 0x10,
+            .transmission_timeout_period = 100,
             .subbands[0] = (subband_t){
                 .channel_header = {
                     .ch_coding = PHY_CODING_PN9,
@@ -182,8 +182,8 @@ void bootstrap()
                     .ch_freq_band = PHY_BAND_433
 #endif
                 },
-                .channel_index_start = 16,
-                .channel_index_end = 16,
+                .channel_index_start = 0,
+                .channel_index_end = 0,
                 .eirp = 10,
                 .ccao = 0
             }
