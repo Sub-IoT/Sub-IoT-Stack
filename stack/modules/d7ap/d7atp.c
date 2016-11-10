@@ -396,10 +396,11 @@ void d7atp_process_received_packet(packet_t* packet)
             return;
         }
 
+        // Check if a new dialog initiated by the responder is allowed
         if(packet->d7atp_ctrl.ctrl_is_start)
         {
-            // if this is the last transaction, it means that the extension procedure is initiated by the responder
-            if (packet->d7atp_ctrl.ctrl_is_stop)
+            // if this is a unicast response and the last transaction, the extension procedure is allowed
+            if (packet->d7atp_ctrl.ctrl_is_stop && packet->dll_header.control_target_address_set)
             {
                 timer_tick_t Tl;
 

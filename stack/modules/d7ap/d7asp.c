@@ -218,6 +218,7 @@ static void switch_state(state_t new_state)
             switch(d7asp_state)
             {
                 case D7ASP_STATE_IDLE:
+                case D7ASP_STATE_MASTER:
                     d7asp_state = new_state;
                     current_request_id = NO_ACTIVE_REQUEST_ID;
                     DPRINT("Switching to state D7ASP_STATE_SLAVE");
