@@ -1,10 +1,10 @@
 /**************************************************************************//**
  * @file ezr32lg_af_ports.h
  * @brief EZR32LG_AF_PORTS register and bit field definitions
- * @version 4.2.1
+ * @version 4.4.0
  ******************************************************************************
  * @section License
- * <b>Copyright 2015 Silicon Laboratories, Inc. http://www.silabs.com</b>
+ * <b>Copyright 2016 Silicon Laboratories, Inc. http://www.silabs.com</b>
  ******************************************************************************
  *
  * Permission is granted to anyone to use this software for any purpose,
@@ -61,8 +61,8 @@
 #define AF_USART2_RX_PORT(i)        ((i) == 0 ? -1 : (i) == 1 ? 1 :  -1)
 #define AF_USART2_CLK_PORT(i)       ((i) == 0 ? -1 : (i) == 1 ? 1 :  -1)
 #define AF_USART2_CS_PORT(i)        ((i) == 0 ? -1 : (i) == 1 ? 1 :  -1)
-#define AF_UART0_TX_PORT(i)         ((i) == 0 ? -1 : (i) == 1 ? 4 : (i) == 2 ? -1 : (i) == 3 ? 2 :  -1)
-#define AF_UART0_RX_PORT(i)         ((i) == 0 ? -1 : (i) == 1 ? 4 : (i) == 2 ? -1 : (i) == 3 ? 2 :  -1)
+#define AF_UART0_TX_PORT(i)         ((i) == 0 ? 5 : (i) == 1 ? 4 : (i) == 2 ? -1 : (i) == 3 ? 2 :  -1)
+#define AF_UART0_RX_PORT(i)         ((i) == 0 ? 5 : (i) == 1 ? 4 : (i) == 2 ? -1 : (i) == 3 ? 2 :  -1)
 #define AF_UART0_CLK_PORT(i)        (-1)
 #define AF_UART0_CS_PORT(i)         (-1)
 #define AF_UART1_TX_PORT(i)         ((i) == 0 ? 2 : (i) == 1 ? -1 : (i) == 2 ? -1 : (i) == 3 ? 4 :  -1)

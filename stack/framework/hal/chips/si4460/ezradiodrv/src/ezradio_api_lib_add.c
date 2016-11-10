@@ -2,7 +2,7 @@
  * @file si4x6x/ezradio_api_lib_add.c
  * @brief This file contains the additional API library for the listed members of
  * the EZRadioPRO family: Si4460_revC2A, Si4461_revC2A, Si4463_revC2A.
- * @version 4.1.0
+ * @version 4.4.0
  *******************************************************************************
  * @section License
  * <b>(C) Copyright 2015 Silicon Labs, http://www.silabs.com</b>
@@ -31,6 +31,7 @@
  *
  ******************************************************************************/
 
+#include <stddef.h>
 #include <stdint.h>
 #include <stdarg.h>
 #include "em_gpio.h"
@@ -128,12 +129,15 @@ void ezradio_get_adc_reading( uint8_t adc_en, uint8_t adc_cfg, ezradio_cmd_reply
                               EZRADIO_CMD_REPLY_COUNT_GET_ADC_READING,
                               ezradioCmd );
 
-    ezradioReply->GET_ADC_READING.GPIO_ADC         = ((uint16_t)ezradioCmd[0] << 8) & 0xFF00;
-    ezradioReply->GET_ADC_READING.GPIO_ADC        |=  (uint16_t)ezradioCmd[1] & 0x00FF;
-    ezradioReply->GET_ADC_READING.BATTERY_ADC      = ((uint16_t)ezradioCmd[2] << 8) & 0xFF00;
-    ezradioReply->GET_ADC_READING.BATTERY_ADC     |=  (uint16_t)ezradioCmd[3] & 0x00FF;
-    ezradioReply->GET_ADC_READING.TEMP_ADC         = ((uint16_t)ezradioCmd[4] << 8) & 0xFF00;
-    ezradioReply->GET_ADC_READING.TEMP_ADC        |=  (uint16_t)ezradioCmd[5] & 0x00FF;
+    if (ezradioReply != NULL)
+    {
+      ezradioReply->GET_ADC_READING.GPIO_ADC         = ((uint16_t)ezradioCmd[0] << 8) & 0xFF00;
+      ezradioReply->GET_ADC_READING.GPIO_ADC        |=  (uint16_t)ezradioCmd[1] & 0x00FF;
+      ezradioReply->GET_ADC_READING.BATTERY_ADC      = ((uint16_t)ezradioCmd[2] << 8) & 0xFF00;
+      ezradioReply->GET_ADC_READING.BATTERY_ADC     |=  (uint16_t)ezradioCmd[3] & 0x00FF;
+      ezradioReply->GET_ADC_READING.TEMP_ADC         = ((uint16_t)ezradioCmd[4] << 8) & 0xFF00;
+      ezradioReply->GET_ADC_READING.TEMP_ADC        |=  (uint16_t)ezradioCmd[5] & 0x00FF;
+    }
 }
 
 /**
@@ -179,8 +183,11 @@ void ezradio_ircal_manual(uint8_t ircal_amp, uint8_t ircal_ph, ezradio_cmd_reply
                               EZRADIO_CMD_REPLY_COUNT_IRCAL_MANUAL,
                               ezradioCmd );
 
-    ezradioReply->IRCAL_MANUAL.IRCAL_AMP_REPLY   = ezradioCmd[0];
-    ezradioReply->IRCAL_MANUAL.IRCAL_PH_REPLY    = ezradioCmd[1];
+    if (ezradioReply != NULL)
+    {
+      ezradioReply->IRCAL_MANUAL.IRCAL_AMP_REPLY   = ezradioCmd[0];
+      ezradioReply->IRCAL_MANUAL.IRCAL_PH_REPLY    = ezradioCmd[1];
+    }
 }
 
 /**

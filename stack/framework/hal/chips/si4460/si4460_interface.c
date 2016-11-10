@@ -24,10 +24,13 @@
 #include <stdint.h>
 
 
+#include "em_device.h"
+#include "gpiointerrupt.h"
 #include "si4460_interface.h"
 #include "si4460_configuration.h"
-#include "ezradio_api_lib.h"
+#include "ezradio_cmd.h"
 #include "ezradio_hal.h"
+#include "ezradio_api_lib.h"
 #include "ezradio_api_lib_add.h"
 
 #include "ecode.h"

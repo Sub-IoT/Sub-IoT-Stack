@@ -37,13 +37,16 @@
 #include "hwsystem.h"
 #include "hwdebug.h"
 #include "types.h"
-
 #include "si4460.h"
 #include "si4460_interface.h"
 #include "si4460_registers.h"
+
+void __ezr_error_callback();
+
 #include "ezradio_cmd.h"
 #include "ezradio_api_lib.h"
-
+#include "em_device.h"
+#include "gpiointerrupt.h"
 #include "ezradio_hal.h"
 #include "fec.h"
 
@@ -120,6 +123,11 @@ static inline int16_t convert_rssi(uint8_t rssi_raw);
 static void start_rx(hw_rx_cfg_t const* rx_cfg);
 static void ezradio_int_callback();
 static void report_rssi();
+
+void __ezr_error_callback()
+{
+    assert(false);
+}
 
 static void configure_channel(const channel_id_t* channel_id)
 {

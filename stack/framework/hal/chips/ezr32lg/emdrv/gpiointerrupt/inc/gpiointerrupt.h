@@ -1,7 +1,7 @@
 /***************************************************************************//**
  * @file gpiointerrupt.h
  * @brief GPIOINT API definition
- * @version 4.1.0
+ * @version 4.4.0
  *******************************************************************************
  * @section License
  * <b>(C) Copyright 2014 Silicon Labs, http://www.silabs.com</b>
@@ -17,21 +17,18 @@
 #define __EMDRV_GPIOINTERRUPT_H
 
 #include "stdint.h"
-
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 /***************************************************************************//**
- * @addtogroup EM_Drivers
+ * @addtogroup emdrv
  * @{
  ******************************************************************************/
 
 /***************************************************************************//**
  * @addtogroup GPIOINT
- * @brief GPIOINT General Purpose Input/Output Interrupt dispatcher, see
- *        @ref gpioint_doc page for detailed
- *        documentation.
+ * @brief GPIOINT General Purpose Input/Output Interrupt dispatcher
  * @{
  ******************************************************************************/
 
@@ -72,7 +69,7 @@ static __INLINE void GPIOINT_CallbackUnRegister(uint8_t pin)
 }
 
 /** @} (end addtogroup GPIOINT */
-/** @} (end addtogroup EM_Drivers) */
+/** @} (end addtogroup emdrv) */
 #ifdef __cplusplus
 }
 #endif

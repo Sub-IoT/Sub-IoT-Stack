@@ -1,7 +1,7 @@
 /**************************************************************************//**
  * @file ezradio_comm.h
  * @brief This file contains the EZRadio communication layer.
- * @version 4.1.0
+ * @version 4.4.0
  ******************************************************************************
  * @section License
  * <b>(C) Copyright 2015 Silicon Labs, http://www.silabs.com</b>
@@ -38,7 +38,7 @@ extern "C" {
 #endif
 
 /***************************************************************************//**
- * @addtogroup EM_Drivers
+ * @addtogroup emdrv
  * @{
  ******************************************************************************/
 
@@ -54,8 +54,9 @@ extern "C" {
  * @{
  ******************************************************************************/
 
-/** Radio CTS timeout */
-#define EZRADIO_CTS_TIMEOUT 10000
+#if defined(EZRADIODRV_SPI_4WIRE_MODE)
+#define EZRADIODRV_MAX_CTS_BUFF_SIZE 257
+#endif
 
 extern uint8_t ezradio_comm_CtsWentHigh;
 
@@ -71,7 +72,7 @@ void ezradio_comm_ClearCTS(void);
 
 /** @} (end addtogroup Comm_Layer) */
 /** @} (end addtogroup EZRADIODRV) */
-/** @} (end addtogroup EM_Drivers) */
+/** @} (end addtogroup emdrv) */
 
 #ifdef __cplusplus
 }

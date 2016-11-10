@@ -1,7 +1,7 @@
 /***************************************************************************//**
  * @file gpiointerrupt.c
  * @brief GPIOINT API implementation
- * @version 4.1.0
+ * @version 4.4.0
  *
  *******************************************************************************
  * @section License
@@ -121,7 +121,7 @@ static void GPIOINT_IRQDispatcher(uint32_t iflags)
   /* check for all flags set in IF register */
   while(iflags)
   {
-    irqIdx = EFM32_CTZ(iflags);
+    irqIdx = SL_CTZ(iflags);
 
     /* clear flag*/
     iflags &= ~(1 << irqIdx);
@@ -177,14 +177,16 @@ void GPIO_ODD_IRQHandler(void)
 /** @endcond */
 
 /** @} (end addtogroup GPIOINT */
-/** @} (end addtogroup EM_Drivers) */
+/** @} (end addtogroup emdrv) */
 
 
 /******** THE REST OF THE FILE IS DOCUMENTATION ONLY !**********************//**
+ * @addtogroup emdrv
+ * @{
+ * @addtogroup GPIOINT
  * @{
 
-@page gpioint_doc GPIOINT General Purpose Input/Output Interrupt dispatcher
-
+@details
   The source files for the GPIO interrupt dispatcher library resides in the
   emdrv/gpiointerrupt folder, and are named gpiointerrupt.c and gpiointerrupt.h.
 
@@ -248,4 +250,5 @@ int main(void)
 
   @endverbatim
 
- * @}**************************************************************************/
+ * @} end group GPIOINT *******************************************************
+ * @} end group emdrv ****************************************************/
