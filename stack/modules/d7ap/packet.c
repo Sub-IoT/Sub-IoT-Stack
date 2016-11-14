@@ -46,7 +46,7 @@ static bool has_hardware_crc = false;
 
 void packet_init(packet_t* packet)
 {
-    // TODO
+    memset(packet, 0x00, sizeof(packet_t));
 }
 
 void packet_assemble(packet_t* packet)
