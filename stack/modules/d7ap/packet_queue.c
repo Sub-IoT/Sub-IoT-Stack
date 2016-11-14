@@ -158,9 +158,7 @@ void packet_queue_mark_processing(packet_t* packet)
     {
         if(packet == &(packet_queue[i]))
         {
-            assert(packet_queue_element_status[i] == PACKET_QUEUE_ELEMENT_STATUS_RECEIVED
-                   || packet_queue_element_status[i] == PACKET_QUEUE_ELEMENT_STATUS_ALLOCATED
-                   || packet_queue_element_status[i] == PACKET_QUEUE_ELEMENT_STATUS_TRANSMITTED);
+            assert(packet_queue_element_status[i] != PACKET_QUEUE_ELEMENT_STATUS_FREE);
 
             packet_queue_element_status[i] = PACKET_QUEUE_ELEMENT_STATUS_PROCESSING;
             return;
