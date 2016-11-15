@@ -40,9 +40,6 @@
 #include "si4460.h"
 #include "si4460_interface.h"
 #include "si4460_registers.h"
-
-void __ezr_error_callback();
-
 #include "ezradio_cmd.h"
 #include "ezradio_api_lib.h"
 #include "em_device.h"

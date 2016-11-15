@@ -40,6 +40,8 @@
 #include "ezradio_hal.h"
 #include "ezradio_comm.h"
 
+void __ezr_error_callback(); // added to prevent warning, hopefully new ezradio release allows to pass a callback for this
+
 /** Can be used to prevent CTS check before any communication command. */
 uint8_t ezradio_comm_CtsWentHigh = 0;
 
