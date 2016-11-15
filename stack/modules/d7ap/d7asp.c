@@ -303,7 +303,7 @@ d7asp_queue_result_t d7asp_queue_alp_actions(d7asp_master_session_t* session, ui
     return (d7asp_queue_result_t){ .fifo_token = session->token, .request_id = request_id };
 }
 
-bool d7asp_process_received_packet(packet_t* packet, bool extension)
+void d7asp_process_received_packet(packet_t* packet, bool extension)
 {
     hw_watchdog_feed(); // TODO do here?
     d7asp_result_t result = {
@@ -377,7 +377,7 @@ bool d7asp_process_received_packet(packet_t* packet, bool extension)
             current_master_session.state = D7ASP_MASTER_SESSION_IDLE;
             switch_state(D7ASP_STATE_SLAVE);
         }
-        return true;
+        return;
     }
     else if(d7asp_state == D7ASP_STATE_IDLE
             || d7asp_state == D7ASP_STATE_SLAVE
@@ -449,14 +449,14 @@ bool d7asp_process_received_packet(packet_t* packet, bool extension)
             packet->d7atp_ctrl.ctrl_is_start = 0;
 
         d7atp_send_response(packet);
-        return true;
+        return;
     }
     else
         assert(false);
 
     discard_request:
         packet_queue_free_packet(packet);
-        return false;
+        return;
 }
 
 static void on_request_completed()
