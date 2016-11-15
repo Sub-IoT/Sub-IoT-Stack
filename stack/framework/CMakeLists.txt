@@ -47,6 +47,9 @@ FRAMEWORK_HEADER_DEFINE(BOOL FRAMEWORK_LOG_BINARY)
 SET(FRAMEWORK_LOG_ENABLED "FALSE" CACHE BOOL "Select whether to enable or disable the generation of logs")
 FRAMEWORK_HEADER_DEFINE(BOOL FRAMEWORK_LOG_ENABLED)
 
+SET(FRAMEWORK_LOG_OUTPUT_ON_RTT "FALSE" CACHE BOOL "When enabled logs will be outputted using the Segger RTT interface instead of using the serial console.")
+FRAMEWORK_HEADER_DEFINE(BOOL FRAMEWORK_LOG_OUTPUT_ON_RTT)
+
 SET(FRAMEWORK_TIMER_LOG_ENABLED "FALSE" CACHE BOOL "Select whether to enable or disable the generation of logs from the timer")
 FRAMEWORK_HEADER_DEFINE(BOOL FRAMEWORK_TIMER_LOG_ENABLED)
 

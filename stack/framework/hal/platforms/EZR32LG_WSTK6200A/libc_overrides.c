@@ -25,13 +25,18 @@
 #include <stdio.h>
 #include <em_usbd.h>
 #include "timer.h"
-
+#include "SEGGER_RTT.h"
 #include "console.h"
 
 //Overwrite _write so 'printf''s get pushed over the uart
 int _write(int fd, char *ptr, int len)
 {
-  console_print_bytes(ptr, len);
+#ifdef FRAMEWORK_LOG_OUTPUT_ON_RTT
+  SEGGER_RTT_Write(0, ptr, len);
+#else
+  console_print_bytes((uint8_t*)ptr, len);
+#endif
+
   return len;
 }
 
@@ -71,12 +76,10 @@ void __assert_func( const char *file, int line, const char *func, const char *fa
 	lcd_write_string("ERROR");
 	lcd_write_number(timer_get_counter_value());
 
-    __asm__("BKPT"); // break into debugger
-
 	while(1)
 	{
-		printf("assertion \"%s\" failed: file \"%s\", line %d%s%s\n",failedexpr, file, line, func ? ", function: " : "", func ? func : "");
-
+    printf("assertion \"%s\" failed: line %d%s%s\n",failedexpr, line, file ? ", file: ", file : "", func ? ", function: " : "", func ? func : "");
+    //__asm__("BKPT"); // break into debugger
 		for(uint32_t j = 0; j < 20; j++)
 		{
 			//blink at twice the frequency of the _exit call, so we can identify which of the two events has occurred
