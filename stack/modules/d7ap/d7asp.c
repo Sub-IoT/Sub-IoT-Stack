@@ -41,6 +41,7 @@
 #define DPRINT(...)
 #endif
 
+
 struct d7asp_master_session {
     d7asp_master_session_config_t config;
     // TODO uint8_t dorm_timer;
@@ -52,6 +53,7 @@ struct d7asp_master_session {
     uint8_t request_buffer_tail_idx;
     uint8_t requests_indices[MODULE_D7AP_FIFO_MAX_REQUESTS_COUNT]; /**< Contains for every request ID the index in command_buffer the index where the request begins */
     uint8_t requests_lengths[MODULE_D7AP_FIFO_MAX_REQUESTS_COUNT]; /**< Contains for every request ID the index in command_buffer the length of the ALP payload in that request */
+    uint8_t response_lengths[MODULE_D7AP_FIFO_MAX_REQUESTS_COUNT]; /**< Contains for every request ID the index in command_buffer the expected length of the ALP response for the specific request */
     uint8_t request_buffer[MODULE_D7AP_FIFO_COMMAND_BUFFER_SIZE];
 };
 
@@ -105,6 +107,7 @@ static void init_master_session(d7asp_master_session_t* session) {
     session->request_buffer_tail_idx = 0;
     memset(session->requests_indices, 0x00, MODULE_D7AP_FIFO_MAX_REQUESTS_COUNT);
     memset(session->requests_lengths, 0x00, MODULE_D7AP_FIFO_MAX_REQUESTS_COUNT);
+    memset(session->response_lengths, 255, MODULE_D7AP_FIFO_MAX_REQUESTS_COUNT);
     memset(session->request_buffer, 0x00, MODULE_D7AP_FIFO_COMMAND_BUFFER_SIZE);
 }
 
@@ -180,7 +183,8 @@ static void flush_fifos()
     }
 
     // TODO calculate D7ANP timeout (and update during transaction lifetime) (based on Tc, channel, cs, payload size, # msgs, # retries)
-    d7atp_send_request(current_master_session.token, current_request_id, (current_request_id == current_master_session.next_request_id - 1), current_request_packet, &current_master_session.config.qos);
+    d7atp_send_request(current_master_session.token, current_request_id, (current_request_id == current_master_session.next_request_id - 1),
+                       current_request_packet, &current_master_session.config.qos, current_master_session.response_lengths[current_request_id]);
 }
 
 // TODO document state diagram
@@ -273,14 +277,15 @@ d7asp_master_session_t* d7asp_master_session_create(d7asp_master_session_config_
 
 // TODO we assume a fifo contains only ALP commands, but according to spec this can be any kind of "Request"
 // we will see later what this means. For instance how to add a request which starts D7AAdvP etc
-d7asp_queue_result_t d7asp_queue_alp_actions(d7asp_master_session_t* session, uint8_t* alp_payload_buffer, uint8_t alp_payload_length)
+d7asp_queue_result_t d7asp_queue_alp_actions(d7asp_master_session_t* session, uint8_t* alp_payload_buffer, uint8_t alp_payload_length, uint8_t expected_alp_response_length)
 {
     DPRINT("Queuing ALP actions");
     // TODO can be called in all session states?
     assert(session == &current_master_session); // TODO tmp
     assert(session->request_buffer_tail_idx + alp_payload_length < MODULE_D7AP_FIFO_COMMAND_BUFFER_SIZE);
     assert(session->next_request_id < MODULE_D7AP_FIFO_MAX_REQUESTS_COUNT); // TODO do not assert but let upper layer handle this
-
+    assert(!(expected_alp_response_length > 0 &&
+             (session->config.qos.qos_resp_mode == SESSION_RESP_MODE_NO || session->config.qos.qos_resp_mode == SESSION_RESP_MODE_NO_RPT))); // TODO return error
     single_request_retry_limit = 3; // TODO read from SEL config file
 
     // add request to buffer
@@ -288,6 +293,7 @@ d7asp_queue_result_t d7asp_queue_alp_actions(d7asp_master_session_t* session, ui
     uint8_t request_id = session->next_request_id;
     session->requests_indices[request_id] = session->request_buffer_tail_idx;
     session->requests_lengths[request_id] = alp_payload_length;
+    session->response_lengths[request_id] = expected_alp_response_length;
     memcpy(session->request_buffer + session->request_buffer_tail_idx, alp_payload_buffer, alp_payload_length);
     session->request_buffer_tail_idx += alp_payload_length + 1;
     session->next_request_id++;
@@ -499,10 +505,6 @@ void d7asp_signal_packet_transmitted(packet_t *packet)
             mark_current_request_done();
             bitmap_set(current_master_session.success_bitmap, current_request_id);
         }
-
-        // if Tc is not provided, the signal transaction terminated is not expected
-        if (!packet->d7atp_ctrl.ctrl_tc)
-            on_request_completed();
     }
     else if(d7asp_state == D7ASP_STATE_SLAVE || d7asp_state == D7ASP_STATE_SLAVE_PENDING_MASTER)
     {

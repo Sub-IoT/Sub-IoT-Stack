@@ -407,7 +407,7 @@ static void execute_csma_ca()
             DPRINT("Tca= %i = %i - %i", dll_tca, Tc, tx_duration);
 
             // Adjust TCA value according the time already elapsed since the reception time in case of response
-            if (current_packet->d7atp_ctrl.ctrl_tc == false)
+            if (current_packet->hw_radio_packet.rx_meta.timestamp)
             {
                 dll_tca -= dll_cca_started - current_packet->hw_radio_packet.rx_meta.timestamp;
                 DPRINT("Adjusted Tca= %i = %i - %i", dll_tca, dll_cca_started, current_packet->hw_radio_packet.rx_meta.timestamp);

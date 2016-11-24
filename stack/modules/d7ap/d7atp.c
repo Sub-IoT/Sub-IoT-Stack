@@ -217,22 +217,14 @@ void d7atp_init()
     sched_register_task(&response_period_timeout_handler);
 }
 
-void d7atp_send_request(uint8_t dialog_id, uint8_t transaction_id, bool is_last_transaction, packet_t* packet, session_qos_t* qos_settings)
+void d7atp_send_request(uint8_t dialog_id, uint8_t transaction_id, bool is_last_transaction, packet_t* packet, session_qos_t* qos_settings, uint8_t expected_response_length)
 {
     /* check that we are not initiating a different dialog if a dialog is still ongoing */
     if (current_dialog_id)
         assert( dialog_id == current_dialog_id);
 
-    DPRINT("Start dialog Id <%i> transID <%i>", dialog_id, transaction_id);
+    DPRINT("Start dialog Id <%i> transID <%i>, expected resp len <%i>", dialog_id, transaction_id, expected_response_length);
     switch_state(D7ATP_STATE_MASTER_TRANSACTION_REQUEST_PERIOD);
-    packet->d7atp_ctrl = (d7atp_ctrl_t){
-        .ctrl_is_start = true,
-        .ctrl_is_stop = is_last_transaction,
-        .ctrl_is_ack_requested = qos_settings->qos_resp_mode == SESSION_RESP_MODE_NO? false : true, // TODO in other cases as well?
-        .ctrl_ack_not_void = qos_settings->qos_resp_mode == SESSION_RESP_MODE_ON_ERR? true : false,
-        .ctrl_tc = true,
-        .ctrl_ack_record = false
-    };
 
     current_dialog_id = dialog_id;
     current_transaction_id = transaction_id;
@@ -244,7 +236,25 @@ void d7atp_send_request(uint8_t dialog_id, uint8_t transaction_id, bool is_last_
         fs_read_access_class(access_class, &active_addressee_access_profile);
 
     uint8_t slave_listen_timeout = packet->d7atp_tc; // TODO for now we keep this the same as Tc (ie don't cater for transaction retries) this probably needs to be managed from upper layer
-    d7anp_set_foreground_scan_timeout(CONVERT_TO_TI(packet->d7atp_tc)); // only slave nodes need to be locked on the NWL channel longer than Tc, requester only used Tc timer
+
+    bool ack_requested = true;
+    if(qos_settings->qos_resp_mode == SESSION_RESP_MODE_NO || qos_settings->qos_resp_mode == SESSION_RESP_MODE_NO_RPT)
+      ack_requested = false;
+
+    bool include_tc = (expected_response_length > 0 || ack_requested);
+    // TODO based on what do we calculate Tc? payload length alone is not enough, depends on for example use of FEC, encryption ..
+    // keep the same as transmission timeout for now
+
+    // FG scan timeout is set (and scan started) in d7atp_signal_packet_transmitted() for now, to be verified
+
+    packet->d7atp_ctrl = (d7atp_ctrl_t){
+        .ctrl_is_start = true,
+        .ctrl_is_stop = is_last_transaction,
+        .ctrl_is_ack_requested = ack_requested,
+        .ctrl_ack_not_void = qos_settings->qos_resp_mode == SESSION_RESP_MODE_ON_ERR? true : false,
+        .ctrl_tc = include_tc,
+        .ctrl_ack_record = false
+    };
 
     d7anp_tx_foreground_frame(packet, true, &active_addressee_access_profile, slave_listen_timeout);
 }
