@@ -4,4 +4,3 @@ loadfile ${BIN}, 0x0
 verifybin ${BIN}, 0x0
 r
 g
-qc
