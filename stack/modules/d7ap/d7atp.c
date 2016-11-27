@@ -217,7 +217,8 @@ void d7atp_init()
     sched_register_task(&response_period_timeout_handler);
 }
 
-void d7atp_send_request(uint8_t dialog_id, uint8_t transaction_id, bool is_last_transaction, packet_t* packet, session_qos_t* qos_settings, uint8_t expected_response_length)
+void d7atp_send_request(uint8_t dialog_id, uint8_t transaction_id, bool is_last_transaction,
+                        packet_t* packet, session_qos_t* qos_settings, uint8_t listen_timeout, uint8_t expected_response_length)
 {
     /* check that we are not initiating a different dialog if a dialog is still ongoing */
     if (current_dialog_id)
@@ -235,7 +236,7 @@ void d7atp_send_request(uint8_t dialog_id, uint8_t transaction_id, bool is_last_
     if(access_class != current_access_class)
         fs_read_access_class(access_class, &active_addressee_access_profile);
 
-    uint8_t slave_listen_timeout = packet->d7atp_tc; // TODO for now we keep this the same as Tc (ie don't cater for transaction retries) this probably needs to be managed from upper layer
+    uint8_t slave_listen_timeout = listen_timeout;
 
     bool ack_requested = true;
     if(qos_settings->qos_resp_mode == SESSION_RESP_MODE_NO || qos_settings->qos_resp_mode == SESSION_RESP_MODE_NO_RPT)
@@ -452,42 +453,42 @@ void d7atp_process_received_packet(packet_t* packet)
             return;
         }
 
-        if (packet->d7anp_listen_timeout)
+        timer_tick_t Tl;
+
+         // The FG scan is only started when the response period expires.
+        if (packet->d7atp_ctrl.ctrl_tc)
         {
-            timer_tick_t Tl;
+            timer_tick_t Tc = adjust_timeout_value(packet->d7atp_tc, packet->hw_radio_packet.rx_meta.timestamp);
 
-            /*
-             * In case of broadcast request, it may be reasonable for power saving
-             * consideration to not perform the FG scan inside the transaction period.
-             * The FG scan is only started when the response period expires.
-             * With this procedure, we are not able to sniff any other concurrent responses
-             */
-            if (!packet->dll_header.control_target_address_set && packet->d7atp_ctrl.ctrl_tc)
+            if (Tc <= 0)
             {
-                timer_tick_t Tc = adjust_timeout_value(packet->d7atp_tc, packet->hw_radio_packet.rx_meta.timestamp);
+                DPRINT("Discard the request since the response period is expired");
+                packet_queue_free_packet(packet);
+                return;
+            }
 
-                if (Tc <= 0)
-                {
-                    DPRINT("Discard the request since the response period is expired");
-                    packet_queue_free_packet(packet);
-                    return;
-                }
-
+            if (packet->d7anp_listen_timeout)
+            {
                 Tl = CONVERT_TO_TI(packet->d7anp_listen_timeout) - CONVERT_TO_TI(packet->d7atp_tc);
                 assert(Tl >= 0);
-
-                schedule_response_period_timeout_handler(Tc);
-                d7anp_set_foreground_scan_timeout(Tl);
-                /* stop eventually the FG scan and force the radio to go back to IDLE */
-                d7anp_stop_foreground_scan(false);
             }
             else
             {
-                Tl = adjust_timeout_value(packet->d7anp_listen_timeout, packet->hw_radio_packet.rx_meta.timestamp);
-                d7anp_set_foreground_scan_timeout(Tl);
-                d7anp_start_foreground_scan();
+                Tl = 0;
             }
+
+            schedule_response_period_timeout_handler(Tc);
+            d7anp_set_foreground_scan_timeout(Tl);
+            /* stop eventually the FG scan and force the radio to go back to IDLE */
+            d7anp_stop_foreground_scan(false);
         }
+        else
+        {
+            Tl = adjust_timeout_value(packet->d7anp_listen_timeout, packet->hw_radio_packet.rx_meta.timestamp);
+            d7anp_set_foreground_scan_timeout(Tl);
+            d7anp_start_foreground_scan();
+        }
+
 
         switch_state(D7ATP_STATE_SLAVE_TRANSACTION_RECEIVED_REQUEST);
 

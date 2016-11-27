@@ -157,11 +157,10 @@ static void flush_fifos()
         // Tc(NB, LEN, CH) = (SFC  * NB  + 1) * TTX(CH, LEN) + TG with NB the number of concurrent devices and SF the collision Avoidance Spreading Factor
         // Tl should correspond to the maximum time needed to send the remaining requests in the FIFO including the RETRY parameter
 
-        // For now, set Tc and Tl according the transmission_timeout_period set in the access profile
+        // For now, set Tc according the transmission_timeout_period set in the access profile
         dae_access_profile_t active_addressee_access_profile;
         fs_read_access_class(current_request_packet->d7anp_addressee->ctrl.access_class, &active_addressee_access_profile);
         current_request_packet->d7atp_tc = active_addressee_access_profile.transmission_timeout_period;
-        current_request_packet->d7anp_listen_timeout = active_addressee_access_profile.transmission_timeout_period;
     }
     else
     {
@@ -182,9 +181,9 @@ static void flush_fifos()
         // TODO stop on error
     }
 
-    // TODO calculate D7ANP timeout (and update during transaction lifetime) (based on Tc, channel, cs, payload size, # msgs, # retries)
+    uint8_t listen_timeout = 0; // TODO calculate timeout (and update during transaction lifetime) (based on Tc, channel, cs, payload size, # msgs, # retries)
     d7atp_send_request(current_master_session.token, current_request_id, (current_request_id == current_master_session.next_request_id - 1),
-                       current_request_packet, &current_master_session.config.qos, current_master_session.response_lengths[current_request_id]);
+                       current_request_packet, &current_master_session.config.qos, listen_timeout, current_master_session.response_lengths[current_request_id]);
 }
 
 // TODO document state diagram
