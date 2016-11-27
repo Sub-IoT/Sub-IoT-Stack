@@ -55,7 +55,7 @@ void bootstrap()
       .control_number_of_subbands = 1,
       .subnet = 0x00,
       .scan_automation_period = 0,
-      .transmission_timeout_period = 50, // TODO measure/calculate
+      .transmission_timeout_period = 30, // TODO measure/calculate
       .subbands[0] = (subband_t){
           .channel_header = {
               .ch_coding = PHY_CODING_PN9,
@@ -75,15 +75,6 @@ void bootstrap()
    dae_access_profile_t ap_868_hi = ap_868_normal;
    ap_868_hi.subbands[0].channel_header.ch_class = PHY_CLASS_HI_RATE;
 
-   dae_access_profile_t ap_868_normal_beacon = ap_868_normal;
-   ap_868_normal_beacon.transmission_timeout_period = 0;
-
-   dae_access_profile_t ap_868_lo_beacon = ap_868_lo;
-   ap_868_lo_beacon.transmission_timeout_period = 0;
-
-   dae_access_profile_t ap_868_hi_beacon = ap_868_hi;
-   ap_868_hi_beacon.transmission_timeout_period = 0;
-
    dae_access_profile_t ap_433_normal = ap_868_normal;
    ap_433_normal.subbands[0].channel_header.ch_freq_band = PHY_BAND_433;
 
@@ -93,29 +84,13 @@ void bootstrap()
    dae_access_profile_t ap_433_hi = ap_868_hi;
    ap_433_hi.subbands[0].channel_header.ch_freq_band = PHY_BAND_433;
 
-   dae_access_profile_t ap_433_normal_beacon = ap_868_normal_beacon;
-   ap_433_normal_beacon.subbands[0].channel_header.ch_freq_band = PHY_BAND_433;
-
-   dae_access_profile_t ap_433_lo_beacon = ap_868_lo_beacon;
-   ap_433_lo_beacon.subbands[0].channel_header.ch_freq_band = PHY_BAND_433;
-
-   dae_access_profile_t ap_433_hi_beacon = ap_868_hi_beacon;
-   ap_433_hi_beacon.subbands[0].channel_header.ch_freq_band = PHY_BAND_433;
-
-
     dae_access_profile_t access_classes[] = {
       ap_868_normal,
       ap_868_lo,
       ap_868_hi,
-      ap_868_normal_beacon,
-      ap_868_lo_beacon,
-      ap_868_hi_beacon,
       ap_433_normal,
       ap_433_lo,
       ap_433_hi,
-      ap_433_normal_beacon,
-      ap_433_lo_beacon,
-      ap_433_hi_beacon,
     };
 
     fs_init_args_t fs_init_args = (fs_init_args_t){
