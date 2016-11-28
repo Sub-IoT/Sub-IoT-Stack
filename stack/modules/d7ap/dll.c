@@ -334,7 +334,7 @@ static void cca_rssi_valid(int16_t cur_rssi)
         {
             DPRINT("CCA1 RSSI: %d", cur_rssi);
             switch_state(DLL_STATE_CCA2);
-            timer_post_task_delay(&execute_cca, 5);
+            timer_post_task_prio_delay(&execute_cca, 5, MAX_PRIORITY);
             return;
         }
         else if(dll_state == DLL_STATE_CCA2)
@@ -373,21 +373,21 @@ static void execute_cca()
 
 static uint16_t calculate_tx_duration()
 {
-    int data_rate = 6; // Normal rate: 6.9 bytes/tick
+    double data_rate = 6.0; // Normal rate: 6.9 bytes/tick
     // TODO select correct subband
     switch (current_access_profile->subbands[0].channel_header.ch_class)
     {
     case PHY_CLASS_LO_RATE:
-        data_rate = 1; // Lo Rate 9.6 kbps: 1.2 bytes/tick
+        data_rate = 1.0; // Lo Rate 9.6 kbps: 1.2 bytes/tick
         break;
     case PHY_CLASS_NORMAL_RATE:
-        data_rate = 6; // Normal Rate 55.555 kbps: 6.94 bytes/tick
+        data_rate = 6.0; // Normal Rate 55.555 kbps: 6.94 bytes/tick
         break;
     case PHY_CLASS_HI_RATE:
-        data_rate = 20; // High rate 166.667 kbps: 20.83 byte/tick
+        data_rate = 20.0; // High rate 166.667 kbps: 20.83 byte/tick
     }
 
-    uint16_t duration = (current_packet->hw_radio_packet.length / data_rate) + 1;
+    uint16_t duration = ceil(current_packet->hw_radio_packet.length / data_rate) + 1;
     return duration;
 }
 
@@ -465,12 +465,12 @@ static void execute_csma_ca()
             if (t_offset > 0)
             {
                 switch_state(DLL_STATE_CCA1);
-                timer_post_task_delay(&execute_cca, t_offset);
+                timer_post_task_prio_delay(&execute_cca, t_offset, MAX_PRIORITY);
             }
             else
             {
                 switch_state(DLL_STATE_CCA1);
-                sched_post_task(&execute_cca);
+                sched_post_task_prio(&execute_cca, MAX_PRIORITY);
             }
 
             break;
@@ -484,7 +484,7 @@ static void execute_csma_ca()
             {
                 DPRINT("CCA fail because dll_to = %i < %i ", dll_to, t_g);
                 switch_state(DLL_STATE_CCA_FAIL);
-                sched_post_task(&execute_csma_ca);
+                sched_post_task_prio(&execute_csma_ca, MAX_PRIORITY);
                 break;
             }
 
@@ -524,12 +524,12 @@ static void execute_csma_ca()
 
             if (t_offset > 0)
             {
-                timer_post_task_delay(&execute_csma_ca, t_offset);
+                timer_post_task_prio_delay(&execute_csma_ca, t_offset, MAX_PRIORITY);
             }
             else
             {
                 switch_state(DLL_STATE_CCA1);
-                sched_post_task(&execute_cca);
+                sched_post_task_prio(&execute_cca, MAX_PRIORITY);
             }
 
             break;
