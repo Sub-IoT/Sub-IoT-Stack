@@ -257,10 +257,11 @@ void d7atp_send_request(uint8_t dialog_id, uint8_t transaction_id, bool is_last_
         .ctrl_ack_record = false
     };
 
+    DPRINT("Tl=%i Tc=%i", packet->d7anp_listen_timeout, packet->d7atp_tc);
     d7anp_tx_foreground_frame(packet, true, &active_addressee_access_profile, slave_listen_timeout);
 }
 
-void d7atp_send_response(packet_t* packet)
+static void send_response(packet_t* packet)
 {
     switch_state(D7ATP_STATE_SLAVE_TRANSACTION_SENDING_RESPONSE);
 
@@ -292,6 +293,7 @@ void d7atp_send_response(packet_t* packet)
     // TODO dormant sessions
 
     // dialog and transaction id remain the same
+    DPRINT("Tl=%i", packet->d7anp_listen_timeout);
     d7anp_tx_foreground_frame(packet, should_include_origin_template, &active_addressee_access_profile, slave_listen_timeout);
 }
 
@@ -351,7 +353,7 @@ void d7atp_signal_packet_transmitted(packet_t* packet)
         if (packet->d7atp_ctrl.ctrl_tc)
         {
             timer_tick_t Tc = adjust_timeout_value(packet->d7atp_tc, packet->hw_radio_packet.tx_meta.timestamp);
-            d7anp_set_foreground_scan_timeout(Tc);
+            d7anp_set_foreground_scan_timeout(Tc + 2); // we include Tt here for now
             d7anp_start_foreground_scan();
         }
         else {
@@ -362,6 +364,14 @@ void d7atp_signal_packet_transmitted(packet_t* packet)
     else if(d7atp_state == D7ATP_STATE_SLAVE_TRANSACTION_SENDING_RESPONSE)
     {
         switch_state(D7ATP_STATE_SLAVE_TRANSACTION_RESPONSE_PERIOD);
+
+        if(!packet->d7anp_listen_timeout && !packet->d7atp_ctrl.ctrl_tc)
+        {
+            // no FG scan running, we can end dialog now
+            timer_cancel_task(&response_period_timeout_handler);
+            terminate_dialog();
+            d7anp_stop_foreground_scan(true); // restart scan automation
+        }
     }
     else if(d7atp_state == D7ATP_STATE_IDLE)
         assert(!packet->d7atp_ctrl.ctrl_is_ack_requested); // can only occur in this case
@@ -397,7 +407,8 @@ void d7atp_process_received_packet(packet_t* packet)
     packet->d7anp_addressee = &current_addressee;
 
     DPRINT("Recvd dialog %i trans id %i, curr %i - %i", packet->d7atp_dialog_id, packet->d7atp_transaction_id, current_dialog_id, current_transaction_id);
-
+    timer_tick_t Tl = packet->d7anp_listen_timeout;
+    DPRINT("Tl=%i Tc=%i (CT)", Tl, packet->d7atp_tc);
     if(IS_IN_MASTER_TRANSACTION())
     {
         if(packet->d7atp_dialog_id != current_dialog_id || packet->d7atp_transaction_id != current_transaction_id)
@@ -413,8 +424,6 @@ void d7atp_process_received_packet(packet_t* packet)
             // if this is a unicast response and the last transaction, the extension procedure is allowed
             if (packet->d7atp_ctrl.ctrl_is_stop && packet->dll_header.control_target_address_set)
             {
-                timer_tick_t Tl;
-
                 Tl = adjust_timeout_value(packet->d7anp_listen_timeout, packet->hw_radio_packet.rx_meta.timestamp);
                 DPRINT("Responder wants to append a new dialog");
                 d7anp_set_foreground_scan_timeout(Tl);
@@ -430,6 +439,9 @@ void d7atp_process_received_packet(packet_t* packet)
                 return;
             }
         }
+
+        bool should_send_response = d7asp_process_received_packet(packet, extension);
+        assert(!should_send_response);
     }
     else
     {
@@ -453,8 +465,6 @@ void d7atp_process_received_packet(packet_t* packet)
             return;
         }
 
-        timer_tick_t Tl;
-
          // The FG scan is only started when the response period expires.
         if (packet->d7atp_ctrl.ctrl_tc)
         {
@@ -471,22 +481,23 @@ void d7atp_process_received_packet(packet_t* packet)
             {
                 Tl = CONVERT_TO_TI(packet->d7anp_listen_timeout) - CONVERT_TO_TI(packet->d7atp_tc);
                 assert(Tl >= 0);
-            }
-            else
-            {
-                Tl = 0;
+                d7anp_set_foreground_scan_timeout(Tl);
             }
 
-            schedule_response_period_timeout_handler(Tc);
-            d7anp_set_foreground_scan_timeout(Tl);
+            schedule_response_period_timeout_handler(Tc); // TODO for unicast, stop response period after transmission of response?
+
             /* stop eventually the FG scan and force the radio to go back to IDLE */
             d7anp_stop_foreground_scan(false);
         }
         else
         {
-            Tl = adjust_timeout_value(packet->d7anp_listen_timeout, packet->hw_radio_packet.rx_meta.timestamp);
-            d7anp_set_foreground_scan_timeout(Tl);
-            d7anp_start_foreground_scan();
+            if(packet->d7anp_listen_timeout)
+            {
+                Tl = adjust_timeout_value(packet->d7anp_listen_timeout, packet->hw_radio_packet.rx_meta.timestamp);
+                d7anp_set_foreground_scan_timeout(Tl);
+                d7anp_start_foreground_scan();
+            }
+
         }
 
 
@@ -508,7 +519,20 @@ void d7atp_process_received_packet(packet_t* packet)
         active_addressee_access_profile.subbands[0].channel_header = rx_channel.channel_header;
         active_addressee_access_profile.subbands[0].channel_index_start = rx_channel.center_freq_index;
         active_addressee_access_profile.subbands[0].channel_index_end = rx_channel.center_freq_index;
+
+        bool should_send_response = d7asp_process_received_packet(packet, extension);
+        if(should_send_response)
+        {
+            send_response(packet);
+        }
+        else
+        {
+            response_period_timeout_handler(); // no response to send, end transaction and go back to IDLE
+            if(Tl == 0)
+            {
+                terminate_dialog();
+            }
+        }
     }
 
-    d7asp_process_received_packet(packet, extension);
 }

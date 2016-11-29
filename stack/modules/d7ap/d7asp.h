@@ -105,7 +105,15 @@ typedef struct {
 void d7asp_init(d7asp_init_args_t* init_args);
 d7asp_master_session_t* d7asp_master_session_create(d7asp_master_session_config_t* d7asp_master_session_config);
 d7asp_queue_result_t d7asp_queue_alp_actions(d7asp_master_session_t* session, uint8_t* alp_payload_buffer, uint8_t alp_payload_length, uint8_t expected_alp_response_length); // TODO return status
-void d7asp_process_received_packet(packet_t* packet, bool extension);
+
+/**
+ * @brief Processes a received packet, and prepares the response packet if needed.
+ *
+ * @returns Wether or not a response is provided. If true the response is contained in the supplied packet.
+ * the caller is responsible for sending the response.
+ */
+
+bool d7asp_process_received_packet(packet_t* packet, bool extension);
 
 /**
  * @brief Called by DLL to signal the CSMA/CA process completed succesfully and packet can be ack-ed for QoS = None

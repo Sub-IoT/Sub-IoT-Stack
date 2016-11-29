@@ -108,7 +108,7 @@ static void schedule_foreground_scan_expired_timer()
 
 void d7anp_start_foreground_scan()
 {
-    if(fg_scan_timeout_ticks >= 0)
+    if(fg_scan_timeout_ticks > 0)
     {
         // if the FG scan timer is already set, update only the tl timeout value
         schedule_foreground_scan_expired_timer();
@@ -125,6 +125,8 @@ void d7anp_set_foreground_scan_timeout(timer_tick_t timeout)
 {
     DPRINT("Set FG scan timeout = %i", timeout);
     assert(d7anp_state == D7ANP_STATE_IDLE || d7anp_state == D7ANP_STATE_FOREGROUND_SCAN);
+    assert(timeout >= 0);
+
     fg_scan_timeout_ticks = timeout;
 }
 
