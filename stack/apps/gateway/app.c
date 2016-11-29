@@ -75,17 +75,17 @@ void bootstrap()
             .control_scan_type_is_foreground = true,
             .control_csma_ca_mode = CSMA_CA_MODE_UNC,
             .control_number_of_subbands = 1,
-            .subnet = 0,
+            .subnet = 0xB6,
             .scan_automation_period = 0,
-            .transmission_timeout_period = 50,
+            .transmission_timeout_period = 100,
             .subbands[0] = (subband_t){
                 .channel_header = {
                     .ch_coding = PHY_CODING_PN9,
                     .ch_class = PHY_CLASS_NORMAL_RATE,
-                    .ch_freq_band = PHY_BAND_433
+                    .ch_freq_band = PHY_BAND_868
                 },
-                .channel_index_start = 0,
-                .channel_index_end = 0,
+                .channel_index_start = 216,
+                .channel_index_end = 216,
                 .eirp = 0,
                 .ccao = 0
             }

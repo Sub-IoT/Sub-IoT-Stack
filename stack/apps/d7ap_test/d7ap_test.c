@@ -74,7 +74,6 @@ void led_blink()
 #define SENSOR_FILE_ID           0x40
 #define SENSOR_FILE_SIZE         4
 #define ACTION_FILE_ID           0x41
-
 #define REPORTING_INTERVAL       5 // seconds
 #define REPORTING_INTERVAL_TICKS TIMER_TICKS_PER_SEC * REPORTING_INTERVAL
 
@@ -178,12 +177,12 @@ void bootstrap() {
             .control_number_of_subbands = 1,
             .subnet = 0x00,
             .scan_automation_period = 0,
-            .transmission_timeout_period = 50,
+            .transmission_timeout_period = 100,
             .subbands[0] = (subband_t){
                 .channel_header = {
                     .ch_coding = PHY_CODING_PN9,
                     .ch_class = PHY_CLASS_NORMAL_RATE,
-                    .ch_freq_band = PHY_BAND_433
+                    .ch_freq_band = PHY_BAND_868
                 },
                 .channel_index_start = 0,
                 .channel_index_end = 0,

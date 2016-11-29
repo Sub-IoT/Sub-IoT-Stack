@@ -141,7 +141,7 @@ void init_user_files()
 
     d7asp_master_session_config_t session_config = {
         .qos = {
-            .qos_resp_mode = SESSION_RESP_MODE_NO,
+            .qos_resp_mode = SESSION_RESP_MODE_ANY,
             .qos_nls                 = false,
             .qos_stop_on_error       = false,
             .qos_record              = false
@@ -171,7 +171,7 @@ void bootstrap()
             .control_number_of_subbands = 1,
             .subnet = 0x00,
             .scan_automation_period = 0,
-            .transmission_timeout_period = 100,
+            .transmission_timeout_period = 40,
             .subbands[0] = (subband_t){
                 .channel_header = {
                     .ch_coding = PHY_CODING_PN9,
