@@ -93,6 +93,7 @@ static void foreground_scan_expired()
 
     /* switch to automation scan */
     dll_stop_foreground_scan(true);
+    fg_scan_timeout_ticks = 0;
     d7atp_signal_foreground_scan_expired();
 }
 
@@ -135,6 +136,7 @@ static void cancel_foreground_scan_task()
     // task can be scheduled now or in the future, try to cancel both // TODO refactor scheduler API
     timer_cancel_task(&foreground_scan_expired);
     sched_cancel_task(&foreground_scan_expired);
+    fg_scan_timeout_ticks = 0;
 }
 
 void d7anp_stop_foreground_scan(bool auto_scan)
