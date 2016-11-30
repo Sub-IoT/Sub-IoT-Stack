@@ -31,6 +31,9 @@
 #include "version.h"
 #include "dll.h"
 
+#define D7A_PROTOCOL_VERSION_MAJOR 1
+#define D7A_PROTOCOL_VERSION_MINOR 1
+
 static fs_file_header_t NGDEF(_file_headers)[MODULE_D7AP_FS_FILE_COUNT] = { 0 };
 #define file_headers NG(_file_headers)
 
@@ -119,6 +122,8 @@ void fs_init(fs_init_args_t* init_args)
         .length = D7A_FILE_FIRMWARE_VERSION_SIZE
     };
 
+    memset(data + current_data_offset, D7A_PROTOCOL_VERSION_MAJOR, 1); current_data_offset++;
+    memset(data + current_data_offset, D7A_PROTOCOL_VERSION_MINOR, 1); current_data_offset++;
     memcpy(data + current_data_offset, _APP_NAME, D7A_FILE_FIRMWARE_VERSION_APP_NAME_SIZE);
     current_data_offset += D7A_FILE_FIRMWARE_VERSION_APP_NAME_SIZE;
     memcpy(data + current_data_offset, _GIT_SHA1, D7A_FILE_FIRMWARE_VERSION_GIT_SHA1_SIZE);
