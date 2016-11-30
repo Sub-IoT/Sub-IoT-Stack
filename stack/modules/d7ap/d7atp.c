@@ -257,7 +257,9 @@ void d7atp_send_request(uint8_t dialog_id, uint8_t transaction_id, bool is_last_
         .ctrl_ack_record = false
     };
 
-    DPRINT("Tl=%i Tc=%i", packet->d7anp_listen_timeout, packet->d7atp_tc);
+    DPRINT("Tl=%i Tc=%i tx", packet->d7anp_listen_timeout, packet->d7atp_tc);
+    DPRINT("resp Tc=%i", include_tc? packet->d7atp_tc : 0);
+
     d7anp_tx_foreground_frame(packet, true, &active_addressee_access_profile, slave_listen_timeout);
 }
 
