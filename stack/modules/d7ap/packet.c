@@ -69,25 +69,20 @@ void packet_assemble(packet_t* packet)
     // add CRC - SW CRC when using FEC
     if (!has_hardware_crc || packet->hw_radio_packet.tx_meta.tx_cfg.channel_id.channel_header.ch_coding == PHY_CODING_FEC_PN9)
     {
-    	DPRINT_DATA_DLL(packet->hw_radio_packet.data, packet->hw_radio_packet.length + 1); // TODO tmp
     	uint16_t crc = __builtin_bswap16(crc_calculate(packet->hw_radio_packet.data, packet->hw_radio_packet.length + 1 - 2));
     	memcpy(data_ptr, &crc, 2);
-    	DPRINT_DATA_DLL(packet->hw_radio_packet.data, packet->hw_radio_packet.length + 1); // TODO tmp
     }
 
 }
 
 void packet_disassemble(packet_t* packet)
 {
-	DPRINT_DATA_DLL(packet->hw_radio_packet.data, packet->hw_radio_packet.length + 1); // TODO tmp
-
     if (packet->hw_radio_packet.rx_meta.crc_status == HW_CRC_UNAVAILABLE)
     {
         uint16_t crc = __builtin_bswap16(crc_calculate(packet->hw_radio_packet.data, packet->hw_radio_packet.length + 1 - 2));
         if(memcmp(&crc, packet->hw_radio_packet.data + packet->hw_radio_packet.length + 1 - 2, 2) != 0)
         {
             DPRINT_DLL("CRC invalid");
-            DPRINT_DATA_DLL((uint8_t*)&crc, 2);
             goto cleanup;
         }
     }
