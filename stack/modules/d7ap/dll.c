@@ -565,6 +565,7 @@ void dll_execute_scan_automation()
     }
 
     current_access_profile = &scan_access_profile;
+    DPRINT("DLL execute scan autom AC=%i", scan_access_class);
 
     if(current_access_profile->control_scan_type_is_foreground && current_access_profile->control_number_of_subbands > 0) // TODO background scan
     {

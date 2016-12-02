@@ -224,7 +224,6 @@ void d7atp_send_request(uint8_t dialog_id, uint8_t transaction_id, bool is_last_
     if (current_dialog_id)
         assert( dialog_id == current_dialog_id);
 
-    DPRINT("Start dialog Id <%i> transID <%i>, expected resp len <%i>", dialog_id, transaction_id, expected_response_length);
     switch_state(D7ATP_STATE_MASTER_TRANSACTION_REQUEST_PERIOD);
 
     current_dialog_id = dialog_id;
@@ -236,6 +235,7 @@ void d7atp_send_request(uint8_t dialog_id, uint8_t transaction_id, bool is_last_
     if(access_class != current_access_class)
         fs_read_access_class(access_class, &active_addressee_access_profile);
 
+    DPRINT("Start dialog Id=%i transID=%i on AC=%i, expected resp len=%i", dialog_id, transaction_id, access_class, expected_response_length);
     uint8_t slave_listen_timeout = listen_timeout;
 
     bool ack_requested = true;
