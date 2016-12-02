@@ -135,7 +135,7 @@ void fs_init(fs_init_args_t* init_args)
         .file_properties.action_protocol_enabled = 0,
         .file_properties.storage_class = FS_STORAGE_RESTORABLE,
         .file_properties.permissions = 0, // TODO
-        .length = D7A_FILE_UID_SIZE
+        .length = D7A_FILE_DLL_CONF_SIZE
     };
 
     memset(data + current_data_offset, 0, 1); current_data_offset += 1; // active access class
