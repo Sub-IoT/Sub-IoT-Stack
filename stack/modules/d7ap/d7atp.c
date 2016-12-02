@@ -510,6 +510,11 @@ void d7atp_process_received_packet(packet_t* packet)
 
         channel_id_t rx_channel = packet->hw_radio_packet.rx_meta.rx_cfg.channel_id;
 
+        // store the received timestamp for later usage (eg CCA). the rx_meta.timestamp can be
+        // overwritten since it is stored in a union with tx_meta and can thus be changed when
+        // trying to transmit
+        packet->request_received_timestamp = packet->hw_radio_packet.rx_meta.timestamp;
+
         // set active_addressee_access_profile to the access_profile supplied by the requester
         if(current_access_class != current_addressee.ctrl.access_class)
         {
