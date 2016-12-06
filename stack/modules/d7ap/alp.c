@@ -63,13 +63,13 @@ static uint8_t process_op_read_file_data(fifo_t* alp_command_fifo, fifo_t* alp_r
     return 0; // TODO status
 
   // fill response
-  fifo_put_byte(alp_response_fifo, ALP_OP_RETURN_FILE_DATA);
-  fifo_put_byte(alp_response_fifo, operand.file_offset.file_id);
-  fifo_put_byte(alp_response_fifo, operand.file_offset.offset); // TODO can be 1-4 bytes, assume 1 for now
-  fifo_put_byte(alp_response_fifo, operand.requested_data_length);
+  err = fifo_put_byte(alp_response_fifo, ALP_OP_RETURN_FILE_DATA); assert(err == SUCCESS);
+  err = fifo_put_byte(alp_response_fifo, operand.file_offset.file_id); assert(err == SUCCESS);
+  err = fifo_put_byte(alp_response_fifo, operand.file_offset.offset); assert(err == SUCCESS); // TODO can be 1-4 bytes, assume 1 for now
+  err = fifo_put_byte(alp_response_fifo, operand.requested_data_length); assert(err == SUCCESS);
   uint8_t data[operand.requested_data_length];
   alp_status_codes_t alp_status = fs_read_file(operand.file_offset.file_id, operand.file_offset.offset, data, operand.requested_data_length); // TODO status
-  fifo_put(alp_response_fifo, data, operand.requested_data_length);
+  err = fifo_put(alp_response_fifo, data, operand.requested_data_length); assert(err == SUCCESS);
 }
 
 static uint8_t process_op_write_file_data(fifo_t* alp_command_fifo, fifo_t* alp_response_fifo) {
@@ -94,6 +94,7 @@ static uint8_t process_op_forward(fifo_t* alp_command_fifo, fifo_t* alp_response
   err = fifo_pop(alp_command_fifo, &session_config->dormant_timeout, 1); assert(err == SUCCESS);
   err = fifo_pop(alp_command_fifo, &session_config->addressee.ctrl.raw, 1); assert(err == SUCCESS);
   uint8_t id_length = d7anp_addressee_id_length(session_config->addressee.ctrl.id_type);
+  err = fifo_pop(alp_command_fifo, &session_config->addressee.access_class, 1); assert(err == SUCCESS);
   err = fifo_pop(alp_command_fifo, session_config->addressee.id, id_length); assert(err == SUCCESS);
   DPRINT("FORWARD");
 }
@@ -109,12 +110,14 @@ void alp_process_command_result_on_d7asp(d7asp_master_session_config_t* session_
   uint8_t alp_response_length = 0;
   alp_process_command(alp_command, alp_command_length, alp_response, &alp_response_length, origin);
   d7asp_master_session_t* session = d7asp_master_session_create(session_config);
-  d7asp_queue_alp_actions(session, alp_response, alp_response_length);
+  uint8_t expected_response_length = alp_get_expected_response_length(alp_response, alp_response_length);
+  d7asp_queue_alp_actions(session, alp_response, alp_response_length, expected_response_length);
 }
 
 void alp_process_command_console_output(uint8_t* alp_command, uint8_t alp_command_length) {
   uint8_t alp_response[ALP_PAYLOAD_MAX_SIZE];
   uint8_t alp_response_length = 0;
+  DPRINT("ALP command recv from console length=%i", alp_command_length);
   alp_process_command(alp_command, alp_command_length, alp_response, &alp_response_length, ALP_CMD_ORIGIN_SERIAL_CONSOLE);
 }
 
@@ -145,7 +148,8 @@ bool alp_process_command(uint8_t* alp_command, uint8_t alp_command_length, uint8
       fifo_pop(&alp_command_fifo, forwarded_alp_actions, forwarded_alp_size);
       d7asp_master_session_t* session = d7asp_master_session_create(&d7asp_session_config);
       // TODO current_command.fifo_token = session->token;
-      d7asp_queue_result_t queue_result = d7asp_queue_alp_actions(session, forwarded_alp_actions, forwarded_alp_size); // TODO pass fifo directly?
+      uint8_t expected_response_length = alp_get_expected_response_length(forwarded_alp_actions, forwarded_alp_size);
+      d7asp_queue_result_t queue_result = d7asp_queue_alp_actions(session, forwarded_alp_actions, forwarded_alp_size, expected_response_length); // TODO pass fifo directly?
       current_command.fifo_token = queue_result.fifo_token;
 
       break; // TODO return response
@@ -229,4 +233,49 @@ void alp_d7asp_fifo_flush_completed(uint8_t fifo_token, uint8_t* progress_bitmap
     default:
       assert(false); // ALP_CMD_ORIGIN_D7ASP this would imply a slave session
   }
+}
+
+uint8_t alp_get_expected_response_length(uint8_t* alp_command, uint8_t alp_command_length) {
+  uint8_t expected_response_length = 0;
+  uint8_t* ptr = alp_command;
+
+  while(ptr < alp_command + alp_command_length) {
+    alp_control_t control;
+    control.raw = (*ptr);
+    ptr++; // skip control byte
+    switch(control.operation) {
+      case ALP_OP_READ_FILE_DATA:
+        ptr += 2; // skip file offset operand // TODO we assume 2 bytes now but can be 2-5 bytes
+        expected_response_length += *ptr; ptr++; // TODO we assume length is coded in 1 byte but can be 4
+        // TODO
+        break;
+      case ALP_OP_REQUEST_TAG:
+        ptr += 1; // skip tag ID operand
+        break;
+      case ALP_OP_RETURN_FILE_DATA:
+      case ALP_OP_WRITE_FILE_DATA:
+        ptr += 2; // skip file offset operand // TODO we assume 2 bytes now but can be 2-5 bytes
+        uint8_t data_length = *ptr;
+        ptr += 1; // skip data length field // TODO we assume length is coded in 1 byte but can be 4
+        ptr += data_length; // skip data
+        break;
+      case ALP_OP_FORWARD:
+        ptr += 1; // skip interface ID
+        ptr += 1; // skip QoS
+        ptr += 1; // skip dormant
+        d7anp_addressee_ctrl addressee_ctrl;
+        addressee_ctrl.raw = *ptr;
+        ptr += 1; // skip addressee ctrl
+        ptr += 1; // skip access class
+        ptr += d7anp_addressee_id_length(addressee_ctrl.id_type); // skip address
+        // TODO refactor to reuse same logic for parsing and response length counting
+        break;
+      // TODO other operations
+      default:
+        assert(false);
+    }
+  }
+
+  DPRINT("Expected ALP response length=%i", expected_response_length);
+  return expected_response_length;
 }

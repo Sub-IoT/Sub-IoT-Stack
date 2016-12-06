@@ -1,10 +1,10 @@
 /**************************************************************************//**
  * @file ezr32lg_af_pins.h
  * @brief EZR32LG_AF_PINS register and bit field definitions
- * @version 4.2.1
+ * @version 4.4.0
  ******************************************************************************
  * @section License
- * <b>Copyright 2015 Silicon Laboratories, Inc. http://www.silabs.com</b>
+ * <b>Copyright 2016 Silicon Laboratories, Inc. http://www.silabs.com</b>
  ******************************************************************************
  *
  * Permission is granted to anyone to use this software for any purpose,
@@ -61,8 +61,8 @@
 #define AF_USART2_RX_PIN(i)        ((i) == 0 ? -1 : (i) == 1 ? 4 :  -1)
 #define AF_USART2_CLK_PIN(i)       ((i) == 0 ? -1 : (i) == 1 ? 5 :  -1)
 #define AF_USART2_CS_PIN(i)        ((i) == 0 ? -1 : (i) == 1 ? 6 :  -1)
-#define AF_UART0_TX_PIN(i)         ((i) == 0 ? -1 : (i) == 1 ? 0 : (i) == 2 ? -1 : (i) == 3 ? 14 :  -1)
-#define AF_UART0_RX_PIN(i)         ((i) == 0 ? -1 : (i) == 1 ? 1 : (i) == 2 ? -1 : (i) == 3 ? 15 :  -1)
+#define AF_UART0_TX_PIN(i)         ((i) == 0 ? 6 : (i) == 1 ? 0 : (i) == 2 ? -1 : (i) == 3 ? 14 :  -1)
+#define AF_UART0_RX_PIN(i)         ((i) == 0 ? 7 : (i) == 1 ? 1 : (i) == 2 ? -1 : (i) == 3 ? 15 :  -1)
 #define AF_UART0_CLK_PIN(i)        (-1)
 #define AF_UART0_CS_PIN(i)         (-1)
 #define AF_UART1_TX_PIN(i)         ((i) == 0 ? 12 : (i) == 1 ? -1 : (i) == 2 ? -1 : (i) == 3 ? 2 :  -1)

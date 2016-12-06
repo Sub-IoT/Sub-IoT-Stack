@@ -64,11 +64,11 @@ enum
 	 *
 	 */
 	MIN_PRIORITY = 7,
-	/*! \brief The maximum allowed priority for scheduled tasks
+  /*! \brief The minimum allowed priority for scheduled tasks, and also the default priority
 	 *
 	 */
 	MAX_PRIORITY= 0,
-	/*! \brief The default priority
+  /*! \brief The maximum allowed priority for scheduled tasks
 	 *
 	 */
 	DEFAULT_PRIORITY = MIN_PRIORITY,

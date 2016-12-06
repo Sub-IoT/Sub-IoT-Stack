@@ -1,10 +1,10 @@
 /**************************************************************************//**
  * @file ezr32lg_vcmp.h
  * @brief EZR32LG_VCMP register and bit field definitions
- * @version 4.2.1
+ * @version 4.4.0
  ******************************************************************************
  * @section License
- * <b>Copyright 2015 Silicon Laboratories, Inc. http://www.silabs.com</b>
+ * <b>Copyright 2016 Silicon Laboratories, Inc. http://www.silabs.com</b>
  ******************************************************************************
  *
  * Permission is granted to anyone to use this software for any purpose,
@@ -40,14 +40,14 @@
  *****************************************************************************/
 typedef struct
 {
-  __IO uint32_t CTRL;     /**< Control Register  */
-  __IO uint32_t INPUTSEL; /**< Input Selection Register  */
-  __I uint32_t  STATUS;   /**< Status Register  */
-  __IO uint32_t IEN;      /**< Interrupt Enable Register  */
-  __I uint32_t  IF;       /**< Interrupt Flag Register  */
-  __IO uint32_t IFS;      /**< Interrupt Flag Set Register  */
-  __IO uint32_t IFC;      /**< Interrupt Flag Clear Register  */
-} VCMP_TypeDef;           /** @} */
+  __IOM uint32_t CTRL;     /**< Control Register  */
+  __IOM uint32_t INPUTSEL; /**< Input Selection Register  */
+  __IM uint32_t  STATUS;   /**< Status Register  */
+  __IOM uint32_t IEN;      /**< Interrupt Enable Register  */
+  __IM uint32_t  IF;       /**< Interrupt Flag Register  */
+  __IOM uint32_t IFS;      /**< Interrupt Flag Set Register  */
+  __IOM uint32_t IFC;      /**< Interrupt Flag Clear Register  */
+} VCMP_TypeDef;            /** @} */
 
 /**************************************************************************//**
  * @defgroup EZR32LG_VCMP_BitFields

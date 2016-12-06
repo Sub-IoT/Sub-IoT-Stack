@@ -1,7 +1,7 @@
 /**************************************************************************//**
  * @file ezradio_hal.h
  * @brief This file contains EZRadio HAL.
- * @version 4.1.0
+ * @version 4.4.0
  ******************************************************************************
  * @section License
  * <b>(C) Copyright 2015 Silicon Labs, http://www.silabs.com</b>
@@ -37,12 +37,10 @@
 extern "C" {
 #endif
 
-
-#include "em_device.h"
-#include "gpiointerrupt.h"
+#include "ezradiodrv_config.h"
 
 /***************************************************************************//**
- * @addtogroup EM_Drivers
+ * @addtogroup emdrv
  * @{
  ******************************************************************************/
 
@@ -67,15 +65,21 @@ void    ezradio_hal_ClearNsel       (void);
 void    ezradio_hal_SetNsel         (void);
 uint8_t ezradio_hal_NirqLevel       (void);
 
+#if defined(EZRADIODRV_DISABLE_PTI) && defined(EZRADIODRV_COMM_USE_GPIO1_FOR_CTS)
+uint8_t ezradio_hal_Gpio1Level(void);
+#endif
+
 void    ezradio_hal_SpiWriteByte    (uint8_t byteToWrite);
 void    ezradio_hal_SpiReadByte     (uint8_t* readByte);
 
 void    ezradio_hal_SpiWriteData    (uint8_t byteCount, uint8_t* pData);
 void    ezradio_hal_SpiReadData     (uint8_t byteCount, uint8_t* pData);
 
+void ezradio_hal_SpiWriteReadData(uint8_t byteCount, uint8_t* txData, uint8_t* rxData);
+
 /** @} (end addtogroup HAL_Layer) */
 /** @} (end addtogroup EZRADIODRV) */
-/** @} (end addtogroup EM_Drivers) */
+/** @} (end addtogroup emdrv) */
 
 #ifdef __cplusplus
 }

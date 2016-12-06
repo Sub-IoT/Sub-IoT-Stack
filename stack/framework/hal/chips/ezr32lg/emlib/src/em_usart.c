@@ -2,10 +2,10 @@
  * @file em_usart.c
  * @brief Universal synchronous/asynchronous receiver/transmitter (USART/UART)
  *   Peripheral API
- * @version 4.2.1
+ * @version 4.4.0
  *******************************************************************************
  * @section License
- * <b>(C) Copyright 2015 Silicon Labs, http://www.silabs.com</b>
+ * <b>Copyright 2016 Silicon Laboratories, Inc. http://www.silabs.com</b>
  *******************************************************************************
  *
  * Permission is granted to anyone to use this software for any purpose,
@@ -39,7 +39,7 @@
 #include "em_assert.h"
 
 /***************************************************************************//**
- * @addtogroup EM_Library
+ * @addtogroup emlib
  * @{
  ******************************************************************************/
 
@@ -47,6 +47,10 @@
  * @addtogroup USART
  * @brief Universal Synchronous/Asynchronous Receiver/Transmitter
  *   Peripheral API
+ * @details
+ *  This module contains functions to control the USART peripheral of Silicon
+ *  Labs 32-bit MCUs and SoCs. The USART handles high-speed UART, SPI bus,
+ *  SmartCards and IrDA communication.
  * @{
  ******************************************************************************/
 
@@ -302,8 +306,11 @@ uint32_t USART_BaudrateCalc(uint32_t refFreq,
   uint64_t quotient;
   uint32_t br;
 
+  /* Out of bound clkdiv ? */
+  EFM_ASSERT(clkdiv <= _USART_CLKDIV_DIV_MASK);
+
   /* Mask out unused bits */
-  clkdiv &= _USART_CLKDIV_MASK;
+  clkdiv &= _USART_CLKDIV_DIV_MASK;
 
   /* We want to use integer division to avoid forcing in float division */
   /* utils, and yet keep rounding effect errors to a minimum. */
@@ -383,8 +390,11 @@ uint32_t USART_BaudrateCalc(uint32_t refFreq,
    * variable names.
    */
 
-  /* Divisor will never exceed max 32 bit value since clkdiv <= 0xFFFFF8 */
-  /* and 'oversample' has been reduced to <= 3. */
+  /*
+   * Divisor will never exceed max 32 bit value since
+   * clkdiv <= _USART_CLKDIV_DIV_MASK (currently 0x1FFFC0 or 0x7FFFF8)
+   * and 'oversample' has been reduced to <= 3.
+   */
   divisor = oversample * (256 + clkdiv);
 
   quotient  = refFreq / divisor;
@@ -493,12 +503,14 @@ void USART_BaudrateSyncSet(USART_TypeDef *usart, uint32_t refFreq, uint32_t baud
   }
 
 #if defined(_USART_CLKDIV_DIV_MASK) && (_USART_CLKDIV_DIV_MASK >= 0x7FFFF8UL)
-  /* Calculate and set CLKDIV without fractional bits */
-  clkdiv = 2 * baudrate;
-  clkdiv = (0x100ULL * (uint64_t)refFreq) / clkdiv;
+  /* Calculate CLKDIV with fractional bits */
+  clkdiv = (128ULL*refFreq)/baudrate - 256;
 
-  /* Round up by not subtracting 256 and mask off fractional part */
-  clkdiv &= ~0xFF;
+  /*
+   * Make sure we dont use fractional bits, do normal integer rounding when
+   * discarding fractional bits.
+   */
+  clkdiv = ((clkdiv + 128)/256) << 8;
 #else
   /* Calculate and set CLKDIV with fractional bits */
   clkdiv  = 2 * refFreq;
@@ -704,11 +716,9 @@ void USART_InitSync(USART_TypeDef *usart, const USART_InitSync_TypeDef *init)
   usart->CMD = (uint32_t)init->enable;
 }
 
-
-#if defined(USART0) || ((USART_COUNT == 1) && defined(USART1))
 /***************************************************************************//**
  * @brief
- *   Init USART0 for asynchronous IrDA mode.
+ *   Init USART for asynchronous IrDA mode.
  *
  * @details
  *   This function will configure basic settings in order to operate in
@@ -724,21 +734,19 @@ void USART_InitSync(USART_TypeDef *usart, const USART_InitSync_TypeDef *init)
  *   configuration, in order to avoid unintended pulses/glitches on output
  *   pins.)
  *
+ * @param[in] usart
+ *   Pointer to USART peripheral register block.
+ *
  * @param[in] init
  *   Pointer to initialization structure used to configure async IrDA setup.
  *
  * @note
- *   This function only applies to USART0 as IrDA is not supported on the other
- *   USART modules.
+ *   Not all USART instances support IrDA. See the datasheet for your device.
  *
  ******************************************************************************/
-void USART_InitIrDA(const USART_InitIrDA_TypeDef *init)
+void USARTn_InitIrDA(USART_TypeDef *usart, const USART_InitIrDA_TypeDef *init)
 {
-  #if (USART_COUNT == 1) && defined(USART1)
-  USART_TypeDef *usart = USART1;
-  #else
-  USART_TypeDef *usart = USART0;
-  #endif
+  EFM_ASSERT(USART_IRDA_VALID(usart));
 
   /* Init USART as async device */
   USART_InitAsync(usart, &(init->async));
@@ -761,8 +769,6 @@ void USART_InitIrDA(const USART_InitIrDA_TypeDef *init)
   /* Enable IrDA */
   usart->IRCTRL |= USART_IRCTRL_IREN;
 }
-#endif
-
 
 #if defined(_USART_I2SCTRL_MASK)
 /***************************************************************************//**
@@ -1211,5 +1217,5 @@ void USART_TxExt(USART_TypeDef *usart, uint16_t data)
 
 
 /** @} (end addtogroup USART) */
-/** @} (end addtogroup EM_Library) */
+/** @} (end addtogroup emlib) */
 #endif /* defined(USART_COUNT) && (USART_COUNT > 0) */

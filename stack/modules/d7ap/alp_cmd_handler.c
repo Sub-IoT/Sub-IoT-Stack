@@ -24,6 +24,7 @@
 
 #define ALP_CMD_MAX_SIZE 0xFF
 
+#include "hwatomic.h"
 #include "types.h"
 #include "alp.h"
 #include "shell.h"
@@ -31,6 +32,14 @@
 #include "debug.h"
 #include "MODULE_D7AP_defs.h"
 #include "ng.h"
+#include "log.h"
+
+#if defined(FRAMEWORK_LOG_ENABLED) && defined(MODULE_D7AP_ALP_LOG_ENABLED)
+#define DPRINT(...) log_print_stack_string(LOG_STACK_ALP, __VA_ARGS__)
+#else
+#define DPRINT(...)
+#endif
+
 
 static alp_cmd_handler_appl_itf_callback NGDEF(_alp_cmd_handler_appl_itf_cb);
 #define alp_cmd_handler_appl_itf_cb NG(_alp_cmd_handler_appl_itf_cb)
@@ -55,16 +64,22 @@ void alp_cmd_handler(fifo_t* cmd_fifo)
             assert(byte == SERIAL_ALP_FRAME_VERSION); // only version 0 implemented for now // TODO pop and return error
             uint8_t alp_command_len;
             err = fifo_peek(cmd_fifo, &alp_command_len, SHELL_CMD_HEADER_SIZE + 2, 1); assert(err == SUCCESS);
-            if(fifo_get_size(cmd_fifo) < SHELL_CMD_HEADER_SIZE + 3 + alp_command_len)
-                return; // ALP command not complete yet, don't pop
+            start_atomic();
+                if(fifo_get_size(cmd_fifo) >= SHELL_CMD_HEADER_SIZE + 3 + alp_command_len)
+                {
+                    uint8_t alp_command[ALP_CMD_MAX_SIZE] = { 0x00 };
+                    err = fifo_pop(cmd_fifo, alp_command, SHELL_CMD_HEADER_SIZE + 3); assert(err == SUCCESS); // pop header
+                    err = fifo_pop(cmd_fifo, alp_command, alp_command_len); assert(err == SUCCESS); // pop full ALP command
 
-            uint8_t alp_command[ALP_CMD_MAX_SIZE] = { 0x00 };
-            err = fifo_pop(cmd_fifo, alp_command, SHELL_CMD_HEADER_SIZE + 3); assert(err == SUCCESS); // pop header
-            err = fifo_pop(cmd_fifo, alp_command, alp_command_len); assert(err == SUCCESS); // pop full ALP command
-
-            uint8_t alp_response[ALP_CMD_MAX_SIZE] = { 0x00 };
-            uint8_t alp_response_len = 0;
-            alp_process_command_console_output(alp_command, alp_command_len);
+                    uint8_t alp_response[ALP_CMD_MAX_SIZE] = { 0x00 };
+                    uint8_t alp_response_len = 0;
+                    alp_process_command_console_output(alp_command, alp_command_len);
+                }
+                else
+                {
+                    //DPRINT("ALP command not complete yet");
+                }
+            end_atomic();
         }
         else
         {
@@ -102,6 +117,7 @@ static uint8_t append_interface_status_action(d7asp_result_t* d7asp_result, uint
   (*ptr) = d7asp_result->seqnr; ptr++;
   (*ptr) = d7asp_result->response_to; ptr++;
   (*ptr) = d7asp_result->addressee->ctrl.raw; ptr++;
+  (*ptr) = d7asp_result->addressee->access_class; ptr++;
   uint8_t address_len = d7anp_addressee_id_length(d7asp_result->addressee->ctrl.id_type);
   memcpy(ptr, d7asp_result->addressee->id, address_len); ptr += address_len;
   return ptr - ptr_start;
@@ -110,6 +126,7 @@ static uint8_t append_interface_status_action(d7asp_result_t* d7asp_result, uint
 void alp_cmd_handler_output_d7asp_response(d7asp_result_t d7asp_result, uint8_t *alp_command, uint8_t alp_command_size)
 {
     // TODO refactor, move partly to alp + call from SP when shell enabled instead of from app
+    DPRINT("output D7ASP response to console");
     uint8_t data[MODULE_D7AP_FIFO_COMMAND_BUFFER_SIZE] = { 0x00 };
     uint8_t* ptr = data;
 
@@ -130,6 +147,7 @@ void alp_cmd_handler_output_d7asp_response(d7asp_result_t d7asp_result, uint8_t 
 void alp_cmd_handler_output_command_completed(uint8_t tag_id, bool error)
 {
   // TODO refactor, move partly to alp + call from SP when shell enabled instead of from app
+  DPRINT("output command completed tag %i to console", tag_id);
   uint8_t data[MODULE_D7AP_FIFO_COMMAND_BUFFER_SIZE] = { 0x00 };
   uint8_t* ptr = data;
 

@@ -104,23 +104,35 @@ typedef struct {
 
 void d7asp_init(d7asp_init_args_t* init_args);
 d7asp_master_session_t* d7asp_master_session_create(d7asp_master_session_config_t* d7asp_master_session_config);
-d7asp_queue_result_t d7asp_queue_alp_actions(d7asp_master_session_t* session, uint8_t* alp_payload_buffer, uint8_t alp_payload_length); // TODO return status
-bool d7asp_process_received_packet(packet_t* packet, bool extension);
+d7asp_queue_result_t d7asp_queue_alp_actions(d7asp_master_session_t* session, uint8_t* alp_payload_buffer, uint8_t alp_payload_length, uint8_t expected_alp_response_length); // TODO return status
 
 /**
- * @brief Called by DLL to signal the packet has been transmitted
+ * @brief Processes a received packet, and prepares the response packet if needed.
+ *
+ * @returns Wether or not a response is provided. If true the response is contained in the supplied packet.
+ * the caller is responsible for sending the response.
  */
-void d7asp_signal_packet_transmitted(packet_t* packet);
 
+bool d7asp_process_received_packet(packet_t* packet, bool extension);
 
 /**
  * @brief Called by DLL to signal the CSMA/CA process completed succesfully and packet can be ack-ed for QoS = None
  */
-void d7asp_signal_packet_csma_ca_insertion_completed(bool succeeded);
-
+void d7asp_signal_packet_transmitted(packet_t* packet);
 
 /**
- * @brief Called by TP to signal the transaction request period has elapsed
+ * @brief Called by DLL to signal the CSMA/CA process failed
  */
-void d7asp_signal_transaction_response_period_elapsed();
+void d7asp_signal_transmission_failure();
+
+/**
+ * @brief Called by TP to signal the dialog is terminated
+ */
+void d7asp_signal_dialog_terminated();
+
+/**
+ * @brief Called by TP to signal the transaction is terminated
+ */
+void d7asp_signal_transaction_terminated();
+
 #endif /* D7ASP_H_ */

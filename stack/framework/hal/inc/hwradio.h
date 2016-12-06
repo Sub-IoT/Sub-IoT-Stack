@@ -53,9 +53,9 @@ typedef enum
  */
 typedef enum
 {
-    PHY_CLASS_LO_RATE = 0x00,
-    PHY_CLASS_NORMAL_RATE = 0x02,
-    PHY_CLASS_HI_RATE = 0x03
+    PHY_CLASS_LO_RATE = 0x00, // 9.6 kbps
+    PHY_CLASS_NORMAL_RATE = 0x02, // 55.555 kbps
+    PHY_CLASS_HI_RATE = 0x03 // 166.667 kbps
 } phy_channel_class_t;
 
 /* \brief The coding schemes and corresponding indices as defined in D7A
@@ -167,20 +167,16 @@ typedef struct
  */
 typedef struct
 {
-#ifdef HAL_RADIO_INCLUDE_TIMESTAMP
-    timer_tick_t timestamp; 	/**< The clock_tick of the framework timer at which the first bit of the sync word was received. */
-#endif
+    timer_tick_t timestamp;	/**< The clock_tick of the framework timer at which the whole frame was received. */
     hw_rx_cfg_t rx_cfg;		/**< The 'RX Configuration' used to receive the packet. */
-    
-    uint8_t lqi;		/**< The link quality indicator (LQI) reported by the radio for the received packet*/	
-    int16_t rssi;		/**< The Received signal strength (RSSI) reported by the radio for the received packet. */
-
+    uint8_t lqi;			/**< The link quality indicator (LQI) reported by the radio for the received packet*/
+    int16_t rssi;			/**< The Received signal strength (RSSI) reported by the radio for the received packet. */
     uint8_t crc_status;		/**< The crc status of the packet
-    				 *
-    				 * HW_CRC_UNAVAILABLE 	if the driver does not support hardware crc checking
-    				 * HW_CRC_INVALID 	if the CRC was not valid
-    				 * HW_CRC_VALID	if the CRC was valid 
-    				 */
+                             *
+                             * HW_CRC_UNAVAILABLE 	if the driver does not support hardware crc checking
+                             * HW_CRC_INVALID 	if the CRC was not valid
+                             * HW_CRC_VALID	if the CRC was valid
+                             */
 
 // TODO optimize struct for size. This was packed but resulted in alignment issues on Cortex-M0 so removed for now.
 } hw_rx_metadata_t;
@@ -190,11 +186,9 @@ typedef struct
  */
 typedef struct
 {
-#ifdef HAL_RADIO_INCLUDE_TIMESTAMP
-    timer_tick_t timestamp; 	/**< The clock_tick of the framework timer at which the first bit of the SFD was sent. */
-#endif
+    timer_tick_t timestamp;	/**< The clock_tick of the framework timer at which the whole frame is transmitted. */
     hw_tx_cfg_t tx_cfg;		/**< The 'TX Configuration' used to receive the packet. */
-    
+
 // TODO optimize struct for size. This was packed but resulted in alignment issues on Cortex-M0 so removed for now.
 } hw_tx_metadata_t;
 
@@ -465,9 +459,8 @@ __LINK_C bool hw_radio_is_rx();
  *
  * If a transmission is initiated while the radio is in RX mode, the radio switches immediately to TX mode to 
  * transmit the packet. If a packet reception is in progress while this function is called, this packet is 
- * dropped. Once the packet has been sent, the radio switches back to RX mode with the original hw_rx_cfg_t 
- * settings used (unless either hw_radio_set_idle() or hw_radio_set_rx() with different rx parameters) is 
- * called while the TX is still in progress.)
+ * dropped. Once the packet has been sent, the radio switches back to IDLE mode , unless hw_radio_set_rx() is
+ * called while the TX is still in progress.
  *
  * \param packet	A pointer to the start of the packet to be transmitted
  *

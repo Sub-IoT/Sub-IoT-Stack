@@ -24,10 +24,13 @@
 #include <stdint.h>
 
 
+#include "em_device.h"
+#include "gpiointerrupt.h"
 #include "si4460_interface.h"
 #include "si4460_configuration.h"
-#include "ezradio_api_lib.h"
+#include "ezradio_cmd.h"
 #include "ezradio_hal.h"
+#include "ezradio_api_lib.h"
 #include "ezradio_api_lib_add.h"
 
 #include "ecode.h"
@@ -42,7 +45,7 @@
 #define RADIO_CONFIG_DATA_RADIO_DELAY_AFTER_RESET_US (10000)
 
 // turn on/off the debug prints
-#ifdef FRAMEWORK_LOG_ENABLED // TODO more granular
+#if defined(FRAMEWORK_LOG_ENABLED) && defined(FRAMEWORK_PHY_LOG_ENABLED)
     #define DPRINT(...) log_print_stack_string(LOG_STACK_PHY, __VA_ARGS__)
 #else
     #define DPRINT(...)

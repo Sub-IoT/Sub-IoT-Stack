@@ -2,7 +2,7 @@
  * @file ezradio_api_lib.c
  * @brief This file contains the common API library of the EZRadio and
  * EZRadioPRO families.
- * @version 4.1.0
+ * @version 4.4.0
  ******************************************************************************
  * @section License
  * <b>(C) Copyright 2015 Silicon Labs, http://www.silabs.com</b>
@@ -31,6 +31,7 @@
  *
  ******************************************************************************/
 
+#include <stddef.h>
 #include <stdint.h>
 #include <stdarg.h>
 #include "em_gpio.h"
@@ -59,13 +60,10 @@ void ezradio_reset(void)
     ezradio_hal_AssertShutdown();
     /* Delay for 20us */
     hw_busy_wait(20);
-    //USTIMER_Delay( 10u );
     /* Release radio from shutdown */
     ezradio_hal_DeassertShutdown();
     /* Delay for 100us */
-    //USTIMER_Delay( 100u );
-
-    hw_busy_wait(100);
+    hw_busy_wait(100u);
     /* Clear CTS signal. */
     ezradio_comm_ClearCTS();
     /* Deinit ustimer */
@@ -112,14 +110,18 @@ void ezradio_part_info(ezradio_cmd_reply_t *ezradioReply)
                               ezradioCmd,
                               EZRADIO_CMD_REPLY_COUNT_PART_INFO,
                               ezradioCmd );
-    ezradioReply->PART_INFO.CHIPREV         = ezradioCmd[0];
-    ezradioReply->PART_INFO.PART            = (((uint16_t)ezradioCmd[1] << 8) & 0xFF00) +
-                                                ((uint16_t)ezradioCmd[2] & 0x00FF);
-    ezradioReply->PART_INFO.PBUILD          = ezradioCmd[3];
-    ezradioReply->PART_INFO.ID              = (((uint16_t)ezradioCmd[4] << 8) & 0xFF00) +
-                                                ((uint16_t)ezradioCmd[5] & 0x00FF);
-    ezradioReply->PART_INFO.CUSTOMER        = ezradioCmd[6];
-    ezradioReply->PART_INFO.ROMID           = ezradioCmd[7];
+
+    if (ezradioReply != NULL)
+    {
+        ezradioReply->PART_INFO.CHIPREV         = ezradioCmd[0];
+        ezradioReply->PART_INFO.PART            = (((uint16_t)ezradioCmd[1] << 8) & 0xFF00) +
+                                                    ((uint16_t)ezradioCmd[2] & 0x00FF);
+        ezradioReply->PART_INFO.PBUILD          = ezradioCmd[3];
+        ezradioReply->PART_INFO.ID              = (((uint16_t)ezradioCmd[4] << 8) & 0xFF00) +
+                                                    ((uint16_t)ezradioCmd[5] & 0x00FF);
+        ezradioReply->PART_INFO.CUSTOMER        = ezradioCmd[6];
+        ezradioReply->PART_INFO.ROMID           = ezradioCmd[7];
+    }
 }
 
 /** Sends START_TX command to the radio.
@@ -198,14 +200,17 @@ void ezradio_get_int_status(uint8_t ph_clr_pend, uint8_t modem_clr_pend, uint8_t
                               EZRADIO_CMD_REPLY_COUNT_GET_INT_STATUS,
                               ezradioCmd );
 
-    ezradioReply->GET_INT_STATUS.INT_PEND       = ezradioCmd[0];
-    ezradioReply->GET_INT_STATUS.INT_STATUS     = ezradioCmd[1];
-    ezradioReply->GET_INT_STATUS.PH_PEND        = ezradioCmd[2];
-    ezradioReply->GET_INT_STATUS.PH_STATUS      = ezradioCmd[3];
-    ezradioReply->GET_INT_STATUS.MODEM_PEND     = ezradioCmd[4];
-    ezradioReply->GET_INT_STATUS.MODEM_STATUS   = ezradioCmd[5];
-    ezradioReply->GET_INT_STATUS.CHIP_PEND      = ezradioCmd[6];
-    ezradioReply->GET_INT_STATUS.CHIP_STATUS    = ezradioCmd[7];
+    if (ezradioReply != NULL)
+    {
+        ezradioReply->GET_INT_STATUS.INT_PEND       = ezradioCmd[0];
+        ezradioReply->GET_INT_STATUS.INT_STATUS     = ezradioCmd[1];
+        ezradioReply->GET_INT_STATUS.PH_PEND        = ezradioCmd[2];
+        ezradioReply->GET_INT_STATUS.PH_STATUS      = ezradioCmd[3];
+        ezradioReply->GET_INT_STATUS.MODEM_PEND     = ezradioCmd[4];
+        ezradioReply->GET_INT_STATUS.MODEM_STATUS   = ezradioCmd[5];
+        ezradioReply->GET_INT_STATUS.CHIP_PEND      = ezradioCmd[6];
+        ezradioReply->GET_INT_STATUS.CHIP_STATUS    = ezradioCmd[7];
+    }
 }
 
 /**
@@ -241,13 +246,16 @@ void ezradio_gpio_pin_cfg(uint8_t gpio0, uint8_t gpio1, uint8_t gpio2, uint8_t g
                               EZRADIO_CMD_REPLY_COUNT_GPIO_PIN_CFG,
                               ezradioCmd );
 
-    ezradioReply->GPIO_PIN_CFG.gpIO[0]        = ezradioCmd[0];
-    ezradioReply->GPIO_PIN_CFG.gpIO[1]        = ezradioCmd[1];
-    ezradioReply->GPIO_PIN_CFG.gpIO[2]        = ezradioCmd[2];
-    ezradioReply->GPIO_PIN_CFG.gpIO[3]        = ezradioCmd[3];
-    ezradioReply->GPIO_PIN_CFG.NIRQ         = ezradioCmd[4];
-    ezradioReply->GPIO_PIN_CFG.SDO          = ezradioCmd[5];
-    ezradioReply->GPIO_PIN_CFG.GEN_CONFIG   = ezradioCmd[6];
+    if (ezradioReply != NULL)
+    {
+        ezradioReply->GPIO_PIN_CFG.gpIO[0]      = ezradioCmd[0];
+        ezradioReply->GPIO_PIN_CFG.gpIO[1]      = ezradioCmd[1];
+        ezradioReply->GPIO_PIN_CFG.gpIO[2]      = ezradioCmd[2];
+        ezradioReply->GPIO_PIN_CFG.gpIO[3]      = ezradioCmd[3];
+        ezradioReply->GPIO_PIN_CFG.NIRQ         = ezradioCmd[4];
+        ezradioReply->GPIO_PIN_CFG.SDO          = ezradioCmd[5];
+        ezradioReply->GPIO_PIN_CFG.GEN_CONFIG   = ezradioCmd[6];
+    }
 }
 
 /**
@@ -340,8 +348,11 @@ void ezradio_fifo_info(uint8_t fifo,
                               EZRADIO_CMD_REPLY_COUNT_FIFO_INFO,
                               ezradioCmd );
 
-    ezradioReply->FIFO_INFO.RX_FIFO_COUNT   = ezradioCmd[0];
-    ezradioReply->FIFO_INFO.TX_FIFO_SPACE   = ezradioCmd[1];
+    if (ezradioReply != NULL)
+    {
+        ezradioReply->FIFO_INFO.RX_FIFO_COUNT   = ezradioCmd[0];
+        ezradioReply->FIFO_INFO.TX_FIFO_SPACE   = ezradioCmd[1];
+    }
 }
 
 /**
@@ -390,22 +401,25 @@ void ezradio_get_property(uint8_t group, uint8_t num_props, uint8_t start_prop,
                               ezradioCmd[2],
                               ezradioCmd );
 
-    ezradioReply->GET_PROPERTY.DATA[0]   = ezradioCmd[0];
-    ezradioReply->GET_PROPERTY.DATA[1]   = ezradioCmd[1];
-    ezradioReply->GET_PROPERTY.DATA[2]   = ezradioCmd[2];
-    ezradioReply->GET_PROPERTY.DATA[3]   = ezradioCmd[3];
-    ezradioReply->GET_PROPERTY.DATA[4]   = ezradioCmd[4];
-    ezradioReply->GET_PROPERTY.DATA[5]   = ezradioCmd[5];
-    ezradioReply->GET_PROPERTY.DATA[6]   = ezradioCmd[6];
-    ezradioReply->GET_PROPERTY.DATA[7]   = ezradioCmd[7];
-    ezradioReply->GET_PROPERTY.DATA[8]   = ezradioCmd[8];
-    ezradioReply->GET_PROPERTY.DATA[9]   = ezradioCmd[9];
-    ezradioReply->GET_PROPERTY.DATA[10]  = ezradioCmd[10];
-    ezradioReply->GET_PROPERTY.DATA[11]  = ezradioCmd[11];
-    ezradioReply->GET_PROPERTY.DATA[12]  = ezradioCmd[12];
-    ezradioReply->GET_PROPERTY.DATA[13]  = ezradioCmd[13];
-    ezradioReply->GET_PROPERTY.DATA[14]  = ezradioCmd[14];
-    ezradioReply->GET_PROPERTY.DATA[15]  = ezradioCmd[15];
+    if (ezradioReply != NULL)
+    {
+        ezradioReply->GET_PROPERTY.DATA[0]   = ezradioCmd[0];
+        ezradioReply->GET_PROPERTY.DATA[1]   = ezradioCmd[1];
+        ezradioReply->GET_PROPERTY.DATA[2]   = ezradioCmd[2];
+        ezradioReply->GET_PROPERTY.DATA[3]   = ezradioCmd[3];
+        ezradioReply->GET_PROPERTY.DATA[4]   = ezradioCmd[4];
+        ezradioReply->GET_PROPERTY.DATA[5]   = ezradioCmd[5];
+        ezradioReply->GET_PROPERTY.DATA[6]   = ezradioCmd[6];
+        ezradioReply->GET_PROPERTY.DATA[7]   = ezradioCmd[7];
+        ezradioReply->GET_PROPERTY.DATA[8]   = ezradioCmd[8];
+        ezradioReply->GET_PROPERTY.DATA[9]   = ezradioCmd[9];
+        ezradioReply->GET_PROPERTY.DATA[10]  = ezradioCmd[10];
+        ezradioReply->GET_PROPERTY.DATA[11]  = ezradioCmd[11];
+        ezradioReply->GET_PROPERTY.DATA[12]  = ezradioCmd[12];
+        ezradioReply->GET_PROPERTY.DATA[13]  = ezradioCmd[13];
+        ezradioReply->GET_PROPERTY.DATA[14]  = ezradioCmd[14];
+        ezradioReply->GET_PROPERTY.DATA[15]  = ezradioCmd[15];
+    }
 }
 
 #ifdef EZRADIO_DRIVER_FULL_SUPPORT
@@ -428,10 +442,13 @@ void ezradio_func_info(ezradio_cmd_reply_t *ezradioReply)
                               EZRADIO_CMD_REPLY_COUNT_FUNC_INFO,
                               ezradioCmd );
 
-    ezradioReply->FUNC_INFO.REVEXT          = ezradioCmd[0];
-    ezradioReply->FUNC_INFO.REVBRANCH       = ezradioCmd[1];
-    ezradioReply->FUNC_INFO.REVINT          = ezradioCmd[2];
-    ezradioReply->FUNC_INFO.FUNC            = ezradioCmd[5];
+    if (ezradioReply != NULL)
+    {
+        ezradioReply->FUNC_INFO.REVEXT          = ezradioCmd[0];
+        ezradioReply->FUNC_INFO.REVBRANCH       = ezradioCmd[1];
+        ezradioReply->FUNC_INFO.REVINT          = ezradioCmd[2];
+        ezradioReply->FUNC_INFO.FUNC            = ezradioCmd[5];
+    }
 }
 
 /**
@@ -450,10 +467,13 @@ void ezradio_frr_a_read(uint8_t respByteCount, ezradio_cmd_reply_t *ezradioReply
                         respByteCount,
                         ezradioCmd);
 
-    ezradioReply->FRR_A_READ.FRR_A_VALUE = ezradioCmd[0];
-    ezradioReply->FRR_A_READ.FRR_B_VALUE = ezradioCmd[1];
-    ezradioReply->FRR_A_READ.FRR_C_VALUE = ezradioCmd[2];
-    ezradioReply->FRR_A_READ.FRR_D_VALUE = ezradioCmd[3];
+    if (ezradioReply != NULL)
+    {
+        ezradioReply->FRR_A_READ.FRR_A_VALUE = ezradioCmd[0];
+        ezradioReply->FRR_A_READ.FRR_B_VALUE = ezradioCmd[1];
+        ezradioReply->FRR_A_READ.FRR_C_VALUE = ezradioCmd[2];
+        ezradioReply->FRR_A_READ.FRR_D_VALUE = ezradioCmd[3];
+    }
 }
 
 /**
@@ -472,10 +492,13 @@ void ezradio_frr_b_read(uint8_t respByteCount, ezradio_cmd_reply_t *ezradioReply
                         respByteCount,
                         ezradioCmd);
 
-    ezradioReply->FRR_B_READ.FRR_B_VALUE = ezradioCmd[0];
-    ezradioReply->FRR_B_READ.FRR_C_VALUE = ezradioCmd[1];
-    ezradioReply->FRR_B_READ.FRR_D_VALUE = ezradioCmd[2];
-    ezradioReply->FRR_B_READ.FRR_A_VALUE = ezradioCmd[3];
+    if (ezradioReply != NULL)
+    {
+        ezradioReply->FRR_B_READ.FRR_B_VALUE = ezradioCmd[0];
+        ezradioReply->FRR_B_READ.FRR_C_VALUE = ezradioCmd[1];
+        ezradioReply->FRR_B_READ.FRR_D_VALUE = ezradioCmd[2];
+        ezradioReply->FRR_B_READ.FRR_A_VALUE = ezradioCmd[3];
+    }
 }
 
 /**
@@ -494,10 +517,13 @@ void ezradio_frr_c_read(uint8_t respByteCount, ezradio_cmd_reply_t *ezradioReply
                         respByteCount,
                         ezradioCmd);
 
-    ezradioReply->FRR_C_READ.FRR_C_VALUE = ezradioCmd[0];
-    ezradioReply->FRR_C_READ.FRR_D_VALUE = ezradioCmd[1];
-    ezradioReply->FRR_C_READ.FRR_A_VALUE = ezradioCmd[2];
-    ezradioReply->FRR_C_READ.FRR_B_VALUE = ezradioCmd[3];
+    if (ezradioReply != NULL)
+    {
+        ezradioReply->FRR_C_READ.FRR_C_VALUE = ezradioCmd[0];
+        ezradioReply->FRR_C_READ.FRR_D_VALUE = ezradioCmd[1];
+        ezradioReply->FRR_C_READ.FRR_A_VALUE = ezradioCmd[2];
+        ezradioReply->FRR_C_READ.FRR_B_VALUE = ezradioCmd[3];
+    }
 }
 
 /**
@@ -516,10 +542,13 @@ void ezradio_frr_d_read(uint8_t respByteCount, ezradio_cmd_reply_t *ezradioReply
                         respByteCount,
                         ezradioCmd);
 
-    ezradioReply->FRR_D_READ.FRR_D_VALUE = ezradioCmd[0];
-    ezradioReply->FRR_D_READ.FRR_A_VALUE = ezradioCmd[1];
-    ezradioReply->FRR_D_READ.FRR_B_VALUE = ezradioCmd[2];
-    ezradioReply->FRR_D_READ.FRR_C_VALUE = ezradioCmd[3];
+    if (ezradioReply != NULL)
+    {
+        ezradioReply->FRR_D_READ.FRR_D_VALUE = ezradioCmd[0];
+        ezradioReply->FRR_D_READ.FRR_A_VALUE = ezradioCmd[1];
+        ezradioReply->FRR_D_READ.FRR_B_VALUE = ezradioCmd[2];
+        ezradioReply->FRR_D_READ.FRR_C_VALUE = ezradioCmd[3];
+    }
 }
 
 /**
@@ -539,8 +568,11 @@ void ezradio_request_device_state(ezradio_cmd_reply_t *ezradioReply)
                               EZRADIO_CMD_REPLY_COUNT_REQUEST_DEVICE_STATE,
                               ezradioCmd );
 
-    ezradioReply->REQUEST_DEVICE_STATE.CURR_STATE       = ezradioCmd[0];
-    ezradioReply->REQUEST_DEVICE_STATE.CURRENT_CHANNEL  = ezradioCmd[1];
+    if (ezradioReply != NULL)
+    {
+        ezradioReply->REQUEST_DEVICE_STATE.CURR_STATE       = ezradioCmd[0];
+        ezradioReply->REQUEST_DEVICE_STATE.CURRENT_CHANNEL  = ezradioCmd[1];
+    }
 }
 
 /**
@@ -560,22 +592,25 @@ void ezradio_read_cmd_buff(ezradio_cmd_reply_t *ezradioReply)
                                EZRADIO_CMD_REPLY_COUNT_READ_CMD_BUFF,
                                ezradioCmd );
 
-    ezradioReply->READ_CMD_BUFF.BYTE[0]   = ezradioCmd[0];
-    ezradioReply->READ_CMD_BUFF.BYTE[1]   = ezradioCmd[1];
-    ezradioReply->READ_CMD_BUFF.BYTE[2]   = ezradioCmd[2];
-    ezradioReply->READ_CMD_BUFF.BYTE[3]   = ezradioCmd[3];
-    ezradioReply->READ_CMD_BUFF.BYTE[4]   = ezradioCmd[4];
-    ezradioReply->READ_CMD_BUFF.BYTE[5]   = ezradioCmd[5];
-    ezradioReply->READ_CMD_BUFF.BYTE[6]   = ezradioCmd[6];
-    ezradioReply->READ_CMD_BUFF.BYTE[7]   = ezradioCmd[7];
-    ezradioReply->READ_CMD_BUFF.BYTE[8]   = ezradioCmd[8];
-    ezradioReply->READ_CMD_BUFF.BYTE[9]   = ezradioCmd[9];
-    ezradioReply->READ_CMD_BUFF.BYTE[10]  = ezradioCmd[10];
-    ezradioReply->READ_CMD_BUFF.BYTE[11]  = ezradioCmd[11];
-    ezradioReply->READ_CMD_BUFF.BYTE[12]  = ezradioCmd[12];
-    ezradioReply->READ_CMD_BUFF.BYTE[13]  = ezradioCmd[13];
-    ezradioReply->READ_CMD_BUFF.BYTE[14]  = ezradioCmd[14];
-    ezradioReply->READ_CMD_BUFF.BYTE[15]  = ezradioCmd[15];
+    if (ezradioReply != NULL)
+    {
+        ezradioReply->READ_CMD_BUFF.BYTE[0]   = ezradioCmd[0];
+        ezradioReply->READ_CMD_BUFF.BYTE[1]   = ezradioCmd[1];
+        ezradioReply->READ_CMD_BUFF.BYTE[2]   = ezradioCmd[2];
+        ezradioReply->READ_CMD_BUFF.BYTE[3]   = ezradioCmd[3];
+        ezradioReply->READ_CMD_BUFF.BYTE[4]   = ezradioCmd[4];
+        ezradioReply->READ_CMD_BUFF.BYTE[5]   = ezradioCmd[5];
+        ezradioReply->READ_CMD_BUFF.BYTE[6]   = ezradioCmd[6];
+        ezradioReply->READ_CMD_BUFF.BYTE[7]   = ezradioCmd[7];
+        ezradioReply->READ_CMD_BUFF.BYTE[8]   = ezradioCmd[8];
+        ezradioReply->READ_CMD_BUFF.BYTE[9]   = ezradioCmd[9];
+        ezradioReply->READ_CMD_BUFF.BYTE[10]  = ezradioCmd[10];
+        ezradioReply->READ_CMD_BUFF.BYTE[11]  = ezradioCmd[11];
+        ezradioReply->READ_CMD_BUFF.BYTE[12]  = ezradioCmd[12];
+        ezradioReply->READ_CMD_BUFF.BYTE[13]  = ezradioCmd[13];
+        ezradioReply->READ_CMD_BUFF.BYTE[14]  = ezradioCmd[14];
+        ezradioReply->READ_CMD_BUFF.BYTE[15]  = ezradioCmd[15];
+    }
 }
 
 /**
@@ -597,8 +632,11 @@ void ezradio_get_ph_status(uint8_t ph_clr_pend, ezradio_cmd_reply_t *ezradioRepl
                               EZRADIO_CMD_REPLY_COUNT_GET_PH_STATUS,
                               ezradioCmd );
 
-    ezradioReply->GET_PH_STATUS.PH_PEND        = ezradioCmd[0];
-    ezradioReply->GET_PH_STATUS.PH_STATUS      = ezradioCmd[1];
+    if (ezradioReply != NULL)
+    {
+        ezradioReply->GET_PH_STATUS.PH_PEND        = ezradioCmd[0];
+        ezradioReply->GET_PH_STATUS.PH_STATUS      = ezradioCmd[1];
+    }
 }
 
 /**
@@ -620,14 +658,17 @@ void ezradio_get_modem_status( uint8_t modem_clr_pend, ezradio_cmd_reply_t *ezra
                               EZRADIO_CMD_REPLY_COUNT_GET_MODEM_STATUS,
                               ezradioCmd );
 
-    ezradioReply->GET_MODEM_STATUS.MODEM_PEND   = ezradioCmd[0];
-    ezradioReply->GET_MODEM_STATUS.MODEM_STATUS = ezradioCmd[1];
-    ezradioReply->GET_MODEM_STATUS.CURR_RSSI    = ezradioCmd[2];
-    ezradioReply->GET_MODEM_STATUS.LATCH_RSSI   = ezradioCmd[3];
-    ezradioReply->GET_MODEM_STATUS.ANT1_RSSI    = ezradioCmd[4];
-    ezradioReply->GET_MODEM_STATUS.ANT2_RSSI    = ezradioCmd[5];
-    ezradioReply->GET_MODEM_STATUS.AFC_FREQ_OFFSET =  ((uint16_t)ezradioCmd[6] << 8) & 0xFF00;
-    ezradioReply->GET_MODEM_STATUS.AFC_FREQ_OFFSET |= (uint16_t)ezradioCmd[7] & 0x00FF;
+    if (ezradioReply != NULL)
+    {
+        ezradioReply->GET_MODEM_STATUS.MODEM_PEND   = ezradioCmd[0];
+        ezradioReply->GET_MODEM_STATUS.MODEM_STATUS = ezradioCmd[1];
+        ezradioReply->GET_MODEM_STATUS.CURR_RSSI    = ezradioCmd[2];
+        ezradioReply->GET_MODEM_STATUS.LATCH_RSSI   = ezradioCmd[3];
+        ezradioReply->GET_MODEM_STATUS.ANT1_RSSI    = ezradioCmd[4];
+        ezradioReply->GET_MODEM_STATUS.ANT2_RSSI    = ezradioCmd[5];
+        ezradioReply->GET_MODEM_STATUS.AFC_FREQ_OFFSET =  ((uint16_t)ezradioCmd[6] << 8) & 0xFF00;
+        ezradioReply->GET_MODEM_STATUS.AFC_FREQ_OFFSET |= (uint16_t)ezradioCmd[7] & 0x00FF;
+    }
 }
 
 /**
@@ -649,9 +690,12 @@ void ezradio_get_chip_status( uint8_t chip_clr_pend, ezradio_cmd_reply_t *ezradi
                               EZRADIO_CMD_REPLY_COUNT_GET_CHIP_STATUS,
                               ezradioCmd );
 
-    ezradioReply->GET_CHIP_STATUS.CHIP_PEND         = ezradioCmd[0];
-    ezradioReply->GET_CHIP_STATUS.CHIP_STATUS       = ezradioCmd[1];
-    ezradioReply->GET_CHIP_STATUS.CMD_ERR_STATUS    = ezradioCmd[2];
+    if (ezradioReply != NULL)
+    {
+        ezradioReply->GET_CHIP_STATUS.CHIP_PEND         = ezradioCmd[0];
+        ezradioReply->GET_CHIP_STATUS.CHIP_STATUS       = ezradioCmd[1];
+        ezradioReply->GET_CHIP_STATUS.CMD_ERR_STATUS    = ezradioCmd[2];
+    }
 }
 
 
@@ -683,8 +727,11 @@ void ezradio_get_packet_info(uint8_t field_number_mask, uint16_t len, int16_t di
                               EZRADIO_CMD_REPLY_COUNT_PACKET_INFO,
                               ezradioCmd );
 
-    ezradioReply->PACKET_INFO.LENGTH = ((uint16_t)ezradioCmd[0] << 8) & 0xFF00;
-    ezradioReply->PACKET_INFO.LENGTH |= (uint16_t)ezradioCmd[1] & 0x00FF;
+    if (ezradioReply != NULL)
+    {
+        ezradioReply->PACKET_INFO.LENGTH = ((uint16_t)ezradioCmd[0] << 8) & 0xFF00;
+        ezradioReply->PACKET_INFO.LENGTH |= (uint16_t)ezradioCmd[1] & 0x00FF;
+    }
 }
 
 
@@ -750,14 +797,17 @@ void ezradio_get_int_status_fast_clear_read(ezradio_cmd_reply_t *ezradioReply)
                               EZRADIO_CMD_REPLY_COUNT_GET_INT_STATUS,
                               ezradioCmd );
 
-    ezradioReply->GET_INT_STATUS.INT_PEND       = ezradioCmd[0];
-    ezradioReply->GET_INT_STATUS.INT_STATUS     = ezradioCmd[1];
-    ezradioReply->GET_INT_STATUS.PH_PEND        = ezradioCmd[2];
-    ezradioReply->GET_INT_STATUS.PH_STATUS      = ezradioCmd[3];
-    ezradioReply->GET_INT_STATUS.MODEM_PEND     = ezradioCmd[4];
-    ezradioReply->GET_INT_STATUS.MODEM_STATUS   = ezradioCmd[5];
-    ezradioReply->GET_INT_STATUS.CHIP_PEND      = ezradioCmd[6];
-    ezradioReply->GET_INT_STATUS.CHIP_STATUS    = ezradioCmd[7];
+    if (ezradioReply != NULL)
+    {
+        ezradioReply->GET_INT_STATUS.INT_PEND       = ezradioCmd[0];
+        ezradioReply->GET_INT_STATUS.INT_STATUS     = ezradioCmd[1];
+        ezradioReply->GET_INT_STATUS.PH_PEND        = ezradioCmd[2];
+        ezradioReply->GET_INT_STATUS.PH_STATUS      = ezradioCmd[3];
+        ezradioReply->GET_INT_STATUS.MODEM_PEND     = ezradioCmd[4];
+        ezradioReply->GET_INT_STATUS.MODEM_STATUS   = ezradioCmd[5];
+        ezradioReply->GET_INT_STATUS.CHIP_PEND      = ezradioCmd[6];
+        ezradioReply->GET_INT_STATUS.CHIP_STATUS    = ezradioCmd[7];
+    }
 }
 
 /**
@@ -777,13 +827,16 @@ void ezradio_gpio_pin_cfg_fast(ezradio_cmd_reply_t *ezradioReply)
                               EZRADIO_CMD_REPLY_COUNT_GPIO_PIN_CFG,
                               ezradioCmd );
 
-    ezradioReply->GPIO_PIN_CFG.gpIO[0]        = ezradioCmd[0];
-    ezradioReply->GPIO_PIN_CFG.gpIO[1]        = ezradioCmd[1];
-    ezradioReply->GPIO_PIN_CFG.gpIO[2]        = ezradioCmd[2];
-    ezradioReply->GPIO_PIN_CFG.gpIO[3]        = ezradioCmd[3];
-    ezradioReply->GPIO_PIN_CFG.NIRQ         = ezradioCmd[4];
-    ezradioReply->GPIO_PIN_CFG.SDO          = ezradioCmd[5];
-    ezradioReply->GPIO_PIN_CFG.GEN_CONFIG   = ezradioCmd[6];
+    if (ezradioReply != NULL)
+    {
+        ezradioReply->GPIO_PIN_CFG.gpIO[0]        = ezradioCmd[0];
+        ezradioReply->GPIO_PIN_CFG.gpIO[1]        = ezradioCmd[1];
+        ezradioReply->GPIO_PIN_CFG.gpIO[2]        = ezradioCmd[2];
+        ezradioReply->GPIO_PIN_CFG.gpIO[3]        = ezradioCmd[3];
+        ezradioReply->GPIO_PIN_CFG.NIRQ         = ezradioCmd[4];
+        ezradioReply->GPIO_PIN_CFG.SDO          = ezradioCmd[5];
+        ezradioReply->GPIO_PIN_CFG.GEN_CONFIG   = ezradioCmd[6];
+    }
 }
 
 
@@ -819,8 +872,11 @@ void ezradio_get_ph_status_fast_clear_read(ezradio_cmd_reply_t *ezradioReply)
                               EZRADIO_CMD_REPLY_COUNT_GET_PH_STATUS,
                               ezradioCmd );
 
-    ezradioReply->GET_PH_STATUS.PH_PEND        = ezradioCmd[0];
-    ezradioReply->GET_PH_STATUS.PH_STATUS      = ezradioCmd[1];
+    if (ezradioReply != NULL)
+    {
+        ezradioReply->GET_PH_STATUS.PH_PEND        = ezradioCmd[0];
+        ezradioReply->GET_PH_STATUS.PH_STATUS      = ezradioCmd[1];
+    }
 }
 
 /**
@@ -855,14 +911,17 @@ void ezradio_get_modem_status_fast_clear_read(ezradio_cmd_reply_t *ezradioReply)
                               EZRADIO_CMD_REPLY_COUNT_GET_MODEM_STATUS,
                               ezradioCmd );
 
-    ezradioReply->GET_MODEM_STATUS.MODEM_PEND   = ezradioCmd[0];
-    ezradioReply->GET_MODEM_STATUS.MODEM_STATUS = ezradioCmd[1];
-    ezradioReply->GET_MODEM_STATUS.CURR_RSSI    = ezradioCmd[2];
-    ezradioReply->GET_MODEM_STATUS.LATCH_RSSI   = ezradioCmd[3];
-    ezradioReply->GET_MODEM_STATUS.ANT1_RSSI    = ezradioCmd[4];
-    ezradioReply->GET_MODEM_STATUS.ANT2_RSSI    = ezradioCmd[5];
-    ezradioReply->GET_MODEM_STATUS.AFC_FREQ_OFFSET = ((uint16_t)ezradioCmd[6] << 8) & 0xFF00;
-    ezradioReply->GET_MODEM_STATUS.AFC_FREQ_OFFSET |= (uint16_t)ezradioCmd[7] & 0x00FF;
+    if (ezradioReply != NULL)
+    {
+        ezradioReply->GET_MODEM_STATUS.MODEM_PEND   = ezradioCmd[0];
+        ezradioReply->GET_MODEM_STATUS.MODEM_STATUS = ezradioCmd[1];
+        ezradioReply->GET_MODEM_STATUS.CURR_RSSI    = ezradioCmd[2];
+        ezradioReply->GET_MODEM_STATUS.LATCH_RSSI   = ezradioCmd[3];
+        ezradioReply->GET_MODEM_STATUS.ANT1_RSSI    = ezradioCmd[4];
+        ezradioReply->GET_MODEM_STATUS.ANT2_RSSI    = ezradioCmd[5];
+        ezradioReply->GET_MODEM_STATUS.AFC_FREQ_OFFSET = ((uint16_t)ezradioCmd[6] << 8) & 0xFF00;
+        ezradioReply->GET_MODEM_STATUS.AFC_FREQ_OFFSET |= (uint16_t)ezradioCmd[7] & 0x00FF;
+    }
 }
 
 /**
@@ -897,9 +956,12 @@ void ezradio_get_chip_status_fast_clear_read(ezradio_cmd_reply_t *ezradioReply)
                               EZRADIO_CMD_REPLY_COUNT_GET_CHIP_STATUS,
                               ezradioCmd );
 
-    ezradioReply->GET_CHIP_STATUS.CHIP_PEND         = ezradioCmd[0];
-    ezradioReply->GET_CHIP_STATUS.CHIP_STATUS       = ezradioCmd[1];
-    ezradioReply->GET_CHIP_STATUS.CMD_ERR_STATUS    = ezradioCmd[2];
+    if (ezradioReply != NULL)
+    {
+        ezradioReply->GET_CHIP_STATUS.CHIP_PEND         = ezradioCmd[0];
+        ezradioReply->GET_CHIP_STATUS.CHIP_STATUS       = ezradioCmd[1];
+        ezradioReply->GET_CHIP_STATUS.CMD_ERR_STATUS    = ezradioCmd[2];
+    }
 }
 
 /**
@@ -935,8 +997,11 @@ void ezradio_fifo_info_fast_read(ezradio_cmd_reply_t *ezradioReply)
                               EZRADIO_CMD_REPLY_COUNT_FIFO_INFO,
                               ezradioCmd );
 
-    ezradioReply->FIFO_INFO.RX_FIFO_COUNT   = ezradioCmd[0];
-    ezradioReply->FIFO_INFO.TX_FIFO_SPACE   = ezradioCmd[1];
+    if (ezradioReply != NULL)
+    {
+        ezradioReply->FIFO_INFO.RX_FIFO_COUNT   = ezradioCmd[0];
+        ezradioReply->FIFO_INFO.TX_FIFO_SPACE   = ezradioCmd[1];
+    }
 }
 
 #endif /* EZRADIO_DRIVER_FULL_SUPPORT */

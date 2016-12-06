@@ -16,12 +16,13 @@
  * limitations under the License.
  */
 
-#include "userbutton.h"
+#include "button.h"
 #include "hwgpio.h"
 #include "hwatomic.h"
 #include "scheduler.h"
 #include <string.h>
 #include <debug.h>
+#include "em_gpio.h"
 
 #if NUM_USERBUTTONS != 2
 	#error "NUM_USERBUTTONS does not match the expected value. Update platform.h or platform_userbutton.c"
@@ -43,6 +44,10 @@ static void button_callback(pin_id_t pin_id, uint8_t event_mask);
 static void button_task();
 __LINK_C void __ubutton_init()
 {
+	error_t err;
+    err = hw_gpio_configure_pin(BUTTON0, true, gpioModeInput, 0); assert(err == SUCCESS); // TODO pull up or pull down to prevent floating
+    err = hw_gpio_configure_pin(BUTTON1, true, gpioModeInput, 0); assert(err == SUCCESS); // TODO pull up or pull down to prevent floating
+
 	buttons[0].button_id = BUTTON0;
 	buttons[1].button_id = BUTTON1;
 	for(int i = 0; i < NUM_USERBUTTONS; i++)

@@ -40,11 +40,32 @@
 #include "alp_cmd_handler.h"
 #include "version.h"
 
+#if HW_NUM_LEDS > 0
+#include "hwleds.h"
+
+void led_blink_off()
+{
+	led_off(0);
+}
+
+void led_blink()
+{
+	led_on(0);
+
+	timer_post_task_delay(&led_blink_off, TIMER_TICKS_PER_SEC * 0.2);
+}
+
+#endif
+
 static d7asp_init_args_t d7asp_init_args;
 
 static void on_unsollicited_response_received(d7asp_result_t d7asp_result, uint8_t *alp_command, uint8_t alp_command_size)
 {
     alp_cmd_handler_output_d7asp_response(d7asp_result, alp_command, alp_command_size);
+
+#if HW_NUM_LEDS > 0
+	led_blink();
+#endif
 }
 
 void bootstrap()
@@ -54,17 +75,16 @@ void bootstrap()
             .control_scan_type_is_foreground = true,
             .control_csma_ca_mode = CSMA_CA_MODE_UNC,
             .control_number_of_subbands = 1,
-            .subnet = 0,
+            .subnet = 0xB6,
             .scan_automation_period = 0,
-            .transmission_timeout_period = 50,
             .subbands[0] = (subband_t){
                 .channel_header = {
                     .ch_coding = PHY_CODING_PN9,
                     .ch_class = PHY_CLASS_NORMAL_RATE,
-                    .ch_freq_band = PHY_BAND_433
+                    .ch_freq_band = PHY_BAND_868
                 },
-                .channel_index_start = 0,
-                .channel_index_end = 0,
+                .channel_index_start = 216,
+                .channel_index_end = 216,
                 .eirp = 0,
                 .ccao = 0
             }
@@ -84,6 +104,10 @@ void bootstrap()
     fs_write_dll_conf_active_access_class(0); // use access class 0 for scan automation
 #ifdef HAS_LCD
     lcd_write_string("GW %s", _GIT_SHA1);
+#endif
+
+#if HW_NUM_LEDS > 0
+    sched_register_task(&led_blink_off);
 #endif
 }
 

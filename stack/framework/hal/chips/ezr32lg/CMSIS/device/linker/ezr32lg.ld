@@ -1,17 +1,17 @@
-/* Linker script for Silicon Labs EZR32LG devices */
-/*                                                                  */
-/* This file is subject to the license terms as defined in ARM's    */
-/* CMSIS END USER LICENSE AGREEMENT.pdf, governing the use of       */
-/* Example Code.                                                    */
-/*                                                                  */
-/* Silicon Laboratories, Inc. 2015                                  */
-/*                                                                  */
-/* Version 4.2.0 */
-/*                                                                  */
+/* Linker script for Silicon Labs EZR32LG devices                      */
+/*                                                                     */
+/* This file is subject to the license terms as defined in ARM's       */
+/* CMSIS END USER LICENSE AGREEMENT.pdf, governing the use of          */
+/* Example Code.                                                       */
+/*                                                                     */
+/* Copyright 2016 Silicon Laboratories, Inc. http://www.silabs.com     */
+/*                                                                     */
+/* Version 4.4.0 */
+/*                                                                     */
 
 MEMORY
 {
-  FLASH (rx) : ORIGIN = 0x00000000, LENGTH = 0x40000 
+  FLASH (rx) : ORIGIN = 0x00000000, LENGTH = 262144
   RAM (rwx)  : ORIGIN = 0x20000000, LENGTH = 32768
 }
 

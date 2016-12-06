@@ -1,10 +1,10 @@
 /**************************************************************************//**
  * @file ezr32lg_timer_cc.h
  * @brief EZR32LG_TIMER_CC register and bit field definitions
- * @version 4.2.1
+ * @version 4.4.0
  ******************************************************************************
  * @section License
- * <b>Copyright 2015 Silicon Laboratories, Inc. http://www.silabs.com</b>
+ * <b>Copyright 2016 Silicon Laboratories, Inc. http://www.silabs.com</b>
  ******************************************************************************
  *
  * Permission is granted to anyone to use this software for any purpose,
@@ -38,10 +38,10 @@
  *****************************************************************************/
 typedef struct
 {
-  __IO uint32_t CTRL; /**< CC Channel Control Register  */
-  __IO uint32_t CCV;  /**< CC Channel Value Register  */
-  __I uint32_t  CCVP; /**< CC Channel Value Peek Register  */
-  __IO uint32_t CCVB; /**< CC Channel Buffer Register  */
+  __IOM uint32_t CTRL; /**< CC Channel Control Register  */
+  __IOM uint32_t CCV;  /**< CC Channel Value Register  */
+  __IM uint32_t  CCVP; /**< CC Channel Value Peek Register  */
+  __IOM uint32_t CCVB; /**< CC Channel Buffer Register  */
 } TIMER_CC_TypeDef;
 
 /** @} End of group Parts */

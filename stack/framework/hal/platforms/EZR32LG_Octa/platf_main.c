@@ -53,7 +53,7 @@ void __platform_init()
 
 void __platform_post_framework_init()
 {
-    __ubutton_init();	
+    __ubutton_init();
     led_init();
 
 #ifdef PLATFORM_USE_USB_CDC

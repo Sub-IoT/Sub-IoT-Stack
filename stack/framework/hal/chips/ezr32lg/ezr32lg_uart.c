@@ -274,7 +274,7 @@ void uart_send_bytes(uart_handle_t* uart, void const *data, size_t length) {
 			uint16_t timeout = 0;
 			while(USBD_EpIsBusy(0x81) && timeout < 100){
 				timeout++;
-				hw_busy_wait(1000);
+        //hw_busy_wait(1000);
 			};
 			int ret = USBD_Write( 0x81, (void*) tempData, length, NULL);
 		}

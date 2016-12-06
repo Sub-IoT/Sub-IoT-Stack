@@ -36,9 +36,9 @@
 #endif
 
 // configuration options
-#define RX_MODE
+//#define RX_MODE
 #define PHY_CLASS PHY_CLASS_LO_RATE
-#define PACKET_LENGTH 10
+#define PACKET_LENGTH 100
 
 
 
@@ -66,9 +66,9 @@ hw_rx_cfg_t rx_cfg = {
 #ifdef PLATFORM_EZR32LG_WSTK6200A
         .channel_header.ch_freq_band = PHY_BAND_868,
 #else
-        .channel_header.ch_freq_band = PHY_BAND_433,
+        .channel_header.ch_freq_band = PHY_BAND_868,
 #endif
-        .center_freq_index = 0
+        .center_freq_index = 16
     },
     .syncword_class = PHY_SYNCWORD_CLASS0
 };
@@ -80,10 +80,10 @@ hw_tx_cfg_t tx_cfg = {
 #ifdef PLATFORM_EZR32LG_WSTK6200A
         .channel_header.ch_freq_band = PHY_BAND_868,
 #else
-        .channel_header.ch_freq_band = PHY_BAND_433,
+        .channel_header.ch_freq_band = PHY_BAND_868,
 #endif
 
-        .center_freq_index = 0
+        .center_freq_index = 16
     },
     .syncword_class = PHY_SYNCWORD_CLASS0,
     .eirp = 10
@@ -152,7 +152,7 @@ void packet_transmitted(hw_radio_packet_t* packet)
     led_toggle(0);
 #endif
     DPRINT("%d tx ok\n", counter);
-    timer_post_task(&transmit_packet, 1000);
+    sched_post_task(&transmit_packet);
 
     hw_watchdog_feed();
 }

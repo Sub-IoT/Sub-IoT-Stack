@@ -31,6 +31,9 @@
 #include "version.h"
 #include "dll.h"
 
+#define D7A_PROTOCOL_VERSION_MAJOR 1
+#define D7A_PROTOCOL_VERSION_MINOR 1
+
 static fs_file_header_t NGDEF(_file_headers)[MODULE_D7AP_FS_FILE_COUNT] = { 0 };
 #define file_headers NG(_file_headers)
 
@@ -79,7 +82,6 @@ static void write_access_class(uint8_t access_class_index, dae_access_profile_t*
     data[current_data_offset] = access_class->control; current_data_offset++;
     data[current_data_offset] = access_class->subnet; current_data_offset++;
     data[current_data_offset] = access_class->scan_automation_period; current_data_offset++;
-    data[current_data_offset] = access_class->transmission_timeout_period; current_data_offset++;
     data[current_data_offset] = 0x00; current_data_offset++; // RFU
     // subbands, only 1 supported for now
     memcpy(data + current_data_offset, &(access_class->subbands[0].channel_header), 1); current_data_offset++;
@@ -119,6 +121,8 @@ void fs_init(fs_init_args_t* init_args)
         .length = D7A_FILE_FIRMWARE_VERSION_SIZE
     };
 
+    memset(data + current_data_offset, D7A_PROTOCOL_VERSION_MAJOR, 1); current_data_offset++;
+    memset(data + current_data_offset, D7A_PROTOCOL_VERSION_MINOR, 1); current_data_offset++;
     memcpy(data + current_data_offset, _APP_NAME, D7A_FILE_FIRMWARE_VERSION_APP_NAME_SIZE);
     current_data_offset += D7A_FILE_FIRMWARE_VERSION_APP_NAME_SIZE;
     memcpy(data + current_data_offset, _GIT_SHA1, D7A_FILE_FIRMWARE_VERSION_GIT_SHA1_SIZE);
@@ -130,7 +134,7 @@ void fs_init(fs_init_args_t* init_args)
         .file_properties.action_protocol_enabled = 0,
         .file_properties.storage_class = FS_STORAGE_RESTORABLE,
         .file_properties.permissions = 0, // TODO
-        .length = D7A_FILE_UID_SIZE
+        .length = D7A_FILE_DLL_CONF_SIZE
     };
 
     memset(data + current_data_offset, 0, 1); current_data_offset += 1; // active access class
@@ -263,7 +267,6 @@ void fs_read_access_class(uint8_t access_class_index, dae_access_profile_t *acce
     access_class->control = (*data_ptr); data_ptr++;
     access_class->subnet = (*data_ptr); data_ptr++;
     access_class->scan_automation_period = (*data_ptr); data_ptr++;
-    access_class->transmission_timeout_period = (*data_ptr); data_ptr++;
     data_ptr++; // RFU
     // subbands, only 1 supported for now
     memcpy(&(access_class->subbands[0].channel_header), data_ptr, 1); data_ptr++;

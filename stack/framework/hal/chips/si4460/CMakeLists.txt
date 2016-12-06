@@ -17,19 +17,33 @@
 # limitations under the License.
 #
 
+ADD_DEFINITIONS(
+    -DEZRADIO_DRIVER_EXTENDED_SUPPORT
+    -DEZRADIO_DRIVER_FULL_SUPPORT
+    -Dezradio_comm_ERROR_CALLBACK=__ezr_error_callback
+)
 
-INCLUDE_DIRECTORIES(	./
-						ezradiodrv/inc)
+INCLUDE_DIRECTORIES(
+    ./
+    ezradiodrv/inc
+)
 
 SET(si4460_SRC
         si4460.c
         si4460.h
-        si4460_interface.c	
+        si4460_interface.c
+        ezradiodrv/src/ezradio_hal.c
         ezradiodrv/src/ezradio_api_lib_add.c
         ezradiodrv/src/ezradio_api_lib.c
         ezradiodrv/src/ezradio_comm.c
-        ezradiodrv/src/ezradio_hal.c
-        
+        ezradiodrv/inc/ezradiodrv_config.h
+        ezradiodrv/inc/ezradio_prop.h
+        ezradiodrv/inc/ezradio_patch_revC2A_general.h
+        ezradiodrv/inc/ezradio_hal.h
+        ezradiodrv/inc/ezradio_comm.h
+        ezradiodrv/inc/ezradio_cmd.h
+        ezradiodrv/inc/ezradio_api_lib.h
+        ezradiodrv/inc/ezradio_api_lib_add.h
 )
 
 

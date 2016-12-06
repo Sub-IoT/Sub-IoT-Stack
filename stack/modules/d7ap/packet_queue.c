@@ -33,7 +33,8 @@ typedef enum
 {
     PACKET_QUEUE_ELEMENT_STATUS_FREE,       /*! The element is free */
     PACKET_QUEUE_ELEMENT_STATUS_ALLOCATED,  /*! The element is allocated and passed to hwradio for filling */
-    PACKET_QUEUE_ELEMENT_STATUS_RECEIVED,   /*! The element contains a succesfully received packet, ready for further processing */
+    PACKET_QUEUE_ELEMENT_STATUS_RECEIVED,   /*! The element contains a successfully received packet, ready for further processing */
+    PACKET_QUEUE_ELEMENT_STATUS_TRANSMITTED,/*! The element contains a successfully transmitted packet */
     PACKET_QUEUE_ELEMENT_STATUS_PROCESSING  /*! Indicates the supplied packet is being processed */
 } packet_queue_element_status_t;
 
@@ -110,12 +111,40 @@ void packet_queue_mark_received(hw_radio_packet_t* hw_radio_packet)
     assert(false);
 }
 
+void packet_queue_mark_transmitted(hw_radio_packet_t* hw_radio_packet)
+{
+    for(uint8_t i = 0; i < MODULE_D7AP_PACKET_QUEUE_SIZE; i++)
+    {
+        if(&(packet_queue[i].hw_radio_packet) == hw_radio_packet)
+        {
+            assert(packet_queue_element_status[i] == PACKET_QUEUE_ELEMENT_STATUS_PROCESSING);
+            DPRINT("Packet queue mark transmitted %p", &(packet_queue[i].hw_radio_packet));
+            packet_queue_element_status[i] = PACKET_QUEUE_ELEMENT_STATUS_TRANSMITTED;
+            return;
+        }
+    }
+
+    assert(false);
+}
+
 packet_t* packet_queue_get_received_packet()
 {
     // note: we return the first found received packet, this may not be the oldest one
     for(uint8_t i = 0; i < MODULE_D7AP_PACKET_QUEUE_SIZE; i++)
     {
         if(packet_queue_element_status[i] == PACKET_QUEUE_ELEMENT_STATUS_RECEIVED)
+            return &(packet_queue[i]);
+    }
+
+    return NULL;
+}
+
+packet_t* packet_queue_get_transmitted_packet()
+{
+    // note: we return the first found transmitted packet but it is not expected to find more than one entry
+    for(uint8_t i = 0; i < MODULE_D7AP_PACKET_QUEUE_SIZE; i++)
+    {
+        if(packet_queue_element_status[i] == PACKET_QUEUE_ELEMENT_STATUS_TRANSMITTED)
             return &(packet_queue[i]);
     }
 
@@ -129,8 +158,7 @@ void packet_queue_mark_processing(packet_t* packet)
     {
         if(packet == &(packet_queue[i]))
         {
-            assert(packet_queue_element_status[i] == PACKET_QUEUE_ELEMENT_STATUS_RECEIVED
-                   || packet_queue_element_status[i] == PACKET_QUEUE_ELEMENT_STATUS_ALLOCATED);
+            assert(packet_queue_element_status[i] != PACKET_QUEUE_ELEMENT_STATUS_FREE);
 
             packet_queue_element_status[i] = PACKET_QUEUE_ELEMENT_STATUS_PROCESSING;
             return;

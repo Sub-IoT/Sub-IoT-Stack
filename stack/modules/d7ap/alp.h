@@ -34,7 +34,7 @@
 #define ALP_ITF_ID_FS     0x00 // not part of the spec
 #define ALP_ITF_ID_APP    0x01 // not part of the spec
 
-#define ALP_PAYLOAD_MAX_SIZE 128 // TODO configurable?
+#define ALP_PAYLOAD_MAX_SIZE 239 // TODO configurable?
 
 typedef enum
 {
@@ -223,5 +223,7 @@ void alp_process_command_console_output(uint8_t* alp_command, uint8_t alp_comman
 void alp_d7asp_request_completed(d7asp_result_t result, uint8_t* payload, uint8_t payload_length);
 
 void alp_d7asp_fifo_flush_completed(uint8_t fifo_token, uint8_t* progress_bitmap, uint8_t* success_bitmap, uint8_t bitmap_byte_count);
+
+uint8_t alp_get_expected_response_length(uint8_t* alp_command, uint8_t alp_command_length);
 
 #endif /* ALP_H_ */

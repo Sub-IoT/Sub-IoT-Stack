@@ -28,13 +28,14 @@
 #ifdef FRAMEWORK_SHELL_ENABLED
 
 
-#define CMD_BUFFER_SIZE 256
+#define CMD_BUFFER_SIZE 512
 #define CMD_HANDLER_REGISTRATIONS_COUNT 3 // TODO configurable using cmake
 #define CMD_HANDLER_ID_NOT_SET -1
 
 #include "hwuart.h"
 #include "scheduler.h"
 #include "hwsystem.h"
+#include "hwatomic.h"
 #include "debug.h"
 
 #include "console.h"
@@ -141,8 +142,13 @@ static void uart_rx_cb(uint8_t data)
       console_print_byte(data);
       if( data == '\r' ) { console_print_byte('\n'); }
     }
+
     error_t err;
-    err = fifo_put(&cmd_fifo, &data, 1); assert(err == SUCCESS);
+
+    start_atomic();
+        err = fifo_put(&cmd_fifo, &data, 1); assert(err == SUCCESS);
+    end_atomic();
+
     if(!sched_is_scheduled(&process_cmd_fifo))
         sched_post_task(&process_cmd_fifo);
 }

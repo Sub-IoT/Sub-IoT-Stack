@@ -65,47 +65,10 @@ __LINK_C void timer_init()
 
 }
 
-#ifdef FRAMEWORK_TIMER_RESET_COUNTER
-
-	static inline void reset_counter()
-	{
-		//this function should only be called from an atomic context
-		NG(timer_offset) = 0;
-		hw_timer_counter_reset(HW_TIMER_ID);
-	}
-	static bool reset_timers()
-	{
-		//this function should only be called from an atomic context
-		if(NG(next_event) == NO_EVENT)
-		{
-			reset_counter();
-			return true;
-		}
-
-		timer_tick_t cur_value = timer_get_counter_value();
-		reset_counter();
-		for(uint32_t i = 0; i < FRAMEWORK_TIMER_STACK_SIZE; i++)
-		{
-			if(NG(timers)[i].f != 0x0)
-			{
-				//prevent the value from 'underflowing'
-				if(cur_value > NG(timers)[i].next_event)
-					NG(timers)[i].next_event = 0;
-				else
-					NG(timers)[i].next_event -= cur_value;
-			}
-		}
-		return true;
-	}
-#else
-	static inline bool reset_timers() {return false;}
-#endif //FRAMEWORK_TIMER_RESET_COUNTER
-
 static void configure_next_event();
 __LINK_C error_t timer_post_task_prio(task_t task, timer_tick_t fire_time, uint8_t priority)
 {
     error_t status = ENOMEM;
-    bool timers_reset = reset_timers();
     if (priority > MIN_PRIORITY)
         return EINVAL;
 
@@ -148,9 +111,8 @@ __LINK_C error_t timer_post_task_prio(task_t task, timer_tick_t fire_time, uint8
 config:
 
     //if there is no event scheduled, this event will run before the next scheduled event
-    //or we reset the timers: trigger a reconfiguration of the next scheduled event
     {
-        bool do_config = NG(next_event) == NO_EVENT || timers_reset;
+        bool do_config = NG(next_event) == NO_EVENT;
 
         if (!do_config)
         {
@@ -241,7 +203,6 @@ __LINK_C timer_tick_t timer_get_counter_value()
 static uint32_t get_next_event()
 {
     //this function should only be called from an atomic context
-    reset_timers();
     int32_t min_delay;
     uint32_t next_fire_event = NO_EVENT;
     uint32_t counter = timer_get_counter_value();

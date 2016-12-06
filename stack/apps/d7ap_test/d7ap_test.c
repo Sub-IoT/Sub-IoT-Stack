@@ -54,16 +54,32 @@
 	#endif
 #endif
 
+#if HW_NUM_LEDS > 0
+#include "hwleds.h"
+
+void led_blink_off()
+{
+	led_off(0);
+}
+
+void led_blink()
+{
+	led_on(0);
+
+	timer_post_task_delay(&led_blink_off, TIMER_TICKS_PER_SEC * 0.2);
+}
+
+#endif
+
 #define SENSOR_FILE_ID           0x40
 #define SENSOR_FILE_SIZE         4
 #define ACTION_FILE_ID           0x41
-
-#define REPORTING_INTERVAL       1 // seconds
+#define REPORTING_INTERVAL       5 // seconds
 #define REPORTING_INTERVAL_TICKS TIMER_TICKS_PER_SEC * REPORTING_INTERVAL
 
 void execute_sensor_measurement() {
 #if HW_NUM_LEDS >= 1
-    led_toggle(0);
+	led_blink();
 #endif
     // use the counter value for now instead of 'real' sensor
     uint32_t val = timer_get_counter_value();
@@ -127,10 +143,10 @@ void init_user_files() {
         .dormant_timeout                  = 0,
         .addressee = {
             .ctrl = {
-                .id_type                  = ID_TYPE_BCAST,
-                .access_class             = 0
+                .id_type                  = ID_TYPE_NOID,
             },
-            .id                 = 0
+            .access_class                 = 0,
+            .id                           = 0
         }
     };
 
@@ -161,12 +177,11 @@ void bootstrap() {
             .control_number_of_subbands = 1,
             .subnet = 0x00,
             .scan_automation_period = 0,
-            .transmission_timeout_period = 50,
             .subbands[0] = (subband_t){
                 .channel_header = {
                     .ch_coding = PHY_CODING_PN9,
                     .ch_class = PHY_CLASS_NORMAL_RATE,
-                    .ch_freq_band = PHY_BAND_433
+                    .ch_freq_band = PHY_BAND_868
                 },
                 .channel_index_start = 0,
                 .channel_index_end = 0,
@@ -189,4 +204,8 @@ void bootstrap() {
 
     sched_register_task(&execute_sensor_measurement);
     timer_post_task_delay(&execute_sensor_measurement, REPORTING_INTERVAL_TICKS);
+
+#if HW_NUM_LEDS > 0
+    sched_register_task(&led_blink_off);
+#endif
 }

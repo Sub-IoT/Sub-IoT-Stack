@@ -37,18 +37,18 @@
 #include "hwsystem.h"
 #include "hwdebug.h"
 #include "types.h"
-
 #include "si4460.h"
 #include "si4460_interface.h"
 #include "si4460_registers.h"
 #include "ezradio_cmd.h"
 #include "ezradio_api_lib.h"
-
+#include "em_device.h"
+#include "gpiointerrupt.h"
 #include "ezradio_hal.h"
 #include "fec.h"
 
 
-#if defined(FRAMEWORK_LOG_ENABLED) && defined(FRAMEWORK_PHY_LOG_ENABLED) // TODO more granular (LOG_PHY_ENABLED)
+#if defined(FRAMEWORK_LOG_ENABLED) && defined(FRAMEWORK_PHY_LOG_ENABLED)
 #define DPRINT(...) log_print_stack_string(LOG_STACK_PHY, __VA_ARGS__)
 #define DPRINT_PACKET(...) log_print_raw_phy_packet(__VA_ARGS__)
 #define DPRINT_DATA(...) log_print_data(__VA_ARGS__)
@@ -120,6 +120,11 @@ static inline int16_t convert_rssi(uint8_t rssi_raw);
 static void start_rx(hw_rx_cfg_t const* rx_cfg);
 static void ezradio_int_callback();
 static void report_rssi();
+
+void __ezr_error_callback()
+{
+    assert(false);
+}
 
 static void configure_channel(const channel_id_t* channel_id)
 {
@@ -632,6 +637,8 @@ error_t hw_radio_set_idle()
 	if(current_state == HW_RADIO_STATE_TX)
 	{
 	  should_rx_after_tx_completed = false;
+    // Check if it is more safe to remove the callback or to disable the Tx interrupt
+    tx_packet_callback = NULL;
 	  return SUCCESS;
 	}
 
@@ -871,27 +878,20 @@ static void ezradio_int_callback()
 				//if (ezradioReply.FRR_A_READ.FRR_C_VALUE & EZRADIO_CMD_GET_INT_STATUS_REP_PH_PEND_PACKET_SENT_PEND_BIT)
 				{
 					DPRINT("PACKET_SENT IRQ");
-
 					DEBUG_TX_END();
-					if(!should_rx_after_tx_completed)
-						switch_to_idle_mode();
-
-					current_packet->tx_meta.timestamp = timer_get_counter_value();
-
-
-					DPRINT_PACKET(current_packet, true);
 
 					if(tx_packet_callback != 0)
-						tx_packet_callback(current_packet);
+          {
+              current_packet->tx_meta.timestamp = timer_get_counter_value();
+              DPRINT_PACKET(current_packet, true);
+              tx_packet_callback(current_packet);
+          }
 
-					if(should_rx_after_tx_completed)
-					{
-						// RX requested while still in TX ...
-						// TODO this could probably be further optimized by not going into IDLE
-						// after RX by setting TXOFF_MODE to RX (if the cfg is the same at least)
-						should_rx_after_tx_completed = false;
-						start_rx(&current_rx_cfg);
-					}
+          /* We can't switch back to Rx since the Rx callbacks are modified
+           * during CCA, so we systematically go to idle
+          */
+          switch_to_idle_mode();
+
 //				} else if (ezradioReply.FRR_A_READ.FRR_C_VALUE & EZRADIO_CMD_GET_INT_STATUS_REP_PH_PEND_TX_FIFO_ALMOST_EMPTY_PEND_BIT)
 //				{
 //					DPRINT(" - TX FIFO Almost empty IRQ ");

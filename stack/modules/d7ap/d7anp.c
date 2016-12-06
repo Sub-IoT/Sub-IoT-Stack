@@ -44,11 +44,14 @@ typedef enum {
 static state_t NGDEF(_d7anp_state);
 #define d7anp_state NG(_d7anp_state)
 
+static state_t NGDEF(_d7anp_prev_state);
+#define d7anp_prev_state NG(_d7anp_prev_state)
+
 static dae_access_profile_t NGDEF(_own_access_profile);
 #define own_access_profile NG(_own_access_profile)
 
-static uint8_t NGDEF(_fg_scan_timeout_ct);
-#define fg_scan_timeout_ct NG(_fg_scan_timeout_ct)
+static timer_tick_t NGDEF(_fg_scan_timeout_ticks);
+#define fg_scan_timeout_ticks NG(_fg_scan_timeout_ticks)
 
 static void switch_state(state_t next_state)
 {
@@ -88,7 +91,9 @@ static void foreground_scan_expired()
     if(d7anp_state == D7ANP_STATE_FOREGROUND_SCAN) // when in D7ANP_STATE_TRANSMIT d7anp_signal_packet_transmitted() will switch state
       switch_state(D7ANP_STATE_IDLE);
 
-    dll_stop_foreground_scan();
+    /* switch to automation scan */
+    dll_stop_foreground_scan(true);
+    fg_scan_timeout_ticks = 0;
     d7atp_signal_foreground_scan_expired();
 }
 
@@ -96,27 +101,34 @@ static void schedule_foreground_scan_expired_timer()
 {
     // TODO in case of responder timeout_ticks counts from reception time , so subtract time passed between now and reception time
     // in case of requester timeout_ticks counts from transmission time, so subtract time passed between now and transmission time
-    uint32_t timeout_ticks = pow(4, fg_scan_timeout_ct >> 5) * (fg_scan_timeout_ct & 0b11111);
-    DPRINT("starting foreground scan expiration timer (%i ticks)", timeout_ticks);
-    assert(timer_post_task_delay(&foreground_scan_expired, timeout_ticks) == SUCCESS);
+    // since this FG scan is started directly from the ISR (transmitted callback), I don't expect a significative delta between now and the transmission time
+
+    DPRINT("starting foreground scan expiration timer (%i ticks)", fg_scan_timeout_ticks);
+    assert(timer_post_task_delay(&foreground_scan_expired, fg_scan_timeout_ticks) == SUCCESS);
 }
 
-static void start_foreground_scan()
+void d7anp_start_foreground_scan()
 {
-    assert(d7anp_state == D7ANP_STATE_IDLE);
-    if(fg_scan_timeout_ct > 0)
+    if(fg_scan_timeout_ticks > 0)
     {
-        switch_state(D7ANP_STATE_FOREGROUND_SCAN);
+        // if the FG scan timer is already set, update only the tl timeout value
         schedule_foreground_scan_expired_timer();
-        dll_start_foreground_scan();
+
+        if (d7anp_state != D7ANP_STATE_FOREGROUND_SCAN)
+        {
+            switch_state(D7ANP_STATE_FOREGROUND_SCAN);
+            dll_start_foreground_scan();
+        }
     }
 }
 
-void d7anp_set_foreground_scan_timeout(uint8_t timeout_ct)
+void d7anp_set_foreground_scan_timeout(timer_tick_t timeout)
 {
-    DPRINT("Set FG scan timeout = %i ct", timeout_ct);
+    DPRINT("Set FG scan timeout = %i", timeout);
     assert(d7anp_state == D7ANP_STATE_IDLE || d7anp_state == D7ANP_STATE_FOREGROUND_SCAN);
-    fg_scan_timeout_ct = timeout_ct;
+    assert(timeout >= 0);
+
+    fg_scan_timeout_ticks = timeout;
 }
 
 static void cancel_foreground_scan_task()
@@ -124,6 +136,19 @@ static void cancel_foreground_scan_task()
     // task can be scheduled now or in the future, try to cancel both // TODO refactor scheduler API
     timer_cancel_task(&foreground_scan_expired);
     sched_cancel_task(&foreground_scan_expired);
+    fg_scan_timeout_ticks = 0;
+}
+
+void d7anp_stop_foreground_scan(bool auto_scan)
+{
+    if (d7anp_state == D7ANP_STATE_FOREGROUND_SCAN)
+    {
+        cancel_foreground_scan_task();
+        switch_state(D7ANP_STATE_IDLE);
+    }
+
+    /* start the automation scan or set the radio to idle */
+    dll_stop_foreground_scan(auto_scan);
 }
 
 void d7anp_init()
@@ -134,7 +159,7 @@ void d7anp_init()
     fs_read_access_class(own_access_class, &own_access_profile);
 
     d7anp_state = D7ANP_STATE_IDLE;
-    fg_scan_timeout_ct = 0;
+    fg_scan_timeout_ticks = 0;
 
     sched_register_task(&foreground_scan_expired);
 }
@@ -143,10 +168,13 @@ void d7anp_tx_foreground_frame(packet_t* packet, bool should_include_origin_temp
 {
     assert(d7anp_state == D7ANP_STATE_IDLE || d7anp_state == D7ANP_STATE_FOREGROUND_SCAN);
 
-    packet->d7anp_ctrl.origin_addressee_ctrl_nls_enabled = false;
     packet->d7anp_ctrl.origin_addressee_ctrl_hop_enabled = false;
+
+    // we need to switch back to the current state after the transmission procedure
+    d7anp_prev_state = d7anp_state;
+
     if(!should_include_origin_template)
-        packet->d7anp_ctrl.origin_addressee_ctrl_id_type = ID_TYPE_BCAST;
+        packet->d7anp_ctrl.origin_addressee_ctrl_id_type = ID_TYPE_NOID; // TODO or NBID in some cases?
     else
     {
         uint8_t vid[2];
@@ -157,7 +185,7 @@ void d7anp_tx_foreground_frame(packet_t* packet, bool should_include_origin_temp
             packet->d7anp_ctrl.origin_addressee_ctrl_id_type = ID_TYPE_VID;
     }
 
-    packet->d7anp_ctrl.origin_addressee_ctrl_access_class = packet->d7anp_addressee->ctrl.access_class; // TODO validate
+    packet->d7anp_ctrl.origin_addressee_ctrl_access_class = packet->d7anp_addressee->access_class; // TODO validate
     packet->d7anp_listen_timeout = slave_listen_timeout_ct;
 
     switch_state(D7ANP_STATE_TRANSMIT);
@@ -185,7 +213,7 @@ uint8_t d7anp_assemble_packet_header(packet_t *packet, uint8_t *data_ptr)
     (*data_ptr) = packet->d7anp_listen_timeout; data_ptr++;
     (*data_ptr) = packet->d7anp_ctrl.raw; data_ptr++;
 
-    if(packet->d7anp_ctrl.origin_addressee_ctrl_id_type != ID_TYPE_BCAST)
+    if(!ID_TYPE_IS_BROADCAST(packet->d7anp_ctrl.origin_addressee_ctrl_id_type))
     {
         if(packet->d7anp_ctrl.origin_addressee_ctrl_id_type == ID_TYPE_UID)
         {
@@ -213,7 +241,7 @@ bool d7anp_disassemble_packet_header(packet_t* packet, uint8_t* data_idx)
     assert(!packet->d7anp_ctrl.origin_addressee_ctrl_nls_enabled); // TODO NLS not yet supported
     assert(!packet->d7anp_ctrl.origin_addressee_ctrl_hop_enabled); // TODO hopping not yet supported
 
-    if(packet->d7anp_ctrl.origin_addressee_ctrl_id_type != ID_TYPE_BCAST)
+    if(!ID_TYPE_IS_BROADCAST(packet->d7anp_ctrl.origin_addressee_ctrl_id_type))
     {
         uint8_t origin_access_id_size = packet->d7anp_ctrl.origin_addressee_ctrl_id_type == ID_TYPE_VID? 2 : 8;
         memcpy(packet->origin_access_id, packet->hw_radio_packet.data + (*data_idx), origin_access_id_size); (*data_idx) += origin_access_id_size;
@@ -225,23 +253,24 @@ bool d7anp_disassemble_packet_header(packet_t* packet, uint8_t* data_idx)
     return true;
 }
 
-void d7anp_signal_packet_csma_ca_insertion_completed(bool succeeded)
+void d7anp_signal_transmission_failure()
 {
-    if(!succeeded)
-    {
-        DPRINT("CSMA-CA insertion failed");
-        // switch back to the previous state before the transmission
-        switch_state(D7ANP_STATE_IDLE);
-    }
+    assert(d7anp_state == D7ANP_STATE_TRANSMIT);
 
-    d7atp_signal_packet_csma_ca_insertion_completed(succeeded);
+    DPRINT("CSMA-CA insertion failed");
+
+    // switch back to the previous state before the transmission
+    switch_state(d7anp_prev_state);
+
+    d7atp_signal_transmission_failure();
 }
 
 void d7anp_signal_packet_transmitted(packet_t* packet)
 {
     assert(d7anp_state == D7ANP_STATE_TRANSMIT);
-    switch_state(D7ANP_STATE_IDLE);
-    start_foreground_scan();
+
+    /* switch back to the same state as before the transmission */
+    switch_state(d7anp_prev_state);
     d7atp_signal_packet_transmitted(packet);
 }
 
@@ -277,8 +306,10 @@ uint8_t d7anp_addressee_id_length(id_type_t id_type)
 {
     switch(id_type)
     {
-        case ID_TYPE_BCAST:
-          return ID_TYPE_BCAST_ID_LENGTH;
+        case ID_TYPE_NOID:
+          return ID_TYPE_NOID_ID_LENGTH;
+        case ID_TYPE_NBID:
+          return ID_TYPE_NBID_ID_LENGTH;
         case ID_TYPE_UID:
           return ID_TYPE_UID_ID_LENGTH;
         case ID_TYPE_VID:

@@ -2,10 +2,10 @@
  * @file ezr32lg330f256r63.h
  * @brief CMSIS Cortex-M Peripheral Access Layer Header File
  *        for EZR32LG330F256R63
- * @version 4.2.1
+ * @version 4.4.0
  ******************************************************************************
  * @section License
- * <b>Copyright 2015 Silicon Laboratories, Inc. http://www.silabs.com</b>
+ * <b>Copyright 2016 Silicon Laboratories, Inc. http://www.silabs.com</b>
  ******************************************************************************
  *
  * Permission is granted to anyone to use this software for any purpose,
@@ -109,6 +109,7 @@ typedef enum IRQn
  * @brief Processor and Core Peripheral Section
  *****************************************************************************/
 #define __MPU_PRESENT             1 /**< Presence of MPU  */
+#define __VTOR_PRESENT            1 /**< Presence of VTOR register in SCB */
 #define __NVIC_PRIO_BITS          3 /**< NVIC interrupt priority bits */
 #define __Vendor_SysTickConfig    0 /**< Is 1 if different SysTick counter is used */
 
@@ -179,7 +180,7 @@ typedef enum IRQn
 #define AFCHAN_MAX           84
 #define AFCHANLOC_MAX        7
 /** Analog AF channels */
-#define AFACHAN_MAX          48
+#define AFACHAN_MAX          50
 
 /* Part number capabilities */
 
@@ -233,6 +234,8 @@ typedef enum IRQn
 #define VCMP_COUNT              1
 #define PRS_PRESENT
 #define PRS_COUNT               1
+#define OPAMP_PRESENT
+#define OPAMP_COUNT             1
 #define BU_PRESENT
 #define BU_COUNT                1
 #define BURTC_PRESENT

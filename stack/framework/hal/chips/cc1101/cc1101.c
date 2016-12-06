@@ -254,28 +254,17 @@ static void end_of_packet_isr()
         case HW_RADIO_STATE_TX:
           DEBUG_TX_END();
 
-          // going to IDLE is the default unless we where in RX when starting transmission or we were put in RX during
-          // transmission. We can also be forced to go back to IDLE after starting TX from RX state (for instance during CCA)
-          if(!should_rx_after_tx_completed)
-          {
-            switch_to_idle_mode();
-          }
-
-          current_packet->tx_meta.timestamp = timer_get_counter_value();
-
-          DPRINT_PACKET(current_packet, true);
-
           if(tx_packet_callback != 0)
-              tx_packet_callback(current_packet);
-
-          if(should_rx_after_tx_completed)
           {
-              // RX requested while still in TX ...
-              // TODO this could probably be further optimized by not going into IDLE
-              // after RX by setting TXOFF_MODE to RX (if the cfg is the same at least)
-              should_rx_after_tx_completed = false;
-              start_rx(&pending_rx_cfg);
+              current_packet->tx_meta.timestamp = timer_get_counter_value();
+              DPRINT_PACKET(current_packet, true);
+              tx_packet_callback(current_packet);
           }
+
+          /* We can't switch back to Rx since the Rx callbacks are modified
+           * during CCA, so we systematically go to idle
+           */
+          switch_to_idle_mode();
           break;
         default:
             assert(false);
@@ -582,6 +571,8 @@ error_t hw_radio_set_idle()
     if(current_state == HW_RADIO_STATE_TX)
     {
         should_rx_after_tx_completed = false;
+        // Check if it is more safe to remove the callback or to disable the Tx interrupt
+        tx_packet_callback = NULL;
         return SUCCESS;
     }
 

@@ -25,7 +25,7 @@
 
 #include <stdbool.h>
 #include "hwadc.h"
-#include <debug.h>
+#include <assert.h>
 
 #include "em_adc.h"
 #include "em_cmu.h"
@@ -238,6 +238,7 @@ void adc_init(ADC_Reference reference, ADC_Input input, uint32_t adc_frequency)
 
 	/* Base the ADC configuration on the default setup. */
 	ADC_Init_TypeDef init = ADC_INIT_DEFAULT;
+	//adcWarmupKeepADCWarm?
 	ADC_InitSingle_TypeDef sInit = ADC_INITSINGLE_DEFAULT;
 
 	/* Initialize timebases */
@@ -284,28 +285,37 @@ void adc_init(ADC_Reference reference, ADC_Input input, uint32_t adc_frequency)
 	}
 
 	switch (input)
-		{
-			/** Temperature reference. */
-		case adcInputSingleTemp:
-			sInit.input = adcSingleInpTemp;
-			break;
-		/** VDD / 3. */
-		case adcInputSingleVDDDiv3:
-			sInit.input = adcSingleInpVDDDiv3;
-			break;
-			/** Positive Ch4, negative Ch5. */
-		case adcInputSingleCh4Ch5:
-			sInit.input = adcSingleInpCh4Ch5;
-			sInit.diff = true;
-			break;
-		}
+	{
+		/** Temperature reference. */
+	case adcInputSingleTemp:
+		sInit.input = adcSingleInpTemp;
+		break;
+	/** VDD / 3. */
+	case adcInputSingleVDDDiv3:
+		sInit.input = adcSingleInpVDDDiv3;
+		break;
+		/** Positive Ch4, negative Ch5. */
+	case adcInputSingleCh4Ch5:
+		sInit.input = adcSingleInpCh4Ch5;
+		sInit.diff = true;
+		break;
+  case adcInputSingleInputCh2:
+    sInit.input = adcSingleInputCh2;
+    break;
+  case adcInputSingleInputCh5:
+        sInit.input = adcSingleInputCh5;
+        break;
+  case adcInputSingleInputCh6:
+    sInit.input = adcSingleInputCh6;
+    break;
+	}
 
 	ADC_InitSingle(ADC0, &sInit);
 
 	/* Setup interrupt generation on completed conversion. */
-	ADC_IntEnable(ADC0, ADC_IF_SINGLE);
+  ADC_IntEnable(ADC0, ADC_IF_SINGLE);
+  //NVIC_EnableIRQ(ADC0_IRQn);
 }
-
 
 void adc_start()
 {
@@ -317,11 +327,6 @@ uint32_t adc_get_value()
 	return ADC_DataSingleGet(ADC0);
 }
 
-bool adc_ready()
-{
-	return ADC0->STATUS;
-}
-
 uint32_t adc_read_single( void )
 {
   ADC_Start(ADC0, adcStartSingle);
@@ -329,8 +334,20 @@ uint32_t adc_read_single( void )
   return ADC_DataSingleGet(ADC0);
 }
 
+
+bool adc_ready()
+{
+	return ADC0->STATUS;
+}
+
 void adc_clear_interrupt()
 {
-	ADC_IntClear(ADC0, ADC_IFC_SINGLEOF);
+  ADC_IntClear(ADC0, ADC_IF_SINGLE);
 }
+
+//void ADC0_IRQHandler(void)
+//{
+//	ADC_IntClear(ADC0, ADC_IF_SINGLE);
+//}
+
 

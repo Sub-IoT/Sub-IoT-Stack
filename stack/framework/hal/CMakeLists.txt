@@ -28,7 +28,6 @@ EXPORT_GLOBAL_INCLUDE_DIRECTORIES(${CMAKE_CURRENT_BINARY_DIR})
 include(${PROJECT_SOURCE_DIR}/cmake/hal_macros.cmake)
 
 # HAL parameters (might be forcefully overruled by chip, which is why HAL_HEADER_DEFINE() is only called after adding chips)
-SET(HAL_RADIO_INCLUDE_TIMESTAMP "TRUE" CACHE BOOL "Include a timestamp in the metadata attached to a packet")
 SET(HAL_RADIO_USE_HW_CRC "FALSE" CACHE BOOL "Enable/Disable the use of HW CRC")
 
 #note: this does not include any chip code. 
