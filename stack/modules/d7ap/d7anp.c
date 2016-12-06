@@ -174,7 +174,7 @@ void d7anp_tx_foreground_frame(packet_t* packet, bool should_include_origin_temp
     d7anp_prev_state = d7anp_state;
 
     if(!should_include_origin_template)
-        packet->d7anp_ctrl.origin_addressee_ctrl_id_type = ID_TYPE_BCAST;
+        packet->d7anp_ctrl.origin_addressee_ctrl_id_type = ID_TYPE_NOID; // TODO or NBID in some cases?
     else
     {
         uint8_t vid[2];
@@ -185,7 +185,7 @@ void d7anp_tx_foreground_frame(packet_t* packet, bool should_include_origin_temp
             packet->d7anp_ctrl.origin_addressee_ctrl_id_type = ID_TYPE_VID;
     }
 
-    packet->d7anp_ctrl.origin_addressee_ctrl_access_class = packet->d7anp_addressee->ctrl.access_class; // TODO validate
+    packet->d7anp_ctrl.origin_addressee_ctrl_access_class = packet->d7anp_addressee->access_class; // TODO validate
     packet->d7anp_listen_timeout = slave_listen_timeout_ct;
 
     switch_state(D7ANP_STATE_TRANSMIT);
@@ -213,7 +213,7 @@ uint8_t d7anp_assemble_packet_header(packet_t *packet, uint8_t *data_ptr)
     (*data_ptr) = packet->d7anp_listen_timeout; data_ptr++;
     (*data_ptr) = packet->d7anp_ctrl.raw; data_ptr++;
 
-    if(packet->d7anp_ctrl.origin_addressee_ctrl_id_type != ID_TYPE_BCAST)
+    if(!ID_TYPE_IS_BROADCAST(packet->d7anp_ctrl.origin_addressee_ctrl_id_type))
     {
         if(packet->d7anp_ctrl.origin_addressee_ctrl_id_type == ID_TYPE_UID)
         {
@@ -241,7 +241,7 @@ bool d7anp_disassemble_packet_header(packet_t* packet, uint8_t* data_idx)
     assert(!packet->d7anp_ctrl.origin_addressee_ctrl_nls_enabled); // TODO NLS not yet supported
     assert(!packet->d7anp_ctrl.origin_addressee_ctrl_hop_enabled); // TODO hopping not yet supported
 
-    if(packet->d7anp_ctrl.origin_addressee_ctrl_id_type != ID_TYPE_BCAST)
+    if(!ID_TYPE_IS_BROADCAST(packet->d7anp_ctrl.origin_addressee_ctrl_id_type))
     {
         uint8_t origin_access_id_size = packet->d7anp_ctrl.origin_addressee_ctrl_id_type == ID_TYPE_VID? 2 : 8;
         memcpy(packet->origin_access_id, packet->hw_radio_packet.data + (*data_idx), origin_access_id_size); (*data_idx) += origin_access_id_size;
@@ -306,8 +306,10 @@ uint8_t d7anp_addressee_id_length(id_type_t id_type)
 {
     switch(id_type)
     {
-        case ID_TYPE_BCAST:
-          return ID_TYPE_BCAST_ID_LENGTH;
+        case ID_TYPE_NOID:
+          return ID_TYPE_NOID_ID_LENGTH;
+        case ID_TYPE_NBID:
+          return ID_TYPE_NBID_ID_LENGTH;
         case ID_TYPE_UID:
           return ID_TYPE_UID_ID_LENGTH;
         case ID_TYPE_VID:

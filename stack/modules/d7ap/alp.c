@@ -94,6 +94,7 @@ static uint8_t process_op_forward(fifo_t* alp_command_fifo, fifo_t* alp_response
   err = fifo_pop(alp_command_fifo, &session_config->dormant_timeout, 1); assert(err == SUCCESS);
   err = fifo_pop(alp_command_fifo, &session_config->addressee.ctrl.raw, 1); assert(err == SUCCESS);
   uint8_t id_length = d7anp_addressee_id_length(session_config->addressee.ctrl.id_type);
+  err = fifo_pop(alp_command_fifo, &session_config->addressee.access_class, 1); assert(err == SUCCESS);
   err = fifo_pop(alp_command_fifo, session_config->addressee.id, id_length); assert(err == SUCCESS);
   DPRINT("FORWARD");
 }
@@ -265,6 +266,7 @@ uint8_t alp_get_expected_response_length(uint8_t* alp_command, uint8_t alp_comma
         d7anp_addressee_ctrl addressee_ctrl;
         addressee_ctrl.raw = *ptr;
         ptr += 1; // skip addressee ctrl
+        ptr += 1; // skip access class
         ptr += d7anp_addressee_id_length(addressee_ctrl.id_type); // skip address
         // TODO refactor to reuse same logic for parsing and response length counting
         break;

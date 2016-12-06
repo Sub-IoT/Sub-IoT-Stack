@@ -159,7 +159,7 @@ static void flush_fifos()
 
         // For now, set Tc according the transmission_timeout_period set in the access profile
         dae_access_profile_t active_addressee_access_profile;
-        fs_read_access_class(current_request_packet->d7anp_addressee->ctrl.access_class, &active_addressee_access_profile);
+        fs_read_access_class(current_request_packet->d7anp_addressee->access_class, &active_addressee_access_profile);
         current_request_packet->d7atp_tc = active_addressee_access_profile.transmission_timeout_period;
     }
     else
@@ -269,6 +269,7 @@ d7asp_master_session_t* d7asp_master_session_create(d7asp_master_session_config_
     current_master_session.config.qos = d7asp_master_session_config->qos;
     current_master_session.config.dormant_timeout = d7asp_master_session_config->dormant_timeout;
     current_master_session.config.addressee.ctrl = d7asp_master_session_config->addressee.ctrl;
+    current_master_session.config.addressee.access_class = d7asp_master_session_config->addressee.access_class;
     memcpy(current_master_session.config.addressee.id, d7asp_master_session_config->addressee.id, sizeof(current_master_session.config.addressee.id));
 
     return &current_master_session;
@@ -354,7 +355,7 @@ bool d7asp_process_received_packet(packet_t* packet, bool extension)
         packet_queue_free_packet(packet); // ACK can be cleaned
 
         /* In case of unicast session, it is acceptable to switch to the next request before the expiration of Tc */
-        if (current_master_session.config.addressee.ctrl.id_type != ID_TYPE_BCAST)
+        if (!ID_TYPE_IS_BROADCAST(current_master_session.config.addressee.ctrl.id_type))
         {
             DPRINT("Request completed, don't wait end of transaction");
             packet_queue_free_packet(current_request_packet);

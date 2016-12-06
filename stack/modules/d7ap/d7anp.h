@@ -30,20 +30,24 @@
 typedef struct packet packet_t;
 
 typedef enum {
-    ID_TYPE_BCAST = 1,
-    ID_TYPE_UID   = 2,
-    ID_TYPE_VID   = 3
+    ID_TYPE_NBID = 0,
+    ID_TYPE_NOID = 1,
+    ID_TYPE_UID = 2,
+    ID_TYPE_VID = 3
 } id_type_t;
 
-#define ID_TYPE_BCAST_ID_LENGTH 0
+#define ID_TYPE_NBID_ID_LENGTH 1
+#define ID_TYPE_NOID_ID_LENGTH 0
 #define ID_TYPE_UID_ID_LENGTH   8
 #define ID_TYPE_VID_LENGTH      2
+
+#define ID_TYPE_IS_BROADCAST(id_type) (id_type == ID_TYPE_NBID || id_type == ID_TYPE_NOID)
 
 typedef struct {
     union {
       uint8_t raw;
       struct {
-          uint8_t access_class : 4;
+          uint8_t nls_method : 4; // TODO
           id_type_t id_type : 2;
           uint8_t _rfu : 2;
       };
@@ -52,6 +56,7 @@ typedef struct {
 
 typedef struct {
     d7anp_addressee_ctrl ctrl;
+    uint8_t access_class;
     uint8_t id[8]; // TODO assuming 8 byte id for now
 } d7anp_addressee_t;
 

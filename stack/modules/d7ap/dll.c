@@ -198,19 +198,18 @@ static void switch_state(dll_state_t next_state)
 
     // output state on debug pins
 
-// TODO debug pin 2 used for response time for now
-//    switch(dll_state)
-//    {
-//        case DLL_STATE_CSMA_CA_STARTED:
-//        case DLL_STATE_CCA1:
-//        case DLL_STATE_CCA2:
-//        case DLL_STATE_CSMA_CA_RETRY:
-//        case DLL_STATE_CCA_FAIL:
-//          DEBUG_PIN_SET(2);
-//          break;
-//        default:
-//          DEBUG_PIN_CLR(2);
-//    }
+    switch(dll_state)
+    {
+        case DLL_STATE_CSMA_CA_STARTED:
+        case DLL_STATE_CCA1:
+        case DLL_STATE_CCA2:
+        case DLL_STATE_CSMA_CA_RETRY:
+        case DLL_STATE_CCA_FAIL:
+          DEBUG_PIN_SET(2);
+          break;
+        default:
+          DEBUG_PIN_CLR(2);
+    }
 }
 
 static bool is_tx_busy()
@@ -640,7 +639,7 @@ void dll_tx_frame(packet_t* packet, dae_access_profile_t* access_profile)
     dll_header->control_eirp_index = access_profile->subbands[0].eirp + 32;
     if(packet->d7atp_ctrl.ctrl_is_start && packet->d7anp_addressee != NULL) // when responding in a transaction we MAY skip targetID
     {
-        if(packet->d7anp_addressee->ctrl.id_type != ID_TYPE_BCAST)
+        if(!ID_TYPE_IS_BROADCAST(packet->d7anp_addressee->ctrl.id_type))
         {
             // TODO dll_header needs to adapted to use id_type_t
             dll_header->control_target_address_set = true;

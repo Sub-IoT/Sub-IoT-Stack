@@ -113,7 +113,7 @@ static void switch_state(state_t new_state)
 
 static void response_period_timeout_handler()
 {
-    DEBUG_PIN_CLR(2);
+//    DEBUG_PIN_CLR(2);
     DPRINT("Expiration of the response period");
 
     assert(d7atp_state == D7ATP_STATE_SLAVE_TRANSACTION_RESPONSE_PERIOD
@@ -139,7 +139,7 @@ static timer_tick_t adjust_timeout_value(uint8_t timeout_tc, timer_tick_t timest
 
 static void schedule_response_period_timeout_handler(timer_tick_t timeout_ticks)
 {
-    DEBUG_PIN_SET(2);
+//    DEBUG_PIN_SET(2);
 
     DPRINT("Starting response_period timer (%i ticks)", timeout_ticks);
 
@@ -231,7 +231,7 @@ void d7atp_send_request(uint8_t dialog_id, uint8_t transaction_id, bool is_last_
     packet->d7atp_dialog_id = current_dialog_id;
     packet->d7atp_transaction_id = current_transaction_id;
 
-    uint8_t access_class = packet->d7anp_addressee->ctrl.access_class;
+    uint8_t access_class = packet->d7anp_addressee->access_class;
     if(access_class != current_access_class)
         fs_read_access_class(access_class, &active_addressee_access_profile);
 
@@ -404,7 +404,7 @@ void d7atp_process_received_packet(packet_t* packet)
 
     // copy addressee from NP origin
     current_addressee.ctrl.id_type = packet->d7anp_ctrl.origin_addressee_ctrl_id_type;
-    current_addressee.ctrl.access_class = packet->d7anp_ctrl.origin_addressee_ctrl_access_class;
+    current_addressee.access_class = packet->d7anp_ctrl.origin_addressee_ctrl_access_class;
     memcpy(current_addressee.id, packet->origin_access_id, 8);
     packet->d7anp_addressee = &current_addressee;
 
@@ -516,10 +516,10 @@ void d7atp_process_received_packet(packet_t* packet)
         packet->request_received_timestamp = packet->hw_radio_packet.rx_meta.timestamp;
 
         // set active_addressee_access_profile to the access_profile supplied by the requester
-        if(current_access_class != current_addressee.ctrl.access_class)
+        if(current_access_class != current_addressee.access_class)
         {
-            fs_read_access_class(current_addressee.ctrl.access_class, &active_addressee_access_profile);
-            current_access_class = current_addressee.ctrl.access_class;
+            fs_read_access_class(current_addressee.access_class, &active_addressee_access_profile);
+            current_access_class = current_addressee.access_class;
         }
 
         // but respond on the channel where we received the request on
