@@ -370,11 +370,10 @@ static void execute_cca()
     hw_radio_set_rx(&rx_cfg, NULL, &cca_rssi_valid);
 }
 
-static uint16_t calculate_tx_duration()
+uint16_t dll_calculate_tx_duration(phy_channel_class_t channel_class, uint8_t packet_length)
 {
     double data_rate = 6.0; // Normal rate: 6.9 bytes/tick
-    // TODO select correct subband
-    switch (current_access_profile->subbands[0].channel_header.ch_class)
+    switch (channel_class)
     {
     case PHY_CLASS_LO_RATE:
         data_rate = 1.0; // Lo Rate 9.6 kbps: 1.2 bytes/tick
@@ -386,7 +385,7 @@ static uint16_t calculate_tx_duration()
         data_rate = 20.0; // High rate 166.667 kbps: 20.83 byte/tick
     }
 
-    uint16_t duration = ceil(current_packet->hw_radio_packet.length / data_rate) + 1;
+    uint16_t duration = ceil(packet_length / data_rate) + 1;
     return duration;
 }
 
@@ -395,7 +394,8 @@ static void execute_csma_ca()
     // TODO generate random channel queue
     //hw_radio_set_rx(NULL, NULL, NULL); // put radio in RX but disable callbacks to make sure we don't receive packets when in this state
                                         // TODO use correct rx cfg + it might be interesting to switch to idle first depending on calculated offset
-    uint16_t tx_duration = calculate_tx_duration();
+    // TODO select correct subband
+    uint16_t tx_duration = dll_calculate_tx_duration(current_access_profile->subbands[0].channel_header.ch_class, current_packet->hw_radio_packet.length);
     timer_tick_t Tc = CONVERT_TO_TI(current_packet->d7atp_tc);
     switch (dll_state)
     {

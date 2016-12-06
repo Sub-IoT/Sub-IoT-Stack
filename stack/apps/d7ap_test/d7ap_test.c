@@ -143,10 +143,10 @@ void init_user_files() {
         .dormant_timeout                  = 0,
         .addressee = {
             .ctrl = {
-                .id_type                  = ID_TYPE_BCAST,
-                .access_class             = 0
+                .id_type                  = ID_TYPE_NOID,
             },
-            .id                 = 0
+            .access_class                 = 0,
+            .id                           = 0
         }
     };
 
@@ -177,7 +177,6 @@ void bootstrap() {
             .control_number_of_subbands = 1,
             .subnet = 0x00,
             .scan_automation_period = 0,
-            .transmission_timeout_period = 100,
             .subbands[0] = (subband_t){
                 .channel_header = {
                     .ch_coding = PHY_CODING_PN9,

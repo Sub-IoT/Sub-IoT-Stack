@@ -82,7 +82,6 @@ static void write_access_class(uint8_t access_class_index, dae_access_profile_t*
     data[current_data_offset] = access_class->control; current_data_offset++;
     data[current_data_offset] = access_class->subnet; current_data_offset++;
     data[current_data_offset] = access_class->scan_automation_period; current_data_offset++;
-    data[current_data_offset] = access_class->transmission_timeout_period; current_data_offset++;
     data[current_data_offset] = 0x00; current_data_offset++; // RFU
     // subbands, only 1 supported for now
     memcpy(data + current_data_offset, &(access_class->subbands[0].channel_header), 1); current_data_offset++;
@@ -268,7 +267,6 @@ void fs_read_access_class(uint8_t access_class_index, dae_access_profile_t *acce
     access_class->control = (*data_ptr); data_ptr++;
     access_class->subnet = (*data_ptr); data_ptr++;
     access_class->scan_automation_period = (*data_ptr); data_ptr++;
-    access_class->transmission_timeout_period = (*data_ptr); data_ptr++;
     data_ptr++; // RFU
     // subbands, only 1 supported for now
     memcpy(&(access_class->subbands[0].channel_header), data_ptr, 1); data_ptr++;

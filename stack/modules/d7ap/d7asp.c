@@ -153,14 +153,19 @@ static void flush_fifos()
         memcpy(current_request_packet->payload, current_master_session.request_buffer + current_master_session.requests_indices[current_request_id], current_master_session.requests_lengths[current_request_id]);
         current_request_packet->payload_length = current_master_session.requests_lengths[current_request_id];
 
-        // TODO calculate Tl and Tc
-        // Tc(NB, LEN, CH) = (SFC  * NB  + 1) * TTX(CH, LEN) + TG with NB the number of concurrent devices and SF the collision Avoidance Spreading Factor
+        // TODO calculate Tl
+
         // Tl should correspond to the maximum time needed to send the remaining requests in the FIFO including the RETRY parameter
 
-        // For now, set Tc according the transmission_timeout_period set in the access profile
         dae_access_profile_t active_addressee_access_profile;
         fs_read_access_class(current_request_packet->d7anp_addressee->access_class, &active_addressee_access_profile);
-        current_request_packet->d7atp_tc = active_addressee_access_profile.transmission_timeout_period;
+
+        // Tc(NB, LEN, CH) = ceil((SFC  * NB  + 1) * TTX(CH, LEN) + TG) with NB the number of concurrent devices and SF the collision Avoidance Spreading Factor
+        // TODO payload length does not include headers ... + hardcoded subband
+        uint16_t tx_duration = dll_calculate_tx_duration(active_addressee_access_profile.subbands[0].channel_header.ch_class, current_request_packet->payload_length);
+        uint8_t Tc = ceil((3 + 1 + 1) * tx_duration + 5);
+
+        current_request_packet->d7atp_tc = Tc;
     }
     else
     {
