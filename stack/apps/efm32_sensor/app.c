@@ -32,13 +32,20 @@
 #include "fs.h"
 #include "log.h"
 
-#if (!defined PLATFORM_EFM32GG_STK3700 && !defined PLATFORM_EFM32HG_STK3400 && !defined PLATFORM_EZR32LG_WSTK6200A)
-	#error Mismatch between the configured platform and the actual platform.
+#include "button.h"
+#if (defined PLATFORM_EFM32GG_STK3700 || defined PLATFORM_EFM32HG_STK3400 || defined PLATFORM_EZR32LG_WSTK6200A)
+  #include "platform_sensors.h"
 #endif
 
-#include "button.h"
-#include "platform_sensors.h"
-#include "platform_lcd.h"
+#ifdef HAS_LCD
+  #include "platform_lcd.h"
+  #define LCD_WRITE_STRING(...) lcd_write_string(__VA_ARGS__)
+  #define LCD_WRITE_LINE(line, ...) lcd_write_line(line, __VA_ARGS__)
+#else
+  #define LCD_WRITE_STRING(...)
+  #define LCD_WRITE_LINE(...)
+#endif
+
 
 #define SENSOR_FILE_ID           0x40
 #define SENSOR_FILE_SIZE         8
@@ -50,15 +57,15 @@
 void userbutton_callback(button_id_t button_id)
 {
 	#ifdef PLATFORM_EFM32GG_STK3700
-	lcd_write_string("Butt %d", button_id);
+    LCD_WRITE_STRING("Butt %d", button_id);
 	#else
-	  lcd_write_string("button: %d\n", button_id);
+    LCD_WRITE_STRING("button: %d\n", button_id);
 	#endif
 }
 
 void execute_sensor_measurement()
 {
-#ifdef PLATFORM_EFM32GG_STK3700
+#if (defined PLATFORM_EFM32GG_STK3700)
   float internal_temp = hw_get_internal_temperature();
   lcd_write_temperature(internal_temp*10, 1);
 
@@ -66,14 +73,13 @@ void execute_sensor_measurement()
 
 
   fs_write_file(SENSOR_FILE_ID, 0, (uint8_t*)&internal_temp, sizeof(internal_temp)); // File 0x40 is configured to use D7AActP trigger an ALP action which broadcasts this file data on Access Class 0
-#endif
-
-#if (defined PLATFORM_EFM32HG_STK3400  || defined PLATFORM_EZR32LG_WSTK6200A)
+#elif (defined PLATFORM_EFM32HG_STK3400  || defined PLATFORM_EZR32LG_WSTK6200A)
   char str[30];
 
   float internal_temp = hw_get_internal_temperature();
   sprintf(str, "Int T: %2d.%d C", (int)internal_temp, (int)(internal_temp*10)%10);
-  lcd_write_line(2,str);
+  LCD_WRITE_LINE(2,str);
+
   log_print_string(str);
 
   uint32_t rhData;
@@ -81,17 +87,17 @@ void execute_sensor_measurement()
   getHumidityAndTemperature(&rhData, &tData);
 
   sprintf(str, "Ext T: %d.%d C", (tData/1000), (tData%1000)/100);
-  lcd_write_line(3,str);
+  LCD_WRITE_LINE(3,str);
   log_print_string(str);
 
   sprintf(str, "Ext H: %d.%d", (rhData/1000), (rhData%1000)/100);
-  lcd_write_line(4,str);
+  LCD_WRITE_LINE(4,str);
   log_print_string(str);
 
   uint32_t vdd = hw_get_battery();
 
   sprintf(str, "Batt %d mV", vdd);
-  lcd_write_line(5,str);
+  LCD_WRITE_LINE(5,str);
   log_print_string(str);
 
   //TODO: put sensor values in array
@@ -104,6 +110,9 @@ void execute_sensor_measurement()
   *pointer++ = (uint16_t) (vdd /10);
 
   fs_write_file(SENSOR_FILE_ID, 0, (uint8_t*)&sensor_values,8);
+#else // no sensor, we just write the current timestamp
+  timer_tick_t t = timer_get_counter_value();
+  fs_write_file(SENSOR_FILE_ID, 0, (uint8_t*)&t, sizeof(timer_tick_t));
 #endif
 
   timer_post_task_delay(&execute_sensor_measurement, SENSOR_UPDATE);
@@ -193,7 +202,9 @@ void bootstrap()
 
     d7ap_stack_init(&fs_init_args, NULL, false, NULL);
 
+#if (defined PLATFORM_EFM32GG_STK3700 || defined PLATFORM_EFM32HG_STK3400 || defined PLATFORM_EZR32LG_WSTK6200A)
     initSensors();
+#endif
 
     ubutton_register_callback(0, &userbutton_callback);
     ubutton_register_callback(1, &userbutton_callback);
@@ -202,6 +213,6 @@ void bootstrap()
 
     timer_post_task_delay(&execute_sensor_measurement, TIMER_TICKS_PER_SEC);
 
-    lcd_write_string("EFM32 Sensor\n");
+    LCD_WRITE_STRING("EFM32 Sensor\n");
 }
 
