@@ -97,7 +97,7 @@ static channel_id_t current_channel_id = {
 };
 
 static syncword_class_t current_syncword_class = PHY_SYNCWORD_CLASS0;
-static syncword_class_t current_eirp = 0;
+static eirp_t current_eirp = 0;
 
 static bool should_rx_after_tx_completed = false;
 static hw_rx_cfg_t pending_rx_cfg;

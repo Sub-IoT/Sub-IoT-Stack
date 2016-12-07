@@ -172,7 +172,7 @@ void d7atp_signal_foreground_scan_expired()
     {
         terminate_dialog();
     }
-    else if(d7atp_state == D7ATP_STATE_MASTER_TRANSACTION_RESPONSE_PERIOD)
+    else if (d7atp_state == D7ATP_STATE_MASTER_TRANSACTION_RESPONSE_PERIOD)
     {
         current_transaction_id = 0;
         d7asp_signal_transaction_terminated();
@@ -248,7 +248,7 @@ void d7atp_send_request(uint8_t dialog_id, uint8_t transaction_id, bool is_last_
     packet->d7atp_transaction_id = current_transaction_id;
 
     uint8_t access_class = packet->d7anp_addressee->access_class;
-    if(access_class != current_access_class)
+    if (access_class != current_access_class)
     {
         fs_read_access_class(packet->d7anp_addressee->access_index, &active_addressee_access_profile);
         current_access_class = access_class;
@@ -258,7 +258,7 @@ void d7atp_send_request(uint8_t dialog_id, uint8_t transaction_id, bool is_last_
     uint8_t slave_listen_timeout = listen_timeout;
 
     bool ack_requested = true;
-    if(qos_settings->qos_resp_mode == SESSION_RESP_MODE_NO || qos_settings->qos_resp_mode == SESSION_RESP_MODE_NO_RPT)
+    if (qos_settings->qos_resp_mode == SESSION_RESP_MODE_NO || qos_settings->qos_resp_mode == SESSION_RESP_MODE_NO_RPT)
       ack_requested = false;
 
     bool include_tc = (expected_response_length > 0 || ack_requested);
@@ -279,14 +279,14 @@ void d7atp_send_request(uint8_t dialog_id, uint8_t transaction_id, bool is_last_
     // Tc(NB, LEN, CH) = ceil((SFC  * NB  + 1) * TTX(CH, LEN) + TG) with NB the number of concurrent devices and SF the collision Avoidance Spreading Factor
     // TODO payload length does not include headers ... + hardcoded subband
     // TODO this length does not include lower layers overhead for now, use a minimum len of 50 for now ...
-    if(expected_response_length < 50)
+    if (expected_response_length < 50)
       expected_response_length = 50;
 
     uint8_t tx_duration_response = dll_calculate_tx_duration(active_addressee_access_profile.channel_header.ch_class, expected_response_length);
     uint8_t nb = 1;
-    if(packet->d7anp_addressee->ctrl.id_type == ID_TYPE_NOID)
+    if (packet->d7anp_addressee->ctrl.id_type == ID_TYPE_NOID)
         nb = 32;
-    else if(packet->d7anp_addressee->ctrl.id_type == ID_TYPE_NBID)
+    else if (packet->d7anp_addressee->ctrl.id_type == ID_TYPE_NBID)
         nb = CT_DECOMPRESS(packet->d7anp_addressee->id[0]);
 
     packet->d7atp_tc = ceil((3 * nb + 1) * tx_duration_response + 5); // TODO compress
@@ -350,7 +350,7 @@ uint8_t d7atp_assemble_packet_header(packet_t* packet, uint8_t* data_ptr)
         //TODO check if at least one Responder has set the ACK_REQ flag
         //TODO aggregate the Device IDs of the Responders that set their ACK_REQ flags.
     }
-    else if(packet->d7atp_ctrl.ctrl_is_ack_requested && packet->d7atp_ctrl.ctrl_ack_not_void)
+    else if (packet->d7atp_ctrl.ctrl_is_ack_requested && packet->d7atp_ctrl.ctrl_ack_not_void)
     {
         // add Responder ACK template
         (*data_ptr) = packet->d7atp_transaction_id; data_ptr++; // transaction ID start
@@ -371,7 +371,7 @@ bool d7atp_disassemble_packet_header(packet_t *packet, uint8_t *data_idx)
     packet->d7atp_dialog_id = packet->hw_radio_packet.data[(*data_idx)]; (*data_idx)++;
     packet->d7atp_transaction_id = packet->hw_radio_packet.data[(*data_idx)]; (*data_idx)++;
 
-    if(packet->d7atp_ctrl.ctrl_is_ack_requested && packet->d7atp_ctrl.ctrl_ack_not_void)
+    if (packet->d7atp_ctrl.ctrl_is_ack_requested && packet->d7atp_ctrl.ctrl_ack_not_void)
     {
         packet->d7atp_ack_template.ack_transaction_id_start = packet->hw_radio_packet.data[(*data_idx)]; (*data_idx)++;
         packet->d7atp_ack_template.ack_transaction_id_stop = packet->hw_radio_packet.data[(*data_idx)]; (*data_idx)++;
@@ -385,7 +385,7 @@ void d7atp_signal_packet_transmitted(packet_t* packet)
 {
     d7asp_signal_packet_transmitted(packet);
 
-    if(d7atp_state == D7ATP_STATE_MASTER_TRANSACTION_REQUEST_PERIOD)
+    if (d7atp_state == D7ATP_STATE_MASTER_TRANSACTION_REQUEST_PERIOD)
     {
         switch_state(D7ATP_STATE_MASTER_TRANSACTION_RESPONSE_PERIOD);
 
@@ -395,12 +395,13 @@ void d7atp_signal_packet_transmitted(packet_t* packet)
             d7anp_set_foreground_scan_timeout(Tc + 2); // we include Tt here for now
             d7anp_start_foreground_scan();
         }
-        else {
+        else
+        {
             current_transaction_id = 0;
             d7asp_signal_transaction_terminated();
         }
     }
-    else if(d7atp_state == D7ATP_STATE_SLAVE_TRANSACTION_SENDING_RESPONSE)
+    else if (d7atp_state == D7ATP_STATE_SLAVE_TRANSACTION_SENDING_RESPONSE)
     {
         switch_state(D7ATP_STATE_SLAVE_TRANSACTION_RESPONSE_PERIOD);
 
@@ -411,7 +412,7 @@ void d7atp_signal_packet_transmitted(packet_t* packet)
             d7anp_stop_foreground_scan(true); // restart scan automation
         }
     }
-    else if(d7atp_state == D7ATP_STATE_IDLE)
+    else if (d7atp_state == D7ATP_STATE_IDLE)
         assert(!packet->d7atp_ctrl.ctrl_is_ack_requested); // can only occur in this case
 }
 
@@ -455,7 +456,7 @@ void d7atp_process_received_packet(packet_t* packet)
     DPRINT("Tl=%i (Ti) Tc=%i (CT)", Tl, packet->d7atp_tc);
     if (IS_IN_MASTER_TRANSACTION())
     {
-        if(packet->d7atp_dialog_id != current_dialog_id || packet->d7atp_transaction_id != current_transaction_id)
+        if (packet->d7atp_dialog_id != current_dialog_id || packet->d7atp_transaction_id != current_transaction_id)
         {
             DPRINT("Unexpected dialog ID or transaction ID received, skipping segment");
             packet_queue_free_packet(packet);
@@ -463,7 +464,7 @@ void d7atp_process_received_packet(packet_t* packet)
         }
 
         // Check if a new dialog initiated by the responder is allowed
-        if(packet->d7atp_ctrl.ctrl_is_start)
+        if (packet->d7atp_ctrl.ctrl_is_start)
         {
             // if this is a unicast response and the last transaction, the extension procedure is allowed
             if (packet->d7atp_ctrl.ctrl_is_stop && !ID_TYPE_IS_BROADCAST(packet->dll_header.control_target_id_type))
@@ -534,7 +535,7 @@ void d7atp_process_received_packet(packet_t* packet)
         }
         else
         {
-            if(packet->d7anp_listen_timeout)
+            if (packet->d7anp_listen_timeout)
             {
                 Tl = adjust_timeout_value(packet->d7anp_listen_timeout, packet->hw_radio_packet.rx_meta.timestamp); // TODO decompress
                 d7anp_set_foreground_scan_timeout(Tl);
@@ -553,7 +554,7 @@ void d7atp_process_received_packet(packet_t* packet)
         packet->request_received_timestamp = packet->hw_radio_packet.rx_meta.timestamp;
 
         // set active_addressee_access_profile to the access_profile supplied by the requester
-        if(current_access_class != current_addressee.access_class)
+        if (current_access_class != current_addressee.access_class)
         {
             fs_read_access_class(current_addressee.access_index, &active_addressee_access_profile);
             current_access_class = current_addressee.access_class;
@@ -562,7 +563,7 @@ void d7atp_process_received_packet(packet_t* packet)
         // DLL is taking care that we respond on the channel where we received the request on
 
         bool should_send_response = d7asp_process_received_packet(packet, extension);
-        if(should_send_response)
+        if (should_send_response)
         {
             if (!packet->d7atp_ctrl.ctrl_tc && (Tl == 0))
                 stop_dialog_after_tx = true;
@@ -573,7 +574,7 @@ void d7atp_process_received_packet(packet_t* packet)
         else
         {
             response_period_timeout_handler(); // no response to send, end transaction and go back to IDLE
-            if(Tl == 0)
+            if (Tl == 0)
             {
                 terminate_dialog();
             }

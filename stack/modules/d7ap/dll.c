@@ -256,7 +256,7 @@ static void schedule_background_scan(timer_tick_t tsched)
 
 static void process_received_packets()
 {
-    if(is_tx_busy())
+    if (is_tx_busy())
     {
         // this task might be scheduled while a TX is busy (for example after scheduling an execute_cca()).
         // make sure we don't start processing this packet before the TX is completed.
@@ -294,7 +294,7 @@ static void notify_transmitted_packet()
 
     d7anp_signal_packet_transmitted(packet);
 
-    if(process_received_packets_after_tx)
+    if (process_received_packets_after_tx)
     {
         sched_post_task_prio(&process_received_packets, MAX_PRIORITY);
         process_received_packets_after_tx = false;
@@ -354,7 +354,7 @@ static void cca_rssi_valid(int16_t cur_rssi)
 
     if (cur_rssi <= E_CCA)
     {
-        if(dll_state == DLL_STATE_CCA1)
+        if (dll_state == DLL_STATE_CCA1)
         {
             DPRINT("CCA1 RSSI: %d", cur_rssi);
             switch_state(DLL_STATE_CCA2);
@@ -365,7 +365,7 @@ static void cca_rssi_valid(int16_t cur_rssi)
             execute_cca();
             return;
         }
-        else if(dll_state == DLL_STATE_CCA2)
+        else if (dll_state == DLL_STATE_CCA2)
         {
             // OK, send packet
             DPRINT("CCA2 RSSI: %d", cur_rssi);
@@ -558,7 +558,7 @@ static void execute_csma_ca()
                 {
                     dll_rigd_n++;
                     dll_slot_duration = (uint16_t) ((double)dll_tca0) / (2 << (dll_rigd_n+1));
-                    if(dll_slot_duration != 0) // TODO can be 0, validate
+                    if (dll_slot_duration != 0) // TODO can be 0, validate
                         t_offset = get_rnd() % dll_slot_duration;
                     else
                         t_offset = 0;
@@ -608,7 +608,7 @@ static void execute_csma_ca()
 void dll_execute_scan_automation()
 {
     uint8_t scan_access_class = fs_read_dll_conf_active_access_class();
-    if(active_access_class != scan_access_class)
+    if (active_access_class != scan_access_class)
     {
         fs_read_access_class(ACCESS_SPECIFIER(scan_access_class), &current_access_profile);
         active_access_class = scan_access_class;
@@ -654,7 +654,7 @@ void dll_execute_scan_automation()
 void dll_notify_dll_conf_file_changed()
 {
     // when doing scan automation restart this
-    if(dll_state == DLL_STATE_SCAN_AUTOMATION)
+    if (dll_state == DLL_STATE_SCAN_AUTOMATION)
     {
         dll_execute_scan_automation();
     }
@@ -668,7 +668,7 @@ void dll_notify_access_profile_file_changed()
     active_access_class = NO_ACTIVE_ACCESS_CLASS;
 
     // when doing scan automation restart this
-    if(dll_state == DLL_STATE_SCAN_AUTOMATION)
+    if (dll_state == DLL_STATE_SCAN_AUTOMATION)
     {
         dll_execute_scan_automation();
     }
@@ -704,7 +704,7 @@ void dll_tx_frame(packet_t* packet)
     dll_header_t* dll_header = &(packet->dll_header);
     dll_header->subnet = packet->d7anp_addressee->access_class;
 
-    if(packet->d7atp_ctrl.ctrl_is_start && packet->d7anp_addressee != NULL) // when responding in a transaction we MAY skip targetID
+    if (packet->d7atp_ctrl.ctrl_is_start && packet->d7anp_addressee != NULL) // when responding in a transaction we MAY skip targetID
         dll_header->control_target_id_type = packet->d7anp_addressee->ctrl.id_type;
     else
         dll_header->control_target_id_type = ID_TYPE_NOID;
@@ -780,7 +780,7 @@ static void start_foreground_scan()
 
 void dll_start_foreground_scan()
 {
-    if(is_tx_busy())
+    if (is_tx_busy())
         discard_tx();
 
     start_foreground_scan();
@@ -788,7 +788,7 @@ void dll_start_foreground_scan()
 
 void dll_stop_foreground_scan(bool auto_scan)
 {
-    if(is_tx_busy())
+    if (is_tx_busy())
         discard_tx();
 
     if (auto_scan && dll_state == DLL_STATE_SCAN_AUTOMATION)
@@ -833,7 +833,7 @@ bool dll_disassemble_packet_header(packet_t* packet, uint8_t* data_idx)
         return false;
     }
 
-    if((FSM & ACCESS_MASK(active_access_class)) == 0) // check that the active access class is always set to the scan access class
+    if ((FSM & ACCESS_MASK(active_access_class)) == 0) // check that the active access class is always set to the scan access class
     {
         DPRINT("Subnet does not match current access class, skipping packet");
         return false;
@@ -844,7 +844,7 @@ bool dll_disassemble_packet_header(packet_t* packet, uint8_t* data_idx)
     {
         uint8_t address_len;
         uint8_t id[8];
-        if(packet->dll_header.control_target_id_type == ID_TYPE_UID)
+        if (packet->dll_header.control_target_id_type == ID_TYPE_UID)
         {
             fs_read_uid(id);
             address_len = 8;
@@ -855,7 +855,7 @@ bool dll_disassemble_packet_header(packet_t* packet, uint8_t* data_idx)
             address_len = 2;
         }
 
-        if(memcmp(packet->hw_radio_packet.data + (*data_idx), id, address_len) != 0)
+        if (memcmp(packet->hw_radio_packet.data + (*data_idx), id, address_len) != 0)
         {
             DPRINT("Device ID filtering failed, skipping packet");
             return false;

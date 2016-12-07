@@ -92,7 +92,7 @@ typedef struct
 typedef struct
 {
     union
-    {	
+    {
         uint8_t channel_header_raw; 	/**< The raw (8-bit) channel header */
         phy_channel_header_t channel_header; /**< The channel header */
     };

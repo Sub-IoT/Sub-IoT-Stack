@@ -91,7 +91,7 @@ static void foreground_scan_expired()
     assert(d7anp_state == D7ANP_STATE_FOREGROUND_SCAN || d7anp_state == D7ANP_STATE_TRANSMIT);
     DPRINT("Foreground scan expired");
 
-    if(d7anp_state == D7ANP_STATE_FOREGROUND_SCAN) // when in D7ANP_STATE_TRANSMIT d7anp_signal_packet_transmitted() will switch state
+    if (d7anp_state == D7ANP_STATE_FOREGROUND_SCAN) // when in D7ANP_STATE_TRANSMIT d7anp_signal_packet_transmitted() will switch state
       switch_state(D7ANP_STATE_IDLE);
 
     /* switch to automation scan */
@@ -175,7 +175,7 @@ void d7anp_tx_foreground_frame(packet_t* packet, bool should_include_origin_temp
     // we need to switch back to the current state after the transmission procedure
     d7anp_prev_state = d7anp_state;
 
-    if(!should_include_origin_template)
+    if (!should_include_origin_template)
     {
         packet->d7anp_ctrl.origin_id_type = ID_TYPE_NOID;
         packet->d7anp_ctrl.origin_void = true;
@@ -184,7 +184,7 @@ void d7anp_tx_foreground_frame(packet_t* packet, bool should_include_origin_temp
     {
         uint8_t vid[2];
         fs_read_vid(vid);
-        if(memcmp(vid, (uint8_t[2]){ 0xFF, 0xFF }, 2) == 0)
+        if (memcmp(vid, (uint8_t[2]){ 0xFF, 0xFF }, 2) == 0)
             packet->d7anp_ctrl.origin_id_type = ID_TYPE_UID;
         else
             packet->d7anp_ctrl.origin_id_type = ID_TYPE_VID;
@@ -220,19 +220,19 @@ uint8_t d7anp_assemble_packet_header(packet_t *packet, uint8_t *data_ptr)
     (*data_ptr) = packet->d7anp_listen_timeout; data_ptr++;
     (*data_ptr) = packet->d7anp_ctrl.raw; data_ptr++;
 
-    if(!packet->d7anp_ctrl.origin_void)
+    if (!packet->d7anp_ctrl.origin_void)
     {
         (*data_ptr) = packet->origin_access_class; data_ptr++;
 
-        if(packet->d7anp_ctrl.origin_id_type == ID_TYPE_UID)
+        if (packet->d7anp_ctrl.origin_id_type == ID_TYPE_UID)
         {
             fs_read_uid(data_ptr); data_ptr += 8;
         }
-        else if(packet->d7anp_ctrl.origin_id_type == ID_TYPE_VID)
+        else if (packet->d7anp_ctrl.origin_id_type == ID_TYPE_VID)
         {
             fs_read_vid(data_ptr); data_ptr += 2;
         }
-        else if(packet->d7anp_ctrl.origin_id_type == ID_TYPE_NBID)
+        else if (packet->d7anp_ctrl.origin_id_type == ID_TYPE_NBID)
         {
             (*data_ptr) = packet->origin_access_id[0]; data_ptr++;
         }
@@ -250,16 +250,16 @@ bool d7anp_disassemble_packet_header(packet_t* packet, uint8_t* data_idx)
     assert(!packet->d7anp_ctrl.nls_method); // TODO NLS not yet supported
     assert(!packet->d7anp_ctrl.hop_enabled); // TODO hopping not yet supported
 
-    if(!packet->d7anp_ctrl.origin_void)
+    if (!packet->d7anp_ctrl.origin_void)
     {
         packet->origin_access_class = packet->hw_radio_packet.data[(*data_idx)]; (*data_idx)++;
 
-        if(!ID_TYPE_IS_BROADCAST(packet->d7anp_ctrl.origin_id_type))
+        if (!ID_TYPE_IS_BROADCAST(packet->d7anp_ctrl.origin_id_type))
         {
             uint8_t origin_access_id_size = packet->d7anp_ctrl.origin_id_type == ID_TYPE_VID? 2 : 8;
             memcpy(packet->origin_access_id, packet->hw_radio_packet.data + (*data_idx), origin_access_id_size); (*data_idx) += origin_access_id_size;
         }
-        else if(packet->d7anp_ctrl.origin_id_type == ID_TYPE_NBID)
+        else if (packet->d7anp_ctrl.origin_id_type == ID_TYPE_NBID)
         {
             packet->origin_access_id[0] = packet->hw_radio_packet.data[(*data_idx)];
             (*data_idx)++;
@@ -297,11 +297,11 @@ void d7anp_process_received_packet(packet_t* packet, bool background_frame)
 {
     // TODO handle case where we are intermediate node while hopping (ie start FG scan, after auth if needed, and return)
 
-    if(d7anp_state == D7ANP_STATE_FOREGROUND_SCAN)
+    if (d7anp_state == D7ANP_STATE_FOREGROUND_SCAN)
     {
         DPRINT("Received packet while in D7ANP_STATE_FOREGROUND_SCAN");
     }
-    else if(d7anp_state == D7ANP_STATE_IDLE)
+    else if (d7anp_state == D7ANP_STATE_IDLE)
     {
         DPRINT("Received packet while in D7ANP_STATE_IDLE (scan automation)");
 

@@ -127,11 +127,11 @@ static void flush_fifos()
     DPRINT("Flushing FIFOs");
     hw_watchdog_feed(); // TODO do here?
 
-    if(current_request_id == NO_ACTIVE_REQUEST_ID)
+    if (current_request_id == NO_ACTIVE_REQUEST_ID)
     {
         // find first request which is not acked or dropped
         int8_t found_next_req_index = bitmap_search(current_master_session.progress_bitmap, false, MODULE_D7AP_FIFO_MAX_REQUESTS_COUNT);
-        if(found_next_req_index == -1 || found_next_req_index == current_master_session.next_request_id)
+        if (found_next_req_index == -1 || found_next_req_index == current_master_session.next_request_id)
         {
             // we handled all requests ...
             flush_completed();
@@ -154,17 +154,13 @@ static void flush_fifos()
         current_request_packet->payload_length = current_master_session.requests_lengths[current_request_id];
 
         // TODO calculate Tl
-
         // Tl should correspond to the maximum time needed to send the remaining requests in the FIFO including the RETRY parameter
-
-        dae_access_profile_t active_addressee_access_profile;
-        fs_read_access_class(current_request_packet->d7anp_addressee->access_class, &active_addressee_access_profile);
     }
     else
     {
         // retrying request ...
         DPRINT("Current request retry count: %i", current_request_retry_count);
-        if(current_request_retry_count == single_request_retry_limit)
+        if (current_request_retry_count == single_request_retry_limit)
         {
             // mark request as failed and pop
             mark_current_request_done();
@@ -297,9 +293,9 @@ d7asp_queue_result_t d7asp_queue_alp_actions(d7asp_master_session_t* session, ui
     session->next_request_id++;
 
     // TODO for master only set to pending when asked by upper layer (ie new function call)
-    if(d7asp_state == D7ASP_STATE_IDLE)
+    if (d7asp_state == D7ASP_STATE_IDLE)
         switch_state(D7ASP_STATE_MASTER); // TODO signal D7ATP that a new dialog is ongoing to prevent a received packet to assert in D7ASP
-    else if(d7asp_state == D7ASP_STATE_SLAVE)
+    else if (d7asp_state == D7ASP_STATE_SLAVE)
         switch_state(D7ASP_STATE_SLAVE_PENDING_MASTER);
 
     current_master_session.state = D7ASP_MASTER_SESSION_ACTIVE;
@@ -326,14 +322,14 @@ bool d7asp_process_received_packet(packet_t* packet, bool extension)
         // .fifo_token and .seqnr filled below
     };
 
-    if(d7asp_state == D7ASP_STATE_MASTER)
+    if (d7asp_state == D7ASP_STATE_MASTER)
     {
         assert(packet->d7atp_dialog_id == current_master_session.token);
         assert(packet->d7atp_transaction_id == current_request_id);
 
         // received ack
         DPRINT("Received ACK");
-        if(current_master_session.config.qos.qos_resp_mode != SESSION_RESP_MODE_NO
+        if (current_master_session.config.qos.qos_resp_mode != SESSION_RESP_MODE_NO
            && current_master_session.config.qos.qos_resp_mode != SESSION_RESP_MODE_NO_RPT)
         {
             // for SESSION_RESP_MODE_NO and SESSION_RESP_MODE_NO_RPT the request was already marked as done
@@ -383,26 +379,25 @@ bool d7asp_process_received_packet(packet_t* packet, bool extension)
         }
         return false;
     }
-    else if(d7asp_state == D7ASP_STATE_IDLE
+    else if (d7asp_state == D7ASP_STATE_IDLE
             || d7asp_state == D7ASP_STATE_SLAVE
             || d7asp_state == D7ASP_STATE_SLAVE_PENDING_MASTER)
     {
         // received a request, start slave session, process and respond
-        if(d7asp_state == D7ASP_STATE_IDLE)
+        if (d7asp_state == D7ASP_STATE_IDLE)
             switch_state(D7ASP_STATE_SLAVE); // don't switch when already in slave state
 
         result.fifo_token = packet->d7atp_dialog_id;
         result.seqnr = packet->d7atp_transaction_id;
 
-
         // TODO move to ALP
-        if(packet->payload_length > 0)
+        if (packet->payload_length > 0)
         {
-            if(alp_get_operation(packet->payload) == ALP_OP_RETURN_FILE_DATA)
+            if (alp_get_operation(packet->payload) == ALP_OP_RETURN_FILE_DATA)
             {
                 // received unsollicited data, notify appl
                 DPRINT("Received unsollicited data");
-                if(d7asp_init_args != NULL && d7asp_init_args->d7asp_received_unsollicited_data_cb != NULL)
+                if (d7asp_init_args != NULL && d7asp_init_args->d7asp_received_unsollicited_data_cb != NULL)
                     d7asp_init_args->d7asp_received_unsollicited_data_cb(result, packet->payload, packet->payload_length);
 
                 packet->payload_length = 0; // no response payload
@@ -416,10 +411,10 @@ bool d7asp_process_received_packet(packet_t* packet, bool extension)
 
                 // ... and if not handled we'll give the application a chance to handle this by returning an ALP response.
                 // if the application fails to handle the request as well the ALP status operand supplied by alp_process_command_fs_itf() will be transmitted (if requested)
-                if(!handled)
+                if (!handled)
                 {
                   DPRINT("ALP command could not be processed by local FS");
-                  if(d7asp_init_args != NULL && d7asp_init_args->d7asp_received_unhandled_alp_command_cb != NULL)
+                  if (d7asp_init_args != NULL && d7asp_init_args->d7asp_received_unhandled_alp_command_cb != NULL)
                   {
                       DPRINT("ALP command passed to application for processing");
                       d7asp_init_args->d7asp_received_unhandled_alp_command_cb(packet->payload, packet->payload_length, packet->payload, &packet->payload_length);
@@ -431,7 +426,7 @@ bool d7asp_process_received_packet(packet_t* packet, bool extension)
         // TODO notify upper layer?
 
         // execute slave transaction
-        if(packet->payload_length == 0 && !packet->d7atp_ctrl.ctrl_is_ack_requested)
+        if (packet->payload_length == 0 && !packet->d7atp_ctrl.ctrl_is_ack_requested)
             goto discard_request; // no need to respond, clean up
 
         DPRINT("Sending response");
@@ -442,7 +437,7 @@ bool d7asp_process_received_packet(packet_t* packet, bool extension)
          * activate the dialog extension procedure in the unicast response if the dialog is terminated
          * and a master session is pending
          */
-        if((!ID_TYPE_IS_BROADCAST(packet->dll_header.control_target_id_type)) && (packet->d7atp_ctrl.ctrl_is_stop)
+        if ((!ID_TYPE_IS_BROADCAST(packet->dll_header.control_target_id_type)) && (packet->d7atp_ctrl.ctrl_is_stop)
                 && (d7asp_state == D7ASP_STATE_SLAVE_PENDING_MASTER))
         {
             packet->d7atp_ctrl.ctrl_is_start = true;
@@ -465,7 +460,7 @@ bool d7asp_process_received_packet(packet_t* packet, bool extension)
 static void on_request_completed()
 {
     assert(d7asp_state == D7ASP_STATE_MASTER);
-    if(!bitmap_get(current_master_session.progress_bitmap, current_request_id))
+    if (!bitmap_get(current_master_session.progress_bitmap, current_request_id))
     {
         current_request_retry_count++;
         // the request may be retransmitted, don't free yet (this will be done in flush_fifo() when failed)
@@ -496,14 +491,14 @@ void d7asp_signal_packet_transmitted(packet_t *packet)
     if (d7asp_state == D7ASP_STATE_MASTER)
     {
         // for the lowest QoS level the packet is ack-ed when CSMA/CA process succeeded
-        if(current_master_session.config.qos.qos_resp_mode == SESSION_RESP_MODE_NO ||
+        if (current_master_session.config.qos.qos_resp_mode == SESSION_RESP_MODE_NO ||
            current_master_session.config.qos.qos_resp_mode == SESSION_RESP_MODE_NO_RPT)
         {
             mark_current_request_done();
             bitmap_set(current_master_session.success_bitmap, current_request_id);
         }
     }
-    else if(d7asp_state == D7ASP_STATE_SLAVE || d7asp_state == D7ASP_STATE_SLAVE_PENDING_MASTER)
+    else if (d7asp_state == D7ASP_STATE_SLAVE || d7asp_state == D7ASP_STATE_SLAVE_PENDING_MASTER)
     {
         assert(current_response_packet == packet);
 
@@ -516,7 +511,7 @@ void d7asp_signal_packet_transmitted(packet_t *packet)
 
 void d7asp_signal_transmission_failure()
 {
-    if(d7asp_state == D7ASP_STATE_MASTER)
+    if (d7asp_state == D7ASP_STATE_MASTER)
         on_request_completed();
     else if (d7asp_state == D7ASP_STATE_SLAVE ||
              d7asp_state == D7ASP_STATE_SLAVE_PENDING_MASTER)
@@ -547,7 +542,7 @@ void d7asp_signal_dialog_terminated()
 
     if (d7asp_state == D7ASP_STATE_SLAVE)
         switch_state(D7ASP_STATE_IDLE);
-    else if(d7asp_state == D7ASP_STATE_SLAVE_PENDING_MASTER)
+    else if (d7asp_state == D7ASP_STATE_SLAVE_PENDING_MASTER)
     {
         switch_state(D7ASP_STATE_MASTER);  // TODO signal D7ATP that a new dialog is ongoing to prevent a received packet to assert in D7ASP
         DPRINT("Schedule task to flush the fifo");
