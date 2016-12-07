@@ -159,13 +159,6 @@ static void flush_fifos()
 
         dae_access_profile_t active_addressee_access_profile;
         fs_read_access_class(current_request_packet->d7anp_addressee->access_class, &active_addressee_access_profile);
-
-        // Tc(NB, LEN, CH) = ceil((SFC  * NB  + 1) * TTX(CH, LEN) + TG) with NB the number of concurrent devices and SF the collision Avoidance Spreading Factor
-        // TODO payload length does not include headers ... + hardcoded subband
-        uint16_t tx_duration = dll_calculate_tx_duration(active_addressee_access_profile.subbands[0].channel_header.ch_class, current_request_packet->payload_length);
-        uint8_t Tc = ceil((3 + 1 + 1) * tx_duration + 5);
-
-        current_request_packet->d7atp_tc = Tc;
     }
     else
     {

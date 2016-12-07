@@ -130,7 +130,7 @@ static void response_period_timeout_handler()
 
 static timer_tick_t adjust_timeout_value(uint8_t timeout_tc, timer_tick_t timestamp)
 {
-    timer_tick_t timeout_ticks = CONVERT_TO_TI(timeout_tc);
+    timer_tick_t timeout_ticks = CT_DECOMPRESS(timeout_tc);
 
     // Adjust the timeout value according the time passed since reception
     timeout_ticks -= timer_get_counter_value() - timestamp;
@@ -257,7 +257,22 @@ void d7atp_send_request(uint8_t dialog_id, uint8_t transaction_id, bool is_last_
         .ctrl_ack_record = false
     };
 
-    DPRINT("Tl=%i Tc=%i tx", packet->d7anp_listen_timeout, packet->d7atp_tc);
+    // Tc(NB, LEN, CH) = ceil((SFC  * NB  + 1) * TTX(CH, LEN) + TG) with NB the number of concurrent devices and SF the collision Avoidance Spreading Factor
+    // TODO payload length does not include headers ... + hardcoded subband
+    // calculate in DLL, after we implemented the changes required to notify DLL of the type of packet (ie request)
+    uint16_t tx_duration = dll_calculate_tx_duration(active_addressee_access_profile.subbands[0].channel_header.ch_class, packet->payload_length);
+    packet->d7atp_tc_requester = ceil((3 + 1 + 1) * tx_duration + 5);
+
+    DPRINT("Tl=%i Tc=%i tx", packet->d7anp_listen_timeout, packet->d7atp_tc_requester);
+    uint8_t tx_duration_response = dll_calculate_tx_duration(active_addressee_access_profile.subbands[0].channel_header.ch_class, expected_response_length);
+    // TODO this length does not include lower layers overhead for now ...
+    uint8_t nb = 1;
+    if(packet->d7anp_addressee->ctrl.id_type == ID_TYPE_NOID)
+      nb = 32;
+    else if(packet->d7anp_addressee->ctrl.id_type == ID_TYPE_NBID)
+      nb = CT_DECOMPRESS(packet->d7anp_addressee->id[0]);
+
+    packet->d7atp_tc = ceil((3 + nb + 1) * tx_duration_response + 5);
     DPRINT("resp Tc=%i", include_tc? packet->d7atp_tc : 0);
 
     d7anp_tx_foreground_frame(packet, true, &active_addressee_access_profile, slave_listen_timeout);
@@ -481,7 +496,7 @@ void d7atp_process_received_packet(packet_t* packet)
 
             if (packet->d7anp_listen_timeout)
             {
-                Tl = CONVERT_TO_TI(packet->d7anp_listen_timeout) - CONVERT_TO_TI(packet->d7atp_tc);
+                Tl = CT_DECOMPRESS(packet->d7anp_listen_timeout) - CT_DECOMPRESS(packet->d7atp_tc);
                 assert(Tl >= 0);
                 d7anp_set_foreground_scan_timeout(Tl);
             }
