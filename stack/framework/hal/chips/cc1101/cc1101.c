@@ -225,6 +225,7 @@ static void end_of_packet_isr()
             packet->rx_meta.rssi = convert_rssi(cc1101_interface_read_single_reg(RXFIFO));
             packet->rx_meta.lqi = cc1101_interface_read_single_reg(RXFIFO) & 0x7F;
             memcpy(&(packet->rx_meta.rx_cfg.channel_id), &current_channel_id, sizeof(channel_id_t));
+            packet->rx_meta.rx_cfg.syncword_class = current_syncword_class;
             packet->rx_meta.crc_status = HW_CRC_UNAVAILABLE; // TODO
             packet->rx_meta.timestamp = timer_get_counter_value();
 

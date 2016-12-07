@@ -238,6 +238,22 @@ static bool is_tx_busy()
     }
 }
 
+
+void start_background_scan()
+{
+    switch_state(DLL_STATE_BACKGROUND_SCAN);
+    // TODO
+    // terminates the scan immediately upon failure to detect a modulated signal on the channel
+    // Beginning from when the scan starts, the device has a period of To to successfully detect the sync word of Class 0
+}
+
+static void schedule_background_scan(timer_tick_t tsched)
+{
+    DPRINT("Perform a dll background scan scan at the end of TSCHED (%i ticks)", tsched);
+    assert(timer_post_task_delay(&start_background_scan, tsched) == SUCCESS);
+}
+
+
 static void process_received_packets()
 {
     if(is_tx_busy())
@@ -627,12 +643,9 @@ void dll_execute_scan_automation()
     }
     else
     {
-        // TODO should already be idle, remove?
-        hw_radio_set_idle();
-
-        // TODO wait until radio idle
-        if(dll_state != DLL_STATE_IDLE)
-            switch_state(DLL_STATE_IDLE);
+        uint8_t tsched = CT_DECOMPRESS(current_access_profile.subprofiles[0].scan_automation_period);
+        rx_cfg.syncword_class = PHY_SYNCWORD_CLASS0;
+        schedule_background_scan(tsched);
     }
 
     current_channel_id = rx_cfg.channel_id;

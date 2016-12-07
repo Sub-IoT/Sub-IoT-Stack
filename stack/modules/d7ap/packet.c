@@ -77,6 +77,8 @@ void packet_assemble(packet_t* packet)
 
 void packet_disassemble(packet_t* packet)
 {
+    bool background_frame = (packet->hw_radio_packet.rx_meta.rx_cfg.syncword_class == PHY_SYNCWORD_CLASS0);
+
     if (packet->hw_radio_packet.rx_meta.crc_status == HW_CRC_UNAVAILABLE)
     {
         uint16_t crc = __builtin_bswap16(crc_calculate(packet->hw_radio_packet.data, packet->hw_radio_packet.length + 1 - 2));
@@ -94,16 +96,18 @@ void packet_disassemble(packet_t* packet)
 
     uint8_t data_idx = 1;
 
+    // TODO extend DLL to decode the DLL header of a background frame
     if(!dll_disassemble_packet_header(packet, &data_idx))
         goto cleanup;
 
-    // TODO assuming D7ANP for now
-    if(!d7anp_disassemble_packet_header(packet, &data_idx))
-        goto cleanup;
+    if (!background_frame)
+    {
+        if(!d7anp_disassemble_packet_header(packet, &data_idx))
+            goto cleanup;
 
-    if(!d7atp_disassemble_packet_header(packet, &data_idx))
-        goto cleanup;
-
+        if(!d7atp_disassemble_packet_header(packet, &data_idx))
+            goto cleanup;
+    }
     // TODO footers
 
     // extract payload
@@ -112,7 +116,7 @@ void packet_disassemble(packet_t* packet)
 
     DPRINT_FWK("Done disassembling packet");
 
-    d7anp_process_received_packet(packet);
+    d7anp_process_received_packet(packet, background_frame);
 
     return;
 

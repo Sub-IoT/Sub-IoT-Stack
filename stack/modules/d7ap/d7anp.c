@@ -293,7 +293,7 @@ void d7anp_signal_packet_transmitted(packet_t* packet)
     d7atp_signal_packet_transmitted(packet);
 }
 
-void d7anp_process_received_packet(packet_t* packet)
+void d7anp_process_received_packet(packet_t* packet, bool background_frame)
 {
     // TODO handle case where we are intermediate node while hopping (ie start FG scan, after auth if needed, and return)
 
@@ -306,10 +306,13 @@ void d7anp_process_received_packet(packet_t* packet)
         DPRINT("Received packet while in D7ANP_STATE_IDLE (scan automation)");
 
         // check if DLL was performing a background scan
-        if(!own_access_profile.control_scan_type_is_foreground) {
+        if (background_frame) {
             timer_tick_t eta;
 
             DPRINT("Received a background frame)");
+
+            assert(packet->payload_length == sizeof(timer_tick_t));
+            memcpy(&eta, packet->payload, sizeof(timer_tick_t));
             //TODO decode the D7A Background Network Protocols Frame in order to trigger the foreground scan after the advertising period
             schedule_foreground_scan_after_D7AAdvP(eta);
             return;
