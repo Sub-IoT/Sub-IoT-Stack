@@ -486,7 +486,8 @@ void d7atp_process_received_packet(packet_t* packet)
         if (packet->d7atp_ctrl.ctrl_tc)
         {
             timer_tick_t Tc = adjust_timeout_value(packet->d7atp_tc, packet->hw_radio_packet.rx_meta.timestamp);
-
+            packet->d7atp_tc_requester = Tc; // TODO until we implemented a way to notify DLL of the type of transmission (ie response in the case),
+                                             // we set this field since this is used by DLL for CSMA-CA
             if (Tc <= 0)
             {
                 DPRINT("Discard the request since the response period is expired");
