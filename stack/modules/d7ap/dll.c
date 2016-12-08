@@ -416,7 +416,7 @@ static void execute_csma_ca()
             {
                 DPRINT("Tca negative, CCA failed");
                 // Let the upper layer decide eventually to change the channel in order to get a chance a send this frame
-                switch_state(DLL_STATE_IDLE);
+                switch_state(DLL_STATE_IDLE); // TODO in this case we should return to scan automation
                 resume_fg_scan = false;
                 d7anp_signal_transmission_failure();
                 break;
