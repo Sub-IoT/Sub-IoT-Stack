@@ -396,14 +396,13 @@ static void execute_csma_ca()
                                         // TODO use correct rx cfg + it might be interesting to switch to idle first depending on calculated offset
     // TODO select correct subband
     uint16_t tx_duration = dll_calculate_tx_duration(current_access_profile->subbands[0].channel_header.ch_class, current_packet->hw_radio_packet.length);
-    timer_tick_t Tc = CT_DECOMPRESS(current_packet->d7atp_tc_requester);
     switch (dll_state)
     {
         case DLL_STATE_CSMA_CA_STARTED:
         {
-            dll_tca = Tc - tx_duration;
+            dll_tca = current_packet->transmission_timeout_ti - tx_duration;
             dll_cca_started = timer_get_counter_value();
-            DPRINT("Tca= %i = %i - %i", dll_tca, Tc, tx_duration);
+            DPRINT("Tca= %i = %i - %i", dll_tca, current_packet->transmission_timeout_ti, tx_duration);
 
             // Adjust TCA value according the time already elapsed since the reception time in case of response
             if (current_packet->request_received_timestamp)

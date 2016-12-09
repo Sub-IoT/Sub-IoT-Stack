@@ -128,12 +128,13 @@ static void response_period_timeout_handler()
     d7anp_start_foreground_scan();
 }
 
-static timer_tick_t adjust_timeout_value(uint8_t timeout_tc, timer_tick_t timestamp)
+static timer_tick_t adjust_timeout_value(uint8_t timeout_ticks, timer_tick_t request_received_timestamp)
 {
-    timer_tick_t timeout_ticks = CT_DECOMPRESS(timeout_tc);
 
     // Adjust the timeout value according the time passed since reception
-    timeout_ticks -= timer_get_counter_value() - timestamp;
+    timer_tick_t delta = timer_get_counter_value() - request_received_timestamp;
+    timeout_ticks -= delta;
+    DPRINT("adjusted timeout val = %i (-%i)", timeout_ticks, delta);
     return timeout_ticks;
 }
 
@@ -261,9 +262,9 @@ void d7atp_send_request(uint8_t dialog_id, uint8_t transaction_id, bool is_last_
     // TODO payload length does not include headers ... + hardcoded subband
     // calculate in DLL, after we implemented the changes required to notify DLL of the type of packet (ie request)
     uint16_t tx_duration = dll_calculate_tx_duration(active_addressee_access_profile.subbands[0].channel_header.ch_class, packet->payload_length);
-    packet->d7atp_tc_requester = ceil((3 + 1 + 1) * tx_duration + 5);
+    packet->transmission_timeout_ti = ceil((3 + 1 + 1) * tx_duration + 5);
 
-    DPRINT("Tl=%i Tc=%i tx", packet->d7anp_listen_timeout, packet->d7atp_tc_requester);
+    DPRINT("Tl=%i Tc=%i tx", packet->d7anp_listen_timeout, packet->transmission_timeout_ti);
     uint8_t tx_duration_response = dll_calculate_tx_duration(active_addressee_access_profile.subbands[0].channel_header.ch_class, expected_response_length);
     // TODO this length does not include lower layers overhead for now ...
     uint8_t nb = 1;
@@ -272,7 +273,7 @@ void d7atp_send_request(uint8_t dialog_id, uint8_t transaction_id, bool is_last_
     else if(packet->d7anp_addressee->ctrl.id_type == ID_TYPE_NBID)
       nb = CT_DECOMPRESS(packet->d7anp_addressee->id[0]);
 
-    packet->d7atp_tc = ceil((3 + nb + 1) * tx_duration_response + 5);
+    packet->d7atp_tc = ceil((3 + nb + 1) * tx_duration_response + 5); // TODO compress
     DPRINT("resp Tc=%i", include_tc? packet->d7atp_tc : 0);
 
     d7anp_tx_foreground_frame(packet, true, &active_addressee_access_profile, slave_listen_timeout);
@@ -369,7 +370,7 @@ void d7atp_signal_packet_transmitted(packet_t* packet)
 
         if (packet->d7atp_ctrl.ctrl_tc)
         {
-            timer_tick_t Tc = adjust_timeout_value(packet->d7atp_tc, packet->hw_radio_packet.tx_meta.timestamp);
+            timer_tick_t Tc = adjust_timeout_value(packet->d7atp_tc, packet->hw_radio_packet.tx_meta.timestamp); // TODO decrompess Tc, for now it is not compressed
             d7anp_set_foreground_scan_timeout(Tc + 2); // we include Tt here for now
             d7anp_start_foreground_scan();
         }
@@ -441,7 +442,7 @@ void d7atp_process_received_packet(packet_t* packet)
             // if this is a unicast response and the last transaction, the extension procedure is allowed
             if (packet->d7atp_ctrl.ctrl_is_stop && packet->dll_header.control_target_address_set)
             {
-                Tl = adjust_timeout_value(packet->d7anp_listen_timeout, packet->hw_radio_packet.rx_meta.timestamp);
+                Tl = adjust_timeout_value(packet->d7anp_listen_timeout, packet->hw_radio_packet.rx_meta.timestamp); // TODO decompress Tl (for now it is not compressed)
                 DPRINT("Responder wants to append a new dialog");
                 d7anp_set_foreground_scan_timeout(Tl);
                 d7anp_start_foreground_scan();
@@ -485,8 +486,8 @@ void d7atp_process_received_packet(packet_t* packet)
          // The FG scan is only started when the response period expires.
         if (packet->d7atp_ctrl.ctrl_tc)
         {
-            timer_tick_t Tc = adjust_timeout_value(packet->d7atp_tc, packet->hw_radio_packet.rx_meta.timestamp);
-            packet->d7atp_tc_requester = Tc; // TODO until we implemented a way to notify DLL of the type of transmission (ie response in the case),
+            timer_tick_t Tc = adjust_timeout_value(packet->d7atp_tc, packet->hw_radio_packet.rx_meta.timestamp); // TODO decrompress Tc, for now it is not compress
+            packet->transmission_timeout_ti = Tc; // TODO until we implemented a way to notify DLL of the type of transmission (ie response in the case),
                                              // we set this field since this is used by DLL for CSMA-CA
             if (Tc <= 0)
             {
@@ -511,7 +512,7 @@ void d7atp_process_received_packet(packet_t* packet)
         {
             if(packet->d7anp_listen_timeout)
             {
-                Tl = adjust_timeout_value(packet->d7anp_listen_timeout, packet->hw_radio_packet.rx_meta.timestamp);
+                Tl = adjust_timeout_value(packet->d7anp_listen_timeout, packet->hw_radio_packet.rx_meta.timestamp); // TODO decrompress
                 d7anp_set_foreground_scan_timeout(Tl);
                 d7anp_start_foreground_scan();
             }

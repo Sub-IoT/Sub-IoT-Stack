@@ -48,7 +48,7 @@ struct packet
     uint8_t d7atp_dialog_id;
     uint8_t d7atp_transaction_id;
     uint8_t d7atp_tc;
-    uint8_t d7atp_tc_requester;
+    timer_tick_t transmission_timeout_ti;
     // TODO d7atp ack template
     uint8_t payload_length;
     uint8_t payload[239]; // TODO make max size configurable using cmake
