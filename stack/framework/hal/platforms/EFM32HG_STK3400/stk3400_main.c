@@ -44,11 +44,6 @@ void __platform_init()
     __usb_init_cdc();
 #endif
 
-#if defined(FRAMEWORK_LOG_ENABLED) || defined(FRAMEWORK_SHELL_ENABLED)
-    // framework does not need console, if app needs it app should init this
-    console_init();
-#endif
-
 #ifdef USE_CC1101
     // configure the interrupt pins here, since hw_gpio_configure_pin() is MCU specific and not part of the common HAL API
     hw_gpio_configure_pin(CC1101_GDO0_PIN, true, gpioModeInput, 0); // TODO pull up or pull down to prevent floating

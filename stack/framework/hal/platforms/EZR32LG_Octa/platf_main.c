@@ -44,7 +44,6 @@ void __platform_init()
 {
 	__ezr32lg_mcu_init();
     __gpio_init();
-    console_init();
 
     __hw_debug_init();
 

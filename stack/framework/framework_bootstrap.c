@@ -21,6 +21,8 @@
 #include "hwsystem.h"
 #include "random.h"
 #include "log.h"
+#include "console.h"
+
 void bootstrap();
 void __framework_bootstrap()
 {
@@ -31,6 +33,10 @@ void __framework_bootstrap()
     set_rng_seed(hw_get_unique_id());
     //reset the log counter
     log_counter_reset();
+
+#ifdef FRAMEWORK_CONSOLE_ENABLED
+    console_init();
+#endif
 
     //register the user bootstrap function();
     sched_register_task(&bootstrap);

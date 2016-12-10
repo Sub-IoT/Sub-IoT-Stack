@@ -43,7 +43,6 @@ void __platform_init()
     __gpio_init();
     __led_init();    // uses ports assigned to UART1 LOC3
     __lcd_init();
-    console_init();
 
 #ifdef USE_CC1101
     // configure the interrupt pins here, since hw_gpio_configure_pin() is MCU

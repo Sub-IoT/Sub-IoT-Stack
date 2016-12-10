@@ -42,11 +42,6 @@ void __platform_init()
     __led_init();
 
     hw_gpio_configure_pin(CC1101_GDO0_PIN, true, gpioModeInput, 1); // TODO pull up or pull down to prevent floating
-
-#if defined(FRAMEWORK_LOG_ENABLED) || defined(FRAMEWORK_SHELL_ENABLED)
-    // framework does not need console, if app needs it app should init this
-    console_init();
-#endif
     __hw_debug_init();
 
     __watchdog_init(); // TODO configure from cmake?

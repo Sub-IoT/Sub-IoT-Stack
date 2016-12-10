@@ -5,14 +5,42 @@
 
 #include "framework_defs.h"
 #include "platform.h"
-
+#include "fifo.h"
+#include "scheduler.h"
 #include "console.h"
 
 #ifdef FRAMEWORK_CONSOLE_ENABLED
 
+#define TX_FIFO_FLUSH_CHUNK_SIZE 10 // at a baudrate of 115200 this ensures completion within 1 ms
+                                    // TODO baudrate dependent
+
 static uart_handle_t* uart;
 
+#define CONSOLE_TX_FIFO_SIZE 255
+static uint8_t console_tx_buffer[CONSOLE_TX_FIFO_SIZE];
+static fifo_t console_tx_fifo;
+
+static void flush_console_tx_fifo() {
+  // only send small chunks over uart each invocation, to make sure
+  // we don't interfer with critical stack timings.
+  // When there is still data left in the fifo this will be rescheduled
+  // with lowest prio
+  uint8_t chunk[TX_FIFO_FLUSH_CHUNK_SIZE];
+  uint8_t depth = fifo_get_size(&console_tx_fifo);
+  if(depth < 10) {
+    fifo_pop(&console_tx_fifo, chunk, depth);
+    uart_send_bytes(uart, chunk, depth);
+  } else {
+    fifo_pop(&console_tx_fifo, chunk, TX_FIFO_FLUSH_CHUNK_SIZE);
+    uart_send_bytes(uart, chunk, TX_FIFO_FLUSH_CHUNK_SIZE);
+    sched_post_task_prio(&flush_console_tx_fifo, MIN_PRIORITY);
+  }
+}
+
 void console_init(void) {
+  fifo_init(&console_tx_fifo, console_tx_buffer, CONSOLE_TX_FIFO_SIZE);
+  sched_register_task(&flush_console_tx_fifo);
+
   uart = uart_init(CONSOLE_UART, CONSOLE_BAUDRATE, CONSOLE_LOCATION);
   uart_enable(uart);
 }
@@ -26,15 +54,17 @@ void console_disable(void) {
 }
 
 inline void console_print_byte(uint8_t byte) {
-  uart_send_byte(uart, byte);
+  fifo_put_byte(&console_tx_fifo, byte);
+  sched_post_task_prio(&flush_console_tx_fifo, MIN_PRIORITY);
 }
 
 inline void console_print_bytes(uint8_t* bytes, uint8_t length) {
-  uart_send_bytes(uart, bytes, length);
+  fifo_put(&console_tx_fifo, bytes, length);
+  sched_post_task_prio(&flush_console_tx_fifo, MIN_PRIORITY);
 }
 
 inline void console_print(char* string) {
-  uart_send_string(uart, string);
+  console_print_bytes((uint8_t*) string, strnlen(string, 100));
 }
 
 inline void console_set_rx_interrupt_callback(uart_rx_inthandler_t uart_rx_cb) {

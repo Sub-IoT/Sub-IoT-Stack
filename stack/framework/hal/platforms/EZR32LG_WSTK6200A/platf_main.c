@@ -91,8 +91,6 @@ void __platform_init()
     __gpio_init();
     __led_init();
     __lcd_init();
-    console_init();
-
 
 
 //#ifdef USE_CC1101
