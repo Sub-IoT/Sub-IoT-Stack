@@ -265,8 +265,11 @@ void d7atp_send_request(uint8_t dialog_id, uint8_t transaction_id, bool is_last_
     packet->transmission_timeout_ti = ceil((3 + 1 + 1) * tx_duration + 5);
 
     DPRINT("Tl=%i Tc=%i tx", packet->d7anp_listen_timeout, packet->transmission_timeout_ti);
+    // TODO this length does not include lower layers overhead for now, use a minimum len of 50 for now ...
+    if(expected_response_length < 50)
+      expected_response_length = 50;
+
     uint8_t tx_duration_response = dll_calculate_tx_duration(active_addressee_access_profile.subbands[0].channel_header.ch_class, expected_response_length);
-    // TODO this length does not include lower layers overhead for now ...
     uint8_t nb = 1;
     if(packet->d7anp_addressee->ctrl.id_type == ID_TYPE_NOID)
       nb = 32;
@@ -387,6 +390,7 @@ void d7atp_signal_packet_transmitted(packet_t* packet)
         {
             // no FG scan running, we can end dialog now
             timer_cancel_task(&response_period_timeout_handler);
+            sched_cancel_task(&response_period_timeout_handler);
             terminate_dialog();
             d7anp_stop_foreground_scan(true); // restart scan automation
         }
