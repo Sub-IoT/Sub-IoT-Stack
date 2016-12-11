@@ -197,19 +197,19 @@ static void switch_state(dll_state_t next_state)
     }
 
     // output state on debug pins
-
-    switch(dll_state)
-    {
-        case DLL_STATE_CSMA_CA_STARTED:
-        case DLL_STATE_CCA1:
-        case DLL_STATE_CCA2:
-        case DLL_STATE_CSMA_CA_RETRY:
-        case DLL_STATE_CCA_FAIL:
-          DEBUG_PIN_SET(2);
-          break;
-        default:
-          DEBUG_PIN_CLR(2);
-    }
+    // TODO debug pin 2 used for response time for now
+//    switch(dll_state)
+//    {
+//        case DLL_STATE_CSMA_CA_STARTED:
+//        case DLL_STATE_CCA1:
+//        case DLL_STATE_CCA2:
+//        case DLL_STATE_CSMA_CA_RETRY:
+//        case DLL_STATE_CCA_FAIL:
+//          DEBUG_PIN_SET(2);
+//          break;
+//        default:
+//          DEBUG_PIN_CLR(2);
+//    }
 }
 
 static bool is_tx_busy()
@@ -333,7 +333,11 @@ static void cca_rssi_valid(int16_t cur_rssi)
         {
             DPRINT("CCA1 RSSI: %d", cur_rssi);
             switch_state(DLL_STATE_CCA2);
-            timer_post_task_prio_delay(&execute_cca, 5, MAX_PRIORITY);
+
+            // execute CCA2 directly after busy wait instead of scheduling this, to prevent another long running
+            // scheduled task to interfer with this timer (for instance d7asp_received_unsollicited_data_cb() )
+            hw_busy_wait(5000);
+            execute_cca();
             return;
         }
         else if(dll_state == DLL_STATE_CCA2)
