@@ -45,18 +45,24 @@ typedef enum {
 
 typedef struct {
     union {
-      uint8_t raw;
-      struct {
-          uint8_t nls_method : 4; // TODO
-          id_type_t id_type : 2;
-          uint8_t _rfu : 2;
-      };
+        uint8_t raw;
+        struct {
+            uint8_t nls_method : 4;
+            id_type_t id_type : 2;
+            uint8_t _rfu : 2;
+        };
     };
 } d7anp_addressee_ctrl;
 
 typedef struct {
     d7anp_addressee_ctrl ctrl;
-    uint8_t access_class;
+    union {
+        uint8_t access_class;
+        struct {
+            uint8_t access_mask : 4;
+            uint8_t access_index : 4;
+        };
+    };
     uint8_t id[8]; // TODO assuming 8 byte id for now
 } d7anp_addressee_t;
 
@@ -69,12 +75,11 @@ typedef struct {
 typedef struct {
     union {
         uint8_t raw;
-        d7anp_addressee_ctrl origin_addressee_ctrl;
         struct {
-            uint8_t origin_addressee_ctrl_access_class : 4;
-            id_type_t origin_addressee_ctrl_id_type : 2;
-            bool origin_addressee_ctrl_hop_enabled : 1;
-            bool origin_addressee_ctrl_nls_enabled : 1;
+            uint8_t nls_method : 4;
+            id_type_t origin_id_type : 2;
+            bool hop_enabled : 1;
+            bool origin_void : 1;
         };
     };
 } d7anp_ctrl_t;

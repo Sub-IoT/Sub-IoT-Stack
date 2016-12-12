@@ -123,7 +123,7 @@ void fs_init(fs_init_args_t* init_args)
         .length = D7A_FILE_DLL_CONF_SIZE
     };
 
-    memset(data + current_data_offset, 0, 1); current_data_offset += 1; // active access class
+    data[current_data_offset] = init_args->access_class; current_data_offset += 1; // active access class
     memset(data + current_data_offset, 0xFF, 2); current_data_offset += 2; // VID; 0xFFFF means not valid
 
     // 0x20+n - Access Profiles

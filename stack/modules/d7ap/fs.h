@@ -91,6 +91,7 @@ typedef struct {
     fs_user_files_init_callback fs_user_files_init_cb; /**< Initialize the user files in this callback */
     uint8_t access_profiles_count; /**< The number of access profiles used (and passed in the access_profiles member).  */
     dae_access_profile_t* access_profiles; /**< The access profiles to be written to the filesystem (using increasing fileID starting from0x20) during init.  */    
+    uint8_t access_class; /* The Active Access Class to be written in the DLL configuration file */
 } fs_init_args_t;
 
 void fs_init(fs_init_args_t* init_args);

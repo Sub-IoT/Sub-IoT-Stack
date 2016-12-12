@@ -32,6 +32,7 @@
 #include "hwradio.h"
 #include "math.h"
 
+#include "d7anp.h"
 #include "dae.h"
 
 #define E_CCA	-86 //TODO: get from file
@@ -47,8 +48,7 @@ typedef struct
         struct
         {
             int8_t control_eirp_index: 6;
-            bool control_vid_used: 1;
-            bool control_target_address_set: 1;
+            id_type_t control_target_id_type : 2;
         };
     };
     //uint8_t target_address[8]; // TODO assuming 8B UID for now
