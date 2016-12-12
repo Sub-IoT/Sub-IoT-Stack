@@ -242,6 +242,10 @@ alp_status_codes_t fs_write_file(uint8_t file_id, uint8_t offset, const uint8_t*
     {
         dll_notify_dll_conf_file_changed();
     }
+    else if(file_id >= D7A_FILE_ACCESS_PROFILE_ID && file_id <= D7A_FILE_ACCESS_PROFILE_ID + 14)
+    {
+        dll_notify_access_profile_file_changed();
+    }
 
     return ALP_STATUS_OK;
 }
@@ -271,6 +275,7 @@ void fs_read_access_class(uint8_t access_class_index, dae_access_profile_t *acce
     access_class->scan_automation_period = (*data_ptr); data_ptr++;
     data_ptr++; // RFU
     // subbands, only 1 supported for now
+    assert(access_class->control_number_of_subbands == 1);
     memcpy(&(access_class->subbands[0].channel_header), data_ptr, 1); data_ptr++;
     memcpy(&(access_class->subbands[0].channel_index_start), data_ptr, 2); data_ptr += 2;
     memcpy(&(access_class->subbands[0].channel_index_end), data_ptr, 2); data_ptr += 2;

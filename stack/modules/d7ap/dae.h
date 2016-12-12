@@ -50,9 +50,9 @@ typedef struct
         uint8_t control;
         struct
         {
+            uint8_t control_number_of_subbands: 3;
+            csma_ca_mode_t control_csma_ca_mode: 4;
             bool control_scan_type_is_foreground: 1;
-            csma_ca_mode_t control_csma_ca_mode: 3;
-            uint8_t control_number_of_subbands: 2;
         };
     };
     uint8_t subnet;

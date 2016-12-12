@@ -609,6 +609,20 @@ void dll_notify_dll_conf_file_changed()
     }
 }
 
+void dll_notify_access_profile_file_changed()
+{
+    DPRINT("AP file changed");
+
+    // make sure access class is re-read when entering scan automation
+    active_access_class = NO_ACTIVE_ACCESS_CLASS;
+
+    // when doing scan automation restart this
+    if(dll_state == DLL_STATE_SCAN_AUTOMATION)
+    {
+        dll_execute_scan_automation();
+    }
+}
+
 void dll_init()
 {
     sched_register_task(&process_received_packets);
