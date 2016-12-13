@@ -58,7 +58,7 @@ typedef struct
 #define CT_DECOMPRESS(ct) (pow(4, ct >> 5) * (ct & 0b11111))
 
 void dll_init();
-void dll_tx_frame(packet_t* packet, dae_access_profile_t* access_profile);
+void dll_tx_frame(packet_t* packet);
 void dll_start_foreground_scan();
 void dll_stop_foreground_scan(bool auto_scan);
 void dll_execute_scan_automation();

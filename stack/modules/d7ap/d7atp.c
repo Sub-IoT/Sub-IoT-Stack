@@ -254,7 +254,7 @@ void d7atp_send_request(uint8_t dialog_id, uint8_t transaction_id, bool is_last_
         current_access_class = access_class;
     }
 
-    DPRINT("Start dialog Id=%i transID=%i on AC=%i, expected resp len=%i", dialog_id, transaction_id, access_class, expected_response_length);
+    DPRINT("Start dialog Id=%i transID=%i on AC=%x, expected resp len=%i", dialog_id, transaction_id, access_class, expected_response_length);
     uint8_t slave_listen_timeout = listen_timeout;
 
     bool ack_requested = true;
@@ -292,7 +292,7 @@ void d7atp_send_request(uint8_t dialog_id, uint8_t transaction_id, bool is_last_
     packet->d7atp_tc = ceil((3 * nb + 1) * tx_duration_response + 5); // TODO compress
     DPRINT("resp Tc=%i Tx duration %d", include_tc? packet->d7atp_tc : 0, tx_duration_response);
 
-    d7anp_tx_foreground_frame(packet, true, &active_addressee_access_profile, slave_listen_timeout);
+    d7anp_tx_foreground_frame(packet, true, slave_listen_timeout);
 }
 
 static void send_response(packet_t* packet)
@@ -333,7 +333,7 @@ static void send_response(packet_t* packet)
 
     // dialog and transaction id remain the same
     DPRINT("Tl=%i", packet->d7anp_listen_timeout);
-    d7anp_tx_foreground_frame(packet, should_include_origin_template, &active_addressee_access_profile, slave_listen_timeout);
+    d7anp_tx_foreground_frame(packet, should_include_origin_template, slave_listen_timeout);
 }
 
 uint8_t d7atp_assemble_packet_header(packet_t* packet, uint8_t* data_ptr)
@@ -542,13 +542,10 @@ void d7atp_process_received_packet(packet_t* packet)
             }
         }
 
-
         switch_state(D7ATP_STATE_SLAVE_TRANSACTION_RECEIVED_REQUEST);
 
         current_dialog_id = packet->d7atp_dialog_id;
         current_transaction_id = packet->d7atp_transaction_id;
-
-        channel_id_t rx_channel = packet->hw_radio_packet.rx_meta.rx_cfg.channel_id;
 
         // store the received timestamp for later usage (eg CCA). the rx_meta.timestamp can be
         // overwritten since it is stored in a union with tx_meta and can thus be changed when
@@ -562,10 +559,7 @@ void d7atp_process_received_packet(packet_t* packet)
             current_access_class = current_addressee.access_class;
         }
 
-        // but respond on the channel where we received the request on
-        active_addressee_access_profile.subbands[0].channel_header = rx_channel.channel_header;
-        active_addressee_access_profile.subbands[0].channel_index_start = rx_channel.center_freq_index;
-        active_addressee_access_profile.subbands[0].channel_index_end = rx_channel.center_freq_index;
+        // DLL is taking care that we respond on the channel where we received the request on
 
         bool should_send_response = d7asp_process_received_packet(packet, extension);
         if(should_send_response)

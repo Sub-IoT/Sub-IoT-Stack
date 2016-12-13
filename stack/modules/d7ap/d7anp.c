@@ -166,7 +166,7 @@ void d7anp_init()
     sched_register_task(&foreground_scan_expired);
 }
 
-void d7anp_tx_foreground_frame(packet_t* packet, bool should_include_origin_template, dae_access_profile_t* access_profile, uint8_t slave_listen_timeout_ct)
+void d7anp_tx_foreground_frame(packet_t* packet, bool should_include_origin_template, uint8_t slave_listen_timeout_ct)
 {
     assert(d7anp_state == D7ANP_STATE_IDLE || d7anp_state == D7ANP_STATE_FOREGROUND_SCAN);
 
@@ -196,7 +196,7 @@ void d7anp_tx_foreground_frame(packet_t* packet, bool should_include_origin_temp
     packet->d7anp_listen_timeout = slave_listen_timeout_ct;
 
     switch_state(D7ANP_STATE_TRANSMIT);
-    dll_tx_frame(packet, access_profile);
+    dll_tx_frame(packet);
 }
 
 void start_foreground_scan_after_D7AAdvP()

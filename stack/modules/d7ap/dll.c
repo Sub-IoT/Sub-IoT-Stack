@@ -678,7 +678,7 @@ void dll_init()
     sched_post_task(&dll_execute_scan_automation);
 }
 
-void dll_tx_frame(packet_t* packet, dae_access_profile_t* access_profile)
+void dll_tx_frame(packet_t* packet)
 {
     if (dll_state != DLL_STATE_FOREGROUND_SCAN)
     {
