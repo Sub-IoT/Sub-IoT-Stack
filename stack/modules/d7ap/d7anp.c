@@ -53,6 +53,9 @@ static dae_access_profile_t NGDEF(_own_access_profile);
 static timer_tick_t NGDEF(_fg_scan_timeout_ticks);
 #define fg_scan_timeout_ticks NG(_fg_scan_timeout_ticks)
 
+static uint8_t NGDEF(_active_access_class);
+#define active_access_class NG(_active_access_class)
+
 static void switch_state(state_t next_state)
 {
     switch(next_state)
@@ -153,10 +156,9 @@ void d7anp_stop_foreground_scan(bool auto_scan)
 
 void d7anp_init()
 {
-    uint8_t own_access_class = fs_read_dll_conf_active_access_class();
-
     // set early our own acces profile since this information may be needed when receiving a frame
-    fs_read_access_class(own_access_class, &own_access_profile);
+    active_access_class = fs_read_dll_conf_active_access_class();
+    fs_read_access_class(ACCESS_SPECIFIER(active_access_class), &own_access_profile);
 
     d7anp_state = D7ANP_STATE_IDLE;
     fg_scan_timeout_ticks = 0;
@@ -168,24 +170,29 @@ void d7anp_tx_foreground_frame(packet_t* packet, bool should_include_origin_temp
 {
     assert(d7anp_state == D7ANP_STATE_IDLE || d7anp_state == D7ANP_STATE_FOREGROUND_SCAN);
 
-    packet->d7anp_ctrl.origin_addressee_ctrl_hop_enabled = false;
+    packet->d7anp_ctrl.hop_enabled = false;
 
     // we need to switch back to the current state after the transmission procedure
     d7anp_prev_state = d7anp_state;
 
     if(!should_include_origin_template)
-        packet->d7anp_ctrl.origin_addressee_ctrl_id_type = ID_TYPE_NOID; // TODO or NBID in some cases?
+    {
+        packet->d7anp_ctrl.origin_id_type = ID_TYPE_NOID;
+        packet->d7anp_ctrl.origin_void = true;
+    }
     else
     {
         uint8_t vid[2];
         fs_read_vid(vid);
         if(memcmp(vid, (uint8_t[2]){ 0xFF, 0xFF }, 2) == 0)
-            packet->d7anp_ctrl.origin_addressee_ctrl_id_type = ID_TYPE_UID;
+            packet->d7anp_ctrl.origin_id_type = ID_TYPE_UID;
         else
-            packet->d7anp_ctrl.origin_addressee_ctrl_id_type = ID_TYPE_VID;
+            packet->d7anp_ctrl.origin_id_type = ID_TYPE_VID;
+
+        packet->d7anp_ctrl.origin_void = false;
+        packet->origin_access_class = active_access_class;
     }
 
-    packet->d7anp_ctrl.origin_addressee_ctrl_access_class = packet->d7anp_addressee->access_class; // TODO validate
     packet->d7anp_listen_timeout = slave_listen_timeout_ct;
 
     switch_state(D7ANP_STATE_TRANSMIT);
@@ -206,26 +213,28 @@ static void schedule_foreground_scan_after_D7AAdvP(timer_tick_t eta)
 
 uint8_t d7anp_assemble_packet_header(packet_t *packet, uint8_t *data_ptr)
 {
-    assert(!packet->d7anp_ctrl.origin_addressee_ctrl_nls_enabled); // TODO NLS not yet supported
-    assert(!packet->d7anp_ctrl.origin_addressee_ctrl_hop_enabled); // TODO hopping not yet supported
+    assert(!packet->d7anp_ctrl.nls_method); // TODO NLS not yet supported
+    assert(!packet->d7anp_ctrl.hop_enabled); // TODO hopping not yet supported
 
     uint8_t* d7anp_header_start = data_ptr;
     (*data_ptr) = packet->d7anp_listen_timeout; data_ptr++;
     (*data_ptr) = packet->d7anp_ctrl.raw; data_ptr++;
 
-    if(!ID_TYPE_IS_BROADCAST(packet->d7anp_ctrl.origin_addressee_ctrl_id_type))
+    if(!packet->d7anp_ctrl.origin_void)
     {
-        if(packet->d7anp_ctrl.origin_addressee_ctrl_id_type == ID_TYPE_UID)
+        (*data_ptr) = packet->origin_access_class; data_ptr++;
+
+        if(packet->d7anp_ctrl.origin_id_type == ID_TYPE_UID)
         {
             fs_read_uid(data_ptr); data_ptr += 8;
         }
-        else if(packet->d7anp_ctrl.origin_addressee_ctrl_id_type == ID_TYPE_VID)
+        else if(packet->d7anp_ctrl.origin_id_type == ID_TYPE_VID)
         {
             fs_read_vid(data_ptr); data_ptr += 2;
         }
-        else
+        else if(packet->d7anp_ctrl.origin_id_type == ID_TYPE_NBID)
         {
-            assert(false);
+            (*data_ptr) = packet->origin_access_id[0]; data_ptr++;
         }
     }
 
@@ -238,13 +247,23 @@ bool d7anp_disassemble_packet_header(packet_t* packet, uint8_t* data_idx)
 {
     packet->d7anp_listen_timeout = packet->hw_radio_packet.data[(*data_idx)]; (*data_idx)++;
     packet->d7anp_ctrl.raw = packet->hw_radio_packet.data[(*data_idx)]; (*data_idx)++;
-    assert(!packet->d7anp_ctrl.origin_addressee_ctrl_nls_enabled); // TODO NLS not yet supported
-    assert(!packet->d7anp_ctrl.origin_addressee_ctrl_hop_enabled); // TODO hopping not yet supported
+    assert(!packet->d7anp_ctrl.nls_method); // TODO NLS not yet supported
+    assert(!packet->d7anp_ctrl.hop_enabled); // TODO hopping not yet supported
 
-    if(!ID_TYPE_IS_BROADCAST(packet->d7anp_ctrl.origin_addressee_ctrl_id_type))
+    if(!packet->d7anp_ctrl.origin_void)
     {
-        uint8_t origin_access_id_size = packet->d7anp_ctrl.origin_addressee_ctrl_id_type == ID_TYPE_VID? 2 : 8;
-        memcpy(packet->origin_access_id, packet->hw_radio_packet.data + (*data_idx), origin_access_id_size); (*data_idx) += origin_access_id_size;
+        packet->origin_access_class = packet->hw_radio_packet.data[(*data_idx)]; (*data_idx)++;
+
+        if(!ID_TYPE_IS_BROADCAST(packet->d7anp_ctrl.origin_id_type))
+        {
+            uint8_t origin_access_id_size = packet->d7anp_ctrl.origin_id_type == ID_TYPE_VID? 2 : 8;
+            memcpy(packet->origin_access_id, packet->hw_radio_packet.data + (*data_idx), origin_access_id_size); (*data_idx) += origin_access_id_size;
+        }
+        else if(packet->d7anp_ctrl.origin_id_type == ID_TYPE_NBID)
+        {
+            packet->origin_access_id[0] = packet->hw_radio_packet.data[(*data_idx)];
+            (*data_idx)++;
+        }
     }
 
     // TODO hopping ctrl

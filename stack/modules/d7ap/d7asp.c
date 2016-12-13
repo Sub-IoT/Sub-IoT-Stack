@@ -317,7 +317,7 @@ bool d7asp_process_received_packet(packet_t* packet, bool extension)
         .target_rx_level = 80, // TODO not implemented yet, use default for now
         .status = {
             .ucast = 0, // TODO
-            .nls = packet->d7anp_ctrl.origin_addressee_ctrl_nls_enabled,
+            .nls = packet->d7anp_ctrl.nls_method ? 1 : 0,
             .retry = false, // TODO
             .missed = false, // TODO
         },
@@ -442,7 +442,7 @@ bool d7asp_process_received_packet(packet_t* packet, bool extension)
          * activate the dialog extension procedure in the unicast response if the dialog is terminated
          * and a master session is pending
          */
-        if((packet->dll_header.control_target_address_set) && (packet->d7atp_ctrl.ctrl_is_stop)
+        if((!ID_TYPE_IS_BROADCAST(packet->dll_header.control_target_id_type)) && (packet->d7atp_ctrl.ctrl_is_stop)
                 && (d7asp_state == D7ASP_STATE_SLAVE_PENDING_MASTER))
         {
             packet->d7atp_ctrl.ctrl_is_start = true;

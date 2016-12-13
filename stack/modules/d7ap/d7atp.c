@@ -238,7 +238,10 @@ void d7atp_send_request(uint8_t dialog_id, uint8_t transaction_id, bool is_last_
 
     uint8_t access_class = packet->d7anp_addressee->access_class;
     if(access_class != current_access_class)
-        fs_read_access_class(access_class, &active_addressee_access_profile);
+    {
+        fs_read_access_class(packet->d7anp_addressee->access_index, &active_addressee_access_profile);
+        current_access_class = access_class;
+    }
 
     DPRINT("Start dialog Id=%i transID=%i on AC=%i, expected resp len=%i", dialog_id, transaction_id, access_class, expected_response_length);
     uint8_t slave_listen_timeout = listen_timeout;
@@ -280,8 +283,8 @@ void d7atp_send_request(uint8_t dialog_id, uint8_t transaction_id, bool is_last_
     else if(packet->d7anp_addressee->ctrl.id_type == ID_TYPE_NBID)
       nb = CT_DECOMPRESS(packet->d7anp_addressee->id[0]);
 
-    packet->d7atp_tc = ceil((3 + nb + 1) * tx_duration_response + 5); // TODO compress
-    DPRINT("resp Tc=%i", include_tc? packet->d7atp_tc : 0);
+    packet->d7atp_tc = ceil((3 * nb + 1) * tx_duration_response + 5); // TODO compress
+    DPRINT("resp Tc=%i Tx duration %d", include_tc? packet->d7atp_tc : 0, tx_duration_response);
 
     d7anp_tx_foreground_frame(packet, true, &active_addressee_access_profile, slave_listen_timeout);
 }
@@ -300,7 +303,7 @@ static void send_response(packet_t* packet)
 
     bool should_include_origin_template = false; // we don't need to send origin ID, the requester will filter based on dialogID, but ...
 
-    if ((!packet->dll_header.control_target_address_set)
+    if (ID_TYPE_IS_BROADCAST(packet->dll_header.control_target_id_type)
             || (packet->d7atp_ctrl.ctrl_is_start
             && packet->d7atp_ctrl.ctrl_is_ack_requested))
     {
@@ -377,7 +380,7 @@ void d7atp_signal_packet_transmitted(packet_t* packet)
 
         if (packet->d7atp_ctrl.ctrl_tc)
         {
-            timer_tick_t Tc = adjust_timeout_value(packet->d7atp_tc, packet->hw_radio_packet.tx_meta.timestamp); // TODO decrompess Tc, for now it is not compressed
+            timer_tick_t Tc = adjust_timeout_value(packet->d7atp_tc, packet->hw_radio_packet.tx_meta.timestamp); // TODO decompress Tc, for now it is not compressed
             d7anp_set_foreground_scan_timeout(Tc + 2); // we include Tt here for now
             d7anp_start_foreground_scan();
         }
@@ -431,8 +434,8 @@ void d7atp_process_received_packet(packet_t* packet)
 
 
     // copy addressee from NP origin
-    current_addressee.ctrl.id_type = packet->d7anp_ctrl.origin_addressee_ctrl_id_type;
-    current_addressee.access_class = packet->d7anp_ctrl.origin_addressee_ctrl_access_class;
+    current_addressee.ctrl.id_type = packet->d7anp_ctrl.origin_id_type;
+    current_addressee.access_class = packet->origin_access_class;
     memcpy(current_addressee.id, packet->origin_access_id, 8);
     packet->d7anp_addressee = &current_addressee;
 
@@ -452,7 +455,7 @@ void d7atp_process_received_packet(packet_t* packet)
         if(packet->d7atp_ctrl.ctrl_is_start)
         {
             // if this is a unicast response and the last transaction, the extension procedure is allowed
-            if (packet->d7atp_ctrl.ctrl_is_stop && packet->dll_header.control_target_address_set)
+            if (packet->d7atp_ctrl.ctrl_is_stop && !ID_TYPE_IS_BROADCAST(packet->dll_header.control_target_id_type))
             {
                 Tl = adjust_timeout_value(packet->d7anp_listen_timeout, packet->hw_radio_packet.rx_meta.timestamp);
                 DPRINT("Responder wants to append a new dialog");
@@ -498,7 +501,7 @@ void d7atp_process_received_packet(packet_t* packet)
          // The FG scan is only started when the response period expires.
         if (packet->d7atp_ctrl.ctrl_tc)
         {
-            timer_tick_t Tc = adjust_timeout_value(packet->d7atp_tc, packet->hw_radio_packet.rx_meta.timestamp); // TODO decrompress Tc, for now it is not compress
+            timer_tick_t Tc = adjust_timeout_value(packet->d7atp_tc, packet->hw_radio_packet.rx_meta.timestamp); // TODO decompress Tc, for now it is not compress
             packet->transmission_timeout_ti = Tc; // TODO until we implemented a way to notify DLL of the type of transmission (ie response in the case),
                                              // we set this field since this is used by DLL for CSMA-CA
             if (Tc <= 0)
@@ -523,7 +526,7 @@ void d7atp_process_received_packet(packet_t* packet)
         {
             if(packet->d7anp_listen_timeout)
             {
-                Tl = adjust_timeout_value(packet->d7anp_listen_timeout, packet->hw_radio_packet.rx_meta.timestamp); // TODO decrompress
+                Tl = adjust_timeout_value(packet->d7anp_listen_timeout, packet->hw_radio_packet.rx_meta.timestamp); // TODO decompress
                 d7anp_set_foreground_scan_timeout(Tl);
                 d7anp_start_foreground_scan();
             }
@@ -545,7 +548,7 @@ void d7atp_process_received_packet(packet_t* packet)
         // set active_addressee_access_profile to the access_profile supplied by the requester
         if(current_access_class != current_addressee.access_class)
         {
-            fs_read_access_class(current_addressee.access_class, &active_addressee_access_profile);
+            fs_read_access_class(current_addressee.access_index, &active_addressee_access_profile);
             current_access_class = current_addressee.access_class;
         }
 
