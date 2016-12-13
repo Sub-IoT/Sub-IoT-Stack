@@ -36,6 +36,7 @@
 #include "dae.h"
 
 #define E_CCA	-86 //TODO: get from file
+#define SFc		3 // Collision Avoidance Spreading Factor
 
 typedef struct packet packet_t;
 

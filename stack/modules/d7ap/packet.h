@@ -33,6 +33,13 @@
 #include "hwradio.h"
 
 
+typedef enum {
+	INITIAL_REQUEST,
+	SUBSEQUENT_REQUEST,
+	RESPONSE_TO_UNICAST,
+	RESPONSE_TO_BROADCAST
+} packet_type;
+
 /*! \brief A D7AP 'packet' used over all layers of the stack. Contains both the raw packet data (as transmitted over the air) as well
  * as metadata parsed or generated while moving through the different layers */
 struct packet
@@ -49,7 +56,7 @@ struct packet
     uint8_t d7atp_dialog_id;
     uint8_t d7atp_transaction_id;
     uint8_t d7atp_tc;
-    timer_tick_t transmission_timeout_ti;
+    packet_type type;
     // TODO d7atp ack template
     uint8_t payload_length;
     uint8_t payload[239]; // TODO make max size configurable using cmake

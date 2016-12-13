@@ -226,8 +226,19 @@ void d7atp_send_request(uint8_t dialog_id, uint8_t transaction_id, bool is_last_
                         packet_t* packet, session_qos_t* qos_settings, uint8_t listen_timeout, uint8_t expected_response_length)
 {
     /* check that we are not initiating a different dialog if a dialog is still ongoing */
+
+    // TODO in case of retry of the initial request, rigorously, we should keep the type INITIAL_REQUEST
+    // How to distinguish a retry?
+
     if (current_dialog_id)
+    {
         assert( dialog_id == current_dialog_id);
+
+        // the Dialog is locked on the channel of the initial request
+        packet->type = SUBSEQUENT_REQUEST;
+    }
+    else
+        packet->type = INITIAL_REQUEST;
 
     switch_state(D7ATP_STATE_MASTER_TRANSACTION_REQUEST_PERIOD);
 
@@ -267,21 +278,16 @@ void d7atp_send_request(uint8_t dialog_id, uint8_t transaction_id, bool is_last_
 
     // Tc(NB, LEN, CH) = ceil((SFC  * NB  + 1) * TTX(CH, LEN) + TG) with NB the number of concurrent devices and SF the collision Avoidance Spreading Factor
     // TODO payload length does not include headers ... + hardcoded subband
-    // calculate in DLL, after we implemented the changes required to notify DLL of the type of packet (ie request)
-    uint16_t tx_duration = dll_calculate_tx_duration(active_addressee_access_profile.subbands[0].channel_header.ch_class, packet->payload_length);
-    packet->transmission_timeout_ti = ceil((3 + 1 + 1) * tx_duration + 5);
-
-    DPRINT("Tl=%i Tc=%i tx", packet->d7anp_listen_timeout, packet->transmission_timeout_ti);
     // TODO this length does not include lower layers overhead for now, use a minimum len of 50 for now ...
     if(expected_response_length < 50)
       expected_response_length = 50;
 
-    uint8_t tx_duration_response = dll_calculate_tx_duration(active_addressee_access_profile.subbands[0].channel_header.ch_class, expected_response_length);
+    uint8_t tx_duration_response = dll_calculate_tx_duration(active_addressee_access_profile.channel_header.ch_class, expected_response_length);
     uint8_t nb = 1;
     if(packet->d7anp_addressee->ctrl.id_type == ID_TYPE_NOID)
-      nb = 32;
+        nb = 32;
     else if(packet->d7anp_addressee->ctrl.id_type == ID_TYPE_NBID)
-      nb = CT_DECOMPRESS(packet->d7anp_addressee->id[0]);
+        nb = CT_DECOMPRESS(packet->d7anp_addressee->id[0]);
 
     packet->d7atp_tc = ceil((3 * nb + 1) * tx_duration_response + 5); // TODO compress
     DPRINT("resp Tc=%i Tx duration %d", include_tc? packet->d7atp_tc : 0, tx_duration_response);
@@ -302,6 +308,11 @@ static void send_response(packet_t* packet)
     d7atp->ctrl_tc = false;
 
     bool should_include_origin_template = false; // we don't need to send origin ID, the requester will filter based on dialogID, but ...
+
+    if (ID_TYPE_IS_BROADCAST(packet->dll_header.control_target_id_type))
+        packet->type = RESPONSE_TO_BROADCAST;
+    else
+        packet->type = RESPONSE_TO_UNICAST;
 
     if (ID_TYPE_IS_BROADCAST(packet->dll_header.control_target_id_type)
             || (packet->d7atp_ctrl.ctrl_is_start
@@ -502,8 +513,7 @@ void d7atp_process_received_packet(packet_t* packet)
         if (packet->d7atp_ctrl.ctrl_tc)
         {
             timer_tick_t Tc = adjust_timeout_value(packet->d7atp_tc, packet->hw_radio_packet.rx_meta.timestamp); // TODO decompress Tc, for now it is not compress
-            packet->transmission_timeout_ti = Tc; // TODO until we implemented a way to notify DLL of the type of transmission (ie response in the case),
-                                             // we set this field since this is used by DLL for CSMA-CA
+
             if (Tc <= 0)
             {
                 DPRINT("Discard the request since the response period is expired");

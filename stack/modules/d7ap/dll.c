@@ -96,6 +96,9 @@ static bool NGDEF(_process_received_packets_after_tx);
 static bool NGDEF(_resume_fg_scan);
 #define resume_fg_scan NG(_resume_fg_scan)
 
+static eirp_t NGDEF(_current_eirp);
+#define current_eirp NG(_current_eirp)
+
 static channel_id_t NGDEF(_current_channel_id);
 #define current_channel_id NG(_current_channel_id)
 
@@ -405,13 +408,22 @@ static void execute_csma_ca()
                                         // TODO use correct rx cfg + it might be interesting to switch to idle first depending on calculated offset
     // TODO select correct subband
     uint16_t tx_duration = dll_calculate_tx_duration(current_channel_id.channel_header.ch_class, current_packet->hw_radio_packet.length);
+
     switch (dll_state)
     {
         case DLL_STATE_CSMA_CA_STARTED:
         {
-            dll_tca = current_packet->transmission_timeout_ti - tx_duration;
+            uint16_t transmission_timeout_ti;
+
+            if (current_packet->type == INITIAL_REQUEST || current_packet->type == SUBSEQUENT_REQUEST)
+                transmission_timeout_ti = ceil((SFc + 1) * tx_duration + 5);
+            // in case of response, use the Tc parameter provided in the request
+            else
+                transmission_timeout_ti = current_packet->d7atp_tc; // TODO decompress Tc
+
+            dll_tca = transmission_timeout_ti - tx_duration;
             dll_cca_started = timer_get_counter_value();
-            DPRINT("Tca= %i = %i - %i", dll_tca, current_packet->transmission_timeout_ti, tx_duration);
+            DPRINT("Tca= %i = %i - %i", dll_tca, transmission_timeout_ti, tx_duration);
 
             // Adjust TCA value according the time already elapsed since the reception time in case of response
             if (current_packet->request_received_timestamp)
@@ -432,8 +444,10 @@ static void execute_csma_ca()
 
             uint16_t t_offset = 0;
 
-            // For now, set always CSMA_CA mode to AIND
-            csma_ca_mode = CSMA_CA_MODE_AIND; 
+            if (current_packet->type == RESPONSE_TO_BROADCAST)
+                csma_ca_mode = CSMA_CA_MODE_RAIND;
+            else
+                csma_ca_mode = CSMA_CA_MODE_AIND;
 
             // TODO overrule mode to UNC if the channel is still guarded
             // This is valid for subsequent requests by the requester, or a single response to a unicast request
@@ -682,26 +696,49 @@ void dll_tx_frame(packet_t* packet, dae_access_profile_t* access_profile)
     else
         dll_header->control_target_id_type = ID_TYPE_NOID;
 
-    // TODO if the channel is locked, we shall use the channel of the initial request
+    // if the channel is locked, we shall use the channel of the initial request
+    if (packet->type == SUBSEQUENT_REQUEST) // TODO MISO conditions not supported
+    {
+        dll_header->control_eirp_index = current_eirp + 32;
 
-    fs_read_access_class(packet->d7anp_addressee->access_index, &current_access_profile);
-    /*
-     * For now the access mask and the subband bitmap are not used
-     * By default, subprofile[0] is selected and subband[0] is used
-     */
+        packet->hw_radio_packet.tx_meta.tx_cfg = (hw_tx_cfg_t){
+            .channel_id = current_channel_id,
+            .syncword_class = PHY_SYNCWORD_CLASS1,
+            .eirp = current_eirp
+        };
+    }
+    else if (packet->type == RESPONSE_TO_UNICAST || packet->type == RESPONSE_TO_BROADCAST)
+    {
+        dll_header->control_eirp_index = current_eirp + 32;
 
-    /* EIRP (dBm) = (EIRP_I – 32) dBm */
-    dll_header->control_eirp_index = current_access_profile.subbands[0].eirp + 32;
+        packet->hw_radio_packet.tx_meta.tx_cfg = (hw_tx_cfg_t){
+                .channel_id = packet->hw_radio_packet.rx_meta.rx_cfg.channel_id,
+                .syncword_class = packet->hw_radio_packet.rx_meta.rx_cfg.syncword_class,
+                .eirp = current_eirp
+            };
+    }
+    else
+    {
+        fs_read_access_class(packet->d7anp_addressee->access_index, &current_access_profile);
+        /*
+         * For now the access mask and the subband bitmap are not used
+         * By default, subprofile[0] is selected and subband[0] is used
+         */
 
-    packet->hw_radio_packet.tx_meta.tx_cfg = (hw_tx_cfg_t){
-        .channel_id.channel_header = current_access_profile.channel_header,
-        .channel_id.center_freq_index = current_access_profile.subbands[0].channel_index_start,
-        .syncword_class = PHY_SYNCWORD_CLASS1,
-        .eirp = current_access_profile.subbands[0].eirp
-    };
+        /* EIRP (dBm) = (EIRP_I – 32) dBm */
+        dll_header->control_eirp_index = current_access_profile.subbands[0].eirp + 32;
 
-    // store the channel id used for Tx
-    current_channel_id = packet->hw_radio_packet.tx_meta.tx_cfg.channel_id;
+        packet->hw_radio_packet.tx_meta.tx_cfg = (hw_tx_cfg_t){
+            .channel_id.channel_header = current_access_profile.channel_header,
+            .channel_id.center_freq_index = current_access_profile.subbands[0].channel_index_start,
+            .syncword_class = PHY_SYNCWORD_CLASS1,
+            .eirp = current_access_profile.subbands[0].eirp
+        };
+
+        // store the channel id and eirp
+        current_eirp = current_access_profile.subbands[0].eirp;
+        current_channel_id = packet->hw_radio_packet.tx_meta.tx_cfg.channel_id;
+    }
 
     packet_assemble(packet);
 
