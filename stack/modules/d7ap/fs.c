@@ -132,7 +132,7 @@ void fs_init(fs_init_args_t* init_args)
     {
     	dae_access_profile_t* access_class = &(init_args->access_profiles[i]);
         file_offsets[D7A_FILE_ACCESS_PROFILE_ID + i] = current_data_offset;
-        write_access_class(i, access_class);
+        fs_write_access_class(i, access_class);
         file_headers[D7A_FILE_ACCESS_PROFILE_ID + i] = (fs_file_header_t){
             .file_properties.action_protocol_enabled = 0,
             .file_properties.storage_class = FS_STORAGE_PERMANENT,
