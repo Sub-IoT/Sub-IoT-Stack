@@ -76,21 +76,6 @@ static void execute_alp_command(uint8_t command_file_id)
     alp_process_command_result_on_d7asp(&fifo_config, data_ptr, file_headers[command_file_id].length - (uint8_t)(data_ptr - file_start), ALP_CMD_ORIGIN_D7AACTP);
 }
 
-void fs_write_access_class(uint8_t access_class_index, dae_access_profile_t* access_class)
-{
-    assert(access_class_index < 16);
-    assert(access_class->control_number_of_subbands == 1); // TODO only one supported for now
-    data[current_data_offset] = access_class->control; current_data_offset++;
-    data[current_data_offset] = access_class->subnet; current_data_offset++;
-    data[current_data_offset] = access_class->scan_automation_period; current_data_offset++;
-    data[current_data_offset] = 0x00; current_data_offset++; // RFU
-    // subbands, only 1 supported for now
-    memcpy(data + current_data_offset, &(access_class->subbands[0].channel_header), 1); current_data_offset++;
-    memcpy(data + current_data_offset, &(access_class->subbands[0].channel_index_start), 2); current_data_offset += 2;
-    memcpy(data + current_data_offset, &(access_class->subbands[0].channel_index_end), 2); current_data_offset += 2;
-    data[current_data_offset] = access_class->subbands[0].eirp; current_data_offset++;
-    data[current_data_offset] = access_class->subbands[0].ccao; current_data_offset++;
-}
 
 void fs_init(fs_init_args_t* init_args)
 {
