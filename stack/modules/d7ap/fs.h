@@ -99,6 +99,7 @@ void fs_init_file_with_D7AActP(uint8_t file_id, const d7asp_master_session_confi
 alp_status_codes_t fs_read_file(uint8_t file_id, uint8_t offset, uint8_t* buffer, uint8_t length);
 alp_status_codes_t fs_write_file(uint8_t file_id, uint8_t offset, const uint8_t* buffer, uint8_t length);
 void fs_read_access_class(uint8_t access_class_index, dae_access_profile_t* access_class);
+void fs_write_access_class(uint8_t access_class_index, dae_access_profile_t* access_class);
 void fs_read_uid(uint8_t* buffer);
 void fs_read_vid(uint8_t* buffer);
 void fs_write_vid(uint8_t* buffer);

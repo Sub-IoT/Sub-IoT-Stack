@@ -33,8 +33,12 @@
 #include "log.h"
 
 #include "button.h"
-#if (defined PLATFORM_EFM32GG_STK3700 || defined PLATFORM_EFM32HG_STK3400 || defined PLATFORM_EZR32LG_WSTK6200A)
+#if (defined PLATFORM_EFM32GG_STK3700 || defined PLATFORM_EFM32HG_STK3400 || defined PLATFORM_EZR32LG_WSTK6200A || defined PLATFORM_EZR32LG_OCTA)
   #include "platform_sensors.h"
+#endif
+
+#ifdef PLATFORM_EZR32LG_OCTA
+#include "led.h"
 #endif
 
 #ifdef HAS_LCD
@@ -51,7 +55,7 @@
 #define SENSOR_FILE_SIZE         8
 #define ACTION_FILE_ID           0x41
 
-#define SENSOR_UPDATE	TIMER_TICKS_PER_SEC * 1
+#define SENSOR_UPDATE	TIMER_TICKS_PER_SEC * 10
 
 // Toggle different operational modes
 void userbutton_callback(button_id_t button_id)
@@ -73,7 +77,7 @@ void execute_sensor_measurement()
 
 
   fs_write_file(SENSOR_FILE_ID, 0, (uint8_t*)&internal_temp, sizeof(internal_temp)); // File 0x40 is configured to use D7AActP trigger an ALP action which broadcasts this file data on Access Class 0
-#elif (defined PLATFORM_EFM32HG_STK3400  || defined PLATFORM_EZR32LG_WSTK6200A)
+#elif (defined PLATFORM_EFM32HG_STK3400  || defined PLATFORM_EZR32LG_WSTK6200A || defined PLATFORM_EZR32LG_OCTA)
   char str[30];
 
   float internal_temp = hw_get_internal_temperature();
@@ -116,6 +120,10 @@ void execute_sensor_measurement()
 #endif
 
   timer_post_task_delay(&execute_sensor_measurement, SENSOR_UPDATE);
+
+#ifdef PLATFORM_EZR32LG_OCTA
+  led_flash_green();
+#endif
 }
 
 void init_user_files()
@@ -184,7 +192,7 @@ void bootstrap()
                 .channel_header = {
                     .ch_coding = PHY_CODING_PN9,
                     .ch_class = PHY_CLASS_NORMAL_RATE,
-                    .ch_freq_band = PHY_BAND_868
+                    .ch_freq_band = PHY_BAND_433
                 },
                 .channel_index_start = 0,
                 .channel_index_end = 0,
@@ -202,7 +210,7 @@ void bootstrap()
 
     d7ap_stack_init(&fs_init_args, NULL, false, NULL);
 
-#if (defined PLATFORM_EFM32GG_STK3700 || defined PLATFORM_EFM32HG_STK3400 || defined PLATFORM_EZR32LG_WSTK6200A)
+#if (defined PLATFORM_EFM32GG_STK3700 || defined PLATFORM_EFM32HG_STK3400 || defined PLATFORM_EZR32LG_WSTK6200A || defined PLATFORM_EZR32LG_OCTA)
     initSensors();
 #endif
 
