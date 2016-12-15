@@ -270,8 +270,9 @@ void fs_read_access_class(uint8_t access_class_index, dae_access_profile_t *acce
 
 void fs_write_access_class(uint8_t access_class_index, dae_access_profile_t* access_class)
 {
-    assert(access_class_index < 16);
+	assert(access_class_index < 16);
     assert(access_class->control_number_of_subbands == 1); // TODO only one supported for now
+    current_data_offset = file_offsets[D7A_FILE_ACCESS_PROFILE_ID + access_class_index];
     data[current_data_offset] = access_class->control; current_data_offset++;
     data[current_data_offset] = access_class->subnet; current_data_offset++;
     data[current_data_offset] = access_class->scan_automation_period; current_data_offset++;
