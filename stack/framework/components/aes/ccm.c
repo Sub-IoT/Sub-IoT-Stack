@@ -42,8 +42,6 @@
 #define DPRINT_DATA(...)
 #endif
 
-#define AES_CCM_L 2 /* For Dash 7, the message length field is encoded in 2 bytes */
-
 /* Implementation according RFC 3610: Counter with CBC-MAC (CCM)
  * Counter with CBC-MAC (CCM) is a generic authenticated encryption
  * block cipher mode
@@ -63,13 +61,8 @@ static void xor_aes_block(uint8_t *dst, const uint8_t *src)
  * Authentication
  *
  * To secure CBC-MAC for variable length messages, the first block (B_0)
- * contains the length of the message.
- * According DASH7 specification, this block is defined  as (MSB first):
- * B_0: NWL payload length | D7ANP Control | Origin ID | Zeros padding | Tl | Control extension |
- *
- * For DASH7, no additional authenticated data is used to authenticate plaintext
- * packet header.
- * This field is kept anyway to comply with the public test vectors.
+ * contains the length of the message. 
+ * 
  */
 
 error_t AES128_CBC_MAC( uint8_t *auth, uint8_t *payload, uint8_t length, const uint8_t *iv,
@@ -84,11 +77,11 @@ error_t AES128_CBC_MAC( uint8_t *auth, uint8_t *payload, uint8_t length, const u
     if (auth_len != 4 && auth_len != 8 && auth_len != 16)
         return EINVAL;
 
-    if (add_len > (2 * AES_BLOCK_SIZE - 2))
+    if (add_len > (2 * AES_BLOCK_SIZE - 1))
         return EINVAL;
 
-    /* For DASH7, the length shall be encoded in a field of 2 bytes */
-    if (length > 0x10000) // 0x10000 = 2^16
+    /* For DASH7, the payload length shall be less than 250 - authentication tag len */
+    if (length > (250 - auth_len))
         return EINVAL;
 
     /* The CBC-MAC is computed by:
@@ -108,15 +101,14 @@ error_t AES128_CBC_MAC( uint8_t *auth, uint8_t *payload, uint8_t length, const u
     // if add_len > 0, add more blocks of authentication data
     if (add_len > 0)
     {
-        uint8_t use_len = add_len < AES_BLOCK_SIZE - 2 ? add_len : AES_BLOCK_SIZE - 2;
+        uint8_t use_len = add_len < AES_BLOCK_SIZE - 1 ? add_len : AES_BLOCK_SIZE - 1;
         uint8_t remainders = add_len - use_len;
 
         memset(blk, 0, AES_BLOCK_SIZE);
-        //since add_len < 16, the length shall be encoded in a field of 2 octets.
-        blk[0] = (uint8_t)( ( add_len >> 8 ) & 0xFF );
-        blk[1] = (uint8_t)( ( add_len      ) & 0xFF );
+        // For DASH7, the additional data length shall be encoded in a field of 1 octet.
+        blk[0] = add_len;
 
-        memcpy( blk + 2, add, use_len );
+        memcpy( blk + 1, add, use_len );
 
         DPRINT("Blk1");
         DPRINT_DATA(blk, AES_BLOCK_SIZE);
@@ -154,6 +146,9 @@ error_t AES128_CBC_MAC( uint8_t *auth, uint8_t *payload, uint8_t length, const u
         DPRINT("Xi");
         DPRINT_DATA(tag, AES_BLOCK_SIZE);
 
+        DPRINT("B_i");
+        DPRINT_DATA(payload, AES_BLOCK_SIZE);
+
         /* X_i+1 = E(K, X_i XOR B_i) */
         xor_aes_block(tag, payload);
         DPRINT("X_i XOR B_i");
@@ -171,6 +166,9 @@ error_t AES128_CBC_MAC( uint8_t *auth, uint8_t *payload, uint8_t length, const u
         /* XOR zero-padded last block */
         DPRINT("Xi");
         DPRINT_DATA(tag, AES_BLOCK_SIZE);
+
+        DPRINT("B_i");
+        DPRINT_DATA(payload, AES_BLOCK_SIZE);
 
         for (i = 0; i < remainders; i++)
             tag[i] ^= *payload++;
@@ -205,11 +203,11 @@ error_t AES128_CCM_encrypt( uint8_t *payload, uint8_t length, const uint8_t *iv,
     if (auth_len != 4 && auth_len != 8 && auth_len != 16)
         return EINVAL;
 
-     /* For DASH7, the length shall be encoded in a field of 2 bytes */
-    if (length > 0x10000) // 0x10000 = 2^16
+     /* For DASH7, the payload length shall be less than 250 - Security header len - authentication tag len */
+    if (length > (250 - 5 - auth_len))
         return EINVAL;
 
-    if (add_len > (2 * AES_BLOCK_SIZE - 2))
+    if (add_len > (2 * AES_BLOCK_SIZE - 1))
         return EINVAL;
 
     /* Authentication */
@@ -256,10 +254,11 @@ error_t AES128_CCM_decrypt( uint8_t *payload, uint8_t length, const uint8_t *iv,
     if (auth_len != 4 && auth_len != 8 && auth_len != 16)
         return EINVAL;
 
-    if (length > 0x10000)
+    /* For DASH7, the payload length shall be less than 250 - Security header len - authentication tag len */
+    if (length > (250 - 5 - auth_len))
         return EINVAL;
 
-    if (add_len > (2 * AES_BLOCK_SIZE - 2))
+    if (add_len > (2 * AES_BLOCK_SIZE - 1))
         return EINVAL;
 
     /* Decryption of the encrypted authentication Tag */

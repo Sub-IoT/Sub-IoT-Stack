@@ -301,6 +301,11 @@ static inline uint32_t read_be32(const uint8_t *buf)
 
 static void build_header(packet_t *packet, uint8_t payload_len, uint8_t *header)
 {
+    /*
+     * According DASH7 specification, this block is defined  as (LSB first):
+     * B_0: Flags | NLS Method | Zeros padding | Origin ID | Control extension | Payload length
+     */
+
     memset(header, 0, AES_BLOCK_SIZE); // for zero padding
 
     /* the CBC-MAC header is defined according Table 7.4.6.1 */
@@ -315,6 +320,11 @@ static void build_header(packet_t *packet, uint8_t payload_len, uint8_t *header)
 
 static void build_iv(packet_t *packet, uint8_t payload_len, uint8_t *iv)
 {
+    /*
+     * According DASH7 specification, the initialization vector is defined  as (LSB first):
+     * IV: Block counter | NLS Method | Key counter | Frame counter | Origin ID | Control extension | Payload length
+     */
+
     memset(iv, 0, AES_BLOCK_SIZE);
 
     /* AES-CTR/AES-CCM Initialization Vector (IV)*/
@@ -337,9 +347,18 @@ uint8_t d7anp_secure_payload(packet_t *packet, uint8_t *payload, uint8_t payload
     uint8_t header[AES_BLOCK_SIZE];
     uint8_t auth[AES_BLOCK_SIZE];
     uint8_t auth_len;
+    uint8_t add[AES_BLOCK_SIZE];
+    uint8_t add_len = 0;
 
     nls_method = packet->d7anp_ctrl.nls_method;
     auth_len = get_auth_len(nls_method);
+
+    /* When unicast access, add the auxiliary authentication data composed of the destination address */
+    if(auth_len && !ID_TYPE_IS_BROADCAST(packet->d7anp_addressee->ctrl.id_type))
+    {
+        add_len = packet->d7anp_addressee->ctrl.id_type == ID_TYPE_VID ? 2 : 8;
+        memcpy(add, packet->d7anp_addressee->id, add_len);
+    }
 
     switch (nls_method)
     {
@@ -356,8 +375,11 @@ uint8_t d7anp_secure_payload(packet_t *packet, uint8_t *payload, uint8_t payload
         /* Build the header block to prepend to the payload */
         build_header(packet, payload_len, header);
 
+        /* Set Header flags */
+        header[0] |= ( add_len > 0 );
+
         /* Compute the CBC-MAC */
-        AES128_CBC_MAC(auth, payload, payload_len, header, NULL, 0, auth_len);
+        AES128_CBC_MAC(auth, payload, payload_len, header, add, add_len, auth_len);
 
         /* Insert the authentication Tag */
         memcpy(payload + payload_len, auth, auth_len);
@@ -365,12 +387,18 @@ uint8_t d7anp_secure_payload(packet_t *packet, uint8_t *payload, uint8_t payload
     case AES_CCM_128:
     case AES_CCM_64:
     case AES_CCM_32:
-        /* For CCM, the same IV is used for the header block and the counter block */
+        /*
+         * For CCM, the same IV is used for the header block and the counter block
+         * Bits 0-3 are set with the flags in AES-CCM header whereas they are set
+         * to the Block counter for the CTR block*/
         build_iv(packet, payload_len, header);
         memcpy(ctr_blk, header, AES_BLOCK_SIZE);
 
+        /* Set Header flags */
+        header[0] |= ( add_len > 0 );
+
         // TODO check that the payload length does not exceed the maximum size
-        AES128_CCM_encrypt(payload, payload_len, header, NULL, 0, ctr_blk, auth_len);
+        AES128_CCM_encrypt(payload, payload_len, header, add, add_len, ctr_blk, auth_len);
         break;
     }
 
@@ -386,6 +414,8 @@ bool d7anp_unsecure_payload(packet_t *packet, uint8_t index)
     uint8_t auth_len;
     uint32_t payload_len;
     uint8_t *tag;
+    uint8_t add[AES_BLOCK_SIZE];
+    uint8_t add_len = 0;
 
     nls_method = packet->d7anp_ctrl.nls_method;
 
@@ -400,6 +430,18 @@ bool d7anp_unsecure_payload(packet_t *packet, uint8_t index)
         tag = packet->hw_radio_packet.data + index + payload_len;
         DPRINT("Tag  <%d>", auth_len);
         DPRINT_DATA(tag, auth_len);
+
+        /* For unicast access, an additional authentication data is used by CBC-MAC */
+        if(packet->dll_header.control_target_id_type == ID_TYPE_UID)
+        {
+            fs_read_uid(add);
+            add_len = 8;
+        }
+        else if(packet->dll_header.control_target_id_type == ID_TYPE_VID)
+        {
+            fs_read_vid(add);
+            add_len = 2;
+        }
     }
 
     switch (nls_method)
@@ -419,9 +461,12 @@ bool d7anp_unsecure_payload(packet_t *packet, uint8_t index)
         /* Build the header block to prepend to the payload */
         build_header(packet, payload_len, header);
 
+        /* Set Header flags */
+        header[0] |= ( add_len > 0 );
+
         /* Compute the CBC-MAC and check the authentication Tag */
         AES128_CBC_MAC(auth, packet->hw_radio_packet.data + index,
-                       payload_len, header, NULL, 0, auth_len);
+                       payload_len, header, add, add_len, auth_len);
 
         if (memcmp(auth, tag, auth_len) != 0)
         {
@@ -439,8 +484,11 @@ bool d7anp_unsecure_payload(packet_t *packet, uint8_t index)
         build_iv(packet, payload_len, header);
         memcpy(ctr_blk, header, AES_BLOCK_SIZE);
 
+        /* Set Header flags */
+        header[0] |= ( add_len > 0 );
+
         if (AES128_CCM_decrypt(packet->hw_radio_packet.data + index,
-                               payload_len, header, NULL, 0, ctr_blk,
+                               payload_len, header, add, add_len, ctr_blk,
                                tag, auth_len) != 0)
             return false;
 
@@ -466,15 +514,20 @@ uint8_t d7anp_assemble_packet_header(packet_t *packet, uint8_t *data_ptr)
 
         if (packet->d7anp_ctrl.origin_id_type == ID_TYPE_UID)
         {
-            fs_read_uid(data_ptr); data_ptr += 8;
+            fs_read_uid(data_ptr);
+            memcpy(packet->origin_access_id, data_ptr, 8);
+            data_ptr += 8;
         }
         else if (packet->d7anp_ctrl.origin_id_type == ID_TYPE_VID)
         {
-            fs_read_vid(data_ptr); data_ptr += 2;
+            fs_read_vid(data_ptr);
+            memcpy(packet->origin_access_id, data_ptr, 2);
+            data_ptr += 2;
         }
         else if (packet->d7anp_ctrl.origin_id_type == ID_TYPE_NBID)
         {
             (*data_ptr) = packet->origin_access_id[0]; data_ptr++;
+            // who set the NBID?
         }
     }
 
