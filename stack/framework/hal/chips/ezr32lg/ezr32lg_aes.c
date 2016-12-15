@@ -36,8 +36,8 @@ void IncrementAesCounterBlock(uint8_t * ctr_blk)
 {
     int i;
 
-    /* in network byte order so start at end and work back */
-    for (i = AES_BLOCKSIZE - 1; i >= 0; i--) {
+    /* the block counter is set on LSB */
+    for (i = 0; i < AES_BLOCKSIZE; i++) {
         if (++ctr_blk[i])  /* we're done unless we overflow */
             return;
     }

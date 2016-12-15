@@ -654,7 +654,7 @@ void AES128_CTR_encrypt(uint8_t *output, uint8_t *input, uint32_t length, uint8_
             output[j] ^= ctr[j];
 
         /* Increment block counter */
-        for (j = KEYLEN - 1; j >= 0; j--)
+        for (j = 0; j < KEYLEN; j++)
         {
             ctr_blk[j]++;
             if (ctr_blk[j])

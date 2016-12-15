@@ -100,7 +100,7 @@ error_t AES128_CBC_MAC( uint8_t *auth, uint8_t *payload, uint8_t length, const u
 
     /* X_1 = E(K, B_0) */
     DPRINT("Blk0");
-    DPRINT_DATA(iv, AES_BLOCK_SIZE);
+    DPRINT_DATA((uint8_t *)iv, AES_BLOCK_SIZE);
     AES128_ECB_encrypt((uint8_t *)iv, tag);
     DPRINT("X_1 = AES(B_0)");
     DPRINT_DATA(tag, AES_BLOCK_SIZE);
@@ -223,7 +223,7 @@ error_t AES128_CCM_encrypt( uint8_t *payload, uint8_t length, const uint8_t *iv,
     /* Encryption with Counter (CTR) mode*/
 
     /* Encryption of the message payload, counter set to 1 */
-    ctr_blk[15] = (ctr_blk[15] & 0xF0) + 1;
+    ctr_blk[0] = (ctr_blk[0] & 0xF0) + 1;
     DPRINT("ctr0");
     DPRINT_DATA(ctr_blk, AES_BLOCK_SIZE);
 
@@ -232,7 +232,7 @@ error_t AES128_CCM_encrypt( uint8_t *payload, uint8_t length, const uint8_t *iv,
     DPRINT_DATA(payload, length);
 
     /* Encryption of the authentication tag , reset counter to 0*/
-    ctr_blk[15] = (ctr_blk[15] & 0xF0);
+    ctr_blk[0] = (ctr_blk[0] & 0xF0);
     AES128_CTR_encrypt(auth_crypted, auth, auth_len, ctr_blk);
     DPRINT("Encrypted authentication tag:");
     DPRINT_DATA(auth_crypted, auth_len);
@@ -263,13 +263,13 @@ error_t AES128_CCM_decrypt( uint8_t *payload, uint8_t length, const uint8_t *iv,
         return EINVAL;
 
     /* Decryption of the encrypted authentication Tag */
-    ctr_blk[15] = (ctr_blk[15] & 0xF0);
+    ctr_blk[0] = (ctr_blk[0] & 0xF0);
     AES128_CTR_encrypt(auth_decrypted, (uint8_t *)auth, auth_len, ctr_blk);
     DPRINT("Decrypted authentication tag:");
     DPRINT_DATA(auth_decrypted, auth_len);
 
     /* Decryption of the message payload, counter set to 1 */
-    ctr_blk[15] = (ctr_blk[15] & 0xF0) + 1;
+    ctr_blk[0] = (ctr_blk[0] & 0xF0) + 1;
     AES128_CTR_encrypt(payload, payload, length, ctr_blk);
 
     /* Recompute the CBC-MAC and check the authentication Tag */
