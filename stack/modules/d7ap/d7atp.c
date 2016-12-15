@@ -222,7 +222,7 @@ void d7atp_init()
     sched_register_task(&response_period_timeout_handler);
 }
 
-void d7atp_send_request(uint8_t dialog_id, uint8_t transaction_id, bool is_last_transaction,
+error_t d7atp_send_request(uint8_t dialog_id, uint8_t transaction_id, bool is_last_transaction,
                         packet_t* packet, session_qos_t* qos_settings, uint8_t listen_timeout, uint8_t expected_response_length)
 {
     /* check that we are not initiating a different dialog if a dialog is still ongoing */
@@ -299,7 +299,7 @@ void d7atp_send_request(uint8_t dialog_id, uint8_t transaction_id, bool is_last_
         DPRINT("packet->d7atp_tc 0x%02x (CT)", packet->d7atp_tc);
     }
 
-    d7anp_tx_foreground_frame(packet, true, slave_listen_timeout);
+    return(d7anp_tx_foreground_frame(packet, true, slave_listen_timeout));
 }
 
 static void send_response(packet_t* packet)

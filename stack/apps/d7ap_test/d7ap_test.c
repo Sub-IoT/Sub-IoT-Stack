@@ -196,7 +196,8 @@ void bootstrap() {
         .fs_user_files_init_cb = &init_user_files,
         .access_profiles_count = 1,
         .access_profiles = access_classes,
-        .access_class = 0x01 // use access profile 0 and select the first subprofile
+        .access_class = 0x01, // use access profile 0 and select the first subprofile
+        .ssr_filter_mode = ENABLE_SSR_FILTER | ALLOW_NEW_SSR_ENTRY_IN_BCAST
     };
 
     d7asp_init_args.d7asp_fifo_flush_completed_cb = &on_d7asp_fifo_flush_completed;

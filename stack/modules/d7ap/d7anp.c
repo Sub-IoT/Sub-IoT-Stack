@@ -59,6 +59,15 @@ static timer_tick_t NGDEF(_fg_scan_timeout_ticks);
 static uint8_t NGDEF(_active_access_class);
 #define active_access_class NG(_active_access_class)
 
+static d7anp_security_t NGDEF(_security_state);
+#define security_state NG(_security_state)
+
+static d7anp_node_security_t NGDEF(_node_security_state);
+#define node_security_state NG(_node_security_state)
+
+static d7anp_trusted_node_t* NGDEF(_latest_node);
+#define latest_node NG(_latest_node)
+
 static inline uint8_t get_auth_len(uint8_t nls_method)
 {
     switch(nls_method)
@@ -190,6 +199,7 @@ void d7anp_init()
 
     sched_register_task(&foreground_scan_expired);
 
+#if defined(MODULE_D7AP_NLS_ENABLED)
     /*
      * Init Security
      * Read the 128 bits key from the "NWL Security Key" file
@@ -198,9 +208,18 @@ void d7anp_init()
     DPRINT("KEY");
     DPRINT_DATA(key, AES_BLOCK_SIZE);
     AES128_init(key);
+
+    /* Read the NWL security parameters */
+    fs_read_nwl_security(&security_state);
+    DPRINT("Initial Key counter %d", security_state.key_counter);
+    DPRINT("Initial Frame counter %ld", security_state.frame_counter);
+    /* Read the NWL security state of the successfully decrypted and authenticated devices */
+    fs_read_nwl_security_state_register(&node_security_state);
+    latest_node = NULL;
+#endif
 }
 
-void d7anp_tx_foreground_frame(packet_t* packet, bool should_include_origin_template, uint8_t slave_listen_timeout_ct)
+error_t d7anp_tx_foreground_frame(packet_t* packet, bool should_include_origin_template, uint8_t slave_listen_timeout_ct)
 {
     assert(d7anp_state == D7ANP_STATE_IDLE || d7anp_state == D7ANP_STATE_FOREGROUND_SCAN);
 
@@ -229,14 +248,27 @@ void d7anp_tx_foreground_frame(packet_t* packet, bool should_include_origin_temp
 
     packet->d7anp_listen_timeout = slave_listen_timeout_ct;
 
-    /* Read the NWL security parameters */
-    fs_read_nwl_security(&packet->d7anp_security);
-    packet->d7anp_security.frame_counter++;
-    DPRINT("Key counter %d", packet->d7anp_security.key_counter);
-    DPRINT("Frame counter %ld", packet->d7anp_security.frame_counter);
+#if defined(MODULE_D7AP_NLS_ENABLED)
 
-    // For now, hard code the security method
-    packet->d7anp_ctrl.nls_method = AES_CCM_128;
+    packet->d7anp_ctrl.nls_method = packet->d7anp_addressee->ctrl.nls_method;
+
+    if (packet->d7anp_ctrl.nls_method == AES_CTR ||
+        packet->d7anp_ctrl.nls_method == AES_CCM_32 ||
+        packet->d7anp_ctrl.nls_method == AES_CCM_64 ||
+        packet->d7anp_ctrl.nls_method == AES_CCM_128)
+    {
+        /* Check if frame counter reaches its maximum value */
+        if (security_state.frame_counter == (uint32_t)~0)
+            return EPERM;
+
+        packet->d7anp_security.frame_counter = security_state.frame_counter++;
+        packet->d7anp_security.key_counter = security_state.key_counter;
+        DPRINT("Frame counter %ld", packet->d7anp_security.frame_counter);
+
+        // Update the frame counter in the D7A file
+        fs_write_nwl_security(&security_state);
+    }
+#endif
 
     switch_state(D7ANP_STATE_TRANSMIT);
     dll_tx_frame(packet);
@@ -461,6 +493,43 @@ uint8_t d7anp_assemble_packet_header(packet_t *packet, uint8_t *data_ptr)
     return data_ptr - d7anp_header_start;
 }
 
+d7anp_trusted_node_t *get_trusted_node(uint8_t *address)
+{
+    //look up the sender's address in the trusted node table
+    for(uint8_t i = 0; i < node_security_state.trusted_node_nb; i++)
+    {
+        if(memcmp(node_security_state.trusted_node_table[i].addr, address, 8) == 0)
+            return &(node_security_state.trusted_node_table[i]);
+    }
+
+    return NULL;
+}
+
+d7anp_trusted_node_t *add_trusted_node(uint8_t *address, uint32_t frame_counter,
+                                       uint8_t key_counter)
+{
+    uint8_t index = node_security_state.trusted_node_nb;
+    d7anp_trusted_node_t *node;
+
+    if (node_security_state.trusted_node_nb < MODULE_D7AP_TRUSTED_NODE_TABLE_SIZE)
+        node_security_state.trusted_node_nb++;
+    else
+    {
+        DPRINT("SSR is full !");
+        return NULL;
+    }
+
+    node = &node_security_state.trusted_node_table[index];
+    memcpy(node->addr, address, 8);
+    node->frame_counter = frame_counter;
+    node->key_counter = key_counter;
+
+    DPRINT("Add node <%p> total number <%d>", node, node_security_state.trusted_node_nb);
+    /* Update the FS */
+    fs_add_nwl_security_state_register_entry(node, node_security_state.trusted_node_nb);
+    return node;
+}
+
 bool d7anp_disassemble_packet_header(packet_t* packet, uint8_t *data_idx)
 {
     packet->d7anp_listen_timeout = packet->hw_radio_packet.data[(*data_idx)]; (*data_idx)++;
@@ -484,7 +553,10 @@ bool d7anp_disassemble_packet_header(packet_t* packet, uint8_t *data_idx)
 
     if (packet->d7anp_ctrl.nls_method)
     {
-    	uint8_t nls_method = packet->d7anp_ctrl.nls_method;
+    	d7anp_trusted_node_t *node;
+        uint8_t nls_method = packet->d7anp_ctrl.nls_method;
+        bool create_node = false;
+        bool prevent_replay_attack = false;
 
         DPRINT("Received nls method %d", nls_method);
 
@@ -498,11 +570,53 @@ bool d7anp_disassemble_packet_header(packet_t* packet, uint8_t *data_idx)
 
             DPRINT("Received key counter <%d>, frame counter <%ld>", packet->d7anp_security.key_counter, packet->d7anp_security.frame_counter);
 
+            if (node_security_state.filter_mode & ENABLE_SSR_FILTER)
+                prevent_replay_attack = true;
+        }
+
+        if (prevent_replay_attack)
+        {
+            /* When Origin ID is not provided, try to use the latest node */
+            if (ID_TYPE_IS_BROADCAST(packet->d7anp_ctrl.origin_id_type))
+            {
+                // frame is not accepted if the Origin ID is really unknown
+                if (!latest_node)
+                     return false;
+
+                node = latest_node;
+            }
+            else
+                node = get_trusted_node(packet->origin_access_id);
+
+            if (node && (node->frame_counter > packet->d7anp_security.frame_counter ||
+                         node->frame_counter == (uint32_t)~0))
+            {
+                DPRINT("Replay attack detected cnt %ld->%ld shift back", node->frame_counter, packet->d7anp_security.frame_counter);
+                return false;
+            }
+
+            // update the node
+            if (node)
+                node->frame_counter = packet->d7anp_security.frame_counter;
+            else
+            {
+                if (ID_TYPE_IS_BROADCAST(packet->dll_header.control_target_id_type) &&
+                     !(node_security_state.filter_mode & ALLOW_NEW_SSR_ENTRY_IN_BCAST))
+                {
+                    DPRINT("New SSR entry not authorized in broadcast");
+                    return false;
+                }
+                else
+                    create_node = true;
+            }
         }
 
         if (!d7anp_unsecure_payload(packet, *data_idx))
             return false;
 
+        if (create_node)
+             add_trusted_node(packet->origin_access_id, packet->d7anp_security.frame_counter,
+                              packet->d7anp_security.key_counter);
     }
 
     assert(!packet->d7anp_ctrl.hop_enabled); // TODO hopping not yet supported

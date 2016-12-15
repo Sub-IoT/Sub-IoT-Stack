@@ -122,6 +122,8 @@ static void flush_completed() {
 
 static void flush_fifos()
 {
+    error_t ret;
+
     if (d7asp_state != D7ASP_STATE_MASTER && d7asp_state != D7ASP_STATE_PENDING_MASTER)
     {
         DPRINT("Flushing FIFOs can't be executed in this state <%d>", d7asp_state);
@@ -183,8 +185,14 @@ static void flush_fifos()
     }
 
     uint8_t listen_timeout = 0; // TODO calculate timeout (and update during transaction lifetime) (based on Tc, channel, cs, payload size, # msgs, # retries)
-    d7atp_send_request(current_master_session.token, current_request_id, (current_request_id == current_master_session.next_request_id - 1),
+    ret = d7atp_send_request(current_master_session.token, current_request_id, (current_request_id == current_master_session.next_request_id - 1),
                        current_request_packet, &current_master_session.config.qos, listen_timeout, current_master_session.response_lengths[current_request_id]);
+    if (ret == EPERM)
+    {
+        // this is probably because no further encryption is possible (frame counter reaches the maximum value)
+        // TODO return an error code to the application?
+        DPRINT("Request sending is not allowed likely because frame counter reaches its maximum value");
+    }
 }
 
 // TODO document state diagram

@@ -26,6 +26,7 @@
 #include "stdbool.h"
 
 #include "dae.h"
+#include "MODULE_D7AP_defs.h"
 
 typedef struct packet packet_t;
 
@@ -45,6 +46,9 @@ typedef enum {
 
 #define GET_NLS_METHOD(VAL) (uint8_t)(VAL & 0x0F)
 #define SET_NLS_METHOD(VAL) (uint8_t)(VAL << 4 & 0xF0)
+
+#define ENABLE_SSR_FILTER 0x01
+#define ALLOW_NEW_SSR_ENTRY_IN_BCAST 0x02
 
 enum
 {
@@ -104,8 +108,21 @@ typedef struct {
     uint32_t frame_counter;
 } d7anp_security_t;
 
+typedef struct {
+    uint8_t key_counter;
+    uint32_t frame_counter;
+    uint8_t addr[8];
+    //bool used;  /* to be used if it is possible to remove a trusted node from the table */
+} d7anp_trusted_node_t;
+
+typedef struct {
+    uint8_t filter_mode;
+    uint8_t trusted_node_nb;
+    d7anp_trusted_node_t trusted_node_table[MODULE_D7AP_TRUSTED_NODE_TABLE_SIZE];
+} d7anp_node_security_t;
+
 void d7anp_init();
-void d7anp_tx_foreground_frame(packet_t* packet, bool should_include_origin_template, uint8_t slave_listen_timeout_ct);
+error_t d7anp_tx_foreground_frame(packet_t* packet, bool should_include_origin_template, uint8_t slave_listen_timeout_ct);
 uint8_t d7anp_assemble_packet_header(packet_t* packet, uint8_t* data_ptr);
 bool d7anp_disassemble_packet_header(packet_t* packet, uint8_t* packet_idx);
 void d7anp_signal_transmission_failure();
