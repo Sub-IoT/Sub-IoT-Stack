@@ -479,8 +479,8 @@ static void execute_csma_ca()
         }
         case DLL_STATE_CSMA_CA_RETRY:
         {
-        	int32_t cca_duration = timer_get_counter_value() - dll_cca_started;
-        	dll_to -= cca_duration;
+            int32_t cca_duration = timer_get_counter_value() - dll_cca_started;
+            dll_to -= cca_duration;
 
             if (dll_to < t_g)
             {
@@ -502,8 +502,18 @@ static void execute_csma_ca()
                 case CSMA_CA_MODE_RAIND:
                 {
                     uint16_t max_nr_slots = dll_tca / tx_duration;
-                    uint16_t slots_wait = get_rnd() % max_nr_slots;
-                    t_offset = slots_wait * tx_duration;
+                    uint16_t slots_wait;
+
+                    if (max_nr_slots)
+                    {
+                        slots_wait = get_rnd() % max_nr_slots;
+                        DPRINT("max_nr_slots %i slots_wait: %i", max_nr_slots, slots_wait);
+                        t_offset = slots_wait * tx_duration;
+                    }
+                    else
+                    {
+                        t_offset = 0;
+                    }
                     break;
                 }
                 case CSMA_CA_MODE_RIGD:
