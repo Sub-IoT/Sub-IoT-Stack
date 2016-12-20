@@ -57,6 +57,9 @@ static uint8_t NGDEF(_current_access_class);
 static dae_access_profile_t NGDEF(_active_addressee_access_profile);
 #define active_addressee_access_profile NG(_active_addressee_access_profile)
 
+static bool NGDEF(_stop_dialog_after_tx);
+#define stop_dialog_after_tx NG(_stop_dialog_after_tx)
+
 typedef enum {
     D7ATP_STATE_IDLE,
     D7ATP_STATE_MASTER_TRANSACTION_REQUEST_PERIOD,
@@ -214,6 +217,7 @@ void d7atp_init()
     d7atp_state = D7ATP_STATE_IDLE;
     current_access_class = ACCESS_CLASS_NOT_SET;
     current_dialog_id = 0;
+    stop_dialog_after_tx = false;
 
     sched_register_task(&response_period_timeout_handler);
 }
@@ -386,11 +390,9 @@ void d7atp_signal_packet_transmitted(packet_t* packet)
     {
         switch_state(D7ATP_STATE_SLAVE_TRANSACTION_RESPONSE_PERIOD);
 
-        if(!packet->d7anp_listen_timeout && !packet->d7atp_ctrl.ctrl_tc)
+        if (stop_dialog_after_tx)
         {
-            // no FG scan running, we can end dialog now
-            timer_cancel_task(&response_period_timeout_handler);
-            sched_cancel_task(&response_period_timeout_handler);
+            // no FG scan and no response period are scheduled, we can end dialog now
             terminate_dialog();
             d7anp_stop_foreground_scan(true); // restart scan automation
         }
@@ -406,9 +408,15 @@ void d7atp_signal_transmission_failure()
 
     DPRINT("CSMA-CA insertion failed, stopping transaction");
 
-    /* For Slaves, wait for FG scan or response period termination before switching to idle state */
     if (d7atp_state == D7ATP_STATE_MASTER_TRANSACTION_REQUEST_PERIOD)
         switch_state(D7ATP_STATE_IDLE);
+    else if (stop_dialog_after_tx)
+    {
+        /* For Slaves, terminate the dialog if no FG scan and no response period are scheduled.*/
+        terminate_dialog();
+        d7anp_stop_foreground_scan(true); // restart scan automation
+        return;
+    }
 
     d7asp_signal_transmission_failure();
 }
@@ -429,9 +437,9 @@ void d7atp_process_received_packet(packet_t* packet)
     packet->d7anp_addressee = &current_addressee;
 
     DPRINT("Recvd dialog %i trans id %i, curr %i - %i", packet->d7atp_dialog_id, packet->d7atp_transaction_id, current_dialog_id, current_transaction_id);
-    timer_tick_t Tl = packet->d7anp_listen_timeout;
-    DPRINT("Tl=%i Tc=%i (CT)", Tl, packet->d7atp_tc);
-    if(IS_IN_MASTER_TRANSACTION())
+    timer_tick_t Tl = CT_DECOMPRESS(packet->d7anp_listen_timeout);
+    DPRINT("Tl=%i (Ti) Tc=%i (CT)", Tl, packet->d7atp_tc);
+    if (IS_IN_MASTER_TRANSACTION())
     {
         if(packet->d7atp_dialog_id != current_dialog_id || packet->d7atp_transaction_id != current_transaction_id)
         {
@@ -446,7 +454,7 @@ void d7atp_process_received_packet(packet_t* packet)
             // if this is a unicast response and the last transaction, the extension procedure is allowed
             if (packet->d7atp_ctrl.ctrl_is_stop && packet->dll_header.control_target_address_set)
             {
-                Tl = adjust_timeout_value(packet->d7anp_listen_timeout, packet->hw_radio_packet.rx_meta.timestamp); // TODO decompress Tl (for now it is not compressed)
+                Tl = adjust_timeout_value(packet->d7anp_listen_timeout, packet->hw_radio_packet.rx_meta.timestamp);
                 DPRINT("Responder wants to append a new dialog");
                 d7anp_set_foreground_scan_timeout(Tl);
                 d7anp_start_foreground_scan();
@@ -500,12 +508,11 @@ void d7atp_process_received_packet(packet_t* packet)
                 return;
             }
 
-            if (packet->d7anp_listen_timeout)
-            {
-                Tl = CT_DECOMPRESS(packet->d7anp_listen_timeout) - CT_DECOMPRESS(packet->d7atp_tc);
-                assert(Tl >= 0);
-                d7anp_set_foreground_scan_timeout(Tl);
-            }
+            if (Tl)
+                Tl -= Tc;
+
+            assert(Tl >= 0);
+            d7anp_set_foreground_scan_timeout(Tl);
 
             schedule_response_period_timeout_handler(Tc); // TODO for unicast, stop response period after transmission of response?
 
@@ -520,7 +527,6 @@ void d7atp_process_received_packet(packet_t* packet)
                 d7anp_set_foreground_scan_timeout(Tl);
                 d7anp_start_foreground_scan();
             }
-
         }
 
 
@@ -551,6 +557,10 @@ void d7atp_process_received_packet(packet_t* packet)
         bool should_send_response = d7asp_process_received_packet(packet, extension);
         if(should_send_response)
         {
+            if (!packet->d7atp_ctrl.ctrl_tc && (Tl == 0))
+                stop_dialog_after_tx = true;
+            else
+                stop_dialog_after_tx = false;
             send_response(packet);
         }
         else
