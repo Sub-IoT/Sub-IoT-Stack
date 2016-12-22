@@ -34,8 +34,10 @@
 
 #if defined(FRAMEWORK_LOG_ENABLED) && defined(MODULE_D7AP_DLL_LOG_ENABLED)
 #define DPRINT(...) log_print_stack_string(LOG_STACK_DLL, __VA_ARGS__)
+#define DPRINT_DATA(...) log_print_data(__VA_ARGS__)
 #else
 #define DPRINT(...)
+#define DPRINT_DATA(...)
 #endif
 
 
@@ -804,29 +806,50 @@ void dll_stop_foreground_scan(bool auto_scan)
     }
 }
 
-uint8_t dll_assemble_packet_header(packet_t* packet, uint8_t* data_ptr)
+uint8_t dll_assemble_packet_header(packet_t* packet, uint8_t* data_ptr, bool background)
 {
     uint8_t* dll_header_start = data_ptr;
     *data_ptr = packet->dll_header.subnet; data_ptr += sizeof(packet->dll_header.subnet);
-    *data_ptr = packet->dll_header.control; data_ptr += sizeof(packet->dll_header.control);
+
     if (!ID_TYPE_IS_BROADCAST(packet->dll_header.control_target_id_type))
     {
         uint8_t addr_len = packet->dll_header.control_target_id_type == ID_TYPE_VID? 2 : 8;
-        memcpy(data_ptr, packet->d7anp_addressee->id, addr_len); data_ptr += addr_len;
+
+        if (background)
+        {
+            uint16_t crc;
+            crc = crc_calculate(packet->d7anp_addressee->id, addr_len);
+            DPRINT("crc %04x ", crc);
+
+            packet->dll_header.control_identifier_tag = (uint8_t)crc & 0x3F;
+            DPRINT("dll_header.control_identifier_tag %x ", packet->dll_header.control_identifier_tag);
+
+            *data_ptr = (packet->dll_header.control_target_id_type << 6) | (packet->dll_header.control_identifier_tag & 0x3F);
+            DPRINT("dll_header.control %x ", *data_ptr);
+            data_ptr ++;
+        }
+        else
+        {
+            *data_ptr = (packet->dll_header.control_target_id_type << 6) | (packet->dll_header.control_eirp_index & 0x3F);
+            data_ptr ++;
+            memcpy(data_ptr, packet->d7anp_addressee->id, addr_len); data_ptr += addr_len;
+        }
     }
     else if (packet->dll_header.control_target_id_type == ID_TYPE_NBID)
     {
-        *data_ptr = packet->d7anp_addressee->id[0]; data_ptr ++;
+        packet->dll_header.control_target_id_type = ID_TYPE_NOID;
     }
 
     return data_ptr - dll_header_start;
 }
 
-bool dll_disassemble_packet_header(packet_t* packet, uint8_t* data_idx)
+bool dll_disassemble_packet_header(packet_t* packet, uint8_t* data_idx, bool background)
 {
     packet->dll_header.subnet = packet->hw_radio_packet.data[(*data_idx)]; (*data_idx)++;
     uint8_t FSS = ACCESS_SPECIFIER(packet->dll_header.subnet);
     uint8_t FSM = ACCESS_MASK(packet->dll_header.subnet);
+    uint8_t address_len;
+    uint8_t id[8];
 
     if ((FSS != 0x0F) && (FSS != ACCESS_SPECIFIER(active_access_class))) // check that the active access class is always set to the scan access class
     {
@@ -840,11 +863,23 @@ bool dll_disassemble_packet_header(packet_t* packet, uint8_t* data_idx)
         return false;
     }
 
-    packet->dll_header.control = packet->hw_radio_packet.data[(*data_idx)]; (*data_idx)++;
+    packet->dll_header.control_target_id_type  = packet->hw_radio_packet.data[(*data_idx)] >> 6 ;
+
+    if (background)
+    {
+        packet->dll_header.control_identifier_tag = packet->hw_radio_packet.data[(*data_idx)] & 0x3F;
+        DPRINT("control_target_id_type 0x%02x Identifier Tag 0x%02x", packet->dll_header.control_target_id_type, packet->dll_header.control_identifier_tag);
+    }
+    else
+    {
+        packet->dll_header.control_eirp_index = packet->hw_radio_packet.data[(*data_idx)] & 0x3F;
+        DPRINT("control_target_id_type 0x%02x EIRP index %d", packet->dll_header.control_target_id_type, packet->dll_header.control_eirp_index);
+    }
+
+    (*data_idx)++;
+
     if (!ID_TYPE_IS_BROADCAST(packet->dll_header.control_target_id_type))
     {
-        uint8_t address_len;
-        uint8_t id[8];
         if (packet->dll_header.control_target_id_type == ID_TYPE_UID)
         {
             fs_read_uid(id);
@@ -856,13 +891,31 @@ bool dll_disassemble_packet_header(packet_t* packet, uint8_t* data_idx)
             address_len = 2;
         }
 
-        if (memcmp(packet->hw_radio_packet.data + (*data_idx), id, address_len) != 0)
+        if (background)
         {
-            DPRINT("Device ID filtering failed, skipping packet");
-            return false;
+            uint16_t crc;
+            crc = crc_calculate(id, address_len);
+            DPRINT("Identifier Tag crc %04x, tag %x", crc, packet->dll_header.control_identifier_tag);
+            /* Check that the tag corresponds to the 6 least significant bits of the CRC16 */
+            if (packet->dll_header.control_identifier_tag != (uint8_t)crc & 0x3F)
+            {
+                DPRINT("Identifier Tag filtering failed, skipping packet");
+                return false;
+            }
         }
-
-        (*data_idx) += address_len;
+        else
+        {
+            if (memcmp(packet->hw_radio_packet.data + (*data_idx), id, address_len) != 0)
+            {
+                DPRINT("Device ID filtering failed, skipping packet");
+                DPRINT("OUR DEVICE ID");
+                DPRINT_DATA(id, address_len);
+                DPRINT("TARGET DEVICE ID");
+                DPRINT_DATA(packet->hw_radio_packet.data + (*data_idx), address_len);
+                return false;
+            }
+            (*data_idx) += address_len;
+        }
     }
     // TODO filter LQ
     // TODO pass to upper layer

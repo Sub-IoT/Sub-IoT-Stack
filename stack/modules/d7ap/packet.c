@@ -52,12 +52,16 @@ void packet_init(packet_t* packet)
 void packet_assemble(packet_t* packet)
 {
     uint8_t* data_ptr = packet->hw_radio_packet.data + 1; // skip length field for now, we fill this later
+    bool background_frame = (packet->hw_radio_packet.tx_meta.tx_cfg.syncword_class == PHY_SYNCWORD_CLASS0);
 
-    data_ptr += dll_assemble_packet_header(packet, data_ptr);
+    data_ptr += dll_assemble_packet_header(packet, data_ptr, background_frame);
 
-    data_ptr += d7anp_assemble_packet_header(packet, data_ptr);
+    if (!background_frame)
+    {
+        data_ptr += d7anp_assemble_packet_header(packet, data_ptr);
 
-    data_ptr += d7atp_assemble_packet_header(packet, data_ptr);
+        data_ptr += d7atp_assemble_packet_header(packet, data_ptr);
+    }
 
     // add payload
     memcpy(data_ptr, packet->payload, packet->payload_length); data_ptr += packet->payload_length;
@@ -96,8 +100,7 @@ void packet_disassemble(packet_t* packet)
 
     uint8_t data_idx = 1;
 
-    // TODO extend DLL to decode the DLL header of a background frame
-    if(!dll_disassemble_packet_header(packet, &data_idx))
+    if(!dll_disassemble_packet_header(packet, &data_idx, background_frame))
         goto cleanup;
 
     if (!background_frame)
