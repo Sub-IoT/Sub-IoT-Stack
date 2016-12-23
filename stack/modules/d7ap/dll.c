@@ -30,6 +30,7 @@
 #include "random.h"
 #include "MODULE_D7AP_defs.h"
 #include "hwatomic.h"
+#include "compress.h"
 
 #if defined(FRAMEWORK_LOG_ENABLED) && defined(MODULE_D7AP_DLL_LOG_ENABLED)
 #define DPRINT(...) log_print_stack_string(LOG_STACK_DLL, __VA_ARGS__)

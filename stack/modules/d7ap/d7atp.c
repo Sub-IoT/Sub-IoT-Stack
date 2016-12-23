@@ -32,6 +32,7 @@
 #include "log.h"
 #include "fs.h"
 #include "MODULE_D7AP_defs.h"
+#include "compress.h"
 
 #if defined(FRAMEWORK_LOG_ENABLED) && defined(MODULE_D7AP_TP_LOG_ENABLED)
 #define DPRINT(...) log_print_stack_string(LOG_STACK_TRANS, __VA_ARGS__)
@@ -276,21 +277,27 @@ void d7atp_send_request(uint8_t dialog_id, uint8_t transaction_id, bool is_last_
         .ctrl_ack_record = false
     };
 
-    // Tc(NB, LEN, CH) = ceil((SFC  * NB  + 1) * TTX(CH, LEN) + TG) with NB the number of concurrent devices and SF the collision Avoidance Spreading Factor
-    // TODO payload length does not include headers ... + hardcoded subband
-    // TODO this length does not include lower layers overhead for now, use a minimum len of 50 for now ...
-    if (expected_response_length < 50)
-      expected_response_length = 50;
+    if (include_tc)
+    {
+        // Tc(NB, LEN, CH) = ceil((SFC  * NB  + 1) * TTX(CH, LEN) + TG) with NB the number of concurrent devices and SF the collision Avoidance Spreading Factor
+        // TODO payload length does not include headers ... + hardcoded subband
+        // TODO this length does not include lower layers overhead for now, use a minimum len of 50 for now ...
+        if (expected_response_length < 50)
+            expected_response_length = 50;
 
-    uint8_t tx_duration_response = dll_calculate_tx_duration(active_addressee_access_profile.channel_header.ch_class, expected_response_length);
-    uint8_t nb = 1;
-    if (packet->d7anp_addressee->ctrl.id_type == ID_TYPE_NOID)
-        nb = 32;
-    else if (packet->d7anp_addressee->ctrl.id_type == ID_TYPE_NBID)
-        nb = CT_DECOMPRESS(packet->d7anp_addressee->id[0]);
+        uint16_t tx_duration_response = dll_calculate_tx_duration(active_addressee_access_profile.channel_header.ch_class, expected_response_length);
+        uint8_t nb = 1;
+        if (packet->d7anp_addressee->ctrl.id_type == ID_TYPE_NOID)
+            nb = 32;
+        else if (packet->d7anp_addressee->ctrl.id_type == ID_TYPE_NBID)
+            nb = CT_DECOMPRESS(packet->d7anp_addressee->id[0]);
 
-    packet->d7atp_tc = ceil((3 * nb + 1) * tx_duration_response + 5); // TODO compress
-    DPRINT("resp Tc=%i Tx duration %d", include_tc? packet->d7atp_tc : 0, tx_duration_response);
+        uint16_t resp_tc = (3 * nb + 1) * tx_duration_response + 5;
+        DPRINT("resp Tc=%i Tx duration %d", resp_tc, tx_duration_response);
+
+        packet->d7atp_tc = compress_data(resp_tc, true);
+        DPRINT("packet->d7atp_tc 0x%02x (CT)", packet->d7atp_tc);
+    }
 
     d7anp_tx_foreground_frame(packet, true, slave_listen_timeout);
 }
@@ -453,7 +460,7 @@ void d7atp_process_received_packet(packet_t* packet)
 
     DPRINT("Recvd dialog %i trans id %i, curr %i - %i", packet->d7atp_dialog_id, packet->d7atp_transaction_id, current_dialog_id, current_transaction_id);
     timer_tick_t Tl = CT_DECOMPRESS(packet->d7anp_listen_timeout);
-    DPRINT("Tl=%i (Ti) Tc=%i (CT)", Tl, packet->d7atp_tc);
+    DPRINT("Tl=%i (CT) -> %i (Ti) ", packet->d7anp_listen_timeout, Tl);
     if (IS_IN_MASTER_TRANSACTION())
     {
         if (packet->d7atp_dialog_id != current_dialog_id || packet->d7atp_transaction_id != current_transaction_id)
@@ -469,7 +476,8 @@ void d7atp_process_received_packet(packet_t* packet)
             // if this is a unicast response and the last transaction, the extension procedure is allowed
             if (packet->d7atp_ctrl.ctrl_is_stop && !ID_TYPE_IS_BROADCAST(packet->dll_header.control_target_id_type))
             {
-                Tl = adjust_timeout_value(packet->d7anp_listen_timeout, packet->hw_radio_packet.rx_meta.timestamp);
+                Tl = adjust_timeout_value(Tl, packet->hw_radio_packet.rx_meta.timestamp);
+                DPRINT("Adjusted Tl=%i (Ti) ", Tl);
                 DPRINT("Responder wants to append a new dialog");
                 d7anp_set_foreground_scan_timeout(Tl);
                 d7anp_start_foreground_scan();
@@ -513,7 +521,10 @@ void d7atp_process_received_packet(packet_t* packet)
          // The FG scan is only started when the response period expires.
         if (packet->d7atp_ctrl.ctrl_tc)
         {
-            timer_tick_t Tc = adjust_timeout_value(packet->d7atp_tc, packet->hw_radio_packet.rx_meta.timestamp); // TODO decompress Tc, for now it is not compress
+            timer_tick_t Tc = CT_DECOMPRESS(packet->d7atp_tc);
+
+            DPRINT("Tc=%i (CT) -> %i (Ti) ", packet->d7atp_tc, Tc);
+            Tc = adjust_timeout_value(Tc, packet->hw_radio_packet.rx_meta.timestamp);
 
             if (Tc <= 0)
             {

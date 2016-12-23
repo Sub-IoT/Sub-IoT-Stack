@@ -30,7 +30,6 @@
 #define OSS_7_DLL_H
 
 #include "hwradio.h"
-#include "math.h"
 
 #include "d7anp.h"
 #include "dae.h"
@@ -54,8 +53,6 @@ typedef struct
     };
     //uint8_t target_address[8]; // TODO assuming 8B UID for now
 } dll_header_t;
-
-#define CT_DECOMPRESS(ct) (pow(4, ct >> 5) * (ct & 0b11111))
 
 void dll_init();
 void dll_tx_frame(packet_t* packet);
