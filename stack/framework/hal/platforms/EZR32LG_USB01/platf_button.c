@@ -46,10 +46,8 @@ __LINK_C void __ubutton_init()
 {
 	error_t err;
     err = hw_gpio_configure_pin(BUTTON0, true, gpioModeInput, 0); assert(err == SUCCESS); // TODO pull up or pull down to prevent floating
-    //err = hw_gpio_configure_pin(BUTTON1, true, gpioModeInput, 0); assert(err == SUCCESS); // TODO pull up or pull down to prevent floating
 
 	buttons[0].button_id = BUTTON0;
-	//buttons[1].button_id = BUTTON1;
 	for(int i = 0; i < NUM_USERBUTTONS; i++)
 	{
 		memset(buttons[i].callbacks, 0, sizeof(buttons[i].callbacks));

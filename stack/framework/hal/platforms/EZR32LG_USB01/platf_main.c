@@ -29,15 +29,11 @@
 #include "button.h"
 #include "em_gpio.h"
 #include <debug.h>
-
 #include "em_cmu.h"
 #include "em_chip.h"
-
-
 #include "console.h"
-
-
 #include "bsp_trace.h"
+#include "led.h"
 
 
 void __platform_init()
@@ -59,6 +55,7 @@ void __platform_post_framework_init()
 #endif
 
     __ubutton_init();
+    led_init();
 
 }
 
