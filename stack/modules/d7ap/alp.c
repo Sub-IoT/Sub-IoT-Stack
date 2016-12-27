@@ -99,9 +99,13 @@ static uint8_t process_op_forward(fifo_t* alp_command_fifo, fifo_t* alp_response
   DPRINT("FORWARD");
 }
 
-static void process_op_request_tag(fifo_t* alp_command_fifo, bool respond_when_completed) {
+static void process_op_request_tag(fifo_t* alp_command_fifo, fifo_t* alp_response_fifo, bool respond_when_completed) {
   fifo_pop(alp_command_fifo, &current_command.tag_id, 1);
   current_command.respond_when_completed = respond_when_completed;
+
+  // fill response with tag response
+  error_t err = fifo_put_byte(alp_response_fifo, ALP_OP_RETURN_TAG); assert(err == SUCCESS); // TODO set b6 on error later
+  err = fifo_put_byte(alp_response_fifo, current_command.tag_id); assert(err == SUCCESS);
 }
 
 void alp_process_command_result_on_d7asp(d7asp_master_session_config_t* session_config, uint8_t* alp_command, uint8_t alp_command_length, alp_command_origin_t origin)
@@ -170,7 +174,7 @@ bool alp_process_command(uint8_t* alp_command, uint8_t alp_command_length, uint8
         break;
       case ALP_OP_REQUEST_TAG: ;
         alp_control_tag_request_t* tag_request = (alp_control_tag_request_t*)&control;
-        process_op_request_tag(&alp_command_fifo, tag_request->respond_when_completed);
+        process_op_request_tag(&alp_command_fifo, &alp_response_fifo, tag_request->respond_when_completed);
         break;
       default:
         assert(false); // TODO return error
