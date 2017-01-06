@@ -108,6 +108,12 @@ static channel_id_t NGDEF(_current_channel_id);
 static csma_ca_mode_t NGDEF(_csma_ca_mode);
 #define csma_ca_mode NG(_csma_ca_mode)
 
+static uint8_t NGDEF(_tx_nf_method);
+#define tx_nf_method NG(_tx_nf_method)
+
+static int16_t NGDEF(_E_CCA);
+#define E_CCA NG(_E_CCA)
+
 // TODO defined somewhere?
 #define t_g	5
 
@@ -679,6 +685,8 @@ void dll_notify_access_profile_file_changed()
 
 void dll_init()
 {
+    uint8_t nf_ctrl;
+
     sched_register_task(&process_received_packets);
     sched_register_task(&notify_transmitted_packet);
     sched_register_task(&execute_cca);
@@ -686,6 +694,9 @@ void dll_init()
     sched_register_task(&dll_execute_scan_automation);
 
     hw_radio_init(&alloc_new_packet, &release_packet);
+
+    fs_read_file(D7A_FILE_DLL_CONF_FILE_ID, 4, &nf_ctrl, 1);
+    tx_nf_method = (nf_ctrl >> 4) & 0x0F;
 
     dll_state = DLL_STATE_IDLE;
     active_access_class = NO_ACTIVE_ACCESS_CLASS;
@@ -754,6 +765,18 @@ void dll_tx_frame(packet_t* packet)
         // store the channel id and eirp
         current_eirp = current_access_profile.subbands[0].eirp;
         current_channel_id = packet->hw_radio_packet.tx_meta.tx_cfg.channel_id;
+
+        // compute Ecca = NF + Eccao
+        if (tx_nf_method == D7ADLL_FIXED_NOISE_FLOOR)
+        {
+            //Use the default channel CCA threshold
+            E_CCA = current_access_profile.subbands[0].cca; // Eccao is set to 0 dB
+        }
+        else
+        {
+            //TODO support the Slow RSSI Variation computation method
+            assert(false);
+        }
     }
 
     packet_assemble(packet);

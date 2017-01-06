@@ -85,7 +85,7 @@ void bootstrap()
                 .channel_index_start = 0,
                 .channel_index_end = 0,
                 .eirp = 0,
-                .cca = 0,
+                .cca = -86,
                 .duty = 0,
             }
         }

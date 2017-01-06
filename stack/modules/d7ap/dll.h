@@ -34,7 +34,11 @@
 #include "d7anp.h"
 #include "dae.h"
 
-#define E_CCA	-86 //TODO: get from file
+typedef enum {
+    D7ADLL_FIXED_NOISE_FLOOR,
+    D7ADLL_SLOW_RSSI_VARIATION
+} noise_floor_computation_method_t;
+
 #define SFc		3 // Collision Avoidance Spreading Factor
 
 typedef struct packet packet_t;
