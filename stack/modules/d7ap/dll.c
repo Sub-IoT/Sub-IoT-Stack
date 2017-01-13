@@ -858,9 +858,12 @@ uint8_t dll_assemble_packet_header(packet_t* packet, uint8_t* data_ptr, bool bac
             memcpy(data_ptr, packet->d7anp_addressee->id, addr_len); data_ptr += addr_len;
         }
     }
-    else if (packet->dll_header.control_target_id_type == ID_TYPE_NBID)
+    else
     {
-        packet->dll_header.control_target_id_type = ID_TYPE_NOID;
+        if (packet->dll_header.control_target_id_type == ID_TYPE_NBID)
+            packet->dll_header.control_target_id_type = ID_TYPE_NOID;
+        *data_ptr = (packet->dll_header.control_target_id_type << 6) | (packet->dll_header.control_eirp_index & 0x3F);
+        data_ptr ++;
     }
 
     return data_ptr - dll_header_start;
