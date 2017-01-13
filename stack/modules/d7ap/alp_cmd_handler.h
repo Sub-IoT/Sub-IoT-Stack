@@ -54,13 +54,6 @@ void alp_cmd_handler_output_alp_command(uint8_t *alp_command, uint8_t alp_comman
 void alp_cmd_handler_output_d7asp_response(d7asp_result_t d7asp_result, uint8_t *alp_command, uint8_t alp_command_size);
 
 ///
-/// \brief Output the completion of a Command to the shell interface
-/// \param tag_id The tag ID of the completed command.
-/// \param error When set an error occured during processing of the command
-///
-void alp_cmd_handler_output_command_completed(uint8_t tag_id, bool error);
-
-///
 /// \brief Set the callback which will be called when an ALP command is received for the application interface
 /// \param cb
 ///

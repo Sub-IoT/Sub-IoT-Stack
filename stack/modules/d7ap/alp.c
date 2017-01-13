@@ -99,12 +99,15 @@ static uint8_t process_op_forward(fifo_t* alp_command_fifo, fifo_t* alp_response
   DPRINT("FORWARD");
 }
 
-static void process_op_request_tag(fifo_t* alp_command_fifo, fifo_t* alp_response_fifo, bool respond_when_completed) {
+static void process_op_request_tag(fifo_t* alp_command_fifo, bool respond_when_completed) {
   fifo_pop(alp_command_fifo, &current_command.tag_id, 1);
   current_command.respond_when_completed = respond_when_completed;
+}
 
+static void add_tag_response(fifo_t* alp_response_fifo, bool error) {
   // fill response with tag response
-  error_t err = fifo_put_byte(alp_response_fifo, ALP_OP_RETURN_TAG); assert(err == SUCCESS); // TODO set b6 on error later
+  uint8_t op_return_tag = ALP_OP_RETURN_TAG | (error << 6);
+  error_t err = fifo_put_byte(alp_response_fifo, op_return_tag); assert(err == SUCCESS);
   err = fifo_put_byte(alp_response_fifo, current_command.tag_id); assert(err == SUCCESS);
 }
 
@@ -174,7 +177,7 @@ bool alp_process_command(uint8_t* alp_command, uint8_t alp_command_length, uint8
         break;
       case ALP_OP_REQUEST_TAG: ;
         alp_control_tag_request_t* tag_request = (alp_control_tag_request_t*)&control;
-        process_op_request_tag(&alp_command_fifo, &alp_response_fifo, tag_request->respond_when_completed);
+        process_op_request_tag(&alp_command_fifo, tag_request->respond_when_completed);
         break;
       default:
         assert(false); // TODO return error
@@ -185,8 +188,15 @@ bool alp_process_command(uint8_t* alp_command, uint8_t alp_command_length, uint8
   (*alp_response_length) = fifo_get_size(&alp_response_fifo);
 
   if((*alp_response_length) > 0) {
-    if(current_command.origin == ALP_CMD_ORIGIN_SERIAL_CONSOLE)
+    if(current_command.origin == ALP_CMD_ORIGIN_SERIAL_CONSOLE) {
+      // make sure we include tag response also for commands with interface HOST
+      // for interface D7ASP this will be done when flush completes
+      if(current_command.respond_when_completed && !do_forward)
+        add_tag_response(&alp_response_fifo, false); // TODO error
+
+      (*alp_response_length) = fifo_get_size(&alp_response_fifo);
       alp_cmd_handler_output_alp_command(alp_response, (*alp_response_length));
+    }
 
     // TODO APP
   }
@@ -199,21 +209,27 @@ bool alp_process_command(uint8_t* alp_command, uint8_t alp_command_length, uint8
     return true;
 }
 
-void alp_d7asp_request_completed(d7asp_result_t result, uint8_t* payload, uint8_t payload_length) {
-  switch(current_command.origin) {
-    case ALP_CMD_ORIGIN_SERIAL_CONSOLE:
-      alp_cmd_handler_output_d7asp_response(result, payload, payload_length);
-      break;
-    case ALP_CMD_ORIGIN_APP:
-      // TODO callback
-      break;
-    case ALP_CMD_ORIGIN_D7AACTP:
-      // do nothing?
-      break;
-    default:
-      assert(false); // ALP_CMD_ORIGIN_D7ASP this would imply a slave session
-  }
+static void add_interface_status_action(fifo_t* alp_response_fifo, d7asp_result_t* d7asp_result)
+{
+  fifo_put_byte(alp_response_fifo, ALP_OP_RETURN_STATUS + (1 << 6));
+  fifo_put_byte(alp_response_fifo, ALP_ITF_ID_D7ASP);
+  fifo_put(alp_response_fifo, (uint8_t*) &(d7asp_result->channel), 3); // TODO might need to reorder fields in channel_id
+  fifo_put_byte(alp_response_fifo, d7asp_result->rx_level);
+  fifo_put_byte(alp_response_fifo, d7asp_result->link_budget);
+  fifo_put_byte(alp_response_fifo, d7asp_result->target_rx_level);
+  fifo_put_byte(alp_response_fifo, d7asp_result->status.raw);
+  fifo_put_byte(alp_response_fifo, d7asp_result->fifo_token);
+  fifo_put_byte(alp_response_fifo, d7asp_result->seqnr);
+  fifo_put_byte(alp_response_fifo, d7asp_result->response_to);
+  fifo_put_byte(alp_response_fifo, d7asp_result->addressee->ctrl.raw);
+  fifo_put_byte(alp_response_fifo, d7asp_result->addressee->access_class);
+  uint8_t address_len = d7anp_addressee_id_length(d7asp_result->addressee->ctrl.id_type);
+  fifo_put(alp_response_fifo, d7asp_result->addressee->id, address_len);
+}
 
+void alp_d7asp_request_completed(d7asp_result_t result, uint8_t* payload, uint8_t payload_length) {
+  add_interface_status_action(&(current_command.alp_response_fifo), &result);
+  fifo_put(&(current_command.alp_response_fifo), payload, payload_length);
   // TODO further bookkeeping
 }
 
@@ -224,7 +240,10 @@ void alp_d7asp_fifo_flush_completed(uint8_t fifo_token, uint8_t* progress_bitmap
     case ALP_CMD_ORIGIN_SERIAL_CONSOLE:
       if(current_command.respond_when_completed) {
         bool error = memcmp(success_bitmap, progress_bitmap, bitmap_byte_count) != 0;
-        alp_cmd_handler_output_command_completed(current_command.tag_id, error);
+        add_tag_response(&(current_command.alp_response_fifo), error);
+
+        uint8_t alp_response_length = fifo_get_size(&(current_command.alp_response_fifo));
+        alp_cmd_handler_output_alp_command(current_command.alp_response, alp_response_length); // TODO pass fifo directly
       }
 
       break;
