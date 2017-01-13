@@ -26,7 +26,6 @@ uint8_t compress_data(uint16_t value, bool ceil)
 {
     uint8_t mantissa;
     uint16_t remainder;
-    assert(value < 496);
 
     for ( int i = 0; i < 8; i++)
     {
