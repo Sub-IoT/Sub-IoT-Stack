@@ -40,7 +40,7 @@
 #define D7A_FILE_DLL_CONF_SIZE		6
 
 #define D7A_FILE_ACCESS_PROFILE_ID 0x20 // the first access class file
-#define D7A_FILE_ACCESS_PROFILE_SIZE 12 // TODO assuming 1 subband
+#define D7A_FILE_ACCESS_PROFILE_SIZE 65
 
 typedef enum
 {
