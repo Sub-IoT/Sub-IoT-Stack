@@ -84,7 +84,8 @@ typedef enum {
     D7ASP_STATE_IDLE,
     D7ASP_STATE_SLAVE,
     D7ASP_STATE_MASTER,
-    D7ASP_STATE_SLAVE_PENDING_MASTER
+    D7ASP_STATE_SLAVE_PENDING_MASTER,
+    D7ASP_STATE_PENDING_MASTER
 } state_t;
 
 static state_t NGDEF(_state);
@@ -123,7 +124,15 @@ static void flush_completed() {
 
 static void flush_fifos()
 {
-    assert(d7asp_state == D7ASP_STATE_MASTER);
+    if (d7asp_state != D7ASP_STATE_MASTER && d7asp_state != D7ASP_STATE_PENDING_MASTER)
+    {
+        DPRINT("Flushing FIFOs can't be executed in this state <%d>", d7asp_state);
+        return;
+    }
+
+    if (d7asp_state == D7ASP_STATE_PENDING_MASTER)
+        switch_state(D7ASP_STATE_MASTER);
+
     DPRINT("Flushing FIFOs");
     hw_watchdog_feed(); // TODO do here?
 
@@ -194,8 +203,8 @@ static void switch_state(state_t new_state)
                     DPRINT("Switching to state D7ASP_STATE_MASTER");
                     break;
                 case D7ASP_STATE_SLAVE_PENDING_MASTER:
+                case D7ASP_STATE_PENDING_MASTER:
                     d7asp_state = new_state;
-                    sched_post_task(&flush_fifos);
                     DPRINT("Switching to state D7ASP_STATE_MASTER");
                     break;
                 case D7ASP_STATE_SLAVE:
@@ -225,9 +234,14 @@ static void switch_state(state_t new_state)
             }
             break;
         case D7ASP_STATE_SLAVE_PENDING_MASTER:
-            assert(d7asp_state == D7ASP_STATE_SLAVE);
+            assert(d7asp_state == D7ASP_STATE_SLAVE || d7asp_state == D7ASP_STATE_PENDING_MASTER);
             d7asp_state = D7ASP_STATE_SLAVE_PENDING_MASTER;
             DPRINT("Switching to state D7ASP_STATE_SLAVE_PENDING_MASTER");
+            break;
+        case D7ASP_STATE_PENDING_MASTER:
+            assert(d7asp_state == D7ASP_STATE_IDLE || d7asp_state == D7ASP_STATE_SLAVE_PENDING_MASTER);
+            d7asp_state = D7ASP_STATE_PENDING_MASTER;
+            DPRINT("Switching to state D7ASP_STATE_PENDING_MASTER");
             break;
         case D7ASP_STATE_IDLE:
             d7asp_state = new_state;
@@ -294,7 +308,10 @@ d7asp_queue_result_t d7asp_queue_alp_actions(d7asp_master_session_t* session, ui
 
     // TODO for master only set to pending when asked by upper layer (ie new function call)
     if (d7asp_state == D7ASP_STATE_IDLE)
-        switch_state(D7ASP_STATE_MASTER); // TODO signal D7ATP that a new dialog is ongoing to prevent a received packet to assert in D7ASP
+    {
+        switch_state(D7ASP_STATE_PENDING_MASTER);
+        sched_post_task(&flush_fifos);
+    }
     else if (d7asp_state == D7ASP_STATE_SLAVE)
         switch_state(D7ASP_STATE_SLAVE_PENDING_MASTER);
 
@@ -381,11 +398,14 @@ bool d7asp_process_received_packet(packet_t* packet, bool extension)
     }
     else if (d7asp_state == D7ASP_STATE_IDLE
             || d7asp_state == D7ASP_STATE_SLAVE
+            || d7asp_state == D7ASP_STATE_PENDING_MASTER
             || d7asp_state == D7ASP_STATE_SLAVE_PENDING_MASTER)
     {
         // received a request, start slave session, process and respond
         if (d7asp_state == D7ASP_STATE_IDLE)
             switch_state(D7ASP_STATE_SLAVE); // don't switch when already in slave state
+        else if (d7asp_state == D7ASP_STATE_PENDING_MASTER)
+            switch_state(D7ASP_STATE_SLAVE_PENDING_MASTER);
 
         result.fifo_token = packet->d7atp_dialog_id;
         result.seqnr = packet->d7atp_transaction_id;
@@ -544,8 +564,7 @@ void d7asp_signal_dialog_terminated()
         switch_state(D7ASP_STATE_IDLE);
     else if (d7asp_state == D7ASP_STATE_SLAVE_PENDING_MASTER)
     {
-        switch_state(D7ASP_STATE_MASTER);  // TODO signal D7ATP that a new dialog is ongoing to prevent a received packet to assert in D7ASP
-        DPRINT("Schedule task to flush the fifo");
-        //sched_post_task(&flush_fifos); // already done in the switch_state()
+        switch_state(D7ASP_STATE_PENDING_MASTER);
+        sched_post_task(&flush_fifos);
     }
 }
