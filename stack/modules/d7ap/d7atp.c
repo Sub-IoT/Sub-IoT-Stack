@@ -124,7 +124,7 @@ static void response_period_timeout_handler()
            || d7atp_state == D7ATP_STATE_SLAVE_TRANSACTION_RECEIVED_REQUEST
            || d7atp_state == D7ATP_STATE_SLAVE_TRANSACTION_SENDING_RESPONSE);
 
-    current_transaction_id = 0;
+    current_transaction_id = NO_ACTIVE_REQUEST_ID;
     switch_state(D7ATP_STATE_IDLE);
 
     DPRINT("Transaction is terminated");
@@ -163,7 +163,7 @@ static void terminate_dialog()
 void d7atp_signal_foreground_scan_expired()
 {
     // Reset the transaction Id
-    current_transaction_id = 0;
+    current_transaction_id = NO_ACTIVE_REQUEST_ID;
 
     // In case of slave, we can consider that the dialog is terminated
     if (d7atp_state == D7ATP_STATE_SLAVE_TRANSACTION_RESPONSE_PERIOD
@@ -175,7 +175,6 @@ void d7atp_signal_foreground_scan_expired()
     }
     else if (d7atp_state == D7ATP_STATE_MASTER_TRANSACTION_RESPONSE_PERIOD)
     {
-        current_transaction_id = 0;
         d7asp_signal_transaction_terminated();
     }
     else
@@ -192,7 +191,7 @@ void d7atp_signal_dialog_termination()
     // segments marked with START flag set to 1.
     switch_state(D7ATP_STATE_IDLE);
     current_dialog_id = 0;
-    current_transaction_id = 0;
+    current_transaction_id = NO_ACTIVE_REQUEST_ID;
 
     // Discard eventually the Tc timer
     timer_cancel_task(&response_period_timeout_handler);
@@ -207,7 +206,7 @@ void d7atp_stop_transaction()
     DPRINT("Current transaction is stopped by upper layer");
 
     assert(d7atp_state == D7ATP_STATE_MASTER_TRANSACTION_RESPONSE_PERIOD);
-    current_transaction_id = 0;
+    current_transaction_id = NO_ACTIVE_REQUEST_ID;
 
     // stop the DLL foreground scan
     d7anp_stop_foreground_scan(false);
@@ -404,7 +403,7 @@ void d7atp_signal_packet_transmitted(packet_t* packet)
         }
         else
         {
-            current_transaction_id = 0;
+            current_transaction_id = NO_ACTIVE_REQUEST_ID;
             d7asp_signal_transaction_terminated();
         }
     }

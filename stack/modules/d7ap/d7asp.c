@@ -63,8 +63,6 @@ static d7asp_master_session_t NGDEF(_current_master_session); // TODO we only us
 static uint8_t NGDEF(_current_request_id); // TODO move ?
 #define current_request_id NG(_current_request_id)
 
-#define NO_ACTIVE_REQUEST_ID 0xFF
-
 static uint8_t NGDEF(_current_request_retry_count);
 #define current_request_retry_count NG(_current_request_retry_count)
 
