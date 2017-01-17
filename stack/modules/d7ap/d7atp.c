@@ -132,7 +132,7 @@ static void response_period_timeout_handler()
     d7anp_start_foreground_scan();
 }
 
-static timer_tick_t adjust_timeout_value(uint8_t timeout_ticks, timer_tick_t request_received_timestamp)
+static timer_tick_t adjust_timeout_value(timer_tick_t timeout_ticks, timer_tick_t request_received_timestamp)
 {
 
     // Adjust the timeout value according the time passed since reception
@@ -397,7 +397,7 @@ void d7atp_signal_packet_transmitted(packet_t* packet)
 
         if (packet->d7atp_ctrl.ctrl_tc)
         {
-            timer_tick_t Tc = adjust_timeout_value(packet->d7atp_tc, packet->hw_radio_packet.tx_meta.timestamp); // TODO decompress Tc, for now it is not compressed
+            timer_tick_t Tc = adjust_timeout_value(CT_DECOMPRESS(packet->d7atp_tc), packet->hw_radio_packet.tx_meta.timestamp);
             d7anp_set_foreground_scan_timeout(Tc + 2); // we include Tt here for now
             d7anp_start_foreground_scan();
         }

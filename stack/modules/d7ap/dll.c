@@ -444,7 +444,7 @@ static void execute_csma_ca()
                 transmission_timeout_ti = ceil((SFc + 1) * tx_duration + 5);
             // in case of response, use the Tc parameter provided in the request
             else
-                transmission_timeout_ti = current_packet->d7atp_tc; // TODO decompress Tc
+                transmission_timeout_ti = CT_DECOMPRESS(current_packet->d7atp_tc);
 
             dll_tca = transmission_timeout_ti - tx_duration;
             dll_cca_started = timer_get_counter_value();
