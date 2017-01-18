@@ -240,7 +240,8 @@ void d7atp_send_request(uint8_t dialog_id, uint8_t transaction_id, bool is_last_
     else
         packet->type = INITIAL_REQUEST;
 
-    switch_state(D7ATP_STATE_MASTER_TRANSACTION_REQUEST_PERIOD);
+    if (d7atp_state != D7ATP_STATE_MASTER_TRANSACTION_REQUEST_PERIOD)
+        switch_state(D7ATP_STATE_MASTER_TRANSACTION_REQUEST_PERIOD);
 
     current_dialog_id = dialog_id;
     current_transaction_id = transaction_id;
@@ -429,9 +430,7 @@ void d7atp_signal_transmission_failure()
 
     DPRINT("CSMA-CA insertion failed, stopping transaction");
 
-    if (d7atp_state == D7ATP_STATE_MASTER_TRANSACTION_REQUEST_PERIOD)
-        switch_state(D7ATP_STATE_IDLE);
-    else if (stop_dialog_after_tx)
+    if (d7atp_state == D7ATP_STATE_SLAVE_TRANSACTION_SENDING_RESPONSE && stop_dialog_after_tx)
     {
         /* For Slaves, terminate the dialog if no FG scan and no response period are scheduled.*/
         terminate_dialog();
