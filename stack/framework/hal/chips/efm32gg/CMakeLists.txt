@@ -60,6 +60,7 @@ ADD_LIBRARY (${CHIP_LIBRARY_NAME} OBJECT
                     CMSIS/device/src/startup_efm32gg.S
                     emlib/src/em_assert.c
                     emlib/src/em_adc.c
+                    emlib/src/em_aes.c
                     emlib/src/em_system.c
                     emlib/src/em_cmu.c
                     emlib/src/em_emu.c

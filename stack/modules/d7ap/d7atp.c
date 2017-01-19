@@ -32,6 +32,7 @@
 #include "log.h"
 #include "fs.h"
 #include "MODULE_D7AP_defs.h"
+#include "compress.h"
 
 #if defined(FRAMEWORK_LOG_ENABLED) && defined(MODULE_D7AP_TP_LOG_ENABLED)
 #define DPRINT(...) log_print_stack_string(LOG_STACK_TRANS, __VA_ARGS__)
@@ -123,7 +124,7 @@ static void response_period_timeout_handler()
            || d7atp_state == D7ATP_STATE_SLAVE_TRANSACTION_RECEIVED_REQUEST
            || d7atp_state == D7ATP_STATE_SLAVE_TRANSACTION_SENDING_RESPONSE);
 
-    current_transaction_id = 0;
+    current_transaction_id = NO_ACTIVE_REQUEST_ID;
     switch_state(D7ATP_STATE_IDLE);
 
     DPRINT("Transaction is terminated");
@@ -131,7 +132,7 @@ static void response_period_timeout_handler()
     d7anp_start_foreground_scan();
 }
 
-static timer_tick_t adjust_timeout_value(uint8_t timeout_ticks, timer_tick_t request_received_timestamp)
+static timer_tick_t adjust_timeout_value(timer_tick_t timeout_ticks, timer_tick_t request_received_timestamp)
 {
 
     // Adjust the timeout value according the time passed since reception
@@ -162,7 +163,7 @@ static void terminate_dialog()
 void d7atp_signal_foreground_scan_expired()
 {
     // Reset the transaction Id
-    current_transaction_id = 0;
+    current_transaction_id = NO_ACTIVE_REQUEST_ID;
 
     // In case of slave, we can consider that the dialog is terminated
     if (d7atp_state == D7ATP_STATE_SLAVE_TRANSACTION_RESPONSE_PERIOD
@@ -172,9 +173,8 @@ void d7atp_signal_foreground_scan_expired()
     {
         terminate_dialog();
     }
-    else if(d7atp_state == D7ATP_STATE_MASTER_TRANSACTION_RESPONSE_PERIOD)
+    else if (d7atp_state == D7ATP_STATE_MASTER_TRANSACTION_RESPONSE_PERIOD)
     {
-        current_transaction_id = 0;
         d7asp_signal_transaction_terminated();
     }
     else
@@ -191,7 +191,7 @@ void d7atp_signal_dialog_termination()
     // segments marked with START flag set to 1.
     switch_state(D7ATP_STATE_IDLE);
     current_dialog_id = 0;
-    current_transaction_id = 0;
+    current_transaction_id = NO_ACTIVE_REQUEST_ID;
 
     // Discard eventually the Tc timer
     timer_cancel_task(&response_period_timeout_handler);
@@ -206,7 +206,7 @@ void d7atp_stop_transaction()
     DPRINT("Current transaction is stopped by upper layer");
 
     assert(d7atp_state == D7ATP_STATE_MASTER_TRANSACTION_RESPONSE_PERIOD);
-    current_transaction_id = 0;
+    current_transaction_id = NO_ACTIVE_REQUEST_ID;
 
     // stop the DLL foreground scan
     d7anp_stop_foreground_scan(false);
@@ -222,14 +222,26 @@ void d7atp_init()
     sched_register_task(&response_period_timeout_handler);
 }
 
-void d7atp_send_request(uint8_t dialog_id, uint8_t transaction_id, bool is_last_transaction,
+error_t d7atp_send_request(uint8_t dialog_id, uint8_t transaction_id, bool is_last_transaction,
                         packet_t* packet, session_qos_t* qos_settings, uint8_t listen_timeout, uint8_t expected_response_length)
 {
     /* check that we are not initiating a different dialog if a dialog is still ongoing */
+
+    // TODO in case of retry of the initial request, rigorously, we should keep the type INITIAL_REQUEST
+    // How to distinguish a retry?
+
     if (current_dialog_id)
+    {
         assert( dialog_id == current_dialog_id);
 
-    switch_state(D7ATP_STATE_MASTER_TRANSACTION_REQUEST_PERIOD);
+        // the Dialog is locked on the channel of the initial request
+        packet->type = SUBSEQUENT_REQUEST;
+    }
+    else
+        packet->type = INITIAL_REQUEST;
+
+    if (d7atp_state != D7ATP_STATE_MASTER_TRANSACTION_REQUEST_PERIOD)
+        switch_state(D7ATP_STATE_MASTER_TRANSACTION_REQUEST_PERIOD);
 
     current_dialog_id = dialog_id;
     current_transaction_id = transaction_id;
@@ -237,14 +249,17 @@ void d7atp_send_request(uint8_t dialog_id, uint8_t transaction_id, bool is_last_
     packet->d7atp_transaction_id = current_transaction_id;
 
     uint8_t access_class = packet->d7anp_addressee->access_class;
-    if(access_class != current_access_class)
-        fs_read_access_class(access_class, &active_addressee_access_profile);
+    if (access_class != current_access_class)
+    {
+        fs_read_access_class(packet->d7anp_addressee->access_index, &active_addressee_access_profile);
+        current_access_class = access_class;
+    }
 
-    DPRINT("Start dialog Id=%i transID=%i on AC=%i, expected resp len=%i", dialog_id, transaction_id, access_class, expected_response_length);
+    DPRINT("Start dialog Id=%i transID=%i on AC=%x, expected resp len=%i", dialog_id, transaction_id, access_class, expected_response_length);
     uint8_t slave_listen_timeout = listen_timeout;
 
     bool ack_requested = true;
-    if(qos_settings->qos_resp_mode == SESSION_RESP_MODE_NO || qos_settings->qos_resp_mode == SESSION_RESP_MODE_NO_RPT)
+    if (qos_settings->qos_resp_mode == SESSION_RESP_MODE_NO || qos_settings->qos_resp_mode == SESSION_RESP_MODE_NO_RPT)
       ack_requested = false;
 
     bool include_tc = (expected_response_length > 0 || ack_requested);
@@ -262,28 +277,29 @@ void d7atp_send_request(uint8_t dialog_id, uint8_t transaction_id, bool is_last_
         .ctrl_ack_record = false
     };
 
-    // Tc(NB, LEN, CH) = ceil((SFC  * NB  + 1) * TTX(CH, LEN) + TG) with NB the number of concurrent devices and SF the collision Avoidance Spreading Factor
-    // TODO payload length does not include headers ... + hardcoded subband
-    // calculate in DLL, after we implemented the changes required to notify DLL of the type of packet (ie request)
-    uint16_t tx_duration = dll_calculate_tx_duration(active_addressee_access_profile.subbands[0].channel_header.ch_class, packet->payload_length);
-    packet->transmission_timeout_ti = ceil((3 + 1 + 1) * tx_duration + 5);
+    if (include_tc)
+    {
+        // Tc(NB, LEN, CH) = ceil((SFC  * NB  + 1) * TTX(CH, LEN) + TG) with NB the number of concurrent devices and SF the collision Avoidance Spreading Factor
+        // TODO payload length does not include headers ... + hardcoded subband
+        // TODO this length does not include lower layers overhead for now, use a minimum len of 50 for now ...
+        if (expected_response_length < 50)
+            expected_response_length = 50;
 
-    DPRINT("Tl=%i Tc=%i tx", packet->d7anp_listen_timeout, packet->transmission_timeout_ti);
-    // TODO this length does not include lower layers overhead for now, use a minimum len of 50 for now ...
-    if(expected_response_length < 50)
-      expected_response_length = 50;
+        uint16_t tx_duration_response = dll_calculate_tx_duration(active_addressee_access_profile.channel_header.ch_class, expected_response_length);
+        uint8_t nb = 1;
+        if (packet->d7anp_addressee->ctrl.id_type == ID_TYPE_NOID)
+            nb = 32;
+        else if (packet->d7anp_addressee->ctrl.id_type == ID_TYPE_NBID)
+            nb = CT_DECOMPRESS(packet->d7anp_addressee->id[0]);
 
-    uint8_t tx_duration_response = dll_calculate_tx_duration(active_addressee_access_profile.subbands[0].channel_header.ch_class, expected_response_length);
-    uint8_t nb = 1;
-    if(packet->d7anp_addressee->ctrl.id_type == ID_TYPE_NOID)
-      nb = 32;
-    else if(packet->d7anp_addressee->ctrl.id_type == ID_TYPE_NBID)
-      nb = CT_DECOMPRESS(packet->d7anp_addressee->id[0]);
+        uint16_t resp_tc = (3 * nb + 1) * tx_duration_response + 5;
+        DPRINT("resp Tc=%i Tx duration %d", resp_tc, tx_duration_response);
 
-    packet->d7atp_tc = ceil((3 + nb + 1) * tx_duration_response + 5); // TODO compress
-    DPRINT("resp Tc=%i", include_tc? packet->d7atp_tc : 0);
+        packet->d7atp_tc = compress_data(resp_tc, true);
+        DPRINT("packet->d7atp_tc 0x%02x (CT)", packet->d7atp_tc);
+    }
 
-    d7anp_tx_foreground_frame(packet, true, &active_addressee_access_profile, slave_listen_timeout);
+    return(d7anp_tx_foreground_frame(packet, true, slave_listen_timeout));
 }
 
 static void send_response(packet_t* packet)
@@ -300,7 +316,12 @@ static void send_response(packet_t* packet)
 
     bool should_include_origin_template = false; // we don't need to send origin ID, the requester will filter based on dialogID, but ...
 
-    if ((!packet->dll_header.control_target_address_set)
+    if (ID_TYPE_IS_BROADCAST(packet->dll_header.control_target_id_type))
+        packet->type = RESPONSE_TO_BROADCAST;
+    else
+        packet->type = RESPONSE_TO_UNICAST;
+
+    if (ID_TYPE_IS_BROADCAST(packet->dll_header.control_target_id_type)
             || (packet->d7atp_ctrl.ctrl_is_start
             && packet->d7atp_ctrl.ctrl_is_ack_requested))
     {
@@ -319,7 +340,7 @@ static void send_response(packet_t* packet)
 
     // dialog and transaction id remain the same
     DPRINT("Tl=%i", packet->d7anp_listen_timeout);
-    d7anp_tx_foreground_frame(packet, should_include_origin_template, &active_addressee_access_profile, slave_listen_timeout);
+    d7anp_tx_foreground_frame(packet, should_include_origin_template, slave_listen_timeout);
 }
 
 uint8_t d7atp_assemble_packet_header(packet_t* packet, uint8_t* data_ptr)
@@ -336,7 +357,7 @@ uint8_t d7atp_assemble_packet_header(packet_t* packet, uint8_t* data_ptr)
         //TODO check if at least one Responder has set the ACK_REQ flag
         //TODO aggregate the Device IDs of the Responders that set their ACK_REQ flags.
     }
-    else if(packet->d7atp_ctrl.ctrl_is_ack_requested && packet->d7atp_ctrl.ctrl_ack_not_void)
+    else if (packet->d7atp_ctrl.ctrl_is_ack_requested && packet->d7atp_ctrl.ctrl_ack_not_void)
     {
         // add Responder ACK template
         (*data_ptr) = packet->d7atp_transaction_id; data_ptr++; // transaction ID start
@@ -357,7 +378,7 @@ bool d7atp_disassemble_packet_header(packet_t *packet, uint8_t *data_idx)
     packet->d7atp_dialog_id = packet->hw_radio_packet.data[(*data_idx)]; (*data_idx)++;
     packet->d7atp_transaction_id = packet->hw_radio_packet.data[(*data_idx)]; (*data_idx)++;
 
-    if(packet->d7atp_ctrl.ctrl_is_ack_requested && packet->d7atp_ctrl.ctrl_ack_not_void)
+    if (packet->d7atp_ctrl.ctrl_is_ack_requested && packet->d7atp_ctrl.ctrl_ack_not_void)
     {
         packet->d7atp_ack_template.ack_transaction_id_start = packet->hw_radio_packet.data[(*data_idx)]; (*data_idx)++;
         packet->d7atp_ack_template.ack_transaction_id_stop = packet->hw_radio_packet.data[(*data_idx)]; (*data_idx)++;
@@ -371,22 +392,23 @@ void d7atp_signal_packet_transmitted(packet_t* packet)
 {
     d7asp_signal_packet_transmitted(packet);
 
-    if(d7atp_state == D7ATP_STATE_MASTER_TRANSACTION_REQUEST_PERIOD)
+    if (d7atp_state == D7ATP_STATE_MASTER_TRANSACTION_REQUEST_PERIOD)
     {
         switch_state(D7ATP_STATE_MASTER_TRANSACTION_RESPONSE_PERIOD);
 
         if (packet->d7atp_ctrl.ctrl_tc)
         {
-            timer_tick_t Tc = adjust_timeout_value(packet->d7atp_tc, packet->hw_radio_packet.tx_meta.timestamp); // TODO decrompess Tc, for now it is not compressed
+            timer_tick_t Tc = adjust_timeout_value(CT_DECOMPRESS(packet->d7atp_tc), packet->hw_radio_packet.tx_meta.timestamp);
             d7anp_set_foreground_scan_timeout(Tc + 2); // we include Tt here for now
             d7anp_start_foreground_scan();
         }
-        else {
-            current_transaction_id = 0;
+        else
+        {
+            current_transaction_id = NO_ACTIVE_REQUEST_ID;
             d7asp_signal_transaction_terminated();
         }
     }
-    else if(d7atp_state == D7ATP_STATE_SLAVE_TRANSACTION_SENDING_RESPONSE)
+    else if (d7atp_state == D7ATP_STATE_SLAVE_TRANSACTION_SENDING_RESPONSE)
     {
         switch_state(D7ATP_STATE_SLAVE_TRANSACTION_RESPONSE_PERIOD);
 
@@ -397,7 +419,7 @@ void d7atp_signal_packet_transmitted(packet_t* packet)
             d7anp_stop_foreground_scan(true); // restart scan automation
         }
     }
-    else if(d7atp_state == D7ATP_STATE_IDLE)
+    else if (d7atp_state == D7ATP_STATE_IDLE)
         assert(!packet->d7atp_ctrl.ctrl_is_ack_requested); // can only occur in this case
 }
 
@@ -408,9 +430,7 @@ void d7atp_signal_transmission_failure()
 
     DPRINT("CSMA-CA insertion failed, stopping transaction");
 
-    if (d7atp_state == D7ATP_STATE_MASTER_TRANSACTION_REQUEST_PERIOD)
-        switch_state(D7ATP_STATE_IDLE);
-    else if (stop_dialog_after_tx)
+    if (d7atp_state == D7ATP_STATE_SLAVE_TRANSACTION_SENDING_RESPONSE && stop_dialog_after_tx)
     {
         /* For Slaves, terminate the dialog if no FG scan and no response period are scheduled.*/
         terminate_dialog();
@@ -431,17 +451,17 @@ void d7atp_process_received_packet(packet_t* packet)
 
 
     // copy addressee from NP origin
-    current_addressee.ctrl.id_type = packet->d7anp_ctrl.origin_addressee_ctrl_id_type;
-    current_addressee.access_class = packet->d7anp_ctrl.origin_addressee_ctrl_access_class;
+    current_addressee.ctrl.id_type = packet->d7anp_ctrl.origin_id_type;
+    current_addressee.access_class = packet->origin_access_class;
     memcpy(current_addressee.id, packet->origin_access_id, 8);
     packet->d7anp_addressee = &current_addressee;
 
     DPRINT("Recvd dialog %i trans id %i, curr %i - %i", packet->d7atp_dialog_id, packet->d7atp_transaction_id, current_dialog_id, current_transaction_id);
     timer_tick_t Tl = CT_DECOMPRESS(packet->d7anp_listen_timeout);
-    DPRINT("Tl=%i (Ti) Tc=%i (CT)", Tl, packet->d7atp_tc);
+    DPRINT("Tl=%i (CT) -> %i (Ti) ", packet->d7anp_listen_timeout, Tl);
     if (IS_IN_MASTER_TRANSACTION())
     {
-        if(packet->d7atp_dialog_id != current_dialog_id || packet->d7atp_transaction_id != current_transaction_id)
+        if (packet->d7atp_dialog_id != current_dialog_id || packet->d7atp_transaction_id != current_transaction_id)
         {
             DPRINT("Unexpected dialog ID or transaction ID received, skipping segment");
             packet_queue_free_packet(packet);
@@ -449,12 +469,13 @@ void d7atp_process_received_packet(packet_t* packet)
         }
 
         // Check if a new dialog initiated by the responder is allowed
-        if(packet->d7atp_ctrl.ctrl_is_start)
+        if (packet->d7atp_ctrl.ctrl_is_start)
         {
             // if this is a unicast response and the last transaction, the extension procedure is allowed
-            if (packet->d7atp_ctrl.ctrl_is_stop && packet->dll_header.control_target_address_set)
+            if (packet->d7atp_ctrl.ctrl_is_stop && !ID_TYPE_IS_BROADCAST(packet->dll_header.control_target_id_type))
             {
-                Tl = adjust_timeout_value(packet->d7anp_listen_timeout, packet->hw_radio_packet.rx_meta.timestamp);
+                Tl = adjust_timeout_value(Tl, packet->hw_radio_packet.rx_meta.timestamp);
+                DPRINT("Adjusted Tl=%i (Ti) ", Tl);
                 DPRINT("Responder wants to append a new dialog");
                 d7anp_set_foreground_scan_timeout(Tl);
                 d7anp_start_foreground_scan();
@@ -498,9 +519,11 @@ void d7atp_process_received_packet(packet_t* packet)
          // The FG scan is only started when the response period expires.
         if (packet->d7atp_ctrl.ctrl_tc)
         {
-            timer_tick_t Tc = adjust_timeout_value(packet->d7atp_tc, packet->hw_radio_packet.rx_meta.timestamp); // TODO decrompress Tc, for now it is not compress
-            packet->transmission_timeout_ti = Tc; // TODO until we implemented a way to notify DLL of the type of transmission (ie response in the case),
-                                             // we set this field since this is used by DLL for CSMA-CA
+            timer_tick_t Tc = CT_DECOMPRESS(packet->d7atp_tc);
+
+            DPRINT("Tc=%i (CT) -> %i (Ti) ", packet->d7atp_tc, Tc);
+            Tc = adjust_timeout_value(Tc, packet->hw_radio_packet.rx_meta.timestamp);
+
             if (Tc <= 0)
             {
                 DPRINT("Discard the request since the response period is expired");
@@ -521,21 +544,18 @@ void d7atp_process_received_packet(packet_t* packet)
         }
         else
         {
-            if(packet->d7anp_listen_timeout)
+            if (packet->d7anp_listen_timeout)
             {
-                Tl = adjust_timeout_value(packet->d7anp_listen_timeout, packet->hw_radio_packet.rx_meta.timestamp); // TODO decrompress
+                Tl = adjust_timeout_value(packet->d7anp_listen_timeout, packet->hw_radio_packet.rx_meta.timestamp); // TODO decompress
                 d7anp_set_foreground_scan_timeout(Tl);
                 d7anp_start_foreground_scan();
             }
         }
 
-
         switch_state(D7ATP_STATE_SLAVE_TRANSACTION_RECEIVED_REQUEST);
 
         current_dialog_id = packet->d7atp_dialog_id;
         current_transaction_id = packet->d7atp_transaction_id;
-
-        channel_id_t rx_channel = packet->hw_radio_packet.rx_meta.rx_cfg.channel_id;
 
         // store the received timestamp for later usage (eg CCA). the rx_meta.timestamp can be
         // overwritten since it is stored in a union with tx_meta and can thus be changed when
@@ -543,19 +563,16 @@ void d7atp_process_received_packet(packet_t* packet)
         packet->request_received_timestamp = packet->hw_radio_packet.rx_meta.timestamp;
 
         // set active_addressee_access_profile to the access_profile supplied by the requester
-        if(current_access_class != current_addressee.access_class)
+        if (current_access_class != current_addressee.access_class)
         {
-            fs_read_access_class(current_addressee.access_class, &active_addressee_access_profile);
+            fs_read_access_class(current_addressee.access_index, &active_addressee_access_profile);
             current_access_class = current_addressee.access_class;
         }
 
-        // but respond on the channel where we received the request on
-        active_addressee_access_profile.subbands[0].channel_header = rx_channel.channel_header;
-        active_addressee_access_profile.subbands[0].channel_index_start = rx_channel.center_freq_index;
-        active_addressee_access_profile.subbands[0].channel_index_end = rx_channel.center_freq_index;
+        // DLL is taking care that we respond on the channel where we received the request on
 
         bool should_send_response = d7asp_process_received_packet(packet, extension);
-        if(should_send_response)
+        if (should_send_response)
         {
             if (!packet->d7atp_ctrl.ctrl_tc && (Tl == 0))
                 stop_dialog_after_tx = true;
@@ -566,7 +583,7 @@ void d7atp_process_received_packet(packet_t* packet)
         else
         {
             response_period_timeout_handler(); // no response to send, end transaction and go back to IDLE
-            if(Tl == 0)
+            if (Tl == 0)
             {
                 terminate_dialog();
             }

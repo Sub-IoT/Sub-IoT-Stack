@@ -27,11 +27,14 @@
 #include "log.h"
 #include "math.h"
 #include "hwdebug.h"
+#include "aes.h"
 
 #if defined(FRAMEWORK_LOG_ENABLED) && defined(MODULE_D7AP_NP_LOG_ENABLED)
 #define DPRINT(...) log_print_stack_string(LOG_STACK_NWL, __VA_ARGS__)
+#define DPRINT_DATA(...) log_print_data(__VA_ARGS__)
 #else
 #define DPRINT(...)
+#define DPRINT_DATA(...)
 #endif
 
 
@@ -52,6 +55,38 @@ static dae_access_profile_t NGDEF(_own_access_profile);
 
 static timer_tick_t NGDEF(_fg_scan_timeout_ticks);
 #define fg_scan_timeout_ticks NG(_fg_scan_timeout_ticks)
+
+static uint8_t NGDEF(_active_access_class);
+#define active_access_class NG(_active_access_class)
+
+static d7anp_security_t NGDEF(_security_state);
+#define security_state NG(_security_state)
+
+static d7anp_node_security_t NGDEF(_node_security_state);
+#define node_security_state NG(_node_security_state)
+
+static d7anp_trusted_node_t* NGDEF(_latest_node);
+#define latest_node NG(_latest_node)
+
+static inline uint8_t get_auth_len(uint8_t nls_method)
+{
+    switch(nls_method)
+    {
+    case AES_CTR:
+        return 0;
+    case AES_CBC_MAC_128:
+    case AES_CCM_128:
+        return 16;
+    case AES_CBC_MAC_64:
+    case AES_CCM_64:
+        return 8;
+    case AES_CBC_MAC_32:
+    case AES_CCM_32:
+        return 4;
+    default:
+        assert(false);
+    }
+}
 
 static void switch_state(state_t next_state)
 {
@@ -88,7 +123,7 @@ static void foreground_scan_expired()
     assert(d7anp_state == D7ANP_STATE_FOREGROUND_SCAN || d7anp_state == D7ANP_STATE_TRANSMIT);
     DPRINT("Foreground scan expired");
 
-    if(d7anp_state == D7ANP_STATE_FOREGROUND_SCAN) // when in D7ANP_STATE_TRANSMIT d7anp_signal_packet_transmitted() will switch state
+    if (d7anp_state == D7ANP_STATE_FOREGROUND_SCAN) // when in D7ANP_STATE_TRANSMIT d7anp_signal_packet_transmitted() will switch state
       switch_state(D7ANP_STATE_IDLE);
 
     /* switch to automation scan */
@@ -153,43 +188,90 @@ void d7anp_stop_foreground_scan(bool auto_scan)
 
 void d7anp_init()
 {
-    uint8_t own_access_class = fs_read_dll_conf_active_access_class();
+    uint8_t key[AES_BLOCK_SIZE];
 
     // set early our own acces profile since this information may be needed when receiving a frame
-    fs_read_access_class(own_access_class, &own_access_profile);
+    active_access_class = fs_read_dll_conf_active_access_class();
+    fs_read_access_class(ACCESS_SPECIFIER(active_access_class), &own_access_profile);
 
     d7anp_state = D7ANP_STATE_IDLE;
     fg_scan_timeout_ticks = 0;
 
     sched_register_task(&foreground_scan_expired);
+
+#if defined(MODULE_D7AP_NLS_ENABLED)
+    /*
+     * Init Security
+     * Read the 128 bits key from the "NWL Security Key" file
+     */
+    assert (fs_read_nwl_security_key(key) == ALP_STATUS_OK); // TODO permission
+    DPRINT("KEY");
+    DPRINT_DATA(key, AES_BLOCK_SIZE);
+    AES128_init(key);
+
+    /* Read the NWL security parameters */
+    fs_read_nwl_security(&security_state);
+    DPRINT("Initial Key counter %d", security_state.key_counter);
+    DPRINT("Initial Frame counter %ld", security_state.frame_counter);
+    /* Read the NWL security state of the successfully decrypted and authenticated devices */
+    fs_read_nwl_security_state_register(&node_security_state);
+    latest_node = NULL;
+#endif
 }
 
-void d7anp_tx_foreground_frame(packet_t* packet, bool should_include_origin_template, dae_access_profile_t* access_profile, uint8_t slave_listen_timeout_ct)
+error_t d7anp_tx_foreground_frame(packet_t* packet, bool should_include_origin_template, uint8_t slave_listen_timeout_ct)
 {
     assert(d7anp_state == D7ANP_STATE_IDLE || d7anp_state == D7ANP_STATE_FOREGROUND_SCAN);
 
-    packet->d7anp_ctrl.origin_addressee_ctrl_hop_enabled = false;
+    packet->d7anp_ctrl.hop_enabled = false;
 
     // we need to switch back to the current state after the transmission procedure
     d7anp_prev_state = d7anp_state;
 
-    if(!should_include_origin_template)
-        packet->d7anp_ctrl.origin_addressee_ctrl_id_type = ID_TYPE_NOID; // TODO or NBID in some cases?
+    if (!should_include_origin_template)
+    {
+        packet->d7anp_ctrl.origin_id_type = ID_TYPE_NOID;
+        packet->d7anp_ctrl.origin_void = true;
+    }
     else
     {
         uint8_t vid[2];
         fs_read_vid(vid);
-        if(memcmp(vid, (uint8_t[2]){ 0xFF, 0xFF }, 2) == 0)
-            packet->d7anp_ctrl.origin_addressee_ctrl_id_type = ID_TYPE_UID;
+        if (memcmp(vid, (uint8_t[2]){ 0xFF, 0xFF }, 2) == 0)
+            packet->d7anp_ctrl.origin_id_type = ID_TYPE_UID;
         else
-            packet->d7anp_ctrl.origin_addressee_ctrl_id_type = ID_TYPE_VID;
+            packet->d7anp_ctrl.origin_id_type = ID_TYPE_VID;
+
+        packet->d7anp_ctrl.origin_void = false;
+        packet->origin_access_class = active_access_class;
     }
 
-    packet->d7anp_ctrl.origin_addressee_ctrl_access_class = packet->d7anp_addressee->access_class; // TODO validate
     packet->d7anp_listen_timeout = slave_listen_timeout_ct;
 
+#if defined(MODULE_D7AP_NLS_ENABLED)
+
+    packet->d7anp_ctrl.nls_method = packet->d7anp_addressee->ctrl.nls_method;
+
+    if (packet->d7anp_ctrl.nls_method == AES_CTR ||
+        packet->d7anp_ctrl.nls_method == AES_CCM_32 ||
+        packet->d7anp_ctrl.nls_method == AES_CCM_64 ||
+        packet->d7anp_ctrl.nls_method == AES_CCM_128)
+    {
+        /* Check if frame counter reaches its maximum value */
+        if (security_state.frame_counter == (uint32_t)~0)
+            return EPERM;
+
+        packet->d7anp_security.frame_counter = security_state.frame_counter++;
+        packet->d7anp_security.key_counter = security_state.key_counter;
+        DPRINT("Frame counter %ld", packet->d7anp_security.frame_counter);
+
+        // Update the frame counter in the D7A file
+        fs_write_nwl_security(&security_state);
+    }
+#endif
+
     switch_state(D7ANP_STATE_TRANSMIT);
-    dll_tx_frame(packet, access_profile);
+    dll_tx_frame(packet);
 }
 
 void start_foreground_scan_after_D7AAdvP()
@@ -204,29 +286,259 @@ static void schedule_foreground_scan_after_D7AAdvP(timer_tick_t eta)
     assert(timer_post_task_delay(&start_foreground_scan_after_D7AAdvP, eta) == SUCCESS);
 }
 
+static inline void write_be32(uint8_t *buf, uint32_t val)
+{
+    buf[0] = (val >> 24) & 0xff;
+    buf[1] = (val >> 16) & 0xff;
+    buf[2] = (val >> 8) & 0xff;
+    buf[3] = val & 0xff;
+}
+
+static inline uint32_t read_be32(const uint8_t *buf)
+{
+    return ((uint32_t) buf[0] << 24) | (buf[1] << 16) | (buf[2] << 8) | buf[3];
+}
+
+static void build_header(packet_t *packet, uint8_t payload_len, uint8_t *header)
+{
+    /*
+     * According DASH7 specification, this block is defined  as (LSB first):
+     * B_0: Flags | NLS Method | Zeros padding | Origin ID | Control extension | Payload length
+     */
+
+    memset(header, 0, AES_BLOCK_SIZE); // for zero padding
+
+    /* the CBC-MAC header is defined according Table 7.4.6.1 */
+    header[0] = SET_NLS_METHOD(packet->d7anp_ctrl.nls_method);
+    memcpy( header + 6, packet->origin_access_id, packet->d7anp_ctrl.origin_id_type == ID_TYPE_VID? 2 : 8);
+    header[14] = packet->d7anp_ctrl.raw;
+    header[15] = payload_len;
+
+    DPRINT("Header for CBC-MAC");
+    DPRINT_DATA(header, AES_BLOCK_SIZE);
+}
+
+static void build_iv(packet_t *packet, uint8_t payload_len, uint8_t *iv)
+{
+    /*
+     * According DASH7 specification, the initialization vector is defined  as (LSB first):
+     * IV: Block counter | NLS Method | Key counter | Frame counter | Origin ID | Control extension | Payload length
+     */
+
+    memset(iv, 0, AES_BLOCK_SIZE);
+
+    /* AES-CTR/AES-CCM Initialization Vector (IV)*/
+    iv[0] = SET_NLS_METHOD(packet->d7anp_ctrl.nls_method);
+    iv[1] = packet->d7anp_security.key_counter;
+    write_be32(&iv[2], packet->d7anp_security.frame_counter);
+    /* When Origin ID is not provided in the NWL frame, it is provided by upper layer.*/
+    memcpy( iv + 6, packet->origin_access_id, packet->d7anp_ctrl.origin_id_type == ID_TYPE_VID? 2 : 8);
+    iv[14] = packet->d7anp_ctrl.raw;
+    iv[15] = payload_len;
+
+    DPRINT("iv for CTR/CCM");
+    DPRINT_DATA(iv, AES_BLOCK_SIZE);
+}
+
+uint8_t d7anp_secure_payload(packet_t *packet, uint8_t *payload, uint8_t payload_len)
+{
+    uint8_t nls_method;
+    uint8_t ctr_blk[AES_BLOCK_SIZE];
+    uint8_t header[AES_BLOCK_SIZE];
+    uint8_t auth[AES_BLOCK_SIZE];
+    uint8_t auth_len;
+    uint8_t add[AES_BLOCK_SIZE];
+    uint8_t add_len = 0;
+
+    nls_method = packet->d7anp_ctrl.nls_method;
+    auth_len = get_auth_len(nls_method);
+
+    /* When unicast access, add the auxiliary authentication data composed of the destination address */
+    if(auth_len && !ID_TYPE_IS_BROADCAST(packet->d7anp_addressee->ctrl.id_type))
+    {
+        add_len = packet->d7anp_addressee->ctrl.id_type == ID_TYPE_VID ? 2 : 8;
+        memcpy(add, packet->d7anp_addressee->id, add_len);
+    }
+
+    switch (nls_method)
+    {
+    case AES_CTR:
+        // Build the initial counter block
+        build_iv(packet, payload_len, ctr_blk);
+
+        // the encrypted payload replaces the plaintext
+        AES128_CTR_encrypt(payload, payload, payload_len, ctr_blk);
+        break;
+    case AES_CBC_MAC_128:
+    case AES_CBC_MAC_64:
+    case AES_CBC_MAC_32:
+        /* Build the header block to prepend to the payload */
+        build_header(packet, payload_len, header);
+
+        /* Set Header flags */
+        header[0] |= ( add_len > 0 );
+
+        /* Compute the CBC-MAC */
+        AES128_CBC_MAC(auth, payload, payload_len, header, add, add_len, auth_len);
+
+        /* Insert the authentication Tag */
+        memcpy(payload + payload_len, auth, auth_len);
+        break;
+    case AES_CCM_128:
+    case AES_CCM_64:
+    case AES_CCM_32:
+        /*
+         * For CCM, the same IV is used for the header block and the counter block
+         * Bits 0-3 are set with the flags in AES-CCM header whereas they are set
+         * to the Block counter for the CTR block*/
+        build_iv(packet, payload_len, header);
+        memcpy(ctr_blk, header, AES_BLOCK_SIZE);
+
+        /* Set Header flags */
+        header[0] |= ( add_len > 0 );
+
+        // TODO check that the payload length does not exceed the maximum size
+        AES128_CCM_encrypt(payload, payload_len, header, add, add_len, ctr_blk, auth_len);
+        break;
+    }
+
+    return auth_len;
+}
+
+bool d7anp_unsecure_payload(packet_t *packet, uint8_t index)
+{
+    uint8_t nls_method;
+    uint8_t ctr_blk[AES_BLOCK_SIZE];
+    uint8_t header[AES_BLOCK_SIZE];
+    uint8_t auth[AES_BLOCK_SIZE];
+    uint8_t auth_len;
+    uint32_t payload_len;
+    uint8_t *tag;
+    uint8_t add[AES_BLOCK_SIZE];
+    uint8_t add_len = 0;
+
+    nls_method = packet->d7anp_ctrl.nls_method;
+
+    payload_len = packet->hw_radio_packet.length + 1 - index - 2; // exclude the headers CRC bytes // TODO exclude footers
+    auth_len = get_auth_len(nls_method); // the authentication length is given in bytes
+
+    /* remove the authentication tag from the payload length if relevant */
+    payload_len -= auth_len;
+
+    if (auth_len)
+    {
+        tag = packet->hw_radio_packet.data + index + payload_len;
+        DPRINT("Tag  <%d>", auth_len);
+        DPRINT_DATA(tag, auth_len);
+
+        /* For unicast access, an additional authentication data is used by CBC-MAC */
+        if(packet->dll_header.control_target_id_type == ID_TYPE_UID)
+        {
+            fs_read_uid(add);
+            add_len = 8;
+        }
+        else if(packet->dll_header.control_target_id_type == ID_TYPE_VID)
+        {
+            fs_read_vid(add);
+            add_len = 2;
+        }
+    }
+
+    switch (nls_method)
+    {
+    case AES_CTR:
+        /* Build the initial counter block */
+        build_iv(packet, payload_len, ctr_blk);
+
+        // the decrypted payload replaces the encrypted data
+        AES128_CTR_encrypt(packet->hw_radio_packet.data + index,
+                           packet->hw_radio_packet.data + index,
+                           payload_len, ctr_blk);
+        break;
+    case AES_CBC_MAC_128:
+    case AES_CBC_MAC_64:
+    case AES_CBC_MAC_32:
+        /* Build the header block to prepend to the payload */
+        build_header(packet, payload_len, header);
+
+        /* Set Header flags */
+        header[0] |= ( add_len > 0 );
+
+        /* Compute the CBC-MAC and check the authentication Tag */
+        AES128_CBC_MAC(auth, packet->hw_radio_packet.data + index,
+                       payload_len, header, add, add_len, auth_len);
+
+        if (memcmp(auth, tag, auth_len) != 0)
+        {
+            DPRINT("CBC-MAC: Auth mismatch");
+            return false;
+        }
+        /* remove the authentication Tag */
+        packet->hw_radio_packet.length -= auth_len;
+
+        break;
+    case AES_CCM_128:
+    case AES_CCM_64:
+    case AES_CCM_32:
+        /* For CCM, the same IV is used for the header block and the counter block */
+        build_iv(packet, payload_len, header);
+        memcpy(ctr_blk, header, AES_BLOCK_SIZE);
+
+        /* Set Header flags */
+        header[0] |= ( add_len > 0 );
+
+        if (AES128_CCM_decrypt(packet->hw_radio_packet.data + index,
+                               payload_len, header, add, add_len, ctr_blk,
+                               tag, auth_len) != 0)
+            return false;
+
+        /* remove the authentication Tag */
+        packet->hw_radio_packet.length -= auth_len;
+    }
+
+    return true;
+}
+
+
 uint8_t d7anp_assemble_packet_header(packet_t *packet, uint8_t *data_ptr)
 {
-    assert(!packet->d7anp_ctrl.origin_addressee_ctrl_nls_enabled); // TODO NLS not yet supported
-    assert(!packet->d7anp_ctrl.origin_addressee_ctrl_hop_enabled); // TODO hopping not yet supported
+    assert(!packet->d7anp_ctrl.hop_enabled); // TODO hopping not yet supported
 
     uint8_t* d7anp_header_start = data_ptr;
     (*data_ptr) = packet->d7anp_listen_timeout; data_ptr++;
     (*data_ptr) = packet->d7anp_ctrl.raw; data_ptr++;
 
-    if(!ID_TYPE_IS_BROADCAST(packet->d7anp_ctrl.origin_addressee_ctrl_id_type))
+    if (!packet->d7anp_ctrl.origin_void)
     {
-        if(packet->d7anp_ctrl.origin_addressee_ctrl_id_type == ID_TYPE_UID)
+        (*data_ptr) = packet->origin_access_class; data_ptr++;
+
+        if (packet->d7anp_ctrl.origin_id_type == ID_TYPE_UID)
         {
-            fs_read_uid(data_ptr); data_ptr += 8;
+            fs_read_uid(data_ptr);
+            memcpy(packet->origin_access_id, data_ptr, 8);
+            data_ptr += 8;
         }
-        else if(packet->d7anp_ctrl.origin_addressee_ctrl_id_type == ID_TYPE_VID)
+        else if (packet->d7anp_ctrl.origin_id_type == ID_TYPE_VID)
         {
-            fs_read_vid(data_ptr); data_ptr += 2;
+            fs_read_vid(data_ptr);
+            memcpy(packet->origin_access_id, data_ptr, 2);
+            data_ptr += 2;
         }
-        else
+        else if (packet->d7anp_ctrl.origin_id_type == ID_TYPE_NBID)
         {
-            assert(false);
+            (*data_ptr) = packet->origin_access_id[0]; data_ptr++;
+            // who set the NBID?
         }
+    }
+
+    if (packet->d7anp_ctrl.nls_method == AES_CTR ||
+        packet->d7anp_ctrl.nls_method == AES_CCM_32 ||
+        packet->d7anp_ctrl.nls_method == AES_CCM_64 ||
+        packet->d7anp_ctrl.nls_method == AES_CCM_128)
+    {
+        (*data_ptr) = packet->d7anp_security.key_counter; data_ptr++;
+        write_be32(data_ptr, packet->d7anp_security.frame_counter);
+        data_ptr += sizeof(uint32_t);
     }
 
     // TODO hopping ctrl
@@ -234,21 +546,133 @@ uint8_t d7anp_assemble_packet_header(packet_t *packet, uint8_t *data_ptr)
     return data_ptr - d7anp_header_start;
 }
 
-bool d7anp_disassemble_packet_header(packet_t* packet, uint8_t* data_idx)
+d7anp_trusted_node_t *get_trusted_node(uint8_t *address)
+{
+    //look up the sender's address in the trusted node table
+    for(uint8_t i = 0; i < node_security_state.trusted_node_nb; i++)
+    {
+        if(memcmp(node_security_state.trusted_node_table[i].addr, address, 8) == 0)
+            return &(node_security_state.trusted_node_table[i]);
+    }
+
+    return NULL;
+}
+
+d7anp_trusted_node_t *add_trusted_node(uint8_t *address, uint32_t frame_counter,
+                                       uint8_t key_counter)
+{
+    uint8_t index = node_security_state.trusted_node_nb;
+    d7anp_trusted_node_t *node;
+
+    if (node_security_state.trusted_node_nb < MODULE_D7AP_TRUSTED_NODE_TABLE_SIZE)
+        node_security_state.trusted_node_nb++;
+    else
+    {
+        DPRINT("SSR is full !");
+        return NULL;
+    }
+
+    node = &node_security_state.trusted_node_table[index];
+    memcpy(node->addr, address, 8);
+    node->frame_counter = frame_counter;
+    node->key_counter = key_counter;
+
+    DPRINT("Add node <%p> total number <%d>", node, node_security_state.trusted_node_nb);
+    /* Update the FS */
+    fs_add_nwl_security_state_register_entry(node, node_security_state.trusted_node_nb);
+    return node;
+}
+
+bool d7anp_disassemble_packet_header(packet_t* packet, uint8_t *data_idx)
 {
     packet->d7anp_listen_timeout = packet->hw_radio_packet.data[(*data_idx)]; (*data_idx)++;
     packet->d7anp_ctrl.raw = packet->hw_radio_packet.data[(*data_idx)]; (*data_idx)++;
-    assert(!packet->d7anp_ctrl.origin_addressee_ctrl_nls_enabled); // TODO NLS not yet supported
-    assert(!packet->d7anp_ctrl.origin_addressee_ctrl_hop_enabled); // TODO hopping not yet supported
 
-    if(!ID_TYPE_IS_BROADCAST(packet->d7anp_ctrl.origin_addressee_ctrl_id_type))
+    if (!packet->d7anp_ctrl.origin_void)
     {
-        uint8_t origin_access_id_size = packet->d7anp_ctrl.origin_addressee_ctrl_id_type == ID_TYPE_VID? 2 : 8;
-        memcpy(packet->origin_access_id, packet->hw_radio_packet.data + (*data_idx), origin_access_id_size); (*data_idx) += origin_access_id_size;
+        packet->origin_access_class = packet->hw_radio_packet.data[(*data_idx)]; (*data_idx)++;
+
+        if (!ID_TYPE_IS_BROADCAST(packet->d7anp_ctrl.origin_id_type))
+        {
+            uint8_t origin_access_id_size = packet->d7anp_ctrl.origin_id_type == ID_TYPE_VID? 2 : 8;
+            memcpy(packet->origin_access_id, packet->hw_radio_packet.data + (*data_idx), origin_access_id_size); (*data_idx) += origin_access_id_size;
+        }
+        else if (packet->d7anp_ctrl.origin_id_type == ID_TYPE_NBID)
+        {
+            packet->origin_access_id[0] = packet->hw_radio_packet.data[(*data_idx)];
+            (*data_idx)++;
+        }
     }
 
-    // TODO hopping ctrl
-    // TODO security
+    if (packet->d7anp_ctrl.nls_method)
+    {
+    	d7anp_trusted_node_t *node;
+        uint8_t nls_method = packet->d7anp_ctrl.nls_method;
+        bool create_node = false;
+        bool prevent_replay_attack = false;
+
+        DPRINT("Received nls method %d", nls_method);
+
+        if (nls_method == AES_CTR || nls_method == AES_CCM_32 ||
+            nls_method == AES_CCM_64 || nls_method == AES_CCM_128)
+        {
+            // extract the key counter and the frame counter
+            packet->d7anp_security.key_counter = packet->hw_radio_packet.data[(*data_idx)]; (*data_idx)++;
+            packet->d7anp_security.frame_counter = read_be32(packet->hw_radio_packet.data + (*data_idx));
+            (*data_idx) += sizeof(uint32_t);
+
+            DPRINT("Received key counter <%d>, frame counter <%ld>", packet->d7anp_security.key_counter, packet->d7anp_security.frame_counter);
+
+            if (node_security_state.filter_mode & ENABLE_SSR_FILTER)
+                prevent_replay_attack = true;
+        }
+
+        if (prevent_replay_attack)
+        {
+            /* When Origin ID is not provided, try to use the latest node */
+            if (ID_TYPE_IS_BROADCAST(packet->d7anp_ctrl.origin_id_type))
+            {
+                // frame is not accepted if the Origin ID is really unknown
+                if (!latest_node)
+                     return false;
+
+                node = latest_node;
+            }
+            else
+                node = get_trusted_node(packet->origin_access_id);
+
+            if (node && (node->frame_counter > packet->d7anp_security.frame_counter ||
+                         node->frame_counter == (uint32_t)~0))
+            {
+                DPRINT("Replay attack detected cnt %ld->%ld shift back", node->frame_counter, packet->d7anp_security.frame_counter);
+                return false;
+            }
+
+            // update the node
+            if (node)
+                node->frame_counter = packet->d7anp_security.frame_counter;
+            else
+            {
+                if (ID_TYPE_IS_BROADCAST(packet->dll_header.control_target_id_type) &&
+                     !(node_security_state.filter_mode & ALLOW_NEW_SSR_ENTRY_IN_BCAST))
+                {
+                    DPRINT("New SSR entry not authorized in broadcast");
+                    return false;
+                }
+                else
+                    create_node = true;
+            }
+        }
+
+        if (!d7anp_unsecure_payload(packet, *data_idx))
+            return false;
+
+        if (create_node)
+             add_trusted_node(packet->origin_access_id, packet->d7anp_security.frame_counter,
+                              packet->d7anp_security.key_counter);
+    }
+
+    assert(!packet->d7anp_ctrl.hop_enabled); // TODO hopping not yet supported
 
     return true;
 }
@@ -272,25 +696,29 @@ void d7anp_signal_packet_transmitted(packet_t* packet)
     /* switch back to the same state as before the transmission */
     switch_state(d7anp_prev_state);
     d7atp_signal_packet_transmitted(packet);
+
 }
 
-void d7anp_process_received_packet(packet_t* packet)
+void d7anp_process_received_packet(packet_t* packet, bool background_frame)
 {
     // TODO handle case where we are intermediate node while hopping (ie start FG scan, after auth if needed, and return)
 
-    if(d7anp_state == D7ANP_STATE_FOREGROUND_SCAN)
+    if (d7anp_state == D7ANP_STATE_FOREGROUND_SCAN)
     {
         DPRINT("Received packet while in D7ANP_STATE_FOREGROUND_SCAN");
     }
-    else if(d7anp_state == D7ANP_STATE_IDLE)
+    else if (d7anp_state == D7ANP_STATE_IDLE)
     {
         DPRINT("Received packet while in D7ANP_STATE_IDLE (scan automation)");
 
         // check if DLL was performing a background scan
-        if(!own_access_profile.control_scan_type_is_foreground) {
+        if (background_frame) {
             timer_tick_t eta;
 
             DPRINT("Received a background frame)");
+
+            assert(packet->payload_length == sizeof(timer_tick_t));
+            memcpy(&eta, packet->payload, sizeof(timer_tick_t));
             //TODO decode the D7A Background Network Protocols Frame in order to trigger the foreground scan after the advertising period
             schedule_foreground_scan_after_D7AAdvP(eta);
             return;

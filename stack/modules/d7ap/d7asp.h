@@ -34,6 +34,8 @@
 
 #define D7ASP_FIFO_CONFIG_SIZE 16
 
+#define NO_ACTIVE_REQUEST_ID 0xFF
+
 typedef struct {
     session_qos_t qos;
     uint8_t dormant_timeout;

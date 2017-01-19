@@ -27,6 +27,7 @@
 
 #include "dae.h"
 #include "alp.h"
+#include "MODULE_D7AP_defs.h"
 
 #define D7A_FILE_UID_FILE_ID 0x00
 #define D7A_FILE_UID_SIZE 8
@@ -40,7 +41,16 @@
 #define D7A_FILE_DLL_CONF_SIZE		6
 
 #define D7A_FILE_ACCESS_PROFILE_ID 0x20 // the first access class file
-#define D7A_FILE_ACCESS_PROFILE_SIZE 12 // TODO assuming 1 subband
+#define D7A_FILE_ACCESS_PROFILE_SIZE 65
+
+#define D7A_FILE_NWL_SECURITY		0x0D
+#define D7A_FILE_NWL_SECURITY_SIZE	5
+
+#define D7A_FILE_NWL_SECURITY_KEY		0x0E
+#define D7A_FILE_NWL_SECURITY_KEY_SIZE	16
+
+#define D7A_FILE_NWL_SECURITY_STATE_REG			0x0F
+#define D7A_FILE_NWL_SECURITY_STATE_REG_SIZE	2 + (MODULE_D7AP_TRUSTED_NODE_TABLE_SIZE)*(D7A_FILE_NWL_SECURITY_SIZE + D7A_FILE_UID_SIZE)
 
 typedef enum
 {
@@ -91,6 +101,8 @@ typedef struct {
     fs_user_files_init_callback fs_user_files_init_cb; /**< Initialize the user files in this callback */
     uint8_t access_profiles_count; /**< The number of access profiles used (and passed in the access_profiles member).  */
     dae_access_profile_t* access_profiles; /**< The access profiles to be written to the filesystem (using increasing fileID starting from0x20) during init.  */    
+    uint8_t access_class; /* The Active Access Class to be written in the DLL configuration file */
+    uint8_t ssr_filter_mode; /* Initialise the SSR filter mode used to maintain the SSR */
 } fs_init_args_t;
 
 void fs_init(fs_init_args_t* init_args);
@@ -105,6 +117,12 @@ void fs_read_vid(uint8_t* buffer);
 void fs_write_vid(uint8_t* buffer);
 uint8_t fs_read_dll_conf_active_access_class();
 void fs_write_dll_conf_active_access_class(uint8_t access_class);
+alp_status_codes_t fs_read_nwl_security_key(uint8_t* key);
+alp_status_codes_t fs_read_nwl_security(d7anp_security_t *nwl_security);
+alp_status_codes_t fs_write_nwl_security(d7anp_security_t *nwl_security);
+alp_status_codes_t fs_read_nwl_security_state_register(d7anp_node_security_t *node_security_state);
+alp_status_codes_t fs_add_nwl_security_state_register_entry(d7anp_trusted_node_t *trusted_node, uint8_t trusted_node_nb);
+alp_status_codes_t fs_update_nwl_security_state_register(d7anp_trusted_node_t *trusted_node, uint8_t trusted_node_index);
 uint8_t fs_get_file_length(uint8_t file_id);
 
 #endif /* FS_H_ */

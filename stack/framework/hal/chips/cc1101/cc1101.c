@@ -97,7 +97,7 @@ static channel_id_t current_channel_id = {
 };
 
 static syncword_class_t current_syncword_class = PHY_SYNCWORD_CLASS0;
-static syncword_class_t current_eirp = 0;
+static eirp_t current_eirp = 0;
 
 static bool should_rx_after_tx_completed = false;
 static hw_rx_cfg_t pending_rx_cfg;
@@ -109,8 +109,8 @@ static RF_SETTINGS rf_settings = {
    RADIO_GDO1_VALUE,    			// IOCFG1    GDO1 output pin configuration.
    RADIO_GDO0_VALUE,   			// IOCFG0    GDO0 output pin configuration.
    RADIO_FIFOTHR_FIFO_THR_61_4,   	// FIFOTHR   RXFIFO and TXFIFO thresholds.
-   RADIO_SYNC1,     				// SYNC1	 Sync word, high byte
-   RADIO_SYNC0,     				// SYNC0	 Sync word, low byte
+   RADIO_SYNC1_CLASS0,     				// SYNC1	 Sync word, high byte
+   RADIO_SYNC0_CLASS0,     				// SYNC0	 Sync word, low byte
    RADIO_PKTLEN,    				// PKTLEN    Packet length.
    RADIO_PKTCTRL1_PQT(3) | RADIO_PKTCTRL1_APPEND_STATUS,   // PKTCTRL1  Packet automation control.
    RADIO_PKTCTRL0_WHITE_DATA | RADIO_PKTCTRL0_LENGTH_VAR,      // PKTCTRL0  Packet automation control.
@@ -225,6 +225,7 @@ static void end_of_packet_isr()
             packet->rx_meta.rssi = convert_rssi(cc1101_interface_read_single_reg(RXFIFO));
             packet->rx_meta.lqi = cc1101_interface_read_single_reg(RXFIFO) & 0x7F;
             memcpy(&(packet->rx_meta.rx_cfg.channel_id), &current_channel_id, sizeof(channel_id_t));
+            packet->rx_meta.rx_cfg.syncword_class = current_syncword_class;
             packet->rx_meta.crc_status = HW_CRC_UNAVAILABLE; // TODO
             packet->rx_meta.timestamp = timer_get_counter_value();
 
@@ -405,8 +406,17 @@ static void configure_syncword_class(syncword_class_t syncword_class)
 {
     if(syncword_class != current_syncword_class)
     {
-        // TODO set syncword
         current_syncword_class = syncword_class;
+        if (current_syncword_class == PHY_SYNCWORD_CLASS0)
+        {
+            cc1101_interface_write_single_reg(SYNC0, RADIO_SYNC0_CLASS0);
+            cc1101_interface_write_single_reg(SYNC1, RADIO_SYNC1_CLASS0);
+        }
+        else
+        {
+            cc1101_interface_write_single_reg(SYNC0, RADIO_SYNC0_CLASS1);
+            cc1101_interface_write_single_reg(SYNC1, RADIO_SYNC1_CLASS1);
+        }
     }
 }
 

@@ -143,9 +143,10 @@ void init_user_files() {
         .dormant_timeout                  = 0,
         .addressee = {
             .ctrl = {
+                .nls_method               = AES_CCM_128,
                 .id_type                  = ID_TYPE_NOID,
             },
-            .access_class                 = 0,
+            .access_class                 = 0x01,
             .id                           = 0
         }
     };
@@ -172,21 +173,21 @@ void bootstrap() {
 
     dae_access_profile_t access_classes[1] = {
         {
-            .control_scan_type_is_foreground = true,
-            .control_csma_ca_mode = CSMA_CA_MODE_UNC,
-            .control_number_of_subbands = 1,
-            .subnet = 0x00,
-            .scan_automation_period = 0,
+            .channel_header = {
+                .ch_coding = PHY_CODING_PN9,
+                .ch_class = PHY_CLASS_NORMAL_RATE,
+                .ch_freq_band = PHY_BAND_868
+            },
+            .subprofiles[0] = {
+                .subband_bitmap = 0x01, // only the first subband is selectable
+                .scan_automation_period = 0,
+            },
             .subbands[0] = (subband_t){
-                .channel_header = {
-                    .ch_coding = PHY_CODING_PN9,
-                    .ch_class = PHY_CLASS_NORMAL_RATE,
-                    .ch_freq_band = PHY_BAND_868
-                },
                 .channel_index_start = 0,
                 .channel_index_end = 0,
                 .eirp = 10,
-                .ccao = 0
+                .cca = -86,
+                .duty = 0,
             }
         }
     };
@@ -194,7 +195,9 @@ void bootstrap() {
     fs_init_args_t fs_init_args = (fs_init_args_t){
         .fs_user_files_init_cb = &init_user_files,
         .access_profiles_count = 1,
-        .access_profiles = access_classes
+        .access_profiles = access_classes,
+        .access_class = 0x01, // use access profile 0 and select the first subprofile
+        .ssr_filter_mode = ENABLE_SSR_FILTER | ALLOW_NEW_SSR_ENTRY_IN_BCAST
     };
 
     d7asp_init_args.d7asp_fifo_flush_completed_cb = &on_d7asp_fifo_flush_completed;

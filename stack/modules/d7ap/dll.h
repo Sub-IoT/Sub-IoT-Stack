@@ -30,11 +30,16 @@
 #define OSS_7_DLL_H
 
 #include "hwradio.h"
-#include "math.h"
 
+#include "d7anp.h"
 #include "dae.h"
 
-#define E_CCA	-86 //TODO: get from file
+typedef enum {
+    D7ADLL_FIXED_NOISE_FLOOR,
+    D7ADLL_SLOW_RSSI_VARIATION
+} noise_floor_computation_method_t;
+
+#define SFc		3 // Collision Avoidance Spreading Factor
 
 typedef struct packet packet_t;
 
@@ -43,28 +48,22 @@ typedef struct
     uint8_t subnet;
     union
     {
-        uint8_t control;
-        struct
-        {
-            int8_t control_eirp_index: 6;
-            bool control_vid_used: 1;
-            bool control_target_address_set: 1;
-        };
+        int8_t control_eirp_index;
+        int8_t control_identifier_tag;
     };
+    id_type_t control_target_id_type;
     //uint8_t target_address[8]; // TODO assuming 8B UID for now
 } dll_header_t;
 
-#define CT_DECOMPRESS(ct) (pow(4, ct >> 5) * (ct & 0b11111))
-
 void dll_init();
-void dll_tx_frame(packet_t* packet, dae_access_profile_t* access_profile);
+void dll_tx_frame(packet_t* packet);
 void dll_start_foreground_scan();
 void dll_stop_foreground_scan(bool auto_scan);
 void dll_execute_scan_automation();
 void dll_notify_dll_conf_file_changed();
 void dll_notify_access_profile_file_changed(); // TODO access specifier
-uint8_t dll_assemble_packet_header(packet_t* packet, uint8_t* data_ptr);
-bool dll_disassemble_packet_header(packet_t* packet, uint8_t* data_idx);
+uint8_t dll_assemble_packet_header(packet_t* packet, uint8_t* data_ptr, bool background);
+bool dll_disassemble_packet_header(packet_t* packet, uint8_t* data_idx, bool background);
 uint16_t dll_calculate_tx_duration(phy_channel_class_t channel_class, uint8_t packet_length);
 
 

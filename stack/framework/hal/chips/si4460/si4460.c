@@ -695,7 +695,8 @@ static void ezradio_handle_end_of_packet()
 {
 	// fill rx_meta
 	rx_packet->rx_meta.rssi = hw_radio_get_latched_rssi();
-	rx_packet->rx_meta.lqi = 0;
+  rx_packet->rx_meta.lqi = 0;
+  rx_packet->rx_meta.rx_cfg.syncword_class = current_syncword_class;
 	memcpy(&(rx_packet->rx_meta.rx_cfg.channel_id), &current_channel_id, sizeof(channel_id_t));
 	if (has_hardware_crc && current_rx_cfg.channel_id.channel_header.ch_coding != PHY_CODING_FEC_PN9)
 		rx_packet->rx_meta.crc_status = HW_CRC_VALID;

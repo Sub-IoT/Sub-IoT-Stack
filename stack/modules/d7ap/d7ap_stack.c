@@ -61,9 +61,10 @@ void d7ap_stack_init(fs_init_args_t* fs_init_args, d7asp_init_args_t* d7asp_init
           .dormant_timeout = 0,
           .addressee = {
             .ctrl = {
-              .id_type                  = ID_TYPE_NOID,
+                .nls_method               = 0,
+                .id_type                  = ID_TYPE_NOID,
             },
-            .access_class             = 0,
+            .access_class                 = 0x01,
             .id = 0
           }
       };

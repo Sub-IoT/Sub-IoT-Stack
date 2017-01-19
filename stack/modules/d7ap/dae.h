@@ -26,6 +26,12 @@
 
 #include "hwradio.h" // TODO for phy_channel_header_t in subband_t, refactor
 
+#define SUBPROFILES_NB	4
+#define SUBBANDS_NB		8
+
+#define ACCESS_SPECIFIER(val) (uint8_t)(val >> 4 & 0x0F)
+#define ACCESS_MASK(val) (uint8_t)(val & 0x0F)
+
 typedef enum
 {
     CSMA_CA_MODE_UNC = 0,
@@ -36,29 +42,24 @@ typedef enum
 
 typedef struct
 {
-    phy_channel_header_t channel_header;
     uint16_t channel_index_start;
     uint16_t channel_index_end;
     int8_t eirp;
-    uint8_t ccao;
-} subband_t; // TODO move?
+    int8_t cca;  // Default Clear channel assessment threshold (-dBm)
+    uint8_t duty; // Maximum per-channel transmission duty cycle in per-mil (‰)
+} subband_t;
 
 typedef struct
 {
-    union
-    {
-        uint8_t control;
-        struct
-        {
-            uint8_t control_number_of_subbands: 3;
-            csma_ca_mode_t control_csma_ca_mode: 4;
-            bool control_scan_type_is_foreground: 1;
-        };
-    };
-    uint8_t subnet;
+    uint8_t subband_bitmap; // Bitmap of used subbands
     uint8_t scan_automation_period;
-    uint8_t _rfu;
-    subband_t subbands[1]; // TODO only support 1 subband for now
+} subprofile_t;
+
+typedef struct
+{
+    phy_channel_header_t channel_header;
+    subprofile_t subprofiles[SUBPROFILES_NB];
+    subband_t subbands[SUBBANDS_NB];
 } dae_access_profile_t;
 
 #endif /* DAE_H_ */

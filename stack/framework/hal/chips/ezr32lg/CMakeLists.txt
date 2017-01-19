@@ -83,6 +83,7 @@ ADD_LIBRARY (${CHIP_LIBRARY_NAME} OBJECT
                     CMSIS/device/src/startup_ezr32lg.c
                     emlib/src/em_assert.c
                     emlib/src/em_adc.c
+                    emlib/src/em_aes.c
                     emlib/src/em_system.c
                     emlib/src/em_cmu.c
                     emlib/src/em_emu.c
@@ -109,6 +110,7 @@ ADD_LIBRARY (${CHIP_LIBRARY_NAME} OBJECT
            #         kits/common/bsp/bsp_stk.c
            #         kits/common/bsp/bsp_trace.c
                     ezr32lg_adc.c 
+		    ezr32lg_aes.c
                     ezr32lg_mcu.c
                     ezr32lg_uart.c
                     ezr32lg_spi.c

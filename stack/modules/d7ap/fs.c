@@ -30,6 +30,7 @@
 #include "MODULE_D7AP_defs.h"
 #include "version.h"
 #include "dll.h"
+#include "key.h"
 
 #define D7A_PROTOCOL_VERSION_MAJOR 1
 #define D7A_PROTOCOL_VERSION_MINOR 1
@@ -123,14 +124,14 @@ void fs_init(fs_init_args_t* init_args)
         .length = D7A_FILE_DLL_CONF_SIZE
     };
 
-    memset(data + current_data_offset, 0, 1); current_data_offset += 1; // active access class
+    data[current_data_offset] = init_args->access_class; current_data_offset += 1; // active access class
     memset(data + current_data_offset, 0xFF, 2); current_data_offset += 2; // VID; 0xFFFF means not valid
 
     // 0x20+n - Access Profiles
     assert(init_args->access_profiles_count > 0 && init_args->access_profiles_count < 16);
     for(uint8_t i = 0; i < init_args->access_profiles_count; i++)
     {
-    	dae_access_profile_t* access_class = &(init_args->access_profiles[i]);
+        dae_access_profile_t* access_class = &(init_args->access_profiles[i]);
         file_offsets[D7A_FILE_ACCESS_PROFILE_ID + i] = current_data_offset;
         fs_write_access_class(i, access_class);
         file_headers[D7A_FILE_ACCESS_PROFILE_ID + i] = (fs_file_header_t){
@@ -140,6 +141,44 @@ void fs_init(fs_init_args_t* init_args)
             .length = D7A_FILE_ACCESS_PROFILE_SIZE
         };
     }
+
+    // 0x0D- Network security
+    file_offsets[D7A_FILE_NWL_SECURITY] = current_data_offset;
+    file_headers[D7A_FILE_NWL_SECURITY] = (fs_file_header_t){
+        .file_properties.action_protocol_enabled = 0,
+        .file_properties.storage_class = FS_STORAGE_PERMANENT,
+        .file_properties.permissions = 0, // TODO
+        .length = D7A_FILE_NWL_SECURITY_SIZE
+    };
+
+    memset(data + current_data_offset, 0, D7A_FILE_NWL_SECURITY_SIZE);
+    current_data_offset += D7A_FILE_NWL_SECURITY_SIZE;
+
+    // 0x0E - Network security key
+    file_offsets[D7A_FILE_NWL_SECURITY_KEY] = current_data_offset;
+    file_headers[D7A_FILE_NWL_SECURITY_KEY] = (fs_file_header_t){
+        .file_properties.action_protocol_enabled = 0,
+        .file_properties.storage_class = FS_STORAGE_PERMANENT,
+        .file_properties.permissions = 0, // TODO
+        .length = D7A_FILE_NWL_SECURITY_KEY_SIZE
+    };
+
+    memcpy(data + current_data_offset, AES128_key, D7A_FILE_NWL_SECURITY_KEY_SIZE);
+    current_data_offset += D7A_FILE_NWL_SECURITY_KEY_SIZE;
+
+    // 0x0F - Network security state register
+    file_offsets[D7A_FILE_NWL_SECURITY_STATE_REG] = current_data_offset;
+    file_headers[D7A_FILE_NWL_SECURITY_STATE_REG] = (fs_file_header_t){
+        .file_properties.action_protocol_enabled = 0,
+        .file_properties.storage_class = FS_STORAGE_PERMANENT,
+        .file_properties.permissions = 0, // TODO
+        .length = init_args->ssr_filter_mode & ENABLE_SSR_FILTER ? D7A_FILE_NWL_SECURITY_STATE_REG_SIZE : 1
+    };
+
+    data[current_data_offset] = init_args->ssr_filter_mode; current_data_offset++;
+    data[current_data_offset] = 0; current_data_offset++;
+    if (init_args->ssr_filter_mode & ENABLE_SSR_FILTER)
+        current_data_offset += D7A_FILE_NWL_SECURITY_STATE_REG_SIZE - 2;
 
     // init user files
     if(init_args->fs_user_files_init_cb)
@@ -250,39 +289,137 @@ void fs_write_vid(uint8_t* buffer)
     fs_write_file(D7A_FILE_DLL_CONF_FILE_ID, 1, buffer, 2);
 }
 
+alp_status_codes_t fs_read_nwl_security_key(uint8_t *buffer)
+{
+    return fs_read_file(D7A_FILE_NWL_SECURITY_KEY, 0, buffer, D7A_FILE_NWL_SECURITY_KEY_SIZE);
+}
+
+alp_status_codes_t fs_read_nwl_security(d7anp_security_t *nwl_security)
+{
+    uint8_t* data_ptr = data + file_offsets[D7A_FILE_NWL_SECURITY];
+    uint32_t frame_counter;
+
+    if(!is_file_defined(D7A_FILE_NWL_SECURITY)) return ALP_STATUS_FILE_ID_NOT_EXISTS;
+
+    nwl_security->key_counter = (*data_ptr); data_ptr++;
+    memcpy(&frame_counter, data_ptr, sizeof(uint32_t));
+    nwl_security->frame_counter = (uint32_t)__builtin_bswap32(frame_counter);
+    return ALP_STATUS_OK;
+}
+
+alp_status_codes_t fs_write_nwl_security(d7anp_security_t *nwl_security)
+{
+    uint8_t* data_ptr = data + file_offsets[D7A_FILE_NWL_SECURITY];
+    uint32_t frame_counter;
+
+    if(!is_file_defined(D7A_FILE_NWL_SECURITY)) return ALP_STATUS_FILE_ID_NOT_EXISTS;
+
+    (*data_ptr) = nwl_security->key_counter; data_ptr++;
+    frame_counter = __builtin_bswap32(nwl_security->frame_counter);
+    memcpy(data_ptr, &frame_counter, sizeof(uint32_t));
+    return ALP_STATUS_OK;
+}
+
+alp_status_codes_t fs_read_nwl_security_state_register(d7anp_node_security_t *node_security_state)
+{
+    uint8_t* data_ptr = data + file_offsets[D7A_FILE_NWL_SECURITY_STATE_REG];
+    uint32_t frame_counter;
+
+    if(!is_file_defined(D7A_FILE_NWL_SECURITY_STATE_REG)) return ALP_STATUS_FILE_ID_NOT_EXISTS;
+
+    node_security_state->filter_mode = (*data_ptr); data_ptr++;
+    node_security_state->trusted_node_nb = (*data_ptr); data_ptr++;
+
+    for(uint8_t i = 0; i < node_security_state->trusted_node_nb; i++)
+    {
+        node_security_state->trusted_node_table[i].key_counter = (*data_ptr); data_ptr++;
+        memcpy(&frame_counter, data_ptr, sizeof(uint32_t)); data_ptr += sizeof(uint32_t);
+        node_security_state->trusted_node_table[i].frame_counter = (uint32_t)__builtin_bswap32(frame_counter);
+        memcpy(node_security_state->trusted_node_table[i].addr, data_ptr, 8); data_ptr += 8;
+    }
+    return ALP_STATUS_OK;
+}
+
+
+alp_status_codes_t fs_add_nwl_security_state_register_entry(d7anp_trusted_node_t *trusted_node,
+                                                            uint8_t trusted_node_nb)
+{
+    uint8_t* data_ptr = data + file_offsets[D7A_FILE_NWL_SECURITY_STATE_REG];
+    uint32_t frame_counter;
+
+    if(!is_file_defined(D7A_FILE_NWL_SECURITY_STATE_REG)) return ALP_STATUS_FILE_ID_NOT_EXISTS;
+
+    data_ptr[1] = trusted_node_nb;
+    data_ptr += (D7A_FILE_NWL_SECURITY_SIZE + D7A_FILE_UID_SIZE)*(trusted_node_nb - 1) + 2;
+    assert(trusted_node_nb <= MODULE_D7AP_TRUSTED_NODE_TABLE_SIZE);
+
+    (*data_ptr) = trusted_node->key_counter; data_ptr++;
+    frame_counter = __builtin_bswap32(trusted_node->frame_counter);
+    memcpy(data_ptr, &frame_counter, sizeof(uint32_t));
+    data_ptr += sizeof(uint32_t);
+    memcpy(data_ptr, trusted_node->addr, 8);
+    return ALP_STATUS_OK;
+}
+
+alp_status_codes_t fs_update_nwl_security_state_register(d7anp_trusted_node_t *trusted_node,
+                                                        uint8_t trusted_node_index)
+{
+    uint8_t* data_ptr = data + file_offsets[D7A_FILE_NWL_SECURITY_STATE_REG];
+    uint32_t frame_counter;
+
+    if(!is_file_defined(D7A_FILE_NWL_SECURITY_STATE_REG)) return ALP_STATUS_FILE_ID_NOT_EXISTS;
+
+    data_ptr += (D7A_FILE_NWL_SECURITY_SIZE + D7A_FILE_UID_SIZE)*(trusted_node_index - 1) + 2;
+    (*data_ptr) = trusted_node->key_counter; data_ptr++;
+    frame_counter = __builtin_bswap32(trusted_node->frame_counter);
+    memcpy(data_ptr, &frame_counter, sizeof(uint32_t));
+    return ALP_STATUS_OK;
+}
+
+
 void fs_read_access_class(uint8_t access_class_index, dae_access_profile_t *access_class)
 {
     assert(access_class_index < 15);
     assert(is_file_defined(D7A_FILE_ACCESS_PROFILE_ID + access_class_index));
     uint8_t* data_ptr = data + file_offsets[D7A_FILE_ACCESS_PROFILE_ID + access_class_index];
-    access_class->control = (*data_ptr); data_ptr++;
-    access_class->subnet = (*data_ptr); data_ptr++;
-    access_class->scan_automation_period = (*data_ptr); data_ptr++;
-    data_ptr++; // RFU
-    // subbands, only 1 supported for now
-    assert(access_class->control_number_of_subbands == 1);
-    memcpy(&(access_class->subbands[0].channel_header), data_ptr, 1); data_ptr++;
-    memcpy(&(access_class->subbands[0].channel_index_start), data_ptr, 2); data_ptr += 2;
-    memcpy(&(access_class->subbands[0].channel_index_end), data_ptr, 2); data_ptr += 2;
-    access_class->subbands[0].eirp = (*data_ptr); data_ptr++;
-    access_class->subbands[0].ccao = (*data_ptr); data_ptr++;
+    memcpy(&(access_class->channel_header), data_ptr, 1); data_ptr++;
+
+    for(uint8_t i = 0; i < SUBPROFILES_NB; i++)
+    {
+        memcpy(&(access_class->subprofiles[i].scan_automation_period), data_ptr, 1); data_ptr++;
+        memcpy(&(access_class->subprofiles[i].subband_bitmap), data_ptr, 1); data_ptr++;
+    }
+
+    for(uint8_t i = 0; i < SUBBANDS_NB; i++)
+    {
+        memcpy(&(access_class->subbands[i].channel_index_start), data_ptr, 2); data_ptr += 2;
+        memcpy(&(access_class->subbands[i].channel_index_end), data_ptr, 2); data_ptr += 2;
+        memcpy(&(access_class->subbands[i].eirp), data_ptr, 1); data_ptr++;
+        memcpy(&(access_class->subbands[i].cca), data_ptr, 1); data_ptr++;
+        memcpy(&(access_class->subbands[i].duty), data_ptr, 1); data_ptr++;
+    }
 }
 
 void fs_write_access_class(uint8_t access_class_index, dae_access_profile_t* access_class)
 {
-	assert(access_class_index < 15);
-    assert(access_class->control_number_of_subbands == 1); // TODO only one supported for now
+    assert(access_class_index < 15);
     current_data_offset = file_offsets[D7A_FILE_ACCESS_PROFILE_ID + access_class_index];
-    data[current_data_offset] = access_class->control; current_data_offset++;
-    data[current_data_offset] = access_class->subnet; current_data_offset++;
-    data[current_data_offset] = access_class->scan_automation_period; current_data_offset++;
-    data[current_data_offset] = 0x00; current_data_offset++; // RFU
-    // subbands, only 1 supported for now
-    memcpy(data + current_data_offset, &(access_class->subbands[0].channel_header), 1); current_data_offset++;
-    memcpy(data + current_data_offset, &(access_class->subbands[0].channel_index_start), 2); current_data_offset += 2;
-    memcpy(data + current_data_offset, &(access_class->subbands[0].channel_index_end), 2); current_data_offset += 2;
-    data[current_data_offset] = access_class->subbands[0].eirp; current_data_offset++;
-    data[current_data_offset] = access_class->subbands[0].ccao; current_data_offset++;
+    memcpy(data + current_data_offset, &(access_class->channel_header), 1); current_data_offset++;
+
+    for(uint8_t i = 0; i < SUBPROFILES_NB; i++)
+    {
+        memcpy(data + current_data_offset, &(access_class->subprofiles[i].scan_automation_period), 1); current_data_offset++;
+        memcpy(data + current_data_offset, &(access_class->subprofiles[i].subband_bitmap), 1); current_data_offset++;
+    }
+
+    for(uint8_t i = 0; i < SUBBANDS_NB; i++)
+    {
+        memcpy(data + current_data_offset, &(access_class->subbands[i].channel_index_start), 2); current_data_offset += 2;
+        memcpy(data + current_data_offset, &(access_class->subbands[i].channel_index_end), 2); current_data_offset += 2;
+        data[current_data_offset] = access_class->subbands[i].eirp; current_data_offset++;
+        data[current_data_offset] = access_class->subbands[i].cca; current_data_offset++;
+        data[current_data_offset] = access_class->subbands[i].duty; current_data_offset++;
+    }
 }
 
 uint8_t fs_read_dll_conf_active_access_class()

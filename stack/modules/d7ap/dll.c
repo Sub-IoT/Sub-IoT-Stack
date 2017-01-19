@@ -30,11 +30,14 @@
 #include "random.h"
 #include "MODULE_D7AP_defs.h"
 #include "hwatomic.h"
+#include "compress.h"
 
 #if defined(FRAMEWORK_LOG_ENABLED) && defined(MODULE_D7AP_DLL_LOG_ENABLED)
 #define DPRINT(...) log_print_stack_string(LOG_STACK_DLL, __VA_ARGS__)
+#define DPRINT_DATA(...) log_print_data(__VA_ARGS__)
 #else
 #define DPRINT(...)
+#define DPRINT_DATA(...)
 #endif
 
 
@@ -55,7 +58,7 @@ typedef enum
     DLL_STATE_TX_FOREGROUND_DISCARDED
 } dll_state_t;
 
-static dae_access_profile_t* NGDEF(_current_access_profile);
+static dae_access_profile_t NGDEF(_current_access_profile);
 #define current_access_profile NG(_current_access_profile)
 
 static dae_access_profile_t NGDEF(_scan_access_profile);
@@ -95,6 +98,21 @@ static bool NGDEF(_process_received_packets_after_tx);
 
 static bool NGDEF(_resume_fg_scan);
 #define resume_fg_scan NG(_resume_fg_scan)
+
+static eirp_t NGDEF(_current_eirp);
+#define current_eirp NG(_current_eirp)
+
+static channel_id_t NGDEF(_current_channel_id);
+#define current_channel_id NG(_current_channel_id)
+
+static csma_ca_mode_t NGDEF(_csma_ca_mode);
+#define csma_ca_mode NG(_csma_ca_mode)
+
+static uint8_t NGDEF(_tx_nf_method);
+#define tx_nf_method NG(_tx_nf_method)
+
+static int16_t NGDEF(_E_CCA);
+#define E_CCA NG(_E_CCA)
 
 // TODO defined somewhere?
 #define t_g	5
@@ -229,9 +247,25 @@ static bool is_tx_busy()
     }
 }
 
+
+void start_background_scan()
+{
+    switch_state(DLL_STATE_BACKGROUND_SCAN);
+    // TODO
+    // terminates the scan immediately upon failure to detect a modulated signal on the channel
+    // Beginning from when the scan starts, the device has a period of To to successfully detect the sync word of Class 0
+}
+
+static void schedule_background_scan(timer_tick_t tsched)
+{
+    DPRINT("Perform a dll background scan scan at the end of TSCHED (%i ticks)", tsched);
+    assert(timer_post_task_delay(&start_background_scan, tsched) == SUCCESS);
+}
+
+
 static void process_received_packets()
 {
-    if(is_tx_busy())
+    if (is_tx_busy())
     {
         // this task might be scheduled while a TX is busy (for example after scheduling an execute_cca()).
         // make sure we don't start processing this packet before the TX is completed.
@@ -269,7 +303,7 @@ static void notify_transmitted_packet()
 
     d7anp_signal_packet_transmitted(packet);
 
-    if(process_received_packets_after_tx)
+    if (process_received_packets_after_tx)
     {
         sched_post_task_prio(&process_received_packets, MAX_PRIORITY);
         process_received_packets_after_tx = false;
@@ -329,7 +363,7 @@ static void cca_rssi_valid(int16_t cur_rssi)
 
     if (cur_rssi <= E_CCA)
     {
-        if(dll_state == DLL_STATE_CCA1)
+        if (dll_state == DLL_STATE_CCA1)
         {
             DPRINT("CCA1 RSSI: %d", cur_rssi);
             switch_state(DLL_STATE_CCA2);
@@ -340,7 +374,7 @@ static void cca_rssi_valid(int16_t cur_rssi)
             execute_cca();
             return;
         }
-        else if(dll_state == DLL_STATE_CCA2)
+        else if (dll_state == DLL_STATE_CCA2)
         {
             // OK, send packet
             DPRINT("CCA2 RSSI: %d", cur_rssi);
@@ -366,8 +400,7 @@ static void execute_cca()
     assert(dll_state == DLL_STATE_CCA1 || dll_state == DLL_STATE_CCA2);
 
     hw_rx_cfg_t rx_cfg =(hw_rx_cfg_t){
-        .channel_id.channel_header = current_access_profile->subbands[0].channel_header,
-        .channel_id.center_freq_index = current_access_profile->subbands[0].channel_index_start,
+        .channel_id = current_channel_id,
         .syncword_class = PHY_SYNCWORD_CLASS1,
     };
 
@@ -399,14 +432,23 @@ static void execute_csma_ca()
     //hw_radio_set_rx(NULL, NULL, NULL); // put radio in RX but disable callbacks to make sure we don't receive packets when in this state
                                         // TODO use correct rx cfg + it might be interesting to switch to idle first depending on calculated offset
     // TODO select correct subband
-    uint16_t tx_duration = dll_calculate_tx_duration(current_access_profile->subbands[0].channel_header.ch_class, current_packet->hw_radio_packet.length);
+    uint16_t tx_duration = dll_calculate_tx_duration(current_channel_id.channel_header.ch_class, current_packet->hw_radio_packet.length);
+
     switch (dll_state)
     {
         case DLL_STATE_CSMA_CA_STARTED:
         {
-            dll_tca = current_packet->transmission_timeout_ti - tx_duration;
+            uint16_t transmission_timeout_ti;
+
+            if (current_packet->type == INITIAL_REQUEST || current_packet->type == SUBSEQUENT_REQUEST)
+                transmission_timeout_ti = ceil((SFc + 1) * tx_duration + 5);
+            // in case of response, use the Tc parameter provided in the request
+            else
+                transmission_timeout_ti = CT_DECOMPRESS(current_packet->d7atp_tc);
+
+            dll_tca = transmission_timeout_ti - tx_duration;
             dll_cca_started = timer_get_counter_value();
-            DPRINT("Tca= %i = %i - %i", dll_tca, current_packet->transmission_timeout_ti, tx_duration);
+            DPRINT("Tca= %i = %i - %i", dll_tca, transmission_timeout_ti, tx_duration);
 
             // Adjust TCA value according the time already elapsed since the reception time in case of response
             if (current_packet->request_received_timestamp)
@@ -427,8 +469,13 @@ static void execute_csma_ca()
 
             uint16_t t_offset = 0;
 
-            csma_ca_mode_t csma_ca_mode = current_access_profile->control_csma_ca_mode;
-            // TODO overrule mode to UNC for subsequent requests by the requester, or a single response to a unicast request
+            if (current_packet->type == RESPONSE_TO_BROADCAST)
+                csma_ca_mode = CSMA_CA_MODE_RAIND;
+            else
+                csma_ca_mode = CSMA_CA_MODE_AIND;
+
+            // TODO overrule mode to UNC if the channel is still guarded
+            // This is valid for subsequent requests by the requester, or a single response to a unicast request
 
             switch(csma_ca_mode)
             {
@@ -496,7 +543,7 @@ static void execute_csma_ca()
             dll_cca_started = timer_get_counter_value();
             uint16_t t_offset = 0;
 
-            switch(current_access_profile->control_csma_ca_mode)
+            switch(csma_ca_mode)
             {
                 case CSMA_CA_MODE_AIND:
                 case CSMA_CA_MODE_RAIND:
@@ -520,7 +567,7 @@ static void execute_csma_ca()
                 {
                     dll_rigd_n++;
                     dll_slot_duration = (uint16_t) ((double)dll_tca0) / (2 << (dll_rigd_n+1));
-                    if(dll_slot_duration != 0) // TODO can be 0, validate
+                    if (dll_slot_duration != 0) // TODO can be 0, validate
                         t_offset = get_rnd() % dll_slot_duration;
                     else
                         t_offset = 0;
@@ -570,50 +617,53 @@ static void execute_csma_ca()
 void dll_execute_scan_automation()
 {
     uint8_t scan_access_class = fs_read_dll_conf_active_access_class();
-    if(active_access_class != scan_access_class)
+    if (active_access_class != scan_access_class)
     {
-        fs_read_access_class(scan_access_class, &scan_access_profile);
+        fs_read_access_class(ACCESS_SPECIFIER(scan_access_class), &current_access_profile);
         active_access_class = scan_access_class;
     }
 
-    current_access_profile = &scan_access_profile;
-    DPRINT("DLL execute scan autom AC=%i", scan_access_class);
+    DPRINT("DLL execute scan autom AC=0x%02x", scan_access_class);
 
-    if(current_access_profile->control_scan_type_is_foreground && current_access_profile->control_number_of_subbands > 0) // TODO background scan
+
+    /*
+     * The Scan Automation Parameters are uniquely defined based on the Active
+     * Access Class of the device.
+     * For now, the access mask and the subband bitmap are not used.
+     * By default, subprofile[0] is selected and subband[0] is used.
+     */
+
+    switch_state(DLL_STATE_SCAN_AUTOMATION);
+    hw_rx_cfg_t rx_cfg = {
+        .channel_id = {
+            .channel_header = current_access_profile.channel_header,
+            .center_freq_index = current_access_profile.subbands[0].channel_index_start
+        },
+    };
+
+    /*
+     * if the scan automation period (To) is set to 0, the scan type is set to
+     * foreground,
+     */
+    if (current_access_profile.subprofiles[0].scan_automation_period == 0)
     {
-        assert(current_access_profile->control_number_of_subbands == 1); // TODO multiple not supported
-        switch_state(DLL_STATE_SCAN_AUTOMATION);
-        hw_rx_cfg_t rx_cfg = {
-            .channel_id = {
-                .channel_header = current_access_profile->subbands[0].channel_header,
-                .center_freq_index = current_access_profile->subbands[0].channel_index_start
-            },
-            .syncword_class = PHY_SYNCWORD_CLASS1
-        };
-
+        rx_cfg.syncword_class = PHY_SYNCWORD_CLASS1;
         hw_radio_set_rx(&rx_cfg, &packet_received, NULL);
-
-        /*
-         * As stated by the specification, if the scan type is set to foreground,
-         * the scan automation period (To) should be set to 0.
-         */
-        assert(current_access_profile->scan_automation_period == 0);
     }
     else
     {
-        // TODO should already be idle, remove?
-        hw_radio_set_idle();
-
-        // TODO wait until radio idle
-        if(dll_state != DLL_STATE_IDLE)
-            switch_state(DLL_STATE_IDLE);
+        uint8_t tsched = CT_DECOMPRESS(current_access_profile.subprofiles[0].scan_automation_period);
+        rx_cfg.syncword_class = PHY_SYNCWORD_CLASS0;
+        schedule_background_scan(tsched);
     }
+
+    current_channel_id = rx_cfg.channel_id;
 }
 
 void dll_notify_dll_conf_file_changed()
 {
     // when doing scan automation restart this
-    if(dll_state == DLL_STATE_SCAN_AUTOMATION)
+    if (dll_state == DLL_STATE_SCAN_AUTOMATION)
     {
         dll_execute_scan_automation();
     }
@@ -627,7 +677,7 @@ void dll_notify_access_profile_file_changed()
     active_access_class = NO_ACTIVE_ACCESS_CLASS;
 
     // when doing scan automation restart this
-    if(dll_state == DLL_STATE_SCAN_AUTOMATION)
+    if (dll_state == DLL_STATE_SCAN_AUTOMATION)
     {
         dll_execute_scan_automation();
     }
@@ -635,6 +685,8 @@ void dll_notify_access_profile_file_changed()
 
 void dll_init()
 {
+    uint8_t nf_ctrl;
+
     sched_register_task(&process_received_packets);
     sched_register_task(&notify_transmitted_packet);
     sched_register_task(&execute_cca);
@@ -643,6 +695,9 @@ void dll_init()
 
     hw_radio_init(&alloc_new_packet, &release_packet);
 
+    fs_read_file(D7A_FILE_DLL_CONF_FILE_ID, 4, &nf_ctrl, 1);
+    tx_nf_method = (nf_ctrl >> 4) & 0x0F;
+
     dll_state = DLL_STATE_IDLE;
     active_access_class = NO_ACTIVE_ACCESS_CLASS;
     process_received_packets_after_tx = false;
@@ -650,7 +705,7 @@ void dll_init()
     sched_post_task(&dll_execute_scan_automation);
 }
 
-void dll_tx_frame(packet_t* packet, dae_access_profile_t* access_profile)
+void dll_tx_frame(packet_t* packet)
 {
     if (dll_state != DLL_STATE_FOREGROUND_SCAN)
     {
@@ -660,26 +715,69 @@ void dll_tx_frame(packet_t* packet, dae_access_profile_t* access_profile)
     else
         resume_fg_scan = true;
 
-    current_access_profile = access_profile;
     dll_header_t* dll_header = &(packet->dll_header);
-    dll_header->subnet = access_profile->subnet;
-    dll_header->control_eirp_index = access_profile->subbands[0].eirp + 32;
-    if(packet->d7atp_ctrl.ctrl_is_start && packet->d7anp_addressee != NULL) // when responding in a transaction we MAY skip targetID
+    dll_header->subnet = packet->d7anp_addressee->access_class;
+
+    if (packet->d7atp_ctrl.ctrl_is_start && packet->d7anp_addressee != NULL) // when responding in a transaction we MAY skip targetID
+        dll_header->control_target_id_type = packet->d7anp_addressee->ctrl.id_type;
+    else
+        dll_header->control_target_id_type = ID_TYPE_NOID;
+
+    // if the channel is locked, we shall use the channel of the initial request
+    if (packet->type == SUBSEQUENT_REQUEST) // TODO MISO conditions not supported
     {
-        if(!ID_TYPE_IS_BROADCAST(packet->d7anp_addressee->ctrl.id_type))
+        dll_header->control_eirp_index = current_eirp + 32;
+
+        packet->hw_radio_packet.tx_meta.tx_cfg = (hw_tx_cfg_t){
+            .channel_id = current_channel_id,
+            .syncword_class = PHY_SYNCWORD_CLASS1,
+            .eirp = current_eirp
+        };
+    }
+    else if (packet->type == RESPONSE_TO_UNICAST || packet->type == RESPONSE_TO_BROADCAST)
+    {
+        dll_header->control_eirp_index = current_eirp + 32;
+
+        packet->hw_radio_packet.tx_meta.tx_cfg = (hw_tx_cfg_t){
+                .channel_id = packet->hw_radio_packet.rx_meta.rx_cfg.channel_id,
+                .syncword_class = packet->hw_radio_packet.rx_meta.rx_cfg.syncword_class,
+                .eirp = current_eirp
+            };
+    }
+    else
+    {
+        fs_read_access_class(packet->d7anp_addressee->access_index, &current_access_profile);
+        /*
+         * For now the access mask and the subband bitmap are not used
+         * By default, subprofile[0] is selected and subband[0] is used
+         */
+
+        /* EIRP (dBm) = (EIRP_I – 32) dBm */
+        dll_header->control_eirp_index = current_access_profile.subbands[0].eirp + 32;
+
+        packet->hw_radio_packet.tx_meta.tx_cfg = (hw_tx_cfg_t){
+            .channel_id.channel_header = current_access_profile.channel_header,
+            .channel_id.center_freq_index = current_access_profile.subbands[0].channel_index_start,
+            .syncword_class = PHY_SYNCWORD_CLASS1,
+            .eirp = current_access_profile.subbands[0].eirp
+        };
+
+        // store the channel id and eirp
+        current_eirp = current_access_profile.subbands[0].eirp;
+        current_channel_id = packet->hw_radio_packet.tx_meta.tx_cfg.channel_id;
+
+        // compute Ecca = NF + Eccao
+        if (tx_nf_method == D7ADLL_FIXED_NOISE_FLOOR)
         {
-            // TODO dll_header needs to adapted to use id_type_t
-            dll_header->control_target_address_set = true;
-            dll_header->control_vid_used = packet->d7anp_addressee->ctrl.id_type == ID_TYPE_VID;
+            //Use the default channel CCA threshold
+            E_CCA = current_access_profile.subbands[0].cca; // Eccao is set to 0 dB
+        }
+        else
+        {
+            //TODO support the Slow RSSI Variation computation method
+            assert(false);
         }
     }
-
-    packet->hw_radio_packet.tx_meta.tx_cfg = (hw_tx_cfg_t){
-        .channel_id.channel_header = current_access_profile->subbands[0].channel_header,
-        .channel_id.center_freq_index = current_access_profile->subbands[0].channel_index_start,
-        .syncword_class = PHY_SYNCWORD_CLASS1,
-        .eirp = current_access_profile->subbands[0].eirp
-    };
 
     packet_assemble(packet);
 
@@ -693,13 +791,14 @@ static void start_foreground_scan()
 {
     switch_state(DLL_STATE_FOREGROUND_SCAN);
 
-    // TODO only access class using 1 subband which contains 1 channel index is supported for now
+    // TODO, if the Requester is MISO and the Request is broadcast, the responses
+    // are expected on the channel list of the Requester's Access Class and not
+    // necessarily on the current channel used to send the initial request
 
     hw_rx_cfg_t rx_cfg = (hw_rx_cfg_t){
-                .channel_id.channel_header = current_access_profile->subbands[0].channel_header,
-                .channel_id.center_freq_index = current_access_profile->subbands[0].channel_index_start,
-                .syncword_class = PHY_SYNCWORD_CLASS1,
-            };
+            .channel_id = current_channel_id,
+            .syncword_class = PHY_SYNCWORD_CLASS1,
+    };
 
     hw_radio_set_rx(&rx_cfg, &packet_received, NULL);
 }
@@ -707,7 +806,7 @@ static void start_foreground_scan()
 
 void dll_start_foreground_scan()
 {
-    if(is_tx_busy())
+    if (is_tx_busy())
         discard_tx();
 
     start_foreground_scan();
@@ -715,7 +814,7 @@ void dll_start_foreground_scan()
 
 void dll_stop_foreground_scan(bool auto_scan)
 {
-    if(is_tx_busy())
+    if (is_tx_busy())
         discard_tx();
 
     if (auto_scan && dll_state == DLL_STATE_SCAN_AUTOMATION)
@@ -730,35 +829,84 @@ void dll_stop_foreground_scan(bool auto_scan)
     }
 }
 
-uint8_t dll_assemble_packet_header(packet_t* packet, uint8_t* data_ptr)
+uint8_t dll_assemble_packet_header(packet_t* packet, uint8_t* data_ptr, bool background)
 {
     uint8_t* dll_header_start = data_ptr;
     *data_ptr = packet->dll_header.subnet; data_ptr += sizeof(packet->dll_header.subnet);
-    *data_ptr = packet->dll_header.control; data_ptr += sizeof(packet->dll_header.control);
-    if(packet->dll_header.control_target_address_set)
+
+    if (!ID_TYPE_IS_BROADCAST(packet->dll_header.control_target_id_type))
     {
-        uint8_t addr_len = packet->dll_header.control_vid_used? 2 : 8;
-        memcpy(data_ptr, packet->d7anp_addressee->id, addr_len); data_ptr += addr_len;
+        uint8_t addr_len = packet->dll_header.control_target_id_type == ID_TYPE_VID? 2 : 8;
+
+        if (background)
+        {
+            uint16_t crc;
+            crc = crc_calculate(packet->d7anp_addressee->id, addr_len);
+            DPRINT("crc %04x ", crc);
+
+            packet->dll_header.control_identifier_tag = (uint8_t)crc & 0x3F;
+            DPRINT("dll_header.control_identifier_tag %x ", packet->dll_header.control_identifier_tag);
+
+            *data_ptr = (packet->dll_header.control_target_id_type << 6) | (packet->dll_header.control_identifier_tag & 0x3F);
+            DPRINT("dll_header.control %x ", *data_ptr);
+            data_ptr ++;
+        }
+        else
+        {
+            *data_ptr = (packet->dll_header.control_target_id_type << 6) | (packet->dll_header.control_eirp_index & 0x3F);
+            data_ptr ++;
+            memcpy(data_ptr, packet->d7anp_addressee->id, addr_len); data_ptr += addr_len;
+        }
+    }
+    else
+    {
+        if (packet->dll_header.control_target_id_type == ID_TYPE_NBID)
+            packet->dll_header.control_target_id_type = ID_TYPE_NOID;
+        *data_ptr = (packet->dll_header.control_target_id_type << 6) | (packet->dll_header.control_eirp_index & 0x3F);
+        data_ptr ++;
     }
 
     return data_ptr - dll_header_start;
 }
 
-bool dll_disassemble_packet_header(packet_t* packet, uint8_t* data_idx)
+bool dll_disassemble_packet_header(packet_t* packet, uint8_t* data_idx, bool background)
 {
     packet->dll_header.subnet = packet->hw_radio_packet.data[(*data_idx)]; (*data_idx)++;
-    if(packet->dll_header.subnet != current_access_profile->subnet)
+    uint8_t FSS = ACCESS_SPECIFIER(packet->dll_header.subnet);
+    uint8_t FSM = ACCESS_MASK(packet->dll_header.subnet);
+    uint8_t address_len;
+    uint8_t id[8];
+
+    if ((FSS != 0x0F) && (FSS != ACCESS_SPECIFIER(active_access_class))) // check that the active access class is always set to the scan access class
     {
-        DPRINT("Subnet does not match current access profile, skipping packet");
+        DPRINT("Subnet 0x%02x does not match current access class 0x%02x, skipping packet", packet->dll_header.subnet, active_access_class);
         return false;
     }
 
-    packet->dll_header.control = packet->hw_radio_packet.data[(*data_idx)]; (*data_idx)++;
-    if(packet->dll_header.control_target_address_set)
+    if ((FSM & ACCESS_MASK(active_access_class)) == 0) // check that the active access class is always set to the scan access class
     {
-        uint8_t address_len;
-        uint8_t id[8];
-        if(!packet->dll_header.control_vid_used)
+        DPRINT("Subnet does not match current access class, skipping packet");
+        return false;
+    }
+
+    packet->dll_header.control_target_id_type  = packet->hw_radio_packet.data[(*data_idx)] >> 6 ;
+
+    if (background)
+    {
+        packet->dll_header.control_identifier_tag = packet->hw_radio_packet.data[(*data_idx)] & 0x3F;
+        DPRINT("control_target_id_type 0x%02x Identifier Tag 0x%02x", packet->dll_header.control_target_id_type, packet->dll_header.control_identifier_tag);
+    }
+    else
+    {
+        packet->dll_header.control_eirp_index = packet->hw_radio_packet.data[(*data_idx)] & 0x3F;
+        DPRINT("control_target_id_type 0x%02x EIRP index %d", packet->dll_header.control_target_id_type, packet->dll_header.control_eirp_index);
+    }
+
+    (*data_idx)++;
+
+    if (!ID_TYPE_IS_BROADCAST(packet->dll_header.control_target_id_type))
+    {
+        if (packet->dll_header.control_target_id_type == ID_TYPE_UID)
         {
             fs_read_uid(id);
             address_len = 8;
@@ -769,13 +917,31 @@ bool dll_disassemble_packet_header(packet_t* packet, uint8_t* data_idx)
             address_len = 2;
         }
 
-        if(memcmp(packet->hw_radio_packet.data + (*data_idx), id, address_len) != 0)
+        if (background)
         {
-            DPRINT("Device ID filtering failed, skipping packet");
-            return false;
+            uint16_t crc;
+            crc = crc_calculate(id, address_len);
+            DPRINT("Identifier Tag crc %04x, tag %x", crc, packet->dll_header.control_identifier_tag);
+            /* Check that the tag corresponds to the 6 least significant bits of the CRC16 */
+            if (packet->dll_header.control_identifier_tag != (uint8_t)crc & 0x3F)
+            {
+                DPRINT("Identifier Tag filtering failed, skipping packet");
+                return false;
+            }
         }
-
-        (*data_idx) += address_len;
+        else
+        {
+            if (memcmp(packet->hw_radio_packet.data + (*data_idx), id, address_len) != 0)
+            {
+                DPRINT("Device ID filtering failed, skipping packet");
+                DPRINT("OUR DEVICE ID");
+                DPRINT_DATA(id, address_len);
+                DPRINT("TARGET DEVICE ID");
+                DPRINT_DATA(packet->hw_radio_packet.data + (*data_idx), address_len);
+                return false;
+            }
+            (*data_idx) += address_len;
+        }
     }
     // TODO filter LQ
     // TODO pass to upper layer

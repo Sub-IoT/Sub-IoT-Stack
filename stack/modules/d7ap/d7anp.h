@@ -26,6 +26,7 @@
 #include "stdbool.h"
 
 #include "dae.h"
+#include "MODULE_D7AP_defs.h"
 
 typedef struct packet packet_t;
 
@@ -43,20 +44,44 @@ typedef enum {
 
 #define ID_TYPE_IS_BROADCAST(id_type) (id_type == ID_TYPE_NBID || id_type == ID_TYPE_NOID)
 
+#define GET_NLS_METHOD(VAL) (uint8_t)(VAL & 0x0F)
+#define SET_NLS_METHOD(VAL) (uint8_t)(VAL << 4 & 0xF0)
+
+#define ENABLE_SSR_FILTER 0x01
+#define ALLOW_NEW_SSR_ENTRY_IN_BCAST 0x02
+
+enum
+{
+    AES_NONE = 0, /* No security */
+    AES_CTR = 0x01, /* data confidentiality */
+    AES_CBC_MAC_128 = 0x02, /* data authenticity */
+    AES_CBC_MAC_64 = 0x03, /* data authenticity */
+    AES_CBC_MAC_32 = 0x04, /* data authenticity */
+    AES_CCM_128 = 0x05, /* data confidentiality and authenticity*/
+    AES_CCM_64 = 0x06, /* data confidentiality and authenticity*/
+    AES_CCM_32 = 0x07, /* data confidentiality and authenticity*/
+};
+
 typedef struct {
     union {
-      uint8_t raw;
-      struct {
-          uint8_t nls_method : 4; // TODO
-          id_type_t id_type : 2;
-          uint8_t _rfu : 2;
-      };
+        uint8_t raw;
+        struct {
+            uint8_t nls_method : 4;
+            id_type_t id_type : 2;
+            uint8_t _rfu : 2;
+        };
     };
 } d7anp_addressee_ctrl;
 
 typedef struct {
     d7anp_addressee_ctrl ctrl;
-    uint8_t access_class;
+    union {
+        uint8_t access_class;
+        struct {
+            uint8_t access_mask : 4;
+            uint8_t access_index : 4;
+        };
+    };
     uint8_t id[8]; // TODO assuming 8 byte id for now
 } d7anp_addressee_t;
 
@@ -69,26 +94,44 @@ typedef struct {
 typedef struct {
     union {
         uint8_t raw;
-        d7anp_addressee_ctrl origin_addressee_ctrl;
         struct {
-            uint8_t origin_addressee_ctrl_access_class : 4;
-            id_type_t origin_addressee_ctrl_id_type : 2;
-            bool origin_addressee_ctrl_hop_enabled : 1;
-            bool origin_addressee_ctrl_nls_enabled : 1;
+            uint8_t nls_method : 4;
+            id_type_t origin_id_type : 2;
+            bool hop_enabled : 1;
+            bool origin_void : 1;
         };
     };
 } d7anp_ctrl_t;
 
+typedef struct {
+    uint8_t key_counter;
+    uint32_t frame_counter;
+} d7anp_security_t;
+
+typedef struct {
+    uint8_t key_counter;
+    uint32_t frame_counter;
+    uint8_t addr[8];
+    //bool used;  /* to be used if it is possible to remove a trusted node from the table */
+} d7anp_trusted_node_t;
+
+typedef struct {
+    uint8_t filter_mode;
+    uint8_t trusted_node_nb;
+    d7anp_trusted_node_t trusted_node_table[MODULE_D7AP_TRUSTED_NODE_TABLE_SIZE];
+} d7anp_node_security_t;
+
 void d7anp_init();
-void d7anp_tx_foreground_frame(packet_t* packet, bool should_include_origin_template, dae_access_profile_t* access_profile, uint8_t slave_listen_timeout_ct);
+error_t d7anp_tx_foreground_frame(packet_t* packet, bool should_include_origin_template, uint8_t slave_listen_timeout_ct);
 uint8_t d7anp_assemble_packet_header(packet_t* packet, uint8_t* data_ptr);
 bool d7anp_disassemble_packet_header(packet_t* packet, uint8_t* packet_idx);
 void d7anp_signal_transmission_failure();
 void d7anp_signal_packet_transmitted(packet_t* packet);
-void d7anp_process_received_packet(packet_t* packet);
+void d7anp_process_received_packet(packet_t* packet, bool background_frame);
 uint8_t d7anp_addressee_id_length(id_type_t);
 void d7anp_set_foreground_scan_timeout(timer_tick_t timeout);
 void d7anp_start_foreground_scan();
 void d7anp_stop_foreground_scan(bool auto_scan);
+uint8_t d7anp_secure_payload(packet_t* packet, uint8_t* payload, uint8_t payload_len);
 
 #endif /* D7ANP_H_ */

@@ -82,7 +82,8 @@ typedef struct
 {
     phy_coding_t ch_coding: 2; 	/**< The 'coding' field in the channel header */
     phy_channel_class_t ch_class: 2;  	/**< The 'class' field in the channel header */
-    phy_channel_band_t ch_freq_band: 4;	/**< The frequency 'band' field in the channel header */
+    phy_channel_band_t ch_freq_band: 3;	/**< The frequency 'band' field in the channel header */
+    uint8_t _rfu: 1;
 } phy_channel_header_t;
 
 /** \brief channel id used to identify the spectrum settings
@@ -92,7 +93,7 @@ typedef struct
 typedef struct
 {
     union
-    {	
+    {
         uint8_t channel_header_raw; 	/**< The raw (8-bit) channel header */
         phy_channel_header_t channel_header; /**< The channel header */
     };
