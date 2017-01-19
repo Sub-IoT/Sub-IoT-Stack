@@ -166,7 +166,7 @@ void init_user_files()
         .dormant_timeout = 0,
         .addressee = {
             .ctrl = {
-                .nls_method = 0,
+                .nls_method = AES_NONE,
                 .id_type = ID_TYPE_NOID,
             },
             .access_class = 0x01,
@@ -187,7 +187,7 @@ void bootstrap()
             .channel_header = {
                 .ch_coding = PHY_CODING_PN9,
                 .ch_class = PHY_CLASS_NORMAL_RATE,
-                .ch_freq_band = PHY_BAND_433
+                .ch_freq_band = PHY_BAND_868
             },
             .subprofiles[0] = {
                 .subband_bitmap = 0x01, // only the first subband is selectable
