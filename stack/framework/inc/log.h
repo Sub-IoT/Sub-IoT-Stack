@@ -24,11 +24,8 @@
  *
  * A number of functions are provided to log both arbitrarily formatted data
  * (processed using the printf family of functions) and binary data (logged in a 
- * more or less human readable format). Moreover data can be logged in human 
- * readable format or in binary format. Which format is used is controlled through the 
- * 'FRAMEWORK_LOG_BINARY' CMake option. The binary format can be parsed with by PyLogger tool,
- * which provides features like filtering per layer or piping to wireshark.
- * 
+ * more or less human readable format).
+ *
  * Logging can be globally enabled or disabled by setting or clearing the 
  * 'FRAMEWORK_LOG_ENABLED' CMake option.
  *
@@ -70,14 +67,6 @@ __LINK_C void log_print_string(char* format,...);
 /*! \brief Log a string from a specific stack layer, which can be optionally formatted using printf() style
  * format specifiers. Note: this is only to be used from within stack code, not from application level code. */
 __LINK_C void log_print_stack_string(log_stack_layer_t type, char* format, ...);
-
-/*! \brief Log a raw packet to be transmitted or received. This is mainly used for tracing using wireshark.
- * Note: only to be used from a radio driver.
- *
- * \param packet contains the payload and the packet metadata including PHY parameters.
- * \param is_tx denotes if this is an incoming or outgoing packet
- */
-__LINK_C void log_print_raw_phy_packet(hw_radio_packet_t* packet, bool is_tx);
 
 /*! \brief Log raw data */
 __LINK_C void log_print_data(uint8_t* message, uint32_t length);

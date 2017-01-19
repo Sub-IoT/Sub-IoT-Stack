@@ -558,7 +558,6 @@ static void uart_rx_cb(uint8_t data) {
 void bootstrap() {
     DPRINT("Device booted at time: %d\n", timer_get_counter_value());
 
-#ifndef FRAMEWORK_LOG_BINARY
     console_print("\r\nPER TEST - commands:\r\n");
     console_print("  CHANfffriii  channel settings:\r\n");
     console_print("               fff frequency : 433, 868, 915\r\n");
@@ -567,7 +566,6 @@ void bootstrap() {
     console_print("  TRANsss      transmit a packet every sss seconds.\r\n");
     console_print("  RECV         receive packets\r\n");
     console_print("  RSET         reset module\r\n");
-#endif
 
     id = hw_get_unique_id();
     strcpy(TX_DATA, "TEST");
