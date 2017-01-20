@@ -57,25 +57,13 @@
 
 #define SENSOR_UPDATE	TIMER_TICKS_PER_SEC * 10
 
-// Toggle different operational modes
-void userbutton_callback(button_id_t button_id)
-{
-	#ifdef PLATFORM_EFM32GG_STK3700
-    LCD_WRITE_STRING("Butt %d", button_id);
-	#else
-    LCD_WRITE_STRING("button: %d\n", button_id);
-	#endif
-}
 
 void execute_sensor_measurement()
 {
 #if (defined PLATFORM_EFM32GG_STK3700)
   float internal_temp = hw_get_internal_temperature();
   lcd_write_temperature(internal_temp*10, 1);
-
   uint32_t vdd = hw_get_battery();
-
-
   fs_write_file(SENSOR_FILE_ID, 0, (uint8_t*)&internal_temp, sizeof(internal_temp)); // File 0x40 is configured to use D7AActP trigger an ALP action which broadcasts this file data on Access Class 0
 #elif (defined PLATFORM_EFM32HG_STK3400  || defined PLATFORM_EZR32LG_WSTK6200A || defined PLATFORM_EZR32LG_OCTA)
   char str[30];
@@ -104,8 +92,6 @@ void execute_sensor_measurement()
   LCD_WRITE_LINE(5,str);
   log_print_string(str);
 
-  //TODO: put sensor values in array
-
   uint8_t sensor_values[8];
   uint16_t *pointer =  (uint16_t*) sensor_values;
   *pointer++ = (uint16_t) (internal_temp * 10);
@@ -114,7 +100,8 @@ void execute_sensor_measurement()
   *pointer++ = (uint16_t) (vdd /10);
 
   fs_write_file(SENSOR_FILE_ID, 0, (uint8_t*)&sensor_values,8);
-#else // no sensor, we just write the current timestamp
+#else
+  // no sensor, we just write the current timestamp
   timer_tick_t t = timer_get_counter_value();
   fs_write_file(SENSOR_FILE_ID, 0, (uint8_t*)&t, sizeof(timer_tick_t));
 #endif
@@ -159,7 +146,7 @@ void init_user_files()
     d7asp_master_session_config_t session_config = {
         .qos = {
             .qos_resp_mode = SESSION_RESP_MODE_ANY,
-            .qos_nls                 = false,
+            .qos_retry_mode = SESSION_RETRY_MODE_NO,
             .qos_stop_on_error       = false,
             .qos_record              = false
         },
@@ -180,7 +167,7 @@ void init_user_files()
 
 void bootstrap()
 {
-	log_print_string("Device booted\n");
+    log_print_string("Device booted\n");
 
     dae_access_profile_t access_classes[1] = {
         {
@@ -216,11 +203,7 @@ void bootstrap()
     initSensors();
 #endif
 
-    ubutton_register_callback(0, &userbutton_callback);
-    ubutton_register_callback(1, &userbutton_callback);
-
     sched_register_task(&execute_sensor_measurement);
-
     timer_post_task_delay(&execute_sensor_measurement, TIMER_TICKS_PER_SEC);
 
     LCD_WRITE_STRING("EFM32 Sensor\n");
