@@ -39,7 +39,6 @@
 #ifdef FRAMEWORK_LOG_ENABLED
 
 
-static const uint16_t microsec_byte = 2*8000000/CONSOLE_BAUDRATE;
 static uint32_t NGDEF(counter);
 
 
@@ -55,7 +54,6 @@ __LINK_C void log_print_string(char* format, ...)
     printf("\n\r[%03d] ", NG(counter)++);
     vprintf(format, args);
     va_end(args);
-    hw_busy_wait(microsec_byte);
 }
 
 __LINK_C void log_print_stack_string(log_stack_layer_t type, char* format, ...)
@@ -65,7 +63,6 @@ __LINK_C void log_print_stack_string(log_stack_layer_t type, char* format, ...)
     printf("\n\r[%03d] ", NG(counter)++);
     vprintf(format, args);
     va_end(args);
-    hw_busy_wait(microsec_byte);
 }
 
 __LINK_C void log_print_data(uint8_t* message, uint32_t length)
@@ -75,8 +72,6 @@ __LINK_C void log_print_data(uint8_t* message, uint32_t length)
     {
         printf(" %02X", message[i]);
     }
-
-    hw_busy_wait(microsec_byte); // TODO remove?
 }
 
 
