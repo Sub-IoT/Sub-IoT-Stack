@@ -104,9 +104,10 @@ static void process_op_request_tag(fifo_t* alp_command_fifo, bool respond_when_c
   current_command.respond_when_completed = respond_when_completed;
 }
 
-static void add_tag_response(fifo_t* alp_response_fifo, bool error) {
+static void add_tag_response(fifo_t* alp_response_fifo, bool eop, bool error) {
   // fill response with tag response
-  uint8_t op_return_tag = ALP_OP_RETURN_TAG | (error << 6);
+  uint8_t op_return_tag = ALP_OP_RETURN_TAG | (eop << 7);
+  op_return_tag |= (error << 6);
   error_t err = fifo_put_byte(alp_response_fifo, op_return_tag); assert(err == SUCCESS);
   err = fifo_put_byte(alp_response_fifo, current_command.tag_id); assert(err == SUCCESS);
 }
@@ -192,7 +193,7 @@ bool alp_process_command(uint8_t* alp_command, uint8_t alp_command_length, uint8
       // make sure we include tag response also for commands with interface HOST
       // for interface D7ASP this will be done when flush completes
       if(current_command.respond_when_completed && !do_forward)
-        add_tag_response(&alp_response_fifo, false); // TODO error
+        add_tag_response(&alp_response_fifo, true, false); // TODO error
 
       (*alp_response_length) = fifo_get_size(&alp_response_fifo);
       alp_cmd_handler_output_alp_command(alp_response, (*alp_response_length));
@@ -230,6 +231,12 @@ static void add_interface_status_action(fifo_t* alp_response_fifo, d7asp_result_
 void alp_d7asp_request_completed(d7asp_result_t result, uint8_t* payload, uint8_t payload_length) {
   add_interface_status_action(&(current_command.alp_response_fifo), &result);
   fifo_put(&(current_command.alp_response_fifo), payload, payload_length);
+
+  // tag and send response already with EOP bit cleared
+  add_tag_response(&(current_command.alp_response_fifo), false, false); // TODO error
+  uint8_t alp_response_length = fifo_get_size(&(current_command.alp_response_fifo));
+  alp_cmd_handler_output_alp_command(current_command.alp_response, alp_response_length); // TODO pass fifo directly
+  fifo_clear(&(current_command.alp_response_fifo));
   // TODO further bookkeeping
 }
 
@@ -240,7 +247,7 @@ void alp_d7asp_fifo_flush_completed(uint8_t fifo_token, uint8_t* progress_bitmap
     case ALP_CMD_ORIGIN_SERIAL_CONSOLE:
       if(current_command.respond_when_completed) {
         bool error = memcmp(success_bitmap, progress_bitmap, bitmap_byte_count) != 0;
-        add_tag_response(&(current_command.alp_response_fifo), error);
+        add_tag_response(&(current_command.alp_response_fifo), true, error);
 
         uint8_t alp_response_length = fifo_get_size(&(current_command.alp_response_fifo));
         alp_cmd_handler_output_alp_command(current_command.alp_response, alp_response_length); // TODO pass fifo directly
