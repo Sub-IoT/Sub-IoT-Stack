@@ -136,7 +136,7 @@ void init_user_files() {
     d7asp_master_session_config_t session_config = {
         .qos = {
             .qos_resp_mode                = SESSION_RESP_MODE_ANY,
-            .qos_nls                      = false,
+            .qos_retry_mode               = SESSION_RETRY_MODE_NO,
             .qos_record                   = false,
             .qos_stop_on_error            = false
         },

@@ -42,15 +42,18 @@ typedef enum  {
     SESSION_RESP_MODE_PREFERRED = 6,
 } session_resp_mode_t;
 
+typedef enum {
+    SESSION_RETRY_MODE_NO = 0
+} session_retry_mode_t;
+
 typedef struct {
     union {
         uint8_t raw;
         struct {
             session_resp_mode_t qos_resp_mode : 3;
-            uint8_t _rfu : 2;
+            session_retry_mode_t qos_retry_mode: 3;
             bool qos_record : 1;
             bool qos_stop_on_error : 1;
-            bool qos_nls : 1;
         };
     };
 } session_qos_t;

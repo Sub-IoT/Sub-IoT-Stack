@@ -54,14 +54,14 @@ void d7ap_stack_init(fs_init_args_t* fs_init_args, d7asp_init_args_t* d7asp_init
       d7asp_master_session_config_t broadcast_fifo_config = {
           .qos = {
             .qos_resp_mode                = SESSION_RESP_MODE_ANY,
-            .qos_nls                      = false,
+            .qos_retry_mode               = SESSION_RETRY_MODE_NO,
             .qos_record                   = false,
             .qos_stop_on_error            = false
           },
           .dormant_timeout = 0,
           .addressee = {
             .ctrl = {
-                .nls_method               = 0,
+                .nls_method               = AES_NONE,
                 .id_type                  = ID_TYPE_NOID,
             },
             .access_class                 = 0x01,
