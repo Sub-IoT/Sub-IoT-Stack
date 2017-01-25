@@ -386,8 +386,8 @@ void fs_read_access_class(uint8_t access_class_index, dae_access_profile_t *acce
 
     for(uint8_t i = 0; i < SUBPROFILES_NB; i++)
     {
-        memcpy(&(access_class->subprofiles[i].scan_automation_period), data_ptr, 1); data_ptr++;
         memcpy(&(access_class->subprofiles[i].subband_bitmap), data_ptr, 1); data_ptr++;
+        memcpy(&(access_class->subprofiles[i].scan_automation_period), data_ptr, 1); data_ptr++;
     }
 
     for(uint8_t i = 0; i < SUBBANDS_NB; i++)
@@ -408,8 +408,8 @@ void fs_write_access_class(uint8_t access_class_index, dae_access_profile_t* acc
 
     for(uint8_t i = 0; i < SUBPROFILES_NB; i++)
     {
-        memcpy(data + current_data_offset, &(access_class->subprofiles[i].scan_automation_period), 1); current_data_offset++;
         memcpy(data + current_data_offset, &(access_class->subprofiles[i].subband_bitmap), 1); current_data_offset++;
+        memcpy(data + current_data_offset, &(access_class->subprofiles[i].scan_automation_period), 1); current_data_offset++;
     }
 
     for(uint8_t i = 0; i < SUBBANDS_NB; i++)
