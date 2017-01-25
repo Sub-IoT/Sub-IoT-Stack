@@ -270,7 +270,7 @@ error_t d7anp_tx_foreground_frame(packet_t* packet, bool should_include_origin_t
         fs_write_nwl_security(&security_state);
     }
 #else
-    assert(packet->d7anp_ctrl.nls_method != AES_NONE); // when encryption is requested the MODULE_D7AP_NLS_ENABLED cmake option should be set
+    assert(packet->d7anp_ctrl.nls_method == AES_NONE); // when encryption is requested the MODULE_D7AP_NLS_ENABLED cmake option should be set
 #endif
 
     switch_state(D7ANP_STATE_TRANSMIT);
