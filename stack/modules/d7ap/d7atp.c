@@ -583,10 +583,6 @@ void d7atp_process_received_packet(packet_t* packet)
         else
         {
             response_period_timeout_handler(); // no response to send, end transaction and go back to IDLE
-            if (Tl == 0)
-            {
-                terminate_dialog();
-            }
         }
     }
 
