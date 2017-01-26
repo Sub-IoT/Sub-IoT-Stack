@@ -68,28 +68,8 @@ void bootstrap()
         }
     };
 
-   dae_access_profile_t ap_868_lo = ap_868_normal;
-   ap_868_lo.channel_header.ch_class = PHY_CLASS_NORMAL_RATE;
-
-   dae_access_profile_t ap_868_hi = ap_868_normal;
-   ap_868_hi.channel_header.ch_class = PHY_CLASS_HI_RATE;
-
-   dae_access_profile_t ap_433_normal = ap_868_normal;
-   ap_433_normal.channel_header.ch_freq_band = PHY_BAND_433;
-
-   dae_access_profile_t ap_433_lo = ap_868_lo;
-   ap_433_lo.channel_header.ch_freq_band = PHY_BAND_433;
-
-   dae_access_profile_t ap_433_hi = ap_868_hi;
-   ap_433_hi.channel_header.ch_freq_band = PHY_BAND_433;
-
     dae_access_profile_t access_classes[] = {
-      ap_868_normal,
-      ap_868_lo,
-      ap_868_hi,
-      ap_433_normal,
-      ap_433_lo,
-      ap_433_hi,
+      ap_868_normal
     };
 
     fs_init_args_t fs_init_args = (fs_init_args_t){
