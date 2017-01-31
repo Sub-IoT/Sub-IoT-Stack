@@ -144,21 +144,16 @@ static void schedule_foreground_scan_expired_timer()
 
 void d7anp_start_foreground_scan()
 {
-    if (fg_scan_timeout_ticks > 0)
-    {
-        // if the FG scan timer is already set, update only the tl timeout value
-        schedule_foreground_scan_expired_timer();
+    // TODO we also do this for fg_scan_timeout_ticks = 0 for now to make sure task is executed async.
+    // Might need refactoring later.
 
-        if (d7anp_state != D7ANP_STATE_FOREGROUND_SCAN)
-        {
-            switch_state(D7ANP_STATE_FOREGROUND_SCAN);
-            dll_start_foreground_scan();
-        }
-    }
-    else
+    // if the FG scan timer is already set, update only the tl timeout value
+    schedule_foreground_scan_expired_timer();
+
+    if (d7anp_state != D7ANP_STATE_FOREGROUND_SCAN)
     {
-        dll_stop_foreground_scan(true); // switch to automation scan
-        d7atp_signal_foreground_scan_expired();
+        switch_state(D7ANP_STATE_FOREGROUND_SCAN);
+        dll_start_foreground_scan();
     }
 }
 
