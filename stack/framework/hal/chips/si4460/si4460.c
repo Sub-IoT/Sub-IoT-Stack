@@ -50,7 +50,6 @@
 
 #if defined(FRAMEWORK_LOG_ENABLED) && defined(FRAMEWORK_PHY_LOG_ENABLED)
 #define DPRINT(...) log_print_stack_string(LOG_STACK_PHY, __VA_ARGS__)
-#define DPRINT_PACKET(...) log_print_raw_phy_packet(__VA_ARGS__)
 #define DPRINT_DATA(...) log_print_data(__VA_ARGS__)
 #else
 #define DPRINT(...)
@@ -529,11 +528,9 @@ error_t hw_radio_set_rx(hw_rx_cfg_t const* rx_cfg, rx_packet_callback_t rx_cb, r
 	if(current_state == HW_RADIO_STATE_TX)
 	{
 		should_rx_after_tx_completed = true;
-
+    DPRINT("now in TX, go into RX after completion");
 		return SUCCESS;
-	} else {
-
-	}
+  }
 
 	if (rx_cfg != NULL)
 	{
@@ -716,9 +713,6 @@ static void ezradio_handle_end_of_packet()
 		//assert length and data[0] can only differ 1
 	}
 
-	DPRINT_PACKET(rx_packet, false);
-
-
 	DEBUG_RX_END();
 
 //					if(rx_packet_callback != NULL) // TODO this can happen while doing CCA but we should not be interrupting here (disable packet handler?)
@@ -742,7 +736,7 @@ static void ezradio_int_callback()
 	//ezradio_frr_a_read(3, &ezradioReply);
 
 	//DPRINT(" - INT_PEND     %s", byte_to_binary(ezradioReply.FRR_A_READ.FRR_A_VALUE));
-//	DPRINT(" - INT_PEND     %s", byte_to_binary(ezradioReply.GET_INT_STATUS.INT_PEND));
+  DPRINT(" - INT_PEND     %s", byte_to_binary(ezradioReply.GET_INT_STATUS.INT_PEND));
 //	DPRINT(" - INT_STATUS   %s", byte_to_binary(ezradioReply.GET_INT_STATUS.INT_STATUS));
 //	DPRINT(" - PH_PEND      %s", byte_to_binary(ezradioReply.GET_INT_STATUS.PH_PEND));
 	//DPRINT(" - PH_STATUS    %s", byte_to_binary(ezradioReply.GET_INT_STATUS.PH_STATUS));
@@ -852,7 +846,7 @@ static void ezradio_int_callback()
 					rx_packet->length = rx_packet->data[0] + 1;
 
 
-					DPRINT_PACKET(rx_packet, false);
+          DPRINT_DATA(rx_packet->data, rx_packet->length);
 
 
 					DEBUG_RX_END();
@@ -884,7 +878,7 @@ static void ezradio_int_callback()
 					if(tx_packet_callback != 0)
           {
               current_packet->tx_meta.timestamp = timer_get_counter_value();
-              DPRINT_PACKET(current_packet, true);
+              DPRINT_DATA(current_packet->data, current_packet->length);
               tx_packet_callback(current_packet);
           }
 
