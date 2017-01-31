@@ -215,19 +215,18 @@ static void switch_state(dll_state_t next_state)
     }
 
     // output state on debug pins
-    // TODO debug pin 2 used for response time for now
-//    switch(dll_state)
-//    {
-//        case DLL_STATE_CSMA_CA_STARTED:
-//        case DLL_STATE_CCA1:
-//        case DLL_STATE_CCA2:
-//        case DLL_STATE_CSMA_CA_RETRY:
-//        case DLL_STATE_CCA_FAIL:
-//          DEBUG_PIN_SET(2);
-//          break;
-//        default:
-//          DEBUG_PIN_CLR(2);
-//    }
+    switch(dll_state)
+    {
+        case DLL_STATE_CSMA_CA_STARTED:
+        case DLL_STATE_CCA1:
+        case DLL_STATE_CCA2:
+        case DLL_STATE_CSMA_CA_RETRY:
+        case DLL_STATE_CCA_FAIL:
+          DEBUG_PIN_SET(2);
+          break;
+        default:
+          DEBUG_PIN_CLR(2);
+    }
 }
 
 static bool is_tx_busy()
@@ -491,10 +490,12 @@ static void execute_csma_ca()
                 }
                 case CSMA_CA_MODE_RAIND: // TODO implement RAIND
                 {
-                    dll_slot_duration = tx_duration;
-                    uint16_t max_nr_slots = dll_tca / tx_duration;
+                    dll_slot_duration = tx_duration + 10; // take time for executing CCA twice into account
+                                                          // TODO currently 9.3 ms on EZR but might be improved. Refactor later
+                    uint16_t max_nr_slots = dll_tca / dll_slot_duration;
                     uint16_t slots_wait = get_rnd() % max_nr_slots;
-                    t_offset = slots_wait * tx_duration;
+                    t_offset = slots_wait * dll_slot_duration;
+                    DPRINT("RAIND: slot %i of %i", slots_wait, max_nr_slots);
                     break;
                 }
                 case CSMA_CA_MODE_RIGD: // TODO implement RAIND
