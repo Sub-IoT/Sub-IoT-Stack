@@ -87,6 +87,7 @@ ADD_LIBRARY (${CHIP_LIBRARY_NAME} OBJECT
                     efm32gg_pins.c 
                     efm32gg_i2c.c 
                     efm32gg_watchdog.c
+                    efm32gg_aes.c
 		    		usb/src/em_usbd.c  
 		    		usb/src/em_usbdch9.c 
 		    		usb/src/em_usbdep.c 
