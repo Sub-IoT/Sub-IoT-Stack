@@ -229,8 +229,6 @@ static void end_of_packet_isr()
             packet->rx_meta.crc_status = HW_CRC_UNAVAILABLE; // TODO
             packet->rx_meta.timestamp = timer_get_counter_value();
 
-            DPRINT_PACKET(packet, false);
-
             DEBUG_RX_END();
             if(rx_packet_callback != NULL) // TODO this can happen while doing CCA but we should not be interrupting here (disable packet handler?)
                 rx_packet_callback(packet);
@@ -258,7 +256,6 @@ static void end_of_packet_isr()
           if(tx_packet_callback != 0)
           {
               current_packet->tx_meta.timestamp = timer_get_counter_value();
-              DPRINT_PACKET(current_packet, true);
               tx_packet_callback(current_packet);
           }
 
