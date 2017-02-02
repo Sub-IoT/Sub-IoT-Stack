@@ -65,6 +65,10 @@ IF(NOT( PLATFORM STREQUAL "none"))
     SET(PLATFORM_PREFIX "PLATFORM_${__upper_name}")
     SET(${PLATFORM_PREFIX} ON)
     ADD_SUBDIRECTORY(${PLATFORM_PATH_${PLATFORM}} ${CMAKE_CURRENT_BINARY_DIR}/platform)
+    ADD_CUSTOM_TARGET(
+        jlink-open
+        COMMAND ${JLinkExe} -speed 10000 -if SWD -Device ${JLINK_DEVICE}
+    )
 ENDIF()
 
 SET(CHIP_EXTRA_CHIPS_DIR "" CACHE STRING "Path to directory containing extra, out of tree chips implementations (optional)")

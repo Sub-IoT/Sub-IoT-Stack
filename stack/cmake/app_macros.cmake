@@ -159,15 +159,12 @@ MACRO(APP_BUILD)
 
     # generate target for flashing application using jlink
     # TODO optional depending on platform?
-    SET(JLinkExe "JLinkExe")
-    IF(CMAKE_HOST_WIN32)
-        SET(JLinkExe "jlink.exe")
-    ENDIF()	 
+
 	
     CONFIGURE_FILE(${PROJECT_SOURCE_DIR}/cmake/jlink-flash.in ${CMAKE_CURRENT_BINARY_DIR}/jlink-flash.script)
     ADD_CUSTOM_TARGET(
         flash-${__APP_BUILD_NAME}
-        COMMAND ${JLinkExe} -speed 4000 -if SWD -CommandFile ${CMAKE_CURRENT_BINARY_DIR}/jlink-flash.script
+        COMMAND ${JLinkExe} -speed 10000 -if SWD -CommandFile ${CMAKE_CURRENT_BINARY_DIR}/jlink-flash.script
         DEPENDS ${ELF}
     )
 ENDMACRO()

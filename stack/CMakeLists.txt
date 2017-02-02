@@ -45,6 +45,11 @@ INSERT_C_FLAGS(BEFORE -std=c99 -fno-common)
 #Retrieve the selected toolchain
 GET_CURRENT_TOOLCHAIN(TOOLCHAIN)
 
+SET(JLinkExe "JLinkExe")
+IF(CMAKE_HOST_WIN32)
+    SET(JLinkExe "jlink.exe")
+ENDIF()
+
 #Then load the Framework
 ADD_SUBDIRECTORY("framework")
 
