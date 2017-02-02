@@ -38,6 +38,9 @@ SET(PROJECT_NAME "OSS-7" CACHE STRING "The name of the project")
 SET(CMAKE_BUILD_TYPE "Debug" CACHE STRING "Choose the type of build, options are: Debug Release")
 SET_PROPERTY( CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS "Debug;Release")
 
+IF(NOT CMAKE_TOOLCHAIN_FILE)
+	SET(CMAKE_TOOLCHAIN_FILE ${CMAKE_CURRENT_SOURCE_DIR}/cmake/toolchains/gcc-arm-embedded.cmake)
+ENDIF()
 PROJECT (${PROJECT_NAME})
 
 #Set the c standard to use
