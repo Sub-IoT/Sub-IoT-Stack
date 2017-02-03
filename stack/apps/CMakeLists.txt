@@ -1,4 +1,4 @@
-# 
+#
 # OSS-7 - An opensource implementation of the DASH7 Alliance Protocol for ultra
 # lowpower wireless sensor communication
 #
@@ -48,6 +48,11 @@ FOREACH(__dir ${APP_DIRS})
     GEN_PREFIX(APP_PREFIX "APP" ${APP_NAME})
     IF(BUILD_APPLICATIONS AND ${APP_PREFIX})
         ADD_SUBDIRECTORY(${__dir} ${CMAKE_CURRENT_BINARY_DIR}/${APP_NAME})
-    ENDIF()	
+        SET(__BUILDING_APP TRUE)
+    ENDIF()
     UNSET(APP_PREFIX)
 ENDFOREACH()
+
+IF(NOT __BUILDING_APP)
+  MESSAGE("No application is configured, you might want to include an application (by adding -DAPP_GATEWAY=y for example)")
+ENDIF()
