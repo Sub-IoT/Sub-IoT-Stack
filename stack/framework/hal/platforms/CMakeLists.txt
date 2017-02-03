@@ -66,7 +66,7 @@ IF(NOT( PLATFORM STREQUAL "none"))
     ADD_SUBDIRECTORY(${PLATFORM_PATH_${PLATFORM}} ${CMAKE_CURRENT_BINARY_DIR}/platform)
     ADD_CUSTOM_TARGET(
         jlink-open
-        COMMAND ${JLinkExe} -speed 10000 -if SWD -Device ${JLINK_DEVICE}
+        COMMAND ${JLinkExe} -speed 10000 -if SWD -Device ${JLINK_DEVICE} -AutoConnect 1
     )
 ENDIF()
 
