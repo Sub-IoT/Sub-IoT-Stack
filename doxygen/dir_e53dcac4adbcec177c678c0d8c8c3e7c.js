@@ -2,6 +2,7 @@ var dir_e53dcac4adbcec177c678c0d8c8c3e7c =
 [
     [ "cc1101", "dir_1966db521c08592bea343a4b0b9536f9.html", "dir_1966db521c08592bea343a4b0b9536f9" ],
     [ "cc430", "dir_043f3ec7ef9714041e69c447018cfdc4.html", "dir_043f3ec7ef9714041e69c447018cfdc4" ],
+    [ "cortus", "dir_b2c55a73893dec0c1d2d9b31b601c747.html", "dir_b2c55a73893dec0c1d2d9b31b601c747" ],
     [ "efm32gg", "dir_8b9647ac80bab5b612e6e51a18f43f10.html", "dir_8b9647ac80bab5b612e6e51a18f43f10" ],
     [ "efm32hg", "dir_d079da393f8045c4019656888f142947.html", "dir_d079da393f8045c4019656888f142947" ],
     [ "efm32lg", "dir_827428d7920709263e817cb9c115ed1d.html", "dir_827428d7920709263e817cb9c115ed1d" ],

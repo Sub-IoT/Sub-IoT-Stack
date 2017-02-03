@@ -2,9 +2,15 @@ var session_8h =
 [
     [ "session_qos_t", "structsession__qos__t.html", "structsession__qos__t" ],
     [ "session_resp_mode_t", "session_8h.html#a4c071663f296f6eed9040f43504e7563", [
-      [ "SESSION_RESP_MODE_NONE", "session_8h.html#a4c071663f296f6eed9040f43504e7563ab3c1c5b32c6c2a4a50eb2cd9d50841e9", null ],
-      [ "SESSION_RESP_MODE_ALLCAST", "session_8h.html#a4c071663f296f6eed9040f43504e7563a18b5cbbb0e0704a6b1053c63839de5ce", null ],
-      [ "SESSION_RESP_MODE_ANYCAST", "session_8h.html#a4c071663f296f6eed9040f43504e7563a38ba7d4a6a2987c13296c4a391e2a354", null ]
+      [ "SESSION_RESP_MODE_NO", "session_8h.html#a4c071663f296f6eed9040f43504e7563aff5e8f94a0ac3b1e6a1d457001dc5d4c", null ],
+      [ "SESSION_RESP_MODE_ALL", "session_8h.html#a4c071663f296f6eed9040f43504e7563ab79df1794bfce5716bc9918a76bc2905", null ],
+      [ "SESSION_RESP_MODE_ANY", "session_8h.html#a4c071663f296f6eed9040f43504e7563a3423df49ffaa60296d68764ec4676995", null ],
+      [ "SESSION_RESP_MODE_NO_RPT", "session_8h.html#a4c071663f296f6eed9040f43504e7563a5e91af61ec1f9b1f3da9f3401b662100", null ],
+      [ "SESSION_RESP_MODE_ON_ERR", "session_8h.html#a4c071663f296f6eed9040f43504e7563ac34dc645722e1169686d089df9be8134", null ],
+      [ "SESSION_RESP_MODE_PREFERRED", "session_8h.html#a4c071663f296f6eed9040f43504e7563a7819e5cd8017fef701f59418bd532b79", null ]
+    ] ],
+    [ "session_retry_mode_t", "session_8h.html#a2c174c72da16a42023ac76e457685e2f", [
+      [ "SESSION_RETRY_MODE_NO", "session_8h.html#a2c174c72da16a42023ac76e457685e2fa907be946bf67fe9897474ef8402c14f5", null ]
     ] ],
     [ "session_state_t", "session_8h.html#afc9c467c0d8264ea38f8e80d8deab0df", [
       [ "SESSION_STATE_IDLE", "session_8h.html#afc9c467c0d8264ea38f8e80d8deab0dfa47dc4c95a9fe51a09b52a38c5c7a680e", null ],

@@ -113,10 +113,13 @@ $(document).ready(function(){initNavTree('si4460__interface_8c.html','');});
 <div class="contents">
 <div class="textblock"><code>#include &lt;stdbool.h&gt;</code><br />
 <code>#include &lt;stdint.h&gt;</code><br />
+<code>#include &quot;em_device.h&quot;</code><br />
+<code>#include &quot;gpiointerrupt.h&quot;</code><br />
 <code>#include &quot;<a class="el" href="si4460__interface_8h_source.html">si4460_interface.h</a>&quot;</code><br />
 <code>#include &quot;<a class="el" href="si4460__configuration_8h_source.html">si4460_configuration.h</a>&quot;</code><br />
-<code>#include &quot;ezradio_api_lib.h&quot;</code><br />
+<code>#include &quot;ezradio_cmd.h&quot;</code><br />
 <code>#include &quot;ezradio_hal.h&quot;</code><br />
+<code>#include &quot;ezradio_api_lib.h&quot;</code><br />
 <code>#include &quot;ezradio_api_lib_add.h&quot;</code><br />
 <code>#include &quot;ecode.h&quot;</code><br />
 <code>#include &quot;<a class="el" href="log_8h_source.html">log.h</a>&quot;</code><br />
@@ -139,10 +142,10 @@ Functions</h2></td></tr>
 <tr class="separator:ac2018a41a1aaf0050690407966885135"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a5a552425d8e40d1eefd78cc82b5dd7b5"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="si4460__interface_8c.html#a5a552425d8e40d1eefd78cc82b5dd7b5">ezradioResetTRxFifo</a> (void)</td></tr>
 <tr class="separator:a5a552425d8e40d1eefd78cc82b5dd7b5"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:abc62ba23a66e6c65bf40ff28d895c17f"><td class="memItemLeft" align="right" valign="top">Ecode_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="si4460__interface_8c.html#abc62ba23a66e6c65bf40ff28d895c17f">ezradioStartRx</a> (uint8_t channel)</td></tr>
-<tr class="separator:abc62ba23a66e6c65bf40ff28d895c17f"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:afda9a04d2288c254e5e5874e85b3cac2"><td class="memItemLeft" align="right" valign="top">Ecode_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="si4460__interface_8c.html#afda9a04d2288c254e5e5874e85b3cac2">ezradioStartTx</a> (<a class="el" href="structhw__radio__packet__t.html">hw_radio_packet_t</a> *<a class="el" href="structpacket.html">packet</a>, uint8_t channel_id, bool rx_after)</td></tr>
-<tr class="separator:afda9a04d2288c254e5e5874e85b3cac2"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab7de2b4cfb23fb831cbc1e3824bd3c3b"><td class="memItemLeft" align="right" valign="top">Ecode_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="si4460__interface_8c.html#ab7de2b4cfb23fb831cbc1e3824bd3c3b">ezradioStartRx</a> (uint8_t channel, bool packet_handler)</td></tr>
+<tr class="separator:ab7de2b4cfb23fb831cbc1e3824bd3c3b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a3b6fa3e0caaf5d1f791b84ab2d652f9d"><td class="memItemLeft" align="right" valign="top">Ecode_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="si4460__interface_8c.html#a3b6fa3e0caaf5d1f791b84ab2d652f9d">ezradioStartTx</a> (<a class="el" href="structhw__radio__packet__t.html">hw_radio_packet_t</a> *<a class="el" href="structpacket.html">packet</a>, uint8_t channel_id, bool rx_after, uint8_t data_lenght)</td></tr>
+<tr class="separator:a3b6fa3e0caaf5d1f791b84ab2d652f9d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a5a8f3bf0fcf05362979b782837afe7d6"><td class="memItemLeft" align="right" valign="top">Ecode_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="si4460__interface_8c.html#a5a8f3bf0fcf05362979b782837afe7d6">ezradioStartTxUnmodelated</a> (uint8_t channel_id)</td></tr>
 <tr class="separator:a5a8f3bf0fcf05362979b782837afe7d6"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
@@ -224,7 +227,7 @@ Functions</h2></td></tr>
 
 </div>
 </div>
-<a class="anchor" id="abc62ba23a66e6c65bf40ff28d895c17f"></a>
+<a class="anchor" id="ab7de2b4cfb23fb831cbc1e3824bd3c3b"></a>
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
@@ -232,15 +235,25 @@ Functions</h2></td></tr>
           <td class="memname">Ecode_t ezradioStartRx </td>
           <td>(</td>
           <td class="paramtype">uint8_t&#160;</td>
-          <td class="paramname"><em>channel</em></td><td>)</td>
+          <td class="paramname"><em>channel</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
           <td></td>
+          <td class="paramtype">bool&#160;</td>
+          <td class="paramname"><em>packet_handler</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
         </tr>
       </table>
 </div><div class="memdoc">
 
 </div>
 </div>
-<a class="anchor" id="afda9a04d2288c254e5e5874e85b3cac2"></a>
+<a class="anchor" id="a3b6fa3e0caaf5d1f791b84ab2d652f9d"></a>
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
@@ -260,7 +273,13 @@ Functions</h2></td></tr>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">bool&#160;</td>
-          <td class="paramname"><em>rx_after</em>&#160;</td>
+          <td class="paramname"><em>rx_after</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">uint8_t&#160;</td>
+          <td class="paramname"><em>data_lenght</em>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -294,7 +313,7 @@ Functions</h2></td></tr>
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
     <li class="navelem"><a class="el" href="dir_644e041c3a6521da7b27eba0e4eb2b95.html">framework</a></li><li class="navelem"><a class="el" href="dir_8f2c340cdabd0cab4db94c39704d70a8.html">hal</a></li><li class="navelem"><a class="el" href="dir_e53dcac4adbcec177c678c0d8c8c3e7c.html">chips</a></li><li class="navelem"><a class="el" href="dir_60236c8c7a2958cea6ca93d5ab2c1944.html">si4460</a></li><li class="navelem"><a class="el" href="si4460__interface_8c.html">si4460_interface.c</a></li>
-    <li class="footer">Generated on Mon May 2 2016 21:25:36 for OSS-7: Open Source Stack for DASH7 Alliance Protocol by
+    <li class="footer">Generated on Fri Feb 3 2017 13:01:26 for OSS-7: Open Source Stack for DASH7 Alliance Protocol by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.8.11 </li>
   </ul>

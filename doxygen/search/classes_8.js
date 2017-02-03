@@ -1,6 +1,9 @@
 var searchData=
 [
-  ['i2c_5fhandle',['i2c_handle',['../structi2c__handle.html',1,'']]],
-  ['i2c_5fpins_5ft',['i2c_pins_t',['../structi2c__pins__t.html',1,'']]],
-  ['i2cspm_5finit_5ftypedef',['I2CSPM_Init_TypeDef',['../struct_i2_c_s_p_m___init___type_def.html',1,'']]]
+  ['hidkbd_5finit_5ft',['HIDKBD_Init_t',['../struct_h_i_d_k_b_d___init__t.html',1,'']]],
+  ['hw_5fradio_5fpacket_5ft',['hw_radio_packet_t',['../structhw__radio__packet__t.html',1,'']]],
+  ['hw_5frx_5fcfg_5ft',['hw_rx_cfg_t',['../structhw__rx__cfg__t.html',1,'']]],
+  ['hw_5frx_5fmetadata_5ft',['hw_rx_metadata_t',['../structhw__rx__metadata__t.html',1,'']]],
+  ['hw_5ftx_5fcfg_5ft',['hw_tx_cfg_t',['../structhw__tx__cfg__t.html',1,'']]],
+  ['hw_5ftx_5fmetadata_5ft',['hw_tx_metadata_t',['../structhw__tx__metadata__t.html',1,'']]]
 ];

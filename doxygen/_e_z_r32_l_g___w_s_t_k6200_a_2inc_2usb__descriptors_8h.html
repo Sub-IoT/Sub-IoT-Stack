@@ -105,69 +105,454 @@ $(document).ready(function(){initNavTree('_e_z_r32_l_g___w_s_t_k6200_a_2inc_2usb
 
 <div class="header">
   <div class="summary">
-<a href="#var-members">Variables</a>  </div>
+<a href="#define-members">Macros</a> &#124;
+<a href="#func-members">Functions</a>  </div>
   <div class="headertitle">
 <div class="title">usb_descriptors.h File Reference</div>  </div>
 </div><!--header-->
 <div class="contents">
 <div class="textblock"><code>#include &quot;<a class="el" href="em__usb_8h_source.html">em_usb.h</a>&quot;</code><br />
+<code>#include &quot;cdc.h&quot;</code><br />
 </div>
 <p><a href="_e_z_r32_l_g___w_s_t_k6200_a_2inc_2usb__descriptors_8h_source.html">Go to the source code of this file.</a></p>
 <table class="memberdecls">
-<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="var-members"></a>
-Variables</h2></td></tr>
-<tr class="memitem:a2221e7c63b87cff8ba03c00871691279"><td class="memItemLeft" align="right" valign="top">const USB_DeviceDescriptor_TypeDef&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="_e_z_r32_l_g___w_s_t_k6200_a_2inc_2usb__descriptors_8h.html#a2221e7c63b87cff8ba03c00871691279">USBDESC_deviceDesc</a></td></tr>
-<tr class="separator:a2221e7c63b87cff8ba03c00871691279"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a18e16a203c43ceb3bf292d4b8c456bce"><td class="memItemLeft" align="right" valign="top">const uint8_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="_e_z_r32_l_g___w_s_t_k6200_a_2inc_2usb__descriptors_8h.html#a18e16a203c43ceb3bf292d4b8c456bce">USBDESC_configDesc</a> []</td></tr>
-<tr class="separator:a18e16a203c43ceb3bf292d4b8c456bce"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a2fbffac52062957bd1e3a241d7770482"><td class="memItemLeft" align="right" valign="top">const void *const&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="_e_z_r32_l_g___w_s_t_k6200_a_2inc_2usb__descriptors_8h.html#a2fbffac52062957bd1e3a241d7770482">USBDESC_strings</a> [3]</td></tr>
-<tr class="separator:a2fbffac52062957bd1e3a241d7770482"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:adfeb9e57e8199c3c887117679351d172"><td class="memItemLeft" align="right" valign="top">const uint8_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="_e_z_r32_l_g___w_s_t_k6200_a_2inc_2usb__descriptors_8h.html#adfeb9e57e8199c3c887117679351d172">USBDESC_bufferingMultiplier</a> []</td></tr>
-<tr class="separator:adfeb9e57e8199c3c887117679351d172"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="define-members"></a>
+Macros</h2></td></tr>
+<tr class="memitem:a7804f11e1d7fad5a15a71c9e32dfda0f"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="_e_z_r32_l_g___w_s_t_k6200_a_2inc_2usb__descriptors_8h.html#a7804f11e1d7fad5a15a71c9e32dfda0f">CONFIG_DESCSIZE</a></td></tr>
+<tr class="separator:a7804f11e1d7fad5a15a71c9e32dfda0f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
+Functions</h2></td></tr>
+<tr class="memitem:aa5d5ae8fc92afc6b253b7fec7207e6f6"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="_e_z_r32_l_g___w_s_t_k6200_a_2inc_2usb__descriptors_8h.html#aa5d5ae8fc92afc6b253b7fec7207e6f6">STATIC_CONST_STRING_DESC_LANGID</a> (langID, 0x04, 0x09)</td></tr>
+<tr class="separator:aa5d5ae8fc92afc6b253b7fec7207e6f6"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a91c14d00621553c11730d3718b6ce068"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="_e_z_r32_l_g___w_s_t_k6200_a_2inc_2usb__descriptors_8h.html#a91c14d00621553c11730d3718b6ce068">STATIC_CONST_STRING_DESC</a> (iManufacturer, 'S','i','l','i','<a class="el" href="_changes__emlib_8txt.html#a0dc9253a1efe20bc268db959bb26b886">c</a>','o','n',' ','L', 'a','b','o','r','a','t','o','r','i', 'e','s',' ','I','n','<a class="el" href="_changes__emlib_8txt.html#a0dc9253a1efe20bc268db959bb26b886">c</a>','.')</td></tr>
+<tr class="separator:a91c14d00621553c11730d3718b6ce068"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a31d0e654ac4b1d038f4fc3f944aef238"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="_e_z_r32_l_g___w_s_t_k6200_a_2inc_2usb__descriptors_8h.html#a31d0e654ac4b1d038f4fc3f944aef238">STATIC_CONST_STRING_DESC</a> (iProduct, 'E','F','M','3','2',' ','U','S','B', ' ','C','<a class="el" href="ezr32lg_2usb_2_silabs___license___agreement_8txt.html#a28ccf9613ef8be40ad6ce388099dc229">D</a>','C',' ','s','e','r','i', 'a','l',' ','p','o','r','t',' ','d', 'e','v','i','<a class="el" href="_changes__emlib_8txt.html#a0dc9253a1efe20bc268db959bb26b886">c</a>','e')</td></tr>
+<tr class="separator:a31d0e654ac4b1d038f4fc3f944aef238"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
-<h2 class="groupheader">Variable Documentation</h2>
-<a class="anchor" id="adfeb9e57e8199c3c887117679351d172"></a>
+<h2 class="groupheader">Macro Definition Documentation</h2>
+<a class="anchor" id="a7804f11e1d7fad5a15a71c9e32dfda0f"></a>
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">const uint8_t USBDESC_bufferingMultiplier[]</td>
+          <td class="memname">#define CONFIG_DESCSIZE</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<b>Value:</b><div class="fragment"><div class="line">( USB_CONFIG_DESCSIZE                   + \</div><div class="line">                          (USB_INTERFACE_DESCSIZE * 2)          + \</div><div class="line">                          (USB_ENDPOINT_DESCSIZE * <a class="code" href="_e_f_m32_g_g___s_t_k3700_2config_2usbconfig_8h.html#a836fd372f59b18af5e859175624b5385">NUM_EP_USED</a>) + \</div><div class="line">                          USB_CDC_HEADER_FND_DESCSIZE           + \</div><div class="line">                          USB_CDC_CALLMNG_FND_DESCSIZE          + \</div><div class="line">                          USB_CDC_ACM_FND_DESCSIZE              + \</div><div class="line">                          5 )</div><div class="ttc" id="_e_f_m32_g_g___s_t_k3700_2config_2usbconfig_8h_html_a836fd372f59b18af5e859175624b5385"><div class="ttname"><a href="_e_f_m32_g_g___s_t_k3700_2config_2usbconfig_8h.html#a836fd372f59b18af5e859175624b5385">NUM_EP_USED</a></div><div class="ttdeci">#define NUM_EP_USED</div><div class="ttdef"><b>Definition:</b> usbconfig.h:30</div></div>
+</div><!-- fragment -->
+</div>
+</div>
+<h2 class="groupheader">Function Documentation</h2>
+<a class="anchor" id="a91c14d00621553c11730d3718b6ce068"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">STATIC_CONST_STRING_DESC </td>
+          <td>(</td>
+          <td class="paramtype">iManufacturer&#160;</td>
+          <td class="paramname">, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">'S'&#160;</td>
+          <td class="paramname">, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">'i'&#160;</td>
+          <td class="paramname">, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">'l'&#160;</td>
+          <td class="paramname">, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">'i'&#160;</td>
+          <td class="paramname">, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">'<a class="el" href="_changes__emlib_8txt.html#a0dc9253a1efe20bc268db959bb26b886">c</a>'&#160;</td>
+          <td class="paramname">, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">'o'&#160;</td>
+          <td class="paramname">, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">'n'&#160;</td>
+          <td class="paramname">, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">' '&#160;</td>
+          <td class="paramname">, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">'L'&#160;</td>
+          <td class="paramname">, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">'a'&#160;</td>
+          <td class="paramname">, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">'b'&#160;</td>
+          <td class="paramname">, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">'o'&#160;</td>
+          <td class="paramname">, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">'r'&#160;</td>
+          <td class="paramname">, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">'a'&#160;</td>
+          <td class="paramname">, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">'t'&#160;</td>
+          <td class="paramname">, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">'o'&#160;</td>
+          <td class="paramname">, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">'r'&#160;</td>
+          <td class="paramname">, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">'i'&#160;</td>
+          <td class="paramname">, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">'e'&#160;</td>
+          <td class="paramname">, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">'s'&#160;</td>
+          <td class="paramname">, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">' '&#160;</td>
+          <td class="paramname">, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">'I'&#160;</td>
+          <td class="paramname">, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">'n'&#160;</td>
+          <td class="paramname">, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">'<a class="el" href="_changes__emlib_8txt.html#a0dc9253a1efe20bc268db959bb26b886">c</a>'&#160;</td>
+          <td class="paramname">, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">'.'&#160;</td>
+          <td class="paramname">&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
         </tr>
       </table>
 </div><div class="memdoc">
 
 </div>
 </div>
-<a class="anchor" id="a18e16a203c43ceb3bf292d4b8c456bce"></a>
+<a class="anchor" id="a31d0e654ac4b1d038f4fc3f944aef238"></a>
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">const uint8_t USBDESC_configDesc[]</td>
+          <td class="memname">STATIC_CONST_STRING_DESC </td>
+          <td>(</td>
+          <td class="paramtype">iProduct&#160;</td>
+          <td class="paramname">, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">'E'&#160;</td>
+          <td class="paramname">, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">'F'&#160;</td>
+          <td class="paramname">, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">'M'&#160;</td>
+          <td class="paramname">, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">'3'&#160;</td>
+          <td class="paramname">, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">'2'&#160;</td>
+          <td class="paramname">, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">' '&#160;</td>
+          <td class="paramname">, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">'U'&#160;</td>
+          <td class="paramname">, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">'S'&#160;</td>
+          <td class="paramname">, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">'B'&#160;</td>
+          <td class="paramname">, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">' '&#160;</td>
+          <td class="paramname">, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">'C'&#160;</td>
+          <td class="paramname">, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">'<a class="el" href="ezr32lg_2usb_2_silabs___license___agreement_8txt.html#a28ccf9613ef8be40ad6ce388099dc229">D</a>'&#160;</td>
+          <td class="paramname">, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">'C'&#160;</td>
+          <td class="paramname">, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">' '&#160;</td>
+          <td class="paramname">, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">'s'&#160;</td>
+          <td class="paramname">, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">'e'&#160;</td>
+          <td class="paramname">, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">'r'&#160;</td>
+          <td class="paramname">, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">'i'&#160;</td>
+          <td class="paramname">, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">'a'&#160;</td>
+          <td class="paramname">, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">'l'&#160;</td>
+          <td class="paramname">, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">' '&#160;</td>
+          <td class="paramname">, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">'p'&#160;</td>
+          <td class="paramname">, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">'o'&#160;</td>
+          <td class="paramname">, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">'r'&#160;</td>
+          <td class="paramname">, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">'t'&#160;</td>
+          <td class="paramname">, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">' '&#160;</td>
+          <td class="paramname">, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">'d'&#160;</td>
+          <td class="paramname">, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">'e'&#160;</td>
+          <td class="paramname">, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">'v'&#160;</td>
+          <td class="paramname">, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">'i'&#160;</td>
+          <td class="paramname">, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">'<a class="el" href="_changes__emlib_8txt.html#a0dc9253a1efe20bc268db959bb26b886">c</a>'&#160;</td>
+          <td class="paramname">, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">'e'&#160;</td>
+          <td class="paramname">&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
         </tr>
       </table>
 </div><div class="memdoc">
 
 </div>
 </div>
-<a class="anchor" id="a2221e7c63b87cff8ba03c00871691279"></a>
+<a class="anchor" id="aa5d5ae8fc92afc6b253b7fec7207e6f6"></a>
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">const USB_DeviceDescriptor_TypeDef USBDESC_deviceDesc</td>
+          <td class="memname">STATIC_CONST_STRING_DESC_LANGID </td>
+          <td>(</td>
+          <td class="paramtype">langID&#160;</td>
+          <td class="paramname">, </td>
         </tr>
-      </table>
-</div><div class="memdoc">
-
-</div>
-</div>
-<a class="anchor" id="a2fbffac52062957bd1e3a241d7770482"></a>
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
         <tr>
-          <td class="memname">const void* const USBDESC_strings[3]</td>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">0x04&#160;</td>
+          <td class="paramname">, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">0x09&#160;</td>
+          <td class="paramname">&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
         </tr>
       </table>
 </div><div class="memdoc">
@@ -180,7 +565,7 @@ Variables</h2></td></tr>
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
     <li class="navelem"><a class="el" href="dir_644e041c3a6521da7b27eba0e4eb2b95.html">framework</a></li><li class="navelem"><a class="el" href="dir_8f2c340cdabd0cab4db94c39704d70a8.html">hal</a></li><li class="navelem"><a class="el" href="dir_4eb32538973cd830b42aabb7e41eb42c.html">platforms</a></li><li class="navelem"><a class="el" href="dir_3ad5e33b2969821c88505322c308d95a.html">EZR32LG_WSTK6200A</a></li><li class="navelem"><a class="el" href="dir_cfbfd81d6ef653e58f472f3b3b0dcfc5.html">inc</a></li><li class="navelem"><a class="el" href="_e_z_r32_l_g___w_s_t_k6200_a_2inc_2usb__descriptors_8h.html">usb_descriptors.h</a></li>
-    <li class="footer">Generated on Mon May 2 2016 21:25:36 for OSS-7: Open Source Stack for DASH7 Alliance Protocol by
+    <li class="footer">Generated on Fri Feb 3 2017 13:01:26 for OSS-7: Open Source Stack for DASH7 Alliance Protocol by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.8.11 </li>
   </ul>

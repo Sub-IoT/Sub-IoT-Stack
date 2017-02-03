@@ -11,5 +11,9 @@ var searchData=
   ['gpio_5fmode_5finput_5fpull_5fup',['GPIO_MODE_INPUT_PULL_UP',['../cc430__chip_8h.html#a2a349421a781f2e95c9f8d58bcdaf667af89e6d06a7e566c02c0fef40339bcc26',1,'cc430_chip.h']]],
   ['gpio_5fmode_5foutput',['GPIO_MODE_OUTPUT',['../cc430__chip_8h.html#a2a349421a781f2e95c9f8d58bcdaf667aa5824cd687ac84449b093087c25cec7c',1,'cc430_chip.h']]],
   ['gpio_5fmode_5foutput_5ffull_5fdrive_5fstrength',['GPIO_MODE_OUTPUT_FULL_DRIVE_STRENGTH',['../cc430__chip_8h.html#a2a349421a781f2e95c9f8d58bcdaf667a7e5350076e70f91a04c8b9f53cac53a8',1,'cc430_chip.h']]],
-  ['gpio_5frising_5fedge',['GPIO_RISING_EDGE',['../group___g_p_i_o.html#ggadf764cbdea00d65edcd07bb9953ad2b7a6aab82123eba95f00452e865cbfe99bc',1,'hwgpio.h']]]
+  ['gpio_5frising_5fedge',['GPIO_RISING_EDGE',['../group___g_p_i_o.html#ggadf764cbdea00d65edcd07bb9953ad2b7a6aab82123eba95f00452e865cbfe99bc',1,'hwgpio.h']]],
+  ['gpiomodeinput',['gpioModeInput',['../gpio_8h.html#a93ff740308e5b31729d8593a89967cdaaaa4999965d92199eb5a93c31026dde42',1,'gpio.h']]],
+  ['gpiomodepushpull',['gpioModePushPull',['../gpio_8h.html#a93ff740308e5b31729d8593a89967cdaa110ef690a2c14c594938e2aa70469abd',1,'gpio.h']]],
+  ['gpioporta',['gpioPortA',['../gpio_8h.html#afe496583dfd425fc03c413d49459efe6aec59c279b8a1e545facf0b86de9464b6',1,'gpio.h']]],
+  ['gpioportb',['gpioPortB',['../gpio_8h.html#afe496583dfd425fc03c413d49459efe6a87fbb44d2820b78499bead63ab15118a',1,'gpio.h']]]
 ];

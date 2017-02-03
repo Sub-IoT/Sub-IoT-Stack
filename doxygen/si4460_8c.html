@@ -124,7 +124,10 @@ $(document).ready(function(){initNavTree('si4460_8c.html','');});
 <code>#include &quot;<a class="el" href="si4460__registers_8h_source.html">si4460_registers.h</a>&quot;</code><br />
 <code>#include &quot;ezradio_cmd.h&quot;</code><br />
 <code>#include &quot;ezradio_api_lib.h&quot;</code><br />
+<code>#include &quot;em_device.h&quot;</code><br />
+<code>#include &quot;gpiointerrupt.h&quot;</code><br />
 <code>#include &quot;ezradio_hal.h&quot;</code><br />
+<code>#include &quot;<a class="el" href="fec_8h_source.html">fec.h</a>&quot;</code><br />
 </div><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="define-members"></a>
 Macros</h2></td></tr>
@@ -164,6 +167,8 @@ Enumerations</h2></td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
 Functions</h2></td></tr>
+<tr class="memitem:a4281e7078bbe946edd1cec7b8b54e36b"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="si4460_8c.html#a4281e7078bbe946edd1cec7b8b54e36b">__ezr_error_callback</a> ()</td></tr>
+<tr class="separator:a4281e7078bbe946edd1cec7b8b54e36b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:gaefab8edede99183d3c557c0d37d3fb93"><td class="memItemLeft" align="right" valign="top"><a class="el" href="types_8h.html#a9ad6b2dc3cbff040775e79656fe8e1a3">error_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__radio.html#gaefab8edede99183d3c557c0d37d3fb93">hw_radio_init</a> (<a class="el" href="group__radio.html#gaed2efbab7ef580464c95416fdbe9cd2c">alloc_packet_callback_t</a> alloc_packet_cb, <a class="el" href="group__radio.html#ga822e576af2256b03278c9945b8d6aacf">release_packet_callback_t</a> release_packet_cb)</td></tr>
 <tr class="memdesc:gaefab8edede99183d3c557c0d37d3fb93"><td class="mdescLeft">&#160;</td><td class="mdescRight">Initialize the radio driver.  <a href="group__radio.html#gaefab8edede99183d3c557c0d37d3fb93">More...</a><br /></td></tr>
 <tr class="separator:gaefab8edede99183d3c557c0d37d3fb93"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -339,6 +344,21 @@ Functions</h2></td></tr>
 </div>
 </div>
 <h2 class="groupheader">Function Documentation</h2>
+<a class="anchor" id="a4281e7078bbe946edd1cec7b8b54e36b"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void __ezr_error_callback </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
 <a class="anchor" id="a3a259993e04fd4cb6d68ea344fee8656"></a>
 <div class="memitem">
 <div class="memproto">
@@ -375,7 +395,7 @@ Functions</h2></td></tr>
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
     <li class="navelem"><a class="el" href="dir_644e041c3a6521da7b27eba0e4eb2b95.html">framework</a></li><li class="navelem"><a class="el" href="dir_8f2c340cdabd0cab4db94c39704d70a8.html">hal</a></li><li class="navelem"><a class="el" href="dir_e53dcac4adbcec177c678c0d8c8c3e7c.html">chips</a></li><li class="navelem"><a class="el" href="dir_60236c8c7a2958cea6ca93d5ab2c1944.html">si4460</a></li><li class="navelem"><a class="el" href="si4460_8c.html">si4460.c</a></li>
-    <li class="footer">Generated on Mon May 2 2016 21:25:36 for OSS-7: Open Source Stack for DASH7 Alliance Protocol by
+    <li class="footer">Generated on Fri Feb 3 2017 13:01:26 for OSS-7: Open Source Stack for DASH7 Alliance Protocol by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.8.11 </li>
   </ul>

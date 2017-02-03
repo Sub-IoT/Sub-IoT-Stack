@@ -117,24 +117,33 @@ Data Structures</h2></td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
 Functions</h2></td></tr>
-<tr class="memitem:ga58ce4419bf49923f66801cfecad6a4fc"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__fifo.html#ga58ce4419bf49923f66801cfecad6a4fc">fifo_init</a> (<a class="el" href="structfifo__t.html">fifo_t</a> *<a class="el" href="d7asp_8c.html#af15466f92fbbc85cbc7efd371fd3dfd8">fifo</a>, uint8_t *buffer, uint16_t max_size)</td></tr>
+<tr class="memitem:ga58ce4419bf49923f66801cfecad6a4fc"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__fifo.html#ga58ce4419bf49923f66801cfecad6a4fc">fifo_init</a> (<a class="el" href="structfifo__t.html">fifo_t</a> *fifo, uint8_t *buffer, uint16_t max_size)</td></tr>
 <tr class="memdesc:ga58ce4419bf49923f66801cfecad6a4fc"><td class="mdescLeft">&#160;</td><td class="mdescRight">Initializes the fifo.  <a href="#ga58ce4419bf49923f66801cfecad6a4fc">More...</a><br /></td></tr>
 <tr class="separator:ga58ce4419bf49923f66801cfecad6a4fc"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:gaab4a8d8be80be6c5e6e79c8114669239"><td class="memItemLeft" align="right" valign="top"><a class="el" href="types_8h.html#a9ad6b2dc3cbff040775e79656fe8e1a3">error_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__fifo.html#gaab4a8d8be80be6c5e6e79c8114669239">fifo_put</a> (<a class="el" href="structfifo__t.html">fifo_t</a> *<a class="el" href="d7asp_8c.html#af15466f92fbbc85cbc7efd371fd3dfd8">fifo</a>, uint8_t *<a class="el" href="fs_8c.html#a43a278d13284fb3412e9eee1db1d967e">data</a>, uint16_t len)</td></tr>
-<tr class="memdesc:gaab4a8d8be80be6c5e6e79c8114669239"><td class="mdescLeft">&#160;</td><td class="mdescRight">Put bytes in tothe FIFO.  <a href="#gaab4a8d8be80be6c5e6e79c8114669239">More...</a><br /></td></tr>
+<tr class="memitem:gad559a5d49dd6b19f0578313bae5321ca"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__fifo.html#gad559a5d49dd6b19f0578313bae5321ca">fifo_init_filled</a> (<a class="el" href="structfifo__t.html">fifo_t</a> *fifo, uint8_t *buffer, uint16_t filled_size, uint16_t max_size)</td></tr>
+<tr class="memdesc:gad559a5d49dd6b19f0578313bae5321ca"><td class="mdescLeft">&#160;</td><td class="mdescRight">Initializes the fifo with a pre-filled buffer.  <a href="#gad559a5d49dd6b19f0578313bae5321ca">More...</a><br /></td></tr>
+<tr class="separator:gad559a5d49dd6b19f0578313bae5321ca"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:gaab4a8d8be80be6c5e6e79c8114669239"><td class="memItemLeft" align="right" valign="top"><a class="el" href="types_8h.html#a9ad6b2dc3cbff040775e79656fe8e1a3">error_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__fifo.html#gaab4a8d8be80be6c5e6e79c8114669239">fifo_put</a> (<a class="el" href="structfifo__t.html">fifo_t</a> *fifo, uint8_t *<a class="el" href="fs_8c.html#a43a278d13284fb3412e9eee1db1d967e">data</a>, uint16_t len)</td></tr>
+<tr class="memdesc:gaab4a8d8be80be6c5e6e79c8114669239"><td class="mdescLeft">&#160;</td><td class="mdescRight">Put bytes in to the FIFO.  <a href="#gaab4a8d8be80be6c5e6e79c8114669239">More...</a><br /></td></tr>
 <tr class="separator:gaab4a8d8be80be6c5e6e79c8114669239"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:gaeca1e4bc3c62c6a5501be3840293cee4"><td class="memItemLeft" align="right" valign="top"><a class="el" href="types_8h.html#a9ad6b2dc3cbff040775e79656fe8e1a3">error_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__fifo.html#gaeca1e4bc3c62c6a5501be3840293cee4">fifo_peek</a> (<a class="el" href="structfifo__t.html">fifo_t</a> *<a class="el" href="d7asp_8c.html#af15466f92fbbc85cbc7efd371fd3dfd8">fifo</a>, uint8_t *buffer, uint16_t offset, uint16_t len)</td></tr>
+<tr class="memitem:ga5e45fae3b820bbcbce16d3807b580301"><td class="memItemLeft" align="right" valign="top"><a class="el" href="types_8h.html#a9ad6b2dc3cbff040775e79656fe8e1a3">error_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__fifo.html#ga5e45fae3b820bbcbce16d3807b580301">fifo_put_byte</a> (<a class="el" href="structfifo__t.html">fifo_t</a> *fifo, uint8_t byte)</td></tr>
+<tr class="memdesc:ga5e45fae3b820bbcbce16d3807b580301"><td class="mdescLeft">&#160;</td><td class="mdescRight">Put byte in to the FIFO.  <a href="#ga5e45fae3b820bbcbce16d3807b580301">More...</a><br /></td></tr>
+<tr class="separator:ga5e45fae3b820bbcbce16d3807b580301"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:gaeca1e4bc3c62c6a5501be3840293cee4"><td class="memItemLeft" align="right" valign="top"><a class="el" href="types_8h.html#a9ad6b2dc3cbff040775e79656fe8e1a3">error_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__fifo.html#gaeca1e4bc3c62c6a5501be3840293cee4">fifo_peek</a> (<a class="el" href="structfifo__t.html">fifo_t</a> *fifo, uint8_t *buffer, uint16_t offset, uint16_t len)</td></tr>
 <tr class="memdesc:gaeca1e4bc3c62c6a5501be3840293cee4"><td class="mdescLeft">&#160;</td><td class="mdescRight">Peek at the FIFO contents without popping. Fills buffer with the data in the FIFO starting from head_idx + offset for len bytes.  <a href="#gaeca1e4bc3c62c6a5501be3840293cee4">More...</a><br /></td></tr>
 <tr class="separator:gaeca1e4bc3c62c6a5501be3840293cee4"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ga14061c103f6c1bfca90c20677e3e7dd1"><td class="memItemLeft" align="right" valign="top"><a class="el" href="types_8h.html#a9ad6b2dc3cbff040775e79656fe8e1a3">error_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__fifo.html#ga14061c103f6c1bfca90c20677e3e7dd1">fifo_pop</a> (<a class="el" href="structfifo__t.html">fifo_t</a> *<a class="el" href="d7asp_8c.html#af15466f92fbbc85cbc7efd371fd3dfd8">fifo</a>, uint8_t *buffer, uint16_t len)</td></tr>
+<tr class="memitem:ga14061c103f6c1bfca90c20677e3e7dd1"><td class="memItemLeft" align="right" valign="top"><a class="el" href="types_8h.html#a9ad6b2dc3cbff040775e79656fe8e1a3">error_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__fifo.html#ga14061c103f6c1bfca90c20677e3e7dd1">fifo_pop</a> (<a class="el" href="structfifo__t.html">fifo_t</a> *fifo, uint8_t *buffer, uint16_t len)</td></tr>
 <tr class="memdesc:ga14061c103f6c1bfca90c20677e3e7dd1"><td class="mdescLeft">&#160;</td><td class="mdescRight">Read and pop bytes from the FIFO.  <a href="#ga14061c103f6c1bfca90c20677e3e7dd1">More...</a><br /></td></tr>
 <tr class="separator:ga14061c103f6c1bfca90c20677e3e7dd1"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ga5f23b5aa50ddc79b1136ced0f28713eb"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__fifo.html#ga5f23b5aa50ddc79b1136ced0f28713eb">fifo_clear</a> (<a class="el" href="structfifo__t.html">fifo_t</a> *<a class="el" href="d7asp_8c.html#af15466f92fbbc85cbc7efd371fd3dfd8">fifo</a>)</td></tr>
+<tr class="memitem:ga5f23b5aa50ddc79b1136ced0f28713eb"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__fifo.html#ga5f23b5aa50ddc79b1136ced0f28713eb">fifo_clear</a> (<a class="el" href="structfifo__t.html">fifo_t</a> *fifo)</td></tr>
 <tr class="memdesc:ga5f23b5aa50ddc79b1136ced0f28713eb"><td class="mdescLeft">&#160;</td><td class="mdescRight">Clears the FIFO.  <a href="#ga5f23b5aa50ddc79b1136ced0f28713eb">More...</a><br /></td></tr>
 <tr class="separator:ga5f23b5aa50ddc79b1136ced0f28713eb"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ga68d28b360bdcd3b9d8f1ac0eed994b44"><td class="memItemLeft" align="right" valign="top">int16_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__fifo.html#ga68d28b360bdcd3b9d8f1ac0eed994b44">fifo_get_size</a> (<a class="el" href="structfifo__t.html">fifo_t</a> *<a class="el" href="d7asp_8c.html#af15466f92fbbc85cbc7efd371fd3dfd8">fifo</a>)</td></tr>
-<tr class="memdesc:ga68d28b360bdcd3b9d8f1ac0eed994b44"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns the number of bytes currently in the FIFO.  <a href="#ga68d28b360bdcd3b9d8f1ac0eed994b44">More...</a><br /></td></tr>
-<tr class="separator:ga68d28b360bdcd3b9d8f1ac0eed994b44"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga1407bfdb3013c7bd292a9f7a4704c3cd"><td class="memItemLeft" align="right" valign="top">uint16_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__fifo.html#ga1407bfdb3013c7bd292a9f7a4704c3cd">fifo_get_size</a> (<a class="el" href="structfifo__t.html">fifo_t</a> *fifo)</td></tr>
+<tr class="memdesc:ga1407bfdb3013c7bd292a9f7a4704c3cd"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns the number of bytes currently in the FIFO.  <a href="#ga1407bfdb3013c7bd292a9f7a4704c3cd">More...</a><br /></td></tr>
+<tr class="separator:ga1407bfdb3013c7bd292a9f7a4704c3cd"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga6bc537fc4b171fc720e697994054f692"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__fifo.html#ga6bc537fc4b171fc720e697994054f692">fifo_is_full</a> (<a class="el" href="structfifo__t.html">fifo_t</a> *fifo)</td></tr>
+<tr class="memdesc:ga6bc537fc4b171fc720e697994054f692"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns if the FIFO is completely full or if there is still space left.  <a href="#ga6bc537fc4b171fc720e697994054f692">More...</a><br /></td></tr>
+<tr class="separator:ga6bc537fc4b171fc720e697994054f692"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <p>A generic FIFO implementation which allows pushing and popping bytes in a circular buffer. </p>
@@ -163,12 +172,12 @@ Functions</h2></td></tr>
 
 </div>
 </div>
-<a class="anchor" id="ga68d28b360bdcd3b9d8f1ac0eed994b44"></a>
+<a class="anchor" id="ga1407bfdb3013c7bd292a9f7a4704c3cd"></a>
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">int16_t fifo_get_size </td>
+          <td class="memname">uint16_t fifo_get_size </td>
           <td>(</td>
           <td class="paramtype"><a class="el" href="structfifo__t.html">fifo_t</a> *&#160;</td>
           <td class="paramname"><em>fifo</em></td><td>)</td>
@@ -227,6 +236,80 @@ Functions</h2></td></tr>
   </table>
   </dd>
 </dl>
+
+</div>
+</div>
+<a class="anchor" id="gad559a5d49dd6b19f0578313bae5321ca"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void fifo_init_filled </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="structfifo__t.html">fifo_t</a> *&#160;</td>
+          <td class="paramname"><em>fifo</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">uint8_t *&#160;</td>
+          <td class="paramname"><em>buffer</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">uint16_t&#160;</td>
+          <td class="paramname"><em>filled_size</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">uint16_t&#160;</td>
+          <td class="paramname"><em>max_size</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Initializes the fifo with a pre-filled buffer. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">fifo</td><td>Fifo state, initialized by this function </td></tr>
+    <tr><td class="paramname">buffer</td><td>The buffer used for the fifo, the caller is responsible for allocating this to be big enough for max_size </td></tr>
+    <tr><td class="paramname">filled_size</td><td>The length of the pre-filled buffer </td></tr>
+    <tr><td class="paramname">max_size</td><td>The maximum size of bytes contained in the FIFO </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a class="anchor" id="ga6bc537fc4b171fc720e697994054f692"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool fifo_is_full </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="structfifo__t.html">fifo_t</a> *&#160;</td>
+          <td class="paramname"><em>fifo</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Returns if the FIFO is completely full or if there is still space left. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">fifo</td><td>Pointer to the fifo object </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>Flag indicating if FIFO is full </dd></dl>
 
 </div>
 </div>
@@ -353,7 +436,7 @@ Functions</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p>Put bytes in tothe FIFO. </p>
+<p>Put bytes in to the FIFO. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">fifo</td><td>Pointer to the fifo object </td></tr>
@@ -366,12 +449,48 @@ Functions</h2></td></tr>
 
 </div>
 </div>
+<a class="anchor" id="ga5e45fae3b820bbcbce16d3807b580301"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="types_8h.html#a9ad6b2dc3cbff040775e79656fe8e1a3">error_t</a> fifo_put_byte </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="structfifo__t.html">fifo_t</a> *&#160;</td>
+          <td class="paramname"><em>fifo</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">uint8_t&#160;</td>
+          <td class="paramname"><em>byte</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Put byte in to the FIFO. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">fifo</td><td>Pointer to the fifo object </td></tr>
+    <tr><td class="paramname">byte</td><td>Byte to be put in the FIFO </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>SUCCESS or ESIZE when data would overwrite head of FIFO </dd></dl>
+
+</div>
+</div>
 </div><!-- contents -->
 </div><!-- doc-content -->
 <!-- start footer part -->
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
-    <li class="footer">Generated on Mon May 2 2016 21:25:36 for OSS-7: Open Source Stack for DASH7 Alliance Protocol by
+    <li class="footer">Generated on Fri Feb 3 2017 13:01:27 for OSS-7: Open Source Stack for DASH7 Alliance Protocol by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.8.11 </li>
   </ul>

@@ -101,21 +101,22 @@ $(document).ready(function(){initNavTree('group___c_h_i_p.html','');});
   <div class="summary">
 <a href="#func-members">Functions</a>  </div>
   <div class="headertitle">
-<div class="title">CHIP<div class="ingroups"><a class="el" href="group___e_m___library.html">EM_Library</a></div></div>  </div>
+<div class="title">CHIP<div class="ingroups"><a class="el" href="group__emlib.html">EMLIB</a></div></div>  </div>
 </div><!--header-->
 <div class="contents">
 
-<p>Chip Initialization API </p><pre class="fragment"></pre><p>.  
+<p>Chip Initialization API.  
 <a href="#details">More...</a></p>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
 Functions</h2></td></tr>
 <tr class="memitem:ga6491ac6b7e786d253753c334615bce61"><td class="memItemLeft" align="right" valign="top">__STATIC_INLINE void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group___c_h_i_p.html#ga6491ac6b7e786d253753c334615bce61">CHIP_Init</a> (void)</td></tr>
-<tr class="memdesc:ga6491ac6b7e786d253753c334615bce61"><td class="mdescLeft">&#160;</td><td class="mdescRight">Chip initialization routine for revision errata workarounds.  <a href="#ga6491ac6b7e786d253753c334615bce61">More...</a><br /></td></tr>
+<tr class="memdesc:ga6491ac6b7e786d253753c334615bce61"><td class="mdescLeft">&#160;</td><td class="mdescRight">Chip initialization routine for revision errata workarounds. This function must be called immediately in <a class="el" href="cortus__main_8c.html#a840291bc02cba5474a4cb46a9b9566fe">main()</a>.  <a href="#ga6491ac6b7e786d253753c334615bce61">More...</a><br /></td></tr>
 <tr class="separator:ga6491ac6b7e786d253753c334615bce61"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
-<p>Chip Initialization API </p><pre class="fragment"></pre><p>. </p>
+<p>Chip Initialization API. </p>
+<p>API to initialize chip for errata workarounds. </p>
 <h2 class="groupheader">Function Documentation</h2>
 <a class="anchor" id="ga6491ac6b7e786d253753c334615bce61"></a>
 <div class="memitem">
@@ -131,7 +132,8 @@ Functions</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p>Chip initialization routine for revision errata workarounds. </p>
+<p>Chip initialization routine for revision errata workarounds. This function must be called immediately in <a class="el" href="cortus__main_8c.html#a840291bc02cba5474a4cb46a9b9566fe">main()</a>. </p>
+<dl class="section note"><dt>Note</dt><dd>This function must be called immediately in <a class="el" href="cortus__main_8c.html#a840291bc02cba5474a4cb46a9b9566fe">main()</a>.</dd></dl>
 <p>This init function will configure the device to a state where it is as similar as later revisions as possible, to improve software compatibility with newer parts. See the device specific errata for details. </p>
 
 </div>
@@ -141,7 +143,7 @@ Functions</h2></td></tr>
 <!-- start footer part -->
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
-    <li class="footer">Generated on Mon May 2 2016 21:25:36 for OSS-7: Open Source Stack for DASH7 Alliance Protocol by
+    <li class="footer">Generated on Fri Feb 3 2017 13:01:27 for OSS-7: Open Source Stack for DASH7 Alliance Protocol by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.8.11 </li>
   </ul>

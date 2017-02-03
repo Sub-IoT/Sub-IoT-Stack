@@ -117,6 +117,7 @@ $(document).ready(function(){initNavTree('fs_8h.html','');});
 <div class="textblock"><code>#include &quot;stdint.h&quot;</code><br />
 <code>#include &quot;<a class="el" href="dae_8h_source.html">dae.h</a>&quot;</code><br />
 <code>#include &quot;<a class="el" href="alp_8h_source.html">alp.h</a>&quot;</code><br />
+<code>#include &quot;MODULE_D7AP_defs.h&quot;</code><br />
 </div>
 <p><a href="fs_8h_source.html">Go to the source code of this file.</a></p>
 <table class="memberdecls">
@@ -142,7 +143,7 @@ Macros</h2></td></tr>
 <tr class="separator:ac70da3f787c0d6d8de15320d769bdb01"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a050d1be9a50910484da599ca7aca02a9"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="fs_8h.html#a050d1be9a50910484da599ca7aca02a9">D7A_FILE_FIRMWARE_VERSION_GIT_SHA1_SIZE</a>&#160;&#160;&#160;7</td></tr>
 <tr class="separator:a050d1be9a50910484da599ca7aca02a9"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a6699a98a47dcfc5a496a3e2956c60336"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="fs_8h.html#a6699a98a47dcfc5a496a3e2956c60336">D7A_FILE_FIRMWARE_VERSION_SIZE</a>&#160;&#160;&#160;(<a class="el" href="fs_8h.html#ac70da3f787c0d6d8de15320d769bdb01">D7A_FILE_FIRMWARE_VERSION_APP_NAME_SIZE</a> + <a class="el" href="fs_8h.html#a050d1be9a50910484da599ca7aca02a9">D7A_FILE_FIRMWARE_VERSION_GIT_SHA1_SIZE</a>)</td></tr>
+<tr class="memitem:a6699a98a47dcfc5a496a3e2956c60336"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="fs_8h.html#a6699a98a47dcfc5a496a3e2956c60336">D7A_FILE_FIRMWARE_VERSION_SIZE</a>&#160;&#160;&#160;(2 + <a class="el" href="fs_8h.html#ac70da3f787c0d6d8de15320d769bdb01">D7A_FILE_FIRMWARE_VERSION_APP_NAME_SIZE</a> + <a class="el" href="fs_8h.html#a050d1be9a50910484da599ca7aca02a9">D7A_FILE_FIRMWARE_VERSION_GIT_SHA1_SIZE</a>)</td></tr>
 <tr class="separator:a6699a98a47dcfc5a496a3e2956c60336"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a6d6ff8795edc38b06c1ec3cc2b542acd"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="fs_8h.html#a6d6ff8795edc38b06c1ec3cc2b542acd">D7A_FILE_DLL_CONF_FILE_ID</a>&#160;&#160;&#160;0x0A</td></tr>
 <tr class="separator:a6d6ff8795edc38b06c1ec3cc2b542acd"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -150,8 +151,20 @@ Macros</h2></td></tr>
 <tr class="separator:ad4f505844966fa5e90669e2fe09228a0"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:af3a35505f410b374cb4bc874788278ca"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="fs_8h.html#af3a35505f410b374cb4bc874788278ca">D7A_FILE_ACCESS_PROFILE_ID</a>&#160;&#160;&#160;0x20</td></tr>
 <tr class="separator:af3a35505f410b374cb4bc874788278ca"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a887ea14be29acfe1a26a48b41a53d74a"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="fs_8h.html#a887ea14be29acfe1a26a48b41a53d74a">D7A_FILE_ACCESS_PROFILE_SIZE</a>&#160;&#160;&#160;12</td></tr>
+<tr class="memitem:a887ea14be29acfe1a26a48b41a53d74a"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="fs_8h.html#a887ea14be29acfe1a26a48b41a53d74a">D7A_FILE_ACCESS_PROFILE_SIZE</a>&#160;&#160;&#160;65</td></tr>
 <tr class="separator:a887ea14be29acfe1a26a48b41a53d74a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a769b3c38d5dfa52c63f000092d732b87"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="fs_8h.html#a769b3c38d5dfa52c63f000092d732b87">D7A_FILE_NWL_SECURITY</a>&#160;&#160;&#160;0x0D</td></tr>
+<tr class="separator:a769b3c38d5dfa52c63f000092d732b87"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac4055ac76347c863a8c6110d178822b6"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="fs_8h.html#ac4055ac76347c863a8c6110d178822b6">D7A_FILE_NWL_SECURITY_SIZE</a>&#160;&#160;&#160;5</td></tr>
+<tr class="separator:ac4055ac76347c863a8c6110d178822b6"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac6e1902b3be729aa4d702a251177b6af"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="fs_8h.html#ac6e1902b3be729aa4d702a251177b6af">D7A_FILE_NWL_SECURITY_KEY</a>&#160;&#160;&#160;0x0E</td></tr>
+<tr class="separator:ac6e1902b3be729aa4d702a251177b6af"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a33b74659ae9c6a39eb32f4dfb851089d"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="fs_8h.html#a33b74659ae9c6a39eb32f4dfb851089d">D7A_FILE_NWL_SECURITY_KEY_SIZE</a>&#160;&#160;&#160;16</td></tr>
+<tr class="separator:a33b74659ae9c6a39eb32f4dfb851089d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aefa3e2539e6d7579a298b74060503aca"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="fs_8h.html#aefa3e2539e6d7579a298b74060503aca">D7A_FILE_NWL_SECURITY_STATE_REG</a>&#160;&#160;&#160;0x0F</td></tr>
+<tr class="separator:aefa3e2539e6d7579a298b74060503aca"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af715a1a944dafa3db3467c2c9c3e676a"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="fs_8h.html#af715a1a944dafa3db3467c2c9c3e676a">D7A_FILE_NWL_SECURITY_STATE_REG_SIZE</a>&#160;&#160;&#160;2 + (MODULE_D7AP_TRUSTED_NODE_TABLE_SIZE)*(<a class="el" href="fs_8h.html#ac4055ac76347c863a8c6110d178822b6">D7A_FILE_NWL_SECURITY_SIZE</a> + <a class="el" href="fs_8h.html#a3a0450f0c4532589bb70835794049f49">D7A_FILE_UID_SIZE</a>)</td></tr>
+<tr class="separator:af715a1a944dafa3db3467c2c9c3e676a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="typedef-members"></a>
 Typedefs</h2></td></tr>
@@ -174,14 +187,16 @@ Functions</h2></td></tr>
 <tr class="separator:a27d9051455db9179567f8ab425b70888"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a17721645a146281e922c557b6c9f7b5e"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="fs_8h.html#a17721645a146281e922c557b6c9f7b5e">fs_init_file</a> (uint8_t file_id, const <a class="el" href="structfs__file__header__t.html">fs_file_header_t</a> *file_header, const uint8_t *initial_data)</td></tr>
 <tr class="separator:a17721645a146281e922c557b6c9f7b5e"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aaa8bd677288a17539d0f79dd89a52b99"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="fs_8h.html#aaa8bd677288a17539d0f79dd89a52b99">fs_init_file_with_D7AActP</a> (uint8_t file_id, const <a class="el" href="structd7asp__fifo__config__t.html">d7asp_fifo_config_t</a> *fifo_config, const <a class="el" href="structalp__control__t.html">alp_control_t</a> *alp_control, const uint8_t *alp_operand)</td></tr>
-<tr class="separator:aaa8bd677288a17539d0f79dd89a52b99"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a4561fdfaf7c79feda04161b2713f7887"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="fs_8h.html#a4561fdfaf7c79feda04161b2713f7887">fs_init_file_with_D7AActP</a> (uint8_t file_id, const <a class="el" href="structd7asp__master__session__config__t.html">d7asp_master_session_config_t</a> *fifo_config, const <a class="el" href="structalp__control__t.html">alp_control_t</a> *alp_control, const uint8_t *alp_operand)</td></tr>
+<tr class="separator:a4561fdfaf7c79feda04161b2713f7887"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ae20504a834db405a362e0fda451d950b"><td class="memItemLeft" align="right" valign="top"><a class="el" href="alp_8h.html#a67740cd779fd5bfd17c0e11f1dfeee1a">alp_status_codes_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="fs_8h.html#ae20504a834db405a362e0fda451d950b">fs_read_file</a> (uint8_t file_id, uint8_t offset, uint8_t *buffer, uint8_t length)</td></tr>
 <tr class="separator:ae20504a834db405a362e0fda451d950b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a05964d90dbbf8fb7580e7aa782dc58c2"><td class="memItemLeft" align="right" valign="top"><a class="el" href="alp_8h.html#a67740cd779fd5bfd17c0e11f1dfeee1a">alp_status_codes_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="fs_8h.html#a05964d90dbbf8fb7580e7aa782dc58c2">fs_write_file</a> (uint8_t file_id, uint8_t offset, const uint8_t *buffer, uint8_t length)</td></tr>
 <tr class="separator:a05964d90dbbf8fb7580e7aa782dc58c2"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aab55136ca1c9654b7711eae2ab4a1e13"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="fs_8h.html#aab55136ca1c9654b7711eae2ab4a1e13">fs_read_access_class</a> (uint8_t access_class_index, <a class="el" href="structdae__access__profile__t.html">dae_access_profile_t</a> *access_class)</td></tr>
 <tr class="separator:aab55136ca1c9654b7711eae2ab4a1e13"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a7a61e6a27f347d537a454d7683dce89d"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="fs_8h.html#a7a61e6a27f347d537a454d7683dce89d">fs_write_access_class</a> (uint8_t access_class_index, <a class="el" href="structdae__access__profile__t.html">dae_access_profile_t</a> *access_class)</td></tr>
+<tr class="separator:a7a61e6a27f347d537a454d7683dce89d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:afa42c5a67a9f439168246be41e707d4d"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="fs_8h.html#afa42c5a67a9f439168246be41e707d4d">fs_read_uid</a> (uint8_t *buffer)</td></tr>
 <tr class="separator:afa42c5a67a9f439168246be41e707d4d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a934f02e302bd17dc9fe6c0a771d91dc4"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="fs_8h.html#a934f02e302bd17dc9fe6c0a771d91dc4">fs_read_vid</a> (uint8_t *buffer)</td></tr>
@@ -192,6 +207,18 @@ Functions</h2></td></tr>
 <tr class="separator:ac236ecd95cad68122ee6b7180e41e7ed"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a3d3e471087bf007c9f4f5733c921c127"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="fs_8h.html#a3d3e471087bf007c9f4f5733c921c127">fs_write_dll_conf_active_access_class</a> (uint8_t access_class)</td></tr>
 <tr class="separator:a3d3e471087bf007c9f4f5733c921c127"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af4f927959562aceb62b7afb20deb1d1c"><td class="memItemLeft" align="right" valign="top"><a class="el" href="alp_8h.html#a67740cd779fd5bfd17c0e11f1dfeee1a">alp_status_codes_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="fs_8h.html#af4f927959562aceb62b7afb20deb1d1c">fs_read_nwl_security_key</a> (uint8_t *key)</td></tr>
+<tr class="separator:af4f927959562aceb62b7afb20deb1d1c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a592c4015cecdd8ab20486fcf09fa30a6"><td class="memItemLeft" align="right" valign="top"><a class="el" href="alp_8h.html#a67740cd779fd5bfd17c0e11f1dfeee1a">alp_status_codes_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="fs_8h.html#a592c4015cecdd8ab20486fcf09fa30a6">fs_read_nwl_security</a> (<a class="el" href="structd7anp__security__t.html">d7anp_security_t</a> *nwl_security)</td></tr>
+<tr class="separator:a592c4015cecdd8ab20486fcf09fa30a6"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a7648e71f1a86e31aebb26b3131d76513"><td class="memItemLeft" align="right" valign="top"><a class="el" href="alp_8h.html#a67740cd779fd5bfd17c0e11f1dfeee1a">alp_status_codes_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="fs_8h.html#a7648e71f1a86e31aebb26b3131d76513">fs_write_nwl_security</a> (<a class="el" href="structd7anp__security__t.html">d7anp_security_t</a> *nwl_security)</td></tr>
+<tr class="separator:a7648e71f1a86e31aebb26b3131d76513"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa0c7fc094c2d8d9639aee316493cf60c"><td class="memItemLeft" align="right" valign="top"><a class="el" href="alp_8h.html#a67740cd779fd5bfd17c0e11f1dfeee1a">alp_status_codes_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="fs_8h.html#aa0c7fc094c2d8d9639aee316493cf60c">fs_read_nwl_security_state_register</a> (<a class="el" href="structd7anp__node__security__t.html">d7anp_node_security_t</a> *<a class="el" href="d7anp_8c.html#a1b05e81b1a7d34bb4b16f580a64eb9f1">node_security_state</a>)</td></tr>
+<tr class="separator:aa0c7fc094c2d8d9639aee316493cf60c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aecf9eb8c88e83f864878a86a6e6b0fa6"><td class="memItemLeft" align="right" valign="top"><a class="el" href="alp_8h.html#a67740cd779fd5bfd17c0e11f1dfeee1a">alp_status_codes_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="fs_8h.html#aecf9eb8c88e83f864878a86a6e6b0fa6">fs_add_nwl_security_state_register_entry</a> (<a class="el" href="structd7anp__trusted__node__t.html">d7anp_trusted_node_t</a> *trusted_node, uint8_t trusted_node_nb)</td></tr>
+<tr class="separator:aecf9eb8c88e83f864878a86a6e6b0fa6"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a475b4fb3d0de373bc2c899c017e0c901"><td class="memItemLeft" align="right" valign="top"><a class="el" href="alp_8h.html#a67740cd779fd5bfd17c0e11f1dfeee1a">alp_status_codes_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="fs_8h.html#a475b4fb3d0de373bc2c899c017e0c901">fs_update_nwl_security_state_register</a> (<a class="el" href="structd7anp__trusted__node__t.html">d7anp_trusted_node_t</a> *trusted_node, uint8_t trusted_node_index)</td></tr>
+<tr class="separator:a475b4fb3d0de373bc2c899c017e0c901"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a6378862472eb19878800ac5fb83b4306"><td class="memItemLeft" align="right" valign="top">uint8_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="fs_8h.html#a6378862472eb19878800ac5fb83b4306">fs_get_file_length</a> (uint8_t file_id)</td></tr>
 <tr class="separator:a6378862472eb19878800ac5fb83b4306"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
@@ -220,7 +247,7 @@ Functions</h2></td></tr>
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">#define D7A_FILE_ACCESS_PROFILE_SIZE&#160;&#160;&#160;12</td>
+          <td class="memname">#define D7A_FILE_ACCESS_PROFILE_SIZE&#160;&#160;&#160;65</td>
         </tr>
       </table>
 </div><div class="memdoc">
@@ -292,7 +319,79 @@ Functions</h2></td></tr>
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">#define D7A_FILE_FIRMWARE_VERSION_SIZE&#160;&#160;&#160;(<a class="el" href="fs_8h.html#ac70da3f787c0d6d8de15320d769bdb01">D7A_FILE_FIRMWARE_VERSION_APP_NAME_SIZE</a> + <a class="el" href="fs_8h.html#a050d1be9a50910484da599ca7aca02a9">D7A_FILE_FIRMWARE_VERSION_GIT_SHA1_SIZE</a>)</td>
+          <td class="memname">#define D7A_FILE_FIRMWARE_VERSION_SIZE&#160;&#160;&#160;(2 + <a class="el" href="fs_8h.html#ac70da3f787c0d6d8de15320d769bdb01">D7A_FILE_FIRMWARE_VERSION_APP_NAME_SIZE</a> + <a class="el" href="fs_8h.html#a050d1be9a50910484da599ca7aca02a9">D7A_FILE_FIRMWARE_VERSION_GIT_SHA1_SIZE</a>)</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a class="anchor" id="a769b3c38d5dfa52c63f000092d732b87"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">#define D7A_FILE_NWL_SECURITY&#160;&#160;&#160;0x0D</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a class="anchor" id="ac6e1902b3be729aa4d702a251177b6af"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">#define D7A_FILE_NWL_SECURITY_KEY&#160;&#160;&#160;0x0E</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a class="anchor" id="a33b74659ae9c6a39eb32f4dfb851089d"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">#define D7A_FILE_NWL_SECURITY_KEY_SIZE&#160;&#160;&#160;16</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a class="anchor" id="ac4055ac76347c863a8c6110d178822b6"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">#define D7A_FILE_NWL_SECURITY_SIZE&#160;&#160;&#160;5</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a class="anchor" id="aefa3e2539e6d7579a298b74060503aca"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">#define D7A_FILE_NWL_SECURITY_STATE_REG&#160;&#160;&#160;0x0F</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a class="anchor" id="af715a1a944dafa3db3467c2c9c3e676a"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">#define D7A_FILE_NWL_SECURITY_STATE_REG_SIZE&#160;&#160;&#160;2 + (MODULE_D7AP_TRUSTED_NODE_TABLE_SIZE)*(<a class="el" href="fs_8h.html#ac4055ac76347c863a8c6110d178822b6">D7A_FILE_NWL_SECURITY_SIZE</a> + <a class="el" href="fs_8h.html#a3a0450f0c4532589bb70835794049f49">D7A_FILE_UID_SIZE</a>)</td>
         </tr>
       </table>
 </div><div class="memdoc">
@@ -363,6 +462,32 @@ Functions</h2></td></tr>
 </div>
 </div>
 <h2 class="groupheader">Function Documentation</h2>
+<a class="anchor" id="aecf9eb8c88e83f864878a86a6e6b0fa6"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="alp_8h.html#a67740cd779fd5bfd17c0e11f1dfeee1a">alp_status_codes_t</a> fs_add_nwl_security_state_register_entry </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="structd7anp__trusted__node__t.html">d7anp_trusted_node_t</a> *&#160;</td>
+          <td class="paramname"><em>trusted_node</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">uint8_t&#160;</td>
+          <td class="paramname"><em>trusted_node_nb</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
 <a class="anchor" id="a6378862472eb19878800ac5fb83b4306"></a>
 <div class="memitem">
 <div class="memproto">
@@ -427,7 +552,7 @@ Functions</h2></td></tr>
 
 </div>
 </div>
-<a class="anchor" id="aaa8bd677288a17539d0f79dd89a52b99"></a>
+<a class="anchor" id="a4561fdfaf7c79feda04161b2713f7887"></a>
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
@@ -440,7 +565,7 @@ Functions</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">const <a class="el" href="structd7asp__fifo__config__t.html">d7asp_fifo_config_t</a> *&#160;</td>
+          <td class="paramtype">const <a class="el" href="structd7asp__master__session__config__t.html">d7asp_master_session_config_t</a> *&#160;</td>
           <td class="paramname"><em>fifo_config</em>, </td>
         </tr>
         <tr>
@@ -544,6 +669,54 @@ Functions</h2></td></tr>
 
 </div>
 </div>
+<a class="anchor" id="a592c4015cecdd8ab20486fcf09fa30a6"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="alp_8h.html#a67740cd779fd5bfd17c0e11f1dfeee1a">alp_status_codes_t</a> fs_read_nwl_security </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="structd7anp__security__t.html">d7anp_security_t</a> *&#160;</td>
+          <td class="paramname"><em>nwl_security</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a class="anchor" id="af4f927959562aceb62b7afb20deb1d1c"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="alp_8h.html#a67740cd779fd5bfd17c0e11f1dfeee1a">alp_status_codes_t</a> fs_read_nwl_security_key </td>
+          <td>(</td>
+          <td class="paramtype">uint8_t *&#160;</td>
+          <td class="paramname"><em>key</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a class="anchor" id="aa0c7fc094c2d8d9639aee316493cf60c"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="alp_8h.html#a67740cd779fd5bfd17c0e11f1dfeee1a">alp_status_codes_t</a> fs_read_nwl_security_state_register </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="structd7anp__node__security__t.html">d7anp_node_security_t</a> *&#160;</td>
+          <td class="paramname"><em>node_security_state</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
 <a class="anchor" id="afa42c5a67a9f439168246be41e707d4d"></a>
 <div class="memitem">
 <div class="memproto">
@@ -570,6 +743,58 @@ Functions</h2></td></tr>
           <td class="paramtype">uint8_t *&#160;</td>
           <td class="paramname"><em>buffer</em></td><td>)</td>
           <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a class="anchor" id="a475b4fb3d0de373bc2c899c017e0c901"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="alp_8h.html#a67740cd779fd5bfd17c0e11f1dfeee1a">alp_status_codes_t</a> fs_update_nwl_security_state_register </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="structd7anp__trusted__node__t.html">d7anp_trusted_node_t</a> *&#160;</td>
+          <td class="paramname"><em>trusted_node</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">uint8_t&#160;</td>
+          <td class="paramname"><em>trusted_node_index</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a class="anchor" id="a7a61e6a27f347d537a454d7683dce89d"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void fs_write_access_class </td>
+          <td>(</td>
+          <td class="paramtype">uint8_t&#160;</td>
+          <td class="paramname"><em>access_class_index</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="structdae__access__profile__t.html">dae_access_profile_t</a> *&#160;</td>
+          <td class="paramname"><em>access_class</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
         </tr>
       </table>
 </div><div class="memdoc">
@@ -630,6 +855,22 @@ Functions</h2></td></tr>
 
 </div>
 </div>
+<a class="anchor" id="a7648e71f1a86e31aebb26b3131d76513"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="alp_8h.html#a67740cd779fd5bfd17c0e11f1dfeee1a">alp_status_codes_t</a> fs_write_nwl_security </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="structd7anp__security__t.html">d7anp_security_t</a> *&#160;</td>
+          <td class="paramname"><em>nwl_security</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
 <a class="anchor" id="a4a686633d0d053c8adef7920870696d4"></a>
 <div class="memitem">
 <div class="memproto">
@@ -652,7 +893,7 @@ Functions</h2></td></tr>
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
     <li class="navelem"><a class="el" href="dir_e05d7e2b1ecd646af5bb94391405f3b5.html">modules</a></li><li class="navelem"><a class="el" href="dir_6b8f92aa648c158fb1e8ed54f9452f2b.html">d7ap</a></li><li class="navelem"><a class="el" href="fs_8h.html">fs.h</a></li>
-    <li class="footer">Generated on Mon May 2 2016 21:25:36 for OSS-7: Open Source Stack for DASH7 Alliance Protocol by
+    <li class="footer">Generated on Fri Feb 3 2017 13:01:27 for OSS-7: Open Source Stack for DASH7 Alliance Protocol by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.8.11 </li>
   </ul>

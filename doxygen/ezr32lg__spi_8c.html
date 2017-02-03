@@ -144,8 +144,10 @@ Data Structures</h2></td></tr>
 Macros</h2></td></tr>
 <tr class="memitem:ae62f322c3b6680e6c47ac21641962ac8"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ezr32lg__spi_8c.html#ae62f322c3b6680e6c47ac21641962ac8">USARTS</a>&#160;&#160;&#160;3</td></tr>
 <tr class="separator:ae62f322c3b6680e6c47ac21641962ac8"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a9e07bbe7431477b51ae00b33032f0771"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ezr32lg__spi_8c.html#a9e07bbe7431477b51ae00b33032f0771">LOCATIONS</a>&#160;&#160;&#160;2</td></tr>
+<tr class="memitem:a9e07bbe7431477b51ae00b33032f0771"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ezr32lg__spi_8c.html#a9e07bbe7431477b51ae00b33032f0771">LOCATIONS</a>&#160;&#160;&#160;3</td></tr>
 <tr class="separator:a9e07bbe7431477b51ae00b33032f0771"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a25fcc3170efa76a8db98fc73d1632f10"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ezr32lg__spi_8c.html#a25fcc3170efa76a8db98fc73d1632f10">UNDEFINED_LOCATION</a></td></tr>
+<tr class="separator:a25fcc3170efa76a8db98fc73d1632f10"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a1851b03e0061cfdda6a3f628e9ad853d"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ezr32lg__spi_8c.html#a1851b03e0061cfdda6a3f628e9ad853d">MAX_SPI_HANDLES</a>&#160;&#160;&#160;4</td></tr>
 <tr class="separator:a1851b03e0061cfdda6a3f628e9ad853d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a7ce3a9aa59b075aa125cc1f581380517"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ezr32lg__spi_8c.html#a7ce3a9aa59b075aa125cc1f581380517">MAX_SPI_SLAVE_HANDLES</a>&#160;&#160;&#160;4</td></tr>
@@ -158,6 +160,10 @@ Typedefs</h2></td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
 Functions</h2></td></tr>
+<tr class="memitem:a6836123f019c402bc9f128313bccc552"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ezr32lg__spi_8c.html#a6836123f019c402bc9f128313bccc552">spi_enable</a> (<a class="el" href="hwspi_8h.html#a624976677b1458a655084160ac11ee55">spi_handle_t</a> *spi)</td></tr>
+<tr class="separator:a6836123f019c402bc9f128313bccc552"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a4c34fb1445c3df4d14000b5886577efe"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ezr32lg__spi_8c.html#a4c34fb1445c3df4d14000b5886577efe">spi_disable</a> (<a class="el" href="hwspi_8h.html#a624976677b1458a655084160ac11ee55">spi_handle_t</a> *spi)</td></tr>
+<tr class="separator:a4c34fb1445c3df4d14000b5886577efe"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a8dccdf967f367d2e46fc3812a5656eb7"><td class="memItemLeft" align="right" valign="top"><a class="el" href="hwspi_8h.html#a624976677b1458a655084160ac11ee55">spi_handle_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ezr32lg__spi_8c.html#a8dccdf967f367d2e46fc3812a5656eb7">spi_init</a> (uint8_t idx, uint32_t baudrate, uint8_t databits, bool msbf, uint8_t pins)</td></tr>
 <tr class="separator:a8dccdf967f367d2e46fc3812a5656eb7"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aece3e92fcab4b2423c61f1a5e47c965c"><td class="memItemLeft" align="right" valign="top"><a class="el" href="hwspi_8h.html#ae4d9fd016ca9d21b32d133929c8c662c">spi_slave_handle_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ezr32lg__spi_8c.html#aece3e92fcab4b2423c61f1a5e47c965c">spi_init_slave</a> (<a class="el" href="hwspi_8h.html#a624976677b1458a655084160ac11ee55">spi_handle_t</a> *spi, <a class="el" href="structpin__id__t.html">pin_id_t</a> cs_pin, bool cs_is_active_low)</td></tr>
@@ -190,7 +196,7 @@ Variables</h2></td></tr>
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">#define LOCATIONS&#160;&#160;&#160;2</td>
+          <td class="memname">#define LOCATIONS&#160;&#160;&#160;3</td>
         </tr>
       </table>
 </div><div class="memdoc">
@@ -219,6 +225,18 @@ Variables</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
+</div>
+</div>
+<a class="anchor" id="a25fcc3170efa76a8db98fc73d1632f10"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">#define UNDEFINED_LOCATION</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<b>Value:</b><div class="fragment"><div class="line">{                     \</div><div class="line"> .location = 0,                                  \</div><div class="line"> .mosi     = { .port = 0,         .pin =  0 },   \</div><div class="line"> .miso     = { .port = 0,         .pin =  0 },   \</div><div class="line"> .clk      = { .port = 0,         .pin =  0 }    \</div><div class="line">}</div></div><!-- fragment -->
 </div>
 </div>
 <a class="anchor" id="ae62f322c3b6680e6c47ac21641962ac8"></a>
@@ -256,6 +274,38 @@ Variables</h2></td></tr>
           <td>(</td>
           <td class="paramtype"><a class="el" href="hwspi_8h.html#ae4d9fd016ca9d21b32d133929c8c662c">spi_slave_handle_t</a> *&#160;</td>
           <td class="paramname"><em>slave</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a class="anchor" id="a4c34fb1445c3df4d14000b5886577efe"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void spi_disable </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="hwspi_8h.html#a624976677b1458a655084160ac11ee55">spi_handle_t</a> *&#160;</td>
+          <td class="paramname"><em>spi</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a class="anchor" id="a6836123f019c402bc9f128313bccc552"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void spi_enable </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="hwspi_8h.html#a624976677b1458a655084160ac11ee55">spi_handle_t</a> *&#160;</td>
+          <td class="paramname"><em>spi</em></td><td>)</td>
           <td></td>
         </tr>
       </table>
@@ -500,7 +550,7 @@ Variables</h2></td></tr>
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
     <li class="navelem"><a class="el" href="dir_644e041c3a6521da7b27eba0e4eb2b95.html">framework</a></li><li class="navelem"><a class="el" href="dir_8f2c340cdabd0cab4db94c39704d70a8.html">hal</a></li><li class="navelem"><a class="el" href="dir_e53dcac4adbcec177c678c0d8c8c3e7c.html">chips</a></li><li class="navelem"><a class="el" href="dir_da2cee54bc048923b90ea1fb73857f31.html">ezr32lg</a></li><li class="navelem"><a class="el" href="ezr32lg__spi_8c.html">ezr32lg_spi.c</a></li>
-    <li class="footer">Generated on Mon May 2 2016 21:25:36 for OSS-7: Open Source Stack for DASH7 Alliance Protocol by
+    <li class="footer">Generated on Fri Feb 3 2017 13:01:26 for OSS-7: Open Source Stack for DASH7 Alliance Protocol by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.8.11 </li>
   </ul>

@@ -15,7 +15,7 @@ var si4460__interface_8h =
     [ "byte_to_binary", "si4460__interface_8h.html#a3b932d16e6ba5d5c47b39ec3f84df461", null ],
     [ "ezradioInit", "si4460__interface_8h.html#aa97f68b510cb3995137d19b0dba6da96", null ],
     [ "ezradioResetTRxFifo", "si4460__interface_8h.html#a5a552425d8e40d1eefd78cc82b5dd7b5", null ],
-    [ "ezradioStartRx", "si4460__interface_8h.html#abc62ba23a66e6c65bf40ff28d895c17f", null ],
-    [ "ezradioStartTx", "si4460__interface_8h.html#afda9a04d2288c254e5e5874e85b3cac2", null ],
+    [ "ezradioStartRx", "si4460__interface_8h.html#ab7de2b4cfb23fb831cbc1e3824bd3c3b", null ],
+    [ "ezradioStartTx", "si4460__interface_8h.html#a3025d27a0c752da53dcd45b68b82f6a0", null ],
     [ "ezradioStartTxUnmodelated", "si4460__interface_8h.html#a5a8f3bf0fcf05362979b782837afe7d6", null ]
 ];

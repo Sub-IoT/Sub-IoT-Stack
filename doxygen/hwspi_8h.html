@@ -128,6 +128,10 @@ Typedefs</h2></td></tr>
 Functions</h2></td></tr>
 <tr class="memitem:ab1f7a5202ea3c2430f3e6948fc2a92e9"><td class="memItemLeft" align="right" valign="top"><a class="el" href="link__c_8h.html#ad7a35fa85166c1d1839000ac10353068">__LINK_C</a> <a class="el" href="hwspi_8h.html#a624976677b1458a655084160ac11ee55">spi_handle_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="hwspi_8h.html#ab1f7a5202ea3c2430f3e6948fc2a92e9">spi_init</a> (uint8_t uart, uint32_t baudrate, uint8_t databits, bool msbf, uint8_t pins)</td></tr>
 <tr class="separator:ab1f7a5202ea3c2430f3e6948fc2a92e9"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:afebf8cfee693548a7b05cff009d87268"><td class="memItemLeft" align="right" valign="top"><a class="el" href="link__c_8h.html#ad7a35fa85166c1d1839000ac10353068">__LINK_C</a> void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="hwspi_8h.html#afebf8cfee693548a7b05cff009d87268">spi_enable</a> (<a class="el" href="hwspi_8h.html#a624976677b1458a655084160ac11ee55">spi_handle_t</a> *spi)</td></tr>
+<tr class="separator:afebf8cfee693548a7b05cff009d87268"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a4f5142329bbab2a1491345f6454963da"><td class="memItemLeft" align="right" valign="top"><a class="el" href="link__c_8h.html#ad7a35fa85166c1d1839000ac10353068">__LINK_C</a> void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="hwspi_8h.html#a4f5142329bbab2a1491345f6454963da">spi_disable</a> (<a class="el" href="hwspi_8h.html#a624976677b1458a655084160ac11ee55">spi_handle_t</a> *spi)</td></tr>
+<tr class="separator:a4f5142329bbab2a1491345f6454963da"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a60f8e0339fbdb93f7685769248b8fc23"><td class="memItemLeft" align="right" valign="top"><a class="el" href="link__c_8h.html#ad7a35fa85166c1d1839000ac10353068">__LINK_C</a> <a class="el" href="hwspi_8h.html#ae4d9fd016ca9d21b32d133929c8c662c">spi_slave_handle_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="hwspi_8h.html#a60f8e0339fbdb93f7685769248b8fc23">spi_init_slave</a> (<a class="el" href="hwspi_8h.html#a624976677b1458a655084160ac11ee55">spi_handle_t</a> *spi, <a class="el" href="structpin__id__t.html">pin_id_t</a> cs_pin, bool cs_is_active_low)</td></tr>
 <tr class="separator:a60f8e0339fbdb93f7685769248b8fc23"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a6a0e01622cab2baa39831a8f15ab1746"><td class="memItemLeft" align="right" valign="top"><a class="el" href="link__c_8h.html#ad7a35fa85166c1d1839000ac10353068">__LINK_C</a> void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="hwspi_8h.html#a6a0e01622cab2baa39831a8f15ab1746">spi_select</a> (<a class="el" href="hwspi_8h.html#ae4d9fd016ca9d21b32d133929c8c662c">spi_slave_handle_t</a> *slave)</td></tr>
@@ -176,6 +180,38 @@ Functions</h2></td></tr>
           <td>(</td>
           <td class="paramtype"><a class="el" href="hwspi_8h.html#ae4d9fd016ca9d21b32d133929c8c662c">spi_slave_handle_t</a> *&#160;</td>
           <td class="paramname"><em>slave</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a class="anchor" id="a4f5142329bbab2a1491345f6454963da"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="link__c_8h.html#ad7a35fa85166c1d1839000ac10353068">__LINK_C</a> void spi_disable </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="hwspi_8h.html#a624976677b1458a655084160ac11ee55">spi_handle_t</a> *&#160;</td>
+          <td class="paramname"><em>spi</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a class="anchor" id="afebf8cfee693548a7b05cff009d87268"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="link__c_8h.html#ad7a35fa85166c1d1839000ac10353068">__LINK_C</a> void spi_enable </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="hwspi_8h.html#a624976677b1458a655084160ac11ee55">spi_handle_t</a> *&#160;</td>
+          <td class="paramname"><em>spi</em></td><td>)</td>
           <td></td>
         </tr>
       </table>
@@ -371,7 +407,7 @@ Functions</h2></td></tr>
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
     <li class="navelem"><a class="el" href="dir_644e041c3a6521da7b27eba0e4eb2b95.html">framework</a></li><li class="navelem"><a class="el" href="dir_8f2c340cdabd0cab4db94c39704d70a8.html">hal</a></li><li class="navelem"><a class="el" href="dir_66efcf04cc0ac2238c9977a7e49e93f8.html">inc</a></li><li class="navelem"><a class="el" href="hwspi_8h.html">hwspi.h</a></li>
-    <li class="footer">Generated on Mon May 2 2016 21:25:36 for OSS-7: Open Source Stack for DASH7 Alliance Protocol by
+    <li class="footer">Generated on Fri Feb 3 2017 13:01:26 for OSS-7: Open Source Stack for DASH7 Alliance Protocol by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.8.11 </li>
   </ul>

@@ -106,7 +106,9 @@ $(document).ready(function(){initNavTree('d7anp_8h.html','');});
 <div class="header">
   <div class="summary">
 <a href="#nested-classes">Data Structures</a> &#124;
+<a href="#define-members">Macros</a> &#124;
 <a href="#typedef-members">Typedefs</a> &#124;
+<a href="#enum-members">Enumerations</a> &#124;
 <a href="#func-members">Functions</a>  </div>
   <div class="headertitle">
 <div class="title">d7anp.h File Reference</div>  </div>
@@ -115,35 +117,228 @@ $(document).ready(function(){initNavTree('d7anp_8h.html','');});
 <div class="textblock"><code>#include &quot;stdint.h&quot;</code><br />
 <code>#include &quot;stdbool.h&quot;</code><br />
 <code>#include &quot;<a class="el" href="dae_8h_source.html">dae.h</a>&quot;</code><br />
+<code>#include &quot;MODULE_D7AP_defs.h&quot;</code><br />
 </div>
 <p><a href="d7anp_8h_source.html">Go to the source code of this file.</a></p>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="nested-classes"></a>
 Data Structures</h2></td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structd7anp__addressee__ctrl.html">d7anp_addressee_ctrl</a></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structd7anp__addressee__t.html">d7anp_addressee_t</a></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structd7anp__ctrl__t.html">d7anp_ctrl_t</a></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">The D7ANP CTRL header.  <a href="structd7anp__ctrl__t.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structd7anp__security__t.html">d7anp_security_t</a></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structd7anp__trusted__node__t.html">d7anp_trusted_node_t</a></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structd7anp__node__security__t.html">d7anp_node_security_t</a></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="define-members"></a>
+Macros</h2></td></tr>
+<tr class="memitem:af9c608e68b27bfbadecf1607cceeee2f"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="d7anp_8h.html#af9c608e68b27bfbadecf1607cceeee2f">ID_TYPE_NBID_ID_LENGTH</a>&#160;&#160;&#160;1</td></tr>
+<tr class="separator:af9c608e68b27bfbadecf1607cceeee2f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aeda206aa2bba3e315e5660c41390b18e"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="d7anp_8h.html#aeda206aa2bba3e315e5660c41390b18e">ID_TYPE_NOID_ID_LENGTH</a>&#160;&#160;&#160;0</td></tr>
+<tr class="separator:aeda206aa2bba3e315e5660c41390b18e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a96e6d9ecc60f0201db0f65db7c2265be"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="d7anp_8h.html#a96e6d9ecc60f0201db0f65db7c2265be">ID_TYPE_UID_ID_LENGTH</a>&#160;&#160;&#160;8</td></tr>
+<tr class="separator:a96e6d9ecc60f0201db0f65db7c2265be"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aee29928fbffcc90d1c574fa0248f2444"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="d7anp_8h.html#aee29928fbffcc90d1c574fa0248f2444">ID_TYPE_VID_LENGTH</a>&#160;&#160;&#160;2</td></tr>
+<tr class="separator:aee29928fbffcc90d1c574fa0248f2444"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a54a0a13311f1d248821eff98f165fb40"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="d7anp_8h.html#a54a0a13311f1d248821eff98f165fb40">ID_TYPE_IS_BROADCAST</a>(id_type)&#160;&#160;&#160;(id_type == <a class="el" href="d7anp_8h.html#a0b13bbf89a93549904d06f0b96402892ac3368ac06e20f284f95355122e7c7bdb">ID_TYPE_NBID</a> || id_type == <a class="el" href="d7anp_8h.html#a0b13bbf89a93549904d06f0b96402892a63ca7745e6994d11772cfc1747cc003c">ID_TYPE_NOID</a>)</td></tr>
+<tr class="separator:a54a0a13311f1d248821eff98f165fb40"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a013201964ab332e97c3b5ca7353d9149"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="d7anp_8h.html#a013201964ab332e97c3b5ca7353d9149">GET_NLS_METHOD</a>(VAL)&#160;&#160;&#160;(uint8_t)(VAL &amp; 0x0F)</td></tr>
+<tr class="separator:a013201964ab332e97c3b5ca7353d9149"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aca66f86e8f3040aa57b99658ba700e3b"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="d7anp_8h.html#aca66f86e8f3040aa57b99658ba700e3b">SET_NLS_METHOD</a>(VAL)&#160;&#160;&#160;(uint8_t)(VAL &lt;&lt; 4 &amp; 0xF0)</td></tr>
+<tr class="separator:aca66f86e8f3040aa57b99658ba700e3b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aad8adbed9641bd637d2f8245a5d95408"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="d7anp_8h.html#aad8adbed9641bd637d2f8245a5d95408">ENABLE_SSR_FILTER</a>&#160;&#160;&#160;0x01</td></tr>
+<tr class="separator:aad8adbed9641bd637d2f8245a5d95408"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac852c03356e5fb9e204ceb61bb1395c2"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="d7anp_8h.html#ac852c03356e5fb9e204ceb61bb1395c2">ALLOW_NEW_SSR_ENTRY_IN_BCAST</a>&#160;&#160;&#160;0x02</td></tr>
+<tr class="separator:ac852c03356e5fb9e204ceb61bb1395c2"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="typedef-members"></a>
 Typedefs</h2></td></tr>
 <tr class="memitem:a055b444e9c43fd24266b5908a7b26636"><td class="memItemLeft" align="right" valign="top">typedef struct <a class="el" href="structpacket.html">packet</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="d7anp_8h.html#a055b444e9c43fd24266b5908a7b26636">packet_t</a></td></tr>
 <tr class="separator:a055b444e9c43fd24266b5908a7b26636"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="enum-members"></a>
+Enumerations</h2></td></tr>
+<tr class="memitem:a0b13bbf89a93549904d06f0b96402892"><td class="memItemLeft" align="right" valign="top">enum &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="d7anp_8h.html#a0b13bbf89a93549904d06f0b96402892">id_type_t</a> { <a class="el" href="d7anp_8h.html#a0b13bbf89a93549904d06f0b96402892ac3368ac06e20f284f95355122e7c7bdb">ID_TYPE_NBID</a> = 0, 
+<a class="el" href="d7anp_8h.html#a0b13bbf89a93549904d06f0b96402892a63ca7745e6994d11772cfc1747cc003c">ID_TYPE_NOID</a> = 1, 
+<a class="el" href="d7anp_8h.html#a0b13bbf89a93549904d06f0b96402892a9f746b9a49a93bca5de51db0c0d48ef3">ID_TYPE_UID</a> = 2, 
+<a class="el" href="d7anp_8h.html#a0b13bbf89a93549904d06f0b96402892a92ed358370b2e8ab8634165f13d0a201">ID_TYPE_VID</a> = 3
+ }</td></tr>
+<tr class="separator:a0b13bbf89a93549904d06f0b96402892"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a38436632403fcee6aacb5b18c6602643"><td class="memItemLeft" align="right" valign="top">enum &#160;</td><td class="memItemRight" valign="bottom">{ <br />
+&#160;&#160;<a class="el" href="d7anp_8h.html#a38436632403fcee6aacb5b18c6602643affe711f732be132e628bedfbfb3fdef1">AES_NONE</a> = 0, 
+<a class="el" href="d7anp_8h.html#a38436632403fcee6aacb5b18c6602643a386977c34c671c481407b1a81b03710b">AES_CTR</a> = 0x01, 
+<a class="el" href="d7anp_8h.html#a38436632403fcee6aacb5b18c6602643a042e992415c3be213a7923327e68d038">AES_CBC_MAC_128</a> = 0x02, 
+<a class="el" href="d7anp_8h.html#a38436632403fcee6aacb5b18c6602643a9f9f45b16d4597c9a955182f65b077b0">AES_CBC_MAC_64</a> = 0x03, 
+<br />
+&#160;&#160;<a class="el" href="d7anp_8h.html#a38436632403fcee6aacb5b18c6602643a0f8b7416550c33a2f140a1f76816a680">AES_CBC_MAC_32</a> = 0x04, 
+<a class="el" href="d7anp_8h.html#a38436632403fcee6aacb5b18c6602643a14e0fb488bf98b55af4d03ddb4ad6492">AES_CCM_128</a> = 0x05, 
+<a class="el" href="d7anp_8h.html#a38436632403fcee6aacb5b18c6602643a728f3b628af26ec6cd436b2ada0f2649">AES_CCM_64</a> = 0x06, 
+<a class="el" href="d7anp_8h.html#a38436632403fcee6aacb5b18c6602643a19bbc9bb08e44b5870bbb35ac060d0a1">AES_CCM_32</a> = 0x07
+<br />
+ }</td></tr>
+<tr class="separator:a38436632403fcee6aacb5b18c6602643"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
 Functions</h2></td></tr>
-<tr class="memitem:aa03f66f871cb0182246d608db0b43dc6"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="d7anp_8h.html#aa03f66f871cb0182246d608db0b43dc6">d7anp_tx_foreground_frame</a> (<a class="el" href="d7anp_8h.html#a055b444e9c43fd24266b5908a7b26636">packet_t</a> *<a class="el" href="structpacket.html">packet</a>, bool should_include_origin_template, <a class="el" href="structdae__access__profile__t.html">dae_access_profile_t</a> *access_profile)</td></tr>
-<tr class="separator:aa03f66f871cb0182246d608db0b43dc6"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aee3b435d93fa563d2906707a95d6f919"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="d7anp_8h.html#aee3b435d93fa563d2906707a95d6f919">d7anp_init</a> ()</td></tr>
+<tr class="separator:aee3b435d93fa563d2906707a95d6f919"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab95828fb2f2f1d8c0562dfaedb4a3da0"><td class="memItemLeft" align="right" valign="top"><a class="el" href="types_8h.html#a9ad6b2dc3cbff040775e79656fe8e1a3">error_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="d7anp_8h.html#ab95828fb2f2f1d8c0562dfaedb4a3da0">d7anp_tx_foreground_frame</a> (<a class="el" href="d7anp_8h.html#a055b444e9c43fd24266b5908a7b26636">packet_t</a> *<a class="el" href="structpacket.html">packet</a>, bool should_include_origin_template, uint8_t slave_listen_timeout_ct)</td></tr>
+<tr class="separator:ab95828fb2f2f1d8c0562dfaedb4a3da0"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:adb701a9e9417a2da5afac4f6d91b50b9"><td class="memItemLeft" align="right" valign="top">uint8_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="d7anp_8h.html#adb701a9e9417a2da5afac4f6d91b50b9">d7anp_assemble_packet_header</a> (<a class="el" href="d7anp_8h.html#a055b444e9c43fd24266b5908a7b26636">packet_t</a> *<a class="el" href="structpacket.html">packet</a>, uint8_t *data_ptr)</td></tr>
 <tr class="separator:adb701a9e9417a2da5afac4f6d91b50b9"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a08e0adbbab43d5201f7be22827e90d38"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="d7anp_8h.html#a08e0adbbab43d5201f7be22827e90d38">d7anp_disassemble_packet_header</a> (<a class="el" href="d7anp_8h.html#a055b444e9c43fd24266b5908a7b26636">packet_t</a> *<a class="el" href="structpacket.html">packet</a>, uint8_t *packet_idx)</td></tr>
 <tr class="separator:a08e0adbbab43d5201f7be22827e90d38"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:add2152414f558f7556eaa24386e2612b"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="d7anp_8h.html#add2152414f558f7556eaa24386e2612b">d7anp_signal_transmission_failure</a> ()</td></tr>
+<tr class="separator:add2152414f558f7556eaa24386e2612b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a68cab22b2d52ebadda412c4a29efcc8c"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="d7anp_8h.html#a68cab22b2d52ebadda412c4a29efcc8c">d7anp_signal_packet_transmitted</a> (<a class="el" href="d7anp_8h.html#a055b444e9c43fd24266b5908a7b26636">packet_t</a> *<a class="el" href="structpacket.html">packet</a>)</td></tr>
+<tr class="separator:a68cab22b2d52ebadda412c4a29efcc8c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a69d21cd1e3437fd5b45d6510f057ad9d"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="d7anp_8h.html#a69d21cd1e3437fd5b45d6510f057ad9d">d7anp_process_received_packet</a> (<a class="el" href="d7anp_8h.html#a055b444e9c43fd24266b5908a7b26636">packet_t</a> *<a class="el" href="structpacket.html">packet</a>, bool background_frame)</td></tr>
+<tr class="separator:a69d21cd1e3437fd5b45d6510f057ad9d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a275a559b214c3fd6a591cfcfe1157b6c"><td class="memItemLeft" align="right" valign="top">uint8_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="d7anp_8h.html#a275a559b214c3fd6a591cfcfe1157b6c">d7anp_addressee_id_length</a> (<a class="el" href="d7anp_8h.html#a0b13bbf89a93549904d06f0b96402892">id_type_t</a>)</td></tr>
+<tr class="separator:a275a559b214c3fd6a591cfcfe1157b6c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa7b7bb07dea7724360a5c1f77a73de5f"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="d7anp_8h.html#aa7b7bb07dea7724360a5c1f77a73de5f">d7anp_set_foreground_scan_timeout</a> (<a class="el" href="group__frameworktimer.html#ga77fd8f9362e4f9ee1022170189802daf">timer_tick_t</a> timeout)</td></tr>
+<tr class="separator:aa7b7bb07dea7724360a5c1f77a73de5f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a302997d6fe216e6ff6af2df5494917ca"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="d7anp_8h.html#a302997d6fe216e6ff6af2df5494917ca">d7anp_start_foreground_scan</a> ()</td></tr>
+<tr class="separator:a302997d6fe216e6ff6af2df5494917ca"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab05aa6bd22ab5cf6f7718abcae6f4e4c"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="d7anp_8h.html#ab05aa6bd22ab5cf6f7718abcae6f4e4c">d7anp_stop_foreground_scan</a> (bool auto_scan)</td></tr>
+<tr class="separator:ab05aa6bd22ab5cf6f7718abcae6f4e4c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a6fe08a456c78d10447a109f4f086104f"><td class="memItemLeft" align="right" valign="top">uint8_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="d7anp_8h.html#a6fe08a456c78d10447a109f4f086104f">d7anp_secure_payload</a> (<a class="el" href="d7anp_8h.html#a055b444e9c43fd24266b5908a7b26636">packet_t</a> *<a class="el" href="structpacket.html">packet</a>, uint8_t *payload, uint8_t payload_len)</td></tr>
+<tr class="separator:a6fe08a456c78d10447a109f4f086104f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><dl class="section copyright"><dt>Copyright</dt><dd>(C) Copyright 2015 University of Antwerp and others (<a href="http://oss-7.cosys.be">http://oss-7.cosys.be</a>)</dd></dl>
 <p>Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the License. You may obtain a copy of the License at </p><pre class="fragment">http://www.apache.org/licenses/LICENSE-2.0
 </pre><p>Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.</p>
 <dl class="section author"><dt>Author</dt><dd><a href="#" onclick="location.href='mai'+'lto:'+'gle'+'nn'+'.er'+'ge'+'ert'+'s@'+'uan'+'tw'+'erp'+'en'+'.be'; return false;">glenn<span style="display: none;">.nosp@m.</span>.erg<span style="display: none;">.nosp@m.</span>eerts<span style="display: none;">.nosp@m.</span>@uan<span style="display: none;">.nosp@m.</span>twerp<span style="display: none;">.nosp@m.</span>en.b<span style="display: none;">.nosp@m.</span>e</a> </dd></dl>
-</div><h2 class="groupheader">Typedef Documentation</h2>
+</div><h2 class="groupheader">Macro Definition Documentation</h2>
+<a class="anchor" id="ac852c03356e5fb9e204ceb61bb1395c2"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">#define ALLOW_NEW_SSR_ENTRY_IN_BCAST&#160;&#160;&#160;0x02</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a class="anchor" id="aad8adbed9641bd637d2f8245a5d95408"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">#define ENABLE_SSR_FILTER&#160;&#160;&#160;0x01</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a class="anchor" id="a013201964ab332e97c3b5ca7353d9149"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">#define GET_NLS_METHOD</td>
+          <td>(</td>
+          <td class="paramtype">&#160;</td>
+          <td class="paramname">VAL</td><td>)</td>
+          <td>&#160;&#160;&#160;(uint8_t)(VAL &amp; 0x0F)</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a class="anchor" id="a54a0a13311f1d248821eff98f165fb40"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">#define ID_TYPE_IS_BROADCAST</td>
+          <td>(</td>
+          <td class="paramtype">&#160;</td>
+          <td class="paramname">id_type</td><td>)</td>
+          <td>&#160;&#160;&#160;(id_type == <a class="el" href="d7anp_8h.html#a0b13bbf89a93549904d06f0b96402892ac3368ac06e20f284f95355122e7c7bdb">ID_TYPE_NBID</a> || id_type == <a class="el" href="d7anp_8h.html#a0b13bbf89a93549904d06f0b96402892a63ca7745e6994d11772cfc1747cc003c">ID_TYPE_NOID</a>)</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a class="anchor" id="af9c608e68b27bfbadecf1607cceeee2f"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">#define ID_TYPE_NBID_ID_LENGTH&#160;&#160;&#160;1</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a class="anchor" id="aeda206aa2bba3e315e5660c41390b18e"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">#define ID_TYPE_NOID_ID_LENGTH&#160;&#160;&#160;0</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a class="anchor" id="a96e6d9ecc60f0201db0f65db7c2265be"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">#define ID_TYPE_UID_ID_LENGTH&#160;&#160;&#160;8</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a class="anchor" id="aee29928fbffcc90d1c574fa0248f2444"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">#define ID_TYPE_VID_LENGTH&#160;&#160;&#160;2</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a class="anchor" id="aca66f86e8f3040aa57b99658ba700e3b"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">#define SET_NLS_METHOD</td>
+          <td>(</td>
+          <td class="paramtype">&#160;</td>
+          <td class="paramname">VAL</td><td>)</td>
+          <td>&#160;&#160;&#160;(uint8_t)(VAL &lt;&lt; 4 &amp; 0xF0)</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<h2 class="groupheader">Typedef Documentation</h2>
 <a class="anchor" id="a055b444e9c43fd24266b5908a7b26636"></a>
 <div class="memitem">
 <div class="memproto">
@@ -156,7 +351,76 @@ Functions</h2></td></tr>
 
 </div>
 </div>
+<h2 class="groupheader">Enumeration Type Documentation</h2>
+<a class="anchor" id="a38436632403fcee6aacb5b18c6602643"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">anonymous enum</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<table class="fieldtable">
+<tr><th colspan="2">Enumerator</th></tr><tr><td class="fieldname"><a class="anchor" id="a38436632403fcee6aacb5b18c6602643affe711f732be132e628bedfbfb3fdef1"></a>AES_NONE&#160;</td><td class="fielddoc">
+</td></tr>
+<tr><td class="fieldname"><a class="anchor" id="a38436632403fcee6aacb5b18c6602643a386977c34c671c481407b1a81b03710b"></a>AES_CTR&#160;</td><td class="fielddoc">
+</td></tr>
+<tr><td class="fieldname"><a class="anchor" id="a38436632403fcee6aacb5b18c6602643a042e992415c3be213a7923327e68d038"></a>AES_CBC_MAC_128&#160;</td><td class="fielddoc">
+</td></tr>
+<tr><td class="fieldname"><a class="anchor" id="a38436632403fcee6aacb5b18c6602643a9f9f45b16d4597c9a955182f65b077b0"></a>AES_CBC_MAC_64&#160;</td><td class="fielddoc">
+</td></tr>
+<tr><td class="fieldname"><a class="anchor" id="a38436632403fcee6aacb5b18c6602643a0f8b7416550c33a2f140a1f76816a680"></a>AES_CBC_MAC_32&#160;</td><td class="fielddoc">
+</td></tr>
+<tr><td class="fieldname"><a class="anchor" id="a38436632403fcee6aacb5b18c6602643a14e0fb488bf98b55af4d03ddb4ad6492"></a>AES_CCM_128&#160;</td><td class="fielddoc">
+</td></tr>
+<tr><td class="fieldname"><a class="anchor" id="a38436632403fcee6aacb5b18c6602643a728f3b628af26ec6cd436b2ada0f2649"></a>AES_CCM_64&#160;</td><td class="fielddoc">
+</td></tr>
+<tr><td class="fieldname"><a class="anchor" id="a38436632403fcee6aacb5b18c6602643a19bbc9bb08e44b5870bbb35ac060d0a1"></a>AES_CCM_32&#160;</td><td class="fielddoc">
+</td></tr>
+</table>
+
+</div>
+</div>
+<a class="anchor" id="a0b13bbf89a93549904d06f0b96402892"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">enum <a class="el" href="d7anp_8h.html#a0b13bbf89a93549904d06f0b96402892">id_type_t</a></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<table class="fieldtable">
+<tr><th colspan="2">Enumerator</th></tr><tr><td class="fieldname"><a class="anchor" id="a0b13bbf89a93549904d06f0b96402892ac3368ac06e20f284f95355122e7c7bdb"></a>ID_TYPE_NBID&#160;</td><td class="fielddoc">
+</td></tr>
+<tr><td class="fieldname"><a class="anchor" id="a0b13bbf89a93549904d06f0b96402892a63ca7745e6994d11772cfc1747cc003c"></a>ID_TYPE_NOID&#160;</td><td class="fielddoc">
+</td></tr>
+<tr><td class="fieldname"><a class="anchor" id="a0b13bbf89a93549904d06f0b96402892a9f746b9a49a93bca5de51db0c0d48ef3"></a>ID_TYPE_UID&#160;</td><td class="fielddoc">
+</td></tr>
+<tr><td class="fieldname"><a class="anchor" id="a0b13bbf89a93549904d06f0b96402892a92ed358370b2e8ab8634165f13d0a201"></a>ID_TYPE_VID&#160;</td><td class="fielddoc">
+</td></tr>
+</table>
+
+</div>
+</div>
 <h2 class="groupheader">Function Documentation</h2>
+<a class="anchor" id="a275a559b214c3fd6a591cfcfe1157b6c"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">uint8_t d7anp_addressee_id_length </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="d7anp_8h.html#a0b13bbf89a93549904d06f0b96402892">id_type_t</a>&#160;</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
 <a class="anchor" id="adb701a9e9417a2da5afac4f6d91b50b9"></a>
 <div class="memitem">
 <div class="memproto">
@@ -209,12 +473,163 @@ Functions</h2></td></tr>
 
 </div>
 </div>
-<a class="anchor" id="aa03f66f871cb0182246d608db0b43dc6"></a>
+<a class="anchor" id="aee3b435d93fa563d2906707a95d6f919"></a>
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">void d7anp_tx_foreground_frame </td>
+          <td class="memname">void d7anp_init </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a class="anchor" id="a69d21cd1e3437fd5b45d6510f057ad9d"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void d7anp_process_received_packet </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="d7anp_8h.html#a055b444e9c43fd24266b5908a7b26636">packet_t</a> *&#160;</td>
+          <td class="paramname"><em>packet</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">bool&#160;</td>
+          <td class="paramname"><em>background_frame</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a class="anchor" id="a6fe08a456c78d10447a109f4f086104f"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">uint8_t d7anp_secure_payload </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="d7anp_8h.html#a055b444e9c43fd24266b5908a7b26636">packet_t</a> *&#160;</td>
+          <td class="paramname"><em>packet</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">uint8_t *&#160;</td>
+          <td class="paramname"><em>payload</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">uint8_t&#160;</td>
+          <td class="paramname"><em>payload_len</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a class="anchor" id="aa7b7bb07dea7724360a5c1f77a73de5f"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void d7anp_set_foreground_scan_timeout </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="group__frameworktimer.html#ga77fd8f9362e4f9ee1022170189802daf">timer_tick_t</a>&#160;</td>
+          <td class="paramname"><em>timeout</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a class="anchor" id="a68cab22b2d52ebadda412c4a29efcc8c"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void d7anp_signal_packet_transmitted </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="d7anp_8h.html#a055b444e9c43fd24266b5908a7b26636">packet_t</a> *&#160;</td>
+          <td class="paramname"><em>packet</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a class="anchor" id="add2152414f558f7556eaa24386e2612b"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void d7anp_signal_transmission_failure </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a class="anchor" id="a302997d6fe216e6ff6af2df5494917ca"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void d7anp_start_foreground_scan </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a class="anchor" id="ab05aa6bd22ab5cf6f7718abcae6f4e4c"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void d7anp_stop_foreground_scan </td>
+          <td>(</td>
+          <td class="paramtype">bool&#160;</td>
+          <td class="paramname"><em>auto_scan</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a class="anchor" id="ab95828fb2f2f1d8c0562dfaedb4a3da0"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="types_8h.html#a9ad6b2dc3cbff040775e79656fe8e1a3">error_t</a> d7anp_tx_foreground_frame </td>
           <td>(</td>
           <td class="paramtype"><a class="el" href="d7anp_8h.html#a055b444e9c43fd24266b5908a7b26636">packet_t</a> *&#160;</td>
           <td class="paramname"><em>packet</em>, </td>
@@ -228,8 +643,8 @@ Functions</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype"><a class="el" href="structdae__access__profile__t.html">dae_access_profile_t</a> *&#160;</td>
-          <td class="paramname"><em>access_profile</em>&#160;</td>
+          <td class="paramtype">uint8_t&#160;</td>
+          <td class="paramname"><em>slave_listen_timeout_ct</em>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -247,7 +662,7 @@ Functions</h2></td></tr>
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
     <li class="navelem"><a class="el" href="dir_e05d7e2b1ecd646af5bb94391405f3b5.html">modules</a></li><li class="navelem"><a class="el" href="dir_6b8f92aa648c158fb1e8ed54f9452f2b.html">d7ap</a></li><li class="navelem"><a class="el" href="d7anp_8h.html">d7anp.h</a></li>
-    <li class="footer">Generated on Mon May 2 2016 21:25:36 for OSS-7: Open Source Stack for DASH7 Alliance Protocol by
+    <li class="footer">Generated on Fri Feb 3 2017 13:01:27 for OSS-7: Open Source Stack for DASH7 Alliance Protocol by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.8.11 </li>
   </ul>

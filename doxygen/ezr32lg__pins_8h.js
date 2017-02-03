@@ -34,6 +34,8 @@ var ezr32lg__pins_8h =
     [ "F10", "ezr32lg__pins_8h.html#a126fc359c3d4cb1c1e7a1708e90108bd", null ],
     [ "F11", "ezr32lg__pins_8h.html#af6061309f7f829b023f12901c691220b", null ],
     [ "F2", "ezr32lg__pins_8h.html#ae0f6f9b7c74cf826de9b2bf1c3c21d9a", null ],
+    [ "F3", "ezr32lg__pins_8h.html#a976361f883a238c1c2632228cce46d38", null ],
+    [ "F4", "ezr32lg__pins_8h.html#a0eb171d14ae3964c6acfe3defb38cec0", null ],
     [ "F5", "ezr32lg__pins_8h.html#a8614e4d9a59d75d31fddc51885b19c7a", null ],
     [ "F6", "ezr32lg__pins_8h.html#a16d1acd6a355ec06c432ce9e0ad0d606", null ],
     [ "F7", "ezr32lg__pins_8h.html#ab626d7a287110f2e42cd0838eef8ccaf", null ],

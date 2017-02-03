@@ -2,6 +2,7 @@ var dir_66efcf04cc0ac2238c9977a7e49e93f8 =
 [
     [ "hw_module_doc.h", "hw__module__doc_8h.html", null ],
     [ "hwadc.h", "hwadc_8h.html", "hwadc_8h" ],
+    [ "hwaes.h", "hwaes_8h.html", "hwaes_8h" ],
     [ "hwatomic.h", "hwatomic_8h.html", "hwatomic_8h" ],
     [ "hwdebug.h", "hwdebug_8h.html", "hwdebug_8h" ],
     [ "hwgpio.h", "hwgpio_8h.html", "hwgpio_8h" ],

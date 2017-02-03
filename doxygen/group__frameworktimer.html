@@ -148,6 +148,9 @@ Functions</h2></td></tr>
 <tr class="memitem:ga9b7e8e64213b01afc03545c9c7dab08e"><td class="memItemLeft" align="right" valign="top"><a class="el" href="link__c_8h.html#ad7a35fa85166c1d1839000ac10353068">__LINK_C</a> <a class="el" href="types_8h.html#a9ad6b2dc3cbff040775e79656fe8e1a3">error_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__frameworktimer.html#ga9b7e8e64213b01afc03545c9c7dab08e">timer_cancel_task</a> (<a class="el" href="group__scheduler.html#ga78a55c2ac757b7addb3150081812288b">task_t</a> task)</td></tr>
 <tr class="memdesc:ga9b7e8e64213b01afc03545c9c7dab08e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Cancel a previously scheduled task.  <a href="#ga9b7e8e64213b01afc03545c9c7dab08e">More...</a><br /></td></tr>
 <tr class="separator:ga9b7e8e64213b01afc03545c9c7dab08e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga6294eacf0b07f6f37e0816be0ebfaf8f"><td class="memItemLeft" align="right" valign="top"><a class="el" href="link__c_8h.html#ad7a35fa85166c1d1839000ac10353068">__LINK_C</a> bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__frameworktimer.html#ga6294eacf0b07f6f37e0816be0ebfaf8f">timer_is_task_scheduled</a> (<a class="el" href="group__scheduler.html#ga78a55c2ac757b7addb3150081812288b">task_t</a> task)</td></tr>
+<tr class="memdesc:ga6294eacf0b07f6f37e0816be0ebfaf8f"><td class="mdescLeft">&#160;</td><td class="mdescRight">check if a task is already scheduled with a delay  <a href="#ga6294eacf0b07f6f37e0816be0ebfaf8f">More...</a><br /></td></tr>
+<tr class="separator:ga6294eacf0b07f6f37e0816be0ebfaf8f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <p>The framework timer provides an abstraction of the low-level hardware timers provided by the HAL. The framework timer interface builds on the low-level HAL timer interface to provide more advanced capabilities. </p>
@@ -158,11 +161,7 @@ Functions</h2></td></tr>
 <li>Support for multiple priorities</li>
 </ul>
 <p>The framework timer supports the same timer resolutions supported by the hal. By default a binary millisecond timer interval is used (HWTIMER_FREQ_MS), but this can be changed by setting the FRAMEWORK_TIMER_RESOLUTION property in CMake.</p>
-<p>The framework timers have two modes of operation 'Reset mode' and 'Normal mode'. In 'Normal mode' the 32-bit counter of the timer (see timer_get_counter()) counts from 0 to MAX_INT and only then loops back to zero. Depending on the selected frequency this yield a loop time between 1,5 days (32KHz timer) and 48 days (1MS ticks). In 'Normal mode' <a class="el" href="group__frameworktimer.html#gaf3aebd60468217e2d12c51e42dfe994b" title="Retrieve the current counter value of the timer. ">timer_get_counter_value()</a> therefore always returns the time since system bootup (or since the last overflow)</p>
-<p>When FRAMEWORK_TIMER_RESET_COUNTER is defined the timers operate in 'Reset Mode'. In 'Reset Mode' the timer counter is reset every time:</p><ul>
-<li>A new event is scheduled</li>
-<li>A timer event fires. The meta-data of the timers is updated accordingly to ensure that the timing of the events is not affected by the operation. In 'Reset mode' <a class="el" href="group__frameworktimer.html#gaf3aebd60468217e2d12c51e42dfe994b" title="Retrieve the current counter value of the timer. ">timer_get_counter_value()</a> returns the number of ticks since the last time since the counter was reset.</li>
-</ul>
+<p>The 32-bit counter of the timer (see timer_get_counter()) counts from 0 to MAX_INT and then loops back to zero. Depending on the selected frequency this yield a loop time between 1,5 days (32KHz timer) and 48 days (1MS ticks). <a class="el" href="group__frameworktimer.html#gaf3aebd60468217e2d12c51e42dfe994b" title="Retrieve the current counter value of the timer. ">timer_get_counter_value()</a> therefore always returns the time since system bootup (or since the last overflow)</p>
 <dl class="section author"><dt>Author</dt><dd><a href="#" onclick="location.href='mai'+'lto:'+'maa'+'rt'+'en.'+'we'+'yn@'+'ua'+'ntw'+'er'+'pen'+'.b'+'e'; return false;">maart<span style="display: none;">.nosp@m.</span>en.w<span style="display: none;">.nosp@m.</span>eyn@u<span style="display: none;">.nosp@m.</span>antw<span style="display: none;">.nosp@m.</span>erpen<span style="display: none;">.nosp@m.</span>.be</a> </dd>
 <dd>
 <a href="#" onclick="location.href='mai'+'lto:'+'dan'+'ie'+'l.v'+'an'+'den'+'ak'+'ker'+'@u'+'ant'+'we'+'rpe'+'n.'+'be'; return false;">danie<span style="display: none;">.nosp@m.</span>l.va<span style="display: none;">.nosp@m.</span>ndena<span style="display: none;">.nosp@m.</span>kker<span style="display: none;">.nosp@m.</span>@uant<span style="display: none;">.nosp@m.</span>werp<span style="display: none;">.nosp@m.</span>en.be</a> </dd></dl>
@@ -283,7 +282,7 @@ Functions</h2></td></tr>
   </table>
   </dd>
 </dl>
-<dl class="section return"><dt>Returns</dt><dd>error_t SUCCESS if the timer was successfully canceled EALREADY if the timer was not scheduled and therefore not canceled </dd></dl>
+<dl class="section return"><dt>Returns</dt><dd>error_t SUCCESS if the task was successfully canceled EALREADY if the task was not scheduled and therefore not canceled </dd></dl>
 
 </div>
 </div>
@@ -301,9 +300,8 @@ Functions</h2></td></tr>
 </div><div class="memdoc">
 
 <p>Retrieve the current counter value of the timer. </p>
-<p>When the timers are operating in 'Normal mode', the returned counter value is the number of clock ticks since the device booted or since the last overflow. (As discussed above an overflow takes between 1,5 days and 48 days to occur depending on the frequence of the timer)</p>
-<p>When the timers are operating in 'Reset mode', the returned counter value is the number of clock ticks since the last time a task was posted OR the last time a posted task was scheduled.</p>
-<dl class="section return"><dt>Returns</dt><dd>timer_tick_t The current value of the counter. Please note that </dd></dl>
+<p>The returned counter value is the number of clock ticks since the device booted or since the last overflow. (As discussed above an overflow takes between 1,5 days and 48 days to occur depending on the frequence of the timer)</p>
+<dl class="section return"><dt>Returns</dt><dd>timer_tick_t The current value of the counter. </dd></dl>
 
 </div>
 </div>
@@ -321,6 +319,31 @@ Functions</h2></td></tr>
 </div><div class="memdoc">
 
 <p>Initialise the timer sub system. </p>
+
+</div>
+</div>
+<a class="anchor" id="ga6294eacf0b07f6f37e0816be0ebfaf8f"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="link__c_8h.html#ad7a35fa85166c1d1839000ac10353068">__LINK_C</a> bool timer_is_task_scheduled </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="group__scheduler.html#ga78a55c2ac757b7addb3150081812288b">task_t</a>&#160;</td>
+          <td class="paramname"><em>task</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>check if a task is already scheduled with a delay </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">task</td><td>The task to verify.</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>bool true if the task is present in the timer event queue false if the task was not scheduled </dd></dl>
 
 </div>
 </div>
@@ -357,7 +380,6 @@ Functions</h2></td></tr>
 <p>Post a task to be scheduled at a given time with a given priority. </p>
 <p>The time parameter denotes the clock tick at which the task is to be scheduled with the task scheduler. time may be a value that is in the future or in the past wrt. the current value of '<a class="el" href="group__frameworktimer.html#gaf3aebd60468217e2d12c51e42dfe994b" title="Retrieve the current counter value of the timer. ">timer_get_counter_value()</a>' (denoted as cur_time). If time denotes a clock tick in the future, the framework timer delays scheduling the task until cur_time == time. If time denotes a clock tick in the past, the task is scheduled immediately. Depending on the frequency of the timer, the priority of the task and the amount of tasks currently scheduled, another few clock ticks may pass before the task is actually executed. (If you need more precise timing, use a hardware timer)</p>
 <p>To ensure proper operation of the framework timer in the event of an overflow, time is interpreted in a circular fashion wrt. the current counter value. A specified time is deemed to be in the past when, using SIGNED integer arithmetic: 'time - cur_time &lt; 0'. This equates to checking whether time &lt; cur_time, except that it also works when the timer is about to overflow.</p>
-<p>When the framework timer is operating in 'Reset mode' (as opposed to 'Normal mode') the value of the counter is reset to '0' right before the task is posted. The supplied time value is then treated in the normal manner, but since the counter itself is reset, time can also be interpreted as the number of clock ticks to wait (from posting the task) before scheduling the task with the task scheduler.</p>
 <p>Please note that posting a task with the framework timers does NOT automatically register it with the scheduler. If the posted task is not registered with the scheduler, the task will not be executed.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
@@ -376,7 +398,7 @@ Functions</h2></td></tr>
 <!-- start footer part -->
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
-    <li class="footer">Generated on Mon May 2 2016 21:25:36 for OSS-7: Open Source Stack for DASH7 Alliance Protocol by
+    <li class="footer">Generated on Fri Feb 3 2017 13:01:27 for OSS-7: Open Source Stack for DASH7 Alliance Protocol by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.8.11 </li>
   </ul>

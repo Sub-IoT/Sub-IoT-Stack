@@ -109,58 +109,141 @@ $(document).ready(function(){initNavTree('md_gettingstarted.html','');});
 <ul>
 <li>OSS-7 code. The code is hosted on <a href="https://github.com/mosaic-lopow/dash7-ap-open-source-stack/commits/master">github</a>, so either fork or clone the repository.</li>
 <li><a href="http://www.cmake.org/">CMake</a> (v2.8.12 or greater) as a flexible build system</li>
-<li>a GCC-based toolchain matching the target platform for example <a href="https://launchpad.net/gcc-arm-embedded">GCC ARM Embedded</a> for ARM Cortex-M bases platforms or <a href="http://software-dl.ti.com/msp430/msp430_public_sw/mcu/msp430/MSPGCC/latest/index_FDS.html">Texas Instruments MSP430-GCC</a> for CC430 based platforms</li>
+<li>a GCC-based toolchain matching the target platform, for example <a href="https://launchpad.net/gcc-arm-embedded">GCC ARM Embedded</a> for ARM Cortex-M based platforms. By default the build system assumes the GCC ARM Embedded toolchain is located in the PATH environment variable (meaning you can run <code>arm-none-eabi-gcc</code> without specifying the full path).</li>
+<li><a href="https://www.segger.com/downloads/jlink">JLinkExe</a> if you are using a JLink probe to flash/debug your target</li>
 </ul>
 <h3>Run cmake</h3>
-<p>We will create a build directory and run cmake to generate the buildscript for an ARM EFM32GG based platform in this case: </p><pre class="fragment">$ mkdir build
+<p>We will create a build directory and run cmake to generate the buildscript: </p><pre class="fragment">$ mkdir build
 $ cd build
-$ cmake ../dash7-ap-open-source-stack/stack/ \
-        -DTOOLCHAIN_DIR=../gcc-arm-none-eabi-4_9-2015q3/ \
-        -DCMAKE_TOOLCHAIN_FILE=../dash7-ap-open-source-stack/stack/cmake/toolchains/gcc-arm-embedded.cmake \
-        -DPLATFORM=EFM32GG_STK3700 \
-        -DPLATFORM_EFM32GG_STK3700_RADIO=cc1101 \
-        -DAPP_D7AP_TEST=on
+$ cmake ../dash7-ap-open-source-stack/stack/ -DAPP_GATEWAY=y -DAPP_SENSOR=y
 -- Cross-compiling using gcc-arm-embedded toolchain
 -- Cross-compiling using gcc-arm-embedded toolchain
--- detected supported platforms: EFM32GG_STK3700EFM32HG_STK3400ifestmatrix_tp1089
--- selected platform: EFM32GG_STK3700
+-- detected supported platforms: EFM32GG_STK3700 EFM32HG_STK3400 EZR32LG_Octa EZR32LG_USB01 EZR32LG_WSTK6200A OCTA_Gateway stm32f4_discovery
+-- selected platform: EZR32LG_WSTK6200A
 -- The ASM compiler identification is GNU
--- Found assembler: /Users/xtof/Workspace/tmp/gcc-arm-none-eabi-4_9-2015q3/bin/arm-none-eabi-gcc
+-- Found assembler: /home/glenn/bin/toolchains/gcc-arm-none-eabi-4_9-2014q4/bin/arm-none-eabi-gcc
+-- Added chip ezr32lg
+-- Added chip si4460
 -- Configuring done
 -- Generating done
--- Build files have been written to: /Users/xtof/Workspace/tmp/build
-</pre><p>A quick run-down of the different arguments:</p><ul>
-<li>we point cmake to the open source stack implementation: <code>../dash7-ap-open-source-stack/stack/</code></li>
-<li><code>TOOLCHAIN_DIR</code> points to our gcc cross compiler</li>
-<li><code>CMAKE_TOOLCHAIN_FILE</code> points to the cmake configuration for our gcc cross compiler. In this case we are using the ARM cross compiler. If you are on a MSP430 based platform you can use <code>msp430-gcc.cmake</code> in the same directory.</li>
-<li><code>PLATFORM</code> is one of the supported platforms (see: <code>dash7-ap-open-source-stack/stack/framework/hal/platforms</code>). Note that the build system will enable platforms based on the selected toolchain so make sure you have select the right toolchain for your target platform.</li>
-<li><code>PLATFORM_&lt;insert chosen platform here in capitals&gt;_RADIO</code> identifies the radio we want to use (see: also <code>dash7-ap-open-source-stack/stack/framework/hal/chips</code>).</li>
-<li>turn on compilation of chosen app(s): <code>APP_&lt;insert chosen application here in capitals&gt;</code> (see: <code>dash7-ap-open-source-stack/stack/apps</code>).</li>
+-- Build files have been written to: /home/glenn/oss7/build
+</pre><p>A quick run-down of what happens:</p><ul>
+<li>We point cmake to the open source stack implementation: <code>../dash7-ap-open-source-stack/stack/</code> in this case</li>
+<li>We are using the default gcc-arm-embedded toolchain, which is in our path. If you prefer not to add the toolchain directory to the PATH you have to specify the path by passing this to cmake as in this example: <code>-DTOOLCHAIN_DIR=../gcc-arm-none-eabi-4_9-2015q3/</code>. If you would want to use another toolchain you have to pass the <code>-DCMAKE_TOOLCHAIN_FILE=...</code> option to point to the cmake configuration for the cross compiler.</li>
+<li>Based on the toolchain a number of supported platform options are available. By default the <code>EZR32LG_WSTK6200A</code> platform is selected. If you want another platform you can specify this using <code>-DPLATFORM=&lt;platform-name&gt;</code></li>
+<li>A platform is a combination of one or more chips (MCU or RF) and the wiring between them. Based on the platform a number of chips will be added to the build, in this example the <code>ezr32lg</code> MCU and the <code>si4460</code> RF chip.</li>
+<li>Applications can be added by setting -DAPP_&lt;name&gt;=y. The name of the application is the name of a subdirectory of stack/apps, but uppercased. In this example we enabled the sensor and gateway application.</li>
 </ul>
 <p>For example configuring a buildscript for the cc430 based wizzimote platform can be done like this: </p><pre class="fragment">$ cmake ../dash7-ap-open-source-stack/stack/ \
         -DTOOLCHAIN_DIR=../msp430-gcc-3.5.0.0/ \
         -DCMAKE_TOOLCHAIN_FILE=../dash7-ap-open-source-stack/stack/cmake/toolchains/msp430-gcc.cmake \
-        -DPLATFORM=wizzimote \
-        -DAPP_PHY_TEST=on
+        -DPLATFORM=wizzimote
 </pre><h3>Build it!</h3>
-<p>If your toolchain is setup correctly you should be able to build the stack and the configured application(s) now: </p><pre class="fragment">$ make
-Scanning dependencies of target CHIP_CC1101
-[  1%] Building C object framework/hal/platforms/platform/framework/hal/chips/cc1101/CMakeFiles/CHIP_CC1101.dir/cc1101.c.obj
-[  2%] Building C object framework/hal/platforms/platform/framework/hal/chips/cc1101/CMakeFiles/CHIP_CC1101.dir/cc1101_interface.c.obj
-[  3%] Building C object framework/hal/platforms/platform/framework/hal/chips/cc1101/CMakeFiles/CHIP_CC1101.dir/cc1101_interface_spi.c.obj
-[  3%] Built target CHIP_CC1101
-Scanning dependencies of target CHIP_EFM32GG
-...
-[ 97%] Built target d7ap
-Scanning dependencies of target d7ap_test.elf
-[ 98%] Building C object apps/d7ap_test/CMakeFiles/d7ap_test.elf.dir/d7ap_test.c.obj
-[100%] Linking C executable d7ap_test.elf
-[100%] Built target d7ap_test.elf
-</pre><h3>Build options</h3>
-<p>More build options to for example tweak parameters of the stack or platform specific settings can be configured through cmake. This can be done by passing -D options on the commandline (as above) or using the ccmake interactive console interface of the cmake-gui interface as shown below.</p>
+<p>If your toolchain is setup correctly you should be able to build the stack and the configured application(s) now. An example of (shortened) output is below: </p><pre class="fragment">$ make
+Scanning dependencies of target CHIP_SI4460
+[  1%] Building C object framework/hal/platforms/platform/chips/si4460/CMakeFiles/CHIP_SI4460.dir/si4460.c.obj
+[  2%] Building C object framework/hal/platforms/platform/chips/si4460/CMakeFiles/CHIP_SI4460.dir/si4460_interface.c.obj
+[  6%] Built target CHIP_SI4460
+Scanning dependencies of target CHIP_EZR32LG
+[  7%] Building C object framework/hal/platforms/platform/chips/ezr32lg/CMakeFiles/CHIP_EZR32LG.dir/ezr32lg_adc.c.obj
+&lt;snip&gt;
+[ 44%] Built target CHIP_EZR32LG
+Scanning dependencies of target PLATFORM
+&lt;snip&gt;
+[ 61%] Built target PLATFORM
+&lt;snip&gt;
+Scanning dependencies of target d7ap
+&lt;snip&gt;
+[ 88%] Linking C static library libd7ap.a
+[ 88%] Built target d7ap
+Scanning dependencies of target gateway.elf
+&lt;snip&gt;
+[ 90%] Linking C executable gateway.elf
+[ 91%] Built target gateway.elf
+&lt;snip&gt;
+Scanning dependencies of target sensor.elf
+[ 95%] Building C object apps/sensor/CMakeFiles/sensor.elf.dir/sensor.c.obj
+[ 96%] Building C object apps/sensor/CMakeFiles/sensor.elf.dir/version.c.obj
+[ 97%] Linking C executable sensor.elf
+[ 97%] Built target sensor.elf
+</pre><p>Note that this builds the chip drivers, the platform and the DASH7 stack implementation as a static library and links the applications.</p>
+<h3>Build options</h3>
+<p>More build options to for example tweak parameters of the stack or platform specific settings can be configured through cmake. This can be done by passing -D options on the commandline (as above) or using the ccmake interactive console interface of the cmake-gui interface as shown below. The current values of all options can be displayed by executing <code>cmake -L</code>.</p>
+<h2>Flashing</h2>
+<p>cmake will generate targets for flashing each application using JLink, by running <code>make flash-&lt;appname&gt;</code>. For example: </p><pre class="fragment">$ make flash-sensor
+&lt;snip&gt;
+[100%] Built target sensor.elf
+SEGGER J-Link Commander V6.10m (Compiled Nov 10 2016 18:38:45)
+DLL version V6.10m, compiled Nov 10 2016 18:38:36
+&lt;snip&gt;
+Connecting to J-Link via USB...O.K.
+Firmware: Silicon Labs J-Link Pro OB compiled Jan 22 2016 15:00:47
+Hardware version: V4.00
+S/N: 440058314
+IP-Addr: DHCP (no addr. received yet)
+VTref = 3.341V
+
+Selecting SWD as current target interface.
+Selecting 10000 kHz as target interface speed
+
+Target connection not established yet but required for command.
+Device "EZR32LG330F256RXX" selected.
+
+Found SWD-DP with ID 0x2BA01477
+AP-IDR: 0x24770011, Type: AHB-AP
+Found Cortex-M3 r2p1, Little endian.
+&lt;snip&gt;
+Downloading file [sensor.bin]...
+Comparing flash   [100%] Done.
+Verifying flash   [100%] Done.
+J-Link: Flash download: Flash download skipped. Flash contents already match
+O.K.
+
+Loading binary file sensor.bin
+Reading 94072 bytes data from target memory @ 0x00000000.
+Verify successful.
+&lt;snip&gt;
+[100%] Built target flash-sensor
+</pre><p>If all went well the application should be running on the target.</p>
+<h2>RTT Logging</h2>
+<p>If you are using a platform which uses JLink then logging will be enabled by default and redirect to the fast RTT interface. This interface makes use of JLink connection, meaning you do not need extra wires (UART or USB) for logging. You can read the logs using <code>JLinkRTTClient</code>. This will wait for a JLink connection and print all RTT logs. Opening a JLink connection can be done using <code>make jlink-open</code> in your build directory. If you open <code>JLinkRTTClient</code> in one terminal and execute <code>make flash-sensor jlink-open</code> in another you will get this output: </p><pre class="fragment">$ JLinkRTTClient
+###RTT Client: ************************************************************
+###RTT Client: *           SEGGER MICROCONTROLLER GmbH &amp; Co KG            *
+###RTT Client: *   Solutions for real time microcontroller applications   *
+###RTT Client: ************************************************************
+###RTT Client: *                                                          *
+###RTT Client: *  (c) 2012 - 2016  SEGGER Microcontroller GmbH &amp; Co KG    *
+###RTT Client: *                                                          *
+###RTT Client: *     www.segger.com     Support: support@segger.com       *
+###RTT Client: *                                                          *
+###RTT Client: ************************************************************
+###RTT Client: *                                                          *
+###RTT Client: * SEGGER J-Link RTT Client   Compiled Nov 10 2016 18:39:09 *
+###RTT Client: *                                                          *
+###RTT Client: ************************************************************
+
+###RTT Client: -----------------------------------------------
+###RTT Client: Connecting to J-Link RTT Server via localhost:19021 ..... Connected.
+SEGGER J-Link V6.10m - Real time terminal output
+Silicon Labs J-Link Pro OB compiled Jan 22 2016 15:00:47 V4.0, SN=440058314
+Process: JLinkExe
+###RTT Client: Connection closed by J-Link DLL. Going to reconnect.
+###RTT Client: Connecting to J-Link RTT Server via localhost:19021 . Connected.
+SEGGER J-Link V6.10m - Real time terminal output
+Silicon Labs J-Link Pro OB compiled Jan 22 2016 15:00:47 V4.0, SN=440058314
+Process: JLinkExe
+
+[000] Device booted
+
+[001] Int T: 31.8 C
+[002] Ext T: 27.7 C
+[003] Ext H: 30.5
+[004] Batt 3297 mV
+</pre><p>Note that you can enable different log sources separatelyby using cmake settings ( x_LOG_ENABLED).</p>
 <h2>IDE Support</h2>
 <p>The OSS-7 buildsystem and code does not require a specific IDE. The user can choose which IDE to use, if any. CMake supports generating project files for Eclipse CDT, CodeBlocks etc, instead of plain makefiles using the -G option. Alternatively you can use an IDE which natively uses cmake projects like Qt Creator or JetBrain's CLion.</p>
-<p>For debugging most toolchains come with a GDB client which you can attach to a GDB server which is compatible with your programmer. For instance ARM Cortex-M platforms can use Segger's JLink programmers which comes with JLinkGDBServer. The arm-gcc-embedded toolchain can then be used to connect with the JLinkGDBServer for flashing and debugging. Segger also provides the JLinkDebugger GUI tool for debugging.</p>
+<h2>Debugging</h2>
+<p>For debugging most toolchains come with a GDB client which you can attach to a GDB server which is compatible with your programmer. For instance ARM Cortex-M platforms can use Segger's JLink programmers which comes with JLinkGDBServer. The arm-gcc-embedded toolchain can then be used to connect with the JLinkGDBServer for flashing and debugging. Segger also provides the <a href="https://www.segger.com/ozone.html">Ozone</a> GUI tool for debugging.</p>
 <p>For Eclipse user: <a href="http://gnuarmeclipse.livius.net/">here</a> you can find an Eclipse plugin to integrate JLink debugging in Eclipse. Similarly, <a href="http://embsysregview.sourceforge.net/">EmbSysRegView</a> is an Eclipse addin to view the registers of different MCU's.</p>
 <p>We don't go into more detail about this here since this depends a lot on your favorite tools and the platform you are using.</p>
 <h2>MS Windows support</h2>
@@ -170,7 +253,7 @@ Scanning dependencies of target d7ap_test.elf
 <!-- start footer part -->
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
-    <li class="footer">Generated on Mon May 2 2016 21:25:36 for OSS-7: Open Source Stack for DASH7 Alliance Protocol by
+    <li class="footer">Generated on Fri Feb 3 2017 13:01:27 for OSS-7: Open Source Stack for DASH7 Alliance Protocol by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.8.11 </li>
   </ul>

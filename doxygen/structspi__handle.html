@@ -114,6 +114,8 @@ $(document).ready(function(){initNavTree('structspi__handle.html','');});
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-attribs"></a>
 Data Fields</h2></td></tr>
+<tr class="memitem:a9df2db357bf1bbd67ff02cedeca27353"><td class="memItemLeft" align="right" valign="top"><a class="el" href="struct_s_p_i.html">SPI</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structspi__handle.html#a9df2db357bf1bbd67ff02cedeca27353">spi_sfradr</a></td></tr>
+<tr class="separator:a9df2db357bf1bbd67ff02cedeca27353"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a14578681684634b1aef2a8102f783135"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structspi__usart__t.html">spi_usart_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structspi__handle.html#a14578681684634b1aef2a8102f783135">usart</a></td></tr>
 <tr class="separator:a14578681684634b1aef2a8102f783135"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a8066ee3195e559af0ad103de7e36dfcf"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structspi__pins__t.html">spi_pins_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structspi__handle.html#a8066ee3195e559af0ad103de7e36dfcf">pins</a></td></tr>
@@ -130,8 +132,36 @@ Data Fields</h2></td></tr>
 <tr class="separator:adb1c38d32ef9e1698caef9d306136360"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ab83d9aa0133f0be886ee133f90e16236"><td class="memItemLeft" align="right" valign="top">uint8_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structspi__handle.html#ab83d9aa0133f0be886ee133f90e16236">users</a></td></tr>
 <tr class="separator:ab83d9aa0133f0be886ee133f90e16236"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa9bf93a62ab1808e98c568ea35830801"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structspi__handle.html#aa9bf93a62ab1808e98c568ea35830801">auto_power</a></td></tr>
+<tr class="separator:aa9bf93a62ab1808e98c568ea35830801"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a6d4c160ad9cd08312032c70c29bd26af"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structspi__handle.html#a6d4c160ad9cd08312032c70c29bd26af">active</a></td></tr>
+<tr class="separator:a6d4c160ad9cd08312032c70c29bd26af"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <h2 class="groupheader">Field Documentation</h2>
+<a class="anchor" id="a6d4c160ad9cd08312032c70c29bd26af"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool spi_handle::active</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a class="anchor" id="aa9bf93a62ab1808e98c568ea35830801"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool spi_handle::auto_power</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
 <a class="anchor" id="a34dd03d05ad09e6d23b015bc8a5b170d"></a>
 <div class="memitem">
 <div class="memproto">
@@ -204,6 +234,18 @@ Data Fields</h2></td></tr>
 
 </div>
 </div>
+<a class="anchor" id="a9df2db357bf1bbd67ff02cedeca27353"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="struct_s_p_i.html">SPI</a>* spi_handle::spi_sfradr</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
 <a class="anchor" id="a14578681684634b1aef2a8102f783135"></a>
 <div class="memitem">
 <div class="memproto">
@@ -229,6 +271,7 @@ Data Fields</h2></td></tr>
 </div>
 </div>
 <hr/>The documentation for this struct was generated from the following files:<ul>
+<li>/home/glenn/projects/oss7/stack/framework/hal/chips/cortus/<a class="el" href="cortus__spi_8c.html">cortus_spi.c</a></li>
 <li>/home/glenn/projects/oss7/stack/framework/hal/chips/efm32gg/<a class="el" href="efm32gg__spi_8c.html">efm32gg_spi.c</a></li>
 <li>/home/glenn/projects/oss7/stack/framework/hal/chips/efm32hg/<a class="el" href="efm32hg__spi_8c.html">efm32hg_spi.c</a></li>
 <li>/home/glenn/projects/oss7/stack/framework/hal/chips/efm32lg/<a class="el" href="efm32lg__spi_8c.html">efm32lg_spi.c</a></li>
@@ -240,7 +283,7 @@ Data Fields</h2></td></tr>
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
     <li class="navelem"><a class="el" href="structspi__handle.html">spi_handle</a></li>
-    <li class="footer">Generated on Mon May 2 2016 21:25:36 for OSS-7: Open Source Stack for DASH7 Alliance Protocol by
+    <li class="footer">Generated on Fri Feb 3 2017 13:01:27 for OSS-7: Open Source Stack for DASH7 Alliance Protocol by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.8.11 </li>
   </ul>

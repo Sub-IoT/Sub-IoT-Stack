@@ -101,11 +101,11 @@ $(document).ready(function(){initNavTree('group___b_i_t_b_a_n_d.html','');});
   <div class="summary">
 <a href="#define-members">Macros</a>  </div>
   <div class="headertitle">
-<div class="title">BITBAND<div class="ingroups"><a class="el" href="group___e_m___library.html">EM_Library</a></div></div>  </div>
+<div class="title">BITBAND<div class="ingroups"><a class="el" href="group__emlib.html">EMLIB</a></div></div>  </div>
 </div><!--header-->
 <div class="contents">
 
-<p>BITBAND Peripheral API (deprecated - use <a class="el" href="em__bus_8h.html" title="RAM and peripheral bit-field set and clear API. ">em_bus.h</a>) </p><pre class="fragment"></pre><p>.  
+<p>BITBAND Peripheral API (deprecated - use <a class="el" href="em__bus_8h.html" title="RAM and peripheral bit-field set and clear API. ">em_bus.h</a>)  
 <a href="#details">More...</a></p>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="define-members"></a>
@@ -124,7 +124,8 @@ Macros</h2></td></tr>
 <tr class="separator:gacd9c86d02446506f3c47bc414debbe28"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
-<p>BITBAND Peripheral API (deprecated - use <a class="el" href="em__bus_8h.html" title="RAM and peripheral bit-field set and clear API. ">em_bus.h</a>) </p><pre class="fragment"></pre><p>. </p>
+<p>BITBAND Peripheral API (deprecated - use <a class="el" href="em__bus_8h.html" title="RAM and peripheral bit-field set and clear API. ">em_bus.h</a>) </p>
+<p>API to perform bitbanded accesses to SRAM and peripheral memory. </p>
 <h2 class="groupheader">Macro Definition Documentation</h2>
 <a class="anchor" id="gaa56c8b8be742543205ff84ceb35c3cb8"></a>
 <div class="memitem">
@@ -158,6 +159,7 @@ Macros</h2></td></tr>
 
 <p>Perform bit-band operation on peripheral memory location. </p>
 <p>Bit-banding provides atomic read-modify-write cycle for single bit modification. Please refer to the reference manual for further details about bit-banding.</p>
+<dl class="deprecated"><dt><b><a class="el" href="deprecated.html#_deprecated000001">Deprecated:</a></b></dt><dd>Deprecated function. New code should use <a class="el" href="group___b_u_s.html#gaf8574f14855448ecae32c5a9dd0c7164">BUS_RegBitWrite()</a>.</dd></dl>
 <dl class="section note"><dt>Note</dt><dd>This function is only atomic on cores which fully support bitbanding.</dd></dl>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
@@ -196,6 +198,7 @@ Macros</h2></td></tr>
 
 <p>Perform a read operation on the peripheral bit-band memory location. </p>
 <p>This function reads a single bit from the peripheral bit-band alias region. Bit-banding provides atomic read-modify-write cycle for single bit modification. Please refer to the reference manual for further details about bit-banding.</p>
+<dl class="deprecated"><dt><b><a class="el" href="deprecated.html#_deprecated000002">Deprecated:</a></b></dt><dd>Deprecated function. New code should use <a class="el" href="group___b_u_s.html#gaca6b55014161f4c51c9daf4f707eeb7c">BUS_RegBitRead()</a>.</dd></dl>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramdir">[in]</td><td class="paramname">addr</td><td>Peripheral address location to read.</td></tr>
@@ -239,6 +242,7 @@ Macros</h2></td></tr>
 
 <p>Perform bit-band operation on SRAM memory location. </p>
 <p>Bit-banding provides atomic read-modify-write cycle for single bit modification. Please refer to the reference manual for further details about bit-banding.</p>
+<dl class="deprecated"><dt><b><a class="el" href="deprecated.html#_deprecated000003">Deprecated:</a></b></dt><dd>Deprecated function. New code should use <a class="el" href="group___b_u_s.html#ga5db07d1f35d501e6de6891eaeae88ec7">BUS_RamBitWrite()</a>.</dd></dl>
 <dl class="section note"><dt>Note</dt><dd>This function is only atomic on cores which fully support bitbanding.</dd></dl>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
@@ -277,6 +281,7 @@ Macros</h2></td></tr>
 
 <p>Read a single bit from the SRAM bit-band alias region. </p>
 <p>This function reads a single bit from the SRAM bit-band alias region. Bit-banding provides atomic read-modify-write cycle for single bit modification. Please refer to the reference manual for further details about bit-banding.</p>
+<dl class="deprecated"><dt><b><a class="el" href="deprecated.html#_deprecated000004">Deprecated:</a></b></dt><dd>Deprecated function. New code should use <a class="el" href="group___b_u_s.html#ga00e7633614955dd90f180acb07f83c8d">BUS_RamBitRead()</a>.</dd></dl>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramdir">[in]</td><td class="paramname">addr</td><td>SRAM address location to modify bit in.</td></tr>
@@ -293,7 +298,7 @@ Macros</h2></td></tr>
 <!-- start footer part -->
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
-    <li class="footer">Generated on Mon May 2 2016 21:25:36 for OSS-7: Open Source Stack for DASH7 Alliance Protocol by
+    <li class="footer">Generated on Fri Feb 3 2017 13:01:27 for OSS-7: Open Source Stack for DASH7 Alliance Protocol by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.8.11 </li>
   </ul>

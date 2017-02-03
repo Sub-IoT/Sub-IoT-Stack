@@ -102,6 +102,7 @@ $(document).ready(function(){initNavTree('group___d_l_l.html','');});
 <a href="#nested-classes">Data Structures</a> &#124;
 <a href="#define-members">Macros</a> &#124;
 <a href="#typedef-members">Typedefs</a> &#124;
+<a href="#enum-members">Enumerations</a> &#124;
 <a href="#func-members">Functions</a>  </div>
   <div class="headertitle">
 <div class="title">DLL<div class="ingroups"><a class="el" href="group___d7_a_p.html">D7AP</a></div></div>  </div>
@@ -118,32 +119,43 @@ Data Structures</h2></td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="define-members"></a>
 Macros</h2></td></tr>
-<tr class="memitem:ga2905231d491ab471a20312f2f1941c8d"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group___d_l_l.html#ga2905231d491ab471a20312f2f1941c8d">E_CCA</a>&#160;&#160;&#160;-86</td></tr>
-<tr class="separator:ga2905231d491ab471a20312f2f1941c8d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga0dd5b972ec4f548a7a48aec85c86a9a4"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group___d_l_l.html#ga0dd5b972ec4f548a7a48aec85c86a9a4">SFc</a>&#160;&#160;&#160;3</td></tr>
+<tr class="separator:ga0dd5b972ec4f548a7a48aec85c86a9a4"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="typedef-members"></a>
 Typedefs</h2></td></tr>
 <tr class="memitem:ga055b444e9c43fd24266b5908a7b26636"><td class="memItemLeft" align="right" valign="top">typedef struct <a class="el" href="structpacket.html">packet</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group___d_l_l.html#ga055b444e9c43fd24266b5908a7b26636">packet_t</a></td></tr>
 <tr class="separator:ga055b444e9c43fd24266b5908a7b26636"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="enum-members"></a>
+Enumerations</h2></td></tr>
+<tr class="memitem:ga174591dbce585c0a576621cf94ab62cb"><td class="memItemLeft" align="right" valign="top">enum &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group___d_l_l.html#ga174591dbce585c0a576621cf94ab62cb">noise_floor_computation_method_t</a> { <a class="el" href="group___d_l_l.html#gga174591dbce585c0a576621cf94ab62cba8355f2ac6108ecee6301d3370e942deb">D7ADLL_FIXED_NOISE_FLOOR</a>, 
+<a class="el" href="group___d_l_l.html#gga174591dbce585c0a576621cf94ab62cba57f52eef6214b37a1efd1d7cf1e93fa8">D7ADLL_SLOW_RSSI_VARIATION</a>
+ }</td></tr>
+<tr class="separator:ga174591dbce585c0a576621cf94ab62cb"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
 Functions</h2></td></tr>
 <tr class="memitem:gaff60408a8d3d73064b219c86df504218"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group___d_l_l.html#gaff60408a8d3d73064b219c86df504218">dll_init</a> ()</td></tr>
 <tr class="separator:gaff60408a8d3d73064b219c86df504218"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ga830d24decc85c3d74729031977cdebfd"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group___d_l_l.html#ga830d24decc85c3d74729031977cdebfd">dll_tx_frame</a> (<a class="el" href="d7anp_8h.html#a055b444e9c43fd24266b5908a7b26636">packet_t</a> *<a class="el" href="structpacket.html">packet</a>, <a class="el" href="structdae__access__profile__t.html">dae_access_profile_t</a> *access_profile)</td></tr>
-<tr class="separator:ga830d24decc85c3d74729031977cdebfd"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga0f7973c0846602d05f6c895cc8d2b5da"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group___d_l_l.html#ga0f7973c0846602d05f6c895cc8d2b5da">dll_tx_frame</a> (<a class="el" href="d7anp_8h.html#a055b444e9c43fd24266b5908a7b26636">packet_t</a> *<a class="el" href="structpacket.html">packet</a>)</td></tr>
+<tr class="separator:ga0f7973c0846602d05f6c895cc8d2b5da"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ga2e0f59470f3631388d19603f83f1b219"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group___d_l_l.html#ga2e0f59470f3631388d19603f83f1b219">dll_start_foreground_scan</a> ()</td></tr>
 <tr class="separator:ga2e0f59470f3631388d19603f83f1b219"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ga372406a7fa3523b8da926a195adb23f0"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group___d_l_l.html#ga372406a7fa3523b8da926a195adb23f0">dll_stop_foreground_scan</a> ()</td></tr>
-<tr class="separator:ga372406a7fa3523b8da926a195adb23f0"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga6ba647fd2fc54722205562a4ab051601"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group___d_l_l.html#ga6ba647fd2fc54722205562a4ab051601">dll_stop_foreground_scan</a> (bool auto_scan)</td></tr>
+<tr class="separator:ga6ba647fd2fc54722205562a4ab051601"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:gafa13f89e545841cbc1ac223ccf071133"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group___d_l_l.html#gafa13f89e545841cbc1ac223ccf071133">dll_execute_scan_automation</a> ()</td></tr>
 <tr class="separator:gafa13f89e545841cbc1ac223ccf071133"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ga459e5bf86340e70a301ac19dc3657af2"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group___d_l_l.html#ga459e5bf86340e70a301ac19dc3657af2">dll_notify_dll_conf_file_changed</a> ()</td></tr>
 <tr class="separator:ga459e5bf86340e70a301ac19dc3657af2"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ga5b49c065d575e31ba0f0fac1ec68feb8"><td class="memItemLeft" align="right" valign="top">uint8_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group___d_l_l.html#ga5b49c065d575e31ba0f0fac1ec68feb8">dll_assemble_packet_header</a> (<a class="el" href="d7anp_8h.html#a055b444e9c43fd24266b5908a7b26636">packet_t</a> *<a class="el" href="structpacket.html">packet</a>, uint8_t *data_ptr)</td></tr>
-<tr class="separator:ga5b49c065d575e31ba0f0fac1ec68feb8"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ga335adda32f012fc86c22470dc715490d"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group___d_l_l.html#ga335adda32f012fc86c22470dc715490d">dll_disassemble_packet_header</a> (<a class="el" href="d7anp_8h.html#a055b444e9c43fd24266b5908a7b26636">packet_t</a> *<a class="el" href="structpacket.html">packet</a>, uint8_t *data_idx)</td></tr>
-<tr class="separator:ga335adda32f012fc86c22470dc715490d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga1ddf8776665b2f2ab2e5e48522b5ed5d"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group___d_l_l.html#ga1ddf8776665b2f2ab2e5e48522b5ed5d">dll_notify_access_profile_file_changed</a> ()</td></tr>
+<tr class="separator:ga1ddf8776665b2f2ab2e5e48522b5ed5d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:gaca5f922048f3721c8003cb06c21e81e9"><td class="memItemLeft" align="right" valign="top">uint8_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group___d_l_l.html#gaca5f922048f3721c8003cb06c21e81e9">dll_assemble_packet_header</a> (<a class="el" href="d7anp_8h.html#a055b444e9c43fd24266b5908a7b26636">packet_t</a> *<a class="el" href="structpacket.html">packet</a>, uint8_t *data_ptr, bool background)</td></tr>
+<tr class="separator:gaca5f922048f3721c8003cb06c21e81e9"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga8073e26aad3e8782c487a97e0b89f8cb"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group___d_l_l.html#ga8073e26aad3e8782c487a97e0b89f8cb">dll_disassemble_packet_header</a> (<a class="el" href="d7anp_8h.html#a055b444e9c43fd24266b5908a7b26636">packet_t</a> *<a class="el" href="structpacket.html">packet</a>, uint8_t *data_idx, bool background)</td></tr>
+<tr class="separator:ga8073e26aad3e8782c487a97e0b89f8cb"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga19f680c0e52de5f31fe7c46f349212d7"><td class="memItemLeft" align="right" valign="top">uint16_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group___d_l_l.html#ga19f680c0e52de5f31fe7c46f349212d7">dll_calculate_tx_duration</a> (<a class="el" href="group__radio.html#ga5237948055f92b747764c14ae1afc6c5">phy_channel_class_t</a> channel_class, uint8_t packet_length)</td></tr>
+<tr class="separator:ga19f680c0e52de5f31fe7c46f349212d7"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <p>This module implements the DLL layer of the D7AP. </p>
@@ -151,12 +163,12 @@ Functions</h2></td></tr>
 <dd>
 <a href="#" onclick="location.href='mai'+'lto:'+'maa'+'rt'+'en.'+'we'+'yn@'+'ua'+'ntw'+'er'+'pen'+'.b'+'e'; return false;">maart<span style="display: none;">.nosp@m.</span>en.w<span style="display: none;">.nosp@m.</span>eyn@u<span style="display: none;">.nosp@m.</span>antw<span style="display: none;">.nosp@m.</span>erpen<span style="display: none;">.nosp@m.</span>.be</a> </dd></dl>
 <h2 class="groupheader">Macro Definition Documentation</h2>
-<a class="anchor" id="ga2905231d491ab471a20312f2f1941c8d"></a>
+<a class="anchor" id="ga0dd5b972ec4f548a7a48aec85c86a9a4"></a>
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">#define E_CCA&#160;&#160;&#160;-86</td>
+          <td class="memname">#define SFc&#160;&#160;&#160;3</td>
         </tr>
       </table>
 </div><div class="memdoc">
@@ -176,8 +188,27 @@ Functions</h2></td></tr>
 
 </div>
 </div>
+<h2 class="groupheader">Enumeration Type Documentation</h2>
+<a class="anchor" id="ga174591dbce585c0a576621cf94ab62cb"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">enum <a class="el" href="group___d_l_l.html#ga174591dbce585c0a576621cf94ab62cb">noise_floor_computation_method_t</a></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<table class="fieldtable">
+<tr><th colspan="2">Enumerator</th></tr><tr><td class="fieldname"><a class="anchor" id="gga174591dbce585c0a576621cf94ab62cba8355f2ac6108ecee6301d3370e942deb"></a>D7ADLL_FIXED_NOISE_FLOOR&#160;</td><td class="fielddoc">
+</td></tr>
+<tr><td class="fieldname"><a class="anchor" id="gga174591dbce585c0a576621cf94ab62cba57f52eef6214b37a1efd1d7cf1e93fa8"></a>D7ADLL_SLOW_RSSI_VARIATION&#160;</td><td class="fielddoc">
+</td></tr>
+</table>
+
+</div>
+</div>
 <h2 class="groupheader">Function Documentation</h2>
-<a class="anchor" id="ga5b49c065d575e31ba0f0fac1ec68feb8"></a>
+<a class="anchor" id="gaca5f922048f3721c8003cb06c21e81e9"></a>
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
@@ -191,7 +222,13 @@ Functions</h2></td></tr>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">uint8_t *&#160;</td>
-          <td class="paramname"><em>data_ptr</em>&#160;</td>
+          <td class="paramname"><em>data_ptr</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">bool&#160;</td>
+          <td class="paramname"><em>background</em>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -203,7 +240,33 @@ Functions</h2></td></tr>
 
 </div>
 </div>
-<a class="anchor" id="ga335adda32f012fc86c22470dc715490d"></a>
+<a class="anchor" id="ga19f680c0e52de5f31fe7c46f349212d7"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">uint16_t dll_calculate_tx_duration </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="group__radio.html#ga5237948055f92b747764c14ae1afc6c5">phy_channel_class_t</a>&#160;</td>
+          <td class="paramname"><em>channel_class</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">uint8_t&#160;</td>
+          <td class="paramname"><em>packet_length</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a class="anchor" id="ga8073e26aad3e8782c487a97e0b89f8cb"></a>
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
@@ -217,7 +280,13 @@ Functions</h2></td></tr>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">uint8_t *&#160;</td>
-          <td class="paramname"><em>data_idx</em>&#160;</td>
+          <td class="paramname"><em>data_idx</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">bool&#160;</td>
+          <td class="paramname"><em>background</em>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -259,6 +328,21 @@ Functions</h2></td></tr>
 
 </div>
 </div>
+<a class="anchor" id="ga1ddf8776665b2f2ab2e5e48522b5ed5d"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void dll_notify_access_profile_file_changed </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
 <a class="anchor" id="ga459e5bf86340e70a301ac19dc3657af2"></a>
 <div class="memitem">
 <div class="memproto">
@@ -289,14 +373,15 @@ Functions</h2></td></tr>
 
 </div>
 </div>
-<a class="anchor" id="ga372406a7fa3523b8da926a195adb23f0"></a>
+<a class="anchor" id="ga6ba647fd2fc54722205562a4ab051601"></a>
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
           <td class="memname">void dll_stop_foreground_scan </td>
           <td>(</td>
-          <td class="paramname"></td><td>)</td>
+          <td class="paramtype">bool&#160;</td>
+          <td class="paramname"><em>auto_scan</em></td><td>)</td>
           <td></td>
         </tr>
       </table>
@@ -304,7 +389,7 @@ Functions</h2></td></tr>
 
 </div>
 </div>
-<a class="anchor" id="ga830d24decc85c3d74729031977cdebfd"></a>
+<a class="anchor" id="ga0f7973c0846602d05f6c895cc8d2b5da"></a>
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
@@ -312,18 +397,8 @@ Functions</h2></td></tr>
           <td class="memname">void dll_tx_frame </td>
           <td>(</td>
           <td class="paramtype"><a class="el" href="d7anp_8h.html#a055b444e9c43fd24266b5908a7b26636">packet_t</a> *&#160;</td>
-          <td class="paramname"><em>packet</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
+          <td class="paramname"><em>packet</em></td><td>)</td>
           <td></td>
-          <td class="paramtype"><a class="el" href="structdae__access__profile__t.html">dae_access_profile_t</a> *&#160;</td>
-          <td class="paramname"><em>access_profile</em>&#160;</td>
-        </tr>
-        <tr>
-          <td></td>
-          <td>)</td>
-          <td></td><td></td>
         </tr>
       </table>
 </div><div class="memdoc">
@@ -335,7 +410,7 @@ Functions</h2></td></tr>
 <!-- start footer part -->
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
-    <li class="footer">Generated on Mon May 2 2016 21:25:36 for OSS-7: Open Source Stack for DASH7 Alliance Protocol by
+    <li class="footer">Generated on Fri Feb 3 2017 13:01:27 for OSS-7: Open Source Stack for DASH7 Alliance Protocol by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.8.11 </li>
   </ul>

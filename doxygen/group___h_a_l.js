@@ -1,6 +1,7 @@
 var group___h_a_l =
 [
     [ "ADC", "group___a_d_c.html", "group___a_d_c" ],
+    [ "AES", "group___a_e_s.html", "group___a_e_s" ],
     [ "Atomic", "group__atomic.html", "group__atomic" ],
     [ "Debug", "group__debug.html", "group__debug" ],
     [ "GPIO", "group___g_p_i_o.html", "group___g_p_i_o" ],

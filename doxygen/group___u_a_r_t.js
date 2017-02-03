@@ -2,6 +2,7 @@ var group___u_a_r_t =
 [
     [ "uart_handle_t", "group___u_a_r_t.html#ga494cbc0c41c3c25047db2bf716e09a64", null ],
     [ "uart_rx_inthandler_t", "group___u_a_r_t.html#ga633f6ca42731791f97943eaf1b286003", null ],
+    [ "cdc_set_rx_interrupt_callback", "group___u_a_r_t.html#gadf777fc3a6e8265fafe21f4268e21643", null ],
     [ "uart_disable", "group___u_a_r_t.html#ga4dcef2c13d16c1b70676500a4c9d279a", null ],
     [ "uart_enable", "group___u_a_r_t.html#gae2e4db0b99371ae91339f817896fb8bc", null ],
     [ "uart_init", "group___u_a_r_t.html#ga0d1979d7105d99af64036020bb7f45de", null ],

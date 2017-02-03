@@ -6,7 +6,6 @@ var _e_z_r32_l_g___w_s_t_k6200_a_2config_2usbconfig_8h =
     [ "CDC_EP_DATA_IN", "_e_z_r32_l_g___w_s_t_k6200_a_2config_2usbconfig_8h.html#ae6bde31fb49a6e0ccde3fdb68c9e2c5f", null ],
     [ "CDC_EP_DATA_OUT", "_e_z_r32_l_g___w_s_t_k6200_a_2config_2usbconfig_8h.html#a92cecdadb2a39ee024b0ed8d44eb0095", null ],
     [ "CDC_EP_NOTIFY", "_e_z_r32_l_g___w_s_t_k6200_a_2config_2usbconfig_8h.html#a6c401ce7fedbb8bcc47371134b88cd5d", null ],
-    [ "CDC_NUM_EP_USED", "_e_z_r32_l_g___w_s_t_k6200_a_2config_2usbconfig_8h.html#a8d31395781f85e09131fb8f05dfb7d0a", null ],
     [ "CDC_RX_DMA_SIGNAL", "_e_z_r32_l_g___w_s_t_k6200_a_2config_2usbconfig_8h.html#ac4d8cc1d8d94d94ddcc5cd92f1059c81", null ],
     [ "CDC_TIMER_ID", "_e_z_r32_l_g___w_s_t_k6200_a_2config_2usbconfig_8h.html#a56257729ed895d1d31a87ce1ca7c079a", null ],
     [ "CDC_TX_DMA_SIGNAL", "_e_z_r32_l_g___w_s_t_k6200_a_2config_2usbconfig_8h.html#a309f65195723f291b3fed2f91008acb5", null ],
@@ -19,16 +18,14 @@ var _e_z_r32_l_g___w_s_t_k6200_a_2config_2usbconfig_8h =
     [ "CDC_UART_TX_DMA_CHANNEL", "_e_z_r32_l_g___w_s_t_k6200_a_2config_2usbconfig_8h.html#a0f0d844ce53e23fe5feeea223788da71", null ],
     [ "CDC_UART_TX_PIN", "_e_z_r32_l_g___w_s_t_k6200_a_2config_2usbconfig_8h.html#ace24392ea70375a956f5584dd078e151", null ],
     [ "CDC_UART_TX_PORT", "_e_z_r32_l_g___w_s_t_k6200_a_2config_2usbconfig_8h.html#a36fb7d26dc6dd4b3bf38a3b6e50aae8c", null ],
+    [ "EP_DATA_IN", "_e_z_r32_l_g___w_s_t_k6200_a_2config_2usbconfig_8h.html#a43ae0ade97c83f24ea1fa3b2572819de", null ],
+    [ "EP_DATA_OUT", "_e_z_r32_l_g___w_s_t_k6200_a_2config_2usbconfig_8h.html#adeedbbaa2ccd90781001e81f935facbd", null ],
+    [ "EP_NOTIFY", "_e_z_r32_l_g___w_s_t_k6200_a_2config_2usbconfig_8h.html#a21e8ca96b6cf78dedb20af00ee58f199", null ],
     [ "MSD_BULK_IN", "_e_z_r32_l_g___w_s_t_k6200_a_2config_2usbconfig_8h.html#a6219ba3e580e242912b5375b707c204b", null ],
     [ "MSD_BULK_OUT", "_e_z_r32_l_g___w_s_t_k6200_a_2config_2usbconfig_8h.html#aae314074c635b75b101b420501572377", null ],
     [ "MSD_FLUSH_TIMER_ID", "_e_z_r32_l_g___w_s_t_k6200_a_2config_2usbconfig_8h.html#adcaeb750d25f4318474a7aa88a7ada7c", null ],
-    [ "MSD_INTERFACE_NO", "_e_z_r32_l_g___w_s_t_k6200_a_2config_2usbconfig_8h.html#a87413710bea1af56c4a66b2cdc8b58a4", null ],
-    [ "MSD_NUM_EP_USED", "_e_z_r32_l_g___w_s_t_k6200_a_2config_2usbconfig_8h.html#a443316c8c469da836fde96c59f2cc5b8", null ],
     [ "NUM_APP_TIMERS", "_e_z_r32_l_g___w_s_t_k6200_a_2config_2usbconfig_8h.html#ac53b4f7b6250b60ff7192c88137f4adc", null ],
     [ "NUM_EP_USED", "_e_z_r32_l_g___w_s_t_k6200_a_2config_2usbconfig_8h.html#a836fd372f59b18af5e859175624b5385", null ],
-    [ "NUM_INTERFACES", "_e_z_r32_l_g___w_s_t_k6200_a_2config_2usbconfig_8h.html#a3c741f0d1654959b591298f9c366442e", null ],
     [ "USB_DEVICE", "_e_z_r32_l_g___w_s_t_k6200_a_2config_2usbconfig_8h.html#ab7858cae755a8a410d6495765def4daa", null ],
-    [ "USB_PWRSAVE_MODE", "_e_z_r32_l_g___w_s_t_k6200_a_2config_2usbconfig_8h.html#a3a1dcf03e81ef1a1930bc2e6b28b1420", null ],
-    [ "VUD_INTERFACE_NO", "_e_z_r32_l_g___w_s_t_k6200_a_2config_2usbconfig_8h.html#a087e30a660ad19840a3cccfa164a1129", null ],
-    [ "VUD_NUM_EP_USED", "_e_z_r32_l_g___w_s_t_k6200_a_2config_2usbconfig_8h.html#ade3bd7bff3f2453f948d9248c7f38d78", null ]
+    [ "USB_PWRSAVE_MODE", "_e_z_r32_l_g___w_s_t_k6200_a_2config_2usbconfig_8h.html#a3a1dcf03e81ef1a1930bc2e6b28b1420", null ]
 ];

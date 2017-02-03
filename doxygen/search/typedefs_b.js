@@ -1,7 +1,8 @@
 var searchData=
 [
-  ['spi_5fhandle_5ft',['spi_handle_t',['../hwspi_8h.html#a624976677b1458a655084160ac11ee55',1,'hwspi.h']]],
-  ['spi_5fslave_5fhandle_5ft',['spi_slave_handle_t',['../hwspi_8h.html#ae4d9fd016ca9d21b32d133929c8c662c',1,'hwspi.h']]],
-  ['spi_5fusart_5ft',['spi_usart_t',['../efm32gg__spi_8c.html#a997a1254f312e181e8ea08622cada629',1,'spi_usart_t():&#160;efm32gg_spi.c'],['../efm32lg__spi_8c.html#a997a1254f312e181e8ea08622cada629',1,'spi_usart_t():&#160;efm32lg_spi.c'],['../ezr32lg__spi_8c.html#a997a1254f312e181e8ea08622cada629',1,'spi_usart_t():&#160;ezr32lg_spi.c']]],
-  ['syncword_5fclass_5ft',['syncword_class_t',['../group__radio.html#gaebbaa832b63f7d77fddaaf7098ad69f0',1,'hwradio.h']]]
+  ['packet_5ft',['packet_t',['../d7anp_8h.html#a055b444e9c43fd24266b5908a7b26636',1,'packet_t():&#160;d7anp.h'],['../d7atp_8h.html#a055b444e9c43fd24266b5908a7b26636',1,'packet_t():&#160;d7atp.h'],['../group___d_l_l.html#ga055b444e9c43fd24266b5908a7b26636',1,'packet_t():&#160;dll.h']]],
+  ['pdisplaydevicedriverinitfunction_5ft',['pDisplayDeviceDriverInitFunction_t',['../group___display.html#ga084120c6ff6117a10cdbcc7973fd634c',1,'pDisplayDeviceDriverInitFunction_t():&#160;display.h'],['../group___display.html#ga084120c6ff6117a10cdbcc7973fd634c',1,'pDisplayDeviceDriverInitFunction_t():&#160;display.h'],['../group___display.html#ga084120c6ff6117a10cdbcc7973fd634c',1,'pDisplayDeviceDriverInitFunction_t():&#160;display.h']]],
+  ['peakdetshuntoptmode',['PEAKDETSHUNTOPTMODE',['../_changes__emlib_8txt.html#af3350b65622816e51091a25c061e9c65',1,'Changes_emlib.txt']]],
+  ['point',['POINT',['../_e_z_r32_l_g___octa_2kits_2common_2drivers_2calibrate_8h.html#acc3759a4f4e54b5f2cbcfa38d4e4ca5e',1,'POINT():&#160;calibrate.h'],['../_e_z_r32_l_g___u_s_b01_2kits_2common_2drivers_2calibrate_8h.html#acc3759a4f4e54b5f2cbcfa38d4e4ca5e',1,'POINT():&#160;calibrate.h'],['../_e_z_r32_l_g___w_s_t_k6200_a_2kits_2common_2drivers_2calibrate_8h.html#acc3759a4f4e54b5f2cbcfa38d4e4ca5e',1,'POINT():&#160;calibrate.h']]],
+  ['putcf',['putcf',['../uocmote_2printf_2printf_8c.html#aba592532448439e7a961d146a8c03843',1,'putcf():&#160;printf.c'],['../wizzimote_2printf_2printf_8h.html#aba592532448439e7a961d146a8c03843',1,'putcf():&#160;printf.h']]]
 ];

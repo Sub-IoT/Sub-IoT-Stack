@@ -97,6 +97,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
       <li><a href="globals_func_g.html#index_g"><span>g</span></a></li>
       <li><a href="globals_func_h.html#index_h"><span>h</span></a></li>
       <li><a href="globals_func_i.html#index_i"><span>i</span></a></li>
+      <li><a href="globals_func_k.html#index_k"><span>k</span></a></li>
       <li><a href="globals_func_l.html#index_l"><span>l</span></a></li>
       <li><a href="globals_func_m.html#index_m"><span>m</span></a></li>
       <li><a href="globals_func_n.html#index_n"><span>n</span></a></li>
@@ -106,6 +107,8 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
       <li><a href="globals_func_s.html#index_s"><span>s</span></a></li>
       <li><a href="globals_func_t.html#index_t"><span>t</span></a></li>
       <li class="current"><a href="globals_func_u.html#index_u"><span>u</span></a></li>
+      <li><a href="globals_func_v.html#index_v"><span>v</span></a></li>
+      <li><a href="globals_func_y.html#index_y"><span>y</span></a></li>
     </ul>
   </div>
 </div><!-- top -->
@@ -152,24 +155,27 @@ $(document).ready(function(){initNavTree('globals_func_u.html','');});
 , <a class="el" href="ezr32lg__uart_8c.html#a5110e6b33cd4e37c9fa7a17c9e681256">ezr32lg_uart.c</a>
 </li>
 <li>uart_disable()
-: <a class="el" href="group___u_a_r_t.html#ga4dcef2c13d16c1b70676500a4c9d279a">efm32hg_uart.c</a>
+: <a class="el" href="group___u_a_r_t.html#ga4dcef2c13d16c1b70676500a4c9d279a">efm32gg_uart.c</a>
+, <a class="el" href="group___u_a_r_t.html#ga4dcef2c13d16c1b70676500a4c9d279a">efm32hg_uart.c</a>
 , <a class="el" href="group___u_a_r_t.html#ga4dcef2c13d16c1b70676500a4c9d279a">efm32lg_uart.c</a>
 , <a class="el" href="group___u_a_r_t.html#ga4dcef2c13d16c1b70676500a4c9d279a">ezr32lg_uart.c</a>
 , <a class="el" href="group___u_a_r_t.html#ga4dcef2c13d16c1b70676500a4c9d279a">hwuart.h</a>
-, <a class="el" href="group___u_a_r_t.html#ga4dcef2c13d16c1b70676500a4c9d279a">efm32gg_uart.c</a>
+, <a class="el" href="group___u_a_r_t.html#ga4dcef2c13d16c1b70676500a4c9d279a">cortus_uart.c</a>
 </li>
 <li>uart_enable()
-: <a class="el" href="group___u_a_r_t.html#gae2e4db0b99371ae91339f817896fb8bc">hwuart.h</a>
+: <a class="el" href="group___u_a_r_t.html#gae2e4db0b99371ae91339f817896fb8bc">efm32lg_uart.c</a>
+, <a class="el" href="group___u_a_r_t.html#gae2e4db0b99371ae91339f817896fb8bc">ezr32lg_uart.c</a>
+, <a class="el" href="group___u_a_r_t.html#gae2e4db0b99371ae91339f817896fb8bc">hwuart.h</a>
+, <a class="el" href="group___u_a_r_t.html#gae2e4db0b99371ae91339f817896fb8bc">cortus_uart.c</a>
 , <a class="el" href="group___u_a_r_t.html#gae2e4db0b99371ae91339f817896fb8bc">efm32gg_uart.c</a>
 , <a class="el" href="group___u_a_r_t.html#gae2e4db0b99371ae91339f817896fb8bc">efm32hg_uart.c</a>
-, <a class="el" href="group___u_a_r_t.html#gae2e4db0b99371ae91339f817896fb8bc">efm32lg_uart.c</a>
-, <a class="el" href="group___u_a_r_t.html#gae2e4db0b99371ae91339f817896fb8bc">ezr32lg_uart.c</a>
 </li>
 <li>uart_enable_interrupt()
 : <a class="el" href="cc430__uart_8c.html#af3e47fba13adaa4f3fd91ba943fc644e">cc430_uart.c</a>
 </li>
 <li>uart_init()
 : <a class="el" href="cc430__uart_8c.html#a01f5996cfbcef121abc486e732b208c7">cc430_uart.c</a>
+, <a class="el" href="group___u_a_r_t.html#ga0d1979d7105d99af64036020bb7f45de">cortus_uart.c</a>
 , <a class="el" href="group___u_a_r_t.html#ga0d1979d7105d99af64036020bb7f45de">efm32gg_uart.c</a>
 , <a class="el" href="group___u_a_r_t.html#ga0d1979d7105d99af64036020bb7f45de">efm32hg_uart.c</a>
 , <a class="el" href="group___u_a_r_t.html#ga0d1979d7105d99af64036020bb7f45de">efm32lg_uart.c</a>
@@ -177,42 +183,48 @@ $(document).ready(function(){initNavTree('globals_func_u.html','');});
 , <a class="el" href="group___u_a_r_t.html#ga0d1979d7105d99af64036020bb7f45de">hwuart.h</a>
 </li>
 <li>uart_rx_interrupt_disable()
-: <a class="el" href="group___u_a_r_t.html#ga3152fdd676acd8a5fd2ec81d6be14a69">efm32gg_uart.c</a>
+: <a class="el" href="group___u_a_r_t.html#ga3152fdd676acd8a5fd2ec81d6be14a69">hwuart.h</a>
+, <a class="el" href="group___u_a_r_t.html#ga3152fdd676acd8a5fd2ec81d6be14a69">cortus_uart.c</a>
+, <a class="el" href="group___u_a_r_t.html#ga3152fdd676acd8a5fd2ec81d6be14a69">efm32gg_uart.c</a>
 , <a class="el" href="group___u_a_r_t.html#ga3152fdd676acd8a5fd2ec81d6be14a69">efm32hg_uart.c</a>
 , <a class="el" href="group___u_a_r_t.html#ga3152fdd676acd8a5fd2ec81d6be14a69">efm32lg_uart.c</a>
 , <a class="el" href="group___u_a_r_t.html#ga3152fdd676acd8a5fd2ec81d6be14a69">ezr32lg_uart.c</a>
-, <a class="el" href="group___u_a_r_t.html#ga3152fdd676acd8a5fd2ec81d6be14a69">hwuart.h</a>
 </li>
 <li>uart_rx_interrupt_enable()
-: <a class="el" href="group___u_a_r_t.html#ga5aac172f324b7f126eeee714364880e2">ezr32lg_uart.c</a>
-, <a class="el" href="group___u_a_r_t.html#ga5aac172f324b7f126eeee714364880e2">hwuart.h</a>
+: <a class="el" href="group___u_a_r_t.html#ga5aac172f324b7f126eeee714364880e2">cortus_uart.c</a>
 , <a class="el" href="group___u_a_r_t.html#ga5aac172f324b7f126eeee714364880e2">efm32gg_uart.c</a>
 , <a class="el" href="group___u_a_r_t.html#ga5aac172f324b7f126eeee714364880e2">efm32hg_uart.c</a>
 , <a class="el" href="group___u_a_r_t.html#ga5aac172f324b7f126eeee714364880e2">efm32lg_uart.c</a>
+, <a class="el" href="group___u_a_r_t.html#ga5aac172f324b7f126eeee714364880e2">ezr32lg_uart.c</a>
+, <a class="el" href="group___u_a_r_t.html#ga5aac172f324b7f126eeee714364880e2">hwuart.h</a>
 </li>
 <li>uart_send_byte()
-: <a class="el" href="group___u_a_r_t.html#gaf15b5acc9b90023ceb7bbf5e8d345e5c">efm32gg_uart.c</a>
+: <a class="el" href="group___u_a_r_t.html#gaf15b5acc9b90023ceb7bbf5e8d345e5c">cortus_uart.c</a>
+, <a class="el" href="group___u_a_r_t.html#gaf15b5acc9b90023ceb7bbf5e8d345e5c">efm32gg_uart.c</a>
 , <a class="el" href="group___u_a_r_t.html#gaf15b5acc9b90023ceb7bbf5e8d345e5c">efm32hg_uart.c</a>
 , <a class="el" href="group___u_a_r_t.html#gaf15b5acc9b90023ceb7bbf5e8d345e5c">efm32lg_uart.c</a>
 , <a class="el" href="group___u_a_r_t.html#gaf15b5acc9b90023ceb7bbf5e8d345e5c">ezr32lg_uart.c</a>
 , <a class="el" href="group___u_a_r_t.html#gaf15b5acc9b90023ceb7bbf5e8d345e5c">hwuart.h</a>
 </li>
 <li>uart_send_bytes()
-: <a class="el" href="group___u_a_r_t.html#gae232628b326e9f791b36a627c66cb541">efm32gg_uart.c</a>
+: <a class="el" href="group___u_a_r_t.html#gae232628b326e9f791b36a627c66cb541">cortus_uart.c</a>
+, <a class="el" href="group___u_a_r_t.html#gae232628b326e9f791b36a627c66cb541">efm32gg_uart.c</a>
 , <a class="el" href="group___u_a_r_t.html#gae232628b326e9f791b36a627c66cb541">efm32hg_uart.c</a>
 , <a class="el" href="group___u_a_r_t.html#gae232628b326e9f791b36a627c66cb541">efm32lg_uart.c</a>
 , <a class="el" href="group___u_a_r_t.html#gae232628b326e9f791b36a627c66cb541">ezr32lg_uart.c</a>
 , <a class="el" href="group___u_a_r_t.html#gae232628b326e9f791b36a627c66cb541">hwuart.h</a>
 </li>
 <li>uart_send_string()
-: <a class="el" href="group___u_a_r_t.html#ga765cded2921e04230925e3450bdc5cf2">efm32gg_uart.c</a>
+: <a class="el" href="group___u_a_r_t.html#ga765cded2921e04230925e3450bdc5cf2">cortus_uart.c</a>
+, <a class="el" href="group___u_a_r_t.html#ga765cded2921e04230925e3450bdc5cf2">efm32gg_uart.c</a>
 , <a class="el" href="group___u_a_r_t.html#ga765cded2921e04230925e3450bdc5cf2">efm32hg_uart.c</a>
 , <a class="el" href="group___u_a_r_t.html#ga765cded2921e04230925e3450bdc5cf2">efm32lg_uart.c</a>
 , <a class="el" href="group___u_a_r_t.html#ga765cded2921e04230925e3450bdc5cf2">ezr32lg_uart.c</a>
 , <a class="el" href="group___u_a_r_t.html#ga765cded2921e04230925e3450bdc5cf2">hwuart.h</a>
 </li>
 <li>uart_set_rx_interrupt_callback()
-: <a class="el" href="group___u_a_r_t.html#ga33f293744659bea166b4d6780becf6a0">efm32gg_uart.c</a>
+: <a class="el" href="group___u_a_r_t.html#ga33f293744659bea166b4d6780becf6a0">cortus_uart.c</a>
+, <a class="el" href="group___u_a_r_t.html#ga33f293744659bea166b4d6780becf6a0">efm32gg_uart.c</a>
 , <a class="el" href="group___u_a_r_t.html#ga33f293744659bea166b4d6780becf6a0">efm32hg_uart.c</a>
 , <a class="el" href="group___u_a_r_t.html#ga33f293744659bea166b4d6780becf6a0">efm32lg_uart.c</a>
 , <a class="el" href="group___u_a_r_t.html#ga33f293744659bea166b4d6780becf6a0">ezr32lg_uart.c</a>
@@ -225,54 +237,87 @@ $(document).ready(function(){initNavTree('globals_func_u.html','');});
 : <a class="el" href="cc430__uart_8c.html#a6ddee7136044f1764363e413cdf917bf">cc430_uart.c</a>
 </li>
 <li>ubutton_deregister_callback()
-: <a class="el" href="_o_c_t_a___mini_2inc_2userbutton_8h.html#a518b72d84097b04cfc06717cac1f4d5a">userbutton.h</a>
-, <a class="el" href="octa__mini__userbutton_8c.html#a518b72d84097b04cfc06717cac1f4d5a">octa_mini_userbutton.c</a>
-, <a class="el" href="octa__gateway__userbutton_8c.html#a518b72d84097b04cfc06717cac1f4d5a">octa_gateway_userbutton.c</a>
-, <a class="el" href="stk3400__userbutton_8c.html#a518b72d84097b04cfc06717cac1f4d5a">stk3400_userbutton.c</a>
-, <a class="el" href="_e_f_m32_g_g___s_t_k3700_2inc_2userbutton_8h.html#a518b72d84097b04cfc06717cac1f4d5a">userbutton.h</a>
-, <a class="el" href="stk3700__userbutton_8c.html#a518b72d84097b04cfc06717cac1f4d5a">stk3700_userbutton.c</a>
+: <a class="el" href="_e_z_r32_l_g___octa_2inc_2button_8h.html#a518b72d84097b04cfc06717cac1f4d5a">button.h</a>
+, <a class="el" href="cortus__userbutton_8c.html#a518b72d84097b04cfc06717cac1f4d5a">cortus_userbutton.c</a>
+, <a class="el" href="cortus__fpga_2inc_2userbutton_8h.html#a518b72d84097b04cfc06717cac1f4d5a">userbutton.h</a>
+, <a class="el" href="_e_f_m32_g_g___s_t_k3700_2inc_2button_8h.html#a518b72d84097b04cfc06717cac1f4d5a">button.h</a>
+, <a class="el" href="_e_f_m32_g_g___s_t_k3700_2platf__button_8c.html#a518b72d84097b04cfc06717cac1f4d5a">platf_button.c</a>
 , <a class="el" href="_e_f_m32_h_g___s_t_k3400_2inc_2userbutton_8h.html#a518b72d84097b04cfc06717cac1f4d5a">userbutton.h</a>
-, <a class="el" href="wstk6200__userbutton_8c.html#a518b72d84097b04cfc06717cac1f4d5a">wstk6200_userbutton.c</a>
+, <a class="el" href="stk3400__userbutton_8c.html#a518b72d84097b04cfc06717cac1f4d5a">stk3400_userbutton.c</a>
+, <a class="el" href="_e_z_r32_l_g___octa_2platf__button_8c.html#a518b72d84097b04cfc06717cac1f4d5a">platf_button.c</a>
+, <a class="el" href="_e_z_r32_l_g___u_s_b01_2inc_2button_8h.html#a518b72d84097b04cfc06717cac1f4d5a">button.h</a>
+, <a class="el" href="_e_z_r32_l_g___u_s_b01_2platf__button_8c.html#a518b72d84097b04cfc06717cac1f4d5a">platf_button.c</a>
 , <a class="el" href="_o_c_t_a___gateway_2inc_2userbutton_8h.html#a518b72d84097b04cfc06717cac1f4d5a">userbutton.h</a>
+, <a class="el" href="octa__gateway__userbutton_8c.html#a518b72d84097b04cfc06717cac1f4d5a">octa_gateway_userbutton.c</a>
+, <a class="el" href="_e_z_r32_l_g___w_s_t_k6200_a_2inc_2button_8h.html#a518b72d84097b04cfc06717cac1f4d5a">button.h</a>
 </li>
 <li>ubutton_pressed()
-: <a class="el" href="_e_f_m32_g_g___s_t_k3700_2inc_2userbutton_8h.html#a739f170d4881526699fba96bce3780bc">userbutton.h</a>
-, <a class="el" href="wstk6200__userbutton_8c.html#a739f170d4881526699fba96bce3780bc">wstk6200_userbutton.c</a>
+: <a class="el" href="cortus__fpga_2inc_2userbutton_8h.html#a739f170d4881526699fba96bce3780bc">userbutton.h</a>
+, <a class="el" href="_e_f_m32_g_g___s_t_k3700_2inc_2button_8h.html#a739f170d4881526699fba96bce3780bc">button.h</a>
+, <a class="el" href="_e_f_m32_g_g___s_t_k3700_2platf__button_8c.html#a739f170d4881526699fba96bce3780bc">platf_button.c</a>
 , <a class="el" href="_e_f_m32_h_g___s_t_k3400_2inc_2userbutton_8h.html#a739f170d4881526699fba96bce3780bc">userbutton.h</a>
-, <a class="el" href="octa__mini__userbutton_8c.html#a739f170d4881526699fba96bce3780bc">octa_mini_userbutton.c</a>
 , <a class="el" href="stk3400__userbutton_8c.html#a739f170d4881526699fba96bce3780bc">stk3400_userbutton.c</a>
-, <a class="el" href="stk3700__userbutton_8c.html#a739f170d4881526699fba96bce3780bc">stk3700_userbutton.c</a>
+, <a class="el" href="_e_z_r32_l_g___octa_2inc_2button_8h.html#a739f170d4881526699fba96bce3780bc">button.h</a>
+, <a class="el" href="_e_z_r32_l_g___octa_2platf__button_8c.html#a739f170d4881526699fba96bce3780bc">platf_button.c</a>
+, <a class="el" href="_e_z_r32_l_g___w_s_t_k6200_a_2inc_2button_8h.html#a739f170d4881526699fba96bce3780bc">button.h</a>
+, <a class="el" href="_e_z_r32_l_g___w_s_t_k6200_a_2platf__button_8c.html#a739f170d4881526699fba96bce3780bc">platf_button.c</a>
+, <a class="el" href="_o_c_t_a___gateway_2inc_2userbutton_8h.html#a739f170d4881526699fba96bce3780bc">userbutton.h</a>
 , <a class="el" href="octa__gateway__userbutton_8c.html#a739f170d4881526699fba96bce3780bc">octa_gateway_userbutton.c</a>
+, <a class="el" href="_e_z_r32_l_g___u_s_b01_2inc_2button_8h.html#a739f170d4881526699fba96bce3780bc">button.h</a>
+, <a class="el" href="cortus__userbutton_8c.html#a739f170d4881526699fba96bce3780bc">cortus_userbutton.c</a>
 </li>
 <li>ubutton_register_callback()
-: <a class="el" href="stk3700__userbutton_8c.html#a844870ddd6f7334cdefb5fa73a13728d">stk3700_userbutton.c</a>
-, <a class="el" href="_e_f_m32_g_g___s_t_k3700_2inc_2userbutton_8h.html#a844870ddd6f7334cdefb5fa73a13728d">userbutton.h</a>
-, <a class="el" href="stk3400__userbutton_8c.html#a844870ddd6f7334cdefb5fa73a13728d">stk3400_userbutton.c</a>
-, <a class="el" href="_e_f_m32_h_g___s_t_k3400_2inc_2userbutton_8h.html#a844870ddd6f7334cdefb5fa73a13728d">userbutton.h</a>
-, <a class="el" href="octa__mini__userbutton_8c.html#a844870ddd6f7334cdefb5fa73a13728d">octa_mini_userbutton.c</a>
-, <a class="el" href="wstk6200__userbutton_8c.html#a844870ddd6f7334cdefb5fa73a13728d">wstk6200_userbutton.c</a>
+: <a class="el" href="_e_z_r32_l_g___u_s_b01_2platf__button_8c.html#a844870ddd6f7334cdefb5fa73a13728d">platf_button.c</a>
+, <a class="el" href="_e_z_r32_l_g___u_s_b01_2inc_2button_8h.html#a844870ddd6f7334cdefb5fa73a13728d">button.h</a>
+, <a class="el" href="cortus__fpga_2inc_2userbutton_8h.html#a844870ddd6f7334cdefb5fa73a13728d">userbutton.h</a>
 , <a class="el" href="octa__gateway__userbutton_8c.html#a844870ddd6f7334cdefb5fa73a13728d">octa_gateway_userbutton.c</a>
-, <a class="el" href="_e_z_r32_l_g___w_s_t_k6200_a_2inc_2userbutton_8h.html#a844870ddd6f7334cdefb5fa73a13728d">userbutton.h</a>
+, <a class="el" href="cortus__userbutton_8c.html#a844870ddd6f7334cdefb5fa73a13728d">cortus_userbutton.c</a>
+, <a class="el" href="_e_z_r32_l_g___w_s_t_k6200_a_2inc_2button_8h.html#a844870ddd6f7334cdefb5fa73a13728d">button.h</a>
+, <a class="el" href="_e_f_m32_g_g___s_t_k3700_2platf__button_8c.html#a844870ddd6f7334cdefb5fa73a13728d">platf_button.c</a>
+, <a class="el" href="_e_f_m32_h_g___s_t_k3400_2inc_2userbutton_8h.html#a844870ddd6f7334cdefb5fa73a13728d">userbutton.h</a>
+, <a class="el" href="stk3400__userbutton_8c.html#a844870ddd6f7334cdefb5fa73a13728d">stk3400_userbutton.c</a>
+, <a class="el" href="_e_z_r32_l_g___octa_2platf__button_8c.html#a844870ddd6f7334cdefb5fa73a13728d">platf_button.c</a>
+, <a class="el" href="_e_f_m32_g_g___s_t_k3700_2inc_2button_8h.html#a844870ddd6f7334cdefb5fa73a13728d">button.h</a>
+, <a class="el" href="_e_z_r32_l_g___w_s_t_k6200_a_2platf__button_8c.html#a844870ddd6f7334cdefb5fa73a13728d">platf_button.c</a>
+, <a class="el" href="_e_z_r32_l_g___octa_2inc_2button_8h.html#a844870ddd6f7334cdefb5fa73a13728d">button.h</a>
+, <a class="el" href="_o_c_t_a___gateway_2inc_2userbutton_8h.html#a844870ddd6f7334cdefb5fa73a13728d">userbutton.h</a>
+</li>
+<li>UDELAY_Calibrate()
+: <a class="el" href="group___udelay.html#ga523f858d15b74728046ceca9796f3046">udelay.c</a>
+, <a class="el" href="group___udelay.html#ga523f858d15b74728046ceca9796f3046">udelay.h</a>
+, <a class="el" href="group___udelay.html#ga523f858d15b74728046ceca9796f3046">udelay.c</a>
+</li>
+<li>UDELAY_Delay()
+: <a class="el" href="group___udelay.html#ga7b02c652fea1e8305b266ec0356a5ad5">udelay.h</a>
+</li>
+<li>Uncompress()
+: <a class="el" href="group___si114x.html#gac9f2901f83ad5922cd94c220dc93ea8a">si114x_functions.c</a>
+, <a class="el" href="group___si114x.html#gac9f2901f83ad5922cd94c220dc93ea8a">si114x_functions.h</a>
+, <a class="el" href="group___si114x.html#gac9f2901f83ad5922cd94c220dc93ea8a">si114x_functions.c</a>
 </li>
 <li>USART0_RX_IRQHandler()
-: <a class="el" href="efm32lg__uart_8c.html#a8ef4dfd53f8b518acaeddcda2b159c61">efm32lg_uart.c</a>
+: <a class="el" href="efm32hg__uart_8c.html#a8ef4dfd53f8b518acaeddcda2b159c61">efm32hg_uart.c</a>
 , <a class="el" href="efm32gg__uart_8c.html#a8ef4dfd53f8b518acaeddcda2b159c61">efm32gg_uart.c</a>
-, <a class="el" href="ezr32lg__uart_8c.html#a8ef4dfd53f8b518acaeddcda2b159c61">ezr32lg_uart.c</a>
-, <a class="el" href="efm32hg__uart_8c.html#a8ef4dfd53f8b518acaeddcda2b159c61">efm32hg_uart.c</a>
+, <a class="el" href="efm32lg__uart_8c.html#a8ef4dfd53f8b518acaeddcda2b159c61">efm32lg_uart.c</a>
 </li>
 <li>USART1_RX_IRQHandler()
-: <a class="el" href="efm32lg__uart_8c.html#aa6a5099bafcea7a957c8a7aff925a5c2">efm32lg_uart.c</a>
-, <a class="el" href="efm32hg__uart_8c.html#aa6a5099bafcea7a957c8a7aff925a5c2">efm32hg_uart.c</a>
-, <a class="el" href="ezr32lg__uart_8c.html#aa6a5099bafcea7a957c8a7aff925a5c2">ezr32lg_uart.c</a>
+: <a class="el" href="efm32hg__uart_8c.html#aa6a5099bafcea7a957c8a7aff925a5c2">efm32hg_uart.c</a>
 , <a class="el" href="efm32gg__uart_8c.html#aa6a5099bafcea7a957c8a7aff925a5c2">efm32gg_uart.c</a>
+, <a class="el" href="ezr32lg__uart_8c.html#aa6a5099bafcea7a957c8a7aff925a5c2">ezr32lg_uart.c</a>
+, <a class="el" href="efm32lg__uart_8c.html#aa6a5099bafcea7a957c8a7aff925a5c2">efm32lg_uart.c</a>
 </li>
 <li>USART2_RX_IRQHandler()
 : <a class="el" href="efm32lg__uart_8c.html#afacefa37377ad49a54ae776893d13837">efm32lg_uart.c</a>
 , <a class="el" href="efm32gg__uart_8c.html#afacefa37377ad49a54ae776893d13837">efm32gg_uart.c</a>
 , <a class="el" href="ezr32lg__uart_8c.html#afacefa37377ad49a54ae776893d13837">ezr32lg_uart.c</a>
 </li>
+<li>USB_HidScancodeToAscii()
+: <a class="el" href="group___usb_hid.html#ga4e181f001853631347d690910afe4e2f">usbkbdscancodes.c</a>
+, <a class="el" href="group___usb_hid.html#ga4e181f001853631347d690910afe4e2f">usbkbdscancodes.h</a>
+, <a class="el" href="group___usb_hid.html#ga4e181f001853631347d690910afe4e2f">usbkbdscancodes.c</a>
+</li>
 <li>USB_IRQHandler()
-: <a class="el" href="wstk6200__usb_8c.html#a0fbd54f7ff4b48c5b9a900421adf3702">wstk6200_usb.c</a>
+: <a class="el" href="_e_z_r32_l_g___w_s_t_k6200_a_2platf__usb_8c.html#a0fbd54f7ff4b48c5b9a900421adf3702">platf_usb.c</a>
 , <a class="el" href="stk3400__usb_8c.html#a0fbd54f7ff4b48c5b9a900421adf3702">stk3400_usb.c</a>
 </li>
 </ul>
@@ -281,7 +326,7 @@ $(document).ready(function(){initNavTree('globals_func_u.html','');});
 <!-- start footer part -->
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
-    <li class="footer">Generated on Mon May 2 2016 21:25:36 for OSS-7: Open Source Stack for DASH7 Alliance Protocol by
+    <li class="footer">Generated on Fri Feb 3 2017 13:01:27 for OSS-7: Open Source Stack for DASH7 Alliance Protocol by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.8.11 </li>
   </ul>

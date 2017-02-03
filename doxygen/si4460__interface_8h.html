@@ -125,7 +125,7 @@ Macros</h2></td></tr>
 <tr class="memdesc:a759250e9a6643d32417a6e8a55a55ffa"><td class="mdescLeft">&#160;</td><td class="mdescRight">Success return value.  <a href="#a759250e9a6643d32417a6e8a55a55ffa">More...</a><br /></td></tr>
 <tr class="separator:a759250e9a6643d32417a6e8a55a55ffa"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ad78c95fe2dec2f1bd1660544625ec77c"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="si4460__interface_8h.html#ad78c95fe2dec2f1bd1660544625ec77c">ECODE_EMDRV_EZRADIODRV_ILLEGAL_HANDLE</a>&#160;&#160;&#160;( ECODE_EMDRV_EZRADIODRV_BASE | 0x00000001 )</td></tr>
-<tr class="memdesc:ad78c95fe2dec2f1bd1660544625ec77c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Illegal SPI handle.  <a href="#ad78c95fe2dec2f1bd1660544625ec77c">More...</a><br /></td></tr>
+<tr class="memdesc:ad78c95fe2dec2f1bd1660544625ec77c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Illegal <a class="el" href="struct_s_p_i.html">SPI</a> handle.  <a href="#ad78c95fe2dec2f1bd1660544625ec77c">More...</a><br /></td></tr>
 <tr class="separator:ad78c95fe2dec2f1bd1660544625ec77c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a30b7ef4cac2f8a090b94be201cccb394"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="si4460__interface_8h.html#a30b7ef4cac2f8a090b94be201cccb394">ECODE_EMDRV_EZRADIODRV_TRANSMIT_PLUGIN_BASE</a>&#160;&#160;&#160;( ECODE_EMDRV_EZRADIODRV_BASE | 0x00000100 )</td></tr>
 <tr class="memdesc:a30b7ef4cac2f8a090b94be201cccb394"><td class="mdescLeft">&#160;</td><td class="mdescRight">Transmit plugin base error code.  <a href="#a30b7ef4cac2f8a090b94be201cccb394">More...</a><br /></td></tr>
@@ -166,10 +166,10 @@ Functions</h2></td></tr>
 <tr class="separator:aa97f68b510cb3995137d19b0dba6da96"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a5a552425d8e40d1eefd78cc82b5dd7b5"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="si4460__interface_8h.html#a5a552425d8e40d1eefd78cc82b5dd7b5">ezradioResetTRxFifo</a> (void)</td></tr>
 <tr class="separator:a5a552425d8e40d1eefd78cc82b5dd7b5"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:abc62ba23a66e6c65bf40ff28d895c17f"><td class="memItemLeft" align="right" valign="top">Ecode_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="si4460__interface_8h.html#abc62ba23a66e6c65bf40ff28d895c17f">ezradioStartRx</a> (uint8_t channel)</td></tr>
-<tr class="separator:abc62ba23a66e6c65bf40ff28d895c17f"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:afda9a04d2288c254e5e5874e85b3cac2"><td class="memItemLeft" align="right" valign="top">Ecode_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="si4460__interface_8h.html#afda9a04d2288c254e5e5874e85b3cac2">ezradioStartTx</a> (<a class="el" href="structhw__radio__packet__t.html">hw_radio_packet_t</a> *<a class="el" href="structpacket.html">packet</a>, uint8_t channel_id, bool rx_after)</td></tr>
-<tr class="separator:afda9a04d2288c254e5e5874e85b3cac2"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab7de2b4cfb23fb831cbc1e3824bd3c3b"><td class="memItemLeft" align="right" valign="top">Ecode_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="si4460__interface_8h.html#ab7de2b4cfb23fb831cbc1e3824bd3c3b">ezradioStartRx</a> (uint8_t channel, bool packet_handler)</td></tr>
+<tr class="separator:ab7de2b4cfb23fb831cbc1e3824bd3c3b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a3025d27a0c752da53dcd45b68b82f6a0"><td class="memItemLeft" align="right" valign="top">Ecode_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="si4460__interface_8h.html#a3025d27a0c752da53dcd45b68b82f6a0">ezradioStartTx</a> (<a class="el" href="structhw__radio__packet__t.html">hw_radio_packet_t</a> *<a class="el" href="structpacket.html">packet</a>, uint8_t channel_id, bool rx_after, uint8_t data_length)</td></tr>
+<tr class="separator:a3025d27a0c752da53dcd45b68b82f6a0"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a5a8f3bf0fcf05362979b782837afe7d6"><td class="memItemLeft" align="right" valign="top">Ecode_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="si4460__interface_8h.html#a5a8f3bf0fcf05362979b782837afe7d6">ezradioStartTxUnmodelated</a> (uint8_t channel_id)</td></tr>
 <tr class="separator:a5a8f3bf0fcf05362979b782837afe7d6"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a3b932d16e6ba5d5c47b39ec3f84df461"><td class="memItemLeft" align="right" valign="top">const char *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="si4460__interface_8h.html#a3b932d16e6ba5d5c47b39ec3f84df461">byte_to_binary</a> (uint8_t x)</td></tr>
@@ -242,7 +242,7 @@ Functions</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p>Illegal SPI handle. </p>
+<p>Illegal <a class="el" href="struct_s_p_i.html">SPI</a> handle. </p>
 
 </div>
 </div>
@@ -392,7 +392,7 @@ Functions</h2></td></tr>
 
 </div>
 </div>
-<a class="anchor" id="abc62ba23a66e6c65bf40ff28d895c17f"></a>
+<a class="anchor" id="ab7de2b4cfb23fb831cbc1e3824bd3c3b"></a>
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
@@ -400,15 +400,25 @@ Functions</h2></td></tr>
           <td class="memname">Ecode_t ezradioStartRx </td>
           <td>(</td>
           <td class="paramtype">uint8_t&#160;</td>
-          <td class="paramname"><em>channel</em></td><td>)</td>
+          <td class="paramname"><em>channel</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
           <td></td>
+          <td class="paramtype">bool&#160;</td>
+          <td class="paramname"><em>packet_handler</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
         </tr>
       </table>
 </div><div class="memdoc">
 
 </div>
 </div>
-<a class="anchor" id="afda9a04d2288c254e5e5874e85b3cac2"></a>
+<a class="anchor" id="a3025d27a0c752da53dcd45b68b82f6a0"></a>
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
@@ -428,7 +438,13 @@ Functions</h2></td></tr>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">bool&#160;</td>
-          <td class="paramname"><em>rx_after</em>&#160;</td>
+          <td class="paramname"><em>rx_after</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">uint8_t&#160;</td>
+          <td class="paramname"><em>data_length</em>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -462,7 +478,7 @@ Functions</h2></td></tr>
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
     <li class="navelem"><a class="el" href="dir_644e041c3a6521da7b27eba0e4eb2b95.html">framework</a></li><li class="navelem"><a class="el" href="dir_8f2c340cdabd0cab4db94c39704d70a8.html">hal</a></li><li class="navelem"><a class="el" href="dir_e53dcac4adbcec177c678c0d8c8c3e7c.html">chips</a></li><li class="navelem"><a class="el" href="dir_60236c8c7a2958cea6ca93d5ab2c1944.html">si4460</a></li><li class="navelem"><a class="el" href="si4460__interface_8h.html">si4460_interface.h</a></li>
-    <li class="footer">Generated on Mon May 2 2016 21:25:36 for OSS-7: Open Source Stack for DASH7 Alliance Protocol by
+    <li class="footer">Generated on Fri Feb 3 2017 13:01:26 for OSS-7: Open Source Stack for DASH7 Alliance Protocol by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.8.11 </li>
   </ul>

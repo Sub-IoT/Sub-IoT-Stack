@@ -1,5 +1,6 @@
 var searchData=
 [
+  ['capsense',['CapSense',['../group___cap_sense.html',1,'']]],
   ['cdc',['Cdc',['../group___cdc.html',1,'']]],
   ['chip',['CHIP',['../group___c_h_i_p.html',1,'']]],
   ['cli',['Cli',['../group__cli.html',1,'']]],

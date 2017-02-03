@@ -1,7 +1,10 @@
 var dll_8c =
 [
     [ "active_access_class", "dll_8c.html#a9febd2c58f3323690f89fec761ce694f", null ],
+    [ "csma_ca_mode", "dll_8c.html#afaa4d1503913fa1b0d32d66192708f2d", null ],
     [ "current_access_profile", "dll_8c.html#a047efbf308e3c8acfe99f0f22059f1fe", null ],
+    [ "current_channel_id", "dll_8c.html#a05c678a07645246ead0b1f13e689f11c", null ],
+    [ "current_eirp", "dll_8c.html#a4a914c33092faccf58b0d50bf6fa7552", null ],
     [ "current_packet", "dll_8c.html#a7fdd03e8b158998d7ced0976a9273065", null ],
     [ "dll_cca_started", "dll_8c.html#a3758a1c2046a4a8f777f6ec5b696c23b", null ],
     [ "dll_rigd_n", "dll_8c.html#ac5bd6062d658f6b4ac298e96fe46f8d3", null ],
@@ -11,9 +14,14 @@ var dll_8c =
     [ "dll_tca0", "dll_8c.html#a7cc5679d8dd18451b79562d278fd6f5a", null ],
     [ "dll_to", "dll_8c.html#a634ebd46c75a6fb6b78249879f8f313d", null ],
     [ "DPRINT", "dll_8c.html#a57a35bfd7d13bdfab37a48171286ecee", null ],
+    [ "DPRINT_DATA", "dll_8c.html#a00479786500318f73fb8290719bfa0db", null ],
+    [ "E_CCA", "dll_8c.html#a2905231d491ab471a20312f2f1941c8d", null ],
     [ "NO_ACTIVE_ACCESS_CLASS", "dll_8c.html#aa7b3a088e0b68e5ea26d8e9d79cd091a", null ],
+    [ "process_received_packets_after_tx", "dll_8c.html#a198b1e10748d1536c0760947b2688659", null ],
+    [ "resume_fg_scan", "dll_8c.html#ab40ffcd84b5851e8cca89bc93d112cac", null ],
     [ "scan_access_profile", "dll_8c.html#aa08df88d8313c17c23c01d70ec658c36", null ],
     [ "t_g", "dll_8c.html#a48814e1cb6fe9e54d4f06ab61606837b", null ],
+    [ "tx_nf_method", "dll_8c.html#ac7164475164a725496985c0c9fefaec0", null ],
     [ "dll_state_t", "dll_8c.html#a6b0d8804a53a83e3ffadb091f1b58c5e", [
       [ "DLL_STATE_IDLE", "dll_8c.html#a6b0d8804a53a83e3ffadb091f1b58c5eaad5cfa4b2b730d501c2b3e95ef764a2e", null ],
       [ "DLL_STATE_SCAN_AUTOMATION", "dll_8c.html#a6b0d8804a53a83e3ffadb091f1b58c5eaef2fe43f24139e2a5ce241fabdeb2968", null ],
@@ -25,15 +33,20 @@ var dll_8c =
       [ "DLL_STATE_FOREGROUND_SCAN", "dll_8c.html#a6b0d8804a53a83e3ffadb091f1b58c5ea010e5a1143ade209270c5147475e53b6", null ],
       [ "DLL_STATE_BACKGROUND_SCAN", "dll_8c.html#a6b0d8804a53a83e3ffadb091f1b58c5ea522bb411e30cd854b2d64e7ac59f1469", null ],
       [ "DLL_STATE_TX_FOREGROUND", "dll_8c.html#a6b0d8804a53a83e3ffadb091f1b58c5eae9a0c60c58c880b7c0b2e689853c460e", null ],
-      [ "DLL_STATE_TX_FOREGROUND_COMPLETED", "dll_8c.html#a6b0d8804a53a83e3ffadb091f1b58c5ea88907a7d9f02661ed9a5f98c35973c28", null ]
+      [ "DLL_STATE_TX_FOREGROUND_COMPLETED", "dll_8c.html#a6b0d8804a53a83e3ffadb091f1b58c5ea88907a7d9f02661ed9a5f98c35973c28", null ],
+      [ "DLL_STATE_TX_FOREGROUND_DISCARDED", "dll_8c.html#a6b0d8804a53a83e3ffadb091f1b58c5eadae2d0c55378fa110584c9b3a6a17ab9", null ]
     ] ],
-    [ "dll_assemble_packet_header", "group___d_l_l.html#ga5b49c065d575e31ba0f0fac1ec68feb8", null ],
-    [ "dll_disassemble_packet_header", "group___d_l_l.html#ga335adda32f012fc86c22470dc715490d", null ],
+    [ "dll_assemble_packet_header", "group___d_l_l.html#gaca5f922048f3721c8003cb06c21e81e9", null ],
+    [ "dll_calculate_tx_duration", "group___d_l_l.html#ga19f680c0e52de5f31fe7c46f349212d7", null ],
+    [ "dll_disassemble_packet_header", "group___d_l_l.html#ga8073e26aad3e8782c487a97e0b89f8cb", null ],
     [ "dll_execute_scan_automation", "group___d_l_l.html#gafa13f89e545841cbc1ac223ccf071133", null ],
     [ "dll_init", "group___d_l_l.html#gaff60408a8d3d73064b219c86df504218", null ],
+    [ "dll_notify_access_profile_file_changed", "group___d_l_l.html#ga1ddf8776665b2f2ab2e5e48522b5ed5d", null ],
     [ "dll_notify_dll_conf_file_changed", "group___d_l_l.html#ga459e5bf86340e70a301ac19dc3657af2", null ],
     [ "dll_start_foreground_scan", "group___d_l_l.html#ga2e0f59470f3631388d19603f83f1b219", null ],
-    [ "dll_stop_foreground_scan", "group___d_l_l.html#ga372406a7fa3523b8da926a195adb23f0", null ],
-    [ "dll_tx_frame", "group___d_l_l.html#ga830d24decc85c3d74729031977cdebfd", null ],
-    [ "packet_received", "dll_8c.html#ac9f3304b3551f03451ba7b0228e47d27", null ]
+    [ "dll_stop_foreground_scan", "group___d_l_l.html#ga6ba647fd2fc54722205562a4ab051601", null ],
+    [ "dll_tx_frame", "group___d_l_l.html#ga0f7973c0846602d05f6c895cc8d2b5da", null ],
+    [ "packet_received", "dll_8c.html#a4dbe954168d3cf9cee44edcdc55f1d90", null ],
+    [ "packet_transmitted", "dll_8c.html#adc31c3a3f693d683c42761bd68bc358c", null ],
+    [ "start_background_scan", "dll_8c.html#aedd7da24b1e804c85f8e98de9198b99c", null ]
 ];

@@ -128,10 +128,14 @@ Functions</h2></td></tr>
 <tr class="separator:a004da15f561c4c46be6f3df718e33c52"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a238e4acdd72f5aa0006c5eb065707e6f"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="packet__queue_8h.html#a238e4acdd72f5aa0006c5eb065707e6f">packet_queue_mark_received</a> (<a class="el" href="structhw__radio__packet__t.html">hw_radio_packet_t</a> *)</td></tr>
 <tr class="separator:a238e4acdd72f5aa0006c5eb065707e6f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:abbb814083923b628304266302aa5abe9"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="packet__queue_8h.html#abbb814083923b628304266302aa5abe9">packet_queue_mark_transmitted</a> (<a class="el" href="structhw__radio__packet__t.html">hw_radio_packet_t</a> *)</td></tr>
+<tr class="separator:abbb814083923b628304266302aa5abe9"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aa19ab37cb2e825ca785fbc585f10d36b"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="packet__queue_8h.html#aa19ab37cb2e825ca785fbc585f10d36b">packet_queue_mark_processing</a> (<a class="el" href="d7anp_8h.html#a055b444e9c43fd24266b5908a7b26636">packet_t</a> *)</td></tr>
 <tr class="separator:aa19ab37cb2e825ca785fbc585f10d36b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a178968f39a8abf2acb98f3c4fbc0a9ba"><td class="memItemLeft" align="right" valign="top"><a class="el" href="d7anp_8h.html#a055b444e9c43fd24266b5908a7b26636">packet_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="packet__queue_8h.html#a178968f39a8abf2acb98f3c4fbc0a9ba">packet_queue_get_received_packet</a> ()</td></tr>
 <tr class="separator:a178968f39a8abf2acb98f3c4fbc0a9ba"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a6e3bc6c866bc0d6b522026385c0f6b05"><td class="memItemLeft" align="right" valign="top"><a class="el" href="d7anp_8h.html#a055b444e9c43fd24266b5908a7b26636">packet_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="packet__queue_8h.html#a6e3bc6c866bc0d6b522026385c0f6b05">packet_queue_get_transmitted_packet</a> ()</td></tr>
+<tr class="separator:a6e3bc6c866bc0d6b522026385c0f6b05"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Contains a (configurable) number of slots for keeping <a class="el" href="group___d_l_l.html#ga055b444e9c43fd24266b5908a7b26636">packets</a> while processing though the different layers of the stack. </p>
@@ -203,6 +207,22 @@ Functions</h2></td></tr>
 
 </div>
 </div>
+<a class="anchor" id="a6e3bc6c866bc0d6b522026385c0f6b05"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="d7anp_8h.html#a055b444e9c43fd24266b5908a7b26636">packet_t</a>* packet_queue_get_transmitted_packet </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Get a transmitted packet for further processing. Returns NULL if no transmitted packet queued. </p>
+
+</div>
+</div>
 <a class="anchor" id="afcc3dd49720df3bd8e0e42a9709afe51"></a>
 <div class="memitem">
 <div class="memproto">
@@ -253,13 +273,30 @@ Functions</h2></td></tr>
 
 </div>
 </div>
+<a class="anchor" id="abbb814083923b628304266302aa5abe9"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void packet_queue_mark_transmitted </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="structhw__radio__packet__t.html">hw_radio_packet_t</a> *&#160;</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Indicates the supplied packet has been succesfully transmitted and can be freed </p>
+
+</div>
+</div>
 </div><!-- contents -->
 </div><!-- doc-content -->
 <!-- start footer part -->
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
     <li class="navelem"><a class="el" href="dir_e05d7e2b1ecd646af5bb94391405f3b5.html">modules</a></li><li class="navelem"><a class="el" href="dir_6b8f92aa648c158fb1e8ed54f9452f2b.html">d7ap</a></li><li class="navelem"><a class="el" href="packet__queue_8h.html">packet_queue.h</a></li>
-    <li class="footer">Generated on Mon May 2 2016 21:25:36 for OSS-7: Open Source Stack for DASH7 Alliance Protocol by
+    <li class="footer">Generated on Fri Feb 3 2017 13:01:27 for OSS-7: Open Source Stack for DASH7 Alliance Protocol by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.8.11 </li>
   </ul>

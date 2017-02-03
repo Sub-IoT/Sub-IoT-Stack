@@ -1,6 +1,7 @@
 var group__radio =
 [
     [ "phy_channel_header_t", "structphy__channel__header__t.html", [
+      [ "_rfu", "structphy__channel__header__t.html#a60e8c331a30da040edda17b19f908d5a", null ],
       [ "ch_class", "structphy__channel__header__t.html#a7e317ffb50aef9c4da9226a348784ef0", null ],
       [ "ch_coding", "structphy__channel__header__t.html#a90146db89c851af3a2031bde960845f7", null ],
       [ "ch_freq_band", "structphy__channel__header__t.html#ab9ffbe7d1331fc49cbb04642fa084d06", null ]
@@ -23,9 +24,11 @@ var group__radio =
       [ "crc_status", "structhw__rx__metadata__t.html#a3deb5b54c2847059abc4629aeb4ee31a", null ],
       [ "lqi", "structhw__rx__metadata__t.html#a5dca4cb219c51b62801ae4e6e63bc2d3", null ],
       [ "rssi", "structhw__rx__metadata__t.html#a1fadff09303a314dd15b4cf4e2f2c090", null ],
-      [ "rx_cfg", "structhw__rx__metadata__t.html#a5fdf5dcfa4be63a3f34ebae8e42d88fb", null ]
+      [ "rx_cfg", "structhw__rx__metadata__t.html#a5fdf5dcfa4be63a3f34ebae8e42d88fb", null ],
+      [ "timestamp", "structhw__rx__metadata__t.html#ae65240056c58ee84bf1fa9450b4b968b", null ]
     ] ],
     [ "hw_tx_metadata_t", "structhw__tx__metadata__t.html", [
+      [ "timestamp", "structhw__tx__metadata__t.html#a538a3401c487e7decb93bea18ce8dbac", null ],
       [ "tx_cfg", "structhw__tx__metadata__t.html#af2b1475e84f222a67f98cc295fdc8844", null ]
     ] ],
     [ "hw_radio_packet_t", "structhw__radio__packet__t.html", [

@@ -10,5 +10,6 @@ var group__framework =
     [ "Random", "group__random.html", "group__random" ],
     [ "Scheduler", "group__scheduler.html", "group__scheduler" ],
     [ "Shell", "group__shell.html", "group__shell" ],
+    [ "key.h", "key_8h.html", null ],
     [ "version.h", "version_8h.html", null ]
 ];

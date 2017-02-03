@@ -109,7 +109,7 @@ OSS-7            </a>
 <p>When the d7-oss-logger.py script is started with the <code>-f [file]</code> parameter it will dump the received traffic to the specified file in the PCAP format (the file format used by wireshark).</p>
 <p>Next we need to configure wireshark to correctly dissect this file. Since wireshark obviously does not know about the OSS-7 and DASH7 packet structure we will need to add a dissector plugin which adds support for parsing the DASH7 packets.
 This plugin is provided in the form of a lua script and can be found in the OSS-7 repository in the <code>tools/wireshark-dissector/</code> directory. Next we need to tell wireshark to use this script. This can be done by calling the script from the init.lua script by adding the following line:</p>
-<div class="codehilite"><pre><span class="nb">dofile</span><span class="p">(</span><span class="s1">&#39;</span><span class="s">&lt;PATH-TO-OSS7&gt;/tools/wireshark-dissector/oss7-wireshark-dissector.lua&#39;</span><span class="p">)</span>
+<div class="codehilite"><pre><span></span><span class="nb">dofile</span><span class="p">(</span><span class="s1">&#39;</span><span class="s">&lt;PATH-TO-OSS7&gt;/tools/wireshark-dissector/oss7-wireshark-dissector.lua&#39;</span><span class="p">)</span>
 </pre></div>
 
 

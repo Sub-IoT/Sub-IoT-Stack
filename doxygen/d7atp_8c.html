@@ -123,6 +123,7 @@ $(document).ready(function(){initNavTree('d7atp_8c.html','');});
 <code>#include &quot;<a class="el" href="log_8h_source.html">log.h</a>&quot;</code><br />
 <code>#include &quot;<a class="el" href="fs_8h_source.html">fs.h</a>&quot;</code><br />
 <code>#include &quot;MODULE_D7AP_defs.h&quot;</code><br />
+<code>#include &quot;<a class="el" href="compress_8h_source.html">compress.h</a>&quot;</code><br />
 </div><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="define-members"></a>
 Macros</h2></td></tr>
@@ -140,18 +141,25 @@ Macros</h2></td></tr>
 <tr class="separator:ae22e19683952fe96713f2521655656dd"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ab2f9fcba1b63519ee0137dbbadb37bf3"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="d7atp_8c.html#ab2f9fcba1b63519ee0137dbbadb37bf3">active_addressee_access_profile</a>&#160;&#160;&#160;<a class="el" href="ng_8h.html#aa25e025bae22513cd27959fe8d2b6108">NG</a>(_active_addressee_access_profile)</td></tr>
 <tr class="separator:ab2f9fcba1b63519ee0137dbbadb37bf3"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a0d8e2aee5f5da642aa98f229885630c5"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="d7atp_8c.html#a0d8e2aee5f5da642aa98f229885630c5">stop_dialog_after_tx</a>&#160;&#160;&#160;<a class="el" href="ng_8h.html#aa25e025bae22513cd27959fe8d2b6108">NG</a>(_stop_dialog_after_tx)</td></tr>
+<tr class="separator:a0d8e2aee5f5da642aa98f229885630c5"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a7fc0e3b6634bfd2d9245a3307949e458"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="d7atp_8c.html#a7fc0e3b6634bfd2d9245a3307949e458">d7atp_state</a>&#160;&#160;&#160;<a class="el" href="ng_8h.html#aa25e025bae22513cd27959fe8d2b6108">NG</a>(_d7atp_state)</td></tr>
 <tr class="separator:a7fc0e3b6634bfd2d9245a3307949e458"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ae8ffa2364849b1437bca121516c976a4"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="d7atp_8c.html#ae8ffa2364849b1437bca121516c976a4">IS_IN_TRANSACTION</a>()&#160;&#160;&#160;(<a class="el" href="d7atp_8c.html#a7fc0e3b6634bfd2d9245a3307949e458">d7atp_state</a> != <a class="el" href="d7atp_8c.html#aa0aafed44fec19806d8f9ad834be1248aa441767c279aec283f8622008d4ce62b">D7ATP_STATE_IDLE</a>)</td></tr>
-<tr class="separator:ae8ffa2364849b1437bca121516c976a4"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a4cd12403f4c31c0b6e9913a8d38e2002"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="d7atp_8c.html#a4cd12403f4c31c0b6e9913a8d38e2002">IS_IN_MASTER_TRANSACTION</a>()</td></tr>
+<tr class="separator:a4cd12403f4c31c0b6e9913a8d38e2002"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="enum-members"></a>
 Enumerations</h2></td></tr>
 <tr class="memitem:aa0aafed44fec19806d8f9ad834be1248"><td class="memItemLeft" align="right" valign="top">enum &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="d7atp_8c.html#aa0aafed44fec19806d8f9ad834be1248">state_t</a> { <br />
-&#160;&#160;<a class="el" href="d7asp_8c.html#aa0aafed44fec19806d8f9ad834be1248adcb34c9e988933f0fed47f1afbcab9a5">D7ASP_STATE_IDLE</a>, 
-<a class="el" href="d7asp_8c.html#aa0aafed44fec19806d8f9ad834be1248a65b9819b6772ad79b2ee241361ac9813">D7ASP_STATE_SLAVE</a>, 
+&#160;&#160;<a class="el" href="d7anp_8c.html#aa0aafed44fec19806d8f9ad834be1248add13ade0aa0f3d6d7f84f66f80785396">D7ANP_STATE_IDLE</a>, 
+<a class="el" href="d7anp_8c.html#aa0aafed44fec19806d8f9ad834be1248afe2669254ae09ba8cd0abff0dc604cdd">D7ANP_STATE_TRANSMIT</a>, 
+<a class="el" href="d7anp_8c.html#aa0aafed44fec19806d8f9ad834be1248a83ee83d17ee3db7e7b531a7e006e0c59">D7ANP_STATE_FOREGROUND_SCAN</a>, 
+<a class="el" href="d7asp_8c.html#aa0aafed44fec19806d8f9ad834be1248adcb34c9e988933f0fed47f1afbcab9a5">D7ASP_STATE_IDLE</a>, 
+<br />
+&#160;&#160;<a class="el" href="d7asp_8c.html#aa0aafed44fec19806d8f9ad834be1248a65b9819b6772ad79b2ee241361ac9813">D7ASP_STATE_SLAVE</a>, 
 <a class="el" href="d7asp_8c.html#aa0aafed44fec19806d8f9ad834be1248a8b4e755cd7dfd39733333b4de06c1baf">D7ASP_STATE_MASTER</a>, 
 <a class="el" href="d7asp_8c.html#aa0aafed44fec19806d8f9ad834be1248a6119773ac5214936a080cd96a515e4e3">D7ASP_STATE_SLAVE_PENDING_MASTER</a>, 
+<a class="el" href="d7asp_8c.html#aa0aafed44fec19806d8f9ad834be1248abc4b2aa2fd8e8b0b7e440ad60f4cf6a0">D7ASP_STATE_PENDING_MASTER</a>, 
 <br />
 &#160;&#160;<a class="el" href="d7atp_8c.html#aa0aafed44fec19806d8f9ad834be1248aa441767c279aec283f8622008d4ce62b">D7ATP_STATE_IDLE</a>, 
 <a class="el" href="d7atp_8c.html#aa0aafed44fec19806d8f9ad834be1248ac64d002ec8cb5b9c8b47901b18a4c5aa">D7ATP_STATE_MASTER_TRANSACTION_REQUEST_PERIOD</a>, 
@@ -166,20 +174,24 @@ Enumerations</h2></td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
 Functions</h2></td></tr>
+<tr class="memitem:a3d2d785ae5a9565c748a7a0c184709ad"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="d7atp_8c.html#a3d2d785ae5a9565c748a7a0c184709ad">d7atp_signal_foreground_scan_expired</a> ()</td></tr>
+<tr class="separator:a3d2d785ae5a9565c748a7a0c184709ad"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:afdce91bd784b0a6c3b6730a1738e59ed"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="d7atp_8c.html#afdce91bd784b0a6c3b6730a1738e59ed">d7atp_signal_dialog_termination</a> ()</td></tr>
+<tr class="separator:afdce91bd784b0a6c3b6730a1738e59ed"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a43bdd78639fd1b1a909a37125143c632"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="d7atp_8c.html#a43bdd78639fd1b1a909a37125143c632">d7atp_stop_transaction</a> ()</td></tr>
+<tr class="separator:a43bdd78639fd1b1a909a37125143c632"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a0761053f83c94b4439d1a790af5a512a"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="d7atp_8c.html#a0761053f83c94b4439d1a790af5a512a">d7atp_init</a> ()</td></tr>
 <tr class="separator:a0761053f83c94b4439d1a790af5a512a"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a4e9336c685b9629cd0cf9549a2537249"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="d7atp_8c.html#a4e9336c685b9629cd0cf9549a2537249">d7atp_start_dialog</a> (uint8_t dialog_id, uint8_t transaction_id, bool is_last_transaction, <a class="el" href="d7anp_8h.html#a055b444e9c43fd24266b5908a7b26636">packet_t</a> *<a class="el" href="structpacket.html">packet</a>, <a class="el" href="structsession__qos__t.html">session_qos_t</a> *qos_settings)</td></tr>
-<tr class="separator:a4e9336c685b9629cd0cf9549a2537249"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a60f2ab7225f2f525fb95e85b1981dc3c"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="d7atp_8c.html#a60f2ab7225f2f525fb95e85b1981dc3c">d7atp_respond_dialog</a> (<a class="el" href="d7anp_8h.html#a055b444e9c43fd24266b5908a7b26636">packet_t</a> *<a class="el" href="structpacket.html">packet</a>)</td></tr>
-<tr class="separator:a60f2ab7225f2f525fb95e85b1981dc3c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a3bcf1185c9891ac51112e8fed7e66104"><td class="memItemLeft" align="right" valign="top"><a class="el" href="types_8h.html#a9ad6b2dc3cbff040775e79656fe8e1a3">error_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="d7atp_8c.html#a3bcf1185c9891ac51112e8fed7e66104">d7atp_send_request</a> (uint8_t dialog_id, uint8_t transaction_id, bool is_last_transaction, <a class="el" href="d7anp_8h.html#a055b444e9c43fd24266b5908a7b26636">packet_t</a> *<a class="el" href="structpacket.html">packet</a>, <a class="el" href="structsession__qos__t.html">session_qos_t</a> *qos_settings, uint8_t listen_timeout, uint8_t expected_response_length)</td></tr>
+<tr class="separator:a3bcf1185c9891ac51112e8fed7e66104"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ae9a5c2389e68cbc153c63449c313607c"><td class="memItemLeft" align="right" valign="top">uint8_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="d7atp_8c.html#ae9a5c2389e68cbc153c63449c313607c">d7atp_assemble_packet_header</a> (<a class="el" href="d7anp_8h.html#a055b444e9c43fd24266b5908a7b26636">packet_t</a> *<a class="el" href="structpacket.html">packet</a>, uint8_t *data_ptr)</td></tr>
 <tr class="separator:ae9a5c2389e68cbc153c63449c313607c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a59413daef08a6339c2ed5e80d36ad0c9"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="d7atp_8c.html#a59413daef08a6339c2ed5e80d36ad0c9">d7atp_disassemble_packet_header</a> (<a class="el" href="d7anp_8h.html#a055b444e9c43fd24266b5908a7b26636">packet_t</a> *<a class="el" href="structpacket.html">packet</a>, uint8_t *data_idx)</td></tr>
 <tr class="separator:a59413daef08a6339c2ed5e80d36ad0c9"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ae4d8f925b8a051c900b6e4de598f1db6"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="d7atp_8c.html#ae4d8f925b8a051c900b6e4de598f1db6">d7atp_signal_packet_transmitted</a> (<a class="el" href="d7anp_8h.html#a055b444e9c43fd24266b5908a7b26636">packet_t</a> *<a class="el" href="structpacket.html">packet</a>)</td></tr>
 <tr class="separator:ae4d8f925b8a051c900b6e4de598f1db6"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ad0fe91afa33c112ebf8ed9f224a69e49"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="d7atp_8c.html#ad0fe91afa33c112ebf8ed9f224a69e49">d7atp_signal_packet_csma_ca_insertion_completed</a> (bool succeeded)</td></tr>
-<tr class="separator:ad0fe91afa33c112ebf8ed9f224a69e49"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a03b4a6e97f993ca890befec89fa62547"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="d7atp_8c.html#a03b4a6e97f993ca890befec89fa62547">d7atp_signal_transmission_failure</a> ()</td></tr>
+<tr class="separator:a03b4a6e97f993ca890befec89fa62547"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ac252aeb5fa283f45343ab757d136457a"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="d7atp_8c.html#ac252aeb5fa283f45343ab757d136457a">d7atp_process_received_packet</a> (<a class="el" href="d7anp_8h.html#a055b444e9c43fd24266b5908a7b26636">packet_t</a> *<a class="el" href="structpacket.html">packet</a>)</td></tr>
 <tr class="separator:ac252aeb5fa283f45343ab757d136457a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
@@ -189,7 +201,9 @@ Functions</h2></td></tr>
 </pre><p>Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.</p>
 <dl class="section author"><dt>Author</dt><dd><a href="#" onclick="location.href='mai'+'lto:'+'gle'+'nn'+'.er'+'ge'+'ert'+'s@'+'uan'+'tw'+'erp'+'en'+'.be'; return false;">glenn<span style="display: none;">.nosp@m.</span>.erg<span style="display: none;">.nosp@m.</span>eerts<span style="display: none;">.nosp@m.</span>@uan<span style="display: none;">.nosp@m.</span>twerp<span style="display: none;">.nosp@m.</span>en.b<span style="display: none;">.nosp@m.</span>e</a> </dd>
 <dd>
-<a href="#" onclick="location.href='mai'+'lto:'+'maa'+'rt'+'en.'+'we'+'yn@'+'ua'+'ntw'+'er'+'pen'+'.b'+'e'; return false;">maart<span style="display: none;">.nosp@m.</span>en.w<span style="display: none;">.nosp@m.</span>eyn@u<span style="display: none;">.nosp@m.</span>antw<span style="display: none;">.nosp@m.</span>erpen<span style="display: none;">.nosp@m.</span>.be</a> </dd></dl>
+<a href="#" onclick="location.href='mai'+'lto:'+'maa'+'rt'+'en.'+'we'+'yn@'+'ua'+'ntw'+'er'+'pen'+'.b'+'e'; return false;">maart<span style="display: none;">.nosp@m.</span>en.w<span style="display: none;">.nosp@m.</span>eyn@u<span style="display: none;">.nosp@m.</span>antw<span style="display: none;">.nosp@m.</span>erpen<span style="display: none;">.nosp@m.</span>.be</a> </dd>
+<dd>
+<a href="#" onclick="location.href='mai'+'lto:'+'phi'+'li'+'ppe'+'.n'+'une'+'s@'+'cor'+'tu'+'s.c'+'om'; return false;">phili<span style="display: none;">.nosp@m.</span>ppe.<span style="display: none;">.nosp@m.</span>nunes<span style="display: none;">.nosp@m.</span>@cor<span style="display: none;">.nosp@m.</span>tus.c<span style="display: none;">.nosp@m.</span>om</a> </dd></dl>
 </div><h2 class="groupheader">Macro Definition Documentation</h2>
 <a class="anchor" id="ae22e19683952fe96713f2521655656dd"></a>
 <div class="memitem">
@@ -291,15 +305,30 @@ Functions</h2></td></tr>
 
 </div>
 </div>
-<a class="anchor" id="ae8ffa2364849b1437bca121516c976a4"></a>
+<a class="anchor" id="a4cd12403f4c31c0b6e9913a8d38e2002"></a>
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">#define IS_IN_TRANSACTION</td>
+          <td class="memname">#define IS_IN_MASTER_TRANSACTION</td>
           <td>(</td>
           <td class="paramname"></td><td>)</td>
-          <td>&#160;&#160;&#160;(<a class="el" href="d7atp_8c.html#a7fc0e3b6634bfd2d9245a3307949e458">d7atp_state</a> != <a class="el" href="d7atp_8c.html#aa0aafed44fec19806d8f9ad834be1248aa441767c279aec283f8622008d4ce62b">D7ATP_STATE_IDLE</a>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<b>Value:</b><div class="fragment"><div class="line">(<a class="code" href="d7atp_8c.html#a7fc0e3b6634bfd2d9245a3307949e458">d7atp_state</a> == <a class="code" href="d7atp_8c.html#aa0aafed44fec19806d8f9ad834be1248ac64d002ec8cb5b9c8b47901b18a4c5aa">D7ATP_STATE_MASTER_TRANSACTION_REQUEST_PERIOD</a> || <a class="code" href="d7atp_8c.html#a7fc0e3b6634bfd2d9245a3307949e458">\</a></div><div class="line"><a class="code" href="d7atp_8c.html#a7fc0e3b6634bfd2d9245a3307949e458">                                    d7atp_state</a> == <a class="code" href="d7atp_8c.html#aa0aafed44fec19806d8f9ad834be1248a604769614d2519a3b6af78b247da472c">D7ATP_STATE_MASTER_TRANSACTION_RESPONSE_PERIOD</a>)</div><div class="ttc" id="d7atp_8c_html_a7fc0e3b6634bfd2d9245a3307949e458"><div class="ttname"><a href="d7atp_8c.html#a7fc0e3b6634bfd2d9245a3307949e458">d7atp_state</a></div><div class="ttdeci">#define d7atp_state</div><div class="ttdef"><b>Definition:</b> d7atp.c:74</div></div>
+<div class="ttc" id="d7atp_8c_html_aa0aafed44fec19806d8f9ad834be1248a604769614d2519a3b6af78b247da472c"><div class="ttname"><a href="d7atp_8c.html#aa0aafed44fec19806d8f9ad834be1248a604769614d2519a3b6af78b247da472c">D7ATP_STATE_MASTER_TRANSACTION_RESPONSE_PERIOD</a></div><div class="ttdef"><b>Definition:</b> d7atp.c:67</div></div>
+<div class="ttc" id="d7atp_8c_html_aa0aafed44fec19806d8f9ad834be1248ac64d002ec8cb5b9c8b47901b18a4c5aa"><div class="ttname"><a href="d7atp_8c.html#aa0aafed44fec19806d8f9ad834be1248ac64d002ec8cb5b9c8b47901b18a4c5aa">D7ATP_STATE_MASTER_TRANSACTION_REQUEST_PERIOD</a></div><div class="ttdef"><b>Definition:</b> d7atp.c:66</div></div>
+</div><!-- fragment -->
+</div>
+</div>
+<a class="anchor" id="a0d8e2aee5f5da642aa98f229885630c5"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">#define stop_dialog_after_tx&#160;&#160;&#160;<a class="el" href="ng_8h.html#aa25e025bae22513cd27959fe8d2b6108">NG</a>(_stop_dialog_after_tx)</td>
         </tr>
       </table>
 </div><div class="memdoc">
@@ -312,18 +341,26 @@ Functions</h2></td></tr>
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">enum <a class="el" href="d7asp_8c.html#aa0aafed44fec19806d8f9ad834be1248">state_t</a></td>
+          <td class="memname">enum <a class="el" href="d7anp_8c.html#aa0aafed44fec19806d8f9ad834be1248">state_t</a></td>
         </tr>
       </table>
 </div><div class="memdoc">
 <table class="fieldtable">
-<tr><th colspan="2">Enumerator</th></tr><tr><td class="fieldname"><a class="anchor" id="aa0aafed44fec19806d8f9ad834be1248adcb34c9e988933f0fed47f1afbcab9a5"></a>D7ASP_STATE_IDLE&#160;</td><td class="fielddoc">
+<tr><th colspan="2">Enumerator</th></tr><tr><td class="fieldname"><a class="anchor" id="aa0aafed44fec19806d8f9ad834be1248add13ade0aa0f3d6d7f84f66f80785396"></a>D7ANP_STATE_IDLE&#160;</td><td class="fielddoc">
+</td></tr>
+<tr><td class="fieldname"><a class="anchor" id="aa0aafed44fec19806d8f9ad834be1248afe2669254ae09ba8cd0abff0dc604cdd"></a>D7ANP_STATE_TRANSMIT&#160;</td><td class="fielddoc">
+</td></tr>
+<tr><td class="fieldname"><a class="anchor" id="aa0aafed44fec19806d8f9ad834be1248a83ee83d17ee3db7e7b531a7e006e0c59"></a>D7ANP_STATE_FOREGROUND_SCAN&#160;</td><td class="fielddoc">
+</td></tr>
+<tr><td class="fieldname"><a class="anchor" id="aa0aafed44fec19806d8f9ad834be1248adcb34c9e988933f0fed47f1afbcab9a5"></a>D7ASP_STATE_IDLE&#160;</td><td class="fielddoc">
 </td></tr>
 <tr><td class="fieldname"><a class="anchor" id="aa0aafed44fec19806d8f9ad834be1248a65b9819b6772ad79b2ee241361ac9813"></a>D7ASP_STATE_SLAVE&#160;</td><td class="fielddoc">
 </td></tr>
 <tr><td class="fieldname"><a class="anchor" id="aa0aafed44fec19806d8f9ad834be1248a8b4e755cd7dfd39733333b4de06c1baf"></a>D7ASP_STATE_MASTER&#160;</td><td class="fielddoc">
 </td></tr>
 <tr><td class="fieldname"><a class="anchor" id="aa0aafed44fec19806d8f9ad834be1248a6119773ac5214936a080cd96a515e4e3"></a>D7ASP_STATE_SLAVE_PENDING_MASTER&#160;</td><td class="fielddoc">
+</td></tr>
+<tr><td class="fieldname"><a class="anchor" id="aa0aafed44fec19806d8f9ad834be1248abc4b2aa2fd8e8b0b7e440ad60f4cf6a0"></a>D7ASP_STATE_PENDING_MASTER&#160;</td><td class="fielddoc">
 </td></tr>
 <tr><td class="fieldname"><a class="anchor" id="aa0aafed44fec19806d8f9ad834be1248aa441767c279aec283f8622008d4ce62b"></a>D7ATP_STATE_IDLE&#160;</td><td class="fielddoc">
 </td></tr>
@@ -425,60 +462,12 @@ Functions</h2></td></tr>
 
 </div>
 </div>
-<a class="anchor" id="a60f2ab7225f2f525fb95e85b1981dc3c"></a>
+<a class="anchor" id="a3bcf1185c9891ac51112e8fed7e66104"></a>
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">void d7atp_respond_dialog </td>
-          <td>(</td>
-          <td class="paramtype"><a class="el" href="d7anp_8h.html#a055b444e9c43fd24266b5908a7b26636">packet_t</a> *&#160;</td>
-          <td class="paramname"><em>packet</em></td><td>)</td>
-          <td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-</div>
-</div>
-<a class="anchor" id="ad0fe91afa33c112ebf8ed9f224a69e49"></a>
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">void d7atp_signal_packet_csma_ca_insertion_completed </td>
-          <td>(</td>
-          <td class="paramtype">bool&#160;</td>
-          <td class="paramname"><em>succeeded</em></td><td>)</td>
-          <td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-</div>
-</div>
-<a class="anchor" id="ae4d8f925b8a051c900b6e4de598f1db6"></a>
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">void d7atp_signal_packet_transmitted </td>
-          <td>(</td>
-          <td class="paramtype"><a class="el" href="d7anp_8h.html#a055b444e9c43fd24266b5908a7b26636">packet_t</a> *&#160;</td>
-          <td class="paramname"><em>packet</em></td><td>)</td>
-          <td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-</div>
-</div>
-<a class="anchor" id="a4e9336c685b9629cd0cf9549a2537249"></a>
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">void d7atp_start_dialog </td>
+          <td class="memname"><a class="el" href="types_8h.html#a9ad6b2dc3cbff040775e79656fe8e1a3">error_t</a> d7atp_send_request </td>
           <td>(</td>
           <td class="paramtype">uint8_t&#160;</td>
           <td class="paramname"><em>dialog_id</em>, </td>
@@ -505,12 +494,100 @@ Functions</h2></td></tr>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype"><a class="el" href="structsession__qos__t.html">session_qos_t</a> *&#160;</td>
-          <td class="paramname"><em>qos_settings</em>&#160;</td>
+          <td class="paramname"><em>qos_settings</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">uint8_t&#160;</td>
+          <td class="paramname"><em>listen_timeout</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">uint8_t&#160;</td>
+          <td class="paramname"><em>expected_response_length</em>&#160;</td>
         </tr>
         <tr>
           <td></td>
           <td>)</td>
           <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a class="anchor" id="afdce91bd784b0a6c3b6730a1738e59ed"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void d7atp_signal_dialog_termination </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a class="anchor" id="a3d2d785ae5a9565c748a7a0c184709ad"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void d7atp_signal_foreground_scan_expired </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a class="anchor" id="ae4d8f925b8a051c900b6e4de598f1db6"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void d7atp_signal_packet_transmitted </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="d7anp_8h.html#a055b444e9c43fd24266b5908a7b26636">packet_t</a> *&#160;</td>
+          <td class="paramname"><em>packet</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a class="anchor" id="a03b4a6e97f993ca890befec89fa62547"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void d7atp_signal_transmission_failure </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a class="anchor" id="a43bdd78639fd1b1a909a37125143c632"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void d7atp_stop_transaction </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
         </tr>
       </table>
 </div><div class="memdoc">
@@ -523,7 +600,7 @@ Functions</h2></td></tr>
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
     <li class="navelem"><a class="el" href="dir_e05d7e2b1ecd646af5bb94391405f3b5.html">modules</a></li><li class="navelem"><a class="el" href="dir_6b8f92aa648c158fb1e8ed54f9452f2b.html">d7ap</a></li><li class="navelem"><a class="el" href="d7atp_8c.html">d7atp.c</a></li>
-    <li class="footer">Generated on Mon May 2 2016 21:25:36 for OSS-7: Open Source Stack for DASH7 Alliance Protocol by
+    <li class="footer">Generated on Fri Feb 3 2017 13:01:27 for OSS-7: Open Source Stack for DASH7 Alliance Protocol by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.8.11 </li>
   </ul>

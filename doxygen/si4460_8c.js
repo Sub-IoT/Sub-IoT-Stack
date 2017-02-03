@@ -18,6 +18,7 @@ var si4460_8c =
       [ "HW_RADIO_STATE_OFF", "si4460_8c.html#a653b17c0ef11443105658b04113f95e3a16090f5798e896c0a683a6e467f95edd", null ],
       [ "HW_RADIO_STATE_UNKOWN", "si4460_8c.html#a653b17c0ef11443105658b04113f95e3a0e2f49128e9583f61434b6c2e91bd896", null ]
     ] ],
+    [ "__ezr_error_callback", "si4460_8c.html#a4281e7078bbe946edd1cec7b8b54e36b", null ],
     [ "hw_radio_get_latched_rssi", "si4460_8c.html#a3a259993e04fd4cb6d68ea344fee8656", null ],
     [ "hw_radio_get_rssi", "group__radio.html#ga43ffbd2f8c0aec2f95fbdb365c39d682", null ],
     [ "hw_radio_init", "group__radio.html#gaefab8edede99183d3c557c0d37d3fb93", null ],

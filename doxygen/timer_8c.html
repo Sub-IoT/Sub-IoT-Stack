@@ -117,9 +117,12 @@ $(document).ready(function(){initNavTree('timer_8c.html','');});
 <code>#include &quot;<a class="el" href="hwatomic_8h_source.html">hwatomic.h</a>&quot;</code><br />
 <code>#include &quot;<a class="el" href="debug_8h_source.html">debug.h</a>&quot;</code><br />
 <code>#include &quot;framework_defs.h&quot;</code><br />
+<code>#include &quot;<a class="el" href="log_8h_source.html">log.h</a>&quot;</code><br />
 </div><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="define-members"></a>
 Macros</h2></td></tr>
+<tr class="memitem:a57a35bfd7d13bdfab37a48171286ecee"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="timer_8c.html#a57a35bfd7d13bdfab37a48171286ecee">DPRINT</a>(...)</td></tr>
+<tr class="separator:a57a35bfd7d13bdfab37a48171286ecee"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ab5d4ace44b915c1b25bb48af8d1b5280"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="timer_8c.html#ab5d4ace44b915c1b25bb48af8d1b5280">HW_TIMER_ID</a>&#160;&#160;&#160;0</td></tr>
 <tr class="separator:ab5d4ace44b915c1b25bb48af8d1b5280"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a9f07600b42403716ae97b29cc338892d"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="timer_8c.html#a9f07600b42403716ae97b29cc338892d">COUNTER_OVERFLOW_INCREASE</a>&#160;&#160;&#160;(UINT32_C(1) &lt;&lt; (8*sizeof(<a class="el" href="group__timer.html#gac76c087138a5a39e6bd3bbf4c3bad1d7">hwtimer_tick_t</a>)))</td></tr>
@@ -136,6 +139,9 @@ Functions</h2></td></tr>
 <tr class="memitem:ga9b7e8e64213b01afc03545c9c7dab08e"><td class="memItemLeft" align="right" valign="top"><a class="el" href="link__c_8h.html#ad7a35fa85166c1d1839000ac10353068">__LINK_C</a> <a class="el" href="types_8h.html#a9ad6b2dc3cbff040775e79656fe8e1a3">error_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__frameworktimer.html#ga9b7e8e64213b01afc03545c9c7dab08e">timer_cancel_task</a> (<a class="el" href="group__scheduler.html#ga78a55c2ac757b7addb3150081812288b">task_t</a> task)</td></tr>
 <tr class="memdesc:ga9b7e8e64213b01afc03545c9c7dab08e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Cancel a previously scheduled task.  <a href="group__frameworktimer.html#ga9b7e8e64213b01afc03545c9c7dab08e">More...</a><br /></td></tr>
 <tr class="separator:ga9b7e8e64213b01afc03545c9c7dab08e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga6294eacf0b07f6f37e0816be0ebfaf8f"><td class="memItemLeft" align="right" valign="top"><a class="el" href="link__c_8h.html#ad7a35fa85166c1d1839000ac10353068">__LINK_C</a> bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__frameworktimer.html#ga6294eacf0b07f6f37e0816be0ebfaf8f">timer_is_task_scheduled</a> (<a class="el" href="group__scheduler.html#ga78a55c2ac757b7addb3150081812288b">task_t</a> task)</td></tr>
+<tr class="memdesc:ga6294eacf0b07f6f37e0816be0ebfaf8f"><td class="mdescLeft">&#160;</td><td class="mdescRight">check if a task is already scheduled with a delay  <a href="group__frameworktimer.html#ga6294eacf0b07f6f37e0816be0ebfaf8f">More...</a><br /></td></tr>
+<tr class="separator:ga6294eacf0b07f6f37e0816be0ebfaf8f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:gaf3aebd60468217e2d12c51e42dfe994b"><td class="memItemLeft" align="right" valign="top"><a class="el" href="link__c_8h.html#ad7a35fa85166c1d1839000ac10353068">__LINK_C</a> <a class="el" href="group__frameworktimer.html#ga77fd8f9362e4f9ee1022170189802daf">timer_tick_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__frameworktimer.html#gaf3aebd60468217e2d12c51e42dfe994b">timer_get_counter_value</a> ()</td></tr>
 <tr class="memdesc:gaf3aebd60468217e2d12c51e42dfe994b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Retrieve the current counter value of the timer.  <a href="group__frameworktimer.html#gaf3aebd60468217e2d12c51e42dfe994b">More...</a><br /></td></tr>
 <tr class="separator:gaf3aebd60468217e2d12c51e42dfe994b"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -147,6 +153,22 @@ Functions</h2></td></tr>
       <table class="memname">
         <tr>
           <td class="memname">#define COUNTER_OVERFLOW_INCREASE&#160;&#160;&#160;(UINT32_C(1) &lt;&lt; (8*sizeof(<a class="el" href="group__timer.html#gac76c087138a5a39e6bd3bbf4c3bad1d7">hwtimer_tick_t</a>)))</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a class="anchor" id="a57a35bfd7d13bdfab37a48171286ecee"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">#define DPRINT</td>
+          <td>(</td>
+          <td class="paramtype">&#160;</td>
+          <td class="paramname"><em>...</em></td><td>)</td>
+          <td></td>
         </tr>
       </table>
 </div><div class="memdoc">
@@ -171,7 +193,7 @@ Functions</h2></td></tr>
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
     <li class="navelem"><a class="el" href="dir_644e041c3a6521da7b27eba0e4eb2b95.html">framework</a></li><li class="navelem"><a class="el" href="dir_f0c40d10fa7c5c4c17711a20d1ec2b4c.html">components</a></li><li class="navelem"><a class="el" href="dir_ed9db800fc85d4925726f648e16663ec.html">timer</a></li><li class="navelem"><a class="el" href="timer_8c.html">timer.c</a></li>
-    <li class="footer">Generated on Mon May 2 2016 21:25:35 for OSS-7: Open Source Stack for DASH7 Alliance Protocol by
+    <li class="footer">Generated on Fri Feb 3 2017 13:01:25 for OSS-7: Open Source Stack for DASH7 Alliance Protocol by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.8.11 </li>
   </ul>

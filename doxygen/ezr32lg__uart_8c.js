@@ -17,7 +17,6 @@ var ezr32lg__uart_8c =
     [ "uart_send_bytes", "group___u_a_r_t.html#gae232628b326e9f791b36a627c66cb541", null ],
     [ "uart_send_string", "group___u_a_r_t.html#ga765cded2921e04230925e3450bdc5cf2", null ],
     [ "uart_set_rx_interrupt_callback", "group___u_a_r_t.html#ga33f293744659bea166b4d6780becf6a0", null ],
-    [ "USART0_RX_IRQHandler", "ezr32lg__uart_8c.html#a8ef4dfd53f8b518acaeddcda2b159c61", null ],
     [ "USART1_RX_IRQHandler", "ezr32lg__uart_8c.html#aa6a5099bafcea7a957c8a7aff925a5c2", null ],
     [ "USART2_RX_IRQHandler", "ezr32lg__uart_8c.html#afacefa37377ad49a54ae776893d13837", null ]
 ];

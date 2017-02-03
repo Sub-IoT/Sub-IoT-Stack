@@ -116,146 +116,44 @@ $(document).ready(function(){initNavTree('structdae__access__profile__t.html',''
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-attribs"></a>
 Data Fields</h2></td></tr>
-<tr class="memitem:a827d741e004280987d18757a1946aaef"><td class="memItemLeft" >union {</td></tr>
-<tr class="memitem:a31443a278c934d9068815a087e0d9f31"><td class="memItemLeft" >&#160;&#160;&#160;uint8_t&#160;&#160;&#160;<a class="el" href="structdae__access__profile__t.html#a6d3df98dd91b95d667a4703f4b6347fd">control</a></td></tr>
-<tr class="separator:a31443a278c934d9068815a087e0d9f31"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a8f80244567299acf1b57cd9037fe730a"><td class="memItemLeft" >&#160;&#160;&#160;struct {</td></tr>
-<tr class="memitem:a72abaca3021b51680b1d4fd8563672fc"><td class="memItemLeft" >&#160;&#160;&#160;&#160;&#160;&#160;bool&#160;&#160;&#160;<a class="el" href="structdae__access__profile__t.html#a6e188c6cdb8ed463c33f0a1d2b60f65c">control_scan_type_is_foreground</a>: 1</td></tr>
-<tr class="separator:a72abaca3021b51680b1d4fd8563672fc"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a47457c5694d73cd1c6e12ed8277e245d"><td class="memItemLeft" >&#160;&#160;&#160;&#160;&#160;&#160;<a class="el" href="dae_8h.html#a608c6ce3543033db758fce89da887b15">csma_ca_mode_t</a>&#160;&#160;&#160;<a class="el" href="structdae__access__profile__t.html#a9b1694095564aed506509d3029c958c2">control_csma_ca_mode</a>: 3</td></tr>
-<tr class="separator:a47457c5694d73cd1c6e12ed8277e245d"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a8f26fae74fa6ce292b0ea943b40c802a"><td class="memItemLeft" >&#160;&#160;&#160;&#160;&#160;&#160;uint8_t&#160;&#160;&#160;<a class="el" href="structdae__access__profile__t.html#a435d1617b30ec2614a5a3376f406d022">control_number_of_subbands</a>: 2</td></tr>
-<tr class="separator:a8f26fae74fa6ce292b0ea943b40c802a"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a8f80244567299acf1b57cd9037fe730a"><td class="memItemLeft" valign="top">&#160;&#160;&#160;}&#160;</td><td class="memItemRight" valign="bottom"></td></tr>
-<tr class="separator:a8f80244567299acf1b57cd9037fe730a"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a827d741e004280987d18757a1946aaef"><td class="memItemLeft" valign="top">};&#160;</td><td class="memItemRight" valign="bottom"></td></tr>
-<tr class="separator:a827d741e004280987d18757a1946aaef"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aabb2dda2f2ecf6f577ff00a4e9d850b5"><td class="memItemLeft" align="right" valign="top">uint8_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structdae__access__profile__t.html#aabb2dda2f2ecf6f577ff00a4e9d850b5">subnet</a></td></tr>
-<tr class="separator:aabb2dda2f2ecf6f577ff00a4e9d850b5"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:acee30e9f3d82b39bdba5802035233d53"><td class="memItemLeft" align="right" valign="top">uint8_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structdae__access__profile__t.html#acee30e9f3d82b39bdba5802035233d53">scan_automation_period</a></td></tr>
-<tr class="separator:acee30e9f3d82b39bdba5802035233d53"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a7e5e185c07d9ea2453136f44b2bbe2c7"><td class="memItemLeft" align="right" valign="top">uint8_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structdae__access__profile__t.html#a7e5e185c07d9ea2453136f44b2bbe2c7">transmission_timeout_period</a></td></tr>
-<tr class="separator:a7e5e185c07d9ea2453136f44b2bbe2c7"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aca14585931687df3301286a5230c2bc0"><td class="memItemLeft" align="right" valign="top">uint8_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structdae__access__profile__t.html#aca14585931687df3301286a5230c2bc0">_rfu</a></td></tr>
-<tr class="separator:aca14585931687df3301286a5230c2bc0"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a189f27005882c10b253d8c9156ac63e5"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structsubband__t.html">subband_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structdae__access__profile__t.html#a189f27005882c10b253d8c9156ac63e5">subbands</a> [1]</td></tr>
-<tr class="separator:a189f27005882c10b253d8c9156ac63e5"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a1c9abc564be049432cb43674a1675650"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structphy__channel__header__t.html">phy_channel_header_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structdae__access__profile__t.html#a1c9abc564be049432cb43674a1675650">channel_header</a></td></tr>
+<tr class="separator:a1c9abc564be049432cb43674a1675650"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a0ba19b4b3deaf8dcea84e37dbd217e86"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structsubprofile__t.html">subprofile_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structdae__access__profile__t.html#a0ba19b4b3deaf8dcea84e37dbd217e86">subprofiles</a> [<a class="el" href="dae_8h.html#a1f5ce041154bf2ad0f3c11a1c56140dc">SUBPROFILES_NB</a>]</td></tr>
+<tr class="separator:a0ba19b4b3deaf8dcea84e37dbd217e86"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a0c73df25a5850245463d6faead837bbd"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structsubband__t.html">subband_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structdae__access__profile__t.html#a0c73df25a5850245463d6faead837bbd">subbands</a> [<a class="el" href="dae_8h.html#a32a70a623ab4c08a41849c8907a4dc0c">SUBBANDS_NB</a>]</td></tr>
+<tr class="separator:a0c73df25a5850245463d6faead837bbd"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <h2 class="groupheader">Field Documentation</h2>
-<a class="anchor" id="a827d741e004280987d18757a1946aaef"></a>
+<a class="anchor" id="a1c9abc564be049432cb43674a1675650"></a>
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">union { ... } </td>
+          <td class="memname"><a class="el" href="structphy__channel__header__t.html">phy_channel_header_t</a> dae_access_profile_t::channel_header</td>
         </tr>
       </table>
 </div><div class="memdoc">
 
 </div>
 </div>
-<a class="anchor" id="aca14585931687df3301286a5230c2bc0"></a>
+<a class="anchor" id="a0c73df25a5850245463d6faead837bbd"></a>
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">uint8_t dae_access_profile_t::_rfu</td>
+          <td class="memname"><a class="el" href="structsubband__t.html">subband_t</a> dae_access_profile_t::subbands[<a class="el" href="dae_8h.html#a32a70a623ab4c08a41849c8907a4dc0c">SUBBANDS_NB</a>]</td>
         </tr>
       </table>
 </div><div class="memdoc">
 
 </div>
 </div>
-<a class="anchor" id="a6d3df98dd91b95d667a4703f4b6347fd"></a>
+<a class="anchor" id="a0ba19b4b3deaf8dcea84e37dbd217e86"></a>
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">uint8_t dae_access_profile_t::control</td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-</div>
-</div>
-<a class="anchor" id="a9b1694095564aed506509d3029c958c2"></a>
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname"><a class="el" href="dae_8h.html#a608c6ce3543033db758fce89da887b15">csma_ca_mode_t</a> dae_access_profile_t::control_csma_ca_mode</td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-</div>
-</div>
-<a class="anchor" id="a435d1617b30ec2614a5a3376f406d022"></a>
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">uint8_t dae_access_profile_t::control_number_of_subbands</td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-</div>
-</div>
-<a class="anchor" id="a6e188c6cdb8ed463c33f0a1d2b60f65c"></a>
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">bool dae_access_profile_t::control_scan_type_is_foreground</td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-</div>
-</div>
-<a class="anchor" id="acee30e9f3d82b39bdba5802035233d53"></a>
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">uint8_t dae_access_profile_t::scan_automation_period</td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-</div>
-</div>
-<a class="anchor" id="a189f27005882c10b253d8c9156ac63e5"></a>
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname"><a class="el" href="structsubband__t.html">subband_t</a> dae_access_profile_t::subbands[1]</td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-</div>
-</div>
-<a class="anchor" id="aabb2dda2f2ecf6f577ff00a4e9d850b5"></a>
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">uint8_t dae_access_profile_t::subnet</td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-</div>
-</div>
-<a class="anchor" id="a7e5e185c07d9ea2453136f44b2bbe2c7"></a>
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">uint8_t dae_access_profile_t::transmission_timeout_period</td>
+          <td class="memname"><a class="el" href="structsubprofile__t.html">subprofile_t</a> dae_access_profile_t::subprofiles[<a class="el" href="dae_8h.html#a1f5ce041154bf2ad0f3c11a1c56140dc">SUBPROFILES_NB</a>]</td>
         </tr>
       </table>
 </div><div class="memdoc">
@@ -271,7 +169,7 @@ Data Fields</h2></td></tr>
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
     <li class="navelem"><a class="el" href="structdae__access__profile__t.html">dae_access_profile_t</a></li>
-    <li class="footer">Generated on Mon May 2 2016 21:25:36 for OSS-7: Open Source Stack for DASH7 Alliance Protocol by
+    <li class="footer">Generated on Fri Feb 3 2017 13:01:27 for OSS-7: Open Source Stack for DASH7 Alliance Protocol by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.8.11 </li>
   </ul>

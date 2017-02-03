@@ -3,6 +3,7 @@ var dir_8b9647ac80bab5b612e6e51a18f43f10 =
     [ "inc", "dir_5fe4e4d1c0b25c557f758916ef70fd70.html", "dir_5fe4e4d1c0b25c557f758916ef70fd70" ],
     [ "inc_platform", "dir_675e4f998664d04a39d028c4d5a090a2.html", "dir_675e4f998664d04a39d028c4d5a090a2" ],
     [ "efm32gg_adc.c", "efm32gg__adc_8c.html", "efm32gg__adc_8c" ],
+    [ "efm32gg_aes.c", "efm32gg__aes_8c.html", "efm32gg__aes_8c" ],
     [ "efm32gg_atomic.c", "efm32gg__atomic_8c.html", "efm32gg__atomic_8c" ],
     [ "efm32gg_gpio.c", "efm32gg__gpio_8c.html", "efm32gg__gpio_8c" ],
     [ "efm32gg_i2c.c", "efm32gg__i2c_8c.html", "efm32gg__i2c_8c" ],

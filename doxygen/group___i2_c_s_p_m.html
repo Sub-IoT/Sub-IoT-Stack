@@ -124,8 +124,16 @@ Macros</h2></td></tr>
 <tr class="separator:gaa124f938b83ea3508c6fd3bee8c597a0"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:gaa124f938b83ea3508c6fd3bee8c597a0"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group___i2_c_s_p_m.html#gaa124f938b83ea3508c6fd3bee8c597a0">I2CSPM_INIT_DEFAULT</a></td></tr>
 <tr class="separator:gaa124f938b83ea3508c6fd3bee8c597a0"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:gaa124f938b83ea3508c6fd3bee8c597a0"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group___i2_c_s_p_m.html#gaa124f938b83ea3508c6fd3bee8c597a0">I2CSPM_INIT_DEFAULT</a></td></tr>
+<tr class="separator:gaa124f938b83ea3508c6fd3bee8c597a0"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:gaa124f938b83ea3508c6fd3bee8c597a0"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group___i2_c_s_p_m.html#gaa124f938b83ea3508c6fd3bee8c597a0">I2CSPM_INIT_DEFAULT</a></td></tr>
+<tr class="separator:gaa124f938b83ea3508c6fd3bee8c597a0"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ga417ac3cbe0bbca8d8263b1a6f57952cf"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group___i2_c_s_p_m.html#ga417ac3cbe0bbca8d8263b1a6f57952cf">I2CSPM_TRANSFER_TIMEOUT</a>&#160;&#160;&#160;300000</td></tr>
 <tr class="separator:ga417ac3cbe0bbca8d8263b1a6f57952cf"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:gaa124f938b83ea3508c6fd3bee8c597a0"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group___i2_c_s_p_m.html#gaa124f938b83ea3508c6fd3bee8c597a0">I2CSPM_INIT_DEFAULT</a></td></tr>
+<tr class="separator:gaa124f938b83ea3508c6fd3bee8c597a0"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:gaa124f938b83ea3508c6fd3bee8c597a0"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group___i2_c_s_p_m.html#gaa124f938b83ea3508c6fd3bee8c597a0">I2CSPM_INIT_DEFAULT</a></td></tr>
+<tr class="separator:gaa124f938b83ea3508c6fd3bee8c597a0"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
 Functions</h2></td></tr>
@@ -160,6 +168,58 @@ Functions</h2></td></tr>
       </table>
 </div><div class="memdoc">
 <b>Value:</b><div class="fragment"><div class="line">{ I2C0,                      <span class="comment">/* Use I2C instance 0 */</span>                        \</div><div class="line">    gpioPortD,                 <span class="comment">/* SCL port */</span>                                  \</div><div class="line">    7,                         <span class="comment">/* SCL pin */</span>                                   \</div><div class="line">    gpioPortD,                 <span class="comment">/* SDA port */</span>                                  \</div><div class="line">    6,                         <span class="comment">/* SDA pin */</span>                                   \</div><div class="line">    1,                         <span class="comment">/* Location */</span>                                  \</div><div class="line">    0,                         <span class="comment">/* Use currently configured reference clock */</span>  \</div><div class="line">    I2C_FREQ_STANDARD_MAX,     <span class="comment">/* Set to standard rate  */</span>                     \</div><div class="line">    i2cClockHLRStandard,       <span class="comment">/* Set to use 4:4 low/high duty cycle */</span>        \</div><div class="line">  }</div></div><!-- fragment -->
+</div>
+</div>
+<a class="anchor" id="gaa124f938b83ea3508c6fd3bee8c597a0"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">#define I2CSPM_INIT_DEFAULT</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<b>Value:</b><div class="fragment"><div class="line">{ I2C0,                       <span class="comment">/* Use I2C instance 0 */</span>                        \</div><div class="line">    gpioPortC,                  <span class="comment">/* SCL port */</span>                                  \</div><div class="line">    5,                          <span class="comment">/* SCL pin */</span>                                   \</div><div class="line">    gpioPortC,                  <span class="comment">/* SDA port */</span>                                  \</div><div class="line">    4,                          <span class="comment">/* SDA pin */</span>                                   \</div><div class="line">    0,                          <span class="comment">/* Location */</span>                                  \</div><div class="line">    0,                          <span class="comment">/* Use currently configured reference clock */</span>  \</div><div class="line">    I2C_FREQ_STANDARD_MAX,      <span class="comment">/* Set to standard rate  */</span>                     \</div><div class="line">    i2cClockHLRStandard,        <span class="comment">/* Set to use 4:4 low/high duty cycle */</span>        \</div><div class="line">  }</div></div><!-- fragment --><p>Default config for I2C init structure. The default may be overridden by a i2cspmconfig.h file. </p>
+
+</div>
+</div>
+<a class="anchor" id="gaa124f938b83ea3508c6fd3bee8c597a0"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">#define I2CSPM_INIT_DEFAULT</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<b>Value:</b><div class="fragment"><div class="line">{ I2C0,                       <span class="comment">/* Use I2C instance 0 */</span>                        \</div><div class="line">    gpioPortC,                  <span class="comment">/* SCL port */</span>                                  \</div><div class="line">    5,                          <span class="comment">/* SCL pin */</span>                                   \</div><div class="line">    gpioPortC,                  <span class="comment">/* SDA port */</span>                                  \</div><div class="line">    4,                          <span class="comment">/* SDA pin */</span>                                   \</div><div class="line">    0,                          <span class="comment">/* Location */</span>                                  \</div><div class="line">    0,                          <span class="comment">/* Use currently configured reference clock */</span>  \</div><div class="line">    I2C_FREQ_STANDARD_MAX,      <span class="comment">/* Set to standard rate  */</span>                     \</div><div class="line">    i2cClockHLRStandard,        <span class="comment">/* Set to use 4:4 low/high duty cycle */</span>        \</div><div class="line">  }</div></div><!-- fragment --><p>Default config for I2C init structure. The default may be overridden by a i2cspmconfig.h file. </p>
+
+</div>
+</div>
+<a class="anchor" id="gaa124f938b83ea3508c6fd3bee8c597a0"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">#define I2CSPM_INIT_DEFAULT</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<b>Value:</b><div class="fragment"><div class="line">{ I2C0,                       <span class="comment">/* Use I2C instance 0 */</span>                        \</div><div class="line">    gpioPortC,                  <span class="comment">/* SCL port */</span>                                  \</div><div class="line">    5,                          <span class="comment">/* SCL pin */</span>                                   \</div><div class="line">    gpioPortC,                  <span class="comment">/* SDA port */</span>                                  \</div><div class="line">    4,                          <span class="comment">/* SDA pin */</span>                                   \</div><div class="line">    0,                          <span class="comment">/* Location */</span>                                  \</div><div class="line">    0,                          <span class="comment">/* Use currently configured reference clock */</span>  \</div><div class="line">    I2C_FREQ_STANDARD_MAX,      <span class="comment">/* Set to standard rate  */</span>                     \</div><div class="line">    i2cClockHLRStandard,        <span class="comment">/* Set to use 4:4 low/high duty cycle */</span>        \</div><div class="line">  }</div></div><!-- fragment --><p>Default config for I2C init structure. The default may be overridden by a i2cspmconfig.h file. </p>
+
+</div>
+</div>
+<a class="anchor" id="gaa124f938b83ea3508c6fd3bee8c597a0"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">#define I2CSPM_INIT_DEFAULT</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<b>Value:</b><div class="fragment"><div class="line">{ I2C0,                       <span class="comment">/* Use I2C instance 0 */</span>                        \</div><div class="line">    gpioPortC,                  <span class="comment">/* SCL port */</span>                                  \</div><div class="line">    5,                          <span class="comment">/* SCL pin */</span>                                   \</div><div class="line">    gpioPortC,                  <span class="comment">/* SDA port */</span>                                  \</div><div class="line">    4,                          <span class="comment">/* SDA pin */</span>                                   \</div><div class="line">    0,                          <span class="comment">/* Location */</span>                                  \</div><div class="line">    0,                          <span class="comment">/* Use currently configured reference clock */</span>  \</div><div class="line">    I2C_FREQ_STANDARD_MAX,      <span class="comment">/* Set to standard rate  */</span>                     \</div><div class="line">    i2cClockHLRStandard,        <span class="comment">/* Set to use 4:4 low/high duty cycle */</span>        \</div><div class="line">  }</div></div><!-- fragment --><p>Default config for I2C init structure. The default may be overridden by a i2cspmconfig.h file. </p>
+
 </div>
 </div>
 <a class="anchor" id="gaa124f938b83ea3508c6fd3bee8c597a0"></a>
@@ -279,7 +339,7 @@ Functions</h2></td></tr>
 <!-- start footer part -->
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
-    <li class="footer">Generated on Mon May 2 2016 21:25:36 for OSS-7: Open Source Stack for DASH7 Alliance Protocol by
+    <li class="footer">Generated on Fri Feb 3 2017 13:01:27 for OSS-7: Open Source Stack for DASH7 Alliance Protocol by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.8.11 </li>
   </ul>

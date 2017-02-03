@@ -1,7 +1,6 @@
 var searchData=
 [
-  ['packet',['packet',['../structpacket.html',1,'']]],
-  ['param',['param',['../structparam.html',1,'']]],
-  ['phy_5fchannel_5fheader_5ft',['phy_channel_header_t',['../structphy__channel__header__t.html',1,'']]],
-  ['pin_5fid_5ft',['pin_id_t',['../structpin__id__t.html',1,'']]]
+  ['i2c_5fhandle',['i2c_handle',['../structi2c__handle.html',1,'']]],
+  ['i2c_5fpins_5ft',['i2c_pins_t',['../structi2c__pins__t.html',1,'']]],
+  ['i2cspm_5finit_5ftypedef',['I2CSPM_Init_TypeDef',['../struct_i2_c_s_p_m___init___type_def.html',1,'']]]
 ];

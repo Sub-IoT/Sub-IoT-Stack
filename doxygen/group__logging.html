@@ -130,6 +130,7 @@ Enumerations</h2></td></tr>
 <br />
 &#160;&#160;<a class="el" href="group__logging.html#gga74f3f01cd15381ebeccd55047988c127a582d7dd01ff1d3913eb5bb82bf5ab8d5">LOG_STACK_TRANS</a> = 0x05, 
 <a class="el" href="group__logging.html#gga74f3f01cd15381ebeccd55047988c127a3837bb1a5e77f910c112d38ebb094b53">LOG_STACK_SESSION</a> = 0x06, 
+<a class="el" href="group__logging.html#gga74f3f01cd15381ebeccd55047988c127a861370f28edf1f2ccc7986e86117d943">LOG_STACK_ALP</a> = 0x07, 
 <a class="el" href="group__logging.html#gga74f3f01cd15381ebeccd55047988c127ae21a5c17a292ad0b9b3af3af8a708dbc">LOG_STACK_FWK</a> = 0x10
 <br />
  }<tr class="memdesc:ga74f3f01cd15381ebeccd55047988c127"><td class="mdescLeft">&#160;</td><td class="mdescRight">The source in the stack from which the log originates.  <a href="group__logging.html#ga74f3f01cd15381ebeccd55047988c127">More...</a><br /></td></tr>
@@ -138,7 +139,7 @@ Enumerations</h2></td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <p>Specifies the generic logging facilities of the framework. </p>
-<p>A number of functions are provided to log both arbitrarily formatted data (processed using the printf family of functions) and binary data (logged in a more or less human readable format). Moreover data can be logged in human readable format or in binary format. Which format is used is controlled through the 'FRAMEWORK_LOG_BINARY' CMake option. The binary format can be parsed with by PyLogger tool, which provides features like filtering per layer or piping to wireshark.</p>
+<p>A number of functions are provided to log both arbitrarily formatted data (processed using the printf family of functions) and binary data (logged in a more or less human readable format).</p>
 <p>Logging can be globally enabled or disabled by setting or clearing the 'FRAMEWORK_LOG_ENABLED' CMake option.</p>
 <dl class="section author"><dt>Author</dt><dd><a href="#" onclick="location.href='mai'+'lto:'+'maa'+'rt'+'en.'+'we'+'yn@'+'ua'+'ntw'+'er'+'pen'+'.b'+'e'; return false;">maart<span style="display: none;">.nosp@m.</span>en.w<span style="display: none;">.nosp@m.</span>eyn@u<span style="display: none;">.nosp@m.</span>antw<span style="display: none;">.nosp@m.</span>erpen<span style="display: none;">.nosp@m.</span>.be</a> </dd>
 <dd>
@@ -234,6 +235,8 @@ Enumerations</h2></td></tr>
 </td></tr>
 <tr><td class="fieldname"><a class="anchor" id="gga74f3f01cd15381ebeccd55047988c127a3837bb1a5e77f910c112d38ebb094b53"></a>LOG_STACK_SESSION&#160;</td><td class="fielddoc">
 </td></tr>
+<tr><td class="fieldname"><a class="anchor" id="gga74f3f01cd15381ebeccd55047988c127a861370f28edf1f2ccc7986e86117d943"></a>LOG_STACK_ALP&#160;</td><td class="fielddoc">
+</td></tr>
 <tr><td class="fieldname"><a class="anchor" id="gga74f3f01cd15381ebeccd55047988c127ae21a5c17a292ad0b9b3af3af8a708dbc"></a>LOG_STACK_FWK&#160;</td><td class="fielddoc">
 </td></tr>
 </table>
@@ -245,7 +248,7 @@ Enumerations</h2></td></tr>
 <!-- start footer part -->
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
-    <li class="footer">Generated on Mon May 2 2016 21:25:36 for OSS-7: Open Source Stack for DASH7 Alliance Protocol by
+    <li class="footer">Generated on Fri Feb 3 2017 13:01:27 for OSS-7: Open Source Stack for DASH7 Alliance Protocol by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.8.11 </li>
   </ul>

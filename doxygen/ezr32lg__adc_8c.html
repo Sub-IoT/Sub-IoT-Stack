@@ -112,7 +112,7 @@ $(document).ready(function(){initNavTree('ezr32lg__adc_8c.html','');});
 <div class="contents">
 <div class="textblock"><code>#include &lt;stdbool.h&gt;</code><br />
 <code>#include &quot;<a class="el" href="hwadc_8h_source.html">hwadc.h</a>&quot;</code><br />
-<code>#include &lt;<a class="el" href="debug_8h_source.html">debug.h</a>&gt;</code><br />
+<code>#include &lt;assert.h&gt;</code><br />
 <code>#include &quot;<a class="el" href="em__adc_8h_source.html">em_adc.h</a>&quot;</code><br />
 <code>#include &quot;<a class="el" href="em__cmu_8h_source.html">em_cmu.h</a>&quot;</code><br />
 <code>#include &quot;platform.h&quot;</code><br />
@@ -135,12 +135,12 @@ Functions</h2></td></tr>
 <tr class="memitem:ga829952f3291cc0a0f5cf92fb43697c0a"><td class="memItemLeft" align="right" valign="top">uint32_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group___a_d_c.html#ga829952f3291cc0a0f5cf92fb43697c0a">adc_get_value</a> ()</td></tr>
 <tr class="memdesc:ga829952f3291cc0a0f5cf92fb43697c0a"><td class="mdescLeft">&#160;</td><td class="mdescRight">Gets the ADC value.  <a href="group___a_d_c.html#ga829952f3291cc0a0f5cf92fb43697c0a">More...</a><br /></td></tr>
 <tr class="separator:ga829952f3291cc0a0f5cf92fb43697c0a"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ga298654b9377ffcf72ac54f085a20e223"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group___a_d_c.html#ga298654b9377ffcf72ac54f085a20e223">adc_ready</a> ()</td></tr>
-<tr class="memdesc:ga298654b9377ffcf72ac54f085a20e223"><td class="mdescLeft">&#160;</td><td class="mdescRight">Checks ADC status flag.  <a href="group___a_d_c.html#ga298654b9377ffcf72ac54f085a20e223">More...</a><br /></td></tr>
-<tr class="separator:ga298654b9377ffcf72ac54f085a20e223"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:gad34148ea21cc1945849acc6f1d751995"><td class="memItemLeft" align="right" valign="top">uint32_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group___a_d_c.html#gad34148ea21cc1945849acc6f1d751995">adc_read_single</a> (void)</td></tr>
 <tr class="memdesc:gad34148ea21cc1945849acc6f1d751995"><td class="mdescLeft">&#160;</td><td class="mdescRight">Starts a single ADC measurement and gets the value.  <a href="group___a_d_c.html#gad34148ea21cc1945849acc6f1d751995">More...</a><br /></td></tr>
 <tr class="separator:gad34148ea21cc1945849acc6f1d751995"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga298654b9377ffcf72ac54f085a20e223"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group___a_d_c.html#ga298654b9377ffcf72ac54f085a20e223">adc_ready</a> ()</td></tr>
+<tr class="memdesc:ga298654b9377ffcf72ac54f085a20e223"><td class="mdescLeft">&#160;</td><td class="mdescRight">Checks ADC status flag.  <a href="group___a_d_c.html#ga298654b9377ffcf72ac54f085a20e223">More...</a><br /></td></tr>
+<tr class="separator:ga298654b9377ffcf72ac54f085a20e223"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ga66fad262cfee6cadec5a8f5d2731772e"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group___a_d_c.html#ga66fad262cfee6cadec5a8f5d2731772e">adc_clear_interrupt</a> ()</td></tr>
 <tr class="memdesc:ga66fad262cfee6cadec5a8f5d2731772e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Clears the ADC interrupt flag.  <a href="group___a_d_c.html#ga66fad262cfee6cadec5a8f5d2731772e">More...</a><br /></td></tr>
 <tr class="separator:ga66fad262cfee6cadec5a8f5d2731772e"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -189,7 +189,7 @@ Functions</h2></td></tr>
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
     <li class="navelem"><a class="el" href="dir_644e041c3a6521da7b27eba0e4eb2b95.html">framework</a></li><li class="navelem"><a class="el" href="dir_8f2c340cdabd0cab4db94c39704d70a8.html">hal</a></li><li class="navelem"><a class="el" href="dir_e53dcac4adbcec177c678c0d8c8c3e7c.html">chips</a></li><li class="navelem"><a class="el" href="dir_da2cee54bc048923b90ea1fb73857f31.html">ezr32lg</a></li><li class="navelem"><a class="el" href="ezr32lg__adc_8c.html">ezr32lg_adc.c</a></li>
-    <li class="footer">Generated on Mon May 2 2016 21:25:36 for OSS-7: Open Source Stack for DASH7 Alliance Protocol by
+    <li class="footer">Generated on Fri Feb 3 2017 13:01:26 for OSS-7: Open Source Stack for DASH7 Alliance Protocol by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.8.11 </li>
   </ul>

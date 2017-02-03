@@ -6,6 +6,7 @@ var dir_da2cee54bc048923b90ea1fb73857f31 =
     [ "inc_platform", "dir_b50589e1d7e85d85319459d86576842d.html", "dir_b50589e1d7e85d85319459d86576842d" ],
     [ "usb", "dir_600673f6973f4907497a9276535fd429.html", "dir_600673f6973f4907497a9276535fd429" ],
     [ "ezr32lg_adc.c", "ezr32lg__adc_8c.html", "ezr32lg__adc_8c" ],
+    [ "ezr32lg_aes.c", "ezr32lg__aes_8c.html", "ezr32lg__aes_8c" ],
     [ "ezr32lg_atomic.c", "ezr32lg__atomic_8c.html", "ezr32lg__atomic_8c" ],
     [ "ezr32lg_gpio.c", "ezr32lg__gpio_8c.html", "ezr32lg__gpio_8c" ],
     [ "ezr32lg_i2c.c", "ezr32lg__i2c_8c.html", "ezr32lg__i2c_8c" ],

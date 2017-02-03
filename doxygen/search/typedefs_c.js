@@ -1,7 +1,6 @@
 var searchData=
 [
-  ['task_5ft',['task_t',['../group__scheduler.html#ga78a55c2ac757b7addb3150081812288b',1,'scheduler.h']]],
-  ['timer_5fcallback_5ft',['timer_callback_t',['../group__timer.html#ga83effb2de3d93d37825bb84a27faa588',1,'hwtimer.h']]],
-  ['timer_5ftick_5ft',['timer_tick_t',['../group__frameworktimer.html#ga77fd8f9362e4f9ee1022170189802daf',1,'timer.h']]],
-  ['tx_5fpacket_5fcallback_5ft',['tx_packet_callback_t',['../group__radio.html#gac2f2e4e8140549c0ac3abcf7fefb9e77',1,'hwradio.h']]]
+  ['release_5fpacket_5fcallback_5ft',['release_packet_callback_t',['../group__radio.html#ga822e576af2256b03278c9945b8d6aacf',1,'hwradio.h']]],
+  ['rssi_5fvalid_5fcallback_5ft',['rssi_valid_callback_t',['../group__radio.html#ga0ba48debc5245ec6150ac6eb1db19766',1,'hwradio.h']]],
+  ['rx_5fpacket_5fcallback_5ft',['rx_packet_callback_t',['../group__radio.html#gaf118d5fc80084fae379668fd97f9719b',1,'hwradio.h']]]
 ];

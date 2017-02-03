@@ -11,6 +11,8 @@ var efm32lg__spi_8c =
     [ "USARTS", "efm32lg__spi_8c.html#ae62f322c3b6680e6c47ac21641962ac8", null ],
     [ "spi_usart_t", "efm32lg__spi_8c.html#a997a1254f312e181e8ea08622cada629", null ],
     [ "spi_deselect", "efm32lg__spi_8c.html#a0ee2718ed1a007be02591f2ce833b0c9", null ],
+    [ "spi_disable", "efm32lg__spi_8c.html#a4c34fb1445c3df4d14000b5886577efe", null ],
+    [ "spi_enable", "efm32lg__spi_8c.html#a6836123f019c402bc9f128313bccc552", null ],
     [ "spi_exchange_byte", "efm32lg__spi_8c.html#a9faef8a325afdeca077e8f7163f2bb63", null ],
     [ "spi_exchange_bytes", "efm32lg__spi_8c.html#aa89619a3ca240c7ea838cf2e0e9a8f41", null ],
     [ "spi_init", "efm32lg__spi_8c.html#a8dccdf967f367d2e46fc3812a5656eb7", null ],

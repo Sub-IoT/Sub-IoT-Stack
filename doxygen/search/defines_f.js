@@ -1,21 +1,11 @@
 var searchData=
 [
-  ['scan_5faccess_5fprofile',['scan_access_profile',['../dll_8c.html#aa08df88d8313c17c23c01d70ec658c36',1,'dll.c']]],
-  ['scheduler_5fmax_5ftasks',['SCHEDULER_MAX_TASKS',['../scheduler_8c.html#af12cab9399b7b23dbe9fe6037e633cc8',1,'scheduler.c']]],
-  ['sharp_5fmemlcd_5fdevice_5fname',['SHARP_MEMLCD_DEVICE_NAME',['../displayls013b7dh03config_8h.html#a6d1451f8201b7ba7eb1016aca6d3361f',1,'displayls013b7dh03config.h']]],
-  ['si4455_5fgdo0_5fpin',['si4455_GDO0_PIN',['../_e_z_r32_l_g___w_s_t_k6200_a_2inc_2platform_8h.html#a44ea6e5659657b43bae42bd66279d60f',1,'platform.h']]],
-  ['si4455_5fgdo1_5fpin',['si4455_GDO1_PIN',['../_e_z_r32_l_g___w_s_t_k6200_a_2inc_2platform_8h.html#a6422fbbe5576c5bc4bd01c830f9e8c3c',1,'platform.h']]],
-  ['si4455_5fsdn_5fpin',['si4455_SDN_PIN',['../_e_z_r32_l_g___w_s_t_k6200_a_2inc_2platform_8h.html#ac9fc208f0e8cabf9e70c5a114028664f',1,'platform.h']]],
-  ['single_5frequest_5fretry_5flimit',['single_request_retry_limit',['../d7asp_8c.html#a2c83584833d5fdb2d431be9c3aaa8955',1,'d7asp.c']]],
-  ['snprintf',['snprintf',['../wizzimote_2printf_2printf_8h.html#aa367b75c5aed883fef5befbdf04835a4',1,'printf.h']]],
-  ['sprintf',['sprintf',['../wizzimote_2printf_2printf_8h.html#a5998f60c4f4af322b36debdbd11d7917',1,'printf.h']]],
-  ['state',['state',['../d7asp_8c.html#a17ba9d3d3f420182822febf73adca0a4',1,'d7asp.c']]],
-  ['success',['SUCCESS',['../errors_8h.html#aa90cac659d18e8ef6294c7ae337f6b58',1,'errors.h']]],
-  ['sync0',['SYNC0',['../cc1101__constants_8h.html#a15ee00f2e8b514a2f2dd3be3ba2cf00d',1,'cc1101_constants.h']]],
-  ['sync1',['SYNC1',['../cc1101__constants_8h.html#ad41ec329474c8e0c7d2c9f7bbc729c83',1,'cc1101_constants.h']]],
-  ['synth_5flpfilt1',['SYNTH_LPFILT1',['../si4460__registers_8h.html#a66acf08cd50cda06054d27435d39ba61',1,'si4460_registers.h']]],
-  ['synth_5flpfilt2',['SYNTH_LPFILT2',['../si4460__registers_8h.html#a3086341654359352627744d59b8c2a09',1,'si4460_registers.h']]],
-  ['synth_5flpfilt3',['SYNTH_LPFILT3',['../si4460__registers_8h.html#a33738d24474c1c4eba8da2b635e9e883',1,'si4460_registers.h']]],
-  ['synth_5fpfdcp_5fcpff_5flr',['SYNTH_PFDCP_CPFF_LR',['../si4460__registers_8h.html#af63a801949378f96a2c1b0057253443b',1,'si4460_registers.h']]],
-  ['synth_5fpfdcp_5fcpint',['SYNTH_PFDCP_CPINT',['../si4460__registers_8h.html#a199137f4a48d44f50060dba9fc596aae',1,'si4460_registers.h']]]
+  ['obcr',['OBCR',['../_e_z_r32_l_g___octa_2kits_2common_2drivers_2ksz8851snl_8c.html#a935d63bec1945201ecb17b7e3bd7ebb7',1,'OBCR():&#160;ksz8851snl.c'],['../_e_z_r32_l_g___u_s_b01_2kits_2common_2drivers_2ksz8851snl_8c.html#a935d63bec1945201ecb17b7e3bd7ebb7',1,'OBCR():&#160;ksz8851snl.c'],['../_e_z_r32_l_g___w_s_t_k6200_a_2kits_2common_2drivers_2ksz8851snl_8c.html#a935d63bec1945201ecb17b7e3bd7ebb7',1,'OBCR():&#160;ksz8851snl.c']]],
+  ['ok',['OK',['../_e_z_r32_l_g___octa_2kits_2common_2drivers_2calibrate_8h.html#aba51915c87d64af47fb1cc59348961c9',1,'OK():&#160;calibrate.h'],['../_e_z_r32_l_g___u_s_b01_2kits_2common_2drivers_2calibrate_8h.html#aba51915c87d64af47fb1cc59348961c9',1,'OK():&#160;calibrate.h'],['../_e_z_r32_l_g___w_s_t_k6200_a_2kits_2common_2drivers_2calibrate_8h.html#aba51915c87d64af47fb1cc59348961c9',1,'OK():&#160;calibrate.h']]],
+  ['one_5fframe_5fthres',['ONE_FRAME_THRES',['../_e_z_r32_l_g___octa_2kits_2common_2drivers_2ksz8851snl_8c.html#a0189fe248f84298f9ccffd38692604fb',1,'ONE_FRAME_THRES():&#160;ksz8851snl.c'],['../_e_z_r32_l_g___u_s_b01_2kits_2common_2drivers_2ksz8851snl_8c.html#a0189fe248f84298f9ccffd38692604fb',1,'ONE_FRAME_THRES():&#160;ksz8851snl.c'],['../_e_z_r32_l_g___w_s_t_k6200_a_2kits_2common_2drivers_2ksz8851snl_8c.html#a0189fe248f84298f9ccffd38692604fb',1,'ONE_FRAME_THRES():&#160;ksz8851snl.c']]],
+  ['opcode_5ffifo_5fread',['OPCODE_FIFO_READ',['../_e_z_r32_l_g___octa_2kits_2common_2drivers_2ksz8851snl__spi_8c.html#a2d6c32b31b85ca6082321357f7439cc6',1,'OPCODE_FIFO_READ():&#160;ksz8851snl_spi.c'],['../_e_z_r32_l_g___u_s_b01_2kits_2common_2drivers_2ksz8851snl__spi_8c.html#a2d6c32b31b85ca6082321357f7439cc6',1,'OPCODE_FIFO_READ():&#160;ksz8851snl_spi.c'],['../_e_z_r32_l_g___w_s_t_k6200_a_2kits_2common_2drivers_2ksz8851snl__spi_8c.html#a2d6c32b31b85ca6082321357f7439cc6',1,'OPCODE_FIFO_READ():&#160;ksz8851snl_spi.c']]],
+  ['opcode_5ffifo_5fwrite',['OPCODE_FIFO_WRITE',['../_e_z_r32_l_g___octa_2kits_2common_2drivers_2ksz8851snl__spi_8c.html#a4ca682808698daba93e94f054b9a51e0',1,'OPCODE_FIFO_WRITE():&#160;ksz8851snl_spi.c'],['../_e_z_r32_l_g___u_s_b01_2kits_2common_2drivers_2ksz8851snl__spi_8c.html#a4ca682808698daba93e94f054b9a51e0',1,'OPCODE_FIFO_WRITE():&#160;ksz8851snl_spi.c'],['../_e_z_r32_l_g___w_s_t_k6200_a_2kits_2common_2drivers_2ksz8851snl__spi_8c.html#a4ca682808698daba93e94f054b9a51e0',1,'OPCODE_FIFO_WRITE():&#160;ksz8851snl_spi.c']]],
+  ['opcode_5freg_5fread',['OPCODE_REG_READ',['../_e_z_r32_l_g___octa_2kits_2common_2drivers_2ksz8851snl__spi_8c.html#a6fcbd064a7e187293addbe9e4cc93cce',1,'OPCODE_REG_READ():&#160;ksz8851snl_spi.c'],['../_e_z_r32_l_g___u_s_b01_2kits_2common_2drivers_2ksz8851snl__spi_8c.html#a6fcbd064a7e187293addbe9e4cc93cce',1,'OPCODE_REG_READ():&#160;ksz8851snl_spi.c'],['../_e_z_r32_l_g___w_s_t_k6200_a_2kits_2common_2drivers_2ksz8851snl__spi_8c.html#a6fcbd064a7e187293addbe9e4cc93cce',1,'OPCODE_REG_READ():&#160;ksz8851snl_spi.c']]],
+  ['opcode_5freg_5fwrite',['OPCODE_REG_WRITE',['../_e_z_r32_l_g___octa_2kits_2common_2drivers_2ksz8851snl__spi_8c.html#ac8b540d46b3b86ae11c069183aea466c',1,'OPCODE_REG_WRITE():&#160;ksz8851snl_spi.c'],['../_e_z_r32_l_g___u_s_b01_2kits_2common_2drivers_2ksz8851snl__spi_8c.html#ac8b540d46b3b86ae11c069183aea466c',1,'OPCODE_REG_WRITE():&#160;ksz8851snl_spi.c'],['../_e_z_r32_l_g___w_s_t_k6200_a_2kits_2common_2drivers_2ksz8851snl__spi_8c.html#ac8b540d46b3b86ae11c069183aea466c',1,'OPCODE_REG_WRITE():&#160;ksz8851snl_spi.c']]],
+  ['own_5faccess_5fprofile',['own_access_profile',['../d7anp_8c.html#a1f20733d09fd63f0840d0564ad85d76d',1,'d7anp.c']]]
 ];

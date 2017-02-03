@@ -102,50 +102,67 @@ $(document).ready(function(){initNavTree('group___c_o_m_m_o_n.html','');});
 <a href="#define-members">Macros</a> &#124;
 <a href="#func-members">Functions</a>  </div>
   <div class="headertitle">
-<div class="title">COMMON<div class="ingroups"><a class="el" href="group___e_m___library.html">EM_Library</a></div></div>  </div>
+<div class="title">COMMON<div class="ingroups"><a class="el" href="group__emlib.html">EMLIB</a></div></div>  </div>
 </div><!--header-->
 <div class="contents">
 
-<p>Emlib general purpose utilities. </p><pre class="fragment"></pre><p>.  
+<p>General purpose utilities.  
 <a href="#details">More...</a></p>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="define-members"></a>
 Macros</h2></td></tr>
-<tr class="memitem:ga4697e43b9f1da10aced32da568a8c729"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group___c_o_m_m_o_n.html#ga4697e43b9f1da10aced32da568a8c729">EFM32_MIN</a>(a,  b)&#160;&#160;&#160;((a) &lt; (b) ? (a) : (b))</td></tr>
-<tr class="separator:ga4697e43b9f1da10aced32da568a8c729"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ga939df829c7cdcf8a52a80b5dc121e75a"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group___c_o_m_m_o_n.html#ga939df829c7cdcf8a52a80b5dc121e75a">EFM32_MAX</a>(a,  b)&#160;&#160;&#160;((a) &gt; (b) ? (a) : (b))</td></tr>
-<tr class="separator:ga939df829c7cdcf8a52a80b5dc121e75a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga9569b0ba06efef226b0a82109eef3ec3"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group___c_o_m_m_o_n.html#ga9569b0ba06efef226b0a82109eef3ec3">SL_MIN</a>(a,  b)&#160;&#160;&#160;((a) &lt; (b) ? (a) : (b))</td></tr>
+<tr class="separator:ga9569b0ba06efef226b0a82109eef3ec3"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:gac33644dcb925ed2bde0b5fc7a5fd9cfe"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group___c_o_m_m_o_n.html#gac33644dcb925ed2bde0b5fc7a5fd9cfe">SL_MAX</a>(a,  b)&#160;&#160;&#160;((a) &gt; (b) ? (a) : (b))</td></tr>
+<tr class="separator:gac33644dcb925ed2bde0b5fc7a5fd9cfe"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:gad9ac3d6162a4c18e51a0852093eab9bd"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group___c_o_m_m_o_n.html#gad9ac3d6162a4c18e51a0852093eab9bd">STRINGIZE</a>(X)&#160;&#160;&#160;#X</td></tr>
 <tr class="separator:gad9ac3d6162a4c18e51a0852093eab9bd"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ga09edca56e303bddfac51da43893d6f48"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group___c_o_m_m_o_n.html#ga09edca56e303bddfac51da43893d6f48">EFM32_PACK_START</a>(X)&#160;&#160;&#160;_Pragma( <a class="el" href="group___c_o_m_m_o_n.html#gad9ac3d6162a4c18e51a0852093eab9bd">STRINGIZE</a>( pack( X ) ) )</td></tr>
+<tr class="memitem:gad8946ecd6351e6f0c7ca483bc698ba10"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group___c_o_m_m_o_n.html#gad8946ecd6351e6f0c7ca483bc698ba10">SL_PACK_START</a>(X)&#160;&#160;&#160;_Pragma(<a class="el" href="group___c_o_m_m_o_n.html#gad9ac3d6162a4c18e51a0852093eab9bd">STRINGIZE</a>(pack(X)))</td></tr>
+<tr class="separator:gad8946ecd6351e6f0c7ca483bc698ba10"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga911e7f1f5d8dc5b4dd025e8c14159977"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group___c_o_m_m_o_n.html#ga911e7f1f5d8dc5b4dd025e8c14159977">SL_PACK_END</a>()&#160;&#160;&#160;_Pragma(&quot;pack()&quot;)</td></tr>
+<tr class="separator:ga911e7f1f5d8dc5b4dd025e8c14159977"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:gaa8622382a414e46f85b7c7c3e56ecc3a"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group___c_o_m_m_o_n.html#gaa8622382a414e46f85b7c7c3e56ecc3a">SL_ATTRIBUTE_PACKED</a></td></tr>
+<tr class="separator:gaa8622382a414e46f85b7c7c3e56ecc3a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga14deffb02010866992cb069907f73846"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group___c_o_m_m_o_n.html#ga14deffb02010866992cb069907f73846">SL_ATTRIBUTE_ALIGN</a>(X)</td></tr>
+<tr class="separator:ga14deffb02010866992cb069907f73846"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga4697e43b9f1da10aced32da568a8c729"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group___c_o_m_m_o_n.html#ga4697e43b9f1da10aced32da568a8c729">EFM32_MIN</a>(a,  b)&#160;&#160;&#160;<a class="el" href="group___c_o_m_m_o_n.html#ga9569b0ba06efef226b0a82109eef3ec3">SL_MIN</a>(a, b)</td></tr>
+<tr class="separator:ga4697e43b9f1da10aced32da568a8c729"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga939df829c7cdcf8a52a80b5dc121e75a"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group___c_o_m_m_o_n.html#ga939df829c7cdcf8a52a80b5dc121e75a">EFM32_MAX</a>(a,  b)&#160;&#160;&#160;<a class="el" href="group___c_o_m_m_o_n.html#gac33644dcb925ed2bde0b5fc7a5fd9cfe">SL_MAX</a>(a, b)</td></tr>
+<tr class="separator:ga939df829c7cdcf8a52a80b5dc121e75a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga09edca56e303bddfac51da43893d6f48"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group___c_o_m_m_o_n.html#ga09edca56e303bddfac51da43893d6f48">EFM32_PACK_START</a>(X)&#160;&#160;&#160;<a class="el" href="group___c_o_m_m_o_n.html#gad8946ecd6351e6f0c7ca483bc698ba10">SL_PACK_START</a>(X)</td></tr>
 <tr class="separator:ga09edca56e303bddfac51da43893d6f48"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:gab2675861d42aae2af68c05f8fa1da22f"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group___c_o_m_m_o_n.html#gab2675861d42aae2af68c05f8fa1da22f">EFM32_PACK_END</a>()&#160;&#160;&#160;_Pragma( &quot;pack()&quot; )</td></tr>
+<tr class="memitem:gab2675861d42aae2af68c05f8fa1da22f"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group___c_o_m_m_o_n.html#gab2675861d42aae2af68c05f8fa1da22f">EFM32_PACK_END</a>()&#160;&#160;&#160;<a class="el" href="group___c_o_m_m_o_n.html#ga911e7f1f5d8dc5b4dd025e8c14159977">SL_PACK_END</a>()</td></tr>
 <tr class="separator:gab2675861d42aae2af68c05f8fa1da22f"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:gabd10f17c7b1949b576d219806aef2d43"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group___c_o_m_m_o_n.html#gabd10f17c7b1949b576d219806aef2d43">__attribute__</a>(...)</td></tr>
-<tr class="separator:gabd10f17c7b1949b576d219806aef2d43"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga3e1e293640dd826cbd20924b763ddcc0"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group___c_o_m_m_o_n.html#ga3e1e293640dd826cbd20924b763ddcc0">EFM32_ALIGN</a>(X)&#160;&#160;&#160;SL_ALIGN(X)</td></tr>
+<tr class="separator:ga3e1e293640dd826cbd20924b763ddcc0"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
 Functions</h2></td></tr>
+<tr class="memitem:ga8df7f6d52e31dad26a89799b7e63adb0"><td class="memItemLeft" align="right" valign="top">__STATIC_INLINE uint32_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group___c_o_m_m_o_n.html#ga8df7f6d52e31dad26a89799b7e63adb0">SL_CTZ</a> (uint32_t value)</td></tr>
+<tr class="memdesc:ga8df7f6d52e31dad26a89799b7e63adb0"><td class="mdescLeft">&#160;</td><td class="mdescRight">Count trailing number of zero's. Use CLZ instruction if available.  <a href="#ga8df7f6d52e31dad26a89799b7e63adb0">More...</a><br /></td></tr>
+<tr class="separator:ga8df7f6d52e31dad26a89799b7e63adb0"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ga360287cd806ff1d1520498417c41bb6c"><td class="memItemLeft" align="right" valign="top">__STATIC_INLINE uint32_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group___c_o_m_m_o_n.html#ga360287cd806ff1d1520498417c41bb6c">EFM32_CTZ</a> (uint32_t value)</td></tr>
-<tr class="memdesc:ga360287cd806ff1d1520498417c41bb6c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Count trailing number of zero's.  <a href="#ga360287cd806ff1d1520498417c41bb6c">More...</a><br /></td></tr>
+<tr class="memdesc:ga360287cd806ff1d1520498417c41bb6c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Count trailing number of zero's. Use CLZ instruction if available.  <a href="#ga360287cd806ff1d1520498417c41bb6c">More...</a><br /></td></tr>
 <tr class="separator:ga360287cd806ff1d1520498417c41bb6c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
-<p>Emlib general purpose utilities. </p><pre class="fragment"></pre><p>. </p>
+<p>General purpose utilities. </p>
+<p>General purpose utilities for polyfilling compiler support etc. </p>
 <h2 class="groupheader">Macro Definition Documentation</h2>
-<a class="anchor" id="gabd10f17c7b1949b576d219806aef2d43"></a>
+<a class="anchor" id="ga3e1e293640dd826cbd20924b763ddcc0"></a>
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">#define __attribute__</td>
+          <td class="memname">#define EFM32_ALIGN</td>
           <td>(</td>
           <td class="paramtype">&#160;</td>
-          <td class="paramname"><em>...</em></td><td>)</td>
-          <td></td>
+          <td class="paramname">X</td><td>)</td>
+          <td>&#160;&#160;&#160;SL_ALIGN(X)</td>
         </tr>
       </table>
 </div><div class="memdoc">
+<dl class="deprecated"><dt><b><a class="el" href="deprecated.html#_deprecated000009">Deprecated:</a></b></dt><dd>New code should use SL_ALIGN(). </dd></dl>
 
 </div>
 </div>
@@ -168,11 +185,11 @@ Functions</h2></td></tr>
         <tr>
           <td></td>
           <td>)</td>
-          <td></td><td>&#160;&#160;&#160;((a) &gt; (b) ? (a) : (b))</td>
+          <td></td><td>&#160;&#160;&#160;<a class="el" href="group___c_o_m_m_o_n.html#gac33644dcb925ed2bde0b5fc7a5fd9cfe">SL_MAX</a>(a, b)</td>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Macro for getting maximum value. </p>
+<dl class="deprecated"><dt><b><a class="el" href="deprecated.html#_deprecated000006">Deprecated:</a></b></dt><dd>New code should use <a class="el" href="group___c_o_m_m_o_n.html#gac33644dcb925ed2bde0b5fc7a5fd9cfe">SL_MAX()</a>. </dd></dl>
 
 </div>
 </div>
@@ -195,11 +212,11 @@ Functions</h2></td></tr>
         <tr>
           <td></td>
           <td>)</td>
-          <td></td><td>&#160;&#160;&#160;((a) &lt; (b) ? (a) : (b))</td>
+          <td></td><td>&#160;&#160;&#160;<a class="el" href="group___c_o_m_m_o_n.html#ga9569b0ba06efef226b0a82109eef3ec3">SL_MIN</a>(a, b)</td>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Macro for getting minimum value. </p>
+<dl class="deprecated"><dt><b><a class="el" href="deprecated.html#_deprecated000005">Deprecated:</a></b></dt><dd>New code should use <a class="el" href="group___c_o_m_m_o_n.html#ga9569b0ba06efef226b0a82109eef3ec3">SL_MIN()</a>. </dd></dl>
 
 </div>
 </div>
@@ -211,10 +228,11 @@ Functions</h2></td></tr>
           <td class="memname">#define EFM32_PACK_END</td>
           <td>(</td>
           <td class="paramname"></td><td>)</td>
-          <td>&#160;&#160;&#160;_Pragma( &quot;pack()&quot; )</td>
+          <td>&#160;&#160;&#160;<a class="el" href="group___c_o_m_m_o_n.html#ga911e7f1f5d8dc5b4dd025e8c14159977">SL_PACK_END</a>()</td>
         </tr>
       </table>
 </div><div class="memdoc">
+<dl class="deprecated"><dt><b><a class="el" href="deprecated.html#_deprecated000008">Deprecated:</a></b></dt><dd>New code should use <a class="el" href="group___c_o_m_m_o_n.html#ga911e7f1f5d8dc5b4dd025e8c14159977">SL_PACK_END()</a>. </dd></dl>
 
 </div>
 </div>
@@ -227,7 +245,121 @@ Functions</h2></td></tr>
           <td>(</td>
           <td class="paramtype">&#160;</td>
           <td class="paramname">X</td><td>)</td>
-          <td>&#160;&#160;&#160;_Pragma( <a class="el" href="group___c_o_m_m_o_n.html#gad9ac3d6162a4c18e51a0852093eab9bd">STRINGIZE</a>( pack( X ) ) )</td>
+          <td>&#160;&#160;&#160;<a class="el" href="group___c_o_m_m_o_n.html#gad8946ecd6351e6f0c7ca483bc698ba10">SL_PACK_START</a>(X)</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<dl class="deprecated"><dt><b><a class="el" href="deprecated.html#_deprecated000007">Deprecated:</a></b></dt><dd>New code should use <a class="el" href="group___c_o_m_m_o_n.html#gad8946ecd6351e6f0c7ca483bc698ba10">SL_PACK_START()</a>. </dd></dl>
+
+</div>
+</div>
+<a class="anchor" id="ga14deffb02010866992cb069907f73846"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">#define SL_ATTRIBUTE_ALIGN</td>
+          <td>(</td>
+          <td class="paramtype">&#160;</td>
+          <td class="paramname">X</td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a class="anchor" id="gaa8622382a414e46f85b7c7c3e56ecc3a"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">#define SL_ATTRIBUTE_PACKED</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a class="anchor" id="gac33644dcb925ed2bde0b5fc7a5fd9cfe"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">#define SL_MAX</td>
+          <td>(</td>
+          <td class="paramtype">&#160;</td>
+          <td class="paramname">a, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">&#160;</td>
+          <td class="paramname">b&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td>&#160;&#160;&#160;((a) &gt; (b) ? (a) : (b))</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Macro for getting maximum value. </p>
+
+</div>
+</div>
+<a class="anchor" id="ga9569b0ba06efef226b0a82109eef3ec3"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">#define SL_MIN</td>
+          <td>(</td>
+          <td class="paramtype">&#160;</td>
+          <td class="paramname">a, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">&#160;</td>
+          <td class="paramname">b&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td>&#160;&#160;&#160;((a) &lt; (b) ? (a) : (b))</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Macro for getting minimum value. </p>
+
+</div>
+</div>
+<a class="anchor" id="ga911e7f1f5d8dc5b4dd025e8c14159977"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">#define SL_PACK_END</td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td>&#160;&#160;&#160;_Pragma(&quot;pack()&quot;)</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a class="anchor" id="gad8946ecd6351e6f0c7ca483bc698ba10"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">#define SL_PACK_START</td>
+          <td>(</td>
+          <td class="paramtype">&#160;</td>
+          <td class="paramname">X</td><td>)</td>
+          <td>&#160;&#160;&#160;_Pragma(<a class="el" href="group___c_o_m_m_o_n.html#gad9ac3d6162a4c18e51a0852093eab9bd">STRINGIZE</a>(pack(X)))</td>
         </tr>
       </table>
 </div><div class="memdoc">
@@ -266,8 +398,33 @@ Functions</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p>Count trailing number of zero's. </p>
-<dl class="section note"><dt>Note</dt><dd>Disabling SWDClk will disable the debug interface, which may result in a lockout if done early in startup (before debugger is able to halt core).</dd></dl>
+<p>Count trailing number of zero's. Use CLZ instruction if available. </p>
+<dl class="deprecated"><dt><b><a class="el" href="deprecated.html#_deprecated000010">Deprecated:</a></b></dt><dd>Deprecated function. New code should use <a class="el" href="group___c_o_m_m_o_n.html#ga8df7f6d52e31dad26a89799b7e63adb0">SL_CTZ()</a>.</dd></dl>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">value</td><td>Data value to check for number of trailing zero bits.</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>Number of trailing zero's in value. </dd></dl>
+
+</div>
+</div>
+<a class="anchor" id="ga8df7f6d52e31dad26a89799b7e63adb0"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">__STATIC_INLINE uint32_t SL_CTZ </td>
+          <td>(</td>
+          <td class="paramtype">uint32_t&#160;</td>
+          <td class="paramname"><em>value</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Count trailing number of zero's. Use CLZ instruction if available. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramdir">[in]</td><td class="paramname">value</td><td>Data value to check for number of trailing zero bits.</td></tr>
@@ -283,7 +440,7 @@ Functions</h2></td></tr>
 <!-- start footer part -->
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
-    <li class="footer">Generated on Mon May 2 2016 21:25:36 for OSS-7: Open Source Stack for DASH7 Alliance Protocol by
+    <li class="footer">Generated on Fri Feb 3 2017 13:01:27 for OSS-7: Open Source Stack for DASH7 Alliance Protocol by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.8.11 </li>
   </ul>

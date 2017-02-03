@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['timer',['Timer',['../group__timer.html',1,'']]]
+  ['platform',['Platform',['../group__platform.html',1,'']]]
 ];

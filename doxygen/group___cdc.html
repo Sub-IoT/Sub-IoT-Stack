@@ -121,7 +121,7 @@ Functions</h2></td></tr>
 <p>Implements USB Communication Device Class (CDC).</p>
 <h1><a class="anchor" id="cdc_intro"></a>
 CDC implementation.</h1>
-<p>The source code of the CDC implementation resides in kits/common/drivers/cdc.c and <a class="el" href="cdc_8h.html" title="USB Communication Device Class (CDC) driver. ">cdc.h</a>. This driver implements a basic USB to RS232 bridge.</p>
+<p>The source code of the CDC implementation resides in kits/common/drivers/cdc.c and cdc.h. This driver implements a basic USB to RS232 bridge.</p>
 <h1><a class="anchor" id="cdc_config"></a>
 CDC device configuration options.</h1>
 <p>This section contains a description of the configuration options for the driver. The options are #define's  which are expected to be found in the application "usbconfig.h" header file. The values shown below are from the Giant Gecko DK3750 CDC example.</p>
@@ -167,7 +167,56 @@ CDC device configuration options.</h1>
 #define CDC_ENABLE_DK_UART_SWITCH() BSP_PeripheralAccess(BSP_RS232_UART, true)
 
 // No RS232 switch on STK's. Leave the definition "empty".
-#define CDC_ENABLE_DK_UART_SWITCH()</pre> <h2 class="groupheader">Function Documentation</h2>
+#define CDC_ENABLE_DK_UART_SWITCH()</pre><p>Implements USB Communication Device Class (CDC).</p>
+<h1><a class="anchor" id="cdc_intro"></a>
+CDC implementation.</h1>
+<p>The source code of the CDC implementation resides in kits/common/drivers/cdc.c and cdc.h. This driver implements a basic USB to RS232 bridge.</p>
+<h1><a class="anchor" id="cdc_config"></a>
+CDC device configuration options.</h1>
+<p>This section contains a description of the configuration options for the driver. The options are #define's  which are expected to be found in the application "usbconfig.h" header file. The values shown below are from the Giant Gecko DK3750 CDC example.</p>
+<pre class="fragment">// USB interface numbers. Interfaces are numbered from zero to one less than
+// the number of concurrent interfaces supported by the configuration. A CDC
+// device is by itself a composite device and has two interfaces.
+// The interface numbers must be 0 and 1 for a standalone CDC device, for a
+// composite device which includes a CDC interface it must not be in conflict
+// with other device interfaces.
+#define CDC_CTRL_INTERFACE_NO ( 0 )
+#define CDC_DATA_INTERFACE_NO ( 1 )
+
+// Endpoint address for CDC data reception.
+#define CDC_EP_DATA_OUT ( 0x01 )
+
+// Endpoint address for CDC data transmission.
+#define CDC_EP_DATA_IN ( 0x81 )
+
+// Endpoint address for the notification endpoint (not used).
+#define CDC_EP_NOTIFY ( 0x82 )
+
+// Timer id, see USBTIMER in the USB device stack documentation.
+// The CDC driver has a Rx timeout functionality which require a timer.
+#define CDC_TIMER_ID ( 0 )
+
+// DMA related macros, select DMA channels and DMA request signals.
+#define CDC_UART_TX_DMA_CHANNEL   ( 0 )
+#define CDC_UART_RX_DMA_CHANNEL   ( 1 )
+#define CDC_TX_DMA_SIGNAL         DMAREQ_UART1_TXBL
+#define CDC_RX_DMA_SIGNAL         DMAREQ_UART1_RXDATAV
+
+// UART/USART selection macros.
+#define CDC_UART                  UART0
+#define CDC_UART_CLOCK            cmuClock_UART0
+#define CDC_UART_ROUTE            ( UART_ROUTE_RXPEN | UART_ROUTE_TXPEN | \
+                                    UART_ROUTE_LOCATION_LOC1 )
+#define CDC_UART_TX_PORT          gpioPortE
+#define CDC_UART_TX_PIN           0
+#define CDC_UART_RX_PORT          gpioPortE
+#define CDC_UART_RX_PIN           1
+
+// Activate the RS232 switch on DK's.
+//#define CDC_ENABLE_DK_UART_SWITCH() BSP_PeripheralAccess(BSP_RS232_UART, true)
+
+// No RS232 switch on STK's. Leave the definition "empty".
+//#define CDC_ENABLE_DK_UART_SWITCH()</pre> <h2 class="groupheader">Function Documentation</h2>
 <a class="anchor" id="gaecd54ce9131e15785ad9cbd5105765d7"></a>
 <div class="memitem">
 <div class="memproto">
@@ -251,7 +300,7 @@ CDC device configuration options.</h1>
 <!-- start footer part -->
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
-    <li class="footer">Generated on Mon May 2 2016 21:25:36 for OSS-7: Open Source Stack for DASH7 Alliance Protocol by
+    <li class="footer">Generated on Fri Feb 3 2017 13:01:27 for OSS-7: Open Source Stack for DASH7 Alliance Protocol by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.8.11 </li>
   </ul>

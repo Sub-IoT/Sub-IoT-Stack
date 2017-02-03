@@ -9,6 +9,5 @@ var console_8h =
     [ "console_printf", "console_8h.html#ad7b3bbc5a3c6b17b914856508001d853", null ],
     [ "console_rx_interrupt_enable", "console_8h.html#a0c220be11f158085f365034022c21e4f", null ],
     [ "console_set_rx_interrupt_callback", "console_8h.html#a0f8e24caabb1661614d191b5fee60487", null ],
-    [ "TRY", "console_8h.html#a091d75e6bf644f55ce24698b7c1d0dc7", null ],
-    [ "TRY_LABEL_LENGTH", "console_8h.html#ad7a847e713bc46dbe6ba71966c4d0969", null ]
+    [ "TRY", "console_8h.html#a091d75e6bf644f55ce24698b7c1d0dc7", null ]
 ];

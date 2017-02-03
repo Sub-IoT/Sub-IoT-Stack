@@ -119,6 +119,7 @@ $(document).ready(function(){initNavTree('ezr32lg__uart_8c.html','');});
 <code>#include &quot;<a class="el" href="hwgpio_8h_source.html">hwgpio.h</a>&quot;</code><br />
 <code>#include &quot;<a class="el" href="hwuart_8h_source.html">hwuart.h</a>&quot;</code><br />
 <code>#include &lt;assert.h&gt;</code><br />
+<code>#include &lt;string.h&gt;</code><br />
 <code>#include &quot;<a class="el" href="hwsystem_8h_source.html">hwsystem.h</a>&quot;</code><br />
 <code>#include &quot;<a class="el" href="ezr32lg__pins_8h_source.html">ezr32lg_pins.h</a>&quot;</code><br />
 <code>#include &quot;platform.h&quot;</code><br />
@@ -165,8 +166,6 @@ Functions</h2></td></tr>
 <tr class="separator:a3f216427c6df5e45eb0cceccee1aa5ba"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a5110e6b33cd4e37c9fa7a17c9e681256"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ezr32lg__uart_8c.html#a5110e6b33cd4e37c9fa7a17c9e681256">UART1_RX_IRQHandler</a> (void)</td></tr>
 <tr class="separator:a5110e6b33cd4e37c9fa7a17c9e681256"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a8ef4dfd53f8b518acaeddcda2b159c61"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ezr32lg__uart_8c.html#a8ef4dfd53f8b518acaeddcda2b159c61">USART0_RX_IRQHandler</a> (void)</td></tr>
-<tr class="separator:a8ef4dfd53f8b518acaeddcda2b159c61"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aa6a5099bafcea7a957c8a7aff925a5c2"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ezr32lg__uart_8c.html#aa6a5099bafcea7a957c8a7aff925a5c2">USART1_RX_IRQHandler</a> (void)</td></tr>
 <tr class="separator:aa6a5099bafcea7a957c8a7aff925a5c2"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:afacefa37377ad49a54ae776893d13837"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ezr32lg__uart_8c.html#afacefa37377ad49a54ae776893d13837">USART2_RX_IRQHandler</a> (void)</td></tr>
@@ -242,22 +241,6 @@ Functions</h2></td></tr>
 
 </div>
 </div>
-<a class="anchor" id="a8ef4dfd53f8b518acaeddcda2b159c61"></a>
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">void USART0_RX_IRQHandler </td>
-          <td>(</td>
-          <td class="paramtype">void&#160;</td>
-          <td class="paramname"></td><td>)</td>
-          <td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-</div>
-</div>
 <a class="anchor" id="aa6a5099bafcea7a957c8a7aff925a5c2"></a>
 <div class="memitem">
 <div class="memproto">
@@ -296,7 +279,7 @@ Functions</h2></td></tr>
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
     <li class="navelem"><a class="el" href="dir_644e041c3a6521da7b27eba0e4eb2b95.html">framework</a></li><li class="navelem"><a class="el" href="dir_8f2c340cdabd0cab4db94c39704d70a8.html">hal</a></li><li class="navelem"><a class="el" href="dir_e53dcac4adbcec177c678c0d8c8c3e7c.html">chips</a></li><li class="navelem"><a class="el" href="dir_da2cee54bc048923b90ea1fb73857f31.html">ezr32lg</a></li><li class="navelem"><a class="el" href="ezr32lg__uart_8c.html">ezr32lg_uart.c</a></li>
-    <li class="footer">Generated on Mon May 2 2016 21:25:36 for OSS-7: Open Source Stack for DASH7 Alliance Protocol by
+    <li class="footer">Generated on Fri Feb 3 2017 13:01:26 for OSS-7: Open Source Stack for DASH7 Alliance Protocol by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.8.11 </li>
   </ul>

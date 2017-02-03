@@ -139,10 +139,7 @@ Files</h2></td></tr>
 <tr class="memdesc:em__cmu_8h"><td class="mdescLeft">&#160;</td><td class="mdescRight">Clock management unit (CMU) API. <br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:em__common_8h"><td class="memItemLeft" align="right" valign="top">file &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="em__common_8h.html">em_common.h</a> <a href="em__common_8h_source.html">[code]</a></td></tr>
-<tr class="memdesc:em__common_8h"><td class="mdescLeft">&#160;</td><td class="mdescRight">Emlib general purpose utilities. <br /></td></tr>
-<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:em__crc_8h"><td class="memItemLeft" align="right" valign="top">file &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="em__crc_8h.html">em_crc.h</a> <a href="em__crc_8h_source.html">[code]</a></td></tr>
-<tr class="memdesc:em__crc_8h"><td class="mdescLeft">&#160;</td><td class="mdescRight">Cyclic Redundancy Check (CRC) API. <br /></td></tr>
+<tr class="memdesc:em__common_8h"><td class="mdescLeft">&#160;</td><td class="mdescRight">General purpose utilities. <br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:em__cryotimer_8h"><td class="memItemLeft" align="right" valign="top">file &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="em__cryotimer_8h.html">em_cryotimer.h</a> <a href="em__cryotimer_8h_source.html">[code]</a></td></tr>
 <tr class="memdesc:em__cryotimer_8h"><td class="mdescLeft">&#160;</td><td class="mdescRight">Ultra Low Energy Timer/Counter (CRYOTIMER) peripheral API. <br /></td></tr>
@@ -164,6 +161,9 @@ Files</h2></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:em__emu_8h"><td class="memItemLeft" align="right" valign="top">file &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="em__emu_8h.html">em_emu.h</a> <a href="em__emu_8h_source.html">[code]</a></td></tr>
 <tr class="memdesc:em__emu_8h"><td class="mdescLeft">&#160;</td><td class="mdescRight">Energy management unit (EMU) peripheral API. <br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:em__gpcrc_8h"><td class="memItemLeft" align="right" valign="top">file &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="em__gpcrc_8h.html">em_gpcrc.h</a> <a href="em__gpcrc_8h_source.html">[code]</a></td></tr>
+<tr class="memdesc:em__gpcrc_8h"><td class="mdescLeft">&#160;</td><td class="mdescRight">General Purpose Cyclic Redundancy Check (GPCRC) API. <br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:em__gpio_8h"><td class="memItemLeft" align="right" valign="top">file &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="em__gpio_8h.html">em_gpio.h</a> <a href="em__gpio_8h_source.html">[code]</a></td></tr>
 <tr class="memdesc:em__gpio_8h"><td class="mdescLeft">&#160;</td><td class="mdescRight">General Purpose IO (GPIO) peripheral API. <br /></td></tr>
@@ -196,7 +196,7 @@ Files</h2></td></tr>
 <tr class="memdesc:em__mpu_8h"><td class="mdescLeft">&#160;</td><td class="mdescRight">Memory protection unit (MPU) peripheral API. <br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:em__msc_8h"><td class="memItemLeft" align="right" valign="top">file &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="em__msc_8h.html">em_msc.h</a> <a href="em__msc_8h_source.html">[code]</a></td></tr>
-<tr class="memdesc:em__msc_8h"><td class="mdescLeft">&#160;</td><td class="mdescRight">Flash controller module (MSC) peripheral API. <br /></td></tr>
+<tr class="memdesc:em__msc_8h"><td class="mdescLeft">&#160;</td><td class="mdescRight">Flash controller (MSC) peripheral API. <br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:em__opamp_8h"><td class="memItemLeft" align="right" valign="top">file &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="em__opamp_8h.html">em_opamp.h</a> <a href="em__opamp_8h_source.html">[code]</a></td></tr>
 <tr class="memdesc:em__opamp_8h"><td class="mdescLeft">&#160;</td><td class="mdescRight">Operational Amplifier (OPAMP) peripheral API. <br /></td></tr>
@@ -209,6 +209,9 @@ Files</h2></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:em__prs_8h"><td class="memItemLeft" align="right" valign="top">file &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="em__prs_8h.html">em_prs.h</a> <a href="em__prs_8h_source.html">[code]</a></td></tr>
 <tr class="memdesc:em__prs_8h"><td class="mdescLeft">&#160;</td><td class="mdescRight">Peripheral Reflex System (PRS) peripheral API. <br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:em__ramfunc_8h"><td class="memItemLeft" align="right" valign="top">file &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="em__ramfunc_8h.html">em_ramfunc.h</a> <a href="em__ramfunc_8h_source.html">[code]</a></td></tr>
+<tr class="memdesc:em__ramfunc_8h"><td class="mdescLeft">&#160;</td><td class="mdescRight">RAM code support. <br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:em__rmu_8h"><td class="memItemLeft" align="right" valign="top">file &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="em__rmu_8h.html">em_rmu.h</a> <a href="em__rmu_8h_source.html">[code]</a></td></tr>
 <tr class="memdesc:em__rmu_8h"><td class="mdescLeft">&#160;</td><td class="mdescRight">Reset Management Unit (RMU) peripheral API. <br /></td></tr>
@@ -244,7 +247,7 @@ Files</h2></td></tr>
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
     <li class="navelem"><a class="el" href="dir_644e041c3a6521da7b27eba0e4eb2b95.html">framework</a></li><li class="navelem"><a class="el" href="dir_8f2c340cdabd0cab4db94c39704d70a8.html">hal</a></li><li class="navelem"><a class="el" href="dir_e53dcac4adbcec177c678c0d8c8c3e7c.html">chips</a></li><li class="navelem"><a class="el" href="dir_da2cee54bc048923b90ea1fb73857f31.html">ezr32lg</a></li><li class="navelem"><a class="el" href="dir_34b06d7130d86bbea405941925cd788c.html">emlib</a></li><li class="navelem"><a class="el" href="dir_400489aa4acc9ab65703c11172f73687.html">inc</a></li>
-    <li class="footer">Generated on Mon May 2 2016 21:25:36 for OSS-7: Open Source Stack for DASH7 Alliance Protocol by
+    <li class="footer">Generated on Fri Feb 3 2017 13:01:27 for OSS-7: Open Source Stack for DASH7 Alliance Protocol by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.8.11 </li>
   </ul>
