@@ -1,4 +1,4 @@
-# 
+#
 # OSS-7 - An opensource implementation of the DASH7 Alliance Protocol for ultra
 # lowpower wireless sensor communication
 #
@@ -33,7 +33,7 @@ FOREACH(dir ${PLATFORM_DIRS})
     GET_FILENAME_COMPONENT(__platform_name "${dir}" NAME)
     LIST(APPEND SUPPORTED_PLATFORMS "${__platform_name}")
     SET(PLATFORM_PATH_${__platform_name} ${dir})
-    ENDIF()    
+    ENDIF()
 ENDFOREACH()
 #If no platforms are compatible with the current toolchain, generate an error
 IF(NOT SUPPORTED_PLATFORMS)
@@ -43,14 +43,13 @@ ELSE()
     STRING(REPLACE ";" " " SUPPORTED_PLATFORMS_STRING "${SUPPORTED_PLATFORMS}")
     MESSAGE(STATUS "detected supported platforms: " ${SUPPORTED_PLATFORMS_STRING})
     LIST(GET SUPPORTED_PLATFORMS 0 def_platform)
-    SET (PLATFORM ${def_platform} CACHE STRING "Choose the platform to compile for.")
     SET_PROPERTY(CACHE PLATFORM PROPERTY STRINGS ${SUPPORTED_PLATFORMS})
 ENDIF()
 UNSET(PLATFORM_DIRS)
 
 #At this point 'PLATFORM' should point to a valid plaform
 #Before we include it though, we first need to:
-#1) Hide the parameters of the previous platform. 
+#1) Hide the parameters of the previous platform.
 #   Parameters of the currently selected platform are re-enabled
 #   by the parameter-definitions of the platform itself
 HIDE_PARAMETERS(PLATFORM_PARAM_LIST)

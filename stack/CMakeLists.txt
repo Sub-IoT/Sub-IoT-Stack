@@ -1,4 +1,4 @@
-# 
+#
 # OSS-7 - An opensource implementation of the DASH7 Alliance Protocol for ultra
 # lowpower wireless sensor communication
 #
@@ -53,6 +53,11 @@ IF(CMAKE_HOST_WIN32)
     SET(JLinkExe "jlink.exe")
 ENDIF()
 
+# set default platform
+IF(NOT PLATFORM)
+	SET(PLATFORM "EZR32LG_WSTK6200A" CACHE STRING "Choose the platform to compile for.")
+ENDIF()
+
 #Then load the Framework
 ADD_SUBDIRECTORY("framework")
 
@@ -63,10 +68,10 @@ ELSE()
     include ("cmake/platform_default_macros.cmake")
 ENDIF()
 
+
 #Then load the modules
 ADD_SUBDIRECTORY("modules")
 #And finally the applications
 ADD_SUBDIRECTORY("apps")
 #And tests
 ADD_SUBDIRECTORY("tests")
-
