@@ -12,4 +12,4 @@ Unless required by applicable law or agreed to in writing, software distributed 
 
 ## Getting Started
 
-Please refer to the [getting started page on our doxygen site] site](http://mosaic-lopow.github.io/dash7-ap-open-source-stack/doxygen/md_gettingstarted.html).
+Please refer to the [getting started page on our doxygen site](http://mosaic-lopow.github.io/dash7-ap-open-source-stack/doxygen/md_gettingstarted.html).
