@@ -168,6 +168,8 @@ If you open `JLinkRTTClient` in one terminal and execute `make flash-sensor jlin
 	[003] Ext H: 30.5
 	[004] Batt 3297 mV
 
+Note that you can enable different log sources separately by using cmake settings ( x_LOG_ENABLED).
+
 ## IDE Support
 
 The OSS-7 buildsystem and code does not require a specific IDE. The user can choose which IDE to use, if any.
