@@ -65,12 +65,37 @@ error_t fifo_put_byte(fifo_t* fifo, uint8_t byte)
     return fifo_put(fifo, &byte, 1);
 }
 
-error_t fifo_peek(fifo_t* fifo, uint8_t* buffer, uint16_t offset, uint16_t len) {
+static error_t check_len(fifo_t* fifo, uint16_t len) {
   // quickly bail out if requested length is zero, nothing to do
   if(len == 0) { return SUCCESS; }
 
   // quick check if requested len doesn't exceed available data
   if(len > fifo_get_size(fifo)) { return ESIZE; }
+
+  return SUCCESS;
+}
+
+static void skip(fifo_t* fifo, uint16_t len) {
+  // progress head to implement popping behaviour
+  fifo->head_idx = (fifo->head_idx + len);
+  if(fifo->head_idx > fifo->max_size)
+    fifo->head_idx = fifo->head_idx % fifo->max_size; // when head_idx == max_size we do not want to point to 0 since size will not be correct then
+}
+
+error_t fifo_skip(fifo_t* fifo, uint16_t len) {
+  error_t err = check_len(fifo, len);
+  if(err != SUCCESS)
+    return err;
+
+  skip(fifo, len);
+
+  return SUCCESS;
+}
+
+error_t fifo_peek(fifo_t* fifo, uint8_t* buffer, uint16_t offset, uint16_t len) {
+  error_t err = check_len(fifo, len);
+  if(err != SUCCESS)
+    return err;
 
   // determine start/end index (in circular buffer)
   uint16_t start_idx = (fifo->head_idx + offset) % fifo->max_size;
@@ -102,10 +127,7 @@ error_t fifo_pop(fifo_t* fifo, uint8_t* buffer, uint16_t len) {
   error_t err = fifo_peek(fifo, buffer, 0, len);
   if( err != SUCCESS ) { return err; }
 
-  // progress head to implement popping behaviour
-  fifo->head_idx = (fifo->head_idx + len);
-  if(fifo->head_idx > fifo->max_size)
-    fifo->head_idx = fifo->head_idx % fifo->max_size; // when head_idx == max_size we do not want to point to 0 since size will not be correct then
+  skip(fifo, len);
 
   return SUCCESS;
 }
