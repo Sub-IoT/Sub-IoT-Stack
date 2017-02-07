@@ -180,6 +180,12 @@ typedef struct {
 } alp_command_t;
 
 /*!
+ * \brief Initializes the ALP layer
+ * \param shell_enabled Specifies if ALP is accessible over the serial console
+ */
+void alp_init(bool shell_enabled);
+
+/*!
  * \brief Returns the ALP operation type contained in alp_command
  * \param alp_command
  * \return the ALP operation type
@@ -201,6 +207,18 @@ alp_operation_t alp_get_operation(uint8_t* alp_command);
 bool alp_process_command(uint8_t* alp_command, uint8_t alp_command_length, uint8_t* alp_response, uint8_t* alp_response_length, alp_command_origin_t origin);
 
 /*!
+ * \brief Process a result received from D7ASP.
+ *
+ * Note: alp_command and alp_response may point to the same buffer
+ * \param alp_command   The raw command
+ * \param alp_command_length The length of the command
+ * \param alp_response Pointer to a buffer where a possible response will be written
+ * \param alp_response_length The length of the response
+ * \param d7asp_result The result
+ */
+void alp_process_d7asp_result(uint8_t* alp_command, uint8_t alp_command_length, uint8_t* alp_response, uint8_t* alp_response_length, d7asp_result_t d7asp_result);
+
+/*!
  * \brief Process the ALP command on the local host interface and output the response to the D7ASP interface
  *
  * \param d7asp_fifo_config The config of the D7ASP fifo to output the ALP response to
@@ -219,8 +237,6 @@ void alp_process_command_result_on_d7asp(d7asp_master_session_config_t* d7asp_fi
  * \param alp_command_length The length of the command
  */
 void alp_process_command_console_output(uint8_t* alp_command, uint8_t alp_command_length);
-
-void alp_d7asp_request_completed(d7asp_result_t result, uint8_t* payload, uint8_t payload_length);
 
 void alp_d7asp_fifo_flush_completed(uint8_t fifo_token, uint8_t* progress_bitmap, uint8_t* success_bitmap, uint8_t bitmap_byte_count);
 
