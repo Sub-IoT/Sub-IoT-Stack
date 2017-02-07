@@ -46,8 +46,12 @@ static alp_command_t NGDEF(_current_command); // TODO support multiple active co
 static d7asp_result_t NGDEF(_current_d7asp_result);
 #define current_d7asp_result NG(_current_d7asp_result)
 
-void alp_init(bool is_shell_enabled)
+static alp_init_args_t* NGDEF(_init_args);
+#define init_args NG(_init_args)
+
+void alp_init(alp_init_args_t* alp_init_args, bool is_shell_enabled)
 {
+  init_args = alp_init_args;
   shell_enabled = is_shell_enabled;
 
   uint8_t read_firmware_version_alp_command[] = { 0x01, D7A_FILE_FIRMWARE_VERSION_FILE_ID, 0, D7A_FILE_FIRMWARE_VERSION_SIZE };
@@ -149,7 +153,8 @@ static void process_op_return_file_data(fifo_t* alp_command_fifo) {
   if(shell_enabled)
     alp_cmd_handler_output_d7asp_response(current_d7asp_result, alp_response, total_len);
 
-  // TODO app callback
+  if(init_args != NULL && init_args->alp_received_unsolicited_data_cb != NULL)
+    init_args->alp_received_unsolicited_data_cb(current_d7asp_result, alp_response, total_len);
 }
 
 static void add_tag_response(fifo_t* alp_response_fifo, bool eop, bool error) {
@@ -200,14 +205,20 @@ void alp_process_d7asp_result(uint8_t* alp_command, uint8_t alp_command_length, 
   current_d7asp_result = d7asp_result;
   if(d7asp_result.fifo_token == current_command.fifo_token) {
     // answer for current command
-    add_interface_status_action(&(current_command.alp_response_fifo), &d7asp_result);
-    fifo_put(&(current_command.alp_response_fifo), alp_command, alp_command_length);
+    if(shell_enabled) {
+      add_interface_status_action(&(current_command.alp_response_fifo), &d7asp_result);
+      fifo_put(&(current_command.alp_response_fifo), alp_command, alp_command_length);
 
-    // tag and send response already with EOP bit cleared
-    add_tag_response(&(current_command.alp_response_fifo), false, false); // TODO error
-    uint8_t alp_response_length = fifo_get_size(&(current_command.alp_response_fifo));
-    alp_cmd_handler_output_alp_command(current_command.alp_response, alp_response_length); // TODO pass fifo directly
-    fifo_clear(&(current_command.alp_response_fifo));
+      // tag and send response already with EOP bit cleared
+      add_tag_response(&(current_command.alp_response_fifo), false, false); // TODO error
+      uint8_t alp_response_length = fifo_get_size(&(current_command.alp_response_fifo));
+      alp_cmd_handler_output_alp_command(current_command.alp_response, alp_response_length); // TODO pass fifo directly
+      fifo_clear(&(current_command.alp_response_fifo));
+    }
+
+    if(init_args != NULL && init_args->alp_command_result_cb != NULL)
+      init_args->alp_command_result_cb(d7asp_result, alp_command, alp_command_length);
+
     // TODO further bookkeeping
   } else {
     // uknown FIFO token; an incoming request or unsolicited response
@@ -305,26 +316,15 @@ bool alp_process_command(uint8_t* alp_command, uint8_t alp_command_length, uint8
 void alp_d7asp_fifo_flush_completed(uint8_t fifo_token, uint8_t* progress_bitmap, uint8_t* success_bitmap, uint8_t bitmap_byte_count) {
   // TODO end session
   DPRINT("D7ASP flush completed");
-  switch(current_command.origin) {
-    case ALP_CMD_ORIGIN_SERIAL_CONSOLE:
-      if(current_command.respond_when_completed) {
-        bool error = memcmp(success_bitmap, progress_bitmap, bitmap_byte_count) != 0;
-        add_tag_response(&(current_command.alp_response_fifo), true, error);
-
-        uint8_t alp_response_length = fifo_get_size(&(current_command.alp_response_fifo));
-        alp_cmd_handler_output_alp_command(current_command.alp_response, alp_response_length); // TODO pass fifo directly
-      }
-
-      break;
-    case ALP_CMD_ORIGIN_APP:
-      // TODO callback
-      break;
-    case ALP_CMD_ORIGIN_D7AACTP:
-      // do nothing?
-      break;
-    default:
-      assert(false); // ALP_CMD_ORIGIN_D7ASP this would imply a slave session
+  bool error = memcmp(success_bitmap, progress_bitmap, bitmap_byte_count) != 0;
+if(shell_enabled && current_command.respond_when_completed) {
+    add_tag_response(&(current_command.alp_response_fifo), true, error);
+    uint8_t alp_response_length = fifo_get_size(&(current_command.alp_response_fifo));
+    alp_cmd_handler_output_alp_command(current_command.alp_response, alp_response_length); // TODO pass fifo directly
   }
+
+  if(init_args != NULL && init_args->alp_command_completed_cb != NULL)
+    init_args->alp_command_completed_cb(fifo_token, !error);
 }
 
 uint8_t alp_get_expected_response_length(uint8_t* alp_command, uint8_t alp_command_length) {

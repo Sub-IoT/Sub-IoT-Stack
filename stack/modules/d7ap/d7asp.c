@@ -75,9 +75,6 @@ static uint8_t NGDEF(_single_request_retry_limit);
 static packet_t* NGDEF(_current_response_packet);
 #define current_response_packet NG(_current_response_packet)
 
-static d7asp_init_args_t* NGDEF(_d7asp_init_args);
-#define d7asp_init_args NG(_d7asp_init_args)
-
 typedef enum {
     D7ASP_STATE_IDLE,
     D7ASP_STATE_SLAVE,
@@ -254,10 +251,9 @@ static void switch_state(state_t new_state)
     }
 }
 
-void d7asp_init(d7asp_init_args_t* init_args)
+void d7asp_init()
 {
     d7asp_state = D7ASP_STATE_IDLE;
-    d7asp_init_args = init_args;
     current_request_id = NO_ACTIVE_REQUEST_ID;
 
     current_master_session.state = D7ASP_MASTER_SESSION_IDLE;

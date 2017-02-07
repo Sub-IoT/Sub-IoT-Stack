@@ -86,25 +86,8 @@ typedef struct {
     d7anp_addressee_t* addressee;
 } d7asp_result_t;
 
-typedef void (*d7asp_fifo_flush_completed_callback)(uint8_t fifo_token, uint8_t* progress_bitmap, uint8_t* success_bitmap, uint8_t bitmap_byte_count);
-typedef void (*d7asp_fifo_request_completed_callback)(d7asp_result_t result, uint8_t* payload, uint8_t payload_length);
-typedef void (*d7asp_received_unsollicited_data_callback)(d7asp_result_t d7asp_result, uint8_t *alp_command, uint8_t alp_command_size);
-typedef void (*d7asp_received_unhandled_alp_command_callback)(uint8_t* alp_command, uint8_t alp_command_length, uint8_t* alp_response, uint8_t* alp_response_length);
 
-typedef struct {
-    d7asp_fifo_flush_completed_callback d7asp_fifo_flush_completed_cb;
-    d7asp_fifo_request_completed_callback d7asp_fifo_request_completed_cb;
-    d7asp_received_unsollicited_data_callback d7asp_received_unsollicited_data_cb;
-    /**
-     * @brief d7asp_received_unhandled_alp_command_cb Called when the stack received an ALP command which cannot be processed against the local filesystem.
-     * The application is given the chance to provide a response (by filling the alp_response and alp_response_length parameters). If the application is not
-     * able to process the command as well it should just return without altering these parameters.
-     * It is important to know this callback is called while a D7AP transaction is in process thus be sure to return within transaction timeout limits!
-     */
-    d7asp_received_unhandled_alp_command_callback d7asp_received_unhandled_alp_command_cb;
-} d7asp_init_args_t;
-
-void d7asp_init(d7asp_init_args_t* init_args);
+void d7asp_init();
 d7asp_master_session_t* d7asp_master_session_create(d7asp_master_session_config_t* d7asp_master_session_config);
 d7asp_queue_result_t d7asp_queue_alp_actions(d7asp_master_session_t* session, uint8_t* alp_payload_buffer, uint8_t alp_payload_length, uint8_t expected_alp_response_length); // TODO return status
 

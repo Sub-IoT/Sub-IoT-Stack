@@ -34,10 +34,8 @@
 
 #include "hwlcd.h"
 #include "d7ap_stack.h"
-#include "dll.h"
 #include "hwuart.h"
 #include "fifo.h"
-#include "alp_cmd_handler.h"
 #include "version.h"
 
 #if HW_NUM_LEDS > 0
@@ -57,16 +55,15 @@ void led_blink()
 
 #endif
 
-static d7asp_init_args_t d7asp_init_args;
-
-static void on_unsollicited_response_received(d7asp_result_t d7asp_result, uint8_t *alp_command, uint8_t alp_command_size)
+static void on_unsolicited_response_received(d7asp_result_t d7asp_result, uint8_t *alp_command, uint8_t alp_command_size)
 {
-    alp_cmd_handler_output_d7asp_response(d7asp_result, alp_command, alp_command_size);
-
 #if HW_NUM_LEDS > 0
-	led_blink();
+  led_blink();
 #endif
 }
+
+
+static alp_init_args_t alp_init_args;
 
 void bootstrap()
 {
@@ -98,9 +95,8 @@ void bootstrap()
         .access_class = 0x01 // use access profile 0 and select the first subprofile
     };
 
-    d7asp_init_args.d7asp_received_unsollicited_data_cb = &on_unsollicited_response_received;
-
-    d7ap_stack_init(&fs_init_args, &d7asp_init_args, true, NULL);
+    alp_init_args.alp_received_unsolicited_data_cb = &on_unsolicited_response_received;
+    d7ap_stack_init(&fs_init_args, &alp_init_args, true, NULL);
 
 #ifdef HAS_LCD
     lcd_write_string("GW %s", _GIT_SHA1);
