@@ -29,4 +29,10 @@
 #SET_PROPERTY(CACHE ${APP_PREFIX}_<param_name> PROPERTY STRINGS "value1;value2")
 #
 
-APP_BUILD(NAME ${APP_NAME} SOURCES continuous_tx.c LIBS framework)
+INCLUDE_DIRECTORIES()
+
+APP_BUILD(NAME ${APP_NAME} 
+	SOURCES 
+		continuous_tx.c
+ 	LIBS framework
+)
