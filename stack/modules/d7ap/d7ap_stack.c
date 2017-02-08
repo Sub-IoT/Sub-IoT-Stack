@@ -20,33 +20,25 @@
 #include "shell.h"
 #include "debug.h"
 #include "framework_defs.h"
+#include "alp.h"
 
-void d7ap_stack_init(fs_init_args_t* fs_init_args, d7asp_init_args_t* d7asp_init_args, bool enable_shell, alp_cmd_handler_appl_itf_callback alp_cmd_handler_appl_itf_cb)
+void d7ap_stack_init(fs_init_args_t* fs_init_args, alp_init_args_t* alp_init_args, bool enable_shell, alp_cmd_handler_appl_itf_callback alp_cmd_handler_appl_itf_cb)
 {
     assert(fs_init_args != NULL);
     assert(fs_init_args->access_profiles_count > 0); // there should be at least one access profile defined
 
     fs_init(fs_init_args);
-    d7asp_init(d7asp_init_args);
+    d7asp_init();
     d7atp_init();
     d7anp_init();
     packet_queue_init();
     dll_init();
 
+    alp_init(alp_init_args, enable_shell);
+
     uint8_t read_firmware_version_alp_command[] = { 0x01, D7A_FILE_FIRMWARE_VERSION_FILE_ID, 0, D7A_FILE_FIRMWARE_VERSION_SIZE };
 
-    if(enable_shell)
-    {
-#ifdef FRAMEWORK_SHELL_ENABLED
-        shell_init();
-        shell_register_handler((cmd_handler_registration_t){ .id = ALP_CMD_HANDLER_ID, .cmd_handler_callback = &alp_cmd_handler });
-        alp_cmd_handler_set_appl_itf_callback(alp_cmd_handler_appl_itf_cb);
-
-        // notify booted to serial
-        alp_process_command_console_output(read_firmware_version_alp_command, sizeof(read_firmware_version_alp_command));
-#endif
-    }
-    else
+    if(!enable_shell)
     {
 #ifdef MODULE_D7AP_BROADCAST_VERSION_ON_BOOT_ENABLED
       // notify booted by broadcasting and retrying 3 times (for diagnostics ie to detect reboots)

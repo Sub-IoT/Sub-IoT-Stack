@@ -75,9 +75,6 @@ static uint8_t NGDEF(_single_request_retry_limit);
 static packet_t* NGDEF(_current_response_packet);
 #define current_response_packet NG(_current_response_packet)
 
-static d7asp_init_args_t* NGDEF(_d7asp_init_args);
-#define d7asp_init_args NG(_d7asp_init_args)
-
 typedef enum {
     D7ASP_STATE_IDLE,
     D7ASP_STATE_SLAVE,
@@ -144,11 +141,6 @@ static void flush_fifos()
         {
             // we handled all requests ...
             flush_completed();
-
-            // TODO move callback to ALP?
-//            if(d7asp_init_args != NULL && d7asp_init_args->d7asp_fifo_flush_completed_cb != NULL)
-//                d7asp_init_args->d7asp_fifo_flush_completed_cb(fifo.token, fifo.progress_bitmap, fifo.success_bitmap, REQUESTS_BITMAP_BYTE_COUNT);
-
             return;
         }
 
@@ -259,10 +251,9 @@ static void switch_state(state_t new_state)
     }
 }
 
-void d7asp_init(d7asp_init_args_t* init_args)
+void d7asp_init()
 {
     d7asp_state = D7ASP_STATE_IDLE;
-    d7asp_init_args = init_args;
     current_request_id = NO_ACTIVE_REQUEST_ID;
 
     current_master_session.state = D7ASP_MASTER_SESSION_IDLE;
@@ -365,9 +356,7 @@ bool d7asp_process_received_packet(packet_t* packet, bool extension)
             assert(packet != current_request_packet);
         }
 
-        alp_d7asp_request_completed(result, packet->payload, packet->payload_length);
-//          if(d7asp_init_args != NULL && d7asp_init_args->d7asp_fifo_request_completed_cb != NULL)
-//              d7asp_init_args->d7asp_fifo_request_completed_cb(result, packet->payload, packet->payload_length); // TODO ALP should notify app if needed, refactor
+        alp_process_d7asp_result(packet->payload, packet->payload_length, packet->payload, &packet->payload_length, result);
 
         packet_queue_free_packet(packet); // ACK can be cleaned
 
@@ -416,40 +405,10 @@ bool d7asp_process_received_packet(packet_t* packet, bool extension)
         result.fifo_token = packet->d7atp_dialog_id;
         result.seqnr = packet->d7atp_transaction_id;
 
-        // TODO move to ALP
         if (packet->payload_length > 0)
         {
-            if (alp_get_operation(packet->payload) == ALP_OP_RETURN_FILE_DATA)
-            {
-                // received unsollicited data, notify appl
-                DPRINT("Received unsollicited data");
-                if (d7asp_init_args != NULL && d7asp_init_args->d7asp_received_unsollicited_data_cb != NULL)
-                    d7asp_init_args->d7asp_received_unsollicited_data_cb(result, packet->payload, packet->payload_length);
-
-                packet->payload_length = 0; // no response payload
-            }
-            else
-            {
-                // build response, we will reuse the same packet for this
-                // we will first try to process the command against the local FS
-                // if the FS handler cannot process this, and a status response is requested, a status operand will be present in the response payload
-                bool handled = alp_process_command(packet->payload, packet->payload_length, packet->payload, &packet->payload_length, ALP_CMD_ORIGIN_D7ASP);
-
-                // ... and if not handled we'll give the application a chance to handle this by returning an ALP response.
-                // if the application fails to handle the request as well the ALP status operand supplied by alp_process_command_fs_itf() will be transmitted (if requested)
-                if (!handled)
-                {
-                  DPRINT("ALP command could not be processed by local FS");
-                  if (d7asp_init_args != NULL && d7asp_init_args->d7asp_received_unhandled_alp_command_cb != NULL)
-                  {
-                      DPRINT("ALP command passed to application for processing");
-                      d7asp_init_args->d7asp_received_unhandled_alp_command_cb(packet->payload, packet->payload_length, packet->payload, &packet->payload_length);
-                  }
-                }
-            }
+            alp_process_d7asp_result(packet->payload, packet->payload_length, packet->payload, &packet->payload_length, result);
         }
-
-        // TODO notify upper layer?
 
         // execute slave transaction
         if (packet->payload_length == 0 && !packet->d7atp_ctrl.ctrl_is_ack_requested)

@@ -179,6 +179,33 @@ typedef struct {
   uint8_t alp_response[ALP_PAYLOAD_MAX_SIZE];
 } alp_command_t;
 
+typedef void (*alp_command_completed_callback)(uint8_t tag_id, bool success);
+typedef void (*alp_command_result_callback)(d7asp_result_t result, uint8_t* payload, uint8_t payload_length);
+typedef void (*alp_received_unsolicited_data_callback)(d7asp_result_t d7asp_result, uint8_t *alp_command, uint8_t alp_command_size);
+// TODO typedef void (*alp_received_unhandled_alp_command_callback)(uint8_t* alp_command, uint8_t alp_command_length, uint8_t* alp_response, uint8_t* alp_response_length);
+
+typedef struct {
+    alp_command_completed_callback alp_command_completed_cb;
+    alp_command_result_callback alp_command_result_cb;
+    alp_received_unsolicited_data_callback alp_received_unsolicited_data_cb;
+    /**
+     * @brief d7asp_received_unhandled_alp_command_cb Called when the stack received an ALP command which cannot be processed against the local filesystem.
+     * The application is given the chance to provide a response (by filling the alp_response and alp_response_length parameters). If the application is not
+     * able to process the command as well it should just return without altering these parameters.
+     * It is important to know this callback is called while a D7AP transaction is in process thus be sure to return within transaction timeout limits!
+     */
+    // alp_received_unhandled_alp_command_callback alp_received_unhandled_alp_command_CB; // TODO not used for now
+} alp_init_args_t;
+
+
+
+/*!
+ * \brief Initializes the ALP layer
+ * \param init_args Specifies the callback function pointers
+ * \param shell_enabled Specifies if ALP is accessible over the serial console
+ */
+void alp_init(alp_init_args_t* init_args, bool shell_enabled);
+
 /*!
  * \brief Returns the ALP operation type contained in alp_command
  * \param alp_command
@@ -201,6 +228,18 @@ alp_operation_t alp_get_operation(uint8_t* alp_command);
 bool alp_process_command(uint8_t* alp_command, uint8_t alp_command_length, uint8_t* alp_response, uint8_t* alp_response_length, alp_command_origin_t origin);
 
 /*!
+ * \brief Process a result received from D7ASP.
+ *
+ * Note: alp_command and alp_response may point to the same buffer
+ * \param alp_command   The raw command
+ * \param alp_command_length The length of the command
+ * \param alp_response Pointer to a buffer where a possible response will be written
+ * \param alp_response_length The length of the response
+ * \param d7asp_result The result
+ */
+void alp_process_d7asp_result(uint8_t* alp_command, uint8_t alp_command_length, uint8_t* alp_response, uint8_t* alp_response_length, d7asp_result_t d7asp_result);
+
+/*!
  * \brief Process the ALP command on the local host interface and output the response to the D7ASP interface
  *
  * \param d7asp_fifo_config The config of the D7ASP fifo to output the ALP response to
@@ -219,8 +258,6 @@ void alp_process_command_result_on_d7asp(d7asp_master_session_config_t* d7asp_fi
  * \param alp_command_length The length of the command
  */
 void alp_process_command_console_output(uint8_t* alp_command, uint8_t alp_command_length);
-
-void alp_d7asp_request_completed(d7asp_result_t result, uint8_t* payload, uint8_t payload_length);
 
 void alp_d7asp_fifo_flush_completed(uint8_t fifo_token, uint8_t* progress_bitmap, uint8_t* success_bitmap, uint8_t bitmap_byte_count);
 

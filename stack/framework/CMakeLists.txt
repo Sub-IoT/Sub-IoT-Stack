@@ -1,4 +1,4 @@
-# 
+#
 # OSS-7 - An opensource implementation of the DASH7 Alliance Protocol for ultra
 # lowpower wireless sensor communication
 #
@@ -35,16 +35,26 @@ ADD_SUBDIRECTORY("components")
 #Add framework options && import them in the framework_defs.h file
 #This is NOT done seperately for each component since components can be overridden by a platform
 #And these settings should not be
-SET(FRAMEWORK_SCHEDULER_MAX_TASKS "16" CACHE STRING "The maximum number of tasks that can be registered with the scheduler")
+SET(FRAMEWORK_SCHEDULER_MAX_TASKS "32" CACHE STRING "The maximum number of tasks that can be registered with the scheduler")
 FRAMEWORK_HEADER_DEFINE(NUMBER FRAMEWORK_SCHEDULER_MAX_TASKS)
 
 SET(FRAMEWORK_SCHEDULER_LP_MODE "0" CACHE STRING "The low power mode to use. Only change this if you know exactly what you are doing")
 FRAMEWORK_HEADER_DEFINE(NUMBER FRAMEWORK_SCHEDULER_LP_MODE)
 
-SET(FRAMEWORK_LOG_ENABLED "FALSE" CACHE BOOL "Select whether to enable or disable the generation of logs")
+# when the current platform is using jlink we enable logging by default
+IF(JLINK_DEVICE)
+  SET(FRAMEWORK_LOG_ENABLED "TRUE" CACHE BOOL "Select whether to enable or disable the generation of logs")
+ELSE()
+  SET(FRAMEWORK_LOG_ENABLED "FALSE" CACHE BOOL "Select whether to enable or disable the generation of logs")
+ENDIF()
 FRAMEWORK_HEADER_DEFINE(BOOL FRAMEWORK_LOG_ENABLED)
 
-SET(FRAMEWORK_LOG_OUTPUT_ON_RTT "FALSE" CACHE BOOL "When enabled logs will be outputted using the Segger RTT interface instead of using the serial console.")
+# when the current platform is using jlink we use RTT logging
+IF(JLINK_DEVICE)
+  SET(FRAMEWORK_LOG_OUTPUT_ON_RTT "TRUE" CACHE BOOL "When enabled logs will be outputted using the Segger RTT interface instead of using the serial console.")
+ELSE()
+  SET(FRAMEWORK_LOG_OUTPUT_ON_RTT "FALSE" CACHE BOOL "When enabled logs will be outputted using the Segger RTT interface instead of using the serial console.")
+ENDIF()
 FRAMEWORK_HEADER_DEFINE(BOOL FRAMEWORK_LOG_OUTPUT_ON_RTT)
 
 SET(FRAMEWORK_TIMER_LOG_ENABLED "FALSE" CACHE BOOL "Select whether to enable or disable the generation of logs from the timer")
@@ -74,6 +84,7 @@ FRAMEWORK_HEADER_DEFINE(ID FRAMEWORK_TIMER_RESOLUTION)
 
 SET(FRAMEWORK_AES_LOG_ENABLED "FALSE" CACHE BOOL "Select whether to enable or disable the generation of logs in the AES algorithms")
 FRAMEWORK_HEADER_DEFINE(BOOL FRAMEWORK_AES_LOG_ENABLED)
+
 
 #Generate the 'framework_defs.h'
 FRAMEWORK_BUILD_SETTINGS_FILE()
@@ -126,15 +137,15 @@ ENDFOREACH()
 ADD_LIBRARY(framework STATIC ${LIBS} ${FRAMEWORK_SOURCES} ${FRAMEWORK_HEADERS} ${HAL_API_HEADERS})
 
 GET_PROPERTY(__global_include_dirs GLOBAL PROPERTY GLOBAL_INCLUDE_DIRECTORIES)
-GET_PROPERTY(__platform_include_dirs GLOBAL PROPERTY PLATFORM_INCLUDE_DIRECTORIES) 
-TARGET_INCLUDE_DIRECTORIES("PLATFORM" PUBLIC 
+GET_PROPERTY(__platform_include_dirs GLOBAL PROPERTY PLATFORM_INCLUDE_DIRECTORIES)
+TARGET_INCLUDE_DIRECTORIES("PLATFORM" PUBLIC
     ${__global_include_dirs}
     ${__platform_include_dirs}
 )
 
-TARGET_INCLUDE_DIRECTORIES("framework" PUBLIC  
+TARGET_INCLUDE_DIRECTORIES("framework" PUBLIC
     ${__global_include_dirs}
 )
 
-GET_PROPERTY(__global_compile_definitions GLOBAL PROPERTY GLOBAL_COMPILE_DEFINITIONS) 
+GET_PROPERTY(__global_compile_definitions GLOBAL PROPERTY GLOBAL_COMPILE_DEFINITIONS)
 TARGET_COMPILE_DEFINITIONS("PLATFORM" PUBLIC ${__global_compile_definitions})

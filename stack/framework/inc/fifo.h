@@ -97,6 +97,14 @@ error_t fifo_peek(fifo_t* fifo, uint8_t* buffer, uint16_t offset, uint16_t len);
 error_t fifo_pop(fifo_t* fifo, uint8_t* buffer, uint16_t len);
 
 /**
+ * @brief Skips bits from the FIFO
+ * @param fifo      Pointer to the fifo object
+ * @param len       number of bytes to stike
+ * @returns SUCCESS or ESIZE if len > current size or when FIFO empty
+ */
+error_t fifo_skip(fifo_t* fifo, uint16_t len);
+
+/**
  * @brief Clears the FIFO
 * @param fifo      Pointer to the fifo object
  */

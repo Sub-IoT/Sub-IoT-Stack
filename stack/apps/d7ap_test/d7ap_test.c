@@ -32,8 +32,6 @@
 #include "random.h"
 
 #include "d7ap_stack.h"
-#include "dll.h"
-#include "alp_cmd_handler.h"
 
 #ifdef HAS_LCD
 #include "hwlcd.h"
@@ -90,7 +88,7 @@ void execute_sensor_measurement() {
 }
 
 
-void on_unsollicited_response_received(d7asp_result_t d7asp_result,
+void on_unsolicited_response_received(d7asp_result_t d7asp_result,
                                       uint8_t *alp_command, uint8_t alp_command_size)
 {
     alp_cmd_handler_output_d7asp_response(d7asp_result, alp_command, alp_command_size);
@@ -156,17 +154,16 @@ void init_user_files() {
                               (uint8_t*)&file_data_request_operand);
 }
 
-void on_d7asp_fifo_flush_completed(uint8_t fifo_token, uint8_t* progress_bitmap,
-                                   uint8_t* success_bitmap, uint8_t bitmap_byte_count)
+void on_command_completed(uint8_t tag_id, bool success)
 {
-    if(memcmp(success_bitmap, progress_bitmap, bitmap_byte_count) == 0) {
-        DPRINT("Req ACK\n");
+    if(success) {
+        DPRINT("OK %i\n", tag_id);
     } else {
-        DPRINT("Req NACK\n");
+        DPRINT("NOK\n", tag_id);
     }
 }
 
-static d7asp_init_args_t d7asp_init_args;
+static alp_init_args_t alp_init_args;
 
 void bootstrap() {
     DPRINT("Device booted at time: %d\n", timer_get_counter_value());
@@ -200,10 +197,10 @@ void bootstrap() {
         .ssr_filter_mode = ENABLE_SSR_FILTER | ALLOW_NEW_SSR_ENTRY_IN_BCAST
     };
 
-    d7asp_init_args.d7asp_fifo_flush_completed_cb = &on_d7asp_fifo_flush_completed;
-    d7asp_init_args.d7asp_received_unsollicited_data_cb = &on_unsollicited_response_received;
+    alp_init_args.alp_command_completed_cb = &on_command_completed;
+    alp_init_args.alp_received_unsolicited_data_cb = &on_unsolicited_response_received;
 
-    d7ap_stack_init(&fs_init_args, &d7asp_init_args, true, NULL);
+    d7ap_stack_init(&fs_init_args, &alp_init_args, true, NULL);
 
     sched_register_task(&execute_sensor_measurement);
     timer_post_task_delay(&execute_sensor_measurement, REPORTING_INTERVAL_TICKS);
