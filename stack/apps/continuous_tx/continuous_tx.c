@@ -54,9 +54,19 @@
 #endif
 
 #if defined USE_CC1101
+#include "../../framework/hal/chips/cc1101/cc1101_constants.h"
 uint8_t cc1101_interface_strobe(uint8_t); // prototype (to prevent warning) of internal driver function which is used here.
 uint8_t cc1101_interface_write_single_reg(uint8_t, uint8_t);
 uint8_t cc1101_interface_write_single_patable(uint8_t);
+static bool radio_status = false;
+static uint8_t current_eirp_level = 0xC0;
+static uint8_t max_eirp_level = 0xC0;//868 MHz = +12 dBm , 433 MHz = +10 dBm
+typedef enum {
+    CW   = 0x30,
+    FSK  = 0x02,
+    GFSK = 0x12
+}modulation;
+
 #elif defined USE_SI4460
 // include private API which is not exported by cmake for 'normal' apps
 #include "../../framework/hal/chips/si4460/ezradiodrv/inc/ezradio_cmd.h"
@@ -65,12 +75,12 @@ uint8_t cc1101_interface_write_single_patable(uint8_t);
 static ezradio_cmd_reply_t ezradioReply;
 static bool radio_status = false;
 static uint8_t current_eirp_level = 0x7f;
-static uint8_t max_eirp_level = 0x7f;
-static enum modulation{
-    CW=0x18,
-    FSK=0x12,
-    GFSK=0x13
-}Mod;
+static uint8_t max_eirp_level = 0x7f;// 868 MHz = +13 dBm
+typedef enum {
+    CW   = 0x18,
+    FSK  = 0x12,
+    GFSK = 0x13
+}modulation;
 #endif
 
 #define NORMAL_RATE_CHANNEL_COUNT 8
@@ -78,6 +88,7 @@ static enum modulation{
 
 static hw_rx_cfg_t rx_cfg;
 static uint8_t current_channel_indexes_index = 0;
+static modulation current_modulation = CW;
 static phy_channel_band_t current_channel_band = PHY_BAND_868;
 static phy_channel_class_t current_channel_class = PHY_CLASS_NORMAL_RATE;
 static uint8_t channel_indexes[NORMAL_RATE_CHANNEL_COUNT] = { 0 }; // reallocated later depending on band/class
@@ -87,6 +98,60 @@ static uint8_t channel_count = NORMAL_RATE_CHANNEL_COUNT;
 void rssi_valid_cb(int16_t rssi)
 {
   // dummy, we are not staying in rx
+}
+
+void stop_radio(){
+#if defined USE_SI4460
+    // stop sending signal
+    ezradio_change_state(EZRADIO_CMD_CHANGE_STATE_ARG_NEXT_STATE1_NEW_STATE_ENUM_READY);
+#elif defined USE_CC1101
+    cc1101_interface_strobe(RF_SIDLE);
+#endif
+    radio_status = false;
+}
+
+void start_radio(){
+#if defined USE_SI4460
+    /* Read ITs, clear pending ones */
+    ezradio_get_int_status(0u, 0u, 0u, NULL);
+    /* Start sending packet, channel 0, START immediately, Packet n bytes long, go READY when done */
+    ezradio_start_tx(rx_cfg.channel_id.center_freq_index, 0u,  0u);
+#elif defined USE_CC1101
+    cc1101_interface_strobe(RF_SCAL);
+    cc1101_interface_strobe(RF_STX);
+#endif
+    radio_status = true;
+}
+
+void configure_radio(modulation mod){
+#if defined USE_SI4460
+    // Si4460 Direct mode
+    ezradio_set_property(0x20, 0x01, 0x00, mod);
+
+    //power level EIRP
+    ezradio_set_property(0x22, 0x01, 0x01, current_eirp_level);
+#elif defined USE_CC1101
+    hw_radio_set_rx(&rx_cfg, NULL, &rssi_valid_cb); // we 'misuse' hw_radio_set_rx to configure the channel (using the public API)
+    hw_radio_set_idle(); // go straight back to idle
+
+    /* Configure */
+    cc1101_interface_write_single_patable(current_eirp_level);
+    //cc1101_interface_write_single_reg(0x08, 0x22); // PKTCTRL0 random PN9 mode + disable data whitening
+    cc1101_interface_write_single_reg(0x08, 0x22); // PKTCTRL0 disable data whitening, continious preamble
+    cc1101_interface_write_single_reg(0x12, mod); // MDMCFG2
+    cc1101_interface_strobe(0x32); // strobe calibrate
+#endif
+}
+
+void change_eirp(){
+#if defined USE_SI4460
+    ezradio_set_property(0x22, 0x01, 0x01, current_eirp_level);
+#elif defined USE_CC1101
+    cc1101_interface_write_single_patable(current_eirp_level);
+#endif
+    char string[10] = "";
+    sprintf(string, "ptx %3x", current_eirp_level),
+    lcd_write_string(string);
 }
 
 void start()
@@ -118,31 +183,21 @@ void start()
     lcd_write_string(string);
 #endif
 
-
-
-#if defined USE_CC1101
-    hw_radio_set_rx(&rx_cfg, NULL, &rssi_valid_cb); // we 'misuse' hw_radio_set_rx to configure the channel (using the public API)
-    hw_radio_set_idle(); // go straight back to idle
-
-    cc1101_interface_write_single_patable(0xc0); // 10dBm TX EIRP
-    //cc1101_interface_write_single_reg(0x08, 0x22); // PKTCTRL0 random PN9 mode + disable data whitening
-    cc1101_interface_write_single_reg(0x08, 0x22); // PKTCTRL0 disable data whitening, continious preamble
-   // cc1101_interface_write_single_reg(0x12, 0x30); // MDMCFG2: use OOK modulation to clearly view centre freq on spectrum analyzer, comment for GFSK
-    cc1101_interface_strobe(0x32); // strobe calibrate
-    cc1101_interface_strobe(0x35); // strobe TX
-#elif defined USE_SI4460
-//    /* Request and check radio device state */
-//    ezradio_request_device_state(&ezradioReply);
     /* Configure */
-    configure_continuous_radio(GFSK);
-    /* Request and check radio device state */
-//    ezradio_request_device_state(&ezradioReply);
+    configure_radio(current_modulation);
+
     /* Start the radio with the new configuration */
     start_radio();
-    /* Request and check radio device state */
-    ezradio_request_device_state(&ezradioReply);
+}
 
-#endif
+void toggle_radio(){
+    if(radio_status == true){
+        stop_radio();
+    }
+    else{
+        start_radio();
+    }
+    start();
 }
 
 #if NUM_USERBUTTONS > 1
@@ -151,14 +206,15 @@ void userbutton_callback(button_id_t button_id)
     switch(button_id)
     {
         case 0:
-#if defined USE_SI4460
+
             // change ezr eirp and restart
             if(current_eirp_level < max_eirp_level+1)
                 current_eirp_level -= 0x05;
             else
                 current_eirp_level = max_eirp_level;
-            configure_continuous_radio(GFSK);
-#endif
+            //change eirp level
+            change_eirp();
+            //toggle_radio();
             break;
         case 1:
             // change channel and restart
@@ -166,49 +222,8 @@ void userbutton_callback(button_id_t button_id)
                 current_channel_indexes_index++;
             else
                 current_channel_indexes_index = 0;
+            sched_post_task(&start);
     }
-    sched_post_task(&start);
-}
-#endif
-
-#if defined USE_SI4460
-void toggle_radio(){
-    if(radio_status == true){
-        stop_radio();
-    }
-    else{
-        start_radio();
-    }
-}
-
-void stop_radio(){
-    // stop sending signal
-    ezradio_change_state(EZRADIO_CMD_CHANGE_STATE_ARG_NEXT_STATE1_NEW_STATE_ENUM_READY);
-    radio_status = false;
-}
-
-void start_radio(){
-    /* Read ITs, clear pending ones */
-    ezradio_get_int_status(0u, 0u, 0u, NULL);
-
-    /* Start sending packet, channel 0, START immediately, Packet n bytes long, go READY when done */
-    ezradio_start_tx(rx_cfg.channel_id.center_freq_index, 0u,  0u);
-    radio_status = true;
-}
-
-void configure_continuous_radio(modulation){
-    DPRINT("Change radio configuration");
-//    ezradio_get_int_status(0x0, 0x0, 0x0, &ezradioReply);
-//    ezradio_change_state(EZRADIO_CMD_CHANGE_STATE_ARG_NEXT_STATE1_NEW_STATE_ENUM_READY);
-
-    /* Request and check radio device state */
-    ezradio_request_device_state(&ezradioReply);
-
-    // Si4460 Direct mode
-    ezradio_set_property(0x20, 0x01, 0x00, modulation);//DIRECT PN9 + 2GFSK
-
-    //power level EIRP
-    ezradio_set_property(0x22, 0x01, 0x01, current_eirp_level);
 }
 #endif
 
