@@ -226,6 +226,17 @@ void alp_process_d7asp_result(uint8_t* alp_command, uint8_t alp_command_length, 
   }
 }
 
+void alp_execute_command(uint8_t* alp_command, uint8_t alp_command_length, d7asp_master_session_config_t* d7asp_master_session_config) {
+  DPRINT("ALP cmd size %i", alp_command_length);
+  assert(alp_command_length <= ALP_PAYLOAD_MAX_SIZE);
+
+  d7asp_master_session_t* session = d7asp_master_session_create(d7asp_master_session_config);
+  uint8_t expected_response_length = alp_get_expected_response_length(alp_command, alp_command_length);
+  d7asp_queue_result_t queue_result = d7asp_queue_alp_actions(session, alp_command, alp_command_length, expected_response_length); // TODO pass fifo directly?
+  current_command.fifo_token = queue_result.fifo_token;
+}
+
+// TODO refactor
 bool alp_process_command(uint8_t* alp_command, uint8_t alp_command_length, uint8_t* alp_response, uint8_t* alp_response_length, alp_command_origin_t origin)
 {
   DPRINT("ALP cmd size %i", alp_command_length);

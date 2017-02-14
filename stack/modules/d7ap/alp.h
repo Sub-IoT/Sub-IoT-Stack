@@ -214,6 +214,14 @@ void alp_init(alp_init_args_t* init_args, bool shell_enabled);
 alp_operation_t alp_get_operation(uint8_t* alp_command);
 
 /*!
+ * \brief Execute the command asynchronously against the provided D7ASP session configuration
+ * \param alp_command
+ * \param alp_command_length
+ * \param d7asp_master_session_config
+ */
+void alp_execute_command(uint8_t* alp_command, uint8_t alp_command_length, d7asp_master_session_config_t* d7asp_master_session_config);
+
+/*!
  * \brief Process the ALP command.
  * Processing will be done against the local host interface unless explicitely forwarded to another interface using an (indirect) forward action.
  *
