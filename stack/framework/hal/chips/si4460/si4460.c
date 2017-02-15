@@ -601,20 +601,16 @@ error_t hw_radio_send_packet(hw_radio_packet_t* packet, tx_packet_callback_t tx_
 
 int16_t hw_radio_get_rssi()
 {
-	ezradio_cmd_reply_t ezradioReply;
-	ezradio_get_modem_status(0, &ezradioReply);
+    ezradio_cmd_reply_t ezradioReply;
+    ezradio_get_modem_status(0, &ezradioReply);
 
-	//return -120;
+    DPRINT("CURR_RSSI    %d %d", convert_rssi(ezradioReply.GET_MODEM_STATUS.CURR_RSSI), ezradioReply.GET_MODEM_STATUS.CURR_RSSI);
+    //DPRINT("LATCH_RSSI    %d %d", convert_rssi(ezradioReply.GET_MODEM_STATUS.LATCH_RSSI), ezradioReply.GET_MODEM_STATUS.LATCH_RSSI);
+    //DPRINT("ANT1_RSSI    %d", convert_rssi(ezradioReply.GET_MODEM_STATUS.ANT1_RSSI));
+    //DPRINT("ANT2_RSSI    %d", convert_rssi(ezradioReply.GET_MODEM_STATUS.ANT2_RSSI));
 
-//	DPRINT("CURR_RSSI    %d", convert_rssi(ezradioReply.GET_MODEM_STATUS.CURR_RSSI));
-//	DPRINT("LATCH_RSSI    %d", convert_rssi(ezradioReply.GET_MODEM_STATUS.LATCH_RSSI));
-//	DPRINT("ANT1_RSSI    %d", convert_rssi(ezradioReply.GET_MODEM_STATUS.ANT1_RSSI));
-//	DPRINT("ANT2_RSSI    %d", convert_rssi(ezradioReply.GET_MODEM_STATUS.ANT2_RSSI));
-//	ezradio_frr_d_read(1, &ezradioReply);
-//	DPRINT("FRR_D_VALUE    %d", convert_rssi(ezradioReply.FRR_D_READ.FRR_D_VALUE));
-
-	uint8_t rss = ezradioReply.GET_MODEM_STATUS.CURR_RSSI > ezradioReply.GET_MODEM_STATUS.LATCH_RSSI ? ezradioReply.GET_MODEM_STATUS.CURR_RSSI : ezradioReply.GET_MODEM_STATUS.LATCH_RSSI;
-	return convert_rssi(rss);
+    int16_t rss = convert_rssi(ezradioReply.GET_MODEM_STATUS.CURR_RSSI);
+    return rss;
 }
 
 int16_t hw_radio_get_latched_rssi()
@@ -685,7 +681,7 @@ static void start_rx(hw_rx_cfg_t const* rx_cfg)
 
 static inline int16_t convert_rssi(uint8_t rssi_raw)
 {
-	return ((int16_t)(rssi_raw >> 1)) - (70 + RSSI_OFFSET);
+    return ((int16_t)(rssi_raw >> 1)) - (70 + RSSI_OFFSET);
 }
 
 static void ezradio_handle_end_of_packet()
