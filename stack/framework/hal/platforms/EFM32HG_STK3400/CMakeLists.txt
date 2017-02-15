@@ -68,7 +68,7 @@ INSERT_LINKER_FLAGS(AFTER LINK_LIBRARIES INSERT "-lgcc -lc -lnosys -Wl,--end-gro
 ADD_LIBRARY(PLATFORM OBJECT
     stk3400_main.c
     stk3400_leds.c
-    stk3400_userbutton.c
+    stk3400_button.c
     stk3400_sensors.c
     stk3400_debug.c
     stk3400_lcd.c
@@ -76,7 +76,7 @@ ADD_LIBRARY(PLATFORM OBJECT
     stk3400_usb.c
     libc_overrides.c
     inc/platform.h
-    inc/userbutton.h
+    inc/button.h
     inc/platform_sensors.h
     Drivers/si7013.c
     Drivers/i2cspm.c
