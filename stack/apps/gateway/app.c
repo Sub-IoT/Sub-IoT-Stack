@@ -67,7 +67,7 @@ static alp_init_args_t alp_init_args;
 
 void bootstrap()
 {
-    dae_access_profile_t access_classes[1] = {
+    dae_access_profile_t access_profiles[6] = {
         {
             .channel_header = {
                 .ch_coding = PHY_CODING_PN9,
@@ -81,7 +81,97 @@ void bootstrap()
             .subbands[0] = (subband_t){
                 .channel_index_start = 0,
                 .channel_index_end = 0,
-                .eirp = 0,
+                .eirp = 10,
+                .cca = -86,
+                .duty = 0,
+            }
+        },
+        {
+            .channel_header = {
+                .ch_coding = PHY_CODING_PN9,
+                .ch_class = PHY_CLASS_HI_RATE,
+                .ch_freq_band = PHY_BAND_868
+            },
+            .subprofiles[0] = {
+                .subband_bitmap = 0x01, // only the first subband is selectable
+                .scan_automation_period = 0,
+            },
+            .subbands[0] = (subband_t){
+                .channel_index_start = 0,
+                .channel_index_end = 0,
+                .eirp = 10,
+                .cca = -86,
+                .duty = 0,
+            }
+        },
+        {
+            .channel_header = {
+                .ch_coding = PHY_CODING_PN9,
+                .ch_class = PHY_CLASS_LO_RATE,
+                .ch_freq_band = PHY_BAND_868
+            },
+            .subprofiles[0] = {
+                .subband_bitmap = 0x01, // only the first subband is selectable
+                .scan_automation_period = 0,
+            },
+            .subbands[0] = (subband_t){
+                .channel_index_start = 0,
+                .channel_index_end = 0,
+                .eirp = 10,
+                .cca = -86,
+                .duty = 0,
+            }
+        },
+        {
+            .channel_header = {
+                .ch_coding = PHY_CODING_PN9,
+                .ch_class = PHY_CLASS_NORMAL_RATE,
+                .ch_freq_band = PHY_BAND_433
+            },
+            .subprofiles[0] = {
+                .subband_bitmap = 0x01, // only the first subband is selectable
+                .scan_automation_period = 0,
+            },
+            .subbands[0] = (subband_t){
+                .channel_index_start = 0,
+                .channel_index_end = 0,
+                .eirp = 10,
+                .cca = -86,
+                .duty = 0,
+            }
+        },
+        {
+            .channel_header = {
+                .ch_coding = PHY_CODING_PN9,
+                .ch_class = PHY_CLASS_HI_RATE,
+                .ch_freq_band = PHY_BAND_433
+            },
+            .subprofiles[0] = {
+                .subband_bitmap = 0x01, // only the first subband is selectable
+                .scan_automation_period = 0,
+            },
+            .subbands[0] = (subband_t){
+                .channel_index_start = 0,
+                .channel_index_end = 0,
+                .eirp = 10,
+                .cca = -86,
+                .duty = 0,
+            }
+        },
+        {
+            .channel_header = {
+                .ch_coding = PHY_CODING_PN9,
+                .ch_class = PHY_CLASS_LO_RATE,
+                .ch_freq_band = PHY_BAND_433
+            },
+            .subprofiles[0] = {
+                .subband_bitmap = 0x01, // only the first subband is selectable
+                .scan_automation_period = 0,
+            },
+            .subbands[0] = (subband_t){
+                .channel_index_start = 0,
+                .channel_index_end = 0,
+                .eirp = 10,
                 .cca = -86,
                 .duty = 0,
             }
@@ -90,8 +180,8 @@ void bootstrap()
 
     fs_init_args_t fs_init_args = (fs_init_args_t){
         .fs_user_files_init_cb = NULL,
-        .access_profiles_count = 1,
-        .access_profiles = access_classes,
+        .access_profiles_count = sizeof(access_profiles) / sizeof(dae_access_profile_t),
+        .access_profiles = access_profiles,
         .access_class = 0x01 // use access profile 0 and select the first subprofile
     };
 
