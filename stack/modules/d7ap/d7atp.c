@@ -259,10 +259,10 @@ error_t d7atp_send_request(uint8_t dialog_id, uint8_t transaction_id, bool is_la
     uint8_t slave_listen_timeout = listen_timeout;
 
     bool ack_requested = true;
-    if (qos_settings->qos_resp_mode == SESSION_RESP_MODE_NO || qos_settings->qos_resp_mode == SESSION_RESP_MODE_NO_RPT)
+    if ((qos_settings->qos_resp_mode == SESSION_RESP_MODE_NO || qos_settings->qos_resp_mode == SESSION_RESP_MODE_NO_RPT)
+        && expected_response_length == 0)
       ack_requested = false;
 
-    bool include_tc = (expected_response_length > 0 || ack_requested);
     // TODO based on what do we calculate Tc? payload length alone is not enough, depends on for example use of FEC, encryption ..
     // keep the same as transmission timeout for now
 
@@ -270,14 +270,14 @@ error_t d7atp_send_request(uint8_t dialog_id, uint8_t transaction_id, bool is_la
 
     packet->d7atp_ctrl = (d7atp_ctrl_t){
         .ctrl_is_start = true,
-        .ctrl_is_stop = is_last_transaction,
         .ctrl_is_ack_requested = ack_requested,
         .ctrl_ack_not_void = qos_settings->qos_resp_mode == SESSION_RESP_MODE_ON_ERR? true : false,
-        .ctrl_tc = include_tc,
+        .ctrl_te = false,
+        .ctrl_agc = false,
         .ctrl_ack_record = false
     };
 
-    if (include_tc)
+    if (ack_requested)
     {
         // Tc(NB, LEN, CH) = ceil((SFC  * NB  + 1) * TTX(CH, LEN) + TG) with NB the number of concurrent devices and SF the collision Avoidance Spreading Factor
         // TODO payload length does not include headers ... + hardcoded subband
@@ -312,7 +312,6 @@ static void send_response(packet_t* packet)
     // leave ctrl_is_ack_requested as is, keep the requester value
     d7atp->ctrl_ack_not_void = false; // TODO
     d7atp->ctrl_ack_record = false; // TODO validate
-    d7atp->ctrl_tc = false;
 
     bool should_include_origin_template = false; // we don't need to send origin ID, the requester will filter based on dialogID, but ...
 
@@ -347,16 +346,31 @@ uint8_t d7atp_assemble_packet_header(packet_t* packet, uint8_t* data_ptr)
 {
     uint8_t* d7atp_header_start = data_ptr;
     (*data_ptr) = packet->d7atp_ctrl.ctrl_raw; data_ptr++;
-    if (packet->d7atp_ctrl.ctrl_tc)
-        (*data_ptr) = packet->d7atp_tc; data_ptr++;
     (*data_ptr) = packet->d7atp_dialog_id; data_ptr++;
     (*data_ptr) = packet->d7atp_transaction_id; data_ptr++;
-
-    // Provide the Responder or Requester ACK template when requested
-    if ((d7atp_state == D7ATP_STATE_MASTER_TRANSACTION_REQUEST_PERIOD) && (packet->d7atp_ctrl.ctrl_is_ack_requested)) {
-        //TODO check if at least one Responder has set the ACK_REQ flag
-        //TODO aggregate the Device IDs of the Responders that set their ACK_REQ flags.
+    if (packet->d7atp_ctrl.ctrl_agc) {
+        (*data_ptr) = packet->d7atp_target_rx_level_i;
+        data_ptr++;
     }
+
+    if (packet->d7atp_ctrl.ctrl_tl) {
+        (*data_ptr) = packet->d7atp_tl;
+        data_ptr++;
+    }
+
+    if (packet->d7atp_ctrl.ctrl_te) {
+        (*data_ptr) = packet->d7atp_te;
+        data_ptr++;
+    }
+
+    if (packet->d7atp_ctrl.ctrl_is_ack_requested && d7atp_state == D7ATP_STATE_MASTER_TRANSACTION_REQUEST_PERIOD) {
+        (*data_ptr) = packet->d7atp_tc;
+        data_ptr++;
+    }
+
+    //TODO check if at least one Responder has set the ACK_REQ flag
+    //TODO aggregate the Device IDs of the Responders that set their ACK_REQ flags.
+    // Provide the Responder or Requester ACK template when requested
     else if (packet->d7atp_ctrl.ctrl_is_ack_requested && packet->d7atp_ctrl.ctrl_ack_not_void)
     {
         // add Responder ACK template
@@ -371,12 +385,27 @@ uint8_t d7atp_assemble_packet_header(packet_t* packet, uint8_t* data_ptr)
 bool d7atp_disassemble_packet_header(packet_t *packet, uint8_t *data_idx)
 {
     packet->d7atp_ctrl.ctrl_raw = packet->hw_radio_packet.data[(*data_idx)]; (*data_idx)++;
-
-    if (packet->d7atp_ctrl.ctrl_tc)
-        packet->d7atp_tc = packet->hw_radio_packet.data[(*data_idx)]; (*data_idx)++;
-
     packet->d7atp_dialog_id = packet->hw_radio_packet.data[(*data_idx)]; (*data_idx)++;
     packet->d7atp_transaction_id = packet->hw_radio_packet.data[(*data_idx)]; (*data_idx)++;
+    if (packet->d7atp_ctrl.ctrl_agc) {
+        packet->d7atp_target_rx_level_i = packet->hw_radio_packet.data[(*data_idx)];
+        (*data_idx)++;
+    }
+
+    if (packet->d7atp_ctrl.ctrl_tl) {
+        packet->d7atp_tl = packet->hw_radio_packet.data[(*data_idx)];
+        (*data_idx)++;
+    }
+
+    if (packet->d7atp_ctrl.ctrl_te) {
+        packet->d7atp_te = packet->hw_radio_packet.data[(*data_idx)];
+        (*data_idx)++;
+    }
+
+    if ((d7atp_state != D7ATP_STATE_MASTER_TRANSACTION_REQUEST_PERIOD) && (packet->d7atp_ctrl.ctrl_is_ack_requested)) {
+      packet->d7atp_tc = packet->hw_radio_packet.data[(*data_idx)];
+      (*data_idx)++;
+    }
 
     if (packet->d7atp_ctrl.ctrl_is_ack_requested && packet->d7atp_ctrl.ctrl_ack_not_void)
     {
@@ -396,7 +425,7 @@ void d7atp_signal_packet_transmitted(packet_t* packet)
     {
         switch_state(D7ATP_STATE_MASTER_TRANSACTION_RESPONSE_PERIOD);
 
-        if (packet->d7atp_ctrl.ctrl_tc)
+        if (packet->d7atp_ctrl.ctrl_is_ack_requested)
         {
             timer_tick_t Tc = adjust_timeout_value(CT_DECOMPRESS(packet->d7atp_tc), packet->hw_radio_packet.tx_meta.timestamp);
             d7anp_set_foreground_scan_timeout(Tc + 2); // we include Tt here for now
@@ -472,7 +501,8 @@ void d7atp_process_received_packet(packet_t* packet)
         if (packet->d7atp_ctrl.ctrl_is_start)
         {
             // if this is a unicast response and the last transaction, the extension procedure is allowed
-            if (packet->d7atp_ctrl.ctrl_is_stop && !ID_TYPE_IS_BROADCAST(packet->dll_header.control_target_id_type))
+            // TODO validate this is still working now we don't have the stop bit any more
+            if (!ID_TYPE_IS_BROADCAST(packet->dll_header.control_target_id_type))
             {
                 Tl = adjust_timeout_value(Tl, packet->hw_radio_packet.rx_meta.timestamp);
                 DPRINT("Adjusted Tl=%i (Ti) ", Tl);
@@ -517,7 +547,7 @@ void d7atp_process_received_packet(packet_t* packet)
         }
 
          // The FG scan is only started when the response period expires.
-        if (packet->d7atp_ctrl.ctrl_tc)
+        if (packet->d7atp_ctrl.ctrl_is_ack_requested)
         {
             timer_tick_t Tc = CT_DECOMPRESS(packet->d7atp_tc);
 
@@ -574,7 +604,7 @@ void d7atp_process_received_packet(packet_t* packet)
         bool should_send_response = d7asp_process_received_packet(packet, extension);
         if (should_send_response)
         {
-            if (!packet->d7atp_ctrl.ctrl_tc && (Tl == 0))
+            if (!packet->d7atp_ctrl.ctrl_is_ack_requested && (Tl == 0))
                 stop_dialog_after_tx = true;
             else
                 stop_dialog_after_tx = false;
