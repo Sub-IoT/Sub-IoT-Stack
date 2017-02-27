@@ -120,6 +120,10 @@ static void start_rx(hw_rx_cfg_t const* rx_cfg);
 static void ezradio_int_callback();
 static void report_rssi();
 
+//TODO validate the energy efficiency when power amplifier is disabled
+static int8_t eirp_lookup[10]     = {16.7, 12.9, 10.2, 8.05, 6.25, 3.7, 0.4, -2.95, -5.55, -15.4};
+static int8_t eirp_reg_values[10] = {0x7F, 0x1C, 0x14, 0x0F, 0x0C, 0x09, 0x06, 0x04, 0x03, 0x01};
+
 void __ezr_error_callback()
 {
     assert(false);
@@ -411,14 +415,16 @@ static void configure_channel(const channel_id_t* channel_id)
 
 static void configure_eirp(const eirp_t eirp)
 {
-	if (eirp == current_eirp)
-		return;
-
-
-	DPRINT("configure_eirp not implemented using max");
-	uint8_t ddac = 0x7F; // max
-	ezradio_set_property(0x22, 0x01, 0x01, ddac);
-	current_eirp = eirp;
+    for (uint8_t var = 0; var < sizeof(eirp_lookup); ++var)
+    {
+        if(eirp >= (int8_t)eirp_lookup[var])//round the given eirp to a lower possible value
+        {
+            int8_t reg_value =eirp_reg_values[var];
+            ezradio_set_property(0x22, 0x01, 0x01, reg_value);
+            current_eirp = eirp;
+            break;
+        }
+    }
 }
 
 static void configure_syncword_class(syncword_class_t syncword_class, phy_coding_t coding)
