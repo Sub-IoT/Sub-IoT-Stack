@@ -508,7 +508,6 @@ uint8_t d7anp_assemble_packet_header(packet_t *packet, uint8_t *data_ptr)
     assert(!packet->d7anp_ctrl.hop_enabled); // TODO hopping not yet supported
 
     uint8_t* d7anp_header_start = data_ptr;
-    (*data_ptr) = packet->d7anp_listen_timeout; data_ptr++;
     (*data_ptr) = packet->d7anp_ctrl.raw; data_ptr++;
 
     if (!packet->d7anp_ctrl.origin_void)
@@ -534,6 +533,8 @@ uint8_t d7anp_assemble_packet_header(packet_t *packet, uint8_t *data_ptr)
         }
     }
 
+    // TODO hopping ctrl
+
     if (packet->d7anp_ctrl.nls_method == AES_CTR ||
         packet->d7anp_ctrl.nls_method == AES_CCM_32 ||
         packet->d7anp_ctrl.nls_method == AES_CCM_64 ||
@@ -543,8 +544,6 @@ uint8_t d7anp_assemble_packet_header(packet_t *packet, uint8_t *data_ptr)
         write_be32(data_ptr, packet->d7anp_security.frame_counter);
         data_ptr += sizeof(uint32_t);
     }
-
-    // TODO hopping ctrl
 
     return data_ptr - d7anp_header_start;
 }
@@ -588,7 +587,6 @@ d7anp_trusted_node_t *add_trusted_node(uint8_t *address, uint32_t frame_counter,
 
 bool d7anp_disassemble_packet_header(packet_t* packet, uint8_t *data_idx)
 {
-    packet->d7anp_listen_timeout = packet->hw_radio_packet.data[(*data_idx)]; (*data_idx)++;
     packet->d7anp_ctrl.raw = packet->hw_radio_packet.data[(*data_idx)]; (*data_idx)++;
 
     if (!packet->d7anp_ctrl.origin_void)
@@ -607,9 +605,11 @@ bool d7anp_disassemble_packet_header(packet_t* packet, uint8_t *data_idx)
         }
     }
 
+    // TODO hopping
+
     if (packet->d7anp_ctrl.nls_method)
     {
-    	d7anp_trusted_node_t *node;
+        d7anp_trusted_node_t *node;
         uint8_t nls_method = packet->d7anp_ctrl.nls_method;
         bool create_node = false;
         bool prevent_replay_attack = false;

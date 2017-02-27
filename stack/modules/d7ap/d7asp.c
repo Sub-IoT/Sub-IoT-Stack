@@ -422,7 +422,7 @@ bool d7asp_process_received_packet(packet_t* packet, bool extension)
          * activate the dialog extension procedure in the unicast response if the dialog is terminated
          * and a master session is pending
          */
-        if ((!ID_TYPE_IS_BROADCAST(packet->dll_header.control_target_id_type)) && (packet->d7atp_ctrl.ctrl_is_stop)
+        if ((!ID_TYPE_IS_BROADCAST(packet->dll_header.control_target_id_type))
                 && (d7asp_state == D7ASP_STATE_SLAVE_PENDING_MASTER))
         {
             packet->d7atp_ctrl.ctrl_is_start = true;

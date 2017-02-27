@@ -57,6 +57,9 @@ struct packet
     uint8_t d7atp_dialog_id;
     uint8_t d7atp_transaction_id;
     uint8_t d7atp_tc;
+    uint8_t d7atp_tl;
+    uint8_t d7atp_te;
+    uint8_t d7atp_target_rx_level_i;
     packet_type type;
     // TODO d7atp ack template
     uint8_t payload_length;
