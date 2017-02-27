@@ -292,7 +292,13 @@ void adc_init(ADC_Reference reference, ADC_Input input, uint32_t adc_frequency)
 		/** VDD / 3. */
 		case adcInputSingleVDDDiv3:
 			sInit.input = adcSingleInpVDDDiv3;
-			break;
+            break;
+        case adcInputSingleInputCh4:
+            sInit.input = adcSingleInputCh4;
+            break;
+        case adcInputSingleInputCh5:
+            sInit.input = adcSingleInputCh5;
+            break;
 			/** Positive Ch4, negative Ch5. */
 		case adcInputSingleCh4Ch5:
 			sInit.input = adcSingleInpCh4Ch5;
