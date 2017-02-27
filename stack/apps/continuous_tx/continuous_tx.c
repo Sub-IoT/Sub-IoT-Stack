@@ -73,16 +73,15 @@ typedef enum {
 #include "../../framework/hal/chips/si4460/ezradiodrv/inc/ezradio_api_lib.h"
 #include "../../framework/hal/chips/si4460/si4460_registers.h"
 #include "../../framework/hal/chips/si4460/si4460.h"
+#include "../../framework/hal/chips/si4460/si4460_interface.h"
 static ezradio_cmd_reply_t ezradioReply;
 static bool radio_status = false;
 static uint8_t current_eirp_level = 0x7f;
 static uint8_t max_eirp_level = 0x7f;// 868 MHz = +13 dBm
 typedef enum {
     CW_direct   = 0x18,
-    FSK_direct  = 0x12,
     GFSK_direct = 0x13,
     CW_packet   = 0x00,
-    FSK_packet  = 0x02,
     GFSK_packet = 0x03,
 }modulation;
 #endif
@@ -90,25 +89,13 @@ typedef enum {
 #define NORMAL_RATE_CHANNEL_COUNT 8
 #define LO_RATE_CHANNEL_COUNT 69
 
-typedef enum{
-    RX,
-    TX
-}status;
-static status app_status = RX;
-static hw_rx_cfg_t rx_cfg;
+static hw_tx_cfg_t tx_cfg;
 static uint8_t current_channel_indexes_index = 0;
 static modulation current_modulation = GFSK_direct;
 static phy_channel_band_t current_channel_band = PHY_BAND_868;
 static phy_channel_class_t current_channel_class = PHY_CLASS_NORMAL_RATE;
 static uint8_t channel_indexes[NORMAL_RATE_CHANNEL_COUNT] = { 0 }; // reallocated later depending on band/class
 static uint8_t channel_count = NORMAL_RATE_CHANNEL_COUNT;
-
-
-void rssi_valid_cb(int16_t rssi)
-{
-  // dummy, we are not staying in rx.
-    lcd_write_string("cb rss : %d \n", rssi);
-}
 
 void stop_radio(){
 #if defined USE_SI4460
@@ -122,33 +109,7 @@ void stop_radio(){
 
 void start_radio(){
 #if defined USE_SI4460
-
-
-    if(app_status == TX){
-        lcd_write_string("Start sending \n");
-        /* Read ITs, clear pending ones */
-        ezradio_get_int_status(0u, 0u, 0u, NULL);
-        //Reset TX FIFO
-        ezradio_fifo_info(EZRADIO_CMD_FIFO_INFO_ARG_FIFO_TX_BIT, NULL);
-        /* Start sending packet, channel 0, START immediately, Packet n bytes long, go READY when done */
-        ezradio_start_tx(rx_cfg.channel_id.center_freq_index, 0u,  0u);
-        //hw_busy_wait(5000);
-        //start_radio();
-    }
-    else{
-        ezradio_change_state(EZRADIO_CMD_CHANGE_STATE_ARG_NEXT_STATE1_NEW_STATE_ENUM_READY);
-        hw_radio_set_rx(&rx_cfg, NULL, &rssi_valid_cb);
-
-        while (true) {
-            int16_t rss = hw_radio_get_rssi();
-            //if(rss != -134){
-            DPRINT("APP rss: %d", rss);
-            lcd_write_string("rss : %d \n", rss);
-            //}
-            hw_busy_wait(5000);
-        }
-    }
-
+    lcd_write_string("Start sending \n");
 #elif defined USE_CC1101
     cc1101_interface_strobe(RF_SCAL);
     cc1101_interface_strobe(RF_STX);
@@ -158,14 +119,18 @@ void start_radio(){
 
 void configure_radio(modulation mod){
 #if defined USE_SI4460
-    // Si4460 Direct mode
-    ezradio_set_property(0x20, 0x01, 0x00, mod);
+    if(mod == CW_direct){
+        //configure and start the radio with CW_direct
+        hw_radio_continuous_tx(&tx_cfg, true);
+    }
+    else{
+        //configure and start the radio with GFSK_direct
+        hw_radio_continuous_tx(&tx_cfg, false);
+    }
 
-    //power level EIRP
-    ezradio_set_property(0x22, 0x01, 0x01, current_eirp_level);
 #elif defined USE_CC1101
 
-    hw_radio_set_rx(&rx_cfg, NULL, &rssi_valid_cb); // we 'misuse' hw_radio_set_rx to configure the channel (using the public API)
+    hw_radio_set_rx(&tx_cfg, NULL, NULL); // we 'misuse' hw_radio_set_rx to configure the channel (using the public API)
     hw_radio_set_idle(); // go straight back to idle
 
     /* Configure */
@@ -190,10 +155,11 @@ void change_eirp(){
 
 void start()
 {
-    rx_cfg.channel_id.channel_header.ch_coding = PHY_CODING_PN9;
-    rx_cfg.channel_id.channel_header.ch_class = current_channel_class;
-    rx_cfg.channel_id.channel_header.ch_freq_band = current_channel_band;
-    rx_cfg.channel_id.center_freq_index = channel_indexes[current_channel_indexes_index];
+    tx_cfg.channel_id.channel_header.ch_coding = PHY_CODING_PN9;
+    tx_cfg.channel_id.channel_header.ch_class = current_channel_class;
+    tx_cfg.channel_id.channel_header.ch_freq_band = current_channel_band;
+    tx_cfg.channel_id.center_freq_index = channel_indexes[current_channel_indexes_index];
+    tx_cfg.eirp = 10;
 
 #ifdef HAS_LCD
     char string[10] = "";
@@ -213,27 +179,16 @@ void start()
         case PHY_BAND_915: strncpy(band, "915", sizeof(band)); break;
     }
 
-    sprintf(string, "%.3s%c-%i\n", band, rate, rx_cfg.channel_id.center_freq_index),
+    sprintf(string, "%.3s%c-%i\n", band, rate, tx_cfg.channel_id.center_freq_index),
     lcd_write_string(string);
 #endif
 
     /* Configure */
-    if(app_status == TX){
-        configure_radio(current_modulation);
-    }
+    configure_radio(current_modulation);
 
-    /* Start the radio with the new configuration */
+    /* start the radio */
     start_radio();
-}
 
-void toggle_radio(){
-    if(radio_status == true){
-        stop_radio();
-    }
-    else{
-        start_radio();
-    }
-    start();
 }
 
 #if NUM_USERBUTTONS > 1
@@ -242,7 +197,6 @@ void userbutton_callback(button_id_t button_id)
     switch(button_id)
     {
         case 0:
-
             // change ezr eirp and restart
             if(current_eirp_level < max_eirp_level+1)
                 current_eirp_level -= 0x05;
@@ -250,7 +204,6 @@ void userbutton_callback(button_id_t button_id)
                 current_eirp_level = max_eirp_level;
             //change eirp level
             change_eirp();
-            //toggle_radio();
             break;
         case 1:
             // change channel and restart
@@ -268,12 +221,11 @@ void bootstrap()
     DPRINT("Device booted at time: %d\n", timer_get_counter_value()); // TODO not printed for some reason, debug later
 
 #ifdef HAS_LCD
-    lcd_write_string("cont tx \n");
+    lcd_write_string("cont TX \n");
 #endif
 
     switch(current_channel_class)
     {
-        // TODO only 433 for now
         case PHY_CLASS_NORMAL_RATE:
           channel_count = NORMAL_RATE_CHANNEL_COUNT;
             realloc(channel_indexes, channel_count);
