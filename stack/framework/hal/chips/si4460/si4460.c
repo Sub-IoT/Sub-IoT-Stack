@@ -547,7 +547,6 @@ error_t hw_radio_set_rx(hw_rx_cfg_t const* rx_cfg, rx_packet_callback_t rx_cb, r
 	return SUCCESS;
 }
 
-
 error_t hw_radio_send_packet(hw_radio_packet_t* packet, tx_packet_callback_t tx_cb)
 {
 	// TODO error handling EINVAL, ESIZE, EOFF
@@ -598,6 +597,27 @@ error_t hw_radio_send_packet(hw_radio_packet_t* packet, tx_packet_callback_t tx_
 	ezradioStartTx(packet, ez_channel_id, should_rx_after_tx_completed, data_length);
 	return SUCCESS;
 }
+
+void hw_radio_continuous_tx(hw_tx_cfg_t const* tx_cfg, bool continuous_wave){
+    //configure the modulation of the chip based on the continuous_wave bool
+    if(continuous_wave){
+        //continuous wave direct
+        ezradio_set_property(0x20, 0x01, 0x00, 0x18); //0x18 = CW_direct
+    }else{
+        //GFSK direct
+        ezradio_set_property(0x20, 0x01, 0x00, 0x13); //0x18 = GFSK_direct
+    }
+    //configure the channel
+    configure_channel(&tx_cfg->channel_id);
+    //configure the eirp of the signal
+    configure_eirp(tx_cfg->eirp);
+    //configure the syncwork
+    configure_syncword_class(tx_cfg->syncword_class, tx_cfg->channel_id.channel_header.ch_coding);
+
+    //start the radio
+    ezradioStartTxUnmodelated(tx_cfg->channel_id.center_freq_index);
+}
+
 
 int16_t hw_radio_get_rssi()
 {

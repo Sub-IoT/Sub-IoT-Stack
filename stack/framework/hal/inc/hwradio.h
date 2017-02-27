@@ -479,6 +479,12 @@ __LINK_C bool hw_radio_is_rx();
 __LINK_C error_t hw_radio_send_packet(hw_radio_packet_t* packet,
 			       tx_packet_callback_t tx_callback);
 
+/**
+ * \brief This function enables us for testing purposes to configure a device with a continuous wave or GFSK wave.
+ *
+ */
+__LINK_C void hw_radio_continuous_tx(hw_tx_cfg_t const* tx_cfg, bool continuous_wave);
+
 /** \brief Check whether or not the radio is currently transmitting a packet
  *
  *  \return bool	true if the radio is currently transmitting a packet, false if it is not.
