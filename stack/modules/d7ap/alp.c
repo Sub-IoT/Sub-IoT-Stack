@@ -80,7 +80,7 @@ static uint8_t process_action(uint8_t* alp_action, uint8_t* alp_response, uint8_
 
 }
 
-static uint8_t process_op_read_file_data(fifo_t* alp_command_fifo, fifo_t* alp_response_fifo) {
+static alp_status_codes_t process_op_read_file_data(fifo_t* alp_command_fifo, fifo_t* alp_response_fifo) {
   alp_operand_file_data_request_t operand;
   error_t err;
   err = fifo_skip(alp_command_fifo, 1); assert(err == SUCCESS); // skip the control byte
@@ -90,19 +90,29 @@ static uint8_t process_op_read_file_data(fifo_t* alp_command_fifo, fifo_t* alp_r
   DPRINT("READ FILE %i LEN %i", operand.file_offset.file_id, operand.requested_data_length);
 
   if(operand.requested_data_length <= 0)
-    return 0; // TODO status
+    return ALP_STATUS_UNKNOWN_ERROR; // TODO more specific error + move to fs_read_file?
 
-  // fill response
-  err = fifo_put_byte(alp_response_fifo, ALP_OP_RETURN_FILE_DATA); assert(err == SUCCESS);
-  err = fifo_put_byte(alp_response_fifo, operand.file_offset.file_id); assert(err == SUCCESS);
-  err = fifo_put_byte(alp_response_fifo, operand.file_offset.offset); assert(err == SUCCESS); // TODO can be 1-4 bytes, assume 1 for now
-  err = fifo_put_byte(alp_response_fifo, operand.requested_data_length); assert(err == SUCCESS);
   uint8_t data[operand.requested_data_length];
-  alp_status_codes_t alp_status = fs_read_file(operand.file_offset.file_id, operand.file_offset.offset, data, operand.requested_data_length); // TODO status
-  err = fifo_put(alp_response_fifo, data, operand.requested_data_length); assert(err == SUCCESS);
+  alp_status_codes_t alp_status = fs_read_file(operand.file_offset.file_id, operand.file_offset.offset, data, operand.requested_data_length);
+  if(alp_status == ALP_STATUS_FILE_ID_NOT_EXISTS) {
+    // give the application layer the chance to fullfill this request ...
+    if(init_args != NULL && init_args->alp_unhandled_read_action_cb != NULL)
+      alp_status = init_args->alp_unhandled_read_action_cb(operand, data);
+  }
+
+  if(alp_status == ALP_STATUS_OK) {
+    // fill response
+    err = fifo_put_byte(alp_response_fifo, ALP_OP_RETURN_FILE_DATA); assert(err == SUCCESS);
+    err = fifo_put_byte(alp_response_fifo, operand.file_offset.file_id); assert(err == SUCCESS);
+    err = fifo_put_byte(alp_response_fifo, operand.file_offset.offset); assert(err == SUCCESS); // TODO can be 1-4 bytes, assume 1 for now
+    err = fifo_put_byte(alp_response_fifo, operand.requested_data_length); assert(err == SUCCESS);
+    err = fifo_put(alp_response_fifo, data, operand.requested_data_length); assert(err == SUCCESS);
+  }
+
+  return alp_status;
 }
 
-static uint8_t process_op_write_file_data(fifo_t* alp_command_fifo, fifo_t* alp_response_fifo) {
+static alp_status_codes_t process_op_write_file_data(fifo_t* alp_command_fifo, fifo_t* alp_response_fifo) {
   alp_operand_file_data_t operand;
   error_t err;
   err = fifo_skip(alp_command_fifo, 1); assert(err == SUCCESS); // skip the control byte
@@ -113,10 +123,10 @@ static uint8_t process_op_write_file_data(fifo_t* alp_command_fifo, fifo_t* alp_
 
   uint8_t data[operand.provided_data_length];
   err = fifo_pop(alp_command_fifo, data, operand.provided_data_length);
-  alp_status_codes_t alp_status = fs_write_file(operand.file_offset.file_id, operand.file_offset.offset, data, operand.provided_data_length); // TODO status
+  return fs_write_file(operand.file_offset.file_id, operand.file_offset.offset, data, operand.provided_data_length);
 }
 
-static uint8_t process_op_forward(fifo_t* alp_command_fifo, fifo_t* alp_response_fifo, d7asp_master_session_config_t* session_config) {
+static alp_status_codes_t process_op_forward(fifo_t* alp_command_fifo, fifo_t* alp_response_fifo, d7asp_master_session_config_t* session_config) {
   uint8_t interface_id;
   error_t err;
   err = fifo_skip(alp_command_fifo, 1); assert(err == SUCCESS); // skip the control byte
@@ -129,16 +139,19 @@ static uint8_t process_op_forward(fifo_t* alp_command_fifo, fifo_t* alp_response
   err = fifo_pop(alp_command_fifo, &session_config->addressee.access_class, 1); assert(err == SUCCESS);
   err = fifo_pop(alp_command_fifo, session_config->addressee.id, id_length); assert(err == SUCCESS);
   DPRINT("FORWARD");
+
+  return ALP_STATUS_PARTIALLY_COMPLETED;
 }
 
-static void process_op_request_tag(fifo_t* alp_command_fifo, bool respond_when_completed) {
+static alp_status_codes_t process_op_request_tag(fifo_t* alp_command_fifo, bool respond_when_completed) {
   error_t err;
   err = fifo_skip(alp_command_fifo, 1); assert(err == SUCCESS); // skip the control byte
   err = fifo_pop(alp_command_fifo, &current_command.tag_id, 1); assert(err == SUCCESS);
   current_command.respond_when_completed = respond_when_completed;
+  return ALP_STATUS_OK;
 }
 
-static void process_op_return_file_data(fifo_t* alp_command_fifo) {
+static alp_status_codes_t process_op_return_file_data(fifo_t* alp_command_fifo) {
   uint8_t offset_operand_size = 2; // TODO we are assuming offset operand to be 2 bytes for now
   uint8_t total_len = 1 + offset_operand_size; // ALP control byte
   uint8_t requested_data_length_size = 1; // TODO we are assuming requested data length is coded in 1 bytes here, but can be 4
@@ -155,6 +168,8 @@ static void process_op_return_file_data(fifo_t* alp_command_fifo) {
 
   if(init_args != NULL && init_args->alp_received_unsolicited_data_cb != NULL)
     init_args->alp_received_unsolicited_data_cb(current_d7asp_result, alp_response, total_len);
+
+  return ALP_STATUS_OK;
 }
 
 static void add_tag_response(fifo_t* alp_response_fifo, bool eop, bool error) {
@@ -274,52 +289,51 @@ bool alp_process_command(uint8_t* alp_command, uint8_t alp_command_length, uint8
 
     alp_control_t control;
     fifo_peek(&alp_command_fifo, &control.raw, 0, 1);
+    alp_status_codes_t alp_status;
     switch(control.operation) {
       case ALP_OP_READ_FILE_DATA:
-        process_op_read_file_data(&alp_command_fifo, &alp_response_fifo);
+        alp_status = process_op_read_file_data(&alp_command_fifo, &alp_response_fifo);
         break;
       case ALP_OP_WRITE_FILE_DATA:
-        process_op_write_file_data(&alp_command_fifo, &alp_response_fifo);
+        alp_status = process_op_write_file_data(&alp_command_fifo, &alp_response_fifo);
         break;
       case ALP_OP_FORWARD:
-        process_op_forward(&alp_command_fifo, &alp_response_fifo, &d7asp_session_config);
+        alp_status = process_op_forward(&alp_command_fifo, &alp_response_fifo, &d7asp_session_config);
         do_forward = true;
         break;
       case ALP_OP_REQUEST_TAG: ;
         alp_control_tag_request_t* tag_request = (alp_control_tag_request_t*)&control;
-        process_op_request_tag(&alp_command_fifo, tag_request->respond_when_completed);
+        alp_status = process_op_request_tag(&alp_command_fifo, tag_request->respond_when_completed);
         break;
       case ALP_OP_RETURN_FILE_DATA:
-        process_op_return_file_data(&alp_command_fifo);
+        alp_status = process_op_return_file_data(&alp_command_fifo);
         break;
       default:
         assert(false); // TODO return error
         //alp_status = ALP_STATUS_UNKNOWN_OPERATION;
-    }
+    }    
   }
 
-  (*alp_response_length) = fifo_get_size(&alp_response_fifo);
+  if(current_command.origin == ALP_CMD_ORIGIN_SERIAL_CONSOLE) {
+    // make sure we include tag response also for commands with interface HOST
+    // for interface D7ASP this will be done when flush completes
+    if(current_command.respond_when_completed && !do_forward)
+      add_tag_response(&alp_response_fifo, true, false); // TODO error
 
-  if((*alp_response_length) > 0) {
-    if(current_command.origin == ALP_CMD_ORIGIN_SERIAL_CONSOLE) {
-      // make sure we include tag response also for commands with interface HOST
-      // for interface D7ASP this will be done when flush completes
-      if(current_command.respond_when_completed && !do_forward)
-        add_tag_response(&alp_response_fifo, true, false); // TODO error
-
-      (*alp_response_length) = fifo_get_size(&alp_response_fifo);
+    (*alp_response_length) = fifo_get_size(&alp_response_fifo);
+    if((*alp_response_length) > 0) {
       alp_cmd_handler_output_alp_command(alp_response, (*alp_response_length));
     }
-
-    // TODO APP
   }
 
+    // TODO APP
     // TODO return ALP status if requested
 
 //    if(alp_status != ALP_STATUS_OK)
 //      return false;
 
-    return true;
+  (*alp_response_length) = fifo_get_size(&alp_response_fifo);
+  return true;
 }
 
 

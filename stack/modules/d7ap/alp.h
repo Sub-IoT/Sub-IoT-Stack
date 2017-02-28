@@ -182,19 +182,22 @@ typedef struct {
 typedef void (*alp_command_completed_callback)(uint8_t tag_id, bool success);
 typedef void (*alp_command_result_callback)(d7asp_result_t result, uint8_t* payload, uint8_t payload_length);
 typedef void (*alp_received_unsolicited_data_callback)(d7asp_result_t d7asp_result, uint8_t *alp_command, uint8_t alp_command_size);
-// TODO typedef void (*alp_received_unhandled_alp_command_callback)(uint8_t* alp_command, uint8_t alp_command_length, uint8_t* alp_response, uint8_t* alp_response_length);
+typedef alp_status_codes_t (*alp_unhandled_read_action_callback)(alp_operand_file_data_request_t operand, uint8_t* alp_response);
 
 typedef struct {
     alp_command_completed_callback alp_command_completed_cb;
     alp_command_result_callback alp_command_result_cb;
     alp_received_unsolicited_data_callback alp_received_unsolicited_data_cb;
     /**
-     * @brief d7asp_received_unhandled_alp_command_cb Called when the stack received an ALP command which cannot be processed against the local filesystem.
-     * The application is given the chance to provide a response (by filling the alp_response and alp_response_length parameters). If the application is not
-     * able to process the command as well it should just return without altering these parameters.
+     * @brief alp_unhandled_read_action_cb Called when the stack received an ALP read action which cannot be processed against the local filesystem,
+     * because the requested fileID does not exist.
+     * The application is given the chance to provide a response (by filling the alp_response and alp_response_length parameters).
+     * If the application is able to process the read action it should provide the data in alp_response and return ALP_STATUS_OK.
+     * Otherwise, when it cannot handle the read action it should return ALP_STATUS_FILE_ID_NOT_EXISTS, or any other alp_status_codes_t item,
+     * for other cases.
      * It is important to know this callback is called while a D7AP transaction is in process thus be sure to return within transaction timeout limits!
      */
-    // alp_received_unhandled_alp_command_callback alp_received_unhandled_alp_command_CB; // TODO not used for now
+    alp_unhandled_read_action_callback alp_unhandled_read_action_cb;
 } alp_init_args_t;
 
 
