@@ -86,6 +86,7 @@ SET(PLATFORM_SRCS
     libc_overrides.c
     inc/button.h
     inc/platform_sensors.h
+    inc/platform.h
     Drivers/si7013.c #also in kits/common/drivers
     Drivers/i2cspm.c #also in kits/common/drivers
     kits/common/drivers/dmactrl.c

@@ -540,7 +540,7 @@ error_t hw_radio_set_rx(hw_rx_cfg_t const* rx_cfg, rx_packet_callback_t rx_cb, r
 
 	if (rx_cfg != NULL)
 	{
-
+    DPRINT("RX ch header=0x%02x, ind=%i", rx_cfg->channel_id.channel_header_raw, rx_cfg->channel_id.center_freq_index);
 		start_rx(rx_cfg);
 		memcpy(&current_rx_cfg, rx_cfg, sizeof(hw_rx_cfg_t));
 	}
@@ -591,7 +591,9 @@ error_t hw_radio_send_packet(hw_radio_packet_t* packet, tx_packet_callback_t tx_
 
 	DPRINT("Data to TX Fifo:");
 	DPRINT_DATA(packet->data, data_length);
-
+        DPRINT("TX ch header=%x, ind=%i",
+               packet->tx_meta.tx_cfg.channel_id.channel_header_raw,
+               packet->tx_meta.tx_cfg.channel_id.center_freq_index);
 
 	configure_channel((channel_id_t*)&(packet->tx_meta.tx_cfg.channel_id));
 	configure_eirp(packet->tx_meta.tx_cfg.eirp);

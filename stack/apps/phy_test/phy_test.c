@@ -30,6 +30,7 @@
 #include <hwradio.h>
 #include <log.h>
 #include <hwwatchdog.h>
+#include <button.h>
 
 #ifdef HAS_LCD
 #include "hwlcd.h"
@@ -37,7 +38,7 @@
 
 // configuration options
 //#define RX_MODE
-#define PHY_CLASS PHY_CLASS_LO_RATE
+#define PHY_CLASS PHY_CLASS_NORMAL_RATE
 #define PACKET_LENGTH 100
 
 
@@ -68,9 +69,9 @@ hw_rx_cfg_t rx_cfg = {
 #else
         .channel_header.ch_freq_band = PHY_BAND_868,
 #endif
-        .center_freq_index = 16
+        .center_freq_index = 0
     },
-    .syncword_class = PHY_SYNCWORD_CLASS0
+    .syncword_class = PHY_SYNCWORD_CLASS1
 };
 
 hw_tx_cfg_t tx_cfg = {
@@ -83,9 +84,9 @@ hw_tx_cfg_t tx_cfg = {
         .channel_header.ch_freq_band = PHY_BAND_868,
 #endif
 
-        .center_freq_index = 16
+        .center_freq_index = 0
     },
-    .syncword_class = PHY_SYNCWORD_CLASS0,
+    .syncword_class = PHY_SYNCWORD_CLASS1,
     .eirp = 10
 };
 
@@ -110,11 +111,24 @@ void start_rx()
 
 void transmit_packet()
 {
-	counter++;
     DPRINT("%d tx %d bytes\n", counter, PACKET_LENGTH);
-    memcpy(&tx_packet->data, data, PACKET_LENGTH);
-    hw_radio_send_packet(tx_packet, &packet_transmitted);
+    log_print_data(tx_packet->data, PACKET_LENGTH);
+    memcpy(tx_packet->data, data, PACKET_LENGTH);
+    memcpy(tx_packet->data + 1, &counter, 1);
+    uint16_t crc = __builtin_bswap16(crc_calculate(tx_packet->data, tx_packet->length + 1 - 2));
+    memcpy(tx_packet->data + tx_packet->length + 1 - 2, &crc, 2);
+
+    if(counter < 100)
+        hw_radio_send_packet(tx_packet, &packet_transmitted);
+	
+    counter++;
 }
+
+void userbutton_callback(button_id_t button_id) {
+  counter = 0;
+  sched_post_task(&transmit_packet);
+}
+
 
 hw_radio_packet_t* alloc_new_packet(uint8_t length)
 {
@@ -169,12 +183,13 @@ void bootstrap()
     hw_radio_init(&alloc_new_packet, &release_packet);
 
     tx_packet->tx_meta.tx_cfg = tx_cfg;
+    ubutton_register_callback(0, &userbutton_callback);
 
 	#ifdef RX_MODE
     	sched_register_task(&start_rx);
         sched_post_task(&start_rx);
 	#else
         sched_register_task(&transmit_packet);
-        sched_post_task(&transmit_packet);
+        //sched_post_task(&transmit_packet);
 	#endif
 }
