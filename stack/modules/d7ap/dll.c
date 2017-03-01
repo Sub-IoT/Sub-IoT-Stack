@@ -624,7 +624,7 @@ void dll_execute_scan_automation()
         active_access_class = scan_access_class;
     }
 
-    DPRINT("DLL execute scan autom AC=0x%02x", scan_access_class);
+    DPRINT("DLL execute scan autom AC=0x%02x", active_access_class);
 
 
     /*
@@ -718,6 +718,10 @@ void dll_tx_frame(packet_t* packet)
 
     dll_header_t* dll_header = &(packet->dll_header);
     dll_header->subnet = packet->d7anp_addressee->access_class;
+    DPRINT("TX with subnet=0x%02x", dll_header->subnet);
+
+    packet->origin_access_class = active_access_class;  // strictly speaking this is a D7ANP field,
+                                                        // but we set it here to prevent rereading/caching in D7ANP
 
     if (packet->d7atp_ctrl.ctrl_is_start && packet->d7anp_addressee != NULL) // when responding in a transaction we MAY skip targetID
         dll_header->control_target_id_type = packet->d7anp_addressee->ctrl.id_type;
@@ -747,13 +751,17 @@ void dll_tx_frame(packet_t* packet)
     }
     else
     {
-        fs_read_access_class(packet->d7anp_addressee->access_index, &current_access_profile);
+        fs_read_access_class(packet->d7anp_addressee->access_specifier, &current_access_profile);
         /*
          * For now the access mask and the subband bitmap are not used
          * By default, subprofile[0] is selected and subband[0] is used
          */
 
         /* EIRP (dBm) = (EIRP_I – 32) dBm */
+
+        log_print_string("AC specifier=%i channel=%i",
+                         packet->d7anp_addressee->access_specifier,
+                         current_access_profile.subbands[0].channel_index_start);
         dll_header->control_eirp_index = current_access_profile.subbands[0].eirp + 32;
 
         packet->hw_radio_packet.tx_meta.tx_cfg = (hw_tx_cfg_t){
