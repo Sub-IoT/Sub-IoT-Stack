@@ -28,9 +28,9 @@
 
 
 
-// static timer_callback_t compare_f = 0x0;
-// static timer_callback_t overflow_f = 0x0;
-// static bool timer_inited = false;
+ static timer_callback_t compare_f = 0x0;
+ static timer_callback_t overflow_f = 0x0;
+ static bool timer_inited = false;
 // /**************************************************************************//**
 //  * @brief Enables LFACLK and selects LFXO as clock source for RTC.
 //  *        Sets up the RTC to count at 1024 Hz.
@@ -40,17 +40,17 @@
 //  *****************************************************************************/
 error_t hw_timer_init(hwtimer_id_t timer_id, uint8_t frequency, timer_callback_t compare_callback, timer_callback_t overflow_callback)
 {
-  //   if(timer_id >= HWTIMER_NUM)
-  //   	return ESIZE;
-  //   if(timer_inited)
-  //   	return EALREADY;
-  //   if(frequency != HWTIMER_FREQ_1MS && frequency != HWTIMER_FREQ_32K)
-  //   	return EINVAL;
+     if(timer_id >= HWTIMER_NUM)
+     	return ESIZE;
+     if(timer_inited)
+     	return EALREADY;
+     if(frequency != HWTIMER_FREQ_1MS && frequency != HWTIMER_FREQ_32K)
+     	return EINVAL;
 	
-  //   start_atomic();
-		// compare_f = compare_callback;
-		// overflow_f = overflow_callback;
-		// timer_inited = true;
+     start_atomic();
+	 compare_f = compare_callback;
+	 overflow_f = overflow_callback;
+	 timer_inited = true;
 
 		// /* Configuring clocks in the Clock Management Unit (CMU) */
 		// startLfxoForRtc(frequency);
@@ -75,12 +75,13 @@ error_t hw_timer_init(hwtimer_id_t timer_id, uint8_t frequency, timer_callback_t
 
 		// NVIC_EnableIRQ(RTC_IRQn);
 		// RTC_Enable(true);
-  //   end_atomic();
+     end_atomic();
     return SUCCESS;
 }
 
 hwtimer_tick_t hw_timer_getvalue(hwtimer_id_t timer_id)
 {
+	return HAL_GetTick();
 // 	if(timer_id >= HWTIMER_NUM || (!timer_inited))
 // 		return 0;
 // 	else
@@ -154,6 +155,7 @@ bool hw_timer_is_interrupt_pending(hwtimer_id_t timer_id)
 // 	bool is_pending = !!((RTC_IntGet() & RTC->IEN) & RTC_IFS_COMP1);
 //     end_atomic();
 //     return is_pending;	
+	return true;
 }
 
 
@@ -176,3 +178,17 @@ bool hw_timer_is_interrupt_pending(hwtimer_id_t timer_id)
 // 			compare_f();
 // 	}
 // }
+
+//void SysTick_Handler(void)
+//{
+//  /* USER CODE BEGIN SysTick_IRQn 0 */
+//
+//  /* USER CODE END SysTick_IRQn 0 */
+//  HAL_IncTick();
+//  HAL_SYSTICK_IRQHandler();
+//  if(compare_f != 0x0)
+//  		compare_f();
+//  /* USER CODE BEGIN SysTick_IRQn 1 */
+//
+//  /* USER CODE END SysTick_IRQn 1 */
+//}

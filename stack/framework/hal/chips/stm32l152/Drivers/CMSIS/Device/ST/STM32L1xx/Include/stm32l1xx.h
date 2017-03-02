@@ -205,13 +205,12 @@ typedef enum
 } FunctionalState;
 #define IS_FUNCTIONAL_STATE(STATE) (((STATE) == DISABLE) || ((STATE) == ENABLE))
 
-/* not compliant with 0SS7
-typedef enum 
-{
-  ERROR = 0, 
-  SUCCESS = !ERROR
-} ErrorStatus;
-*/
+//typedef enum
+//{
+//  ERROR = 0,
+//  SUCCESS = !ERROR
+//} ErrorStatus;
+
 /**
   * @}
   */

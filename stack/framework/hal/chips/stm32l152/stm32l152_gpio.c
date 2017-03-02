@@ -23,6 +23,7 @@
 
 #include "types.h"
 #include "hwgpio.h"
+#include "stm32l1xx_hal_conf.h"
 #include "stm32l1xx_hal.h"
 //#include "stm32l1xx_hal_gpio.h"
 //#include "stm32l1xx_hal_rcc.h"
@@ -118,10 +119,10 @@ __LINK_C bool hw_gpio_get_in(pin_id_t pin_id)
     return (HAL_GPIO_ReadPin(ports[pin_id.port], 1 << pin_id.pin) == GPIO_PIN_SET);
 }
 
-static void gpio_int_callback(uint8_t pin)
-{
-
-}
+//static void gpio_int_callback(uint8_t pin)
+//{
+//
+//}
 
 __LINK_C error_t hw_gpio_configure_interrupt(pin_id_t pin_id, gpio_inthandler_t callback, uint8_t event_mask)
 {
