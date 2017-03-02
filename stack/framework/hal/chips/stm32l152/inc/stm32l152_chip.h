@@ -19,7 +19,7 @@
 #ifndef __STM32L152_CHIP_H_
 #define __STM32L152_CHIP_H_
 #include "stm32l152_pins.h"
-#include "stm32l1xx_hal_gpio.h"
+//#include "stm32l1xx_hal_gpio.h"
 #include "hwgpio.h"
 
 

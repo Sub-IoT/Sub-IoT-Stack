@@ -24,6 +24,18 @@
 #include "hwgpio.h"
 #include "stm32l1xx_hal_gpio.h"
 
+enum
+{
+	GPIO_PORTA = 0,
+	GPIO_PORTB,
+	GPIO_PORTC,
+	GPIO_PORTD,
+	GPIO_PORTE,
+	GPIO_PORTF,
+	GPIO_PORTG,
+	GPIO_PORTH
+} ;
+
 //Definition of the pin_id's for the GPIO ports of the stm32l152
-pin_id_t const A5 = {.port = GPIOA, .pin = GPIO_PIN_5};
-pin_id_t const C13 = {.port = GPIOC, .pin = GPIO_PIN_13};
+pin_id_t const A5 = {.port = GPIO_PORTA, .pin = 5};
+pin_id_t const C13 = {.port = GPIO_PORTC, .pin = 13};

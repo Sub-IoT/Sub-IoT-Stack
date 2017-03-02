@@ -31,6 +31,7 @@
 #include "timer.h"
 #include "led.h"
 #include "stm32l152_chip.h"
+#include "stm32l1xx_hal_gpio.h"
 
 
 #if HW_NUM_LEDS < 1
@@ -43,6 +44,7 @@ void __led_init()
 	leds[0] = LED0;
 	for(int i = 0; i < HW_NUM_LEDS; i++)
 	{
+		hw_gpio_clr(leds[i]);
 		error_t err = hw_gpio_configure_pin(leds[i], false, GPIO_MODE_OUTPUT_PP, 0);
 		assert(err == SUCCESS);
 	}

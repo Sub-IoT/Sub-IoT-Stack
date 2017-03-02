@@ -19,15 +19,23 @@
 
 #include "stm32l152_mcu.h"
 #include "bootstrap.h"
+#include "hwgpio.h"
+#include "hwleds.h"
+#include "led.h"
+#include "button.h"
 
 void __platform_init()
 {
+    __stm32l152_mcu_init();
+    __gpio_init();
+    __led_init();
 
 }
 
 void __platform_post_framework_init()
 {
-
+    __ubutton_init();
+    led_init();
 }
 
 //Quick hack, approximately 1ms delay
@@ -59,6 +67,16 @@ int main()
 //       ms_delay(1000);
 //       GPIOD->ODR ^= (1 << 13);           // Toggle the pin
 //    }
+
+//    while (1)
+//    {
+//    	if (!hw_gpio_get_in(BUTTON0)) {
+//    		hw_gpio_set(LED0);
+//    	} else {
+//    		hw_gpio_clr(LED0);
+//    	}
+//    	//HAL_Delay(500);
+//     }
 
     scheduler_run();
     return 0;

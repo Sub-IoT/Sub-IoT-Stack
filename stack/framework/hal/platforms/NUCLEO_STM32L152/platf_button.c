@@ -24,6 +24,7 @@
 #include <debug.h>
 
 #include "stm32l152_chip.h"
+#include "stm32l1xx_hal_gpio.h"
 
 #if NUM_USERBUTTONS != 1
 	#error "NUM_USERBUTTONS does not match the expected value. Update platform.h or platform_userbutton.c"
@@ -41,7 +42,7 @@ typedef struct
 
 button_info_t buttons[NUM_USERBUTTONS];
 
-static void button_callback(pin_id_t pin_id, uint8_t event_mask);
+static void button_callback(uint16_t pin_id_pin, uint8_t event_mask);
 static void button_task();
 __LINK_C void __ubutton_init()
 {
@@ -54,7 +55,7 @@ __LINK_C void __ubutton_init()
 		memset(buttons[i].callbacks, 0, sizeof(buttons[i].callbacks));
 		buttons[i].cur_callback_id = BUTTON_QUEUE_SIZE;
 		buttons[i].num_registered_callbacks = 0;
-		error_t err = hw_gpio_configure_interrupt(buttons[i].button_id, &button_callback, GPIO_FALLING_EDGE);
+		//error_t err = hw_gpio_configure_interrupt(buttons[i].button_id, &button_callback, GPIO_FALLING_EDGE);
 		assert(err == SUCCESS);
 	}
 	sched_register_task(&button_task);
@@ -132,11 +133,12 @@ __LINK_C error_t ubutton_deregister_callback(button_id_t button_id, ubutton_call
 	return SUCCESS;
 }
 
-static void button_callback(pin_id_t pin_id, uint8_t event_mask)
+static void button_callback(uint16_t pin_id_pin, uint8_t event_mask)
 {
+	//TODO only pin is compared
 	for(int i = 0; i < NUM_USERBUTTONS;i++)
 	{
-		if(hw_gpio_pin_matches(buttons[i].button_id, pin_id))
+		if(buttons[i].button_id.pin == pin_id_pin)
 		{
 			//set cur_callback_id to 0 to trigger all registered callbacks and post a task to do the actual callbacks
 			buttons[i].cur_callback_id = 0;
@@ -170,5 +172,15 @@ void button_task()
 		sched_post_task(&button_task);
 		callback(button_id);
 	}
+}
+
+void EXTI15_10_IRQHandler(void)
+{
+    HAL_GPIO_EXTI_IRQHandler(BUTTON0.pin);
+}
+
+void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
+	if(GPIO_Pin == BUTTON0.pin)
+		button_callback(GPIO_Pin, 0);
 }
 

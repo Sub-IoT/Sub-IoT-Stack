@@ -21,15 +21,21 @@
  *
  */
 
-
+#include "types.h"
 #include "hwgpio.h"
-#include "stm32l1xx_hal_gpio.h"
+#include "stm32l1xx_hal.h"
+//#include "stm32l1xx_hal_gpio.h"
+//#include "stm32l1xx_hal_rcc.h"
 
 typedef struct
 {
     gpio_inthandler_t callback;
     uint32_t interrupt_port;
 } gpio_interrupt_t;
+
+
+static GPIO_TypeDef* ports[8] = {GPIOA, GPIOB, GPIOC, GPIOD, GPIOE, GPIOF, GPIOG, GPIOH};
+
 //the list of configured interrupts
 static gpio_interrupt_t interrupts[16];
 
@@ -49,9 +55,9 @@ __LINK_C void __gpio_init()
     /* GPIO Ports Clock Enable */
     //todo: only used clk
     __HAL_RCC_GPIOC_CLK_ENABLE();
-    __HAL_RCC_GPIOH_CLK_ENABLE();
+    //__HAL_RCC_GPIOH_CLK_ENABLE();
     __HAL_RCC_GPIOA_CLK_ENABLE();
-    __HAL_RCC_GPIOB_CLK_ENABLE();
+   // __HAL_RCC_GPIOB_CLK_ENABLE();
 
     /* Initialize GPIO interrupt dispatcher */
     //GPIOINT_Init();
@@ -60,47 +66,56 @@ __LINK_C void __gpio_init()
 __LINK_C error_t hw_gpio_configure_pin(pin_id_t pin_id, bool int_allowed, uint8_t mode, unsigned int out)
 {
     //do early-stop error checking
-    if((gpio_pins_configured[pin_id.port] & (1<<pin_id.pin)))
-    return EALREADY;
-    else if(int_allowed && (interrupts[pin_id.pin].interrupt_port != 0xFF))
-    return EBUSY;
+    //if((gpio_pins_configured[pin_id.port] & (1<<pin_id.pin)))
+    //return EALREADY;
+    //else if(int_allowed && (interrupts[pin_id.pin].interrupt_port != 0xFF))
+    //return EBUSY;
 
     //set the pin to be configured
-    gpio_pins_configured[pin_id.port] |= (1<<pin_id.pin);
+    //gpio_pins_configured[pin_id.port] |= (1<<pin_id.pin);
 
     //configure the pin itself
-    GPIO_PinModeSet(pin_id.port, pin_id.pin, mode, out);
+    GPIO_InitTypeDef GPIO_InitStruct;
+    GPIO_InitStruct.Pin = 1 << pin_id.pin;
+    GPIO_InitStruct.Mode = mode;
+    GPIO_InitStruct.Pull = GPIO_PULLDOWN; // todo ??
+    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+    HAL_GPIO_Init(ports[pin_id.port], &GPIO_InitStruct);
 
     //if interrupts are allowed: set the port to use
     if(int_allowed)
-    interrupts[pin_id.pin].interrupt_port = pin_id.port;
+        interrupts[pin_id.pin].interrupt_port = pin_id.port;
 
     return SUCCESS;
 }
 
 __LINK_C error_t hw_gpio_set(pin_id_t pin_id)
 {
+    HAL_GPIO_WritePin(ports[pin_id.port], 1 << pin_id.pin, GPIO_PIN_SET);
     return SUCCESS;
 }
 
 __LINK_C error_t hw_gpio_clr(pin_id_t pin_id)
 {
+    HAL_GPIO_WritePin(ports[pin_id.port], 1 << pin_id.pin, GPIO_PIN_RESET);
     return SUCCESS;
 }
 
 __LINK_C error_t hw_gpio_toggle(pin_id_t pin_id)
 {
+    HAL_GPIO_TogglePin(ports[pin_id.port], 1 << pin_id.pin);
     return SUCCESS;
 }
 
 __LINK_C bool hw_gpio_get_out(pin_id_t pin_id)
 {
-    return false;
+    // todo check pin is not input pin
+    return (HAL_GPIO_ReadPin(ports[pin_id.port], 1 << pin_id.pin) == GPIO_PIN_SET);
 }
 
 __LINK_C bool hw_gpio_get_in(pin_id_t pin_id)
 {
-    return false;
+    return (HAL_GPIO_ReadPin(ports[pin_id.port], 1 << pin_id.pin) == GPIO_PIN_SET);
 }
 
 static void gpio_int_callback(uint8_t pin)
@@ -110,14 +125,27 @@ static void gpio_int_callback(uint8_t pin)
 
 __LINK_C error_t hw_gpio_configure_interrupt(pin_id_t pin_id, gpio_inthandler_t callback, uint8_t event_mask)
 {
-
+	return SUCCESS;
 }
 __LINK_C error_t hw_gpio_enable_interrupt(pin_id_t pin_id)
 {
-    
+	if (pin_id.pin >= 10 && pin_id.pin <= 15)
+	{
+		HAL_NVIC_EnableIRQ(EXTI15_10_IRQn);
+		return SUCCESS;
+	}
+    return FAIL;
 }
 
 __LINK_C error_t hw_gpio_disable_interrupt(pin_id_t pin_id)
 {
-    
+	if (pin_id.pin >= 10 && pin_id.pin <= 15)
+		{
+			HAL_NVIC_DisableIRQ(EXTI15_10_IRQn);
+			return SUCCESS;
+		}
+	    return FAIL;
 }
+
+
+

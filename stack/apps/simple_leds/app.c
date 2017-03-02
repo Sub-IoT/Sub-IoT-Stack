@@ -30,6 +30,7 @@
 void userbutton_callback(button_id_t button_id)
 {
 	log_print_string("Button PB%u pressed.", button_id);
+	led_toggle(0);
 }
 
 #endif
@@ -85,6 +86,17 @@ void bootstrap()
 
     led_off(0);
     led_off(1);
+
+//	while(1)
+//	{
+//        if (ubutton_pressed(0))
+//            led_on(0);
+//        else
+//            led_off(0);
+//
+//
+//
+//	}
 
 
 }
