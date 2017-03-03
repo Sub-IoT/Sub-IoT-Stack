@@ -58,8 +58,8 @@ INSERT_C_FLAGS(AFTER "-gdwarf-2" "-mcpu=cortex-m3" "-mthumb" "-fmessage-length=0
 
 #Add platform specific linker flags
 INSERT_LINKER_FLAGS(BEFORE OBJECTS INSERT "--specs=nano.specs" "-Wl,-gc-sections")
-INSERT_LINKER_FLAGS(BEFORE LINK_LIBRARIES INSERT "-Wl,--start-group")
-INSERT_LINKER_FLAGS(AFTER LINK_LIBRARIES INSERT "-lgcc -lc -lnosys -Wl,--end-group")
+INSERT_LINKER_FLAGS(BEFORE LINK_LIBRARIES INSERT "-Wl,--start-group -Wl,--whole-archive")
+INSERT_LINKER_FLAGS(AFTER LINK_LIBRARIES INSERT "-Wl,--no-whole-archive -lgcc -lc -lnosys -Wl,--end-group")
 
 
 #Set platform specific compile options

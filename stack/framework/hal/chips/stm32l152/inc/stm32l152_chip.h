@@ -24,7 +24,7 @@
 
 #define PLATFORM_NUM_TIMERS 1
 
-/* \brief Implementation of hw_gpio_configure_pin for the EZR32WG MCU
+/* \brief Implementation of hw_gpio_configure_pin
  *
  * This function supports all pin configuration modes available through the
  * 'GPIO_PinModeSet' function in emlib.
@@ -54,7 +54,7 @@
  *		EALREADY if the pin was already configured through a previous call to this function
  *		EBUSY if <int_allowed> is true and interrupts were already allowed for a conflicting pin
  */
-__LINK_C error_t hw_gpio_configure_pin(pin_id_t pin_id, bool int_allowed, uint8_t mode, unsigned int out);
+__LINK_C error_t hw_gpio_configure_pin(pin_id_t pin_id, bool int_allowed, uint32_t mode, unsigned int out);
 
 
 

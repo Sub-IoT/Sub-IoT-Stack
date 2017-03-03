@@ -122,8 +122,8 @@ MACRO(APP_BUILD)
     ADD_EXECUTABLE(${ELF} ${__APP_BUILD_SOURCES})
     ADD_EXECUTABLE(${__APP_BUILD_NAME}.axf ${__APP_BUILD_SOURCES}) # TODO for simplicity studio, still needed? make optional
 
-    TARGET_LINK_LIBRARIES(${ELF} -Wl,--whole-archive ${__APP_BUILD_LIBS} -Wl,--no-whole-archive)
-    TARGET_LINK_LIBRARIES(${__APP_BUILD_NAME}.axf -Wl,--whole-archive ${__APP_BUILD_LIBS} -Wl,--no-whole-archive)
+    TARGET_LINK_LIBRARIES(${ELF} ${__APP_BUILD_LIBS})
+    TARGET_LINK_LIBRARIES(${__APP_BUILD_NAME}.axf ${__APP_BUILD_LIBS})
 
     GET_PROPERTY(__global_compile_definitions GLOBAL PROPERTY GLOBAL_COMPILE_DEFINITIONS)
     TARGET_COMPILE_DEFINITIONS(${ELF} PUBLIC ${__global_compile_definitions})

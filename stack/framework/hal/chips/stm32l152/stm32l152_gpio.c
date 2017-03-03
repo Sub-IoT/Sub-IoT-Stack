@@ -56,15 +56,15 @@ __LINK_C void __gpio_init()
     /* GPIO Ports Clock Enable */
     //todo: only used clk
     __HAL_RCC_GPIOC_CLK_ENABLE();
-    //__HAL_RCC_GPIOH_CLK_ENABLE();
+    __HAL_RCC_GPIOH_CLK_ENABLE();
     __HAL_RCC_GPIOA_CLK_ENABLE();
-   // __HAL_RCC_GPIOB_CLK_ENABLE();
+    __HAL_RCC_GPIOB_CLK_ENABLE();
 
     /* Initialize GPIO interrupt dispatcher */
     //GPIOINT_Init();
 }
 
-__LINK_C error_t hw_gpio_configure_pin(pin_id_t pin_id, bool int_allowed, uint8_t mode, unsigned int out)
+__LINK_C error_t hw_gpio_configure_pin(pin_id_t pin_id, bool int_allowed, uint32_t mode, unsigned int out)
 {
     //do early-stop error checking
     //if((gpio_pins_configured[pin_id.port] & (1<<pin_id.pin)))
@@ -79,8 +79,13 @@ __LINK_C error_t hw_gpio_configure_pin(pin_id_t pin_id, bool int_allowed, uint8_
     GPIO_InitTypeDef GPIO_InitStruct;
     GPIO_InitStruct.Pin = 1 << pin_id.pin;
     GPIO_InitStruct.Mode = mode;
-    GPIO_InitStruct.Pull = GPIO_PULLDOWN; // todo ??
-    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+    if  (GPIO_InitStruct.Mode == GPIO_MODE_IT_RISING)
+    {
+    	GPIO_InitStruct.Pull = GPIO_NOPULL;
+    } else {
+    	GPIO_InitStruct.Pull = GPIO_PULLDOWN; // todo ??
+        GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+    }
     HAL_GPIO_Init(ports[pin_id.port], &GPIO_InitStruct);
 
     //if interrupts are allowed: set the port to use

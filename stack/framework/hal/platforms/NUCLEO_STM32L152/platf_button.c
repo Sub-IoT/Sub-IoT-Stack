@@ -47,16 +47,15 @@ static void button_task();
 __LINK_C void __ubutton_init()
 {
 	error_t err;
-    err = hw_gpio_configure_pin(BUTTON0, true, GPIO_MODE_IT_RISING, 0); assert(err == SUCCESS); // TODO pull up or pull down to prevent floating
-
 	buttons[0].button_id = BUTTON0;
 	for(int i = 0; i < NUM_USERBUTTONS; i++)
 	{
 		memset(buttons[i].callbacks, 0, sizeof(buttons[i].callbacks));
 		buttons[i].cur_callback_id = BUTTON_QUEUE_SIZE;
 		buttons[i].num_registered_callbacks = 0;
-		//error_t err = hw_gpio_configure_interrupt(buttons[i].button_id, &button_callback, GPIO_FALLING_EDGE);
-		assert(err == SUCCESS);
+		err = hw_gpio_configure_pin(buttons[0].button_id, true, GPIO_MODE_IT_RISING, 0); assert(err == SUCCESS); // TODO pull up or pull down to prevent floating
+
+		//error_t err = hw_gpio_configure_interrupt(buttons[i].button_id, &button_callback, GPIO_FALLING_EDGE); //assert(err == SUCCESS);
 	}
 	sched_register_task(&button_task);
 }
@@ -176,11 +175,11 @@ void button_task()
 
 void EXTI15_10_IRQHandler(void)
 {
-    HAL_GPIO_EXTI_IRQHandler(BUTTON0.pin);
+    HAL_GPIO_EXTI_IRQHandler(1 << BUTTON0.pin);
 }
 
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
-	if(GPIO_Pin == BUTTON0.pin)
-		button_callback(GPIO_Pin, 0);
+	if(GPIO_Pin == 1 << BUTTON0.pin)
+		button_callback(BUTTON0.pin, 0);
 }
 
