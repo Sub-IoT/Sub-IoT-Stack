@@ -23,6 +23,7 @@
 #include "debug.h"
 #include "platform.h"
 #include "hwwatchdog.h"
+#include "console.h"
 
 #if NUM_USERBUTTONS > 0
 #include "button.h"
@@ -35,6 +36,7 @@ void Error_Handler()
 void userbutton_callback(button_id_t button_id)
 {
 	log_print_string("Button PB%u pressed.", button_id);
+	console_print("Button Pressed\n");
 	led_toggle(0);
 }
 

@@ -55,6 +55,7 @@
  *		EBUSY if <int_allowed> is true and interrupts were already allowed for a conflicting pin
  */
 __LINK_C error_t hw_gpio_configure_pin(pin_id_t pin_id, bool int_allowed, uint32_t mode, unsigned int out);
+__LINK_C error_t hw_gpio_configure_pin_stm(pin_id_t pin_id, void* GPIO_InitStruct);
 
 
 

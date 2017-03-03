@@ -95,6 +95,19 @@ __LINK_C error_t hw_gpio_configure_pin(pin_id_t pin_id, bool int_allowed, uint32
     return SUCCESS;
 }
 
+
+__LINK_C error_t hw_gpio_configure_pin_stm(pin_id_t pin_id, void* GPIO_InitStruct)
+{
+	GPIO_InitTypeDef* initStruct = (GPIO_InitTypeDef*) GPIO_InitStruct;
+
+	HAL_GPIO_Init(ports[pin_id.port], initStruct);
+
+	if  (initStruct->Mode == GPIO_MODE_IT_RISING)
+	{
+		interrupts[pin_id.pin].interrupt_port = pin_id.port;
+	}
+}
+
 __LINK_C error_t hw_gpio_set(pin_id_t pin_id)
 {
     HAL_GPIO_WritePin(ports[pin_id.port], 1 << pin_id.pin, GPIO_PIN_SET);

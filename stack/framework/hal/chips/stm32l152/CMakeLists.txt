@@ -73,8 +73,11 @@ ADD_LIBRARY (${CHIP_LIBRARY_NAME} OBJECT
   	Drivers/STM32L1xx_HAL_Driver/Src/stm32l1xx_hal_pwr_ex.c 
   	Drivers/STM32L1xx_HAL_Driver/Src/stm32l1xx_hal_rcc.c 
   	Drivers/STM32L1xx_HAL_Driver/Src/stm32l1xx_hal_rcc_ex.c 
+        Drivers/STM32L1xx_HAL_Driver/Src/stm32l1xx_hal_rtc.c 
+        Drivers/STM32L1xx_HAL_Driver/Src/stm32l1xx_hal_rtc_ex.c  
   	Drivers/STM32L1xx_HAL_Driver/Src/stm32l1xx_hal_tim.c 
   	Drivers/STM32L1xx_HAL_Driver/Src/stm32l1xx_hal_tim_ex.c 
+        Drivers/STM32L1xx_HAL_Driver/Src/stm32l1xx_hal_uart.c 
   
 	 	  
 		
