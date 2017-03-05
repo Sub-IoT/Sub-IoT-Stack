@@ -29,13 +29,14 @@
 
 void hw_enter_lowpower_mode(uint8_t mode)
 {
-//	switch (mode)
-//		{
-//		case 0:
-//			HAL_PWR_EnterSLEEPMode(PWR_MAINREGULATOR_ON, PWR_SLEEPENTRY_WFI);
-//			break;
-//
-//		}
+	switch (mode)
+		{
+		case 0:
+		case 1:
+			HAL_PWR_EnterSLEEPMode(PWR_MAINREGULATOR_ON, PWR_SLEEPENTRY_WFI);
+			break;
+
+		}
 }
 
 uint64_t hw_get_unique_id()

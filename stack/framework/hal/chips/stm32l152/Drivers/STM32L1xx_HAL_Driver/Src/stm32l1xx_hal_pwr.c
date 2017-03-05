@@ -477,7 +477,13 @@ void HAL_PWR_EnterSLEEPMode(uint32_t Regulator, uint8_t SLEEPEntry)
   if(SLEEPEntry == PWR_SLEEPENTRY_WFI)
   {
     /* Request Wait For Interrupt */
-    __WFI();
+
+	// Fixing HARDFAULT after wakeup???
+	__disable_irq();
+	__asm__ ("DMB");
+	__WFI();
+	__asm__ ("nop");
+	__enable_irq();
   }
   else
   {
