@@ -28,15 +28,10 @@
 #if NUM_USERBUTTONS > 0
 #include "button.h"
 
-void Error_Handler()
-{
-
-}
-
 void userbutton_callback(button_id_t button_id)
 {
 	log_print_string("Button PB%u pressed.", button_id);
-	console_print("Button Pressed\n");
+	console_print("Button Pressed\r\n");
 	led_toggle(0);
 }
 
@@ -55,6 +50,7 @@ void led_on_callback()
 	timer_post_task_delay(&led_on_callback, TIMER_TICKS_PER_SEC);
 	timer_post_task_delay(&led_off_callback, TIMER_TICKS_PER_SEC*0.050);
 	log_print_string("Toggled on %d", 0);
+	console_print("Toggle led 0\r\n");
 
 	hw_watchdog_feed();
 
@@ -67,6 +63,7 @@ void timer1_callback()
 	led_toggle(1);
 	timer_post_task_delay(&timer1_callback, 0x0000FFFF + (uint32_t)100);
 	log_print_string("Toggled led %d", 1);
+	console_print("Toggle led 1\r\n");
 }
 
 void bootstrap()
@@ -75,6 +72,7 @@ void bootstrap()
 	led_on(1);
 
 	log_print_string("Device booted at time: %d\n", timer_get_counter_value());
+	console_print("Device Booted\r\n");
 
     sched_register_task(&led_on_callback);
     sched_register_task(&led_off_callback);
@@ -93,18 +91,5 @@ void bootstrap()
 
     led_off(0);
     led_off(1);
-
-//	while(1)
-//	{
-//        if (ubutton_pressed(0))
-//            led_on(0);
-//        else
-//            led_off(0);
-//
-//
-//
-//	}
-
-
 }
 

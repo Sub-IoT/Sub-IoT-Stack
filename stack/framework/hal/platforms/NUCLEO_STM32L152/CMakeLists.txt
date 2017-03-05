@@ -85,7 +85,7 @@ ADD_LIBRARY(PLATFORM OBJECT
     platf_main.c
     platf_leds.c
     platf_button.c
-    #libc_overrides.c
+    libc_overrides.c
     inc/button.h
 )
 

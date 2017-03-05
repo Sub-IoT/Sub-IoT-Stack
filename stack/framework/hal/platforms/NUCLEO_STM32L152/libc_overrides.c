@@ -24,6 +24,10 @@
 #include "SEGGER_RTT.h"
 #include "console.h"
 
+//#if defined(DEBUG)
+#define __DEBUG_BKPT()  __asm__ volatile ("bkpt 0")
+//#endif
+
 //Overwrite _write so 'printf''s get pushed over the uart
 int _write(int fd, char *ptr, int len)
 {
@@ -71,7 +75,9 @@ void __assert_func( const char *file, int line, const char *func, const char *fa
 	while(1)
 	{
             printf("assertion \"%s\" failed: file \"%s\", line %d%s%s\n",failedexpr, file, line, func ? ", function: " : "", func ? func : "");
-            //__BKPT (0); // break into debugger, when attached
+			//#if defined(DEBUG)
+            	__DEBUG_BKPT();  // break into debugger, when attached
+			//#endif
 
 		for(uint32_t j = 0; j < 20; j++)
 		{

@@ -25,170 +25,199 @@
 
 #include "hwtimer.h"
 #include "hwatomic.h"
+#include "stm32l1xx_hal.h"
 
 
 
  static timer_callback_t compare_f = 0x0;
  static timer_callback_t overflow_f = 0x0;
  static bool timer_inited = false;
+ static TIM_HandleTypeDef htim10;
 // /**************************************************************************//**
-//  * @brief Enables LFACLK and selects LFXO as clock source for RTC.
-//  *        Sets up the RTC to count at 1024 Hz.
+//  * @brief Sets up the TIM6 to count at 1024 Hz.
 //  *        The counter should not be cleared on a compare match and keep running.
 //  *        Interrupts should be cleared and enabled.
 //  *        The counter should run.
 //  *****************************************************************************/
 error_t hw_timer_init(hwtimer_id_t timer_id, uint8_t frequency, timer_callback_t compare_callback, timer_callback_t overflow_callback)
 {
-     if(timer_id >= HWTIMER_NUM)
-     	return ESIZE;
-     if(timer_inited)
-     	return EALREADY;
-     if(frequency != HWTIMER_FREQ_1MS && frequency != HWTIMER_FREQ_32K)
-     	return EINVAL;
+	if(timer_id >= HWTIMER_NUM)
+		return ESIZE;
+	if(timer_inited)
+		return EALREADY;
+	if(frequency != HWTIMER_FREQ_1MS && frequency != HWTIMER_FREQ_32K)
+		return EINVAL;
+
+	start_atomic();
+	compare_f = compare_callback;
+	overflow_f = overflow_callback;
+	timer_inited = true;
+
+	TIM_ClockConfigTypeDef sClockSourceConfig;
+	TIM_OC_InitTypeDef sConfigOC;
 	
-     start_atomic();
-	 compare_f = compare_callback;
-	 overflow_f = overflow_callback;
-	 timer_inited = true;
+	htim10.Instance = TIM10;
+	htim10.Init.Prescaler = (uint32_t) (SystemCoreClock / (1024 - 1));
+	htim10.Init.CounterMode = TIM_COUNTERMODE_UP;
+	htim10.Init.Period = (UINT32_C(1) << (8*sizeof(hwtimer_tick_t))) -1;
+	htim10.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
+	if (HAL_TIM_Base_Init(&htim10) != HAL_OK)
+	{
+		return FAIL;
+	}
 
-		// /* Configuring clocks in the Clock Management Unit (CMU) */
-		// startLfxoForRtc(frequency);
+	   sClockSourceConfig.ClockSource = TIM_CLOCKSOURCE_INTERNAL;
+	   if (HAL_TIM_ConfigClockSource(&htim10, &sClockSourceConfig) != HAL_OK)
+	   {
+		     return FAIL;
+	   }
 
-		// RTC_Init_TypeDef rtcInit = RTC_INIT_DEFAULT;
-		// rtcInit.enable   = false;   /* Don't enable RTC after init has run */
-		// rtcInit.comp0Top = true;    Clear counter on compare 0 match: cmp 0 is used to limit the value of the rtc to 0xffff 
-		// rtcInit.debugRun = false;   /* Counter shall not keep running during debug halt. */
+	   if (HAL_TIM_OC_Init(&htim10) != HAL_OK)
+	   {
+		     return FAIL;
+	   }
+
+	   sConfigOC.OCMode = TIM_OCMODE_TIMING;
+	   sConfigOC.Pulse = 0;
+	   sConfigOC.OCPolarity = TIM_OCPOLARITY_HIGH;
+	   sConfigOC.OCFastMode = TIM_OCFAST_DISABLE;
+	   if (HAL_TIM_OC_ConfigChannel(&htim10, &sConfigOC, TIM_CHANNEL_1) != HAL_OK)
+	   {
+		     return FAIL;
+	   }
+
+	// __HAL_RCC_TIM10_CLK_ENABLE();
+	/* Peripheral interrupt init */
+	//HAL_NVIC_SetPriority(TIM10_IRQn, 0, 0);
+	//HAL_NVIC_EnableIRQ(TIM10_IRQn);
+
+	//__HAL_TIM_DISABLE_IT(&htim10, TIM_IT_CC1 | TIM_IT_UPDATE);
+	//__HAL_TIM_CLEAR_FLAG(&htim10, TIM_IT_CC1 | TIM_IT_UPDATE);
+	//HAL_TIM_OC_Start_IT(&htim10, TIM_CHANNEL_1);
+	//__HAL_TIM_DISABLE_IT(&htim10, TIM_IT_CC1);
+	//  __HAL_TIM_ENABLE_IT(&htim10, TIM_IT_UPDATE);
+	__HAL_TIM_CLEAR_FLAG(&htim10, TIM_IT_CC1 | TIM_IT_UPDATE);
+	HAL_TIM_Base_Start_IT(&htim10);
 
 
-		// /* Initialize the RTC */
-		// RTC_Init(&rtcInit);
 
-		// //disable all rtc interrupts while we're still configuring
-		// RTC_IntDisable(RTC_IEN_OF | RTC_IEN_COMP0 | RTC_IEN_COMP1);
-		// RTC_IntClear(RTC_IFC_OF | RTC_IFC_COMP0 | RTC_IFC_COMP1);
-		// //Set maximum value for the RTC
-		// RTC_CompareSet( 0, 0x0000FFFF );
-		// RTC_CounterReset();
+	//
 
-		// RTC_IntEnable(RTC_IEN_COMP0);
 
-		// NVIC_EnableIRQ(RTC_IRQn);
-		// RTC_Enable(true);
+
+
+
      end_atomic();
     return SUCCESS;
 }
 
 hwtimer_tick_t hw_timer_getvalue(hwtimer_id_t timer_id)
 {
-	return HAL_GetTick();
-// 	if(timer_id >= HWTIMER_NUM || (!timer_inited))
-// 		return 0;
-// 	else
-// 	{
-// 		uint32_t value =(uint16_t)(RTC->CNT & 0xFFFF);
-// 		return value;
-// 	}
+ 	if(timer_id >= HWTIMER_NUM || (!timer_inited))
+ 		return 0;
+ 	else
+ 	{
+ 		uint32_t value =__HAL_TIM_GET_COUNTER(&htim10);
+ 		return value;
+ 	}
 }
 
 error_t hw_timer_schedule(hwtimer_id_t timer_id, hwtimer_tick_t tick )
 {
-// 	if(timer_id >= HWTIMER_NUM)
-// 		return ESIZE;
-// 	if(!timer_inited)
-// 		return EOFF;
+ 	if(timer_id >= HWTIMER_NUM)
+ 		return ESIZE;
+ 	if(!timer_inited)
+ 		return EOFF;
 
-// 	start_atomic();
-// 	   RTC_IntDisable(RTC_IEN_COMP1);
-// 	   RTC_CompareSet( 1, tick );
-// 	   RTC_IntClear(RTC_IEN_COMP1);
-// 	   RTC_IntEnable(RTC_IEN_COMP1);
-// 	end_atomic();
+ 	start_atomic();
+ 	__HAL_TIM_DISABLE_IT(&htim10, TIM_IT_CC1);
+
+ 	__HAL_TIM_SET_COMPARE(&htim10, TIM_CHANNEL_1, tick);
+ 	//HAL_TIM_OC_Start_IT(&htim10, TIM_CHANNEL_1);
+ 	__HAL_TIM_ENABLE_IT(&htim10, TIM_IT_CC1);
+ 	//HAL_NVIC_ClearPendingIRQ(TIM6_IRQn);
+	//HAL_NVIC_EnableIRQ(TIM6_IRQn);
+ 	end_atomic();
 }
 
 error_t hw_timer_cancel(hwtimer_id_t timer_id)
 {
-// 	if(timer_id >= HWTIMER_NUM)
-// 		return ESIZE;
-// 	if(!timer_inited)
-// 		return EOFF;
+ 	if(timer_id >= HWTIMER_NUM)
+ 		return ESIZE;
+ 	if(!timer_inited)
+ 		return EOFF;
 
-// 	start_atomic();
-// 	   RTC_IntDisable(RTC_IEN_COMP1);
-// 	   RTC_IntClear(RTC_IEN_COMP1);
-// 	end_atomic();
+ 	start_atomic();
+ 	__HAL_TIM_CLEAR_FLAG(&htim10, TIM_IT_CC1);
+ 	__HAL_TIM_DISABLE_IT(&htim10, TIM_IT_CC1);
+ 	//HAL_NVIC_ClearPendingIRQ(TIM6_IRQn);
+ 	//HAL_NVIC_DisableIRQ(TIM6_IRQn);
+ 	end_atomic();
 }
 
 error_t hw_timer_counter_reset(hwtimer_id_t timer_id)
 {
-// 	if(timer_id >= HWTIMER_NUM)
-// 		return ESIZE;
-// 	if(!timer_inited)
-// 		return EOFF;
+ 	if(timer_id >= HWTIMER_NUM)
+ 		return ESIZE;
+ 	if(!timer_inited)
+ 		return EOFF;
 
-// 	start_atomic();
-// 		RTC_IntDisable(RTC_IEN_COMP0 | RTC_IEN_COMP1);
-// 		RTC_IntClear(RTC_IEN_COMP0 | RTC_IEN_COMP1);
-// 		RTC_CounterReset();
-// 		RTC_IntEnable(RTC_IEN_COMP0);
-// 	end_atomic();
+ 	start_atomic();
+
+ 	__HAL_TIM_DISABLE_IT(&htim10, TIM_IT_CC1 | TIM_IT_UPDATE);
+ 	__HAL_TIM_CLEAR_FLAG(&htim10, TIM_IT_CC1 | TIM_IT_UPDATE);
+ 	__HAL_TIM_SET_COUNTER(&htim10, 10);
+	__HAL_TIM_ENABLE_IT(&htim10, TIM_IT_UPDATE);
+ 	end_atomic();
 
 }
 
 bool hw_timer_is_overflow_pending(hwtimer_id_t timer_id)
 {
-//     if(timer_id >= HWTIMER_NUM)
-// 	return false;
-//     start_atomic();
-// 	//COMP0 is used to limit thc RTC to 16 bits -> use this one to check
-// 	bool is_pending = !!((RTC_IntGet() & RTC->IEN) & RTC_IFS_COMP0);
-//     end_atomic();
-//     return is_pending;	
+     if(timer_id >= HWTIMER_NUM)
+ 	return false;
+     start_atomic();
+ 	//COMP0 is used to limit thc RTC to 16 bits -> use this one to check
+ 	bool is_pending = __HAL_TIM_GET_FLAG(&htim10, TIM_IT_UPDATE);
+     end_atomic();
+     return is_pending;
 }
 
 bool hw_timer_is_interrupt_pending(hwtimer_id_t timer_id)
 {
-//     if(timer_id >= HWTIMER_NUM)
-// 	return false;
+     if(timer_id >= HWTIMER_NUM)
+ 	return false;
 
-//     start_atomic();
-// 	bool is_pending = !!((RTC_IntGet() & RTC->IEN) & RTC_IFS_COMP1);
-//     end_atomic();
-//     return is_pending;	
-	return true;
+     start_atomic();
+ 	bool is_pending = __HAL_TIM_GET_FLAG(&htim10, TIM_IT_CC1);
+     end_atomic();
+     return is_pending;
+}
+
+void HAL_TIM_OC_DelayElapsedCallback(TIM_HandleTypeDef *htim)
+{
+	if (htim->Instance==TIM10)
+		{
+
+			__HAL_TIM_DISABLE_IT(&htim10, TIM_IT_CC1);
+			if(compare_f != 0x0)
+			 		compare_f();
+		}
+}
+
+void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
+{
+	if (htim->Instance==TIM10)
+	{
+		if(overflow_f != 0x0)
+			overflow_f();
+	}
 }
 
 
+void TIM10_IRQHandler(void)
+{
+  HAL_TIM_IRQHandler(&htim10);
+}
 
-// INT_HANDLER(RTC_IRQHandler)
-// {
-// 	//retrieve flags. We 'OR' this with the enabled interrupts
-// 	//since the COMP1 flag may be set if it wasn't used before (compare register == 0 -> ifs flag set regardless of whether interrupt is enabled)
-// 	//by AND ing with the IEN we make sure we only consider the flags of the ENABLED interrupts
-// 	uint32_t flags = (RTC_IntGet() & RTC->IEN);
-// 	RTC_IntClear(RTC_IFC_OF | RTC_IFC_COMP0 | RTC_IFC_COMP1);
 
-// 	//evaluate flags to see which one(s) fired:
-// 	if((flags & RTC_IFS_COMP0) && (overflow_f != 0x0))
-// 		overflow_f();
-// 	if((flags & RTC_IFS_COMP1))
-// 	{
-// 		RTC_IntDisable(RTC_IEN_COMP1);
-// 		if(compare_f != 0x0)
-// 			compare_f();
-// 	}
-// }
-
-//void SysTick_Handler(void)
-//{
-//  /* USER CODE BEGIN SysTick_IRQn 0 */
-//
-//  /* USER CODE END SysTick_IRQn 0 */
-//  HAL_IncTick();
-//  HAL_SYSTICK_IRQHandler();
-//  if(compare_f != 0x0)
-//  		compare_f();
-//  /* USER CODE BEGIN SysTick_IRQn 1 */
-//
-//  /* USER CODE END SysTick_IRQn 1 */
-//}
