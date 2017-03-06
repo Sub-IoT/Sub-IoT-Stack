@@ -634,6 +634,13 @@ void dll_execute_scan_automation()
      * By default, subprofile[0] is selected and subband[0] is used.
      */
 
+    if(current_access_profile.subprofiles[0].subband_bitmap == 0)
+    {
+        DPRINT("Scan autom ch list is void, not entering scan\n");
+        hw_radio_set_idle();
+        return;
+    }
+
     switch_state(DLL_STATE_SCAN_AUTOMATION);
     hw_rx_cfg_t rx_cfg = {
         .channel_id = {
