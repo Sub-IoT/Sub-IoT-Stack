@@ -203,7 +203,7 @@ void fs_init_file(uint8_t file_id, const fs_file_header_t* file_header, const ui
         fs_write_file(file_id, 0, initial_data, file_header->length);
 }
 
-void fs_init_file_with_D7AActP(uint8_t file_id, const d7asp_master_session_config_t* fifo_config, const alp_control_t* alp_ctrl, const uint8_t* alp_operand)
+void fs_init_file_with_D7AActP(uint8_t file_id, const d7asp_master_session_config_t* fifo_config, const uint8_t* alp_command, const uint8_t alp_command_len)
 {
     uint8_t alp_command_buffer[40] = { 0 };
     uint8_t* ptr = alp_command_buffer;
@@ -214,20 +214,7 @@ void fs_init_file_with_D7AActP(uint8_t file_id, const d7asp_master_session_confi
     (*ptr) = fifo_config->addressee.access_class; ptr++;
     memcpy(ptr, &(fifo_config->addressee.id), 8); ptr += 8; // TODO assume 8 for now
 
-    (*ptr) = alp_ctrl->raw; ptr++;
-
-    uint8_t alp_operand_len = 0;
-    switch(alp_ctrl->operation)
-    {
-        case ALP_OP_READ_FILE_DATA:
-            alp_operand_len = 3; // File Offset Operand + requested Data Length
-                //TODO File Offset Operand can be 2-5 bytes actually, depending on File Offset Field Length, see spec
-            break;
-        default:
-            assert(false);
-    }
-
-    memcpy(ptr, alp_operand, alp_operand_len); ptr += alp_operand_len;
+    memcpy(ptr, alp_command, alp_command_len); ptr += alp_command_len;
 
     // TODO fixed header implemented here, or should this be configurable by app?
     fs_file_header_t action_file_header = (fs_file_header_t){

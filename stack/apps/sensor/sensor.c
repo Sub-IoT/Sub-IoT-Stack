@@ -129,21 +129,20 @@ void init_user_files()
     fs_init_file(SENSOR_FILE_ID, &file_header, NULL);
 
     // configure file notification using D7AActP: write ALP command to broadcast changes made to file 0x40 in file 0x41
-    // first generate ALP command consisting of ALP Control header, ALP File Data Request operand and D7ASP interface configuration
-    alp_control_regular_t alp_ctrl = {
-        .group = false,
-        .response_requested = false,
-        .operation = ALP_OP_READ_FILE_DATA
+
+    // first generate ALP command. We do this manually for now (until we have an API for this).
+    // Please refer to the spec for the format
+
+    uint8_t alp_command[4] = {
+      // ALP Control byte
+      ALP_OP_READ_FILE_DATA,
+      // File Data Request operand:
+      SENSOR_FILE_ID, // the file ID
+      0, // offset in file
+      SENSOR_FILE_SIZE // requested data length
     };
 
-    alp_operand_file_data_request_t file_data_request_operand = {
-        .file_offset = {
-            .file_id = SENSOR_FILE_ID,
-            .offset = 0
-        },
-        .requested_data_length = SENSOR_FILE_SIZE,
-    };
-
+    // Define the D7 interface configuration used for sending the result of above ALP command on
     d7asp_master_session_config_t session_config = {
         .qos = {
             .qos_resp_mode = SESSION_RESP_MODE_ANY,
@@ -163,7 +162,7 @@ void init_user_files()
     };
 
     // finally, register D7AActP file
-    fs_init_file_with_D7AActP(ACTION_FILE_ID, &session_config, (alp_control_t*)&alp_ctrl, (uint8_t*)&file_data_request_operand);
+    fs_init_file_with_D7AActP(ACTION_FILE_ID, &session_config, alp_command, sizeof(alp_command));
 }
 
 void bootstrap()

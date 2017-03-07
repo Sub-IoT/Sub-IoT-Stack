@@ -40,7 +40,6 @@
 #include "link_c.h"
 #include "framework_defs.h"
 #include "types.h"
-#include "hwradio.h"
 
 /*! \brief The source in the stack from which the log originates  */
 typedef enum

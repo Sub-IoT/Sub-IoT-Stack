@@ -61,6 +61,7 @@ typedef enum
 	/** Positive Ch4, negative Ch5. */
         adcInputSingleCh4Ch5,
         adcInputSingleInputCh2,
+        adcInputSingleInputCh4,
         adcInputSingleInputCh5,
         adcInputSingleInputCh6
 } ADC_Input;

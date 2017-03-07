@@ -251,7 +251,7 @@ error_t d7atp_send_request(uint8_t dialog_id, uint8_t transaction_id, bool is_la
     uint8_t access_class = packet->d7anp_addressee->access_class;
     if (access_class != current_access_class)
     {
-        fs_read_access_class(packet->d7anp_addressee->access_index, &active_addressee_access_profile);
+        fs_read_access_class(packet->d7anp_addressee->access_specifier, &active_addressee_access_profile);
         current_access_class = access_class;
     }
 
@@ -402,7 +402,7 @@ bool d7atp_disassemble_packet_header(packet_t *packet, uint8_t *data_idx)
         (*data_idx)++;
     }
 
-    if ((d7atp_state != D7ATP_STATE_MASTER_TRANSACTION_REQUEST_PERIOD) && (packet->d7atp_ctrl.ctrl_is_ack_requested)) {
+    if ((d7atp_state != D7ATP_STATE_MASTER_TRANSACTION_RESPONSE_PERIOD) && (packet->d7atp_ctrl.ctrl_is_ack_requested)) {
       packet->d7atp_tc = packet->hw_radio_packet.data[(*data_idx)];
       (*data_idx)++;
     }
@@ -482,6 +482,7 @@ void d7atp_process_received_packet(packet_t* packet)
     // copy addressee from NP origin
     current_addressee.ctrl.id_type = packet->d7anp_ctrl.origin_id_type;
     current_addressee.access_class = packet->origin_access_class;
+    DPRINT("ORI AC=0x%02x", packet->origin_access_class);
     memcpy(current_addressee.id, packet->origin_access_id, 8);
     packet->d7anp_addressee = &current_addressee;
 
@@ -595,7 +596,7 @@ void d7atp_process_received_packet(packet_t* packet)
         // set active_addressee_access_profile to the access_profile supplied by the requester
         if (current_access_class != current_addressee.access_class)
         {
-            fs_read_access_class(current_addressee.access_index, &active_addressee_access_profile);
+            fs_read_access_class(current_addressee.access_specifier, &active_addressee_access_profile);
             current_access_class = current_addressee.access_class;
         }
 

@@ -50,14 +50,8 @@ static state_t NGDEF(_d7anp_state);
 static state_t NGDEF(_d7anp_prev_state);
 #define d7anp_prev_state NG(_d7anp_prev_state)
 
-static dae_access_profile_t NGDEF(_own_access_profile);
-#define own_access_profile NG(_own_access_profile)
-
 static timer_tick_t NGDEF(_fg_scan_timeout_ticks);
 #define fg_scan_timeout_ticks NG(_fg_scan_timeout_ticks)
-
-static uint8_t NGDEF(_active_access_class);
-#define active_access_class NG(_active_access_class)
 
 static d7anp_security_t NGDEF(_security_state);
 #define security_state NG(_security_state)
@@ -190,10 +184,6 @@ void d7anp_init()
 {
     uint8_t key[AES_BLOCK_SIZE];
 
-    // set early our own acces profile since this information may be needed when receiving a frame
-    active_access_class = fs_read_dll_conf_active_access_class();
-    fs_read_access_class(ACCESS_SPECIFIER(active_access_class), &own_access_profile);
-
     d7anp_state = D7ANP_STATE_IDLE;
     fg_scan_timeout_ticks = 0;
 
@@ -243,7 +233,7 @@ error_t d7anp_tx_foreground_frame(packet_t* packet, bool should_include_origin_t
             packet->d7anp_ctrl.origin_id_type = ID_TYPE_VID;
 
         packet->d7anp_ctrl.origin_void = false;
-        packet->origin_access_class = active_access_class;
+        // note we set packet->origin_access_class in DLL, since we cache the active access class there already
     }
 
     packet->d7anp_listen_timeout = slave_listen_timeout_ct;

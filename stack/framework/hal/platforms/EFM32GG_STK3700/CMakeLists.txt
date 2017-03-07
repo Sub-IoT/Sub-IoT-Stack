@@ -94,7 +94,7 @@ ADD_LIBRARY(PLATFORM OBJECT
 
 #Include the sources for the efm32gg chip
 ADD_CHIP("efm32gg")
-
+ADD_CHIP("sx1276") # TODO tmp
 #Include the sources for the radio chip, if needed
 IF(NOT ("${${PLATFORM_PREFIX}_RADIO}" STREQUAL "none"))
     ADD_CHIP(${${PLATFORM_PREFIX}_RADIO})

@@ -79,7 +79,7 @@ typedef struct {
         uint8_t access_class;
         struct {
             uint8_t access_mask : 4;
-            uint8_t access_index : 4;
+            uint8_t access_specifier : 4;
         };
     };
     uint8_t id[8]; // TODO assuming 8 byte id for now
