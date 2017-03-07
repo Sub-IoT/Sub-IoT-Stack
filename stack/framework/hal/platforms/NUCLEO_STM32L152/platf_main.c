@@ -23,12 +23,18 @@
 #include "hwleds.h"
 #include "led.h"
 #include "button.h"
+#include "stm32l1xx_hal_gpio.h"
 
 void __platform_init()
 {
     __stm32l152_mcu_init();
     __gpio_init();
     __led_init();
+#ifdef USE_CC1101
+    // configure the interrupt pins here, since hw_gpio_configure_pin() is MCU
+    // specific and not part of the common HAL API
+    hw_gpio_configure_pin(CC1101_GDO0_PIN, true, GPIO_MODE_IT_FALLING, 0);
+#endif
 
 }
 

@@ -42,7 +42,7 @@ typedef struct
 
 button_info_t buttons[NUM_USERBUTTONS];
 
-static void button_callback(uint16_t pin_id_pin, uint8_t event_mask);
+static void button_callback(pin_id_t pin_id, uint8_t event_mask);
 static void button_task();
 __LINK_C void __ubutton_init()
 {
@@ -53,9 +53,8 @@ __LINK_C void __ubutton_init()
 		memset(buttons[i].callbacks, 0, sizeof(buttons[i].callbacks));
 		buttons[i].cur_callback_id = BUTTON_QUEUE_SIZE;
 		buttons[i].num_registered_callbacks = 0;
-		err = hw_gpio_configure_pin(buttons[0].button_id, true, GPIO_MODE_IT_RISING, 0); assert(err == SUCCESS); // TODO pull up or pull down to prevent floating
-
-		//error_t err = hw_gpio_configure_interrupt(buttons[i].button_id, &button_callback, GPIO_FALLING_EDGE); //assert(err == SUCCESS);
+		err = hw_gpio_configure_pin(buttons[0].button_id, true, GPIO_MODE_IT_FALLING, 0); assert(err == SUCCESS); // TODO pull up or pull down to prevent floating
+		err = hw_gpio_configure_interrupt(buttons[i].button_id, &button_callback, GPIO_FALLING_EDGE); assert(err == SUCCESS);
 	}
 	sched_register_task(&button_task);
 }
@@ -132,12 +131,12 @@ __LINK_C error_t ubutton_deregister_callback(button_id_t button_id, ubutton_call
 	return SUCCESS;
 }
 
-static void button_callback(uint16_t pin_id_pin, uint8_t event_mask)
+static void button_callback(pin_id_t pin_id, uint8_t event_mask)
 {
 	//TODO only pin is compared
 	for(int i = 0; i < NUM_USERBUTTONS;i++)
 	{
-		if(buttons[i].button_id.pin == pin_id_pin)
+		if(buttons[i].button_id.pin == pin_id.pin)
 		{
 			//set cur_callback_id to 0 to trigger all registered callbacks and post a task to do the actual callbacks
 			buttons[i].cur_callback_id = 0;
@@ -173,13 +172,5 @@ void button_task()
 	}
 }
 
-void EXTI15_10_IRQHandler(void)
-{
-    HAL_GPIO_EXTI_IRQHandler(1 << BUTTON0.pin);
-}
 
-void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
-	if(GPIO_Pin == 1 << BUTTON0.pin)
-		button_callback(BUTTON0.pin, 0);
-}
 

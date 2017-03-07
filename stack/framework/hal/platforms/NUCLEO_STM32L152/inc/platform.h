@@ -65,14 +65,14 @@
 
 
 // CC1101 PIN definitions
-// #ifdef USE_CC1101
-// #define CC1101_SPI_USART    1
-// #define CC1101_SPI_BAUDRATE 6000000
-// #define CC1101_SPI_LOCATION 1
-// #define CC1101_SPI_PIN_CS   D3
-// #define CC1101_GDO0_PIN     C3
-// #define CC1101_GDO2_PIN     C4
-// #endif
+ #ifdef USE_CC1101
+ #define CC1101_SPI_USART    2
+ #define CC1101_SPI_BAUDRATE 4000000
+ #define CC1101_SPI_LOCATION 0
+ #define CC1101_SPI_PIN_CS   C6
+ #define CC1101_GDO0_PIN     C7
+ //#define CC1101_GDO2_PIN     C8
+ #endif
 
 #define PLATFORM_NUM_TIMERS 1
 

@@ -21,6 +21,13 @@
 #include "hwgpio.h"
 //port A
 extern pin_id_t const A5;
+// PORT B
+extern pin_id_t const B13;
+extern pin_id_t const B14;
+extern pin_id_t const B15;
 //port C
+extern pin_id_t const C6;
+extern pin_id_t const C7;
+extern pin_id_t const C8;
 extern pin_id_t const C13;
 #endif //__STM32L152_PINS_H_

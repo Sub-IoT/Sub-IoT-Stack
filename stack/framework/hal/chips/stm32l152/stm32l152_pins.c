@@ -38,4 +38,12 @@ enum
 
 //Definition of the pin_id's for the GPIO ports of the stm32l152
 pin_id_t const A5 = {.port = GPIO_PORTA, .pin = 5};
+
+pin_id_t const B13 = {.port = GPIO_PORTB, .pin = 13};
+pin_id_t const B14 = {.port = GPIO_PORTB, .pin = 14};
+pin_id_t const B15 = {.port = GPIO_PORTB, .pin = 15};
+
+pin_id_t const C6 = {.port = GPIO_PORTC, .pin = 6};
+pin_id_t const C7 = {.port = GPIO_PORTC, .pin = 7};
+pin_id_t const C8 = {.port = GPIO_PORTC, .pin = 8};
 pin_id_t const C13 = {.port = GPIO_PORTC, .pin = 13};

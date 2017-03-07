@@ -25,6 +25,8 @@
 #include "hwgpio.h"
 #include "stm32l1xx_hal_conf.h"
 #include "stm32l1xx_hal.h"
+#include "hwatomic.h"
+#include "assert.h"
 //#include "stm32l1xx_hal_gpio.h"
 //#include "stm32l1xx_hal_rcc.h"
 
@@ -102,10 +104,12 @@ __LINK_C error_t hw_gpio_configure_pin_stm(pin_id_t pin_id, void* GPIO_InitStruc
 
 	HAL_GPIO_Init(ports[pin_id.port], initStruct);
 
-	if  (initStruct->Mode == GPIO_MODE_IT_RISING)
+	if  (initStruct->Mode == GPIO_MODE_IT_RISING || initStruct->Mode == GPIO_MODE_IT_FALLING || initStruct->Mode == GPIO_MODE_IT_RISING_FALLING)
 	{
 		interrupts[pin_id.pin].interrupt_port = pin_id.port;
 	}
+
+	return SUCCESS;
 }
 
 __LINK_C error_t hw_gpio_set(pin_id_t pin_id)
@@ -137,17 +141,55 @@ __LINK_C bool hw_gpio_get_in(pin_id_t pin_id)
     return (HAL_GPIO_ReadPin(ports[pin_id.port], 1 << pin_id.pin) == GPIO_PIN_SET);
 }
 
-//static void gpio_int_callback(uint8_t pin)
-//{
-//
-//}
+static void gpio_int_callback(uint8_t pin)
+{
+    //we use emlib's GPIO interrupt handler which does NOT
+    //disable the interrupts by default --> disable them here to get the same behavior !!
+    start_atomic();
+	assert(interrupts[pin].callback != 0x0);
+	pin_id_t id = {interrupts[pin].interrupt_port, pin};
+	//report an event_mask of '0' since the only way to check which event occurred
+	//is to check the state of the pin from the interrupt handler and
+    //since the execution of interrupt handlers may be 'delayed' this method is NOT reliable.
+    // TODO find out if there is no way to do this reliable on efm32gg
+    interrupts[pin].callback(id,0);
+    end_atomic();
+}
 
 __LINK_C error_t hw_gpio_configure_interrupt(pin_id_t pin_id, gpio_inthandler_t callback, uint8_t event_mask)
 {
-	return SUCCESS;
+	if(interrupts[pin_id.pin].interrupt_port != pin_id.port)
+	    	return EOFF;
+	    else if(callback == 0x0 || event_mask > (GPIO_RISING_EDGE | GPIO_FALLING_EDGE))
+	    	return EINVAL;
+
+	    error_t err;
+	    start_atomic();
+		//do this check atomically: interrupts[..] callback is altered by this function
+		//so the check belongs in the critical section as well
+	    if(interrupts[pin_id.pin].callback != 0x0 && interrupts[pin_id.pin].callback != callback)
+		    err = EBUSY;
+		else
+		{
+		    interrupts[pin_id.pin].callback = callback;
+//	    	GPIOINT_CallbackRegister(pin_id.pin, &gpio_int_callback);
+//		    GPIO_IntConfig(pin_id.port, pin_id.pin,
+//				!!(event_mask & GPIO_RISING_EDGE),
+//				!!(event_mask & GPIO_FALLING_EDGE),
+//				false);
+		    err = SUCCESS;
+		}
+	    end_atomic();
+	    return err;
 }
 __LINK_C error_t hw_gpio_enable_interrupt(pin_id_t pin_id)
 {
+	if (pin_id.pin >= 5 && pin_id.pin <= 9)
+	{
+		HAL_NVIC_EnableIRQ(EXTI9_5_IRQn);
+		return SUCCESS;
+	}
+
 	if (pin_id.pin >= 10 && pin_id.pin <= 15)
 	{
 		HAL_NVIC_EnableIRQ(EXTI15_10_IRQn);
@@ -158,12 +200,89 @@ __LINK_C error_t hw_gpio_enable_interrupt(pin_id_t pin_id)
 
 __LINK_C error_t hw_gpio_disable_interrupt(pin_id_t pin_id)
 {
+	//TODO: check if no other pins are still using the interrupt
+	if (pin_id.pin >= 5 && pin_id.pin <= 9)
+	{
+		HAL_NVIC_EnableIRQ(EXTI9_5_IRQn);
+		return SUCCESS;
+	}
 	if (pin_id.pin >= 10 && pin_id.pin <= 15)
+	{
+		HAL_NVIC_DisableIRQ(EXTI15_10_IRQn);
+		return SUCCESS;
+	}
+	return FAIL;
+}
+
+void EXTI9_5_IRQHandler(void)
+{
+    HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_5);
+    HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_6);
+    HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_7);
+    HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_8);
+    HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_9);
+}
+
+void EXTI15_10_IRQHandler(void)
+{
+    HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_10);
+    HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_11);
+    HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_12);
+    HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_13);
+    HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_14);
+    HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_15);
+}
+
+void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
+	// TODO: find more efficient method
+	switch (GPIO_Pin)
 		{
-			HAL_NVIC_DisableIRQ(EXTI15_10_IRQn);
-			return SUCCESS;
+		case GPIO_PIN_0:
+			gpio_int_callback(0);
+			break;
+		case GPIO_PIN_1:
+			gpio_int_callback(1);
+			break;
+		case GPIO_PIN_2:
+			gpio_int_callback(2);
+			break;
+		case GPIO_PIN_3:
+			gpio_int_callback(3);
+			break;
+		case GPIO_PIN_4:
+			gpio_int_callback(4);
+			break;
+		case GPIO_PIN_5:
+			gpio_int_callback(5);
+			break;
+		case GPIO_PIN_6:
+			gpio_int_callback(6);
+			break;
+		case GPIO_PIN_7:
+			gpio_int_callback(7);
+			break;
+		case GPIO_PIN_9:
+			gpio_int_callback(9);
+			break;
+		case GPIO_PIN_10:
+			gpio_int_callback(10);
+			break;
+		case GPIO_PIN_11:
+			gpio_int_callback(11);
+			break;
+		case GPIO_PIN_12:
+			gpio_int_callback(12);
+			break;
+		case GPIO_PIN_13:
+			gpio_int_callback(13);
+			break;
+		case GPIO_PIN_14:
+			gpio_int_callback(14);
+			break;
+		case GPIO_PIN_15:
+			gpio_int_callback(15);
+			break;
 		}
-	    return FAIL;
 }
 
 
