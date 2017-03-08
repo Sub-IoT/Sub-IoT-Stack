@@ -18,7 +18,7 @@
 
 
 // This examples pushes sensor data to gateway(s) by manually constructing an ALP command with a file read result action
-// (unsolicited message)
+// (unsolicited message). The D7 session is configured to request ACKs. All received ACKs are printed.
 
 #include "hwleds.h"
 #include "hwsystem.h"
@@ -155,6 +155,22 @@ void execute_sensor_measurement()
 #endif
 }
 
+void on_alp_command_completed_cb(uint8_t tag_id, bool success)
+{
+    if(success)
+      log_print_string("Command completed successfully");
+    else
+      log_print_string("Command failed, no ack received");
+}
+
+void on_alp_command_result_cb(d7asp_result_t result, uint8_t* payload, uint8_t payload_length)
+{
+    log_print_string("recv response @ %i dB link budget from:", result.link_budget);
+    log_print_data(result.addressee->id, 8);
+}
+
+static alp_init_args_t alp_init_args;
+
 void bootstrap()
 {
     log_print_string("Device booted\n");
@@ -186,7 +202,9 @@ void bootstrap()
         .access_class = 0x01
     };
 
-    d7ap_stack_init(&fs_init_args, NULL, false, NULL);
+    alp_init_args.alp_command_completed_cb = &on_alp_command_completed_cb;
+    alp_init_args.alp_command_result_cb = &on_alp_command_result_cb;
+    d7ap_stack_init(&fs_init_args, &alp_init_args, false, NULL);
 
 #if (defined PLATFORM_EFM32GG_STK3700 || defined PLATFORM_EFM32HG_STK3400 || defined PLATFORM_EZR32LG_WSTK6200A || defined PLATFORM_EZR32LG_OCTA)
     initSensors();
