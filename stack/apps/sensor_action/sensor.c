@@ -32,6 +32,9 @@
 #include "fs.h"
 #include "log.h"
 
+// This examples pushes sensor data to gateway(s) by writing it to a local file, which is configured to trigger a file action (using D7AActP)
+// which results in reading this file and sending the result to the D7 interface
+
 
 #include "button.h"
 #if (defined PLATFORM_EFM32GG_STK3700 || defined PLATFORM_EFM32HG_STK3400 || defined PLATFORM_EZR32LG_WSTK6200A || defined PLATFORM_EZR32LG_OCTA)
