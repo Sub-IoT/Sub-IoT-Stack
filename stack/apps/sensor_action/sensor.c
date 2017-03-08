@@ -33,7 +33,7 @@
 #include "log.h"
 
 // This examples pushes sensor data to gateway(s) by writing it to a local file, which is configured to trigger a file action (using D7AActP)
-// which results in reading this file and sending the result to the D7 interface
+// which results in reading this file and sending the result to the D7 interface. The D7 session is configured not to request ACKs.
 
 
 #include "button.h"
