@@ -87,22 +87,23 @@ void execute_sensor_measurement()
 
   uint8_t sensor_values[SENSOR_FILE_SIZE] = { 0 };
 
-#if (defined PLATFORM_EFM32GG_STK3700)
-  float internal_temp = hw_get_internal_temperature();
-  lcd_write_temperature(internal_temp*10, 1);
-  uint32_t vdd = hw_get_battery();
-  fs_write_file(SENSOR_FILE_ID, 0, (uint8_t*)&internal_temp, sizeof(internal_temp)); // File 0x40 is configured to use D7AActP trigger an ALP action which broadcasts this file data on Access Class 0
-#elif (defined PLATFORM_EFM32HG_STK3400  || defined PLATFORM_EZR32LG_WSTK6200A || defined PLATFORM_EZR32LG_OCTA)
+#if (defined PLATFORM_EFM32HG_STK3400  || defined PLATFORM_EZR32LG_WSTK6200A \
+  || defined PLATFORM_EZR32LG_OCTA || defined PLATFORM_EFM32GG_STK3700 || defined PLATFORM_EZR32LG_USB01)
   char str[30];
 
   float internal_temp = hw_get_internal_temperature();
+#if (defined PLATFORM_EFM32GG_STK3700)
+  lcd_write_temperature(internal_temp*10, 1);
+#else
   sprintf(str, "Int T: %2d.%d C", (int)internal_temp, (int)(internal_temp*10)%10);
   LCD_WRITE_LINE(2,str);
+#endif
 
   log_print_string(str);
 
-  uint32_t rhData;
-  uint32_t tData;
+  uint32_t rhData = 0;
+  uint32_t tData = 0;
+#if ! defined PLATFORM_EZR32LG_USB01
   getHumidityAndTemperature(&rhData, &tData);
 
   sprintf(str, "Ext T: %d.%d C", (tData/1000), (tData%1000)/100);
@@ -112,6 +113,7 @@ void execute_sensor_measurement()
   sprintf(str, "Ext H: %d.%d", (rhData/1000), (rhData%1000)/100);
   LCD_WRITE_LINE(4,str);
   log_print_string(str);
+#endif
 
   uint32_t vdd = hw_get_battery();
 
