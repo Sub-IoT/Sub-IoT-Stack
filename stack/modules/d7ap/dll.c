@@ -638,6 +638,9 @@ void dll_execute_scan_automation()
     {
         DPRINT("Scan autom ch list is void, not entering scan\n");
         hw_radio_set_idle();
+        if(dll_state != DLL_STATE_IDLE)
+          switch_state(DLL_STATE_IDLE);
+
         return;
     }
 
