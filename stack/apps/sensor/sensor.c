@@ -56,7 +56,7 @@
 #define SENSOR_FILE_SIZE         8
 #define ACTION_FILE_ID           0x41
 
-#define SENSOR_UPDATE	TIMER_TICKS_PER_SEC * 10
+#define SENSOR_INTERVAL_SEC	TIMER_TICKS_PER_SEC * 10
 
 
 void execute_sensor_measurement()
@@ -107,7 +107,7 @@ void execute_sensor_measurement()
   fs_write_file(SENSOR_FILE_ID, 0, (uint8_t*)&t, sizeof(timer_tick_t));
 #endif
 
-  timer_post_task_delay(&execute_sensor_measurement, SENSOR_UPDATE);
+  timer_post_task_delay(&execute_sensor_measurement, SENSOR_INTERVAL_SEC);
 
 #ifdef PLATFORM_EZR32LG_OCTA
   led_flash_green();
@@ -145,7 +145,7 @@ void init_user_files()
     // Define the D7 interface configuration used for sending the result of above ALP command on
     d7asp_master_session_config_t session_config = {
         .qos = {
-            .qos_resp_mode = SESSION_RESP_MODE_ANY,
+            .qos_resp_mode = SESSION_RESP_MODE_NO,
             .qos_retry_mode = SESSION_RETRY_MODE_NO,
             .qos_stop_on_error       = false,
             .qos_record              = false
@@ -204,7 +204,7 @@ void bootstrap()
 #endif
 
     sched_register_task(&execute_sensor_measurement);
-    timer_post_task_delay(&execute_sensor_measurement, TIMER_TICKS_PER_SEC);
+    timer_post_task_delay(&execute_sensor_measurement, SENSOR_INTERVAL_SEC);
 
     LCD_WRITE_STRING("EFM32 Sensor\n");
 }
