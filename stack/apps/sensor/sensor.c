@@ -177,7 +177,7 @@ void bootstrap()
                 .ch_freq_band = PHY_BAND_868
             },
             .subprofiles[0] = {
-                .subband_bitmap = 0x01, // only the first subband is selectable
+                .subband_bitmap = 0x00, // void scan automation channel list
                 .scan_automation_period = 0,
             },
             .subbands[0] = (subband_t){
