@@ -38,6 +38,8 @@
 
 #define HW_RSSI_INVALID 0x7FFF
 
+#define PACKET_MAX_SIZE 255
+
 /* \brief The channel bands and corresponding band indices as defined in D7A
  *
  */

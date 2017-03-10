@@ -24,10 +24,16 @@
 #ifndef CC1101_H
 #define CC1101_H
 
+#define FIFO_SIZE   64
+
+#define AVAILABLE_BYTES_IN_TX_FIFO  20
+#define BYTES_IN_RX_FIFO            20
+
 /* \brief Callback called by cc1101_interface_{spi/cc430} when end_of_packet interrupt occurs.
  * Note: this is called from an interrupt context so should contain minimal processing.
  *
  */
 typedef void(*end_of_packet_isr_t)(void);
+typedef void(*fifo_thr_isr_t)(void);
 
 #endif // CC1101_H

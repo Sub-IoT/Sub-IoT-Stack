@@ -36,6 +36,7 @@ extern "C" {
 #include <stdbool.h>
 
 #include "cc1101.h"
+#include "cc1101_constants.h"
 
 typedef enum {
 	GDOLine0 = 0x2,
@@ -92,8 +93,9 @@ typedef struct {
     uint8_t fscal0;           // Frequency Synthesizer Calibration
 } RF_SETTINGS;
 
-void cc1101_interface_init(end_of_packet_isr_t end_of_packet_isr_cb);
-void cc1101_interface_set_interrupts_enabled(bool enabled);
+void cc1101_interface_init(end_of_packet_isr_t end_of_packet_isr_cb, fifo_thr_isr_t fifo_threshold_isr_cb);
+void cc1101_interface_set_interrupts_enabled(cc1101_gdOx_t gdOx, bool enabled);
+void c1101_interface_set_edge_interrupt(cc1101_gdOx_t gdOx, uint8_t edge);
 uint8_t cc1101_interface_strobe(uint8_t strobe_command);
 void cc1101_interface_reset_radio_core(void);
 void cc1101_interface_write_rfsettings(RF_SETTINGS* rfsettings);

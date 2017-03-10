@@ -43,24 +43,34 @@
 #endif
 
 static end_of_packet_isr_t end_of_packet_isr_callback;
-void _c1101_interface_set_interrupts_enabled(bool enable);
+static fifo_thr_isr_t fifo_thr_isr_callback;
+
+void _c1101_interface_set_interrupts_enabled(cc1101_gdOx_t gdOx, bool enable);
 
 void _cc1101_gdo_isr(pin_id_t pin_id, uint8_t event_mask)
 {
-    assert(hw_gpio_pin_matches(pin_id, CC1101_GDO0_PIN));
-    //assert(event_mask == GPIO_FALLING_EDGE); // only using falling edge for now // TODO flank detection not supported on efm32gg for now
-
-    _c1101_interface_set_interrupts_enabled(false);
-    end_of_packet_isr_callback();
+	if (hw_gpio_pin_matches(pin_id, CC1101_GDO0_PIN))
+    {
+		_c1101_interface_set_interrupts_enabled(CC1101_GDO0, false);
+		end_of_packet_isr_callback();
+    }
+    else if (hw_gpio_pin_matches(pin_id, CC1101_GDO2_PIN))
+    {
+    	_c1101_interface_set_interrupts_enabled(CC1101_GDO2, false);
+    	fifo_thr_isr_callback();
+    }
+    else
+        assert(false);
 }
 
 static spi_handle_t* spi;
 static spi_slave_handle_t* spi_slave;
 
 
-void _cc1101_interface_init(end_of_packet_isr_t end_of_packet_isr_cb)
+void _cc1101_interface_init(end_of_packet_isr_t end_of_packet_isr_cb, fifo_thr_isr_t fifo_thr_isr_cb)
 {
     end_of_packet_isr_callback = end_of_packet_isr_cb;
+    fifo_thr_isr_callback = fifo_thr_isr_cb;
 
     spi = spi_init(CC1101_SPI_USART, CC1101_SPI_BAUDRATE, 8, true, CC1101_SPI_LOCATION);
     spi_enable(spi);
@@ -68,24 +78,31 @@ void _cc1101_interface_init(end_of_packet_isr_t end_of_packet_isr_cb)
 
     error_t err;
     err = hw_gpio_configure_interrupt(CC1101_GDO0_PIN, &_cc1101_gdo_isr, GPIO_FALLING_EDGE); assert(err == SUCCESS);
+    err = hw_gpio_configure_interrupt(CC1101_GDO2_PIN, &_cc1101_gdo_isr, GPIO_FALLING_EDGE); assert(err == SUCCESS);
 
     DPRINT("CC1101 SPI initialised\r\n");
 }
 
-void _c1101_interface_set_interrupts_enabled(bool enable)
+void _c1101_interface_set_interrupts_enabled(cc1101_gdOx_t gdOx, bool enable)
 {
+    pin_id_t pin_id = (gdOx == CC1101_GDO0 ? CC1101_GDO0_PIN : CC1101_GDO2_PIN);
+
     if(enable)
     {
         //radioClearInterruptPendingLines(); // TODO clearing int needed?
-
-        hw_gpio_enable_interrupt(CC1101_GDO0_PIN);
-        // TODO GD02 not used for now
+        hw_gpio_enable_interrupt(pin_id);
     }
     else
     {
-        hw_gpio_disable_interrupt(CC1101_GDO0_PIN);
-        // TODO GD02 not used for now
+        hw_gpio_disable_interrupt(pin_id);
     }
+}
+
+void _c1101_interface_set_edge_interrupt(cc1101_gdOx_t gdOx, uint8_t edge)
+{
+    pin_id_t pin_id = (gdOx == CC1101_GDO0 ? CC1101_GDO0_PIN : CC1101_GDO2_PIN);
+
+    hw_gpio_set_edge_interrupt(pin_id, edge);
 }
 
 uint8_t _c1101_interface_strobe(uint8_t strobe)

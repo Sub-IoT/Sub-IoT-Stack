@@ -110,33 +110,40 @@ static eirp_t current_eirp = 0;
 static bool should_rx_after_tx_completed = false;
 static hw_rx_cfg_t pending_rx_cfg;
 
+static bool writeRemainingDataFlag = false;
+static bool endOfPacket = false;
+static uint8_t bytesLeft;
+static uint8_t *BufferIndex;
+static uint8_t iterations;
+
+
 static void start_rx(hw_rx_cfg_t const* rx_cfg);
 
 static RF_SETTINGS rf_settings = {
-   RADIO_GDO2_VALUE,   			// IOCFG2    GDO2 output pin configuration.
-   RADIO_GDO1_VALUE,    			// IOCFG1    GDO1 output pin configuration.
-   RADIO_GDO0_VALUE,   			// IOCFG0    GDO0 output pin configuration.
-   RADIO_FIFOTHR_FIFO_THR_61_4,   	// FIFOTHR   RXFIFO and TXFIFO thresholds.
-   RADIO_SYNC1_CLASS0,     				// SYNC1	 Sync word, high byte
-   RADIO_SYNC0_CLASS0,     				// SYNC0	 Sync word, low byte
-   RADIO_PKTLEN,    				// PKTLEN    Packet length.
+   RADIO_GDO2_VALUE,               // IOCFG2    GDO2 output pin configuration.
+   RADIO_GDO1_VALUE,               // IOCFG1    GDO1 output pin configuration.
+   RADIO_GDO0_VALUE,               // IOCFG0    GDO0 output pin configuration.
+   RADIO_FIFOTHR_FIFO_THR_61_4,    // FIFOTHR   RXFIFO and TXFIFO thresholds.
+   RADIO_SYNC1_CLASS0,             // SYNC1     Sync word, high byte
+   RADIO_SYNC0_CLASS0,             // SYNC0     Sync word, low byte
+   RADIO_PKTLEN,                   // PKTLEN    Packet length.
    RADIO_PKTCTRL1_PQT(3) | RADIO_PKTCTRL1_APPEND_STATUS,   // PKTCTRL1  Packet automation control.
-   RADIO_PKTCTRL0_WHITE_DATA | RADIO_PKTCTRL0_LENGTH_VAR,      // PKTCTRL0  Packet automation control.
-   RADIO_ADDR,   					// ADDR      Device address.
-   RADIO_CHAN,   					// CHANNR    Channel number.
-   RADIO_FREQ_IF,   				// FSCTRL1   Frequency synthesizer control.
-   RADIO_FREQOFF,   				// FSCTRL0   Frequency synthesizer control.
-   RADIO_FREQ2(RADIO_FREQ_433_NORMAL_RATE),                                        // FREQ2     Frequency control word, high byte.
-   RADIO_FREQ1(RADIO_FREQ_433_NORMAL_RATE),                                        // FREQ1     Frequency control word, middle byte.
-   RADIO_FREQ0(RADIO_FREQ_433_NORMAL_RATE),                                        // FREQ0     Frequency control word, low byte.
+   RADIO_PKTCTRL0_WHITE_DATA | RADIO_PKTCTRL0_LENGTH_VAR,  // PKTCTRL0  Packet automation control.
+   RADIO_ADDR,                      // ADDR      Device address.
+   RADIO_CHAN,                      // CHANNR    Channel number.
+   RADIO_FREQ_IF,                   // FSCTRL1   Frequency synthesizer control.
+   RADIO_FREQOFF,                   // FSCTRL0   Frequency synthesizer control.
+   RADIO_FREQ2(RADIO_FREQ_433_NORMAL_RATE),   // FREQ2     Frequency control word, high byte.
+   RADIO_FREQ1(RADIO_FREQ_433_NORMAL_RATE),   // FREQ1     Frequency control word, middle byte.
+   RADIO_FREQ0(RADIO_FREQ_433_NORMAL_RATE),   // FREQ0     Frequency control word, low byte.
    RADIO_MDMCFG4_NORMAL_RATE,
-   RADIO_MDMCFG3_DRATE_M_NORMAL_RATE,   	// MDMCFG3   Modem configuration.
+   RADIO_MDMCFG3_DRATE_M_NORMAL_RATE,         // MDMCFG3   Modem configuration.
    RADIO_MDMCFG2_DEM_DCFILT_ON | RADIO_MDMCFG2_MOD_FORMAT_GFSK | RADIO_MDMCFG2_SYNC_MODE_16in16CS,   // MDMCFG2   Modem configuration.
    RADIO_MDMCFG1_NUM_PREAMBLE_4B | RADIO_MDMCFG1_CHANSPC_E_NORMAL_RATE,   // MDMCFG1   Modem configuration.
-   RADIO_MDMCFG0_CHANSPC_M_NORMAL_RATE,   	// MDMCFG0   Modem configuration.
+   RADIO_MDMCFG0_CHANSPC_M_NORMAL_RATE,       // MDMCFG0   Modem configuration.
    RADIO_DEVIATN_NORMAL_RATE,   // DEVIATN   Modem deviation setting (when FSK modulation is enabled).
-   RADIO_MCSM2_RX_TIME(7),			// MCSM2		 Main Radio Control State Machine configuration.
-   RADIO_MCSM1_CCA_ALWAYS | RADIO_MCSM1_RXOFF_MODE_RX | RADIO_MCSM1_TXOFF_MODE_IDLE,	// MCSM1 Main Radio Control State Machine configuration.
+   RADIO_MCSM2_RX_TIME(7),      // MCSM2         Main Radio Control State Machine configuration.
+   RADIO_MCSM1_CCA_ALWAYS | RADIO_MCSM1_RXOFF_MODE_RX | RADIO_MCSM1_TXOFF_MODE_IDLE,    // MCSM1 Main Radio Control State Machine configuration.
    //RADIO_MCSM0_FS_AUTOCAL_FROMIDLE,// MCSM0     Main Radio Control State Machine configuration.
    RADIO_MCSM0_FS_AUTOCAL_4THIDLE,// MCSM0     Main Radio Control State Machine configuration.
    RADIO_FOCCFG_FOC_PRE_K_3K | RADIO_FOCCFG_FOC_POST_K_HALFK | RADIO_FOCCFG_FOC_LIMIT_4THBW,   // FOCCFG    Frequency Offset Compensation Configuration.
@@ -144,22 +151,23 @@ static RF_SETTINGS rf_settings = {
    RADIO_AGCCTRL2_MAX_DVGA_GAIN_ALL | RADIO_AGCCTRL2_MAX_LNA_GAIN_SUB0 | RADIO_AGCCTRL2_MAX_MAGN_TARGET_33,   // AGCCTRL2  AGC control.
    RADIO_AGCCTRL1_AGC_LNA_PRIORITY | RADIO_AGCCTRL1_CS_REL_THR_DISABLED | RADIO_AGCCTRL1_CS_ABS_THR_FLAT,   // AGCCTRL1  AGC control.
    RADIO_AGCCTRL0_HYST_LEVEL_MED | RADIO_AGCCTRL0_WAIT_ITME_16 | RADIO_AGCCTRL0_AGC_FREEZE_NORMAL | RADIO_AGCCTRL0_FILTER_LENGTH_16,   // AGCCTRL0  AGC control.
-   RADIO_WOREVT1_EVENT0_HI(128), 	// WOREVT1
-   RADIO_WOREVT0_EVENT0_LO(0),		// WOREVT0
-   RADIO_WORCTRL_ALCK_PD,			// WORCTRL
+   RADIO_WOREVT1_EVENT0_HI(128),  // WOREVT1
+   RADIO_WOREVT0_EVENT0_LO(0),    // WOREVT0
+   RADIO_WORCTRL_ALCK_PD,         // WORCTRL
    RADIO_FREND1_LNA_CURRENT(1) | RADIO_FREND1_LNA2MIX_CURRENT(1) | RADIO_FREND1_LODIV_BUF_CURRENT_RX(1) | RADIO_FREND1_MIX_CURRENT(2),   // FREND1    Front end RX configuration.
    RADIO_FREND0_LODIV_BUF_CURRENT_TX(1) | RADIO_FREND0_PA_POWER(0),   // FREND0    Front end TX configuration.
    RADIO_FSCAL3_HI(3) | RADIO_FSCAL3_CHP_CURR_CAL_EN(2) | RADIO_FSCAL3_LO(10),   // FSCAL3    Frequency synthesizer calibration.
-   RADIO_FSCAL2_FSCAL2(10) | RADIO_FSCAL2_VCO_CORE_H_EN,   		// FSCAL2    Frequency synthesizer calibration.
-   RADIO_FSCAL1(0),   				// FSCAL1    Frequency synthesizer calibration.
-   RADIO_FSCAL0(31)   				// FSCAL0    Frequency synthesizer calibration.
+   RADIO_FSCAL2_FSCAL2(10) | RADIO_FSCAL2_VCO_CORE_H_EN,           // FSCAL2    Frequency synthesizer calibration.
+   RADIO_FSCAL1(0),               // FSCAL1    Frequency synthesizer calibration.
+   RADIO_FSCAL0(31)               // FSCAL0    Frequency synthesizer calibration.
 };
 
 static void switch_to_idle_mode()
 {
     DPRINT("Switching to HW_RADIO_STATE_IDLE");
     //Flush FIFOs and go to sleep, ensure interrupts are disabled
-    cc1101_interface_set_interrupts_enabled(false);
+    cc1101_interface_set_interrupts_enabled(CC1101_GDO0, false);
+    cc1101_interface_set_interrupts_enabled(CC1101_GDO2, false);
     current_state = HW_RADIO_STATE_IDLE;
     cc1101_interface_strobe(RF_SFRX); // TODO cc1101 datasheet : Only issue SFRX in IDLE or RXFIFO_OVERFLOW states
     cc1101_interface_strobe(RF_SFTX); // TODO cc1101 datasheet : Only issue SFTX in IDLE or TXFIFO_UNDERFLOW states.
@@ -172,10 +180,10 @@ static void switch_to_idle_mode()
 static inline int16_t convert_rssi(int8_t rssi_raw)
 {
     // CC1101 RSSI is 0.5 dBm units, signed byte
-    int16_t rssi = (int16_t)rssi_raw;		//Convert to signed 16 bit
-    rssi += 128;                      		//Make it positive...
-    rssi >>= 1;                        		//...So division to 1 dBm units can be a shift...
-    rssi -= 64 + RSSI_OFFSET;     			// ...and then rescale it, including offset
+    int16_t rssi = (int16_t)rssi_raw;        //Convert to signed 16 bit
+    rssi += 128;                             //Make it positive...
+    rssi >>= 1;                              //...So division to 1 dBm units can be a shift...
+    rssi -= 64 + RSSI_OFFSET;                // ...and then rescale it, including offset
 
     return rssi;
 }
@@ -193,103 +201,156 @@ static void ensure_settling_and_calibration_done()
     }
 }
 
+static void fifo_threshold_isr()
+{
+    switch(current_state)
+    {
+        case HW_RADIO_STATE_RX: ;
+            // Do not empty the FIFO (See the CC1100 or 2500 Errata Note)
+            cc1101_interface_read_burst_reg(RXFIFO, BufferIndex, (BYTES_IN_RX_FIFO - 1));
+            bytesLeft -= (BYTES_IN_RX_FIFO - 1);
+            BufferIndex += (BYTES_IN_RX_FIFO - 1);
+
+            //c1101_interface_set_edge_interrupt(CC1101_GDO2, GPIO_RISING_EDGE);
+            cc1101_interface_set_interrupts_enabled(CC1101_GDO2, true);
+
+            break;
+        case HW_RADIO_STATE_TX:
+            if (writeRemainingDataFlag)
+            {
+                // We have space enough in the FIFO to write the remaining data
+                cc1101_interface_write_burst_reg(TXFIFO, BufferIndex, bytesLeft);
+                // Wait end of packet transmission
+                c1101_interface_set_edge_interrupt(CC1101_GDO0, GPIO_FALLING_EDGE);
+                cc1101_interface_set_interrupts_enabled(CC1101_GDO0, true);
+            }
+            else
+            {
+                cc1101_interface_write_burst_reg(TXFIFO, BufferIndex, AVAILABLE_BYTES_IN_TX_FIFO);
+
+                BufferIndex += AVAILABLE_BYTES_IN_TX_FIFO;
+                bytesLeft -= AVAILABLE_BYTES_IN_TX_FIFO;
+                if (!(--iterations))
+                    writeRemainingDataFlag = true;
+
+                c1101_interface_set_edge_interrupt(CC1101_GDO2, GPIO_FALLING_EDGE);
+                cc1101_interface_set_interrupts_enabled(CC1101_GDO2, true);
+            }
+            break;
+        default:
+            assert(false);
+    }
+}
+
 static void end_of_packet_isr()
 {
     DPRINT("end of packet ISR");
     switch(current_state)
     {
         case HW_RADIO_STATE_RX: ;
-
-            /* Check how many bytes we received. */
-            uint8_t packet_len = 0;
-
-            do
+            if (!endOfPacket)
             {
-                cc1101_interface_read_burst_reg(RXBYTES, &packet_len, 1);
-                packet_len = packet_len & 0x7F;
-            } while (packet_len < 4);  // TODO counter to avoid a dead lock
+                uint8_t packet_len = 0;
 
-            uint8_t buffer[4];
-            cc1101_interface_read_burst_reg(RXFIFO, buffer, 4);
+                // After the sync word is received one needs to wait some time before there will be any data
+                // in the FIFO. In addition, the FIFO should not be emptied
+                // (See the CC1100 or 2500 Errata Note) before the whole packet has been received.
+                uint8_t rx_bytes = 0;
+                do
+                {
+                    cc1101_interface_read_burst_reg(RXBYTES, &rx_bytes, 1);
+                    rx_bytes = rx_bytes & 0x7F;
+                } while (rx_bytes < 4);  // TODO counter to avoid a dead lock
 
-            if (current_channel_id.channel_header.ch_coding == PHY_CODING_FEC_PN9)
-            {
-                uint8_t fec_buffer[4];
-                memcpy(fec_buffer, buffer, 4);
-                fec_decode_packet(fec_buffer, 4, 4);
-                packet_len = fec_calculated_decoded_length(fec_buffer[0]+1);
-                DPRINT("RX Packet Length: %d / %d", fec_buffer[0], packet_len);
+                uint8_t buffer[4];
+                cc1101_interface_read_burst_reg(RXFIFO, buffer, 4);
+
+                if (current_channel_id.channel_header.ch_coding == PHY_CODING_FEC_PN9)
+                {
+                    uint8_t fec_buffer[4];
+                    memcpy(fec_buffer, buffer, 4);
+                    fec_decode_packet(fec_buffer, 4, 4);
+                    packet_len = fec_calculated_decoded_length(fec_buffer[0]+1);
+                    DPRINT("RX Packet Length: %d / %d", fec_buffer[0], packet_len);
+                }
+                else
+                {
+                    packet_len = buffer[0] + 1;
+                }
+
+                current_packet = alloc_packet_callback(packet_len);
+                memcpy(current_packet->data, buffer, 4);
+
+                bytesLeft = packet_len - 4;
+                BufferIndex = current_packet->data + 4;
+                endOfPacket = true;
+
+                if (bytesLeft < FIFO_SIZE)
+                {
+                    // Disable interrupt on threshold since it is room for the whole packet in the FIFO
+                    cc1101_interface_set_interrupts_enabled(CC1101_GDO2, false);
+                    if (packet_len <= rx_bytes)
+                        goto end_of_packet;
+                }
+                else
+                {
+                    // Asserts when RX FIFO is filled at or above the RX FIFO threshold.
+                    c1101_interface_set_edge_interrupt(CC1101_GDO2, GPIO_RISING_EDGE);
+                    cc1101_interface_set_interrupts_enabled(CC1101_GDO2, true);
+                }
+
+                // Enables external interrupt on falling edge (packet received)
+                c1101_interface_set_edge_interrupt(CC1101_GDO0, GPIO_FALLING_EDGE);
+                cc1101_interface_set_interrupts_enabled(CC1101_GDO0, true);
             }
             else
-            {
-                packet_len = buffer[0] + 1;
-            }
+            {   // End of Packet
+end_of_packet:
 
-            DPRINT("EOP ISR packetLength: %d", packet_len);
-            if(packet_len >= 63)
-            {
-                // long packets not yet supported or bit error in length byte, don't assert but flush rx
-                DPRINT("Packet size too big, flushing RX");
-                uint8_t status = (cc1101_interface_strobe(RF_SNOP) & 0xF0);
-                if(status == 0x60)
+                cc1101_interface_read_burst_reg(RXFIFO, BufferIndex, bytesLeft);
+                endOfPacket = false;
+
+                // fill rx_meta
+                current_packet->rx_meta.rssi = convert_rssi(cc1101_interface_read_single_reg(RXFIFO));
+                current_packet->rx_meta.lqi = cc1101_interface_read_single_reg(RXFIFO) & 0x7F;
+                 memcpy(&(current_packet->rx_meta.rx_cfg.channel_id), &current_channel_id, sizeof(channel_id_t));
+                current_packet->rx_meta.rx_cfg.syncword_class = current_syncword_class;
+                current_packet->rx_meta.crc_status = HW_CRC_UNAVAILABLE; // TODO
+                current_packet->rx_meta.timestamp = timer_get_counter_value();
+
+                DEBUG_RX_END();
+                if (current_channel_id.channel_header.ch_coding == PHY_CODING_FEC_PN9)
                 {
-                    // RX overflow
-                    cc1101_interface_strobe(RF_SFRX);
-                }
-                else if(status == 0x10)
-                {
-                    // still in RX, switch to idle first
-                    cc1101_interface_strobe(RF_SIDLE);
-                    cc1101_interface_strobe(RF_SFRX);
-                }
-
-                while(cc1101_interface_strobe(RF_SNOP) != 0x0F); // wait until in idle state
-                cc1101_interface_strobe(RF_SRX);
-                while(cc1101_interface_strobe(RF_SNOP) != 0x1F); // wait until in RX state
-                cc1101_interface_set_interrupts_enabled(true);
-                return;
-            }
-
-            hw_radio_packet_t* packet = alloc_packet_callback(packet_len);
-            memcpy(packet->data, buffer, 4);
-            cc1101_interface_read_burst_reg(RXFIFO, packet->data + 4, packet_len - 4);
-
-            // fill rx_meta
-            packet->rx_meta.rssi = convert_rssi(cc1101_interface_read_single_reg(RXFIFO));
-            packet->rx_meta.lqi = cc1101_interface_read_single_reg(RXFIFO) & 0x7F;
-            memcpy(&(packet->rx_meta.rx_cfg.channel_id), &current_channel_id, sizeof(channel_id_t));
-            packet->rx_meta.rx_cfg.syncword_class = current_syncword_class;
-            packet->rx_meta.crc_status = HW_CRC_UNAVAILABLE; // TODO
-            packet->rx_meta.timestamp = timer_get_counter_value();
-
-            DEBUG_RX_END();
-            if (current_channel_id.channel_header.ch_coding == PHY_CODING_FEC_PN9)
-            {
-                fec_decode_packet(packet->data, packet_len, packet_len);
-            }
-
-            if(rx_packet_callback != NULL) // TODO this can happen while doing CCA but we should not be interrupting here (disable packet handler?)
-                rx_packet_callback(packet);
-            else
-                release_packet_callback(packet);
-
-            if(current_state == HW_RADIO_STATE_RX) // check still in RX, could be modified by upper layer while in callback
-            {
-                uint8_t status = (cc1101_interface_strobe(RF_SNOP) & 0xF0);
-                if(status == 0x60) // RX overflow
-                {
-                    cc1101_interface_strobe(RF_SFRX);
-                    while(cc1101_interface_strobe(RF_SNOP) != 0x0F); // wait until in idle state
-                    cc1101_interface_strobe(RF_SRX);
-                    while(cc1101_interface_strobe(RF_SNOP) != 0x1F); // wait until in RX state
+                    uint8_t packet_len = (BufferIndex + bytesLeft) - current_packet->data;
+                    fec_decode_packet(current_packet->data, packet_len, packet_len);
                 }
 
-                cc1101_interface_set_interrupts_enabled(true);
-                assert(cc1101_interface_strobe(RF_SNOP) == 0x1F); // expect to be in RX mode
+                if(rx_packet_callback != NULL) // TODO this can happen while doing CCA but we should not be interrupting here (disable packet handler?)
+                    rx_packet_callback(current_packet);
+                else
+                    release_packet_callback(current_packet);
+
+                if(current_state == HW_RADIO_STATE_RX) // check still in RX, could be modified by upper layer while in callback
+                {
+                    uint8_t status = (cc1101_interface_strobe(RF_SNOP) & 0xF0);
+                    if(status == 0x60) // RX overflow
+                    {
+                        cc1101_interface_strobe(RF_SFRX);
+                        while(cc1101_interface_strobe(RF_SNOP) != 0x0F); // wait until in idle state
+                        cc1101_interface_strobe(RF_SRX);
+                        while(cc1101_interface_strobe(RF_SNOP) != 0x1F); // wait until in RX state
+                    }
+
+                    c1101_interface_set_edge_interrupt(CC1101_GDO0, GPIO_RISING_EDGE);
+                    cc1101_interface_set_interrupts_enabled(CC1101_GDO0, true);
+                    assert(cc1101_interface_strobe(RF_SNOP) == 0x1F); // expect to be in RX mode
+                }
             }
             break;
         case HW_RADIO_STATE_TX:
           DEBUG_TX_END();
+
+          writeRemainingDataFlag = false;
 
           if(tx_packet_callback != 0)
           {
@@ -490,7 +551,7 @@ error_t hw_radio_init(alloc_packet_callback_t alloc_packet_cb,
 
     current_state = HW_RADIO_STATE_IDLE;
 
-    cc1101_interface_init(&end_of_packet_isr);
+    cc1101_interface_init(&end_of_packet_isr, &fifo_threshold_isr);
     cc1101_interface_reset_radio_core();
     cc1101_interface_write_rfsettings(&rf_settings);
 
@@ -506,6 +567,12 @@ error_t hw_radio_init(alloc_packet_callback_t alloc_packet_cb,
     configure_channel(&current_channel_id);
     configure_eirp(current_eirp);
     configure_syncword_class(current_syncword_class);
+    cc1101_interface_write_single_reg(FIFOTHR, 0x04);
+    // FIFO_THR = 4
+    // 45 bytes in TX FIFO (19 available spaces)
+    // 20 bytes in the RX FIFO
+    // If this threshold is changed, AVAILABLE_BYTES_IN_TX_FIFO
+    // and BYTES_RX_FIFO must be updated
 
     cc1101_interface_strobe(RF_SCAL); // TODO use autocalibration instead of manual?
     wait_for_chip_state(CC1101_CHIPSTATE_IDLE);
@@ -519,13 +586,16 @@ static void start_rx(hw_rx_cfg_t const* rx_cfg)
 //
 //    while (status == 0x80)
 //    {
-    	// Should not be 0x80 -> means Chip not ready
-//    	status = cc1101_interface_strobe(RF_SNOP) & 0x80;
+          // Should not be 0x80 -> means Chip not ready
+//        status = cc1101_interface_strobe(RF_SNOP) & 0x80;
 //    }
 
     configure_channel(&(rx_cfg->channel_id));
     configure_syncword_class(rx_cfg->syncword_class);
     cc1101_interface_write_single_reg(PKTLEN, 0xFF);
+    // Associated to the RX FIFO: Asserts when RX FIFO is filled at or above the
+    // RX FIFO threshold. De-asserts when RX FIFO is drained below the same threshold
+    cc1101_interface_write_single_reg(IOCFG2, 0x00);
 
     // cc1101_interface_strobe(RF_SFRX); TODO only when in idle or overflow state
 
@@ -533,23 +603,26 @@ static void start_rx(hw_rx_cfg_t const* rx_cfg)
     uint8_t counter = 0;
     do
     {
-    	status = cc1101_interface_strobe(RF_SRX);
-      if(status == 0x6F)
-      {
-          // RX FIFO overflow, flush first
-          cc1101_interface_strobe(RF_SFRX);
-      }
+        status = cc1101_interface_strobe(RF_SRX);
+        if(status == 0x6F)
+        {
+            // RX FIFO overflow, flush first
+            cc1101_interface_strobe(RF_SFRX);
+        }
 
-      assert(counter++ < 100); // TODO measure value in normal case
+        assert(counter++ < 100); // TODO measure value in normal case
     } while(status != 0x1F);
 
     DEBUG_RX_START();
     if(rx_packet_callback != 0) // when rx callback not set we ignore received packets
-      cc1101_interface_set_interrupts_enabled(true);
+    {
+        c1101_interface_set_edge_interrupt(CC1101_GDO0, GPIO_RISING_EDGE);
+        cc1101_interface_set_interrupts_enabled(CC1101_GDO0, true);
+    }
     else
-      cc1101_interface_set_interrupts_enabled(false);
+        cc1101_interface_set_interrupts_enabled(CC1101_GDO0, false);
 
-	// TODO when only rssi callback set the packet handler is still active and we enter in RXFIFOOVERFLOW, find a way to around this
+    // TODO when only rssi callback set the packet handler is still active and we enter in RXFIFOOVERFLOW, find a way to around this
 
     if(rssi_valid_callback != 0)
     {
@@ -596,7 +669,7 @@ error_t hw_radio_send_packet(hw_radio_packet_t* packet, tx_packet_callback_t tx_
     if(current_state == HW_RADIO_STATE_TX)
         return EBUSY;
 
-    assert(packet->length < 63); // long packets not yet supported
+    assert(packet->length < PACKET_MAX_SIZE);
 
     tx_packet_callback = tx_cb;
 
@@ -616,28 +689,45 @@ error_t hw_radio_send_packet(hw_radio_packet_t* packet, tx_packet_callback_t tx_
     current_state = HW_RADIO_STATE_TX;
     current_packet = packet;
 
-    DPRINT("Data to TX Fifo:");
-    DPRINT_DATA(packet->data, packet->length + 1);
     configure_channel((channel_id_t*)&(current_packet->tx_meta.tx_cfg.channel_id));
     configure_eirp(current_packet->tx_meta.tx_cfg.eirp);
     configure_syncword_class(current_packet->tx_meta.tx_cfg.syncword_class);
 
-    uint8_t data_length = packet->length + 1;
+    // Associated to the TX FIFO: Asserts when the TX FIFO is filled above TXFIFO_THR.
+    // De-asserts when the TX FIFO is below TXFIFO_THR.
+    cc1101_interface_write_single_reg(IOCFG2, 0x02);
 
-    if (packet->tx_meta.tx_cfg.channel_id.channel_header.ch_coding == PHY_CODING_FEC_PN9)
+    // The entire packet can be written at once
+    if (packet->length < FIFO_SIZE)
     {
-        data_length = fec_encode(packet->data, data_length);
-        DPRINT("Encoded packet: %d", data_length);
-        DPRINT_DATA(packet->data, data_length);
+        cc1101_interface_write_burst_reg(TXFIFO, packet->data, packet->length + 1);
 
-        cc1101_interface_write_single_reg(PKTLEN, data_length);
+        c1101_interface_set_edge_interrupt(CC1101_GDO0, GPIO_FALLING_EDGE);
+        cc1101_interface_set_interrupts_enabled(CC1101_GDO0, true);
+        DEBUG_TX_START();
+        DEBUG_RX_END();
+        cc1101_interface_strobe(RF_STX);
     }
+    else
+    {   // The TX FIFO needs to be re-filled several times
+        DPRINT("Data to TX Fifo (First part of %d bytes):", packet->length + 1);
+        DPRINT_DATA(packet->data, FIFO_SIZE);
 
-    cc1101_interface_write_burst_reg(TXFIFO, packet->data, data_length);
-    cc1101_interface_set_interrupts_enabled(true);
-    DEBUG_TX_START();
-    DEBUG_RX_END();
-    cc1101_interface_strobe(RF_STX);
+        cc1101_interface_write_burst_reg(TXFIFO, packet->data, FIFO_SIZE); // Fill up the TX FIFO
+
+        DEBUG_TX_START();
+        DEBUG_RX_END();
+
+        bytesLeft = packet->length + 1 - FIFO_SIZE;
+        BufferIndex = packet->data + FIFO_SIZE;
+        iterations = (bytesLeft / AVAILABLE_BYTES_IN_TX_FIFO);
+        if (!iterations)
+             writeRemainingDataFlag = true;
+
+        c1101_interface_set_edge_interrupt(CC1101_GDO2, GPIO_FALLING_EDGE);
+        cc1101_interface_set_interrupts_enabled(CC1101_GDO2, true);
+        cc1101_interface_strobe(RF_STX);
+    }
 
     return SUCCESS;
 }
