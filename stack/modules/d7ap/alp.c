@@ -342,12 +342,13 @@ void alp_d7asp_fifo_flush_completed(uint8_t fifo_token, uint8_t* progress_bitmap
   // TODO end session
   DPRINT("D7ASP flush completed");
   bool error = memcmp(success_bitmap, progress_bitmap, bitmap_byte_count) != 0;
-if(shell_enabled && current_command.respond_when_completed) {
+  if(shell_enabled && current_command.respond_when_completed) {
     add_tag_response(&(current_command.alp_response_fifo), true, error);
     uint8_t alp_response_length = fifo_get_size(&(current_command.alp_response_fifo));
     alp_cmd_handler_output_alp_command(current_command.alp_response, alp_response_length); // TODO pass fifo directly
   }
 
+  fifo_clear(&(current_command.alp_response_fifo));
   if(init_args != NULL && init_args->alp_command_completed_cb != NULL)
     init_args->alp_command_completed_cb(fifo_token, !error);
 }
