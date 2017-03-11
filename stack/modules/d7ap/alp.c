@@ -232,12 +232,15 @@ static void add_tag_response(alp_command_t* command, bool eop, bool error) {
 
 void alp_process_command_result_on_d7asp(d7asp_master_session_config_t* session_config, uint8_t* alp_command, uint8_t alp_command_length, alp_command_origin_t origin)
 {
-  uint8_t alp_response[ALP_PAYLOAD_MAX_SIZE];
-  uint8_t alp_response_length = 0;
-  alp_process_command(alp_command, alp_command_length, alp_response, &alp_response_length, origin);
+  uint8_t alp_result_length = 0;
+  // TODO refactor
+  alp_command_t* command = alloc_command();
+  assert(command != NULL);
+  alp_process_command(alp_command, alp_command_length, command->alp_command, &alp_result_length, origin);
   d7asp_master_session_t* session = d7asp_master_session_create(session_config);
-  uint8_t expected_response_length = alp_get_expected_response_length(alp_response, alp_response_length);
-  d7asp_queue_alp_actions(session, alp_response, alp_response_length, expected_response_length);
+  uint8_t expected_response_length = alp_get_expected_response_length(command->alp_command, alp_result_length);
+  d7asp_queue_result_t result = d7asp_queue_alp_actions(session, command->alp_command, alp_result_length, expected_response_length);
+  command->fifo_token = result.fifo_token;
 }
 
 void alp_process_command_console_output(uint8_t* alp_command, uint8_t alp_command_length) {
@@ -386,6 +389,7 @@ bool alp_process_command(uint8_t* alp_command, uint8_t alp_command_length, uint8
 //      return false;
 
   (*alp_response_length) = fifo_get_size(&command->alp_response_fifo);
+  memcpy(alp_response, command->alp_response, *alp_response_length);
   free_command(command);
   return true;
 }
