@@ -44,12 +44,19 @@ uint64_t hw_get_unique_id()
     return (uint64_t) HAL_GetDEVID();
 }
 
+#pragma GCC push_options
+#pragma GCC optimize ("O3")
 void hw_busy_wait(int16_t microseconds)
 {
-    HAL_Delay(microseconds/1000);
+	DWT->CTRL |= 1 ;
+	volatile uint32_t cycles = (SystemCoreClock/1000000L)*microseconds;
+	volatile uint32_t start = DWT->CYCCNT;
+	do {
+	} while(DWT->CYCCNT - start < cycles);
 }
+#pragma GCC pop_options
 
 void hw_reset()
 {
-    //NVIC_SystemReset();
+	HAL_NVIC_SystemReset();
 }

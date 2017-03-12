@@ -37,7 +37,7 @@ typedef struct
 } gpio_interrupt_t;
 
 
-static GPIO_TypeDef* ports[8] = {GPIOA, GPIOB, GPIOC, GPIOD, GPIOE, GPIOF, GPIOG, GPIOH};
+GPIO_TypeDef* ports[8] = {GPIOA, GPIOB, GPIOC, GPIOD, GPIOE, GPIOF, GPIOG, GPIOH};
 
 //the list of configured interrupts
 static gpio_interrupt_t interrupts[16];
@@ -57,10 +57,10 @@ __LINK_C void __gpio_init()
 
     /* GPIO Ports Clock Enable */
     //todo: only used clk
-    __HAL_RCC_GPIOC_CLK_ENABLE();
-    __HAL_RCC_GPIOH_CLK_ENABLE();
     __HAL_RCC_GPIOA_CLK_ENABLE();
     __HAL_RCC_GPIOB_CLK_ENABLE();
+    __HAL_RCC_GPIOC_CLK_ENABLE();
+    __HAL_RCC_GPIOH_CLK_ENABLE();
 
     /* Initialize GPIO interrupt dispatcher */
     //GPIOINT_Init();
@@ -81,7 +81,7 @@ __LINK_C error_t hw_gpio_configure_pin(pin_id_t pin_id, bool int_allowed, uint32
     GPIO_InitTypeDef GPIO_InitStruct;
     GPIO_InitStruct.Pin = 1 << pin_id.pin;
     GPIO_InitStruct.Mode = mode;
-    if  (GPIO_InitStruct.Mode == GPIO_MODE_IT_RISING)
+    if  (GPIO_InitStruct.Mode == GPIO_MODE_IT_RISING|| GPIO_InitStruct.Mode == GPIO_MODE_IT_FALLING || GPIO_InitStruct.Mode == GPIO_MODE_IT_RISING_FALLING)
     {
     	GPIO_InitStruct.Pull = GPIO_NOPULL;
     } else {
@@ -216,74 +216,38 @@ __LINK_C error_t hw_gpio_disable_interrupt(pin_id_t pin_id)
 
 void EXTI9_5_IRQHandler(void)
 {
-    HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_5);
-    HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_6);
-    HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_7);
-    HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_8);
-    HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_9);
+	// will check the different pins here instead of using the HAL
+
+	uint8_t pin_id = 5;
+	for (;pin_id <= 9; pin_id++)
+	{
+		uint16_t pin = 1 << pin_id;
+		if(__HAL_GPIO_EXTI_GET_IT(pin) != RESET)
+		{
+			__HAL_GPIO_EXTI_CLEAR_IT(pin);
+			gpio_int_callback(pin_id);
+			return;
+		}
+	}
 }
 
 void EXTI15_10_IRQHandler(void)
 {
-    HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_10);
-    HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_11);
-    HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_12);
-    HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_13);
-    HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_14);
-    HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_15);
-}
+	// will check the different pins here instead of using the HAL
 
-void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
-	// TODO: find more efficient method
-	switch (GPIO_Pin)
+		uint8_t pin_id = 10;
+		for (;pin_id <= 15; pin_id++)
 		{
-		case GPIO_PIN_0:
-			gpio_int_callback(0);
-			break;
-		case GPIO_PIN_1:
-			gpio_int_callback(1);
-			break;
-		case GPIO_PIN_2:
-			gpio_int_callback(2);
-			break;
-		case GPIO_PIN_3:
-			gpio_int_callback(3);
-			break;
-		case GPIO_PIN_4:
-			gpio_int_callback(4);
-			break;
-		case GPIO_PIN_5:
-			gpio_int_callback(5);
-			break;
-		case GPIO_PIN_6:
-			gpio_int_callback(6);
-			break;
-		case GPIO_PIN_7:
-			gpio_int_callback(7);
-			break;
-		case GPIO_PIN_9:
-			gpio_int_callback(9);
-			break;
-		case GPIO_PIN_10:
-			gpio_int_callback(10);
-			break;
-		case GPIO_PIN_11:
-			gpio_int_callback(11);
-			break;
-		case GPIO_PIN_12:
-			gpio_int_callback(12);
-			break;
-		case GPIO_PIN_13:
-			gpio_int_callback(13);
-			break;
-		case GPIO_PIN_14:
-			gpio_int_callback(14);
-			break;
-		case GPIO_PIN_15:
-			gpio_int_callback(15);
-			break;
+			uint16_t pin = 1 << pin_id;
+			if(__HAL_GPIO_EXTI_GET_IT(pin) != RESET)
+			{
+				__HAL_GPIO_EXTI_CLEAR_IT(pin);
+				gpio_int_callback(pin_id);
+				return;
+			}
 		}
 }
+
 
 
 

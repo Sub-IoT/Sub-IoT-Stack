@@ -29,6 +29,7 @@ void __platform_init()
 {
     __stm32l152_mcu_init();
     __gpio_init();
+    __led_init();
 #ifdef USE_CC1101
     // configure the interrupt pins here, since hw_gpio_configure_pin() is MCU
     // specific and not part of the common HAL API
@@ -43,15 +44,8 @@ void __platform_post_framework_init()
     led_init();
 }
 
-////Quick hack, approximately 1ms delay
-//void ms_delay(int ms)
-//{
-//   while (ms-- > 0) {
-//      volatile int x=5971;
-//      while (x-- > 0)
-//         __asm("nop");
-//   }
-//}
+//Quick hack, approximately 1ms delay
+
 
 int main()
 {

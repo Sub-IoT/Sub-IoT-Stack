@@ -25,8 +25,10 @@
 
 void start_atomic()
 {
+	//__disable_irq();
 }
 
 void end_atomic()
 {
+	//__enable_irq();
 }

@@ -32,7 +32,6 @@
 #include "string.h"
 
 #define UARTS     6   // Dummy + 2 UARTs + 3 USARTs
-#define LOCATIONS 1
 
  typedef struct {
    IRQn_Type  tx;
@@ -44,28 +43,31 @@
    pin_id_t rx;
  } uart_pins_t;
 
- #define UNDEFINED_LOCATION {                      \
+ #define UNDEFINED_LOCATION                       \
    .tx       = { .port = 0xFF,         .pin =  0xFF },   \
    .rx       = { .port = 0xFF,         .pin =  0xFF }    \
- }
+
 
  // configuration of uart/location mapping to tx and rx pins
  // TODO to be completed with all documented locations
- static uart_pins_t location[UARTS][LOCATIONS] = {
+ static uart_pins_t location[UARTS] = {
  {
 		   // DUMMY
 		   UNDEFINED_LOCATION
 	},
 	{
-		   // USART 1
-		   UNDEFINED_LOCATION
+			// USART 1
+
+					      .tx       = { .port = 0, .pin =  9 },
+					      .rx       = { .port = 0, .pin =  10 }
+
    },
    {
 		   // USART 2
-		   {
+
 		      .tx       = { .port = 0, .pin =  2 },
 		      .rx       = { .port = 0, .pin =  3 }
-		   },
+
    },
    {
 	   	   // USART 3
@@ -104,6 +106,7 @@ static uart_rx_inthandler_t handler[UARTS];
    {
 		   .idx     = 1,
 		   .mapping = GPIO_AF7_USART1,
+		   .uart.Instance  = USART1,
 		   .irq     = { .tx = 0,  .rx = 0  }
    },
    {
@@ -130,16 +133,54 @@ static uart_rx_inthandler_t handler[UARTS];
  };
 
 uart_handle_t* uart_init(uint8_t idx, uint32_t baudrate, uint8_t pins) {
-   handle[idx].pins = &location[idx][pins];
+   handle[idx].pins = &location[idx];
    handle[idx].baudrate = baudrate;
 
    GPIO_InitTypeDef GPIO_InitStruct;
-   GPIO_InitStruct.Pin = (1<<handle[idx].pins->tx.pin) | (1<<handle[idx].pins->rx.pin) ;
-   GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
-   GPIO_InitStruct.Pull = GPIO_PULLUP;
-   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
-   GPIO_InitStruct.Alternate = handle[idx].mapping;
-   hw_gpio_configure_pin_stm(handle[idx].pins->tx, &GPIO_InitStruct);
+
+   switch (idx)
+   	{
+   	case 1:
+   		GPIO_InitStruct.Pin 			= 1<<handle[idx].pins->tx.pin ;
+   		GPIO_InitStruct.Mode 			= GPIO_MODE_AF_PP;
+   		GPIO_InitStruct.Speed 		= GPIO_SPEED_LOW;
+
+   		GPIO_InitStruct.Alternate             = GPIO_AF7_USART1;
+   		GPIO_InitStruct.Pull 			= GPIO_NOPULL;
+
+//   		#ifdef STM32F103xB
+//   		  GPIO_InitStruct.Pull      = GPIO_PULLUP;
+//   		  GPIO_InitStruct.Speed     = GPIO_SPEED_FREQ_HIGH;
+//   		#endif
+
+   		hw_gpio_configure_pin_stm(handle[idx].pins->tx, &GPIO_InitStruct);
+
+   		  /* UART RX GPIO pin configuration  */
+   		  GPIO_InitStruct.Pin = 1<<handle[idx].pins->rx.pin;
+   		 GPIO_InitStruct.Mode      = GPIO_MODE_AF_PP;
+
+//   		#ifdef STM32F103xB
+//   		  GPIO_InitStruct.Mode      = GPIO_MODE_INPUT;
+//   		#endif
+
+    		hw_gpio_configure_pin_stm(handle[idx].pins->rx, &GPIO_InitStruct);
+   		break;
+   	case 2:
+   		GPIO_InitStruct.Pin = (1<<handle[idx].pins->tx.pin) | (1<<handle[idx].pins->rx.pin) ;
+   		GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
+   		GPIO_InitStruct.Pull = GPIO_PULLUP;
+   		GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
+   		GPIO_InitStruct.Alternate = handle[idx].mapping;
+   		hw_gpio_configure_pin_stm(handle[idx].pins->tx, &GPIO_InitStruct);
+   		break;
+   	default:
+   		assert("not defined");
+   		return false;
+   	}
+
+
+
+
 
    return &handle[idx];
 }
@@ -148,6 +189,9 @@ bool uart_enable(uart_handle_t* uart) {
 
 	switch (uart->idx)
 	{
+	case 1:
+		__HAL_RCC_USART1_CLK_ENABLE();
+		break;
 	case 2:
 		__HAL_RCC_USART2_CLK_ENABLE();
 		break;
@@ -169,10 +213,46 @@ bool uart_enable(uart_handle_t* uart) {
      return false;
    }
 
-   HAL_NVIC_SetPriority(uart->irq.rx, 0, 0);
+//   switch (uart->idx)
+//   	{
+//   	case 1:
+//   		__HAL_RCC_USART1_FORCE_RESET();
+//   		__HAL_RCC_USART1_RELEASE_RESET();
+//   		break;
+//   	case 2:
+//
+//   		__HAL_RCC_USART2_FORCE_RESET();
+//   		__HAL_RCC_USART2_RELEASE_RESET();
+//   		break;
+//   	default:
+//   		assert("not defined");
+//   		return false;
+//   	}
+
+
+
+   HAL_NVIC_SetPriority(uart->irq.rx, 0, 3);
   
    return true;
  }
+
+bool uart_disable(uart_handle_t* uart) {
+  HAL_UART_DeInit(&(uart->uart));
+  switch (uart->idx)
+  	{
+  	case 1:
+  		__HAL_RCC_USART1_CLK_DISABLE();
+  		break;
+  	case 2:
+  		__HAL_RCC_USART2_CLK_DISABLE();
+  		break;
+  	default:
+  		assert("not defined");
+  		return false;
+  	}
+
+  return true;
+}
 
  void uart_set_rx_interrupt_callback(uart_handle_t* uart,
                                      uart_rx_inthandler_t rx_handler)
@@ -186,9 +266,19 @@ bool uart_enable(uart_handle_t* uart) {
  	HAL_UART_Transmit(&uart->uart, &data, 1, HAL_MAX_DELAY);
  }
 
+uint8_t uart_read_byte(uart_handle_t* uart, uint32_t timeout) {
+	uint8_t rec;
+	HAL_UART_Receive(&uart->uart, &rec, 1, timeout);
+	return rec;
+}
+
+void uart_read_bytes(uart_handle_t* uart,  uint8_t  *data, size_t length, uint32_t timeout) {
+	HAL_UART_Receive(&uart->uart, data, length, timeout);
+}
+
 void uart_send_bytes(uart_handle_t* uart, void const *data, size_t length) {
 
-	HAL_UART_Transmit(&uart->uart, data, length, HAL_MAX_DELAY);
+	HAL_UART_Transmit(&uart->uart, (uint8_t*) data, length, HAL_MAX_DELAY);
 // 	for(uint8_t i=0; i<length; i++)	{
 // 		uart_send_byte(uart, ((uint8_t const*)data)[i]);
 // 	}
@@ -218,12 +308,11 @@ void uart_send_bytes(uart_handle_t* uart, void const *data, size_t length) {
 
  void USART2_IRQHandler(void) {
 	 HAL_UART_IRQHandler(&handle[2].uart);
-
-//   if(handle[0].channel->STATUS & UART_STATUS_RXDATAV) {
-//     handler[0](USART_Rx(handle[0].channel));
-//     USART_IntClear(handle[0].channel, UART_IF_RXDATAV);
-//   }
  }
+
+ void USART1_IRQHandler(void) {
+ 	 HAL_UART_IRQHandler(&handle[1].uart);
+  }
 
  void HAL_UART_RxCpltCallback(UART_HandleTypeDef *UartHandle) {
   /* Set transmission flag: transfer complete*/

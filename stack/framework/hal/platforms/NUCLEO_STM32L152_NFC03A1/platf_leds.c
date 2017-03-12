@@ -34,7 +34,7 @@
 #include "stm32l1xx_hal_gpio.h"
 
 
-#if HW_NUM_LEDS < 1
+#if HW_NUM_LEDS != 4
 	#error HW_NUM_LEDS does not match the expected value. Update platform.h or platform_leds.c
 #endif
 static pin_id_t leds[ HW_NUM_LEDS ];
@@ -42,6 +42,9 @@ static pin_id_t leds[ HW_NUM_LEDS ];
 void __led_init()
 {
 	leds[0] = LED0;
+	leds[1] = LED1;
+	leds[2] = LED2;
+	leds[3] = LED3;
 	for(int i = 0; i < HW_NUM_LEDS; i++)
 	{
 		hw_gpio_clr(leds[i]);
@@ -72,15 +75,21 @@ void led_toggle(unsigned char led_nr)
 // flashing support
 
 static void end_flash_green()  { led_off(LED_GREEN);  }
+static void end_flash_blue()  { led_off(LED_BLUE);  }
 
 void led_flash_green() {
   led_on(LED_GREEN);
   timer_post_task_delay(&end_flash_green, FLASH_DURATION);
 }
 
+void led_flash_blue() {
+  led_on(LED_BLUE);
+  timer_post_task_delay(&end_flash_blue, FLASH_DURATION);
+}
+
 bool led_init() {
-	__led_init();
-	sched_register_task(&end_flash_green);
-	return true;
+  sched_register_task(&end_flash_green);
+  sched_register_task(&led_flash_blue);
+  return true;
 }
 

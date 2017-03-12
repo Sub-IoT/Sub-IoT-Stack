@@ -118,7 +118,13 @@
  };
 
  // private storage for handles, pointers to these records are passed around
- static spi_handle_t handle[USARTS] = { {.id=0},{.id=1},{.id=2},{.id=3}};
+ static spi_handle_t handle[USARTS] =
+ 	 	 	 {
+ 	 	 			 {.id=0, .hspi.Instance=NULL},
+					 {.id=1, .hspi.Instance=NULL},
+					 {.id=2, .hspi.Instance=NULL},
+					 {.id=3, .hspi.Instance=NULL}
+ 	 	 	 };
 
  static void ensure_slaves_deselected(spi_handle_t* spi) {
    // make sure CS lines for all slaves of this bus are high for active low
@@ -197,10 +203,13 @@
    assert(uart < USARTS);
    assert(uart > 0);
 
+   if (handle[uart].hspi.Instance != NULL)
+   {
+	   //TODO: check if settings are ok
+	   return &handle[uart];
+   }
+
    GPIO_InitTypeDef GPIO_InitStruct;
-
-
-
    GPIO_InitStruct.Pin = usarts[uart].pins;
    GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
    GPIO_InitStruct.Pull = GPIO_NOPULL;
@@ -215,6 +224,36 @@
   	handle[uart].hspi.Init.CLKPolarity = SPI_POLARITY_LOW;
   	handle[uart].hspi.Init.CLKPhase = SPI_PHASE_1EDGE;
   	handle[uart].hspi.Init.NSS = SPI_NSS_SOFT;
+  	switch (baudrate)
+  	{
+  	case 16000000:
+  		handle[uart].hspi.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_2;
+  		break;
+  	case 8000000:
+  		handle[uart].hspi.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_4;
+  		break;
+  	case 4000000:
+  		handle[uart].hspi.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_8;
+  		break;
+  	case 2000000:
+  		handle[uart].hspi.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_16;
+  		break;
+  	case 1000000:
+  		handle[uart].hspi.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_32;
+  		break;
+  	case 500000:
+  		handle[uart].hspi.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_64;
+  		break;
+  	case 250000:
+  		handle[uart].hspi.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_128;
+  		break;
+  	case 125000:
+  		handle[uart].hspi.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_256;
+  		break;
+  	default:
+  		assert(false);
+  	}
+
   	handle[uart].hspi.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_8;
   	if (msbf)
   	handle[uart].hspi.Init.FirstBit = SPI_FIRSTBIT_MSB;

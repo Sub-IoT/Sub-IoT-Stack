@@ -16,27 +16,18 @@
  * limitations under the License.
  */
 
-#ifndef __STM32L152_PINS_H_
-#define __STM32L152_PINS_H_
-#include "hwgpio.h"
-//port A
-extern pin_id_t const A5;
-extern pin_id_t const A6;
-extern pin_id_t const A7;
-extern pin_id_t const A8;
-extern pin_id_t const A9;
-extern pin_id_t const A10;
-// PORT B
-extern pin_id_t const B4;
-extern pin_id_t const B5;
-extern pin_id_t const B6;
-extern pin_id_t const B10;
-extern pin_id_t const B13;
-extern pin_id_t const B14;
-extern pin_id_t const B15;
-//port C
-extern pin_id_t const C6;
-extern pin_id_t const C7;
-extern pin_id_t const C8;
-extern pin_id_t const C13;
-#endif //__STM32L152_PINS_H_
+#ifndef __PLATFORM_LED_H_
+#define __PLATFORM_LED_H_
+
+#include "hwleds.h"
+#include "timer.h"
+
+#define FLASH_DURATION TIMER_TICKS_PER_SEC * 0.2
+
+bool led_init(void);
+
+void led_flash_green(void);
+void led_flash_blue(void);
+void led_flash_red(void);
+
+#endif

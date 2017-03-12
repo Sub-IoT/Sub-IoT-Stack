@@ -39,10 +39,10 @@ INCLUDE_DIRECTORIES(
 
 ##Export the 'inc' directory globally		    
 EXPORT_GLOBAL_INCLUDE_DIRECTORIES(
-		inc
-		#Drivers/STM32L1xx_HAL_Driver/Inc
-		#Drivers/CMSIS/Device/ST/STM32L1xx/Include
-		#Drivers/CMSIS/Include
+		inc		
+                Drivers/STM32L1xx_HAL_Driver/Inc
+		Drivers/CMSIS/Device/ST/STM32L1xx/Include
+		Drivers/CMSIS/Include
 )
 
 #Please note we include 'inc' here since for complicated cmake reasons directories exported 
