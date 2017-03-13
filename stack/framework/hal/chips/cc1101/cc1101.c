@@ -116,6 +116,10 @@ static uint8_t bytesLeft;
 static uint8_t *BufferIndex;
 static uint8_t iterations;
 
+const uint16_t sync_word_value[2][4] = {
+    { 0xE6D0, 0x0000, 0xF498, 0x0000 },
+    { 0x0B67, 0x0000, 0x192F, 0x0000 }
+};
 
 static void start_rx(hw_rx_cfg_t const* rx_cfg);
 
@@ -124,8 +128,8 @@ static RF_SETTINGS rf_settings = {
    RADIO_GDO1_VALUE,               // IOCFG1    GDO1 output pin configuration.
    RADIO_GDO0_VALUE,               // IOCFG0    GDO0 output pin configuration.
    RADIO_FIFOTHR_FIFO_THR_61_4,    // FIFOTHR   RXFIFO and TXFIFO thresholds.
-   RADIO_SYNC1_CLASS0,             // SYNC1     Sync word, high byte
-   RADIO_SYNC0_CLASS0,             // SYNC0     Sync word, low byte
+   RADIO_SYNC1_CS0_CLASS0,         // SYNC1     Sync word, high byte
+   RADIO_SYNC0_CS0_CLASS0,         // SYNC0     Sync word, low byte
    RADIO_PKTLEN,                   // PKTLEN    Packet length.
    RADIO_PKTCTRL1_PQT(3) | RADIO_PKTCTRL1_APPEND_STATUS,   // PKTCTRL1  Packet automation control.
    RADIO_PKTCTRL0_WHITE_DATA | RADIO_PKTCTRL0_LENGTH_VAR,  // PKTCTRL0  Packet automation control.
@@ -525,21 +529,16 @@ static void configure_eirp(const eirp_t eirp)
     }
 }
 
-static void configure_syncword_class(syncword_class_t syncword_class)
+static void configure_syncword(syncword_class_t syncword_class, phy_coding_t ch_coding)
 {
-    if(syncword_class != current_syncword_class)
+    if((syncword_class != current_syncword_class) || (ch_coding != current_channel_id.channel_header.ch_coding))
     {
         current_syncword_class = syncword_class;
-        if (current_syncword_class == PHY_SYNCWORD_CLASS0)
-        {
-            cc1101_interface_write_single_reg(SYNC0, RADIO_SYNC0_CLASS0);
-            cc1101_interface_write_single_reg(SYNC1, RADIO_SYNC1_CLASS0);
-        }
-        else
-        {
-            cc1101_interface_write_single_reg(SYNC0, RADIO_SYNC0_CLASS1);
-            cc1101_interface_write_single_reg(SYNC1, RADIO_SYNC1_CLASS1);
-        }
+        uint16_t sync_word = sync_word_value[syncword_class][ch_coding];
+
+        DPRINT("sync_word = %04x", sync_word);
+        cc1101_interface_write_single_reg(SYNC0, sync_word & 0xFF);
+        cc1101_interface_write_single_reg(SYNC1, sync_word >> 8);
     }
 }
 
@@ -566,7 +565,7 @@ error_t hw_radio_init(alloc_packet_callback_t alloc_packet_cb,
     // configure default channel, eirp and syncword
     configure_channel(&current_channel_id);
     configure_eirp(current_eirp);
-    configure_syncword_class(current_syncword_class);
+    configure_syncword(current_syncword_class, current_channel_id.channel_header.ch_coding);
     cc1101_interface_write_single_reg(FIFOTHR, 0x04);
     // FIFO_THR = 4
     // 45 bytes in TX FIFO (19 available spaces)
@@ -591,7 +590,7 @@ static void start_rx(hw_rx_cfg_t const* rx_cfg)
 //    }
 
     configure_channel(&(rx_cfg->channel_id));
-    configure_syncword_class(rx_cfg->syncword_class);
+    configure_syncword(rx_cfg->syncword_class, rx_cfg->channel_id.channel_header.ch_coding);
     cc1101_interface_write_single_reg(PKTLEN, 0xFF);
     // Associated to the RX FIFO: Asserts when RX FIFO is filled at or above the
     // RX FIFO threshold. De-asserts when RX FIFO is drained below the same threshold
@@ -691,7 +690,8 @@ error_t hw_radio_send_packet(hw_radio_packet_t* packet, tx_packet_callback_t tx_
 
     configure_channel((channel_id_t*)&(current_packet->tx_meta.tx_cfg.channel_id));
     configure_eirp(current_packet->tx_meta.tx_cfg.eirp);
-    configure_syncword_class(current_packet->tx_meta.tx_cfg.syncword_class);
+    configure_syncword(current_packet->tx_meta.tx_cfg.syncword_class,
+                       current_packet->tx_meta.tx_cfg.channel_id.channel_header.ch_coding);
 
     // Associated to the TX FIFO: Asserts when the TX FIFO is filled above TXFIFO_THR.
     // De-asserts when the TX FIFO is below TXFIFO_THR.

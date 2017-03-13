@@ -152,11 +152,18 @@ RFIFG15 Positive edge: WOR event 1
 #define RADIO_FIFOTHR_FIFO_THR_17_48    (11)             // FIFOTHR.FIFO_THR 17B TX / 48B RX
 #define RADIO_FIFOTHR_FIFO_THR_1_64     (15)            // FIFOTHR.FIFO_THR  1B TX / 64B RX
 
-#define RADIO_SYNC1_CLASS0              0xE6            // SYNC1 MSB sync word class 0
-#define RADIO_SYNC0_CLASS0              0xD0            // SYNC0 LSB sync word class 0
+#define RADIO_SYNC1_CS0_CLASS0           0xE6            // SYNC1 MSB sync word class 0 coding scheme CS0
+#define RADIO_SYNC0_CS0_CLASS0           0xD0            // SYNC0 LSB sync word class 0 coding scheme CS0
 
-#define RADIO_SYNC1_CLASS1              0x0B            // SYNC1 MSB sync word class 1
-#define RADIO_SYNC0_CLASS1              0x67            // SYNC0 LSB sync word class 1
+#define RADIO_SYNC1_CS0_CLASS1           0x0B            // SYNC1 MSB sync word class 1 coding scheme CS0
+#define RADIO_SYNC0_CS0_CLASS1           0x67            // SYNC0 LSB sync word class 1 coding scheme CS0
+
+#define RADIO_SYNC1_CS2_CLASS0           0xF4            // SYNC1 MSB sync word class 0 coding scheme CS2
+#define RADIO_SYNC0_CS2_CLASS0           0x98            // SYNC0 LSB sync word class 0 coding scheme CS2
+
+#define RADIO_SYNC1_CS2_CLASS1           0x19            // SYNC1 MSB sync word class 1 coding scheme CS2
+#define RADIO_SYNC0_CS2_CLASS1           0x2F            // SYNC0 LSB sync word class 1 coding scheme CS2
+
 
 #define RADIO_PKTLEN                    0xFF            // PKTLEN (default)
 
