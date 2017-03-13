@@ -123,6 +123,23 @@ const uint16_t sync_word_value[2][4] = {
     { 0x0B67, 0x0000, 0x192F, 0x0000 }
 };
 
+/*
+ * In background scan, the device has a period of To to successfully detect the sync word
+ * To is at least equal to the duration of one background frame plus the duration
+ * of the maximum preamble length for the used channel class.
+ */
+
+#define To_CLASS_LO_RATE 22 // (12(FEC encode payload) + 2 (SYNC) + 8 (Max preamble)) / 1 byte/tick
+#define To_CLASS_NORMAL_RATE 4 // (12(FEC encode payload) + 2 (SYNC) + 8 (Max preamble)) / 6 bytes/tick
+#define To_CLASS_HI_RATE 2 // (12(FEC encode payload) + 2 (SYNC) + 16 (Max preamble)) / 20 bytes/tick
+
+const uint8_t bg_timeout[4] = {
+    To_CLASS_LO_RATE,
+    0, // RFU
+    To_CLASS_NORMAL_RATE,
+    To_CLASS_HI_RATE
+};
+
 static void start_rx(hw_rx_cfg_t const* rx_cfg);
 
 static RF_SETTINGS rf_settings = {
@@ -254,10 +271,28 @@ static void end_of_packet_isr()
     switch(current_state)
     {
         case HW_RADIO_STATE_RX: ;
+            uint8_t packet_len = 0;
+
+            if (current_syncword_class == PHY_SYNCWORD_CLASS0)
+            {
+                DPRINT("BG packet received!");
+                uint8_t packet_len;
+                if (current_channel_id.channel_header.ch_coding == PHY_CODING_FEC_PN9)
+                    packet_len = BACKGROUND_FRAME_LENGTH * 2;
+                else
+                    packet_len = BACKGROUND_FRAME_LENGTH;
+
+                current_packet = alloc_packet_callback(packet_len);
+                current_packet->length = BACKGROUND_FRAME_LENGTH;
+                bytesLeft = packet_len;
+                BufferIndex = current_packet->data + 1;
+                endOfPacket = true;
+                timer_cancel_task(&switch_to_idle_mode);
+                sched_cancel_task(&switch_to_idle_mode);
+            }
+
             if (!endOfPacket)
             {
-                uint8_t packet_len = 0;
-
                 // After the sync word is received one needs to wait some time before there will be any data
                 // in the FIFO. In addition, the FIFO should not be emptied
                 // (See the CC1100 or 2500 Errata Note) before the whole packet has been received.
@@ -327,8 +362,13 @@ end_of_packet:
                 DEBUG_RX_END();
                 if (current_channel_id.channel_header.ch_coding == PHY_CODING_FEC_PN9)
                 {
-                    uint8_t packet_len = (BufferIndex + bytesLeft) - current_packet->data;
-                    fec_decode_packet(current_packet->data, packet_len, packet_len);
+                    if (current_syncword_class == PHY_SYNCWORD_CLASS0)
+                        fec_decode_packet(current_packet->data + 1, packet_len, packet_len);
+                    else
+                    {
+                        packet_len = (BufferIndex + bytesLeft) - current_packet->data;
+                        fec_decode_packet(current_packet->data, packet_len, packet_len);
+                    }
                 }
 
                 if(rx_packet_callback != NULL) // TODO this can happen while doing CCA but we should not be interrupting here (disable packet handler?)
@@ -384,37 +424,35 @@ static inline void wait_for_chip_state(cc1101_chipstate_t expected_state)
 
 static void configure_channel(const channel_id_t* channel_id)
 {
+    //Update the PKTCTRL0 register since this register may be changed by background scan
+    // CC1101 supports CRC as well as FEC, but the order of data whitening relative to FEC
+    // is the reverse of what is specified by D7A. Therefore, the embedded FEC can't be enabled
+    if (channel_id->channel_header.ch_coding == PHY_CODING_FEC_PN9)
+    {
+        DPRINT("FEC is applied in SW");
+        // we use the fixed packet length mode since the first byte is FEC encoded
+        cc1101_interface_write_single_reg(PKTCTRL0, RADIO_PKTCTRL0_WHITE_DATA | RADIO_PKTCTRL0_LENGTH_FIXED);
+    }
+    else if (channel_id->channel_header.ch_coding == PHY_CODING_PN9)
+    {
+        if (has_hardware_crc)
+            cc1101_interface_write_single_reg(PKTCTRL0, RADIO_PKTCTRL0_WHITE_DATA | RADIO_PKTCTRL0_CRC | RADIO_PKTCTRL0_LENGTH_VAR);
+        else
+            cc1101_interface_write_single_reg(PKTCTRL0, RADIO_PKTCTRL0_WHITE_DATA | RADIO_PKTCTRL0_LENGTH_VAR);
+
+        cc1101_interface_write_single_reg(PKTLEN, RADIO_PKTLEN);
+     }
+     else
+     {
+         // Receive the raw data as is.
+         cc1101_interface_write_single_reg(PKTCTRL0, RADIO_PKTCTRL0_LENGTH_INF);
+         cc1101_interface_write_single_reg(PKTLEN, RADIO_PKTLEN);
+         DPRINT("Raw data applied !");
+     }
+
     // only change settings if channel_id changed compared to current config
     if(!hw_radio_channel_ids_equal(channel_id, &current_channel_id))
     {
-        if (channel_id->channel_header.ch_coding != current_channel_id.channel_header.ch_coding)
-        {
-            // CC1101 supports CRC as well as FEC, but the order of data whitening relative to FEC
-            // is the reverse of what is specified by D7A. Therefore, the embedded FEC can't be enabled
-            if (channel_id->channel_header.ch_coding == PHY_CODING_FEC_PN9)
-            {
-                DPRINT("FEC is applied in SW");
-                // we use the fixed packet length mode since the first byte is FEC encoded
-                cc1101_interface_write_single_reg(PKTCTRL0, RADIO_PKTCTRL0_WHITE_DATA | RADIO_PKTCTRL0_LENGTH_FIXED);
-            }
-            else if (channel_id->channel_header.ch_coding == PHY_CODING_PN9)
-            {
-                if (has_hardware_crc)
-                    cc1101_interface_write_single_reg(PKTCTRL0, RADIO_PKTCTRL0_WHITE_DATA | RADIO_PKTCTRL0_CRC | RADIO_PKTCTRL0_LENGTH_VAR);
-                else
-                    cc1101_interface_write_single_reg(PKTCTRL0, RADIO_PKTCTRL0_WHITE_DATA | RADIO_PKTCTRL0_LENGTH_VAR);
-
-                cc1101_interface_write_single_reg(PKTLEN, RADIO_PKTLEN);
-            }
-            else
-            {
-                // Receive the raw data as is.
-                cc1101_interface_write_single_reg(PKTCTRL0, RADIO_PKTCTRL0_LENGTH_INF);
-                cc1101_interface_write_single_reg(PKTLEN, RADIO_PKTLEN);
-                DPRINT("Raw data applied !");
-            }
-        }
-
         // TODO assert valid center freq index
 
         cc1101_interface_strobe(RF_SIDLE); // we need to be in IDLE state before starting calibration
@@ -552,6 +590,8 @@ error_t hw_radio_init(alloc_packet_callback_t alloc_packet_cb,
 
     current_state = HW_RADIO_STATE_IDLE;
 
+    sched_register_task(&switch_to_idle_mode);
+
     cc1101_interface_init(&end_of_packet_isr, &fifo_threshold_isr);
     cc1101_interface_reset_radio_core();
     cc1101_interface_write_rfsettings(&rf_settings);
@@ -660,6 +700,77 @@ error_t hw_radio_set_rx(hw_rx_cfg_t const* rx_cfg, rx_packet_callback_t rx_cb, r
     }
 
     start_rx(rx_cfg);
+
+    return SUCCESS;
+}
+
+error_t hw_radio_start_background_scan(hw_rx_cfg_t const* rx_cfg, rx_packet_callback_t rx_cb, int16_t rssi_thr)
+{
+    uint8_t packet_len;
+
+    DPRINT("START BG scan @ %i", timer_get_counter_value());
+
+    if(rx_cb != NULL)
+    {
+        assert(alloc_packet_callback != NULL);
+        assert(release_packet_callback != NULL);
+    }
+    rx_packet_callback = rx_cb;
+
+    // We should not initiate a background scan before TX is completed
+    assert(current_state != HW_RADIO_STATE_TX);
+
+    current_state = HW_RADIO_STATE_RX;
+
+    configure_syncword(rx_cfg->syncword_class, rx_cfg->channel_id.channel_header.ch_coding);
+    configure_channel(&(rx_cfg->channel_id));
+
+    cc1101_interface_write_single_reg(PKTCTRL0, RADIO_PKTCTRL0_WHITE_DATA | RADIO_PKTCTRL0_LENGTH_FIXED);
+
+    if (current_channel_id.channel_header.ch_coding == PHY_CODING_FEC_PN9)
+        packet_len = BACKGROUND_FRAME_LENGTH * 2;
+    else
+        packet_len = BACKGROUND_FRAME_LENGTH;
+
+    cc1101_interface_write_single_reg(PKTLEN, packet_len);
+    DPRINT("packet length %d", packet_len);
+
+    DEBUG_RX_START();
+
+    uint8_t status;
+    uint8_t counter = 0;
+    do
+    {
+        status = cc1101_interface_strobe(RF_SRX);
+        if(status == 0x6F)
+        {
+            // RX FIFO overflow, flush first
+            DPRINT("RX FIFO overflow");
+            cc1101_interface_strobe(RF_SFRX);
+        }
+
+        assert(counter++ < 100); // TODO measure value in normal case
+    } while(status != 0x1F);
+
+    // Fast RX termination if no carrier is detected
+    ensure_settling_and_calibration_done();
+
+    int16_t rssi = hw_radio_get_rssi();
+    if (rssi <= rssi_thr)
+    {
+        DPRINT("FAST RX termination RSSI %i limit %i", rssi, rssi_thr);
+        switch_to_idle_mode();
+        DEBUG_RX_END();
+        return FAIL;
+    }
+    else
+    {
+        c1101_interface_set_edge_interrupt(CC1101_GDO0, GPIO_FALLING_EDGE);
+        cc1101_interface_set_interrupts_enabled(CC1101_GDO0, true);
+    }
+
+    // the device has a period of To to successfully detect the sync word
+    assert(timer_post_task_delay(&switch_to_idle_mode, bg_timeout[current_channel_id.channel_header.ch_class]) == SUCCESS);
 
     return SUCCESS;
 }
@@ -867,6 +978,8 @@ error_t hw_radio_send_background_packet(hw_radio_packet_t* packet, tx_packet_cal
         do
         {
             cc1101_interface_read_burst_reg(TXBYTES, &bytes_in_fifo, 1);
+            if (bytes_in_fifo & 0x80)
+                DPRINT("TX FIFO underflow %x", bytes_in_fifo);
             bytes_in_fifo = bytes_in_fifo & 0x7F;
         } while (FIFO_SIZE - bytes_in_fifo < tx_len);
 
@@ -931,6 +1044,8 @@ error_t hw_radio_set_idle()
         return SUCCESS;
     }
 
-    switch_to_idle_mode();
+    if (current_state != HW_RADIO_STATE_IDLE)
+        switch_to_idle_mode();
+
     return SUCCESS;
 }

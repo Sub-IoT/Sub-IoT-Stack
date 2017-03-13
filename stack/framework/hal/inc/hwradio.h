@@ -522,6 +522,27 @@ __LINK_C error_t hw_radio_send_background_packet(hw_radio_packet_t* packet,
                                         tx_packet_callback_t tx_callback,
                                         uint16_t eta, uint16_t tx_duration); 
 
+/** \brief Start a background scan.
+ *
+ * During scan automation, the receiver is waiting for a valid D7AAdvP frame.
+ *
+ * \param rx_cfg;  The 'RX Configuration' used to receive the background packet.
+ *
+ * \param rx_cb    The rx_packet_callback_t function to call whenever a background packet is received
+ *                 Please note that this function is called from an *interrupt* context and therefore
+ *                 can only do minimal processing. If this function is 0x0, all received
+ *                 packets will be dropped.
+ *
+ * \param rssi_thr The scan shall stop immediately upon failure to detect a modulated signal on the channel
+ *                 rssi_thr gives the signal strength threshold to detect a modulated signal
+ *
+ * \return error_t SUCCESS if the radio was put in background scan mode
+ *                 EINVAL if the supplied rx_cfg contains invalid parameters.
+ *                 EOFF if the radio is not yet initialised.
+ */
+__LINK_C error_t hw_radio_start_background_scan(hw_rx_cfg_t const* rx_cfg, rx_packet_callback_t rx_cb,
+                                                int16_t rssi_thr);
+
 /**
  * \brief This function enables us for testing purposes to configure a device with a continuous wave or GFSK wave.
  *

@@ -52,7 +52,6 @@ typedef enum
     DLL_STATE_CCA2,
     DLL_STATE_CCA_FAIL,
     DLL_STATE_FOREGROUND_SCAN,
-    DLL_STATE_BACKGROUND_SCAN,
     DLL_STATE_TX_FOREGROUND,
     DLL_STATE_TX_BACKGROUND,
     DLL_STATE_TX_FOREGROUND_COMPLETED,
@@ -112,12 +111,16 @@ static uint8_t NGDEF(_tx_nf_method);
 static int16_t NGDEF(_E_CCA);
 #define E_CCA NG(_E_CCA)
 
+static uint16_t NGDEF(_tsched);
+#define tsched NG(_tsched)
+
 // TODO defined somewhere?
-#define t_g	5
+#define t_g    5
 
 static void execute_cca();
 static void execute_csma_ca();
 static void start_foreground_scan();
+static void packet_received(hw_radio_packet_t* hw_radio_packet);
 
 static hw_radio_packet_t* alloc_new_packet(uint8_t length)
 {
@@ -249,21 +252,27 @@ static bool is_tx_busy()
     }
 }
 
-
 void start_background_scan()
 {
-    switch_state(DLL_STATE_BACKGROUND_SCAN);
-    // TODO
-    // terminates the scan immediately upon failure to detect a modulated signal on the channel
-    // Beginning from when the scan starts, the device has a period of To to successfully detect the sync word of Class 0
-}
-
-static void schedule_background_scan(timer_tick_t tsched)
-{
-    DPRINT("Perform a dll background scan scan at the end of TSCHED (%i ticks)", tsched);
+    // Start a new tsched timer
     assert(timer_post_task_delay(&start_background_scan, tsched) == SUCCESS);
+
+    hw_rx_cfg_t rx_cfg = {
+        .channel_id = current_channel_id,
+        .syncword_class = PHY_SYNCWORD_CLASS0,
+       };
+
+    hw_radio_start_background_scan(&rx_cfg, &packet_received, E_CCA);
 }
 
+void dll_stop_background_scan()
+{
+    assert(dll_state == DLL_STATE_SCAN_AUTOMATION);
+
+    timer_cancel_task(&start_background_scan);
+    sched_cancel_task(&start_background_scan);
+    hw_radio_set_idle();
+}
 
 static void process_received_packets()
 {
@@ -279,13 +288,17 @@ static void process_received_packets()
     packet_t* packet = packet_queue_get_received_packet();
     assert(packet != NULL);
     DPRINT("Processing received packet");
+
+    if (packet->hw_radio_packet.rx_meta.rx_cfg.syncword_class == PHY_SYNCWORD_CLASS0)
+        packet->type = BACKGROUND_ADV;
+
     packet_queue_mark_processing(packet);
     packet_disassemble(packet);
 
     // TODO check if more received packets are pending
 }
 
-void packet_received(hw_radio_packet_t* hw_radio_packet)
+static void packet_received(hw_radio_packet_t* hw_radio_packet)
 {
     assert(dll_state == DLL_STATE_FOREGROUND_SCAN || dll_state == DLL_STATE_SCAN_AUTOMATION);
 
@@ -293,6 +306,10 @@ void packet_received(hw_radio_packet_t* hw_radio_packet)
     // schedule it and return
     DPRINT("packet received @ %i , RSSI = %i", hw_radio_packet->rx_meta.timestamp, hw_radio_packet->rx_meta.rssi);
     packet_queue_mark_received(hw_radio_packet);
+
+    // DLL Scan Automation is disabled during the processing of the received packet.
+    if (dll_state == DLL_STATE_SCAN_AUTOMATION)
+        hw_radio_set_idle();
 
     /* the received packet needs to be handled in priority */
     sched_post_task_prio(&process_received_packets, MAX_PRIORITY);
@@ -682,7 +699,6 @@ void dll_execute_scan_automation()
 
     DPRINT("DLL execute scan autom AC=0x%02x", active_access_class);
 
-
     /*
      * The Scan Automation Parameters are uniquely defined based on the Active
      * Access Class of the device.
@@ -719,9 +735,20 @@ void dll_execute_scan_automation()
     }
     else
     {
-        uint8_t tsched = CT_DECOMPRESS(current_access_profile.subprofiles[0].scan_automation_period);
+        tsched = CT_DECOMPRESS(current_access_profile.subprofiles[0].scan_automation_period);
         rx_cfg.syncword_class = PHY_SYNCWORD_CLASS0;
-        schedule_background_scan(tsched);
+
+        // compute Ecca = NF + Eccao
+        if (tx_nf_method == D7ADLL_FIXED_NOISE_FLOOR)
+        {
+            //Use the default channel CCA threshold
+            E_CCA = current_access_profile.subbands[0].cca; // Eccao is set to 0 dB
+            DPRINT("E_CCA %i", E_CCA);
+        }
+
+        // If TSCHED > 0, an independent scheduler is set to generate regular scan start events at TSCHED rate.
+        DPRINT("Perform a dll background scan at the end of TSCHED (%d ticks)", tsched);
+        assert(timer_post_task_delay(&start_background_scan, tsched) == SUCCESS);
     }
 
     current_channel_id = rx_cfg.channel_id;
@@ -759,6 +786,7 @@ void dll_init()
     sched_register_task(&execute_cca);
     sched_register_task(&execute_csma_ca);
     sched_register_task(&dll_execute_scan_automation);
+    sched_register_task(&start_background_scan);
 
     hw_radio_init(&alloc_new_packet, &release_packet);
 
@@ -774,6 +802,12 @@ void dll_init()
 
 void dll_tx_frame(packet_t* packet)
 {
+    if (dll_state == DLL_STATE_SCAN_AUTOMATION)
+    {
+        timer_cancel_task(&start_background_scan);
+        sched_cancel_task(&start_background_scan);
+    }
+
     if (dll_state != DLL_STATE_FOREGROUND_SCAN)
     {
         hw_radio_set_idle();
@@ -853,7 +887,7 @@ void dll_tx_frame(packet_t* packet)
 
             packet_length += sizeof(uint16_t) + (current_access_profile.channel_header.ch_class ==  PHY_CLASS_HI_RATE ? PREAMBLE_HI_RATE_CLASS : PREAMBLE_LOW_RATE_CLASS);
 
-            DPRINT("packet_length <%d> TSCHED %i", packet_length, CT_DECOMPRESS(current_access_profile.subprofiles[0].scan_automation_period));
+            DPRINT("packet_length <%d> TSCHED %d", packet_length, CT_DECOMPRESS(current_access_profile.subprofiles[0].scan_automation_period));
 
             ttx = dll_calculate_tx_duration(current_access_profile.channel_header.ch_class, packet_length);
 
@@ -891,6 +925,13 @@ void dll_tx_frame(packet_t* packet)
 
 static void start_foreground_scan()
 {
+    if (dll_state == DLL_STATE_SCAN_AUTOMATION)
+    {
+        timer_cancel_task(&start_background_scan);
+        sched_cancel_task(&start_background_scan);
+        hw_radio_set_idle();
+    }
+
     switch_state(DLL_STATE_FOREGROUND_SCAN);
 
     // TODO, if the Requester is MISO and the Request is broadcast, the responses
