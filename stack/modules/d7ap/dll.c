@@ -848,7 +848,7 @@ void dll_stop_foreground_scan(bool auto_scan)
     }
 }
 
-uint8_t dll_assemble_packet_header(packet_t* packet, uint8_t* data_ptr, bool background)
+uint8_t dll_assemble_packet_header(packet_t* packet, uint8_t* data_ptr)
 {
     uint8_t* dll_header_start = data_ptr;
     *data_ptr = packet->dll_header.subnet; data_ptr += sizeof(packet->dll_header.subnet);
@@ -857,7 +857,7 @@ uint8_t dll_assemble_packet_header(packet_t* packet, uint8_t* data_ptr, bool bac
     {
         uint8_t addr_len = packet->dll_header.control_target_id_type == ID_TYPE_VID? 2 : 8;
 
-        if (background)
+        if (packet->type == BACKGROUND_ADV)
         {
             uint16_t crc;
             crc = crc_calculate(packet->d7anp_addressee->id, addr_len);
@@ -888,7 +888,7 @@ uint8_t dll_assemble_packet_header(packet_t* packet, uint8_t* data_ptr, bool bac
     return data_ptr - dll_header_start;
 }
 
-bool dll_disassemble_packet_header(packet_t* packet, uint8_t* data_idx, bool background)
+bool dll_disassemble_packet_header(packet_t* packet, uint8_t* data_idx)
 {
     packet->dll_header.subnet = packet->hw_radio_packet.data[(*data_idx)]; (*data_idx)++;
     uint8_t FSS = ACCESS_SPECIFIER(packet->dll_header.subnet);
@@ -910,7 +910,7 @@ bool dll_disassemble_packet_header(packet_t* packet, uint8_t* data_idx, bool bac
 
     packet->dll_header.control_target_id_type  = packet->hw_radio_packet.data[(*data_idx)] >> 6 ;
 
-    if (background)
+    if (packet->type == BACKGROUND_ADV)
     {
         packet->dll_header.control_identifier_tag = packet->hw_radio_packet.data[(*data_idx)] & 0x3F;
         DPRINT("control_target_id_type 0x%02x Identifier Tag 0x%02x", packet->dll_header.control_target_id_type, packet->dll_header.control_identifier_tag);
@@ -936,7 +936,7 @@ bool dll_disassemble_packet_header(packet_t* packet, uint8_t* data_idx, bool bac
             address_len = 2;
         }
 
-        if (background)
+        if (packet->type == BACKGROUND_ADV)
         {
             uint16_t crc;
             crc = crc_calculate(id, address_len);

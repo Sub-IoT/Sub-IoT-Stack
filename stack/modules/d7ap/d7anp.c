@@ -28,6 +28,7 @@
 #include "math.h"
 #include "hwdebug.h"
 #include "aes.h"
+#include "packet_queue.h"
 
 #if defined(FRAMEWORK_LOG_ENABLED) && defined(MODULE_D7AP_NP_LOG_ENABLED)
 #define DPRINT(...) log_print_stack_string(LOG_STACK_NWL, __VA_ARGS__)
@@ -696,7 +697,7 @@ void d7anp_signal_packet_transmitted(packet_t* packet)
 
 }
 
-void d7anp_process_received_packet(packet_t* packet, bool background_frame)
+void d7anp_process_received_packet(packet_t* packet)
 {
     // TODO handle case where we are intermediate node while hopping (ie start FG scan, after auth if needed, and return)
 
@@ -709,15 +710,10 @@ void d7anp_process_received_packet(packet_t* packet, bool background_frame)
         DPRINT("Received packet while in D7ANP_STATE_IDLE (scan automation)");
 
         // check if DLL was performing a background scan
-        if (background_frame) {
-            timer_tick_t eta;
-
-            DPRINT("Received a background frame)");
-
-            assert(packet->payload_length == sizeof(timer_tick_t));
-            memcpy(&eta, packet->payload, sizeof(timer_tick_t));
-            //TODO decode the D7A Background Network Protocols Frame in order to trigger the foreground scan after the advertising period
-            schedule_foreground_scan_after_D7AAdvP(eta);
+        if (packet->type == BACKGROUND_ADV)
+        {
+            schedule_foreground_scan_after_D7AAdvP(packet->ETA);
+            packet_queue_free_packet(packet);
             return;
         }
     }

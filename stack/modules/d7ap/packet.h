@@ -38,6 +38,7 @@ typedef enum {
     RETRY_REQUEST,
     RESPONSE_TO_UNICAST,
     RESPONSE_TO_BROADCAST,
+    BACKGROUND_ADV
 } packet_type;
 
 /*! \brief A D7AP 'packet' used over all layers of the stack. Contains both the raw packet data (as transmitted over the air) as well

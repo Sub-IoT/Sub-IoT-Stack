@@ -127,7 +127,7 @@ uint8_t d7anp_assemble_packet_header(packet_t* packet, uint8_t* data_ptr);
 bool d7anp_disassemble_packet_header(packet_t* packet, uint8_t* packet_idx);
 void d7anp_signal_transmission_failure();
 void d7anp_signal_packet_transmitted(packet_t* packet);
-void d7anp_process_received_packet(packet_t* packet, bool background_frame);
+void d7anp_process_received_packet(packet_t* packet);
 uint8_t d7anp_addressee_id_length(id_type_t);
 void d7anp_set_foreground_scan_timeout(timer_tick_t timeout);
 void d7anp_start_foreground_scan();
