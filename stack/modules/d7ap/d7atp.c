@@ -230,22 +230,19 @@ error_t d7atp_send_request(uint8_t dialog_id, uint8_t transaction_id, bool is_la
                         packet_t* packet, session_qos_t* qos_settings, uint8_t listen_timeout, uint8_t expected_response_length)
 {
     /* check that we are not initiating a different dialog if a dialog is still ongoing */
-
-    // TODO in case of retry of the initial request, rigorously, we should keep the type INITIAL_REQUEST
-    // How to distinguish a retry?
-
     if (current_dialog_id)
     {
         assert( dialog_id == current_dialog_id);
-
-        // the Dialog is locked on the channel of the initial request
-        packet->type = SUBSEQUENT_REQUEST;
     }
-    else
-        packet->type = INITIAL_REQUEST;
 
     if (d7atp_state != D7ATP_STATE_MASTER_TRANSACTION_REQUEST_PERIOD)
         switch_state(D7ATP_STATE_MASTER_TRANSACTION_REQUEST_PERIOD);
+
+    if ( packet->type == RETRY_REQUEST )
+    {
+        DPRINT("Retry the transmission with the same packet content");
+        goto send_packet;
+    }
 
     current_dialog_id = dialog_id;
     current_transaction_id = transaction_id;
@@ -303,6 +300,7 @@ error_t d7atp_send_request(uint8_t dialog_id, uint8_t transaction_id, bool is_la
         DPRINT("packet->d7atp_tc 0x%02x (CT)", packet->d7atp_tc);
     }
 
+send_packet:
     return(d7anp_tx_foreground_frame(packet, true, slave_listen_timeout));
 }
 

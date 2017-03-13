@@ -154,6 +154,11 @@ static void flush_fifos()
         memcpy(current_request_packet->payload, current_master_session.request_buffer + current_master_session.requests_indices[current_request_id], current_master_session.requests_lengths[current_request_id]);
         current_request_packet->payload_length = current_master_session.requests_lengths[current_request_id];
 
+        if (current_request_id == 0)
+            current_request_packet->type = INITIAL_REQUEST;
+        else
+            current_request_packet->type =  SUBSEQUENT_REQUEST;
+
         // TODO calculate Tl
         // Tl should correspond to the maximum time needed to send the remaining requests in the FIFO including the RETRY parameter
     }
@@ -173,6 +178,7 @@ static void flush_fifos()
         }
 
         packet_queue_mark_processing(current_request_packet);
+        current_request_packet->type = RETRY_REQUEST;
         // TODO stop on error
     }
 

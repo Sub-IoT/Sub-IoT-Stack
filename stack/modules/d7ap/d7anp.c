@@ -218,6 +218,10 @@ error_t d7anp_tx_foreground_frame(packet_t* packet, bool should_include_origin_t
     // we need to switch back to the current state after the transmission procedure
     d7anp_prev_state = d7anp_state;
 
+    // No need to initialize the packet field in case of retry, except the security frame counter
+    if (packet->type == RETRY_REQUEST)
+        goto security;
+
     if (!should_include_origin_template)
     {
         packet->d7anp_ctrl.origin_id_type = ID_TYPE_NOID;
@@ -238,7 +242,7 @@ error_t d7anp_tx_foreground_frame(packet_t* packet, bool should_include_origin_t
 
     packet->d7anp_listen_timeout = slave_listen_timeout_ct;
 
-
+security:
 #if defined(MODULE_D7AP_NLS_ENABLED)
 
     packet->d7anp_ctrl.nls_method = packet->d7anp_addressee->ctrl.nls_method;

@@ -32,12 +32,12 @@
 #include "d7anp.h"
 #include "hwradio.h"
 
-
 typedef enum {
-	INITIAL_REQUEST,
-	SUBSEQUENT_REQUEST,
-	RESPONSE_TO_UNICAST,
-	RESPONSE_TO_BROADCAST
+    INITIAL_REQUEST,
+    SUBSEQUENT_REQUEST,
+    RETRY_REQUEST,
+    RESPONSE_TO_UNICAST,
+    RESPONSE_TO_BROADCAST,
 } packet_type;
 
 /*! \brief A D7AP 'packet' used over all layers of the stack. Contains both the raw packet data (as transmitted over the air) as well
