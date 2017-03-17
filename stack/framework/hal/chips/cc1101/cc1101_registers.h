@@ -232,6 +232,7 @@ RFIFG15 Positive edge: WOR event 1
 #define RADIO_MDMCFG2_SYNC_MODE_16in16CS  (6)           // Sync Word Qualifier: 15/16 sync words detected + Carrier sense
 #define RADIO_MDMCFG2_SYNC_MODE_30in32CS  (7)           // Sync Word Qualifier: 15/16 sync words detected + Carrier sense
 
+#define RADIO_MDMCFG1_FEC_EN              (1<<7)        // Enable Forward Error Correction (FEC) with interleaving for packet payload
 #define RADIO_MDMCFG1_NUM_PREAMBLE_2B     (0<<4)        // 2 bytes preamble
 #define RADIO_MDMCFG1_NUM_PREAMBLE_3B     (1<<4)
 #define RADIO_MDMCFG1_NUM_PREAMBLE_4B     (2<<4)

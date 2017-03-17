@@ -64,6 +64,7 @@ typedef enum
 typedef enum
 {
     PHY_CODING_PN9 = 0x00,
+    PHY_CODING_RFU = 0x01,
     PHY_CODING_FEC_PN9 = 0x02
 } phy_coding_t;
 

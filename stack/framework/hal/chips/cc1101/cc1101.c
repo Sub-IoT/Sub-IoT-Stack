@@ -47,6 +47,8 @@
 #include "cc1101_constants.h"
 #include "cc1101_registers.h"
 
+#include "fec.h"
+
 // turn on/off the debug prints
 #if defined(FRAMEWORK_LOG_ENABLED) && defined(FRAMEWORK_PHY_LOG_ENABLED)
 #define DPRINT(...) log_print_stack_string(LOG_STACK_PHY, __VA_ARGS__)
@@ -56,6 +58,12 @@
 #define DPRINT(...)
 #define DPRINT_PACKET(...)
 #define DPRINT_DATA(...)
+#endif
+
+#ifdef HAL_RADIO_USE_HW_CRC
+static bool has_hardware_crc = true;
+#else
+static bool has_hardware_crc = false;
 #endif
 
 #define RSSI_OFFSET 74
@@ -191,11 +199,36 @@ static void end_of_packet_isr()
     switch(current_state)
     {
         case HW_RADIO_STATE_RX: ;
-            uint8_t packet_len = cc1101_interface_read_single_reg(RXFIFO);
+
+            /* Check how many bytes we received. */
+            uint8_t packet_len = 0;
+
+            do
+            {
+                cc1101_interface_read_burst_reg(RXBYTES, &packet_len, 1);
+                packet_len = packet_len & 0x7F;
+            } while (packet_len < 4);  // TODO counter to avoid a dead lock
+
+            uint8_t buffer[4];
+            cc1101_interface_read_burst_reg(RXFIFO, buffer, 4);
+
+            if (current_channel_id.channel_header.ch_coding == PHY_CODING_FEC_PN9)
+            {
+                uint8_t fec_buffer[4];
+                memcpy(fec_buffer, buffer, 4);
+                fec_decode_packet(fec_buffer, 4, 4);
+                packet_len = fec_calculated_decoded_length(fec_buffer[0]+1);
+                DPRINT("RX Packet Length: %d / %d", fec_buffer[0], packet_len);
+            }
+            else
+            {
+                packet_len = buffer[0] + 1;
+            }
+
             DPRINT("EOP ISR packetLength: %d", packet_len);
             if(packet_len >= 63)
             {
-            	// long packets not yet supported or bit error in length byte, don't assert but flush rx
+                // long packets not yet supported or bit error in length byte, don't assert but flush rx
                 DPRINT("Packet size too big, flushing RX");
                 uint8_t status = (cc1101_interface_strobe(RF_SNOP) & 0xF0);
                 if(status == 0x60)
@@ -218,8 +251,8 @@ static void end_of_packet_isr()
             }
 
             hw_radio_packet_t* packet = alloc_packet_callback(packet_len);
-            packet->length = packet_len;
-            cc1101_interface_read_burst_reg(RXFIFO, packet->data + 1, packet->length);
+            memcpy(packet->data, buffer, 4);
+            cc1101_interface_read_burst_reg(RXFIFO, packet->data + 4, packet_len - 4);
 
             // fill rx_meta
             packet->rx_meta.rssi = convert_rssi(cc1101_interface_read_single_reg(RXFIFO));
@@ -230,6 +263,11 @@ static void end_of_packet_isr()
             packet->rx_meta.timestamp = timer_get_counter_value();
 
             DEBUG_RX_END();
+            if (current_channel_id.channel_header.ch_coding == PHY_CODING_FEC_PN9)
+            {
+                fec_decode_packet(packet->data, packet_len, packet_len);
+            }
+
             if(rx_packet_callback != NULL) // TODO this can happen while doing CCA but we should not be interrupting here (disable packet handler?)
                 rx_packet_callback(packet);
             else
@@ -282,7 +320,34 @@ static void configure_channel(const channel_id_t* channel_id)
     // only change settings if channel_id changed compared to current config
     if(!hw_radio_channel_ids_equal(channel_id, &current_channel_id))
     {
-        assert(channel_id->channel_header.ch_coding == PHY_CODING_PN9); // TODO implement other codings
+        if (channel_id->channel_header.ch_coding != current_channel_id.channel_header.ch_coding)
+        {
+            // CC1101 supports CRC as well as FEC, but the order of data whitening relative to FEC
+            // is the reverse of what is specified by D7A. Therefore, the embedded FEC can't be enabled
+            if (channel_id->channel_header.ch_coding == PHY_CODING_FEC_PN9)
+            {
+                DPRINT("FEC is applied in SW");
+                // we use the fixed packet length mode since the first byte is FEC encoded
+                cc1101_interface_write_single_reg(PKTCTRL0, RADIO_PKTCTRL0_WHITE_DATA | RADIO_PKTCTRL0_LENGTH_FIXED);
+            }
+            else if (channel_id->channel_header.ch_coding == PHY_CODING_PN9)
+            {
+                if (has_hardware_crc)
+                    cc1101_interface_write_single_reg(PKTCTRL0, RADIO_PKTCTRL0_WHITE_DATA | RADIO_PKTCTRL0_CRC | RADIO_PKTCTRL0_LENGTH_VAR);
+                else
+                    cc1101_interface_write_single_reg(PKTCTRL0, RADIO_PKTCTRL0_WHITE_DATA | RADIO_PKTCTRL0_LENGTH_VAR);
+
+                cc1101_interface_write_single_reg(PKTLEN, RADIO_PKTLEN);
+            }
+            else
+            {
+                // Receive the raw data as is.
+                cc1101_interface_write_single_reg(PKTCTRL0, RADIO_PKTCTRL0_LENGTH_INF);
+                cc1101_interface_write_single_reg(PKTLEN, RADIO_PKTLEN);
+                DPRINT("Raw data applied !");
+            }
+        }
+
         // TODO assert valid center freq index
 
         cc1101_interface_strobe(RF_SIDLE); // we need to be in IDLE state before starting calibration
@@ -557,7 +622,18 @@ error_t hw_radio_send_packet(hw_radio_packet_t* packet, tx_packet_callback_t tx_
     configure_eirp(current_packet->tx_meta.tx_cfg.eirp);
     configure_syncword_class(current_packet->tx_meta.tx_cfg.syncword_class);
 
-    cc1101_interface_write_burst_reg(TXFIFO, packet->data, packet->length + 1);
+    uint8_t data_length = packet->length + 1;
+
+    if (packet->tx_meta.tx_cfg.channel_id.channel_header.ch_coding == PHY_CODING_FEC_PN9)
+    {
+        data_length = fec_encode(packet->data, data_length);
+        DPRINT("Encoded packet: %d", data_length);
+        DPRINT_DATA(packet->data, data_length);
+
+        cc1101_interface_write_single_reg(PKTLEN, data_length);
+    }
+
+    cc1101_interface_write_burst_reg(TXFIFO, packet->data, data_length);
     cc1101_interface_set_interrupts_enabled(true);
     DEBUG_TX_START();
     DEBUG_RX_END();
