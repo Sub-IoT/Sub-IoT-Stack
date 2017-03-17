@@ -39,6 +39,13 @@ typedef enum {
     D7ADLL_SLOW_RSSI_VARIATION
 } noise_floor_computation_method_t;
 
+/*
+ * Background frames are of fixed length
+ * Subnet / CTRL / Payload / CRC16
+ * 1 byte /1 byte/ 2 bytes / 2 bytes
+ */
+#define BACKGROUND_FRAME_LENGTH 6
+
 #define SFc		3 // Collision Avoidance Spreading Factor
 
 typedef struct packet packet_t;

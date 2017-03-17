@@ -24,6 +24,8 @@
 #include "fec.h"
 #include "MODULE_D7AP_defs.h"
 
+#include "debug.h"
+
 #if defined(FRAMEWORK_LOG_ENABLED) && defined(MODULE_D7AP_FWK_LOG_ENABLED)
 #define DPRINT_FWK(...) log_print_stack_string(LOG_STACK_FWK, __VA_ARGS__)
 #else
@@ -69,6 +71,13 @@ void packet_assemble(packet_t* packet)
         /* Encrypt/authenticate nwl_payload if needed */
         if (packet->d7anp_ctrl.nls_method)
             data_ptr += d7anp_secure_payload(packet, nwl_payload, data_ptr - nwl_payload);
+    }
+    else
+    {
+        // add ETA for background frames
+        uint16_t eta = __builtin_bswap16(packet->ETA);
+        memcpy(data_ptr, &eta, sizeof(uint16_t));
+        data_ptr += sizeof(uint16_t);
     }
 
     packet->hw_radio_packet.length = data_ptr - packet->hw_radio_packet.data - 1 + 2; // exclude the length byte and add CRC bytes
@@ -126,12 +135,23 @@ void packet_disassemble(packet_t* packet)
 
         if(!d7atp_disassemble_packet_header(packet, &data_idx))
             goto cleanup;
+
+        // extract payload
+        packet->payload_length = packet->hw_radio_packet.length + 1 - data_idx - 2; // exclude the headers CRC bytes // TODO exclude footers
+        memcpy(packet->payload, packet->hw_radio_packet.data + data_idx, packet->payload_length);
+    }
+    else
+    {
+        // extract ETA for background frames
+        uint16_t eta;
+        packet->payload_length = packet->hw_radio_packet.length + 1 - data_idx - 2; // exclude the headers CRC bytes // TODO exclude footers
+        assert(packet->payload_length == sizeof(uint16_t));
+
+        memcpy(&eta, packet->hw_radio_packet.data + data_idx, packet->payload_length);
+        packet->ETA = __builtin_bswap16(eta);
     }
     // TODO footers
 
-    // extract payload
-    packet->payload_length = packet->hw_radio_packet.length + 1 - data_idx - 2; // exclude the headers CRC bytes // TODO exclude footers
-    memcpy(packet->payload, packet->hw_radio_packet.data + data_idx, packet->payload_length);
 
     DPRINT_FWK("Done disassembling packet");
 

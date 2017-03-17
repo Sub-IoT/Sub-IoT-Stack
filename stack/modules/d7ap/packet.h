@@ -62,6 +62,7 @@ struct packet
     uint8_t d7atp_te;
     uint8_t d7atp_target_rx_level_i;
     packet_type type;
+    uint16_t ETA;
     // TODO d7atp ack template
     uint8_t payload_length;
     uint8_t payload[239]; // TODO make max size configurable using cmake

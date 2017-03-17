@@ -54,15 +54,13 @@ typedef enum
     DLL_STATE_FOREGROUND_SCAN,
     DLL_STATE_BACKGROUND_SCAN,
     DLL_STATE_TX_FOREGROUND,
+    DLL_STATE_TX_BACKGROUND,
     DLL_STATE_TX_FOREGROUND_COMPLETED,
-    DLL_STATE_TX_FOREGROUND_DISCARDED
+    DLL_STATE_TX_DISCARDED
 } dll_state_t;
 
 static dae_access_profile_t NGDEF(_current_access_profile);
 #define current_access_profile NG(_current_access_profile)
-
-static dae_access_profile_t NGDEF(_scan_access_profile);
-#define scan_access_profile NG(_scan_access_profile)
 
 #define NO_ACTIVE_ACCESS_CLASS 0xFF
 static uint8_t NGDEF(_active_access_class);
@@ -150,9 +148,9 @@ static void switch_state(dll_state_t next_state)
         break;
     case DLL_STATE_CSMA_CA_RETRY:
         assert(dll_state == DLL_STATE_CCA1 || dll_state == DLL_STATE_CCA2);
-		dll_state = next_state;
-		DPRINT("Switched to DLL_STATE_CSMA_CA_RETRY");
-		break;
+        dll_state = next_state;
+        DPRINT("Switched to DLL_STATE_CSMA_CA_RETRY");
+        break;
     case DLL_STATE_CCA1:
         assert(dll_state == DLL_STATE_CSMA_CA_STARTED || dll_state == DLL_STATE_CSMA_CA_RETRY);
         dll_state = next_state;
@@ -172,7 +170,7 @@ static void switch_state(dll_state_t next_state)
     case DLL_STATE_IDLE:
         assert(dll_state == DLL_STATE_FOREGROUND_SCAN
                || dll_state == DLL_STATE_CCA_FAIL
-               || dll_state == DLL_STATE_TX_FOREGROUND_DISCARDED
+               || dll_state == DLL_STATE_TX_DISCARDED
                || dll_state == DLL_STATE_TX_FOREGROUND_COMPLETED
                || dll_state == DLL_STATE_CSMA_CA_STARTED
                || dll_state == DLL_STATE_CCA1
@@ -190,23 +188,28 @@ static void switch_state(dll_state_t next_state)
         DPRINT("Switched to DLL_STATE_SCAN_AUTOMATION");
         break;
     case DLL_STATE_TX_FOREGROUND:
-        assert(dll_state == DLL_STATE_CCA2);
+        assert(dll_state == DLL_STATE_CCA2 || dll_state == DLL_STATE_TX_BACKGROUND);
         dll_state = next_state;
         DPRINT("Switched to DLL_STATE_TX_FOREGROUND");
+        break;
+    case DLL_STATE_TX_BACKGROUND:
+        assert(dll_state == DLL_STATE_CCA2);
+        dll_state = next_state;
+        DPRINT("Switched to DLL_STATE_TX_BACKGROUND");
         break;
     case DLL_STATE_TX_FOREGROUND_COMPLETED:
         assert(dll_state == DLL_STATE_TX_FOREGROUND);
         dll_state = next_state;
         DPRINT("Switched to DLL_STATE_TX_FOREGROUND_COMPLETED");
         break;
-    case DLL_STATE_TX_FOREGROUND_DISCARDED:
+    case DLL_STATE_TX_DISCARDED:
         assert(dll_state == DLL_STATE_TX_FOREGROUND);
         dll_state = next_state;
-        DPRINT("Switched to DLL_STATE_TX_FOREGROUND_DISCARDED");
+        DPRINT("Switched to DLL_STATE_TX_DISCARDED");
         break;
     case DLL_STATE_CCA_FAIL:
         assert(dll_state == DLL_STATE_CCA1 || dll_state == DLL_STATE_CCA2
-        		|| dll_state == DLL_STATE_CSMA_CA_STARTED || dll_state == DLL_STATE_CSMA_CA_RETRY);
+                || dll_state == DLL_STATE_CSMA_CA_STARTED || dll_state == DLL_STATE_CSMA_CA_RETRY);
         dll_state = next_state;
         DPRINT("Switched to DLL_STATE_CCA_FAIL");
         break;
@@ -327,14 +330,27 @@ void packet_transmitted(hw_radio_packet_t* hw_radio_packet)
     sched_post_task_prio(&notify_transmitted_packet, MAX_PRIORITY);
 }
 
+void background_advertising_terminated(hw_radio_packet_t* hw_radio_packet)
+{
+    assert(dll_state == DLL_STATE_TX_BACKGROUND);
+    switch_state(DLL_STATE_TX_FOREGROUND);
+
+    current_packet->hw_radio_packet.tx_meta.tx_cfg.syncword_class = PHY_SYNCWORD_CLASS1;
+    current_packet->type = INITIAL_REQUEST;
+    packet_assemble(current_packet);
+
+    DPRINT("Transmit packet @ %i", timer_get_counter_value()); // ensure that we are sending the foreground request within the guarded time
+    hw_radio_send_packet(&current_packet->hw_radio_packet, &packet_transmitted);
+}
+
 static void discard_tx()
 {
     start_atomic();
-    if (dll_state == DLL_STATE_TX_FOREGROUND)
+    if (dll_state == DLL_STATE_TX_FOREGROUND || dll_state == DLL_STATE_TX_BACKGROUND)
     {
         /* wait until TX completed but Tx callback is removed */
         hw_radio_set_idle();
-        switch_state(DLL_STATE_TX_FOREGROUND_DISCARDED);
+        switch_state(DLL_STATE_TX_DISCARDED);
     }
     end_atomic();
 
@@ -376,12 +392,44 @@ static void cca_rssi_valid(int16_t cur_rssi)
         else if (dll_state == DLL_STATE_CCA2)
         {
             // OK, send packet
+            error_t err;
             DPRINT("CCA2 RSSI: %d", cur_rssi);
             DPRINT("CCA2 succeeded, transmitting ...");
             // log_print_data(current_packet->hw_radio_packet.data, current_packet->hw_radio_packet.length + 1); // TODO tmp
 
-            switch_state(DLL_STATE_TX_FOREGROUND);
-            error_t err = hw_radio_send_packet(&current_packet->hw_radio_packet, &packet_transmitted);
+            if (current_packet->type == BACKGROUND_ADV)
+            {
+                uint8_t packet_len;
+
+                if (current_channel_id.channel_header.ch_coding == PHY_CODING_FEC_PN9)
+                    packet_len = BACKGROUND_FRAME_LENGTH * 2;
+                else
+                    packet_len = BACKGROUND_FRAME_LENGTH;
+
+                packet_len += sizeof(uint16_t) + (current_channel_id.channel_header.ch_class ==  PHY_CLASS_HI_RATE ? PREAMBLE_HI_RATE_CLASS : PREAMBLE_LOW_RATE_CLASS);
+                uint16_t tx_duration = dll_calculate_tx_duration(current_channel_id.channel_header.ch_class, packet_len);
+
+                switch_state(DLL_STATE_TX_BACKGROUND);
+                DPRINT("Start background advertising @ %i", timer_get_counter_value());
+                err = hw_radio_send_background_packet(&current_packet->hw_radio_packet,
+                                                      &background_advertising_terminated,
+                                                      current_packet->ETA, tx_duration);
+
+                // To save time and guarantee to send the foreground frame within the guarded time,
+                // it should be optimal to prepare the foreground packet before the end of the
+                // advertising period, but for now, the sending of background packet is a none interrupted
+                // sequence
+
+                //current_packet->hw_radio_packet.tx_meta.tx_cfg.syncword_class = PHY_SYNCWORD_CLASS1;
+                //current_packet->type = INITIAL_REQUEST;
+                //packet_assemble(current_packet);
+            }
+            else
+            {
+                switch_state(DLL_STATE_TX_FOREGROUND);
+                err = hw_radio_send_packet(&current_packet->hw_radio_packet, &packet_transmitted);
+            }
+
             assert(err == SUCCESS);
             return;
         }
@@ -431,7 +479,14 @@ static void execute_csma_ca()
     //hw_radio_set_rx(NULL, NULL, NULL); // put radio in RX but disable callbacks to make sure we don't receive packets when in this state
                                         // TODO use correct rx cfg + it might be interesting to switch to idle first depending on calculated offset
     // TODO select correct subband
-    uint16_t tx_duration = dll_calculate_tx_duration(current_channel_id.channel_header.ch_class, current_packet->hw_radio_packet.length);
+    uint8_t data_length;
+
+    if (current_channel_id.channel_header.ch_coding == PHY_CODING_FEC_PN9)
+        data_length = current_packet->hw_radio_packet.length * 2;
+    else
+        data_length = current_packet->hw_radio_packet.length;
+
+    uint16_t tx_duration = dll_calculate_tx_duration(current_channel_id.channel_header.ch_class, data_length);
 
     switch (dll_state)
     {
@@ -439,7 +494,8 @@ static void execute_csma_ca()
         {
             uint16_t transmission_timeout_ti;
 
-            if (current_packet->type == INITIAL_REQUEST || current_packet->type == SUBSEQUENT_REQUEST)
+            if (current_packet->type == INITIAL_REQUEST || current_packet->type == SUBSEQUENT_REQUEST ||
+                current_packet->type == BACKGROUND_ADV)
                 transmission_timeout_ti = ceil((SFc + 1) * tx_duration + 5);
             // in case of response, use the Tc parameter provided in the request
             else
@@ -777,9 +833,35 @@ void dll_tx_frame(packet_t* packet)
         packet->hw_radio_packet.tx_meta.tx_cfg = (hw_tx_cfg_t){
             .channel_id.channel_header = current_access_profile.channel_header,
             .channel_id.center_freq_index = current_access_profile.subbands[0].channel_index_start,
-            .syncword_class = PHY_SYNCWORD_CLASS1,
             .eirp = current_access_profile.subbands[0].eirp
         };
+
+        /* use D7AAdvP if the receiver is engaged in ultra low power scan */
+        if (current_access_profile.subprofiles[0].scan_automation_period)
+        {
+            uint16_t ttx;
+            uint8_t packet_length;
+
+            packet->type = BACKGROUND_ADV;
+            packet->hw_radio_packet.tx_meta.tx_cfg.syncword_class = PHY_SYNCWORD_CLASS0;
+
+            // TADV = TSCHED + TTX (TTX is the duration for transmitting a single D7AAdvP frame)
+            if (current_access_profile.channel_header.ch_coding == PHY_CODING_FEC_PN9)
+                packet_length = BACKGROUND_FRAME_LENGTH * 2;
+            else
+                packet_length = BACKGROUND_FRAME_LENGTH;
+
+            packet_length += sizeof(uint16_t) + (current_access_profile.channel_header.ch_class ==  PHY_CLASS_HI_RATE ? PREAMBLE_HI_RATE_CLASS : PREAMBLE_LOW_RATE_CLASS);
+
+            DPRINT("packet_length <%d> TSCHED %i", packet_length, CT_DECOMPRESS(current_access_profile.subprofiles[0].scan_automation_period));
+
+            ttx = dll_calculate_tx_duration(current_access_profile.channel_header.ch_class, packet_length);
+
+            packet->ETA = CT_DECOMPRESS(current_access_profile.subprofiles[0].scan_automation_period) + ttx;
+            DPRINT("First background frame contains ETA <%d> ttx %d", packet->ETA, ttx);
+        }
+        else
+            packet->hw_radio_packet.tx_meta.tx_cfg.syncword_class = PHY_SYNCWORD_CLASS1;
 
         // store the channel id and eirp
         current_eirp = current_access_profile.subbands[0].eirp;
@@ -790,6 +872,7 @@ void dll_tx_frame(packet_t* packet)
         {
             //Use the default channel CCA threshold
             E_CCA = current_access_profile.subbands[0].cca; // Eccao is set to 0 dB
+            DPRINT("E_CCA %i", E_CCA);
         }
         else
         {

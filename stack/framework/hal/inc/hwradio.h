@@ -40,6 +40,8 @@
 
 #define PACKET_MAX_SIZE 255
 
+#define BACKGROUND_FRAME_LENGTH 6
+
 /* \brief The channel bands and corresponding band indices as defined in D7A
  *
  */
@@ -78,6 +80,13 @@ typedef enum
     PHY_SYNCWORD_CLASS0 = 0x00,
     PHY_SYNCWORD_CLASS1 = 0x01
 } phy_syncword_class_t;
+
+typedef enum
+{
+    PREAMBLE_LOW_RATE_CLASS = 4, //(4 bytes, 32 bits)
+    PREAMBLE_NORMAL_RATE_CLASS = 4, //(4 bytes, 32 bits)
+    PREAMBLE_HI_RATE_CLASS = 6, //(6 bytes, 48 bits)
+} phy_preamble_min_length_t;
 
 /* \brief The channel header as defined in D7AP
  */
@@ -480,7 +489,38 @@ __LINK_C bool hw_radio_is_rx();
  *			EOFF if the radio has not yet been initialised
  */
 __LINK_C error_t hw_radio_send_packet(hw_radio_packet_t* packet,
-			       tx_packet_callback_t tx_callback);
+                                      tx_packet_callback_t tx_callback);
+
+/** \brief Initiate a background frame flooding until expiration of the advertising period
+ *
+ * Each background frame contains the Estimated Time of Arrival of the D7ANP Request (ETA).
+ * When no more advertising background frames can be fully transmitted before the start of D7ANP,
+ * the last background frame is extended by padding preamble symbols after the end of the background
+ * packet, in order to guarantee no silence period on the channel between D7AAdvP and D7ANP.
+ *
+ * This function sends the packet pointed to by the packet parameter over the air. Packets are always 
+ * transmitted using the tx_cfg settings in the tx_meta field of the supplied packet.
+ *
+ * Packet transmission is always done *asynchronously*, that is: a packet transmission is initiated by a call 
+ * to this function, but is not completed until the supplied tx_packet_callback_t function is invoked by
+ * the radio driver.
+ *
+ * \param packet	A pointer to the start of the packet to be transmitted
+ *
+ * \param tx_callback	The tx_packet_callback_t function to call whenever the advertising period is terminated
+ *			sent by the radio. Please note that this function is called from an 
+ *			*interrupt* context and therefore can only do minimal processing. If this
+ *			parameter is 0x0, no callback will be made.
+ *
+ * \return error_t	SUCCESS if the packet transmission has been successfully initiated.
+ *			EINVAL if the tx_cfg parameter contains invalid settings
+ *			EBUSY if another TX operation is already in progress
+ *			ESIZE if the packet is either too long or too small
+ *			EOFF if the radio has not yet been initialised
+ */
+__LINK_C error_t hw_radio_send_background_packet(hw_radio_packet_t* packet,
+                                        tx_packet_callback_t tx_callback,
+                                        uint16_t eta, uint16_t tx_duration); 
 
 /**
  * \brief This function enables us for testing purposes to configure a device with a continuous wave or GFSK wave.
