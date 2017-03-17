@@ -24,6 +24,8 @@ ENDIF()
 
 SET(LINKER_SCRIPT "${CMAKE_CURRENT_SOURCE_DIR}/CMSIS/device/linker/ezr32lg.ld" CACHE FILEPATH "")
 
+SET(HAL_UART_USE_DMA_TX "TRUE" CACHE BOOL "Enable/Disable the use of DMA for UART TX" FORCE)
+
 IF(${PLATFORM_BUILD_BOOTLOADABLE_VERSION})
     SET(LINKER_SCRIPT_BOOTLOADABLE "${CMAKE_CURRENT_SOURCE_DIR}/CMSIS/device/linker/ezr32lg_bootloader.ld" CACHE FILEPATH "")
 ENDIF()
@@ -132,5 +134,6 @@ ADD_LIBRARY (${CHIP_LIBRARY_NAME} OBJECT
 		    		usb/src/em_usbtimer.c	    		
                     emdrv/gpiointerrupt/src/gpiointerrupt.c
 		    		emdrv/spidrv/src/spidrv.c       
-		    		emdrv/dmadrv/src/dmadrv.c      
+                                emdrv/dmadrv/src/dmadrv.c
+                                emdrv/dmadrv/inc/dmadrv.h
                     )

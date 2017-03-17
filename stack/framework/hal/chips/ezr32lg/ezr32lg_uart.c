@@ -27,6 +27,7 @@
 #include <em_cmu.h>
 #include <em_gpio.h>
 #include <em_usbd.h>
+#include <dmadrv.h>
 #include "hwgpio.h"
 #include "hwuart.h"
 #include <assert.h>
@@ -37,6 +38,7 @@
 #include "ezr32lg_pins.h"
 
 #include "platform.h"
+#include "hal_defs.h"
 
 
 #define UARTS     4   // 2 UARTs + 3 USARTs
@@ -149,6 +151,10 @@ struct uart_handle {
   CMU_Clock_TypeDef    clock;
   uart_irq_t           irq;
   uart_pins_t*         pins;
+#ifdef HAL_UART_USE_DMA_TX
+  unsigned int         dma_channel_tx;
+  DMADRV_PeripheralSignal_t dma_req_signal_tx;
+#endif
 };
 
 // private storage of handles, pointers to these records are passed around
@@ -157,25 +163,37 @@ static uart_handle_t handle[UARTS] = {
     .idx     = 0,
     .channel = UART0,
     .clock   = cmuClock_UART0,
-    .irq     = { .tx = UART0_TX_IRQn,  .rx = UART0_RX_IRQn  }
+    .irq     = { .tx = UART0_TX_IRQn,  .rx = UART0_RX_IRQn  },
+#ifdef HAL_UART_USE_DMA_TX
+    .dma_req_signal_tx = DMAREQ_UART0_TXBL
+#endif
   },
   {
     .idx     = 1,
     .channel = UART1,
     .clock   = cmuClock_UART1,
-    .irq     = { .tx = UART1_TX_IRQn,  .rx = UART1_RX_IRQn  }
+    .irq     = { .tx = UART1_TX_IRQn,  .rx = UART1_RX_IRQn  },
+#ifdef HAL_UART_USE_DMA_TX
+    .dma_req_signal_tx = DMAREQ_UART1_TXBL
+#endif
   },
   {
     .idx     = 2,
     .channel = USART1,
     .clock   = cmuClock_USART1,
-    .irq     = { .tx = USART1_TX_IRQn, .rx = USART1_RX_IRQn }
+    .irq     = { .tx = USART1_TX_IRQn, .rx = USART1_RX_IRQn },
+#ifdef HAL_UART_USE_DMA_TX
+    .dma_req_signal_tx = DMAREQ_USART1_TXBL
+#endif
   },
   {
     .idx     = 3,
     .channel = USART2,
     .clock   = cmuClock_USART2,
-    .irq     = { .tx = USART2_TX_IRQn, .rx = USART2_RX_IRQn }
+    .irq     = { .tx = USART2_TX_IRQn, .rx = USART2_RX_IRQn },
+#ifdef HAL_UART_USE_DMA_TX
+    .dma_req_signal_tx = DMAREQ_USART2_TXBL
+#endif
   }
 };
 
@@ -215,6 +233,14 @@ uart_handle_t* uart_init(uint8_t idx, uint32_t baudrate, uint8_t pins) {
   NVIC_ClearPendingIRQ(handle[idx].irq.tx);
 
   USART_Enable(handle[idx].channel, usartEnable);
+
+#ifdef HAL_UART_USE_DMA_TX
+  // DMADRV is used for allocating a channel. We need to use DMADRV for housekeeping, since ezradio driver also uses this for allocating a channel.
+  Ecode_t e = DMADRV_Init();
+  assert(e == ECODE_EMDRV_DMADRV_OK || e == ECODE_EMDRV_DMADRV_ALREADY_INITIALIZED); // can be already initialized for example by EZRDRV
+
+  e = DMADRV_AllocateChannel(&(handle[idx].dma_channel_tx), NULL); assert(e == ECODE_EMDRV_DMADRV_OK);
+#endif
 
   return &handle[idx];
 }
@@ -279,10 +305,23 @@ void uart_send_bytes(uart_handle_t* uart, void const *data, size_t length) {
 			int ret = USBD_Write( 0x81, (void*) tempData, length, NULL);
 		}
 #else
+#ifdef HAL_UART_USE_DMA_TX
+  DMADRV_MemoryPeripheral(
+        uart->dma_channel_tx,
+        uart->dma_req_signal_tx,
+        (void*)&uart->channel->TXDATA,
+        data,
+        true,
+        length,
+        dmadrvDataSize1,
+        NULL,
+        NULL);
+#else
   for(size_t i=0; i<length; i++)	{
-		uart_send_byte(uart, ((uint8_t const*)data)[i]);
-	}
-#endif
+    uart_send_byte(uart, ((uint8_t const*)data)[i]);
+  }
+#endif // HAL_UART_USE_DMA_TX
+#endif // PLATFORM_USE_USB_CDC
 }
 
 void uart_send_string(uart_handle_t* uart, const char *string) {
@@ -312,6 +351,7 @@ void uart_rx_interrupt_disable(uart_handle_t* uart) {
 
 void UART0_RX_IRQHandler(void) {
   if(handle[0].channel->STATUS & UART_STATUS_RXDATAV) {
+    assert((USART_IntGet(handle[0].channel) & UART_IF_RXOF) == 0);
     handler[0](USART_Rx(handle[0].channel));
     USART_IntClear(handle[0].channel, UART_IF_RXDATAV);
   }

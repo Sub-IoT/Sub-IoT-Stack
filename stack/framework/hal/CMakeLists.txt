@@ -29,6 +29,7 @@ include(${PROJECT_SOURCE_DIR}/cmake/hal_macros.cmake)
 
 # HAL parameters (might be forcefully overruled by chip, which is why HAL_HEADER_DEFINE() is only called after adding chips)
 SET(HAL_RADIO_USE_HW_CRC "FALSE" CACHE BOOL "Enable/Disable the use of HW CRC")
+SET(HAL_UART_USE_DMA_TX "FALSE" CACHE BOOL "Enable/Disable the use of DMA for UART TX")
 
 #note: this does not include any chip code. 
 #see note in 'chips' directory in the CMakeLists.txt in the 'chips' directory
@@ -40,6 +41,7 @@ ADD_SUBDIRECTORY("platforms")
 #Generate the 'hal_defs.h'
 HAL_HEADER_DEFINE(BOOL HAL_RADIO_INCLUDE_TIMESTAMP)
 HAL_HEADER_DEFINE(BOOL HAL_RADIO_USE_HW_CRC)
+HAL_HEADER_DEFINE(BOOL HAL_UART_USE_DMA_TX)
 HAL_BUILD_SETTINGS_FILE()
 
 
