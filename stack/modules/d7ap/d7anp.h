@@ -50,6 +50,8 @@ typedef enum {
 #define ENABLE_SSR_FILTER 0x01
 #define ALLOW_NEW_SSR_ENTRY_IN_BCAST 0x02
 
+#define FG_SCAN_TIMEOUT    200   // expressed in Ti, to be adjusted
+#define FG_SCAN_STARTUP_TIME 100 // to be adjusted per platform
 enum
 {
     AES_NONE = 0, /* No security */

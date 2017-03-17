@@ -640,6 +640,8 @@ static void start_rx(hw_rx_cfg_t const* rx_cfg)
 
     // cc1101_interface_strobe(RF_SFRX); TODO only when in idle or overflow state
 
+    DPRINT("START FG scan @ %i", timer_get_counter_value());
+
     uint8_t status;
     uint8_t counter = 0;
     do

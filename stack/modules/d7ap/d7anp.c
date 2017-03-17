@@ -116,7 +116,7 @@ static void foreground_scan_expired()
 {
     // the FG scan expiration may also happen while Tx is busy (d7anp_state = D7ANP_STATE_TRANSMIT) // TODO validate
     assert(d7anp_state == D7ANP_STATE_FOREGROUND_SCAN || d7anp_state == D7ANP_STATE_TRANSMIT);
-    DPRINT("Foreground scan expired");
+    DPRINT("Foreground scan expired @%i", timer_get_counter_value());
 
     if (d7anp_state == D7ANP_STATE_FOREGROUND_SCAN) // when in D7ANP_STATE_TRANSMIT d7anp_signal_packet_transmitted() will switch state
       switch_state(D7ANP_STATE_IDLE);
@@ -181,6 +181,13 @@ void d7anp_stop_foreground_scan(bool auto_scan)
     dll_stop_foreground_scan(auto_scan);
 }
 
+void start_foreground_scan_after_D7AAdvP()
+{
+    DPRINT("start_foreground_scan_after_D7AAdvP");
+    fg_scan_timeout_ticks = FG_SCAN_TIMEOUT;
+    d7anp_start_foreground_scan();
+}
+
 void d7anp_init()
 {
     uint8_t key[AES_BLOCK_SIZE];
@@ -189,6 +196,7 @@ void d7anp_init()
     fg_scan_timeout_ticks = 0;
 
     sched_register_task(&foreground_scan_expired);
+    sched_register_task(&start_foreground_scan_after_D7AAdvP);
 
 #if defined(MODULE_D7AP_NLS_ENABLED)
     /*
@@ -270,12 +278,6 @@ security:
 
     switch_state(D7ANP_STATE_TRANSMIT);
     dll_tx_frame(packet);
-}
-
-void start_foreground_scan_after_D7AAdvP()
-{
-    switch_state(D7ANP_STATE_FOREGROUND_SCAN);
-    dll_start_foreground_scan();
 }
 
 static void schedule_foreground_scan_after_D7AAdvP(timer_tick_t eta)
@@ -712,7 +714,19 @@ void d7anp_process_received_packet(packet_t* packet)
         // check if DLL was performing a background scan
         if (packet->type == BACKGROUND_ADV)
         {
-            schedule_foreground_scan_after_D7AAdvP(packet->ETA);
+            timer_tick_t time_elapsed = timer_get_counter_value() - packet->hw_radio_packet.rx_meta.timestamp;
+            if (packet->ETA > time_elapsed + FG_SCAN_STARTUP_TIME)
+            {
+                DPRINT("FG scan start after %d", packet->ETA - (time_elapsed + FG_SCAN_STARTUP_TIME));
+                schedule_foreground_scan_after_D7AAdvP(packet->ETA - (time_elapsed + FG_SCAN_STARTUP_TIME));
+                // meanwhile stay in idle
+                dll_stop_background_scan();
+            }
+            else
+            {
+                DPRINT("No time to switch to FG scan because ETA is too short %i", packet->ETA);
+            }
+
             packet_queue_free_packet(packet);
             return;
         }

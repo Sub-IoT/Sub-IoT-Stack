@@ -172,8 +172,7 @@ void d7atp_signal_foreground_scan_expired()
     // In case of slave, we can consider that the dialog is terminated
     if (d7atp_state == D7ATP_STATE_SLAVE_TRANSACTION_RESPONSE_PERIOD
         || d7atp_state == D7ATP_STATE_SLAVE_TRANSACTION_RECEIVED_REQUEST
-        || d7atp_state == D7ATP_STATE_SLAVE_TRANSACTION_SENDING_RESPONSE
-        || d7atp_state == D7ATP_STATE_IDLE )
+        || d7atp_state == D7ATP_STATE_SLAVE_TRANSACTION_SENDING_RESPONSE )
     {
         terminate_dialog();
     }
@@ -183,7 +182,8 @@ void d7atp_signal_foreground_scan_expired()
     }
     else
     {
-        assert(false);
+        DPRINT("A FG scan initiated probably by an advertising background frame "
+        "or after a dormant session notification is expired");
     }
 }
 
@@ -479,7 +479,6 @@ void d7atp_process_received_packet(packet_t* packet)
     assert(d7atp_state == D7ATP_STATE_MASTER_TRANSACTION_RESPONSE_PERIOD
            || d7atp_state == D7ATP_STATE_SLAVE_TRANSACTION_RESPONSE_PERIOD
            || d7atp_state == D7ATP_STATE_IDLE); // IDLE: when doing channel scanning outside of transaction
-
 
     // copy addressee from NP origin
     current_addressee.ctrl.id_type = packet->d7anp_ctrl.origin_id_type;
