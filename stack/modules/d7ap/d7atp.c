@@ -125,7 +125,6 @@ static void response_period_timeout_handler()
            || d7atp_state == D7ATP_STATE_SLAVE_TRANSACTION_SENDING_RESPONSE);
 
     current_transaction_id = NO_ACTIVE_REQUEST_ID;
-    switch_state(D7ATP_STATE_IDLE);
 
     DPRINT("Transaction is terminated");
 
@@ -137,7 +136,11 @@ static timer_tick_t adjust_timeout_value(timer_tick_t timeout_ticks, timer_tick_
 
     // Adjust the timeout value according the time passed since reception
     timer_tick_t delta = timer_get_counter_value() - request_received_timestamp;
-    timeout_ticks -= delta;
+    if (timeout_ticks > delta)
+        timeout_ticks -= delta;
+    else
+        timeout_ticks = 0;
+
     DPRINT("adjusted timeout val = %i (-%i)", timeout_ticks, delta);
     return timeout_ticks;
 }
@@ -156,6 +159,7 @@ static void terminate_dialog()
 {
     DPRINT("Dialog terminated");
     current_dialog_id = 0;
+    stop_dialog_after_tx = false;
     d7asp_signal_dialog_terminated();
     switch_state(D7ATP_STATE_IDLE);
 }
@@ -553,9 +557,16 @@ void d7atp_process_received_packet(packet_t* packet)
             timer_tick_t Tc = CT_DECOMPRESS(packet->d7atp_tc);
 
             DPRINT("Tc=%i (CT) -> %i (Ti) ", packet->d7atp_tc, Tc);
+
+            // We choose to start the FG scan after the response period so Tl = Tl - Tc
+            if (Tl > Tc)
+                Tl -= Tc;
+            else
+                Tl = 0;
+
             Tc = adjust_timeout_value(Tc, packet->hw_radio_packet.rx_meta.timestamp);
 
-            if (Tc <= 0)
+            if (Tc == 0)
             {
                 DPRINT("Discard the request since the response period is expired");
                 packet_queue_free_packet(packet);
@@ -563,21 +574,19 @@ void d7atp_process_received_packet(packet_t* packet)
             }
 
             if (Tl)
-                Tl -= Tc;
-
-            assert(Tl >= 0);
-            d7anp_set_foreground_scan_timeout(Tl);
-
-            schedule_response_period_timeout_handler(Tc); // TODO for unicast, stop response period after transmission of response?
+            {
+                d7anp_set_foreground_scan_timeout(Tl);
+                schedule_response_period_timeout_handler(Tc); // TODO for unicast, stop response period after transmission of response?
+            }
 
             /* stop eventually the FG scan and force the radio to go back to IDLE */
             d7anp_stop_foreground_scan(false);
         }
         else
         {
-            if (packet->d7anp_listen_timeout)
+            Tl = adjust_timeout_value(Tl, packet->hw_radio_packet.rx_meta.timestamp);
+            if (Tl > 0)
             {
-                Tl = adjust_timeout_value(packet->d7anp_listen_timeout, packet->hw_radio_packet.rx_meta.timestamp); // TODO decompress
                 d7anp_set_foreground_scan_timeout(Tl);
                 d7anp_start_foreground_scan();
             }
@@ -605,16 +614,14 @@ void d7atp_process_received_packet(packet_t* packet)
         bool should_send_response = d7asp_process_received_packet(packet, extension);
         if (should_send_response)
         {
-            if (!packet->d7atp_ctrl.ctrl_is_ack_requested && (Tl == 0))
+            // If there is no listen period, then we can end the dialog after the response transmission
+            if (Tl == 0)
                 stop_dialog_after_tx = true;
-            else
-                stop_dialog_after_tx = false;
+
             send_response(packet);
         }
-        else
-        {
-            response_period_timeout_handler(); // no response to send, end transaction and go back to IDLE
-        }
+        else if (Tl == 0)
+            terminate_dialog();
     }
 
 }
