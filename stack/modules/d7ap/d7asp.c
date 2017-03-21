@@ -411,7 +411,7 @@ bool d7asp_process_received_packet(packet_t* packet, bool extension)
         }
 
         // execute slave transaction
-        if (packet->payload_length == 0 && !packet->d7atp_ctrl.ctrl_is_ack_requested)
+        if (!packet->d7atp_ctrl.ctrl_is_ack_requested)
             goto discard_request; // no need to respond, clean up
 
         DPRINT("Sending response");
