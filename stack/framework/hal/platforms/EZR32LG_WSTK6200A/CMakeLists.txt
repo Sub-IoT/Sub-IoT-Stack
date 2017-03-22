@@ -28,7 +28,7 @@ PLATFORM_OPTION(${PLATFORM_PREFIX}_DEBUGPINS "Enable/Disable Hardware Debug Pins
 PLATFORM_OPTION(PLATFORM_USE_VCOM "Enable/Disable VCOM support" FALSE)
 PLATFORM_OPTION(PLATFORM_USE_SWO "Enable/Disable SWO Uart output" FALSE)
 #Restrict the number of possible options for the radio option in the usual manner...
-SET_PROPERTY(CACHE ${PLATFORM_PREFIX}_RADIO PROPERTY STRINGS "si4460")
+SET_PROPERTY(CACHE ${PLATFORM_PREFIX}_RADIO PROPERTY STRINGS "si4460;sx127x")
 PLATFORM_OPTION(PLATFORM_USE_USB_CDC "Enable/Disable the use of CDC (UART Communication using USB" FALSE)
 PLATFORM_OPTION(PLATFORM_BUILD_BOOTLOADABLE_VERSION "When set builds applications to be deployed using bootloader as well (modified linker script)" FALSE)
 
