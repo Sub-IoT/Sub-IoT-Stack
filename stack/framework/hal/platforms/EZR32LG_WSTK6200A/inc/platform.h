@@ -70,10 +70,11 @@
  * SPI RF DEFINITIONS *
  *******************/
 
-
-    #define si4455_GDO0_PIN A15
-    #define si4455_GDO1_PIN E14
-    #define si4455_SDN_PIN  E8
+// only relevant for sx127x
+#define SX127x_SPI_USART    1
+#define SX127x_SPI_LOCATION 1
+#define SX127x_SPI_PIN_CS   D3
+#define SX127x_SPI_BAUDRATE 6000000 // TODO 10 M
 
 /*************************
  * DEBUG PIN DEFINITIONS *

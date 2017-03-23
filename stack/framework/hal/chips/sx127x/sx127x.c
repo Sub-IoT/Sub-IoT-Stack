@@ -30,6 +30,10 @@
 #include "log.h"
 #include "hwradio.h"
 #include "hwdebug.h"
+#include "hwspi.h"
+#include "platform.h"
+
+#include "sx1276Regs-Fsk.h"
 
 
 #if defined(FRAMEWORK_LOG_ENABLED) && defined(FRAMEWORK_PHY_LOG_ENABLED)
@@ -61,8 +65,41 @@ typedef enum {
     HW_RADIO_STATE_UNKOWN
 } state_t;
 
-error_t hw_radio_init(alloc_packet_callback_t p_alloc, release_packet_callback_t p_free) {
-  // TODO
+static spi_slave_handle_t* sx127x_spi = NULL;
+static alloc_packet_callback_t alloc_packet_callback;
+static release_packet_callback_t release_packet_callback;
+static rx_packet_callback_t rx_packet_callback;
+static tx_packet_callback_t tx_packet_callback;
+//static rssi_valid_callback_t rssi_valid_callback;
+//static state_t current_state;
+//static hw_radio_packet_t* current_packet;
+//static channel_id_t current_channel_id = {
+//    .channel_header_raw = 0xFF,
+//    .center_freq_index = 0xFF
+//};
+
+static uint8_t read_reg(uint8_t addr) {
+  spi_select(sx127x_spi);
+  spi_exchange_byte(sx127x_spi, addr & 0x7F); // send address with bit 7 low to signal a read operation
+  uint8_t value = spi_exchange_byte(sx127x_spi, 0x00); // get the response
+  spi_deselect(sx127x_spi);
+  return value;
+}
+
+error_t hw_radio_init(alloc_packet_callback_t alloc_packet_cb, release_packet_callback_t release_packet_cb) {
+  if(sx127x_spi != NULL)
+    return EALREADY;
+
+  if(alloc_packet_cb == NULL || release_packet_cb == NULL)
+    return EINVAL;
+
+  alloc_packet_callback = alloc_packet_cb;
+  release_packet_callback = release_packet_cb;
+
+  spi_handle_t* spi_handle = spi_init(SX127x_SPI_USART, SX127x_SPI_BAUDRATE, 8, true, SX127x_SPI_LOCATION);
+  sx127x_spi = spi_init_slave(spi_handle, SX127x_SPI_PIN_CS, true);
+
+  return SUCCESS; // TODO FAIL return code
 }
 
 error_t hw_radio_set_idle() {

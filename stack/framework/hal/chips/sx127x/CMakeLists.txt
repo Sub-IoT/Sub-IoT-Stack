@@ -23,7 +23,8 @@ INCLUDE_DIRECTORIES(
 )
 
 SET(sx127x_SRC
-        sx127x.c
+    sx127x.c
+    sx1276Regs-Fsk.h
 )
 
 
