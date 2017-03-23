@@ -178,7 +178,8 @@ static void switch_state(dll_state_t next_state)
                || dll_state == DLL_STATE_CSMA_CA_STARTED
                || dll_state == DLL_STATE_CCA1
                || dll_state == DLL_STATE_CCA2
-               || dll_state == DLL_STATE_CSMA_CA_RETRY);
+               || dll_state == DLL_STATE_CSMA_CA_RETRY
+               || dll_state == DLL_STATE_SCAN_AUTOMATION);
         dll_state = next_state;
         DPRINT("Switched to DLL_STATE_IDLE");
         break;
@@ -309,7 +310,10 @@ static void packet_received(hw_radio_packet_t* hw_radio_packet)
 
     // DLL Scan Automation is disabled during the processing of the received packet.
     if (dll_state == DLL_STATE_SCAN_AUTOMATION)
+    {
         hw_radio_set_idle();
+        switch_state(DLL_STATE_IDLE);
+    }
 
     /* the received packet needs to be handled in priority */
     sched_post_task_prio(&process_received_packets, MAX_PRIORITY);

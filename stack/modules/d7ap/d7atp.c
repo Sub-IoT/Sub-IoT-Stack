@@ -619,6 +619,7 @@ void d7atp_process_received_packet(packet_t* packet)
         }
         else if (Tl == 0)
             terminate_dialog();
+            d7anp_stop_foreground_scan(true); // restart scan automation
     }
 
 }
