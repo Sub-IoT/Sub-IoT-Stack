@@ -47,6 +47,9 @@ pin_id_t const A10 = {.port = GPIO_PORTA, .pin = 10};
 pin_id_t const B4 = {.port = GPIO_PORTB, .pin = 4};
 pin_id_t const B5 = {.port = GPIO_PORTB, .pin = 5};
 pin_id_t const B6 = {.port = GPIO_PORTB, .pin = 6};
+pin_id_t const B7 = {.port = GPIO_PORTB, .pin = 7};
+pin_id_t const B8 = {.port = GPIO_PORTB, .pin = 8};
+pin_id_t const B9 = {.port = GPIO_PORTB, .pin = 9};
 pin_id_t const B10 = {.port = GPIO_PORTB, .pin = 10};
 pin_id_t const B13 = {.port = GPIO_PORTB, .pin = 13};
 pin_id_t const B14 = {.port = GPIO_PORTB, .pin = 14};
@@ -55,7 +58,11 @@ pin_id_t const B15 = {.port = GPIO_PORTB, .pin = 15};
 pin_id_t const C6 = {.port = GPIO_PORTC, .pin = 6};
 pin_id_t const C7 = {.port = GPIO_PORTC, .pin = 7};
 pin_id_t const C8 = {.port = GPIO_PORTC, .pin = 8};
+pin_id_t const C12 = {.port = GPIO_PORTC, .pin = 12};
 pin_id_t const C13 = {.port = GPIO_PORTC, .pin = 13};
+
+//port C
+pin_id_t const D2 = {.port = GPIO_PORTD, .pin = 2};
 
 
 

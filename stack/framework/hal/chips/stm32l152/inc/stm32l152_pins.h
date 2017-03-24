@@ -30,6 +30,9 @@ extern pin_id_t const A10;
 extern pin_id_t const B4;
 extern pin_id_t const B5;
 extern pin_id_t const B6;
+extern pin_id_t const B7;
+extern pin_id_t const B8;
+extern pin_id_t const B9;
 extern pin_id_t const B10;
 extern pin_id_t const B13;
 extern pin_id_t const B14;
@@ -38,5 +41,8 @@ extern pin_id_t const B15;
 extern pin_id_t const C6;
 extern pin_id_t const C7;
 extern pin_id_t const C8;
+extern pin_id_t const C12;
 extern pin_id_t const C13;
+
+extern pin_id_t const D2;
 #endif //__STM32L152_PINS_H_
