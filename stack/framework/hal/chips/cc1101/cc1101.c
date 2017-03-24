@@ -287,8 +287,6 @@ static void end_of_packet_isr()
                 bytesLeft = packet_len;
                 BufferIndex = current_packet->data + 1;
                 endOfPacket = true;
-                timer_cancel_task(&switch_to_idle_mode);
-                sched_cancel_task(&switch_to_idle_mode);
             }
 
             if (!endOfPacket)
@@ -330,7 +328,7 @@ static void end_of_packet_isr()
                 {
                     // Disable interrupt on threshold since it is room for the whole packet in the FIFO
                     cc1101_interface_set_interrupts_enabled(CC1101_GDO2, false);
-                    if (packet_len <= rx_bytes)
+                    if (bytesLeft <= rx_bytes)
                         goto end_of_packet;
                 }
                 else
@@ -376,7 +374,8 @@ end_of_packet:
                 else
                     release_packet_callback(current_packet);
 
-                if(current_state == HW_RADIO_STATE_RX) // check still in RX, could be modified by upper layer while in callback
+                // check still in RX, could be modified by upper layer while in callback
+                if ((current_state == HW_RADIO_STATE_RX) && (current_syncword_class != PHY_SYNCWORD_CLASS0))
                 {
                     uint8_t status = (cc1101_interface_strobe(RF_SNOP) & 0xF0);
                     if(status == 0x60) // RX overflow

@@ -308,13 +308,6 @@ static void packet_received(hw_radio_packet_t* hw_radio_packet)
     DPRINT("packet received @ %i , RSSI = %i", hw_radio_packet->rx_meta.timestamp, hw_radio_packet->rx_meta.rssi);
     packet_queue_mark_received(hw_radio_packet);
 
-    // DLL Scan Automation is disabled during the processing of the received packet.
-    if (dll_state == DLL_STATE_SCAN_AUTOMATION)
-    {
-        hw_radio_set_idle();
-        switch_state(DLL_STATE_IDLE);
-    }
-
     /* the received packet needs to be handled in priority */
     sched_post_task_prio(&process_received_packets, MAX_PRIORITY);
 }
