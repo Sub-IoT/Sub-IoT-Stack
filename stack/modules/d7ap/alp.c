@@ -63,7 +63,10 @@ static alp_init_args_t* NGDEF(_init_args);
 #define init_args NG(_init_args)
 
 static void free_command(alp_command_t* command) {
+  DPRINT("Free cmd %i", command->fifo_token);
   command->is_active = false;
+  fifo_clear(&command->alp_command_fifo);
+  fifo_clear(&command->alp_response_fifo);
   // other fields are initialized on usage
 };
 
@@ -89,11 +92,11 @@ static alp_command_t* alloc_command()
 
 static alp_command_t* get_command_by_fifo_token(uint8_t fifo_token) {
   for(uint8_t i = 0; i < MODULE_D7AP_ALP_MAX_ACTIVE_COMMAND_COUNT; i++) {
-    if(commands[i].fifo_token == fifo_token)
+    if(commands[i].fifo_token == fifo_token && commands[i].is_active)
       return &(commands[i]);
   }
 
-  DPRINT("No command found with fifo_token = %i", fifo_token);
+  DPRINT("No active command found with fifo_token = %i", fifo_token);
   return NULL;
 }
 
@@ -390,7 +393,10 @@ bool alp_process_command(uint8_t* alp_command, uint8_t alp_command_length, uint8
 
   (*alp_response_length) = fifo_get_size(&command->alp_response_fifo);
   memcpy(alp_response, command->alp_response, *alp_response_length);
-  free_command(command);
+
+  if(!do_forward)
+    free_command(command); // when forwarding the response will arrive async, clean up then
+
   return true;
 }
 
@@ -408,7 +414,6 @@ void alp_d7asp_fifo_flush_completed(uint8_t fifo_token, uint8_t* progress_bitmap
     alp_cmd_handler_output_alp_command(command->alp_response, alp_response_length); // TODO pass fifo directly
   }
 
-  fifo_clear(&(command->alp_response_fifo));
   free_command(command);
 
   if(init_args != NULL && init_args->alp_command_completed_cb != NULL)
