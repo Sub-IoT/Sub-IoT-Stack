@@ -721,18 +721,34 @@ void dll_execute_scan_automation()
         },
     };
 
+    // The Scan Automation TSCHED is obtained as the minimum of all selected subprofiles' TSCHED.
+    uint16_t scan_period;
+    tsched = (uint16_t)~0;
+    for(uint8_t i = 0; i < SUBPROFILES_NB; i++)
+    {
+        // Only consider the selectable subprofiles (having their Access Mask bits set to 1 and having non-void subband bitmaps)
+        if ((ACCESS_MASK(active_access_class) & (0x01 << i)) && current_access_profile.subprofiles[i].subband_bitmap)
+        {
+            scan_period = CT_DECOMPRESS(current_access_profile.subprofiles[i].scan_automation_period);
+            if ((tsched == (uint16_t)~0) || (scan_period < tsched))
+                tsched = scan_period;
+        }
+    }
+
+    // tsched is necessarily set because at least one selectable subprofile should be found
+    assert(tsched != (uint16_t)~0);
+
     /*
-     * if the scan automation period (To) is set to 0, the scan type is set to
+     * If the scan automation period (To) is set to 0, the scan type is set to
      * foreground,
      */
-    if (current_access_profile.subprofiles[0].scan_automation_period == 0)
+    if (tsched == 0)
     {
         rx_cfg.syncword_class = PHY_SYNCWORD_CLASS1;
         hw_radio_set_rx(&rx_cfg, &packet_received, NULL);
     }
     else
     {
-        tsched = CT_DECOMPRESS(current_access_profile.subprofiles[0].scan_automation_period);
         rx_cfg.syncword_class = PHY_SYNCWORD_CLASS0;
 
         // compute Ecca = NF + Eccao
@@ -854,6 +870,8 @@ void dll_tx_frame(packet_t* packet)
          * By default, subprofile[0] is selected and subband[0] is used
          */
 
+        //TODO assert if no selectable subprofile can be found
+
         /* EIRP (dBm) = (EIRP_I – 32) dBm */
 
         log_print_string("AC specifier=%i channel=%i",
@@ -867,8 +885,22 @@ void dll_tx_frame(packet_t* packet)
             .eirp = current_access_profile.subbands[0].eirp
         };
 
+        // The Access TSCHED is obtained as the maximum of all selected subprofiles' TSCHED.
+        uint16_t scan_period;
+        tsched = 0;
+        for(uint8_t i = 0; i < SUBPROFILES_NB; i++)
+        {
+            // Only consider the selectable subprofiles (having their Access Mask bits set to 1 and having non-void subband bitmaps)
+            if ((packet->d7anp_addressee->access_mask & (0x01 << i)) && current_access_profile.subprofiles[i].subband_bitmap)
+            {
+                scan_period = CT_DECOMPRESS(current_access_profile.subprofiles[i].scan_automation_period);
+                if (scan_period > tsched)
+                    tsched = scan_period;
+            }
+        }
+
         /* use D7AAdvP if the receiver is engaged in ultra low power scan */
-        if (current_access_profile.subprofiles[0].scan_automation_period)
+        if (tsched)
         {
             uint16_t ttx;
             uint8_t packet_length;
@@ -888,7 +920,7 @@ void dll_tx_frame(packet_t* packet)
 
             ttx = dll_calculate_tx_duration(current_access_profile.channel_header.ch_class, packet_length);
 
-            packet->ETA = CT_DECOMPRESS(current_access_profile.subprofiles[0].scan_automation_period) + ttx;
+            packet->ETA = tsched + ttx;
             DPRINT("First background frame contains ETA <%d> ttx %d", packet->ETA, ttx);
         }
         else
