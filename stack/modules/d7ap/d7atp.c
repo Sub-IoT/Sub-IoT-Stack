@@ -115,6 +115,16 @@ static void switch_state(state_t new_state)
     }
 }
 
+static void execution_delay_timeout_handler()
+{
+    assert(d7atp_state == D7ATP_STATE_MASTER_TRANSACTION_RESPONSE_PERIOD);
+
+    // After the Execution Delay period, the Requester engages in a DLL foreground scan for a duration of TC
+    DPRINT("Execution Delay period is expired @%i",  timer_get_counter_value());
+
+    d7anp_start_foreground_scan();
+}
+
 static void response_period_timeout_handler()
 {
 //    DEBUG_PIN_CLR(2);
@@ -224,6 +234,7 @@ void d7atp_init()
     stop_dialog_after_tx = false;
 
     sched_register_task(&response_period_timeout_handler);
+    sched_register_task(&execution_delay_timeout_handler);
 }
 
 error_t d7atp_send_request(uint8_t dialog_id, uint8_t transaction_id, bool is_last_transaction,
@@ -429,7 +440,25 @@ void d7atp_signal_packet_transmitted(packet_t* packet)
 
         if (packet->d7atp_ctrl.ctrl_is_ack_requested)
         {
-            timer_tick_t Tc = adjust_timeout_value(CT_DECOMPRESS(packet->d7atp_tc), packet->hw_radio_packet.tx_meta.timestamp);
+            timer_tick_t Tc = CT_DECOMPRESS(packet->d7atp_tc);
+
+            // Check if an Execution Delay period needs to be observed
+            if (packet->d7atp_ctrl.ctrl_te)
+            {
+                timer_tick_t Te = adjust_timeout_value(CT_DECOMPRESS(packet->d7atp_te), packet->hw_radio_packet.tx_meta.timestamp);
+                if (Te)
+                {
+                    d7anp_set_foreground_scan_timeout(Tc + 2); // we include Tt here for now
+                    timer_post_task_delay(&execution_delay_timeout_handler, Te);
+                    return;
+                }
+                // if the the time passed since transmission is greater than Te, Tc is updated to include Te
+                // and the foreground scan is started immediately
+                else
+                    Tc += CT_DECOMPRESS(packet->d7atp_te);
+            }
+
+            Tc = adjust_timeout_value( Tc, packet->hw_radio_packet.tx_meta.timestamp);
             d7anp_set_foreground_scan_timeout(Tc + 2); // we include Tt here for now
             d7anp_start_foreground_scan();
         }
@@ -554,8 +583,10 @@ void d7atp_process_received_packet(packet_t* packet)
             timer_tick_t Tc = CT_DECOMPRESS(packet->d7atp_tc);
 
             DPRINT("Tc=%i (CT) -> %i (Ti) ", packet->d7atp_tc, Tc);
+            if (packet->d7atp_ctrl.ctrl_te)
+                Tc += CT_DECOMPRESS(packet->d7atp_te);
 
-            // We choose to start the FG scan after the response period so Tl = Tl - Tc
+            // We choose to start the FG scan after the execution delay and the response period so Tl = Tl - Tc - Te
             if (Tl > Tc)
                 Tl -= Tc;
             else
@@ -573,7 +604,7 @@ void d7atp_process_received_packet(packet_t* packet)
             if (Tl)
             {
                 d7anp_set_foreground_scan_timeout(Tl);
-                schedule_response_period_timeout_handler(Tc); // TODO for unicast, stop response period after transmission of response?
+                schedule_response_period_timeout_handler(Tc);
             }
 
             /* stop eventually the FG scan and force the radio to go back to IDLE */

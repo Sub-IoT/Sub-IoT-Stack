@@ -949,6 +949,29 @@ void dll_tx_frame(packet_t* packet)
     current_packet = packet;
 
     switch_state(DLL_STATE_CSMA_CA_STARTED);
+
+    if ((packet->type == RESPONSE_TO_UNICAST) || (packet->type == RESPONSE_TO_BROADCAST))
+    {
+        // If the Requester provides an Execution Delay Timeout, the Responders delay their responses
+        if (packet->d7atp_ctrl.ctrl_te)
+        {
+            timer_tick_t Te = CT_DECOMPRESS(packet->d7atp_te);
+            timer_tick_t Trpd = timer_get_counter_value() - current_packet->request_received_timestamp; //response processing delay
+
+            // the DLL foreground scan duration TC is adjusted to start after the Execution Delay period
+            current_packet->request_received_timestamp += Te;
+
+            if (Te > Trpd)
+            {
+                Te -= Trpd;
+                timer_post_task_prio_delay(&execute_csma_ca, Te, MAX_PRIORITY);
+                return;
+            }
+            // If the response processing delay TRPD is bigger than TE,
+            // Responders subtract the residue TRPD - TE from the Congestion Timeout
+            // and start the DLL CSMA-CA routine immediately
+        }
+    }
     execute_csma_ca();
 }
 
