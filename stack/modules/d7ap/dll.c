@@ -117,6 +117,12 @@ static uint16_t NGDEF(_tsched);
 // TODO defined somewhere?
 #define t_g    5
 
+#ifdef USE_CC1101
+#define CCA_SETUP_TIME 5
+#else
+#define CCA_SETUP_TIME 2.5
+#endif
+
 static void execute_cca();
 static void execute_csma_ca();
 static void start_foreground_scan();
@@ -386,6 +392,8 @@ static void discard_tx()
 
 static void cca_rssi_valid(int16_t cur_rssi)
 {
+    DPRINT("cca_rssi_valid @%i", timer_get_counter_value());
+
     // When the radio goes back to Rx state, the rssi_valid callback may be still set. Skip it in this case
     if (dll_state != DLL_STATE_CCA1 && dll_state != DLL_STATE_CCA2)
         return;
@@ -458,6 +466,8 @@ static void cca_rssi_valid(int16_t cur_rssi)
 
 static void execute_cca()
 {
+    DPRINT("execute_cca @%i", timer_get_counter_value());
+
     assert(dll_state == DLL_STATE_CCA1 || dll_state == DLL_STATE_CCA2);
 
     hw_rx_cfg_t rx_cfg =(hw_rx_cfg_t){
@@ -560,12 +570,20 @@ static void execute_csma_ca()
                 }
                 case CSMA_CA_MODE_RAIND: // TODO implement RAIND
                 {
-                    dll_slot_duration = tx_duration + 10; // take time for executing CCA twice into account
-                                                          // TODO currently 9.3 ms on EZR but might be improved. Refactor later
+                    dll_slot_duration = tx_duration + t_g + 2*CCA_SETUP_TIME; // take time for executing CCA twice into account
+                                                                              // TODO currently 9.3 ms on EZR but might be improved. Refactor later
                     uint16_t max_nr_slots = dll_tca / dll_slot_duration;
-                    uint16_t slots_wait = get_rnd() % max_nr_slots;
-                    t_offset = slots_wait * dll_slot_duration;
-                    DPRINT("RAIND: slot %i of %i", slots_wait, max_nr_slots);
+
+                    if (max_nr_slots)
+                    {
+                        uint16_t slots_wait = get_rnd() % max_nr_slots;
+                        t_offset = slots_wait * dll_slot_duration;
+                        DPRINT("RAIND: slot %i of %i", slots_wait, max_nr_slots);
+                    }
+                    else
+                    {
+                        t_offset = 0;
+                    }
                     break;
                 }
                 case CSMA_CA_MODE_RIGD: // TODO implement RAIND
@@ -580,7 +598,7 @@ static void execute_csma_ca()
 
             DPRINT("slot duration: %i t_offset: %i csma ca mode: %i", dll_slot_duration, t_offset, csma_ca_mode);
 
-            dll_to = dll_tca - t_offset;
+            dll_to = dll_tca;
 
             if (t_offset > 0)
             {
@@ -619,14 +637,15 @@ static void execute_csma_ca()
                 case CSMA_CA_MODE_AIND:
                 case CSMA_CA_MODE_RAIND:
                 {
-                    uint16_t max_nr_slots = dll_tca / tx_duration;
-                    uint16_t slots_wait;
+                    dll_slot_duration = tx_duration + t_g + 2*CCA_SETUP_TIME;
+
+                    uint16_t max_nr_slots = dll_tca / dll_slot_duration;
 
                     if (max_nr_slots)
                     {
-                        slots_wait = get_rnd() % max_nr_slots;
-                        DPRINT("max_nr_slots %i slots_wait: %i", max_nr_slots, slots_wait);
-                        t_offset = slots_wait * tx_duration;
+                        uint16_t slots_wait = get_rnd() % max_nr_slots;
+                        t_offset = slots_wait * dll_slot_duration;
+                        DPRINT("RAIND: slot %i of %i", slots_wait, max_nr_slots);
                     }
                     else
                     {
@@ -650,7 +669,7 @@ static void execute_csma_ca()
 
             DPRINT("t_offset: %i", t_offset);
 
-            dll_to = dll_tca - t_offset;
+            dll_to = dll_tca;
 
             if (t_offset > 0)
             {
