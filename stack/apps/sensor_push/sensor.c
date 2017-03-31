@@ -36,8 +36,6 @@
 #include "fs.h"
 #include "log.h"
 
-
-#include "button.h"
 #if (defined PLATFORM_EFM32GG_STK3700 || defined PLATFORM_EFM32HG_STK3400 || defined PLATFORM_EZR32LG_WSTK6200A || defined PLATFORM_EZR32LG_OCTA)
   #include "platform_sensors.h"
 #endif
