@@ -109,7 +109,9 @@ void stop_radio(){
 
 void start_radio(){
 #if defined USE_SI4460
+#ifdef HAS_LCD
     lcd_write_string("Start sending \n");
+#endif
 #elif defined USE_CC1101
     cc1101_interface_strobe(RF_SCAL);
     cc1101_interface_strobe(RF_STX);
