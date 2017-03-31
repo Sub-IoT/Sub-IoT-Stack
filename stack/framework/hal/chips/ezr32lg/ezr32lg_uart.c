@@ -315,7 +315,7 @@ void uart_send_bytes(uart_handle_t* uart, void const *data, size_t length) {
         uart->dma_channel_tx,
         uart->dma_req_signal_tx,
         (void*)&uart->channel->TXDATA,
-        data,
+        (void*)data,
         true,
         length,
         dmadrvDataSize1,
