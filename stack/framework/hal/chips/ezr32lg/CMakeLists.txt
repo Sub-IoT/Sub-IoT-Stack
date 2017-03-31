@@ -123,17 +123,22 @@ ADD_LIBRARY (${CHIP_LIBRARY_NAME} OBJECT
                     ezr32lg_pins.c 
                     ezr32lg_i2c.c 
                     ezr32lg_watchdog.c
-		    		usb/src/em_usbd.c  
-		    		usb/src/em_usbdch9.c 
-		    		usb/src/em_usbdep.c 
-		    		usb/src/em_usbdint.c 
-		    		#usb/src/em_usbh.c 
-		    		usb/src/em_usbhal.c 
-		    		#usb/src/em_usbhep.c 
-		    		#usb/src/em_usbhint.c 
-		    		usb/src/em_usbtimer.c	    		
                     emdrv/gpiointerrupt/src/gpiointerrupt.c
 		    		emdrv/spidrv/src/spidrv.c       
                                 emdrv/dmadrv/src/dmadrv.c
                                 emdrv/dmadrv/inc/dmadrv.h
                     )
+
+IF(${PLATFORM_USE_USB_CDC})
+  ADD_LIBRARY( ${CHIP_LIBRARY_NAME} OBJECT
+  	usb/src/em_usbd.c
+  	usb/src/em_usbdch9.c
+  	usb/src/em_usbdep.c
+  	usb/src/em_usbdint.c
+  	#usb/src/em_usbh.c
+  	usb/src/em_usbhal.c
+  	#usb/src/em_usbhep.c
+  	#usb/src/em_usbhint.c
+  	usb/src/em_usbtimer.c
+  )
+ENDIF()

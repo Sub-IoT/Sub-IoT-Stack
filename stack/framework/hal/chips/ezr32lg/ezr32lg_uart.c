@@ -26,13 +26,18 @@
 #include <em_usart.h>
 #include <em_cmu.h>
 #include <em_gpio.h>
-#include <em_usbd.h>
+
 #include <dmadrv.h>
+
+#ifdef USB_DEVICE
+#include <em_usbd.h>
+#endif
+
 #include "hwgpio.h"
 #include "hwuart.h"
 #include <assert.h>
 #include <string.h>
-#include "em_gpio.h"
+
 #include "hwsystem.h"
 
 #include "ezr32lg_pins.h"
