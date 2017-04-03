@@ -39,7 +39,7 @@ PLATFORM_PARAM(${PLATFORM_PREFIX}_CONSOLE_BAUDRATE "115200" STRING "The baudrate
 PLATFORM_OPTION(${PLATFORM_PREFIX}_DEBUGPINS "Enable/Disable Hardware Debug Pins support (see 'hwdebug.h')" TRUE)
 PLATFORM_OPTION(PLATFORM_USE_USB_CDC "Enable/Disable the use of CDC (UART Communication using USB" FALSE)
 #Restrict the number of possible options for the radio option in the usual manner...
-SET_PROPERTY(CACHE ${PLATFORM_PREFIX}_RADIO PROPERTY STRINGS "cc1101;none")
+SET_PROPERTY(CACHE ${PLATFORM_PREFIX}_RADIO PROPERTY STRINGS "cc1101;sx127x")
 
 #Add a 'global' definition for the specific MCU
 EXPORT_GLOBAL_COMPILE_DEFINITIONS("-D${${PLATFORM_PREFIX}_MCU}")
@@ -94,7 +94,7 @@ ADD_LIBRARY(PLATFORM OBJECT
 
 #Include the sources for the efm32gg chip
 ADD_CHIP("efm32gg")
-ADD_CHIP("sx1276") # TODO tmp
+
 #Include the sources for the radio chip, if needed
 IF(NOT ("${${PLATFORM_PREFIX}_RADIO}" STREQUAL "none"))
     ADD_CHIP(${${PLATFORM_PREFIX}_RADIO})
