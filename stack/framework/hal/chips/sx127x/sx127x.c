@@ -35,6 +35,8 @@
 
 #include "sx1276Regs-Fsk.h"
 
+#include "pn9.h"
+
 #define FREQ_STEP 61.03515625
 
 #if defined(FRAMEWORK_LOG_ENABLED) && defined(FRAMEWORK_PHY_LOG_ENABLED)
@@ -292,9 +294,18 @@ int16_t hw_radio_get_rssi() {
 
 void hw_radio_continuous_tx(hw_tx_cfg_t const* tx_cfg, bool continuous_wave) {
   // TODO tx_cfg
-  assert(!continuous_wave); // TODO CW not supported for now
-  write_reg(REG_PAYLOADLENGTH, 0);
-  write_fifo(NULL, 50); // TODO
-  set_opmode(OPMODE_TX);
   log_print_string("cont tx\n");
+  assert(!continuous_wave); // TODO CW not supported for now
+  set_opmode(OPMODE_TX);
+
+  // chip does not include a PN9 generator so fill fifo manually ...
+  while(1) {
+    uint8_t payload_len = 63;
+    uint8_t data[payload_len + 1];
+    data[0]= payload_len;
+    pn9_encode(data + 1 , sizeof(data) - 1);
+    write_fifo(data, payload_len + 1);
+
+    while(read_reg(REG_IRQFLAGS2) & 0x20) {} // wait until we go under Fifo threshold
+  }
 }
