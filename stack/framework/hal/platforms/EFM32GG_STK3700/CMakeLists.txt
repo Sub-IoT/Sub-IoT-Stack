@@ -40,7 +40,7 @@ PLATFORM_OPTION(${PLATFORM_PREFIX}_DEBUGPINS "Enable/Disable Hardware Debug Pins
 PLATFORM_OPTION(PLATFORM_USE_USB_CDC "Enable/Disable the use of CDC (UART Communication using USB" FALSE)
 #Restrict the number of possible options for the radio option in the usual manner...
 SET_PROPERTY(CACHE ${PLATFORM_PREFIX}_RADIO PROPERTY STRINGS "cc1101;sx127x")
-
+PLATFORM_OPTION(PLATFORM_SX127X_USE_PA_BOOST "Use the PA_BOOST output of sx127x chip" TRUE)
 #Add a 'global' definition for the specific MCU
 EXPORT_GLOBAL_COMPILE_DEFINITIONS("-D${${PLATFORM_PREFIX}_MCU}")
 
@@ -72,6 +72,7 @@ PLATFORM_HEADER_DEFINE(
          ${PLATFORM_PREFIX}_CONSOLE_BAUDRATE
   BOOL   ${PLATFORM_PREFIX}_DEBUGPINS
          PLATFORM_USE_USB_CDC
+         PLATFORM_SX127X_USE_PA_BOOST
 )
 
 #Define the 'platform library'. Every platform must define a 'PLATFORM' object library

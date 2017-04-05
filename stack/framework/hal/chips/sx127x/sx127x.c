@@ -117,6 +117,20 @@ static void set_opmode(opmode_t opmode) {
   write_reg(REG_OPMODE, (read_reg(REG_OPMODE) & RF_OPMODE_MASK) | opmode);
 }
 
+static void set_eirp(eirp_t eirp) {
+#ifdef PLATFORM_SX127X_USE_PA_BOOST
+  // Pout = 17-(15-outputpower)
+  assert(eirp >= 2); // lower not supported when using PA_BOOST output
+  assert(eirp <= 17); // chip supports until +20 dBm but then we need to enable PaDac. Max 17 for now.
+  write_reg(REG_PACONFIG, 0x80 | (eirp - 2));
+#else
+  // Pout = Pmax-(15-outputpower)
+  assert(eirp <= 14); // Pmax = 13.8 dBm
+  assert(eirp >= -2); // -1.2 dBm is minimum with this Pmax. We can modify Pmax later as well if we need to go lower.
+  write_reg(REG_PACONFIG, 0x70 | (uint8_t)(eirp - 13.8 + 15));
+#endif
+}
+
 static void init_regs() {
   write_reg(REG_OPMODE, 0x00); // FSK, hi freq, sleep
 
@@ -137,7 +151,7 @@ static void init_regs() {
   write_reg(REG_FRFLSB, (uint8_t)(freq & 0xFF));
 
   // PA
-  write_reg(REG_PACONFIG, 0xF8); // use PA BOOST & ~10 dBm output power // TODO needed for RFM96, for nucleo shield disable PA boost
+  set_eirp(10);
   write_reg(REG_PARAMP, (2 << 5) | 0x09); // BT=0.5 and PaRamp=40us // TODO
 
   //  write_reg(REG_OCP, 0); // TODO default for now
