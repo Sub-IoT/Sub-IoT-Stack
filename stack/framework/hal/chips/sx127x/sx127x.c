@@ -93,6 +93,7 @@ static uint8_t read_reg(uint8_t addr) {
   spi_exchange_byte(sx127x_spi, addr & 0x7F); // send address with bit 7 low to signal a read operation
   uint8_t value = spi_exchange_byte(sx127x_spi, 0x00); // get the response
   spi_deselect(sx127x_spi);
+  DPRINT("READ %02x: %02x\n", addr, value);
   return value;
 }
 
@@ -101,6 +102,7 @@ static void write_reg(uint8_t addr, uint8_t value) {
   spi_exchange_byte(sx127x_spi, addr | 0x80); // send address with bit 8 high to signal a write operation
   spi_exchange_byte(sx127x_spi, value);
   spi_deselect(sx127x_spi);
+  DPRINT("WRITE %02x: %02x", addr, value);
 }
 
 static void write_fifo(uint8_t* buffer, uint8_t size) {
@@ -108,6 +110,7 @@ static void write_fifo(uint8_t* buffer, uint8_t size) {
   spi_exchange_byte(sx127x_spi, 0x00 | 0x80); // send address with bit 8 high to signal a write operation
   spi_exchange_bytes(sx127x_spi, buffer, NULL, size);
   spi_deselect(sx127x_spi);
+  DPRINT("WRITE FIFO %i", size);
 }
 
 static void set_opmode(opmode_t opmode) {
@@ -134,8 +137,8 @@ static void init_regs() {
   write_reg(REG_FRFLSB, (uint8_t)(freq & 0xFF));
 
   // PA
-  write_reg(REG_PACONFIG, 0x7F); // no PA BOOST & use max output power
-  write_reg(REG_PARAMP, (2 << 5) & 0x09); // BT=0.5 and PaRamp=40us // TODO
+  write_reg(REG_PACONFIG, 0xF8); // use PA BOOST & ~10 dBm output power // TODO needed for RFM96, for nucleo shield disable PA boost
+  write_reg(REG_PARAMP, (2 << 5) | 0x09); // BT=0.5 and PaRamp=40us // TODO
 
   //  write_reg(REG_OCP, 0); // TODO default for now
   write_reg(REG_LNA, 0x23); // highest gain for now, for 868
@@ -167,7 +170,6 @@ static void init_regs() {
   write_reg(REG_SYNCVALUE2, 0x67);
   write_reg(REG_PACKETCONFIG1, 0xC8); // var length, whitening, addressFiltering off. TODO CRC
   write_reg(REG_PACKETCONFIG2, 0x40); // packet mode
-//  write_reg(REG_PAYLOADLENGTH, 0); // TODO
 //  write_reg(REG_FIFOTHRESH, 0); // TODO
 //  write_reg(REG_SEQCONFIG1, 0); // TODO
 //  write_reg(REG_SEQCONFIG2, 0); // TODO
@@ -227,7 +229,18 @@ static void dio_isr(pin_id_t pin_id, uint8_t event_mask) {
 
 }
 
+
+
+//static void reset() {
+//  hw_gpio_configure_pin(SX127x_RESET_PIN, false, gpioModePushPull, 0);
+//  hw_busy_wait(150);
+//  hw_gpio_configure_pin(SX127x_RESET_PIN, false, gpioModeInputPull, 1);
+//  hw_busy_wait(6000);
+//}
+
 error_t hw_radio_init(alloc_packet_callback_t alloc_packet_cb, release_packet_callback_t release_packet_cb) {
+  //reset();
+
   if(sx127x_spi != NULL)
     return EALREADY;
 
@@ -244,10 +257,8 @@ error_t hw_radio_init(alloc_packet_callback_t alloc_packet_cb, release_packet_ca
   set_opmode(OPMODE_STANDBY); // TODO sleep
   // TODO reset ?
   // TODO op mode
-
+  // TODO calibrate rx chain
   error_t e = hw_gpio_configure_interrupt(SX127x_DIO0_PIN, &dio_isr, GPIO_RISING_EDGE); assert(e == SUCCESS);
-
-  // TODO def regs
 
   return SUCCESS; // TODO FAIL return code
 }
@@ -296,6 +307,7 @@ void hw_radio_continuous_tx(hw_tx_cfg_t const* tx_cfg, bool continuous_wave) {
   // TODO tx_cfg
   log_print_string("cont tx\n");
   assert(!continuous_wave); // TODO CW not supported for now
+  hw_gpio_disable_interrupt(SX127x_DIO0_PIN);
   set_opmode(OPMODE_TX);
 
   // chip does not include a PN9 generator so fill fifo manually ...
@@ -305,7 +317,6 @@ void hw_radio_continuous_tx(hw_tx_cfg_t const* tx_cfg, bool continuous_wave) {
     data[0]= payload_len;
     pn9_encode(data + 1 , sizeof(data) - 1);
     write_fifo(data, payload_len + 1);
-
     while(read_reg(REG_IRQFLAGS2) & 0x20) {} // wait until we go under Fifo threshold
   }
 }
