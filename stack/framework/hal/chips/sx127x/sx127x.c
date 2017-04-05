@@ -83,10 +83,12 @@ static tx_packet_callback_t tx_packet_callback;
 static state_t state = STATE_IDLE;
 static hw_radio_packet_t* current_packet;
 //static rssi_valid_callback_t rssi_valid_callback;
-//static channel_id_t current_channel_id = {
-//    .channel_header_raw = 0xFF,
-//    .center_freq_index = 0xFF
-//};
+static channel_id_t current_channel_id = {
+  .channel_header.ch_coding = PHY_CODING_PN9,
+  .channel_header.ch_class = PHY_CLASS_NORMAL_RATE,
+  .channel_header.ch_freq_band = PHY_BAND_868,
+  .center_freq_index = 0
+};
 
 static uint8_t read_reg(uint8_t addr) {
   spi_select(sx127x_spi);
@@ -131,6 +133,43 @@ static void set_eirp(eirp_t eirp) {
 #endif
 }
 
+static void set_center_freq(const channel_id_t* channel) {
+  assert(channel->channel_header.ch_freq_band == PHY_BAND_868); // TODO other bands
+  assert(channel->channel_header.ch_class == PHY_CLASS_NORMAL_RATE); // TODO other rates
+
+   // TODO check channel index is allowed
+
+  uint32_t center_freq = 433.06e3;
+  if(channel->channel_header.ch_freq_band == PHY_BAND_868)
+    center_freq = 863e6;
+  else if(channel->channel_header.ch_freq_band == PHY_BAND_915)
+    center_freq = 902e6;
+
+  uint32_t channel_spacing_half = 100e3;
+  if(channel->channel_header.ch_class == PHY_CLASS_LO_RATE)
+    channel_spacing_half = 12500;
+
+  center_freq += 0.025 * channel->center_freq_index + channel_spacing_half;
+  DPRINT("center: %d\n", center_freq);
+  center_freq = (uint32_t)((double)center_freq/(double)FREQ_STEP);
+
+  write_reg(REG_FRFMSB, (uint8_t)((center_freq >> 16) & 0xFF));
+  write_reg(REG_FRFMID, (uint8_t)((center_freq >> 8) & 0xFF));
+  write_reg(REG_FRFLSB, (uint8_t)(center_freq & 0xFF));
+}
+
+static void set_channel(const channel_id_t* channel) {
+// TODO cache
+//  if(hw_radio_channel_ids_equal(&current_channel_id, channel)) {
+//    return;
+//  }
+  assert(channel->channel_header.ch_freq_band == PHY_BAND_868); // TODO other bands
+  assert(channel->channel_header.ch_class == PHY_CLASS_NORMAL_RATE); // TODO other rates
+  assert(channel->channel_header.ch_coding == PHY_CODING_PN9); // TODO FEC
+
+  set_center_freq(channel);
+}
+
 static void init_regs() {
   write_reg(REG_OPMODE, 0x00); // FSK, hi freq, sleep
 
@@ -143,12 +182,7 @@ static void init_regs() {
   write_reg(REG_FDEVMSB, 0x03);
   write_reg(REG_FDEVLSB, 0x33);
 
-  // centr freq, default to 868N000: 863.1 MHz
-  uint32_t freq = 863100000; // in Hz
-  freq = (uint32_t)((double)freq / (double)FREQ_STEP);
-  write_reg(REG_FRFMSB, (uint8_t)((freq >> 16) & 0xFF));
-  write_reg(REG_FRFMID, (uint8_t)((freq >> 8) & 0xFF));
-  write_reg(REG_FRFLSB, (uint8_t)(freq & 0xFF));
+  set_channel(&current_channel_id);
 
   // PA
   set_eirp(10);
