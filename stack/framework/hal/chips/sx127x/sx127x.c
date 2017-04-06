@@ -217,7 +217,7 @@ static void init_regs() {
   write_reg(REG_SYNCVALUE1, 0x0B);
   write_reg(REG_SYNCVALUE2, 0x67);
 
-  write_reg(REG_PACKETCONFIG1, 0x98); // var length, whitening disabled (not compatible), addressFiltering off. TODO CRC
+  write_reg(REG_PACKETCONFIG1, 0x88); // var length, whitening and CRC disabled (not compatible), addressFiltering off.
   write_reg(REG_PACKETCONFIG2, 0x40); // packet mode
   write_reg(REG_PAYLOADLENGTH, 0xFF); // not used in TX (var length packets), max size in RX
   write_reg(REG_FIFOTHRESH, 0x80); // tx start condition true when there is at least one byte in FIFO (we are in standby/sleep when filling FIFO anyway)

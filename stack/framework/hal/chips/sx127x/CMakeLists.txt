@@ -17,6 +17,10 @@
 # limitations under the License.
 #
 
+IF(HAL_RADIO_USE_HW_CRC)
+    MESSAGE("sx127x does not support (DASH7 compatible) hardware CRC, forcing HAL_RADIO_USE_HW_CRC to FALSE")
+    SET(HAL_RADIO_USE_HW_CRC "FALSE" CACHE BOOL "Enable/Disable the use of HW CRC" FORCE)
+ENDIF()
 
 INCLUDE_DIRECTORIES(
     ./
