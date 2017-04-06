@@ -111,7 +111,7 @@ static void write_reg(uint8_t addr, uint8_t value) {
 
 static void write_fifo(uint8_t* buffer, uint8_t size) {
   spi_select(sx127x_spi);
-  spi_exchange_byte(sx127x_spi, 0x00 | 0x80); // send address with bit 8 high to signal a write operation
+  spi_exchange_byte(sx127x_spi, 0x80); // send address with bit 8 high to signal a write operation
   spi_exchange_bytes(sx127x_spi, buffer, NULL, size);
   spi_deselect(sx127x_spi);
   DPRINT("WRITE FIFO %i", size);
@@ -230,10 +230,11 @@ static void init_regs() {
   write_reg(REG_SYNCVALUE1, 0x0B);
   write_reg(REG_SYNCVALUE2, 0x67);
 
-  write_reg(REG_PACKETCONFIG1, 0x88); // var length, whitening and CRC disabled (not compatible), addressFiltering off.
+  write_reg(REG_PACKETCONFIG1, 0x08); // fixed length (unlimited length mode), whitening and CRC disabled (not compatible), addressFiltering off.
   write_reg(REG_PACKETCONFIG2, 0x40); // packet mode
-  write_reg(REG_PAYLOADLENGTH, 0xFF); // not used in TX (var length packets), max size in RX
-  write_reg(REG_FIFOTHRESH, 0x80); // tx start condition true when there is at least one byte in FIFO (we are in standby/sleep when filling FIFO anyway)
+  write_reg(REG_PAYLOADLENGTH, 0x00); // unlimited length mode (in combination with PacketFormat = 0), so we can encode/decode length byte in software
+  write_reg(REG_FIFOTHRESH, 0x83); // tx start condition true when there is at least one byte in FIFO (we are in standby/sleep when filling FIFO anyway)
+                                   // For RX the threshold is set to 4 since this is the minimum length of a D7 packet.
   write_reg(REG_SEQCONFIG1, 0x40); // force off for now
   //  write_reg(REG_SEQCONFIG2, 0); // not used for now
   //  write_reg(REG_TIMERRESOL, 0); // not used for now
@@ -282,11 +283,14 @@ static void packet_transmitted_isr(pin_id_t pin_id, uint8_t event_mask) {
   }
 }
 
-static void sync_detected_isr(pin_id_t pin_id, uint8_t event_mask) {
-  hw_gpio_disable_interrupt(SX127x_DIO2_PIN);
-  DPRINT("sync detected ISR\n");
+static void fifo_threshold_isr(pin_id_t pin_id, uint8_t event_mask) {
+  hw_gpio_disable_interrupt(SX127x_DIO1_PIN);
+  DPRINT("fifo threshold detected ISR\n");
   assert(state == STATE_RX);
 
+  uint8_t packet_len = read_reg(REG_FIFO);
+  pn9_encode(&packet_len, 1);
+  DPRINT("rx packet len=%i\n", packet_len);
   // TODO receive packet. This has to be handled in software since hardware data whitening support
   // is not compatible with PN9, so packet handler cannot decode length byte.
 }
@@ -298,6 +302,10 @@ static void sync_detected_isr(pin_id_t pin_id, uint8_t event_mask) {
 //  hw_busy_wait(6000);
 //}
 
+static inline void flush_fifo() {
+  write_reg(REG_IRQFLAGS2, 0x10);
+}
+
 static void start_rx(hw_rx_cfg_t const* rx_cfg) {
   state = STATE_RX;
 
@@ -307,14 +315,18 @@ static void start_rx(hw_rx_cfg_t const* rx_cfg) {
   DPRINT("START FG scan @ %i", timer_get_counter_value());
   DEBUG_RX_START();
 
-  set_opmode(OPMODE_RX);
   if(rx_packet_callback != 0) {
-    hw_gpio_enable_interrupt(SX127x_DIO2_PIN);
+    assert(hw_gpio_enable_interrupt(SX127x_DIO1_PIN) == SUCCESS);
   } else {
+    assert(false); // TODO tmp
     // when rx callback not set we ignore received packets
-    hw_gpio_disable_interrupt(SX127x_DIO2_PIN);
+    hw_gpio_disable_interrupt(SX127x_DIO1_PIN);
     // TODO disable packet handler completely in this case?
   }
+
+  flush_fifo();
+  set_opmode(OPMODE_RX);
+
 
   if(rssi_valid_callback != 0)
   {
@@ -345,7 +357,7 @@ error_t hw_radio_init(alloc_packet_callback_t alloc_packet_cb, release_packet_ca
 
   error_t e;
   e = hw_gpio_configure_interrupt(SX127x_DIO0_PIN, &packet_transmitted_isr, GPIO_RISING_EDGE); assert(e == SUCCESS);
-  e = hw_gpio_configure_interrupt(SX127x_DIO2_PIN, &sync_detected_isr, GPIO_RISING_EDGE); assert(e == SUCCESS);
+  e = hw_gpio_configure_interrupt(SX127x_DIO1_PIN, &fifo_threshold_isr, GPIO_RISING_EDGE); assert(e == SUCCESS);
 
   return SUCCESS; // TODO FAIL return code
 }
