@@ -54,6 +54,7 @@ void __platform_init()
     // configure the interrupt pins here, since hw_gpio_configure_pin() is MCU
     // specific and not part of the common HAL API
     hw_gpio_configure_pin(SX127x_DIO0_PIN, true, gpioModeInputPull, 1);
+    hw_gpio_configure_pin(SX127x_DIO2_PIN, true, gpioModeInputPull, 1);
     hw_gpio_configure_pin(SX127x_RESET_PIN, false, gpioModePushPull, 1);
 #endif
     __hw_debug_init();

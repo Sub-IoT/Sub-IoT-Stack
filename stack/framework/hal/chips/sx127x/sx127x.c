@@ -82,7 +82,9 @@ static rx_packet_callback_t rx_packet_callback;
 static tx_packet_callback_t tx_packet_callback;
 static state_t state = STATE_IDLE;
 static hw_radio_packet_t* current_packet;
-//static rssi_valid_callback_t rssi_valid_callback;
+static rssi_valid_callback_t rssi_valid_callback;
+static bool should_rx_after_tx_completed = false;
+static hw_rx_cfg_t pending_rx_cfg;
 static channel_id_t current_channel_id = {
   .channel_header.ch_coding = PHY_CODING_PN9,
   .channel_header.ch_class = PHY_CLASS_NORMAL_RATE,
@@ -188,29 +190,40 @@ static void init_regs() {
   set_eirp(10);
   write_reg(REG_PARAMP, (2 << 5) | 0x09); // BT=0.5 and PaRamp=40us // TODO
 
-  //  write_reg(REG_OCP, 0); // TODO default for now
-  write_reg(REG_LNA, 0x23); // highest gain for now, for 868
-  //  write_reg(REG_RXCONFIG, 0); // TODO default for now
-  //  write_reg(REG_RSSICONFIG, 0); // TODO default for now
-  //  write_reg(REG_RSSICOLLISION, 0); // TODO default for now
-  //  write_reg(REG_RSSITHRESH, 0); // TODO default for now
-
   // RX
+  //  write_reg(REG_OCP, 0); // TODO default for now
+  write_reg(REG_LNA, 0x23); // highest gain for now, for 868 // TODO LnaBoostHf consumes 150% current compared to default LNA
+
+  // TODO validate:
+  // - RestartRxOnCollision (off for now)
+  // - RestartRxWith(out)PllLock flags: set on freq change
+  // - AfcAutoOn: default for now
+  // - AgcAutoOn: default for now (use AGC)
+  // - RxTrigger: default for now
+  write_reg(REG_RXCONFIG, 0x0E);
+
+  write_reg(REG_RSSICONFIG, 0x02); // TODO no RSSI offset for now + using 8 samples for smoothing
+  //  write_reg(REG_RSSICOLLISION, 0); // TODO not used for now
+  write_reg(REG_RSSITHRESH, 0xFF); // TODO using -128 dBm for now
+
   // channel bandwidth 203.125 kHz, data rate 55.542 kBaud
   // Carson's rule: 2 x fm + 2 x fd  = 55.555 + 2 x 50 = 155.555 kHz
   // assuming 10 ppm crystals gives max error of: 2 * 10 ppm * 433.16 = 8.66 kHz
   // => BW > 155.555 + 8.66 kHz => > 164 kHZ. Closest possible value is 166.7
+  // TODO validate sensitivity / xtal accuracy tradeoff
   write_reg(REG_RXBW, (2 << 3) & 1);
-  //  write_reg(REG_AFCBW, 0); // TODO default for now
-  //  write_reg(REG_AFCFEI, 0); // TODO default for now
-  //  write_reg(REG_AFCMSB, 0); // TODO default for now
-  //  write_reg(REG_AFCLSB, 0); // TODO default for now
-//  write_reg(REG_PREAMBLEDETECT, 0); // TODO
-//  write_reg(REG_RXTIMEOUT1, 0); // TODO
-//  write_reg(REG_RXTIMEOUT1, 0); // TODO
-//  write_reg(REG_RXTIMEOUT1, 0); // TODO
-//  write_reg(REG_RXDELAY, 0); // TODO
-//  write_reg(REG_OSC, 0x07); // keep as default: off
+  //  write_reg(REG_AFCBW, 0); // TODO not used for now (AfcAutoOn not set)
+  //  write_reg(REG_AFCFEI, 0); // TODO not used for now (AfcAutoOn not set)
+  //  write_reg(REG_AFCMSB, 0); // TODO not used for now (AfcAutoOn not set)
+  //  write_reg(REG_AFCLSB, 0); // TODO not used for now (AfcAutoOn not set)
+  //  write_reg(REG_FEIMSB, 0); // TODO freq offset not used for now
+  //  write_reg(REG_FEILSB, 0); // TODO freq offset not used for now
+  write_reg(REG_PREAMBLEDETECT, 0xCA); // TODO validate PreambleDetectorSize (2 now) and PreambleDetectorTol (10 now)
+  // write_reg(REG_RXTIMEOUT1, 0); // not used for now
+  // write_reg(REG_RXTIMEOUT2, 0); // not used for now
+  // write_reg(REG_RXTIMEOUT3, 0); // not used for now
+  // write_reg(REG_RXDELAY, 0); // not used for now
+  // write_reg(REG_OSC, 0x07); // keep as default: off
   write_reg(REG_PREAMBLEMSB, 0x00);
   write_reg(REG_PREAMBLELSB, 32); // TODO 48 for hi rate
   write_reg(REG_SYNCCONFIG, 0x11); // no AutoRestartRx, default PreambePolarity, enable syncword of 2 bytes
@@ -221,24 +234,26 @@ static void init_regs() {
   write_reg(REG_PACKETCONFIG2, 0x40); // packet mode
   write_reg(REG_PAYLOADLENGTH, 0xFF); // not used in TX (var length packets), max size in RX
   write_reg(REG_FIFOTHRESH, 0x80); // tx start condition true when there is at least one byte in FIFO (we are in standby/sleep when filling FIFO anyway)
-//  write_reg(REG_SEQCONFIG1, 0); // TODO
-//  write_reg(REG_SEQCONFIG2, 0); // TODO
-//  write_reg(REG_TIMERRESOL, 0); // TODO
-//  write_reg(REG_TIMER1COEF, 0); // TODO
-//  write_reg(REG_TIMER2COEF, 0); // TODO
-//  write_reg(REG_IMAGECAL, 0); // TODO
-//  write_reg(REG_LOWBAT, 0); // TODO
-  write_reg(REG_DIOMAPPING1, 0); // TODO
-  write_reg(REG_DIOMAPPING2, 0x30); // ModeReady TODO
-//  write_reg(REG_PLLHOP, 0); // TODO
-//  write_reg(REG_TCXO, 0); // TODO
-//  write_reg(REG_PADAC, 0); // TODO
-//  write_reg(REG_BITRATEFRAC, 0); // TODO
-//  write_reg(REG_AGCREF, 0); // TODO
-//  write_reg(REG_AGCTHRESH1, 0); // TODO
-//  write_reg(REG_AGCTHRESH2, 0); // TODO
-//  write_reg(REG_AGCTHRESH3, 0); // TODO
-//  write_reg(REG_PLL, 0); // TODO
+  write_reg(REG_SEQCONFIG1, 0x40); // force off for now
+  //  write_reg(REG_SEQCONFIG2, 0); // not used for now
+  //  write_reg(REG_TIMERRESOL, 0); // not used for now
+  //  write_reg(REG_TIMER1COEF, 0); // not used for now
+  //  write_reg(REG_TIMER2COEF, 0); // not used for now
+  //  write_reg(REG_IMAGECAL, 0); // TODO not used for now
+  //  write_reg(REG_LOWBAT, 0); // TODO not used for now
+
+  write_reg(REG_DIOMAPPING1, 0x0C); // DIO2 = 0b11 => interrupt on sync detect
+  write_reg(REG_DIOMAPPING2, 0x30); // ModeReady TODO configure for RSSI interrupt when doing CCA?
+  //  write_reg(REG_PLLHOP, 0); // TODO might be interesting for channel hopping
+  //  write_reg(REG_TCXO, 0); // default
+  //  write_reg(REG_PADAC, 0); // default
+  //  write_reg(REG_FORMERTEMP, 0); // not used for now
+  //  write_reg(REG_BITRATEFRAC, 0); // default
+  //  write_reg(REG_AGCREF, 0); // default, TODO validate
+  //  write_reg(REG_AGCTHRESH1, 0); // not used for now
+  //  write_reg(REG_AGCTHRESH2, 0); // not used for now
+  //  write_reg(REG_AGCTHRESH3, 0); // not used for now
+  //  write_reg(REG_PLL, 0); // not used for now
 
 
   // TODO validate:
@@ -255,31 +270,26 @@ static void init_regs() {
   // TODO burst write reg?
 }
 
-static void end_of_packet_isr() {
-  log_print_string("end of packet ISR");
-  if(state = STATE_TX) {
-    set_opmode(OPMODE_STANDBY);
-    if(tx_packet_callback) {
-      current_packet->tx_meta.timestamp = timer_get_counter_value();
-      tx_packet_callback(current_packet);
-    }
-  } else {
-    assert(false); // TODO RX
+static void packet_transmitted_isr(pin_id_t pin_id, uint8_t event_mask) {
+  hw_gpio_disable_interrupt(SX127x_DIO0_PIN);
+  DPRINT("packet transmitted ISR\n");
+  assert(state == STATE_TX);
+
+  set_opmode(OPMODE_STANDBY);
+  if(tx_packet_callback) {
+    current_packet->tx_meta.timestamp = timer_get_counter_value();
+    tx_packet_callback(current_packet);
   }
 }
 
-static void dio_isr(pin_id_t pin_id, uint8_t event_mask) {
-  log_print_string("DIO IRQ\n");
-  if(hw_gpio_pin_matches(pin_id, SX127x_DIO0_PIN)) {
-    hw_gpio_disable_interrupt(SX127x_DIO0_PIN);
-    end_of_packet_isr();
-  }
-  else
-     assert(false); // other DIO pins not used (yet)
+static void sync_detected_isr(pin_id_t pin_id, uint8_t event_mask) {
+  hw_gpio_disable_interrupt(SX127x_DIO2_PIN);
+  DPRINT("sync detected ISR\n");
+  assert(state == STATE_RX);
 
+  // TODO receive packet. This has to be handled in software since hardware data whitening support
+  // is not compatible with PN9, so packet handler cannot decode length byte.
 }
-
-
 
 //static void reset() {
 //  hw_gpio_configure_pin(SX127x_RESET_PIN, false, gpioModePushPull, 0);
@@ -287,6 +297,30 @@ static void dio_isr(pin_id_t pin_id, uint8_t event_mask) {
 //  hw_gpio_configure_pin(SX127x_RESET_PIN, false, gpioModeInputPull, 1);
 //  hw_busy_wait(6000);
 //}
+
+static void start_rx(hw_rx_cfg_t const* rx_cfg) {
+  state = STATE_RX;
+
+  set_channel(&(rx_cfg->channel_id));
+  // TODO configure_syncword(rx_cfg->syncword_class, rx_cfg->channel_id.channel_header.ch_coding);
+
+  DPRINT("START FG scan @ %i", timer_get_counter_value());
+  DEBUG_RX_START();
+
+  set_opmode(OPMODE_RX);
+  if(rx_packet_callback != 0) {
+    hw_gpio_enable_interrupt(SX127x_DIO2_PIN);
+  } else {
+    // when rx callback not set we ignore received packets
+    hw_gpio_disable_interrupt(SX127x_DIO2_PIN);
+    // TODO disable packet handler completely in this case?
+  }
+
+  if(rssi_valid_callback != 0)
+  {
+      assert(false); // TODO
+  }
+}
 
 error_t hw_radio_init(alloc_packet_callback_t alloc_packet_cb, release_packet_callback_t release_packet_cb) {
   //reset();
@@ -308,7 +342,10 @@ error_t hw_radio_init(alloc_packet_callback_t alloc_packet_cb, release_packet_ca
   // TODO reset ?
   // TODO op mode
   // TODO calibrate rx chain
-  error_t e = hw_gpio_configure_interrupt(SX127x_DIO0_PIN, &dio_isr, GPIO_RISING_EDGE); assert(e == SUCCESS);
+
+  error_t e;
+  e = hw_gpio_configure_interrupt(SX127x_DIO0_PIN, &packet_transmitted_isr, GPIO_RISING_EDGE); assert(e == SUCCESS);
+  e = hw_gpio_configure_interrupt(SX127x_DIO2_PIN, &sync_detected_isr, GPIO_RISING_EDGE); assert(e == SUCCESS);
 
   return SUCCESS; // TODO FAIL return code
 }
@@ -321,8 +358,31 @@ bool hw_radio_is_idle() {
   // TODO
 }
 
-error_t hw_radio_set_rx(hw_rx_cfg_t const* rx_cfg, rx_packet_callback_t rx_callback, rssi_valid_callback_t rssi_callback) {
-  // TODO
+error_t hw_radio_set_rx(hw_rx_cfg_t const* rx_cfg, rx_packet_callback_t rx_cb, rssi_valid_callback_t rssi_valid_cb) {
+  if(rx_cb) {
+    assert(alloc_packet_callback != NULL);
+    assert(release_packet_callback != NULL);
+  }
+
+  // assert(rx_cb != NULL || rssi_valid_cb != NULL); // at least one callback should be valid
+
+  // TODO error handling EINVAL, EOFF
+
+  rx_packet_callback = rx_cb;
+  rssi_valid_callback = rssi_valid_cb;
+
+  // if we are currently transmitting wait until TX completed before entering RX
+  // we return now and go into RX when TX is completed
+  if(state == STATE_TX)
+  {
+    should_rx_after_tx_completed = true;
+    memcpy(&pending_rx_cfg, rx_cfg, sizeof(hw_rx_cfg_t));
+    return SUCCESS;
+  }
+
+  start_rx(rx_cfg);
+
+  return SUCCESS;
 }
 
 bool hw_radio_is_rx() {
@@ -330,7 +390,6 @@ bool hw_radio_is_rx() {
 }
 
 error_t hw_radio_send_packet(hw_radio_packet_t* packet, tx_packet_callback_t tx_callback) {
-
   tx_packet_callback = tx_callback;
   current_packet = packet;
   hw_gpio_enable_interrupt(SX127x_DIO0_PIN);
