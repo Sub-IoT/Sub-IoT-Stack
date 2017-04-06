@@ -212,13 +212,15 @@ static void init_regs() {
 //  write_reg(REG_RXDELAY, 0); // TODO
 //  write_reg(REG_OSC, 0x07); // keep as default: off
   write_reg(REG_PREAMBLEMSB, 0x00);
-  write_reg(REG_PREAMBLELSB, 0x04); // TODO 6 for hi rate
-  write_reg(REG_SYNCCONFIG, 0); // no AutoRestartRx, default PreambePolarity, enable syncword of 2 bytes
+  write_reg(REG_PREAMBLELSB, 32); // TODO 48 for hi rate
+  write_reg(REG_SYNCCONFIG, 0x11); // no AutoRestartRx, default PreambePolarity, enable syncword of 2 bytes
   write_reg(REG_SYNCVALUE1, 0x0B);
   write_reg(REG_SYNCVALUE2, 0x67);
-  write_reg(REG_PACKETCONFIG1, 0xC8); // var length, whitening, addressFiltering off. TODO CRC
+
+  write_reg(REG_PACKETCONFIG1, 0x98); // var length, whitening disabled (not compatible), addressFiltering off. TODO CRC
   write_reg(REG_PACKETCONFIG2, 0x40); // packet mode
-//  write_reg(REG_FIFOTHRESH, 0); // TODO
+  write_reg(REG_PAYLOADLENGTH, 0xFF); // not used in TX (var length packets), max size in RX
+  write_reg(REG_FIFOTHRESH, 0x80); // tx start condition true when there is at least one byte in FIFO (we are in standby/sleep when filling FIFO anyway)
 //  write_reg(REG_SEQCONFIG1, 0); // TODO
 //  write_reg(REG_SEQCONFIG2, 0); // TODO
 //  write_reg(REG_TIMERRESOL, 0); // TODO
@@ -332,9 +334,10 @@ error_t hw_radio_send_packet(hw_radio_packet_t* packet, tx_packet_callback_t tx_
   tx_packet_callback = tx_callback;
   current_packet = packet;
   hw_gpio_enable_interrupt(SX127x_DIO0_PIN);
-  log_print_string("TX len=%i", packet->length);
-  write_reg(REG_PAYLOADLENGTH, packet->length);
-  write_fifo(packet->data, packet->length);
+  DPRINT("TX len=%i", packet->length);
+  DPRINT_DATA(packet->data, packet->length + 1);
+  pn9_encode(packet->data, packet->length + 1); // sx127x does not support PN9 whitening in hardware ...
+  write_fifo(packet->data, packet->length + 1);
   state = STATE_TX;
   set_opmode(OPMODE_TX);
 }
