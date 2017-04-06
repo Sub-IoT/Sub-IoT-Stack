@@ -48,7 +48,12 @@
 #ifdef HAS_LCD
   #include "platform_lcd.h"
   #define LCD_WRITE_STRING(...) lcd_write_string(__VA_ARGS__)
-  #define LCD_WRITE_LINE(line, ...) lcd_write_line(line, __VA_ARGS__)
+  #ifdef PLATFORM_EFM32GG_STK3700
+    // STK3700 LCD does not use multiple lines
+    #define LCD_WRITE_LINE(line, ...) lcd_write_string(__VA_ARGS__)
+  #else
+    #define LCD_WRITE_LINE(line, ...) lcd_write_line(line, __VA_ARGS__)
+  #endif
 #else
   #define LCD_WRITE_STRING(...)
   #define LCD_WRITE_LINE(...)
@@ -80,7 +85,7 @@ void execute_sensor_measurement()
 
   uint32_t rhData = 0;
   uint32_t tData = 0;
-#if ! defined PLATFORM_EZR32LG_USB01
+#if ! defined PLATFORM_EZR32LG_USB01 && ! defined PLATFORM_EFM32GG_STK3700
   getHumidityAndTemperature(&rhData, &tData);
 
   sprintf(str, "Ext T: %d.%d C", (tData/1000), (tData%1000)/100);
