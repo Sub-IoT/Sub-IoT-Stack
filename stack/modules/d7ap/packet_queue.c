@@ -111,7 +111,7 @@ void packet_queue_mark_received(hw_radio_packet_t* hw_radio_packet)
     assert(false);
 }
 
-void packet_queue_mark_transmitted(hw_radio_packet_t* hw_radio_packet)
+packet_t* packet_queue_mark_transmitted(hw_radio_packet_t* hw_radio_packet)
 {
     for(uint8_t i = 0; i < MODULE_D7AP_PACKET_QUEUE_SIZE; i++)
     {
@@ -120,7 +120,7 @@ void packet_queue_mark_transmitted(hw_radio_packet_t* hw_radio_packet)
             assert(packet_queue_element_status[i] == PACKET_QUEUE_ELEMENT_STATUS_PROCESSING);
             DPRINT("Packet queue mark transmitted %p", &(packet_queue[i].hw_radio_packet));
             packet_queue_element_status[i] = PACKET_QUEUE_ELEMENT_STATUS_TRANSMITTED;
-            return;
+            return &(packet_queue[i]);
         }
     }
 

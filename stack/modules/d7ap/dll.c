@@ -109,6 +109,8 @@ static int16_t NGDEF(_E_CCA);
 static uint16_t NGDEF(_tsched);
 #define tsched NG(_tsched)
 
+static bool NGDEF(_guarded_channel);
+#define guarded_channel NG(_guarded_channel)
 
 static void execute_cca();
 static void execute_csma_ca();
@@ -246,6 +248,12 @@ static bool is_tx_busy()
     }
 }
 
+void guard_period_expiration()
+{
+    guarded_channel = false;
+    DPRINT("Channel guarding period is terminated, Tx is now conditioned by CSMA");
+}
+
 void start_background_scan()
 {
     // Start a new tsched timer
@@ -296,6 +304,21 @@ static void packet_received(hw_radio_packet_t* hw_radio_packet)
 {
     assert(dll_state == DLL_STATE_FOREGROUND_SCAN || dll_state == DLL_STATE_SCAN_AUTOMATION);
 
+    if (hw_radio_packet->rx_meta.rx_cfg.syncword_class == PHY_SYNCWORD_CLASS1)
+    {
+        uint16_t tx_duration = dll_calculate_tx_duration(current_access_profile.channel_header.ch_class,
+                                                         current_access_profile.channel_header.ch_coding,
+                                                         hw_radio_packet->length + 1);
+        // If the first transmission duration is greater than or equal to the Guard Interval TG,
+        // the channel guard period is extended by TG following the transmission.
+        if (tx_duration >= t_g)
+            timer_post_task_prio_delay(&guard_period_expiration, t_g, MAX_PRIORITY);
+        else
+            timer_post_task_prio_delay(&guard_period_expiration, t_g - tx_duration, MAX_PRIORITY);
+
+        guarded_channel = true;
+    }
+
     // we are in interrupt context here, so mark packet for further processing,
     // schedule it and return
     DPRINT("packet received @ %i , RSSI = %i", hw_radio_packet->rx_meta.timestamp, hw_radio_packet->rx_meta.rssi);
@@ -310,6 +333,7 @@ static void notify_transmitted_packet()
     packet_t* packet = packet_queue_get_transmitted_packet();
     assert(packet != NULL);
 
+    switch_state(DLL_STATE_IDLE);
     d7anp_signal_packet_transmitted(packet);
 
     if (process_received_packets_after_tx)
@@ -331,7 +355,14 @@ void packet_transmitted(hw_radio_packet_t* hw_radio_packet)
     switch_state(DLL_STATE_TX_FOREGROUND_COMPLETED);
     DPRINT("Transmitted packet @ %i with length = %i", hw_radio_packet->tx_meta.timestamp, hw_radio_packet->length);
 
-    packet_queue_mark_transmitted(hw_radio_packet);
+    packet_t* packet = packet_queue_mark_transmitted(hw_radio_packet);
+
+    if (packet->tx_duration >= t_g )
+    {
+        timer_post_task_prio_delay(&guard_period_expiration, t_g, MAX_PRIORITY);
+    }
+    else
+        timer_post_task_prio_delay(&guard_period_expiration, t_g - packet->tx_duration, MAX_PRIORITY);
 
     /* the notification task needs to be handled in priority */
     sched_post_task_prio(&notify_transmitted_packet, MAX_PRIORITY);
@@ -352,6 +383,7 @@ void background_advertising_terminated(hw_radio_packet_t* hw_radio_packet)
 
     DPRINT("Transmit packet @ %i", timer_get_counter_value()); // ensure that we are sending the foreground request within the guarded time
     hw_radio_send_packet(&current_packet->hw_radio_packet, &packet_transmitted);
+    guarded_channel = true;
 }
 
 static void discard_tx()
@@ -376,7 +408,12 @@ static void discard_tx()
         sched_cancel_task(&execute_csma_ca);
     }
     else if (dll_state == DLL_STATE_TX_FOREGROUND_COMPLETED)
+    {
+        timer_cancel_task(&guard_period_expiration);
+        sched_cancel_task(&guard_period_expiration);
+        guarded_channel = false;
         sched_cancel_task(&notify_transmitted_packet);
+    }
 
     switch_state(DLL_STATE_IDLE);
 }
@@ -431,6 +468,7 @@ static void cca_rssi_valid(int16_t cur_rssi)
             {
                 switch_state(DLL_STATE_TX_FOREGROUND);
                 err = hw_radio_send_packet(&current_packet->hw_radio_packet, &packet_transmitted);
+                guarded_channel = true;
             }
 
             assert(err == SUCCESS);
@@ -493,6 +531,19 @@ uint16_t dll_calculate_tx_duration(phy_channel_class_t channel_class, phy_coding
 static void execute_csma_ca()
 {
     // TODO select Channel at front of the channel queue
+
+    /*
+     * During the period when the channel is guarded by the Requester, the transmission
+     * of a subsequent requests, or a single response to a unicast request on the
+     * guarded channel, is not conditioned by CSMA-CA
+     */
+    if ((current_packet->type == SUBSEQUENT_REQUEST ||
+        current_packet->type == RESPONSE_TO_UNICAST) && guarded_channel)
+    {
+        switch_state(DLL_STATE_TX_FOREGROUND);
+        assert(hw_radio_send_packet(&current_packet->hw_radio_packet, &packet_transmitted) == SUCCESS);
+        return;
+    }
 
     switch (dll_state)
     {
@@ -785,6 +836,7 @@ void dll_init()
     sched_register_task(&execute_csma_ca);
     sched_register_task(&dll_execute_scan_automation);
     sched_register_task(&start_background_scan);
+    sched_register_task(&guard_period_expiration);
 
     hw_radio_init(&alloc_new_packet, &release_packet);
 
@@ -796,6 +848,7 @@ void dll_init()
     process_received_packets_after_tx = false;
     resume_fg_scan = false;
     sched_post_task(&dll_execute_scan_automation);
+    guarded_channel = false;
 }
 
 void dll_tx_frame(packet_t* packet)
