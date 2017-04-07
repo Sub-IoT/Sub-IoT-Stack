@@ -31,6 +31,7 @@
 #include "MODULE_D7AP_defs.h"
 #include "hwatomic.h"
 #include "compress.h"
+#include "fec.h"
 
 #if defined(FRAMEWORK_LOG_ENABLED) && defined(MODULE_D7AP_DLL_LOG_ENABLED)
 #define DPRINT(...) log_print_stack_string(LOG_STACK_DLL, __VA_ARGS__)
@@ -359,6 +360,10 @@ void background_advertising_terminated(hw_radio_packet_t* hw_radio_packet)
     current_packet->type = INITIAL_REQUEST;
     packet_assemble(current_packet);
 
+    current_packet->tx_duration = dll_calculate_tx_duration(current_access_profile.channel_header.ch_class,
+                                                            current_access_profile.channel_header.ch_coding,
+                                                            current_packet->hw_radio_packet.length + 1);
+
     DPRINT("Transmit packet @ %i", timer_get_counter_value()); // ensure that we are sending the foreground request within the guarded time
     hw_radio_send_packet(&current_packet->hw_radio_packet, &packet_transmitted);
 }
@@ -421,21 +426,11 @@ static void cca_rssi_valid(int16_t cur_rssi)
 
             if (current_packet->type == BACKGROUND_ADV)
             {
-                uint8_t packet_len;
-
-                if (current_channel_id.channel_header.ch_coding == PHY_CODING_FEC_PN9)
-                    packet_len = BACKGROUND_FRAME_LENGTH * 2;
-                else
-                    packet_len = BACKGROUND_FRAME_LENGTH;
-
-                packet_len += sizeof(uint16_t) + (current_channel_id.channel_header.ch_class ==  PHY_CLASS_HI_RATE ? PREAMBLE_HI_RATE_CLASS : PREAMBLE_LOW_RATE_CLASS);
-                uint16_t tx_duration = dll_calculate_tx_duration(current_channel_id.channel_header.ch_class, packet_len);
-
                 switch_state(DLL_STATE_TX_BACKGROUND);
                 DPRINT("Start background advertising @ %i", timer_get_counter_value());
                 err = hw_radio_send_background_packet(&current_packet->hw_radio_packet,
                                                       &background_advertising_terminated,
-                                                      current_packet->ETA, tx_duration);
+                                                      current_packet->ETA, current_packet->tx_duration);
 
                 // To save time and guarantee to send the foreground frame within the guarded time,
                 // it should be optimal to prepare the foreground packet before the end of the
@@ -478,22 +473,34 @@ static void execute_cca()
     hw_radio_set_rx(&rx_cfg, NULL, &cca_rssi_valid);
 }
 
-uint16_t dll_calculate_tx_duration(phy_channel_class_t channel_class, uint8_t packet_length)
+uint16_t dll_calculate_tx_duration(phy_channel_class_t channel_class, phy_coding_t ch_coding, uint8_t packet_length)
 {
     double data_rate = 6.0; // Normal rate: 6.9 bytes/tick
+
+    if (ch_coding == PHY_CODING_FEC_PN9)
+        packet_length = fec_calculated_decoded_length(packet_length);
+
+    packet_length += sizeof(uint16_t); // Sync word
+
     switch (channel_class)
     {
     case PHY_CLASS_LO_RATE:
+        packet_length += PREAMBLE_LOW_RATE_CLASS;
         data_rate = 1.0; // Lo Rate 9.6 kbps: 1.2 bytes/tick
         break;
     case PHY_CLASS_NORMAL_RATE:
+        packet_length += PREAMBLE_NORMAL_RATE_CLASS;
         data_rate = 6.0; // Normal Rate 55.555 kbps: 6.94 bytes/tick
         break;
     case PHY_CLASS_HI_RATE:
+        packet_length += PREAMBLE_HI_RATE_CLASS;
         data_rate = 20.0; // High rate 166.667 kbps: 20.83 byte/tick
     }
 
+    // TODO Add the power ramp-up/ramp-down symbols in the packet length?
+
     uint16_t duration = ceil(packet_length / data_rate) + 1;
+    DPRINT("Transmission duration  %i", duration);
     return duration;
 }
 
@@ -503,14 +510,6 @@ static void execute_csma_ca()
     //hw_radio_set_rx(NULL, NULL, NULL); // put radio in RX but disable callbacks to make sure we don't receive packets when in this state
                                         // TODO use correct rx cfg + it might be interesting to switch to idle first depending on calculated offset
     // TODO select correct subband
-    uint8_t data_length;
-
-    if (current_channel_id.channel_header.ch_coding == PHY_CODING_FEC_PN9)
-        data_length = current_packet->hw_radio_packet.length * 2;
-    else
-        data_length = current_packet->hw_radio_packet.length;
-
-    uint16_t tx_duration = dll_calculate_tx_duration(current_channel_id.channel_header.ch_class, data_length);
 
     switch (dll_state)
     {
@@ -520,14 +519,14 @@ static void execute_csma_ca()
 
             if (current_packet->type == INITIAL_REQUEST || current_packet->type == SUBSEQUENT_REQUEST ||
                 current_packet->type == BACKGROUND_ADV)
-                transmission_timeout_ti = ceil((SFc + 1) * tx_duration + 5);
+                transmission_timeout_ti = ceil((SFc + 1) * current_packet->tx_duration + 5);
             // in case of response, use the Tc parameter provided in the request
             else
                 transmission_timeout_ti = CT_DECOMPRESS(current_packet->d7atp_tc);
 
-            dll_tca = transmission_timeout_ti - tx_duration;
+            dll_tca = transmission_timeout_ti - current_packet->tx_duration;
             dll_cca_started = timer_get_counter_value();
-            DPRINT("Tca= %i = %i - %i", dll_tca, transmission_timeout_ti, tx_duration);
+            DPRINT("Tca= %i = %i - %i", dll_tca, transmission_timeout_ti, current_packet->tx_duration);
 
             // Adjust TCA value according the time already elapsed since the reception time in case of response
             if (current_packet->request_received_timestamp)
@@ -564,13 +563,13 @@ static void execute_csma_ca()
                     break;
                 case CSMA_CA_MODE_AIND: // TODO implement AIND
                 {
-                    dll_slot_duration = tx_duration;
+                    dll_slot_duration = current_packet->tx_duration;
                     // no initial delay
                     break;
                 }
                 case CSMA_CA_MODE_RAIND: // TODO implement RAIND
                 {
-                    dll_slot_duration = tx_duration + t_g + 2*CCA_SETUP_TIME; // take time for executing CCA twice into account
+                    dll_slot_duration = current_packet->tx_duration + t_g + 2*CCA_SETUP_TIME; // take time for executing CCA twice into account
                                                                               // TODO currently 9.3 ms on EZR but might be improved. Refactor later
                     uint16_t max_nr_slots = dll_tca / dll_slot_duration;
 
@@ -637,8 +636,6 @@ static void execute_csma_ca()
                 case CSMA_CA_MODE_AIND:
                 case CSMA_CA_MODE_RAIND:
                 {
-                    dll_slot_duration = tx_duration + t_g + 2*CCA_SETUP_TIME;
-
                     uint16_t max_nr_slots = dll_tca / dll_slot_duration;
 
                     if (max_nr_slots)
@@ -921,26 +918,16 @@ void dll_tx_frame(packet_t* packet)
         /* use D7AAdvP if the receiver is engaged in ultra low power scan */
         if (tsched)
         {
-            uint16_t ttx;
-            uint8_t packet_length;
-
             packet->type = BACKGROUND_ADV;
             packet->hw_radio_packet.tx_meta.tx_cfg.syncword_class = PHY_SYNCWORD_CLASS0;
 
             // TADV = TSCHED + TTX (TTX is the duration for transmitting a single D7AAdvP frame)
-            if (current_access_profile.channel_header.ch_coding == PHY_CODING_FEC_PN9)
-                packet_length = BACKGROUND_FRAME_LENGTH * 2;
-            else
-                packet_length = BACKGROUND_FRAME_LENGTH;
+            packet->tx_duration = dll_calculate_tx_duration(current_access_profile.channel_header.ch_class,
+                                                            current_access_profile.channel_header.ch_coding,
+                                                            BACKGROUND_FRAME_LENGTH);
 
-            packet_length += sizeof(uint16_t) + (current_access_profile.channel_header.ch_class ==  PHY_CLASS_HI_RATE ? PREAMBLE_HI_RATE_CLASS : PREAMBLE_LOW_RATE_CLASS);
-
-            DPRINT("packet_length <%d> TSCHED %d", packet_length, CT_DECOMPRESS(current_access_profile.subprofiles[0].scan_automation_period));
-
-            ttx = dll_calculate_tx_duration(current_access_profile.channel_header.ch_class, packet_length);
-
-            packet->ETA = tsched + ttx;
-            DPRINT("First background frame contains ETA <%d> ttx %d", packet->ETA, ttx);
+            packet->ETA = tsched + packet->tx_duration;
+            DPRINT("First background frame contains ETA <%d> ttx %d", packet->ETA, packet->tx_duration);
         }
         else
             packet->hw_radio_packet.tx_meta.tx_cfg.syncword_class = PHY_SYNCWORD_CLASS1;
@@ -964,6 +951,13 @@ void dll_tx_frame(packet_t* packet)
     }
 
     packet_assemble(packet);
+
+    if (packet->type != BACKGROUND_ADV)
+    {
+        packet->tx_duration = dll_calculate_tx_duration(current_access_profile.channel_header.ch_class,
+                                                        current_access_profile.channel_header.ch_coding,
+                                                        packet->hw_radio_packet.length + 1);
+    }
 
     current_packet = packet;
 

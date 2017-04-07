@@ -297,7 +297,9 @@ error_t d7atp_send_request(uint8_t dialog_id, uint8_t transaction_id, bool is_la
         if (expected_response_length < 50)
             expected_response_length = 50;
 
-        uint16_t tx_duration_response = dll_calculate_tx_duration(active_addressee_access_profile.channel_header.ch_class, expected_response_length);
+        uint16_t tx_duration_response = dll_calculate_tx_duration(active_addressee_access_profile.channel_header.ch_class,
+                                                                  active_addressee_access_profile.channel_header.ch_coding,
+                                                                  expected_response_length);
         uint8_t nb = 1;
         if (packet->d7anp_addressee->ctrl.id_type == ID_TYPE_NOID)
             nb = 32;

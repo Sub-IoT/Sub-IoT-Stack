@@ -71,7 +71,7 @@ void dll_notify_dll_conf_file_changed();
 void dll_notify_access_profile_file_changed(); // TODO access specifier
 uint8_t dll_assemble_packet_header(packet_t* packet, uint8_t* data_ptr);
 bool dll_disassemble_packet_header(packet_t* packet, uint8_t* data_idx);
-uint16_t dll_calculate_tx_duration(phy_channel_class_t channel_class, uint8_t packet_length);
+uint16_t dll_calculate_tx_duration(phy_channel_class_t channel_class, phy_coding_t ch_coding, uint8_t packet_length);
 void dll_stop_background_scan();
 
 

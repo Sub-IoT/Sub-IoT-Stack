@@ -278,7 +278,7 @@ static void end_of_packet_isr()
                 DPRINT("BG packet received!");
                 uint8_t packet_len;
                 if (current_channel_id.channel_header.ch_coding == PHY_CODING_FEC_PN9)
-                    packet_len = BACKGROUND_FRAME_LENGTH * 2;
+                    packet_len = fec_calculated_decoded_length(BACKGROUND_FRAME_LENGTH);
                 else
                     packet_len = BACKGROUND_FRAME_LENGTH;
 
@@ -729,7 +729,7 @@ error_t hw_radio_start_background_scan(hw_rx_cfg_t const* rx_cfg, rx_packet_call
     cc1101_interface_write_single_reg(PKTCTRL0, RADIO_PKTCTRL0_WHITE_DATA | RADIO_PKTCTRL0_LENGTH_FIXED);
 
     if (current_channel_id.channel_header.ch_coding == PHY_CODING_FEC_PN9)
-        packet_len = BACKGROUND_FRAME_LENGTH * 2;
+        packet_len = fec_calculated_decoded_length(BACKGROUND_FRAME_LENGTH);
     else
         packet_len = BACKGROUND_FRAME_LENGTH;
 
