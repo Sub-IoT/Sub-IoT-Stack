@@ -46,7 +46,9 @@ typedef enum {
  */
 #define BACKGROUND_FRAME_LENGTH 6
 
-#define SFc		3 // Collision Avoidance Spreading Factor
+#define SFc    3 // Collision Avoidance Spreading Factor
+
+#define t_g    5 // Guarding period
 
 typedef struct packet packet_t;
 

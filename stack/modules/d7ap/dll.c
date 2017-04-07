@@ -76,17 +76,11 @@ static packet_t* NGDEF(_current_packet);
 static int16_t NGDEF(_dll_tca);
 #define dll_tca NG(_dll_tca)
 
-static int16_t NGDEF(_dll_tca0);
-#define dll_tca0 NG(_dll_tca0)
-
 static int16_t NGDEF(_dll_to);
 #define dll_to NG(_dll_to)
 
 static uint16_t NGDEF(_dll_slot_duration);
 #define dll_slot_duration NG(_dll_slot_duration)
-
-static uint16_t NGDEF(_dll_rigd_n);
-#define dll_rigd_n NG(_dll_rigd_n)
 
 static uint32_t NGDEF(_dll_cca_started);
 #define dll_cca_started NG(_dll_cca_started)
@@ -115,14 +109,6 @@ static int16_t NGDEF(_E_CCA);
 static uint16_t NGDEF(_tsched);
 #define tsched NG(_tsched)
 
-// TODO defined somewhere?
-#define t_g    5
-
-#ifdef USE_CC1101
-#define CCA_SETUP_TIME 5
-#else
-#define CCA_SETUP_TIME 2.5
-#endif
 
 static void execute_cca();
 static void execute_csma_ca();
@@ -506,27 +492,28 @@ uint16_t dll_calculate_tx_duration(phy_channel_class_t channel_class, phy_coding
 
 static void execute_csma_ca()
 {
-    // TODO generate random channel queue
-    //hw_radio_set_rx(NULL, NULL, NULL); // put radio in RX but disable callbacks to make sure we don't receive packets when in this state
-                                        // TODO use correct rx cfg + it might be interesting to switch to idle first depending on calculated offset
-    // TODO select correct subband
+    // TODO select Channel at front of the channel queue
 
     switch (dll_state)
     {
         case DLL_STATE_CSMA_CA_STARTED:
         {
-            uint16_t transmission_timeout_ti;
+            uint16_t dll_tc;
 
-            if (current_packet->type == INITIAL_REQUEST || current_packet->type == SUBSEQUENT_REQUEST ||
-                current_packet->type == BACKGROUND_ADV)
-                transmission_timeout_ti = ceil((SFc + 1) * current_packet->tx_duration + 5);
             // in case of response, use the Tc parameter provided in the request
+            if (current_packet->type == RESPONSE_TO_UNICAST || current_packet->type == RESPONSE_TO_BROADCAST)
+                dll_tc = CT_DECOMPRESS(current_packet->d7atp_tc);
             else
-                transmission_timeout_ti = CT_DECOMPRESS(current_packet->d7atp_tc);
+                dll_tc = ceil((SFc + 1) * current_packet->tx_duration + t_g);
 
-            dll_tca = transmission_timeout_ti - current_packet->tx_duration;
+            /*
+             * Tca = Tc - Ttx - Tg
+             * we substract also 1 tick to take into account also the switching
+             * time required in the transceiver.
+             */
+            dll_tca = dll_tc - current_packet->tx_duration - t_g - 1;
             dll_cca_started = timer_get_counter_value();
-            DPRINT("Tca= %i = %i - %i", dll_tca, transmission_timeout_ti, current_packet->tx_duration);
+            DPRINT("Tca= %i with Tc %i and Ttx %i", dll_tca, dll_tc, current_packet->tx_duration);
 
             // Adjust TCA value according the time already elapsed since the reception time in case of response
             if (current_packet->request_received_timestamp)
@@ -552,25 +539,19 @@ static void execute_csma_ca()
             else
                 csma_ca_mode = CSMA_CA_MODE_AIND;
 
-            // TODO overrule mode to UNC if the channel is still guarded
-            // This is valid for subsequent requests by the requester, or a single response to a unicast request
+            // TODO determine how to enable CSMA_CA_MODE_RIGD
 
             switch(csma_ca_mode)
             {
-                case CSMA_CA_MODE_UNC:
-                    // no delay
-                    dll_slot_duration = 0;
-                    break;
                 case CSMA_CA_MODE_AIND: // TODO implement AIND
                 {
+                    // no initial delay, t_offset = 0
                     dll_slot_duration = current_packet->tx_duration;
-                    // no initial delay
                     break;
                 }
-                case CSMA_CA_MODE_RAIND: // TODO implement RAIND
+                case CSMA_CA_MODE_RAIND:
                 {
-                    dll_slot_duration = current_packet->tx_duration + t_g + 2*CCA_SETUP_TIME; // take time for executing CCA twice into account
-                                                                              // TODO currently 9.3 ms on EZR but might be improved. Refactor later
+                    dll_slot_duration = current_packet->tx_duration;
                     uint16_t max_nr_slots = dll_tca / dll_slot_duration;
 
                     if (max_nr_slots)
@@ -579,17 +560,11 @@ static void execute_csma_ca()
                         t_offset = slots_wait * dll_slot_duration;
                         DPRINT("RAIND: slot %i of %i", slots_wait, max_nr_slots);
                     }
-                    else
-                    {
-                        t_offset = 0;
-                    }
                     break;
                 }
-                case CSMA_CA_MODE_RIGD: // TODO implement RAIND
+                case CSMA_CA_MODE_RIGD:
                 {
-                    dll_rigd_n = 0;
-                    dll_tca0 = dll_tca;
-                    dll_slot_duration = (uint16_t) ((double)dll_tca0) / (2 << (dll_rigd_n));
+                    dll_slot_duration = (uint16_t) ((double)dll_tca / 2 );
                     t_offset = get_rnd() % dll_slot_duration;
                     break;
                 }
@@ -599,7 +574,7 @@ static void execute_csma_ca()
 
             dll_to = dll_tca;
 
-            if (t_offset > 0)
+            if (t_offset)
             {
                 switch_state(DLL_STATE_CCA1);
                 timer_post_task_prio_delay(&execute_cca, t_offset, MAX_PRIORITY);
@@ -617,15 +592,17 @@ static void execute_csma_ca()
             int32_t cca_duration = timer_get_counter_value() - dll_cca_started;
             dll_to -= cca_duration;
 
-            if (dll_to < t_g)
+            if (dll_to <= 0)
             {
-                DPRINT("CCA fail because dll_to = %i < %i ", dll_to, t_g);
+                DPRINT("CCA fail because dll_to = %i", dll_to);
                 switch_state(DLL_STATE_CCA_FAIL);
                 sched_post_task_prio(&execute_csma_ca, MAX_PRIORITY);
                 break;
             }
 
-            DPRINT("RETRY dll_to = %i >= %i ", dll_to, t_g);
+            DPRINT("RETRY with dll_to = %i", dll_to);
+
+            // TODO shift channel queue
 
             dll_tca = dll_to;
             dll_cca_started = timer_get_counter_value();
@@ -642,35 +619,27 @@ static void execute_csma_ca()
                     {
                         uint16_t slots_wait = get_rnd() % max_nr_slots;
                         t_offset = slots_wait * dll_slot_duration;
-                        DPRINT("RAIND: slot %i of %i", slots_wait, max_nr_slots);
-                    }
-                    else
-                    {
-                        t_offset = 0;
+                        DPRINT("RAIND: wait %i slots of %i", slots_wait, max_nr_slots);
                     }
                     break;
                 }
                 case CSMA_CA_MODE_RIGD:
                 {
-                    dll_rigd_n++;
-                    dll_slot_duration = (uint16_t) ((double)dll_tca0) / (2 << (dll_rigd_n+1));
+                    dll_slot_duration >>= 1;
                     if (dll_slot_duration != 0) // TODO can be 0, validate
                         t_offset = get_rnd() % dll_slot_duration;
-                    else
-                        t_offset = 0;
 
-                    DPRINT("slot duration: %i", dll_slot_duration);
+                    DPRINT("RIGD: slot duration: %i", dll_slot_duration);
                     break;
                 }
             }
 
             DPRINT("t_offset: %i", t_offset);
 
-            dll_to = dll_tca;
-
-            if (t_offset > 0)
+            if (t_offset)
             {
-                timer_post_task_prio_delay(&execute_csma_ca, t_offset, MAX_PRIORITY);
+                switch_state(DLL_STATE_CCA1);
+                timer_post_task_prio_delay(&execute_cca, t_offset, MAX_PRIORITY);
             }
             else
             {
@@ -886,7 +855,8 @@ void dll_tx_frame(packet_t* packet)
          * By default, subprofile[0] is selected and subband[0] is used
          */
 
-        //TODO assert if no selectable subprofile can be found
+        // TODO generate random channel queue
+        // TODO assert if no selectable subprofile can be found
 
         /* EIRP (dBm) = (EIRP_I – 32) dBm */
 
@@ -1131,7 +1101,7 @@ bool dll_disassemble_packet_header(packet_t* packet, uint8_t* data_idx)
             crc = crc_calculate(id, address_len);
             DPRINT("Identifier Tag crc %04x, tag %x", crc, packet->dll_header.control_identifier_tag);
             /* Check that the tag corresponds to the 6 least significant bits of the CRC16 */
-            if (packet->dll_header.control_identifier_tag != (uint8_t)crc & 0x3F)
+            if (packet->dll_header.control_identifier_tag != ((uint8_t)crc & 0x3F))
             {
                 DPRINT("Identifier Tag filtering failed, skipping packet");
                 return false;

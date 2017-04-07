@@ -291,7 +291,6 @@ error_t d7atp_send_request(uint8_t dialog_id, uint8_t transaction_id, bool is_la
 
     if (ack_requested)
     {
-        // Tc(NB, LEN, CH) = ceil((SFC  * NB  + 1) * TTX(CH, LEN) + TG) with NB the number of concurrent devices and SF the collision Avoidance Spreading Factor
         // TODO payload length does not include headers ... + hardcoded subband
         // TODO this length does not include lower layers overhead for now, use a minimum len of 50 for now ...
         if (expected_response_length < 50)
@@ -306,11 +305,11 @@ error_t d7atp_send_request(uint8_t dialog_id, uint8_t transaction_id, bool is_la
         else if (packet->d7anp_addressee->ctrl.id_type == ID_TYPE_NBID)
             nb = CT_DECOMPRESS(packet->d7anp_addressee->id[0]);
 
-        uint16_t resp_tc = (3 * nb + 1) * tx_duration_response + 5;
-        DPRINT("resp Tc=%i Tx duration %d", resp_tc, tx_duration_response);
-
+        // Tc(NB, LEN, CH) = ceil((SFC  * NB  + 1) * TTX(CH, LEN) + TG) with NB the number of concurrent devices and SF the collision Avoidance Spreading Factor
+        uint16_t resp_tc = (SFc * nb + 1) * tx_duration_response + t_g;
         packet->d7atp_tc = compress_data(resp_tc, true);
-        DPRINT("packet->d7atp_tc 0x%02x (CT)", packet->d7atp_tc);
+
+        DPRINT("Tc <%i (Ti)> Tc <0x%02x (CT)> Tx duration <%i>", resp_tc, packet->d7atp_tc, tx_duration_response);
     }
 
 send_packet:
