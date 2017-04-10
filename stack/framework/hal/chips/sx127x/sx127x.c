@@ -80,8 +80,9 @@ typedef enum {
  * - packets > 64 bytes
  * - FEC
  * - background frames
- * - RSSI during reception
- * - RSSI (CCA)
+ * - validate RSSI measurement (CCA)
+ * - after CCA chip does not seem to go into TX
+ * - research if it has advantages to use chip's top level sequencer
  */
 
 static spi_slave_handle_t* sx127x_spi = NULL;
@@ -303,6 +304,10 @@ static inline void flush_fifo() {
   write_reg(REG_IRQFLAGS2, 0x10);
 }
 
+static inline int16_t get_rssi() {
+  return - read_reg(REG_RSSIVALUE) / 2;
+}
+
 static void fifo_threshold_isr(pin_id_t pin_id, uint8_t event_mask) {
   // TODO might be optimized. Initial plan was to read length byte and reconfigure threshold
   // based on the expected length so we can wait for next interrupt to read remaining bytes.
@@ -335,7 +340,7 @@ static void fifo_threshold_isr(pin_id_t pin_id, uint8_t event_mask) {
     current_packet->rx_meta.timestamp = timer_get_counter_value();
     current_packet->rx_meta.rx_cfg.syncword_class = current_syncword_class;
     current_packet->rx_meta.crc_status = HW_CRC_UNAVAILABLE;
-    current_packet->rx_meta.rssi = - read_reg(REG_RSSIVALUE) / 2;
+    current_packet->rx_meta.rssi = get_rssi();
     current_packet->rx_meta.lqi = 0; // TODO
     memcpy(&(current_packet->rx_meta.rx_cfg.channel_id), &current_channel_id, sizeof(channel_id_t));
     pn9_encode(current_packet->data, current_packet->length + 1);
@@ -357,16 +362,16 @@ static void fifo_threshold_isr(pin_id_t pin_id, uint8_t event_mask) {
 
 static void configure_syncword(syncword_class_t syncword_class, phy_coding_t ch_coding)
 {
-    if((syncword_class != current_syncword_class) || (ch_coding != current_channel_id.channel_header.ch_coding))
-    {
-        current_syncword_class = syncword_class;
-        // TODO set
-        uint16_t sync_word = sync_word_value[syncword_class][ch_coding];
+  if((syncword_class != current_syncword_class) || (ch_coding != current_channel_id.channel_header.ch_coding))
+  {
+    current_syncword_class = syncword_class;
+    // TODO set
+    uint16_t sync_word = sync_word_value[syncword_class][ch_coding];
 
-        DPRINT("sync_word = %04x", sync_word);
-        write_reg(REG_SYNCVALUE2, sync_word & 0xFF);
-        write_reg(REG_SYNCVALUE1, sync_word >> 8);
-    }
+    DPRINT("sync_word = %04x", sync_word);
+    write_reg(REG_SYNCVALUE2, sync_word & 0xFF);
+    write_reg(REG_SYNCVALUE1, sync_word >> 8);
+  }
 }
 
 static void start_rx(hw_rx_cfg_t const* rx_cfg) {
@@ -379,9 +384,8 @@ static void start_rx(hw_rx_cfg_t const* rx_cfg) {
   DEBUG_RX_START();
 
   if(rx_packet_callback != 0) {
-    assert(hw_gpio_enable_interrupt(SX127x_DIO1_PIN) == SUCCESS);
+    hw_gpio_enable_interrupt(SX127x_DIO1_PIN);
   } else {
-    assert(false); // TODO tmp
     // when rx callback not set we ignore received packets
     hw_gpio_disable_interrupt(SX127x_DIO1_PIN);
     // TODO disable packet handler completely in this case?
@@ -394,7 +398,11 @@ static void start_rx(hw_rx_cfg_t const* rx_cfg) {
 
   if(rssi_valid_callback != 0)
   {
-      assert(false); // TODO
+    while(!(read_reg(REG_IRQFLAGS1) & 0x08)) {
+      // wait for RxReady signal
+    }
+
+    rssi_valid_callback(get_rssi());
   }
 }
 
@@ -472,9 +480,11 @@ error_t hw_radio_send_packet(hw_radio_packet_t* packet, tx_packet_callback_t tx_
   DPRINT("TX len=%i", packet->length);
   DPRINT_DATA(packet->data, packet->length + 1);
   pn9_encode(packet->data, packet->length + 1); // sx127x does not support PN9 whitening in hardware ...
+  flush_fifo();
   write_fifo(packet->data, packet->length + 1);
   state = STATE_TX;
   set_opmode(OPMODE_TX);
+  return SUCCESS; // TODO other return codes
 }
 
 error_t hw_radio_send_background_packet(hw_radio_packet_t* packet, tx_packet_callback_t tx_callback, uint16_t eta, uint16_t tx_duration) {
