@@ -82,8 +82,10 @@ static rx_packet_callback_t rx_packet_callback;
 static tx_packet_callback_t tx_packet_callback;
 static state_t state = STATE_IDLE;
 static hw_radio_packet_t* current_packet;
+static uint8_t current_packet_data_offset = 0;
 static rssi_valid_callback_t rssi_valid_callback;
 static bool should_rx_after_tx_completed = false;
+static syncword_class_t current_syncword_class = PHY_SYNCWORD_CLASS0;
 static hw_rx_cfg_t pending_rx_cfg;
 static channel_id_t current_channel_id = {
   .channel_header.ch_coding = PHY_CODING_PN9,
@@ -283,16 +285,52 @@ static void packet_transmitted_isr(pin_id_t pin_id, uint8_t event_mask) {
   }
 }
 
+static inline void flush_fifo() {
+  write_reg(REG_IRQFLAGS2, 0x10);
+}
+
 static void fifo_threshold_isr(pin_id_t pin_id, uint8_t event_mask) {
+  // TODO might be optimized. Initial plan was to read length byte and reconfigure threshold
+  // based on the expected length so we can wait for next interrupt to read remaining bytes.
+  // This doesn't seem to work for now however: the interrupt doesn't fire again for some unclear reason.
+  // So now we do it as suggest in the datasheet: reading bytes from FIFO until FifoEmpty flag is set.
+  // Reading more bytes at once might be more efficient, however getting the number of bytes in the FIFO seems
+  // not possible.
   hw_gpio_disable_interrupt(SX127x_DIO1_PIN);
   DPRINT("fifo threshold detected ISR\n");
+  read_reg(REG_IRQFLAGS2);
   assert(state == STATE_RX);
 
   uint8_t packet_len = read_reg(REG_FIFO);
-  pn9_encode(&packet_len, 1);
   DPRINT("rx packet len=%i\n", packet_len);
-  // TODO receive packet. This has to be handled in software since hardware data whitening support
-  // is not compatible with PN9, so packet handler cannot decode length byte.
+  current_packet = alloc_packet_callback(packet_len);
+  current_packet->length = packet_len;
+  current_packet_data_offset = 1;
+  pn9_encode(&packet_len, 1); // decode only packet_len for now so we now how many bytes to receive.
+                              // the full packet is decoded at once, when completely received
+                              // note that current_packet->length contains the coded version for now
+  do {
+    current_packet->data[current_packet_data_offset] = read_reg(REG_FIFO);
+    current_packet_data_offset++;
+  } while(!hw_gpio_get_in(SX127x_DIO3_PIN) && current_packet_data_offset < packet_len + 1); //while(!(read_reg(REG_IRQFLAGS2) & 0x40) && current_packet_data_offset < packet_len + 1);
+
+  uint8_t remaining = (packet_len + 1) - current_packet_data_offset;
+  DPRINT("read %i bytes, %i remaining\n", current_packet_data_offset, remaining);
+
+  if(remaining == 0) {
+    current_packet->rx_meta.timestamp = timer_get_counter_value();
+    current_packet->rx_meta.rx_cfg.syncword_class = current_syncword_class;
+    current_packet->rx_meta.crc_status = HW_CRC_UNAVAILABLE;
+    // TODO RSSI, LQI
+    memcpy(&(current_packet->rx_meta.rx_cfg.channel_id), &current_channel_id, sizeof(channel_id_t));
+    pn9_encode(current_packet->data, current_packet->length + 1);
+    DPRINT_DATA(current_packet->data, current_packet->length + 1);
+    DPRINT("RX done\n");
+    flush_fifo();
+    rx_packet_callback(current_packet);
+  }
+
+  hw_gpio_enable_interrupt(SX127x_DIO1_PIN);
 }
 
 //static void reset() {
@@ -302,15 +340,25 @@ static void fifo_threshold_isr(pin_id_t pin_id, uint8_t event_mask) {
 //  hw_busy_wait(6000);
 //}
 
-static inline void flush_fifo() {
-  write_reg(REG_IRQFLAGS2, 0x10);
+static void configure_syncword(syncword_class_t syncword_class, phy_coding_t ch_coding)
+{
+    if((syncword_class != current_syncword_class) || (ch_coding != current_channel_id.channel_header.ch_coding))
+    {
+        current_syncword_class = syncword_class;
+        // TODO set
+//        uint16_t sync_word = sync_word_value[syncword_class][ch_coding];
+
+//        DPRINT("sync_word = %04x", sync_word);
+//        cc1101_interface_write_single_reg(SYNC0, sync_word & 0xFF);
+//        cc1101_interface_write_single_reg(SYNC1, sync_word >> 8);
+    }
 }
 
 static void start_rx(hw_rx_cfg_t const* rx_cfg) {
   state = STATE_RX;
 
   set_channel(&(rx_cfg->channel_id));
-  // TODO configure_syncword(rx_cfg->syncword_class, rx_cfg->channel_id.channel_header.ch_coding);
+  configure_syncword(rx_cfg->syncword_class, rx_cfg->channel_id.channel_header.ch_coding);
 
   DPRINT("START FG scan @ %i", timer_get_counter_value());
   DEBUG_RX_START();
@@ -325,6 +373,7 @@ static void start_rx(hw_rx_cfg_t const* rx_cfg) {
   }
 
   flush_fifo();
+  current_packet_data_offset = 0;
   set_opmode(OPMODE_RX);
 
 

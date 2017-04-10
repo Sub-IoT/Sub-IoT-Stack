@@ -55,6 +55,7 @@ void __platform_init()
     // specific and not part of the common HAL API
     hw_gpio_configure_pin(SX127x_DIO0_PIN, true, gpioModeInputPull, 0);
     hw_gpio_configure_pin(SX127x_DIO1_PIN, true, gpioModeInputPull, 0);
+    hw_gpio_configure_pin(SX127x_DIO3_PIN, true, gpioModeInputPull, 0);
     hw_gpio_configure_pin(SX127x_RESET_PIN, false, gpioModePushPull, 1);
 #endif
     __hw_debug_init();

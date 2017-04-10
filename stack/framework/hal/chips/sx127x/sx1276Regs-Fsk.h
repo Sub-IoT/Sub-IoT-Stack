@@ -104,6 +104,7 @@ Maintainer: Miguel Luis and Gregory Cristian
 #define REG_NODEADRS                                0x33
 #define REG_BROADCASTADRS                           0x34
 #define REG_FIFOTHRESH                              0x35
+#define REG_FIFOTHRESH_MASK_FIFOTHR                 0x3F
 // SM settings
 #define REG_SEQCONFIG1                              0x36
 #define REG_SEQCONFIG2                              0x37
