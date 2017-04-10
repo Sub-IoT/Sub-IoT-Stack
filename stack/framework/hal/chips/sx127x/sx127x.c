@@ -75,6 +75,15 @@ typedef enum {
   STATE_RX
 } state_t;
 
+/*
+ * TODO:
+ * - packets > 64 bytes
+ * - FEC
+ * - background frames
+ * - RSSI during reception
+ * - RSSI (CCA)
+ */
+
 static spi_slave_handle_t* sx127x_spi = NULL;
 static alloc_packet_callback_t alloc_packet_callback;
 static release_packet_callback_t release_packet_callback;
