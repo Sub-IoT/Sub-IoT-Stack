@@ -335,7 +335,8 @@ static void fifo_threshold_isr(pin_id_t pin_id, uint8_t event_mask) {
     current_packet->rx_meta.timestamp = timer_get_counter_value();
     current_packet->rx_meta.rx_cfg.syncword_class = current_syncword_class;
     current_packet->rx_meta.crc_status = HW_CRC_UNAVAILABLE;
-    // TODO RSSI, LQI
+    current_packet->rx_meta.rssi = - read_reg(REG_RSSIVALUE) / 2;
+    current_packet->rx_meta.lqi = 0; // TODO
     memcpy(&(current_packet->rx_meta.rx_cfg.channel_id), &current_channel_id, sizeof(channel_id_t));
     pn9_encode(current_packet->data, current_packet->length + 1);
     DPRINT_DATA(current_packet->data, current_packet->length + 1);
