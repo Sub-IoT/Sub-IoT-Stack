@@ -103,6 +103,11 @@ static channel_id_t current_channel_id = {
   .center_freq_index = 0
 };
 
+const uint16_t sync_word_value[2][4] = {
+    { 0xE6D0, 0x0000, 0xF498, 0x0000 },
+    { 0x0B67, 0x0000, 0x192F, 0x0000 }
+};
+
 static uint8_t read_reg(uint8_t addr) {
   spi_select(sx127x_spi);
   spi_exchange_byte(sx127x_spi, addr & 0x7F); // send address with bit 7 low to signal a read operation
@@ -355,11 +360,11 @@ static void configure_syncword(syncword_class_t syncword_class, phy_coding_t ch_
     {
         current_syncword_class = syncword_class;
         // TODO set
-//        uint16_t sync_word = sync_word_value[syncword_class][ch_coding];
+        uint16_t sync_word = sync_word_value[syncword_class][ch_coding];
 
-//        DPRINT("sync_word = %04x", sync_word);
-//        cc1101_interface_write_single_reg(SYNC0, sync_word & 0xFF);
-//        cc1101_interface_write_single_reg(SYNC1, sync_word >> 8);
+        DPRINT("sync_word = %04x", sync_word);
+        write_reg(REG_SYNCVALUE2, sync_word & 0xFF);
+        write_reg(REG_SYNCVALUE1, sync_word >> 8);
     }
 }
 
