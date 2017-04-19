@@ -294,6 +294,7 @@ static void packet_transmitted_isr(pin_id_t pin_id, uint8_t event_mask) {
   assert(state == STATE_TX);
 
   set_opmode(OPMODE_STANDBY);
+  state = STATE_IDLE;
   if(tx_packet_callback) {
     current_packet->tx_meta.timestamp = timer_get_counter_value();
     tx_packet_callback(current_packet);
@@ -477,13 +478,18 @@ error_t hw_radio_send_packet(hw_radio_packet_t* packet, tx_packet_callback_t tx_
   tx_packet_callback = tx_callback;
   current_packet = packet;
   hw_gpio_enable_interrupt(SX127x_DIO0_PIN);
+  // sx127x does not support PN9 whitening in hardware ...
+  // copy the packet so we do not encode original packet->data
+  uint8_t encoded_packet[256];
+  memcpy(encoded_packet, packet->data, packet->length + 1);
   DPRINT("TX len=%i", packet->length);
   DPRINT_DATA(packet->data, packet->length + 1);
-  pn9_encode(packet->data, packet->length + 1); // sx127x does not support PN9 whitening in hardware ...
+  pn9_encode(encoded_packet, packet->length + 1);
   flush_fifo();
-  write_fifo(packet->data, packet->length + 1);
   state = STATE_TX;
   set_opmode(OPMODE_TX);
+  write_fifo(encoded_packet, packet->length + 1);
+
   return SUCCESS; // TODO other return codes
 }
 
