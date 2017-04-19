@@ -407,6 +407,28 @@ static void start_rx(hw_rx_cfg_t const* rx_cfg) {
   }
 }
 
+static void calibrate_rx_chain() {
+  DPRINT("Calibrating RX chain");
+  // TODO currently assumes to be called on boot only
+  uint8_t regPaConfigInitVal;
+  uint32_t initialFreq;
+
+  // Cut the PA just in case, RFO output, power = -1 dBm
+  write_reg(REG_PACONFIG, 0x00);
+
+  // Launch Rx chain calibration for LF band
+  write_reg(REG_IMAGECAL, (read_reg(REG_IMAGECAL) & RF_IMAGECAL_IMAGECAL_MASK) | RF_IMAGECAL_IMAGECAL_START);
+  while((read_reg(REG_IMAGECAL) & RF_IMAGECAL_IMAGECAL_RUNNING) == RF_IMAGECAL_IMAGECAL_RUNNING) {
+  }
+
+  set_center_freq(&current_channel_id);   // Sets a Frequency in HF band
+
+  // Launch Rx chain calibration for HF band
+  write_reg(REG_IMAGECAL, (read_reg(REG_IMAGECAL) & RF_IMAGECAL_IMAGECAL_MASK) | RF_IMAGECAL_IMAGECAL_START);
+  while((read_reg(REG_IMAGECAL) & RF_IMAGECAL_IMAGECAL_RUNNING) == RF_IMAGECAL_IMAGECAL_RUNNING) {
+  }
+}
+
 error_t hw_radio_init(alloc_packet_callback_t alloc_packet_cb, release_packet_callback_t release_packet_cb) {
   //reset();
 
@@ -422,11 +444,11 @@ error_t hw_radio_init(alloc_packet_callback_t alloc_packet_cb, release_packet_ca
   spi_handle_t* spi_handle = spi_init(SX127x_SPI_USART, SX127x_SPI_BAUDRATE, 8, true, SX127x_SPI_LOCATION);
   sx127x_spi = spi_init_slave(spi_handle, SX127x_SPI_PIN_CS, true);
 
+  calibrate_rx_chain();
   init_regs();
   set_opmode(OPMODE_STANDBY); // TODO sleep
   // TODO reset ?
   // TODO op mode
-  // TODO calibrate rx chain
 
   error_t e;
   e = hw_gpio_configure_interrupt(SX127x_DIO0_PIN, &packet_transmitted_isr, GPIO_RISING_EDGE); assert(e == SUCCESS);
