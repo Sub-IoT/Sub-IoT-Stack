@@ -244,6 +244,19 @@ __LINK_C error_t hw_gpio_enable_interrupt(pin_id_t pin_id);
  **/
 __LINK_C error_t hw_gpio_disable_interrupt(pin_id_t pin_id);
 
+/*! \brief Set the interrupt edge for a specific GPIO pin.
+ *
+ * \param pin_id	The GPIO pin for which to set the interrupt edge
+ * \param edge      A bitmask of the events that should be captured. The event_mask can
+ *			        be one of three values:
+ *			  - 0: no events will be captured
+ *			  - GPIO_RISING_EDGE: capture rising edge events only
+ *			  - GPIO_FALLING_EDGE: capture falling edge events only
+ *			  - (GPIO_RISING_EDGE | GPIO_FALLING_EDGE): capture both rising and falling edge events.
+ * \return error_t	SUCCESS if the interrupt was set successfully
+ **/
+__LINK_C error_t hw_gpio_set_edge_interrupt(pin_id_t pin_id, uint8_t edge);
+
 /*! \brief Configure a specific GPIO pin of the MCU for use
  *
  * This function is mainly intended to allow platform-specific initialization code to

@@ -38,8 +38,9 @@
 
 // functions to be defined which contain CC1101 or CC430 specific implementation
 // implementation is in cc1101_interface_spi.c for cc1101 or cc1101_interface_cc430.c for cc430.
-extern void _cc1101_interface_init(end_of_packet_isr_t end_of_packet_isr_cb);
-extern void _c1101_interface_set_interrupts_enabled(bool);
+extern void _cc1101_interface_init(end_of_packet_isr_t end_of_packet_isr_cb, fifo_thr_isr_t fifo_threshold_isr_cb);
+extern void _c1101_interface_set_interrupts_enabled(cc1101_gdOx_t, bool);
+extern void _c1101_interface_set_edge_interrupt(cc1101_gdOx_t, uint8_t);
 extern uint8_t _c1101_interface_strobe(uint8_t);
 extern uint8_t _c1101_interface_reset_radio_core();
 extern uint8_t _c1101_interface_read_single_reg(uint8_t);
@@ -50,14 +51,19 @@ extern void _c1101_interface_write_single_patable(uint8_t);
 extern void _c1101_interface_write_burst_patable(uint8_t*, uint8_t);
 
 
-void cc1101_interface_init(end_of_packet_isr_t end_of_packet_isr_cb)
+void cc1101_interface_init(end_of_packet_isr_t end_of_packet_isr_cb, fifo_thr_isr_t fifo_threshold_isr_cb)
 {
-    _cc1101_interface_init(end_of_packet_isr_cb);
+    _cc1101_interface_init(end_of_packet_isr_cb, fifo_threshold_isr_cb);
 }
 
-void cc1101_interface_set_interrupts_enabled(bool enabled)
+void cc1101_interface_set_interrupts_enabled(cc1101_gdOx_t gdOx, bool enabled)
 {
-    _c1101_interface_set_interrupts_enabled(enabled);
+    _c1101_interface_set_interrupts_enabled(gdOx, enabled);
+}
+
+void c1101_interface_set_edge_interrupt(cc1101_gdOx_t gdOx, uint8_t edge)
+{
+    _c1101_interface_set_edge_interrupt(gdOx, edge);
 }
 
 // *************************************************************************************************

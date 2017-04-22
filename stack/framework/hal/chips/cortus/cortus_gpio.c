@@ -29,7 +29,7 @@
 #include "machine/ic.h"
 #include "machine/gpio.h"
 #include "machine/capint.h"
-
+#include <machine/cpu.h>
 
 #define NUM_GPIOINT 16  // GPIO1 is only available for gpio interrupts.
 
@@ -98,16 +98,17 @@ __LINK_C bool hw_gpio_get_in(pin_id_t pin_id)
 void interrupt_handler(IRQ_GPIO1)
 {
     uint8_t event_mask = 0; // This is a dummy var for compatible outline of call function.
-    uint32_t inreg, old_inreg, i;
+    uint32_t inreg, old_inreg, mask, i;
     GPio *TGpio = (GPio*) SFRADR_GPIO1;
     inreg       = TGpio->in;
     old_inreg   = TGpio->old_in;
+    mask        = TGpio->mask;
     pin_id_t tmp_pin_id;
 
     tmp_pin_id.port = SFRADR_GPIO1;
     for(i=0; i<NUM_GPIOINT; i++)
     {
-        if(gpio_callback[i] != 0x00)
+        if((gpio_callback[i] != 0x00) && (mask & 0x01))
         {
             if( (inreg&0x01) != (old_inreg&0x01) )
             {
@@ -119,6 +120,7 @@ void interrupt_handler(IRQ_GPIO1)
 
         inreg       >>= 1;
         old_inreg   >>= 1;
+        mask        >>= 1;
     }
 
     //capint0->mode = 3;   // negative edge
@@ -133,10 +135,8 @@ __LINK_C error_t hw_gpio_configure_interrupt(pin_id_t pin_id, gpio_inthandler_t 
     start_atomic();
     GPio *TGpio                 =   (GPio*) SFRADR_GPIO1;
     gpio_callback[pin_id.pin]   =   callback;
-    //TGpio->dir                  &=  (0x0ffffffff ^ (1 << pin_id.pin));  // mode ==> 0:input 1:output
     TGpio->old_in               &=  (0x0ffffffff ^ (1 << pin_id.pin));
     TGpio->old_in               |=  ((event_mask-1) << pin_id.pin); // RISING:1, FALLING:2
-    //TGpio->mask                 |=  (1<<pin_id.pin);
     
     if(event_mask == 1)
         capint0->mode = 2;  // positive edge
@@ -161,7 +161,7 @@ __LINK_C error_t hw_gpio_enable_interrupt(pin_id_t pin_id)
     TGpio->mask |= (1<<pin_id.pin);
 
     // capint module setting
-    if (pin_id.port == gpioPortA && pin_id.pin == 0)
+    if (pin_id.port == gpioPortA)
     {
        //capint0->mode = 3;   // negative edge
        capint0->status = 0;
@@ -180,11 +180,29 @@ __LINK_C error_t hw_gpio_disable_interrupt(pin_id_t pin_id)
     TGpio->mask  &= (0x0ffffffff ^ (1<<pin_id.pin));
 
     // capint module setting
-    if (pin_id.port == gpioPortA && pin_id.pin == 0)
+    if (pin_id.port == gpioPortA)
     {
        capint0->mask = 0;
        capint0->status = 0;
     }
+    end_atomic();
+
+    return SUCCESS;
+}
+
+__LINK_C error_t hw_gpio_set_edge_interrupt(pin_id_t pin_id, uint8_t edge)
+{
+    GPio *TGpio = (GPio*) pin_id.port;
+
+    start_atomic();
+    TGpio->old_in &=  (0x0ffffffff ^ (1 << pin_id.pin));
+    TGpio->old_in |=  ((edge-1) << pin_id.pin); // RISING:1, FALLING:2
+
+    if(edge == 1)
+        capint0->mode = 2;  // positive edge
+    else if(edge == 2)
+        capint0->mode = 3;  // negative edge
+
     end_atomic();
 
     return SUCCESS;

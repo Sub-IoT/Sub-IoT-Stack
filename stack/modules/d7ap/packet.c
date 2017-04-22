@@ -24,6 +24,8 @@
 #include "fec.h"
 #include "MODULE_D7AP_defs.h"
 
+#include "debug.h"
+
 #if defined(FRAMEWORK_LOG_ENABLED) && defined(MODULE_D7AP_FWK_LOG_ENABLED)
 #define DPRINT_FWK(...) log_print_stack_string(LOG_STACK_FWK, __VA_ARGS__)
 #else
@@ -52,12 +54,11 @@ void packet_init(packet_t* packet)
 void packet_assemble(packet_t* packet)
 {
     uint8_t* data_ptr = packet->hw_radio_packet.data + 1; // skip length field for now, we fill this later
-    bool background_frame = (packet->hw_radio_packet.tx_meta.tx_cfg.syncword_class == PHY_SYNCWORD_CLASS0);
     uint8_t* nwl_payload;
 
-    data_ptr += dll_assemble_packet_header(packet, data_ptr, background_frame);
+    data_ptr += dll_assemble_packet_header(packet, data_ptr);
 
-    if (!background_frame)
+    if (packet->type != BACKGROUND_ADV)
     {
         data_ptr += d7anp_assemble_packet_header(packet, data_ptr);
         nwl_payload = data_ptr;
@@ -71,14 +72,27 @@ void packet_assemble(packet_t* packet)
         if (packet->d7anp_ctrl.nls_method)
             data_ptr += d7anp_secure_payload(packet, nwl_payload, data_ptr - nwl_payload);
     }
+    else
+    {
+        // add ETA for background frames
+        uint16_t eta = __builtin_bswap16(packet->ETA);
+        memcpy(data_ptr, &eta, sizeof(uint16_t));
+        data_ptr += sizeof(uint16_t);
+    }
 
     packet->hw_radio_packet.length = data_ptr - packet->hw_radio_packet.data - 1 + 2; // exclude the length byte and add CRC bytes
     packet->hw_radio_packet.data[0] = packet->hw_radio_packet.length;
 
     // TODO network protocol footer
 
-    // add CRC - SW CRC when using FEC
-    if (!has_hardware_crc || packet->hw_radio_packet.tx_meta.tx_cfg.channel_id.channel_header.ch_coding == PHY_CODING_FEC_PN9)
+    // add CRC - SW CRC when using FEC or when the packet is a background frame
+    if (packet->type == BACKGROUND_ADV)
+    {
+        uint16_t crc = __builtin_bswap16(crc_calculate(packet->hw_radio_packet.data + 1, packet->hw_radio_packet.length - 2));
+        memcpy(data_ptr, &crc, 2);
+    }
+    else if (!has_hardware_crc ||
+              packet->hw_radio_packet.tx_meta.tx_cfg.channel_id.channel_header.ch_coding == PHY_CODING_FEC_PN9)
     {
         uint16_t crc = __builtin_bswap16(crc_calculate(packet->hw_radio_packet.data, packet->hw_radio_packet.length + 1 - 2));
         memcpy(data_ptr, &crc, 2);
@@ -88,11 +102,15 @@ void packet_assemble(packet_t* packet)
 
 void packet_disassemble(packet_t* packet)
 {
-    bool background_frame = (packet->hw_radio_packet.rx_meta.rx_cfg.syncword_class == PHY_SYNCWORD_CLASS0);
 
     if (packet->hw_radio_packet.rx_meta.crc_status == HW_CRC_UNAVAILABLE)
     {
-        uint16_t crc = __builtin_bswap16(crc_calculate(packet->hw_radio_packet.data, packet->hw_radio_packet.length + 1 - 2));
+        uint16_t crc;
+        // The length byte is not transmitted in the background frame. Therefore, this byte is not included in the CRC computation
+        if (packet->type == BACKGROUND_ADV)
+            crc = __builtin_bswap16(crc_calculate(packet->hw_radio_packet.data + 1 , packet->hw_radio_packet.length - 2));
+        else
+            crc = __builtin_bswap16(crc_calculate(packet->hw_radio_packet.data, packet->hw_radio_packet.length + 1 - 2));
         if(memcmp(&crc, packet->hw_radio_packet.data + packet->hw_radio_packet.length + 1 - 2, 2) != 0)
         {
             DPRINT_DLL("CRC invalid");
@@ -107,26 +125,37 @@ void packet_disassemble(packet_t* packet)
 
     uint8_t data_idx = 1;
 
-    if(!dll_disassemble_packet_header(packet, &data_idx, background_frame))
+    if(!dll_disassemble_packet_header(packet, &data_idx))
         goto cleanup;
 
-    if (!background_frame)
+    if (packet->type != BACKGROUND_ADV)
     {
         if(!d7anp_disassemble_packet_header(packet, &data_idx))
             goto cleanup;
 
         if(!d7atp_disassemble_packet_header(packet, &data_idx))
             goto cleanup;
+
+        // extract payload
+        packet->payload_length = packet->hw_radio_packet.length + 1 - data_idx - 2; // exclude the headers CRC bytes // TODO exclude footers
+        memcpy(packet->payload, packet->hw_radio_packet.data + data_idx, packet->payload_length);
+    }
+    else
+    {
+        // extract ETA for background frames
+        uint16_t eta;
+        packet->payload_length = packet->hw_radio_packet.length + 1 - data_idx - 2; // exclude the headers CRC bytes // TODO exclude footers
+        assert(packet->payload_length == sizeof(uint16_t));
+
+        memcpy(&eta, packet->hw_radio_packet.data + data_idx, packet->payload_length);
+        packet->ETA = __builtin_bswap16(eta);
     }
     // TODO footers
 
-    // extract payload
-    packet->payload_length = packet->hw_radio_packet.length + 1 - data_idx - 2; // exclude the headers CRC bytes // TODO exclude footers
-    memcpy(packet->payload, packet->hw_radio_packet.data + data_idx, packet->payload_length);
 
     DPRINT_FWK("Done disassembling packet");
 
-    d7anp_process_received_packet(packet, background_frame);
+    d7anp_process_received_packet(packet);
 
     return;
 

@@ -28,6 +28,8 @@
 #include "em_chip.h"
 #include "platform.h"
 
+#define INT_PRIO_HIGH 1
+#define INT_PRIO_LOW 2
 
 void __ezr32lg_mcu_init()
 {
@@ -51,5 +53,46 @@ void __ezr32lg_mcu_init()
 #endif
 
     uint32_t hf = CMU_ClockFreqGet(cmuClock_HF);
-}
 
+    // set interrupt priorities, mainly to ensure USART IO has highest prio (after exceptions), to prevent RF overflow.
+    // This is system wide for now.
+    NVIC_SetPriorityGrouping(0); // only use preempt priorities, no subpriorities
+    NVIC_SetPriority(SysTick_IRQn, INT_PRIO_LOW);
+    NVIC_SetPriority(DMA_IRQn, INT_PRIO_LOW);
+    NVIC_SetPriority(GPIO_EVEN_IRQn, INT_PRIO_LOW);
+    NVIC_SetPriority(TIMER0_IRQn, INT_PRIO_LOW);
+    NVIC_SetPriority(USARTRF0_RX_IRQn, INT_PRIO_LOW);
+    NVIC_SetPriority(USARTRF0_TX_IRQn, INT_PRIO_LOW);
+    NVIC_SetPriority(USB_IRQn, INT_PRIO_HIGH);
+    NVIC_SetPriority(ACMP0_IRQn, INT_PRIO_LOW);
+    NVIC_SetPriority(ADC0_IRQn, INT_PRIO_LOW);
+    NVIC_SetPriority(DAC0_IRQn, INT_PRIO_LOW);
+    NVIC_SetPriority(I2C0_IRQn, INT_PRIO_LOW);
+    NVIC_SetPriority(I2C1_IRQn, INT_PRIO_LOW);
+    NVIC_SetPriority(GPIO_ODD_IRQn, INT_PRIO_LOW);
+    NVIC_SetPriority(TIMER1_IRQn, INT_PRIO_LOW);
+    NVIC_SetPriority(TIMER2_IRQn, INT_PRIO_LOW);
+    NVIC_SetPriority(TIMER3_IRQn, INT_PRIO_LOW);
+    NVIC_SetPriority(USART1_RX_IRQn, INT_PRIO_HIGH);
+    NVIC_SetPriority(USART1_TX_IRQn, INT_PRIO_HIGH);
+    NVIC_SetPriority(LESENSE_IRQn, INT_PRIO_LOW);
+    NVIC_SetPriority(USART2_RX_IRQn, INT_PRIO_HIGH);
+    NVIC_SetPriority(USART2_TX_IRQn, INT_PRIO_HIGH);
+    NVIC_SetPriority(UART0_RX_IRQn, INT_PRIO_HIGH);
+    NVIC_SetPriority(UART0_TX_IRQn, INT_PRIO_HIGH);
+    NVIC_SetPriority(UART1_RX_IRQn, INT_PRIO_HIGH);
+    NVIC_SetPriority(UART1_TX_IRQn, INT_PRIO_HIGH);
+    NVIC_SetPriority(LEUART0_IRQn, INT_PRIO_HIGH);
+    NVIC_SetPriority(LEUART1_IRQn, INT_PRIO_HIGH);
+    NVIC_SetPriority(LETIMER0_IRQn, INT_PRIO_LOW);
+    NVIC_SetPriority(PCNT0_IRQn, INT_PRIO_LOW);
+    NVIC_SetPriority(PCNT1_IRQn, INT_PRIO_LOW);
+    NVIC_SetPriority(PCNT2_IRQn, INT_PRIO_LOW);
+    NVIC_SetPriority(RTC_IRQn, INT_PRIO_LOW);
+    NVIC_SetPriority(BURTC_IRQn, INT_PRIO_LOW);
+    NVIC_SetPriority(CMU_IRQn, INT_PRIO_LOW);
+    NVIC_SetPriority(VCMP_IRQn, INT_PRIO_LOW);
+    NVIC_SetPriority(MSC_IRQn, INT_PRIO_LOW);
+    NVIC_SetPriority(AES_IRQn, INT_PRIO_LOW);
+    NVIC_SetPriority(EMU_IRQn, INT_PRIO_LOW);
+}

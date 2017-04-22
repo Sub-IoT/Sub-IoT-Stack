@@ -39,7 +39,16 @@ typedef enum {
     D7ADLL_SLOW_RSSI_VARIATION
 } noise_floor_computation_method_t;
 
-#define SFc		3 // Collision Avoidance Spreading Factor
+/*
+ * Background frames are of fixed length
+ * Subnet / CTRL / Payload / CRC16
+ * 1 byte /1 byte/ 2 bytes / 2 bytes
+ */
+#define BACKGROUND_FRAME_LENGTH 6
+
+#define SFc    3 // Collision Avoidance Spreading Factor
+
+#define t_g    5 // Guarding period
 
 typedef struct packet packet_t;
 
@@ -62,9 +71,10 @@ void dll_stop_foreground_scan(bool auto_scan);
 void dll_execute_scan_automation();
 void dll_notify_dll_conf_file_changed();
 void dll_notify_access_profile_file_changed(); // TODO access specifier
-uint8_t dll_assemble_packet_header(packet_t* packet, uint8_t* data_ptr, bool background);
-bool dll_disassemble_packet_header(packet_t* packet, uint8_t* data_idx, bool background);
-uint16_t dll_calculate_tx_duration(phy_channel_class_t channel_class, uint8_t packet_length);
+uint8_t dll_assemble_packet_header(packet_t* packet, uint8_t* data_ptr);
+bool dll_disassemble_packet_header(packet_t* packet, uint8_t* data_idx);
+uint16_t dll_calculate_tx_duration(phy_channel_class_t channel_class, phy_coding_t ch_coding, uint8_t packet_length);
+void dll_stop_background_scan();
 
 
 #endif //OSS_7_DLL_H

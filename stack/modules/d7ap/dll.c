@@ -31,6 +31,7 @@
 #include "MODULE_D7AP_defs.h"
 #include "hwatomic.h"
 #include "compress.h"
+#include "fec.h"
 
 #if defined(FRAMEWORK_LOG_ENABLED) && defined(MODULE_D7AP_DLL_LOG_ENABLED)
 #define DPRINT(...) log_print_stack_string(LOG_STACK_DLL, __VA_ARGS__)
@@ -52,17 +53,14 @@ typedef enum
     DLL_STATE_CCA2,
     DLL_STATE_CCA_FAIL,
     DLL_STATE_FOREGROUND_SCAN,
-    DLL_STATE_BACKGROUND_SCAN,
     DLL_STATE_TX_FOREGROUND,
+    DLL_STATE_TX_BACKGROUND,
     DLL_STATE_TX_FOREGROUND_COMPLETED,
-    DLL_STATE_TX_FOREGROUND_DISCARDED
+    DLL_STATE_TX_DISCARDED
 } dll_state_t;
 
 static dae_access_profile_t NGDEF(_current_access_profile);
 #define current_access_profile NG(_current_access_profile)
-
-static dae_access_profile_t NGDEF(_scan_access_profile);
-#define scan_access_profile NG(_scan_access_profile)
 
 #define NO_ACTIVE_ACCESS_CLASS 0xFF
 static uint8_t NGDEF(_active_access_class);
@@ -78,17 +76,11 @@ static packet_t* NGDEF(_current_packet);
 static int16_t NGDEF(_dll_tca);
 #define dll_tca NG(_dll_tca)
 
-static int16_t NGDEF(_dll_tca0);
-#define dll_tca0 NG(_dll_tca0)
-
 static int16_t NGDEF(_dll_to);
 #define dll_to NG(_dll_to)
 
 static uint16_t NGDEF(_dll_slot_duration);
 #define dll_slot_duration NG(_dll_slot_duration)
-
-static uint16_t NGDEF(_dll_rigd_n);
-#define dll_rigd_n NG(_dll_rigd_n)
 
 static uint32_t NGDEF(_dll_cca_started);
 #define dll_cca_started NG(_dll_cca_started)
@@ -114,12 +106,16 @@ static uint8_t NGDEF(_tx_nf_method);
 static int16_t NGDEF(_E_CCA);
 #define E_CCA NG(_E_CCA)
 
-// TODO defined somewhere?
-#define t_g	5
+static uint16_t NGDEF(_tsched);
+#define tsched NG(_tsched)
+
+static bool NGDEF(_guarded_channel);
+#define guarded_channel NG(_guarded_channel)
 
 static void execute_cca();
 static void execute_csma_ca();
 static void start_foreground_scan();
+static void packet_received(hw_radio_packet_t* hw_radio_packet);
 
 static hw_radio_packet_t* alloc_new_packet(uint8_t length)
 {
@@ -150,9 +146,9 @@ static void switch_state(dll_state_t next_state)
         break;
     case DLL_STATE_CSMA_CA_RETRY:
         assert(dll_state == DLL_STATE_CCA1 || dll_state == DLL_STATE_CCA2);
-		dll_state = next_state;
-		DPRINT("Switched to DLL_STATE_CSMA_CA_RETRY");
-		break;
+        dll_state = next_state;
+        DPRINT("Switched to DLL_STATE_CSMA_CA_RETRY");
+        break;
     case DLL_STATE_CCA1:
         assert(dll_state == DLL_STATE_CSMA_CA_STARTED || dll_state == DLL_STATE_CSMA_CA_RETRY);
         dll_state = next_state;
@@ -172,12 +168,13 @@ static void switch_state(dll_state_t next_state)
     case DLL_STATE_IDLE:
         assert(dll_state == DLL_STATE_FOREGROUND_SCAN
                || dll_state == DLL_STATE_CCA_FAIL
-               || dll_state == DLL_STATE_TX_FOREGROUND_DISCARDED
+               || dll_state == DLL_STATE_TX_DISCARDED
                || dll_state == DLL_STATE_TX_FOREGROUND_COMPLETED
                || dll_state == DLL_STATE_CSMA_CA_STARTED
                || dll_state == DLL_STATE_CCA1
                || dll_state == DLL_STATE_CCA2
-               || dll_state == DLL_STATE_CSMA_CA_RETRY);
+               || dll_state == DLL_STATE_CSMA_CA_RETRY
+               || dll_state == DLL_STATE_SCAN_AUTOMATION);
         dll_state = next_state;
         DPRINT("Switched to DLL_STATE_IDLE");
         break;
@@ -190,23 +187,28 @@ static void switch_state(dll_state_t next_state)
         DPRINT("Switched to DLL_STATE_SCAN_AUTOMATION");
         break;
     case DLL_STATE_TX_FOREGROUND:
-        assert(dll_state == DLL_STATE_CCA2);
+        assert(dll_state == DLL_STATE_CCA2 || dll_state == DLL_STATE_TX_BACKGROUND);
         dll_state = next_state;
         DPRINT("Switched to DLL_STATE_TX_FOREGROUND");
+        break;
+    case DLL_STATE_TX_BACKGROUND:
+        assert(dll_state == DLL_STATE_CCA2);
+        dll_state = next_state;
+        DPRINT("Switched to DLL_STATE_TX_BACKGROUND");
         break;
     case DLL_STATE_TX_FOREGROUND_COMPLETED:
         assert(dll_state == DLL_STATE_TX_FOREGROUND);
         dll_state = next_state;
         DPRINT("Switched to DLL_STATE_TX_FOREGROUND_COMPLETED");
         break;
-    case DLL_STATE_TX_FOREGROUND_DISCARDED:
+    case DLL_STATE_TX_DISCARDED:
         assert(dll_state == DLL_STATE_TX_FOREGROUND);
         dll_state = next_state;
-        DPRINT("Switched to DLL_STATE_TX_FOREGROUND_DISCARDED");
+        DPRINT("Switched to DLL_STATE_TX_DISCARDED");
         break;
     case DLL_STATE_CCA_FAIL:
         assert(dll_state == DLL_STATE_CCA1 || dll_state == DLL_STATE_CCA2
-        		|| dll_state == DLL_STATE_CSMA_CA_STARTED || dll_state == DLL_STATE_CSMA_CA_RETRY);
+                || dll_state == DLL_STATE_CSMA_CA_STARTED || dll_state == DLL_STATE_CSMA_CA_RETRY);
         dll_state = next_state;
         DPRINT("Switched to DLL_STATE_CCA_FAIL");
         break;
@@ -246,21 +248,33 @@ static bool is_tx_busy()
     }
 }
 
+void guard_period_expiration()
+{
+    guarded_channel = false;
+    DPRINT("Channel guarding period is terminated, Tx is now conditioned by CSMA");
+}
 
 void start_background_scan()
 {
-    switch_state(DLL_STATE_BACKGROUND_SCAN);
-    // TODO
-    // terminates the scan immediately upon failure to detect a modulated signal on the channel
-    // Beginning from when the scan starts, the device has a period of To to successfully detect the sync word of Class 0
-}
-
-static void schedule_background_scan(timer_tick_t tsched)
-{
-    DPRINT("Perform a dll background scan scan at the end of TSCHED (%i ticks)", tsched);
+    // Start a new tsched timer
     assert(timer_post_task_delay(&start_background_scan, tsched) == SUCCESS);
+
+    hw_rx_cfg_t rx_cfg = {
+        .channel_id = current_channel_id,
+        .syncword_class = PHY_SYNCWORD_CLASS0,
+       };
+
+    hw_radio_start_background_scan(&rx_cfg, &packet_received, E_CCA);
 }
 
+void dll_stop_background_scan()
+{
+    assert(dll_state == DLL_STATE_SCAN_AUTOMATION);
+
+    timer_cancel_task(&start_background_scan);
+    sched_cancel_task(&start_background_scan);
+    hw_radio_set_idle();
+}
 
 static void process_received_packets()
 {
@@ -276,15 +290,34 @@ static void process_received_packets()
     packet_t* packet = packet_queue_get_received_packet();
     assert(packet != NULL);
     DPRINT("Processing received packet");
+
+    if (packet->hw_radio_packet.rx_meta.rx_cfg.syncword_class == PHY_SYNCWORD_CLASS0)
+        packet->type = BACKGROUND_ADV;
+
     packet_queue_mark_processing(packet);
     packet_disassemble(packet);
 
     // TODO check if more received packets are pending
 }
 
-void packet_received(hw_radio_packet_t* hw_radio_packet)
+static void packet_received(hw_radio_packet_t* hw_radio_packet)
 {
     assert(dll_state == DLL_STATE_FOREGROUND_SCAN || dll_state == DLL_STATE_SCAN_AUTOMATION);
+
+    if (hw_radio_packet->rx_meta.rx_cfg.syncword_class == PHY_SYNCWORD_CLASS1)
+    {
+        uint16_t tx_duration = dll_calculate_tx_duration(current_access_profile.channel_header.ch_class,
+                                                         current_access_profile.channel_header.ch_coding,
+                                                         hw_radio_packet->length + 1);
+        // If the first transmission duration is greater than or equal to the Guard Interval TG,
+        // the channel guard period is extended by TG following the transmission.
+        if (tx_duration >= t_g)
+            timer_post_task_prio_delay(&guard_period_expiration, t_g, MAX_PRIORITY);
+        else
+            timer_post_task_prio_delay(&guard_period_expiration, t_g - tx_duration, MAX_PRIORITY);
+
+        guarded_channel = true;
+    }
 
     // we are in interrupt context here, so mark packet for further processing,
     // schedule it and return
@@ -300,6 +333,7 @@ static void notify_transmitted_packet()
     packet_t* packet = packet_queue_get_transmitted_packet();
     assert(packet != NULL);
 
+    switch_state(DLL_STATE_IDLE);
     d7anp_signal_packet_transmitted(packet);
 
     if (process_received_packets_after_tx)
@@ -321,20 +355,45 @@ void packet_transmitted(hw_radio_packet_t* hw_radio_packet)
     switch_state(DLL_STATE_TX_FOREGROUND_COMPLETED);
     DPRINT("Transmitted packet @ %i with length = %i", hw_radio_packet->tx_meta.timestamp, hw_radio_packet->length);
 
-    packet_queue_mark_transmitted(hw_radio_packet);
+    packet_t* packet = packet_queue_mark_transmitted(hw_radio_packet);
+
+    if (packet->tx_duration >= t_g )
+    {
+        timer_post_task_prio_delay(&guard_period_expiration, t_g, MAX_PRIORITY);
+    }
+    else
+        timer_post_task_prio_delay(&guard_period_expiration, t_g - packet->tx_duration, MAX_PRIORITY);
 
     /* the notification task needs to be handled in priority */
     sched_post_task_prio(&notify_transmitted_packet, MAX_PRIORITY);
 }
 
+void background_advertising_terminated(hw_radio_packet_t* hw_radio_packet)
+{
+    assert(dll_state == DLL_STATE_TX_BACKGROUND);
+    switch_state(DLL_STATE_TX_FOREGROUND);
+
+    current_packet->hw_radio_packet.tx_meta.tx_cfg.syncword_class = PHY_SYNCWORD_CLASS1;
+    current_packet->type = INITIAL_REQUEST;
+    packet_assemble(current_packet);
+
+    current_packet->tx_duration = dll_calculate_tx_duration(current_access_profile.channel_header.ch_class,
+                                                            current_access_profile.channel_header.ch_coding,
+                                                            current_packet->hw_radio_packet.length + 1);
+
+    DPRINT("Transmit packet @ %i", timer_get_counter_value()); // ensure that we are sending the foreground request within the guarded time
+    hw_radio_send_packet(&current_packet->hw_radio_packet, &packet_transmitted);
+    guarded_channel = true;
+}
+
 static void discard_tx()
 {
     start_atomic();
-    if (dll_state == DLL_STATE_TX_FOREGROUND)
+    if (dll_state == DLL_STATE_TX_FOREGROUND || dll_state == DLL_STATE_TX_BACKGROUND)
     {
         /* wait until TX completed but Tx callback is removed */
         hw_radio_set_idle();
-        switch_state(DLL_STATE_TX_FOREGROUND_DISCARDED);
+        switch_state(DLL_STATE_TX_DISCARDED);
     }
     end_atomic();
 
@@ -349,13 +408,20 @@ static void discard_tx()
         sched_cancel_task(&execute_csma_ca);
     }
     else if (dll_state == DLL_STATE_TX_FOREGROUND_COMPLETED)
+    {
+        timer_cancel_task(&guard_period_expiration);
+        sched_cancel_task(&guard_period_expiration);
+        guarded_channel = false;
         sched_cancel_task(&notify_transmitted_packet);
+    }
 
     switch_state(DLL_STATE_IDLE);
 }
 
 static void cca_rssi_valid(int16_t cur_rssi)
 {
+    DPRINT("cca_rssi_valid @%i", timer_get_counter_value());
+
     // When the radio goes back to Rx state, the rssi_valid callback may be still set. Skip it in this case
     if (dll_state != DLL_STATE_CCA1 && dll_state != DLL_STATE_CCA2)
         return;
@@ -376,12 +442,35 @@ static void cca_rssi_valid(int16_t cur_rssi)
         else if (dll_state == DLL_STATE_CCA2)
         {
             // OK, send packet
+            error_t err;
             DPRINT("CCA2 RSSI: %d", cur_rssi);
             DPRINT("CCA2 succeeded, transmitting ...");
             // log_print_data(current_packet->hw_radio_packet.data, current_packet->hw_radio_packet.length + 1); // TODO tmp
 
-            switch_state(DLL_STATE_TX_FOREGROUND);
-            error_t err = hw_radio_send_packet(&current_packet->hw_radio_packet, &packet_transmitted);
+            if (current_packet->type == BACKGROUND_ADV)
+            {
+                switch_state(DLL_STATE_TX_BACKGROUND);
+                DPRINT("Start background advertising @ %i", timer_get_counter_value());
+                err = hw_radio_send_background_packet(&current_packet->hw_radio_packet,
+                                                      &background_advertising_terminated,
+                                                      current_packet->ETA, current_packet->tx_duration);
+
+                // To save time and guarantee to send the foreground frame within the guarded time,
+                // it should be optimal to prepare the foreground packet before the end of the
+                // advertising period, but for now, the sending of background packet is a none interrupted
+                // sequence
+
+                //current_packet->hw_radio_packet.tx_meta.tx_cfg.syncword_class = PHY_SYNCWORD_CLASS1;
+                //current_packet->type = INITIAL_REQUEST;
+                //packet_assemble(current_packet);
+            }
+            else
+            {
+                switch_state(DLL_STATE_TX_FOREGROUND);
+                err = hw_radio_send_packet(&current_packet->hw_radio_packet, &packet_transmitted);
+                guarded_channel = true;
+            }
+
             assert(err == SUCCESS);
             return;
         }
@@ -396,6 +485,8 @@ static void cca_rssi_valid(int16_t cur_rssi)
 
 static void execute_cca()
 {
+    DPRINT("execute_cca @%i", timer_get_counter_value());
+
     assert(dll_state == DLL_STATE_CCA1 || dll_state == DLL_STATE_CCA2);
 
     hw_rx_cfg_t rx_cfg =(hw_rx_cfg_t){
@@ -406,48 +497,74 @@ static void execute_cca()
     hw_radio_set_rx(&rx_cfg, NULL, &cca_rssi_valid);
 }
 
-uint16_t dll_calculate_tx_duration(phy_channel_class_t channel_class, uint8_t packet_length)
+uint16_t dll_calculate_tx_duration(phy_channel_class_t channel_class, phy_coding_t ch_coding, uint8_t packet_length)
 {
     double data_rate = 6.0; // Normal rate: 6.9 bytes/tick
+
+    if (ch_coding == PHY_CODING_FEC_PN9)
+        packet_length = fec_calculated_decoded_length(packet_length);
+
+    packet_length += sizeof(uint16_t); // Sync word
+
     switch (channel_class)
     {
     case PHY_CLASS_LO_RATE:
+        packet_length += PREAMBLE_LOW_RATE_CLASS;
         data_rate = 1.0; // Lo Rate 9.6 kbps: 1.2 bytes/tick
         break;
     case PHY_CLASS_NORMAL_RATE:
+        packet_length += PREAMBLE_NORMAL_RATE_CLASS;
         data_rate = 6.0; // Normal Rate 55.555 kbps: 6.94 bytes/tick
         break;
     case PHY_CLASS_HI_RATE:
+        packet_length += PREAMBLE_HI_RATE_CLASS;
         data_rate = 20.0; // High rate 166.667 kbps: 20.83 byte/tick
     }
 
+    // TODO Add the power ramp-up/ramp-down symbols in the packet length?
+
     uint16_t duration = ceil(packet_length / data_rate) + 1;
+    DPRINT("Transmission duration  %i", duration);
     return duration;
 }
 
 static void execute_csma_ca()
 {
-    // TODO generate random channel queue
-    //hw_radio_set_rx(NULL, NULL, NULL); // put radio in RX but disable callbacks to make sure we don't receive packets when in this state
-                                        // TODO use correct rx cfg + it might be interesting to switch to idle first depending on calculated offset
-    // TODO select correct subband
-    uint16_t tx_duration = dll_calculate_tx_duration(current_channel_id.channel_header.ch_class, current_packet->hw_radio_packet.length);
+    // TODO select Channel at front of the channel queue
+
+    /*
+     * During the period when the channel is guarded by the Requester, the transmission
+     * of a subsequent requests, or a single response to a unicast request on the
+     * guarded channel, is not conditioned by CSMA-CA
+     */
+    if ((current_packet->type == SUBSEQUENT_REQUEST ||
+        current_packet->type == RESPONSE_TO_UNICAST) && guarded_channel)
+    {
+        switch_state(DLL_STATE_TX_FOREGROUND);
+        assert(hw_radio_send_packet(&current_packet->hw_radio_packet, &packet_transmitted) == SUCCESS);
+        return;
+    }
 
     switch (dll_state)
     {
         case DLL_STATE_CSMA_CA_STARTED:
         {
-            uint16_t transmission_timeout_ti;
+            uint16_t dll_tc;
 
-            if (current_packet->type == INITIAL_REQUEST || current_packet->type == SUBSEQUENT_REQUEST)
-                transmission_timeout_ti = ceil((SFc + 1) * tx_duration + 5);
             // in case of response, use the Tc parameter provided in the request
+            if (current_packet->type == RESPONSE_TO_UNICAST || current_packet->type == RESPONSE_TO_BROADCAST)
+                dll_tc = CT_DECOMPRESS(current_packet->d7atp_tc);
             else
-                transmission_timeout_ti = CT_DECOMPRESS(current_packet->d7atp_tc);
+                dll_tc = ceil((SFc + 1) * current_packet->tx_duration + t_g);
 
-            dll_tca = transmission_timeout_ti - tx_duration;
+            /*
+             * Tca = Tc - Ttx - Tg
+             * we substract also 1 tick to take into account also the switching
+             * time required in the transceiver.
+             */
+            dll_tca = dll_tc - current_packet->tx_duration - t_g - 1;
             dll_cca_started = timer_get_counter_value();
-            DPRINT("Tca= %i = %i - %i", dll_tca, transmission_timeout_ti, tx_duration);
+            DPRINT("Tca= %i with Tc %i and Ttx %i", dll_tca, dll_tc, current_packet->tx_duration);
 
             // Adjust TCA value according the time already elapsed since the reception time in case of response
             if (current_packet->request_received_timestamp)
@@ -473,36 +590,32 @@ static void execute_csma_ca()
             else
                 csma_ca_mode = CSMA_CA_MODE_AIND;
 
-            // TODO overrule mode to UNC if the channel is still guarded
-            // This is valid for subsequent requests by the requester, or a single response to a unicast request
+            // TODO determine how to enable CSMA_CA_MODE_RIGD
 
             switch(csma_ca_mode)
             {
-                case CSMA_CA_MODE_UNC:
-                    // no delay
-                    dll_slot_duration = 0;
-                    break;
                 case CSMA_CA_MODE_AIND: // TODO implement AIND
                 {
-                    dll_slot_duration = tx_duration;
-                    // no initial delay
+                    // no initial delay, t_offset = 0
+                    dll_slot_duration = current_packet->tx_duration;
                     break;
                 }
-                case CSMA_CA_MODE_RAIND: // TODO implement RAIND
+                case CSMA_CA_MODE_RAIND:
                 {
-                    dll_slot_duration = tx_duration + 10; // take time for executing CCA twice into account
-                                                          // TODO currently 9.3 ms on EZR but might be improved. Refactor later
+                    dll_slot_duration = current_packet->tx_duration;
                     uint16_t max_nr_slots = dll_tca / dll_slot_duration;
-                    uint16_t slots_wait = get_rnd() % max_nr_slots;
-                    t_offset = slots_wait * dll_slot_duration;
-                    DPRINT("RAIND: slot %i of %i", slots_wait, max_nr_slots);
+
+                    if (max_nr_slots)
+                    {
+                        uint16_t slots_wait = get_rnd() % max_nr_slots;
+                        t_offset = slots_wait * dll_slot_duration;
+                        DPRINT("RAIND: slot %i of %i", slots_wait, max_nr_slots);
+                    }
                     break;
                 }
-                case CSMA_CA_MODE_RIGD: // TODO implement RAIND
+                case CSMA_CA_MODE_RIGD:
                 {
-                    dll_rigd_n = 0;
-                    dll_tca0 = dll_tca;
-                    dll_slot_duration = (uint16_t) ((double)dll_tca0) / (2 << (dll_rigd_n));
+                    dll_slot_duration = (uint16_t) ((double)dll_tca / 2 );
                     t_offset = get_rnd() % dll_slot_duration;
                     break;
                 }
@@ -510,9 +623,9 @@ static void execute_csma_ca()
 
             DPRINT("slot duration: %i t_offset: %i csma ca mode: %i", dll_slot_duration, t_offset, csma_ca_mode);
 
-            dll_to = dll_tca - t_offset;
+            dll_to = dll_tca;
 
-            if (t_offset > 0)
+            if (t_offset)
             {
                 switch_state(DLL_STATE_CCA1);
                 timer_post_task_prio_delay(&execute_cca, t_offset, MAX_PRIORITY);
@@ -530,15 +643,17 @@ static void execute_csma_ca()
             int32_t cca_duration = timer_get_counter_value() - dll_cca_started;
             dll_to -= cca_duration;
 
-            if (dll_to < t_g)
+            if (dll_to <= 0)
             {
-                DPRINT("CCA fail because dll_to = %i < %i ", dll_to, t_g);
+                DPRINT("CCA fail because dll_to = %i", dll_to);
                 switch_state(DLL_STATE_CCA_FAIL);
                 sched_post_task_prio(&execute_csma_ca, MAX_PRIORITY);
                 break;
             }
 
-            DPRINT("RETRY dll_to = %i >= %i ", dll_to, t_g);
+            DPRINT("RETRY with dll_to = %i", dll_to);
+
+            // TODO shift channel queue
 
             dll_tca = dll_to;
             dll_cca_started = timer_get_counter_value();
@@ -549,42 +664,33 @@ static void execute_csma_ca()
                 case CSMA_CA_MODE_AIND:
                 case CSMA_CA_MODE_RAIND:
                 {
-                    uint16_t max_nr_slots = dll_tca / tx_duration;
-                    uint16_t slots_wait;
+                    uint16_t max_nr_slots = dll_tca / dll_slot_duration;
 
                     if (max_nr_slots)
                     {
-                        slots_wait = get_rnd() % max_nr_slots;
-                        DPRINT("max_nr_slots %i slots_wait: %i", max_nr_slots, slots_wait);
-                        t_offset = slots_wait * tx_duration;
-                    }
-                    else
-                    {
-                        t_offset = 0;
+                        uint16_t slots_wait = get_rnd() % max_nr_slots;
+                        t_offset = slots_wait * dll_slot_duration;
+                        DPRINT("RAIND: wait %i slots of %i", slots_wait, max_nr_slots);
                     }
                     break;
                 }
                 case CSMA_CA_MODE_RIGD:
                 {
-                    dll_rigd_n++;
-                    dll_slot_duration = (uint16_t) ((double)dll_tca0) / (2 << (dll_rigd_n+1));
+                    dll_slot_duration >>= 1;
                     if (dll_slot_duration != 0) // TODO can be 0, validate
                         t_offset = get_rnd() % dll_slot_duration;
-                    else
-                        t_offset = 0;
 
-                    DPRINT("slot duration: %i", dll_slot_duration);
+                    DPRINT("RIGD: slot duration: %i", dll_slot_duration);
                     break;
                 }
             }
 
             DPRINT("t_offset: %i", t_offset);
 
-            dll_to = dll_tca - t_offset;
-
-            if (t_offset > 0)
+            if (t_offset)
             {
-                timer_post_task_prio_delay(&execute_csma_ca, t_offset, MAX_PRIORITY);
+                switch_state(DLL_STATE_CCA1);
+                timer_post_task_prio_delay(&execute_cca, t_offset, MAX_PRIORITY);
             }
             else
             {
@@ -626,7 +732,6 @@ void dll_execute_scan_automation()
 
     DPRINT("DLL execute scan autom AC=0x%02x", active_access_class);
 
-
     /*
      * The Scan Automation Parameters are uniquely defined based on the Active
      * Access Class of the device.
@@ -638,6 +743,9 @@ void dll_execute_scan_automation()
     {
         DPRINT("Scan autom ch list is void, not entering scan\n");
         hw_radio_set_idle();
+        if(dll_state != DLL_STATE_IDLE)
+          switch_state(DLL_STATE_IDLE);
+
         return;
     }
 
@@ -649,20 +757,47 @@ void dll_execute_scan_automation()
         },
     };
 
+    // The Scan Automation TSCHED is obtained as the minimum of all selected subprofiles' TSCHED.
+    uint16_t scan_period;
+    tsched = (uint16_t)~0;
+    for(uint8_t i = 0; i < SUBPROFILES_NB; i++)
+    {
+        // Only consider the selectable subprofiles (having their Access Mask bits set to 1 and having non-void subband bitmaps)
+        if ((ACCESS_MASK(active_access_class) & (0x01 << i)) && current_access_profile.subprofiles[i].subband_bitmap)
+        {
+            scan_period = CT_DECOMPRESS(current_access_profile.subprofiles[i].scan_automation_period);
+            if ((tsched == (uint16_t)~0) || (scan_period < tsched))
+                tsched = scan_period;
+        }
+    }
+
+    // tsched is necessarily set because at least one selectable subprofile should be found
+    assert(tsched != (uint16_t)~0);
+
     /*
-     * if the scan automation period (To) is set to 0, the scan type is set to
+     * If the scan automation period (To) is set to 0, the scan type is set to
      * foreground,
      */
-    if (current_access_profile.subprofiles[0].scan_automation_period == 0)
+    if (tsched == 0)
     {
         rx_cfg.syncword_class = PHY_SYNCWORD_CLASS1;
         hw_radio_set_rx(&rx_cfg, &packet_received, NULL);
     }
     else
     {
-        uint8_t tsched = CT_DECOMPRESS(current_access_profile.subprofiles[0].scan_automation_period);
         rx_cfg.syncword_class = PHY_SYNCWORD_CLASS0;
-        schedule_background_scan(tsched);
+
+        // compute Ecca = NF + Eccao
+        if (tx_nf_method == D7ADLL_FIXED_NOISE_FLOOR)
+        {
+            //Use the default channel CCA threshold
+            E_CCA = current_access_profile.subbands[0].cca; // Eccao is set to 0 dB
+            DPRINT("E_CCA %i", E_CCA);
+        }
+
+        // If TSCHED > 0, an independent scheduler is set to generate regular scan start events at TSCHED rate.
+        DPRINT("Perform a dll background scan at the end of TSCHED (%d ticks)", tsched);
+        assert(timer_post_task_delay(&start_background_scan, tsched) == SUCCESS);
     }
 
     current_channel_id = rx_cfg.channel_id;
@@ -700,6 +835,8 @@ void dll_init()
     sched_register_task(&execute_cca);
     sched_register_task(&execute_csma_ca);
     sched_register_task(&dll_execute_scan_automation);
+    sched_register_task(&start_background_scan);
+    sched_register_task(&guard_period_expiration);
 
     hw_radio_init(&alloc_new_packet, &release_packet);
 
@@ -711,10 +848,17 @@ void dll_init()
     process_received_packets_after_tx = false;
     resume_fg_scan = false;
     sched_post_task(&dll_execute_scan_automation);
+    guarded_channel = false;
 }
 
 void dll_tx_frame(packet_t* packet)
 {
+    if (dll_state == DLL_STATE_SCAN_AUTOMATION)
+    {
+        timer_cancel_task(&start_background_scan);
+        sched_cancel_task(&start_background_scan);
+    }
+
     if (dll_state != DLL_STATE_FOREGROUND_SCAN)
     {
         hw_radio_set_idle();
@@ -764,6 +908,9 @@ void dll_tx_frame(packet_t* packet)
          * By default, subprofile[0] is selected and subband[0] is used
          */
 
+        // TODO generate random channel queue
+        // TODO assert if no selectable subprofile can be found
+
         /* EIRP (dBm) = (EIRP_I – 32) dBm */
 
         log_print_string("AC specifier=%i channel=%i",
@@ -774,9 +921,39 @@ void dll_tx_frame(packet_t* packet)
         packet->hw_radio_packet.tx_meta.tx_cfg = (hw_tx_cfg_t){
             .channel_id.channel_header = current_access_profile.channel_header,
             .channel_id.center_freq_index = current_access_profile.subbands[0].channel_index_start,
-            .syncword_class = PHY_SYNCWORD_CLASS1,
             .eirp = current_access_profile.subbands[0].eirp
         };
+
+        // The Access TSCHED is obtained as the maximum of all selected subprofiles' TSCHED.
+        uint16_t scan_period;
+        tsched = 0;
+        for(uint8_t i = 0; i < SUBPROFILES_NB; i++)
+        {
+            // Only consider the selectable subprofiles (having their Access Mask bits set to 1 and having non-void subband bitmaps)
+            if ((packet->d7anp_addressee->access_mask & (0x01 << i)) && current_access_profile.subprofiles[i].subband_bitmap)
+            {
+                scan_period = CT_DECOMPRESS(current_access_profile.subprofiles[i].scan_automation_period);
+                if (scan_period > tsched)
+                    tsched = scan_period;
+            }
+        }
+
+        /* use D7AAdvP if the receiver is engaged in ultra low power scan */
+        if (tsched)
+        {
+            packet->type = BACKGROUND_ADV;
+            packet->hw_radio_packet.tx_meta.tx_cfg.syncword_class = PHY_SYNCWORD_CLASS0;
+
+            // TADV = TSCHED + TTX (TTX is the duration for transmitting a single D7AAdvP frame)
+            packet->tx_duration = dll_calculate_tx_duration(current_access_profile.channel_header.ch_class,
+                                                            current_access_profile.channel_header.ch_coding,
+                                                            BACKGROUND_FRAME_LENGTH);
+
+            packet->ETA = tsched + packet->tx_duration;
+            DPRINT("First background frame contains ETA <%d> ttx %d", packet->ETA, packet->tx_duration);
+        }
+        else
+            packet->hw_radio_packet.tx_meta.tx_cfg.syncword_class = PHY_SYNCWORD_CLASS1;
 
         // store the channel id and eirp
         current_eirp = current_access_profile.subbands[0].eirp;
@@ -787,6 +964,7 @@ void dll_tx_frame(packet_t* packet)
         {
             //Use the default channel CCA threshold
             E_CCA = current_access_profile.subbands[0].cca; // Eccao is set to 0 dB
+            DPRINT("E_CCA %i", E_CCA);
         }
         else
         {
@@ -797,14 +975,51 @@ void dll_tx_frame(packet_t* packet)
 
     packet_assemble(packet);
 
+    if (packet->type != BACKGROUND_ADV)
+    {
+        packet->tx_duration = dll_calculate_tx_duration(current_access_profile.channel_header.ch_class,
+                                                        current_access_profile.channel_header.ch_coding,
+                                                        packet->hw_radio_packet.length + 1);
+    }
+
     current_packet = packet;
 
     switch_state(DLL_STATE_CSMA_CA_STARTED);
+
+    if ((packet->type == RESPONSE_TO_UNICAST) || (packet->type == RESPONSE_TO_BROADCAST))
+    {
+        // If the Requester provides an Execution Delay Timeout, the Responders delay their responses
+        if (packet->d7atp_ctrl.ctrl_te)
+        {
+            timer_tick_t Te = CT_DECOMPRESS(packet->d7atp_te);
+            timer_tick_t Trpd = timer_get_counter_value() - current_packet->request_received_timestamp; //response processing delay
+
+            // the DLL foreground scan duration TC is adjusted to start after the Execution Delay period
+            current_packet->request_received_timestamp += Te;
+
+            if (Te > Trpd)
+            {
+                Te -= Trpd;
+                timer_post_task_prio_delay(&execute_csma_ca, Te, MAX_PRIORITY);
+                return;
+            }
+            // If the response processing delay TRPD is bigger than TE,
+            // Responders subtract the residue TRPD - TE from the Congestion Timeout
+            // and start the DLL CSMA-CA routine immediately
+        }
+    }
     execute_csma_ca();
 }
 
 static void start_foreground_scan()
 {
+    if (dll_state == DLL_STATE_SCAN_AUTOMATION)
+    {
+        timer_cancel_task(&start_background_scan);
+        sched_cancel_task(&start_background_scan);
+        hw_radio_set_idle();
+    }
+
     switch_state(DLL_STATE_FOREGROUND_SCAN);
 
     // TODO, if the Requester is MISO and the Request is broadcast, the responses
@@ -845,7 +1060,7 @@ void dll_stop_foreground_scan(bool auto_scan)
     }
 }
 
-uint8_t dll_assemble_packet_header(packet_t* packet, uint8_t* data_ptr, bool background)
+uint8_t dll_assemble_packet_header(packet_t* packet, uint8_t* data_ptr)
 {
     uint8_t* dll_header_start = data_ptr;
     *data_ptr = packet->dll_header.subnet; data_ptr += sizeof(packet->dll_header.subnet);
@@ -854,7 +1069,7 @@ uint8_t dll_assemble_packet_header(packet_t* packet, uint8_t* data_ptr, bool bac
     {
         uint8_t addr_len = packet->dll_header.control_target_id_type == ID_TYPE_VID? 2 : 8;
 
-        if (background)
+        if (packet->type == BACKGROUND_ADV)
         {
             uint16_t crc;
             crc = crc_calculate(packet->d7anp_addressee->id, addr_len);
@@ -885,7 +1100,7 @@ uint8_t dll_assemble_packet_header(packet_t* packet, uint8_t* data_ptr, bool bac
     return data_ptr - dll_header_start;
 }
 
-bool dll_disassemble_packet_header(packet_t* packet, uint8_t* data_idx, bool background)
+bool dll_disassemble_packet_header(packet_t* packet, uint8_t* data_idx)
 {
     packet->dll_header.subnet = packet->hw_radio_packet.data[(*data_idx)]; (*data_idx)++;
     uint8_t FSS = ACCESS_SPECIFIER(packet->dll_header.subnet);
@@ -907,7 +1122,7 @@ bool dll_disassemble_packet_header(packet_t* packet, uint8_t* data_idx, bool bac
 
     packet->dll_header.control_target_id_type  = packet->hw_radio_packet.data[(*data_idx)] >> 6 ;
 
-    if (background)
+    if (packet->type == BACKGROUND_ADV)
     {
         packet->dll_header.control_identifier_tag = packet->hw_radio_packet.data[(*data_idx)] & 0x3F;
         DPRINT("control_target_id_type 0x%02x Identifier Tag 0x%02x", packet->dll_header.control_target_id_type, packet->dll_header.control_identifier_tag);
@@ -933,13 +1148,13 @@ bool dll_disassemble_packet_header(packet_t* packet, uint8_t* data_idx, bool bac
             address_len = 2;
         }
 
-        if (background)
+        if (packet->type == BACKGROUND_ADV)
         {
             uint16_t crc;
             crc = crc_calculate(id, address_len);
             DPRINT("Identifier Tag crc %04x, tag %x", crc, packet->dll_header.control_identifier_tag);
             /* Check that the tag corresponds to the 6 least significant bits of the CRC16 */
-            if (packet->dll_header.control_identifier_tag != (uint8_t)crc & 0x3F)
+            if (packet->dll_header.control_identifier_tag != ((uint8_t)crc & 0x3F))
             {
                 DPRINT("Identifier Tag filtering failed, skipping packet");
                 return false;

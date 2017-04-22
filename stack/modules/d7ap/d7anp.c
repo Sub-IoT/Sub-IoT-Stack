@@ -28,6 +28,7 @@
 #include "math.h"
 #include "hwdebug.h"
 #include "aes.h"
+#include "packet_queue.h"
 
 #if defined(FRAMEWORK_LOG_ENABLED) && defined(MODULE_D7AP_NP_LOG_ENABLED)
 #define DPRINT(...) log_print_stack_string(LOG_STACK_NWL, __VA_ARGS__)
@@ -115,7 +116,7 @@ static void foreground_scan_expired()
 {
     // the FG scan expiration may also happen while Tx is busy (d7anp_state = D7ANP_STATE_TRANSMIT) // TODO validate
     assert(d7anp_state == D7ANP_STATE_FOREGROUND_SCAN || d7anp_state == D7ANP_STATE_TRANSMIT);
-    DPRINT("Foreground scan expired");
+    DPRINT("Foreground scan expired @%i", timer_get_counter_value());
 
     if (d7anp_state == D7ANP_STATE_FOREGROUND_SCAN) // when in D7ANP_STATE_TRANSMIT d7anp_signal_packet_transmitted() will switch state
       switch_state(D7ANP_STATE_IDLE);
@@ -180,6 +181,13 @@ void d7anp_stop_foreground_scan(bool auto_scan)
     dll_stop_foreground_scan(auto_scan);
 }
 
+void start_foreground_scan_after_D7AAdvP()
+{
+    DPRINT("start_foreground_scan_after_D7AAdvP");
+    fg_scan_timeout_ticks = FG_SCAN_TIMEOUT;
+    d7anp_start_foreground_scan();
+}
+
 void d7anp_init()
 {
     uint8_t key[AES_BLOCK_SIZE];
@@ -188,6 +196,7 @@ void d7anp_init()
     fg_scan_timeout_ticks = 0;
 
     sched_register_task(&foreground_scan_expired);
+    sched_register_task(&start_foreground_scan_after_D7AAdvP);
 
 #if defined(MODULE_D7AP_NLS_ENABLED)
     /*
@@ -218,6 +227,10 @@ error_t d7anp_tx_foreground_frame(packet_t* packet, bool should_include_origin_t
     // we need to switch back to the current state after the transmission procedure
     d7anp_prev_state = d7anp_state;
 
+    // No need to initialize the packet field in case of retry, except the security frame counter
+    if (packet->type == RETRY_REQUEST)
+        goto security;
+
     if (!should_include_origin_template)
     {
         packet->d7anp_ctrl.origin_id_type = ID_TYPE_NOID;
@@ -238,7 +251,7 @@ error_t d7anp_tx_foreground_frame(packet_t* packet, bool should_include_origin_t
 
     packet->d7anp_listen_timeout = slave_listen_timeout_ct;
 
-
+security:
 #if defined(MODULE_D7AP_NLS_ENABLED)
 
     packet->d7anp_ctrl.nls_method = packet->d7anp_addressee->ctrl.nls_method;
@@ -265,12 +278,6 @@ error_t d7anp_tx_foreground_frame(packet_t* packet, bool should_include_origin_t
 
     switch_state(D7ANP_STATE_TRANSMIT);
     dll_tx_frame(packet);
-}
-
-void start_foreground_scan_after_D7AAdvP()
-{
-    switch_state(D7ANP_STATE_FOREGROUND_SCAN);
-    dll_start_foreground_scan();
 }
 
 static void schedule_foreground_scan_after_D7AAdvP(timer_tick_t eta)
@@ -692,7 +699,7 @@ void d7anp_signal_packet_transmitted(packet_t* packet)
 
 }
 
-void d7anp_process_received_packet(packet_t* packet, bool background_frame)
+void d7anp_process_received_packet(packet_t* packet)
 {
     // TODO handle case where we are intermediate node while hopping (ie start FG scan, after auth if needed, and return)
 
@@ -705,15 +712,22 @@ void d7anp_process_received_packet(packet_t* packet, bool background_frame)
         DPRINT("Received packet while in D7ANP_STATE_IDLE (scan automation)");
 
         // check if DLL was performing a background scan
-        if (background_frame) {
-            timer_tick_t eta;
+        if (packet->type == BACKGROUND_ADV)
+        {
+            timer_tick_t time_elapsed = timer_get_counter_value() - packet->hw_radio_packet.rx_meta.timestamp;
+            if (packet->ETA > time_elapsed + FG_SCAN_STARTUP_TIME)
+            {
+                DPRINT("FG scan start after %d", packet->ETA - (time_elapsed + FG_SCAN_STARTUP_TIME));
+                schedule_foreground_scan_after_D7AAdvP(packet->ETA - (time_elapsed + FG_SCAN_STARTUP_TIME));
+                // meanwhile stay in idle
+                dll_stop_background_scan();
+            }
+            else
+            {
+                DPRINT("No time to switch to FG scan because ETA is too short %i", packet->ETA);
+            }
 
-            DPRINT("Received a background frame)");
-
-            assert(packet->payload_length == sizeof(timer_tick_t));
-            memcpy(&eta, packet->payload, sizeof(timer_tick_t));
-            //TODO decode the D7A Background Network Protocols Frame in order to trigger the foreground scan after the advertising period
-            schedule_foreground_scan_after_D7AAdvP(eta);
+            packet_queue_free_packet(packet);
             return;
         }
     }

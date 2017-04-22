@@ -8,6 +8,7 @@
 #include "fifo.h"
 #include "scheduler.h"
 #include "console.h"
+#include "hal_defs.h"
 
 #ifdef FRAMEWORK_CONSOLE_ENABLED
 
@@ -21,20 +22,27 @@ static uint8_t console_tx_buffer[CONSOLE_TX_FIFO_SIZE];
 static fifo_t console_tx_fifo;
 
 static void flush_console_tx_fifo() {
+  uint8_t len = fifo_get_size(&console_tx_fifo);
+#ifdef HAL_UART_USE_DMA_TX
+  // when using DMA we transmit the whole FIFO at once
+  uint8_t buffer[CONSOLE_TX_FIFO_SIZE];
+  fifo_pop(&console_tx_fifo, buffer, len);
+  uart_send_bytes(uart, buffer, len);
+#else
   // only send small chunks over uart each invocation, to make sure
   // we don't interfer with critical stack timings.
   // When there is still data left in the fifo this will be rescheduled
   // with lowest prio
   uint8_t chunk[TX_FIFO_FLUSH_CHUNK_SIZE];
-  uint8_t depth = fifo_get_size(&console_tx_fifo);
-  if(depth < 10) {
-    fifo_pop(&console_tx_fifo, chunk, depth);
-    uart_send_bytes(uart, chunk, depth);
+  if(len < 10) {
+    fifo_pop(&console_tx_fifo, chunk, len);
+    uart_send_bytes(uart, chunk, len);
   } else {
     fifo_pop(&console_tx_fifo, chunk, TX_FIFO_FLUSH_CHUNK_SIZE);
     uart_send_bytes(uart, chunk, TX_FIFO_FLUSH_CHUNK_SIZE);
     sched_post_task_prio(&flush_console_tx_fifo, MIN_PRIORITY);
   }
+#endif
 }
 
 void console_init(void) {

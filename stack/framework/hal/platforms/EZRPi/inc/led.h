@@ -1,7 +1,8 @@
-/* * OSS-7 - An opensource implementation of the DASH7 Alliance Protocol for ultra
+/* OSS-7 - An opensource implementation of the DASH7 Alliance Protocol for ultra
  * lowpower wireless sensor communication
  *
- * Copyright 2015 University of Antwerp
+ * Copyright 2017 Christophe VG <contact@christophe.vg>
+ * Copyright 2017 University of Antwerp
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,24 +17,23 @@
  * limitations under the License.
  */
 
-/*! \file
+/*! \file led.h
  *
- *
- */
-
-#ifndef CC1101_H
-#define CC1101_H
-
-#define FIFO_SIZE   64
-
-#define AVAILABLE_BYTES_IN_TX_FIFO  20
-#define BYTES_IN_RX_FIFO            20
-
-/* \brief Callback called by cc1101_interface_{spi/cc430} when end_of_packet interrupt occurs.
- * Note: this is called from an interrupt context so should contain minimal processing.
+ *  \author contact@christophe.vg
  *
  */
-typedef void(*end_of_packet_isr_t)(void);
-typedef void(*fifo_thr_isr_t)(void);
 
-#endif // CC1101_H
+#ifndef __PLATFORM_LED_H_
+#define __PLATFORM_LED_H_
+
+#include "hwleds.h"
+
+#include "timer.h"
+
+#define FLASH_DURATION TIMER_TICKS_PER_SEC * 0.1
+
+bool led_init(void);
+
+void led_flash(void);
+
+#endif

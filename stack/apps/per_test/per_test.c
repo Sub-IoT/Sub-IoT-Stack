@@ -40,7 +40,7 @@
 #ifdef PLATFORM_EFM32GG_STK3700
 #include "platform_lcd.h"
 #endif
-#include "userbutton.h"
+#include "button.h"
 #include "fifo.h"
 
 #include "console.h"

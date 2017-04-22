@@ -167,18 +167,6 @@ typedef struct {
     // data
 } alp_operand_file_data_t;
 
-
-typedef struct {
-  uint8_t fifo_token;
-  uint8_t tag_id;
-  bool respond_when_completed;
-  alp_command_origin_t origin;
-  fifo_t alp_command_fifo;
-  fifo_t alp_response_fifo;
-  uint8_t alp_command[ALP_PAYLOAD_MAX_SIZE];
-  uint8_t alp_response[ALP_PAYLOAD_MAX_SIZE];
-} alp_command_t;
-
 typedef void (*alp_command_completed_callback)(uint8_t tag_id, bool success);
 typedef void (*alp_command_result_callback)(d7asp_result_t result, uint8_t* payload, uint8_t payload_length);
 typedef void (*alp_received_unsolicited_data_callback)(d7asp_result_t d7asp_result, uint8_t *alp_command, uint8_t alp_command_size);

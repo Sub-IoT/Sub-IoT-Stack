@@ -178,8 +178,10 @@ void _cc1101_interface_init(end_of_packet_isr_t end_of_packet_isr_cb)
     interrupt_table[RF1AIV_RFIFG0/2 + 0x11] = end_of_packet_isr_callback; // offset for RFIFG0 negative flank
 }
 
-void _c1101_interface_set_interrupts_enabled(bool enable)
+void _c1101_interface_set_interrupts_enabled(cc1101_gdOx_t gdOx, bool enable)
 {
+    // TODO configure the interrupt according GDO0 or GDO2.
+
     if(enable)
     {
         // interrupt on GDO0 falling edge (end of packet), similar as cc1101
@@ -193,6 +195,12 @@ void _c1101_interface_set_interrupts_enabled(bool enable)
         RF1AIE  = 0;
         RF1AIFG = 0;
     }
+}
+
+void _c1101_interface_set_edge_interrupt(cc1101_gdOx_t gdOx, uint8_t edge)
+{
+    //TODO set the edge interrupt on GDO0 or GDO2 to detect either the TXUnderflow,
+    //the RXFirstByte, the RX filled or the End Of Packet. 
 }
 
 uint8_t _c1101_interface_strobe(uint8_t strobe)

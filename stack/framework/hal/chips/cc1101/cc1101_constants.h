@@ -131,4 +131,10 @@ typedef enum {
     // TODO other states not used for now
 } cc1101_chipstate_t;
 
+typedef enum {
+    CC1101_GDO0 = 0,
+    CC1101_GDO1 = 1,
+    CC1101_GDO2 = 2,
+} cc1101_gdOx_t;
+
 #endif /* CONSTANTS_H_ */

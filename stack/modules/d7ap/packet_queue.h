@@ -40,11 +40,11 @@ void packet_queue_free_packet(packet_t*);
 /*! Finds the packet_t corresponding to the supplied hw_radio_packet_t */
 packet_t* packet_queue_find_packet(hw_radio_packet_t*);
 
-/*! Indicates the supplied packet has been succesfully received and is ready for further processing */
+/*! Indicates the supplied packet has been successfully received and is ready for further processing */
 void packet_queue_mark_received(hw_radio_packet_t*);
 
-/*! Indicates the supplied packet has been succesfully transmitted and can be freed */
-void packet_queue_mark_transmitted(hw_radio_packet_t*);
+/*! Indicates the supplied packet has been successfully transmitted and can be freed, returns the corresponding packet_t */
+packet_t* packet_queue_mark_transmitted(hw_radio_packet_t*);
 
 /*! Indicates the supplied packet is being processed */
 void packet_queue_mark_processing(packet_t*);

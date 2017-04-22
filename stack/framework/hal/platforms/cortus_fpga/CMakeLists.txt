@@ -60,7 +60,8 @@ ADD_LIBRARY(PLATFORM OBJECT
         cortus_main.c
         cortus_leds.c
         cortus_userbutton.c
-        inc/userbutton.h
+        libc_overrides.c
+        inc/button.h
 )
 
 #Include the sources for the cortus fpga

@@ -109,7 +109,9 @@ void stop_radio(){
 
 void start_radio(){
 #if defined USE_SI4460
+#ifdef HAS_LCD
     lcd_write_string("Start sending \n");
+#endif
 #elif defined USE_CC1101
     cc1101_interface_strobe(RF_SCAL);
     cc1101_interface_strobe(RF_STX);
@@ -148,9 +150,11 @@ void change_eirp(){
 #elif defined USE_CC1101
     cc1101_interface_write_single_patable(current_eirp_level);
 #endif
+#ifdef HAS_LCD
     char string[10] = "";
-    sprintf(string, "ptx %3x", current_eirp_level),
+    sprintf(string, "ptx %3x", current_eirp_level);
     lcd_write_string(string);
+#endif
 }
 
 void start()

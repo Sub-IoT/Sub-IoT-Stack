@@ -553,6 +553,21 @@ error_t hw_radio_set_rx(hw_rx_cfg_t const* rx_cfg, rx_packet_callback_t rx_cb, r
 	return SUCCESS;
 }
 
+error_t hw_radio_start_background_scan(hw_rx_cfg_t const* rx_cfg, rx_packet_callback_t rx_cb,
+                                                int16_t rssi_thr)
+{
+  assert(false);
+  // TODO implement this
+}
+
+error_t hw_radio_send_background_packet(hw_radio_packet_t* packet,
+                                        tx_packet_callback_t tx_callback,
+                                        uint16_t eta, uint16_t tx_duration)
+{
+  assert(false);
+  // TODO implement this
+}
+
 error_t hw_radio_send_packet(hw_radio_packet_t* packet, tx_packet_callback_t tx_cb)
 {
 	// TODO error handling EINVAL, ESIZE, EOFF

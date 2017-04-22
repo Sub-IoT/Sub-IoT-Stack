@@ -17,16 +17,6 @@
 # limitations under the License.
 #
 
-#See the explanation of APP_OPTION and APP_PARAM in cmake/app_macros.cmake
-#for details on how to add application-specific CMake GUI entries
-
-#By convention, application parameters should be prefixed with '${APP_PREFIX}'
-#Some examples:
-#APP_OPTION(${APP_PREFIX}_<option_name> "Option explanation" <default_value>)
-#APP_PARAM(${APP_PREFIX}_<param_name> "<default_value>" <type> "Parameter explanation")
-#
-#Cache properties can be set on application parameters just like on regular cache parameters
-#SET_PROPERTY(CACHE ${APP_PREFIX}_<param_name> PROPERTY STRINGS "value1;value2")
-#
-
-APP_BUILD(NAME ${APP_NAME} SOURCES d7ap_test.c LIBS d7ap framework)
+#Each Framework component must generate a single OBJECT library named
+#'${COMPONENT_LIBRARY_NAME}'
+ADD_LIBRARY(${COMPONENT_LIBRARY_NAME} OBJECT pn9.c)

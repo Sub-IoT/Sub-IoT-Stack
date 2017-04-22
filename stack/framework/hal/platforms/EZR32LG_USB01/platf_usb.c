@@ -28,7 +28,8 @@
 #include "em_cmu.h"
 #include <string.h>
 #include <debug.h>
-
+#include "hwsystem.h"
+#include <stdio.h>
 
 #include "em_usbd.h"
 #include "em_usb.h"
@@ -59,14 +60,23 @@ const USBD_Init_TypeDef usbInitStruct =
 
 void __usb_init_cdc()
 {
-	//BSP_Init(BSP_INIT_DEFAULT);   /* Initialize DK board register access */
+        //BSP_Init(BSP_INIT_DEFAULT);   /* Initialize DK board register access */
 
 	//CMU_ClockSelectSet(cmuClock_HF, cmuSelect_HFRCO);
 
 	/* Initialize the communication class device. */
 	CDC_Init();
 
-	/* Initialize and start USB device stack. */
+        // store the UID in a string descriptor. This will show up as ID_SERIAL_SHORT attribute
+        // in udev, and can thus be used for generating a symlink containing the device UID
+        uint64_t uid = hw_get_unique_id();
+        char uid_str[16];
+        sprintf(uid_str, "%lx%lx", (uint32_t)(uid >> 32), (uint32_t)uid);
+        for(int i = 0; i < 16; i++) {
+            _usb_descr_serial.name[i] = (uid_str[i]);
+        }
+
+        /* Initialize and start USB device stack. */
 	USBD_Init(&usbInitStruct);
 
 	/*

@@ -16,6 +16,10 @@
  * limitations under the License.
  */
 
+
+// This examples pushes sensor data to gateway(s) by manually constructing an ALP command with a file read result action
+// (unsolicited message). The D7 session is configured to request ACKs. All received ACKs are printed.
+
 #include "hwleds.h"
 #include "hwsystem.h"
 #include "scheduler.h"
@@ -32,8 +36,6 @@
 #include "fs.h"
 #include "log.h"
 
-
-#include "button.h"
 #if (defined PLATFORM_EFM32GG_STK3700 || defined PLATFORM_EFM32HG_STK3400 || defined PLATFORM_EZR32LG_WSTK6200A || defined PLATFORM_EZR32LG_OCTA)
   #include "platform_sensors.h"
 #endif
@@ -54,29 +56,52 @@
 
 #define SENSOR_FILE_ID           0x40
 #define SENSOR_FILE_SIZE         8
-#define ACTION_FILE_ID           0x41
+#define SENSOR_INTERVAL_SEC	TIMER_TICKS_PER_SEC * 10
 
-#define SENSOR_UPDATE	TIMER_TICKS_PER_SEC * 10
+// Define the D7 interface configuration used for sending the ALP command on
+static d7asp_master_session_config_t session_config = {
+    .qos = {
+        .qos_resp_mode = SESSION_RESP_MODE_ANY,
+        .qos_retry_mode = SESSION_RETRY_MODE_NO,
+        .qos_stop_on_error       = false,
+        .qos_record              = false
+    },
+    .dormant_timeout = 0,
+    .addressee = {
+        .ctrl = {
+            .nls_method = AES_NONE,
+            .id_type = ID_TYPE_NOID,
+        },
+        .access_class = 0x01,
+        .id = 0
+    }
+};
+
 
 
 void execute_sensor_measurement()
 {
-#if (defined PLATFORM_EFM32GG_STK3700)
-  float internal_temp = hw_get_internal_temperature();
-  lcd_write_temperature(internal_temp*10, 1);
-  uint32_t vdd = hw_get_battery();
-  fs_write_file(SENSOR_FILE_ID, 0, (uint8_t*)&internal_temp, sizeof(internal_temp)); // File 0x40 is configured to use D7AActP trigger an ALP action which broadcasts this file data on Access Class 0
-#elif (defined PLATFORM_EFM32HG_STK3400  || defined PLATFORM_EZR32LG_WSTK6200A || defined PLATFORM_EZR32LG_OCTA)
+  // first get the sensor reading ...
+
+  uint8_t sensor_values[SENSOR_FILE_SIZE] = { 0 };
+
+#if (defined PLATFORM_EFM32HG_STK3400  || defined PLATFORM_EZR32LG_WSTK6200A \
+  || defined PLATFORM_EZR32LG_OCTA || defined PLATFORM_EFM32GG_STK3700 || defined PLATFORM_EZR32LG_USB01)
   char str[30];
 
   float internal_temp = hw_get_internal_temperature();
+#if (defined PLATFORM_EFM32GG_STK3700)
+  lcd_write_temperature(internal_temp*10, 1);
+#else
   sprintf(str, "Int T: %2d.%d C", (int)internal_temp, (int)(internal_temp*10)%10);
   LCD_WRITE_LINE(2,str);
+#endif
 
   log_print_string(str);
 
-  uint32_t rhData;
-  uint32_t tData;
+  uint32_t rhData = 0;
+  uint32_t tData = 0;
+#if ! defined PLATFORM_EZR32LG_USB01
   getHumidityAndTemperature(&rhData, &tData);
 
   sprintf(str, "Ext T: %d.%d C", (tData/1000), (tData%1000)/100);
@@ -86,6 +111,7 @@ void execute_sensor_measurement()
   sprintf(str, "Ext H: %d.%d", (rhData/1000), (rhData%1000)/100);
   LCD_WRITE_LINE(4,str);
   log_print_string(str);
+#endif
 
   uint32_t vdd = hw_get_battery();
 
@@ -93,77 +119,57 @@ void execute_sensor_measurement()
   LCD_WRITE_LINE(5,str);
   log_print_string(str);
 
-  uint8_t sensor_values[8];
   uint16_t *pointer =  (uint16_t*) sensor_values;
   *pointer++ = (uint16_t) (internal_temp * 10);
   *pointer++ = (uint16_t) (tData /100);
   *pointer++ = (uint16_t) (rhData /100);
   *pointer++ = (uint16_t) (vdd /10);
-
-  fs_write_file(SENSOR_FILE_ID, 0, (uint8_t*)&sensor_values,8);
 #else
   // no sensor, we just write the current timestamp
   timer_tick_t t = timer_get_counter_value();
-  fs_write_file(SENSOR_FILE_ID, 0, (uint8_t*)&t, sizeof(timer_tick_t));
+  memcpy(sensor_values, (uint8_t*)&t, sizeof(timer_tick_t));
 #endif
 
-  timer_post_task_delay(&execute_sensor_measurement, SENSOR_UPDATE);
+  // Generate ALP command. We do this manually for now (until we have an API for this).
+  // We will be sending a return file data action, without a preceding file read request.
+  // This is an unsolicited message, where we push the sensor data to the gateway(s).
+  // Please refer to the spec for the format
+
+  uint8_t alp_command[4 + SENSOR_FILE_SIZE] = {
+    // ALP Control byte
+    ALP_OP_RETURN_FILE_DATA,
+    // File Data Request operand:
+    SENSOR_FILE_ID, // the file ID
+    0, // offset in file
+    SENSOR_FILE_SIZE // data length
+    // the sensor data, see below
+  };
+
+  memcpy(alp_command + 4, sensor_values, SENSOR_FILE_SIZE);
+
+  alp_execute_command(alp_command, sizeof(alp_command), &session_config);
+  timer_post_task_delay(&execute_sensor_measurement, SENSOR_INTERVAL_SEC);
 
 #ifdef PLATFORM_EZR32LG_OCTA
   led_flash_green();
 #endif
 }
 
-void init_user_files()
+void on_alp_command_completed_cb(uint8_t tag_id, bool success)
 {
-    // file 0x40: contains our sensor data + configure an action file to be executed upon write
-    fs_file_header_t file_header = (fs_file_header_t){
-        .file_properties.action_protocol_enabled = 1,
-        .file_properties.action_file_id = ACTION_FILE_ID,
-        .file_properties.action_condition = ALP_ACT_COND_WRITE,
-        .file_properties.storage_class = FS_STORAGE_VOLATILE,
-        .file_properties.permissions = 0, // TODO
-        .length = SENSOR_FILE_SIZE
-    };
-
-    fs_init_file(SENSOR_FILE_ID, &file_header, NULL);
-
-    // configure file notification using D7AActP: write ALP command to broadcast changes made to file 0x40 in file 0x41
-
-    // first generate ALP command. We do this manually for now (until we have an API for this).
-    // Please refer to the spec for the format
-
-    uint8_t alp_command[4] = {
-      // ALP Control byte
-      ALP_OP_READ_FILE_DATA,
-      // File Data Request operand:
-      SENSOR_FILE_ID, // the file ID
-      0, // offset in file
-      SENSOR_FILE_SIZE // requested data length
-    };
-
-    // Define the D7 interface configuration used for sending the result of above ALP command on
-    d7asp_master_session_config_t session_config = {
-        .qos = {
-            .qos_resp_mode = SESSION_RESP_MODE_ANY,
-            .qos_retry_mode = SESSION_RETRY_MODE_NO,
-            .qos_stop_on_error       = false,
-            .qos_record              = false
-        },
-        .dormant_timeout = 0,
-        .addressee = {
-            .ctrl = {
-                .nls_method = AES_NONE,
-                .id_type = ID_TYPE_NOID,
-            },
-            .access_class = 0x01,
-            .id = 0
-        }
-    };
-
-    // finally, register D7AActP file
-    fs_init_file_with_D7AActP(ACTION_FILE_ID, &session_config, alp_command, sizeof(alp_command));
+    if(success)
+      log_print_string("Command completed successfully");
+    else
+      log_print_string("Command failed, no ack received");
 }
+
+void on_alp_command_result_cb(d7asp_result_t result, uint8_t* payload, uint8_t payload_length)
+{
+    log_print_string("recv response @ %i dB link budget from:", result.link_budget);
+    log_print_data(result.addressee->id, 8);
+}
+
+static alp_init_args_t alp_init_args;
 
 void bootstrap()
 {
@@ -177,7 +183,7 @@ void bootstrap()
                 .ch_freq_band = PHY_BAND_868
             },
             .subprofiles[0] = {
-                .subband_bitmap = 0x01, // only the first subband is selectable
+                .subband_bitmap = 0x00, // void scan automation channel list
                 .scan_automation_period = 0,
             },
             .subbands[0] = (subband_t){
@@ -191,21 +197,22 @@ void bootstrap()
     };
 
     fs_init_args_t fs_init_args = (fs_init_args_t){
-        .fs_user_files_init_cb = &init_user_files,
         .access_profiles_count = 1,
         .access_profiles = access_classes,
         .access_class = 0x01
     };
 
-    d7ap_stack_init(&fs_init_args, NULL, false, NULL);
+    alp_init_args.alp_command_completed_cb = &on_alp_command_completed_cb;
+    alp_init_args.alp_command_result_cb = &on_alp_command_result_cb;
+    d7ap_stack_init(&fs_init_args, &alp_init_args, false, NULL);
 
 #if (defined PLATFORM_EFM32GG_STK3700 || defined PLATFORM_EFM32HG_STK3400 || defined PLATFORM_EZR32LG_WSTK6200A || defined PLATFORM_EZR32LG_OCTA)
     initSensors();
 #endif
 
     sched_register_task(&execute_sensor_measurement);
-    timer_post_task_delay(&execute_sensor_measurement, TIMER_TICKS_PER_SEC);
+    timer_post_task_delay(&execute_sensor_measurement, SENSOR_INTERVAL_SEC);
 
-    LCD_WRITE_STRING("EFM32 Sensor\n");
+    LCD_WRITE_STRING("Sensor push\n");
 }
 

@@ -73,6 +73,7 @@ PLATFORM_HEADER_DEFINE(
          ${PLATFORM_PREFIX}_CONSOLE_BAUDRATE
   BOOL   ${PLATFORM_PREFIX}_DEBUGPINS
          PLATFORM_USE_USB_CDC
+		 PLATFORM_USE_VCOM
 )
 
 #Define the 'platform library'. Every platform must define a 'PLATFORM' object library

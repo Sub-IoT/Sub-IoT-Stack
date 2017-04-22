@@ -34,7 +34,7 @@ static const USB_DeviceDescriptor_TypeDef USBDESC_deviceDesc __attribute__ ((ali
   .bcdDevice          = 0x0000,
   .iManufacturer      = 1,
   .iProduct           = 2,
-  .iSerialNumber      = 0,
+  .iSerialNumber      = 3,
   .bNumConfigurations = 1
 };
 
@@ -162,11 +162,34 @@ STATIC_CONST_STRING_DESC( iProduct     , 'E','F','M','3','2',' ','U','S','B', \
                                          'e','v','i','c','e' );
 #endif
 
+// adding an extra string descriptor for the serial number. This one is not const so we can adapt
+// later (ie use UID for this). The goal is to have something unique to use in a udev rule
+
+EFM32_PACK_START( 1 )
+typedef struct
+{
+  uint8_t  len;
+  uint8_t  type;
+  char16_t name[ 16 + 1 ];
+} __attribute__ ((packed)) _usb_descr_serial_t;
+EFM32_PACK_END()
+EFM32_ALIGN( 4 )
+EFM32_PACK_START( 1 )
+_usb_descr_serial_t _usb_descr_serial __attribute__ ((aligned(4)))=
+{
+  .len  = sizeof( _usb_descr_serial_t ) - 2,
+  .type = USB_STRING_DESCRIPTOR,
+  .name = { '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '\0'}  // dummy ID, replaced later
+};
+EFM32_PACK_END()
+
+
 static const void * const USBDESC_strings[] =
 {
   &langID,
   &iManufacturer,
   &iProduct,
+  &_usb_descr_serial
 };
 
 /* Endpoint buffer sizes */
