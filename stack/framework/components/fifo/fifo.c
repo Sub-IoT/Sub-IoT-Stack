@@ -33,12 +33,21 @@ void fifo_init_filled(fifo_t *fifo, uint8_t *buffer, uint16_t filled_size, uint1
 {
     fifo->buffer = buffer;
     fifo->head_idx = 0;
-    fifo->max_size = max_size;
+    fifo->max_size = max_size - 1;
     fifo->tail_idx = filled_size;
 }
 
 error_t fifo_put(fifo_t *fifo, uint8_t *data, uint16_t len)
 {
+    if(fifo->tail_idx < fifo->head_idx)
+    {
+        if(fifo->tail_idx + len >= fifo->head_idx)
+            return ESIZE;
+        memcpy(fifo->buffer + fifo->tail_idx, data, len);
+        fifo->tail_idx += len;
+        return SUCCESS;
+    }
+
     if(fifo->tail_idx + len <= fifo->max_size)
     {
         memcpy(fifo->buffer + fifo->tail_idx, data, len);
