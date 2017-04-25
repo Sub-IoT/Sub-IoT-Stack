@@ -173,8 +173,7 @@ void packet_transmitted(hw_radio_packet_t* packet)
 
 void bootstrap()
 {
-    DPRINT("Device booted at time: %d\n", timer_get_counter_value()); // TODO not printed for some reason, debug later
-
+    DPRINT("Device booted at time: %d\n", timer_get_counter_value());
     data[0] = PACKET_LENGTH-1;
     int i = 1;
     for (;i<PACKET_LENGTH;i++)
@@ -187,9 +186,9 @@ void bootstrap()
 
 	#ifdef RX_MODE
     	sched_register_task(&start_rx);
-        sched_post_task(&start_rx);
+      sched_post_task(&start_rx);
 	#else
-        sched_register_task(&transmit_packet);
-        //sched_post_task(&transmit_packet);
+      sched_register_task(&transmit_packet);
+      sched_post_task(&transmit_packet);
 	#endif
 }

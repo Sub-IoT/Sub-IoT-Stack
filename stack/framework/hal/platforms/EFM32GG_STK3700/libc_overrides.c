@@ -80,11 +80,14 @@ void __assert_func( const char *file, int line, const char *func, const char *fa
 	lcd_write_string("ERROR");
 	lcd_write_number(timer_get_counter_value());
 
-    __asm__("BKPT"); // break into debugger
-
 	while(1)
 	{
 		printf("assertion \"%s\" failed: file \"%s\", line %d%s%s\n",failedexpr, file, line, func ? ", function: " : "", func ? func : "");
+
+    if (CoreDebug->DHCSR & 1)
+    {
+        __BKPT (0); // break into debugger, when attached
+    }
 
 		for(uint32_t j = 0; j < 20; j++)
 		{

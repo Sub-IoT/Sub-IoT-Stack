@@ -59,11 +59,10 @@
  * DEBUG PIN DEFINITIONS *
  ************************/
 
-#define DEBUG_PIN_NUM 4
-#define DEBUG0	D4
-#define DEBUG1	D5
-#define DEBUG2	D6
-#define DEBUG3	D7
+#define DEBUG_PIN_NUM 3
+#define DEBUG0	D5
+#define DEBUG1	D6
+#define DEBUG2	D7
 
 /**************************
  * USERBUTTON DEFINITIONS *
@@ -83,6 +82,16 @@
 #define CC1101_GDO2_PIN     C4
 #endif
 
+#ifdef USE_SX127X
+#define SX127x_SPI_USART    1
+#define SX127x_SPI_LOCATION 1
+#define SX127x_SPI_PIN_CS   D3
+#define SX127x_SPI_BAUDRATE 10000000
+#define SX127x_DIO0_PIN C5
+#define SX127x_DIO1_PIN B12
+#define SX127x_DIO3_PIN C3
+#define SX127x_RESET_PIN D4
+#endif
 #define HAS_LCD
 
 #endif

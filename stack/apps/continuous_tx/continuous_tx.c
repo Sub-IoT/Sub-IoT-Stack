@@ -31,9 +31,10 @@
 #include "stdlib.h"
 #include "hwsystem.h"
 #include "platform_defs.h"
+#include "debug.h"
 
-#if !defined (USE_CC1101) && !defined (USE_SI4460)
-    #error "This application only works with cc1101 and SI4460"
+#if !defined (USE_CC1101) && !defined (USE_SI4460) && !defined (USE_SX127X)
+    #error "This application only works with cc1101, si4460 or sx127x radios"
 #endif
 
 #include "log.h"
@@ -53,49 +54,48 @@
 #define DPRINT(...)
 #endif
 
+
+
 #if defined USE_CC1101
-#include "../../framework/hal/chips/cc1101/cc1101_constants.h"
-uint8_t cc1101_interface_strobe(uint8_t); // prototype (to prevent warning) of internal driver function which is used here.
-uint8_t cc1101_interface_write_single_reg(uint8_t, uint8_t);
-uint8_t cc1101_interface_write_single_patable(uint8_t);
-static bool radio_status = false;
-static uint8_t current_eirp_level = 0xC0;
-static uint8_t max_eirp_level = 0xC0;//868 MHz = +12 dBm , 433 MHz = +10 dBm
-typedef enum {
-    CW_direct   = 0x30,
-    FSK_direct  = 0x02,
-    GFSK_direct = 0x12
-}modulation;
+  #include "../../framework/hal/chips/cc1101/cc1101_constants.h"
+  uint8_t cc1101_interface_strobe(uint8_t); // prototype (to prevent warning) of internal driver function which is used here.
+  uint8_t cc1101_interface_write_single_reg(uint8_t, uint8_t);
+  uint8_t cc1101_interface_write_single_patable(uint8_t);
+  #define DEFAULT_EIRP 0xC0
+  #define MAX_EIRP 0xC0 //868 MHz = +12 dBm , 433 MHz = +10 dBm
 
 #elif defined USE_SI4460
-// include private API which is not exported by cmake for 'normal' apps
-#include "../../framework/hal/chips/si4460/ezradiodrv/inc/ezradio_cmd.h"
-#include "../../framework/hal/chips/si4460/ezradiodrv/inc/ezradio_api_lib.h"
-#include "../../framework/hal/chips/si4460/si4460_registers.h"
-#include "../../framework/hal/chips/si4460/si4460.h"
-#include "../../framework/hal/chips/si4460/si4460_interface.h"
-static ezradio_cmd_reply_t ezradioReply;
-static bool radio_status = false;
-static uint8_t current_eirp_level = 0x7f;
-static uint8_t max_eirp_level = 0x7f;// 868 MHz = +13 dBm
-typedef enum {
-    CW_direct   = 0x18,
-    GFSK_direct = 0x13,
-    CW_packet   = 0x00,
-    GFSK_packet = 0x03,
-}modulation;
+  // include private API which is not exported by cmake for 'normal' apps
+  #include "../../framework/hal/chips/si4460/ezradiodrv/inc/ezradio_cmd.h"
+  #include "../../framework/hal/chips/si4460/ezradiodrv/inc/ezradio_api_lib.h"
+  #include "../../framework/hal/chips/si4460/si4460_registers.h"
+  #include "../../framework/hal/chips/si4460/si4460.h"
+  #include "../../framework/hal/chips/si4460/si4460_interface.h"
+  static ezradio_cmd_reply_t ezradioReply;
+  #define DEFAULT_EIRP 0x7f
+  #define MAX_EIRP 0x7f // 868 MHz = +13 dBm
+#elif defined USE_SX127X
+  #define DEFAULT_EIRP 0 // TODO
+  #define MAX_EIRP 0 // TODO
 #endif
+
+typedef enum {
+  MODULATION_CW,
+  MODULATION_GFSK,
+} modulation_t;
+
 
 #define NORMAL_RATE_CHANNEL_COUNT 8
 #define LO_RATE_CHANNEL_COUNT 69
 
 static hw_tx_cfg_t tx_cfg;
 static uint8_t current_channel_indexes_index = 0;
-static modulation current_modulation = GFSK_direct;
+static modulation_t current_modulation = MODULATION_GFSK;
 static phy_channel_band_t current_channel_band = PHY_BAND_868;
 static phy_channel_class_t current_channel_class = PHY_CLASS_NORMAL_RATE;
 static uint8_t channel_indexes[NORMAL_RATE_CHANNEL_COUNT] = { 0 }; // reallocated later depending on band/class
 static uint8_t channel_count = NORMAL_RATE_CHANNEL_COUNT;
+static uint8_t current_eirp_level = DEFAULT_EIRP;
 
 void stop_radio(){
 #if defined USE_SI4460
@@ -104,7 +104,6 @@ void stop_radio(){
 #elif defined USE_CC1101
     cc1101_interface_strobe(RF_SIDLE);
 #endif
-    radio_status = false;
 }
 
 void start_radio(){
@@ -116,17 +115,13 @@ void start_radio(){
     cc1101_interface_strobe(RF_SCAL);
     cc1101_interface_strobe(RF_STX);
 #endif
-    radio_status = true;
 }
 
-void configure_radio(modulation mod){
-#if defined USE_SI4460
-    if(mod == CW_direct){
-        //configure and start the radio with CW_direct
+void configure_radio(modulation_t mod){
+#if defined USE_SI4460 || defined USE_SX127X
+    if(mod == MODULATION_CW){
         hw_radio_continuous_tx(&tx_cfg, true);
-    }
-    else{
-        //configure and start the radio with GFSK_direct
+    } else {
         hw_radio_continuous_tx(&tx_cfg, false);
     }
 
@@ -139,7 +134,12 @@ void configure_radio(modulation mod){
     cc1101_interface_write_single_patable(current_eirp_level);
     //cc1101_interface_write_single_reg(0x08, 0x22); // PKTCTRL0 random PN9 mode + disable data whitening
     cc1101_interface_write_single_reg(0x08, 0x22); // PKTCTRL0 disable data whitening, continious preamble
-    cc1101_interface_write_single_reg(0x12, mod); // MDMCFG2
+    if(mod == MODULATION_CW) {
+      cc1101_interface_write_single_reg(0x12, 0x30); // MDMCFG2
+    } else {
+      cc1101_interface_write_single_reg(0x12, 0x12); // MDMCFG2
+    }
+
     cc1101_interface_strobe(0x32); // strobe calibrate
 #endif
 }
@@ -201,11 +201,12 @@ void userbutton_callback(button_id_t button_id)
     switch(button_id)
     {
         case 0:
+            // TODO switch to values in dBm and use API to change instead of directly changing reg values
             // change ezr eirp and restart
-            if(current_eirp_level < max_eirp_level+1)
+            if(current_eirp_level < MAX_EIRP+1)
                 current_eirp_level -= 0x05;
             else
-                current_eirp_level = max_eirp_level;
+                current_eirp_level = MAX_EIRP;
             //change eirp level
             change_eirp();
             break;
@@ -219,6 +220,16 @@ void userbutton_callback(button_id_t button_id)
     }
 }
 #endif
+
+
+// packet callbacks only here to make hwradio_init() happy, not used
+hw_radio_packet_t* alloc_packet_callback(uint8_t length) {
+  assert(false);
+}
+
+void release_packet_callback(hw_radio_packet_t* p) {
+  assert(false);
+}
 
 void bootstrap()
 {
@@ -251,8 +262,8 @@ void bootstrap()
     ubutton_register_callback(1, &userbutton_callback);
 #endif
 
-    hw_radio_init(NULL, NULL);
+    hw_radio_init(&alloc_packet_callback, &release_packet_callback);
 
     sched_register_task(&start);
-    timer_post_task_delay(&start, TIMER_TICKS_PER_SEC * 2);
+    timer_post_task_delay(&start, 500);
 }

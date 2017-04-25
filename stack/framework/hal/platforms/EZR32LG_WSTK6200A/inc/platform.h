@@ -66,14 +66,6 @@
 // USE CONSOLE_UART 3 / LOCATION 1
 
 
-/********************
- * SPI RF DEFINITIONS *
- *******************/
-
-
-    #define si4455_GDO0_PIN A15
-    #define si4455_GDO1_PIN E14
-    #define si4455_SDN_PIN  E8
 
 /*************************
  * DEBUG PIN DEFINITIONS *
