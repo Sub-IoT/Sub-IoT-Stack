@@ -12,6 +12,8 @@
 #include "hwgpio.h"
 #include "hwi2c.h"
 
+#include <stdlib.h>
+
 #include "platform.h"
 
 // TODO use other ways to avoid long polling
@@ -188,4 +190,46 @@ int8_t i2c_write_read(i2c_handle_t* i2c, uint8_t to, uint8_t* payload, int lengt
 	  .buf[1].data = receive,
 	  .buf[1].len  = receive_length,
 	});
+}
+
+int8_t i2c_read_memory(i2c_handle_t* i2c, uint8_t to, uint16_t register_address,  uint8_t register_address_size, uint8_t* payload, int length)
+{
+	uint8_t mem_addr_size = register_address_size == 8 ? 1 : 2;
+	uint8_t send[2] = {register_address & 0xFF, register_address  >> 8};
+
+	return _perform_i2c_transfer(i2c, (I2C_TransferSeq_TypeDef) {
+	    .addr        = to,
+	    .flags       = I2C_FLAG_WRITE_READ,
+	    .buf[0].data = send,
+	    .buf[0].len  = mem_addr_size,
+		  .buf[1].data = payload,
+		  .buf[1].len  = length,
+		});
+}
+
+int8_t i2c_write_memory(i2c_handle_t* i2c, uint8_t to, uint16_t register_address,  uint8_t register_address_size, uint8_t* payload, int length)
+{
+	uint8_t mem_addr_size = register_address_size == 8 ? 1 : 2;
+	uint8_t *new_payload;
+
+	   /* Initial memory allocation */
+	new_payload = (uint8_t *) malloc(length + mem_addr_size);
+
+	if (mem_addr_size == 1)
+	{
+		new_payload[0] = register_address;
+	} else {
+		new_payload[0] = register_address & 0xFF;
+		new_payload[1] = register_address >> 8;
+	}
+
+	memcpy(&new_payload[mem_addr_size], payload, length);
+
+
+	return _perform_i2c_transfer(i2c, (I2C_TransferSeq_TypeDef) {
+	    .addr        = to,
+	    .flags       = I2C_FLAG_WRITE,
+	    .buf[0].data = new_payload,
+	    .buf[0].len  = length + mem_addr_size,
+		});
 }

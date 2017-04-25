@@ -135,9 +135,15 @@ static void gpio_int_callback(uint8_t pin)
 
 __LINK_C error_t hw_gpio_configure_interrupt(pin_id_t pin_id, gpio_inthandler_t callback, uint8_t event_mask)
 {
-    if(interrupts[pin_id.pin].interrupt_port != pin_id.port)
-    	return EOFF;
-    else if(callback == 0x0 || event_mask > (GPIO_RISING_EDGE | GPIO_FALLING_EDGE))
+	if (interrupts[pin_id.pin].interrupt_port != 0xFF)
+	{
+		if (interrupts[pin_id.pin].interrupt_port != pin_id.port)
+			return EOFF;
+	} else {
+		interrupts[pin_id.pin].interrupt_port = pin_id.port;
+	}
+
+    if(callback == 0x0 || event_mask > (GPIO_RISING_EDGE | GPIO_FALLING_EDGE))
     	return EINVAL;
 
     error_t err;
