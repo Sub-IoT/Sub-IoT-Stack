@@ -67,6 +67,7 @@ ADD_LIBRARY (${CHIP_LIBRARY_NAME} OBJECT
     emlib/src/em_system.c
     emlib/src/em_cmu.c
     emlib/src/em_emu.c
+    emlib/src/em_rmu.c
     emlib/src/em_gpio.c
     emlib/src/em_usart.c
     emlib/src/em_rtc.c
