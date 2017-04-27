@@ -67,7 +67,7 @@ typedef enum {
   OPMODE_FSTX = 2,
   OPMODE_TX = 3,
   OPMODE_FSRX = 4,
-  OPMODE_RX = 5,
+  OPMODE_RX = 5, // RXCONTINUOUS in case of LoRa
 } opmode_t;
 
 typedef enum {
@@ -92,6 +92,7 @@ static release_packet_callback_t release_packet_callback;
 static rx_packet_callback_t rx_packet_callback;
 static tx_packet_callback_t tx_packet_callback;
 static state_t state = STATE_IDLE;
+static bool lora_mode = false;
 static hw_radio_packet_t* current_packet;
 static uint8_t current_packet_data_offset = 0;
 static rssi_valid_callback_t rssi_valid_callback;
@@ -144,8 +145,12 @@ static void set_lora_mode(bool use_lora) {
   write_reg(REG_OPMODE, (read_reg(REG_OPMODE) & RFLR_OPMODE_LONGRANGEMODE_MASK) | (use_lora << 7)); // TODO can only be modified in sleep mode
   if(use_lora) {
     DPRINT("Enabling LoRa mode");
-    write_reg(REG_LR_MODEMCONFIG1, 0x73); // BW=125 kHz, CR=4/5, implicit header mode
+    write_reg(REG_LR_MODEMCONFIG1, 0x72); // BW=125 kHz, CR=4/5, explicit header mode
     write_reg(REG_LR_MODEMCONFIG2, 0x90); // SF=9, CRC disabled
+    lora_mode = true;
+  } else {
+    DPRINT("Enabling GFSK mode");
+    lora_mode = false;
   }
 }
 
@@ -305,7 +310,11 @@ static void init_regs() {
   // TODO burst write reg?
 }
 
-static void packet_transmitted_isr(pin_id_t pin_id, uint8_t event_mask) {
+static inline int16_t get_rssi() {
+  return - read_reg(REG_RSSIVALUE) / 2;
+}
+
+static void packet_transmitted_isr() {
   hw_gpio_disable_interrupt(SX127x_DIO0_PIN);
   DPRINT("packet transmitted ISR\n");
   assert(state == STATE_TX);
@@ -323,12 +332,53 @@ static void packet_transmitted_isr(pin_id_t pin_id, uint8_t event_mask) {
   }
 }
 
-static inline void flush_fifo() {
-  write_reg(REG_IRQFLAGS2, 0x10);
+static void lora_rxdone_isr() {
+  hw_gpio_disable_interrupt(SX127x_DIO0_PIN);
+  DPRINT("LoRa RxDone ISR\n");
+  assert(state == STATE_RX && lora_mode);
+  uint8_t irqflags = read_reg(REG_LR_IRQFLAGS);
+  assert(irqflags & RFLR_IRQFLAGS_RXDONE_MASK);
+  // TODO check PayloadCRCError and ValidHeader?
+
+  uint8_t len = read_reg(REG_LR_RXNBBYTES);
+  write_reg(REG_LR_FIFOADDRPTR, read_reg(REG_LR_FIFORXCURRENTADDR));
+  DPRINT("rx packet len=%i\n", len);
+  current_packet = alloc_packet_callback(len);
+  current_packet->length = len;
+  for(int i = 0; i < len; i++) {
+    current_packet->data[i] = read_reg(REG_FIFO);
+  }
+
+  write_reg(REG_LR_FIFORXBASEADDR, 0);
+  write_reg(REG_LR_FIFOADDRPTR, 0);
+  current_packet->rx_meta.timestamp = timer_get_counter_value();
+  current_packet->rx_meta.rx_cfg.syncword_class = current_syncword_class; // TODO
+  current_packet->rx_meta.crc_status = HW_CRC_UNAVAILABLE;
+  current_packet->rx_meta.rssi = get_rssi();
+  current_packet->rx_meta.lqi = 0; // TODO
+  memcpy(&(current_packet->rx_meta.rx_cfg.channel_id), &current_channel_id, sizeof(channel_id_t));
+  DPRINT_DATA(current_packet->data, current_packet->length + 1);
+  DPRINT("RX done\n");
+
+  rx_packet_callback(current_packet);
+  write_reg(REG_LR_IRQFLAGS, 0xFF);
+  hw_gpio_enable_interrupt(SX127x_DIO0_PIN);
 }
 
-static inline int16_t get_rssi() {
-  return - read_reg(REG_RSSIVALUE) / 2;
+static void dio0_isr(pin_id_t pin_id, uint8_t event_mask) {
+  if(lora_mode) {
+    if(state == STATE_RX) {
+      lora_rxdone_isr();
+    } else {
+      packet_transmitted_isr();
+    }
+  } else {
+    packet_transmitted_isr();
+  }
+}
+
+static inline void flush_fifo() {
+  write_reg(REG_IRQFLAGS2, 0x10);
 }
 
 static void fifo_threshold_isr(pin_id_t pin_id, uint8_t event_mask) {
@@ -401,32 +451,65 @@ static void start_rx(hw_rx_cfg_t const* rx_cfg) {
   state = STATE_RX;
 
   configure_channel(&(rx_cfg->channel_id));
-  configure_syncword(rx_cfg->syncword_class, rx_cfg->channel_id.channel_header.ch_coding);
 
-  DPRINT("START FG scan @ %i", timer_get_counter_value());
-  DEBUG_RX_START();
+  if(lora_mode) {
+    // mask all interrupts except RxDone
+    write_reg(REG_LR_IRQFLAGSMASK,  RFLR_IRQFLAGS_RXTIMEOUT |
+                                    // RFLR_IRQFLAGS_RXDONE |
+                                    RFLR_IRQFLAGS_PAYLOADCRCERROR |
+                                    RFLR_IRQFLAGS_VALIDHEADER |
+                                    RFLR_IRQFLAGS_TXDONE |
+                                    RFLR_IRQFLAGS_CADDONE |
+                                    RFLR_IRQFLAGS_FHSSCHANGEDCHANNEL |
+                                    RFLR_IRQFLAGS_CADDETECTED );
 
-  if(rx_packet_callback != 0) {
-    hw_gpio_enable_interrupt(SX127x_DIO1_PIN);
-  } else {
-    // when rx callback not set we ignore received packets
-    hw_gpio_disable_interrupt(SX127x_DIO1_PIN);
-    // TODO disable packet handler completely in this case?
-  }
+    // DIO0=RxDone
+    write_reg(REG_DIOMAPPING1, (read_reg(REG_DIOMAPPING1 ) & RFLR_DIOMAPPING1_DIO0_MASK) | RFLR_DIOMAPPING1_DIO0_00);
+    write_reg(REG_LR_FIFORXBASEADDR, 0);
+    write_reg(REG_LR_FIFOADDRPTR, 0);
 
-  flush_fifo();
-  current_packet_data_offset = 0;
-  set_opmode(OPMODE_RX);
-
-
-  if(rssi_valid_callback != 0)
-  {
-    while(!(read_reg(REG_IRQFLAGS1) & 0x08)) {
-      // wait for RxReady signal
+    if(rx_packet_callback != 0) {
+      hw_gpio_enable_interrupt(SX127x_DIO0_PIN);
+    } else {
+      // when rx callback not set we ignore received packets
+      hw_gpio_disable_interrupt(SX127x_DIO0_PIN);
+      // TODO disable packet handler completely in this case?
     }
 
-    rssi_valid_callback(get_rssi());
+    DPRINT("START LoRa FG scan @ %i", timer_get_counter_value());
+    DEBUG_RX_START();
+    write_reg(REG_LR_IRQFLAGS, 0xFF);
+    set_opmode(OPMODE_RX);
+
+    // TODO rssi_valid_cb
+  } else {
+    configure_syncword(rx_cfg->syncword_class, rx_cfg->channel_id.channel_header.ch_coding);
+    if(rx_packet_callback != 0) {
+      hw_gpio_enable_interrupt(SX127x_DIO1_PIN);
+    } else {
+      // when rx callback not set we ignore received packets
+      hw_gpio_disable_interrupt(SX127x_DIO1_PIN);
+      // TODO disable packet handler completely in this case?
+    }
+
+    DPRINT("START FG scan @ %i", timer_get_counter_value());
+    DEBUG_RX_START();
+
+    flush_fifo();
+    current_packet_data_offset = 0;
+    set_opmode(OPMODE_RX);
+
+
+    if(rssi_valid_callback != 0)
+    {
+      while(!(read_reg(REG_IRQFLAGS1) & 0x08)) {
+        // wait for RxReady signal
+      }
+
+      rssi_valid_callback(get_rssi());
+    }
   }
+
 }
 
 static void calibrate_rx_chain() {
@@ -473,7 +556,7 @@ error_t hw_radio_init(alloc_packet_callback_t alloc_packet_cb, release_packet_ca
   // TODO op mode
 
   error_t e;
-  e = hw_gpio_configure_interrupt(SX127x_DIO0_PIN, &packet_transmitted_isr, GPIO_RISING_EDGE); assert(e == SUCCESS);
+  e = hw_gpio_configure_interrupt(SX127x_DIO0_PIN, &dio0_isr, GPIO_RISING_EDGE); assert(e == SUCCESS);
   e = hw_gpio_configure_interrupt(SX127x_DIO1_PIN, &fifo_threshold_isr, GPIO_RISING_EDGE); assert(e == SUCCESS);
 
   return SUCCESS; // TODO FAIL return code
