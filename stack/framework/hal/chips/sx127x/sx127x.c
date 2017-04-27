@@ -34,6 +34,7 @@
 #include "platform.h"
 
 #include "sx1276Regs-Fsk.h"
+#include "sx1276Regs-LoRa.h"
 
 #include "pn9.h"
 
@@ -138,7 +139,17 @@ static void set_opmode(opmode_t opmode) {
   write_reg(REG_OPMODE, (read_reg(REG_OPMODE) & RF_OPMODE_MASK) | opmode);
 }
 
-static void set_eirp(eirp_t eirp) {
+static void set_lora_mode(bool use_lora) {
+  set_opmode(OPMODE_SLEEP); // mode changing requires being in sleep
+  write_reg(REG_OPMODE, (read_reg(REG_OPMODE) & RFLR_OPMODE_LONGRANGEMODE_MASK) | (use_lora << 7)); // TODO can only be modified in sleep mode
+  if(use_lora) {
+    DPRINT("Enabling LoRa mode");
+    write_reg(REG_LR_MODEMCONFIG1, 0x73); // BW=125 kHz, CR=4/5, implicit header mode
+    write_reg(REG_LR_MODEMCONFIG2, 0x90); // SF=9, CRC disabled
+  }
+}
+
+static void configure_eirp(eirp_t eirp) {
 #ifdef PLATFORM_SX127X_USE_PA_BOOST
   // Pout = 17-(15-outputpower)
   assert(eirp >= 2); // lower not supported when using PA_BOOST output
@@ -154,9 +165,11 @@ static void set_eirp(eirp_t eirp) {
 
 static void set_center_freq(const channel_id_t* channel) {
   assert(channel->channel_header.ch_freq_band == PHY_BAND_868); // TODO other bands
-  assert(channel->channel_header.ch_class == PHY_CLASS_NORMAL_RATE); // TODO other rates
+  assert(channel->channel_header.ch_class == PHY_CLASS_NORMAL_RATE ||
+         channel->channel_header.ch_class == PHY_CLASS_LORA); // TODO other rates
 
-   // TODO check channel index is allowed
+  // TODO check channel index is allowed
+  // TODO define channel settings for LoRa PHY
 
   uint32_t center_freq = 433.06e3;
   if(channel->channel_header.ch_freq_band == PHY_BAND_868)
@@ -177,16 +190,20 @@ static void set_center_freq(const channel_id_t* channel) {
   write_reg(REG_FRFLSB, (uint8_t)(center_freq & 0xFF));
 }
 
-static void set_channel(const channel_id_t* channel) {
-// TODO cache
-//  if(hw_radio_channel_ids_equal(&current_channel_id, channel)) {
-//    return;
-//  }
+static void configure_channel(const channel_id_t* channel) {
   assert(channel->channel_header.ch_freq_band == PHY_BAND_868); // TODO other bands
-  assert(channel->channel_header.ch_class == PHY_CLASS_NORMAL_RATE); // TODO other rates
+  assert(channel->channel_header.ch_class == PHY_CLASS_NORMAL_RATE ||
+         channel->channel_header.ch_class == PHY_CLASS_LORA ); // TODO other rates
   assert(channel->channel_header.ch_coding == PHY_CODING_PN9); // TODO FEC
 
+  if(hw_radio_channel_ids_equal(&current_channel_id, channel)) {
+    return;
+  }
+
+  set_lora_mode(channel->channel_header.ch_class == PHY_CLASS_LORA); // TODO only switch when needed
+
   set_center_freq(channel);
+  memcpy(&current_channel_id, channel, sizeof(channel_id_t));
 }
 
 static void init_regs() {
@@ -201,10 +218,10 @@ static void init_regs() {
   write_reg(REG_FDEVMSB, 0x03);
   write_reg(REG_FDEVLSB, 0x33);
 
-  set_channel(&current_channel_id);
+  configure_channel(&current_channel_id);
 
   // PA
-  set_eirp(10);
+  configure_eirp(10);
   write_reg(REG_PARAMP, (2 << 5) | 0x09); // BT=0.5 and PaRamp=40us // TODO
 
   // RX
@@ -292,7 +309,12 @@ static void packet_transmitted_isr(pin_id_t pin_id, uint8_t event_mask) {
   hw_gpio_disable_interrupt(SX127x_DIO0_PIN);
   DPRINT("packet transmitted ISR\n");
   assert(state == STATE_TX);
+  if(current_channel_id.channel_header.ch_class == PHY_CLASS_LORA) {
+    // in LoRa mode we have to clear the IRQ register manually
+    write_reg(REG_LR_IRQFLAGS, 0xFF);
+  }
 
+  DEBUG_TX_END();
   set_opmode(OPMODE_STANDBY);
   state = STATE_IDLE;
   if(tx_packet_callback) {
@@ -378,7 +400,7 @@ static void configure_syncword(syncword_class_t syncword_class, phy_coding_t ch_
 static void start_rx(hw_rx_cfg_t const* rx_cfg) {
   state = STATE_RX;
 
-  set_channel(&(rx_cfg->channel_id));
+  configure_channel(&(rx_cfg->channel_id));
   configure_syncword(rx_cfg->syncword_class, rx_cfg->channel_id.channel_header.ch_coding);
 
   DPRINT("START FG scan @ %i", timer_get_counter_value());
@@ -499,18 +521,49 @@ bool hw_radio_is_rx() {
 error_t hw_radio_send_packet(hw_radio_packet_t* packet, tx_packet_callback_t tx_callback) {
   tx_packet_callback = tx_callback;
   current_packet = packet;
-  hw_gpio_enable_interrupt(SX127x_DIO0_PIN);
-  // sx127x does not support PN9 whitening in hardware ...
-  // copy the packet so we do not encode original packet->data
-  uint8_t encoded_packet[256];
-  memcpy(encoded_packet, packet->data, packet->length + 1);
-  DPRINT("TX len=%i", packet->length);
-  DPRINT_DATA(packet->data, packet->length + 1);
-  pn9_encode(encoded_packet, packet->length + 1);
-  flush_fifo();
+
+  configure_channel((channel_id_t*)&(current_packet->tx_meta.tx_cfg.channel_id));
+  configure_eirp(current_packet->tx_meta.tx_cfg.eirp);
+  configure_syncword(current_packet->tx_meta.tx_cfg.syncword_class,
+                     current_packet->tx_meta.tx_cfg.channel_id.channel_header.ch_coding);
+
   state = STATE_TX;
-  set_opmode(OPMODE_TX);
-  write_fifo(encoded_packet, packet->length + 1);
+  hw_gpio_enable_interrupt(SX127x_DIO0_PIN);
+  if(packet->tx_meta.tx_cfg.channel_id.channel_header.ch_class != PHY_CLASS_LORA) {
+    // sx127x does not support PN9 whitening in hardware ...
+    // copy the packet so we do not encode original packet->data
+    uint8_t encoded_packet[256];
+    memcpy(encoded_packet, packet->data, packet->length + 1);
+    DPRINT("TX len=%i", packet->length);
+    DPRINT_DATA(packet->data, packet->length + 1);
+    pn9_encode(encoded_packet, packet->length + 1);
+    flush_fifo();
+    DEBUG_TX_START();
+    set_opmode(OPMODE_TX);
+    write_fifo(encoded_packet, packet->length + 1);
+  } else {
+    DPRINT("TX LoRa len=%i", packet->length);
+    write_reg(REG_LR_PAYLOADLENGTH, packet->length + 1);
+    write_reg(REG_LR_FIFOTXBASEADDR, 0);
+    write_reg(REG_LR_FIFOADDRPTR, 0);
+    write_fifo(packet->data, packet->length + 1);
+    write_reg(REG_LR_IRQFLAGS, 0xFF);
+    // mask all interrupts except for TxDone
+    write_reg(REG_LR_IRQFLAGSMASK,  RFLR_IRQFLAGS_RXTIMEOUT |
+                                    RFLR_IRQFLAGS_RXDONE |
+                                    RFLR_IRQFLAGS_PAYLOADCRCERROR |
+                                    RFLR_IRQFLAGS_VALIDHEADER |
+                                    // RFLR_IRQFLAGS_TXDONE |
+                                    RFLR_IRQFLAGS_CADDONE |
+                                    RFLR_IRQFLAGS_FHSSCHANGEDCHANNEL |
+                                    RFLR_IRQFLAGS_CADDETECTED);
+
+    // DIO0 mapped to TxDone
+    write_reg(REG_DIOMAPPING1, RFLR_DIOMAPPING1_DIO0_01 );
+
+    DEBUG_TX_START();
+    set_opmode(OPMODE_TX);
+  }
 
   return SUCCESS; // TODO other return codes
 }

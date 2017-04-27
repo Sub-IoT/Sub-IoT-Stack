@@ -58,6 +58,9 @@ typedef enum
 typedef enum
 {
     PHY_CLASS_LO_RATE = 0x00, // 9.6 kbps
+#ifdef USE_SX127X
+    PHY_CLASS_LORA = 0x01, // LoRa SF9, BW 125, CR 4/5. Note this is _not_ part of D7A spec (for now), and subject to change (or removal)
+#endif
     PHY_CLASS_NORMAL_RATE = 0x02, // 55.555 kbps
     PHY_CLASS_HI_RATE = 0x03 // 166.667 kbps
 } phy_channel_class_t;
@@ -200,7 +203,7 @@ typedef struct
 typedef struct
 {
     timer_tick_t timestamp;	/**< The clock_tick of the framework timer at which the whole frame is transmitted. */
-    hw_tx_cfg_t tx_cfg;		/**< The 'TX Configuration' used to receive the packet. */
+    hw_tx_cfg_t tx_cfg;		/**< The 'TX Configuration' used to transmit the packet. */
 
 // TODO optimize struct for size. This was packed but resulted in alignment issues on Cortex-M0 so removed for now.
 } hw_tx_metadata_t;
