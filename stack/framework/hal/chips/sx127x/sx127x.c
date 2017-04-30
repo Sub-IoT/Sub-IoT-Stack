@@ -453,35 +453,40 @@ static void start_rx(hw_rx_cfg_t const* rx_cfg) {
   configure_channel(&(rx_cfg->channel_id));
 
   if(lora_mode) {
-    // mask all interrupts except RxDone
-    write_reg(REG_LR_IRQFLAGSMASK,  RFLR_IRQFLAGS_RXTIMEOUT |
-                                    // RFLR_IRQFLAGS_RXDONE |
-                                    RFLR_IRQFLAGS_PAYLOADCRCERROR |
-                                    RFLR_IRQFLAGS_VALIDHEADER |
-                                    RFLR_IRQFLAGS_TXDONE |
-                                    RFLR_IRQFLAGS_CADDONE |
-                                    RFLR_IRQFLAGS_FHSSCHANGEDCHANNEL |
-                                    RFLR_IRQFLAGS_CADDETECTED );
-
-    // DIO0=RxDone
-    write_reg(REG_DIOMAPPING1, (read_reg(REG_DIOMAPPING1 ) & RFLR_DIOMAPPING1_DIO0_MASK) | RFLR_DIOMAPPING1_DIO0_00);
-    write_reg(REG_LR_FIFORXBASEADDR, 0);
-    write_reg(REG_LR_FIFOADDRPTR, 0);
-
     if(rx_packet_callback != 0) {
+      // mask all interrupts except RxDone
+      write_reg(REG_LR_IRQFLAGSMASK,  RFLR_IRQFLAGS_RXTIMEOUT |
+                                      // RFLR_IRQFLAGS_RXDONE |
+                                      RFLR_IRQFLAGS_PAYLOADCRCERROR |
+                                      RFLR_IRQFLAGS_VALIDHEADER |
+                                      RFLR_IRQFLAGS_TXDONE |
+                                      RFLR_IRQFLAGS_CADDONE |
+                                      RFLR_IRQFLAGS_FHSSCHANGEDCHANNEL |
+                                      RFLR_IRQFLAGS_CADDETECTED );
+
+      // DIO0=RxDone
+      write_reg(REG_DIOMAPPING1, (read_reg(REG_DIOMAPPING1 ) & RFLR_DIOMAPPING1_DIO0_MASK) | RFLR_DIOMAPPING1_DIO0_00);
+      write_reg(REG_LR_FIFORXBASEADDR, 0);
+      write_reg(REG_LR_FIFOADDRPTR, 0);
+
       hw_gpio_enable_interrupt(SX127x_DIO0_PIN);
+      DPRINT("START LoRa FG scan @ %i", timer_get_counter_value());
+      DEBUG_RX_START();
+      write_reg(REG_LR_IRQFLAGS, 0xFF);
+      set_opmode(OPMODE_RX);
     } else {
       // when rx callback not set we ignore received packets
       hw_gpio_disable_interrupt(SX127x_DIO0_PIN);
       // TODO disable packet handler completely in this case?
     }
 
-    DPRINT("START LoRa FG scan @ %i", timer_get_counter_value());
-    DEBUG_RX_START();
-    write_reg(REG_LR_IRQFLAGS, 0xFF);
-    set_opmode(OPMODE_RX);
-
-    // TODO rssi_valid_cb
+    if(rssi_valid_callback) {
+      // TODO decide how to handle CCA for LoRa. RSSI on it's own is not sufficient since LoRa is able to receive
+      // below noise level. Using CAD feature only works LoRa transmitters during preambe.
+      // For now we assume channel is always clear and return a very low RSSI.
+      // Note that we don't go to RX in case of CCA for now.
+      rssi_valid_callback(-140);
+    }
   } else {
     configure_syncword(rx_cfg->syncword_class, rx_cfg->channel_id.channel_header.ch_coding);
     if(rx_packet_callback != 0) {
