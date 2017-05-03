@@ -443,13 +443,19 @@ static void reset() {
   hw_busy_wait(6000);
 }
 
-static void configure_syncword(syncword_class_t syncword_class, phy_coding_t ch_coding)
+static void configure_syncword(syncword_class_t syncword_class, const channel_id_t* channel)
 {
-  if((syncword_class != current_syncword_class) || (ch_coding != current_channel_id.channel_header.ch_coding))
+  if(channel->channel_header.ch_class == PHY_CLASS_LORA) {
+    assert(syncword_class == PHY_SYNCWORD_CLASS1); // TODO CLASS0 not implemented for LoRa for now
+    current_syncword_class = syncword_class;
+    return;
+    // TODO
+  }
+
+  if(syncword_class != current_syncword_class || (channel->channel_header.ch_coding != current_channel_id.channel_header.ch_coding))
   {
     current_syncword_class = syncword_class;
-    // TODO set
-    uint16_t sync_word = sync_word_value[syncword_class][ch_coding];
+    uint16_t sync_word = sync_word_value[syncword_class][channel->channel_header.ch_coding ];
 
     DPRINT("sync_word = %04x", sync_word);
     write_reg(REG_SYNCVALUE2, sync_word & 0xFF);
@@ -461,6 +467,7 @@ static void start_rx(hw_rx_cfg_t const* rx_cfg) {
   state = STATE_RX;
 
   configure_channel(&(rx_cfg->channel_id));
+  configure_syncword(rx_cfg->syncword_class, &(rx_cfg->channel_id));
 
   if(lora_mode) {
     if(rx_packet_callback != 0) {
@@ -498,7 +505,6 @@ static void start_rx(hw_rx_cfg_t const* rx_cfg) {
       rssi_valid_callback(-140);
     }
   } else {
-    configure_syncword(rx_cfg->syncword_class, rx_cfg->channel_id.channel_header.ch_coding);
     if(rx_packet_callback != 0) {
       hw_gpio_enable_interrupt(SX127x_DIO1_PIN);
     } else {
@@ -622,7 +628,7 @@ error_t hw_radio_send_packet(hw_radio_packet_t* packet, tx_packet_callback_t tx_
   configure_channel((channel_id_t*)&(current_packet->tx_meta.tx_cfg.channel_id));
   configure_eirp(current_packet->tx_meta.tx_cfg.eirp);
   configure_syncword(current_packet->tx_meta.tx_cfg.syncword_class,
-                     current_packet->tx_meta.tx_cfg.channel_id.channel_header.ch_coding);
+                     &(current_packet->tx_meta.tx_cfg.channel_id));
 
   state = STATE_TX;
   hw_gpio_enable_interrupt(SX127x_DIO0_PIN);
