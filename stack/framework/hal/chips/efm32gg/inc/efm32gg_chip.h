@@ -50,7 +50,6 @@
  * \param out(unsigned int)		The out value for the GPIO pin (see EFM32gg docs for more information)
  *
  * \return	SUCCESS if the pin was configured successfully
- *		EALREADY if the pin was already configured through a previous call to this function
  *		EBUSY if <int_allowed> is true and interrupts were already allowed for a conflicting pin
  */
 __LINK_C error_t hw_gpio_configure_pin(pin_id_t pin_id, bool int_allowed, uint8_t mode, unsigned int out);
