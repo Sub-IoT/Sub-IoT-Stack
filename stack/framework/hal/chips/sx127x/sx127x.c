@@ -354,13 +354,12 @@ static void lora_rxdone_isr() {
   write_reg(REG_LR_FIFOADDRPTR, read_reg(REG_LR_FIFORXCURRENTADDR));
   DPRINT("rx packet len=%i\n", len);
   current_packet = alloc_packet_callback(len);
-  current_packet->length = len;
-  read_fifo(current_packet->data + 1, len);
+  current_packet->length = len - 1;
+  read_fifo(current_packet->data, len);
+  write_reg(REG_LR_IRQFLAGS, 0xFF);
 
-  write_reg(REG_LR_FIFORXBASEADDR, 0);
-  write_reg(REG_LR_FIFOADDRPTR, 0);
   current_packet->rx_meta.timestamp = timer_get_counter_value();
-  current_packet->rx_meta.rx_cfg.syncword_class = current_syncword_class; // TODO
+  current_packet->rx_meta.rx_cfg.syncword_class = current_syncword_class;
   current_packet->rx_meta.crc_status = HW_CRC_UNAVAILABLE;
   current_packet->rx_meta.rssi = get_rssi();
   current_packet->rx_meta.lqi = 0; // TODO
@@ -369,7 +368,6 @@ static void lora_rxdone_isr() {
   DPRINT("RX done\n");
 
   rx_packet_callback(current_packet);
-  write_reg(REG_LR_IRQFLAGS, 0xFF);
   hw_gpio_enable_interrupt(SX127x_DIO0_PIN);
 }
 
@@ -646,6 +644,7 @@ error_t hw_radio_send_packet(hw_radio_packet_t* packet, tx_packet_callback_t tx_
     write_fifo(encoded_packet, packet->length + 1);
   } else {
     DPRINT("TX LoRa len=%i", packet->length);
+    DPRINT_DATA(packet->data, packet->length + 1);
     write_reg(REG_LR_PAYLOADLENGTH, packet->length + 1);
     write_reg(REG_LR_FIFOTXBASEADDR, 0);
     write_reg(REG_LR_FIFOADDRPTR, 0);
