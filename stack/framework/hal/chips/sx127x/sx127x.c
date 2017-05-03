@@ -36,6 +36,8 @@
 #include "sx1276Regs-Fsk.h"
 #include "sx1276Regs-LoRa.h"
 
+#include "em_gpio.h" // TODO platform specific!
+
 #include "pn9.h"
 
 #define FREQ_STEP 61.03515625
@@ -426,12 +428,14 @@ static void fifo_threshold_isr(pin_id_t pin_id, uint8_t event_mask) {
   hw_gpio_enable_interrupt(SX127x_DIO1_PIN);
 }
 
-//static void reset() {
-//  hw_gpio_configure_pin(SX127x_RESET_PIN, false, gpioModePushPull, 0);
-//  hw_busy_wait(150);
-//  hw_gpio_configure_pin(SX127x_RESET_PIN, false, gpioModeInputPull, 1);
-//  hw_busy_wait(6000);
-//}
+static void reset() {
+  DPRINT("reset");
+  error_t e;
+  e = hw_gpio_configure_pin(SX127x_RESET_PIN, false, gpioModePushPull, 0); assert(e == SUCCESS); // TODO platform specific
+  hw_busy_wait(150);
+  e = hw_gpio_configure_pin(SX127x_RESET_PIN, false, gpioModeInputPull, 1); assert(e == SUCCESS); // TODO platform specific
+  hw_busy_wait(6000);
+}
 
 static void configure_syncword(syncword_class_t syncword_class, phy_coding_t ch_coding)
 {
@@ -540,8 +544,6 @@ static void calibrate_rx_chain() {
 }
 
 error_t hw_radio_init(alloc_packet_callback_t alloc_packet_cb, release_packet_callback_t release_packet_cb) {
-  //reset();
-
   if(sx127x_spi != NULL)
     return EALREADY;
 
@@ -554,6 +556,7 @@ error_t hw_radio_init(alloc_packet_callback_t alloc_packet_cb, release_packet_ca
   spi_handle_t* spi_handle = spi_init(SX127x_SPI_USART, SX127x_SPI_BAUDRATE, 8, true, SX127x_SPI_LOCATION);
   sx127x_spi = spi_init_slave(spi_handle, SX127x_SPI_PIN_CS, true);
 
+  reset();
   calibrate_rx_chain();
   init_regs();
   set_opmode(OPMODE_STANDBY); // TODO sleep
