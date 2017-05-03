@@ -138,6 +138,14 @@ static void write_fifo(uint8_t* buffer, uint8_t size) {
   DPRINT("WRITE FIFO %i", size);
 }
 
+static void read_fifo(uint8_t* buffer, uint8_t size) {
+  spi_select(sx127x_spi);
+  spi_exchange_byte(sx127x_spi, 0x00);
+  spi_exchange_bytes(sx127x_spi, NULL, buffer, size);
+  spi_deselect(sx127x_spi);
+  DPRINT("READ FIFO %i", size);
+}
+
 static void set_opmode(opmode_t opmode) {
   write_reg(REG_OPMODE, (read_reg(REG_OPMODE) & RF_OPMODE_MASK) | opmode);
 }
@@ -347,9 +355,7 @@ static void lora_rxdone_isr() {
   DPRINT("rx packet len=%i\n", len);
   current_packet = alloc_packet_callback(len);
   current_packet->length = len;
-  for(int i = 0; i < len; i++) {
-    current_packet->data[i] = read_reg(REG_FIFO);
-  }
+  read_fifo(current_packet->data + 1, len);
 
   write_reg(REG_LR_FIFORXBASEADDR, 0);
   write_reg(REG_LR_FIFOADDRPTR, 0);
