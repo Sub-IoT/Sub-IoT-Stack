@@ -91,6 +91,7 @@ ADD_LIBRARY(PLATFORM OBJECT
     kits/common/bsp/bsp_bcc.c
     kits/common/bsp/bsp_stk.c
     kits/common/bsp/bsp_trace.c
+    kits/common/drivers/cdc.c
 )
 
 #Include the sources for the efm32gg chip
