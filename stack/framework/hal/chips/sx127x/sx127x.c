@@ -361,7 +361,7 @@ static void lora_rxdone_isr() {
   current_packet->rx_meta.timestamp = timer_get_counter_value();
   current_packet->rx_meta.rx_cfg.syncword_class = current_syncword_class;
   current_packet->rx_meta.crc_status = HW_CRC_UNAVAILABLE;
-  current_packet->rx_meta.rssi = get_rssi();
+  current_packet->rx_meta.rssi = -157 + read_reg(REG_LR_PKTRSSIVALUE); // TODO only valid for HF port
   current_packet->rx_meta.lqi = 0; // TODO
   memcpy(&(current_packet->rx_meta.rx_cfg.channel_id), &current_channel_id, sizeof(channel_id_t));
   DPRINT_DATA(current_packet->data, current_packet->length + 1);
