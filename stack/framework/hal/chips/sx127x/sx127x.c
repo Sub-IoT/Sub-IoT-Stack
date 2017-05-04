@@ -647,6 +647,7 @@ error_t hw_radio_send_packet(hw_radio_packet_t* packet, tx_packet_callback_t tx_
   } else {
     DPRINT("TX LoRa len=%i", packet->length);
     DPRINT_DATA(packet->data, packet->length + 1);
+    set_opmode(OPMODE_STANDBY); // LoRa FIFO can only be filled in standby mode
     write_reg(REG_LR_PAYLOADLENGTH, packet->length + 1);
     write_reg(REG_LR_FIFOTXBASEADDR, 0);
     write_reg(REG_LR_FIFOADDRPTR, 0);
