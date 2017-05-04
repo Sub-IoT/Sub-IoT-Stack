@@ -516,8 +516,10 @@ static void start_rx(hw_rx_cfg_t const* rx_cfg) {
 
     flush_fifo();
     current_packet_data_offset = 0;
+    // TODO not sure why yet, but for some reason we need to write REG_DIOMAPPING1
+    // if not, this will result in continuous TX when switching from LoRa mode to FSK RX ...
+    write_reg(REG_DIOMAPPING1, 0x0C); // DIO2 = 0b11 => interrupt on sync detect
     set_opmode(OPMODE_RX);
-
 
     if(rssi_valid_callback != 0)
     {
