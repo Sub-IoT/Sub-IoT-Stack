@@ -63,10 +63,7 @@ __LINK_C void __gpio_init()
 
 __LINK_C error_t hw_gpio_configure_pin(pin_id_t pin_id, bool int_allowed, uint8_t mode, unsigned int out)
 {
-    //do early-stop error checking
-    if((gpio_pins_configured[pin_id.port] & (1<<pin_id.pin)))
-    	return EALREADY;
-    else if(int_allowed && (interrupts[pin_id.pin].interrupt_port != 0xFF))
+    if(int_allowed && (interrupts[pin_id.pin].interrupt_port != 0xFF))
     	return EBUSY;
 
     //set the pin to be configured
