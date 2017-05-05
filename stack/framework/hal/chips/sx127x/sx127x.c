@@ -544,8 +544,7 @@ static void start_rx(hw_rx_cfg_t const* rx_cfg) {
 static void calibrate_rx_chain() {
   DPRINT("Calibrating RX chain");
   // TODO currently assumes to be called on boot only
-  uint8_t regPaConfigInitVal;
-  uint32_t initialFreq;
+  uint8_t reg_pa_config_initial_value = read_reg(REG_PACONFIG);
 
   // Cut the PA just in case, RFO output, power = -1 dBm
   write_reg(REG_PACONFIG, 0x00);
@@ -561,6 +560,8 @@ static void calibrate_rx_chain() {
   write_reg(REG_IMAGECAL, (read_reg(REG_IMAGECAL) & RF_IMAGECAL_IMAGECAL_MASK) | RF_IMAGECAL_IMAGECAL_START);
   while((read_reg(REG_IMAGECAL) & RF_IMAGECAL_IMAGECAL_RUNNING) == RF_IMAGECAL_IMAGECAL_RUNNING) {
   }
+
+  write_reg(REG_PACONFIG, reg_pa_config_initial_value);
 }
 
 error_t hw_radio_init(alloc_packet_callback_t alloc_packet_cb, release_packet_callback_t release_packet_cb) {
@@ -580,7 +581,7 @@ error_t hw_radio_init(alloc_packet_callback_t alloc_packet_cb, release_packet_ca
   reset();
 #endif
 
-  //calibrate_rx_chain();
+  calibrate_rx_chain();
   init_regs();
   set_opmode(OPMODE_STANDBY); // TODO sleep
   // TODO reset ?
