@@ -78,16 +78,15 @@
  ************************/
 
 #define DEBUG_PIN_NUM 0
-#define DEBUG0	E0
-#define DEBUG1	E1
+
 
 /**************************
  * USERBUTTON DEFINITIONS *
  *************************/
 
 #define NUM_USERBUTTONS 	2
-#define BUTTON0				F5
-#define BUTTON1				B3
+#define BUTTON0				F4
+#define BUTTON1				A0
 
 
 #endif
