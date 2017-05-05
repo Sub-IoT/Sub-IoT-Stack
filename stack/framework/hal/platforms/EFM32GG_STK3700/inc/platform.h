@@ -89,8 +89,12 @@
 #define SX127x_SPI_BAUDRATE 10000000
 #define SX127x_DIO0_PIN C5
 #define SX127x_DIO1_PIN B12
-#define SX127x_DIO3_PIN C3
-#define SX127x_RESET_PIN D4
+#ifdef PLATFORM_SX127X_USE_DIO3_PIN
+  #define SX127x_DIO3_PIN C3
+#endif
+#ifdef PLATFORM_SX127X_USE_RESET_PIN
+  #define SX127x_RESET_PIN D4
+#endif
 #endif
 #define HAS_LCD
 

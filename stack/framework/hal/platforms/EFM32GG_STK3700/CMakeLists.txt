@@ -41,6 +41,9 @@ PLATFORM_OPTION(PLATFORM_USE_USB_CDC "Enable/Disable the use of CDC (UART Commun
 #Restrict the number of possible options for the radio option in the usual manner...
 SET_PROPERTY(CACHE ${PLATFORM_PREFIX}_RADIO PROPERTY STRINGS "cc1101;sx127x")
 PLATFORM_OPTION(PLATFORM_SX127X_USE_PA_BOOST "Use the PA_BOOST output of sx127x chip" TRUE)
+PLATFORM_OPTION(PLATFORM_SX127X_USE_RESET_PIN "Platform has access to the RESET pin of sx127x chip" TRUE)
+PLATFORM_OPTION(PLATFORM_SX127X_USE_DIO3_PIN "Platform has access to the DIO3 pin of sx127x chip" TRUE)
+
 #Add a 'global' definition for the specific MCU
 EXPORT_GLOBAL_COMPILE_DEFINITIONS("-D${${PLATFORM_PREFIX}_MCU}")
 
@@ -73,6 +76,8 @@ PLATFORM_HEADER_DEFINE(
   BOOL   ${PLATFORM_PREFIX}_DEBUGPINS
          PLATFORM_USE_USB_CDC
          PLATFORM_SX127X_USE_PA_BOOST
+         PLATFORM_SX127X_USE_RESET_PIN
+         PLATFORM_SX127X_USE_DIO3_PIN
 )
 
 #Define the 'platform library'. Every platform must define a 'PLATFORM' object library
