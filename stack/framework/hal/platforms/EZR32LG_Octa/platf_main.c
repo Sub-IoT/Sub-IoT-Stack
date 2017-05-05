@@ -45,6 +45,19 @@ void __platform_init()
 	__ezr32lg_mcu_init();
     __gpio_init();
 
+#ifdef USE_SX127X
+    // configure the interrupt pins here, since hw_gpio_configure_pin() is MCU
+    // specific and not part of the common HAL API
+    hw_gpio_configure_pin(SX127x_DIO0_PIN, true, gpioModeInputPull, 0);
+    hw_gpio_configure_pin(SX127x_DIO1_PIN, true, gpioModeInputPull, 0);
+#ifdef PLATFORM_SX127X_USE_DIO3_PIN
+    hw_gpio_configure_pin(SX127x_DIO3_PIN, true, gpioModeInputPull, 0);
+#endif
+#ifdef PLATFORM_SX127X_USE_RESET_PIN
+    hw_gpio_configure_pin(SX127x_RESET_PIN, false, gpioModePushPull, 1);
+#endif
+#endif
+
     __hw_debug_init();
 
     __watchdog_init(); // TODO configure from cmake?

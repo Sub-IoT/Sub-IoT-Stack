@@ -26,7 +26,10 @@ SET(JLINK_DEVICE ${${PLATFORM_PREFIX}_MCU} CACHE STRING "The device passed to JL
 PLATFORM_PARAM(${PLATFORM_PREFIX}_RADIO "si4460" STRING "The radio chip connected to the Gecko board")
 PLATFORM_OPTION(${PLATFORM_PREFIX}_DEBUGPINS "Enable/Disable Hardware Debug Pins support (see 'hwdebug.h')" TRUE)
 #Restrict the number of possible options for the radio option in the usual manner...
-SET_PROPERTY(CACHE ${PLATFORM_PREFIX}_RADIO PROPERTY STRINGS "si4460")
+SET_PROPERTY(CACHE ${PLATFORM_PREFIX}_RADIO PROPERTY STRINGS "si4460;sx127x")
+PLATFORM_OPTION(PLATFORM_SX127X_USE_PA_BOOST "Use the PA_BOOST output of sx127x chip" TRUE)
+PLATFORM_OPTION(PLATFORM_SX127X_USE_RESET_PIN "Platform has access to the RESET pin of sx127x chip" TRUE)
+PLATFORM_OPTION(PLATFORM_SX127X_USE_DIO3_PIN "Platform has access to the DIO3 pin of sx127x chip" TRUE)
 PLATFORM_OPTION(PLATFORM_USE_USB_CDC "Enable/Disable the use of CDC (UART Communication using USB" FALSE)
 
 

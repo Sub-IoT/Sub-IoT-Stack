@@ -59,19 +59,25 @@
 #define CONSOLE_LOCATION    PLATFORM_EZR32LG_OCTA_CONSOLE_LOCATION
 #define CONSOLE_BAUDRATE    PLATFORM_EZR32LG_OCTA_CONSOLE_BAUDRATE
 
-/*******************
- *   VCOM          *
- ******************/
-
-
-
-/********************
- * SPI RF DEFINITIONS *
- *******************/
 
 #define si4455_GDO0_PIN A15
 #define si4455_GDO1_PIN E14
 #define si4455_SDN_PIN  E8
+
+#ifdef USE_SX127X
+  #define SX127x_SPI_USART    1
+  #define SX127x_SPI_LOCATION 1
+  #define SX127x_SPI_PIN_CS   D3
+  #define SX127x_SPI_BAUDRATE 10000000
+  #define SX127x_DIO0_PIN E2
+  #define SX127x_DIO1_PIN E3
+  #ifdef PLATFORM_SX127X_USE_DIO3_PIN
+    #define SX127x_DIO3_PIN E0
+  #endif
+  #ifdef PLATFORM_SX127X_USE_RESET_PIN
+    #define SX127x_RESET_PIN E1
+  #endif
+#endif
 
 /*************************
  * DEBUG PIN DEFINITIONS *

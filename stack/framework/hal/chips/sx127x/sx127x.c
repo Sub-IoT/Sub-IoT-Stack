@@ -63,6 +63,12 @@
     #define DEBUG_RX_END()
 #endif
 
+#ifdef PLATFORM_SX127X_USE_DIO3_PIN
+  #define CHECK_FIFO_EMPTY() hw_gpio_get_in(SX127x_DIO3_PIN)
+#else
+  #define CHECK_FIFO_EMPTY() read_reg(REG_IRQFLAGS2) & 0x40
+#endif
+
 typedef enum {
   OPMODE_SLEEP = 0,
   OPMODE_STANDBY = 1,
@@ -410,7 +416,7 @@ static void fifo_threshold_isr(pin_id_t pin_id, uint8_t event_mask) {
   do {
     current_packet->data[current_packet_data_offset] = read_reg(REG_FIFO);
     current_packet_data_offset++;
-  } while(!hw_gpio_get_in(SX127x_DIO3_PIN) && current_packet_data_offset < packet_len + 1); //while(!(read_reg(REG_IRQFLAGS2) & 0x40) && current_packet_data_offset < packet_len + 1);
+  } while(!CHECK_FIFO_EMPTY() && current_packet_data_offset < packet_len + 1);
 
   uint8_t remaining = (packet_len + 1) - current_packet_data_offset;
   DPRINT("read %i bytes, %i remaining\n", current_packet_data_offset, remaining);
@@ -432,6 +438,7 @@ static void fifo_threshold_isr(pin_id_t pin_id, uint8_t event_mask) {
   hw_gpio_enable_interrupt(SX127x_DIO1_PIN);
 }
 
+#ifdef PLATFORM_SX127X_USE_RESET_PIN
 static void reset() {
   DPRINT("reset");
   error_t e;
@@ -440,6 +447,7 @@ static void reset() {
   e = hw_gpio_configure_pin(SX127x_RESET_PIN, false, gpioModeInputPull, 1); assert(e == SUCCESS); // TODO platform specific
   hw_busy_wait(6000);
 }
+#endif
 
 static void configure_syncword(syncword_class_t syncword_class, const channel_id_t* channel)
 {
@@ -568,8 +576,11 @@ error_t hw_radio_init(alloc_packet_callback_t alloc_packet_cb, release_packet_ca
   spi_handle_t* spi_handle = spi_init(SX127x_SPI_USART, SX127x_SPI_BAUDRATE, 8, true, SX127x_SPI_LOCATION);
   sx127x_spi = spi_init_slave(spi_handle, SX127x_SPI_PIN_CS, true);
 
+#ifdef PLATFORM_SX127X_USE_RESET_PIN
   reset();
-  calibrate_rx_chain();
+#endif
+
+  //calibrate_rx_chain();
   init_regs();
   set_opmode(OPMODE_STANDBY); // TODO sleep
   // TODO reset ?
