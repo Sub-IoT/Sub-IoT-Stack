@@ -13,6 +13,7 @@
 #include "hwi2c.h"
 
 #include <stdlib.h>
+#include <string.h>
 
 #include "platform.h"
 
