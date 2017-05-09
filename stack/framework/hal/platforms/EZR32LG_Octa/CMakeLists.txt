@@ -76,6 +76,7 @@ PLATFORM_HEADER_DEFINE(
          PLATFORM_USE_USB_CDC
          PLATFORM_SX127X_USE_RESET_PIN
          PLATFORM_SX127X_USE_DIO3_PIN
+         PLATFORM_SX127X_USE_PA_BOOST
 )
 
 #Define the 'platform library'. Every platform must define a 'PLATFORM' object library
