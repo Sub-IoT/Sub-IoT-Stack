@@ -429,7 +429,7 @@ static void fifo_threshold_isr(pin_id_t pin_id, uint8_t event_mask) {
     current_packet->rx_meta.rssi = get_rssi();
     current_packet->rx_meta.lqi = 0; // TODO
     memcpy(&(current_packet->rx_meta.rx_cfg.channel_id), &current_channel_id, sizeof(channel_id_t));
-    pn9_encode(current_packet->data, current_packet->length + 1);
+    pn9_encode(current_packet->data, packet_len + 1);
     DPRINT_DATA(current_packet->data, current_packet->length + 1);
     DPRINT("RX done\n");
     flush_fifo();
@@ -595,8 +595,22 @@ error_t hw_radio_init(alloc_packet_callback_t alloc_packet_cb, release_packet_ca
   return SUCCESS; // TODO FAIL return code
 }
 
+static void switch_to_standby_mode()
+{
+    DPRINT("Switching to standby mode");
+    //Ensure interrupts are disabled before selecting the chip mode
+    hw_gpio_disable_interrupt(SX127x_DIO0_PIN);
+    hw_gpio_disable_interrupt(SX127x_DIO1_PIN);
+
+    set_opmode(OPMODE_STANDBY);
+}
+
+
 error_t hw_radio_set_idle() {
-  // TODO
+    // TODO Select the chip mode during Idle state (Standby mode or Sleep mode)
+
+    // For now, select by default the standby mode
+    switch_to_standby_mode();
 }
 
 bool hw_radio_is_idle() {
