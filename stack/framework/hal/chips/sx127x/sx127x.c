@@ -66,7 +66,7 @@
 #ifdef PLATFORM_SX127X_USE_DIO3_PIN
   #define CHECK_FIFO_EMPTY() hw_gpio_get_in(SX127x_DIO3_PIN)
 #else
-  #define CHECK_FIFO_EMPTY() read_reg(REG_IRQFLAGS2) & 0x40
+  #define CHECK_FIFO_EMPTY() (read_reg(REG_IRQFLAGS2) & 0x40)
 #endif
 
 typedef enum {
@@ -405,14 +405,15 @@ static void fifo_threshold_isr(pin_id_t pin_id, uint8_t event_mask) {
   read_reg(REG_IRQFLAGS2);
   assert(state == STATE_RX);
 
-  uint8_t packet_len = read_reg(REG_FIFO);
-  DPRINT("rx packet len=%i\n", packet_len);
-  current_packet = alloc_packet_callback(packet_len);
-  current_packet->length = packet_len;
-  current_packet_data_offset = 1;
-  pn9_encode(&packet_len, 1); // decode only packet_len for now so we now how many bytes to receive.
+  uint8_t coded_packet_len = read_reg(REG_FIFO);
+  uint8_t packet_len = coded_packet_len;
+  pn9_encode(&packet_len, 1); // decode only packet_len for now so we know how many bytes to receive.
                               // the full packet is decoded at once, when completely received
                               // note that current_packet->length contains the coded version for now
+  DPRINT("rx packet len=%i\n", packet_len);
+  current_packet = alloc_packet_callback(packet_len);
+  current_packet->length = coded_packet_len;
+  current_packet_data_offset = 1;
   do {
     current_packet->data[current_packet_data_offset] = read_reg(REG_FIFO);
     current_packet_data_offset++;
