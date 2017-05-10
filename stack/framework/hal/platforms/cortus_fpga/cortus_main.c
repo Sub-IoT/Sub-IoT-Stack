@@ -42,6 +42,13 @@ void __platform_init()
     // hw_gpio_configure_pin(CC1101_SPI_PIN_CS, false, gpioModePushPull, 1);
 #endif
 
+#ifdef USE_SX127X
+    // configure the interrupt pins here, since hw_gpio_configure_pin() is MCU
+    // specific and not part of the common HAL API
+    hw_gpio_configure_pin(SX127x_DIO0_PIN, true, gpioModeInput, 0);
+    hw_gpio_configure_pin(SX127x_DIO1_PIN, true, gpioModeInput, 0);
+#endif
+
     __watchdog_init();
 }
 

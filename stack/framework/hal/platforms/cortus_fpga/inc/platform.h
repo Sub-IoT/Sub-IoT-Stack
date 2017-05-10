@@ -87,6 +87,15 @@
 #define CC1101_GDO2_PIN     A1
 #endif
 
+#ifdef USE_SX127X
+#define SX127x_SPI_USART    1
+#define SX127x_SPI_LOCATION 1
+#define SX127x_SPI_PIN_CS   A2
+#define SX127x_SPI_BAUDRATE 8 //10000000
+#define SX127x_DIO0_PIN A0
+#define SX127x_DIO1_PIN A1
+#endif
+
 //#define HAS_LCD
 
 #endif

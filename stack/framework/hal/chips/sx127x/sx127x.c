@@ -36,7 +36,9 @@
 #include "sx1276Regs-Fsk.h"
 #include "sx1276Regs-LoRa.h"
 
+#ifdef PLATFORM_SX127X_USE_RESET_PIN
 #include "em_gpio.h" // TODO platform specific!
+#endif
 
 #include "pn9.h"
 
@@ -417,7 +419,7 @@ static void fifo_threshold_isr(pin_id_t pin_id, uint8_t event_mask) {
   do {
     current_packet->data[current_packet_data_offset] = read_reg(REG_FIFO);
     current_packet_data_offset++;
-  } while(!CHECK_FIFO_EMPTY() && current_packet_data_offset < packet_len + 1);
+  } while(!(CHECK_FIFO_EMPTY()) && current_packet_data_offset < packet_len + 1);
 
   uint8_t remaining = (packet_len + 1) - current_packet_data_offset;
   DPRINT("read %i bytes, %i remaining\n", current_packet_data_offset, remaining);
