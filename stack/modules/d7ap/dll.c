@@ -801,6 +801,8 @@ void dll_execute_scan_automation()
     }
 
     current_channel_id = rx_cfg.channel_id;
+    // Set by default the eirp in case we need to respond to an incoming request
+    current_eirp = current_access_profile.subbands[0].eirp;
 }
 
 void dll_notify_dll_conf_file_changed()
