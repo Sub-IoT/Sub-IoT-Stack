@@ -17,3 +17,7 @@ Please refer to the [getting started page on our doxygen site](http://mosaic-lop
 ## Related repositories
 
 [pyd7a](https://github.com/MOSAIC-LoPoW/pyd7a) provides a collection of python modules, supporting the DASH7 Alliance Protocol in general, and OSS-7 in particular.
+
+## Community
+
+The developers can be reached on the [dash7-ap-oss Google Group](https://groups.google.com/forum/#!forum/dash7-ap-oss)
