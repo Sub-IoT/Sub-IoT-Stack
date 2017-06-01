@@ -179,3 +179,8 @@ __LINK_C error_t hw_gpio_disable_interrupt(pin_id_t pin_id)
     BITBAND_Peripheral(&(GPIO->IEN), pin_id.pin, 0);
     return SUCCESS;
 }
+
+__LINK_C error_t hw_gpio_set_edge_interrupt(pin_id_t pin_id, uint8_t edge)
+{
+    // TODO
+}
