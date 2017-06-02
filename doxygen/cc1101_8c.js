@@ -8,6 +8,9 @@ var cc1101_8c =
     [ "DPRINT_DATA", "cc1101_8c.html#a00479786500318f73fb8290719bfa0db", null ],
     [ "DPRINT_PACKET", "cc1101_8c.html#ac993e2836cb4e277f2564aeadbc9ffaf", null ],
     [ "RSSI_OFFSET", "cc1101_8c.html#a2749202671e6c83693acbddba7257782", null ],
+    [ "To_CLASS_HI_RATE", "cc1101_8c.html#ab71596ea3ef081580923a4b1f313f960", null ],
+    [ "To_CLASS_LO_RATE", "cc1101_8c.html#ae1bf31ac1cabb48833c0df7b21c38113", null ],
+    [ "To_CLASS_NORMAL_RATE", "cc1101_8c.html#a96f2b9b146a1b425a1f93534da9edcdc", null ],
     [ "hw_radio_state_t", "cc1101_8c.html#a653b17c0ef11443105658b04113f95e3", [
       [ "HW_RADIO_STATE_IDLE", "cc1101_8c.html#a653b17c0ef11443105658b04113f95e3a40d69103ec2b3f26e674a9686a063483", null ],
       [ "HW_RADIO_STATE_TX", "cc1101_8c.html#a653b17c0ef11443105658b04113f95e3a7b90548219d473043de5e71853a7e60d", null ],
@@ -20,7 +23,11 @@ var cc1101_8c =
     ] ],
     [ "hw_radio_get_rssi", "group__radio.html#ga43ffbd2f8c0aec2f95fbdb365c39d682", null ],
     [ "hw_radio_init", "group__radio.html#gaefab8edede99183d3c557c0d37d3fb93", null ],
+    [ "hw_radio_send_background_packet", "group__radio.html#gaf57630d8e3053d91cb5dc8d1f578c001", null ],
     [ "hw_radio_send_packet", "group__radio.html#ga7292dedeeb8229173201c2987811fb8f", null ],
     [ "hw_radio_set_idle", "group__radio.html#gac4a7a12a95592bbb1a55532e5ddd9e6f", null ],
-    [ "hw_radio_set_rx", "group__radio.html#gaeeb8ffcdd89455429d4d13caf08fb661", null ]
+    [ "hw_radio_set_rx", "group__radio.html#gaeeb8ffcdd89455429d4d13caf08fb661", null ],
+    [ "hw_radio_start_background_scan", "group__radio.html#ga74b5e84bb3a1a11a3419aa99915ab4ec", null ],
+    [ "bg_timeout", "cc1101_8c.html#aa8799cf36ffd41f3fd3a6d9ac1b6a4ac", null ],
+    [ "sync_word_value", "cc1101_8c.html#a4612108b3818af7747dc354e208eaf99", null ]
 ];

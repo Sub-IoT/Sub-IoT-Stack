@@ -19,11 +19,14 @@ var si4460_8c =
       [ "HW_RADIO_STATE_UNKOWN", "si4460_8c.html#a653b17c0ef11443105658b04113f95e3a0e2f49128e9583f61434b6c2e91bd896", null ]
     ] ],
     [ "__ezr_error_callback", "si4460_8c.html#a4281e7078bbe946edd1cec7b8b54e36b", null ],
+    [ "hw_radio_continuous_tx", "group__radio.html#gaf6acc4c34df71b28a5444aece3cf4afa", null ],
     [ "hw_radio_get_latched_rssi", "si4460_8c.html#a3a259993e04fd4cb6d68ea344fee8656", null ],
     [ "hw_radio_get_rssi", "group__radio.html#ga43ffbd2f8c0aec2f95fbdb365c39d682", null ],
     [ "hw_radio_init", "group__radio.html#gaefab8edede99183d3c557c0d37d3fb93", null ],
     [ "hw_radio_poweroff", "si4460_8c.html#aba7472cc32633f092d94c60cfb621c50", null ],
+    [ "hw_radio_send_background_packet", "group__radio.html#gaf57630d8e3053d91cb5dc8d1f578c001", null ],
     [ "hw_radio_send_packet", "group__radio.html#ga7292dedeeb8229173201c2987811fb8f", null ],
     [ "hw_radio_set_idle", "group__radio.html#gac4a7a12a95592bbb1a55532e5ddd9e6f", null ],
-    [ "hw_radio_set_rx", "group__radio.html#gaeeb8ffcdd89455429d4d13caf08fb661", null ]
+    [ "hw_radio_set_rx", "group__radio.html#gaeeb8ffcdd89455429d4d13caf08fb661", null ],
+    [ "hw_radio_start_background_scan", "group__radio.html#ga74b5e84bb3a1a11a3419aa99915ab4ec", null ]
 ];

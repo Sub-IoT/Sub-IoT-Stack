@@ -1,24 +1,15 @@
 var searchData=
 [
+  ['uart',['uart',['../structuart__handle.html#a92173777f6af7cff073127198a5dfeb1',1,'uart_handle']]],
   ['uart_5fsfradr',['uart_sfradr',['../structuart__handle.html#af3beaba2dbac1991ddd00b96fbc6e7d6',1,'uart_handle']]],
   ['uc',['uc',['../structparam.html#ae97f88ed92df4269e1a75810d5d4851f',1,'param']]],
   ['ucast',['ucast',['../structd7asp__state__t.html#ac89c14aaa525122eeecfc9f7513dfc21',1,'d7asp_state_t']]],
-  ['ucoef',['ucoef',['../structcal__ref__t.html#a3e15d76e520e0b4fa26c0d192dcc22dd',1,'cal_ref_t']]],
-  ['ucoef_5fp',['ucoef_p',['../struct_s_i114_x___c_a_l___s.html#a8203b8f48e514e9d01287644f5507afb',1,'SI114X_CAL_S']]],
-  ['uif_5faem',['UIF_AEM',['../struct_b_c___type_def.html#a53e15e8e8330016d9a4297ab91111592',1,'BC_TypeDef']]],
-  ['uif_5fctrl',['UIF_CTRL',['../struct_b_c___type_def.html#a8ca550851efeeae785ee977017b6d542',1,'BC_TypeDef']]],
-  ['uif_5fdip',['UIF_DIP',['../struct_b_c___type_def.html#a67f4b3aa06f0e8394f890f7eccfb532a',1,'BC_TypeDef']]],
-  ['uif_5fjoystick',['UIF_JOYSTICK',['../struct_b_c___type_def.html#ad0af6540bea6f437d7881e6233fa1bfa',1,'BC_TypeDef']]],
-  ['uif_5fleds',['UIF_LEDS',['../struct_b_c___type_def.html#a94f2c2119b39b100eaa822c7106b6311',1,'BC_TypeDef']]],
-  ['uif_5fpb',['UIF_PB',['../struct_b_c___type_def.html#a5e4f37139cd2eb713b1e1fe01faa6524',1,'BC_TypeDef']]],
-  ['ulfrco',['ULFRCO',['../_changes__emlib_8txt.html#a0909929bc5cf345d561801e4a696da6b',1,'Changes_emlib.txt']]],
-  ['update',['update',['../_changes__emlib_8txt.html#ac398059584fb4c1f62c162426719e772',1,'Changes_emlib.txt']]],
   ['usart',['usart',['../structspi__handle.html#a14578681684634b1aef2a8102f783135',1,'spi_handle']]],
   ['usbdesc_5fbufferingmultiplier',['USBDESC_bufferingMultiplier',['../_e_f_m32_g_g___s_t_k3700_2inc_2usb__descriptors_8h.html#adfeb9e57e8199c3c887117679351d172',1,'USBDESC_bufferingMultiplier():&#160;platf_usb_descriptors.c'],['../_e_f_m32_g_g___s_t_k3700_2platf__usb__descriptors_8c.html#a2b3d495cff3f07db443ac686ded4b352',1,'USBDESC_bufferingMultiplier():&#160;platf_usb_descriptors.c'],['../_e_f_m32_h_g___s_t_k3400_2inc_2usb__descriptors_8h.html#adfeb9e57e8199c3c887117679351d172',1,'USBDESC_bufferingMultiplier():&#160;platf_usb_descriptors.c'],['../stk3400__usb__descriptors_8c.html#a2b3d495cff3f07db443ac686ded4b352',1,'USBDESC_bufferingMultiplier():&#160;stk3400_usb_descriptors.c']]],
   ['usbdesc_5fconfigdesc',['USBDESC_configDesc',['../_e_f_m32_g_g___s_t_k3700_2inc_2usb__descriptors_8h.html#aee31bb58152bc682517ba4f804a0812c',1,'USBDESC_configDesc():&#160;usb_descriptors.h'],['../_e_f_m32_h_g___s_t_k3400_2inc_2usb__descriptors_8h.html#a18e16a203c43ceb3bf292d4b8c456bce',1,'USBDESC_configDesc():&#160;usb_descriptors.h']]],
   ['usbdesc_5fdevicedesc',['USBDESC_deviceDesc',['../_e_f_m32_g_g___s_t_k3700_2inc_2usb__descriptors_8h.html#a2221e7c63b87cff8ba03c00871691279',1,'USBDESC_deviceDesc():&#160;usb_descriptors.h'],['../_e_f_m32_h_g___s_t_k3400_2inc_2usb__descriptors_8h.html#a2221e7c63b87cff8ba03c00871691279',1,'USBDESC_deviceDesc():&#160;usb_descriptors.h']]],
   ['usbdesc_5fstrings',['USBDESC_strings',['../_e_f_m32_g_g___s_t_k3700_2inc_2usb__descriptors_8h.html#a7ac932f15ba97e3ffb5b55afb6fca084',1,'USBDESC_strings():&#160;platf_usb_descriptors.c'],['../_e_f_m32_g_g___s_t_k3700_2platf__usb__descriptors_8c.html#a5cb4356d2ce19394119073378069c060',1,'USBDESC_strings():&#160;platf_usb_descriptors.c'],['../_e_f_m32_h_g___s_t_k3400_2inc_2usb__descriptors_8h.html#a2fbffac52062957bd1e3a241d7770482',1,'USBDESC_strings():&#160;platf_usb_descriptors.c'],['../stk3400__usb__descriptors_8c.html#a5cb4356d2ce19394119073378069c060',1,'USBDESC_strings():&#160;stk3400_usb_descriptors.c']]],
   ['usbinitstruct',['usbInitStruct',['../_e_f_m32_g_g___s_t_k3700_2platf__usb_8c.html#acacb985fa5a03375f2c076d7a5345c7c',1,'usbInitStruct():&#160;platf_usb.c'],['../stk3400__usb_8c.html#acacb985fa5a03375f2c076d7a5345c7c',1,'usbInitStruct():&#160;stk3400_usb.c'],['../_e_z_r32_l_g___octa_2platf__usb_8c.html#acacb985fa5a03375f2c076d7a5345c7c',1,'usbInitStruct():&#160;platf_usb.c'],['../_e_z_r32_l_g___u_s_b01_2platf__usb_8c.html#acacb985fa5a03375f2c076d7a5345c7c',1,'usbInitStruct():&#160;platf_usb.c'],['../_e_z_r32_l_g___w_s_t_k6200_a_2platf__usb_8c.html#acacb985fa5a03375f2c076d7a5345c7c',1,'usbInitStruct():&#160;platf_usb.c']]],
-  ['use',['Use',['../efm32gg_2_silabs___license___agreement_8txt.html#aa521818c795f80b93812613b9ae35e57',1,'Use():&#160;Silabs_License_Agreement.txt'],['../efm32hg_2_silabs___license___agreement_8txt.html#aa521818c795f80b93812613b9ae35e57',1,'Use():&#160;Silabs_License_Agreement.txt'],['../efm32lg_2_silabs___license___agreement_8txt.html#aa521818c795f80b93812613b9ae35e57',1,'Use():&#160;Silabs_License_Agreement.txt'],['../ezr32lg_2_silabs___license___agreement_8txt.html#aa521818c795f80b93812613b9ae35e57',1,'Use():&#160;Silabs_License_Agreement.txt'],['../ezr32lg_2usb_2_silabs___license___agreement_8txt.html#aa521818c795f80b93812613b9ae35e57',1,'Use():&#160;Silabs_License_Agreement.txt']]],
-  ['users',['users',['../structspi__handle.html#ab83d9aa0133f0be886ee133f90e16236',1,'spi_handle']]]
+  ['users',['users',['../structspi__handle.html#ab83d9aa0133f0be886ee133f90e16236',1,'spi_handle']]],
+  ['uwtick',['uwTick',['../stm32l152__timer_8c.html#a9d411ea525781e633bf7ea7ef2f90728',1,'stm32l152_timer.c']]]
 ];

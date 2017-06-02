@@ -1,6 +1,5 @@
 var d7anp_8c =
 [
-    [ "active_access_class", "d7anp_8c.html#a9febd2c58f3323690f89fec761ce694f", null ],
     [ "d7anp_prev_state", "d7anp_8c.html#a6999b49daeee835d844e8282201e15d8", null ],
     [ "d7anp_state", "d7anp_8c.html#a04362876476114787a277169d69697b0", null ],
     [ "DPRINT", "d7anp_8c.html#a57a35bfd7d13bdfab37a48171286ecee", null ],
@@ -8,9 +7,11 @@ var d7anp_8c =
     [ "fg_scan_timeout_ticks", "d7anp_8c.html#a5d6b11351ef79bee843985fd97cd196f", null ],
     [ "latest_node", "d7anp_8c.html#aa3c3aaee9538e17f4e798670a7a4292e", null ],
     [ "node_security_state", "d7anp_8c.html#a1b05e81b1a7d34bb4b16f580a64eb9f1", null ],
-    [ "own_access_profile", "d7anp_8c.html#a1f20733d09fd63f0840d0564ad85d76d", null ],
     [ "security_state", "d7anp_8c.html#a678e04b8a2252790b0347d514ef50c71", null ],
     [ "state_t", "d7anp_8c.html#aa0aafed44fec19806d8f9ad834be1248", [
+      [ "STATE_IDLE", "sx127x_8c.html#aa0aafed44fec19806d8f9ad834be1248aaade5e53e88cf231292cd1142cce2afe", null ],
+      [ "STATE_TX", "sx127x_8c.html#aa0aafed44fec19806d8f9ad834be1248a2039c907bc9f9d1dcc56822857a78233", null ],
+      [ "STATE_RX", "sx127x_8c.html#aa0aafed44fec19806d8f9ad834be1248aaa5073142a5133d1bd55e04f56d9135d", null ],
       [ "D7ANP_STATE_IDLE", "d7anp_8c.html#aa0aafed44fec19806d8f9ad834be1248add13ade0aa0f3d6d7f84f66f80785396", null ],
       [ "D7ANP_STATE_TRANSMIT", "d7anp_8c.html#aa0aafed44fec19806d8f9ad834be1248afe2669254ae09ba8cd0abff0dc604cdd", null ],
       [ "D7ANP_STATE_FOREGROUND_SCAN", "d7anp_8c.html#aa0aafed44fec19806d8f9ad834be1248a83ee83d17ee3db7e7b531a7e006e0c59", null ],
@@ -31,7 +32,7 @@ var d7anp_8c =
     [ "d7anp_assemble_packet_header", "d7anp_8c.html#adb701a9e9417a2da5afac4f6d91b50b9", null ],
     [ "d7anp_disassemble_packet_header", "d7anp_8c.html#a165ff1dc94391a828a2474f527c10fa1", null ],
     [ "d7anp_init", "d7anp_8c.html#aee3b435d93fa563d2906707a95d6f919", null ],
-    [ "d7anp_process_received_packet", "d7anp_8c.html#a69d21cd1e3437fd5b45d6510f057ad9d", null ],
+    [ "d7anp_process_received_packet", "d7anp_8c.html#a22862c264a8da64612ea3893873d7a19", null ],
     [ "d7anp_secure_payload", "d7anp_8c.html#a6fe08a456c78d10447a109f4f086104f", null ],
     [ "d7anp_set_foreground_scan_timeout", "d7anp_8c.html#aa7b7bb07dea7724360a5c1f77a73de5f", null ],
     [ "d7anp_signal_packet_transmitted", "d7anp_8c.html#a68cab22b2d52ebadda412c4a29efcc8c", null ],

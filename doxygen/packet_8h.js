@@ -4,8 +4,10 @@ var packet_8h =
     [ "packet_type", "packet_8h.html#ad875bcb78f9bd8625c5e454cafdc8de7", [
       [ "INITIAL_REQUEST", "packet_8h.html#ad875bcb78f9bd8625c5e454cafdc8de7a74428a64a37ddae967a73ce7f2a9a74d", null ],
       [ "SUBSEQUENT_REQUEST", "packet_8h.html#ad875bcb78f9bd8625c5e454cafdc8de7acbed78ba6fbab665f95e7abce71d6372", null ],
+      [ "RETRY_REQUEST", "packet_8h.html#ad875bcb78f9bd8625c5e454cafdc8de7aa51ff60b7eee69b5f8fa3461f79b31eb", null ],
       [ "RESPONSE_TO_UNICAST", "packet_8h.html#ad875bcb78f9bd8625c5e454cafdc8de7a6618a85c519ad9fb2f00f32fcb0d9569", null ],
-      [ "RESPONSE_TO_BROADCAST", "packet_8h.html#ad875bcb78f9bd8625c5e454cafdc8de7a4d19d6c3e71bfc1c91bb565e8cc3e871", null ]
+      [ "RESPONSE_TO_BROADCAST", "packet_8h.html#ad875bcb78f9bd8625c5e454cafdc8de7a4d19d6c3e71bfc1c91bb565e8cc3e871", null ],
+      [ "BACKGROUND_ADV", "packet_8h.html#ad875bcb78f9bd8625c5e454cafdc8de7a9146ebd12085b0626c263e6ebe1ed66c", null ]
     ] ],
     [ "packet_assemble", "packet_8h.html#a44779632fe674a36df8e8bbd279d5cc5", null ],
     [ "packet_disassemble", "packet_8h.html#aadd554a8285700bb827d244b2a0c5066", null ],

@@ -8,5 +8,5 @@ var packet__queue_8h =
     [ "packet_queue_init", "packet__queue_8h.html#afcc3dd49720df3bd8e0e42a9709afe51", null ],
     [ "packet_queue_mark_processing", "packet__queue_8h.html#aa19ab37cb2e825ca785fbc585f10d36b", null ],
     [ "packet_queue_mark_received", "packet__queue_8h.html#a238e4acdd72f5aa0006c5eb065707e6f", null ],
-    [ "packet_queue_mark_transmitted", "packet__queue_8h.html#abbb814083923b628304266302aa5abe9", null ]
+    [ "packet_queue_mark_transmitted", "packet__queue_8h.html#a4a048a48594979f668f501f0f8543852", null ]
 ];

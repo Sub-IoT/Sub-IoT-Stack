@@ -14,5 +14,6 @@ var group__fifo =
     [ "fifo_peek", "group__fifo.html#gaeca1e4bc3c62c6a5501be3840293cee4", null ],
     [ "fifo_pop", "group__fifo.html#ga14061c103f6c1bfca90c20677e3e7dd1", null ],
     [ "fifo_put", "group__fifo.html#gaab4a8d8be80be6c5e6e79c8114669239", null ],
-    [ "fifo_put_byte", "group__fifo.html#ga5e45fae3b820bbcbce16d3807b580301", null ]
+    [ "fifo_put_byte", "group__fifo.html#ga5e45fae3b820bbcbce16d3807b580301", null ],
+    [ "fifo_skip", "group__fifo.html#ga0b4299807de67c9322c86d9c278631f7", null ]
 ];

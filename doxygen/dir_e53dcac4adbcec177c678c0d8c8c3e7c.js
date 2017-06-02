@@ -9,5 +9,7 @@ var dir_e53dcac4adbcec177c678c0d8c8c3e7c =
     [ "ezr32lg", "dir_da2cee54bc048923b90ea1fb73857f31.html", "dir_da2cee54bc048923b90ea1fb73857f31" ],
     [ "kl02z", "dir_a6c034a80bce7676a98ad99e193bff92.html", "dir_a6c034a80bce7676a98ad99e193bff92" ],
     [ "si4460", "dir_60236c8c7a2958cea6ca93d5ab2c1944.html", "dir_60236c8c7a2958cea6ca93d5ab2c1944" ],
-    [ "stm32f4", "dir_88df1e497aae16ba915347abd32ef222.html", "dir_88df1e497aae16ba915347abd32ef222" ]
+    [ "stm32f4", "dir_88df1e497aae16ba915347abd32ef222.html", "dir_88df1e497aae16ba915347abd32ef222" ],
+    [ "stm32l152", "dir_d9ec86a31e1fb062fc291a8c5099b72f.html", "dir_d9ec86a31e1fb062fc291a8c5099b72f" ],
+    [ "sx127x", "dir_80e7b5004cd092cf811c6c081b374bf7.html", "dir_80e7b5004cd092cf811c6c081b374bf7" ]
 ];

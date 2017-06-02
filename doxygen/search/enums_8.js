@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['msdbot_5fstatus_5ftypedef',['MSDBOT_Status_TypeDef',['../group___msd.html#ga8c250077559bcebe75d58cd631add55e',1,'MSDBOT_Status_TypeDef():&#160;msdbot.h'],['../group___msd.html#ga8c250077559bcebe75d58cd631add55e',1,'MSDBOT_Status_TypeDef():&#160;msdbot.h'],['../group___msd.html#ga8c250077559bcebe75d58cd631add55e',1,'MSDBOT_Status_TypeDef():&#160;msdbot.h']]]
+  ['noise_5ffloor_5fcomputation_5fmethod_5ft',['noise_floor_computation_method_t',['../group___d_l_l.html#ga174591dbce585c0a576621cf94ab62cb',1,'dll.h']]]
 ];

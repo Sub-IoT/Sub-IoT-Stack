@@ -1,6 +1,5 @@
 var dir_da2cee54bc048923b90ea1fb73857f31 =
 [
-    [ "emlib", "dir_34b06d7130d86bbea405941925cd788c.html", "dir_34b06d7130d86bbea405941925cd788c" ],
     [ "glib", "dir_647575c8756c54701390152ffc2e5c27.html", "dir_647575c8756c54701390152ffc2e5c27" ],
     [ "inc", "dir_fff318e219a51e25dea8bcd319539427.html", "dir_fff318e219a51e25dea8bcd319539427" ],
     [ "inc_platform", "dir_b50589e1d7e85d85319459d86576842d.html", "dir_b50589e1d7e85d85319459d86576842d" ],

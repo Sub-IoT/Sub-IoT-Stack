@@ -11,6 +11,9 @@ var d7atp_8c =
     [ "IS_IN_MASTER_TRANSACTION", "d7atp_8c.html#a4cd12403f4c31c0b6e9913a8d38e2002", null ],
     [ "stop_dialog_after_tx", "d7atp_8c.html#a0d8e2aee5f5da642aa98f229885630c5", null ],
     [ "state_t", "d7atp_8c.html#aa0aafed44fec19806d8f9ad834be1248", [
+      [ "STATE_IDLE", "sx127x_8c.html#aa0aafed44fec19806d8f9ad834be1248aaade5e53e88cf231292cd1142cce2afe", null ],
+      [ "STATE_TX", "sx127x_8c.html#aa0aafed44fec19806d8f9ad834be1248a2039c907bc9f9d1dcc56822857a78233", null ],
+      [ "STATE_RX", "sx127x_8c.html#aa0aafed44fec19806d8f9ad834be1248aaa5073142a5133d1bd55e04f56d9135d", null ],
       [ "D7ANP_STATE_IDLE", "d7anp_8c.html#aa0aafed44fec19806d8f9ad834be1248add13ade0aa0f3d6d7f84f66f80785396", null ],
       [ "D7ANP_STATE_TRANSMIT", "d7anp_8c.html#aa0aafed44fec19806d8f9ad834be1248afe2669254ae09ba8cd0abff0dc604cdd", null ],
       [ "D7ANP_STATE_FOREGROUND_SCAN", "d7anp_8c.html#aa0aafed44fec19806d8f9ad834be1248a83ee83d17ee3db7e7b531a7e006e0c59", null ],

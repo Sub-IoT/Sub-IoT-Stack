@@ -7,11 +7,15 @@ var alp_8h =
     [ "alp_operand_file_offset_t", "structalp__operand__file__offset__t.html", "structalp__operand__file__offset__t" ],
     [ "alp_operand_file_data_request_t", "structalp__operand__file__data__request__t.html", "structalp__operand__file__data__request__t" ],
     [ "alp_operand_file_data_t", "structalp__operand__file__data__t.html", "structalp__operand__file__data__t" ],
-    [ "alp_command_t", "structalp__command__t.html", "structalp__command__t" ],
+    [ "alp_init_args_t", "structalp__init__args__t.html", "structalp__init__args__t" ],
     [ "ALP_ITF_ID_APP", "alp_8h.html#a86ce06384b728a832b0c3874bd88875f", null ],
     [ "ALP_ITF_ID_D7ASP", "alp_8h.html#a4c60a330539ba5499aef5e51aa81b507", null ],
     [ "ALP_ITF_ID_FS", "alp_8h.html#ae425b557b6ac2531bd3647ac2fbeef29", null ],
     [ "ALP_PAYLOAD_MAX_SIZE", "alp_8h.html#ac6344231d481b0aecc5d222f55b0d96b", null ],
+    [ "alp_command_completed_callback", "alp_8h.html#af6ba580dcf78185dd227188a633b9b57", null ],
+    [ "alp_command_result_callback", "alp_8h.html#a69aad47407a9213ed573ccf36a04796e", null ],
+    [ "alp_received_unsolicited_data_callback", "alp_8h.html#a77292873d1d31e6c4fd5a266ab064fed", null ],
+    [ "alp_unhandled_read_action_callback", "alp_8h.html#aca31631d873d14203f67d94532a70595", null ],
     [ "alp_act_condition_t", "alp_8h.html#ad8ae3d9fcb6789f76da94fc857c03f02", [
       [ "ALP_ACT_COND_LIST", "alp_8h.html#ad8ae3d9fcb6789f76da94fc857c03f02a6b3b1efcc27602bbc1a321b97eb33c4e", null ],
       [ "ALP_ACT_COND_READ", "alp_8h.html#ad8ae3d9fcb6789f76da94fc857c03f02a9c8d7ced206cba44b8cfb476831789d8", null ],
@@ -63,10 +67,12 @@ var alp_8h =
       [ "ALP_STATUS_FILE_ID_NOT_EXISTS", "alp_8h.html#a67740cd779fd5bfd17c0e11f1dfeee1aa9e06fb7b788d42546aee3f56f18049e6", null ]
     ] ],
     [ "alp_d7asp_fifo_flush_completed", "alp_8h.html#a994217d2ca4b5757c0659774bf68dc7b", null ],
-    [ "alp_d7asp_request_completed", "alp_8h.html#ae9f5641b26b0208b49808b175074f571", null ],
+    [ "alp_execute_command", "alp_8h.html#aa142445f312d1b5dac4611fb8f4efb2e", null ],
     [ "alp_get_expected_response_length", "alp_8h.html#a61a61de031ed7c406f565d347577b91a", null ],
     [ "alp_get_operation", "alp_8h.html#a7a6f7658a2206d0ddc11c69b15a20e3d", null ],
+    [ "alp_init", "alp_8h.html#a7fbfa5ed9462a0ca6e05b814bebac352", null ],
     [ "alp_process_command", "alp_8h.html#a3a7da5b9247e3f13a674d028868ce7d8", null ],
     [ "alp_process_command_console_output", "alp_8h.html#abd7bcaf89d790b0eee8256405edf9792", null ],
-    [ "alp_process_command_result_on_d7asp", "alp_8h.html#acfe5ce8096beac4aa17b0b987214c718", null ]
+    [ "alp_process_command_result_on_d7asp", "alp_8h.html#acfe5ce8096beac4aa17b0b987214c718", null ],
+    [ "alp_process_d7asp_result", "alp_8h.html#ae60809b9cd3facdcb68489e18fd64e42", null ]
 ];

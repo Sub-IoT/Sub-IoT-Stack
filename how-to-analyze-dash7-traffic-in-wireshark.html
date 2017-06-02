@@ -109,7 +109,7 @@ OSS-7            </a>
 <p>When the d7-oss-logger.py script is started with the <code>-f [file]</code> parameter it will dump the received traffic to the specified file in the PCAP format (the file format used by wireshark).</p>
 <p>Next we need to configure wireshark to correctly dissect this file. Since wireshark obviously does not know about the OSS-7 and DASH7 packet structure we will need to add a dissector plugin which adds support for parsing the DASH7 packets.
 This plugin is provided in the form of a lua script and can be found in the OSS-7 repository in the <code>tools/wireshark-dissector/</code> directory. Next we need to tell wireshark to use this script. This can be done by calling the script from the init.lua script by adding the following line:</p>
-<div class="codehilite"><pre><span></span><span class="nb">dofile</span><span class="p">(</span><span class="s1">&#39;</span><span class="s">&lt;PATH-TO-OSS7&gt;/tools/wireshark-dissector/oss7-wireshark-dissector.lua&#39;</span><span class="p">)</span>
+<div class="highlight"><pre><span></span><span class="nb">dofile</span><span class="p">(</span><span class="s1">&#39;&lt;PATH-TO-OSS7&gt;/tools/wireshark-dissector/oss7-wireshark-dissector.lua&#39;</span><span class="p">)</span>
 </pre></div>
 
 
@@ -117,9 +117,9 @@ This plugin is provided in the form of a lua script and can be found in the OSS-
 <p>As a final step we need to configure wireshark to use this dissector. This is done by coupling the User 0 link layer type (which the logger uses to write the PCAP file) to the protocol dissector for DASH7. 
 To do this select <code>Edit &gt; Preferences &gt; Protocols &gt; DLT_USER &gt; Edit &gt; New</code>. 
 Fill in the dialog like in the screenshot below and press OK.
-<img alt="DLT" src="./images/dlt.png" /></p>
+<img alt="DLT" src="./images/dlt.png"></p>
 <p>Now you should be able to analyze DASH7 packets by loading a PCAP file captured with the logger tool. This is shown in the screenshot below.
-<img alt="wireshark dissector" src="./images/wireshark-dissector.png" /></p>
+<img alt="wireshark dissector" src="./images/wireshark-dissector.png"></p>
 <p>The dissector does not yet support the full protocol however. This will be implemented in parallel with the stack itself.
 As long as you use the same git revision for the stack and for the dissector script you should be fine.</p>
 <p>In a future post we will explain how to go one step further and do live tracing of packets in wireshark instead of reading from a previously captured file.</p>

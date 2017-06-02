@@ -117,7 +117,7 @@ For this reason, we decided to explore the feasibility of reusing an NFC antenna
 
 <p>For this demo we used an off the shelf Sansung S4 smartphone. We attached an external antenna board to the NFC antenna connection pads.
 On the antenna board we have (besides the antenna itself) a diplexer circuit we designed which allows to use the antenna for both technologies by shielding them from each other and providing the correct matching. Attached to the antenna board is the NFC chip inside the smartphone on the one hand and a Wizzimote/CC430 SoC (the white board on the picture) which runs the OSS-7 stack. To be able to communicate between the OSS-7 stack and the smartphone we are using an UART to USB converter, which is the red board on the picture.</p>
-<p><img alt="DLT" src="./images/IMG_20150703_161123.jpg" /></p>
+<p><img alt="DLT" src="./images/IMG_20150703_161123.jpg"></p>
 <p>The results are very promising. It certainly is possible to use a combined antenna for NFC and DASH7. Because of this the biggest technical hurdle to integrating DASH7 into the space constrained smartphone is removed. What remains are a few passive components and an RF chip, which can be miniaturized easily.
 Currently we are using an external NFC antenna because this is easier to integrate. In the future we will look into using the internal antenna (which is located in the battery in this model) and improve the diplexer further.</p>
 <p>Many thanks to Jens Vanhooydonck, who implemented this as part of his master thesis!</p>

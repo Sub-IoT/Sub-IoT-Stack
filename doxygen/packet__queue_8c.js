@@ -17,5 +17,5 @@ var packet__queue_8c =
     [ "packet_queue_get_transmitted_packet", "packet__queue_8c.html#a6e3bc6c866bc0d6b522026385c0f6b05", null ],
     [ "packet_queue_mark_processing", "packet__queue_8c.html#a81145785b23f3e0c75da8d15f4169f46", null ],
     [ "packet_queue_mark_received", "packet__queue_8c.html#a89272b2af2eb8c33bb1538874d3bb7d2", null ],
-    [ "packet_queue_mark_transmitted", "packet__queue_8c.html#a760109740b6ad8172964e478c2afeb32", null ]
+    [ "packet_queue_mark_transmitted", "packet__queue_8c.html#a654f854546bd0b09159debf1ea6ff6e2", null ]
 ];

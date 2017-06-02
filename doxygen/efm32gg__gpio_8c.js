@@ -10,5 +10,6 @@ var efm32gg__gpio_8c =
     [ "hw_gpio_get_in", "group___g_p_i_o.html#ga6866c778c89f878d9d14281a34ec5b10", null ],
     [ "hw_gpio_get_out", "group___g_p_i_o.html#ga03b0dfc60c12eac84dc3725c63f9092d", null ],
     [ "hw_gpio_set", "group___g_p_i_o.html#gae4d9abb5f15c9824f2df0034c1560db8", null ],
+    [ "hw_gpio_set_edge_interrupt", "group___g_p_i_o.html#ga1c01e9d7671e90b6bc78c8decae3104e", null ],
     [ "hw_gpio_toggle", "group___g_p_i_o.html#ga3986acded7d726648a5901ba014016fd", null ]
 ];

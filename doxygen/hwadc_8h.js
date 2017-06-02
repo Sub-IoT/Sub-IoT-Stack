@@ -5,6 +5,7 @@ var hwadc_8h =
       [ "adcInputSingleVDDDiv3", "group___a_d_c.html#gga2d56278915683d00a45b9b1ede13c307ad43eadc38ed5fc1d67dad18f4da41e56", null ],
       [ "adcInputSingleCh4Ch5", "group___a_d_c.html#gga2d56278915683d00a45b9b1ede13c307ab2f1582c5db9b1bccfdc9d9996de61fc", null ],
       [ "adcInputSingleInputCh2", "group___a_d_c.html#gga2d56278915683d00a45b9b1ede13c307a0144b8dc4798f6380622ee0fb2ccc205", null ],
+      [ "adcInputSingleInputCh4", "group___a_d_c.html#gga2d56278915683d00a45b9b1ede13c307a7e8d060d792a85d44277e9592d0fede8", null ],
       [ "adcInputSingleInputCh5", "group___a_d_c.html#gga2d56278915683d00a45b9b1ede13c307ad00b5ff2758c6f823372de3145c742d6", null ],
       [ "adcInputSingleInputCh6", "group___a_d_c.html#gga2d56278915683d00a45b9b1ede13c307a04614f9265c3d24e8a7122ec91a69c3d", null ]
     ] ],
