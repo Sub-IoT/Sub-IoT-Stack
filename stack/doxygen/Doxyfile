@@ -819,9 +819,26 @@ EXCLUDE +=	../framework/hal/chips/kl02z/hal
 EXCLUDE +=	../framework/hal/chips/si4460/ezradiodrv
 EXCLUDE +=	../framework/hal/chips/stm32f4/CMSIS
 EXCLUDE +=	../framework/hal/chips/ezr32lg/emdrv
+EXCLUDE +=	../framework/hal/chips/ezr32lg/emlib
 EXCLUDE +=	../framework/hal/chips/ezr32lg/CMSIS
 EXCLUDE +=  ../framework/hal/chips/ezr32lg/kits/common/drivers
 EXCLUDE +=  ../framework/hal/chips/ezr32lg/kits/common/bsp
+EXCLUDE +=  ../framework/hal/chips/stm32l152/Drivers
+EXCLUDE +=  ../framework/hal/platforms/EZRPi
+EXCLUDE +=  ../framework/hal/platforms/EZR32LG_WSTK6200A/kits
+EXCLUDE +=  ../framework/hal/platforms/EZR32LG_WSTK6200A/Drivers
+EXCLUDE +=  ../framework/hal/platforms/EZR32LG_WSTK6200A/config
+EXCLUDE +=  ../framework/hal/platforms/EFM32GG_STK3700/kits
+EXCLUDE +=  ../framework/hal/platforms/EFM32GG_STK3700/Drivers
+EXCLUDE +=  ../framework/hal/platforms/EFM32GG_STK3700/config
+EXCLUDE +=  ../framework/hal/platforms/EFM32HG_STK3400/kits
+EXCLUDE +=  ../framework/hal/platforms/EFM32HG_STK3400/Drivers
+EXCLUDE +=  ../framework/hal/platforms/EFM32HG_STK3400/config
+EXCLUDE +=  ../framework/hal/platforms/EZR32LG_Octa/kits
+EXCLUDE +=  ../framework/hal/platforms/EZR32LG_Octa/Drivers
+EXCLUDE +=  ../framework/hal/platforms/EZR32LG_Octa/config
+EXCLUDE +=  ../framework/hal/platforms/EZR32LG_USB01/kits
+EXCLUDE +=  ../framework/hal/platforms/EZR32LG_USB01/config
 
 # The EXCLUDE_SYMLINKS tag can be used to select whether or not files or
 # directories that are symbolic links (a Unix file system feature) are excluded
