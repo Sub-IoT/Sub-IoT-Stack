@@ -13,8 +13,9 @@ Platform        | MCU                                   | Radio                 
 --------------- | ------------------------------------- | ----------------------------- | ----------------- | 
 EFM32GG_STK3700 | Silicon Labs Giant Gecko (Cortex-M3)  | Texas Instruments CC1101      | gcc-arm-embedded  |
 EFM32HG_STK3400 | Silicon Labs Happy Gecko (Cortex-M0+) | Texas Instruments CC1101      | gcc-arm-embedded  |
-wizzimote       | Texas Instruments CC430 (MSP430)      | Texas Instruments CC1101 (SoC)| msp430-gcc        |
 EZR32LG_WSTK6200| Silicon Labs EZR32LG SoC (Cortex-M3)	| EZradio si4460 			| gcc-arm-embedded  |
+
+Currently the EZR32LG_WSTK6200 board is the only off the shelf, commercially available devkit which includes a radio. Because of this, this board is currently the easiest way to get started. A disadvantage is that it is not as cheap as we would want it to be. However, we are actively working on porting to cheaper, off the shelf boards. More information will follow soon.
 
 The [EFM32GG_STK3700](https://www.silabs.com/products/mcu/lowpower/Pages/efm32gg-stk3700.aspx) is currently the most used by us, and thus the best supported.
 A disadvantage of this platform is that you need to attach an external CC1101. We designed a CC1101-based module which can be plugged in the expansion port of the devkit, see below for the schematics.
@@ -59,10 +60,6 @@ is still a young effort and there are some known problems with code size optimiz
 Finally, it is of course possible to define your own platform. Especially if you are using an MCU and radio which is already implemented it takes very little effort to add support to OSS-7 for your platform.
 Designing your own platform gives you the most flexibility regarding form factor and sensors specific for you use case of course. We are glad to assist in designing a custom board.
 
-
-
-
-
 ##CC1101 RF module for Giant Gecko##
 
 The RF module is a plug-in module for the [Giant Gecko starter kit](https://www.silabs.com/products/mcu/lowpower/Pages/efm32gg-stk3700.aspx) and is developed by University of Antwerp. The STK3700 is a development kit from Silicon Labs, which contains a Cortex M3 chip and several sensors. 
@@ -73,17 +70,4 @@ Currently there are two baluns available for this module, 433MHz and 868MHz.
 ![Gaint Gecko with CC1101 RF module](GG_CC1101.jpg)
 
 Schematics and Eagle files are available in the [git repository](https://github.com/mosaic-lopow/dash7-ap-open-source-stack/tree/master/hardware/stk3700-cc1101). If there are any questions, contact us through the mailing list.
-
-
-##Wizzikit##
-
-The Wizzikit is developed by WizziLab and is already few years on the market. The package contains two different boards, Wizzibase and  two Wizzimote. 
-The boards are based on the CC430F5137, this is a System on Chip (SoC), that integrates an MSP430 microcontroller and the CC1101 radio chip in one IC. 
-The programmer is not included in the wizzikit, we recommend to use the TI MSP-FET430UIF programmer or the OLimex MSP430-JTAG-TINY-V2 programmer. 
-
-
-![Wizzikit](WizziKit.png)
-
-[Datasheet (includes schematic)](http://www.wizzilab.com/wp-content/uploads/2013/03/WizziKit2-Datasheet.pdf)
-
 
