@@ -170,6 +170,10 @@ If you open `JLinkRTTClient` in one terminal and execute `make flash-sensor jlin
 
 Note that you can enable different log sources separately by using cmake settings ( x_LOG_ENABLED).
 
+## Tools
+
+Make sure to checkout [pyd7a](https://github.com/MOSAIC-LoPoW/pyd7a) as well. This python package provides a collection of python modules, supporting the DASH7 Alliance Protocol in general, and OSS-7 in particular. It has an API to programmatically access an oss7 modem, tools to parse incoming packets and a webgui to interact with a modem and the network behind it.
+
 ## IDE Support
 
 The OSS-7 buildsystem and code does not require a specific IDE. The user can choose which IDE to use, if any.
