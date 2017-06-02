@@ -21,7 +21,7 @@ We will create a build directory and run cmake to generate the buildscript:
 
 	$ mkdir build
 	$ cd build
-	$ cmake ../dash7-ap-open-source-stack/stack/ -DAPP_GATEWAY=y -DAPP_SENSOR=y
+	$ cmake ../dash7-ap-open-source-stack/stack/ -DAPP_GATEWAY=y -DAPP_SENSOR_PUSH=y
 	-- Cross-compiling using gcc-arm-embedded toolchain
 	-- Cross-compiling using gcc-arm-embedded toolchain
 	-- detected supported platforms: EFM32GG_STK3700 EFM32HG_STK3400 EZR32LG_Octa EZR32LG_USB01 EZR32LG_WSTK6200A OCTA_Gateway stm32f4_discovery
@@ -37,7 +37,7 @@ We will create a build directory and run cmake to generate the buildscript:
 A quick run-down of what happens:
 * We point cmake to the open source stack implementation: `../dash7-ap-open-source-stack/stack/` in this case
 * We are using the default gcc-arm-embedded toolchain, which is in our path. If you prefer not to add the toolchain directory to the PATH you have to specify the path by passing this to cmake as in this example: `-DTOOLCHAIN_DIR=../gcc-arm-none-eabi-4_9-2015q3/`. If you would want to use another toolchain you have to pass the `-DCMAKE_TOOLCHAIN_FILE=...` option to point to the cmake configuration for the cross compiler.
-* Based on the toolchain a number of supported platform options are available. By default the `EZR32LG_WSTK6200A` platform is selected. If you want another platform you can specify this using `-DPLATFORM=<platform-name>`
+* Based on the toolchain a number of supported platform options are available. By default the `EZR32LG_WSTK6200A` platform is selected. If you want another platform you can specify this using `-DPLATFORM=<platform-name>`. Each subdirectory beneath `stack/framework/hal/platforms` contains a different platform, and the platform name to use is equal to the name of the subdirectory.
 * A platform is a combination of one or more chips (MCU or RF) and the wiring between them. Based on the platform a number of chips will be added to the build, in this example the `ezr32lg` MCU and the `si4460` RF chip.
 * Applications can be added by setting -DAPP_<name>=y. The name of the application is the name of a subdirectory of stack/apps, but uppercased. In this example we enabled the sensor and gateway application.
 
@@ -74,25 +74,25 @@ If your toolchain is setup correctly you should be able to build the stack and t
 	[ 90%] Linking C executable gateway.elf
 	[ 91%] Built target gateway.elf
 	<snip>
-	Scanning dependencies of target sensor.elf
-	[ 95%] Building C object apps/sensor/CMakeFiles/sensor.elf.dir/sensor.c.obj
-	[ 96%] Building C object apps/sensor/CMakeFiles/sensor.elf.dir/version.c.obj
-	[ 97%] Linking C executable sensor.elf
-	[ 97%] Built target sensor.elf
+	Scanning dependencies of target sensor_push.elf
+	[ 95%] Building C object apps/sensor_push/CMakeFiles/sensor_push.elf.dir/sensor.c.obj
+	[ 96%] Building C object apps/sensor_push/CMakeFiles/sensor_push.elf.dir/version.c.obj
+	[ 97%] Linking C executable sensor_push.elf
+	[ 97%] Built target sensor_push.elf
 
 Note that this builds the chip drivers, the platform and the DASH7 stack implementation as a static library and links the applications.
 
 ### Build options
 
-More build options to for example tweak parameters of the stack or platform specific settings can be configured through cmake. This can be done by passing -D options on the commandline (as above) or using the ccmake interactive console interface of the cmake-gui interface as shown below. The current values of all options can be displayed by executing `cmake -L`.
+More build options to for example tweak parameters of the stack or platform specific settings can be configured through cmake. This can be done by passing -D options on the commandline (as above) or using the ccmake interactive console interface or the cmake-gui interface as shown below. The current values of all options can be displayed by executing `cmake -L`.
 
 ## Flashing
 
 cmake will generate targets for flashing each application using JLink, by running `make flash-<appname>`. For example:
 
-	$ make flash-sensor
+	$ make flash-sensor_push
 	<snip>
-	[100%] Built target sensor.elf
+	[100%] Built target sensor_push.elf
 	SEGGER J-Link Commander V6.10m (Compiled Nov 10 2016 18:38:45)
 	DLL version V6.10m, compiled Nov 10 2016 18:38:36
 	<snip>
@@ -113,7 +113,7 @@ cmake will generate targets for flashing each application using JLink, by runnin
 	AP-IDR: 0x24770011, Type: AHB-AP
 	Found Cortex-M3 r2p1, Little endian.
 	<snip>
-	Downloading file [sensor.bin]...
+	Downloading file [sensor_push.bin]...
 	Comparing flash   [100%] Done.
 	Verifying flash   [100%] Done.
 	J-Link: Flash download: Flash download skipped. Flash contents already match
