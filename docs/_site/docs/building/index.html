@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title>Building</title>
+    <meta name="description" content="Get prerequisites">
+
+
+    <link rel="stylesheet" href="/oss7-site-jekyll-test/css/main.css">
+    <link rel="stylesheet" href="/oss7-site-jekyll-test/css/font-awesome.min.css">
+    <link rel="stylesheet" href="//fonts.googleapis.com/css?family=Roboto:400,300,300italic,400italic,500" type="text/css">
+
+
+    <!--<link rel="shortcut icon" href="/oss7-site-jekyll-test/favicon.ico?1">-->
+    <!-- Begin Jekyll SEO tag v2.2.2 -->
+<title>Building | OSS-7</title>
+<meta property="og:title" content="Building" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="Get prerequisites" />
+<meta property="og:description" content="Get prerequisites" />
+<link rel="canonical" href="http://localhost:4000/oss7-site-jekyll-test/docs/building/" />
+<meta property="og:url" content="http://localhost:4000/oss7-site-jekyll-test/docs/building/" />
+<meta property="og:site_name" content="OSS-7" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2017-06-06T20:29:58+02:00" />
+<script type="application/ld+json">
+{"@context":"http://schema.org","@type":"WebPage","headline":"Building","datePublished":"2017-06-06T20:29:58+02:00","dateModified":"2017-06-06T20:29:58+02:00","description":"Get prerequisites","url":"http://localhost:4000/oss7-site-jekyll-test/docs/building/"}</script>
+<!-- End Jekyll SEO tag -->
+
+
+    <link rel="canonical" href="http://localhost:4000/oss7-site-jekyll-test/docs/building/">
+    <link rel="alternate" type="application/rss+xml" title="OSS-7" href="http://localhost:4000/oss7-site-jekyll-test/feed.xml" />
+</head>
+
+
+<body>
+
+    <nav class="navbar navbar-default navbar-fixed-top">
+    <div class="container navbar-container">
+        <div class="navbar-header">
+            <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
+        <span class="sr-only">Toggle navigation</span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+            <a class="navbar-brand" href="/oss7-site-jekyll-test/">
+                <!-- <span><img src="/oss7-site-jekyll-test/img/icon.png" style="margin-top: -14px; width:40px;"></span>  -->
+                OSS-7
+            </a>
+        </div>
+        <div id="navbar" class="collapse navbar-collapse">
+            <ul class="nav navbar-nav">
+                <li  class="active" ><a href="/oss7-site-jekyll-test/docs/home/">Docs</a></li>
+                <li ><a href="/oss7-site-jekyll-test/blog/2017/06/04/welcome-to-our-new-site/">Blog</a></li>
+                <li><a href="/oss7-site-jekyll-test/community">Community</a></li>
+            </ul>
+            <div class="navbar-right">
+                <form class="navbar-form navbar-left">
+                    <div class="form-group has-feedback">
+                        <input id="search-box" type="text" class="form-control" placeholder="Search...">
+                        <i class="fa fa-search form-control-feedback"></i>
+                    </div>
+                </form>
+                <ul class="nav navbar-nav">
+                    <li><a href="https://github.com/MOSAIC-LoPoW/dash7-ap-open-source-stack"><i class="fa fa-github" aria-hidden="true"></i></a></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</nav>
+
+
+    <div class="page-content">
+        <div class="wrapper">
+            <div class="container">
+    <div class="row">
+        <div class="col-md-4">
+          <div class="panel-group" id="accordion" role="tablist" aria-multiselectable="true">
+
+  <div class="panel panel-default">
+    <div class="panel-heading">
+      <h4 class="panel-title">
+        <a role="button" data-toggle="collapse" data-parent="#accordion" href="#collapse-1" aria-expanded="false" aria-controls="collapse-1">
+          Getting Started
+        </a>
+      </h4>
+    </div>
+    <div id="collapse-1" class="panel-collapse collapse" role="tabpanel" aria-labelledby="headingOne">
+      <ul class="list-group">
+        
+          
+          
+          <a class="list-group-item " href="/oss7-site-jekyll-test/docs/supported-hardware/">Supported hardware</a>
+        
+          
+          
+          <a class="list-group-item active" href="/oss7-site-jekyll-test/docs/building/">Building</a>
+        
+      </ul>
+    </div>
+  </div>
+
+  <div class="panel panel-default">
+    <div class="panel-heading">
+      <h4 class="panel-title">
+        <a role="button" data-toggle="collapse" data-parent="#accordion" href="#collapse-2" aria-expanded="false" aria-controls="collapse-2">
+          Other Topics
+        </a>
+      </h4>
+    </div>
+    <div id="collapse-2" class="panel-collapse collapse" role="tabpanel" aria-labelledby="headingOne">
+      <ul class="list-group">
+        
+          
+          
+          <a class="list-group-item " href="/oss7-site-jekyll-test/docs/logging/">Logging</a>
+        
+          
+          
+          <a class="list-group-item " href="/oss7-site-jekyll-test/docs/tools/">Tools</a>
+        
+          
+          
+          <a class="list-group-item " href="/oss7-site-jekyll-test/docs/ide-support/">IDE and debugging</a>
+        
+      </ul>
+    </div>
+  </div>
+
+</div>
+
+        </div>
+
+        <div class="col-md-8">
+            <h1>Building</h1>
+            <div id="markdown-content-container"><h1 id="get-prerequisites">Get prerequisites</h1>
+
+<ul>
+  <li>OSS-7 code. The code is hosted on <a href="https://github.com/mosaic-lopow/dash7-ap-open-source-stack/commits/master">github</a>, so either fork or clone the repository.</li>
+  <li><a href="http://www.cmake.org/">CMake</a> (v2.8.12 or greater) as a flexible build system</li>
+  <li>a GCC-based toolchain matching the target platform, for example <a href="https://launchpad.net/gcc-arm-embedded">GCC ARM Embedded</a> for ARM Cortex-M based platforms. By default the build system assumes the GCC ARM Embedded toolchain is located in the PATH environment variable (meaning you can run <code class="highlighter-rouge">arm-none-eabi-gcc</code> without specifying the full path).</li>
+  <li><a href="https://www.segger.com/downloads/jlink">JLinkExe</a> if you are using a JLink probe to flash/debug your target</li>
+</ul>
+
+<h1 id="run-cmake">Run cmake</h1>
+
+<p>We will create a build directory and run cmake to generate the buildscript:</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>$ mkdir build
+$ cd build
+$ cmake ../dash7-ap-open-source-stack/stack/ -DAPP_GATEWAY=y -DAPP_SENSOR_PUSH=y
+-- Cross-compiling using gcc-arm-embedded toolchain
+-- Cross-compiling using gcc-arm-embedded toolchain
+-- detected supported platforms: EFM32GG_STK3700 EFM32HG_STK3400 EZR32LG_Octa EZR32LG_USB01 EZR32LG_WSTK6200A OCTA_Gateway stm32f4_discovery
+-- selected platform: EZR32LG_WSTK6200A
+-- The ASM compiler identification is GNU
+-- Found assembler: /home/glenn/bin/toolchains/gcc-arm-none-eabi-4_9-2014q4/bin/arm-none-eabi-gcc
+-- Added chip ezr32lg
+-- Added chip si4460
+-- Configuring done
+-- Generating done
+-- Build files have been written to: /home/glenn/oss7/build
+</code></pre>
+</div>
+
+<p>A quick run-down of what happens:</p>
+<ul>
+  <li>We point cmake to the open source stack implementation: <code class="highlighter-rouge">../dash7-ap-open-source-stack/stack/</code> in this case</li>
+  <li>We are using the default gcc-arm-embedded toolchain, which is in our path. If you prefer not to add the toolchain directory to the PATH you have to specify the path by passing this to cmake as in this example: <code class="highlighter-rouge">-DTOOLCHAIN_DIR=../gcc-arm-none-eabi-4_9-2015q3/</code>. If you would want to use another toolchain you have to pass the <code class="highlighter-rouge">-DCMAKE_TOOLCHAIN_FILE=...</code> option to point to the cmake configuration for the cross compiler.</li>
+  <li>Based on the toolchain a number of supported platform options are available. By default the <code class="highlighter-rouge">EZR32LG_WSTK6200A</code> platform is selected. If you want another platform you can specify this using <code class="highlighter-rouge">-DPLATFORM=&lt;platform-name&gt;</code>. Each subdirectory beneath <code class="highlighter-rouge">stack/framework/hal/platforms</code> contains a different platform, and the platform name to use is equal to the name of the subdirectory.</li>
+  <li>A platform is a combination of one or more chips (MCU or RF) and the wiring between them. Based on the platform a number of chips will be added to the build, in this example the <code class="highlighter-rouge">ezr32lg</code> MCU and the <code class="highlighter-rouge">si4460</code> RF chip.</li>
+  <li>Applications can be added by setting -DAPP_<name>=y. The name of the application is the name of a subdirectory of stack/apps, but uppercased. In this example we enabled the sensor and gateway application.</name></li>
+</ul>
+
+<p>For example configuring a buildscript for the cc430 based wizzimote platform can be done like this:</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>$ cmake ../dash7-ap-open-source-stack/stack/ \
+        -DTOOLCHAIN_DIR=../msp430-gcc-3.5.0.0/ \
+        -DCMAKE_TOOLCHAIN_FILE=../dash7-ap-open-source-stack/stack/cmake/toolchains/msp430-gcc.cmake \
+        -DPLATFORM=wizzimote
+</code></pre>
+</div>
+
+<h1 id="build-it">Build it!</h1>
+
+<p>If your toolchain is setup correctly you should be able to build the stack and the configured application(s) now. An example of (shortened) output is below:</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>$ make
+Scanning dependencies of target CHIP_SI4460
+[  1%] Building C object framework/hal/platforms/platform/chips/si4460/CMakeFiles/CHIP_SI4460.dir/si4460.c.obj
+[  2%] Building C object framework/hal/platforms/platform/chips/si4460/CMakeFiles/CHIP_SI4460.dir/si4460_interface.c.obj
+[  6%] Built target CHIP_SI4460
+Scanning dependencies of target CHIP_EZR32LG
+[  7%] Building C object framework/hal/platforms/platform/chips/ezr32lg/CMakeFiles/CHIP_EZR32LG.dir/ezr32lg_adc.c.obj
+&lt;snip&gt;
+[ 44%] Built target CHIP_EZR32LG
+Scanning dependencies of target PLATFORM
+&lt;snip&gt;
+[ 61%] Built target PLATFORM
+&lt;snip&gt;
+Scanning dependencies of target d7ap
+&lt;snip&gt;
+[ 88%] Linking C static library libd7ap.a
+[ 88%] Built target d7ap
+Scanning dependencies of target gateway.elf
+&lt;snip&gt;
+[ 90%] Linking C executable gateway.elf
+[ 91%] Built target gateway.elf
+&lt;snip&gt;
+Scanning dependencies of target sensor_push.elf
+[ 95%] Building C object apps/sensor_push/CMakeFiles/sensor_push.elf.dir/sensor.c.obj
+[ 96%] Building C object apps/sensor_push/CMakeFiles/sensor_push.elf.dir/version.c.obj
+[ 97%] Linking C executable sensor_push.elf
+[ 97%] Built target sensor_push.elf
+</code></pre>
+</div>
+
+<p>Note that this builds the chip drivers, the platform and the DASH7 stack implementation as a static library and links the applications.</p>
+
+<h1 id="build-options">Build options</h1>
+
+<p>More build options to for example tweak parameters of the stack or platform specific settings can be configured through cmake. This can be done by passing -D options on the commandline (as above) or using the ccmake interactive console interface or the cmake-gui interface as shown below. The current values of all options can be displayed by executing <code class="highlighter-rouge">cmake -L</code>.</p>
+
+<h1 id="flashing">Flashing</h1>
+
+<p>cmake will generate targets for flashing each application using JLink, by running <code class="highlighter-rouge">make flash-&lt;appname&gt;</code>. For example:</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>$ make flash-sensor_push
+&lt;snip&gt;
+[100%] Built target sensor_push.elf
+SEGGER J-Link Commander V6.10m (Compiled Nov 10 2016 18:38:45)
+DLL version V6.10m, compiled Nov 10 2016 18:38:36
+&lt;snip&gt;
+Connecting to J-Link via USB...O.K.
+Firmware: Silicon Labs J-Link Pro OB compiled Jan 22 2016 15:00:47
+Hardware version: V4.00
+S/N: 440058314
+IP-Addr: DHCP (no addr. received yet)
+VTref = 3.341V
+
+Selecting SWD as current target interface.
+Selecting 10000 kHz as target interface speed
+
+Target connection not established yet but required for command.
+Device "EZR32LG330F256RXX" selected.
+
+Found SWD-DP with ID 0x2BA01477
+AP-IDR: 0x24770011, Type: AHB-AP
+Found Cortex-M3 r2p1, Little endian.
+&lt;snip&gt;
+Downloading file [sensor_push.bin]...
+Comparing flash   [100%] Done.
+Verifying flash   [100%] Done.
+J-Link: Flash download: Flash download skipped. Flash contents already match
+O.K.
+
+Loading binary file sensor.bin
+Reading 94072 bytes data from target memory @ 0x00000000.
+Verify successful.
+&lt;snip&gt;
+[100%] Built target flash-sensor
+</code></pre>
+</div>
+
+<p>If all went well the application should be running on the target.</p>
+
+<h1 id="tools">Tools</h1>
+
+<p>Make sure to checkout <a href="https://github.com/MOSAIC-LoPoW/pyd7a">pyd7a</a> as well. This python package provides a collection of python modules, supporting the DASH7 Alliance Protocol in general, and OSS-7 in particular. It has an API to programmatically access an oss7 modem, tools to parse incoming packets and a webgui to interact with a modem and the network behind it.</p>
+
+<h1 id="ide-support">IDE Support</h1>
+
+<p>The OSS-7 buildsystem and code does not require a specific IDE. The user can choose which IDE to use, if any.
+CMake supports generating project files for Eclipse CDT, CodeBlocks etc, instead of plain makefiles using the -G option.
+Alternatively you can use an IDE which natively uses cmake projects like Qt Creator or JetBrain’s CLion.</p>
+
+<h1 id="debugging">Debugging</h1>
+
+<p>For debugging most toolchains come with a GDB client which you can attach to a GDB server which is compatible with your programmer.
+For instance ARM Cortex-M platforms can use Segger’s JLink programmers which comes with JLinkGDBServer. The arm-gcc-embedded toolchain
+can then be used to connect with the JLinkGDBServer for flashing and debugging. Segger also provides the <a href="https://www.segger.com/ozone.html">Ozone</a> GUI tool for debugging.</p>
+
+<p>For Eclipse user: <a href="http://gnuarmeclipse.livius.net/">here</a> you can find an Eclipse plugin to integrate JLink debugging in Eclipse.
+Similarly, <a href="http://embsysregview.sourceforge.net/">EmbSysRegView</a> is an Eclipse addin to view the registers of different MCU’s.</p>
+
+<p>We don’t go into more detail about this here since this depends a lot on your favorite tools and the platform you are using.</p>
+
+<h1 id="ms-windows-support">MS Windows support</h1>
+
+<p>While the above is written for Unix OS’s (GNU/Linux and Mac OS X) it works on MS Windows as well. On MS Windows you should install the mingw32 compiler and use the “MinGW32 Makefiles” generator option when running cmake. Finally, you should use the <code class="highlighter-rouge">mingw32-make</code> command instead of <code class="highlighter-rouge">make</code>.</p>
+</div>
+            <p class="text-center">
+              <br />
+              <a target="_blank" href="https://github.com/MOSAIC-LoPoW/dash7-ap-open-source-stack/docs/_docs/building.md" class="btn btn-default githubEditButton" role="button">
+                <i class="fa fa-pencil fa-lg"></i> Improve this page
+              </a>
+            </p>
+            <hr>
+            
+
+
+
+
+
+  
+  
+
+  
+  
+    <ul class="pager">
+      
+        
+        
+        <li class="previous">
+          <a href="/oss7-site-jekyll-test/docs/supported-hardware/">
+            <span aria-hidden="true">&larr;</span> Previous
+          </a>
+        </li>
+      
+
+      
+        
+        
+        <li class="next">
+          <a href="/oss7-site-jekyll-test/docs/logging/">
+            Next <span aria-hidden="true">&rarr;</span>
+          </a>
+        </li>
+      
+    </div>
+    <div class="clear"></div>
+    
+
+        </div>
+
+    </div>
+</div>
+
+        </div>
+    </div>
+
+    <footer class="footer">
+    <div class="container">
+
+        <p class="text-center">
+            OSS-7 2017 |
+            Powered by <a href="https://github.com/aksakalli/jekyll-doc-theme">Jekyll Doc Theme</a>
+        </p>
+        <!-- <p class="text-muted">Place sticky footer content here.</p> -->
+    </div>
+</footer>
+
+    <script>
+  var baseurl = '/oss7-site-jekyll-test'
+</script>
+<script src="//code.jquery.com/jquery-1.10.2.min.js"></script>
+<script src="/oss7-site-jekyll-test/js/bootstrap.min.js "></script>
+<script src="/oss7-site-jekyll-test/js/typeahead.bundle.min.js "></script>
+
+<script src="/oss7-site-jekyll-test/js/main.js "></script>
+
+</body>
+
+</html>

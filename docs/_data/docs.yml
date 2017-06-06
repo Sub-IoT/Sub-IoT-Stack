@@ -1,10 +1,9 @@
 - title: Getting Started
   docs:
-  - home
-  - customization
-
-- title: Examples
+  - supported-hardware
+  - building
+- title: Other Topics
   docs:
-  - cheatsheet
-  - font-awesome
-  - bootstrap
+  - logging
+  - tools
+  - ide-support

@@ -1,14 +1,13 @@
 # Site settings
-title: Jekyll Doc Theme
-email: your-email@domain.com
-description: > 
-  Jekyll Template for Project Websites
-  providing documentation and blog post pages.
+title: OSS-7
+email: glenn.ergeerts@uantwerpen.be
+description: >
+  An opensource stack implementation of the DASH7 Alliance Protocol.
 
-baseurl: "/jekyll-doc-theme" # the subpath of your site, e.g. /blog/
-url: https://aksakalli.github.io/jekyll-doc-theme # the base hostname & protocol for your site
-git_address: https://github.com/aksakalli/jekyll-doc-theme
-git_edit_address: https://github.com/aksakalli/jekyll-doc-theme/blob/gh-pages
+baseurl: "/dash7-ap-open-source-stack" # the subpath of your site, e.g. /blog/
+url: https://mosaic-lopow.github.io/dash7-ap-open-source-stack # the base hostname & protocol for your site
+git_address: https://github.com/MOSAIC-LoPoW/dash7-ap-open-source-stack
+git_edit_address: https://github.com/MOSAIC-LoPoW/dash7-ap-open-source-stack/docs
 
 # Build settings
 markdown: kramdown
@@ -18,14 +17,12 @@ gems:
   - jekyll-redirect-from
   - jekyll-seo-tag
   - jekyll-sitemap
-  - sass
+
 exclude:
   - Gemfile
   - Gemfile.lock
-  - .idea/
   - .gitignore
   - README.md
-timezone: Europe/Berlin
 defaults:
 - scope:
     path: _posts

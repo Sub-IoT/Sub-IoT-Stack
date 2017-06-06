@@ -1,0 +1,54 @@
+[
+
+  
+    
+    
+    {
+      "title": "Supported hardware",
+      "url": "/oss7-site-jekyll-test/docs/supported-hardware/"
+
+    },
+  
+    
+    
+    {
+      "title": "Building",
+      "url": "/oss7-site-jekyll-test/docs/building/"
+
+    },
+  
+
+  
+    
+    
+    {
+      "title": "Logging",
+      "url": "/oss7-site-jekyll-test/docs/logging/"
+
+    },
+  
+    
+    
+    {
+      "title": "Tools",
+      "url": "/oss7-site-jekyll-test/docs/tools/"
+
+    },
+  
+    
+    
+    {
+      "title": "IDE and debugging",
+      "url": "/oss7-site-jekyll-test/docs/ide-support/"
+
+    },
+  
+
+
+  
+  {
+  "title": "Welcome to our new site!",
+  "url": "/oss7-site-jekyll-test/blog/2017/06/04/welcome-to-our-new-site/"
+  }
+  
+]
