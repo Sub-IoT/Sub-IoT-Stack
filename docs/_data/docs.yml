@@ -1,0 +1,10 @@
+- title: Getting Started
+  docs:
+  - home
+  - customization
+
+- title: Examples
+  docs:
+  - cheatsheet
+  - font-awesome
+  - bootstrap
