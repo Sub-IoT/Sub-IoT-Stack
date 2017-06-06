@@ -6,7 +6,7 @@ For more information visit the [OSS-7 site](http://mosaic-lopow.github.io/dash7-
 
 # Getting Started
 
-Please refer to the [documentation section on our site](https://mosaic-lopow.github.io/oss7-site-jekyll-test/docs/home/).
+Please refer to the [documentation section on our site](http://mosaic-lopow.github.io/dash7-ap-open-source-stack/docs/home/).
 
 # Related repositories
 
