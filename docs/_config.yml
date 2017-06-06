@@ -7,7 +7,7 @@ description: >
 baseurl: "/dash7-ap-open-source-stack" # the subpath of your site, e.g. /blog/
 url: https://mosaic-lopow.github.io/dash7-ap-open-source-stack # the base hostname & protocol for your site
 git_address: https://github.com/MOSAIC-LoPoW/dash7-ap-open-source-stack
-git_edit_address: https://github.com/MOSAIC-LoPoW/dash7-ap-open-source-stack/docs
+git_edit_address: https://github.com/MOSAIC-LoPoW/dash7-ap-open-source-stack/blob/master/docs
 
 # Build settings
 markdown: kramdown
