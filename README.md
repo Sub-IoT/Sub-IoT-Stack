@@ -2,11 +2,11 @@
 
 OSS-7 is an open source implementation of the [DASH7 Alliance](http://www.dash7-alliance.org) protocol for ultra low power wireless sensor communication. The aim of the project is to provide a reference implementation of the protocol stack which allows for fast development and prototyping of DASH7 based products. This implementation focusses on completeness, correctness, ease of use and understanding. Performance and code size are less important aspects. For clarity a clear separation between the ISO layers is maintained in the code.
 
-For more information visit the [OSS-7 site](http://mosaic-lopow.github.io/dash7-ap-open-source-stack/) and our [doxygen site](http://mosaic-lopow.github.io/dash7-ap-open-source-stack/doxygen/)
+For more information visit the [OSS-7 site](http://mosaic-lopow.github.io/dash7-ap-open-source-stack/).
 
 # Getting Started
 
-Please refer to the [getting started page on our doxygen site](http://mosaic-lopow.github.io/dash7-ap-open-source-stack/doxygen/md_gettingstarted.html).
+Please refer to the [documentation section on our site](https://mosaic-lopow.github.io/oss7-site-jekyll-test/docs/home/).
 
 # Related repositories
 
