@@ -60,7 +60,7 @@ ADD_LIBRARY(PLATFORM OBJECT
     octa_gateway_debug.c
     libc_overrides.c
     inc/platform.h
-    inc/userbutton.h
+    inc/button.h
 )
 
 #Include the sources for the efm32lg chip

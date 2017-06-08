@@ -28,7 +28,7 @@
 #include "efm32lg_mcu.h"
 #include "hwdebug.h"
 #include "platform.h"
-#include "userbutton.h"
+#include "button.h"
 #include "em_gpio.h"
 #include <assert.h>
 #include "console.h"
