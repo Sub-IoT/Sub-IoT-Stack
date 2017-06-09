@@ -577,7 +577,7 @@ error_t hw_radio_init(alloc_packet_callback_t alloc_packet_cb, release_packet_ca
   alloc_packet_callback = alloc_packet_cb;
   release_packet_callback = release_packet_cb;
 
-  spi_handle_t* spi_handle = spi_init(SX127x_SPI_USART, SX127x_SPI_BAUDRATE, 8, true, SX127x_SPI_LOCATION);
+  spi_handle_t* spi_handle = spi_init(SX127x_SPI_INDEX, SX127x_SPI_BAUDRATE, 8, true, SX127x_SPI_LOCATION);
   sx127x_spi = spi_init_slave(spi_handle, SX127x_SPI_PIN_CS, true);
 
 #ifdef PLATFORM_SX127X_USE_RESET_PIN
@@ -586,6 +586,7 @@ error_t hw_radio_init(alloc_packet_callback_t alloc_packet_cb, release_packet_ca
 
   calibrate_rx_chain();
   init_regs();
+
   set_opmode(OPMODE_STANDBY); // TODO sleep
   // TODO reset ?
   // TODO op mode
