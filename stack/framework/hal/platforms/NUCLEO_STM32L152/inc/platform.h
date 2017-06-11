@@ -65,14 +65,29 @@
 
 
 // CC1101 PIN definitions
- #ifdef USE_CC1101
+#ifdef USE_CC1101
  #define CC1101_SPI_USART    1
  #define CC1101_SPI_BAUDRATE 4000000
  #define CC1101_SPI_LOCATION 0
  #define CC1101_SPI_PIN_CS   C6
  #define CC1101_GDO0_PIN     C7
  //#define CC1101_GDO0_PIN     C8
- #endif
+#endif
+
+#ifdef USE_SX127X
+  #define SX127x_SPI_INDEX    0
+  #define SX127x_SPI_LOCATION 0
+  #define SX127x_SPI_PIN_CS   B6
+  #define SX127x_SPI_BAUDRATE 8000000
+  #define SX127x_DIO0_PIN A10
+  #define SX127x_DIO1_PIN B3
+  #ifdef PLATFORM_SX127X_USE_DIO3_PIN
+    #define SX127x_DIO3_PIN B4
+  #endif
+  #ifdef PLATFORM_SX127X_USE_RESET_PIN
+    #define SX127x_RESET_PIN A0
+  #endif
+#endif
 
 #define PLATFORM_NUM_TIMERS 1
 
