@@ -81,8 +81,9 @@ ADD_LIBRARY (${CHIP_LIBRARY_NAME} OBJECT
   	Drivers/STM32L1xx_HAL_Driver/Src/stm32l1xx_hal_tim.c 
   	Drivers/STM32L1xx_HAL_Driver/Src/stm32l1xx_hal_tim_ex.c 
         Drivers/STM32L1xx_HAL_Driver/Src/stm32l1xx_hal_uart.c 
-  
-	 	  
+
+        Drivers/STM32L1xx_HAL_Driver/Src/stm32l1xx_ll_exti.c
+        Drivers/STM32L1xx_HAL_Driver/Src/stm32l1xx_ll_gpio.c
 		
 	stm32l152_atomic.c
         stm32l152_gpio.c
