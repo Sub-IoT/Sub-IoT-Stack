@@ -27,6 +27,9 @@
 #include "stm32l1xx_hal.h"
 #include "hwatomic.h"
 #include "assert.h"
+#include "stm32l1xx_ll_exti.h"
+#include "stm32l1xx_ll_gpio.h"
+#include "stm32l1xx_ll_system.h"
 //#include "stm32l1xx_hal_gpio.h"
 //#include "stm32l1xx_hal_rcc.h"
 
@@ -144,75 +147,125 @@ __LINK_C bool hw_gpio_get_in(pin_id_t pin_id)
 
 static void gpio_int_callback(uint8_t pin)
 {
-    //we use emlib's GPIO interrupt handler which does NOT
-    //disable the interrupts by default --> disable them here to get the same behavior !!
-    start_atomic();
-	assert(interrupts[pin].callback != 0x0);
-	pin_id_t id = {interrupts[pin].interrupt_port, pin};
-	//report an event_mask of '0' since the only way to check which event occurred
-	//is to check the state of the pin from the interrupt handler and
-    //since the execution of interrupt handlers may be 'delayed' this method is NOT reliable.
-    // TODO find out if there is no way to do this reliable on efm32gg
-    interrupts[pin].callback(id,0);
-    end_atomic();
+  start_atomic();
+    assert(interrupts[pin].callback != 0x0);
+    pin_id_t id = {interrupts[pin].interrupt_port, pin};
+    interrupts[pin].callback(id,0); // TODO event mask
+    // TODO clear?
+  end_atomic();
 }
 
 __LINK_C error_t hw_gpio_configure_interrupt(pin_id_t pin_id, gpio_inthandler_t callback, uint8_t event_mask)
 {
-	if(interrupts[pin_id.pin].interrupt_port != pin_id.port)
-	    	return EOFF;
-	    else if(callback == 0x0 || event_mask > (GPIO_RISING_EDGE | GPIO_FALLING_EDGE))
-	    	return EINVAL;
+  if (interrupts[pin_id.pin].interrupt_port != 0xFF)
+  {
+    if (interrupts[pin_id.pin].interrupt_port != pin_id.port)
+      return EOFF;
+  } else {
+    interrupts[pin_id.pin].interrupt_port = pin_id.port;
+  }
 
-	    error_t err;
-	    start_atomic();
-		//do this check atomically: interrupts[..] callback is altered by this function
-		//so the check belongs in the critical section as well
-	    if(interrupts[pin_id.pin].callback != 0x0 && interrupts[pin_id.pin].callback != callback)
-		    err = EBUSY;
+  if(callback == 0x0 || event_mask > (GPIO_RISING_EDGE | GPIO_FALLING_EDGE))
+    return EINVAL;
+
+    error_t err;
+    start_atomic();
+    //do this check atomically: interrupts[..] callback is altered by this function
+    //so the check belongs in the critical section as well
+    if(interrupts[pin_id.pin].callback != 0x0 && interrupts[pin_id.pin].callback != callback)
+      err = EBUSY;
 		else
 		{
 		    interrupts[pin_id.pin].callback = callback;
-//	    	GPIOINT_CallbackRegister(pin_id.pin, &gpio_int_callback);
-//		    GPIO_IntConfig(pin_id.port, pin_id.pin,
-//				!!(event_mask & GPIO_RISING_EDGE),
-//				!!(event_mask & GPIO_FALLING_EDGE),
-//				false);
+        uint32_t exti_line = 1 << pin_id.pin;
+        /* First Disable Event on provided Lines */
+        LL_EXTI_DisableEvent_0_31(exti_line);
+        /* Then Enable IT on provided Lines */
+        LL_EXTI_EnableIT_0_31(exti_line);
+
+        switch(event_mask)
+        {
+          case GPIO_RISING_EDGE:
+            LL_EXTI_DisableFallingTrig_0_31(exti_line);
+            LL_EXTI_EnableRisingTrig_0_31(exti_line);
+            break;
+          case GPIO_FALLING_EDGE:
+            LL_EXTI_DisableRisingTrig_0_31(exti_line);
+            LL_EXTI_EnableFallingTrig_0_31(exti_line);
+            break;
+          case (GPIO_RISING_EDGE | GPIO_FALLING_EDGE):
+            LL_EXTI_EnableRisingTrig_0_31(exti_line);
+            LL_EXTI_EnableFallingTrig_0_31(exti_line);
+            break;
+          case 0:
+            LL_EXTI_DisableIT_0_31(exti_line);
+            break;
+          default:
+            assert(false);
+            break;
+        }
 		    err = SUCCESS;
 		}
-	    end_atomic();
-	    return err;
+
+    end_atomic();
+    return err;
 }
+
+
 __LINK_C error_t hw_gpio_enable_interrupt(pin_id_t pin_id)
 {
-	if (pin_id.pin >= 5 && pin_id.pin <= 9)
-	{
+  if(pin_id.pin < 5) {
+    HAL_NVIC_EnableIRQ(EXTI0_IRQn + pin_id.pin); // EXTI0->5 are subsequent
+    NVIC_SetPriority(EXTI0_IRQn + pin_id.pin,0); // TODO on boot
+    return SUCCESS;
+  } else if (pin_id.pin >= 5 && pin_id.pin <= 9) {
 		HAL_NVIC_EnableIRQ(EXTI9_5_IRQn);
+    NVIC_SetPriority(EXTI9_5_IRQn,0); // TODO on boot
+		return SUCCESS;
+  } else if (pin_id.pin >= 10 && pin_id.pin <= 15) {
+		HAL_NVIC_EnableIRQ(EXTI15_10_IRQn);
+    NVIC_SetPriority(EXTI15_10_IRQn,0); // TODO on boot
 		return SUCCESS;
 	}
 
-	if (pin_id.pin >= 10 && pin_id.pin <= 15)
-	{
-		HAL_NVIC_EnableIRQ(EXTI15_10_IRQn);
-		return SUCCESS;
-	}
-    return FAIL;
+  assert(false);
 }
 
 __LINK_C error_t hw_gpio_disable_interrupt(pin_id_t pin_id)
 {
 	//TODO: check if no other pins are still using the interrupt
-	if (pin_id.pin >= 5 && pin_id.pin <= 9)
-	{
-		HAL_NVIC_EnableIRQ(EXTI9_5_IRQn);
-		return SUCCESS;
-	}
-	if (pin_id.pin >= 10 && pin_id.pin <= 15)
-	{
-		HAL_NVIC_DisableIRQ(EXTI15_10_IRQn);
-		return SUCCESS;
-	}
-	return FAIL;
+  if(pin_id.pin < 5) {
+    HAL_NVIC_DisableIRQ(EXTI0_IRQn + pin_id.pin); // EXTI0->5 are subsequent
+    return SUCCESS;
+  } else if (pin_id.pin >= 5 && pin_id.pin <= 9) {
+    HAL_NVIC_DisableIRQ(EXTI9_5_IRQn);
+    return SUCCESS;
+  } else if (pin_id.pin >= 10 && pin_id.pin <= 15) {
+    HAL_NVIC_DisableIRQ(EXTI15_10_IRQn);
+    return SUCCESS;
+  }
+
+  assert(false);
+}
+
+void EXTI0_IRQHandler() {
+  gpio_int_callback(0);
+}
+
+void EXTI1_IRQHandler() {
+  gpio_int_callback(1);
+}
+
+void EXTI2_IRQHandler() {
+  gpio_int_callback(2);
+}
+
+void EXTI3_IRQHandler() {
+  gpio_int_callback(3);
+}
+
+void EXTI4_IRQHandler() {
+  gpio_int_callback(4);
 }
 
 void EXTI9_5_IRQHandler(void)
@@ -235,7 +288,6 @@ void EXTI9_5_IRQHandler(void)
 void EXTI15_10_IRQHandler(void)
 {
 	// will check the different pins here instead of using the HAL
-
 		uint8_t pin_id = 10;
 		for (;pin_id <= 15; pin_id++)
 		{

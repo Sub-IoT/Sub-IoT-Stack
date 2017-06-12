@@ -88,7 +88,7 @@
 #endif
 
 #ifdef USE_SX127X
-#define SX127x_SPI_USART    1
+#define SX127x_SPI_INDEX    1
 #define SX127x_SPI_LOCATION 1
 #define SX127x_SPI_PIN_CS   A2
 #define SX127x_SPI_BAUDRATE 8 //10000000

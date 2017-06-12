@@ -65,7 +65,7 @@
 #define si4455_SDN_PIN  E8
 
 #ifdef USE_SX127X
-  #define SX127x_SPI_USART    1
+  #define SX127x_SPI_INDEX    1
   #define SX127x_SPI_LOCATION 1
   #define SX127x_SPI_PIN_CS   D3
   #define SX127x_SPI_BAUDRATE 10000000
