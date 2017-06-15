@@ -336,8 +336,10 @@ static void build_iv(packet_t *packet, uint8_t payload_len, uint8_t *iv)
     iv[14] = packet->d7anp_ctrl.raw;
     iv[15] = payload_len;
 
+#if defined(FRAMEWORK_AES_LOG_ENABLED)
     DPRINT("iv for CTR/CCM");
     DPRINT_DATA(iv, AES_BLOCK_SIZE);
+#endif
 }
 
 uint8_t d7anp_secure_payload(packet_t *packet, uint8_t *payload, uint8_t payload_len)
@@ -349,6 +351,10 @@ uint8_t d7anp_secure_payload(packet_t *packet, uint8_t *payload, uint8_t payload
     uint8_t auth_len;
     uint8_t add[AES_BLOCK_SIZE];
     uint8_t add_len = 0;
+
+    DPRINT("Start Secure payload (len %d) ", payload_len );
+    timer_tick_t time_elapsed = timer_get_counter_value();
+
 
     nls_method = packet->d7anp_ctrl.nls_method;
     auth_len = get_auth_len(nls_method);
@@ -402,6 +408,8 @@ uint8_t d7anp_secure_payload(packet_t *packet, uint8_t *payload, uint8_t payload
         break;
     }
 
+    time_elapsed = timer_get_counter_value() - time_elapsed;
+    DPRINT("Payload secured in %i Ti", time_elapsed);
     return auth_len;
 }
 
