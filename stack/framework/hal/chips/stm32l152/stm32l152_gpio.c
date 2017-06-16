@@ -25,13 +25,12 @@
 #include "hwgpio.h"
 #include "stm32l1xx_hal_conf.h"
 #include "stm32l1xx_hal.h"
+
 #include "hwatomic.h"
 #include "assert.h"
 #include "stm32l1xx_ll_exti.h"
 #include "stm32l1xx_ll_gpio.h"
 #include "stm32l1xx_ll_system.h"
-//#include "stm32l1xx_hal_gpio.h"
-//#include "stm32l1xx_hal_rcc.h"
 
 typedef struct
 {
@@ -215,20 +214,20 @@ __LINK_C error_t hw_gpio_configure_interrupt(pin_id_t pin_id, gpio_inthandler_t 
 __LINK_C error_t hw_gpio_enable_interrupt(pin_id_t pin_id)
 {
   if(pin_id.pin < 5) {
+    HAL_NVIC_SetPriority(EXTI0_IRQn + pin_id.pin, 2, 0); // TODO on boot
     HAL_NVIC_EnableIRQ(EXTI0_IRQn + pin_id.pin); // EXTI0->5 are subsequent
-    NVIC_SetPriority(EXTI0_IRQn + pin_id.pin,0); // TODO on boot
     return SUCCESS;
   } else if (pin_id.pin >= 5 && pin_id.pin <= 9) {
+    HAL_NVIC_SetPriority(EXTI9_5_IRQn, 2, 0); // TODO on boot
 		HAL_NVIC_EnableIRQ(EXTI9_5_IRQn);
-    NVIC_SetPriority(EXTI9_5_IRQn,0); // TODO on boot
 		return SUCCESS;
   } else if (pin_id.pin >= 10 && pin_id.pin <= 15) {
+    HAL_NVIC_SetPriority(EXTI15_10_IRQn, 2, 0); // TODO on boot
 		HAL_NVIC_EnableIRQ(EXTI15_10_IRQn);
-    NVIC_SetPriority(EXTI15_10_IRQn,0); // TODO on boot
 		return SUCCESS;
-	}
-
-  assert(false);
+  } else {
+    assert(false);
+  }
 }
 
 __LINK_C error_t hw_gpio_disable_interrupt(pin_id_t pin_id)
