@@ -42,10 +42,13 @@
  * LED DEFINITIONS *
  *******************/
 
-#define HW_NUM_LEDS 3
+#define HW_NUM_LEDS         3
 #define LED0				A8
 #define LED1				A9
-#define LED2				A10
+#define LED2				B11//A10
+#define LED_GREEN           1
+#define LED_ORANGE          2
+#define LED_RED             0
 
 // CC1101 PIN definitions
 #define CC1101_SPI_USART    1

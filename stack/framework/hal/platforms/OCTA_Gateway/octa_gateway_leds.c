@@ -28,6 +28,8 @@
 #include "platform.h"
 #include "em_gpio.h"
 #include <assert.h>
+#include "timer.h"
+#include "led.h"
 
 #if HW_NUM_LEDS != 3
 	#error HW_NUM_LEDS does not match the expected value. Update platform.h or platform_leds.c
@@ -62,5 +64,40 @@ void led_toggle(unsigned char led_nr)
 {
     if(led_nr < HW_NUM_LEDS)
     	hw_gpio_toggle(leds[led_nr]);
+}
+
+// flashing support
+
+static void end_flash_green()  {
+    led_off(LED_GREEN);
+}
+static void end_flash_orange()   {
+    led_off(LED_ORANGE);
+}
+static void end_flash_red()    {
+    led_off(LED_RED);
+}
+
+void led_flash_green() {
+  led_on(LED_GREEN);
+  timer_post_task_delay(&end_flash_green, FLASH_DURATION);
+}
+
+void led_flash_orange() {
+  led_on(LED_ORANGE);
+  timer_post_task_delay(&end_flash_orange, FLASH_DURATION);
+}
+
+void led_flash_red() {
+  led_on(LED_RED);
+  timer_post_task_delay(&end_flash_red, FLASH_DURATION);
+}
+
+bool led_init() {
+  //__led_init();
+  sched_register_task(&end_flash_green);
+  sched_register_task(&end_flash_orange);
+  sched_register_task(&end_flash_red);
+  return true;
 }
 
