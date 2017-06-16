@@ -33,7 +33,7 @@ void hw_enter_lowpower_mode(uint8_t mode)
 		{
 		case 0:
 		case 1:
-			HAL_PWR_EnterSLEEPMode(PWR_MAINREGULATOR_ON, PWR_SLEEPENTRY_WFI);
+      HAL_PWR_EnterSLEEPMode(PWR_MAINREGULATOR_ON, PWR_SLEEPENTRY_WFI);
 			break;
 
 		}
@@ -59,4 +59,9 @@ void hw_busy_wait(int16_t microseconds)
 void hw_reset()
 {
 	HAL_NVIC_SystemReset();
+}
+
+void HardFault_Handler()
+{
+  assert(false);
 }
