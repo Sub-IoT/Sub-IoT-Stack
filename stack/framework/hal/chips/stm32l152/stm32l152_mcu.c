@@ -67,7 +67,10 @@ void SystemClock_Config(void)
 	RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
 	RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSI;
 	RCC_OscInitStruct.PLL.PLLMUL = RCC_PLL_MUL6;
-	RCC_OscInitStruct.PLL.PLLDIV = RCC_PLL_DIV3;
+  RCC_OscInitStruct.PLL.PLLDIV = RCC_PLL_DIV4;
+  // TODO using RCC_PLL_DIV3 is giving problems for now when resuming from
+  // WFI and with a debugger attached; we enter FaultHandler in this case.
+  // Lowering the clock frequency solves this for now.
 
 	HAL_StatusTypeDef status = HAL_RCC_OscConfig(&RCC_OscInitStruct);
 	assert(status == HAL_OK);
