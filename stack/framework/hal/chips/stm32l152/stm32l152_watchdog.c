@@ -25,6 +25,7 @@
 
 void __watchdog_init()
 {
+  assert(false);
 }
 
 void hw_watchdog_feed()

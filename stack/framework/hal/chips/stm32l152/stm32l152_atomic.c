@@ -24,8 +24,8 @@
 #include "hwatomic.h"
 
 void start_atomic()
-{
-	//__disable_irq();
+{  
+  //__disable_irq();
 }
 
 void end_atomic()

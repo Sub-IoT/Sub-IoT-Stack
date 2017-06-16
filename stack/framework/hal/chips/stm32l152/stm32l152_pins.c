@@ -26,14 +26,14 @@
 
 enum
 {
-	GPIO_PORTA = 0,
-	GPIO_PORTB,
-	GPIO_PORTC,
-	GPIO_PORTD,
-	GPIO_PORTE,
-	GPIO_PORTF,
-	GPIO_PORTG,
-	GPIO_PORTH
+  GPIO_PORTA = 0,
+  GPIO_PORTB,
+  GPIO_PORTC,
+  GPIO_PORTD,
+  GPIO_PORTE,
+  GPIO_PORTF,
+  GPIO_PORTG,
+  GPIO_PORTH
 } ;
 
 //Definition of the pin_id's for the GPIO ports of the stm32l152
