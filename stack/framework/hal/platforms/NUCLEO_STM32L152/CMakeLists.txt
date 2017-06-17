@@ -32,7 +32,7 @@ PLATFORM_OPTION(PLATFORM_BUILD_BOOTLOADABLE_VERSION "When set builds application
 
 
 # CONSOLE
-# uses UART2,  (PA2 / PA3)
+# uses USART2,  (PA2 / PA3)
 PLATFORM_PARAM(${PLATFORM_PREFIX}_CONSOLE_UART     "2"      STRING "The UART channel used by the console UART configuration."   )
 PLATFORM_PARAM(${PLATFORM_PREFIX}_CONSOLE_BAUDRATE "115200" STRING "The baudrate used by the second console configuration."       )
 

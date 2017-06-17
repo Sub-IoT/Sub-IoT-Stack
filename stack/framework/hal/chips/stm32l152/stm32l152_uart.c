@@ -27,16 +27,12 @@
 
 #include "stm32l152_pins.h"
 #include "stm32l1xx_hal.h"
+#include "stm32l1xx_ll_usart.h"
 
 #include "platform.h"
 #include "string.h"
 
 #define UARTS     6   // Dummy + 2 UARTs + 3 USARTs
-
-typedef struct {
-  IRQn_Type  tx;
-  IRQn_Type  rx;
-} uart_irq_t;
 
 typedef struct {
   pin_id_t tx;
@@ -91,7 +87,7 @@ struct uart_handle {
   uint8_t              idx;
   uint8_t 	mapping;
   UART_HandleTypeDef 	uart;
-  uart_irq_t           irq;
+  IRQn_Type           irq;
   uart_pins_t*         pins;
   uint32_t baudrate;
 };
@@ -101,35 +97,36 @@ static uart_handle_t handle[UARTS] = {
   {
     .idx     = 0,
     .mapping = 0,
-    .irq     = { .tx = 0,  .rx = 0  }
+    .irq     = 0
   },
   {
     .idx     = 1,
     .mapping = GPIO_AF7_USART1,
     .uart.Instance  = USART1,
-    .irq     = { .tx = 0,  .rx = 0  }
+    .irq     = USART1_IRQn
   },
   {
     .idx     = 2,
     .mapping = GPIO_AF7_USART2,
     .uart.Instance  = USART2,
-    .irq     = { .tx = 0, .rx = 0 }
+    .irq     = USART2_IRQn
   },
   {
     .idx     = 3,
     .mapping = GPIO_AF7_USART3,
-    .irq     = { .tx = 0, .rx = 0 }
-  },
-  {
-    .idx     = 4,
-    .mapping = GPIO_AF8_UART4,
-    .irq     = { .tx = 0, .rx = 0 }
-  },
-  {
-    .idx     = 5,
-    .mapping = GPIO_AF8_UART5,
-    .irq     = { .tx = 0, .rx = 0 }
+    .irq     = USART3_IRQn
   }
+  // TODO
+//  {
+//    .idx     = 4,
+//    .mapping = GPIO_AF8_UART4,
+//    .irq     = { .tx = 0, .rx = 0 }
+//  },
+//  {
+//    .idx     = 5,
+//    .mapping = GPIO_AF8_UART5,
+//    .irq     = { .tx = 0, .rx = 0 }
+//  }
 };
 
 uart_handle_t* uart_init(uint8_t idx, uint32_t baudrate, uint8_t pins) {
@@ -143,7 +140,7 @@ uart_handle_t* uart_init(uint8_t idx, uint32_t baudrate, uint8_t pins) {
     case 1:
       GPIO_InitStruct.Pin 			= 1<<handle[idx].pins->tx.pin ;
       GPIO_InitStruct.Mode 			= GPIO_MODE_AF_PP;
-      GPIO_InitStruct.Speed 		= GPIO_SPEED_LOW;
+      GPIO_InitStruct.Speed 		= GPIO_SPEED_LOW; // TODO ?
 
       GPIO_InitStruct.Alternate             = GPIO_AF7_USART1;
       GPIO_InitStruct.Pull 			= GPIO_NOPULL;
@@ -196,8 +193,7 @@ bool uart_enable(uart_handle_t* uart) {
       __HAL_RCC_USART2_CLK_ENABLE();
       break;
     default:
-      assert("not defined");
-      return false;
+      assert(false);
   }
 
   uart->uart.Init.BaudRate = uart->baudrate;
@@ -231,7 +227,7 @@ bool uart_enable(uart_handle_t* uart) {
 
 
 
-  HAL_NVIC_SetPriority(uart->irq.rx, 0, 3);
+  HAL_NVIC_SetPriority(USART2_IRQn, 0, 3);
   
   return true;
 }
@@ -247,8 +243,7 @@ bool uart_disable(uart_handle_t* uart) {
       __HAL_RCC_USART2_CLK_DISABLE();
       break;
     default:
-      assert("not defined");
-      return false;
+      assert(false);
   }
 
   return true;
@@ -266,15 +261,16 @@ void uart_send_byte(uart_handle_t* uart, uint8_t data) {
   HAL_UART_Transmit(&uart->uart, &data, 1, HAL_MAX_DELAY);
 }
 
-uint8_t uart_read_byte(uart_handle_t* uart, uint32_t timeout) {
-  uint8_t rec;
-  HAL_UART_Receive(&uart->uart, &rec, 1, timeout);
-  return rec;
-}
+// TODO remove or extend API?
+//uint8_t uart_read_byte(uart_handle_t* uart, uint32_t timeout) {
+//  uint8_t rec;
+//  HAL_UART_Receive(&uart->uart, &rec, 1, timeout);
+//  return rec;
+//}
 
-void uart_read_bytes(uart_handle_t* uart,  uint8_t  *data, size_t length, uint32_t timeout) {
-  HAL_UART_Receive(&uart->uart, data, length, timeout);
-}
+//void uart_read_bytes(uart_handle_t* uart,  uint8_t  *data, size_t length, uint32_t timeout) {
+//  HAL_UART_Receive(&uart->uart, data, length, timeout);
+//}
 
 void uart_send_bytes(uart_handle_t* uart, void const *data, size_t length) {
 
@@ -296,28 +292,40 @@ error_t uart_rx_interrupt_enable(uart_handle_t* uart) {
   //   NVIC_ClearPendingIRQ(uart->irq.rx);
   //   NVIC_EnableIRQ(uart->irq.rx);
 
-  HAL_NVIC_ClearPendingIRQ(uart->irq.rx);
-  HAL_NVIC_EnableIRQ(uart->irq.rx);
+  HAL_NVIC_ClearPendingIRQ(uart->irq);
+  HAL_NVIC_EnableIRQ(uart->irq);
+  LL_USART_EnableIT_RXNE(uart->uart.Instance);
+  LL_USART_EnableIT_ERROR(uart->uart.Instance);
   return SUCCESS;
 }
 
 void uart_rx_interrupt_disable(uart_handle_t* uart) {
-  HAL_NVIC_ClearPendingIRQ(uart->irq.rx);
-  HAL_NVIC_DisableIRQ(uart->irq.rx);
+  HAL_NVIC_ClearPendingIRQ(uart->irq);
+  HAL_NVIC_DisableIRQ(uart->irq);
+  LL_USART_DisableIT_RXNE(uart->uart.Instance);
+  LL_USART_DisableIT_ERROR(uart->uart.Instance);
 }
 
 void USART2_IRQHandler(void) {
-  HAL_UART_IRQHandler(&handle[2].uart);
+  if(LL_USART_IsActiveFlag_RXNE(USART2) && LL_USART_IsEnabledIT_RXNE(USART2))
+  {
+    handler[2](LL_USART_ReceiveData8(USART2)); // RXNE flag will be cleared by reading of DR register
+  }
+
+  if(LL_USART_IsEnabledIT_ERROR(USART2) && LL_USART_IsActiveFlag_NE(USART2))
+  {
+    assert(false); // TODO how to handle this?
+  }
 }
 
 void USART1_IRQHandler(void) {
-  HAL_UART_IRQHandler(&handle[1].uart);
+  assert(false); // TODO
 }
 
-void HAL_UART_RxCpltCallback(UART_HandleTypeDef *UartHandle) {
-  /* Set transmission flag: transfer complete*/
-  //UartReady = SET;
-}
+//void HAL_UART_RxCpltCallback(UART_HandleTypeDef *UartHandle) {
+//  /* Set transmission flag: transfer complete*/
+//  //UartReady = SET;
+//}
 
 void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart) {
   //   if(RingBuffer_GetDataLength(&txBuf) > 0) {
