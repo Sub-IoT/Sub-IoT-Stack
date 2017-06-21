@@ -29,10 +29,11 @@
 #include "stm32l0xx_hal.h"
 #include "stm32l0xx_ll_usart.h"
 
+#include "stm32l0xx_gpio.h"
 #include "platform.h"
 #include "string.h"
 
-#define UARTS     6   // Dummy + 2 UARTs + 3 USARTs
+#define UARTS     3   // TODO add LPUART?
 
 typedef struct {
   pin_id_t tx;
@@ -43,7 +44,6 @@ typedef struct {
   .tx       = { .port = 0xFF,         .pin =  0xFF },   \
   .rx       = { .port = 0xFF,         .pin =  0xFF }    \
 
-
 // configuration of uart/location mapping to tx and rx pins
 // TODO to be completed with all documented locations
 static uart_pins_t location[UARTS] = {
@@ -53,29 +53,14 @@ static uart_pins_t location[UARTS] = {
   },
   {
     // USART 1
-
     .tx       = { .port = 0, .pin =  9 },
     .rx       = { .port = 0, .pin =  10 }
 
   },
   {
     // USART 2
-
     .tx       = { .port = 0, .pin =  2 },
     .rx       = { .port = 0, .pin =  3 }
-
-  },
-  {
-    // USART 3
-    UNDEFINED_LOCATION
-  },
-  {
-    // UART 1
-    UNDEFINED_LOCATION
-  },
-  {
-    // UART 2
-    UNDEFINED_LOCATION
   }
 };
 
@@ -97,87 +82,37 @@ static uart_handle_t handle[UARTS] = {
   {
     .idx     = 0,
     .mapping = 0,
-    .irq     = 0
+    //.irq     = 0
   },
   {
     .idx     = 1,
-    .mapping = GPIO_AF7_USART1,
+    .mapping = GPIO_AF4_USART1,
     .uart.Instance  = USART1,
     .irq     = USART1_IRQn
   },
   {
     .idx     = 2,
-    .mapping = GPIO_AF7_USART2,
+    .mapping = GPIO_AF4_USART2,
     .uart.Instance  = USART2,
     .irq     = USART2_IRQn
-  },
-  {
-    .idx     = 3,
-    .mapping = GPIO_AF7_USART3,
-    .irq     = USART3_IRQn
   }
-  // TODO
-//  {
-//    .idx     = 4,
-//    .mapping = GPIO_AF8_UART4,
-//    .irq     = { .tx = 0, .rx = 0 }
-//  },
-//  {
-//    .idx     = 5,
-//    .mapping = GPIO_AF8_UART5,
-//    .irq     = { .tx = 0, .rx = 0 }
-//  }
 };
 
 uart_handle_t* uart_init(uint8_t idx, uint32_t baudrate, uint8_t pins) {
+  assert(idx == 1 || idx == 2);
+
   handle[idx].pins = &location[idx];
   handle[idx].baudrate = baudrate;
 
   GPIO_InitTypeDef GPIO_InitStruct;
 
-  switch (idx)
-  {
-    case 1:
-      GPIO_InitStruct.Pin 			= 1<<handle[idx].pins->tx.pin ;
-      GPIO_InitStruct.Mode 			= GPIO_MODE_AF_PP;
-      GPIO_InitStruct.Speed 		= GPIO_SPEED_LOW; // TODO ?
-
-      GPIO_InitStruct.Alternate             = GPIO_AF7_USART1;
-      GPIO_InitStruct.Pull 			= GPIO_NOPULL;
-
-      //   		#ifdef STM32F103xB
-      //   		  GPIO_InitStruct.Pull      = GPIO_PULLUP;
-      //   		  GPIO_InitStruct.Speed     = GPIO_SPEED_FREQ_HIGH;
-      //   		#endif
-
-      hw_gpio_configure_pin_stm(handle[idx].pins->tx, &GPIO_InitStruct);
-
-      /* UART RX GPIO pin configuration  */
-      GPIO_InitStruct.Pin = 1<<handle[idx].pins->rx.pin;
-      GPIO_InitStruct.Mode      = GPIO_MODE_AF_PP;
-
-      //   		#ifdef STM32F103xB
-      //   		  GPIO_InitStruct.Mode      = GPIO_MODE_INPUT;
-      //   		#endif
-
-      hw_gpio_configure_pin_stm(handle[idx].pins->rx, &GPIO_InitStruct);
-      break;
-    case 2:
-      GPIO_InitStruct.Pin = (1<<handle[idx].pins->tx.pin) | (1<<handle[idx].pins->rx.pin) ;
-      GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
-      GPIO_InitStruct.Pull = GPIO_PULLUP;
-      GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
-      GPIO_InitStruct.Alternate = handle[idx].mapping;
-      hw_gpio_configure_pin_stm(handle[idx].pins->tx, &GPIO_InitStruct);
-      break;
-    default:
-      assert("not defined");
-      return false;
-  }
-
-
-
-
+  GPIO_InitStruct.Pin = (1 << handle[idx].pins->tx.pin) | (1 << handle[idx].pins->rx.pin);
+  GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
+  GPIO_InitStruct.Alternate = handle[idx].mapping;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  assert(hw_gpio_configure_pin_stm(handle[idx].pins->rx, &GPIO_InitStruct) == SUCCESS);
+  assert(hw_gpio_configure_pin_stm(handle[idx].pins->tx, &GPIO_InitStruct) == SUCCESS);
 
   return &handle[idx];
 }
@@ -291,6 +226,8 @@ error_t uart_rx_interrupt_enable(uart_handle_t* uart) {
   //   NVIC_ClearPendingIRQ(uart->irq.tx);
   //   NVIC_ClearPendingIRQ(uart->irq.rx);
   //   NVIC_EnableIRQ(uart->irq.rx);
+
+  __HAL_RCC_GPIOA_CLK_ENABLE(); // TODO not sure why this is needed here, should already be enabled. Look into this later
 
   HAL_NVIC_ClearPendingIRQ(uart->irq);
   HAL_NVIC_EnableIRQ(uart->irq);

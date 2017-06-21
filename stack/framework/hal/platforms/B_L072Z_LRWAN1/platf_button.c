@@ -23,7 +23,7 @@
 #include <string.h>
 #include <debug.h>
 
-#include "stm32l0xx_chip.h"
+#include "stm32l0xx_gpio.h"
 #include "stm32l0xx_hal_gpio.h"
 
 #if NUM_USERBUTTONS != 1

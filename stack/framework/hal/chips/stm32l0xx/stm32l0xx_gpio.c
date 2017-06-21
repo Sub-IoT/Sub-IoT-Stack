@@ -23,6 +23,7 @@
 
 #include "types.h"
 #include "hwgpio.h"
+#include "stm32l0xx_gpio.h"
 #include "stm32l0xx_hal_conf.h"
 #include "stm32l0xx_hal.h"
 
@@ -84,30 +85,25 @@ __LINK_C error_t hw_gpio_configure_pin(pin_id_t pin_id, bool int_allowed, uint32
   GPIO_InitTypeDef GPIO_InitStruct;
   GPIO_InitStruct.Pin = 1 << pin_id.pin;
   GPIO_InitStruct.Mode = mode;
-  if  (GPIO_InitStruct.Mode == GPIO_MODE_IT_RISING|| GPIO_InitStruct.Mode == GPIO_MODE_IT_FALLING || GPIO_InitStruct.Mode == GPIO_MODE_IT_RISING_FALLING)
+  if(GPIO_InitStruct.Mode == GPIO_MODE_IT_RISING
+     || GPIO_InitStruct.Mode == GPIO_MODE_IT_FALLING
+     || GPIO_InitStruct.Mode == GPIO_MODE_IT_RISING_FALLING)
   {
     GPIO_InitStruct.Pull = GPIO_NOPULL;
   } else {
     GPIO_InitStruct.Pull = GPIO_PULLDOWN; // todo ??
     GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   }
-  HAL_GPIO_Init(ports[pin_id.port], &GPIO_InitStruct);
 
-  //if interrupts are allowed: set the port to use
-  if(int_allowed)
-    interrupts[pin_id.pin].interrupt_port = pin_id.port;
-
-  return SUCCESS;
+  return hw_gpio_configure_pin_stm(pin_id, &GPIO_InitStruct);
 }
 
 
-__LINK_C error_t hw_gpio_configure_pin_stm(pin_id_t pin_id, void* GPIO_InitStruct)
+__LINK_C error_t hw_gpio_configure_pin_stm(pin_id_t pin_id, GPIO_InitTypeDef* init_options)
 {
-  GPIO_InitTypeDef* initStruct = (GPIO_InitTypeDef*) GPIO_InitStruct;
+  HAL_GPIO_Init(ports[pin_id.port], init_options);
 
-  HAL_GPIO_Init(ports[pin_id.port], initStruct);
-
-  if  (initStruct->Mode == GPIO_MODE_IT_RISING || initStruct->Mode == GPIO_MODE_IT_FALLING || initStruct->Mode == GPIO_MODE_IT_RISING_FALLING)
+  if  (init_options->Mode == GPIO_MODE_IT_RISING || init_options->Mode == GPIO_MODE_IT_FALLING || init_options->Mode == GPIO_MODE_IT_RISING_FALLING)
   {
     interrupts[pin_id.pin].interrupt_port = pin_id.port;
   }

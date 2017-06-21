@@ -22,6 +22,15 @@
 
 
 //port A
+extern pin_id_t const A0;
+extern pin_id_t const A1;
+extern pin_id_t const A2;
+extern pin_id_t const A3;
+extern pin_id_t const A4;
+extern pin_id_t const A5;
+extern pin_id_t const A6;
+extern pin_id_t const A7;
+extern pin_id_t const A8;
 extern pin_id_t const A9;
 extern pin_id_t const A10;
 extern pin_id_t const A11;

@@ -19,7 +19,16 @@
 #ifndef __STM32L0xx_CHIP_H_
 #define __STM32L0xx_CHIP_H_
 #include "stm32l0xx_pins.h"
+#include "stm32l0xx_hal_gpio.h"
 
 #define PLATFORM_NUM_TIMERS 1
+
+/* \brief Implementation of hw_gpio_configure_pin
+ *
+ * TODO
+ */
+__LINK_C error_t hw_gpio_configure_pin(pin_id_t pin_id, bool int_allowed, uint32_t mode, unsigned int out);
+__LINK_C error_t hw_gpio_configure_pin_stm(pin_id_t pin_id, GPIO_InitTypeDef* init_options);
+
 
 #endif //__STM32L0xx_CHIP_H_

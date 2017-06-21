@@ -30,7 +30,7 @@
 #include <debug.h>
 #include "timer.h"
 #include "led.h"
-#include "stm32l0xx_chip.h"
+#include "stm32l0xx_gpio.h"
 
 
 #if HW_NUM_LEDS < 1
