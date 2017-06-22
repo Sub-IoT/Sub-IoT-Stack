@@ -54,7 +54,7 @@ pin_id_t const A15 = {.port = GPIO_PORTA, .pin = 15};
 pin_id_t const B0 = {.port = GPIO_PORTB, .pin = 0};
 pin_id_t const B1 = {.port = GPIO_PORTB, .pin = 1};
 pin_id_t const B2 = {.port = GPIO_PORTB, .pin = 2};
-pin_id_t const B3 = {.port = GPIO_PORTB, .pin = 2};
+pin_id_t const B3 = {.port = GPIO_PORTB, .pin = 3};
 pin_id_t const B4 = {.port = GPIO_PORTB, .pin = 4};
 pin_id_t const B5 = {.port = GPIO_PORTB, .pin = 5};
 pin_id_t const B6 = {.port = GPIO_PORTB, .pin = 6};
