@@ -36,10 +36,6 @@
 #include "sx1276Regs-Fsk.h"
 #include "sx1276Regs-LoRa.h"
 
-#ifdef PLATFORM_SX127X_USE_RESET_PIN
-#include "em_gpio.h" // TODO platform specific!
-#endif
-
 #include "pn9.h"
 
 #define FREQ_STEP 61.03515625
@@ -441,17 +437,6 @@ static void fifo_threshold_isr(pin_id_t pin_id, uint8_t event_mask) {
   hw_gpio_enable_interrupt(SX127x_DIO1_PIN);
 }
 
-#ifdef PLATFORM_SX127X_USE_RESET_PIN
-static void reset() {
-  DPRINT("reset");
-  error_t e;
-  e = hw_gpio_configure_pin(SX127x_RESET_PIN, false, gpioModePushPull, 0); assert(e == SUCCESS); // TODO platform specific
-  hw_busy_wait(150);
-  e = hw_gpio_configure_pin(SX127x_RESET_PIN, false, gpioModeInputPull, 1); assert(e == SUCCESS); // TODO platform specific
-  hw_busy_wait(6000);
-}
-#endif
-
 static void configure_syncword(syncword_class_t syncword_class, const channel_id_t* channel)
 {
   if(channel->channel_header.ch_class == PHY_CLASS_LORA) {
@@ -580,15 +565,10 @@ error_t hw_radio_init(alloc_packet_callback_t alloc_packet_cb, release_packet_ca
   spi_handle_t* spi_handle = spi_init(SX127x_SPI_INDEX, SX127x_SPI_BAUDRATE, 8, true, SX127x_SPI_LOCATION);
   sx127x_spi = spi_init_slave(spi_handle, SX127x_SPI_PIN_CS, true);
 
-#ifdef PLATFORM_SX127X_USE_RESET_PIN
-  reset();
-#endif
-
   calibrate_rx_chain();
   init_regs();
 
   set_opmode(OPMODE_STANDBY); // TODO sleep
-  // TODO reset ?
   // TODO op mode
 
   error_t e;

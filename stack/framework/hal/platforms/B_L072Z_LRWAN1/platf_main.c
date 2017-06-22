@@ -23,16 +23,29 @@
 #include "hwleds.h"
 #include "led.h"
 #include "button.h"
-//#include "stm32l0xx_hal_gpio.h"
+#include "stm32l0xx_gpio.h"
+#include "hwsystem.h"
+#include "debug.h"
+#include "stm32l0xx_pins.h"
+
+#if defined(USE_SX127X) && defined(PLATFORM_SX127X_USE_RESET_PIN)
+static void reset_sx127x()
+{
+  error_t e;
+  e = hw_gpio_configure_pin(SX127x_RESET_PIN, false, GPIO_MODE_OUTPUT_PP, 0); assert(e == SUCCESS); // TODO platform specific
+  hw_busy_wait(150);
+  e = hw_gpio_configure_pin(SX127x_RESET_PIN, false, GPIO_MODE_INPUT, 1); assert(e == SUCCESS); // TODO platform specific
+  hw_busy_wait(6000);
+}
+#endif
 
 void __platform_init()
 {
     __stm32l0xx_mcu_init();
     __gpio_init();
-#ifdef USE_CC1101
-    // configure the interrupt pins here, since hw_gpio_configure_pin() is MCU
-    // specific and not part of the common HAL API
-    hw_gpio_configure_pin(CC1101_GDO0_PIN, true, GPIO_MODE_IT_FALLING, 0);
+
+#if defined(USE_SX127X) && defined(PLATFORM_SX127X_USE_RESET_PIN)
+    reset_sx127x();
 #endif
 
 }

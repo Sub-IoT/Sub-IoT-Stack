@@ -39,6 +39,16 @@
 
 #include "bsp_trace.h"
 
+#if defined(USE_SX127X) && defined(PLATFORM_SX127X_USE_RESET_PIN)
+static void reset_sx127x()
+{
+  error_t e;
+  e = hw_gpio_configure_pin(SX127x_RESET_PIN, false, gpioModePushPull, 0); assert(e == SUCCESS); // TODO platform specific
+  hw_busy_wait(150);
+  e = hw_gpio_configure_pin(SX127x_RESET_PIN, false, gpioModeInputPull, 1); assert(e == SUCCESS); // TODO platform specific
+  hw_busy_wait(6000);
+}
+#endif
 
 void __platform_init()
 {
@@ -55,6 +65,7 @@ void __platform_init()
 #endif
 #ifdef PLATFORM_SX127X_USE_RESET_PIN
     hw_gpio_configure_pin(SX127x_RESET_PIN, false, gpioModePushPull, 1);
+    reset_sx127x()
 #endif
 #endif
 
