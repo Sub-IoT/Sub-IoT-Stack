@@ -34,7 +34,15 @@ enum
 };
 
 
-
+pin_id_t const A0 = {.port = GPIO_PORTA, .pin = 0};
+pin_id_t const A1 = {.port = GPIO_PORTA, .pin = 1};
+pin_id_t const A2 = {.port = GPIO_PORTA, .pin = 2};
+pin_id_t const A3 = {.port = GPIO_PORTA, .pin = 3};
+pin_id_t const A4 = {.port = GPIO_PORTA, .pin = 4};
+pin_id_t const A5 = {.port = GPIO_PORTA, .pin = 5};
+pin_id_t const A6 = {.port = GPIO_PORTA, .pin = 6};
+pin_id_t const A7 = {.port = GPIO_PORTA, .pin = 7};
+pin_id_t const A8 = {.port = GPIO_PORTA, .pin = 8};
 pin_id_t const A9 = {.port = GPIO_PORTA, .pin = 9};
 pin_id_t const A10 = {.port = GPIO_PORTA, .pin = 10};
 pin_id_t const A11 = {.port = GPIO_PORTA, .pin = 11};
