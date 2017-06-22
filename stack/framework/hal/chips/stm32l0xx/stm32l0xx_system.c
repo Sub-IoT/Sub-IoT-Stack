@@ -44,9 +44,15 @@ uint64_t hw_get_unique_id()
   return (uint64_t) HAL_GetDEVID();
 }
 
-void hw_busy_wait(int16_t microseconds)
+#pragma GCC push_options
+#pragma GCC optimize ("O3")
+void hw_busy_wait(int16_t us)
 {
-  assert(false); // TODO
+  // note: measure this, may switch to timer later if more accuracy is needed.
+  uint32_t counter = us * (HAL_RCC_GetSysClockFreq() / 1000000);
+  uint32_t i = 0;
+
+  while (i<counter) i++;
 }
 
 void hw_reset()
