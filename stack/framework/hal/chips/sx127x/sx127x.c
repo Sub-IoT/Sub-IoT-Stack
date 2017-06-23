@@ -36,9 +36,17 @@
 #include "sx1276Regs-Fsk.h"
 #include "sx1276Regs-LoRa.h"
 
+#include "crc.h"
 #include "pn9.h"
+#include "fec.h"
 
 #define FREQ_STEP 61.03515625
+
+#define FIFO_SIZE   64
+#define AVAILABLE_BYTES_IN_TX_FIFO  32
+#define BYTES_IN_RX_FIFO            32
+
+
 
 #if defined(FRAMEWORK_LOG_ENABLED) && defined(FRAMEWORK_PHY_LOG_ENABLED)
 #define DPRINT(...) log_print_stack_string(LOG_STACK_PHY, __VA_ARGS__)
@@ -66,6 +74,10 @@
 #else
   #define CHECK_FIFO_EMPTY() (read_reg(REG_IRQFLAGS2) & 0x40)
 #endif
+
+#define CHECK_FIFO_LEVEL() (read_reg(REG_IRQFLAGS2) & 0x20)
+#define CHECK_FIFO_FULL()  (read_reg(REG_IRQFLAGS2) & 0x80)
+
 
 typedef enum {
   OPMODE_SLEEP = 0,
@@ -100,7 +112,6 @@ static tx_packet_callback_t tx_packet_callback;
 static state_t state = STATE_IDLE;
 static bool lora_mode = false;
 static hw_radio_packet_t* current_packet;
-static uint8_t current_packet_data_offset = 0;
 static rssi_valid_callback_t rssi_valid_callback;
 static bool should_rx_after_tx_completed = false;
 static syncword_class_t current_syncword_class = PHY_SYNCWORD_CLASS0;
@@ -111,6 +122,18 @@ static channel_id_t current_channel_id = {
   .channel_header.ch_freq_band = PHY_BAND_868,
   .center_freq_index = 0
 };
+
+/*
+ * FSK packet handler structure
+ */
+typedef struct
+{
+    uint8_t Size;
+    uint8_t NbBytes;
+    uint8_t FifoThresh;
+}FskPacketHandler_t;
+
+FskPacketHandler_t FskPacketHandler;
 
 const uint16_t sync_word_value[2][4] = {
     { 0xE6D0, 0x0000, 0xF498, 0x0000 },
@@ -131,7 +154,7 @@ static void write_reg(uint8_t addr, uint8_t value) {
   spi_exchange_byte(sx127x_spi, addr | 0x80); // send address with bit 8 high to signal a write operation
   spi_exchange_byte(sx127x_spi, value);
   spi_deselect(sx127x_spi);
-  DPRINT("WRITE %02x: %02x", addr, value);
+  //DPRINT("WRITE %02x: %02x", addr, value);
 }
 
 static void write_fifo(uint8_t* buffer, uint8_t size) {
@@ -139,7 +162,7 @@ static void write_fifo(uint8_t* buffer, uint8_t size) {
   spi_exchange_byte(sx127x_spi, 0x80); // send address with bit 8 high to signal a write operation
   spi_exchange_bytes(sx127x_spi, buffer, NULL, size);
   spi_deselect(sx127x_spi);
-  DPRINT("WRITE FIFO %i", size);
+  //DPRINT("WRITE FIFO %i", size);
 }
 
 static void read_fifo(uint8_t* buffer, uint8_t size) {
@@ -156,6 +179,10 @@ static opmode_t get_opmode() {
 
 static void set_opmode(opmode_t opmode) {
   write_reg(REG_OPMODE, (read_reg(REG_OPMODE) & RF_OPMODE_MASK) | opmode);
+}
+
+static inline void flush_fifo() {
+  write_reg(REG_IRQFLAGS2, 0x10);
 }
 
 static void set_lora_mode(bool use_lora) {
@@ -217,7 +244,6 @@ static void configure_channel(const channel_id_t* channel) {
   assert(channel->channel_header.ch_freq_band == PHY_BAND_868); // TODO other bands
   assert(channel->channel_header.ch_class == PHY_CLASS_NORMAL_RATE ||
          channel->channel_header.ch_class == PHY_CLASS_LORA ); // TODO other rates
-  assert(channel->channel_header.ch_coding == PHY_CODING_PN9); // TODO FEC
 
   if(hw_radio_channel_ids_equal(&current_channel_id, channel)) {
     return;
@@ -287,11 +313,12 @@ static void init_regs() {
   write_reg(REG_SYNCVALUE1, 0x0B);
   write_reg(REG_SYNCVALUE2, 0x67);
 
-  write_reg(REG_PACKETCONFIG1, 0x08); // fixed length (unlimited length mode), whitening and CRC disabled (not compatible), addressFiltering off.
+  write_reg(REG_PACKETCONFIG1, 0x08); // fixed length (unlimited length mode), CRC auto clear OFF, whitening and CRC disabled (not compatible), addressFiltering off.
   write_reg(REG_PACKETCONFIG2, 0x40); // packet mode
   write_reg(REG_PAYLOADLENGTH, 0x00); // unlimited length mode (in combination with PacketFormat = 0), so we can encode/decode length byte in software
   write_reg(REG_FIFOTHRESH, 0x83); // tx start condition true when there is at least one byte in FIFO (we are in standby/sleep when filling FIFO anyway)
-                                   // For RX the threshold is set to 4 since this is the minimum length of a D7 packet.
+                                   // For RX the threshold is set to 4 since this is the minimum length of a D7 packet (number of bytes in FIFO >= FifoThreshold + 1).
+
   write_reg(REG_SEQCONFIG1, 0x40); // force off for now
   //  write_reg(REG_SEQCONFIG2, 0); // not used for now
   //  write_reg(REG_TIMERRESOL, 0); // not used for now
@@ -300,7 +327,7 @@ static void init_regs() {
   //  write_reg(REG_IMAGECAL, 0); // TODO not used for now
   //  write_reg(REG_LOWBAT, 0); // TODO not used for now
 
-  write_reg(REG_DIOMAPPING1, 0x0C); // DIO2 = 0b11 => interrupt on sync detect
+  write_reg(REG_DIOMAPPING1, 0x0C); // DIO0 = 00 | DIO1 = 00 | DIO2 = 0b11 => interrupt on sync detect | DIO3 = 00
   write_reg(REG_DIOMAPPING2, 0x30); // ModeReady TODO configure for RSSI interrupt when doing CCA?
   //  write_reg(REG_PLLHOP, 0); // TODO might be interesting for channel hopping
   //  write_reg(REG_TCXO, 0); // default
@@ -391,10 +418,6 @@ static void dio0_isr(pin_id_t pin_id, uint8_t event_mask) {
   }
 }
 
-static inline void flush_fifo() {
-  write_reg(REG_IRQFLAGS2, 0x10);
-}
-
 static void set_packet_handler_enabled(bool enable) {
   write_reg(REG_PREAMBLEDETECT, (read_reg(REG_PREAMBLEDETECT) & RF_PREAMBLEDETECT_DETECTOR_MASK) | (enable << 7));
   write_reg(REG_SYNCCONFIG, (read_reg(REG_SYNCCONFIG) & RF_SYNCCONFIG_SYNC_MASK) | (enable << 4));
@@ -406,44 +429,95 @@ static void fifo_threshold_isr(pin_id_t pin_id, uint8_t event_mask) {
   // This doesn't seem to work for now however: the interrupt doesn't fire again for some unclear reason.
   // So now we do it as suggest in the datasheet: reading bytes from FIFO until FifoEmpty flag is set.
   // Reading more bytes at once might be more efficient, however getting the number of bytes in the FIFO seems
-  // not possible.
-  hw_gpio_disable_interrupt(SX127x_DIO1_PIN);
-  DPRINT("fifo threshold detected ISR\n");
-  read_reg(REG_IRQFLAGS2);
-  assert(state == STATE_RX);
+  // not possible at least in FSK mode (for LoRa, the register RegRxNbBytes gives the number of received bytes).
+    hw_gpio_disable_interrupt(SX127x_DIO1_PIN);
+    //DPRINT("fifo threshold detected ISR with IRQ %x\n", read_reg(REG_IRQFLAGS2));
+    assert(state == STATE_RX);
 
-  uint8_t coded_packet_len = read_reg(REG_FIFO);
-  uint8_t packet_len = coded_packet_len;
-  pn9_encode(&packet_len, 1); // decode only packet_len for now so we know how many bytes to receive.
-                              // the full packet is decoded at once, when completely received
-                              // note that current_packet->length contains the coded version for now
-  DPRINT("rx packet len=%i\n", packet_len);
-  current_packet = alloc_packet_callback(packet_len);
-  current_packet->length = coded_packet_len;
-  current_packet_data_offset = 1;
-  do {
-    current_packet->data[current_packet_data_offset] = read_reg(REG_FIFO);
-    current_packet_data_offset++;
-  } while(!(CHECK_FIFO_EMPTY()) && current_packet_data_offset < packet_len + 1);
+    uint8_t packet_len;
 
-  uint8_t remaining = (packet_len + 1) - current_packet_data_offset;
-  DPRINT("read %i bytes, %i remaining\n", current_packet_data_offset, remaining);
+    if (FskPacketHandler.Size == 0 && FskPacketHandler.NbBytes == 0)
+    {
+        // For RX, the threshold is set to 4, so if the DIO1 interrupt occurs, it means that can read at least 4 bytes
+        uint8_t rx_bytes = 0;
+        uint8_t buffer[4];
+        do {
+            buffer[rx_bytes++] = read_reg(REG_FIFO);
+        } while(!(CHECK_FIFO_EMPTY()) && rx_bytes < 4);
 
-  if(remaining == 0) {
-    current_packet->rx_meta.timestamp = timer_get_counter_value();
-    current_packet->rx_meta.rx_cfg.syncword_class = current_syncword_class;
-    current_packet->rx_meta.crc_status = HW_CRC_UNAVAILABLE;
-    current_packet->rx_meta.rssi = get_rssi();
-    current_packet->rx_meta.lqi = 0; // TODO
-    memcpy(&(current_packet->rx_meta.rx_cfg.channel_id), &current_channel_id, sizeof(channel_id_t));
-    pn9_encode(current_packet->data, packet_len + 1);
-    DPRINT_DATA(current_packet->data, current_packet->length + 1);
-    DPRINT("RX done\n");
-    flush_fifo();
-    rx_packet_callback(current_packet);
-  }
+        assert(rx_bytes == 4);
 
-  hw_gpio_enable_interrupt(SX127x_DIO1_PIN);
+        if (current_channel_id.channel_header.ch_coding == PHY_CODING_FEC_PN9)
+        {
+            uint8_t decoded_buffer[4];
+            memcpy(decoded_buffer, buffer, 4);
+            pn9_encode(decoded_buffer, 4);
+            fec_decode_packet(decoded_buffer, 4, 4);
+            packet_len = fec_calculated_decoded_length(decoded_buffer[0]+1);
+        }
+        else
+        {
+            packet_len = buffer[0];
+            pn9_encode(&packet_len, 1); // decode only packet_len for now so we know how many bytes to receive.
+                                        // the full packet is decoded at once, when completely received
+            packet_len++;
+        }
+
+        DPRINT("RX Packet Length: %i ", packet_len);
+
+        current_packet = alloc_packet_callback(packet_len);
+        memcpy(current_packet->data, buffer, 4);
+
+        FskPacketHandler.Size = packet_len;
+        FskPacketHandler.NbBytes = 4;
+    }
+
+    if (FskPacketHandler.FifoThresh)
+    {
+        read_fifo(&current_packet->data[FskPacketHandler.NbBytes], FskPacketHandler.FifoThresh);
+        FskPacketHandler.NbBytes += FskPacketHandler.FifoThresh;
+    }
+
+    while(!(CHECK_FIFO_EMPTY()) && (FskPacketHandler.NbBytes < FskPacketHandler.Size))
+       current_packet->data[FskPacketHandler.NbBytes++] = read_reg(REG_FIFO);
+
+    uint8_t remaining_bytes = FskPacketHandler.Size - FskPacketHandler.NbBytes;
+    DPRINT("read %i bytes, %i remaining\n", FskPacketHandler.NbBytes, remaining_bytes);
+
+    if(remaining_bytes == 0) {
+        current_packet->rx_meta.timestamp = timer_get_counter_value();
+        current_packet->rx_meta.rx_cfg.syncword_class = current_syncword_class;
+        current_packet->rx_meta.crc_status = HW_CRC_UNAVAILABLE;
+        current_packet->rx_meta.rssi = get_rssi();
+        current_packet->rx_meta.lqi = 0; // TODO
+        memcpy(&(current_packet->rx_meta.rx_cfg.channel_id), &current_channel_id, sizeof(channel_id_t));
+
+        pn9_encode(current_packet->data, FskPacketHandler.NbBytes);
+
+        if (current_channel_id.channel_header.ch_coding == PHY_CODING_FEC_PN9)
+            fec_decode_packet(current_packet->data, FskPacketHandler.NbBytes, FskPacketHandler.NbBytes);
+
+        DPRINT_DATA(current_packet->data, current_packet->length + 1);
+        DPRINT("RX done\n");
+        flush_fifo();
+        rx_packet_callback(current_packet);
+        FskPacketHandler.Size = 0;
+        FskPacketHandler.NbBytes = 0;
+        return;
+    }
+
+    //Trigger FifoLevel interrupt
+    if ( remaining_bytes > FIFO_SIZE)
+    {
+        write_reg(REG_FIFOTHRESH, 0x80 | (BYTES_IN_RX_FIFO - 1));
+        FskPacketHandler.FifoThresh = BYTES_IN_RX_FIFO;
+    } else {
+        write_reg(REG_FIFOTHRESH, 0x80 | (remaining_bytes - 1));
+        FskPacketHandler.FifoThresh = remaining_bytes;
+    }
+
+    hw_gpio_set_edge_interrupt(SX127x_DIO1_PIN, GPIO_RISING_EDGE);
+    hw_gpio_enable_interrupt(SX127x_DIO1_PIN);
 }
 
 static void configure_syncword(syncword_class_t syncword_class, const channel_id_t* channel)
@@ -508,7 +582,22 @@ static void start_rx(hw_rx_cfg_t const* rx_cfg) {
       rssi_valid_callback(-140);
     }
   } else {
+   
+
+    flush_fifo();
+    FskPacketHandler.NbBytes = 0;
+    FskPacketHandler.Size = 0;
+    FskPacketHandler.FifoThresh = 0;
+
+    write_reg(REG_FIFOTHRESH, 0x83);
+    write_reg(REG_PAYLOADLENGTH, 0x00); // unlimited length mode
+
+    // TODO not sure why yet, but for some reason we need to write REG_DIOMAPPING1
+    // if not, this will result in continuous TX when switching from LoRa mode to FSK RX ...
+    write_reg(REG_DIOMAPPING1, 0x0C); // DIO2 = 0b11 => interrupt on sync detect
+
     if(rx_packet_callback != 0) {
+      hw_gpio_set_edge_interrupt(SX127x_DIO1_PIN, GPIO_RISING_EDGE);
       hw_gpio_enable_interrupt(SX127x_DIO1_PIN);
       set_packet_handler_enabled(true);
     } else {
@@ -519,12 +608,6 @@ static void start_rx(hw_rx_cfg_t const* rx_cfg) {
 
     DPRINT("START FG scan @ %i", timer_get_counter_value());
     DEBUG_RX_START();
-
-    flush_fifo();
-    current_packet_data_offset = 0;
-    // TODO not sure why yet, but for some reason we need to write REG_DIOMAPPING1
-    // if not, this will result in continuous TX when switching from LoRa mode to FSK RX ...
-    write_reg(REG_DIOMAPPING1, 0x0C); // DIO2 = 0b11 => interrupt on sync detect
     set_opmode(OPMODE_RX);
 
     if(rssi_valid_callback != 0)
@@ -534,7 +617,6 @@ static void start_rx(hw_rx_cfg_t const* rx_cfg) {
       rssi_valid_callback(get_rssi());
     }
   }
-
 }
 
 static void calibrate_rx_chain() {
@@ -653,14 +735,20 @@ error_t hw_radio_send_packet(hw_radio_packet_t* packet, tx_packet_callback_t tx_
     // sx127x does not support PN9 whitening in hardware ...
     // copy the packet so we do not encode original packet->data
     uint8_t encoded_packet[256];
+    uint8_t encoded_len = packet->length + 1;
     memcpy(encoded_packet, packet->data, packet->length + 1);
     DPRINT("TX len=%i", packet->length);
     DPRINT_DATA(packet->data, packet->length + 1);
-    pn9_encode(encoded_packet, packet->length + 1);
+
+    if (current_channel_id.channel_header.ch_coding == PHY_CODING_FEC_PN9)
+        encoded_len = fec_encode(encoded_packet, packet->length + 1);
+
+    pn9_encode(encoded_packet, encoded_len);
+
     flush_fifo();
     DEBUG_TX_START();
     set_opmode(OPMODE_TX);
-    write_fifo(encoded_packet, packet->length + 1);
+    write_fifo(encoded_packet, encoded_len);
   } else {
     DPRINT("TX LoRa len=%i", packet->length);
     DPRINT_DATA(packet->data, packet->length + 1);
