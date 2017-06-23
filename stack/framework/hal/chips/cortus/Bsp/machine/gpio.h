@@ -16,25 +16,28 @@
  * limitations under the License.
  */
 
-#ifndef _GPIO_H
-#define _GPIO_H
+#ifndef _GPIO_EDGE_H
+#define _GPIO_EDGE_H
 #include <machine/sfradr.h>
 
-typedef struct GPio
+typedef struct GPio_edge
 {
     volatile unsigned out;
     volatile unsigned in;
     volatile unsigned dir;
     volatile unsigned old_in;
     volatile unsigned mask;
-} GPio;
-
+    volatile unsigned level_sel;
+    volatile unsigned rs_edge_sel;
+    volatile unsigned fl_edge_sel;
+    volatile unsigned edge;
+} GPio_edge;
 
 /** GPIO ports identificator. */
 typedef enum
 {
-  gpioPortA = SFRADR_GPIO1, /**< Port A */
-  gpioPortB = SFRADR_GPIO1, /**< Port B */
+  gpioPortA = SFRADR_GPIO_EDGE1, /**< Port A */
+  gpioPortB = SFRADR_GPIO_EDGE2, /**< Port B */
   //gpioPortC = 2, /**< Port C */
   //gpioPortD = 3, /**< Port D */
   //gpioPortE = 4, /**< Port E */
@@ -67,13 +70,11 @@ typedef enum
 
 } GPIO_Mode_TypeDef;
 
-
-
-
 #ifdef __APS__
-#define gpio ((GPio *)SFRADR_GPIO1)
+#define gpio1_edge ((GPio_edge *)SFRADR_GPIO_EDGE1)
+#define gpio2_edge ((GPio_edge *)SFRADR_GPIO_EDGE2)
 #else
-extern GPio __gpio;
-#define gpio (&__gpio)
+extern GPio_edge __gpio;
+#define gpio_edge (&__gpio_edge)
 #endif
 #endif

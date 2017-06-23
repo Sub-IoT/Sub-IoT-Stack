@@ -43,8 +43,8 @@
 #define SFRADR_WDT              0x40003000
 #define SFRADR_WDT_WD           0x40003100
 
-#define SFRADR_GPIO1            0x40004000 
-#define SFRADR_GPIO2            0x40004100 
+#define SFRADR_GPIO_EDGE1       0x40004000
+#define SFRADR_GPIO_EDGE2       0x40004100 
 
 #define SFRADR_SPI              0x40005000 
 #define SFRADR_SPI2             0x40005100 
@@ -77,7 +77,7 @@
 #define IRQ_ETH_RX              9
 #define IRQ_ETH_TX             10
 
-#define IRQ_GPIO1              11
+#define IRQ_GPIO_EDGE1         11
 
 #define IRQ_SPI_TX             12
 #define IRQ_SPI_RX             13
