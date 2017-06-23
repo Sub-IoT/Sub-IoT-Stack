@@ -12,15 +12,15 @@
    ---
       #include <sys/heap.h>
       #include <machine/memsize.h>
-      STACK_SIZE(64*1024);
-      HEAP_SIZE(64*1024);
+      STACK_SIZE(4*1024);
+      HEAP_SIZE(16*1024);
       PROGRAM_MEMORY_SIZE(512*1024);
       DATA_MEMORY_SIZE(512*1024);
    ---
 */
 
-_STACK_SIZE          = DEFINED(_STACK_SIZE)          ? _STACK_SIZE          :  64K;
-_HEAP_SIZE           = DEFINED(_HEAP_SIZE)           ? _HEAP_SIZE           :  64K;
+_STACK_SIZE          = DEFINED(_STACK_SIZE)          ? _STACK_SIZE          :  4K;
+_HEAP_SIZE           = DEFINED(_HEAP_SIZE)           ? _HEAP_SIZE           :  16K;
 _PROGRAM_MEMORY_SIZE = DEFINED(_PROGRAM_MEMORY_SIZE) ? _PROGRAM_MEMORY_SIZE : 512K;
 _DATA_MEMORY_SIZE    = DEFINED(_DATA_MEMORY_SIZE)    ? _DATA_MEMORY_SIZE    : 512K;
 
