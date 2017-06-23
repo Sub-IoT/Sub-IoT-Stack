@@ -368,22 +368,19 @@ void packet_transmitted(hw_radio_packet_t* hw_radio_packet)
     sched_post_task_prio(&notify_transmitted_packet, MAX_PRIORITY);
 }
 
+void transmit_foreground_packet()
+{
+    DPRINT("Transmit packet @ %i", timer_get_counter_value()); // ensure that we are sending the foreground request within the guarded time
+    hw_radio_send_packet(&current_packet->hw_radio_packet, &packet_transmitted);
+    guarded_channel = true;
+}
+
 void background_advertising_terminated(hw_radio_packet_t* hw_radio_packet)
 {
     assert(dll_state == DLL_STATE_TX_BACKGROUND);
     switch_state(DLL_STATE_TX_FOREGROUND);
 
-    current_packet->hw_radio_packet.tx_meta.tx_cfg.syncword_class = PHY_SYNCWORD_CLASS1;
-    current_packet->type = INITIAL_REQUEST;
-    packet_assemble(current_packet);
-
-    current_packet->tx_duration = dll_calculate_tx_duration(current_access_profile.channel_header.ch_class,
-                                                            current_access_profile.channel_header.ch_coding,
-                                                            current_packet->hw_radio_packet.length + 1);
-
-    DPRINT("Transmit packet @ %i", timer_get_counter_value()); // ensure that we are sending the foreground request within the guarded time
-    hw_radio_send_packet(&current_packet->hw_radio_packet, &packet_transmitted);
-    guarded_channel = true;
+    sched_post_task_prio(&transmit_foreground_packet, MAX_PRIORITY);
 }
 
 static void discard_tx()
@@ -451,18 +448,23 @@ static void cca_rssi_valid(int16_t cur_rssi)
             {
                 switch_state(DLL_STATE_TX_BACKGROUND);
                 DPRINT("Start background advertising @ %i", timer_get_counter_value());
-                err = hw_radio_send_background_packet(&current_packet->hw_radio_packet,
-                                                      &background_advertising_terminated,
-                                                      current_packet->ETA, current_packet->tx_duration);
+                err = hw_radio_set_background(&current_packet->hw_radio_packet,
+                                              current_packet->ETA,
+                                              current_packet->tx_duration);
 
-                // To save time and guarantee to send the foreground frame within the guarded time,
-                // it should be optimal to prepare the foreground packet before the end of the
-                // advertising period, but for now, the sending of background packet is a none interrupted
-                // sequence
+                // To guarantee to send the foreground frame within the guarded time,
+                // we need to prepare the foreground packet before starting the
+                // advertising sequence
 
-                //current_packet->hw_radio_packet.tx_meta.tx_cfg.syncword_class = PHY_SYNCWORD_CLASS1;
-                //current_packet->type = INITIAL_REQUEST;
-                //packet_assemble(current_packet);
+                current_packet->hw_radio_packet.tx_meta.tx_cfg.syncword_class = PHY_SYNCWORD_CLASS1;
+                current_packet->type = INITIAL_REQUEST;
+                packet_assemble(current_packet);
+
+                current_packet->tx_duration = dll_calculate_tx_duration(current_access_profile.channel_header.ch_class,
+                                                                        current_access_profile.channel_header.ch_coding,
+                                                                        current_packet->hw_radio_packet.length + 1);
+
+                err = hw_radio_start_background_advertising(&background_advertising_terminated);
             }
             else
             {
@@ -845,6 +847,7 @@ void dll_init()
     sched_register_task(&dll_execute_scan_automation);
     sched_register_task(&start_background_scan);
     sched_register_task(&guard_period_expiration);
+    sched_register_task(&transmit_foreground_packet);
 
     hw_radio_init(&alloc_new_packet, &release_packet);
 
@@ -982,6 +985,8 @@ void dll_tx_frame(packet_t* packet)
     }
 
     packet_assemble(packet);
+
+    DPRINT("Packet LENGTH %d", packet->hw_radio_packet.length);
 
     if (packet->type != BACKGROUND_ADV)
     {
