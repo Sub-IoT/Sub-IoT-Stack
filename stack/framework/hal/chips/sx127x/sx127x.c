@@ -692,7 +692,10 @@ error_t hw_radio_start_background_scan(hw_rx_cfg_t const* rx_cfg, rx_packet_call
 }
 
 int16_t hw_radio_get_rssi() {
-  // TODO
+    if(lora_mode)
+        return (read_reg(REG_LR_RSSIVALUE) -157); // for HF output port
+    else
+        return (- read_reg(REG_RSSIVALUE) / 2);
 }
 
 void hw_radio_continuous_tx(hw_tx_cfg_t const* tx_cfg, bool continuous_wave) {
