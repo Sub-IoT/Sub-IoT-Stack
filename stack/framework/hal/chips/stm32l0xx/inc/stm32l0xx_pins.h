@@ -50,6 +50,8 @@ extern pin_id_t const B7;
 extern pin_id_t const B8;
 extern pin_id_t const B9;
 extern pin_id_t const B10;
+extern pin_id_t const B11;
+extern pin_id_t const B12;
 extern pin_id_t const B13;
 extern pin_id_t const B14;
 extern pin_id_t const B15;

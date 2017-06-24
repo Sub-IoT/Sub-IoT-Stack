@@ -101,6 +101,7 @@ __LINK_C error_t hw_gpio_configure_pin(pin_id_t pin_id, bool int_allowed, uint32
 
 __LINK_C error_t hw_gpio_configure_pin_stm(pin_id_t pin_id, GPIO_InitTypeDef* init_options)
 {
+  assert(((1 << pin_id.pin) & init_options->Pin) == (1 << pin_id.pin)); // TODO init_options contains flag per pin ... Replace pin_id here with port?
   HAL_GPIO_Init(ports[pin_id.port], init_options);
 
   if  (init_options->Mode == GPIO_MODE_IT_RISING || init_options->Mode == GPIO_MODE_IT_FALLING || init_options->Mode == GPIO_MODE_IT_RISING_FALLING)
