@@ -26,22 +26,25 @@
 #include "hwtimer.h"
 #include "hwatomic.h"
 #include "stm32l0xx_hal.h"
+#include "debug.h"
 
 // TODO validate
 
  static timer_callback_t compare_f = 0x0;
  static timer_callback_t overflow_f = 0x0;
  static bool timer_inited = false;
- static TIM_HandleTypeDef        htim2;
+ static TIM_HandleTypeDef tim2;
  extern __IO uint32_t uwTick;
-// /**************************************************************************//**
-//  * @brief Sets up the TIM6 to count at 1024 Hz.
+
+// /*****************************************************************************
+//  * @brief Sets up the TIM2 to count at 1024 Hz.
 //  *        The counter should not be cleared on a compare match and keep running.
 //  *        Interrupts should be cleared and enabled.
 //  *        The counter should run.
 //  *****************************************************************************/
 error_t hw_timer_init(hwtimer_id_t timer_id, uint8_t frequency, timer_callback_t compare_callback, timer_callback_t overflow_callback)
 {
+  // TODO using only one timer for now
 	if(timer_id >= HWTIMER_NUM)
 		return ESIZE;
 	if(timer_inited)
@@ -54,54 +57,30 @@ error_t hw_timer_init(hwtimer_id_t timer_id, uint8_t frequency, timer_callback_t
 	overflow_f = overflow_callback;
 	timer_inited = true;
 
-	TIM_ClockConfigTypeDef sClockSourceConfig;
-	TIM_OC_InitTypeDef sConfigOC;
-	
-//	htim11.Instance = TIM10;
-//	htim11.Init.Prescaler = (uint32_t) (SystemCoreClock / (1024 - 1));
-//	htim11.Init.CounterMode = TIM_COUNTERMODE_UP;
-//	htim11.Init.Period = (UINT32_C(1) << (8*sizeof(hwtimer_tick_t))) -1;
-//	htim11.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
-//	if (HAL_TIM_Base_Init(&htim11) != HAL_OK)
-//	{
-//		return FAIL;
-//	}
+  tim2.Instance = TIM2;
+  tim2.Init.Prescaler = (uint32_t) (SystemCoreClock / (1024 - 1));
+  tim2.Init.CounterMode = TIM_COUNTERMODE_UP;
+  tim2.Init.Period = 0xFFFF; // used for overflow, for timing output compare is used
+  tim2.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
 
-	sClockSourceConfig.ClockSource = TIM_CLOCKSOURCE_INTERNAL;
-        if (HAL_TIM_ConfigClockSource(&htim2, &sClockSourceConfig) != HAL_OK)
-	{
-		 return FAIL;
-	}
+  __HAL_RCC_TIM2_CLK_ENABLE();
 
-        if (HAL_TIM_OC_Init(&htim2) != HAL_OK)
-	{
-		 return FAIL;
-	}
+  TIM_ClockConfigTypeDef clock_source_config;
+  clock_source_config.ClockSource = TIM_CLOCKSOURCE_INTERNAL;
+  assert(HAL_TIM_ConfigClockSource(&tim2, &clock_source_config) == HAL_OK);
+  assert(HAL_TIM_OC_Init(&tim2) == HAL_OK);
 
-	sConfigOC.OCMode = TIM_OCMODE_TIMING;
-	sConfigOC.Pulse = 0;
-	sConfigOC.OCPolarity = TIM_OCPOLARITY_HIGH;
-	sConfigOC.OCFastMode = TIM_OCFAST_DISABLE;
-        if (HAL_TIM_OC_ConfigChannel(&htim2, &sConfigOC, TIM_CHANNEL_1) != HAL_OK)
-	{
-		 return FAIL;
-	}
+  TIM_OC_InitTypeDef output_compare_config;
+  output_compare_config.OCMode = TIM_OCMODE_TIMING;
+  assert(HAL_TIM_OC_ConfigChannel(&tim2, &output_compare_config, TIM_CHANNEL_1) == HAL_OK);
 
-	// __HAL_RCC_TIM10_CLK_ENABLE();
-	/* Peripheral interrupt init */
-	//HAL_NVIC_SetPriority(TIM10_IRQn, 0, 0);
-	//HAL_NVIC_EnableIRQ(TIM10_IRQn);
+  HAL_NVIC_SetPriority(TIM2_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(TIM2_IRQn);
+  HAL_TIM_Base_Init(&tim2);
+  HAL_TIM_Base_Start_IT(&tim2);
 
-	//__HAL_TIM_DISABLE_IT(&htim11, TIM_IT_CC1 | TIM_IT_UPDATE);
-	//__HAL_TIM_CLEAR_FLAG(&htim11, TIM_IT_CC1 | TIM_IT_UPDATE);
-	//HAL_TIM_OC_Start_IT(&htim11, TIM_CHANNEL_1);
-	//__HAL_TIM_DISABLE_IT(&htim11, TIM_IT_CC1);
-	//  __HAL_TIM_ENABLE_IT(&htim11, TIM_IT_UPDATE);
-        __HAL_TIM_CLEAR_FLAG(&htim2, TIM_IT_CC1 | TIM_IT_UPDATE);
-        HAL_TIM_Base_Start_IT(&htim2);
-
-     end_atomic();
-    return SUCCESS;
+  end_atomic();
+  return SUCCESS;
 }
 
 hwtimer_tick_t hw_timer_getvalue(hwtimer_id_t timer_id)
@@ -110,7 +89,7 @@ hwtimer_tick_t hw_timer_getvalue(hwtimer_id_t timer_id)
  		return 0;
  	else
  	{
-                uint32_t value =__HAL_TIM_GET_COUNTER(&htim2);
+    uint32_t value =__HAL_TIM_GET_COUNTER(&tim2);
  		return value;
  	}
 }
@@ -123,13 +102,11 @@ error_t hw_timer_schedule(hwtimer_id_t timer_id, hwtimer_tick_t tick )
  		return EOFF;
 
  	start_atomic();
-        __HAL_TIM_DISABLE_IT(&htim2, TIM_IT_CC1);
-
-        __HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_1, tick);
- 	//HAL_TIM_OC_Start_IT(&htim11, TIM_CHANNEL_1);
-        __HAL_TIM_ENABLE_IT(&htim2, TIM_IT_CC1);
- 	//HAL_NVIC_ClearPendingIRQ(TIM6_IRQn);
-	//HAL_NVIC_EnableIRQ(TIM6_IRQn);
+    __HAL_TIM_DISABLE_IT(&tim2, TIM_IT_CC1);
+    __HAL_TIM_SET_COMPARE(&tim2, TIM_CHANNEL_1, tick);
+    __HAL_TIM_ENABLE_IT(&tim2, TIM_IT_CC1);
+    HAL_NVIC_ClearPendingIRQ(TIM6_IRQn);
+    HAL_NVIC_EnableIRQ(TIM6_IRQn);
  	end_atomic();
 }
 
@@ -141,10 +118,10 @@ error_t hw_timer_cancel(hwtimer_id_t timer_id)
  		return EOFF;
 
  	start_atomic();
-        __HAL_TIM_CLEAR_FLAG(&htim2, TIM_IT_CC1);
-        __HAL_TIM_DISABLE_IT(&htim2, TIM_IT_CC1);
- 	//HAL_NVIC_ClearPendingIRQ(TIM6_IRQn);
- 	//HAL_NVIC_DisableIRQ(TIM6_IRQn);
+    __HAL_TIM_DISABLE_IT(&tim2, TIM_IT_CC1);
+    __HAL_TIM_CLEAR_FLAG(&tim2, TIM_IT_CC1);
+    HAL_NVIC_ClearPendingIRQ(TIM2_IRQn);
+    HAL_NVIC_DisableIRQ(TIM2_IRQn);
  	end_atomic();
 }
 
@@ -156,134 +133,44 @@ error_t hw_timer_counter_reset(hwtimer_id_t timer_id)
  		return EOFF;
 
  	start_atomic();
-
-        __HAL_TIM_DISABLE_IT(&htim2, TIM_IT_CC1 | TIM_IT_UPDATE);
-        __HAL_TIM_CLEAR_FLAG(&htim2, TIM_IT_CC1 | TIM_IT_UPDATE);
-        __HAL_TIM_SET_COUNTER(&htim2, 10);
-        __HAL_TIM_ENABLE_IT(&htim2, TIM_IT_UPDATE);
+    __HAL_TIM_DISABLE_IT(&tim2, TIM_IT_CC1 | TIM_IT_UPDATE);
+    __HAL_TIM_CLEAR_FLAG(&tim2, TIM_IT_CC1 | TIM_IT_UPDATE);
+    __HAL_TIM_SET_COUNTER(&tim2, 10);
+    __HAL_TIM_ENABLE_IT(&tim2, TIM_IT_UPDATE);
  	end_atomic();
 
+  return SUCCESS;
 }
 
 bool hw_timer_is_overflow_pending(hwtimer_id_t timer_id)
 {
-     if(timer_id >= HWTIMER_NUM)
- 	return false;
-     start_atomic();
- 	//COMP0 is used to limit thc RTC to 16 bits -> use this one to check
-        bool is_pending = __HAL_TIM_GET_FLAG(&htim2, TIM_IT_UPDATE);
-     end_atomic();
-     return is_pending;
+  if(timer_id >= HWTIMER_NUM)
+    return false;
+
+  start_atomic();
+    bool is_pending = __HAL_TIM_GET_FLAG(&tim2, TIM_IT_UPDATE);
+  end_atomic();
+
+  return is_pending;
 }
 
 bool hw_timer_is_interrupt_pending(hwtimer_id_t timer_id)
 {
-     if(timer_id >= HWTIMER_NUM)
- 	return false;
+  if(timer_id >= HWTIMER_NUM)
+    return false;
 
-     start_atomic();
-        bool is_pending = __HAL_TIM_GET_FLAG(&htim2, TIM_IT_CC1);
-     end_atomic();
-     return is_pending;
-}
+  start_atomic();
+    bool is_pending = __HAL_TIM_GET_FLAG(&tim2, TIM_IT_CC1);
+  end_atomic();
 
-/**
-  * @brief  This function configures the TIM2 as a time base source.
-  *         The time source is configured  to have 1ms time base with a dedicated
-  *         Tick interrupt priority.
-  * @note   This function is called  automatically at the beginning of program after
-  *         reset by HAL_Init() or at any time when clock is configured, by HAL_RCC_ClockConfig().
-  * @param  TickPriority: Tick interrupt priorty.
-  * @retval HAL status
-  */
-//HAL_StatusTypeDef HAL_InitTick(uint32_t TickPriority)
-//{
-//  RCC_ClkInitTypeDef    clkconfig;
-//  uint32_t              uwTimclock = 0;
-//  uint32_t              uwPrescalerValue = 0;
-//  uint32_t              pFLatency;
-
-//  /*Configure the TIM2 IRQ priority */
-//  HAL_NVIC_SetPriority(TIM2_IRQn, TickPriority ,0);
-
-//  /* Enable the TIM2 global Interrupt */
-//  HAL_NVIC_EnableIRQ(TIM2_IRQn);
-
-//  /* Enable TIM2 clock */
-//  __HAL_RCC_TIM2_CLK_ENABLE();
-
-//  /* Get clock configuration */
-//  HAL_RCC_GetClockConfig(&clkconfig, &pFLatency);
-
-//  /* Compute TIM2 clock */
-//  uwTimclock = HAL_RCC_GetPCLK2Freq();
-
-//  /* Compute the prescaler value to have TIM2 counter clock equal to 1MHz */
-//  uwPrescalerValue = (uint32_t) ((uwTimclock / 1024) - 1);
-
-//  /* Initialize TIM11 */
-//  htim2.Instance = TIM2;
-
-//  /* Initialize TIMx peripheral as follow:
-//  + Period = [(TIM2CLK/1000) - 1]. to have a (1/1000) s time base.
-//  + Prescaler = (uwTimclock/1000000 - 1) to have a 1MHz counter clock.
-//  + ClockDivision = 0
-//  + Counter direction = Up
-//  */
-//  htim2.Init.Period = (UINT32_C(1) << (8*sizeof(uint16_t))) -1; //(1000000 / 1000) - 1;
-//  htim2.Init.Prescaler = uwPrescalerValue;
-//  htim2.Init.ClockDivision = 0;
-//  htim2.Init.CounterMode = TIM_COUNTERMODE_UP;
-//  if(HAL_TIM_Base_Init(&htim2) == HAL_OK)
-//  {
-//    /* Start the TIM time Base generation in interrupt mode */
-//          __HAL_TIM_CLEAR_FLAG(&htim2, TIM_IT_UPDATE);
-//    return HAL_TIM_Base_Start_IT(&htim2);
-//  }
-
-//  /* Return function status */
-//  return HAL_ERROR;
-//}
-
-/**
-  * @brief  Suspend Tick increment.
-  * @note   Disable the tick increment by disabling TIM11 update interrupt.
-  * @param  None
-  * @retval None
-  */
-void HAL_SuspendTick(void)
-{
-  /* Disable TIM11 update Interrupt */
-  __HAL_TIM_DISABLE_IT(&htim2, TIM_IT_UPDATE);
-}
-
-/**
-  * @brief  Resume Tick increment.
-  * @note   Enable the tick increment by Enabling TIM11 update interrupt.
-  * @param  None
-  * @retval None
-  */
-void HAL_ResumeTick(void)
-{
-  /* Enable TIM11 Update interrupt */
-  __HAL_TIM_ENABLE_IT(&htim2, TIM_IT_UPDATE);
-}
-
-void HAL_IncTick(void)
-{
-  uwTick += (htim2.Init.Period + 1);
-}
-
-uint32_t HAL_GetTick(void)
-{
-  return uwTick + __HAL_TIM_GET_COUNTER(&htim2);
+  return is_pending;
 }
 
 void HAL_TIM_OC_DelayElapsedCallback(TIM_HandleTypeDef *htim)
 {
-        if (htim->Instance==TIM2)
+  if(htim->Instance==TIM2)
 	{
-                __HAL_TIM_DISABLE_IT(&htim2, TIM_IT_CC1);
+    __HAL_TIM_DISABLE_IT(&tim2, TIM_IT_CC1);
 		if(compare_f != 0x0)
 				compare_f();
 	}
@@ -291,18 +178,39 @@ void HAL_TIM_OC_DelayElapsedCallback(TIM_HandleTypeDef *htim)
 
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 {
-        if (htim->Instance==TIM2)
+  if (htim->Instance==TIM2)
 	{
-                uwTick += (htim2.Init.Period + 1);
+    uwTick += (tim2.Init.Period + 1);
 		if(overflow_f != 0x0)
 			overflow_f();
 	}
 }
 
 
-void TIM11_IRQHandler(void)
+void TIM2_IRQHandler(void)
 {
-  HAL_TIM_IRQHandler(&htim2);
+  // We are not using HAL_TIM_IRQHandler() here to reduce interrupt latency
+  // first check for overflow ...
+  if(__HAL_TIM_GET_FLAG(&tim2, TIM_FLAG_UPDATE) != RESET)
+  {
+    if(__HAL_TIM_GET_IT_SOURCE(&tim2, TIM_IT_UPDATE) !=RESET)
+    {
+      __HAL_TIM_CLEAR_IT(&tim2, TIM_IT_UPDATE);
+      HAL_TIM_PeriodElapsedCallback(&tim2);
+    }
+  }
+
+  // ... and then for compare value
+  if(__HAL_TIM_GET_FLAG(&tim2, TIM_FLAG_CC1) != RESET)
+  {
+    if(__HAL_TIM_GET_IT_SOURCE(&tim2, TIM_IT_CC1) !=RESET)
+    {
+      __HAL_TIM_DISABLE_IT(&tim2, TIM_IT_CC1);
+      __HAL_TIM_CLEAR_IT(&tim2, TIM_IT_CC1);
+      if(compare_f != 0x0)
+          compare_f();
+    }
+  }
 }
 
 
