@@ -66,6 +66,7 @@ extern pin_id_t const C6;
 extern pin_id_t const C7;
 extern pin_id_t const C8;
 extern pin_id_t const C12;
+extern pin_id_t const C13;
 // port D
 extern pin_id_t const D0;
 extern pin_id_t const D1;
