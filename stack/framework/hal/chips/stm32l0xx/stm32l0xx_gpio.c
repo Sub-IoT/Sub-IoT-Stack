@@ -83,7 +83,6 @@ __LINK_C error_t hw_gpio_configure_pin(pin_id_t pin_id, bool int_allowed, uint32
 
   //configure the pin itself
   GPIO_InitTypeDef GPIO_InitStruct;
-  GPIO_InitStruct.Pin = 1 << pin_id.pin;
   GPIO_InitStruct.Mode = mode;
   if(GPIO_InitStruct.Mode == GPIO_MODE_IT_RISING
      || GPIO_InitStruct.Mode == GPIO_MODE_IT_FALLING
@@ -101,7 +100,7 @@ __LINK_C error_t hw_gpio_configure_pin(pin_id_t pin_id, bool int_allowed, uint32
 
 __LINK_C error_t hw_gpio_configure_pin_stm(pin_id_t pin_id, GPIO_InitTypeDef* init_options)
 {
-  assert(((1 << pin_id.pin) & init_options->Pin) == (1 << pin_id.pin)); // TODO init_options contains flag per pin ... Replace pin_id here with port?
+  init_options->Pin = 1 << pin_id.pin;
   HAL_GPIO_Init(ports[pin_id.port], init_options);
 
   if  (init_options->Mode == GPIO_MODE_IT_RISING || init_options->Mode == GPIO_MODE_IT_FALLING || init_options->Mode == GPIO_MODE_IT_RISING_FALLING)
@@ -173,6 +172,15 @@ __LINK_C error_t hw_gpio_configure_interrupt(pin_id_t pin_id, gpio_inthandler_t 
   else
   {
     interrupts[pin_id.pin].callback = callback;
+
+    __HAL_RCC_SYSCFG_CLK_ENABLE();
+
+    // set external interrupt configuration
+    uint32_t temp = SYSCFG->EXTICR[pin_id.pin >> 2U];
+    CLEAR_BIT(temp, ((uint32_t)0x0FU) << (4U * (pin_id.pin & 0x03U)));
+    SET_BIT(temp, (pin_id.port) << (4 * (pin_id.pin & 0x03U)));
+    SYSCFG->EXTICR[pin_id.pin >> 2U] = temp;
+
     uint32_t exti_line = 1 << pin_id.pin;
     /* First Disable Event on provided Lines */
     LL_EXTI_DisableEvent_0_31(exti_line);
@@ -210,7 +218,7 @@ __LINK_C error_t hw_gpio_configure_interrupt(pin_id_t pin_id, gpio_inthandler_t 
 
 __LINK_C error_t hw_gpio_enable_interrupt(pin_id_t pin_id)
 {
-  if(pin_id.pin < 1) {
+  if(pin_id.pin <= 1) {
     HAL_NVIC_SetPriority(EXTI0_1_IRQn, 2, 0); // TODO on boot
     HAL_NVIC_EnableIRQ(EXTI0_1_IRQn);
     return SUCCESS;
@@ -230,13 +238,13 @@ __LINK_C error_t hw_gpio_enable_interrupt(pin_id_t pin_id)
 __LINK_C error_t hw_gpio_disable_interrupt(pin_id_t pin_id)
 {
   //TODO: check if no other pins are still using the interrupt
-  if(pin_id.pin < 5) {
+  if(pin_id.pin <= 1) {
     HAL_NVIC_DisableIRQ(EXTI0_1_IRQn);
     return SUCCESS;
-  } else if (pin_id.pin >= 5 && pin_id.pin <= 9) {
+  } else if (pin_id.pin >= 2 && pin_id.pin < 4) {
     HAL_NVIC_DisableIRQ(EXTI2_3_IRQn);
     return SUCCESS;
-  } else if (pin_id.pin >= 10 && pin_id.pin <= 15) {
+  } else if (pin_id.pin >= 4 && pin_id.pin < 16) {
     HAL_NVIC_DisableIRQ(EXTI4_15_IRQn);
     return SUCCESS;
   }
@@ -244,32 +252,11 @@ __LINK_C error_t hw_gpio_disable_interrupt(pin_id_t pin_id)
   assert(false);
 }
 
-void EXTI0_IRQHandler() {
-  gpio_int_callback(0);
-}
-
-void EXTI1_IRQHandler() {
-  gpio_int_callback(1);
-}
-
-void EXTI2_IRQHandler() {
-  gpio_int_callback(2);
-}
-
-void EXTI3_IRQHandler() {
-  gpio_int_callback(3);
-}
-
-void EXTI4_IRQHandler() {
-  gpio_int_callback(4);
-}
-
-void EXTI9_5_IRQHandler(void)
+void EXTI0_1_IRQHandler(void)
 {
   // will check the different pins here instead of using the HAL
-
-  uint8_t pin_id = 5;
-  for (;pin_id <= 9; pin_id++)
+  uint8_t pin_id = 0;
+  for (;pin_id <= 1; pin_id++)
   {
     uint16_t pin = 1 << pin_id;
     if(__HAL_GPIO_EXTI_GET_IT(pin) != RESET)
@@ -281,10 +268,28 @@ void EXTI9_5_IRQHandler(void)
   }
 }
 
-void EXTI15_10_IRQHandler(void)
+void EXTI2_3_IRQHandler(void)
 {
   // will check the different pins here instead of using the HAL
-  uint8_t pin_id = 10;
+
+  uint8_t pin_id = 2;
+  for (;pin_id <= 3; pin_id++)
+  {
+    uint16_t pin = 1 << pin_id;
+    if(__HAL_GPIO_EXTI_GET_IT(pin) != RESET)
+    {
+      __HAL_GPIO_EXTI_CLEAR_IT(pin);
+      gpio_int_callback(pin_id);
+      return;
+    }
+  }
+}
+
+void EXTI4_15_IRQHandler(void)
+{
+  // will check the different pins here instead of using the HAL
+
+  uint8_t pin_id = 4;
   for (;pin_id <= 15; pin_id++)
   {
     uint16_t pin = 1 << pin_id;
@@ -296,7 +301,3 @@ void EXTI15_10_IRQHandler(void)
     }
   }
 }
-
-
-
-
