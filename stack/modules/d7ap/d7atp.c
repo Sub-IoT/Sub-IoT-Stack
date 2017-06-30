@@ -252,6 +252,7 @@ error_t d7atp_send_request(uint8_t dialog_id, uint8_t transaction_id, bool is_la
     if ( packet->type == RETRY_REQUEST )
     {
         DPRINT("Retry the transmission with the same packet content");
+        current_transaction_id = transaction_id;
         goto send_packet;
     }
 
