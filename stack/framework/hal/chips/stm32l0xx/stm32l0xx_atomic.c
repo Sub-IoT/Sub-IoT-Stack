@@ -22,15 +22,16 @@
  */
 
 #include "hwatomic.h"
+#include "stm32l0xx_hal.h"
+
+ // TODO nesting?
 
 void start_atomic()
 {  
-    // TODO
-    //__disable_irq();
+  __disable_irq();
 }
 
 void end_atomic()
 {
-    // TODO
-    //__enable_irq();
+  __enable_irq();
 }
