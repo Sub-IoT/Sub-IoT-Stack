@@ -41,7 +41,7 @@ void hw_enter_lowpower_mode(uint8_t mode)
 
 uint64_t hw_get_unique_id()
 {
-  return (uint64_t) HAL_GetDEVID();
+  return (*((uint64_t *)(UID_BASE + 4U)) << 32) + *((uint64_t *)(UID_BASE + 8U));
 }
 
 #pragma GCC push_options
