@@ -31,6 +31,7 @@
 #include <log.h>
 #include <hwwatchdog.h>
 #include <button.h>
+#include "crc.h"
 
 #ifdef HAS_LCD
 #include "hwlcd.h"
@@ -101,7 +102,7 @@ hw_radio_packet_t received_packet;
 static uint8_t counter = 0;
 
 void packet_received(hw_radio_packet_t* packet);
-void packet_transmitted(hw_radio_packet_t* packet);
+static void packet_transmitted(hw_radio_packet_t* packet);
 
 
 void start_rx()
@@ -160,7 +161,7 @@ void packet_received(hw_radio_packet_t* packet)
     hw_watchdog_feed();
 }
 
-void packet_transmitted(hw_radio_packet_t* packet)
+static void packet_transmitted(hw_radio_packet_t* packet)
 {
 #if HW_NUM_LEDS > 0
     led_toggle(0);
