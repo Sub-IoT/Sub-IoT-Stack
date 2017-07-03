@@ -29,34 +29,39 @@
 
 void hw_enter_lowpower_mode(uint8_t mode)
 {
-	switch (mode)
-		{
-		case 0:
-		case 1:
-			HAL_PWR_EnterSLEEPMode(PWR_MAINREGULATOR_ON, PWR_SLEEPENTRY_WFI);
-			break;
+  switch (mode)
+  {
+    case 0:
+    case 1:
+      HAL_PWR_EnterSLEEPMode(PWR_MAINREGULATOR_ON, PWR_SLEEPENTRY_WFI);
+      break;
 
-		}
+  }
 }
 
 uint64_t hw_get_unique_id()
 {
-    return (uint64_t) HAL_GetDEVID();
+  return (uint64_t) HAL_GetDEVID();
 }
 
 #pragma GCC push_options
 #pragma GCC optimize ("O3")
 void hw_busy_wait(int16_t microseconds)
 {
-	DWT->CTRL |= 1 ;
-	volatile uint32_t cycles = (SystemCoreClock/1000000L)*microseconds;
-	volatile uint32_t start = DWT->CYCCNT;
-	do {
-	} while(DWT->CYCCNT - start < cycles);
+  DWT->CTRL |= 1 ;
+  volatile uint32_t cycles = (SystemCoreClock/1000000L)*microseconds;
+  volatile uint32_t start = DWT->CYCCNT;
+  do {
+  } while(DWT->CYCCNT - start < cycles);
 }
 #pragma GCC pop_options
 
 void hw_reset()
 {
-	HAL_NVIC_SystemReset();
+  HAL_NVIC_SystemReset();
+}
+
+void HardFault_Handler()
+{
+  assert(false);
 }

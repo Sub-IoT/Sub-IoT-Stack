@@ -80,9 +80,6 @@ static void uart_outch_raw (int c)
 
 void uart_send_byte(uart_handle_t* uart, uint8_t data) {
 
-	if (data == '\n')
-		uart_outch_raw ('\r');
-
 	uart_outch_raw (data);
 }
 

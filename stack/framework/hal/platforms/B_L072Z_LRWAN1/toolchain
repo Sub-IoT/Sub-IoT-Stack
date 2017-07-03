@@ -1,0 +1,8 @@
+# This file tells the cmake system what toolchain is used by the platform
+# The only non-outcommented line should be structured as follows:
+#   toolchain=<toolchain_name>
+# where <toolchain_name> is the name of the required toolchain.
+# This does not suffice to guarantee that the correct toolchain is used
+# you should also add a 'REQUIRE_TOOLCHAIN(<toolchain_name>) to the 
+# CMakeLists.txt file of the platform itself to double check this
+toolchain=gcc-arm-embedded

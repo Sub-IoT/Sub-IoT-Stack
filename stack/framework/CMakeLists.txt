@@ -63,7 +63,7 @@ FRAMEWORK_HEADER_DEFINE(BOOL FRAMEWORK_TIMER_LOG_ENABLED)
 SET(FRAMEWORK_PHY_LOG_ENABLED "FALSE" CACHE BOOL "Select whether to enable or disable the generation of logs from the PHY layer")
 FRAMEWORK_HEADER_DEFINE(BOOL FRAMEWORK_PHY_LOG_ENABLED)
 
-SET(FRAMEWORK_DEBUG_ASSERT_MINIMAL "TRUE" CACHE BOOL "Enabling this strips file, line functino and condition information from asserts, to save ROM")
+SET(FRAMEWORK_DEBUG_ASSERT_MINIMAL "FALSE" CACHE BOOL "Enabling this strips file, line functino and condition information from asserts, to save ROM")
 FRAMEWORK_HEADER_DEFINE(BOOL FRAMEWORK_DEBUG_ASSERT_MINIMAL)
 
 SET(FRAMEWORK_DEBUG_ASSERT_REBOOT "FALSE" CACHE BOOL "When enabled the system will reboot upon assert")
