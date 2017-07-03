@@ -74,8 +74,8 @@
  *************************/
 
 #define NUM_USERBUTTONS 	2
-#define BUTTON0				A7
-#define BUTTON1				A11
+#define BUTTON0				D7
+#define BUTTON1				C10
 
 /*************************
  * DEBUG PIN DEFINITIONS *
