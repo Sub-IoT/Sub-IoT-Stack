@@ -29,9 +29,7 @@
 
 #include <dmadrv.h>
 
-#ifdef USB_DEVICE
 #include <em_usbd.h>
-#endif
 
 #include "hwgpio.h"
 #include "hwuart.h"

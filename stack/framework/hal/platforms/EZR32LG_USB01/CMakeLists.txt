@@ -84,7 +84,6 @@ ADD_LIBRARY(PLATFORM OBJECT
     #platf_usb_descriptors.c
     libc_overrides.c
     inc/button.h
-    kits/common/drivers/dmactrl.c
     kits/common/drivers/udelay.c
     kits/common/drivers/cdc.c
     kits/common/bsp/bsp_bcc.c
