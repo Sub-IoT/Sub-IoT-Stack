@@ -837,8 +837,12 @@ EXCLUDE +=  ../framework/hal/platforms/EFM32HG_STK3400/config
 EXCLUDE +=  ../framework/hal/platforms/EZR32LG_Octa/kits
 EXCLUDE +=  ../framework/hal/platforms/EZR32LG_Octa/Drivers
 EXCLUDE +=  ../framework/hal/platforms/EZR32LG_Octa/config
+EXCLUDE +=  ../framework/hal/platforms/OCTA_Gateway/config
+EXCLUDE +=  ../framework/hal/platforms/OCTA_Gateway/Drivers
+EXCLUDE +=  ../framework/hal/platforms/OCTA_Gateway/kits
 EXCLUDE +=  ../framework/hal/platforms/EZR32LG_USB01/kits
 EXCLUDE +=  ../framework/hal/platforms/EZR32LG_USB01/config
+EXCLUDE +=  ../framework/hal/chips/stm32l0xx/Drivers
 
 # The EXCLUDE_SYMLINKS tag can be used to select whether or not files or
 # directories that are symbolic links (a Unix file system feature) are excluded
