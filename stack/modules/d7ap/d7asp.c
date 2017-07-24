@@ -94,6 +94,11 @@ static void mark_current_request_done()
     // current_request_packet will be free-ed in the packet_queue when the transaction is completed
 }
 
+static void mark_current_request_successful()
+{
+    bitmap_set(current_master_session.success_bitmap, current_request_id);
+}
+
 static void init_master_session(d7asp_master_session_t* session) {
     session->state = D7ASP_MASTER_SESSION_IDLE;
     session->token = get_rnd() % 0xFF;
@@ -109,8 +114,13 @@ static void init_master_session(d7asp_master_session_t* session) {
 
 static void flush_completed() {
     DPRINT("FIFO flush completed");
+
+    // TODO When a Session does not terminate on success, the Session is automatically re-activated using
+    // the RETRY_MODE pattern defined in the Configuration file
+
+    // single flush of the FIFO without retry
     alp_d7asp_fifo_flush_completed(current_master_session.token, current_master_session.progress_bitmap,
-                                   current_master_session.success_bitmap, REQUESTS_BITMAP_BYTE_COUNT);
+                                   current_master_session.success_bitmap, current_master_session.next_request_id - 1);
     init_master_session(&current_master_session);
     current_master_session.state = D7ASP_MASTER_SESSION_IDLE;
     d7atp_signal_dialog_termination();
@@ -273,13 +283,23 @@ d7asp_master_session_t* d7asp_master_session_create(d7asp_master_session_config_
     // TODO for now we assume only one concurrent session, in the future we should dynamically allocate (or return from pool) a session
 
     if (current_master_session.state != D7ASP_MASTER_SESSION_IDLE)
+    {
+        // Requests can be pushed in the FIFO by upper layer anytime
+        if ((current_master_session.config.addressee.access_class == d7asp_master_session_config->addressee.access_class) &&
+            (current_master_session.config.addressee.ctrl.raw == d7asp_master_session_config->addressee.ctrl.raw) &&
+            memcmp(current_master_session.config.addressee.id, d7asp_master_session_config->addressee.id, d7anp_addressee_id_length(d7asp_master_session_config->addressee.ctrl.id_type)));
         return &current_master_session;
+
+        // TODO create a pending session or a dormant session if TO (DORM_TIMER) !=0
+    }
 
     init_master_session(&current_master_session);
 
     DPRINT("Create master session %d", current_master_session.token);
 
     current_master_session.config.qos = d7asp_master_session_config->qos;
+
+    //TODO create a dormant master session if TO (DORM_TIMER) !=0
     current_master_session.config.dormant_timeout = d7asp_master_session_config->dormant_timeout;
     current_master_session.config.addressee.ctrl = d7asp_master_session_config->addressee.ctrl;
     current_master_session.config.addressee.access_class = d7asp_master_session_config->addressee.access_class;
@@ -359,7 +379,7 @@ bool d7asp_process_received_packet(packet_t* packet, bool extension)
 
             result.fifo_token = current_master_session.token;
             result.seqnr = current_request_id;
-            bitmap_set(current_master_session.success_bitmap, current_request_id);
+            mark_current_request_successful();
             mark_current_request_done();
             assert(packet != current_request_packet);
         }
@@ -393,7 +413,7 @@ bool d7asp_process_received_packet(packet_t* packet, bool extension)
             DPRINT("Dialog Extension Procedure is initiated, mark the FIFO flush"
                     " completed before switching to a responder state");
             alp_d7asp_fifo_flush_completed(current_master_session.token, current_master_session.progress_bitmap,
-                                           current_master_session.success_bitmap, REQUESTS_BITMAP_BYTE_COUNT);
+                                           current_master_session.success_bitmap, current_master_session.next_request_id - 1);
             current_master_session.state = D7ASP_MASTER_SESSION_IDLE;
             switch_state(D7ASP_STATE_SLAVE);
         }
@@ -488,7 +508,7 @@ void d7asp_signal_packet_transmitted(packet_t *packet)
            current_master_session.config.qos.qos_resp_mode == SESSION_RESP_MODE_NO_RPT)
         {
             mark_current_request_done();
-            bitmap_set(current_master_session.success_bitmap, current_request_id);
+            mark_current_request_successful();
         }
     }
     else if (d7asp_state == D7ASP_STATE_SLAVE || d7asp_state == D7ASP_STATE_SLAVE_PENDING_MASTER)

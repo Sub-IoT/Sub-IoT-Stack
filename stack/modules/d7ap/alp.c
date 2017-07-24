@@ -44,6 +44,7 @@ static bool NGDEF(_shell_enabled);
 typedef struct {
   bool is_active;
   uint8_t fifo_token;
+  uint8_t request_id;
   uint8_t tag_id;
   bool respond_when_completed;
   alp_command_origin_t origin;
@@ -244,6 +245,7 @@ void alp_process_command_result_on_d7asp(d7asp_master_session_config_t* session_
   uint8_t expected_response_length = alp_get_expected_response_length(command->alp_command, alp_result_length);
   d7asp_queue_result_t result = d7asp_queue_alp_actions(session, command->alp_command, alp_result_length, expected_response_length);
   command->fifo_token = result.fifo_token;
+  command->request_id = result.request_id;
 }
 
 void alp_process_command_console_output(uint8_t* alp_command, uint8_t alp_command_length) {
@@ -293,7 +295,7 @@ void alp_process_d7asp_result(uint8_t* alp_command, uint8_t alp_command_length, 
 
     // TODO further bookkeeping
   } else {
-    // uknown FIFO token; an incoming request or unsolicited response
+    // unknown FIFO token; an incoming request or unsolicited response
     alp_process_command(alp_command, alp_command_length, alp_response, alp_response_length, ALP_CMD_ORIGIN_D7ASP);
   }
 }
@@ -403,21 +405,28 @@ bool alp_process_command(uint8_t* alp_command, uint8_t alp_command_length, uint8
 
 
 void alp_d7asp_fifo_flush_completed(uint8_t fifo_token, uint8_t* progress_bitmap, uint8_t* success_bitmap, uint8_t bitmap_byte_count) {
-  // TODO end session
-  DPRINT("D7ASP flush completed");
-  alp_command_t* command = get_command_by_fifo_token(fifo_token);
-  assert(command != NULL);
-  bool error = memcmp(success_bitmap, progress_bitmap, bitmap_byte_count) != 0;
-  if(shell_enabled && command->respond_when_completed) {
-    add_tag_response(command, true, error);
-    uint8_t alp_response_length = fifo_get_size(&(command->alp_response_fifo));
-    alp_cmd_handler_output_alp_command(command->alp_response, alp_response_length); // TODO pass fifo directly
-  }
+    // TODO end session
+    DPRINT("D7ASP flush completed");
+    alp_command_t* command = get_command_by_fifo_token(fifo_token);
+    assert(command != NULL);
+    bool error;
 
-  free_command(command);
+    while(command)
+    {
+        error = (progress_bitmap[command->request_id] && success_bitmap[command->request_id]) ? 0 : 1;
 
-  if(init_args != NULL && init_args->alp_command_completed_cb != NULL)
-    init_args->alp_command_completed_cb(fifo_token, !error);
+        if(shell_enabled && command->respond_when_completed) {
+            add_tag_response(command, true, error);
+            uint8_t alp_response_length = fifo_get_size(&(command->alp_response_fifo));
+            alp_cmd_handler_output_alp_command(command->alp_response, alp_response_length); // TODO pass fifo directly
+        }
+
+        if(init_args != NULL && init_args->alp_command_completed_cb != NULL)
+            init_args->alp_command_completed_cb(command->tag_id, !error);
+
+        free_command(command);
+        command = get_command_by_fifo_token(fifo_token);
+    }
 }
 
 uint8_t alp_get_expected_response_length(uint8_t* alp_command, uint8_t alp_command_length) {
