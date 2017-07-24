@@ -17,6 +17,7 @@
  */
 
 /*! \file packet_queue.h
+ * \addtogroup Packet_queue
  * \ingroup D7AP
  * @{
  * \brief Contains a (configurable) number of slots for keeping [packets](@ref packet_t) while processing though the different layers of the stack

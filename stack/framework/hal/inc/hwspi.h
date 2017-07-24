@@ -20,7 +20,7 @@
  * \file hwspi.h
  * \addtogroup SPI
  * \ingroup HAL
- * {@
+ * @{
  * \brief HAL API for SPI
  *
  * \author jan.stevens@ieee.org

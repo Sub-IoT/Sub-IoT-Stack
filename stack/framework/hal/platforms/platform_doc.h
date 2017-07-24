@@ -17,7 +17,7 @@
  */
 
 /*! \file platform_doc.h
- * \defgroup platform
+ * \defgroup platform platform
  *
  * \brief A platform defines a combination of an MCU type, an RF chip, optional other chips and the wiring on the board.
  * 	This means there is one platform defined for each type of board.

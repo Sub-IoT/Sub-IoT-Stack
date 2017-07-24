@@ -17,8 +17,7 @@
  */
 
 /*!
- * \file key.h
- * \ingroup framework
+ * \ingroup aes
  * @{
  * \brief The preconfigured network security key for AES cyphering.
  * \author philippe.nunes@cortus.com

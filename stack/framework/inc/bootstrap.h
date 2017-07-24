@@ -34,7 +34,7 @@
  * This function is not a 'true' task in the sense that it is not registered with the 
  * scheduler. As a result it will only be executed once. 
  *
- * It should be noted that this function is respobnsible for initialising the scheduler. 
+ * It should be noted that this function is responsible for initialising the scheduler.
  * This is NOT done by the HAL, since the scheduler is part of the framework.
  *
  */

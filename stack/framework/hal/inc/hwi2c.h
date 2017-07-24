@@ -49,3 +49,5 @@ __LINK_C int8_t        	i2c_write_read(i2c_handle_t* i2c, uint8_t address, uint8
 
 
 #endif
+
+/** @}*/

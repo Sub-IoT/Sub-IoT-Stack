@@ -19,6 +19,15 @@
  *
  */
 
+/*! \file d7anp.h
+ * \addtogroup D7ANP
+ * \ingroup D7AP
+ * @{
+ * \brief Network Layer Protocol APIs
+ * \author	glenn.ergeerts@uantwerpen.be
+ * \author	philippe.nunes@cortus.com
+ */
+
 #ifndef D7ANP_H_
 #define D7ANP_H_
 
@@ -137,3 +146,5 @@ void d7anp_stop_foreground_scan(bool auto_scan);
 uint8_t d7anp_secure_payload(packet_t* packet, uint8_t* payload, uint8_t payload_len);
 
 #endif /* D7ANP_H_ */
+
+/** @}*/

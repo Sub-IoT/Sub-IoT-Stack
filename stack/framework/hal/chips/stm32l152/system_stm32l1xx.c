@@ -50,35 +50,8 @@
   ******************************************************************************
   */
 
-/** @addtogroup CMSIS
-  * @{
-  */
-
-/** @addtogroup stm32l1xx_system
-  * @{
-  */  
-  
-/** @addtogroup STM32L1xx_System_Private_Includes
-  * @{
-  */
-
 #include "stm32l1xx.h"
 
-/**
-  * @}
-  */
-
-/** @addtogroup STM32L1xx_System_Private_TypesDefinitions
-  * @{
-  */
-
-/**
-  * @}
-  */
-
-/** @addtogroup STM32L1xx_System_Private_Defines
-  * @{
-  */
 #if !defined  (HSE_VALUE) 
   #define HSE_VALUE    ((uint32_t)8000000U) /*!< Default value of the External oscillator in Hz.
                                                 This value can be provided and adapted by the user application. */
@@ -98,21 +71,8 @@
 /* #define VECT_TAB_SRAM */
 #define VECT_TAB_OFFSET  0x00U /*!< Vector Table base offset field. 
                                   This value must be a multiple of 0x200. */
-/**
-  * @}
-  */
 
-/** @addtogroup STM32L1xx_System_Private_Macros
-  * @{
-  */
 
-/**
-  * @}
-  */
-
-/** @addtogroup STM32L1xx_System_Private_Variables
-  * @{
-  */
   /* This variable is updated in three ways:
       1) by calling CMSIS function SystemCoreClockUpdate()
       2) by calling HAL API function HAL_RCC_GetHCLKFreq()
@@ -126,27 +86,11 @@ const uint8_t PLLMulTable[9]    = {3U, 4U, 6U, 8U, 12U, 16U, 24U, 32U, 48U};
 const uint8_t AHBPrescTable[16] = {0U, 0U, 0U, 0U, 0U, 0U, 0U, 0U, 1U, 2U, 3U, 4U, 6U, 7U, 8U, 9U};
 const uint8_t APBPrescTable[8]  = {0U, 0U, 0U, 0U, 1U, 2U, 3U, 4U};
 
-/**
-  * @}
-  */
-
-/** @addtogroup STM32L1xx_System_Private_FunctionPrototypes
-  * @{
-  */
-
 #if defined (STM32L151xD) || defined (STM32L152xD) || defined (STM32L162xD)
 #ifdef DATA_IN_ExtSRAM
   static void SystemInit_ExtMemCtl(void); 
 #endif /* DATA_IN_ExtSRAM */
 #endif /* STM32L151xD || STM32L152xD || STM32L162xD */
-
-/**
-  * @}
-  */
-
-/** @addtogroup STM32L1xx_System_Private_Functions
-  * @{
-  */
 
 /**
   * @brief  Setup the microcontroller system.
@@ -428,17 +372,5 @@ void SystemInit_ExtMemCtl(void)
 }
 #endif /* DATA_IN_ExtSRAM */
 #endif /* STM32L151xD || STM32L152xD || STM32L162xD */
-
-/**
-  * @}
-  */
-
-/**
-  * @}
-  */
-
-/**
-  * @}
-  */
 
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/

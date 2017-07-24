@@ -19,6 +19,19 @@
  *
  */
 
+/*!
+ * \file compress.h
+ * \addtogroup compress
+ * \ingroup framework
+ * @{
+ * \brief Implements the compressed format
+ *
+ * The compressed format allows compressing a unit ranged from 0 to 507904 to 1 byte with variable resolution.
+ *
+ * It can be converted back to units using the formula T = (4^EXP)·(MANT).
+ * \author philippe.nunes@cortus.com
+ */
+
 #ifndef COMPRESS_H_
 #define COMPRESS_H_
 
@@ -30,3 +43,5 @@
 uint8_t compress_data(uint16_t value, bool ceil);
 
 #endif /* COMPRESS_H_ */
+
+/** @}*/

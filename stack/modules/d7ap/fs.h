@@ -15,9 +15,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *
- * \author glenn.ergeerts@uantwerpen.be
+ */
+
+/*! \file fs.h
+ * \addtogroup Fs
+ * \ingroup D7AP
+ * @{
+ * \brief Filesystem APIs
  * \author maarten.weyn@uantwerpen.be
- *
+ * \author	glenn.ergeerts@uantwerpen.be
+ * \author	philippe.nunes@cortus.com
  */
 
 #ifndef FS_H_
@@ -126,3 +133,5 @@ alp_status_codes_t fs_update_nwl_security_state_register(d7anp_trusted_node_t *t
 uint8_t fs_get_file_length(uint8_t file_id);
 
 #endif /* FS_H_ */
+
+/** @}*/

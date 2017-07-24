@@ -18,6 +18,15 @@
  * \author philippe.nunes@cortus.com
  *
  */
+
+/*! \file pn9.h
+ * \addtogroup pn9
+ * \ingroup framework
+ * @{
+ * \brief Implements the PN9 Encoder used for data whitening
+ *
+ */
+
 #ifndef PN9_H_
 #define PN9_H_
 
@@ -31,3 +40,5 @@
 void pn9_encode(uint8_t *data, uint8_t length);
 
 #endif // PN9_H_
+
+/** @}*/

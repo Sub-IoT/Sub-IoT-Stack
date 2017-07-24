@@ -17,12 +17,12 @@
  * limitations under the License.
  */
 
-/**
- * @file bitmap.h
- * @addtogroup bitmap
- * @ingroup framework
+/*! 
+ * \file bitmap.h
+ * \addtogroup bitmap
+ * \ingroup framework
  * @{
- * @brief Bitmap helper functions
+ * \brief Bitmap helper functions
  *
  */
 
@@ -32,42 +32,38 @@
 #include "stdint.h"
 #include "stdbool.h"
 
-/**
- * @brief Set a bit in the bitmap
- * @param bitmap    The bitmap. Note: the user is responsible for initializing this.
- * @param pos       The bit number to set. Note: the user is responsible for checking pos is not bigger then the bitmap itself
+/*! \brief Set a bit in the bitmap
+ * \param bitmap    The bitmap. Note: the user is responsible for initializing this.
+ * \param pos       The bit number to set. Note: the user is responsible for checking pos is not bigger then the bitmap itself
  */
 static inline void bitmap_set(uint8_t* bitmap, uint8_t pos)
 {
     bitmap[pos / 8] |= (1 << (pos & 7));
 }
 
-/**
- * @brief Clear a bit in the bitmap
- * @param bitmap    The bitmap. Note: the user is responsible for initializing this.
- * @param pos       The bit number to clear. Note: the user is responsible for checking pos is not bigger then the bitmap itself
+/*! \brief Clear a bit in the bitmap
+ * \param bitmap    The bitmap. Note: the user is responsible for initializing this.
+ * \param pos       The bit number to clear. Note: the user is responsible for checking pos is not bigger then the bitmap itself
  */
 static inline void bitmap_clear(uint8_t* bitmap, uint8_t pos)
 {
     bitmap[pos / 8] &= ~(1 << (pos & 7));
 }
 
-/**
- * @brief Get a bit from the bitmap
- * @param bitmap    The bitmap. Note: the user is responsible for initializing this.
- * @param pos       The bit number to get. Note: the user is responsible for checking pos is not bigger then the bitmap itself
+/*! \brief Get a bit from the bitmap
+ * \param bitmap    The bitmap. Note: the user is responsible for initializing this.
+ * \param pos       The bit number to get. Note: the user is responsible for checking pos is not bigger then the bitmap itself
  */
 static bool bitmap_get(uint8_t* bitmap, uint8_t pos)
 {
     return bitmap[pos / 8] & (1 << (pos & 7))? true : false;
 }
 
-/**
- * @brief           Find the first occurance of 'flag' in the bitmap
- * @param bitmap    The bitmap to search
- * @param flag      Determines if we search for 1 or 0
- * @param size      The max number of bits to search
- * @return The index of the first occurance of flag, or -1 when not found
+/*! \brief          Find the first occurance of 'flag' in the bitmap
+ * \param bitmap    The bitmap to search
+ * \param flag      Determines if we search for 1 or 0
+ * \param size      The max number of bits to search
+ * \return The index of the first occurance of flag, or -1 when not found
  */
 static int8_t bitmap_search(uint8_t* bitmap, bool flag, uint8_t size)
 {

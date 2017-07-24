@@ -20,6 +20,15 @@
  *
  */
 
+/*! \file d7asp.h
+ * \addtogroup D7ASP
+ * \ingroup D7AP
+ * @{
+ * \brief Session Layer Protocol APIs
+ * \author	glenn.ergeerts@uantwerpen.be
+ * \author	philippe.nunes@cortus.com
+ */
+
 #ifndef D7ASP_H_
 #define D7ASP_H_
 
@@ -121,3 +130,5 @@ void d7asp_signal_dialog_terminated();
 void d7asp_signal_transaction_terminated();
 
 #endif /* D7ASP_H_ */
+
+/** @}*/

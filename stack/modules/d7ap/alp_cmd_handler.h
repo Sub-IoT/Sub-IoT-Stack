@@ -16,7 +16,12 @@
  * limitations under the License.
  */
 
-/*
+
+/*! \file alp_cmd_handler.h
+ * \addtogroup alp_cmd_handler
+ * \ingroup D7AP
+ * @{
+ * \brief APIs to handle ALP through the shell interface
  * \author	glenn.ergeerts@uantwerpen.be
  */
 
@@ -60,3 +65,5 @@ void alp_cmd_handler_output_d7asp_response(d7asp_result_t d7asp_result, uint8_t 
 void alp_cmd_handler_set_appl_itf_callback(alp_cmd_handler_appl_itf_callback cb);
 
 #endif // ALP_CMD_HANDLER_H
+
+/** @}*/

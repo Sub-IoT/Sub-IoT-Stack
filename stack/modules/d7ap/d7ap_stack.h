@@ -17,11 +17,11 @@
  */
 
 /*! \file d7ap_stack.h
- * \defgroup D7AP
+ * \addtogroup D7AP_STACK
+ * \ingroup D7AP
  * @{
- * \brief The D7AP stack implementation
- *
- * \author glenn.ergeerts@uantwerpen.be
+ * \brief D7AP stack initialization API
+ * \author	glenn.ergeerts@uantwerpen.be
  */
 
 #ifndef OSS_7_D7AP_STACK_H
@@ -37,7 +37,7 @@
  * @param fs_init_args
  * @param alp_init_args
  * @param enable_shell
- * @param Called when the shell receives ALP commands for interface ID application.
+ * @param cb Called when the shell receives ALP commands for interface ID application.
  */
 void d7ap_stack_init(fs_init_args_t* fs_init_args, alp_init_args_t* alp_init_args, bool enable_shell, alp_cmd_handler_appl_itf_callback cb);
 

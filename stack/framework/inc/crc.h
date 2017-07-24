@@ -19,6 +19,14 @@
  *
  */
 
+/*! \file crc.h
+ * \addtogroup crc
+ * \ingroup framework
+ * @{
+ * \brief Implements the CRC calculation according the CCITT CRC16 polynomial
+ * \author maarten.weyn@uantwerpen.be
+ */
+
 #ifndef CRC_H_
 #define CRC_H_
 
@@ -28,3 +36,5 @@
 uint16_t crc_calculate(uint8_t* data, uint8_t length);
 
 #endif /* CRC_H_ */
+
+/** @}*/

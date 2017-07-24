@@ -20,6 +20,20 @@
  *
  */
 
+/*! \file fec.h
+ * \addtogroup fec
+ * \ingroup framework
+ * @{
+ * \brief Implements the FEC Encoder used for error correction
+ *
+ * FEC makes sense when operating near the sensitivity limit.
+ * This is a technique used for controlling errors in data transmission over unreliable or noisy communication channels.
+ * FEC is accomplished by adding redundancy to the transmitted information.
+ *
+ * Channel errors tend to occur in bursts. FEC is associated with an interleaver. Interleaving ameliorates this problem by shuffling source symbols across several code words, thereby creating a more uniform distribution of errors.
+ */
+
+
 #ifndef FEC_H_
 #define FEC_H_
 
@@ -54,3 +68,5 @@ uint16_t fec_calculated_decoded_length(uint8_t packet_length);
 #endif
 
 #endif /* FEC_H_ */
+
+/** @}*/

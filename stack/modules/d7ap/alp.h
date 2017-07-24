@@ -20,6 +20,15 @@
  *
  */
 
+/*! \file alp.h
+ * \addtogroup ALP
+ * \ingroup D7AP
+ * @{
+ * \brief Application Layer Protocol APIs
+ * \author	glenn.ergeerts@uantwerpen.be
+ * \author	philippe.nunes@cortus.com
+ */
+
 #ifndef ALP_H_
 #define ALP_H_
 
@@ -263,3 +272,5 @@ void alp_d7asp_fifo_flush_completed(uint8_t fifo_token, uint8_t* progress_bitmap
 uint8_t alp_get_expected_response_length(uint8_t* alp_command, uint8_t alp_command_length);
 
 #endif /* ALP_H_ */
+
+/** @}*/

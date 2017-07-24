@@ -20,6 +20,15 @@
  *
  */
 
+/*! \file d7atp.h
+ * \addtogroup D7ATP
+ * \ingroup D7AP
+ * @{
+ * \brief Transport Layer Protocol APIs
+ * \author	glenn.ergeerts@uantwerpen.be
+ * \author	philippe.nunes@cortus.com
+ */
+
 #ifndef D7ATP_H_
 #define D7ATP_H_
 
@@ -71,3 +80,5 @@ void d7atp_process_received_packet(packet_t* packet);
 void d7atp_signal_dialog_termination();
 void d7atp_stop_transaction();
 #endif /* D7ATP_H_ */
+
+/** @}*/

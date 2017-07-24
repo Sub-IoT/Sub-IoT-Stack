@@ -17,6 +17,7 @@
  */
 
 /*! \file packet.h
+ * \addtogroup Packet
  * \ingroup D7AP
  * @{
  * \brief This module contains data structures and behaviour for a D7AP 'packet' when moving through all layers of the stack

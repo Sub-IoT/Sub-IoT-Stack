@@ -17,7 +17,7 @@
  */
 
 /*! \file timer.h
- * \defgroup frameworktimer Framework Timer
+ * \addtogroup timer
  * \ingroup framework
  * @{
  * \brief The framework timer provides an abstraction of the low-level hardware timers provided by the HAL. 
@@ -126,7 +126,7 @@ __LINK_C timer_tick_t timer_get_counter_value();
  */
 __LINK_C error_t timer_post_task_prio(task_t task, timer_tick_t time, uint8_t priority);
 
-/*! \brief Post a task <task> to be scheduled at a given <time> with the default priority.
+/*! \brief Post a task \<task\> to be scheduled at a given \<time\> with the default priority.
  *
  * This function is equivalent to
  * \code{.c}
@@ -147,13 +147,13 @@ __LINK_C error_t timer_post_task_prio(task_t task, timer_tick_t time, uint8_t pr
 static inline error_t timer_post_task(task_t task, timer_tick_t time) { return timer_post_task_prio(task,time,DEFAULT_PRIORITY);}
 
 
-/*! \brief Post a task <task> to be scheduled with a certain <delay> with a given <priority>
+/*! \brief Post a task \<task\> to be scheduled with a certain \<delay\> with a given \<priority\>
  *
  * This function behaves in much the same way as timer_post_task_prio, except that instead of specifying the
- * time at which a task should be scheduled, the task is always scheduled <delay> ticks into the future,
+ * time at which a task should be scheduled, the task is always scheduled \<delay\> ticks into the future,
  * regardless of the 'operation mode' of the framework timer.
  *
- * <delay> MUST be a value between 0 and 2^31. If <delay> is outside this range, the behavior
+ * \<delay\> MUST be a value between 0 and 2^31. If <delay> is outside this range, the behavior
  * of the framework timer is undefined.
  *
  * See the comments above 'timer_post_task_prio()' for a more detailed explanation on the operation of the timers.
@@ -172,7 +172,7 @@ static inline error_t timer_post_task_prio_delay(task_t task, timer_tick_t delay
 { 
     return timer_post_task_prio(task,timer_get_counter_value()+delay, priority);
 }
-/*! \brief Post a task to be scheduled with a certain delay> with the default priority.
+/*! \brief Post a task to be scheduled with a certain \<delay\> with the default priority.
  *
  * This function is equivalent to
  * \code{.c}
@@ -187,9 +187,9 @@ static inline error_t timer_post_task_prio_delay(task_t task, timer_tick_t delay
  *						   many tasks waiting for execution.
  * 					EALREADY if the task was already scheduled.
  */
-static inline error_t timer_post_task_delay(task_t task, timer_tick_t time) { return timer_post_task_prio_delay(task,time,DEFAULT_PRIORITY);}
+static inline error_t timer_post_task_delay(task_t task, timer_tick_t delay) { return timer_post_task_prio_delay(task, delay, DEFAULT_PRIORITY);}
 
-/*! \brief Schedule a given <timer_event>
+/*! \brief Schedule a given \<timer_event\>
  *
  * This function is equivalent to
  * \code{.c}

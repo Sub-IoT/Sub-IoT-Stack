@@ -1,8 +1,34 @@
+/* * OSS-7 - An opensource implementation of the DASH7 Alliance Protocol for ultra
+ * lowpower wireless sensor communication
+ *
+ * Copyright 2017 University of Antwerp
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+/*!
+ * \file aes.h
+ * \addtogroup aes
+ * \ingroup framework
+ * @{
+ * \brief The AES module provides encryption/decryption functions.
+ * \author philippe.nunes@cortus.com
+ */
+
 #ifndef _AES_H_
 #define _AES_H_
 
 #include <types.h>
-
 
 #define AES_BLOCK_SIZE 16
 
@@ -48,7 +74,7 @@ void AES128_CTR_encrypt(uint8_t *output, uint8_t *input, uint32_t length, uint8_
 
 #endif // #if defined(CTR) && CTR
 
-/*! \brief AES CBC-MAC.
+/*! \brief AES CBC-MAC (Cipher Block Chaining MAC).
  *
  * \param auth		Buffer to place the MAC. Must be at least @p auth_len long.
  * \param payload	Buffer to place the text to authenticate.
@@ -56,7 +82,6 @@ void AES128_CTR_encrypt(uint8_t *output, uint8_t *input, uint32_t length, uint8_
  * \param iv		Initialization vector to be used as the first block by CBC-MAC
  * \param add		Buffer to place the Additional authenticated data.
  * \param add_len	Length of the additional authentication data
- * \param ctr_blk	128 bit initial counter block to be used for the CTR encryption.
  * \param auth_len	MIC length of 0, 4, 8 or 16 bytes are allowed
  */
 error_t AES128_CBC_MAC( uint8_t *auth, uint8_t *payload, uint8_t length, const uint8_t *iv,
@@ -85,6 +110,7 @@ error_t AES128_CCM_encrypt( uint8_t *payload, uint8_t length, const uint8_t *iv,
  * \param add		Buffer to place the Additional authenticated data.
  * \param add_len	Length of the additional authentication data
  * \param ctr_blk	128 bit initial counter block to be used for the CTR encryption.
+ * \param auth      Authentication Tag to check
  * \param auth_len	MIC length of 0, 4, 8 or 16 bytes are allowed
  */
 error_t AES128_CCM_decrypt( uint8_t *payload, uint8_t length, const uint8_t *iv,
@@ -92,3 +118,5 @@ error_t AES128_CCM_decrypt( uint8_t *payload, uint8_t length, const uint8_t *iv,
                             const uint8_t *auth, uint8_t auth_len );
 
 #endif //_AES_H_
+
+/** @}*/
