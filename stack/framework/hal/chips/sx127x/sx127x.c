@@ -527,7 +527,7 @@ static void fifo_threshold_isr() {
   // Reading more bytes at once might be more efficient, however getting the number of bytes in the FIFO seems
   // not possible at least in FSK mode (for LoRa, the register RegRxNbBytes gives the number of received bytes).
     hw_gpio_disable_interrupt(SX127x_DIO1_PIN);
-    //DPRINT("fifo threshold detected ISR with IRQ %x\n", read_reg(REG_IRQFLAGS2));
+    DPRINT("THR ISR with IRQ %x\n", read_reg(REG_IRQFLAGS2));
     assert(state == STATE_RX);
 
     uint8_t packet_len;
@@ -537,9 +537,10 @@ static void fifo_threshold_isr() {
         // For RX, the threshold is set to 4, so if the DIO1 interrupt occurs, it means that can read at least 4 bytes
         uint8_t rx_bytes = 0;
         uint8_t buffer[4];
-        do {
+        while(!(CHECK_FIFO_EMPTY()) && rx_bytes < 4)
+        {
             buffer[rx_bytes++] = read_reg(REG_FIFO);
-        } while(!(CHECK_FIFO_EMPTY()) && rx_bytes < 4);
+        }
 
         assert(rx_bytes == 4);
 
@@ -566,6 +567,7 @@ static void fifo_threshold_isr() {
 
         FskPacketHandler.Size = packet_len;
         FskPacketHandler.NbBytes = 4;
+        //DPRINT_DATA(current_packet->data, 4);
     }
 
     if (FskPacketHandler.FifoThresh)
@@ -578,7 +580,7 @@ static void fifo_threshold_isr() {
        current_packet->data[FskPacketHandler.NbBytes++] = read_reg(REG_FIFO);
 
     uint8_t remaining_bytes = FskPacketHandler.Size - FskPacketHandler.NbBytes;
-    DPRINT("read %i bytes, %i remaining\n", FskPacketHandler.NbBytes, remaining_bytes);
+    DPRINT("read %i bytes, %i remaining, FLAGS2 %x \n", FskPacketHandler.NbBytes, remaining_bytes, read_reg(REG_IRQFLAGS2));
 
     if(remaining_bytes == 0) {
         current_packet->rx_meta.timestamp = timer_get_counter_value();
@@ -595,10 +597,25 @@ static void fifo_threshold_isr() {
 
         DPRINT_DATA(current_packet->data, current_packet->length + 1);
         DPRINT("RX done\n");
-        flush_fifo();
         rx_packet_callback(current_packet);
-        FskPacketHandler.Size = 0;
+
+        // Restart the reception until upper layer decides to stop it
         FskPacketHandler.NbBytes = 0;
+        FskPacketHandler.Size = 0;
+        FskPacketHandler.FifoThresh = 0;
+
+        write_reg(REG_FIFOTHRESH, 0x83);
+        write_reg(REG_DIOMAPPING1, 0x0C);
+        
+        // Trigger a manual restart of the Receiver chain (no frequency change)
+        write_reg(REG_RXCONFIG, 0x4E);
+        flush_fifo();
+
+        // Seems that the SyncAddressMatch is not cleared after the flush, so set again the RX mode
+        set_opmode(OPMODE_RX);
+        //DPRINT("Before enabling interrupt: FLAGS1 %x FLAGS2 %x\n", read_reg(REG_IRQFLAGS1), read_reg(REG_IRQFLAGS2));
+        hw_gpio_set_edge_interrupt(SX127x_DIO1_PIN, GPIO_RISING_EDGE);
+        hw_gpio_enable_interrupt(SX127x_DIO1_PIN);
         return;
     }
 
