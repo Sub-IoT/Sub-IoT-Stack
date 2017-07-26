@@ -142,7 +142,7 @@ void d7anp_process_received_packet(packet_t* packet);
 uint8_t d7anp_addressee_id_length(id_type_t);
 void d7anp_set_foreground_scan_timeout(timer_tick_t timeout);
 void d7anp_start_foreground_scan();
-void d7anp_stop_foreground_scan(bool auto_scan);
+void d7anp_stop_foreground_scan();
 uint8_t d7anp_secure_payload(packet_t* packet, uint8_t* payload, uint8_t payload_len);
 
 #endif /* D7ANP_H_ */

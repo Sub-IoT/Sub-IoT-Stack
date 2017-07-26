@@ -121,8 +121,7 @@ static void foreground_scan_expired()
     if (d7anp_state == D7ANP_STATE_FOREGROUND_SCAN) // when in D7ANP_STATE_TRANSMIT d7anp_signal_packet_transmitted() will switch state
       switch_state(D7ANP_STATE_IDLE);
 
-    /* switch to automation scan */
-    dll_stop_foreground_scan(true);
+    dll_stop_foreground_scan();
     fg_scan_timeout_ticks = 0;
     d7atp_signal_foreground_scan_expired();
 }
@@ -169,7 +168,7 @@ static void cancel_foreground_scan_task()
     fg_scan_timeout_ticks = 0;
 }
 
-void d7anp_stop_foreground_scan(bool auto_scan)
+void d7anp_stop_foreground_scan()
 {
     if (d7anp_state == D7ANP_STATE_FOREGROUND_SCAN)
     {
@@ -177,8 +176,8 @@ void d7anp_stop_foreground_scan(bool auto_scan)
         switch_state(D7ANP_STATE_IDLE);
     }
 
-    /* start the automation scan or set the radio to idle */
-    dll_stop_foreground_scan(auto_scan);
+    /* set the radio to idle */
+    dll_stop_foreground_scan();
 }
 
 void start_foreground_scan_after_D7AAdvP()

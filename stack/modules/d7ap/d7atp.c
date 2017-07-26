@@ -171,6 +171,7 @@ static void terminate_dialog()
     current_dialog_id = 0;
     stop_dialog_after_tx = false;
     d7asp_signal_dialog_terminated();
+    dll_notify_dialog_terminated();
     switch_state(D7ATP_STATE_IDLE);
 }
 
@@ -212,7 +213,10 @@ void d7atp_signal_dialog_termination()
     sched_cancel_task(&response_period_timeout_handler);
 
     // stop the DLL foreground scan
-    d7anp_stop_foreground_scan(true);
+    d7anp_stop_foreground_scan();
+
+    // notify DLL that the dialog is over
+    dll_notify_dialog_terminated();
 }
 
 void d7atp_stop_transaction()
@@ -223,7 +227,7 @@ void d7atp_stop_transaction()
     current_transaction_id = NO_ACTIVE_REQUEST_ID;
 
     // stop the DLL foreground scan
-    d7anp_stop_foreground_scan(false);
+    d7anp_stop_foreground_scan();
 }
 
 void d7atp_init()
@@ -477,8 +481,8 @@ void d7atp_signal_packet_transmitted(packet_t* packet)
         if (stop_dialog_after_tx)
         {
             // no FG scan and no response period are scheduled, we can end dialog now
+            d7anp_stop_foreground_scan();
             terminate_dialog();
-            d7anp_stop_foreground_scan(true); // restart scan automation
         }
     }
     else if (d7atp_state == D7ATP_STATE_IDLE)
@@ -495,8 +499,8 @@ void d7atp_signal_transmission_failure()
     if (d7atp_state == D7ATP_STATE_SLAVE_TRANSACTION_SENDING_RESPONSE && stop_dialog_after_tx)
     {
         /* For Slaves, terminate the dialog if no FG scan and no response period are scheduled.*/
+        d7anp_stop_foreground_scan();
         terminate_dialog();
-        d7anp_stop_foreground_scan(true); // restart scan automation
         return;
     }
 
@@ -610,7 +614,7 @@ void d7atp_process_received_packet(packet_t* packet)
             }
 
             /* stop eventually the FG scan and force the radio to go back to IDLE */
-            d7anp_stop_foreground_scan(false);
+            d7anp_stop_foreground_scan();
         }
         else
         {

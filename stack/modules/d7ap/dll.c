@@ -828,6 +828,12 @@ void dll_notify_access_profile_file_changed()
     }
 }
 
+void dll_notify_dialog_terminated()
+{
+    DPRINT("Since the dialog is terminated, we can resume the automation scan");
+    dll_execute_scan_automation();
+}
+
 void dll_init()
 {
     uint8_t nf_ctrl;
@@ -1022,6 +1028,9 @@ static void start_foreground_scan()
         hw_radio_set_idle();
     }
 
+    if (dll_state == DLL_STATE_FOREGROUND_SCAN)
+        return;
+
     switch_state(DLL_STATE_FOREGROUND_SCAN);
 
     // TODO, if the Requester is MISO and the Request is broadcast, the responses
@@ -1045,21 +1054,17 @@ void dll_start_foreground_scan()
     start_foreground_scan();
 }
 
-void dll_stop_foreground_scan(bool auto_scan)
+void dll_stop_foreground_scan()
 {
+    if(dll_state == DLL_STATE_IDLE)
+        return;
+
     if (is_tx_busy())
         discard_tx();
 
-    if (auto_scan && dll_state == DLL_STATE_SCAN_AUTOMATION)
-        return;
-
-    if (auto_scan)
-        dll_execute_scan_automation();
-    else
-    {
-        DPRINT("Set the radio to idle state");
-        hw_radio_set_idle();
-    }
+    DPRINT("Set the radio to idle state");
+    hw_radio_set_idle();
+    switch_state(DLL_STATE_IDLE);
 }
 
 uint8_t dll_assemble_packet_header(packet_t* packet, uint8_t* data_ptr)

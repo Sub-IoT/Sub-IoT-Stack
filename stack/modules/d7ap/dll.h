@@ -67,10 +67,11 @@ typedef struct
 void dll_init();
 void dll_tx_frame(packet_t* packet);
 void dll_start_foreground_scan();
-void dll_stop_foreground_scan(bool auto_scan);
+void dll_stop_foreground_scan();
 void dll_execute_scan_automation();
 void dll_notify_dll_conf_file_changed();
 void dll_notify_access_profile_file_changed(); // TODO access specifier
+void dll_notify_dialog_terminated();
 uint8_t dll_assemble_packet_header(packet_t* packet, uint8_t* data_ptr);
 bool dll_disassemble_packet_header(packet_t* packet, uint8_t* data_idx);
 uint16_t dll_calculate_tx_duration(phy_channel_class_t channel_class, phy_coding_t ch_coding, uint8_t packet_length);
