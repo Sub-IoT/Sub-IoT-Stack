@@ -10,15 +10,4 @@ The goal of the project is to provide a reference implementation of the DASH7 Al
 
 ## Further reading ##
 
-For more information make sure to visit the following pages:
-- [Supported hardware](hardware.md)
-- [Getting started](gettingstarted.md)
-- [OSS-7 architecture](architecture.md)
-- [Community](community.md)
-- [OSS-7 blog](http://mosaic-lopow.github.io/dash7-ap-open-source-stack/)
-- [OSS-7 GitHub project](https://github.com/mosaic-lopow/dash7-ap-open-source-stack)
-
-
-
- 
- 
+Only the API docs are maintained in Doxygen. For general documentation and more information make sure to visit the [OSS-7 webite](http://mosaic-lopow.github.io/dash7-ap-open-source-stack/)
