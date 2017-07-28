@@ -1,5 +1,6 @@
 - title: Getting Started
   docs:
+  - architecture
   - supported-hardware
   - building
 - title: Other Topics

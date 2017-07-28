@@ -7,7 +7,7 @@ permalink: /docs/supported-hardware/
 
 A goal of OSS-7 is to support different hardware platforms and radio's.
 The stack provides this portability by using portable C code for the higher layers, and providing a pluggable driver system for hardware specific implementations.
-As explained in the [architecture documentation](architecture.md) OSS-7 has the concept of chips and platforms inside the hardware abstraction layer.
+As explained in the [architecture documentation]({{ site.baseurl }}{% link _docs/architecture.md %})) OSS-7 has the concept of chips and platforms inside the hardware abstraction layer.
 A chip implementation contains drivers for MCU peripherals or radio chips. A platform is a combination of an MCU and a radio chips and describes the board wiring and features like LEDs or buttons.
 
 Currently we support the following plaforms, in decreasing order of completeness/stability:
