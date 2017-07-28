@@ -8,7 +8,7 @@ permalink: /docs/logging/
 If you are using a platform which uses JLink then logging will be enabled by default and redirect to the fast RTT interface. This interface makes use of JLink connection, meaning you do not need extra wires (UART or USB) for logging.
 You can read the logs using `JLinkRTTClient`. This will wait for a JLink connection and print all RTT logs.
 Opening a JLink connection can be done using `make jlink-open` in your build directory.
-If you open `JLinkRTTClient` in one terminal and execute `make flash-sensor jlink-open` in another you will get this output:
+If you open `JLinkRTTClient` in one terminal and execute `make flash-sensor_push jlink-open` in another this will flash the sensor_push example application and keep the JLink connection open. In the JLinkRTTClient window you will get output like this:
 
 	$ JLinkRTTClient
 	###RTT Client: ************************************************************
@@ -44,4 +44,4 @@ If you open `JLinkRTTClient` in one terminal and execute `make flash-sensor jlin
 	[003] Ext H: 30.5
 	[004] Batt 3297 mV
 
-Note that you can enable different log sources separately by using cmake settings ( x_LOG_ENABLED).
+Note that you can enable different log sources separately by using cmake settings (x_LOG_ENABLED).
