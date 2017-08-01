@@ -218,6 +218,8 @@ __LINK_C error_t hw_gpio_configure_interrupt(pin_id_t pin_id, gpio_inthandler_t 
 
 __LINK_C error_t hw_gpio_enable_interrupt(pin_id_t pin_id)
 {
+  __HAL_GPIO_EXTI_CLEAR_IT(1 << pin_id.pin);
+
   if(pin_id.pin <= 1) {
     HAL_NVIC_SetPriority(EXTI0_1_IRQn, 2, 0); // TODO on boot
     HAL_NVIC_EnableIRQ(EXTI0_1_IRQn);
