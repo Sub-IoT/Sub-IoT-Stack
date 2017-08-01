@@ -150,6 +150,31 @@ static void gpio_int_callback(uint8_t pin)
   end_atomic();
 }
 
+__LINK_C error_t hw_gpio_set_edge_interrupt(pin_id_t pin_id, uint8_t edge)
+{
+  uint32_t exti_line = 1 << pin_id.pin;
+  switch(edge)
+  {
+    case GPIO_RISING_EDGE:
+      LL_EXTI_DisableFallingTrig_0_31(exti_line);
+      LL_EXTI_EnableRisingTrig_0_31(exti_line);
+      break;
+    case GPIO_FALLING_EDGE:
+      LL_EXTI_DisableRisingTrig_0_31(exti_line);
+      LL_EXTI_EnableFallingTrig_0_31(exti_line);
+      break;
+    case (GPIO_RISING_EDGE | GPIO_FALLING_EDGE):
+      LL_EXTI_EnableRisingTrig_0_31(exti_line);
+      LL_EXTI_EnableFallingTrig_0_31(exti_line);
+      break;
+    default:
+      assert(false);
+      break;
+  }
+
+  return SUCCESS;
+}
+
 __LINK_C error_t hw_gpio_configure_interrupt(pin_id_t pin_id, gpio_inthandler_t callback, uint8_t event_mask)
 {
   if (interrupts[pin_id.pin].interrupt_port != 0xFF)
