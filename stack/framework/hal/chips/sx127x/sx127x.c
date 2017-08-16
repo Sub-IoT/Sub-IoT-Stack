@@ -530,24 +530,20 @@ static void start_rx(hw_rx_cfg_t const* rx_cfg) {
 }
 
 static void calibrate_rx_chain() {
-  DPRINT("Calibrating RX chain");
   // TODO currently assumes to be called on boot only
+  DPRINT("Calibrating RX chain");
+  assert(get_opmode() == OPMODE_STANDBY);
   uint8_t reg_pa_config_initial_value = read_reg(REG_PACONFIG);
 
   // Cut the PA just in case, RFO output, power = -1 dBm
   write_reg(REG_PACONFIG, 0x00);
 
-  // Launch Rx chain calibration for LF band
-  write_reg(REG_IMAGECAL, (read_reg(REG_IMAGECAL) & RF_IMAGECAL_IMAGECAL_MASK) | RF_IMAGECAL_IMAGECAL_START);
-  while((read_reg(REG_IMAGECAL) & RF_IMAGECAL_IMAGECAL_RUNNING) == RF_IMAGECAL_IMAGECAL_RUNNING) {
-  }
+  // We are not calibrating for LF band for now, this is done at POR already
 
   set_center_freq(&current_channel_id);   // Sets a Frequency in HF band
 
-  // Launch Rx chain calibration for HF band
-  write_reg(REG_IMAGECAL, (read_reg(REG_IMAGECAL) & RF_IMAGECAL_IMAGECAL_MASK) | RF_IMAGECAL_IMAGECAL_START);
-  while((read_reg(REG_IMAGECAL) & RF_IMAGECAL_IMAGECAL_RUNNING) == RF_IMAGECAL_IMAGECAL_RUNNING) {
-  }
+  write_reg(REG_IMAGECAL, 0x01 | RF_IMAGECAL_IMAGECAL_START); // TODO temperature monitoring disabled for now
+  while((read_reg(REG_IMAGECAL) & RF_IMAGECAL_IMAGECAL_RUNNING) == RF_IMAGECAL_IMAGECAL_RUNNING) { }
 
   write_reg(REG_PACONFIG, reg_pa_config_initial_value);
 }
@@ -565,10 +561,13 @@ error_t hw_radio_init(alloc_packet_callback_t alloc_packet_cb, release_packet_ca
   spi_handle_t* spi_handle = spi_init(SX127x_SPI_INDEX, SX127x_SPI_BAUDRATE, 8, true, SX127x_SPI_LOCATION);
   sx127x_spi = spi_init_slave(spi_handle, SX127x_SPI_PIN_CS, true);
 
-  calibrate_rx_chain();
+  set_opmode(OPMODE_STANDBY); // TODO sleep
+
+  // TODO calibrating RX chain for 868 MHz results in wrong RSS measurements during CCA for some reason,
+  // skipping for now
+  // calibrate_rx_chain();
   init_regs();
 
-  set_opmode(OPMODE_STANDBY); // TODO sleep
   // TODO op mode
 
   error_t e;
