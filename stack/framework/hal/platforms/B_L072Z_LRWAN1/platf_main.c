@@ -33,10 +33,10 @@
 static void reset_sx127x()
 {
   error_t e;
-  e = hw_gpio_configure_pin(SX127x_RESET_PIN, false, GPIO_MODE_OUTPUT_PP, 0); assert(e == SUCCESS); // TODO platform specific
+  e = hw_gpio_configure_pin(SX127x_RESET_PIN, false, GPIO_MODE_OUTPUT_PP, 0); assert(e == SUCCESS);
   hw_busy_wait(150);
-  e = hw_gpio_configure_pin(SX127x_RESET_PIN, false, GPIO_MODE_INPUT, 1); assert(e == SUCCESS); // TODO platform specific
-  hw_busy_wait(6000);
+  e = hw_gpio_configure_pin(SX127x_RESET_PIN, false, GPIO_MODE_INPUT, 1); assert(e == SUCCESS);
+  hw_busy_wait(10000);
 }
 #endif
 
@@ -54,8 +54,8 @@ void __platform_init()
     hw_gpio_configure_pin(SX127x_DIO3_PIN, true, GPIO_MODE_INPUT, 0);
 #endif
 #ifdef PLATFORM_SX127X_USE_RESET_PIN
-    hw_gpio_configure_pin(SX127x_RESET_PIN, false, gpioModePushPull, 1);
-    reset_sx127x()
+    hw_gpio_configure_pin(SX127x_RESET_PIN, false, GPIO_MODE_OUTPUT_PP, 1);
+    reset_sx127x();
 #endif
 #endif
 
