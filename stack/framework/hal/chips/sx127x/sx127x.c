@@ -122,7 +122,7 @@ static uint8_t read_reg(uint8_t addr) {
   spi_exchange_byte(sx127x_spi, addr & 0x7F); // send address with bit 7 low to signal a read operation
   uint8_t value = spi_exchange_byte(sx127x_spi, 0x00); // get the response
   spi_deselect(sx127x_spi);
-  DPRINT("READ %02x: %02x\n", addr, value);
+  //DPRINT("READ %02x: %02x\n", addr, value);
   return value;
 }
 
@@ -395,6 +395,11 @@ static inline void flush_fifo() {
   write_reg(REG_IRQFLAGS2, 0x10);
 }
 
+static void set_packet_handler_enabled(bool enable) {
+  write_reg(REG_PREAMBLEDETECT, (read_reg(REG_PREAMBLEDETECT) & RF_PREAMBLEDETECT_DETECTOR_MASK) | enable);
+  write_reg(REG_SYNCCONFIG, (read_reg(REG_SYNCCONFIG) & RF_SYNCCONFIG_SYNC_MASK) | enable);
+}
+
 static void fifo_threshold_isr(pin_id_t pin_id, uint8_t event_mask) {
   // TODO might be optimized. Initial plan was to read length byte and reconfigure threshold
   // based on the expected length so we can wait for next interrupt to read remaining bytes.
@@ -505,10 +510,11 @@ static void start_rx(hw_rx_cfg_t const* rx_cfg) {
   } else {
     if(rx_packet_callback != 0) {
       hw_gpio_enable_interrupt(SX127x_DIO1_PIN);
+      set_packet_handler_enabled(true);
     } else {
       // when rx callback not set we ignore received packets
       hw_gpio_disable_interrupt(SX127x_DIO1_PIN);
-      // TODO disable packet handler completely in this case?
+      set_packet_handler_enabled(false);
     }
 
     DPRINT("START FG scan @ %i", timer_get_counter_value());
@@ -523,9 +529,7 @@ static void start_rx(hw_rx_cfg_t const* rx_cfg) {
 
     if(rssi_valid_callback != 0)
     {
-      while(!(read_reg(REG_IRQFLAGS1) & 0x08)) {
-        // wait for RxReady signal
-      }
+      while(!(read_reg(REG_IRQFLAGS1) & 0x08)) {} // wait until we have a valid RSSI value
 
       rssi_valid_callback(get_rssi());
     }
