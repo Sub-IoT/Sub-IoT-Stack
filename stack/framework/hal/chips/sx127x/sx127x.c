@@ -264,7 +264,7 @@ static void init_regs() {
   // assuming 10 ppm crystals gives max error of: 2 * 10 ppm * 433.16 = 8.66 kHz
   // => BW > 155.555 + 8.66 kHz => > 164 kHZ. Closest possible value is 166.7
   // TODO validate sensitivity / xtal accuracy tradeoff
-  write_reg(REG_RXBW, (2 << 3) & 1);
+  write_reg(REG_RXBW, (2 << 3) | 1); // 166.7 kHz
   //  write_reg(REG_AFCBW, 0); // TODO not used for now (AfcAutoOn not set)
   //  write_reg(REG_AFCFEI, 0); // TODO not used for now (AfcAutoOn not set)
   //  write_reg(REG_AFCMSB, 0); // TODO not used for now (AfcAutoOn not set)
