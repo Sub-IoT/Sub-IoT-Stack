@@ -150,6 +150,10 @@ static void read_fifo(uint8_t* buffer, uint8_t size) {
   DPRINT("READ FIFO %i", size);
 }
 
+static opmode_t get_opmode() {
+  return (read_reg(REG_OPMODE) & ~RF_OPMODE_MASK);
+}
+
 static void set_opmode(opmode_t opmode) {
   write_reg(REG_OPMODE, (read_reg(REG_OPMODE) & RF_OPMODE_MASK) | opmode);
 }
@@ -561,14 +565,13 @@ error_t hw_radio_init(alloc_packet_callback_t alloc_packet_cb, release_packet_ca
   spi_handle_t* spi_handle = spi_init(SX127x_SPI_INDEX, SX127x_SPI_BAUDRATE, 8, true, SX127x_SPI_LOCATION);
   sx127x_spi = spi_init_slave(spi_handle, SX127x_SPI_PIN_CS, true);
 
-  set_opmode(OPMODE_STANDBY); // TODO sleep
+  set_opmode(OPMODE_STANDBY);
+  while(get_opmode() != OPMODE_STANDBY) {}
 
-  // TODO calibrating RX chain for 868 MHz results in wrong RSS measurements during CCA for some reason,
-  // skipping for now
-  // calibrate_rx_chain();
+  calibrate_rx_chain();
   init_regs();
 
-  // TODO op mode
+  // TODO sleep
 
   error_t e;
   e = hw_gpio_configure_interrupt(SX127x_DIO0_PIN, &dio0_isr, GPIO_RISING_EDGE); assert(e == SUCCESS);
