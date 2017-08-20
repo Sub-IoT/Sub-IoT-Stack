@@ -45,3 +45,22 @@ If you open `JLinkRTTClient` in one terminal and execute `make flash-sensor_push
 	[004] Batt 3297 mV
 
 Note that you can enable different log sources separately by using cmake settings (x_LOG_ENABLED).
+
+# RTT logging with multiple targets attached
+
+The `jlink-open` make target assumes there is only one JLink attached to the host system. If you want to open 2 (or more) JLink connections to view the logging of multiple devices, you will need to open a JLink connection manually.
+This can be done as shown below:
+
+	JLinkExe -SelectEmuBySN 518007358 -If SWD -Device EZR32LG330F256RXX -AutoConnect 1 -RTTTelnetPort 19021 -Speed 10000
+
+Important to note here are the `-SelectEmuBySN <sn>` and `-RTTTelnetPort <port>` parameters. The first one allows you the specify which JLink adapter to use. The second parameter tells JLinkExe on which port it should listen for RTT clients. You can pass the same parameter to JLinkRTTClient:
+
+	JLinkRTTClient -RTTTelnetPort 19021
+
+This way multiple JLink adapters can be used at the same time, each which a different SN and port.
+Note that flashing can done using the JLinkExe prompt as well using the `loadfile` command.
+Refer to the JLink documentation for more info
+
+# UART logging
+
+TODO
