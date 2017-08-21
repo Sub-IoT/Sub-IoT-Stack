@@ -263,6 +263,8 @@ void d7asp_init()
     current_request_id = NO_ACTIVE_REQUEST_ID;
 
     current_master_session.state = D7ASP_MASTER_SESSION_IDLE;
+    DPRINT("REQUESTS_BITMAP_BYTE_COUNT %d", REQUESTS_BITMAP_BYTE_COUNT);
+    DPRINT("FIFO_MAX_REQUESTS_COUNT %d", MODULE_D7AP_FIFO_MAX_REQUESTS_COUNT);
 
     sched_register_task(&flush_fifos);
 }

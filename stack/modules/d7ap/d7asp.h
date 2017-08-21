@@ -58,7 +58,11 @@ typedef enum {
   D7ASP_MASTER_SESSION_ACTIVE,
 } d7asp_master_session_state_t;
 
-#define REQUESTS_BITMAP_BYTE_COUNT ((MODULE_D7AP_FIFO_MAX_REQUESTS_COUNT + 7) / 8)
+// index [0 ..  7] --> byte 1
+// index [8 .. 15] --> byte 2
+// index [16.. 23] --> byte 3
+// so the byte count can be calculated as the integer quotient of the division + 1 byte
+#define REQUESTS_BITMAP_BYTE_COUNT (MODULE_D7AP_FIFO_MAX_REQUESTS_COUNT/8) + 1
 
 /**
  * /brief The state of a session FIFO
