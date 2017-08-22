@@ -1,7 +1,7 @@
 ---
 layout: post
-title:  "New recommend devkit"
-date:   2017-08-22 10:00:00
+title:  "New recommended devkit"
+date:   2017-08-22 11:00:00
 author: Glenn
 ---
 
