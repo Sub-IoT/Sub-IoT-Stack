@@ -35,8 +35,8 @@ PLATFORM_OPTION(PLATFORM_USE_USB_CDC "Enable/Disable the use of CDC (UART Commun
 
 # CONSOLE
 # uses UART0, location 1
-PLATFORM_PARAM(${PLATFORM_PREFIX}_CONSOLE_UART     "0"      STRING "The UART channel used by the console UART configuration."   )
-PLATFORM_PARAM(${PLATFORM_PREFIX}_CONSOLE_LOCATION "1"      STRING "The route location used by the console UART configuration." )
+PLATFORM_PARAM(${PLATFORM_PREFIX}_CONSOLE_UART     "1"      STRING "The UART channel used by the console UART configuration."   )
+PLATFORM_PARAM(${PLATFORM_PREFIX}_CONSOLE_LOCATION "3"      STRING "The route location used by the console UART configuration." )
 PLATFORM_PARAM(${PLATFORM_PREFIX}_CONSOLE_BAUDRATE "115200" STRING "The baudrate used by the second console configuration."       )
 
 #Add a 'global' definition for the specific MCU
