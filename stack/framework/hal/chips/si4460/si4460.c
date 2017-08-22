@@ -568,6 +568,18 @@ error_t hw_radio_send_background_packet(hw_radio_packet_t* packet,
   // TODO implement this
 }
 
+error_t hw_radio_start_background_advertising(tx_packet_callback_t tx_callback)
+{
+  assert(false);
+  // TODO implement this
+}
+
+error_t hw_radio_set_background(hw_radio_packet_t* packet, uint16_t eta, uint16_t tx_duration)
+{
+  assert(false);
+  // TODO implement this
+}
+
 error_t hw_radio_send_packet(hw_radio_packet_t* packet, tx_packet_callback_t tx_cb)
 {
 	// TODO error handling EINVAL, ESIZE, EOFF
@@ -997,4 +1009,3 @@ static void ezradio_int_callback()
 
 
 }
-
