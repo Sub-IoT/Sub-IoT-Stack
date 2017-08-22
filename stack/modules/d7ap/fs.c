@@ -50,6 +50,8 @@ static uint16_t NGDEF(_file_offsets)[MODULE_D7AP_FS_FILE_COUNT] = { 0 };
 static bool NGDEF(_is_fs_init_completed);
 #define is_fs_init_completed NG(_is_fs_init_completed)
 
+static fs_modified_file_callback_t file_change_callback = NULL;
+
 static inline bool is_file_defined(uint8_t file_id)
 {
     return file_headers[file_id].length != 0;
@@ -258,6 +260,10 @@ alp_status_codes_t fs_write_file(uint8_t file_id, uint8_t offset, const uint8_t*
         dll_notify_access_profile_file_changed();
     }
 
+    // notify APP about a user file change
+    if ((file_id > 0x3f) && (file_change_callback)) //from 0x0 to 0x3F are reserved for D7A System Files.)
+        file_change_callback(file_id);
+
     return ALP_STATUS_OK;
 }
 
@@ -425,4 +431,9 @@ uint8_t fs_get_file_length(uint8_t file_id)
 {
   assert(is_file_defined(file_id));
   return file_headers[file_id].length;
+}
+
+uint8_t fs_register_file_modified_callback(fs_modified_file_callback_t callback)
+{
+    file_change_callback = callback;
 }

@@ -101,6 +101,12 @@ typedef struct
 typedef void (*fs_user_files_init_callback)(void);
 
 
+/* \brief The callback function for when a user file is modified
+ *
+ * \param file_id		The id of the modified user file
+ * **/
+typedef void (*fs_modified_file_callback_t)(uint8_t file_id);
+
 /**
  * \brief Arguments used by the stack for filesystem initialization
  */
@@ -131,6 +137,9 @@ alp_status_codes_t fs_read_nwl_security_state_register(d7anp_node_security_t *no
 alp_status_codes_t fs_add_nwl_security_state_register_entry(d7anp_trusted_node_t *trusted_node, uint8_t trusted_node_nb);
 alp_status_codes_t fs_update_nwl_security_state_register(d7anp_trusted_node_t *trusted_node, uint8_t trusted_node_index);
 uint8_t fs_get_file_length(uint8_t file_id);
+
+uint8_t fs_register_file_modified_callback(fs_modified_file_callback_t callback);
+
 
 #endif /* FS_H_ */
 
