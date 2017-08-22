@@ -5,7 +5,7 @@ date:   2017-08-22 11:00:00
 author: Glenn
 ---
 
-Before now, the Silicon Labs EZR32LG_WSTK6200 devkit was our recommend off the shelf kit to get start with OSS-7.
+Until now, the Silicon Labs EZR32LG_WSTK6200 devkit was our recommend off the shelf kit to get start with OSS-7.
 We had good experiences using this board, however it has the disadvantage of being too expensive. People wanting to give OSS-7
 a try should be able to buy an off the shelf devkit for a reasonable price.
 
