@@ -648,6 +648,7 @@ error_t hw_radio_send_packet(hw_radio_packet_t* packet, tx_packet_callback_t tx_
 
   state = STATE_TX;
   hw_gpio_enable_interrupt(SX127x_DIO0_PIN);
+  set_packet_handler_enabled(true);
   if(packet->tx_meta.tx_cfg.channel_id.channel_header.ch_class != PHY_CLASS_LORA) {
     // sx127x does not support PN9 whitening in hardware ...
     // copy the packet so we do not encode original packet->data
