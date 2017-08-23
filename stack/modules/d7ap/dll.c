@@ -924,7 +924,7 @@ void dll_tx_frame(packet_t* packet)
 
         /* EIRP (dBm) = (EIRP_I – 32) dBm */
 
-        log_print_string("AC specifier=%i channel=%i",
+        DPRINT("AC specifier=%i channel=%i",
                          packet->d7anp_addressee->access_specifier,
                          current_access_profile.subbands[0].channel_index_start);
         dll_header->control_eirp_index = current_access_profile.subbands[0].eirp + 32;
