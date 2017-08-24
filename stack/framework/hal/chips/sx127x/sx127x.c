@@ -256,7 +256,7 @@ static void set_center_freq(const channel_id_t* channel) {
   // TODO check channel index is allowed
   // TODO define channel settings for LoRa PHY
 
-  uint32_t center_freq = 433.06e3;
+  uint32_t center_freq = 433.06e6;
   if(channel->channel_header.ch_freq_band == PHY_BAND_868)
     center_freq = 863e6;
   else if(channel->channel_header.ch_freq_band == PHY_BAND_915)
@@ -266,7 +266,7 @@ static void set_center_freq(const channel_id_t* channel) {
   if(channel->channel_header.ch_class == PHY_CLASS_LO_RATE)
     channel_spacing_half = 12500;
 
-  center_freq += 0.025 * channel->center_freq_index + channel_spacing_half;
+  center_freq += 25000 * channel->center_freq_index + channel_spacing_half;
   DPRINT("center: %d\n", center_freq);
   center_freq = (uint32_t)((double)center_freq/(double)FREQ_STEP);
 
