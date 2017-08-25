@@ -55,7 +55,7 @@ ENDIF()
 
 # set default platform
 IF(NOT PLATFORM)
-	SET(PLATFORM "EZR32LG_WSTK6200A" CACHE STRING "Choose the platform to compile for.")
+	SET(PLATFORM "B_L072Z_LRWAN1" CACHE STRING "Choose the platform to compile for.")
 ENDIF()
 
 #Then load the Framework
