@@ -3,6 +3,7 @@
   - architecture
   - supported-hardware
   - building
+  - running-examples
 - title: Other Topics
   docs:
   - logging
