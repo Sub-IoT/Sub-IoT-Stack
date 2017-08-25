@@ -1,6 +1,6 @@
 ---
 title: Platform notes EZR32LG_WSTK6200a
-permalink: /docs/platform-wstk6200/
+permalink: /docs/platform-wstk6200a/
 ---
 
 To use the default UART using Breakout pad P4 (TX) and P6 (RX):
