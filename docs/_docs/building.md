@@ -6,18 +6,19 @@ permalink: /docs/building/
 
 # Get prerequisites
 
-- OSS-7 code. The code is hosted on [github](https://github.com/mosaic-lopow/dash7-ap-open-source-stack/commits/master), so either fork or clone the repository.
+- OSS-7 code. The code is hosted on [github](https://github.com/mosaic-lopow/dash7-ap-open-source-stack/), so either fork or clone the repository.
 - [CMake](http://www.cmake.org/) (v2.8.12 or greater) as a flexible build system
-- a GCC-based toolchain matching the target platform, for example [GCC ARM Embedded](https://launchpad.net/gcc-arm-embedded) for ARM Cortex-M based platforms. By default the build system assumes the GCC ARM Embedded toolchain is located in the PATH environment variable (meaning you can run `arm-none-eabi-gcc` without specifying the full path).
+- a GCC-based toolchain matching the target platform, for example [GNU ARM Embedded](https://developer.arm.com/open-source/gnu-toolchain/gnu-rm/downloads) for ARM Cortex-M based platforms. By default the build system assumes the GNU ARM Embedded toolchain is located in the PATH environment variable (meaning you can run `arm-none-eabi-gcc` without specifying the full path).
 - [JLinkExe](https://www.segger.com/downloads/jlink) if you are using a JLink probe to flash/debug your target
 
 # Run cmake
 
 We will create a build directory and run cmake to generate the buildscript:
 
+	$ git clone https://github.com/MOSAIC-LoPoW/dash7-ap-open-source-stack.git
 	$ mkdir build
 	$ cd build
-	$ cmake ../dash7-ap-open-source-stack//stack/ -DAPP_GATEWAY=y -DAPP_SENSOR_PUSH=y
+	$ cmake ../dash7-ap-open-source-stack/stack/ -DAPP_GATEWAY=y -DAPP_SENSOR_PUSH=y
 	-- Cross-compiling using gcc-arm-embedded toolchain
 	-- Cross-compiling using gcc-arm-embedded toolchain
 	-- The C compiler identification is GNU 4.9.3
