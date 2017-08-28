@@ -9,7 +9,7 @@ permalink: /docs/building/
 - OSS-7 code. The code is hosted on [github](https://github.com/mosaic-lopow/dash7-ap-open-source-stack/), so either fork or clone the repository.
 - [CMake](http://www.cmake.org/) (v2.8.12 or greater) as a flexible build system
 - a GCC-based toolchain matching the target platform, for example [GNU ARM Embedded](https://developer.arm.com/open-source/gnu-toolchain/gnu-rm/downloads) for ARM Cortex-M based platforms. By default the build system assumes the GNU ARM Embedded toolchain is located in the PATH environment variable (meaning you can run `arm-none-eabi-gcc` without specifying the full path).
-- [JLinkExe](https://www.segger.com/downloads/jlink) if you are using a JLink probe to flash/debug your target
+- [JLinkExe](https://www.segger.com/downloads/jlink) (included in 'J-Link Software and Documentation Pack') if you are using a JLink probe to flash/debug your target
 
 # Run cmake
 
