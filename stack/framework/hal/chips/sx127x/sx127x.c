@@ -46,7 +46,44 @@
 #define AVAILABLE_BYTES_IN_TX_FIFO  32
 #define BYTES_IN_RX_FIFO            32
 
+// modulation settings
+// lo rate
+// BR 0x0D05 => 9600.960 bps
+#define BITRATEMSB_L 0x0D
+#define BITRATELSB_L 0x05
+// Fdev => 4.8 kHz
+#define FDEVMSB_L 0x00
+#define FDEVLSB_L 0x40
+// Carson's rule: 2 x fm + 2 x fd  = 9.600 + 2 x 4.800 = 19.2 kHz
+// assuming 10 ppm crystals gives max error of: 2 * 10 ppm * 868 = 17.36 kHz
+// => BW > 19.2 + 17.36 kHz => > 36.5 kHZ. Closest possible value is 41.7 kHz
+#define RXBW_L ((2 << 3) | 3)  // TODO validate sensitivity / xtal accuracy tradeoff
 
+// normal rate
+// BR 0x0240 => 55555.55555 bps
+#define BITRATEMSB_N 0x02
+#define BITRATELSB_N 0x40
+// Fdev => 49.988 kHz
+#define FDEVMSB_N 0x03
+#define FDEVLSB_N 0x33
+// data rate 55.542 kBaud
+// Carson's rule: 2 x fm + 2 x fd  = 55.555 + 2 x 50 = 155.555 kHz
+// assuming 10 ppm crystals gives max error of: 2 * 10 ppm * 868 = 17.36 kHz
+// => BW > 155.555 + 17.36 => 172.91. Closest possible value is 166.7 kHz
+// TODO bit too high, next step is 200, validate sensitivity / xtal accuracy tradeoff
+#define RXBW_N ((2 << 3) | 1)
+
+// hi rate
+// BR 0x00C0 => 166666.667 bps
+#define BITRATEMSB_H 0x00
+#define BITRATELSB_H 0xC0
+// Fdev => 41.667 kHz
+#define FDEVMSB_H 0x02
+#define FDEVLSB_H 0xAA
+// Carson's rule: 2 x fm + 2 x fd  = 166.667 + 2 x 41.667 = 250 kHz
+// assuming 10 ppm crystals gives max error of: 2 * 10 ppm * 868 = 17.36 kHz
+// => BW > 250 + 17.36 kHz => > 267.36 kHZ. Closest possible value is 250 kHz (=max)
+#define RXBW_H ((0 << 3) | 1)  // TODO validate sensitivity / xtal accuracy tradeoff
 
 #if defined(FRAMEWORK_LOG_ENABLED) && defined(FRAMEWORK_PHY_LOG_ENABLED)
 #define DPRINT(...) log_print_stack_string(LOG_STACK_PHY, __VA_ARGS__)
@@ -116,12 +153,14 @@ static rssi_valid_callback_t rssi_valid_callback;
 static bool should_rx_after_tx_completed = false;
 static syncword_class_t current_syncword_class = PHY_SYNCWORD_CLASS0;
 static hw_rx_cfg_t pending_rx_cfg;
-static channel_id_t current_channel_id = {
+static channel_id_t default_channel_id = {
   .channel_header.ch_coding = PHY_CODING_PN9,
   .channel_header.ch_class = PHY_CLASS_NORMAL_RATE,
   .channel_header.ch_freq_band = PHY_BAND_868,
   .center_freq_index = 0
 };
+
+static channel_id_t* current_channel_id = NULL;
 
 /*
  * FSK packet handler structure
@@ -248,13 +287,52 @@ static void configure_eirp(eirp_t eirp) {
 #endif
 }
 
-static void set_center_freq(const channel_id_t* channel) {
-  assert(channel->channel_header.ch_freq_band == PHY_BAND_868); // TODO other bands
-  assert(channel->channel_header.ch_class == PHY_CLASS_NORMAL_RATE ||
-         channel->channel_header.ch_class == PHY_CLASS_LORA); // TODO other rates
+static void set_center_freq(uint32_t center_freq) {
+  DPRINT("set center: %d\n", center_freq);
+  center_freq = (uint32_t)((double)center_freq/(double)FREQ_STEP);
+
+  write_reg(REG_FRFMSB, (uint8_t)((center_freq >> 16) & 0xFF));
+  write_reg(REG_FRFMID, (uint8_t)((center_freq >> 8) & 0xFF));
+  write_reg(REG_FRFLSB, (uint8_t)(center_freq & 0xFF));
+}
+
+static void configure_channel(const channel_id_t* channel) {
+  assert(channel->channel_header.ch_freq_band == PHY_BAND_868); // TODO implement other bands
+
+  if(hw_radio_channel_ids_equal(current_channel_id, channel)) {
+    return;
+  }
+
+  set_lora_mode(channel->channel_header.ch_class == PHY_CLASS_LORA); // TODO only switch when needed
 
   // TODO check channel index is allowed
   // TODO define channel settings for LoRa PHY
+
+
+  // configure modulation settings
+  // nothing to be done for LoRa here
+  if(channel->channel_header.ch_class == PHY_CLASS_LO_RATE) {
+    write_reg(REG_BITRATEMSB, BITRATEMSB_L);
+    write_reg(REG_BITRATELSB, BITRATELSB_L);
+    write_reg(REG_FDEVMSB, FDEVMSB_L);
+    write_reg(REG_FDEVLSB, FDEVMSB_L);
+    write_reg(REG_RXBW, RXBW_L);
+  } else if(channel->channel_header.ch_class == PHY_CLASS_NORMAL_RATE) {
+    write_reg(REG_BITRATEMSB, BITRATEMSB_N);
+    write_reg(REG_BITRATELSB, BITRATELSB_N);
+    write_reg(REG_FDEVMSB, FDEVMSB_N);
+    write_reg(REG_FDEVLSB, FDEVMSB_N);
+    write_reg(REG_RXBW, RXBW_N);
+  } else if(channel->channel_header.ch_class == PHY_CLASS_HI_RATE) {
+    write_reg(REG_BITRATEMSB, BITRATEMSB_H);
+    write_reg(REG_BITRATELSB, BITRATELSB_H);
+    write_reg(REG_FDEVMSB, FDEVMSB_H);
+    write_reg(REG_FDEVLSB, FDEVMSB_H);
+    write_reg(REG_RXBW, RXBW_H);
+  }
+
+
+  // TODO regopmode for LF?
 
   uint32_t center_freq = 433.06e6;
   if(channel->channel_header.ch_freq_band == PHY_BAND_868)
@@ -267,42 +345,15 @@ static void set_center_freq(const channel_id_t* channel) {
     channel_spacing_half = 12500;
 
   center_freq += 25000 * channel->center_freq_index + channel_spacing_half;
-  DPRINT("center: %d\n", center_freq);
-  center_freq = (uint32_t)((double)center_freq/(double)FREQ_STEP);
+  set_center_freq(center_freq);
 
-  write_reg(REG_FRFMSB, (uint8_t)((center_freq >> 16) & 0xFF));
-  write_reg(REG_FRFMID, (uint8_t)((center_freq >> 8) & 0xFF));
-  write_reg(REG_FRFLSB, (uint8_t)(center_freq & 0xFF));
-}
-
-static void configure_channel(const channel_id_t* channel) {
-  assert(channel->channel_header.ch_freq_band == PHY_BAND_868); // TODO other bands
-  assert(channel->channel_header.ch_class == PHY_CLASS_NORMAL_RATE ||
-         channel->channel_header.ch_class == PHY_CLASS_LORA ); // TODO other rates
-
-  if(hw_radio_channel_ids_equal(&current_channel_id, channel)) {
-    return;
-  }
-
-  set_lora_mode(channel->channel_header.ch_class == PHY_CLASS_LORA); // TODO only switch when needed
-
-  set_center_freq(channel);
   memcpy(&current_channel_id, channel, sizeof(channel_id_t));
 }
 
 static void init_regs() {
   write_reg(REG_OPMODE, 0x00); // FSK, hi freq, sleep
 
-  // modulation settings, defaulting to normal channel class
-  // BR 0x0240 => 55555.55555 bps
-  write_reg(REG_BITRATEMSB, 0x02);
-  write_reg(REG_BITRATELSB, 0x40);
-
-  // Fdev => 49.988 kHz
-  write_reg(REG_FDEVMSB, 0x03);
-  write_reg(REG_FDEVLSB, 0x33);
-
-  configure_channel(&current_channel_id);
+  configure_channel(&default_channel_id);
 
   // PA
   configure_eirp(10);
@@ -324,12 +375,6 @@ static void init_regs() {
   //  write_reg(REG_RSSICOLLISION, 0); // TODO not used for now
   write_reg(REG_RSSITHRESH, 0xFF); // TODO using -128 dBm for now
 
-  // channel bandwidth 203.125 kHz, data rate 55.542 kBaud
-  // Carson's rule: 2 x fm + 2 x fd  = 55.555 + 2 x 50 = 155.555 kHz
-  // assuming 10 ppm crystals gives max error of: 2 * 10 ppm * 433.16 = 8.66 kHz
-  // => BW > 155.555 + 8.66 kHz => > 164 kHZ. Closest possible value is 166.7
-  // TODO validate sensitivity / xtal accuracy tradeoff
-  write_reg(REG_RXBW, (2 << 3) | 1); // 166.7 kHz
   //  write_reg(REG_AFCBW, 0); // TODO not used for now (AfcAutoOn not set)
   //  write_reg(REG_AFCFEI, 0); // TODO not used for now (AfcAutoOn not set)
   //  write_reg(REG_AFCMSB, 0); // TODO not used for now (AfcAutoOn not set)
@@ -398,7 +443,7 @@ static void packet_transmitted_isr() {
   hw_gpio_disable_interrupt(SX127x_DIO0_PIN);
   DPRINT("packet transmitted ISR\n");
   assert(state == STATE_TX);
-  if(current_channel_id.channel_header.ch_class == PHY_CLASS_LORA) {
+  if(current_channel_id->channel_header.ch_class == PHY_CLASS_LORA) {
     // in LoRa mode we have to clear the IRQ register manually
     write_reg(REG_LR_IRQFLAGS, 0xFF);
   }
@@ -462,7 +507,7 @@ static void bg_scan_rx_done()
     memcpy(&(current_packet->rx_meta.rx_cfg.channel_id), &current_channel_id, sizeof(channel_id_t));
 
     pn9_encode(current_packet->data + 1, FskPacketHandler.Size);
-    if (current_channel_id.channel_header.ch_coding == PHY_CODING_FEC_PN9)
+    if (current_channel_id->channel_header.ch_coding == PHY_CODING_FEC_PN9)
         fec_decode_packet(current_packet->data + 1, FskPacketHandler.Size, FskPacketHandler.Size);
 
     DPRINT_DATA(current_packet->data, BACKGROUND_FRAME_LENGTH + 1);
@@ -544,7 +589,7 @@ static void fifo_threshold_isr() {
 
         assert(rx_bytes == 4);
 
-        if (current_channel_id.channel_header.ch_coding == PHY_CODING_FEC_PN9)
+        if (current_channel_id->channel_header.ch_coding == PHY_CODING_FEC_PN9)
         {
             uint8_t decoded_buffer[4];
             memcpy(decoded_buffer, buffer, 4);
@@ -592,7 +637,7 @@ static void fifo_threshold_isr() {
 
         pn9_encode(current_packet->data, FskPacketHandler.NbBytes);
 
-        if (current_channel_id.channel_header.ch_coding == PHY_CODING_FEC_PN9)
+        if (current_channel_id->channel_header.ch_coding == PHY_CODING_FEC_PN9)
             fec_decode_packet(current_packet->data, FskPacketHandler.NbBytes, FskPacketHandler.NbBytes);
 
         DPRINT_DATA(current_packet->data, current_packet->length + 1);
@@ -651,7 +696,7 @@ static void configure_syncword(syncword_class_t syncword_class, const channel_id
     // TODO
   }
 
-  if(syncword_class != current_syncword_class || (channel->channel_header.ch_coding != current_channel_id.channel_header.ch_coding))
+  if(syncword_class != current_syncword_class || (channel->channel_header.ch_coding != current_channel_id->channel_header.ch_coding))
   {
     current_syncword_class = syncword_class;
     uint16_t sync_word = sync_word_value[syncword_class][channel->channel_header.ch_coding ];
@@ -752,7 +797,7 @@ static void calibrate_rx_chain() {
 
   // We are not calibrating for LF band for now, this is done at POR already
 
-  set_center_freq(&current_channel_id);   // Sets a Frequency in HF band
+  set_center_freq(863150000);   // Sets a Frequency in HF band
 
   write_reg(REG_IMAGECAL, 0x01 | RF_IMAGECAL_IMAGECAL_START); // TODO temperature monitoring disabled for now
   while((read_reg(REG_IMAGECAL) & RF_IMAGECAL_IMAGECAL_RUNNING) == RF_IMAGECAL_IMAGECAL_RUNNING) { }
@@ -861,7 +906,7 @@ error_t hw_radio_send_packet(hw_radio_packet_t* packet, tx_packet_callback_t tx_
     DPRINT("TX len=%i", packet->length);
     DPRINT_DATA(packet->data, packet->length + 1);
 
-    if (current_channel_id.channel_header.ch_coding == PHY_CODING_FEC_PN9)
+    if (current_channel_id->channel_header.ch_coding == PHY_CODING_FEC_PN9)
         encoded_len = fec_encode(encoded_packet, packet->length + 1);
 
     pn9_encode(encoded_packet, encoded_len);
@@ -912,7 +957,7 @@ error_t hw_radio_set_background(hw_radio_packet_t* packet, uint16_t eta, uint16_
 
     if(state == STATE_RX)
     {
-        pending_rx_cfg.channel_id = current_channel_id;
+        pending_rx_cfg.channel_id = *current_channel_id;
         pending_rx_cfg.syncword_class = current_syncword_class;
         should_rx_after_tx_completed = true;
         // when in RX state we can directly strobe TX and do not need to wait until in IDLE
@@ -938,12 +983,12 @@ error_t hw_radio_set_background(hw_radio_packet_t* packet, uint16_t eta, uint16_
     write_reg(REG_FIFOTHRESH, 0x80 | 0x05);
 
     // Prepare the subsequent background frames which include the preamble and the sync word
-    uint8_t preamble_len = (current_channel_id.channel_header.ch_class ==  PHY_CLASS_HI_RATE ? PREAMBLE_HI_RATE_CLASS : PREAMBLE_LOW_RATE_CLASS);
+    uint8_t preamble_len = (current_channel_id->channel_header.ch_class ==  PHY_CLASS_HI_RATE ? PREAMBLE_HI_RATE_CLASS : PREAMBLE_LOW_RATE_CLASS);
     memset(bg_adv.packet, 0xAA, preamble_len); // preamble length is given in number of bytes
-    uint16_t sync_word = __builtin_bswap16(sync_word_value[current_syncword_class][current_channel_id.channel_header.ch_coding]);
+    uint16_t sync_word = __builtin_bswap16(sync_word_value[current_syncword_class][current_channel_id->channel_header.ch_coding]);
     memcpy(&bg_adv.packet[preamble_len], &sync_word, 2);
 
-    if (current_channel_id.channel_header.ch_coding == PHY_CODING_FEC_PN9)
+    if (current_channel_id->channel_header.ch_coding == PHY_CODING_FEC_PN9)
         bg_adv.packet_size = preamble_len + 2 + fec_calculated_decoded_length(BACKGROUND_FRAME_LENGTH);
     else
         bg_adv.packet_size = preamble_len + 2 + BACKGROUND_FRAME_LENGTH;
@@ -988,7 +1033,7 @@ static uint8_t assemble_background_payload()
     crc = __builtin_bswap16(crc_calculate(bg_adv.packet_payload, 4));
     memcpy(&bg_adv.packet_payload[BACKGROUND_DLL_HEADER_LENGTH + sizeof(uint16_t)], &crc, 2);
 
-    if (current_channel_id.channel_header.ch_coding == PHY_CODING_FEC_PN9)
+    if (current_channel_id->channel_header.ch_coding == PHY_CODING_FEC_PN9)
     {
         payload_len = fec_encode(bg_adv.packet_payload, BACKGROUND_FRAME_LENGTH);
         pn9_encode(bg_adv.packet_payload, payload_len);
@@ -1105,7 +1150,7 @@ error_t hw_radio_start_background_scan(hw_rx_cfg_t const* rx_cfg, rx_packet_call
     configure_syncword(rx_cfg->syncword_class, &(rx_cfg->channel_id));
     configure_channel(&(rx_cfg->channel_id));
 
-    if (current_channel_id.channel_header.ch_coding == PHY_CODING_FEC_PN9)
+    if (current_channel_id->channel_header.ch_coding == PHY_CODING_FEC_PN9)
         packet_len = fec_calculated_decoded_length(BACKGROUND_FRAME_LENGTH);
     else
         packet_len = BACKGROUND_FRAME_LENGTH;
@@ -1142,7 +1187,7 @@ error_t hw_radio_start_background_scan(hw_rx_cfg_t const* rx_cfg, rx_packet_call
     }
 
     // the device has a period of To to successfully detect the sync word
-    assert(timer_post_task_delay(&switch_to_standby_mode, bg_timeout[current_channel_id.channel_header.ch_class]) == SUCCESS);
+    assert(timer_post_task_delay(&switch_to_standby_mode, bg_timeout[current_channel_id->channel_header.ch_class]) == SUCCESS);
 
     return SUCCESS;
 }
