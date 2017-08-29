@@ -13,8 +13,10 @@ this also allows logging using RTT (see [here for more info]({{ site.baseurl }}{
 
 # Console location
 
-The serial console on this platfrom is configured to use UART2 by default. This has the advantage that is useable from the VCOM which is exposed by ST-LINK.
+The serial console on this platform is configured to use UART2 by default. This has the advantage that is useable from the VCOM which is exposed by ST-LINK.
 This means that after plugging in your device using the ST-LINK USB connection you will get a serial interface (next to the USB mass storage device).
 This interface can be used for interacting with the console.
+Note that, on some Linux system, a service called ModemManager will claim the device upon detection. It will give up after a while, but it will result in communication problems,
+each time you plug in. For a workaround look [here](https://linux-tips.com/t/prevent-modem-manager-to-capture-usb-serial-devices/284).
 
 If you reflashed the ST-LINK to a JLink another serial connection is required. More information on this will follow later.
