@@ -327,7 +327,7 @@ static void configure_channel(const channel_id_t* channel) {
     write_reg(REG_BITRATEMSB, BITRATEMSB_H);
     write_reg(REG_BITRATELSB, BITRATELSB_H);
     write_reg(REG_FDEVMSB, FDEVMSB_H);
-    write_reg(REG_FDEVLSB, FDEVMSB_H);
+    write_reg(REG_FDEVLSB, FDEVLSB_H);
     write_reg(REG_RXBW, RXBW_H);
   }
 
