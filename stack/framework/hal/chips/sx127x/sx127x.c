@@ -1203,6 +1203,7 @@ void hw_radio_continuous_tx(hw_tx_cfg_t const* tx_cfg, bool continuous_wave) {
   // TODO tx_cfg
   log_print_string("cont tx\n");
   assert(!continuous_wave); // TODO CW not supported for now
+  configure_channel(&(tx_cfg->channel_id));
   hw_gpio_disable_interrupt(SX127x_DIO0_PIN);
   set_opmode(OPMODE_TX);
 
