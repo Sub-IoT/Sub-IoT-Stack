@@ -1214,6 +1214,7 @@ void hw_radio_continuous_tx(hw_tx_cfg_t const* tx_cfg, bool continuous_wave) {
     data[0]= payload_len;
     pn9_encode(data + 1 , sizeof(data) - 1);
     write_fifo(data, payload_len + 1);
-    while(read_reg(REG_IRQFLAGS2) & 0x20) {} // wait until we go under Fifo threshold
+    //while(read_reg(REG_IRQFLAGS2) & 0x20) {} // wait until we go under Fifo threshold
+    // TODO waiting for fifo threshold causes ugly spikes in the spectrum (possibly there are gaps where fifo is empty causing the chip to transmit preamble or unmodulated signal)
   }
 }
