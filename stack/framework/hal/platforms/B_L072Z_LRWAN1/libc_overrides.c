@@ -23,10 +23,8 @@
 #include "timer.h"
 #include "SEGGER_RTT.h"
 #include "console.h"
+#include "stm32l0xx.h"
 
-//#if defined(DEBUG)
-#define __DEBUG_BKPT()  __asm__ volatile ("bkpt 0")
-//#endif
 
 //Overwrite _write so 'printf''s get pushed over the uart
 int _write(int fd, char *ptr, int len)
@@ -60,33 +58,25 @@ void _exit(int exit)
 void __assert_func( const char *file, int line, const char *func, const char *failedexpr)
 {
 	start_atomic();
-	led_on(0);
-	led_on(1);
-#ifdef PLATFORM_USE_USB_CDC
-	// Dissable all IRQs except the one for USB
-	for(uint32_t j=0;j < EMU_IRQn; j++)
-		NVIC_DisableIRQ(j);
 
-	NVIC_EnableIRQ( USB_IRQn );
-
-	end_atomic();
-#endif
+  led_on(0);
+  led_on(2);
+  led_on(3);
 
 	while(1)
 	{
-            printf("assertion \"%s\" failed: file \"%s\", line %d%s%s\n",failedexpr, file, line, func ? ", function: " : "", func ? func : "");
-			//#if defined(DEBUG)
-            	__DEBUG_BKPT();  // break into debugger, when attached
-			//#endif
+    printf("assertion \"%s\" failed: file \"%s\", line %d%s%s\n",failedexpr, file, line, func ? ", function: " : "", func ? func : "");
+    __BKPT (0); // break into debugger, when attached
 
-		for(uint32_t j = 0; j < 20; j++)
+    for(uint32_t j = 0; j < 20; j++)
 		{
 			//blink at twice the frequency of the _exit call, so we can identify which of the two events has occurred
 			for(uint32_t i = 0; i < 0xFFFFF; i++){}
 			led_toggle(0);
-			led_toggle(1);
+      led_toggle(2);
+      led_toggle(3);
 		}
 	}
-	end_atomic();
 
+	end_atomic();
 }
