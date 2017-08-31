@@ -33,10 +33,12 @@
  * LED DEFINITIONS *
  *******************/
 
-#define HW_NUM_LEDS 1
-#define LED0 B5
+#define HW_NUM_LEDS 4
+#define LED1 B5
+#define LED2 A5
+#define LED3 B6
+#define LED4 B7
 #define LED_GREEN 0
-
 
 /********************
  * UART DEFINITIONS *

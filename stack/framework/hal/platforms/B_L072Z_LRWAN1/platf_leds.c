@@ -40,7 +40,10 @@ static pin_id_t leds[ HW_NUM_LEDS ];
 
 void __led_init()
 {
-	leds[0] = LED0;
+  leds[0] = LED1;
+  leds[1] = LED2;
+  leds[2] = LED3;
+  leds[3] = LED4;
 	for(int i = 0; i < HW_NUM_LEDS; i++)
 	{
 		hw_gpio_clr(leds[i]);
