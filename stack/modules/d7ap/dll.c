@@ -823,8 +823,8 @@ void dll_notify_access_profile_file_changed()
     // make sure access class is re-read when entering scan automation
     active_access_class = NO_ACTIVE_ACCESS_CLASS;
 
-    // when doing scan automation restart this
-    if (dll_state == DLL_STATE_SCAN_AUTOMATION)
+    // when we are idle switch to scan automation now as well, in case the new AP enables scanning
+    if (dll_state == DLL_STATE_IDLE || dll_state == DLL_STATE_SCAN_AUTOMATION)
     {
         dll_execute_scan_automation();
     }
