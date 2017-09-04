@@ -315,13 +315,13 @@ static void configure_channel(const channel_id_t* channel) {
     write_reg(REG_BITRATEMSB, BITRATEMSB_L);
     write_reg(REG_BITRATELSB, BITRATELSB_L);
     write_reg(REG_FDEVMSB, FDEVMSB_L);
-    write_reg(REG_FDEVLSB, FDEVMSB_L);
+    write_reg(REG_FDEVLSB, FDEVLSB_L);
     write_reg(REG_RXBW, RXBW_L);
   } else if(channel->channel_header.ch_class == PHY_CLASS_NORMAL_RATE) {
     write_reg(REG_BITRATEMSB, BITRATEMSB_N);
     write_reg(REG_BITRATELSB, BITRATELSB_N);
     write_reg(REG_FDEVMSB, FDEVMSB_N);
-    write_reg(REG_FDEVLSB, FDEVMSB_N);
+    write_reg(REG_FDEVLSB, FDEVLSB_N);
     write_reg(REG_RXBW, RXBW_N);
   } else if(channel->channel_header.ch_class == PHY_CLASS_HI_RATE) {
     write_reg(REG_BITRATEMSB, BITRATEMSB_H);
