@@ -115,10 +115,13 @@ void alp_cmd_handler_set_appl_itf_callback(alp_cmd_handler_appl_itf_callback cb)
 
 static uint8_t append_interface_status_action(d7asp_result_t* d7asp_result, uint8_t* ptr)
 {
+  // TODO refactor: duplicate of add_interface_status_action() in alp.c??
   uint8_t* ptr_start = ptr;
   (*ptr) = ALP_OP_RETURN_STATUS + (1 << 6); ptr++;
   (*ptr) = ALP_ITF_ID_D7ASP; ptr++;
-  memcpy(ptr, &(d7asp_result->channel), 3); ptr += 3; // TODO might need to reorder fields in channel_id
+  (*ptr) = d7asp_result->channel.channel_header_raw; ptr++;
+  uint16_t center_freq_index_be = __builtin_bswap16(d7asp_result->channel.center_freq_index);
+  memcpy(ptr, &center_freq_index_be, 2); ptr += 2;
   memcpy(ptr, &(d7asp_result->rx_level), 1); ptr += 1;
   (*ptr) = d7asp_result->link_budget; ptr++;
   (*ptr) = d7asp_result->target_rx_level; ptr++;

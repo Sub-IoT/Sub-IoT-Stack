@@ -259,7 +259,9 @@ static void add_interface_status_action(fifo_t* alp_response_fifo, d7asp_result_
 {
   fifo_put_byte(alp_response_fifo, ALP_OP_RETURN_STATUS + (1 << 6));
   fifo_put_byte(alp_response_fifo, ALP_ITF_ID_D7ASP);
-  fifo_put(alp_response_fifo, (uint8_t*) &(d7asp_result->channel), 3); // TODO might need to reorder fields in channel_id
+  fifo_put_byte(alp_response_fifo, d7asp_result->channel.channel_header_raw, 1);
+  uint16_t center_freq_index_be = __builtin_bswap16(d7asp_result->channel.center_freq_index);
+  fifo_put(alp_response_fifo, (uint8_t*)&center_freq_index_be, 2);
   fifo_put_byte(alp_response_fifo, d7asp_result->rx_level);
   fifo_put_byte(alp_response_fifo, d7asp_result->link_budget);
   fifo_put_byte(alp_response_fifo, d7asp_result->target_rx_level);
