@@ -160,7 +160,9 @@ static channel_id_t default_channel_id = {
   .center_freq_index = 0
 };
 
-static channel_id_t* current_channel_id = NULL;
+#define EMPTY_CHANNEL_ID { .channel_header_raw = 0xFF, .center_freq_index = 0xFF };
+
+static channel_id_t current_channel_id = EMPTY_CHANNEL_ID;
 
 /*
  * FSK packet handler structure
@@ -289,7 +291,7 @@ static void configure_eirp(eirp_t eirp) {
 
 static void set_center_freq(uint32_t center_freq) {
   DPRINT("set center: %d\n", center_freq);
-  center_freq = (uint32_t)((double)center_freq/(double)FREQ_STEP);
+  center_freq = (uint32_t)(center_freq/FREQ_STEP);
 
   write_reg(REG_FRFMSB, (uint8_t)((center_freq >> 16) & 0xFF));
   write_reg(REG_FRFMID, (uint8_t)((center_freq >> 8) & 0xFF));
@@ -299,7 +301,7 @@ static void set_center_freq(uint32_t center_freq) {
 static void configure_channel(const channel_id_t* channel) {
   assert(channel->channel_header.ch_freq_band == PHY_BAND_868); // TODO implement other bands
 
-  if(hw_radio_channel_ids_equal(current_channel_id, channel)) {
+  if(hw_radio_channel_ids_equal(&current_channel_id, channel)) {
     return;
   }
 
@@ -347,7 +349,11 @@ static void configure_channel(const channel_id_t* channel) {
   center_freq += 25000 * channel->center_freq_index + channel_spacing_half;
   set_center_freq(center_freq);
 
-  memcpy(&current_channel_id, channel, sizeof(channel_id_t));
+  current_channel_id = *channel;
+  DPRINT("set channel_header %i, channel_band %i, center_freq_index %i\n",
+         current_channel_id.channel_header_raw,
+         current_channel_id.channel_header.ch_freq_band,
+         current_channel_id.center_freq_index);
 }
 
 static void init_regs() {
@@ -443,7 +449,7 @@ static void packet_transmitted_isr() {
   hw_gpio_disable_interrupt(SX127x_DIO0_PIN);
   DPRINT("packet transmitted ISR\n");
   assert(state == STATE_TX);
-  if(current_channel_id->channel_header.ch_class == PHY_CLASS_LORA) {
+  if(current_channel_id.channel_header.ch_class == PHY_CLASS_LORA) {
     // in LoRa mode we have to clear the IRQ register manually
     write_reg(REG_LR_IRQFLAGS, 0xFF);
   }
@@ -507,7 +513,7 @@ static void bg_scan_rx_done()
     memcpy(&(current_packet->rx_meta.rx_cfg.channel_id), &current_channel_id, sizeof(channel_id_t));
 
     pn9_encode(current_packet->data + 1, FskPacketHandler.Size);
-    if (current_channel_id->channel_header.ch_coding == PHY_CODING_FEC_PN9)
+    if (current_channel_id.channel_header.ch_coding == PHY_CODING_FEC_PN9)
         fec_decode_packet(current_packet->data + 1, FskPacketHandler.Size, FskPacketHandler.Size);
 
     DPRINT_DATA(current_packet->data, BACKGROUND_FRAME_LENGTH + 1);
@@ -589,7 +595,7 @@ static void fifo_threshold_isr() {
 
         assert(rx_bytes == 4);
 
-        if (current_channel_id->channel_header.ch_coding == PHY_CODING_FEC_PN9)
+        if (current_channel_id.channel_header.ch_coding == PHY_CODING_FEC_PN9)
         {
             uint8_t decoded_buffer[4];
             memcpy(decoded_buffer, buffer, 4);
@@ -637,7 +643,7 @@ static void fifo_threshold_isr() {
 
         pn9_encode(current_packet->data, FskPacketHandler.NbBytes);
 
-        if (current_channel_id->channel_header.ch_coding == PHY_CODING_FEC_PN9)
+        if (current_channel_id.channel_header.ch_coding == PHY_CODING_FEC_PN9)
             fec_decode_packet(current_packet->data, FskPacketHandler.NbBytes, FskPacketHandler.NbBytes);
 
         DPRINT_DATA(current_packet->data, current_packet->length + 1);
@@ -696,7 +702,7 @@ static void configure_syncword(syncword_class_t syncword_class, const channel_id
     // TODO
   }
 
-  if(syncword_class != current_syncword_class || (channel->channel_header.ch_coding != current_channel_id->channel_header.ch_coding))
+  if(syncword_class != current_syncword_class || (channel->channel_header.ch_coding != current_channel_id.channel_header.ch_coding))
   {
     current_syncword_class = syncword_class;
     uint16_t sync_word = sync_word_value[syncword_class][channel->channel_header.ch_coding ];
@@ -707,9 +713,14 @@ static void configure_syncword(syncword_class_t syncword_class, const channel_id
   }
 }
 
-static void start_rx(hw_rx_cfg_t const* rx_cfg) {
-  state = STATE_RX;
+static void restart_rx_chain() {
+  // TODO for now we assume we need a restart PLL lock.
+  // this can be optimized for case where there is no freq change
+  write_reg(REG_RXCONFIG, read_reg(REG_RXCONFIG) | RF_RXCONFIG_RESTARTRXWITHPLLLOCK);
+  DPRINT("restart RX chain with PLL lock");
+}
 
+static void start_rx(hw_rx_cfg_t const* rx_cfg) {
   configure_channel(&(rx_cfg->channel_id));
   configure_syncword(rx_cfg->syncword_class, &(rx_cfg->channel_id));
 
@@ -775,6 +786,10 @@ static void start_rx(hw_rx_cfg_t const* rx_cfg) {
 
     DPRINT("START FG scan @ %i", timer_get_counter_value());
     DEBUG_RX_START();
+    if(state == STATE_RX)
+      restart_rx_chain(); // restart when already in RX so PLL can lock when there is a freq change
+
+    state = STATE_RX;
     set_opmode(OPMODE_RX);
 
     if(rssi_valid_callback != 0)
@@ -906,7 +921,7 @@ error_t hw_radio_send_packet(hw_radio_packet_t* packet, tx_packet_callback_t tx_
     DPRINT("TX len=%i", packet->length);
     DPRINT_DATA(packet->data, packet->length + 1);
 
-    if (current_channel_id->channel_header.ch_coding == PHY_CODING_FEC_PN9)
+    if (current_channel_id.channel_header.ch_coding == PHY_CODING_FEC_PN9)
         encoded_len = fec_encode(encoded_packet, packet->length + 1);
 
     pn9_encode(encoded_packet, encoded_len);
@@ -957,7 +972,7 @@ error_t hw_radio_set_background(hw_radio_packet_t* packet, uint16_t eta, uint16_
 
     if(state == STATE_RX)
     {
-        pending_rx_cfg.channel_id = *current_channel_id;
+        pending_rx_cfg.channel_id = current_channel_id;
         pending_rx_cfg.syncword_class = current_syncword_class;
         should_rx_after_tx_completed = true;
         // when in RX state we can directly strobe TX and do not need to wait until in IDLE
@@ -983,12 +998,12 @@ error_t hw_radio_set_background(hw_radio_packet_t* packet, uint16_t eta, uint16_
     write_reg(REG_FIFOTHRESH, 0x80 | 0x05);
 
     // Prepare the subsequent background frames which include the preamble and the sync word
-    uint8_t preamble_len = (current_channel_id->channel_header.ch_class ==  PHY_CLASS_HI_RATE ? PREAMBLE_HI_RATE_CLASS : PREAMBLE_LOW_RATE_CLASS);
+    uint8_t preamble_len = (current_channel_id.channel_header.ch_class ==  PHY_CLASS_HI_RATE ? PREAMBLE_HI_RATE_CLASS : PREAMBLE_LOW_RATE_CLASS);
     memset(bg_adv.packet, 0xAA, preamble_len); // preamble length is given in number of bytes
-    uint16_t sync_word = __builtin_bswap16(sync_word_value[current_syncword_class][current_channel_id->channel_header.ch_coding]);
+    uint16_t sync_word = __builtin_bswap16(sync_word_value[current_syncword_class][current_channel_id.channel_header.ch_coding]);
     memcpy(&bg_adv.packet[preamble_len], &sync_word, 2);
 
-    if (current_channel_id->channel_header.ch_coding == PHY_CODING_FEC_PN9)
+    if (current_channel_id.channel_header.ch_coding == PHY_CODING_FEC_PN9)
         bg_adv.packet_size = preamble_len + 2 + fec_calculated_decoded_length(BACKGROUND_FRAME_LENGTH);
     else
         bg_adv.packet_size = preamble_len + 2 + BACKGROUND_FRAME_LENGTH;
@@ -1033,7 +1048,7 @@ static uint8_t assemble_background_payload()
     crc = __builtin_bswap16(crc_calculate(bg_adv.packet_payload, 4));
     memcpy(&bg_adv.packet_payload[BACKGROUND_DLL_HEADER_LENGTH + sizeof(uint16_t)], &crc, 2);
 
-    if (current_channel_id->channel_header.ch_coding == PHY_CODING_FEC_PN9)
+    if (current_channel_id.channel_header.ch_coding == PHY_CODING_FEC_PN9)
     {
         payload_len = fec_encode(bg_adv.packet_payload, BACKGROUND_FRAME_LENGTH);
         pn9_encode(bg_adv.packet_payload, payload_len);
@@ -1150,7 +1165,7 @@ error_t hw_radio_start_background_scan(hw_rx_cfg_t const* rx_cfg, rx_packet_call
     configure_syncword(rx_cfg->syncword_class, &(rx_cfg->channel_id));
     configure_channel(&(rx_cfg->channel_id));
 
-    if (current_channel_id->channel_header.ch_coding == PHY_CODING_FEC_PN9)
+    if (current_channel_id.channel_header.ch_coding == PHY_CODING_FEC_PN9)
         packet_len = fec_calculated_decoded_length(BACKGROUND_FRAME_LENGTH);
     else
         packet_len = BACKGROUND_FRAME_LENGTH;
@@ -1187,7 +1202,7 @@ error_t hw_radio_start_background_scan(hw_rx_cfg_t const* rx_cfg, rx_packet_call
     }
 
     // the device has a period of To to successfully detect the sync word
-    assert(timer_post_task_delay(&switch_to_standby_mode, bg_timeout[current_channel_id->channel_header.ch_class]) == SUCCESS);
+    assert(timer_post_task_delay(&switch_to_standby_mode, bg_timeout[current_channel_id.channel_header.ch_class]) == SUCCESS);
 
     return SUCCESS;
 }
