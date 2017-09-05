@@ -23,7 +23,7 @@
 
 
 #include "hwsystem.h"
-#include <assert.h>
+#include "debug.h"
 #include "stm32l0xx_hal.h"
 #include "stm32l0xx_hal_pwr.h"
 
