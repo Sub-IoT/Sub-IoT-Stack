@@ -70,6 +70,19 @@ __LINK_C void __gpio_init()
   //GPIOINT_Init();
 }
 
+__LINK_C error_t hw_gpio_configure_pin_stm(pin_id_t pin_id, GPIO_InitTypeDef* init_options)
+{
+  init_options->Pin = 1 << pin_id.pin;
+  HAL_GPIO_Init(ports[pin_id.port], init_options);
+
+  if  (init_options->Mode == GPIO_MODE_IT_RISING || init_options->Mode == GPIO_MODE_IT_FALLING || init_options->Mode == GPIO_MODE_IT_RISING_FALLING)
+  {
+    interrupts[pin_id.pin].interrupt_port = pin_id.port;
+  }
+
+  return SUCCESS;
+}
+
 __LINK_C error_t hw_gpio_configure_pin(pin_id_t pin_id, bool int_allowed, uint32_t mode, unsigned int out)
 {
   //do early-stop error checking
@@ -95,20 +108,6 @@ __LINK_C error_t hw_gpio_configure_pin(pin_id_t pin_id, bool int_allowed, uint32
   }
 
   return hw_gpio_configure_pin_stm(pin_id, &GPIO_InitStruct);
-}
-
-
-__LINK_C error_t hw_gpio_configure_pin_stm(pin_id_t pin_id, GPIO_InitTypeDef* init_options)
-{
-  init_options->Pin = 1 << pin_id.pin;
-  HAL_GPIO_Init(ports[pin_id.port], init_options);
-
-  if  (init_options->Mode == GPIO_MODE_IT_RISING || init_options->Mode == GPIO_MODE_IT_FALLING || init_options->Mode == GPIO_MODE_IT_RISING_FALLING)
-  {
-    interrupts[pin_id.pin].interrupt_port = pin_id.port;
-  }
-
-  return SUCCESS;
 }
 
 __LINK_C error_t hw_gpio_set(pin_id_t pin_id)

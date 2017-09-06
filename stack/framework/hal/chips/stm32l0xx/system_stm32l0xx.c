@@ -51,6 +51,18 @@
   ******************************************************************************
   */
 
+/** @addtogroup CMSIS
+  * @{
+  */
+
+/** @addtogroup stm32l0xx_system
+  * @{
+  */  
+  
+/** @addtogroup STM32L0xx_System_Private_Includes
+  * @{
+  */
+
 #include "stm32l0xx.h"
 
 #if !defined  (HSE_VALUE) 
@@ -66,6 +78,21 @@
 #endif /* HSI_VALUE */
 
 
+/**
+  * @}
+  */
+
+/** @addtogroup STM32L0xx_System_Private_TypesDefinitions
+  * @{
+  */
+
+/**
+  * @}
+  */
+
+/** @addtogroup STM32L0xx_System_Private_Defines
+  * @{
+  */
 /************************* Miscellaneous Configuration ************************/
 
 /*!< Uncomment the following line if you need to relocate your vector Table in
@@ -74,7 +101,21 @@
 #define VECT_TAB_OFFSET  0x00U /*!< Vector Table base offset field. 
                                    This value must be a multiple of 0x200. */
 /******************************************************************************/
+/**
+  * @}
+  */
 
+/** @addtogroup STM32L0xx_System_Private_Macros
+  * @{
+  */
+
+/**
+  * @}
+  */
+
+/** @addtogroup STM32L0xx_System_Private_Variables
+  * @{
+  */
   /* This variable is updated in three ways:
       1) by calling CMSIS function SystemCoreClockUpdate()
       2) by calling HAL API function HAL_RCC_GetHCLKFreq()
@@ -87,6 +128,22 @@
   const uint8_t AHBPrescTable[16] = {0U, 0U, 0U, 0U, 0U, 0U, 0U, 0U, 1U, 2U, 3U, 4U, 6U, 7U, 8U, 9U};
   const uint8_t APBPrescTable[8] = {0U, 0U, 0U, 0U, 1U, 2U, 3U, 4U};
   const uint8_t PLLMulTable[9] = {3U, 4U, 6U, 8U, 12U, 16U, 24U, 32U, 48U};
+
+/**
+  * @}
+  */
+
+/** @addtogroup STM32L0xx_System_Private_FunctionPrototypes
+  * @{
+  */
+
+/**
+  * @}
+  */
+
+/** @addtogroup STM32L0xx_System_Private_Functions
+  * @{
+  */
 
 /**
   * @brief  Setup the microcontroller system.
@@ -213,5 +270,18 @@ void SystemCoreClockUpdate (void)
   SystemCoreClock >>= tmp;
 }
 
+
+
+/**
+  * @}
+  */
+
+/**
+  * @}
+  */
+
+/**
+  * @}
+  */
 
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/

@@ -72,10 +72,10 @@ HAL_StatusTypeDef HAL_InitTick(uint32_t TickPriority)
   * @param Delay: specifies the delay time length, in milliseconds.
   * @retval None
   */
-void HAL_Delay(__IO uint32_t Delay)
-{
-  DelayMs( Delay ); /* based on RTC */
-}
+//void HAL_Delay(__IO uint32_t Delay)
+//{
+//  DelayMs( Delay ); /* based on RTC */
+//}
 
 /**
   * @brief  Initializes the MSP.
@@ -179,10 +179,10 @@ void HAL_MspInit(void)
   * @param  GPIO_Pin: Specifies the pins connected to the EXTI line.
   * @retval None
   */
-void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
-{
-  HW_GPIO_IrqHandler( GPIO_Pin );
-}
+//void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
+//{
+//  HW_GPIO_IrqHandler( GPIO_Pin );
+//}
 
 /**
   * @brief  Gets IRQ number as a function of the GPIO_Pin.

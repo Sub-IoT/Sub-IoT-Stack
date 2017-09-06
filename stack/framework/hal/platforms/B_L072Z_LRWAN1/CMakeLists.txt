@@ -21,7 +21,8 @@
 REQUIRE_TOOLCHAIN(gcc-arm-embedded)
 
 #Define platform specific options
-PLATFORM_PARAM(${PLATFORM_PREFIX}_MCU "STM32L072xx" STRING "The MCU used")
+PLATFORM_PARAM(PLATFORM_MCU "STM32L072xx" STRING "The MCU series name of the platform")
+PLATFORM_PARAM(PLATFORM_MCU_FULL "STM32L072CZ" STRING "The full MCU name of the platform")
 SET(JLINK_DEVICE "STM32L072CZ" CACHE STRING "The device passed to JLinkExe for flashing")
 PLATFORM_PARAM(${PLATFORM_PREFIX}_RADIO "sx127x" STRING "The radio chip connected to the board")
 PLATFORM_OPTION(${PLATFORM_PREFIX}_DEBUGPINS "Enable/Disable Hardware Debug Pins support (see 'hwdebug.h')" FALSE)
@@ -40,7 +41,7 @@ PLATFORM_PARAM(${PLATFORM_PREFIX}_CONSOLE_BAUDRATE "115200" STRING "The baudrate
 
 
 #Add a 'global' definition for the specific MCU
-EXPORT_GLOBAL_COMPILE_DEFINITIONS("-D${${PLATFORM_PREFIX}_MCU}")
+EXPORT_GLOBAL_COMPILE_DEFINITIONS("-D${PLATFORM_MCU}")
 
 #Make the 'inc' directory available so 'platform.h' can be found
 EXPORT_GLOBAL_INCLUDE_DIRECTORIES(inc)

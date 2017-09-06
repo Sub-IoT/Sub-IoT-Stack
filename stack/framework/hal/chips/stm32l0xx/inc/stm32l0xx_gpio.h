@@ -16,8 +16,8 @@
  * limitations under the License.
  */
 
-#ifndef __STM32L0xx_CHIP_H_
-#define __STM32L0xx_CHIP_H_
+#ifndef __STM32L0xx_GPIO_H_
+#define __STM32L0xx_GPIO_H_
 #include "stm32l0xx_pins.h"
 #include "stm32l0xx_hal_gpio.h"
 
@@ -31,4 +31,4 @@ __LINK_C error_t hw_gpio_configure_pin(pin_id_t pin_id, bool int_allowed, uint32
 __LINK_C error_t hw_gpio_configure_pin_stm(pin_id_t pin_id, GPIO_InitTypeDef* init_options);
 
 
-#endif //__STM32L0xx_CHIP_H_
+#endif //__STM32L0xx_GPIO_H_
