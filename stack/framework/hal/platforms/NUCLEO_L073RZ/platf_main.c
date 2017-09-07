@@ -58,6 +58,9 @@ void __platform_init()
     hw_gpio_configure_pin(SX127x_RESET_PIN, false, GPIO_MODE_OUTPUT_PP, 1);
     reset_sx127x();
 #endif
+#ifdef PLATFORM_SX127X_USE_MANUAL_RXTXSW_PIN
+    hw_gpio_configure_pin(SX127x_MANUAL_RXTXSW_PIN, false, GPIO_MODE_OUTPUT_PP, 0);
+#endif
 #endif
 
 #if defined(USE_SX127X) && defined(PLATFORM_SX127X_USE_RESET_PIN)

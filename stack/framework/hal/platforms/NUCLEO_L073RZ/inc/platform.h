@@ -76,6 +76,9 @@
   #ifdef PLATFORM_SX127X_USE_RESET_PIN
     #define SX127x_RESET_PIN A0
   #endif
+  #ifdef PLATFORM_SX127X_USE_MANUAL_RXTXSW_PIN
+    #define SX127x_MANUAL_RXTXSW_PIN C1
+  #endif
 #endif
 
 #define PLATFORM_NUM_TIMERS 1

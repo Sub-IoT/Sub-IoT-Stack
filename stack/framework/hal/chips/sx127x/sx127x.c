@@ -253,8 +253,23 @@ static opmode_t get_opmode() {
   return (read_reg(REG_OPMODE) & ~RF_OPMODE_MASK);
 }
 
+
+static void set_antenna_switch(opmode_t opmode) {
+  if(opmode == OPMODE_TX) {
+    DPRINT("set RXTX SW");
+    hw_gpio_set(SX127x_MANUAL_RXTXSW_PIN);
+  } else {
+    DPRINT("clear RXTX SW");
+    hw_gpio_clr(SX127x_MANUAL_RXTXSW_PIN);
+  }
+}
+
 static void set_opmode(opmode_t opmode) {
   write_reg(REG_OPMODE, (read_reg(REG_OPMODE) & RF_OPMODE_MASK) | opmode);
+
+#ifdef PLATFORM_SX127X_USE_MANUAL_RXTXSW_PIN
+  set_antenna_switch(opmode);
+#endif
 }
 
 static inline void flush_fifo() {
