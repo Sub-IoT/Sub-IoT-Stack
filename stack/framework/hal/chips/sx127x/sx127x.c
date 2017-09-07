@@ -299,8 +299,6 @@ static void set_center_freq(uint32_t center_freq) {
 }
 
 static void configure_channel(const channel_id_t* channel) {
-  assert(channel->channel_header.ch_freq_band == PHY_BAND_868); // TODO implement other bands
-
   if(hw_radio_channel_ids_equal(&current_channel_id, channel)) {
     return;
   }
