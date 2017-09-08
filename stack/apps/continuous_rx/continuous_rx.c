@@ -32,8 +32,8 @@
 #include "hwsystem.h"
 #include "platform_defs.h"
 
-#if !defined (USE_CC1101) && !defined (USE_SI4460)
-    #error "This application only works with cc1101 and SI4460"
+#if !defined (USE_CC1101) && !defined (USE_SI4460) && !defined (USE_SX127X)
+    #error "This application only works with cc1101, SI4460 or SX1276"
 #endif
 
 #include "log.h"
@@ -53,29 +53,27 @@
 #define DPRINT(...)
 #endif
 
-#if defined USE_CC1101
+
+typedef enum {
+  MODULATION_CW,
+  MODULATION_GFSK,
+} modulation_t;
+
+#if defined(USE_CC1101)
 #include "../../framework/hal/chips/cc1101/cc1101_constants.h"
 uint8_t cc1101_interface_strobe(uint8_t); // prototype (to prevent warning) of internal driver function which is used here.
 uint8_t cc1101_interface_write_single_reg(uint8_t, uint8_t);
 uint8_t cc1101_interface_write_single_patable(uint8_t);
 static uint8_t current_eirp_level = 0xC0;
 static uint8_t max_eirp_level = 0xC0;//868 MHz = +12 dBm , 433 MHz = +10 dBm
-typedef enum {
-    CW_direct   = 0x30,
-    GFSK_direct = 0x12
-}modulation;
-
-#elif defined USE_SI4460
+#endif
+#if defined USE_SI4460
 // include private API which is not exported by cmake for 'normal' apps
 #include "../../framework/hal/chips/si4460/ezradiodrv/inc/ezradio_cmd.h"
 #include "../../framework/hal/chips/si4460/ezradiodrv/inc/ezradio_api_lib.h"
 #include "../../framework/hal/chips/si4460/si4460_registers.h"
 #include "../../framework/hal/chips/si4460/si4460.h"
 static ezradio_cmd_reply_t ezradioReply;
-typedef enum {
-    CW_direct   = 0x18,
-    GFSK_direct = 0x13
-}modulation;
 #endif
 
 #define NORMAL_RATE_CHANNEL_COUNT 8
@@ -84,7 +82,7 @@ typedef enum {
 static hw_rx_cfg_t rx_cfg;
 static uint8_t current_channel_indexes_index = 0;
 static uint8_t current_eirp_level = 0x7f;
-static modulation current_modulation = GFSK_direct;
+static modulation_t current_modulation = MODULATION_GFSK;
 static phy_channel_band_t current_channel_band = PHY_BAND_868;
 static phy_channel_class_t current_channel_class = PHY_CLASS_NORMAL_RATE;
 static uint8_t channel_indexes[NORMAL_RATE_CHANNEL_COUNT] = { 0 }; // reallocated later depending on band/class
@@ -105,20 +103,15 @@ void start_radio(){
         /* start the device as receiver  */
         ezradio_change_state(EZRADIO_CMD_CHANGE_STATE_ARG_NEXT_STATE1_NEW_STATE_ENUM_READY);
         hw_radio_set_rx(&rx_cfg, NULL, NULL);
-        /* start an infinite loop in order to read the rssi signal every 500 ms */
+#endif
         while (true) {
             int16_t rss = hw_radio_get_rssi();
-            //if(rss != -134){
-            DPRINT("APP rss: %d", rss);
-            lcd_write_string("rss : %d \n", rss);
-            //}
+            log_print_string("rss : %d \n", rss);
             hw_busy_wait(5000);
         }
-
-#endif
 }
 
-void configure_radio(modulation mod){
+void configure_radio(modulation_t mod){
 #if defined USE_SI4460
     // Si4460 Direct mode
     ezradio_set_property(0x20, 0x01, 0x00, mod);
@@ -137,6 +130,8 @@ void configure_radio(modulation mod){
     cc1101_interface_write_single_reg(0x08, 0x22); // PKTCTRL0 disable data whitening, continious preamble
     cc1101_interface_write_single_reg(0x12, mod); // MDMCFG2
     cc1101_interface_strobe(0x32); // strobe calibrate
+#elif defined USE_SX127X
+    hw_radio_set_rx(&rx_cfg, NULL, NULL);
 #endif
 }
 

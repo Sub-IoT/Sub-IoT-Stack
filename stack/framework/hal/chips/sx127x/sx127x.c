@@ -871,9 +871,6 @@ error_t hw_radio_init(alloc_packet_callback_t alloc_packet_cb, release_packet_ca
   if(sx127x_spi != NULL)
     return EALREADY;
 
-  if(alloc_packet_cb == NULL || release_packet_cb == NULL)
-    return EINVAL;
-
   alloc_packet_callback = alloc_packet_cb;
   release_packet_callback = release_packet_cb;
 
