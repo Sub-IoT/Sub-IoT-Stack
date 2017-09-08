@@ -82,6 +82,12 @@
   #endif
 #endif
 
+#define PLATFORM_USE_ABZ // this platform is based on the Murata ABZ module
+// Antenna switching uses 3 pins on murata ABZ module
+#define ABZ_ANT_SW_RX_PIN A1
+#define ABZ_ANT_SW_TX_PIN C2
+#define ABZ_ANT_SW_PA_BOOST_PIN C1
+
 #define PLATFORM_NUM_TIMERS 1
 
 #endif

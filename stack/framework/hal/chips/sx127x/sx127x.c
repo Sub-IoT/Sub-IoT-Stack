@@ -115,6 +115,9 @@
 #define CHECK_FIFO_LEVEL() (read_reg(REG_IRQFLAGS2) & 0x20)
 #define CHECK_FIFO_FULL()  (read_reg(REG_IRQFLAGS2) & 0x80)
 
+#if defined(PLATFORM_USE_ABZ) && defined(PLATFORM_SX127X_USE_MANUAL_RXTXSW_PIN)
+  #error "Invalid configuration"
+#endif
 
 typedef enum {
   OPMODE_SLEEP = 0,
@@ -257,19 +260,39 @@ static opmode_t get_opmode() {
 static void set_antenna_switch(opmode_t opmode) {
   if(opmode == OPMODE_TX) {
     DPRINT("set RXTX SW");
+#ifdef PLATFORM_SX127X_USE_MANUAL_RXTXSW_PIN
     hw_gpio_set(SX127x_MANUAL_RXTXSW_PIN);
+#endif
+#ifdef PLATFORM_USE_ABZ
+    hw_gpio_clr(ABZ_ANT_SW_RX_PIN);
+    if((read_reg(REG_PACONFIG) & RF_PACONFIG_PASELECT_PABOOST) == RF_PACONFIG_PASELECT_PABOOST) {
+      hw_gpio_clr(ABZ_ANT_SW_TX_PIN);
+      hw_gpio_set(ABZ_ANT_SW_PA_BOOST_PIN);
+    } else {
+      hw_gpio_set(ABZ_ANT_SW_TX_PIN);
+      hw_gpio_clr(ABZ_ANT_SW_PA_BOOST_PIN);
+    }
+#endif
   } else {
     DPRINT("clear RXTX SW");
+#ifdef PLATFORM_SX127X_USE_MANUAL_RXTXSW_PIN
     hw_gpio_clr(SX127x_MANUAL_RXTXSW_PIN);
+#endif
+#ifdef PLATFORM_USE_ABZ
+    hw_gpio_set(ABZ_ANT_SW_RX_PIN);
+    hw_gpio_clr(ABZ_ANT_SW_TX_PIN);
+    hw_gpio_clr(ABZ_ANT_SW_PA_BOOST_PIN);
+#endif
   }
 }
 
-static void set_opmode(opmode_t opmode) {
-  write_reg(REG_OPMODE, (read_reg(REG_OPMODE) & RF_OPMODE_MASK) | opmode);
 
-#ifdef PLATFORM_SX127X_USE_MANUAL_RXTXSW_PIN
+static void set_opmode(opmode_t opmode) {
+#if defined(PLATFORM_SX127X_USE_MANUAL_RXTXSW_PIN) || defined(PLATFORM_USE_ABZ)
   set_antenna_switch(opmode);
 #endif
+
+  write_reg(REG_OPMODE, (read_reg(REG_OPMODE) & RF_OPMODE_MASK) | opmode);
 }
 
 static inline void flush_fifo() {
