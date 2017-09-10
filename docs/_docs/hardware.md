@@ -66,9 +66,3 @@ It is important to know that there are a number of parties who are currently in 
 so the choice should increase in the near future.
 
 For more info on adding support for custom platforms or porting to new MCU's or RF chips please refer to the [porting section]({{ site.baseurl }}{% link _docs/porting.md %})
-
-## Note on CC430 based platforms
-
-At the moment we are not focusing on the CC430 based platform, mainly because ARM Cortex based platforms gives us more flexibility with regard to code size.
-Also, in my experience, the free toolchains available for CC430 are not as robust as gcc-arm-embedded. TI's msp430-gcc (which supersedes mspgcc),
-is still a young effort and there are some known problems with code size optimization. While OSS-7 has a HAL implementation to support the Wizzilab platform, this platform is not tested by us anymore since we stopped using cc430 based hardware for our projects. Furthermore, we are aware of crashes when running the current OSS-7 stack on cc430. Only the PHY layer is validated to work on cc430 for now. We currently lack time to look into this and would like to focus our efforts, but we would of course welcome patches from people who would still like to use cc430. The code for this platform will be removed in the near future, unless someone volunteers to maintain this. This means that using cc430 based platforms is strongly discouraged and not supported unless you want maintain/fix this.
