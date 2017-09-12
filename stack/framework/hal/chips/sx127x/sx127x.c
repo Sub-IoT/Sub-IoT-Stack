@@ -336,12 +336,17 @@ static void set_center_freq(uint32_t center_freq) {
   write_reg(REG_FRFLSB, (uint8_t)(center_freq & 0xFF));
 }
 
+static bool is_lora_channel(const channel_id_t* channel) {
+  return channel->channel_header.ch_class == PHY_CLASS_LORA;
+}
+
 static void configure_channel(const channel_id_t* channel) {
   if(hw_radio_channel_ids_equal(&current_channel_id, channel)) {
     return;
   }
 
-  set_lora_mode(channel->channel_header.ch_class == PHY_CLASS_LORA); // TODO only switch when needed
+  if(is_lora_channel(channel) != is_lora_channel(&current_channel_id))
+    set_lora_mode(is_lora_channel(channel)); // only set mode when changed compared to current
 
   // TODO check channel index is allowed
   // TODO define channel settings for LoRa PHY
