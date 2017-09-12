@@ -650,6 +650,7 @@ static void fifo_threshold_isr() {
         DPRINT("RX Packet Length: %i ", packet_len);
 
         current_packet = alloc_packet_callback(packet_len);
+        current_packet->rx_meta.rssi = get_rssi(); // we assume TX is still ongoing now
         memcpy(current_packet->data, buffer, 4);
 
         FskPacketHandler.Size = packet_len;
@@ -673,8 +674,9 @@ static void fifo_threshold_isr() {
         current_packet->rx_meta.timestamp = timer_get_counter_value();
         current_packet->rx_meta.rx_cfg.syncword_class = current_syncword_class;
         current_packet->rx_meta.crc_status = HW_CRC_UNAVAILABLE;
-        current_packet->rx_meta.rssi = get_rssi();
         current_packet->rx_meta.lqi = 0; // TODO
+        // RSSI is measured during reception of the first part of the packet
+        // to make sure we are actually measuring during a TX, instead of after
         memcpy(&(current_packet->rx_meta.rx_cfg.channel_id), &current_channel_id, sizeof(channel_id_t));
 
         pn9_encode(current_packet->data, FskPacketHandler.NbBytes);
@@ -683,7 +685,7 @@ static void fifo_threshold_isr() {
             fec_decode_packet(current_packet->data, FskPacketHandler.NbBytes, FskPacketHandler.NbBytes);
 
         DPRINT_DATA(current_packet->data, current_packet->length + 1);
-        DPRINT("RX done\n");
+        DPRINT("RX done (%i dBm)", current_packet->rx_meta.rssi);
         rx_packet_callback(current_packet);
 
         // Restart the reception until upper layer decides to stop it
