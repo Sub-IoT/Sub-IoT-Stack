@@ -129,10 +129,9 @@ void spi_disable(spi_handle_t* spi) {
 }
 
 
-spi_handle_t* spi_init(uint8_t spi_number, uint32_t baudrate, uint8_t databits, bool msbf, uint8_t pins) {
+spi_handle_t* spi_init(uint8_t spi_number, uint32_t baudrate, uint8_t databits, bool msbf) {
   // assert what is supported by HW
   assert(databits == 8);
-  assert(pins == 0); // TODO alternate location?
   assert(spi_number < SPI_COUNT);
 
   if (handle[spi_number].hspi.Instance != NULL)

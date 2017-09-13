@@ -64,7 +64,6 @@
 
 #ifdef USE_SX127X
   #define SX127x_SPI_INDEX    0
-  #define SX127x_SPI_LOCATION 0
   #define SX127x_SPI_PIN_CS PIN(1, 6)
   #define SX127x_SPI_BAUDRATE 8000000
   #define SX127x_DIO0_PIN PIN(0, 10)

@@ -105,8 +105,7 @@ struct spi_slave_handle {
 uint8_t            next_spi_slave_handle = 0;
 spi_slave_handle_t slave_handle[MAX_SPI_SLAVE_HANDLES];
 
-spi_handle_t* spi_init(uint8_t idx, uint32_t baudrate, uint8_t databits,
-                       bool msbf, uint8_t pins)
+spi_handle_t* spi_init(uint8_t idx, uint32_t baudrate, uint8_t databits, bool msbf)
 {
   // limit pre-allocated handles
   assert(next_spi_handle < MAX_SPI_HANDLES);
@@ -114,7 +113,6 @@ spi_handle_t* spi_init(uint8_t idx, uint32_t baudrate, uint8_t databits,
   // assert what is supported by HW and emlib
   assert(databits == 8 || databits == 9);
   assert(idx < USARTS);
-  assert(pins < LOCATIONS); // TODO: not more implemented yet
 
   // configure new handle
   handle[next_spi_handle] = (spi_handle_t){
