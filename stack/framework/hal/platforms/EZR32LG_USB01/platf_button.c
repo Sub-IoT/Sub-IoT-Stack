@@ -135,7 +135,7 @@ static void button_callback(pin_id_t pin_id, uint8_t event_mask)
 {
 	for(int i = 0; i < NUM_USERBUTTONS;i++)
 	{
-		if(hw_gpio_pin_matches(buttons[i].button_id, pin_id))
+    if(buttons[i].button_id == pin_id)
 		{
 			//set cur_callback_id to 0 to trigger all registered callbacks and post a task to do the actual callbacks
 			buttons[i].cur_callback_id = 0;

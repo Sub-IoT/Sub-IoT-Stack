@@ -23,6 +23,8 @@
  * \author contact@christophe.vg
  */
 
+#include "mcu.h"
+#include "ports.h"
 #include <stdbool.h>
 #include <stdint.h>
 
@@ -41,58 +43,10 @@
 #include "debug.h"
 #include "platform.h"
 
+
 #define USARTS    3 // only 1 and 2 available
 #define LOCATIONS 3 // only 1 and (2) available
 
-typedef struct {
-  uint32_t location;
-  pin_id_t mosi;
-  pin_id_t miso;
-  pin_id_t clk;
-} spi_pins_t;
-
-#define UNDEFINED_LOCATION {                     \
- .location = 0,                                  \
- .mosi     = { .port = 0,         .pin =  0 },   \
- .miso     = { .port = 0,         .pin =  0 },   \
- .clk      = { .port = 0,         .pin =  0 }    \
-}
-
-static spi_pins_t location[USARTS][LOCATIONS] = {
-  {
-    // USART0
-    UNDEFINED_LOCATION, // LOC0
-    UNDEFINED_LOCATION, // LOC1
-    UNDEFINED_LOCATION  // LOC2
-  },
-  {
-    // USART 1
-    UNDEFINED_LOCATION, // LOC0
-    {
-      .location = USART_ROUTE_LOCATION_LOC1,
-      .mosi     = { .port = gpioPortD, .pin = 0 },
-      .miso     = { .port = gpioPortD, .pin = 1 },
-      .clk      = { .port = gpioPortD, .pin = 2 }
-    },
-    {
-      .location = USART_ROUTE_LOCATION_LOC2,
-      .mosi     = { .port = gpioPortD, .pin = 7 },
-      .miso     = { .port = gpioPortD, .pin = 6 },
-      .clk      = { .port = gpioPortF, .pin = 0 }
-    }
-  },
-  {
-    // USART 2
-    UNDEFINED_LOCATION,  // LOC0
-    {
-      .location = USART_ROUTE_LOCATION_LOC1,
-      .mosi     = { .port = gpioPortB, .pin = 3 },
-      .miso     = { .port = gpioPortB, .pin = 4 },
-      .clk      = { .port = gpioPortB, .pin = 5 }
-    },
-    UNDEFINED_LOCATION  // LOC2
-  }
-};
 
 typedef struct spi_usart {
   USART_TypeDef*    channel;
@@ -121,7 +75,7 @@ static spi_usart_t usart[USARTS] = {
 // private implementation of handle structs
 struct spi_handle {
   spi_usart_t*        usart;
-  spi_pins_t*         pins;
+  const spi_port_t*         port;
   uint32_t            baudrate;
   uint8_t             databits;
   bool                msbf;
@@ -185,7 +139,7 @@ void spi_enable(spi_handle_t* spi) {
   spi->usart->channel->ROUTE = USART_ROUTE_TXPEN
                              | USART_ROUTE_RXPEN
                              | USART_ROUTE_CLKPEN
-                             | spi->pins->location;
+                             | spi->port->location;
 
   spi->active = true;
 }
@@ -226,7 +180,7 @@ spi_handle_t* spi_init(uint8_t idx,  uint32_t baudrate, uint8_t databits,
   // configure new handle
   handle[next_spi_handle] = (spi_handle_t){
     .usart      = &usart[idx],
-    .pins       = &location[idx][pins],
+    .port       = &spi_ports[idx],
     .baudrate   = baudrate,
     .databits   = databits,
     .msbf       = msbf,
@@ -237,11 +191,11 @@ spi_handle_t* spi_init(uint8_t idx,  uint32_t baudrate, uint8_t databits,
 
   // pins can be reused, e.g. same configuration, different baudrate
   error_t err;
-  err = hw_gpio_configure_pin(handle[next_spi_handle].pins->mosi, false, gpioModePushPull, 0);
+  err = hw_gpio_configure_pin(handle[next_spi_handle].port->mosi, false, gpioModePushPull, 0);
   assert( err == SUCCESS || err == EALREADY );
-  err = hw_gpio_configure_pin(handle[next_spi_handle].pins->miso, false, gpioModeInput,    0);
+  err = hw_gpio_configure_pin(handle[next_spi_handle].port->miso, false, gpioModeInput,    0);
   assert( err == SUCCESS || err == EALREADY );
-  err = hw_gpio_configure_pin(handle[next_spi_handle].pins->clk,  false, gpioModePushPull, 0);
+  err = hw_gpio_configure_pin(handle[next_spi_handle].port->clk,  false, gpioModePushPull, 0);
   assert( err == SUCCESS || err == EALREADY );
 
   // enable SPI bus if we're not doing auto power mgmgt

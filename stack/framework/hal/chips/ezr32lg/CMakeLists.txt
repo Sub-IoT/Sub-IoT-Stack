@@ -119,7 +119,6 @@ LIST(APPEND CHIP_SRCS
   ezr32lg_timer.c
   ezr32lg_system.c                    
   ezr32lg_gpio.c                    
-  ezr32lg_pins.c 
   ezr32lg_i2c.c 
   ezr32lg_watchdog.c
   emdrv/gpiointerrupt/src/gpiointerrupt.c

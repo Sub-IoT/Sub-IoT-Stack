@@ -18,10 +18,12 @@
 
 #ifndef __EZR32WG_CHIP_H_
 #define __EZR32WG_CHIP_H_
-#include <ezr32lg_pins.h>
 #include "hwgpio.h"
 
 #define PLATFORM_NUM_TIMERS 1
+
+#define GPIO_PIN(pin_id) (pin_id & 0x0F)
+#define GPIO_PORT(pin_id) ((pin_id >> 4) & 0x0F)
 
 /* \brief Implementation of hw_gpio_configure_pin for the EZR32WG MCU
  *

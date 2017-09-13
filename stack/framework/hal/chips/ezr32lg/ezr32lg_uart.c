@@ -23,6 +23,7 @@
  *  \author contact@christophe.vg
  */
 
+#include "mcu.h"
 #include <em_usart.h>
 #include <em_cmu.h>
 #include <em_gpio.h>
@@ -37,8 +38,6 @@
 #include <string.h>
 
 #include "hwsystem.h"
-
-#include "ezr32lg_pins.h"
 
 #include "platform.h"
 #include "hal_defs.h"
@@ -60,29 +59,30 @@ typedef struct {
 
 #define UNDEFINED_LOCATION {                      \
   .location = 0,                                  \
-  .tx       = { .port = 0,         .pin =  0 },   \
-  .rx       = { .port = 0,         .pin =  0 }    \
+  .tx       = PIN(0, 0),   \
+  .rx       = PIN(0, 0)    \
 }
 
 // configuration of uart/location mapping to tx and rx pins
 // TODO to be completed with all documented locations
+// TODO move to platform's port.h
 static uart_pins_t location[UARTS][LOCATIONS] = {
   {
     // 0: UART 0
     {
       .location = UART_ROUTE_LOCATION_LOC0,
-      .tx       = { .port = gpioPortF, .pin =  6 },
-      .rx       = { .port = gpioPortF, .pin =  7 }
+      .tx       = PIN(GPIO_PORTF, 6),
+      .rx       = PIN(GPIO_PORTF, 7)
     },
     {
       .location = UART_ROUTE_LOCATION_LOC1,
-      .tx       = { .port = gpioPortE, .pin =  0 },
-      .rx       = { .port = gpioPortE, .pin =  1 }
+      .tx       = PIN(GPIO_PORTE, 0),
+      .rx       = PIN(GPIO_PORTE, 1)
     },
     {
       .location = UART_ROUTE_LOCATION_LOC2,
-      .tx       = { .port = gpioPortA, .pin =  3 },
-      .rx       = { .port = gpioPortA, .pin =  4 }
+      .tx       = PIN(GPIO_PORTA, 3),
+      .rx       = PIN(GPIO_PORTA, 4)
     },
     // no LOCATION 3
     UNDEFINED_LOCATION
@@ -92,23 +92,23 @@ static uart_pins_t location[UARTS][LOCATIONS] = {
     // no LOCATION 0
     {
       .location = UART_ROUTE_LOCATION_LOC0,
-      .tx       = { .port = 0,         .pin =  0 },
-      .rx       = { .port = 0,         .pin =  0 }
+      .tx       = PIN(0, 0),
+      .rx       = PIN(0, 0)
     },
     {
       .location = UART_ROUTE_LOCATION_LOC1,
-      .tx       = { .port = gpioPortF, .pin = 10 },
-      .rx       = { .port = gpioPortF, .pin = 11 }
+      .tx       = PIN(GPIO_PORTF, 11),
+      .rx       = PIN(GPIO_PORTF, 11)
     },
     {
       .location = UART_ROUTE_LOCATION_LOC2,
-      .tx       = { .port = gpioPortB, .pin =  9 },
-      .rx       = { .port = gpioPortB, .pin = 10 }
+      .tx       = PIN(GPIO_PORTB, 9),
+      .rx       = PIN(GPIO_PORTF, 10)
     },
     {
       .location = UART_ROUTE_LOCATION_LOC3,
-      .tx       = { .port = gpioPortE, .pin =  2 },
-      .rx       = { .port = gpioPortE, .pin =  3 }
+      .tx       = PIN(GPIO_PORTE, 2),
+      .rx       = PIN(GPIO_PORTE, 3)
     }
   },
   {
@@ -117,13 +117,13 @@ static uart_pins_t location[UARTS][LOCATIONS] = {
 		  UNDEFINED_LOCATION,
     {
       .location = USART_ROUTE_LOCATION_LOC1,
-      .tx       = { .port = gpioPortD, .pin =  0 },
-      .rx       = { .port = gpioPortD, .pin =  1 }
+      .tx       = PIN(GPIO_PORTD, 0),
+      .rx       = PIN(GPIO_PORTD, 1)
     },
     {
       .location = USART_ROUTE_LOCATION_LOC2,
-      .tx       = { .port = gpioPortD, .pin =  7 },
-      .rx       = { .port = gpioPortD, .pin =  6 }
+      .tx       = PIN(GPIO_PORTD, 7),
+      .rx       = PIN(GPIO_PORTD, 6)
     },
     // no LOCATION 3
     UNDEFINED_LOCATION
@@ -134,8 +134,8 @@ static uart_pins_t location[UARTS][LOCATIONS] = {
 	UNDEFINED_LOCATION,
     {
       .location = USART_ROUTE_LOCATION_LOC1,
-      .tx       = { .port = gpioPortB, .pin =  3 },
-      .rx       = { .port = gpioPortB, .pin =  4 }
+      .tx       = PIN(GPIO_PORTB, 3),
+      .rx       = PIN(GPIO_PORTB, 4)
     },
     	//no LOCATION 2
        UNDEFINED_LOCATION,
