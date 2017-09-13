@@ -16,6 +16,7 @@
  * limitations under the License.
  */
 
+#include "mcu.h"
 #include "button.h"
 #include "hwgpio.h"
 #include "hwatomic.h"
@@ -136,7 +137,7 @@ static void button_callback(pin_id_t pin_id, uint8_t event_mask)
 	//TODO only pin is compared
 	for(int i = 0; i < NUM_USERBUTTONS;i++)
 	{
-		if(buttons[i].button_id.pin == pin_id.pin)
+    if(buttons[i].button_id == pin_id)
 		{
 			//set cur_callback_id to 0 to trigger all registered callbacks and post a task to do the actual callbacks
 			buttons[i].cur_callback_id = 0;

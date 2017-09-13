@@ -24,6 +24,7 @@
  *
  */
 
+#include "mcu.h"
 #include "hwleds.h"
 #include "platform.h"
 #include "hwgpio.h"

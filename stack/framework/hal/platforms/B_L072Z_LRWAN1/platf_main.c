@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-
+#include "mcu.h"
 #include "stm32l0xx_mcu.h"
 #include "bootstrap.h"
 #include "hwgpio.h"
@@ -26,7 +26,6 @@
 #include "stm32l0xx_gpio.h"
 #include "hwsystem.h"
 #include "debug.h"
-#include "stm32l0xx_pins.h"
 #include "stm32l0xx_hal.h"
 
 #if defined(USE_SX127X) && defined(PLATFORM_SX127X_USE_RESET_PIN)

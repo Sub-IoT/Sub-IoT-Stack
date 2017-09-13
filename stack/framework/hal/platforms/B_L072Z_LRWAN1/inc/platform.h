@@ -25,19 +25,15 @@
     #error Mismatch between the configured platform and the actual platform. Expected PLATFORM_NUCLEO_STM32L152 to be defined
 #endif
 
-#include <stm32l0xx_pins.h>
-//#include <stm32l0xx_chip.h>
-
-
 /********************
  * LED DEFINITIONS *
  *******************/
 
 #define HW_NUM_LEDS 4
-#define LED1 B5
-#define LED2 A5
-#define LED3 B6
-#define LED4 B7
+#define LED1 PIN(1, 5)
+#define LED2 PIN(0, 5)
+#define LED3 PIN(1, 6)
+#define LED4 PIN(1, 7)
 #define LED_GREEN 0
 
 /********************
@@ -64,29 +60,29 @@
  *************************/
 
 #define NUM_USERBUTTONS 	1
-#define BUTTON0                 B2
+#define BUTTON0           PIN(1, 2)
 
 #ifdef USE_SX127X
   // TODO tmp
   #define SX127x_SPI_INDEX  0
   #define SX127x_SPI_LOCATION 0
-  #define SX127x_SPI_PIN_CS  A15
+  #define SX127x_SPI_PIN_CS  PIN(0, 15)
   #define SX127x_SPI_BAUDRATE 8000000
-  #define SX127x_DIO0_PIN B4
-  #define SX127x_DIO1_PIN B1
+  #define SX127x_DIO0_PIN PIN(1, 4)
+  #define SX127x_DIO1_PIN PIN(1, 1)
   #ifdef PLATFORM_SX127X_USE_DIO3_PIN
-    #define SX127x_DIO3_PIN C13
+    #define SX127x_DIO3_PIN PIN(2, 13)
   #endif
   #ifdef PLATFORM_SX127X_USE_RESET_PIN
-    #define SX127x_RESET_PIN C0
+    #define SX127x_RESET_PIN PIN(2, 0)
   #endif
 #endif
 
 #define PLATFORM_USE_ABZ // this platform is based on the Murata ABZ module
 // Antenna switching uses 3 pins on murata ABZ module
-#define ABZ_ANT_SW_RX_PIN A1
-#define ABZ_ANT_SW_TX_PIN C2
-#define ABZ_ANT_SW_PA_BOOST_PIN C1
+#define ABZ_ANT_SW_RX_PIN PIN(0, 1)
+#define ABZ_ANT_SW_TX_PIN PIN(2, 2)
+#define ABZ_ANT_SW_PA_BOOST_PIN PIN(2, 1)
 
 #define PLATFORM_NUM_TIMERS 1
 

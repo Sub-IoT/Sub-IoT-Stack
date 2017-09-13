@@ -29,7 +29,7 @@ static const spi_port_t spi_ports[] = {
         .spi = SPI1,
         .miso_pin = PIN(GPIO_PORTA, 6),
         .mosi_pin = PIN(GPIO_PORTA, 7),
-        .sck_pin = PIN(GPIO_PORTA, 5),
+        .sck_pin = PIN(GPIO_PORTB, 3),
         .alternate = GPIO_AF0_SPI1,
     }
 };
