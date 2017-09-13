@@ -18,7 +18,6 @@
 
 #ifndef __STM32L0xx_CHIP_H_
 #define __STM32L0xx_CHIP_H_
-#include "stm32l0xx_pins.h"
 
 #define PLATFORM_NUM_TIMERS 1
 

@@ -24,8 +24,7 @@
 #include "hwuart.h"
 #include <assert.h>
 #include "hwsystem.h"
-
-#include "stm32l0xx_pins.h"
+#include "mcu.h"
 #include "stm32l0xx_hal.h"
 #include "stm32l0xx_ll_usart.h"
 
@@ -41,11 +40,12 @@ typedef struct {
 } uart_pins_t;
 
 #define UNDEFINED_LOCATION                       \
-  .tx       = { .port = 0xFF,         .pin =  0xFF },   \
-  .rx       = { .port = 0xFF,         .pin =  0xFF }    \
+  .tx       = PIN_UNDEFINED,   \
+  .rx       = PIN_UNDEFINED    \
 
 // configuration of uart/location mapping to tx and rx pins
 // TODO to be completed with all documented locations
+// TODO move to ports.h
 static uart_pins_t location[UARTS] = {
   {
     // DUMMY
@@ -53,14 +53,14 @@ static uart_pins_t location[UARTS] = {
   },
   {
     // USART 1
-    .tx       = { .port = 0, .pin =  9 },
-    .rx       = { .port = 0, .pin =  10 }
+    .tx       = PIN(0, 9),
+    .rx       = PIN(0, 10)
 
   },
   {
     // USART 2
-    .tx       = { .port = 0, .pin =  2 },
-    .rx       = { .port = 0, .pin =  3 }
+    .tx       = PIN(0, 2),
+    .rx       = PIN(0, 3)
   }
 };
 
@@ -106,7 +106,7 @@ uart_handle_t* uart_init(uint8_t idx, uint32_t baudrate, uint8_t pins) {
 
   GPIO_InitTypeDef GPIO_InitStruct;
 
-  GPIO_InitStruct.Pin = (1 << handle[idx].pins->tx.pin) | (1 << handle[idx].pins->rx.pin);
+  GPIO_InitStruct.Pin = (1 << GPIO_PIN(handle[idx].pins->tx)) | (1 << GPIO_PIN(handle[idx].pins->rx));
   GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
   GPIO_InitStruct.Alternate = handle[idx].mapping;

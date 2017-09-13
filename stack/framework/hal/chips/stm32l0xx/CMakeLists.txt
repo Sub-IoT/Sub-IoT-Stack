@@ -87,7 +87,6 @@ ADD_LIBRARY (${CHIP_LIBRARY_NAME} OBJECT
     stm32l0xx_gpio.c
 #     stm32l0x2_i2c.c
     stm32l0xx_mcu.c
-    stm32l0xx_pins.c
     stm32l0xx_spi.c
     stm32l0xx_system.c
     stm32l0xx_timer.c

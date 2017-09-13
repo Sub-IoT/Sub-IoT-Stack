@@ -26,6 +26,7 @@
 
 #include "hwleds.h"
 #include "platform.h"
+#include "mcu.h"
 #include "hwgpio.h"
 #include <debug.h>
 #include "timer.h"

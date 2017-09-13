@@ -16,22 +16,34 @@
  * limitations under the License.
  */
 
-#ifndef __STM32L0xx_GPIO_H_
-#define __STM32L0xx_GPIO_H_
+#ifndef __MCU_H_
+#define __MCU_H_
 
-#include "stm32l0xx_hal_gpio.h"
+#include "stm32l0xx.h"
+#include "stm32l0xx_hal.h"
+#include "hwgpio.h"
 
-#define PLATFORM_NUM_TIMERS 1
+#define PIN(port, pin)  ((GPIOA_BASE + (port << 10)) | pin)
+#define PIN_UNDEFINED 0xFFFFFFFF
 
-#define GPIO_PORT(pin_id) ((pin_id >> 10) & 0xF)
-#define GPIO_PIN(pin_id)  (pin_id & 0xF)
+enum
+{
+  GPIO_PORTA = 0,
+  GPIO_PORTB,
+  GPIO_PORTC,
+  GPIO_PORTD,
+  GPIO_PORTE,
+};
 
-/* \brief Implementation of hw_gpio_configure_pin
- *
- * TODO
- */
-__LINK_C error_t hw_gpio_configure_pin(pin_id_t pin_id, bool int_allowed, uint32_t mode, unsigned int out);
-__LINK_C error_t hw_gpio_configure_pin_stm(pin_id_t pin_id, GPIO_InitTypeDef* init_options);
+typedef struct {
+  pin_id_t sck_pin;
+  pin_id_t miso_pin;
+  pin_id_t mosi_pin;
+  uint32_t pins;
+  uint32_t alternate;
+  SPI_TypeDef* spi;
+} spi_port_t;
 
+void __stm32l0xx_mcu_init();
 
-#endif //__STM32L0xx_GPIO_H_
+#endif

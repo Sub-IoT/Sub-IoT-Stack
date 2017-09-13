@@ -1,7 +1,7 @@
 /* * OSS-7 - An opensource implementation of the DASH7 Alliance Protocol for ultra
  * lowpower wireless sensor communication
  *
- * Copyright 2015 University of Antwerp
+ * Copyright 2017 University of Antwerp
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,22 +16,24 @@
  * limitations under the License.
  */
 
-#ifndef __STM32L0xx_GPIO_H_
-#define __STM32L0xx_GPIO_H_
+#ifndef __PORTSS_H_
+#define __PORTS_H_
 
+#include "stm32l0xx_hal.h"
 #include "stm32l0xx_hal_gpio.h"
+#include "stm32l0xx_chip.h"
+#include "mcu.h"
 
-#define PLATFORM_NUM_TIMERS 1
+static const spi_port_t spi_ports[] = {
+    {
+        .spi = SPI1,
+        .miso_pin = PIN(GPIO_PORTA, 6),
+        .mosi_pin = PIN(GPIO_PORTA, 7),
+        .sck_pin = PIN(GPIO_PORTA, 5),
+        .alternate = GPIO_AF0_SPI1,
+    }
+};
 
-#define GPIO_PORT(pin_id) ((pin_id >> 10) & 0xF)
-#define GPIO_PIN(pin_id)  (pin_id & 0xF)
+#define SPI_COUNT sizeof(spi_ports) / sizeof(spi_port_t)
 
-/* \brief Implementation of hw_gpio_configure_pin
- *
- * TODO
- */
-__LINK_C error_t hw_gpio_configure_pin(pin_id_t pin_id, bool int_allowed, uint32_t mode, unsigned int out);
-__LINK_C error_t hw_gpio_configure_pin_stm(pin_id_t pin_id, GPIO_InitTypeDef* init_options);
-
-
-#endif //__STM32L0xx_GPIO_H_
+#endif

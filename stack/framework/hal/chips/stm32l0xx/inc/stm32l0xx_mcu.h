@@ -16,12 +16,8 @@
  * limitations under the License.
  */
 
-#ifndef __STM32L152_MCU_H_
-#define __STM32L152_MCU_H_
-
-//#include "em_int.h"
-
-
+#ifndef __STM32L0XX_MCU_H_
+#define __STM32L0XX_MCU_H_
 
 void __stm32l0xx_mcu_init();
 
