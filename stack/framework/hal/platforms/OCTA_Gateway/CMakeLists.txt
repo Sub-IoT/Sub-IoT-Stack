@@ -1,4 +1,4 @@
-# 
+#
 # OSS-7 - An opensource implementation of the DASH7 Alliance Protocol for ultra
 # lowpower wireless sensor communication
 #
@@ -22,21 +22,19 @@ REQUIRE_TOOLCHAIN(gcc-arm-embedded)
 
 #Define platform specific options
 PLATFORM_PARAM(${PLATFORM_PREFIX}_MCU "EFM32LG980F256" STRING "The MCU of the OCTA Mini")
-PLATFORM_PARAM(${PLATFORM_PREFIX}_RADIO "cc1101" STRING "The radio chip connected to the Octa Mini")
+PLATFORM_PARAM(${PLATFORM_PREFIX}_RADIO "none" STRING "The radio chip connected to the Octa Mini")
 PLATFORM_PARAM(${PLATFORM_PREFIX}_UART_BAUDRATE "115200" STRING "The baudrate used by the UART port")
 PLATFORM_OPTION(${PLATFORM_PREFIX}_DEBUGPINS "Enable/Disable Hardware Debug Pins support (see 'hwdebug.h')" TRUE)
 SET(JLINK_DEVICE ${${PLATFORM_PREFIX}_MCU} CACHE STRING "The device passed to JLinkExe for flashing")
 #Restrict the number of possible options for the radio option in the usual manner...
-SET_PROPERTY(CACHE ${PLATFORM_PREFIX}_RADIO PROPERTY STRINGS "cc1101")
+SET_PROPERTY(CACHE ${PLATFORM_PREFIX}_RADIO PROPERTY STRINGS "none;cc1101")
 
 EXPORT_GLOBAL_COMPILE_DEFINITIONS("-D${${PLATFORM_PREFIX}_MCU}")
 
 #Make the 'inc' directory available so 'platform.h' can be found
-EXPORT_GLOBAL_INCLUDE_DIRECTORIES(inc)
-
-EXPORT_GLOBAL_INCLUDE_DIRECTORIES(inc)
-##testing...
-EXPORT_GLOBAL_INCLUDE_DIRECTORIES(config
+EXPORT_GLOBAL_INCLUDE_DIRECTORIES(
+	inc
+	config
 	LIS3DH
 	NFC)
 

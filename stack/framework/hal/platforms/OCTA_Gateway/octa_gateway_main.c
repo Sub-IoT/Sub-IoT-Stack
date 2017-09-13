@@ -41,7 +41,10 @@ void __platform_init()
     __gpio_init();
     __led_init();
 
+#ifdef USE_CC1101
     hw_gpio_configure_pin(CC1101_GDO0_PIN, true, gpioModeInput, 1); // TODO pull up or pull down to prevent floating
+#endif
+
     __hw_debug_init();
 
     __watchdog_init(); // TODO configure from cmake?

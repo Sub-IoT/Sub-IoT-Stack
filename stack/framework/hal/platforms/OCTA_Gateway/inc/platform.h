@@ -43,20 +43,13 @@
  *******************/
 
 #define HW_NUM_LEDS         3
-#define LED0				A8
-#define LED1				A9
-#define LED2				B11//A10
+#define LED0				PIN(0,8)
+#define LED1				PIN(0,9)
+#define LED2				PIN(1,11)//A10
 #define LED_GREEN           1
 #define LED_ORANGE          2
 #define LED_RED             0
 
-// CC1101 PIN definitions
-#define CC1101_SPI_USART    1
-#define CC1101_SPI_BAUDRATE 6000000
-#define CC1101_SPI_LOCATION 1
-#define CC1101_SPI_PIN_CS   D3
-#define CC1101_GDO0_PIN     D6
-#define CC1101_GDO2_PIN     C6
 
 #ifdef SPI_USE_DMA
 
@@ -74,8 +67,8 @@
  *************************/
 
 #define NUM_USERBUTTONS 	2
-#define BUTTON0				D7
-#define BUTTON1				C10
+#define BUTTON0				PIN(3, 7)
+#define BUTTON1				PIN(2, 10)
 
 /*************************
  * DEBUG PIN DEFINITIONS *

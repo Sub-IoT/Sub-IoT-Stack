@@ -24,7 +24,7 @@
 
 #ifdef PLATFORM_OCTA_GATEWAY_DEBUGPINS
 
-#if DEBUG_PIN_NUM != 3
+#if DEBUG_PIN_NUM != 0
 	#error DEBUG_PIN_NUM does not match the expected value. Update platform.h or platform_debug.c
 #endif
 
@@ -35,9 +35,9 @@ static pin_id_t debug_pins[DEBUG_PIN_NUM];
 
 void __hw_debug_init()
 {
-	debug_pins[0] = DEBUG0;
-	debug_pins[1] = DEBUG1;
-	debug_pins[2] = DEBUG2;
+//	debug_pins[0] = DEBUG0;
+//	debug_pins[1] = DEBUG1;
+//	debug_pins[2] = DEBUG2;
 	for(int i = 0; i < DEBUG_PIN_NUM; i++)
 	{
 		error_t err = hw_gpio_configure_pin(debug_pins[i], false, gpioModePushPull, 0);

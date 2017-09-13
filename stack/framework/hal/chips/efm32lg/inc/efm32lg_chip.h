@@ -19,7 +19,9 @@
 #ifndef __EFM32LG_CHIP_H
 #define __EFM32LG_CHIP_H
 #include "hwgpio.h"
-#include "efm32lg_pins.h"
+
+#define GPIO_PIN(pin_id) (pin_id & 0x0F)
+#define GPIO_PORT(pin_id) ((pin_id >> 4) & 0x0F)
 
 #define PLATFORM_NUM_TIMERS 1
 
