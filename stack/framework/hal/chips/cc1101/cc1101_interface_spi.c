@@ -49,12 +49,12 @@ void _c1101_interface_set_interrupts_enabled(cc1101_gdOx_t gdOx, bool enable);
 
 void _cc1101_gdo_isr(pin_id_t pin_id, uint8_t event_mask)
 {
-	if (hw_gpio_pin_matches(pin_id, CC1101_GDO0_PIN))
+    if (pin_id == CC1101_GDO0_PIN)
     {
 		_c1101_interface_set_interrupts_enabled(CC1101_GDO0, false);
 		end_of_packet_isr_callback();
     }
-    else if (hw_gpio_pin_matches(pin_id, CC1101_GDO2_PIN))
+    else if (pin_id == CC1101_GDO2_PIN)
     {
     	_c1101_interface_set_interrupts_enabled(CC1101_GDO2, false);
     	fifo_thr_isr_callback();
