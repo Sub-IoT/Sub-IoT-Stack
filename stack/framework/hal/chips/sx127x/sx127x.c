@@ -794,6 +794,7 @@ static void start_rx(hw_rx_cfg_t const* rx_cfg) {
       DPRINT("START LoRa FG scan @ %i", timer_get_counter_value());
       DEBUG_RX_START();
       write_reg(REG_LR_IRQFLAGS, 0xFF);
+      state = STATE_RX;
       set_opmode(OPMODE_RX);
     } else {
       // when rx callback not set we ignore received packets
