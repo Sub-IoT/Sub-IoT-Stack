@@ -757,9 +757,15 @@ static void configure_syncword(syncword_class_t syncword_class, const channel_id
 }
 
 static void restart_rx_chain() {
-  // TODO for now we assume we need a restart PLL lock.
+  // TODO restarting by triggering RF_RXCONFIG_RESTARTRXWITHPLLLOCK seems not to work
+  // for some reason, when already in RX and after a freq change.
+  // The chip is unable to receive on the new freq
+  // For now the workaround is to go back to standby mode, to be optimized later
+  set_opmode(OPMODE_STANDBY);
+
+  // TODO for now we assume we need a restart with PLL lock.
   // this can be optimized for case where there is no freq change
-  write_reg(REG_RXCONFIG, read_reg(REG_RXCONFIG) | RF_RXCONFIG_RESTARTRXWITHPLLLOCK);
+  // write_reg(REG_RXCONFIG, read_reg(REG_RXCONFIG) | RF_RXCONFIG_RESTARTRXWITHPLLLOCK);
   DPRINT("restart RX chain with PLL lock");
 }
 
