@@ -120,20 +120,17 @@ MACRO(APP_BUILD)
     SET(ELF ${__APP_BUILD_NAME}.elf)
     SET(BIN ${__APP_BUILD_NAME}.bin)    
     ADD_EXECUTABLE(${ELF} ${__APP_BUILD_SOURCES})
-    ADD_EXECUTABLE(${__APP_BUILD_NAME}.axf ${__APP_BUILD_SOURCES}) # TODO for simplicity studio, still needed? make optional
 
     TARGET_LINK_LIBRARIES(${ELF} ${__APP_BUILD_LIBS})
-    TARGET_LINK_LIBRARIES(${__APP_BUILD_NAME}.axf ${__APP_BUILD_LIBS})
 
     GET_PROPERTY(__global_compile_definitions GLOBAL PROPERTY GLOBAL_COMPILE_DEFINITIONS)
     TARGET_COMPILE_DEFINITIONS(${ELF} PUBLIC ${__global_compile_definitions})
-    TARGET_COMPILE_DEFINITIONS(${__APP_BUILD_NAME}.axf PUBLIC ${__global_compile_definitions})
 
     IF(LINKER_SCRIPT)
         SET(__LINKER_SCRIPT_FLAG "-T${LINKER_SCRIPT}")
     ENDIF()
 
-    SET_TARGET_PROPERTIES(${ELF} ${__APP_BUILD_NAME}.axf PROPERTIES LINK_FLAGS "${__LINKER_SCRIPT_FLAG} ${LINKER_FLAGS}")
+    SET_TARGET_PROPERTIES(${ELF} PROPERTIES LINK_FLAGS "${__LINKER_SCRIPT_FLAG} ${LINKER_FLAGS}")
 
     IF(${PLATFORM_BUILD_BOOTLOADABLE_VERSION})
         SET(BOOTLOADABLE_ELF ${__APP_BUILD_NAME}_bootloadable.elf)
@@ -145,22 +142,11 @@ MACRO(APP_BUILD)
         ADD_CUSTOM_COMMAND(TARGET ${BOOTLOADABLE_ELF} POST_BUILD COMMAND ${CMAKE_OBJCOPY} -O binary ${BOOTLOADABLE_ELF} ${BOOTLOADABLE_BIN})
     ENDIF()
 
-    # TODO, still needed?
-    #Generate IDE specific binaries (if the required macro is available for the chosen platform)
-    #MACRO_AVAILABLE(GENERATE_SIMPLICITY_STUDIO_FILES SSF_AVAILABLE)
-    #IF(SSF_AVAILABLE)
-    #    GENERATE_SIMPLICITY_STUDIO_FILES(d7ap_test)
-    #    ADD_EXECUTABLE(d7ap_test.axf d7ap_test.c)
-    #    TARGET_LINK_LIBRARIES(d7ap_test.axf d7ap framework)
-    #ENDIF()
-
     # extract bin file
     ADD_CUSTOM_COMMAND(TARGET ${ELF} POST_BUILD COMMAND ${CMAKE_OBJCOPY} -O binary ${ELF} ${BIN})
 
     # generate target for flashing application using jlink
     # TODO optional depending on platform?
-
-	
     CONFIGURE_FILE(${PROJECT_SOURCE_DIR}/cmake/jlink-flash.in ${CMAKE_CURRENT_BINARY_DIR}/jlink-flash.script)
     ADD_CUSTOM_TARGET(
         flash-${__APP_BUILD_NAME}
