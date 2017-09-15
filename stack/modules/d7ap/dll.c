@@ -914,6 +914,7 @@ void dll_tx_frame(packet_t* packet)
     else
     {
         fs_read_access_class(packet->d7anp_addressee->access_specifier, &current_access_profile);
+        active_access_class = packet->d7anp_addressee->access_class;
         /*
          * For now the access mask and the subband bitmap are not used
          * By default, subprofile[0] is selected and subband[0] is used
