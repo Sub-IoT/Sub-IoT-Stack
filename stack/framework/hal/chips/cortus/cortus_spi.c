@@ -30,6 +30,8 @@
 #include "hwspi.h"
 #include "hwgpio.h"
 
+#include "cortus_gpio.h"
+
 #include "machine/spi.h"
 #include "machine/gpio.h"
 
@@ -58,8 +60,7 @@ static bool          CURRENT_CS_IS_ACTIVE_LOW;
 
 
 
-spi_handle_t* spi_init(uint8_t idx, uint32_t baudrate, uint8_t databits,
-                       bool msbf, uint8_t pins)
+spi_handle_t* spi_init(uint8_t idx, uint32_t baudrate, uint8_t databits, bool msbf)
 {
 
    // assert what is supported by cortus

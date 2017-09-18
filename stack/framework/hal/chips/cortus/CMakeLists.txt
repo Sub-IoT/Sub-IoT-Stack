@@ -62,7 +62,6 @@ ADD_LIBRARY (${CHIP_LIBRARY_NAME} OBJECT
       cortus_atomic.c
       cortus_gpio.c
       cortus_i2c.c
-      cortus_pins.c
       cortus_uart.c
 
 )

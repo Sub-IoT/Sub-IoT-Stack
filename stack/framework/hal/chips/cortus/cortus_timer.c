@@ -39,7 +39,7 @@
 #include <stdio.h>
 #endif
 
-
+#define HWTIMER_NUM 1
 
 static timer_callback_t compare_f = 0x0;
 static timer_callback_t overflow_f = 0x0;

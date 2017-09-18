@@ -18,21 +18,22 @@
 
 /*! \file cortus_gpio.c
  *
- *  \author junghoon 
- *
+ *  \author junghoon
+ *  \author philippe.nunes@cortus.com
  */
-
 
 #include "hwgpio.h"
 #include <assert.h>
 #include "hwatomic.h"
 #include "machine/ic.h"
 #include "machine/gpio.h"
-#include "machine/capint.h"
 #include <machine/cpu.h>
+#include "cortus_gpio.h"
+#include "cortus_mcu.h"
 
 #define NUM_GPIOINT 16  // GPIO1 is only available for gpio interrupts.
 
+#define PORT_BASE(pin)  ((GPio_edge*)(pin & ~0x0F)) // the LSB byte is used to set the pin number
 
 // There is a limitation for using gpio interrupts. You can use gpio interrupts upto 16 pins in only gpio1 module(0 to 15).
 static gpio_inthandler_t gpio_callback[NUM_GPIOINT];
@@ -51,48 +52,48 @@ __LINK_C void __gpio_init()
 
 __LINK_C error_t hw_gpio_configure_pin(pin_id_t pin_id, bool int_allowed, uint8_t mode, unsigned int out)
 {
-    if((int_allowed) && (gpio_callback[pin_id.pin] != 0x00)) return EBUSY;
+    if((int_allowed) && (gpio_callback[GPIO_PIN(pin_id)] != 0x00)) return EBUSY;
 
-    GPio_edge *TGpio =   (GPio_edge*) pin_id.port;
-    TGpio->dir  &=  (0x0ffffffff ^ (1 << pin_id.pin));
-    TGpio->dir  |=  (mode << pin_id.pin);    // mode => 0:input 1:output
-    TGpio->out  &=  (0x0ffffffff ^ (1 << pin_id.pin));
-    TGpio->out  |=  (out << pin_id.pin);
+    GPio_edge *TGpio =   (GPio_edge*) PORT_BASE(pin_id);
+    TGpio->dir  &=  (0x0ffffffff ^ (1 << GPIO_PIN(pin_id)));
+    TGpio->dir  |=  (mode << GPIO_PIN(pin_id));    // mode => 0:input 1:output
+    TGpio->out  &=  (0x0ffffffff ^ (1 << GPIO_PIN(pin_id)));
+    TGpio->out  |=  (out << GPIO_PIN(pin_id));
 
     return SUCCESS;
 }
 
 __LINK_C error_t hw_gpio_set(pin_id_t pin_id)
 {
-	GPio_edge *TGpio =  (GPio_edge*) pin_id.port;
-    TGpio->out  |= (1 << pin_id.pin);
+    GPio_edge *TGpio =  (GPio_edge*) PORT_BASE(pin_id);
+    TGpio->out  |= (1 << GPIO_PIN(pin_id));
     return SUCCESS;
 }
 
 __LINK_C error_t hw_gpio_clr(pin_id_t pin_id)
 {
-	GPio_edge *TGpio = (GPio_edge*) pin_id.port;
-    TGpio->out &= (0x0ffffffff ^ (1 << pin_id.pin));
+    GPio_edge *TGpio = (GPio_edge*) PORT_BASE(pin_id);
+    TGpio->out &= (0x0ffffffff ^ (1 << GPIO_PIN(pin_id)));
     return SUCCESS;
 }
 
 __LINK_C error_t hw_gpio_toggle(pin_id_t pin_id)
 {
-	GPio_edge *TGpio = (GPio_edge*) pin_id.port;
-    TGpio->out ^= (1<<pin_id.pin);
+    GPio_edge *TGpio = (GPio_edge*) PORT_BASE(pin_id);
+    TGpio->out ^= (1<<GPIO_PIN(pin_id));
     return SUCCESS;
 }
 
 __LINK_C bool hw_gpio_get_out(pin_id_t pin_id)
 {
-	GPio_edge *TGpio = (GPio_edge*) pin_id.port;
-    return ((TGpio->out >> pin_id.pin)&1);
+    GPio_edge *TGpio = (GPio_edge*) PORT_BASE(pin_id);
+    return ((TGpio->out >> GPIO_PIN(pin_id))&1);
 }
 
 __LINK_C bool hw_gpio_get_in(pin_id_t pin_id)
 {
-	GPio_edge *TGpio = (GPio_edge*) pin_id.port;
-    return ((TGpio->in >> pin_id.pin)&1);
+    GPio_edge *TGpio = (GPio_edge*) PORT_BASE(pin_id);
+    return ((TGpio->in >> GPIO_PIN(pin_id))&1);
 }
 
 void interrupt_handler(IRQ_GPIO_EDGE1)
@@ -103,9 +104,7 @@ void interrupt_handler(IRQ_GPIO_EDGE1)
     inreg       = TGpio->in;
     old_inreg   = TGpio->old_in;
     mask        = TGpio->mask;
-    pin_id_t tmp_pin_id;
-
-    tmp_pin_id.port = SFRADR_GPIO_EDGE1;
+    pin_id_t pin_id;
 
     //DPRINT ("INT in %02x old %02x", inreg, old_inreg);
 
@@ -115,8 +114,8 @@ void interrupt_handler(IRQ_GPIO_EDGE1)
         {
             if( (inreg&0x01) != (old_inreg&0x01) )
             {
-                tmp_pin_id.pin = i;
-                gpio_callback[i](tmp_pin_id, event_mask);
+                pin_id = PIN(SFRADR_GPIO_EDGE1, i);
+                gpio_callback[i](pin_id, event_mask);
                 break;
             }
         }
@@ -129,20 +128,20 @@ void interrupt_handler(IRQ_GPIO_EDGE1)
 
 __LINK_C error_t hw_gpio_configure_interrupt(pin_id_t pin_id, gpio_inthandler_t callback, uint8_t event_mask)
 {
-    if((pin_id.pin >= NUM_GPIOINT) || (gpio_callback[pin_id.pin] != 0x00)) return EINVAL;
+    if((GPIO_PIN(pin_id) >= NUM_GPIOINT) || (gpio_callback[GPIO_PIN(pin_id)] != 0x00)) return EINVAL;
    
     start_atomic();
-    GPio_edge *gpio_edge        = (GPio_edge *) SFRADR_GPIO_EDGE1;
-    gpio_callback[pin_id.pin]   = callback;
-    gpio_edge->old_in           = gpio_edge->in;
+    GPio_edge *TGpio        = (GPio_edge *) SFRADR_GPIO_EDGE1;
+    gpio_callback[GPIO_PIN(pin_id)]   = callback;
+    TGpio->old_in           = TGpio->in;
 
-    gpio_edge->edge = 0x1; // Clear all edges
-    gpio_edge->level_sel |= (1<<pin_id.pin);// Select pin to interrupt
+    TGpio->edge = 0x1; // Clear all edges
+    TGpio->level_sel |= (1<<GPIO_PIN(pin_id));// Select pin to interrupt
 
     if (event_mask == GPIO_RISING_EDGE)
-        gpio_edge->rs_edge_sel = 0x1;
+        TGpio->rs_edge_sel = 0x1;
     else if (event_mask == GPIO_FALLING_EDGE)
-        gpio_edge->fl_edge_sel = 0x1;
+        TGpio->fl_edge_sel = 0x1;
     else
     {
         end_atomic();
@@ -156,12 +155,12 @@ __LINK_C error_t hw_gpio_configure_interrupt(pin_id_t pin_id, gpio_inthandler_t 
 __LINK_C error_t hw_gpio_enable_interrupt(pin_id_t pin_id)
 {
     start_atomic();
-    GPio_edge *gpio_edge = (GPio_edge*) SFRADR_GPIO_EDGE1;
+    GPio_edge *TGpio = (GPio_edge*) SFRADR_GPIO_EDGE1;
 
     // update mask register
-    gpio_edge->mask |= (1<<pin_id.pin);
+    TGpio->mask |= (1<<GPIO_PIN(pin_id));
 
-    //DPRINT ("Enable: mask = %08x pin_id %04x in %02x", gpio_edge->mask, pin_id.pin, gpio_edge->in);
+    //DPRINT ("Enable: mask = %08x pin_id %04x in %02x", gpio_edge->mask, GPIO_PIN(pin_id), gpio_edge->in);
 
     end_atomic();
 
@@ -171,12 +170,12 @@ __LINK_C error_t hw_gpio_enable_interrupt(pin_id_t pin_id)
 __LINK_C error_t hw_gpio_disable_interrupt(pin_id_t pin_id)
 {
     start_atomic();
-    GPio_edge *gpio_edge = (GPio_edge*) SFRADR_GPIO_EDGE1;
+    GPio_edge *TGpio = (GPio_edge*) SFRADR_GPIO_EDGE1;
 
     // update mask register
-    gpio_edge->mask  &= (0x0ffffffff ^ (1<<pin_id.pin));
+    TGpio->mask  &= (0x0ffffffff ^ (1<<GPIO_PIN(pin_id)));
 
-    //DPRINT ("Disable: mask = %08x pin_id %04x in %02x", gpio_edge->mask, pin_id.pin, gpio_edge->in);
+    //DPRINT ("Disable: mask = %08x pin_id %04x in %02x", gpio_edge->mask, GPIO_PIN(pin_id), gpio_edge->in);
 
     end_atomic();
 
@@ -185,21 +184,21 @@ __LINK_C error_t hw_gpio_disable_interrupt(pin_id_t pin_id)
 
 __LINK_C error_t hw_gpio_set_edge_interrupt(pin_id_t pin_id, uint8_t edge)
 {
-    GPio_edge *gpio_edge = (GPio_edge*) pin_id.port;
+    GPio_edge *TGpio = (GPio_edge*) PORT_BASE(pin_id);
 
     start_atomic();
-    gpio_edge->mask  &= (0x0ffffffff ^ (1<<pin_id.pin));
+    TGpio->mask  &= (0x0ffffffff ^ (1<<GPIO_PIN(pin_id)));
 
-    gpio_edge->edge = 0x1; // Clear all edges
-    gpio_edge->old_in = gpio_edge->in;
-    gpio_edge->level_sel |= (1<<pin_id.pin); // Select pin to interrupt
+    TGpio->edge = 0x1; // Clear all edges
+    TGpio->old_in = TGpio->in;
+    TGpio->level_sel |= (1<<GPIO_PIN(pin_id)); // Select pin to interrupt
 
     if (edge == GPIO_RISING_EDGE)
-        gpio_edge->rs_edge_sel = 0x1;
+        TGpio->rs_edge_sel = 0x1;
     else
-        gpio_edge->fl_edge_sel = 0x1;
+        TGpio->fl_edge_sel = 0x1;
 
-    //DPRINT ("id %04x edge %d level_sel = %02x in %02x old %02x", pin_id.pin, edge, gpio_edge->level_sel, gpio_edge->in, gpio_edge->old_in);
+    //DPRINT ("id %04x edge %d level_sel = %02x in %02x old %02x", GPIO_PIN(pin_id), edge, gpio_edge->level_sel, gpio_edge->in, gpio_edge->old_in);
 
     end_atomic();
 

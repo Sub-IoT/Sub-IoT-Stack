@@ -24,9 +24,13 @@ REQUIRE_TOOLCHAIN(aps-gcc)
 PLATFORM_PARAM(${PLATFORM_PREFIX}_MCU "aps3r" STRING "The CPU of the cortus fpga board")
 PLATFORM_PARAM(${PLATFORM_PREFIX}_RADIO "none" STRING "The radio chip connected to the cortus fpga board")
 
+# CONSOLE
+# uses UART0, location 1
+PLATFORM_PARAM(PLATFORM_CONSOLE_UART     "0"      STRING "The UART channel used by the console UART configuration."   )
+PLATFORM_PARAM(PLATFORM_CONSOLE_LOCATION "1"      STRING "The route location used by the console UART configuration." )
+PLATFORM_PARAM(PLATFORM_CONSOLE_BAUDRATE "115200" STRING "The baudrate used by the second console configuration."       )
+
 INCLUDE_DIRECTORIES(inc)
-
-
 
 #Restrict the number of possible options for the radio option in the usual manner...
 SET_PROPERTY(CACHE ${PLATFORM_PREFIX}_RADIO PROPERTY STRINGS "cc1101;sx127x")
@@ -75,6 +79,9 @@ IF(NOT ("${${PLATFORM_PREFIX}_RADIO}" STREQUAL "none"))
 ENDIF()
 
 PLATFORM_HEADER_DEFINE(
+ NUMBER PLATFORM_CONSOLE_UART
+        PLATFORM_CONSOLE_LOCATION
+        PLATFORM_CONSOLE_BAUDRATE
  BOOL   PLATFORM_SX127X_USE_PA_BOOST
 )
 

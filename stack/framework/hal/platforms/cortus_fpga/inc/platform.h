@@ -28,8 +28,8 @@
 //#define HW_USE_HFXO
 //#define HW_USE_LFXO
 
-#include "cortus_chip.h"
-
+#include "cortus_mcu.h"
+#include "machine/gpio.h"
 
 /********************
  * LED DEFINITIONS *
@@ -51,10 +51,6 @@
  *******************/
 
 // console configuration
-//#define CONSOLE_UART        PLATFORM_EFM32GG_STK3700_CONSOLE_UART
-//#define CONSOLE_LOCATION    PLATFORM_EFM32GG_STK3700_CONSOLE_LOCATION
-//#define CONSOLE_BAUDRATE    PLATFORM_EFM32GG_STK3700_CONSOLE_BAUDRATE
-// dummy
 #define CONSOLE_UART        0
 #define CONSOLE_LOCATION    1
 #define CONSOLE_BAUDRATE    115200
@@ -74,28 +70,24 @@
  *************************/
 
 #define NUM_USERBUTTONS 	2
-#define BUTTON0				A4
-#define BUTTON1				A5
+#define BUTTON0				PIN(gpioPortA, 4)
+#define BUTTON1				PIN(gpioPortA, 5)
 
 // CC1101 PIN definitions
 #ifdef USE_CC1101
 #define CC1101_SPI_USART    1  // not used
-#define CC1101_SPI_BAUDRATE 8  // divider (efm32gg: 6000000)
-#define CC1101_SPI_LOCATION 1  // not used
-#define CC1101_SPI_PIN_CS   A2
-#define CC1101_GDO0_PIN     A0
-#define CC1101_GDO2_PIN     A1
+#define CC1101_SPI_BAUDRATE 8  // divider
+#define CC1101_SPI_PIN_CS   PIN(gpioPortA, 2)
+#define CC1101_GDO0_PIN     PIN(gpioPortA, 0)
+#define CC1101_GDO2_PIN     PIN(gpioPortA, 1)
 #endif
 
 #ifdef USE_SX127X
 #define SX127x_SPI_INDEX    1
-#define SX127x_SPI_LOCATION 1
-#define SX127x_SPI_PIN_CS   A2
+#define SX127x_SPI_PIN_CS   PIN(gpioPortA, 2)
 #define SX127x_SPI_BAUDRATE 8 //10000000
-#define SX127x_DIO0_PIN A0
-#define SX127x_DIO1_PIN A1
+#define SX127x_DIO0_PIN     PIN(gpioPortA, 0)
+#define SX127x_DIO1_PIN     PIN(gpioPortA, 1)
 #endif
-
-//#define HAS_LCD
 
 #endif

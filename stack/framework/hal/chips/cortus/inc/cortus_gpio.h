@@ -1,7 +1,7 @@
 /* * OSS-7 - An opensource implementation of the DASH7 Alliance Protocol for ultra
  * lowpower wireless sensor communication
  *
- * Copyright 2015 University of Antwerp
+ * Copyright 2017 CORTUS
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,13 +16,13 @@
  * limitations under the License.
  */
 
-#ifndef __CORTUS_CHIP_H
-#define __CORTUS_CHIP_H
+#ifndef __CORTUS_GPIO_H
+#define __CORTUS_GPIO_H
 
 #include "hwgpio.h"
-#include "cortus_pins.h"
 
-#define PLATFORM_NUM_TIMERS 1
+#define GPIO_PIN(pin_id) (pin_id & 0x0F) // only 32 pins per GPIO module, so the LSB byte is used to set the pin number
+#define GPIO_PORT(pin_id) ((pin_id >> 4) & 0x0F)
 
 /* \brief Implementation of hw_gpio_configure_pin for the Cortus MCU
  *
@@ -56,6 +56,4 @@
  */
 __LINK_C error_t hw_gpio_configure_pin(pin_id_t pin_id, bool int_allowed, uint8_t mode, unsigned int out);
 
-
-
-#endif //__CORTUS_CHIP_H
+#endif //__CORTUS_GPIO_H
