@@ -24,14 +24,13 @@
 
 
 #ifndef PLATFORM_B_L072Z_LRWAN1
-    #error Mismatch between the configured platform and the actual platform. Expected PLATFORM_NUCLEO_STM32L152 to be defined
+    #error Mismatch between the configured platform and the actual platform. Expected PLATFORM_B_L072Z_LRWAN1 to be defined
 #endif
 
 /********************
  * LED DEFINITIONS *
  *******************/
 
-#define PLATFORM_NUM_LEDS 4
 #define LED1 PIN(1, 5)
 #define LED2 PIN(0, 5)
 #define LED3 PIN(1, 6)
@@ -75,7 +74,5 @@
 #define ABZ_ANT_SW_RX_PIN PIN(0, 1)
 #define ABZ_ANT_SW_TX_PIN PIN(2, 2)
 #define ABZ_ANT_SW_PA_BOOST_PIN PIN(2, 1)
-
-#define PLATFORM_NUM_TIMERS 1
 
 #endif

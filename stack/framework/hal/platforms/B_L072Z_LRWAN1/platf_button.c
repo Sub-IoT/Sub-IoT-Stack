@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-#include "stm32l0xx_mcu.h"
+#include "platform.h"
 #include "button.h"
 #include "hwgpio.h"
 #include "hwatomic.h"
@@ -28,7 +28,7 @@
 #include "stm32l0xx_hal_gpio.h"
 
 #if PLATFORM_NUM_BUTTONS != 1
-	#error "PLATFORM_NUM_BUTTONS does not match the expected value. Update platform.h or platform_userbutton.c"
+  #error "PLATFORM_NUM_BUTTONS does not match the expected value. Update platform CMakeLists.txt or platform_userbutton.c"
 #endif
 
 //yes, ok for perfect configurability this should be added to the cmake file but this will do for now
