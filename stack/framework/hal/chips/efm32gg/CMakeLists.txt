@@ -26,6 +26,8 @@ SET(LINKER_SCRIPT "${CMAKE_CURRENT_SOURCE_DIR}/CMSIS/device/linker/efm32gg.ld" C
 
 SET(LINKER_FLAGS "-Xlinker  -Map=.map" CACHE STRING "")
 
+SET(HAL_SUPPORT_HW_AES "TRUE" CACHE BOOL "AES is supported by an hardware accelerated module")
+
 ENABLE_LANGUAGE(ASM)
 SET_PROPERTY(SOURCE efm32gg/CMSIS/device/src/startup_efm32gg.S PROPERTY LANGUAGE ASM)
 INCLUDE_DIRECTORIES(CMSIS/include
