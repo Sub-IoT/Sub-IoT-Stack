@@ -24,7 +24,7 @@
 #include "hwuart.h"
 #include <assert.h>
 #include "hwsystem.h"
-#include "mcu.h"
+#include "stm32l0xx_mcu.h"
 #include "stm32l0xx_hal.h"
 #include "stm32l0xx_ll_usart.h"
 

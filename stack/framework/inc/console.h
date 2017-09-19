@@ -10,7 +10,6 @@
 #include "hwuart.h"
 
 #include "framework_defs.h"
-#include "platform.h"
 
 #ifdef FRAMEWORK_CONSOLE_ENABLED
 

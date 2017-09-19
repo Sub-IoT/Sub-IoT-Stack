@@ -28,6 +28,8 @@
 #include "stm32l0xx_hal.h"
 #include "debug.h"
 
+#define HWTIMER_NUM 1
+
 // TODO validate
 
  static timer_callback_t compare_f = 0x0;

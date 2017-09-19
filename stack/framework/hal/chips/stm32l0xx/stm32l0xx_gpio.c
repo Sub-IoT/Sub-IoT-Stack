@@ -22,7 +22,7 @@
  */
 
 #include "types.h"
-#include "mcu.h"
+#include "stm32l0xx_mcu.h"
 #include "hwgpio.h"
 #include "stm32l0xx_gpio.h"
 #include "stm32l0xx_hal_conf.h"

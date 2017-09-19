@@ -16,7 +16,6 @@
  * limitations under the License.
  */
 
-#include "mcu.h"
 #include "stm32l0xx_mcu.h"
 #include "bootstrap.h"
 #include "hwgpio.h"

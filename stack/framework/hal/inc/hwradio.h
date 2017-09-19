@@ -35,6 +35,7 @@
 #include "errors.h"
 #include "hal_defs.h"
 #include "timer.h"
+#include "platform_defs.h"
 
 #define HW_RSSI_INVALID 0x7FFF
 

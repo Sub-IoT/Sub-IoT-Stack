@@ -33,11 +33,10 @@
 #include <stdint.h>
 
 #include "errors.h"
-#include "platform.h"
 #include "link_c.h"
-#ifndef PLATFORM_NUM_TIMERS
-    #error The platform should define the number of available timers
-#endif
+//#ifndef PLATFORM_NUM_TIMERS
+//    #error The platform should define the number of available timers
+//#endif
 
 enum
 {
@@ -45,7 +44,6 @@ enum
     HWTIMER_TICKS_1MS = 1024,
     HWTIMER_FREQ_32K = 1,
     HWTIMER_TICKS_32K = 32768,
-    HWTIMER_NUM = PLATFORM_NUM_TIMERS,
 };
 
 /*! \brief Timer callback definition

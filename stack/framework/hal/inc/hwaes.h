@@ -65,6 +65,6 @@ __LINK_C void hw_aes_cbc128(uint8_t *out, const uint8_t *in, unsigned int len, c
 __LINK_C void hw_aes_ctr128(uint8_t *out, const uint8_t *in, unsigned int len, const uint8_t *key, uint8_t * ctr);
 
 #endif //__HW_AES_H_
-#include "platform.h"
+
 
 /** @}*/

@@ -19,7 +19,7 @@
 #ifndef NG_H_
 #define NG_H_
 #include "link_c.h"
-#include "platform.h"
+//#include "platform.h"
 
 #ifdef __cplusplus
 extern "C" {

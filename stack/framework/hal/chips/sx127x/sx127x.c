@@ -25,7 +25,6 @@
 
 #include "string.h"
 #include "types.h"
-#include "mcu.h"
 
 #include "debug.h"
 #include "log.h"

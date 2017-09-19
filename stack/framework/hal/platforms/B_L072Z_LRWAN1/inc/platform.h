@@ -20,6 +20,8 @@
 #define __PLATFORM_H_
 
 #include "platform_defs.h"
+#include "stm32l0xx_mcu.h"
+
 
 #ifndef PLATFORM_B_L072Z_LRWAN1
     #error Mismatch between the configured platform and the actual platform. Expected PLATFORM_NUCLEO_STM32L152 to be defined
@@ -36,14 +38,6 @@
 #define LED4 PIN(1, 7)
 #define LED_GREEN 0
 
-/********************
- * UART DEFINITIONS *
- *******************/
-
-// console configuration
-#define CONSOLE_UART        PLATFORM_B_L072Z_LRWAN1_CONSOLE_UART
-#define CONSOLE_BAUDRATE    PLATFORM_B_L072Z_LRWAN1_CONSOLE_BAUDRATE
-#define CONSOLE_LOCATION	0
 
 /*************************
  * DEBUG PIN DEFINITIONS *

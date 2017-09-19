@@ -4,7 +4,7 @@
 #include "hwuart.h"
 
 #include "framework_defs.h"
-#include "platform.h"
+#include "platform_defs.h"
 #include "fifo.h"
 #include "scheduler.h"
 #include "console.h"
@@ -49,7 +49,7 @@ void console_init(void) {
   fifo_init(&console_tx_fifo, console_tx_buffer, CONSOLE_TX_FIFO_SIZE);
   sched_register_task(&flush_console_tx_fifo);
 
-  uart = uart_init(CONSOLE_UART, CONSOLE_BAUDRATE, CONSOLE_LOCATION);
+  uart = uart_init(PLATFORM_CONSOLE_UART, PLATFORM_CONSOLE_BAUDRATE, PLATFORM_CONSOLE_LOCATION);
   uart_enable(uart);
 }
 

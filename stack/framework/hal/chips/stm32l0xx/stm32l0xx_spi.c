@@ -25,7 +25,7 @@
 
 #include "hwgpio.h"
 #include "hwspi.h"
-#include "mcu.h"
+#include "stm32l0xx_mcu.h"
 #include "platform.h"
 #include "ports.h"
 

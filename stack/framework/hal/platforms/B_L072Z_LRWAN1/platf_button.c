@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-#include "mcu.h"
+#include "stm32l0xx_mcu.h"
 #include "button.h"
 #include "hwgpio.h"
 #include "hwatomic.h"
