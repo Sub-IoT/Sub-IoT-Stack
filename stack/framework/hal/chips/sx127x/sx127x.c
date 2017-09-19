@@ -259,7 +259,6 @@ static opmode_t get_opmode() {
 
 static void set_antenna_switch(opmode_t opmode) {
   if(opmode == OPMODE_TX) {
-    DPRINT("set RXTX SW");
 #ifdef PLATFORM_SX127X_USE_MANUAL_RXTXSW_PIN
     hw_gpio_set(SX127x_MANUAL_RXTXSW_PIN);
 #endif
@@ -274,7 +273,6 @@ static void set_antenna_switch(opmode_t opmode) {
     }
 #endif
   } else {
-    DPRINT("clear RXTX SW");
 #ifdef PLATFORM_SX127X_USE_MANUAL_RXTXSW_PIN
     hw_gpio_clr(SX127x_MANUAL_RXTXSW_PIN);
 #endif
@@ -1219,7 +1217,6 @@ error_t hw_radio_start_background_scan(hw_rx_cfg_t const* rx_cfg, rx_packet_call
 
     // set PayloadLength to the length of the expected Background frame (fixed length packet format is used)
     write_reg(REG_PAYLOADLENGTH, packet_len);
-    DPRINT("packet length %d", packet_len);
 
     DEBUG_RX_START();
 
@@ -1244,7 +1241,7 @@ error_t hw_radio_start_background_scan(hw_rx_cfg_t const* rx_cfg, rx_packet_call
     else
     {
         //hw_gpio_enable_interrupt(SX127x_DIO2_PIN); // enable the SyncAddress interrupt to stop the sync detection timeout
-        DPRINT("rssi %i", rssi);
+        DPRINT("rssi %i, waiting for BG frame", rssi);
         hw_gpio_enable_interrupt(SX127x_DIO0_PIN); // enable the PayloadReady interrupt
     }
 
