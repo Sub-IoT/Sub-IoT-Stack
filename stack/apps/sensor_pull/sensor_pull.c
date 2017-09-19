@@ -47,8 +47,11 @@
   #include "platform_sensors.h"
 #endif
 
-#ifdef PLATFORM_EZR32LG_OCTA
-#include "led.h"
+#if (defined PLATFORM_EZR32LG_OCTA || defined PLATFORM_B_L072Z_LRWAN1)
+	#include "led.h"
+	#define LED_FLASH_GREEN()	led_flash_green()
+#else
+	#define LED_FLASH_GREEN()
 #endif
 
 #ifdef HAS_LCD
@@ -141,9 +144,7 @@ void execute_sensor_measurement()
 
   timer_post_task_delay(&execute_sensor_measurement, SENSOR_INTERVAL_SEC);
 
-#ifdef PLATFORM_EZR32LG_OCTA
-  led_flash_green();
-#endif
+  LED_FLASH_GREEN();
 }
 
 void bootstrap()
