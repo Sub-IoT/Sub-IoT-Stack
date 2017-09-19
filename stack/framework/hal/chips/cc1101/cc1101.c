@@ -41,6 +41,7 @@
 #include "hwradio.h"
 #include "hwsystem.h"
 #include "hwdebug.h"
+#include "hwgpio.h"
 
 #include "cc1101.h"
 #include "cc1101_interface.h"

@@ -1,5 +1,5 @@
 #include <debug.h>
-#include "mcu.h"
+#include "ezr32lg_mcu.h"
 #include "em_device.h"
 #include "em_system.h"
 #include "em_chip.h"

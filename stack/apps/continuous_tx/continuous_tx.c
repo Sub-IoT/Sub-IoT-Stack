@@ -40,7 +40,7 @@
 #include "log.h"
 #include "hwradio.h"
 
-#if NUM_USERBUTTONS > 1
+#if PLATFORM_NUM_BUTTONS > 1
 #include "button.h"
 #endif
 
@@ -195,7 +195,7 @@ void start()
 
 }
 
-#if NUM_USERBUTTONS > 1
+#if PLATFORM_NUM_BUTTONS > 1
 void userbutton_callback(button_id_t button_id)
 {
     switch(button_id)
@@ -257,7 +257,7 @@ void bootstrap()
             break;
     }
 
-#if NUM_USERBUTTONS > 1
+#if PLATFORM_NUM_BUTTONS > 1
     ubutton_register_callback(0, &userbutton_callback);
     ubutton_register_callback(1, &userbutton_callback);
 #endif

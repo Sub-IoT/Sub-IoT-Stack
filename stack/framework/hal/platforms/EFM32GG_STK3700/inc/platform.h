@@ -31,11 +31,6 @@
 #include "efm32gg_chip.h"
 
 
-/********************
- * LED DEFINITIONS *
- *******************/
-
-#define HW_NUM_LEDS 2
 
 
 //INT_HANDLER
@@ -45,15 +40,6 @@
  ********************/
 
 #define USB_DEVICE
-
-/********************
- * UART DEFINITIONS *
- *******************/
-
-// console configuration
-#define CONSOLE_UART        PLATFORM_EFM32GG_STK3700_CONSOLE_UART
-#define CONSOLE_LOCATION    PLATFORM_EFM32GG_STK3700_CONSOLE_LOCATION
-#define CONSOLE_BAUDRATE    PLATFORM_EFM32GG_STK3700_CONSOLE_BAUDRATE
 
 /*************************
  * DEBUG PIN DEFINITIONS *
@@ -68,7 +54,6 @@
  * USERBUTTON DEFINITIONS *
  *************************/
 
-#define NUM_USERBUTTONS 	2
 #define BUTTON0				B9
 #define BUTTON1				B10
 

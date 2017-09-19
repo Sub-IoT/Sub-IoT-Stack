@@ -25,7 +25,7 @@
 #include "hwwatchdog.h"
 #include "console.h"
 
-#if NUM_USERBUTTONS > 0
+#if PLATFORM_NUM_BUTTONS > 0
 #include "button.h"
 
 void userbutton_callback(button_id_t button_id)
@@ -81,9 +81,9 @@ void bootstrap()
     timer_post_task_delay(&led_on_callback, TIMER_TICKS_PER_SEC);
     timer_post_task_delay(&timer1_callback, 0x0000FFFF + (uint32_t)100);
 
-#if NUM_USERBUTTONS > 0
+#if PLATFORM_NUM_BUTTONS > 0
     int i= 0;
-    for (i=0;i<NUM_USERBUTTONS;i++)
+    for (i=0;i<PLATFORM_NUM_BUTTONS;i++)
 	{
     	ubutton_register_callback(i, &userbutton_callback);
 	}

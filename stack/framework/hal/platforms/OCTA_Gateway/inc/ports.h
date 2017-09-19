@@ -20,7 +20,7 @@
 #define __PORTS_H_
 
 
-#include "mcu.h"
+#include "efm32lg_mcu.h"
 
 static const spi_port_t spi_ports[] = {
     {  }

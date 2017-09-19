@@ -20,6 +20,7 @@
 #define __PLATFORM_H_
 
 #include "platform_defs.h"
+#include "efm32lg_mcu.h"
 
 #ifndef PLATFORM_OCTA_GATEWAY
     #error Mismatch between the configured platform and the actual platform. Expected PLATFORM_OCTA_MINI to be defined
@@ -30,19 +31,11 @@
 
 
 #define HW_USE_HFXO
-/********************
- * UART DEFINITIONS *
- *******************/
-// console configuration
-#define CONSOLE_UART        2 //US0
-#define CONSOLE_LOCATION    2 //loc2
-#define CONSOLE_BAUDRATE    115200//PLATFORM_OCTA_GATEWAY_UART_BAUDRATE
 
 /********************
  * LED DEFINITIONS *
  *******************/
 
-#define HW_NUM_LEDS         3
 #define LED0				PIN(0,8)
 #define LED1				PIN(0,9)
 #define LED2				PIN(1,11)//A10
@@ -66,7 +59,6 @@
  * USERBUTTON DEFINITIONS *
  *************************/
 
-#define NUM_USERBUTTONS 	2
 #define BUTTON0				PIN(3, 7)
 #define BUTTON1				PIN(2, 10)
 

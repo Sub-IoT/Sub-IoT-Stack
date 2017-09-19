@@ -20,7 +20,7 @@
 #define __PLATFORM_H_
 
 #include "platform_defs.h"
-#include "mcu.h"
+#include "ezr32lg_mcu.h"
 
 #ifndef PLATFORM_EZR32LG_WSTK6200A
     #error Mismatch between the configured platform and the actual platform. Expected PLATFORM_EZR32LG_WSTK6200A to be defined
@@ -36,7 +36,6 @@
  * LED DEFINITIONS *
  *******************/
 
-#define HW_NUM_LEDS 2
 #define LED0	PIN(5, 6)
 #define	LED1	PIN(5, 7)
 
@@ -49,11 +48,6 @@
 /********************
  * UART DEFINITIONS *
  *******************/
-
-// console configuration
-#define CONSOLE_UART        PLATFORM_EZR32LG_WSTK6200A_CONSOLE_UART
-#define CONSOLE_LOCATION    PLATFORM_EZR32LG_WSTK6200A_CONSOLE_LOCATION
-#define CONSOLE_BAUDRATE    PLATFORM_EZR32LG_WSTK6200A_CONSOLE_BAUDRATE
 
 // UART0 location #1: PE0 and PE1
 //#define UART_PIN_TX         E0           // PE0
@@ -82,7 +76,6 @@
  * USERBUTTON DEFINITIONS *
  *************************/
 
-#define NUM_USERBUTTONS 	2
 #define BUTTON0				PIN(4, 3)
 #define BUTTON1				PIN(4, 2)
 

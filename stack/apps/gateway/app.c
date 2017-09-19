@@ -27,7 +27,7 @@
 #include "timer.h"
 #include "log.h"
 #include "debug.h"
-#include "platform.h"
+#include "platform_defs.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -39,7 +39,7 @@
 #include "version.h"
 #include "compress.h"
 
-#if HW_NUM_LEDS > 0
+#if PLATFORM_NUM_LEDS > 0
 #include "hwleds.h"
 
 void led_blink_off()
@@ -58,7 +58,7 @@ void led_blink()
 
 static void on_unsolicited_response_received(d7asp_result_t d7asp_result, uint8_t *alp_command, uint8_t alp_command_size)
 {
-#if HW_NUM_LEDS > 0
+#if PLATFORM_NUM_LEDS > 0
   led_blink();
 #endif
 }
@@ -123,7 +123,7 @@ void bootstrap()
     lcd_write_string("GW %s", _GIT_SHA1);
 #endif
 
-#if HW_NUM_LEDS > 0
+#if PLATFORM_NUM_LEDS > 0
     sched_register_task(&led_blink_off);
 #endif
 }

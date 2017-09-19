@@ -1,6 +1,5 @@
 #include <debug.h>
 #include <stdio.h>
-#include "mcu.h"
 #include "em_device.h"
 #include "em_system.h"
 #include "em_chip.h"

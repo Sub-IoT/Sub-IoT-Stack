@@ -32,7 +32,6 @@
 
 #include "link_c.h"
 #include "types.h"
-#include "platform.h"
 
 /* \brief The identifiers for the buttons
  */

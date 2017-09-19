@@ -26,7 +26,6 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-#include "mcu.h"
 #include "ports.h"
 #include "debug.h"
 

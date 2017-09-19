@@ -163,7 +163,7 @@ void packet_received(hw_radio_packet_t* packet)
 
 static void packet_transmitted(hw_radio_packet_t* packet)
 {
-#if HW_NUM_LEDS > 0
+#if PLATFORM_NUM_LEDS > 0
     led_toggle(0);
 #endif
     DPRINT("%d tx ok\n", counter);

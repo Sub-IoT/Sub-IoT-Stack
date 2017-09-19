@@ -34,6 +34,8 @@
 #include "hwatomic.h"
 #include "efm32lg_mcu.h"
 
+#define HWTIMER_NUM 1
+
 /**************************************************************************//**
  * @brief  Start LFRCO for RTC
  * Starts the low frequency RC oscillator (LFRCO) and routes it to the RTC

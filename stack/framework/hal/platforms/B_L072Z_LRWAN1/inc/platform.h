@@ -31,7 +31,7 @@
  * LED DEFINITIONS *
  *******************/
 
-#define HW_NUM_LEDS 4
+#define PLATFORM_NUM_LEDS 4
 #define LED1 PIN(1, 5)
 #define LED2 PIN(0, 5)
 #define LED3 PIN(1, 6)
@@ -53,7 +53,6 @@
  * USERBUTTON DEFINITIONS *
  *************************/
 
-#define NUM_USERBUTTONS 	1
 #define BUTTON0           PIN(1, 2)
 
 #ifdef USE_SX127X

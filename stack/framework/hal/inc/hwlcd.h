@@ -27,7 +27,6 @@
 #ifndef __LCD_H__
 #define __LCD_H__
 
-#include "platform.h"
 
 #include "types.h"
 #include "link_c.h"

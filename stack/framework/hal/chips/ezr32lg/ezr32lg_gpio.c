@@ -23,7 +23,7 @@
  *
  */
 
-#include "mcu.h"
+#include "ezr32lg_mcu.h"
 #include "hwgpio.h"
 #include <em_gpio.h>
 #include <em_cmu.h>

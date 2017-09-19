@@ -20,7 +20,7 @@
 #define __PLATFORM_H_
 
 #include "platform_defs.h"
-#include "mcu.h"
+#include "ezr32lg_mcu.h"
 
 #ifndef PLATFORM_EZR32LG_OCTA
     #error Mismatch between the configured platform and the actual platform. Expected PLATFORM_EZR32LG_USB01 to be defined
@@ -36,7 +36,6 @@
  * LED DEFINITIONS *
  *******************/
 
-#define HW_NUM_LEDS 3
 #define LED0	PIN(1, 4)
 #define	LED1	PIN(1, 5)
 #define LED2	PIN(1, 6)
@@ -54,11 +53,6 @@
 /********************
  * UART DEFINITIONS *
  *******************/
-
-// console configuration
-#define CONSOLE_UART        PLATFORM_EZR32LG_OCTA_CONSOLE_UART
-#define CONSOLE_LOCATION    PLATFORM_EZR32LG_OCTA_CONSOLE_LOCATION
-#define CONSOLE_BAUDRATE    PLATFORM_EZR32LG_OCTA_CONSOLE_BAUDRATE
 
 
 #define si4455_GDO0_PIN A15
@@ -91,7 +85,6 @@
  * USERBUTTON DEFINITIONS *
  *************************/
 
-#define NUM_USERBUTTONS 	2
 #define BUTTON0				PIN(5, 4)
 #define BUTTON1				PIN(0, 0)
 

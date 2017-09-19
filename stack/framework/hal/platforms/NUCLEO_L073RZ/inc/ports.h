@@ -21,8 +21,7 @@
 
 #include "stm32l0xx_hal.h"
 #include "stm32l0xx_hal_gpio.h"
-#include "stm32l0xx_chip.h"
-#include "mcu.h"
+#include "stm32l0xx_mcu.h"
 
 static const spi_port_t spi_ports[] = {
     {

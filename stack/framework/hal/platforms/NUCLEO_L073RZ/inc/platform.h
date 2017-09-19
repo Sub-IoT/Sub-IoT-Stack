@@ -19,6 +19,7 @@
 #ifndef __PLATFORM_H_
 #define __PLATFORM_H_
 
+#include "stm32l0xx_mcu.h"
 #include "platform_defs.h"
 
 #ifndef PLATFORM_NUCLEO_L073RZ
@@ -31,19 +32,10 @@
  * LED DEFINITIONS *
  *******************/
 
-#define HW_NUM_LEDS 1
 #define LED0 PIN(0, 5)
 #define LED_GREEN 0
 
 
-/********************
- * UART DEFINITIONS *
- *******************/
-
-// console configuration
-#define CONSOLE_UART        PLATFORM_NUCLEO_L073RZ_CONSOLE_UART
-#define CONSOLE_BAUDRATE    PLATFORM_NUCLEO_L073RZ_CONSOLE_BAUDRATE
-#define CONSOLE_LOCATION	0
 
 /*************************
  * DEBUG PIN DEFINITIONS *
@@ -59,7 +51,6 @@
  * USERBUTTON DEFINITIONS *
  *************************/
 
-#define NUM_USERBUTTONS 	1
 #define BUTTON0				PIN(2, 13)
 
 #ifdef USE_SX127X

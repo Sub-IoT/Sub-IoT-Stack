@@ -23,7 +23,7 @@
  *  \author contact@christophe.vg
  */
 
-#include "mcu.h"
+#include "ezr32lg_mcu.h"
 #include <em_usart.h>
 #include <em_cmu.h>
 #include <em_gpio.h>

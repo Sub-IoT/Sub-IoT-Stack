@@ -17,7 +17,6 @@
  */
 
 
-#include "mcu.h"
 #include "bootstrap.h"
 #include "hwgpio.h"
 #include "hwleds.h"

@@ -30,12 +30,6 @@
 #ifndef __LEDS_H__
 #define __LEDS_H__
 
-#include "platform.h"
-
-#ifndef HW_NUM_LEDS
-    #warning the platform does not define HW_NUM_LEDS
-#endif
-
 #include "types.h"
 #include "link_c.h"
 
@@ -50,7 +44,7 @@ __LINK_C void __led_init();
 /*! \brief Turn a led on
  *
  *  \param led_id The id of the led to turn on. This must be a number between 0
- * 		  and HW_NUM_LEDS. Out-of-range indexes are silently ignored
+ * 		  and PLATFORM_NUM_LEDS. Out-of-range indexes are silently ignored
  *
  */
 __LINK_C void led_on(uint8_t led_id);
@@ -58,7 +52,7 @@ __LINK_C void led_on(uint8_t led_id);
 /*! \brief Turn a led off
  *
  *  \param led_id The id of the led to turn off. This must be a number between 0
- * 		  and HW_NUM_LEDS. Out-of-range indexes are silently ignored
+ * 		  and PLATFORM_NUM_LEDS. Out-of-range indexes are silently ignored
  *
  */
 __LINK_C void led_off(uint8_t led_id);
@@ -66,7 +60,7 @@ __LINK_C void led_off(uint8_t led_id);
 /*! \brief Toggle a led. If it was on it is turned off and vice versa.
  *
  *  \param led_id The id of the led to toggle. This must be a number between 0
- * 		  and HW_NUM_LEDS. Out-of-range indexes are silently ignored
+ * 		  and PLATFORM_NUM_LEDS. Out-of-range indexes are silently ignored
  *
  */
 __LINK_C void led_toggle(uint8_t led_id);

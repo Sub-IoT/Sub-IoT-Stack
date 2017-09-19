@@ -23,7 +23,7 @@
  *
  */
 
-#include "mcu.h"
+#include "platform.h"
 #include "hwgpio.h"
 #include "efm32lg_chip.h"
 #include <em_gpio.h>

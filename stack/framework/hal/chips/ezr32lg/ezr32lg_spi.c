@@ -23,7 +23,7 @@
  * \author contact@christophe.vg
  */
 
-#include "mcu.h"
+#include "ezr32lg_mcu.h"
 #include "ports.h"
 #include <stdbool.h>
 #include <stdint.h>
