@@ -44,7 +44,7 @@ and transmit the Application Layer Protocol (ALP) payload (see [resources]({{ si
 This payload is a binary format. We will be using [pyd7a](https://github.com/MOSAIC-LoPoW/pyd7a) for parsing this, so make sure to get and install this as described in the README.md .
 After installation you can use the `modem-example.py` script to connect with your gateway using a serial port and print the received data:
 
-	$ PYTHONPATH=. python examples/modem_example.py -d /dev/ttyACM1
+	$ PYTHONPATH=. python -u examples/modem_example.py -d /dev/ttyACM1
 	connected to /dev/ttyACM1, node UID b570000091418 running D7AP v1.1, application "gatewa" with git sha1 73f0c73
 	Command with tag 136 (executing)
 	        actions:
@@ -64,7 +64,7 @@ pyd7a also contains a webgui to interface with a serial DASH7 modem. Using this 
 
 This can be started using:
 
-	PYTHONPATH=. python modem-webgui/modem-webgui.py -d /dev/ttyACM1
+	PYTHONPATH=. python -u modem-webgui/modem-webgui.py -d /dev/ttyACM1
 
 Besides these tools pyd7a naturally allows to access the modem programmatically and thus integrate into your own system.
 
