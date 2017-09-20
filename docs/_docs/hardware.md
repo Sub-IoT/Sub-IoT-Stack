@@ -13,15 +13,16 @@ A chip implementation contains drivers for MCU peripherals or radio chips. A pla
 
 Currently we support the following platforms, in decreasing order of completeness/stability:
 
-Platform        | MCU                                   | Radio                         | Toolchain         |
---------------- | ------------------------------------- | ----------------------------- | ----------------- |
-B_L072Z_LRWAN1  | STMicroelectronics STM32L072CZ (Cortex-M0+) | Semtech SX1276 | gcc-arm-embedded |
-EZR32LG_WSTK6200| Silicon Labs EZR32LG SoC (Cortex-M3)	| Silicon Labs si4460 			| gcc-arm-embedded  |
-EFM32GG_STK3700 | Silicon Labs Giant Gecko (Cortex-M3)  | none on-board (Texas Instruments CC1101 extension board available)      | gcc-arm-embedded  |
-EFM32HG_STK3400 | Silicon Labs Happy Gecko (Cortex-M0+) | none on-board (Texas Instruments CC1101 extension board available)      | gcc-arm-embedded  |
+Platform        | MCU                                   | Radio                         |
+--------------- | ------------------------------------- | ----------------------------- |
+B_L072Z_LRWAN1  | STMicroelectronics STM32L072CZ (Cortex-M0+) | Semtech SX1276 |
+NUCLEO_L073RZ   | STMicroelectronics STM32L073RZ (Cortex-M0+) | Semtech SX1276 (SX1276MB1MAS shield)|
+EZR32LG_WSTK6200| Silicon Labs EZR32LG SoC (Cortex-M3)	| Silicon Labs si4460 			|
+EFM32GG_STK3700 | Silicon Labs Giant Gecko (Cortex-M3)  | none on-board (Texas Instruments CC1101 extension board available)      |
+EFM32HG_STK3400 | Silicon Labs Happy Gecko (Cortex-M0+) | none on-board (Texas Instruments CC1101 extension board available)      |
 
 
-Currently the B_L072Z_LRWAN1 and EZR32LG_WSTK6200 boards are the only off the shelf, commercially available devkits which includes a radio. Because of this, these board is currently the easiest way to get started. The B_L072Z_LRWAN1 is probably the better option to get started. While the EZR32LG_WSTK6200 is a nice devkit it is not as cheap as we would want it to be. Also it appears to be out of stock lately and we think it might be discontinued soon.
+Currently the B_L072Z_LRWAN1, NUCLEO_L073RZ (+SX1276MB1MAS) and EZR32LG_WSTK6200 boards are the only off the shelf, commercially available devkits which includes a radio. Because of this, these boards are the easiest way to get started. The B_L072Z_LRWAN1 or the NUCLEO_L073RZ are currently the best options. While the EZR32LG_WSTK6200 is a nice devkit it is not as cheap as we would want it to be. Also it appears to be out of stock lately and we think it might be discontinued soon. Additionally, the sx1276 driver is more feature complete and better tested than the si4460 driver, at the moment.
 
 Below you will find more information on each platform, and a section about supporting other platforms as well.
 
@@ -32,6 +33,10 @@ The [B_L072Z_LRWAN1](http://www.st.com/content/st_com/en/products/evaluation-too
  which contains a STM32L072CZ MCU and a Semtech sx1276 RF chip together on a stand-alone module. This module is interesting because it allows to easily integrate a DASH7 modem on a custom design. Note that this platform (and all platforms using the Murata module) only supports the 868 and 915 MHz bands, not the 433 MHz band. See the [platform notes]({{ site.baseurl }}{% link _docs/platform-lrwan1.md %}) for more specific information on how to use this platform.
 
  ![B_L072Z_LRWAN1](https://i0.wp.com/blog.st.com/wp-content/uploads/RS7569_B_L072Z_side_antenna.jpg)
+
+## NUCLEO_L073RZ
+
+The [NUCLEO_L073RZ](http://www.st.com/en/evaluation-tools/nucleo-l073rz.html) is a Nucleo-64 type of development board from STMicroelectronics. The MCU is basically the same as the B_L072Z_LRWAN1 above, so it is using the same HAL driver. The board does not include a radio, but a separate [SX1276MB1xAS](https://os.mbed.com/components/SX1276MB1xAS/shield) containing a Semtech sx1276 can be ordered. Here as well, the radio is reusing the same driver as with the Murata module. The platform is very comparable to the B_L072Z_LRWAN1 overall. A distinction is that the SX1276MB1xAS has a LF output, which allows to use the 433 MHz band, while the Murata module only supports the 868 and 915 MHz bands. See the [platform notes]({{ site.baseurl }}{% link _docs/platform-nucleo-l073.md %}) for more specific information on how to use this platform.
 
 ## EZR32LG_WSTK6200
 
