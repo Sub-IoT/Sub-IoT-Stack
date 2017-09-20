@@ -12,18 +12,15 @@
 
 // TODO use other ways to avoid long polling
 #define I2C_POLLING  100000
-#define I2C_DEFAULT_TIMEOUT	HAL_MAX_DELAY
+#define I2C_DEFAULT_TIMEOUT	10000
+//HAL_MAX_DELAY
 
-#define I2CS       3
+#define I2CS       1
 
 typedef struct {
   pin_id_t sda;
   pin_id_t scl;
 } i2c_pins_t;
-
-#define UNDEFINED_LOCATION  \
-  .scl      = { .port = 0,         .pin =  0 },   \
-  .sda      = { .port = 0,         .pin =  0 }
 
 // TODO to be completed with all documented locations
 
@@ -53,15 +50,9 @@ const PinMap PinMap_I2C_SCL[] = {
 
 static i2c_pins_t location[I2CS]= {
   {
-    UNDEFINED_LOCATION
-  },
-  {
     // I2C 1
-    .scl      = { .port = 1, .pin =  8 },
-    .sda      = { .port = 1, .pin =  9 }
-  },
-  {
-    UNDEFINED_LOCATION
+    .scl      = PIN(GPIO_PORTB,8),
+    .sda      = PIN(GPIO_PORTB,9)
   }
 };
 
@@ -74,10 +65,7 @@ typedef struct i2c_handle {
 } i2c_handle_t;
 
 static i2c_handle_t handle[I2CS] = {
-  {
-    .idx     = 0,
-  },
-  {
+    {
     .idx     = 1,
     .handle.Instance = I2C1,
     .pins = GPIO_PIN_8|GPIO_PIN_9,
@@ -86,27 +74,42 @@ static i2c_handle_t handle[I2CS] = {
   }
 };
 
+static inline uint32_t get_i2c_timing(int hz)
+{
+    uint32_t tim = 0;
+
+    switch (hz) {
+        case 100000:
+            tim = 0x10805E89; // Standard mode with Rise Time = 400ns and Fall Time = 100ns
+            break;
+        case 400000:
+            tim = 0x00901850; // Fast mode with Rise Time = 250ns and Fall Time = 100ns
+            break;
+        case 1000000:
+            tim = 0x00700818; // Fast mode Plus with Rise Time = 60ns and Fall Time = 100ns
+            break;
+        default:
+            break;
+    }
+    return tim;
+}
+
 i2c_handle_t* i2c_init(uint8_t idx, uint8_t pins)
 {
   assert (pins==0);
-  assert(idx > 0 && idx < 3);
+  assert(idx < I2CS);
 
   GPIO_InitTypeDef GPIO_InitStruct;
 
-  RCC_PeriphCLKInitTypeDef PeriphClkInit;
+  /*RCC_PeriphCLKInitTypeDef PeriphClkInit;
   PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_I2C1;
 	PeriphClkInit.I2c1ClockSelection = RCC_I2C1CLKSOURCE_PCLK1;
 	if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInit) != HAL_OK)
 	{
 		return NULL;
-	}
+	}*/
 
-  if (idx == 1)
-  {
-    __HAL_RCC_I2C1_CLK_ENABLE();
-  } else if (idx == 2) {
-    __HAL_RCC_I2C2_CLK_ENABLE();
-  }
+  __HAL_RCC_I2C1_CLK_ENABLE();
 
   GPIO_InitStruct.Pin = handle[idx].pins;
   GPIO_InitStruct.Alternate = handle[idx].alternate;
@@ -115,7 +118,7 @@ i2c_handle_t* i2c_init(uint8_t idx, uint8_t pins)
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
   HAL_GPIO_Init(handle[idx].port, &GPIO_InitStruct);
 
-  handle[idx].handle.Init.Timing = 0x00000708;
+  handle[idx].handle.Init.Timing = get_i2c_timing(100000);
   handle[idx].handle.Init.OwnAddress1 = 0;
   handle[idx].handle.Init.AddressingMode = I2C_ADDRESSINGMODE_7BIT;
   handle[idx].handle.Init.DualAddressMode = I2C_DUALADDRESS_DISABLE;
