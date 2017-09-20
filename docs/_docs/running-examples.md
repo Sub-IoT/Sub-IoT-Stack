@@ -4,47 +4,23 @@ permalink: /docs/running-examples/
 ---
 
 In this section we are going to show how to run the standard examples to get an end-to-end system running.
-For now we will use the case of a sensor pushing data to a gateway which is always listening.
-
-DASH7 supports more communication schemes (see [resources]({{ site.baseurl }}/resources/index.html)) on more background about DASH7) but we will limit ourselves to this simple case for now.
+We will show different communication schemes, as introduced in the [previous section]({{ site.baseurl }}{% link _docs/D7AP-intro.md %}).
 
 For the rest of this section we assume you have 2 supported [boards]({{ site.baseurl }}{% link _docs/hardware.md %}) ready,
-and you are able to [build]({{ site.baseurl }}{% link _docs/building.md %}) the `gateway` and `sensor_push` sample applications.
+and you are able to [build]({{ site.baseurl }}{% link _docs/building.md %}) the `gateway`, `sensor_push`, `sensor_actuib` and `sensor_pull` sample applications.
 Also make sure to check the platform notes specific for your platform (linked from [here]({{ site.baseurl }}{% link _docs/hardware.md %})), for more information on how to attach and configure your platform.
 
-# Flashing
+# Push communication
 
-cmake will generate targets for flashing each application using JLink, by running `make flash-<appname>`.
-If you are not using a JLink adapter you can of course flash the binary manually. For instance, if you want to
-use the embedded ST-LINK on the B_L072Z_LRWAN1 you can copy over the generated bin file from `<build-dir>/apps/<app-name>/<app-name>.bin` to the mass storage device, as explained in the [B_L072Z_LRWAN1 platform notes]({{ site.baseurl }}{% link _docs/platform-lrwan1.md %}).
-Otherwise, if you are using JLink just use the make target like this:
-
-	$ make flash-sensor_push
-	[100%] Built target sensor_push.elf
-	Scanning dependencies of target flash-sensor_push
-	SEGGER J-Link Commander V6.18a (Compiled Aug 11 2017 17:53:58)
-	<snip>
-	Downloading file [sensor_push.bin]...
-	Comparing flash   [100%] Done.
-	Erasing flash     [100%] Done.
-	Programming flash [100%] Done.
-	Verifying flash   [100%] Done.
-	<snip>
-	[100%] Built target flash-sensor_push
-
-If all went well the application should be running on the target.
-
+This example shows the use the case of a sensor pushing data to a gateway which is always listening.
 Make sure to flash one board with the `sensor_push` firmware and another one with the `gateway` firmware.
-
-# Receiving the sensor data
-
 The `sensor_push` example broadcasts sensor values every 10 seconds. The `gateway` will receive the packets,
-and transmit the Application Layer Protocol (ALP) payload (see [resources]({{ site.baseurl }}/resources/index.html)) for more info) over the serial console (see the platform notes for your specific platform to find out how to access the serial console) to your PC.
+and transmit the Application Layer Protocol (ALP) payload (see [D7AP intro]({{ site.baseurl }}{% link _docs/D7AP-intro.md %}) for more info) over the serial console (see the platform notes for your specific platform to find out how to access the serial console) to your PC.
 
 This payload is a binary format. We will be using [pyd7a](https://github.com/MOSAIC-LoPoW/pyd7a) for parsing this, so make sure to get and install this as described in the README.md .
-After installation you can use the `modem-example.py` script to connect with your gateway using a serial port and print the received data:
+After installation you can use the `unsolicited_response_logger.py` script to connect with your gateway using a serial port and print the received data:
 
-	$ PYTHONPATH=. python -u examples/modem_example.py -d /dev/ttyACM1
+	$ PYTHONPATH=. python -u examples/unsolicited_response_logger.py -d /dev/ttyACM1
 	connected to /dev/ttyACM1, node UID b570000091418 running D7AP v1.1, application "gatewa" with git sha1 73f0c73
 	Command with tag 136 (executing)
 	        actions:
@@ -58,16 +34,34 @@ After installation you can use the `modem-example.py` script to connect with you
 
 The raw sensor data is contained in the `data` field. The other fields contain for instance the sensor node UID, reception level and link budget, channel information etc. For now we are not going to dive into this in more detail, refer to the D7A specification for more info.
 
-pyd7a also contains a webgui to interface with a serial DASH7 modem. Using this GUI you can also view the incoming packets.
+# Pull communication
 
-![modem-webgui log]({{site.baseurl}}/img/modem-webgui-log.png)
+In this example the sensor does not push sensor data to gateway(s) continuously, but instead writes the sensor value to a local file,
+which can then be fetched on request. The sensor will sniff the channel every second for background adhoc synchronization frames, to be able to receive requests from other nodes. The gateway will synchronize all nodes in the network using adhoc synchronization frames, after which it will send the query in a foreground frame. For this example we need one node running the `gateway` application and one or more node(s) running `sensor_pull`. For executing the query we will be using the `query_nodes.py` example which is provided by pyd7a.
+Running this script by providing the serial device of the gateway will show something like this:
 
-This can be started using:
+	$ PYTHONPATH=. python -u examples/query_nodes.py -d /dev/ttyACM1
+	connected to /dev/ttyACM1, node UID 3237303400640011 running D7AP v1.1, application "gatewa" with git sha1 8d0af96
+	Executing query...
+	Command with tag 40 (executing)
+	        actions:
+	                action: Received UidFile content: uid=0x41303039002f002aL
+	        interface status: interface-id=215, status=unicast=False, nls=False, retry=False, missed=False, fifo_token=220, rx_level=0, seq_nr=0, target_rx_level=80, addressee=ac=17, id_type=IdType.UID, id=0x41303039002f002aL, response_to=exp=0 mant0, link_budget=10, channel_header=coding=ChannelCoding.PN9, class=ChannelClass.NORMAL_RATE, band=ChannelBand.BAND_868, channel_index=0
 
-	PYTHONPATH=. python -u modem-webgui/modem-webgui.py -d /dev/ttyACM1
+	Command with tag 40 (executing)
+	        actions:
+	                action: Received UidFile content: uid=0x41303039002c003dL
+	        interface status: interface-id=215, status=unicast=False, nls=False, retry=False, missed=False, fifo_token=220, rx_level=39, seq_nr=0, target_rx_level=80, addressee=ac=17, id_type=IdType.UID, id=0x41303039002c003dL, response_to=exp=0 mant0, link_budget=49, channel_header=coding=ChannelCoding.PN9, class=ChannelClass.NORMAL_RATE, band=ChannelBand.BAND_868, channel_index=0
 
-Besides these tools pyd7a naturally allows to access the modem programmatically and thus integrate into your own system.
+	Command with tag 40 (executing)
+	        actions:
+	                action: Received UidFile content: uid=0x433731340037002bL
+	        interface status: interface-id=215, status=unicast=False, nls=False, retry=False, missed=False, fifo_token=220, rx_level=7, seq_nr=0, target_rx_level=80, addressee=ac=17, id_type=IdType.UID, id=0x433731340037002bL, response_to=exp=0 mant0, link_budget=17, channel_header=coding=ChannelCoding.PN9, class=ChannelClass.NORMAL_RATE, band=ChannelBand.BAND_868, channel_index=0
+
+	Command with tag 40 (completed, without error)
+
+The script connects to the modem and then executes a query which just requests the UID file from all nodes. In this case we can see we get multiple response commands on executing our query; 3 nodes are answering before the query completes.
 
 # What's next
 
-The example described above is only the simplest case. In the future this will be extended to show how to use other communication schemes like querying using low-power wake up, using dormant sessions etc. We will also provide more info on how to configure the DASH7 modem itself, covering aspects like the frequency band, the channel, QoS settings, channel scanning, frequency agility. Furthermore, expect more documentation on how to integrate a DASH7 stack into your own application.
+The examples described above show the push and pull communication schemes. In the future this will be extended to show how to use dormant sessions etc. We will also provide more info on how to configure the DASH7 modem itself, covering aspects like the frequency band, the channel, QoS settings, channel scanning, frequency agility. Furthermore, expect more documentation on how to integrate a DASH7 stack into your own application.

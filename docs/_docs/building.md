@@ -82,9 +82,32 @@ Note that this builds the chip drivers, the platform, the framework and the DASH
 
 More build options to for example tweak parameters of the stack or platform specific settings can be configured through cmake. This can be done by passing -D options on the commandline (as above) or using the ccmake interactive console interface or the cmake-gui interface as shown below. The current values of all options can be displayed by executing `cmake -L`.
 
+# Flashing
+
+cmake will generate targets for flashing each application using JLink, by running `make flash-<appname>`.
+If you are not using a JLink adapter you can of course flash the binary manually. For instance, if you want to
+use the embedded ST-LINK on the B_L072Z_LRWAN1 you can copy over the generated bin file from `<build-dir>/apps/<app-name>/<app-name>.bin` to the mass storage device, as explained in the [B_L072Z_LRWAN1 platform notes]({{ site.baseurl }}{% link _docs/platform-lrwan1.md %}).
+Otherwise, if you are using JLink just use the make target like this:
+
+	$ make flash-sensor_push
+	[100%] Built target sensor_push.elf
+	Scanning dependencies of target flash-sensor_push
+	SEGGER J-Link Commander V6.18a (Compiled Aug 11 2017 17:53:58)
+	<snip>
+	Downloading file [sensor_push.bin]...
+	Comparing flash   [100%] Done.
+	Erasing flash     [100%] Done.
+	Programming flash [100%] Done.
+	Verifying flash   [100%] Done.
+	<snip>
+	[100%] Built target flash-sensor_push
+
+If all went well the application should be running on the target.
+
 # Running
 
-Please refer to the [running the examples section]({{ site.baseurl }}{% link _docs/running-examples.md %}).
+Please refer to the [running the examples section]({{ site.baseurl }}{% link _docs/running-examples.md %}), but it is advised to read the next section first, which gives [an introduction to DASH7 Alliance Protocol]({{ site.baseurl }}{% link _docs/D7AP-intro.md %}).
+
 
 # MS Windows support
 
