@@ -129,11 +129,17 @@ void fs_init(fs_init_args_t* init_args)
     data[current_data_offset] = init_args->access_class; current_data_offset += 1; // active access class
     memset(data + current_data_offset, 0xFF, 2); current_data_offset += 2; // VID; 0xFFFF means not valid
 
-    // 0x20+n - Access Profiles
-    assert(init_args->access_profiles_count > 0 && init_args->access_profiles_count < 16);
-    for(uint8_t i = 0; i < init_args->access_profiles_count; i++)
+    // 0x20-0x2E - Access Profiles
+    for(uint8_t i = 0; i < D7A_FILE_ACCESS_PROFILE_COUNT; i++)
     {
-        dae_access_profile_t* access_class = &(init_args->access_profiles[i]);
+        dae_access_profile_t* access_class;
+
+        // make sure we fill all 15 AP files, either with the supplied AP or by repeating the last one
+        if(i < init_args->access_profiles_count)
+          access_class = &(init_args->access_profiles[i]);
+        else
+          access_class = &(init_args->access_profiles[init_args->access_profiles_count - 1]);
+
         file_offsets[D7A_FILE_ACCESS_PROFILE_ID + i] = current_data_offset;
         fs_write_access_class(i, access_class);
         file_headers[D7A_FILE_ACCESS_PROFILE_ID + i] = (fs_file_header_t){
