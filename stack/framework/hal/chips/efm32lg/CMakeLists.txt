@@ -87,7 +87,6 @@ ADD_LIBRARY (${CHIP_LIBRARY_NAME} OBJECT
     efm32lg_timer.c
     efm32lg_system.c
     efm32lg_gpio.c
-    efm32lg_pins.c
     efm32lg_i2c.c
     efm32lg_watchdog.c
     kits/common/drivers/gpiointerrupt.c

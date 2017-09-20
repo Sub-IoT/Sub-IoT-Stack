@@ -60,7 +60,10 @@ NOTE:   String length must be evenly divisible by 16byte (str_len % 16 == 0)
 #include <string.h> // CBC mode, for memset
 #include "stdbool.h"
 #include "aes.h"
+
+#ifdef HAL_SUPPORT_HW_AES
 #include "hwaes.h"
+#endif
 
 /*****************************************************************************/
 /* Defines:                                                                  */
@@ -79,11 +82,6 @@ NOTE:   String length must be evenly divisible by 16byte (str_len % 16 == 0)
 // See this link for more information: https://github.com/kokke/tiny-AES128-C/pull/3
 #ifndef MULTIPLY_AS_A_FUNCTION
     #define MULTIPLY_AS_A_FUNCTION 0
-#endif
-
-
-#if (defined PLATFORM_EFM32GG_STK3700 || defined PLATFORM_EFM32HG_STK3400 || defined PLATFORM_EZR32LG_WSTK6200A)
-    #define AES_HARDWARE_SUPPORT
 #endif
 
 /*****************************************************************************/
@@ -498,7 +496,7 @@ void AES128_init(const uint8_t *key)
 
 void AES128_ECB_encrypt(uint8_t *input, uint8_t *output)
 {
-#ifdef AES_HARDWARE_SUPPORT
+#ifdef HAL_SUPPORT_HW_AES
     /*
      * Hardware AES support for ECB through the low level peripheral library EMLIB
      * The functions AES128_ECB_encrypt() expects inputs of 128 bit length = 16 bytes.
@@ -511,12 +509,12 @@ void AES128_ECB_encrypt(uint8_t *input, uint8_t *output)
 
     // The next function call encrypts the PlainText with the Key using AES algorithm.
     Cipher();
-#endif // AES_HARDWARE_SUPPORT
+#endif // HAL_SUPPORT_HW_AES
 }
 
 void AES128_ECB_decrypt(uint8_t *input, uint8_t *output)
 {
-#ifdef AES_HARDWARE_SUPPORT
+#ifdef HAL_SUPPORT_HW_AES
     /*
      * Hardware AES support for ECB through the low level peripheral library EMLIB
      * The functions AES128_ECB_decrypt() expects inputs of 128 bit length = 16 bytes.
@@ -528,7 +526,7 @@ void AES128_ECB_decrypt(uint8_t *input, uint8_t *output)
     state = (state_t *)output;
 
     InvCipher();
-#endif // AES_HARDWARE_SUPPORT
+#endif // HAL_SUPPORT_HW_AES
 }
 
 
@@ -550,7 +548,7 @@ static void XorWithIv(uint8_t *buf)
 
 void AES128_CBC_encrypt_buffer(uint8_t *output, uint8_t *input, uint32_t length, const uint8_t *iv)
 {
-#ifdef AES_HARDWARE_SUPPORT
+#ifdef HAL_SUPPORT_HW_AES
     // Hardware AES support for CBC through the low level peripheral library EMLIB
     hw_aes_cbc128(output, input, length, Key, iv, true);
 #else
@@ -581,12 +579,12 @@ void AES128_CBC_encrypt_buffer(uint8_t *output, uint8_t *input, uint32_t length,
         state = (state_t *)output;
         Cipher();
     }
-#endif // AES_HARDWARE_SUPPORT
+#endif // HAL_SUPPORT_HW_AES
 }
 
 void AES128_CBC_decrypt_buffer(uint8_t *output, uint8_t *input, uint32_t length, const uint8_t *iv)
 {
-#ifdef AES_HARDWARE_SUPPORT
+#ifdef HAL_SUPPORT_HW_AES
     // Hardware AES support for CBC through the low level peripheral library EMLIB
     hw_aes_cbc128(output, input, length, Key, iv, false);
 #else
@@ -608,7 +606,7 @@ void AES128_CBC_decrypt_buffer(uint8_t *output, uint8_t *input, uint32_t length,
         input += KEYLEN;
         output += KEYLEN;
     }
-#endif // AES_HARDWARE_SUPPORT
+#endif // HAL_SUPPORT_HW_AES
 }
 
 
@@ -635,7 +633,7 @@ void AES128_CBC_decrypt_buffer(uint8_t *output, uint8_t *input, uint32_t length,
 
 void AES128_CTR_encrypt(uint8_t *output, uint8_t *input, uint32_t length, uint8_t *ctr_blk)
 {
-#ifdef AES_HARDWARE_SUPPORT
+#ifdef HAL_SUPPORT_HW_AES
     // Hardware AES support for CTR through the low level peripheral library EMLIB
     hw_aes_ctr128(output, input, length, Key, ctr_blk);
 #else

@@ -39,7 +39,7 @@
 
 // LED
 
-#define HW_NUM_LEDS         1
+#define PLATFORM_NUM_LEDS         1
 #define LED_BLUE            0
 #define LED0	              E2
 

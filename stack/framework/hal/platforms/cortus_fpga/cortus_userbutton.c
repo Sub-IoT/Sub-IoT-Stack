@@ -22,6 +22,7 @@
 #include "scheduler.h"
 #include <string.h>
 #include <debug.h>
+#include "cortus_gpio.h"
 
 #if NUM_USERBUTTONS != 2
 	#error "NUM_USERBUTTONS does not match the expected value. Update platform.h or platform_userbutton.c"
@@ -132,7 +133,7 @@ static void button_callback(pin_id_t pin_id, uint8_t event_mask)
 {
 	for(int i = 0; i < NUM_USERBUTTONS;i++)
 	{
-		if(hw_gpio_pin_matches(buttons[i].button_id, pin_id))
+		if(GPIO_PIN(buttons[i].button_id) == GPIO_PIN(pin_id))
 		{
 			//set cur_callback_id to 0 to trigger all registered callbacks and post a task to do the actual callbacks
 			buttons[i].cur_callback_id = 0;

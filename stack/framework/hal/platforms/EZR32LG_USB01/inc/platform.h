@@ -20,6 +20,7 @@
 #define __PLATFORM_H_
 
 #include "platform_defs.h"
+#include "ezr32lg_mcu.h"
 
 #ifndef PLATFORM_EZR32LG_USB01
     #error Mismatch between the configured platform and the actual platform. Expected PLATFORM_EZR32LG_USB01 to be defined
@@ -35,13 +36,12 @@
  * LED DEFINITIONS *
  *******************/
 
-#define HW_NUM_LEDS 3
 #define LED_GREEN	0
 #define LED_RED		1
 #define LED_ORANGE	2
-#define LED0	D6
-#define	LED1	D5
-#define LED2	D4
+#define LED0	PIN(3, 6)
+#define	LED1	PIN(3, 5)
+#define LED2	PIN(3, 4)
 
 /********************
  *  USB SUPPORT      *
@@ -49,14 +49,6 @@
 
 #define USB_DEVICE
 
-/********************
- * UART DEFINITIONS *
- *******************/
-
-// console configuration
-#define CONSOLE_UART        PLATFORM_EZR32LG_USB01_CONSOLE_UART
-#define CONSOLE_LOCATION    PLATFORM_EZR32LG_USB01_CONSOLE_LOCATION
-#define CONSOLE_BAUDRATE    PLATFORM_EZR32LG_USB01_CONSOLE_BAUDRATE
 
 // UART0 location #1: PE0 and PE1
 //#define UART_PIN_TX         E0           // PE0
@@ -81,15 +73,14 @@
  ************************/
 
 #define DEBUG_PIN_NUM 0
-#define DEBUG0	E0
-#define DEBUG1	E1
+#define DEBUG0	PIN(4, 0)
+#define DEBUG1	PIN(4, 1)
 
 /**************************
  * USERBUTTON DEFINITIONS *
  *************************/
 
-#define NUM_USERBUTTONS 	1
-#define BUTTON0				F5
+#define BUTTON0				PIN(5, 5)
 
 
 #endif

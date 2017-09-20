@@ -19,32 +19,23 @@
 #ifndef __PLATFORM_H_
 #define __PLATFORM_H_
 
+#include "stm32l0xx_mcu.h"
 #include "platform_defs.h"
 
 #ifndef PLATFORM_NUCLEO_L073RZ
     #error Mismatch between the configured platform and the actual platform. Expected PLATFORM_NUCLEO_STM32L152 to be defined
 #endif
 
-#include <stm32l0xx_chip.h>
 
 
 /********************
  * LED DEFINITIONS *
  *******************/
 
-#define HW_NUM_LEDS 1
-#define LED0 A5
+#define LED0 PIN(0, 5)
 #define LED_GREEN 0
 
 
-/********************
- * UART DEFINITIONS *
- *******************/
-
-// console configuration
-#define CONSOLE_UART        PLATFORM_NUCLEO_L073RZ_CONSOLE_UART
-#define CONSOLE_BAUDRATE    PLATFORM_NUCLEO_L073RZ_CONSOLE_BAUDRATE
-#define CONSOLE_LOCATION	0
 
 /*************************
  * DEBUG PIN DEFINITIONS *
@@ -60,24 +51,22 @@
  * USERBUTTON DEFINITIONS *
  *************************/
 
-#define NUM_USERBUTTONS 	1
-#define BUTTON0				C13
+#define BUTTON0				PIN(2, 13)
 
 #ifdef USE_SX127X
   #define SX127x_SPI_INDEX    0
-  #define SX127x_SPI_LOCATION 0
-  #define SX127x_SPI_PIN_CS   B6
+  #define SX127x_SPI_PIN_CS PIN(1, 6)
   #define SX127x_SPI_BAUDRATE 8000000
-  #define SX127x_DIO0_PIN A10
-  #define SX127x_DIO1_PIN B3
+  #define SX127x_DIO0_PIN PIN(0, 10)
+  #define SX127x_DIO1_PIN PIN(1, 3)
   #ifdef PLATFORM_SX127X_USE_DIO3_PIN
-    #define SX127x_DIO3_PIN B4
+    #define SX127x_DIO3_PIN PIN(1, 4)
   #endif
   #ifdef PLATFORM_SX127X_USE_RESET_PIN
-    #define SX127x_RESET_PIN A0
+    #define SX127x_RESET_PIN PIN(0, 0)
   #endif
   #ifdef PLATFORM_SX127X_USE_MANUAL_RXTXSW_PIN
-    #define SX127x_MANUAL_RXTXSW_PIN C1
+    #define SX127x_MANUAL_RXTXSW_PIN PIN(2, 1)
   #endif
 #endif
 

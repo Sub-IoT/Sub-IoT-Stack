@@ -26,7 +26,8 @@
 #include "hwleds.h"
 #include "hwwatchdog.h"
 
-
+#include "button.h"
+#include "cortus_gpio.h"
 
 void __platform_init()
 {

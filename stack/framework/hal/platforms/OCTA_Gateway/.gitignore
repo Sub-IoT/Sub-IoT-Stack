@@ -1,5 +1,0 @@
-#exclude the parent ignore for this file
-!.gitignore
- 
-#include everything in this directory
-!*

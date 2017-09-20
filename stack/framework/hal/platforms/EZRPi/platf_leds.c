@@ -35,8 +35,8 @@
 
 #include "led.h"
 
-#if HW_NUM_LEDS != 1
-	#error HW_NUM_LEDS does not match the expected value. Update platform.h or platf_leds.c
+#if PLATFORM_NUM_LEDS != 1
+	#error PLATFORM_NUM_LEDS does not match the expected value. Update platform.h or platf_leds.c
 #endif
 
 void __led_init() {

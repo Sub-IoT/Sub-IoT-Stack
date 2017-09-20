@@ -25,6 +25,7 @@ ENDIF()
 SET(LINKER_SCRIPT "${CMAKE_CURRENT_SOURCE_DIR}/CMSIS/device/linker/ezr32lg.ld" CACHE FILEPATH "")
 
 SET(HAL_UART_USE_DMA_TX "TRUE" CACHE BOOL "Enable/Disable the use of DMA for UART TX" FORCE)
+SET(HAL_SUPPORT_HW_AES "TRUE" CACHE BOOL "AES is supported by an hardware accelerated module")
 
 IF(${PLATFORM_BUILD_BOOTLOADABLE_VERSION})
     SET(LINKER_SCRIPT_BOOTLOADABLE "${CMAKE_CURRENT_SOURCE_DIR}/CMSIS/device/linker/ezr32lg_bootloader.ld" CACHE FILEPATH "")
@@ -119,7 +120,6 @@ LIST(APPEND CHIP_SRCS
   ezr32lg_timer.c
   ezr32lg_system.c                    
   ezr32lg_gpio.c                    
-  ezr32lg_pins.c 
   ezr32lg_i2c.c 
   ezr32lg_watchdog.c
   emdrv/gpiointerrupt/src/gpiointerrupt.c

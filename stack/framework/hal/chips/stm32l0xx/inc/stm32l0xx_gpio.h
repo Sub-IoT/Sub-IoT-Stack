@@ -18,10 +18,13 @@
 
 #ifndef __STM32L0xx_GPIO_H_
 #define __STM32L0xx_GPIO_H_
-#include "stm32l0xx_pins.h"
+
 #include "stm32l0xx_hal_gpio.h"
 
 #define PLATFORM_NUM_TIMERS 1
+
+#define GPIO_PORT(pin_id) ((pin_id >> 10) & 0xF)
+#define GPIO_PIN(pin_id)  (pin_id & 0xF)
 
 /* \brief Implementation of hw_gpio_configure_pin
  *

@@ -1,7 +1,7 @@
 /* * OSS-7 - An opensource implementation of the DASH7 Alliance Protocol for ultra
  * lowpower wireless sensor communication
  *
- * Copyright 2015 University of Antwerp
+ * Copyright 2017 CORTUS
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,21 +16,20 @@
  * limitations under the License.
  */
 
-#ifndef __EFM32LG_CHIP_H
-#define __EFM32LG_CHIP_H
+#ifndef __CORTUS_GPIO_H
+#define __CORTUS_GPIO_H
+
 #include "hwgpio.h"
 
-#define GPIO_PIN(pin_id) (pin_id & 0x0F)
+#define GPIO_PIN(pin_id) (pin_id & 0x0F) // only 32 pins per GPIO module, so the LSB byte is used to set the pin number
 #define GPIO_PORT(pin_id) ((pin_id >> 4) & 0x0F)
 
-#define PLATFORM_NUM_TIMERS 1
-
-/* \brief Implementation of hw_gpio_configure_pin for the EFM32LG MCU
+/* \brief Implementation of hw_gpio_configure_pin for the Cortus MCU
  *
  * This function supports all pin configuration modes available through the
  * 'GPIO_PinModeSet' function in emlib.
  *
- * It should be noted that the EFM32LG only has a single interrupt bit for each pin id
+ * It should be noted that the Cortus only has a single interrupt bit for each pin id
  * and that only a single GPIO port can be selected for each pin id. This means that it is,
  * for instance not possible to configure an interrupt both for in A3 and D3 since these pins share
  * the same pin id (3 in this case) but are wired on different ports. A3 and D4 do not conflict
@@ -48,8 +47,8 @@
  *
  * \param pin_id(pin_id_t)		The pin_id of the GPIO pin to configure
  * \param int_allowed(bool)		Whether or not to allow interrupts for this pin
- * \param mode(GPIO_Mode_TypeDef)	The mode for the GPIO pin (see EFM32LG docs for more information)
- * \param out(unsigned int)		The out value for the GPIO pin (see EFM32LG docs for more information)
+ * \param mode(GPIO_Mode_TypeDef)	The mode for the GPIO pin (see Cortus docs for more information)
+ * \param out(unsigned int)		The out value for the GPIO pin (see Cortus docs for more information)
  *
  * \return	SUCCESS if the pin was configured successfully
  *		EALREADY if the pin was already configured through a previous call to this function
@@ -57,6 +56,4 @@
  */
 __LINK_C error_t hw_gpio_configure_pin(pin_id_t pin_id, bool int_allowed, uint8_t mode, unsigned int out);
 
-
-
-#endif //__EFM32LG_CHIP_H
+#endif //__CORTUS_GPIO_H

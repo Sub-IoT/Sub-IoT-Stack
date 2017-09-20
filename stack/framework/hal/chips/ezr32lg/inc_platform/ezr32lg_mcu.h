@@ -20,6 +20,29 @@
 #define __EZR32WG_MCU_H_
 
 #include "em_int.h"
+#include "hwgpio.h"
+
+#define PIN(port, pin)  ((port << 4) | pin)
+#define PIN_UNDEFINED 0xFFFFFFFF
+
+enum
+{
+    GPIO_PORTA = 0,
+    GPIO_PORTB,
+    GPIO_PORTC,
+    GPIO_PORTD,
+    GPIO_PORTE,
+    GPIO_PORTF,
+};
+
+
+typedef struct {
+    uint32_t location;
+    pin_id_t mosi;
+    pin_id_t miso;
+    pin_id_t clk;
+} spi_port_t;
+
 
 //General definition for EZR32 interrupt handlers
 #define INT_HANDLER(handler)	static inline void __ ## handler();\

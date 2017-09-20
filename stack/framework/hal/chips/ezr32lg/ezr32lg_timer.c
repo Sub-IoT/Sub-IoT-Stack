@@ -35,6 +35,7 @@
 #include "ezr32lg_mcu.h"
 #include "platform.h"
 
+#define HWTIMER_NUM 1
 /**************************************************************************//**
  * @brief  Start oscillator for RTC
  * Starts the low frequency oscillator and routes it to the RTC

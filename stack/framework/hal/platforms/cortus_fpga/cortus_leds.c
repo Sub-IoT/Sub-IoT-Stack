@@ -19,15 +19,16 @@
 /*! \file cortus_leds.c
  *
  *  \author junghoon
+ *  \author philippe.nunes@cortus.com
  *
  */
 
 #include "hwleds.h"
 #include "platform.h"
-//#include "em_gpio.h"
 #include "hwgpio.h"
 #include <debug.h>
 #include "machine/gpio.h"
+#include "cortus_gpio.h"
 
 #if HW_NUM_LEDS != 8
 	#error HW_NUM_LEDS does not match the expected value. Update platform.h or platform_leds.c
@@ -37,14 +38,14 @@ static pin_id_t leds[ HW_NUM_LEDS ];
 
 void __led_init()
 {
-	leds[0] = A16;
-	leds[1] = A17;
-	leds[2] = A18;
-	leds[3] = A19;
-	leds[4] = A20;
-	leds[5] = A21;
-	leds[6] = A22;
-	leds[7] = A23;
+	leds[0] = PIN(gpioPortA,16);
+	leds[1] = PIN(gpioPortA,17);
+	leds[2] = PIN(gpioPortA,18);
+	leds[3] = PIN(gpioPortA,19);
+	leds[4] = PIN(gpioPortA,20);
+	leds[5] = PIN(gpioPortA,21);
+	leds[6] = PIN(gpioPortA,22);
+	leds[7] = PIN(gpioPortA,23);
 	for(int i = 0; i < HW_NUM_LEDS; i++)
 	{
 		hw_gpio_configure_pin(leds[i], false, gpioModePushPull, 0);
@@ -56,20 +57,18 @@ void __led_init()
 void led_on(uint8_t led_nr)
 {
     if(led_nr < HW_NUM_LEDS)
-    	hw_gpio_set(leds[led_nr]);
+        hw_gpio_set(leds[led_nr]);
 }
 
 void led_off(unsigned char led_nr)
 {
     if(led_nr < HW_NUM_LEDS)
-    	hw_gpio_clr(leds[led_nr]);
+        hw_gpio_clr(leds[led_nr]);
 }
 
 void led_toggle(unsigned char led_nr)
 {
     if(led_nr < HW_NUM_LEDS)
-    	hw_gpio_toggle(leds[led_nr]);
+        hw_gpio_toggle(leds[led_nr]);
 }
-
-
 

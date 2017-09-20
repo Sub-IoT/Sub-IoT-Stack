@@ -16,6 +16,7 @@
  * limitations under the License.
  */
 
+#include "platform.h"
 #include "button.h"
 #include "hwgpio.h"
 #include "hwatomic.h"
@@ -26,8 +27,8 @@
 #include "stm32l0xx_gpio.h"
 #include "stm32l0xx_hal_gpio.h"
 
-#if NUM_USERBUTTONS != 1
-	#error "NUM_USERBUTTONS does not match the expected value. Update platform.h or platform_userbutton.c"
+#if PLATFORM_NUM_BUTTONS != 1
+  #error "PLATFORM_NUM_BUTTONS does not match the expected value. Update platform CMakeLists.txt or platform_userbutton.c"
 #endif
 
 //yes, ok for perfect configurability this should be added to the cmake file but this will do for now
@@ -40,7 +41,7 @@ typedef struct
 	uint8_t num_registered_callbacks;
 } button_info_t;
 
-button_info_t buttons[NUM_USERBUTTONS];
+button_info_t buttons[PLATFORM_NUM_BUTTONS];
 
 static void button_callback(pin_id_t pin_id, uint8_t event_mask);
 static void button_task();
@@ -48,7 +49,7 @@ __LINK_C void __ubutton_init()
 {
 	error_t err;
 	buttons[0].button_id = BUTTON0;
-	for(int i = 0; i < NUM_USERBUTTONS; i++)
+	for(int i = 0; i < PLATFORM_NUM_BUTTONS; i++)
 	{
 		memset(buttons[i].callbacks, 0, sizeof(buttons[i].callbacks));
 		buttons[i].cur_callback_id = BUTTON_QUEUE_SIZE;
@@ -62,12 +63,12 @@ __LINK_C void __ubutton_init()
 __LINK_C bool ubutton_pressed(button_id_t button_id)
 {
 	//note: we invert gpio_get_in since the GPIO pin is pulled low when the button is pressed
-	return (button_id < NUM_USERBUTTONS) && (!hw_gpio_get_in(buttons[button_id].button_id));
+	return (button_id < PLATFORM_NUM_BUTTONS) && (!hw_gpio_get_in(buttons[button_id].button_id));
 }
 
 __LINK_C error_t ubutton_register_callback(button_id_t button_id, ubutton_callback_t callback)
 {
-	if(button_id >= NUM_USERBUTTONS)
+	if(button_id >= PLATFORM_NUM_BUTTONS)
 		return ESIZE;
 	else if (callback == 0x0)
 		return EINVAL;
@@ -99,7 +100,7 @@ __LINK_C error_t ubutton_register_callback(button_id_t button_id, ubutton_callba
 
 __LINK_C error_t ubutton_deregister_callback(button_id_t button_id, ubutton_callback_t callback)
 {
-	if(button_id >= NUM_USERBUTTONS)
+	if(button_id >= PLATFORM_NUM_BUTTONS)
 		return ESIZE;
 	else if (callback == 0x0)
 		return EINVAL;
@@ -134,9 +135,9 @@ __LINK_C error_t ubutton_deregister_callback(button_id_t button_id, ubutton_call
 static void button_callback(pin_id_t pin_id, uint8_t event_mask)
 {
 	//TODO only pin is compared
-	for(int i = 0; i < NUM_USERBUTTONS;i++)
+	for(int i = 0; i < PLATFORM_NUM_BUTTONS;i++)
 	{
-		if(buttons[i].button_id.pin == pin_id.pin)
+    if(buttons[i].button_id == pin_id)
 		{
 			//set cur_callback_id to 0 to trigger all registered callbacks and post a task to do the actual callbacks
 			buttons[i].cur_callback_id = 0;
@@ -147,11 +148,11 @@ static void button_callback(pin_id_t pin_id, uint8_t event_mask)
 
 void button_task()
 {
-	button_id_t button_id = NUM_USERBUTTONS;
+	button_id_t button_id = PLATFORM_NUM_BUTTONS;
 	ubutton_callback_t callback = 0x0;
 
 	start_atomic();
-	for(int i = 0; i < NUM_USERBUTTONS;i++)
+	for(int i = 0; i < PLATFORM_NUM_BUTTONS;i++)
 	{
 		for(;buttons[i].cur_callback_id < BUTTON_QUEUE_SIZE && buttons[i].callbacks[buttons[i].cur_callback_id] == 0x0; buttons[i].cur_callback_id++);
 		if(buttons[i].cur_callback_id < BUTTON_QUEUE_SIZE)
@@ -164,7 +165,7 @@ void button_task()
 	}
 	end_atomic();
 
-	if(button_id < NUM_USERBUTTONS && callback != 0x0)
+	if(button_id < PLATFORM_NUM_BUTTONS && callback != 0x0)
 	{
 		//reschedule the task to do the next callback (if needed)
 		sched_post_task(&button_task);

@@ -59,19 +59,7 @@
 /*! \brief the type for the pin_id's that identify each individual GPIO pin
  *
  */
-typedef struct
-{
-    uint32_t port;
-    uint16_t pin;
-} pin_id_t;
-
-/*! \brief Utility function to check whether two pin_id_t's refer to the same GPIO pin
- *
- * \param a	The first pin_id
- * \param b	The second pin_id
- * \return bool	true if the two pin_id's refer to the same GPIO pin, false otherwise.
- */
-static inline bool hw_gpio_pin_matches(pin_id_t a, pin_id_t b) {return a.port == b.port && a.pin == b.pin;}
+typedef uint32_t pin_id_t;
 
 enum
 {
@@ -282,6 +270,5 @@ __LINK_C error_t hw_gpio_set_edge_interrupt(pin_id_t pin_id, uint8_t edge);
 __LINK_C void __gpio_init();
 
 #endif //__HW_GPIO_H_
-#include "platform.h"
 
 /** @}*/

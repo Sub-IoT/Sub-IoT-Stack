@@ -40,7 +40,6 @@
 
 #include "console.h"
 
-#include "platform.h"
 #include "ng.h"
 
 static uint8_t NGDEF(_cmd_buffer)[CMD_BUFFER_SIZE] = { 0 };

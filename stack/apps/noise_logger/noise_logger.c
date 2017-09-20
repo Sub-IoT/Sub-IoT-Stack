@@ -323,7 +323,7 @@ void start_rx()
 	hw_radio_set_rx(&rx_cfg, NULL, &rssi_valid);
 }
 
-#if NUM_USERBUTTONS > 1
+#if PLATFORM_NUM_BUTTONS > 1
 void userbutton_callback(button_id_t button_id)
 {
     // change channel and restart
@@ -380,7 +380,7 @@ void bootstrap()
     lcd_write_string("NOISE");
 #endif
 
-#if NUM_USERBUTTONS > 1
+#if PLATFORM_NUM_BUTTONS > 1
     ubutton_register_callback(0, &userbutton_callback);
     ubutton_register_callback(1, &userbutton_callback);
 #endif

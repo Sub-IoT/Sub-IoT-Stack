@@ -17,7 +17,6 @@
  */
 
 
-#include "stm32l0xx_mcu.h"
 #include "bootstrap.h"
 #include "hwgpio.h"
 #include "hwleds.h"
@@ -25,7 +24,6 @@
 #include "button.h"
 #include "stm32l0xx_gpio.h"
 #include "stm32l0xx_hal_gpio.h"
-#include "stm32l0xx_pins.h"
 #include "stm32l0xx_hal.h"
 #include "platform.h"
 #include "debug.h"

@@ -20,6 +20,7 @@
 #define __PLATFORM_H_
 
 #include "platform_defs.h"
+#include "ezr32lg_mcu.h"
 
 #ifndef PLATFORM_EZR32LG_WSTK6200A
     #error Mismatch between the configured platform and the actual platform. Expected PLATFORM_EZR32LG_WSTK6200A to be defined
@@ -35,9 +36,8 @@
  * LED DEFINITIONS *
  *******************/
 
-#define HW_NUM_LEDS 2
-#define LED0	F6
-#define	LED1	F7
+#define LED0	PIN(5, 6)
+#define	LED1	PIN(5, 7)
 
 /********************
  *  USB SUPPORT      *
@@ -49,11 +49,6 @@
  * UART DEFINITIONS *
  *******************/
 
-// console configuration
-#define CONSOLE_UART        PLATFORM_EZR32LG_WSTK6200A_CONSOLE_UART
-#define CONSOLE_LOCATION    PLATFORM_EZR32LG_WSTK6200A_CONSOLE_LOCATION
-#define CONSOLE_BAUDRATE    PLATFORM_EZR32LG_WSTK6200A_CONSOLE_BAUDRATE
-
 // UART0 location #1: PE0 and PE1
 //#define UART_PIN_TX         E0           // PE0
 //#define UART_PIN_RX         E1          // PE1
@@ -62,7 +57,7 @@
  *   VCOM          *
  ******************/
 
-#define VCOM_ENABLE	A12
+#define VCOM_ENABLE	PIN(0, 12)
 // USE CONSOLE_UART 3 / LOCATION 1
 
 
@@ -72,18 +67,17 @@
  ************************/
 
 #define DEBUG_PIN_NUM 4
-#define DEBUG0	C6      // P0
-#define DEBUG1	C7      // P2
-#define DEBUG2	B11     // P8
-#define DEBUG3	F3      // P10
+#define DEBUG0	PIN(2, 6)      // P0
+#define DEBUG1	PIN(2, 7)      // P2
+#define DEBUG2	PIN(1, 11)     // P8
+#define DEBUG3	PIN(5, 3)      // P10
 
 /**************************
  * USERBUTTON DEFINITIONS *
  *************************/
 
-#define NUM_USERBUTTONS 	2
-#define BUTTON0				E3
-#define BUTTON1				E2
+#define BUTTON0				PIN(4, 3)
+#define BUTTON1				PIN(4, 2)
 
 
 

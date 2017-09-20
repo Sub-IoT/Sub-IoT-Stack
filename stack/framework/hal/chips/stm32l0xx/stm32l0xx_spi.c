@@ -25,52 +25,21 @@
 
 #include "hwgpio.h"
 #include "hwspi.h"
-
+#include "stm32l0xx_mcu.h"
 #include "platform.h"
+#include "ports.h"
 
-#include "stm32l0xx_pins.h"
 #include "stm32l0xx_hal.h"
 #include "stm32l0xx_gpio.h"
 
-#define SPI_COUNT 2
-#define MAX_SPI_SLAVE_HANDLES 4        // TODO expose this in chip configuration
 
-typedef struct {
-  pin_id_t sck_pin;
-  pin_id_t miso_pin;
-  pin_id_t mosi_pin;
-  uint32_t pins;
-  uint32_t alternate;
-  SPI_TypeDef* spi;
-} spi_pins_t;
+#define MAX_SPI_SLAVE_HANDLES 4        // TODO expose this in chip configuration
 
 struct spi_slave_handle {
   spi_handle_t* spi;
   pin_id_t      cs;
   bool          cs_is_active_low;
   bool          selected;
-};
-
-// TODO to be completed with all documented locations
-// TODO SPIx has 2 sets of SPI pins which can be mixed and matched (ie we don't choose one set but can choose pins from each)
-// we will probably need to change API and take pins as params
-static spi_pins_t spis[SPI_COUNT] = {
-  {
-    // SPI1
-    .sck_pin = { .port = 1, .pin = 3 }, // TODO or A5 ...
-    .miso_pin = { .port = 0, .pin = 6 },
-    .mosi_pin = { .port = 0, .pin = 7 },
-    .alternate = GPIO_AF0_SPI1,
-    .spi = SPI1
-  },
-  {
-    // SPI2
-    .sck_pin = { .port = 1, .pin = 13 },
-    .miso_pin = { .port = 1, .pin = 14 },
-    .mosi_pin = { .port = 1, .pin = 15 },
-    .alternate = GPIO_AF0_SPI2,
-    .spi = SPI2
-  }
 };
 
 uint8_t            next_spi_slave_handle = 0;
@@ -87,7 +56,6 @@ struct spi_handle {
 
 // private storage for handles, pointers to these records are passed around
 static spi_handle_t handle[SPI_COUNT] = {
-  {.hspi.Instance=NULL},
   {.hspi.Instance=NULL}
 };
 
@@ -160,10 +128,10 @@ void spi_disable(spi_handle_t* spi) {
   spi->active = false;
 }
 
-spi_handle_t* spi_init(uint8_t spi_number, uint32_t baudrate, uint8_t databits, bool msbf, uint8_t pins) {
+
+spi_handle_t* spi_init(uint8_t spi_number, uint32_t baudrate, uint8_t databits, bool msbf) {
   // assert what is supported by HW
   assert(databits == 8);
-  assert(pins == 0); // TODO alternate location?
   assert(spi_number < SPI_COUNT);
 
   if (handle[spi_number].hspi.Instance != NULL)
@@ -176,18 +144,18 @@ spi_handle_t* spi_init(uint8_t spi_number, uint32_t baudrate, uint8_t databits, 
   GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
   GPIO_InitStruct.Pull = GPIO_PULLDOWN;
   GPIO_InitStruct.Speed = GPIO_SPEED_HIGH;
-  GPIO_InitStruct.Alternate = spis[spi_number].alternate;
+  GPIO_InitStruct.Alternate = spi_ports[spi_number].alternate;
 
-  GPIO_InitStruct.Pin = 1 << spis[spi_number].sck_pin.pin;
-  hw_gpio_configure_pin_stm(spis[spi_number].sck_pin, &GPIO_InitStruct);
+  GPIO_InitStruct.Pin = 1 << GPIO_PIN(spi_ports[spi_number].sck_pin);
+  hw_gpio_configure_pin_stm(spi_ports[spi_number].sck_pin, &GPIO_InitStruct);
 
-  GPIO_InitStruct.Pin = 1 << spis[spi_number].miso_pin.pin;
-  hw_gpio_configure_pin_stm(spis[spi_number].miso_pin, &GPIO_InitStruct);
+  GPIO_InitStruct.Pin = 1 << GPIO_PIN(spi_ports[spi_number].miso_pin);
+  hw_gpio_configure_pin_stm(spi_ports[spi_number].miso_pin, &GPIO_InitStruct);
 
-  GPIO_InitStruct.Pin = 1 << spis[spi_number].mosi_pin.pin;
-  hw_gpio_configure_pin_stm(spis[spi_number].mosi_pin, &GPIO_InitStruct);
+  GPIO_InitStruct.Pin = 1 << GPIO_PIN(spi_ports[spi_number].mosi_pin);
+  hw_gpio_configure_pin_stm(spi_ports[spi_number].mosi_pin, &GPIO_InitStruct);
 
-  handle[spi_number].hspi.Instance = spis[spi_number].spi;
+  handle[spi_number].hspi.Instance = spi_ports[spi_number].spi;
   handle[spi_number].hspi.Init.Mode = SPI_MODE_MASTER;
   handle[spi_number].hspi.Init.Direction = SPI_DIRECTION_2LINES;
   handle[spi_number].hspi.Init.DataSize = SPI_DATASIZE_8BIT;
@@ -244,12 +212,12 @@ spi_slave_handle_t*  spi_init_slave(spi_handle_t* spi, pin_id_t cs_pin, bool cs_
   bool initial_level = spi->active > 0 && cs_is_active_low;
 
   GPIO_InitTypeDef GPIO_InitStruct;
-  GPIO_InitStruct.Pin = (1<<cs_pin.pin);
+  GPIO_InitStruct.Pin = 1 << GPIO_PIN(cs_pin);
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_PULLUP; // TODO depending on cs_is_active_low?
   GPIO_InitStruct.Speed = GPIO_SPEED_HIGH;
   error_t err = hw_gpio_configure_pin_stm(cs_pin, &GPIO_InitStruct);
-  __HAL_RCC_GPIOB_CLK_ENABLE();
+  __HAL_RCC_GPIOB_CLK_ENABLE(); // TODO
   assert(err == SUCCESS || err == EALREADY);
 
   if(cs_is_active_low) {

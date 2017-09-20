@@ -39,7 +39,7 @@
  * LED DEFINITIONS *
  *******************/
 
-#define HW_NUM_LEDS 2
+#define PLATFORM_NUM_LEDS 2
 
 
 //INT_HANDLER
@@ -72,7 +72,6 @@
  * USERBUTTON DEFINITIONS *
  *************************/
 
-#define NUM_USERBUTTONS 	2
 #define BUTTON0				C9
 #define BUTTON1				C10
 

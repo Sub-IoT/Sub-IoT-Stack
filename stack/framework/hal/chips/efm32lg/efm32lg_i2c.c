@@ -1,6 +1,5 @@
 #include <debug.h>
 #include <stdio.h>
-
 #include "em_device.h"
 #include "em_system.h"
 #include "em_chip.h"
@@ -29,56 +28,57 @@ typedef struct {
 
 #define UNDEFINED_LOCATION {                      \
   .location = 0,                                  \
-  .scl      = { .port = 0,         .pin =  0 },   \
-  .sda      = { .port = 0,         .pin =  0 }    \
+  .scl      = PIN(0, 0),   \
+  .sda      = PIN(0, 0)    \
 }
 
 // TODO to be completed with all documented locations
+// TODO move to ports.h
 static i2c_pins_t location[I2CS][LOCATIONS] = {
   {
     // I2C 0
     {
       .location = I2C_ROUTE_LOCATION_LOC0,
-      .scl      = { .port = gpioPortA, .pin =  1 },
-      .sda      = { .port = gpioPortA, .pin =  0 }
+      .scl      = PIN(GPIO_PORTA, 1),
+      .sda      = PIN(GPIO_PORTA, 0)
     },
     {
       .location = I2C_ROUTE_LOCATION_LOC1,
-      .scl      = { .port = gpioPortD, .pin =  7 },
-      .sda      = { .port = gpioPortD, .pin =  6 }
+      .scl      = PIN(GPIO_PORTD, 7),
+      .sda      = PIN(GPIO_PORTD, 6)
     },
     {
       .location = I2C_ROUTE_LOCATION_LOC2,
-      .scl      = { .port = gpioPortC, .pin =  7 },
-      .sda      = { .port = gpioPortC, .pin =  6 }
+      .scl      = PIN(GPIO_PORTC, 7),
+      .sda      = PIN(GPIO_PORTC, 6)
     },
     {
       .location = I2C_ROUTE_LOCATION_LOC3,
-      .scl      = { .port = gpioPortD, .pin = 15 },
-      .sda      = { .port = gpioPortD, .pin = 14 }
+      .scl      = PIN(GPIO_PORTD, 15),
+      .sda      = PIN(GPIO_PORTD, 14)
     },
     {
       .location = I2C_ROUTE_LOCATION_LOC4,
-      .scl      = { .port = gpioPortC, .pin =  1 },
-      .sda      = { .port = gpioPortC, .pin =  0 }
+      .scl      = PIN(GPIO_PORTC, 1),
+      .sda      = PIN(GPIO_PORTC, 0)
     }
   },
   {
     // I2C 1
     {
       .location = I2C_ROUTE_LOCATION_LOC0,
-      .scl      = { .port = gpioPortC, .pin =  5 },
-      .sda      = { .port = gpioPortC, .pin =  4 }
+      .scl      = PIN(GPIO_PORTC, 5),
+      .sda      = PIN(GPIO_PORTC, 4)
     },
     {
       .location = I2C_ROUTE_LOCATION_LOC1,
-      .scl      = { .port = gpioPortB, .pin = 12 },
-      .sda      = { .port = gpioPortB, .pin = 11 }
+      .scl      = PIN(GPIO_PORTB, 12),
+      .sda      = PIN(GPIO_PORTB, 11)
     },
     {
       .location = I2C_ROUTE_LOCATION_LOC2,
-      .scl      = { .port = gpioPortE, .pin =  1 },
-      .sda      = { .port = gpioPortE, .pin =  0 }
+      .scl      = PIN(GPIO_PORTE, 1),
+      .sda      = PIN(GPIO_PORTE, 0)
     },
     // no LOCATION 3
     UNDEFINED_LOCATION,

@@ -30,7 +30,6 @@
 #include <stdio.h>
 #include <stdarg.h>
 #include <unistd.h>
-#include <hwradio.h>
 #include "framework_defs.h"
 #include "hwsystem.h"
 
