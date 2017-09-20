@@ -3,8 +3,8 @@
   - architecture
   - supported-hardware
   - building
-  - running-examples
   - d7ap-intro
+  - running-examples
 - title: Other Topics
   docs:
   - logging
