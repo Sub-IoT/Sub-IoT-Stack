@@ -46,7 +46,4 @@ typedef struct {
 
 void __stm32l0xx_mcu_init();
 
-
-void __stm32l0xx_mcu_init();
-
 #endif
