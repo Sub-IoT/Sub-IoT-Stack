@@ -67,7 +67,7 @@ ADD_LIBRARY (${CHIP_LIBRARY_NAME} OBJECT
 #     Drivers/STM32L0xx_HAL_Driver/Src/stm32l0xx_hal_flash_ex.c
 #     Drivers/STM32L0xx_HAL_Driver/Src/stm32l0xx_hal_flash_ramfunc.c
     Drivers/STM32L0xx_HAL_Driver/Src/stm32l0xx_hal_gpio.c
-#     Drivers/STM32L0xx_HAL_Driver/Src/stm32l0xx_hal_i2c.c
+    Drivers/STM32L0xx_HAL_Driver/Src/stm32l0xx_hal_i2c.c
     Drivers/STM32L0xx_HAL_Driver/Src/stm32l0xx_hal_pwr.c
     Drivers/STM32L0xx_HAL_Driver/Src/stm32l0xx_hal_pwr_ex.c
     Drivers/STM32L0xx_HAL_Driver/Src/stm32l0xx_hal_rcc.c
@@ -85,7 +85,7 @@ ADD_LIBRARY (${CHIP_LIBRARY_NAME} OBJECT
 #
     stm32l0xx_atomic.c
     stm32l0xx_gpio.c
-#     stm32l0x2_i2c.c
+    stm32l0xx_i2c.c
     stm32l0xx_mcu.c
     stm32l0xx_pins.c
     stm32l0xx_spi.c

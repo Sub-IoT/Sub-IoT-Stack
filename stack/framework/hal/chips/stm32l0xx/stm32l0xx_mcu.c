@@ -25,6 +25,8 @@
 #include "stm32l0xx_hal_conf.h"
 #include "debug.h"
 
+#include "timer.h"
+
 /**
   * @brief  System Clock Configuration
   *         The system Clock is configured as follow :
@@ -78,3 +80,9 @@ void __stm32l0xx_mcu_init()
   HAL_Init();
   init_clock();
 }
+
+uint32_t HAL_GetTick(void)
+{
+	return timer_get_counter_value();
+}
+
