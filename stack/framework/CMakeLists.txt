@@ -108,20 +108,6 @@ SET(FRAMEWORK_HEADERS
         inc/shell.h
 )
 
-SET(HAL_API_HEADERS
-        hal/inc/hwatomic.h
-        hal/inc/hwleds.h
-        hal/inc/hwgpio.h
-        hal/inc/hwradio.h
-        hal/inc/hwsystem.h
-        hal/inc/hwdebug.h
-        hal/inc/hwuart.h
-        hal/inc/hwtimer.h
-        hal/inc/hwspi.h
-        hal/inc/hwwatchdog.h
-        hal/inc/hwaes.h
-)
-
 # Assemble the library
 # PLATFORM_CHIP_LIBS: Object libraries of individual chips
 # PLATFORM: Object library of the platform itself
@@ -134,7 +120,7 @@ FOREACH(libname ${LIBNAMES})
     LIST(APPEND LIBS "$<TARGET_OBJECTS:${libname}>")
 ENDFOREACH()
 #AND finally add the library
-ADD_LIBRARY(framework STATIC ${LIBS} ${FRAMEWORK_SOURCES} ${FRAMEWORK_HEADERS} ${HAL_API_HEADERS})
+ADD_LIBRARY(framework STATIC ${LIBS} ${FRAMEWORK_SOURCES} ${FRAMEWORK_HEADERS})
 
 GET_PROPERTY(__global_include_dirs GLOBAL PROPERTY GLOBAL_INCLUDE_DIRECTORIES)
 GET_PROPERTY(__platform_include_dirs GLOBAL PROPERTY PLATFORM_INCLUDE_DIRECTORIES)
