@@ -870,11 +870,10 @@ static void calibrate_rx_chain() {
 
 static void switch_to_standby_mode()
 {
-    DPRINT("Switching to standby mode");
+    //DPRINT("Switching to standby mode");
     //Ensure interrupts are disabled before selecting the chip mode
     hw_gpio_disable_interrupt(SX127x_DIO0_PIN);
     hw_gpio_disable_interrupt(SX127x_DIO1_PIN);
-
     set_opmode(OPMODE_STANDBY);
     state = STATE_IDLE;
 }
@@ -909,6 +908,8 @@ error_t hw_radio_set_idle() {
 
     // For now, select by default the standby mode
     switch_to_standby_mode();
+    DEBUG_RX_END();
+    DEBUG_TX_END();
 }
 
 bool hw_radio_is_idle() {
@@ -1193,7 +1194,7 @@ error_t hw_radio_start_background_scan(hw_rx_cfg_t const* rx_cfg, rx_packet_call
 {
     uint8_t packet_len;
 
-    DPRINT("START BG scan @ %i", timer_get_counter_value());
+    //DPRINT("START BG scan @ %i", timer_get_counter_value());
 
     if(rx_cb != NULL)
     {
@@ -1233,7 +1234,7 @@ error_t hw_radio_start_background_scan(hw_rx_cfg_t const* rx_cfg, rx_packet_call
     int16_t rssi = hw_radio_get_rssi();
     if (rssi <= rssi_thr)
     {
-        DPRINT("FAST RX termination RSSI %i limit %i", rssi, rssi_thr);
+        //DPRINT("FAST RX termination RSSI %i limit %i", rssi, rssi_thr);
         switch_to_standby_mode();
         DEBUG_RX_END();
         return FAIL;
