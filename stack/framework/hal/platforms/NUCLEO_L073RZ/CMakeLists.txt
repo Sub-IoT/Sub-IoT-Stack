@@ -25,7 +25,7 @@ PLATFORM_PARAM(PLATFORM_MCU "STM32L073xx" STRING "The MCU series name of the pla
 PLATFORM_PARAM(PLATFORM_MCU_FULL "STM32L073RZ" STRING "The full MCU name of the platform")
 SET(JLINK_DEVICE "STM32L073RZ" CACHE STRING "The device passed to JLinkExe for flashing")
 PLATFORM_PARAM(${PLATFORM_PREFIX}_RADIO "sx127x" STRING "The radio chip connected to the board")
-PLATFORM_OPTION(${PLATFORM_PREFIX}_DEBUGPINS "Enable/Disable Hardware Debug Pins support (see 'hwdebug.h')" FALSE)
+PLATFORM_OPTION(PLATFORM_USE_DEBUGPINS "Enable/Disable Hardware Debug Pins support (see 'hwdebug.h')" FALSE)
 #Restrict the number of possible options for the radio option in the usual manner...
 SET_PROPERTY(CACHE ${PLATFORM_PREFIX}_RADIO PROPERTY STRINGS "sx127x;none")
 PLATFORM_OPTION(PLATFORM_USE_USB_CDC "Enable/Disable the use of CDC (UART Communication using USB" FALSE)
@@ -44,6 +44,7 @@ PLATFORM_PARAM(PLATFORM_CONSOLE_LOCATION "0" STRING "The location.") # TODO remo
 
 PLATFORM_PARAM(PLATFORM_NUM_LEDS "1" STRING "The number of LEDs available.")
 PLATFORM_PARAM(PLATFORM_NUM_BUTTONS "1" STRING "The number of buttons available.")
+PLATFORM_PARAM(PLATFORM_NUM_DEBUGPINS "3" STRING "The number of debugpins available.")
 
 #Add a 'global' definition for the specific MCU
 EXPORT_GLOBAL_COMPILE_DEFINITIONS("-D${PLATFORM_MCU}")
@@ -85,7 +86,8 @@ PLATFORM_HEADER_DEFINE(
     PLATFORM_CONSOLE_BAUDRATE
     PLATFORM_NUM_LEDS
     PLATFORM_NUM_BUTTONS
-    BOOL   ${PLATFORM_PREFIX}_DEBUGPINS
+    PLATFORM_NUM_DEBUGPINS
+    BOOL   PLATFORM_USE_DEBUGPINS
     PLATFORM_USE_USB_CDC
     PLATFORM_SX127X_USE_RESET_PIN
     PLATFORM_SX127X_USE_DIO3_PIN
@@ -99,8 +101,8 @@ ADD_LIBRARY(PLATFORM OBJECT
     platf_main.c
     platf_leds.c
     platf_button.c
+    platf_debug.c
     libc_overrides.c
-    inc/button.h
 )
 
 #Include the sources for the efm32gg chip
