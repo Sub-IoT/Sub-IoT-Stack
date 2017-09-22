@@ -59,7 +59,7 @@
 
 #define RSSI_OFFSET 64 // if this is changed also change radio register 0x20,0x4e
 
-#if DEBUG_PIN_NUM >= 2
+#if PLATFORM_NUM_DEBUGPINS >= 2
     #define DEBUG_TX_START() hw_debug_set(0);
     #define DEBUG_TX_END() hw_debug_clr(0);
     #define DEBUG_RX_START() hw_debug_set(1);

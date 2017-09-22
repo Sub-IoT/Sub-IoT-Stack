@@ -40,7 +40,7 @@
 #include "link_c.h"
 #include "platform_defs.h"
 
-#if DEBUG_PIN_NUM > 0
+#if PLATFORM_NUM_DEBUGPINS > 0
     #define DEBUG_PIN_SET(pin) hw_debug_set(pin)
     #define DEBUG_PIN_CLR(pin) hw_debug_clr(pin)
     #define DEBUG_PIN_TOGGLE(pin) hw_debug_toggle(pin)
