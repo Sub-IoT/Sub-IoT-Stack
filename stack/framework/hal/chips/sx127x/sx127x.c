@@ -53,7 +53,7 @@
 #define BITRATELSB_L 0x05
 // Fdev => 4.8 kHz
 #define FDEVMSB_L 0x00
-#define FDEVLSB_L 0x40
+#define FDEVLSB_L 0x4F
 // Carson's rule: 2 x fm + 2 x fd  = 9.600 + 2 x 4.800 = 19.2 kHz
 // assuming 10 ppm crystals gives max error of: 2 * 10 ppm * 868 = 17.36 kHz
 // => BW > 19.2 + 17.36 kHz => > 36.5 kHZ. Closest possible value is 41.7 kHz
@@ -358,18 +358,29 @@ static void configure_channel(const channel_id_t* channel) {
     write_reg(REG_FDEVMSB, FDEVMSB_L);
     write_reg(REG_FDEVLSB, FDEVLSB_L);
     write_reg(REG_RXBW, RXBW_L);
+
+    write_reg(REG_PREAMBLEMSB, 0x00);
+    write_reg(REG_PREAMBLELSB, PREAMBLE_LOW_RATE_CLASS * 8);
+
   } else if(channel->channel_header.ch_class == PHY_CLASS_NORMAL_RATE) {
     write_reg(REG_BITRATEMSB, BITRATEMSB_N);
     write_reg(REG_BITRATELSB, BITRATELSB_N);
     write_reg(REG_FDEVMSB, FDEVMSB_N);
     write_reg(REG_FDEVLSB, FDEVLSB_N);
     write_reg(REG_RXBW, RXBW_N);
+
+    write_reg(REG_PREAMBLEMSB, 0x00);
+    write_reg(REG_PREAMBLELSB, PREAMBLE_NORMAL_RATE_CLASS * 8);
+
   } else if(channel->channel_header.ch_class == PHY_CLASS_HI_RATE) {
     write_reg(REG_BITRATEMSB, BITRATEMSB_H);
     write_reg(REG_BITRATELSB, BITRATELSB_H);
     write_reg(REG_FDEVMSB, FDEVMSB_H);
     write_reg(REG_FDEVLSB, FDEVLSB_H);
     write_reg(REG_RXBW, RXBW_H);
+
+    write_reg(REG_PREAMBLEMSB, 0x00);
+    write_reg(REG_PREAMBLELSB, PREAMBLE_HI_RATE_CLASS * 8);
   }
 
 
@@ -432,8 +443,7 @@ static void init_regs() {
   // write_reg(REG_RXTIMEOUT3, 0); // not used for now
   // write_reg(REG_RXDELAY, 0); // not used for now
   // write_reg(REG_OSC, 0x07); // keep as default: off
-  write_reg(REG_PREAMBLEMSB, 0x00);
-  write_reg(REG_PREAMBLELSB, 32); // TODO 48 for hi rate
+
   write_reg(REG_SYNCCONFIG, 0x11); // no AutoRestartRx, default PreambePolarity, enable syncword of 2 bytes
   write_reg(REG_SYNCVALUE1, 0xE6); // by default, the syncword is set for CS0(PN9) class 0
   write_reg(REG_SYNCVALUE2, 0xD0);
