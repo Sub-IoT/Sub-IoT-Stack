@@ -45,7 +45,7 @@ typedef struct
     uint16_t channel_index_start;
     uint16_t channel_index_end;
     int8_t eirp;
-    int8_t cca;  // Default Clear channel assessment threshold (-dBm)
+    uint8_t cca;  // Default Clear channel assessment threshold (-dBm)
     uint8_t duty; // Maximum per-channel transmission duty cycle in per-mil (‰)
 } subband_t;
 

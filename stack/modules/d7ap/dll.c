@@ -264,7 +264,7 @@ void start_background_scan()
         .syncword_class = PHY_SYNCWORD_CLASS0,
        };
 
-    hw_radio_start_background_scan(&rx_cfg, &packet_received, E_CCA);
+    hw_radio_start_background_scan(&rx_cfg, &packet_received, - E_CCA);
 }
 
 void dll_stop_background_scan()
