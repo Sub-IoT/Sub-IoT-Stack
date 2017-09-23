@@ -38,6 +38,8 @@ The [B_L072Z_LRWAN1](http://www.st.com/content/st_com/en/products/evaluation-too
 
 The [NUCLEO_L073RZ](http://www.st.com/en/evaluation-tools/nucleo-l073rz.html) is a Nucleo-64 type of development board from STMicroelectronics. The MCU is basically the same as the B_L072Z_LRWAN1 above, so it is using the same HAL driver. The board does not include a radio, but a separate [SX1276MB1xAS](https://os.mbed.com/components/SX1276MB1xAS/shield) containing a Semtech sx1276 can be ordered. Here as well, the radio is reusing the same driver as with the Murata module. The platform is very comparable to the B_L072Z_LRWAN1 overall. A distinction is that the SX1276MB1xAS has a LF output, which allows to use the 433 MHz band, while the Murata module only supports the 868 and 915 MHz bands. See the [platform notes]({{ site.baseurl }}{% link _docs/platform-nucleo-l073.md %}) for more specific information on how to use this platform.
 
+![The nucleo-l073rz + SX1276MB1xAS devkit]({{site.baseurl}}/img/nucleo.jpg)
+
 ## EZR32LG_WSTK6200
 
 The [EZR32LG_WSTK6200](https://www.silabs.com/products/development-tools/wireless/proprietary/slwstk6200a-ezr32-leopard-gecko-868-mhz-starter-kit) platform is a starter kit based on the EZR32 Leopard Gecko Wireless MCU. This SoC contains a Wonder Gecko Cortex-M3 combined with an RF chip (si4460).
