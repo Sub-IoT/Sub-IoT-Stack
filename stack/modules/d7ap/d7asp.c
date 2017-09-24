@@ -319,7 +319,7 @@ d7asp_queue_result_t d7asp_queue_alp_actions(d7asp_master_session_t* session, ui
     assert(session->next_request_id < MODULE_D7AP_FIFO_MAX_REQUESTS_COUNT); // TODO do not assert but let upper layer handle this
     assert(!(expected_alp_response_length > 0 &&
              (session->config.qos.qos_resp_mode == SESSION_RESP_MODE_NO || session->config.qos.qos_resp_mode == SESSION_RESP_MODE_NO_RPT))); // TODO return error
-    single_request_retry_limit = 3; // TODO read from SEL config file
+    single_request_retry_limit = 1; // TODO read from SEL config file
 
     // add request to buffer
     // TODO request can contain 1 or more ALP commands, find a way to group commands in requests instead of dumping all requests in one buffer
