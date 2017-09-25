@@ -19,6 +19,7 @@
 #ifndef __STM32L0xx_GPIO_H_
 #define __STM32L0xx_GPIO_H_
 
+#include "hwgpio.h"
 #include "stm32l0xx_hal_gpio.h"
 
 #define PLATFORM_NUM_TIMERS 1

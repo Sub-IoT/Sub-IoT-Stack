@@ -12,7 +12,7 @@
 
 // TODO use other ways to avoid long polling
 #define I2C_POLLING  100000
-#define I2C_DEFAULT_TIMEOUT	10000
+#define I2C_DEFAULT_TIMEOUT	1000
 //HAL_MAX_DELAY
 
 #define I2CS       1
