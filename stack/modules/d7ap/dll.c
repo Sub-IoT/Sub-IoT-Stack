@@ -725,6 +725,11 @@ static void execute_csma_ca()
 
 void dll_execute_scan_automation()
 {
+    // first make sure the background scan tasks are stopped,
+    // since they might not be necessary for current active class anymore
+    timer_cancel_task(&start_background_scan);
+    sched_cancel_task(&start_background_scan);
+
     uint8_t scan_access_class = fs_read_dll_conf_active_access_class();
     if (active_access_class != scan_access_class)
     {
