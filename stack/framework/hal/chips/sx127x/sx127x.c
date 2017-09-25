@@ -987,7 +987,7 @@ error_t hw_radio_send_packet(hw_radio_packet_t* packet, tx_packet_callback_t tx_
     hw_gpio_set_edge_interrupt(SX127x_DIO0_PIN, GPIO_RISING_EDGE);
     hw_gpio_enable_interrupt(SX127x_DIO0_PIN);
     set_packet_handler_enabled(true);
- 
+    DEBUG_RX_END();
     DEBUG_TX_START();
     set_opmode(OPMODE_TX);
     write_fifo(encoded_packet, encoded_len);
@@ -1194,6 +1194,7 @@ error_t hw_radio_start_background_advertising(tx_packet_callback_t tx_callback)
     DPRINT("BG advertising start time @ %i stop time @ %i", start, bg_adv.stop_time);
 
     state = STATE_TX;
+    DEBUG_RX_END();
     DEBUG_TX_START();
     set_opmode(OPMODE_TX);
     hw_gpio_enable_interrupt(SX127x_DIO1_PIN);
