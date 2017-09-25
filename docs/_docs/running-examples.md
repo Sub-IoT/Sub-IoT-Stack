@@ -7,7 +7,7 @@ In this section we are going to show how to run the standard examples to get an 
 We will show different communication schemes, as introduced in the [previous section]({{ site.baseurl }}{% link _docs/D7AP-intro.md %}).
 
 For the rest of this section we assume you have 2 supported [boards]({{ site.baseurl }}{% link _docs/hardware.md %}) ready,
-and you are able to [build]({{ site.baseurl }}{% link _docs/building.md %}) the `gateway`, `sensor_push`, `sensor_actuib` and `sensor_pull` sample applications.
+and you are able to [build]({{ site.baseurl }}{% link _docs/building.md %}) the `gateway`, `sensor_push`, `sensor_action` and `sensor_pull` sample applications.
 Also make sure to check the platform notes specific for your platform (linked from [here]({{ site.baseurl }}{% link _docs/hardware.md %})), for more information on how to attach and configure your platform.
 
 # Push communication
