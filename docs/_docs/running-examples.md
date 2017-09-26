@@ -21,7 +21,7 @@ This payload is a binary format. We will be using [pyd7a](https://github.com/MOS
 After installation you can use the `unsolicited_response_logger.py` script to connect with your gateway using a serial port and print the received data:
 
 	$ PYTHONPATH=. python -u examples/unsolicited_response_logger.py -d /dev/ttyACM1
-	connected to /dev/ttyACM1, node UID b570000091418 running D7AP v1.1, application "gateway" with git sha1 73f0c73
+	connected to /dev/ttyACM1, node UID b570000091418 running D7AP v1.1, application "gatewa" with git sha1 73f0c73
 	Command with tag 136 (executing)
 	        actions:
 	                action: ReturnFileData: file-id=64, size=1, offset=0, length=8, data=[86, 246, 250, 0, 0, 0, 0, 0]
