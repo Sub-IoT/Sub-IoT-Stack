@@ -12,7 +12,7 @@ Also make sure to check the platform notes specific for your platform (linked fr
 
 # Push communication
 
-This example shows the use the case of a sensor pushing data to a gateway which is always listening.
+This example shows the use case of a sensor pushing data to a gateway which is always listening.
 Make sure to flash one board with the `sensor_push` firmware and another one with the `gateway` firmware.
 The `sensor_push` example broadcasts sensor values every 10 seconds. The `gateway` will receive the packets,
 and transmit the Application Layer Protocol (ALP) payload (see [D7AP intro]({{ site.baseurl }}{% link _docs/D7AP-intro.md %}) for more info) over the serial console (see the platform notes for your specific platform to find out how to access the serial console) to your PC.
@@ -21,7 +21,7 @@ This payload is a binary format. We will be using [pyd7a](https://github.com/MOS
 After installation you can use the `unsolicited_response_logger.py` script to connect with your gateway using a serial port and print the received data:
 
 	$ PYTHONPATH=. python -u examples/unsolicited_response_logger.py -d /dev/ttyACM1
-	connected to /dev/ttyACM1, node UID b570000091418 running D7AP v1.1, application "gatewa" with git sha1 73f0c73
+	connected to /dev/ttyACM1, node UID b570000091418 running D7AP v1.1, application "gateway" with git sha1 73f0c73
 	Command with tag 136 (executing)
 	        actions:
 	                action: ReturnFileData: file-id=64, size=1, offset=0, length=8, data=[86, 246, 250, 0, 0, 0, 0, 0]

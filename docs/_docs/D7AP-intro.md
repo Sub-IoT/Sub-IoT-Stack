@@ -21,7 +21,7 @@ Important design considerations are:
 D7AP uses different sub-GHz bands (433, 868 and 915 MHz) for global availability. The sub-GHz frequencies enable a bigger range compared to 2.4 GHz solutions.
 Because of this, D7AP allows to solve a lot of use cases using a star or tree (1 hop) topology, instead of the more power hungry and complex mesh topology.
 
-D7AP specifies all layer of the OSI model, making it a very easy to implement a use case since a lot of functionality is provided in the stack. As we will later discuss, you can make an application DASH7 enabled by adding a modem module and interfacing with this using an file operations.
+D7AP specifies all layer of the OSI model, making it very easy to implement a use case since a lot of functionality is provided in the stack. As we will later discuss, you can make an application DASH7 enabled by adding a modem module and interfacing with this using commong file operations.
 
 # Filesystem
 
