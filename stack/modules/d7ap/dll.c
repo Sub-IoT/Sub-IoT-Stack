@@ -54,7 +54,6 @@ typedef enum
     DLL_STATE_CCA_FAIL,
     DLL_STATE_FOREGROUND_SCAN,
     DLL_STATE_TX_FOREGROUND,
-    DLL_STATE_TX_BACKGROUND,
     DLL_STATE_TX_FOREGROUND_COMPLETED,
     DLL_STATE_TX_DISCARDED
 } dll_state_t;
@@ -187,14 +186,9 @@ static void switch_state(dll_state_t next_state)
         DPRINT("Switched to DLL_STATE_SCAN_AUTOMATION");
         break;
     case DLL_STATE_TX_FOREGROUND:
-        assert(dll_state == DLL_STATE_CCA2 || dll_state == DLL_STATE_TX_BACKGROUND);
-        dll_state = next_state;
-        DPRINT("Switched to DLL_STATE_TX_FOREGROUND");
-        break;
-    case DLL_STATE_TX_BACKGROUND:
         assert(dll_state == DLL_STATE_CCA2);
         dll_state = next_state;
-        DPRINT("Switched to DLL_STATE_TX_BACKGROUND");
+        DPRINT("Switched to DLL_STATE_TX_FOREGROUND");
         break;
     case DLL_STATE_TX_FOREGROUND_COMPLETED:
         assert(dll_state == DLL_STATE_TX_FOREGROUND);
@@ -368,25 +362,10 @@ void packet_transmitted(hw_radio_packet_t* hw_radio_packet)
     sched_post_task_prio(&notify_transmitted_packet, MAX_PRIORITY);
 }
 
-void transmit_foreground_packet()
-{
-    DPRINT("Transmit packet @ %i", timer_get_counter_value()); // ensure that we are sending the foreground request within the guarded time
-    hw_radio_send_packet(&current_packet->hw_radio_packet, &packet_transmitted);
-    guarded_channel = true;
-}
-
-void background_advertising_terminated(hw_radio_packet_t* hw_radio_packet)
-{
-    assert(dll_state == DLL_STATE_TX_BACKGROUND);
-    switch_state(DLL_STATE_TX_FOREGROUND);
-
-    sched_post_task_prio(&transmit_foreground_packet, MAX_PRIORITY);
-}
-
 static void discard_tx()
 {
     start_atomic();
-    if (dll_state == DLL_STATE_TX_FOREGROUND || dll_state == DLL_STATE_TX_BACKGROUND)
+    if (dll_state == DLL_STATE_TX_FOREGROUND)
     {
         /* wait until TX completed but Tx callback is removed */
         hw_radio_set_idle();
@@ -446,11 +425,11 @@ static void cca_rssi_valid(int16_t cur_rssi)
 
             if (current_packet->type == BACKGROUND_ADV)
             {
-                switch_state(DLL_STATE_TX_BACKGROUND);
+                switch_state(DLL_STATE_TX_FOREGROUND);
                 DPRINT("Start background advertising @ %i", timer_get_counter_value());
-                err = hw_radio_set_background(&current_packet->hw_radio_packet,
-                                              current_packet->ETA,
-                                              current_packet->tx_duration);
+                uint8_t dll_header_bg_frame[2];
+                assert(dll_assemble_packet_header(current_packet, dll_header_bg_frame) == 2);
+                uint16_t tx_duration_bg_frame = current_packet->tx_duration;
 
                 // To guarantee to send the foreground frame within the guarded time,
                 // we need to prepare the foreground packet before starting the
@@ -464,7 +443,10 @@ static void cca_rssi_valid(int16_t cur_rssi)
                                                                         current_access_profile.channel_header.ch_coding,
                                                                         current_packet->hw_radio_packet.length + 1);
 
-                err = hw_radio_start_background_advertising(&background_advertising_terminated);
+
+
+                err = hw_radio_send_packet_with_advertising(dll_header_bg_frame, tx_duration_bg_frame, current_packet->ETA, &current_packet->hw_radio_packet, &packet_transmitted);
+                guarded_channel = true;
             }
             else
             {
@@ -852,7 +834,6 @@ void dll_init()
     sched_register_task(&dll_execute_scan_automation);
     sched_register_task(&start_background_scan);
     sched_register_task(&guard_period_expiration);
-    sched_register_task(&transmit_foreground_packet);
 
     hw_radio_init(&alloc_new_packet, &release_packet);
 

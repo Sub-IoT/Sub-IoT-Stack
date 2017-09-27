@@ -496,11 +496,23 @@ __LINK_C bool hw_radio_is_rx();
 __LINK_C error_t hw_radio_send_packet(hw_radio_packet_t* packet,
                                       tx_packet_callback_t tx_callback);
 
-/** \brief Set the radio in Tx background mode
+/** \brief Send a packet using background advertising
  *
- * \param packet       A pointer to the start of the background packet to be transmitted
- * \param eta          The Estimated Time of Arrival of the D7ANP Request (in Ti)
- * \param tx_duration  The duration for transmitting a single D7AAdvP frame
+ * Start a background frame flooding until expiration of the advertising period, followed by transmission
+ * of the foreground frame.
+ * Each background frame contains the Estimated Time of Arrival of the D7ANP Request (ETA).
+ * When no more advertising background frames can be fully transmitted before the start of D7ANP,
+ * the last background frame is extended by padding preamble symbols after the end of the background
+ * packet, in order to guarantee no silence period on the channel between D7AAdvP and D7ANP.
+ *
+ * \param dll_header_bg_frame   The background frame DLL header
+ * \param tx_duration_bg_frame  The duration for transmitting a single D7AAdvP frame
+ * \param eta                   The Estimated Time of Arrival of the D7ANP Request (in Ti)
+ * \param packet                The foreground frame to transmit
+ * \param tx_callback           The tx_packet_callback_t function to call whenever the foreground packet has been
+ *			sent by the radio. Please note that this function is called from an
+ *			*interrupt* context and therefore can only do minimal processing. If this
+ *			parameter is 0x0, no callback will be made.
  *
  * \return error_t	SUCCESS if the Tx background mode has been successfully configured.
  *			EINVAL if the tx_cfg parameter contains invalid settings
@@ -508,34 +520,8 @@ __LINK_C error_t hw_radio_send_packet(hw_radio_packet_t* packet,
  *			ESIZE if the packet is either too long or too small
  *			EOFF if the radio has not yet been initialised
  */
-__LINK_C error_t hw_radio_set_background(hw_radio_packet_t* packet,
-                                         uint16_t eta, uint16_t tx_duration);
-
-/** \brief Start a background frame flooding until expiration of the advertising period
- *
- * Each background frame contains the Estimated Time of Arrival of the D7ANP Request (ETA).
- * When no more advertising background frames can be fully transmitted before the start of D7ANP,
- * the last background frame is extended by padding preamble symbols after the end of the background
- * packet, in order to guarantee no silence period on the channel between D7AAdvP and D7ANP.
- *
- * The background frame flooding is always done *asynchronously*, that is:
- * the background frame flooding is not completed until the supplied tx_packet_callback_t
- * function is invoked by the radio driver.
- *
- *
- * \param tx_callback	The tx_packet_callback_t function to call whenever the advertising period is terminated
- *                      Please note that this function is called from an interrupt
- *                      context and therefore can only do minimal processing.
- *                      If this parameter is 0x0, no callback will be made.
- *
- * \return error_t	SUCCESS if the background advertising has been successfully initiated.
- *			EINVAL if the tx_cfg parameter contains invalid settings
- *			EBUSY if another TX operation is already in progress
- *			ESIZE if the packet is either too long or too small
- *			EOFF if the radio has not yet been initialised
- */
-
-__LINK_C error_t hw_radio_start_background_advertising(tx_packet_callback_t tx_callback);
+__LINK_C error_t hw_radio_send_packet_with_advertising(uint8_t dll_header_bg_frame[2], uint16_t tx_duration_bg_frame,
+                                                        uint16_t eta, hw_radio_packet_t* packet, tx_packet_callback_t tx_callback);
 
 
 /** \brief Start a background scan.

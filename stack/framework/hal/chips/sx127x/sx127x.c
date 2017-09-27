@@ -191,6 +191,9 @@ typedef struct
     uint16_t eta;
     uint16_t tx_duration;
     timer_tick_t stop_time;
+    uint8_t fg_frame_encoded_length;
+    uint8_t fg_frame_encoded_packet[PREAMBLE_HI_RATE_CLASS + 2 + 256]; // include space for preamble and syncword
+    uint8_t fg_frame_transmitted_index;
 }bg_adv_t;
 
 bg_adv_t bg_adv;
@@ -573,7 +576,6 @@ static void bg_scan_rx_done()
 
 
 static void dio0_isr(pin_id_t pin_id, uint8_t event_mask) {
-
     if(state == STATE_RX) {
         if(lora_mode)
             lora_rxdone_isr();
@@ -605,7 +607,6 @@ static void fifo_level_isr()
 
     fill_in_fifo();
     //DPRINT("Flag %x", read_reg(REG_IRQFLAGS2));
-
     if (bg_adv.eta)
     {
         // clear the interrupt
@@ -957,6 +958,17 @@ bool hw_radio_is_rx() {
   // TODO
 }
 
+static uint8_t encode_packet(hw_radio_packet_t* packet, uint8_t* encoded_packet) {
+  uint8_t encoded_len = packet->length + 1;
+  memcpy(encoded_packet, packet->data, packet->length + 1);
+
+  if (current_channel_id.channel_header.ch_coding == PHY_CODING_FEC_PN9)
+      encoded_len = fec_encode(encoded_packet, packet->length + 1);
+
+  pn9_encode(encoded_packet, encoded_len);
+  return encoded_len;
+}
+
 error_t hw_radio_send_packet(hw_radio_packet_t* packet, tx_packet_callback_t tx_callback) {
   tx_packet_callback = tx_callback;
   current_packet = packet;
@@ -972,15 +984,10 @@ error_t hw_radio_send_packet(hw_radio_packet_t* packet, tx_packet_callback_t tx_
     // sx127x does not support PN9 whitening in hardware ...
     // copy the packet so we do not encode original packet->data
     uint8_t encoded_packet[256];
-    uint8_t encoded_len = packet->length + 1;
-    memcpy(encoded_packet, packet->data, packet->length + 1);
     DPRINT("TX len=%i", packet->length);
     DPRINT_DATA(packet->data, packet->length + 1);
 
-    if (current_channel_id.channel_header.ch_coding == PHY_CODING_FEC_PN9)
-        encoded_len = fec_encode(encoded_packet, packet->length + 1);
-
-    pn9_encode(encoded_packet, encoded_len);
+    uint8_t encoded_len = encode_packet(packet, encoded_packet);
 
     flush_fifo();
 
@@ -1019,65 +1026,6 @@ error_t hw_radio_send_packet(hw_radio_packet_t* packet, tx_packet_callback_t tx_
   }
 
   return SUCCESS; // TODO other return codes
-}
-
-error_t hw_radio_set_background(hw_radio_packet_t* packet, uint16_t eta, uint16_t tx_duration)
-{
-    if(state == STATE_TX)
-        return EBUSY;
-
-    if(state == STATE_RX)
-    {
-        pending_rx_cfg.channel_id = current_channel_id;
-        pending_rx_cfg.syncword_class = current_syncword_class;
-        should_rx_after_tx_completed = true;
-        // when in RX state we can directly strobe TX and do not need to wait until in IDLE
-    }
-    else
-    {
-        assert(get_opmode() == OPMODE_STANDBY);
-        // wait for Standby mode ready
-        while(!(read_reg(REG_IRQFLAGS1) & 0x80))
-        state = STATE_IDLE;
-    }
-
-    flush_fifo();
-
-    configure_syncword(packet->tx_meta.tx_cfg.syncword_class,
-                       (channel_id_t*)&(packet->tx_meta.tx_cfg.channel_id));
-    configure_channel((channel_id_t*)&(packet->tx_meta.tx_cfg.channel_id));
-    configure_eirp(packet->tx_meta.tx_cfg.eirp);
-
-    // During the advertising flooding, use the infinite packet length mode
-    write_reg(REG_PAYLOADLENGTH, 0x00);
-    // Set the FifoThreshold to fill in the FIFO before the FIFO is empty
-    write_reg(REG_FIFOTHRESH, 0x80 | 0x05);
-
-    // Prepare the subsequent background frames which include the preamble and the sync word
-    uint8_t preamble_len = (current_channel_id.channel_header.ch_class ==  PHY_CLASS_HI_RATE ? PREAMBLE_HI_RATE_CLASS : PREAMBLE_LOW_RATE_CLASS);
-    memset(bg_adv.packet, 0xAA, preamble_len); // preamble length is given in number of bytes
-    uint16_t sync_word = __builtin_bswap16(sync_word_value[current_syncword_class][current_channel_id.channel_header.ch_coding]);
-    memcpy(&bg_adv.packet[preamble_len], &sync_word, 2);
-
-    if (current_channel_id.channel_header.ch_coding == PHY_CODING_FEC_PN9)
-        bg_adv.packet_size = preamble_len + 2 + fec_calculated_decoded_length(BACKGROUND_FRAME_LENGTH);
-    else
-        bg_adv.packet_size = preamble_len + 2 + BACKGROUND_FRAME_LENGTH;
-
-    bg_adv.packet_payload = bg_adv.packet + preamble_len + 2 ;
-
-    // Backup the DLL header
-    memcpy(bg_adv.dll_header, packet->data + 1, BACKGROUND_DLL_HEADER_LENGTH);
-    DPRINT("DLL header followed by ETA %i", eta);
-    DPRINT_DATA(bg_adv.dll_header, BACKGROUND_DLL_HEADER_LENGTH);
-
-    DPRINT("Original payload with ETA %i", eta);
-    DPRINT_DATA(packet->data, packet->length + 1);
-
-    bg_adv.eta = eta;
-    bg_adv.tx_duration = tx_duration;
-
-    return SUCCESS;
 }
 
 static uint8_t assemble_background_payload()
@@ -1120,6 +1068,104 @@ static uint8_t assemble_background_payload()
     return payload_len;
 }
 
+error_t hw_radio_send_packet_with_advertising(uint8_t dll_header_bg_frame[2], uint16_t tx_duration_bg_frame, uint16_t eta, hw_radio_packet_t* packet, tx_packet_callback_t tx_callback)
+{
+    if(state == STATE_TX)
+        return EBUSY;
+
+    tx_packet_callback = tx_callback;
+    current_packet = packet;
+
+    if(state == STATE_RX)
+    {
+        pending_rx_cfg.channel_id = current_channel_id;
+        pending_rx_cfg.syncword_class = current_syncword_class;
+        should_rx_after_tx_completed = true;
+        switch_to_standby_mode();
+    }
+    else
+    {
+        assert(get_opmode() == OPMODE_STANDBY);
+        // wait for Standby mode ready
+        while(!(read_reg(REG_IRQFLAGS1) & 0x80))
+        state = STATE_IDLE;
+    }
+
+    flush_fifo();
+
+    configure_syncword(PHY_SYNCWORD_CLASS0, (channel_id_t*)&(packet->tx_meta.tx_cfg.channel_id));
+    configure_channel((channel_id_t*)&(packet->tx_meta.tx_cfg.channel_id));
+    configure_eirp(packet->tx_meta.tx_cfg.eirp);
+
+    // During the advertising flooding, use the infinite packet length mode
+    write_reg(REG_PAYLOADLENGTH, 0x00);
+    // Set the FifoThreshold to fill in the FIFO before the FIFO is empty
+    write_reg(REG_FIFOTHRESH, 0x80 | 0x05);
+
+    // Prepare the subsequent background frames which include the preamble and the sync word
+    uint8_t preamble_len = (current_channel_id.channel_header.ch_class ==  PHY_CLASS_HI_RATE ? PREAMBLE_HI_RATE_CLASS : PREAMBLE_LOW_RATE_CLASS);
+    memset(bg_adv.packet, 0xAA, preamble_len); // preamble length is given in number of bytes
+    uint16_t sync_word = __builtin_bswap16(sync_word_value[PHY_SYNCWORD_CLASS0][current_channel_id.channel_header.ch_coding]);
+    memcpy(&bg_adv.packet[preamble_len], &sync_word, 2);
+
+    if (current_channel_id.channel_header.ch_coding == PHY_CODING_FEC_PN9)
+        bg_adv.packet_size = preamble_len + 2 + fec_calculated_decoded_length(BACKGROUND_FRAME_LENGTH);
+    else
+        bg_adv.packet_size = preamble_len + 2 + BACKGROUND_FRAME_LENGTH;
+
+    bg_adv.packet_payload = bg_adv.packet + preamble_len + 2 ;
+
+    // Backup the DLL header
+    memcpy(bg_adv.dll_header, dll_header_bg_frame, BACKGROUND_DLL_HEADER_LENGTH);
+    DPRINT("DLL header followed by ETA %i", eta);
+    DPRINT_DATA(bg_adv.dll_header, BACKGROUND_DLL_HEADER_LENGTH);
+
+    bg_adv.eta = eta;
+    bg_adv.tx_duration = tx_duration_bg_frame;
+
+    // prepare the foreground frame, so we can transmit this immediately
+    DPRINT("Original payload with ETA %i", eta);
+    DPRINT_DATA(packet->data, packet->length + 1);
+    memset(bg_adv.fg_frame_encoded_packet, 0xAA, preamble_len);
+    sync_word = __builtin_bswap16(sync_word_value[PHY_SYNCWORD_CLASS1][current_channel_id.channel_header.ch_coding]);
+    memcpy(&bg_adv.fg_frame_encoded_packet[preamble_len], &sync_word, 2);
+    bg_adv.fg_frame_encoded_length = encode_packet(packet, bg_adv.fg_frame_encoded_packet + preamble_len + 2);
+    bg_adv.fg_frame_encoded_length += preamble_len + 2; // add preamble + syncword
+
+    uint8_t payload_len;
+    payload_len = assemble_background_payload();
+
+    // For the first advertising frame, transmit directly the payload since the preamble and the sync word are directly managed by the xcv
+    DPRINT("Transmit packet: %d", payload_len);
+    DPRINT_DATA(bg_adv.packet_payload, payload_len);
+
+    // Fill the FIFO with the first BG frame (preamble and sync word are appended by the transceiver)
+    write_fifo(bg_adv.packet_payload, payload_len); // Fill up the TX FIFO
+
+    // prepare the next advertising frame, insert the preamble and the SYNC word
+    bg_adv.eta -= bg_adv.tx_duration; // the next ETA is the time remaining after the end transmission time of the D7AAdvP frame
+    assemble_background_payload();
+
+    write_reg(REG_DIOMAPPING1, 0x00); // FIFO LEVEL ISR
+    hw_gpio_set_edge_interrupt(SX127x_DIO1_PIN, GPIO_FALLING_EDGE);
+
+    DPRINT("\n REG %x", read_reg(REG_IRQFLAGS2));
+
+    // start Tx
+    timer_tick_t start = timer_get_counter_value();
+    bg_adv.stop_time = start + bg_adv.eta;
+    DPRINT("BG advertising start time @ %i stop time @ %i", start, bg_adv.stop_time);
+
+    state = STATE_TX;
+    DEBUG_RX_END();
+    DEBUG_TX_START();
+    hw_gpio_enable_interrupt(SX127x_DIO1_PIN);
+    set_opmode(OPMODE_TX);
+
+    return SUCCESS;
+}
+
+
 static void fill_in_fifo()
 {
     timer_tick_t current = timer_get_counter_value();
@@ -1135,22 +1181,8 @@ static void fill_in_fifo()
      * symbols after the end of the background packet, in order to guarantee no silence period.
      * The FIFO level allows to write enough padding preamble bytes without overflow
      */
-    if (bg_adv.eta < bg_adv.tx_duration)
-    {
-        uint16_t preamble_len;
-        preamble_len = bg_adv.eta * (bg_adv.packet_size / bg_adv.tx_duration);
-        DPRINT("Add preamble_bytes: %d", preamble_len);
 
-        // Normally, we have space enough in the FIFO for the padding preambles
-        while(!(CHECK_FIFO_FULL()) && preamble_len)
-        {
-            write_reg(REG_FIFO, 0xAA);
-            preamble_len --;
-        }
-
-        bg_adv.eta = 0;
-    }
-    else
+    if (bg_adv.eta > bg_adv.tx_duration)
     {
         // Fill up the TX FIFO with the full packet including the preamble and the SYNC word
         write_fifo(bg_adv.packet, bg_adv.packet_size);
@@ -1158,49 +1190,46 @@ static void fill_in_fifo()
         // Prepare the next frame
         assemble_background_payload();
     }
+    else
+    {
+        // not enough time for sending another BG frame, send the FG frame,
+        // prepend with preamble bytes if necessary
+        uint16_t preamble_len = 0;
+        if(bg_adv.fg_frame_transmitted_index == 0)
+        {
+            preamble_len = bg_adv.eta * (bg_adv.packet_size / bg_adv.tx_duration);
+            DPRINT("Add preamble_bytes: %d", preamble_len);
+
+            // Normally, we have space enough in the FIFO for the padding preambles
+            while(preamble_len)
+            {
+                write_reg(REG_FIFO, 0xAA);
+                preamble_len --;
+            }
+        }
+
+        bg_adv.eta = 0;
+
+        // send the FG frame, fill the remaining space in the FIFO
+
+        // TODO ensure enough preamble symbols transmitted
+        uint8_t fifo_space_remaining = 64 - 5 - preamble_len; // FIFO threshold is 5
+        while(fifo_space_remaining && bg_adv.fg_frame_transmitted_index < bg_adv.fg_frame_encoded_length)
+        {
+            write_reg(REG_FIFO, bg_adv.fg_frame_encoded_packet[bg_adv.fg_frame_transmitted_index]);
+            bg_adv.fg_frame_transmitted_index++;
+            fifo_space_remaining--;
+        }
+
+        if(bg_adv.fg_frame_transmitted_index == bg_adv.fg_frame_encoded_length - 1)
+        {
+            // FG frame fully queued, enabled packet transmitted ISR
+            hw_gpio_enable_interrupt(SX127x_DIO0_PIN);
+        }
+    }
 }
 
-error_t hw_radio_start_background_advertising(tx_packet_callback_t tx_callback)
-{
-    uint8_t payload_len;
 
-    if(state == STATE_TX)
-        return EBUSY;
-
-    switch_to_standby_mode(); // to fill the FIFO, we need to be in standby mode
-
-    tx_packet_callback = tx_callback;
-    payload_len = assemble_background_payload();
-
-    // For the first advertising frame, transmit directly the payload since the preamble and the sync word are directly managed by the xcv
-    DPRINT("Transmit packet: %d", payload_len);
-    DPRINT_DATA(bg_adv.packet_payload, payload_len);
-
-    // Fill the FIFO with the first BG frame (preamble and sync word are appended by the transceiver)
-    write_fifo(bg_adv.packet_payload, payload_len); // Fill up the TX FIFO
-
-    // prepare the next advertising frame, insert the preamble and the SYNC word
-    bg_adv.eta -= bg_adv.tx_duration; // the next ETA is the time remaining after the end transmission time of the D7AAdvP frame
-    assemble_background_payload();
-
-    write_reg(REG_DIOMAPPING1, 0x0C); // FIFO LEVEL ISR
-    hw_gpio_set_edge_interrupt(SX127x_DIO1_PIN, GPIO_FALLING_EDGE);
-
-    DPRINT("\n REG %x", read_reg(REG_IRQFLAGS2));
-
-    // start Tx
-    timer_tick_t start = timer_get_counter_value();
-    bg_adv.stop_time = start + bg_adv.eta;
-    DPRINT("BG advertising start time @ %i stop time @ %i", start, bg_adv.stop_time);
-
-    state = STATE_TX;
-    DEBUG_RX_END();
-    DEBUG_TX_START();
-    set_opmode(OPMODE_TX);
-    hw_gpio_enable_interrupt(SX127x_DIO1_PIN);
-
-    return SUCCESS;
-}
 error_t hw_radio_start_background_scan(hw_rx_cfg_t const* rx_cfg, rx_packet_callback_t rx_cb, int16_t rssi_thr)
 {
     uint8_t packet_len;
