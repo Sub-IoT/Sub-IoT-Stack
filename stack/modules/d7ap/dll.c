@@ -423,36 +423,23 @@ static void cca_rssi_valid(int16_t cur_rssi)
             DPRINT("CCA2 succeeded, transmitting ...");
             // log_print_data(current_packet->hw_radio_packet.data, current_packet->hw_radio_packet.length + 1); // TODO tmp
 
-            if (current_packet->type == BACKGROUND_ADV)
+            switch_state(DLL_STATE_TX_FOREGROUND);
+            guarded_channel = true;
+
+            if (current_packet->ETA)
             {
-                switch_state(DLL_STATE_TX_FOREGROUND);
                 DPRINT("Start background advertising @ %i", timer_get_counter_value());
                 uint8_t dll_header_bg_frame[2];
                 assert(dll_assemble_packet_header(current_packet, dll_header_bg_frame) == 2);
-                uint16_t tx_duration_bg_frame = current_packet->tx_duration;
-
-                // To guarantee to send the foreground frame within the guarded time,
-                // we need to prepare the foreground packet before starting the
-                // advertising sequence
-
-                current_packet->hw_radio_packet.tx_meta.tx_cfg.syncword_class = PHY_SYNCWORD_CLASS1;
-                current_packet->type = INITIAL_REQUEST;
-                packet_assemble(current_packet);
-
-                current_packet->tx_duration = dll_calculate_tx_duration(current_access_profile.channel_header.ch_class,
-                                                                        current_access_profile.channel_header.ch_coding,
-                                                                        current_packet->hw_radio_packet.length + 1);
-
-
+                uint16_t tx_duration_bg_frame = dll_calculate_tx_duration(current_channel_id.channel_header.ch_class,
+                                                                          current_channel_id.channel_header.ch_coding,
+                                                                          BACKGROUND_FRAME_LENGTH);
 
                 err = hw_radio_send_packet_with_advertising(dll_header_bg_frame, tx_duration_bg_frame, current_packet->ETA, &current_packet->hw_radio_packet, &packet_transmitted);
-                guarded_channel = true;
             }
             else
             {
-                switch_state(DLL_STATE_TX_FOREGROUND);
                 err = hw_radio_send_packet(&current_packet->hw_radio_packet, &packet_transmitted);
-                guarded_channel = true;
             }
 
             assert(err == SUCCESS);
@@ -885,6 +872,9 @@ void dll_tx_frame(packet_t* packet)
     {
         dll_header->control_eirp_index = current_eirp + 32;
 
+         // We need to check if the channel has really been confirmed through a previous transaction
+         // otherwise we need to set packet->ETA to enable the ad-hoc sync.
+
         packet->hw_radio_packet.tx_meta.tx_cfg = (hw_tx_cfg_t){
             .channel_id = current_channel_id,
             .syncword_class = PHY_SYNCWORD_CLASS1,
@@ -944,19 +934,11 @@ void dll_tx_frame(packet_t* packet)
         /* use D7AAdvP if the receiver is engaged in ultra low power scan */
         if (tsched)
         {
-            packet->type = BACKGROUND_ADV;
-            packet->hw_radio_packet.tx_meta.tx_cfg.syncword_class = PHY_SYNCWORD_CLASS0;
-
-            // TADV = TSCHED + TTX (TTX is the duration for transmitting a single D7AAdvP frame)
-            packet->tx_duration = dll_calculate_tx_duration(responder_access_profile.channel_header.ch_class,
-                                                            responder_access_profile.channel_header.ch_coding,
-                                                            BACKGROUND_FRAME_LENGTH);
-
-            packet->ETA = tsched + packet->tx_duration;
-            DPRINT("First background frame contains ETA <%d> ttx %d", packet->ETA, packet->tx_duration);
+            packet->ETA = tsched;
+            DPRINT("This request requires ad-hoc sync with a first ETA <%d>", packet->ETA);
         }
-        else
-            packet->hw_radio_packet.tx_meta.tx_cfg.syncword_class = PHY_SYNCWORD_CLASS1;
+
+        packet->hw_radio_packet.tx_meta.tx_cfg.syncword_class = PHY_SYNCWORD_CLASS1;
 
         // store the channel id and eirp
         current_eirp = responder_access_profile.subbands[0].eirp;
@@ -980,12 +962,9 @@ void dll_tx_frame(packet_t* packet)
 
     DPRINT("Packet LENGTH %d", packet->hw_radio_packet.length);
 
-    if (packet->type != BACKGROUND_ADV)
-    {
-        packet->tx_duration = dll_calculate_tx_duration(request_access_profile->channel_header.ch_class,
-                                                        request_access_profile->channel_header.ch_coding,
-                                                        packet->hw_radio_packet.length + 1);
-    }
+    packet->tx_duration = dll_calculate_tx_duration(request_access_profile->channel_header.ch_class,
+                                                    request_access_profile->channel_header.ch_coding,
+                                                    packet->hw_radio_packet.length + 1);
 
     current_packet = packet;
 
