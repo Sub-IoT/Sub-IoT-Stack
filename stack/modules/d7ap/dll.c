@@ -61,6 +61,9 @@ typedef enum
 static dae_access_profile_t NGDEF(_current_access_profile);
 #define current_access_profile NG(_current_access_profile)
 
+static dae_access_profile_t NGDEF(_remote_access_profile);
+#define remote_access_profile NG(_remote_access_profile)
+
 #define NO_ACTIVE_ACCESS_CLASS 0xFF
 static uint8_t NGDEF(_active_access_class);
 #define active_access_class NG(_active_access_class)
@@ -300,8 +303,8 @@ static void packet_received(hw_radio_packet_t* hw_radio_packet)
 
     if (hw_radio_packet->rx_meta.rx_cfg.syncword_class == PHY_SYNCWORD_CLASS1)
     {
-        uint16_t tx_duration = dll_calculate_tx_duration(current_access_profile.channel_header.ch_class,
-                                                         current_access_profile.channel_header.ch_coding,
+        uint16_t tx_duration = dll_calculate_tx_duration(current_channel_id.channel_header.ch_class,
+                                                         current_channel_id.channel_header.ch_coding,
                                                          hw_radio_packet->length + 1);
         // If the first transmission duration is greater than or equal to the Guard Interval TG,
         // the channel guard period is extended by TG following the transmission.
@@ -858,10 +861,6 @@ void dll_tx_frame(packet_t* packet)
     packet->origin_access_class = active_access_class;  // strictly speaking this is a D7ANP field,
                                                         // but we set it here to prevent rereading/caching in D7ANP
 
-    // AP to use for request, for responses we use the current scan AP. In case of request we point this to the responders AP later
-    dae_access_profile_t* request_access_profile = &current_access_profile;
-    dae_access_profile_t responder_access_profile; // filled later, when needed
-
     if (packet->d7atp_ctrl.ctrl_is_start && packet->d7anp_addressee != NULL) // when responding in a transaction we MAY skip targetID
         dll_header->control_target_id_type = packet->d7anp_addressee->ctrl.id_type;
     else
@@ -893,8 +892,7 @@ void dll_tx_frame(packet_t* packet)
     }
     else
     {
-        fs_read_access_class(packet->d7anp_addressee->access_specifier, &responder_access_profile);
-        request_access_profile = &responder_access_profile; // use the responders AP for this request
+        fs_read_access_class(packet->d7anp_addressee->access_specifier, &remote_access_profile);
 
         /*
          * For now the access mask and the subband bitmap are not used
@@ -909,12 +907,12 @@ void dll_tx_frame(packet_t* packet)
         DPRINT("AC specifier=%i channel=%i",
                          packet->d7anp_addressee->access_specifier,
                          responder_access_profile.subbands[0].channel_index_start);
-        dll_header->control_eirp_index = responder_access_profile.subbands[0].eirp + 32;
+        dll_header->control_eirp_index = remote_access_profile.subbands[0].eirp + 32;
 
         packet->hw_radio_packet.tx_meta.tx_cfg = (hw_tx_cfg_t){
-            .channel_id.channel_header = responder_access_profile.channel_header,
-            .channel_id.center_freq_index = responder_access_profile.subbands[0].channel_index_start,
-            .eirp = responder_access_profile.subbands[0].eirp
+            .channel_id.channel_header = remote_access_profile.channel_header,
+            .channel_id.center_freq_index = remote_access_profile.subbands[0].channel_index_start,
+            .eirp = remote_access_profile.subbands[0].eirp
         };
 
         // The Access TSCHED is obtained as the maximum of all selected subprofiles' TSCHED.
@@ -923,9 +921,9 @@ void dll_tx_frame(packet_t* packet)
         for(uint8_t i = 0; i < SUBPROFILES_NB; i++)
         {
             // Only consider the selectable subprofiles (having their Access Mask bits set to 1 and having non-void subband bitmaps)
-            if ((packet->d7anp_addressee->access_mask & (0x01 << i)) && responder_access_profile.subprofiles[i].subband_bitmap)
+            if ((packet->d7anp_addressee->access_mask & (0x01 << i)) && remote_access_profile.subprofiles[i].subband_bitmap)
             {
-                scan_period = CT_DECOMPRESS(responder_access_profile.subprofiles[i].scan_automation_period);
+                scan_period = CT_DECOMPRESS(remote_access_profile.subprofiles[i].scan_automation_period);
                 if (scan_period > tsched)
                     tsched = scan_period;
             }
@@ -941,14 +939,14 @@ void dll_tx_frame(packet_t* packet)
         packet->hw_radio_packet.tx_meta.tx_cfg.syncword_class = PHY_SYNCWORD_CLASS1;
 
         // store the channel id and eirp
-        current_eirp = responder_access_profile.subbands[0].eirp;
+        current_eirp = packet->hw_radio_packet.tx_meta.tx_cfg.eirp;
         current_channel_id = packet->hw_radio_packet.tx_meta.tx_cfg.channel_id;
 
         // compute Ecca = NF + Eccao
         if (tx_nf_method == D7ADLL_FIXED_NOISE_FLOOR)
         {
             //Use the default channel CCA threshold
-            E_CCA = current_access_profile.subbands[0].cca; // Eccao is set to 0 dB
+            E_CCA = remote_access_profile.subbands[0].cca; // Eccao is set to 0 dB
             DPRINT("E_CCA %i", E_CCA);
         }
         else
@@ -962,8 +960,8 @@ void dll_tx_frame(packet_t* packet)
 
     DPRINT("Packet LENGTH %d", packet->hw_radio_packet.length);
 
-    packet->tx_duration = dll_calculate_tx_duration(request_access_profile->channel_header.ch_class,
-                                                    request_access_profile->channel_header.ch_coding,
+    packet->tx_duration = dll_calculate_tx_duration(current_channel_id.channel_header.ch_class,
+                                                    current_channel_id.channel_header.ch_coding,
                                                     packet->hw_radio_packet.length + 1);
 
     current_packet = packet;
