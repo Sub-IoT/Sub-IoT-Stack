@@ -480,49 +480,26 @@ __LINK_C bool hw_radio_is_rx();
  * dropped. Once the packet has been sent, the radio switches back to IDLE mode , unless hw_radio_set_rx() is
  * called while the TX is still in progress.
  *
- * \param packet	A pointer to the start of the packet to be transmitted
- *
- * \param tx_callback	The tx_packet_callback_t function to call whenever a packet has been 
- *			sent by the radio. Please note that this function is called from an 
- *			*interrupt* context and therefore can only do minimal processing. If this
- *			parameter is 0x0, no callback will be made.
- *
- * \return error_t	SUCCESS if the packet transmission has been successfully initiated.
- *			EINVAL if the tx_cfg parameter contains invalid settings
- *			EBUSY if another TX operation is already in progress
- *			ESIZE if the packet is either too long or too small
- *			EOFF if the radio has not yet been initialised
- */
-__LINK_C error_t hw_radio_send_packet(hw_radio_packet_t* packet,
-                                      tx_packet_callback_t tx_callback);
-
-/** \brief Send a packet using background advertising
- *
- * Start a background frame flooding until expiration of the advertising period, followed by transmission
- * of the foreground frame.
- * Each background frame contains the Estimated Time of Arrival of the D7ANP Request (ETA).
- * When no more advertising background frames can be fully transmitted before the start of D7ANP,
- * the last background frame is extended by padding preamble symbols after the end of the background
- * packet, in order to guarantee no silence period on the channel between D7AAdvP and D7ANP.
+ * If the ETA parameter is set, the packet transmission requires a preliminary advertising period for ad-hoc
+ * synchronization with the responder.
  *
  * \param dll_header_bg_frame   The background frame DLL header
  * \param tx_duration_bg_frame  The duration for transmitting a single D7AAdvP frame
  * \param eta                   The Estimated Time of Arrival of the D7ANP Request (in Ti)
- * \param packet                The foreground frame to transmit
- * \param tx_callback           The tx_packet_callback_t function to call whenever the foreground packet has been
- *			sent by the radio. Please note that this function is called from an
- *			*interrupt* context and therefore can only do minimal processing. If this
- *			parameter is 0x0, no callback will be made.
+ * \param packet                A pointer to the start of the Foreground frame to be transmitted
+ * \param tx_callback           The tx_packet_callback_t function to call whenever a packet has been
+ *                              sent by the radio. Please note that this function is called from an
+ *                              *interrupt* context and therefore can only do minimal processing. If this
+ *                              parameter is 0x0, no callback will be made.
  *
- * \return error_t	SUCCESS if the Tx background mode has been successfully configured.
- *			EINVAL if the tx_cfg parameter contains invalid settings
- *			EBUSY if another TX operation is already in progress
- *			ESIZE if the packet is either too long or too small
- *			EOFF if the radio has not yet been initialised
+ * \return error_t	SUCCESS if the packet transmission has been successfully initiated.
+ *          EINVAL if the tx_cfg parameter contains invalid settings
+ *          EBUSY if another TX operation is already in progress
+ *          ESIZE if the packet is either too long or too small
+ *          EOFF if the radio has not yet been initialised
  */
-__LINK_C error_t hw_radio_send_packet_with_advertising(uint8_t dll_header_bg_frame[2], uint16_t tx_duration_bg_frame,
-                                                        uint16_t eta, hw_radio_packet_t* packet, tx_packet_callback_t tx_callback);
-
+__LINK_C error_t hw_radio_send_packet(uint8_t dll_header_bg_frame[2], uint16_t tx_duration_bg_frame,
+                                      uint16_t eta, hw_radio_packet_t* packet, tx_packet_callback_t tx_callback);
 
 /** \brief Start a background scan.
  *

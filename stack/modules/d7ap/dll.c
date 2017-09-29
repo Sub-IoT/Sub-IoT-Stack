@@ -438,11 +438,11 @@ static void cca_rssi_valid(int16_t cur_rssi)
                                                                           current_channel_id.channel_header.ch_coding,
                                                                           BACKGROUND_FRAME_LENGTH);
 
-                err = hw_radio_send_packet_with_advertising(dll_header_bg_frame, tx_duration_bg_frame, current_packet->ETA, &current_packet->hw_radio_packet, &packet_transmitted);
+                err = hw_radio_send_packet(dll_header_bg_frame, tx_duration_bg_frame, current_packet->ETA, &current_packet->hw_radio_packet, &packet_transmitted);
             }
             else
             {
-                err = hw_radio_send_packet(&current_packet->hw_radio_packet, &packet_transmitted);
+                err = hw_radio_send_packet(NULL, 0, 0, &current_packet->hw_radio_packet, &packet_transmitted);
             }
 
             assert(err == SUCCESS);
@@ -515,7 +515,7 @@ static void execute_csma_ca()
         current_packet->type == RESPONSE_TO_UNICAST) && guarded_channel)
     {
         switch_state(DLL_STATE_TX_FOREGROUND);
-        assert(hw_radio_send_packet(&current_packet->hw_radio_packet, &packet_transmitted) == SUCCESS);
+        assert(hw_radio_send_packet(NULL, 0, 0, &current_packet->hw_radio_packet, &packet_transmitted) == SUCCESS);
         return;
     }
 
