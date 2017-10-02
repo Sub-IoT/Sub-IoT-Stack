@@ -147,6 +147,18 @@ void execute_sensor_measurement()
   LED_FLASH_GREEN();
 }
 
+void init_user_files()
+{
+  // file 0x40: contains our sensor data
+  fs_file_header_t file_header = (fs_file_header_t){
+      .file_properties.action_protocol_enabled = 0,
+      .file_properties.permissions = 0, // TODO
+      .length = SENSOR_FILE_SIZE
+  };
+
+  fs_init_file(SENSOR_FILE_ID, &file_header, NULL);
+}
+
 void bootstrap()
 {
     log_print_string("Device booted\n");
@@ -195,7 +207,8 @@ void bootstrap()
     fs_init_args_t fs_init_args = (fs_init_args_t){
         .access_profiles_count = 2,
         .access_profiles = access_classes,
-        .access_class = 0x11 // use scanning AC
+        .access_class = 0x11, // use scanning AC
+        .fs_user_files_init_cb = &init_user_files
     };
 
     d7ap_stack_init(&fs_init_args, NULL, false, NULL);
