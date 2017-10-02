@@ -43,11 +43,11 @@
   #error "background frames are only supported by the sx127x driver for now"
 #endif
 
-#if (defined PLATFORM_EFM32GG_STK3700 || defined PLATFORM_EFM32HG_STK3400 || defined PLATFORM_EZR32LG_WSTK6200A || defined PLATFORM_EZR32LG_OCTA)
+#if (defined PLATFORM_EFM32GG_STK3700 || defined PLATFORM_EZR32LG_WSTK6200A)
   #include "platform_sensors.h"
 #endif
 
-#if (defined PLATFORM_EZR32LG_OCTA || defined PLATFORM_B_L072Z_LRWAN1)
+#if (defined PLATFORM_B_L072Z_LRWAN1)
 	#include "led.h"
 	#define LED_FLASH_GREEN()	led_flash_green()
 #else
@@ -79,8 +79,7 @@ void execute_sensor_measurement()
 
   uint8_t sensor_values[SENSOR_FILE_SIZE] = { 0 };
 
-#if (defined PLATFORM_EFM32HG_STK3400  || defined PLATFORM_EZR32LG_WSTK6200A \
-  || defined PLATFORM_EZR32LG_OCTA || defined PLATFORM_EFM32GG_STK3700 || defined PLATFORM_EZR32LG_USB01)
+#if (defined PLATFORM_EZR32LG_WSTK6200A || defined PLATFORM_EFM32GG_STK3700 || defined PLATFORM_EZR32LG_USB01)
   char str[30];
 
   float internal_temp = hw_get_internal_temperature();
@@ -213,7 +212,7 @@ void bootstrap()
 
     d7ap_stack_init(&fs_init_args, NULL, false, NULL);
 
-#if (defined PLATFORM_EFM32GG_STK3700 || defined PLATFORM_EFM32HG_STK3400 || defined PLATFORM_EZR32LG_WSTK6200A || defined PLATFORM_EZR32LG_OCTA)
+#if (defined PLATFORM_EFM32GG_STK3700 || defined PLATFORM_EZR32LG_WSTK6200A)
     initSensors();
 #endif
 

@@ -37,12 +37,8 @@
 
 
 #include "button.h"
-#if (defined PLATFORM_EFM32GG_STK3700 || defined PLATFORM_EFM32HG_STK3400 || defined PLATFORM_EZR32LG_WSTK6200A || defined PLATFORM_EZR32LG_OCTA)
+#if (defined PLATFORM_EFM32GG_STK3700 || defined PLATFORM_EZR32LG_WSTK6200A)
   #include "platform_sensors.h"
-#endif
-
-#ifdef PLATFORM_EZR32LG_OCTA
-#include "led.h"
 #endif
 
 #ifdef HAS_LCD
@@ -69,8 +65,8 @@
 
 void execute_sensor_measurement()
 {
-#if (defined PLATFORM_EFM32HG_STK3400  || defined PLATFORM_EZR32LG_WSTK6200A \
-  || defined PLATFORM_EZR32LG_OCTA || defined PLATFORM_EFM32GG_STK3700 || defined PLATFORM_EZR32LG_USB01)
+#if (defined PLATFORM_EZR32LG_WSTK6200A \
+  || defined PLATFORM_EFM32GG_STK3700 || defined PLATFORM_EZR32LG_USB01)
   char str[30];
 
   float internal_temp = hw_get_internal_temperature();
@@ -209,7 +205,7 @@ void bootstrap()
 
     d7ap_stack_init(&fs_init_args, NULL, false, NULL);
 
-#if (defined PLATFORM_EFM32GG_STK3700 || defined PLATFORM_EFM32HG_STK3400 || defined PLATFORM_EZR32LG_WSTK6200A || defined PLATFORM_EZR32LG_OCTA)
+#if (defined PLATFORM_EFM32GG_STK3700 || defined PLATFORM_EZR32LG_WSTK6200A)
     initSensors();
 #endif
 

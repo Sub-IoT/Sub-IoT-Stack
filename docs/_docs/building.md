@@ -31,7 +31,7 @@ We will create a build directory and run cmake to generate the buildscript:
 	-- Detecting CXX compiler ABI info - failed
 	-- Detecting CXX compile features
 	-- Detecting CXX compile features - failed
-	-- detected supported platforms: B_L072Z_LRWAN1 EFM32GG_STK3700 EFM32HG_STK3400 EZR32LG_Octa EZR32LG_USB01 EZR32LG_WSTK6200A EZRPi NUCLEO_STM32L152 OCTA_Gateway stm32f4_discovery
+        -- detected supported platforms: B_L072Z_LRWAN1 EFM32GG_STK3700 EZR32LG_USB01 EZR32LG_WSTK6200A EZRPi NUCLEO_L073RZ
 	-- selected platform: B_L072Z_LRWAN1
 	-- The ASM compiler identification is GNU
 	-- Found assembler: /home/glenn/bin/toolchains/gcc-arm-none-eabi-4_9-2014q4/bin/arm-none-eabi-gcc
