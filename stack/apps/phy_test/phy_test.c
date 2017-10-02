@@ -120,7 +120,7 @@ void transmit_packet()
     memcpy(tx_packet->data + tx_packet->length + 1 - 2, &crc, 2);
 
     if(counter < 100)
-        hw_radio_send_packet(tx_packet, &packet_transmitted);
+        hw_radio_send_packet(NULL, 0, 0, tx_packet, &packet_transmitted);
 	
     counter++;
 }

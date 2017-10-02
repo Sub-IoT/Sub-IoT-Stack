@@ -1118,7 +1118,7 @@ static uint8_t assemble_background_payload()
  */
 static error_t hw_radio_send_packet_with_advertising(uint8_t dll_header_bg_frame[2], uint16_t tx_duration_bg_frame, uint16_t eta, hw_radio_packet_t* packet)
 {
-    DPRINT("Start the bg advertising for ad-hoc sync before transmitting the FG frame")
+    DPRINT("Start the bg advertising for ad-hoc sync before transmitting the FG frame");
 
     configure_syncword(PHY_SYNCWORD_CLASS0, (channel_id_t*)&(packet->tx_meta.tx_cfg.channel_id));
     configure_channel((channel_id_t*)&(packet->tx_meta.tx_cfg.channel_id));

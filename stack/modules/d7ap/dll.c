@@ -906,7 +906,7 @@ void dll_tx_frame(packet_t* packet)
 
         DPRINT("AC specifier=%i channel=%i",
                          packet->d7anp_addressee->access_specifier,
-                         responder_access_profile.subbands[0].channel_index_start);
+                         remote_access_profile.subbands[0].channel_index_start);
         dll_header->control_eirp_index = remote_access_profile.subbands[0].eirp + 32;
 
         packet->hw_radio_packet.tx_meta.tx_cfg = (hw_tx_cfg_t){
