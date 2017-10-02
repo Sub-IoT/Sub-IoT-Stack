@@ -19,8 +19,6 @@ B_L072Z_LRWAN1  | STMicroelectronics STM32L072CZ (Cortex-M0+) | Semtech SX1276 |
 NUCLEO_L073RZ   | STMicroelectronics STM32L073RZ (Cortex-M0+) | Semtech SX1276 (SX1276MB1MAS shield)|
 EZR32LG_WSTK6200| Silicon Labs EZR32LG SoC (Cortex-M3)	| Silicon Labs si4460 			|
 EFM32GG_STK3700 | Silicon Labs Giant Gecko (Cortex-M3)  | none on-board (Texas Instruments CC1101 extension board available)      |
-EFM32HG_STK3400 | Silicon Labs Happy Gecko (Cortex-M0+) | none on-board (Texas Instruments CC1101 extension board available)      |
-
 
 Currently the B_L072Z_LRWAN1, NUCLEO_L073RZ (+SX1276MB1MAS) and EZR32LG_WSTK6200 boards are the only off the shelf, commercially available devkits which includes a radio. Because of this, these boards are the easiest way to get started. The B_L072Z_LRWAN1 or the NUCLEO_L073RZ are currently the best options. While the EZR32LG_WSTK6200 is a nice devkit it is not as cheap as we would want it to be. Also it appears to be out of stock lately and we think it might be discontinued soon. Additionally, the sx1276 driver is more feature complete and better tested than the si4460 driver, at the moment.
 
@@ -53,8 +51,6 @@ See the [platform notes]({{ site.baseurl }}{% link _docs/platform-wstk6200a.md %
 The [EFM32GG_STK3700](https://www.silabs.com/products/mcu/lowpower/Pages/efm32gg-stk3700.aspx) is a devkit for the SiLabs Giant Gecko MCU. An advantage is that a JLink programmer is already included on the board, making this is a cheap option (currently around 25 euro!).
 A disadvantage of this platform is that you need to attach an external radio. We designed a CC1101-based module which can be plugged in the expansion port of the devkit, see below for the schematics.
 
-## EFM32HG_STK3400
-The [EFM32HG_STK3400](https://www.silabs.com/products/mcu/32-bit/Pages/efm32hg-stk3400.aspx) is very similar to the STK3700 but instead has a Cortex-M0+ instead of Cortex-M3 and a more capable LCD screen. The same CC1101 module as used for the STK3700 can be plugged into the expansion header.
 
 ## CC1101 RF module for Gecko devkits
 
