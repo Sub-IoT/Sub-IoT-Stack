@@ -981,13 +981,7 @@ error_t hw_radio_send_packet(uint8_t dll_header_bg_frame[2], uint16_t tx_duratio
         pending_rx_cfg.syncword_class = current_syncword_class;
         should_rx_after_tx_completed = true;
         switch_to_standby_mode();
-    }
-    else
-    {
-        assert(get_opmode() == OPMODE_STANDBY);
-        // wait for Standby mode ready
-        while(!(read_reg(REG_IRQFLAGS1) & 0x80))
-        state = STATE_IDLE;
+        while(!(read_reg(REG_IRQFLAGS1) & 0x80)); // wait for Standby mode ready
     }
 
     flush_fifo();
@@ -1013,8 +1007,6 @@ error_t hw_radio_send_packet(uint8_t dll_header_bg_frame[2], uint16_t tx_duratio
     fg_frame.encoded_length = encode_packet(packet, fg_frame.encoded_packet);
     fg_frame.transmitted_index = 0;
     fg_frame.bg_adv = false;
-
-    flush_fifo();
 
     if (fg_frame.encoded_length > FIFO_SIZE)
     {
