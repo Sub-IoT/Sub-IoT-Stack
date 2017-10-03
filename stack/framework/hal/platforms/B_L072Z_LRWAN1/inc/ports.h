@@ -22,6 +22,8 @@
 #include "stm32l0xx_hal.h"
 #include "stm32l0xx_hal_gpio.h"
 #include "stm32l0xx_mcu.h"
+#include "platform_defs.h"
+#include "hwgpio.h"
 
 static const spi_port_t spi_ports[] = {
     {
@@ -34,5 +36,11 @@ static const spi_port_t spi_ports[] = {
 };
 
 #define SPI_COUNT sizeof(spi_ports) / sizeof(spi_port_t)
+
+static pin_id_t debug_pins[PLATFORM_NUM_DEBUGPINS] = {
+  PIN(GPIO_PORTB, 9), // exposed on CN3 header, pin 24
+  PIN(GPIO_PORTB, 8), // exposed on CN3 header, pin 25
+};
+
 
 #endif
