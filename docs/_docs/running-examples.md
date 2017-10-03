@@ -40,27 +40,22 @@ In this example the sensor does not push sensor data to gateway(s) continuously,
 which can then be fetched on request. The sensor will sniff the channel every second for background adhoc synchronization frames, to be able to receive requests from other nodes. The gateway will synchronize all nodes in the network using adhoc synchronization frames, after which it will send the query in a foreground frame. For this example we need one node running the `gateway` application and one or more node(s) running `sensor_pull`. For executing the query we will be using the `query_nodes.py` example which is provided by pyd7a.
 Running this script by providing the serial device of the gateway will show something like this:
 
-	$ PYTHONPATH=. python -u examples/query_nodes.py -d /dev/ttyACM1
-	connected to /dev/ttyACM1, node UID 3237303400640011 running D7AP v1.1, application "gatewa" with git sha1 8d0af96
+	$ PYTHONPATH=. python2 -u examples/query_nodes.py -d /dev/ttyACM1
+	connected to /dev/ttyACM1, node UID 433731340037002b running D7AP v1.1, application "gatewa" with git sha1 a8fe586
 	Executing query...
-	Command with tag 40 (executing)
+	Command with tag 52 (executing)
 	        actions:
-	                action: Received UidFile content: uid=0x41303039002f002aL
-	        interface status: interface-id=215, status=unicast=False, nls=False, retry=False, missed=False, fifo_token=220, rx_level=0, seq_nr=0, target_rx_level=80, addressee=ac=17, id_type=IdType.UID, id=0x41303039002f002aL, response_to=exp=0 mant0, link_budget=10, channel_header=coding=ChannelCoding.PN9, class=ChannelClass.NORMAL_RATE, band=ChannelBand.BAND_868, channel_index=0
+	                action: ReturnFileData: file-id=64, size=1, offset=0, length=8, data=[14, 200, 0, 0, 0, 0, 0, 0]
+	        interface status: interface-id=215, status=unicast=False, nls=False, retry=False, missed=False, fifo_token=239, rx_level=26, seq_nr=0, target_rx_level=80, addressee=ac=17, id_type=IdType.UID, id=0x41303039002f002aL, response_to=exp=0 mant0, link_budget=36, channel_header=coding=ChannelCoding.PN9, class=ChannelClass.NORMAL_RATE, band=ChannelBand.BAND_868, channel_index=0
 
-	Command with tag 40 (executing)
+	Command with tag 52 (executing)
 	        actions:
-	                action: Received UidFile content: uid=0x41303039002c003dL
-	        interface status: interface-id=215, status=unicast=False, nls=False, retry=False, missed=False, fifo_token=220, rx_level=39, seq_nr=0, target_rx_level=80, addressee=ac=17, id_type=IdType.UID, id=0x41303039002c003dL, response_to=exp=0 mant0, link_budget=49, channel_header=coding=ChannelCoding.PN9, class=ChannelClass.NORMAL_RATE, band=ChannelBand.BAND_868, channel_index=0
+	                action: ReturnFileData: file-id=64, size=1, offset=0, length=8, data=[14, 24, 1, 0, 0, 0, 0, 0]
+	        interface status: interface-id=215, status=unicast=False, nls=False, retry=False, missed=False, fifo_token=239, rx_level=23, seq_nr=0, target_rx_level=80, addressee=ac=17, id_type=IdType.UID, id=0x41303039002c003dL, response_to=exp=0 mant0, link_budget=33, channel_header=coding=ChannelCoding.PN9, class=ChannelClass.NORMAL_RATE, band=ChannelBand.BAND_868, channel_index=0
 
-	Command with tag 40 (executing)
-	        actions:
-	                action: Received UidFile content: uid=0x433731340037002bL
-	        interface status: interface-id=215, status=unicast=False, nls=False, retry=False, missed=False, fifo_token=220, rx_level=7, seq_nr=0, target_rx_level=80, addressee=ac=17, id_type=IdType.UID, id=0x433731340037002bL, response_to=exp=0 mant0, link_budget=17, channel_header=coding=ChannelCoding.PN9, class=ChannelClass.NORMAL_RATE, band=ChannelBand.BAND_868, channel_index=0
+	Command with tag 52 (completed, without error)
 
-	Command with tag 40 (completed, without error)
-
-The script connects to the modem and then executes a query which just requests the UID file from all nodes. In this case we can see we get multiple response commands on executing our query; 3 nodes are answering before the query completes.
+The script connects to the modem and then executes a query which requests the sensor data file from all nodes. In this case we can see we get multiple response commands on executing our query; 2 nodes are answering before the query completes. The requested data (in this case the first 8 bytes of file-id 64) is displayed (in the data=[] field), together with metadata supplied by the DASH7 interface like the UID or link budget.
 
 # What's next
 
