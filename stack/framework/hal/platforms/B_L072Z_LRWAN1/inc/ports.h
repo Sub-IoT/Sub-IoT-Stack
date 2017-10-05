@@ -45,6 +45,14 @@ static const uart_port_t uart_ports[] = {
     .alternate = GPIO_AF4_USART2,
     .uart = USART2,
     .irq = USART2_IRQn
+  },
+  {
+    // USART1, exposed on CN3 header: TX=PA9, RX=PA10
+    .tx = PIN(GPIO_PORTA, 9),
+    .rx = PIN(GPIO_PORTA, 10),
+    .alternate = GPIO_AF4_USART1,
+    .uart = USART1,
+    .irq = USART1_IRQn
   }
 };
 

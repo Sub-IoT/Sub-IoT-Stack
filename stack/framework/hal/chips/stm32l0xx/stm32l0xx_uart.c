@@ -46,6 +46,10 @@ static uart_handle_t handle[UART_COUNT] = {
   {
     .uart_port = &uart_ports[0],
     .rx_cb = NULL
+  },
+  {
+    .uart_port = &uart_ports[1],
+    .rx_cb = NULL
   }
 };
 
@@ -192,27 +196,34 @@ void uart_rx_interrupt_disable(uart_handle_t* uart) {
   LL_USART_DisableIT_ERROR(uart->handle.Instance);
 }
 
-void USART2_IRQHandler(void) {
-  if(LL_USART_IsActiveFlag_RXNE(USART2) && LL_USART_IsEnabledIT_RXNE(USART2))
+static void uart_irq_handler(USART_TypeDef* uart) {
+  if(LL_USART_IsEnabledIT_ERROR(uart) && LL_USART_IsActiveFlag_NE(uart))
+  {
+    assert(false); // TODO how to handle this?
+  }
+
+  if(LL_USART_IsActiveFlag_RXNE(uart) && LL_USART_IsEnabledIT_RXNE(uart))
   {
     uint8_t idx = 0;
     do {
-      if(handle[idx].handle.Instance == USART2) {
-        handle[idx].rx_cb(LL_USART_ReceiveData8(USART2)); // RXNE flag will be cleared by reading of DR register
+      if(handle[idx].handle.Instance == uart) {
+        handle[idx].rx_cb(LL_USART_ReceiveData8(uart)); // RXNE flag will be cleared by reading of DR register
+        return;
       }
 
       idx++;
     } while(idx < UART_COUNT);
-  }
 
-  if(LL_USART_IsEnabledIT_ERROR(USART2) && LL_USART_IsActiveFlag_NE(USART2))
-  {
-    assert(false); // TODO how to handle this?
+    assert(false); // we should not reach this point
   }
 }
 
+void USART2_IRQHandler(void) {
+  uart_irq_handler(USART2);
+}
+
 void USART1_IRQHandler(void) {
-  assert(false); // TODO
+  uart_irq_handler(USART1);
 }
 
 //void HAL_UART_RxCpltCallback(UART_HandleTypeDef *UartHandle) {
