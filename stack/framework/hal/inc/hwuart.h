@@ -42,7 +42,7 @@ typedef struct uart_handle uart_handle_t;
 // callback handler for received byte
 typedef void (*uart_rx_inthandler_t)(uint8_t byte);
 
-__LINK_C uart_handle_t* uart_init(uint8_t channel, uint32_t baudrate, uint8_t pins);
+__LINK_C uart_handle_t* uart_init(uint8_t port_idx, uint32_t baudrate, uint8_t pins);
 __LINK_C bool           uart_disable(uart_handle_t* uart);
 __LINK_C bool           uart_enable(uart_handle_t* uart);
 

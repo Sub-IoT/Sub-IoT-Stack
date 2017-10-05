@@ -44,6 +44,14 @@ typedef struct {
   SPI_TypeDef* spi;
 } spi_port_t;
 
+typedef struct {
+  pin_id_t tx;
+  pin_id_t rx;
+  uint32_t alternate;
+  USART_TypeDef* uart;
+  IRQn_Type irq;
+} uart_port_t;
+
 void __stm32l0xx_mcu_init();
 
 #endif

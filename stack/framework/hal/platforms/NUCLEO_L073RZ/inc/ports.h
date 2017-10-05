@@ -36,6 +36,20 @@ static const spi_port_t spi_ports[] = {
 
 #define SPI_COUNT sizeof(spi_ports) / sizeof(spi_port_t)
 
+static const uart_port_t uart_ports[] = {
+  {
+    // USART2, connected to VCOM of debugger USB connection
+    .tx = PIN(GPIO_PORTA, 2),
+    .rx = PIN(GPIO_PORTA, 3),
+    .alternate = GPIO_AF4_USART2,
+    .uart = USART2,
+    .irq = USART2_IRQn
+  }
+};
+
+#define UART_COUNT sizeof(uart_ports) / sizeof(uart_port_t)
+
+
 static pin_id_t debug_pins[PLATFORM_NUM_DEBUGPINS] = {
   PIN(GPIO_PORTC, 8), // exposed on CN10 header, pin 2
   PIN(GPIO_PORTC, 6), // exposed on CN10 header, pin 4

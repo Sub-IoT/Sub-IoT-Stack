@@ -36,7 +36,7 @@ PLATFORM_OPTION(PLATFORM_SX127X_USE_DIO3_PIN "Platform has access to the DIO3 pi
 
 # CONSOLE
 # uses USART2,  (PA2 / PA3)
-PLATFORM_PARAM(PLATFORM_CONSOLE_UART     "2"      STRING "The UART channel used by the console UART configuration."   )
+PLATFORM_PARAM(PLATFORM_CONSOLE_UART     "0"      STRING "The UART port used by the console UART configuration."   )
 PLATFORM_PARAM(PLATFORM_CONSOLE_BAUDRATE "115200" STRING "The baudrate used by the second console configuration."       )
 PLATFORM_PARAM(PLATFORM_CONSOLE_LOCATION "0" STRING "The location") # TODO remove after removing the pins param from the API
 

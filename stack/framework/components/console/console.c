@@ -9,6 +9,7 @@
 #include "scheduler.h"
 #include "console.h"
 #include "hal_defs.h"
+#include "debug.h"
 
 #ifdef FRAMEWORK_CONSOLE_ENABLED
 
@@ -50,7 +51,7 @@ void console_init(void) {
   sched_register_task(&flush_console_tx_fifo);
 
   uart = uart_init(PLATFORM_CONSOLE_UART, PLATFORM_CONSOLE_BAUDRATE, PLATFORM_CONSOLE_LOCATION);
-  uart_enable(uart);
+  assert(uart_enable(uart));
 }
 
 void console_enable(void) {

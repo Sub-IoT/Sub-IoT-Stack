@@ -31,114 +31,63 @@
 #include "stm32l0xx_gpio.h"
 #include "platform.h"
 #include "string.h"
-
-#define UARTS     3   // TODO add LPUART?
-
-typedef struct {
-  pin_id_t tx;
-  pin_id_t rx;
-} uart_pins_t;
-
-#define UNDEFINED_LOCATION                       \
-  .tx       = PIN_UNDEFINED,   \
-  .rx       = PIN_UNDEFINED    \
-
-// configuration of uart/location mapping to tx and rx pins
-// TODO to be completed with all documented locations
-// TODO move to ports.h
-static uart_pins_t location[UARTS] = {
-  {
-    // DUMMY
-    UNDEFINED_LOCATION
-  },
-  {
-    // USART 1
-    .tx       = PIN(0, 9),
-    .rx       = PIN(0, 10)
-
-  },
-  {
-    // USART 2
-    .tx       = PIN(0, 2),
-    .rx       = PIN(0, 3)
-  }
-};
-
-// references to registered handlers
-static uart_rx_inthandler_t handler[UARTS];
+#include "ports.h"
 
 // private definition of the UART handle, passed around publicly as a pointer
 struct uart_handle {
-  uint8_t              idx;
-  uint8_t 	mapping;
-  UART_HandleTypeDef 	uart;
-  IRQn_Type           irq;
-  uart_pins_t*         pins;
+  const uart_port_t* uart_port;
+  UART_HandleTypeDef handle;
   uint32_t baudrate;
+  uart_rx_inthandler_t rx_cb;
 };
 
 // private storage of handles, pointers to these records are passed around
-static uart_handle_t handle[UARTS] = {
+static uart_handle_t handle[UART_COUNT] = {
   {
-    .idx     = 0,
-    .mapping = 0,
-    //.irq     = 0
-  },
-  {
-    .idx     = 1,
-    .mapping = GPIO_AF4_USART1,
-    .uart.Instance  = USART1,
-    .irq     = USART1_IRQn
-  },
-  {
-    .idx     = 2,
-    .mapping = GPIO_AF4_USART2,
-    .uart.Instance  = USART2,
-    .irq     = USART2_IRQn
+    .uart_port = &uart_ports[0],
+    .rx_cb = NULL
   }
 };
 
-uart_handle_t* uart_init(uint8_t idx, uint32_t baudrate, uint8_t pins) {
-  assert(idx == 1 || idx == 2);
+uart_handle_t* uart_init(uint8_t port_idx, uint32_t baudrate, uint8_t pins) {
+  assert(port_idx < UART_COUNT);
 
-  handle[idx].pins = &location[idx];
-  handle[idx].baudrate = baudrate;
+  handle[port_idx].baudrate = baudrate;
 
   GPIO_InitTypeDef GPIO_InitStruct;
-
-  GPIO_InitStruct.Pin = (1 << GPIO_PIN(handle[idx].pins->tx)) | (1 << GPIO_PIN(handle[idx].pins->rx));
+  GPIO_InitStruct.Pin = (1 << GPIO_PIN(handle[port_idx].uart_port->tx)) | (1 << GPIO_PIN(handle[port_idx].uart_port->rx));
   GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
-  GPIO_InitStruct.Alternate = handle[idx].mapping;
+  GPIO_InitStruct.Alternate = handle[port_idx].uart_port->alternate;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
-  assert(hw_gpio_configure_pin_stm(handle[idx].pins->rx, &GPIO_InitStruct) == SUCCESS);
-  assert(hw_gpio_configure_pin_stm(handle[idx].pins->tx, &GPIO_InitStruct) == SUCCESS);
+  assert(hw_gpio_configure_pin_stm(handle[port_idx].uart_port->rx, &GPIO_InitStruct) == SUCCESS);
+  assert(hw_gpio_configure_pin_stm(handle[port_idx].uart_port->tx, &GPIO_InitStruct) == SUCCESS);
 
-  return &handle[idx];
+  return &handle[port_idx];
 }
 
 bool uart_enable(uart_handle_t* uart) {
-
-  switch (uart->idx)
+  switch ((intptr_t)*(&uart->uart_port->uart))
   {
-    case 1:
+    case USART1_BASE:
       __HAL_RCC_USART1_CLK_ENABLE();
       break;
-    case 2:
+    case USART2_BASE:
       __HAL_RCC_USART2_CLK_ENABLE();
       break;
     default:
       assert(false);
   }
 
-  uart->uart.Init.BaudRate = uart->baudrate;
-  uart->uart.Init.WordLength = UART_WORDLENGTH_8B;
-  uart->uart.Init.StopBits = UART_STOPBITS_1;
-  uart->uart.Init.Parity = UART_PARITY_NONE;
-  uart->uart.Init.Mode = UART_MODE_TX_RX;
-  uart->uart.Init.HwFlowCtl = UART_HWCONTROL_NONE;
-  uart->uart.Init.OverSampling = UART_OVERSAMPLING_16;
-  if (HAL_UART_Init(&(uart->uart)) != HAL_OK)
+  uart->handle.Init.BaudRate = uart->baudrate;
+  uart->handle.Init.WordLength = UART_WORDLENGTH_8B;
+  uart->handle.Init.StopBits = UART_STOPBITS_1;
+  uart->handle.Init.Parity = UART_PARITY_NONE;
+  uart->handle.Init.Mode = UART_MODE_TX_RX;
+  uart->handle.Init.HwFlowCtl = UART_HWCONTROL_NONE;
+  uart->handle.Init.OverSampling = UART_OVERSAMPLING_16;
+  uart->handle.Instance = uart->uart_port->uart;
+  if (HAL_UART_Init(&(uart->handle)) != HAL_OK)
   {
     assert ("cannot init");
     return false;
@@ -162,19 +111,19 @@ bool uart_enable(uart_handle_t* uart) {
 
 
 
-  HAL_NVIC_SetPriority(USART2_IRQn, 0, 3);
+  HAL_NVIC_SetPriority(uart->uart_port->irq, 0, 3);
   
   return true;
 }
 
 bool uart_disable(uart_handle_t* uart) {
-  HAL_UART_DeInit(&(uart->uart));
-  switch (uart->idx)
+  HAL_UART_DeInit(&(uart->handle));
+  switch ((intptr_t)*(&uart->uart_port->uart))
   {
-    case 1:
+    case USART1_BASE:
       __HAL_RCC_USART1_CLK_DISABLE();
       break;
-    case 2:
+    case USART2_BASE:
       __HAL_RCC_USART2_CLK_DISABLE();
       break;
     default:
@@ -187,13 +136,13 @@ bool uart_disable(uart_handle_t* uart) {
 void uart_set_rx_interrupt_callback(uart_handle_t* uart,
                                     uart_rx_inthandler_t rx_handler)
 {
-  handler[uart->idx] = rx_handler;
+  uart->rx_cb = rx_handler;
 }
 
 void uart_send_byte(uart_handle_t* uart, uint8_t data) {
   //   while(!(uart->channel->STATUS & (1 << 6))); // wait for TX buffer to empty
   // 	uart->channel->TXDATA = data;
-  HAL_UART_Transmit(&uart->uart, &data, 1, HAL_MAX_DELAY);
+  HAL_UART_Transmit(&uart->handle, &data, 1, HAL_MAX_DELAY);
 }
 
 // TODO remove or extend API?
@@ -209,7 +158,7 @@ void uart_send_byte(uart_handle_t* uart, uint8_t data) {
 
 void uart_send_bytes(uart_handle_t* uart, void const *data, size_t length) {
 
-  HAL_UART_Transmit(&uart->uart, (uint8_t*) data, length, HAL_MAX_DELAY);
+  HAL_UART_Transmit(&uart->handle, (uint8_t*) data, length, HAL_MAX_DELAY);
   // 	for(uint8_t i=0; i<length; i++)	{
   // 		uart_send_byte(uart, ((uint8_t const*)data)[i]);
   // 	}
@@ -220,7 +169,7 @@ void uart_send_string(uart_handle_t* uart, const char *string) {
 }
 
 error_t uart_rx_interrupt_enable(uart_handle_t* uart) {
-  if(handler[uart->idx] == NULL) { return EOFF; }
+  if(uart->rx_cb == NULL) { return EOFF; }
   //   USART_IntClear(uart->channel, _UART_IF_MASK);
   //   USART_IntEnable(uart->channel, UART_IF_RXDATAV);
   //   NVIC_ClearPendingIRQ(uart->irq.tx);
@@ -229,24 +178,31 @@ error_t uart_rx_interrupt_enable(uart_handle_t* uart) {
 
   __HAL_RCC_GPIOA_CLK_ENABLE(); // TODO not sure why this is needed here, should already be enabled. Look into this later
 
-  HAL_NVIC_ClearPendingIRQ(uart->irq);
-  HAL_NVIC_EnableIRQ(uart->irq);
-  LL_USART_EnableIT_RXNE(uart->uart.Instance);
-  LL_USART_EnableIT_ERROR(uart->uart.Instance);
+  HAL_NVIC_ClearPendingIRQ(uart->uart_port->irq);
+  HAL_NVIC_EnableIRQ(uart->uart_port->irq);
+  LL_USART_EnableIT_RXNE(uart->handle.Instance);
+  LL_USART_EnableIT_ERROR(uart->handle.Instance);
   return SUCCESS;
 }
 
 void uart_rx_interrupt_disable(uart_handle_t* uart) {
-  HAL_NVIC_ClearPendingIRQ(uart->irq);
-  HAL_NVIC_DisableIRQ(uart->irq);
-  LL_USART_DisableIT_RXNE(uart->uart.Instance);
-  LL_USART_DisableIT_ERROR(uart->uart.Instance);
+  HAL_NVIC_ClearPendingIRQ(uart->uart_port->irq);
+  HAL_NVIC_DisableIRQ(uart->uart_port->irq);
+  LL_USART_DisableIT_RXNE(uart->handle.Instance);
+  LL_USART_DisableIT_ERROR(uart->handle.Instance);
 }
 
 void USART2_IRQHandler(void) {
   if(LL_USART_IsActiveFlag_RXNE(USART2) && LL_USART_IsEnabledIT_RXNE(USART2))
   {
-    handler[2](LL_USART_ReceiveData8(USART2)); // RXNE flag will be cleared by reading of DR register
+    uint8_t idx = 0;
+    do {
+      if(handle[idx].handle.Instance == USART2) {
+        handle[idx].rx_cb(LL_USART_ReceiveData8(USART2)); // RXNE flag will be cleared by reading of DR register
+      }
+
+      idx++;
+    } while(idx < UART_COUNT);
   }
 
   if(LL_USART_IsEnabledIT_ERROR(USART2) && LL_USART_IsActiveFlag_NE(USART2))

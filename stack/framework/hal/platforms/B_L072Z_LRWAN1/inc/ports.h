@@ -26,16 +26,29 @@
 #include "hwgpio.h"
 
 static const spi_port_t spi_ports[] = {
-    {
-        .spi = SPI1,
-        .miso_pin = PIN(GPIO_PORTA, 6),
-        .mosi_pin = PIN(GPIO_PORTA, 7),
-        .sck_pin = PIN(GPIO_PORTB, 3),
-        .alternate = GPIO_AF0_SPI1,
-    }
+  {
+    .spi = SPI1,
+    .miso_pin = PIN(GPIO_PORTA, 6),
+    .mosi_pin = PIN(GPIO_PORTA, 7),
+    .sck_pin = PIN(GPIO_PORTB, 3),
+    .alternate = GPIO_AF0_SPI1,
+  }
 };
 
 #define SPI_COUNT sizeof(spi_ports) / sizeof(spi_port_t)
+
+static const uart_port_t uart_ports[] = {
+  {
+    // USART2, connected to VCOM of debugger USB connection
+    .tx = PIN(GPIO_PORTA, 2),
+    .rx = PIN(GPIO_PORTA, 3),
+    .alternate = GPIO_AF4_USART2,
+    .uart = USART2,
+    .irq = USART2_IRQn
+  }
+};
+
+#define UART_COUNT sizeof(uart_ports) / sizeof(uart_port_t)
 
 static pin_id_t debug_pins[PLATFORM_NUM_DEBUGPINS] = {
   PIN(GPIO_PORTB, 9), // exposed on CN3 header, pin 24
