@@ -46,7 +46,7 @@ ALP commands can be executed using an API when running on the same MCU, or using
 D7AP enables multiple communication schemes which we can divide in push or pull communication.
 Push communication happens for instance when a sensor pushes data messages to a gateway. The sensor is sending (periodically or based on a trigger) a response to a read file command which in fact never happened. This is also called unsolicited responses and is the simplest scheme.
 DASH7 makes it very simple to use this scheme by defining action files which are configured to be executed when a read or write operation on a file occurs.
-For example, a sensor file can be configured that when written to it triggers and action which results in pushing the sensor data.
+For example, a sensor file can be configured that, when written to it, an action is triggered which results in pushing the sensor data.
 From the application point of view only the sensor file is written. The stack will transparently execute the attached action file. A typical example is that the command in the action file reads the sensor file and transmits this data over a D7ASP interface with a certain configuration (addressee, QoS, ...).
 As the action is contained in a file by itself it can be remotely updated, which means this behavior can be changed OTA without requiring adaptions to the application code itself.
 
