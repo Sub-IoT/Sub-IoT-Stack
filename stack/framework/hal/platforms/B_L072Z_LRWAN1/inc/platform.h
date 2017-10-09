@@ -57,6 +57,9 @@
   #ifdef PLATFORM_SX127X_USE_RESET_PIN
     #define SX127x_RESET_PIN PIN(2, 0)
   #endif
+  #ifdef PLATFORM_SX127X_USE_VCC_TXCO
+	#define SX127x_VCC_TXCO PIN(0, 12)
+  #endif
 #endif
 
 #define PLATFORM_USE_ABZ // this platform is based on the Murata ABZ module
