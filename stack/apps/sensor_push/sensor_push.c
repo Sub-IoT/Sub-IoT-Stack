@@ -25,13 +25,11 @@
 #include "scheduler.h"
 #include "timer.h"
 #include "assert.h"
-#include "platform.h"
 
 #include <stdio.h>
 #include <stdlib.h>
 
 #include "hwlcd.h"
-#include "hwadc.h"
 #include "d7ap_stack.h"
 #include "fs.h"
 #include "log.h"
@@ -220,4 +218,3 @@ void bootstrap()
 
     LCD_WRITE_STRING("Sensor push\n");
 }
-
