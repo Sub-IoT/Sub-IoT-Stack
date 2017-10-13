@@ -21,7 +21,6 @@
 #include "timer.h"
 #include "log.h"
 #include "debug.h"
-#include "platform.h"
 #include "hwwatchdog.h"
 #include "console.h"
 
@@ -92,4 +91,3 @@ void bootstrap()
     led_off(0);
     led_off(1);
 }
-
