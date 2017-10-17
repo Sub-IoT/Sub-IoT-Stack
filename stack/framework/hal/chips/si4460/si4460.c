@@ -560,28 +560,10 @@ error_t hw_radio_start_background_scan(hw_rx_cfg_t const* rx_cfg, rx_packet_call
   // TODO implement this
 }
 
-error_t hw_radio_send_background_packet(hw_radio_packet_t* packet,
-                                        tx_packet_callback_t tx_callback,
-                                        uint16_t eta, uint16_t tx_duration)
+error_t hw_radio_send_packet(hw_radio_packet_t* packet, tx_packet_callback_t tx_cb, uint16_t eta, uint8_t dll_header_bg_frame[2])
 {
-  assert(false);
-  // TODO implement this
-}
+  assert(eta == 0); // advertising not implemented on si4460 for now
 
-error_t hw_radio_start_background_advertising(tx_packet_callback_t tx_callback)
-{
-  assert(false);
-  // TODO implement this
-}
-
-error_t hw_radio_set_background(hw_radio_packet_t* packet, uint16_t eta, uint16_t tx_duration)
-{
-  assert(false);
-  // TODO implement this
-}
-
-error_t hw_radio_send_packet(hw_radio_packet_t* packet, tx_packet_callback_t tx_cb)
-{
 	// TODO error handling EINVAL, ESIZE, EOFF
 	if(current_state == HW_RADIO_STATE_TX)
 		return EBUSY;

@@ -51,6 +51,7 @@
 #include "pn9.h"
 #include "fec.h"
 #include "crc.h"
+#include "phy.h"
 
 // turn on/off the debug prints
 #if defined(FRAMEWORK_LOG_ENABLED) && defined(FRAMEWORK_PHY_LOG_ENABLED)
@@ -451,13 +452,13 @@ static void configure_channel(const channel_id_t* channel_id)
      }
 
     // only change settings if channel_id changed compared to current config
-    if(!hw_radio_channel_ids_equal(channel_id, &current_channel_id))
+    if(!phy_radio_channel_ids_equal(channel_id, &current_channel_id))
     {
         // TODO assert valid center freq index
 
         cc1101_interface_strobe(RF_SIDLE); // we need to be in IDLE state before starting calibration
         wait_for_chip_state(CC1101_CHIPSTATE_IDLE);
-        
+
         memcpy(&current_channel_id, channel_id, sizeof(channel_id_t)); // cache new settings
 
         // TODO preamble size depends on channel class
@@ -777,20 +778,11 @@ error_t hw_radio_start_background_scan(hw_rx_cfg_t const* rx_cfg, rx_packet_call
     return SUCCESS;
 }
 
-error_t hw_radio_start_background_advertising(tx_packet_callback_t tx_callback)
-{
-  assert(false);
-  // TODO implement this
-}
 
-error_t hw_radio_set_background(hw_radio_packet_t* packet, uint16_t eta, uint16_t tx_duration)
+error_t hw_radio_send_packet(hw_radio_packet_t* packet, tx_packet_callback_t tx_cb, uint16_t eta, uint8_t dll_header_bg_frame[2])
 {
-  assert(false);
-  // TODO implement this
-}
+    assert(eta == 0); // advertising not implemented on cc1101 for now
 
-error_t hw_radio_send_packet(hw_radio_packet_t* packet, tx_packet_callback_t tx_cb)
-{
     // TODO error handling EINVAL, ESIZE, EOFF
     if(current_state == HW_RADIO_STATE_TX)
         return EBUSY;
@@ -1034,7 +1026,7 @@ error_t hw_radio_send_background_packet(hw_radio_packet_t* packet, tx_packet_cal
             bytes_in_fifo = bytes_in_fifo & 0x7F;
         } while (bytes_in_fifo);
         DPRINT("End AdvP @ %i", timer_get_counter_value());
-        switch_to_idle_mode();        
+        switch_to_idle_mode();
         tx_packet_callback(current_packet);
     }
 
