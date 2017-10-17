@@ -967,7 +967,7 @@ static uint8_t encode_packet(hw_radio_packet_t* packet, uint8_t* encoded_packet)
   return encoded_len;
 }
 
-error_t hw_radio_send_packet(uint8_t dll_header_bg_frame[2], uint16_t eta, hw_radio_packet_t* packet, tx_packet_callback_t tx_callback)
+error_t hw_radio_send_packet(hw_radio_packet_t* packet, tx_packet_callback_t tx_callback, uint16_t eta, uint8_t dll_header_bg_frame[2])
 {
     if(state == STATE_TX)
         return EBUSY;
