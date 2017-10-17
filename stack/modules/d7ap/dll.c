@@ -303,7 +303,7 @@ static void packet_received(hw_radio_packet_t* hw_radio_packet)
 
     if (hw_radio_packet->rx_meta.rx_cfg.syncword_class == PHY_SYNCWORD_CLASS1)
     {
-        uint16_t tx_duration = dll_calculate_tx_duration(current_channel_id.channel_header.ch_class,
+        uint16_t tx_duration = phy_calculate_tx_duration(current_channel_id.channel_header.ch_class,
                                                          current_channel_id.channel_header.ch_coding,
                                                          hw_radio_packet->length + 1);
         // If the first transmission duration is greater than or equal to the Guard Interval TG,
@@ -434,15 +434,12 @@ static void cca_rssi_valid(int16_t cur_rssi)
                 DPRINT("Start background advertising @ %i", timer_get_counter_value());
                 uint8_t dll_header_bg_frame[2];
                 assert(dll_assemble_packet_header(current_packet, dll_header_bg_frame) == 2);
-                uint16_t tx_duration_bg_frame = dll_calculate_tx_duration(current_channel_id.channel_header.ch_class,
-                                                                          current_channel_id.channel_header.ch_coding,
-                                                                          BACKGROUND_FRAME_LENGTH);
 
-                err = hw_radio_send_packet(dll_header_bg_frame, tx_duration_bg_frame, current_packet->ETA, &current_packet->hw_radio_packet, &packet_transmitted);
+                err = hw_radio_send_packet(dll_header_bg_frame, current_packet->ETA, &current_packet->hw_radio_packet, &packet_transmitted);
             }
             else
             {
-                err = hw_radio_send_packet(NULL, 0, 0, &current_packet->hw_radio_packet, &packet_transmitted);
+                err = hw_radio_send_packet(NULL, 0, &current_packet->hw_radio_packet, &packet_transmitted);
             }
 
             assert(err == SUCCESS);
@@ -471,37 +468,6 @@ static void execute_cca()
     hw_radio_set_rx(&rx_cfg, NULL, &cca_rssi_valid);
 }
 
-uint16_t dll_calculate_tx_duration(phy_channel_class_t channel_class, phy_coding_t ch_coding, uint8_t packet_length)
-{
-    double data_rate = 6.0; // Normal rate: 6.9 bytes/tick
-
-    if (ch_coding == PHY_CODING_FEC_PN9)
-        packet_length = fec_calculated_decoded_length(packet_length);
-
-    packet_length += sizeof(uint16_t); // Sync word
-
-    switch (channel_class)
-    {
-    case PHY_CLASS_LO_RATE:
-        packet_length += PREAMBLE_LOW_RATE_CLASS;
-        data_rate = 1.0; // Lo Rate 9.6 kbps: 1.2 bytes/tick
-        break;
-    case PHY_CLASS_NORMAL_RATE:
-        packet_length += PREAMBLE_NORMAL_RATE_CLASS;
-        data_rate = 6.0; // Normal Rate 55.555 kbps: 6.94 bytes/tick
-        break;
-    case PHY_CLASS_HI_RATE:
-        packet_length += PREAMBLE_HI_RATE_CLASS;
-        data_rate = 20.0; // High rate 166.667 kbps: 20.83 byte/tick
-    }
-
-    // TODO Add the power ramp-up/ramp-down symbols in the packet length?
-
-    uint16_t duration = ceil(packet_length / data_rate) + 1;
-    DPRINT("Transmission duration  %i", duration);
-    return duration;
-}
-
 static void execute_csma_ca()
 {
     // TODO select Channel at front of the channel queue
@@ -515,7 +481,7 @@ static void execute_csma_ca()
         current_packet->type == RESPONSE_TO_UNICAST) && guarded_channel)
     {
         switch_state(DLL_STATE_TX_FOREGROUND);
-        assert(hw_radio_send_packet(NULL, 0, 0, &current_packet->hw_radio_packet, &packet_transmitted) == SUCCESS);
+        assert(hw_radio_send_packet(NULL, 0, &current_packet->hw_radio_packet, &packet_transmitted) == SUCCESS);
         return;
     }
 
@@ -960,7 +926,7 @@ void dll_tx_frame(packet_t* packet)
 
     DPRINT("Packet LENGTH %d", packet->hw_radio_packet.length);
 
-    packet->tx_duration = dll_calculate_tx_duration(current_channel_id.channel_header.ch_class,
+    packet->tx_duration = phy_calculate_tx_duration(current_channel_id.channel_header.ch_class,
                                                     current_channel_id.channel_header.ch_coding,
                                                     packet->hw_radio_packet.length + 1);
 

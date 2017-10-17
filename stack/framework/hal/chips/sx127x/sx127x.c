@@ -352,7 +352,7 @@ static bool is_lora_channel(const channel_id_t* channel) {
 }
 
 static void configure_channel(const channel_id_t* channel) {
-  if(hw_radio_channel_ids_equal(&current_channel_id, channel)) {
+  if(phy_radio_channel_ids_equal(&current_channel_id, channel)) {
     return;
   }
 
@@ -967,7 +967,7 @@ static uint8_t encode_packet(hw_radio_packet_t* packet, uint8_t* encoded_packet)
   return encoded_len;
 }
 
-error_t hw_radio_send_packet(uint8_t dll_header_bg_frame[2], uint16_t tx_duration_bg_frame, uint16_t eta, hw_radio_packet_t* packet, tx_packet_callback_t tx_callback)
+error_t hw_radio_send_packet(uint8_t dll_header_bg_frame[2], uint16_t eta, hw_radio_packet_t* packet, tx_packet_callback_t tx_callback)
 {
     if(state == STATE_TX)
         return EBUSY;
@@ -986,8 +986,13 @@ error_t hw_radio_send_packet(uint8_t dll_header_bg_frame[2], uint16_t tx_duratio
 
     flush_fifo();
 
-    if (eta)
+    if (eta) {
+        uint16_t tx_duration_bg_frame = phy_calculate_tx_duration(current_channel_id.channel_header.ch_class,
+                                                                current_channel_id.channel_header.ch_coding,
+                                                                BACKGROUND_FRAME_LENGTH);
+
         return hw_radio_send_packet_with_advertising(dll_header_bg_frame, tx_duration_bg_frame, eta, packet);
+    }
 
   configure_channel((channel_id_t*)&(current_packet->tx_meta.tx_cfg.channel_id));
   configure_eirp(current_packet->tx_meta.tx_cfg.eirp);

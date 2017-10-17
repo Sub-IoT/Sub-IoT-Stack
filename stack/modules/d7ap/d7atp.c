@@ -33,6 +33,7 @@
 #include "fs.h"
 #include "MODULE_D7AP_defs.h"
 #include "compress.h"
+#include "phy.h"
 
 #if defined(FRAMEWORK_LOG_ENABLED) && defined(MODULE_D7AP_TP_LOG_ENABLED)
 #define DPRINT(...) log_print_stack_string(LOG_STACK_TRANS, __VA_ARGS__)
@@ -301,7 +302,7 @@ error_t d7atp_send_request(uint8_t dialog_id, uint8_t transaction_id, bool is_la
         if (expected_response_length < 50)
             expected_response_length = 50;
 
-        uint16_t tx_duration_response = dll_calculate_tx_duration(active_addressee_access_profile.channel_header.ch_class,
+        uint16_t tx_duration_response = phy_calculate_tx_duration(active_addressee_access_profile.channel_header.ch_class,
                                                                   active_addressee_access_profile.channel_header.ch_coding,
                                                                   expected_response_length);
         uint8_t nb = 1;
