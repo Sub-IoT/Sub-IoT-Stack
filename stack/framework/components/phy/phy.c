@@ -51,8 +51,10 @@ uint16_t phy_calculate_tx_duration(phy_channel_class_t channel_class, phy_coding
         packet_length += PREAMBLE_HI_RATE_CLASS;
         data_rate = 20.0; // High rate 166.667 kbps: 20.83 byte/tick
         break;
-      case PHY_CLASS_LORA:
-        assert(false); // TODO
+#ifdef USE_SX127X
+    case PHY_CLASS_LORA:
+      assert(false); // TODO
+#endif
     }
 
     // TODO Add the power ramp-up/ramp-down symbols in the packet length?
