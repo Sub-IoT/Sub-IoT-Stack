@@ -13,6 +13,11 @@
 // TODO use other ways to avoid long polling
 #define I2C_POLLING  100000
 #define I2C_DEFAULT_TIMEOUT	1000
+
+#ifndef IC2_BAUDRATE
+#define IC2_BAUDRATE 100000
+#endif
+
 //HAL_MAX_DELAY
 
 #define I2CS       1
@@ -62,6 +67,7 @@ typedef struct i2c_handle {
   uint32_t pins;
   GPIO_TypeDef* port;
   uint32_t alternate;
+  uint32_t baudrate;
 } i2c_handle_t;
 
 static i2c_handle_t handle[I2CS] = {
@@ -70,7 +76,8 @@ static i2c_handle_t handle[I2CS] = {
     .handle.Instance = I2C1,
     .pins = GPIO_PIN_8|GPIO_PIN_9,
     .port = GPIOB,
-    .alternate = GPIO_AF4_I2C1
+    .alternate = GPIO_AF4_I2C1,
+	.baudrate = IC2_BAUDRATE
   }
 };
 
@@ -118,7 +125,7 @@ i2c_handle_t* i2c_init(uint8_t idx, uint8_t pins)
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
   HAL_GPIO_Init(handle[idx].port, &GPIO_InitStruct);
 
-  handle[idx].handle.Init.Timing = get_i2c_timing(100000);
+  handle[idx].handle.Init.Timing = get_i2c_timing(handle[idx].baudrate);
   handle[idx].handle.Init.OwnAddress1 = 0;
   handle[idx].handle.Init.AddressingMode = I2C_ADDRESSINGMODE_7BIT;
   handle[idx].handle.Init.DualAddressMode = I2C_DUALADDRESS_DISABLE;
