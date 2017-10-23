@@ -24,6 +24,8 @@
 #include "hwwatchdog.h"
 #include "console.h"
 
+#include "platform.h"
+
 #if PLATFORM_NUM_BUTTONS > 0
 #include "button.h"
 
