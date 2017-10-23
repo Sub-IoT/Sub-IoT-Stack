@@ -48,13 +48,14 @@ static void button_task();
 __LINK_C void __ubutton_init()
 {
 	error_t err;
+	GPIO_InitTypeDef GPIO_InitStruct;
 	buttons[0].button_id = BUTTON0;
 	for(int i = 0; i < PLATFORM_NUM_BUTTONS; i++)
 	{
 		memset(buttons[i].callbacks, 0, sizeof(buttons[i].callbacks));
 		buttons[i].cur_callback_id = BUTTON_QUEUE_SIZE;
 		buttons[i].num_registered_callbacks = 0;
-		err = hw_gpio_configure_pin(buttons[0].button_id, true, GPIO_MODE_IT_FALLING, 0); assert(err == SUCCESS); // TODO pull up or pull down to prevent floating
+		err = hw_gpio_configure_pin(buttons[i].button_id, true, GPIO_MODE_IT_FALLING, 0); assert(err == SUCCESS); // TODO pull up or pull down to prevent floating
 		err = hw_gpio_configure_interrupt(buttons[i].button_id, &button_callback, GPIO_FALLING_EDGE); assert(err == SUCCESS);
 	}
 	sched_register_task(&button_task);

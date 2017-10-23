@@ -104,7 +104,12 @@ ADD_LIBRARY(PLATFORM OBJECT
     platf_button.c
     platf_debug.c
     libc_overrides.c
-    #inc/button.h
+	
+	
+	inc/platform.h	
+    inc/button.h
+	inc/led.h
+	inc/ports.h
 )
 
 #Include the sources for the efm32gg chip
