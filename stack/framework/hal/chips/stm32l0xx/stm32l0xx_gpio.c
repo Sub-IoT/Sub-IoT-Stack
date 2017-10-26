@@ -145,7 +145,7 @@ static void gpio_int_callback(uint8_t pin)
   start_atomic();
   assert(interrupts[pin].callback != 0x0);
   pin_id_t id = PIN(interrupts[pin].interrupt_port, pin);
-  interrupts[pin].callback(id,0); // TODO event mask
+  interrupts[pin].callback(id,hw_gpio_get_in(id));
   // TODO clear?
   end_atomic();
 }

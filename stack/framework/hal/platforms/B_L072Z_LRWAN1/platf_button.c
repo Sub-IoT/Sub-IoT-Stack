@@ -48,7 +48,6 @@ static void button_task();
 __LINK_C void __ubutton_init()
 {
 	error_t err;
-	GPIO_InitTypeDef GPIO_InitStruct;
 	buttons[0].button_id = BUTTON0;
 	for(int i = 0; i < PLATFORM_NUM_BUTTONS; i++)
 	{

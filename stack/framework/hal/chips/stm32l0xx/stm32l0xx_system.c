@@ -35,6 +35,9 @@ void hw_enter_lowpower_mode(uint8_t mode)
     case 1:
       HAL_PWR_EnterSLEEPMode(PWR_MAINREGULATOR_ON, PWR_SLEEPENTRY_WFI);
       break;
+    case 2:
+      HAL_PWR_EnterSTOPMode(PWR_MAINREGULATOR_ON, PWR_SLEEPENTRY_WFI);
+      break;
 
   }
 }

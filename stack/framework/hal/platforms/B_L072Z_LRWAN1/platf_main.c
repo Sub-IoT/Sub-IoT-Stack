@@ -67,7 +67,6 @@ void __platform_init()
     hw_gpio_configure_pin(SX127x_VCC_TXCO, false, GPIO_MODE_OUTPUT_PP, 1);
     hw_gpio_set(SX127x_VCC_TXCO);
 #endif
-
 #endif
 
     HAL_EnableDBGSleepMode(); // TODO impact on power?
