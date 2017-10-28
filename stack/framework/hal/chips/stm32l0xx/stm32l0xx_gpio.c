@@ -245,6 +245,9 @@ __LINK_C error_t hw_gpio_enable_interrupt(pin_id_t pin_id)
 {
   __HAL_GPIO_EXTI_CLEAR_IT(1 << GPIO_PIN(pin_id));
 
+  uint32_t exti_line = 1 << GPIO_PIN(pin_id);
+  LL_EXTI_EnableIT_0_31(exti_line);
+
   if(GPIO_PIN(pin_id) <= 1) {
     HAL_NVIC_SetPriority(EXTI0_1_IRQn, 2, 0); // TODO on boot
     HAL_NVIC_EnableIRQ(EXTI0_1_IRQn);
@@ -265,7 +268,8 @@ __LINK_C error_t hw_gpio_enable_interrupt(pin_id_t pin_id)
 __LINK_C error_t hw_gpio_disable_interrupt(pin_id_t pin_id)
 {
   //TODO: check if no other pins are still using the interrupt
-  if(GPIO_PIN(pin_id) <= 1) {
+  /*
+   if(GPIO_PIN(pin_id) <= 1) {
     HAL_NVIC_DisableIRQ(EXTI0_1_IRQn);
     return SUCCESS;
   } else if (GPIO_PIN(pin_id) >= 2 && GPIO_PIN(pin_id) < 4) {
@@ -275,7 +279,12 @@ __LINK_C error_t hw_gpio_disable_interrupt(pin_id_t pin_id)
     HAL_NVIC_DisableIRQ(EXTI4_15_IRQn);
     return SUCCESS;
   }
+  */
 
+	uint32_t exti_line = 1 << GPIO_PIN(pin_id);
+	LL_EXTI_DisableIT_0_31(exti_line);
+
+	return SUCCESS;
   assert(false);
 }
 
