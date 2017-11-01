@@ -20,14 +20,20 @@ Using this data it becomes possible to build simple dashboards in ThingsBoard wi
 
 ![dashboard]({{ site.baseurl }}/img/tb-dashboard.png)
 
-The user files are not parsed at the gateway side but transmitted as raw bytes, since the content of these files is not specified in the standard (as opposed to the system files, which are parsed at the gateway). This also means that these values cannot be visualized in the platform as is. There are multiple options available:
+By default, the user files are not parsed at the gateway side but transmitted as raw bytes, since the content of these files is not specified in the standard (as opposed to the system files, which are parsed at the gateway). This also means that these values cannot be visualized in the platform as is. There are multiple options available:
 - extend gateway.py to parse the files (according to your application) and transmit parsed values to the platform
 - write a ThingsBoard plugin which parses the data at the platform side
 - use an application on top of ThingsBoard which takes the raw data, parses this, and augments the device's data in ThingsBoard with the parsed data using it's API.
 
-We will describe the last option in the next section
+We will describe the first and the last option in the next sections respectively.
+
+## Extend the gateway to parse your user files
+
+This is most straightforward way to ensure your user files are parsed and stored as readable attribute on your device. The gateway is extended with a plug-in (written in python) which is responsible for parsing the file data. An example is provided [here](https://github.com/MOSAIC-LoPoW/oss7-thingsboard-gateway/tree/master/plugin-example), basically it boils down to implementing a function `parse_file_data(file_offset, file_data)` which returns the name of the attribute and value. The path to the plug-in can be specified by supplying the `-p <path>` parameter.
 
 ## Application integration (optional)
+
+While this option also allows to parse user files (like the option described above) it takes more time to set up. The advantage is that it might be easier to maintain since this parsing logic is only contained in the backed instead of in each gateway.
 
 ### Forward to MQTT
 
