@@ -924,11 +924,10 @@ void dll_tx_frame(packet_t* packet)
 
     packet_assemble(packet);
 
-    DPRINT("Packet LENGTH %d", packet->hw_radio_packet.length);
-
     packet->tx_duration = phy_calculate_tx_duration(current_channel_id.channel_header.ch_class,
                                                     current_channel_id.channel_header.ch_coding,
                                                     packet->hw_radio_packet.length + 1);
+    DPRINT("Packet LENGTH %d, TX DURATION %d", packet->hw_radio_packet.length, packet->tx_duration);
 
     current_packet = packet;
 

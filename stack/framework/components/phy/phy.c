@@ -22,6 +22,9 @@
 #include "debug.h"
 #include "phy.h"
 
+#define LORA_T_SYMBOL_SF9_MS 4.096 // based on SF9 and 125k BW
+#define LORA_T_PREAMBE_SF9_MS (8 + 4.25) * LORA_T_SYMBOL_SF9_MS // assuming 8 symbols for now
+
 bool phy_radio_channel_ids_equal(const channel_id_t* a, const channel_id_t* b)
 {
     //return memcmp(a,b, sizeof(channel_id_t)) == 0; //not working since channel_id_t not packed
@@ -37,6 +40,16 @@ uint16_t phy_calculate_tx_duration(phy_channel_class_t channel_class, phy_coding
 
     packet_length += sizeof(uint16_t); // Sync word
 
+#ifdef USE_SX127X
+    if(channel_class == PHY_CLASS_LORA) {
+        // based on http://www.semtech.com/images/datasheet/LoraDesignGuide_STD.pdf
+        // only valid for explicit header, CR4/5, SF9 for now
+        uint16_t payload_symbols = 8 + ceil(2*(packet_length+1)/9)*5;
+        uint16_t packet_duration = LORA_T_PREAMBE_SF9_MS + payload_symbols * LORA_T_SYMBOL_SF9_MS;
+        return packet_duration;
+    }
+#endif
+
     switch (channel_class)
     {
     case PHY_CLASS_LO_RATE:
@@ -51,10 +64,6 @@ uint16_t phy_calculate_tx_duration(phy_channel_class_t channel_class, phy_coding
         packet_length += PREAMBLE_HI_RATE_CLASS;
         data_rate = 20.0; // High rate 166.667 kbps: 20.83 byte/tick
         break;
-#ifdef USE_SX127X
-    case PHY_CLASS_LORA:
-      assert(false); // TODO
-#endif
     }
 
     // TODO Add the power ramp-up/ramp-down symbols in the packet length?
