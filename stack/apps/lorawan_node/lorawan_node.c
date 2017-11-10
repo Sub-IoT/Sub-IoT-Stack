@@ -20,10 +20,18 @@
 
 #include "lorawan_stack.h"
 
+static LoRaMainCallback_t lora_main_callbacks = {
+  NULL, //HW_GetBatteryLevel,
+  HW_GetUniqueId,
+  HW_GetRandomSeed,
+  NULL, //LoraTxData,
+  NULL //LoraRxData
+};
+
 void bootstrap()
 {
     log_print_string("Device booted\n");
-    lora_Init(NULL, NULL); // TODO params
+    lora_Init(&lora_main_callbacks, NULL); // TODO params
 
     while(1)
     {
