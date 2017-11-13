@@ -75,7 +75,7 @@ Maintainer: Miguel Luis and Gregory Cristian
 #include "hw_spi.h"
 #include "hw_rtc.h"
 #include "hw_msp.h"
-#include "debug.h"
+#include "lorawan_debug.h"
 
 #ifdef __cplusplus
 }

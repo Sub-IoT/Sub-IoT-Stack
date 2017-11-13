@@ -227,7 +227,7 @@ void SystemClock_Config( void )
 
   if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
   {
-    Error_Handler();
+    assert(false);
   }
 
   /* Set Voltage scale1 as MCU will run at 32MHz */
@@ -246,7 +246,7 @@ void SystemClock_Config( void )
   RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV1;
   if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_1) != HAL_OK)
   {
-    Error_Handler();
+    assert(false);
   }
 }
 /**

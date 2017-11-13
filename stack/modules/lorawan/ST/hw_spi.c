@@ -61,6 +61,7 @@ Maintainer: Miguel Luis and Gregory Cristian
 /* Includes ------------------------------------------------------------------*/
 #include "hw.h"
 #include "utilities.h"
+#include "debug.h"
 
 
 /* Private typedef -----------------------------------------------------------*/
@@ -111,7 +112,7 @@ void HW_SPI_Init( void )
   if(HAL_SPI_Init( &hspi) != HAL_OK)
   {
     /* Initialization Error */
-     Error_Handler();
+     assert(false);
   }
 
   /*##-2- Configure the SPI GPIOs */

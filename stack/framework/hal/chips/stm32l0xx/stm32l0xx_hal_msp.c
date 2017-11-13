@@ -48,6 +48,7 @@
 #include "stm32l0xx_hal.h"
 #include "stm32l0xx_hal_flash.h"
 #include "stm32l0xx_hal_flash_ex.h"
+#include "debug.h"
 
 /* when fast wake up is enabled, the mcu wakes up in ~20us  * and 
  * does not wait for the VREFINT to be settled. THis is ok for 

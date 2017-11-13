@@ -31,7 +31,7 @@ Maintainer: Miguel Luis ( Semtech ), Gregory Cristian ( Semtech ) and Daniel Jae
 #include "Region.h"
 #include "RegionCommon.h"
 #include "RegionEU868.h"
-#include "debug.h"
+#include "lorawan_debug.h"
 
 // Definitions
 #define CHANNELS_MASK_SIZE              1
