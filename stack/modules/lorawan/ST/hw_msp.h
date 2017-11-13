@@ -109,22 +109,6 @@ do {                                                    \
   } while(0) 
 
 /* Exported functions ------------------------------------------------------- */ 
-
-/*!
- * \brief Get the current temperature
- *
- * \retval value  temperature in degreeCelcius( q7.8 )
- */
-uint16_t HW_GetTemperatureLevel( void );
-/*!
- * \brief Get the current battery level
- *
- * \retval value  battery level ( 0: very low, 254: fully charged )
- */
-uint8_t HW_GetBatteryLevel( void );
-/*!
- * \brief Initializes the boards peripherals.
- */
 void HW_Init( void );
 
   /*!
@@ -172,29 +156,6 @@ typedef enum
     e_LOW_POWER_UART = (1<<2), /* can be used to forbid stop mode in case of uart Xfer*/
   } e_LOW_POWER_State_Id_t;
 
-/* ADC */
-
-/*!
- * \brief Initializes the ADC input
- *
- * \param [IN] scl  ADC input pin name to be used
- */
-void HW_AdcInit(  void );
-
-/*!
- * \brief DeInitializes the ADC 
- *
- * \param [IN] none
- */
-void HW_AdcDeInit( void );
-
-/*!
- * \brief Read the analogue voltage value
- *
- * \param [IN] Channel to read
- * \retval value    Analogue pin value
- */
-uint16_t HW_AdcReadChannel( uint32_t Channel);
 
 /*!
  * \brief Configures the sytem Clock at start-up
