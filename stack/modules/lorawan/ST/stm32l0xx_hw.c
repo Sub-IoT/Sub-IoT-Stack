@@ -128,7 +128,7 @@ void HW_Init( void )
     NVIC_SetVectorTable( NVIC_VectTab_FLASH, 0x3000 );
 #endif
 
-    HW_AdcInit( );
+//    HW_AdcInit( );
 
     Radio.IoInit( );
     

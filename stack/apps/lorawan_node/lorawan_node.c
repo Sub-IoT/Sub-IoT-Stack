@@ -31,7 +31,11 @@ static LoRaMainCallback_t lora_main_callbacks = {
 void bootstrap()
 {
     log_print_string("Device booted\n");
+
+    HW_Init(); // TODO refactor
+
     lora_Init(&lora_main_callbacks, NULL); // TODO params
+
 
     while(1)
     {
