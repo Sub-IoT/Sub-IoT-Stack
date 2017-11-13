@@ -128,14 +128,12 @@ void HW_Init( void )
     NVIC_SetVectorTable( NVIC_VectTab_FLASH, 0x3000 );
 #endif
 
-//    HW_AdcInit( );
-
     Radio.IoInit( );
-    
-    HW_SPI_Init( );
 
     HW_RTC_Init( );
     
+    HW_SPI_Init( );
+
     //vcom_Init( );
     
     //BSP_sensor_Init( );
@@ -167,8 +165,6 @@ void HW_DeInit( void )
   */
 static void HW_IoInit( void )
 {
-  HW_SPI_IoInit( );
-  
   Radio.IoInit( );
   
   vcom_IoInit( );
@@ -180,9 +176,7 @@ static void HW_IoInit( void )
   * @retval None
   */
 static void HW_IoDeInit( void )
-{
-  HW_SPI_IoDeInit( );
-  
+{ 
   Radio.IoDeInit( );
   
   vcom_IoDeInit( );
