@@ -56,6 +56,8 @@ Maintainer: Miguel Luis and Gregory Cristian
 #include "mlm32l07x01.h"
 #include "delay.h"
 #include "timeServer.h"
+#include "hwgpio.h"
+#include "platform.h"
 
 #define IRQ_HIGH_PRIORITY  0
 
@@ -155,26 +157,28 @@ void SX1276IoInit( void )
   
   SX1276BoardInit( &BoardCallbacks );
   
-  initStruct.Mode =GPIO_MODE_IT_RISING;
-  initStruct.Pull = GPIO_PULLUP;
-  initStruct.Speed = GPIO_SPEED_HIGH;
+// done by platform
+//  initStruct.Mode =GPIO_MODE_IT_RISING;
+//  initStruct.Pull = GPIO_PULLUP;
+//  initStruct.Speed = GPIO_SPEED_HIGH;
 
-  HW_GPIO_Init( RADIO_DIO_0_PORT, RADIO_DIO_0_PIN, &initStruct );
-  HW_GPIO_Init( RADIO_DIO_1_PORT, RADIO_DIO_1_PIN, &initStruct );
-  HW_GPIO_Init( RADIO_DIO_2_PORT, RADIO_DIO_2_PIN, &initStruct );
-  HW_GPIO_Init( RADIO_DIO_3_PORT, RADIO_DIO_3_PIN, &initStruct );
-  
-  initStruct.Mode =GPIO_MODE_OUTPUT_PP;
-  initStruct.Pull = GPIO_NOPULL;  
-  HW_GPIO_Init( RADIO_TCXO_VCC_PORT, RADIO_TCXO_VCC_PIN, &initStruct );
+//  HW_GPIO_Init( RADIO_DIO_0_PORT, RADIO_DIO_0_PIN, &initStruct );
+//  HW_GPIO_Init( RADIO_DIO_1_PORT, RADIO_DIO_1_PIN, &initStruct );
+//  HW_GPIO_Init( RADIO_DIO_2_PORT, RADIO_DIO_2_PIN, &initStruct );
+//  HW_GPIO_Init( RADIO_DIO_3_PORT, RADIO_DIO_3_PIN, &initStruct );
+
+// TODO needed?
+//  initStruct.Mode =GPIO_MODE_OUTPUT_PP;
+//  initStruct.Pull = GPIO_NOPULL;
+//  HW_GPIO_Init( RADIO_TCXO_VCC_PORT, RADIO_TCXO_VCC_PIN, &initStruct );
 }
 
 void SX1276IoIrqInit( DioIrqHandler **irqHandlers )
 {
-  HW_GPIO_SetIrq( RADIO_DIO_0_PORT, RADIO_DIO_0_PIN, IRQ_HIGH_PRIORITY, irqHandlers[0] );
-  HW_GPIO_SetIrq( RADIO_DIO_1_PORT, RADIO_DIO_1_PIN, IRQ_HIGH_PRIORITY, irqHandlers[1] );
-  HW_GPIO_SetIrq( RADIO_DIO_2_PORT, RADIO_DIO_2_PIN, IRQ_HIGH_PRIORITY, irqHandlers[2] );
-  HW_GPIO_SetIrq( RADIO_DIO_3_PORT, RADIO_DIO_3_PIN, IRQ_HIGH_PRIORITY, irqHandlers[3] );
+  hw_gpio_configure_interrupt(SX127x_DIO0_PIN, (gpio_inthandler_t)irqHandlers[0], GPIO_RISING_EDGE);
+  hw_gpio_configure_interrupt(SX127x_DIO1_PIN, (gpio_inthandler_t)irqHandlers[1], GPIO_RISING_EDGE);
+  // TODO needed for loramac? hw_gpio_configure_interrupt(SX127x_DIO2_PIN, (gpio_inthandler_t)irqHandlers[2], GPIO_RISING_EDGE);
+  hw_gpio_configure_interrupt(SX127x_DIO3_PIN, (gpio_inthandler_t)irqHandlers[2], GPIO_RISING_EDGE);
 }
 
 void SX1276IoDeInit( void )
