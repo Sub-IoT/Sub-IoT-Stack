@@ -411,6 +411,11 @@ void HW_RTC_IrqHandler ( void )
   }
 }
 
+// TODO move
+void RTC_IRQHandler( void )
+{
+  HW_RTC_IrqHandler ( );
+}
 
 /*!
  * @brief a delay of delay ms by polling RTC

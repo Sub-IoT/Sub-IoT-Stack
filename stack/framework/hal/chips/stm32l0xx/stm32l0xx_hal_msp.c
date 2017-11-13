@@ -119,37 +119,37 @@ void HAL_MspInit(void)
   *        the backup registers) and RCC_CSR register are set to their reset values.  
   * @retval None
   */
-//void HAL_RTC_MspInit(RTC_HandleTypeDef *hrtc)
-//{
-//  RCC_OscInitTypeDef RCC_OscInitStruct;
-//  RCC_PeriphCLKInitTypeDef  PeriphClkInitStruct;
+void HAL_RTC_MspInit(RTC_HandleTypeDef *hrtc)
+{
+  RCC_OscInitTypeDef RCC_OscInitStruct;
+  RCC_PeriphCLKInitTypeDef  PeriphClkInitStruct;
 
-//  /*##-1- Configue the RTC clock soucre ######################################*/
-//  /* -a- Enable LSE Oscillator */
-//  RCC_OscInitStruct.OscillatorType =  RCC_OSCILLATORTYPE_LSE;
-//  RCC_OscInitStruct.PLL.PLLState = RCC_PLL_NONE;
-//  RCC_OscInitStruct.LSEState = RCC_LSE_ON;
-//  if(HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
-//  {
-//    Error_Handler();
-//  }
+  /*##-1- Configue the RTC clock soucre ######################################*/
+  /* -a- Enable LSE Oscillator */
+  RCC_OscInitStruct.OscillatorType =  RCC_OSCILLATORTYPE_LSE;
+  RCC_OscInitStruct.PLL.PLLState = RCC_PLL_NONE;
+  RCC_OscInitStruct.LSEState = RCC_LSE_ON;
+  if(HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
+  {
+    assert(0);
+  }
 
-//  /* -b- Select LSI as RTC clock source */
-//  PeriphClkInitStruct.PeriphClockSelection = RCC_PERIPHCLK_RTC;
-//  PeriphClkInitStruct.RTCClockSelection = RCC_RTCCLKSOURCE_LSE;
-//  if(HAL_RCCEx_PeriphCLKConfig(&PeriphClkInitStruct) != HAL_OK)
-//  {
-//    Error_Handler();
-//  }
+  /* -b- Select LSI as RTC clock source */
+  PeriphClkInitStruct.PeriphClockSelection = RCC_PERIPHCLK_RTC;
+  PeriphClkInitStruct.RTCClockSelection = RCC_RTCCLKSOURCE_LSE;
+  if(HAL_RCCEx_PeriphCLKConfig(&PeriphClkInitStruct) != HAL_OK)
+  {
+    assert(0);
+  }
 
-//  /*##-2- Enable the RTC peripheral Clock ####################################*/
-//  /* Enable RTC Clock */
-//  __HAL_RCC_RTC_ENABLE();
+  /*##-2- Enable the RTC peripheral Clock ####################################*/
+  /* Enable RTC Clock */
+  __HAL_RCC_RTC_ENABLE();
   
-//  /*##-3- Configure the NVIC for RTC Alarm ###################################*/
-//  HAL_NVIC_SetPriority(RTC_Alarm_IRQn, 0x0, 0);
-//  HAL_NVIC_EnableIRQ(RTC_Alarm_IRQn);
-//}
+  /*##-3- Configure the NVIC for RTC Alarm ###################################*/
+  HAL_NVIC_SetPriority(RTC_IRQn, 0x0, 0);
+  HAL_NVIC_EnableIRQ(RTC_IRQn);
+}
 
 ///**
 //  * @brief RTC MSP De-Initialization
@@ -165,15 +165,15 @@ void HAL_MspInit(void)
 //}
 
 
-///**
-//  * @brief  Alarm A callback.
-//  * @param  hrtc: RTC handle
-//  * @retval None
-//  */
-//void HAL_RTC_AlarmAEventCallback(RTC_HandleTypeDef *hrtc)
-//{
-//  TimerIrqHandler( );
-//}
+/**
+  * @brief  Alarm A callback.
+  * @param  hrtc: RTC handle
+  * @retval None
+  */
+void HAL_RTC_AlarmAEventCallback(RTC_HandleTypeDef *hrtc)
+{
+  TimerIrqHandler( );
+}
 
 /**
   * @brief  EXTI line detection callbacks.
