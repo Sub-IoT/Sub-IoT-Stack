@@ -176,9 +176,12 @@ void SX1276IoInit( void )
 void SX1276IoIrqInit( DioIrqHandler **irqHandlers )
 {
   hw_gpio_configure_interrupt(SX127x_DIO0_PIN, (gpio_inthandler_t)irqHandlers[0], GPIO_RISING_EDGE);
+  hw_gpio_enable_interrupt(SX127x_DIO0_PIN);
   hw_gpio_configure_interrupt(SX127x_DIO1_PIN, (gpio_inthandler_t)irqHandlers[1], GPIO_RISING_EDGE);
+  hw_gpio_enable_interrupt(SX127x_DIO1_PIN);
   // TODO needed for loramac? hw_gpio_configure_interrupt(SX127x_DIO2_PIN, (gpio_inthandler_t)irqHandlers[2], GPIO_RISING_EDGE);
   hw_gpio_configure_interrupt(SX127x_DIO3_PIN, (gpio_inthandler_t)irqHandlers[2], GPIO_RISING_EDGE);
+  hw_gpio_enable_interrupt(SX127x_DIO3_PIN);
 }
 
 void SX1276IoDeInit( void )
