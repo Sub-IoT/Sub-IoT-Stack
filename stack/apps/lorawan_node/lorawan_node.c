@@ -20,12 +20,65 @@
 
 #include "lorawan_stack.h"
 
+#define LORAWAN_APP_PORT                            2
+#define LORAWAN_CONFIRMED_MSG                       ENABLE
+#define APP_TX_DUTYCYCLE                            10000 // in ms
+#define LORAWAN_ADR_ON                              1
+#define JOINREQ_NBTRIALS                            3
+
+static void LoraTxData( lora_AppData_t *AppData, FunctionalState* IsTxConfirmed)
+{
+  // TODO
+  /* USER CODE BEGIN 3 */
+  uint16_t pressure = 0;
+  int16_t temperature = 0;
+  uint16_t humidity = 0;
+  uint8_t batteryLevel;
+
+
+  temperature = 0;     /* in °C * 100 */
+  pressure    = 0;  /* in hPa / 10 */
+  humidity    = 0;        /* in %*10     */
+
+  uint32_t i = 0;
+
+  batteryLevel = 0;                     /* 1 (very low) to 254 (fully charged) */
+
+  AppData->Port = LORAWAN_APP_PORT;
+
+  *IsTxConfirmed =  LORAWAN_CONFIRMED_MSG;
+
+
+  AppData->Buff[i++] = 0;
+  AppData->Buff[i++] = ( pressure >> 8 ) & 0xFF;
+  AppData->Buff[i++] = pressure & 0xFF;
+  AppData->Buff[i++] = ( temperature >> 8 ) & 0xFF;
+  AppData->Buff[i++] = temperature & 0xFF;
+  AppData->Buff[i++] = ( humidity >> 8 ) & 0xFF;
+  AppData->Buff[i++] = humidity & 0xFF;
+  AppData->Buff[i++] = batteryLevel;
+
+  AppData->BuffSize = i;
+
+  /* USER CODE END 3 */
+}
+
 static LoRaMainCallback_t lora_main_callbacks = {
   NULL, //HW_GetBatteryLevel,
   HW_GetUniqueId,
   HW_GetRandomSeed,
-  NULL, //LoraTxData,
+  LoraTxData, // TODO
   NULL //LoraRxData
+};
+
+static LoRaParam_t lora_init_params = {
+  TX_ON_TIMER,
+  APP_TX_DUTYCYCLE,
+  CLASS_A,
+  LORAWAN_ADR_ON,
+  DR_0,
+  LORAWAN_PUBLIC_NETWORK,
+  JOINREQ_NBTRIALS
 };
 
 void bootstrap()
@@ -34,7 +87,7 @@ void bootstrap()
 
     HW_Init(); // TODO refactor
 
-    lora_Init(&lora_main_callbacks, NULL); // TODO params
+    lora_Init(&lora_main_callbacks, &lora_init_params);
 
 
     while(1)
