@@ -47,6 +47,7 @@ ADD_LIBRARY(lorawan STATIC
     ST/hw_gpio.c
     ST/hw_spi.c
     ST/stm32l0xx_hw.c   # TODO remove?
+    lorawan_stack.c
 )
 
 ADD_DEFINITIONS("-DUSE_B_L072Z_LRWAN1" "-DSTM32L072xx" "-DREGION_EU868" "-DDEBUG" "-DTRACE") # TODO tmp

@@ -19,10 +19,10 @@
 #ifndef LORAWAN_STACK_H
 #define LORAWAN_STACK_H
 
-#include "stm32l0xx_hal.h" // TODO
+#include "types.h"
 
-#include "hw.h"
-#include "lora.h"
+void lorawan_stack_init();
+void lorawan_stack_tick();
 
 #endif //LORAWAN_STACK_H
 
