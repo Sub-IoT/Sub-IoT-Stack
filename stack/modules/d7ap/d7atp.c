@@ -241,8 +241,8 @@ void d7atp_init()
     current_dialog_id = 0;
     stop_dialog_after_tx = false;
 
-    sched_register_task(&response_period_timeout_handler);
-    sched_register_task(&execution_delay_timeout_handler);
+    sched_register_task(&response_period_timeout_handler, NULL);
+    sched_register_task(&execution_delay_timeout_handler, NULL);
 }
 
 void d7atp_stop()

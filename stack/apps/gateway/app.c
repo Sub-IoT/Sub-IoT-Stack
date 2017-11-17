@@ -38,6 +38,7 @@
 #include "fifo.h"
 #include "version.h"
 #include "compress.h"
+#include "log.h"
 
 #include "../shared/shared.h"
 
@@ -62,6 +63,9 @@ static void on_unsolicited_response_received(d7asp_result_t d7asp_result, uint8_
 #if PLATFORM_NUM_LEDS > 0
   led_blink();
 #endif
+  log_print_string("on_unsolicited_response_received : payload %i", alp_command_size);
+  log_print_data(alp_command, alp_command_size);
+
 }
 
 
@@ -84,7 +88,7 @@ void bootstrap()
 #endif
 
 #if PLATFORM_NUM_LEDS > 0
-    sched_register_task(&led_blink_off);
+    sched_register_task(&led_blink_off, NULL);
 #endif
 }
 

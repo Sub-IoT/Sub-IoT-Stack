@@ -52,6 +52,7 @@ enum
 typedef struct
 {
 	task_t task;
+	void *arg;
 	uint8_t next;
 	uint8_t prev;
 	uint8_t priority;
@@ -177,7 +178,7 @@ __LINK_C uint8_t get_task_id(task_t task)
 	return NO_TASK;
 }
 
-__LINK_C error_t sched_register_task(task_t task)
+__LINK_C error_t sched_register_task(task_t task, void *arg)
 {
   assert(NG(num_registered_tasks) <= NUM_TASKS);
   if(get_task_id(task) != NO_TASK)
@@ -195,6 +196,7 @@ __LINK_C error_t sched_register_task(task_t task)
             NG(m_index)[i].task = task;
             NG(m_index)[i].index = NG(num_registered_tasks);
             NG(m_info)[NG(m_index)[i].index].task = task;
+            NG(m_info)[NG(m_index)[i].index].arg = arg;
             break;
         }
         else
@@ -349,7 +351,7 @@ __LINK_C void scheduler_run()
 			for(uint8_t id = pop_task((NG(current_priority))); id != NO_TASK; id = pop_task(NG(current_priority)))
 			{
 				check_structs_are_valid();
-				NG(m_info)[id].task();
+				NG(m_info)[id].task(NG(m_info)[id].arg);
 			}
 			//this needs to be done atomically since otherwise we risk decrementing the current priority
 			//while a higher priority task is waiting in the queue

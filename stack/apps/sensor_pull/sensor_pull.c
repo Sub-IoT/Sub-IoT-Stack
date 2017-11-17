@@ -45,7 +45,7 @@
   #include "hwi2c.h"
 #endif
 
-#ifndef USE_SX127X
+#if !defined(USE_SX127X) && !defined(USE_NETDEV_SX127X)
   #error "background frames are only supported by the sx127x driver for now"
 #endif
 
@@ -118,6 +118,6 @@ void bootstrap()
     HTS221_Activate(hts221_handle);
 #endif
 
-    sched_register_task(&execute_sensor_measurement);
+    sched_register_task(&execute_sensor_measurement, NULL);
     timer_post_task_delay(&execute_sensor_measurement, SENSOR_INTERVAL_SEC);
 }

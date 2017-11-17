@@ -197,8 +197,8 @@ void d7anp_init()
     d7anp_state = D7ANP_STATE_IDLE;
     fg_scan_timeout_ticks = 0;
 
-    sched_register_task(&foreground_scan_expired);
-    sched_register_task(&start_foreground_scan_after_D7AAdvP);
+    sched_register_task(&foreground_scan_expired, NULL);
+    sched_register_task(&start_foreground_scan_after_D7AAdvP, NULL);
 
 #if defined(MODULE_D7AP_NLS_ENABLED)
     /*

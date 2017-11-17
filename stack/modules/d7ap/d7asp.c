@@ -279,7 +279,7 @@ void d7asp_init()
     DPRINT("REQUESTS_BITMAP_BYTE_COUNT %d", REQUESTS_BITMAP_BYTE_COUNT);
     DPRINT("FIFO_MAX_REQUESTS_COUNT %d", MODULE_D7AP_FIFO_MAX_REQUESTS_COUNT);
 
-    sched_register_task(&flush_fifos);
+    sched_register_task(&flush_fifos, NULL);
 }
 
 void d7asp_stop()

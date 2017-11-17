@@ -150,6 +150,6 @@ void bootstrap()
     HTS221_Activate(hts221_handle);
 #endif
 
-    sched_register_task(&execute_sensor_measurement);
+    sched_register_task(&execute_sensor_measurement, NULL);
     timer_post_task_delay(&execute_sensor_measurement, SENSOR_INTERVAL_SEC);
 }
