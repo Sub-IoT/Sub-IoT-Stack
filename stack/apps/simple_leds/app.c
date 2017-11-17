@@ -75,9 +75,9 @@ void bootstrap()
 	log_print_string("Device booted at time: %d\n", timer_get_counter_value());
 	console_print("Device Booted\r\n");
 
-    sched_register_task(&led_on_callback);
-    sched_register_task(&led_off_callback);
-    sched_register_task(&timer1_callback);
+    sched_register_task(&led_on_callback, NULL);
+    sched_register_task(&led_off_callback, NULL);
+    sched_register_task(&timer1_callback, NULL);
 
     timer_post_task_delay(&led_on_callback, TIMER_TICKS_PER_SEC);
     timer_post_task_delay(&timer1_callback, 0x0000FFFF + (uint32_t)100);

@@ -276,7 +276,7 @@ void d7asp_init()
     DPRINT("REQUESTS_BITMAP_BYTE_COUNT %d", REQUESTS_BITMAP_BYTE_COUNT);
     DPRINT("FIFO_MAX_REQUESTS_COUNT %d", MODULE_D7AP_FIFO_MAX_REQUESTS_COUNT);
 
-    sched_register_task(&flush_fifos);
+    sched_register_task(&flush_fifos, NULL);
 }
 
 d7asp_master_session_t* d7asp_master_session_create(d7asp_master_session_config_t* d7asp_master_session_config) {

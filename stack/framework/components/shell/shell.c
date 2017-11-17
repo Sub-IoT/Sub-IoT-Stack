@@ -165,7 +165,7 @@ void shell_init()
     console_set_rx_interrupt_callback(&uart_rx_cb);
     console_rx_interrupt_enable();
 
-    sched_register_task(&process_cmd_fifo);
+    sched_register_task(&process_cmd_fifo, NULL);
 }
 
 void shell_echo_enable() {

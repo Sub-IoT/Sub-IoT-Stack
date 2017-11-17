@@ -207,7 +207,7 @@ void bootstrap()
     initSensors();
 #endif
 
-    sched_register_task(&execute_sensor_measurement);
+    sched_register_task(&execute_sensor_measurement, NULL);
     timer_post_task_delay(&execute_sensor_measurement, SENSOR_INTERVAL_SEC);
 
     LCD_WRITE_STRING("EFM32 Sensor\n");

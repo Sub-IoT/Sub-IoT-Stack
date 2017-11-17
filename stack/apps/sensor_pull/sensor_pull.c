@@ -37,7 +37,7 @@
 #include "log.h"
 #include "compress.h"
 
-#ifndef USE_SX127X
+#if !defined(USE_SX127X) && !defined(USE_NETDEV_SX127X)
   #error "background frames are only supported by the sx127x driver for now"
 #endif
 
@@ -214,7 +214,7 @@ void bootstrap()
     initSensors();
 #endif
 
-    sched_register_task(&execute_sensor_measurement);
+    sched_register_task(&execute_sensor_measurement, NULL);
     timer_post_task_delay(&execute_sensor_measurement, SENSOR_INTERVAL_SEC);
 
     LCD_WRITE_STRING("Sensor push\n");

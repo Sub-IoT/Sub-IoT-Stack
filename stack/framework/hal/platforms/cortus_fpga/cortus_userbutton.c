@@ -54,7 +54,7 @@ __LINK_C void __ubutton_init()
 		error_t err = hw_gpio_configure_interrupt(buttons[i].button_id, &button_callback, GPIO_FALLING_EDGE);
 		assert(err == SUCCESS);
 	}
-	sched_register_task(&button_task);
+	sched_register_task(&button_task, NULL);
 }
 
 __LINK_C bool ubutton_pressed(button_id_t button_id)

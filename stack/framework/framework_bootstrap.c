@@ -39,6 +39,6 @@ void __framework_bootstrap()
 #endif
 
     //register the user bootstrap function();
-    sched_register_task(&bootstrap);
+    sched_register_task(&bootstrap, NULL);
     sched_post_task(&bootstrap);
 }

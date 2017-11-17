@@ -170,6 +170,8 @@ void on_alp_command_result_cb(d7asp_result_t result, uint8_t* payload, uint8_t p
 {
     log_print_string("recv response @ %i dB link budget from:", result.link_budget);
     log_print_data(result.addressee->id, 8);
+    log_print_string("payload %i", payload_length);
+    log_print_data(payload, payload_length);
 }
 
 static alp_init_args_t alp_init_args;
@@ -213,7 +215,7 @@ void bootstrap()
     initSensors();
 #endif
 
-    sched_register_task(&execute_sensor_measurement);
+    sched_register_task(&execute_sensor_measurement, NULL);
     timer_post_task_delay(&execute_sensor_measurement, SENSOR_INTERVAL_SEC);
 
     LCD_WRITE_STRING("Sensor push\n");

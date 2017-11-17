@@ -783,13 +783,13 @@ void dll_init()
 {
     uint8_t nf_ctrl;
 
-    sched_register_task(&process_received_packets);
-    sched_register_task(&notify_transmitted_packet);
-    sched_register_task(&execute_cca);
-    sched_register_task(&execute_csma_ca);
-    sched_register_task(&dll_execute_scan_automation);
-    sched_register_task(&start_background_scan);
-    sched_register_task(&guard_period_expiration);
+    sched_register_task(&process_received_packets, NULL);
+    sched_register_task(&notify_transmitted_packet, NULL);
+    sched_register_task(&execute_cca, NULL);
+    sched_register_task(&execute_csma_ca, NULL);
+    sched_register_task(&dll_execute_scan_automation, NULL);
+    sched_register_task(&start_background_scan, NULL);
+    sched_register_task(&guard_period_expiration, NULL);
 
     hw_radio_init(&alloc_new_packet, &release_packet);
 

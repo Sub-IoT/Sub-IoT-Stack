@@ -238,8 +238,8 @@ void d7atp_init()
     current_dialog_id = 0;
     stop_dialog_after_tx = false;
 
-    sched_register_task(&response_period_timeout_handler);
-    sched_register_task(&execution_delay_timeout_handler);
+    sched_register_task(&response_period_timeout_handler, NULL);
+    sched_register_task(&execution_delay_timeout_handler, NULL);
 }
 
 error_t d7atp_send_request(uint8_t dialog_id, uint8_t transaction_id, bool is_last_transaction,

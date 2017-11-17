@@ -35,7 +35,7 @@
 /*! \brief Type definition for tasks
  *
  */
-typedef void (*task_t)();
+typedef void (*task_t)(void *arg);
 
 /*! \brief Initialise the scheduler sub system. 
  *
@@ -83,7 +83,7 @@ enum
  *
  * \return error_t 	SUCCESS if the task was registered successfully
  */
-__LINK_C error_t sched_register_task(task_t task);
+__LINK_C error_t sched_register_task(task_t task, void *arg);
 
 /*! \brief Post a task with the given priority
  *

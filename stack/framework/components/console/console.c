@@ -48,7 +48,7 @@ static void flush_console_tx_fifo() {
 
 void console_init(void) {
   fifo_init(&console_tx_fifo, console_tx_buffer, CONSOLE_TX_FIFO_SIZE);
-  sched_register_task(&flush_console_tx_fifo);
+  sched_register_task(&flush_console_tx_fifo, NULL);
 
   uart = uart_init(PLATFORM_CONSOLE_UART, PLATFORM_CONSOLE_BAUDRATE, PLATFORM_CONSOLE_LOCATION);
   assert(uart_enable(uart));
