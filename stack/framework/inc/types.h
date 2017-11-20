@@ -36,4 +36,6 @@
 typedef int error_t;	//use 'int' since it matches the value expected for errors from <errno.h>
 						//and the EFM32GG toolchain actually defines it as such
 
+typedef const char * string_t;
+
 #endif // __FRM_TYPES_H__
