@@ -144,7 +144,23 @@ void sx127x_rx_chain_calibration(sx127x_t *dev);
  *
  * @return current value of RSSI in [dBm]
  */
-int16_t sx127x_read_rssi(const sx127x_t *dev);
+int16_t sx127x_read_rssi(sx127x_t *dev);
+
+/**
+ * @brief   Flush the FIFO.
+ *
+ * @param[in] dev                      The sx127x device descriptor
+ */
+void sx127x_flush_fifo(const sx127x_t *dev);
+
+/**
+ * @brief   check if the FIFO is empty.
+ *
+ * @param[in] dev                      The sx127x device descriptor
+ *
+ * @return TRUE/FALSE to indicate whether the FIFO is empty or not
+ */
+bool sx127x_is_fifo_empty(const sx127x_t *dev);
 
 #ifdef __cplusplus
 }
