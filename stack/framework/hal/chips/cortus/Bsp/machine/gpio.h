@@ -1,7 +1,7 @@
 /* * OSS-7 - An opensource implementation of the DASH7 Alliance Protocol for ultra
  * lowpower wireless sensor communication
  *
- * Copyright 2015 University of Antwerp
+ * Copyright 2018 CORTUS
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,13 +14,16 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
+ *
+ * \file gpio.h
+ * \author philippe.nunes@cortus.com
  */
 
 #ifndef _GPIO_H
 #define _GPIO_H
 #include <machine/sfradr.h>
 
-typedef struct GPio
+typedef struct Gpio
 {
     volatile unsigned out;
     volatile unsigned in;
@@ -31,32 +34,35 @@ typedef struct GPio
     volatile unsigned rs_edge_sel;
     volatile unsigned fl_edge_sel;
     volatile unsigned edge;
-} GPio;
+} Gpio;
 
-/** GPIO ports */
+/** GPIO ports identificator. */
 typedef enum
 {
   gpioPortA = SFRADR_GPIO1, /**< Port A */
   gpioPortB = SFRADR_GPIO2, /**< Port B */
 } GPIO_Port_TypeDef;
 
-/** Pin mode. For more details on each mode, please refer to the EFM32
- * reference manual. */
+/** Pin mode. For more details on each mode, please refer to the APS peripheral reference manual. */
+
+#define HAVE_GPIO_MODE_T
 typedef enum
 {
-  /** Input enabled. Filter if DOUT is set */
-  gpioModeInput                     = 0,
-  /** Push-pull output */
-  gpioModePushPull                  = 1
-
+  /** Input  without pull up*/
+  gpioModeInput = 0,
+  /** Input  with pull up*/
+  gpioModeInputPull = 0xFF,
+  /** output  with pull up*/
+  gpioModePushPull = 1,
 } GPIO_Mode_TypeDef;
 
 #ifdef __APS__
-#define gpio1 ((GPio *)SFRADR_GPIO1)
-#define gpio2 ((GPio *)SFRADR_GPIO2)
+#define gpio1 ((Gpio *)SFRADR_GPIO1)
+#define gpio2 ((Gpio *)SFRADR_GPIO2)
 #else
-extern GPio __gpio;
-#define gpio (&__gpio)
+extern Gpio __gpio1;
+extern Gpio __gpio2;
+#define gpio1 (&__gpio1)
+#define gpio2 (&__gpio2)
 #endif
-
 #endif

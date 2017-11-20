@@ -19,6 +19,7 @@
 #include <stdint.h>
 
 #include "hwi2c.h"
+#include "errors.h"
 
 #include "machine/i2c.h"
 
@@ -39,7 +40,7 @@ volatile unsigned int tmp;
 
 
 i2c_handle_t* i2c_init(uint8_t idx, uint8_t pins, uint32_t baudrate) {
-    i2c->divider = 542;   // EFM32GG: 92000
+    i2c->divider = 542;
     i2c->master = 1;
     i2c->selclk = 0; // 0:50MHz, 1:25MHz, 2:12.5MHZ, 3:3.125MHz
     //i2c->onbus = 1;
@@ -50,8 +51,6 @@ i2c_handle_t* i2c_init(uint8_t idx, uint8_t pins, uint32_t baudrate) {
 
    return &handle;
 }
-
-
 
 int8_t i2c_write(i2c_handle_t* handle, uint8_t to, uint8_t* payload, int length) {
     int i;
@@ -74,6 +73,8 @@ int8_t i2c_write(i2c_handle_t* handle, uint8_t to, uint8_t* payload, int length)
 #if defined(FRAMEWORK_LOG_ENABLED)
     printf ("End of transmission\n");
 #endif
+
+    return SUCCESS;
 }
 
 
@@ -99,7 +100,7 @@ int8_t i2c_read(i2c_handle_t* handle, uint8_t to, uint8_t* payload, int length) 
     while (i2c->activity == 1) {} // Be sure the reception is over
 
     while  ((i2c->rx_status & 0x1) == 1) // Empty the rx_fifo (Last data sent by the slave 
-	// but not aknwoledged by the master; however it is written in the rx_fifo)
+	// but not acknowledged by the master; however it is written in the rx_fifo)
     {
        tmp = i2c->rx_data;
 #if defined(FRAMEWORK_LOG_ENABLED)
@@ -114,6 +115,8 @@ int8_t i2c_read(i2c_handle_t* handle, uint8_t to, uint8_t* payload, int length) 
 
     printf ("End of reception\n");
 #endif
+
+    return SUCCESS;
 }
 
 
@@ -121,5 +124,5 @@ int8_t i2c_read(i2c_handle_t* handle, uint8_t to, uint8_t* payload, int length) 
 int8_t i2c_write_read(i2c_handle_t* handle, uint8_t to, uint8_t* payload, int length, uint8_t* receive, int receive_length)
 {
    i2c_write(handle, to, payload, length);
-   i2c_read(handle, to, receive, receive_length);
+   return (i2c_read(handle, to, receive, receive_length));
 }

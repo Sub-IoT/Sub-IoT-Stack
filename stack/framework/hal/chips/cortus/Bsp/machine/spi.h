@@ -1,7 +1,7 @@
 /* * OSS-7 - An opensource implementation of the DASH7 Alliance Protocol for ultra
  * lowpower wireless sensor communication
  *
- * Copyright 2015 University of Antwerp
+ * Copyright 2017 CORTUS
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,6 +14,9 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
+ *
+ * \file spi.h
+ * \author philippe.nunes@cortus.com
  */
 
 #ifndef _SPI_H

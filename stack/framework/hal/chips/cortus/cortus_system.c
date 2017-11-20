@@ -33,7 +33,7 @@ void hw_enter_lowpower_mode(uint8_t mode)
 uint64_t hw_get_unique_id()
 {
    // TODO
-   return 0;
+   return 0x1122334455667788;
 }
 
 void hw_busy_wait(int16_t microseconds)

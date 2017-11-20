@@ -157,6 +157,9 @@ error_t hw_timer_schedule(hwtimer_id_t timer_id, hwtimer_tick_t tick )
          timer1_cmpb->compare = tick * 98;
       else
          timer1_cmpb->compare = tick * 3125;
+
+      assert(timer1_cmpb->compare < timer1->period);
+
       irq[IRQ_TIMER1_CMPB].ipl = 0;
       irq[IRQ_TIMER1_CMPB].ien = 1;
 

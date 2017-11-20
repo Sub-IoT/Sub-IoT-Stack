@@ -2,6 +2,7 @@
  * lowpower wireless sensor communication
  *
  * Copyright 2015 University of Antwerp
+ * Copyright 2018 Cortus SA
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -35,10 +36,6 @@
 #include "machine/spi.h"
 #include "machine/gpio.h"
 
-#if defined(FRAMEWORK_LOG_ENABLED)
-#include <stdio.h>
-#endif
-
 #define MAX_SPI_SLAVE_HANDLES 2
 
 struct spi_slave_handle {
@@ -60,11 +57,9 @@ uint8_t next_spi_slave_handle = 0;
 
 #define TIMING_ADJ
 
-
 spi_handle_t* spi_init(uint8_t idx, uint32_t baudrate, uint8_t databits, bool msbf)
 {
-
-    // assert what is supported by cortus
+    // assert what is supported by CORTUS
     assert(databits == 8);
     assert(idx < SPI_COUNT);
 
@@ -83,7 +78,7 @@ spi_handle_t* spi_init(uint8_t idx, uint32_t baudrate, uint8_t databits, bool ms
 }
 
 static void ensure_slaves_deselected(spi_handle_t* spi) {
-  // make sure CS line is high for active low slave and vice versa
+    // make sure CS line is high for active low slave and vice versa
     if(spi->slave->cs_is_active_low)
       hw_gpio_set(spi->slave->cs);
     else
@@ -176,16 +171,14 @@ unsigned char spi_exchange_byte(spi_slave_handle_t* slave, unsigned char data) {
 
 void spi_send_byte_with_control(spi_slave_handle_t* slave, uint16_t data) {
    // 9-bit transmission is not supported.
-#if defined(FRAMEWORK_LOG_ENABLED)
-   DPRINT("CORTUS: spi_send_byte_with_control is called but not supported.\n");
-#endif
+   printf("CORTUS: spi_send_byte_with_control is called but not supported.\n");
 }
 
 void spi_exchange_bytes(spi_slave_handle_t* slave,
                         uint8_t* TxData, uint8_t* RxData, size_t length)
 {
     uint16_t i = 0;
-    if( RxData != NULL && TxData != NULL ) {           // two way transmition
+    if( RxData != NULL && TxData != NULL ) {           // two way transmission
         while( i < length ) {
             RxData[i] = spi_exchange_byte(slave, TxData[i]);
             i++;

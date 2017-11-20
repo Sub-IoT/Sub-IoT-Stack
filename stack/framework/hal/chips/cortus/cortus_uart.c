@@ -37,82 +37,85 @@ static uart_rx_inthandler_t rx_inthandler = 0x0;
 
 uart_handle_t* uart_init(uint8_t idx, uint32_t baudrate, uint8_t pins) {
 
-	// Initialize the UART to reasonable values
-	uart1->config = 0; // 8 bits, no parity, 1 stop bit, flow control disabled
-	uart1->selclk = 0; // 0:50MHz, 1:25MHz, 2:12.5MHZ, 3:3.125MHz
-	uart1->divider = 8*(50000000/baudrate);
+    // Initialize the UART to reasonable values
+    uart1->config = 0; // 8 bits, no parity, 1 stop bit, flow control disabled
+    uart1->selclk = 0; // 0:50MHz, 1:25MHz, 2:12.5MHZ, 3:3.125MHz
+    uart1->divider = 8*(50000000/baudrate);
 
-	handle.uart_sfradr = uart1;
-	return &handle;
+    handle.uart_sfradr = uart1;
+
+    irq[IRQ_UART1_RX].ipl = 0;
+    irq[IRQ_UART1_RX].ien = 1;
+
+    return &handle;
 }
 
 bool uart_enable(uart_handle_t* uart_handle) {
-	volatile int dump;
+    volatile int dump;
 
-	/* Flush the RX buffer. */
-	while(uart1->rx_status)
-		dump = uart1->rx_data;
+    /* Flush the RX buffer. */
+    while(uart1->rx_status)
+        dump = uart1->rx_data;
 
-	uart1->rx_mask = 1;  /* start Rx interrupt */
+    uart1->rx_mask = 1;  /* start Rx interrupt */
 
-	return true;
+    return true;
 }
 
 bool uart_disable(uart_handle_t* uart) {
 
-	uart1->rx_mask = 0; /* stop Rx interrupt */
-	uart1->tx_mask = 0; /* stop Tx interrupt */
+    uart1->rx_mask = 0; /* stop Rx interrupt */
+    uart1->tx_mask = 0; /* stop Tx interrupt */
 
-	return true;
+    return true;
 }
 
 void uart_set_rx_interrupt_callback(uart_handle_t* uart,
-									uart_rx_inthandler_t rx_handler)
+                                    uart_rx_inthandler_t rx_handler)
 {
-	rx_inthandler = rx_handler;
+    rx_inthandler = rx_handler;
 }
 
 static void uart_outch_raw (int c)
 {
-	while (! (uart1->tx_status & 0x01)) ;
-	uart1->tx_data = c;
+    while (! (uart1->tx_status & 0x01)) ;
+    uart1->tx_data = c;
 }
 
 void uart_send_byte(uart_handle_t* uart, uint8_t data) {
 
-	uart_outch_raw (data);
+    uart_outch_raw (data);
 }
 
 void uart_send_bytes(uart_handle_t* uart, void const *data, size_t length) {
 
-	for(uint8_t i=0; i<length; i++)	{
-		uart_send_byte(uart, ((uint8_t const*)data)[i]);
-	}
+    for(uint8_t i=0; i<length; i++)	{
+        uart_send_byte(uart, ((uint8_t const*)data)[i]);
+    }
 }
 
 void uart_send_string(uart_handle_t* uart, const char *string) {
-	uart_send_bytes(uart, string, strnlen(string, 100));
+    uart_send_bytes(uart, string, strnlen(string, 100));
 }
 
 error_t uart_rx_interrupt_enable(uart_handle_t* uart) {
 
-	irq[IRQ_UART1_RX].ien = 1;
-	uart1->rx_mask = 1;  /* start Rx interrupt */
-	return SUCCESS;
+    uart1->rx_mask = 1;  /* start Rx interrupt */
+    return SUCCESS;
 }
 
 void uart_rx_interrupt_disable(uart_handle_t* uart) {
 
-	uart1->rx_mask = 0; //stop Rx interrupt
+    uart1->rx_mask = 0; //stop Rx interrupt
 }
 
 void interrupt_handler(IRQ_UART1_RX)
 {
-	volatile unsigned ch;
+    volatile unsigned ch;
 
-	while(((uart1->rx_status)&(0x01)) != 0){
-		ch = uart1->rx_data;
-		if (rx_inthandler != 0x0)
-			rx_inthandler(ch);
-	}
+    while(((uart1->rx_status)&(0x01)) != 0){
+        ch = uart1->rx_data;
+        if (rx_inthandler != 0x0)
+            rx_inthandler(ch);
+    }
 }
