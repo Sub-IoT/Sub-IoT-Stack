@@ -199,9 +199,17 @@ void sx127x_rx_chain_calibration(sx127x_t *dev)
     sx127x_set_channel(dev, initial_freq);
 }
 
-int16_t sx127x_read_rssi(const sx127x_t *dev)
+int16_t sx127x_read_rssi(sx127x_t *dev)
 {
     int16_t rssi = 0;
+
+    if (dev->settings.state != SX127X_RF_RX_RUNNING)
+    {
+        sx127x_set_state(dev, SX127X_RF_RX_RUNNING);
+        /* Set radio in continuous reception */
+        sx127x_set_op_mode(dev, SX127X_RF_OPMODE_RECEIVER);
+        hw_busy_wait(700); // wait settling time and RSSI smoothing time
+    }
 
     switch (dev->settings.modem) {
         case SX127X_MODEM_FSK:
@@ -257,4 +265,18 @@ void sx127x_start_cad(sx127x_t *dev)
         default:
             break;
     }
+}
+
+void sx127x_flush_fifo(const sx127x_t *dev)
+{
+    sx127x_reg_write(dev, SX127X_REG_IRQFLAGS2, 0x10);
+}
+
+bool sx127x_is_fifo_empty(const sx127x_t *dev)
+{
+#ifdef PLATFORM_SX127X_USE_DIO3_PIN
+    return hw_gpio_get_in(dev->params.dio3_pin);
+#else
+    return (sx127x_reg_read(dev, SX127X_REG_IRQFLAGS2) & 0x40);
+#endif
 }

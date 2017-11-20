@@ -78,6 +78,7 @@ xcvr_handle_t xcvr = { .sx127x.netdev.driver = &sx127x_driver};
 static int _send(netdev_t *netdev, const struct iovec *vector, unsigned count)
 {
     sx127x_t *dev = (sx127x_t*) netdev;
+    uint8_t size = vector[0].iov_len; // only one vector is considered
 
     if (sx127x_get_state(dev) == SX127X_RF_TX_RUNNING) {
         DEBUG("[WARNING] Cannot send packet: radio already in transmitting "
@@ -85,19 +86,44 @@ static int _send(netdev_t *netdev, const struct iovec *vector, unsigned count)
         return -ENOTSUP;
     }
 
-    uint8_t size;
-    size = _get_tx_len(vector, count);
-
-/* FIFO operations can not take place in Sleep mode
+    /* FIFO operations can not take place in Sleep mode
      * So wake up the chip */
     if (sx127x_get_op_mode(dev) == SX127X_RF_OPMODE_SLEEP) {
         sx127x_set_standby(dev);
         hw_busy_wait(SX127X_RADIO_WAKEUP_TIME); /* wait for chip wake up */
     }
 
+    sx127x_reg_write(dev, SX127X_REG_DIOMAPPING1, 0x00); // FIFO LEVEL ISR or Packet Sent ISR
+    sx127x_reg_write(dev, SX127X_REG_FIFOTHRESH, 0x80 | (SX127X_FIFO_MID_SIZE - 1));
+    sx127x_flush_fifo(dev);
+
     switch (dev->settings.modem) {
         case SX127X_MODEM_FSK:
-            /* todo */
+
+            dev->packet.length = size;
+
+            if (size > SX127X_FIFO_MAX_SIZE)
+            {
+                sx127x_reg_write(dev, SX127X_REG_FIFOTHRESH, 0x80 | (SX127X_FIFO_MID_SIZE - 1));
+                dev->packet.fifothresh = SX127X_FIFO_MID_SIZE;
+
+                memcpy((void*)dev->packet.buf, vector[0].iov_base, size);
+                /* Write payload buffer */
+                sx127x_write_fifo(dev, dev->packet.buf, SX127X_FIFO_MAX_SIZE);
+
+                dev->packet.pos = SX127X_FIFO_MAX_SIZE;
+                hw_gpio_set_edge_interrupt(dev->params.dio1_pin, GPIO_FALLING_EDGE);
+                hw_gpio_enable_interrupt(dev->params.dio1_pin);
+            }
+            else
+            {
+                sx127x_write_fifo(dev, vector[0].iov_base, size);
+                dev->packet.pos = size;
+                hw_gpio_set_edge_interrupt(dev->params.dio0_pin, GPIO_RISING_EDGE);
+                hw_gpio_enable_interrupt(dev->params.dio0_pin);
+            }
+
+            sx127x_set_packet_handler_enabled(dev, true);
             break;
         case SX127X_MODEM_LORA:
             /* Initializes the payload size */
@@ -136,7 +162,7 @@ static int _send(netdev_t *netdev, const struct iovec *vector, unsigned count)
 
     /* Start TX timeout timer */
     dev->_internal.tx_timeout_timer.next_event = dev->settings.lora.tx_timeout; // TODO convert timeout in timer_tick
-    timer_add_event(&dev->_internal.tx_timeout_timer);
+    //timer_add_event(&dev->_internal.tx_timeout_timer);
 
     /* Put chip into transfer mode */
     sx127x_set_state(dev, SX127X_RF_TX_RUNNING);
@@ -152,7 +178,23 @@ static int _recv(netdev_t *netdev, void *buf, size_t len, void *info)
     uint8_t size = 0;
     switch (dev->settings.modem) {
         case SX127X_MODEM_FSK:
-            /* todo */
+            /* just return length when buf == NULL */
+            if (buf == NULL) {
+                return dev->packet.length;
+            }
+
+            if (dev->packet.length > len) {
+                return -ENOSPC;
+            }
+
+            memcpy(buf, (void*)dev->packet.buf, dev->packet.length);
+            if (info != NULL) {
+                netdev_sx127x_packet_info_t *packet_info = info;
+
+                packet_info->rssi = (uint8_t)sx127x_read_rssi(dev);
+                packet_info->lqi = 0;
+            }
+            return dev->packet.length;
             break;
         case SX127X_MODEM_LORA:
             /* Clear IRQ */
@@ -174,7 +216,7 @@ static int _recv(netdev_t *netdev, void *buf, size_t len, void *info)
                 return -EBADMSG;
             }
 
-            netdev_sx127x_lora_packet_info_t *packet_info = info;
+            netdev_sx127x_packet_info_t *packet_info = info;
             if (packet_info) {
                 /* there is no LQI for LoRa */
                 packet_info->lqi = 0;
@@ -327,9 +369,9 @@ static int _get(netdev_t *netdev, netopt_t opt, void *val, size_t max_len)
             return sizeof(uint32_t);
 
         case NETOPT_BANDWIDTH:
-            assert(max_len >= sizeof(uint8_t));
-            *((uint8_t*) val) = sx127x_get_bandwidth(dev);
-            return sizeof(uint8_t);
+            assert(max_len >= sizeof(uint32_t));
+            *((uint32_t*) val) = sx127x_get_bandwidth(dev);
+            return sizeof(uint32_t);
 
         case NETOPT_SPREADING_FACTOR:
             assert(max_len >= sizeof(uint8_t));
@@ -340,6 +382,11 @@ static int _get(netdev_t *netdev, netopt_t opt, void *val, size_t max_len)
             assert(max_len >= sizeof(uint8_t));
             *((uint8_t*) val) = sx127x_get_coding_rate(dev);
             return sizeof(uint8_t);
+
+        case NETOPT_BITRATE:
+            assert(max_len >= sizeof(uint32_t));
+            *((uint32_t*) val) = sx127x_get_bitrate(dev);
+            return sizeof(uint32_t);
 
         case NETOPT_MAX_PACKET_SIZE:
             assert(max_len >= sizeof(uint8_t));
@@ -365,6 +412,64 @@ static int _get(netdev_t *netdev, netopt_t opt, void *val, size_t max_len)
             assert(max_len >= sizeof(uint8_t));
             *((netopt_enable_t*) val) = sx127x_get_rx_single(dev) ? NETOPT_ENABLE : NETOPT_DISABLE;
             break;
+
+        case NETOPT_SYNC_LENGTH:
+            assert(max_len >= sizeof(uint8_t));
+            *((uint8_t*) val) = sx127x_get_syncword_length(dev);
+            return sizeof(uint8_t);
+
+        case NETOPT_SYNC_WORD:
+            return sx127x_get_syncword(dev, (uint8_t*)val, max_len);
+
+        case NETOPT_FDEV:
+            assert(max_len >= sizeof(uint32_t));
+            *((uint32_t*) val) = sx127x_get_tx_fdev(dev);
+            return sizeof(uint32_t);
+
+        case NETOPT_MOD_SHAPING:
+            assert(max_len >= sizeof(uint8_t));
+            *((uint8_t*) val) = sx127x_get_modulation_shaping(dev);
+            return sizeof(uint8_t);
+
+        case NETOPT_CCA_THRESHOLD:
+            assert(max_len >= sizeof(uint8_t));
+            *((uint8_t*) val) = sx127x_get_rssi_threshold(dev);
+            return sizeof(uint8_t);
+
+        case NETOPT_RSSI_SMOOTHING:
+            assert(max_len >= sizeof(uint8_t));
+            *((uint8_t*) val) = sx127x_get_rssi_smoothing(dev);
+            return sizeof(uint8_t);
+
+        case NETOPT_SYNC_ON:
+            assert(max_len >= sizeof(uint8_t));
+            *((uint8_t*) val) = sx127x_get_sync_on(dev);
+            return sizeof(uint8_t);
+
+        case NETOPT_PREAMBLE_DETECT_ON:
+            assert(max_len >= sizeof(uint8_t));
+            *((uint8_t*) val) = sx127x_get_preamble_detect_on(dev);
+            return sizeof(uint8_t);
+
+        case NETOPT_PREAMBLE_LENGTH:
+            assert(max_len >= sizeof(uint16_t));
+            *((uint16_t*) val) = sx127x_get_preamble_length(dev);
+            return sizeof(uint16_t);
+
+        case NETOPT_PREAMBLE_POLARITY:
+            assert(max_len >= sizeof(uint8_t));
+            *((uint8_t*) val) = sx127x_get_preamble_polarity(dev);
+            return sizeof(uint8_t);
+
+        case NETOPT_DC_FREE_SCHEME:
+            assert(max_len >= sizeof(uint8_t));
+            *((uint8_t*) val) = sx127x_get_dc_free(dev);
+            return sizeof(uint8_t);
+
+        case NETOPT_RSSI_VALUE:
+            assert(max_len >= sizeof(int16_t));
+            *((int16_t*) val) = sx127x_read_rssi(dev);
+            return sizeof(int16_t);
 
         default:
             break;
@@ -398,13 +503,8 @@ static int _set(netdev_t *netdev, netopt_t opt, const void *val, size_t len)
             return sizeof(uint32_t);
 
         case NETOPT_BANDWIDTH:
-            assert(len <= sizeof(uint8_t));
-            uint8_t bw = *((const uint8_t *)val);
-            if (bw < SX127X_BW_125_KHZ ||
-                bw > SX127X_BW_500_KHZ) {
-                res = -EINVAL;
-                break;
-            }
+            assert(len <= sizeof(uint32_t));
+            uint32_t bw = *((const uint32_t *)val);
             sx127x_set_bandwidth(dev, bw);
             return sizeof(uint8_t);
 
@@ -429,6 +529,11 @@ static int _set(netdev_t *netdev, netopt_t opt, const void *val, size_t len)
             }
             sx127x_set_coding_rate(dev, cr);
             return sizeof(uint8_t);
+
+        case NETOPT_BITRATE:
+            assert(len <= sizeof(uint32_t));
+            sx127x_set_bitrate(dev, *((const uint32_t*) val));
+            return sizeof(uint32_t);
 
         case NETOPT_MAX_PACKET_SIZE:
             assert(len <= sizeof(uint8_t));
@@ -480,10 +585,71 @@ static int _set(netdev_t *netdev, netopt_t opt, const void *val, size_t len)
             sx127x_set_preamble_length(dev, *((const uint16_t*) val));
             return sizeof(uint16_t);
 
+        case NETOPT_PREAMBLE_POLARITY:
+            assert(len <= sizeof(uint8_t));
+            sx127x_set_preamble_polarity(dev, *((const uint8_t*) val));
+            return sizeof(uint8_t);
+
+        case NETOPT_PREAMBLE_DETECT_ON:
+            assert(len <= sizeof(uint8_t));
+            sx127x_set_preamble_detect_on(dev, *((const uint8_t*) val));
+            return sizeof(uint8_t);
+
         case NETOPT_IQ_INVERT:
             assert(len <= sizeof(netopt_enable_t));
             sx127x_set_iq_invert(dev, *((const netopt_enable_t*) val) ? true : false);
             return sizeof(bool);
+
+        case NETOPT_SYNC_ON:
+            assert(len <= sizeof(uint8_t));
+            sx127x_set_sync_on(dev, *((const uint8_t*) val));
+            return sizeof(uint8_t);
+
+        case NETOPT_SYNC_LENGTH:
+            assert(len <= sizeof(uint8_t));
+            sx127x_set_syncword_length(dev, *((const uint8_t*) val));
+            return sizeof(uint8_t);
+
+        case NETOPT_SYNC_WORD:
+            sx127x_set_syncword(dev, (const uint8_t*)val, len);
+            return len;
+
+        case NETOPT_FDEV:
+            assert(len <= sizeof(uint32_t));
+            sx127x_set_tx_fdev(dev, *((const uint32_t*) val));
+            return sizeof(uint32_t);
+
+        case NETOPT_MOD_SHAPING:
+            assert(len <= sizeof(uint8_t));
+            sx127x_set_modulation_shaping(dev, *((const uint8_t*) val));
+            return sizeof(uint8_t);
+
+        case NETOPT_CCA_THRESHOLD:
+            assert(len <= sizeof(uint8_t));
+            sx127x_set_rssi_threshold(dev, *((const uint8_t*) val));
+            return sizeof(uint8_t);
+
+        case NETOPT_RSSI_SMOOTHING:
+            assert(len <= sizeof(uint8_t));
+            sx127x_set_rssi_smoothing(dev, *((const uint8_t*) val));
+            return sizeof(uint8_t);
+
+        case NETOPT_DC_FREE_SCHEME:
+            assert(len <= sizeof(uint8_t));
+            sx127x_set_dc_free(dev, *((const uint8_t*) val));
+            return sizeof(uint8_t);
+
+        case NETOPT_RX_START_IRQ:
+            return sx127x_set_option(dev, SX127X_OPT_TELL_RX_START, *((const bool *)val));
+
+        case NETOPT_RX_END_IRQ:
+            return sx127x_set_option(dev, SX127X_OPT_TELL_RX_END, *((const bool *)val));
+
+        case NETOPT_TX_START_IRQ:
+            return sx127x_set_option(dev, SX127X_OPT_TELL_TX_START, *((const bool *)val));
+
+        case NETOPT_TX_END_IRQ:
+            return sx127x_set_option(dev, SX127X_OPT_TELL_TX_END, *((const bool *)val));
 
         default:
             break;
@@ -568,6 +734,45 @@ static int _get_state(sx127x_t *dev, void *val)
     return sizeof(netopt_state_t);
 }
 
+static void fill_in_fifo(sx127x_t *dev)
+{
+    uint8_t remaining_bytes = dev->packet.length - dev->packet.pos;
+    uint8_t space_left = SX127X_FIFO_MAX_SIZE - dev->packet.fifothresh;
+
+    if (remaining_bytes == 0) // means that we need to ask the upper layer to refill the fifo
+    {
+        netdev_t *netdev = (netdev_t*) &dev->netdev;
+        netdev->event_callback(netdev, NETDEV_EVENT_TX_REFILL_NEEDED);
+
+        //update remaining_bytes
+        remaining_bytes = dev->packet.length - dev->packet.pos;
+        if (remaining_bytes == 0) // no new data, end of transmission
+        {
+            hw_gpio_set_edge_interrupt(dev->params.dio0_pin, GPIO_RISING_EDGE);
+            hw_gpio_enable_interrupt(dev->params.dio0_pin);
+            return;
+        }
+    }
+
+    if (remaining_bytes > space_left)
+    {
+        sx127x_write_fifo(dev, &dev->packet.buf[dev->packet.pos], space_left);
+        dev->packet.pos += space_left;
+
+        // clear the interrupt
+        hw_gpio_set_edge_interrupt(dev->params.dio1_pin, GPIO_FALLING_EDGE);
+        hw_gpio_enable_interrupt(dev->params.dio1_pin);
+    }
+    else
+    {
+        sx127x_write_fifo(dev, &dev->packet.buf[dev->packet.pos], remaining_bytes);
+        dev->packet.pos += remaining_bytes;
+
+        hw_gpio_set_edge_interrupt(dev->params.dio0_pin, GPIO_RISING_EDGE);
+        hw_gpio_enable_interrupt(dev->params.dio0_pin);
+    }
+}
+
 void _on_dio0_irq(void *arg)
 {
     sx127x_t *dev = (sx127x_t *) arg;
@@ -575,6 +780,7 @@ void _on_dio0_irq(void *arg)
 
     switch (dev->settings.state) {
         case SX127X_RF_RX_RUNNING:
+            sx127x_read_fifo(dev, dev->packet.buf, dev->packet.length);
             netdev->event_callback(netdev, NETDEV_EVENT_RX_COMPLETE);
             break;
         case SX127X_RF_TX_RUNNING:
@@ -584,9 +790,12 @@ void _on_dio0_irq(void *arg)
                     /* Clear IRQ */
                     sx127x_reg_write(dev, SX127X_REG_LR_IRQFLAGS,
                                      SX127X_RF_LORA_IRQFLAGS_TXDONE);
+                    break;
                 /* Intentional fall-through */
                 case SX127X_MODEM_FSK:
                 default:
+                    hw_gpio_disable_interrupt(dev->params.dio0_pin);
+                    sx127x_set_standby(dev);
                     sx127x_set_state(dev, SX127X_RF_IDLE);
                     netdev->event_callback(netdev, NETDEV_EVENT_TX_COMPLETE);
                     break;
@@ -611,7 +820,83 @@ void _on_dio1_irq(void *arg)
         case SX127X_RF_RX_RUNNING:
             switch (dev->settings.modem) {
                 case SX127X_MODEM_FSK:
-                    /* todo */
+                    hw_gpio_disable_interrupt(dev->params.dio1_pin);
+                    timer_cancel_event(&dev->_internal.rx_timeout_timer);
+
+                    if (dev->packet.length == 0 && dev->packet.pos == 0)
+                    {
+                        // For RX, the threshold is set to 4, so if the DIO1 interrupt occurs, it means that can read at least 4 bytes
+                        uint8_t rx_bytes = 0;
+                         while(!(sx127x_is_fifo_empty(dev)) && rx_bytes < 4)
+                        {
+                            dev->packet.buf[rx_bytes++] = sx127x_reg_read(dev, SX127X_REG_FIFO);
+                        }
+                        DEBUG("packet buf %i", rx_bytes);
+                        DEBUG_DATA(dev->packet.buf, rx_bytes);
+
+                        assert(rx_bytes == 4);
+
+                        //In unlimited length packet format, let the upper layer determine the length
+                        dev->packet.length = rx_bytes;
+                        netdev->event_callback(netdev, NETDEV_EVENT_RX_STARTED);
+
+                        DEBUG("RX Packet Length: %i ", dev->packet.length);
+
+                        dev->packet.pos = rx_bytes;
+                    }
+
+                    if (dev->packet.fifothresh)
+                    {
+                        sx127x_read_fifo(dev, &dev->packet.buf[dev->packet.pos], dev->packet.fifothresh);
+                        dev->packet.pos += dev->packet.fifothresh;
+                    }
+
+                    while(!(sx127x_is_fifo_empty(dev)) && (dev->packet.pos < dev->packet.length))
+                         dev->packet.buf[dev->packet.pos++] = sx127x_reg_read(dev, SX127X_REG_FIFO);
+
+                    uint8_t remaining_bytes = dev->packet.length - dev->packet.pos;
+                    DEBUG("read %i bytes, %i remaining, FLAGS2 %x \n", dev->packet.pos,
+                            remaining_bytes, sx127x_reg_read(dev, SX127X_REG_IRQFLAGS2));
+
+                    if (remaining_bytes == 0) {
+                        /*if (!(dev->settings.fsk.flags & SX127X_RX_CONTINUOUS_FLAG)) {
+                            sx127x_set_state(dev, SX127X_RF_IDLE);
+                        }*/
+                        netdev->event_callback(netdev, NETDEV_EVENT_RX_COMPLETE);
+
+                        // Restart the reception until upper layer decides to stop it
+                        dev->packet.fifothresh = 0;
+                        dev->packet.length = 0;
+                        dev->packet.pos = 0;
+
+                        sx127x_reg_write(dev, SX127X_REG_FIFOTHRESH, 0x83);
+                        sx127x_reg_write(dev, SX127X_REG_DIOMAPPING1, 0x0C);
+                        sx127x_reg_write(dev, SX127X_REG_PAYLOADLENGTH, 0x00);
+
+                        // Trigger a manual restart of the Receiver chain (no frequency change)
+                        sx127x_reg_write(dev, SX127X_REG_RXCONFIG, 0x4E);
+                        sx127x_flush_fifo(dev);
+
+                        // Seems that the SyncAddressMatch is not cleared after the flush, so set again the RX mode
+                        sx127x_set_op_mode(dev, SX127X_RF_OPMODE_RECEIVER);
+                        //DPRINT("Before enabling interrupt: FLAGS1 %x FLAGS2 %x\n", hw_radio_read_reg(REG_IRQFLAGS1), hw_radio_read_reg(REG_IRQFLAGS2));
+                        hw_gpio_set_edge_interrupt(dev->params.dio1_pin, GPIO_RISING_EDGE);
+                        hw_gpio_enable_interrupt(dev->params.dio1_pin);
+                        return;
+                    }
+
+                    //Trigger FifoLevel interrupt
+                    if (remaining_bytes > SX127X_FIFO_MAX_SIZE)
+                    {
+                        sx127x_reg_write(dev, SX127X_REG_FIFOTHRESH, 0x80 | (SX127X_FIFO_MID_SIZE - 1));
+                        dev->packet.fifothresh = SX127X_FIFO_MID_SIZE;
+                    } else {
+                        sx127x_reg_write(dev, SX127X_REG_FIFOTHRESH, 0x80 | (remaining_bytes - 1));
+                        dev->packet.fifothresh = remaining_bytes;
+                    }
+
+                    hw_gpio_set_edge_interrupt(dev->params.dio1_pin, GPIO_RISING_EDGE);
+                    hw_gpio_enable_interrupt(dev->params.dio1_pin);
                     break;
                 case SX127X_MODEM_LORA:
                     timer_cancel_event(&dev->_internal.rx_timeout_timer);
@@ -626,9 +911,21 @@ void _on_dio1_irq(void *arg)
             break;
         case SX127X_RF_TX_RUNNING:
             switch (dev->settings.modem) {
-                case SX127X_MODEM_FSK:
-                    /* todo */
-                    break;
+                case SX127X_MODEM_FSK: {
+                    uint8_t flags;
+
+                    //hw_gpio_disable_interrupt(SX127x_DIO1_PIN);
+
+                    flags = sx127x_reg_read(dev, SX127X_REG_IRQFLAGS2);
+                    // detect underflow
+                    if (flags & 0x08)
+                    {
+                        DEBUG("FlagsIRQ2: %x means that packet has been sent! ", flags);
+                        assert(false);
+                    }
+
+                    fill_in_fifo(dev);
+                } break;
                 case SX127X_MODEM_LORA:
                     break;
                 default:

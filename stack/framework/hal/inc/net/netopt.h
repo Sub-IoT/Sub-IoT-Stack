@@ -25,6 +25,8 @@
 #ifndef NET_NETOPT_H
 #define NET_NETOPT_H
 
+#include "platform_defs.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -34,7 +36,7 @@ extern "C" {
  *          network stack, e.g. by netdev and netapi
  */
 typedef enum {
-    NETOPT_CHANNEL,             /**< get/set channel as uint16_t in host
+    NETOPT_CHANNEL,             /**< get/set channel as uint32_t in host
                                  *   byte order */
     NETOPT_IS_CHANNEL_CLR,      /**< check if channel is clear */
     NETOPT_ADDRESS,             /**< get/set address in host byte order */
@@ -131,7 +133,7 @@ typedef enum {
     NETOPT_IPV6_SND_RTR_ADV,    /**< en/disable sending of IPv6 router
                                  *   advertisements or read the current state */
     NETOPT_TX_POWER,            /**< get/set the output power for radio
-                                 *   devices in dBm as int16_t in host byte
+                                 *   devices in dBm as int8_t in host byte
                                  *   order */
     NETOPT_MAX_PACKET_SIZE,     /**< get/set the maximum packet size a
                                  *   network module can handle as uint16_t
@@ -370,6 +372,70 @@ typedef enum {
      */
     NETOPT_PREAMBLE_LENGTH,
 
+#if defined(USE_NETDEV_SX127X)
+
+    /**
+     * @brief   Get/Set the preamble polarity as uint8_t in host byte order.
+     */
+    NETOPT_PREAMBLE_POLARITY,
+
+    /**
+     * @brief   Get/Set the Preamble detector enable flag as uint8_t in host byte order.
+     */
+    NETOPT_PREAMBLE_DETECT_ON,
+
+    /**
+     * @brief   Get/Set the SYNC enable flag as uint8_t in host byte order.
+     */
+    NETOPT_SYNC_ON,
+
+    /**
+     * @brief   Get/Set sync word length as uint16_t in host byte order.
+     */
+    NETOPT_SYNC_LENGTH,
+
+    /**
+     * @brief   Get/Set sync word in host byte order.
+     */
+    NETOPT_SYNC_WORD,
+
+    /**
+     * @brief   Get/Set frequency deviation as uint32_t in host byte order.
+     */
+    NETOPT_FDEV,
+
+    /**
+     * @brief   Get/Set the bitrate as uint32_t in host byte order.
+     */
+    NETOPT_BITRATE,
+
+    /**
+     * @brief   Get/Set the RSSI value as uint16_t in host byte order.
+     */
+    NETOPT_RSSI_VALUE,
+
+    /**
+     * @brief   Get/Set the RSSI smoothing value as uint8_t in host byte order.
+     */
+    NETOPT_RSSI_SMOOTHING,
+
+    /**
+     * @brief   Get/Set the modulation shaping as uint8_t in host byte order.
+     */
+    NETOPT_MOD_SHAPING,
+
+    /**
+     * @brief   Get/Set the CRC enable flag as uint8_t in host byte order.
+     */
+    NETOPT_CRC_ON,
+
+    /**
+     * @brief   Get/Set the DC-free encoding scheme as netopt_dc_free_t type
+     */
+    NETOPT_DC_FREE_SCHEME,
+
+#endif
+
     /**
      * @brief   Enable/disable integrity check (e.g CRC).
      */
@@ -412,7 +478,7 @@ typedef enum {
     NETOPT_DEVICE_MODE,
 
     /**
-     * @brief   Get/Set the radio modulation bandwidth as uint8_t.
+     * @brief   Get/Set the radio modulation bandwidth as uint32_t.
      */
     NETOPT_BANDWIDTH,
 
@@ -500,6 +566,16 @@ typedef enum {
     NETOPT_RF_TESTMODE_CTX_CW,      /**< carrier wave continuous tx mode */
     NETOPT_RF_TESTMODE_CTX_PRBS9,   /**< PRBS9 continuous tx mode */
 } netopt_rf_testmode_t;
+
+/**
+ * @brief   Option parameter to be used with @ref NETOPT_DC_FREE_SCHEME
+ */
+typedef enum {
+    NETOPT_DC_FREE_NONE = 0,         /**< No DC-FREE encoding/decoding */
+    NETOPT_DC_FREE_MANCHESTER,       /**< Manchester */
+    NETOPT_DC_FREE_WHITENING,        /**< PN9 whitening */
+} netopt_dc_free_t;
+
 
 /**
  * @brief   Get a string ptr corresponding to opt, for debugging

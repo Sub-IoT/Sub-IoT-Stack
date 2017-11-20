@@ -251,6 +251,11 @@ struct netdev_radio_rx_info {
 };
 
 /**
+ * @brief   Forward declaration for netdev_radio_rx_info struct
+ */
+typedef struct netdev_radio_rx_info netdev_radio_rx_info_t;
+
+/**
  * @brief   Forward declaration for netdev struct
  */
 typedef struct netdev netdev_t;
