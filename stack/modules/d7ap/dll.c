@@ -19,7 +19,7 @@
 
 #include "log.h"
 #include "dll.h"
-#include "hwradio.h"
+#include "phy.h"
 #include "packet_queue.h"
 #include "packet.h"
 #include "crc.h"
