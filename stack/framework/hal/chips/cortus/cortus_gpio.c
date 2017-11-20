@@ -46,13 +46,15 @@
 #define PORT_BASE(pin)  ((Gpio*)(pin & ~0x0F)) // the LSB byte is used to set the pin number
 
 // There is a limitation for using gpio interrupts. You can use gpio interrupts upto 16 pins in only gpio1 module(0 to 15).
-static gpio_inthandler_t gpio_callback[NUM_GPIOINT];
-
+static gpio_isr_ctx_t isr_ctx[NUM_GPIOINT];
 
 __LINK_C void __gpio_init()
 {
     // initialize interrupts[]
-    for(int i = 0; i<NUM_GPIOINT; i++) gpio_callback[i] = 0x00;
+    for (int i = 0; i<NUM_GPIOINT; i++) {
+        isr_ctx[i].cb = 0x00;
+        isr_ctx[i].arg = NULL;
+    }
 
     // enable interrupt for GPIO1
     irq[IRQ_GPIO1].ipl = 0;
@@ -62,7 +64,7 @@ __LINK_C void __gpio_init()
 
 __LINK_C error_t hw_gpio_configure_pin(pin_id_t pin_id, bool int_allowed, uint8_t mode, unsigned int out)
 {
-    if((int_allowed) && (gpio_callback[GPIO_PIN(pin_id)] != 0x00)) return EBUSY;
+    if((int_allowed) && (isr_ctx[GPIO_PIN(pin_id)].cb != 0x00)) return EBUSY;
 
     Gpio *TGpio =   (Gpio*) PORT_BASE(pin_id);
     TGpio->dir  &=  (0x0ffffffff ^ (1 << GPIO_PIN(pin_id)));
@@ -108,24 +110,22 @@ __LINK_C bool hw_gpio_get_in(pin_id_t pin_id)
 
 void interrupt_handler(IRQ_GPIO1)
 {
-    uint8_t event_mask = 0; // This is a dummy var for compatible outline of call function.
     uint32_t inreg, old_inreg, mask, i;
     Gpio *TGpio = (Gpio*) SFRADR_GPIO1;
     inreg       = TGpio->in;
     old_inreg   = TGpio->old_in;
     mask        = TGpio->mask;
-    pin_id_t pin_id;
 
-    //DPRINT ("INT in %02x old %02x", inreg, old_inreg);
+    start_atomic();
+    DPRINT ("INT in %02x old %02x", inreg, old_inreg);
 
     for(i=0; i<NUM_GPIOINT; i++)
     {
-        if((gpio_callback[i] != 0x00) && (mask & 0x01))
+        if((isr_ctx[i].cb != 0x00) && (mask & 0x01))
         {
             if( (inreg&0x01) != (old_inreg&0x01) )
             {
-                pin_id = PIN(SFRADR_GPIO1, i);
-                gpio_callback[i](pin_id, event_mask);
+                isr_ctx[i].cb(isr_ctx[i].arg);
                 break;
             }
         }
@@ -134,16 +134,21 @@ void interrupt_handler(IRQ_GPIO1)
         old_inreg   >>= 1;
         mask        >>= 1;
     }
+    end_atomic();
 }
 
-__LINK_C error_t hw_gpio_configure_interrupt(pin_id_t pin_id, gpio_inthandler_t callback, uint8_t event_mask)
+__LINK_C error_t hw_gpio_configure_interrupt(pin_id_t pin_id, uint8_t event_mask,
+                                             gpio_cb_t callback, void *arg)
 {
-    if((GPIO_PIN(pin_id) >= NUM_GPIOINT) || (gpio_callback[GPIO_PIN(pin_id)] != 0x00)) return EINVAL;
+    if((GPIO_PIN(pin_id) >= NUM_GPIOINT) || (isr_ctx[GPIO_PIN(pin_id)].cb!= 0x00)) return EINVAL;
    
     start_atomic();
     Gpio *TGpio        = (Gpio *) SFRADR_GPIO1;
-    gpio_callback[GPIO_PIN(pin_id)]   = callback;
-    TGpio->old_in           = TGpio->in;
+
+    /* set callback */
+    isr_ctx[GPIO_PIN(pin_id)].cb = callback;
+    isr_ctx[GPIO_PIN(pin_id)].arg = arg;
+    TGpio->old_in = TGpio->in;
 
     TGpio->edge = 0x1; // Clear all edges
     TGpio->level_sel |= (1<<GPIO_PIN(pin_id));// Select pin to interrupt

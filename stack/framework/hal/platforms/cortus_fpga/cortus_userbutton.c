@@ -41,8 +41,9 @@ typedef struct
 
 button_info_t buttons[PLATFORM_NUM_BUTTONS];
 
-static void button_callback(pin_id_t pin_id, uint8_t event_mask);
+static void button_callback(void* arg);
 static void button_task();
+
 __LINK_C void __ubutton_init()
 {
 	buttons[0].button_id = BUTTON0;
@@ -52,7 +53,7 @@ __LINK_C void __ubutton_init()
 		memset(buttons[i].callbacks, 0, sizeof(buttons[i].callbacks));
 		buttons[i].cur_callback_id = BUTTON_QUEUE_SIZE;
 		buttons[i].num_registered_callbacks = 0;
-		error_t err = hw_gpio_configure_interrupt(buttons[i].button_id, &button_callback, GPIO_FALLING_EDGE);
+		error_t err = hw_gpio_configure_interrupt(buttons[i].button_id, GPIO_FALLING_EDGE, &button_callback, &buttons[i].button_id);
 		assert(err == SUCCESS);
 	}
 	sched_register_task(&button_task);
@@ -130,8 +131,10 @@ __LINK_C error_t ubutton_deregister_callback(button_id_t button_id, ubutton_call
 	return SUCCESS;
 }
 
-static void button_callback(pin_id_t pin_id, uint8_t event_mask)
+static void button_callback(void* arg)
 {
+	pin_id_t pin_id = *(pin_id_t*)arg;
+
 	for(int i = 0; i < PLATFORM_NUM_BUTTONS;i++)
 	{
 		if(GPIO_PIN(buttons[i].button_id) == GPIO_PIN(pin_id))
