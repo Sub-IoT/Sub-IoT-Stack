@@ -20,6 +20,8 @@
 #define _SPI_H
 #include <machine/sfradr.h>
 
+#define SPI_COUNT 2
+
 typedef struct SPI
 {
     /* Transmit data to tx buffer */
@@ -67,9 +69,9 @@ typedef struct SPI
 } SPI;
 
 /***************  Bit definition for SPI_TX_STATUS register ******************/
-#define SPI_TX_SR_FIFO_NOT_FULL       1 /*!< space in the fifo */
-#define SPI_RX_SR_DATA_AVAILABLE      1 /*!< data available in fifo */
-#define SPI_BUS_ACTIVE                1 /*!< activity on spi bus */
+#define SPI_TX_SR_FIFO_NOT_FULL       0x01 /*!< space in the fifo - bit 0 of spi.tx_status*/
+#define SPI_RX_SR_DATA_AVAILABLE      0x01 /*!< data available in fifo - bit 0 of spi.rx_status*/
+#define SPI_BUS_ACTIVE                0x01 /*!< activity on spi bus - bit 0 of spi.bus_active*/
 
 #ifdef __APS__
 #define spi1 ((SPI *)SFRADR_SPI)
