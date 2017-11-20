@@ -31,7 +31,7 @@
 #include "d7atp.h"
 #include "dll.h"
 #include "d7anp.h"
-#include "hwradio.h"
+#include "phy.h"
 
 typedef enum {
     INITIAL_REQUEST,

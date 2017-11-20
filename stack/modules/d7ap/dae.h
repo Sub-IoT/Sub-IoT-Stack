@@ -24,7 +24,7 @@
 
 #include "stdint.h"
 
-#include "hwradio.h" // TODO for phy_channel_header_t in subband_t, refactor
+#include "phy.h" // TODO for phy_channel_header_t in subband_t, refactor
 
 #define SUBPROFILES_NB	4
 #define SUBBANDS_NB		8

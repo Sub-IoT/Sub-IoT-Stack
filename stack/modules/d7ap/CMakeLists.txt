@@ -87,6 +87,8 @@ ADD_LIBRARY(d7ap STATIC
     dll.c
     alp_cmd_handler.c
     alp_cmd_handler.h
+    phy.c
+    phy.h
 )
 
 GET_PROPERTY(__global_include_dirs GLOBAL PROPERTY GLOBAL_INCLUDE_DIRECTORIES)

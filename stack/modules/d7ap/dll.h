@@ -29,7 +29,7 @@
 #ifndef OSS_7_DLL_H
 #define OSS_7_DLL_H
 
-#include "hwradio.h"
+#include "phy.h"
 
 #include "d7anp.h"
 #include "dae.h"
