@@ -19,6 +19,7 @@
 
 #include <stddef.h>
 #include <string.h>
+#include <stdbool.h>
 #include <errno.h>
 
 #include "net/netopt.h"
@@ -26,10 +27,19 @@
 #include "sx127x_registers.h"
 #include "sx127x_internal.h"
 #include "sx127x_netdev.h"
+#include "sx127x_params.h"
 #include "sx127x.h"
-
-#define ENABLE_DEBUG (0)
+#include "hwradio.h"
+#include "hwsystem.h"
 #include "debug.h"
+
+#ifdef FRAMEWORK_LOG_ENABLED
+#include "log.h"
+    #define DEBUG(...) log_print_string(__VA_ARGS__)
+    #define DEBUG_DATA(...) log_print_data(__VA_ARGS__)
+#else
+    #define DEBUG(...)
+#endif
 
 /* Internal helper functions */
 static uint8_t _get_tx_len(const struct iovec *vector, unsigned count);
@@ -40,6 +50,8 @@ void _on_dio1_irq(void *arg);
 void _on_dio2_irq(void *arg);
 void _on_dio3_irq(void *arg);
 
+bool init_done = false;
+
 /* Netdev driver api functions */
 static int _send(netdev_t *netdev, const struct iovec *vector, unsigned count);
 static int _recv(netdev_t *netdev, void *buf, size_t len, void *info);
@@ -47,6 +59,10 @@ static int _init(netdev_t *netdev);
 static void _isr(netdev_t *netdev);
 static int _get(netdev_t *netdev, netopt_t opt, void *val, size_t max_len);
 static int _set(netdev_t *netdev, netopt_t opt, const void *val, size_t len);
+
+struct xcvr_handle {
+    sx127x_t sx127x;
+};
 
 const netdev_driver_t sx127x_driver = {
     .send = _send,
@@ -56,6 +72,8 @@ const netdev_driver_t sx127x_driver = {
     .get = _get,
     .set = _set,
 };
+
+xcvr_handle_t xcvr = { .sx127x.netdev.driver = &sx127x_driver};
 
 static int _send(netdev_t *netdev, const struct iovec *vector, unsigned count)
 {
@@ -69,6 +87,14 @@ static int _send(netdev_t *netdev, const struct iovec *vector, unsigned count)
 
     uint8_t size;
     size = _get_tx_len(vector, count);
+
+/* FIFO operations can not take place in Sleep mode
+     * So wake up the chip */
+    if (sx127x_get_op_mode(dev) == SX127X_RF_OPMODE_SLEEP) {
+        sx127x_set_standby(dev);
+        hw_busy_wait(SX127X_RADIO_WAKEUP_TIME); /* wait for chip wake up */
+    }
+
     switch (dev->settings.modem) {
         case SX127X_MODEM_FSK:
             /* todo */
@@ -81,42 +107,36 @@ static int _send(netdev_t *netdev, const struct iovec *vector, unsigned count)
             sx127x_reg_write(dev, SX127X_REG_LR_FIFOTXBASEADDR, 0x00);
             sx127x_reg_write(dev, SX127X_REG_LR_FIFOADDRPTR, 0x00);
 
-            /* FIFO operations can not take place in Sleep mode
-             * So wake up the chip */
-            if (sx127x_get_op_mode(dev) == SX127X_RF_OPMODE_SLEEP) {
-                sx127x_set_standby(dev);
-                xtimer_usleep(SX127X_RADIO_WAKEUP_TIME); /* wait for chip wake up */
-            }
-
             /* Write payload buffer */
             for (size_t i = 0;i < count ; i++) {
                 sx127x_write_fifo(dev, vector[i].iov_base, vector[i].iov_len);
             }
+
+            /* Enable TXDONE interrupt */
+            sx127x_reg_write(dev, SX127X_REG_LR_IRQFLAGSMASK,
+                             SX127X_RF_LORA_IRQFLAGS_RXTIMEOUT |
+                             SX127X_RF_LORA_IRQFLAGS_RXDONE |
+                             SX127X_RF_LORA_IRQFLAGS_PAYLOADCRCERROR |
+                             SX127X_RF_LORA_IRQFLAGS_VALIDHEADER |
+                             /* SX127X_RF_LORA_IRQFLAGS_TXDONE | */
+                             SX127X_RF_LORA_IRQFLAGS_CADDONE |
+                             SX127X_RF_LORA_IRQFLAGS_FHSSCHANGEDCHANNEL |
+                             SX127X_RF_LORA_IRQFLAGS_CADDETECTED);
+
+            /* Set TXDONE interrupt to the DIO0 line */
+            sx127x_reg_write(dev, SX127X_REG_DIOMAPPING1,
+                             (sx127x_reg_read(dev, SX127X_REG_DIOMAPPING1) &
+                              SX127X_RF_LORA_DIOMAPPING1_DIO0_MASK) |
+                             SX127X_RF_LORA_DIOMAPPING1_DIO0_01);
             break;
         default:
-            puts("sx127x_netdev, Unsupported modem");
+            DEBUG("sx127x_netdev, Unsupported modem");
             break;
     }
 
-    /* Enable TXDONE interrupt */
-    sx127x_reg_write(dev, SX127X_REG_LR_IRQFLAGSMASK,
-                     SX127X_RF_LORA_IRQFLAGS_RXTIMEOUT |
-                     SX127X_RF_LORA_IRQFLAGS_RXDONE |
-                     SX127X_RF_LORA_IRQFLAGS_PAYLOADCRCERROR |
-                     SX127X_RF_LORA_IRQFLAGS_VALIDHEADER |
-                     /* SX127X_RF_LORA_IRQFLAGS_TXDONE | */
-                     SX127X_RF_LORA_IRQFLAGS_CADDONE |
-                     SX127X_RF_LORA_IRQFLAGS_FHSSCHANGEDCHANNEL |
-                     SX127X_RF_LORA_IRQFLAGS_CADDETECTED);
-
-    /* Set TXDONE interrupt to the DIO0 line */
-    sx127x_reg_write(dev, SX127X_REG_DIOMAPPING1,
-                     (sx127x_reg_read(dev, SX127X_REG_DIOMAPPING1) &
-                      SX127X_RF_LORA_DIOMAPPING1_DIO0_MASK) |
-                     SX127X_RF_LORA_DIOMAPPING1_DIO0_01);
-
     /* Start TX timeout timer */
-    xtimer_set(&dev->_internal.tx_timeout_timer, dev->settings.lora.tx_timeout);
+    dev->_internal.tx_timeout_timer.next_event = dev->settings.lora.tx_timeout; // TODO convert timeout in timer_tick
+    timer_add_event(&dev->_internal.tx_timeout_timer);
 
     /* Put chip into transfer mode */
     sx127x_set_state(dev, SX127X_RF_TX_RUNNING);
@@ -149,7 +169,7 @@ static int _recv(netdev_t *netdev, void *buf, size_t len, void *info)
                     sx127x_set_state(dev, SX127X_RF_IDLE);
                 }
 
-                xtimer_remove(&dev->_internal.rx_timeout_timer);
+                timer_cancel_event(&dev->_internal.rx_timeout_timer);
                 netdev->event_callback(netdev, NETDEV_EVENT_CRC_ERROR);
                 return -EBADMSG;
             }
@@ -210,7 +230,7 @@ static int _recv(netdev_t *netdev, void *buf, size_t len, void *info)
                 sx127x_set_state(dev, SX127X_RF_IDLE);
             }
 
-            xtimer_remove(&dev->_internal.rx_timeout_timer);
+            timer_cancel_event(&dev->_internal.rx_timeout_timer);
 
             /* Read the last packet from FIFO */
             uint8_t last_rx_addr = sx127x_reg_read(dev, SX127X_REG_LR_FIFORXCURRENTADDR);
@@ -228,6 +248,9 @@ static int _init(netdev_t *netdev)
 {
     sx127x_t *sx127x = (sx127x_t*) netdev;
 
+    if (init_done)
+        return 0;
+
     sx127x->irq = 0;
     sx127x_radio_settings_t settings;
     settings.channel = SX127X_CHANNEL_DEFAULT;
@@ -235,6 +258,7 @@ static int _init(netdev_t *netdev)
     settings.state = SX127X_RF_IDLE;
 
     sx127x->settings = settings;
+    memcpy(&sx127x->params, sx127x_params, sizeof(sx127x_params_t));
 
     /* Launch initialization of driver and device */
     DEBUG("init_radio: initializing driver...\n");
@@ -245,6 +269,7 @@ static int _init(netdev_t *netdev)
     sx127x_set_sleep(sx127x);
 
     DEBUG("init_radio: sx127x initialization done\n");
+    init_done = true;
 
     return 0;
 }
@@ -553,7 +578,7 @@ void _on_dio0_irq(void *arg)
             netdev->event_callback(netdev, NETDEV_EVENT_RX_COMPLETE);
             break;
         case SX127X_RF_TX_RUNNING:
-            xtimer_remove(&dev->_internal.tx_timeout_timer);
+            timer_cancel_event(&dev->_internal.tx_timeout_timer);
             switch (dev->settings.modem) {
                 case SX127X_MODEM_LORA:
                     /* Clear IRQ */
@@ -568,10 +593,10 @@ void _on_dio0_irq(void *arg)
             }
             break;
         case SX127X_RF_IDLE:
-            printf("sx127x_on_dio0: IDLE state\n");
+            DEBUG("sx127x_on_dio0: IDLE state\n");
             break;
         default:
-            printf("sx127x_on_dio0: Unknown state [%d]\n", dev->settings.state);
+            DEBUG("sx127x_on_dio0: Unknown state [%d]\n", dev->settings.state);
             break;
     }
 }
@@ -589,7 +614,7 @@ void _on_dio1_irq(void *arg)
                     /* todo */
                     break;
                 case SX127X_MODEM_LORA:
-                    xtimer_remove(&dev->_internal.rx_timeout_timer);
+                    timer_cancel_event(&dev->_internal.rx_timeout_timer);
                     /*  Clear Irq */
                     sx127x_reg_write(dev, SX127X_REG_LR_IRQFLAGS, SX127X_RF_LORA_IRQFLAGS_RXTIMEOUT);
                     sx127x_set_state(dev, SX127X_RF_IDLE);
@@ -611,7 +636,7 @@ void _on_dio1_irq(void *arg)
             }
             break;
         default:
-            puts("sx127x_on_dio1: Unknown state");
+            DEBUG("sx127x_on_dio1: Unknown state");
             break;
     }
 }

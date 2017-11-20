@@ -29,9 +29,15 @@
 #include "sx127x.h"
 #include "sx127x_registers.h"
 #include "sx127x_internal.h"
-
-#define ENABLE_DEBUG (0)
+#include "platform.h"
 #include "debug.h"
+
+#ifdef FRAMEWORK_LOG_ENABLED
+#include "log.h"
+    #define DEBUG(...) log_print_string(__VA_ARGS__)
+#else
+    #define DEBUG(...)
+#endif
 
 
 uint8_t sx127x_get_state(const sx127x_t *dev)
@@ -199,8 +205,8 @@ void sx127x_set_sleep(sx127x_t *dev)
     DEBUG("[DEBUG] Set sleep\n");
 
     /* Disable running timers */
-    xtimer_remove(&dev->_internal.tx_timeout_timer);
-    xtimer_remove(&dev->_internal.rx_timeout_timer);
+    timer_cancel_event(&dev->_internal.tx_timeout_timer);
+    timer_cancel_event(&dev->_internal.rx_timeout_timer);
 
     /* Put chip into sleep */
     sx127x_set_op_mode(dev, SX127X_RF_OPMODE_SLEEP);
@@ -212,8 +218,13 @@ void sx127x_set_standby(sx127x_t *dev)
     DEBUG("[DEBUG] Set standby\n");
 
     /* Disable running timers */
-    xtimer_remove(&dev->_internal.tx_timeout_timer);
-    xtimer_remove(&dev->_internal.rx_timeout_timer);
+    timer_cancel_event(&dev->_internal.tx_timeout_timer);
+    timer_cancel_event(&dev->_internal.rx_timeout_timer);
+
+    dev->options = 0; // clear the options
+     /* Disable the interrupts */
+    hw_gpio_disable_interrupt(dev->params.dio0_pin);
+    hw_gpio_disable_interrupt(dev->params.dio1_pin);
 
     sx127x_set_op_mode(dev, SX127X_RF_OPMODE_STANDBY);
     sx127x_set_state(dev,  SX127X_RF_IDLE);
@@ -308,8 +319,8 @@ void sx127x_set_rx(sx127x_t *dev)
 
     sx127x_set_state(dev, SX127X_RF_RX_RUNNING);
     if (dev->settings.window_timeout != 0) {
-        xtimer_set(&(dev->_internal.rx_timeout_timer),
-                   dev->settings.window_timeout);
+        dev->_internal.rx_timeout_timer.next_event = dev->settings.window_timeout; // TODO convert timeout in timer_tick
+        timer_add_event(&dev->_internal.rx_timeout_timer);
     }
 
     if (dev->settings.lora.flags & SX127X_RX_CONTINUOUS_FLAG) {
@@ -371,8 +382,8 @@ void sx127x_set_tx(sx127x_t *dev)
 
     sx127x_set_state(dev, SX127X_RF_RX_RUNNING);
     if (dev->settings.window_timeout != 0) {
-        xtimer_set(&(dev->_internal.tx_timeout_timer),
-                   dev->settings.window_timeout);
+        dev->_internal.tx_timeout_timer.next_event = dev->settings.window_timeout; // TODO convert timeout in timer_tick
+        timer_add_event(&dev->_internal.tx_timeout_timer);
     }
     sx127x_set_op_mode(dev, SX127X_RF_OPMODE_TRANSMITTER );
 }
