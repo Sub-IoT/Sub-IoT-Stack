@@ -237,6 +237,7 @@ typedef enum {
     NETDEV_EVENT_CRC_ERROR,                 /**< wrong CRC */
     NETDEV_EVENT_FHSS_CHANGE_CHANNEL,       /**< channel changed */
     NETDEV_EVENT_CAD_DONE,                  /**< channel activity detection done */
+    NETDEV_EVENT_TX_REFILL_NEEDED,          /**< new data needed to transmit without discontinuity */
     /* expand this list if needed */
 } netdev_event_t;
 

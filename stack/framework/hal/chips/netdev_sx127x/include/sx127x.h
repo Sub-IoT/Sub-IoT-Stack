@@ -134,7 +134,9 @@ extern "C" {
                                                  *   start */
 #define SX127X_OPT_TELL_RX_END      (0x08)    /**< notify MAC layer on RX
                                                  *   finished */
-
+#define SX127X_OPT_TELL_TX_REFILL   (0x10)    /**< notify MAC layer when TX
+                                                 *   needs to be refilled */
+#define SX127X_OPT_PRELOADING       (0x20)    /**< preloading enabled */
 /** @} */
 
 /**
