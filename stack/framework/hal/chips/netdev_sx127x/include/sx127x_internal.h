@@ -59,6 +59,15 @@ bool sx127x_test(const sx127x_t *dev);
 void sx127x_reg_write(const sx127x_t *dev, uint8_t addr, uint8_t data);
 
 /**
+ * @brief   Writes the radio register at specified address.
+ *
+ * @param[in] dev                      The sx127x device structure pointer
+ * @param[in] addr                     Register address
+ * @param[in] data                     New uint16_t register value
+ */
+void sx127x_reg_write_u16(const sx127x_t *dev, uint8_t addr, uint16_t data);
+
+/**
  * @brief   Reads the radio register at specified address.
  *
  * @param[in] dev                      The sx127x device structure pointer
@@ -67,6 +76,16 @@ void sx127x_reg_write(const sx127x_t *dev, uint8_t addr, uint8_t data);
  * @return	Register value
  */
 uint8_t sx127x_reg_read(const sx127x_t *dev, uint8_t addr);
+
+/**
+ * @brief   Reads the radio register at specified address.
+ *
+ * @param[in] dev                      The sx127x device structure pointer
+ * @param[in] addr                     Register address
+ *
+ * @return	Register uint16_t value
+ */
+uint16_t sx127x_reg_read_u16(const sx127x_t *dev, uint8_t addr);
 
 /**
  * @brief   Writes multiple radio registers starting at address (burst-mode).

@@ -25,15 +25,20 @@
 #include <stdbool.h>
 #include <inttypes.h>
 
-#include "irq.h"
+#include "hwatomic.h"
+#include "hwsystem.h"
 
 #include "sx127x.h"
 #include "sx127x_registers.h"
 #include "sx127x_internal.h"
 #include "sx127x_params.h"
 
-#define ENABLE_DEBUG (0)
-#include "debug.h"
+#ifdef FRAMEWORK_LOG_ENABLED
+#include "log.h"
+    #define DEBUG(...) log_print_string(__VA_ARGS__)
+#else
+    #define DEBUG(...)
+#endif
 
 
 #define SX127X_SPI_SPEED    (SPI_CLK_1MHZ)
@@ -69,6 +74,22 @@ void sx127x_reg_write(const sx127x_t *dev, uint8_t addr, uint8_t data)
     sx127x_reg_write_burst(dev, addr, &data, 1);
 }
 
+void sx127x_reg_write_u16(const sx127x_t *dev, uint8_t addr, uint16_t value)
+{
+    void *sx127x_spi = dev->_internal.spi_slave;
+
+    start_atomic();
+
+    spi_select(sx127x_spi);
+    spi_exchange_byte(sx127x_spi, addr | 0x80); // send address with bit 8 high to signal a write operation
+    spi_exchange_byte(sx127x_spi, (value >> 8) & 0xff);
+    spi_exchange_byte(sx127x_spi, value & 0xff);
+    spi_deselect(sx127x_spi);
+
+    end_atomic();
+}
+
+
 uint8_t sx127x_reg_read(const sx127x_t *dev, uint8_t addr)
 {
     uint8_t data;
@@ -78,38 +99,51 @@ uint8_t sx127x_reg_read(const sx127x_t *dev, uint8_t addr)
     return data;
 }
 
+uint16_t sx127x_reg_read_u16(const sx127x_t *dev, uint8_t addr)
+{
+    void *sx127x_spi = dev->_internal.spi_slave;
+
+    start_atomic();
+
+    spi_select(sx127x_spi);
+    spi_exchange_byte(sx127x_spi, addr & 0x7F); // send address with bit 7 low to signal a read operation
+    uint16_t value = spi_exchange_byte(sx127x_spi, 0x00); // get the response
+    value <<= 8;
+    value += spi_exchange_byte(sx127x_spi, 0x00);
+    spi_deselect(sx127x_spi);
+
+    end_atomic();
+    return value;
+}
+
 void sx127x_reg_write_burst(const sx127x_t *dev, uint8_t addr, uint8_t *buffer,
                             uint8_t size)
 {
-    unsigned int cpsr;
+    void *sx127x_spi = dev->_internal.spi_slave;
 
-    spi_acquire(dev->params.spi, SPI_CS_UNDEF, SX127X_SPI_MODE, SX127X_SPI_SPEED);
-    cpsr = irq_disable();
+    start_atomic();
 
-    gpio_clear(dev->params.nss_pin);
-    spi_transfer_regs(dev->params.spi, SPI_CS_UNDEF, addr | 0x80, (char *) buffer, NULL, size);
-    gpio_set(dev->params.nss_pin);
+    spi_select(sx127x_spi);
+    spi_exchange_byte(sx127x_spi, addr | 0x80);
+    spi_exchange_bytes(sx127x_spi, buffer, NULL, size);
+    spi_deselect(sx127x_spi);
 
-    irq_restore(cpsr);
-    spi_release(dev->params.spi);
+    end_atomic();
 }
 
 void sx127x_reg_read_burst(const sx127x_t *dev, uint8_t addr, uint8_t *buffer,
                            uint8_t size)
 {
-    unsigned int cpsr;
+	void *sx127x_spi = dev->_internal.spi_slave;
 
-    cpsr = irq_disable();
+    start_atomic();
 
-    spi_acquire(dev->params.spi, SPI_CS_UNDEF, SX127X_SPI_MODE, SX127X_SPI_SPEED);
+    spi_select(sx127x_spi);
+    spi_exchange_byte(sx127x_spi, addr);
+    spi_exchange_bytes(sx127x_spi, NULL, buffer, size);
+    spi_deselect(sx127x_spi);
 
-    gpio_clear(dev->params.nss_pin);
-    spi_transfer_regs(dev->params.spi, SPI_CS_UNDEF, addr & 0x7F, NULL, (char *) buffer, size);
-    gpio_set(dev->params.nss_pin);
-
-    spi_release(dev->params.spi);
-
-    irq_restore(cpsr);
+    end_atomic();
 }
 
 void sx127x_write_fifo(const sx127x_t *dev, uint8_t *buffer, uint8_t size)
@@ -126,6 +160,8 @@ void sx127x_rx_chain_calibration(sx127x_t *dev)
 {
     uint8_t reg_pa_config_init_val;
     uint32_t initial_freq;
+
+    DEBUG("RX calibration");
 
     /* Save context */
     reg_pa_config_init_val = sx127x_reg_read(dev, SX127X_REG_PACONFIG);

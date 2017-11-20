@@ -60,10 +60,10 @@
 #ifndef SX127X_H
 #define SX127X_H
 
-#include "xtimer.h"
+#include "timer.h"
 #include "net/netdev.h"
-#include "periph/gpio.h"
-#include "periph/spi.h"
+#include "hwgpio.h"
+#include "hwspi.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -234,10 +234,11 @@ typedef struct {
  */
 typedef struct {
     /* Data that will be passed to events handler in application */
-    xtimer_t tx_timeout_timer;         /**< TX operation timeout timer */
-    xtimer_t rx_timeout_timer;         /**< RX operation timeout timer */
+    timer_event tx_timeout_timer;         /**< TX operation timeout timer */
+    timer_event rx_timeout_timer;         /**< RX operation timeout timer */
     uint32_t last_channel;             /**< Last channel in frequency hopping sequence */
     bool is_last_cad_success;          /**< Sign of success of last CAD operation (activity detected) */
+    void* spi_slave;          /**< SPI slave */
 } sx127x_internal_t;
 
 /**
@@ -245,14 +246,14 @@ typedef struct {
  */
 typedef struct {
     spi_t spi;                         /**< SPI device */
-    gpio_t nss_pin;                    /**< SPI NSS pin */
-    gpio_t reset_pin;                  /**< Reset pin */
-    gpio_t dio0_pin;                   /**< Interrupt line DIO0 (Tx done) */
-    gpio_t dio1_pin;                   /**< Interrupt line DIO1 (Rx timeout) */
-    gpio_t dio2_pin;                   /**< Interrupt line DIO2 (FHSS channel change) */
-    gpio_t dio3_pin;                   /**< Interrupt line DIO3 (CAD done) */
-    gpio_t dio4_pin;                   /**< Interrupt line DIO4 (not used) */
-    gpio_t dio5_pin;                   /**< Interrupt line DIO5 (not used) */
+    pin_id_t nss_pin;                    /**< SPI NSS pin */
+    pin_id_t reset_pin;                  /**< Reset pin */
+    pin_id_t dio0_pin;                   /**< Interrupt line DIO0 (Tx done) */
+    pin_id_t dio1_pin;                   /**< Interrupt line DIO1 (Rx timeout) */
+    pin_id_t dio2_pin;                   /**< Interrupt line DIO2 (FHSS channel change) */
+    pin_id_t dio3_pin;                   /**< Interrupt line DIO3 (CAD done) */
+    pin_id_t dio4_pin;                   /**< Interrupt line DIO4 (not used) */
+    pin_id_t dio5_pin;                   /**< Interrupt line DIO5 (not used) */
 } sx127x_params_t;
 
 /**

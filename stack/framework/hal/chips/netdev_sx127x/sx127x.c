@@ -24,19 +24,24 @@
 #include <string.h>
 #include <stdlib.h>
 
-#include "xtimer.h"
-#include "thread.h"
+#include "timer.h"
 
-#include "periph/gpio.h"
-#include "periph/spi.h"
+#include "hwgpio.h"
+#include "hwspi.h"
+#include "hwsystem.h"
 
 #include "sx127x.h"
 #include "sx127x_internal.h"
 #include "sx127x_registers.h"
 #include "sx127x_netdev.h"
+#include "platform.h"
 
-#define ENABLE_DEBUG (0)
-#include "debug.h"
+#ifdef FRAMEWORK_LOG_ENABLED
+#include "log.h"
+    #define DEBUG(...) log_print_string(__VA_ARGS__)
+#else
+    #define DEBUG(...)
+#endif
 
 /* Internal functions */
 static void _init_isrs(sx127x_t *dev);
@@ -61,28 +66,8 @@ void sx127x_setup(sx127x_t *dev, const sx127x_params_t *params)
 
 void sx127x_reset(const sx127x_t *dev)
 {
-    /*
-     * This reset scheme complies with 7.2 chapter of the SX1272/1276 datasheet
-     * See http://www.semtech.com/images/datasheet/sx1276.pdf for SX1276
-     * See http://www.semtech.com/images/datasheet/sx1272.pdf for SX1272
-     *
-     * 1. Set NReset pin to LOW for at least 100 us
-     * 2. Set NReset in Hi-Z state
-     * 3. Wait at least 5 milliseconds
-     */
-    gpio_init(dev->params.reset_pin, GPIO_OUT);
-
-    /* Set reset pin to 0 */
-    gpio_clear(dev->params.reset_pin);
-
-    /* Wait 1 ms */
-    xtimer_usleep(1000);
-
-    /* Put reset pin in High-Z */
-    gpio_init(dev->params.reset_pin, GPIO_IN);
-
-    /* Wait 10 ms */
-    xtimer_usleep(1000 * 10);
+    // this function is implemented in platform_main.c
+    // TODO expose and invoke the platform API
 }
 
 int sx127x_init(sx127x_t *dev)
@@ -99,10 +84,11 @@ int sx127x_init(sx127x_t *dev)
     }
 
     _init_timers(dev);
-    xtimer_usleep(1000); /* wait 1 millisecond */
+     hw_busy_wait(1000); /* wait 1 millisecond */
 
+#ifdef PLATFORM_SX127X_USE_RESET_PIN
     sx127x_reset(dev);
-
+#endif
     sx127x_rx_chain_calibration(dev);
     sx127x_set_op_mode(dev, SX127X_RF_OPMODE_SLEEP);
 
@@ -153,7 +139,7 @@ uint32_t sx127x_random(sx127x_t *dev)
     sx127x_set_op_mode(dev, SX127X_RF_OPMODE_RECEIVER);
 
     for (unsigned i = 0; i < 32; i++) {
-        xtimer_usleep(1000); /* wait for the chaos */
+        hw_busy_wait(1000); /* wait for the chaos */
 
         /* Non-filtered RSSI value reading. Only takes the LSB value */
         rnd |= ((uint32_t) sx127x_reg_read(dev, SX127X_REG_LR_RSSIWIDEBAND) & 0x01) << i;
@@ -203,19 +189,20 @@ static void sx127x_on_dio3_isr(void *arg)
 /* Internal event handlers */
 static void _init_isrs(sx127x_t *dev)
 {
-    if (gpio_init_int(dev->params.dio0_pin, GPIO_IN, GPIO_RISING, sx127x_on_dio0_isr, dev) < 0) {
+
+    if (hw_gpio_configure_interrupt(dev->params.dio0_pin, GPIO_RISING_EDGE, &sx127x_on_dio0_isr, dev) < 0){
         DEBUG("Error: cannot initialize DIO0 pin\n");
     }
 
-    if (gpio_init_int(dev->params.dio1_pin, GPIO_IN, GPIO_RISING, sx127x_on_dio1_isr, dev) < 0) {
+    if (hw_gpio_configure_interrupt(dev->params.dio1_pin, GPIO_RISING_EDGE, &sx127x_on_dio1_isr, dev) < 0){
         DEBUG("Error: cannot initialize DIO1 pin\n");
     }
 
-    if (gpio_init_int(dev->params.dio2_pin, GPIO_IN, GPIO_RISING, sx127x_on_dio2_isr, dev) < 0) {
+    if (hw_gpio_configure_interrupt(dev->params.dio2_pin, GPIO_RISING_EDGE, &sx127x_on_dio2_isr, dev) < 0){
         DEBUG("Error: cannot initialize DIO2 pin\n");
     }
 
-    if (gpio_init_int(dev->params.dio3_pin, GPIO_IN, GPIO_RISING, sx127x_on_dio3_isr, dev) < 0) {
+    if (hw_gpio_configure_interrupt(dev->params.dio3_pin, GPIO_RISING_EDGE, &sx127x_on_dio3_isr, dev) < 0){
         DEBUG("Error: cannot initialize DIO3 pin\n");
     }
 }
@@ -236,11 +223,13 @@ static void _on_rx_timeout(void *arg)
 
 static void _init_timers(sx127x_t *dev)
 {
-    dev->_internal.tx_timeout_timer.arg = dev;
-    dev->_internal.tx_timeout_timer.callback = _on_tx_timeout;
+    dev->_internal.tx_timeout_timer.f = _on_tx_timeout;
+    dev->_internal.tx_timeout_timer.priority = MAX_PRIORITY;
+    sched_register_task(&_on_tx_timeout, dev);
 
-    dev->_internal.rx_timeout_timer.arg = dev;
-    dev->_internal.rx_timeout_timer.callback = _on_rx_timeout;
+    dev->_internal.rx_timeout_timer.f = _on_rx_timeout;
+    dev->_internal.rx_timeout_timer.priority = MAX_PRIORITY;
+    sched_register_task(&_on_rx_timeout, dev);
 }
 
 static int _init_peripherals(sx127x_t *dev)
@@ -248,22 +237,21 @@ static int _init_peripherals(sx127x_t *dev)
     int res;
 
     /* Setup SPI for SX127X */
-    res = spi_init_cs(dev->params.spi, dev->params.nss_pin);
+    spi_handle_t* spi_handle = spi_init(dev->params.spi, SX127x_SPI_BAUDRATE, 8, true);
 
-    if (res != SPI_OK) {
+    if (spi_handle == NULL) {
         DEBUG("sx127x: error initializing SPI_%i device (code %i)\n",
                   dev->params.spi, res);
         return 0;
     }
 
-    res = gpio_init(dev->params.nss_pin, GPIO_OUT);
-    if (res < 0) {
-        DEBUG("sx127x: error initializing GPIO_%ld as CS line (code %i)\n",
-                  (long)dev->params.nss_pin, res);
+    spi_slave_handle_t* sx127x_spi = spi_init_slave(spi_handle, dev->params.nss_pin, true);
+    if (sx127x_spi == NULL) {
+        DEBUG("sx127x: error initializing GPIO_%ld as CS line \n",
+                  (long)dev->params.nss_pin);
         return 0;
     }
-
-    gpio_set(dev->params.nss_pin);
+    dev->_internal.spi_slave = sx127x_spi;
 
     DEBUG("sx127x: peripherals initialized with success\n");
     return 1;

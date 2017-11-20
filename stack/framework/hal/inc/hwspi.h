@@ -35,6 +35,16 @@
 #include "types.h"
 #include "link_c.h"
 
+/**
+ * @brief   Default SPI device access macro
+ */
+#ifndef SPI_DEV
+#define SPI_DEV(x)      (x)
+#endif
+
+// SPI device
+typedef uint8_t spi_t;
+
 // expose spi_handles with unknown internals
 typedef struct spi_handle spi_handle_t;
 typedef struct spi_slave_handle spi_slave_handle_t;
