@@ -200,6 +200,16 @@ typedef enum {
     NETOPT_TX_END_IRQ,
 
     /**
+     * @brief en/disable the interrupt to refill the FIFO for continuous transmission.
+     *
+     * This interrupt is triggered when it's time to refill the FIFO with a
+     * subsequent packet for continuous transmission.
+     *
+     * @note not all transceivers may support this interrupt
+     */
+    NETOPT_TX_REFILL_IRQ,
+
+    /**
      * @brief Check automatically before sending if the channel is clear.
      *
      * This may be a hardware feature of the given transceiver, or might be

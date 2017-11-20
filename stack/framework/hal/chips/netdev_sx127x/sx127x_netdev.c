@@ -80,10 +80,23 @@ static int _send(netdev_t *netdev, const struct iovec *vector, unsigned count)
     sx127x_t *dev = (sx127x_t*) netdev;
     uint8_t size = vector[0].iov_len; // only one vector is considered
 
-    if (sx127x_get_state(dev) == SX127X_RF_TX_RUNNING) {
-        DEBUG("[WARNING] Cannot send packet: radio already in transmitting "
-              "state.\n");
-        return -ENOTSUP;
+    if (sx127x_get_state(dev) == SX127X_RF_TX_RUNNING)
+    {
+        // Check if refill is expected
+        if (dev->options & SX127X_OPT_TELL_TX_REFILL)
+        {
+            /* refill the payload buffer */
+            memcpy((void*)dev->packet.buf, vector[0].iov_base,  size);
+            dev->packet.pos = 0;
+            dev->packet.length = size;
+            return 0;
+        }
+        else
+        {
+            DEBUG("[WARNING] Cannot send packet: radio already in transmitting "
+                  "state.\n");
+            return -ENOTSUP;
+        }
     }
 
     /* FIFO operations can not take place in Sleep mode
@@ -119,8 +132,18 @@ static int _send(netdev_t *netdev, const struct iovec *vector, unsigned count)
             {
                 sx127x_write_fifo(dev, vector[0].iov_base, size);
                 dev->packet.pos = size;
-                hw_gpio_set_edge_interrupt(dev->params.dio0_pin, GPIO_RISING_EDGE);
-                hw_gpio_enable_interrupt(dev->params.dio0_pin);
+                if (dev->options & SX127X_OPT_TELL_TX_REFILL) // we expect to refill the FIFO with subsequent data
+                {
+                    sx127x_reg_write(dev, SX127X_REG_FIFOTHRESH, 0x81); // FIFO level interrupt if under 2 bytes
+                    dev->packet.fifothresh = 2;
+                    hw_gpio_set_edge_interrupt(dev->params.dio1_pin, GPIO_FALLING_EDGE);
+                    hw_gpio_enable_interrupt(dev->params.dio1_pin);
+                }
+                else
+                {
+                    hw_gpio_set_edge_interrupt(dev->params.dio0_pin, GPIO_RISING_EDGE);
+                    hw_gpio_enable_interrupt(dev->params.dio0_pin);
+                }
             }
 
             sx127x_set_packet_handler_enabled(dev, true);
@@ -160,13 +183,16 @@ static int _send(netdev_t *netdev, const struct iovec *vector, unsigned count)
             break;
     }
 
-    /* Start TX timeout timer */
-    dev->_internal.tx_timeout_timer.next_event = dev->settings.lora.tx_timeout; // TODO convert timeout in timer_tick
-    //timer_add_event(&dev->_internal.tx_timeout_timer);
+    if (!(dev->options & SX127X_OPT_PRELOADING))
+    {
+        /* Start TX timeout timer */
+        dev->_internal.tx_timeout_timer.next_event = dev->settings.lora.tx_timeout; // TODO convert timeout in timer_tick
+        //timer_add_event(&dev->_internal.tx_timeout_timer);
 
-    /* Put chip into transfer mode */
-    sx127x_set_state(dev, SX127X_RF_TX_RUNNING);
-    sx127x_set_op_mode(dev, SX127X_RF_OPMODE_TRANSMITTER);
+        /* Put chip into transfer mode */
+        sx127x_set_state(dev, SX127X_RF_TX_RUNNING);
+        sx127x_set_op_mode(dev, SX127X_RF_OPMODE_TRANSMITTER);
+    }
 
     return 0;
 }
@@ -471,6 +497,14 @@ static int _get(netdev_t *netdev, netopt_t opt, void *val, size_t max_len)
             *((int16_t*) val) = sx127x_read_rssi(dev);
             return sizeof(int16_t);
 
+        case NETOPT_PRELOADING:
+            if (dev->options & SX127X_OPT_PRELOADING) {
+                *((netopt_enable_t *)val) = NETOPT_ENABLE;
+            }
+            else {
+                *((netopt_enable_t *)val) = NETOPT_DISABLE;
+            }
+            return sizeof(netopt_enable_t);
         default:
             break;
     }
@@ -651,6 +685,11 @@ static int _set(netdev_t *netdev, netopt_t opt, const void *val, size_t len)
         case NETOPT_TX_END_IRQ:
             return sx127x_set_option(dev, SX127X_OPT_TELL_TX_END, *((const bool *)val));
 
+        case NETOPT_TX_REFILL_IRQ:
+            return sx127x_set_option(dev, SX127X_OPT_TELL_TX_REFILL, *((const bool *)val));
+
+        case NETOPT_PRELOADING:
+            return sx127x_set_option(dev, SX127X_OPT_PRELOADING, *((const bool *)val));
         default:
             break;
     }
@@ -768,8 +807,16 @@ static void fill_in_fifo(sx127x_t *dev)
         sx127x_write_fifo(dev, &dev->packet.buf[dev->packet.pos], remaining_bytes);
         dev->packet.pos += remaining_bytes;
 
-        hw_gpio_set_edge_interrupt(dev->params.dio0_pin, GPIO_RISING_EDGE);
-        hw_gpio_enable_interrupt(dev->params.dio0_pin);
+        if (dev->options & SX127X_OPT_TELL_TX_REFILL)
+        {
+            hw_gpio_set_edge_interrupt(dev->params.dio1_pin, GPIO_FALLING_EDGE);
+            hw_gpio_enable_interrupt(dev->params.dio1_pin);
+        }
+        else
+        {
+            hw_gpio_set_edge_interrupt(dev->params.dio0_pin, GPIO_RISING_EDGE);
+            hw_gpio_enable_interrupt(dev->params.dio0_pin);
+        }
     }
 }
 
