@@ -203,7 +203,7 @@ static inline error_t timer_post_task_delay(task_t task, timer_tick_t delay) { r
  *					EINVAL if an invalid priority was specified.
  *					EALREADY if the task was already scheduled.
  */
-static inline error_t timer_add_event( timer_event* event) { return timer_post_task_prio(event->f, event->next_event, event->priority);}
+static inline error_t timer_add_event(timer_event* event) { return timer_post_task_prio(event->f, event->next_event, event->priority);}
 
 
 /*! \brief Cancel a previously scheduled task
@@ -215,6 +215,20 @@ static inline error_t timer_add_event( timer_event* event) { return timer_post_t
  *
  */
 __LINK_C error_t timer_cancel_task(task_t task);
+
+/*! \brief Cancel a given \<timer_event\>
+ *
+ * This function is equivalent to
+ * \code{.c}
+ *		timer_cancel_task(event->f);
+ * \endcode
+ *
+ * \param event		The event to cancel
+ * \return error_t	SUCCESS if the event was successfully canceled
+ * 					EALREADY if the event was not scheduled and therefore not canceled
+ */
+static inline error_t timer_cancel_event(timer_event* event) { timer_cancel_task(event->f);
+                                                               return sched_cancel_task(event->f);}
 
 /*! \brief check if a task is already scheduled with a delay
  *
