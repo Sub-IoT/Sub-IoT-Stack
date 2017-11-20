@@ -20,6 +20,8 @@
 #define _SPI_H
 #include <machine/sfradr.h>
 
+#define SPI_COUNT 2
+
 typedef struct SPI
 {
     /* Transmit data to tx buffer */
