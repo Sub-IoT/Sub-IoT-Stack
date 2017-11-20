@@ -101,6 +101,39 @@ error_t fifo_skip(fifo_t* fifo, uint16_t len) {
   return SUCCESS;
 }
 
+error_t fifo_remove(fifo_t *fifo, uint16_t len)
+{
+    if(fifo->tail_idx > fifo->head_idx)
+    {
+        if((fifo->tail_idx - len) < fifo->head_idx)
+            return ESIZE;
+        fifo->tail_idx -= len;
+        return SUCCESS;
+    }
+
+    if(fifo->tail_idx - len > 0)
+    {
+        fifo->tail_idx -= len;
+        return SUCCESS;
+    }
+
+    uint16_t space_left_before_0 = fifo->tail_idx;
+
+    uint16_t space_freed_after_wrap = len - space_left_before_0;
+    if(fifo->max_size - fifo->head_idx > space_freed_after_wrap)
+    {
+        // wrap
+        fifo->tail_idx = fifo->max_size - space_freed_after_wrap;
+        return SUCCESS;
+    }
+    else
+        return ESIZE;
+}
+
+error_t fifo_remove_last_byte(fifo_t* fifo) {
+    return fifo_remove(fifo, 1);
+}
+
 error_t fifo_peek(fifo_t* fifo, uint8_t* buffer, uint16_t offset, uint16_t len) {
   error_t err = check_len(fifo, len);
   if(err != SUCCESS)
