@@ -50,7 +50,7 @@ void __platform_init()
     hw_gpio_configure_pin(SX127x_DIO1_PIN, true, gpioModeInput, 0);
 #endif
 
-    __watchdog_init();
+    //__watchdog_init();
 }
 
 int main (void)
