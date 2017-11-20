@@ -51,7 +51,7 @@ __LINK_C void __ubutton_init()
 		memset(buttons[i].callbacks, 0, sizeof(buttons[i].callbacks));
 		buttons[i].cur_callback_id = BUTTON_QUEUE_SIZE;
 		buttons[i].num_registered_callbacks = 0;
-		error_t err = hw_gpio_configure_interrupt(buttons[i].button_id, &button_callback, GPIO_FALLING_EDGE);
+		error_t err = hw_gpio_configure_interrupt(buttons[i].button_id, GPIO_FALLING_EDGE, &button_callback, NULL);
 		assert(err == SUCCESS);
 	}
 	sched_register_task(&button_task, NULL);
