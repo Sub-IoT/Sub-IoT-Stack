@@ -86,7 +86,13 @@ inline void console_print_bytes(uint8_t* bytes, uint8_t length) {
 }
 
 inline void console_print(char* string) {
-  console_print_bytes((uint8_t*) string, strnlen(string, 100));
+    uint8_t len = strnlen(string, CONSOLE_TX_FIFO_SIZE);
+
+    // If no space enough in the TX FIFO, it's time to flush.
+    while(len > (console_tx_fifo.max_size - fifo_get_size(&console_tx_fifo)))
+        flush_console_tx_fifo(&console_tx_fifo);
+
+    console_print_bytes((uint8_t*) string, len);
 }
 
 inline void console_set_rx_interrupt_callback(uart_rx_inthandler_t uart_rx_cb) {
