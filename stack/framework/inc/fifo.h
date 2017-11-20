@@ -135,6 +135,13 @@ uint16_t fifo_get_size(fifo_t* fifo);
  */
 bool fifo_is_full(fifo_t* fifo);
 
+/**
+ * @brief Remove the last byte put in the FIFO
+ * @param fifo      Pointer to the fifo object
+ * @return SUCCESS or ESIZE when FIFO empty
+ */
+error_t fifo_remove_last_byte(fifo_t* fifo);
+
 #endif // FIFO_H
 
 /** @}*/
