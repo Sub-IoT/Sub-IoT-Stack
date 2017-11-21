@@ -29,7 +29,6 @@ EXPORT_GLOBAL_INCLUDE_DIRECTORIES(.)
 
 #By convention, each module should generate a single 'static' library that can be included by the application
 ADD_LIBRARY(lorawan STATIC
-    LoRaMAC/Core/lora.c
     LoRaMAC/Mac/LoRaMac.c
     LoRaMAC/Mac/region/Region.c
     LoRaMAC/Mac/region/RegionCommon.c

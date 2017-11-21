@@ -1976,6 +1976,7 @@ static LoRaMacStatus_t ScheduleTx( void )
     else
     {
         // Send later - prepare timer
+        log_print_string("delaying TX by %i ms due to duty cycle limit", dutyCycleTimeOff);
         LoRaMacState |= LORAMAC_TX_DELAYED;
         TimerSetValue( &TxDelayedTimer, dutyCycleTimeOff );
         TimerStart( &TxDelayedTimer );

@@ -21,8 +21,22 @@
 
 #include "types.h"
 
-void lorawan_stack_init();
+typedef struct
+{
+  /*point to the LoRa App data buffer*/
+  uint8_t* Buff;
+  /*LoRa App data buffer size*/
+  uint8_t BuffSize;
+  /*Port on which the LoRa App is data is sent/ received*/
+  uint8_t Port;
+
+} lora_AppData_t;
+
+typedef void (*lora_rx_callback_t) (lora_AppData_t *AppData);
+
+void lorawan_stack_init(uint8_t devEUI[8], uint8_t appEUI[8], uint8_t appKey[16], lora_rx_callback_t cb);
 void lorawan_stack_tick();
+bool lorawan_stack_send(uint8_t* payload, uint8_t length, uint8_t app_port, bool request_ack);
 
 #endif //LORAWAN_STACK_H
 

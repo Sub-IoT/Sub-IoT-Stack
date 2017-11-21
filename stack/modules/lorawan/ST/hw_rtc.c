@@ -579,9 +579,9 @@ static void HW_RTC_StartWakeUpAlarm( uint32_t timeoutValue )
   HAL_RTC_SetAlarm_IT( &RtcHandle, &RTC_AlarmStructure, RTC_FORMAT_BIN );
   
   /* Debug Printf*/
-  DBG( HW_RTC_GetCalendarValue( &RTC_DateStruct, &RTC_TimeStruct ); );
-  DBG_PRINTF("it's %d:%d:%d:%d ", RTC_TimeStruct.Hours, RTC_TimeStruct.Minutes, RTC_TimeStruct.Seconds, ((PREDIV_S - RTC_TimeStruct.SubSeconds)*1000)>>N_PREDIV_S);
-  DBG_PRINTF("WU@ %d:%d:%d:%d\n\r", rtcAlarmHours, rtcAlarmMinutes, rtcAlarmSeconds, (rtcAlarmSubSeconds*1000)>>N_PREDIV_S );
+//  DBG( HW_RTC_GetCalendarValue( &RTC_DateStruct, &RTC_TimeStruct ); );
+//  DBG_PRINTF("it's %d:%d:%d:%d ", RTC_TimeStruct.Hours, RTC_TimeStruct.Minutes, RTC_TimeStruct.Seconds, ((PREDIV_S - RTC_TimeStruct.SubSeconds)*1000)>>N_PREDIV_S);
+//  DBG_PRINTF("WU@ %d:%d:%d:%d\n\r", rtcAlarmHours, rtcAlarmMinutes, rtcAlarmSeconds, (rtcAlarmSubSeconds*1000)>>N_PREDIV_S );
   
   DBG_GPIO_RST(GPIOB, GPIO_PIN_13);
 }
