@@ -67,22 +67,19 @@
 
 
 #include "lorawan_stack.h"
-# include "Commissioning.h" // TODO
 #include "hw.h"
 #include "LoRaMac.h"
 #include "LoRaMacTest.h"
 #include "debug.h"
 
 // TODO configurable
-#define LORAWAN_APP_PORT                            2
-#define LORAWAN_CONFIRMED_MSG                       ENABLE
-#define APP_TX_DUTYCYCLE                            10000 // in ms
 #define LORAWAN_ADR_ENABLED                         1 // TODO configurable?
 #define LORAWAN_PUBLIC_NETWORK_ENABLED              1 // TODO configurable?
 #define LORAWAN_CLASS                               CLASS_A // TODO configurable?
 #define JOINREQ_NBTRIALS                            3
 #define LORAWAN_APP_DATA_BUFF_SIZE                  64 // TODO = max?
 #define LORAWAN_DATARATE                            0 // TODO configurable? assuming ADR for now
+#define OVER_THE_AIR_ACTIVATION                     1
 
 typedef enum
 {
@@ -92,9 +89,9 @@ typedef enum
     STATE_SEND,
     STATE_CYCLE,
     STATE_SLEEP
-} DeviceState_t;
+} state_t;
 
-static DeviceState_t state = STATE_INIT;
+static state_t state = STATE_INIT;
 static LoRaMacPrimitives_t loraMacPrimitives;
 static LoRaMacCallback_t loraMacCallbacks;
 static LoRaMacStatus_t loraMacStatus;
