@@ -315,7 +315,7 @@ void lorawan_stack_init(uint8_t dEUI[8], uint8_t aEUI[8], uint8_t aKey[16], lora
   log_print_string("AppEui:");
   log_print_data(appEui, 8);
   log_print_string("AppKey:");
-  log_print_data(appKey, 8);
+  log_print_data(appKey, 16);
 
   loraMacPrimitives.MacMcpsConfirm = &mcps_confirm;
   loraMacPrimitives.MacMcpsIndication = &mcps_indication;
