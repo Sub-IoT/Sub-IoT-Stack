@@ -96,6 +96,7 @@ int sx127x_init(sx127x_t *dev)
 #ifdef PLATFORM_SX127X_USE_RESET_PIN
     sx127x_reset(dev);
 #endif
+    sx127x_set_op_mode(dev, SX127X_RF_OPMODE_STANDBY);
     sx127x_rx_chain_calibration(dev);
     sx127x_set_op_mode(dev, SX127X_RF_OPMODE_SLEEP);
 

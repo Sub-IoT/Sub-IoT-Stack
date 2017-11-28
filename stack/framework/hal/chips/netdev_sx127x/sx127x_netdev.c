@@ -75,6 +75,21 @@ const netdev_driver_t sx127x_driver = {
 
 xcvr_handle_t xcvr = { .sx127x.netdev.driver = &sx127x_driver};
 
+static void dump_register(sx127x_t *dev)
+{
+
+    DEBUG("************************DUMP REGISTER*********************");
+
+    for (uint8_t add=0; add <= SX127X_REG_VERSION; add++)
+        sx127x_reg_read(dev, add);
+
+    // Please note that when reading the first byte of the FIFO register, this
+    // byte is removed so the dump is not recommended before a TX or take care
+    // to fill it after the dump
+
+    DEBUG("**********************************************************");
+}
+
 static int _send(netdev_t *netdev, const struct iovec *vector, unsigned count)
 {
     sx127x_t *dev = (sx127x_t*) netdev;
@@ -130,17 +145,18 @@ static int _send(netdev_t *netdev, const struct iovec *vector, unsigned count)
             }
             else
             {
-                sx127x_write_fifo(dev, vector[0].iov_base, size);
                 dev->packet.pos = size;
                 if (dev->options & SX127X_OPT_TELL_TX_REFILL) // we expect to refill the FIFO with subsequent data
                 {
                     sx127x_reg_write(dev, SX127X_REG_FIFOTHRESH, 0x81); // FIFO level interrupt if under 2 bytes
                     dev->packet.fifothresh = 2;
+                    sx127x_write_fifo(dev, vector[0].iov_base, size);
                     hw_gpio_set_edge_interrupt(dev->params.dio1_pin, GPIO_FALLING_EDGE);
                     hw_gpio_enable_interrupt(dev->params.dio1_pin);
                 }
                 else
                 {
+                    sx127x_write_fifo(dev, vector[0].iov_base, size);
                     hw_gpio_set_edge_interrupt(dev->params.dio0_pin, GPIO_RISING_EDGE);
                     hw_gpio_enable_interrupt(dev->params.dio0_pin);
                 }
@@ -795,8 +811,11 @@ static void fill_in_fifo(sx127x_t *dev)
 
     if (remaining_bytes > space_left)
     {
-        sx127x_write_fifo(dev, &dev->packet.buf[dev->packet.pos], space_left);
-        dev->packet.pos += space_left;
+        sx127x_reg_write(dev, SX127X_REG_FIFOTHRESH, 0x80 | (SX127X_FIFO_MID_SIZE - 1));
+        dev->packet.fifothresh = SX127X_FIFO_MID_SIZE;
+    	sx127x_write_fifo(dev, &dev->packet.buf[dev->packet.pos], space_left);
+
+    	dev->packet.pos += space_left;
 
         // clear the interrupt
         hw_gpio_set_edge_interrupt(dev->params.dio1_pin, GPIO_FALLING_EDGE);
