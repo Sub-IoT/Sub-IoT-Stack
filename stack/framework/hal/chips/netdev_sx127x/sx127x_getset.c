@@ -330,23 +330,25 @@ void sx127x_set_rx(sx127x_t *dev)
         case SX127X_MODEM_FSK:
             sx127x_flush_fifo(dev);
 
-            dev->packet.length = 0;
             dev->packet.pos = 0;
             dev->packet.fifothresh = 0;
 
             /* Setup interrupts */
             sx127x_reg_write(dev, SX127X_REG_DIOMAPPING1, 0x0C); // DIO2 interrupt on sync detect and DIO0 interrupt on PayloadReady
             sx127x_reg_write(dev, SX127X_REG_FIFOTHRESH, 0x83);
-            sx127x_reg_write(dev, SX127X_REG_PAYLOADLENGTH, 0x00);
 
             if (dev->options & SX127X_OPT_TELL_RX_START)
             {
+                sx127x_reg_write(dev, SX127X_REG_PAYLOADLENGTH, 0x00);
+                dev->packet.length = 0;
                 hw_gpio_set_edge_interrupt(dev->params.dio1_pin, GPIO_RISING_EDGE);
                 hw_gpio_enable_interrupt(dev->params.dio1_pin);
                 sx127x_set_packet_handler_enabled(dev, true);
             }
             else if (dev->options & SX127X_OPT_TELL_RX_END)
             {
+                // Don't overrride the payload length which must have been set by the upper layer
+                dev->packet.length = sx127x_get_max_payload_len(dev);
                 hw_gpio_set_edge_interrupt(dev->params.dio0_pin, GPIO_RISING_EDGE);
                 hw_gpio_enable_interrupt(dev->params.dio0_pin); // enable the PayloadReady interrupt
             }
@@ -1306,7 +1308,7 @@ uint8_t sx127x_get_preamble_detect_on(const sx127x_t *dev)
 void sx127x_set_dc_free(sx127x_t *dev, uint8_t encoding_scheme)
 {
     sx127x_reg_write(dev, SX127X_REG_PACKETCONFIG1,
-                         (sx127x_reg_read(dev, SX127X_REG_PREAMBLEDETECT) &
+                         (sx127x_reg_read(dev, SX127X_REG_PACKETCONFIG1) &
                           SX127X_RF_PACKETCONFIG1_DCFREE_MASK) |
                          (encoding_scheme << 5));
 }

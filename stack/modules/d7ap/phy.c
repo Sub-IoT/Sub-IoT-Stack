@@ -398,7 +398,7 @@ static void configure_syncword(syncword_class_t syncword_class, const channel_id
     if(syncword_class != current_syncword_class || (channel->channel_header.ch_coding != current_channel_id.channel_header.ch_coding))
     {
         current_syncword_class = syncword_class;
-        uint16_t sync_word = sync_word_value[syncword_class][channel->channel_header.ch_coding ];
+        uint16_t sync_word = __builtin_bswap16(sync_word_value[syncword_class][channel->channel_header.ch_coding ]);
 
         DPRINT("sync_word = %04x", sync_word);
         hw_radio_set_sync_word((uint8_t *)&sync_word, sizeof(uint16_t));
@@ -441,7 +441,7 @@ static void switch_to_standby_mode()
 }
 
 static void isr_handler(void *arg) {
-    DPRINT("Netdev ISR handler outside the IRQ context");
+    //DPRINT("Netdev ISR handler outside the IRQ context");
     netdev->driver->isr(netdev);
 }
 
@@ -508,7 +508,7 @@ static void _event_cb(netdev_t *dev, netdev_event_t event)
                 }
                 break;
             case NETDEV_EVENT_TX_REFILL_NEEDED:
-                 DPRINT("New data needed to transmit without discontinuity");
+                 //DPRINT("New data needed to transmit without discontinuity");
                  fill_in_fifo(dev);
                  break;
             case NETDEV_EVENT_RX_STARTED: {
@@ -853,6 +853,7 @@ static void fill_in_fifo()
 
             // Prepare the next frame
             assemble_background_payload();
+            return;
         }
         else
         {
@@ -869,16 +870,16 @@ static void fill_in_fifo()
 
             bg_adv.eta = 0;
             fg_frame.bg_adv = false;
+            // if preamble pading is necessary, then wait for the next refill notificationt to send the FG frame
+            if (preamble_len)
+                return;
         }
     }
-    else
-    {
-        // Disable the refill event since this is the last chunk of data to transmit
-        netopt_enable_t enable = NETOPT_DISABLE;
-        netdev->driver->set(netdev, NETOPT_TX_REFILL_IRQ, &enable, sizeof(netopt_enable_t));
-        hw_radio_send_payload(fg_frame.encoded_packet, fg_frame.encoded_length);
-    }
 
+    hw_radio_send_payload(fg_frame.encoded_packet, fg_frame.encoded_length);
+    // Disable the refill event since this is the last chunk of data to transmit
+    netopt_enable_t enable = NETOPT_DISABLE;
+    netdev->driver->set(netdev, NETOPT_TX_REFILL_IRQ, &enable, sizeof(netopt_enable_t));
 }
 
 
@@ -911,14 +912,17 @@ error_t hw_radio_start_background_scan(hw_rx_cfg_t const* rx_cfg, rx_packet_call
     // set PayloadLength to the length of the expected Background frame (fixed length packet format is used)
     hw_radio_set_payload_length(packet_len);
 
-    DEBUG_RX_START();
+    // enable the interrupt after packet reception
+    netopt_enable_t enable = NETOPT_ENABLE;
+    netdev->driver->set(netdev, NETOPT_RX_END_IRQ, &enable, sizeof(netopt_enable_t));
 
+    DEBUG_RX_START();
     hw_radio_set_opmode(NETOPT_STATE_RX);
 
     int16_t rssi = hw_radio_get_rssi();
     if (rssi <= rssi_thr)
     {
-        //DPRINT("FAST RX termination RSSI %i limit %i", rssi, rssi_thr);
+        DPRINT("FAST RX termination RSSI %i limit %i", rssi, rssi_thr);
         switch_to_standby_mode();
         DEBUG_RX_END();
         return FAIL;
@@ -928,10 +932,6 @@ error_t hw_radio_start_background_scan(hw_rx_cfg_t const* rx_cfg, rx_packet_call
 
     // the device has a period of To to successfully detect the sync word
     netdev->driver->set(netdev, NETOPT_RX_TIMEOUT, &bg_timeout[current_channel_id.channel_header.ch_class], sizeof(uint32_t));
-
-    // enable the interrupt after packet reception
-    netopt_enable_t enable = NETOPT_ENABLE;
-    netdev->driver->set(netdev, NETOPT_RX_END_IRQ, &enable, sizeof(netopt_enable_t));
 
     return SUCCESS;
 }
