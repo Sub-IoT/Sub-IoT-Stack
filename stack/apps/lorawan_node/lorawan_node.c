@@ -21,6 +21,7 @@
 #include "lorawan_stack.h"
 #include "scheduler.h"
 #include "timeServer.h"
+#include "timer.h"
 
 // TODO
 static uint8_t devEui[] = { 0xBE, 0x7A, 0x00, 0x00, 0x00, 0x00, 0x1B, 0x81 };
@@ -29,10 +30,10 @@ static uint8_t appKey[] = { 0x7E, 0xEF, 0x56, 0xEC, 0xDA, 0x1D, 0xD5, 0xA4, 0x70
 
 TimerEvent_t sensor_timer;
 
-//void lorawan_task() {
-//  lorawan_stack_tick();
-//  sched_post_task(&lorawan_task);
-//}
+void lorawan_task() {
+  lorawan_stack_tick();
+  sched_post_task(&lorawan_task);
+}
 
 void read_sensor_task() {
   static uint8_t msg_counter = 0;
@@ -45,7 +46,7 @@ void read_sensor_task() {
   }
 
   msg_counter++;
-  TimerStart(&sensor_timer);
+  timer_post_task_delay(&read_sensor_task, 60 * TIMER_TICKS_PER_SEC);
 }
 
 void bootstrap()
@@ -54,24 +55,9 @@ void bootstrap()
 
     lorawan_stack_init(devEui, appEui, appKey, NULL);
 
-//    sched_register_task(&lorawan_task);
-//    sched_post_task(&lorawan_task);
+    sched_register_task(&lorawan_task);
+    sched_post_task(&lorawan_task);
 
-    TimerInit(&sensor_timer, &read_sensor_task); // TODO using lorawan stack timer API for now
-    TimerSetValue(&sensor_timer, 60000);
-    TimerStart(&sensor_timer);
-
-    while(1) {
-      lorawan_stack_tick();
-    }
-//        DISABLE_IRQ();
-//        /* if an interrupt has occurred after DISABLE_IRQ, it is kept pending
-//         * and cortex will not enter low power anyway  */
-//        if ( lora_getDeviceState( ) == DEVICE_STATE_SLEEP )
-//        {
-//        #ifndef LOW_POWER_DISABLE
-//          LowPower_Handler( );
-//        #endif
-//        }
-//        ENABLE_IRQ();
+    sched_register_task(&read_sensor_task);
+    timer_post_task_delay(&read_sensor_task, 60 * TIMER_TICKS_PER_SEC);
 }

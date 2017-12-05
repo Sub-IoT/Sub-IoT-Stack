@@ -62,6 +62,7 @@ Maintainer: Miguel Luis, Gregory Cristian and Wael Guibene
 #include <time.h>
 #include "hw.h"
 #include "timeServer.h"
+#include "scheduler.h"
 //#include "low_power.h"
 
 
@@ -133,6 +134,7 @@ void TimerInit( TimerEvent_t *obj, void ( *callback )( void ) )
   obj->IsRunning = false;
   obj->Callback = callback;
   obj->Next = NULL;
+  sched_register_task(obj->Callback);
 }
 
 void TimerStart( TimerEvent_t *obj )
@@ -246,7 +248,8 @@ void TimerIrqHandler( void )
   {
     cur = TimerListHead;
     TimerListHead = TimerListHead->Next;
-    exec_cb( cur->Callback );
+    //exec_cb( cur->Callback );
+    sched_post_task(cur->Callback);
   }
 
 
@@ -255,7 +258,8 @@ void TimerIrqHandler( void )
   {
    cur = TimerListHead;
    TimerListHead = TimerListHead->Next;
-   exec_cb( cur->Callback );
+   //exec_cb( cur->Callback );
+   sched_post_task(cur->Callback);
   }
 
   /* start the next TimerListHead if it exists AND NOT running */
