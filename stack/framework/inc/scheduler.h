@@ -82,6 +82,7 @@ enum
  * \param task		The task to register
  *
  * \return error_t 	SUCCESS if the task was registered successfully
+ *                  EALREADY if the task was already registered
  */
 __LINK_C error_t sched_register_task(task_t task);
 
