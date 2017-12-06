@@ -69,6 +69,7 @@ typedef struct {
 } d7atp_ack_template_t;
 
 void d7atp_init();
+void d7atp_stop();
 error_t  d7atp_send_request(uint8_t dialog_id, uint8_t transaction_id, bool is_last_transaction,
                         packet_t* packet, session_qos_t* qos_settings, uint8_t listen_timeout, uint8_t expected_response_length);
 uint8_t d7atp_assemble_packet_header(packet_t* packet, uint8_t* data_ptr);

@@ -40,12 +40,13 @@
 
 
 typedef enum {
+    D7ANP_STATE_STOPPED,
     D7ANP_STATE_IDLE,
     D7ANP_STATE_TRANSMIT,
     D7ANP_STATE_FOREGROUND_SCAN,
 } state_t;
 
-static state_t NGDEF(_d7anp_state);
+static state_t NGDEF(_d7anp_state) = D7ANP_STATE_STOPPED;
 #define d7anp_state NG(_d7anp_state)
 
 static state_t NGDEF(_d7anp_prev_state);
@@ -189,6 +190,8 @@ void start_foreground_scan_after_D7AAdvP()
 
 void d7anp_init()
 {
+    assert(d7anp_state == D7ANP_STATE_STOPPED);
+
     uint8_t key[AES_BLOCK_SIZE];
 
     d7anp_state = D7ANP_STATE_IDLE;
@@ -215,6 +218,15 @@ void d7anp_init()
     fs_read_nwl_security_state_register(&node_security_state);
     latest_node = NULL;
 #endif
+}
+
+void d7anp_stop()
+{
+    d7anp_state = D7ANP_STATE_STOPPED;
+    timer_cancel_task(&foreground_scan_expired);
+    sched_cancel_task(&foreground_scan_expired);
+    timer_cancel_task(&start_foreground_scan_after_D7AAdvP);
+    sched_cancel_task(&start_foreground_scan_after_D7AAdvP);
 }
 
 error_t d7anp_tx_foreground_frame(packet_t* packet, bool should_include_origin_template, uint8_t slave_listen_timeout_ct)

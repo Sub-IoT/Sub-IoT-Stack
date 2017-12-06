@@ -281,6 +281,12 @@ typedef void (*rssi_valid_callback_t)(int16_t cur_rssi);
  */
 __LINK_C error_t hw_radio_init(alloc_packet_callback_t p_alloc, release_packet_callback_t p_free);
 
+
+/** \brief Stop the radio driver, and free the hardware resources (SPI, GPIO interrupts, ...)
+ */
+__LINK_C void hw_radio_stop();
+
+
 /** \brief Set the radio in the IDLE mode.
  *
  * When the radio is IDLE, the tranceiver is disabled to reduce energy consumption. 

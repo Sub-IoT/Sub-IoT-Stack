@@ -41,6 +41,11 @@
  */
 void d7ap_stack_init(fs_init_args_t* fs_init_args, alp_init_args_t* alp_init_args, bool enable_shell, alp_cmd_handler_appl_itf_callback cb);
 
+/**
+ * @brief Stops the D7AP stack tasks and free the hardware resources
+ */
+void d7ap_stack_stop();
+
 #endif //OSS_7_D7AP_STACK_H
 
 /** @}*/

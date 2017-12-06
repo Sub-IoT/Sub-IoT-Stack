@@ -67,3 +67,12 @@ void d7ap_stack_init(fs_init_args_t* fs_init_args, alp_init_args_t* alp_init_arg
 #endif
     }
 }
+
+void d7ap_stack_stop()
+{
+    d7asp_stop();
+    d7atp_stop();
+    d7anp_stop();
+    dll_stop();
+    hw_radio_stop();
+}

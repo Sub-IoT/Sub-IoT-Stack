@@ -63,6 +63,7 @@ static bool NGDEF(_stop_dialog_after_tx);
 #define stop_dialog_after_tx NG(_stop_dialog_after_tx)
 
 typedef enum {
+    D7ATP_STATE_STOPPED,
     D7ATP_STATE_IDLE,
     D7ATP_STATE_MASTER_TRANSACTION_REQUEST_PERIOD,
     D7ATP_STATE_MASTER_TRANSACTION_RESPONSE_PERIOD,
@@ -71,7 +72,7 @@ typedef enum {
     D7ATP_STATE_SLAVE_TRANSACTION_RESPONSE_PERIOD,
 } state_t;
 
-static state_t NGDEF(_d7atp_state);
+static state_t NGDEF(_d7atp_state) = D7ATP_STATE_STOPPED;
 #define d7atp_state NG(_d7atp_state)
 
 #define IS_IN_MASTER_TRANSACTION() (d7atp_state == D7ATP_STATE_MASTER_TRANSACTION_REQUEST_PERIOD || \
@@ -233,12 +234,23 @@ void d7atp_stop_transaction()
 
 void d7atp_init()
 {
+    assert(d7atp_state == D7ATP_STATE_STOPPED);
+
     d7atp_state = D7ATP_STATE_IDLE;
     current_access_class = ACCESS_CLASS_NOT_SET;
     current_dialog_id = 0;
     stop_dialog_after_tx = false;
 
     sched_register_task(&response_period_timeout_handler);
+    sched_register_task(&execution_delay_timeout_handler);
+}
+
+void d7atp_stop()
+{
+    d7atp_state = D7ATP_STATE_STOPPED;
+    timer_cancel_task(&response_period_timeout_handler);
+    sched_cancel_task(&response_period_timeout_handler);
+    timer_cancel_task(&execution_delay_timeout_handler);
     sched_register_task(&execution_delay_timeout_handler);
 }
 

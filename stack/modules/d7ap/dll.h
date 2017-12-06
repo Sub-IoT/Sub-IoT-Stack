@@ -65,6 +65,7 @@ typedef struct
 } dll_header_t;
 
 void dll_init();
+void dll_stop();
 void dll_tx_frame(packet_t* packet);
 void dll_start_foreground_scan();
 void dll_stop_foreground_scan();

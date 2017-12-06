@@ -133,6 +133,7 @@ typedef struct {
 } d7anp_node_security_t;
 
 void d7anp_init();
+void d7anp_stop();
 error_t d7anp_tx_foreground_frame(packet_t* packet, bool should_include_origin_template, uint8_t slave_listen_timeout_ct);
 uint8_t d7anp_assemble_packet_header(packet_t* packet, uint8_t* data_ptr);
 bool d7anp_disassemble_packet_header(packet_t* packet, uint8_t* packet_idx);

@@ -76,6 +76,7 @@ static packet_t* NGDEF(_current_response_packet);
 #define current_response_packet NG(_current_response_packet)
 
 typedef enum {
+    D7ASP_STATE_STOPPED,
     D7ASP_STATE_IDLE,
     D7ASP_STATE_SLAVE,
     D7ASP_STATE_MASTER,
@@ -83,7 +84,7 @@ typedef enum {
     D7ASP_STATE_PENDING_MASTER
 } state_t;
 
-static state_t NGDEF(_state);
+static state_t NGDEF(_state) = D7ASP_STATE_STOPPED;
 #define d7asp_state NG(_state)
 
 static void switch_state(state_t new_state);
@@ -269,6 +270,8 @@ static void switch_state(state_t new_state)
 
 void d7asp_init()
 {
+    assert(d7asp_state == D7ASP_STATE_STOPPED);
+
     d7asp_state = D7ASP_STATE_IDLE;
     current_request_id = NO_ACTIVE_REQUEST_ID;
 
@@ -277,6 +280,13 @@ void d7asp_init()
     DPRINT("FIFO_MAX_REQUESTS_COUNT %d", MODULE_D7AP_FIFO_MAX_REQUESTS_COUNT);
 
     sched_register_task(&flush_fifos);
+}
+
+void d7asp_stop()
+{
+    d7asp_state = D7ASP_STATE_STOPPED;
+    timer_cancel_task(&flush_fifos);
+    sched_cancel_task(&flush_fifos);
 }
 
 d7asp_master_session_t* d7asp_master_session_create(d7asp_master_session_config_t* d7asp_master_session_config) {

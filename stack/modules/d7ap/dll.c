@@ -45,6 +45,7 @@
 
 typedef enum
 {
+    DLL_STATE_STOPPED,
     DLL_STATE_IDLE,
     DLL_STATE_SCAN_AUTOMATION,
     DLL_STATE_CSMA_CA_STARTED,
@@ -68,7 +69,7 @@ static dae_access_profile_t NGDEF(_remote_access_profile);
 static uint8_t NGDEF(_active_access_class);
 #define active_access_class NG(_active_access_class)
 
-static dll_state_t NGDEF(_dll_state);
+static dll_state_t NGDEF(_dll_state) = DLL_STATE_STOPPED;
 #define dll_state NG(_dll_state)
 
 static packet_t* NGDEF(_current_packet);
@@ -752,6 +753,7 @@ void dll_execute_scan_automation()
 
 void dll_notify_dll_conf_file_changed()
 {
+    DPRINT("DLL config file changed");
     // when doing scan automation restart this
     if (dll_state == DLL_STATE_SCAN_AUTOMATION)
     {
@@ -781,6 +783,8 @@ void dll_notify_dialog_terminated()
 
 void dll_init()
 {
+    assert(dll_state == DLL_STATE_STOPPED);
+
     uint8_t nf_ctrl;
 
     sched_register_task(&process_received_packets);
@@ -802,6 +806,25 @@ void dll_init()
     resume_fg_scan = false;
     sched_post_task(&dll_execute_scan_automation);
     guarded_channel = false;
+}
+
+void dll_stop()
+{
+    dll_state = DLL_STATE_STOPPED;
+    timer_cancel_task(&process_received_packets);
+    sched_cancel_task(&process_received_packets);
+    timer_cancel_task(&notify_transmitted_packet);
+    sched_cancel_task(&notify_transmitted_packet);
+    timer_cancel_task(&execute_cca);
+    sched_cancel_task(&execute_cca);
+    timer_cancel_task(&execute_csma_ca);
+    sched_cancel_task(&execute_csma_ca);
+    timer_cancel_task(&dll_execute_scan_automation);
+    sched_cancel_task(&dll_execute_scan_automation);
+    timer_cancel_task(&start_background_scan);
+    sched_cancel_task(&start_background_scan);
+    timer_cancel_task(&guard_period_expiration);
+    sched_cancel_task(&guard_period_expiration);
 }
 
 void dll_tx_frame(packet_t* packet)
