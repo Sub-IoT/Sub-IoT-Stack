@@ -71,6 +71,7 @@
 #include "LoRaMac.h"
 #include "LoRaMacTest.h"
 #include "debug.h"
+#include "scheduler.h"
 
 // TODO configurable
 #define LORAWAN_ADR_ENABLED                         1 // TODO configurable?
@@ -83,15 +84,12 @@
 
 typedef enum
 {
-    STATE_INIT,
-    STATE_JOIN,
-    STATE_JOINED,
-    STATE_SEND,
-    STATE_CYCLE,
-    STATE_SLEEP
+  STATE_NOT_JOINED,
+  STATE_JOINED,
+  STATE_JOIN_FAILED
 } state_t;
 
-static state_t state = STATE_INIT;
+static state_t state = STATE_NOT_JOINED;
 static LoRaMacPrimitives_t loraMacPrimitives;
 static LoRaMacCallback_t loraMacCallbacks;
 static LoRaMacStatus_t loraMacStatus;
@@ -105,6 +103,77 @@ static uint8_t payload_data_buffer[LORAWAN_APP_DATA_BUFF_SIZE];
 static lora_AppData_t app_data = { payload_data_buffer, 0 ,0 };
 
 static lora_rx_callback_t rx_callback = NULL;
+static join_completed_callback_t join_completed_callback = NULL;
+
+static void run_fsm()
+{
+  switch(state)
+  {
+    case STATE_NOT_JOINED:
+    {
+#if( OVER_THE_AIR_ACTIVATION != 0 )
+      MlmeReq_t mlmeReq;
+
+      mlmeReq.Type = MLME_JOIN;
+      mlmeReq.Req.Join.DevEui = devEui;
+      mlmeReq.Req.Join.AppEui = appEui;
+      mlmeReq.Req.Join.AppKey = appKey;
+      mlmeReq.Req.Join.NbTrials = JOINREQ_NBTRIALS;
+
+      //if(next_tx == true)
+      {
+          LoRaMacMlmeRequest(&mlmeReq);
+      }
+
+      //sched_post_task_prio(&run_fsm, MIN_PRIORITY);
+#else
+      MibRequestConfirm_t mibReq;
+      mibReq.Type = MIB_NET_ID;
+      mibReq.Param.NetID = LORAWAN_NETWORK_ID;
+      LoRaMacMibSetRequestConfirm( &mibReq );
+
+      mibReq.Type = MIB_DEV_ADDR;
+      mibReq.Param.DevAddr = DevAddr;
+      LoRaMacMibSetRequestConfirm( &mibReq );
+
+      mibReq.Type = MIB_NWK_SKEY;
+      mibReq.Param.NwkSKey = NwkSKey;
+      LoRaMacMibSetRequestConfirm( &mibReq );
+
+      mibReq.Type = MIB_APP_SKEY;
+      mibReq.Param.AppSKey = AppSKey;
+      LoRaMacMibSetRequestConfirm( &mibReq );
+
+      mibReq.Type = MIB_NETWORK_JOINED;
+      mibReq.Param.IsNetworkJoined = true;
+      LoRaMacMibSetRequestConfirm( &mibReq );
+      state = STATE_JOINED;
+#endif
+      break;
+    }
+    case STATE_JOINED:
+    {
+      log_print_string("JOINED");
+      sched_cancel_task(&run_fsm);
+      if(join_completed_callback)
+        join_completed_callback(true);
+      break;
+    }
+    case STATE_JOIN_FAILED:
+    {
+      log_print_string("JOIN FAILED");
+      if(join_completed_callback)
+        join_completed_callback(false);
+      break;
+    }
+    default:
+    {
+      assert(false);
+      break;
+    }
+  }
+
+}
 
 static void mcps_confirm(McpsConfirm_t *McpsConfirm)
 {
@@ -142,8 +211,9 @@ static void mlme_confirm(MlmeConfirm_t *mlmeConfirm)
       }
       else
       {
-        log_print_string("join failed, retrying");
-        state = STATE_JOIN;
+        log_print_string("join failed");
+        state = STATE_JOIN_FAILED;
+        sched_post_task(&run_fsm);
       }
       break;
     }
@@ -163,142 +233,9 @@ static bool is_joined()
   return (mibReq.Param.IsNetworkJoined == true);
 }
 
-static void lora_fsm()
-{
-  switch(state)
-  {
-    case STATE_INIT:
-    {
-#if defined( REGION_AS923 )
-      LoRaMacInitialization( &loraMacPrimitives, &loraMacCallbacks, LORAMAC_REGION_AS923 );
-#elif defined( REGION_AU915 )
-      LoRaMacInitialization( &loraMacPrimitives, &loraMacCallbacks, LORAMAC_REGION_AU915 );
-#elif defined( REGION_CN470 )
-      LoRaMacInitialization( &loraMacPrimitives, &loraMacCallbacks, LORAMAC_REGION_CN470 );
-#elif defined( REGION_CN779 )
-      LoRaMacInitialization( &loraMacPrimitives, &loraMacCallbacks, LORAMAC_REGION_CN779 );
-#elif defined( REGION_EU433 )
-      LoRaMacInitialization( &loraMacPrimitives, &loraMacCallbacks, LORAMAC_REGION_EU433 );
- #elif defined( REGION_IN865 )
-      LoRaMacInitialization( &loraMacPrimitives, &loraMacCallbacks, LORAMAC_REGION_IN865 );
-#elif defined( REGION_EU868 )
-      LoRaMacInitialization( &loraMacPrimitives, &loraMacCallbacks, LORAMAC_REGION_EU868 );
-#elif defined( REGION_KR920 )
-      LoRaMacInitialization( &loraMacPrimitives, &loraMacCallbacks, LORAMAC_REGION_KR920 );
-#elif defined( REGION_US915 )
-      LoRaMacInitialization( &loraMacPrimitives, &loraMacCallbacks, LORAMAC_REGION_US915 );
-#elif defined( REGION_US915_HYBRID )
-      LoRaMacInitialization( &loraMacPrimitives, &loraMacCallbacks, LORAMAC_REGION_US915_HYBRID );
-#else
-      #error "Please define a region in the compiler options."
-#endif
-      MibRequestConfirm_t mibReq;
-      mibReq.Type = MIB_ADR;
-      mibReq.Param.AdrEnable = LORAWAN_ADR_ENABLED;
-      LoRaMacMibSetRequestConfirm( &mibReq );
-
-      mibReq.Type = MIB_PUBLIC_NETWORK;
-      mibReq.Param.EnablePublicNetwork = LORAWAN_PUBLIC_NETWORK_ENABLED;
-      LoRaMacMibSetRequestConfirm( &mibReq );
-
-      mibReq.Type = MIB_DEVICE_CLASS;
-      mibReq.Param.Class = LORAWAN_CLASS;
-      LoRaMacMibSetRequestConfirm( &mibReq );
-
-#if defined( REGION_EU868 )
-      LoRaMacTestSetDutyCycleOn(true);
-
-#if( USE_SEMTECH_DEFAULT_CHANNEL_LINEUP == 1 )
-      LoRaMacChannelAdd( 3, ( ChannelParams_t )LC4 );
-      LoRaMacChannelAdd( 4, ( ChannelParams_t )LC5 );
-      LoRaMacChannelAdd( 5, ( ChannelParams_t )LC6 );
-      LoRaMacChannelAdd( 6, ( ChannelParams_t )LC7 );
-      LoRaMacChannelAdd( 7, ( ChannelParams_t )LC8 );
-      LoRaMacChannelAdd( 8, ( ChannelParams_t )LC9 );
-      LoRaMacChannelAdd( 9, ( ChannelParams_t )LC10 );
-
-      mibReq.Type = MIB_RX2_DEFAULT_CHANNEL;
-      mibReq.Param.Rx2DefaultChannel = ( Rx2ChannelParams_t ){ 869525000, DR_3 };
-      LoRaMacMibSetRequestConfirm( &mibReq );
-
-      mibReq.Type = MIB_RX2_CHANNEL;
-      mibReq.Param.Rx2Channel = ( Rx2ChannelParams_t ){ 869525000, DR_3 };
-      LoRaMacMibSetRequestConfirm( &mibReq );
-#endif
-
-#endif
-      state = STATE_JOIN;
-      break;
-    }
-    case STATE_JOIN:
-    {
-#if( OVER_THE_AIR_ACTIVATION != 0 )
-      MlmeReq_t mlmeReq;
-
-      mlmeReq.Type = MLME_JOIN;
-      mlmeReq.Req.Join.DevEui = devEui;
-      mlmeReq.Req.Join.AppEui = appEui;
-      mlmeReq.Req.Join.AppKey = appKey;
-      mlmeReq.Req.Join.NbTrials = JOINREQ_NBTRIALS;
-
-      //if(next_tx == true)
-      {
-          LoRaMacMlmeRequest(&mlmeReq);
-      }
-
-      state = STATE_SLEEP;
-#else
-      MibRequestConfirm_t mibReq;
-      mibReq.Type = MIB_NET_ID;
-      mibReq.Param.NetID = LORAWAN_NETWORK_ID;
-      LoRaMacMibSetRequestConfirm( &mibReq );
-
-      mibReq.Type = MIB_DEV_ADDR;
-      mibReq.Param.DevAddr = DevAddr;
-      LoRaMacMibSetRequestConfirm( &mibReq );
-
-      mibReq.Type = MIB_NWK_SKEY;
-      mibReq.Param.NwkSKey = NwkSKey;
-      LoRaMacMibSetRequestConfirm( &mibReq );
-
-      mibReq.Type = MIB_APP_SKEY;
-      mibReq.Param.AppSKey = AppSKey;
-      LoRaMacMibSetRequestConfirm( &mibReq );
-
-      mibReq.Type = MIB_NETWORK_JOINED;
-      mibReq.Param.IsNetworkJoined = true;
-      LoRaMacMibSetRequestConfirm( &mibReq );
-
-      state = STATE_SEND;
-#endif
-      break;
-    }
-    case STATE_JOINED:
-    {
-      PRINTF("JOINED\n\r");
-      state = STATE_SEND;
-      break;
-    }
-    case STATE_SEND:
-    {
-      state = STATE_SLEEP;
-      break;
-    }
-    case STATE_SLEEP:
-    {
-      // Wake up through events
-      break;
-    }
-    default:
-    {
-      state = STATE_INIT;
-      break;
-    }
-  }
-}
 
 // TODO assuming OTAA for now
-void lorawan_stack_init(uint8_t dEUI[8], uint8_t aEUI[8], uint8_t aKey[16], lora_rx_callback_t rx_cb) {
+void lorawan_stack_init(uint8_t dEUI[8], uint8_t aEUI[8], uint8_t aKey[16], join_completed_callback_t join_completed_cb, lora_rx_callback_t rx_cb) {
   memcpy(devEui, dEUI, 8);
   memcpy(appEui, aEUI, 8);
   memcpy(appKey, aKey, 16);
@@ -306,8 +243,9 @@ void lorawan_stack_init(uint8_t dEUI[8], uint8_t aEUI[8], uint8_t aKey[16], lora
   HW_Init(); // TODO refactor
 
   rx_callback = rx_cb;
+  join_completed_callback = join_completed_cb;
 
-  state = STATE_INIT;
+  state = STATE_NOT_JOINED;
 
   log_print_string("Init using OTAA");
   log_print_string("DevEui:");
@@ -316,6 +254,9 @@ void lorawan_stack_init(uint8_t dEUI[8], uint8_t aEUI[8], uint8_t aKey[16], lora
   log_print_data(appEui, 8);
   log_print_string("AppKey:");
   log_print_data(appKey, 16);
+
+  sched_register_task(&run_fsm);
+  sched_post_task(&run_fsm);
 
   loraMacPrimitives.MacMcpsConfirm = &mcps_confirm;
   loraMacPrimitives.MacMcpsIndication = &mcps_indication;
@@ -328,20 +269,50 @@ void lorawan_stack_init(uint8_t dEUI[8], uint8_t aEUI[8], uint8_t aKey[16], lora
   } else {
     log_print_string("init failed");
   }
+
+  MibRequestConfirm_t mibReq;
+  mibReq.Type = MIB_ADR;
+  mibReq.Param.AdrEnable = LORAWAN_ADR_ENABLED;
+  LoRaMacMibSetRequestConfirm( &mibReq );
+
+  mibReq.Type = MIB_PUBLIC_NETWORK;
+  mibReq.Param.EnablePublicNetwork = LORAWAN_PUBLIC_NETWORK_ENABLED;
+  LoRaMacMibSetRequestConfirm( &mibReq );
+
+  mibReq.Type = MIB_DEVICE_CLASS;
+  mibReq.Param.Class = LORAWAN_CLASS;
+  LoRaMacMibSetRequestConfirm( &mibReq );
+
+#if defined( REGION_EU868 )
+  LoRaMacTestSetDutyCycleOn(true);
+
+#if( USE_SEMTECH_DEFAULT_CHANNEL_LINEUP == 1 )
+  LoRaMacChannelAdd( 3, ( ChannelParams_t )LC4 );
+  LoRaMacChannelAdd( 4, ( ChannelParams_t )LC5 );
+  LoRaMacChannelAdd( 5, ( ChannelParams_t )LC6 );
+  LoRaMacChannelAdd( 6, ( ChannelParams_t )LC7 );
+  LoRaMacChannelAdd( 7, ( ChannelParams_t )LC8 );
+  LoRaMacChannelAdd( 8, ( ChannelParams_t )LC9 );
+  LoRaMacChannelAdd( 9, ( ChannelParams_t )LC10 );
+
+  mibReq.Type = MIB_RX2_DEFAULT_CHANNEL;
+  mibReq.Param.Rx2DefaultChannel = ( Rx2ChannelParams_t ){ 869525000, DR_3 };
+  LoRaMacMibSetRequestConfirm( &mibReq );
+
+  mibReq.Type = MIB_RX2_CHANNEL;
+  mibReq.Param.Rx2Channel = ( Rx2ChannelParams_t ){ 869525000, DR_3 };
+  LoRaMacMibSetRequestConfirm( &mibReq );
+#endif
+
+#endif
 }
 
-void lorawan_stack_tick() {
-  lora_fsm();
-}
 
-bool lorawan_stack_send(uint8_t* payload, uint8_t length, uint8_t app_port, bool request_ack) {
+lorawan_stack_error_t lorawan_stack_send(uint8_t* payload, uint8_t length, uint8_t app_port, bool request_ack) {
   if(!is_joined()) {
     log_print_string("TX not possible, not joined");
-    state = STATE_JOIN;
-    return false;
+    return LORAWAN_STACK_ERROR_NOT_JOINED;
   }
-
-  state = STATE_SEND;
 
   if(length > LORAWAN_APP_DATA_BUFF_SIZE)
       length = LORAWAN_APP_DATA_BUFF_SIZE;
@@ -361,8 +332,8 @@ bool lorawan_stack_send(uint8_t* payload, uint8_t length, uint8_t app_port, bool
     mcpsReq.Req.Unconfirmed.fBufferSize = 0;
     mcpsReq.Req.Unconfirmed.Datarate = LORAWAN_DATARATE;
     LoRaMacMcpsRequest(&mcpsReq);
-    state = STATE_SLEEP;
-    return false;
+    //state = STATE_SLEEP;
+    return LORAWAN_STACK_ERROR_TX_NOT_POSSIBLE;
   }
 
   if(!request_ack)
@@ -385,10 +356,10 @@ bool lorawan_stack_send(uint8_t* payload, uint8_t length, uint8_t app_port, bool
 
   LoRaMacStatus_t status = LoRaMacMcpsRequest(&mcpsReq);
   if(status != LORAMAC_STATUS_OK) {
-    state = STATE_SLEEP;
+    //  state = STATE_SLEEP;
     log_print_string("failed sending data (status %i)", status);
-    return false;
+    return LORAWAN_STACK_ERROR_UNKNOWN;
   }
 
-  return true;
+  return LORAWAN_STACK_ERROR_OK;
 }

@@ -32,11 +32,19 @@ typedef struct
 
 } lora_AppData_t;
 
-typedef void (*lora_rx_callback_t) (lora_AppData_t *AppData);
+typedef enum {
+  LORAWAN_STACK_ERROR_OK,
+  LORAWAN_STACK_ERROR_NOT_JOINED,
+  LORAWAN_STACK_ERROR_TX_NOT_POSSIBLE,
+  LORAWAN_STACK_ERROR_UNKNOWN,
+} lorawan_stack_error_t;
 
-void lorawan_stack_init(uint8_t devEUI[8], uint8_t appEUI[8], uint8_t appKey[16], lora_rx_callback_t cb);
-void lorawan_stack_tick();
-bool lorawan_stack_send(uint8_t* payload, uint8_t length, uint8_t app_port, bool request_ack);
+typedef void (*lora_rx_callback_t)(lora_AppData_t *AppData);
+typedef void (*join_completed_callback_t)(bool success);
+
+void lorawan_stack_init(uint8_t devEUI[8], uint8_t appEUI[8], uint8_t appKey[16], join_completed_callback_t join_failed_cb, lora_rx_callback_t cb);
+bool lorawan_stack_join();
+lorawan_stack_error_t lorawan_stack_send(uint8_t* payload, uint8_t length, uint8_t app_port, bool request_ack);
 
 #endif //LORAWAN_STACK_H
 
