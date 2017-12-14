@@ -190,7 +190,7 @@ static void switch_state(dll_state_t next_state)
         DPRINT("Switched to DLL_STATE_SCAN_AUTOMATION");
         break;
     case DLL_STATE_TX_FOREGROUND:
-        assert(dll_state == DLL_STATE_CCA2);
+        assert(dll_state == DLL_STATE_CCA2 || dll_state == DLL_STATE_CSMA_CA_STARTED);
         dll_state = next_state;
         DPRINT("Switched to DLL_STATE_TX_FOREGROUND");
         break;
