@@ -160,6 +160,8 @@ void fs_init(fs_init_args_t* init_args)
     };
 
     memset(data + current_data_offset, 0, D7A_FILE_NWL_SECURITY_SIZE);
+    data[current_data_offset] = PROVISIONED_KEY_COUNTER;
+
     current_data_offset += D7A_FILE_NWL_SECURITY_SIZE;
 
     // 0x0E - Network security key
@@ -339,7 +341,6 @@ alp_status_codes_t fs_read_nwl_security_state_register(d7anp_node_security_t *no
     return ALP_STATUS_OK;
 }
 
-
 alp_status_codes_t fs_add_nwl_security_state_register_entry(d7anp_trusted_node_t *trusted_node,
                                                             uint8_t trusted_node_nb)
 {
@@ -374,7 +375,6 @@ alp_status_codes_t fs_update_nwl_security_state_register(d7anp_trusted_node_t *t
     memcpy(data_ptr, &frame_counter, sizeof(uint32_t));
     return ALP_STATUS_OK;
 }
-
 
 void fs_read_access_class(uint8_t access_class_index, dae_access_profile_t *access_class)
 {
