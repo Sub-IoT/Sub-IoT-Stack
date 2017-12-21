@@ -2,7 +2,12 @@
 
 node {
     stage('Pull changes') {
-        sh' git clean -dfx'
+        sh '''
+        if [ -d .git ]; then
+         git clean -dfx
+        fi;
+        
+        '''
         checkout scm
         sh '''
             rm -rf B_L072Z_LRWAN1
