@@ -24,14 +24,9 @@ node {
          '''
         
     }
-step([$class: 'GitHubCommitStatusSetter',
-           contextSource: [$class: 'ManuallyEnteredCommitContextSource',
-                            context: 'Test Context'],
-      reposSource: [$class: "ManuallyEnteredRepositorySource", url: 'https://github.com/MOSAIC-LoPoW/dash7-ap-open-source-stack'],
-            statusResultSource: [$class: 'ConditionalStatusResultSource',
-                                 results: [[$class: 'AnyBuildResult',
-                                            message: 'test message',
-                                            state: 'SUCCESS']]]])
+
+
+ 
     stage('Build B_L072Z_LRWAN1 platform') {
         dir('B_L072Z_LRWAN1') {
             sh 'mkdir build'
@@ -47,6 +42,7 @@ step([$class: 'GitHubCommitStatusSetter',
         }
     }
 
+  setBuildStatus("testMessage","SUCCESS")
  
     stage('Build NUCLEO_L073RZ platform') {
         dir('NUCLEO_L073RZ') {
@@ -102,7 +98,7 @@ step([$class: 'GitHubCommitStatusSetter',
    repoUrl = getRepoURL()
   step([
       $class: "GitHubCommitStatusSetter",
-      reposSource: [$class: "ManuallyEnteredRepositorySource", url: repoUrl],
+      reposSource: [$class: "ManuallyEnteredRepositorySource", url: 'https://github.com/MOSAIC-LoPoW/dash7-ap-open-source-stack'],
       contextSource: [$class: "ManuallyEnteredCommitContextSource", context: "ci/jenkins/build-status"],
       errorHandlers: [[$class: "ChangingBuildStatusErrorHandler", result: "UNSTABLE"]],
       statusResultSource: [ $class: "ConditionalStatusResultSource", results: [[$class: "AnyBuildResult", message: message, state: state]] ]
