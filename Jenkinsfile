@@ -41,8 +41,16 @@ node {
             }
         }
     }
-
-  setBuildStatus("B_L072Z_LRWAN1","Platform","SUCCESS") || true
+ stage('Setting status') {
+script {
+            try {
+               
+  setBuildStatus("B_L072Z_LRWAN1","Platform","SUCCESS")
+                } catch (err) {
+                echo err
+            }
+        }
+ }
  
     stage('Build NUCLEO_L073RZ platform') {
         dir('NUCLEO_L073RZ') {
@@ -98,9 +106,7 @@ node {
 
  def setBuildStatus(String context,String message, String state) {
    repoUrl = getRepoURL()
-  script {
-            try {
-               
+  
   step([
       $class: "GitHubCommitStatusSetter",
       reposSource: [$class: "ManuallyEnteredRepositorySource", url: 'https://github.com/MOSAIC-LoPoW/dash7-ap-open-source-stack'],
@@ -109,10 +115,7 @@ node {
       statusResultSource: [ $class: "ConditionalStatusResultSource", results: [[$class: "AnyBuildResult", message: message, state: state]] ]
   ]);
   
-            } catch (err) {
-                echo err
-            }
-        }
+         
 }
 def getRepoURL() {
   sh "git config --get remote.origin.url > .git/remote-url"
