@@ -74,6 +74,7 @@ node {
         }
     }
   setBuildStatus("Platform: EZR32LG_WSTK6200A","SUCCESS")
+ 
      stage('Build cortus_fpga platform') {
         dir('cortus_fpga') {
             sh 'mkdir build'
@@ -88,7 +89,7 @@ node {
             }
         }
     }
- setBuildStatus("Platform: cortus_fpga","SUCCESS"
+ setBuildStatus("Platform: cortus_fpga","SUCCESS")
     stage ('Save Artifacts'){
          if (env.BRANCH_NAME == 'master') {
             archiveArtifacts '**'
