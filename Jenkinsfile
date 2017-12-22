@@ -42,7 +42,7 @@ node {
         }
     }
 
-  setBuildStatus("Platform: B_L072Z_LRWAN1","SUCCESS")
+  setBuildStatus("B_L072Z_LRWAN1","Platform","SUCCESS")
  
     stage('Build NUCLEO_L073RZ platform') {
         dir('NUCLEO_L073RZ') {
@@ -58,7 +58,7 @@ node {
             }
         }
     }
-   setBuildStatus("Platform: NUCLEO_L073RZ","SUCCESS")
+ setBuildStatus("NUCLEO_L073RZ","Platform","SUCCESS")
     stage('Build EZR32LG_WSTK6200A platform') {
         dir('EZR32LG_WSTK6200A') {
             sh 'mkdir build'
@@ -73,8 +73,7 @@ node {
             }
         }
     }
-  setBuildStatus("Platform: EZR32LG_WSTK6200A","SUCCESS")
- 
+ setBuildStatus("EZR32LG_WSTK6200A","Platform","SUCCESS")
      stage('Build cortus_fpga platform') {
         dir('cortus_fpga') {
             sh 'mkdir build'
@@ -89,7 +88,7 @@ node {
             }
         }
     }
- setBuildStatus("Platform: cortus_fpga","SUCCESS")
+  setBuildStatus("cortus_fpga","Platform","SUCCESS")
     stage ('Save Artifacts'){
          if (env.BRANCH_NAME == 'master') {
             archiveArtifacts '**'
@@ -97,12 +96,12 @@ node {
     }
 }
 
- def setBuildStatus(String message, String state) {
+ def setBuildStatus(String context,String message, String state) {
    repoUrl = getRepoURL()
   step([
       $class: "GitHubCommitStatusSetter",
       reposSource: [$class: "ManuallyEnteredRepositorySource", url: 'https://github.com/MOSAIC-LoPoW/dash7-ap-open-source-stack'],
-      contextSource: [$class: "ManuallyEnteredCommitContextSource", context: "ci/jenkins/build-status"],
+      contextSource: [$class: "ManuallyEnteredCommitContextSource", context: context],
       errorHandlers: [[$class: "ChangingBuildStatusErrorHandler", result: "UNSTABLE"]],
       statusResultSource: [ $class: "ConditionalStatusResultSource", results: [[$class: "AnyBuildResult", message: message, state: state]] ]
   ]);
