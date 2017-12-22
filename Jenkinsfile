@@ -2,6 +2,7 @@
 
 node {
     stage('Pull changes') {
+        properties([[$class: 'CopyArtifactPermissionProperty', projectNames: '*']])
         sh '''
         if [ -d .git ]; then
          git clean -dfx
@@ -84,7 +85,6 @@ node {
     stage ('Save Artifacts'){
          if (env.BRANCH_NAME == 'master') {
             archiveArtifacts '**'
-            build 'FlashRPI'
         }
     }
     
