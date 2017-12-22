@@ -1,12 +1,14 @@
 #!/usr/bin/env groovy
 
 node {
+ 
     stage('Pull changes') {
+        
+        properties([[$class: 'CopyArtifactPermissionProperty', projectNames: '*']])
         sh '''
         if [ -d .git ]; then
          git clean -dfx
-        fi;
-        
+        fi;        
         '''
         checkout scm
         sh '''
@@ -22,7 +24,13 @@ node {
          '''
         
     }
-
+step([$class: 'GitHubCommitStatusSetter',
+           contextSource: [$class: 'ManuallyEnteredCommitContextSource',
+                            context: 'Test Context'],
+            statusResultSource: [$class: 'ConditionalStatusResultSource',
+                                 results: [[$class: 'AnyBuildResult',
+                                            message: 'test message',
+                                            state: 'SUCCESS']]]])
     stage('Build B_L072Z_LRWAN1 platform') {
         dir('B_L072Z_LRWAN1') {
             sh 'mkdir build'
@@ -38,6 +46,7 @@ node {
         }
     }
 
+ 
     stage('Build NUCLEO_L073RZ platform') {
         dir('NUCLEO_L073RZ') {
              sh 'mkdir build'
@@ -52,7 +61,7 @@ node {
             }
         }
     }
-
+ 
     stage('Build EZR32LG_WSTK6200A platform') {
         dir('EZR32LG_WSTK6200A') {
             sh 'mkdir build'
@@ -84,9 +93,21 @@ node {
     stage ('Save Artifacts'){
          if (env.BRANCH_NAME == 'master') {
             archiveArtifacts '**'
-            build 'FlashRPI'
         }
     }
-    
-  
+}
+
+ def setBuildStatus(String message, String state) {
+   repoUrl = getRepoURL()
+  step([
+      $class: "GitHubCommitStatusSetter",
+      reposSource: [$class: "ManuallyEnteredRepositorySource", url: repoUrl],
+      contextSource: [$class: "ManuallyEnteredCommitContextSource", context: "ci/jenkins/build-status"],
+      errorHandlers: [[$class: "ChangingBuildStatusErrorHandler", result: "UNSTABLE"]],
+      statusResultSource: [ $class: "ConditionalStatusResultSource", results: [[$class: "AnyBuildResult", message: message, state: state]] ]
+  ]);
+}
+def getRepoURL() {
+  sh "git config --get remote.origin.url > .git/remote-url"
+  return readFile(".git/remote-url").trim()
 }
