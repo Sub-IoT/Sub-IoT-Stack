@@ -42,7 +42,7 @@ node {
         }
     }
 
-  setBuildStatus("testMessage","SUCCESS")
+  setBuildStatus("Platform: B_L072Z_LRWAN1","SUCCESS")
  
     stage('Build NUCLEO_L073RZ platform') {
         dir('NUCLEO_L073RZ') {
@@ -58,7 +58,7 @@ node {
             }
         }
     }
- 
+   setBuildStatus("Platform: NUCLEO_L073RZ","SUCCESS")
     stage('Build EZR32LG_WSTK6200A platform') {
         dir('EZR32LG_WSTK6200A') {
             sh 'mkdir build'
@@ -73,6 +73,7 @@ node {
             }
         }
     }
+  setBuildStatus("Platform: EZR32LG_WSTK6200A","SUCCESS")
      stage('Build cortus_fpga platform') {
         dir('cortus_fpga') {
             sh 'mkdir build'
@@ -87,6 +88,7 @@ node {
             }
         }
     }
+ setBuildStatus("Platform: cortus_fpga","SUCCESS"
     stage ('Save Artifacts'){
          if (env.BRANCH_NAME == 'master') {
             archiveArtifacts '**'
@@ -103,6 +105,7 @@ node {
       errorHandlers: [[$class: "ChangingBuildStatusErrorHandler", result: "UNSTABLE"]],
       statusResultSource: [ $class: "ConditionalStatusResultSource", results: [[$class: "AnyBuildResult", message: message, state: state]] ]
   ]);
+  return true;
 }
 def getRepoURL() {
   sh "git config --get remote.origin.url > .git/remote-url"
