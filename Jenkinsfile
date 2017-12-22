@@ -98,6 +98,9 @@ node {
 
  def setBuildStatus(String context,String message, String state) {
    repoUrl = getRepoURL()
+  script {
+            try {
+               
   step([
       $class: "GitHubCommitStatusSetter",
       reposSource: [$class: "ManuallyEnteredRepositorySource", url: 'https://github.com/MOSAIC-LoPoW/dash7-ap-open-source-stack'],
@@ -105,7 +108,11 @@ node {
       errorHandlers: [[$class: "ChangingBuildStatusErrorHandler", result: "UNSTABLE"]],
       statusResultSource: [ $class: "ConditionalStatusResultSource", results: [[$class: "AnyBuildResult", message: message, state: state]] ]
   ]);
-  return true;
+  
+            } catch (err) {
+                echo err
+            }
+        }
 }
 def getRepoURL() {
   sh "git config --get remote.origin.url > .git/remote-url"
