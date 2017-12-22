@@ -105,7 +105,6 @@ node {
       errorHandlers: [[$class: "ChangingBuildStatusErrorHandler", result: "UNSTABLE"]],
       statusResultSource: [ $class: "ConditionalStatusResultSource", results: [[$class: "AnyBuildResult", message: message, state: state]] ]
   ]);
-  return true;
 }
 def getRepoURL() {
   sh "git config --get remote.origin.url > .git/remote-url"
