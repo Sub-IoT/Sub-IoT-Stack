@@ -27,6 +27,7 @@ node {
 step([$class: 'GitHubCommitStatusSetter',
            contextSource: [$class: 'ManuallyEnteredCommitContextSource',
                             context: 'Test Context'],
+      reposSource: [$class: "ManuallyEnteredRepositorySource", url: 'https://github.com/MOSAIC-LoPoW/dash7-ap-open-source-stack'],
             statusResultSource: [$class: 'ConditionalStatusResultSource',
                                  results: [[$class: 'AnyBuildResult',
                                             message: 'test message',
