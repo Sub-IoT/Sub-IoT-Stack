@@ -42,7 +42,7 @@ node {
         }
     }
 
-  setBuildStatus("B_L072Z_LRWAN1","Platform","SUCCESS")
+  setBuildStatus("B_L072Z_LRWAN1","Platform","SUCCESS") || true
  
     stage('Build NUCLEO_L073RZ platform') {
         dir('NUCLEO_L073RZ') {
@@ -58,7 +58,7 @@ node {
             }
         }
     }
- setBuildStatus("NUCLEO_L073RZ","Platform","SUCCESS")
+ setBuildStatus("NUCLEO_L073RZ","Platform","SUCCESS") || true
     stage('Build EZR32LG_WSTK6200A platform') {
         dir('EZR32LG_WSTK6200A') {
             sh 'mkdir build'
@@ -73,7 +73,7 @@ node {
             }
         }
     }
- setBuildStatus("EZR32LG_WSTK6200A","Platform","SUCCESS")
+ setBuildStatus("EZR32LG_WSTK6200A","Platform","SUCCESS") || true
      stage('Build cortus_fpga platform') {
         dir('cortus_fpga') {
             sh 'mkdir build'
@@ -88,7 +88,7 @@ node {
             }
         }
     }
-  setBuildStatus("cortus_fpga","Platform","SUCCESS")
+  setBuildStatus("cortus_fpga","Platform","SUCCESS") || true
     stage ('Save Artifacts'){
          if (env.BRANCH_NAME == 'master') {
             archiveArtifacts '**'
