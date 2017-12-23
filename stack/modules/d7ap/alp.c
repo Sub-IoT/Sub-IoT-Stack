@@ -165,6 +165,38 @@ static alp_status_codes_t process_op_read_file_data(alp_command_t* command) {
   return alp_status;
 }
 
+static alp_status_codes_t process_op_read_file_properties(alp_command_t* command) {
+  uint8_t file_id;
+  error_t err;
+  err = fifo_skip(&command->alp_command_fifo, 1); assert(err == SUCCESS); // skip the control byte
+  err = fifo_pop(&command->alp_command_fifo, &file_id, 1); assert(err == SUCCESS);
+  DPRINT("READ FILE PROPERTIES %i", file_id);
+
+  fs_file_header_t file_header;
+  alp_status_codes_t alp_status = fs_read_file_header(file_id, &file_header);
+
+  if(alp_status == ALP_STATUS_OK) {
+    // fill response
+    err = fifo_put_byte(&command->alp_response_fifo, ALP_OP_RETURN_FILE_PROPERTIES); assert(err == SUCCESS);
+    err = fifo_put_byte(&command->alp_response_fifo, file_id); assert(err == SUCCESS);
+    err = fifo_put(&command->alp_response_fifo, (uint8_t*)&file_header, sizeof(fs_file_header_t)); assert(err == SUCCESS);
+  }
+
+  return alp_status;
+}
+
+static alp_status_codes_t process_op_write_file_properties(alp_command_t* command) {
+  uint8_t file_id;
+  error_t err;
+  fs_file_header_t file_header;
+  err = fifo_skip(&command->alp_command_fifo, 1); assert(err == SUCCESS); // skip the control byte
+  err = fifo_pop(&command->alp_command_fifo, &file_id, 1); assert(err == SUCCESS);
+  err = fifo_pop(&command->alp_command_fifo, (uint8_t*)&file_header, sizeof(fs_file_header_t)); assert(err == SUCCESS);
+  DPRINT("WRITE FILE PROPERTIES %i", file_id);
+
+  return fs_write_file_header(file_id, &file_header);
+}
+
 static alp_status_codes_t process_op_write_file_data(alp_command_t* command) {
   alp_operand_file_data_t operand;
   error_t err;
@@ -356,8 +388,14 @@ bool alp_process_command(uint8_t* alp_command, uint8_t alp_command_length, uint8
       case ALP_OP_READ_FILE_DATA:
         alp_status = process_op_read_file_data(command);
         break;
+      case ALP_OP_READ_FILE_PROPERTIES:
+        alp_status = process_op_read_file_properties(command);
+        break;
       case ALP_OP_WRITE_FILE_DATA:
         alp_status = process_op_write_file_data(command);
+        break;
+      case ALP_OP_WRITE_FILE_PROPERTIES:
+        alp_status = process_op_write_file_properties(command);
         break;
       case ALP_OP_FORWARD:
         alp_status = process_op_forward(command, &d7asp_session_config);

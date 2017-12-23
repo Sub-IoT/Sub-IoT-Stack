@@ -123,10 +123,10 @@ void init_user_files()
     // file 0x40: contains our sensor data + configure an action file to be executed upon write
     fs_file_header_t file_header = (fs_file_header_t){
         .file_properties.action_protocol_enabled = 1,
-        .file_properties.action_file_id = ACTION_FILE_ID,
         .file_properties.action_condition = ALP_ACT_COND_WRITE,
         .file_properties.storage_class = FS_STORAGE_VOLATILE,
-        .file_properties.permissions = 0, // TODO
+        .file_permissions = 0, // TODO
+        .alp_cmd_file_id = ACTION_FILE_ID,
         .length = SENSOR_FILE_SIZE
     };
 

@@ -68,29 +68,22 @@ typedef enum
     FS_STORAGE_PERMANENT = 3
 } fs_storage_class_t;
 
-typedef struct
+typedef struct __packed
 {
-    uint8_t action_file_id;
-    union
-    {
-        uint8_t _flags;
-        struct
-        {
-            bool action_protocol_enabled : 1;
-            alp_act_condition_t action_condition : 3;
-            uint8_t _rfu : 2;
-            fs_storage_class_t storage_class : 2; // TODO
-        };
-        // TODO save to use bitfields here?
-    };
-    uint8_t permissions;
+    fs_storage_class_t storage_class : 2;
+    uint8_t _rfu : 2;
+    alp_act_condition_t action_condition : 3;
+    bool action_protocol_enabled : 1;
 } fs_file_properties_t;
 
-typedef struct
+typedef struct __packed
 {
+    uint8_t file_permissions; // TODO not used for now
     fs_file_properties_t file_properties;
+    uint8_t alp_cmd_file_id;
+    uint8_t interface_file_id;
     uint32_t length;
-    // TODO not used for now uint32_t allocated_length;
+    uint32_t allocated_length;
 } fs_file_header_t;
 
 /**
@@ -126,6 +119,8 @@ alp_status_codes_t fs_read_file(uint8_t file_id, uint8_t offset, uint8_t* buffer
 alp_status_codes_t fs_write_file(uint8_t file_id, uint8_t offset, const uint8_t* buffer, uint8_t length);
 void fs_read_access_class(uint8_t access_class_index, dae_access_profile_t* access_class);
 void fs_write_access_class(uint8_t access_class_index, dae_access_profile_t* access_class);
+alp_status_codes_t fs_read_file_header(uint8_t file_id, fs_file_header_t* file_header);
+alp_status_codes_t fs_write_file_header(uint8_t file_id, fs_file_header_t* file_header);
 void fs_read_uid(uint8_t* buffer);
 void fs_read_vid(uint8_t* buffer);
 void fs_write_vid(uint8_t* buffer);

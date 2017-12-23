@@ -91,8 +91,9 @@ void fs_init(fs_init_args_t* init_args)
     file_headers[D7A_FILE_UID_FILE_ID] = (fs_file_header_t){
         .file_properties.action_protocol_enabled = 0,
         .file_properties.storage_class = FS_STORAGE_PERMANENT,
-        .file_properties.permissions = 0, // TODO
-        .length = D7A_FILE_UID_SIZE
+        .file_permissions = 0, // TODO
+        .length = D7A_FILE_UID_SIZE,
+        .allocated_length = D7A_FILE_UID_SIZE
     };
 
     uint64_t id = hw_get_unique_id();
@@ -106,8 +107,9 @@ void fs_init(fs_init_args_t* init_args)
     file_headers[D7A_FILE_FIRMWARE_VERSION_FILE_ID] = (fs_file_header_t){
         .file_properties.action_protocol_enabled = 0,
         .file_properties.storage_class = FS_STORAGE_PERMANENT,
-        .file_properties.permissions = 0, // TODO
-        .length = D7A_FILE_FIRMWARE_VERSION_SIZE
+        .file_permissions = 0, // TODO
+        .length = D7A_FILE_FIRMWARE_VERSION_SIZE,
+        .allocated_length = D7A_FILE_FIRMWARE_VERSION_SIZE
     };
 
     memset(data + current_data_offset, D7A_PROTOCOL_VERSION_MAJOR, 1); current_data_offset++;
@@ -122,8 +124,9 @@ void fs_init(fs_init_args_t* init_args)
     file_headers[D7A_FILE_DLL_CONF_FILE_ID] = (fs_file_header_t){
         .file_properties.action_protocol_enabled = 0,
         .file_properties.storage_class = FS_STORAGE_RESTORABLE,
-        .file_properties.permissions = 0, // TODO
-        .length = D7A_FILE_DLL_CONF_SIZE
+        .file_permissions = 0, // TODO
+        .length = D7A_FILE_DLL_CONF_SIZE,
+        .allocated_length = D7A_FILE_DLL_CONF_SIZE
     };
 
     data[current_data_offset] = init_args->access_class; current_data_offset += 1; // active access class
@@ -145,8 +148,9 @@ void fs_init(fs_init_args_t* init_args)
         file_headers[D7A_FILE_ACCESS_PROFILE_ID + i] = (fs_file_header_t){
             .file_properties.action_protocol_enabled = 0,
             .file_properties.storage_class = FS_STORAGE_PERMANENT,
-            .file_properties.permissions = 0, // TODO
-            .length = D7A_FILE_ACCESS_PROFILE_SIZE
+            .file_permissions = 0, // TODO
+            .length = D7A_FILE_ACCESS_PROFILE_SIZE,
+            .allocated_length = D7A_FILE_ACCESS_PROFILE_SIZE
         };
     }
 
@@ -155,8 +159,9 @@ void fs_init(fs_init_args_t* init_args)
     file_headers[D7A_FILE_NWL_SECURITY] = (fs_file_header_t){
         .file_properties.action_protocol_enabled = 0,
         .file_properties.storage_class = FS_STORAGE_PERMANENT,
-        .file_properties.permissions = 0, // TODO
-        .length = D7A_FILE_NWL_SECURITY_SIZE
+        .file_permissions = 0, // TODO
+        .length = D7A_FILE_NWL_SECURITY_SIZE,
+        .allocated_length = D7A_FILE_ACCESS_PROFILE_SIZE
     };
 
     memset(data + current_data_offset, 0, D7A_FILE_NWL_SECURITY_SIZE);
@@ -169,8 +174,9 @@ void fs_init(fs_init_args_t* init_args)
     file_headers[D7A_FILE_NWL_SECURITY_KEY] = (fs_file_header_t){
         .file_properties.action_protocol_enabled = 0,
         .file_properties.storage_class = FS_STORAGE_PERMANENT,
-        .file_properties.permissions = 0, // TODO
-        .length = D7A_FILE_NWL_SECURITY_KEY_SIZE
+        .file_permissions = 0, // TODO
+        .length = D7A_FILE_NWL_SECURITY_KEY_SIZE,
+        .allocated_length = D7A_FILE_NWL_SECURITY_KEY_SIZE
     };
 
     memcpy(data + current_data_offset, AES128_key, D7A_FILE_NWL_SECURITY_KEY_SIZE);
@@ -181,8 +187,9 @@ void fs_init(fs_init_args_t* init_args)
     file_headers[D7A_FILE_NWL_SECURITY_STATE_REG] = (fs_file_header_t){
         .file_properties.action_protocol_enabled = 0,
         .file_properties.storage_class = FS_STORAGE_PERMANENT,
-        .file_properties.permissions = 0, // TODO
-        .length = init_args->ssr_filter_mode & ENABLE_SSR_FILTER ? D7A_FILE_NWL_SECURITY_STATE_REG_SIZE : 1
+        .file_permissions = 0, // TODO
+        .length = init_args->ssr_filter_mode & ENABLE_SSR_FILTER ? D7A_FILE_NWL_SECURITY_STATE_REG_SIZE : 1,
+        .allocated_length = init_args->ssr_filter_mode & ENABLE_SSR_FILTER ? D7A_FILE_NWL_SECURITY_STATE_REG_SIZE : 1
     };
 
     data[current_data_offset] = init_args->ssr_filter_mode; current_data_offset++;
@@ -226,12 +233,14 @@ void fs_init_file_with_D7AActP(uint8_t file_id, const d7asp_master_session_confi
 
     memcpy(ptr, alp_command, alp_command_len); ptr += alp_command_len;
 
+    uint32_t len = ptr - alp_command_buffer;
     // TODO fixed header implemented here, or should this be configurable by app?
     fs_file_header_t action_file_header = (fs_file_header_t){
         .file_properties.action_protocol_enabled = 0,
         .file_properties.storage_class = FS_STORAGE_PERMANENT,
-        .file_properties.permissions = 0, // TODO
-        .length = ptr - alp_command_buffer
+        .file_permissions = 0, // TODO
+        .length = len,
+        .allocated_length = len,
     };
 
     fs_init_file(file_id, &action_file_header, alp_command_buffer);
@@ -246,6 +255,22 @@ alp_status_codes_t fs_read_file(uint8_t file_id, uint8_t offset, uint8_t* buffer
     return ALP_STATUS_OK;
 }
 
+alp_status_codes_t fs_read_file_header(uint8_t file_id, fs_file_header_t* file_header)
+{
+  if(!is_file_defined(file_id)) return ALP_STATUS_FILE_ID_NOT_EXISTS;
+
+  memcpy(file_header, &file_headers[file_id], sizeof(fs_file_header_t));
+  return ALP_STATUS_OK;
+}
+
+alp_status_codes_t fs_write_file_header(uint8_t file_id, fs_file_header_t* file_header)
+{
+  if(!is_file_defined(file_id)) return ALP_STATUS_FILE_ID_NOT_EXISTS;
+
+  memcpy(&file_headers[file_id], file_header, sizeof(fs_file_header_t));
+  return ALP_STATUS_OK;
+}
+
 alp_status_codes_t fs_write_file(uint8_t file_id, uint8_t offset, const uint8_t* buffer, uint8_t length)
 {
     if(!is_file_defined(file_id)) return ALP_STATUS_FILE_ID_NOT_EXISTS;
@@ -256,7 +281,7 @@ alp_status_codes_t fs_write_file(uint8_t file_id, uint8_t offset, const uint8_t*
     if(file_headers[file_id].file_properties.action_protocol_enabled == true
             && file_headers[file_id].file_properties.action_condition == ALP_ACT_COND_WRITE) // TODO ALP_ACT_COND_WRITEFLUSH?
     {
-        execute_alp_command(file_headers[file_id].file_properties.action_file_id);
+        execute_alp_command(file_headers[file_id].alp_cmd_file_id);
     }
 
     if(file_id == D7A_FILE_DLL_CONF_FILE_ID)

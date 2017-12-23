@@ -149,8 +149,8 @@ void init_user_files()
   // file 0x40: contains our sensor data
   fs_file_header_t file_header = (fs_file_header_t){
       .file_properties.action_protocol_enabled = 0,
-      .file_properties.permissions = 0, // TODO
-      .length = SENSOR_FILE_SIZE
+      .file_permissions = 0, // TODO
+      .length = SENSOR_FILE_SIZE,
   };
 
   fs_init_file(SENSOR_FILE_ID, &file_header, NULL);
