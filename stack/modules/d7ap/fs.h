@@ -68,15 +68,15 @@ typedef enum
     FS_STORAGE_PERMANENT = 3
 } fs_storage_class_t;
 
-typedef struct __packed
+typedef struct
 {
     fs_storage_class_t storage_class : 2;
     uint8_t _rfu : 2;
     alp_act_condition_t action_condition : 3;
     bool action_protocol_enabled : 1;
-} fs_file_properties_t;
+} __packed fs_file_properties_t;
 
-typedef struct __packed
+typedef struct
 {
     uint8_t file_permissions; // TODO not used for now
     fs_file_properties_t file_properties;
@@ -84,7 +84,7 @@ typedef struct __packed
     uint8_t interface_file_id;
     uint32_t length;
     uint32_t allocated_length;
-} fs_file_header_t;
+} __packed fs_file_header_t;
 
 /**
  * \brief Initialize the user files in this callback.
