@@ -2,6 +2,7 @@
 
 node {
     stage('Pull changes') {
+        properties([[$class: 'CopyArtifactPermissionProperty', projectNames: '*']])
         sh '''
         if [ -d .git ]; then
          git clean -dfx
@@ -37,7 +38,7 @@ node {
             }
         }
     }
-
+setBuildStatus("B_L072Z_LRWAN1","Build","SUCCESS")
     stage('Build NUCLEO_L073RZ platform') {
         dir('NUCLEO_L073RZ') {
              sh 'mkdir build'
@@ -52,7 +53,7 @@ node {
             }
         }
     }
-
+    setBuildStatus("NUCLEO_L073RZ","Build","SUCCESS")
     stage('Build EZR32LG_WSTK6200A platform') {
         dir('EZR32LG_WSTK6200A') {
             sh 'mkdir build'
@@ -67,6 +68,7 @@ node {
             }
         }
     }
+    setBuildStatus("EZR32LG_WSTK6200A","Build","SUCCESS")
      stage('Build cortus_fpga platform') {
         dir('cortus_fpga') {
             sh 'mkdir build'
@@ -81,12 +83,19 @@ node {
             }
         }
     }
+    setBuildStatus("cortus_fpga","Build","SUCCESS")
     stage ('Save Artifacts'){
          if (env.BRANCH_NAME == 'master') {
             archiveArtifacts '**'
-            build 'FlashRPI'
         }
-    }
-    
-  
+    }  
+}
+def setBuildStatus(String context,String message, String state) {
+  step([
+      $class: "GitHubCommitStatusSetter",
+      reposSource: [$class: "ManuallyEnteredRepositorySource", url: 'https://github.com/MOSAIC-LoPoW/dash7-ap-open-source-stack'],
+      contextSource: [$class: "ManuallyEnteredCommitContextSource", context: context],
+      errorHandlers: [[$class: "ChangingBuildStatusErrorHandler", result: "UNSTABLE"]],
+      statusResultSource: [ $class: "ConditionalStatusResultSource", results: [[$class: "AnyBuildResult", message: message, state: state]] ]
+  ]);
 }
