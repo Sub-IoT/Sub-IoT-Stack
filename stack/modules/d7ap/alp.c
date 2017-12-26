@@ -133,13 +133,48 @@ static uint8_t process_action(uint8_t* alp_action, uint8_t* alp_response, uint8_
 
 }
 
+static uint32_t parse_length_operand(fifo_t* cmd_fifo) {
+  uint8_t len = 0;
+  fifo_pop(cmd_fifo, (uint8_t*)&len, 1);
+  uint8_t field_len = len >> 6;
+  if(field_len == 0)
+    return (uint32_t)len;
+
+  uint32_t full_length = (len & 0x3F) << ( 8 * field_len); // mask field length specificier bits and shoft before adding other length bytes
+  fifo_pop(cmd_fifo, (uint8_t*)&full_length, field_len);
+  return full_length;
+}
+
+static void generate_length_operand(fifo_t* cmd_fifo, uint32_t length) {
+  if(length < 64) {
+    // can be coded in one byte
+    fifo_put(cmd_fifo, (uint8_t*)&length, 1);
+    return;
+  }
+
+  uint8_t size = 1;
+  if(length > 0x3FFF)
+    size = 2;
+  if(length > 0x3FFFFF)
+    size = 3;
+
+  uint8_t byte = 0;
+  byte += (size << 6); // length specifier bits
+  byte += ((uint8_t*)(&length))[size];
+  fifo_put(cmd_fifo, &byte, 1);
+  do {
+    size--;
+    fifo_put(cmd_fifo, (uint8_t*)&length + size, 1);
+  } while(size > 0);
+}
+
 static alp_status_codes_t process_op_read_file_data(alp_command_t* command) {
   alp_operand_file_data_request_t operand;
   error_t err;
   err = fifo_skip(&command->alp_command_fifo, 1); assert(err == SUCCESS); // skip the control byte
   err = fifo_pop(&command->alp_command_fifo, &operand.file_offset.file_id, 1); assert(err == SUCCESS);
-  err = fifo_pop(&command->alp_command_fifo, &operand.file_offset.offset, 1); assert(err == SUCCESS); // TODO can be 1-4 bytes, assume 1 for now
-  err = fifo_pop(&command->alp_command_fifo, &operand.requested_data_length, 1); assert(err == SUCCESS);
+  operand.file_offset.offset = parse_length_operand(&command->alp_command_fifo);
+  operand.requested_data_length = parse_length_operand(&command->alp_command_fifo);
   DPRINT("READ FILE %i LEN %i", operand.file_offset.file_id, operand.requested_data_length);
 
   if(operand.requested_data_length <= 0)
@@ -157,8 +192,8 @@ static alp_status_codes_t process_op_read_file_data(alp_command_t* command) {
     // fill response
     err = fifo_put_byte(&command->alp_response_fifo, ALP_OP_RETURN_FILE_DATA); assert(err == SUCCESS);
     err = fifo_put_byte(&command->alp_response_fifo, operand.file_offset.file_id); assert(err == SUCCESS);
-    err = fifo_put_byte(&command->alp_response_fifo, operand.file_offset.offset); assert(err == SUCCESS); // TODO can be 1-4 bytes, assume 1 for now
-    err = fifo_put_byte(&command->alp_response_fifo, operand.requested_data_length); assert(err == SUCCESS);
+    generate_length_operand(&command->alp_response_fifo, operand.file_offset.offset);
+    generate_length_operand(&command->alp_response_fifo, operand.requested_data_length);
     err = fifo_put(&command->alp_response_fifo, data, operand.requested_data_length); assert(err == SUCCESS);
   }
 
@@ -202,8 +237,8 @@ static alp_status_codes_t process_op_write_file_data(alp_command_t* command) {
   error_t err;
   err = fifo_skip(&command->alp_command_fifo, 1); assert(err == SUCCESS); // skip the control byte
   err = fifo_pop(&command->alp_command_fifo, &operand.file_offset.file_id, 1); assert(err == SUCCESS);
-  err = fifo_pop(&command->alp_command_fifo, &operand.file_offset.offset, 1); assert(err == SUCCESS); // TODO can be 1-4 bytes, assume 1 for now
-  err = fifo_pop(&command->alp_command_fifo, &operand.provided_data_length, 1); assert(err == SUCCESS);
+  operand.file_offset.offset = parse_length_operand(&command->alp_command_fifo);
+  operand.provided_data_length = parse_length_operand(&command->alp_command_fifo);
   DPRINT("WRITE FILE %i LEN %i", operand.file_offset.file_id, operand.provided_data_length);
 
   uint8_t data[operand.provided_data_length];

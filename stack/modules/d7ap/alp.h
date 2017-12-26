@@ -162,17 +162,17 @@ typedef struct {
 
 typedef struct {
     uint8_t file_id;
-    uint8_t offset; // TODO can be 1-4 bytes, assuming 1 byte for now
+    uint32_t offset;
 } alp_operand_file_offset_t;
 
 typedef struct {
     alp_operand_file_offset_t file_offset;
-    uint8_t requested_data_length;
+    uint32_t requested_data_length;
 } alp_operand_file_data_request_t;
 
 typedef struct {
     alp_operand_file_offset_t file_offset;
-    uint8_t provided_data_length;
+    uint32_t provided_data_length;
     // data
 } alp_operand_file_data_t;
 
