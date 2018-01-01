@@ -20,6 +20,7 @@
  *
  */
 
+#include "stdlib.h"
 #include "debug.h"
 #include "ng.h"
 
@@ -168,12 +169,18 @@ static void generate_length_operand(fifo_t* cmd_fifo, uint32_t length) {
   } while(size > 0);
 }
 
+static alp_operand_file_offset_t parse_file_offset_operand(fifo_t* cmd_fifo) {
+  alp_operand_file_offset_t operand;
+  error_t err = fifo_pop(cmd_fifo, &operand.file_id, 1); assert(err == SUCCESS);
+  operand.offset = parse_length_operand(cmd_fifo);
+  return operand;
+}
+
 static alp_status_codes_t process_op_read_file_data(alp_command_t* command) {
   alp_operand_file_data_request_t operand;
   error_t err;
   err = fifo_skip(&command->alp_command_fifo, 1); assert(err == SUCCESS); // skip the control byte
-  err = fifo_pop(&command->alp_command_fifo, &operand.file_offset.file_id, 1); assert(err == SUCCESS);
-  operand.file_offset.offset = parse_length_operand(&command->alp_command_fifo);
+  operand.file_offset = parse_file_offset_operand(&command->alp_command_fifo);
   operand.requested_data_length = parse_length_operand(&command->alp_command_fifo);
   DPRINT("READ FILE %i LEN %i", operand.file_offset.file_id, operand.requested_data_length);
 
@@ -236,14 +243,83 @@ static alp_status_codes_t process_op_write_file_data(alp_command_t* command) {
   alp_operand_file_data_t operand;
   error_t err;
   err = fifo_skip(&command->alp_command_fifo, 1); assert(err == SUCCESS); // skip the control byte
-  err = fifo_pop(&command->alp_command_fifo, &operand.file_offset.file_id, 1); assert(err == SUCCESS);
-  operand.file_offset.offset = parse_length_operand(&command->alp_command_fifo);
+  operand.file_offset = parse_file_offset_operand(&command->alp_command_fifo);
   operand.provided_data_length = parse_length_operand(&command->alp_command_fifo);
   DPRINT("WRITE FILE %i LEN %i", operand.file_offset.file_id, operand.provided_data_length);
 
   uint8_t data[operand.provided_data_length];
   err = fifo_pop(&command->alp_command_fifo, data, operand.provided_data_length);
   return fs_write_file(operand.file_offset.file_id, operand.file_offset.offset, data, operand.provided_data_length);
+}
+
+bool process_arithm_predicate(uint8_t* value1, uint8_t* value2, uint32_t len, alp_query_arithmetic_comparison_type_t comp_type) {
+  // TODO assuming unsigned for now
+  DPRINT("ARITH PREDICATE COMP TYPE %i LEN %i", comp_type, len);
+  // first check for equality/inequality
+  bool is_equal = memcmp(value1, value2, len) == 0;
+  if(is_equal) {
+    if(comp_type == ARITH_COMP_TYPE_EQUALITY || comp_type == ARITH_COMP_TYPE_GREATER_THAN_OR_EQUAL_TO || comp_type == ARITH_COMP_TYPE_LESS_THAN_OR_EQUAL_TO)
+      return true;
+    else
+      return false;
+  } else if(comp_type == ARITH_COMP_TYPE_INEQUALITY) {
+    return true;
+  }
+
+  // since we don't know length in advance compare byte per byte starting from MSB
+  for(uint32_t i = 0; i < len; i++) {
+    if(value1[i] == value2[i])
+      continue;
+
+    if(value1[i] > value2[i] && (comp_type == ARITH_COMP_TYPE_GREATER_THAN || comp_type == ARITH_COMP_TYPE_GREATER_THAN_OR_EQUAL_TO))
+      return true;
+    else
+      return false;
+
+    if(value1[i] < value2[i] && (comp_type == ARITH_COMP_TYPE_LESS_THAN || comp_type == ARITH_COMP_TYPE_LESS_THAN_OR_EQUAL_TO))
+      return true;
+    else
+      return false;
+  }
+
+  assert(false); // should not reach here
+}
+
+static alp_status_codes_t process_op_break_query(alp_command_t* command) {
+  uint8_t query_code;
+  error_t err;
+  DPRINT("BREAK QUERY");
+  err = fifo_skip(&command->alp_command_fifo, 1); assert(err == SUCCESS); // skip the control byte
+  err = fifo_pop(&command->alp_command_fifo, &query_code, 1); assert(err == SUCCESS);
+  assert((query_code & 0xE0) == 0x40); // TODO only arithm comp with value type is implemented for now
+  assert((query_code & 0x10) == 0); // TODO mask value not implemented for now
+
+  // parse arithm query params
+  bool use_signed_comparison = true;
+  if((query_code & 0x08) == 0)
+    use_signed_comparison = false;
+
+  alp_query_arithmetic_comparison_type_t comp_type = query_code & 0x07;
+  uint32_t comp_length = parse_length_operand(&command->alp_command_fifo);
+  // TODO assuming no compare mask for now + assume compare value present + only 1 file offset operand
+
+  uint8_t value[comp_length];
+  memset(value, 0, comp_length);
+  err = fifo_pop(&command->alp_command_fifo, value, comp_length); assert(err == SUCCESS);
+  alp_operand_file_offset_t offset_a = parse_file_offset_operand(&command->alp_command_fifo);
+
+  uint8_t file_value[comp_length];
+  fs_read_file(offset_a.file_id, offset_a.offset, file_value, comp_length);
+
+  bool success = process_arithm_predicate(value, file_value, comp_length, comp_type);
+  DPRINT("predicate result: %i", success);
+
+  if(!success) {
+    DPRINT("predicate failed, clearing ALP command to stop further processing");
+    fifo_clear(&command->alp_command_fifo);
+  }
+
+  return ALP_STATUS_OK;
 }
 
 static alp_status_codes_t process_op_forward(alp_command_t* command, d7asp_master_session_config_t* session_config) {
@@ -431,6 +507,9 @@ bool alp_process_command(uint8_t* alp_command, uint8_t alp_command_length, uint8
         break;
       case ALP_OP_WRITE_FILE_PROPERTIES:
         alp_status = process_op_write_file_properties(command);
+        break;
+      case ALP_OP_BREAK_QUERY:
+        alp_status = process_op_break_query(command);
         break;
       case ALP_OP_FORWARD:
         alp_status = process_op_forward(command, &d7asp_session_config);

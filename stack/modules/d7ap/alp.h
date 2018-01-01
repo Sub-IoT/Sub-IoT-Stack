@@ -102,6 +102,14 @@ typedef enum {
   ALP_STATUS_FILE_ID_NOT_EXISTS = 0xFF,
 } alp_status_codes_t;
 
+typedef enum {
+  ARITH_COMP_TYPE_INEQUALITY = 0,
+  ARITH_COMP_TYPE_EQUALITY = 1,
+  ARITH_COMP_TYPE_LESS_THAN = 2,
+  ARITH_COMP_TYPE_LESS_THAN_OR_EQUAL_TO = 3,
+  ARITH_COMP_TYPE_GREATER_THAN = 4,
+  ARITH_COMP_TYPE_GREATER_THAN_OR_EQUAL_TO = 5
+} alp_query_arithmetic_comparison_type_t;
 
 /*! \brief The ALP CTRL header
  *
