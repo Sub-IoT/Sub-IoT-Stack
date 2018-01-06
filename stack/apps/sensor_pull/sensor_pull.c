@@ -19,8 +19,10 @@
 
 // This examples does not push sensor data to gateway(s) continuously, but instead writes the sensor value to a local file,
 // which can then be fetched on request.
+// Temperature data is used as a sensor value, when a HTS221 is available, otherwise value 0 is used.
 // Contrary to the sensor_push example we are now defining an Access Profile which has a periodic scan automation enabled.
 // The sensor will sniff the channel every second for background adhoc synchronization frames, to be able to receive requests from other nodes.
+
 
 #include "hwleds.h"
 #include "hwsystem.h"
@@ -37,94 +39,37 @@
 #include "log.h"
 #include "compress.h"
 
+#ifdef USE_HTS221
+  #include "HTS221_Driver.h"
+  #include "hwi2c.h"
+#endif
+
 #ifndef USE_SX127X
   #error "background frames are only supported by the sx127x driver for now"
 #endif
 
-#if (defined PLATFORM_EFM32GG_STK3700 || defined PLATFORM_EZR32LG_WSTK6200A)
-  #include "platform_sensors.h"
-#endif
-
-#if (defined PLATFORM_B_L072Z_LRWAN1)
-	#include "led.h"
-	#define LED_FLASH_GREEN()	led_flash_green()
-#else
-	#define LED_FLASH_GREEN()
-#endif
-
-#ifdef HAS_LCD
-  #include "platform_lcd.h"
-  #define LCD_WRITE_STRING(...) lcd_write_string(__VA_ARGS__)
-  #ifdef PLATFORM_EFM32GG_STK3700
-    // STK3700 LCD does not use multiple lines
-    #define LCD_WRITE_LINE(line, ...) lcd_write_string(__VA_ARGS__)
-  #else
-    #define LCD_WRITE_LINE(line, ...) lcd_write_line(line, __VA_ARGS__)
-  #endif
-#else
-  #define LCD_WRITE_STRING(...)
-  #define LCD_WRITE_LINE(...)
-#endif
-
 
 #define SENSOR_FILE_ID           0x40
-#define SENSOR_FILE_SIZE         8
+#define SENSOR_FILE_SIZE         2
 #define SENSOR_INTERVAL_SEC	TIMER_TICKS_PER_SEC * 10
+
+#ifdef USE_HTS221
+  static i2c_handle_t* hts221_handle;
+#endif
 
 void execute_sensor_measurement()
 {
   // first get the sensor reading ...
+  int16_t temperature = 0; // in decicelsius. When there is no sensor, we just transmit 0 degrees
 
-  uint8_t sensor_values[SENSOR_FILE_SIZE] = { 0 };
-
-#if (defined PLATFORM_EZR32LG_WSTK6200A || defined PLATFORM_EFM32GG_STK3700 || defined PLATFORM_EZR32LG_USB01)
-  char str[30];
-
-  float internal_temp = hw_get_internal_temperature();
-#if (defined PLATFORM_EFM32GG_STK3700)
-  lcd_write_temperature(internal_temp*10, 1);
-#else
-  sprintf(str, "Int T: %2d.%d C", (int)internal_temp, (int)(internal_temp*10)%10);
-  LCD_WRITE_LINE(2,str);
-#endif
-
-  log_print_string(str);
-
-  uint32_t rhData = 0;
-  uint32_t tData = 0;
-#if ! defined PLATFORM_EZR32LG_USB01 && ! defined PLATFORM_EFM32GG_STK3700
-  getHumidityAndTemperature(&rhData, &tData);
-
-  sprintf(str, "Ext T: %d.%d C", (tData/1000), (tData%1000)/100);
-  LCD_WRITE_LINE(3,str);
-  log_print_string(str);
-
-  sprintf(str, "Ext H: %d.%d", (rhData/1000), (rhData%1000)/100);
-  LCD_WRITE_LINE(4,str);
-  log_print_string(str);
-#endif
-
-  uint32_t vdd = hw_get_battery();
-
-  sprintf(str, "Batt %d mV", vdd);
-  LCD_WRITE_LINE(5,str);
-  log_print_string(str);
-
-  uint16_t *pointer =  (uint16_t*) sensor_values;
-  *pointer++ = (uint16_t) (internal_temp * 10);
-  *pointer++ = (uint16_t) (tData /100);
-  *pointer++ = (uint16_t) (rhData /100);
-  *pointer++ = (uint16_t) (vdd /10);
-#else
-  // no sensor, we just write the current timestamp
-  timer_tick_t t = timer_get_counter_value();
-  memcpy(sensor_values, (uint8_t*)&t, sizeof(timer_tick_t));
+#if defined USE_HTS221
+  HTS221_Get_Temperature(hts221_handle, &temperature);
 #endif
 
   // Generate ALP command. We do this manually for now (until we have an API for this).
   // We will write to a local file
 
-  uint8_t alp_command[4 + SENSOR_FILE_SIZE] = {
+  uint8_t alp_command[4 + sizeof(temperature)] = {
     // ALP Control byte
     ALP_OP_WRITE_FILE_DATA,
     // File Data Request operand:
@@ -134,14 +79,12 @@ void execute_sensor_measurement()
     // the sensor data, see below
   };
 
-  memcpy(alp_command + 4, sensor_values, SENSOR_FILE_SIZE);
+  memcpy(alp_command + 4, (uint8_t*)&temperature, sizeof(temperature));
 
   uint8_t resp = 0;
   alp_process_command(alp_command, sizeof(alp_command), alp_command, &resp, ALP_CMD_ORIGIN_APP);
 
   timer_post_task_delay(&execute_sensor_measurement, SENSOR_INTERVAL_SEC);
-
-  LED_FLASH_GREEN();
 }
 
 void init_user_files()
@@ -210,12 +153,14 @@ void bootstrap()
 
     d7ap_stack_init(&fs_init_args, NULL, false, NULL);
 
-#if (defined PLATFORM_EFM32GG_STK3700 || defined PLATFORM_EZR32LG_WSTK6200A)
-    initSensors();
+#if defined USE_HTS221
+    hts221_handle = i2c_init(0, 0);
+    HTS221_DeActivate(hts221_handle);
+    HTS221_Set_BduMode(hts221_handle, HTS221_ENABLE);
+    HTS221_Set_Odr(hts221_handle, HTS221_ODR_7HZ);
+    HTS221_Activate(hts221_handle);
 #endif
 
     sched_register_task(&execute_sensor_measurement);
     timer_post_task_delay(&execute_sensor_measurement, SENSOR_INTERVAL_SEC);
-
-    LCD_WRITE_STRING("Sensor push\n");
 }
