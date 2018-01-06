@@ -147,7 +147,7 @@ void bootstrap()
         .access_class = 0x01
     };
 
-    d7ap_stack_init(&fs_init_args, NULL, true, NULL);
+    d7ap_stack_init(&fs_init_args, NULL, false, NULL);
 
 #if defined USE_HTS221
     hts221_handle = i2c_init(0, 0);
