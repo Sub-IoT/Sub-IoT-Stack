@@ -213,7 +213,7 @@ typedef struct
 /**
 * @brief  I2C address.
 */
-#define HTS221_I2C_ADDRESS  (uint8_t)0xBE
+#define HTS221_I2C_ADDRESS  (uint8_t)0xBE >> 1 // TODO remove >>, after adapting i2c drivers
 
 /**
 * @brief  Driver version.
