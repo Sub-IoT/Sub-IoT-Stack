@@ -59,30 +59,13 @@
 
 void execute_sensor_measurement()
 {
-  // first get the sensor reading ...
   int16_t temperature = 0; // in decicelsius. When there is no sensor, we just transmit 0 degrees
 
 #if defined USE_HTS221
   HTS221_Get_Temperature(hts221_handle, &temperature);
 #endif
 
-  // Generate ALP command. We do this manually for now (until we have an API for this).
-  // We will write to a local file
-
-  uint8_t alp_command[4 + sizeof(temperature)] = {
-    // ALP Control byte
-    ALP_OP_WRITE_FILE_DATA,
-    // File Data Request operand:
-    SENSOR_FILE_ID, // the file ID
-    0, // offset in file
-    SENSOR_FILE_SIZE // data length
-    // the sensor data, see below
-  };
-
-  memcpy(alp_command + 4, (uint8_t*)&temperature, sizeof(temperature));
-
-  uint8_t resp = 0;
-  alp_process_command(alp_command, sizeof(alp_command), alp_command, &resp, ALP_CMD_ORIGIN_APP);
+  fs_write_file(SENSOR_FILE_ID, 0, (uint8_t*)&temperature, SENSOR_FILE_SIZE);
 
   timer_post_task_delay(&execute_sensor_measurement, SENSOR_INTERVAL_SEC);
 }
@@ -90,13 +73,23 @@ void execute_sensor_measurement()
 void init_user_files()
 {
   // file 0x40: contains our sensor data
-  fs_file_header_t file_header = (fs_file_header_t){
+  fs_file_header_t sensor_file_header = (fs_file_header_t){
       .file_properties.action_protocol_enabled = 0,
       .file_permissions = 0, // TODO
       .length = SENSOR_FILE_SIZE,
   };
 
-  fs_init_file(SENSOR_FILE_ID, &file_header, NULL);
+  fs_init_file(SENSOR_FILE_ID, &sensor_file_header, NULL);
+
+  // file 0x41: reserved file (for example action file)
+  // TODO this can be removed when support creating files post init
+  fs_file_header_t file_header = (fs_file_header_t){
+      .file_properties.action_protocol_enabled = 0,
+      .file_permissions = 0, // TODO
+      .length = 20,
+  };
+
+  fs_init_file(0x41, &file_header, NULL);
 }
 
 void bootstrap()
