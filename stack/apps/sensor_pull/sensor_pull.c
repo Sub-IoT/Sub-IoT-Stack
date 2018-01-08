@@ -86,10 +86,15 @@ void init_user_files()
   fs_file_header_t file_header = (fs_file_header_t){
       .file_properties.action_protocol_enabled = 0,
       .file_permissions = 0, // TODO
-      .length = 20,
+      .length = 6,
   };
 
   fs_init_file(0x41, &file_header, NULL);
+
+  // file 0x42: reserved file for interface configuration
+  // TODO this can be removed when support creating files post init
+  d7asp_master_session_config_t session_config;
+  fs_init_file_with_d7asp_interface_config(0x42, &session_config);
 }
 
 void bootstrap()
