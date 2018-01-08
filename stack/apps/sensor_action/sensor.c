@@ -43,6 +43,7 @@
 #define SENSOR_FILE_ID           0x40
 #define SENSOR_FILE_SIZE         2
 #define ACTION_FILE_ID           0x41
+#define INTERFACE_FILE_ID        0x42
 
 #define SENSOR_INTERVAL_SEC	TIMER_TICKS_PER_SEC * 1
 
@@ -66,53 +67,63 @@ void execute_sensor_measurement()
 
 void init_user_files()
 {
-    // file 0x40: contains our sensor data + configure an action file to be executed upon write
-    fs_file_header_t file_header = (fs_file_header_t){
-        .file_properties.action_protocol_enabled = 1,
-        .file_properties.action_condition = ALP_ACT_COND_WRITE,
-        .file_properties.storage_class = FS_STORAGE_VOLATILE,
-        .file_permissions = 0, // TODO
-        .alp_cmd_file_id = ACTION_FILE_ID,
-        .length = SENSOR_FILE_SIZE
-    };
+  // configure file notification using D7AActP: changes made to file SENSOR_FILE_ID will result in the action in file ACTION_FILE_ID
+  // being executed of which the results will transmitted to the interface defined in file INTERFACE_FILE_ID
 
-    fs_init_file(SENSOR_FILE_ID, &file_header, NULL);
+  // first generate ALP command for the action file. We do this manually for now (until we have an API for this).
+  // Please refer to the spec for the format
+  uint8_t alp_command[4] = {
+    // ALP Control byte
+    ALP_OP_READ_FILE_DATA,
+    // File Data Request operand:
+    SENSOR_FILE_ID, // the file ID
+    0, // offset in file
+    SENSOR_FILE_SIZE // requested data length
+  };
 
-    // configure file notification using D7AActP: write ALP command to broadcast changes made to file 0x40 in file 0x41
+  fs_file_header_t action_file_header = (fs_file_header_t){
+    .file_properties.action_protocol_enabled = 0,
+    .file_properties.storage_class = FS_STORAGE_PERMANENT,
+    .file_permissions = 0, // TODO
+    .length = sizeof(alp_command),
+    .allocated_length = sizeof(alp_command),
+  };
 
-    // first generate ALP command. We do this manually for now (until we have an API for this).
-    // Please refer to the spec for the format
+  fs_init_file(ACTION_FILE_ID, &action_file_header, alp_command);
 
-    uint8_t alp_command[4] = {
-      // ALP Control byte
-      ALP_OP_READ_FILE_DATA,
-      // File Data Request operand:
-      SENSOR_FILE_ID, // the file ID
-      0, // offset in file
-      SENSOR_FILE_SIZE // requested data length
-    };
+  // define the D7 interface configuration used for sending the result of above ALP command on
+  d7asp_master_session_config_t session_config = {
+    .qos = {
+      .qos_resp_mode = SESSION_RESP_MODE_NO,
+      .qos_retry_mode = SESSION_RETRY_MODE_NO,
+      .qos_stop_on_error = false,
+      .qos_record = false
+    },
+    .dormant_timeout = 0,
+    .addressee = {
+      .ctrl = {
+        .nls_method = AES_NONE,
+        .id_type = ID_TYPE_NOID,
+      },
+      .access_class = 0x01,
+      .id = 0
+    }
+  };
 
-    // Define the D7 interface configuration used for sending the result of above ALP command on
-    d7asp_master_session_config_t session_config = {
-        .qos = {
-            .qos_resp_mode = SESSION_RESP_MODE_NO,
-            .qos_retry_mode = SESSION_RETRY_MODE_NO,
-            .qos_stop_on_error       = false,
-            .qos_record              = false
-        },
-        .dormant_timeout = 0,
-        .addressee = {
-            .ctrl = {
-                .nls_method = AES_NONE,
-                .id_type = ID_TYPE_NOID,
-            },
-            .access_class = 0x01,
-            .id = 0
-        }
-    };
+  fs_init_file_with_d7asp_interface_config(INTERFACE_FILE_ID, &session_config);
 
-    // finally, register D7AActP file
-    fs_init_file_with_D7AActP(ACTION_FILE_ID, &session_config, alp_command, sizeof(alp_command));
+  // finally, register the sensor file, configured to use D7AActP
+  fs_file_header_t file_header = (fs_file_header_t){
+    .file_properties.action_protocol_enabled = 1,
+    .file_properties.action_condition = ALP_ACT_COND_WRITE,
+    .file_properties.storage_class = FS_STORAGE_VOLATILE,
+    .file_permissions = 0, // TODO
+    .alp_cmd_file_id = ACTION_FILE_ID,
+    .interface_file_id = INTERFACE_FILE_ID,
+    .length = SENSOR_FILE_SIZE
+  };
+
+  fs_init_file(SENSOR_FILE_ID, &file_header, NULL);
 }
 
 void bootstrap()
