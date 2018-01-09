@@ -62,11 +62,9 @@ static void execute_d7a_action_protocol(uint8_t command_file_id, uint8_t interfa
     assert(is_file_defined(command_file_id));
     // TODO interface_file_id is optional, how do we code this in file header?
     // for now we assume it's always used
-
     assert(is_file_defined(interface_file_id));
 
     uint8_t* data_ptr = (uint8_t*)(data + file_offsets[interface_file_id]);
-    uint8_t* file_start = data_ptr;
 
     d7asp_master_session_config_t fifo_config;
     assert((*data_ptr) == ALP_ITF_ID_D7ASP); // only D7ASP supported for now
