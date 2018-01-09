@@ -308,7 +308,7 @@ static alp_status_codes_t process_op_break_query(alp_command_t* command) {
   uint8_t file_value[comp_length];
   fs_read_file(offset_a.file_id, offset_a.offset, file_value, comp_length);
 
-  bool success = process_arithm_predicate(value, file_value, comp_length, comp_type);
+  bool success = process_arithm_predicate(file_value, value, comp_length, comp_type);
   DPRINT("predicate result: %i", success);
 
   if(!success) {
