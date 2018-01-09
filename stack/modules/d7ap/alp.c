@@ -617,6 +617,9 @@ uint8_t alp_get_expected_response_length(uint8_t* alp_command, uint8_t alp_comma
         ptr += d7anp_addressee_id_length(addressee_ctrl.id_type); // skip address
         // TODO refactor to reuse same logic for parsing and response length counting
         break;
+      case ALP_OP_WRITE_FILE_PROPERTIES:
+        ptr += 1 + sizeof(fs_file_header_t); // skip file ID & header
+        break;
       // TODO other operations
       default:
         assert(false);
