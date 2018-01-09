@@ -93,6 +93,7 @@ void execute_sensor_measurement()
     // the sensor data, see below
   };
 
+  temperature = __builtin_bswap16(temperature); // convert to big endian before transmission
   memcpy(alp_command + 4, (uint8_t*)&temperature, SENSOR_FILE_SIZE);
 
   alp_execute_command(alp_command, sizeof(alp_command), &session_config);

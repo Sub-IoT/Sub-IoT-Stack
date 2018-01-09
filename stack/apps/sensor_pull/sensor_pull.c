@@ -65,6 +65,7 @@ void execute_sensor_measurement()
   HTS221_Get_Temperature(hts221_handle, &temperature);
 #endif
 
+  temperature = __builtin_bswap16(temperature); // need to store in big endian in fs
   fs_write_file(SENSOR_FILE_ID, 0, (uint8_t*)&temperature, SENSOR_FILE_SIZE);
 
   timer_post_task_delay(&execute_sensor_measurement, SENSOR_INTERVAL_SEC);
