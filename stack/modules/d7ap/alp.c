@@ -381,11 +381,13 @@ void alp_process_command_result_on_d7asp(d7asp_master_session_config_t* session_
   alp_command_t* command = alloc_command();
   assert(command != NULL);
   alp_process_command(alp_command, alp_command_length, command->alp_command, &alp_result_length, origin);
-  d7asp_master_session_t* session = d7asp_master_session_create(session_config);
-  uint8_t expected_response_length = alp_get_expected_response_length(command->alp_command, alp_result_length);
-  d7asp_queue_result_t result = d7asp_queue_alp_actions(session, command->alp_command, alp_result_length, expected_response_length);
-  command->fifo_token = result.fifo_token;
-  command->request_id = result.request_id;
+  if(alp_result_length > 0) {
+    d7asp_master_session_t* session = d7asp_master_session_create(session_config);
+    uint8_t expected_response_length = alp_get_expected_response_length(command->alp_command, alp_result_length);
+    d7asp_queue_result_t result = d7asp_queue_alp_actions(session, command->alp_command, alp_result_length, expected_response_length);
+    command->fifo_token = result.fifo_token;
+    command->request_id = result.request_id;
+  }
 }
 
 void alp_process_command_console_output(uint8_t* alp_command, uint8_t alp_command_length) {
