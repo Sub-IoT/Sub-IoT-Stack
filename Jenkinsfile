@@ -7,7 +7,7 @@ node {
         if [ -d .git ]; then
          git clean -dfx
         fi;
-        
+
         '''
         checkout scm
         sh '''
@@ -21,7 +21,7 @@ node {
             mkdir EZR32LG_WSTK6200A
             mkdir cortus_fpga
          '''
-        
+
     }
 
     stage('Build B_L072Z_LRWAN1 platform') {
@@ -70,7 +70,7 @@ node {
     }
             setBuildStatus("EZR32LG_WSTK6200A","Build",currentBuild.currentResult)
 
-            /*            
+            /*
      stage('Build cortus_fpga platform') {
         dir('cortus_fpga') {
             sh 'mkdir build'
@@ -85,7 +85,7 @@ node {
             }
         }
     }
-   
+
             setBuildStatus("cortus_fpga","Build",currentBuild.currentResult)
 */
 
@@ -93,7 +93,7 @@ node {
          if (env.BRANCH_NAME == 'master') {
             archiveArtifacts '**'
         }
-    }  
+    }
 }
 def setBuildStatus(String context,String message, String state) {
   step([
@@ -103,4 +103,7 @@ def setBuildStatus(String context,String message, String state) {
       errorHandlers: [[$class: "ChangingBuildStatusErrorHandler", result: "UNSTABLE"]],
       statusResultSource: [ $class: "ConditionalStatusResultSource", results: [[$class: "AnyBuildResult", message: message, state: state]] ]
   ]);
+
+  def msg = "Build ${context} ${state} (${env.BUILD_NUMBER})"
+  slackSend(message: msg)
 }
