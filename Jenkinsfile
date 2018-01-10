@@ -104,6 +104,10 @@ def setBuildStatus(String context,String message, String state) {
       statusResultSource: [ $class: "ConditionalStatusResultSource", results: [[$class: "AnyBuildResult", message: message, state: state]] ]
   ]);
 
+  def color = "danger"
+  if(state == 'SUCCESS')
+    color = "good"
+    
   def msg = "Build ${context} ${state} (${env.BUILD_NUMBER})"
-  slackSend(message: msg)
+  slackSend(color: color, message: msg)
 }
