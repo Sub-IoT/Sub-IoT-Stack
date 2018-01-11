@@ -878,13 +878,20 @@ static void calibrate_rx_chain() {
   write_reg(REG_PACONFIG, reg_pa_config_initial_value);
 }
 
-static void switch_to_standby_mode()
+static void switch_to_sleep_mode()
 {
-    //DPRINT("Switching to standby mode");
+    DPRINT("Switching to sleep mode");
+
+#ifdef PLATFORM_SX127X_USE_VCC_TXCO
+    hw_gpio_clr(SX127x_VCC_TXCO);
+#endif
+
     //Ensure interrupts are disabled before selecting the chip mode
     hw_gpio_disable_interrupt(SX127x_DIO0_PIN);
     hw_gpio_disable_interrupt(SX127x_DIO1_PIN);
-    set_opmode(OPMODE_STANDBY);
+
+    set_opmode(OPMODE_SLEEP);
+
     state = STATE_IDLE;
 }
 
@@ -915,7 +922,7 @@ error_t hw_radio_init(alloc_packet_callback_t alloc_packet_cb, release_packet_ca
 
 void hw_radio_stop() {
   // TODO reset chip?
-  switch_to_standby_mode();
+  switch_to_sleep_mode();
   spi_disable(spi_handle);  // TODO only disable the slave, other slaves might be attached to the same SPI pheriperal,
                             // so only the SPI driver should be able to decide to disable the pheriperal as a whone
 
@@ -924,10 +931,7 @@ void hw_radio_stop() {
 }
 
 error_t hw_radio_set_idle() {
-    // TODO Select the chip mode during Idle state (Standby mode or Sleep mode)
-
-    // For now, select by default the standby mode
-    switch_to_standby_mode();
+    switch_to_sleep_mode();
     DEBUG_RX_END();
     DEBUG_TX_END();
 }
@@ -991,7 +995,10 @@ error_t hw_radio_send_packet(hw_radio_packet_t* packet, tx_packet_callback_t tx_
         pending_rx_cfg.channel_id = current_channel_id;
         pending_rx_cfg.syncword_class = current_syncword_class;
         should_rx_after_tx_completed = true;
-        switch_to_standby_mode();
+        // switch to standby for now
+        hw_gpio_disable_interrupt(SX127x_DIO0_PIN);
+        hw_gpio_disable_interrupt(SX127x_DIO1_PIN);
+        set_opmode(OPMODE_STANDBY);
         while(!(read_reg(REG_IRQFLAGS1) & 0x80)); // wait for Standby mode ready
     }
 
@@ -1342,7 +1349,7 @@ error_t hw_radio_start_background_scan(hw_rx_cfg_t const* rx_cfg, rx_packet_call
     if (rssi <= rssi_thr)
     {
         //DPRINT("FAST RX termination RSSI %i limit %i", rssi, rssi_thr);
-        switch_to_standby_mode();
+        switch_to_sleep_mode(); // TODO we might want to switch to standby mode here instead, to allow rapid channel cycling
         DEBUG_RX_END();
         return FAIL;
     }
@@ -1354,7 +1361,8 @@ error_t hw_radio_start_background_scan(hw_rx_cfg_t const* rx_cfg, rx_packet_call
     }
 
     // the device has a period of To to successfully detect the sync word
-    assert(timer_post_task_delay(&switch_to_standby_mode, bg_timeout[current_channel_id.channel_header.ch_class]) == SUCCESS);
+    assert(timer_post_task_delay(&switch_to_sleep_mode, bg_timeout[current_channel_id.channel_header.ch_class]) == SUCCESS);
+    // TODO we might want to switch to standby mode here instead, to allow rapid channel cycling
 
     return SUCCESS;
 }
