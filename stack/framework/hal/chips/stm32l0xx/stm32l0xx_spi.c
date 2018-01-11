@@ -110,10 +110,10 @@ void spi_disable(spi_handle_t* spi) {
   switch ((uint32_t)(spi->hspi.Instance))
   {
     case SPI1_BASE:
-      __HAL_RCC_SPI1_CLK_ENABLE();
+      __HAL_RCC_SPI1_CLK_DISABLE();
       break;
     case SPI2_BASE:
-      __HAL_RCC_SPI2_CLK_ENABLE();
+      __HAL_RCC_SPI2_CLK_DISABLE();
       break;
     default:
       assert(false);
