@@ -987,6 +987,9 @@ error_t hw_radio_send_packet(hw_radio_packet_t* packet, tx_packet_callback_t tx_
     if(state == STATE_TX)
         return EBUSY;
 
+    if(packet->length == 0)
+        return ESIZE;
+
     tx_packet_callback = tx_callback;
     current_packet = packet;
 
