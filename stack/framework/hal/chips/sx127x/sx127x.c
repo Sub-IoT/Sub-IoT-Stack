@@ -305,6 +305,13 @@ static void set_opmode(opmode_t opmode) {
 #endif
 
   write_reg(REG_OPMODE, (read_reg(REG_OPMODE) & RF_OPMODE_MASK) | opmode);
+
+#ifdef PLATFORM_SX127X_USE_VCC_TXCO
+  if(opmode == OPMODE_SLEEP)
+    hw_gpio_clr(SX127x_VCC_TXCO);
+  else
+    hw_gpio_set(SX127x_VCC_TXCO);
+#endif
 }
 
 static inline void flush_fifo() {
@@ -881,10 +888,6 @@ static void calibrate_rx_chain() {
 static void switch_to_sleep_mode()
 {
     DPRINT("Switching to sleep mode");
-
-#ifdef PLATFORM_SX127X_USE_VCC_TXCO
-    hw_gpio_clr(SX127x_VCC_TXCO);
-#endif
 
     //Ensure interrupts are disabled before selecting the chip mode
     hw_gpio_disable_interrupt(SX127x_DIO0_PIN);
