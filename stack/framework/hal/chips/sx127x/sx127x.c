@@ -785,7 +785,9 @@ static void restart_rx_chain() {
 }
 
 static void resume_from_sleep_mode() {
-  assert(state == STATE_IDLE);
+  if(state != STATE_IDLE)
+    return;
+
   DPRINT("resuming from sleep mode");
   hw_radio_io_init();
 }
