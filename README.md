@@ -1,4 +1,4 @@
-[![Build Status](https://jenkins.idlab.uantwerpen.be/buildStatus/icon?job=BuildProjectMaster)](https://jenkins.idlab.uantwerpen.be/job/BuildProjectMaster)
+[![Build Status](https://jenkins.idlab.uantwerpen.be/buildStatus/icon?job=BuildForOSS7Repo/master)](https://jenkins.idlab.uantwerpen.be/job/BuildForOSS7Repo/job/master/)
 
 # Welcome
 

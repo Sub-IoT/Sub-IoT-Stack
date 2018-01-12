@@ -102,6 +102,14 @@ typedef enum {
   ALP_STATUS_FILE_ID_NOT_EXISTS = 0xFF,
 } alp_status_codes_t;
 
+typedef enum {
+  ARITH_COMP_TYPE_INEQUALITY = 0,
+  ARITH_COMP_TYPE_EQUALITY = 1,
+  ARITH_COMP_TYPE_LESS_THAN = 2,
+  ARITH_COMP_TYPE_LESS_THAN_OR_EQUAL_TO = 3,
+  ARITH_COMP_TYPE_GREATER_THAN = 4,
+  ARITH_COMP_TYPE_GREATER_THAN_OR_EQUAL_TO = 5
+} alp_query_arithmetic_comparison_type_t;
 
 /*! \brief The ALP CTRL header
  *
@@ -162,17 +170,17 @@ typedef struct {
 
 typedef struct {
     uint8_t file_id;
-    uint8_t offset; // TODO can be 1-4 bytes, assuming 1 byte for now
+    uint32_t offset;
 } alp_operand_file_offset_t;
 
 typedef struct {
     alp_operand_file_offset_t file_offset;
-    uint8_t requested_data_length;
+    uint32_t requested_data_length;
 } alp_operand_file_data_request_t;
 
 typedef struct {
     alp_operand_file_offset_t file_offset;
-    uint8_t provided_data_length;
+    uint32_t provided_data_length;
     // data
 } alp_operand_file_data_t;
 

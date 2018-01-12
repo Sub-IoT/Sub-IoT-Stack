@@ -145,7 +145,7 @@ static void transmit_packet() {
 
     tx_cfg.channel_id = current_channel_id;
     tx_packet->tx_meta.tx_cfg = tx_cfg;
-    hw_radio_send_packet(tx_packet, &packet_transmitted);
+    hw_radio_send_packet(tx_packet, &packet_transmitted, 0, NULL);
 }
 
 static hw_radio_packet_t* alloc_new_packet(uint8_t length) {

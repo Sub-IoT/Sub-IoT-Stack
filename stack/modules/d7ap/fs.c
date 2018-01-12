@@ -57,26 +57,27 @@ static inline bool is_file_defined(uint8_t file_id)
     return file_headers[file_id].length != 0;
 }
 
-static void execute_alp_command(uint8_t command_file_id)
+static void execute_d7a_action_protocol(uint8_t command_file_id, uint8_t interface_file_id)
 {
     assert(is_file_defined(command_file_id));
-    uint8_t* data_ptr = (uint8_t*)(data + file_offsets[command_file_id]);
-    uint8_t* file_start = data_ptr;
+    // TODO interface_file_id is optional, how do we code this in file header?
+    // for now we assume it's always used
+    assert(is_file_defined(interface_file_id));
 
-    // TODO refactor
-    // parse ALP command
+    uint8_t* data_ptr = (uint8_t*)(data + file_offsets[interface_file_id]);
+
     d7asp_master_session_config_t fifo_config;
     assert((*data_ptr) == ALP_ITF_ID_D7ASP); // only D7ASP supported for now
     data_ptr++;
+    // TODO add length field according to spec
     fifo_config.qos.raw = (*data_ptr); data_ptr++;
     fifo_config.dormant_timeout = (*data_ptr); data_ptr++;;
+    // TODO add Te field according to spec
     fifo_config.addressee.ctrl.raw = (*data_ptr); data_ptr++;
     fifo_config.addressee.access_class = (*data_ptr); data_ptr++;
     memcpy(&(fifo_config.addressee.id), data_ptr, 8); data_ptr += 8; // TODO assume 8 for now
 
-    uint8_t alp_response[ALP_PAYLOAD_MAX_SIZE] = { 0 };
-    uint8_t alp_response_length = 0;
-    alp_process_command_result_on_d7asp(&fifo_config, data_ptr, file_headers[command_file_id].length - (uint8_t)(data_ptr - file_start), ALP_CMD_ORIGIN_D7AACTP);
+    alp_process_command_result_on_d7asp(&fifo_config, (uint8_t*)(data + file_offsets[command_file_id]), file_headers[command_file_id].length, ALP_CMD_ORIGIN_D7AACTP);
 }
 
 
@@ -91,8 +92,9 @@ void fs_init(fs_init_args_t* init_args)
     file_headers[D7A_FILE_UID_FILE_ID] = (fs_file_header_t){
         .file_properties.action_protocol_enabled = 0,
         .file_properties.storage_class = FS_STORAGE_PERMANENT,
-        .file_properties.permissions = 0, // TODO
-        .length = D7A_FILE_UID_SIZE
+        .file_permissions = 0, // TODO
+        .length = D7A_FILE_UID_SIZE,
+        .allocated_length = D7A_FILE_UID_SIZE
     };
 
     uint64_t id = hw_get_unique_id();
@@ -106,8 +108,9 @@ void fs_init(fs_init_args_t* init_args)
     file_headers[D7A_FILE_FIRMWARE_VERSION_FILE_ID] = (fs_file_header_t){
         .file_properties.action_protocol_enabled = 0,
         .file_properties.storage_class = FS_STORAGE_PERMANENT,
-        .file_properties.permissions = 0, // TODO
-        .length = D7A_FILE_FIRMWARE_VERSION_SIZE
+        .file_permissions = 0, // TODO
+        .length = D7A_FILE_FIRMWARE_VERSION_SIZE,
+        .allocated_length = D7A_FILE_FIRMWARE_VERSION_SIZE
     };
 
     memset(data + current_data_offset, D7A_PROTOCOL_VERSION_MAJOR, 1); current_data_offset++;
@@ -122,8 +125,9 @@ void fs_init(fs_init_args_t* init_args)
     file_headers[D7A_FILE_DLL_CONF_FILE_ID] = (fs_file_header_t){
         .file_properties.action_protocol_enabled = 0,
         .file_properties.storage_class = FS_STORAGE_RESTORABLE,
-        .file_properties.permissions = 0, // TODO
-        .length = D7A_FILE_DLL_CONF_SIZE
+        .file_permissions = 0, // TODO
+        .length = D7A_FILE_DLL_CONF_SIZE,
+        .allocated_length = D7A_FILE_DLL_CONF_SIZE
     };
 
     data[current_data_offset] = init_args->access_class; current_data_offset += 1; // active access class
@@ -145,8 +149,9 @@ void fs_init(fs_init_args_t* init_args)
         file_headers[D7A_FILE_ACCESS_PROFILE_ID + i] = (fs_file_header_t){
             .file_properties.action_protocol_enabled = 0,
             .file_properties.storage_class = FS_STORAGE_PERMANENT,
-            .file_properties.permissions = 0, // TODO
-            .length = D7A_FILE_ACCESS_PROFILE_SIZE
+            .file_permissions = 0, // TODO
+            .length = D7A_FILE_ACCESS_PROFILE_SIZE,
+            .allocated_length = D7A_FILE_ACCESS_PROFILE_SIZE
         };
     }
 
@@ -155,11 +160,14 @@ void fs_init(fs_init_args_t* init_args)
     file_headers[D7A_FILE_NWL_SECURITY] = (fs_file_header_t){
         .file_properties.action_protocol_enabled = 0,
         .file_properties.storage_class = FS_STORAGE_PERMANENT,
-        .file_properties.permissions = 0, // TODO
-        .length = D7A_FILE_NWL_SECURITY_SIZE
+        .file_permissions = 0, // TODO
+        .length = D7A_FILE_NWL_SECURITY_SIZE,
+        .allocated_length = D7A_FILE_ACCESS_PROFILE_SIZE
     };
 
     memset(data + current_data_offset, 0, D7A_FILE_NWL_SECURITY_SIZE);
+    data[current_data_offset] = PROVISIONED_KEY_COUNTER;
+
     current_data_offset += D7A_FILE_NWL_SECURITY_SIZE;
 
     // 0x0E - Network security key
@@ -167,8 +175,9 @@ void fs_init(fs_init_args_t* init_args)
     file_headers[D7A_FILE_NWL_SECURITY_KEY] = (fs_file_header_t){
         .file_properties.action_protocol_enabled = 0,
         .file_properties.storage_class = FS_STORAGE_PERMANENT,
-        .file_properties.permissions = 0, // TODO
-        .length = D7A_FILE_NWL_SECURITY_KEY_SIZE
+        .file_permissions = 0, // TODO
+        .length = D7A_FILE_NWL_SECURITY_KEY_SIZE,
+        .allocated_length = D7A_FILE_NWL_SECURITY_KEY_SIZE
     };
 
     memcpy(data + current_data_offset, AES128_key, D7A_FILE_NWL_SECURITY_KEY_SIZE);
@@ -179,8 +188,9 @@ void fs_init(fs_init_args_t* init_args)
     file_headers[D7A_FILE_NWL_SECURITY_STATE_REG] = (fs_file_header_t){
         .file_properties.action_protocol_enabled = 0,
         .file_properties.storage_class = FS_STORAGE_PERMANENT,
-        .file_properties.permissions = 0, // TODO
-        .length = init_args->ssr_filter_mode & ENABLE_SSR_FILTER ? D7A_FILE_NWL_SECURITY_STATE_REG_SIZE : 1
+        .file_permissions = 0, // TODO
+        .length = init_args->ssr_filter_mode & ENABLE_SSR_FILTER ? D7A_FILE_NWL_SECURITY_STATE_REG_SIZE : 1,
+        .allocated_length = init_args->ssr_filter_mode & ENABLE_SSR_FILTER ? D7A_FILE_NWL_SECURITY_STATE_REG_SIZE : 1
     };
 
     data[current_data_offset] = init_args->ssr_filter_mode; current_data_offset++;
@@ -211,6 +221,32 @@ void fs_init_file(uint8_t file_id, const fs_file_header_t* file_header, const ui
         fs_write_file(file_id, 0, initial_data, file_header->length);
 }
 
+void fs_init_file_with_d7asp_interface_config(uint8_t file_id, const d7asp_master_session_config_t* fifo_config)
+{
+    // TODO check file not already defined
+
+    uint8_t alp_command_buffer[40] = { 0 };
+    uint8_t* ptr = alp_command_buffer;
+    (*ptr) = ALP_ITF_ID_D7ASP; ptr++;
+    (*ptr) = fifo_config->qos.raw; ptr++;
+    (*ptr) = fifo_config->dormant_timeout; ptr++;
+    (*ptr) = fifo_config->addressee.ctrl.raw; ptr++;
+    (*ptr) = fifo_config->addressee.access_class; ptr++;
+    memcpy(ptr, &(fifo_config->addressee.id), 8); ptr += 8; // TODO assume 8 for now
+
+    uint32_t len = ptr - alp_command_buffer;
+    // TODO fixed header implemented here, or should this be configurable by app?
+    fs_file_header_t file_header = (fs_file_header_t){
+        .file_properties.action_protocol_enabled = 0,
+        .file_properties.storage_class = FS_STORAGE_PERMANENT,
+        .file_permissions = 0, // TODO
+        .length = len,
+        .allocated_length = len,
+    };
+
+    fs_init_file(file_id, &file_header, alp_command_buffer);
+}
+
 void fs_init_file_with_D7AActP(uint8_t file_id, const d7asp_master_session_config_t* fifo_config, const uint8_t* alp_command, const uint8_t alp_command_len)
 {
     uint8_t alp_command_buffer[40] = { 0 };
@@ -224,12 +260,14 @@ void fs_init_file_with_D7AActP(uint8_t file_id, const d7asp_master_session_confi
 
     memcpy(ptr, alp_command, alp_command_len); ptr += alp_command_len;
 
+    uint32_t len = ptr - alp_command_buffer;
     // TODO fixed header implemented here, or should this be configurable by app?
     fs_file_header_t action_file_header = (fs_file_header_t){
         .file_properties.action_protocol_enabled = 0,
         .file_properties.storage_class = FS_STORAGE_PERMANENT,
-        .file_properties.permissions = 0, // TODO
-        .length = ptr - alp_command_buffer
+        .file_permissions = 0, // TODO
+        .length = len,
+        .allocated_length = len,
     };
 
     fs_init_file(file_id, &action_file_header, alp_command_buffer);
@@ -244,6 +282,22 @@ alp_status_codes_t fs_read_file(uint8_t file_id, uint8_t offset, uint8_t* buffer
     return ALP_STATUS_OK;
 }
 
+alp_status_codes_t fs_read_file_header(uint8_t file_id, fs_file_header_t* file_header)
+{
+  if(!is_file_defined(file_id)) return ALP_STATUS_FILE_ID_NOT_EXISTS;
+
+  memcpy(file_header, &file_headers[file_id], sizeof(fs_file_header_t));
+  return ALP_STATUS_OK;
+}
+
+alp_status_codes_t fs_write_file_header(uint8_t file_id, fs_file_header_t* file_header)
+{
+  if(!is_file_defined(file_id)) return ALP_STATUS_FILE_ID_NOT_EXISTS;
+
+  memcpy(&file_headers[file_id], file_header, sizeof(fs_file_header_t));
+  return ALP_STATUS_OK;
+}
+
 alp_status_codes_t fs_write_file(uint8_t file_id, uint8_t offset, const uint8_t* buffer, uint8_t length)
 {
     if(!is_file_defined(file_id)) return ALP_STATUS_FILE_ID_NOT_EXISTS;
@@ -254,7 +308,7 @@ alp_status_codes_t fs_write_file(uint8_t file_id, uint8_t offset, const uint8_t*
     if(file_headers[file_id].file_properties.action_protocol_enabled == true
             && file_headers[file_id].file_properties.action_condition == ALP_ACT_COND_WRITE) // TODO ALP_ACT_COND_WRITEFLUSH?
     {
-        execute_alp_command(file_headers[file_id].file_properties.action_file_id);
+        execute_d7a_action_protocol(file_headers[file_id].alp_cmd_file_id, file_headers[file_id].interface_file_id);
     }
 
     if(file_id == D7A_FILE_DLL_CONF_FILE_ID)
@@ -339,7 +393,6 @@ alp_status_codes_t fs_read_nwl_security_state_register(d7anp_node_security_t *no
     return ALP_STATUS_OK;
 }
 
-
 alp_status_codes_t fs_add_nwl_security_state_register_entry(d7anp_trusted_node_t *trusted_node,
                                                             uint8_t trusted_node_nb)
 {
@@ -374,7 +427,6 @@ alp_status_codes_t fs_update_nwl_security_state_register(d7anp_trusted_node_t *t
     memcpy(data_ptr, &frame_counter, sizeof(uint32_t));
     return ALP_STATUS_OK;
 }
-
 
 void fs_read_access_class(uint8_t access_class_index, dae_access_profile_t *access_class)
 {

@@ -27,6 +27,7 @@
 #include "debug.h"
 #include "stm32l0xx_hal.h"
 #include "hwdebug.h"
+#include "hwradio.h"
 
 #if defined(USE_SX127X) && defined(PLATFORM_SX127X_USE_RESET_PIN)
 static void reset_sx127x()
@@ -46,27 +47,7 @@ void __platform_init()
     __hw_debug_init();
 
 #ifdef USE_SX127X
-    // configure the radio GPIO pins here, since hw_gpio_configure_pin() is MCU
-    // specific and not part of the common HAL API
-    hw_gpio_configure_pin(SX127x_DIO0_PIN, true, GPIO_MODE_INPUT, 0);
-    hw_gpio_configure_pin(SX127x_DIO1_PIN, true, GPIO_MODE_INPUT, 0);
-
-    // Antenna switching uses 3 pins on murata ABZ module
-    hw_gpio_configure_pin(ABZ_ANT_SW_RX_PIN, false, GPIO_MODE_OUTPUT_PP, 0);
-    hw_gpio_configure_pin(ABZ_ANT_SW_TX_PIN, false, GPIO_MODE_OUTPUT_PP, 0);
-    hw_gpio_configure_pin(ABZ_ANT_SW_PA_BOOST_PIN, false, GPIO_MODE_OUTPUT_PP, 0);
-
-#ifdef PLATFORM_SX127X_USE_DIO3_PIN
-    hw_gpio_configure_pin(SX127x_DIO3_PIN, true, GPIO_MODE_INPUT, 0);
-#endif
-#ifdef PLATFORM_SX127X_USE_RESET_PIN
-    hw_gpio_configure_pin(SX127x_RESET_PIN, false, GPIO_MODE_OUTPUT_PP, 1);
-    reset_sx127x();
-#endif
-#ifdef PLATFORM_SX127X_USE_VCC_TXCO
-    hw_gpio_configure_pin(SX127x_VCC_TXCO, false, GPIO_MODE_OUTPUT_PP, 1);
-    hw_gpio_set(SX127x_VCC_TXCO);
-#endif
+    hw_radio_io_init();
 #endif
 
     HAL_EnableDBGSleepMode(); // TODO impact on power?
@@ -90,3 +71,67 @@ int main()
     scheduler_run();
     return 0;
 }
+
+#if defined(USE_SX127X)
+// override the weak definition
+void hw_radio_io_init() {
+  // configure the radio GPIO pins here, since hw_gpio_configure_pin() is MCU
+  // specific and not part of the common HAL API
+  hw_gpio_configure_pin(SX127x_DIO0_PIN, true, GPIO_MODE_INPUT, 0);
+  hw_gpio_configure_pin(SX127x_DIO1_PIN, true, GPIO_MODE_INPUT, 0);
+
+  // Antenna switching uses 3 pins on murata ABZ module
+  hw_gpio_configure_pin(ABZ_ANT_SW_RX_PIN, false, GPIO_MODE_OUTPUT_PP, 0);
+  hw_gpio_configure_pin(ABZ_ANT_SW_TX_PIN, false, GPIO_MODE_OUTPUT_PP, 0);
+  hw_gpio_configure_pin(ABZ_ANT_SW_PA_BOOST_PIN, false, GPIO_MODE_OUTPUT_PP, 0);
+
+#ifdef PLATFORM_SX127X_USE_DIO3_PIN
+  hw_gpio_configure_pin(SX127x_DIO3_PIN, true, GPIO_MODE_INPUT, 0);
+#endif
+#ifdef PLATFORM_SX127X_USE_RESET_PIN
+  hw_gpio_configure_pin(SX127x_RESET_PIN, false, GPIO_MODE_OUTPUT_PP, 1);
+  reset_sx127x();
+#endif
+#ifdef PLATFORM_SX127X_USE_VCC_TXCO
+  hw_gpio_configure_pin(SX127x_VCC_TXCO, false, GPIO_MODE_OUTPUT_PP, 1);
+  hw_gpio_set(SX127x_VCC_TXCO);
+#endif
+}
+
+// override the weak definition
+void hw_radio_io_deinit() {
+  GPIO_InitTypeDef initStruct={0};
+  initStruct.Mode = GPIO_MODE_ANALOG;
+
+  hw_gpio_configure_pin_stm(SX127x_DIO0_PIN, &initStruct);
+  hw_gpio_configure_pin_stm(SX127x_DIO1_PIN, &initStruct);
+#ifdef PLATFORM_SX127X_USE_DIO3_PIN
+  hw_gpio_configure_pin_stm(SX127x_DIO3_PIN, &initStruct);
+#endif
+  hw_gpio_configure_pin_stm(ABZ_ANT_SW_RX_PIN, &initStruct);
+  hw_gpio_clr(ABZ_ANT_SW_RX_PIN);
+  hw_gpio_configure_pin_stm(ABZ_ANT_SW_TX_PIN, &initStruct);
+  hw_gpio_clr(ABZ_ANT_SW_TX_PIN);
+  hw_gpio_configure_pin_stm(ABZ_ANT_SW_PA_BOOST_PIN, &initStruct);
+  hw_gpio_clr(ABZ_ANT_SW_PA_BOOST_PIN);
+#ifdef PLATFORM_SX127X_USE_RESET_PIN
+  hw_gpio_configure_pin_stm(SX127x_RESET_PIN, &initStruct);
+#endif
+#ifdef PLATFORM_SX127X_USE_VCC_TXCO
+  hw_gpio_configure_pin_stm(SX127x_VCC_TXCO, &initStruct);
+#endif
+// TODO do not deinit SPI for now, may be used for other slave as well
+//  hw_gpio_configure_pin_stm(SX127x_SPI_PIN_CS, &initStruct);
+//  hw_gpio_configure_pin_stm(PIN(GPIO_PORTA, 6), &initStruct);
+//  hw_gpio_configure_pin_stm(PIN(GPIO_PORTA, 7), &initStruct);
+//  hw_gpio_configure_pin_stm(PIN(GPIO_PORTB, 3), &initStruct);
+
+  // TODO remove here, ports can be used for other purposes, needs to be managed by gpio driver
+//  __HAL_RCC_GPIOA_CLK_DISABLE();
+//  __HAL_RCC_GPIOB_CLK_DISABLE();
+//  __HAL_RCC_GPIOC_CLK_DISABLE();
+//  __HAL_RCC_GPIOD_CLK_DISABLE();
+//  __HAL_RCC_GPIOE_CLK_DISABLE();
+//  __HAL_RCC_GPIOH_CLK_DISABLE();
+}
+#endif

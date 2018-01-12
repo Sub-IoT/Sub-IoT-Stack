@@ -36,6 +36,32 @@
 
 #define PORT_BASE(pin)  ((GPIO_TypeDef*)(pin & ~0x0F))
 
+#define RCC_GPIO_CLK_ENABLE(__GPIO_PORT__)                    \
+do {                                                          \
+    switch( __GPIO_PORT__)                                    \
+    {                                                         \
+      case GPIOA_BASE: __HAL_RCC_GPIOA_CLK_ENABLE(); break;   \
+      case GPIOB_BASE: __HAL_RCC_GPIOB_CLK_ENABLE(); break;   \
+      case GPIOC_BASE: __HAL_RCC_GPIOC_CLK_ENABLE(); break;   \
+      case GPIOD_BASE: __HAL_RCC_GPIOD_CLK_ENABLE(); break;   \
+      case GPIOE_BASE: __HAL_RCC_GPIOE_CLK_ENABLE(); break;   \
+      case GPIOH_BASE: __HAL_RCC_GPIOH_CLK_ENABLE(); break;   \
+    }                                                         \
+  } while(0)
+
+#define RCC_GPIO_CLK_DISABLE(__GPIO_PORT__)                   \
+do {                                                          \
+    switch( __GPIO_PORT__)                                    \
+    {                                                         \
+      case GPIOA_BASE: __HAL_RCC_GPIOA_CLK_DISABLE(); break;  \
+      case GPIOB_BASE: __HAL_RCC_GPIOB_CLK_DISABLE(); break;  \
+      case GPIOC_BASE: __HAL_RCC_GPIOC_CLK_DISABLE(); break;  \
+      case GPIOD_BASE: __HAL_RCC_GPIOD_CLK_DISABLE(); break;  \
+      case GPIOE_BASE: __HAL_RCC_GPIOE_CLK_DISABLE(); break;  \
+      case GPIOH_BASE: __HAL_RCC_GPIOH_CLK_DISABLE(); break;  \
+    }                                                         \
+  } while(0)
+
 typedef struct
 {
   gpio_inthandler_t callback;
@@ -58,21 +84,38 @@ __LINK_C void __gpio_init()
   for(int i = 0; i < 6; i++)
     gpio_pins_configured[i] = 0;
 
-
-  /* GPIO Ports Clock Enable */
-  //todo: only used clk
   __HAL_RCC_GPIOA_CLK_ENABLE();
   __HAL_RCC_GPIOB_CLK_ENABLE();
   __HAL_RCC_GPIOC_CLK_ENABLE();
   __HAL_RCC_GPIOD_CLK_ENABLE();
+  __HAL_RCC_GPIOE_CLK_ENABLE();
   __HAL_RCC_GPIOH_CLK_ENABLE();
 
-  /* Initialize GPIO interrupt dispatcher */
-  //GPIOINT_Init();
+  // set all pins to analog by default
+  GPIO_InitTypeDef GPIO_InitStruct= { 0 };
+  GPIO_InitStruct.Mode = GPIO_MODE_ANALOG;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  // for all pins except debug pins (SWCLK and SWD) // TODO disable in release build
+  GPIO_InitStruct.Pin = GPIO_PIN_All & (~( GPIO_PIN_13 | GPIO_PIN_14) );
+  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+  GPIO_InitStruct.Pin = GPIO_PIN_All;
+  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+  HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
+  HAL_GPIO_Init(GPIOD, &GPIO_InitStruct);
+  HAL_GPIO_Init(GPIOE, &GPIO_InitStruct);
+  HAL_GPIO_Init(GPIOH, &GPIO_InitStruct);
+
+  __HAL_RCC_GPIOA_CLK_DISABLE();
+  __HAL_RCC_GPIOB_CLK_DISABLE();
+  __HAL_RCC_GPIOC_CLK_DISABLE();
+  __HAL_RCC_GPIOD_CLK_DISABLE();
+  __HAL_RCC_GPIOE_CLK_DISABLE();
+  __HAL_RCC_GPIOH_CLK_DISABLE();
 }
 
 __LINK_C error_t hw_gpio_configure_pin_stm(pin_id_t pin_id, GPIO_InitTypeDef* init_options)
 {
+  RCC_GPIO_CLK_ENABLE((uint32_t)PORT_BASE(pin_id));
   init_options->Pin = 1 << GPIO_PIN(pin_id);
   HAL_GPIO_Init(PORT_BASE(pin_id), init_options);
 
@@ -80,6 +123,10 @@ __LINK_C error_t hw_gpio_configure_pin_stm(pin_id_t pin_id, GPIO_InitTypeDef* in
   {
     interrupts[GPIO_PIN(pin_id)].interrupt_port = GPIO_PORT(pin_id);
   }
+
+  //RCC_GPIO_CLK_DISABLE((uint32_t)PORT_BASE(pin_id));
+  // TODO for now keep the clock for all configured ports as enabled. We might disable them if the pin configuration allows this
+  // and if no other pins on the port require this (for eg pins using AF for SPI etc)
 
   return SUCCESS;
 }
@@ -285,7 +332,6 @@ __LINK_C error_t hw_gpio_disable_interrupt(pin_id_t pin_id)
 	LL_EXTI_DisableIT_0_31(exti_line);
 
 	return SUCCESS;
-  assert(false);
 }
 
 void EXTI0_1_IRQHandler(void)

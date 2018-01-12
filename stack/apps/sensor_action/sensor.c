@@ -30,143 +30,101 @@
 #include "fs.h"
 #include "log.h"
 
+#ifdef USE_HTS221
+  #include "HTS221_Driver.h"
+  #include "hwi2c.h"
+#endif
+
+
 // This examples pushes sensor data to gateway(s) by writing it to a local file, which is configured to trigger a file action (using D7AActP)
 // which results in reading this file and sending the result to the D7 interface. The D7 session is configured not to request ACKs.
-
-
-#include "button.h"
-#if (defined PLATFORM_EFM32GG_STK3700 || defined PLATFORM_EZR32LG_WSTK6200A)
-  #include "platform_sensors.h"
-#endif
-
-#ifdef HAS_LCD
-  #include "platform_lcd.h"
-  #define LCD_WRITE_STRING(...) lcd_write_string(__VA_ARGS__)
-  #ifdef PLATFORM_EFM32GG_STK3700
-    // STK3700 LCD does not use multiple lines
-    #define LCD_WRITE_LINE(line, ...) lcd_write_string(__VA_ARGS__)
-  #else
-    #define LCD_WRITE_LINE(line, ...) lcd_write_line(line, __VA_ARGS__)
-  #endif
-#else
-  #define LCD_WRITE_STRING(...)
-  #define LCD_WRITE_LINE(...)
-#endif
-
+// Temperature data is used as a sensor value, when a HTS221 is available, otherwise value 0 is used.
 
 #define SENSOR_FILE_ID           0x40
-#define SENSOR_FILE_SIZE         8
+#define SENSOR_FILE_SIZE         2
 #define ACTION_FILE_ID           0x41
+#define INTERFACE_FILE_ID        0x42
 
-#define SENSOR_INTERVAL_SEC	TIMER_TICKS_PER_SEC * 10
+#define SENSOR_INTERVAL_SEC	TIMER_TICKS_PER_SEC * 1
 
+#ifdef USE_HTS221
+  static i2c_handle_t* hts221_handle;
+#endif
 
 void execute_sensor_measurement()
 {
-#if (defined PLATFORM_EZR32LG_WSTK6200A \
-  || defined PLATFORM_EFM32GG_STK3700 || defined PLATFORM_EZR32LG_USB01)
-  char str[30];
+  int16_t temperature = 0; // in decicelsius. When there is no sensor, we just transmit 0 degrees
 
-  float internal_temp = hw_get_internal_temperature();
-#if (defined PLATFORM_EFM32GG_STK3700)
-  lcd_write_temperature(internal_temp*10, 1);
-#else
-  sprintf(str, "Int T: %2d.%d C", (int)internal_temp, (int)(internal_temp*10)%10);
-  LCD_WRITE_LINE(2,str);
+#if defined USE_HTS221
+  HTS221_Get_Temperature(hts221_handle, &temperature);
 #endif
 
-  log_print_string(str);
+  temperature = __builtin_bswap16(temperature); // need to store in big endian in fs
+  fs_write_file(SENSOR_FILE_ID, 0, (uint8_t*)&temperature, SENSOR_FILE_SIZE);
 
-  uint32_t rhData = 0;
-  uint32_t tData = 0;
-#if ! defined PLATFORM_EZR32LG_USB01 && ! defined PLATFORM_EFM32GG_STK3700
-  getHumidityAndTemperature(&rhData, &tData);
-
-  sprintf(str, "Ext T: %d.%d C", (tData/1000), (tData%1000)/100);
-  LCD_WRITE_LINE(3,str);
-  log_print_string(str);
-
-  sprintf(str, "Ext H: %d.%d", (rhData/1000), (rhData%1000)/100);
-  LCD_WRITE_LINE(4,str);
-  log_print_string(str);
-#endif
-
-  uint32_t vdd = hw_get_battery();
-
-  sprintf(str, "Batt %d mV", vdd);
-  LCD_WRITE_LINE(5,str);
-  log_print_string(str);
-
-  uint8_t sensor_values[8];
-  uint16_t *pointer =  (uint16_t*) sensor_values;
-  *pointer++ = (uint16_t) (internal_temp * 10);
-  *pointer++ = (uint16_t) (tData /100);
-  *pointer++ = (uint16_t) (rhData /100);
-  *pointer++ = (uint16_t) (vdd /10);
-
-  fs_write_file(SENSOR_FILE_ID, 0, (uint8_t*)&sensor_values,8);
-#else
-  // no sensor, we just write the current timestamp
-  timer_tick_t t = timer_get_counter_value();
-  fs_write_file(SENSOR_FILE_ID, 0, (uint8_t*)&t, sizeof(timer_tick_t));
-#endif
-
+  log_print_string("temp %i dC", temperature);
   timer_post_task_delay(&execute_sensor_measurement, SENSOR_INTERVAL_SEC);
-
-#ifdef PLATFORM_EZR32LG_OCTA
-  led_flash_green();
-#endif
 }
 
 void init_user_files()
 {
-    // file 0x40: contains our sensor data + configure an action file to be executed upon write
-    fs_file_header_t file_header = (fs_file_header_t){
-        .file_properties.action_protocol_enabled = 1,
-        .file_properties.action_file_id = ACTION_FILE_ID,
-        .file_properties.action_condition = ALP_ACT_COND_WRITE,
-        .file_properties.storage_class = FS_STORAGE_VOLATILE,
-        .file_properties.permissions = 0, // TODO
-        .length = SENSOR_FILE_SIZE
-    };
+  // configure file notification using D7AActP: changes made to file SENSOR_FILE_ID will result in the action in file ACTION_FILE_ID
+  // being executed of which the results will transmitted to the interface defined in file INTERFACE_FILE_ID
 
-    fs_init_file(SENSOR_FILE_ID, &file_header, NULL);
+  // first generate ALP command for the action file. We do this manually for now (until we have an API for this).
+  // Please refer to the spec for the format
+  uint8_t alp_command[4] = {
+    // ALP Control byte
+    ALP_OP_READ_FILE_DATA,
+    // File Data Request operand:
+    SENSOR_FILE_ID, // the file ID
+    0, // offset in file
+    SENSOR_FILE_SIZE // requested data length
+  };
 
-    // configure file notification using D7AActP: write ALP command to broadcast changes made to file 0x40 in file 0x41
+  fs_file_header_t action_file_header = (fs_file_header_t){
+    .file_properties.action_protocol_enabled = 0,
+    .file_properties.storage_class = FS_STORAGE_PERMANENT,
+    .file_permissions = 0, // TODO
+    .length = sizeof(alp_command),
+    .allocated_length = sizeof(alp_command),
+  };
 
-    // first generate ALP command. We do this manually for now (until we have an API for this).
-    // Please refer to the spec for the format
+  fs_init_file(ACTION_FILE_ID, &action_file_header, alp_command);
 
-    uint8_t alp_command[4] = {
-      // ALP Control byte
-      ALP_OP_READ_FILE_DATA,
-      // File Data Request operand:
-      SENSOR_FILE_ID, // the file ID
-      0, // offset in file
-      SENSOR_FILE_SIZE // requested data length
-    };
+  // define the D7 interface configuration used for sending the result of above ALP command on
+  d7asp_master_session_config_t session_config = {
+    .qos = {
+      .qos_resp_mode = SESSION_RESP_MODE_NO,
+      .qos_retry_mode = SESSION_RETRY_MODE_NO,
+      .qos_stop_on_error = false,
+      .qos_record = false
+    },
+    .dormant_timeout = 0,
+    .addressee = {
+      .ctrl = {
+        .nls_method = AES_NONE,
+        .id_type = ID_TYPE_NOID,
+      },
+      .access_class = 0x01,
+      .id = 0
+    }
+  };
 
-    // Define the D7 interface configuration used for sending the result of above ALP command on
-    d7asp_master_session_config_t session_config = {
-        .qos = {
-            .qos_resp_mode = SESSION_RESP_MODE_NO,
-            .qos_retry_mode = SESSION_RETRY_MODE_NO,
-            .qos_stop_on_error       = false,
-            .qos_record              = false
-        },
-        .dormant_timeout = 0,
-        .addressee = {
-            .ctrl = {
-                .nls_method = AES_NONE,
-                .id_type = ID_TYPE_NOID,
-            },
-            .access_class = 0x01,
-            .id = 0
-        }
-    };
+  fs_init_file_with_d7asp_interface_config(INTERFACE_FILE_ID, &session_config);
 
-    // finally, register D7AActP file
-    fs_init_file_with_D7AActP(ACTION_FILE_ID, &session_config, alp_command, sizeof(alp_command));
+  // finally, register the sensor file, configured to use D7AActP
+  fs_file_header_t file_header = (fs_file_header_t){
+    .file_properties.action_protocol_enabled = 1,
+    .file_properties.action_condition = ALP_ACT_COND_WRITE,
+    .file_properties.storage_class = FS_STORAGE_VOLATILE,
+    .file_permissions = 0, // TODO
+    .alp_cmd_file_id = ACTION_FILE_ID,
+    .interface_file_id = INTERFACE_FILE_ID,
+    .length = SENSOR_FILE_SIZE
+  };
+
+  fs_init_file(SENSOR_FILE_ID, &file_header, NULL);
 }
 
 void bootstrap()
@@ -203,12 +161,14 @@ void bootstrap()
 
     d7ap_stack_init(&fs_init_args, NULL, false, NULL);
 
-#if (defined PLATFORM_EFM32GG_STK3700 || defined PLATFORM_EZR32LG_WSTK6200A)
-    initSensors();
+#if defined USE_HTS221
+    hts221_handle = i2c_init(0, 0);
+    HTS221_DeActivate(hts221_handle);
+    HTS221_Set_BduMode(hts221_handle, HTS221_ENABLE);
+    HTS221_Set_Odr(hts221_handle, HTS221_ODR_7HZ);
+    HTS221_Activate(hts221_handle);
 #endif
 
     sched_register_task(&execute_sensor_measurement);
     timer_post_task_delay(&execute_sensor_measurement, SENSOR_INTERVAL_SEC);
-
-    LCD_WRITE_STRING("EFM32 Sensor\n");
 }

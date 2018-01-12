@@ -38,6 +38,11 @@ void __assert_func(const char *, int, const char *, const char *);
 
 #endif
 
+#ifndef __ASSERT_FUNC
+#   define __ASSERT_FUNC ((char *) 0)
+void __assert_func(const char *, int, const char *, const char *);
+#endif
+
 #ifdef NDEBUG           /* required by ANSI standard */
 # define assert(__e) ((void)0)
 #elif defined FRAMEWORK_DEBUG_ASSERT_REBOOT

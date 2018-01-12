@@ -1,7 +1,7 @@
 /* * OSS-7 - An opensource implementation of the DASH7 Alliance Protocol for ultra
  * lowpower wireless sensor communication
  *
- * Copyright 2016 University of Antwerp
+ * Copyright 2015 University of Antwerp
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,20 +16,26 @@
  * limitations under the License.
  */
 
-/*!
- * \ingroup aes
- * @{
- * \brief The preconfigured network security key for AES cyphering.
- * \author philippe.nunes@cortus.com
- */
+#include "hwuart.h"
+#include "hwatomic.h"
+#include "hwleds.h"
+#include "log.h"
 
-#ifndef KEY_H
-#define KEY_H
+//we override __assert_func to abort the CPU and get the stack trace
+void __assert_func( const char *file, int line, const char *func, const char *failedexpr)
+{
+    start_atomic();
+    led_on(0);
+    led_on(1);
+    abort();
+}
 
-// preconfigured key
-const uint8_t AES128_key[16] = "D7A_SECURITY_KEY";
-                       //{ 0x44 0x37 0x41 0x5F 0x53 0x45 0x43 0x55 0x52 0x49 0x54 0x59 0x5f 0x4b 0x45 0x59 };
-#define PROVISIONED_KEY_COUNTER 1
-#endif // KEY_H
+size_t strnlen(const char *str, size_t maxlen)
+{
+  const char *start = str;
 
-/** @}*/
+  while (maxlen-- > 0 && *str)
+    str++;
+
+  return str - start;
+}

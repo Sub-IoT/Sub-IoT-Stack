@@ -22,7 +22,7 @@ REQUIRE_TOOLCHAIN(aps-gcc)
 
 #Define platform specific options
 PLATFORM_PARAM(${PLATFORM_PREFIX}_MCU "aps3r" STRING "The CPU of the cortus fpga board")
-PLATFORM_PARAM(${PLATFORM_PREFIX}_RADIO "none" STRING "The radio chip connected to the cortus fpga board")
+PLATFORM_PARAM(${PLATFORM_PREFIX}_RADIO "sx127x" STRING "The radio chip connected to the cortus fpga board")
 
 # CONSOLE
 # uses UART0, location 1

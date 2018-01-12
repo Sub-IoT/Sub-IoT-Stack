@@ -190,7 +190,7 @@ static void switch_state(dll_state_t next_state)
         DPRINT("Switched to DLL_STATE_SCAN_AUTOMATION");
         break;
     case DLL_STATE_TX_FOREGROUND:
-        assert(dll_state == DLL_STATE_CCA2);
+        assert(dll_state == DLL_STATE_CCA2 || dll_state == DLL_STATE_CSMA_CA_STARTED);
         dll_state = next_state;
         DPRINT("Switched to DLL_STATE_TX_FOREGROUND");
         break;
@@ -254,6 +254,8 @@ void guard_period_expiration()
 
 void start_background_scan()
 {
+    assert(dll_state == DLL_STATE_SCAN_AUTOMATION);
+
     // Start a new tsched timer
     assert(timer_post_task_delay(&start_background_scan, tsched) == SUCCESS);
 
@@ -1026,7 +1028,11 @@ void dll_stop_foreground_scan()
 
     DPRINT("Set the radio to idle state");
     hw_radio_set_idle();
-    switch_state(DLL_STATE_IDLE);
+
+    if(dll_state == DLL_STATE_SCAN_AUTOMATION)
+      return; // stay in scan automation
+    else
+      switch_state(DLL_STATE_IDLE);
 }
 
 uint8_t dll_assemble_packet_header(packet_t* packet, uint8_t* data_ptr)

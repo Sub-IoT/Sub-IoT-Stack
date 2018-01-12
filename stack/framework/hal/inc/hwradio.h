@@ -286,6 +286,16 @@ __LINK_C error_t hw_radio_init(alloc_packet_callback_t p_alloc, release_packet_c
  */
 __LINK_C void hw_radio_stop();
 
+/** \brief Initializes all GPIO pins required by the radio.
+ * This is a weak symbol which needs to be implemented in the platform if you want to use this
+ */
+__LINK_C __attribute__((weak)) void hw_radio_io_init();
+
+
+/** \brief Deinitializes all GPIO pins required by the radio.
+ * This is a weak symbol which needs to be implemented in the platform if you want to use this
+ */
+__LINK_C __attribute__((weak)) void hw_radio_io_deinit();
 
 /** \brief Set the radio in the IDLE mode.
  *
