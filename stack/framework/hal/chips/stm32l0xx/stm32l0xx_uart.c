@@ -79,6 +79,9 @@ bool uart_enable(uart_handle_t* uart) {
     case USART2_BASE:
       __HAL_RCC_USART2_CLK_ENABLE();
       break;
+    case USART4_BASE:
+      __HAL_RCC_USART4_CLK_ENABLE();
+      break;
     default:
       assert(false);
   }
