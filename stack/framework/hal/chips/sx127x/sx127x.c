@@ -926,7 +926,7 @@ error_t hw_radio_init(alloc_packet_callback_t alloc_packet_cb, release_packet_ca
   calibrate_rx_chain();
   init_regs();
 
-  // TODO sleep
+  switch_to_sleep_mode();
 
   error_t e;
   e = hw_gpio_configure_interrupt(SX127x_DIO0_PIN, &dio0_isr, GPIO_RISING_EDGE); assert(e == SUCCESS);
@@ -938,11 +938,6 @@ error_t hw_radio_init(alloc_packet_callback_t alloc_packet_cb, release_packet_ca
 void hw_radio_stop() {
   // TODO reset chip?
   switch_to_sleep_mode();
-  spi_disable(spi_handle);  // TODO only disable the slave, other slaves might be attached to the same SPI pheriperal,
-                            // so only the SPI driver should be able to decide to disable the pheriperal as a whone
-
-  hw_gpio_disable_interrupt(SX127x_DIO0_PIN);
-  hw_gpio_disable_interrupt(SX127x_DIO1_PIN);
 }
 
 error_t hw_radio_set_idle() {
