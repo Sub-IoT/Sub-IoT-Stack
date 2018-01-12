@@ -784,7 +784,14 @@ static void restart_rx_chain() {
   DPRINT("restart RX chain with PLL lock");
 }
 
+static void resume_from_sleep_mode() {
+  assert(state == STATE_IDLE);
+  DPRINT("resuming from sleep mode");
+  hw_radio_io_init();
+}
+
 static void start_rx(hw_rx_cfg_t const* rx_cfg) {
+  resume_from_sleep_mode();
   configure_channel(&(rx_cfg->channel_id));
   configure_syncword(rx_cfg->syncword_class, &(rx_cfg->channel_id));
 
@@ -894,9 +901,14 @@ static void switch_to_sleep_mode()
     hw_gpio_disable_interrupt(SX127x_DIO1_PIN);
 
     set_opmode(OPMODE_SLEEP);
-
     state = STATE_IDLE;
+
+    //spi_disable(spi_handle);  // TODO only disable the slave, other slaves might be attached to the same SPI pheriperal,
+                                // so only the SPI driver should be able to decide to disable the pheriperal as a whole
+
+    hw_radio_io_deinit();
 }
+
 
 error_t hw_radio_init(alloc_packet_callback_t alloc_packet_cb, release_packet_callback_t release_packet_cb) {
   if(sx127x_spi != NULL)
@@ -941,6 +953,14 @@ error_t hw_radio_set_idle() {
 
 bool hw_radio_is_idle() {
   // TODO
+}
+
+__attribute__((weak)) void hw_radio_io_init() {
+  // needs to be implemented in platform for now (until we have a public API to configure GPIO pins)
+}
+
+__attribute__((weak)) void hw_radio_io_deinit() {
+  // needs to be implemented in platform for now (until we have a public API to configure GPIO pins)
 }
 
 error_t hw_radio_set_rx(hw_rx_cfg_t const* rx_cfg, rx_packet_callback_t rx_cb, rssi_valid_callback_t rssi_valid_cb) {
@@ -996,6 +1016,7 @@ error_t hw_radio_send_packet(hw_radio_packet_t* packet, tx_packet_callback_t tx_
     tx_packet_callback = tx_callback;
     current_packet = packet;
 
+    resume_from_sleep_mode();
     if(state == STATE_RX)
     {
         pending_rx_cfg.channel_id = current_channel_id;
@@ -1322,6 +1343,8 @@ error_t hw_radio_start_background_scan(hw_rx_cfg_t const* rx_cfg, rx_packet_call
         assert(release_packet_callback != NULL);
     }
     rx_packet_callback = rx_cb;
+
+    resume_from_sleep_mode();
 
     // We should not initiate a background scan before TX is completed
     assert(state != STATE_TX);
