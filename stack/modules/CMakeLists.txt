@@ -18,11 +18,19 @@
 #
 
 include(${PROJECT_SOURCE_DIR}/cmake/module_macros.cmake)
+
+SET(MODULE_EXTRA_MODULES_DIR "" CACHE STRING "Path to directory containing extra, out of tree modules (optional)")
+
 #Add the 'BUILD_MODULES' option
 OPTION(BUILD_MODULES "Build Modules" ON)
-LIST_SUBDIRS(CUR_DIRS ${CMAKE_CURRENT_SOURCE_DIR})
+LIST_SUBDIRS(MODULE_DIRS ${CMAKE_CURRENT_SOURCE_DIR})
+IF(NOT(MODULE_EXTRA_MODULES_DIR STREQUAL ""))
+    LIST_SUBDIRS(EXTRA_MODULES_DIRS ${MODULE_EXTRA_MODULES_DIR})
+ENDIF()
+LIST(APPEND MODULE_DIRS ${EXTRA_MODULES_DIRS})
+
 #Add conditional options for all subdirs (which are individual modules)
-FOREACH(__dir ${CUR_DIRS})
+FOREACH(__dir ${MODULE_DIRS})
     GET_FILENAME_COMPONENT(__module_name ${__dir} NAME) # strip full path keeping only module name
     STRING(TOUPPER ${__module_name} __upper_name)
     OPTION(MODULE_${__upper_name} "Build Module ${__module_name}" false)
@@ -34,12 +42,12 @@ ENDFOREACH()
 HIDE_PARAMETERS(MODULE_PARAM_LIST)
 
 #Finally Load the individual modules
-FOREACH(__dir ${CUR_DIRS})
+FOREACH(__dir ${MODULE_DIRS})
     GET_FILENAME_COMPONENT(__module_name ${__dir} NAME) # strip full path keeping only module name
     GEN_PREFIX(MODULE_PREFIX "MODULE" ${__module_name})
     IF(BUILD_MODULES AND ${MODULE_PREFIX})
-	ADD_SUBDIRECTORY(${__dir})
+        ADD_SUBDIRECTORY(${__dir} ${CMAKE_CURRENT_BINARY_DIR}/modules/${__module_name})
         MESSAGE(STATUS "Added module " ${__module_name})
-    ENDIF()	
+    ENDIF()
     UNSET(MODULE_PREFIX)
 ENDFOREACH()
