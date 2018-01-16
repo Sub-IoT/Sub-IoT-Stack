@@ -48,6 +48,10 @@ void __platform_init()
 
 #ifdef USE_SX127X
     hw_radio_io_init();
+
+  #ifdef PLATFORM_SX127X_USE_RESET_PIN
+    reset_sx127x();
+  #endif
 #endif
 
     HAL_EnableDBGSleepMode(); // TODO impact on power?
@@ -87,10 +91,6 @@ void hw_radio_io_init() {
 
 #ifdef PLATFORM_SX127X_USE_DIO3_PIN
   hw_gpio_configure_pin(SX127x_DIO3_PIN, true, GPIO_MODE_INPUT, 0);
-#endif
-#ifdef PLATFORM_SX127X_USE_RESET_PIN
-  hw_gpio_configure_pin(SX127x_RESET_PIN, false, GPIO_MODE_OUTPUT_PP, 1);
-  reset_sx127x();
 #endif
 #ifdef PLATFORM_SX127X_USE_VCC_TXCO
   hw_gpio_configure_pin(SX127x_VCC_TXCO, false, GPIO_MODE_OUTPUT_PP, 1);
