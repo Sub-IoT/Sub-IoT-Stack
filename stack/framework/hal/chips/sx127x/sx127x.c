@@ -688,7 +688,6 @@ static void fifo_threshold_isr() {
        current_packet->data[FskPacketHandler.NbBytes++] = read_reg(REG_FIFO);
 
     uint8_t remaining_bytes = FskPacketHandler.Size - FskPacketHandler.NbBytes;
-    DPRINT("read %i bytes, %i remaining, FLAGS2 %x \n", FskPacketHandler.NbBytes, remaining_bytes, read_reg(REG_IRQFLAGS2));
 
     if(remaining_bytes == 0) {
         current_packet->rx_meta.timestamp = timer_get_counter_value();
@@ -740,6 +739,8 @@ static void fifo_threshold_isr() {
 
     hw_gpio_set_edge_interrupt(SX127x_DIO1_PIN, GPIO_RISING_EDGE);
     hw_gpio_enable_interrupt(SX127x_DIO1_PIN);
+
+    DPRINT("read %i bytes, %i remaining, FLAGS2 %x \n", FskPacketHandler.NbBytes, remaining_bytes, read_reg(REG_IRQFLAGS2));
 }
 
 static void dio1_isr(pin_id_t pin_id, uint8_t event_mask) {
