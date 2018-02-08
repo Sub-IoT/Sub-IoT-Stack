@@ -39,22 +39,22 @@
 #include "version.h"
 #include "compress.h"
 
-#if PLATFORM_NUM_LEDS > 0
-#include "hwleds.h"
 #include "../shared/shared.h"
 
-void led_blink_off()
-{
-	led_off(0);
-}
+#if PLATFORM_NUM_LEDS > 0
+  #include "hwleds.h"
 
-void led_blink()
-{
-	led_on(0);
+  void led_blink_off()
+  {
+    led_off(0);
+  }
 
-	timer_post_task_delay(&led_blink_off, TIMER_TICKS_PER_SEC * 0.2);
-}
+  void led_blink()
+  {
+    led_on(0);
 
+    timer_post_task_delay(&led_blink_off, TIMER_TICKS_PER_SEC * 0.2);
+  }
 #endif
 
 static void on_unsolicited_response_received(d7asp_result_t d7asp_result, uint8_t *alp_command, uint8_t alp_command_size)
