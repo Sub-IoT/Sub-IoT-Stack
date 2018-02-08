@@ -38,6 +38,7 @@
 #include "fs.h"
 #include "log.h"
 #include "compress.h"
+#include "../shared/shared.h"
 
 #ifdef USE_HTS221
   #include "HTS221_Driver.h"
@@ -100,50 +101,9 @@ void bootstrap()
 {
     log_print_string("Device booted\n");
 
-    dae_access_profile_t access_classes[2] = {
-        {
-            // AC used for pushing data to the GW, no scanning
-            .channel_header = {
-                .ch_coding = PHY_CODING_PN9,
-                .ch_class = PHY_CLASS_NORMAL_RATE,
-                .ch_freq_band = PHY_BAND_868
-            },
-            .subprofiles[0] = {
-                .subband_bitmap = 0x00, // void scan automation channel list
-                .scan_automation_period = 0,
-            },
-            .subbands[0] = (subband_t){
-                .channel_index_start = 0,
-                .channel_index_end = 0,
-                .eirp = 10,
-                .cca = 86,
-                .duty = 0,
-            }
-        },
-        {
-            // AC used for scanning for BG request every second
-            .channel_header = {
-                .ch_coding = PHY_CODING_PN9,
-                .ch_class = PHY_CLASS_NORMAL_RATE,
-                .ch_freq_band = PHY_BAND_868
-            },
-            .subprofiles[0] = {
-              .subband_bitmap = 0x01,
-              .scan_automation_period = compress_data(1024, true),
-            },
-            .subbands[0] = (subband_t){
-                .channel_index_start = 0,
-                .channel_index_end = 0,
-                .eirp = 10,
-                .cca = 86,
-                .duty = 0,
-            }
-        }
-    };
-
     fs_init_args_t fs_init_args = (fs_init_args_t){
-        .access_profiles_count = 2,
-        .access_profiles = access_classes,
+        .access_profiles_count = DEFAULT_ACCESS_PROFILES_COUNT,
+        .access_profiles = default_access_profiles,
         .access_class = 0x11, // use scanning AC
         .fs_user_files_init_cb = &init_user_files
     };

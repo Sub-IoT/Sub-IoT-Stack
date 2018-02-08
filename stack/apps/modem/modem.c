@@ -31,6 +31,8 @@
 #include "fs.h"
 #include "log.h"
 
+#include "../shared/shared.h"
+
 // This example application contains a modem which can be used from another MCU through
 // the serial interface
 
@@ -38,31 +40,10 @@ void bootstrap()
 {
     log_print_string("Device booted\n");
 
-    dae_access_profile_t access_classes[1] = {
-        {
-            .channel_header = {
-                .ch_coding = PHY_CODING_PN9,
-                .ch_class = PHY_CLASS_NORMAL_RATE,
-                .ch_freq_band = PHY_BAND_868
-            },
-            .subprofiles[0] = {
-                .subband_bitmap = 0x00, // void scan automation channel list
-                .scan_automation_period = 0,
-            },
-            .subbands[0] = (subband_t){
-                .channel_index_start = 0,
-                .channel_index_end = 0,
-                .eirp = 10,
-                .cca = 86,
-                .duty = 0,
-            }
-        }
-    };
-
     fs_init_args_t fs_init_args = (fs_init_args_t){
-        .access_profiles_count = 1,
-        .access_profiles = access_classes,
-        .access_class = 0x01
+        .access_profiles_count = DEFAULT_ACCESS_PROFILES_COUNT,
+        .access_profiles = default_access_profiles,
+        .access_class = 0x11
     };
 
     d7ap_stack_init(&fs_init_args, NULL, true, NULL);

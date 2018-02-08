@@ -41,6 +41,7 @@
 
 #if PLATFORM_NUM_LEDS > 0
 #include "hwleds.h"
+#include "../shared/shared.h"
 
 void led_blink_off()
 {
@@ -68,51 +69,10 @@ static alp_init_args_t alp_init_args;
 
 void bootstrap()
 {
-    dae_access_profile_t access_profiles[2] = {
-        {
-          // AC used for pushing data to the GW, continuous FG scan
-            .channel_header = {
-                .ch_coding = PHY_CODING_PN9,
-                .ch_class = PHY_CLASS_NORMAL_RATE,
-                .ch_freq_band = PHY_BAND_868
-            },
-            .subprofiles[0] = {
-                .subband_bitmap = 0x01, // only the first subband is selectable
-                .scan_automation_period = 0,
-            },
-            .subbands[0] = (subband_t){
-                .channel_index_start = 0,
-                .channel_index_end = 0,
-                .eirp = 10,
-                .cca = 86,
-                .duty = 0,
-            }
-        },
-        {
-            // AC used by sensors for scanning for BG request every second
-            .channel_header = {
-                .ch_coding = PHY_CODING_PN9,
-                .ch_class = PHY_CLASS_NORMAL_RATE,
-                .ch_freq_band = PHY_BAND_868
-            },
-            .subprofiles[0] = {
-              .subband_bitmap = 0x01,
-              .scan_automation_period = compress_data(1024, true),
-            },
-            .subbands[0] = (subband_t){
-                .channel_index_start = 0,
-                .channel_index_end = 0,
-                .eirp = 10,
-                .cca = 86,
-                .duty = 0,
-            }
-        }
-    };
-
     fs_init_args_t fs_init_args = (fs_init_args_t){
         .fs_user_files_init_cb = NULL,
-        .access_profiles_count = sizeof(access_profiles) / sizeof(dae_access_profile_t),
-        .access_profiles = access_profiles,
+        .access_profiles_count = DEFAULT_ACCESS_PROFILES_COUNT,
+        .access_profiles = default_access_profiles,
         .access_class = 0x01 // use access profile 0 and select the first subprofile
     };
 
