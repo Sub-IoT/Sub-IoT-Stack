@@ -30,6 +30,9 @@ PLATFORM_PARAM(PLATFORM_CONSOLE_UART     "0"      STRING "The UART channel used 
 PLATFORM_PARAM(PLATFORM_CONSOLE_LOCATION "1"      STRING "The route location used by the console UART configuration." )
 PLATFORM_PARAM(PLATFORM_CONSOLE_BAUDRATE "115200" STRING "The baudrate used by the second console configuration."       )
 
+PLATFORM_PARAM(PLATFORM_NUM_LEDS "8" STRING "The number of LEDs.")
+PLATFORM_PARAM(PLATFORM_NUM_BUTTONS "2" STRING "The number of buttons.")
+
 INCLUDE_DIRECTORIES(inc)
 
 #Restrict the number of possible options for the radio option in the usual manner...
@@ -82,6 +85,8 @@ PLATFORM_HEADER_DEFINE(
  NUMBER PLATFORM_CONSOLE_UART
         PLATFORM_CONSOLE_LOCATION
         PLATFORM_CONSOLE_BAUDRATE
+        PLATFORM_NUM_LEDS
+        PLATFORM_NUM_BUTTONS
  BOOL   PLATFORM_SX127X_USE_PA_BOOST
 )
 

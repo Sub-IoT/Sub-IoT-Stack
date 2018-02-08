@@ -25,20 +25,20 @@
     #error Mismatch between the configured platform and the actual platform. Expected PLATFORM_CORTUS_FPGA to be defined
 #endif
 
-//#define HW_USE_HFXO
-//#define HW_USE_LFXO
-
 #include "cortus_mcu.h"
 #include "machine/gpio.h"
 
 /********************
  * LED DEFINITIONS *
  *******************/
-
-#define HW_NUM_LEDS 8
-
-
-//INT_HANDLER
+#define LED1                PIN(gpioPortA,16);
+#define LED2                PIN(gpioPortA,17);
+#define LED3                PIN(gpioPortA,18);
+#define LED4                PIN(gpioPortA,19);
+#define LED5                PIN(gpioPortA,20);
+#define LED6                PIN(gpioPortA,21);
+#define LED7                PIN(gpioPortA,22);
+#define LED8                PIN(gpioPortA,23);
 
 /********************
  *  USB SUPPORT      *
@@ -68,10 +68,8 @@
 /**************************
  * USERBUTTON DEFINITIONS *
  *************************/
-
-#define NUM_USERBUTTONS 	2
-#define BUTTON0				PIN(gpioPortA, 4)
-#define BUTTON1				PIN(gpioPortA, 5)
+#define BUTTON0             PIN(gpioPortA, 4)
+#define BUTTON1             PIN(gpioPortA, 5)
 
 // CC1101 PIN definitions
 #ifdef USE_CC1101
