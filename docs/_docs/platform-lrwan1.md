@@ -18,3 +18,11 @@ This means that after plugging in your device using the ST-LINK USB connection y
 This interface can be used for interacting with the console.
 Note that, on some Linux system, a service called ModemManager will claim the device upon detection. It will give up after a while, but it will result in communication problems,
 each time you plug in. For a workaround look [here](https://linux-tips.com/t/prevent-modem-manager-to-capture-usb-serial-devices/284).
+
+# Low power operation
+
+To configure the board for low power operation:
+- connect pin 1 and 2 of JP9, so TCXO is not powered continuously but can be powered through pin
+- set cmake option PLATFORM_SX127X_USE_VCC_TXCO so the driver will take care of powering the TCXO
+- Disconnect the ST-LINK  (note you will not be able to debug flash anymore) by removing SB28 and SB28 and SB37
+- If you want to power through CN13 then you need to remove SB6 as well, so the voltage regulator is disabled
