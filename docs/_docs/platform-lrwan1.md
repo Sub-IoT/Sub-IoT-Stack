@@ -24,5 +24,5 @@ each time you plug in. For a workaround look [here](https://linux-tips.com/t/pre
 To configure the board for low power operation:
 - connect pin 1 and 2 of JP9, so TCXO is not powered continuously but can be powered through pin
 - set cmake option PLATFORM_SX127X_USE_VCC_TXCO so the driver will take care of powering the TCXO
-- Disconnect the ST-LINK  (note you will not be able to debug flash anymore) by removing SB28 and SB28 and SB37
+- Disconnect the ST-LINK  (note you will not be able to debug flash anymore) by removing SB28 and SB29 and SB37
 - If you want to power through CN13 then you need to remove SB6 and R26 as well, so the voltage regulator is disabled
