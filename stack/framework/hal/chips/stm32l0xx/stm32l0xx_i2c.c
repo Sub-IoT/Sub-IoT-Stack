@@ -20,7 +20,7 @@
 
 //HAL_MAX_DELAY
 
-#define I2CS       1
+#define I2CS       2
 
 typedef struct {
   pin_id_t sda;
@@ -58,7 +58,12 @@ static i2c_pins_t location[I2CS]= {
     // I2C 1
     .scl      = PIN(GPIO_PORTB,8),
     .sda      = PIN(GPIO_PORTB,9)
-  }
+  },
+  {
+      // I2C 1
+      .scl      = PIN(GPIO_PORTC,0),
+      .sda      = PIN(GPIO_PORTC,1)
+    }
 };
 
 typedef struct i2c_handle {
@@ -78,7 +83,15 @@ static i2c_handle_t handle[I2CS] = {
     .port = GPIOB,
     .alternate = GPIO_AF4_I2C1,
 	.baudrate = IC2_BAUDRATE
-  }
+  },
+  {
+		    .idx     = 3,
+		    .handle.Instance = I2C3,
+		    .pins = GPIO_PIN_0|GPIO_PIN_1,
+		    .port = GPIOC,
+		    .alternate = GPIO_AF7_I2C3,
+			.baudrate = IC2_BAUDRATE
+		  }
 };
 
 static inline uint32_t get_i2c_timing(int hz)
@@ -116,7 +129,8 @@ i2c_handle_t* i2c_init(uint8_t idx, uint8_t pins)
 		return NULL;
 	}*/
 
-  __HAL_RCC_I2C1_CLK_ENABLE();
+  if (handle[idx].handle.Instance == I2C1) __HAL_RCC_I2C1_CLK_ENABLE();
+  else if (handle[idx].handle.Instance == I2C3) __HAL_RCC_I2C3_CLK_ENABLE();
 
   GPIO_InitStruct.Pin = handle[idx].pins;
   GPIO_InitStruct.Alternate = handle[idx].alternate;
