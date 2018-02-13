@@ -163,6 +163,7 @@ spi_handle_t* spi_init(uint8_t spi_number, uint32_t baudrate, uint8_t databits, 
   handle[spi_number].hspi.Init.CLKPhase = SPI_PHASE_1EDGE;
   handle[spi_number].hspi.Init.NSS = SPI_NSS_SOFT;
 
+  // TODO take pheripal clock freq into account ...
   switch (baudrate)
   {
     case 16000000:
