@@ -46,6 +46,6 @@ void bootstrap()
         .access_class = 0x11
     };
 
-    d7ap_stack_init(&fs_init_args, NULL, false, NULL);
+    d7ap_stack_init(&fs_init_args, NULL, true, NULL);
 }
 
