@@ -251,7 +251,7 @@ void d7atp_stop()
     timer_cancel_task(&response_period_timeout_handler);
     sched_cancel_task(&response_period_timeout_handler);
     timer_cancel_task(&execution_delay_timeout_handler);
-    sched_register_task(&execution_delay_timeout_handler);
+    sched_cancel_task(&execution_delay_timeout_handler);
 }
 
 error_t d7atp_send_request(uint8_t dialog_id, uint8_t transaction_id, bool is_last_transaction,
