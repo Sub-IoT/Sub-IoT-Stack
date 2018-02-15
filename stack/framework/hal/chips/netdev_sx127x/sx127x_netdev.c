@@ -39,6 +39,7 @@
     #define DEBUG_DATA(...) log_print_data(__VA_ARGS__)
 #else
     #define DEBUG(...)
+    #define DEBUG_DATA(...)
 #endif
 
 /* Internal helper functions */
@@ -661,7 +662,7 @@ static int _set(netdev_t *netdev, netopt_t opt, const void *val, size_t len)
             return sizeof(uint8_t);
 
         case NETOPT_SYNC_WORD:
-            sx127x_set_syncword(dev, (const uint8_t*)val, len);
+            sx127x_set_syncword(dev, (uint8_t*)val, len);
             return len;
 
         case NETOPT_FDEV:

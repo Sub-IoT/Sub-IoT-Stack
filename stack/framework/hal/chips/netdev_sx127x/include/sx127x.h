@@ -161,9 +161,9 @@ enum {
  * @brief   LoRa signal bandwidth.
  */
 enum {
-    SX127X_BW_125_KHZ = 125000,             /**< 125 kHz bandwidth */
-    SX127X_BW_250_KHZ = 250000,             /**< 250 kHz bandwidth */
-    SX127X_BW_500_KHZ = 500000              /**< 500 kHz bandwidth */
+    SX127X_BW_125_KHZ = 125,             /**< 125 kHz bandwidth */
+    SX127X_BW_250_KHZ = 250,             /**< 250 kHz bandwidth */
+    SX127X_BW_500_KHZ = 500              /**< 500 kHz bandwidth */
 };
 
 /**
@@ -230,7 +230,7 @@ enum {
 typedef struct {
     uint16_t preamble_len;             /**< Length of preamble header */
     uint8_t power;                     /**< Signal power */
-    uint8_t bandwidth;                 /**< Signal bandwidth */
+    uint16_t bandwidth;                /**< Signal bandwidth */
     uint8_t datarate;                  /**< Spreading factor rate, e.g datarate */
     uint8_t coderate;                  /**< Error coding rate */
     uint8_t freq_hop_period;           /**< Frequency hop period */
