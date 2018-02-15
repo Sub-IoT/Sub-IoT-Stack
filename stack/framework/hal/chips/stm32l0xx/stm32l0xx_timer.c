@@ -35,11 +35,11 @@
  static timer_callback_t compare_f = 0x0;
  static timer_callback_t overflow_f = 0x0;
  static bool timer_inited = false;
- static TIM_HandleTypeDef tim2;
+ static TIM_HandleTypeDef tim22;
 
 
 // /*****************************************************************************
-//  * @brief Sets up the TIM2 to count at 1024 Hz.
+//  * @brief Sets up the TIM22 to count at 1024 Hz, driven by the 32.768 kHz LSE
 //  *        The counter should not be cleared on a compare match and keep running.
 //  *        Interrupts should be cleared and enabled.
 //  *        The counter should run.
@@ -54,34 +54,41 @@ error_t hw_timer_init(hwtimer_id_t timer_id, uint8_t frequency, timer_callback_t
 	if(frequency != HWTIMER_FREQ_1MS && frequency != HWTIMER_FREQ_32K)
 		return EINVAL;
 
-	start_atomic();
+  TIM_ClockConfigTypeDef clock_source_config;
+  TIM_MasterConfigTypeDef master_config;
+
+  start_atomic();
 	compare_f = compare_callback;
 	overflow_f = overflow_callback;
 	timer_inited = true;
+  __HAL_RCC_TIM22_CLK_ENABLE();
 
-  tim2.Instance = TIM2;
-  tim2.Init.Prescaler = (uint32_t) (SystemCoreClock / (1024 - 1));
-  tim2.Init.CounterMode = TIM_COUNTERMODE_UP;
-  tim2.Init.Period = 0xFFFF; // used for overflow, for timing output compare is used
-  tim2.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
-  __HAL_RCC_TIM2_CLK_ENABLE();
+  tim22.Instance = TIM22;
+  tim22.Init.Prescaler = 31;
+  tim22.Init.CounterMode = TIM_COUNTERMODE_UP;
+  tim22.Init.Period = 0xFFFF;
+  tim22.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
+  assert(HAL_TIM_Base_Init(&tim22) == HAL_OK);
 
-  TIM_ClockConfigTypeDef clock_source_config;
-  clock_source_config.ClockSource = TIM_CLOCKSOURCE_INTERNAL;
-  assert(HAL_TIM_ConfigClockSource(&tim2, &clock_source_config) == HAL_OK);
-  assert(HAL_TIM_OC_Init(&tim2) == HAL_OK);
-  TIM_OC_InitTypeDef output_compare_config;
-  output_compare_config.OCMode = TIM_OCMODE_TIMING;
-  assert(HAL_TIM_OC_ConfigChannel(&tim2, &output_compare_config, TIM_CHANNEL_1) == HAL_OK);
-  HAL_TIM_Base_Init(&tim2);
-  __HAL_TIM_ENABLE_IT(&tim2, TIM_IT_UPDATE);
-  __HAL_TIM_ENABLE(&tim2);
+  clock_source_config.ClockSource = TIM_CLOCKSOURCE_ETRMODE2;
+  clock_source_config.ClockPolarity = TIM_CLOCKPOLARITY_NONINVERTED;
+  clock_source_config.ClockPrescaler = TIM_CLOCKPRESCALER_DIV1;
+  clock_source_config.ClockFilter = 0;
+  assert(HAL_TIM_ConfigClockSource(&tim22, &clock_source_config) == HAL_OK);
+
+  master_config.MasterOutputTrigger = TIM_TRGO_RESET;
+  master_config.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
+  assert(HAL_TIMEx_MasterConfigSynchronization(&tim22, &master_config) == HAL_OK);
+  assert(HAL_TIMEx_RemapConfig(&tim22, TIM22_ETR_LSE) == HAL_OK);
+
+  __HAL_TIM_ENABLE_IT(&tim22, TIM_IT_UPDATE);
+  __HAL_TIM_ENABLE(&tim22);
 
   // make sure we only get an update interrupt on overflow, and not on for instance reset of CC
-  __HAL_TIM_URS_ENABLE(&tim2);
-  __HAL_TIM_CLEAR_FLAG(&tim2, TIM_SR_UIF);
-  HAL_NVIC_SetPriority(TIM2_IRQn, 0, 0);
-  HAL_NVIC_EnableIRQ(TIM2_IRQn);
+  __HAL_TIM_URS_ENABLE(&tim22);
+  __HAL_TIM_CLEAR_FLAG(&tim22, TIM_SR_UIF);
+  HAL_NVIC_SetPriority(TIM22_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(TIM22_IRQn);
   end_atomic();
   return SUCCESS;
 }
@@ -92,7 +99,7 @@ hwtimer_tick_t hw_timer_getvalue(hwtimer_id_t timer_id)
  		return 0;
  	else
  	{
-    uint32_t value =__HAL_TIM_GET_COUNTER(&tim2);
+    uint32_t value =__HAL_TIM_GET_COUNTER(&tim22);
  		return value;
  	}
 }
@@ -106,12 +113,12 @@ error_t hw_timer_schedule(hwtimer_id_t timer_id, hwtimer_tick_t tick )
  		return EOFF;
 
  	start_atomic();
-    __HAL_TIM_DISABLE_IT(&tim2, TIM_IT_CC1);
-    __HAL_TIM_SET_COMPARE(&tim2, TIM_CHANNEL_1, tick);
-    __HAL_TIM_ENABLE_IT(&tim2, TIM_IT_UPDATE);
-    __HAL_TIM_ENABLE_IT(&tim2, TIM_IT_CC1);
-    HAL_NVIC_ClearPendingIRQ(TIM2_IRQn);
-    HAL_NVIC_EnableIRQ(TIM2_IRQn);
+    __HAL_TIM_DISABLE_IT(&tim22, TIM_IT_CC1);
+    __HAL_TIM_SET_COMPARE(&tim22, TIM_CHANNEL_1, tick);
+    __HAL_TIM_ENABLE_IT(&tim22, TIM_IT_UPDATE);
+    __HAL_TIM_ENABLE_IT(&tim22, TIM_IT_CC1);
+    HAL_NVIC_ClearPendingIRQ(TIM22_IRQn);
+    HAL_NVIC_EnableIRQ(TIM22_IRQn);
  	end_atomic();
 
 }
@@ -124,9 +131,9 @@ error_t hw_timer_cancel(hwtimer_id_t timer_id)
  		return EOFF;
 
  	start_atomic();
-    __HAL_TIM_DISABLE_IT(&tim2, TIM_IT_CC1);
-    __HAL_TIM_CLEAR_FLAG(&tim2, TIM_IT_CC1);
-    HAL_NVIC_ClearPendingIRQ(TIM2_IRQn);
+    __HAL_TIM_DISABLE_IT(&tim22, TIM_IT_CC1);
+    __HAL_TIM_CLEAR_FLAG(&tim22, TIM_IT_CC1);
+    HAL_NVIC_ClearPendingIRQ(TIM22_IRQn);
  	end_atomic();
 }
 
@@ -138,10 +145,10 @@ error_t hw_timer_counter_reset(hwtimer_id_t timer_id)
  		return EOFF;
 
  	start_atomic();
-    __HAL_TIM_DISABLE_IT(&tim2, TIM_IT_CC1 | TIM_IT_UPDATE);
-    __HAL_TIM_CLEAR_FLAG(&tim2, TIM_IT_CC1 | TIM_IT_UPDATE);
-    __HAL_TIM_SET_COUNTER(&tim2, 10); // TODO 10??
-    __HAL_TIM_ENABLE_IT(&tim2, TIM_IT_UPDATE);
+    __HAL_TIM_DISABLE_IT(&tim22, TIM_IT_CC1 | TIM_IT_UPDATE);
+    __HAL_TIM_CLEAR_FLAG(&tim22, TIM_IT_CC1 | TIM_IT_UPDATE);
+    __HAL_TIM_SET_COUNTER(&tim22, 10); // TODO 10??
+    __HAL_TIM_ENABLE_IT(&tim22, TIM_IT_UPDATE);
  	end_atomic();
 
   return SUCCESS;
@@ -153,7 +160,7 @@ bool hw_timer_is_overflow_pending(hwtimer_id_t timer_id)
     return false;
 
   start_atomic();
-    bool is_pending = __HAL_TIM_GET_FLAG(&tim2, TIM_IT_UPDATE);
+    bool is_pending = __HAL_TIM_GET_FLAG(&tim22, TIM_IT_UPDATE);
   end_atomic();
 
   return is_pending;
@@ -165,34 +172,34 @@ bool hw_timer_is_interrupt_pending(hwtimer_id_t timer_id)
     return false;
 
   start_atomic();
-    bool is_pending = __HAL_TIM_GET_FLAG(&tim2, TIM_IT_CC1);
+    bool is_pending = __HAL_TIM_GET_FLAG(&tim22, TIM_IT_CC1);
   end_atomic();
 
   return is_pending;
 }
 
 
-void TIM2_IRQHandler(void)
+void TIM22_IRQHandler(void)
 {
   // We are not using HAL_TIM_IRQHandler() here to reduce interrupt latency
   // first check for overflow ...
-  if(__HAL_TIM_GET_FLAG(&tim2, TIM_FLAG_UPDATE) != RESET)
+  if(__HAL_TIM_GET_FLAG(&tim22, TIM_FLAG_UPDATE) != RESET)
   {
-    if(__HAL_TIM_GET_IT_SOURCE(&tim2, TIM_IT_UPDATE) !=RESET)
+    if(__HAL_TIM_GET_IT_SOURCE(&tim22, TIM_IT_UPDATE) !=RESET)
     {
-      __HAL_TIM_CLEAR_IT(&tim2, TIM_IT_UPDATE);
+      __HAL_TIM_CLEAR_IT(&tim22, TIM_IT_UPDATE);
       if(overflow_f != 0x0)
         overflow_f();
     }
   }
 
   // ... and then for compare value
-  if(__HAL_TIM_GET_FLAG(&tim2, TIM_FLAG_CC1) != RESET)
+  if(__HAL_TIM_GET_FLAG(&tim22, TIM_FLAG_CC1) != RESET)
   {
-    if(__HAL_TIM_GET_IT_SOURCE(&tim2, TIM_IT_CC1) !=RESET)
+    if(__HAL_TIM_GET_IT_SOURCE(&tim22, TIM_IT_CC1) !=RESET)
     {
-      __HAL_TIM_DISABLE_IT(&tim2, TIM_IT_CC1);
-      __HAL_TIM_CLEAR_IT(&tim2, TIM_IT_CC1);
+      __HAL_TIM_DISABLE_IT(&tim22, TIM_IT_CC1);
+      __HAL_TIM_CLEAR_IT(&tim22, TIM_IT_CC1);
       if(compare_f != 0x0)
           compare_f();
     }

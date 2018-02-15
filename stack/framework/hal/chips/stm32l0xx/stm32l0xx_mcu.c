@@ -36,14 +36,22 @@ static void init_clock(void)
   RCC_OscInitTypeDef RCC_OscInitStruct = {0};
 
 #ifdef PLATFORM_LOW_CLOCK_SPEED
-  // using 4MHz clock based on HSI
+  // using 4MHz clock based on HSI, use 32k LSE for timer
   __HAL_PWR_VOLTAGESCALING_CONFIG(PWR_REGULATOR_VOLTAGE_SCALE2);
+  HAL_PWR_EnableBkUpAccess();
+  __HAL_RCC_LSE_CONFIG(RCC_LSE_OFF);
+  while (__HAL_RCC_GET_FLAG(RCC_FLAG_LSERDY) != RESET) {};
+  __HAL_RCC_LSEDRIVE_CONFIG(RCC_LSEDRIVE_LOW);
 
   RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSI;
   RCC_OscInitStruct.HSIState = RCC_HSI_ON;
   RCC_OscInitStruct.HSICalibrationValue = RCC_HSICALIBRATION_DEFAULT;
+  RCC_OscInitStruct.LSEState            = RCC_LSE_ON;
   RCC_OscInitStruct.PLL.PLLState = RCC_PLL_NONE;
   assert(HAL_RCC_OscConfig(&RCC_OscInitStruct) == HAL_OK);
+  __HAL_RCC_LSE_CONFIG(RCC_LSE_ON);
+  while (__HAL_RCC_GET_FLAG(RCC_FLAG_LSERDY) != RESET) {};
+  HAL_PWR_DisableBkUpAccess();
 
   RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK | RCC_CLOCKTYPE_SYSCLK | RCC_CLOCKTYPE_PCLK1 | RCC_CLOCKTYPE_PCLK2;
   RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_HSI;
@@ -52,10 +60,15 @@ static void init_clock(void)
   RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV1;
   assert(HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_1) == HAL_OK);
 #else
-  // using 32MHz clock based on HSI+PLL
+  // using 32MHz clock based on HSI+PLL, use 32k LSE for timer
   __HAL_PWR_VOLTAGESCALING_CONFIG(PWR_REGULATOR_VOLTAGE_SCALE1);
+  HAL_PWR_EnableBkUpAccess();
+  __HAL_RCC_LSE_CONFIG(RCC_LSE_OFF);
+  while (__HAL_RCC_GET_FLAG(RCC_FLAG_LSERDY) != RESET) {};
+  __HAL_RCC_LSEDRIVE_CONFIG(RCC_LSEDRIVE_LOW);
   RCC_OscInitStruct.OscillatorType      = RCC_OSCILLATORTYPE_HSI;
   RCC_OscInitStruct.HSEState            = RCC_HSE_OFF;
+  RCC_OscInitStruct.LSEState            = RCC_LSE_ON;
   RCC_OscInitStruct.HSIState            = RCC_HSI_ON;
   RCC_OscInitStruct.HSICalibrationValue = RCC_HSICALIBRATION_DEFAULT;
   RCC_OscInitStruct.PLL.PLLState        = RCC_PLL_ON;
@@ -64,6 +77,9 @@ static void init_clock(void)
   RCC_OscInitStruct.PLL.PLLDIV          = RCC_PLL_DIV3;
   assert(HAL_RCC_OscConfig(&RCC_OscInitStruct) == HAL_OK);
   while (__HAL_PWR_GET_FLAG(PWR_FLAG_VOS) != RESET) {};
+  __HAL_RCC_LSE_CONFIG(RCC_LSE_ON);
+  while (__HAL_RCC_GET_FLAG(RCC_FLAG_LSERDY) != RESET) {};
+  HAL_PWR_DisableBkUpAccess();
   /* Select PLL as system clock source and configure the HCLK, PCLK1 and PCLK2
   clocks dividers */
   RCC_ClkInitStruct.ClockType = (RCC_CLOCKTYPE_SYSCLK | RCC_CLOCKTYPE_HCLK | RCC_CLOCKTYPE_PCLK1 | RCC_CLOCKTYPE_PCLK2);
