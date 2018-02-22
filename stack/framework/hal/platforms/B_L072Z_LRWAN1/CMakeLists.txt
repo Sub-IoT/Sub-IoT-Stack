@@ -132,6 +132,7 @@ ENDIF()
 
 IF(${PLATFORM_USE_NUCLEO_IKS01A2_SHIELD})
     ADD_CHIP("hts221")
+    ADD_CHIP("lsm303agr")
 ENDIF()
 
 #Build the 'platform_defs.h' settings file
