@@ -112,7 +112,7 @@ typedef struct
  */
 bool phy_radio_channel_ids_equal(const channel_id_t* a, const channel_id_t* b);
 
-uint16_t phy_calculate_tx_duration(phy_channel_class_t channel_class, phy_coding_t ch_coding, uint8_t packet_length);
+uint16_t phy_calculate_tx_duration(phy_channel_class_t channel_class, phy_coding_t ch_coding, uint8_t packet_length, bool payload_only);
 
 #endif //_PHY_H_
 

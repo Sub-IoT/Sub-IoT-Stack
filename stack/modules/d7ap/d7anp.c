@@ -133,7 +133,7 @@ static void schedule_foreground_scan_expired_timer()
     // in case of requester timeout_ticks counts from transmission time, so subtract time passed between now and transmission time
     // since this FG scan is started directly from the ISR (transmitted callback), I don't expect a significative delta between now and the transmission time
 
-    DPRINT("starting foreground scan expiration timer (%i ticks)", fg_scan_timeout_ticks);
+    DPRINT("starting foreground scan expiration timer (%i ticks, now %i)", fg_scan_timeout_ticks, timer_get_counter_value());
     assert(timer_post_task_delay(&foreground_scan_expired, fg_scan_timeout_ticks) == SUCCESS);
 }
 
@@ -736,8 +736,17 @@ void d7anp_process_received_packet(packet_t* packet)
             timer_tick_t time_elapsed = timer_get_counter_value() - packet->hw_radio_packet.rx_meta.timestamp;
             if (packet->ETA > time_elapsed + FG_SCAN_STARTUP_TIME)
             {
-                DPRINT("FG scan start after %d", packet->ETA - (time_elapsed + FG_SCAN_STARTUP_TIME));
-                schedule_foreground_scan_after_D7AAdvP(packet->ETA - (time_elapsed + FG_SCAN_STARTUP_TIME));
+                // TODO assert FG_SCAN_STARTUP_TIME + FG_SCAN_START_BEFORE_ETA_SAFETY_MARGIN < BG frame tx time,
+                // or else we risk missing packets
+                uint16_t delay = packet->ETA - time_elapsed - FG_SCAN_STARTUP_TIME;
+                if(delay <= FG_SCAN_START_BEFORE_ETA_SAFETY_MARGIN)
+                  delay = 0;
+                else
+                  delay -= FG_SCAN_START_BEFORE_ETA_SAFETY_MARGIN;
+
+                DPRINT("FG scan start after %d", delay);
+                DPRINT("FG scan start after %d - (%d + %d + %d)", packet->ETA, time_elapsed, FG_SCAN_STARTUP_TIME, FG_SCAN_START_BEFORE_ETA_SAFETY_MARGIN);
+                schedule_foreground_scan_after_D7AAdvP(delay);
                 // meanwhile stay in idle
                 dll_stop_background_scan();
             }

@@ -308,7 +308,7 @@ static void packet_received(hw_radio_packet_t* hw_radio_packet)
     {
         uint16_t tx_duration = phy_calculate_tx_duration(current_channel_id.channel_header.ch_class,
                                                          current_channel_id.channel_header.ch_coding,
-                                                         hw_radio_packet->length + 1);
+                                                         hw_radio_packet->length + 1, false);
         // If the first transmission duration is greater than or equal to the Guard Interval TG,
         // the channel guard period is extended by TG following the transmission.
         if (tx_duration >= t_g)
@@ -924,7 +924,7 @@ void dll_tx_frame(packet_t* packet)
         if (tsched)
         {
             packet->ETA = tsched;
-            DPRINT("This request requires ad-hoc sync with a first ETA <%d>", packet->ETA);
+            DPRINT("This request requires ad-hoc sync with access scheduling period (Tsched) <%d> ti", packet->ETA);
         }
 
         packet->hw_radio_packet.tx_meta.tx_cfg.syncword_class = PHY_SYNCWORD_CLASS1;
@@ -951,7 +951,7 @@ void dll_tx_frame(packet_t* packet)
 
     packet->tx_duration = phy_calculate_tx_duration(current_channel_id.channel_header.ch_class,
                                                     current_channel_id.channel_header.ch_coding,
-                                                    packet->hw_radio_packet.length + 1);
+                                                    packet->hw_radio_packet.length + 1, false);
     DPRINT("Packet LENGTH %d, TX DURATION %d", packet->hw_radio_packet.length, packet->tx_duration);
 
     current_packet = packet;

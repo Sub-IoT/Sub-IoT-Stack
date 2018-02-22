@@ -193,6 +193,7 @@ typedef struct
     uint8_t packet_size;
     uint16_t eta;
     uint16_t tx_duration;
+    uint8_t fifo_threshold_flush_duration; // the time needed to transmit the remaining bytes in the flush when threshold is reached
     timer_tick_t stop_time;
 }bg_adv_t;
 
@@ -517,7 +518,7 @@ static inline int16_t get_rssi() {
 
 static void packet_transmitted_isr() {
   hw_gpio_disable_interrupt(SX127x_DIO0_PIN);
-  DPRINT("packet transmitted ISR\n");
+  DPRINT("packet transmitted ISR @ %d\n", timer_get_counter_value());
   assert(state == STATE_TX);
   if(current_channel_id.channel_header.ch_class == PHY_CLASS_LORA) {
     // in LoRa mode we have to clear the IRQ register manually
@@ -567,7 +568,7 @@ static void bg_scan_rx_done()
     hw_gpio_disable_interrupt(SX127x_DIO0_PIN);
 
     assert(current_syncword_class == PHY_SYNCWORD_CLASS0);
-
+    timer_tick_t rx_timestamp = timer_get_counter_value();
     DPRINT("BG packet received!");
 
     current_packet = alloc_packet_callback(FskPacketHandler.Size);
@@ -575,7 +576,7 @@ static void bg_scan_rx_done()
 
     read_fifo(current_packet->data + 1, FskPacketHandler.Size);
 
-    current_packet->rx_meta.timestamp = timer_get_counter_value();
+    current_packet->rx_meta.timestamp = rx_timestamp;
     current_packet->rx_meta.rx_cfg.syncword_class = current_syncword_class;
     current_packet->rx_meta.crc_status = HW_CRC_UNAVAILABLE;
     current_packet->rx_meta.rssi = get_rssi();
@@ -1032,7 +1033,7 @@ error_t hw_radio_send_packet(hw_radio_packet_t* packet, tx_packet_callback_t tx_
     if (eta) {
         uint16_t tx_duration_bg_frame = phy_calculate_tx_duration(current_channel_id.channel_header.ch_class,
                                                                 current_channel_id.channel_header.ch_coding,
-                                                                BACKGROUND_FRAME_LENGTH);
+                                                                BACKGROUND_FRAME_LENGTH, false);
 
         return hw_radio_send_packet_with_advertising(dll_header_bg_frame, tx_duration_bg_frame, eta, packet);
     }
@@ -1107,6 +1108,7 @@ error_t hw_radio_send_packet(hw_radio_packet_t* packet, tx_packet_callback_t tx_
   return SUCCESS; // TODO other return codes
 }
 
+
 static uint8_t assemble_background_payload()
 {
     uint16_t crc, swap_eta;
@@ -1159,7 +1161,6 @@ static uint8_t assemble_background_payload()
 static error_t hw_radio_send_packet_with_advertising(uint8_t dll_header_bg_frame[2], uint16_t tx_duration_bg_frame, uint16_t eta, hw_radio_packet_t* packet)
 {
     DPRINT("Start the bg advertising for ad-hoc sync before transmitting the FG frame");
-
     configure_syncword(PHY_SYNCWORD_CLASS0, (channel_id_t*)&(packet->tx_meta.tx_cfg.channel_id));
     configure_channel((channel_id_t*)&(packet->tx_meta.tx_cfg.channel_id));
     configure_eirp(packet->tx_meta.tx_cfg.eirp);
@@ -1189,11 +1190,14 @@ static error_t hw_radio_send_packet_with_advertising(uint8_t dll_header_bg_frame
 
     bg_adv.eta = eta;
     bg_adv.tx_duration = tx_duration_bg_frame;
+    bg_adv.fifo_threshold_flush_duration = phy_calculate_tx_duration(current_channel_id.channel_header.ch_class,
+                                                            PHY_CODING_PN9, // override FEC, we need the time for the BG_THRESHOLD bytes in the fifo, regardless of coding
+                                                            BG_THRESHOLD, true); // don't take syncword and preamble into account
 
     // prepare the foreground frame, so we can transmit this immediately
     DPRINT("Original payload with ETA %i", eta);
     DPRINT_DATA(packet->data, packet->length + 1);
-
+    DPRINT("tx_duration_bg_frame %i, fifo_threshold_flush_duration %i", bg_adv.tx_duration, bg_adv.fifo_threshold_flush_duration);
     fg_frame.bg_adv = true;
     memset(fg_frame.encoded_packet, 0xAA, preamble_len);
     sync_word = __builtin_bswap16(sync_word_value[PHY_SYNCWORD_CLASS1][current_channel_id.channel_header.ch_coding]);
@@ -1222,8 +1226,8 @@ static error_t hw_radio_send_packet_with_advertising(uint8_t dll_header_bg_frame
 
     // start Tx
     timer_tick_t start = timer_get_counter_value();
-    bg_adv.stop_time = start + bg_adv.eta;
-    DPRINT("BG advertising start time @ %i stop time @ %i", start, bg_adv.stop_time);
+    bg_adv.stop_time = start + eta + bg_adv.tx_duration; // Tadv = Tsched + Ttx
+    DPRINT("BG Tadv %i (start time @ %i stop time @ %i)", eta + bg_adv.tx_duration, start, bg_adv.stop_time);
 
     state = STATE_TX;
     DEBUG_RX_END();
@@ -1237,14 +1241,18 @@ static error_t hw_radio_send_packet_with_advertising(uint8_t dll_header_bg_frame
 
 static void fill_in_fifo()
 {
+    // At this point the fifo is not empty yet, but it reached the threshold.
+    // Take the number of bytes in the fifo into account when calculating the timings
     if (fg_frame.bg_adv == true)
     {
         timer_tick_t current = timer_get_counter_value();
-        if (bg_adv.stop_time > current)
-            bg_adv.eta = (bg_adv.stop_time - current) - bg_adv.tx_duration; // ETA is updated according the real current time
+        if (bg_adv.stop_time > current + bg_adv.tx_duration + bg_adv.fifo_threshold_flush_duration)
+            bg_adv.eta = (bg_adv.stop_time - current) - bg_adv.tx_duration - bg_adv.fifo_threshold_flush_duration; // ETA is updated according the real current time
         else
             //TODO avoid stop time being elapsed
             bg_adv.eta = 0;
+
+        DPRINT("ts after tx %d, new ETA %d", current + bg_adv.tx_duration, bg_adv.eta);
 
         /*
          * When no more advertising background frames can be fully transmitted before
@@ -1253,7 +1261,7 @@ static void fill_in_fifo()
          * The FIFO level allows to write enough padding preamble bytes without overflow
          */
 
-        if (bg_adv.eta > bg_adv.tx_duration)
+        if (bg_adv.eta)
         {
             // Fill up the TX FIFO with the full packet including the preamble and the SYNC word
             write_fifo(bg_adv.packet, bg_adv.packet_size);
@@ -1270,15 +1278,15 @@ static void fill_in_fifo()
             // not enough time for sending another BG frame, send the FG frame,
             // prepend with preamble bytes if necessary
             uint16_t preamble_len = 0;
-
-            preamble_len = bg_adv.eta * (bg_adv.packet_size / bg_adv.tx_duration);
+            preamble_len = (bg_adv.stop_time - current) * (bg_adv.packet_size / (float)bg_adv.tx_duration); // TODO instead of current we should use the timestamp
+                                                                                                            // when the bytes still in fifo are (expected to) be transmitted
+            DPRINT("ETA %d, packet size %d, tx_dur %d, curr %d", bg_adv.eta, bg_adv.packet_size, bg_adv.tx_duration, timer_get_counter_value()); // TODO tmp
             DPRINT("Add preamble_bytes: %d", preamble_len);
 
             // Normally, we have space enough in the FIFO for the padding preambles
-            while(preamble_len)
+            for(uint8_t i = 0; i <= preamble_len; i++)
             {
                 write_reg(REG_FIFO, 0xAA);
-                preamble_len --;
             }
 
             bg_adv.eta = 0;
@@ -1286,6 +1294,7 @@ static void fill_in_fifo()
 
             // send the FG frame, fill the remaining space in the FIFO
             uint8_t fifo_space_remaining = FIFO_SIZE - BG_THRESHOLD - preamble_len;
+
 
             if (fg_frame.encoded_length > fifo_space_remaining)
             {
