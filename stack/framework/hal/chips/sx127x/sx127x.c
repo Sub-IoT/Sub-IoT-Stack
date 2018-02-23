@@ -1240,11 +1240,16 @@ static void fill_in_fifo()
 {
     // At this point the fifo is not empty yet, but it reached the threshold.
     // Take the number of bytes in the fifo into account when calculating the timings
+    // Also, at the time we calculate ETA here we will only insert the previously crafted packet (containing the prev ETA) in the
+    // FIFO. So we will need to take this into account as well.
+
+    // TODO adapt how we calculate ETA. There is no reason to use current time for each ETA update, we can just use the BG frame duration
+    // and a frame counter to determine this.
     if (fg_frame.bg_adv == true)
     {
         timer_tick_t current = timer_get_counter_value();
-        if (bg_adv.stop_time > current + bg_adv.tx_duration + bg_adv.fifo_threshold_flush_duration)
-            bg_adv.eta = (bg_adv.stop_time - current) - bg_adv.tx_duration - bg_adv.fifo_threshold_flush_duration; // ETA is updated according the real current time
+        if (bg_adv.stop_time > current + 2 * bg_adv.tx_duration + bg_adv.fifo_threshold_flush_duration)
+            bg_adv.eta = (bg_adv.stop_time - current) - 2 * bg_adv.tx_duration - bg_adv.fifo_threshold_flush_duration; // ETA is updated according the real current time
         else
             //TODO avoid stop time being elapsed
             bg_adv.eta = 0;
