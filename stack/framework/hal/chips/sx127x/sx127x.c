@@ -762,15 +762,12 @@ static void configure_syncword(syncword_class_t syncword_class, const channel_id
     // TODO
   }
 
-  if(syncword_class != current_syncword_class || (channel->channel_header.ch_coding != current_channel_id.channel_header.ch_coding))
-  {
-    current_syncword_class = syncword_class;
-    uint16_t sync_word = sync_word_value[syncword_class][channel->channel_header.ch_coding ];
+  current_syncword_class = syncword_class;
+  uint16_t sync_word = sync_word_value[syncword_class][channel->channel_header.ch_coding ];
 
-    DPRINT("sync_word = %04x", sync_word);
-    write_reg(REG_SYNCVALUE2, sync_word & 0xFF);
-    write_reg(REG_SYNCVALUE1, sync_word >> 8);
-  }
+  DPRINT("sync_word = %04x", sync_word);
+  write_reg(REG_SYNCVALUE2, sync_word & 0xFF);
+  write_reg(REG_SYNCVALUE1, sync_word >> 8);
 }
 
 static void restart_rx_chain() {
