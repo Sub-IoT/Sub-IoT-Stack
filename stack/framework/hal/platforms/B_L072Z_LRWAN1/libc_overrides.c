@@ -65,7 +65,9 @@ void __assert_func( const char *file, int line, const char *func, const char *fa
 
 	while(1)
 	{
+#if defined(FRAMEWORK_LOG_ENABLED)
     printf("assertion \"%s\" failed: file \"%s\", line %d%s%s\n",failedexpr, file, line, func ? ", function: " : "", func ? func : "");
+#endif
     __BKPT (0); // break into debugger, when attached
 
     for(uint32_t j = 0; j < 20; j++)
