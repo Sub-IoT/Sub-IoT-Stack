@@ -73,9 +73,9 @@ EXPORT_GLOBAL_INCLUDE_DIRECTORIES(${CMAKE_CURRENT_BINARY_DIR})
 INSERT_C_FLAGS(AFTER "-gdwarf-2" "-mcpu=cortex-m0plus" "-mthumb" "-fmessage-length=0" "-mno-sched-prolog" "-fno-builtin" "-ffunction-sections" "-fdata-sections")
 
 #Add platform specific linker flags
-INSERT_LINKER_FLAGS(BEFORE OBJECTS INSERT "--specs=nano.specs" "-Wl,-gc-sections")
-INSERT_LINKER_FLAGS(BEFORE LINK_LIBRARIES INSERT "-Wl,--start-group -Wl,--whole-archive")
-INSERT_LINKER_FLAGS(AFTER LINK_LIBRARIES INSERT "-Wl,--no-whole-archive -lgcc -lc -lnosys -Wl,--end-group")
+INSERT_LINKER_FLAGS(BEFORE OBJECTS INSERT "--specs=nano.specs" "--specs=nosys.specs" "-Wl,-gc-sections")
+INSERT_LINKER_FLAGS(BEFORE LINK_LIBRARIES INSERT "-Wl,--start-group -Wl,--whole-archive") # libs are using weak symbols
+INSERT_LINKER_FLAGS(AFTER LINK_LIBRARIES INSERT "-Wl,--no-whole-archive  -Wl,--end-group")
 
 
 #Set platform specific compile options
