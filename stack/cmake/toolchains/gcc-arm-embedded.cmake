@@ -40,6 +40,9 @@ SET(CMAKE_SYSTEM_NAME Generic)
 SET(CMAKE_SYSTEM_VERSION 1)
 SET(CMAKE_CROSSCOMPILING 1)
 
+# set compiler flags to optimize for code size
+SET(CMAKE_C_FLAGS_DEBUG "-Og" CACHE STRING "")
+SET(CMAKE_C_FLAGS_RELEASE "-Os" CACHE STRING "")
 
 SET(TOOLCHAIN_DIR "" CACHE PATH "The directory containing all the cross compilation tools. (Compilation will fail if this is not set correctly)")
 
