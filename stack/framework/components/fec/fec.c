@@ -111,13 +111,13 @@ static void print_vstate()
 //		VITERBIPATH states2[8];
 //	} VITERBISTATE;
 
-	printf("VSTATE:\n");
-	printf(" - path_size: %d\n", vstate.path_size);
+  DPRINT("VSTATE:\n");
+  DPRINT(" - path_size: %d\n", vstate.path_size);
 	//printf(" - old: %03d - %s\n", vstate.old->cost, int_to_binary(vstate.old->path));
 	//printf(" - new: %03d - %s\n", vstate.new->cost, int_to_binary(vstate.new->path));
 	int i;
 	for (i=0;i<8;i++)
-		printf(" - states - %d: %03d - %s\n", i, vstate.old[i].cost, int_to_binary(vstate.old[i].path));
+    DPRINT(" - states - %d: %03d - %s\n", i, vstate.old[i].cost, int_to_binary(vstate.old[i].path));
 
 }
 
