@@ -28,63 +28,101 @@ node {
         dir('B_L072Z_LRWAN1') {
             sh 'mkdir build'
             dir('build') {
-                sh '''
-                    platform="B_L072Z_LRWAN1"
-                    toolchain_file="../../stack/cmake/toolchains/gcc-arm-embedded.cmake"
-                    toolchain_dir="/opt/gcc-arm-none-eabi-6-2017-q2-update"
-                    cmake ../../stack/ -DAPP_GATEWAY=y -DAPP_MODEM=y -DAPP_SENSOR_PUSH=y -DPLATFORM=$platform -DTOOLCHAIN_DIR=$toolchain_dir -DCMAKE_TOOLCHAIN_FILE=$toolchain_file
-                    make
-                   '''
+                try {
+                    sh '''
+                        platform="B_L072Z_LRWAN1"
+                        toolchain_file="../../stack/cmake/toolchains/gcc-arm-embedded.cmake"
+                        toolchain_dir="/opt/gcc-arm-none-eabi-7-2017-q4-major"
+                        cmake ../../stack/ -DAPP_GATEWAY=y -DAPP_MODEM=y -DAPP_SENSOR_PUSH=y -DPLATFORM=$platform -DTOOLCHAIN_DIR=$toolchain_dir -DCMAKE_TOOLCHAIN_FILE=$toolchain_file
+                        make
+                       '''
+                    setBuildStatus("B_L072Z_LRWAN1","Build","SUCCESS")
+                    echo 'B_L072Z_LRWAN1 success '
+                }
+                catch (exc) 
+                {
+                    setBuildStatus("B_L072Z_LRWAN1","Build","FAILURE")
+                    echo 'B_L072Z_LRWAN1 failed'
+                    currentBuild.result = 'FAILURE'
+                }
             }
         }
     }
-            setBuildStatus("B_L072Z_LRWAN1","Build",currentBuild.currentResult)
+    
     stage('Build NUCLEO_L073RZ platform') {
         dir('NUCLEO_L073RZ') {
-             sh 'mkdir build'
+            sh 'mkdir build'
             dir('build') {
-                sh '''
-                    platform="NUCLEO_L073RZ"
-                    toolchain_file="../../stack/cmake/toolchains/gcc-arm-embedded.cmake"
-                    toolchain_dir="/opt/gcc-arm-none-eabi-6-2017-q2-update"
-                    cmake ../../stack/ -DAPP_GATEWAY=y -DAPP_MODEM=y -DAPP_SENSOR_PUSH=y -DPLATFORM=$platform -DTOOLCHAIN_DIR=$toolchain_dir -DCMAKE_TOOLCHAIN_FILE=$toolchain_file
-                    make
-                   '''
+                try {
+                    sh '''
+                        platform="NUCLEO_L073RZ"
+                        toolchain_file="../../stack/cmake/toolchains/gcc-arm-embedded.cmake"
+                        toolchain_dir="/opt/gcc-arm-none-eabi-7-2017-q4-major"
+                        cmake ../../stack/ -DAPP_GATEWAY=y -DAPP_MODEM=y -DAPP_SENSOR_PUSH=y -DPLATFORM=$platform -DTOOLCHAIN_DIR=$toolchain_dir -DCMAKE_TOOLCHAIN_FILE=$toolchain_file
+                        make
+                       '''
+                    setBuildStatus("NUCLEO_L073RZ","Build","SUCCESS")
+                    echo 'NUCLEO_L073RZ success '
+                }
+                catch (exc) 
+                {
+                    setBuildStatus("NUCLEO_L073RZ","Build","FAILURE")
+                    echo 'NUCLEO_L073RZ failed'
+                    currentBuild.result = 'FAILURE'
+                }
             }
         }
     }
-            setBuildStatus("NUCLEO_L073RZ","Build",currentBuild.currentResult)
+
     stage('Build EZR32LG_WSTK6200A platform') {
         dir('EZR32LG_WSTK6200A') {
             sh 'mkdir build'
             dir('build') {
-                sh '''
-                    platform="EZR32LG_WSTK6200A"
-                    toolchain_file="../../stack/cmake/toolchains/gcc-arm-embedded.cmake"
-                    toolchain_dir="/opt/gcc-arm-none-eabi-6-2017-q2-update"
-                    cmake ../../stack/ -DAPP_GATEWAY=y -DAPP_MODEM=y -DAPP_SENSOR_PUSH=y -DPLATFORM=$platform -DTOOLCHAIN_DIR=$toolchain_dir -DCMAKE_TOOLCHAIN_FILE=$toolchain_file
-                    make
-                   '''
+                try {
+                    sh '''
+                        platform="EZR32LG_WSTK6200A"
+                        toolchain_file="../../stack/cmake/toolchains/gcc-arm-embedded.cmake"
+                        toolchain_dir="/opt/gcc-arm-none-eabi-7-2017-q4-major"
+                        cmake ../../stack/ -DAPP_GATEWAY=y -DAPP_MODEM=y -DAPP_SENSOR_PUSH=y -DPLATFORM=$platform -DTOOLCHAIN_DIR=$toolchain_dir -DCMAKE_TOOLCHAIN_FILE=$toolchain_file
+                        make
+                       '''
+                    setBuildStatus("EZR32LG_WSTK6200A","Build","SUCCESS")
+                    echo 'EZR32LG_WSTK6200A success'
+                }
+                catch (exc) 
+                {
+                    setBuildStatus("EZR32LG_WSTK6200A","Build","FAILURE")
+                    echo 'EZR32LG_WSTK6200A failed'
+                    currentBuild.result = 'FAILURE'
+                }
             }
         }
     }
-            setBuildStatus("EZR32LG_WSTK6200A","Build",currentBuild.currentResult)
 
      stage('Build cortus_fpga platform') {
         dir('cortus_fpga') {
             sh 'mkdir build'
             dir('build') {
-                sh '''
-                    platform="cortus_fpga"
-                    toolchain_dir="/opt/cortus"
-                    toolchain_file="../../stack/cmake/toolchains/aps-gcc.cmake"
-                    cmake ../../stack/ -DAPP_GATEWAY=y -DAPP_MODEM=y -DAPP_SENSOR_PUSH=y -DPLATFORM=$platform -DTOOLCHAIN_DIR=$toolchain_dir -DCMAKE_TOOLCHAIN_FILE=$toolchain_file
-                    make
-                   '''
+                try{
+                    sh '''
+                        platform="cortus_fpga"
+                        toolchain_dir="/opt/cortus"
+                        toolchain_file="../../stack/cmake/toolchains/aps-gcc.cmake"
+                        cmake ../../stack/ -DAPP_GATEWAY=y -DAPP_MODEM=y -DAPP_SENSOR_PUSH=y -DPLATFORM=$platform -DTOOLCHAIN_DIR=$toolchain_dir -DCMAKE_TOOLCHAIN_FILE=$toolchain_file
+                        make
+                       '''
+                    setBuildStatus("cortus_fpga","Build","SUCCESS")
+                    echo 'cortus_fpga success'
+                }
+                catch (exc) 
+                {
+                    setBuildStatus("cortus_fpga","Build","FAILURE")
+                    echo 'cortus_fpga failed'
+                    currentBuild.result = 'FAILURE'
+                }
             }
         }
     }
-            setBuildStatus("cortus_fpga","Build",currentBuild.currentResult)
 
     stage ('Save Artifacts'){
          if (env.BRANCH_NAME == 'master') {
