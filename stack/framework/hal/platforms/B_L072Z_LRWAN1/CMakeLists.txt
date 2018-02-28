@@ -22,7 +22,6 @@ REQUIRE_TOOLCHAIN(gcc-arm-embedded)
 
 #Define platform specific options
 PLATFORM_PARAM(PLATFORM_MCU "STM32L072xx" STRING "The MCU series name of the platform")
-PLATFORM_PARAM(PLATFORM_MCU_FULL "STM32L072CZ" STRING "The full MCU name of the platform")
 SET(JLINK_DEVICE "STM32L072CZ" CACHE STRING "The device passed to JLinkExe for flashing")
 PLATFORM_PARAM(${PLATFORM_PREFIX}_RADIO "sx127x" STRING "The radio chip connected to the board")
 PLATFORM_OPTION(PLATFORM_USE_DEBUGPINS "Enable/Disable Hardware Debug Pins support (see 'hwdebug.h')" FALSE)
@@ -77,6 +76,9 @@ INSERT_LINKER_FLAGS(BEFORE OBJECTS INSERT "--specs=nano.specs" "--specs=nosys.sp
 INSERT_LINKER_FLAGS(BEFORE LINK_LIBRARIES INSERT "-Wl,--start-group -Wl,--whole-archive") # libs are using weak symbols
 INSERT_LINKER_FLAGS(AFTER LINK_LIBRARIES INSERT "-Wl,--no-whole-archive  -Wl,--end-group")
 
+
+SET(LINKER_SCRIPT "${CMAKE_CURRENT_SOURCE_DIR}/STM32L072XZ.ld" CACHE FILEPATH "")
+SET(LINKER_FLAGS "-Xlinker -Map=linker.map" CACHE STRING "")
 
 #Set platform specific compile options
 #INSERT_C_FLAGS(AFTER "-gdwarf-2" "-mcpu=cortex-m3" "-mthumb" "-fmessage-length=0" "-mno-sched-prolog" "-fno-builtin" "-ffunction-sections" "-fdata-sections")
