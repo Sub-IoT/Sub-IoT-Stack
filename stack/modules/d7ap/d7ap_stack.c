@@ -20,7 +20,7 @@
 #include "shell.h"
 #include "debug.h"
 #include "framework_defs.h"
-#include "alp.h"
+
 
 void d7ap_stack_init(fs_init_args_t* fs_init_args, alp_init_args_t* alp_init_args, bool enable_shell, alp_cmd_handler_appl_itf_callback alp_cmd_handler_appl_itf_cb)
 {
@@ -34,7 +34,7 @@ void d7ap_stack_init(fs_init_args_t* fs_init_args, alp_init_args_t* alp_init_arg
     packet_queue_init();
     dll_init();
 
-    alp_init(alp_init_args, enable_shell);
+    alp_layer_init(alp_init_args, enable_shell);
 
     uint8_t read_firmware_version_alp_command[] = { 0x01, D7A_FILE_FIRMWARE_VERSION_FILE_ID, 0, D7A_FILE_FIRMWARE_VERSION_SIZE };
 

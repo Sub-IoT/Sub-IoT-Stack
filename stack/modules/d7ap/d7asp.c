@@ -24,7 +24,7 @@
 #include "log.h"
 #include "bitmap.h"
 #include "d7asp.h"
-#include "alp.h"
+#include "alp_layer.h"
 #include "fs.h"
 #include "scheduler.h"
 #include "d7atp.h"
@@ -120,7 +120,7 @@ static void flush_completed() {
     // the RETRY_MODE pattern defined in the Configuration file
 
     // single flush of the FIFO without retry
-    alp_d7asp_fifo_flush_completed(current_master_session.token, current_master_session.progress_bitmap,
+    alp_layer_d7asp_fifo_flush_completed(current_master_session.token, current_master_session.progress_bitmap,
                                    current_master_session.success_bitmap, current_master_session.next_request_id - 1);
     init_master_session(&current_master_session);
     current_master_session.state = D7ASP_MASTER_SESSION_IDLE;
@@ -394,7 +394,7 @@ bool d7asp_process_received_packet(packet_t* packet, bool extension)
             assert(packet != current_request_packet);
         }
 
-        alp_process_d7asp_result(packet->payload, packet->payload_length, packet->payload, &packet->payload_length, result);
+        alp_layer_process_d7asp_result(packet->payload, packet->payload_length, packet->payload, &packet->payload_length, result);
 
         packet_queue_free_packet(packet); // ACK can be cleaned
 
@@ -422,7 +422,7 @@ bool d7asp_process_received_packet(packet_t* packet, bool extension)
         {
             DPRINT("Dialog Extension Procedure is initiated, mark the FIFO flush"
                     " completed before switching to a responder state");
-            alp_d7asp_fifo_flush_completed(current_master_session.token, current_master_session.progress_bitmap,
+            alp_layer_d7asp_fifo_flush_completed(current_master_session.token, current_master_session.progress_bitmap,
                                            current_master_session.success_bitmap, current_master_session.next_request_id - 1);
             current_master_session.state = D7ASP_MASTER_SESSION_IDLE;
             switch_state(D7ASP_STATE_SLAVE);
@@ -445,7 +445,7 @@ bool d7asp_process_received_packet(packet_t* packet, bool extension)
 
         if (packet->payload_length > 0)
         {
-            alp_process_d7asp_result(packet->payload, packet->payload_length, packet->payload, &packet->payload_length, result);
+            alp_layer_process_d7asp_result(packet->payload, packet->payload_length, packet->payload, &packet->payload_length, result);
         }
 
         // execute slave transaction

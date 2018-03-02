@@ -25,7 +25,7 @@
 #include "fs.h"
 #include "ng.h"
 #include "hwsystem.h"
-#include "alp.h"
+#include "alp_layer.h"
 #include "d7asp.h"
 #include "MODULE_D7AP_defs.h"
 #include "version.h"
@@ -77,7 +77,7 @@ static void execute_d7a_action_protocol(uint8_t command_file_id, uint8_t interfa
     fifo_config.addressee.access_class = (*data_ptr); data_ptr++;
     memcpy(&(fifo_config.addressee.id), data_ptr, 8); data_ptr += 8; // TODO assume 8 for now
 
-    alp_process_command_result_on_d7asp(&fifo_config, (uint8_t*)(data + file_offsets[command_file_id]), file_headers[command_file_id].length, ALP_CMD_ORIGIN_D7AACTP);
+    alp_layer_process_command_result_on_d7asp(&fifo_config, (uint8_t*)(data + file_offsets[command_file_id]), file_headers[command_file_id].length, ALP_CMD_ORIGIN_D7AACTP);
 }
 
 

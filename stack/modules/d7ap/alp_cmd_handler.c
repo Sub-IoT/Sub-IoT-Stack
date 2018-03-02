@@ -26,7 +26,7 @@
 
 #include "hwatomic.h"
 #include "types.h"
-#include "alp.h"
+#include "alp_layer.h"
 #include "shell.h"
 #include "console.h"
 #include "debug.h"
@@ -76,7 +76,7 @@ void alp_cmd_handler(fifo_t* cmd_fifo)
 
                 uint8_t alp_response[ALP_CMD_MAX_SIZE] = { 0x00 };
                 uint8_t alp_response_len = 0;
-                alp_process_command_console_output(alp_command, alp_command_len);
+                alp_layer_process_command_console_output(alp_command, alp_command_len);
             }
             else
             {

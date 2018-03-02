@@ -35,6 +35,7 @@
 #include "dae.h"
 #include "alp.h"
 #include "MODULE_D7AP_defs.h"
+#include "d7asp.h"
 
 #define D7A_FILE_UID_FILE_ID 0x00
 #define D7A_FILE_UID_SIZE 8

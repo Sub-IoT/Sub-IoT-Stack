@@ -1,4 +1,4 @@
-/*! \file alp.h
+/*! \file alpr.h
  *
 
  *  \copyright (C) Copyright 2015 University of Antwerp and others (http://oss-7.cosys.be)
@@ -26,7 +26,6 @@
  * @{
  * \brief Application Layer Protocol APIs
  * \author	glenn.ergeerts@uantwerpen.be
- * \author	philippe.nunes@cortus.com
  */
 
 #ifndef ALP_H_
@@ -37,21 +36,11 @@
 
 #include "fifo.h"
 
-#include "d7asp.h"
-
 #define ALP_ITF_ID_D7ASP  0xD7
 #define ALP_ITF_ID_FS     0x00 // not part of the spec
 #define ALP_ITF_ID_APP    0x01 // not part of the spec
 
 #define ALP_PAYLOAD_MAX_SIZE 239 // TODO configurable?
-
-typedef enum
-{
-    ALP_CMD_ORIGIN_APP,
-    ALP_CMD_ORIGIN_SERIAL_CONSOLE,
-    ALP_CMD_ORIGIN_D7AACTP,
-    ALP_CMD_ORIGIN_D7ASP,
-} alp_command_origin_t;
 
 typedef enum
 {
@@ -90,6 +79,10 @@ typedef enum {
     ALP_OP_FORWARD = 50,
     ALP_OP_REQUEST_TAG = 52
 } alp_operation_t;
+
+// define the (max) size for all ALP operation types
+#define ALP_OP_SIZE_REQUEST_TAG (1 + 1)
+#define ALP_OP_SIZE_READ_FILE_DATA (1 + 5 + 4)
 
 typedef enum {
   ALP_STATUS_OK = 0x00,
@@ -184,35 +177,6 @@ typedef struct {
     // data
 } alp_operand_file_data_t;
 
-typedef void (*alp_command_completed_callback)(uint8_t tag_id, bool success);
-typedef void (*alp_command_result_callback)(d7asp_result_t result, uint8_t* payload, uint8_t payload_length);
-typedef void (*alp_received_unsolicited_data_callback)(d7asp_result_t d7asp_result, uint8_t *alp_command, uint8_t alp_command_size);
-typedef alp_status_codes_t (*alp_unhandled_read_action_callback)(alp_operand_file_data_request_t operand, uint8_t* alp_response);
-
-typedef struct {
-    alp_command_completed_callback alp_command_completed_cb;
-    alp_command_result_callback alp_command_result_cb;
-    alp_received_unsolicited_data_callback alp_received_unsolicited_data_cb;
-    /**
-     * @brief alp_unhandled_read_action_cb Called when the stack received an ALP read action which cannot be processed against the local filesystem,
-     * because the requested fileID does not exist.
-     * The application is given the chance to provide a response (by filling the alp_response and alp_response_length parameters).
-     * If the application is able to process the read action it should provide the data in alp_response and return ALP_STATUS_OK.
-     * Otherwise, when it cannot handle the read action it should return ALP_STATUS_FILE_ID_NOT_EXISTS, or any other alp_status_codes_t item,
-     * for other cases.
-     * It is important to know this callback is called while a D7AP transaction is in process thus be sure to return within transaction timeout limits!
-     */
-    alp_unhandled_read_action_callback alp_unhandled_read_action_cb;
-} alp_init_args_t;
-
-
-
-/*!
- * \brief Initializes the ALP layer
- * \param init_args Specifies the callback function pointers
- * \param shell_enabled Specifies if ALP is accessible over the serial console
- */
-void alp_init(alp_init_args_t* init_args, bool shell_enabled);
 
 /*!
  * \brief Returns the ALP operation type contained in alp_command
@@ -221,63 +185,13 @@ void alp_init(alp_init_args_t* init_args, bool shell_enabled);
  */
 alp_operation_t alp_get_operation(uint8_t* alp_command);
 
-/*!
- * \brief Execute the command asynchronously against the provided D7ASP session configuration
- * \param alp_command
- * \param alp_command_length
- * \param d7asp_master_session_config
- */
-void alp_execute_command(uint8_t* alp_command, uint8_t alp_command_length, d7asp_master_session_config_t* d7asp_master_session_config);
-
-/*!
- * \brief Process the ALP command.
- * Processing will be done against the local host interface unless explicitely forwarded to another interface using an (indirect) forward action.
- *
- * Note: alp_command and alp_response may point to the same buffer
- * \param alp_command   The raw command
- * \param alp_command_length The length of the command
- * \param alp_response Pointer to a buffer where a possible response will be written
- * \param alp_response_length The length of the response
- * \param origin Where the ALP command originates from, determines where response will go to
- * \return If the ALP command was processed correctly or not
- */
-bool alp_process_command(uint8_t* alp_command, uint8_t alp_command_length, uint8_t* alp_response, uint8_t* alp_response_length, alp_command_origin_t origin);
-
-/*!
- * \brief Process a result received from D7ASP.
- *
- * Note: alp_command and alp_response may point to the same buffer
- * \param alp_command   The raw command
- * \param alp_command_length The length of the command
- * \param alp_response Pointer to a buffer where a possible response will be written
- * \param alp_response_length The length of the response
- * \param d7asp_result The result
- */
-void alp_process_d7asp_result(uint8_t* alp_command, uint8_t alp_command_length, uint8_t* alp_response, uint8_t* alp_response_length, d7asp_result_t d7asp_result);
-
-/*!
- * \brief Process the ALP command on the local host interface and output the response to the D7ASP interface
- *
- * \param d7asp_fifo_config The config of the D7ASP fifo to output the ALP response to
- * \param alp_command   The raw command
- * \param alp_command_length The length of the command
- * \param origin Where the ALP command originates from, determines where response will go to
- */
-void alp_process_command_result_on_d7asp(d7asp_master_session_config_t* d7asp_fifo_config, uint8_t* alp_command, uint8_t alp_command_length, alp_command_origin_t origin);
-
-/*!
- * \brief Process the ALP command and output the result on the console.
- * Processing will be done against the local host interface unless explicitely forwarded to another interface using an (indirect) forward action.
- *
- * Note: alp_command and alp_response may point to the same buffer
- * \param alp_command   The raw command
- * \param alp_command_length The length of the command
- */
-void alp_process_command_console_output(uint8_t* alp_command, uint8_t alp_command_length);
-
-void alp_d7asp_fifo_flush_completed(uint8_t fifo_token, uint8_t* progress_bitmap, uint8_t* success_bitmap, uint8_t bitmap_byte_count);
 
 uint8_t alp_get_expected_response_length(uint8_t* alp_command, uint8_t alp_command_length);
+
+void alp_append_tag_request(fifo_t* fifo, uint8_t tag_id, bool eop);
+void alp_append_read_file_data(fifo_t* fifo, uint8_t file_id, uint32_t offset, uint32_t length, bool resp, bool group);
+void alp_append_length_operand(fifo_t* fifo, uint32_t length);
+uint32_t alp_parse_length_operand(fifo_t* cmd_fifo);
 
 #endif /* ALP_H_ */
 

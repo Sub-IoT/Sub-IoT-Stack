@@ -28,7 +28,7 @@
 #define OSS_7_D7AP_STACK_H
 
 #include "fs.h"
-#include "alp.h"
+#include "alp_layer.h"
 #include "alp_cmd_handler.h"
 #include "packet_queue.h"
 
