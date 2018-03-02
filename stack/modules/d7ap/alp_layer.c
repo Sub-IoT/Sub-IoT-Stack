@@ -324,7 +324,7 @@ static alp_status_codes_t process_op_forward(alp_command_t* command, d7ap_master
   err = fifo_pop(&command->alp_command_fifo, &session_config->qos.raw, 1); assert(err == SUCCESS);
   err = fifo_pop(&command->alp_command_fifo, &session_config->dormant_timeout, 1); assert(err == SUCCESS);
   err = fifo_pop(&command->alp_command_fifo, &session_config->addressee.ctrl.raw, 1); assert(err == SUCCESS);
-  uint8_t id_length = d7anp_addressee_id_length(session_config->addressee.ctrl.id_type);
+  uint8_t id_length = alp_addressee_id_length(session_config->addressee.ctrl.id_type);
   err = fifo_pop(&command->alp_command_fifo, &session_config->addressee.access_class, 1); assert(err == SUCCESS);
   err = fifo_pop(&command->alp_command_fifo, session_config->addressee.id, id_length); assert(err == SUCCESS);
   DPRINT("FORWARD");
@@ -412,7 +412,7 @@ static void add_interface_status_action(fifo_t* alp_response_fifo, d7ap_session_
   fifo_put_byte(alp_response_fifo, d7asp_result->response_to);
   fifo_put_byte(alp_response_fifo, d7asp_result->addressee->ctrl.raw);
   fifo_put_byte(alp_response_fifo, d7asp_result->addressee->access_class);
-  uint8_t address_len = d7anp_addressee_id_length(d7asp_result->addressee->ctrl.id_type);
+  uint8_t address_len = alp_addressee_id_length(d7asp_result->addressee->ctrl.id_type);
   fifo_put(alp_response_fifo, d7asp_result->addressee->id, address_len);
 }
 

@@ -753,7 +753,7 @@ void dll_execute_scan_automation()
     current_eirp = current_access_profile.subbands[0].eirp;
 }
 
-void dll_notify_dll_conf_file_changed()
+static void conf_file_changed_callback(uint8_t file_id)
 {
     DPRINT("DLL config file changed");
     // when doing scan automation restart this
@@ -763,7 +763,7 @@ void dll_notify_dll_conf_file_changed()
     }
 }
 
-void dll_notify_access_profile_file_changed()
+static void access_profile_file_changed_callback(uint8_t file_id)
 {
     DPRINT("AP file changed");
 
@@ -782,6 +782,7 @@ void dll_notify_dialog_terminated()
     DPRINT("Since the dialog is terminated, we can resume the automation scan");
     dll_execute_scan_automation();
 }
+
 
 void dll_init()
 {
@@ -808,7 +809,12 @@ void dll_init()
     resume_fg_scan = false;
     sched_post_task(&dll_execute_scan_automation);
     guarded_channel = false;
+
+    fs_register_file_modified_callback(D7A_FILE_DLL_CONF_FILE_ID, &conf_file_changed_callback);
+    for(int i = 0; i < 15; i++)
+      fs_register_file_modified_callback(D7A_FILE_ACCESS_PROFILE_ID + i, &access_profile_file_changed_callback);
 }
+
 
 void dll_stop()
 {

@@ -32,6 +32,11 @@
 #include "types.h"
 #include "phy.h"
 
+#define ID_TYPE_NBID_ID_LENGTH 1
+#define ID_TYPE_NOID_ID_LENGTH 0
+#define ID_TYPE_UID_ID_LENGTH   8
+#define ID_TYPE_VID_LENGTH      2
+
 typedef enum {
     ID_TYPE_NBID = 0,
     ID_TYPE_NOID = 1,

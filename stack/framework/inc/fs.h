@@ -141,7 +141,7 @@ alp_status_codes_t fs_add_nwl_security_state_register_entry(dae_nwl_trusted_node
 alp_status_codes_t fs_update_nwl_security_state_register(dae_nwl_trusted_node_t *trusted_node, uint8_t trusted_node_index);
 uint8_t fs_get_file_length(uint8_t file_id);
 
-uint8_t fs_register_file_modified_callback(fs_modified_file_callback_t callback);
+bool fs_register_file_modified_callback(uint8_t file_id, fs_modified_file_callback_t callback);
 
 
 #endif /* FS_H_ */

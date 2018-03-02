@@ -22,17 +22,12 @@
 
 #include "stdlib.h"
 #include "debug.h"
-#include "ng.h"
 
 #include "alp.h"
-#include "d7ap.h"
-//#include "packet.h"
 #include "fs.h"
 #include "fifo.h"
 #include "log.h"
-//#include "alp_cmd_handler.h"
-#include "shell.h"
-//#include "MODULE_D7AP_defs.h"
+
 
 #if defined(FRAMEWORK_LOG_ENABLED) && defined(MODULE_D7AP_ALP_LOG_ENABLED)
 #define DPRINT(...) log_print_stack_string(LOG_STACK_ALP, __VA_ARGS__)
@@ -121,9 +116,28 @@ static void add_interface_status_action(fifo_t* alp_response_fifo, d7ap_session_
   fifo_put_byte(alp_response_fifo, d7asp_result->response_to);
   fifo_put_byte(alp_response_fifo, d7asp_result->addressee->ctrl.raw);
   fifo_put_byte(alp_response_fifo, d7asp_result->addressee->access_class);
-  uint8_t address_len = d7anp_addressee_id_length(d7asp_result->addressee->ctrl.id_type);
+  uint8_t address_len = alp_addressee_id_length(d7asp_result->addressee->ctrl.id_type);
   fifo_put(alp_response_fifo, d7asp_result->addressee->id, address_len);
 }
+
+uint8_t alp_addressee_id_length(d7ap_addressee_id_type_t id_type)
+{
+    switch(id_type)
+    {
+        case ID_TYPE_NOID:
+          return ID_TYPE_NOID_ID_LENGTH;
+        case ID_TYPE_NBID:
+          return ID_TYPE_NBID_ID_LENGTH;
+        case ID_TYPE_UID:
+          return ID_TYPE_UID_ID_LENGTH;
+        case ID_TYPE_VID:
+          return ID_TYPE_VID_LENGTH;
+        default:
+          assert(false);
+    }
+}
+
+
 
 uint8_t alp_get_expected_response_length(uint8_t* alp_command, uint8_t alp_command_length) {
   uint8_t expected_response_length = 0;
@@ -157,7 +171,7 @@ uint8_t alp_get_expected_response_length(uint8_t* alp_command, uint8_t alp_comma
         addressee_ctrl.raw = *ptr;
         ptr += 1; // skip addressee ctrl
         ptr += 1; // skip access class
-        ptr += d7anp_addressee_id_length(addressee_ctrl.id_type); // skip address
+        ptr += alp_addressee_id_length(addressee_ctrl.id_type); // skip address
         // TODO refactor to reuse same logic for parsing and response length counting
         break;
       case ALP_OP_WRITE_FILE_PROPERTIES:

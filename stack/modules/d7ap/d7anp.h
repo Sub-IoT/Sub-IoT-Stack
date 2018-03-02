@@ -40,11 +40,6 @@
 
 typedef struct packet packet_t;
 
-#define ID_TYPE_NBID_ID_LENGTH 1
-#define ID_TYPE_NOID_ID_LENGTH 0
-#define ID_TYPE_UID_ID_LENGTH   8
-#define ID_TYPE_VID_LENGTH      2
-
 #define ID_TYPE_IS_BROADCAST(id_type) (id_type == ID_TYPE_NBID || id_type == ID_TYPE_NOID)
 
 #define GET_NLS_METHOD(VAL) (uint8_t)(VAL & 0x0F)
@@ -99,7 +94,6 @@ bool d7anp_disassemble_packet_header(packet_t* packet, uint8_t* packet_idx);
 void d7anp_signal_transmission_failure();
 void d7anp_signal_packet_transmitted(packet_t* packet);
 void d7anp_process_received_packet(packet_t* packet);
-uint8_t d7anp_addressee_id_length(d7ap_addressee_id_type_t id_type);
 void d7anp_set_foreground_scan_timeout(timer_tick_t timeout);
 void d7anp_start_foreground_scan();
 void d7anp_stop_foreground_scan();

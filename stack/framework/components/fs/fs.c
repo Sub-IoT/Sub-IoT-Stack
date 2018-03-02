@@ -49,7 +49,8 @@ static uint16_t NGDEF(_file_offsets)[FRAMEWORK_FS_FILE_COUNT] = { 0 };
 static bool NGDEF(_is_fs_init_completed);
 #define is_fs_init_completed NG(_is_fs_init_completed)
 
-static fs_modified_file_callback_t file_change_callback = NULL;
+static fs_modified_file_callback_t file_modified_callbacks[FRAMEWORK_FS_FILE_COUNT] = { NULL };
+
 static fs_d7aactp_callback_t d7aactp_callback = NULL;
 
 static inline bool is_file_defined(uint8_t file_id)
@@ -313,18 +314,9 @@ alp_status_codes_t fs_write_file(uint8_t file_id, uint8_t offset, const uint8_t*
         execute_d7a_action_protocol(file_headers[file_id].alp_cmd_file_id, file_headers[file_id].interface_file_id);
     }
 
-    if(file_id == D7A_FILE_DLL_CONF_FILE_ID)
-    {
-        dll_notify_dll_conf_file_changed();
-    }
-    else if(file_id >= D7A_FILE_ACCESS_PROFILE_ID && file_id <= D7A_FILE_ACCESS_PROFILE_ID + 14)
-    {
-        dll_notify_access_profile_file_changed();
-    }
 
-    // notify APP about a user file change
-    if ((file_id > 0x3f) && (file_change_callback)) //from 0x0 to 0x3F are reserved for D7A System Files.)
-        file_change_callback(file_id);
+    if(file_modified_callbacks[file_id])
+      file_modified_callbacks[file_id](file_id);
 
     return ALP_STATUS_OK;
 }
@@ -493,7 +485,10 @@ uint8_t fs_get_file_length(uint8_t file_id)
   return file_headers[file_id].length;
 }
 
-uint8_t fs_register_file_modified_callback(fs_modified_file_callback_t callback)
+bool fs_register_file_modified_callback(uint8_t file_id, fs_modified_file_callback_t callback)
 {
-    file_change_callback = callback;
+  if(file_modified_callbacks[file_id])
+    return false; // already registered
+
+  file_modified_callbacks[file_id] = callback;
 }

@@ -34,6 +34,7 @@
 #include "stdint.h"
 #include "stdbool.h"
 
+#include "d7ap.h"
 #include "fifo.h"
 
 #define ALP_ITF_ID_D7ASP  0xD7
@@ -192,6 +193,8 @@ void alp_append_tag_request(fifo_t* fifo, uint8_t tag_id, bool eop);
 void alp_append_read_file_data(fifo_t* fifo, uint8_t file_id, uint32_t offset, uint32_t length, bool resp, bool group);
 void alp_append_length_operand(fifo_t* fifo, uint32_t length);
 uint32_t alp_parse_length_operand(fifo_t* cmd_fifo);
+
+uint8_t alp_addressee_id_length(d7ap_addressee_id_type_t id_type);
 
 #endif /* ALP_H_ */
 

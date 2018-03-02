@@ -297,7 +297,7 @@ d7asp_master_session_t* d7asp_master_session_create(d7ap_master_session_config_t
         // Requests can be pushed in the FIFO by upper layer anytime
         if ((current_master_session.config.addressee.access_class == d7asp_master_session_config->addressee.access_class) &&
             (current_master_session.config.addressee.ctrl.raw == d7asp_master_session_config->addressee.ctrl.raw) &&
-            memcmp(current_master_session.config.addressee.id, d7asp_master_session_config->addressee.id, d7anp_addressee_id_length(d7asp_master_session_config->addressee.ctrl.id_type)));
+            memcmp(current_master_session.config.addressee.id, d7asp_master_session_config->addressee.id, alp_addressee_id_length(d7asp_master_session_config->addressee.ctrl.id_type)));
         return &current_master_session;
 
         // TODO create a pending session or a dormant session if TO (DORM_TIMER) !=0
