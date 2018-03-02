@@ -34,6 +34,7 @@ PLATFORM_OPTION(PLATFORM_SX127X_USE_RESET_PIN "Platform has access to the RESET 
 PLATFORM_OPTION(PLATFORM_SX127X_USE_DIO3_PIN "Platform has access to the DIO3 pin of sx127x chip" TRUE)
 PLATFORM_OPTION(PLATFORM_SX127X_USE_VCC_TXCO "Platform has access to the VCC TCXO pin of sx127x chip" TRUE)
 PLATFORM_OPTION(PLATFORM_USE_NUCLEO_IKS01A2_SHIELD "The NUCLEO IKS01A2 shield is mounted" FALSE)
+PLATFORM_OPTION(PLATFORM_USE_EXTERNAL_MODEM "Use an external serial connected oss7-modem" FALSE)
 PLATFORM_OPTION(PLATFORM_LOW_CLOCK_SPEED "Low clock speed for energy optimization. Will be removed in the future when we support freq scaling" FALSE)
 
 # CONSOLE
@@ -105,6 +106,7 @@ PLATFORM_HEADER_DEFINE(
     PLATFORM_SX127X_USE_PA_BOOST
     PLATFORM_SX127X_USE_VCC_TXCO
     PLATFORM_USE_NUCLEO_IKS01A2_SHIELD
+    PLATFORM_USE_EXTERNAL_MODEM
     PLATFORM_LOW_CLOCK_SPEED
 )
 
@@ -135,6 +137,10 @@ ENDIF()
 IF(${PLATFORM_USE_NUCLEO_IKS01A2_SHIELD})
     ADD_CHIP("hts221")
     ADD_CHIP("lsm303agr")
+ENDIF()
+
+IF(${PLATFORM_USE_EXTERNAL_MODEM})
+    ADD_CHIP("oss7_modem")
 ENDIF()
 
 #Build the 'platform_defs.h' settings file
