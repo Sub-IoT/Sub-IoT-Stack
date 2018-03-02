@@ -50,8 +50,8 @@ typedef enum
 
 
 typedef void (*alp_command_completed_callback)(uint8_t tag_id, bool success);
-typedef void (*alp_command_result_callback)(d7asp_result_t result, uint8_t* payload, uint8_t payload_length);
-typedef void (*alp_received_unsolicited_data_callback)(d7asp_result_t d7asp_result, uint8_t *alp_command, uint8_t alp_command_size);
+typedef void (*alp_command_result_callback)(d7ap_session_result_t result, uint8_t* payload, uint8_t payload_length);
+typedef void (*alp_received_unsolicited_data_callback)(d7ap_session_result_t d7asp_result, uint8_t *alp_command, uint8_t alp_command_size);
 typedef alp_status_codes_t (*alp_unhandled_read_action_callback)(alp_operand_file_data_request_t operand, uint8_t* alp_response);
 
 typedef struct {
@@ -86,7 +86,7 @@ void alp_layer_init(alp_init_args_t* init_args, bool shell_enabled);
  * \param alp_command_length
  * \param d7asp_master_session_config
  */
-void alp_layer_execute_command(uint8_t* alp_command, uint8_t alp_command_length, d7asp_master_session_config_t* d7asp_master_session_config);
+void alp_layer_execute_command(uint8_t* alp_command, uint8_t alp_command_length, d7ap_master_session_config_t* d7asp_master_session_config);
 
 /*!
  * \brief Process the ALP command.
@@ -112,7 +112,7 @@ bool alp_layer_process_command(uint8_t* alp_command, uint8_t alp_command_length,
  * \param alp_response_length The length of the response
  * \param d7asp_result The result
  */
-void alp_layer_process_d7asp_result(uint8_t* alp_command, uint8_t alp_command_length, uint8_t* alp_response, uint8_t* alp_response_length, d7asp_result_t d7asp_result);
+void alp_layer_process_d7asp_result(uint8_t* alp_command, uint8_t alp_command_length, uint8_t* alp_response, uint8_t* alp_response_length, d7ap_session_result_t d7asp_result);
 
 /*!
  * \brief Process the ALP command on the local host interface and output the response to the D7ASP interface
@@ -120,9 +120,8 @@ void alp_layer_process_d7asp_result(uint8_t* alp_command, uint8_t alp_command_le
  * \param d7asp_fifo_config The config of the D7ASP fifo to output the ALP response to
  * \param alp_command   The raw command
  * \param alp_command_length The length of the command
- * \param origin Where the ALP command originates from, determines where response will go to
  */
-void alp_layer_process_command_result_on_d7asp(d7asp_master_session_config_t* d7asp_fifo_config, uint8_t* alp_command, uint8_t alp_command_length, alp_command_origin_t origin);
+void alp_layer_process_d7aacpt(d7ap_master_session_config_t* d7asp_fifo_config, uint8_t* alp_command, uint8_t alp_command_length);
 
 /*!
  * \brief Process the ALP command and output the result on the console.

@@ -22,35 +22,35 @@
 
 #include "string.h"
 #include "debug.h"
+#include "d7ap.h"
 #include "fs.h"
 #include "ng.h"
 #include "hwsystem.h"
-#include "alp_layer.h"
-#include "d7asp.h"
-#include "MODULE_D7AP_defs.h"
 #include "version.h"
-#include "dll.h"
 #include "key.h"
 
 #define D7A_PROTOCOL_VERSION_MAJOR 1
 #define D7A_PROTOCOL_VERSION_MINOR 1
 
-static fs_file_header_t NGDEF(_file_headers)[MODULE_D7AP_FS_FILE_COUNT] = { 0 };
+#define FS_ENABLE_SSR_FILTER 0 // TODO always enabled? cmake param?
+
+static fs_file_header_t NGDEF(_file_headers)[FRAMEWORK_FS_FILE_COUNT] = { 0 };
 #define file_headers NG(_file_headers)
 
 static uint16_t NGDEF(_current_data_offset); // TODO we are using offset here instead of pointer because NG does not support pointers, fix later when NG is replaced
 #define current_data_offset NG(_current_data_offset)
 
-static uint8_t NGDEF(_data)[MODULE_D7AP_FS_FILESYSTEM_SIZE] = { 0 };
+static uint8_t NGDEF(_data)[FRAMEWORK_FS_FILESYSTEM_SIZE] = { 0 };
 #define data NG(_data)
 
-static uint16_t NGDEF(_file_offsets)[MODULE_D7AP_FS_FILE_COUNT] = { 0 };
+static uint16_t NGDEF(_file_offsets)[FRAMEWORK_FS_FILE_COUNT] = { 0 };
 #define file_offsets NG(_file_offsets)
 
 static bool NGDEF(_is_fs_init_completed);
 #define is_fs_init_completed NG(_is_fs_init_completed)
 
 static fs_modified_file_callback_t file_change_callback = NULL;
+static fs_d7aactp_callback_t d7aactp_callback = NULL;
 
 static inline bool is_file_defined(uint8_t file_id)
 {
@@ -66,7 +66,7 @@ static void execute_d7a_action_protocol(uint8_t command_file_id, uint8_t interfa
 
     uint8_t* data_ptr = (uint8_t*)(data + file_offsets[interface_file_id]);
 
-    d7asp_master_session_config_t fifo_config;
+    d7ap_master_session_config_t fifo_config;
     assert((*data_ptr) == ALP_ITF_ID_D7ASP); // only D7ASP supported for now
     data_ptr++;
     // TODO add length field according to spec
@@ -77,7 +77,8 @@ static void execute_d7a_action_protocol(uint8_t command_file_id, uint8_t interfa
     fifo_config.addressee.access_class = (*data_ptr); data_ptr++;
     memcpy(&(fifo_config.addressee.id), data_ptr, 8); data_ptr += 8; // TODO assume 8 for now
 
-    alp_layer_process_command_result_on_d7asp(&fifo_config, (uint8_t*)(data + file_offsets[command_file_id]), file_headers[command_file_id].length, ALP_CMD_ORIGIN_D7AACTP);
+    if(d7aactp_callback)
+      d7aactp_callback(&fifo_config, (uint8_t*)(data + file_offsets[command_file_id]), file_headers[command_file_id].length);
 }
 
 
@@ -189,29 +190,30 @@ void fs_init(fs_init_args_t* init_args)
         .file_properties.action_protocol_enabled = 0,
         .file_properties.storage_class = FS_STORAGE_PERMANENT,
         .file_permissions = 0, // TODO
-        .length = init_args->ssr_filter_mode & ENABLE_SSR_FILTER ? D7A_FILE_NWL_SECURITY_STATE_REG_SIZE : 1,
-        .allocated_length = init_args->ssr_filter_mode & ENABLE_SSR_FILTER ? D7A_FILE_NWL_SECURITY_STATE_REG_SIZE : 1
+        .length = init_args->ssr_filter_mode & FS_ENABLE_SSR_FILTER ? D7A_FILE_NWL_SECURITY_STATE_REG_SIZE : 1,
+        .allocated_length = init_args->ssr_filter_mode & FS_ENABLE_SSR_FILTER ? D7A_FILE_NWL_SECURITY_STATE_REG_SIZE : 1
     };
 
     data[current_data_offset] = init_args->ssr_filter_mode; current_data_offset++;
     data[current_data_offset] = 0; current_data_offset++;
-    if (init_args->ssr_filter_mode & ENABLE_SSR_FILTER)
+    if (init_args->ssr_filter_mode & FS_ENABLE_SSR_FILTER)
         current_data_offset += D7A_FILE_NWL_SECURITY_STATE_REG_SIZE - 2;
 
     // init user files
     if(init_args->fs_user_files_init_cb)
         init_args->fs_user_files_init_cb();
 
-    assert(current_data_offset <= MODULE_D7AP_FS_FILESYSTEM_SIZE);
+    assert(current_data_offset <= FRAMEWORK_FS_FILESYSTEM_SIZE);
+    d7aactp_callback = init_args->fs_d7aactp_cb;
     is_fs_init_completed = true;
 }
 
 void fs_init_file(uint8_t file_id, const fs_file_header_t* file_header, const uint8_t* initial_data)
 {
     assert(!is_fs_init_completed); // initing files not allowed after fs_init() completed (for now?)
-    assert(file_id < MODULE_D7AP_FS_FILE_COUNT);
+    assert(file_id < FRAMEWORK_FS_FILE_COUNT);
     assert(file_id >= 0x40); // system files may not be inited
-    assert(current_data_offset + file_header->length <= MODULE_D7AP_FS_FILESYSTEM_SIZE);
+    assert(current_data_offset + file_header->length <= FRAMEWORK_FS_FILESYSTEM_SIZE);
 
     file_offsets[file_id] = current_data_offset;
     memcpy(file_headers + file_id, file_header, sizeof(fs_file_header_t));
@@ -221,7 +223,7 @@ void fs_init_file(uint8_t file_id, const fs_file_header_t* file_header, const ui
         fs_write_file(file_id, 0, initial_data, file_header->length);
 }
 
-void fs_init_file_with_d7asp_interface_config(uint8_t file_id, const d7asp_master_session_config_t* fifo_config)
+void fs_init_file_with_d7asp_interface_config(uint8_t file_id, const d7ap_master_session_config_t* fifo_config)
 {
     // TODO check file not already defined
 
@@ -247,7 +249,7 @@ void fs_init_file_with_d7asp_interface_config(uint8_t file_id, const d7asp_maste
     fs_init_file(file_id, &file_header, alp_command_buffer);
 }
 
-void fs_init_file_with_D7AActP(uint8_t file_id, const d7asp_master_session_config_t* fifo_config, const uint8_t* alp_command, const uint8_t alp_command_len)
+void fs_init_file_with_D7AActP(uint8_t file_id, const d7ap_master_session_config_t* fifo_config, const uint8_t* alp_command, const uint8_t alp_command_len)
 {
     uint8_t alp_command_buffer[40] = { 0 };
     uint8_t* ptr = alp_command_buffer;
@@ -347,7 +349,7 @@ alp_status_codes_t fs_read_nwl_security_key(uint8_t *buffer)
     return fs_read_file(D7A_FILE_NWL_SECURITY_KEY, 0, buffer, D7A_FILE_NWL_SECURITY_KEY_SIZE);
 }
 
-alp_status_codes_t fs_read_nwl_security(d7anp_security_t *nwl_security)
+alp_status_codes_t fs_read_nwl_security(dae_nwl_security_t *nwl_security)
 {
     uint8_t* data_ptr = data + file_offsets[D7A_FILE_NWL_SECURITY];
     uint32_t frame_counter;
@@ -360,7 +362,7 @@ alp_status_codes_t fs_read_nwl_security(d7anp_security_t *nwl_security)
     return ALP_STATUS_OK;
 }
 
-alp_status_codes_t fs_write_nwl_security(d7anp_security_t *nwl_security)
+alp_status_codes_t fs_write_nwl_security(dae_nwl_security_t *nwl_security)
 {
     uint8_t* data_ptr = data + file_offsets[D7A_FILE_NWL_SECURITY];
     uint32_t frame_counter;
@@ -373,7 +375,7 @@ alp_status_codes_t fs_write_nwl_security(d7anp_security_t *nwl_security)
     return ALP_STATUS_OK;
 }
 
-alp_status_codes_t fs_read_nwl_security_state_register(d7anp_node_security_t *node_security_state)
+alp_status_codes_t fs_read_nwl_security_state_register(dae_nwl_ssr_t *node_security_state)
 {
     uint8_t* data_ptr = data + file_offsets[D7A_FILE_NWL_SECURITY_STATE_REG];
     uint32_t frame_counter;
@@ -393,7 +395,7 @@ alp_status_codes_t fs_read_nwl_security_state_register(d7anp_node_security_t *no
     return ALP_STATUS_OK;
 }
 
-alp_status_codes_t fs_add_nwl_security_state_register_entry(d7anp_trusted_node_t *trusted_node,
+alp_status_codes_t fs_add_nwl_security_state_register_entry(dae_nwl_trusted_node_t *trusted_node,
                                                             uint8_t trusted_node_nb)
 {
     uint8_t* data_ptr = data + file_offsets[D7A_FILE_NWL_SECURITY_STATE_REG];
@@ -403,7 +405,7 @@ alp_status_codes_t fs_add_nwl_security_state_register_entry(d7anp_trusted_node_t
 
     data_ptr[1] = trusted_node_nb;
     data_ptr += (D7A_FILE_NWL_SECURITY_SIZE + D7A_FILE_UID_SIZE)*(trusted_node_nb - 1) + 2;
-    assert(trusted_node_nb <= MODULE_D7AP_TRUSTED_NODE_TABLE_SIZE);
+    assert(trusted_node_nb <= FRAMEWORK_FS_TRUSTED_NODE_TABLE_SIZE);
 
     (*data_ptr) = trusted_node->key_counter; data_ptr++;
     frame_counter = __builtin_bswap32(trusted_node->frame_counter);
@@ -413,7 +415,7 @@ alp_status_codes_t fs_add_nwl_security_state_register_entry(d7anp_trusted_node_t
     return ALP_STATUS_OK;
 }
 
-alp_status_codes_t fs_update_nwl_security_state_register(d7anp_trusted_node_t *trusted_node,
+alp_status_codes_t fs_update_nwl_security_state_register(dae_nwl_trusted_node_t *trusted_node,
                                                         uint8_t trusted_node_index)
 {
     uint8_t* data_ptr = data + file_offsets[D7A_FILE_NWL_SECURITY_STATE_REG];

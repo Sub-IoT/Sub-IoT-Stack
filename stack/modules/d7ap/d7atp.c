@@ -42,7 +42,7 @@
 #endif
 
 
-static d7anp_addressee_t NGDEF(_current_addressee);
+static d7ap_addressee_t NGDEF(_current_addressee);
 #define current_addressee NG(_current_addressee)
 
 static uint8_t NGDEF(_current_dialog_id);
@@ -255,7 +255,7 @@ void d7atp_stop()
 }
 
 error_t d7atp_send_request(uint8_t dialog_id, uint8_t transaction_id, bool is_last_transaction,
-                        packet_t* packet, session_qos_t* qos_settings, uint8_t listen_timeout, uint8_t expected_response_length)
+                        packet_t* packet, d7ap_session_qos_t* qos_settings, uint8_t listen_timeout, uint8_t expected_response_length)
 {
     /* check that we are not initiating a different dialog if a dialog is still ongoing */
     if (current_dialog_id)

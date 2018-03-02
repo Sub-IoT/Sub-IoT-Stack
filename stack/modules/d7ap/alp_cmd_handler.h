@@ -56,7 +56,7 @@ void alp_cmd_handler_output_alp_command(uint8_t *alp_command, uint8_t alp_comman
 /// \param alp_command
 /// \param alp_command_size
 ///
-void alp_cmd_handler_output_d7asp_response(d7asp_result_t d7asp_result, uint8_t *alp_command, uint8_t alp_command_size);
+void alp_cmd_handler_output_d7asp_response(d7ap_session_result_t d7asp_result, uint8_t *alp_command, uint8_t alp_command_size);
 
 ///
 /// \brief Set the callback which will be called when an ALP command is received for the application interface

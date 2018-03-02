@@ -51,7 +51,7 @@
 #endif
 
 // Define the D7 interface configuration used for sending the ALP command on
-static d7asp_master_session_config_t session_config = {
+static d7ap_master_session_config_t session_config = {
     .qos = {
         .qos_resp_mode = SESSION_RESP_MODE_ANY,
         .qos_retry_mode = SESSION_RETRY_MODE_NO,
@@ -110,7 +110,7 @@ void on_alp_command_completed_cb(uint8_t tag_id, bool success)
       log_print_string("Command failed, no ack received");
 }
 
-void on_alp_command_result_cb(d7asp_result_t result, uint8_t* payload, uint8_t payload_length)
+void on_alp_command_result_cb(d7ap_session_result_t result, uint8_t* payload, uint8_t payload_length)
 {
     log_print_string("recv response @ %i dB link budget from:", result.link_budget);
     log_print_data(result.addressee->id, 8);

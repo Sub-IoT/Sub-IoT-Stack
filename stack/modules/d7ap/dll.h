@@ -60,7 +60,8 @@ typedef struct
         int8_t control_eirp_index;
         int8_t control_identifier_tag;
     };
-    id_type_t control_target_id_type;
+
+    d7ap_addressee_id_type_t control_target_id_type;
     //uint8_t target_address[8]; // TODO assuming 8B UID for now
 } dll_header_t;
 

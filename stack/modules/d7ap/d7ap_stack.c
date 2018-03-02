@@ -27,6 +27,7 @@ void d7ap_stack_init(fs_init_args_t* fs_init_args, alp_init_args_t* alp_init_arg
     assert(fs_init_args != NULL);
     assert(fs_init_args->access_profiles_count > 0); // there should be at least one access profile defined
 
+    fs_init_args->fs_d7aactp_cb = &alp_layer_process_d7aacpt;
     fs_init(fs_init_args);
     d7asp_init();
     d7atp_init();

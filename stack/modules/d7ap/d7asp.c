@@ -43,7 +43,7 @@
 
 
 struct d7asp_master_session {
-    d7asp_master_session_config_t config;
+    d7ap_master_session_config_t config;
     // TODO uint8_t dorm_timer;
     d7asp_master_session_state_t state;
     uint8_t token;
@@ -289,7 +289,7 @@ void d7asp_stop()
     sched_cancel_task(&flush_fifos);
 }
 
-d7asp_master_session_t* d7asp_master_session_create(d7asp_master_session_config_t* d7asp_master_session_config) {
+d7asp_master_session_t* d7asp_master_session_create(d7ap_master_session_config_t* d7asp_master_session_config) {
     // TODO for now we assume only one concurrent session, in the future we should dynamically allocate (or return from pool) a session
 
     if (current_master_session.state != D7ASP_MASTER_SESSION_IDLE)
@@ -358,7 +358,7 @@ d7asp_queue_result_t d7asp_queue_alp_actions(d7asp_master_session_t* session, ui
 bool d7asp_process_received_packet(packet_t* packet, bool extension)
 {
     hw_watchdog_feed(); // TODO do here?
-    d7asp_result_t result = {
+    d7ap_session_result_t result = {
         .channel = packet->hw_radio_packet.rx_meta.rx_cfg.channel_id,
         .rx_level =  - packet->hw_radio_packet.rx_meta.rssi,
         .link_budget = (packet->dll_header.control_eirp_index - 32) - packet->hw_radio_packet.rx_meta.rssi,

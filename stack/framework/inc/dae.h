@@ -62,4 +62,23 @@ typedef struct
     subband_t subbands[SUBBANDS_NB];
 } dae_access_profile_t;
 
+typedef struct {
+    uint8_t key_counter;
+    uint32_t frame_counter;
+} dae_nwl_security_t;
+
+
+typedef struct {
+    uint8_t key_counter;
+    uint32_t frame_counter;
+    uint8_t addr[8];
+    //bool used;  /* to be used if it is possible to remove a trusted node from the table */
+} dae_nwl_trusted_node_t;
+
+typedef struct {
+    uint8_t filter_mode;
+    uint8_t trusted_node_nb;
+    dae_nwl_trusted_node_t trusted_node_table[FRAMEWORK_FS_TRUSTED_NODE_TABLE_SIZE];
+} dae_nwl_ssr_t;
+
 #endif /* DAE_H_ */

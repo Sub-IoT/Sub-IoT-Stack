@@ -27,20 +27,11 @@ MODULE_HEADER_DEFINE(NUMBER ${MODULE_PREFIX}_ALP_MAX_ACTIVE_COMMAND_COUNT)
 MODULE_PARAM(${MODULE_PREFIX}_PACKET_QUEUE_SIZE "2" STRING "The max number of packets which can be used concurrently")
 MODULE_HEADER_DEFINE(NUMBER ${MODULE_PREFIX}_PACKET_QUEUE_SIZE)
 
-MODULE_PARAM(${MODULE_PREFIX}_TRUSTED_NODE_TABLE_SIZE "16" STRING "The max number of trusted node entries which can be used to store security state")
-MODULE_HEADER_DEFINE(NUMBER ${MODULE_PREFIX}_TRUSTED_NODE_TABLE_SIZE)
-
 MODULE_PARAM(${MODULE_PREFIX}_FIFO_COMMAND_BUFFER_SIZE "100" STRING "The D7ASP FIFO command buffer size")
 MODULE_HEADER_DEFINE(NUMBER ${MODULE_PREFIX}_FIFO_COMMAND_BUFFER_SIZE)
 
 MODULE_PARAM(${MODULE_PREFIX}_FIFO_MAX_REQUESTS_COUNT "8" STRING "The maximum number of requests in a D7ASP FIFO (before flush terminates)")
 MODULE_HEADER_DEFINE(NUMBER ${MODULE_PREFIX}_FIFO_MAX_REQUESTS_COUNT)
-
-MODULE_PARAM(${MODULE_PREFIX}_FS_FILE_COUNT "80" STRING "The number of files in the filesystem")
-MODULE_HEADER_DEFINE(NUMBER ${MODULE_PREFIX}_FS_FILE_COUNT)
-
-MODULE_PARAM(${MODULE_PREFIX}_FS_FILESYSTEM_SIZE "1200" STRING "The total number of bytes which can be stored in the filesystem")
-MODULE_HEADER_DEFINE(NUMBER ${MODULE_PREFIX}_FS_FILESYSTEM_SIZE)
 
 MODULE_OPTION(${MODULE_PREFIX}_NLS_ENABLED "Enable Security in NETW layer" FALSE)
 MODULE_HEADER_DEFINE(BOOL ${MODULE_PREFIX}_NLS_ENABLED)
@@ -75,19 +66,14 @@ EXPORT_GLOBAL_INCLUDE_DIRECTORIES(.)
 #By convention, each module should generate a single 'static' library that can be included by the application
 ADD_LIBRARY(d7ap STATIC
     d7ap_stack.c
-    alp.c
     d7asp.c
-    session.h
     d7atp.c
     d7anp.c
-    fs.c
-    dae.h
     packet_queue.c
     packet.c
     dll.c
     alp_cmd_handler.c
     alp_cmd_handler.h
-    alp.c
     alp_layer.c
 )
 

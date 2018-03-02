@@ -34,8 +34,7 @@
 
 #include "dae.h"
 #include "alp.h"
-#include "MODULE_D7AP_defs.h"
-#include "d7asp.h"
+#include "d7ap.h"
 
 #define D7A_FILE_UID_FILE_ID 0x00
 #define D7A_FILE_UID_SIZE 8
@@ -59,7 +58,7 @@
 #define D7A_FILE_NWL_SECURITY_KEY_SIZE	16
 
 #define D7A_FILE_NWL_SECURITY_STATE_REG			0x0F
-#define D7A_FILE_NWL_SECURITY_STATE_REG_SIZE	2 + (MODULE_D7AP_TRUSTED_NODE_TABLE_SIZE)*(D7A_FILE_NWL_SECURITY_SIZE + D7A_FILE_UID_SIZE)
+#define D7A_FILE_NWL_SECURITY_STATE_REG_SIZE	2 + (FRAMEWORK_FS_TRUSTED_NODE_TABLE_SIZE)*(D7A_FILE_NWL_SECURITY_SIZE + D7A_FILE_UID_SIZE)
 
 typedef enum
 {
@@ -103,10 +102,16 @@ typedef void (*fs_user_files_init_callback)(void);
 typedef void (*fs_modified_file_callback_t)(uint8_t file_id);
 
 /**
+ * \brief Callback function executed when D7AActP is triggered
+ */
+typedef void (*fs_d7aactp_callback_t)(d7ap_master_session_config_t* session_config, uint8_t* alp_command, uint8_t alp_command_length);
+
+/**
  * \brief Arguments used by the stack for filesystem initialization
  */
 typedef struct {
     fs_user_files_init_callback fs_user_files_init_cb; /**< Initialize the user files in this callback */
+    fs_d7aactp_callback_t fs_d7aactp_cb; /**< Callback function executed when D7AActP is triggered */
     uint8_t access_profiles_count; /**< The number of access profiles passed in the access_profiles member.  */
     dae_access_profile_t* access_profiles; /**< The access profiles to be written to the filesystem (using increasing fileID starting from0x20) during init.  */    
     uint8_t access_class; /* The Active Access Class to be written in the DLL configuration file */
@@ -115,8 +120,8 @@ typedef struct {
 
 void fs_init(fs_init_args_t* init_args);
 void fs_init_file(uint8_t file_id, const fs_file_header_t* file_header, const uint8_t* initial_data);
-void fs_init_file_with_D7AActP(uint8_t file_id, const d7asp_master_session_config_t* fifo_config, const uint8_t* alp_command, const uint8_t alp_command_len);
-void fs_init_file_with_d7asp_interface_config(uint8_t file_id, const d7asp_master_session_config_t* fifo_config);
+void fs_init_file_with_D7AActP(uint8_t file_id, const d7ap_master_session_config_t* fifo_config, const uint8_t* alp_command, const uint8_t alp_command_len);
+void fs_init_file_with_d7asp_interface_config(uint8_t file_id, const d7ap_master_session_config_t* fifo_config);
 alp_status_codes_t fs_read_file(uint8_t file_id, uint8_t offset, uint8_t* buffer, uint8_t length);
 alp_status_codes_t fs_write_file(uint8_t file_id, uint8_t offset, const uint8_t* buffer, uint8_t length);
 void fs_read_access_class(uint8_t access_class_index, dae_access_profile_t* access_class);
@@ -129,11 +134,11 @@ void fs_write_vid(uint8_t* buffer);
 uint8_t fs_read_dll_conf_active_access_class();
 void fs_write_dll_conf_active_access_class(uint8_t access_class);
 alp_status_codes_t fs_read_nwl_security_key(uint8_t* key);
-alp_status_codes_t fs_read_nwl_security(d7anp_security_t *nwl_security);
-alp_status_codes_t fs_write_nwl_security(d7anp_security_t *nwl_security);
-alp_status_codes_t fs_read_nwl_security_state_register(d7anp_node_security_t *node_security_state);
-alp_status_codes_t fs_add_nwl_security_state_register_entry(d7anp_trusted_node_t *trusted_node, uint8_t trusted_node_nb);
-alp_status_codes_t fs_update_nwl_security_state_register(d7anp_trusted_node_t *trusted_node, uint8_t trusted_node_index);
+alp_status_codes_t fs_read_nwl_security(dae_nwl_security_t *nwl_security);
+alp_status_codes_t fs_write_nwl_security(dae_nwl_security_t *nwl_security);
+alp_status_codes_t fs_read_nwl_security_state_register(dae_nwl_ssr_t *node_security_state);
+alp_status_codes_t fs_add_nwl_security_state_register_entry(dae_nwl_trusted_node_t *trusted_node, uint8_t trusted_node_nb);
+alp_status_codes_t fs_update_nwl_security_state_register(dae_nwl_trusted_node_t *trusted_node, uint8_t trusted_node_index);
 uint8_t fs_get_file_length(uint8_t file_id);
 
 uint8_t fs_register_file_modified_callback(fs_modified_file_callback_t callback);

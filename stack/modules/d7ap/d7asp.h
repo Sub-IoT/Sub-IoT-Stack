@@ -38,18 +38,11 @@
 #include "d7anp.h"
 #include "d7atp.h"
 #include "MODULE_D7AP_defs.h"
-
-#include "session.h"
+#include "d7ap.h"
 
 #define D7ASP_FIFO_CONFIG_SIZE 16
 
 #define NO_ACTIVE_REQUEST_ID 0xFF
-
-typedef struct {
-    session_qos_t qos;
-    uint8_t dormant_timeout;
-    d7anp_addressee_t addressee;
-} d7asp_master_session_config_t;
 
 typedef enum {
   D7ASP_MASTER_SESSION_IDLE,
@@ -69,40 +62,17 @@ typedef enum {
  */
 typedef struct d7asp_master_session d7asp_master_session_t;
 
-typedef struct {
-    union {
-        uint8_t raw;
-        struct {
-            uint8_t _rfu : 4;
-            bool ucast : 1;
-            bool retry : 1;
-            bool missed : 1;
-            bool nls : 1;
-        };
-    };
-} d7asp_state_t;
 
 typedef struct {
     uint8_t fifo_token;
     uint8_t request_id;
 } d7asp_queue_result_t;
 
-typedef struct {
-    channel_id_t channel;
-    uint8_t rx_level;
-    uint8_t link_budget;
-    uint8_t target_rx_level;
-    d7asp_state_t status;
-    uint8_t fifo_token;
-    uint8_t seqnr;
-    uint8_t response_to;
-    d7anp_addressee_t* addressee;
-} d7asp_result_t;
 
 
 void d7asp_init();
 void d7asp_stop();
-d7asp_master_session_t* d7asp_master_session_create(d7asp_master_session_config_t* d7asp_master_session_config);
+d7asp_master_session_t* d7asp_master_session_create(d7ap_master_session_config_t* d7asp_master_session_config);
 d7asp_queue_result_t d7asp_queue_alp_actions(d7asp_master_session_t* session, uint8_t* alp_payload_buffer, uint8_t alp_payload_length, uint8_t expected_alp_response_length); // TODO return status
 
 /**

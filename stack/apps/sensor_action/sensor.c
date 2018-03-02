@@ -95,7 +95,7 @@ void init_user_files()
   fs_init_file(ACTION_FILE_ID, &action_file_header, alp_command);
 
   // define the D7 interface configuration used for sending the result of above ALP command on
-  d7asp_master_session_config_t session_config = {
+  d7ap_master_session_config_t session_config = {
     .qos = {
       .qos_resp_mode = SESSION_RESP_MODE_NO,
       .qos_retry_mode = SESSION_RETRY_MODE_NO,

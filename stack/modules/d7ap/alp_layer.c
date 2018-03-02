@@ -60,7 +60,7 @@ typedef struct {
 static alp_command_t NGDEF(_commands)[MODULE_D7AP_ALP_MAX_ACTIVE_COMMAND_COUNT];
 #define commands NG(_commands)
 
-static d7asp_result_t NGDEF(_current_d7asp_result);
+static d7ap_session_result_t NGDEF(_current_d7asp_result);
 #define current_d7asp_result NG(_current_d7asp_result)
 
 static alp_init_args_t* NGDEF(_init_args);
@@ -314,7 +314,7 @@ static alp_status_codes_t process_op_break_query(alp_command_t* command) {
   return ALP_STATUS_OK;
 }
 
-static alp_status_codes_t process_op_forward(alp_command_t* command, d7asp_master_session_config_t* session_config) {
+static alp_status_codes_t process_op_forward(alp_command_t* command, d7ap_master_session_config_t* session_config) {
   // TODO move session config to alp_command_t struct
   uint8_t interface_id;
   error_t err;
@@ -369,13 +369,13 @@ static void add_tag_response(alp_command_t* command, bool eop, bool error) {
   err = fifo_put_byte(&command->alp_response_fifo, command->tag_id); assert(err == SUCCESS);
 }
 
-void alp_layer_process_command_result_on_d7asp(d7asp_master_session_config_t* session_config, uint8_t* alp_command, uint8_t alp_command_length, alp_command_origin_t origin)
+void alp_layer_process_d7aacpt(d7ap_master_session_config_t* session_config, uint8_t* alp_command, uint8_t alp_command_length)
 {
   uint8_t alp_result_length = 0;
   // TODO refactor
   alp_command_t* command = alloc_command();
   assert(command != NULL);
-  alp_layer_process_command(alp_command, alp_command_length, command->alp_command, &alp_result_length, origin);
+  alp_layer_process_command(alp_command, alp_command_length, command->alp_command, &alp_result_length, ALP_CMD_ORIGIN_D7AACTP);
   if(alp_result_length == 0) {
     free_command(command);
     return;
@@ -396,7 +396,7 @@ void alp_layer_process_command_console_output(uint8_t* alp_command, uint8_t alp_
   alp_layer_process_command(alp_command, alp_command_length, alp_response, &alp_response_length, ALP_CMD_ORIGIN_SERIAL_CONSOLE);
 }
 
-static void add_interface_status_action(fifo_t* alp_response_fifo, d7asp_result_t* d7asp_result)
+static void add_interface_status_action(fifo_t* alp_response_fifo, d7ap_session_result_t* d7asp_result)
 {
   fifo_put_byte(alp_response_fifo, ALP_OP_RETURN_STATUS + (1 << 6));
   fifo_put_byte(alp_response_fifo, ALP_ITF_ID_D7ASP);
@@ -416,7 +416,7 @@ static void add_interface_status_action(fifo_t* alp_response_fifo, d7asp_result_
   fifo_put(alp_response_fifo, d7asp_result->addressee->id, address_len);
 }
 
-void alp_layer_process_d7asp_result(uint8_t* alp_command, uint8_t alp_command_length, uint8_t* alp_response, uint8_t* alp_response_length, d7asp_result_t d7asp_result)
+void alp_layer_process_d7asp_result(uint8_t* alp_command, uint8_t alp_command_length, uint8_t* alp_response, uint8_t* alp_response_length, d7ap_session_result_t d7asp_result)
 {
   alp_command_t* command = get_command_by_fifo_token(d7asp_result.fifo_token);
   current_d7asp_result = d7asp_result; // TODO
@@ -443,7 +443,7 @@ void alp_layer_process_d7asp_result(uint8_t* alp_command, uint8_t alp_command_le
   }
 }
 
-void alp_layer_execute_command(uint8_t* alp_command, uint8_t alp_command_length, d7asp_master_session_config_t* d7asp_master_session_config) {
+void alp_layer_execute_command(uint8_t* alp_command, uint8_t alp_command_length, d7ap_master_session_config_t* d7asp_master_session_config) {
   DPRINT("ALP cmd size %i", alp_command_length);
   assert(alp_command_length <= ALP_PAYLOAD_MAX_SIZE);
 
@@ -471,7 +471,7 @@ bool alp_layer_process_command(uint8_t* alp_command, uint8_t alp_command_length,
   command->origin = origin;
 
   (*alp_response_length) = 0;
-  d7asp_master_session_config_t d7asp_session_config;
+  d7ap_master_session_config_t d7asp_session_config;
   bool do_forward = false;
 
   while(fifo_get_size(&command->alp_command_fifo) > 0) {

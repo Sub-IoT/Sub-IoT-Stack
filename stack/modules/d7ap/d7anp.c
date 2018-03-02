@@ -55,13 +55,13 @@ static state_t NGDEF(_d7anp_prev_state);
 static timer_tick_t NGDEF(_fg_scan_timeout_ticks);
 #define fg_scan_timeout_ticks NG(_fg_scan_timeout_ticks)
 
-static d7anp_security_t NGDEF(_security_state);
+static dae_nwl_security_t NGDEF(_security_state);
 #define security_state NG(_security_state)
 
-static d7anp_node_security_t NGDEF(_node_security_state);
+static dae_nwl_ssr_t NGDEF(_node_security_state);
 #define node_security_state NG(_node_security_state)
 
-static d7anp_trusted_node_t* NGDEF(_latest_node);
+static dae_nwl_trusted_node_t* NGDEF(_latest_node);
 #define latest_node NG(_latest_node)
 
 static inline uint8_t get_auth_len(uint8_t nls_method)
@@ -564,7 +564,7 @@ uint8_t d7anp_assemble_packet_header(packet_t *packet, uint8_t *data_ptr)
     return data_ptr - d7anp_header_start;
 }
 
-d7anp_trusted_node_t *get_trusted_node(uint8_t *address)
+dae_nwl_trusted_node_t *get_trusted_node(uint8_t *address)
 {
     //look up the sender's address in the trusted node table
     for(uint8_t i = 0; i < node_security_state.trusted_node_nb; i++)
@@ -576,13 +576,13 @@ d7anp_trusted_node_t *get_trusted_node(uint8_t *address)
     return NULL;
 }
 
-d7anp_trusted_node_t *add_trusted_node(uint8_t *address, uint32_t frame_counter,
+dae_nwl_trusted_node_t *add_trusted_node(uint8_t *address, uint32_t frame_counter,
                                        uint8_t key_counter)
 {
     uint8_t index = node_security_state.trusted_node_nb;
-    d7anp_trusted_node_t *node;
+    dae_nwl_trusted_node_t *node;
 
-    if (node_security_state.trusted_node_nb < MODULE_D7AP_TRUSTED_NODE_TABLE_SIZE)
+    if (node_security_state.trusted_node_nb < FRAMEWORK_FS_TRUSTED_NODE_TABLE_SIZE)
         node_security_state.trusted_node_nb++;
     else
     {
@@ -625,7 +625,7 @@ bool d7anp_disassemble_packet_header(packet_t* packet, uint8_t *data_idx)
 
     if (packet->d7anp_ctrl.nls_method)
     {
-        d7anp_trusted_node_t *node;
+        dae_nwl_trusted_node_t *node;
         uint8_t nls_method = packet->d7anp_ctrl.nls_method;
         bool create_node = false;
         bool prevent_replay_attack = false;
@@ -765,7 +765,7 @@ void d7anp_process_received_packet(packet_t* packet)
     d7atp_process_received_packet(packet);
 }
 
-uint8_t d7anp_addressee_id_length(id_type_t id_type)
+uint8_t d7anp_addressee_id_length(d7ap_addressee_id_type_t id_type)
 {
     switch(id_type)
     {

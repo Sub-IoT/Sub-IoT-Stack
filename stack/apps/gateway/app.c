@@ -57,7 +57,7 @@
   }
 #endif
 
-static void on_unsolicited_response_received(d7asp_result_t d7asp_result, uint8_t *alp_command, uint8_t alp_command_size)
+static void on_unsolicited_response_received(d7ap_session_result_t d7asp_result, uint8_t *alp_command, uint8_t alp_command_size)
 {
 #if PLATFORM_NUM_LEDS > 0
   led_blink();

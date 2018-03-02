@@ -52,9 +52,9 @@ struct packet
     d7anp_ctrl_t d7anp_ctrl;
     uint8_t origin_access_class;
     uint8_t origin_access_id[8];
-    d7anp_security_t d7anp_security;
+    dae_nwl_security_t d7anp_security;
     d7atp_ctrl_t d7atp_ctrl;
-    d7anp_addressee_t* d7anp_addressee;
+    d7ap_addressee_t* d7anp_addressee;
     d7atp_ack_template_t d7atp_ack_template;
     uint8_t d7atp_dialog_id;
     uint8_t d7atp_transaction_id;

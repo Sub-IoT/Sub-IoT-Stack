@@ -25,13 +25,14 @@
 #include "ng.h"
 
 #include "alp.h"
-#include "packet.h"
+#include "d7ap.h"
+//#include "packet.h"
 #include "fs.h"
 #include "fifo.h"
 #include "log.h"
-#include "alp_cmd_handler.h"
+//#include "alp_cmd_handler.h"
 #include "shell.h"
-#include "MODULE_D7AP_defs.h"
+//#include "MODULE_D7AP_defs.h"
 
 #if defined(FRAMEWORK_LOG_ENABLED) && defined(MODULE_D7AP_ALP_LOG_ENABLED)
 #define DPRINT(...) log_print_stack_string(LOG_STACK_ALP, __VA_ARGS__)
@@ -104,7 +105,7 @@ static void append_tag_response(fifo_t* fifo, uint8_t tag_id, bool eop, bool err
 }
 
 
-static void add_interface_status_action(fifo_t* alp_response_fifo, d7asp_result_t* d7asp_result)
+static void add_interface_status_action(fifo_t* alp_response_fifo, d7ap_session_result_t* d7asp_result)
 {
   fifo_put_byte(alp_response_fifo, ALP_OP_RETURN_STATUS + (1 << 6));
   fifo_put_byte(alp_response_fifo, ALP_ITF_ID_D7ASP);
@@ -152,7 +153,7 @@ uint8_t alp_get_expected_response_length(uint8_t* alp_command, uint8_t alp_comma
         ptr += 1; // skip interface ID
         ptr += 1; // skip QoS
         ptr += 1; // skip dormant
-        d7anp_addressee_ctrl addressee_ctrl;
+        d7ap_addressee_ctrl_t addressee_ctrl;
         addressee_ctrl.raw = *ptr;
         ptr += 1; // skip addressee ctrl
         ptr += 1; // skip access class
