@@ -43,7 +43,7 @@ alp_operation_t alp_get_operation(uint8_t* alp_command)
     return alp_ctrl.operation;
 }
 
-uint32_t alp_parse_length_operand(fifo_t* cmd_fifo) {
+static uint32_t parse_length_operand(fifo_t* cmd_fifo) {
   uint8_t len = 0;
   fifo_pop(cmd_fifo, (uint8_t*)&len, 1);
   uint8_t field_len = len >> 6;
@@ -81,7 +81,7 @@ void alp_append_length_operand(fifo_t* fifo, uint32_t length) {
 static alp_operand_file_offset_t parse_file_offset_operand(fifo_t* cmd_fifo) {
   alp_operand_file_offset_t operand;
   error_t err = fifo_pop(cmd_fifo, &operand.file_id, 1); assert(err == SUCCESS);
-  operand.offset = alp_parse_length_operand(cmd_fifo);
+  operand.offset = parse_length_operand(cmd_fifo);
   return operand;
 }
 
@@ -137,7 +137,30 @@ uint8_t alp_addressee_id_length(d7ap_addressee_id_type_t id_type)
     }
 }
 
+static void parse_op_return_file_data(fifo_t* fifo, alp_action_t* action) {
+  action->file_data_operand.file_offset = parse_file_offset_operand(fifo);
+  action->file_data_operand.provided_data_length = parse_length_operand(fifo);
+  assert(action->file_data_operand.provided_data_length <= sizeof(action->file_data_operand.data));
+  fifo_pop(fifo, action->file_data_operand.data, action->file_data_operand.provided_data_length);
+  log_print_string("parsed file data file %i, len %i", action->file_data_operand.file_offset.file_id, action->file_data_operand.provided_data_length);
+}
 
+void alp_parse_action(fifo_t* fifo, alp_action_t* action) {
+  uint8_t op;
+  fifo_pop(fifo, &op, 1);
+  op &= 0x3F; // op is in b5-b0
+  action->operation = op;
+  switch(op) {
+    case ALP_OP_RETURN_FILE_DATA:
+      parse_op_return_file_data(fifo, action);
+      break;
+    default:
+      log_print_string("op %x not implemented", op);
+      assert(false);
+  }
+
+  log_print_string("parsed action");
+}
 
 uint8_t alp_get_expected_response_length(uint8_t* alp_command, uint8_t alp_command_length) {
   uint8_t expected_response_length = 0;

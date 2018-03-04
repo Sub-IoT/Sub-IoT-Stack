@@ -41,6 +41,10 @@
 #define ALP_ITF_ID_FS     0x00 // not part of the spec
 #define ALP_ITF_ID_APP    0x01 // not part of the spec
 
+#define SERIAL_ALP_FRAME_SYNC_BYTE 0xC0
+#define SERIAL_ALP_FRAME_VERSION   0x00
+#define SERIAL_ALP_FRAME_HEADER_SIZE 3
+
 #define ALP_PAYLOAD_MAX_SIZE 239 // TODO configurable?
 
 typedef enum
@@ -175,9 +179,15 @@ typedef struct {
 typedef struct {
     alp_operand_file_offset_t file_offset;
     uint32_t provided_data_length;
-    // data
+    uint8_t data[255]; // TODO fixed size?
 } alp_operand_file_data_t;
 
+typedef struct {
+    alp_operation_t operation;
+    union {
+        alp_operand_file_data_t file_data_operand; // TODO other operands
+    };
+} alp_action_t;
 
 /*!
  * \brief Returns the ALP operation type contained in alp_command
@@ -193,6 +203,7 @@ void alp_append_tag_request(fifo_t* fifo, uint8_t tag_id, bool eop);
 void alp_append_read_file_data(fifo_t* fifo, uint8_t file_id, uint32_t offset, uint32_t length, bool resp, bool group);
 void alp_append_length_operand(fifo_t* fifo, uint32_t length);
 uint32_t alp_parse_length_operand(fifo_t* cmd_fifo);
+void alp_parse_action(fifo_t* fifo, alp_action_t* action);
 
 uint8_t alp_addressee_id_length(d7ap_addressee_id_type_t id_type);
 

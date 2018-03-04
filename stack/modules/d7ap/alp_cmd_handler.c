@@ -44,8 +44,6 @@
 static alp_cmd_handler_appl_itf_callback NGDEF(_alp_cmd_handler_appl_itf_cb);
 #define alp_cmd_handler_appl_itf_cb NG(_alp_cmd_handler_appl_itf_cb)
 
-#define SERIAL_ALP_FRAME_SYNC_BYTE 0xC0
-#define SERIAL_ALP_FRAME_VERSION   0x00
 
 void alp_cmd_handler(fifo_t* cmd_fifo)
 {
