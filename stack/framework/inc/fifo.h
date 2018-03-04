@@ -41,6 +41,7 @@ typedef struct {
     uint16_t tail_idx;      /**< The offset in buffer to the head of the FIFO */
     uint16_t max_size;      /**< The maximum size of bytes contained in the FIFO */
     uint8_t* buffer;        /**< The buffer where the data is stored*/
+    bool is_subview;
 } fifo_t;
 
 /**
@@ -59,6 +60,15 @@ void fifo_init(fifo_t* fifo, uint8_t* buffer, uint16_t max_size);
  * @param max_size      The maximum size of bytes contained in the FIFO
  */
 void fifo_init_filled(fifo_t *fifo, uint8_t *buffer, uint16_t filled_size, uint16_t max_size);
+
+/**
+ * @brief Initializes a fifo which is a subset of an existing fifo, starting from original_fifo's head.
+ * Note that appending to a subset fifo is not allowed. Popping from a subset fifo is allowed, but does not change original_fifo's head.
+ * @param subset_fifo   The fifo containing the subset
+ * @param original_fifo The original fifo
+ * @param subset_size   The size of the subset (must be smaller than fifo_get_size(&original_fifo))
+ */
+void fifo_init_subview(fifo_t *subview_fifo, fifo_t* original_fifo, uint16_t subset_size);
 
 /**
  * @brief Put bytes in to the FIFO
@@ -83,7 +93,7 @@ error_t fifo_put_byte(fifo_t* fifo, uint8_t byte);
  * @param buffer    buffer to be filled
  * @param offset    offset starting from head
  * @param len       length in number of bytes to read
- * @returns SUCCESS or ESIZE when len > max_size or len > current size
+ * @returns SUCCESS or ESIZE when len > max_size or len > current size, or EINVAL when fifo is a subview
  */
 error_t fifo_peek(fifo_t* fifo, uint8_t* buffer, uint16_t offset, uint16_t len);
 

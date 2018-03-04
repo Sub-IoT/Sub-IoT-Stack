@@ -23,6 +23,7 @@
 #include "fifo.h"
 #include "string.h"
 #include "errors.h"
+#include "debug.h"
 
 void fifo_init(fifo_t *fifo, uint8_t *buffer, uint16_t max_size)
 {
@@ -35,10 +36,24 @@ void fifo_init_filled(fifo_t *fifo, uint8_t *buffer, uint16_t filled_size, uint1
     fifo->head_idx = 0;
     fifo->max_size = max_size - 1;
     fifo->tail_idx = filled_size;
+    fifo->is_subview = false;
+}
+
+void fifo_init_subview(fifo_t *subset_fifo, fifo_t* original_fifo, uint16_t subset_size) {
+    assert(subset_size <= fifo_get_size(original_fifo));
+
+    subset_fifo->buffer = original_fifo->buffer;
+    subset_fifo->head_idx = original_fifo->head_idx;
+    subset_fifo->tail_idx = original_fifo->tail_idx;
+    subset_fifo->max_size = subset_size;
+    subset_fifo->is_subview = true;
 }
 
 error_t fifo_put(fifo_t *fifo, uint8_t *data, uint16_t len)
 {
+    if(fifo->is_subview)
+        return EINVAL;
+
     if(fifo->tail_idx < fifo->head_idx)
     {
         if(fifo->tail_idx + len >= fifo->head_idx)
