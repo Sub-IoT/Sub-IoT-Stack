@@ -21,7 +21,7 @@
 // TODO for now we are assuming running on OSS-7, we can refactor later
 // so it is more portable
 
-typedef void (*modem_command_completed_callback_t)();
+typedef void (*modem_command_completed_callback_t)(bool with_error);
 
 void modem_init(uart_handle_t* uart_handle, modem_command_completed_callback_t cb);
 void modem_execute_raw_alp(uint8_t* alp, uint8_t len);

@@ -50,13 +50,21 @@ static uint8_t payload_len = 0;
 
 static void process_serial_frame(fifo_t* fifo) {
   alp_action_t action;
-  alp_parse_action(fifo, &action);
+  while(fifo_get_size(fifo)) {
+    alp_parse_action(fifo, &action);
+  }
 
-  // TODO tmp
-  log_print_string("action: ");
-  log_print_data(action.file_data_operand.data, action.file_data_operand.provided_data_length);
+  if(action.tag_response.tag_id == command.tag_id) {
+    log_print_string("command with tag %i completed", action.tag_response.tag_id);
+    if(command_completed_cb)
+      command_completed_cb(action.tag_response.error);
 
-  // TODO in loop
+  } else {
+    log_print_string("received resp with unexpected tag_id (%i vs %i)", action.tag_response.tag_id, command.tag_id);
+    // TODO unsolicited responses
+  }
+
+  command.is_active = false;
 }
 
 static void process_rx_fifo() {
@@ -64,7 +72,6 @@ static void process_rx_fifo() {
     // <sync byte (0xC0)><version (0x00)><length of ALP command (1 byte)><ALP command> // TODO CRC
     if(fifo_get_size(&rx_fifo) > SERIAL_ALP_FRAME_HEADER_SIZE) {
         uint8_t header[SERIAL_ALP_FRAME_HEADER_SIZE];
-        error_t err;
         fifo_peek(&rx_fifo, header, 0, SERIAL_ALP_FRAME_HEADER_SIZE);
         log_print_data(header, 3); // TODO tmp
         if(header[0] != SERIAL_ALP_FRAME_SYNC_BYTE || header[1] != SERIAL_ALP_FRAME_VERSION) {
