@@ -28,14 +28,14 @@
 #include <stdlib.h>
 
 #define RX_BUFFER_SIZE 256
-
+#define CMD_BUFFER_SIZE 256
 
 
 typedef struct {
   uint8_t tag_id;
-  uint8_t resp_size;
   bool is_active;
   fifo_t fifo;
+  uint8_t buffer[256];
 } command_t;
 
 static uart_handle_t* uart_handle;
@@ -43,7 +43,7 @@ static modem_callbacks_t* callbacks;
 static fifo_t rx_fifo;
 static uint8_t rx_buffer[RX_BUFFER_SIZE];
 static command_t command; // TODO only one active command supported for now
-static uint8_t current_tag_id = 0;
+static uint8_t next_tag_id = 0;
 static bool parsed_header = false;
 static uint8_t payload_len = 0;
 
@@ -119,12 +119,12 @@ static void process_rx_fifo() {
     // rx_fifo can be bigger than the current serial packet, init a subview fifo
     // which is restricted to payload_len so we can't parse past this packet.
     fifo_t payload_fifo;
-    fifo_init_subview(&payload_fifo, &rx_fifo, SERIAL_ALP_FRAME_HEADER_SIZE, payload_len);
+    fifo_init_subview(&payload_fifo, &rx_fifo, 0, payload_len);
     process_serial_frame(&payload_fifo);
 
     // pop parsed bytes from original fifo
-    log_print_string("payload_fifo size %i, payload_len %i", fifo_get_size(&payload_fifo), payload_len); // TODO tmp
     fifo_skip(&rx_fifo, payload_len - fifo_get_size(&payload_fifo));
+    parsed_header = false;
   }
 }
 
@@ -157,28 +157,44 @@ void modem_init(uart_handle_t* uart, modem_callbacks_t* cbs) {
   assert(uart_rx_interrupt_enable(uart_handle) == SUCCESS);
 }
 
-void modem_execute_raw_alp(uint8_t* alp, uint8_t len) {
+bool modem_execute_raw_alp(uint8_t* alp, uint8_t len) {
   send(alp, len);
 }
 
-
-bool modem_read_file(uint8_t file_id, uint32_t offset, uint32_t size) {
+bool alloc_command() {
   if(command.is_active) {
     log_print_string("prev command still active");
     return false;
   }
 
   command.is_active = true;
-  uint8_t buffer[255];
-  fifo_init(&command.fifo, buffer, ALP_OP_SIZE_REQUEST_TAG + ALP_OP_SIZE_READ_FILE_DATA);
-  command.resp_size = size;
-  command.tag_id = current_tag_id++;
+  fifo_init(&command.fifo, command.buffer, CMD_BUFFER_SIZE);
+  command.tag_id = next_tag_id;
+  next_tag_id++;
 
-  alp_append_tag_request(&command.fifo, command.tag_id, true);
-  alp_append_read_file_data(&command.fifo, file_id, offset, size, true, false);
+  alp_append_tag_request_action(&command.fifo, command.tag_id, true);
+  return true;
+}
 
-  send(buffer, fifo_get_size(&command.fifo));
+bool modem_read_file(uint8_t file_id, uint32_t offset, uint32_t size) {
+  if(!alloc_command())
+    return false;
+
+  alp_append_read_file_data_action(&command.fifo, file_id, offset, size, true, false);
+
+  send(command.buffer, fifo_get_size(&command.fifo));
 
   return true;
 }
 
+bool modem_send_unsolicited_response(uint8_t file_id, uint32_t offset, uint32_t length, uint8_t* data,
+                                     d7ap_master_session_config_t* d7_interface_config) {
+  if(!alloc_command())
+    return false;
+
+  alp_append_forward_action(&command.fifo, d7_interface_config);
+  alp_append_return_file_data_action(&command.fifo, file_id, offset, length, data);
+
+  send(command.buffer, fifo_get_size(&command.fifo));
+  return true;
+}
