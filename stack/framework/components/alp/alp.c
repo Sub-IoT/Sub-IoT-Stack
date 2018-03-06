@@ -29,7 +29,7 @@
 #include "log.h"
 
 
-#if defined(FRAMEWORK_LOG_ENABLED) && defined(MODULE_D7AP_ALP_LOG_ENABLED)
+#if defined(FRAMEWORK_LOG_ENABLED)
 #define DPRINT(...) log_print_stack_string(LOG_STACK_ALP, __VA_ARGS__)
 #else
 #define DPRINT(...)
@@ -90,6 +90,26 @@ void alp_append_file_offset_operand(fifo_t* fifo, uint8_t file_id, uint32_t offs
   alp_append_length_operand(fifo, offset);
 }
 
+void alp_append_forward_action(fifo_t* fifo, d7ap_master_session_config_t* session_config) {
+  assert(session_config);
+  assert(fifo_put_byte(fifo, ALP_OP_FORWARD) == SUCCESS);
+  assert(fifo_put_byte(fifo, ALP_ITF_ID_D7ASP) == SUCCESS);
+  assert(fifo_put_byte(fifo, session_config->qos.raw) == SUCCESS);
+  assert(fifo_put_byte(fifo, session_config->dormant_timeout) == SUCCESS);
+  assert(fifo_put_byte(fifo, session_config->addressee.ctrl.raw) == SUCCESS);
+  uint8_t id_length = alp_addressee_id_length(session_config->addressee.ctrl.id_type);
+  assert(fifo_put_byte(fifo, session_config->addressee.access_class) == SUCCESS);
+  assert(fifo_put(fifo, session_config->addressee.id, id_length) == SUCCESS);
+  DPRINT("FORWARD");
+}
+
+void alp_append_return_file_data_action(fifo_t* fifo, uint8_t file_id, uint32_t offset, uint32_t length, uint8_t* data) {
+  assert(fifo_put_byte(fifo, ALP_OP_RETURN_FILE_DATA) == SUCCESS);
+  assert(fifo_put_byte(fifo, file_id) == SUCCESS);
+  alp_append_length_operand(fifo, offset);
+  alp_append_length_operand(fifo, length);
+  assert(fifo_put(fifo, data, length) == SUCCESS);
+}
 
 static void append_tag_response(fifo_t* fifo, uint8_t tag_id, bool eop, bool error) {
   // fill response with tag response
@@ -222,13 +242,14 @@ uint8_t alp_get_expected_response_length(uint8_t* alp_command, uint8_t alp_comma
   return expected_response_length;
 }
 
-void alp_append_tag_request(fifo_t* fifo, uint8_t tag_id, bool eop) {
+void alp_append_tag_request_action(fifo_t* fifo, uint8_t tag_id, bool eop) {
+  DPRINT("append tag %i", tag_id);
   uint8_t op = ALP_OP_REQUEST_TAG | (eop << 7);
   assert(fifo_put_byte(fifo, op) == SUCCESS);
   assert(fifo_put_byte(fifo, tag_id) == SUCCESS);
 }
 
-void alp_append_read_file_data(fifo_t* fifo, uint8_t file_id, uint32_t offset, uint32_t length, bool resp, bool group) {
+void alp_append_read_file_data_action(fifo_t* fifo, uint8_t file_id, uint32_t offset, uint32_t length, bool resp, bool group) {
   uint8_t op = ALP_OP_READ_FILE_DATA | (resp << 6) | (group << 7);
   assert(fifo_put_byte(fifo, op) == SUCCESS);
   alp_append_file_offset_operand(fifo, file_id, offset);
