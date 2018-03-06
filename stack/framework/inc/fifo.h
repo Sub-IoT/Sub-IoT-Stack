@@ -66,9 +66,10 @@ void fifo_init_filled(fifo_t *fifo, uint8_t *buffer, uint16_t filled_size, uint1
  * Note that appending to a subset fifo is not allowed. Popping from a subset fifo is allowed, but does not change original_fifo's head.
  * @param subset_fifo   The fifo containing the subset
  * @param original_fifo The original fifo
+ * @param offset        The offset index in original fifo which will be used as the subset's head
  * @param subset_size   The size of the subset (must be smaller than fifo_get_size(&original_fifo))
  */
-void fifo_init_subview(fifo_t *subview_fifo, fifo_t* original_fifo, uint16_t subset_size);
+void fifo_init_subview(fifo_t *subview_fifo, fifo_t* original_fifo, uint16_t offset, uint16_t subset_size);
 
 /**
  * @brief Put bytes in to the FIFO

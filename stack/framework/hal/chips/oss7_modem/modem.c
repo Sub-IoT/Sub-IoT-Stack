@@ -92,7 +92,7 @@ static void process_rx_fifo() {
     // rx_fifo can be bigger than the current serial packet, init a subview fifo
     // which is restricted to payload_len so we can't parse past this packet.
     fifo_t payload_fifo;
-    fifo_init_subview(&payload_fifo, &rx_fifo, payload_len);
+    fifo_init_subview(&payload_fifo, &rx_fifo, SERIAL_ALP_FRAME_HEADER_SIZE, payload_len);
     process_serial_frame(&payload_fifo);
 
     // pop parsed bytes from original fifo

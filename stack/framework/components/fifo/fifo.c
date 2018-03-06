@@ -39,13 +39,14 @@ void fifo_init_filled(fifo_t *fifo, uint8_t *buffer, uint16_t filled_size, uint1
     fifo->is_subview = false;
 }
 
-void fifo_init_subview(fifo_t *subset_fifo, fifo_t* original_fifo, uint16_t subset_size) {
+void fifo_init_subview(fifo_t *subset_fifo, fifo_t* original_fifo, uint16_t offset, uint16_t subset_size) {
     assert(subset_size <= fifo_get_size(original_fifo));
+    assert(subset_size + offset <= original_fifo->max_size);
 
     subset_fifo->buffer = original_fifo->buffer;
-    subset_fifo->head_idx = original_fifo->head_idx;
+    subset_fifo->head_idx = offset;
     subset_fifo->tail_idx = original_fifo->tail_idx;
-    subset_fifo->max_size = subset_size;
+    subset_fifo->max_size = offset + subset_size;
     subset_fifo->is_subview = true;
 }
 
