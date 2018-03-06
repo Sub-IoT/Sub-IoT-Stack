@@ -31,14 +31,47 @@
 #include "log.h"
 #include "modem.h"
 #include "d7ap.h"
+#include "scheduler.h"
+#include "timer.h"
 
+#define TX_INTERVAL_TICKS (TIMER_TICKS_PER_SEC * 2)
+
+#define FILE_ID 0x40
 
 // This example application shows how to integrate a serial D7 modem
 
 static uart_handle_t* modem_uart;
 
+
+// define the D7 interface configuration used for sending the file data to
+d7ap_master_session_config_t session_config = {
+  .qos = {
+    .qos_resp_mode = SESSION_RESP_MODE_NO,
+    .qos_retry_mode = SESSION_RETRY_MODE_NO,
+    .qos_stop_on_error = false,
+    .qos_record = false
+  },
+  .dormant_timeout = 0,
+  .addressee = {
+    .ctrl = {
+      .nls_method = AES_NONE,
+      .id_type = ID_TYPE_NOID,
+    },
+    .access_class = 0x01,
+    .id = 0
+  }
+};
+
+void send_counter() {
+  static uint8_t counter = 0;
+  log_print_string("counter %i", counter);
+  modem_send_unsolicited_response(FILE_ID, 0, 1, &counter, &session_config);
+  counter++;
+}
+
 void command_completed_cb(bool with_error) {
   log_print_string("command completed!");
+  timer_post_task_delay(&send_counter, TX_INTERVAL_TICKS);
 }
 
 void return_file_data_cb(uint8_t file_id, uint32_t offset, uint32_t size, uint8_t* buffer) {
@@ -53,12 +86,13 @@ modem_callbacks_t callbacks = (modem_callbacks_t){
   .return_file_data_callback = &return_file_data_cb,
 };
 
-void bootstrap()
-{
+
+void bootstrap() {
   modem_uart = uart_init(1, 9600, 0);
   modem_init(modem_uart, &callbacks);
-  modem_read_file(0, 0, 8); // try reading the UID file to make sure we are connected to a modem
 
+  sched_register_task(&send_counter);
+  sched_post_task(&send_counter);
   log_print_string("Device booted\n");
 }
 
