@@ -36,11 +36,10 @@ typedef struct {
   uint8_t resp_size;
   bool is_active;
   fifo_t fifo;
-  uint8_t* buffer;
 } command_t;
 
 static uart_handle_t* uart_handle;
-static modem_command_completed_callback_t command_completed_cb;
+static modem_callbacks_t* callbacks;
 static fifo_t rx_fifo;
 static uint8_t rx_buffer[RX_BUFFER_SIZE];
 static command_t command; // TODO only one active command supported for now
@@ -48,23 +47,44 @@ static uint8_t current_tag_id = 0;
 static bool parsed_header = false;
 static uint8_t payload_len = 0;
 
-static void process_serial_frame(fifo_t* fifo) {
-  alp_action_t action;
+static void process_serial_frame(fifo_t* fifo) {  
+
+  bool command_completed = false;
+  bool completed_with_error = false;
   while(fifo_get_size(fifo)) {
+    alp_action_t action;
     alp_parse_action(fifo, &action);
+
+    switch(action.operation) {
+      case ALP_OP_RETURN_TAG:
+        if(action.tag_response.tag_id == command.tag_id) {
+          command_completed = action.tag_response.completed;
+          completed_with_error = action.tag_response.error;
+        } else {
+          log_print_string("received resp with unexpected tag_id (%i vs %i)", action.tag_response.tag_id, command.tag_id);
+          // TODO unsolicited responses
+        }
+        break;
+      case ALP_OP_RETURN_FILE_DATA:
+        if(callbacks->return_file_data_callback)
+          callbacks->return_file_data_callback(action.file_data_operand.file_offset.file_id,
+                                               action.file_data_operand.file_offset.offset,
+                                               action.file_data_operand.provided_data_length,
+                                               action.file_data_operand.data);
+        break;
+      default:
+        assert(false);
+    }
   }
 
-  if(action.tag_response.tag_id == command.tag_id) {
-    log_print_string("command with tag %i completed", action.tag_response.tag_id);
-    if(command_completed_cb)
-      command_completed_cb(action.tag_response.error);
 
-  } else {
-    log_print_string("received resp with unexpected tag_id (%i vs %i)", action.tag_response.tag_id, command.tag_id);
-    // TODO unsolicited responses
+  if(command_completed) {
+    log_print_string("command with tag %i completed", command.tag_id);
+    if(callbacks->command_completed_callback)
+      callbacks->command_completed_callback(completed_with_error);
+
+    command.is_active = false;
   }
-
-  command.is_active = false;
 }
 
 static void process_rx_fifo() {
@@ -121,12 +141,11 @@ static void send(uint8_t* buffer, uint8_t len) {
   log_print_string("> %i bytes\n", len);
 }
 
-void modem_init(uart_handle_t* uart, modem_command_completed_callback_t cb) {
+void modem_init(uart_handle_t* uart, modem_callbacks_t* cbs) {
   assert(uart != NULL);
-  assert(cb != NULL);
 
   uart_handle = uart;
-  command_completed_cb = cb;
+  callbacks = cbs;
   fifo_init(&rx_fifo,rx_buffer, RX_BUFFER_SIZE);
 
   sched_register_task(&process_rx_fifo);
@@ -143,24 +162,22 @@ void modem_execute_raw_alp(uint8_t* alp, uint8_t len) {
 }
 
 
-bool modem_read_file(uint8_t file_id, uint32_t offset, uint32_t size, uint8_t* output_buffer) {
-  assert(output_buffer != NULL);
-
+bool modem_read_file(uint8_t file_id, uint32_t offset, uint32_t size) {
   if(command.is_active) {
     log_print_string("prev command still active");
     return false;
   }
 
   command.is_active = true;
-  command.buffer = output_buffer;
-  fifo_init(&command.fifo, command.buffer, ALP_OP_SIZE_REQUEST_TAG + ALP_OP_SIZE_READ_FILE_DATA);
+  uint8_t buffer[255];
+  fifo_init(&command.fifo, buffer, ALP_OP_SIZE_REQUEST_TAG + ALP_OP_SIZE_READ_FILE_DATA);
   command.resp_size = size;
   command.tag_id = current_tag_id++;
 
   alp_append_tag_request(&command.fifo, command.tag_id, true);
   alp_append_read_file_data(&command.fifo, file_id, offset, size, true, false);
 
-  send(command.buffer, fifo_get_size(&command.fifo));
+  send(buffer, fifo_get_size(&command.fifo));
 
   return true;
 }

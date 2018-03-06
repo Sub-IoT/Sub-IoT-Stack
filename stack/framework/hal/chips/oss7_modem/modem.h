@@ -22,7 +22,13 @@
 // so it is more portable
 
 typedef void (*modem_command_completed_callback_t)(bool with_error);
+typedef void (*modem_return_file_data_callback_t)(uint8_t file_id, uint32_t offset, uint32_t size, uint8_t* output_buffer);
 
-void modem_init(uart_handle_t* uart_handle, modem_command_completed_callback_t cb);
+typedef struct {
+    modem_command_completed_callback_t command_completed_callback;
+    modem_return_file_data_callback_t return_file_data_callback;
+} modem_callbacks_t;
+
+void modem_init(uart_handle_t* uart_handle, modem_callbacks_t* callbacks);
 void modem_execute_raw_alp(uint8_t* alp, uint8_t len);
-bool modem_read_file(uint8_t file_id, uint32_t offset, uint32_t size,  uint8_t* output_buffer);
+bool modem_read_file(uint8_t file_id, uint32_t offset, uint32_t size);
