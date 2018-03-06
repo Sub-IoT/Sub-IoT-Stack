@@ -52,18 +52,6 @@ typedef struct packet packet_t;
 #define FG_SCAN_STARTUP_TIME 3   // to be adjusted per platform
 #define FG_SCAN_START_BEFORE_ETA_SAFETY_MARGIN 8 // safety margin to start the FG scan before the designated ETA // TODO lower this, possibly transmitted ETA is still off
 
-enum
-{
-    AES_NONE = 0, /* No security */
-    AES_CTR = 0x01, /* data confidentiality */
-    AES_CBC_MAC_128 = 0x02, /* data authenticity */
-    AES_CBC_MAC_64 = 0x03, /* data authenticity */
-    AES_CBC_MAC_32 = 0x04, /* data authenticity */
-    AES_CCM_128 = 0x05, /* data confidentiality and authenticity*/
-    AES_CCM_64 = 0x06, /* data confidentiality and authenticity*/
-    AES_CCM_32 = 0x07, /* data confidentiality and authenticity*/
-};
-
 
 
 /*! \brief The D7ANP CTRL header

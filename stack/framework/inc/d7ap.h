@@ -106,6 +106,18 @@ typedef struct {
     };
 } d7ap_sp_state_t;
 
+typedef enum
+{
+    AES_NONE = 0, /* No security */
+    AES_CTR = 0x01, /* data confidentiality */
+    AES_CBC_MAC_128 = 0x02, /* data authenticity */
+    AES_CBC_MAC_64 = 0x03, /* data authenticity */
+    AES_CBC_MAC_32 = 0x04, /* data authenticity */
+    AES_CCM_128 = 0x05, /* data confidentiality and authenticity*/
+    AES_CCM_64 = 0x06, /* data confidentiality and authenticity*/
+    AES_CCM_32 = 0x07, /* data confidentiality and authenticity*/
+} nls_method_t;
+
 
 typedef struct {
     channel_id_t channel;

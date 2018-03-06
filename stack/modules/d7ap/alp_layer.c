@@ -192,11 +192,8 @@ static alp_status_codes_t process_op_read_file_data(alp_command_t* command) {
 
   if(alp_status == ALP_STATUS_OK) {
     // fill response
-    err = fifo_put_byte(&command->alp_response_fifo, ALP_OP_RETURN_FILE_DATA); assert(err == SUCCESS);
-    err = fifo_put_byte(&command->alp_response_fifo, operand.file_offset.file_id); assert(err == SUCCESS);
-    generate_length_operand(&command->alp_response_fifo, operand.file_offset.offset);
-    generate_length_operand(&command->alp_response_fifo, operand.requested_data_length);
-    err = fifo_put(&command->alp_response_fifo, data, operand.requested_data_length); assert(err == SUCCESS);
+    alp_append_return_file_data_action(&command->alp_response_fifo, operand.file_offset.file_id, operand.file_offset.offset,
+                                       operand.requested_data_length, data);
   }
 
   return alp_status;
@@ -363,6 +360,7 @@ static alp_status_codes_t process_op_return_file_data(alp_command_t* command) {
 
 static void add_tag_response(alp_command_t* command, bool eop, bool error) {
   // fill response with tag response
+  DPRINT("add_tag_response %i", command->tag_id);
   uint8_t op_return_tag = ALP_OP_RETURN_TAG | (eop << 7);
   op_return_tag |= (error << 6);
   error_t err = fifo_put_byte(&command->alp_response_fifo, op_return_tag); assert(err == SUCCESS);
