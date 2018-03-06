@@ -165,7 +165,6 @@ typedef struct {
     };
 } alp_control_tag_response_t;
 
-
 typedef struct {
     uint8_t file_id;
     uint32_t offset;
@@ -185,8 +184,14 @@ typedef struct {
 typedef struct {
     alp_operation_t operation;
     union {
-        alp_operand_file_data_t file_data_operand; // TODO other operands
+        alp_operand_file_data_t file_data_operand;
+        struct {
+            bool completed;
+            bool error;
+            uint8_t tag_id;
+        } tag_response;
     };
+
 } alp_action_t;
 
 /*!

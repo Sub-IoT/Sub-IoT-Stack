@@ -145,14 +145,26 @@ static void parse_op_return_file_data(fifo_t* fifo, alp_action_t* action) {
   log_print_string("parsed file data file %i, len %i", action->file_data_operand.file_offset.file_id, action->file_data_operand.provided_data_length);
 }
 
+static void parse_op_return_tag(fifo_t* fifo, alp_action_t* action, bool b6, bool b7) {
+  action->tag_response.completed = b7;
+  action->tag_response.error = b6;
+  assert(fifo_pop(fifo, &action->tag_response.tag_id, 1) == SUCCESS);
+  log_print_string("parsed return tag %i, eop %i, err %i", action->tag_response.tag_id, action->tag_response.completed, action->tag_response.error);
+}
+
 void alp_parse_action(fifo_t* fifo, alp_action_t* action) {
   uint8_t op;
-  fifo_pop(fifo, &op, 1);
+  assert(fifo_pop(fifo, &op, 1) == SUCCESS);
+  bool b6 = (op >> 6) & 1;
+  bool b7 = op >> 7;
   op &= 0x3F; // op is in b5-b0
   action->operation = op;
   switch(op) {
     case ALP_OP_RETURN_FILE_DATA:
       parse_op_return_file_data(fifo, action);
+      break;
+    case ALP_OP_RETURN_TAG:
+      parse_op_return_tag(fifo, action, b6, b7);
       break;
     default:
       log_print_string("op %x not implemented", op);
