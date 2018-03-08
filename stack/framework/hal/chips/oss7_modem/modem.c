@@ -198,3 +198,15 @@ bool modem_send_unsolicited_response(uint8_t file_id, uint32_t offset, uint32_t 
   send(command.buffer, fifo_get_size(&command.fifo));
   return true;
 }
+
+bool modem_send_raw_unsolicited_response(uint8_t* alp_command, uint32_t length,
+                                         d7ap_master_session_config_t* d7_interface_config) {
+  if(!alloc_command())
+    return false;
+
+  alp_append_forward_action(&command.fifo, d7_interface_config);
+  fifo_put(&command.fifo, alp_command, length);
+
+  send(command.buffer, fifo_get_size(&command.fifo));
+  return true;
+}
