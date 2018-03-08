@@ -144,7 +144,7 @@ __LINK_C error_t timer_post_task_prio(task_t task, timer_tick_t time, uint8_t pr
  *						   many tasks waiting for execution.
  * 					EALREADY if the task was already scheduled.
  */
-static inline error_t timer_post_task(task_t task, timer_tick_t time) { return timer_post_task_prio(task,time,DEFAULT_PRIORITY);}
+inline error_t timer_post_task(task_t task, timer_tick_t time) { return timer_post_task_prio(task,time,DEFAULT_PRIORITY);}
 
 
 /*! \brief Post a task \<task\> to be scheduled with a certain \<delay\> with a given \<priority\>
@@ -168,8 +168,8 @@ static inline error_t timer_post_task(task_t task, timer_tick_t time) { return t
  *					EINVAL if an invalid priority was specified.
  *					EALREADY if the task was already scheduled.
  */
-static inline error_t timer_post_task_prio_delay(task_t task, timer_tick_t delay, uint8_t priority)
-{ 
+inline error_t timer_post_task_prio_delay(task_t task, timer_tick_t delay, uint8_t priority)
+{
     return timer_post_task_prio(task,timer_get_counter_value()+delay, priority);
 }
 /*! \brief Post a task to be scheduled with a certain \<delay\> with the default priority.
@@ -187,7 +187,7 @@ static inline error_t timer_post_task_prio_delay(task_t task, timer_tick_t delay
  *						   many tasks waiting for execution.
  * 					EALREADY if the task was already scheduled.
  */
-static inline error_t timer_post_task_delay(task_t task, timer_tick_t delay) { return timer_post_task_prio_delay(task, delay, DEFAULT_PRIORITY);}
+inline error_t timer_post_task_delay(task_t task, timer_tick_t delay) { return timer_post_task_prio_delay(task, delay, DEFAULT_PRIORITY);}
 
 /*! \brief Schedule a given \<timer_event\>
  *
@@ -203,13 +203,13 @@ static inline error_t timer_post_task_delay(task_t task, timer_tick_t delay) { r
  *					EINVAL if an invalid priority was specified.
  *					EALREADY if the task was already scheduled.
  */
-static inline error_t timer_add_event( timer_event* event) { return timer_post_task_prio(event->f, event->next_event, event->priority);}
+inline error_t timer_add_event( timer_event* event) { return timer_post_task_prio(event->f, event->next_event, event->priority);}
 
 
 /*! \brief Cancel a previously scheduled task
  *
  * \param task	The task to cancel.
- * 
+ *
  * \return error_t	SUCCESS if the task was successfully canceled
  * 					EALREADY if the task was not scheduled and therefore not canceled
  *

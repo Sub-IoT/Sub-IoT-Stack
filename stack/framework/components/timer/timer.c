@@ -39,6 +39,12 @@
 
 #define COUNTER_OVERFLOW_INCREASE (UINT32_C(1) << (8*sizeof(hwtimer_tick_t)))
 
+// define inline functions from timer.h as extern
+extern inline error_t timer_post_task(task_t task, timer_tick_t time);
+extern inline error_t timer_post_task_prio_delay(task_t task, timer_tick_t delay, uint8_t priority);
+extern inline error_t timer_post_task_delay(task_t task, timer_tick_t delay);
+extern inline error_t timer_add_event( timer_event* event);
+
 static timer_event NGDEF(timers)[FRAMEWORK_TIMER_STACK_SIZE];
 static volatile timer_tick_t NGDEF(next_event);
 static volatile bool NGDEF(hw_event_scheduled);
