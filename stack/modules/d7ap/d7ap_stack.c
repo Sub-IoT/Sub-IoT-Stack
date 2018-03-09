@@ -66,6 +66,8 @@ void d7ap_stack_init(fs_init_args_t* fs_init_args, alp_init_args_t* alp_init_arg
       uint8_t alp_response_length = 0;
       alp_process_command_result_on_d7asp(&broadcast_fifo_config, read_firmware_version_alp_command, sizeof(read_firmware_version_alp_command), ALP_CMD_ORIGIN_APP); // TODO origin stack?
 #endif
+    } else {
+      alp_layer_process_command_console_output(read_firmware_version_alp_command, sizeof(read_firmware_version_alp_command));
     }
 }
 
