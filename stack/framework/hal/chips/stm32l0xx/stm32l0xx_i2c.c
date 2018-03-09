@@ -6,7 +6,8 @@
 #include "hwi2c.h"
 
 #include "platform.h"
-
+#include "ports.h"
+#include "stm32l0xx_gpio.h"
 #include "stm32l0xx_hal.h"
 #include "stm32l0xx_hal_i2c.h"
 
@@ -20,7 +21,6 @@
 
 //HAL_MAX_DELAY
 
-#define I2CS       2
 
 typedef struct {
   pin_id_t sda;
@@ -53,45 +53,15 @@ const PinMap PinMap_I2C_SCL[] = {
 };
 */
 
-static i2c_pins_t location[I2CS]= {
-  {
-    // I2C 1
-    .scl      = PIN(GPIO_PORTB,8),
-    .sda      = PIN(GPIO_PORTB,9)
-  },
-  {
-      // I2C 1
-      .scl      = PIN(GPIO_PORTC,0),
-      .sda      = PIN(GPIO_PORTC,1)
-    }
-};
 
 typedef struct i2c_handle {
-  uint8_t           idx;
-  I2C_HandleTypeDef handle;
-  uint32_t pins;
-  GPIO_TypeDef* port;
-  uint32_t alternate;
-  uint32_t baudrate;
+  I2C_HandleTypeDef hal_handle;
 } i2c_handle_t;
 
-static i2c_handle_t handle[I2CS] = {
-    {
-    .idx     = 1,
-    .handle.Instance = I2C1,
-    .pins = GPIO_PIN_8|GPIO_PIN_9,
-    .port = GPIOB,
-    .alternate = GPIO_AF4_I2C1,
-	.baudrate = IC2_BAUDRATE
-  },
+static i2c_handle_t handle[I2C_COUNT] = {
   {
-		    .idx     = 3,
-		    .handle.Instance = I2C3,
-		    .pins = GPIO_PIN_0|GPIO_PIN_1,
-		    .port = GPIOC,
-		    .alternate = GPIO_AF7_I2C3,
-			.baudrate = IC2_BAUDRATE
-		  }
+    .hal_handle.Instance = NULL,
+  }
 };
 
 static inline uint32_t get_i2c_timing(int hz)
@@ -114,12 +84,12 @@ static inline uint32_t get_i2c_timing(int hz)
     return tim;
 }
 
-i2c_handle_t* i2c_init(uint8_t idx, uint8_t pins)
+i2c_handle_t* i2c_init(uint8_t idx, uint8_t pins, uint32_t baudrate)
 {
-  assert (pins==0);
-  assert(idx < I2CS);
+  assert(pins==0);
+  assert(idx < I2C_COUNT);
 
-  GPIO_InitTypeDef GPIO_InitStruct;
+  GPIO_InitTypeDef gpio_init_options;
 
   /*RCC_PeriphCLKInitTypeDef PeriphClkInit;
   PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_I2C1;
@@ -129,61 +99,78 @@ i2c_handle_t* i2c_init(uint8_t idx, uint8_t pins)
 		return NULL;
 	}*/
 
-  if (handle[idx].handle.Instance == I2C1) __HAL_RCC_I2C1_CLK_ENABLE();
-  else if (handle[idx].handle.Instance == I2C3) __HAL_RCC_I2C3_CLK_ENABLE();
+  switch ((uint32_t)(i2c_ports[idx].i2c))
+  {
+    case I2C1_BASE:
+      __HAL_RCC_I2C1_CLK_ENABLE();
+      break;
+    case I2C2_BASE:
+      __HAL_RCC_I2C2_CLK_ENABLE();
+      break;
+    case I2C3_BASE:
+      __HAL_RCC_I2C3_CLK_ENABLE();
+      break;
+    default:
+      assert(false);
+  }
 
-  GPIO_InitStruct.Pin = handle[idx].pins;
-  GPIO_InitStruct.Alternate = handle[idx].alternate;
-  GPIO_InitStruct.Mode = GPIO_MODE_AF_OD;
-  GPIO_InitStruct.Pull = GPIO_PULLUP;
-  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
-  HAL_GPIO_Init(handle[idx].port, &GPIO_InitStruct);
+  gpio_init_options.Alternate = i2c_ports[idx].alternate;
+  gpio_init_options.Mode = GPIO_MODE_AF_OD;
+  gpio_init_options.Pull = GPIO_PULLUP;
+  gpio_init_options.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
+  hw_gpio_configure_pin_stm(i2c_ports[idx].scl_pin, &gpio_init_options);
+  hw_gpio_configure_pin_stm(i2c_ports[idx].sda_pin, &gpio_init_options);
 
-  handle[idx].handle.Init.Timing = get_i2c_timing(handle[idx].baudrate);
-  handle[idx].handle.Init.OwnAddress1 = 0;
-  handle[idx].handle.Init.AddressingMode = I2C_ADDRESSINGMODE_7BIT;
-  handle[idx].handle.Init.DualAddressMode = I2C_DUALADDRESS_DISABLE;
-  handle[idx].handle.Init.OwnAddress2 = 0;
-  handle[idx].handle.Init.GeneralCallMode = I2C_GENERALCALL_DISABLE;
-  handle[idx].handle.Init.NoStretchMode = I2C_NOSTRETCH_DISABLE;
-  if (HAL_I2C_Init(&handle[idx].handle) != HAL_OK)
+  I2C_InitTypeDef i2c_init_options;
+  i2c_init_options.Timing = get_i2c_timing(baudrate);
+  i2c_init_options.OwnAddress1 = 0;
+  i2c_init_options.AddressingMode = I2C_ADDRESSINGMODE_7BIT;
+  i2c_init_options.DualAddressMode = I2C_DUALADDRESS_DISABLE;
+  i2c_init_options.OwnAddress2 = 0;
+  i2c_init_options.GeneralCallMode = I2C_GENERALCALL_DISABLE;
+  i2c_init_options.NoStretchMode = I2C_NOSTRETCH_DISABLE;
+  handle[idx].hal_handle.Init = i2c_init_options;
+  handle[idx].hal_handle.Instance = i2c_ports[idx].i2c;
+  if (HAL_I2C_Init(&handle[idx].hal_handle) != HAL_OK)
   {
     return NULL;
   }
+
+  // TODO only disable clock until actually using I2C
 
   return &handle[idx];
 }
 
 int8_t i2c_write(i2c_handle_t* i2c, uint8_t to, uint8_t* payload, int length) {
-  HAL_StatusTypeDef status = HAL_I2C_Master_Transmit(&i2c->handle, (uint16_t) to << 1, payload, length, I2C_DEFAULT_TIMEOUT);
+  HAL_StatusTypeDef status = HAL_I2C_Master_Transmit(&i2c->hal_handle, (uint16_t) to << 1, payload, length, I2C_DEFAULT_TIMEOUT);
   return status == HAL_OK;
 }
 
 int8_t i2c_read(i2c_handle_t* i2c, uint8_t to, uint8_t* payload, int length) {
 
-  HAL_StatusTypeDef status = HAL_I2C_Master_Receive(&i2c->handle, (uint16_t) to << 1, payload, length, I2C_DEFAULT_TIMEOUT);
+  HAL_StatusTypeDef status = HAL_I2C_Master_Receive(&i2c->hal_handle, (uint16_t) to << 1, payload, length, I2C_DEFAULT_TIMEOUT);
   return status == HAL_OK;
 }
 
 int8_t i2c_read_memory(i2c_handle_t* i2c, uint8_t to, uint16_t register_address,  uint8_t register_address_size, uint8_t* payload, int length)
 {
   uint8_t mem_addr_size = register_address_size == 8 ? I2C_MEMADD_SIZE_8BIT : I2C_MEMADD_SIZE_16BIT;
-  int status = HAL_I2C_Mem_Read(&i2c->handle, (uint16_t) to << 1, register_address, mem_addr_size, payload, length, I2C_DEFAULT_TIMEOUT);
+  int status = HAL_I2C_Mem_Read(&i2c->hal_handle, (uint16_t) to << 1, register_address, mem_addr_size, payload, length, I2C_DEFAULT_TIMEOUT);
   return status == HAL_OK;
 }
 
 int8_t i2c_write_memory(i2c_handle_t* i2c, uint8_t to, uint16_t register_address,  uint8_t register_address_size, uint8_t* payload, int length)
 {
   uint8_t mem_addr_size = register_address_size == 8 ? I2C_MEMADD_SIZE_8BIT : I2C_MEMADD_SIZE_16BIT;
-  int status = HAL_I2C_Mem_Write(&i2c->handle, (uint16_t) to << 1, register_address, mem_addr_size, payload, length, I2C_DEFAULT_TIMEOUT);
+  int status = HAL_I2C_Mem_Write(&i2c->hal_handle, (uint16_t) to << 1, register_address, mem_addr_size, payload, length, I2C_DEFAULT_TIMEOUT);
   return status == HAL_OK;
 }
 
 int8_t i2c_write_read(i2c_handle_t* i2c, uint8_t to, uint8_t* payload, int length, uint8_t* receive, int receive_length)
 {
-  HAL_StatusTypeDef status = HAL_I2C_Master_Transmit(&i2c->handle, (uint16_t) to << 1, payload, length, I2C_DEFAULT_TIMEOUT);
+  HAL_StatusTypeDef status = HAL_I2C_Master_Transmit(&i2c->hal_handle, (uint16_t) to << 1, payload, length, I2C_DEFAULT_TIMEOUT);
   if (status != HAL_OK) return 0;
 
-  status = HAL_I2C_Master_Receive(&i2c->handle, (uint16_t) to << 1, receive, receive_length, I2C_DEFAULT_TIMEOUT);
+  status = HAL_I2C_Master_Receive(&i2c->hal_handle, (uint16_t) to << 1, receive, receive_length, I2C_DEFAULT_TIMEOUT);
   return status == HAL_OK;
 }

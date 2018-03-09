@@ -36,7 +36,7 @@
 // expose i2c_handle with unknown internals
 typedef struct i2c_handle i2c_handle_t;
 
-__LINK_C i2c_handle_t* 	i2c_init(uint8_t idx, uint8_t pins);
+__LINK_C i2c_handle_t* 	i2c_init(uint8_t i2c_port_idx, uint8_t pins, uint32_t baudrate); // TODO remove pins argument after all drivers are migrated
 
 __LINK_C int8_t        	i2c_write(i2c_handle_t* i2c,      uint8_t address, uint8_t* tx_buffer, int length);
 __LINK_C int8_t        	i2c_read(i2c_handle_t* i2c,       uint8_t address, uint8_t* rx_buffer, int length);

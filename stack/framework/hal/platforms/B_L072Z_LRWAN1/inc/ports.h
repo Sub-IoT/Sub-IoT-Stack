@@ -58,6 +58,17 @@ static const uart_port_t uart_ports[] = {
 
 #define UART_COUNT sizeof(uart_ports) / sizeof(uart_port_t)
 
+static const i2c_port_t i2c_ports[] = {
+  {
+    .i2c = I2C1,
+    .scl_pin = PIN(GPIO_PORTB, 8),
+    .sda_pin = PIN(GPIO_PORTB, 9),
+    .alternate = GPIO_AF4_I2C1,
+  }
+};
+
+#define I2C_COUNT sizeof(i2c_ports) / sizeof(i2c_port_t)
+
 static pin_id_t debug_pins[PLATFORM_NUM_DEBUGPINS] = {
   PIN(GPIO_PORTB, 9), // exposed on CN3 header, pin 24
   PIN(GPIO_PORTB, 8), // exposed on CN3 header, pin 25

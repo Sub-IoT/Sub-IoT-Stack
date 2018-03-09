@@ -107,7 +107,7 @@ static i2c_handle_t handle[I2CS] = {
   }  
 };
 
-i2c_handle_t* i2c_init(uint8_t idx, uint8_t pins) {
+i2c_handle_t* i2c_init(uint8_t idx, uint8_t pins, uint32_t baudrate) {
 	CMU_ClockEnable(cmuClock_HFPER, true);
 	CMU_ClockEnable(handle[idx].clock, true);
 

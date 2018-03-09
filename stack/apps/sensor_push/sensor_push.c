@@ -120,6 +120,7 @@ static alp_init_args_t alp_init_args;
 
 void bootstrap()
 {
+
     log_print_string("Device booted\n");
 
     fs_init_args_t fs_init_args = (fs_init_args_t){
@@ -133,7 +134,7 @@ void bootstrap()
     d7ap_stack_init(&fs_init_args, &alp_init_args, false, NULL);
 
 #if defined USE_HTS221
-    hts221_handle = i2c_init(0, 0);
+    hts221_handle = i2c_init(0, 0, 100000);
     HTS221_DeActivate(hts221_handle);
     HTS221_Set_BduMode(hts221_handle, HTS221_ENABLE);
     HTS221_Set_Odr(hts221_handle, HTS221_ODR_7HZ);

@@ -146,13 +146,8 @@ spi_handle_t* spi_init(uint8_t spi_number, uint32_t baudrate, uint8_t databits, 
   GPIO_InitStruct.Speed = GPIO_SPEED_HIGH;
   GPIO_InitStruct.Alternate = spi_ports[spi_number].alternate;
 
-  GPIO_InitStruct.Pin = 1 << GPIO_PIN(spi_ports[spi_number].sck_pin);
   hw_gpio_configure_pin_stm(spi_ports[spi_number].sck_pin, &GPIO_InitStruct);
-
-  GPIO_InitStruct.Pin = 1 << GPIO_PIN(spi_ports[spi_number].miso_pin);
   hw_gpio_configure_pin_stm(spi_ports[spi_number].miso_pin, &GPIO_InitStruct);
-
-  GPIO_InitStruct.Pin = 1 << GPIO_PIN(spi_ports[spi_number].mosi_pin);
   hw_gpio_configure_pin_stm(spi_ports[spi_number].mosi_pin, &GPIO_InitStruct);
 
   handle[spi_number].hspi.Instance = spi_ports[spi_number].spi;

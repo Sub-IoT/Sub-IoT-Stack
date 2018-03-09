@@ -143,7 +143,7 @@ void bootstrap()
     d7ap_stack_init(&fs_init_args, NULL, false, NULL);
 
 #if defined USE_HTS221
-    hts221_handle = i2c_init(0, 0);
+    hts221_handle = i2c_init(0, 0, 100000);
     HTS221_DeActivate(hts221_handle);
     HTS221_Set_BduMode(hts221_handle, HTS221_ENABLE);
     HTS221_Set_Odr(hts221_handle, HTS221_ODR_7HZ);

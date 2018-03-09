@@ -39,7 +39,6 @@ typedef struct {
   pin_id_t sck_pin;
   pin_id_t miso_pin;
   pin_id_t mosi_pin;
-  uint32_t pins;
   uint32_t alternate;
   SPI_TypeDef* spi;
 } spi_port_t;
@@ -51,6 +50,13 @@ typedef struct {
   USART_TypeDef* uart;
   IRQn_Type irq;
 } uart_port_t;
+
+typedef struct {
+  I2C_TypeDef* i2c;
+  pin_id_t scl_pin;
+  pin_id_t sda_pin;
+  uint32_t alternate;
+} i2c_port_t;
 
 void __stm32l0xx_mcu_init();
 
