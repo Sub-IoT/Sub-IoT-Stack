@@ -23,6 +23,7 @@
 #include "fifo.h"
 #include "alp.h"
 #include "scheduler.h"
+#include "timer.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -79,7 +80,7 @@ static void process_serial_frame(fifo_t* fifo) {
 
 
   if(command_completed) {
-    log_print_string("command with tag %i completed", command.tag_id);
+    log_print_string("command with tag %i completed @ %i", command.tag_id, timer_get_counter_value());
     if(callbacks->command_completed_callback)
       callbacks->command_completed_callback(completed_with_error);
 
@@ -131,14 +132,14 @@ static void process_rx_fifo() {
 static void rx_cb(uint8_t byte) {
   fifo_put_byte(&rx_fifo, byte);
   if(!sched_is_scheduled(&process_rx_fifo))
-    sched_post_task(&process_rx_fifo);
+    sched_post_task_prio(&process_rx_fifo, MAX_PRIORITY);
 }
 
 static void send(uint8_t* buffer, uint8_t len) {
   uint8_t header[] = {'A', 'T', '$', 'D', 0xC0, 0x00, len };
   uart_send_bytes(uart_handle, header, sizeof(header));
   uart_send_bytes(uart_handle, buffer, len);
-  log_print_string("> %i bytes\n", len);
+  log_print_string("> %i bytes @ %i", len, timer_get_counter_value());
 }
 
 void modem_init(uart_handle_t* uart, modem_callbacks_t* cbs) {
@@ -163,7 +164,7 @@ bool modem_execute_raw_alp(uint8_t* alp, uint8_t len) {
 
 bool alloc_command() {
   if(command.is_active) {
-    log_print_string("prev command still active");
+    log_print_string("prev command still active @ %i", timer_get_counter_value());
     return false;
   }
 
