@@ -1,6 +1,10 @@
 #!/usr/bin/env groovy
 
 node {
+    parameters
+    {
+        string(name: 'BRANCH_PASSED_OVER', defaultValue: '${env.BRANCH_NAME}', description: 'pass branch value')
+    }
     stage('Pull changes') {
         properties([[$class: 'CopyArtifactPermissionProperty', projectNames: '*']])
         sh '''
@@ -125,10 +129,12 @@ node {
     }
 
     stage ('Save Artifacts'){
-         if (env.BRANCH_NAME == 'master') {
             archiveArtifacts '**'
-        }
     }
+    stage ('Flash B_L072Z_LRWAN1'){
+           build job: 'FlashRPI_P_B_L072Z_LRWAN1_param', wait: false, parameters: [string(name: 'PASS_BRANCH_NAME', value: env.BRANCH_NAME)]
+    }
+    
 }
 def setBuildStatus(String context,String message, String state) {
   step([
