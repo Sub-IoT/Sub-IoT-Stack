@@ -45,8 +45,8 @@ void fifo_init_subview(fifo_t *subset_fifo, fifo_t* original_fifo, uint16_t offs
 
     subset_fifo->buffer = original_fifo->buffer;
     subset_fifo->head_idx = original_fifo->head_idx + offset;
-    subset_fifo->tail_idx = original_fifo->tail_idx;
-    subset_fifo->max_size = original_fifo->tail_idx;
+    subset_fifo->tail_idx = original_fifo->head_idx + offset + subset_size;
+    subset_fifo->max_size = original_fifo->head_idx + offset + subset_size;
     subset_fifo->is_subview = true;
 }
 
