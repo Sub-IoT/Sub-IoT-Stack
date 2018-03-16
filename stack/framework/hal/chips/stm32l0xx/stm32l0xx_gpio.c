@@ -29,7 +29,7 @@
 #include "stm32l0xx_hal.h"
 
 #include "hwatomic.h"
-#include "assert.h"
+#include "debug.h"
 #include "stm32l0xx_ll_exti.h"
 #include "stm32l0xx_ll_gpio.h"
 #include "stm32l0xx_ll_system.h"

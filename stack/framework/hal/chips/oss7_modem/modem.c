@@ -17,7 +17,7 @@
  */
 
 #include "modem.h"
-#include "assert.h"
+#include "debug.h"
 #include "log.h"
 #include "errors.h"
 #include "fifo.h"

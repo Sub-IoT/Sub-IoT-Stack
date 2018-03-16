@@ -22,7 +22,7 @@
 
 #include "hwgpio.h"
 #include "hwuart.h"
-#include <assert.h>
+#include "debug.h"
 #include "hwsystem.h"
 #include "stm32l0xx_mcu.h"
 #include "stm32l0xx_hal.h"
