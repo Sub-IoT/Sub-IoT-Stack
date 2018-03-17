@@ -149,7 +149,7 @@ void modem_init(uart_handle_t* uart, modem_callbacks_t* cbs) {
 
   uart_handle = uart;
   callbacks = cbs;
-  fifo_init(&rx_fifo,rx_buffer, RX_BUFFER_SIZE);
+  fifo_init(&rx_fifo, rx_buffer, RX_BUFFER_SIZE);
 
   sched_register_task(&process_rx_fifo);
 
@@ -158,6 +158,10 @@ void modem_init(uart_handle_t* uart, modem_callbacks_t* cbs) {
   assert(uart_enable(uart_handle));
   uart_set_rx_interrupt_callback(uart_handle, &rx_cb);
   assert(uart_rx_interrupt_enable(uart_handle) == SUCCESS);
+}
+
+void modem_reinit() {
+  command.is_active = false;
 }
 
 bool modem_execute_raw_alp(uint8_t* alp, uint8_t len) {
