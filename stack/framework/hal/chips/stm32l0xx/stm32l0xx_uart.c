@@ -200,9 +200,20 @@ void uart_rx_interrupt_disable(uart_handle_t* uart) {
 }
 
 static void uart_irq_handler(USART_TypeDef* uart) {
-  if(LL_USART_IsEnabledIT_ERROR(uart) && LL_USART_IsActiveFlag_NE(uart))
+  if(LL_USART_IsEnabledIT_ERROR(uart))
   {
-    assert(false); // TODO how to handle this?
+    if(LL_USART_IsActiveFlag_NE(uart))
+    {
+      //assert(false); // TODO how to handle this?
+      LL_USART_ClearFlag_NE(uart);
+    }
+
+    if(LL_USART_IsActiveFlag_FE(uart))
+    {
+      LL_USART_ClearFlag_FE(uart);
+    }
+
+    // TODO other flags?
   }
 
   if(LL_USART_IsActiveFlag_RXNE(uart) && LL_USART_IsEnabledIT_RXNE(uart))
