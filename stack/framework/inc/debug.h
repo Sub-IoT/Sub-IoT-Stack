@@ -44,7 +44,7 @@ void __assert_func(const char *, int, const char *, const char *);
 #endif
 
 #ifdef NDEBUG           /* required by ANSI standard */
-# define assert(__e) ((void)0)
+# define assert(__e) (__e)
 #elif defined FRAMEWORK_DEBUG_ASSERT_REBOOT
 # define assert(__e) if(!(__e)) { hw_reset(); }
 #elif defined FRAMEWORK_DEBUG_ASSERT_MINIMAL
