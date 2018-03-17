@@ -102,6 +102,8 @@ static void process_rx_fifo() {
           payload_len = 0;
           if(fifo_get_size(&rx_fifo) > SERIAL_ALP_FRAME_HEADER_SIZE)
             sched_post_task(&process_rx_fifo);
+
+          return;
         }
 
         parsed_header = true;
