@@ -26,8 +26,8 @@ dae_access_profile_t default_access_profiles[DEFAULT_ACCESS_PROFILES_COUNT] = {
     {
         // AC used for pushing data to the GW, continuous FG scan
         .channel_header = {
-            .ch_coding = PHY_CODING_PN9,
-            .ch_class = PHY_CLASS_NORMAL_RATE,
+            .ch_coding = PHY_CODING_FEC_PN9,
+            .ch_class = PHY_CLASS_LO_RATE,
             .ch_freq_band = PHY_BAND_868
         },
         .subprofiles[0] = {
@@ -45,8 +45,8 @@ dae_access_profile_t default_access_profiles[DEFAULT_ACCESS_PROFILES_COUNT] = {
     {
         // AC used by sensors for scanning for BG request every second
         .channel_header = {
-            .ch_coding = PHY_CODING_PN9,
-            .ch_class = PHY_CLASS_NORMAL_RATE,
+            .ch_coding = PHY_CODING_FEC_PN9,
+            .ch_class = PHY_CLASS_LO_RATE,
             .ch_freq_band = PHY_BAND_868
         },
         .subprofiles[0] = {
@@ -64,8 +64,8 @@ dae_access_profile_t default_access_profiles[DEFAULT_ACCESS_PROFILES_COUNT] = {
     {
         // AC used by sensor, push only, no scanning
         .channel_header = {
-            .ch_coding = PHY_CODING_PN9,
-            .ch_class = PHY_CLASS_NORMAL_RATE,
+            .ch_coding = PHY_CODING_FEC_PN9,
+            .ch_class = PHY_CLASS_LO_RATE,
             .ch_freq_band = PHY_BAND_868
         },
         .subprofiles[0] = {
