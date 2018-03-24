@@ -408,10 +408,10 @@ static void add_interface_status_action(fifo_t* alp_response_fifo, d7ap_session_
   fifo_put_byte(alp_response_fifo, d7asp_result->fifo_token);
   fifo_put_byte(alp_response_fifo, d7asp_result->seqnr);
   fifo_put_byte(alp_response_fifo, d7asp_result->response_to);
-  fifo_put_byte(alp_response_fifo, d7asp_result->addressee->ctrl.raw);
-  fifo_put_byte(alp_response_fifo, d7asp_result->addressee->access_class);
-  uint8_t address_len = alp_addressee_id_length(d7asp_result->addressee->ctrl.id_type);
-  fifo_put(alp_response_fifo, d7asp_result->addressee->id, address_len);
+  fifo_put_byte(alp_response_fifo, d7asp_result->addressee.ctrl.raw);
+  fifo_put_byte(alp_response_fifo, d7asp_result->addressee.access_class);
+  uint8_t address_len = alp_addressee_id_length(d7asp_result->addressee.ctrl.id_type);
+  fifo_put(alp_response_fifo, d7asp_result->addressee.id, address_len);
 }
 
 void alp_layer_process_d7asp_result(uint8_t* alp_command, uint8_t alp_command_length, uint8_t* alp_response, uint8_t* alp_response_length, d7ap_session_result_t d7asp_result)
