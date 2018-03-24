@@ -113,7 +113,7 @@ void on_alp_command_completed_cb(uint8_t tag_id, bool success)
 void on_alp_command_result_cb(d7ap_session_result_t result, uint8_t* payload, uint8_t payload_length)
 {
     log_print_string("recv response @ %i dB link budget from:", result.link_budget);
-    log_print_data(result.addressee->id, 8);
+    log_print_data(result.addressee.id, 8);
 }
 
 static alp_init_args_t alp_init_args;
