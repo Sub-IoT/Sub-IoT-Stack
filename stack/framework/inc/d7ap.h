@@ -81,7 +81,7 @@ typedef struct {
     };
 } d7ap_addressee_ctrl_t;
 
-typedef struct {
+typedef struct __attribute__((__packed__)) {
     d7ap_addressee_ctrl_t ctrl;
     union {
         uint8_t access_class;
@@ -119,7 +119,7 @@ typedef enum
 } nls_method_t;
 
 
-typedef struct {
+typedef struct __attribute__((__packed__)) {
     channel_id_t channel;
     uint8_t rx_level;
     uint8_t link_budget;
@@ -128,7 +128,7 @@ typedef struct {
     uint8_t fifo_token;
     uint8_t seqnr;
     uint8_t response_to;
-    d7ap_addressee_t* addressee;
+    d7ap_addressee_t addressee;
 } d7ap_session_result_t;
 
 typedef enum {

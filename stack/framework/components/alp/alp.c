@@ -134,10 +134,10 @@ static void add_interface_status_action(fifo_t* alp_response_fifo, d7ap_session_
   fifo_put_byte(alp_response_fifo, d7asp_result->fifo_token);
   fifo_put_byte(alp_response_fifo, d7asp_result->seqnr);
   fifo_put_byte(alp_response_fifo, d7asp_result->response_to);
-  fifo_put_byte(alp_response_fifo, d7asp_result->addressee->ctrl.raw);
-  fifo_put_byte(alp_response_fifo, d7asp_result->addressee->access_class);
-  uint8_t address_len = alp_addressee_id_length(d7asp_result->addressee->ctrl.id_type);
-  fifo_put(alp_response_fifo, d7asp_result->addressee->id, address_len);
+  fifo_put_byte(alp_response_fifo, d7asp_result->addressee.ctrl.raw);
+  fifo_put_byte(alp_response_fifo, d7asp_result->addressee.access_class);
+  uint8_t address_len = alp_addressee_id_length(d7asp_result->addressee.ctrl.id_type);
+  fifo_put(alp_response_fifo, d7asp_result->addressee.id, address_len);
 }
 
 uint8_t alp_addressee_id_length(d7ap_addressee_id_type_t id_type)
@@ -172,6 +172,31 @@ static void parse_op_return_tag(fifo_t* fifo, alp_action_t* action, bool b6, boo
   log_print_string("parsed return tag %i, eop %i, err %i", action->tag_response.tag_id, action->tag_response.completed, action->tag_response.error);
 }
 
+static void parse_op_return_status(fifo_t* fifo, alp_action_t* action, bool b6, bool b7) {
+  assert(b6 && !b7); // TODO implement action status
+  uint8_t itf_id;
+  assert(fifo_pop(fifo, &itf_id, 1) == SUCCESS);
+  assert(itf_id == 0xD7); // TODO only D7 supported for now
+  // TODO uint32_t itf_len = parse_length_operand(fifo);
+  // assert(itf_len == sizeof(d7ap_session_result_t));
+
+  fifo_pop(fifo, &action->d7_interface_status.channel.channel_header_raw, 1);
+  fifo_pop(fifo, (uint8_t*)&action->d7_interface_status.channel.center_freq_index, 2);
+  action->d7_interface_status.channel.center_freq_index = __builtin_bswap16(action->d7_interface_status.channel.center_freq_index);
+  fifo_pop(fifo, &action->d7_interface_status.rx_level, 1);
+  fifo_pop(fifo, &action->d7_interface_status.link_budget, 1);
+  fifo_pop(fifo, &action->d7_interface_status.target_rx_level, 1);
+  fifo_pop(fifo, &action->d7_interface_status.status.raw, 1);
+  fifo_pop(fifo, &action->d7_interface_status.fifo_token, 1);
+  fifo_pop(fifo, &action->d7_interface_status.seqnr, 1);
+  fifo_pop(fifo, &action->d7_interface_status.response_to, 1);
+  fifo_pop(fifo, &action->d7_interface_status.addressee.ctrl.raw, 1);
+  fifo_pop(fifo, &action->d7_interface_status.addressee.access_class, 1);
+  uint8_t addressee_len = alp_addressee_id_length(action->d7_interface_status.addressee.ctrl.id_type);
+  assert(fifo_pop(fifo, action->d7_interface_status.addressee.id, addressee_len) == SUCCESS);
+  log_print_string("parsed interface status");
+}
+
 void alp_parse_action(fifo_t* fifo, alp_action_t* action) {
   uint8_t op;
   assert(fifo_pop(fifo, &op, 1) == SUCCESS);
@@ -185,6 +210,9 @@ void alp_parse_action(fifo_t* fifo, alp_action_t* action) {
       break;
     case ALP_OP_RETURN_TAG:
       parse_op_return_tag(fifo, action, b6, b7);
+      break;
+    case ALP_OP_RETURN_STATUS:
+      parse_op_return_status(fifo, action, b6, b7);
       break;
     default:
       log_print_string("op %x not implemented", op);

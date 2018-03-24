@@ -73,6 +73,12 @@ static void process_serial_frame(fifo_t* fifo) {
                                                action.file_data_operand.provided_data_length,
                                                action.file_data_operand.data);
         break;
+      case ALP_OP_RETURN_STATUS: ;
+        uint8_t addressee_len = alp_addressee_id_length(action.d7_interface_status.addressee.ctrl.id_type);
+        log_print_string("received resp from: ");
+        log_print_data(action.d7_interface_status.addressee.id, addressee_len);
+        // TODO callback?
+        break;
       default:
         assert(false);
     }

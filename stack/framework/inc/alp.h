@@ -190,6 +190,7 @@ typedef struct {
             bool error;
             uint8_t tag_id;
         } tag_response;
+        d7ap_session_result_t d7_interface_status;
     };
 
 } alp_action_t;

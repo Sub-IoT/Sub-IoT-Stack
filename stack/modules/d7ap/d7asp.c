@@ -370,7 +370,7 @@ bool d7asp_process_received_packet(packet_t* packet, bool extension)
             .missed = false, // TODO
         },
         .response_to = packet->d7atp_tc,
-        .addressee = packet->d7anp_addressee
+        .addressee = *packet->d7anp_addressee
         // .fifo_token and .seqnr filled below
     };
 
