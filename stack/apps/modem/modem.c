@@ -43,7 +43,7 @@ void bootstrap()
     fs_init_args_t fs_init_args = (fs_init_args_t){
         .access_profiles_count = DEFAULT_ACCESS_PROFILES_COUNT,
         .access_profiles = default_access_profiles,
-        .access_class = 0x11
+        .access_class = 0x21
     };
 
     d7ap_stack_init(&fs_init_args, NULL, true, NULL);
