@@ -307,6 +307,14 @@ void lorawan_stack_init(uint8_t dEUI[8], uint8_t aEUI[8], uint8_t aKey[16], join
 #endif
 }
 
+void lorawan_stack_deinit(){
+    log_print_string("Deiniting LoRaWAN stack");
+    sched_cancel_task(&run_fsm);
+    state = STATE_NOT_JOINED;
+    HW_DeInit();
+}
+
+
 
 lorawan_stack_error_t lorawan_stack_send(uint8_t* payload, uint8_t length, uint8_t app_port, bool request_ack) {
   if(!is_joined()) {
