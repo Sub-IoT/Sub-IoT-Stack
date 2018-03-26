@@ -47,7 +47,7 @@
 #define ACTION_FILE_ID           0x41
 #define INTERFACE_FILE_ID        0x42
 
-#define SENSOR_INTERVAL_SEC	TIMER_TICKS_PER_SEC * 1
+#define SENSOR_INTERVAL_SEC	TIMER_TICKS_PER_SEC * 30
 
 #ifdef USE_HTS221
   static i2c_handle_t* hts221_handle;
