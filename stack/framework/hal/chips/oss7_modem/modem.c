@@ -200,6 +200,17 @@ bool modem_read_file(uint8_t file_id, uint32_t offset, uint32_t size) {
   return true;
 }
 
+bool modem_write_file(uint8_t file_id, uint32_t offset, uint32_t size, uint8_t* data) {
+  if(!alloc_command())
+    return false;
+
+  alp_append_write_file_data_action(&command.fifo, file_id, offset, size, data, true, false);
+
+  send(command.buffer, fifo_get_size(&command.fifo));
+
+  return true;
+}
+
 bool modem_send_unsolicited_response(uint8_t file_id, uint32_t offset, uint32_t length, uint8_t* data,
                                      d7ap_master_session_config_t* d7_interface_config) {
   if(!alloc_command())

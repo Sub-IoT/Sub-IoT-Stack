@@ -283,3 +283,11 @@ void alp_append_read_file_data_action(fifo_t* fifo, uint8_t file_id, uint32_t of
   alp_append_file_offset_operand(fifo, file_id, offset);
   alp_append_length_operand(fifo, length);
 }
+
+void alp_append_write_file_data_action(fifo_t* fifo, uint8_t file_id, uint32_t offset, uint32_t length, uint8_t* data, bool resp, bool group) {
+  uint8_t op = ALP_OP_WRITE_FILE_DATA | (resp << 6) | (group << 7);
+  assert(fifo_put_byte(fifo, op) == SUCCESS);
+  alp_append_file_offset_operand(fifo, file_id, offset);
+  alp_append_length_operand(fifo, length);
+  assert(fifo_put(fifo, data, length) == SUCCESS);
+}
