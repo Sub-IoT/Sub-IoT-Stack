@@ -208,6 +208,8 @@ static void mlme_confirm(MlmeConfirm_t *mlmeConfirm)
       {
         log_print_string("join succeeded");
         state = STATE_JOINED;
+        if(join_completed_callback)
+            join_completed_callback(true);
       }
       else
       {
