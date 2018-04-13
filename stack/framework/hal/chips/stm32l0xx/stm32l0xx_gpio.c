@@ -64,7 +64,7 @@ do {                                                          \
 
 typedef struct
 {
-  gpio_inthandler_t callback;
+  gpio_cb_t callback;
   uint32_t interrupt_port;
 } gpio_interrupt_t;
 
@@ -191,8 +191,7 @@ static void gpio_int_callback(uint8_t pin)
 {
   start_atomic();
   assert(interrupts[pin].callback != 0x0);
-  pin_id_t id = PIN(interrupts[pin].interrupt_port, pin);
-  interrupts[pin].callback(id,hw_gpio_get_in(id));
+  interrupts[pin].callback(NULL);
   // TODO clear?
   end_atomic();
 }
@@ -222,7 +221,7 @@ __LINK_C error_t hw_gpio_set_edge_interrupt(pin_id_t pin_id, uint8_t edge)
   return SUCCESS;
 }
 
-__LINK_C error_t hw_gpio_configure_interrupt(pin_id_t pin_id, gpio_inthandler_t callback, uint8_t event_mask)
+__LINK_C error_t hw_gpio_configure_interrupt(pin_id_t pin_id, uint8_t event_mask, gpio_cb_t callback, void* arg)
 {
   if (interrupts[GPIO_PIN(pin_id)].interrupt_port != 0xFF)
   {

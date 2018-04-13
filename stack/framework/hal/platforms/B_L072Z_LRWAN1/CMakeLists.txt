@@ -24,7 +24,7 @@ REQUIRE_TOOLCHAIN(gcc-arm-embedded)
 PLATFORM_PARAM(PLATFORM_MCU "STM32L072xx" STRING "The MCU series name of the platform")
 PLATFORM_PARAM(PLATFORM_MCU_FULL "STM32L072CZ" STRING "The full MCU name of the platform")
 SET(JLINK_DEVICE "STM32L072CZ" CACHE STRING "The device passed to JLinkExe for flashing")
-PLATFORM_PARAM(${PLATFORM_PREFIX}_RADIO "sx127x" STRING "The radio chip connected to the board")
+PLATFORM_PARAM(${PLATFORM_PREFIX}_RADIO "netdev_sx127x" STRING "The radio chip connected to the board")
 PLATFORM_OPTION(PLATFORM_USE_DEBUGPINS "Enable/Disable Hardware Debug Pins support (see 'hwdebug.h')" FALSE)
 #Restrict the number of possible options for the radio option in the usual manner...
 SET_PROPERTY(CACHE ${PLATFORM_PREFIX}_RADIO PROPERTY STRINGS "sx127x;none")

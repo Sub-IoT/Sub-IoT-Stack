@@ -83,6 +83,6 @@ void led_flash_green() {
 
 bool led_init() {
 	__led_init();
-	sched_register_task(&end_flash_green);
+  sched_register_task(&end_flash_green, NULL);
 	return true;
 }

@@ -43,7 +43,7 @@ typedef struct
 
 button_info_t buttons[PLATFORM_NUM_BUTTONS];
 
-static void button_callback(pin_id_t pin_id, uint8_t event_mask);
+static void button_callback(void* arg);
 static void button_task();
 __LINK_C void __ubutton_init()
 {
@@ -55,9 +55,9 @@ __LINK_C void __ubutton_init()
 		buttons[i].cur_callback_id = BUTTON_QUEUE_SIZE;
 		buttons[i].num_registered_callbacks = 0;
 		err = hw_gpio_configure_pin(buttons[i].button_id, true, GPIO_MODE_IT_FALLING, 0); assert(err == SUCCESS); // TODO pull up or pull down to prevent floating
-		err = hw_gpio_configure_interrupt(buttons[i].button_id, &button_callback, GPIO_FALLING_EDGE); assert(err == SUCCESS);
+    err = hw_gpio_configure_interrupt(buttons[i].button_id, GPIO_FALLING_EDGE, &button_callback, NULL); assert(err == SUCCESS);
 	}
-	sched_register_task(&button_task);
+  sched_register_task(&button_task, NULL);
 }
 
 __LINK_C bool ubutton_pressed(button_id_t button_id)
@@ -132,18 +132,19 @@ __LINK_C error_t ubutton_deregister_callback(button_id_t button_id, ubutton_call
 	return SUCCESS;
 }
 
-static void button_callback(pin_id_t pin_id, uint8_t event_mask)
+static void button_callback(void* arg)
 {
 	//TODO only pin is compared
-	for(int i = 0; i < PLATFORM_NUM_BUTTONS;i++)
-	{
-    if(buttons[i].button_id == pin_id)
-		{
-			//set cur_callback_id to 0 to trigger all registered callbacks and post a task to do the actual callbacks
-			buttons[i].cur_callback_id = 0;
-			sched_post_task(&button_task);
-		}
-	}
+// TODO fix
+//	for(int i = 0; i < PLATFORM_NUM_BUTTONS;i++)
+//	{
+//    if(buttons[i].button_id == pin_id)
+//		{
+//			//set cur_callback_id to 0 to trigger all registered callbacks and post a task to do the actual callbacks
+//			buttons[i].cur_callback_id = 0;
+//			sched_post_task(&button_task);
+//		}
+//	}
 }
 
 void button_task()

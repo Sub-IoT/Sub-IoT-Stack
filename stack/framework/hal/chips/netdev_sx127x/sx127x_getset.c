@@ -552,34 +552,35 @@ void sx127x_set_max_payload_len(sx127x_t *dev, uint8_t maxlen)
     }
 }
 
-#if defined(PLATFORM_SX127X_USE_MANUAL_RXTXSW_PIN) || defined(PLATFORM_USE_ABZ)
-static void set_antenna_switch(opmode_t opmode) {
-  if(opmode == OPMODE_TX) {
-#ifdef PLATFORM_SX127X_USE_MANUAL_RXTXSW_PIN
-    hw_gpio_set(SX127x_MANUAL_RXTXSW_PIN);
-#endif
-#ifdef PLATFORM_USE_ABZ
-    hw_gpio_clr(ABZ_ANT_SW_RX_PIN);
-    if((read_reg(REG_PACONFIG) & RF_PACONFIG_PASELECT_PABOOST) == RF_PACONFIG_PASELECT_PABOOST) {
-      hw_gpio_clr(ABZ_ANT_SW_TX_PIN);
-      hw_gpio_set(ABZ_ANT_SW_PA_BOOST_PIN);
-    } else {
-      hw_gpio_set(ABZ_ANT_SW_TX_PIN);
-      hw_gpio_clr(ABZ_ANT_SW_PA_BOOST_PIN);
-    }
-#endif
-  } else {
-#ifdef PLATFORM_SX127X_USE_MANUAL_RXTXSW_PIN
-    hw_gpio_clr(SX127x_MANUAL_RXTXSW_PIN);
-#endif
-#ifdef PLATFORM_USE_ABZ
-    hw_gpio_set(ABZ_ANT_SW_RX_PIN);
-    hw_gpio_clr(ABZ_ANT_SW_TX_PIN);
-    hw_gpio_clr(ABZ_ANT_SW_PA_BOOST_PIN);
-#endif
-  }
-}
-#endif
+// TODO port antenna switching. Refactor so we don't have platform specific code here (like the ABZ specific switching), this should be done by platform instead
+//#if defined(PLATFORM_SX127X_USE_MANUAL_RXTXSW_PIN) || defined(PLATFORM_USE_ABZ)
+//static void set_antenna_switch(opmode_t opmode) {
+//  if(opmode == OPMODE_TX) {
+//#ifdef PLATFORM_SX127X_USE_MANUAL_RXTXSW_PIN
+//    hw_gpio_set(SX127x_MANUAL_RXTXSW_PIN);
+//#endif
+//#ifdef PLATFORM_USE_ABZ
+//    hw_gpio_clr(ABZ_ANT_SW_RX_PIN);
+//    if((sx127x_reg_read(dev, SX127X_REG_LR_PACONFIG) & SX127X_RF_PACONFIG_PASELECT_PABOOST) == SX127X_RF_PACONFIG_PASELECT_PABOOST) {
+//      hw_gpio_clr(ABZ_ANT_SW_TX_PIN);
+//      hw_gpio_set(ABZ_ANT_SW_PA_BOOST_PIN);
+//    } else {
+//      hw_gpio_set(ABZ_ANT_SW_TX_PIN);
+//      hw_gpio_clr(ABZ_ANT_SW_PA_BOOST_PIN);
+//    }
+//#endif
+//  } else {
+//#ifdef PLATFORM_SX127X_USE_MANUAL_RXTXSW_PIN
+//    hw_gpio_clr(SX127x_MANUAL_RXTXSW_PIN);
+//#endif
+//#ifdef PLATFORM_USE_ABZ
+//    hw_gpio_set(ABZ_ANT_SW_RX_PIN);
+//    hw_gpio_clr(ABZ_ANT_SW_TX_PIN);
+//    hw_gpio_clr(ABZ_ANT_SW_PA_BOOST_PIN);
+//#endif
+//  }
+//}
+//#endif
 
 
 uint8_t sx127x_get_op_mode(const sx127x_t *dev)
@@ -612,9 +613,10 @@ void sx127x_set_op_mode(const sx127x_t *dev, uint8_t op_mode)
     }
 #endif
 
-#if defined(PLATFORM_SX127X_USE_MANUAL_RXTXSW_PIN) || defined(PLATFORM_USE_ABZ)
-  set_antenna_switch(opmode);
-#endif
+// TODO
+//#if defined(PLATFORM_SX127X_USE_MANUAL_RXTXSW_PIN) || defined(PLATFORM_USE_ABZ)
+//  set_antenna_switch(opmode);
+//#endif
 
     /* Replace previous mode value and setup new mode value */
     sx127x_reg_write(dev, SX127X_REG_OPMODE,

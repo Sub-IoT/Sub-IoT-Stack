@@ -44,7 +44,7 @@
 
 #define BUTTON0           PIN(1, 2)
 
-#ifdef USE_SX127X
+#if defined(USE_SX127X) || defined(USE_NETDEV_SX127X)
   // TODO tmp
   #define SX127x_SPI_INDEX  0
   #define SX127x_SPI_PIN_CS  PIN(0, 15)
