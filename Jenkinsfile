@@ -39,6 +39,7 @@ node {
         }
     }
             setBuildStatus("B_L072Z_LRWAN1","Build",currentBuild.currentResult)
+    /*
     stage('Build NUCLEO_L073RZ platform') {
         dir('NUCLEO_L073RZ') {
              sh 'mkdir build'
@@ -69,7 +70,7 @@ node {
         }
     }
             setBuildStatus("EZR32LG_WSTK6200A","Build",currentBuild.currentResult)
-
+    */
      stage('Build cortus_fpga platform') {
         dir('cortus_fpga') {
             sh 'mkdir build'
