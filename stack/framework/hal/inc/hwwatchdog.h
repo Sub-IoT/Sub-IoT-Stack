@@ -39,7 +39,7 @@
  *  Failing to do so before the timer elapses results in MCU reset.
  *
  */
-void __watchdog_init();
+__LINK_C void __watchdog_init();
 
 /*! \brief Feeds the watchdog.
  */
