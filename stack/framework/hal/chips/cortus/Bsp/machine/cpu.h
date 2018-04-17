@@ -71,7 +71,8 @@ static inline void cpu_spin_lock(volatile unsigned* lock)
 	 "; aquire spin lock\n\t"
 	 "mov\tr7, #1\n"
 	 "1:\tldst.cc r6, [%0]\n\t"
-  	 "bne\t1b" : 
+	 "bra\t2\n\t" 
+  	 "2:bne\t1b" : 
          /* no outputs */ : 
          /* inputs */ "r" (lock) : 
          /* clobber */ "r6", "r7", "psr", "memory"); 

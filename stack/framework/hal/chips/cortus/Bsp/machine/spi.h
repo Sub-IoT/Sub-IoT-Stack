@@ -66,11 +66,18 @@ typedef struct SPI
 
 } SPI;
 
+/***************  Bit definition for SPI_TX_STATUS register ******************/
+#define SPI_TX_SR_FIFO_NOT_FULL       1 /*!< space in the fifo */
+#define SPI_RX_SR_DATA_AVAILABLE      1 /*!< data available in fifo */
+#define SPI_BUS_ACTIVE                1 /*!< activity on spi bus */
+
 #ifdef __APS__
 #define spi1 ((SPI *)SFRADR_SPI)
 #define spi2 ((SPI *)SFRADR_SPI2)
 #else
 extern SPI __spi;
 #define spi1 (&__spi)
+#define spi2 (&__spi)
 #endif
+
 #endif
