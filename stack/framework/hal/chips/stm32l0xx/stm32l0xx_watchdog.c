@@ -21,13 +21,27 @@
  */
 
 #include "hwwatchdog.h"
+#include "stm32l0xx_hal_iwdg.h"
+
 #include <assert.h>
 
+static IWDG_HandleTypeDef iwdg_hal_hadle = {.Instance = NULL};
 void __watchdog_init()
 {
-  assert(false);
+    IWDG_InitTypeDef iwdg_init_options;
+    /*
+     * Settings below disable window comparison (window exuals the reload value)
+     * the Watchdog will reset the MCU after: 256*4096/37000 ~ 28s
+     */
+    iwdg_init_options.Prescaler = IWDG_PRESCALER_256;
+    iwdg_init_options.Reload = 0xFFF;
+    iwdg_init_options.Window = 0xFFF;
+    iwdg_hal_hadle.Init = iwdg_init_options;
+    iwdg_hal_hadle.Instance = IWDG;
+    HAL_IWDG_Init(&iwdg_hal_hadle);
 }
 
 void hw_watchdog_feed()
 {
+    HAL_IWDG_Refresh(&iwdg_hal_hadle);
 }
