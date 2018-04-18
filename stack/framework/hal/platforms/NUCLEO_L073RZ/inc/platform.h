@@ -19,7 +19,8 @@
 #ifndef __PLATFORM_H_
 #define __PLATFORM_H_
 
-#include "stm32l0xx_mcu.h"
+#include "stm32_device.h"
+#include "stm32_common_mcu.h"
 #include "platform_defs.h"
 
 #ifndef PLATFORM_NUCLEO_L073RZ
