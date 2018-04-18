@@ -30,7 +30,6 @@
 
 #include "link_c.h"
 #include "types.h"
-#include "errors.h"
 
 /*! \brief Type definition for tasks
  *

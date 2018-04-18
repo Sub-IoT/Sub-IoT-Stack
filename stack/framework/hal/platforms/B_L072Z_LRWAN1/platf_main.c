@@ -16,16 +16,15 @@
  * limitations under the License.
  */
 
-#include "stm32l0xx_mcu.h"
+#include "stm32_device.h"
 #include "bootstrap.h"
 #include "hwgpio.h"
 #include "hwleds.h"
 #include "led.h"
 #include "button.h"
-#include "stm32l0xx_gpio.h"
 #include "hwsystem.h"
 #include "debug.h"
-#include "stm32l0xx_hal.h"
+#include "stm32_common_gpio.h"
 #include "hwdebug.h"
 #include "hwradio.h"
 
@@ -42,7 +41,7 @@ static void reset_sx127x()
 
 void __platform_init()
 {
-    __stm32l0xx_mcu_init();
+    __stm32_common_mcu_init();
     __gpio_init();
     __hw_debug_init();
 
@@ -65,11 +64,11 @@ void __platform_post_framework_init()
 
 int main()
 {
-//    //initialise the platform itself
+    //initialise the platform itself
     __platform_init();
-//    //do not initialise the scheduler, this is done by __framework_bootstrap()
+    //do not initialise the scheduler, this is done by __framework_bootstrap()
     __framework_bootstrap();
-//    //initialise platform functionality that depends on the framework
+    //initialise platform functionality that depends on the framework
     __platform_post_framework_init();
 
     scheduler_run();

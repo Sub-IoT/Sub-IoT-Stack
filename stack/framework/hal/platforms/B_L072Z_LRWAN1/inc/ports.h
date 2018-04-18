@@ -19,9 +19,8 @@
 #ifndef __PORTS_H_
 #define __PORTS_H_
 
-#include "stm32l0xx_hal.h"
-#include "stm32l0xx_hal_gpio.h"
-#include "stm32l0xx_mcu.h"
+#include "stm32_device.h"
+#include "stm32_common_mcu.h"
 #include "platform_defs.h"
 #include "hwgpio.h"
 

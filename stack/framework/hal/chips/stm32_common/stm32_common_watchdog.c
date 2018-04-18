@@ -1,7 +1,7 @@
 /* * OSS-7 - An opensource implementation of the DASH7 Alliance Protocol for ultra
  * lowpower wireless sensor communication
  *
- * Copyright 2015 University of Antwerp
+ * Copyright 2018 University of Antwerp
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,12 +16,12 @@
  * limitations under the License.
  */
 
-/*! \file stm32l0xx_watchdog.c
+/*! \file stm32_common_watchdog.c
  *  \author glenn.ergeerts@uantwerpen.be
  */
 
 #include "hwwatchdog.h"
-#include "stm32l0xx_hal_iwdg.h"
+#include "stm32_device.h"
 
 #include <assert.h>
 
@@ -35,7 +35,9 @@ void __watchdog_init()
      */
     iwdg_init_options.Prescaler = IWDG_PRESCALER_256;
     iwdg_init_options.Reload = 0xFFF;
+#ifdef STM32L0
     iwdg_init_options.Window = 0xFFF;
+#endif
     iwdg_hal_hadle.Init = iwdg_init_options;
     iwdg_hal_hadle.Instance = IWDG;
     HAL_IWDG_Init(&iwdg_hal_hadle);

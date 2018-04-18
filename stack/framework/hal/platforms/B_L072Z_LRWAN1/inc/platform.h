@@ -20,8 +20,8 @@
 #define __PLATFORM_H_
 
 #include "platform_defs.h"
-#include "stm32l0xx_mcu.h"
-
+#include "stm32_device.h"
+#include "stm32_common_mcu.h"
 
 #ifndef PLATFORM_B_L072Z_LRWAN1
     #error Mismatch between the configured platform and the actual platform. Expected PLATFORM_B_L072Z_LRWAN1 to be defined

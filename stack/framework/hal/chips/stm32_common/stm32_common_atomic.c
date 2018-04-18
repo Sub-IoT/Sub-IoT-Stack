@@ -1,7 +1,7 @@
 /* * OSS-7 - An opensource implementation of the DASH7 Alliance Protocol for ultra
  * lowpower wireless sensor communication
  *
- * Copyright 2015 University of Antwerp
+ * Copyright 2018 University of Antwerp
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,13 +16,13 @@
  * limitations under the License.
  */
 
-/*! \file stm32l0xx_atomic.c
+/*! \file stm32_common_atomic.c
  *
  *
  */
 
 #include "hwatomic.h"
-#include "stm32l0xx_hal.h"
+#include "stm32_device.h"
 
  // TODO nesting?
 

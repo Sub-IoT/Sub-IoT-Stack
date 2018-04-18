@@ -2,14 +2,13 @@
 #include <stdio.h>
 
 
-#include "hwgpio.h"
+//#include "hwgpio.h"
 #include "hwi2c.h"
 
 #include "platform.h"
 #include "ports.h"
-#include "stm32l0xx_gpio.h"
-#include "stm32l0xx_hal.h"
-#include "stm32l0xx_hal_i2c.h"
+#include "stm32_device.h"
+#include "stm32_common_gpio.h"
 
 // TODO use other ways to avoid long polling
 #define I2C_POLLING  100000
@@ -21,6 +20,7 @@
 
 //HAL_MAX_DELAY
 
+#if defined(STM32L0) // TODO not supported yet on STM32L1 (CubeMX HAL I2C API is not compatible)
 
 typedef struct {
   pin_id_t sda;
@@ -107,9 +107,11 @@ i2c_handle_t* i2c_init(uint8_t idx, uint8_t pins, uint32_t baudrate)
     case I2C2_BASE:
       __HAL_RCC_I2C2_CLK_ENABLE();
       break;
+#if defined (I2C3_BASE)
     case I2C3_BASE:
       __HAL_RCC_I2C3_CLK_ENABLE();
       break;
+#endif
     default:
       assert(false);
   }
@@ -139,12 +141,6 @@ i2c_handle_t* i2c_init(uint8_t idx, uint8_t pins, uint32_t baudrate)
   // TODO only disable clock until actually using I2C
 
   return &handle[idx];
-}
-
-int8_t i2c_deinit(i2c_handle_t* i2c)
-{
-	HAL_StatusTypeDef status = HAL_I2C_DeInit(&i2c->hal_handle);
-    return status == HAL_OK;
 }
 
 int8_t i2c_write(i2c_handle_t* i2c, uint8_t to, uint8_t* payload, int length) {
@@ -180,3 +176,5 @@ int8_t i2c_write_read(i2c_handle_t* i2c, uint8_t to, uint8_t* payload, int lengt
   status = HAL_I2C_Master_Receive(&i2c->hal_handle, (uint16_t) to << 1, receive, receive_length, I2C_DEFAULT_TIMEOUT);
   return status == HAL_OK;
 }
+
+#endif

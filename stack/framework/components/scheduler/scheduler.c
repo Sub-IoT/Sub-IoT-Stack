@@ -33,6 +33,7 @@
 #include "hwatomic.h"
 #include "ng.h"
 #include "hwsystem.h"
+#include "errors.h"
 
 #include "framework_defs.h"
 #define SCHEDULER_MAX_TASKS FRAMEWORK_SCHEDULER_MAX_TASKS

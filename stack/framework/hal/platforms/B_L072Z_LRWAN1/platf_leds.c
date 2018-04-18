@@ -24,14 +24,15 @@
  *
  */
 
-#include "stm32l0xx_mcu.h"
+#include "stm32_device.h"
 #include "hwleds.h"
 #include "platform.h"
 #include "hwgpio.h"
 #include <debug.h>
 #include "timer.h"
 #include "led.h"
-#include "stm32l0xx_gpio.h"
+#include "errors.h"
+#include "stm32_common_gpio.h"
 
 
 #if PLATFORM_NUM_LEDS < 1
