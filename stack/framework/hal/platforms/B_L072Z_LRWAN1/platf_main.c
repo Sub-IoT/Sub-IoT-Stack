@@ -27,6 +27,7 @@
 #include "stm32_common_gpio.h"
 #include "hwdebug.h"
 #include "hwradio.h"
+#include "errors.h"
 
 #if defined(USE_SX127X) && defined(PLATFORM_SX127X_USE_RESET_PIN)
 static void reset_sx127x()

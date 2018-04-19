@@ -34,6 +34,7 @@
 #include "random.h"
 #include "hwwatchdog.h"
 #include "MODULE_D7AP_defs.h"
+#include "errors.h"
 
 #if defined(FRAMEWORK_LOG_ENABLED) && defined(MODULE_D7AP_SP_LOG_ENABLED)
 #define DPRINT(...) log_print_stack_string(LOG_STACK_SESSION, __VA_ARGS__)

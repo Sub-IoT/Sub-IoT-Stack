@@ -54,7 +54,6 @@
 #ifndef __HW_GPIO_H_
 #define __HW_GPIO_H_
 #include "types.h"
-#include "errors.h"
 #include "link_c.h"
 /*! \brief the type for the pin_id's that identify each individual GPIO pin
  *
