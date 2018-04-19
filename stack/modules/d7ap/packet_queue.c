@@ -64,7 +64,9 @@ packet_t* packet_queue_alloc_packet()
         }
     }
 
-    assert(false); // should not happen, possible to small PACKET_QUEUE_SIZE or not always free()-ed correctly?
+    // should not happen, possible to small PACKET_QUEUE_SIZE or not always free()-ed correctly?
+    DPRINT("Packet queue full, could not alloc new packet!");
+    return NULL;
 }
 
 void packet_queue_free_packet(packet_t* packet)
@@ -97,6 +99,7 @@ packet_t* packet_queue_find_packet(hw_radio_packet_t* hw_radio_packet)
 
 void packet_queue_mark_received(hw_radio_packet_t* hw_radio_packet)
 {
+    assert(hw_radio_packet != NULL);
     for(uint8_t i = 0; i < MODULE_D7AP_PACKET_QUEUE_SIZE; i++)
     {
         if(&(packet_queue[i].hw_radio_packet) == hw_radio_packet)

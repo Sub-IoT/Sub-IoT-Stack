@@ -546,6 +546,7 @@ static void lora_rxdone_isr() {
   write_reg(REG_LR_FIFOADDRPTR, read_reg(REG_LR_FIFORXCURRENTADDR));
   DPRINT("rx packet len=%i\n", len);
   current_packet = alloc_packet_callback(len);
+  assert(current_packet); // TODO handle
   current_packet->length = len - 1;
   read_fifo(current_packet->data, len);
   write_reg(REG_LR_IRQFLAGS, 0xFF);
@@ -572,6 +573,7 @@ static void bg_scan_rx_done()
     DPRINT("BG packet received!");
 
     current_packet = alloc_packet_callback(FskPacketHandler.Size);
+    assert(current_packet); // TODO handle
     current_packet->length = BACKGROUND_FRAME_LENGTH;
 
     read_fifo(current_packet->data + 1, FskPacketHandler.Size);
@@ -627,6 +629,25 @@ static void fifo_level_isr()
     fill_in_fifo();
 }
 
+static void restart_rx() {
+  FskPacketHandler.NbBytes = 0;
+  FskPacketHandler.Size = 0;
+  FskPacketHandler.FifoThresh = 0;
+
+  write_reg(REG_FIFOTHRESH, 0x83);
+  write_reg(REG_DIOMAPPING1, 0x0C);
+
+  // Trigger a manual restart of the Receiver chain (no frequency change)
+  write_reg(REG_RXCONFIG, 0x4E);
+  flush_fifo();
+
+  // Seems that the SyncAddressMatch is not cleared after the flush, so set again the RX mode
+  set_opmode(OPMODE_RX);
+  //DPRINT("Before enabling interrupt: FLAGS1 %x FLAGS2 %x\n", read_reg(REG_IRQFLAGS1), read_reg(REG_IRQFLAGS2));
+  hw_gpio_set_edge_interrupt(SX127x_DIO1_PIN, GPIO_RISING_EDGE);
+  hw_gpio_enable_interrupt(SX127x_DIO1_PIN);
+}
+
 static void fifo_threshold_isr() {
   // TODO might be optimized. Initial plan was to read length byte and reconfigure threshold
   // based on the expected length so we can wait for next interrupt to read remaining bytes.
@@ -671,6 +692,12 @@ static void fifo_threshold_isr() {
         DPRINT("RX Packet Length: %i ", packet_len);
 
         current_packet = alloc_packet_callback(packet_len);
+        if(current_packet == NULL) {
+          DPRINT("Could not alloc packet, skipping");
+          restart_rx();
+          return;
+        }
+
         current_packet->rx_meta.rssi = get_rssi(); // we assume TX is still ongoing now
         memcpy(current_packet->data, buffer, 4);
 
@@ -709,22 +736,7 @@ static void fifo_threshold_isr() {
         rx_packet_callback(current_packet);
 
         // Restart the reception until upper layer decides to stop it
-        FskPacketHandler.NbBytes = 0;
-        FskPacketHandler.Size = 0;
-        FskPacketHandler.FifoThresh = 0;
-
-        write_reg(REG_FIFOTHRESH, 0x83);
-        write_reg(REG_DIOMAPPING1, 0x0C);
-        
-        // Trigger a manual restart of the Receiver chain (no frequency change)
-        write_reg(REG_RXCONFIG, 0x4E);
-        flush_fifo();
-
-        // Seems that the SyncAddressMatch is not cleared after the flush, so set again the RX mode
-        set_opmode(OPMODE_RX);
-        //DPRINT("Before enabling interrupt: FLAGS1 %x FLAGS2 %x\n", read_reg(REG_IRQFLAGS1), read_reg(REG_IRQFLAGS2));
-        hw_gpio_set_edge_interrupt(SX127x_DIO1_PIN, GPIO_RISING_EDGE);
-        hw_gpio_enable_interrupt(SX127x_DIO1_PIN);
+        restart_rx();
         return;
     }
 
