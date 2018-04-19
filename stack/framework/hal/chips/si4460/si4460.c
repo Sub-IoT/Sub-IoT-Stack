@@ -46,6 +46,7 @@
 #include "gpiointerrupt.h"
 #include "ezradio_hal.h"
 #include "fec.h"
+#include "errors.h"
 
 
 #if defined(FRAMEWORK_LOG_ENABLED) && defined(FRAMEWORK_PHY_LOG_ENABLED)

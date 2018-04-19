@@ -30,6 +30,7 @@
 #include <machine/cpu.h>
 #include "cortus_gpio.h"
 #include "cortus_mcu.h"
+#include "errors.h"
 
 #define NUM_GPIOINT 16  // GPIO1 is only available for gpio interrupts.
 
