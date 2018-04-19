@@ -164,6 +164,13 @@ i2c_handle_t* i2c_init(uint8_t idx, uint8_t pins, uint32_t baudrate)
   return &handle[idx];
 }
 
+int8_t i2c_deinit(i2c_handle_t* i2c)
+{
+	HAL_StatusTypeDef status = HAL_I2C_DeInit(&i2c->hal_handle);
+    return status == HAL_OK;
+}
+
+
 int8_t i2c_write(i2c_handle_t* i2c, uint8_t to, uint8_t* payload, int length) {
   HAL_StatusTypeDef status = HAL_I2C_Master_Transmit(&i2c->hal_handle, (uint16_t) to << 1, payload, length, I2C_DEFAULT_TIMEOUT);
   return status == HAL_OK;
