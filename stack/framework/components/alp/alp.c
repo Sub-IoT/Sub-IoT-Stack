@@ -163,14 +163,14 @@ static void parse_op_return_file_data(fifo_t* fifo, alp_action_t* action) {
   action->file_data_operand.provided_data_length = parse_length_operand(fifo);
   assert(action->file_data_operand.provided_data_length <= sizeof(action->file_data_operand.data));
   fifo_pop(fifo, action->file_data_operand.data, action->file_data_operand.provided_data_length);
-  log_print_string("parsed file data file %i, len %i", action->file_data_operand.file_offset.file_id, action->file_data_operand.provided_data_length);
+  DPRINT("parsed file data file %i, len %i", action->file_data_operand.file_offset.file_id, action->file_data_operand.provided_data_length);
 }
 
 static void parse_op_return_tag(fifo_t* fifo, alp_action_t* action, bool b6, bool b7) {
   action->tag_response.completed = b7;
   action->tag_response.error = b6;
   assert(fifo_pop(fifo, &action->tag_response.tag_id, 1) == SUCCESS);
-  log_print_string("parsed return tag %i, eop %i, err %i", action->tag_response.tag_id, action->tag_response.completed, action->tag_response.error);
+  DPRINT("parsed return tag %i, eop %i, err %i", action->tag_response.tag_id, action->tag_response.completed, action->tag_response.error);
 }
 
 static void parse_op_return_status(fifo_t* fifo, alp_action_t* action, bool b6, bool b7) {
@@ -195,7 +195,7 @@ static void parse_op_return_status(fifo_t* fifo, alp_action_t* action, bool b6, 
   fifo_pop(fifo, &action->d7_interface_status.addressee.access_class, 1);
   uint8_t addressee_len = alp_addressee_id_length(action->d7_interface_status.addressee.ctrl.id_type);
   assert(fifo_pop(fifo, action->d7_interface_status.addressee.id, addressee_len) == SUCCESS);
-  log_print_string("parsed interface status");
+  DPRINT("parsed interface status");
 }
 
 void alp_parse_action(fifo_t* fifo, alp_action_t* action) {
@@ -216,11 +216,11 @@ void alp_parse_action(fifo_t* fifo, alp_action_t* action) {
       parse_op_return_status(fifo, action, b6, b7);
       break;
     default:
-      log_print_string("op %x not implemented", op);
+      DPRINT("op %x not implemented", op);
       assert(false);
   }
 
-  log_print_string("parsed action");
+  DPRINT("parsed action");
 }
 
 uint8_t alp_get_expected_response_length(uint8_t* alp_command, uint8_t alp_command_length) {
