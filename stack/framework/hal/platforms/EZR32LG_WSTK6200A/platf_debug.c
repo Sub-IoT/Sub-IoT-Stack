@@ -21,6 +21,7 @@
 #include "hwgpio.h"
 #include "em_gpio.h"
 #include <debug.h>
+#include "errors.h"
 
 #ifdef PLATFORM_EZR32LG_WSTK6200A_DEBUGPINS
 

@@ -28,6 +28,7 @@
 #include "platform.h"
 #include "em_gpio.h"
 #include <debug.h>
+#include "errors.h"
 
 #if PLATFORM_NUM_LEDS != 2
 	#error PLATFORM_NUM_LEDS does not match the expected value. Update platform.h or platform_leds.c
