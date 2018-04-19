@@ -23,6 +23,7 @@
 #include <string.h>
 #include <debug.h>
 #include "cortus_gpio.h"
+#include "errors.h"
 
 #if PLATFORM_NUM_BUTTONS != 2
 	#error "PLATFORM_NUM_BUTTONS does not match the expected value. Update platform.h or platform_userbutton.c"

@@ -23,6 +23,7 @@
 #include "scheduler.h"
 #include <string.h>
 #include <debug.h>
+#include "errors.h"
 
 #include "stm32_device.h"
 #include "stm32_common_gpio.h"

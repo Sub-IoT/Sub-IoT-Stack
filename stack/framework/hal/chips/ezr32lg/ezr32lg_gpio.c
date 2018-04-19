@@ -33,6 +33,7 @@
 #include <assert.h>
 #include <ezr32lg_chip.h>
 #include "hwatomic.h"
+#include "errors.h"
 
 
 typedef struct
