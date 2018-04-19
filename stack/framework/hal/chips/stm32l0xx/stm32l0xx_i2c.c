@@ -114,6 +114,27 @@ i2c_handle_t* i2c_init(uint8_t idx, uint8_t pins, uint32_t baudrate)
       assert(false);
   }
 
+  // Make sure no slave is pulling the SDA port low
+  // first init SDA as input
+  gpio_init_options.Mode = GPIO_MODE_INPUT;
+  gpio_init_options.Pull = GPIO_NOPULL;
+  gpio_init_options.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
+  hw_gpio_configure_pin_stm(i2c_ports[idx].sda_pin, &gpio_init_options);
+
+  // SCL as output
+  gpio_init_options.Mode = GPIO_MODE_OUTPUT_PP;
+  hw_gpio_configure_pin_stm(i2c_ports[idx].scl_pin, &gpio_init_options);
+
+  // if SDA is pulled low, clock the SCK to free it
+  while  (!hw_gpio_get_in(i2c_ports[idx].sda_pin))
+  {
+	  hw_gpio_set(i2c_ports[idx].scl_pin);
+	  hw_busy_wait(10);
+	  hw_gpio_clr(i2c_ports[idx].scl_pin);
+	  hw_busy_wait(10);
+  }
+
+  // then configure the I2C port as usual
   gpio_init_options.Alternate = i2c_ports[idx].alternate;
   gpio_init_options.Mode = GPIO_MODE_AF_OD;
   gpio_init_options.Pull = GPIO_PULLUP;
