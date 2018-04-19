@@ -29,6 +29,7 @@
 #include "hwdebug.h"
 #include "aes.h"
 #include "packet_queue.h"
+#include "errors.h"
 
 #if defined(FRAMEWORK_LOG_ENABLED) && defined(MODULE_D7AP_NP_LOG_ENABLED)
 #define DPRINT(...) log_print_stack_string(LOG_STACK_NWL, __VA_ARGS__)

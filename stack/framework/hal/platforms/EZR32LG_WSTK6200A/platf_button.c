@@ -24,6 +24,7 @@
 #include <debug.h>
 #include "em_gpio.h"
 #include "platform.h"
+#include "errors.h"
 
 #if PLATFORM_NUM_BUTTONS != 2
   #error "PLATFORM_NUM_BUTTONS does not match the expected value. Update platform CMakeLists.txt or platform_userbutton.c"

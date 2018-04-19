@@ -41,7 +41,7 @@
 
 #include "platform.h"
 #include "hal_defs.h"
-
+#include "errors.h"
 
 #define UARTS     4   // 2 UARTs + 3 USARTs
 #define LOCATIONS 4

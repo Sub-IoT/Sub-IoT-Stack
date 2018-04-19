@@ -42,6 +42,7 @@
 
 #include "debug.h"
 #include "platform.h"
+#include "errors.h"
 
 
 #define USARTS    3 // only 1 and 2 available

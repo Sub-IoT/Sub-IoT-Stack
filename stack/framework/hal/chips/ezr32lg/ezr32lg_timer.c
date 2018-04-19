@@ -34,6 +34,7 @@
 #include "hwatomic.h"
 #include "ezr32lg_mcu.h"
 #include "platform.h"
+#include "errors.h"
 
 #define HWTIMER_NUM 1
 /**************************************************************************//**

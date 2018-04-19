@@ -31,7 +31,8 @@
 #include "timer.h"
 #include "led.h"
 #include "stm32_device.h"
-
+#include "stm32_common_gpio.h"
+#include "errors.h"
 
 #if PLATFORM_NUM_LEDS < 1
   #error PLATFORM_NUM_LEDS does not match the expected value. Update platform CMakeLists.txt or platform_leds.c

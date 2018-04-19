@@ -16,6 +16,7 @@
 #include <string.h>
 
 #include "platform.h"
+#include "errors.h"
 
 // TODO use other ways to avoid long polling
 #define I2C_POLLING  10000

@@ -26,12 +26,14 @@
 #include "string.h"
 #include "types.h"
 
+
 #include "debug.h"
 #include "log.h"
 #include "hwradio.h"
 #include "hwdebug.h"
 #include "hwspi.h"
 #include "platform.h"
+#include "errors.h"
 
 #include "sx1276Regs-Fsk.h"
 #include "sx1276Regs-LoRa.h"
