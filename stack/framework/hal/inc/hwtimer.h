@@ -32,7 +32,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-#include "errors.h"
+#include "types.h"
 #include "link_c.h"
 //#ifndef PLATFORM_NUM_TIMERS
 //    #error The platform should define the number of available timers

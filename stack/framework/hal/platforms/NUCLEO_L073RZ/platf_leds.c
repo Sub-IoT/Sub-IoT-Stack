@@ -30,8 +30,7 @@
 #include <debug.h>
 #include "timer.h"
 #include "led.h"
-#include "stm32l0xx_gpio.h"
-#include "stm32l0xx_hal_gpio.h"
+#include "stm32_device.h"
 
 
 #if PLATFORM_NUM_LEDS < 1

@@ -1,7 +1,7 @@
 /* * OSS-7 - An opensource implementation of the DASH7 Alliance Protocol for ultra
  * lowpower wireless sensor communication
  *
- * Copyright 2015 University of Antwerp
+ * Copyright 2018 University of Antwerp
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,23 +16,18 @@
  * limitations under the License.
  */
 
-/*! \file stm32l0xx_gpio.c
+/*! \file stm32_common_gpio.c
 
  *
  */
 
-#include "types.h"
-#include "stm32l0xx_mcu.h"
-#include "hwgpio.h"
-#include "stm32l0xx_gpio.h"
-#include "stm32l0xx_hal_conf.h"
-#include "stm32l0xx_hal.h"
-
-#include "hwatomic.h"
 #include "debug.h"
-#include "stm32l0xx_ll_exti.h"
-#include "stm32l0xx_ll_gpio.h"
-#include "stm32l0xx_ll_system.h"
+#include "stm32_device.h"
+#include "hwgpio.h"
+#include "stm32_common_gpio.h"
+#include "stm32_common_mcu.h"
+#include "hwatomic.h"
+#include "errors.h"
 
 #define PORT_BASE(pin)  ((GPIO_TypeDef*)(pin & ~0x0F))
 
@@ -295,6 +290,7 @@ __LINK_C error_t hw_gpio_enable_interrupt(pin_id_t pin_id)
   uint32_t exti_line = 1 << GPIO_PIN(pin_id);
   LL_EXTI_EnableIT_0_31(exti_line);
 
+#if defined(STM32L0)
   if(GPIO_PIN(pin_id) <= 1) {
     HAL_NVIC_SetPriority(EXTI0_1_IRQn, 2, 0); // TODO on boot
     HAL_NVIC_EnableIRQ(EXTI0_1_IRQn);
@@ -311,6 +307,26 @@ __LINK_C error_t hw_gpio_enable_interrupt(pin_id_t pin_id)
     assert(false);
   }
 }
+#elif defined(STM32L1)
+  if(GPIO_PIN(pin_id) <= 4) {
+    HAL_NVIC_SetPriority(EXTI0_IRQn + GPIO_PIN(pin_id), 2, 0); // TODO on boot
+    HAL_NVIC_EnableIRQ(EXTI0_IRQn + GPIO_PIN(pin_id));
+    return SUCCESS;
+  } else if (GPIO_PIN(pin_id) <= 9) {
+    HAL_NVIC_SetPriority(EXTI9_5_IRQn, 2, 0); // TODO on boot
+    HAL_NVIC_EnableIRQ(EXTI9_5_IRQn);
+    return SUCCESS;
+  } else if (GPIO_PIN(pin_id) > 9 && GPIO_PIN(pin_id) <= 15) {
+    HAL_NVIC_SetPriority(EXTI15_10_IRQn, 2, 0); // TODO on boot
+    HAL_NVIC_EnableIRQ(EXTI15_10_IRQn);
+    return SUCCESS;
+  } else {
+    assert(false);
+  }
+}
+#else
+  #error "STM32 family not supported"
+#endif
 
 __LINK_C error_t hw_gpio_disable_interrupt(pin_id_t pin_id)
 {

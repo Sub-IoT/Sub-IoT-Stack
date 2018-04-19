@@ -23,6 +23,7 @@
 #include "debug.h"
 #include "framework_defs.h"
 #include "log.h"
+#include "errors.h"
 
 #if defined(FRAMEWORK_LOG_ENABLED) && defined(FRAMEWORK_TIMER_LOG_ENABLED)
   #define DPRINT(...) log_print_stack_string(LOG_STACK_FWK, __VA_ARGS__)

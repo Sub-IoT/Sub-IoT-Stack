@@ -24,8 +24,8 @@
 #include <string.h>
 #include <debug.h>
 
-#include "stm32l0xx_gpio.h"
-#include "stm32l0xx_hal_gpio.h"
+#include "stm32_device.h"
+#include "stm32_common_gpio.h"
 
 #if PLATFORM_NUM_BUTTONS != 1
 	#error "PLATFORM_NUM_BUTTONS does not match the expected value. Update platform.h or platform_userbutton.c"

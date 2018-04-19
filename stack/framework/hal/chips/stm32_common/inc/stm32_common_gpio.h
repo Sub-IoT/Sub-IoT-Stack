@@ -1,7 +1,7 @@
 /* * OSS-7 - An opensource implementation of the DASH7 Alliance Protocol for ultra
  * lowpower wireless sensor communication
  *
- * Copyright 2015 University of Antwerp
+ * Copyright 2018 University of Antwerp
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,11 +16,11 @@
  * limitations under the License.
  */
 
-#ifndef __STM32L0xx_GPIO_H_
-#define __STM32L0xx_GPIO_H_
+#ifndef __STM32_COMMON_GPIO_H_
+#define __STM32_COMMON_GPIO_H_
 
 #include "hwgpio.h"
-#include "stm32l0xx_hal_gpio.h"
+#include "stm32_device.h"
 
 #define PLATFORM_NUM_TIMERS 1
 
@@ -35,4 +35,4 @@ __LINK_C error_t hw_gpio_configure_pin(pin_id_t pin_id, bool int_allowed, uint32
 __LINK_C error_t hw_gpio_configure_pin_stm(pin_id_t pin_id, GPIO_InitTypeDef* init_options);
 
 
-#endif //__STM32L0xx_GPIO_H_
+#endif //__STM32_COMMON_GPIO_H_

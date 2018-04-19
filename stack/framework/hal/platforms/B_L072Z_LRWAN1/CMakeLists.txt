@@ -118,16 +118,17 @@ ADD_LIBRARY(PLATFORM OBJECT
     platf_button.c
     platf_debug.c
     libc_overrides.c
-	
-	
-	inc/platform.h	
+
+
+	inc/platform.h
     inc/button.h
 	inc/led.h
 	inc/ports.h
 )
 
-#Include the sources for the efm32gg chip
+#Include the sources for the stm32l0 chip
 ADD_CHIP("stm32l0xx")
+ADD_CHIP("stm32_common")
 
 #Include the sources for the radio chip, if needed
 IF(NOT ("${${PLATFORM_PREFIX}_RADIO}" STREQUAL "none"))

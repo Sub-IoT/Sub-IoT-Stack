@@ -21,7 +21,7 @@
 #include "hwgpio.h"
 #include <debug.h>
 #include "ports.h"
-#include "stm32l0xx_gpio.h"
+#include "stm32_device.h"
 
 #if defined(PLATFORM_USE_DEBUGPINS) && PLATFORM_NUM_DEBUGPINS > 0
 

@@ -159,6 +159,7 @@ static void flush_fifos()
         current_request_retry_count = 0;
 
         current_request_packet = packet_queue_alloc_packet();
+        assert(current_request_packet);
         packet_queue_mark_processing(current_request_packet);
         current_request_packet->d7anp_addressee = &(current_master_session.config.addressee); // TODO explicitly pass addressee down the stack layers?
 

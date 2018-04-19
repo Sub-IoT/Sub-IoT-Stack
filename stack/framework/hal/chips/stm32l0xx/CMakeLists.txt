@@ -77,14 +77,4 @@ ADD_LIBRARY (${CHIP_LIBRARY_NAME} OBJECT
 #
 #     Drivers/STM32L0xx_HAL_Driver/Src/stm32l0xx_ll_exti.c
     Drivers/STM32L0xx_HAL_Driver/Src/stm32l0xx_ll_gpio.c
-#
-    stm32l0xx_atomic.c
-    stm32l0xx_gpio.c
-    stm32l0xx_i2c.c
-    stm32l0xx_mcu.c
-    stm32l0xx_spi.c
-    stm32l0xx_system.c
-    stm32l0xx_timer.c
-    stm32l0xx_uart.c
-    stm32l0xx_watchdog.c
 )

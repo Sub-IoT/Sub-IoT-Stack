@@ -30,6 +30,7 @@
 #include "framework_defs.h"
 #include "assert.h" // start from assert.h which defines __ASSERT_FUNCT and then redefine assert
 #include "hwsystem.h"
+#include <stdio.h>
 #undef assert
 
 #ifdef __ASSERT_FUNCTION  // some systems define __ASSERT_FUNCTION ..
@@ -46,7 +47,13 @@ void __assert_func(const char *, int, const char *, const char *);
 #ifdef NDEBUG           /* required by ANSI standard */
 # define assert(__e) (__e)
 #elif defined FRAMEWORK_DEBUG_ASSERT_REBOOT
-# define assert(__e) if(!(__e)) { hw_reset(); }
+# define assert(__e) \
+  do { \
+    if(!(__e)) { \
+      printf("assertion \"%s\" failed: file \"%s\", line %d%s%s\n", #__e, __FILE__, __LINE__, __ASSERT_FUNC ? ", function: " : "", __ASSERT_FUNC ? __ASSERT_FUNC : ""); \
+      hw_reset(); \
+    } \
+  } while(0)
 #elif defined FRAMEWORK_DEBUG_ASSERT_MINIMAL
 # define assert(__e) ((__e) ? (void)0 : __assert_func (NULL, 0, NULL, NULL))
 #else

@@ -1,7 +1,7 @@
 /* * OSS-7 - An opensource implementation of the DASH7 Alliance Protocol for ultra
  * lowpower wireless sensor communication
  *
- * Copyright 2015 University of Antwerp
+ * Copyright 2018 University of Antwerp
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,13 +16,12 @@
  * limitations under the License.
  */
 
-/*! \file stm32l0xx_mcu.c
+/*! \file stm32_common_mcu.c
  *  \author glenn.ergeerts@uantwerpen.be
  */
 
-#include "stm32l0xx_hal.h"
+#include "stm32_device.h"
 
-#include "stm32l0xx_hal_conf.h"
 #include "debug.h"
 
 #include "timer.h"
@@ -65,7 +64,10 @@ static void init_clock(void)
   HAL_PWR_EnableBkUpAccess();
   __HAL_RCC_LSE_CONFIG(RCC_LSE_OFF);
   while (__HAL_RCC_GET_FLAG(RCC_FLAG_LSERDY) != RESET) {};
+#if defined(STM32L0)
+  // TODO not defined on STM32L1
   __HAL_RCC_LSEDRIVE_CONFIG(RCC_LSEDRIVE_LOW);
+#endif
   RCC_OscInitStruct.OscillatorType      = RCC_OSCILLATORTYPE_HSI;
   RCC_OscInitStruct.HSEState            = RCC_HSE_OFF;
   RCC_OscInitStruct.LSEState            = RCC_LSE_ON;
@@ -90,7 +92,7 @@ static void init_clock(void)
 #endif
 }
 
-void __stm32l0xx_mcu_init()
+void __stm32_common_mcu_init()
 {
   HAL_Init();
   init_clock();
