@@ -357,11 +357,15 @@ void EXTI_IRQHandler()
   for (uint8_t pin_nr = 0; pin_nr < EXTI_LINES_COUNT; pin_nr++)
   {
     uint16_t pin = 1 << pin_nr;
-    if(__HAL_GPIO_EXTI_GET_IT(pin) != RESET)
+    if(pin & exti_interrrupts)
     {
-      __HAL_GPIO_EXTI_CLEAR_IT(pin);
-      gpio_int_callback(pin_nr);
-      return;
+      if(__HAL_GPIO_EXTI_GET_IT(pin) != RESET)
+      {
+        __HAL_GPIO_EXTI_CLEAR_IT(pin);
+        gpio_int_callback(pin_nr);
+        return;
+      }
     }
   }
 }
+
