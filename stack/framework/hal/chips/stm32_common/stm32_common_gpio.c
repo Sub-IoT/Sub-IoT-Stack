@@ -30,6 +30,7 @@
 #include "errors.h"
 
 #define PORT_BASE(pin)  ((GPIO_TypeDef*)(pin & ~0x0F))
+#define EXTI_LINES_COUNT 16
 
 #define RCC_GPIO_CLK_ENABLE(__GPIO_PORT__)                    \
 do {                                                          \
@@ -350,51 +351,16 @@ __LINK_C error_t hw_gpio_disable_interrupt(pin_id_t pin_id)
 	return SUCCESS;
 }
 
-void EXTI0_1_IRQHandler(void)
+void EXTI_IRQHandler()
 {
-  // will check the different pins here instead of using the HAL
-  uint8_t pin_id = 0;
-  for (;pin_id <= 1; pin_id++)
+  uint32_t exti_interrrupts = EXTI->PR & EXTI->IMR;
+  for (uint8_t pin_nr = 0; pin_nr < EXTI_LINES_COUNT; pin_nr++)
   {
-    uint16_t pin = 1 << pin_id;
+    uint16_t pin = 1 << pin_nr;
     if(__HAL_GPIO_EXTI_GET_IT(pin) != RESET)
     {
       __HAL_GPIO_EXTI_CLEAR_IT(pin);
-      gpio_int_callback(pin_id);
-      return;
-    }
-  }
-}
-
-void EXTI2_3_IRQHandler(void)
-{
-  // will check the different pins here instead of using the HAL
-
-  uint8_t pin_id = 2;
-  for (;pin_id <= 3; pin_id++)
-  {
-    uint16_t pin = 1 << pin_id;
-    if(__HAL_GPIO_EXTI_GET_IT(pin) != RESET)
-    {
-      __HAL_GPIO_EXTI_CLEAR_IT(pin);
-      gpio_int_callback(pin_id);
-      return;
-    }
-  }
-}
-
-void EXTI4_15_IRQHandler(void)
-{
-  // will check the different pins here instead of using the HAL
-
-  uint8_t pin_id = 4;
-  for (;pin_id <= 15; pin_id++)
-  {
-    uint16_t pin = 1 << pin_id;
-    if(__HAL_GPIO_EXTI_GET_IT(pin) != RESET)
-    {
-      __HAL_GPIO_EXTI_CLEAR_IT(pin);
-      gpio_int_callback(pin_id);
+      gpio_int_callback(pin_nr);
       return;
     }
   }

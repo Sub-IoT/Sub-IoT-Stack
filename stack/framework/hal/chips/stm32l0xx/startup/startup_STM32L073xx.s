@@ -223,14 +223,14 @@ g_pfnVectors:
    .weak      RCC_CRS_IRQHandler
    .thumb_set RCC_CRS_IRQHandler,Default_Handler
 
-   .weak      EXTI0_1_IRQHandler
-   .thumb_set EXTI0_1_IRQHandler,Default_Handler
+   .weak      EXTI_IRQHandler
+   .thumb_set EXTI_IRQHandler,Default_Handler
 
-   .weak      EXTI2_3_IRQHandler
-   .thumb_set EXTI2_3_IRQHandler,Default_Handler
+   .weak      EXTI_IRQHandler
+   .thumb_set EXTI_IRQHandler,Default_Handler
 
-   .weak      EXTI4_15_IRQHandler
-   .thumb_set EXTI4_15_IRQHandler,Default_Handler
+   .weak      EXTI_IRQHandler
+   .thumb_set EXTI_IRQHandler,Default_Handler
 
    .weak      TSC_IRQHandler
    .thumb_set TSC_IRQHandler,Default_Handler
