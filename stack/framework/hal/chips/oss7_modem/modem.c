@@ -31,6 +31,14 @@
 #define RX_BUFFER_SIZE 256
 #define CMD_BUFFER_SIZE 256
 
+#if defined(FRAMEWORK_LOG_ENABLED) && defined(FRAMEWORK_MODEM_LOG_ENABLED)
+  #define DPRINT(...) log_print_string(__VA_ARGS__)
+  #define DPRINT_DATA(...) log_print_data(__VA_ARGS__)
+#else
+    #define DPRINT(...)
+    #define DPRINT_DATA(...)
+#endif
+
 
 typedef struct {
   uint8_t tag_id;
@@ -61,7 +69,7 @@ static void process_serial_frame(fifo_t* fifo) {
           command_completed = action.tag_response.completed;
           completed_with_error = action.tag_response.error;
         } else {
-          log_print_string("received resp with unexpected tag_id (%i vs %i)", action.tag_response.tag_id, command.tag_id);
+          DPRINT("received resp with unexpected tag_id (%i vs %i)", action.tag_response.tag_id, command.tag_id);
           // TODO unsolicited responses
         }
         break;
@@ -74,8 +82,8 @@ static void process_serial_frame(fifo_t* fifo) {
         break;
       case ALP_OP_RETURN_STATUS: ;
         uint8_t addressee_len = alp_addressee_id_length(action.d7_interface_status.addressee.ctrl.id_type);
-        log_print_string("received resp from: ");
-        log_print_data(action.d7_interface_status.addressee.id, addressee_len);
+        DPRINT("received resp from: ");
+        DPRINT_DATA(action.d7_interface_status.addressee.id, addressee_len);
         // TODO callback?
         break;
       default:
@@ -85,7 +93,7 @@ static void process_serial_frame(fifo_t* fifo) {
 
 
   if(command_completed) {
-    log_print_string("command with tag %i completed @ %i", command.tag_id, timer_get_counter_value());
+    DPRINT("command with tag %i completed @ %i", command.tag_id, timer_get_counter_value());
     if(callbacks->command_completed_callback)
       callbacks->command_completed_callback(completed_with_error);
 
@@ -99,10 +107,10 @@ static void process_rx_fifo() {
     if(fifo_get_size(&rx_fifo) > SERIAL_ALP_FRAME_HEADER_SIZE) {
         uint8_t header[SERIAL_ALP_FRAME_HEADER_SIZE];
         fifo_peek(&rx_fifo, header, 0, SERIAL_ALP_FRAME_HEADER_SIZE);
-        log_print_data(header, 3); // TODO tmp
+        DPRINT_DATA(header, 3); // TODO tmp
         if(header[0] != SERIAL_ALP_FRAME_SYNC_BYTE || header[1] != SERIAL_ALP_FRAME_VERSION) {
           fifo_skip(&rx_fifo, 1);
-          log_print_string("skip");
+          DPRINT("skip");
           parsed_header = false;
           payload_len = 0;
           if(fifo_get_size(&rx_fifo) > SERIAL_ALP_FRAME_HEADER_SIZE)
@@ -114,12 +122,12 @@ static void process_rx_fifo() {
         parsed_header = true;
         fifo_skip(&rx_fifo, SERIAL_ALP_FRAME_HEADER_SIZE);
         payload_len = header[2];
-        log_print_string("found header, payload size = %i", payload_len);
+        DPRINT("found header, payload size = %i", payload_len);
         sched_post_task(&process_rx_fifo);
     }
   } else {
     if(fifo_get_size(&rx_fifo) < payload_len) {
-      log_print_string("payload not complete yet");
+      DPRINT("payload not complete yet");
       return;
     }
 
@@ -146,7 +154,7 @@ static void send(uint8_t* buffer, uint8_t len) {
   uint8_t header[] = {'A', 'T', '$', 'D', 0xC0, 0x00, len };
   uart_send_bytes(uart_handle, header, sizeof(header));
   uart_send_bytes(uart_handle, buffer, len);
-  log_print_string("> %i bytes @ %i", len, timer_get_counter_value());
+  DPRINT("> %i bytes @ %i", len, timer_get_counter_value());
 }
 
 void modem_init(uart_handle_t* uart, modem_callbacks_t* cbs) {
@@ -175,7 +183,7 @@ bool modem_execute_raw_alp(uint8_t* alp, uint8_t len) {
 
 bool alloc_command() {
   if(command.is_active) {
-    log_print_string("prev command still active @ %i", timer_get_counter_value());
+    DPRINT("prev command still active @ %i", timer_get_counter_value());
     return false;
   }
 
