@@ -48,8 +48,7 @@ static uint8_t next_tag_id = 0;
 static bool parsed_header = false;
 static uint8_t payload_len = 0;
 
-static void process_serial_frame(fifo_t* fifo) {  
-
+static void process_serial_frame(fifo_t* fifo) {
   bool command_completed = false;
   bool completed_with_error = false;
   while(fifo_get_size(fifo)) {
