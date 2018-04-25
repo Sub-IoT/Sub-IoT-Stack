@@ -6,7 +6,7 @@ MEMORY
 
 ENTRY(Reset_Handler)
 
-_stack_size = 0x300;
+_stack_size = 0x500;
 _heap_size = 0x300;
 
 SECTIONS
