@@ -20,6 +20,7 @@
  *  \author philippe.nunes@cortus.com
  *
  */
+#include <assert.h>
 
 #include "debug.h"
 #include "hwdebug.h"
@@ -65,6 +66,9 @@ static dae_access_profile_t NGDEF(_active_addressee_access_profile);
 
 static bool NGDEF(_stop_dialog_after_tx);
 #define stop_dialog_after_tx NG(_stop_dialog_after_tx)
+
+static timer_event d7atp_response_period_expired_timer;
+static timer_event d7atp_execution_delay_expired_timer;
 
 typedef enum {
     D7ATP_STATE_STOPPED,
@@ -167,7 +171,9 @@ static void schedule_response_period_timeout_handler(timer_tick_t timeout_ticks)
 
     DPRINT("Starting response_period timer (%i ticks)", timeout_ticks);
 
-    assert(timer_post_task_delay(&response_period_timeout_handler, timeout_ticks) == SUCCESS);
+    d7atp_response_period_expired_timer.next_event = timeout_ticks;
+    d7atp_response_period_expired_timer.priority = MAX_PRIORITY;
+    assert(timer_add_event(&d7atp_response_period_expired_timer) == SUCCESS);
 }
 
 
@@ -215,8 +221,7 @@ void d7atp_signal_dialog_termination()
     current_transaction_id = NO_ACTIVE_REQUEST_ID;
 
     // Discard eventually the Tc timer
-    timer_cancel_task(&response_period_timeout_handler);
-    sched_cancel_task(&response_period_timeout_handler);
+    timer_cancel_event(&d7atp_response_period_expired_timer);
 
     if(current_Tl_received == 0) {
       DPRINT("Tl = 0, stop FG scan");
@@ -250,18 +255,15 @@ void d7atp_init()
     current_dialog_id = 0;
     current_Tl_received = 0;
     stop_dialog_after_tx = false;
-
-    sched_register_task(&response_period_timeout_handler);
-    sched_register_task(&execution_delay_timeout_handler);
+    timer_init_event(&d7atp_response_period_expired_timer, &response_period_timeout_handler);
+    timer_init_event(&d7atp_execution_delay_expired_timer, &execution_delay_timeout_handler);
 }
 
 void d7atp_stop()
 {
     d7atp_state = D7ATP_STATE_STOPPED;
-    timer_cancel_task(&response_period_timeout_handler);
-    sched_cancel_task(&response_period_timeout_handler);
-    timer_cancel_task(&execution_delay_timeout_handler);
-    sched_cancel_task(&execution_delay_timeout_handler);
+    timer_cancel_event(&d7atp_response_period_expired_timer);
+    timer_cancel_event(&d7atp_execution_delay_expired_timer);
 }
 
 error_t d7atp_send_request(uint8_t dialog_id, uint8_t transaction_id, bool is_last_transaction,
@@ -477,7 +479,10 @@ void d7atp_signal_packet_transmitted(packet_t* packet)
                 if (Te)
                 {
                     d7anp_set_foreground_scan_timeout(Tc + 2); // we include Tt here for now
-                    timer_post_task_delay(&execution_delay_timeout_handler, Te);
+
+                    d7atp_execution_delay_expired_timer.next_event = Te;
+                    d7atp_execution_delay_expired_timer.priority = MAX_PRIORITY;
+                    timer_add_event(&d7atp_execution_delay_expired_timer);
                     return;
                 }
                 // if the the time passed since transmission is greater than Te, Tc is updated to include Te

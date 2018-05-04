@@ -79,6 +79,8 @@ static uint8_t NGDEF(_single_request_retry_limit);
 static packet_t* NGDEF(_current_response_packet);
 #define current_response_packet NG(_current_response_packet)
 
+static timer_event dormant_session_timer;
+
 typedef enum {
     D7ASP_STATE_STOPPED,
     D7ASP_STATE_IDLE,
@@ -331,7 +333,9 @@ static void schedule_dormant_session(d7asp_master_session_t* dormant_session) {
   assert(dormant_session->state == D7ASP_MASTER_SESSION_DORMANT);
   timer_tick_t timeout = CT_DECOMPRESS(dormant_session->config.dormant_timeout);
   DPRINT("Sched dormant timeout in %i s", timeout);
-  timer_post_task_delay(&dormant_session_timeout, timeout * 1024);
+  dormant_session_timer.next_event = timeout * 1024;
+  dormant_session_timer.priority = MAX_PRIORITY;
+  assert(timer_add_event(&dormant_session_timer) == SUCCESS);
 }
 
 void d7asp_init()
@@ -348,7 +352,7 @@ void d7asp_init()
     DPRINT("FIFO_MAX_REQUESTS_COUNT %d", MODULE_D7AP_FIFO_MAX_REQUESTS_COUNT);
 
     sched_register_task(&flush_fifos);
-    sched_register_task(&dormant_session_timeout);
+    timer_init_event(&dormant_session_timer, &dormant_session_timeout);
 }
 
 void d7asp_stop()
@@ -356,8 +360,7 @@ void d7asp_stop()
     d7asp_state = D7ASP_STATE_STOPPED;
     timer_cancel_task(&flush_fifos);
     sched_cancel_task(&flush_fifos);
-    timer_cancel_task(&dormant_session_timeout);
-    sched_cancel_task(&dormant_session_timeout);
+    timer_cancel_event(&dormant_session_timer);
 }
 
 d7asp_master_session_t* d7asp_master_session_create(d7ap_session_config_t* d7asp_master_session_config) {

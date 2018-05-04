@@ -33,6 +33,7 @@
 #include "compress.h"
 #include "fec.h"
 #include "errors.h"
+#include "timer.h"
 
 #if defined(FRAMEWORK_LOG_ENABLED) && defined(MODULE_D7AP_DLL_LOG_ENABLED)
 #define DPRINT(...) log_print_stack_string(LOG_STACK_DLL, __VA_ARGS__)
@@ -136,6 +137,36 @@ static void release_packet(hw_radio_packet_t* hw_radio_packet)
 {
     packet_queue_free_packet(packet_queue_find_packet(hw_radio_packet));
 }
+
+/*!
+ * D7A timer used to perform a CCA
+ */
+static timer_event dll_cca_timer;
+
+/*!
+ * D7A timer used to perform a CSMA-CA
+ */
+static timer_event dll_csma_timer;
+
+/*!
+ * D7A timer used to start the automation scan (foreground)
+ */
+static timer_event dll_scan_automation_timer;
+
+/*!
+ * D7A timer used to start a background scan
+ */
+static timer_event dll_background_scan_timer;
+
+/*!
+ * D7A timer used to expire the guard period
+ */
+static timer_event dll_guard_period_expiration_timer;
+
+/*!
+ * D7A timer used to delay the processing of a received packet
+ */
+static timer_event dll_process_received_packet_timer;
 
 static void switch_state(dll_state_t next_state)
 {
@@ -261,7 +292,9 @@ void start_guard_period(timer_tick_t period)
 {
     DPRINT("guard channel");
     guarded_channel = true;
-    timer_post_task_prio_delay(&guard_period_expiration, period, MAX_PRIORITY);
+    dll_guard_period_expiration_timer.next_event = period;
+    dll_guard_period_expiration_timer.priority = MAX_PRIORITY;
+    timer_add_event(&dll_guard_period_expiration_timer);
 }
 
 void start_background_scan()
@@ -269,7 +302,9 @@ void start_background_scan()
     assert(dll_state == DLL_STATE_SCAN_AUTOMATION);
 
     // Start a new tsched timer
-    assert(timer_post_task_delay(&start_background_scan, tsched) == SUCCESS);
+    dll_background_scan_timer.next_event = tsched;
+    dll_background_scan_timer.priority = MAX_PRIORITY;
+    timer_add_event(&dll_background_scan_timer);
 
     hw_rx_cfg_t rx_cfg = {
         .channel_id = current_channel_id,
@@ -283,8 +318,7 @@ void dll_stop_background_scan()
 {
     assert(dll_state == DLL_STATE_SCAN_AUTOMATION);
 
-    timer_cancel_task(&start_background_scan);
-    sched_cancel_task(&start_background_scan);
+    timer_cancel_event(&dll_background_scan_timer);
     hw_radio_set_idle();
 }
 
@@ -337,7 +371,9 @@ static void packet_received(hw_radio_packet_t* hw_radio_packet)
     packet_queue_mark_received(hw_radio_packet);
 
     /* the received packet needs to be handled in priority */
-    sched_post_task_prio(&process_received_packets, MAX_PRIORITY, NULL);
+    dll_process_received_packet_timer.next_event = 0;
+    dll_process_received_packet_timer.priority = MAX_PRIORITY;
+    assert(timer_add_event(&dll_process_received_packet_timer) == SUCCESS);
 }
 
 static void notify_transmitted_packet(void *arg)
@@ -350,7 +386,9 @@ static void notify_transmitted_packet(void *arg)
 
     if (process_received_packets_after_tx)
     {
-        sched_post_task_prio(&process_received_packets, MAX_PRIORITY, NULL);
+        dll_process_received_packet_timer.next_event = 0;
+        dll_process_received_packet_timer.priority = MAX_PRIORITY;
+        assert(timer_add_event(&dll_process_received_packet_timer) == SUCCESS);
         process_received_packets_after_tx = false;
     }
 
@@ -393,18 +431,15 @@ static void discard_tx()
 
     if ((dll_state == DLL_STATE_CCA1) || (dll_state == DLL_STATE_CCA2))
     {
-        timer_cancel_task(&execute_cca);
-        sched_cancel_task(&execute_cca);
+        timer_cancel_event(&dll_cca_timer);
     }
     else if ((dll_state == DLL_STATE_CCA_FAIL) || (dll_state == DLL_STATE_CSMA_CA_RETRY))
     {
-        timer_cancel_task(&execute_csma_ca);
-        sched_cancel_task(&execute_csma_ca);
+        timer_cancel_event(&dll_csma_timer);
     }
     else if (dll_state == DLL_STATE_TX_FOREGROUND_COMPLETED)
     {
-        timer_cancel_task(&guard_period_expiration);
-        sched_cancel_task(&guard_period_expiration);
+        timer_cancel_event(&dll_guard_period_expiration_timer);
         guarded_channel = false;
         sched_cancel_task(&notify_transmitted_packet);
     }
@@ -585,12 +620,16 @@ static void execute_csma_ca(void *arg)
             if (t_offset)
             {
                 switch_state(DLL_STATE_CCA1);
-                timer_post_task_prio_delay(&execute_cca, t_offset, MAX_PRIORITY);
+                dll_cca_timer.next_event = t_offset;
+                dll_cca_timer.priority = MAX_PRIORITY;
+                assert(timer_add_event(&dll_cca_timer) == SUCCESS);
             }
             else
             {
                 switch_state(DLL_STATE_CCA1);
-                sched_post_task_prio(&execute_cca, MAX_PRIORITY, NULL);
+                dll_cca_timer.next_event = 0;
+                dll_cca_timer.priority = MAX_PRIORITY;
+                assert(timer_add_event(&dll_cca_timer) == SUCCESS);
             }
 
             break;
@@ -604,7 +643,9 @@ static void execute_csma_ca(void *arg)
             {
                 DPRINT("CCA fail because dll_to = %i", dll_to);
                 switch_state(DLL_STATE_CCA_FAIL);
-                sched_post_task_prio(&execute_csma_ca, MAX_PRIORITY, NULL);
+                dll_csma_timer.next_event = 0;
+                dll_csma_timer.priority = MAX_PRIORITY;
+                assert(timer_add_event(&dll_csma_timer) == SUCCESS);
                 break;
             }
 
@@ -646,15 +687,16 @@ static void execute_csma_ca(void *arg)
 
             if (t_offset)
             {
-                switch_state(DLL_STATE_CCA1);
-                timer_post_task_prio_delay(&execute_cca, t_offset, MAX_PRIORITY);
+                dll_cca_timer.next_event = t_offset;
             }
             else
             {
-                switch_state(DLL_STATE_CCA1);
-                sched_post_task_prio(&execute_cca, MAX_PRIORITY, NULL);
+                dll_cca_timer.next_event = 0;
             }
 
+            switch_state(DLL_STATE_CCA1);
+            dll_cca_timer.priority = MAX_PRIORITY;
+            assert(timer_add_event(&dll_cca_timer) == SUCCESS);
             break;
         }
         case DLL_STATE_CCA_FAIL:
@@ -664,7 +706,9 @@ static void execute_csma_ca(void *arg)
             d7anp_signal_transmission_failure();
             if (process_received_packets_after_tx)
             {
-                sched_post_task_prio(&process_received_packets, MAX_PRIORITY, NULL);
+                dll_process_received_packet_timer.next_event = 0;
+                dll_process_received_packet_timer.priority = MAX_PRIORITY;
+                assert(timer_add_event(&dll_process_received_packet_timer) == SUCCESS);
                 process_received_packets_after_tx = false;
             }
 
@@ -680,10 +724,9 @@ static void execute_csma_ca(void *arg)
 
 void dll_execute_scan_automation(void *arg)
 {
-    // first make sure the background scan tasks are stopped,
+    // first make sure the background scan timer is stopped and the pending task canceled
     // since they might not be necessary for current active class anymore
-    timer_cancel_task(&start_background_scan);
-    sched_cancel_task(&start_background_scan);
+    timer_cancel_event(&dll_background_scan_timer);
 
     uint8_t scan_access_class = fs_read_dll_conf_active_access_class();
     if (active_access_class != scan_access_class)
@@ -759,7 +802,8 @@ void dll_execute_scan_automation(void *arg)
 
         // If TSCHED > 0, an independent scheduler is set to generate regular scan start events at TSCHED rate.
         DPRINT("Perform a dll background scan at the end of TSCHED (%d ticks)", tsched);
-        assert(timer_post_task_delay(&start_background_scan, tsched) == SUCCESS);
+        dll_background_scan_timer.next_event = tsched;
+        assert(timer_add_event(&dll_background_scan_timer) == SUCCESS);
     }
 
     current_channel_id = rx_cfg.channel_id;
@@ -797,20 +841,20 @@ void dll_notify_dialog_terminated()
     dll_execute_scan_automation(NULL);
 }
 
-
 void dll_init()
 {
     assert(dll_state == DLL_STATE_STOPPED);
 
     uint8_t nf_ctrl;
 
-    sched_register_task(&process_received_packets);
+    // Initialize timers
     sched_register_task(&notify_transmitted_packet);
-    sched_register_task(&execute_cca);
-    sched_register_task(&execute_csma_ca);
-    sched_register_task(&dll_execute_scan_automation);
-    sched_register_task(&start_background_scan);
-    sched_register_task(&guard_period_expiration);
+    timer_init_event(&dll_cca_timer, &execute_cca);
+    timer_init_event(&dll_csma_timer, &execute_csma_ca);
+    timer_init_event(&dll_scan_automation_timer, &dll_execute_scan_automation);
+    timer_init_event(&dll_background_scan_timer, &start_background_scan);
+    timer_init_event(&dll_guard_period_expiration_timer, &guard_period_expiration);
+    timer_init_event(&dll_process_received_packet_timer, &process_received_packets);
 
     hw_radio_init(&alloc_new_packet, &release_packet);
 
@@ -821,40 +865,35 @@ void dll_init()
     active_access_class = NO_ACTIVE_ACCESS_CLASS;
     process_received_packets_after_tx = false;
     resume_fg_scan = false;
-    sched_post_task(&dll_execute_scan_automation);
+
+    // Start immediately the scan automation
+    dll_scan_automation_timer.next_event = 0;
+    timer_add_event(&dll_scan_automation_timer);
     guarded_channel = false;
 
     fs_register_file_modified_callback(D7A_FILE_DLL_CONF_FILE_ID, &conf_file_changed_callback);
     for(int i = 0; i < 15; i++)
-      fs_register_file_modified_callback(D7A_FILE_ACCESS_PROFILE_ID + i, &access_profile_file_changed_callback);
+        fs_register_file_modified_callback(D7A_FILE_ACCESS_PROFILE_ID + i, &access_profile_file_changed_callback);
 }
-
 
 void dll_stop()
 {
     dll_state = DLL_STATE_STOPPED;
-    timer_cancel_task(&process_received_packets);
-    sched_cancel_task(&process_received_packets);
     timer_cancel_task(&notify_transmitted_packet);
     sched_cancel_task(&notify_transmitted_packet);
-    timer_cancel_task(&execute_cca);
-    sched_cancel_task(&execute_cca);
-    timer_cancel_task(&execute_csma_ca);
-    sched_cancel_task(&execute_csma_ca);
-    timer_cancel_task(&dll_execute_scan_automation);
-    sched_cancel_task(&dll_execute_scan_automation);
-    timer_cancel_task(&start_background_scan);
-    sched_cancel_task(&start_background_scan);
-    timer_cancel_task(&guard_period_expiration);
-    sched_cancel_task(&guard_period_expiration);
+    timer_cancel_event(&dll_cca_timer);
+    timer_cancel_event(&dll_csma_timer);
+    timer_cancel_event(&dll_scan_automation_timer);
+    timer_cancel_event(&dll_background_scan_timer);
+    timer_cancel_event(&dll_guard_period_expiration_timer);
+    timer_cancel_event(&dll_process_received_packet_timer);
 }
 
 void dll_tx_frame(packet_t* packet)
 {
     if (dll_state == DLL_STATE_SCAN_AUTOMATION)
     {
-        timer_cancel_task(&start_background_scan);
-        sched_cancel_task(&start_background_scan);
+        timer_cancel_event(&dll_background_scan_timer);
     }
 
     if (dll_state != DLL_STATE_FOREGROUND_SCAN)
@@ -992,7 +1031,9 @@ void dll_tx_frame(packet_t* packet)
             if (Te > Trpd)
             {
                 Te -= Trpd;
-                timer_post_task_prio_delay(&execute_csma_ca, Te, MAX_PRIORITY);
+                dll_csma_timer.next_event = Te;
+                dll_csma_timer.priority = MAX_PRIORITY;
+                timer_add_event(&dll_csma_timer);
                 return;
             }
             // If the response processing delay TRPD is bigger than TE,
@@ -1007,8 +1048,7 @@ static void start_foreground_scan()
 {
     if (dll_state == DLL_STATE_SCAN_AUTOMATION)
     {
-        timer_cancel_task(&start_background_scan);
-        sched_cancel_task(&start_background_scan);
+        timer_cancel_event(&dll_background_scan_timer);
         hw_radio_set_idle();
     }
 

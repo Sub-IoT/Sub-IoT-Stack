@@ -190,6 +190,12 @@ inline error_t timer_post_task_prio_delay(task_t task, timer_tick_t delay, uint8
  */
 inline error_t timer_post_task_delay(task_t task, timer_tick_t delay) { return timer_post_task_prio_delay(task, delay, DEFAULT_PRIORITY);}
 
+/*! \brief Set a timer to execute a callback at some time in the future.
+ *
+ * @param[in] event        Structure containing the event parameters
+ */
+error_t timer_init_event(timer_event* event, task_t callback);
+
 /*! \brief Schedule a given \<timer_event\>
  *
  * This function is equivalent to
@@ -225,6 +231,17 @@ __LINK_C error_t timer_cancel_task(task_t task);
  *
  */
 __LINK_C bool timer_is_task_scheduled(task_t task);
+
+/**
+ * @brief Cancel an event
+ *
+ * @param[in] event Structure containing the event parameters
+ */
+inline void timer_cancel_event(timer_event* event)
+{
+    timer_cancel_task(event->f);
+    sched_cancel_task(event->f);
+}
 
 #endif /* TIMER_H_ */
 

@@ -72,6 +72,14 @@ __LINK_C void timer_init()
 
 }
 
+error_t timer_init_event(timer_event* event, task_t callback)
+{
+    event->f = callback;
+    event->arg = NULL;
+    event->priority = DEFAULT_PRIORITY;
+    return (sched_register_task(callback)); // register the function callback to be called at the end of the timeout
+}
+
 static void configure_next_event();
 __LINK_C error_t timer_post_task_prio(task_t task, timer_tick_t fire_time, uint8_t priority, void *arg)
 {

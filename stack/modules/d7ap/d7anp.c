@@ -30,6 +30,7 @@
 #include "aes.h"
 #include "packet_queue.h"
 #include "errors.h"
+#include "timer.h"
 
 #if defined(FRAMEWORK_LOG_ENABLED) && defined(MODULE_D7AP_NP_LOG_ENABLED)
 #define DPRINT(...) log_print_stack_string(LOG_STACK_NWL, __VA_ARGS__)
@@ -64,6 +65,9 @@ static dae_nwl_ssr_t NGDEF(_node_security_state);
 
 static dae_nwl_trusted_node_t* NGDEF(_latest_node);
 #define latest_node NG(_latest_node)
+
+static timer_event d7anp_fg_scan_expired_timer;
+static timer_event d7anp_start_fg_scan_after_d7aadvp_timer;
 
 static inline uint8_t get_auth_len(uint8_t nls_method)
 {
@@ -114,7 +118,7 @@ static void switch_state(state_t next_state)
     d7anp_state == D7ANP_STATE_FOREGROUND_SCAN? DEBUG_PIN_SET(3) : DEBUG_PIN_CLR(3);
 }
 
-static void foreground_scan_expired()
+static void foreground_scan_expired(void *arg)
 {
     // the FG scan expiration may also happen while Tx is busy (d7anp_state = D7ANP_STATE_TRANSMIT) // TODO validate
     assert(d7anp_state == D7ANP_STATE_FOREGROUND_SCAN || d7anp_state == D7ANP_STATE_TRANSMIT);
@@ -135,7 +139,9 @@ static void schedule_foreground_scan_expired_timer()
     // since this FG scan is started directly from the ISR (transmitted callback), I don't expect a significative delta between now and the transmission time
 
     DPRINT("starting foreground scan expiration timer (%i ticks, now %i)", fg_scan_timeout_ticks, timer_get_counter_value());
-    assert(timer_post_task_delay(&foreground_scan_expired, fg_scan_timeout_ticks) == SUCCESS);
+    d7anp_fg_scan_expired_timer.next_event = fg_scan_timeout_ticks;
+    d7anp_fg_scan_expired_timer.priority = MAX_PRIORITY;
+    assert(timer_add_event(&d7anp_fg_scan_expired_timer) == SUCCESS);
 }
 
 void d7anp_start_foreground_scan()
@@ -164,9 +170,7 @@ void d7anp_set_foreground_scan_timeout(timer_tick_t timeout)
 
 static void cancel_foreground_scan_task()
 {
-    // task can be scheduled now or in the future, try to cancel both // TODO refactor scheduler API
-    timer_cancel_task(&foreground_scan_expired);
-    sched_cancel_task(&foreground_scan_expired);
+    timer_cancel_event(&d7anp_fg_scan_expired_timer);
     fg_scan_timeout_ticks = 0;
 }
 
@@ -182,7 +186,7 @@ void d7anp_stop_foreground_scan()
     dll_stop_foreground_scan();
 }
 
-void start_foreground_scan_after_D7AAdvP()
+void start_foreground_scan_after_D7AAdvP(void *arg)
 {
     DPRINT("start_foreground_scan_after_D7AAdvP");
     fg_scan_timeout_ticks = FG_SCAN_TIMEOUT;
@@ -198,8 +202,9 @@ void d7anp_init()
     d7anp_state = D7ANP_STATE_IDLE;
     fg_scan_timeout_ticks = 0;
 
-    sched_register_task(&foreground_scan_expired);
-    sched_register_task(&start_foreground_scan_after_D7AAdvP);
+    // Initialize timers
+    timer_init_event(&d7anp_fg_scan_expired_timer, &foreground_scan_expired);
+    timer_init_event(&d7anp_start_fg_scan_after_d7aadvp_timer, &start_foreground_scan_after_D7AAdvP);
 
 #if defined(MODULE_D7AP_NLS_ENABLED)
     /*
@@ -224,10 +229,8 @@ void d7anp_init()
 void d7anp_stop()
 {
     d7anp_state = D7ANP_STATE_STOPPED;
-    timer_cancel_task(&foreground_scan_expired);
-    sched_cancel_task(&foreground_scan_expired);
-    timer_cancel_task(&start_foreground_scan_after_D7AAdvP);
-    sched_cancel_task(&start_foreground_scan_after_D7AAdvP);
+    timer_cancel_event(&d7anp_fg_scan_expired_timer);
+    timer_cancel_event(&d7anp_start_fg_scan_after_d7aadvp_timer);
 }
 
 error_t d7anp_tx_foreground_frame(packet_t* packet, bool should_include_origin_template)
@@ -293,7 +296,9 @@ security:
 static void schedule_foreground_scan_after_D7AAdvP(timer_tick_t eta)
 {
     DPRINT("Perform a dll foreground scan at the end of the delay period (%i ticks)", eta);
-    assert(timer_post_task_delay(&start_foreground_scan_after_D7AAdvP, eta) == SUCCESS);
+    d7anp_start_fg_scan_after_d7aadvp_timer.next_event = eta;
+    d7anp_start_fg_scan_after_d7aadvp_timer.priority = MAX_PRIORITY;
+    assert(timer_add_event(&d7anp_start_fg_scan_after_d7aadvp_timer) == SUCCESS);
 }
 
 static inline void write_be32(uint8_t *buf, uint32_t val)
