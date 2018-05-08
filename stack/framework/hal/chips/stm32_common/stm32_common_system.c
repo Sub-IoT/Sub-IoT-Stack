@@ -25,6 +25,7 @@
 #include "hwsystem.h"
 #include "debug.h"
 #include "stm32_device.h"
+#include "log.h"
 
 void hw_enter_lowpower_mode(uint8_t mode)
 {
@@ -62,7 +63,32 @@ void hw_reset()
   HAL_NVIC_SystemReset();
 }
 
+void __hardfault_handler(char* reason) {
+  log_print_string("HardFault occured: %s\n", reason);
+  assert(false);
+}
+
+__attribute__((naked)) void HardFault_Handler();
 void HardFault_Handler()
 {
-  assert(false);
+  // implemented in asm and as a naked function, to make sure we are not using the stack
+  // in case this is originating from a stack overflow.
+  // Checks if the stack has overflown, and if yes, reset the stack pointer and call assert()
+  __asm volatile (
+      "    mov r0,sp\n\t"
+      "    ldr r1,=__stack_start\n\t"
+      "    cmp r0,r1\n\t"
+      "    bcs stack_ok\n\t"
+      "    ldr r0,=_estack\n\t"
+      "    mov sp,r0\n\t"
+      "    ldr r0,=str_overflow\n\t"
+      "    mov r1,#1\n\t"
+      "    b __hardfault_handler\n\t"
+      "stack_ok:\n\t"
+      "    ldr r0,=str_hardfault\n\t"
+      "    mov r1,#2\n\t"
+      "    b __hardfault_handler\n\t"
+      "str_overflow:  .asciz \"StackOverflow\"\n\t"
+      "str_hardfault: .asciz \"HardFault\"\n\t"
+  );
 }
