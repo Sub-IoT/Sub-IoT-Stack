@@ -346,7 +346,7 @@ static alp_status_codes_t process_op_return_file_data(alp_command_t* command) {
   fifo_peek(&command->alp_command_fifo, &data_len, 1 + offset_operand_size, requested_data_length_size);
   total_len += data_len;
 
-  uint8_t alp_response[ALP_PAYLOAD_MAX_SIZE];
+  uint8_t alp_response[total_len];
   fifo_pop(&command->alp_command_fifo, alp_response, total_len);
 
   if(shell_enabled)
@@ -387,11 +387,10 @@ void alp_layer_process_d7aacpt(d7ap_master_session_config_t* session_config, uin
 }
 
 void alp_layer_process_command_console_output(uint8_t* alp_command, uint8_t alp_command_length) {
-  uint8_t alp_response[ALP_PAYLOAD_MAX_SIZE];
-  uint8_t alp_response_length = 0;
   DPRINT("ALP command recv from console length=%i", alp_command_length);
   DPRINT_DATA(alp_command, alp_command_length);
-  alp_layer_process_command(alp_command, alp_command_length, alp_response, &alp_response_length, ALP_CMD_ORIGIN_SERIAL_CONSOLE);
+  uint8_t alp_response_length = 0;
+  alp_layer_process_command(alp_command, alp_command_length, NULL, &alp_response_length, ALP_CMD_ORIGIN_SERIAL_CONSOLE);
 }
 
 static void add_interface_status_action(fifo_t* alp_response_fifo, d7ap_session_result_t* d7asp_result)
@@ -426,8 +425,7 @@ void alp_layer_process_d7asp_result(uint8_t* alp_command, uint8_t alp_command_le
 
       // tag and send response already with EOP bit cleared
       add_tag_response(command, false, false); // TODO error
-      uint8_t alp_response_length = fifo_get_size(&(command->alp_response_fifo));
-      alp_cmd_handler_output_alp_command(command->alp_response, alp_response_length); // TODO pass fifo directly
+      alp_cmd_handler_output_alp_command(&(command->alp_response_fifo));
       fifo_clear(&(command->alp_response_fifo));
     }
 
@@ -530,11 +528,7 @@ bool alp_layer_process_command(uint8_t* alp_command, uint8_t alp_command_length,
     if(command->respond_when_completed && !do_forward)
       add_tag_response(command, true, false); // TODO error
 
-    (*alp_response_length) = fifo_get_size(&command->alp_response_fifo);
-    if((*alp_response_length) > 0) {
-      memcpy(alp_response, command->alp_response, *alp_response_length);
-      alp_cmd_handler_output_alp_command(alp_response, (*alp_response_length));
-    }
+    alp_cmd_handler_output_alp_command(&command->alp_response_fifo);
   }
 
     // TODO APP
@@ -542,9 +536,10 @@ bool alp_layer_process_command(uint8_t* alp_command, uint8_t alp_command_length,
 
 //    if(alp_status != ALP_STATUS_OK)
 //      return false;
-
-  (*alp_response_length) = fifo_get_size(&command->alp_response_fifo);
-  memcpy(alp_response, command->alp_response, *alp_response_length);
+  if(alp_response != NULL) {
+    (*alp_response_length) = fifo_get_size(&command->alp_response_fifo);
+    memcpy(alp_response, command->alp_response, *alp_response_length);
+  }
 
   if(!do_forward)
     free_command(command); // when forwarding the response will arrive async, clean up then
@@ -567,8 +562,7 @@ void alp_layer_d7asp_fifo_flush_completed(uint8_t fifo_token, uint8_t* progress_
 
         if(shell_enabled && command->respond_when_completed) {
             add_tag_response(command, true, error);
-            uint8_t alp_response_length = fifo_get_size(&(command->alp_response_fifo));
-            alp_cmd_handler_output_alp_command(command->alp_response, alp_response_length); // TODO pass fifo directly
+            alp_cmd_handler_output_alp_command(&(command->alp_response_fifo));
         }
 
         if(init_args != NULL && init_args->alp_command_completed_cb != NULL)

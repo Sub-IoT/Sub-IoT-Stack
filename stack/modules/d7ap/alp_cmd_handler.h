@@ -48,7 +48,7 @@ void alp_cmd_handler(fifo_t* cmd_fifo);
 /// \param alp_command
 /// \param alp_command_len
 ///
-void alp_cmd_handler_output_alp_command(uint8_t *alp_command, uint8_t alp_command_len);
+void alp_cmd_handler_output_alp_command(fifo_t* resp_fifo);
 
 ///
 /// \brief Output received responses received from D7ASP to the shell interface

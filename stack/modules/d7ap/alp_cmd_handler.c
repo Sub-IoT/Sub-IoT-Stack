@@ -44,6 +44,8 @@
 static alp_cmd_handler_appl_itf_callback NGDEF(_alp_cmd_handler_appl_itf_cb);
 #define alp_cmd_handler_appl_itf_cb NG(_alp_cmd_handler_appl_itf_cb)
 
+static uint8_t alp_command[ALP_CMD_MAX_SIZE] = { 0x00 };
+static uint8_t alp_resp[ALP_CMD_MAX_SIZE] = { 0x00 };
 
 void alp_cmd_handler(fifo_t* cmd_fifo)
 {
@@ -65,15 +67,11 @@ void alp_cmd_handler(fifo_t* cmd_fifo)
 
             if(fifo_get_size(cmd_fifo) >= SHELL_CMD_HEADER_SIZE + 3 + alp_command_len)
             {
-                uint8_t alp_command[ALP_CMD_MAX_SIZE] = { 0x00 };
-
                 start_atomic();
                     err = fifo_pop(cmd_fifo, alp_command, SHELL_CMD_HEADER_SIZE + 3); assert(err == SUCCESS); // pop header
                     err = fifo_pop(cmd_fifo, alp_command, alp_command_len); assert(err == SUCCESS); // pop full ALP command
                 end_atomic();
 
-                uint8_t alp_response[ALP_CMD_MAX_SIZE] = { 0x00 };
-                uint8_t alp_response_len = 0;
                 alp_layer_process_command_console_output(alp_command, alp_command_len);
             }
             else
@@ -94,13 +92,17 @@ void alp_cmd_handler(fifo_t* cmd_fifo)
     }
 }
 
-void alp_cmd_handler_output_alp_command(uint8_t *alp_command, uint8_t alp_command_len)
+void alp_cmd_handler_output_alp_command(fifo_t* resp_fifo)
 {
-    DPRINT("output ALP cmd of size %i", alp_command_len);
-    console_print_byte(SERIAL_ALP_FRAME_SYNC_BYTE);
-    console_print_byte(SERIAL_ALP_FRAME_VERSION);
-    console_print_byte(alp_command_len);
-    console_print_bytes(alp_command, alp_command_len);
+    uint8_t resp_len = fifo_get_size(resp_fifo);
+    if(resp_len > 0) {
+        DPRINT("output ALP cmd of size %i", resp_len);
+        console_print_byte(SERIAL_ALP_FRAME_SYNC_BYTE);
+        console_print_byte(SERIAL_ALP_FRAME_VERSION);
+        console_print_byte(resp_len);
+        fifo_pop(resp_fifo, alp_resp, resp_len);
+        console_print_bytes(alp_resp, resp_len);
+    }
     // TODO crc?
 }
 
@@ -139,8 +141,7 @@ void alp_cmd_handler_output_d7asp_response(d7ap_session_result_t d7asp_result, u
 {
     // TODO refactor, move partly to alp + call from SP when shell enabled instead of from app
     DPRINT("output D7ASP response to console");
-    uint8_t data[MODULE_D7AP_FIFO_COMMAND_BUFFER_SIZE] = { 0x00 };
-    uint8_t* ptr = data;
+    uint8_t* ptr = alp_resp;
 
     (*ptr) = SERIAL_ALP_FRAME_SYNC_BYTE; ptr++;               // serial interface sync byte
     (*ptr) = SERIAL_ALP_FRAME_VERSION; ptr++;               // serial interface version
@@ -151,8 +152,8 @@ void alp_cmd_handler_output_d7asp_response(d7ap_session_result_t d7asp_result, u
     // the actual received data ...
     memcpy(ptr, alp_command, alp_command_size); ptr+= alp_command_size;
 
-    data[2] = ptr - (data + 3);       // fill length byte
+    alp_resp[2] = ptr - (alp_resp + 3);       // fill length byte
 
-    console_print_bytes(data, ptr - data);
+    console_print_bytes(alp_resp, ptr - alp_resp);
 }
 
