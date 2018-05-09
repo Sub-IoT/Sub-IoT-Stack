@@ -238,6 +238,7 @@ typedef enum {
     NETDEV_EVENT_CRC_ERROR,                 /**< wrong CRC */
     NETDEV_EVENT_FHSS_CHANGE_CHANNEL,       /**< channel changed */
     NETDEV_EVENT_CAD_DONE,                  /**< channel activity detection done */
+    NETDEV_EVENT_TX_REFILL_NEEDED,          /**< new data needed to transmit without discontinuity */
     /* expand this list if needed */
 } netdev_event_t;
 
@@ -250,6 +251,11 @@ struct netdev_radio_rx_info {
     int16_t rssi;       /**< RSSI of a received packet in dBm */
     uint8_t lqi;        /**< LQI of a received packet */
 };
+
+/**
+ * @brief   Forward declaration for netdev_radio_rx_info struct
+ */
+typedef struct netdev_radio_rx_info netdev_radio_rx_info_t;
 
 /**
  * @brief   Forward declaration for netdev struct
