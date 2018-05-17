@@ -28,12 +28,14 @@
 
 //needs to be decoupled
 #include "debug.h"
+#include "log.h"
 #include <string.h>
 #include <stdio.h>
 #include "hwatomic.h"
 #include "ng.h"
 #include "hwsystem.h"
 #include "errors.h"
+#include "timer.h"
 
 #include "framework_defs.h"
 #define SCHEDULER_MAX_TASKS FRAMEWORK_SCHEDULER_MAX_TASKS
@@ -41,6 +43,13 @@
 #ifdef NODE_GLOBALS
     #warning NODE_GLOBALS is defined when using the default scheduler. Are you sure this is what you want ?
 #endif
+
+#if defined(FRAMEWORK_LOG_ENABLED) && defined(FRAMEWORK_SCHED_LOG_ENABLED)
+  #define DPRINT(...) log_print_string( __VA_ARGS__)
+#else
+  #define DPRINT(...)
+#endif
+
 
 enum
 {
@@ -350,7 +359,16 @@ __LINK_C void scheduler_run()
 			for(uint8_t id = pop_task((NG(current_priority))); id != NO_TASK; id = pop_task(NG(current_priority)))
 			{
 				check_structs_are_valid();
-				NG(m_info)[id].task();
+#if defined(FRAMEWORK_LOG_ENABLED) && defined(FRAMEWORK_SCHED_LOG_ENABLED)
+        timer_tick_t start = timer_get_counter_value();
+        log_print_string("SCHED start %p at %i", NG(m_info)[id].task, start);
+#endif
+        NG(m_info)[id].task();
+#if defined(FRAMEWORK_LOG_ENABLED) && defined(FRAMEWORK_SCHED_LOG_ENABLED)
+        timer_tick_t stop = timer_get_counter_value();
+        timer_tick_t duration = stop - start;
+        log_print_string("SCHED stop %p at %i took %i", NG(m_info)[id].task, stop, duration);
+#endif
 			}
 			//this needs to be done atomically since otherwise we risk decrementing the current priority
 			//while a higher priority task is waiting in the queue
