@@ -31,7 +31,7 @@ Maintainer: Miguel Luis ( Semtech ), Gregory Cristian ( Semtech ) and Daniel Jae
 #include "lorawan_debug.h"
 #include "LoRaMacTest.h"
 
-
+#include "scheduler.h"
 
 /*!
  * Maximum PHY layer payload size
@@ -2441,6 +2441,21 @@ LoRaMacStatus_t LoRaMacInitialization( LoRaMacPrimitives_t *primitives, LoRaMacC
     Radio.Sleep( );
 
     return LORAMAC_STATUS_OK;
+}
+
+void LoRaMacDeInit()
+{
+    Radio.Sleep();
+    TimerStop(&MacStateCheckTimer);
+    sched_cancel_task(MacStateCheckTimer.Callback);
+    TimerStop(&TxDelayedTimer);
+    sched_cancel_task(TxDelayedTimer.Callback);
+    TimerStop(&RxWindowTimer1);
+    sched_cancel_task(RxWindowTimer1.Callback);
+    TimerStop(&RxWindowTimer2);
+    sched_cancel_task(RxWindowTimer2.Callback);
+    TimerStop(&AckTimeoutTimer);
+    sched_cancel_task(AckTimeoutTimer.Callback);
 }
 
 LoRaMacStatus_t LoRaMacQueryTxPossible( uint8_t size, LoRaMacTxInfo_t* txInfo )
