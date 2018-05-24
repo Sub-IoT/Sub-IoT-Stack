@@ -56,11 +56,12 @@ static uint32_t parse_length_operand(fifo_t* cmd_fifo) {
   return full_length;
 }
 
-void alp_append_length_operand(fifo_t* fifo, uint32_t length) {
+error_t alp_append_length_operand(fifo_t* fifo, uint32_t length) {
+  error_t err;
   if(length < 64) {
     // can be coded in one byte
-    assert(fifo_put(fifo, (uint8_t*)&length, 1) == SUCCESS);
-    return;
+    err = fifo_put(fifo, (uint8_t*)&length, 1);
+    return err;
   }
 
   uint8_t size = 1;
@@ -72,11 +73,14 @@ void alp_append_length_operand(fifo_t* fifo, uint32_t length) {
   uint8_t byte = 0;
   byte += (size << 6); // length specifier bits
   byte += ((uint8_t*)(&length))[size];
-  assert(fifo_put(fifo, &byte, 1) == SUCCESS);
+  err = fifo_put(fifo, &byte, 1);
+  if(err != SUCCESS) return err;
   do {
     size--;
-    assert(fifo_put(fifo, (uint8_t*)&length + size, 1) == SUCCESS);
+    err = fifo_put(fifo, (uint8_t*)&length + size, 1);
+    if(err != SUCCESS) return err;
   } while(size > 0);
+  return err;
 }
 
 static alp_operand_file_offset_t parse_file_offset_operand(fifo_t* cmd_fifo) {
@@ -86,59 +90,116 @@ static alp_operand_file_offset_t parse_file_offset_operand(fifo_t* cmd_fifo) {
   return operand;
 }
 
-void alp_append_file_offset_operand(fifo_t* fifo, uint8_t file_id, uint32_t offset) {
-  assert(fifo_put_byte(fifo, file_id) == SUCCESS);
-  alp_append_length_operand(fifo, offset);
+error_t alp_append_file_offset_operand(fifo_t* fifo, uint8_t file_id, uint32_t offset) {
+  error_t err;
+  err = fifo_put_byte(fifo, file_id);
+  if(err != SUCCESS) return err;
+  err = alp_append_length_operand(fifo, offset);
+  return err;
 }
 
-void alp_append_forward_action(fifo_t* fifo, d7ap_master_session_config_t* session_config) {
+error_t alp_append_forward_action(fifo_t* fifo, d7ap_master_session_config_t* session_config) {
+  error_t err;
   assert(session_config);
-  assert(fifo_put_byte(fifo, ALP_OP_FORWARD) == SUCCESS);
-  assert(fifo_put_byte(fifo, ALP_ITF_ID_D7ASP) == SUCCESS);
-  assert(fifo_put_byte(fifo, session_config->qos.raw) == SUCCESS);
-  assert(fifo_put_byte(fifo, session_config->dormant_timeout) == SUCCESS);
-  assert(fifo_put_byte(fifo, session_config->addressee.ctrl.raw) == SUCCESS);
+  err = fifo_put_byte(fifo, ALP_OP_FORWARD);
+  if(err != SUCCESS) return err;
+
+  err = fifo_put_byte(fifo, ALP_ITF_ID_D7ASP);
+  if(err != SUCCESS) return err;
+
+  err = fifo_put_byte(fifo, session_config->qos.raw);
+  if(err != SUCCESS) return err;
+
+  err = fifo_put_byte(fifo, session_config->dormant_timeout);
+  if(err != SUCCESS) return err;
+
+  err = fifo_put_byte(fifo, session_config->addressee.ctrl.raw);
+  if(err != SUCCESS) return err;
+
   uint8_t id_length = alp_addressee_id_length(session_config->addressee.ctrl.id_type);
-  assert(fifo_put_byte(fifo, session_config->addressee.access_class) == SUCCESS);
-  assert(fifo_put(fifo, session_config->addressee.id, id_length) == SUCCESS);
+  err = fifo_put_byte(fifo, session_config->addressee.access_class);
+  if(err != SUCCESS) return err;
+
+  err = fifo_put(fifo, session_config->addressee.id, id_length);
   DPRINT("FORWARD");
+  return err;
 }
 
-void alp_append_return_file_data_action(fifo_t* fifo, uint8_t file_id, uint32_t offset, uint32_t length, uint8_t* data) {
-  assert(fifo_put_byte(fifo, ALP_OP_RETURN_FILE_DATA) == SUCCESS);
-  assert(fifo_put_byte(fifo, file_id) == SUCCESS);
-  alp_append_length_operand(fifo, offset);
-  alp_append_length_operand(fifo, length);
-  assert(fifo_put(fifo, data, length) == SUCCESS);
+error_t alp_append_return_file_data_action(fifo_t* fifo, uint8_t file_id, uint32_t offset, uint32_t length, uint8_t* data) {
+  error_t err;
+  err = fifo_put_byte(fifo, ALP_OP_RETURN_FILE_DATA);
+  if(err != SUCCESS) return err;
+
+  err = fifo_put_byte(fifo, file_id);
+  if(err != SUCCESS) return err;
+
+  err = alp_append_length_operand(fifo, offset);
+  if(err != SUCCESS) return err;
+
+  err = alp_append_length_operand(fifo, length);
+  if(err != SUCCESS) return err;
+
+  return fifo_put(fifo, data, length);
 }
 
-static void append_tag_response(fifo_t* fifo, uint8_t tag_id, bool eop, bool error) {
+static error_t append_tag_response(fifo_t* fifo, uint8_t tag_id, bool eop, bool error) {
   // fill response with tag response
+  error_t err;
   uint8_t op_return_tag = ALP_OP_RETURN_TAG | (eop << 7);
   op_return_tag |= (error << 6);
-  error_t err = fifo_put_byte(fifo, op_return_tag); assert(err == SUCCESS);
-  err = fifo_put_byte(fifo, tag_id); assert(err == SUCCESS);
+  err = fifo_put_byte(fifo, op_return_tag);
+  if(err != SUCCESS) return err;
+  err = fifo_put_byte(fifo, tag_id);
+  return err;
 }
 
 
-static void add_interface_status_action(fifo_t* alp_response_fifo, d7ap_session_result_t* d7asp_result)
+static error_t add_interface_status_action(fifo_t* alp_response_fifo, d7ap_session_result_t* d7asp_result)
 {
-  fifo_put_byte(alp_response_fifo, ALP_OP_RETURN_STATUS + (1 << 6));
-  fifo_put_byte(alp_response_fifo, ALP_ITF_ID_D7ASP);
-  fifo_put_byte(alp_response_fifo, d7asp_result->channel.channel_header_raw);
+  error_t err;
+  err = fifo_put_byte(alp_response_fifo, ALP_OP_RETURN_STATUS + (1 << 6));
+  if(err != SUCCESS) return err;
+
+  err = fifo_put_byte(alp_response_fifo, ALP_ITF_ID_D7ASP);
+  if(err != SUCCESS) return err;
+
+  err = fifo_put_byte(alp_response_fifo, d7asp_result->channel.channel_header_raw);
+  if(err != SUCCESS) return err;
+
   uint16_t center_freq_index_be = __builtin_bswap16(d7asp_result->channel.center_freq_index);
-  fifo_put(alp_response_fifo, (uint8_t*)&center_freq_index_be, 2);
-  fifo_put_byte(alp_response_fifo, d7asp_result->rx_level);
-  fifo_put_byte(alp_response_fifo, d7asp_result->link_budget);
-  fifo_put_byte(alp_response_fifo, d7asp_result->target_rx_level);
-  fifo_put_byte(alp_response_fifo, d7asp_result->status.raw);
-  fifo_put_byte(alp_response_fifo, d7asp_result->fifo_token);
-  fifo_put_byte(alp_response_fifo, d7asp_result->seqnr);
-  fifo_put_byte(alp_response_fifo, d7asp_result->response_to);
-  fifo_put_byte(alp_response_fifo, d7asp_result->addressee.ctrl.raw);
-  fifo_put_byte(alp_response_fifo, d7asp_result->addressee.access_class);
+  err = fifo_put(alp_response_fifo, (uint8_t*)&center_freq_index_be, 2);
+  if(err != SUCCESS) return err;
+
+  err = fifo_put_byte(alp_response_fifo, d7asp_result->rx_level);
+  if(err != SUCCESS) return err;
+
+  err = fifo_put_byte(alp_response_fifo, d7asp_result->link_budget);
+  if(err != SUCCESS) return err;
+
+  err = fifo_put_byte(alp_response_fifo, d7asp_result->target_rx_level);
+  if(err != SUCCESS) return err;
+
+  err = fifo_put_byte(alp_response_fifo, d7asp_result->status.raw);
+  if(err != SUCCESS) return err;
+
+  err = fifo_put_byte(alp_response_fifo, d7asp_result->fifo_token);
+  if(err != SUCCESS) return err;
+
+  err = fifo_put_byte(alp_response_fifo, d7asp_result->seqnr);
+  if(err != SUCCESS) return err;
+
+  err = fifo_put_byte(alp_response_fifo, d7asp_result->response_to);
+  if(err != SUCCESS) return err;
+
+  err = fifo_put_byte(alp_response_fifo, d7asp_result->addressee.ctrl.raw);
+  if(err != SUCCESS) return err;
+
+  err = fifo_put_byte(alp_response_fifo, d7asp_result->addressee.access_class);
+  if(err != SUCCESS) return err;
+
   uint8_t address_len = alp_addressee_id_length(d7asp_result->addressee.ctrl.id_type);
-  fifo_put(alp_response_fifo, d7asp_result->addressee.id, address_len);
+  err = fifo_put(alp_response_fifo, d7asp_result->addressee.id, address_len);
+  return err;
 }
 
 uint8_t alp_addressee_id_length(d7ap_addressee_id_type_t id_type)
@@ -158,62 +219,85 @@ uint8_t alp_addressee_id_length(d7ap_addressee_id_type_t id_type)
     }
 }
 
-static void parse_op_return_file_data(fifo_t* fifo, alp_action_t* action) {
+static error_t parse_op_return_file_data(fifo_t* fifo, alp_action_t* action) {
+  error_t err;
   action->file_data_operand.file_offset = parse_file_offset_operand(fifo);
   action->file_data_operand.provided_data_length = parse_length_operand(fifo);
   assert(action->file_data_operand.provided_data_length <= sizeof(action->file_data_operand.data));
-  fifo_pop(fifo, action->file_data_operand.data, action->file_data_operand.provided_data_length);
+  err = fifo_pop(fifo, action->file_data_operand.data, action->file_data_operand.provided_data_length);
   DPRINT("parsed file data file %i, len %i", action->file_data_operand.file_offset.file_id, action->file_data_operand.provided_data_length);
+  return err;
 }
 
-static void parse_op_return_tag(fifo_t* fifo, alp_action_t* action, bool b6, bool b7) {
+static error_t parse_op_return_tag(fifo_t* fifo, alp_action_t* action, bool b6, bool b7) {
+  error_t err;
   action->tag_response.completed = b7;
   action->tag_response.error = b6;
-  assert(fifo_pop(fifo, &action->tag_response.tag_id, 1) == SUCCESS);
+  err = fifo_pop(fifo, &action->tag_response.tag_id, 1);
   DPRINT("parsed return tag %i, eop %i, err %i", action->tag_response.tag_id, action->tag_response.completed, action->tag_response.error);
+  return err;
 }
 
-static void parse_op_return_status(fifo_t* fifo, alp_action_t* action, bool b6, bool b7) {
+static error_t parse_op_return_status(fifo_t* fifo, alp_action_t* action, bool b6, bool b7) {
   assert(b6 && !b7); // TODO implement action status
   uint8_t itf_id;
-  assert(fifo_pop(fifo, &itf_id, 1) == SUCCESS);
+  error_t err;
+  err = fifo_pop(fifo, &itf_id, 1);
+  if(err != SUCCESS) return err;
+
   assert(itf_id == 0xD7); // TODO only D7 supported for now
   // TODO uint32_t itf_len = parse_length_operand(fifo);
   // assert(itf_len == sizeof(d7ap_session_result_t));
 
-  fifo_pop(fifo, &action->d7_interface_status.channel.channel_header_raw, 1);
-  fifo_pop(fifo, (uint8_t*)&action->d7_interface_status.channel.center_freq_index, 2);
+  err = fifo_pop(fifo, &action->d7_interface_status.channel.channel_header_raw, 1);
+  if(err != SUCCESS) return err;
+  err = fifo_pop(fifo, (uint8_t*)&action->d7_interface_status.channel.center_freq_index, 2);
+  if(err != SUCCESS) return err;
+
   action->d7_interface_status.channel.center_freq_index = __builtin_bswap16(action->d7_interface_status.channel.center_freq_index);
-  fifo_pop(fifo, &action->d7_interface_status.rx_level, 1);
-  fifo_pop(fifo, &action->d7_interface_status.link_budget, 1);
-  fifo_pop(fifo, &action->d7_interface_status.target_rx_level, 1);
-  fifo_pop(fifo, &action->d7_interface_status.status.raw, 1);
-  fifo_pop(fifo, &action->d7_interface_status.fifo_token, 1);
-  fifo_pop(fifo, &action->d7_interface_status.seqnr, 1);
-  fifo_pop(fifo, &action->d7_interface_status.response_to, 1);
-  fifo_pop(fifo, &action->d7_interface_status.addressee.ctrl.raw, 1);
-  fifo_pop(fifo, &action->d7_interface_status.addressee.access_class, 1);
+  err = fifo_pop(fifo, &action->d7_interface_status.rx_level, 1);
+  if(err != SUCCESS) return err;
+
+  err = fifo_pop(fifo, &action->d7_interface_status.link_budget, 1);
+  if(err != SUCCESS) return err;
+  err = fifo_pop(fifo, &action->d7_interface_status.target_rx_level, 1);
+  if(err != SUCCESS) return err;
+  err = fifo_pop(fifo, &action->d7_interface_status.status.raw, 1);
+  if(err != SUCCESS) return err;
+  err =fifo_pop(fifo, &action->d7_interface_status.fifo_token, 1);
+  if(err != SUCCESS) return err;
+  err = fifo_pop(fifo, &action->d7_interface_status.seqnr, 1);
+  if(err != SUCCESS) return err;
+  err = fifo_pop(fifo, &action->d7_interface_status.response_to, 1);
+  if(err != SUCCESS) return err;
+  err = fifo_pop(fifo, &action->d7_interface_status.addressee.ctrl.raw, 1);
+  if(err != SUCCESS) return err;
+  err = fifo_pop(fifo, &action->d7_interface_status.addressee.access_class, 1);
+  if(err != SUCCESS) return err;
   uint8_t addressee_len = alp_addressee_id_length(action->d7_interface_status.addressee.ctrl.id_type);
-  assert(fifo_pop(fifo, action->d7_interface_status.addressee.id, addressee_len) == SUCCESS);
+  err = fifo_pop(fifo, action->d7_interface_status.addressee.id, addressee_len);
   DPRINT("parsed interface status");
+  return err;
 }
 
-void alp_parse_action(fifo_t* fifo, alp_action_t* action) {
+error_t alp_parse_action(fifo_t* fifo, alp_action_t* action) {
   uint8_t op;
-  assert(fifo_pop(fifo, &op, 1) == SUCCESS);
+  error_t err;
+  err = fifo_pop(fifo, &op, 1);
+  if(err != SUCCESS) return err;
   bool b6 = (op >> 6) & 1;
   bool b7 = op >> 7;
   op &= 0x3F; // op is in b5-b0
   action->operation = op;
   switch(op) {
     case ALP_OP_RETURN_FILE_DATA:
-      parse_op_return_file_data(fifo, action);
+      err = parse_op_return_file_data(fifo, action);
       break;
     case ALP_OP_RETURN_TAG:
-      parse_op_return_tag(fifo, action, b6, b7);
+      err = parse_op_return_tag(fifo, action, b6, b7);
       break;
     case ALP_OP_RETURN_STATUS:
-      parse_op_return_status(fifo, action, b6, b7);
+      err = parse_op_return_status(fifo, action, b6, b7);
       break;
     default:
       DPRINT("op %x not implemented", op);
@@ -221,6 +305,7 @@ void alp_parse_action(fifo_t* fifo, alp_action_t* action) {
   }
 
   DPRINT("parsed action");
+  return err;
 }
 
 uint8_t alp_get_expected_response_length(uint8_t* alp_command, uint8_t alp_command_length) {
@@ -271,24 +356,34 @@ uint8_t alp_get_expected_response_length(uint8_t* alp_command, uint8_t alp_comma
   return expected_response_length;
 }
 
-void alp_append_tag_request_action(fifo_t* fifo, uint8_t tag_id, bool eop) {
+error_t alp_append_tag_request_action(fifo_t* fifo, uint8_t tag_id, bool eop) {
+  error_t err;
   DPRINT("append tag %i", tag_id);
   uint8_t op = ALP_OP_REQUEST_TAG | (eop << 7);
-  assert(fifo_put_byte(fifo, op) == SUCCESS);
-  assert(fifo_put_byte(fifo, tag_id) == SUCCESS);
+  err = fifo_put_byte(fifo, op);
+  if(err != SUCCESS) return err;
+  err = fifo_put_byte(fifo, tag_id);
+  return err;
 }
 
-void alp_append_read_file_data_action(fifo_t* fifo, uint8_t file_id, uint32_t offset, uint32_t length, bool resp, bool group) {
+error_t alp_append_read_file_data_action(fifo_t* fifo, uint8_t file_id, uint32_t offset, uint32_t length, bool resp, bool group) {
+  error_t err;
   uint8_t op = ALP_OP_READ_FILE_DATA | (resp << 6) | (group << 7);
-  assert(fifo_put_byte(fifo, op) == SUCCESS);
-  alp_append_file_offset_operand(fifo, file_id, offset);
+  err = fifo_put_byte(fifo, op);
+  if(err != SUCCESS) return err;
+  err = alp_append_file_offset_operand(fifo, file_id, offset);
   alp_append_length_operand(fifo, length);
+  return  err;
 }
 
-void alp_append_write_file_data_action(fifo_t* fifo, uint8_t file_id, uint32_t offset, uint32_t length, uint8_t* data, bool resp, bool group) {
+error_t alp_append_write_file_data_action(fifo_t* fifo, uint8_t file_id, uint32_t offset, uint32_t length, uint8_t* data, bool resp, bool group) {
+  error_t err;
   uint8_t op = ALP_OP_WRITE_FILE_DATA | (resp << 6) | (group << 7);
-  assert(fifo_put_byte(fifo, op) == SUCCESS);
-  alp_append_file_offset_operand(fifo, file_id, offset);
+  err = fifo_put_byte(fifo, op);
+  if(err != SUCCESS) return err;
+  err = alp_append_file_offset_operand(fifo, file_id, offset);
+  if(err != SUCCESS) return err;
   alp_append_length_operand(fifo, length);
-  assert(fifo_put(fifo, data, length) == SUCCESS);
+  err = fifo_put(fifo, data, length);
+  return err;
 }
