@@ -39,8 +39,8 @@ uart_handle_t* uart_init(uint8_t idx, uint32_t baudrate, uint8_t pins) {
 
     // Initialize the UART to reasonable values
     uart1->config = 0; // 8 bits, no parity, 1 stop bit, flow control disabled
-    uart1->selclk = 0; // 0:50MHz, 1:25MHz, 2:12.5MHZ, 3:3.125MHz
-    uart1->divider = 8*(50000000/baudrate);
+    uart1->selclk = 0; // 0:32MHz, 1:16MHz, 2:8MHZ, 3:4MHz
+    uart1->divider = 8*(32000000/baudrate);
 
     handle.uart_sfradr = uart1;
 

@@ -72,7 +72,7 @@ spi_handle_t* spi_init(uint8_t idx, uint32_t baudrate, uint8_t databits, bool ms
     handle[idx].spi_sfradr->divider = baudrate;
     handle[idx].spi_sfradr->master = 1;
     handle[idx].spi_sfradr->config = 0x0 | ((0x1&(~msbf)) << 2);
-    handle[idx].spi_sfradr->selclk = 0; // 0:50MHz, 1:25MHz, 2:12.5MHZ, 3:3.125MHz
+    handle[idx].spi_sfradr->selclk = 0; // 0:32MHz, 1:16MHz, 2:8MHZ, 3:4MHz
 
    return &handle[idx];
 }

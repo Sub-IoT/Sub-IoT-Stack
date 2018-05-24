@@ -29,6 +29,7 @@
 
 #include "hwtimer.h"
 #include "hwatomic.h"
+#include "assert.h"
 
 #include "machine/sfradr.h"
 #include "machine/ic.h"
@@ -79,14 +80,14 @@ error_t hw_timer_init(hwtimer_id_t timer_id, uint8_t frequency, timer_callback_t
          if(frequency == HWTIMER_FREQ_32K)
             timer1->period = 0x0061A800;
          else
-            timer1->period = 0x0C350000;
-         timer1->prescaler = 0;
-         timer1->tclk_sel = 3; // 3.125MHz
+            timer1->period = 0x03E80000;
+         timer1->prescaler = 2; // divide by 4
+         timer1->tclk_sel = 3;  // 4MHz
 
          if(frequency == HWTIMER_FREQ_32K)
             timer1_cmpa->compare = 0x0061A7FF;
          else
-            timer1_cmpa->compare = 0x0C34FFFF;
+            timer1_cmpa->compare = 0x03E7FFFF;
          irq[IRQ_TIMER1_CMPA].ipl = 0;
          irq[IRQ_TIMER1_CMPA].ien = 1;
 
@@ -129,7 +130,7 @@ hwtimer_tick_t hw_timer_getvalue(hwtimer_id_t timer_id)
       if(FREQ == HWTIMER_FREQ_32K)
          value = timer1_capa->value / 98;
       else
-         value = timer1_capa->value / 3125;
+         value = timer1_capa->value / 1000;
       timer1_capa->capture = 0;
       timer1_capa->status = 0;
 #if defined(FRAMEWORK_LOG_ENABLED)
@@ -156,7 +157,7 @@ error_t hw_timer_schedule(hwtimer_id_t timer_id, hwtimer_tick_t tick )
       if(FREQ == HWTIMER_FREQ_32K)
          timer1_cmpb->compare = tick * 98;
       else
-         timer1_cmpb->compare = tick * 3125;
+         timer1_cmpb->compare = tick * 1000;
 
       assert(timer1_cmpb->compare < timer1->period);
 
