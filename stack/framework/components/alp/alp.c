@@ -44,7 +44,7 @@ alp_operation_t alp_get_operation(uint8_t* alp_command)
     return alp_ctrl.operation;
 }
 
-static uint32_t parse_length_operand(fifo_t* cmd_fifo) {
+uint32_t alp_parse_length_operand(fifo_t* cmd_fifo) {
   uint8_t len = 0;
   fifo_pop(cmd_fifo, (uint8_t*)&len, 1);
   uint8_t field_len = len >> 6;
@@ -86,7 +86,7 @@ error_t alp_append_length_operand(fifo_t* fifo, uint32_t length) {
 static alp_operand_file_offset_t parse_file_offset_operand(fifo_t* cmd_fifo) {
   alp_operand_file_offset_t operand;
   error_t err = fifo_pop(cmd_fifo, &operand.file_id, 1); assert(err == SUCCESS);
-  operand.offset = parse_length_operand(cmd_fifo);
+  operand.offset = alp_parse_length_operand(cmd_fifo);
   return operand;
 }
 
@@ -222,7 +222,7 @@ uint8_t alp_addressee_id_length(d7ap_addressee_id_type_t id_type)
 static error_t parse_op_return_file_data(fifo_t* fifo, alp_action_t* action) {
   error_t err;
   action->file_data_operand.file_offset = parse_file_offset_operand(fifo);
-  action->file_data_operand.provided_data_length = parse_length_operand(fifo);
+  action->file_data_operand.provided_data_length = alp_parse_length_operand(fifo);
   assert(action->file_data_operand.provided_data_length <= sizeof(action->file_data_operand.data));
   err = fifo_pop(fifo, action->file_data_operand.data, action->file_data_operand.provided_data_length);
   DPRINT("parsed file data file %i, len %i", action->file_data_operand.file_offset.file_id, action->file_data_operand.provided_data_length);
@@ -318,9 +318,12 @@ uint8_t alp_get_expected_response_length(uint8_t* alp_command, uint8_t alp_comma
     ptr++; // skip control byte
     switch(control.operation) {
       case ALP_OP_READ_FILE_DATA:
-        ptr += 2; // skip file offset operand // TODO we assume 2 bytes now but can be 2-5 bytes
-        expected_response_length += *ptr; ptr++; // TODO we assume length is coded in 1 byte but can be 4
-        // TODO
+        ptr += 1; // skip file ID
+        fifo_t fifo;
+        fifo_init_filled(&fifo, ptr, alp_command_length - (ptr - alp_command), 4);
+        uint32_t file_len = alp_parse_length_operand(&fifo);
+        expected_response_length += file_len;
+        ptr += file_len;
         break;
       case ALP_OP_REQUEST_TAG:
         ptr += 1; // skip tag ID operand
