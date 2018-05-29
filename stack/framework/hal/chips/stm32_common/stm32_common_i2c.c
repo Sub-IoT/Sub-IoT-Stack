@@ -53,6 +53,10 @@ const PinMap PinMap_I2C_SCL[] = {
 };
 */
 
+#define I2C_TIMINGR_STANDARD_PCLK_4M  0
+#define I2C_TIMINGR_STANDARD_PCLK_2M  1
+
+const uint32_t I2C_TIMINGR_LUT[] = {0x00201111, 0x00100608};
 
 typedef struct i2c_handle {
   I2C_HandleTypeDef hal_handle;
@@ -67,10 +71,25 @@ static i2c_handle_t handle[I2C_COUNT] = {
 static inline uint32_t get_i2c_timing(int hz)
 {
     uint32_t tim = 0;
+    uint32_t pclk1 = HAL_RCC_GetPCLK1Freq();
 
+    assert(hz == 100000); //other speeds not supported with MSI RC
+
+    switch(pclk1/1000000){
+        case 2:
+            tim = I2C_TIMINGR_LUT[I2C_TIMINGR_STANDARD_PCLK_2M];
+            break;
+        case 4:
+            tim = I2C_TIMINGR_LUT[I2C_TIMINGR_STANDARD_PCLK_4M];
+            break;
+        default:
+            assert(false); // other MSI RC do not support 100kHz i2c;
+            break;
+    }
+    /*
     switch (hz) {
         case 100000:
-            tim = 0x10805E89; // Standard mode with Rise Time = 400ns and Fall Time = 100ns
+            tim = 0x00000004; // Standard mode with Rise Time = 400ns and Fall Time = 100ns
             break;
         case 400000:
             tim = 0x00901850; // Fast mode with Rise Time = 250ns and Fall Time = 100ns
@@ -80,7 +99,7 @@ static inline uint32_t get_i2c_timing(int hz)
             break;
         default:
             break;
-    }
+    }*/
     return tim;
 }
 
