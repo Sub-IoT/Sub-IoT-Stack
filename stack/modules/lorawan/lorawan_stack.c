@@ -312,6 +312,7 @@ void lorawan_stack_init(uint8_t dEUI[8], uint8_t aEUI[8], uint8_t aKey[16], join
 void lorawan_stack_deinit(){
     log_print_string("Deiniting LoRaWAN stack");
     sched_cancel_task(&run_fsm);
+    LoRaMacDeInit();
     state = STATE_NOT_JOINED;
     HW_DeInit();
 }

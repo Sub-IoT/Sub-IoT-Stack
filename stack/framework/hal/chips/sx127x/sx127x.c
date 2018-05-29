@@ -941,6 +941,7 @@ error_t hw_radio_init(alloc_packet_callback_t alloc_packet_cb, release_packet_ca
   calibrate_rx_chain();
   init_regs();
 
+  set_lora_mode(false);
   switch_to_sleep_mode();
 
   error_t e;

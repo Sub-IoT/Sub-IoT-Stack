@@ -234,10 +234,10 @@ __LINK_C error_t hw_gpio_configure_interrupt(pin_id_t pin_id, gpio_inthandler_t 
   start_atomic();
   //do this check atomically: interrupts[..] callback is altered by this function
   //so the check belongs in the critical section as well
-  if(interrupts[GPIO_PIN(pin_id)].callback != 0x0 && interrupts[GPIO_PIN(pin_id)].callback != callback)
+  /*if(interrupts[GPIO_PIN(pin_id)].callback != 0x0 && interrupts[GPIO_PIN(pin_id)].callback != callback)
     err = EBUSY;
   else
-  {
+  {*/
     interrupts[GPIO_PIN(pin_id)].callback = callback;
 
     __HAL_RCC_SYSCFG_CLK_ENABLE();
@@ -276,7 +276,7 @@ __LINK_C error_t hw_gpio_configure_interrupt(pin_id_t pin_id, gpio_inthandler_t 
         break;
     }
     err = SUCCESS;
-  }
+  //}
 
   end_atomic();
   return err;
