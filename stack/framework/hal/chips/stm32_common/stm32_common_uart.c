@@ -57,13 +57,15 @@ uart_handle_t* uart_init(uint8_t port_idx, uint32_t baudrate, uint8_t pins) {
   handle[port_idx].baudrate = baudrate;
 
   GPIO_InitTypeDef GPIO_InitStruct;
-  GPIO_InitStruct.Pin = (1 << GPIO_PIN(handle[port_idx].uart_port->tx)) | (1 << GPIO_PIN(handle[port_idx].uart_port->rx));
+  GPIO_InitStruct.Pin = 1 << GPIO_PIN(handle[port_idx].uart_port->tx);
   GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
   GPIO_InitStruct.Alternate = handle[port_idx].uart_port->alternate;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
-  assert(hw_gpio_configure_pin_stm(handle[port_idx].uart_port->rx, &GPIO_InitStruct) == SUCCESS);
   assert(hw_gpio_configure_pin_stm(handle[port_idx].uart_port->tx, &GPIO_InitStruct) == SUCCESS);
+  GPIO_InitStruct.Pin = 1 << GPIO_PIN(handle[port_idx].uart_port->rx);
+  GPIO_InitStruct.Pull = GPIO_PULLUP; // TODO this is only required on some boards (eg nucleo when using usb connection). Make sure there is no drawback (for example energy consumption)
+  assert(hw_gpio_configure_pin_stm(handle[port_idx].uart_port->rx, &GPIO_InitStruct) == SUCCESS);
 
   return &handle[port_idx];
 }
