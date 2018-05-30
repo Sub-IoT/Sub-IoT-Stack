@@ -310,47 +310,40 @@ error_t alp_parse_action(fifo_t* fifo, alp_action_t* action) {
 
 uint8_t alp_get_expected_response_length(uint8_t* alp_command, uint8_t alp_command_length) {
   uint8_t expected_response_length = 0;
-  uint8_t* ptr = alp_command;
+  fifo_t fifo;
+  fifo_init_filled(&fifo, alp_command, alp_command_length, alp_command_length + 1);
 
-  while(ptr < alp_command + alp_command_length) {
+  while(fifo_get_size(&fifo) > 0) {
     alp_control_t control;
-    control.raw = (*ptr);
-    ptr++; // skip control byte
+    fifo_pop(&fifo, (uint8_t*)&control.raw, 1);
     switch(control.operation) {
       case ALP_OP_READ_FILE_DATA:
-        ptr += 1; // skip file ID
-        fifo_t fifo;
-        fifo_init_filled(&fifo, ptr, alp_command_length - (ptr - alp_command), 4);
-        uint32_t file_len = alp_parse_length_operand(&fifo);
-        expected_response_length += file_len;
-        ptr += file_len;
+        fifo_skip(&fifo, 1); // skip file ID
+        alp_parse_length_operand(&fifo); // offset
+        expected_response_length += alp_parse_length_operand(&fifo);;
         break;
       case ALP_OP_REQUEST_TAG:
-        ptr += 1; // skip tag ID operand
+        fifo_skip(&fifo, 1); // skip tag ID operand
         break;
       case ALP_OP_RETURN_FILE_DATA:
       case ALP_OP_WRITE_FILE_DATA:
-        ptr += 2; // skip file offset operand // TODO we assume 2 bytes now but can be 2-5 bytes
-        uint8_t data_length = *ptr;
-        ptr += 1; // skip data length field // TODO we assume length is coded in 1 byte but can be 4
-        ptr += data_length; // skip data
+        fifo_skip(&fifo, 1); // skip file ID
+        alp_parse_length_operand(&fifo); // offset
+        fifo_skip(&fifo, alp_parse_length_operand(&fifo));
         break;
       case ALP_OP_FORWARD:
-        ptr += 1; // skip interface ID
-        ptr += 1; // skip QoS
-        ptr += 1; // skip dormant
+        fifo_skip(&fifo, 3); // skip interface ID, QoS, dormant timeout
         d7ap_addressee_ctrl_t addressee_ctrl;
-        addressee_ctrl.raw = *ptr;
-        ptr += 1; // skip addressee ctrl
-        ptr += 1; // skip access class
-        ptr += alp_addressee_id_length(addressee_ctrl.id_type); // skip address
+        fifo_pop(&fifo, (uint8_t*)&addressee_ctrl.raw, 1);
+        fifo_skip(&fifo, 2 + alp_addressee_id_length(addressee_ctrl.id_type)); // skip addressee ctrl, access class
         // TODO refactor to reuse same logic for parsing and response length counting
         break;
       case ALP_OP_WRITE_FILE_PROPERTIES:
-        ptr += 1 + sizeof(fs_file_header_t); // skip file ID & header
+        fifo_skip(&fifo, 1 + sizeof(fs_file_header_t)); // skip file ID & header
         break;
       // TODO other operations
       default:
+        DPRINT("op %i not implemented", control.operation);
         assert(false);
     }
   }
