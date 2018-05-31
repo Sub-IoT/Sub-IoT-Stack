@@ -156,7 +156,7 @@ void SX1276IoInit( void )
   GPIO_InitTypeDef initStruct={0};
   
   SX1276BoardInit( &BoardCallbacks );
-  
+  hw_radio_io_init();
 // done by platform
 //  initStruct.Mode =GPIO_MODE_IT_RISING;
 //  initStruct.Pull = GPIO_PULLUP;
@@ -188,7 +188,7 @@ void SX1276IoDeInit( void )
 {
   GPIO_InitTypeDef initStruct={0};
 
-  initStruct.Mode = GPIO_MODE_IT_RISING ; //GPIO_MODE_ANALOG;
+  initStruct.Mode = GPIO_MODE_ANALOG;
   initStruct.Pull = GPIO_NOPULL;
   
   HW_GPIO_Init( RADIO_DIO_0_PORT, RADIO_DIO_0_PIN, &initStruct );

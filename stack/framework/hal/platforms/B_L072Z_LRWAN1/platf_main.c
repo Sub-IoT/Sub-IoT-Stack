@@ -30,7 +30,9 @@
 #include "errors.h"
 
 #if defined(USE_SX127X) && defined(PLATFORM_SX127X_USE_RESET_PIN)
-static void reset_sx127x()
+// override the weak definition
+// TODO might be moved to radio driver is hw_gpio_configure_pin() is part of public HAL API instead of platform specific
+void hw_radio_reset()
 {
   error_t e;
   e = hw_gpio_configure_pin(SX127x_RESET_PIN, false, GPIO_MODE_OUTPUT_PP, 0); assert(e == SUCCESS);
@@ -50,7 +52,7 @@ void __platform_init()
     hw_radio_io_init();
 
   #ifdef PLATFORM_SX127X_USE_RESET_PIN
-    reset_sx127x();
+    hw_radio_reset();
   #endif
 #endif
 
@@ -82,7 +84,9 @@ void hw_radio_io_init() {
   // configure the radio GPIO pins here, since hw_gpio_configure_pin() is MCU
   // specific and not part of the common HAL API
   hw_gpio_configure_pin(SX127x_DIO0_PIN, true, GPIO_MODE_INPUT, 0);
+  hw_gpio_disable_interrupt(SX127x_DIO0_PIN);
   hw_gpio_configure_pin(SX127x_DIO1_PIN, true, GPIO_MODE_INPUT, 0);
+  hw_gpio_disable_interrupt(SX127x_DIO1_PIN);
 
   // Antenna switching uses 3 pins on murata ABZ module
   hw_gpio_configure_pin(ABZ_ANT_SW_RX_PIN, false, GPIO_MODE_OUTPUT_PP, 0);
@@ -91,6 +95,7 @@ void hw_radio_io_init() {
 
 #ifdef PLATFORM_SX127X_USE_DIO3_PIN
   hw_gpio_configure_pin(SX127x_DIO3_PIN, true, GPIO_MODE_INPUT, 0);
+  hw_gpio_disable_interrupt(SX127x_DIO3_PIN);
 #endif
 #ifdef PLATFORM_SX127X_USE_VCC_TXCO
   hw_gpio_configure_pin(SX127x_VCC_TXCO, false, GPIO_MODE_OUTPUT_PP, 1);

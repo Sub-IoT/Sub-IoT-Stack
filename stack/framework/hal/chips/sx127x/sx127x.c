@@ -926,14 +926,16 @@ static void switch_to_sleep_mode()
 
 
 error_t hw_radio_init(alloc_packet_callback_t alloc_packet_cb, release_packet_callback_t release_packet_cb) {
-  if(sx127x_spi != NULL)
-    return EALREADY;
-
   alloc_packet_callback = alloc_packet_cb;
   release_packet_callback = release_packet_cb;
 
-  spi_handle = spi_init(SX127x_SPI_INDEX, SX127x_SPI_BAUDRATE, 8, true);
-  sx127x_spi = spi_init_slave(spi_handle, SX127x_SPI_PIN_CS, true);
+  if(sx127x_spi == NULL) {
+    spi_handle = spi_init(SX127x_SPI_INDEX, SX127x_SPI_BAUDRATE, 8, true);
+    sx127x_spi = spi_init_slave(spi_handle, SX127x_SPI_PIN_CS, true);
+  }
+
+  hw_radio_io_init();
+  hw_radio_reset();
 
   set_opmode(OPMODE_STANDBY);
   while(get_opmode() != OPMODE_STANDBY) {}
@@ -947,6 +949,7 @@ error_t hw_radio_init(alloc_packet_callback_t alloc_packet_cb, release_packet_ca
   error_t e;
   e = hw_gpio_configure_interrupt(SX127x_DIO0_PIN, &dio0_isr, GPIO_RISING_EDGE); assert(e == SUCCESS);
   e = hw_gpio_configure_interrupt(SX127x_DIO1_PIN, &dio1_isr, GPIO_RISING_EDGE); assert(e == SUCCESS);
+  DPRINT("inited sx127x");
 
   return SUCCESS; // TODO FAIL return code
 }
@@ -964,6 +967,10 @@ error_t hw_radio_set_idle() {
 
 bool hw_radio_is_idle() {
   // TODO
+}
+
+__attribute__((weak)) void hw_radio_reset() {
+  // needs to be implemented in platform for now (until we have a public API to configure GPIO pins)
 }
 
 __attribute__((weak)) void hw_radio_io_init() {
