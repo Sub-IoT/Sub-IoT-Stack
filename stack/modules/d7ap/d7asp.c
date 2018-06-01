@@ -35,6 +35,7 @@
 #include "hwwatchdog.h"
 #include "MODULE_D7AP_defs.h"
 #include "errors.h"
+#include "compress.h"
 
 #if defined(FRAMEWORK_LOG_ENABLED) && defined(MODULE_D7AP_SP_LOG_ENABLED)
 #define DPRINT(...) log_print_stack_string(LOG_STACK_SESSION, __VA_ARGS__)
@@ -139,6 +140,12 @@ static void flush_fifos()
         return;
     }
 
+    if(current_master_session.state != D7ASP_MASTER_SESSION_PENDING) {
+      DPRINT("No sessions in pending state, skipping");
+      return;
+    }
+
+    current_master_session.state = D7ASP_MASTER_SESSION_ACTIVE;
     if (d7asp_state == D7ASP_STATE_PENDING_MASTER)
         switch_state(D7ASP_STATE_MASTER);
 
@@ -310,12 +317,14 @@ d7asp_master_session_t* d7asp_master_session_create(d7ap_master_session_config_t
     DPRINT("Create master session %d", current_master_session.token);
 
     current_master_session.config.qos = d7asp_master_session_config->qos;
-
-    //TODO create a dormant master session if TO (DORM_TIMER) !=0
     current_master_session.config.dormant_timeout = d7asp_master_session_config->dormant_timeout;
     current_master_session.config.addressee.ctrl = d7asp_master_session_config->addressee.ctrl;
     current_master_session.config.addressee.access_class = d7asp_master_session_config->addressee.access_class;
     memcpy(current_master_session.config.addressee.id, d7asp_master_session_config->addressee.id, sizeof(current_master_session.config.addressee.id));
+
+    //TODO actually use dormant timeout. For now it is infinite
+    if(current_master_session.config.dormant_timeout)
+      current_master_session.state = D7ASP_MASTER_SESSION_DORMANT;
 
     return &current_master_session;
 }
@@ -352,7 +361,14 @@ d7asp_queue_result_t d7asp_queue_alp_actions(d7asp_master_session_t* session, ui
     else if (d7asp_state == D7ASP_STATE_SLAVE)
         switch_state(D7ASP_STATE_SLAVE_PENDING_MASTER);
 
-    current_master_session.state = D7ASP_MASTER_SESSION_ACTIVE;
+    if(current_master_session.state == D7ASP_MASTER_SESSION_IDLE) {
+      current_master_session.state = D7ASP_MASTER_SESSION_PENDING;
+      DPRINT("converting IDLE session to PENDING");
+    } else if(current_master_session.state == D7ASP_MASTER_SESSION_DORMANT) {
+      DPRINT("session is dormant, not activating");
+    } else {
+      assert(false);
+    }
 
     return (d7asp_queue_result_t){ .fifo_token = session->token, .request_id = request_id };
 }
@@ -424,6 +440,7 @@ bool d7asp_process_received_packet(packet_t* packet, bool extension)
         {
             DPRINT("Dialog Extension Procedure is initiated, mark the FIFO flush"
                     " completed before switching to a responder state");
+            packet_queue_free_packet(current_request_packet);
             alp_layer_d7asp_fifo_flush_completed(current_master_session.token, current_master_session.progress_bitmap,
                                            current_master_session.success_bitmap, current_master_session.next_request_id - 1);
             current_master_session.state = D7ASP_MASTER_SESSION_IDLE;
@@ -458,16 +475,25 @@ bool d7asp_process_received_packet(packet_t* packet, bool extension)
 
         current_response_packet = packet;
 
+        if (current_master_session.state == D7ASP_MASTER_SESSION_DORMANT &&
+            // TODO ignore for now until we implement preferred GW (!ID_TYPE_IS_BROADCAST(packet->dll_header.control_target_id_type)) &&
+            memcmp(current_master_session.config.addressee.id, packet->d7anp_addressee->id, alp_addressee_id_length(packet->d7anp_addressee->ctrl.id_type)) == 0) {
+          DPRINT("pending dormant session for requester");
+          current_master_session.state = D7ASP_MASTER_SESSION_PENDING;
+        }
+
         /*
          * activate the dialog extension procedure in the unicast response if the dialog is terminated
          * and a master session is pending
          */
-        if ((!ID_TYPE_IS_BROADCAST(packet->dll_header.control_target_id_type))
-                && (d7asp_state == D7ASP_STATE_SLAVE_PENDING_MASTER))
+        if (
+            // TODO ignore for now until we implement preferred GW (!ID_TYPE_IS_BROADCAST(packet->dll_header.control_target_id_type)) &&
+                (d7asp_state == D7ASP_STATE_SLAVE_PENDING_MASTER))
         {
             packet->d7atp_ctrl.ctrl_is_start = true;
-            // TODO set packet->d7anp_listen_timeout according the time remaining in the current transaction
-            // + the maximum time to send the first request of the pending session.
+            packet->d7atp_ctrl.ctrl_tl = true;
+            packet->d7atp_tl = compress_data(10240, true); // TODO set according the time remaining in the current transaction
+                                                           // + the maximum time to send the first request of the pending session.
         }
         else
             packet->d7atp_ctrl.ctrl_is_start = 0;
@@ -512,7 +538,6 @@ static void on_request_completed()
 void d7asp_signal_packet_transmitted(packet_t *packet)
 {
     DPRINT("Packet transmitted");
-
     if (d7asp_state == D7ASP_STATE_MASTER)
     {
         // for the lowest QoS level the packet is ack-ed when CSMA/CA process succeeded

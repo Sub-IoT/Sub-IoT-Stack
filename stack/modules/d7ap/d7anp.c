@@ -230,7 +230,7 @@ void d7anp_stop()
     sched_cancel_task(&start_foreground_scan_after_D7AAdvP);
 }
 
-error_t d7anp_tx_foreground_frame(packet_t* packet, bool should_include_origin_template, uint8_t slave_listen_timeout_ct)
+error_t d7anp_tx_foreground_frame(packet_t* packet, bool should_include_origin_template)
 {
     assert(d7anp_state == D7ANP_STATE_IDLE || d7anp_state == D7ANP_STATE_FOREGROUND_SCAN);
 
@@ -260,8 +260,6 @@ error_t d7anp_tx_foreground_frame(packet_t* packet, bool should_include_origin_t
         packet->d7anp_ctrl.origin_void = false;
         // note we set packet->origin_access_class in DLL, since we cache the active access class there already
     }
-
-    packet->d7anp_listen_timeout = slave_listen_timeout_ct;
 
 security:
 #if defined(MODULE_D7AP_NLS_ENABLED)

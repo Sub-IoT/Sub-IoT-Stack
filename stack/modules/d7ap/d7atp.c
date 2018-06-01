@@ -332,7 +332,7 @@ error_t d7atp_send_request(uint8_t dialog_id, uint8_t transaction_id, bool is_la
     }
 
 send_packet:
-    return(d7anp_tx_foreground_frame(packet, true, slave_listen_timeout));
+    return(d7anp_tx_foreground_frame(packet, true));
 }
 
 static void send_response(packet_t* packet)
@@ -364,15 +364,14 @@ static void send_response(packet_t* packet)
         should_include_origin_template = true;
     }
 
-    uint8_t slave_listen_timeout = 0;
     // we are the slave here, so we don't need to lock the other party on the channel, unless we want to signal a pending dormant session with this addressee
-    if (!packet->d7atp_ctrl.ctrl_is_start)
-        slave_listen_timeout = 0;
-    // TODO dormant sessions
+    if (packet->d7atp_ctrl.ctrl_is_start) {
+        DPRINT("extending dialog");
+    }
 
     // dialog and transaction id remain the same
-    DPRINT("Tl=%i", packet->d7anp_listen_timeout);
-    d7anp_tx_foreground_frame(packet, should_include_origin_template, slave_listen_timeout);
+    DPRINT("Tl=%i", packet->d7atp_tl);
+    d7anp_tx_foreground_frame(packet, should_include_origin_template);
 }
 
 uint8_t d7atp_assemble_packet_header(packet_t* packet, uint8_t* data_ptr)
@@ -537,8 +536,8 @@ void d7atp_process_received_packet(packet_t* packet)
     packet->d7anp_addressee = &current_addressee;
 
     DPRINT("Recvd dialog %i trans id %i, curr %i - %i", packet->d7atp_dialog_id, packet->d7atp_transaction_id, current_dialog_id, current_transaction_id);
-    timer_tick_t Tl = CT_DECOMPRESS(packet->d7anp_listen_timeout);
-    DPRINT("Tl=%i (CT) -> %i (Ti) ", packet->d7anp_listen_timeout, Tl);
+    timer_tick_t Tl = CT_DECOMPRESS(packet->d7atp_tl);
+    DPRINT("Tl=%i (CT) -> %i (Ti) ", packet->d7atp_tl, Tl);
     if (IS_IN_MASTER_TRANSACTION())
     {
         if (packet->d7atp_dialog_id != current_dialog_id || packet->d7atp_transaction_id != current_transaction_id)
@@ -553,7 +552,8 @@ void d7atp_process_received_packet(packet_t* packet)
         {
             // if this is a unicast response and the last transaction, the extension procedure is allowed
             // TODO validate this is still working now we don't have the stop bit any more
-            if (!ID_TYPE_IS_BROADCAST(packet->dll_header.control_target_id_type))
+            // TODO re-eable later if we have preffered GW if (!ID_TYPE_IS_BROADCAST(packet->dll_header.control_target_id_type))
+            if(1)
             {
                 Tl = adjust_timeout_value(Tl, packet->hw_radio_packet.rx_meta.timestamp);
                 DPRINT("Adjusted Tl=%i (Ti) ", Tl);

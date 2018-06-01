@@ -48,7 +48,6 @@ struct packet
 {
     timer_tick_t request_received_timestamp;
     dll_header_t dll_header;
-    uint8_t d7anp_listen_timeout;
     d7anp_ctrl_t d7anp_ctrl;
     uint8_t origin_access_class;
     uint8_t origin_access_id[8];
