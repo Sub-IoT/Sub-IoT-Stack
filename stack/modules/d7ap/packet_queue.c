@@ -59,7 +59,7 @@ packet_t* packet_queue_alloc_packet()
         if(packet_queue_element_status[i] == PACKET_QUEUE_ELEMENT_STATUS_FREE)
         {
             packet_queue_element_status[i] = PACKET_QUEUE_ELEMENT_STATUS_ALLOCATED;
-            DPRINT("Packet queue alloc %p", &(packet_queue[i]));
+            DPRINT("Packet queue alloc %p slot %i", &(packet_queue[i]), i);
             return &(packet_queue[i]);
         }
     }
@@ -76,6 +76,7 @@ void packet_queue_free_packet(packet_t* packet)
     {
         if(packet == &(packet_queue[i]))
         {
+            DPRINT("packet slot %i", i);
             assert(packet_queue_element_status[i] >= PACKET_QUEUE_ELEMENT_STATUS_ALLOCATED);
             packet_queue_element_status[i] = PACKET_QUEUE_ELEMENT_STATUS_FREE;
             packet_init(&(packet_queue[i]));
@@ -105,7 +106,7 @@ void packet_queue_mark_received(hw_radio_packet_t* hw_radio_packet)
         if(&(packet_queue[i].hw_radio_packet) == hw_radio_packet)
         {
             assert(packet_queue_element_status[i] == PACKET_QUEUE_ELEMENT_STATUS_ALLOCATED);
-            DPRINT("Packet queue mark received %p", &(packet_queue[i].hw_radio_packet));
+            DPRINT("Packet queue mark received %p, slot %i", &(packet_queue[i].hw_radio_packet), i);
             packet_queue_element_status[i] = PACKET_QUEUE_ELEMENT_STATUS_RECEIVED;
             return;
         }
@@ -121,7 +122,7 @@ packet_t* packet_queue_mark_transmitted(hw_radio_packet_t* hw_radio_packet)
         if(&(packet_queue[i].hw_radio_packet) == hw_radio_packet)
         {
             assert(packet_queue_element_status[i] == PACKET_QUEUE_ELEMENT_STATUS_PROCESSING);
-            DPRINT("Packet queue mark transmitted %p", &(packet_queue[i].hw_radio_packet));
+            DPRINT("Packet queue mark transmitted %p slot %i", &(packet_queue[i].hw_radio_packet), i);
             packet_queue_element_status[i] = PACKET_QUEUE_ELEMENT_STATUS_TRANSMITTED;
             return &(packet_queue[i]);
         }
@@ -135,8 +136,10 @@ packet_t* packet_queue_get_received_packet()
     // note: we return the first found received packet, this may not be the oldest one
     for(uint8_t i = 0; i < MODULE_D7AP_PACKET_QUEUE_SIZE; i++)
     {
-        if(packet_queue_element_status[i] == PACKET_QUEUE_ELEMENT_STATUS_RECEIVED)
+        if(packet_queue_element_status[i] == PACKET_QUEUE_ELEMENT_STATUS_RECEIVED) {
+            DPRINT("Packet slot %i", i);
             return &(packet_queue[i]);
+        }
     }
 
     return NULL;
@@ -162,7 +165,7 @@ void packet_queue_mark_processing(packet_t* packet)
         if(packet == &(packet_queue[i]))
         {
             assert(packet_queue_element_status[i] != PACKET_QUEUE_ELEMENT_STATUS_FREE);
-
+            DPRINT("Packet slot %i", i);
             packet_queue_element_status[i] = PACKET_QUEUE_ELEMENT_STATUS_PROCESSING;
             return;
         }
