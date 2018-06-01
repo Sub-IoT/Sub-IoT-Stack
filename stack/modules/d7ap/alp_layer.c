@@ -70,8 +70,8 @@ static alp_init_args_t* NGDEF(_init_args);
 static void free_command(alp_command_t* command) {
   DPRINT("Free cmd %i", command->fifo_token);
   command->is_active = false;
-  fifo_clear(&command->alp_command_fifo);
-  fifo_clear(&command->alp_response_fifo);
+  fifo_init(&command->alp_command_fifo, command->alp_command, ALP_PAYLOAD_MAX_SIZE);
+  fifo_init(&command->alp_response_fifo, command->alp_response, ALP_PAYLOAD_MAX_SIZE);
   // other fields are initialized on usage
 };
 
@@ -87,6 +87,7 @@ static alp_command_t* alloc_command()
   for(uint8_t i = 0; i < MODULE_D7AP_ALP_MAX_ACTIVE_COMMAND_COUNT; i++) {
     if(commands[i].is_active == false) {
       commands[i].is_active = true;
+      DPRINT("alloc cmd %p in slot %i", &commands[i], i);
       return &(commands[i]);
     }
   }
@@ -97,8 +98,10 @@ static alp_command_t* alloc_command()
 
 static alp_command_t* get_command_by_fifo_token(uint8_t fifo_token) {
   for(uint8_t i = 0; i < MODULE_D7AP_ALP_MAX_ACTIVE_COMMAND_COUNT; i++) {
-    if(commands[i].fifo_token == fifo_token && commands[i].is_active)
+    if(commands[i].fifo_token == fifo_token && commands[i].is_active) {
+      DPRINT("command %i in slot %i", fifo_token, i);
       return &(commands[i]);
+    }
   }
 
   DPRINT("No active command found with fifo_token = %i", fifo_token);
@@ -487,7 +490,6 @@ bool alp_layer_process_command(uint8_t* alp_command, uint8_t alp_command_length,
 
   memcpy(command->alp_command, alp_command, alp_command_length); // TODO not needed to store this
   fifo_init_filled(&(command->alp_command_fifo), command->alp_command, alp_command_length, ALP_PAYLOAD_MAX_SIZE);
-  fifo_init(&(command->alp_response_fifo), command->alp_response, ALP_PAYLOAD_MAX_SIZE);
   command->origin = origin;
 
   (*alp_response_length) = 0;
