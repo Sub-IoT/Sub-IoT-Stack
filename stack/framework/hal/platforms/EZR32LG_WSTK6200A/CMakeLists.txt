@@ -22,7 +22,7 @@ REQUIRE_TOOLCHAIN(gcc-arm-embedded)
 
 #Define platform specific options
 PLATFORM_PARAM(${PLATFORM_PREFIX}_MCU "EZR32LG330F256R60" STRING "The MCU of the Gecko board")
-SET(JLINK_DEVICE ${${PLATFORM_PREFIX}_MCU} CACHE STRING "The device passed to JLinkExe for flashing")
+SET(JLINK_DEVICE "EZR32LG330F256R60" CACHE STRING "The device passed to JLinkExe for flashing")
 PLATFORM_PARAM(${PLATFORM_PREFIX}_RADIO "si4460" STRING "The radio chip connected to the Gecko board")
 PLATFORM_OPTION(${PLATFORM_PREFIX}_DEBUGPINS "Enable/Disable Hardware Debug Pins support (see 'hwdebug.h')" TRUE)
 PLATFORM_OPTION(PLATFORM_USE_VCOM "Enable/Disable VCOM support" FALSE)
