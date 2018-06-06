@@ -134,6 +134,8 @@ spi_handle_t* spi_init(uint8_t spi_number, uint32_t baudrate, uint8_t databits, 
   assert(databits == 8);
   assert(spi_number < SPI_COUNT);
 
+  next_spi_slave_handle = 0;
+
   if (handle[spi_number].hspi.Instance != NULL)
   {
     //TODO: check if settings are ok
