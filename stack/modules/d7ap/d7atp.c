@@ -214,12 +214,6 @@ void d7atp_signal_dialog_termination()
     // Discard eventually the Tc timer
     timer_cancel_task(&response_period_timeout_handler);
     sched_cancel_task(&response_period_timeout_handler);
-
-    // stop the DLL foreground scan
-    d7anp_stop_foreground_scan();
-
-    // notify DLL that the dialog is over
-    dll_notify_dialog_terminated();
 }
 
 void d7atp_stop_transaction()
