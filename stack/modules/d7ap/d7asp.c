@@ -366,8 +366,6 @@ d7asp_queue_result_t d7asp_queue_alp_actions(d7asp_master_session_t* session, ui
       DPRINT("converting IDLE session to PENDING");
     } else if(current_master_session.state == D7ASP_MASTER_SESSION_DORMANT) {
       DPRINT("session is dormant, not activating");
-    } else {
-      assert(false);
     }
 
     return (d7asp_queue_result_t){ .fifo_token = session->token, .request_id = request_id };

@@ -762,7 +762,7 @@ static void conf_file_changed_callback(uint8_t file_id)
 {
     DPRINT("DLL config file changed");
     // when doing scan automation restart this
-    if (dll_state == DLL_STATE_SCAN_AUTOMATION)
+    if (dll_state == DLL_STATE_IDLE || dll_state == DLL_STATE_SCAN_AUTOMATION)
     {
         dll_execute_scan_automation();
     }
