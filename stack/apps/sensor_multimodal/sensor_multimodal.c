@@ -23,7 +23,7 @@
 #define SENSOR_FILE_ID                  0x40
 #define SENSOR_FILE_SIZE                2
 #define SENSOR_INTERVAL_LORAWAN_SEC     TIMER_TICKS_PER_SEC * 60
-#define SENSOR_INTERVAL_D7AP_SEC        TIMER_TICKS_PER_SEC * 10
+#define SENSOR_INTERVAL_D7AP_SEC        TIMER_TICKS_PER_SEC * 20
 
 typedef struct {
   char name[4];
