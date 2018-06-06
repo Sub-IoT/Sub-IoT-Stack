@@ -476,7 +476,7 @@ bool d7asp_process_received_packet(packet_t* packet, bool extension)
         current_response_packet = packet;
 
         if (current_master_session.state == D7ASP_MASTER_SESSION_DORMANT &&
-            // TODO ignore for now until we implement preferred GW (!ID_TYPE_IS_BROADCAST(packet->dll_header.control_target_id_type)) &&
+            (!ID_TYPE_IS_BROADCAST(packet->dll_header.control_target_id_type)) &&
             memcmp(current_master_session.config.addressee.id, packet->d7anp_addressee->id, alp_addressee_id_length(packet->d7anp_addressee->ctrl.id_type)) == 0) {
           DPRINT("pending dormant session for requester");
           current_master_session.state = D7ASP_MASTER_SESSION_PENDING;
@@ -486,8 +486,7 @@ bool d7asp_process_received_packet(packet_t* packet, bool extension)
          * activate the dialog extension procedure in the unicast response if the dialog is terminated
          * and a master session is pending
          */
-        if (
-            // TODO ignore for now until we implement preferred GW (!ID_TYPE_IS_BROADCAST(packet->dll_header.control_target_id_type)) &&
+        if ((!ID_TYPE_IS_BROADCAST(packet->dll_header.control_target_id_type)) &&
                 (d7asp_state == D7ASP_STATE_SLAVE_PENDING_MASTER))
         {
             packet->d7atp_ctrl.ctrl_is_start = true;

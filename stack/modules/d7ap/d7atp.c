@@ -552,8 +552,7 @@ void d7atp_process_received_packet(packet_t* packet)
         {
             // if this is a unicast response and the last transaction, the extension procedure is allowed
             // TODO validate this is still working now we don't have the stop bit any more
-            // TODO re-eable later if we have preffered GW if (!ID_TYPE_IS_BROADCAST(packet->dll_header.control_target_id_type))
-            if(1)
+            if (!ID_TYPE_IS_BROADCAST(packet->dll_header.control_target_id_type))
             {
                 Tl = adjust_timeout_value(Tl, packet->hw_radio_packet.rx_meta.timestamp);
                 DPRINT("Adjusted Tl=%i (Ti) ", Tl);
