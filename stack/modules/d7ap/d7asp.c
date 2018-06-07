@@ -140,8 +140,8 @@ static void flush_fifos()
         return;
     }
 
-    if(current_master_session.state != D7ASP_MASTER_SESSION_PENDING) {
-      DPRINT("No sessions in pending state, skipping");
+    if(current_master_session.state != D7ASP_MASTER_SESSION_PENDING && current_master_session.state != D7ASP_MASTER_SESSION_ACTIVE) {
+      DPRINT("No sessions in pending or active state, skipping");
       return;
     }
 
@@ -277,6 +277,25 @@ static void switch_state(state_t new_state)
     }
 }
 
+static void dormant_session_timeout() {
+  // TODO pass session so we can have multiple
+  DPRINT("dormant session timeout");
+  if(current_master_session.state == D7ASP_MASTER_SESSION_DORMANT) {
+    current_master_session.state = D7ASP_MASTER_SESSION_PENDING;
+    if(d7asp_state == D7ASP_STATE_IDLE)
+      D7ASP_STATE_PENDING_MASTER;
+
+    sched_post_task(&flush_fifos);
+  }
+}
+
+static void schedule_dormant_session(d7asp_master_session_t* dormant_session) {
+  assert(dormant_session->state == D7ASP_MASTER_SESSION_DORMANT);
+  timer_tick_t timeout = CT_DECOMPRESS(dormant_session->config.dormant_timeout);
+  DPRINT("Sched dormant timeout in %i ti", timeout);
+  timer_post_task_delay(&dormant_session_timeout, timeout);
+}
+
 void d7asp_init()
 {
     assert(d7asp_state == D7ASP_STATE_STOPPED);
@@ -289,6 +308,7 @@ void d7asp_init()
     DPRINT("FIFO_MAX_REQUESTS_COUNT %d", MODULE_D7AP_FIFO_MAX_REQUESTS_COUNT);
 
     sched_register_task(&flush_fifos);
+    sched_register_task(&dormant_session_timeout);
 }
 
 void d7asp_stop()
@@ -296,6 +316,8 @@ void d7asp_stop()
     d7asp_state = D7ASP_STATE_STOPPED;
     timer_cancel_task(&flush_fifos);
     sched_cancel_task(&flush_fifos);
+    timer_cancel_task(&dormant_session_timeout);
+    sched_cancel_task(&dormant_session_timeout);
 }
 
 d7asp_master_session_t* d7asp_master_session_create(d7ap_master_session_config_t* d7asp_master_session_config) {
@@ -323,8 +345,10 @@ d7asp_master_session_t* d7asp_master_session_create(d7ap_master_session_config_t
     memcpy(current_master_session.config.addressee.id, d7asp_master_session_config->addressee.id, sizeof(current_master_session.config.addressee.id));
 
     //TODO actually use dormant timeout. For now it is infinite
-    if(current_master_session.config.dormant_timeout)
+    if(current_master_session.config.dormant_timeout) {
       current_master_session.state = D7ASP_MASTER_SESSION_DORMANT;
+      schedule_dormant_session(&current_master_session);
+    }
 
     return &current_master_session;
 }
@@ -508,6 +532,7 @@ bool d7asp_process_received_packet(packet_t* packet, bool extension)
 static void on_request_completed()
 {
     assert(d7asp_state == D7ASP_STATE_MASTER);
+    DPRINT("request completed");
     if (!bitmap_get(current_master_session.progress_bitmap, current_request_id))
     {
         current_request_retry_count++;
