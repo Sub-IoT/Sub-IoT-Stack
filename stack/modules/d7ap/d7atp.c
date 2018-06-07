@@ -55,6 +55,9 @@ static uint8_t NGDEF(_current_transaction_id);
 static uint8_t NGDEF(_current_access_class);
 #define current_access_class NG(_current_access_class)
 
+static timer_tick_t NGDEF(_current_Tl_received);
+#define current_Tl_received NG(_current_Tl_received)
+
 #define ACCESS_CLASS_NOT_SET 0xFF
 
 static dae_access_profile_t NGDEF(_active_addressee_access_profile);
@@ -214,6 +217,17 @@ void d7atp_signal_dialog_termination()
     // Discard eventually the Tc timer
     timer_cancel_task(&response_period_timeout_handler);
     sched_cancel_task(&response_period_timeout_handler);
+
+    if(current_Tl_received == 0) {
+      DPRINT("Tl = 0, stop FG scan");
+      // stop the DLL foreground scan
+      d7anp_stop_foreground_scan();
+
+      // notify DLL that the dialog is over
+      dll_notify_dialog_terminated();
+    } else {
+      DPRINT("Tl set, don't stop FG scan");
+    }
 }
 
 void d7atp_stop_transaction()
@@ -234,6 +248,7 @@ void d7atp_init()
     d7atp_state = D7ATP_STATE_IDLE;
     current_access_class = ACCESS_CLASS_NOT_SET;
     current_dialog_id = 0;
+    current_Tl_received = 0;
     stop_dialog_after_tx = false;
 
     sched_register_task(&response_period_timeout_handler);
@@ -530,8 +545,8 @@ void d7atp_process_received_packet(packet_t* packet)
     packet->d7anp_addressee = &current_addressee;
 
     DPRINT("Recvd dialog %i trans id %i, curr %i - %i", packet->d7atp_dialog_id, packet->d7atp_transaction_id, current_dialog_id, current_transaction_id);
-    timer_tick_t Tl = CT_DECOMPRESS(packet->d7atp_tl);
-    DPRINT("Tl=%i (CT) -> %i (Ti) ", packet->d7atp_tl, Tl);
+    current_Tl_received = CT_DECOMPRESS(packet->d7atp_tl);
+    DPRINT("Tl=%i (CT) -> %i (Ti) ", packet->d7atp_tl, current_Tl_received);
     if (IS_IN_MASTER_TRANSACTION())
     {
         if (packet->d7atp_dialog_id != current_dialog_id || packet->d7atp_transaction_id != current_transaction_id)
@@ -548,10 +563,10 @@ void d7atp_process_received_packet(packet_t* packet)
             // TODO validate this is still working now we don't have the stop bit any more
             if (!ID_TYPE_IS_BROADCAST(packet->dll_header.control_target_id_type))
             {
-                Tl = adjust_timeout_value(Tl, packet->hw_radio_packet.rx_meta.timestamp);
-                DPRINT("Adjusted Tl=%i (Ti) ", Tl);
+                current_Tl_received = adjust_timeout_value(current_Tl_received, packet->hw_radio_packet.rx_meta.timestamp);
+                DPRINT("Adjusted Tl=%i (Ti) ", current_Tl_received);
                 DPRINT("Responder wants to append a new dialog");
-                d7anp_set_foreground_scan_timeout(Tl);
+                d7anp_set_foreground_scan_timeout(current_Tl_received);
                 d7anp_start_foreground_scan();
                 current_dialog_id = 0;
                 switch_state(D7ATP_STATE_IDLE);
@@ -600,10 +615,10 @@ void d7atp_process_received_packet(packet_t* packet)
                 Tc += CT_DECOMPRESS(packet->d7atp_te);
 
             // We choose to start the FG scan after the execution delay and the response period so Tl = Tl - Tc - Te
-            if (Tl > Tc)
-                Tl -= Tc;
+            if (current_Tl_received > Tc)
+                current_Tl_received -= Tc;
             else
-                Tl = 0;
+                current_Tl_received = 0;
 
             Tc = adjust_timeout_value(Tc, packet->hw_radio_packet.rx_meta.timestamp);
 
@@ -614,9 +629,9 @@ void d7atp_process_received_packet(packet_t* packet)
                 return;
             }
 
-            if (Tl)
+            if (current_Tl_received)
             {
-                d7anp_set_foreground_scan_timeout(Tl);
+                d7anp_set_foreground_scan_timeout(current_Tl_received);
                 schedule_response_period_timeout_handler(Tc);
             }
 
@@ -625,10 +640,10 @@ void d7atp_process_received_packet(packet_t* packet)
         }
         else
         {
-            Tl = adjust_timeout_value(Tl, packet->hw_radio_packet.rx_meta.timestamp);
-            if (Tl > 0)
+            current_Tl_received = adjust_timeout_value(current_Tl_received, packet->hw_radio_packet.rx_meta.timestamp);
+            if (current_Tl_received > 0)
             {
-                d7anp_set_foreground_scan_timeout(Tl);
+                d7anp_set_foreground_scan_timeout(current_Tl_received);
                 d7anp_start_foreground_scan();
             }
         }
@@ -656,12 +671,12 @@ void d7atp_process_received_packet(packet_t* packet)
         if (should_send_response)
         {
             // If there is no listen period, then we can end the dialog after the response transmission
-            if (Tl == 0)
+            if (current_Tl_received == 0)
                 stop_dialog_after_tx = true;
 
             send_response(packet);
         }
-        else if (Tl == 0)
+        else if (current_Tl_received == 0)
             terminate_dialog();
     }
 
