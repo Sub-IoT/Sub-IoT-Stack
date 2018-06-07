@@ -344,7 +344,6 @@ d7asp_master_session_t* d7asp_master_session_create(d7ap_master_session_config_t
     current_master_session.config.addressee.access_class = d7asp_master_session_config->addressee.access_class;
     memcpy(current_master_session.config.addressee.id, d7asp_master_session_config->addressee.id, sizeof(current_master_session.config.addressee.id));
 
-    //TODO actually use dormant timeout. For now it is infinite
     if(current_master_session.config.dormant_timeout) {
       current_master_session.state = D7ASP_MASTER_SESSION_DORMANT;
       schedule_dormant_session(&current_master_session);
@@ -513,8 +512,26 @@ bool d7asp_process_received_packet(packet_t* packet, bool extension)
         {
             packet->d7atp_ctrl.ctrl_is_start = true;
             packet->d7atp_ctrl.ctrl_tl = true;
-            packet->d7atp_tl = compress_data(10240, true); // TODO set according the time remaining in the current transaction
-                                                           // + the maximum time to send the first request of the pending session.
+            // calculate Tl
+            // TODO payload length does not include headers ... + hardcoded subband
+            // TODO this length does not include lower layers overhead for now, assume 20 bytes for now ...
+            uint16_t len = packet->payload_length;
+            if(len < 255 - 20)
+              len += 20;
+
+            // TX duration for ack
+            uint16_t estimated_tl = phy_calculate_tx_duration(packet->hw_radio_packet.rx_meta.rx_cfg.channel_id.channel_header.ch_class,
+                                                              packet->hw_radio_packet.rx_meta.rx_cfg.channel_id.channel_header.ch_coding,
+                                                              len, false);
+
+            estimated_tl += 2; // Tt
+            // TX duration for dormant session
+            estimated_tl += phy_calculate_tx_duration(packet->hw_radio_packet.rx_meta.rx_cfg.channel_id.channel_header.ch_class,
+                                                      packet->hw_radio_packet.rx_meta.rx_cfg.channel_id.channel_header.ch_coding,
+                                                      current_master_session.requests_lengths[0], false); // TODO assuming 1 queued request for now
+
+            DPRINT("Dormant session estimated Tl=%i", estimated_tl);
+            packet->d7atp_tl = compress_data(estimated_tl, true);
         }
         else
             packet->d7atp_ctrl.ctrl_is_start = 0;
