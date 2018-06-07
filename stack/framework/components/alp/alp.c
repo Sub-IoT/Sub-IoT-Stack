@@ -79,7 +79,7 @@ void alp_append_length_operand(fifo_t* fifo, uint32_t length) {
   } while(size > 0);
 }
 
-static alp_operand_file_offset_t parse_file_offset_operand(fifo_t* cmd_fifo) {
+alp_operand_file_offset_t alp_parse_file_offset_operand(fifo_t* cmd_fifo) {
   alp_operand_file_offset_t operand;
   error_t err = fifo_pop(cmd_fifo, &operand.file_id, 1); assert(err == SUCCESS);
   operand.offset = alp_parse_length_operand(cmd_fifo);
@@ -159,7 +159,7 @@ uint8_t alp_addressee_id_length(d7ap_addressee_id_type_t id_type)
 }
 
 static void parse_op_return_file_data(fifo_t* fifo, alp_action_t* action) {
-  action->file_data_operand.file_offset = parse_file_offset_operand(fifo);
+  action->file_data_operand.file_offset = alp_parse_file_offset_operand(fifo);
   action->file_data_operand.provided_data_length = alp_parse_length_operand(fifo);
   assert(action->file_data_operand.provided_data_length <= sizeof(action->file_data_operand.data));
   fifo_pop(fifo, action->file_data_operand.data, action->file_data_operand.provided_data_length);

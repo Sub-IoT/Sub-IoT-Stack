@@ -211,7 +211,10 @@ void alp_append_write_file_data_action(fifo_t* fifo, uint8_t file_id, uint32_t o
 void alp_append_forward_action(fifo_t* fifo, d7ap_master_session_config_t* session_config);
 void alp_append_return_file_data_action(fifo_t* fifo, uint8_t file_id, uint32_t offset, uint32_t length, uint8_t* data);
 void alp_append_length_operand(fifo_t* fifo, uint32_t length);
+
 uint32_t alp_parse_length_operand(fifo_t* cmd_fifo);
+alp_operand_file_offset_t alp_parse_file_offset_operand(fifo_t* cmd_fifo);
+
 void alp_parse_action(fifo_t* fifo, alp_action_t* action);
 
 uint8_t alp_addressee_id_length(d7ap_addressee_id_type_t id_type);

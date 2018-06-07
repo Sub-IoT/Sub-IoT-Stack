@@ -25,6 +25,7 @@
 #include "ng.h"
 
 #include "alp_layer.h"
+#include "alp.h"
 #include "packet.h"
 #include "fs.h"
 #include "fifo.h"
@@ -129,17 +130,17 @@ static uint8_t process_action(uint8_t* alp_action, uint8_t* alp_response, uint8_
 
 }
 
-static uint32_t parse_length_operand(fifo_t* cmd_fifo) {
-  uint8_t len = 0;
-  fifo_pop(cmd_fifo, (uint8_t*)&len, 1);
-  uint8_t field_len = len >> 6;
-  if(field_len == 0)
-    return (uint32_t)len;
+//static uint32_t parse_length_operand(fifo_t* cmd_fifo) {
+//  uint8_t len = 0;
+//  fifo_pop(cmd_fifo, (uint8_t*)&len, 1);
+//  uint8_t field_len = len >> 6;
+//  if(field_len == 0)
+//    return (uint32_t)len;
 
-  uint32_t full_length = (len & 0x3F) << ( 8 * field_len); // mask field length specificier bits and shoft before adding other length bytes
-  fifo_pop(cmd_fifo, (uint8_t*)&full_length, field_len);
-  return full_length;
-}
+//  uint32_t full_length = (len & 0x3F) << ( 8 * field_len); // mask field length specificier bits and shoft before adding other length bytes
+//  fifo_pop(cmd_fifo, (uint8_t*)&full_length, field_len);
+//  return full_length;
+//}
 
 static void generate_length_operand(fifo_t* cmd_fifo, uint32_t length) {
   if(length < 64) {
@@ -164,19 +165,19 @@ static void generate_length_operand(fifo_t* cmd_fifo, uint32_t length) {
   } while(size > 0);
 }
 
-static alp_operand_file_offset_t parse_file_offset_operand(fifo_t* cmd_fifo) {
-  alp_operand_file_offset_t operand;
-  error_t err = fifo_pop(cmd_fifo, &operand.file_id, 1); assert(err == SUCCESS);
-  operand.offset = parse_length_operand(cmd_fifo);
-  return operand;
-}
+//static alp_operand_file_offset_t parse_file_offset_operand(fifo_t* cmd_fifo) {
+//  alp_operand_file_offset_t operand;
+//  error_t err = fifo_pop(cmd_fifo, &operand.file_id, 1); assert(err == SUCCESS);
+//  operand.offset = parse_length_operand(cmd_fifo);
+//  return operand;
+//}
 
 static alp_status_codes_t process_op_read_file_data(alp_command_t* command) {
   alp_operand_file_data_request_t operand;
   error_t err;
   err = fifo_skip(&command->alp_command_fifo, 1); assert(err == SUCCESS); // skip the control byte
-  operand.file_offset = parse_file_offset_operand(&command->alp_command_fifo);
-  operand.requested_data_length = parse_length_operand(&command->alp_command_fifo);
+  operand.file_offset = alp_parse_file_offset_operand(&command->alp_command_fifo);
+  operand.requested_data_length = alp_parse_length_operand(&command->alp_command_fifo);
   DPRINT("READ FILE %i LEN %i", operand.file_offset.file_id, operand.requested_data_length);
 
   if(operand.requested_data_length <= 0)
@@ -235,8 +236,8 @@ static alp_status_codes_t process_op_write_file_data(alp_command_t* command) {
   alp_operand_file_data_t operand;
   error_t err;
   err = fifo_skip(&command->alp_command_fifo, 1); assert(err == SUCCESS); // skip the control byte
-  operand.file_offset = parse_file_offset_operand(&command->alp_command_fifo);
-  operand.provided_data_length = parse_length_operand(&command->alp_command_fifo);
+  operand.file_offset = alp_parse_file_offset_operand(&command->alp_command_fifo);
+  operand.provided_data_length = alp_parse_length_operand(&command->alp_command_fifo);
   DPRINT("WRITE FILE %i LEN %i", operand.file_offset.file_id, operand.provided_data_length);
 
   uint8_t data[operand.provided_data_length];
@@ -289,13 +290,13 @@ static alp_status_codes_t process_op_break_query(alp_command_t* command) {
     use_signed_comparison = false;
 
   alp_query_arithmetic_comparison_type_t comp_type = query_code & 0x07;
-  uint32_t comp_length = parse_length_operand(&command->alp_command_fifo);
+  uint32_t comp_length = alp_parse_length_operand(&command->alp_command_fifo);
   // TODO assuming no compare mask for now + assume compare value present + only 1 file offset operand
 
   uint8_t value[comp_length];
   memset(value, 0, comp_length);
   err = fifo_pop(&command->alp_command_fifo, value, comp_length); assert(err == SUCCESS);
-  alp_operand_file_offset_t offset_a = parse_file_offset_operand(&command->alp_command_fifo);
+  alp_operand_file_offset_t offset_a = alp_parse_file_offset_operand(&command->alp_command_fifo);
 
   uint8_t file_value[comp_length];
   fs_read_file(offset_a.file_id, offset_a.offset, file_value, comp_length);
@@ -338,13 +339,36 @@ static alp_status_codes_t process_op_request_tag(alp_command_t* command, bool re
 }
 
 static alp_status_codes_t process_op_return_file_data(alp_command_t* command) {
-  uint8_t offset_operand_size = 2; // TODO we are assuming offset operand to be 2 bytes for now
-  uint8_t total_len = 1 + offset_operand_size; // ALP control byte
-  uint8_t requested_data_length_size = 1; // TODO we are assuming requested data length is coded in 1 bytes here, but can be 4
-  total_len += requested_data_length_size;
-  uint8_t data_len;
-  fifo_peek(&command->alp_command_fifo, &data_len, 1 + offset_operand_size, requested_data_length_size);
-  total_len += data_len;
+//  alp_control_tag_response_t crtl;
+//  alp_operand_file_data_request_t operand;
+
+//  fifo_pop(&command->alp_command_fifo, &crtl, 1); //get control byte
+//  operand.file_offset = alp_parse_file_offset_operand(&command->alp_command_fifo);
+//  operand.requested_data_length = alp_parse_length_operand(&command->alp_command_fifo);
+
+  // determine total size of alp
+  uint8_t total_len = 2; // ALP control byte + File ID byte
+  uint8_t length_field;
+  uint8_t len; // b7 b6 of length field
+  uint32_t data_len;
+
+  //read length field of file offset
+  fifo_peek(&command->alp_command_fifo, &length_field, total_len, 1);
+  len = (length_field >> 6);
+  DPRINT("file offset length: %d", len + 1);
+  total_len += len + 1;
+
+  //read length field of data length data
+  fifo_peek(&command->alp_command_fifo, &length_field, total_len, 1);
+  len = (length_field >> 6);
+  DPRINT("data length length: %d", len + 1);
+
+  //read data lenght data
+  data_len = (length_field & 0x3F) << ( 8 * len); // mask field length specificier bits and shift before adding other length bytes
+  fifo_peek(&command->alp_command_fifo, (uint8_t*) &data_len, total_len + 1, len); //ofset is one byte further as we have read the first byte
+
+  DPRINT("data length: %d", data_len);
+  total_len += len + 1 + data_len;
 
   uint8_t alp_response[total_len];
   fifo_pop(&command->alp_command_fifo, alp_response, total_len);
