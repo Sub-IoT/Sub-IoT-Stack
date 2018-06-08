@@ -257,6 +257,13 @@ void guard_period_expiration()
     DPRINT("Channel guarding period is terminated, Tx is now conditioned by CSMA");
 }
 
+void start_guard_period(timer_tick_t period)
+{
+    DPRINT("guard channel");
+    guarded_channel = true;
+    timer_post_task_prio_delay(&guard_period_expiration, period, MAX_PRIORITY);
+}
+
 void start_background_scan()
 {
     assert(dll_state == DLL_STATE_SCAN_AUTOMATION);
@@ -317,9 +324,9 @@ static void packet_received(hw_radio_packet_t* hw_radio_packet)
         // If the first transmission duration is greater than or equal to the Guard Interval TG,
         // the channel guard period is extended by TG following the transmission.
         if (tx_duration >= t_g)
-            timer_post_task_prio_delay(&guard_period_expiration, t_g, MAX_PRIORITY);
+            start_guard_period(t_g);
         else
-            timer_post_task_prio_delay(&guard_period_expiration, t_g - tx_duration, MAX_PRIORITY);
+            start_guard_period(t_g - tx_duration);
 
         guarded_channel = true;
     }
@@ -364,10 +371,10 @@ void packet_transmitted(hw_radio_packet_t* hw_radio_packet)
 
     if (packet->tx_duration >= t_g )
     {
-        timer_post_task_prio_delay(&guard_period_expiration, t_g, MAX_PRIORITY);
+        start_guard_period(t_g);
     }
     else
-        timer_post_task_prio_delay(&guard_period_expiration, t_g - packet->tx_duration, MAX_PRIORITY);
+        start_guard_period(t_g - packet->tx_duration);
 
     /* the notification task needs to be handled in priority */
     sched_post_task_prio(&notify_transmitted_packet, MAX_PRIORITY);
