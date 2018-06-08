@@ -21,6 +21,7 @@
 #include "scheduler.h"
 #include "bootstrap.h"
 #include "platform.h"
+#include "button.h"
 
 #include "hwgpio.h"
 #include "hwleds.h"
@@ -50,7 +51,7 @@ void __platform_init()
     hw_gpio_configure_pin(SX127x_DIO1_PIN, true, gpioModeInput, 0);
 #endif
 
-    __watchdog_init();
+    //__watchdog_init();
 }
 
 int main (void)
