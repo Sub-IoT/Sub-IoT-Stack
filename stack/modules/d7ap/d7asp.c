@@ -140,11 +140,15 @@ static void flush_fifos()
         return;
     }
 
-    if(current_master_session.state != D7ASP_MASTER_SESSION_PENDING && current_master_session.state != D7ASP_MASTER_SESSION_ACTIVE) {
+    if(current_master_session.state != D7ASP_MASTER_SESSION_PENDING &&
+       current_master_session.state != D7ASP_MASTER_SESSION_ACTIVE &&
+       current_master_session.state != D7ASP_MASTER_SESSION_PENDING_DORMANT_TIMEOUT &&
+       current_master_session.state != D7ASP_MASTER_SESSION_PENDING_DORMANT_TRIGGERED) {
       DPRINT("No sessions in pending or active state, skipping");
       return;
     }
 
+    bool is_triggered_dormant_session = (current_master_session.state == D7ASP_MASTER_SESSION_PENDING_DORMANT_TRIGGERED);
     current_master_session.state = D7ASP_MASTER_SESSION_ACTIVE;
     if (d7asp_state == D7ASP_STATE_PENDING_MASTER)
         switch_state(D7ASP_STATE_MASTER);
@@ -174,10 +178,17 @@ static void flush_fifos()
         memcpy(current_request_packet->payload, current_master_session.request_buffer + current_master_session.requests_indices[current_request_id], current_master_session.requests_lengths[current_request_id]);
         current_request_packet->payload_length = current_master_session.requests_lengths[current_request_id];
 
-        if (current_request_id == 0)
-            current_request_packet->type = INITIAL_REQUEST;
+        if(is_triggered_dormant_session)
+        {
+            current_request_packet->type = REQUEST_IN_DIALOG_EXTENSION;
+        }
         else
-            current_request_packet->type =  SUBSEQUENT_REQUEST;
+        {
+            if (current_request_id == 0)
+                current_request_packet->type = INITIAL_REQUEST;
+            else
+                current_request_packet->type =  SUBSEQUENT_REQUEST;
+        }
 
         // TODO calculate Tl
         // Tl should correspond to the maximum time needed to send the remaining requests in the FIFO including the RETRY parameter
@@ -281,9 +292,9 @@ static void dormant_session_timeout() {
   // TODO pass session so we can have multiple
   DPRINT("dormant session timeout");
   if(current_master_session.state == D7ASP_MASTER_SESSION_DORMANT) {
-    current_master_session.state = D7ASP_MASTER_SESSION_PENDING;
+    current_master_session.state = D7ASP_MASTER_SESSION_PENDING_DORMANT_TIMEOUT;
     if(d7asp_state == D7ASP_STATE_IDLE)
-      D7ASP_STATE_PENDING_MASTER;
+      d7asp_state = D7ASP_STATE_PENDING_MASTER;
 
     sched_post_task(&flush_fifos);
   }
@@ -500,7 +511,7 @@ bool d7asp_process_received_packet(packet_t* packet, bool extension)
             (!ID_TYPE_IS_BROADCAST(packet->dll_header.control_target_id_type)) &&
             memcmp(current_master_session.config.addressee.id, packet->d7anp_addressee->id, alp_addressee_id_length(packet->d7anp_addressee->ctrl.id_type)) == 0) {
           DPRINT("pending dormant session for requester");
-          current_master_session.state = D7ASP_MASTER_SESSION_PENDING;
+          current_master_session.state = D7ASP_MASTER_SESSION_PENDING_DORMANT_TRIGGERED;
         }
 
         /*

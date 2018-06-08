@@ -493,8 +493,10 @@ static void execute_csma_ca()
      * guarded channel, is not conditioned by CSMA-CA
      */
     if ((current_packet->type == SUBSEQUENT_REQUEST ||
-        current_packet->type == RESPONSE_TO_UNICAST) && guarded_channel)
+        current_packet->type == RESPONSE_TO_UNICAST ||
+         current_packet->type == REQUEST_IN_DIALOG_EXTENSION) && guarded_channel)
     {
+        DPRINT("Guarded channel, UNC CSMA-CA");
         switch_state(DLL_STATE_TX_FOREGROUND);
         assert(hw_radio_send_packet(&current_packet->hw_radio_packet, &packet_transmitted, 0, NULL) == SUCCESS);
         return;
@@ -876,7 +878,7 @@ void dll_tx_frame(packet_t* packet)
         dll_header->control_target_id_type = ID_TYPE_NOID;
 
     // if the channel is locked, we shall use the channel of the initial request
-    if (packet->type == SUBSEQUENT_REQUEST) // TODO MISO conditions not supported
+    if (packet->type == SUBSEQUENT_REQUEST || packet->type == REQUEST_IN_DIALOG_EXTENSION) // TODO MISO conditions not supported
     {
         dll_header->control_eirp_index = current_eirp + 32;
 
