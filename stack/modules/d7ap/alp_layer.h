@@ -121,7 +121,7 @@ void alp_layer_process_d7asp_result(uint8_t* alp_command, uint8_t alp_command_le
  * \param alp_command   The raw command
  * \param alp_command_length The length of the command
  */
-void alp_layer_process_d7aacpt(d7ap_master_session_config_t* d7asp_fifo_config, uint8_t* alp_command, uint8_t alp_command_length);
+void alp_layer_process_d7aactp(d7ap_master_session_config_t* config, uint8_t* alp_command, uint8_t alp_command_length);
 
 /*!
  * \brief Process the ALP command and output the result on the console.

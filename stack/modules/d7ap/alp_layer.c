@@ -391,7 +391,7 @@ static void add_tag_response(alp_command_t* command, bool eop, bool error) {
   err = fifo_put_byte(&command->alp_response_fifo, command->tag_id); assert(err == SUCCESS);
 }
 
-void alp_layer_process_d7aacpt(d7ap_master_session_config_t* session_config, uint8_t* alp_command, uint8_t alp_command_length)
+void alp_layer_process_d7aactp(d7ap_master_session_config_t* session_config, uint8_t* alp_command, uint8_t alp_command_length)
 {
   uint8_t alp_result_length = 0;
   // TODO refactor
