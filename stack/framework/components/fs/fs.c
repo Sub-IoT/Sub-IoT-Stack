@@ -46,7 +46,7 @@ static uint8_t NGDEF(_data)[FRAMEWORK_FS_FILESYSTEM_SIZE] = { 0 };
 static uint16_t NGDEF(_file_offsets)[FRAMEWORK_FS_FILE_COUNT] = { 0 };
 #define file_offsets NG(_file_offsets)
 
-static bool NGDEF(_is_fs_init_completed);
+static bool NGDEF(_is_fs_init_completed) = false;
 #define is_fs_init_completed NG(_is_fs_init_completed)
 
 static fs_modified_file_callback_t file_modified_callbacks[FRAMEWORK_FS_FILE_COUNT] = { NULL };
@@ -86,8 +86,13 @@ static void execute_d7a_action_protocol(uint8_t command_file_id, uint8_t interfa
 void fs_init(fs_init_args_t* init_args)
 {
     // TODO store as big endian!
-    is_fs_init_completed = false;
+    if (is_fs_init_completed)
+        return;
+
     current_data_offset = 0;
+
+    assert(init_args != NULL);
+    assert(init_args->access_profiles_count > 0); // there should be at least one access profile defined
 
     // 0x00 - UID
     file_offsets[D7A_FILE_UID_FILE_ID] = current_data_offset;

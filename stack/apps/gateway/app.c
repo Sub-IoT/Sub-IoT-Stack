@@ -20,24 +20,27 @@
  * \author	maarten.weyn@uantwerpen.be
  */
 
+#include <stdio.h>
+#include <stdlib.h>
+
 #include "hwuart.h"
 #include "hwleds.h"
 #include "hwsystem.h"
+#include "hwlcd.h"
+
 #include "scheduler.h"
 #include "timer.h"
 #include "log.h"
 #include "debug.h"
-#include "platform_defs.h"
-
-#include <stdio.h>
-#include <stdlib.h>
-
-#include "hwlcd.h"
-#include "d7ap_stack.h"
-#include "hwuart.h"
+#include "fs.h"
 #include "fifo.h"
 #include "version.h"
 #include "compress.h"
+
+#include "platform_defs.h"
+
+#include "d7ap.h"
+#include "alp_layer.h"
 
 #include "../shared/shared.h"
 
@@ -64,20 +67,23 @@ static void on_unsolicited_response_received(d7ap_session_result_t d7asp_result,
 #endif
 }
 
-
 static alp_init_args_t alp_init_args;
 
 void bootstrap()
 {
     fs_init_args_t fs_init_args = (fs_init_args_t){
+        .fs_d7aactp_cb = &alp_layer_process_d7aactp,
         .fs_user_files_init_cb = NULL,
         .access_profiles_count = DEFAULT_ACCESS_PROFILES_COUNT,
         .access_profiles = default_access_profiles,
         .access_class = 0x01 // use access profile 0 and select the first subprofile
     };
 
+    fs_init(&fs_init_args);
+    d7ap_init();
+
     alp_init_args.alp_received_unsolicited_data_cb = &on_unsolicited_response_received;
-    d7ap_stack_init(&fs_init_args, &alp_init_args, true, NULL);
+    alp_layer_init(&alp_init_args, true);
 
 #ifdef HAS_LCD
     lcd_write_string("GW %s", _GIT_SHA1);

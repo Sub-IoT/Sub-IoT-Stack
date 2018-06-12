@@ -23,21 +23,22 @@
 // Contrary to the sensor_push example we are now defining an Access Profile which has a periodic scan automation enabled.
 // The sensor will sniff the channel every second for background adhoc synchronization frames, to be able to receive requests from other nodes.
 
-
-#include "hwleds.h"
-#include "hwsystem.h"
-#include "scheduler.h"
-#include "timer.h"
-#include "assert.h"
-
 #include <stdio.h>
 #include <stdlib.h>
 
+#include "hwleds.h"
+#include "hwsystem.h"
 #include "hwlcd.h"
-#include "d7ap_stack.h"
+
+#include "scheduler.h"
+#include "timer.h"
+#include "assert.h"
 #include "fs.h"
 #include "log.h"
 #include "compress.h"
+
+#include "d7ap.h"
+#include "alp_layer.h""
 #include "../shared/shared.h"
 
 #ifdef USE_HTS221
@@ -102,13 +103,16 @@ void bootstrap()
     log_print_string("Device booted\n");
 
     fs_init_args_t fs_init_args = (fs_init_args_t){
+        .fs_d7aactp_cb = &alp_layer_process_d7aactp,
         .access_profiles_count = DEFAULT_ACCESS_PROFILES_COUNT,
         .access_profiles = default_access_profiles,
         .access_class = 0x11, // use scanning AC
         .fs_user_files_init_cb = &init_user_files
     };
 
-    d7ap_stack_init(&fs_init_args, NULL, false, NULL);
+    fs_init(&fs_init_args);
+    d7ap_init();
+    alp_layer_init(NULL, false);
 
 #if defined USE_HTS221
     hts221_handle = i2c_init(0, 0, 100000);

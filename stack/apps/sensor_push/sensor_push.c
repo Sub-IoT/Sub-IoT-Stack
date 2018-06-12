@@ -21,20 +21,21 @@
 // (unsolicited message). The D7 session is configured to request ACKs. All received ACKs are printed.
 // Temperature data is used as a sensor value, when a HTS221 is available, otherwise value 0 is used.
 
-#include "hwleds.h"
-#include "hwsystem.h"
-#include "scheduler.h"
-#include "timer.h"
-#include "assert.h"
-
 #include <stdio.h>
 #include <stdlib.h>
 
+#include "hwleds.h"
+#include "hwsystem.h"
 #include "hwlcd.h"
-#include "d7ap_stack.h"
+
+#include "scheduler.h"
+#include "timer.h"
+#include "assert.h"
 #include "fs.h"
 #include "log.h"
 
+#include "d7ap.h"
+#include "alp_layer.h"
 #include "../shared/shared.h"
 
 #ifdef USE_HTS221
@@ -124,14 +125,18 @@ void bootstrap()
     log_print_string("Device booted\n");
 
     fs_init_args_t fs_init_args = (fs_init_args_t){
+        .fs_d7aactp_cb = &alp_layer_process_d7aactp,
         .access_profiles_count = DEFAULT_ACCESS_PROFILES_COUNT,
         .access_profiles = default_access_profiles,
         .access_class = 0x21 // push only AC, no scanning
     };
 
+    fs_init(&fs_init_args);
+    d7ap_init();
+
     alp_init_args.alp_command_completed_cb = &on_alp_command_completed_cb;
     alp_init_args.alp_command_result_cb = &on_alp_command_result_cb;
-    d7ap_stack_init(&fs_init_args, &alp_init_args, false, NULL);
+    alp_layer_init(&alp_init_args, false);
 
 #if defined USE_HTS221
     hts221_handle = i2c_init(0, 0, 100000);

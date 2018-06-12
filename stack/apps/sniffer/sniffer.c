@@ -19,6 +19,8 @@
 /*
  * \author	maarten.weyn@uantwerpen.be
  */
+#include <stdio.h>
+#include <stdlib.h>
 
 #include "hwuart.h"
 #include "hwleds.h"
@@ -28,6 +30,7 @@
 #include "hwsystem.h"
 #include "hwradio.h"
 #include "hwatomic.h"
+
 #include "packet_queue.h"
 #include "timer.h"
 #include "log.h"
@@ -36,11 +39,10 @@
 #include "shell.h"
 #include "fs.h"
 #include "scheduler.h"
-#include <stdio.h>
-#include <stdlib.h>
 #include "console.h"
-#include "alp_cmd_handler.h"
 #include "version.h"
+
+#include "alp_cmd_handler.h"
 
 #define PACKET_FIFO_BUFFER_SIZE (10 * sizeof(hw_radio_packet_t))
 

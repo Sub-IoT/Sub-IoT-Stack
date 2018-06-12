@@ -114,7 +114,6 @@ void alp_layer_init(alp_init_args_t* alp_init_args, bool is_shell_enabled)
   shell_enabled = is_shell_enabled;
   init_commands();
 
-  uint8_t read_firmware_version_alp_command[] = { 0x01, D7A_FILE_FIRMWARE_VERSION_FILE_ID, 0, D7A_FILE_FIRMWARE_VERSION_SIZE };
   if(shell_enabled)
   {
 #ifdef FRAMEWORK_SHELL_ENABLED
@@ -123,9 +122,38 @@ void alp_layer_init(alp_init_args_t* alp_init_args, bool is_shell_enabled)
       // alp_cmd_handler_set_appl_itf_callback(alp_cmd_handler_appl_itf_cb); // TODO
 
       // notify booted to serial
+      uint8_t read_firmware_version_alp_command[] = { 0x01, D7A_FILE_FIRMWARE_VERSION_FILE_ID, 0, D7A_FILE_FIRMWARE_VERSION_SIZE };
       alp_layer_process_command_console_output(read_firmware_version_alp_command, sizeof(read_firmware_version_alp_command));
 #endif
   }
+
+#ifdef MODULE_D7AP_BROADCAST_VERSION_ON_BOOT_ENABLED
+      uint8_t read_firmware_version_alp_command[] = { 0x01, D7A_FILE_FIRMWARE_VERSION_FILE_ID, 0, D7A_FILE_FIRMWARE_VERSION_SIZE };
+
+      // notify booted by broadcasting and retrying 3 times (for diagnostics ie to detect reboots)
+        // TODO: default access class
+        d7ap_session_config_t broadcast_fifo_config = {
+            .qos = {
+                .qos_resp_mode                = SESSION_RESP_MODE_NO,
+                .qos_retry_mode               = SESSION_RETRY_MODE_NO,
+                .qos_record                   = false,
+                .qos_stop_on_error            = false
+            },
+            .dormant_timeout = 0,
+            .addressee = {
+                .ctrl = {
+                    .nls_method               = AES_NONE,
+                    .id_type                  = ID_TYPE_NOID,
+                },
+                .access_class                 = 0x01,
+                .id = 0
+            }
+        };
+
+        alp_layer_process_d7aacpt(&broadcast_fifo_config,
+                                  read_firmware_version_alp_command,
+                                  sizeof(read_firmware_version_alp_command));
+#endif
 }
 
 static uint8_t process_action(uint8_t* alp_action, uint8_t* alp_response, uint8_t* alp_response_length)
@@ -417,7 +445,7 @@ void alp_layer_process_d7aactp(d7ap_session_config_t* session_config, uint8_t* a
 
   d7asp_master_session_t* session = d7asp_master_session_create(session_config);
   uint8_t expected_response_length = alp_get_expected_response_length(command->alp_command, alp_result_length);
-  d7asp_queue_result_t result = d7asp_queue_alp_actions(session, command->alp_command, alp_result_length, expected_response_length);
+  d7asp_queue_result_t result = d7asp_queue_request(session, command->alp_command, alp_result_length, expected_response_length);
   command->fifo_token = result.fifo_token;
   command->request_id = result.request_id;
 }
@@ -483,7 +511,7 @@ void alp_layer_execute_command(uint8_t* alp_command, uint8_t alp_command_length,
   assert(command != NULL); // TODO return to app
   d7asp_master_session_t* session = d7asp_master_session_create(d7asp_master_session_config); // TODO store in alp_command_t
   uint8_t expected_response_length = alp_get_expected_response_length(alp_command, alp_command_length);
-  d7asp_queue_result_t queue_result = d7asp_queue_alp_actions(session, alp_command, alp_command_length, expected_response_length); // TODO pass fifo directly?
+  d7asp_queue_result_t queue_result = d7asp_queue_request(session, alp_command, alp_command_length, expected_response_length); // TODO pass fifo directly?
   command->fifo_token = queue_result.fifo_token;
 }
 
@@ -516,7 +544,7 @@ bool alp_layer_process_command(uint8_t* alp_command, uint8_t alp_command_length,
         d7asp_master_session_t* session = d7asp_master_session_create(&d7asp_session_config);
         // TODO current_command.fifo_token = session->token;
         uint8_t expected_response_length = alp_get_expected_response_length(forwarded_alp_actions, forwarded_alp_size);
-        d7asp_queue_result_t queue_result = d7asp_queue_alp_actions(session, forwarded_alp_actions, forwarded_alp_size, expected_response_length); // TODO pass fifo directly?
+        d7asp_queue_result_t queue_result = d7asp_queue_request(session, forwarded_alp_actions, forwarded_alp_size, expected_response_length); // TODO pass fifo directly?
         command->fifo_token = queue_result.fifo_token;
       } else if(forward_itf_id == ALP_ITF_ID_SERIAL) {
         alp_cmd_handler_output_alp_command(&command->alp_command_fifo);

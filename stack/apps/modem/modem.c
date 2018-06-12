@@ -27,7 +27,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "d7ap_stack.h"
+#include "d7ap.h"
+#include "alp_layer.h"
 #include "fs.h"
 #include "log.h"
 
@@ -41,12 +42,16 @@ void bootstrap()
     log_print_string("Device booted\n");
 
     fs_init_args_t fs_init_args = (fs_init_args_t){
+        .fs_d7aactp_cb = &alp_layer_process_d7aactp,
         .access_profiles_count = DEFAULT_ACCESS_PROFILES_COUNT,
         .access_profiles = default_access_profiles,
         .access_class = 0x21
     };
 
-    d7ap_stack_init(&fs_init_args, NULL, true, NULL);
+    fs_init(&fs_init_args);
+    d7ap_init();
+
+    alp_layer_init(NULL, true);
 
     uint8_t uid[8];
     fs_read_uid(uid);

@@ -39,7 +39,7 @@
  * @param enable_shell
  * @param cb Called when the shell receives ALP commands for interface ID application.
  */
-void d7ap_stack_init(fs_init_args_t* fs_init_args, alp_init_args_t* alp_init_args, bool enable_shell, alp_cmd_handler_appl_itf_callback cb);
+void d7ap_stack_init(void);
 
 /**
  * @brief Stops the D7AP stack tasks and free the hardware resources
