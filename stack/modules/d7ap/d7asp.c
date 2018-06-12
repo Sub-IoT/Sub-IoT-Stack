@@ -39,14 +39,15 @@
 
 #if defined(FRAMEWORK_LOG_ENABLED) && defined(MODULE_D7AP_SP_LOG_ENABLED)
 #define DPRINT(...) log_print_stack_string(LOG_STACK_SESSION, __VA_ARGS__)
+#define DPRINT_DATA(...) log_print_data(__VA_ARGS__)
 #else
 #define DPRINT(...)
+#define DPRINT_DATA(...)
 #endif
 
 
 struct d7asp_master_session {
     d7ap_master_session_config_t config;
-    // TODO uint8_t dorm_timer;
     d7asp_master_session_state_t state;
     uint8_t token;
     uint8_t progress_bitmap[REQUESTS_BITMAP_BYTE_COUNT];
@@ -57,6 +58,7 @@ struct d7asp_master_session {
     uint8_t requests_lengths[MODULE_D7AP_FIFO_MAX_REQUESTS_COUNT]; /**< Contains for every request ID the index in command_buffer the length of the ALP payload in that request */
     uint8_t response_lengths[MODULE_D7AP_FIFO_MAX_REQUESTS_COUNT]; /**< Contains for every request ID the index in command_buffer the expected length of the ALP response for the specific request */
     uint8_t request_buffer[MODULE_D7AP_FIFO_COMMAND_BUFFER_SIZE];
+    d7ap_addressee_t preferred_addressee;
 };
 
 static d7asp_master_session_t NGDEF(_current_master_session); // TODO we only use 1 fifo for now, should be multiple later (1 per on unique addressee and QoS combination)
@@ -86,6 +88,15 @@ typedef enum {
     D7ASP_STATE_PENDING_MASTER
 } state_t;
 
+typedef struct {
+  uint8_t lb;
+  uint8_t id[8];
+} lowest_lb_responder_t;
+
+static lowest_lb_responder_t current_responder_lowest_lb;
+
+#define LB_MAX 140
+
 static state_t NGDEF(_state) = D7ASP_STATE_STOPPED;
 #define d7asp_state NG(_state)
 
@@ -113,6 +124,11 @@ static void init_master_session(d7asp_master_session_t* session) {
     memset(session->requests_lengths, 0x00, MODULE_D7AP_FIFO_MAX_REQUESTS_COUNT);
     memset(session->response_lengths, 255, MODULE_D7AP_FIFO_MAX_REQUESTS_COUNT);
     memset(session->request_buffer, 0x00, MODULE_D7AP_FIFO_COMMAND_BUFFER_SIZE);
+
+    // TODO we don't reset preferred_addressee field for now
+    // for now one ALP command execution mostly results one new session, which
+    // would break the preferred addressee mechanism. For now this is cached regardless
+    // over the session, until we decide on session lifetime etc
 }
 
 static void flush_completed() {
@@ -153,6 +169,7 @@ static void flush_fifos()
     if (d7asp_state == D7ASP_STATE_PENDING_MASTER)
         switch_state(D7ASP_STATE_MASTER);
 
+    current_responder_lowest_lb.lb = LB_MAX;
     DPRINT("Flushing FIFOs");
     hw_watchdog_feed(); // TODO do here?
 
@@ -174,6 +191,13 @@ static void flush_fifos()
         assert(current_request_packet);
         packet_queue_mark_processing(current_request_packet);
         current_request_packet->d7anp_addressee = &(current_master_session.config.addressee); // TODO explicitly pass addressee down the stack layers?
+
+        if(current_master_session.config.qos.qos_resp_mode == SESSION_RESP_MODE_PREFERRED
+           && memcmp(current_master_session.preferred_addressee.id,(uint8_t[8]){ 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 }, 8) != 0)
+        {
+            DPRINT("overriding addressee with preferred one");
+            current_request_packet->d7anp_addressee = &current_master_session.preferred_addressee;
+        }
 
         memcpy(current_request_packet->payload, current_master_session.request_buffer + current_master_session.requests_indices[current_request_id], current_master_session.requests_lengths[current_request_id]);
         current_request_packet->payload_length = current_master_session.requests_lengths[current_request_id];
@@ -315,6 +339,8 @@ void d7asp_init()
     current_request_id = NO_ACTIVE_REQUEST_ID;
 
     current_master_session.state = D7ASP_MASTER_SESSION_IDLE;
+    memcpy(current_responder_lowest_lb.id, (uint8_t[8]){ 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 }, 8);
+    memcpy(current_master_session.preferred_addressee.id, (uint8_t[8]){ 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 }, 8);
     DPRINT("REQUESTS_BITMAP_BYTE_COUNT %d", REQUESTS_BITMAP_BYTE_COUNT);
     DPRINT("FIFO_MAX_REQUESTS_COUNT %d", MODULE_D7AP_FIFO_MAX_REQUESTS_COUNT);
 
@@ -353,7 +379,17 @@ d7asp_master_session_t* d7asp_master_session_create(d7ap_master_session_config_t
     current_master_session.config.dormant_timeout = d7asp_master_session_config->dormant_timeout;
     current_master_session.config.addressee.ctrl = d7asp_master_session_config->addressee.ctrl;
     current_master_session.config.addressee.access_class = d7asp_master_session_config->addressee.access_class;
-    memcpy(current_master_session.config.addressee.id, d7asp_master_session_config->addressee.id, sizeof(current_master_session.config.addressee.id));
+
+    if(current_master_session.config.qos.qos_resp_mode != SESSION_RESP_MODE_PREFERRED) {
+      memcpy(current_master_session.config.addressee.id, d7asp_master_session_config->addressee.id, sizeof(current_master_session.config.addressee.id));
+    } else {
+      // in this case we don't reset the preferred addressee.
+      // for now one ALP command execution mostly results one new session, which
+      // would break the preferred addressee mechanism. For now this is cached regardless
+      // over the session, until we decide on session lifetime etc.
+      assert(d7asp_master_session_config->addressee.ctrl.id_type == ID_TYPE_NBID
+             || d7asp_master_session_config->addressee.ctrl.id_type == ID_TYPE_NOID);
+    }
 
     if(current_master_session.config.dormant_timeout) {
       current_master_session.state = D7ASP_MASTER_SESSION_DORMANT;
@@ -441,6 +477,17 @@ bool d7asp_process_received_packet(packet_t* packet, bool extension)
             result.seqnr = current_request_id;
             mark_current_request_successful();
             mark_current_request_done();
+            if(current_master_session.config.qos.qos_resp_mode == SESSION_RESP_MODE_PREFERRED
+               && ID_TYPE_IS_BROADCAST(current_master_session.config.addressee.ctrl.id_type))
+            {
+                if(result.link_budget < current_responder_lowest_lb.lb)
+                {
+                    memcpy(current_responder_lowest_lb.id, result.addressee.id, 8); // TODO assume UID for now
+                    current_responder_lowest_lb.lb = result.link_budget;
+                    DPRINT("current responder with lowest LB %i:", current_responder_lowest_lb.lb);
+                    DPRINT_DATA(current_responder_lowest_lb.id, 8);
+                }
+            }
             assert(packet != current_request_packet);
         }
 
@@ -561,8 +608,24 @@ static void on_request_completed()
 {
     assert(d7asp_state == D7ASP_STATE_MASTER);
     DPRINT("request completed");
+
+    if(current_master_session.config.qos.qos_resp_mode == SESSION_RESP_MODE_PREFERRED) {
+      memcpy(current_master_session.preferred_addressee.id, current_responder_lowest_lb.id, 8); // TODO assume UID for now
+      current_master_session.preferred_addressee.ctrl.id_type = ID_TYPE_UID;
+
+      DPRINT("preferred addressee with LB %i is now:", current_responder_lowest_lb.lb);
+      DPRINT_DATA(current_master_session.preferred_addressee.id, 8);
+    }
+
     if (!bitmap_get(current_master_session.progress_bitmap, current_request_id))
     {
+        if(current_master_session.config.qos.qos_resp_mode == SESSION_RESP_MODE_PREFERRED
+          && memcmp(current_master_session.preferred_addressee.id, (uint8_t[8]){ 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 }, 8) != 0)
+        {
+            DPRINT("No ack from preferred addressee, switching to bcast");
+            current_responder_lowest_lb.lb = LB_MAX;
+            memcpy(current_master_session.preferred_addressee.id, (uint8_t[8]){ 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 }, 8);
+        }
         current_request_retry_count++;
         // the request may be retransmitted, don't free yet (this will be done in flush_fifo() when failed)
     }
