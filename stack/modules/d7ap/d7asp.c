@@ -23,6 +23,7 @@
 #include "ng.h"
 #include "log.h"
 #include "bitmap.h"
+#include "d7ap.h"
 #include "d7asp.h"
 #include "alp_layer.h"
 #include "fs.h"
@@ -371,7 +372,7 @@ d7asp_master_session_t* d7asp_master_session_create(d7ap_session_config_t* d7asp
         // Requests can be pushed in the FIFO by upper layer anytime
         if ((current_master_session.config.addressee.access_class == d7asp_master_session_config->addressee.access_class) &&
             (current_master_session.config.addressee.ctrl.raw == d7asp_master_session_config->addressee.ctrl.raw) &&
-            memcmp(current_master_session.config.addressee.id, d7asp_master_session_config->addressee.id, alp_addressee_id_length(d7asp_master_session_config->addressee.ctrl.id_type)));
+            memcmp(current_master_session.config.addressee.id, d7asp_master_session_config->addressee.id, d7ap_addressee_id_length(d7asp_master_session_config->addressee.ctrl.id_type)));
         return &current_master_session;
 
         // TODO create a pending session or a dormant session if TO (DORM_TIMER) !=0
@@ -563,12 +564,12 @@ bool d7asp_process_received_packet(packet_t* packet, bool extension)
 
         current_response_packet = packet;
 
-        if (current_master_session.state == D7ASP_MASTER_SESSION_DORMANT &&
-            (!ID_TYPE_IS_BROADCAST(packet->dll_header.control_target_id_type)) &&
-            memcmp(current_master_session.config.addressee.id, packet->d7anp_addressee->id, alp_addressee_id_length(packet->d7anp_addressee->ctrl.id_type)) == 0) {
-          DPRINT("pending dormant session for requester");
-          current_master_session.state = D7ASP_MASTER_SESSION_PENDING_DORMANT_TRIGGERED;
-        }
+    if (current_master_session.state == D7ASP_MASTER_SESSION_DORMANT &&
+        (!ID_TYPE_IS_BROADCAST(packet->dll_header.control_target_id_type)) &&
+        memcmp(current_master_session.config.addressee.id, packet->d7anp_addressee->id, d7ap_addressee_id_length(packet->d7anp_addressee->ctrl.id_type)) == 0) {
+        DPRINT("pending dormant session for requester");
+        current_master_session.state = D7ASP_MASTER_SESSION_PENDING_DORMANT_TRIGGERED;
+    }
 
         /*
          * activate the dialog extension procedure in the unicast response if the dialog is terminated

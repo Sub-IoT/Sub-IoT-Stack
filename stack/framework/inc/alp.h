@@ -34,7 +34,6 @@
 #include "stdint.h"
 #include "stdbool.h"
 
-#include "d7ap.h"
 #include "fifo.h"
 
 #define ALP_ITF_ID_HOST     0x00
@@ -182,6 +181,12 @@ typedef struct {
 } alp_operand_file_data_t;
 
 typedef struct {
+    uint8_t data[255];
+    uint8_t len;
+} alp_interface_status_t;
+
+
+typedef struct {
     alp_operation_t operation;
     union {
         alp_operand_file_data_t file_data_operand;
@@ -190,7 +195,7 @@ typedef struct {
             bool error;
             uint8_t tag_id;
         } tag_response;
-        d7ap_session_result_t d7_interface_status;
+        alp_interface_status_t status;
     };
 
 } alp_action_t;
@@ -208,7 +213,7 @@ uint8_t alp_get_expected_response_length(uint8_t* alp_command, uint8_t alp_comma
 void alp_append_tag_request_action(fifo_t* fifo, uint8_t tag_id, bool eop);
 void alp_append_read_file_data_action(fifo_t* fifo, uint8_t file_id, uint32_t offset, uint32_t length, bool resp, bool group);
 void alp_append_write_file_data_action(fifo_t* fifo, uint8_t file_id, uint32_t offset, uint32_t length, uint8_t* data, bool resp, bool group);
-void alp_append_forward_action(fifo_t* fifo, d7ap_session_config_t* session_config);
+void alp_append_forward_action(fifo_t* fifo, uint8_t itf_id, uint8_t *config, uint8_t config_len);
 void alp_append_return_file_data_action(fifo_t* fifo, uint8_t file_id, uint32_t offset, uint32_t length, uint8_t* data);
 void alp_append_length_operand(fifo_t* fifo, uint32_t length);
 
@@ -216,8 +221,6 @@ uint32_t alp_parse_length_operand(fifo_t* cmd_fifo);
 alp_operand_file_offset_t alp_parse_file_offset_operand(fifo_t* cmd_fifo);
 
 void alp_parse_action(fifo_t* fifo, alp_action_t* action);
-
-uint8_t alp_addressee_id_length(d7ap_addressee_id_type_t id_type);
 
 #endif /* ALP_H_ */
 

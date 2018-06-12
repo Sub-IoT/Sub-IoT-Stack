@@ -31,6 +31,7 @@
 #include "console.h"
 #include "debug.h"
 #include "MODULE_D7AP_defs.h"
+#include "d7ap.h"
 #include "ng.h"
 #include "log.h"
 
@@ -131,7 +132,7 @@ static uint8_t append_interface_status_action(d7ap_session_result_t* d7asp_resul
   (*ptr) = d7asp_result->response_to; ptr++;
   (*ptr) = d7asp_result->addressee.ctrl.raw; ptr++;
   (*ptr) = d7asp_result->addressee.access_class; ptr++;
-  uint8_t address_len = alp_addressee_id_length(d7asp_result->addressee.ctrl.id_type);
+  uint8_t address_len = d7ap_addressee_id_length(d7asp_result->addressee.ctrl.id_type);
   memcpy(ptr, d7asp_result->addressee.id, address_len); ptr += address_len;
   return ptr - ptr_start;
 }

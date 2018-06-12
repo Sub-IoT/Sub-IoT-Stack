@@ -27,6 +27,7 @@
 #include "alp.h"
 #include "fs.h"
 #include "fifo.h"
+#include "d7ap.h"
 #include "log.h"
 
 
@@ -91,16 +92,25 @@ void alp_append_file_offset_operand(fifo_t* fifo, uint8_t file_id, uint32_t offs
   alp_append_length_operand(fifo, offset);
 }
 
-void alp_append_forward_action(fifo_t* fifo, d7ap_session_config_t* session_config) {
-  assert(session_config);
+void alp_append_forward_action(fifo_t* fifo, uint8_t itf_id, uint8_t *config, uint8_t config_len) {
+  assert(config!=NULL);
   assert(fifo_put_byte(fifo, ALP_OP_FORWARD) == SUCCESS);
-  assert(fifo_put_byte(fifo, ALP_ITF_ID_D7ASP) == SUCCESS);
-  assert(fifo_put_byte(fifo, session_config->qos.raw) == SUCCESS);
-  assert(fifo_put_byte(fifo, session_config->dormant_timeout) == SUCCESS);
-  assert(fifo_put_byte(fifo, session_config->addressee.ctrl.raw) == SUCCESS);
-  uint8_t id_length = alp_addressee_id_length(session_config->addressee.ctrl.id_type);
-  assert(fifo_put_byte(fifo, session_config->addressee.access_class) == SUCCESS);
-  assert(fifo_put(fifo, session_config->addressee.id, id_length) == SUCCESS);
+  assert(fifo_put_byte(fifo, itf_id) == SUCCESS);
+
+  if (itf_id == ALP_ITF_ID_D7ASP)
+  {
+    assert(fifo_put_byte(fifo, ((d7ap_session_config_t*)config)->qos.raw) == SUCCESS);
+    assert(fifo_put_byte(fifo, ((d7ap_session_config_t*)config)->dormant_timeout) == SUCCESS);
+    assert(fifo_put_byte(fifo, ((d7ap_session_config_t*)config)->addressee.ctrl.raw) == SUCCESS);
+    uint8_t id_length = d7ap_addressee_id_length(((d7ap_session_config_t*)config)->addressee.ctrl.id_type);
+    assert(fifo_put_byte(fifo, ((d7ap_session_config_t*)config)->addressee.access_class) == SUCCESS);
+    assert(fifo_put(fifo, ((d7ap_session_config_t*)config)->addressee.id, id_length) == SUCCESS);
+  }
+  else
+  {
+    assert(fifo_put(fifo, config, config_len) == SUCCESS);
+  }
+
   DPRINT("FORWARD");
 }
 
@@ -121,41 +131,27 @@ static void append_tag_response(fifo_t* fifo, uint8_t tag_id, bool eop, bool err
 }
 
 
-static void add_interface_status_action(fifo_t* alp_response_fifo, d7ap_session_result_t* d7asp_result)
-{
-  fifo_put_byte(alp_response_fifo, ALP_OP_RETURN_STATUS + (1 << 6));
-  fifo_put_byte(alp_response_fifo, ALP_ITF_ID_D7ASP);
-  fifo_put_byte(alp_response_fifo, d7asp_result->channel.channel_header);
-  uint16_t center_freq_index_be = __builtin_bswap16(d7asp_result->channel.center_freq_index);
-  fifo_put(alp_response_fifo, (uint8_t*)&center_freq_index_be, 2);
-  fifo_put_byte(alp_response_fifo, d7asp_result->rx_level);
-  fifo_put_byte(alp_response_fifo, d7asp_result->link_budget);
-  fifo_put_byte(alp_response_fifo, d7asp_result->target_rx_level);
-  fifo_put_byte(alp_response_fifo, d7asp_result->status.raw);
-  fifo_put_byte(alp_response_fifo, d7asp_result->fifo_token);
-  fifo_put_byte(alp_response_fifo, d7asp_result->seqnr);
-  fifo_put_byte(alp_response_fifo, d7asp_result->response_to);
-  fifo_put_byte(alp_response_fifo, d7asp_result->addressee.ctrl.raw);
-  fifo_put_byte(alp_response_fifo, d7asp_result->addressee.access_class);
-  uint8_t address_len = alp_addressee_id_length(d7asp_result->addressee.ctrl.id_type);
-  fifo_put(alp_response_fifo, d7asp_result->addressee.id, address_len);
-}
-
-uint8_t alp_addressee_id_length(d7ap_addressee_id_type_t id_type)
-{
-    switch(id_type)
-    {
-        case ID_TYPE_NOID:
-          return ID_TYPE_NOID_ID_LENGTH;
-        case ID_TYPE_NBID:
-          return ID_TYPE_NBID_ID_LENGTH;
-        case ID_TYPE_UID:
-          return ID_TYPE_UID_ID_LENGTH;
-        case ID_TYPE_VID:
-          return ID_TYPE_VID_LENGTH;
-        default:
-          assert(false);
-    }
+static void add_interface_status_action(fifo_t* alp_response_fifo, uint8_t itf_id, uint8_t *status, uint8_t status_len) {
+  if (itf_id == ALP_ITF_ID_D7ASP)
+  {
+    fifo_put_byte(alp_response_fifo, ALP_OP_RETURN_STATUS + (1 << 6));
+    fifo_put_byte(alp_response_fifo, ALP_ITF_ID_D7ASP);
+    //TODO insert status len
+    fifo_put_byte(alp_response_fifo, ((d7ap_session_result_t*)status)->channel.channel_header);
+    uint16_t center_freq_index_be = __builtin_bswap16(((d7ap_session_result_t*)status)->channel.center_freq_index);
+    fifo_put(alp_response_fifo, (uint8_t*)&center_freq_index_be, 2);
+    fifo_put_byte(alp_response_fifo, ((d7ap_session_result_t*)status)->rx_level);
+    fifo_put_byte(alp_response_fifo, ((d7ap_session_result_t*)status)->link_budget);
+    fifo_put_byte(alp_response_fifo, ((d7ap_session_result_t*)status)->target_rx_level);
+    fifo_put_byte(alp_response_fifo, ((d7ap_session_result_t*)status)->status.raw);
+    fifo_put_byte(alp_response_fifo, ((d7ap_session_result_t*)status)->fifo_token);
+    fifo_put_byte(alp_response_fifo, ((d7ap_session_result_t*)status)->seqnr);
+    fifo_put_byte(alp_response_fifo, ((d7ap_session_result_t*)status)->response_to);
+    fifo_put_byte(alp_response_fifo, ((d7ap_session_result_t*)status)->addressee.ctrl.raw);
+    fifo_put_byte(alp_response_fifo, ((d7ap_session_result_t*)status)->addressee.access_class);
+    uint8_t address_len = d7ap_addressee_id_length(((d7ap_session_result_t*)status)->addressee.ctrl.id_type);
+    fifo_put(alp_response_fifo, ((d7ap_session_result_t*)status)->addressee.id, address_len);
+  }
 }
 
 
@@ -191,21 +187,26 @@ static void parse_op_return_status(fifo_t* fifo, alp_action_t* action, bool b6, 
   assert(itf_id == 0xD7); // TODO only D7 supported for now
   // TODO uint32_t itf_len = parse_length_operand(fifo);
   // assert(itf_len == sizeof(d7ap_session_result_t));
+  if (itf_id == ALP_ITF_ID_D7ASP)
+  {
+    d7ap_session_result_t interface_status =  *((d7ap_session_result_t*)action->status.data);
 
-  fifo_pop(fifo, &action->d7_interface_status.channel.channel_header, 1);
-  fifo_pop(fifo, (uint8_t*)&action->d7_interface_status.channel.center_freq_index, 2);
-  action->d7_interface_status.channel.center_freq_index = __builtin_bswap16(action->d7_interface_status.channel.center_freq_index);
-  fifo_pop(fifo, &action->d7_interface_status.rx_level, 1);
-  fifo_pop(fifo, &action->d7_interface_status.link_budget, 1);
-  fifo_pop(fifo, &action->d7_interface_status.target_rx_level, 1);
-  fifo_pop(fifo, &action->d7_interface_status.status.raw, 1);
-  fifo_pop(fifo, &action->d7_interface_status.fifo_token, 1);
-  fifo_pop(fifo, &action->d7_interface_status.seqnr, 1);
-  fifo_pop(fifo, &action->d7_interface_status.response_to, 1);
-  fifo_pop(fifo, &action->d7_interface_status.addressee.ctrl.raw, 1);
-  fifo_pop(fifo, &action->d7_interface_status.addressee.access_class, 1);
-  uint8_t addressee_len = alp_addressee_id_length(action->d7_interface_status.addressee.ctrl.id_type);
-  assert(fifo_pop(fifo, action->d7_interface_status.addressee.id, addressee_len) == SUCCESS);
+    fifo_pop(fifo, &interface_status.channel.channel_header, 1);
+    fifo_pop(fifo, (uint8_t*)&interface_status.channel.center_freq_index, 2);
+    interface_status.channel.center_freq_index = __builtin_bswap16(interface_status.channel.center_freq_index);
+    fifo_pop(fifo, &interface_status.rx_level, 1);
+    fifo_pop(fifo, &interface_status.link_budget, 1);
+    fifo_pop(fifo, &interface_status.target_rx_level, 1);
+    fifo_pop(fifo, &interface_status.status.raw, 1);
+    fifo_pop(fifo, &interface_status.fifo_token, 1);
+    fifo_pop(fifo, &interface_status.seqnr, 1);
+    fifo_pop(fifo, &interface_status.response_to, 1);
+    fifo_pop(fifo, &interface_status.addressee.ctrl.raw, 1);
+    fifo_pop(fifo, &interface_status.addressee.access_class, 1);
+    uint8_t addressee_len = d7ap_addressee_id_length(interface_status.addressee.ctrl.id_type);
+    assert(fifo_pop(fifo, interface_status.addressee.id, addressee_len) == SUCCESS);
+  }
+
   DPRINT("parsed interface status");
 }
 
@@ -267,7 +268,7 @@ uint8_t alp_get_expected_response_length(uint8_t* alp_command, uint8_t alp_comma
           fifo_skip(&fifo, 1); // skip QoS, dormant timeout
           d7ap_addressee_ctrl_t addressee_ctrl;
           fifo_pop(&fifo, (uint8_t*)&addressee_ctrl.raw, 1);
-          fifo_skip(&fifo, 2 + alp_addressee_id_length(addressee_ctrl.id_type)); // skip addressee ctrl, access class
+          fifo_skip(&fifo, 2 + d7ap_addressee_id_length(addressee_ctrl.id_type)); // skip addressee ctrl, access class
           // TODO refactor to reuse same logic for parsing and response length counting
         }
         // other ITFs have no configuration

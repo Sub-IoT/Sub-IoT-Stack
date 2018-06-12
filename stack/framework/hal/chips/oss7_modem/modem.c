@@ -88,7 +88,7 @@ static void process_serial_frame(fifo_t* fifo) {
                                                action.file_data_operand.data);
         break;
       case ALP_OP_RETURN_STATUS: ;
-        uint8_t addressee_len = alp_addressee_id_length(action.d7_interface_status.addressee.ctrl.id_type);
+        uint8_t addressee_len = d7ap_addressee_id_length(((d7ap_session_result_t)action->status.data).addressee.ctrl.id_type);
         DPRINT("received resp from: ");
         DPRINT_DATA(action.d7_interface_status.addressee.id, addressee_len);
         // TODO callback?
@@ -230,7 +230,7 @@ bool modem_send_unsolicited_response(uint8_t file_id, uint32_t offset, uint32_t 
   if(!alloc_command())
     return false;
 
-  alp_append_forward_action(&command.fifo, d7_interface_config);
+  alp_append_forward_action(&command.fifo, (uint8_t *)d7_interface_config, sizeof(d7ap_session_config_t));
   alp_append_return_file_data_action(&command.fifo, file_id, offset, length, data);
 
   send(command.buffer, fifo_get_size(&command.fifo));
@@ -242,7 +242,7 @@ bool modem_send_raw_unsolicited_response(uint8_t* alp_command, uint32_t length,
   if(!alloc_command())
     return false;
 
-  alp_append_forward_action(&command.fifo, d7_interface_config);
+  alp_append_forward_action(&command.fifo, (uint8_t *)d7_interface_config, sizeof(d7ap_session_config_t));
   fifo_put(&command.fifo, alp_command, length);
 
   send(command.buffer, fifo_get_size(&command.fifo));
