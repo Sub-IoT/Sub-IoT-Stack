@@ -196,6 +196,9 @@ static void flush_fifos()
            && memcmp(current_master_session.preferred_addressee.id,(uint8_t[8]){ 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 }, 8) != 0)
         {
             DPRINT("overriding addressee with preferred one");
+            current_master_session.preferred_addressee.access_class = current_master_session.config.addressee.access_class;
+            current_master_session.preferred_addressee.ctrl.nls_method = current_master_session.config.addressee.ctrl.nls_method;
+            current_master_session.config.addressee.ctrl.id_type = ID_TYPE_UID; // TODO no VID for now
             current_request_packet->d7anp_addressee = &current_master_session.preferred_addressee;
         }
 
