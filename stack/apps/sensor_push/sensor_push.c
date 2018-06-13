@@ -53,7 +53,7 @@
 // Define the D7 interface configuration used for sending the ALP command on
 static d7ap_master_session_config_t session_config = {
     .qos = {
-        .qos_resp_mode = SESSION_RESP_MODE_ANY,
+        .qos_resp_mode = SESSION_RESP_MODE_PREFERRED,
         .qos_retry_mode = SESSION_RETRY_MODE_NO,
         .qos_stop_on_error       = false,
         .qos_record              = false
@@ -142,5 +142,5 @@ void bootstrap()
 #endif
 
     sched_register_task(&execute_sensor_measurement);
-    timer_post_task_delay(&execute_sensor_measurement, SENSOR_INTERVAL_SEC);
+    sched_post_task(&execute_sensor_measurement);
 }
