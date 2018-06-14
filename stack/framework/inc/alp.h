@@ -37,9 +37,9 @@
 #include "d7ap.h"
 #include "fifo.h"
 
-#define ALP_ITF_ID_D7ASP  0xD7
-#define ALP_ITF_ID_FS     0x00 // not part of the spec
-#define ALP_ITF_ID_APP    0x01 // not part of the spec
+#define ALP_ITF_ID_HOST     0x00
+#define ALP_ITF_ID_SERIAL   0x01 // not part of the spec
+#define ALP_ITF_ID_D7ASP    0xD7
 
 #define SERIAL_ALP_FRAME_SYNC_BYTE 0xC0
 #define SERIAL_ALP_FRAME_VERSION   0x00

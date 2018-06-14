@@ -315,20 +315,29 @@ static alp_status_codes_t process_op_break_query(alp_command_t* command) {
   return ALP_STATUS_OK;
 }
 
-static alp_status_codes_t process_op_forward(alp_command_t* command, d7ap_master_session_config_t* session_config) {
+static alp_status_codes_t process_op_forward(alp_command_t* command, uint8_t* itf_id, d7ap_master_session_config_t* session_config) {
   // TODO move session config to alp_command_t struct
-  uint8_t interface_id;
   error_t err;
   err = fifo_skip(&command->alp_command_fifo, 1); assert(err == SUCCESS); // skip the control byte
-  err = fifo_pop(&command->alp_command_fifo, &interface_id, 1); assert(err == SUCCESS);
-  assert(interface_id == ALP_ITF_ID_D7ASP); // only D7ASP supported for now // TODO return error instead of asserting
-  err = fifo_pop(&command->alp_command_fifo, &session_config->qos.raw, 1); assert(err == SUCCESS);
-  err = fifo_pop(&command->alp_command_fifo, &session_config->dormant_timeout, 1); assert(err == SUCCESS);
-  err = fifo_pop(&command->alp_command_fifo, &session_config->addressee.ctrl.raw, 1); assert(err == SUCCESS);
-  uint8_t id_length = alp_addressee_id_length(session_config->addressee.ctrl.id_type);
-  err = fifo_pop(&command->alp_command_fifo, &session_config->addressee.access_class, 1); assert(err == SUCCESS);
-  err = fifo_pop(&command->alp_command_fifo, session_config->addressee.id, id_length); assert(err == SUCCESS);
-  DPRINT("FORWARD");
+  err = fifo_pop(&command->alp_command_fifo, itf_id, 1); assert(err == SUCCESS);
+  switch(*itf_id) {
+    case ALP_ITF_ID_D7ASP:
+      err = fifo_pop(&command->alp_command_fifo, &session_config->qos.raw, 1); assert(err == SUCCESS);
+      err = fifo_pop(&command->alp_command_fifo, &session_config->dormant_timeout, 1); assert(err == SUCCESS);
+      err = fifo_pop(&command->alp_command_fifo, &session_config->addressee.ctrl.raw, 1); assert(err == SUCCESS);
+      uint8_t id_length = alp_addressee_id_length(session_config->addressee.ctrl.id_type);
+      err = fifo_pop(&command->alp_command_fifo, &session_config->addressee.access_class, 1); assert(err == SUCCESS);
+      err = fifo_pop(&command->alp_command_fifo, session_config->addressee.id, id_length); assert(err == SUCCESS);
+      DPRINT("FORWARD D7ASP");
+      break;
+    case ALP_ITF_ID_SERIAL:
+      // no configuration
+      DPRINT("FORWARD SERIAL");
+      break;
+    default:
+      DPRINT("unsupported ITF %i", itf_id);
+      assert(false);
+  }
 
   return ALP_STATUS_PARTIALLY_COMPLETED;
 }
@@ -494,20 +503,26 @@ bool alp_layer_process_command(uint8_t* alp_command, uint8_t alp_command_length,
 
   (*alp_response_length) = 0;
   d7ap_master_session_config_t d7asp_session_config;
-  bool do_forward = false;
+  uint8_t forward_itf_id = ALP_ITF_ID_HOST;
 
   while(fifo_get_size(&command->alp_command_fifo) > 0) {
-    if(do_forward) {
-      // forward rest of the actions over the D7ASP interface
-      // TODO support multiple FIFOs
-      uint8_t forwarded_alp_size = fifo_get_size(&command->alp_command_fifo);
-      uint8_t forwarded_alp_actions[forwarded_alp_size];
-      fifo_pop(&command->alp_command_fifo, forwarded_alp_actions, forwarded_alp_size);
-      d7asp_master_session_t* session = d7asp_master_session_create(&d7asp_session_config);
-      // TODO current_command.fifo_token = session->token;
-      uint8_t expected_response_length = alp_get_expected_response_length(forwarded_alp_actions, forwarded_alp_size);
-      d7asp_queue_result_t queue_result = d7asp_queue_alp_actions(session, forwarded_alp_actions, forwarded_alp_size, expected_response_length); // TODO pass fifo directly?
-      command->fifo_token = queue_result.fifo_token;
+    if(forward_itf_id != ALP_ITF_ID_HOST) {
+      if(forward_itf_id == ALP_ITF_ID_D7ASP) {
+        // forward rest of the actions over the D7ASP interface
+        uint8_t forwarded_alp_size = fifo_get_size(&command->alp_command_fifo);
+        uint8_t forwarded_alp_actions[forwarded_alp_size];
+        fifo_pop(&command->alp_command_fifo, forwarded_alp_actions, forwarded_alp_size);
+        // TODO support multiple FIFOs
+        d7asp_master_session_t* session = d7asp_master_session_create(&d7asp_session_config);
+        // TODO current_command.fifo_token = session->token;
+        uint8_t expected_response_length = alp_get_expected_response_length(forwarded_alp_actions, forwarded_alp_size);
+        d7asp_queue_result_t queue_result = d7asp_queue_alp_actions(session, forwarded_alp_actions, forwarded_alp_size, expected_response_length); // TODO pass fifo directly?
+        command->fifo_token = queue_result.fifo_token;
+      } else if(forward_itf_id == ALP_ITF_ID_SERIAL) {
+        alp_cmd_handler_output_alp_command(&command->alp_command_fifo);
+      } else {
+        assert(false);
+      }
 
       break; // TODO return response
     }
@@ -532,8 +547,7 @@ bool alp_layer_process_command(uint8_t* alp_command, uint8_t alp_command_length,
         alp_status = process_op_break_query(command);
         break;
       case ALP_OP_FORWARD:
-        alp_status = process_op_forward(command, &d7asp_session_config);
-        do_forward = true;
+        alp_status = process_op_forward(command, &forward_itf_id, &d7asp_session_config);
         break;
       case ALP_OP_REQUEST_TAG: ;
         alp_control_tag_request_t* tag_request = (alp_control_tag_request_t*)&control;
@@ -551,7 +565,7 @@ bool alp_layer_process_command(uint8_t* alp_command, uint8_t alp_command_length,
   if(command->origin == ALP_CMD_ORIGIN_SERIAL_CONSOLE) {
     // make sure we include tag response also for commands with interface HOST
     // for interface D7ASP this will be done when flush completes
-    if(command->respond_when_completed && !do_forward)
+    if(command->respond_when_completed && forward_itf_id != ALP_ITF_ID_D7ASP)
       add_tag_response(command, true, false); // TODO error
 
     alp_cmd_handler_output_alp_command(&command->alp_response_fifo);
@@ -567,7 +581,7 @@ bool alp_layer_process_command(uint8_t* alp_command, uint8_t alp_command_length,
     memcpy(alp_response, command->alp_response, *alp_response_length);
   }
 
-  if(!do_forward)
+  if(forward_itf_id == ALP_ITF_ID_HOST)
     free_command(command); // when forwarding the response will arrive async, clean up then
 
   return true;

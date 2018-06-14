@@ -246,12 +246,17 @@ uint8_t alp_get_expected_response_length(uint8_t* alp_command, uint8_t alp_comma
         alp_parse_length_operand(&fifo); // offset
         fifo_skip(&fifo, alp_parse_length_operand(&fifo));
         break;
-      case ALP_OP_FORWARD:
-        fifo_skip(&fifo, 3); // skip interface ID, QoS, dormant timeout
-        d7ap_addressee_ctrl_t addressee_ctrl;
-        fifo_pop(&fifo, (uint8_t*)&addressee_ctrl.raw, 1);
-        fifo_skip(&fifo, 2 + alp_addressee_id_length(addressee_ctrl.id_type)); // skip addressee ctrl, access class
-        // TODO refactor to reuse same logic for parsing and response length counting
+      case ALP_OP_FORWARD: ;
+        uint8_t itf_id;
+        fifo_pop(&fifo, &itf_id, 1);
+        if(itf_id == ALP_ITF_ID_D7ASP) {
+          fifo_skip(&fifo, 1); // skip QoS, dormant timeout
+          d7ap_addressee_ctrl_t addressee_ctrl;
+          fifo_pop(&fifo, (uint8_t*)&addressee_ctrl.raw, 1);
+          fifo_skip(&fifo, 2 + alp_addressee_id_length(addressee_ctrl.id_type)); // skip addressee ctrl, access class
+          // TODO refactor to reuse same logic for parsing and response length counting
+        }
+        // other ITFs have no configuration
         break;
       case ALP_OP_WRITE_FILE_PROPERTIES:
         fifo_skip(&fifo, 1 + sizeof(fs_file_header_t)); // skip file ID & header
