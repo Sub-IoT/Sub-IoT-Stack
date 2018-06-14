@@ -29,4 +29,4 @@
 #SET_PROPERTY(CACHE ${APP_PREFIX}_<param_name> PROPERTY STRINGS "value1;value2")
 #
 
-APP_BUILD(NAME ${APP_NAME} SOURCES per_test.c LIBS framework)
+APP_BUILD(NAME ${APP_NAME} SOURCES per_test.c LIBS framework m)

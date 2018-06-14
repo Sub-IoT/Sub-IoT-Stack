@@ -46,9 +46,6 @@
 #include "console.h"
 #include "errors.h"
 
-#if (!defined PLATFORM_EFM32GG_STK3700  && !defined PLATFORM_EZR32LG_WSTK6200A && !defined PLATFORM_CORTUS_FPGA)
-	#error Mismatch between the configured platform and the actual platform.
-#endif
 
 // configuration options
 #define PACKET_SIZE 255
