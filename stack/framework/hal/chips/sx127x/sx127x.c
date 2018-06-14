@@ -720,6 +720,11 @@ static void fifo_threshold_isr() {
     uint8_t remaining_bytes = FskPacketHandler.Size - FskPacketHandler.NbBytes;
 
     if(remaining_bytes == 0) {
+        uint8_t nr_bytes = FskPacketHandler.NbBytes; // cache because restart_rx() resets this
+
+        // Restart the reception until upper layer decides to stop it
+        restart_rx(); // restart already before doing decoding so we don't miss packets on low clock speeds
+
         current_packet->rx_meta.timestamp = timer_get_counter_value();
         current_packet->rx_meta.rx_cfg.syncword_class = current_syncword_class;
         current_packet->rx_meta.crc_status = HW_CRC_UNAVAILABLE;
@@ -728,17 +733,15 @@ static void fifo_threshold_isr() {
         // to make sure we are actually measuring during a TX, instead of after
         memcpy(&(current_packet->rx_meta.rx_cfg.channel_id), &current_channel_id, sizeof(channel_id_t));
 
-        pn9_encode(current_packet->data, FskPacketHandler.NbBytes);
+        pn9_encode(current_packet->data, nr_bytes);
 
         if (current_channel_id.channel_header.ch_coding == PHY_CODING_FEC_PN9)
-            fec_decode_packet(current_packet->data, FskPacketHandler.NbBytes, FskPacketHandler.NbBytes);
+            fec_decode_packet(current_packet->data, nr_bytes, nr_bytes);
 
         DPRINT_DATA(current_packet->data, current_packet->length + 1);
         DPRINT("RX done (%i dBm)", current_packet->rx_meta.rssi);
         rx_packet_callback(current_packet);
 
-        // Restart the reception until upper layer decides to stop it
-        restart_rx();
         return;
     }
 
