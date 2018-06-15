@@ -330,8 +330,8 @@ static void dormant_session_timeout() {
 static void schedule_dormant_session(d7asp_master_session_t* dormant_session) {
   assert(dormant_session->state == D7ASP_MASTER_SESSION_DORMANT);
   timer_tick_t timeout = CT_DECOMPRESS(dormant_session->config.dormant_timeout);
-  DPRINT("Sched dormant timeout in %i ti", timeout);
-  timer_post_task_delay(&dormant_session_timeout, timeout);
+  DPRINT("Sched dormant timeout in %i s", timeout);
+  timer_post_task_delay(&dormant_session_timeout, timeout * 1024);
 }
 
 void d7asp_init()
