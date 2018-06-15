@@ -158,12 +158,23 @@ uint8_t alp_addressee_id_length(d7ap_addressee_id_type_t id_type)
     }
 }
 
-static void parse_op_return_file_data(fifo_t* fifo, alp_action_t* action) {
+
+static void parse_operand_file_data(fifo_t* fifo, alp_action_t* action) {
   action->file_data_operand.file_offset = alp_parse_file_offset_operand(fifo);
   action->file_data_operand.provided_data_length = alp_parse_length_operand(fifo);
   assert(action->file_data_operand.provided_data_length <= sizeof(action->file_data_operand.data));
   fifo_pop(fifo, action->file_data_operand.data, action->file_data_operand.provided_data_length);
-  DPRINT("parsed file data file %i, len %i", action->file_data_operand.file_offset.file_id, action->file_data_operand.provided_data_length);
+}
+
+static void parse_op_write_file_data(fifo_t* fifo, alp_action_t* action) {
+  parse_operand_file_data(fifo, action);
+  DPRINT("parsed write file data file %i, len %i", action->file_data_operand.file_offset.file_id, action->file_data_operand.provided_data_length);
+}
+
+
+static void parse_op_return_file_data(fifo_t* fifo, alp_action_t* action) {
+  parse_operand_file_data(fifo, action);
+  DPRINT("parsed return file data file %i, len %i", action->file_data_operand.file_offset.file_id, action->file_data_operand.provided_data_length);
 }
 
 static void parse_op_return_tag(fifo_t* fifo, alp_action_t* action, bool b6, bool b7) {
@@ -206,6 +217,9 @@ void alp_parse_action(fifo_t* fifo, alp_action_t* action) {
   op &= 0x3F; // op is in b5-b0
   action->operation = op;
   switch(op) {
+    case ALP_OP_WRITE_FILE_DATA:
+      parse_op_write_file_data(fifo, action);
+      break;
     case ALP_OP_RETURN_FILE_DATA:
       parse_op_return_file_data(fifo, action);
       break;
