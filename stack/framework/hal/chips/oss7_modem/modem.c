@@ -73,6 +73,13 @@ static void process_serial_frame(fifo_t* fifo) {
           // TODO unsolicited responses
         }
         break;
+      case ALP_OP_WRITE_FILE_DATA:
+        if(callbacks->write_file_data_callback)
+          callbacks->write_file_data_callback(action.file_data_operand.file_offset.file_id,
+                                               action.file_data_operand.file_offset.offset,
+                                               action.file_data_operand.provided_data_length,
+                                               action.file_data_operand.data);
+        break;
       case ALP_OP_RETURN_FILE_DATA:
         if(callbacks->return_file_data_callback)
           callbacks->return_file_data_callback(action.file_data_operand.file_offset.file_id,

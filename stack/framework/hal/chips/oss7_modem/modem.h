@@ -27,10 +27,12 @@
 
 typedef void (*modem_command_completed_callback_t)(bool with_error);
 typedef void (*modem_return_file_data_callback_t)(uint8_t file_id, uint32_t offset, uint32_t size, uint8_t* output_buffer);
+typedef void (*modem_write_file_data_callback_t)(uint8_t file_id, uint32_t offset, uint32_t size, uint8_t* output_buffer);
 
 typedef struct {
     modem_command_completed_callback_t command_completed_callback;
     modem_return_file_data_callback_t return_file_data_callback;
+    modem_write_file_data_callback_t write_file_data_callback;
 } modem_callbacks_t;
 
 void modem_init(uart_handle_t* uart_handle, modem_callbacks_t* callbacks);
