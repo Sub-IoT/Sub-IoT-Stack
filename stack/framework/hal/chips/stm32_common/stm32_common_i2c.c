@@ -53,10 +53,37 @@ const PinMap PinMap_I2C_SCL[] = {
 };
 */
 
-#define I2C_TIMINGR_STANDARD_PCLK_4M  0
-#define I2C_TIMINGR_STANDARD_PCLK_2M  1
+//#define I2C_TIMINGR_STANDARD_PCLK_4M  0
+//#define I2C_TIMINGR_STANDARD_PCLK_2M  1
 
-const uint32_t I2C_TIMINGR_LUT[] = {0x00201111, 0x00100608};
+#define I2C_TIMINGR_INVALID_VAL  0x00000000
+
+typedef struct{
+    uint32_t clk_32M;
+    uint32_t clk_4M;
+    uint32_t clk_2M;
+
+} i2c_timingr_value_struct_t;
+
+typedef  struct{
+    i2c_timingr_value_struct_t i2c_standard_speed;
+    i2c_timingr_value_struct_t i2c_high_speed;
+} i2c_speed_struc_t;
+
+const i2c_speed_struc_t I2C_TIMINGR_LUT = {
+    .i2c_standard_speed = {
+        .clk_32M = 0x00B07DB9,
+        .clk_4M = 0x00201111,
+        .clk_2M =  0x00100608
+    },
+    .i2c_high_speed = {
+        .clk_32M = 0x00601135,
+        .clk_4M = I2C_TIMINGR_INVALID_VAL,
+        .clk_2M = I2C_TIMINGR_INVALID_VAL
+    }
+};
+
+//const uint32_t I2C_TIMINGR_LUT[] = {0x00201111, 0x00100608};
 
 typedef struct i2c_handle {
   I2C_HandleTypeDef hal_handle;
@@ -72,20 +99,47 @@ static inline uint32_t get_i2c_timing(int hz)
 {
     uint32_t tim = 0;
     uint32_t pclk1 = HAL_RCC_GetPCLK1Freq();
+    i2c_timingr_value_struct_t timing_struct;
 
-    assert(hz == 100000); //other speeds not supported with MSI RC
+    //assert(hz == 100000); //other speeds not supported with MSI RC
 
-    switch(pclk1/1000000){
-        case 2:
-            tim = I2C_TIMINGR_LUT[I2C_TIMINGR_STANDARD_PCLK_2M];
-            break;
-        case 4:
-            tim = I2C_TIMINGR_LUT[I2C_TIMINGR_STANDARD_PCLK_4M];
-            break;
-        default:
-            assert(false); // other MSI RC do not support 100kHz i2c;
-            break;
+    switch(hz)
+    {
+    case 100000:
+        timing_struct = I2C_TIMINGR_LUT.i2c_standard_speed;
+        break;
+    case 400000:
+        timing_struct = I2C_TIMINGR_LUT.i2c_high_speed;
+        break;
+    default:
+        assert(false);
     }
+    switch(pclk1/1000000)
+    {
+    case 2:
+        tim = timing_struct.clk_2M;
+        break;
+    case 4:
+        tim =timing_struct.clk_4M;
+        break;
+    case 32:
+        tim = timing_struct.clk_32M;
+        break;
+    default:
+        assert(false);
+    }
+
+//    switch(pclk1/1000000){
+//        case 2:
+//            tim = I2C_TIMINGR_LUT[I2C_TIMINGR_STANDARD_PCLK_2M];
+//            break;
+//        case 4:
+//            tim = I2C_TIMINGR_LUT[I2C_TIMINGR_STANDARD_PCLK_4M];
+//            break;
+//        default:
+//            assert(false); // other MSI RC do not support 100kHz i2c;
+//            break;
+//    }
     /*
     switch (hz) {
         case 100000:
@@ -100,6 +154,7 @@ static inline uint32_t get_i2c_timing(int hz)
         default:
             break;
     }*/
+    assert(tim != I2C_TIMINGR_INVALID_VAL);
     return tim;
 }
 
