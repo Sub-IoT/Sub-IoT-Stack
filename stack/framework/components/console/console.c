@@ -22,7 +22,7 @@ static uart_handle_t* uart;
 static uint8_t console_tx_buffer[CONSOLE_TX_FIFO_SIZE];
 static fifo_t console_tx_fifo;
 
-static void flush_console_tx_fifo() {
+static void flush_console_tx_fifo(void *arg) {
   uint8_t len = fifo_get_size(&console_tx_fifo);
 #ifdef HAL_UART_USE_DMA_TX
   // when using DMA we transmit the whole FIFO at once
@@ -41,7 +41,7 @@ static void flush_console_tx_fifo() {
   } else {
     fifo_pop(&console_tx_fifo, chunk, TX_FIFO_FLUSH_CHUNK_SIZE);
     uart_send_bytes(uart, chunk, TX_FIFO_FLUSH_CHUNK_SIZE);
-    sched_post_task_prio(&flush_console_tx_fifo, MIN_PRIORITY);
+    sched_post_task_prio(&flush_console_tx_fifo, MIN_PRIORITY, NULL);
   }
 #endif
 }
@@ -64,12 +64,12 @@ void console_disable(void) {
 
 inline void console_print_byte(uint8_t byte) {
   fifo_put_byte(&console_tx_fifo, byte);
-  sched_post_task_prio(&flush_console_tx_fifo, MIN_PRIORITY);
+  sched_post_task_prio(&flush_console_tx_fifo, MIN_PRIORITY, NULL);
 }
 
 inline void console_print_bytes(uint8_t* bytes, uint8_t length) {
   fifo_put(&console_tx_fifo, bytes, length);
-  sched_post_task_prio(&flush_console_tx_fifo, MIN_PRIORITY);
+  sched_post_task_prio(&flush_console_tx_fifo, MIN_PRIORITY, NULL);
 }
 
 inline void console_print(char* string) {

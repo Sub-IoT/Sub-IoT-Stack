@@ -44,7 +44,7 @@
 extern inline error_t timer_post_task(task_t task, timer_tick_t time);
 extern inline error_t timer_post_task_prio_delay(task_t task, timer_tick_t delay, uint8_t priority);
 extern inline error_t timer_post_task_delay(task_t task, timer_tick_t delay);
-extern inline error_t timer_add_event( timer_event* event);
+extern inline error_t timer_add_event(timer_event* event);
 
 static timer_event NGDEF(timers)[FRAMEWORK_TIMER_STACK_SIZE];
 static volatile timer_tick_t NGDEF(next_event);
@@ -73,7 +73,7 @@ __LINK_C void timer_init()
 }
 
 static void configure_next_event();
-__LINK_C error_t timer_post_task_prio(task_t task, timer_tick_t fire_time, uint8_t priority)
+__LINK_C error_t timer_post_task_prio(task_t task, timer_tick_t fire_time, uint8_t priority, void *arg)
 {
     error_t status = ENOMEM;
     if (priority > MIN_PRIORITY)
@@ -111,6 +111,7 @@ __LINK_C error_t timer_post_task_prio(task_t task, timer_tick_t fire_time, uint8
         NG(timers)[empty_index].f = task;
         NG(timers)[empty_index].next_event = fire_time;
         NG(timers)[empty_index].priority = priority;
+        NG(timers)[empty_index].arg = arg;
     }
     else
         goto end;
@@ -246,7 +247,7 @@ static void configure_next_event()
 			next_fire_time = NG(timers)[NG(next_event)].next_event;
 			if ( (((int32_t)next_fire_time) - ((int32_t)timer_get_counter_value())) <= 0 )
 			{
-				sched_post_task_prio(NG(timers)[NG(next_event)].f, NG(timers)[NG(next_event)].priority);
+				sched_post_task_prio(NG(timers)[NG(next_event)].f, NG(timers)[NG(next_event)].priority, NG(timers)[NG(next_event)].arg);
 				NG(timers)[NG(next_event)].f = 0x0;
 			}
 		}
@@ -322,7 +323,7 @@ static void timer_fired()
 {
     assert(NG(next_event) != NO_EVENT);
     assert(NG(timers)[NG(next_event)].f != 0x0);
-    sched_post_task_prio(NG(timers)[NG(next_event)].f, NG(timers)[NG(next_event)].priority);
+    sched_post_task_prio(NG(timers)[NG(next_event)].f, NG(timers)[NG(next_event)].priority, NG(timers)[NG(next_event)].arg);
     NG(timers)[NG(next_event)].f = 0x0;
     configure_next_event();
 }

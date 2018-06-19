@@ -34,7 +34,7 @@
 /*! \brief Type definition for tasks
  *
  */
-typedef void (*task_t)();
+typedef void (*task_t)(void *arg);
 
 /*! \brief Initialise the scheduler sub system. 
  *
@@ -96,7 +96,7 @@ __LINK_C error_t sched_register_task(task_t task);
  *			EALREADY if the task was already scheduled. If this is the case,
  *			the task will be executed but only once.
  */
-__LINK_C error_t sched_post_task_prio(task_t task, uint8_t priority);
+__LINK_C error_t sched_post_task_prio(task_t task, uint8_t priority, void *arg);
 
 /*! \brief Post a task at the default priority
  *
@@ -107,7 +107,7 @@ __LINK_C error_t sched_post_task_prio(task_t task, uint8_t priority);
  *			EALREADY if the task was already scheduled. If this is the case,
  *			the task will be executed but only once.
  */
-static inline error_t sched_post_task(task_t task) { return sched_post_task_prio(task,DEFAULT_PRIORITY);}
+static inline error_t sched_post_task(task_t task) { return sched_post_task_prio(task,DEFAULT_PRIORITY, NULL);}
 
 /*! \brief Cancel an already scheduled task
  *

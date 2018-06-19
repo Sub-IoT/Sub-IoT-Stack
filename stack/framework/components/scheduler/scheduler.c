@@ -62,6 +62,7 @@ enum
 typedef struct
 {
 	task_t task;
+	void *arg;
 	uint8_t next;
 	uint8_t prev;
 	uint8_t priority;
@@ -205,6 +206,7 @@ __LINK_C error_t sched_register_task(task_t task)
             NG(m_index)[i].task = task;
             NG(m_index)[i].index = NG(num_registered_tasks);
             NG(m_info)[NG(m_index)[i].index].task = task;
+            NG(m_info)[NG(m_index)[i].index].arg = NULL;
             break;
         }
         else
@@ -241,7 +243,7 @@ __LINK_C bool sched_is_scheduled(task_t task)
 	return retVal;
 }
 
-__LINK_C error_t sched_post_task_prio(task_t task, uint8_t priority)
+__LINK_C error_t sched_post_task_prio(task_t task, uint8_t priority, void *arg)
 {
 	error_t retVal;
 	start_atomic();
@@ -267,6 +269,7 @@ __LINK_C error_t sched_post_task_prio(task_t task, uint8_t priority)
 			NG(m_tail)[priority] = task_id;
 		}
 		NG(m_info)[task_id].priority = priority;
+                NG(m_info)[task_id].arg = arg;
 		//if our priority is higher than the currently known maximum priority
 		if((priority < NG(current_priority)))
 			NG(current_priority) = priority;
@@ -363,7 +366,7 @@ __LINK_C void scheduler_run()
         timer_tick_t start = timer_get_counter_value();
         log_print_string("SCHED start %p at %i", NG(m_info)[id].task, start);
 #endif
-        NG(m_info)[id].task();
+        NG(m_info)[id].task(NG(m_info)[id].arg);
 #if defined(FRAMEWORK_LOG_ENABLED) && defined(FRAMEWORK_SCHED_LOG_ENABLED)
         timer_tick_t stop = timer_get_counter_value();
         timer_tick_t duration = stop - start;

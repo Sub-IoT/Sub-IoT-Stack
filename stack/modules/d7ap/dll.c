@@ -116,8 +116,8 @@ static uint16_t NGDEF(_tsched);
 static bool NGDEF(_guarded_channel);
 #define guarded_channel NG(_guarded_channel)
 
-static void execute_cca();
-static void execute_csma_ca();
+static void execute_cca(void *arg);
+static void execute_csma_ca(void *arg);
 static void start_foreground_scan();
 static void packet_received(hw_radio_packet_t* hw_radio_packet);
 
@@ -288,7 +288,7 @@ void dll_stop_background_scan()
     hw_radio_set_idle();
 }
 
-static void process_received_packets()
+static void process_received_packets(void *arg)
 {
     if (is_tx_busy())
     {
@@ -337,12 +337,12 @@ static void packet_received(hw_radio_packet_t* hw_radio_packet)
     packet_queue_mark_received(hw_radio_packet);
 
     /* the received packet needs to be handled in priority */
-    sched_post_task_prio(&process_received_packets, MAX_PRIORITY);
+    sched_post_task_prio(&process_received_packets, MAX_PRIORITY, NULL);
 }
 
-static void notify_transmitted_packet()
+static void notify_transmitted_packet(void *arg)
 {
-    packet_t* packet = packet_queue_get_transmitted_packet();
+    packet_t* packet = (packet_t*)arg;
     assert(packet != NULL);
 
     switch_state(DLL_STATE_IDLE);
@@ -350,7 +350,7 @@ static void notify_transmitted_packet()
 
     if (process_received_packets_after_tx)
     {
-        sched_post_task_prio(&process_received_packets, MAX_PRIORITY);
+        sched_post_task_prio(&process_received_packets, MAX_PRIORITY, NULL);
         process_received_packets_after_tx = false;
     }
 
@@ -377,7 +377,7 @@ void packet_transmitted(hw_radio_packet_t* hw_radio_packet)
         start_guard_period(t_g - packet->tx_duration);
 
     /* the notification task needs to be handled in priority */
-    sched_post_task_prio(&notify_transmitted_packet, MAX_PRIORITY);
+    sched_post_task_prio(&notify_transmitted_packet, MAX_PRIORITY, packet);
 }
 
 static void discard_tx()
@@ -430,7 +430,7 @@ static void cca_rssi_valid(int16_t cur_rssi)
             // execute CCA2 directly after busy wait instead of scheduling this, to prevent another long running
             // scheduled task to interfer with this timer (for instance d7asp_received_unsollicited_data_cb() )
             hw_busy_wait(5000);
-            execute_cca();
+            execute_cca(NULL);
             return;
         }
         else if (dll_state == DLL_STATE_CCA2)
@@ -465,11 +465,11 @@ static void cca_rssi_valid(int16_t cur_rssi)
     {
         DPRINT("Channel not clear, RSSI: %i", cur_rssi);
         switch_state(DLL_STATE_CSMA_CA_RETRY);
-        execute_csma_ca();
+        execute_csma_ca(NULL);
     }
 }
 
-static void execute_cca()
+static void execute_cca(void *arg)
 {
     DPRINT("execute_cca @%i", timer_get_counter_value());
 
@@ -483,7 +483,7 @@ static void execute_cca()
     hw_radio_set_rx(&rx_cfg, NULL, &cca_rssi_valid);
 }
 
-static void execute_csma_ca()
+static void execute_csma_ca(void *arg)
 {
     // TODO select Channel at front of the channel queue
 
@@ -590,7 +590,7 @@ static void execute_csma_ca()
             else
             {
                 switch_state(DLL_STATE_CCA1);
-                sched_post_task_prio(&execute_cca, MAX_PRIORITY);
+                sched_post_task_prio(&execute_cca, MAX_PRIORITY, NULL);
             }
 
             break;
@@ -604,7 +604,7 @@ static void execute_csma_ca()
             {
                 DPRINT("CCA fail because dll_to = %i", dll_to);
                 switch_state(DLL_STATE_CCA_FAIL);
-                sched_post_task_prio(&execute_csma_ca, MAX_PRIORITY);
+                sched_post_task_prio(&execute_csma_ca, MAX_PRIORITY, NULL);
                 break;
             }
 
@@ -652,7 +652,7 @@ static void execute_csma_ca()
             else
             {
                 switch_state(DLL_STATE_CCA1);
-                sched_post_task_prio(&execute_cca, MAX_PRIORITY);
+                sched_post_task_prio(&execute_cca, MAX_PRIORITY, NULL);
             }
 
             break;
@@ -664,7 +664,7 @@ static void execute_csma_ca()
             d7anp_signal_transmission_failure();
             if (process_received_packets_after_tx)
             {
-                sched_post_task_prio(&process_received_packets, MAX_PRIORITY);
+                sched_post_task_prio(&process_received_packets, MAX_PRIORITY, NULL);
                 process_received_packets_after_tx = false;
             }
 
@@ -678,7 +678,7 @@ static void execute_csma_ca()
     }
 }
 
-void dll_execute_scan_automation()
+void dll_execute_scan_automation(void *arg)
 {
     // first make sure the background scan tasks are stopped,
     // since they might not be necessary for current active class anymore
@@ -773,7 +773,7 @@ static void conf_file_changed_callback(uint8_t file_id)
     // when doing scan automation restart this
     if (dll_state == DLL_STATE_IDLE || dll_state == DLL_STATE_SCAN_AUTOMATION)
     {
-        dll_execute_scan_automation();
+        dll_execute_scan_automation(NULL);
     }
 }
 
@@ -787,14 +787,14 @@ static void access_profile_file_changed_callback(uint8_t file_id)
     // when we are idle switch to scan automation now as well, in case the new AP enables scanning
     if (dll_state == DLL_STATE_IDLE || dll_state == DLL_STATE_SCAN_AUTOMATION)
     {
-        dll_execute_scan_automation();
+        dll_execute_scan_automation(NULL);
     }
 }
 
 void dll_notify_dialog_terminated()
 {
     DPRINT("Since the dialog is terminated, we can resume the automation scan");
-    dll_execute_scan_automation();
+    dll_execute_scan_automation(NULL);
 }
 
 
@@ -1000,7 +1000,7 @@ void dll_tx_frame(packet_t* packet)
             // and start the DLL CSMA-CA routine immediately
         }
     }
-    execute_csma_ca();
+    execute_csma_ca(NULL);
 }
 
 static void start_foreground_scan()

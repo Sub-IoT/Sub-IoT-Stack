@@ -108,7 +108,7 @@ static void process_serial_frame(fifo_t* fifo) {
   }
 }
 
-static void process_rx_fifo() {
+static void process_rx_fifo(void *arg) {
   if(!parsed_header) {
     // <sync byte (0xC0)><version (0x00)><length of ALP command (1 byte)><ALP command> // TODO CRC
     if(fifo_get_size(&rx_fifo) > SERIAL_ALP_FRAME_HEADER_SIZE) {
@@ -121,7 +121,7 @@ static void process_rx_fifo() {
           parsed_header = false;
           payload_len = 0;
           if(fifo_get_size(&rx_fifo) > SERIAL_ALP_FRAME_HEADER_SIZE)
-            sched_post_task(&process_rx_fifo);
+            sched_post_task(&process_rx_fifo, NULL);
 
           return;
         }
@@ -130,7 +130,7 @@ static void process_rx_fifo() {
         fifo_skip(&rx_fifo, SERIAL_ALP_FRAME_HEADER_SIZE);
         payload_len = header[2];
         DPRINT("found header, payload size = %i", payload_len);
-        sched_post_task(&process_rx_fifo);
+        sched_post_task(&process_rx_fifo, NULL);
     }
   } else {
     if(fifo_get_size(&rx_fifo) < payload_len) {
@@ -154,7 +154,7 @@ static void process_rx_fifo() {
 static void rx_cb(uint8_t byte) {
   fifo_put_byte(&rx_fifo, byte);
   if(!sched_is_scheduled(&process_rx_fifo))
-    sched_post_task_prio(&process_rx_fifo, MAX_PRIORITY);
+    sched_post_task_prio(&process_rx_fifo, MAX_PRIORITY, NULL);
 }
 
 static void send(uint8_t* buffer, uint8_t len) {
