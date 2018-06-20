@@ -10,6 +10,8 @@
 #include "stm32_device.h"
 #include "stm32_common_gpio.h"
 
+#include "log.h"
+
 // TODO use other ways to avoid long polling
 #define I2C_POLLING  100000
 #define I2C_DEFAULT_TIMEOUT	1000
@@ -60,6 +62,7 @@ const PinMap PinMap_I2C_SCL[] = {
 
 typedef struct{
     uint32_t clk_32M;
+    uint32_t clk_16M;
     uint32_t clk_4M;
     uint32_t clk_2M;
 
@@ -73,11 +76,13 @@ typedef  struct{
 const i2c_speed_struc_t I2C_TIMINGR_LUT = {
     .i2c_standard_speed = {
         .clk_32M = 0x00B07DB9,
+        .clk_16M = 0x00503D5A,
         .clk_4M = 0x00201111,
         .clk_2M =  0x00100608
     },
     .i2c_high_speed = {
         .clk_32M = 0x00601135,
+        .clk_16M = 0x00300619,
         .clk_4M = I2C_TIMINGR_INVALID_VAL,
         .clk_2M = I2C_TIMINGR_INVALID_VAL
     }
@@ -121,6 +126,9 @@ static inline uint32_t get_i2c_timing(int hz)
         break;
     case 4:
         tim =timing_struct.clk_4M;
+        break;
+    case 16:
+        tim = timing_struct.clk_16M;
         break;
     case 32:
         tim = timing_struct.clk_32M;
