@@ -18,10 +18,10 @@
 
 
 #include "log.h"
-#include "dll.h"
 #include "hwradio.h"
 #include "packet_queue.h"
 #include "packet.h"
+#include "dll.h"
 #include "crc.h"
 #include "debug.h"
 #include "fs.h"
@@ -714,7 +714,7 @@ void dll_execute_scan_automation(void *arg)
     switch_state(DLL_STATE_SCAN_AUTOMATION);
     hw_rx_cfg_t rx_cfg = {
         .channel_id = {
-            .channel_header = current_access_profile.channel_header,
+            .channel_header_raw = current_access_profile.channel_header_raw,
             .center_freq_index = current_access_profile.subbands[0].channel_index_start
         },
     };
@@ -921,7 +921,7 @@ void dll_tx_frame(packet_t* packet)
         dll_header->control_eirp_index = remote_access_profile.subbands[0].eirp + 32;
 
         packet->hw_radio_packet.tx_meta.tx_cfg = (hw_tx_cfg_t){
-            .channel_id.channel_header = remote_access_profile.channel_header,
+            .channel_id.channel_header_raw = remote_access_profile.channel_header_raw,
             .channel_id.center_freq_index = remote_access_profile.subbands[0].channel_index_start,
             .eirp = remote_access_profile.subbands[0].eirp
         };

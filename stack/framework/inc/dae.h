@@ -23,8 +23,7 @@
 #define DAE_H_
 
 #include "stdint.h"
-
-#include "hwradio.h" // TODO for phy_channel_header_t in subband_t, refactor
+#include "framework_defs.h"
 
 #define SUBPROFILES_NB	4
 #define SUBBANDS_NB		8
@@ -57,7 +56,19 @@ typedef struct
 
 typedef struct
 {
-    phy_channel_header_t channel_header;
+    uint8_t ch_coding: 2;     /**< The 'coding' field in the channel header */
+    uint8_t ch_class: 2;      /**< The 'class' field in the channel header */
+    uint8_t ch_freq_band: 3;  /**< The frequency 'band' field in the channel header */
+    uint8_t _rfu: 1;
+} channel_header_t;
+
+typedef struct
+{
+    union
+    {
+        uint8_t channel_header_raw;          /**< The raw (8-bit) channel header */
+        channel_header_t channel_header; /**< The channel header */
+    };
     subprofile_t subprofiles[SUBPROFILES_NB];
     subband_t subbands[SUBBANDS_NB];
 } dae_access_profile_t;
