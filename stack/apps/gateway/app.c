@@ -41,8 +41,7 @@
 
 #include "d7ap.h"
 #include "alp_layer.h"
-
-#include "../shared/shared.h"
+#include "dae.h"
 
 #if PLATFORM_NUM_LEDS > 0
   #include "hwleds.h"

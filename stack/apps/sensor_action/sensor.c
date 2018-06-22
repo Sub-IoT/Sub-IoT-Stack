@@ -32,7 +32,7 @@
 #include "d7ap.h"
 #include "alp_layer.h"
 
-#include "../shared/shared.h"
+#include "dae.h"
 
 #ifdef USE_HTS221
   #include "HTS221_Driver.h"

@@ -31,8 +31,7 @@
 #include "alp_layer.h"
 #include "fs.h"
 #include "log.h"
-
-#include "../shared/shared.h"
+#include "dae.h"
 
 // This example application contains a modem which can be used from another MCU through
 // the serial interface
