@@ -111,6 +111,7 @@ error_t hw_timer_init(hwtimer_id_t timer_id, uint8_t frequency, timer_callback_t
   __HAL_TIM_URS_ENABLE(&timer);
   __HAL_TIM_CLEAR_FLAG(&timer, TIM_SR_UIF);
   HAL_NVIC_SetPriority(TIMER_IRQ, 0, 0);
+  HAL_NVIC_ClearPendingIRQ(TIMER_IRQ);
   HAL_NVIC_EnableIRQ(TIMER_IRQ);
   end_atomic();
   return SUCCESS;
@@ -141,9 +142,7 @@ error_t hw_timer_schedule(hwtimer_id_t timer_id, hwtimer_tick_t tick )
     __HAL_TIM_ENABLE_IT(&timer, TIM_IT_UPDATE);
     __HAL_TIM_ENABLE_IT(&timer, TIM_IT_CC1);
     HAL_NVIC_ClearPendingIRQ(TIMER_IRQ);
-    HAL_NVIC_EnableIRQ(TIMER_IRQ);
  	end_atomic();
-
 }
 
 error_t hw_timer_cancel(hwtimer_id_t timer_id)
@@ -201,7 +200,6 @@ bool hw_timer_is_interrupt_pending(hwtimer_id_t timer_id)
   return is_pending;
 }
 
-
 void TIMER_ISR(void)
 {
   // We are not using HAL_TIM_IRQHandler() here to reduce interrupt latency
@@ -228,5 +226,4 @@ void TIMER_ISR(void)
     }
   }
 }
-
 
