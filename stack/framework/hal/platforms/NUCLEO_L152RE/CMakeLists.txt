@@ -3,8 +3,8 @@
 REQUIRE_TOOLCHAIN(gcc-arm-embedded)
 
 #Define platform specific options
-PLATFORM_PARAM(PLATFORM_MCU "STM32L151xC" STRING "The MCU series name of the platform")
-SET(JLINK_DEVICE "STM32L151CC" CACHE STRING "The device passed to JLinkExe for flashing")
+PLATFORM_PARAM(PLATFORM_MCU "STM32L152xE" STRING "The MCU series name of the platform")
+SET(JLINK_DEVICE "STM32L152RE" CACHE STRING "The device passed to JLinkExe for flashing")
 PLATFORM_PARAM(${PLATFORM_PREFIX}_RADIO "none" STRING "The radio chip connected to the board")
 #Restrict the number of possible options for the radio option in the usual manner...
 SET_PROPERTY(CACHE ${PLATFORM_PREFIX}_RADIO PROPERTY STRINGS "sx127x;none")
