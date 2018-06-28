@@ -21,8 +21,17 @@
 #MODULE_OPTION and MODULE_PARAMETER
 #See cmake/module_macros.cmake for more information
 
+MODULE_PARAM(${MODULE_PREFIX}_MAX_CLIENT_COUNT "4" STRING "The maximum number of d7ap clients")
+MODULE_HEADER_DEFINE(NUMBER ${MODULE_PREFIX}_MAX_CLIENT_COUNT)
+
 MODULE_PARAM(${MODULE_PREFIX}_ALP_MAX_ACTIVE_COMMAND_COUNT "5" STRING "The maximum number of active ALP commands")
 MODULE_HEADER_DEFINE(NUMBER ${MODULE_PREFIX}_ALP_MAX_ACTIVE_COMMAND_COUNT)
+
+MODULE_PARAM(${MODULE_PREFIX}_MAX_REQUEST_COUNT "5" STRING "The maximum number of requests per session")
+MODULE_HEADER_DEFINE(NUMBER ${MODULE_PREFIX}_MAX_REQUEST_COUNT)
+
+MODULE_PARAM(${MODULE_PREFIX}_MAX_SESSION_COUNT "5" STRING "The maximum number of session")
+MODULE_HEADER_DEFINE(NUMBER ${MODULE_PREFIX}_MAX_SESSION_COUNT)
 
 MODULE_PARAM(${MODULE_PREFIX}_PACKET_QUEUE_SIZE "5" STRING "The max number of packets which can be used concurrently")
 MODULE_HEADER_DEFINE(NUMBER ${MODULE_PREFIX}_PACKET_QUEUE_SIZE)
@@ -66,6 +75,7 @@ EXPORT_GLOBAL_INCLUDE_DIRECTORIES(.)
 #By convention, each module should generate a single 'static' library that can be included by the application
 ADD_LIBRARY(d7ap STATIC
     d7ap_stack.c
+    d7ap.c
     d7asp.c
     d7atp.c
     d7anp.c

@@ -23,6 +23,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "hwleds.h"
 #include "hwsystem.h"
@@ -99,7 +100,7 @@ void execute_sensor_measurement()
   temperature = __builtin_bswap16(temperature); // convert to big endian before transmission
   memcpy(alp_command + 4, (uint8_t*)&temperature, SENSOR_FILE_SIZE);
 
-  alp_layer_execute_command(alp_command, sizeof(alp_command), &session_config);
+  alp_layer_execute_command_over_d7a(alp_command, sizeof(alp_command), &session_config);
   timer_post_task_delay(&execute_sensor_measurement, SENSOR_INTERVAL_SEC);
 }
 

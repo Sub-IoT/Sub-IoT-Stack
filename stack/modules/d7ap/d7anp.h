@@ -34,9 +34,9 @@
 #include "stdint.h"
 #include "stdbool.h"
 
-#include "d7ap.h"
 #include "MODULE_D7AP_defs.h"
 #include "timer.h"
+#include "packet.h"
 
 typedef struct packet packet_t;
 

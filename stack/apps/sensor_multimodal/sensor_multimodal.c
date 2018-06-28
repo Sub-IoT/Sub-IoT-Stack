@@ -95,7 +95,7 @@ void on_alp_command_result_cb(d7ap_session_result_t result, uint8_t* payload, ui
 }
 
 static uint8_t transmit_d7ap(uint8_t* alp, uint16_t len) {
-  alp_layer_execute_command(alp, len, &session_config);
+  alp_layer_execute_command_over_d7a(alp, len, &session_config);
   return 0;
 }
 
@@ -165,7 +165,7 @@ void network_drivers_init() {
   memcpy(lora.name, "LoRa", 4);
 
   d7.init = &init_d7ap;
-  d7.stop = &d7ap_stack_stop;
+  d7.stop = &d7ap_stop;
   d7.send = &transmit_d7ap;
   memcpy(d7.name, "DSH7", 4);
 }

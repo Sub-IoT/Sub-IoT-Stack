@@ -45,7 +45,7 @@ typedef enum
     ALP_CMD_ORIGIN_APP,
     ALP_CMD_ORIGIN_SERIAL_CONSOLE,
     ALP_CMD_ORIGIN_D7AACTP,
-    ALP_CMD_ORIGIN_D7ASP,
+    ALP_CMD_ORIGIN_D7AP,
 } alp_command_origin_t;
 
 
@@ -86,7 +86,7 @@ void alp_layer_init(alp_init_args_t* init_args, bool shell_enabled);
  * \param alp_command_length
  * \param d7asp_master_session_config
  */
-void alp_layer_execute_command(uint8_t* alp_command, uint8_t alp_command_length, d7ap_session_config_t* config);
+void alp_layer_execute_command_over_d7a(uint8_t* alp_command, uint8_t alp_command_length, d7ap_session_config_t* config);
 
 /*!
  * \brief Process the ALP command.
@@ -106,13 +106,13 @@ bool alp_layer_process_command(uint8_t* alp_command, uint8_t alp_command_length,
  * \brief Process a result received from D7ASP.
  *
  * Note: alp_command and alp_response may point to the same buffer
- * \param alp_command   The raw command
- * \param alp_command_length The length of the command
- * \param alp_response Pointer to a buffer where a possible response will be written
+ * \param alp_command         The raw command
+ * \param alp_command_length  The length of the command
+ * \param alp_response        Pointer to a buffer where a possible response will be written
  * \param alp_response_length The length of the response
- * \param d7asp_result The result
+ * \param d7asp_result        The D7AP session result
  */
-void alp_layer_process_d7asp_result(uint8_t* alp_command, uint8_t alp_command_length, uint8_t* alp_response, uint8_t* alp_response_length, d7ap_session_result_t d7asp_result);
+void alp_layer_process_d7ap_result(uint8_t* alp_command, uint8_t alp_command_length, d7ap_session_result_t d7asp_result);
 
 /*!
  * \brief Process the ALP command on the local host interface and output the response to the D7ASP interface
@@ -133,7 +133,7 @@ void alp_layer_process_d7aactp(d7ap_session_config_t* config, uint8_t* alp_comma
  */
 void alp_layer_process_command_console_output(uint8_t* alp_command, uint8_t alp_command_length);
 
-void alp_layer_d7asp_fifo_flush_completed(uint8_t fifo_token, uint8_t* progress_bitmap, uint8_t* success_bitmap, uint8_t bitmap_byte_count);
+void alp_layer_d7ap_session_completed(void);
 
 #endif /* ALP_LAYER_H_ */
 

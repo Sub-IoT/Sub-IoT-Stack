@@ -145,6 +145,7 @@ static void response_period_timeout_handler()
            || d7atp_state == D7ATP_STATE_SLAVE_TRANSACTION_SENDING_RESPONSE);
 
     current_transaction_id = NO_ACTIVE_REQUEST_ID;
+    d7asp_signal_transaction_terminated();
 
     DPRINT("Transaction is terminated");
 
@@ -346,7 +347,7 @@ send_packet:
     return(d7anp_tx_foreground_frame(packet, true));
 }
 
-static void send_response(packet_t* packet)
+error_t d7atp_send_response(packet_t* packet)
 {
     switch_state(D7ATP_STATE_SLAVE_TRANSACTION_SENDING_RESPONSE);
 
@@ -382,7 +383,7 @@ static void send_response(packet_t* packet)
 
     // dialog and transaction id remain the same
     DPRINT("Tl=%i", packet->d7atp_tl);
-    d7anp_tx_foreground_frame(packet, should_include_origin_template);
+    return (d7anp_tx_foreground_frame(packet, should_include_origin_template));
 }
 
 uint8_t d7atp_assemble_packet_header(packet_t* packet, uint8_t* data_ptr)
@@ -585,8 +586,7 @@ void d7atp_process_received_packet(packet_t* packet)
             }
         }
 
-        bool should_send_response = d7asp_process_received_packet(packet, extension);
-        assert(!should_send_response);
+        d7asp_process_received_response(packet, extension);
     }
     else
     {
@@ -672,17 +672,23 @@ void d7atp_process_received_packet(packet_t* packet)
 
         // DLL is taking care that we respond on the channel where we received the request on
 
-        bool should_send_response = d7asp_process_received_packet(packet, extension);
-        if (should_send_response)
-        {
-            // If there is no listen period, then we can end the dialog after the response transmission
-            if (current_Tl_received == 0)
-                stop_dialog_after_tx = true;
+        bool response_expected = d7asp_process_received_packet(packet);
 
-            send_response(packet);
+        if (packet->d7atp_ctrl.ctrl_is_ack_requested)
+        {
+            if (response_expected)
+            {
+                // If there is no listen period, then we can end the dialog after the response transmission
+                if (current_Tl_received == 0)
+                    stop_dialog_after_tx = true;
+                return;
+            }
+
+            // if ACK requested and no response expected, send the acknowledge
+            packet->payload_length = 0;
+            d7atp_send_response(packet);
         }
         else if (current_Tl_received == 0)
             terminate_dialog();
     }
-
 }
