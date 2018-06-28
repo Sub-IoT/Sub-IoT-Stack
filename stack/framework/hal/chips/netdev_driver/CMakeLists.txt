@@ -28,6 +28,10 @@ INCLUDE_DIRECTORIES(
 
 SET(netdev_driver_SRC
     netdev.c
+    sx127x.c
+    sx127x_internal.c
+    sx127x_netdev.c
+    sx127x_getset.c
 )
 
 

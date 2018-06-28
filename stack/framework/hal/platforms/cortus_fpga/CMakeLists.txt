@@ -39,7 +39,7 @@ PLATFORM_PARAM(PLATFORM_NUM_BUTTONS "2" STRING "The number of buttons.")
 INCLUDE_DIRECTORIES(inc)
 
 #Restrict the number of possible options for the radio option in the usual manner...
-SET_PROPERTY(CACHE ${PLATFORM_PREFIX}_RADIO PROPERTY STRINGS "cc1101;sx127x")
+SET_PROPERTY(CACHE ${PLATFORM_PREFIX}_RADIO PROPERTY STRINGS "cc1101;sx127x;netdev_driver")
 
 PLATFORM_OPTION(PLATFORM_SX127X_USE_PA_BOOST "Use the PA_BOOST output of sx127x chip" TRUE)
 
@@ -80,9 +80,12 @@ ADD_LIBRARY(PLATFORM OBJECT
 ADD_CHIP("cortus")
 
 #Include the sources for the radio chip, if needed
-IF(NOT ("${${PLATFORM_PREFIX}_RADIO}" STREQUAL "none"))
-    ADD_CHIP(${${PLATFORM_PREFIX}_RADIO})
-ENDIF()
+#IF(NOT ("${${PLATFORM_PREFIX}_RADIO}" STREQUAL "none"))
+#    ADD_CHIP(${${PLATFORM_PREFIX}_RADIO})
+#ENDIF()
+
+#Force the netdev driver by default
+ADD_CHIP("netdev_driver")
 
 PLATFORM_HEADER_DEFINE(
  NUMBER PLATFORM_CONSOLE_UART
