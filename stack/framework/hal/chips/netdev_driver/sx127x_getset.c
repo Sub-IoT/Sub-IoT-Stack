@@ -31,9 +31,15 @@
 #include "sx127x.h"
 #include "sx127x_registers.h"
 #include "sx127x_internal.h"
-
-#define ENABLE_DEBUG (0)
+#include "platform.h"
 #include "debug.h"
+
+#ifdef FRAMEWORK_LOG_ENABLED
+#include "log.h"
+    #define DEBUG(...) log_print_string(__VA_ARGS__)
+#else
+    #define DEBUG(...)
+#endif
 
 
 uint8_t sx127x_get_state(const sx127x_t *dev)
@@ -67,6 +73,8 @@ void sx127x_set_modem(sx127x_t *dev, uint8_t modem)
 {
     DEBUG("[sx127x] set modem: %d\n", modem);
 
+    //FIXME mapping between SX127X_MODEM_XXX and NETDEV_TYPE_XXX
+
     if ((sx127x_reg_read(dev, SX127X_REG_OPMODE) & SX127X_RF_LORA_OPMODE_LONGRANGEMODE_ON) != 0) {
         dev->settings.modem = SX127X_MODEM_LORA;
     }
@@ -85,6 +93,11 @@ void sx127x_set_modem(sx127x_t *dev, uint8_t modem)
 
     switch (dev->settings.modem) {
         case SX127X_MODEM_FSK:
+            sx127x_set_op_mode(dev, SX127X_RF_OPMODE_SLEEP);
+            sx127x_reg_write(dev, SX127X_REG_OPMODE,
+                                         (sx127x_reg_read(dev, SX127X_REG_OPMODE) &
+                                          SX127X_RF_LORA_OPMODE_LONGRANGEMODE_MASK) |
+                                          SX127X_RF_LORA_OPMODE_LONGRANGEMODE_OFF);
             /* Todo */
             break;
         case SX127X_MODEM_LORA:
@@ -102,23 +115,83 @@ void sx127x_set_modem(sx127x_t *dev, uint8_t modem)
     }
 }
 
-uint8_t sx127x_get_syncword(const sx127x_t *dev)
+uint8_t sx127x_get_syncword_length(const sx127x_t *dev)
 {
-    return sx127x_reg_read(dev, SX127X_REG_LR_SYNCWORD);
+    switch (dev->settings.modem) {
+        case SX127X_MODEM_FSK: {
+            uint8_t sync_size = sx127x_reg_read(dev, SX127X_REG_SYNCCONFIG) &
+                                ~SX127X_RF_SYNCCONFIG_SYNCSIZE_MASK;
+            sync_size++;
+
+            DEBUG("Synx word size <%d>", sync_size);
+            return sync_size;
+        }
+        case SX127X_MODEM_LORA:
+            return dev->settings.lora.preamble_len;
+    }
 }
 
-void sx127x_set_syncword(sx127x_t *dev, uint8_t syncword)
+void sx127x_set_syncword_length(sx127x_t *dev, uint8_t len)
 {
+    DEBUG("[sx127x] Set sync word length: %d\n", len);
+
+    switch (dev->settings.modem) {
+        case SX127X_MODEM_FSK:
+            assert(len >= 1);
+            sx127x_reg_write(dev, SX127X_REG_SYNCCONFIG,
+                             (sx127x_reg_read(dev, SX127X_REG_SYNCCONFIG) &
+                             SX127X_RF_SYNCCONFIG_SYNCSIZE_MASK) | (len - 1));
+            break;
+        case SX127X_MODEM_LORA:
+            // sync word is necessarily 1 byte
+            break;
+        default:
+            break;
+    }
+}
+
+uint8_t sx127x_get_syncword(const sx127x_t *dev, uint8_t *syncword, uint8_t sync_size)
+{
+    uint8_t size;
+
+    assert(sync_size >= 1);
+
+    switch (dev->settings.modem) {
+        case SX127X_MODEM_FSK:
+            size = (sx127x_reg_read(dev, SX127X_REG_SYNCCONFIG) &
+                    ~SX127X_RF_SYNCCONFIG_SYNCSIZE_MASK) + 1;
+            assert(size <= sync_size);
+            sx127x_reg_read_burst(dev, SX127X_REG_SYNCVALUE1, syncword, size);
+            return size;
+        case SX127X_MODEM_LORA:
+            *syncword = sx127x_reg_read(dev, SX127X_REG_LR_SYNCWORD);
+            return sizeof(uint8_t);
+    }
+}
+
+void sx127x_set_syncword(sx127x_t *dev, uint8_t *syncword, uint8_t sync_size)
+{
+    assert(sync_size >= 1);
     DEBUG("[sx127x] Set syncword: %02x\n", syncword);
 
-    sx127x_reg_write(dev, SX127X_REG_LR_SYNCWORD, syncword);
+    switch (dev->settings.modem) {
+        case SX127X_MODEM_FSK:
+            sx127x_reg_write(dev, SX127X_REG_SYNCCONFIG,
+                             (sx127x_reg_read(dev , SX127X_REG_SYNCCONFIG) &
+                              SX127X_RF_SYNCCONFIG_SYNCSIZE_MASK) | (sync_size - 1));
+            sx127x_reg_write_burst(dev, SX127X_REG_SYNCVALUE1, syncword, sync_size);
+            break;
+        case SX127X_MODEM_LORA:
+            sx127x_reg_write(dev, SX127X_REG_LR_SYNCWORD, *syncword);
+            break;
+    }
 }
 
 uint32_t sx127x_get_channel(const sx127x_t *dev)
 {
     return (((uint32_t)sx127x_reg_read(dev, SX127X_REG_FRFMSB) << 16) |
             (sx127x_reg_read(dev, SX127X_REG_FRFMID) << 8) |
-            (sx127x_reg_read(dev, SX127X_REG_FRFLSB))) * LORA_FREQUENCY_RESOLUTION_DEFAULT;
+            (sx127x_reg_read(dev, SX127X_REG_FRFLSB))) * SX127X_FREQUENCY_RESOLUTION;
 }
 
 void sx127x_set_channel(sx127x_t *dev, uint32_t channel)
@@ -128,7 +201,7 @@ void sx127x_set_channel(sx127x_t *dev, uint32_t channel)
     /* Save current operating mode */
     dev->settings.channel = channel;
 
-    channel = (uint32_t)((double) channel / (double)LORA_FREQUENCY_RESOLUTION_DEFAULT);
+    channel = (uint32_t)((double) channel / (double) SX127X_FREQUENCY_RESOLUTION);
 
     /* Write frequency settings into chip */
     sx127x_reg_write(dev, SX127X_REG_FRFMSB, (uint8_t)((channel >> 16) & 0xFF));
@@ -201,8 +274,8 @@ void sx127x_set_sleep(sx127x_t *dev)
     DEBUG("[sx127x] Set sleep\n");
 
     /* Disable running timers */
-    xtimer_remove(&dev->_internal.tx_timeout_timer);
-    xtimer_remove(&dev->_internal.rx_timeout_timer);
+    timer_cancel_event(&dev->_internal.tx_timeout_timer);
+    timer_cancel_event(&dev->_internal.rx_timeout_timer);
 
     /* Put chip into sleep */
     sx127x_set_op_mode(dev, SX127X_RF_OPMODE_SLEEP);
@@ -214,11 +287,44 @@ void sx127x_set_standby(sx127x_t *dev)
     DEBUG("[sx127x] Set standby\n");
 
     /* Disable running timers */
-    xtimer_remove(&dev->_internal.tx_timeout_timer);
-    xtimer_remove(&dev->_internal.rx_timeout_timer);
+    timer_cancel_event(&dev->_internal.tx_timeout_timer);
+    timer_cancel_event(&dev->_internal.rx_timeout_timer);
+
+    dev->options = 0; // clear the options
+     /* Disable the interrupts */
+    hw_gpio_disable_interrupt(dev->params.dio0_pin);
+    hw_gpio_disable_interrupt(dev->params.dio1_pin);
 
     sx127x_set_op_mode(dev, SX127X_RF_OPMODE_STANDBY);
+    while(!(sx127x_reg_read(dev, SX127X_REG_IRQFLAGS1) & SX127X_RF_IRQFLAGS1_MODEREADY)); // wait for Standby mode ready
+
     sx127x_set_state(dev,  SX127X_RF_IDLE);
+}
+
+void sx127x_set_packet_handler_enabled(sx127x_t *dev, bool enable) {
+    sx127x_reg_write(dev, SX127X_REG_PREAMBLEDETECT,
+                     (sx127x_reg_read(dev, SX127X_REG_PREAMBLEDETECT) &
+                      SX127X_RF_PREAMBLEDETECT_DETECTOR_MASK) |
+                     (enable << 7));
+    sx127x_reg_write(dev, SX127X_REG_SYNCCONFIG,
+                     (sx127x_reg_read(dev, SX127X_REG_SYNCCONFIG) &
+                      SX127X_RF_SYNCCONFIG_SYNC_MASK) |
+                     (enable << 4));
+}
+
+static void restart_rx_chain(sx127x_t *dev)
+{
+    // TODO restarting by triggering RF_RXCONFIG_RESTARTRXWITHPLLLOCK seems not to work
+    // for some reason, when already in RX and after a freq change.
+    // The chip is unable to receive on the new freq
+    // For now the workaround is to go back to standby mode, to be optimized later
+    sx127x_set_op_mode(dev, SX127X_RF_OPMODE_STANDBY);
+    while(!(sx127x_reg_read(dev, SX127X_REG_IRQFLAGS1) & SX127X_RF_IRQFLAGS1_MODEREADY)); // wait for Standby mode ready
+
+    // TODO for now we assume we need a restart with PLL lock.
+    // this can be optimized for case where there is no freq change
+    // write_reg(REG_RXCONFIG, read_reg(REG_RXCONFIG) | RF_RXCONFIG_RESTARTRXWITHPLLLOCK);
+    DEBUG("restart RX chain with PLL lock");
 }
 
 void sx127x_set_rx(sx127x_t *dev)
@@ -227,7 +333,41 @@ void sx127x_set_rx(sx127x_t *dev)
 
     switch (dev->settings.modem) {
         case SX127X_MODEM_FSK:
-            /* todo */
+            sx127x_flush_fifo(dev);
+
+            dev->packet.pos = 0;
+            dev->packet.fifothresh = 0;
+
+            /* Setup interrupts */
+            sx127x_reg_write(dev, SX127X_REG_DIOMAPPING1, 0x0C); // DIO2 interrupt on sync detect and DIO0 interrupt on PayloadReady
+            sx127x_reg_write(dev, SX127X_REG_FIFOTHRESH, 0x83);
+
+            if (dev->options & SX127X_OPT_TELL_RX_START)
+            {
+                sx127x_reg_write(dev, SX127X_REG_PAYLOADLENGTH, 0x00);
+                dev->packet.length = 0;
+                hw_gpio_set_edge_interrupt(dev->params.dio1_pin, GPIO_RISING_EDGE);
+                hw_gpio_enable_interrupt(dev->params.dio1_pin);
+                sx127x_set_packet_handler_enabled(dev, true);
+            }
+            else if (dev->options & SX127X_OPT_TELL_RX_END)
+            {
+                // Don't overrride the payload length which must have been set by the upper layer
+                dev->packet.length = sx127x_get_max_payload_len(dev);
+                hw_gpio_set_edge_interrupt(dev->params.dio0_pin, GPIO_RISING_EDGE);
+                hw_gpio_enable_interrupt(dev->params.dio0_pin); // enable the PayloadReady interrupt
+            }
+            else
+            {
+                // when IRQ flag is not set, we ignore received packets
+                hw_gpio_disable_interrupt(dev->params.dio0_pin);
+                hw_gpio_disable_interrupt(dev->params.dio1_pin);
+                sx127x_set_packet_handler_enabled(dev, false);
+            }
+
+            if(dev->settings.state  == SX127X_RF_RX_RUNNING)
+                restart_rx_chain(dev); // restart when already in RX so PLL can lock when there is a freq change
+
             break;
         case SX127X_MODEM_LORA:
         {
@@ -309,15 +449,25 @@ void sx127x_set_rx(sx127x_t *dev)
     }
 
     sx127x_set_state(dev, SX127X_RF_RX_RUNNING);
-    if (dev->settings.lora.rx_timeout != 0) {
-        xtimer_set(&(dev->_internal.rx_timeout_timer), dev->settings.lora.rx_timeout);
-    }
 
-    if (dev->settings.lora.flags & SX127X_RX_CONTINUOUS_FLAG) {
-        sx127x_set_op_mode(dev, SX127X_RF_LORA_OPMODE_RECEIVER);
+    if (dev->settings.modem == SX127X_MODEM_FSK)
+    {
+        sx127x_set_op_mode(dev, SX127X_RF_OPMODE_RECEIVER);
     }
-    else {
-        sx127x_set_op_mode(dev, SX127X_RF_LORA_OPMODE_RECEIVER_SINGLE);
+    else
+    {
+        if (dev->settings.lora.rx_timeout != 0) {
+            dev->_internal.rx_timeout_timer.next_event = dev->settings.lora.rx_timeout; // TODO convert timeout in timer_tick
+            timer_add_event(&dev->_internal.rx_timeout_timer);
+        }
+
+
+        if (dev->settings.lora.flags & SX127X_RX_CONTINUOUS_FLAG) {
+           sx127x_set_op_mode(dev, SX127X_RF_LORA_OPMODE_RECEIVER);
+        }
+        else {
+            sx127x_set_op_mode(dev, SX127X_RF_LORA_OPMODE_RECEIVER_SINGLE);
+        }
     }
 }
 
@@ -325,7 +475,7 @@ void sx127x_set_tx(sx127x_t *dev)
 {
      switch (dev->settings.modem) {
         case SX127X_MODEM_FSK:
-            /* todo */
+            sx127x_reg_write(dev, SX127X_REG_DIOMAPPING1, 0x00); // FIFO LEVEL ISR or Packet Sent ISR
             break;
         case SX127X_MODEM_LORA:
         {
@@ -370,9 +520,13 @@ void sx127x_set_tx(sx127x_t *dev)
         break;
     }
 
-    sx127x_set_state(dev, SX127X_RF_RX_RUNNING);
-    if (dev->settings.lora.tx_timeout != 0) {
-        xtimer_set(&(dev->_internal.tx_timeout_timer), dev->settings.lora.tx_timeout);
+    sx127x_set_state(dev, SX127X_RF_TX_RUNNING);
+    if (dev->settings.modem == SX127X_MODEM_LORA)
+    {
+        if (dev->settings.lora.tx_timeout != 0) {
+            dev->_internal.tx_timeout_timer.next_event = dev->settings.lora.tx_timeout; // TODO convert timeout in timer_tick
+            timer_add_event(&dev->_internal.tx_timeout_timer);
+        }
     }
     sx127x_set_op_mode(dev, SX127X_RF_OPMODE_TRANSMITTER );
 }
@@ -391,13 +545,15 @@ uint8_t sx127x_get_max_payload_len(const sx127x_t *dev)
     return 0;
 }
 
-void sx127x_set_max_payload_len(const sx127x_t *dev, uint8_t maxlen)
+void sx127x_set_max_payload_len(sx127x_t *dev, uint8_t maxlen)
 {
     DEBUG("[sx127x] Set max payload len: %d\n", maxlen);
 
     switch (dev->settings.modem) {
         case SX127X_MODEM_FSK:
             sx127x_reg_write(dev, SX127X_REG_PAYLOADLENGTH, maxlen);
+            if (dev->settings.state == SX127X_RF_RX_RUNNING)
+                dev->packet.length = maxlen;
             break;
 
         case SX127X_MODEM_LORA:
@@ -405,6 +561,36 @@ void sx127x_set_max_payload_len(const sx127x_t *dev, uint8_t maxlen)
             break;
     }
 }
+
+#if defined(PLATFORM_SX127X_USE_MANUAL_RXTXSW_PIN) || defined(PLATFORM_USE_ABZ)
+static void set_antenna_switch(opmode_t opmode) {
+  if(opmode == OPMODE_TX) {
+#ifdef PLATFORM_SX127X_USE_MANUAL_RXTXSW_PIN
+    hw_gpio_set(SX127x_MANUAL_RXTXSW_PIN);
+#endif
+#ifdef PLATFORM_USE_ABZ
+    hw_gpio_clr(ABZ_ANT_SW_RX_PIN);
+    if((read_reg(REG_PACONFIG) & RF_PACONFIG_PASELECT_PABOOST) == RF_PACONFIG_PASELECT_PABOOST) {
+      hw_gpio_clr(ABZ_ANT_SW_TX_PIN);
+      hw_gpio_set(ABZ_ANT_SW_PA_BOOST_PIN);
+    } else {
+      hw_gpio_set(ABZ_ANT_SW_TX_PIN);
+      hw_gpio_clr(ABZ_ANT_SW_PA_BOOST_PIN);
+    }
+#endif
+  } else {
+#ifdef PLATFORM_SX127X_USE_MANUAL_RXTXSW_PIN
+    hw_gpio_clr(SX127x_MANUAL_RXTXSW_PIN);
+#endif
+#ifdef PLATFORM_USE_ABZ
+    hw_gpio_set(ABZ_ANT_SW_RX_PIN);
+    hw_gpio_clr(ABZ_ANT_SW_TX_PIN);
+    hw_gpio_clr(ABZ_ANT_SW_PA_BOOST_PIN);
+#endif
+  }
+}
+#endif
+
 
 uint8_t sx127x_get_op_mode(const sx127x_t *dev)
 {
@@ -436,14 +622,60 @@ void sx127x_set_op_mode(const sx127x_t *dev, uint8_t op_mode)
     }
 #endif
 
+#if defined(PLATFORM_SX127X_USE_MANUAL_RXTXSW_PIN) || defined(PLATFORM_USE_ABZ)
+  set_antenna_switch(opmode);
+#endif
+
     /* Replace previous mode value and setup new mode value */
     sx127x_reg_write(dev, SX127X_REG_OPMODE,
-                     (sx127x_reg_read(dev, SX127X_REG_OPMODE) & SX127X_RF_OPMODE_MASK) | op_mode);
+                     (sx127x_reg_read(dev, SX127X_REG_OPMODE) &
+                      SX127X_RF_OPMODE_MASK) | op_mode);
 }
 
-uint8_t sx127x_get_bandwidth(const sx127x_t *dev)
+uint32_t computeRxBw( uint8_t mantisse, uint8_t exponent )
 {
-    return dev->settings.lora.bandwidth;
+    return SX127X_XTAL_FREQ / (mantisse * (1 << (exponent+2)));
+}
+
+void computeRxBwMantExp( uint32_t rxBwValue, uint8_t* mantisse, uint8_t* exponent )
+{
+    uint8_t tmpExp, tmpMant;
+    uint32_t tmpRxBw;
+    uint32_t rxBwMin = 10e6;
+
+    for( tmpExp = 0; tmpExp < 8; tmpExp++ ) {
+        for( tmpMant = 16; tmpMant <= 24; tmpMant += 4 ) {
+            tmpRxBw = computeRxBw(tmpMant, tmpExp);
+            if( abs( tmpRxBw - rxBwValue ) < rxBwMin ) {
+                rxBwMin = abs( tmpRxBw - rxBwValue );
+                *mantisse = tmpMant;
+                *exponent = tmpExp;
+            }
+        }
+    }
+}
+
+uint32_t sx127x_get_bandwidth(const sx127x_t *dev)
+{
+    switch (dev->settings.modem) {
+        case SX127X_MODEM_FSK: {
+            uint8_t reg_bw = sx127x_reg_read(dev, SX127X_REG_RXBW);
+            uint8_t mantissa = reg_bw & ~SX127X_RF_RXBW_MANT_MASK;
+            uint8_t exponent = reg_bw & ~SX127X_RF_RXBW_EXP_MASK;
+
+            switch (mantissa) {
+                case SX127X_RF_RXBW_MANT_16: mantissa = 16; break;
+                case SX127X_RF_RXBW_MANT_20: mantissa = 20; break;
+                case SX127X_RF_RXBW_MANT_24: mantissa = 24; break;
+                default: mantissa = 0; break;
+            }
+
+            return computeRxBw(mantissa , exponent);
+        }
+
+        case SX127X_MODEM_LORA:
+            return dev->settings.lora.bandwidth;
+    }
 }
 
 static void _low_datarate_optimize(sx127x_t *dev)
@@ -511,31 +743,61 @@ static void _update_bandwidth(const sx127x_t *dev)
     sx127x_reg_write(dev, SX127X_REG_LR_MODEMCONFIG1, config1_reg);
 }
 
-void sx127x_set_bandwidth(sx127x_t *dev, uint8_t bandwidth)
+void sx127x_set_bandwidth(sx127x_t *dev, uint32_t bandwidth)
 {
     DEBUG("[sx127x] Set bandwidth: %d\n", bandwidth);
 
-    dev->settings.lora.bandwidth = bandwidth;
+    switch (dev->settings.modem) {
+        case SX127X_MODEM_FSK: {
+            uint8_t mantisse = 0;
+            uint8_t exponent = 0;
+            uint8_t reg_bw;
 
-    _update_bandwidth((const sx127x_t *)dev);
+            computeRxBwMantExp(bandwidth, &mantisse, &exponent);
+            switch( mantisse ) {
+                case 16:
+                    reg_bw = SX127X_RF_RXBW_MANT_16 | exponent;
+                    break;
+                case 20:
+                    reg_bw = SX127X_RF_RXBW_MANT_20 | exponent;
+                    break;
+                case 24:
+                    reg_bw = SX127X_RF_RXBW_MANT_24 | exponent;
+                    break;
+                default:
+                    DEBUG("mantisse:%d\n", mantisse);
+                    assert(false);
+                    break;
+            }
 
-    _low_datarate_optimize(dev);
+            sx127x_reg_write(dev, SX127X_REG_RXBW, reg_bw);
+        } break;
 
-    /* ERRATA sensitivity tweaks */
-    if ((dev->settings.lora.bandwidth == LORA_BW_500_KHZ) &&
-        (dev->settings.channel > SX127X_RF_MID_BAND_THRESH)) {
-        /* ERRATA 2.1 - Sensitivity Optimization with a 500 kHz Bandwidth */
-        sx127x_reg_write(dev, SX127X_REG_LR_TEST36, 0x02);
-        sx127x_reg_write(dev, SX127X_REG_LR_TEST3A, 0x64);
-    }
-    else if (dev->settings.lora.bandwidth == LORA_BW_500_KHZ) {
-        /* ERRATA 2.1 - Sensitivity Optimization with a 500 kHz Bandwidth */
-        sx127x_reg_write(dev, SX127X_REG_LR_TEST36, 0x02);
-        sx127x_reg_write(dev, SX127X_REG_LR_TEST3A, 0x7F);
-    }
-    else {
-        /* ERRATA 2.1 - Sensitivity Optimization with another Bandwidth */
-        sx127x_reg_write(dev, SX127X_REG_LR_TEST36, 0x03);
+        case SX127X_MODEM_LORA:
+
+            dev->settings.lora.bandwidth = bandwidth;
+
+            _update_bandwidth((const sx127x_t *)dev);
+
+            _low_datarate_optimize(dev);
+
+            /* ERRATA sensitivity tweaks */
+            if ((dev->settings.lora.bandwidth == LORA_BW_500_KHZ) &&
+                (dev->settings.channel > SX127X_RF_MID_BAND_THRESH)) {
+                /* ERRATA 2.1 - Sensitivity Optimization with a 500 kHz Bandwidth */
+                sx127x_reg_write(dev, SX127X_REG_LR_TEST36, 0x02);
+                sx127x_reg_write(dev, SX127X_REG_LR_TEST3A, 0x64);
+            }
+            else if (dev->settings.lora.bandwidth == LORA_BW_500_KHZ) {
+                /* ERRATA 2.1 - Sensitivity Optimization with a 500 kHz Bandwidth */
+                sx127x_reg_write(dev, SX127X_REG_LR_TEST36, 0x02);
+                sx127x_reg_write(dev, SX127X_REG_LR_TEST3A, 0x7F);
+            }
+            else {
+                /* ERRATA 2.1 - Sensitivity Optimization with another Bandwidth */
+                sx127x_reg_write(dev, SX127X_REG_LR_TEST36, 0x03);
+            }
+            break;
     }
 }
 
@@ -628,31 +890,52 @@ void sx127x_set_rx_single(sx127x_t *dev, bool single)
 
 bool sx127x_get_crc(const sx127x_t *dev)
 {
+    switch (dev->settings.modem) {
+        case SX127X_MODEM_FSK:
+            return ((sx127x_reg_read(dev, SX127X_REG_PACKETCONFIG1) &
+                    ~SX127X_RF_PACKETCONFIG1_CRC_MASK) >> 4);
+        case SX127X_MODEM_LORA:
 #if defined(MODULE_SX1272)
-    return (sx127x_reg_read(dev, SX127X_REG_LR_MODEMCONFIG1) &
-            SX1272_RF_LORA_MODEMCONFIG1_RXPAYLOADCRC_MASK);
+            return (sx127x_reg_read(dev, SX127X_REG_LR_MODEMCONFIG1) &
+                    SX1272_RF_LORA_MODEMCONFIG1_RXPAYLOADCRC_MASK);
 #else /* MODULE_SX1276 */
-    return (sx127x_reg_read(dev, SX127X_REG_LR_MODEMCONFIG2) &
-            SX1276_RF_LORA_MODEMCONFIG2_RXPAYLOADCRC_MASK);
+            return (sx127x_reg_read(dev, SX127X_REG_LR_MODEMCONFIG2) &
+                    SX1276_RF_LORA_MODEMCONFIG2_RXPAYLOADCRC_MASK);
 #endif
+        default:
+            break;
+    }
+
 }
 
 void sx127x_set_crc(sx127x_t *dev, bool crc)
 {
     DEBUG("[sx127x] Set CRC: %d\n", crc);
-    _set_flag(dev, SX127X_ENABLE_CRC_FLAG, crc);
+
+    switch (dev->settings.modem) {
+        case SX127X_MODEM_FSK:
+            sx127x_reg_write(dev, SX127X_REG_PACKETCONFIG1,
+                             (sx127x_reg_read(dev, SX127X_REG_PACKETCONFIG1) &
+                              SX127X_RF_PACKETCONFIG1_CRC_MASK) | (crc << 4));
+            break;
+        case SX127X_MODEM_LORA:
+            _set_flag(dev, SX127X_ENABLE_CRC_FLAG, crc);
 
 #if defined(MODULE_SX1272)
-    uint8_t config2_reg = sx127x_reg_read(dev, SX127X_REG_LR_MODEMCONFIG1);
-    config2_reg &= SX1272_RF_LORA_MODEMCONFIG1_RXPAYLOADCRC_MASK;
-    config2_reg |= crc << 1;
-    sx127x_reg_write(dev, SX127X_REG_LR_MODEMCONFIG1, config2_reg);
+            uint8_t config2_reg = sx127x_reg_read(dev, SX127X_REG_LR_MODEMCONFIG1);
+            config2_reg &= SX1272_RF_LORA_MODEMCONFIG1_RXPAYLOADCRC_MASK;
+            config2_reg |= crc << 1;
+            sx127x_reg_write(dev, SX127X_REG_LR_MODEMCONFIG1, config2_reg);
 #else /* MODULE_SX1276 */
-    uint8_t config2_reg = sx127x_reg_read(dev, SX127X_REG_LR_MODEMCONFIG2);
-    config2_reg &= SX1276_RF_LORA_MODEMCONFIG2_RXPAYLOADCRC_MASK;
-    config2_reg |= crc << 2;
-    sx127x_reg_write(dev, SX127X_REG_LR_MODEMCONFIG2, config2_reg);
+            uint8_t config2_reg = sx127x_reg_read(dev, SX127X_REG_LR_MODEMCONFIG2);
+            config2_reg &= SX1276_RF_LORA_MODEMCONFIG2_RXPAYLOADCRC_MASK;
+            config2_reg |= crc << 2;
+            sx127x_reg_write(dev, SX127X_REG_LR_MODEMCONFIG2, config2_reg);
 #endif
+            break;
+        default:
+            break;
+    }
 }
 
 uint8_t sx127x_get_hop_period(const sx127x_t *dev)
@@ -698,14 +981,30 @@ void sx127x_set_fixed_header_len_mode(sx127x_t *dev, bool fixed_len)
 
 uint8_t sx127x_get_payload_length(const sx127x_t *dev)
 {
-    return sx127x_reg_read(dev, SX127X_REG_LR_PAYLOADLENGTH);;
+    switch (dev->settings.modem) {
+        case SX127X_MODEM_FSK:
+            return sx127x_reg_read(dev, SX127X_REG_PAYLOADLENGTH);
+        case SX127X_MODEM_LORA:
+            return sx127x_reg_read(dev, SX127X_REG_LR_PAYLOADLENGTH);
+        default:
+            break;
+    }
 }
 
 void sx127x_set_payload_length(sx127x_t *dev, uint8_t len)
 {
     DEBUG("[sx127x] Set payload len: %d\n", len);
 
-    sx127x_reg_write(dev, SX127X_REG_LR_PAYLOADLENGTH, len);
+    switch (dev->settings.modem) {
+        case SX127X_MODEM_FSK:
+            sx127x_reg_write(dev, SX127X_REG_PAYLOADLENGTH, len);
+            break;
+        case SX127X_MODEM_LORA:
+            sx127x_reg_write(dev, SX127X_REG_LR_PAYLOADLENGTH, len);
+            break;
+        default:
+            break;
+    }
 }
 
 static inline uint8_t sx127x_get_pa_select(const sx127x_t *dev)
@@ -719,14 +1018,40 @@ static inline uint8_t sx127x_get_pa_select(const sx127x_t *dev)
 
 uint8_t sx127x_get_tx_power(const sx127x_t *dev)
 {
-    return dev->settings.lora.power;
+    switch (dev->settings.modem) {
+        case SX127X_MODEM_FSK:
+            return dev->settings.fsk.power;
+        case SX127X_MODEM_LORA:
+            return dev->settings.lora.power;
+    }
 }
 
 void sx127x_set_tx_power(sx127x_t *dev, int8_t power)
 {
     DEBUG("[sx127x] Set power: %d\n", power);
 
-    dev->settings.lora.power = power;
+    switch (dev->settings.modem) {
+        case SX127X_MODEM_FSK:
+            dev->settings.fsk.power = power;
+#ifdef PLATFORM_SX127X_USE_PA_BOOST
+            // Pout = 17-(15-outputpower)
+            assert(power >= 2); // lower not supported when using PA_BOOST output
+            assert(power <= 17); // chip supports until +20 dBm but then we need to enable PaDac. Max 17 for now.
+            sx127x_reg_write(dev, SX127X_REG_PACONFIG, 0x80 | (power - 2));
+#else
+            // Pout = Pmax-(15-outputpower)
+            assert(power <= 14); // Pmax = 13.8 dBm
+            assert(power >= -2); // -1.2 dBm is minimum with this Pmax. We can modify Pmax later as well if we need to go lower.
+            sx127x_reg_write(dev, SX127X_REG_PACONFIG, 0x70 | (uint8_t)(power - 13.8 + 15));
+#endif
+            return;
+            break;
+        case SX127X_MODEM_LORA:
+            dev->settings.lora.power = power;
+            break;
+        default:
+            break;
+    }
 
     uint8_t pa_config = sx127x_reg_read(dev, SX127X_REG_PACONFIG);
 #if defined(MODULE_SX1272)
@@ -797,19 +1122,30 @@ void sx127x_set_tx_power(sx127x_t *dev, int8_t power)
 
 uint16_t sx127x_get_preamble_length(const sx127x_t *dev)
 {
-    return dev->settings.lora.preamble_len;
+    switch (dev->settings.modem) {
+        case SX127X_MODEM_FSK:
+            return dev->settings.fsk.preamble_len;
+        case SX127X_MODEM_LORA:
+            return dev->settings.lora.preamble_len;
+    }
 }
 
 void sx127x_set_preamble_length(sx127x_t *dev, uint16_t preamble)
 {
     DEBUG("[sx127x] Set preamble length: %d\n", preamble);
 
-    dev->settings.lora.preamble_len = preamble;
-
-    sx127x_reg_write(dev, SX127X_REG_LR_PREAMBLEMSB,
-                     (preamble >> 8) & 0xFF);
-    sx127x_reg_write(dev, SX127X_REG_LR_PREAMBLELSB,
-                     preamble & 0xFF);
+    switch (dev->settings.modem) {
+        case SX127X_MODEM_FSK:
+            dev->settings.fsk.preamble_len = preamble;
+            sx127x_reg_write_u16(dev, SX127X_REG_PREAMBLEMSB, preamble);
+            break;
+        case SX127X_MODEM_LORA:
+            dev->settings.lora.preamble_len = preamble;
+            sx127x_reg_write_u16(dev, SX127X_REG_LR_PREAMBLEMSB, preamble);
+            break;
+        default:
+            break;
+    }
 }
 
 void sx127x_set_rx_timeout(sx127x_t *dev, uint32_t timeout)
@@ -836,7 +1172,7 @@ void sx127x_set_symbol_timeout(sx127x_t *dev, uint16_t timeout)
     config2_reg &= SX127X_RF_LORA_MODEMCONFIG2_SYMBTIMEOUTMSB_MASK;
     config2_reg |= (timeout >> 8) & ~SX127X_RF_LORA_MODEMCONFIG2_SYMBTIMEOUTMSB_MASK;
     sx127x_reg_write(dev, SX127X_REG_LR_MODEMCONFIG2, config2_reg);
-    sx127x_reg_write(dev, SX127X_REG_LR_SYMBTIMEOUTLSB,timeout & 0xFF);
+    sx127x_reg_write(dev, SX127X_REG_LR_SYMBTIMEOUTLSB, timeout & 0xFF);
 }
 
 bool sx127x_get_iq_invert(const sx127x_t *dev)
@@ -866,4 +1202,190 @@ void sx127x_set_freq_hop(sx127x_t *dev, bool freq_hop_on)
     DEBUG("[sx127x] Set freq hop: %d\n", freq_hop_on);
 
      _set_flag(dev, SX127X_CHANNEL_HOPPING_FLAG, freq_hop_on);
+}
+
+uint32_t sx127x_get_bitrate(const sx127x_t *dev)
+{
+    uint16_t br = sx127x_reg_read_u16(dev, SX127X_REG_BITRATEMSB);
+
+    if (br == 0)
+        return 0;
+    else {
+        uint32_t bps = SX127X_XTAL_FREQ / br;
+        //bit_period_us = bps / 1000;
+        return bps;
+    }
+}
+
+void sx127x_set_bitrate(sx127x_t *dev, uint32_t bps)
+{
+    uint16_t tmpBitrate = SX127X_XTAL_FREQ / bps;
+    //bit_period_us = bps / 1000;
+
+    DEBUG("[sx127x] Set bitrate register to %i", tmpBitrate);
+    sx127x_reg_write_u16(dev, SX127X_REG_BITRATEMSB, tmpBitrate);
+}
+
+uint8_t sx127x_get_preamble_polarity(const sx127x_t *dev)
+{
+    uint8_t polarity = sx127x_reg_read(dev, SX127X_REG_SYNCCONFIG) &
+                       ~SX127X_RF_SYNCCONFIG_PREAMBLEPOLARITY_MASK;
+
+    if (polarity == SX127X_RF_SYNCCONFIG_PREAMBLEPOLARITY_MASK)
+        DEBUG("[sx127x] Polarity set to 0x55");
+    else
+        DEBUG("[sx127x] Polarity set to default 0xAA");
+
+    return (polarity >> 5);
+}
+
+void sx127x_set_preamble_polarity(sx127x_t *dev, uint8_t polarity)
+{
+    sx127x_reg_write(dev, SX127X_REG_SYNCCONFIG,
+                     (sx127x_reg_read(dev, SX127X_REG_SYNCCONFIG) &
+                      SX127X_RF_SYNCCONFIG_PREAMBLEPOLARITY_MASK) |
+                     (polarity << 5));
+}
+
+void sx127x_set_rssi_threshold(sx127x_t *dev, uint8_t rssi_thr)
+{
+    /*
+     * RSSI trigger level for the Rssi interrupt:
+     *  - RssiThreshold / 2 [dBm]
+     */
+    sx127x_reg_write(dev, SX127X_REG_RSSITHRESH, rssi_thr * 2);
+}
+
+uint8_t sx127x_get_rssi_threshold(const sx127x_t *dev)
+{
+    uint8_t rssi_thr = sx127x_reg_read(dev, SX127X_REG_RSSITHRESH);
+
+    return (rssi_thr / 2);
+}
+
+void sx127x_set_rssi_smoothing(sx127x_t *dev, uint8_t rssi_samples)
+{
+    sx127x_reg_write(dev, SX127X_REG_RSSICONFIG,
+                         (sx127x_reg_read(dev, SX127X_REG_RSSICONFIG) &
+                          SX127X_RF_RSSICONFIG_SMOOTHING_MASK) |
+                         (rssi_samples/2 -1));
+}
+
+uint8_t sx127x_get_rssi_smoothing(const sx127x_t *dev)
+{
+    uint8_t rssi_samples = sx127x_reg_read(dev, SX127X_REG_RSSICONFIG) &
+                           ~SX127X_RF_RSSICONFIG_SMOOTHING_MASK;
+    return (1 << (1 + rssi_samples));
+}
+
+void sx127x_set_sync_on(sx127x_t *dev, uint8_t enable)
+{
+    sx127x_reg_write(dev, SX127X_REG_SYNCCONFIG,
+                     (sx127x_reg_read(dev, SX127X_REG_SYNCCONFIG) &
+                      SX127X_RF_SYNCCONFIG_SYNC_MASK) |
+                     (enable << 4));
+}
+
+uint8_t sx127x_get_sync_on(const sx127x_t *dev)
+{
+    return ((sx127x_reg_read(dev, SX127X_REG_SYNCCONFIG) &
+             ~SX127X_RF_SYNCCONFIG_SYNC_MASK) >> 4);
+}
+
+void sx127x_set_preamble_detect_on(sx127x_t *dev, uint8_t enable)
+{
+     sx127x_reg_write(dev, SX127X_REG_PREAMBLEDETECT,
+                     (sx127x_reg_read(dev, SX127X_REG_PREAMBLEDETECT) &
+                      SX127X_RF_PREAMBLEDETECT_DETECTOR_MASK) |
+                     (enable << 7));
+}
+
+uint8_t sx127x_get_preamble_detect_on(const sx127x_t *dev)
+{
+    return ((sx127x_reg_read(dev, SX127X_REG_PREAMBLEDETECT) &
+            ~SX127X_RF_PREAMBLEDETECT_DETECTOR_MASK) >> 7);
+}
+
+void sx127x_set_dc_free(sx127x_t *dev, uint8_t encoding_scheme)
+{
+    sx127x_reg_write(dev, SX127X_REG_PACKETCONFIG1,
+                         (sx127x_reg_read(dev, SX127X_REG_PACKETCONFIG1) &
+                          SX127X_RF_PACKETCONFIG1_DCFREE_MASK) |
+                         (encoding_scheme << 5));
+}
+
+uint8_t sx127x_get_dc_free(const sx127x_t *dev)
+{
+    return ((sx127x_reg_read(dev, SX127X_REG_PACKETCONFIG1) & ~SX127X_RF_PACKETCONFIG1_DCFREE_MASK) >> 5);
+}
+
+void sx127x_set_tx_fdev(sx127x_t *dev, uint32_t fdev)
+{
+    uint16_t tmpFedev = (uint16_t)(fdev / SX127X_FREQUENCY_RESOLUTION);
+
+    DEBUG("[sx127x] Set Frequency deviation to %i", tmpFedev);
+    sx127x_reg_write_u16(dev, SX127X_REG_FDEVMSB, tmpFedev);
+}
+
+uint32_t sx127x_get_tx_fdev(const sx127x_t *dev)
+{
+    uint16_t fdev = sx127x_reg_read_u16(dev, SX127X_REG_FDEVMSB);
+    return fdev * SX127X_FREQUENCY_RESOLUTION;
+}
+
+void sx127x_set_modulation_shaping(sx127x_t *dev, uint8_t shaping)
+{
+    sx127x_reg_write(dev, SX127X_REG_OPMODE,
+                     (sx127x_reg_read(dev, SX127X_REG_OPMODE) &
+                      SX127X_RF_OPMODE_MODULATIONSHAPING_MASK) |
+                     (shaping << 3));
+}
+
+uint8_t sx127x_get_modulation_shaping(const sx127x_t *dev)
+{
+    uint8_t modulation_shaping = sx127x_reg_read(dev, SX127X_REG_OPMODE) &
+                                 ~SX127X_RF_OPMODE_MODULATIONSHAPING_MASK;
+
+    switch (modulation_shaping) {
+        case SX127X_RF_OPMODE_MODULATIONSHAPING_00: DEBUG("No Shaping"); break;
+        case SX127X_RF_OPMODE_MODULATIONSHAPING_01: DEBUG("Gaussian filter BT = 1.0"); break;
+        case SX127X_RF_OPMODE_MODULATIONSHAPING_10: DEBUG("Gaussian filter BT = 0.5"); break;
+        case SX127X_RF_OPMODE_MODULATIONSHAPING_11: DEBUG("Gaussian filter BT = 0.3"); break;
+    }
+
+    return (modulation_shaping >> 3);
+}
+
+int sx127x_set_option(sx127x_t *dev, uint8_t option, bool state)
+{
+    switch(option) {
+        case SX127X_OPT_TELL_TX_START:
+            DEBUG("[sx127x] set_option: inform when TX START (%s)\n", state ? "Enable" : "Disable");
+            break;
+        case SX127X_OPT_TELL_TX_END:
+            DEBUG("[sx127x] set_option: inform when TX is terminated (%s)\n", state ? "Enable" : "Disable");
+            break;
+        case SX127X_OPT_TELL_RX_START:
+            DEBUG("[sx127x] set_option: inform when a packet header is received (%s)\n", state ? "Enable" : "Disable");
+            break;
+        case SX127X_OPT_TELL_RX_END:
+            DEBUG("[sx127x] set_option: inform when a packet is received (%s)\n", state ? "Enable" : "Disable");
+            break;
+        case SX127X_OPT_TELL_TX_REFILL:
+            DEBUG("[sx127x] set_option: inform when TX fifo needs to be refilled (%s)\n", state ? "Enable" : "Disable");
+            break;
+        case SX127X_OPT_PRELOADING:
+            DEBUG("[sx127x] set_option: TX FIFO is just filled for preloading (No TX mode) (%s)\n", state ? "Enable" : "Disable");
+            break;
+    }
+
+    /* set option field */
+    if (state) {
+        dev->options |= option;
+    }
+    else {
+        dev->options &= ~(option);
+    }
+
+    return sizeof(netopt_enable_t);
 }

@@ -60,10 +60,10 @@
 #ifndef SX127X_H
 #define SX127X_H
 
-#include "xtimer.h"
+#include "timer.h"
 #include "net/netdev.h"
-#include "periph/gpio.h"
-#include "periph/spi.h"
+#include "hwgpio.h"
+#include "hwspi.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -73,12 +73,24 @@ extern "C" {
  * @name    SX127X device default configuration
  * @{
  */
-#define SX127X_MODEM_DEFAULT             (SX127X_MODEM_LORA)    /**< Use LoRa as default modem */
+#define SX127X_PACKET_LENGTH             (0xFF)                 /**< max packet length = 255b */
+#define SX127X_FIFO_MAX_SIZE             (64)                   /**< FIFO max size */
+#define SX127X_FIFO_MID_SIZE             (32)                   /**< FIFO mid size */
+
+#define SX127X_MODEM_DEFAULT             (SX127X_MODEM_FSK)     /**< Use FSK as default modem */
 #define SX127X_CHANNEL_DEFAULT           (868300000UL)          /**< Default channel frequency, 868.3MHz (Europe) */
 #define SX127X_HF_CHANNEL_DEFAULT        (868000000UL)          /**< Use to calibrate RX chain for LF and HF bands */
 #define SX127X_RF_MID_BAND_THRESH        (525000000UL)          /**< Mid-band threshold */
+#define SX127X_FREQUENCY_RESOLUTION      (61.03515625)          /**< Frequency resolution in Hz */
 #define SX127X_XTAL_FREQ                 (32000000UL)           /**< Internal oscillator frequency, 32MHz */
 #define SX127X_RADIO_WAKEUP_TIME         (1000U)                /**< In microseconds [us] */
+
+#define SX127X_BW_125_KHZ                125
+#define SX127X_BW_DEFAULT                (SX127X_BW_125_KHZ)    /**< Set default bandwidth to 125kHz */
+//#define SX127X_FIXED_HEADER_LEN_MODE     (false)                /**< Set fixed header length mode (implicit header) */
+//#define SX127X_PAYLOAD_CRC_ON            (true)                 /**< Enable payload CRC, optional */
+#define SX127X_PAYLOAD_LENGTH            (0U)                   /**< Set payload length, unused with implicit header */
+
 
 #define SX127X_TX_TIMEOUT_DEFAULT        (1000U * 1000U * 30UL) /**< TX timeout, 30s */
 #define SX127X_RX_SINGLE                 (false)                /**< Single byte receive mode => continuous by default */
@@ -92,6 +104,23 @@ extern "C" {
 #define SX127X_IRQ_DIO3                  (1<<3)  /**< DIO3 IRQ */
 #define SX127X_IRQ_DIO4                  (1<<4)  /**< DIO4 IRQ */
 #define SX127X_IRQ_DIO5                  (1<<5)  /**< DIO5 IRQ */
+/** @} */
+
+/**
+ * @name    Internal device option flags
+ * @{
+ */
+#define SX127X_OPT_TELL_TX_START    (0x01)    /**< notify MAC layer on TX
+                                                 *   start */
+#define SX127X_OPT_TELL_TX_END      (0x02)    /**< notify MAC layer on TX
+                                                 *   finished */
+#define SX127X_OPT_TELL_RX_START    (0x04)    /**< notify MAC layer on RX
+                                                 *   start */
+#define SX127X_OPT_TELL_RX_END      (0x08)    /**< notify MAC layer on RX
+                                                 *   finished */
+#define SX127X_OPT_TELL_TX_REFILL   (0x10)    /**< notify MAC layer when TX
+                                                 *   needs to be refilled */
+#define SX127X_OPT_PRELOADING       (0x20)    /**< preloading enabled */
 /** @} */
 
 /**
@@ -175,13 +204,31 @@ typedef struct {
 } sx127x_lora_settings_t;
 
 /**
+ * @brief   Fsk configuration structure.
+ */
+typedef struct {
+    uint16_t preamble_len;             /**< Length of preamble header */
+    uint8_t sync_len;                  /**< Length of sync word */
+    uint8_t power;                     /**< Signal power */
+    uint8_t bandwidth;                 /**< Signal bandwidth */
+    uint8_t datarate;                  /**< bitrate in bps */
+
+    uint8_t flags;                     /**< Boolean flags */
+    uint32_t rx_timeout;               /**< RX timeout in symbols */
+    uint32_t tx_timeout;               /**< TX timeout in symbols */
+} sx127x_fsk_settings_t;
+
+/**
  * @brief   Radio settings.
  */
 typedef struct {
     uint32_t channel;                  /**< Radio channel */
     uint8_t state;                     /**< Radio state */
     uint8_t modem;                     /**< Driver model (FSK or LoRa) */
-    sx127x_lora_settings_t lora;       /**< LoRa settings */
+    union { // union ?
+        sx127x_lora_settings_t lora;   /**< LoRa settings */
+        sx127x_fsk_settings_t fsk;     /**< Fsk settings */
+    };
 } sx127x_radio_settings_t;
 
 /**
@@ -189,10 +236,11 @@ typedef struct {
  */
 typedef struct {
     /* Data that will be passed to events handler in application */
-    xtimer_t tx_timeout_timer;         /**< TX operation timeout timer */
-    xtimer_t rx_timeout_timer;         /**< RX operation timeout timer */
+    timer_event tx_timeout_timer;         /**< TX operation timeout timer */
+    timer_event rx_timeout_timer;         /**< RX operation timeout timer */
     uint32_t last_channel;             /**< Last channel in frequency hopping sequence */
     bool is_last_cad_success;          /**< Sign of success of last CAD operation (activity detected) */
+    void* spi_slave;          /**< SPI slave */
 } sx127x_internal_t;
 
 /**
@@ -200,14 +248,14 @@ typedef struct {
  */
 typedef struct {
     spi_t spi;                         /**< SPI device */
-    gpio_t nss_pin;                    /**< SPI NSS pin */
-    gpio_t reset_pin;                  /**< Reset pin */
-    gpio_t dio0_pin;                   /**< Interrupt line DIO0 (Tx done) */
-    gpio_t dio1_pin;                   /**< Interrupt line DIO1 (Rx timeout) */
-    gpio_t dio2_pin;                   /**< Interrupt line DIO2 (FHSS channel change) */
-    gpio_t dio3_pin;                   /**< Interrupt line DIO3 (CAD done) */
-    gpio_t dio4_pin;                   /**< Interrupt line DIO4 (not used) */
-    gpio_t dio5_pin;                   /**< Interrupt line DIO5 (not used) */
+    pin_id_t nss_pin;                    /**< SPI NSS pin */
+    pin_id_t reset_pin;                  /**< Reset pin */
+    pin_id_t dio0_pin;                   /**< Interrupt line DIO0 (Tx done) */
+    pin_id_t dio1_pin;                   /**< Interrupt line DIO1 (Rx timeout) */
+    pin_id_t dio2_pin;                   /**< Interrupt line DIO2 (FHSS channel change) */
+    pin_id_t dio3_pin;                   /**< Interrupt line DIO3 (CAD done) */
+    pin_id_t dio4_pin;                   /**< Interrupt line DIO4 (not used) */
+    pin_id_t dio5_pin;                   /**< Interrupt line DIO5 (not used) */
     uint8_t paselect;                  /**< Power amplifier mode (RFO or PABOOST) */
 } sx127x_params_t;
 
@@ -215,6 +263,16 @@ typedef struct {
  * @brief   SX127X IRQ flags.
  */
 typedef uint8_t sx127x_flags_t;
+
+/**
+ * @brief struct holding sx127x packet + metadata
+ */
+typedef struct {
+    uint8_t length;                      /**< Length of the packet (without length byte) */
+    uint8_t pos;                         /**< Index of the data already transmitted. */
+    uint8_t fifothresh;                  /**< Threshold used to trigger FifoLevel interrupt. */
+    uint8_t buf[SX127X_PACKET_LENGTH +1];/**< buffer for the whole packet including the length byte */
+} sx127x_pkt_t;
 
 /**
  * @brief   SX127X device descriptor.
@@ -226,6 +284,8 @@ typedef struct {
     sx127x_params_t params;            /**< Device driver parameters */
     sx127x_internal_t _internal;       /**< Internal sx127x data used within the driver */
     sx127x_flags_t irq;                /**< Device IRQ flags */
+    uint16_t options;                  /**< Option flags */
+    sx127x_pkt_t packet;               /**< RX/TX buffer */
 } sx127x_t;
 
 /**
@@ -303,7 +363,7 @@ bool sx127x_is_channel_free(sx127x_t *dev, uint32_t freq, int16_t rssi_threshold
  *
  * @return the current value of RSSI (in dBm)
  */
-int16_t sx127x_read_rssi(const sx127x_t *dev);
+int16_t sx127x_read_rssi(sx127x_t *dev);
 
 /**
  * @brief   Gets current state of transceiver.
@@ -333,13 +393,31 @@ void sx127x_set_state(sx127x_t *dev, uint8_t state);
 void sx127x_set_modem(sx127x_t *dev, uint8_t modem);
 
 /**
+ * @brief   Gets the SX127X syncword length
+ *
+ * @param[in] dev                      The sx127x device descriptor
+ *
+ * @return the syncword length
+ */
+uint8_t sx127x_get_syncword_length(const sx127x_t *dev);
+
+/**
+ * @brief   Sets the SX127X syncword length
+ *
+ * @param[in] dev                      The sx127x device descriptor
+ * @param[in] len                      The syncword length
+ */
+void sx127x_set_syncword_length(sx127x_t *dev, uint8_t len);
+
+
+/**
  * @brief   Gets the synchronization word.
  *
  * @param[in] dev                      The sx127x device descriptor
  *
- * @return The synchronization word
+ * @return The syncword length placed in the sync word buffer
  */
-uint8_t sx127x_get_syncword(const sx127x_t *dev);
+uint8_t sx127x_get_syncword(const sx127x_t *dev, uint8_t *syncword, uint8_t sync_size);
 
 /**
  * @brief   Sets the synchronization word.
@@ -347,7 +425,7 @@ uint8_t sx127x_get_syncword(const sx127x_t *dev);
  * @param[in] dev                     The sx127x device descriptor
  * @param[in] syncword                The synchronization word
  */
-void sx127x_set_syncword(sx127x_t *dev, uint8_t syncword);
+void sx127x_set_syncword(sx127x_t *dev, uint8_t *syncword, uint8_t sync_size);
 
 /**
  * @brief   Gets the channel RF frequency.
@@ -422,7 +500,7 @@ uint8_t sx127x_get_max_payload_len(const sx127x_t *dev);
  * @param[in] dev                      The sx127x device descriptor
  * @param[in] maxlen                   Maximum payload length in bytes
  */
-void sx127x_set_max_payload_len(const sx127x_t *dev, uint8_t maxlen);
+void sx127x_set_max_payload_len(sx127x_t *dev, uint8_t maxlen);
 
 /**
  * @brief   Gets the SX127X operating mode
@@ -448,7 +526,7 @@ void sx127x_set_op_mode(const sx127x_t *dev, uint8_t op_mode);
  *
  * @return the bandwidth
  */
-uint8_t sx127x_get_bandwidth(const sx127x_t *dev);
+uint32_t sx127x_get_bandwidth(const sx127x_t *dev);
 
 /**
  * @brief   Sets the SX127X bandwidth
@@ -456,7 +534,7 @@ uint8_t sx127x_get_bandwidth(const sx127x_t *dev);
  * @param[in] dev                      The sx127x device descriptor
  * @param[in] bandwidth                The new bandwidth
  */
-void sx127x_set_bandwidth(sx127x_t *dev, uint8_t bandwidth);
+void sx127x_set_bandwidth(sx127x_t *dev, uint32_t bandwidth);
 
 /**
  * @brief   Gets the SX127X LoRa spreading factor
@@ -604,10 +682,10 @@ void sx127x_set_tx_power(sx127x_t *dev, int8_t power);
 uint16_t sx127x_get_preamble_length(const sx127x_t *dev);
 
 /**
- * @brief   Sets the SX127X LoRa preamble length
+ * @brief   Sets the SX127X preamble length
  *
  * @param[in] dev                      The sx127x device descriptor
- * @param[in] preamble                 The LoRa preamble length
+ * @param[in] preamble                 The preamble length
  */
 void sx127x_set_preamble_length(sx127x_t *dev, uint16_t preamble);
 
@@ -659,6 +737,51 @@ void sx127x_set_iq_invert(sx127x_t *dev, bool iq_invert);
  * @param[in] freq_hop_on              The LoRa frequency hopping mode
  */
 void sx127x_set_freq_hop(sx127x_t *dev, bool freq_hop_on);
+
+/**
+ * @brief   Gets the SX127X bit rate
+ *
+ * @param[in] dev                      The sx127x device descriptor
+ *
+ * @return the bit rate (bps)
+ */
+uint32_t sx127x_get_bitrate(const sx127x_t *dev);
+
+/**
+ * @brief   Sets the SX127X bit rate
+ *
+ * @param[in] dev                      The sx127x device descriptor
+ * @param[in] bps                      The bit rate
+ */
+void sx127x_set_bitrate(sx127x_t *dev, uint32_t bps);
+
+void sx127x_set_packet_handler_enabled(sx127x_t *dev, bool enable);
+
+uint8_t sx127x_get_preamble_polarity(const sx127x_t *dev);
+void sx127x_set_preamble_polarity(sx127x_t *dev, uint8_t polarity);
+
+void sx127x_set_rssi_threshold(sx127x_t *dev, uint8_t rssi_thr);
+uint8_t sx127x_get_rssi_threshold(const sx127x_t *dev);
+
+void sx127x_set_rssi_smoothing(sx127x_t *dev, uint8_t rssi_samples);
+uint8_t sx127x_get_rssi_smoothing(const sx127x_t *dev);
+
+void sx127x_set_sync_on(sx127x_t *dev, uint8_t enable);
+uint8_t sx127x_get_sync_on(const sx127x_t *dev);
+
+void sx127x_set_preamble_detect_on(sx127x_t *dev, uint8_t enable);
+uint8_t sx127x_get_preamble_detect_on(const sx127x_t *dev);
+
+void sx127x_set_dc_free(sx127x_t *dev, uint8_t encoding_scheme);
+uint8_t sx127x_get_dc_free(const sx127x_t *dev);
+
+void sx127x_set_tx_fdev(sx127x_t *dev, uint32_t fdev);
+uint32_t sx127x_get_tx_fdev(const sx127x_t *dev);
+
+void sx127x_set_modulation_shaping(sx127x_t *dev, uint8_t shaping);
+uint8_t sx127x_get_modulation_shaping(const sx127x_t *dev);
+
+int sx127x_set_option(sx127x_t *dev, uint8_t option, bool state);
 
 #ifdef __cplusplus
 }
