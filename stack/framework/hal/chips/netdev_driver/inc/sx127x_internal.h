@@ -61,14 +61,33 @@ int sx127x_check_version(const sx127x_t *dev);
 void sx127x_reg_write(const sx127x_t *dev, uint8_t addr, uint8_t data);
 
 /**
+ * @brief   Writes the radio register at specified address.
+ *
+ * @param[in] dev                      The sx127x device structure pointer
+ * @param[in] addr                     Register address
+ * @param[in] data                     New uint16_t register value
+ */
+void sx127x_reg_write_u16(const sx127x_t *dev, uint8_t addr, uint16_t data);
+
+/**
  * @brief   Reads the radio register at specified address.
  *
  * @param[in] dev                      The sx127x device structure pointer
  * @param[in] addr                     Register address
  *
- * @return	Register value
+ * @return    Register value
  */
 uint8_t sx127x_reg_read(const sx127x_t *dev, uint8_t addr);
+
+/**
+ * @brief   Reads the radio register at specified address.
+ *
+ * @param[in] dev                      The sx127x device structure pointer
+ * @param[in] addr                     Register address
+ *
+ * @return    Register uint16_t value
+ */
+uint16_t sx127x_reg_read_u16(const sx127x_t *dev, uint8_t addr);
 
 /**
  * @brief   Writes multiple radio registers starting at address (burst-mode).
@@ -111,16 +130,6 @@ void sx127x_write_fifo(const sx127x_t *dev, uint8_t *buffer, uint8_t size);
 void sx127x_read_fifo(const sx127x_t *dev, uint8_t *buffer, uint8_t size);
 
 /**
- * @brief   Reads the current RSSI value.
- *
- * @param[in] dev                      The sx127x device descriptor
- *
- * @return current value of RSSI in [dBm]
- */
-int16_t sx127x_read_rssi(const sx127x_t *dev);
-
-#if defined(MODULE_SX1276)
-/**
  * @brief   Performs the Rx chain calibration for LF and HF bands
  *
  *          Must be called just after the reset so all registers are at their
@@ -128,8 +137,23 @@ int16_t sx127x_read_rssi(const sx127x_t *dev);
  *
  * @param[in] dev                      The sx127x device structure pointer
  */
-void sx1276_rx_chain_calibration(sx127x_t *dev);
-#endif
+void sx127x_rx_chain_calibration(sx127x_t *dev);
+
+/**
+ * @brief   Flush the FIFO.
+ *
+ * @param[in] dev                      The sx127x device descriptor
+ */
+void sx127x_flush_fifo(const sx127x_t *dev);
+
+/**
+ * @brief   check if the FIFO is empty.
+ *
+ * @param[in] dev                      The sx127x device descriptor
+ *
+ * @return TRUE/FALSE to indicate whether the FIFO is empty or not
+ */
+bool sx127x_is_fifo_empty(const sx127x_t *dev);
 
 #ifdef __cplusplus
 }

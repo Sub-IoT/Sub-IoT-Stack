@@ -39,6 +39,13 @@
 
 #define HW_RSSI_INVALID 0x7FFF
 
+typedef struct xcvr_handle xcvr_handle_t;
+
+/**
+ * @brief   Reference to the transceiver handle struct
+ */
+extern xcvr_handle_t xcvr;
+
 /**
  * @brief   used  to set or get the state of a radio device
  */

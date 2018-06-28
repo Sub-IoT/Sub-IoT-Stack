@@ -34,11 +34,12 @@ extern const netdev_driver_t sx127x_driver;
 /**
  * @brief   Received LoRa packet status information
  */
-typedef struct netdev_radio_lora_packet_info {
+typedef struct netdev_radio_packet_info {
     uint8_t rssi;           /**< RSSI of a received packet */
     uint8_t lqi;            /**< LQI of a received packet */
     int8_t snr;             /**< S/N ratio */
-} netdev_sx127x_lora_packet_info_t;
+    uint32_t time_on_air;   /**< Time on air of a received packet (ms) */
+} netdev_sx127x_packet_info_t;
 
 #ifdef __cplusplus
 }
