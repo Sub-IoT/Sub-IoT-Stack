@@ -80,7 +80,7 @@ typedef void (*fs_modified_file_callback_t)(uint8_t file_id);
 /**
  * \brief Callback function executed when D7AActP is triggered
  */
-typedef void (*fs_d7aactp_callback_t)(d7ap_master_session_config_t* session_config, uint8_t* alp_command, uint8_t alp_command_length);
+typedef void (*fs_d7aactp_callback_t)(d7ap_session_config_t* session_config, uint8_t* alp_command, uint8_t alp_command_length);
 
 /**
  * \brief Arguments used by the stack for filesystem initialization
@@ -96,8 +96,8 @@ typedef struct {
 
 void fs_init(fs_init_args_t* init_args);
 void fs_init_file(uint8_t file_id, const fs_file_header_t* file_header, const uint8_t* initial_data);
-void fs_init_file_with_D7AActP(uint8_t file_id, const d7ap_master_session_config_t* fifo_config, const uint8_t* alp_command, const uint8_t alp_command_len);
-void fs_init_file_with_d7asp_interface_config(uint8_t file_id, const d7ap_master_session_config_t* fifo_config);
+void fs_init_file_with_D7AActP(uint8_t file_id, const d7ap_session_config_t* fifo_config, const uint8_t* alp_command, const uint8_t alp_command_len);
+void fs_init_file_with_d7asp_interface_config(uint8_t file_id, const d7ap_session_config_t* fifo_config);
 alp_status_codes_t fs_read_file(uint8_t file_id, uint8_t offset, uint8_t* buffer, uint8_t length);
 alp_status_codes_t fs_write_file(uint8_t file_id, uint8_t offset, const uint8_t* buffer, uint8_t length);
 void fs_read_access_class(uint8_t access_class_index, dae_access_profile_t* access_class);

@@ -93,7 +93,7 @@ void init_user_files()
 
   // file 0x42: reserved file for interface configuration
   // TODO this can be removed when we support creating files post init
-  d7ap_master_session_config_t session_config;
+  d7ap_session_config_t session_config;
   fs_init_file_with_d7asp_interface_config(0x42, &session_config);
 }
 

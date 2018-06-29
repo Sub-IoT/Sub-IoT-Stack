@@ -168,7 +168,7 @@ typedef struct {
     d7ap_session_qos_t qos;
     uint8_t dormant_timeout;
     d7ap_addressee_t addressee;
-} d7ap_master_session_config_t;
+} d7ap_session_config_t;
 
 
 #endif // D7AP_H

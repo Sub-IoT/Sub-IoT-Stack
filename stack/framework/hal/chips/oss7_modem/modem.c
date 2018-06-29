@@ -226,7 +226,7 @@ bool modem_write_file(uint8_t file_id, uint32_t offset, uint32_t size, uint8_t* 
 }
 
 bool modem_send_unsolicited_response(uint8_t file_id, uint32_t offset, uint32_t length, uint8_t* data,
-                                     d7ap_master_session_config_t* d7_interface_config) {
+                                     d7ap_session_config_t* d7_interface_config) {
   if(!alloc_command())
     return false;
 
@@ -238,7 +238,7 @@ bool modem_send_unsolicited_response(uint8_t file_id, uint32_t offset, uint32_t 
 }
 
 bool modem_send_raw_unsolicited_response(uint8_t* alp_command, uint32_t length,
-                                         d7ap_master_session_config_t* d7_interface_config) {
+                                         d7ap_session_config_t* d7_interface_config) {
   if(!alloc_command())
     return false;
 

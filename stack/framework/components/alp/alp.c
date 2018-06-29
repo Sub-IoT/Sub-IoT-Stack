@@ -91,7 +91,7 @@ void alp_append_file_offset_operand(fifo_t* fifo, uint8_t file_id, uint32_t offs
   alp_append_length_operand(fifo, offset);
 }
 
-void alp_append_forward_action(fifo_t* fifo, d7ap_master_session_config_t* session_config) {
+void alp_append_forward_action(fifo_t* fifo, d7ap_session_config_t* session_config) {
   assert(session_config);
   assert(fifo_put_byte(fifo, ALP_OP_FORWARD) == SUCCESS);
   assert(fifo_put_byte(fifo, ALP_ITF_ID_D7ASP) == SUCCESS);

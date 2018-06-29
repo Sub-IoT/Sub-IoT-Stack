@@ -51,7 +51,7 @@
 #endif
 
 // Define the D7 interface configuration used for sending the ALP command on
-static d7ap_master_session_config_t session_config = {
+static d7ap_session_config_t session_config = {
     .qos = {
         .qos_resp_mode = SESSION_RESP_MODE_PREFERRED,
         .qos_retry_mode = SESSION_RETRY_MODE_NO,

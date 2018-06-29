@@ -47,7 +47,7 @@
 
 
 struct d7asp_master_session {
-    d7ap_master_session_config_t config;
+    d7ap_session_config_t config;
     d7asp_master_session_state_t state;
     uint8_t token;
     uint8_t progress_bitmap[REQUESTS_BITMAP_BYTE_COUNT];
@@ -360,7 +360,7 @@ void d7asp_stop()
     sched_cancel_task(&dormant_session_timeout);
 }
 
-d7asp_master_session_t* d7asp_master_session_create(d7ap_master_session_config_t* d7asp_master_session_config) {
+d7asp_master_session_t* d7asp_master_session_create(d7ap_session_config_t* d7asp_master_session_config) {
     // TODO for now we assume only one concurrent session, in the future we should dynamically allocate (or return from pool) a session
 
     if (current_master_session.state != D7ASP_MASTER_SESSION_IDLE)

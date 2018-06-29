@@ -67,7 +67,7 @@ static void execute_d7a_action_protocol(uint8_t command_file_id, uint8_t interfa
 
     uint8_t* data_ptr = (uint8_t*)(data + file_offsets[interface_file_id]);
 
-    d7ap_master_session_config_t fifo_config;
+    d7ap_session_config_t fifo_config;
     assert((*data_ptr) == ALP_ITF_ID_D7ASP); // only D7ASP supported for now
     data_ptr++;
     // TODO add length field according to spec
@@ -224,7 +224,7 @@ void fs_init_file(uint8_t file_id, const fs_file_header_t* file_header, const ui
         fs_write_file(file_id, 0, initial_data, file_header->length);
 }
 
-void fs_init_file_with_d7asp_interface_config(uint8_t file_id, const d7ap_master_session_config_t* fifo_config)
+void fs_init_file_with_d7asp_interface_config(uint8_t file_id, const d7ap_session_config_t* fifo_config)
 {
     // TODO check file not already defined
 
@@ -250,7 +250,7 @@ void fs_init_file_with_d7asp_interface_config(uint8_t file_id, const d7ap_master
     fs_init_file(file_id, &file_header, alp_command_buffer);
 }
 
-void fs_init_file_with_D7AActP(uint8_t file_id, const d7ap_master_session_config_t* fifo_config, const uint8_t* alp_command, const uint8_t alp_command_len)
+void fs_init_file_with_D7AActP(uint8_t file_id, const d7ap_session_config_t* fifo_config, const uint8_t* alp_command, const uint8_t alp_command_len)
 {
     uint8_t alp_command_buffer[40] = { 0 };
     uint8_t* ptr = alp_command_buffer;
