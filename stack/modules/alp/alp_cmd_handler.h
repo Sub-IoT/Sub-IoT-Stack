@@ -30,8 +30,7 @@
 
 #include "types.h"
 #include "fifo.h"
-#include "d7asp.h"
-
+#include "d7ap.h"
 
 #define ALP_CMD_HANDLER_ID 'D'
 

@@ -34,9 +34,9 @@
 
 
 
-#if defined(FRAMEWORK_LOG_ENABLED) && defined(MODULE_D7AP_SP_LOG_ENABLED)
+#if defined(FRAMEWORK_LOG_ENABLED) && defined(MODULE_D7AP_LOG_ENABLED)
 #include "log.h"
-#define DPRINT(...) log_print_stack_string(LOG_STACK_SESSION, __VA_ARGS__)
+#define DPRINT(...) log_print_stack_string(LOG_STACK_D7AP, __VA_ARGS__)
 #else
 #define DPRINT(...)
 #endif

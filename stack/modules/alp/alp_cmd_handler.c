@@ -30,12 +30,11 @@
 #include "shell.h"
 #include "console.h"
 #include "debug.h"
-#include "MODULE_D7AP_defs.h"
 #include "d7ap.h"
 #include "ng.h"
 #include "log.h"
 
-#if defined(FRAMEWORK_LOG_ENABLED) && defined(MODULE_D7AP_ALP_LOG_ENABLED)
+#if defined(MODULE_ALP_LOG_ENABLED)
 #define DPRINT(...) log_print_stack_string(LOG_STACK_ALP, __VA_ARGS__)
 #else
 #define DPRINT(...)

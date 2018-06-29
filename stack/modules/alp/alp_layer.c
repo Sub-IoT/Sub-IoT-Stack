@@ -2,6 +2,7 @@
  *
 
  *  \copyright (C) Copyright 2015 University of Antwerp and others (http://oss-7.cosys.be)
+ *  Copyright 2018 CORTUS S.A
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,25 +18,27 @@
  *
  *  \author glenn.ergeerts@uantwerpen.be
  *  \author maarten.weyn@uantwerpen.be
- *
+ *  \author philippe.nunes@cortus.com
  */
 
-#include "stdlib.h"
+#include <stdlib.h>
+#include <string.h>
 #include "debug.h"
 #include "ng.h"
 
-#include "alp_layer.h"
 #include "alp.h"
-#include "packet.h"
 #include "fs.h"
 #include "fifo.h"
 #include "log.h"
-#include "alp_cmd_handler.h"
 #include "shell.h"
-#include "MODULE_D7AP_defs.h"
+#include "timer.h"
+#include "MODULE_ALP_defs.h"
 #include "d7ap.h"
 
-#if defined(FRAMEWORK_LOG_ENABLED) && defined(MODULE_D7AP_ALP_LOG_ENABLED)
+#include "alp_layer.h"
+#include "alp_cmd_handler.h"
+
+#if defined(FRAMEWORK_LOG_ENABLED) && defined(MODULE_ALP_LOG_ENABLED)
 #define DPRINT(...) log_print_stack_string(LOG_STACK_ALP, __VA_ARGS__)
 #define DPRINT_DATA(p, n) log_print_data(p, n)
 #else
@@ -58,7 +61,7 @@ typedef struct {
   uint8_t alp_response[ALP_PAYLOAD_MAX_SIZE];
 } alp_command_t;
 
-static alp_command_t NGDEF(_commands)[MODULE_D7AP_ALP_MAX_ACTIVE_COMMAND_COUNT];
+static alp_command_t NGDEF(_commands)[MODULE_ALP_MAX_ACTIVE_COMMAND_COUNT];
 #define commands NG(_commands)
 
 static d7ap_session_result_t NGDEF(_current_d7asp_result);
@@ -87,14 +90,14 @@ static void free_command(alp_command_t* command) {
 
 static void init_commands()
 {
-  for(uint8_t i = 0; i < MODULE_D7AP_ALP_MAX_ACTIVE_COMMAND_COUNT; i++) {
+  for(uint8_t i = 0; i < MODULE_ALP_MAX_ACTIVE_COMMAND_COUNT; i++) {
     free_command(&commands[i]);
   }
 }
 
 static alp_command_t* alloc_command()
 {
-  for(uint8_t i = 0; i < MODULE_D7AP_ALP_MAX_ACTIVE_COMMAND_COUNT; i++) {
+  for(uint8_t i = 0; i < MODULE_ALP_MAX_ACTIVE_COMMAND_COUNT; i++) {
     if(commands[i].is_active == false) {
       commands[i].is_active = true;
       DPRINT("alloc cmd %p in slot %i", &commands[i], i);
@@ -102,12 +105,12 @@ static alp_command_t* alloc_command()
     }
   }
 
-  DPRINT("Could not alloc command, all %i reserved slots active", MODULE_D7AP_ALP_MAX_ACTIVE_COMMAND_COUNT);
+  DPRINT("Could not alloc command, all %i reserved slots active", MODULE_ALP_MAX_ACTIVE_COMMAND_COUNT);
   return NULL;
 }
 
 static alp_command_t* get_command_by_transid(uint16_t trans_id) {
-  for(uint8_t i = 0; i < MODULE_D7AP_ALP_MAX_ACTIVE_COMMAND_COUNT; i++) {
+  for(uint8_t i = 0; i < MODULE_ALP_MAX_ACTIVE_COMMAND_COUNT; i++) {
     if(commands[i].trans_id == trans_id && commands[i].is_active) {
         DPRINT("command trans Id %i in slot %i", trans_id, i);  
         return &(commands[i]);
@@ -147,7 +150,7 @@ void alp_layer_init(alp_init_args_t* alp_init_args, bool is_shell_enabled)
 #endif
   }
 
-#ifdef MODULE_D7AP_BROADCAST_VERSION_ON_BOOT_ENABLED
+#ifdef MODULE_ALP_BROADCAST_VERSION_ON_BOOT_ENABLED
       uint8_t read_firmware_version_alp_command[] = { 0x01, D7A_FILE_FIRMWARE_VERSION_FILE_ID, 0, D7A_FILE_FIRMWARE_VERSION_SIZE };
 
       // notify booted by broadcasting and retrying 3 times (for diagnostics ie to detect reboots)

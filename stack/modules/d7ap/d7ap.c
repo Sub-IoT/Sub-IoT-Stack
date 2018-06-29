@@ -1,6 +1,7 @@
 /*! \file d7ap.c
  *
  *  \copyright (C) Copyright 2018 University of Antwerp and others (http://oss-7.cosys.be)
+ *                 Copyright 2018 Cortus SA
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,9 +28,9 @@
 #include "dae.h"
 #include "MODULE_D7AP_defs.h"
 
-#if defined(FRAMEWORK_LOG_ENABLED) && defined(MODULE_D7AP_SP_LOG_ENABLED)
+#if defined(FRAMEWORK_LOG_ENABLED) && defined(MODULE_D7AP_LOG_ENABLED)
 #include "log.h"
-#define DPRINT(...) log_print_stack_string(LOG_STACK_SESSION, __VA_ARGS__)
+#define DPRINT(...) log_print_stack_string(LOG_STACK_D7AP, __VA_ARGS__)
 #else
 #define DPRINT(...)
 #endif

@@ -29,4 +29,4 @@
 #SET_PROPERTY(CACHE ${APP_PREFIX}_<param_name> PROPERTY STRINGS "value1;value2")
 #
 
-APP_BUILD(NAME ${APP_NAME} SOURCES app.c LIBS d7ap framework)
+APP_BUILD(NAME ${APP_NAME} SOURCES app.c LIBS d7ap alp framework)

@@ -23,7 +23,7 @@
 #include "ng.h"
 #include "log.h"
 
-#if defined(FRAMEWORK_LOG_ENABLED) && defined(MODULE_D7AP_MISC_LOG_ENABLED)
+#if defined(FRAMEWORK_LOG_ENABLED) && defined(MODULE_D7AP_PACKET_LOG_ENABLED)
 #define DPRINT(...) log_print_stack_string(LOG_STACK_FWK, __VA_ARGS__)
 #else
 #define DPRINT(...)
