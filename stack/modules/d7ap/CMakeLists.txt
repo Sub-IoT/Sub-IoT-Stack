@@ -88,6 +88,7 @@ ADD_LIBRARY(d7ap STATIC
     packet_queue.c
     packet.c
     dll.c
+    phy.c
 )
 
 GET_PROPERTY(__global_include_dirs GLOBAL PROPERTY GLOBAL_INCLUDE_DIRECTORIES)
