@@ -98,7 +98,7 @@ packet_t* packet_queue_find_packet(hw_radio_packet_t* hw_radio_packet)
     return NULL;
 }
 
-void packet_queue_mark_received(hw_radio_packet_t* hw_radio_packet)
+packet_t* packet_queue_mark_received(hw_radio_packet_t* hw_radio_packet)
 {
     assert(hw_radio_packet != NULL);
     for(uint8_t i = 0; i < MODULE_D7AP_PACKET_QUEUE_SIZE; i++)
@@ -108,7 +108,7 @@ void packet_queue_mark_received(hw_radio_packet_t* hw_radio_packet)
             assert(packet_queue_element_status[i] == PACKET_QUEUE_ELEMENT_STATUS_ALLOCATED);
             DPRINT("Packet queue mark received %p, slot %i", &(packet_queue[i].hw_radio_packet), i);
             packet_queue_element_status[i] = PACKET_QUEUE_ELEMENT_STATUS_RECEIVED;
-            return;
+            return &(packet_queue[i]);
         }
     }
 
