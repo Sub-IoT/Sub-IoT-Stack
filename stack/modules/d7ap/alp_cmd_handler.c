@@ -119,7 +119,7 @@ static uint8_t append_interface_status_action(d7ap_session_result_t* d7asp_resul
   uint8_t* ptr_start = ptr;
   (*ptr) = ALP_OP_RETURN_STATUS + (1 << 6); ptr++;
   (*ptr) = ALP_ITF_ID_D7ASP; ptr++;
-  (*ptr) = d7asp_result->channel.channel_header_raw; ptr++;
+  (*ptr) = d7asp_result->channel.channel_header; ptr++;
   uint16_t center_freq_index_be = __builtin_bswap16(d7asp_result->channel.center_freq_index);
   memcpy(ptr, &center_freq_index_be, 2); ptr += 2;
   memcpy(ptr, &(d7asp_result->rx_level), 1); ptr += 1;

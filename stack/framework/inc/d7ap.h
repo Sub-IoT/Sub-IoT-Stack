@@ -30,8 +30,6 @@
 #define D7AP_H
 
 #include "types.h"
-#include "phy.h"
-
 
 #define D7A_FILE_UID_FILE_ID 0x00
 #define D7A_FILE_UID_SIZE 8
@@ -106,6 +104,12 @@ typedef struct {
     };
 } d7ap_sp_state_t;
 
+typedef struct
+{
+    uint8_t channel_header;         /**< PHY layer channel header */
+    uint16_t center_freq_index;     /**< The center frequency index of the channel id */
+} d7ap_channel_t;
+
 typedef enum
 {
     AES_NONE = 0, /* No security */
@@ -120,7 +124,7 @@ typedef enum
 
 
 typedef struct __attribute__((__packed__)) {
-    channel_id_t channel;
+    d7ap_channel_t channel;
     uint8_t rx_level;
     uint8_t link_budget;
     uint8_t target_rx_level;

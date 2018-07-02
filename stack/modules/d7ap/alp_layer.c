@@ -433,7 +433,7 @@ static void add_interface_status_action(fifo_t* alp_response_fifo, d7ap_session_
 {
   fifo_put_byte(alp_response_fifo, ALP_OP_RETURN_STATUS + (1 << 6));
   fifo_put_byte(alp_response_fifo, ALP_ITF_ID_D7ASP);
-  fifo_put_byte(alp_response_fifo, d7asp_result->channel.channel_header_raw);
+  fifo_put_byte(alp_response_fifo, d7asp_result->channel.channel_header);
   uint16_t center_freq_index_be = __builtin_bswap16(d7asp_result->channel.center_freq_index);
   fifo_put(alp_response_fifo, (uint8_t*)&center_freq_index_be, 2);
   fifo_put_byte(alp_response_fifo, d7asp_result->rx_level);
