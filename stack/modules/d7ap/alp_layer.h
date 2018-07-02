@@ -52,7 +52,7 @@ typedef enum
 typedef void (*alp_command_completed_callback)(uint8_t tag_id, bool success);
 typedef void (*alp_command_result_callback)(d7ap_session_result_t result, uint8_t* payload, uint8_t payload_length);
 typedef void (*alp_received_unsolicited_data_callback)(d7ap_session_result_t d7asp_result, uint8_t *alp_command, uint8_t alp_command_size);
-typedef alp_status_codes_t (*alp_unhandled_read_action_callback)(alp_operand_file_data_request_t operand, uint8_t* alp_response);
+typedef alp_status_codes_t (*alp_unhandled_read_action_callback)(d7ap_session_result_t d7asp_result, alp_operand_file_data_request_t operand, uint8_t* alp_response);
 
 typedef struct {
     alp_command_completed_callback alp_command_completed_cb;
