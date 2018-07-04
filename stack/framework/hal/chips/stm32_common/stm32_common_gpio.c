@@ -61,7 +61,7 @@ do {                                                          \
 
 typedef struct
 {
-  gpio_inthandler_t callback;
+  gpio_isr_ctx_t isr_ctx;
   uint32_t interrupt_port;
 } gpio_interrupt_t;
 
@@ -75,7 +75,8 @@ __LINK_C void __gpio_init()
 {
   for(int i = 0; i < 16; i++)
   {
-    interrupts[i].callback = 0x0;
+    interrupts[i].isr_ctx.cb = 0x0;
+    interrupts[i].isr_ctx.arg = NULL;
     interrupts[i].interrupt_port = 0xFF; //signal that a port has not yet been chosen
   }
   for(int i = 0; i < 6; i++)
@@ -197,7 +198,7 @@ __LINK_C bool hw_gpio_get_in(pin_id_t pin_id)
 static void gpio_int_callback(uint8_t pin)
 {
   start_atomic();
-  assert(interrupts[pin].callback != 0x0);
+  assert(interrupts[pin].isr_ctx.cb != NULL);
   pin_id_t id = PIN(interrupts[pin].interrupt_port, pin);
   // when interrupting on both edges and when using low power mode where GPIO clocks are disabled we don't know which edge triggered the interrupt.
   // We could enable the clocks to read in the current GPIO level but most drivers and apps do not need to know this or can determine this based on state.
@@ -205,7 +206,7 @@ static void gpio_int_callback(uint8_t pin)
   // in this taks in thread context ensures that the clocks are active and the actual current state (instead of the last latched) is read.
   // For this reason we pass 0 to the event_mask param of the callback.
   // TODO when only one interrupt edge is configured we _can_ reliably determine the edge so this can be improved
-  interrupts[pin].callback(id, 0);
+  interrupts[pin].isr_ctx.cb(interrupts[pin].isr_ctx.arg);
   end_atomic();
 }
 
@@ -234,7 +235,7 @@ __LINK_C error_t hw_gpio_set_edge_interrupt(pin_id_t pin_id, uint8_t edge)
   return SUCCESS;
 }
 
-__LINK_C error_t hw_gpio_configure_interrupt(pin_id_t pin_id, gpio_inthandler_t callback, uint8_t event_mask)
+__LINK_C error_t hw_gpio_configure_interrupt(pin_id_t pin_id, uint8_t event_mask, gpio_cb_t callback, void *arg)
 {
   if (interrupts[GPIO_PIN(pin_id)].interrupt_port != 0xFF)
   {
@@ -255,7 +256,8 @@ __LINK_C error_t hw_gpio_configure_interrupt(pin_id_t pin_id, gpio_inthandler_t 
     err = EBUSY;
   else
   {*/
-    interrupts[GPIO_PIN(pin_id)].callback = callback;
+    interrupts[GPIO_PIN(pin_id)].isr_ctx.cb = callback;
+    interrupts[GPIO_PIN(pin_id)].isr_ctx.arg = arg;
 
     __HAL_RCC_SYSCFG_CLK_ENABLE();
 
