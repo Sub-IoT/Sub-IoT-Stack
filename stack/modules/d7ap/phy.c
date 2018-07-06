@@ -221,11 +221,19 @@ static void packet_received(hw_radio_packet_t* hw_radio_packet)
         fec_decode_packet(hw_radio_packet->data, hw_radio_packet->length, hw_radio_packet->length);
 #endif
 
+    if (current_syncword_class == PHY_SYNCWORD_CLASS0)
+    {
+        packet->type = BACKGROUND_ADV;
+        if (current_channel_id.channel_header.ch_coding == PHY_CODING_FEC_PN9)
+            hw_radio_packet->length = fec_calculated_decoded_length(BACKGROUND_FRAME_LENGTH);
+        else
+            hw_radio_packet->length = BACKGROUND_FRAME_LENGTH;
+    }
+    else
+        hw_radio_packet->length = hw_radio_packet->data[0] + 1;
+
     packet->phy_config.rx.syncword_class = current_syncword_class;
     memcpy(&(packet->phy_config.rx.channel_id), &current_channel_id, sizeof(channel_id_t));
-
-    if (current_syncword_class == PHY_SYNCWORD_CLASS0)
-        packet->type = BACKGROUND_ADV;
 
     if (state == STATE_RX)
     {
@@ -249,9 +257,6 @@ static void packet_header_received(uint8_t *data, uint8_t len)
 #ifndef HAL_RADIO_USE_HW_DC_FREE
     pn9_encode(data, len);
 #endif
-
-    DPRINT("Packet Header received after PN9 decoding %i\n", len);
-    DPRINT_DATA(data, len);
 
     if (current_channel_id.channel_header.ch_coding == PHY_CODING_FEC_PN9)
     {
@@ -471,12 +476,12 @@ error_t phy_stop_rx(){
 
 static uint8_t encode_packet(hw_radio_packet_t* packet, uint8_t* encoded_packet)
 {
-    uint8_t encoded_len = packet->length + 1;
-    memcpy(encoded_packet, packet->data, packet->length + 1);
+    uint8_t encoded_len = packet->length;
+    memcpy(encoded_packet, packet->data, packet->length);
 
 #ifndef HAL_RADIO_USE_HW_FEC
     if (current_channel_id.channel_header.ch_coding == PHY_CODING_FEC_PN9)
-        encoded_len = fec_encode(encoded_packet, packet->length + 1);
+        encoded_len = fec_encode(encoded_packet, packet->length);
 #endif
 
 #ifndef HAL_RADIO_USE_HW_DC_FREE
@@ -506,11 +511,14 @@ error_t phy_send_packet(hw_radio_packet_t* packet, phy_tx_config_t* config)
 
     state = STATE_TX;
 
+    DPRINT("BEFORE ENCODING TX len=%i", packet->length);
+    DPRINT_DATA(packet->data, packet->length);
+
     // Encode the packet if not supported by xcvr
     uint8_t encoded_packet[PACKET_MAX_SIZE + 1];
     uint8_t encoded_length = encode_packet(packet, encoded_packet);
 
-    DPRINT("TX len=%i", encoded_length);
+    DPRINT("AFTER ENCODING TX len=%i", encoded_length);
     DPRINT_DATA(encoded_packet, encoded_length);
 
     DEBUG_RX_END();
@@ -614,7 +622,7 @@ error_t phy_send_packet_with_advertising(hw_radio_packet_t* packet, phy_tx_confi
 
     // prepare the foreground frame, so we can transmit this immediately
     DPRINT("Original payload with ETA %i", eta);
-    DPRINT_DATA(packet->data, packet->length + 1);
+    DPRINT_DATA(packet->data, packet->length);
 
     fg_frame.bg_adv = true;
     memset(fg_frame.encoded_packet, 0xAA, preamble_len);
