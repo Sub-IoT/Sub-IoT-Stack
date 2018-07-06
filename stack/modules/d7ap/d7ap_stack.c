@@ -253,7 +253,7 @@ error_t d7ap_stack_send(uint8_t client_id, d7ap_session_config_t* config, uint8_
 
     switch_state(D7AP_STACK_STATE_TRANSMITTING);
 
-    session->trans_id[session->request_nb] = ((uint16_t)session->token << 8) | (request_id && 0x00FF);
+    session->trans_id[session->request_nb] = ((uint16_t)session->token << 8) | (request_id & 0x00FF);
 
     if (trans_id != NULL)
         *trans_id = session->trans_id[session->request_nb];
@@ -295,7 +295,7 @@ void d7ap_stack_process_received_response(uint8_t *payload, uint8_t length, d7ap
 
     assert(session != NULL);
 
-    uint16_t trans_id = ((uint16_t)result.fifo_token << 8) | (result.seqnr && 0x00FF);
+    uint16_t trans_id = ((uint16_t)result.fifo_token << 8) | (result.seqnr & 0x00FF);
     uint8_t i = 0;
 
     for(i = 0; i < session->request_nb; i++)
