@@ -89,6 +89,12 @@ __LINK_C error_t timer_post_task_prio(task_t task, timer_tick_t fire_time, uint8
 
     DPRINT("fire_time  <%lu>" , fire_time);
 
+    if (fire_time == 0)
+    {
+        DPRINT("No delay, so the timer event callback is scheduled immediately");
+        return (sched_post_task_prio(task, priority, arg));
+    }
+
     start_atomic();
     uint32_t empty_index = FRAMEWORK_TIMER_STACK_SIZE;
     for (uint32_t i = 0; i < FRAMEWORK_TIMER_STACK_SIZE; i++)
