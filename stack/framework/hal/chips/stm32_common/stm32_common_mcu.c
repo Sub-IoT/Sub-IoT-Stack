@@ -82,6 +82,15 @@ static void init_clock(void)
   RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV1;
   assert(HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_1) == HAL_OK);
 #endif
+
+#if defined(STM32L0)
+  // set LPTIM1 clock source to LSE
+  RCC_PeriphCLKInitTypeDef RCC_PeriphClkInit;
+  RCC_PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_LPTIM1;
+  RCC_PeriphClkInit.LptimClockSelection = RCC_LPTIM1CLKSOURCE_LSE;
+  assert(HAL_RCCEx_PeriphCLKConfig(&RCC_PeriphClkInit) == HAL_OK);
+#endif
+
 }
 
 void __stm32_common_mcu_init()

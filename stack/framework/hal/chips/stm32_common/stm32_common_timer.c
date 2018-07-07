@@ -33,9 +33,9 @@
 
 // TODO define timers in ports.h
 #if defined(STM32L0)
-  #define TIMER_INSTANCE TIM22
-  #define TIMER_IRQ TIM22_IRQn
-  #define TIMER_ISR TIM22_IRQHandler
+  #define TIMER_INSTANCE LPTIM1
+  #define TIMER_IRQ LPTIM1_IRQn
+  #define TIMER_ISR LPTIM1_IRQHandler
 #elif defined(STM32L1)
   #define TIMER_INSTANCE TIM10
   #define TIMER_IRQ TIM10_IRQn
@@ -44,20 +44,18 @@
   #error "Family not supported"
 #endif
 
-// TODO validate
+static timer_callback_t compare_f = 0x0;
+static timer_callback_t overflow_f = 0x0;
+static bool timer_inited = false;
+#if defined(STM32L0)
+  static LPTIM_HandleTypeDef timer;
+#elif defined(STM32L1)
+  static TIM_HandleTypeDef timer;
+#endif
 
- static timer_callback_t compare_f = 0x0;
- static timer_callback_t overflow_f = 0x0;
- static bool timer_inited = false;
- static TIM_HandleTypeDef timer;
-
-
-// /*****************************************************************************
-//  * @brief Sets up the TIM22 to count at 1024 Hz, driven by the 32.768 kHz LSE
-//  *        The counter should not be cleared on a compare match and keep running.
-//  *        Interrupts should be cleared and enabled.
-//  *        The counter should run.
-//  *****************************************************************************/
+// Sets up a timer to count at 1024 Hz, driven by the 32.768 kHz LSE
+// The timer is running continuously. On STM32L0 the LPTIM1 is used,
+// on STM32L1 we use TIM10 a general purpose
 error_t hw_timer_init(hwtimer_id_t timer_id, uint8_t frequency, timer_callback_t compare_callback, timer_callback_t overflow_callback)
 {
   // TODO using only one timer for now
@@ -77,11 +75,27 @@ error_t hw_timer_init(hwtimer_id_t timer_id, uint8_t frequency, timer_callback_t
 	timer_inited = true;
 
 #if defined(STM32L0)
-  __HAL_RCC_TIM22_CLK_ENABLE();
+  __HAL_RCC_LPTIM1_CLK_ENABLE();
+  __HAL_RCC_LPTIM1_FORCE_RESET();
+  __HAL_RCC_LPTIM1_RELEASE_RESET();
+
+  timer.Instance = TIMER_INSTANCE;
+  timer.Init.Clock.Source = LPTIM_CLOCKSOURCE_APBCLOCK_LPOSC;
+  timer.Init.Clock.Prescaler = LPTIM_PRESCALER_DIV32; // TODO
+  timer.Init.Trigger.Source = LPTIM_TRIGSOURCE_SOFTWARE;
+  timer.Init.CounterSource = LPTIM_COUNTERSOURCE_INTERNAL;
+  timer.Init.UpdateMode = LPTIM_UPDATE_IMMEDIATE;
+  assert(HAL_LPTIM_Init(&timer) == HAL_OK);
+
+  __HAL_LPTIM_ENABLE(&timer);
+  __HAL_LPTIM_AUTORELOAD_SET(&timer, 0xFFFF);
+  __HAL_LPTIM_START_CONTINUOUS(&timer);
+
+  __HAL_LPTIM_ENABLE_IT(&timer, LPTIM_IT_ARRM);
+  __HAL_LPTIM_ENABLE_IT(&timer, LPTIM_IT_CMPM);
+  //  __HAL_LPTIM_ENABLE_IT(&timer, LPTIM_IT_CMPOK);
 #elif defined(STM32L1)
   __HAL_RCC_TIM10_CLK_ENABLE();
-#endif
-
   timer.Instance = TIMER_INSTANCE;
   timer.Init.Prescaler = 31;
   timer.Init.CounterMode = TIM_COUNTERMODE_UP;
@@ -98,18 +112,15 @@ error_t hw_timer_init(hwtimer_id_t timer_id, uint8_t frequency, timer_callback_t
   master_config.MasterOutputTrigger = TIM_TRGO_RESET;
   master_config.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
   assert(HAL_TIMEx_MasterConfigSynchronization(&timer, &master_config) == HAL_OK);
-#if defined(STM32L0)
-  assert(HAL_TIMEx_RemapConfig(&timer, TIM22_ETR_LSE) == HAL_OK);
-#elif defined(STM32L1)
   assert(HAL_TIMEx_RemapConfig(&timer, TIM_TIM10_ETR_LSE) == HAL_OK);
-#endif
-
   __HAL_TIM_ENABLE_IT(&timer, TIM_IT_UPDATE);
   __HAL_TIM_ENABLE(&timer);
 
   // make sure we only get an update interrupt on overflow, and not on for instance reset of CC
   __HAL_TIM_URS_ENABLE(&timer);
   __HAL_TIM_CLEAR_FLAG(&timer, TIM_SR_UIF);
+#endif
+
   HAL_NVIC_SetPriority(TIMER_IRQ, 0, 0);
   HAL_NVIC_ClearPendingIRQ(TIMER_IRQ);
   HAL_NVIC_EnableIRQ(TIMER_IRQ);
@@ -123,7 +134,15 @@ hwtimer_tick_t hw_timer_getvalue(hwtimer_id_t timer_id)
  		return 0;
  	else
  	{
+#if defined(STM32L0)
+    // only valid value until 2 consecutive reads return the same value, see reference manuel
+    uint32_t value = LPTIM1->CNT;
+    while(value != LPTIM1->CNT) {
+      value = LPTIM1->CNT;
+    }
+#elif defined(STM32L1)
     uint32_t value =__HAL_TIM_GET_COUNTER(&timer);
+#endif
  		return value;
  	}
 }
@@ -137,12 +156,21 @@ error_t hw_timer_schedule(hwtimer_id_t timer_id, hwtimer_tick_t tick )
  		return EOFF;
 
  	start_atomic();
+#if defined(STM32L0)
+//    __HAL_LPTIM_DISABLE_IT(&timer, LPTIM_IT_CMPM);
+    __HAL_LPTIM_CLEAR_FLAG(&timer, LPTIM_ICR_CMPOKCF);
+    __HAL_LPTIM_CLEAR_FLAG(&timer, LPTIM_FLAG_CMPM);
+    __HAL_LPTIM_COMPARE_SET(&timer, tick - 1); // TODO
+    __HAL_LPTIM_ENABLE_IT(&timer, LPTIM_IT_CMPM);
+    while (__HAL_LPTIM_GET_FLAG(&timer, LPTIM_FLAG_CMPOK) == RESET) {} // TODO block here?
+#elif defined(STM32L1)
     __HAL_TIM_DISABLE_IT(&timer, TIM_IT_CC1);
     __HAL_TIM_SET_COMPARE(&timer, TIM_CHANNEL_1, tick);
     __HAL_TIM_ENABLE_IT(&timer, TIM_IT_UPDATE);
     __HAL_TIM_ENABLE_IT(&timer, TIM_IT_CC1);
+#endif
     HAL_NVIC_ClearPendingIRQ(TIMER_IRQ);
- 	end_atomic();
+  end_atomic();
 }
 
 error_t hw_timer_cancel(hwtimer_id_t timer_id)
@@ -153,8 +181,13 @@ error_t hw_timer_cancel(hwtimer_id_t timer_id)
  		return EOFF;
 
  	start_atomic();
+#if defined(STM32L0)
+    __HAL_LPTIM_DISABLE_IT(&timer, LPTIM_IT_CMPM);
+    __HAL_LPTIM_CLEAR_FLAG(&timer, LPTIM_IT_CMPM);
+#elif defined(STM32L1)
     __HAL_TIM_DISABLE_IT(&timer, TIM_IT_CC1);
     __HAL_TIM_CLEAR_FLAG(&timer, TIM_IT_CC1);
+#endif
     HAL_NVIC_ClearPendingIRQ(TIMER_IRQ);
  	end_atomic();
 }
@@ -167,10 +200,17 @@ error_t hw_timer_counter_reset(hwtimer_id_t timer_id)
  		return EOFF;
 
  	start_atomic();
+#if defined(STM32L0)
+    __HAL_LPTIM_DISABLE_IT(&timer, LPTIM_IT_CMPM | LPTIM_IT_ARRM);
+    __HAL_LPTIM_CLEAR_FLAG(&timer, LPTIM_FLAG_CMPM | LPTIM_FLAG_ARRM);
+    timer.Instance->CNT = 0;
+    __HAL_LPTIM_ENABLE_IT(&timer, LPTIM_IT_CMPM | LPTIM_IT_ARRM);
+#elif defined(STM32L1)
     __HAL_TIM_DISABLE_IT(&timer, TIM_IT_CC1 | TIM_IT_UPDATE);
     __HAL_TIM_CLEAR_FLAG(&timer, TIM_IT_CC1 | TIM_IT_UPDATE);
     __HAL_TIM_SET_COUNTER(&timer, 10); // TODO 10??
-    __HAL_TIM_ENABLE_IT(&timer, TIM_IT_UPDATE);
+    __HAL_TIM_ENABLE_IT(&timer, TIM_IT_CC1 | TIM_IT_UPDATE);
+#endif
  	end_atomic();
 
   return SUCCESS;
@@ -182,7 +222,11 @@ bool hw_timer_is_overflow_pending(hwtimer_id_t timer_id)
     return false;
 
   start_atomic();
-    bool is_pending = __HAL_TIM_GET_FLAG(&timer, TIM_IT_UPDATE);
+#if defined(STM32L0)
+  bool is_pending = __HAL_LPTIM_GET_FLAG(&timer, LPTIM_FLAG_ARRM);
+#elif defined(STM32L1)
+    bool is_pending = __HAL_TIM_GET_FLAG(&timer, TIM_FLAG_UPDATE);
+#endif
   end_atomic();
 
   return is_pending;
@@ -194,7 +238,11 @@ bool hw_timer_is_interrupt_pending(hwtimer_id_t timer_id)
     return false;
 
   start_atomic();
-    bool is_pending = __HAL_TIM_GET_FLAG(&timer, TIM_IT_CC1);
+#if defined(STM32L0)
+    bool is_pending = __HAL_LPTIM_GET_FLAG(&timer, LPTIM_FLAG_CMPM);
+#elif defined(STM32L1)
+    bool is_pending = __HAL_TIM_GET_FLAG(&timer, TIM_FLAG_CC1);
+#endif
   end_atomic();
 
   return is_pending;
@@ -203,6 +251,31 @@ bool hw_timer_is_interrupt_pending(hwtimer_id_t timer_id)
 void TIMER_ISR(void)
 {
   // We are not using HAL_TIM_IRQHandler() here to reduce interrupt latency
+#if defined(STM32L0)
+  // first check for overflow ...
+  if(__HAL_LPTIM_GET_FLAG(&timer, LPTIM_FLAG_ARRM) != RESET)
+  {
+    if(__HAL_LPTIM_GET_IT_SOURCE(&timer, LPTIM_FLAG_ARRM) !=RESET)
+    {
+      __HAL_LPTIM_CLEAR_FLAG(&timer, LPTIM_IT_ARRM);
+      if(overflow_f != 0x0)
+        overflow_f();
+    }
+  }
+
+  // ... and then for compare value
+  if(__HAL_LPTIM_GET_FLAG(&timer, LPTIM_IT_CMPM) != RESET)
+  {
+    if(__HAL_LPTIM_GET_IT_SOURCE(&timer, LPTIM_IT_CMPM) !=RESET)
+    {
+      //__HAL_LPTIM_DISABLE_IT(&timer, LPTIM_IT_CMPM);
+      __HAL_LPTIM_CLEAR_FLAG(&timer, LPTIM_IT_CMPM);
+      if(compare_f != 0x0)
+          compare_f();
+    }
+  }
+
+#elif defined(STM32L1)
   // first check for overflow ...
   if(__HAL_TIM_GET_FLAG(&timer, TIM_FLAG_UPDATE) != RESET)
   {
@@ -225,5 +298,6 @@ void TIMER_ISR(void)
           compare_f();
     }
   }
+#endif
 }
 

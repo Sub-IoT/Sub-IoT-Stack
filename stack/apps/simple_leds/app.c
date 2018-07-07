@@ -47,9 +47,9 @@ void led_off_callback()
 
 void led_on_callback()
 {
-	led_on(0);
-	timer_post_task_delay(&led_on_callback, TIMER_TICKS_PER_SEC);
-	timer_post_task_delay(&led_off_callback, TIMER_TICKS_PER_SEC*0.050);
+  led_toggle(0);
+  timer_post_task_delay(&led_on_callback, TIMER_TICKS_PER_SEC * 70);
+  //timer_post_task_delay(&led_off_callback, TIMER_TICKS_PER_SEC*0.050);
 	log_print_string("Toggled on %d", 0);
 	console_print("Toggle led 0\r\n");
 
@@ -80,7 +80,7 @@ void bootstrap()
     sched_register_task(&timer1_callback);
 
     timer_post_task_delay(&led_on_callback, TIMER_TICKS_PER_SEC);
-    timer_post_task_delay(&timer1_callback, 0x0000FFFF + (uint32_t)100);
+    //timer_post_task_delay(&timer1_callback, 0x0000FFFF + (uint32_t)100);
 
 #if PLATFORM_NUM_BUTTONS > 0
     int i= 0;
