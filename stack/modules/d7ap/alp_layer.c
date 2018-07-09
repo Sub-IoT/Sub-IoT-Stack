@@ -191,7 +191,7 @@ static alp_status_codes_t process_op_read_file_data(alp_command_t* command) {
   if(alp_status == ALP_STATUS_FILE_ID_NOT_EXISTS) {
     // give the application layer the chance to fullfill this request ...
     if(init_args != NULL && init_args->alp_unhandled_read_action_cb != NULL)
-      alp_status = init_args->alp_unhandled_read_action_cb(operand, data);
+      alp_status = init_args->alp_unhandled_read_action_cb(current_d7asp_result, operand, data);
   }
 
   if(alp_status == ALP_STATUS_OK) {

@@ -29,7 +29,8 @@
 
 void hw_enter_lowpower_mode(uint8_t mode)
 {
-
+  __disable_irq();
+  __DSB();
   switch (mode)
   {
     case 0:
@@ -42,6 +43,8 @@ void hw_enter_lowpower_mode(uint8_t mode)
       HAL_PWR_EnterSTOPMode(PWR_MAINREGULATOR_ON, PWR_SLEEPENTRY_WFI);
       break;
   }
+
+  __enable_irq();
 }
 
 uint64_t hw_get_unique_id()
@@ -94,3 +97,4 @@ void HardFault_Handler()
       "str_hardfault: .asciz \"HardFault\"\n\t"
   );
 }
+
