@@ -49,6 +49,7 @@ static timer_callback_t overflow_f = 0x0;
 static bool timer_inited = false;
 #if defined(STM32L0)
   static LPTIM_HandleTypeDef timer;
+  static bool cmp_reg_write_pending = false;
 #elif defined(STM32L1)
   static TIM_HandleTypeDef timer;
 #endif
@@ -93,7 +94,7 @@ error_t hw_timer_init(hwtimer_id_t timer_id, uint8_t frequency, timer_callback_t
 
   __HAL_LPTIM_ENABLE_IT(&timer, LPTIM_IT_ARRM);
   __HAL_LPTIM_ENABLE_IT(&timer, LPTIM_IT_CMPM);
-  //  __HAL_LPTIM_ENABLE_IT(&timer, LPTIM_IT_CMPOK);
+  __HAL_LPTIM_ENABLE_IT(&timer, LPTIM_IT_CMPOK);
 #elif defined(STM32L1)
   __HAL_RCC_TIM10_CLK_ENABLE();
   timer.Instance = TIMER_INSTANCE;
@@ -157,12 +158,11 @@ error_t hw_timer_schedule(hwtimer_id_t timer_id, hwtimer_tick_t tick )
 
  	start_atomic();
 #if defined(STM32L0)
-//    __HAL_LPTIM_DISABLE_IT(&timer, LPTIM_IT_CMPM);
-    __HAL_LPTIM_CLEAR_FLAG(&timer, LPTIM_ICR_CMPOKCF);
+    while(cmp_reg_write_pending); // prev write operation is pending, writing again before may give unpredicatable results (see datasheet), so block here
+    cmp_reg_write_pending = true; // cleared in ISR
     __HAL_LPTIM_CLEAR_FLAG(&timer, LPTIM_FLAG_CMPM);
-    __HAL_LPTIM_COMPARE_SET(&timer, tick - 1); // TODO
+    __HAL_LPTIM_COMPARE_SET(&timer, tick - 1);
     __HAL_LPTIM_ENABLE_IT(&timer, LPTIM_IT_CMPM);
-    while (__HAL_LPTIM_GET_FLAG(&timer, LPTIM_FLAG_CMPOK) == RESET) {} // TODO block here?
 #elif defined(STM32L1)
     __HAL_TIM_DISABLE_IT(&timer, TIM_IT_CC1);
     __HAL_TIM_SET_COMPARE(&timer, TIM_CHANNEL_1, tick);
@@ -252,6 +252,13 @@ void TIMER_ISR(void)
 {
   // We are not using HAL_TIM_IRQHandler() here to reduce interrupt latency
 #if defined(STM32L0)
+  if(__HAL_LPTIM_GET_FLAG(&timer, LPTIM_FLAG_CMPOK) != RESET)
+  {
+     // compare register write done, new writes are allowed now
+     __HAL_LPTIM_CLEAR_FLAG(&timer, LPTIM_FLAG_CMPOK);
+     cmp_reg_write_pending = false;
+  }
+
   // first check for overflow ...
   if(__HAL_LPTIM_GET_FLAG(&timer, LPTIM_FLAG_ARRM) != RESET)
   {
