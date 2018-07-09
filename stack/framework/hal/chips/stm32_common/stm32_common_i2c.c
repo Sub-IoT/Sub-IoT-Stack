@@ -105,27 +105,27 @@ static inline uint32_t get_i2c_timing(int hz)
 
     switch(hz)
     {
-    case 100000:
+      case 100000:
         timing_struct = I2C_TIMINGR_LUT.i2c_standard_speed;
         break;
-    case 400000:
+      case 400000:
         timing_struct = I2C_TIMINGR_LUT.i2c_high_speed;
         break;
-    default:
+      default:
         assert(false);
     }
     switch(pclk1/1000000)
     {
-    case 2:
+      case 2:
         tim = timing_struct.clk_2M;
         break;
-    case 4:
+      case 4:
         tim =timing_struct.clk_4M;
         break;
-    case 32:
+      case 32:
         tim = timing_struct.clk_32M;
         break;
-    default:
+      default:
         assert(false);
     }
 
