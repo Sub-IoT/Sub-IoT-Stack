@@ -46,6 +46,11 @@ enum
     HWTIMER_TICKS_32K = 32768,
 };
 
+typedef struct {
+    uint8_t min_delay_ticks;
+} hwtimer_info_t;
+
+
 /*! \brief Timer callback definition
  * 
  */
@@ -79,6 +84,13 @@ typedef uint16_t hwtimer_tick_t;
  *				EINVAL if the requested frequency is not supported by the timer
  */
 __LINK_C error_t hw_timer_init(hwtimer_id_t timer_id, uint8_t frequency, timer_callback_t compare_callback, timer_callback_t overflow_callback);
+
+
+/*! \brief Get the timer info
+ *  \return pointer to hwtimer_info_t or NULL when invalid
+ */
+__LINK_C const hwtimer_info_t* hw_timer_get_info(hwtimer_id_t timer_id);
+
 
 /*! \brief Get the current timer value
  * 

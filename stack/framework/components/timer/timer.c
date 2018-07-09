@@ -50,6 +50,7 @@ static timer_event NGDEF(timers)[FRAMEWORK_TIMER_STACK_SIZE];
 static volatile timer_tick_t NGDEF(next_event);
 static volatile bool NGDEF(hw_event_scheduled);
 static volatile timer_tick_t NGDEF(timer_offset);
+static const hwtimer_info_t* timer_info;
 enum
 {
     NO_EVENT = FRAMEWORK_TIMER_STACK_SIZE,
@@ -70,6 +71,7 @@ __LINK_C void timer_init()
     error_t err = hw_timer_init(HW_TIMER_ID, TIMER_RESOLUTION, &timer_fired, &timer_overflow);
     assert(err == SUCCESS);
 
+    timer_info = hw_timer_get_info(HW_TIMER_ID);
 }
 
 error_t timer_init_event(timer_event* event, task_t callback)
@@ -259,14 +261,15 @@ static void configure_next_event()
 		if(NG(next_event) != NO_EVENT)
 		{
 			next_fire_time = NG(timers)[NG(next_event)].next_event;
-			if ( (((int32_t)next_fire_time) - ((int32_t)timer_get_counter_value())) <= 0 )
+      if ( (((int32_t)next_fire_time) - ((int32_t)timer_get_counter_value()) - timer_info->min_delay_ticks) <= 0 )
 			{
-				sched_post_task_prio(NG(timers)[NG(next_event)].f, NG(timers)[NG(next_event)].priority, NG(timers)[NG(next_event)].arg);
+        DPRINT("will be late, sched immediately");
+        sched_post_task_prio(NG(timers)[NG(next_event)].f, NG(timers)[NG(next_event)].priority, NG(timers)[NG(next_event)].arg);
 				NG(timers)[NG(next_event)].f = 0x0;
 			}
 		}
     }
-    while(NG(next_event) != NO_EVENT && ( (((int32_t)next_fire_time) - ((int32_t)timer_get_counter_value())) <= 0  ) );
+    while(NG(next_event) != NO_EVENT && ( (((int32_t)next_fire_time) - ((int32_t)timer_get_counter_value())  - timer_info->min_delay_ticks) <= 0  ) );
 
     //at this point NG(next_event) is eiter equal to NO_EVENT (no tasks left)
     //or we have the next event we can schedule
@@ -282,7 +285,7 @@ static void configure_next_event()
 		//latest overflow time, to counteract any delays in updating counter_offset
 		//(eg when we're scheduling an event from an interrupt and thereby delaying
 		//the updating of counter_offset)
-    	timer_tick_t fire_delay = (next_fire_time - timer_get_counter_value());
+      timer_tick_t fire_delay = (next_fire_time - timer_get_counter_value());
 		//if the timer should fire in less ticks than supported by the HW timer --> schedule it
 		//(otherwise it is scheduled from timer_overflow when needed)
 		if(fire_delay < COUNTER_OVERFLOW_INCREASE)
@@ -292,7 +295,7 @@ static void configure_next_event()
 #ifndef NDEBUG	    
 			//check that we didn't try to schedule a timer in the past
 			//normally this shouldn't happen but it IS theoretically possible...
-			fire_delay = (next_fire_time - timer_get_counter_value());
+      fire_delay = (next_fire_time - timer_get_counter_value() - timer_info->min_delay_ticks);
 			//fire_delay should be in [0,COUNTER_OVERFLOW_INCREASE]. if this is not the case, it is because timer_get_counter() is
 			//now larger than next_fire_event, which means we 'missed' the event
 			assert(((int32_t)fire_delay) > 0);

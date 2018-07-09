@@ -129,6 +129,22 @@ error_t hw_timer_init(hwtimer_id_t timer_id, uint8_t frequency, timer_callback_t
   return SUCCESS;
 }
 
+const hwtimer_info_t* hw_timer_get_info(hwtimer_id_t timer_id)
+{
+    if(timer_id >= HWTIMER_NUM)
+      return NULL;
+
+    static const hwtimer_info_t timer_info = {
+#if defined(STM32L0)
+      .min_delay_ticks = 5, // for LPTIMER we need a minimal delay
+#elif defined(STM32L1)
+      .min_delay_ticks = 0,
+#endif
+    };
+
+    return &timer_info;
+}
+
 hwtimer_tick_t hw_timer_getvalue(hwtimer_id_t timer_id)
 {
  	if(timer_id >= HWTIMER_NUM || (!timer_inited))
@@ -171,6 +187,8 @@ error_t hw_timer_schedule(hwtimer_id_t timer_id, hwtimer_tick_t tick )
 #endif
     HAL_NVIC_ClearPendingIRQ(TIMER_IRQ);
   end_atomic();
+
+  return SUCCESS;
 }
 
 error_t hw_timer_cancel(hwtimer_id_t timer_id)
@@ -190,6 +208,8 @@ error_t hw_timer_cancel(hwtimer_id_t timer_id)
 #endif
     HAL_NVIC_ClearPendingIRQ(TIMER_IRQ);
  	end_atomic();
+
+  return SUCCESS;
 }
 
 error_t hw_timer_counter_reset(hwtimer_id_t timer_id)
