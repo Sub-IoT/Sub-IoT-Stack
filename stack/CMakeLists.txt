@@ -68,7 +68,8 @@ ELSE()
     include ("cmake/platform_default_macros.cmake")
 ENDIF()
 
-SET(MODULE_D7AP true CACHE BOOLEAN "") # only D7AP module is enabled by default
+SET(MODULE_D7AP true CACHE BOOLEAN "") # D7AP module enabled by default
+SET(MODULE_ALP true CACHE BOOLEAN "")  # ALP module enabled by default
 
 #Then load the modules
 ADD_SUBDIRECTORY("modules")
