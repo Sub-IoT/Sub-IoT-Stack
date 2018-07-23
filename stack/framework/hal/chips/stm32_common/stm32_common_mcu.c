@@ -37,10 +37,6 @@ static void init_clock(void)
 #ifdef PLATFORM_LOW_CLOCK_SPEED
   // using 4MHz clock based on HSI, use 32k LSE for timer
   __HAL_PWR_VOLTAGESCALING_CONFIG(PWR_REGULATOR_VOLTAGE_SCALE2);
-  HAL_PWR_EnableBkUpAccess();
-  __HAL_RCC_LSE_CONFIG(RCC_LSE_OFF);
-  while (__HAL_RCC_GET_FLAG(RCC_FLAG_LSERDY) != RESET) {};
-  __HAL_RCC_LSEDRIVE_CONFIG(RCC_LSEDRIVE_LOW);
 
   RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSI;
   RCC_OscInitStruct.HSIState = RCC_HSI_ON;
@@ -48,9 +44,6 @@ static void init_clock(void)
   RCC_OscInitStruct.LSEState            = RCC_LSE_ON;
   RCC_OscInitStruct.PLL.PLLState = RCC_PLL_NONE;
   assert(HAL_RCC_OscConfig(&RCC_OscInitStruct) == HAL_OK);
-  __HAL_RCC_LSE_CONFIG(RCC_LSE_ON);
-  while (__HAL_RCC_GET_FLAG(RCC_FLAG_LSERDY) != RESET) {};
-  HAL_PWR_DisableBkUpAccess();
 
   RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK | RCC_CLOCKTYPE_SYSCLK | RCC_CLOCKTYPE_PCLK1 | RCC_CLOCKTYPE_PCLK2;
   RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_HSI;
@@ -61,9 +54,6 @@ static void init_clock(void)
 #else
   // using 32MHz clock based on HSI+PLL, use 32k LSE for timer
   __HAL_PWR_VOLTAGESCALING_CONFIG(PWR_REGULATOR_VOLTAGE_SCALE1);
-  HAL_PWR_EnableBkUpAccess();
-  __HAL_RCC_LSE_CONFIG(RCC_LSE_OFF);
-  while (__HAL_RCC_GET_FLAG(RCC_FLAG_LSERDY) != RESET) {};
 #if defined(STM32L0)
   // TODO not defined on STM32L1
   __HAL_RCC_LSEDRIVE_CONFIG(RCC_LSEDRIVE_LOW);
@@ -79,9 +69,11 @@ static void init_clock(void)
   RCC_OscInitStruct.PLL.PLLDIV          = RCC_PLL_DIV3;
   assert(HAL_RCC_OscConfig(&RCC_OscInitStruct) == HAL_OK);
   while (__HAL_PWR_GET_FLAG(PWR_FLAG_VOS) != RESET) {};
-  __HAL_RCC_LSE_CONFIG(RCC_LSE_ON);
-  while (__HAL_RCC_GET_FLAG(RCC_FLAG_LSERDY) != RESET) {};
-  HAL_PWR_DisableBkUpAccess();
+  RCC_OscInitStruct.OscillatorType =  RCC_OSCILLATORTYPE_LSE;
+  RCC_OscInitStruct.PLL.PLLState = RCC_PLL_NONE;
+  RCC_OscInitStruct.LSEState = RCC_LSE_ON;
+  assert(HAL_RCC_OscConfig(&RCC_OscInitStruct) == HAL_OK);
+
   /* Select PLL as system clock source and configure the HCLK, PCLK1 and PCLK2
   clocks dividers */
   RCC_ClkInitStruct.ClockType = (RCC_CLOCKTYPE_SYSCLK | RCC_CLOCKTYPE_HCLK | RCC_CLOCKTYPE_PCLK1 | RCC_CLOCKTYPE_PCLK2);
