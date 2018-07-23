@@ -81,7 +81,7 @@ const i2c_speed_struc_t I2C_TIMINGR_LUT = {
         .clk_2M =  0x00100608
     },
     .i2c_high_speed = {
-        .clk_32M = 0x00601135,
+        .clk_32M = 0x00900F2E,
         .clk_16M = 0x00300619,
         .clk_4M = I2C_TIMINGR_INVALID_VAL,
         .clk_2M = I2C_TIMINGR_INVALID_VAL
