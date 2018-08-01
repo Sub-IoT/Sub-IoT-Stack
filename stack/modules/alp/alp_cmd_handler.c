@@ -36,7 +36,7 @@
 #include "MODULE_ALP_defs.h"
 #include "modem_interface.h"
 
-#if defined(MODULE_ALP_LOG_ENABLED)
+#if defined(FRAMEWORK_LOG_ENABLED) && defined(MODULE_ALP_LOG_ENABLED)
 #define DPRINT(...) log_print_stack_string(LOG_STACK_ALP, __VA_ARGS__)
 #define DPRINT_DATA(...) log_print_data(__VA_ARGS__)
 #else
