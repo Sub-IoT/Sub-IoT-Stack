@@ -683,17 +683,25 @@ bool d7asp_process_received_packet(packet_t* packet)
             packet->d7atp_ctrl.ctrl_is_start = 0;
 
     // execute slave transaction
-    if ((packet->d7atp_ctrl.ctrl_is_ack_requested) && (expected_response_length > 0))
-        //Don't need to wait for an answer from the upper layer. Send the ACK
+    if (packet->d7atp_ctrl.ctrl_is_ack_requested)
     {
-        DPRINT("Need to send a response");
-        switch_state(D7ASP_STATE_SLAVE_WAITING_RESPONSE);
+        // a response is required, either with payload or just an ack without payload
         current_response_packet = packet;
-        return true;
+        if(expected_response_length == 0) {
+          DPRINT("Don't need resp payload from upper layer, send the ACK");
+          return false; // don't free the packet here, it will be done in d7asp_signal_packet_transmitted()
+        } else {
+          DPRINT("Wait for resp from upper layer");
+          switch_state(D7ASP_STATE_SLAVE_WAITING_RESPONSE);
+          return true;
+        }
     }
-
-    packet_queue_free_packet(packet);
-    return false;
+    else
+    {
+        // no ack to be transmitted, free packet
+        packet_queue_free_packet(packet);
+        return false;
+    }
 }
 
 static void on_request_completed()
