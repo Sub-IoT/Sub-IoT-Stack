@@ -249,8 +249,11 @@ uint8_t alp_get_expected_response_length(uint8_t* alp_command, uint8_t alp_comma
     switch(control.operation) {
       case ALP_OP_READ_FILE_DATA:
         fifo_skip(&fifo, 1); // skip file ID
-        alp_parse_length_operand(&fifo); // offset
-        expected_response_length += alp_parse_length_operand(&fifo);;
+        uint32_t offset = alp_parse_length_operand(&fifo); // offset
+        expected_response_length += alp_parse_length_operand(&fifo); // the file length
+        expected_response_length += alp_length_operand_coded_length(expected_response_length); // the length of the provided data operand
+        expected_response_length += alp_length_operand_coded_length(offset) + 1; // the length of the offset operand
+        expected_response_length += 1; // the opcode
         break;
       case ALP_OP_REQUEST_TAG:
         fifo_skip(&fifo, 1); // skip tag ID operand
@@ -307,4 +310,18 @@ void alp_append_write_file_data_action(fifo_t* fifo, uint8_t file_id, uint32_t o
   alp_append_file_offset_operand(fifo, file_id, offset);
   alp_append_length_operand(fifo, length);
   assert(fifo_put(fifo, data, length) == SUCCESS);
+}
+
+uint8_t alp_length_operand_coded_length(uint32_t length) {
+  uint8_t coded_len = 1;
+  if(length > 0x3F)
+    coded_len = 2;
+
+  if(length > 0x3FFF)
+    coded_len = 3;
+
+  if(length > 0x3FFFFF)
+    coded_len = 4;
+
+  return coded_len;
 }
