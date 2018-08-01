@@ -222,6 +222,8 @@ alp_operand_file_offset_t alp_parse_file_offset_operand(fifo_t* cmd_fifo);
 
 void alp_parse_action(fifo_t* fifo, alp_action_t* action);
 
+uint8_t alp_length_operand_coded_length(uint32_t length);
+
 #endif /* ALP_H_ */
 
 /** @}*/
