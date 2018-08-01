@@ -37,20 +37,20 @@
  * \code{.c}
  *    void foo()
  *    {
- *	start_atomic();
- *	...
- *	end_atomic();
+ *  start_atomic();
+ *  ...
+ *  end_atomic();
  *    }
  *    
  *    void bar()
  *    {
- *	start_atomic();
- *	...
- *	foo();
- *	//interrupts are still disabled despite end_atomic() being called from foo()
- *	...
- *	end_atomic();
- *	//interrupts are re-enabled
+ *  start_atomic();
+ *  ...
+ *  foo();
+ *  //interrupts are still disabled despite end_atomic() being called from foo()
+ *  ...
+ *  end_atomic();
+ *  //interrupts are re-enabled
  *    }
  * \endcode
  *
@@ -66,7 +66,7 @@
  * and usage of critical sections
  *
  */
-__LINK_C void start_atomic();
+__LINK_C void start_atomic(void);
 
 /*! \brief End an atomic section
  *
@@ -74,7 +74,7 @@ __LINK_C void start_atomic();
  * and usage of critical sections
  *
  */
-__LINK_C void end_atomic();
+__LINK_C void end_atomic(void);
 
 #endif //__HW_ATOMIC_H_
 
