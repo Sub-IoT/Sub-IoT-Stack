@@ -32,8 +32,8 @@ SET(HAL_RADIO_USE_HW_CRC "FALSE" CACHE BOOL "Enable/Disable the use of HW CRC")
 SET(HAL_RADIO_USE_HW_DC_FREE "FALSE" CACHE BOOL "Enable/Disable the use of HW PN9 whitening")
 SET(HAL_UART_USE_DMA_TX "FALSE" CACHE BOOL "Enable/Disable the use of DMA for UART TX")
 SET(HAL_SUPPORT_HW_AES "FALSE" CACHE BOOL "Indicates whether an hardware accelerated module is present for AES")
+SET(HAL_RADIO_LOG_ENABLED "FALSE" CACHE BOOL "Enable logging for the radio driver")
 SET(HAL_PERIPH_LOG_ENABLED "FALSE" CACHE BOOL "Enable/Disable the logging in the CPU peripherals")
-
 
 #note: this does not include any chip code. 
 #see note in 'chips' directory in the CMakeLists.txt in the 'chips' directory
@@ -51,6 +51,7 @@ HAL_HEADER_DEFINE(BOOL HAL_RADIO_USE_HW_CRC)
 HAL_HEADER_DEFINE(BOOL HAL_RADIO_USE_HW_DC_FREE)
 HAL_HEADER_DEFINE(BOOL HAL_UART_USE_DMA_TX)
 HAL_HEADER_DEFINE(BOOL HAL_SUPPORT_HW_AES)
+HAL_HEADER_DEFINE(BOOL HAL_RADIO_LOG_ENABLED)
 HAL_HEADER_DEFINE(BOOL HAL_PERIPH_LOG_ENABLED)
 HAL_BUILD_SETTINGS_FILE()
 
