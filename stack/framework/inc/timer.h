@@ -200,7 +200,7 @@ error_t timer_init_event(timer_event* event, task_t callback);
  *
  * This function is equivalent to
  * \code{.c}
- *		timer_post_task_prio(event->f, event->next_event, event->priority);
+ *		timer_post_task_prio_delay(event->f, event->next_event, event->priority);
  * \endcode
  * 
  * \param event		The event to schedule
@@ -210,7 +210,10 @@ error_t timer_init_event(timer_event* event, task_t callback);
  *					EINVAL if an invalid priority was specified.
  *					EALREADY if the task was already scheduled.
  */
-inline error_t timer_add_event(timer_event* event) { return timer_post_task_prio(event->f, event->next_event, event->priority, event->arg);}
+inline error_t timer_add_event(timer_event* event)
+{
+    return timer_post_task_prio(event->f, timer_get_counter_value() + event->next_event, event->priority, event->arg);
+}
 
 /*! \brief Cancel a previously scheduled task
  *
