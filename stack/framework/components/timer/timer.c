@@ -190,6 +190,17 @@ __LINK_C error_t timer_cancel_task(task_t task)
     return status;
 }
 
+error_t timer_add_event(timer_event* event)
+{
+    return timer_post_task_prio(event->f, timer_get_counter_value() + event->next_event, event->priority, event->arg);
+}
+
+void timer_cancel_event(timer_event* event)
+{
+    timer_cancel_task(event->f);
+    sched_cancel_task(event->f);
+}
+
 __LINK_C bool timer_is_task_scheduled(task_t task)
 {
     bool present = false;
