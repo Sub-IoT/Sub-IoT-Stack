@@ -33,6 +33,7 @@
 #include "d7ap.h"
 #include "ng.h"
 #include "log.h"
+#include "MODULE_ALP_defs.h"
 
 #if defined(MODULE_ALP_LOG_ENABLED)
 #define DPRINT(...) log_print_stack_string(LOG_STACK_ALP, __VA_ARGS__)
