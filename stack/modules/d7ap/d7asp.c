@@ -444,7 +444,9 @@ static d7asp_master_session_t* get_master_session_from_token(uint8_t session_tok
 error_t d7asp_send_response(uint8_t* payload, uint8_t length)
 {
     DPRINT("Send the expected response");
+    DPRINT_DATA(payload, length);
     assert(d7asp_state == D7ASP_STATE_SLAVE_WAITING_RESPONSE); // return an error instead?
+    assert(length == current_response_packet->payload_length);
 
     memcpy(current_response_packet->payload, payload, length);
 
@@ -692,6 +694,7 @@ bool d7asp_process_received_packet(packet_t* packet)
           return false; // don't free the packet here, it will be done in d7asp_signal_packet_transmitted()
         } else {
           DPRINT("Wait for resp from upper layer");
+          current_response_packet->payload_length = expected_response_length;
           switch_state(D7ASP_STATE_SLAVE_WAITING_RESPONSE);
           return true;
         }
