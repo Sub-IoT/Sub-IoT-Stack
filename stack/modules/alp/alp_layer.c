@@ -532,6 +532,7 @@ uint8_t alp_layer_process_command_from_d7ap(uint8_t* alp_command, uint8_t alp_co
     // unknown FIFO token; an incoming request or unsolicited response
     DPRINT("ALP cmd size %i", alp_command_length);
     assert(alp_command_length <= ALP_PAYLOAD_MAX_SIZE);
+    current_d7asp_result = d7asp_result;
 
     //TODO how to make use of the D7A interface status (d7asp_result)
 
