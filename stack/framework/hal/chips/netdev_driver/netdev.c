@@ -32,8 +32,8 @@
 #include "hwdebug.h"
 #include "errors.h"
 
-#if defined(FRAMEWORK_LOG_ENABLED) && defined(FRAMEWORK_PHY_LOG_ENABLED)
-#define DPRINT(...) log_print_stack_string(LOG_STACK_PHY, __VA_ARGS__)
+#if defined(FRAMEWORK_LOG_ENABLED) && defined(HAL_RADIO_LOG_ENABLED)
+#define DPRINT(...) log_print_stack_string(LOG_STACK_FWK, __VA_ARGS__)
 #define DPRINT_DATA(...) log_print_data(__VA_ARGS__)
 #else
 #define DPRINT(...)
