@@ -68,9 +68,11 @@ void packet_assemble(packet_t* packet)
         // add payload
         memcpy(data_ptr, packet->payload, packet->payload_length); data_ptr += packet->payload_length;
 
+#if defined(MODULE_D7AP_NLS_ENABLED)
         /* Encrypt/authenticate nwl_payload if needed */
         if (packet->d7anp_ctrl.nls_method)
             data_ptr += d7anp_secure_payload(packet, nwl_payload, data_ptr - nwl_payload);
+#endif
     }
     else
     {

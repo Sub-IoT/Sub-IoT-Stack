@@ -57,6 +57,7 @@ static state_t NGDEF(_d7anp_prev_state);
 static timer_tick_t NGDEF(_fg_scan_timeout_ticks);
 #define fg_scan_timeout_ticks NG(_fg_scan_timeout_ticks)
 
+#if defined(MODULE_D7AP_NLS_ENABLED)
 static dae_nwl_security_t NGDEF(_security_state);
 #define security_state NG(_security_state)
 
@@ -65,10 +66,12 @@ static dae_nwl_ssr_t NGDEF(_node_security_state);
 
 static dae_nwl_trusted_node_t* NGDEF(_latest_node);
 #define latest_node NG(_latest_node)
+#endif
 
 static timer_event d7anp_fg_scan_expired_timer;
 static timer_event d7anp_start_fg_scan_after_d7aadvp_timer;
 
+#if defined(MODULE_D7AP_NLS_ENABLED)
 static inline uint8_t get_auth_len(uint8_t nls_method)
 {
     switch(nls_method)
@@ -88,6 +91,7 @@ static inline uint8_t get_auth_len(uint8_t nls_method)
         assert(false);
     }
 }
+#endif
 
 static void switch_state(state_t next_state)
 {
@@ -200,8 +204,6 @@ void d7anp_init()
 {
     assert(d7anp_state == D7ANP_STATE_STOPPED);
 
-    uint8_t key[AES_BLOCK_SIZE];
-
     d7anp_state = D7ANP_STATE_IDLE;
     fg_scan_timeout_ticks = 0;
 
@@ -214,6 +216,8 @@ void d7anp_init()
      * Init Security
      * Read the 128 bits key from the "NWL Security Key" file
      */
+    uint8_t key[AES_BLOCK_SIZE];
+
     assert (d7ap_fs_read_nwl_security_key(key) == ALP_STATUS_OK); // TODO permission
     DPRINT("KEY");
     DPRINT_DATA(key, AES_BLOCK_SIZE);
@@ -305,6 +309,7 @@ static void schedule_foreground_scan_after_D7AAdvP(timer_tick_t eta)
     assert(timer_add_event(&d7anp_start_fg_scan_after_d7aadvp_timer) == SUCCESS);
 }
 
+#if defined(MODULE_D7AP_NLS_ENABLED)
 static inline void write_be32(uint8_t *buf, uint32_t val)
 {
     buf[0] = (val >> 24) & 0xff;
@@ -525,7 +530,7 @@ bool d7anp_unsecure_payload(packet_t *packet, uint8_t index)
 
     return true;
 }
-
+#endif
 
 uint8_t d7anp_assemble_packet_header(packet_t *packet, uint8_t *data_ptr)
 {
@@ -559,6 +564,7 @@ uint8_t d7anp_assemble_packet_header(packet_t *packet, uint8_t *data_ptr)
 
     // TODO hopping ctrl
 
+#if defined(MODULE_D7AP_NLS_ENABLED)
     if (packet->d7anp_ctrl.nls_method == AES_CTR ||
         packet->d7anp_ctrl.nls_method == AES_CCM_32 ||
         packet->d7anp_ctrl.nls_method == AES_CCM_64 ||
@@ -568,10 +574,12 @@ uint8_t d7anp_assemble_packet_header(packet_t *packet, uint8_t *data_ptr)
         write_be32(data_ptr, packet->d7anp_security.frame_counter);
         data_ptr += sizeof(uint32_t);
     }
+#endif
 
     return data_ptr - d7anp_header_start;
 }
 
+#if defined(MODULE_D7AP_NLS_ENABLED)
 dae_nwl_trusted_node_t *get_trusted_node(uint8_t *address)
 {
     //look up the sender's address in the trusted node table
@@ -608,6 +616,7 @@ dae_nwl_trusted_node_t *add_trusted_node(uint8_t *address, uint32_t frame_counte
     d7ap_fs_add_nwl_security_state_register_entry(node, node_security_state.trusted_node_nb);
     return node;
 }
+#endif
 
 bool d7anp_disassemble_packet_header(packet_t* packet, uint8_t *data_idx)
 {
@@ -631,6 +640,7 @@ bool d7anp_disassemble_packet_header(packet_t* packet, uint8_t *data_idx)
 
     // TODO hopping
 
+#if defined(MODULE_D7AP_NLS_ENABLED)
     if (packet->d7anp_ctrl.nls_method)
     {
         dae_nwl_trusted_node_t *node;
@@ -698,6 +708,7 @@ bool d7anp_disassemble_packet_header(packet_t* packet, uint8_t *data_idx)
              add_trusted_node(packet->origin_access_id, packet->d7anp_security.frame_counter,
                               packet->d7anp_security.key_counter);
     }
+#endif
 
     assert(!packet->d7anp_ctrl.hop_enabled); // TODO hopping not yet supported
 
