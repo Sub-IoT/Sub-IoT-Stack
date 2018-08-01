@@ -294,23 +294,23 @@ __LINK_C error_t hw_radio_init(hwradio_init_args_t* init_args);
 
 /** \brief Stop the radio driver, and free the hardware resources (SPI, GPIO interrupts, ...)
  */
-__LINK_C void hw_radio_stop();
+__LINK_C void hw_radio_stop(void);
 
 /** \brief Initializes all GPIO pins required by the radio.
  * This is a weak symbol which needs to be implemented in the platform if you want to use this
  */
-__LINK_C __attribute__((weak)) void hw_radio_io_init();
+__LINK_C __attribute__((weak)) void hw_radio_io_init(void);
 
 /** \brief Reset the radio.
  * This is a weak symbol which can be implemented in the platform if you want to use this
  */
-__LINK_C __attribute__((weak)) void hw_radio_reset();
+__LINK_C __attribute__((weak)) void hw_radio_reset(void);
 
 
 /** \brief Deinitializes all GPIO pins required by the radio.
  * This is a weak symbol which needs to be implemented in the platform if you want to use this
  */
-__LINK_C __attribute__((weak)) void hw_radio_io_deinit();
+__LINK_C __attribute__((weak)) void hw_radio_io_deinit(void);
 
 /** \brief Set the radio in the IDLE mode.
  *
@@ -333,7 +333,7 @@ __LINK_C __attribute__((weak)) void hw_radio_io_deinit();
  *			EOFF if the radio is not yet initialised.
  *
  */
-__LINK_C error_t hw_radio_set_idle();
+__LINK_C error_t hw_radio_set_idle(void);
 
 /** \brief Initiate a packet transmission over the air.
  *
@@ -373,13 +373,13 @@ __LINK_C error_t hw_radio_transmit(uint8_t *data, uint16_t len);
  *
  *  \return bool	true if the radio is currently transmitting a packet, false if it is not.
  */
-__LINK_C bool hw_radio_tx_busy();
+__LINK_C bool hw_radio_tx_busy(void);
 
 /** \brief Check whether or not the radio is currently receiving a packet
  *
  *  \return bool	true if the radio is currently receiving a packet, false if it is not.
  */
-__LINK_C bool hw_radio_rx_busy();
+__LINK_C bool hw_radio_rx_busy(void);
 
 /** \brief Check whether the RSSI value measured by the radio driver is valid or not.
  *
@@ -390,7 +390,7 @@ __LINK_C bool hw_radio_rx_busy();
  *  - hw_radio_rssi_valid() == (hw_radio_get_rssi() == HW_RSSI_INVALID)
  *
  */
-bool hw_radio_rssi_valid();
+bool hw_radio_rssi_valid(void);
 
 /** \brief Measure the current RSSI on the channel.
  *
@@ -410,9 +410,9 @@ bool hw_radio_rssi_valid();
  *   -# Waiting for the rssi_valid callback to be invoked.
  *
  */
-__LINK_C int16_t hw_radio_get_rssi();
+__LINK_C int16_t hw_radio_get_rssi(void);
 
-hw_state_t hw_radio_get_opmode();
+hw_state_t hw_radio_get_opmode(void);
 void hw_radio_set_opmode(hw_state_t opmode);
 
 void hw_radio_set_center_freq(uint32_t center_freq);
@@ -438,9 +438,9 @@ void hw_radio_set_crc_on(uint8_t enable);
 void hw_radio_send_payload(uint8_t * data, uint8_t len);
 void hw_radio_set_payload_length(uint8_t length);
 
-error_t hw_radio_set_idle();
-bool hw_radio_is_idle();
-bool hw_radio_is_rx();
+error_t hw_radio_set_idle(void);
+bool hw_radio_is_idle(void);
+bool hw_radio_is_rx(void);
 
 void hw_radio_enable_refill(bool enable);
 void hw_radio_enable_preloading(bool enable);
