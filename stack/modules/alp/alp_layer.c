@@ -76,7 +76,7 @@ static timer_event alp_layer_process_command_timer;
 static void _async_process_command_from_d7ap(void* arg);
 void alp_layer_process_response_from_d7ap(uint16_t trans_id, uint8_t* alp_command,
                                           uint8_t alp_command_length, d7ap_session_result_t d7asp_result);
-uint8_t alp_layer_process_command_from_d7ap(uint8_t* alp_command, uint8_t alp_command_length, d7ap_session_result_t d7asp_result);
+bool alp_layer_process_command_from_d7ap(uint8_t* alp_command, uint8_t alp_command_length, d7ap_session_result_t d7asp_result);
 void alp_layer_command_completed(uint16_t trans_id, error_t error);
 
 
@@ -527,7 +527,7 @@ void alp_layer_process_response_from_d7ap(uint16_t trans_id, uint8_t* alp_comman
         init_args->alp_command_result_cb(d7asp_result, alp_command, alp_command_length);
 }
 
-uint8_t alp_layer_process_command_from_d7ap(uint8_t* alp_command, uint8_t alp_command_length, d7ap_session_result_t d7asp_result)
+bool alp_layer_process_command_from_d7ap(uint8_t* alp_command, uint8_t alp_command_length, d7ap_session_result_t d7asp_result)
 {
     // unknown FIFO token; an incoming request or unsolicited response
     DPRINT("ALP cmd size %i", alp_command_length);
@@ -552,7 +552,7 @@ uint8_t alp_layer_process_command_from_d7ap(uint8_t* alp_command, uint8_t alp_co
 
     uint8_t expected_response_length = alp_get_expected_response_length(alp_command, alp_command_length);
     DPRINT("This ALP command will initiate a response containing <%d> bytes", expected_response_length);
-    return (expected_response_length);
+    return (expected_response_length > 0);
 }
 
 void alp_layer_execute_command_over_d7a(uint8_t* alp_command, uint8_t alp_command_length, d7ap_session_config_t* session_config) {

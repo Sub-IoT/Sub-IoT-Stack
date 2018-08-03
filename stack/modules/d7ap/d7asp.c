@@ -446,8 +446,8 @@ error_t d7asp_send_response(uint8_t* payload, uint8_t length)
     DPRINT("Send the expected response");
     DPRINT_DATA(payload, length);
     assert(d7asp_state == D7ASP_STATE_SLAVE_WAITING_RESPONSE); // return an error instead?
-    assert(length == current_response_packet->payload_length);
 
+    current_response_packet->payload_length = length;
     memcpy(current_response_packet->payload, payload, length);
 
     // check if there is a pending session
@@ -605,7 +605,7 @@ void d7asp_process_received_response(packet_t* packet, bool extension)
 
 bool d7asp_process_received_packet(packet_t* packet)
 {
-    uint8_t expected_response_length = 0;
+    bool expect_upper_layer_resp_payload = false;
 
     assert(d7asp_state == D7ASP_STATE_IDLE ||
            d7asp_state == D7ASP_STATE_SLAVE ||
@@ -641,7 +641,7 @@ bool d7asp_process_received_packet(packet_t* packet)
             .seqnr = packet->d7atp_transaction_id
         };
 
-        expected_response_length = d7ap_stack_process_unsolicited_request(packet->payload, packet->payload_length, result);
+        expect_upper_layer_resp_payload = d7ap_stack_process_unsolicited_request(packet->payload, packet->payload_length, result);
     }
 
     if (current_master_session.state == D7ASP_MASTER_SESSION_DORMANT &&
@@ -689,12 +689,11 @@ bool d7asp_process_received_packet(packet_t* packet)
     {
         // a response is required, either with payload or just an ack without payload
         current_response_packet = packet;
-        if(expected_response_length == 0) {
+        if(expect_upper_layer_resp_payload == false) {
           DPRINT("Don't need resp payload from upper layer, send the ACK");
           return false; // don't free the packet here, it will be done in d7asp_signal_packet_transmitted()
         } else {
           DPRINT("Wait for resp from upper layer");
-          current_response_packet->payload_length = expected_response_length;
           switch_state(D7ASP_STATE_SLAVE_WAITING_RESPONSE);
           return true;
         }

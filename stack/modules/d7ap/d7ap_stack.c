@@ -262,9 +262,9 @@ error_t d7ap_stack_send(uint8_t client_id, d7ap_session_config_t* config, uint8_
     return SUCCESS;
 }
 
-uint8_t d7ap_stack_process_unsolicited_request(uint8_t *payload, uint8_t length, d7ap_session_result_t result)
+bool d7ap_stack_process_unsolicited_request(uint8_t *payload, uint8_t length, d7ap_session_result_t result)
 {
-    uint8_t response_len;
+    bool expect_upper_layer_resp_payload = false;
 
     //TODO handle here the re-assembly if needed?
     DPRINT("[D7AP] Received an unsolicited request");
@@ -277,15 +277,15 @@ uint8_t d7ap_stack_process_unsolicited_request(uint8_t *payload, uint8_t length,
     for(uint8_t i = 0; i < registered_client_nb; i++)
     {
         if (registered_client[i].unsolicited_cb)
-            response_len = registered_client[i].unsolicited_cb(payload, length, result);
+            expect_upper_layer_resp_payload = registered_client[i].unsolicited_cb(payload, length, result);
     }
 
-    if ((slave_session.expected_response) && (response_len))
+    if ((slave_session.expected_response) && (expect_upper_layer_resp_payload))
         switch_state(D7AP_STACK_STATE_WAIT_APP_ANSWER);
     else
         switch_state(D7AP_STACK_STATE_RECEIVING);
 
-    return response_len;
+    return expect_upper_layer_resp_payload;
 }
 
 void d7ap_stack_process_received_response(uint8_t *payload, uint8_t length, d7ap_session_result_t result)
