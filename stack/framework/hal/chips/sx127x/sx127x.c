@@ -168,6 +168,8 @@ static channel_id_t default_channel_id = {
   .center_freq_index = 0
 };
 
+static bool is_sx1272 = false;
+
 #define EMPTY_CHANNEL_ID { .channel_header_raw = 0xFF, .center_freq_index = 0xFF };
 
 static channel_id_t current_channel_id = EMPTY_CHANNEL_ID;
@@ -367,6 +369,10 @@ static void configure_channel(const channel_id_t* channel) {
     return;
   }
 
+  if(is_sx1272) {
+    assert(channel->channel_header.ch_freq_band != PHY_BAND_433);
+  }
+
   if(is_lora_channel(channel) != is_lora_channel(&current_channel_id))
     set_lora_mode(is_lora_channel(channel)); // only set mode when changed compared to current
 
@@ -431,13 +437,22 @@ static void configure_channel(const channel_id_t* channel) {
 }
 
 static void init_regs() {
-  write_reg(REG_OPMODE, 0x00); // FSK, hi freq, sleep
+  uint8_t gaussian_shape_filter = 2; // 0: no shaping, 1: BT=1.0, 2: BT=0.5, 3: BT=0.3 // TODO benchmark?
+  if(is_sx1272) {
+    write_reg(REG_OPMODE, gaussian_shape_filter << 3); // FSK; modulation shaping, sleep
+  } else {
+    write_reg(REG_OPMODE, 0x00); // FSK, hi freq, sleep
+  }
 
   configure_channel(&default_channel_id);
 
   // PA
   configure_eirp(10);
-  write_reg(REG_PARAMP, (2 << 5) | 0x09); // BT=0.5 and PaRamp=40us // TODO
+  if(is_sx1272) {
+    write_reg(REG_PARAMP, 0x19); // PaRamp=40us // TODO, use LowPnRxPll?
+  } else {
+    write_reg(REG_PARAMP, (gaussian_shape_filter << 5) | 0x09); // modulation shaping and PaRamp=40us
+  }
 
   // RX
   //  write_reg(REG_OCP, 0); // TODO default for now
@@ -942,6 +957,18 @@ error_t hw_radio_init(alloc_packet_callback_t alloc_packet_cb, release_packet_ca
 
   set_opmode(OPMODE_STANDBY);
   while(get_opmode() != OPMODE_STANDBY) {}
+
+  uint8_t chip_version = read_reg(REG_VERSION);
+  if(chip_version == 0x12) {
+    DPRINT("Detected sx1276");
+    is_sx1272 = false;
+  } else if(chip_version == 0x22) {
+    DPRINT("Detected sx1272");
+    is_sx1272 = true;
+  } else {
+    assert(false);
+  }
+
 
   calibrate_rx_chain();
   init_regs();
