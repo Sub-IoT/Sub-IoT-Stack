@@ -106,6 +106,7 @@ static void switch_state(state_t new_state)
                 case D7AP_STACK_STATE_STOPPED:
                 case D7AP_STACK_STATE_IDLE:
                 case D7AP_STACK_STATE_WAIT_APP_ANSWER:
+                case D7AP_STACK_STATE_RECEIVING:
                     d7ap_stack_state = new_state;
                     DPRINT("[D7AP] Switching to state D7AP_STATE_RECEIVING");
                     break;
@@ -251,8 +252,6 @@ error_t d7ap_stack_send(uint8_t client_id, d7ap_session_config_t* config, uint8_
                                              payload, len,
                                              expected_response_length);
 
-    switch_state(D7AP_STACK_STATE_TRANSMITTING);
-
     session->trans_id[session->request_nb] = ((uint16_t)session->token << 8) | (request_id & 0x00FF);
 
     if (trans_id != NULL)
@@ -338,6 +337,7 @@ free_session:
 
 void d7ap_stack_signal_active_master_session(uint8_t session_token)
 {
+    switch_state(D7AP_STACK_STATE_TRANSMITTING);
     DPRINT("[D7AP] session[%d] is now active", session_token);
     session_t* session = get_session_by_session_token(session_token);
 

@@ -162,7 +162,7 @@ static void flush_completed() {
 }
 
 static void schedule_current_session() {
-    assert(d7asp_state == D7ASP_STATE_MASTER || d7asp_state == D7ASP_STATE_PENDING_MASTER);
+    assert(d7asp_state == D7ASP_STATE_MASTER || d7asp_state == D7ASP_STATE_PENDING_MASTER || d7asp_state == D7ASP_STATE_SLAVE);
     assert(current_master_session.state >= D7ASP_MASTER_SESSION_PENDING);
 
     DPRINT("Re-schedule immediately the current session");
@@ -327,7 +327,7 @@ static void switch_state(state_t new_state)
             DPRINT("Switching to state D7ASP_STATE_SLAVE_PENDING_MASTER");
             break;
         case D7ASP_STATE_PENDING_MASTER:
-            assert(d7asp_state == D7ASP_STATE_IDLE || d7asp_state == D7ASP_STATE_SLAVE_PENDING_MASTER);
+            assert(d7asp_state == D7ASP_STATE_IDLE || d7asp_state == D7ASP_STATE_SLAVE);
             d7asp_state = D7ASP_STATE_PENDING_MASTER;
             DPRINT("Switching to state D7ASP_STATE_PENDING_MASTER");
             break;
@@ -656,7 +656,7 @@ bool d7asp_process_received_packet(packet_t* packet)
          * and a master session is pending
          */
         if ((!ID_TYPE_IS_BROADCAST(packet->dll_header.control_target_id_type)) &&
-                (d7asp_state == D7ASP_STATE_SLAVE_PENDING_MASTER))
+                (d7asp_state == D7ASP_STATE_SLAVE))
         {
             packet->d7atp_ctrl.ctrl_is_start = true;
             packet->d7atp_ctrl.ctrl_tl = true;
@@ -771,6 +771,8 @@ void d7asp_signal_packet_transmitted(packet_t *packet)
         // requests (in master sessions) will be cleanup upon termination of the dialog.
         current_response_packet = NULL;
         packet_queue_free_packet(packet);
+
+
     }
 }
 
@@ -812,12 +814,11 @@ void d7asp_signal_dialog_terminated()
         current_response_packet = NULL;
     }
 
-    if (d7asp_state == D7ASP_STATE_SLAVE)
-        switch_state(D7ASP_STATE_IDLE);
-    else if (d7asp_state == D7ASP_STATE_SLAVE_PENDING_MASTER)
-    {
-        switch_state(D7ASP_STATE_PENDING_MASTER);
-        schedule_current_session();
+    if (current_master_session.state == D7ASP_MASTER_SESSION_PENDING_DORMANT_TRIGGERED) {
+      switch_state(D7ASP_STATE_PENDING_MASTER);
+      schedule_current_session();
+    } else {
+      switch_state(D7ASP_STATE_IDLE);
     }
 
     d7ap_stack_signal_slave_session_terminated();
