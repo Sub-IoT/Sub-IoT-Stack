@@ -167,7 +167,6 @@ static void schedule_current_session() {
 
     DPRINT("Re-schedule immediately the current session");
     current_session_timer.next_event = 0;
-    current_session_timer.priority = MAX_PRIORITY;
     assert(timer_add_event(&current_session_timer) == SUCCESS);
 }
 
@@ -363,7 +362,6 @@ static void schedule_dormant_session(d7asp_master_session_t* dormant_session) {
   timer_tick_t timeout = CT_DECOMPRESS(dormant_session->config.dormant_timeout);
   DPRINT("Sched dormant timeout in %i s", timeout);
   dormant_session_timer.next_event = timeout * 1024;
-  dormant_session_timer.priority = MAX_PRIORITY;
   assert(timer_add_event(&dormant_session_timer) == SUCCESS);
 }
 

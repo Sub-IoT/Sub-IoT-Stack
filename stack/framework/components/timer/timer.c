@@ -78,7 +78,7 @@ error_t timer_init_event(timer_event* event, task_t callback)
 {
     event->f = callback;
     event->arg = NULL;
-    event->priority = DEFAULT_PRIORITY;
+    event->priority = MAX_PRIORITY;
     return (sched_register_task(callback)); // register the function callback to be called at the end of the timeout
 }
 
