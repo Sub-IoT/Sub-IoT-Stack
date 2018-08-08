@@ -201,7 +201,6 @@ static void schedule_response_period_timeout_handler(timer_tick_t timeout_ticks)
     DPRINT("Starting response_period timer (%i ticks)", timeout_ticks);
 
     d7atp_response_period_expired_timer.next_event = timeout_ticks;
-    d7atp_response_period_expired_timer.priority = MAX_PRIORITY;
     assert(timer_add_event(&d7atp_response_period_expired_timer) == SUCCESS);
 }
 
@@ -509,7 +508,6 @@ void d7atp_signal_packet_transmitted(packet_t* packet)
                     d7anp_set_foreground_scan_timeout(Tc + 2); // we include Tt here for now
 
                     d7atp_execution_delay_expired_timer.next_event = Te;
-                    d7atp_execution_delay_expired_timer.priority = MAX_PRIORITY;
                     timer_add_event(&d7atp_execution_delay_expired_timer);
                     return;
                 }

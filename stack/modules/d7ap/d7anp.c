@@ -146,7 +146,6 @@ static void schedule_foreground_scan_expired_timer()
 
     DPRINT("starting foreground scan expiration timer (%i ticks, now %i)", fg_scan_timeout_ticks, timer_get_counter_value());
     d7anp_fg_scan_expired_timer.next_event = fg_scan_timeout_ticks;
-    d7anp_fg_scan_expired_timer.priority = MAX_PRIORITY;
     assert(timer_add_event(&d7anp_fg_scan_expired_timer) == SUCCESS);
 }
 
@@ -305,7 +304,6 @@ static void schedule_foreground_scan_after_D7AAdvP(timer_tick_t eta)
 {
     DPRINT("Perform a dll foreground scan at the end of the delay period (%i ticks)", eta);
     d7anp_start_fg_scan_after_d7aadvp_timer.next_event = eta;
-    d7anp_start_fg_scan_after_d7aadvp_timer.priority = MAX_PRIORITY;
     assert(timer_add_event(&d7anp_start_fg_scan_after_d7aadvp_timer) == SUCCESS);
 }
 
