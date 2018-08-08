@@ -25,6 +25,8 @@
 #include <stdbool.h>
 #include <inttypes.h>
 
+#include "hal_defs.h"
+
 #include "hwatomic.h"
 #include "hwsystem.h"
 
@@ -35,7 +37,7 @@
 #include "sx127x_internal.h"
 #include "sx127x_params.h"
 
-#ifdef FRAMEWORK_LOG_ENABLED
+#if defined(FRAMEWORK_LOG_ENABLED) && defined(HAL_RADIO_LOG_ENABLED)
 #include "log.h"
     #define DEBUG(...) log_print_string(__VA_ARGS__)
 #else

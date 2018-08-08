@@ -39,7 +39,9 @@
 #include "sx127x_netdev.h"
 #include "platform.h"
 
-#ifdef FRAMEWORK_LOG_ENABLED
+#include "hal_defs.h"
+
+#if defined(FRAMEWORK_LOG_ENABLED) && defined(HAL_RADIO_LOG_ENABLED)
 #include "log.h"
     #define DEBUG(...) log_print_string(__VA_ARGS__)
 #else

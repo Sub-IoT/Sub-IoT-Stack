@@ -32,6 +32,7 @@
 #include "cortus_mcu.h"
 #include "log.h"
 #include "errors.h"
+#include "hal_defs.h"
 
 #if defined(FRAMEWORK_LOG_ENABLED) && defined(HAL_PERIPH_LOG_ENABLED)
 #define DPRINT(...) log_print_string(__VA_ARGS__)
