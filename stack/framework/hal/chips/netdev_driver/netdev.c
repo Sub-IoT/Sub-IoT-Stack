@@ -181,6 +181,10 @@ void hw_radio_send_payload(uint8_t * data, uint8_t len)
             .iol_len = len
         };
 
+    DPRINT("TX data");
+    DPRINT("Payload: %d bytes", len);
+    DPRINT_DATA(data, len);
+
     if (netdev->driver->send(netdev, &iolist) == -ENOTSUP)
     {
         DPRINT("Cannot send: radio is still transmitting");
