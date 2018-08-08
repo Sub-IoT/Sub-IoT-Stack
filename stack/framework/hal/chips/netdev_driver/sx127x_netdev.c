@@ -36,7 +36,7 @@
 #include "hwsystem.h"
 #include "debug.h"
 
-#ifdef FRAMEWORK_LOG_ENABLED
+#if defined(FRAMEWORK_LOG_ENABLED) && defined(HAL_RADIO_LOG_ENABLED)
 #include "log.h"
     #define DEBUG(...) log_print_string(__VA_ARGS__)
     #define DEBUG_DATA(...) log_print_data(__VA_ARGS__)
@@ -84,7 +84,7 @@ static void dump_register(sx127x_t *dev)
     DEBUG("************************DUMP REGISTER*********************");
 
     for (uint8_t add=0; add <= SX127X_REG_VERSION; add++)
-        sx127x_reg_read(dev, add);
+        printf("ADDR %2X DATA %02X \r\n", add, sx127x_reg_read(dev, add));
 
     // Please note that when reading the first byte of the FIFO register, this
     // byte is removed so the dump is not recommended before a TX or take care
