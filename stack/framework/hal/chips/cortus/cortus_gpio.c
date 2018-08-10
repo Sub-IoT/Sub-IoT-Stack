@@ -43,7 +43,7 @@
 
 #define NUM_GPIOINT 16  // GPIO1 is only available for gpio interrupts.
 
-#define PORT_BASE(pin)  ((Gpio*)(pin & ~0xFF)) // the LSB byte is used to set the pin number
+#define PORT_BASE(pin)  ((Gpio*)(pin & ~0x0F)) // the LSB byte is used to set the pin number
 
 // There is a limitation for using gpio interrupts. You can use gpio interrupts upto 16 pins in only gpio1 module(0 to 15).
 static gpio_inthandler_t gpio_callback[NUM_GPIOINT];

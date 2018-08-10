@@ -21,8 +21,8 @@
 
 #include "hwgpio.h"
 
-#define GPIO_PIN(pin_id) (pin_id & 0xFF) // only 32 pins per GPIO module, so the LSB byte is used to set the pin number
-#define GPIO_PORT(pin_id) ((pin_id >> 8) & ~0xFF)
+#define GPIO_PIN(pin_id) (pin_id & 0x0F) // only 16 pins per GPIO module, so the LSB byte is used to set the pin number
+#define GPIO_PORT(pin_id) ((pin_id >> 4) & 0x0F)
 
 /* \brief Implementation of hw_gpio_configure_pin for the Cortus MCU
  *
