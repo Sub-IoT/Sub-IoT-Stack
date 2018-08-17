@@ -93,7 +93,6 @@ error_t hw_timer_init(hwtimer_id_t timer_id, uint8_t frequency, timer_callback_t
   __HAL_LPTIM_START_CONTINUOUS(&timer);
 
   __HAL_LPTIM_ENABLE_IT(&timer, LPTIM_IT_ARRM);
-  __HAL_LPTIM_ENABLE_IT(&timer, LPTIM_IT_CMPM);
   __HAL_LPTIM_ENABLE_IT(&timer, LPTIM_IT_CMPOK);
 #elif defined(STM32L1)
   __HAL_RCC_TIM10_CLK_ENABLE();
@@ -121,7 +120,6 @@ error_t hw_timer_init(hwtimer_id_t timer_id, uint8_t frequency, timer_callback_t
   __HAL_TIM_URS_ENABLE(&timer);
   __HAL_TIM_CLEAR_FLAG(&timer, TIM_SR_UIF);
 #endif
-
   HAL_NVIC_SetPriority(TIMER_IRQ, 0, 0);
   HAL_NVIC_ClearPendingIRQ(TIMER_IRQ);
   HAL_NVIC_EnableIRQ(TIMER_IRQ);
@@ -166,7 +164,6 @@ hwtimer_tick_t hw_timer_getvalue(hwtimer_id_t timer_id)
 
 error_t hw_timer_schedule(hwtimer_id_t timer_id, hwtimer_tick_t tick )
 {
-
  	if(timer_id >= HWTIMER_NUM)
  		return ESIZE;
  	if(!timer_inited)

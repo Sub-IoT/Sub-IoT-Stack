@@ -27,24 +27,35 @@
 #include "stm32_device.h"
 #include "log.h"
 
+
 void hw_enter_lowpower_mode(uint8_t mode)
 {
+//  log_print_string("sleep (mode %i) @ %i", mode, hw_timer_getvalue(0));
   __disable_irq();
+//  log_print_string("EXTI PR %x\n", EXTI->PR);
+//  log_print_string("LPTIM ISR %x\n", LPTIM1->ISR);
+//  log_print_string("USART2 ISR %x\n", USART2->ISR);
+//  log_print_string("EXTI IMR %x\n", EXTI->IMR);
+  assert(EXTI->PR == 0);
+  EXTI->IMR &=  ~(1 << 25);
+
+
   __DSB();
   switch (mode)
   {
     case 0:
-        HAL_PWR_EnterSLEEPMode(PWR_MAINREGULATOR_ON, PWR_SLEEPENTRY_WFI);
-        break;
+      HAL_PWR_EnterSLEEPMode(PWR_MAINREGULATOR_ON, PWR_SLEEPENTRY_WFI);
+      break;
     case 1:
-      HAL_PWR_EnterSLEEPMode(PWR_LOWPOWERREGULATOR_ON, PWR_SLEEPENTRY_WFI);
+      __HAL_PWR_CLEAR_FLAG(PWR_FLAG_WU);
+      HAL_PWR_EnterSTOPMode(PWR_LOWPOWERREGULATOR_ON, PWR_SLEEPENTRY_WFI);
       break;
-    case 2:
-      HAL_PWR_EnterSTOPMode(PWR_MAINREGULATOR_ON, PWR_SLEEPENTRY_WFI);
-      break;
+    default:
+      assert(false);
   }
 
   __enable_irq();
+  log_print_string("wake up @ %i", hw_timer_getvalue(0) );
 }
 
 uint64_t hw_get_unique_id()
