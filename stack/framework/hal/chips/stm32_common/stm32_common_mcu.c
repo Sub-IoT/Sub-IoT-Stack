@@ -34,24 +34,6 @@ static void init_clock(void)
   RCC_ClkInitTypeDef RCC_ClkInitStruct = {0};
   RCC_OscInitTypeDef RCC_OscInitStruct = {0};
 
-#ifdef PLATFORM_LOW_CLOCK_SPEED
-  // using 4MHz clock based on HSI, use 32k LSE for timer
-  __HAL_PWR_VOLTAGESCALING_CONFIG(PWR_REGULATOR_VOLTAGE_SCALE2);
-
-  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSI;
-  RCC_OscInitStruct.HSIState = RCC_HSI_ON;
-  RCC_OscInitStruct.HSICalibrationValue = RCC_HSICALIBRATION_DEFAULT;
-  RCC_OscInitStruct.LSEState            = RCC_LSE_ON;
-  RCC_OscInitStruct.PLL.PLLState = RCC_PLL_NONE;
-  assert(HAL_RCC_OscConfig(&RCC_OscInitStruct) == HAL_OK);
-
-  RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK | RCC_CLOCKTYPE_SYSCLK | RCC_CLOCKTYPE_PCLK1 | RCC_CLOCKTYPE_PCLK2;
-  RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_HSI;
-  RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV4;
-  RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV1; // TODO check
-  RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV1;
-  assert(HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_1) == HAL_OK);
-#else
   // using 32MHz clock based on HSI+PLL, use 32k LSE for timer
   __HAL_PWR_VOLTAGESCALING_CONFIG(PWR_REGULATOR_VOLTAGE_SCALE1);
 #if defined(STM32L0)
@@ -81,7 +63,6 @@ static void init_clock(void)
   RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV1;
   RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV1;
   assert(HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_1) == HAL_OK);
-#endif
 
 #if defined(STM32L0)
   // set LPTIM1 clock source to LSE
@@ -90,7 +71,6 @@ static void init_clock(void)
   RCC_PeriphClkInit.LptimClockSelection = RCC_LPTIM1CLKSOURCE_LSE;
   assert(HAL_RCCEx_PeriphCLKConfig(&RCC_PeriphClkInit) == HAL_OK);
 #endif
-
 }
 
 void __stm32_common_mcu_init()

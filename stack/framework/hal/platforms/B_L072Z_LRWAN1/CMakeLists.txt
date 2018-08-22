@@ -35,7 +35,6 @@ PLATFORM_OPTION(PLATFORM_SX127X_USE_DIO3_PIN "Platform has access to the DIO3 pi
 PLATFORM_OPTION(PLATFORM_SX127X_USE_VCC_TXCO "Platform has access to the VCC TCXO pin of sx127x chip" TRUE)
 PLATFORM_OPTION(PLATFORM_USE_NUCLEO_IKS01A2_SHIELD "The NUCLEO IKS01A2 shield is mounted" FALSE)
 PLATFORM_OPTION(PLATFORM_USE_EXTERNAL_MODEM "Use an external serial connected oss7-modem" FALSE)
-PLATFORM_OPTION(PLATFORM_LOW_CLOCK_SPEED "Low clock speed for energy optimization. Will be removed in the future when we support freq scaling" FALSE)
 
 # CONSOLE
 # uses USART2,  (PA2 / PA3)
@@ -52,13 +51,6 @@ EXPORT_GLOBAL_COMPILE_DEFINITIONS("-D${PLATFORM_MCU}")
 
 #Make the 'inc' directory available so 'platform.h' can be found
 EXPORT_GLOBAL_INCLUDE_DIRECTORIES(inc)
-
-if(${PLATFORM_LOW_CLOCK_SPEED})
-    message(STATUS "Using low clock speed")
-    if(${PLATFORM_CONSOLE_BAUDRATE} STREQUAL "115200")
-        message(WARNING "PLATFORM_CONSOLE_BAUDRATE should be limited to 28800 when using low clock speed")
-    endif()
-endif()
 
 ##testing...
 #EXPORT_GLOBAL_INCLUDE_DIRECTORIES(config)
@@ -108,7 +100,6 @@ PLATFORM_HEADER_DEFINE(
     PLATFORM_SX127X_USE_VCC_TXCO
     PLATFORM_USE_NUCLEO_IKS01A2_SHIELD
     PLATFORM_USE_EXTERNAL_MODEM
-    PLATFORM_LOW_CLOCK_SPEED
 )
 
 
