@@ -33,6 +33,7 @@
 #define D7AP_H
 
 #include "types.h"
+#include "assert.h"
 
 #define D7AP_MAX_CLIENT_COUNT 8
 
@@ -69,6 +70,7 @@
 #define ID_TYPE_IS_BROADCAST(id_type) (id_type == ID_TYPE_NBID || id_type == ID_TYPE_NOID)
 
 #define D7A_PAYLOAD_MAX_SIZE 239 // TODO confirm this value when FEC and security are disabled
+
 
 typedef enum {
     ID_TYPE_NBID = 0,
@@ -285,7 +287,24 @@ uint8_t d7ap_get_access_class(void);
  * @param[in] id_type  The addressee Id type
  * @return  The length of the addressee Id according the addressee Id type
  */
-uint8_t d7ap_addressee_id_length(d7ap_addressee_id_type_t id_type);
+inline uint8_t d7ap_addressee_id_length(d7ap_addressee_id_type_t id_type) {
+  switch(id_type)
+  {
+      case ID_TYPE_NOID:
+        return ID_TYPE_NOID_ID_LENGTH;
+      case ID_TYPE_NBID:
+        return ID_TYPE_NBID_ID_LENGTH;
+      case ID_TYPE_UID:
+        return ID_TYPE_UID_ID_LENGTH;
+      case ID_TYPE_VID:
+        return ID_TYPE_VID_LENGTH;
+      default:
+        assert(false);
+  }
+
+  return ID_TYPE_NOID_ID_LENGTH;
+}
+
 
 
 #endif // D7AP_H

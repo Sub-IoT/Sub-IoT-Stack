@@ -237,22 +237,3 @@ uint8_t d7ap_get_access_class(void)
 {
 
 }
-
-uint8_t d7ap_addressee_id_length(d7ap_addressee_id_type_t id_type)
-{
-    switch(id_type)
-    {
-        case ID_TYPE_NOID:
-          return ID_TYPE_NOID_ID_LENGTH;
-        case ID_TYPE_NBID:
-          return ID_TYPE_NBID_ID_LENGTH;
-        case ID_TYPE_UID:
-          return ID_TYPE_UID_ID_LENGTH;
-        case ID_TYPE_VID:
-          return ID_TYPE_VID_LENGTH;
-        default:
-          assert(false);
-    }
-
-    return ID_TYPE_NOID_ID_LENGTH;
-}
