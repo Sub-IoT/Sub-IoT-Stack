@@ -169,10 +169,10 @@ error_t hw_timer_schedule(hwtimer_id_t timer_id, hwtimer_tick_t tick )
  	if(!timer_inited)
  		return EOFF;
 
- 	start_atomic();
+  while(cmp_reg_write_pending); // prev write operation is pending, writing again before may give unpredicatable results (see datasheet), so block here
+  start_atomic();
 #if defined(STM32L0)
-    while(cmp_reg_write_pending); // prev write operation is pending, writing again before may give unpredicatable results (see datasheet), so block here
-    cmp_reg_write_pending = true; // cleared in ISR
+      cmp_reg_write_pending = true; // cleared in ISR
     __HAL_LPTIM_CLEAR_FLAG(&timer, LPTIM_FLAG_CMPM);
     __HAL_LPTIM_COMPARE_SET(&timer, tick - 1);
     __HAL_LPTIM_ENABLE_IT(&timer, LPTIM_IT_CMPM);
