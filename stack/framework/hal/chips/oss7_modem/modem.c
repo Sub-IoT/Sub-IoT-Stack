@@ -24,7 +24,7 @@
 #include "alp.h"
 #include "scheduler.h"
 #include "timer.h"
-
+#include "d7ap.h"
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -88,9 +88,10 @@ static void process_serial_frame(fifo_t* fifo) {
                                                action.file_data_operand.data);
         break;
       case ALP_OP_RETURN_STATUS: ;
-        uint8_t addressee_len = d7ap_addressee_id_length(((d7ap_session_result_t)action->status.data).addressee.ctrl.id_type);
+        d7ap_session_result_t interface_status = *((d7ap_session_result_t*)action.status.data);
+        uint8_t addressee_len = d7ap_addressee_id_length(interface_status.addressee.ctrl.id_type);
         DPRINT("received resp from: ");
-        DPRINT_DATA(action.d7_interface_status.addressee.id, addressee_len);
+        DPRINT_DATA(interface_status.addressee.id, addressee_len);
         // TODO callback?
         break;
       default:
@@ -115,13 +116,14 @@ static void process_rx_fifo(void *arg) {
         uint8_t header[SERIAL_ALP_FRAME_HEADER_SIZE];
         fifo_peek(&rx_fifo, header, 0, SERIAL_ALP_FRAME_HEADER_SIZE);
         DPRINT_DATA(header, 3); // TODO tmp
+
         if(header[0] != SERIAL_ALP_FRAME_SYNC_BYTE || header[1] != SERIAL_ALP_FRAME_VERSION) {
           fifo_skip(&rx_fifo, 1);
           DPRINT("skip");
           parsed_header = false;
           payload_len = 0;
           if(fifo_get_size(&rx_fifo) > SERIAL_ALP_FRAME_HEADER_SIZE)
-            sched_post_task(&process_rx_fifo, NULL);
+            sched_post_task(&process_rx_fifo);
 
           return;
         }
@@ -130,7 +132,7 @@ static void process_rx_fifo(void *arg) {
         fifo_skip(&rx_fifo, SERIAL_ALP_FRAME_HEADER_SIZE);
         payload_len = header[2];
         DPRINT("found header, payload size = %i", payload_len);
-        sched_post_task(&process_rx_fifo, NULL);
+        sched_post_task(&process_rx_fifo);
     }
   } else {
     if(fifo_get_size(&rx_fifo) < payload_len) {
@@ -230,7 +232,7 @@ bool modem_send_unsolicited_response(uint8_t file_id, uint32_t offset, uint32_t 
   if(!alloc_command())
     return false;
 
-  alp_append_forward_action(&command.fifo, (uint8_t *)d7_interface_config, sizeof(d7ap_session_config_t));
+  alp_append_forward_action(&command.fifo, ALP_ITF_ID_D7ASP, (uint8_t *)d7_interface_config, sizeof(d7ap_session_config_t));
   alp_append_return_file_data_action(&command.fifo, file_id, offset, length, data);
 
   send(command.buffer, fifo_get_size(&command.fifo));
@@ -242,7 +244,7 @@ bool modem_send_raw_unsolicited_response(uint8_t* alp_command, uint32_t length,
   if(!alloc_command())
     return false;
 
-  alp_append_forward_action(&command.fifo, (uint8_t *)d7_interface_config, sizeof(d7ap_session_config_t));
+  alp_append_forward_action(&command.fifo, ALP_ITF_ID_D7ASP, (uint8_t *)d7_interface_config, sizeof(d7ap_session_config_t));
   fifo_put(&command.fifo, alp_command, length);
 
   send(command.buffer, fifo_get_size(&command.fifo));
