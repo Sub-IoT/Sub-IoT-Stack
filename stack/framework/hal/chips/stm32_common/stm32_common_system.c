@@ -70,15 +70,18 @@ uint64_t hw_get_unique_id()
   return (*((uint64_t *)(UID_BASE + 0x04U)) << 32) + *((uint64_t *)(UID_BASE + 0x14U));
 }
 
-#pragma GCC push_options
-#pragma GCC optimize ("O3")
 void hw_busy_wait(int16_t us)
 {
   // note: measure this, may switch to timer later if more accuracy is needed.
   uint32_t counter = us * (HAL_RCC_GetSysClockFreq() / 1000000);
-  uint32_t i = 0;
-
-  while (i<counter) i++;
+  uint32_t n = counter/4;
+  __asm volatile (
+    " dmb\n"
+    " 1:\n"
+    " sub %[n], %[n], #1\n"
+    " cmp %[n], #0\n"
+    " bne 1b"
+  : [n] "+r" (n) :: "cc");
 }
 
 void hw_reset()
