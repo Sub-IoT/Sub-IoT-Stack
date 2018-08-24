@@ -55,7 +55,11 @@ void hw_enter_lowpower_mode(uint8_t mode)
       PWR->CR |= PWR_CR_FWU;
 
       __HAL_PWR_CLEAR_FLAG(PWR_FLAG_WU);
+      RCC->CFGR |= RCC_CFGR_STOPWUCK; // use HSI16 after wake up
       HAL_PWR_EnterSTOPMode(PWR_LOWPOWERREGULATOR_ON, PWR_SLEEPENTRY_WFI);
+
+      // after resuming from STOP mode we should reinit the clock config
+      stm32_common_mcu_init();
       break;
     default:
       assert(false);

@@ -73,7 +73,7 @@ static void init_clock(void)
 #endif
 }
 
-void __stm32_common_mcu_init()
+void stm32_common_mcu_init()
 {
   HAL_Init();
   init_clock();

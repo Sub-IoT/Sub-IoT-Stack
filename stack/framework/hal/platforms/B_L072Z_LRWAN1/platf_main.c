@@ -44,7 +44,7 @@ void hw_radio_reset()
 
 void __platform_init()
 {
-    __stm32_common_mcu_init();
+    stm32_common_mcu_init();
     __gpio_init();
     __hw_debug_init();
 

@@ -57,6 +57,6 @@ typedef struct {
   uint32_t alternate;
 } i2c_port_t;
 
-void __stm32_common_mcu_init();
+void stm32_common_mcu_init();
 
 #endif
