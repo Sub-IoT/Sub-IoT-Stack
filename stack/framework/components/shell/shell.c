@@ -149,7 +149,7 @@ static void uart_rx_cb(uint8_t data)
     end_atomic();
 
     if(!sched_is_scheduled(&process_cmd_fifo))
-        sched_post_task(&process_cmd_fifo);
+        sched_post_task_prio(&process_cmd_fifo, MIN_PRIORITY - 1, NULL);
 }
 
 void shell_init()

@@ -21,9 +21,16 @@ static uart_handle_t* uart;
 #define CONSOLE_TX_FIFO_SIZE 255
 static uint8_t console_tx_buffer[CONSOLE_TX_FIFO_SIZE];
 static fifo_t console_tx_fifo;
+static bool flush_in_progress = false;
 
 static void flush_console_tx_fifo(void *arg) {
   uint8_t len = fifo_get_size(&console_tx_fifo);
+#ifdef PLATFORM_USE_MODEM_INTERRUPT_LINES
+  // TODO remove this when ALP serial interface is removed from console
+  if(!flush_in_progress)
+    platform_app_mcu_wakeup();
+#endif
+  flush_in_progress = true;
 #ifdef HAL_UART_USE_DMA_TX
   // when using DMA we transmit the whole FIFO at once
   uint8_t buffer[CONSOLE_TX_FIFO_SIZE];
@@ -38,6 +45,10 @@ static void flush_console_tx_fifo(void *arg) {
   if(len < 10) {
     fifo_pop(&console_tx_fifo, chunk, len);
     uart_send_bytes(uart, chunk, len);
+    flush_in_progress = false;
+#ifdef PLATFORM_USE_MODEM_INTERRUPT_LINES
+    platform_app_mcu_release();
+#endif
   } else {
     fifo_pop(&console_tx_fifo, chunk, TX_FIFO_FLUSH_CHUNK_SIZE);
     uart_send_bytes(uart, chunk, TX_FIFO_FLUSH_CHUNK_SIZE);

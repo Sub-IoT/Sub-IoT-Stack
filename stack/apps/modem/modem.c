@@ -23,6 +23,7 @@
 #include "hwleds.h"
 #include "hwsystem.h"
 #include "assert.h"
+#include "console.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -32,6 +33,7 @@
 #include "fs.h"
 #include "log.h"
 #include "dae.h"
+#include "platform_defs.h"
 
 // This example application contains a modem which can be used from another MCU through
 // the serial interface
@@ -56,5 +58,10 @@ void bootstrap()
     fs_read_uid(uid);
     log_print_string("UID %02X%02X%02X%02X%02X%02X%02X%02X", uid[0], uid[1], uid[2], uid[3], uid[4], uid[5], uid[6], uid[7]);
 
+#ifdef PLATFORM_USE_MODEM_INTERRUPT_LINES
+    // console will be enabled when the interrupt line is toggled
+    // TODO remove when serial ALP is removed from console
+    console_disable();
+#endif
 }
 
