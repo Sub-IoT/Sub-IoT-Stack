@@ -205,7 +205,7 @@ bg_adv_t bg_adv;
 
 typedef struct
 {
-    uint8_t encoded_length;
+    uint16_t encoded_length;
     uint8_t encoded_packet[PREAMBLE_HI_RATE_CLASS + 2 + 256]; // include space for preamble and syncword
     uint8_t transmitted_index;
     bool bg_adv;
@@ -1042,8 +1042,8 @@ bool hw_radio_is_rx() {
   // TODO
 }
 
-static uint8_t encode_packet(hw_radio_packet_t* packet, uint8_t* encoded_packet) {
-  uint8_t encoded_len = packet->length + 1;
+static uint16_t encode_packet(hw_radio_packet_t* packet, uint8_t* encoded_packet) {
+  uint16_t encoded_len = packet->length + 1;
   memcpy(encoded_packet, packet->data, packet->length + 1);
 
   if (current_channel_id.channel_header.ch_coding == PHY_CODING_FEC_PN9)
