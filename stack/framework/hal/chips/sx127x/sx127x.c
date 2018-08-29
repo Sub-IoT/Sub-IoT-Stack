@@ -206,7 +206,7 @@ bg_adv_t bg_adv;
 typedef struct
 {
     uint16_t encoded_length;
-    uint8_t encoded_packet[PREAMBLE_HI_RATE_CLASS + 2 + 256]; // include space for preamble and syncword
+    uint8_t encoded_packet[PREAMBLE_HI_RATE_CLASS + 2 + 256 * 2]; // include space for preamble and syncword and FEC coded payload
     uint8_t transmitted_index;
     bool bg_adv;
 }fg_frame_t;
