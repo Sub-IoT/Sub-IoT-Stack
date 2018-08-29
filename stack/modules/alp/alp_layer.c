@@ -598,10 +598,12 @@ static bool alp_layer_parse_and_execute_alp_command(alp_command_t* command)
             } else {
                 assert(false);
             }
+
+            return true;
         }
 
         alp_control_t control;
-        fifo_peek(&command->alp_command_fifo, &control.raw, 0, 1);
+        assert(fifo_peek(&command->alp_command_fifo, &control.raw, 0, 1) == SUCCESS);
         alp_status_codes_t alp_status;
         switch(control.operation) {
             case ALP_OP_READ_FILE_DATA:
