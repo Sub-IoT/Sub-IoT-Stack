@@ -681,13 +681,6 @@ void dll_execute_scan_automation(void *arg)
     // since they might not be necessary for current active class anymore
     timer_cancel_event(&dll_background_scan_timer);
 
-    uint8_t scan_access_class = d7ap_fs_read_dll_conf_active_access_class();
-    if (active_access_class != scan_access_class)
-    {
-        d7ap_fs_read_access_class(ACCESS_SPECIFIER(scan_access_class), &current_access_profile);
-        active_access_class = scan_access_class;
-    }
-
     DPRINT("DLL execute scan autom AC=0x%02x", active_access_class);
 
     /*
@@ -767,24 +760,36 @@ static void conf_file_changed_callback(uint8_t file_id)
 {
     (void)file_id;
     DPRINT("DLL config file changed");
-    // when doing scan automation restart this
-    if (dll_state == DLL_STATE_IDLE || dll_state == DLL_STATE_SCAN_AUTOMATION)
+    uint8_t scan_access_class = d7ap_fs_read_dll_conf_active_access_class();
+
+    // if the access class has been modified, update the current access profile
+    if (active_access_class != scan_access_class)
     {
-        sched_post_task(&dll_execute_scan_automation);
+        d7ap_fs_read_access_class(ACCESS_SPECIFIER(scan_access_class), &current_access_profile);
+        active_access_class = scan_access_class;
+
+        // when doing scan automation restart this
+        if (dll_state == DLL_STATE_IDLE || dll_state == DLL_STATE_SCAN_AUTOMATION)
+        {
+            sched_post_task(&dll_execute_scan_automation);
+        }
     }
 }
 
 void dll_notify_access_profile_file_changed(uint8_t file_id)
 {
-    DPRINT("AP file changed");
+    DPRINT("Access Profile changed");
 
-    // make sure access class is re-read when entering scan automation
-    active_access_class = NO_ACTIVE_ACCESS_CLASS;
-
-    // when we are idle switch to scan automation now as well, in case the new AP enables scanning
-    if (dll_state == DLL_STATE_IDLE || dll_state == DLL_STATE_SCAN_AUTOMATION)
+    // update only the current access profile if this access profile has been changed
+    if (file_id == D7A_FILE_ACCESS_PROFILE_ID + ACCESS_SPECIFIER(active_access_class))
     {
-        sched_post_task(&dll_execute_scan_automation);
+        d7ap_fs_read_access_class(ACCESS_SPECIFIER(active_access_class), &current_access_profile);
+
+        // when we are idle switch to scan automation now as well, in case the new AP enables scanning
+        if (dll_state == DLL_STATE_IDLE || dll_state == DLL_STATE_SCAN_AUTOMATION)
+        {
+            sched_post_task(&dll_execute_scan_automation);
+        }
     }
 }
 
@@ -814,7 +819,11 @@ void dll_init()
     tx_nf_method = (nf_ctrl >> 4) & 0x0F;
 
     dll_state = DLL_STATE_IDLE;
-    active_access_class = NO_ACTIVE_ACCESS_CLASS;
+
+    // caching of the active class and the selected access profile
+    active_access_class = d7ap_fs_read_dll_conf_active_access_class();
+    d7ap_fs_read_access_class(ACCESS_SPECIFIER(active_access_class), &current_access_profile);
+
     process_received_packets_after_tx = false;
     resume_fg_scan = false;
 
