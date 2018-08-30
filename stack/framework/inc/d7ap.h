@@ -287,7 +287,7 @@ uint8_t d7ap_get_access_class(void);
  * @param[in] id_type  The addressee Id type
  * @return  The length of the addressee Id according the addressee Id type
  */
-inline uint8_t d7ap_addressee_id_length(d7ap_addressee_id_type_t id_type) {
+static inline uint8_t d7ap_addressee_id_length(d7ap_addressee_id_type_t id_type) {
   switch(id_type)
   {
       case ID_TYPE_NOID:
