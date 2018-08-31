@@ -1487,7 +1487,8 @@ error_t hw_radio_start_background_scan(hw_rx_cfg_t const* rx_cfg, rx_packet_call
     }
 
     // the device has a period of To to successfully detect the sync word
-    assert(timer_post_task_delay(&switch_to_sleep_mode, bg_timeout[current_channel_id.channel_header.ch_class]) == SUCCESS);
+    error_t rtc = timer_post_task_delay(&switch_to_sleep_mode, bg_timeout[current_channel_id.channel_header.ch_class]);
+    assert(rtc == SUCCESS);
     // TODO we might want to switch to standby mode here instead, to allow rapid channel cycling
 
     return SUCCESS;

@@ -617,7 +617,8 @@ bool alp_layer_process_command_from_d7ap(uint8_t* alp_command, uint8_t alp_comma
     alp_layer_process_command_timer.next_event = 0;
     alp_layer_process_command_timer.priority = MAX_PRIORITY;
     alp_layer_process_command_timer.arg = command;
-    assert(timer_add_event(&alp_layer_process_command_timer) == SUCCESS);
+    error_t rtc = timer_add_event(&alp_layer_process_command_timer);
+    assert(rtc == SUCCESS);
 
     uint8_t expected_response_length = alp_get_expected_response_length(alp_command, alp_command_length);
     DPRINT("This ALP command will initiate a response containing <%d> bytes", expected_response_length);
