@@ -208,6 +208,7 @@ void d7atp_signal_foreground_scan_expired()
     {
         DPRINT("A FG scan initiated probably by an advertising background frame "
         "or after a dormant session notification is expired");
+        dll_notify_dialog_terminated(); // enter scan automation
     }
 }
 
