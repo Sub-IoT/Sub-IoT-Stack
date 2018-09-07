@@ -82,25 +82,22 @@ void execute_sensor_measurement()
   HTS221_Get_Temperature(hts221_handle, &temperature);
 #endif
 
-  // Generate ALP command. We do this manually for now (until we have an API for this).
+  temperature = __builtin_bswap16(temperature); // convert to big endian before transmission
+
+  // Generate ALP command.
   // We will be sending a return file data action, without a preceding file read request.
   // This is an unsolicited message, where we push the sensor data to the gateway(s).
-  // Please refer to the spec for the format
 
-  uint8_t alp_command[4 + SENSOR_FILE_SIZE] = {
-    // ALP Control byte
-    ALP_OP_RETURN_FILE_DATA,
-    // File Data Request operand:
-    SENSOR_FILE_ID, // the file ID
-    0, // offset in file
-    SENSOR_FILE_SIZE // data length
-    // the sensor data, see below
-  };
+  // allocate a buffer and fifo to store the command
+  uint8_t alp_command[128];
+  fifo_t alp_command_fifo;
+  fifo_init(&alp_command_fifo, alp_command, sizeof(alp_command));
 
-  temperature = __builtin_bswap16(temperature); // convert to big endian before transmission
-  memcpy(alp_command + 4, (uint8_t*)&temperature, SENSOR_FILE_SIZE);
+  // add the return file data action
+  alp_append_return_file_data_action(&alp_command_fifo, SENSOR_FILE_ID, 0, SENSOR_FILE_SIZE, (uint8_t*)&temperature);
 
-  alp_layer_execute_command_over_d7a(alp_command, sizeof(alp_command), &session_config);
+  // and execute this
+  alp_layer_execute_command_over_d7a(alp_command, fifo_get_size(&alp_command_fifo), &session_config);
 }
 
 void on_alp_command_completed_cb(uint8_t tag_id, bool success)
