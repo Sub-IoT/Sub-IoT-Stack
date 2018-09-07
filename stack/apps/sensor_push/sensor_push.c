@@ -101,7 +101,6 @@ void execute_sensor_measurement()
   memcpy(alp_command + 4, (uint8_t*)&temperature, SENSOR_FILE_SIZE);
 
   alp_layer_execute_command_over_d7a(alp_command, sizeof(alp_command), &session_config);
-  timer_post_task_delay(&execute_sensor_measurement, SENSOR_INTERVAL_SEC);
 }
 
 void on_alp_command_completed_cb(uint8_t tag_id, bool success)
@@ -110,6 +109,9 @@ void on_alp_command_completed_cb(uint8_t tag_id, bool success)
       log_print_string("Command completed successfully");
     else
       log_print_string("Command failed, no ack received");
+
+    // reschedule sensor measurement
+    timer_post_task_delay(&execute_sensor_measurement, SENSOR_INTERVAL_SEC);
 }
 
 void on_alp_command_result_cb(d7ap_session_result_t result, uint8_t* payload, uint8_t payload_length)
