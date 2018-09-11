@@ -299,6 +299,12 @@ void TIMER_ISR(void)
     }
   }
 
+  // clear autoreload register update OK if set
+  if(__HAL_LPTIM_GET_FLAG(&timer, LPTIM_FLAG_ARROK) != RESET)
+  {
+    __HAL_LPTIM_CLEAR_FLAG(&timer, LPTIM_IT_ARROK);
+  }
+
 #elif defined(STM32L1)
   // first check for overflow ...
   if(__HAL_TIM_GET_FLAG(&timer, TIM_FLAG_UPDATE) != RESET)
