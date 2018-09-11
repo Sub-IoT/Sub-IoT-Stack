@@ -40,11 +40,15 @@ static void init_clock(void)
   // TODO not defined on STM32L1
   __HAL_RCC_LSEDRIVE_CONFIG(RCC_LSEDRIVE_LOW);
 #endif
+  // first start HSE without PLL and in second stage enable PLL
+  // doing it in one go results in HAL_RCC_OscConfig() returning an error in specific circumstances
   RCC_OscInitStruct.OscillatorType      = RCC_OSCILLATORTYPE_HSI;
   RCC_OscInitStruct.HSEState            = RCC_HSE_OFF;
   RCC_OscInitStruct.LSEState            = RCC_LSE_ON;
   RCC_OscInitStruct.HSIState            = RCC_HSI_ON;
   RCC_OscInitStruct.HSICalibrationValue = RCC_HSICALIBRATION_DEFAULT;
+  RCC_OscInitStruct.PLL.PLLState        = RCC_PLL_OFF;
+  assert(HAL_RCC_OscConfig(&RCC_OscInitStruct) == HAL_OK);
   RCC_OscInitStruct.PLL.PLLState        = RCC_PLL_ON;
   RCC_OscInitStruct.PLL.PLLSource       = RCC_PLLSOURCE_HSI;
   RCC_OscInitStruct.PLL.PLLMUL          = RCC_PLL_MUL6;
