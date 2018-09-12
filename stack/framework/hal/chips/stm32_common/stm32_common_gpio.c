@@ -91,9 +91,13 @@ __LINK_C void __gpio_init()
   GPIO_InitTypeDef GPIO_InitStruct= { 0 };
   GPIO_InitStruct.Mode = GPIO_MODE_ANALOG;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
-  // for all pins except debug pins (SWCLK and SWD) // TODO disable in release build
-//  GPIO_InitStruct.Pin = GPIO_PIN_All & (~( GPIO_PIN_13 | GPIO_PIN_14) );
-//  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+  uint32_t porta_pins = GPIO_PIN_All;
+#ifndef NDEBUG
+  // in debug mode keep SWCLK and SWD pin in the default config (AF)
+  porta_pins = GPIO_PIN_All & (~( GPIO_PIN_13 | GPIO_PIN_14) );
+#endif
+  GPIO_InitStruct.Pin = porta_pins;
+  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
   GPIO_InitStruct.Pin = GPIO_PIN_All;
   HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
   HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
