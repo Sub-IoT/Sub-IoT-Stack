@@ -185,11 +185,14 @@ void modem_init(uart_handle_t* uart, modem_callbacks_t* cbs) {
 
   sched_register_task(&process_rx_fifo);
 
-  // TODO for now we keep uart enabled so we can use RX IRQ.
-  // can be optimized later if GPIO IRQ lines are implemented.
-  assert(uart_enable(uart_handle));
   uart_set_rx_interrupt_callback(uart_handle, &rx_cb);
+
+  // When not using interrupt lines we keep uart enabled so we can use RX IRQ.
+  // If the platform has interrupt lines the UART should be re-enabled when handling the modem interrupt
+#ifndef PLATFORM_USE_MODEM_INTERRUPT_LINES
+  assert(uart_enable(uart_handle));
   assert(uart_rx_interrupt_enable(uart_handle) == SUCCESS);
+#endif
 }
 
 void modem_reinit() {
