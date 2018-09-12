@@ -47,13 +47,15 @@ static void init_clock(void)
   RCC_OscInitStruct.LSEState            = RCC_LSE_ON;
   RCC_OscInitStruct.HSIState            = RCC_HSI_ON;
   RCC_OscInitStruct.HSICalibrationValue = RCC_HSICALIBRATION_DEFAULT;
-  RCC_OscInitStruct.PLL.PLLState        = RCC_PLL_OFF;
+  RCC_OscInitStruct.PLL.PLLState        = RCC_PLL_NONE;
   assert(HAL_RCC_OscConfig(&RCC_OscInitStruct) == HAL_OK);
-  RCC_OscInitStruct.PLL.PLLState        = RCC_PLL_ON;
-  RCC_OscInitStruct.PLL.PLLSource       = RCC_PLLSOURCE_HSI;
-  RCC_OscInitStruct.PLL.PLLMUL          = RCC_PLL_MUL6;
-  RCC_OscInitStruct.PLL.PLLDIV          = RCC_PLL_DIV3;
-  assert(HAL_RCC_OscConfig(&RCC_OscInitStruct) == HAL_OK);
+  log_print_string("!!! HSI ON");
+//  RCC_OscInitStruct.PLL.PLLState        = RCC_PLL_ON;
+//  RCC_OscInitStruct.PLL.PLLSource       = RCC_PLLSOURCE_HSI;
+//  RCC_OscInitStruct.PLL.PLLMUL          = RCC_PLL_MUL6;
+//  RCC_OscInitStruct.PLL.PLLDIV          = RCC_PLL_DIV3;
+//  assert(HAL_RCC_OscConfig(&RCC_OscInitStruct) == HAL_OK);
+//  log_print_string("!!! PLL ON\n");
   while (__HAL_PWR_GET_FLAG(PWR_FLAG_VOS) != RESET) {};
   RCC_OscInitStruct.OscillatorType =  RCC_OSCILLATORTYPE_LSE;
   RCC_OscInitStruct.PLL.PLLState = RCC_PLL_NONE;
@@ -63,7 +65,8 @@ static void init_clock(void)
   /* Select PLL as system clock source and configure the HCLK, PCLK1 and PCLK2
   clocks dividers */
   RCC_ClkInitStruct.ClockType = (RCC_CLOCKTYPE_SYSCLK | RCC_CLOCKTYPE_HCLK | RCC_CLOCKTYPE_PCLK1 | RCC_CLOCKTYPE_PCLK2);
-  RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_PLLCLK;
+  //RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_PLLCLK;
+  RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_HSI;
   RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV1;
   RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV1;
   assert(HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_1) == HAL_OK);
