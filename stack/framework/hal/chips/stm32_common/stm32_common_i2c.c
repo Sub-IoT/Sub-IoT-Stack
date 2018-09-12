@@ -24,6 +24,28 @@
 
 #if defined(STM32L0) // TODO not supported yet on STM32L1 (CubeMX HAL I2C API is not compatible)
 
+#define I2C_CLK_ENABLE(i2c_instance)                          \
+do {                                                          \
+    switch(i2c_instance)                                      \
+    {                                                         \
+      case I2C1_BASE: __HAL_RCC_I2C1_CLK_ENABLE(); break;     \
+      case I2C2_BASE: __HAL_RCC_I2C2_CLK_ENABLE(); break;     \
+      case I2C3_BASE: __HAL_RCC_I2C3_CLK_ENABLE(); break;     \
+      default: assert(false);                                 \
+    }                                                         \
+  } while(0)
+
+#define I2C_CLK_DISABLE(i2c_instance)                         \
+do {                                                          \
+    switch(i2c_instance)                                      \
+    {                                                         \
+      case I2C1_BASE: __HAL_RCC_I2C1_CLK_DISABLE(); break;    \
+      case I2C2_BASE: __HAL_RCC_I2C2_CLK_DISABLE(); break;    \
+      case I2C3_BASE: __HAL_RCC_I2C3_CLK_DISABLE(); break;     \
+      default: assert(false);                                 \
+    }                                                         \
+  } while(0)
+
 typedef struct {
   pin_id_t sda;
   pin_id_t scl;
@@ -173,30 +195,7 @@ i2c_handle_t* i2c_init(uint8_t idx, uint8_t pins, uint32_t baudrate)
 
   GPIO_InitTypeDef gpio_init_options;
 
-  /*RCC_PeriphCLKInitTypeDef PeriphClkInit;
-  PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_I2C1;
-	PeriphClkInit.I2c1ClockSelection = RCC_I2C1CLKSOURCE_PCLK1;
-	if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInit) != HAL_OK)
-	{
-		return NULL;
-	}*/
-
-  switch ((uint32_t)(i2c_ports[idx].i2c))
-  {
-    case I2C1_BASE:
-      __HAL_RCC_I2C1_CLK_ENABLE();
-      break;
-    case I2C2_BASE:
-      __HAL_RCC_I2C2_CLK_ENABLE();
-      break;
-#if defined (I2C3_BASE)
-    case I2C3_BASE:
-      __HAL_RCC_I2C3_CLK_ENABLE();
-      break;
-#endif
-    default:
-      assert(false);
-  }
+  I2C_CLK_ENABLE((uint32_t)(i2c_ports[idx].i2c));
 
   // Make sure no slave is pulling the SDA port low
   // first init SDA as input
@@ -241,17 +240,28 @@ i2c_handle_t* i2c_init(uint8_t idx, uint8_t pins, uint32_t baudrate)
     return NULL;
   }
 
-  // TODO only disable clock until actually using I2C
+  I2C_CLK_DISABLE((uint32_t)(i2c_ports[idx].i2c));
 
   return &handle[idx];
 }
 
 int8_t i2c_deinit(i2c_handle_t* i2c)
 {
-	HAL_StatusTypeDef status = HAL_I2C_DeInit(&i2c->hal_handle);
-    return status == HAL_OK;
+  HAL_StatusTypeDef status = HAL_I2C_DeInit(&i2c->hal_handle);
+  I2C_CLK_DISABLE((uint32_t)i2c->hal_handle.Instance);
+  return status == HAL_OK;
 }
 
+void i2c_acquire(i2c_handle_t* i2c)
+{
+  // TODO assuming no mutual access for now, so no locking
+  I2C_CLK_ENABLE((uint32_t)i2c->hal_handle.Instance);
+}
+
+void i2c_release(i2c_handle_t* i2c)
+{
+  I2C_CLK_DISABLE((uint32_t)i2c->hal_handle.Instance);
+}
 
 int8_t i2c_write(i2c_handle_t* i2c, uint8_t to, uint8_t* payload, int length) {
   HAL_StatusTypeDef status = HAL_I2C_Master_Transmit(&i2c->hal_handle, (uint16_t) to << 1, payload, length, I2C_DEFAULT_TIMEOUT);
