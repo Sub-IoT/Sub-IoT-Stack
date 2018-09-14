@@ -437,7 +437,7 @@ void hw_radio_set_dc_free(uint8_t scheme);
 void hw_radio_set_sync_word(uint8_t *sync_word, uint8_t sync_size);
 void hw_radio_set_crc_on(uint8_t enable);
 
-void hw_radio_send_payload(uint8_t * data, uint16_t len);
+error_t hw_radio_send_payload(uint8_t * data, uint16_t len);
 void hw_radio_set_payload_length(uint16_t length);
 
 error_t hw_radio_set_idle(void);
