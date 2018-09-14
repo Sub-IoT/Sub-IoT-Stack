@@ -207,21 +207,21 @@ void hw_radio_set_payload_length(uint16_t length)
     netdev->driver->set(netdev, NETOPT_MAX_PACKET_SIZE, &length, sizeof(uint16_t));
 }
 
-void hw_radio_send_payload(uint8_t * data, uint16_t len)
+error_t hw_radio_send_payload(uint8_t * data, uint16_t len)
 {
+    error_t ret;
     iolist_t iolist = {
             .iol_base = data,
             .iol_len = len
         };
 
-    DPRINT("TX data");
-    DPRINT("Payload: %d bytes", len);
-    DPRINT_DATA(data, len);
-
-    if (netdev->driver->send(netdev, &iolist) == -ENOTSUP)
+    ret = netdev->driver->send(netdev, &iolist);
+    if ( ret == -ENOTSUP)
     {
         DPRINT("Cannot send: radio is still transmitting");
     }
+
+    return ret;
 }
 
 error_t hw_radio_set_idle() {

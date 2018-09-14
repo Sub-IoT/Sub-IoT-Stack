@@ -26,6 +26,7 @@
 
 #include "timer.h"
 #include "errors.h"
+#include "debug.h"
 
 #include "hwgpio.h"
 #include "hwspi.h"

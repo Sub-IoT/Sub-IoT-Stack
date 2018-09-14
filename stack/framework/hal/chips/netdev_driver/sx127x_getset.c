@@ -130,6 +130,8 @@ uint8_t sx127x_get_syncword_length(const sx127x_t *dev)
         case SX127X_MODEM_LORA:
             return dev->settings.lora.preamble_len;
     }
+
+    return 0;
 }
 
 void sx127x_set_syncword_length(sx127x_t *dev, uint8_t len)
@@ -168,6 +170,8 @@ uint8_t sx127x_get_syncword(const sx127x_t *dev, uint8_t *syncword, uint8_t sync
             *syncword = sx127x_reg_read(dev, SX127X_REG_LR_SYNCWORD);
             return sizeof(uint8_t);
     }
+
+    return 0;
 }
 
 void sx127x_set_syncword(sx127x_t *dev, uint8_t *syncword, uint8_t sync_size)
@@ -690,6 +694,8 @@ uint32_t sx127x_get_bandwidth(const sx127x_t *dev)
         case SX127X_MODEM_LORA:
             return dev->settings.lora.bandwidth;
     }
+
+    return 0;
 }
 
 static void _low_datarate_optimize(sx127x_t *dev)
@@ -920,6 +926,7 @@ bool sx127x_get_crc(const sx127x_t *dev)
             break;
     }
 
+    return false;
 }
 
 void sx127x_set_crc(sx127x_t *dev, bool crc)
@@ -1003,6 +1010,8 @@ uint16_t sx127x_get_payload_length(const sx127x_t *dev)
         default:
             break;
     }
+
+    return 0;
 }
 
 void sx127x_set_payload_length(sx127x_t *dev, uint16_t len)
@@ -1038,6 +1047,8 @@ uint8_t sx127x_get_tx_power(const sx127x_t *dev)
         case SX127X_MODEM_LORA:
             return dev->settings.lora.power;
     }
+
+    return 0;
 }
 
 void sx127x_set_tx_power(sx127x_t *dev, int8_t power)
@@ -1142,6 +1153,8 @@ uint16_t sx127x_get_preamble_length(const sx127x_t *dev)
         case SX127X_MODEM_LORA:
             return dev->settings.lora.preamble_len;
     }
+
+    return 0;
 }
 
 void sx127x_set_preamble_length(sx127x_t *dev, uint16_t preamble)

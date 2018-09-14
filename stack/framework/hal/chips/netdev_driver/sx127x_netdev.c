@@ -1007,7 +1007,7 @@ void _on_dio1_irq(void *arg)
                         netdev->event_callback(netdev, NETDEV_EVENT_RX_COMPLETE);
 
                         // restart RX in unlimited length mode.
-                        restart_rx(netdev);
+                        restart_rx(dev);
                         return;
                     }
 
