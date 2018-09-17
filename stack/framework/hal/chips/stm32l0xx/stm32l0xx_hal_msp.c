@@ -106,6 +106,8 @@ void HAL_MspInit(void)
 #else  
   HAL_PWREx_DisableFastWakeUp( );
 #endif
+
+  __HAL_RCC_PWR_CLK_DISABLE();
 }
 
 /**

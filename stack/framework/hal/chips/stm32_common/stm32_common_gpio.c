@@ -283,6 +283,8 @@ __LINK_C error_t hw_gpio_configure_interrupt(pin_id_t pin_id, gpio_inthandler_t 
     err = SUCCESS;
   //}
 
+    __HAL_RCC_SYSCFG_CLK_DISABLE();
+
   end_atomic();
   return err;
 }
