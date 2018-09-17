@@ -33,29 +33,35 @@ void hw_enter_lowpower_mode(uint8_t mode)
 
 //  log_print_string("sleep (mode %i) @ %i", mode, hw_timer_getvalue(0));
   __disable_irq();
-//  log_print_string("EXTI PR %x\n", EXTI->PR);
-//  log_print_string("LPTIM ISR %x\n", LPTIM1->ISR);
-//  log_print_string("USART2 ISR %x\n", USART2->ISR);
-//  log_print_string("EXTI IMR %x\n", EXTI->IMR);
 
-  assert(EXTI->PR == 0);
-  EXTI->IMR &=  ~(1 << 25);
+  hw_deinit_pheriperals();
 
   __DSB();
   switch (mode)
   {
-    case 0:
+    case 0: // sleep mode
       HAL_PWR_EnterSLEEPMode(PWR_MAINREGULATOR_ON, PWR_SLEEPENTRY_WFI);
       break;
-    case 1:
+    case 1: // STOP mode
+#ifndef NDEBUG
       // enable debugger in stop mode
-      // TODO impact on power? disable in release build?
-      __HAL_RCC_DBGMCU_CLK_ENABLE( );
+      __HAL_RCC_DBGMCU_CLK_ENABLE();
       DBGMCU->CR |= DBGMCU_CR_DBG_STOP;
-      PWR->CR |= PWR_CR_FWU;
+      __HAL_RCC_DBGMCU_CLK_DISABLE( );
+#else
+      __HAL_FLASH_SLEEP_POWERDOWN_ENABLE(); // TODO test
+      // we can't do this in debug mode since DBGMCU the core is always clocked and will not wait for flash to be ready
+#endif
 
+      __HAL_RCC_PWR_CLK_ENABLE(); // to be able to change PWR registers
+      PWR->CR |= (PWR_CR_ULP & PWR_CR_FWU & PWR_CR_PVDE); // we don't need Vrefint and PVD
+      //RCC->CFGR |= RCC_CFGR_STOPWUCK; // use HSI16 after wake up
       __HAL_PWR_CLEAR_FLAG(PWR_FLAG_WU);
-      RCC->CFGR |= RCC_CFGR_STOPWUCK; // use HSI16 after wake up
+      __HAL_RCC_PWR_CLK_DISABLE();
+
+      assert(EXTI->PR == 0);
+      assert((PWR->CSR & PWR_CSR_WUF) == 0);
+
       HAL_PWR_EnterSTOPMode(PWR_LOWPOWERREGULATOR_ON, PWR_SLEEPENTRY_WFI);
 
       // after resuming from STOP mode we should reinit the clock config
