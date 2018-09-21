@@ -234,7 +234,7 @@ error_t d7ap_stack_send(uint8_t client_id, d7ap_session_config_t* config, uint8_
     // Check if a session already exists
     session_t* session = get_session_by_session_token(session_token);
 
-    if (session == NULL) {
+    if ((session == NULL) || (session->active == false)) {
         session = alloc_session(client_id);
 
         if (session == NULL)
