@@ -43,7 +43,7 @@ void hw_enter_lowpower_mode(uint8_t mode)
       HAL_PWR_EnterSLEEPMode(PWR_MAINREGULATOR_ON, PWR_SLEEPENTRY_WFI);
       break;
     case 1: // STOP mode
-#ifndef NDEBUG
+#ifdef FRAMEWORK_DEBUG_ENABLE_SWD
       // enable debugger in stop mode
       __HAL_RCC_DBGMCU_CLK_ENABLE();
       DBGMCU->CR |= DBGMCU_CR_DBG_STOP;

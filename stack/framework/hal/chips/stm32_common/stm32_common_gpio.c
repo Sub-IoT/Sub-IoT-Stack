@@ -28,6 +28,7 @@
 #include "stm32_common_mcu.h"
 #include "hwatomic.h"
 #include "errors.h"
+#include "framework_defs.h"
 
 #define PORT_BASE(pin)  ((GPIO_TypeDef*)(pin & ~0x0F))
 #define EXTI_LINES_COUNT 16
@@ -92,7 +93,7 @@ __LINK_C void __gpio_init()
   GPIO_InitStruct.Mode = GPIO_MODE_ANALOG;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   uint32_t porta_pins = GPIO_PIN_All;
-#ifndef NDEBUG
+#ifdef FRAMEWORK_DEBUG_ENABLE_SWD
   // in debug mode keep SWCLK and SWD pin in the default config (AF)
   porta_pins = GPIO_PIN_All & (~( GPIO_PIN_13 | GPIO_PIN_14) );
 #endif
