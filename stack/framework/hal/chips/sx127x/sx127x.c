@@ -821,6 +821,8 @@ static void resume_from_sleep_mode() {
 
   DPRINT("resuming from sleep mode");
   hw_radio_io_init();
+
+  spi_enable(spi_handle);
 }
 
 static void start_rx(hw_rx_cfg_t const* rx_cfg) {
@@ -936,8 +938,8 @@ static void switch_to_sleep_mode()
     set_opmode(OPMODE_SLEEP);
     state = STATE_IDLE;
 
-    //spi_disable(spi_handle);  // TODO only disable the slave, other slaves might be attached to the same SPI pheriperal,
-                                // so only the SPI driver should be able to decide to disable the pheriperal as a whole
+    spi_disable(spi_handle);  // TODO only disable the slave, other slaves might be attached to the same SPI pheriperal,
+                              // so only the SPI driver should be able to decide to disable the pheriperal as a whole
 
     hw_radio_io_deinit();
 }
