@@ -52,6 +52,7 @@ struct spi_handle {
   uint8_t             slaves;  // number of slaves for array mgmt
   uint8_t             users;   // for reference counting of active slaves
   bool                active;
+  uint8_t             spi_port_number; // for reference to SPI port defined in ports.h (pins)
 };
 
 // private storage for handles, pointers to these records are passed around
@@ -71,9 +72,32 @@ static void ensure_slaves_deselected(spi_handle_t* spi) {
   }
 }
 
+static void init_pins(spi_handle_t* spi) {
+  GPIO_InitTypeDef GPIO_InitStruct;
+  GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
+  GPIO_InitStruct.Pull = GPIO_PULLDOWN;
+  GPIO_InitStruct.Speed = GPIO_SPEED_HIGH;
+  GPIO_InitStruct.Alternate = spi_ports[spi->spi_port_number].alternate;
+
+  hw_gpio_configure_pin_stm(spi_ports[spi->spi_port_number].sck_pin, &GPIO_InitStruct);
+  hw_gpio_configure_pin_stm(spi_ports[spi->spi_port_number].miso_pin, &GPIO_InitStruct);
+  hw_gpio_configure_pin_stm(spi_ports[spi->spi_port_number].mosi_pin, &GPIO_InitStruct);
+}
+
+static void deinit_pins(spi_handle_t* spi) {
+  GPIO_InitTypeDef GPIO_InitStruct;
+  GPIO_InitStruct.Mode = GPIO_MODE_ANALOG;
+
+  hw_gpio_configure_pin_stm(spi_ports[spi->spi_port_number].sck_pin, &GPIO_InitStruct);
+  hw_gpio_configure_pin_stm(spi_ports[spi->spi_port_number].miso_pin, &GPIO_InitStruct);
+  hw_gpio_configure_pin_stm(spi_ports[spi->spi_port_number].mosi_pin, &GPIO_InitStruct);
+}
+
 void spi_enable(spi_handle_t* spi) {
   // already active?
   if(spi->active) { return; }
+
+  init_pins(spi);
 
   // bringing SPI bus up
   ensure_slaves_deselected(spi);
@@ -125,6 +149,7 @@ void spi_disable(spi_handle_t* spi) {
     hw_gpio_clr(spi->slave[s]->cs);
   }
 
+  deinit_pins(spi);
   spi->active = false;
 }
 
@@ -142,15 +167,8 @@ spi_handle_t* spi_init(uint8_t spi_number, uint32_t baudrate, uint8_t databits, 
     return &handle[spi_number];
   }
 
-  GPIO_InitTypeDef GPIO_InitStruct;
-  GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
-  GPIO_InitStruct.Pull = GPIO_PULLDOWN;
-  GPIO_InitStruct.Speed = GPIO_SPEED_HIGH;
-  GPIO_InitStruct.Alternate = spi_ports[spi_number].alternate;
-
-  hw_gpio_configure_pin_stm(spi_ports[spi_number].sck_pin, &GPIO_InitStruct);
-  hw_gpio_configure_pin_stm(spi_ports[spi_number].miso_pin, &GPIO_InitStruct);
-  hw_gpio_configure_pin_stm(spi_ports[spi_number].mosi_pin, &GPIO_InitStruct);
+  handle[spi_number].spi_port_number = spi_number;
+  init_pins(&handle[spi_number]);
 
   handle[spi_number].hspi.Instance = spi_ports[spi_number].spi;
   handle[spi_number].hspi.Init.Mode = SPI_MODE_MASTER;
