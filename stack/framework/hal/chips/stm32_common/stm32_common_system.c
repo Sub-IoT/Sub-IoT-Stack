@@ -28,12 +28,60 @@
 #include "log.h"
 
 
+static uint32_t gpioa_moder;
+static uint32_t gpiob_moder;
+static uint32_t gpioc_moder;
+static uint32_t gpiod_moder;
+static uint32_t gpioe_moder;
+static uint32_t gpioh_moder;
+static uint32_t iopenr; // GPIO clock enable register
+
+static void gpio_config_save() {
+  gpioa_moder = GPIOA->MODER;
+  gpiob_moder = GPIOB->MODER;
+  gpioc_moder = GPIOC->MODER;
+  gpiod_moder = GPIOD->MODER;
+  gpioe_moder = GPIOE->MODER;
+  gpioh_moder = GPIOH->MODER;
+
+  iopenr = RCC->IOPENR;
+}
+
+static void gpio_config_restore() {
+  __HAL_RCC_GPIOA_CLK_ENABLE();
+  GPIOA->MODER = gpioa_moder;
+  __HAL_RCC_GPIOA_CLK_DISABLE();
+
+  __HAL_RCC_GPIOB_CLK_ENABLE();
+  GPIOB->MODER = gpiob_moder;
+  __HAL_RCC_GPIOB_CLK_DISABLE();
+
+  __HAL_RCC_GPIOC_CLK_ENABLE();
+  GPIOC->MODER = gpioc_moder;
+  __HAL_RCC_GPIOC_CLK_DISABLE();
+
+  __HAL_RCC_GPIOD_CLK_ENABLE();
+  GPIOD->MODER = gpiod_moder;
+  __HAL_RCC_GPIOD_CLK_DISABLE();
+
+  __HAL_RCC_GPIOE_CLK_ENABLE();
+  GPIOE->MODER = gpioe_moder;
+  __HAL_RCC_GPIOE_CLK_DISABLE();
+
+  __HAL_RCC_GPIOH_CLK_ENABLE();
+  GPIOH->MODER = gpioh_moder;
+  __HAL_RCC_GPIOH_CLK_DISABLE();
+
+  RCC->IOPENR = iopenr;
+}
+
 void hw_enter_lowpower_mode(uint8_t mode)
 {
 
-//  log_print_string("sleep (mode %i) @ %i", mode, hw_timer_getvalue(0));
+  log_print_string("sleep (mode %i) @ %i", mode, hw_timer_getvalue(0));
   __disable_irq();
 
+  gpio_config_save();
   hw_deinit_pheriperals();
 
   __DSB();
@@ -71,8 +119,9 @@ void hw_enter_lowpower_mode(uint8_t mode)
       assert(false);
   }
 
+  gpio_config_restore();
   __enable_irq();
-//  log_print_string("wake up @ %i", hw_timer_getvalue(0) );
+  log_print_string("wake up @ %i", hw_timer_getvalue(0) );
 }
 
 uint64_t hw_get_unique_id()
