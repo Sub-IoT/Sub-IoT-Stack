@@ -194,8 +194,6 @@ error_t uart_rx_interrupt_enable(uart_handle_t* uart) {
   //   NVIC_ClearPendingIRQ(uart->irq.rx);
   //   NVIC_EnableIRQ(uart->irq.rx);
 
-  __HAL_RCC_GPIOA_CLK_ENABLE(); // TODO not sure why this is needed here, should already be enabled. Look into this later
-
   HAL_NVIC_ClearPendingIRQ(uart->uart_port->irq);
   HAL_NVIC_EnableIRQ(uart->uart_port->irq);
   LL_USART_EnableIT_RXNE(uart->handle.Instance);

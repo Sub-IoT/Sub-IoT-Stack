@@ -106,8 +106,6 @@ void spi_enable(spi_handle_t* spi) {
   {
     case SPI1_BASE:
       __HAL_RCC_SPI1_CLK_ENABLE();
-      __HAL_RCC_GPIOA_CLK_ENABLE(); // TODO
-      __HAL_RCC_GPIOB_CLK_ENABLE(); // TODO
       break;
     case SPI2_BASE:
       __HAL_RCC_SPI2_CLK_ENABLE();
