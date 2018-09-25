@@ -226,9 +226,11 @@ uint8_t d7ap_register(d7ap_resource_desc_t* desc);
 /**
  * @brief   Gets the device address UID/VID
  *
- * @param[out] *addr   Pointer to the device addressee UID/VID
+ * @param[out] *addr   buffer to store the device addressee UID/VID.
+ *                     the buffer should be large enough to contain the 64 bits UID
+ * @return the address type (either UID or VID)
  */
-void d7ap_get_dev_addr(d7ap_addressee_t* addr);
+d7ap_addressee_id_type_t d7ap_get_dev_addr(uint8_t* addr);
 
 
 /**
