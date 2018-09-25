@@ -80,11 +80,21 @@ uint8_t d7ap_register(d7ap_resource_desc_t* desc)
 /**
  * @brief   Gets the device address UID/VID
  *
- * @param[out] *addr   Pointer to the device addressee UID/VID
+ * @param[out] *addr   buffer to store the device addressee UID/VID.
+ *                     the buffer should be large enough to contain the 64 bits UID
+ * @return the address type (either UID or VID)
  */
-void d7ap_get_dev_addr(d7ap_addressee_t* addr)
+d7ap_addressee_id_type_t d7ap_get_dev_addr(uint8_t* addr)
 {
+    d7ap_fs_read_vid(addr);
 
+    // vid is not valid when set to FF
+    if (memcmp(addr, (uint8_t[2]){ 0xFF, 0xFF }, 2) == 0)
+    {
+        d7ap_fs_read_uid(addr);
+        return (ID_TYPE_UID);
+    } else
+        return (ID_TYPE_VID);
 }
 
 
