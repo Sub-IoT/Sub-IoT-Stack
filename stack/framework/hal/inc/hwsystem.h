@@ -59,6 +59,11 @@ __LINK_C void hw_enter_lowpower_mode(uint8_t mode);
  */
 __LINK_C __attribute__((weak)) void hw_deinit_pheriperals();
 
+/** \brief Reinitializes all pheriperals after resuming from low power mode.
+ * This is a weak symbol which can be implemented in the platform if you want to use this
+ */
+__LINK_C __attribute__((weak)) void hw_reinit_pheriperals();
+
 /*! \brief Get a 64-bit identifier that is unique to the device on which this function is called.
  *
  * The exact manner in which this ID is generated depends on the specific platform. In general however,

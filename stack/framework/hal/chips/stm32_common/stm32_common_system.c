@@ -120,6 +120,7 @@ void hw_enter_lowpower_mode(uint8_t mode)
   }
 
   gpio_config_restore();
+  hw_reinit_pheriperals();
   __enable_irq();
   log_print_string("wake up @ %i", hw_timer_getvalue(0) );
 }
