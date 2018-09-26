@@ -40,22 +40,24 @@ static void init_clock(void)
   // TODO not defined on STM32L1
   __HAL_RCC_LSEDRIVE_CONFIG(RCC_LSEDRIVE_LOW);
 #endif
-  // first start HSE without PLL and in second stage enable PLL
-  // doing it in one go results in HAL_RCC_OscConfig() returning an error in specific circumstances
+  __HAL_FLASH_SET_LATENCY(FLASH_LATENCY_1);
+
+  // first switch to HSI as sysclk. Switching to HSI+PLL immediately fails sometimes when calling HAL_RCC_OscConfig()
+  __HAL_RCC_HSI_ENABLE();
+  while( __HAL_RCC_GET_FLAG(RCC_FLAG_HSIRDY) == 0 ) {}
+  __HAL_RCC_SYSCLK_CONFIG(RCC_SYSCLKSOURCE_HSI); //
+  while(__HAL_RCC_GET_SYSCLK_SOURCE() != RCC_SYSCLKSOURCE_STATUS_HSI) {}
+
   RCC_OscInitStruct.OscillatorType      = RCC_OSCILLATORTYPE_HSI;
   RCC_OscInitStruct.HSEState            = RCC_HSE_OFF;
   RCC_OscInitStruct.LSEState            = RCC_LSE_ON;
   RCC_OscInitStruct.HSIState            = RCC_HSI_ON;
   RCC_OscInitStruct.HSICalibrationValue = RCC_HSICALIBRATION_DEFAULT;
-  RCC_OscInitStruct.PLL.PLLState        = RCC_PLL_NONE;
+  RCC_OscInitStruct.PLL.PLLState        = RCC_PLL_ON;
+  RCC_OscInitStruct.PLL.PLLSource       = RCC_PLLSOURCE_HSI;
+  RCC_OscInitStruct.PLL.PLLMUL          = RCC_PLL_MUL6;
+  RCC_OscInitStruct.PLL.PLLDIV          = RCC_PLL_DIV3;
   assert(HAL_RCC_OscConfig(&RCC_OscInitStruct) == HAL_OK);
-  log_print_string("!!! HSI ON");
-//  RCC_OscInitStruct.PLL.PLLState        = RCC_PLL_ON;
-//  RCC_OscInitStruct.PLL.PLLSource       = RCC_PLLSOURCE_HSI;
-//  RCC_OscInitStruct.PLL.PLLMUL          = RCC_PLL_MUL6;
-//  RCC_OscInitStruct.PLL.PLLDIV          = RCC_PLL_DIV3;
-//  assert(HAL_RCC_OscConfig(&RCC_OscInitStruct) == HAL_OK);
-//  log_print_string("!!! PLL ON\n");
   while (__HAL_PWR_GET_FLAG(PWR_FLAG_VOS) != RESET) {};
   RCC_OscInitStruct.OscillatorType =  RCC_OSCILLATORTYPE_LSE;
   RCC_OscInitStruct.PLL.PLLState = RCC_PLL_NONE;
@@ -65,8 +67,7 @@ static void init_clock(void)
   /* Select PLL as system clock source and configure the HCLK, PCLK1 and PCLK2
   clocks dividers */
   RCC_ClkInitStruct.ClockType = (RCC_CLOCKTYPE_SYSCLK | RCC_CLOCKTYPE_HCLK | RCC_CLOCKTYPE_PCLK1 | RCC_CLOCKTYPE_PCLK2);
-  //RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_PLLCLK;
-  RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_HSI;
+  RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_PLLCLK;
   RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV1;
   RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV1;
   assert(HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_1) == HAL_OK);
