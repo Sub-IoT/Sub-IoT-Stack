@@ -48,6 +48,9 @@ static void init_clock(void)
   __HAL_RCC_SYSCLK_CONFIG(RCC_SYSCLKSOURCE_HSI); //
   while(__HAL_RCC_GET_SYSCLK_SOURCE() != RCC_SYSCLKSOURCE_STATUS_HSI) {}
 
+  // now that we are running on HSI we can disable MSI
+  __HAL_RCC_MSI_DISABLE();
+
   RCC_OscInitStruct.OscillatorType      = RCC_OSCILLATORTYPE_HSI;
   RCC_OscInitStruct.HSEState            = RCC_HSE_OFF;
   RCC_OscInitStruct.LSEState            = RCC_LSE_ON;
