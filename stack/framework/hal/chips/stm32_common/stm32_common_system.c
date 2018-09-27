@@ -27,6 +27,8 @@
 #include "stm32_device.h"
 #include "log.h"
 
+#define DPRINT(...)
+//#define DPRINT(...) log_print_string(__VA_ARGS__)
 
 static uint32_t gpioa_moder;
 static uint32_t gpiob_moder;
@@ -78,7 +80,7 @@ static void gpio_config_restore() {
 void hw_enter_lowpower_mode(uint8_t mode)
 {
 
-  log_print_string("sleep (mode %i) @ %i", mode, hw_timer_getvalue(0));
+  DPRINT("sleep (mode %i) @ %i", mode, hw_timer_getvalue(0));
   __disable_irq();
 
   gpio_config_save();
@@ -107,7 +109,8 @@ void hw_enter_lowpower_mode(uint8_t mode)
       __HAL_PWR_CLEAR_FLAG(PWR_FLAG_WU);
       __HAL_RCC_PWR_CLK_DISABLE();
 
-      assert(EXTI->PR == 0);
+      DPRINT("EXTI->PR %x", EXTI->PR);
+      //assert(EXTI->PR == 0);
       assert((PWR->CSR & PWR_CSR_WUF) == 0);
 
       HAL_PWR_EnterSTOPMode(PWR_LOWPOWERREGULATOR_ON, PWR_SLEEPENTRY_WFI);
@@ -122,7 +125,7 @@ void hw_enter_lowpower_mode(uint8_t mode)
   gpio_config_restore();
   hw_reinit_pheriperals();
   __enable_irq();
-  log_print_string("wake up @ %i", hw_timer_getvalue(0) );
+  DPRINT("wake up @ %i", hw_timer_getvalue(0) );
 }
 
 uint64_t hw_get_unique_id()
