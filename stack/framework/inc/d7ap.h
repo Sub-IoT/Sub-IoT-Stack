@@ -203,6 +203,10 @@ typedef struct{
  */
 void d7ap_init(void);
 
+/**
+ * @brief Stop the D7A stack
+ */
+void d7ap_stop(void);
 
 /**
  * @brief   Register the client callbacks

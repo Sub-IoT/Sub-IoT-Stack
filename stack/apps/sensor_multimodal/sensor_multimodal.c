@@ -28,6 +28,8 @@
 #include "led.h"
 
 #include "d7ap.h"
+#include "dae.h"
+#include "fs.h"
 #include "alp_layer.h"
 #include "lorawan_stack.h"
 
@@ -100,31 +102,10 @@ static uint8_t transmit_d7ap(uint8_t* alp, uint16_t len) {
 }
 
 static void init_d7ap() {
-  dae_access_profile_t access_classes[1] = {
-    {
-      .channel_header = {
-        .ch_coding = PHY_CODING_FEC_PN9,
-        .ch_class = PHY_CLASS_LO_RATE,
-        .ch_freq_band = PHY_BAND_868
-      },
-      .subprofiles[0] = {
-        .subband_bitmap = 0x00, // void scan automation channel list
-        .scan_automation_period = 0,
-      },
-      .subbands[0] = (subband_t){
-        .channel_index_start = 200,
-        .channel_index_end = 200,
-        .eirp = 10,
-        .cca = 86,
-        .duty = 0,
-      }
-    }
-  };
-
   fs_init_args_t fs_init_args = (fs_init_args_t){
       .fs_d7aactp_cb = &alp_layer_process_d7aactp,
-      .access_profiles_count = 1,
-      .access_profiles = access_classes,
+      .access_profiles_count = DEFAULT_ACCESS_PROFILES_COUNT,
+      .access_profiles = default_access_profiles,
       .access_class = 0x01
   };
 
