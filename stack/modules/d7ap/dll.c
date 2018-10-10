@@ -867,14 +867,13 @@ void dll_init()
     process_received_packets_after_tx = false;
     resume_fg_scan = false;
 
-    // Start immediately the scan automation
-    dll_scan_automation_timer.next_event = 0;
-    timer_add_event(&dll_scan_automation_timer);
-    guarded_channel = false;
-
     fs_register_file_modified_callback(D7A_FILE_DLL_CONF_FILE_ID, &conf_file_changed_callback);
     for(int i = 0; i < 15; i++)
         fs_register_file_modified_callback(D7A_FILE_ACCESS_PROFILE_ID + i, &access_profile_file_changed_callback);
+
+    // Start immediately the scan automation
+    guarded_channel = false;
+    dll_execute_scan_automation(NULL);
 }
 
 void dll_stop()
