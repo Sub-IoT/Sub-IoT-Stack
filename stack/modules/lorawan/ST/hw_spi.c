@@ -66,6 +66,7 @@ Maintainer: Miguel Luis and Gregory Cristian
 #include "platform.h"
 
 static spi_slave_handle_t* sx127x_spi = NULL;
+static spi_handle_t* spi_handle = NULL;
 
 /*!
  * @brief Initializes the SPI object and MCU peripheral
@@ -74,8 +75,9 @@ static spi_slave_handle_t* sx127x_spi = NULL;
  */
 void HW_SPI_Init( void )
 {
-  spi_handle_t* spi_handle = spi_init(SX127x_SPI_INDEX, SX127x_SPI_BAUDRATE, 8, true);
+  spi_handle = spi_init(SX127x_SPI_INDEX, SX127x_SPI_BAUDRATE, 8, true);
   sx127x_spi = spi_init_slave(spi_handle, SX127x_SPI_PIN_CS, true);
+  spi_enable(spi_handle);
 }
 
 /*!
@@ -85,6 +87,7 @@ void HW_SPI_Init( void )
  */
 void HW_SPI_DeInit( void )
 {
+  spi_disable(spi_handle);
 //  HAL_SPI_DeInit( &hspi);
 
 //    /*##-1- Reset peripherals ####*/
