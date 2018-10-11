@@ -52,4 +52,4 @@ target_include_directories(alp PUBLIC
     ${CMAKE_CURRENT_BINARY_DIR} # MODULE_D7AP_defs.h
 )
 
-TARGET_LINK_LIBRARIES(alp m)
+TARGET_LINK_LIBRARIES(alp m lorawan d7ap)

@@ -38,6 +38,7 @@
 #include "fifo.h"
 #include "alp.h"
 #include "d7ap.h"
+#include "lorawan_stack.h"
 
 typedef enum
 {
@@ -47,6 +48,16 @@ typedef enum
     ALP_CMD_ORIGIN_D7AP,
 } alp_command_origin_t;
 
+typedef enum
+{
+  STATE_NOT_INITIALIZED,
+  STATE_INITIALIZED
+} interface_state_t; //ADD MORE STATES?
+
+typedef union  {
+    d7ap_session_config_t d7asp_session_config;
+    lora_session_config_t lora_session_config;
+}session_config_t;
 
 typedef void (*alp_command_completed_callback)(uint8_t tag_id, bool success);
 typedef void (*alp_command_result_callback)(d7ap_session_result_t result, uint8_t* payload, uint8_t payload_length);

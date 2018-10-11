@@ -39,12 +39,14 @@
 #define ALP_ITF_ID_HOST     0x00
 #define ALP_ITF_ID_SERIAL   0x01 // not part of the spec
 #define ALP_ITF_ID_D7ASP    0xD7
+#define ALP_ITF_ID_LORWAN   0x02//not part of the spec
+
 
 #define SERIAL_ALP_FRAME_SYNC_BYTE 0xC0
 #define SERIAL_ALP_FRAME_VERSION   0x00
 #define SERIAL_ALP_FRAME_HEADER_SIZE 3
 
-#define ALP_PAYLOAD_MAX_SIZE 239 // TODO configurable?
+#define ALP_PAYLOAD_MAX_SIZE 200 // TODO configurable?
 
 typedef enum
 {
