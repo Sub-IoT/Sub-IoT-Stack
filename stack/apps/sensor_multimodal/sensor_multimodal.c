@@ -45,9 +45,9 @@
 
 #define LORAWAN_APP_PORT                10
 #define LORAWAN_MTU                     51
-#define LORAWAN_DEVICE_EUI              {0xBE, 0x7A, 0x00, 0x00, 0x00, 0x00, 0x24, 0x24}
-#define LORAWAN_APPLICATION_EUI         {0xBE, 0x7A, 0x00, 0x00, 0x00, 0x00, 0x0D, 0x9F}
-#define LORAWAN_APPLICATION_KEY         {0x4D, 0x0D, 0x9C, 0x6D, 0x8F, 0x2C, 0xF7, 0xF4, 0xB0, 0x20, 0x78, 0xD7, 0x6F, 0x42, 0xB9, 0x10}
+#define LORAWAN_DEVICE_ADDR             0
+#define LORAWAN_APP_SESSION_KEY         {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}
+#define LORAWAN_NETW_SESSION_KEY        {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}
 
 #define SENSOR_FILE_ID                  0x40
 #define SENSOR_FILE_SIZE                2
@@ -110,25 +110,23 @@ static uint8_t transmit_d7ap(uint8_t* alp, uint16_t len) {
 }
 
 static void init_d7ap() {
-  fs_init_args_t fs_init_args = (fs_init_args_t){
-      .fs_d7aactp_cb = &alp_layer_process_d7aactp,
-      .access_profiles_count = DEFAULT_ACCESS_PROFILES_COUNT,
-      .access_profiles = default_access_profiles,
-      .access_class = 0x01
-  };
-
-  fs_init(&fs_init_args);
   d7ap_init();
   DEBUG_PRINTF("DASH7 init");
 }
 
 static void lora_init(void) {
-  uint8_t devEui[8]  = LORAWAN_DEVICE_EUI;
-  uint8_t appEui[8]  = LORAWAN_APPLICATION_EUI;
-  uint8_t appKey[16] = LORAWAN_APPLICATION_KEY;
-
-  lorawan_stack_init(devEui, appEui, appKey, NULL, NULL);
   DEBUG_PRINTF("LoRa init");
+
+  static lorawan_session_config_t lorawan_session_config = {
+     .activationMethod = ABP,
+     .appSKey = LORAWAN_APP_SESSION_KEY,
+     .nwkSKey = LORAWAN_NETW_SESSION_KEY,
+     .devAddr = LORAWAN_DEVICE_ADDR,
+     .request_ack = false
+  };
+
+  lorawan_register_cbs(NULL, NULL, NULL);
+  lorawan_stack_init(&lorawan_session_config);
 }
 
 static uint8_t lora_send(uint8_t* buffer, uint16_t length) {
@@ -212,6 +210,15 @@ void execute_sensor_measurement()
 
 void bootstrap() {
   DEBUG_PRINTF("Device booted\n");
+
+  fs_init_args_t fs_init_args = (fs_init_args_t){
+      .fs_d7aactp_cb = &alp_layer_process_d7aactp,
+      .access_profiles_count = DEFAULT_ACCESS_PROFILES_COUNT,
+      .access_profiles = default_access_profiles,
+      .access_class = 0x21
+  };
+
+  fs_init(&fs_init_args);
 
   network_drivers_init();
   current_network_driver = &d7;
