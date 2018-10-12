@@ -20,7 +20,6 @@
 #define LORAWAN_STACK_H
 
 #include "types.h"
-#include "LoRaMac.h"
 
 typedef struct
 {
@@ -60,7 +59,7 @@ typedef struct {
 
 typedef void (*lora_rx_callback_t)(lora_AppData_t *AppData);
 typedef void (*join_completed_callback_t)(bool success,uint8_t app_port2,bool request_ack2);
-typedef void (*lora_tx_callback_t)(McpsConfirm_t *McpsConfirm);
+typedef void (*lora_tx_completed_callback_t)(bool error);
 
 
 void lorawan_stack_init(uint8_t devEUI[8], uint8_t appEUI[8], uint8_t appKey[16], join_completed_callback_t join_failed_cb, lora_rx_callback_t cb);
@@ -68,7 +67,7 @@ bool refresh_lorawan_session_config(lora_session_config_t* lora_session_config);
 void lorawan_stack_init2(lora_session_config_t* activationKeys);
 void lorawan_stack_deinit();
 bool lorawan_stack_join();
-void lora_register_cbs(lora_rx_callback_t  lora_rx_cb,lora_tx_callback_t lora_tx_cb,join_completed_callback_t join_completed_cb);
+void lora_register_cbs(lora_rx_callback_t  lora_rx_cb, lora_tx_completed_callback_t lora_tx_cb, join_completed_callback_t join_completed_cb);
 lorawan_stack_error_t lorawan_stack_send(uint8_t* payload, uint8_t length, uint8_t app_port, bool request_ack);
 
 #endif //LORAWAN_STACK_H

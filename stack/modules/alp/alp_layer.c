@@ -34,6 +34,7 @@
 #include "timer.h"
 #include "MODULE_ALP_defs.h"
 #include "d7ap.h"
+#include "lorawan_stack.h"
 
 #include "alp_layer.h"
 #include "alp_cmd_handler.h"
@@ -83,7 +84,7 @@ bool alp_layer_process_command_from_d7ap(uint8_t* alp_command, uint8_t alp_comma
 void alp_layer_command_completed(uint16_t trans_id, error_t error);
 
 void lorwan_rx(lora_AppData_t *AppData);
-void alp_layer_command_completed_from_lorawan(McpsConfirm_t *McpsConfirm);
+void alp_layer_command_completed_from_lorawan(bool error);
 void lorawan_join_completed(bool success,uint8_t app_port2,bool request_ack2);
 
 
@@ -793,24 +794,14 @@ void lorwan_rx(lora_AppData_t *AppData)
 {
    DPRINT("RECEIVED DATA"); //TODO
 }
-void alp_layer_command_completed_from_lorawan(McpsConfirm_t* McpsConfirm)
+
+void alp_layer_command_completed_from_lorawan(bool error)
 {
   
   // TODO end session
   DPRINT("LORAWAN flush completed");
-  error_t error =ERROR;
   alp_command_t* command =&commands[0];
-  if(McpsConfirm!=NULL) {
-    if( ((McpsConfirm->McpsRequest == MCPS_CONFIRMED && McpsConfirm->AckReceived==1) || (McpsConfirm->McpsRequest == MCPS_UNCONFIRMED)) && McpsConfirm->Status==LORAMAC_EVENT_INFO_STATUS_OK)
-      error =SUCCESS;
-    else if((McpsConfirm->McpsRequest==MCPS_CONFIRMED && McpsConfirm->AckReceived!=1))
-      error =ERROR;
-    if(shell_enabled&&McpsConfirm->AckReceived==1) {
-      //add_interface_status_action_lorawan(&(command->alp_response_fifo), &McpsConfirm); //TODO get ack interface status in lorwan_rx cb
-    }
-  }
-  else
-    error=ERROR;
+
   if(shell_enabled && command->respond_when_completed) {
       add_tag_response(command, true, error);
       alp_cmd_handler_output_alp_command(&(command->alp_response_fifo));

@@ -112,7 +112,7 @@ static uint8_t payload_data_buffer[LORAWAN_APP_DATA_BUFF_SIZE];
 static lora_AppData_t app_data = { payload_data_buffer, 0 ,0 };
 
 static lora_rx_callback_t rx_callback = NULL; //called when transmitting is done
-static lora_tx_callback_t tx_callback = NULL;
+static lora_tx_completed_callback_t tx_callback = NULL;
 static join_completed_callback_t join_completed_callback = NULL;
 
 static void run_fsm()
@@ -202,8 +202,17 @@ static void run_fsm()
 static void mcps_confirm(McpsConfirm_t *McpsConfirm)
 {
   log_print_string("mcps_confirm: %i",McpsConfirm->AckReceived);
-  tx_callback(McpsConfirm);
-  // TODO
+  bool error = false;
+  if(McpsConfirm!=NULL) {
+    if(((McpsConfirm->McpsRequest == MCPS_CONFIRMED && McpsConfirm->AckReceived == 1) || (McpsConfirm->McpsRequest == MCPS_UNCONFIRMED)) && McpsConfirm->Status==LORAMAC_EVENT_INFO_STATUS_OK)
+      error = false;
+    else if(McpsConfirm->McpsRequest == MCPS_CONFIRMED && McpsConfirm->AckReceived != 1)
+      error = true;
+  }
+  else
+    error = true;
+
+  tx_callback(error);
 }
 
 static void mcps_indication(McpsIndication_t *mcpsIndication)
@@ -261,7 +270,7 @@ static bool is_joined()
   return (mibReq.Param.IsNetworkJoined == true);
 }
 
-void lora_register_cbs(lora_rx_callback_t  lora_rx_cb,lora_tx_callback_t lora_tx_cb,join_completed_callback_t join_completed_cb)
+void lora_register_cbs(lora_rx_callback_t  lora_rx_cb, lora_tx_completed_callback_t lora_tx_cb,join_completed_callback_t join_completed_cb)
 {
   rx_callback = lora_rx_cb;
   tx_callback = lora_tx_cb;
