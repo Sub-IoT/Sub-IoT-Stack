@@ -38,8 +38,10 @@
 #include "compress.h"
 
 #include "d7ap.h"
-#include "alp_layer.h""
+#include "alp_layer.h"
 #include "dae.h"
+#include "platform_defs.h"
+#include "modules_defs.h"
 
 #ifdef USE_HTS221
   #include "HTS221_Driver.h"
