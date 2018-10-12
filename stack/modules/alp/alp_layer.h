@@ -56,7 +56,7 @@ typedef enum
 
 typedef union  {
     d7ap_session_config_t d7asp_session_config;
-    lora_session_config_t lora_session_config;
+    lorawan_session_config_t lorawan_session_config;
 }session_config_t;
 
 typedef void (*alp_command_completed_callback)(uint8_t tag_id, bool success);

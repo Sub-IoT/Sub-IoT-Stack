@@ -84,7 +84,7 @@ void alp_layer_process_response_from_d7ap(uint16_t trans_id, uint8_t* alp_comman
 bool alp_layer_process_command_from_d7ap(uint8_t* alp_command, uint8_t alp_command_length, d7ap_session_result_t d7asp_result);
 void alp_layer_command_completed(uint16_t trans_id, error_t error);
 
-void lorwan_rx(lora_AppData_t *AppData);
+void lorwan_rx(lorawan_AppData_t *AppData);
 void alp_layer_command_completed_from_lorawan(bool error);
 void lorawan_join_completed(bool success,uint8_t app_port2,bool request_ack2);
 
@@ -144,7 +144,7 @@ void alp_layer_init(alp_init_args_t* alp_init_args, bool is_shell_enabled)
   };
 
 #ifdef MODULE_LORAWAN
-  lora_register_cbs(lorwan_rx,alp_layer_command_completed_from_lorawan, lorawan_join_completed);
+  lorawan_register_cbs(lorwan_rx,alp_layer_command_completed_from_lorawan, lorawan_join_completed);
 #endif
 
   alp_client_id = d7ap_register(&alp_desc);
@@ -404,24 +404,24 @@ static alp_status_codes_t process_op_forward(alp_command_t* command, uint8_t* it
     case ALP_ITF_ID_LORWAN:
       
       err = fifo_pop(&command->alp_command_fifo, &session_config_flags, 1); assert(err == SUCCESS);
-      session_config->lora_session_config.activationMethod=session_config_flags & (1<<activationBitLocation);
-      session_config->lora_session_config.request_ack=session_config_flags & (1<<requestAckBitLocation);
-      err = fifo_pop(&command->alp_command_fifo, &session_config->lora_session_config.application_port, 1); assert(err == SUCCESS);
+      session_config->lorawan_session_config.activationMethod=session_config_flags & (1<<activationBitLocation);
+      session_config->lorawan_session_config.request_ack=session_config_flags & (1<<requestAckBitLocation);
+      err = fifo_pop(&command->alp_command_fifo, &session_config->lorawan_session_config.application_port, 1); assert(err == SUCCESS);
 
-      if(&session_config->lora_session_config.activationMethod==OTAA)
+      if(session_config->lorawan_session_config.activationMethod==OTAA)
       {
-        err = fifo_pop(&command->alp_command_fifo, &session_config->lora_session_config.devEUI, 8); assert(err == SUCCESS);
-        err = fifo_pop(&command->alp_command_fifo, &session_config->lora_session_config.appEUI, 8); assert(err == SUCCESS);
-        err = fifo_pop(&command->alp_command_fifo, &session_config->lora_session_config.appKey, 16); assert(err == SUCCESS);
+        err = fifo_pop(&command->alp_command_fifo, session_config->lorawan_session_config.devEUI, 8); assert(err == SUCCESS);
+        err = fifo_pop(&command->alp_command_fifo, session_config->lorawan_session_config.appEUI, 8); assert(err == SUCCESS);
+        err = fifo_pop(&command->alp_command_fifo, session_config->lorawan_session_config.appKey, 16); assert(err == SUCCESS);
       }
       else
       {
-        err = fifo_pop(&command->alp_command_fifo, &session_config->lora_session_config.nwkSKey, 16); assert(err == SUCCESS);
-        err = fifo_pop(&command->alp_command_fifo, &session_config->lora_session_config.appSKey, 16); assert(err == SUCCESS);
-        err = fifo_pop(&command->alp_command_fifo, &session_config->lora_session_config.devAddr, 4); assert(err == SUCCESS);
-        session_config->lora_session_config.devAddr=__builtin_bswap32(session_config->lora_session_config.devAddr);
-        err = fifo_pop(&command->alp_command_fifo, &session_config->lora_session_config.network_id, 4); assert(err == SUCCESS);
-        session_config->lora_session_config.network_id=__builtin_bswap32(session_config->lora_session_config.network_id);
+        err = fifo_pop(&command->alp_command_fifo, session_config->lorawan_session_config.nwkSKey, 16); assert(err == SUCCESS);
+        err = fifo_pop(&command->alp_command_fifo, session_config->lorawan_session_config.appSKey, 16); assert(err == SUCCESS);
+        err = fifo_pop(&command->alp_command_fifo, &session_config->lorawan_session_config.devAddr, 4); assert(err == SUCCESS);
+        session_config->lorawan_session_config.devAddr=__builtin_bswap32(session_config->lorawan_session_config.devAddr);
+        err = fifo_pop(&command->alp_command_fifo, &session_config->lorawan_session_config.network_id, 4); assert(err == SUCCESS);
+        session_config->lorawan_session_config.network_id=__builtin_bswap32(session_config->lorawan_session_config.network_id);
       }
       
       DPRINT("FORWARD LORAWAN");
@@ -653,18 +653,18 @@ static bool alp_layer_parse_and_execute_alp_command(alp_command_t* command)
                   d7ap_stop();
                   d7ap_interface_state=STATE_NOT_INITIALIZED;
                 }
-                lorawan_stack_init2(&session_config.lora_session_config); 
+                lorawan_stack_init(&session_config.lorawan_session_config); 
                 lorawan_interface_state=STATE_INITIALIZED;
                 send_on_join=true;
                } else {
-                bool changed=refresh_lorawan_session_config(&session_config.lora_session_config);
+                bool changed=lorawan_is_joined(&session_config.lorawan_session_config);
                 if (changed){
                   send_on_join=true;
                 } else {
                   uint8_t forwarded_alp_size = fifo_get_size(&command->alp_command_fifo);
                   uint8_t forwarded_alp_actions[forwarded_alp_size];
                   fifo_pop(&command->alp_command_fifo, forwarded_alp_actions, forwarded_alp_size);
-                  lorawan_stack_error_t e = lorawan_stack_send(forwarded_alp_actions, forwarded_alp_size, session_config.lora_session_config.application_port, session_config.lora_session_config.request_ack);
+                  lorawan_stack_error_t e = lorawan_stack_send(forwarded_alp_actions, forwarded_alp_size, session_config.lorawan_session_config.application_port, session_config.lorawan_session_config.request_ack);
                   if(e !=LORAWAN_STACK_ERROR_OK )
                     alp_layer_command_completed_from_lorawan(NULL);    
                 }
@@ -800,7 +800,7 @@ void alp_layer_command_completed(uint16_t trans_id, error_t error) {
 }
 
 #ifdef MODULE_LORAWAN
-void lorwan_rx(lora_AppData_t *AppData)
+void lorwan_rx(lorawan_AppData_t *AppData)
 {
    DPRINT("RECEIVED DATA"); //TODO
 }
