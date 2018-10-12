@@ -48,6 +48,10 @@
   #include "hwi2c.h"
 #endif
 
+#ifdef MODULE_LORAWAN
+  #error "sensor_pull app is not compatible with LoRaWAN, so disable MODULE_LORAWAN in cmake"
+#endif
+
 #ifndef USE_SX127X
   #error "background frames are only supported by the sx127x driver for now"
 #endif

@@ -33,6 +33,14 @@
 #include "alp_layer.h"
 #include "lorawan_stack.h"
 
+#include "string.h"
+
+#include "modules_defs.h"
+
+#ifndef MODULE_LORAWAN
+  #error "sensor multimodal requires MODULE_LORAWAN=y"
+#endif
+
 #define DEBUG_PRINTF(...) 							log_print_string(__VA_ARGS__)
 
 #define LORAWAN_APP_PORT                10

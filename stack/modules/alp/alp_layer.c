@@ -32,6 +32,7 @@
 #include "log.h"
 #include "shell.h"
 #include "timer.h"
+#include "modules_defs.h"
 #include "MODULE_ALP_defs.h"
 #include "d7ap.h"
 #include "lorawan_stack.h"
@@ -142,7 +143,9 @@ void alp_layer_init(alp_init_args_t* alp_init_args, bool is_shell_enabled)
       .unsolicited_cb = alp_layer_process_command_from_d7ap
   };
 
+#ifdef MODULE_LORAWAN
   lora_register_cbs(lorwan_rx,alp_layer_command_completed_from_lorawan, lorawan_join_completed);
+#endif
 
   alp_client_id = d7ap_register(&alp_desc);
   timer_init_event(&alp_layer_process_command_timer, &_async_process_command_from_d7ap);
@@ -624,10 +627,12 @@ static bool alp_layer_parse_and_execute_alp_command(alp_command_t* command)
             if(forward_itf_id == ALP_ITF_ID_D7ASP) {
             // forward rest of the actions over the D7ASP interface
              if(d7ap_interface_state==STATE_NOT_INITIALIZED){
+#ifdef MODULE_LORAWAN
                if(lorawan_interface_state==STATE_INITIALIZED){
                   lorawan_stack_deinit();
                   lorawan_interface_state=STATE_NOT_INITIALIZED;
                 }
+#endif
                 d7ap_stack_init();
                 d7ap_interface_state=STATE_INITIALIZED;
               } 
@@ -640,7 +645,9 @@ static bool alp_layer_parse_and_execute_alp_command(alp_command_t* command)
                 break; // TODO return response
             } else if(forward_itf_id == ALP_ITF_ID_SERIAL) {
                 alp_cmd_handler_output_alp_command(&command->alp_command_fifo);
-            } else if(forward_itf_id == ALP_ITF_ID_LORWAN) {
+            }
+#ifdef MODULE_LORAWAN
+            else if(forward_itf_id == ALP_ITF_ID_LORWAN) {
               if(lorawan_interface_state==STATE_NOT_INITIALIZED){
                 if(d7ap_interface_state==STATE_INITIALIZED){
                   d7ap_stop();
@@ -664,6 +671,7 @@ static bool alp_layer_parse_and_execute_alp_command(alp_command_t* command)
               }
               break; // TODO return response
             }
+#endif
             else 
             {
                 assert(false);
@@ -790,6 +798,8 @@ void alp_layer_command_completed(uint16_t trans_id, error_t error) {
 
     free_command(command);
 }
+
+#ifdef MODULE_LORAWAN
 void lorwan_rx(lora_AppData_t *AppData)
 {
    DPRINT("RECEIVED DATA"); //TODO
@@ -835,3 +845,4 @@ void lorawan_join_completed(bool success,uint8_t app_port2,bool request_ack2)
     alp_layer_command_completed_from_lorawan(NULL); //join failed
   }
 }
+#endif
