@@ -33,7 +33,7 @@
 #define D7AP_H
 
 #include "types.h"
-#include "assert.h"
+#include "debug.h"
 
 #define D7AP_MAX_CLIENT_COUNT 8
 

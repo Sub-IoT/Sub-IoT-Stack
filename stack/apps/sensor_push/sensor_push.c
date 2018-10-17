@@ -31,7 +31,7 @@
 
 #include "scheduler.h"
 #include "timer.h"
-#include "assert.h"
+#include "debug.h"
 #include "fs.h"
 #include "log.h"
 

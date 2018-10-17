@@ -23,7 +23,7 @@
 #include "scheduler.h"
 #include "timer.h"
 #include "button.h"
-#include "assert.h"
+#include "debug.h"
 #include "log.h"
 #include "led.h"
 

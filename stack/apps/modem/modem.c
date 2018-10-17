@@ -22,7 +22,7 @@
 
 #include "hwleds.h"
 #include "hwsystem.h"
-#include "assert.h"
+#include "debug.h"
 #include "console.h"
 
 #include <stdio.h>

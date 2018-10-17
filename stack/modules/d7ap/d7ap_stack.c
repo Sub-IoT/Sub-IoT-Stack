@@ -23,7 +23,7 @@
 
 #include "bitmap.h"
 #include "errors.h"
-#include "assert.h"
+#include "debug.h"
 
 #include "packet_queue.h"
 #include "d7ap_stack.h"

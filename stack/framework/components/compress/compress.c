@@ -19,7 +19,7 @@
  */
 
 #include <stdint.h>
-#include "assert.h"
+#include "debug.h"
 #include "compress.h"
 
 uint8_t compress_data(uint16_t value, bool ceil)

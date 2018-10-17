@@ -29,7 +29,7 @@
 
 #include "hwtimer.h"
 #include "hwatomic.h"
-#include "assert.h"
+#include "debug.h"
 
 #include "machine/sfradr.h"
 #include "machine/ic.h"

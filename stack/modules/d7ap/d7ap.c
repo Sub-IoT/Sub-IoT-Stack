@@ -24,7 +24,7 @@
 #include "fs.h"
 #include "phy.h"
 #include "errors.h"
-#include "assert.h"
+#include "debug.h"
 #include "dae.h"
 #include "MODULE_D7AP_defs.h"
 
