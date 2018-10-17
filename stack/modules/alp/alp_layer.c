@@ -32,8 +32,10 @@
 #include "log.h"
 #include "shell.h"
 #include "timer.h"
+#include "modules_defs.h"
 #include "MODULE_ALP_defs.h"
 #include "d7ap.h"
+#include "lorawan_stack.h"
 
 #include "alp_layer.h"
 #include "alp_cmd_handler.h"
@@ -47,6 +49,9 @@
 #endif
 
 static bool NGDEF(_shell_enabled);
+static interface_state_t lorawan_interface_state=STATE_NOT_INITIALIZED;
+static interface_state_t d7ap_interface_state=STATE_INITIALIZED;
+static send_on_join=false;
 #define shell_enabled NG(_shell_enabled)
 
 typedef struct {
@@ -78,6 +83,10 @@ void alp_layer_process_response_from_d7ap(uint16_t trans_id, uint8_t* alp_comman
                                           uint8_t alp_command_length, d7ap_session_result_t d7asp_result);
 bool alp_layer_process_command_from_d7ap(uint8_t* alp_command, uint8_t alp_command_length, d7ap_session_result_t d7asp_result);
 void alp_layer_command_completed(uint16_t trans_id, error_t error);
+
+void lorwan_rx(lorawan_AppData_t *AppData);
+void alp_layer_command_completed_from_lorawan(bool error);
+void lorawan_join_completed(bool success,uint8_t app_port2,bool request_ack2);
 
 
 static void free_command(alp_command_t* command) {
@@ -133,6 +142,10 @@ void alp_layer_init(alp_init_args_t* alp_init_args, bool is_shell_enabled)
       .transmitted_cb = alp_layer_command_completed,
       .unsolicited_cb = alp_layer_process_command_from_d7ap
   };
+
+#ifdef MODULE_LORAWAN
+  lorawan_register_cbs(lorwan_rx,alp_layer_command_completed_from_lorawan, lorawan_join_completed);
+#endif
 
   alp_client_id = d7ap_register(&alp_desc);
   timer_init_event(&alp_layer_process_command_timer, &_async_process_command_from_d7ap);
@@ -366,24 +379,52 @@ static alp_status_codes_t process_op_break_query(alp_command_t* command) {
   return ALP_STATUS_OK;
 }
 
-static alp_status_codes_t process_op_forward(alp_command_t* command, uint8_t* itf_id, d7ap_session_config_t* session_config) {
+static alp_status_codes_t process_op_forward(alp_command_t* command, uint8_t* itf_id, session_config_t* session_config) {
   // TODO move session config to alp_command_t struct
   error_t err;
+  uint8_t activationBitLocation=0;
+  uint8_t requestAckBitLocation=1;
+  uint8_t session_config_flags;
   err = fifo_skip(&command->alp_command_fifo, 1); assert(err == SUCCESS); // skip the control byte
   err = fifo_pop(&command->alp_command_fifo, itf_id, 1); assert(err == SUCCESS);
   switch(*itf_id) {
     case ALP_ITF_ID_D7ASP:
-      err = fifo_pop(&command->alp_command_fifo, &session_config->qos.raw, 1); assert(err == SUCCESS);
-      err = fifo_pop(&command->alp_command_fifo, &session_config->dormant_timeout, 1); assert(err == SUCCESS);
-      err = fifo_pop(&command->alp_command_fifo, &session_config->addressee.ctrl.raw, 1); assert(err == SUCCESS);
-      uint8_t id_length = d7ap_addressee_id_length(session_config->addressee.ctrl.id_type);
-      err = fifo_pop(&command->alp_command_fifo, &session_config->addressee.access_class, 1); assert(err == SUCCESS);
-      err = fifo_pop(&command->alp_command_fifo, session_config->addressee.id, id_length); assert(err == SUCCESS);
+      err = fifo_pop(&command->alp_command_fifo, &session_config->d7asp_session_config.qos.raw, 1); assert(err == SUCCESS);
+      err = fifo_pop(&command->alp_command_fifo, &session_config->d7asp_session_config.dormant_timeout, 1); assert(err == SUCCESS);
+      err = fifo_pop(&command->alp_command_fifo, &session_config->d7asp_session_config.addressee.ctrl.raw, 1); assert(err == SUCCESS);
+      uint8_t id_length = d7ap_addressee_id_length(session_config->d7asp_session_config.addressee.ctrl.id_type);
+      err = fifo_pop(&command->alp_command_fifo, &session_config->d7asp_session_config.addressee.access_class, 1); assert(err == SUCCESS);
+      err = fifo_pop(&command->alp_command_fifo, session_config->d7asp_session_config.addressee.id, id_length); assert(err == SUCCESS);
       DPRINT("FORWARD D7ASP");
       break;
     case ALP_ITF_ID_SERIAL:
       // no configuration
       DPRINT("FORWARD SERIAL");
+      break;
+    case ALP_ITF_ID_LORWAN:
+      
+      err = fifo_pop(&command->alp_command_fifo, &session_config_flags, 1); assert(err == SUCCESS);
+      session_config->lorawan_session_config.activationMethod=session_config_flags & (1<<activationBitLocation);
+      session_config->lorawan_session_config.request_ack=session_config_flags & (1<<requestAckBitLocation);
+      err = fifo_pop(&command->alp_command_fifo, &session_config->lorawan_session_config.application_port, 1); assert(err == SUCCESS);
+
+      if(session_config->lorawan_session_config.activationMethod==OTAA)
+      {
+        err = fifo_pop(&command->alp_command_fifo, session_config->lorawan_session_config.devEUI, 8); assert(err == SUCCESS);
+        err = fifo_pop(&command->alp_command_fifo, session_config->lorawan_session_config.appEUI, 8); assert(err == SUCCESS);
+        err = fifo_pop(&command->alp_command_fifo, session_config->lorawan_session_config.appKey, 16); assert(err == SUCCESS);
+      }
+      else
+      {
+        err = fifo_pop(&command->alp_command_fifo, session_config->lorawan_session_config.nwkSKey, 16); assert(err == SUCCESS);
+        err = fifo_pop(&command->alp_command_fifo, session_config->lorawan_session_config.appSKey, 16); assert(err == SUCCESS);
+        err = fifo_pop(&command->alp_command_fifo, &session_config->lorawan_session_config.devAddr, 4); assert(err == SUCCESS);
+        session_config->lorawan_session_config.devAddr=__builtin_bswap32(session_config->lorawan_session_config.devAddr);
+        err = fifo_pop(&command->alp_command_fifo, &session_config->lorawan_session_config.network_id, 4); assert(err == SUCCESS);
+        session_config->lorawan_session_config.network_id=__builtin_bswap32(session_config->lorawan_session_config.network_id);
+      }
+      
+      DPRINT("FORWARD LORAWAN");
       break;
     default:
       DPRINT("unsupported ITF %i", itf_id);
@@ -575,7 +616,7 @@ void alp_layer_execute_command_over_d7a(uint8_t* alp_command, uint8_t alp_comman
 
 static bool alp_layer_parse_and_execute_alp_command(alp_command_t* command)
 {
-    d7ap_session_config_t d7asp_session_config;
+    session_config_t session_config;
     uint8_t forward_itf_id = ALP_ITF_ID_HOST;
     bool do_forward = false;
 
@@ -585,20 +626,56 @@ static bool alp_layer_parse_and_execute_alp_command(alp_command_t* command)
             do_forward = true;
             if(forward_itf_id == ALP_ITF_ID_D7ASP) {
             // forward rest of the actions over the D7ASP interface
-                uint8_t forwarded_alp_size = fifo_get_size(&command->alp_command_fifo);
-                uint8_t forwarded_alp_actions[forwarded_alp_size];
-                fifo_pop(&command->alp_command_fifo, forwarded_alp_actions, forwarded_alp_size);
-
-                uint8_t expected_response_length = alp_get_expected_response_length(forwarded_alp_actions, forwarded_alp_size);
-                d7ap_send(alp_client_id, &d7asp_session_config, forwarded_alp_actions,
-                          forwarded_alp_size, expected_response_length, &command->trans_id);
+             if(d7ap_interface_state==STATE_NOT_INITIALIZED){
+#ifdef MODULE_LORAWAN
+               if(lorawan_interface_state==STATE_INITIALIZED){
+                  lorawan_stack_deinit();
+                  lorawan_interface_state=STATE_NOT_INITIALIZED;
+                }
+#endif
+                d7ap_stack_init();
+                d7ap_interface_state=STATE_INITIALIZED;
+              } 
+              uint8_t forwarded_alp_size = fifo_get_size(&command->alp_command_fifo);
+              uint8_t forwarded_alp_actions[forwarded_alp_size];
+              fifo_pop(&command->alp_command_fifo, forwarded_alp_actions, forwarded_alp_size);
+              uint8_t expected_response_length = alp_get_expected_response_length(forwarded_alp_actions, forwarded_alp_size);
+              d7ap_send(alp_client_id, &session_config.d7asp_session_config, forwarded_alp_actions,
+                        forwarded_alp_size, expected_response_length, &command->trans_id);
                 break; // TODO return response
             } else if(forward_itf_id == ALP_ITF_ID_SERIAL) {
                 alp_cmd_handler_output_alp_command(&command->alp_command_fifo);
-            } else {
+            }
+#ifdef MODULE_LORAWAN
+            else if(forward_itf_id == ALP_ITF_ID_LORWAN) {
+              if(lorawan_interface_state==STATE_NOT_INITIALIZED){
+                if(d7ap_interface_state==STATE_INITIALIZED){
+                  d7ap_stop();
+                  d7ap_interface_state=STATE_NOT_INITIALIZED;
+                }
+                lorawan_stack_init(&session_config.lorawan_session_config); 
+                lorawan_interface_state=STATE_INITIALIZED;
+                send_on_join=true;
+               } else {
+                bool changed=lorawan_is_joined(&session_config.lorawan_session_config);
+                if (changed){
+                  send_on_join=true;
+                } else {
+                  uint8_t forwarded_alp_size = fifo_get_size(&command->alp_command_fifo);
+                  uint8_t forwarded_alp_actions[forwarded_alp_size];
+                  fifo_pop(&command->alp_command_fifo, forwarded_alp_actions, forwarded_alp_size);
+                  lorawan_stack_error_t e = lorawan_stack_send(forwarded_alp_actions, forwarded_alp_size, session_config.lorawan_session_config.application_port, session_config.lorawan_session_config.request_ack);
+                  if(e !=LORAWAN_STACK_ERROR_OK )
+                    alp_layer_command_completed_from_lorawan(NULL);    
+                }
+              }
+              break; // TODO return response
+            }
+#endif
+            else 
+            {
                 assert(false);
             }
-
             return true;
         }
 
@@ -622,7 +699,7 @@ static bool alp_layer_parse_and_execute_alp_command(alp_command_t* command)
             alp_status = process_op_break_query(command);
             break;
         case ALP_OP_FORWARD:
-            alp_status = process_op_forward(command, &forward_itf_id, &d7asp_session_config);
+            alp_status = process_op_forward(command, &forward_itf_id, &session_config);
             break;
         case ALP_OP_REQUEST_TAG: ;
             alp_control_tag_request_t* tag_request = (alp_control_tag_request_t*)&control;
@@ -721,3 +798,51 @@ void alp_layer_command_completed(uint16_t trans_id, error_t error) {
 
     free_command(command);
 }
+
+#ifdef MODULE_LORAWAN
+void lorwan_rx(lorawan_AppData_t *AppData)
+{
+   DPRINT("RECEIVED DATA"); //TODO
+}
+
+void alp_layer_command_completed_from_lorawan(bool error)
+{
+  
+  // TODO end session
+  DPRINT("LORAWAN flush completed");
+  alp_command_t* command =&commands[0];
+
+  if(shell_enabled && command->respond_when_completed) {
+      add_tag_response(command, true, error);
+      alp_cmd_handler_output_alp_command(&(command->alp_response_fifo));
+      fifo_clear(&(command->alp_response_fifo));
+  }
+
+  if(init_args != NULL && init_args->alp_command_completed_cb != NULL)
+      init_args->alp_command_completed_cb(command->tag_id, !error);
+
+  free_command(command);  
+}
+
+void lorawan_join_completed(bool success,uint8_t app_port2,bool request_ack2)
+{
+  if(send_on_join&&success)
+  {
+    alp_command_t* command =&commands[0];
+    
+    uint8_t forwarded_alp_size = fifo_get_size(&command->alp_command_fifo);
+    uint8_t forwarded_alp_actions[forwarded_alp_size];
+    
+    fifo_pop(&command->alp_command_fifo, forwarded_alp_actions, forwarded_alp_size);
+    lorawan_stack_error_t e = lorawan_stack_send(forwarded_alp_actions, forwarded_alp_size, app_port2, request_ack2);
+    
+    if(e !=LORAWAN_STACK_ERROR_OK )
+      alp_layer_command_completed_from_lorawan(NULL);  
+    send_on_join=false;
+  }
+  else if(send_on_join&&!success)
+  {
+    alp_layer_command_completed_from_lorawan(NULL); //join failed
+  }
+}
+#endif

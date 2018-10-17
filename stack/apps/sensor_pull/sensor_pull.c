@@ -38,12 +38,18 @@
 #include "compress.h"
 
 #include "d7ap.h"
-#include "alp_layer.h""
+#include "alp_layer.h"
 #include "dae.h"
+#include "platform_defs.h"
+#include "modules_defs.h"
 
 #ifdef USE_HTS221
   #include "HTS221_Driver.h"
   #include "hwi2c.h"
+#endif
+
+#ifdef MODULE_LORAWAN
+  #error "sensor_pull app is not compatible with LoRaWAN, so disable MODULE_LORAWAN in cmake"
 #endif
 
 #ifndef USE_SX127X

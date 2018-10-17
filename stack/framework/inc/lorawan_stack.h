@@ -30,7 +30,7 @@ typedef struct
   /*Port on which the LoRa App is data is sent/ received*/
   uint8_t Port;
 
-} lora_AppData_t;
+} lorawan_AppData_t;
 
 typedef enum {
   LORAWAN_STACK_ERROR_OK,
@@ -39,12 +39,34 @@ typedef enum {
   LORAWAN_STACK_ERROR_UNKNOWN,
 } lorawan_stack_error_t;
 
-typedef void (*lora_rx_callback_t)(lora_AppData_t *AppData);
-typedef void (*join_completed_callback_t)(bool success);
+typedef enum {
+  ABP,
+  OTAA,
+} activationMethod_t;
 
-void lorawan_stack_init(uint8_t devEUI[8], uint8_t appEUI[8], uint8_t appKey[16], join_completed_callback_t join_failed_cb, lora_rx_callback_t cb);
+typedef struct {
+    uint8_t devEUI[8];
+    uint8_t appEUI[8];
+    uint8_t appKey[16];
+    activationMethod_t activationMethod;
+    uint8_t nwkSKey[16] ;
+    uint8_t appSKey[16] ;
+    uint32_t devAddr;
+    uint32_t network_id;
+    bool request_ack;
+    uint8_t application_port;
+} lorawan_session_config_t;
+
+typedef void (*lorawan_rx_callback_t)(lorawan_AppData_t *AppData);
+typedef void (*join_completed_callback_t)(bool success,uint8_t app_port2,bool request_ack2);
+typedef void (*lorawan_tx_completed_callback_t)(bool error);
+
+
+bool lorawan_is_joined(lorawan_session_config_t* lorawan_session_config);
+void lorawan_stack_init(lorawan_session_config_t* activationKeys);
 void lorawan_stack_deinit();
 bool lorawan_stack_join();
+void lorawan_register_cbs(lorawan_rx_callback_t  lorawan_rx_cb, lorawan_tx_completed_callback_t lorawan_tx_cb, join_completed_callback_t join_completed_cb);
 lorawan_stack_error_t lorawan_stack_send(uint8_t* payload, uint8_t length, uint8_t app_port, bool request_ack);
 
 #endif //LORAWAN_STACK_H

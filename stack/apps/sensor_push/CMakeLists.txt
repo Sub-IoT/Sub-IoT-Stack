@@ -29,4 +29,10 @@
 #SET_PROPERTY(CACHE ${APP_PREFIX}_<param_name> PROPERTY STRINGS "value1;value2")
 #
 
-APP_BUILD(NAME ${APP_NAME} SOURCES sensor_push.c LIBS alp d7ap framework)
+IF(${MODULE_LORAWAN})
+    SET(libs alp d7ap lorawan framework)
+ELSE()
+    SET(libs alp d7ap framework)
+ENDIF()
+
+APP_BUILD(NAME ${APP_NAME} SOURCES sensor_push.c LIBS ${libs})

@@ -78,30 +78,30 @@ node {
         }
     }
 
-    stage('Build EZR32LG_WSTK6200A platform') {
-        dir('EZR32LG_WSTK6200A') {
-            sh 'mkdir build'
-            dir('build') {
-                try {
-                    sh '''
-                        platform="EZR32LG_WSTK6200A"
-                        toolchain_file="../../stack/cmake/toolchains/gcc-arm-embedded.cmake"
-                        toolchain_dir="/opt/gcc-arm-none-eabi-7-2017-q4-major"
-                        cmake ../../stack/ -DAPP_GATEWAY=y -DAPP_MODEM=y -DAPP_SENSOR_PUSH=y -DPLATFORM=$platform -DTOOLCHAIN_DIR=$toolchain_dir -DCMAKE_TOOLCHAIN_FILE=$toolchain_file
-                        make
-                       '''
-                    setBuildStatus("EZR32LG_WSTK6200A","Build","SUCCESS")
-                    echo 'EZR32LG_WSTK6200A success'
-                }
-                catch (exc) 
-                {
-                    setBuildStatus("EZR32LG_WSTK6200A","Build","FAILURE")
-                    echo 'EZR32LG_WSTK6200A failed'
-                    currentBuild.result = 'FAILURE'
-                }
-            }
-        }
-    }
+    // stage('Build EZR32LG_WSTK6200A platform') {
+    //     dir('EZR32LG_WSTK6200A') {
+    //         sh 'mkdir build'
+    //         dir('build') {
+    //             try {
+    //                 sh '''
+    //                     platform="EZR32LG_WSTK6200A"
+    //                     toolchain_file="../../stack/cmake/toolchains/gcc-arm-embedded.cmake"
+    //                     toolchain_dir="/opt/gcc-arm-none-eabi-7-2017-q4-major"
+    //                     cmake ../../stack/ -DAPP_GATEWAY=y -DAPP_MODEM=y -DAPP_SENSOR_PUSH=y -DPLATFORM=$platform -DTOOLCHAIN_DIR=$toolchain_dir -DCMAKE_TOOLCHAIN_FILE=$toolchain_file
+    //                     make
+    //                    '''
+    //                 setBuildStatus("EZR32LG_WSTK6200A","Build","SUCCESS")
+    //                 echo 'EZR32LG_WSTK6200A success'
+    //             }
+    //             catch (exc) 
+    //             {
+    //                 setBuildStatus("EZR32LG_WSTK6200A","Build","FAILURE")
+    //                 echo 'EZR32LG_WSTK6200A failed'
+    //                 currentBuild.result = 'FAILURE'
+    //             }
+    //         }
+    //     }
+    // }
 
      stage('Build cortus_fpga platform') {
         dir('cortus_fpga') {

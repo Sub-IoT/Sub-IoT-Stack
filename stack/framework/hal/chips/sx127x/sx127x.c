@@ -954,6 +954,7 @@ error_t hw_radio_init(alloc_packet_callback_t alloc_packet_cb, release_packet_ca
     sx127x_spi = spi_init_slave(spi_handle, SX127x_SPI_PIN_CS, true);
   }
 
+  spi_enable(spi_handle);
   hw_radio_io_init();
   hw_radio_reset();
 
