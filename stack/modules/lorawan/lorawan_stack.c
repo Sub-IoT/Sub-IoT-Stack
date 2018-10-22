@@ -369,6 +369,8 @@ bool lorawan_is_joined(lorawan_session_config_t* lorawan_session_config)
 void lorawan_stack_init(lorawan_session_config_t* lorawan_session_config) {
 
   activationMethod=lorawan_session_config->activationMethod;
+  app_port2=lorawan_session_config->application_port;
+  request_ack2=lorawan_session_config->request_ack;
   if(activationMethod==OTAA)
   {
     memcpy(devEui,&lorawan_session_config->devEUI ,8);
