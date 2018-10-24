@@ -158,7 +158,8 @@ spi_handle_t* spi_init(uint8_t spi_number, uint32_t baudrate, uint8_t databits, 
   assert(spi_number < SPI_COUNT);
 
   next_spi_slave_handle = 0;
-
+  handle[spi_number].slaves=0;
+  
   if (handle[spi_number].hspi.Instance != NULL)
   {
     //TODO: check if settings are ok
@@ -166,7 +167,7 @@ spi_handle_t* spi_init(uint8_t spi_number, uint32_t baudrate, uint8_t databits, 
   }
 
   handle[spi_number].spi_port_number = spi_number;
-  handle[spi_number].slaves=0;
+  
   init_pins(&handle[spi_number]);
 
   handle[spi_number].hspi.Instance = spi_ports[spi_number].spi;

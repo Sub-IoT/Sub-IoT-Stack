@@ -28,5 +28,10 @@
 #Cache properties can be set on application parameters just like on regular cache parameters
 #SET_PROPERTY(CACHE ${APP_PREFIX}_<param_name> PROPERTY STRINGS "value1;value2")
 #
+IF(${MODULE_LORAWAN})
+    SET(libs alp d7ap lorawan framework)
+ELSE()
+    SET(libs alp d7ap framework)
+ENDIF()
 
-APP_BUILD(NAME ${APP_NAME} SOURCES app.c LIBS d7ap alp framework)
+APP_BUILD(NAME ${APP_NAME} SOURCES app.c LIBS ${libs})
