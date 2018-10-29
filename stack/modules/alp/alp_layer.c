@@ -382,7 +382,6 @@ static alp_status_codes_t process_op_break_query(alp_command_t* command) {
 static alp_status_codes_t process_op_forward(alp_command_t* command, uint8_t* itf_id, session_config_t* session_config) {
   // TODO move session config to alp_command_t struct
   error_t err;
-  uint8_t activationBitLocation=0;
   uint8_t requestAckBitLocation=1;
   uint8_t session_config_flags;
   err = fifo_skip(&command->alp_command_fifo, 1); assert(err == SUCCESS); // skip the control byte
@@ -401,7 +400,7 @@ static alp_status_codes_t process_op_forward(alp_command_t* command, uint8_t* it
       // no configuration
       DPRINT("FORWARD SERIAL");
       break;
-    case ALP_ITF_ID_LORWAN_OTAA:
+    case ALP_ITF_ID_LORAWAN_OTAA:
       
       err = fifo_pop(&command->alp_command_fifo, &session_config_flags, 1); assert(err == SUCCESS);
       session_config->lorawan_session_config_otaa.request_ack=session_config_flags & (1<<requestAckBitLocation);
@@ -413,7 +412,7 @@ static alp_status_codes_t process_op_forward(alp_command_t* command, uint8_t* it
       
       DPRINT("FORWARD LORAWAN");
       break;
-    case ALP_ITF_ID_LORWAN_ABP:
+    case ALP_ITF_ID_LORAWAN_ABP:
       
       err = fifo_pop(&command->alp_command_fifo, &session_config_flags, 1); assert(err == SUCCESS);
       session_config->lorawan_session_config_abp.request_ack=session_config_flags & (1<<requestAckBitLocation);
@@ -649,7 +648,7 @@ static bool alp_layer_parse_and_execute_alp_command(alp_command_t* command)
                 alp_cmd_handler_output_alp_command(&command->alp_command_fifo);
             }
 #ifdef MODULE_LORAWAN
-            else if(forward_itf_id == ALP_ITF_ID_LORWAN_ABP ) {
+            else if(forward_itf_id == ALP_ITF_ID_LORAWAN_ABP ) {
               if(lorawan_interface_state==STATE_NOT_INITIALIZED){
                 if(d7ap_interface_state==STATE_INITIALIZED){
                   d7ap_stop();
@@ -673,7 +672,7 @@ static bool alp_layer_parse_and_execute_alp_command(alp_command_t* command)
               }
               break; // TODO return response
             }
-            else if(forward_itf_id == ALP_ITF_ID_LORWAN_OTAA ) {
+            else if(forward_itf_id == ALP_ITF_ID_LORAWAN_OTAA ) {
               if(lorawan_interface_state==STATE_NOT_INITIALIZED){
                 if(d7ap_interface_state==STATE_INITIALIZED){
                   d7ap_stop();

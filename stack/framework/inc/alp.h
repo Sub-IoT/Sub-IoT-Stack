@@ -36,18 +36,20 @@
 
 #include "fifo.h"
 
-#define ALP_ITF_ID_HOST         0x00
-#define ALP_ITF_ID_SERIAL       0x01 // not part of the spec
-#define ALP_ITF_ID_D7ASP        0xD7
-#define ALP_ITF_ID_LORWAN_ABP   0x02//not part of the spec
-#define ALP_ITF_ID_LORWAN_OTAA  0x03//not part of the spec
-
-
 #define SERIAL_ALP_FRAME_SYNC_BYTE 0xC0
 #define SERIAL_ALP_FRAME_VERSION   0x00
 #define SERIAL_ALP_FRAME_HEADER_SIZE 3
 
 #define ALP_PAYLOAD_MAX_SIZE 200 // TODO configurable?
+
+typedef enum
+{
+    ALP_ITF_ID_HOST = 0x00,
+    ALP_ITF_ID_SERIAL = 0x01, // not part of the spec
+    ALP_ITF_ID_LORAWAN_ABP = 0x02, // not part of the spec
+    ALP_ITF_ID_LORAWAN_OTAA = 0x03, // not part of the spec
+    ALP_ITF_ID_D7ASP = 0xD7
+} alp_itf_id_t;
 
 typedef enum
 {

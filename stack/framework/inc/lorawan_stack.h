@@ -72,8 +72,8 @@ bool lorawan_abp_is_joined(lorawan_session_config_abp_t* lorawan_session_config)
 bool lorawan_otaa_is_joined(lorawan_session_config_otaa_t* lorawan_session_config);
 void lorawan_stack_init_abp(lorawan_session_config_abp_t* lorawan_session_config);
 void lorawan_stack_init_otaa(lorawan_session_config_otaa_t* lorawan_session_config) ;
-void lorawan_stack_deinit();
-bool lorawan_stack_join();
+void lorawan_stack_deinit(void);
+bool lorawan_stack_join(void);
 void lorawan_register_cbs(lorawan_rx_callback_t  lorawan_rx_cb, lorawan_tx_completed_callback_t lorawan_tx_cb, join_completed_callback_t join_completed_cb);
 lorawan_stack_error_t lorawan_stack_send(uint8_t* payload, uint8_t length, uint8_t app_port, bool request_ack);
 
