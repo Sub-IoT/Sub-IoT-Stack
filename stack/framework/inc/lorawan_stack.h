@@ -44,26 +44,36 @@ typedef enum {
   OTAA,
 } activationMethod_t;
 
+
+
 typedef struct {
-    uint8_t devEUI[8];
-    uint8_t appEUI[8];
-    uint8_t appKey[16];
-    activationMethod_t activationMethod;
     uint8_t nwkSKey[16] ;
     uint8_t appSKey[16] ;
     uint32_t devAddr;
     uint32_t network_id;
     bool request_ack;
     uint8_t application_port;
-} lorawan_session_config_t;
+    activationMethod_t activationMethod; //TODO remove
+} lorawan_session_config_abp_t;
+
+typedef struct {
+    uint8_t devEUI[8];
+    uint8_t appEUI[8];
+    uint8_t appKey[16];
+   bool request_ack;
+    uint8_t application_port;
+    activationMethod_t activationMethod; //TODO remove
+} lorawan_session_config_otaa_t;
 
 typedef void (*lorawan_rx_callback_t)(lorawan_AppData_t *AppData);
 typedef void (*join_completed_callback_t)(bool success,uint8_t app_port2,bool request_ack2);
 typedef void (*lorawan_tx_completed_callback_t)(bool error);
 
 
-bool lorawan_is_joined(lorawan_session_config_t* lorawan_session_config);
-void lorawan_stack_init(lorawan_session_config_t* activationKeys);
+bool lorawan_abp_is_joined(lorawan_session_config_abp_t* lorawan_session_config);
+bool lorawan_otaa_is_joined(lorawan_session_config_otaa_t* lorawan_session_config);
+void lorawan_stack_init_abp(lorawan_session_config_abp_t* lorawan_session_config);
+void lorawan_stack_init_otaa(lorawan_session_config_otaa_t* lorawan_session_config) ;
 void lorawan_stack_deinit();
 bool lorawan_stack_join();
 void lorawan_register_cbs(lorawan_rx_callback_t  lorawan_rx_cb, lorawan_tx_completed_callback_t lorawan_tx_cb, join_completed_callback_t join_completed_cb);
