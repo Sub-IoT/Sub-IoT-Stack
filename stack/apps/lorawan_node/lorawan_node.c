@@ -55,11 +55,11 @@ void on_join_completed(bool success,uint8_t app_port,bool request_ack) {
 }
 void lorwan_rx(lorawan_AppData_t *AppData)
 {
-   DPRINT("RECEIVED DATA"); //TODO
+   log_print_string("RECEIVED DATA"); //TODO
 }
 void lorwan_tx(bool error)
 {
-   DPRINT("RECEIVED DATA"); //TODO
+   log_print_string("RECEIVED DATA"); //TODO
 }
 
 void bootstrap()
