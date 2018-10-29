@@ -286,9 +286,9 @@ bool lorawan_abp_is_joined(lorawan_session_config_abp_t* lorawan_session_config)
   app_port2=lorawan_session_config->application_port;
   request_ack2=lorawan_session_config->request_ack;
   
-  if(activationMethod!=lorawan_session_config->activationMethod)
+  if(activationMethod!=ABP)
   {
-    activationMethod=lorawan_session_config->activationMethod;
+    activationMethod=ABP;
     joined=false;
   }
 
@@ -348,9 +348,9 @@ bool lorawan_otaa_is_joined(lorawan_session_config_otaa_t* lorawan_session_confi
   app_port2=lorawan_session_config->application_port;
   request_ack2=lorawan_session_config->request_ack;
   
-  if(activationMethod!=lorawan_session_config->activationMethod)
+  if(activationMethod!=OTAA)
   {
-    activationMethod=lorawan_session_config->activationMethod;
+    activationMethod=OTAA;
     joined=false;
   }
   if(memcmp(devEui,&lorawan_session_config->devEUI ,8)!=0)
@@ -398,7 +398,7 @@ bool lorawan_otaa_is_joined(lorawan_session_config_otaa_t* lorawan_session_confi
 }
 void lorawan_stack_init_abp(lorawan_session_config_abp_t* lorawan_session_config) {
 
-  activationMethod=lorawan_session_config->activationMethod;
+  activationMethod=ABP;
   app_port2=lorawan_session_config->application_port;
   request_ack2=lorawan_session_config->request_ack;
 
@@ -476,7 +476,7 @@ void lorawan_stack_init_abp(lorawan_session_config_abp_t* lorawan_session_config
 }
 void lorawan_stack_init_otaa(lorawan_session_config_otaa_t* lorawan_session_config) {
 
-  activationMethod=lorawan_session_config->activationMethod;
+  activationMethod=OTAA;
   app_port2=lorawan_session_config->application_port;
   request_ack2=lorawan_session_config->request_ack;
 

@@ -404,8 +404,6 @@ static alp_status_codes_t process_op_forward(alp_command_t* command, uint8_t* it
     case ALP_ITF_ID_LORWAN_OTAA:
       
       err = fifo_pop(&command->alp_command_fifo, &session_config_flags, 1); assert(err == SUCCESS);
-      //session_config->lorawan_session_config_otaa.activationMethod=session_config_flags & (1<<activationBitLocation);
-      session_config->lorawan_session_config_otaa.activationMethod=true;
       session_config->lorawan_session_config_otaa.request_ack=session_config_flags & (1<<requestAckBitLocation);
       err = fifo_pop(&command->alp_command_fifo, &session_config->lorawan_session_config_otaa.application_port, 1); assert(err == SUCCESS);
 
@@ -418,8 +416,6 @@ static alp_status_codes_t process_op_forward(alp_command_t* command, uint8_t* it
     case ALP_ITF_ID_LORWAN_ABP:
       
       err = fifo_pop(&command->alp_command_fifo, &session_config_flags, 1); assert(err == SUCCESS);
-      //session_config->lorawan_session_config_abp.activationMethod=session_config_flags & (1<<activationBitLocation);
-      session_config->lorawan_session_config_abp.activationMethod=false;
       session_config->lorawan_session_config_abp.request_ack=session_config_flags & (1<<requestAckBitLocation);
       err = fifo_pop(&command->alp_command_fifo, &session_config->lorawan_session_config_abp.application_port, 1); assert(err == SUCCESS);
 
