@@ -352,6 +352,59 @@ void sched_set_low_power_mode(uint8_t mode) {
   low_power_mode = mode;
 }
 
+
+typedef char (*protothread_function_t)(struct pt* pt);
+__LINK_C void sched_run_thread(protothread_function_t pt_func, struct pt* pt)
+{
+  DPRINT("> scheduler_run_thread\n");
+  while(PT_SCHEDULE(pt_func(pt)))
+  {
+    bool executed_task = false;
+    while(NG(current_priority) < NUM_PRIORITIES)
+    {
+      check_structs_are_valid();
+      for(uint8_t id = pop_task((NG(current_priority))); id != NO_TASK; id = pop_task(NG(current_priority)))
+      {
+        check_structs_are_valid();
+#if defined(FRAMEWORK_LOG_ENABLED) && defined(FRAMEWORK_SCHED_LOG_ENABLED)
+        timer_tick_t start = timer_get_counter_value();
+        DPRINT("SCHED start %p at %i", NG(m_info)[id].task, start);
+#endif
+        NG(m_info)[id].task(NG(m_info)[id].arg);
+        executed_task = true;
+#if defined(FRAMEWORK_LOG_ENABLED) && defined(FRAMEWORK_SCHED_LOG_ENABLED)
+        timer_tick_t stop = timer_get_counter_value();
+        timer_tick_t duration = stop - start;
+        log_print_string("SCHED stop %p at %i took %i", NG(m_info)[id].task, stop, duration);
+#endif
+      }
+      //this needs to be done atomically since otherwise we risk decrementing the current priority
+      //while a higher priority task is waiting in the queue
+      start_atomic();
+      if (!tasks_waiting(NG(current_priority)))
+        NG(current_priority)++;
+#ifndef NDEBUG
+      for(int i = 0; i < NG(current_priority); i++)
+        assert(!tasks_waiting(i));
+#endif
+      end_atomic();
+    }
+
+    if(executed_task) {
+      // rerun the blocking thread again to see if the executed task(s) unblocked it, before going to sleep
+      if(!PT_SCHEDULE(pt_func(pt)))
+        goto end;
+    }
+
+    hw_enter_lowpower_mode(low_power_mode);
+  }
+
+end:
+  // reset priorities so main scheduler loops starts again at max prio
+  NG(current_priority) = MAX_PRIORITY;
+  DPRINT("< sched_run_thread @ %i\n", timer_get_counter_value());
+}
+
 __LINK_C void scheduler_run()
 {
 	while(1)

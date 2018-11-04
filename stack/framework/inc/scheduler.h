@@ -30,6 +30,7 @@
 
 #include "link_c.h"
 #include "types.h"
+#include "pt.h"
 
 /*! \brief Type definition for tasks
  *
@@ -128,6 +129,9 @@ __LINK_C bool sched_is_scheduled(task_t task);
 
 __LINK_C uint8_t sched_get_low_power_mode(void);
 __LINK_C void    sched_set_low_power_mode(uint8_t mode);
+
+typedef char (*protothread_function_t)(struct pt* pt);
+__LINK_C void sched_run_thread(protothread_function_t pt_func, struct pt* pt);
 
 #endif /* SCHEDULER_H_ */
 
