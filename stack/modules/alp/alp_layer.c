@@ -827,9 +827,17 @@ void alp_layer_command_completed(uint16_t trans_id, error_t error) {
 #ifdef MODULE_LORAWAN
 void lorwan_rx(lorawan_AppData_t *AppData)
 {
-   DPRINT("RECEIVED DATA"); //TODO
-   DPRINT_DATA(AppData->Buff, AppData->BuffSize);
-   
+  DPRINT("RECEIVED DOWNLINK"); //TODO
+  DPRINT_DATA(AppData->Buff,AppData->BuffSize);
+  alp_command_t* command = alloc_command();
+  assert(command != NULL); // TODO return error
+
+  memcpy(command->alp_command, AppData->Buff, AppData->BuffSize); // TODO not needed to store this
+  fifo_init_filled(&(command->alp_command_fifo), command->alp_command, AppData->BuffSize, ALP_PAYLOAD_MAX_SIZE);
+  command->origin = ALP_CMD_ORIGIN_D7AP; //TODO add lorawan origin?
+
+  bool do_forward = alp_layer_parse_and_execute_alp_command(command);
+  free_command(command); // when forwarding the response will arrive async, clean up then   
 }
 
 void alp_layer_command_completed_from_lorawan(bool error)
