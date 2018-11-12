@@ -134,7 +134,7 @@ void TimerInit( TimerEvent_t *obj, void ( *callback )( void ) )
   obj->IsRunning = false;
   obj->Callback = callback;
   obj->Next = NULL;
-  sched_register_task(obj->Callback);
+  sched_register_task((task_t)obj->Callback);
 }
 
 void TimerStart( TimerEvent_t *obj )
@@ -249,7 +249,7 @@ void TimerIrqHandler( void )
     cur = TimerListHead;
     TimerListHead = TimerListHead->Next;
     //exec_cb( cur->Callback );
-    sched_post_task(cur->Callback);
+    sched_post_task((task_t)cur->Callback);
   }
 
 
@@ -259,7 +259,7 @@ void TimerIrqHandler( void )
    cur = TimerListHead;
    TimerListHead = TimerListHead->Next;
    //exec_cb( cur->Callback );
-   sched_post_task(cur->Callback);
+   sched_post_task((task_t)cur->Callback);
   }
 
   /* start the next TimerListHead if it exists AND NOT running */

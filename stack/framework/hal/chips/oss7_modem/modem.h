@@ -22,6 +22,7 @@
 #include "d7ap.h"
 #include "hwuart.h"
 #include "lorawan_stack.h"
+#include "alp.h"
 
 // TODO for now we are assuming running on OSS-7, we can refactor later
 // so it is more portable
@@ -41,9 +42,7 @@ void modem_reinit();
 bool modem_execute_raw_alp(uint8_t* alp, uint8_t len);
 bool modem_read_file(uint8_t file_id, uint32_t offset, uint32_t size);
 bool modem_write_file(uint8_t file_id, uint32_t offset, uint32_t size, uint8_t* data);
-bool modem_send_unsolicited_response(uint8_t file_id, uint32_t offset, uint32_t length, uint8_t* data, d7ap_session_config_t* d7_interface_config);
-bool modem_send_raw_unsolicited_response(uint8_t* alp_command, uint32_t length, d7ap_session_config_t* d7_interface_config);
-bool lorawan_modem_send_unsolicited_response(uint8_t file_id, uint32_t offset, uint32_t length, uint8_t* data, lorawan_session_config_otaa_t* lorawan_session_config_otaa);
-bool lorawan_modem_send_raw_unsolicited_response(uint8_t* alp_command, uint32_t length, lorawan_session_config_otaa_t* lorawan_session_config_otaa);
+bool modem_send_unsolicited_response(uint8_t file_id, uint32_t offset, uint32_t length, uint8_t* data, session_config_t* session_config);
+bool modem_send_raw_unsolicited_response(uint8_t* alp_command, uint32_t length, session_config_t* session_config);
 
 #endif

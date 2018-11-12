@@ -241,46 +241,35 @@ bool modem_write_file(uint8_t file_id, uint32_t offset, uint32_t size, uint8_t* 
 }
 
 bool modem_send_unsolicited_response(uint8_t file_id, uint32_t offset, uint32_t length, uint8_t* data,
-                                     d7ap_session_config_t* d7_interface_config) {
+                                     session_config_t* session_config) {
   if(!alloc_command())
     return false;
 
-  alp_append_forward_action(&command.fifo, ALP_ITF_ID_D7ASP, (uint8_t *)d7_interface_config, sizeof(d7ap_session_config_t));
+  if(session_config->interface_type==DASH7)
+    alp_append_forward_action(&command.fifo, ALP_ITF_ID_D7ASP, (uint8_t *) &session_config->d7ap_session_config, sizeof(d7ap_session_config_t));
+  else if(session_config->interface_type==LORAWAN_OTAA)
+    alp_append_forward_action(&command.fifo, ALP_ITF_ID_LORAWAN_OTAA, (uint8_t *) &session_config->lorawan_session_config_otaa, sizeof(lorawan_session_config_otaa_t));
+  else if(session_config->interface_type==lorawan_ABP)
+    alp_append_forward_action(&command.fifo, ALP_ITF_ID_LORAWAN_ABP, (uint8_t *) &session_config->lorawan_session_config_abp, sizeof(lorawan_session_config_abp_t));
+
   alp_append_return_file_data_action(&command.fifo, file_id, offset, length, data);
-
-  send(command.buffer, fifo_get_size(&command.fifo));
-  return true;
-}
-
-bool lorawan_modem_send_unsolicited_response(uint8_t file_id, uint32_t offset, uint32_t length, uint8_t* data,
-                                     lorawan_session_config_otaa_t* lorawan_session_config_otaa) {
-  if(!alloc_command())
-    return false;
-
-  alp_append_forward_action(&command.fifo, ALP_ITF_ID_LORAWAN_OTAA, (uint8_t *)lorawan_session_config_otaa, sizeof(lorawan_session_config_otaa_t));
-  alp_append_return_file_data_action(&command.fifo, file_id, offset, length, data);
-
-  send(command.buffer, fifo_get_size(&command.fifo));
-  return true;
-}
-bool lorawan_modem_send_raw_unsolicited_response(uint8_t* alp_command, uint32_t length, 
-                                         lorawan_session_config_otaa_t* lorawan_session_config_otaa) {
-  if(!alloc_command())
-    return false;
-
-  alp_append_forward_action(&command.fifo, ALP_ITF_ID_LORAWAN_OTAA, (uint8_t *)lorawan_session_config_otaa, sizeof(lorawan_session_config_otaa_t));
-  fifo_put(&command.fifo, alp_command, length);
 
   send(command.buffer, fifo_get_size(&command.fifo));
   return true;
 }
 
 bool modem_send_raw_unsolicited_response(uint8_t* alp_command, uint32_t length,
-                                         d7ap_session_config_t* d7_interface_config) {
+                                         session_config_t* session_config) {
   if(!alloc_command())
     return false;
 
-  alp_append_forward_action(&command.fifo, ALP_ITF_ID_D7ASP, (uint8_t *)d7_interface_config, sizeof(d7ap_session_config_t));
+   if(session_config->interface_type==DASH7)
+    alp_append_forward_action(&command.fifo, ALP_ITF_ID_D7ASP, (uint8_t *) &session_config->d7ap_session_config, sizeof(d7ap_session_config_t));
+  else if(session_config->interface_type==LORAWAN_OTAA)
+    alp_append_forward_action(&command.fifo, ALP_ITF_ID_LORAWAN_OTAA, (uint8_t *) &session_config->lorawan_session_config_otaa, sizeof(lorawan_session_config_otaa_t));
+  else if(session_config->interface_type==lorawan_ABP)
+    alp_append_forward_action(&command.fifo, ALP_ITF_ID_LORAWAN_ABP, (uint8_t *) &session_config->lorawan_session_config_abp, sizeof(lorawan_session_config_abp_t));
+
   fifo_put(&command.fifo, alp_command, length);
 
   send(command.buffer, fifo_get_size(&command.fifo));
