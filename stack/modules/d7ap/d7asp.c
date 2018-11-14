@@ -445,7 +445,13 @@ error_t d7asp_send_response(uint8_t* payload, uint8_t length)
 {
     DPRINT("Send the expected response");
     DPRINT_DATA(payload, length);
-    assert(d7asp_state == D7ASP_STATE_SLAVE_WAITING_RESPONSE); // return an error instead?
+
+    if (d7asp_state != D7ASP_STATE_SLAVE_WAITING_RESPONSE)
+    {
+        // Response comes too late, the response period is probably expired
+        DPRINT("Not waiting for a response, discard it");
+        return EINVAL;
+    }
 
     current_response_packet->payload_length = length;
     memcpy(current_response_packet->payload, payload, length);
