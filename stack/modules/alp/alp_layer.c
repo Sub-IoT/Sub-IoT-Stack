@@ -420,9 +420,9 @@ static alp_status_codes_t process_op_forward(alp_command_t* command, uint8_t* it
 
       err = fifo_pop(&command->alp_command_fifo, session_config->lorawan_session_config_abp.nwkSKey, 16); assert(err == SUCCESS);
       err = fifo_pop(&command->alp_command_fifo, session_config->lorawan_session_config_abp.appSKey, 16); assert(err == SUCCESS);
-      err = fifo_pop(&command->alp_command_fifo, (uint8_t*) session_config->lorawan_session_config_abp.devAddr, 4); assert(err == SUCCESS);
+      err = fifo_pop(&command->alp_command_fifo, (uint8_t*) &session_config->lorawan_session_config_abp.devAddr, 4); assert(err == SUCCESS);
       session_config->lorawan_session_config_abp.devAddr=__builtin_bswap32(session_config->lorawan_session_config_abp.devAddr);
-      err = fifo_pop(&command->alp_command_fifo,  (uint8_t*) session_config->lorawan_session_config_abp.network_id, 4); assert(err == SUCCESS);
+      err = fifo_pop(&command->alp_command_fifo,  (uint8_t*) &session_config->lorawan_session_config_abp.network_id, 4); assert(err == SUCCESS);
       session_config->lorawan_session_config_abp.network_id=__builtin_bswap32(session_config->lorawan_session_config_abp.network_id);
       
       DPRINT("FORWARD LORAWAN");
