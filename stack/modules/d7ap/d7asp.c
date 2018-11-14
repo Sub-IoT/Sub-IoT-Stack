@@ -797,6 +797,8 @@ void d7asp_signal_transaction_terminated()
             switch_state(D7ASP_STATE_SLAVE_PENDING_MASTER);
         else
             switch_state(D7ASP_STATE_SLAVE);
+
+        d7ap_stack_signal_transaction_terminated();
     }
     else if (d7asp_state == D7ASP_STATE_MASTER)
         on_request_completed();

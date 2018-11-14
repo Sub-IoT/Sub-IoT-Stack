@@ -266,7 +266,7 @@ bool d7ap_stack_process_unsolicited_request(uint8_t *payload, uint8_t length, d7
     bool expect_upper_layer_resp_payload = false;
 
     //TODO handle here the re-assembly if needed?
-    DPRINT("[D7AP] Received an unsolicited request");
+    DPRINT("[D7AP] received an unsolicited request");
 
     slave_session.active = true;
     slave_session.token = result.fifo_token;
@@ -289,7 +289,7 @@ bool d7ap_stack_process_unsolicited_request(uint8_t *payload, uint8_t length, d7
 
 void d7ap_stack_process_received_response(uint8_t *payload, uint8_t length, d7ap_session_result_t result)
 {
-    DPRINT("[D7AP] received a response ");
+    DPRINT("[D7AP] received a response");
     session_t* session = get_session_by_session_token(result.fifo_token);
 
     assert(session != NULL);
@@ -351,6 +351,14 @@ void d7ap_stack_signal_slave_session_terminated(void)
     DPRINT("[D7AP] slave session is terminated");
     slave_session.active = false;
     switch_state(D7AP_STACK_STATE_IDLE);
+}
+
+void d7ap_stack_signal_transaction_terminated(void)
+{
+    DPRINT("[D7AP] transaction is terminated");
+
+    if ( d7ap_stack_state ==  D7AP_STACK_STATE_WAIT_APP_ANSWER)
+        switch_state(D7AP_STACK_STATE_RECEIVING);
 }
 
 bool d7ap_stack_is_client_session_active(uint8_t client_id)
