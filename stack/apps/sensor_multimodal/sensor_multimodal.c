@@ -117,8 +117,7 @@ static void init_d7ap() {
 static void lora_init(void) {
   DEBUG_PRINTF("LoRa init");
 
-  static lorawan_session_config_t lorawan_session_config = {
-     .activationMethod = ABP,
+  static lorawan_session_config_abp_t lorawan_session_config = {
      .appSKey = LORAWAN_APP_SESSION_KEY,
      .nwkSKey = LORAWAN_NETW_SESSION_KEY,
      .devAddr = LORAWAN_DEVICE_ADDR,
@@ -126,7 +125,7 @@ static void lora_init(void) {
   };
 
   lorawan_register_cbs(NULL, NULL, NULL);
-  lorawan_stack_init(&lorawan_session_config);
+  lorawan_stack_init_abp(&lorawan_session_config);
 }
 
 static uint8_t lora_send(uint8_t* buffer, uint16_t length) {

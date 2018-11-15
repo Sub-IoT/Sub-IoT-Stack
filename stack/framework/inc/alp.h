@@ -33,20 +33,41 @@
 
 #include "stdint.h"
 #include "stdbool.h"
+#include "d7ap.h"
+#include "lorawan_stack.h"
 
 #include "fifo.h"
-
-#define ALP_ITF_ID_HOST     0x00
-#define ALP_ITF_ID_SERIAL   0x01 // not part of the spec
-#define ALP_ITF_ID_D7ASP    0xD7
-#define ALP_ITF_ID_LORWAN   0x02//not part of the spec
-
 
 #define SERIAL_ALP_FRAME_SYNC_BYTE 0xC0
 #define SERIAL_ALP_FRAME_VERSION   0x00
 #define SERIAL_ALP_FRAME_HEADER_SIZE 3
 
 #define ALP_PAYLOAD_MAX_SIZE 200 // TODO configurable?
+
+typedef enum
+{
+    DASH7,
+    LORAWAN_OTAA,
+    lorawan_ABP
+} interface_type_t;
+
+typedef struct {
+    interface_type_t interface_type;
+    union {
+        d7ap_session_config_t d7ap_session_config;
+        lorawan_session_config_otaa_t lorawan_session_config_otaa;
+        lorawan_session_config_abp_t lorawan_session_config_abp;
+    };
+} session_config_t;
+
+typedef enum
+{
+    ALP_ITF_ID_HOST = 0x00,
+    ALP_ITF_ID_SERIAL = 0x01, // not part of the spec
+    ALP_ITF_ID_LORAWAN_ABP = 0x02, // not part of the spec
+    ALP_ITF_ID_LORAWAN_OTAA = 0x03, // not part of the spec
+    ALP_ITF_ID_D7ASP = 0xD7
+} alp_itf_id_t;
 
 typedef enum
 {

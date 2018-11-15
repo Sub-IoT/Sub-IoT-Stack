@@ -677,16 +677,16 @@ void d7atp_process_received_packet(packet_t* packet)
 
         if (packet->d7atp_ctrl.ctrl_is_ack_requested)
         {
+            // If there is no listen period, then we can end the dialog after the response transmission
+            if (current_Tl_received == 0)
+                stop_dialog_after_tx = true;
+
             if (response_payload_expected)
             {
                 // wait for response payload before sending ...
             }
             else
             {
-                // If there is no listen period, then we can end the dialog after the response transmission
-                if (current_Tl_received == 0)
-                    stop_dialog_after_tx = true;
-
                 // if ACK requested and no response payload expected, send the ack now
                 packet->payload_length = 0;
                 d7atp_send_response(packet);

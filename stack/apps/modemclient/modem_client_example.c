@@ -44,22 +44,26 @@ static uart_handle_t* modem_uart;
 
 
 // define the D7 interface configuration used for sending the file data to
-d7ap_session_config_t session_config = {
-  .qos = {
-    .qos_resp_mode = SESSION_RESP_MODE_NO,
-    .qos_retry_mode = SESSION_RETRY_MODE_NO,
-    .qos_stop_on_error = false,
-    .qos_record = false
-  },
-  .dormant_timeout = 0,
-  .addressee = {
-    .ctrl = {
-      .nls_method = AES_NONE,
-      .id_type = ID_TYPE_NOID,
-    },
-    .access_class = 0x01,
-    .id = 0
-  }
+static session_config_t session_config   = 
+{
+    .interface_type = DASH7,
+    .d7ap_session_config = {
+        .qos = {
+          .qos_resp_mode = SESSION_RESP_MODE_NO,
+          .qos_retry_mode = SESSION_RETRY_MODE_NO,
+          .qos_stop_on_error = false,
+          .qos_record = false
+        },
+        .dormant_timeout = 0,
+        .addressee = {
+          .ctrl = {
+            .nls_method = AES_NONE,
+            .id_type = ID_TYPE_NOID,
+          },
+          .access_class = 0x01,
+          .id = 0
+        }
+    }
 };
 
 void send_counter() {

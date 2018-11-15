@@ -54,10 +54,7 @@ typedef enum
   STATE_INITIALIZED
 } interface_state_t; //ADD MORE STATES?
 
-typedef union  {
-    d7ap_session_config_t d7asp_session_config;
-    lorawan_session_config_t lorawan_session_config;
-}session_config_t;
+
 
 typedef void (*alp_command_completed_callback)(uint8_t tag_id, bool success);
 typedef void (*alp_command_result_callback)(d7ap_session_result_t result, uint8_t* payload, uint8_t payload_length);

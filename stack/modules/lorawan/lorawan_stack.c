@@ -73,6 +73,16 @@
 #include "debug.h"
 #include "scheduler.h"
 
+#define LORAWAN_LOG_ENABLED 1
+
+#if defined(LORAWAN_LOG_ENABLED) 
+#define DPRINT(...) log_print_stack_string(LOG_STACK_ALP, __VA_ARGS__)
+#define DPRINT_DATA(p, n) log_print_data(p, n)
+#else
+#define DPRINT(...)
+#define DPRINT_DATA(p, n)
+#endif
+
 // TODO configurable
 #define LORAWAN_ADR_ENABLED                         1 // TODO configurable?
 #define LORAWAN_PUBLIC_NETWORK_ENABLED              1 // TODO configurable?
@@ -102,8 +112,8 @@ static uint8_t AppSKey[16]= { 0 };    //used for ABP
 static uint32_t DevAddr=0;            //used for ABP
 static uint32_t LORAWAN_NETWORK_ID=0; //used for ABP
 
-static uint8_t app_port2;
-static bool request_ack2;
+static uint8_t app_port;
+static bool request_ack;
 
 static bool next_tx = true;
 static bool use_confirmed_tx = false;
@@ -178,17 +188,17 @@ static void run_fsm()
     }
     case STATE_JOINED:
     {
-      log_print_string("JOINED");
+      DPRINT("JOINED");
       sched_cancel_task(&run_fsm);
       if(join_completed_callback)
-        join_completed_callback(true,app_port2,request_ack2);
+        join_completed_callback(true,app_port,request_ack);
       break;
     }
     case STATE_JOIN_FAILED:
     {
-      log_print_string("JOIN FAILED");
+      DPRINT("JOIN FAILED");
       if(join_completed_callback)
-        join_completed_callback(false,app_port2,request_ack2);
+        join_completed_callback(false,app_port,request_ack);
       break;
     }
     default:
@@ -201,7 +211,7 @@ static void run_fsm()
 
 static void mcps_confirm(McpsConfirm_t *McpsConfirm)
 {
-  log_print_string("mcps_confirm: %i",McpsConfirm->AckReceived);
+  DPRINT("mcps_confirm: %i",McpsConfirm->AckReceived);
   bool error = false;
   if(McpsConfirm!=NULL) {
     if(((McpsConfirm->McpsRequest == MCPS_CONFIRMED && McpsConfirm->AckReceived == 1) || (McpsConfirm->McpsRequest == MCPS_UNCONFIRMED)) && McpsConfirm->Status==LORAMAC_EVENT_INFO_STATUS_OK)
@@ -219,13 +229,13 @@ static void mcps_indication(McpsIndication_t *mcpsIndication)
 {
   if(mcpsIndication->Status != LORAMAC_EVENT_INFO_STATUS_OK)
   {
-    log_print_string("mcps_indication status: %i", mcpsIndication->Status);
+    DPRINT("mcps_indication status: %i", mcpsIndication->Status);
     return;
   }
 
   if( mcpsIndication->RxData == true )
   {
-    log_print_string("received %i bytes for port %i", mcpsIndication->BufferSize, mcpsIndication->Port);
+    DPRINT("received %i bytes for port %i", mcpsIndication->BufferSize, mcpsIndication->Port);
     app_data.Port = mcpsIndication->Port;
     app_data.BuffSize = mcpsIndication->BufferSize;
     memcpy1(app_data.Buff, mcpsIndication->Buffer, app_data.BuffSize);
@@ -241,21 +251,21 @@ static void mlme_confirm(MlmeConfirm_t *mlmeConfirm)
     {
       if(mlmeConfirm->Status == LORAMAC_EVENT_INFO_STATUS_OK)
       {
-        log_print_string("join succeeded");
+        DPRINT("join succeeded");
         state = STATE_JOINED;
         if(join_completed_callback)
-            join_completed_callback(true,app_port2,request_ack2);
+            join_completed_callback(true,app_port,request_ack);
       }
       else
       {
-        log_print_string("join failed");
+        DPRINT("join failed");
         state = STATE_JOIN_FAILED;
         sched_post_task(&run_fsm);
       }
       break;
     }
     default:
-      log_print_string("mlme_confirm called for not implemented mlme request %i", mlmeConfirm->MlmeRequest);
+      DPRINT("mlme_confirm called for not implemented mlme request %i", mlmeConfirm->MlmeRequest);
       break;
   }
 
@@ -276,64 +286,45 @@ void lorawan_register_cbs(lorawan_rx_callback_t  lorawan_rx_cb, lorawan_tx_compl
   tx_callback = lorawan_tx_cb;
   join_completed_callback = join_completed_cb;
 }
-bool lorawan_is_joined(lorawan_session_config_t* lorawan_session_config)
+bool lorawan_abp_is_joined(lorawan_session_config_abp_t* lorawan_session_config)
 {
-  log_print_string("Checking for change in config");
-  bool changed=false;
+  DPRINT("Checking for change in config");
+  bool joined=true;
   sched_cancel_task(&run_fsm);
   if(state!=STATE_JOINED)
-    changed=true;
-  app_port2=lorawan_session_config->application_port;
-  request_ack2=lorawan_session_config->request_ack;
+    joined=false;
+  app_port=lorawan_session_config->application_port;
+  request_ack=lorawan_session_config->request_ack;
   
-  if(activationMethod!=lorawan_session_config->activationMethod)
+  if(activationMethod!=ABP)
   {
-    activationMethod=lorawan_session_config->activationMethod;
-    changed=true;
+    activationMethod=ABP;
+    joined=false;
   }
-  if(activationMethod==OTAA)
-  {  
-    if(memcmp(devEui,&lorawan_session_config->devEUI ,8)!=0)
-    {
-      changed=true;
-      memcpy(devEui,&lorawan_session_config->devEUI ,8);
-    }
-    if(memcmp( appEui,&lorawan_session_config->appEUI,8)!=0)
-    {
-      changed=true;
-      memcpy( appEui,&lorawan_session_config->appEUI,8);
-    }
-    if(memcmp( appKey,&lorawan_session_config->appKey,16)!=0)
-    {
-      changed=true;
-      memcpy( appKey,&lorawan_session_config->appKey,16);
-    }
-  }
-  else
-  {
-    if(DevAddr!=lorawan_session_config->devAddr)
-    {
-      DevAddr=lorawan_session_config->devAddr;
-      changed=true;
-    }
 
-    if(LORAWAN_NETWORK_ID!=lorawan_session_config->network_id)
-    {
-      LORAWAN_NETWORK_ID=lorawan_session_config->network_id;
-      changed=true;
-    }
-    if(memcmp(NwkSKey,&lorawan_session_config->nwkSKey ,16)!=0)
-    {
-      changed=true;
-      memcpy(NwkSKey,&lorawan_session_config->nwkSKey ,16);
-    }
-    if(memcmp( AppSKey,&lorawan_session_config->appSKey ,16)!=0)
-    {
-      changed=true;
-      memcpy( AppSKey,&lorawan_session_config->appSKey ,16);
-    }
+  if(DevAddr!=lorawan_session_config->devAddr)
+  {
+    DevAddr=lorawan_session_config->devAddr;
+    joined=false;
   }
-  if(changed)
+
+  if(LORAWAN_NETWORK_ID!=lorawan_session_config->network_id)
+  {
+    LORAWAN_NETWORK_ID=lorawan_session_config->network_id;
+    joined=false;
+  }
+  if(memcmp(NwkSKey,&lorawan_session_config->nwkSKey ,16)!=0)
+  {
+    joined=false;
+    memcpy(NwkSKey,&lorawan_session_config->nwkSKey ,16);
+  }
+  if(memcmp( AppSKey,&lorawan_session_config->appSKey ,16)!=0)
+  {
+    joined=false;
+    memcpy( AppSKey,&lorawan_session_config->appSKey ,16);
+  }
+  
+  if(!joined)
   {
     LoRaMacStatus_t status=LORAMAC_STATUS_OK;
     MibRequestConfirm_t mibReq;
@@ -343,68 +334,102 @@ bool lorawan_is_joined(lorawan_session_config_t* lorawan_session_config)
     if(status!=LORAMAC_STATUS_OK) {
       assert(false);}
 
-      log_print_string("Change found");
-      if( lorawan_session_config->activationMethod == OTAA ) {
-      log_print_string("Init using OTAA");
-      log_print_string("DevEui:");
-      log_print_data(lorawan_session_config->devEUI, 8);
-      log_print_string("AppEui:");
-      log_print_data(lorawan_session_config->appEUI, 8);
-      log_print_string("AppKey:");
-      log_print_data(lorawan_session_config->appKey, 16);
-    } else {
-      log_print_string("Init using ABP");
-      log_print_string("NwkSKey:");
-      log_print_data(lorawan_session_config->nwkSKey, 16);
-      log_print_string("AppSKey:");
-      log_print_data(lorawan_session_config->appSKey, 16);
-      log_print_string("DevAddr: %lu", lorawan_session_config->devAddr);
-      log_print_string("LORAWAN_NETWORK_ID: %lu", lorawan_session_config->network_id);
-    }
+    DPRINT("Init using ABP");
+    DPRINT("NwkSKey:");
+    DPRINT_DATA(lorawan_session_config->nwkSKey, 16);
+    DPRINT("AppSKey:");
+    DPRINT_DATA(lorawan_session_config->appSKey, 16);
+    DPRINT("DevAddr: %lu", lorawan_session_config->devAddr);
+    DPRINT("LORAWAN_NETWORK_ID: %lu", lorawan_session_config->network_id);
+    
     state = STATE_NOT_JOINED;
     sched_post_task(&run_fsm);
   }
-    return changed;
+    return joined;
 }
-void lorawan_stack_init(lorawan_session_config_t* lorawan_session_config) {
 
-  activationMethod=lorawan_session_config->activationMethod;
-  if(activationMethod==OTAA)
+bool lorawan_otaa_is_joined(lorawan_session_config_otaa_t* lorawan_session_config)
+{
+  DPRINT("Checking for change in config");
+  bool joined=true;
+  sched_cancel_task(&run_fsm);
+  if(state!=STATE_JOINED)
+    joined=false;
+  app_port=lorawan_session_config->application_port;
+  request_ack=lorawan_session_config->request_ack;
+  
+  if(activationMethod!=OTAA)
   {
+    activationMethod=OTAA;
+    joined=false;
+  }
+  if(memcmp(devEui,&lorawan_session_config->devEUI ,8)!=0)
+  {
+    joined=false;
     memcpy(devEui,&lorawan_session_config->devEUI ,8);
+  }
+  if(memcmp( appEui,&lorawan_session_config->appEUI,8)!=0)
+  {
+    joined=false;
     memcpy( appEui,&lorawan_session_config->appEUI,8);
+  }
+  if(memcmp( appKey,&lorawan_session_config->appKey,16)!=0)
+  {
+    joined=false;
     memcpy( appKey,&lorawan_session_config->appKey,16);
   }
-  else
+ 
+  if(!joined)
   {
-    memcpy(NwkSKey,&lorawan_session_config->nwkSKey ,16);
-    memcpy( AppSKey,&lorawan_session_config->appSKey ,16);
-    DevAddr= lorawan_session_config->devAddr;
-    LORAWAN_NETWORK_ID=lorawan_session_config->network_id;
+    LoRaMacStatus_t status=LORAMAC_STATUS_OK;
+    MibRequestConfirm_t mibReq;
+    mibReq.Type = MIB_NETWORK_JOINED;
+    mibReq.Param.IsNetworkJoined = false;
+    status=LoRaMacMibSetRequestConfirm( &mibReq );
+    if(status!=LORAMAC_STATUS_OK) {
+      assert(false);}
+
+    DPRINT("Change found");
+    DPRINT("Init using OTAA");
+    DPRINT("DevEui:");
+    DPRINT_DATA(lorawan_session_config->devEUI, 8);
+    DPRINT("AppEui:");
+    DPRINT_DATA(lorawan_session_config->appEUI, 8);
+    DPRINT("AppKey:");
+    DPRINT_DATA(lorawan_session_config->appKey, 16);
+
+   
+    
+    state = STATE_NOT_JOINED;
+    sched_post_task(&run_fsm);
   }
+    return joined;
+}
+void lorawan_stack_init_abp(lorawan_session_config_abp_t* lorawan_session_config) {
+
+  activationMethod=ABP;
+  app_port=lorawan_session_config->application_port;
+  request_ack=lorawan_session_config->request_ack;
+
+  memcpy(NwkSKey,&lorawan_session_config->nwkSKey ,16);
+  memcpy( AppSKey,&lorawan_session_config->appSKey ,16);
+  DevAddr= lorawan_session_config->devAddr;
+  LORAWAN_NETWORK_ID=lorawan_session_config->network_id;
   
   
   HW_Init(); // TODO refactor
 
   state = STATE_NOT_JOINED;
   
-  if( lorawan_session_config->activationMethod == OTAA ) {
-    log_print_string("Init using OTAA");
-    log_print_string("DevEui:");
-    log_print_data(lorawan_session_config->devEUI, 8);
-    log_print_string("AppEui:");
-    log_print_data(lorawan_session_config->appEUI, 8);
-    log_print_string("AppKey:");
-    log_print_data(lorawan_session_config->appKey, 16);
-  } else {
-    log_print_string("Init using ABP");
-    log_print_string("NwkSKey:");
-    log_print_data(lorawan_session_config->nwkSKey, 16);
-    log_print_string("AppSKey:");
-    log_print_data(lorawan_session_config->appSKey, 16);
-    log_print_string("DevAddr: %lu", lorawan_session_config->devAddr);
-    log_print_string("LORAWAN_NETWORK_ID: %lu", lorawan_session_config->network_id);
-  }
+  
+  DPRINT("Init using ABP");
+  DPRINT("NwkSKey:");
+  DPRINT_DATA(lorawan_session_config->nwkSKey, 16);
+  DPRINT("AppSKey:");
+  DPRINT_DATA(lorawan_session_config->appSKey, 16);
+  DPRINT("DevAddr: %lu", lorawan_session_config->devAddr);
+  DPRINT("LORAWAN_NETWORK_ID: %lu", lorawan_session_config->network_id);
+  
 
   sched_register_task(&run_fsm);
   sched_post_task(&run_fsm);
@@ -416,9 +441,84 @@ void lorawan_stack_init(lorawan_session_config_t* lorawan_session_config) {
   // Initialization for the region EU868
   loraMacStatus = LoRaMacInitialization(&loraMacPrimitives, &loraMacCallbacks, LORAMAC_REGION_EU868);
   if(loraMacStatus == LORAMAC_STATUS_OK) {
-    log_print_string("init OK");
+    DPRINT("init OK");
   } else {
-    log_print_string("init failed");
+    DPRINT("init failed");
+  }
+
+  MibRequestConfirm_t mibReq;
+  mibReq.Type = MIB_ADR;
+  mibReq.Param.AdrEnable = LORAWAN_ADR_ENABLED;
+  LoRaMacMibSetRequestConfirm( &mibReq );
+
+  mibReq.Type = MIB_PUBLIC_NETWORK;
+  mibReq.Param.EnablePublicNetwork = LORAWAN_PUBLIC_NETWORK_ENABLED;
+  LoRaMacMibSetRequestConfirm( &mibReq );
+
+  mibReq.Type = MIB_DEVICE_CLASS;
+  mibReq.Param.Class = LORAWAN_CLASS;
+  LoRaMacMibSetRequestConfirm( &mibReq );
+
+#if defined( REGION_EU868 )
+  LoRaMacTestSetDutyCycleOn(false);
+
+#if( USE_SEMTECH_DEFAULT_CHANNEL_LINEUP == 1 )
+  LoRaMacChannelAdd( 3, ( ChannelParams_t )LC4 );
+  LoRaMacChannelAdd( 4, ( ChannelParams_t )LC5 );
+  LoRaMacChannelAdd( 5, ( ChannelParams_t )LC6 );
+  LoRaMacChannelAdd( 6, ( ChannelParams_t )LC7 );
+  LoRaMacChannelAdd( 7, ( ChannelParams_t )LC8 );
+  LoRaMacChannelAdd( 8, ( ChannelParams_t )LC9 );
+  LoRaMacChannelAdd( 9, ( ChannelParams_t )LC10 );
+
+  mibReq.Type = MIB_RX2_DEFAULT_CHANNEL;
+  mibReq.Param.Rx2DefaultChannel = ( Rx2ChannelParams_t ){ 869525000, DR_3 };
+  LoRaMacMibSetRequestConfirm( &mibReq );
+
+  mibReq.Type = MIB_RX2_CHANNEL;
+  mibReq.Param.Rx2Channel = ( Rx2ChannelParams_t ){ 869525000, DR_3 };
+  LoRaMacMibSetRequestConfirm( &mibReq );
+#endif
+
+#endif
+
+}
+void lorawan_stack_init_otaa(lorawan_session_config_otaa_t* lorawan_session_config) {
+
+  activationMethod=OTAA;
+  app_port=lorawan_session_config->application_port;
+  request_ack=lorawan_session_config->request_ack;
+
+  memcpy(devEui,&lorawan_session_config->devEUI ,8);
+  memcpy( appEui,&lorawan_session_config->appEUI,8);
+  memcpy( appKey,&lorawan_session_config->appKey,16);
+  
+  HW_Init(); // TODO refactor
+
+  state = STATE_NOT_JOINED;
+  
+  DPRINT("Init using OTAA");
+  DPRINT("DevEui:");
+  DPRINT_DATA(lorawan_session_config->devEUI, 8);
+  DPRINT("AppEui:");
+  DPRINT_DATA(lorawan_session_config->appEUI, 8);
+  DPRINT("AppKey:");
+  DPRINT_DATA(lorawan_session_config->appKey, 16);
+  
+
+  sched_register_task(&run_fsm);
+  sched_post_task(&run_fsm);
+
+  loraMacPrimitives.MacMcpsConfirm = &mcps_confirm;
+  loraMacPrimitives.MacMcpsIndication = &mcps_indication;
+  loraMacPrimitives.MacMlmeConfirm = &mlme_confirm;
+
+  // Initialization for the region EU868
+  loraMacStatus = LoRaMacInitialization(&loraMacPrimitives, &loraMacCallbacks, LORAMAC_REGION_EU868);
+  if(loraMacStatus == LORAMAC_STATUS_OK) {
+    DPRINT("init OK");
+  } else {
+    DPRINT("init failed");
   }
 
   MibRequestConfirm_t mibReq;
@@ -461,7 +561,7 @@ void lorawan_stack_init(lorawan_session_config_t* lorawan_session_config) {
 
 
 void lorawan_stack_deinit(){
-    log_print_string("Deiniting LoRaWAN stack");
+    DPRINT("Deiniting LoRaWAN stack");
     sched_cancel_task(&run_fsm);
     LoRaMacDeInit();
     state = STATE_NOT_JOINED;
@@ -471,7 +571,7 @@ void lorawan_stack_deinit(){
 lorawan_stack_error_t lorawan_stack_send(uint8_t* payload, uint8_t length, uint8_t app_port, bool request_ack) {
 
   if(!is_joined()) {
-    log_print_string("TX not possible, not joined");
+    DPRINT("TX not possible, not joined");
     return LORAWAN_STACK_ERROR_NOT_JOINED;
   }
 
@@ -487,7 +587,7 @@ lorawan_stack_error_t lorawan_stack_send(uint8_t* payload, uint8_t length, uint8
   if(LoRaMacQueryTxPossible(app_data.BuffSize, &txInfo) != LORAMAC_STATUS_OK )
   {
     // Send empty frame in order to flush MAC commands
-    log_print_string("TX not possible, max payloadsize %i, trying to transmit %i", txInfo.MaxPossiblePayload, txInfo.CurrentPayloadSize);
+    DPRINT("TX not possible, max payloadsize %i, trying to transmit %i", txInfo.MaxPossiblePayload, txInfo.CurrentPayloadSize);
     mcpsReq.Type = MCPS_UNCONFIRMED;
     mcpsReq.Req.Unconfirmed.fBuffer = NULL;
     mcpsReq.Req.Unconfirmed.fBufferSize = 0;
@@ -518,7 +618,7 @@ lorawan_stack_error_t lorawan_stack_send(uint8_t* payload, uint8_t length, uint8
   LoRaMacStatus_t status = LoRaMacMcpsRequest(&mcpsReq);
   if(status != LORAMAC_STATUS_OK) {
     //  state = STATE_SLEEP;
-    log_print_string("failed sending data (status %i)", status);
+    DPRINT("failed sending data (status %i)", status);
     return LORAWAN_STACK_ERROR_UNKNOWN;
   }
 

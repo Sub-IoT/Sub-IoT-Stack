@@ -2447,15 +2447,15 @@ void LoRaMacDeInit()
 {
     Radio.Sleep();
     TimerStop(&MacStateCheckTimer);
-    sched_cancel_task(MacStateCheckTimer.Callback);
+    sched_cancel_task((task_t)MacStateCheckTimer.Callback);
     TimerStop(&TxDelayedTimer);
-    sched_cancel_task(TxDelayedTimer.Callback);
+    sched_cancel_task((task_t)TxDelayedTimer.Callback);
     TimerStop(&RxWindowTimer1);
-    sched_cancel_task(RxWindowTimer1.Callback);
+    sched_cancel_task((task_t)RxWindowTimer1.Callback);
     TimerStop(&RxWindowTimer2);
-    sched_cancel_task(RxWindowTimer2.Callback);
+    sched_cancel_task((task_t)RxWindowTimer2.Callback);
     TimerStop(&AckTimeoutTimer);
-    sched_cancel_task(AckTimeoutTimer.Callback);
+    sched_cancel_task((task_t)AckTimeoutTimer.Callback);
 }
 
 LoRaMacStatus_t LoRaMacQueryTxPossible( uint8_t size, LoRaMacTxInfo_t* txInfo )

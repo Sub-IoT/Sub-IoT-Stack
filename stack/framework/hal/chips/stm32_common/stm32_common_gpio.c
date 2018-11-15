@@ -152,7 +152,10 @@ __LINK_C error_t hw_gpio_configure_pin(pin_id_t pin_id, bool int_allowed, uint32
   {
     GPIO_InitStruct.Pull = GPIO_NOPULL;
   } else {
-    GPIO_InitStruct.Pull = GPIO_PULLDOWN; // todo ??
+    if(out)
+      GPIO_InitStruct.Pull = GPIO_PULLUP;
+    else
+      GPIO_InitStruct.Pull = GPIO_PULLDOWN;
     GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   }
 
