@@ -118,6 +118,8 @@ void hw_enter_lowpower_mode(uint8_t mode)
       // after resuming from STOP mode we should reinit the clock config
       stm32_common_mcu_init();
       break;
+    case 255:
+      break;
     default:
       assert(false);
   }
