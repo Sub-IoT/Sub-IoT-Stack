@@ -1,0 +1,54 @@
+stages:
+  - build stack
+  - flash test boards 
+  - run tests
+variables:
+  GIT_STRATEGY: fetch
+  GIT_SUBMODULE_STRATEGY: recursive
+job 1:
+  tags: 
+  - linux
+  stage: build stack
+  script: 
+  - apt-get update -y
+  - apt-get install cmake -y
+  - wget https://developer.arm.com/-/media/Files/downloads/gnu-rm/7-2018q2/gcc-arm-none-eabi-7-2018-q2-update-linux.tar.bz2
+  - tar xvf gcc-arm-none-eabi-7-2018-q2-update-linux.tar.bz2
+  - rm gcc-arm-none-eabi-7-2018-q2-update-linux.tar.bz2
+  - PATH="$(pwd)/gcc-arm-none-eabi-7-2018-q2-update/bin/:$PATH"
+  - mkdir build && cd build
+  - platform="B_L072Z_LRWAN1"
+  - cmake ../stack/ -DAPP_GATEWAY=y -DAPP_MODEM=y -DAPP_SENSOR_PUSH=y -DPLATFORM=$platform
+  - make
+  artifacts:
+   name: "$CI_COMMIT_REF_NAME"
+   when: always
+   paths:
+   - build/apps/gateway/*
+   - build/apps/modem/*
+   - build/apps/sensor_push/*
+job 2:
+  tags:
+  - JLink
+  stage: flash test boards
+  dependencies: 
+  - job 1
+  script:
+  - cd build/apps/modem
+  - JLinkExe -SelectEmuBySN 772689716 -CommandFile jlink-flash.script
+  - JLinkExe -SelectEmuBySN 770773405 -CommandFile jlink-flash.script
+job 3:
+  tags:
+  - JLink
+  stage: run tests
+  script:
+  - git clone --recurse-submodules git@github.com:MOSAIC-LoPoW/oss7-testsuite.git
+  - cd oss7-testsuite
+  - pip install -r requirements.txt
+  - cd lib/pyd7a/
+  - pip install -r requirements.txt
+  - cd ../..
+  - python2 run.py --serial-test-device=/dev/ttyACM0 --serial-dut=/dev/ttyACM1 -m "not band433" --junitxml report.xml -v
+  artifacts:
+    reports:
+      junit: oss7-testsuite/report.xml
