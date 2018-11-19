@@ -37,8 +37,11 @@
 #include "machine/timer_cap.h"
 #include "machine/timer_cmp.h"
 
-#if defined(FRAMEWORK_LOG_ENABLED)
+#if defined(FRAMEWORK_LOG_ENABLED) && defined(HAL_PERIPH_LOG_ENABLED)
 #include <stdio.h>
+#define DPRINT(...) log_print_string(__VA_ARGS__)
+#else
+#define DPRINT(...)
 #endif
 
 #define HWTIMER_NUM 1
@@ -133,9 +136,8 @@ hwtimer_tick_t hw_timer_getvalue(hwtimer_id_t timer_id)
          value = timer1_capa->value / 1000;
       timer1_capa->capture = 0;
       timer1_capa->status = 0;
-#if defined(FRAMEWORK_LOG_ENABLED)
-  printf("cap = %d\n", value);
-#endif
+
+      DPRINT("cap = %d\n", value);
 
       return value;
    }
@@ -236,9 +238,8 @@ bool hw_timer_is_interrupt_pending(hwtimer_id_t timer_id)
 
 void interrupt_handler(IRQ_TIMER1_CMPA)
 {
-#if defined(FRAMEWORK_LOG_ENABLED)
-  printf("hit! CMPA = %d\n", hw_timer_getvalue(0));
-#endif
+  DPRINT("hit! CMPA = %d\n", hw_timer_getvalue(0));
+
   timer1_cmpa->status = 0;
   timer1_cmpb->status = 0;
 
@@ -250,9 +251,8 @@ void interrupt_handler(IRQ_TIMER1_CMPA)
 
 void interrupt_handler(IRQ_TIMER1_CMPB)
 {
-#if defined(FRAMEWORK_LOG_ENABLED)
-  printf("hit! CMPB = %d\n", hw_timer_getvalue(0));
-#endif
+  DPRINT("hit! CMPB = %d\n", hw_timer_getvalue(0));
+
   timer1_cmpa->status = 0;
   timer1_cmpb->status = 0;
   timer1_cmpb->enable = 0;

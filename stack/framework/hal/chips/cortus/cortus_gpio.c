@@ -33,7 +33,7 @@
 #include "log.h"
 #include "errors.h"
 
-#if defined(FRAMEWORK_LOG_ENABLED) && defined(HAL_GPIO_LOG_ENABLED)
+#if defined(FRAMEWORK_LOG_ENABLED) && defined(HAL_PERIPH_LOG_ENABLED)
 #define DPRINT(...) log_print_string(__VA_ARGS__)
 #define DPRINT_DATA(...) log_print_data(__VA_ARGS__)
 #else
