@@ -173,14 +173,27 @@ uint8_t sx127x_get_syncword(const sx127x_t *dev, uint8_t *syncword, uint8_t sync
 void sx127x_set_syncword(sx127x_t *dev, uint8_t *syncword, uint8_t sync_size)
 {
     assert(sync_size >= 1);
-    DEBUG("[sx127x] Set syncword: %02x\n", syncword);
+    DEBUG("[sx127x] set syncword: len <%d> :", sync_size);
+
+    for( uint32_t i = 0 ; i < sync_size ; i++ )
+    {
+        DEBUG(" %02X", syncword[i]);
+    }
+
+    // Reverse the order since the least significant byte is stored at the lowest address (CPU is little endian)
+    // but we write into the SYNCVALUE registers MSB first
+    uint8_t reverse_syncword[8];
+    for (int i = 0; i < sync_size; i++)
+    {
+        reverse_syncword[sync_size -1 - i] = syncword[i];
+    }
 
     switch (dev->settings.modem) {
         case SX127X_MODEM_FSK:
             sx127x_reg_write(dev, SX127X_REG_SYNCCONFIG,
                              (sx127x_reg_read(dev , SX127X_REG_SYNCCONFIG) &
                               SX127X_RF_SYNCCONFIG_SYNCSIZE_MASK) | (sync_size - 1));
-            sx127x_reg_write_burst(dev, SX127X_REG_SYNCVALUE1, syncword, sync_size);
+            sx127x_reg_write_burst(dev, SX127X_REG_SYNCVALUE1, reverse_syncword, sync_size);
             break;
         case SX127X_MODEM_LORA:
             sx127x_reg_write(dev, SX127X_REG_LR_SYNCWORD, *syncword);
