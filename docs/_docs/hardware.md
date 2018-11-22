@@ -16,6 +16,7 @@ Currently we support the following platforms, in decreasing order of completenes
 Platform        | MCU                                   | Radio                         |
 --------------- | ------------------------------------- | ----------------------------- |
 B_L072Z_LRWAN1  | STMicroelectronics STM32L072CZ (Cortex-M0+) | Semtech SX1276 |
+MURATA_ABZ  | STMicroelectronics STM32L072CZ (Cortex-M0+) | Semtech SX1276 |
 NUCLEO_L073RZ   | STMicroelectronics STM32L073RZ (Cortex-M0+) | Semtech SX1276 (SX1276MB1MAS shield)|
 EZR32LG_WSTK6200| Silicon Labs EZR32LG SoC (Cortex-M3)	| Silicon Labs si4460 			|
 EFM32GG_STK3700 | Silicon Labs Giant Gecko (Cortex-M3)  | none on-board (Texas Instruments CC1101 extension board available)      |
@@ -28,9 +29,20 @@ Below you will find more information on each platform, and a section about suppo
 ## B_L072Z_LRWAN1
 
 The [B_L072Z_LRWAN1](http://www.st.com/content/st_com/en/products/evaluation-tools/product-evaluation-tools/mcu-eval-tools/stm32-mcu-eval-tools/stm32-mcu-discovery-kits/b-l072z-lrwan1.html) is marketed by STMicroelectronics as an STM32L0 discovery kit for LoRa, but it can be used for DASH7 as well. It contains a [Murata CMWX1ZZABZ-091 module](http://wireless.murata.com/eng/products/rf-modules-1/lpwa/type-abz.html)
- which contains a STM32L072CZ MCU and a Semtech sx1276 RF chip together on a stand-alone module. This module is interesting because it allows to easily integrate a DASH7 modem on a custom design. Note that this platform (and all platforms using the Murata module) only supports the 868 and 915 MHz bands, not the 433 MHz band. See the [platform notes]({{ site.baseurl }}{% link _docs/platform-lrwan1.md %}) for more specific information on how to use this platform.
+ which contains a STM32L072CZ MCU and a Semtech sx1276 RF chip together on a stand-alone module (the Murata Type ABZ).
+ Note that this platform (and all platforms using the Murata module) only supports the 868 and 915 MHz bands, not the 433 MHz band. See the [platform notes]({{ site.baseurl }}{% link _docs/platform-lrwan1.md %}) for more specific information on how to use this platform.
 
  ![B_L072Z_LRWAN1](https://i0.wp.com/blog.st.com/wp-content/uploads/RS7569_B_L072Z_side_antenna.jpg)
+
+## MURATA_ABZ
+
+The [Murata Type ABZ](https://wireless.murata.com/eng/products/rf-modules-1/lpwa/type-abz.html)
+ which contains a STM32L072CZ MCU and a Semtech sx1276 RF chip together on a stand-alone module. This platform is very similar to B_L072Z_LRWAN1 except that it only contains what is needed for Murata based designs.
+ Compared to B_L072Z_LRWAN1 this platform does not include LED and button definitions.
+This module is interesting because it allows to easily integrate a DASH7 modem on a custom design. Note that this module only supports the 868 and 915 MHz bands, not the 433 MHz band.
+
+ ![typeABZ](https://wireless.murata.com/media/catalog/product/cache/3/image/9df78eab33525d08d6e5fb8d27136e95/t/y/typeabz.jpg)
+
 
 ## NUCLEO_L073RZ
 
