@@ -28,6 +28,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "platform.h"
+#include "modem_interface.h"
+#include "hwuart.h"
 
 #define RX_BUFFER_SIZE 256
 #define CMD_BUFFER_SIZE 256
@@ -154,6 +156,7 @@ static void process_rx_fifo(void *arg) {
   }
 }
 
+
 static void rx_cb(uint8_t byte) {
   fifo_put_byte(&rx_fifo, byte);
   if(!sched_is_scheduled(&process_rx_fifo))
@@ -175,23 +178,30 @@ static void send(uint8_t* buffer, uint8_t len) {
 
   DPRINT("> %i bytes @ %i", len, timer_get_counter_value());
 }
+void modem_cb_init(modem_callbacks_t* cbs)
+{
+    callbacks = cbs;
+}
 
-void modem_init(uart_handle_t* uart, modem_callbacks_t* cbs) {
-  assert(uart != NULL);
+void modem_init() 
+{
+  //assert(uart != NULL);
+  modem_interface_init(MODEM_UART,MODEM_UART_BAUDRATE, 0);
+  modem_interface_register_handler(&process_serial_frame, 0);
+  //uart_handle = uart;
+  //if(cbs!=NULL)
+  //  callbacks = cbs;
+  //fifo_init(&rx_fifo, rx_buffer, RX_BUFFER_SIZE);
 
-  uart_handle = uart;
-  callbacks = cbs;
-  fifo_init(&rx_fifo, rx_buffer, RX_BUFFER_SIZE);
+  //sched_register_task(&process_rx_fifo);
 
-  sched_register_task(&process_rx_fifo);
-
-  uart_set_rx_interrupt_callback(uart_handle, &rx_cb);
+  //uart_set_rx_interrupt_callback(uart_handle, &rx_cb);
 
   // When not using interrupt lines we keep uart enabled so we can use RX IRQ.
   // If the platform has interrupt lines the UART should be re-enabled when handling the modem interrupt
 #ifndef PLATFORM_USE_MODEM_INTERRUPT_LINES
-  assert(uart_enable(uart_handle));
-  assert(uart_rx_interrupt_enable(uart_handle) == SUCCESS);
+  //assert(uart_enable(uart_handle));
+  //assert(uart_rx_interrupt_enable(uart_handle) == SUCCESS);
 #endif
 }
 
@@ -200,7 +210,8 @@ void modem_reinit() {
 }
 
 bool modem_execute_raw_alp(uint8_t* alp, uint8_t len) {
-  send(alp, len);
+  //send(alp, len);
+  modem_interface_print_bytes(alp,len,APP_TO_MODEM);
 }
 
 bool alloc_command() {
@@ -224,7 +235,8 @@ bool modem_read_file(uint8_t file_id, uint32_t offset, uint32_t size) {
 
   alp_append_read_file_data_action(&command.fifo, file_id, offset, size, true, false);
 
-  send(command.buffer, fifo_get_size(&command.fifo));
+  //send(command.buffer, fifo_get_size(&command.fifo));
+  modem_interface_print_bytes(command.buffer,fifo_get_size(&command.fifo),APP_TO_MODEM);
 
   return true;
 }
@@ -235,7 +247,8 @@ bool modem_write_file(uint8_t file_id, uint32_t offset, uint32_t size, uint8_t* 
 
   alp_append_write_file_data_action(&command.fifo, file_id, offset, size, data, true, false);
 
-  send(command.buffer, fifo_get_size(&command.fifo));
+  //send(command.buffer, fifo_get_size(&command.fifo));
+  modem_interface_print_bytes(command.buffer,fifo_get_size(&command.fifo),APP_TO_MODEM);
 
   return true;
 }
@@ -254,7 +267,8 @@ bool modem_send_unsolicited_response(uint8_t file_id, uint32_t offset, uint32_t 
 
   alp_append_return_file_data_action(&command.fifo, file_id, offset, length, data);
 
-  send(command.buffer, fifo_get_size(&command.fifo));
+  modem_interface_print_bytes(command.buffer,fifo_get_size(&command.fifo),APP_TO_MODEM);
+  //send(command.buffer, fifo_get_size(&command.fifo));
   return true;
 }
 
@@ -272,6 +286,7 @@ bool modem_send_raw_unsolicited_response(uint8_t* alp_command, uint32_t length,
 
   fifo_put(&command.fifo, alp_command, length);
 
-  send(command.buffer, fifo_get_size(&command.fifo));
+  //send(command.buffer, fifo_get_size(&command.fifo));
+  modem_interface_print_bytes(command.buffer,fifo_get_size(&command.fifo),APP_TO_MODEM);
   return true;
 }
