@@ -41,8 +41,6 @@ The [Murata Type ABZ](https://wireless.murata.com/eng/products/rf-modules-1/lpwa
  Compared to B_L072Z_LRWAN1 this platform does not include LED and button definitions.
 This module is interesting because it allows to easily integrate a DASH7 modem on a custom design. Note that this module only supports the 868 and 915 MHz bands, not the 433 MHz band.
 
- ![typeABZ](https://wireless.murata.com/media/catalog/product/cache/3/image/9df78eab33525d08d6e5fb8d27136e95/t/y/typeabz.jpg)
-
 
 ## NUCLEO_L073RZ
 
