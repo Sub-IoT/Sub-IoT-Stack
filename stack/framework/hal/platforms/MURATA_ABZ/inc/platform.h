@@ -51,4 +51,11 @@
 #define ABZ_ANT_SW_TX_PIN PIN(2, 2)
 #define ABZ_ANT_SW_PA_BOOST_PIN PIN(2, 1)
 
+// TODO these defines are dependent on how the Murata module is integrated on the board
+// we hardcode them for now
+#ifdef PLATFORM_USE_MODEM_INTERRUPT_LINES
+  #define MODEM2MCU_INT_PIN PIN(0, 11)
+  #define MCU2MODEM_INT_PIN PIN(0, 0)
+#endif
+
 #endif
