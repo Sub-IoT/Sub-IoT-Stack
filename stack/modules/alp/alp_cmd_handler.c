@@ -38,8 +38,10 @@
 
 #if defined(MODULE_ALP_LOG_ENABLED)
 #define DPRINT(...) log_print_stack_string(LOG_STACK_ALP, __VA_ARGS__)
+#define DPRINT_DATA(...) log_print_data(__VA_ARGS__)
 #else
 #define DPRINT(...)
+#define DPRINT_DATA(...)
 #endif
 
 
@@ -151,6 +153,7 @@ void alp_cmd_handler_output_d7asp_response(d7ap_session_result_t d7asp_result, u
 {
     // TODO refactor, move partly to alp + call from SP when shell enabled instead of from app
     DPRINT("output D7ASP response to console");
+    DPRINT_DATA(alp_command, alp_command_size);
     uint8_t* ptr = alp_resp;
 
     ptr += append_interface_status_action(&d7asp_result, ptr);
