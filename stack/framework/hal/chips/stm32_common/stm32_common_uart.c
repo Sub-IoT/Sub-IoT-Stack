@@ -147,7 +147,7 @@ bool uart_disable(uart_handle_t* uart) {
   GPIO_InitStruct.Pin = 1 << GPIO_PIN(uart->uart_port->rx);
   assert(hw_gpio_configure_pin_stm(uart->uart_port->rx, &GPIO_InitStruct) == SUCCESS);
 
-  log_print_string("!!! uart disabled");
+  //log_print_string("!!! uart disabled");
   return true;
 }
 

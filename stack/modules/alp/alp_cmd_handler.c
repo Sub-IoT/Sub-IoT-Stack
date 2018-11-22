@@ -34,6 +34,7 @@
 #include "ng.h"
 #include "log.h"
 #include "MODULE_ALP_defs.h"
+#include "modem_interface.h"
 
 #if defined(MODULE_ALP_LOG_ENABLED)
 #define DPRINT(...) log_print_stack_string(LOG_STACK_ALP, __VA_ARGS__)
@@ -47,6 +48,16 @@ static alp_cmd_handler_appl_itf_callback NGDEF(_alp_cmd_handler_appl_itf_cb);
 
 static uint8_t alp_command[ALP_CMD_MAX_SIZE] = { 0x00 };
 static uint8_t alp_resp[ALP_CMD_MAX_SIZE] = { 0x00 };
+
+void modem_interface_cmd_handler(fifo_t* cmd_fifo)
+{
+    error_t err;
+    uint8_t alp_command_len=fifo_get_size(cmd_fifo);
+    start_atomic();
+    err = fifo_pop(cmd_fifo, alp_command, alp_command_len); assert(err == SUCCESS); // pop full ALP command
+    end_atomic();
+    alp_layer_process_command_console_output(alp_command, alp_command_len);
+}
 
 void alp_cmd_handler(fifo_t* cmd_fifo)
 {
@@ -98,11 +109,16 @@ void alp_cmd_handler_output_alp_command(fifo_t* resp_fifo)
     uint8_t resp_len = fifo_get_size(resp_fifo);
     if(resp_len > 0) {
         DPRINT("output ALP cmd of size %i", resp_len);
-        console_print_byte(SERIAL_ALP_FRAME_SYNC_BYTE);
-        console_print_byte(SERIAL_ALP_FRAME_VERSION);
-        console_print_byte(resp_len);
-        fifo_pop(resp_fifo, alp_resp, resp_len);
-        console_print_bytes(alp_resp, resp_len);
+
+        //console_print_byte(SERIAL_ALP_FRAME_SYNC_BYTE);
+        //console_print_byte(SERIAL_ALP_FRAME_VERSION);
+        //console_print_byte(resp_len);
+        //alp_resp[0]=SERIAL_ALP_FRAME_SYNC_BYTE;
+        //alp_resp[2]=SERIAL_ALP_FRAME_VERSION;
+        //alp_resp[3]=resp_len;
+        //fifo_pop(resp_fifo, &alp_resp[4], resp_len);
+        fifo_pop(resp_fifo, alp_resp,resp_len);
+        modem_interface_print_bytes(alp_resp, resp_len, MODEM_TO_APP);
     }
     // TODO crc?
 }
