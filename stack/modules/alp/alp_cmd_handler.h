@@ -63,6 +63,10 @@ void alp_cmd_handler_output_d7asp_response(d7ap_session_result_t d7asp_result, u
 ///
 void alp_cmd_handler_set_appl_itf_callback(alp_cmd_handler_appl_itf_callback cb);
 
+///
+/// \brief Modem interface command handler for ALP interface
+/// \param cmd_fifo
+///
 void modem_interface_cmd_handler(fifo_t* cmd_fifo);
 
 #endif // ALP_CMD_HANDLER_H

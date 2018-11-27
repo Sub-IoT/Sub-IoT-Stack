@@ -29,7 +29,6 @@
 #include <stdlib.h>
 #include "platform.h"
 #include "modem_interface.h"
-#include "hwuart.h"
 
 #define RX_BUFFER_SIZE 256
 #define CMD_BUFFER_SIZE 256
@@ -110,6 +109,7 @@ static void process_serial_frame(fifo_t* fifo) {
 
     command.is_active = false;
   }
+  //command.is_active = false;
 }
 
 static void process_rx_fifo(void *arg) {
@@ -185,24 +185,8 @@ void modem_cb_init(modem_callbacks_t* cbs)
 
 void modem_init() 
 {
-  //assert(uart != NULL);
-  modem_interface_init(MODEM_UART,MODEM_UART_BAUDRATE, 0);
-  modem_interface_register_handler(&process_serial_frame, 0);
-  //uart_handle = uart;
-  //if(cbs!=NULL)
-  //  callbacks = cbs;
-  //fifo_init(&rx_fifo, rx_buffer, RX_BUFFER_SIZE);
-
-  //sched_register_task(&process_rx_fifo);
-
-  //uart_set_rx_interrupt_callback(uart_handle, &rx_cb);
-
-  // When not using interrupt lines we keep uart enabled so we can use RX IRQ.
-  // If the platform has interrupt lines the UART should be re-enabled when handling the modem interrupt
-#ifndef PLATFORM_USE_MODEM_INTERRUPT_LINES
-  //assert(uart_enable(uart_handle));
-  //assert(uart_rx_interrupt_enable(uart_handle) == SUCCESS);
-#endif
+  modem_interface_init(MODEM_UART, MODEM_UART_BAUDRATE, 0, MCU2MODEM_INT_PIN, MODEM2MCU_INT_PIN);
+  modem_interface_register_handler(&process_serial_frame, APP_TO_MODEM); 
 }
 
 void modem_reinit() {

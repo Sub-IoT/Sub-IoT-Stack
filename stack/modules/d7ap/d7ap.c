@@ -48,8 +48,8 @@ dae_access_profile_t default_access_profiles[DEFAULT_ACCESS_PROFILES_COUNT] = {
             .scan_automation_period = 0,
         },
         .subbands[0] = (subband_t){
-            .channel_index_start = 8,
-            .channel_index_end = 8,
+            .channel_index_start = 0,
+            .channel_index_end = 0,
             .eirp = 14,
             .cca = 86,
             .duty = 0,
@@ -67,8 +67,8 @@ dae_access_profile_t default_access_profiles[DEFAULT_ACCESS_PROFILES_COUNT] = {
           .scan_automation_period = 112, // 1024 ticks
         },
         .subbands[0] = (subband_t){
-            .channel_index_start = 8,
-            .channel_index_end = 8,
+            .channel_index_start = 0,
+            .channel_index_end = 0,
             .eirp = 14,
             .cca = 86,
             .duty = 0,
@@ -86,8 +86,8 @@ dae_access_profile_t default_access_profiles[DEFAULT_ACCESS_PROFILES_COUNT] = {
             .scan_automation_period = 0,
         },
         .subbands[0] = (subband_t){
-            .channel_index_start = 8,
-            .channel_index_end = 8,
+            .channel_index_start = 0,
+            .channel_index_end = 0,
             .eirp = 14,
             .cca = 86,
             .duty = 0,
