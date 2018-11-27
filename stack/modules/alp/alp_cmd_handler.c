@@ -110,13 +110,6 @@ void alp_cmd_handler_output_alp_command(fifo_t* resp_fifo)
     if(resp_len > 0) {
         DPRINT("output ALP cmd of size %i", resp_len);
 
-        //console_print_byte(SERIAL_ALP_FRAME_SYNC_BYTE);
-        //console_print_byte(SERIAL_ALP_FRAME_VERSION);
-        //console_print_byte(resp_len);
-        //alp_resp[0]=SERIAL_ALP_FRAME_SYNC_BYTE;
-        //alp_resp[2]=SERIAL_ALP_FRAME_VERSION;
-        //alp_resp[3]=resp_len;
-        //fifo_pop(resp_fifo, &alp_resp[4], resp_len);
         fifo_pop(resp_fifo, alp_resp,resp_len);
         modem_interface_print_bytes(alp_resp, resp_len, MODEM_TO_APP);
     }

@@ -4,6 +4,7 @@
 //#define MODEM_INTERFACE_ENABLED 1
 #include "fifo.h"
 #include "hwuart.h"
+#include "hwgpio.h"
 //#ifdef MODEM_INTERFACE_ENABLED
 
 #define SERIAL_FRAME_SYNC_BYTE 0xC0
@@ -25,7 +26,7 @@ typedef enum
 
 typedef void (*cmd_handler_t)(fifo_t* cmd_fifo);
 
-void modem_interface_init(uint8_t idx, uint32_t baudrate, uint8_t pins);
+void modem_interface_init(uint8_t idx, uint32_t baudrate, uint8_t pins, pin_id_t mcu2modem, pin_id_t modem2mcu);
 void modem_interface_enable();
 void modem_interface_disable();
 void modem_interface_print_bytes(uint8_t* bytes, uint8_t length, serial_message_type_t type);
