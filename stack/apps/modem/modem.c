@@ -43,7 +43,7 @@
 void bootstrap()
 {
     log_print_string("Device booted\n");
-    modem_interface_init(1,9600,0,MODEM2MCU_INT_PIN,MCU2MODEM_INT_PIN);
+    modem_interface_init(1,115200,0,MODEM2MCU_INT_PIN,MCU2MODEM_INT_PIN);
 
     fs_init_args_t fs_init_args = (fs_init_args_t){
         .fs_d7aactp_cb = &alp_layer_process_d7aactp,
@@ -60,6 +60,5 @@ void bootstrap()
     uint8_t uid[8];
     fs_read_uid(uid);
     log_print_string("UID %02X%02X%02X%02X%02X%02X%02X%02X", uid[0], uid[1], uid[2], uid[3], uid[4], uid[5], uid[6], uid[7]);
-    
 }
 

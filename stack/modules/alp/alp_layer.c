@@ -145,7 +145,7 @@ void alp_layer_init(alp_init_args_t* alp_init_args, bool is_shell_enabled)
       .unsolicited_cb = alp_layer_process_command_from_d7ap
   };
 
-  modem_interface_register_handler(&modem_interface_cmd_handler, MODEM_TO_APP);
+  modem_interface_register_handler(&modem_interface_cmd_handler, ALP_DATA);
 
 #ifdef MODULE_LORAWAN
   lorawan_register_cbs(lorwan_rx,alp_layer_command_completed_from_lorawan, lorawan_join_completed);

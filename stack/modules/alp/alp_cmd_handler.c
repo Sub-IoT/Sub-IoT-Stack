@@ -111,7 +111,7 @@ void alp_cmd_handler_output_alp_command(fifo_t* resp_fifo)
         DPRINT("output ALP cmd of size %i", resp_len);
 
         fifo_pop(resp_fifo, alp_resp,resp_len);
-        modem_interface_print_bytes(alp_resp, resp_len, MODEM_TO_APP);
+        modem_interface_print_bytes(alp_resp, resp_len, ALP_DATA);
     }
     // TODO crc?
 }

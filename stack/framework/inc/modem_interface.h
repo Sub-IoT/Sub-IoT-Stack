@@ -18,9 +18,9 @@
 
 typedef enum
 {
-    MODEM_TO_APP=0X01,
-    APP_TO_MODEM=0X02,
-    PING=0X03,
+    ALP_DATA=0X01,
+    PING_REQUEST=0X02,
+    PING_RESPONSE=0X03,
     LOGGING=0X04
 } serial_message_type_t;
 
