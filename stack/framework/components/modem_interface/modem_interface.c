@@ -73,19 +73,15 @@ static void flush_modem_interface_tx_fifo(void *arg)
 {
   uint8_t len = fifo_get_size(&modem_interface_tx_fifo);
 
+#ifdef PLATFORM_USE_MODEM_INTERRUPT_LINES
   if(!flush_in_progress)
-    platform_wakeup();
-  
-  //while(waiting_for_receiver){}
-  if(waiting_for_receiver)
   {
-    //waiting for receiver to be ready
-    sched_post_task_prio(&flush_modem_interface_tx_fifo, MIN_PRIORITY, NULL);
-    return;
-  }
-  if(!flush_in_progress)
+    platform_wakeup();
+    while(waiting_for_receiver){} //TODO timeout?
     modem_interface_enable();
-    
+  }
+#endif
+        
   flush_in_progress = true;
 
 #ifdef HAL_UART_USE_DMA_TX
@@ -194,7 +190,6 @@ static void process_rx_fifo(void *arg)
           payload_len = 0;
           if(fifo_get_size(&rx_fifo) > SERIAL_FRAME_HEADER_SIZE)
             sched_post_task(&process_rx_fifo);
-
           return;
         }
         parsed_header = true;
@@ -219,27 +214,21 @@ static void process_rx_fifo(void *arg)
     {
       if(header[SERIAL_FRAME_TYPE]==ALP_DATA && alp_handler != NULL)
         alp_handler(&payload_fifo);
+      else if (header[SERIAL_FRAME_TYPE]==LOGGING && ping_response_handler != NULL)
+        ping_response_handler(&payload_fifo);
+      else if (header[SERIAL_FRAME_TYPE]==PING_RESPONSE && logging_handler != NULL)
+        logging_handler(&payload_fifo);
       else if (header[SERIAL_FRAME_TYPE]==PING_REQUEST)
       {
         uint8_t bytes[1]={0};
         modem_interface_print_bytes((uint8_t*) &bytes,1,PING_RESPONSE);
-      }
-      else if (header[SERIAL_FRAME_TYPE]==LOGGING && ping_response_handler != NULL)
-      {
-        ping_response_handler(&payload_fifo);
-      }
-      else if (header[SERIAL_FRAME_TYPE]==PING_RESPONSE && logging_handler != NULL)
-      {
-        logging_handler(&payload_fifo);
       }
       else
         DPRINT("!!!FRAME TYPE NOT IMPLEMENTED");
       fifo_skip(&rx_fifo, payload_len - fifo_get_size(&payload_fifo)); // pop parsed bytes from original fifo
     }
     else
-    {
       DPRINT("!!!PAYLOAD DATA INCORRECT");
-    }
     payload_len = 0;
     parsed_header = false;
      if(fifo_get_size(&rx_fifo) > SERIAL_FRAME_HEADER_SIZE)
@@ -250,7 +239,6 @@ static void process_rx_fifo(void *arg)
 static void uart_rx_cb(uint8_t data)
 {
     error_t err;
-
     start_atomic();
         err = fifo_put(&rx_fifo, &data, 1); assert(err == SUCCESS);
     end_atomic();
@@ -264,9 +252,8 @@ static void modem_listen(void* arg)
   {
     modem_listen_uart_inited = true;
     modem_interface_enable();
-    //set interrupt gpio to indicate ready for data
 #ifdef PLATFORM_USE_MODEM_INTERRUPT_LINES
-    hw_gpio_set(uart_state_pin);
+    hw_gpio_set(uart_state_pin); //set interrupt gpio to indicate ready for data
 #endif   
   }
 
@@ -399,13 +386,11 @@ void modem_interface_set_rx_interrupt_callback(uart_rx_inthandler_t uart_rx_cb) 
 
 static void platform_wakeup()
 { 
-#ifdef PLATFORM_USE_MODEM_INTERRUPT_LINES
   if(!waiting_for_receiver && hw_gpio_get_out(uart_state_pin)==0)
   {
     hw_gpio_set(uart_state_pin);
     waiting_for_receiver=true;
   }
-#endif
 }
 
 static void platform_release()
