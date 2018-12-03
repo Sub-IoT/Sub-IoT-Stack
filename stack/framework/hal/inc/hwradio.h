@@ -246,8 +246,10 @@ typedef void (*tx_packet_callback_t)(timer_tick_t timestamp);
  * The tx_refill_callback_t function is called by the radio driver when the TX FIFO needs to be refilled before
  * an underrun occur.
  *
+ * \param    len     The length of the remaining bytes before refill
+ *
  */
-typedef void (*tx_refill_callback_t)(void);
+typedef void (*tx_refill_callback_t)(uint8_t remaining_bytes_len);
 
 
 /** \brief Type definition for the rssi_valid callback function.
