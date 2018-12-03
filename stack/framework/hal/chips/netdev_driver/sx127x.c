@@ -198,6 +198,7 @@ void sx127x_init_radio_settings(sx127x_t *dev)
             sx127x_set_rx_single(dev, SX127X_RX_SINGLE);
             sx127x_set_tx_timeout(dev, SX127X_TX_TIMEOUT_DEFAULT);
         default:
+            assert(false);//not implemented
             break;
     }
 }

@@ -356,27 +356,23 @@ void sx127x_set_rx(sx127x_t *dev)
             sx127x_reg_write(dev, SX127X_REG_DIOMAPPING1, 0x0C); // DIO2 interrupt on sync detect and DIO0 interrupt on PayloadReady
             sx127x_reg_write(dev, SX127X_REG_FIFOTHRESH, 0x83);
 
-            if (dev->options & SX127X_OPT_TELL_RX_START)
+            uint8_t max_payload_len = sx127x_get_max_payload_len(dev);
+            sx127x_set_packet_handler_enabled(dev, true);
+
+            // In case of unlimited length packet format, interrupt is generated once the header is received
+            if (max_payload_len == 0)
             {
-                sx127x_reg_write(dev, SX127X_REG_PAYLOADLENGTH, 0x00);
                 dev->packet.length = 0;
                 hw_gpio_set_edge_interrupt(dev->params.dio1_pin, GPIO_RISING_EDGE);
                 hw_gpio_enable_interrupt(dev->params.dio1_pin);
                 sx127x_set_packet_handler_enabled(dev, true);
             }
-            else if (dev->options & SX127X_OPT_TELL_RX_END)
+            else
             {
                 // Don't overrride the payload length which must have been set by the upper layer
                 dev->packet.length = sx127x_get_max_payload_len(dev);
                 hw_gpio_set_edge_interrupt(dev->params.dio0_pin, GPIO_RISING_EDGE);
                 hw_gpio_enable_interrupt(dev->params.dio0_pin); // enable the PayloadReady interrupt
-            }
-            else
-            {
-                // when IRQ flag is not set, we ignore received packets
-                hw_gpio_disable_interrupt(dev->params.dio0_pin);
-                hw_gpio_disable_interrupt(dev->params.dio1_pin);
-                sx127x_set_packet_handler_enabled(dev, false);
             }
 
             if(dev->settings.state  == SX127X_RF_RX_RUNNING)
@@ -466,6 +462,11 @@ void sx127x_set_rx(sx127x_t *dev)
 
     if (dev->settings.modem == SX127X_MODEM_FSK)
     {
+        if (dev->settings.fsk.rx_timeout != 0) {
+            dev->_internal.rx_timeout_timer.next_event = dev->settings.fsk.rx_timeout; // TODO convert timeout in timer_tick
+            timer_add_event(&dev->_internal.rx_timeout_timer);
+        }
+
         sx127x_set_op_mode(dev, SX127X_RF_OPMODE_RECEIVER);
     }
     else
@@ -474,7 +475,6 @@ void sx127x_set_rx(sx127x_t *dev)
             dev->_internal.rx_timeout_timer.next_event = dev->settings.lora.rx_timeout; // TODO convert timeout in timer_tick
             timer_add_event(&dev->_internal.rx_timeout_timer);
         }
-
 
         if (dev->settings.lora.flags & SX127X_RX_CONTINUOUS_FLAG) {
            sx127x_set_op_mode(dev, SX127X_RF_LORA_OPMODE_RECEIVER);
