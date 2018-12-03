@@ -38,6 +38,7 @@ typedef struct {
 } modem_callbacks_t;
 
 void modem_init();
+void modem_send_ping();
 void modem_cb_init(modem_callbacks_t* cbs);
 void modem_reinit();
 bool modem_execute_raw_alp(uint8_t* alp, uint8_t len);

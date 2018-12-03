@@ -193,6 +193,11 @@ void modem_reinit() {
   command.is_active = false;
 }
 
+void modem_send_ping() {
+  uint8_t ping_reply[15]={0x64 ,0x69 ,0x74 ,0x20 ,0x69 ,0x73 ,0x20 ,0x65 ,0x65 ,0x6e ,0x20 ,0x70 ,0x69 ,0x6e ,0x67};
+  modem_interface_print_bytes((uint8_t*) &ping_reply,15,PING_REQUEST);
+}
+
 bool modem_execute_raw_alp(uint8_t* alp, uint8_t len) {
   //send(alp, len);
   modem_interface_print_bytes(alp,len,ALP_DATA);

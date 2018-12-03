@@ -8,7 +8,6 @@
 #include "hal_defs.h"
 #include "debug.h"
 #include "errors.h"
-//#include "platform.h"
 #include "platform_defs.h"
 
 #include "hwsystem.h"
@@ -20,12 +19,6 @@
 
 #include "log.h"
 
-#define MODEM_INTERFACE_ENABLED 1
-
-#ifdef MODEM_INTERFACE_ENABLED
-#define PLATFORM_MODEM_INTERFACE_UART 1
-#define PLATFORM_MODEM_INTERFACE_BAUD 9600
-#define MODEM_HEADER_SIZE 7
 #define RX_BUFFER_SIZE 256
 
 #define TX_FIFO_FLUSH_CHUNK_SIZE 10 // at a baudrate of 115200 this ensures completion within 1 ms
@@ -40,20 +33,22 @@ static uint32_t baudrate1;
 static uint8_t pins1;
 
 
-//#if defined(FRAMEWORK_LOG_ENABLED) && defined(FRAMEWORK_MODEM_LOG_ENABLED)
-  #define DPRINT(...) log_print_string(__VA_ARGS__)
-  #define DPRINT_DATA(...) log_print_data(__VA_ARGS__)
+//#if defined(FRAMEWORK_LOG_ENABLED) && defined(FRAMEWORK_MODEM_LOG_ENABLED) //TODO add log option for modem_interface
+  //#define DPRINT(...) log_print_string(__VA_ARGS__)
+  //#define DPRINT_DATA(...) log_print_data(__VA_ARGS__)
 //#else
-  //#define DPRINT(...)
-  //#define DPRINT_DATA(...)
+  #define DPRINT(...)
+  #define DPRINT_DATA(...)
 //#endif
 
 #define MODEM_INTERFACE_TX_FIFO_SIZE 255
 static uint8_t modem_interface_tx_buffer[MODEM_INTERFACE_TX_FIFO_SIZE];
 static fifo_t modem_interface_tx_fifo;
 static bool flush_in_progress = false;
-static bool parsed_header = false;
-static bool waiting_for_receiver = false;
+
+uint8_t ping_reply[15]=
+{0x64 ,0x69 ,0x74 ,0x20 ,0x69 ,0x73 ,0x20 ,0x65 ,0x65 ,0x6e ,0x20 ,0x70 ,0x69 ,0x6e ,0x67};
+
 uint8_t header[SERIAL_FRAME_HEADER_SIZE];
 static uint8_t payload_len = 0;
 static uint8_t packet_up_counter = 0;
@@ -62,27 +57,68 @@ static pin_id_t uart_state_pin;
 static pin_id_t target_uart_state_pin;
 
 static bool modem_listen_uart_inited = false;
+static bool parsed_header = false;
+static bool waiting_for_receiver = false;
+static bool transmitting = false;
+static bool receiving = false;
 
-static void platform_wakeup();
-static void platform_release();
+
 cmd_handler_t alp_handler;
 cmd_handler_t ping_response_handler;
 cmd_handler_t logging_handler;
 
+/** @Brief Enable UART interface and UART interrupt
+ *  @return void
+ */
+static void modem_interface_enable(void) 
+{
+  DPRINT("uart enabled @ %i",timer_get_counter_value());
+  assert(uart_enable(uart));
+  uart_rx_interrupt_enable(uart);
+  modem_listen_uart_inited = true;
+}
+
+/** @Brief disables UART interface
+ *  @return void
+ */
+static void modem_interface_disable(void) 
+{
+  DPRINT("uart disabled @ %i",timer_get_counter_value());
+  modem_listen_uart_inited = false;
+  assert(uart_disable(uart));
+}
+
+/** @brief Enables UART interrupt line in 
+ *  to wake up the receiver.
+ *  @return void
+ */
+static void platform_wakeup()
+{ 
+  if(!waiting_for_receiver)
+  {
+    hw_gpio_set(uart_state_pin);
+    waiting_for_receiver=true;
+  }
+}
+
+/** @brief Lets receiver know that 
+ *  all the data has been transfered
+ *  @return void
+ */
+static void platform_release()
+{
+#ifdef PLATFORM_USE_MODEM_INTERRUPT_LINES
+  modem_interface_disable();
+  hw_gpio_clr(uart_state_pin);
+#endif
+}
+
+/** @brief transmit data in fifo to UART
+ *  @return void
+ */
 static void flush_modem_interface_tx_fifo(void *arg) 
 {
   uint8_t len = fifo_get_size(&modem_interface_tx_fifo);
-
-#ifdef PLATFORM_USE_MODEM_INTERRUPT_LINES
-  if(!flush_in_progress)
-  {
-    platform_wakeup();
-    while(waiting_for_receiver){} //TODO timeout?
-    modem_interface_enable();
-  }
-#endif
-        
-  flush_in_progress = true;
 
 #ifdef HAL_UART_USE_DMA_TX
   // when using DMA we transmit the whole FIFO at once
@@ -99,8 +135,7 @@ static void flush_modem_interface_tx_fifo(void *arg)
   {
     fifo_pop(&modem_interface_tx_fifo, chunk, len);
     uart_send_bytes(uart, chunk, len);
-    flush_in_progress = false;
-    waiting_for_receiver = false;
+    transmitting=false;
     platform_release();
   } 
   else 
@@ -112,26 +147,31 @@ static void flush_modem_interface_tx_fifo(void *arg)
 #endif
 }
 
-void modem_interface_register_handler(cmd_handler_t cmd_handler, serial_message_type_t type)
+/** @Brief Schedules flush tx fifo when receiver is ready
+ *  @return void
+ */
+static void get_receiver_ready()
 {
-  if(type == ALP_DATA) 
-    alp_handler=cmd_handler;
-  else if(type == PING_RESPONSE) 
-    ping_response_handler=cmd_handler;
-  else if(type == LOGGING) 
-    logging_handler=cmd_handler;
+#ifdef PLATFORM_USE_MODEM_INTERRUPT_LINES
+  if(!receiving)
+  {
+    transmitting=true;
+    platform_wakeup();
+    DPRINT("request receiver");
+    while(waiting_for_receiver){} //TODO timeout?
+    modem_interface_enable();
+    sched_post_task_prio(&flush_modem_interface_tx_fifo, MIN_PRIORITY, NULL);
+  }
   else
-    DPRINT("Modem interface callback not implemented");
+  {
+    sched_post_task_prio(&get_receiver_ready, MIN_PRIORITY, NULL);
+  }
+#endif
 }
 
-static uint8_t *convertFrom16To8(uint16_t dataAll) {
-    static uint8_t arrayData[2] = { 0x00, 0x00 };
-
-    *(arrayData) = (dataAll >> 8) & 0x00FF;
-    arrayData[1] = dataAll & 0x00FF;
-    return arrayData;
-}
-
+/** @Brief Check package counter and crc
+ *  @return void
+ */
 static bool verify_payload(fifo_t* bytes, uint8_t* header)
 {
   uint8_t payload[header[SERIAL_FRAME_SIZE]];
@@ -152,28 +192,25 @@ static bool verify_payload(fifo_t* bytes, uint8_t* header)
   DPRINT_DATA(payload, header[SERIAL_FRAME_SIZE]);
 
   uint16_t calculated_crc = crc_calculate(payload, header[SERIAL_FRAME_SIZE]);
-  uint8_t *dataMix = convertFrom16To8(calculated_crc);
  
-  if(dataMix[0]!=header[SERIAL_FRAME_CRC1] || dataMix[1]!=header[SERIAL_FRAME_CRC2]) //TODO inline
+  if(header[SERIAL_FRAME_CRC1]!=((calculated_crc >> 8) & 0x00FF) || header[SERIAL_FRAME_CRC2]!=(calculated_crc & 0x00FF))
   {
     //TODO consequence? (request repeat?)
-    log_print_string("CRC incorrect! Calculated crc: ");
-    DPRINT_DATA(dataMix, 2);
+    log_print_string("CRC incorrect!");
     return false;
   }
   else
     return true;
 }
-/*
----------------HEADER(bytes)---------------------
-|sync|sync|counter|message type|length|crc1|crc2|
--------------------------------------------------
-1) Search for sync bytes (always)
-2) get header size and parse header
-3) Wait for correct # of bytes (length present in header)
-4) Execute crc check and check message counter
-5) send to corresponding service (alp, ping service, log service)
-*/
+
+/** @Brief Processes received uart data
+ * 1) Search for sync bytes (always)
+ * 2) get header size and parse header
+ * 3) Wait for correct # of bytes (length present in header)
+ * 4) Execute crc check and check message counter
+ * 5) send to corresponding service (alp, ping service, log service)
+ *  @return void
+ */
 static void process_rx_fifo(void *arg) 
 {
   if(!parsed_header) 
@@ -219,10 +256,7 @@ static void process_rx_fifo(void *arg)
       else if (header[SERIAL_FRAME_TYPE]==PING_RESPONSE && logging_handler != NULL)
         logging_handler(&payload_fifo);
       else if (header[SERIAL_FRAME_TYPE]==PING_REQUEST)
-      {
-        uint8_t bytes[1]={0};
-        modem_interface_print_bytes((uint8_t*) &bytes,1,PING_RESPONSE);
-      }
+        modem_interface_print_bytes((uint8_t*) &ping_reply,15,PING_RESPONSE);
       else
         DPRINT("!!!FRAME TYPE NOT IMPLEMENTED");
       fifo_skip(&rx_fifo, payload_len - fifo_get_size(&payload_fifo)); // pop parsed bytes from original fifo
@@ -231,11 +265,13 @@ static void process_rx_fifo(void *arg)
       DPRINT("!!!PAYLOAD DATA INCORRECT");
     payload_len = 0;
     parsed_header = false;
-     if(fifo_get_size(&rx_fifo) > SERIAL_FRAME_HEADER_SIZE)
-        sched_post_task(&process_rx_fifo);
+    if(fifo_get_size(&rx_fifo) > SERIAL_FRAME_HEADER_SIZE)
+      sched_post_task(&process_rx_fifo);
   }
 }
-
+/** @Brief put received UART data in fifo
+ *  @return void
+ */
 static void uart_rx_cb(uint8_t data)
 {
     error_t err;
@@ -246,60 +282,70 @@ static void uart_rx_cb(uint8_t data)
     if(!sched_is_scheduled(&process_rx_fifo))
         sched_post_task_prio(&process_rx_fifo, MIN_PRIORITY - 1, NULL);
 }
+/** @Brief Keeps µC awake while receiving UART data
+ *  @return void
+ */
 static void modem_listen(void* arg) 
 {
   if(!modem_listen_uart_inited) 
   {
-    modem_listen_uart_inited = true;
     modem_interface_enable();
-#ifdef PLATFORM_USE_MODEM_INTERRUPT_LINES
     hw_gpio_set(uart_state_pin); //set interrupt gpio to indicate ready for data
-#endif   
   }
 
-  if(hw_gpio_get_in(target_uart_state_pin)) 
+  if(receiving==true)
   {
     // prevent the MCU to go back to stop mode by scheduling ourself again until pin goes low,
     // to keep UART RX enabled
-    sched_post_task_prio(&modem_listen, MIN_PRIORITY, NULL);
+    sched_post_task_prio(&modem_listen, MIN_PRIORITY-2, NULL); //TODO check if desired -2
   }
   else 
   {
-#ifdef PLATFORM_USE_MODEM_INTERRUPT_LINES
     hw_gpio_clr(uart_state_pin);
     modem_interface_disable();
-#endif  
   }
 }
-
+/** @Brief Processes events on UART interrupt line
+ *  @return void
+ */
 static void uart_int_cb(pin_id_t pin_id, uint8_t event_mask)
 {
+  /*
+    Delay uart init until scheduled task,
+    MCU clock will only be initialzed correclty after ISR, 
+    when entering scheduler again
+  */
   if(event_mask & GPIO_RISING_EDGE) 
   {
-    
-    /*
-      Delay uart init until scheduled task,
-      MCU clock will only be initialzed correclty after ISR, 
-      when entering scheduler again
-    */
-   if(!waiting_for_receiver)
-   {
-    modem_listen_uart_inited = false;
-    sched_post_task(&modem_listen);
-    DPRINT("Ready to receive @ %i",timer_get_counter_value());
-   }
-   else
-   {
-     DPRINT("Target ready @ %i",timer_get_counter_value());
-     waiting_for_receiver=false;
-   }
+    if(transmitting)
+    {
+      DPRINT("Target ready @ %i",timer_get_counter_value());
+      waiting_for_receiver=false;
+    }
+    else
+    {
+      receiving=true;
+      DPRINT("Ready to receive @ %i",timer_get_counter_value());
+      sched_post_task(&modem_listen);
+    }
   }
+  else
+    receiving=false;
+}
+
+static void modem_interface_set_rx_interrupt_callback(uart_rx_inthandler_t uart_rx_cb) {
+#ifdef PLATFORM_USE_USB_CDC
+	cdc_set_rx_interrupt_callback(uart_rx_cb);
+#else
+  uart_set_rx_interrupt_callback(uart, uart_rx_cb);
+#endif
 }
 
 void modem_interface_init(uint8_t idx, uint32_t baudrate, uint8_t pins, pin_id_t uart_state_int_pin, pin_id_t target_uart_state_int_pin) 
 {
   fifo_init(&modem_interface_tx_fifo, modem_interface_tx_buffer, MODEM_INTERFACE_TX_FIFO_SIZE);
   sched_register_task(&flush_modem_interface_tx_fifo);
+  sched_register_task(&get_receiver_ready);
   idx1=idx;
   baudrate1=baudrate;
   pins1=pins;
@@ -310,48 +356,36 @@ void modem_interface_init(uint8_t idx, uint32_t baudrate, uint8_t pins, pin_id_t
   DPRINT("uart initialized");
   
   fifo_init(&rx_fifo, rx_buffer, sizeof(rx_buffer));
-  assert(sched_register_task(&modem_listen) == SUCCESS);
+  modem_interface_set_rx_interrupt_callback(&uart_rx_cb);
 
 #ifdef PLATFORM_USE_MODEM_INTERRUPT_LINES
-  assert(hw_gpio_configure_interrupt(target_uart_state_pin, &uart_int_cb, GPIO_RISING_EDGE) == SUCCESS);
+  assert(sched_register_task(&modem_listen) == SUCCESS);
+  DPRINT("using interrupt lines");
+  assert(hw_gpio_configure_interrupt(target_uart_state_pin, &uart_int_cb, GPIO_RISING_EDGE | GPIO_FALLING_EDGE) == SUCCESS);
   assert(hw_gpio_enable_interrupt(target_uart_state_pin) == SUCCESS);
+  if(hw_gpio_get_in(target_uart_state_pin))
+  {
+    receiving=true;
+    sched_post_task(&modem_listen);
+    DPRINT("Ready to receive (boot) @ %i",timer_get_counter_value());
+  }
 #endif
-
-modem_interface_set_rx_interrupt_callback(&uart_rx_cb);
 
 // When not using interrupt lines we keep uart enabled so we can use RX IRQ.
 // If the platform has interrupt lines the UART should be re-enabled when handling the modem interrupt
 #ifndef PLATFORM_USE_MODEM_INTERRUPT_LINES
   modem_interface_enable();
 #endif
-
   sched_register_task(&process_rx_fifo);
 }
 
-void modem_interface_enable(void) {
-  DPRINT("uart enabled @ %i",timer_get_counter_value());
-  uart_enable(uart);
-  uart_rx_interrupt_enable(uart);
-}
 
-void modem_interface_disable(void) {
-  DPRINT("uart disabled @ %i",timer_get_counter_value());
-  uart_disable(uart);
-}
 
-/*
----------------HEADER(bytes)---------------------
-|sync|sync|counter|message type|length|crc1|crc2|
--------------------------------------------------
-1) Calculate crc
-2) Create frame
-3) Add frame
-*/
 void modem_interface_print_bytes(uint8_t* bytes, uint8_t length, serial_message_type_t type) 
 {
   uint8_t header[SERIAL_FRAME_HEADER_SIZE];
   uint16_t crc=crc_calculate(bytes,length);
-  uint8_t* crc8= convertFrom16To8(crc);
+
   packet_up_counter++;
   header[0] = SERIAL_FRAME_SYNC_BYTE;
   header[1] = SERIAL_FRAME_VERSION;
@@ -359,8 +393,8 @@ void modem_interface_print_bytes(uint8_t* bytes, uint8_t length, serial_message_
   header[SERIAL_FRAME_COUNTER] = packet_up_counter;
   header[SERIAL_FRAME_TYPE] = type;
   header[SERIAL_FRAME_SIZE] = length;
-  header[SERIAL_FRAME_CRC1] = crc8[0];
-  header[SERIAL_FRAME_CRC2] = crc8[1];
+  header[SERIAL_FRAME_CRC1] = (crc >> 8) & 0x00FF;
+  header[SERIAL_FRAME_CRC2] = crc & 0x00FF;
 
   DPRINT("TX HEADER:");
   DPRINT_DATA(header, SERIAL_FRAME_HEADER_SIZE);
@@ -369,36 +403,27 @@ void modem_interface_print_bytes(uint8_t* bytes, uint8_t length, serial_message_
    
   fifo_put(&modem_interface_tx_fifo, (uint8_t*) &header, SERIAL_FRAME_HEADER_SIZE);
   fifo_put(&modem_interface_tx_fifo, bytes, length);
+
+#ifdef PLATFORM_USE_MODEM_INTERRUPT_LINES
+  sched_post_task_prio(&get_receiver_ready, MIN_PRIORITY, NULL);
+#else
   sched_post_task_prio(&flush_modem_interface_tx_fifo, MIN_PRIORITY, NULL);
+#endif  
 }
 
 void modem_interface_print(char* string) {
-  modem_interface_print_bytes((uint8_t*) string, strnlen(string, 100), LOGGING); //TODO
+  modem_interface_print_bytes((uint8_t*) string, strnlen(string, 100), LOGGING); 
 }
 
-void modem_interface_set_rx_interrupt_callback(uart_rx_inthandler_t uart_rx_cb) {
-#ifdef PLATFORM_USE_USB_CDC
-	cdc_set_rx_interrupt_callback(uart_rx_cb);
-#else
-  uart_set_rx_interrupt_callback(uart, uart_rx_cb);
-#endif
-}
 
-static void platform_wakeup()
-{ 
-  if(!waiting_for_receiver && hw_gpio_get_out(uart_state_pin)==0)
-  {
-    hw_gpio_set(uart_state_pin);
-    waiting_for_receiver=true;
-  }
-}
-
-static void platform_release()
+void modem_interface_register_handler(cmd_handler_t cmd_handler, serial_message_type_t type)
 {
-#ifdef PLATFORM_USE_MODEM_INTERRUPT_LINES
-  modem_interface_disable();
-  hw_gpio_clr(uart_state_pin);
-#endif
+  if(type == ALP_DATA) 
+    alp_handler=cmd_handler;
+  else if(type == PING_RESPONSE) 
+    ping_response_handler=cmd_handler;
+  else if(type == LOGGING) 
+    logging_handler=cmd_handler;
+  else
+    DPRINT("Modem interface callback not implemented");
 }
-
-#endif

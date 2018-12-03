@@ -1,11 +1,9 @@
 #ifndef MODEM_INTERFACE_H
 #define MODEM_INTERFACE_H
 
-//#define MODEM_INTERFACE_ENABLED 1
 #include "fifo.h"
 #include "hwuart.h"
 #include "hwgpio.h"
-//#ifdef MODEM_INTERFACE_ENABLED
 
 #define SERIAL_FRAME_SYNC_BYTE 0xC0
 #define SERIAL_FRAME_VERSION   0x00
@@ -26,26 +24,40 @@ typedef enum
 
 typedef void (*cmd_handler_t)(fifo_t* cmd_fifo);
 
-void modem_interface_init(uint8_t idx, uint32_t baudrate, uint8_t pins, pin_id_t mcu2modem, pin_id_t modem2mcu);
-void modem_interface_enable();
-void modem_interface_disable();
-void modem_interface_print_bytes(uint8_t* bytes, uint8_t length, serial_message_type_t type);
-void modem_interface_print(char* string);
-void modem_interface_rx_interrupt_enable();
-void modem_interface_set_rx_interrupt_callback(uart_rx_inthandler_t uart_rx_cb);
-void modem_interface_register_handler(cmd_handler_t cmd_handler, uint8_t type);
-
 /*
-#else
-
-#define modem_interface_init(....)              ((void)0)
-#define modem_interface_enable()            ((void)0)
-#define shell_echo_disable()                ((void)0)
-#define modem_interface_disable()           ((void)0)
-#define modem_interface_print_bytes(...)    ((void)0)
-#define modem_interface_print(...)          ((void)0)
-
-#endif
+---------------HEADER(bytes)---------------------
+|sync|sync|counter|message type|length|crc1|crc2|
+-------------------------------------------------
 */
+
+/** @brief Initialize the modem interface by registering
+ *  tasks, initialising fifos/UART and registering callbacks/interrupts
+ *  @param idx The UART port id.
+ *  @param baudrate The used baud rate for UART communication
+ *  @param pins NOT USED
+ *  @param mcu2modem The GPIO pin id of interrupt line indication request transmission/ready to receive
+ *  @param modem2mcu The GPIO pin id of interrupt line indication request transmission/ready to receive
+ *  @return Void.
+ */
+void modem_interface_init(uint8_t idx, uint32_t baudrate, uint8_t pins, pin_id_t mcu2modem, pin_id_t modem2mcu);
+
+/** @brief  Adds header to bytes containing sync bytes, counter, length and crc and puts it in UART fifo
+ *  @param bytes Bytes that need to be transmitted
+ *  @param length Length of bytes
+ *  @param type type of message (ALP, PING_REQUEST, LOGGING, ...)
+ *  @return Void.
+ */
+void modem_interface_print_bytes(uint8_t* bytes, uint8_t length, serial_message_type_t type);
+/** @brief Transmits a string by adding a header and putting it in the UART fifo
+ *  @param string Bytes that need to be transmitted
+ *  @return Void.
+ */
+void modem_interface_print(char* string);
+/** @brief Registers callback to process a certain type op received UART data
+ *  @param cmd_handler Pointer to function that processes the data
+ *  @param type The type of data that needs to be processed by the given callback function
+ *  @return Void.
+ */
+void modem_interface_register_handler(cmd_handler_t cmd_handler, uint8_t type);
 
 #endif //MODEM_INTERFACE_H
