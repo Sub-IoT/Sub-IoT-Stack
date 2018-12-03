@@ -122,11 +122,6 @@ void hw_radio_set_rssi_threshold(uint8_t rssi_thr)
     netdev->driver->set(netdev, NETOPT_CCA_THRESHOLD, &rssi_thr, sizeof(uint8_t));
 }
 
-void hw_radio_set_rssi_smoothing(uint8_t rssi_samples)
-{
-    netdev->driver->set(netdev, NETOPT_RSSI_SMOOTHING, &rssi_samples, sizeof(uint8_t));
-}
-
 void hw_radio_set_sync_word_size(uint8_t sync_size)
 {
     netdev->driver->set(netdev, NETOPT_SYNC_LENGTH, &sync_size, sizeof(uint8_t));
@@ -142,6 +137,11 @@ void hw_radio_set_preamble_detect_on(uint8_t enable)
     netdev->driver->set(netdev, NETOPT_PREAMBLE_DETECT_ON, &enable, sizeof(uint8_t));
 }
 */
+
+void hw_radio_set_rssi_smoothing(uint8_t rssi_samples)
+{
+    netdev->driver->set(netdev, NETOPT_RSSI_SMOOTHING, &rssi_samples, sizeof(uint8_t));
+}
 
 void hw_radio_set_dc_free(uint8_t scheme)
 {
@@ -192,10 +192,7 @@ void hw_radio_send_payload(uint8_t * data, uint8_t len)
 }
 
 error_t hw_radio_set_idle() {
-    // TODO Select the chip mode during Idle state (Standby mode or Sleep mode)
-
-    // For now, select by default the standby mode
-    hw_radio_set_opmode(HW_STATE_STANDBY);
+    hw_radio_set_opmode(HW_STATE_SLEEP);
     DEBUG_RX_END();
     DEBUG_TX_END();
 
@@ -222,6 +219,10 @@ static void _event_cb(netdev_t *dev, netdev_event_t event)
             case NETDEV_EVENT_RX_COMPLETE:
                 len = dev->driver->recv(netdev, NULL, 0, 0);
                 hw_radio_packet_t* rx_packet = alloc_packet_callback(len);
+                if(rx_packet == NULL) {
+                    DPRINT("Could not alloc packet, skipping");
+                    return;
+                }
                 rx_packet->length = len;
 
                 dev->driver->recv(netdev, rx_packet->data, len, &packet_info);
@@ -268,7 +269,9 @@ static void _event_cb(netdev_t *dev, netdev_event_t event)
 
             } break;
             case NETDEV_EVENT_TX_TIMEOUT:
-                //sx127x_set_sleep(&sx127x);
+            case NETDEV_EVENT_RX_TIMEOUT:
+                hw_radio_set_idle();
+                // TODO invoke a registered callback to notify the upper layer about this event
                 break;
             default:
                 DPRINT("Unexpected netdev event received: %d\n", event);
@@ -294,6 +297,9 @@ error_t hw_radio_init(hwradio_init_args_t* init_args)
     netdev->event_callback = _event_cb;
     sched_register_task(&isr_handler);
 
+    // put the chip into sleep mode after init
+    hw_radio_set_idle();
+
     return ret;
 }
 
@@ -313,7 +319,7 @@ void hw_radio_enable_refill(bool enable)
 void hw_radio_enable_preloading(bool enable)
 {
     netopt_enable_t netopt_enable = enable ? NETOPT_ENABLE : NETOPT_DISABLE;
-    netdev->driver->set(netdev, NETOPT_TX_REFILL_IRQ, &netopt_enable, sizeof(netopt_enable_t));
+    netdev->driver->set(netdev, NETOPT_PRELOADING, &netopt_enable, sizeof(netopt_enable_t));
 }
 
 void hw_radio_set_tx_power(uint8_t eirp)
@@ -326,9 +332,10 @@ void hw_radio_set_rx_timeout(uint32_t timeout)
     netdev->driver->set(netdev, NETOPT_RX_TIMEOUT, &timeout, sizeof(uint32_t));
 }
 
-void hw_radio_enable_rx_interrupt(bool enable)
-{
-    netopt_enable_t netopt_enable = enable ? NETOPT_ENABLE : NETOPT_DISABLE;
-    netdev->driver->set(netdev, NETOPT_RX_END_IRQ, &netopt_enable, sizeof(netopt_enable_t));
-    netdev->driver->set(netdev, NETOPT_RX_START_IRQ, &netopt_enable, sizeof(netopt_enable_t));
+void hw_radio_stop() {
+    // TODO reset chip?
+    DEBUG_RX_END();
+    DEBUG_TX_END();
+
+    hw_radio_set_opmode(HW_STATE_SLEEP);
 }
