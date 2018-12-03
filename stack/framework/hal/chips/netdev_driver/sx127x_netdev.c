@@ -769,6 +769,15 @@ static int _set(netdev_t *netdev, netopt_t opt, const void *val, size_t len)
 
 static int _set_state(sx127x_t *dev, netopt_state_t state)
 {
+    /* Some operations can not take place in Sleep mode, so wake up the chip */
+    if ((state != NETOPT_STATE_SLEEP) && (state !=NETOPT_STATE_RESET))
+    {
+        if (sx127x_get_op_mode(dev) == SX127X_RF_OPMODE_SLEEP) {
+            sx127x_set_standby(dev);
+            hw_busy_wait(SX127X_RADIO_WAKEUP_TIME); /* wait for chip wake up */
+        }
+    }
+
     switch (state) {
         case NETOPT_STATE_SLEEP:
             sx127x_set_sleep(dev);
@@ -882,6 +891,29 @@ static void fill_in_fifo(sx127x_t *dev)
     }
 }
 
+static void restart_rx(sx127x_t *dev)
+{
+    // Restart the reception until upper layer decides to stop it
+    dev->packet.fifothresh = 0;
+    dev->packet.length = 0;
+    dev->packet.pos = 0;
+
+    sx127x_reg_write(dev, SX127X_REG_FIFOTHRESH, 0x83);
+    sx127x_reg_write(dev, SX127X_REG_DIOMAPPING1, 0x0C);
+    sx127x_reg_write(dev, SX127X_REG_PAYLOADLENGTH, 0x00);
+
+    // Trigger a manual restart of the Receiver chain (no frequency change)
+    sx127x_reg_write(dev, SX127X_REG_RXCONFIG, 0x4E);
+    sx127x_flush_fifo(dev);
+
+    // Seems that the SyncAddressMatch is not cleared after the flush, so set again the RX mode
+    sx127x_set_op_mode(dev, SX127X_RF_OPMODE_RECEIVER);
+    //DPRINT("Before enabling interrupt: FLAGS1 %x FLAGS2 %x\n", hw_radio_read_reg(REG_IRQFLAGS1), hw_radio_read_reg(REG_IRQFLAGS2));
+    hw_gpio_set_edge_interrupt(dev->params.dio1_pin, GPIO_RISING_EDGE);
+    hw_gpio_enable_interrupt(dev->params.dio1_pin);
+}
+
+
 void _on_dio0_irq(void *arg)
 {
     sx127x_t *dev = (sx127x_t *) arg;
@@ -974,24 +1006,8 @@ void _on_dio1_irq(void *arg)
                         }*/
                         netdev->event_callback(netdev, NETDEV_EVENT_RX_COMPLETE);
 
-                        // Restart the reception until upper layer decides to stop it
-                        dev->packet.fifothresh = 0;
-                        dev->packet.length = 0;
-                        dev->packet.pos = 0;
-
-                        sx127x_reg_write(dev, SX127X_REG_FIFOTHRESH, 0x83);
-                        sx127x_reg_write(dev, SX127X_REG_DIOMAPPING1, 0x0C);
-                        sx127x_reg_write(dev, SX127X_REG_PAYLOADLENGTH, 0x00);
-
-                        // Trigger a manual restart of the Receiver chain (no frequency change)
-                        sx127x_reg_write(dev, SX127X_REG_RXCONFIG, 0x4E);
-                        sx127x_flush_fifo(dev);
-
-                        // Seems that the SyncAddressMatch is not cleared after the flush, so set again the RX mode
-                        sx127x_set_op_mode(dev, SX127X_RF_OPMODE_RECEIVER);
-                        //DPRINT("Before enabling interrupt: FLAGS1 %x FLAGS2 %x\n", hw_radio_read_reg(REG_IRQFLAGS1), hw_radio_read_reg(REG_IRQFLAGS2));
-                        hw_gpio_set_edge_interrupt(dev->params.dio1_pin, GPIO_RISING_EDGE);
-                        hw_gpio_enable_interrupt(dev->params.dio1_pin);
+                        // restart RX in unlimited length mode.
+                        restart_rx(netdev);
                         return;
                     }
 

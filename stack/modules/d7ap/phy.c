@@ -190,6 +190,12 @@ static void switch_to_standby_mode()
     state = STATE_IDLE;
 }
 
+static void switch_to_sleep_mode()
+{
+    hw_radio_set_opmode(HW_STATE_SLEEP);
+    state = STATE_IDLE;
+}
+
 static void packet_transmitted(timer_tick_t timestamp)
 {
     assert(state == STATE_TX);
@@ -286,29 +292,43 @@ uint16_t phy_calculate_tx_duration(phy_channel_class_t channel_class, phy_coding
     if (ch_coding == PHY_CODING_FEC_PN9)
         packet_length = fec_calculated_decoded_length(packet_length);
 
-    packet_length += sizeof(uint16_t); // Sync word
+    if(!payload_only)
+      packet_length += sizeof(uint16_t); // Sync word
+
+#ifdef USE_SX127X
+    if(channel_class == PHY_CLASS_LORA) {
+        // based on http://www.semtech.com/images/datasheet/LoraDesignGuide_STD.pdf
+        // only valid for explicit header, CR4/5, SF9 for now
+        uint16_t payload_symbols = 8 + ceil(2*(packet_length+1)/9)*5;
+        uint16_t packet_duration = LORA_T_PREAMBE_SF9_MS + payload_symbols * LORA_T_SYMBOL_SF9_MS;
+        return packet_duration;
+    }
+#endif
 
     switch (channel_class)
     {
     case PHY_CLASS_LO_RATE:
-        packet_length += PREAMBLE_LOW_RATE_CLASS;
+        if(!payload_only)
+          packet_length += PREAMBLE_LOW_RATE_CLASS;
+
         data_rate = 1.0; // Lo Rate 9.6 kbps: 1.2 bytes/tick
         break;
     case PHY_CLASS_NORMAL_RATE:
-        packet_length += PREAMBLE_NORMAL_RATE_CLASS;
+        if(!payload_only)
+          packet_length += PREAMBLE_NORMAL_RATE_CLASS;
+
         data_rate = 6.0; // Normal Rate 55.555 kbps: 6.94 bytes/tick
         break;
     case PHY_CLASS_HI_RATE:
-        packet_length += PREAMBLE_HI_RATE_CLASS;
+        if(!payload_only)
+          packet_length += PREAMBLE_HI_RATE_CLASS;
+
         data_rate = 20.0; // High rate 166.667 kbps: 20.83 byte/tick
         break;
-#ifdef USE_SX127X
-    case PHY_CLASS_LORA:
-      assert(false); // TODO
-#endif
     }
 
     // TODO Add the power ramp-up/ramp-down symbols in the packet length?
+
     return ceil(packet_length / data_rate) + 1;
 }
 
@@ -371,14 +391,11 @@ static void configure_channel(const channel_id_t* channel) {
 
 static void configure_syncword(syncword_class_t syncword_class, const channel_id_t* channel)
 {
-    if(syncword_class != current_syncword_class || (channel->channel_header.ch_coding != current_channel_id.channel_header.ch_coding))
-    {
-        current_syncword_class = syncword_class;
-        uint16_t sync_word = sync_word_value[syncword_class][channel->channel_header.ch_coding ];
+    current_syncword_class = syncword_class;
+    uint16_t sync_word = sync_word_value[syncword_class][channel->channel_header.ch_coding ];
 
-        DPRINT("sync_word = %04x", sync_word);
-        hw_radio_set_sync_word((uint8_t *)&sync_word, sizeof(uint16_t));
-    }
+    DPRINT("sync_word = %04x", sync_word);
+    hw_radio_set_sync_word((uint8_t *)&sync_word, sizeof(uint16_t));
 }
 
 error_t phy_init(void) {
@@ -436,10 +453,8 @@ error_t phy_start_rx(channel_id_t* channel, syncword_class_t syncword_class){
     configure_channel(channel);
     configure_syncword(syncword_class, channel);
 
+    // Unlimited Length packet format to set the Receive packet of arbitrary length
     hw_radio_set_payload_length(0x00); // unlimited length mode
-
-    //FIXME
-    hw_radio_enable_rx_interrupt(true);
 
     DPRINT("START FG scan @ %i", timer_get_counter_value());
     DEBUG_RX_START();
@@ -457,20 +472,22 @@ error_t phy_start_energy_scan(channel_id_t* channel, rssi_valid_callback_t rssi_
 
     configure_channel(channel);
     //configure_syncword(syncword_class, channel);
-
     hw_radio_set_payload_length(0x00); // unlimited length mode
 
+    // switch to RX since the RSSI measurement is done in RX mode
     state = STATE_RX;
-    hw_radio_set_opmode(HW_STATE_RX);
 
     //FIXME support asynchronous RSSI and scan duration
+    //uint8_t rssi_samples = scan_duration
+    //hw_radio_set_rssi_smoothing(rssi_samples);
+
     int16_t rssi = hw_radio_get_rssi();
     rssi_cb(rssi);
 }
 
 error_t phy_stop_rx(){
 
-    switch_to_standby_mode();
+    switch_to_sleep_mode();
     return SUCCESS;
 }
 
@@ -494,6 +511,9 @@ static uint8_t encode_packet(hw_radio_packet_t* packet, uint8_t* encoded_packet)
 error_t phy_send_packet(hw_radio_packet_t* packet, phy_tx_config_t* config)
 {
     assert(packet->length < PACKET_MAX_SIZE);
+
+    if(packet->length == 0)
+        return ESIZE;
 
     current_packet = packet;
 
@@ -590,11 +610,7 @@ error_t phy_send_packet_with_advertising(hw_radio_packet_t* packet, phy_tx_confi
     // During the advertising flooding, use the infinite packet length mode
     hw_radio_set_payload_length(0x00); // unlimited length mode
 
-    // FIXME
-    //netopt_enable_t enable = NETOPT_ENABLE;
-    //netdev->driver->set(netdev, NETOPT_TX_REFILL_IRQ, &enable, sizeof(netopt_enable_t));
     hw_radio_enable_refill(true);
-    //netdev->driver->set(netdev, NETOPT_PRELOADING, &enable, sizeof(netopt_enable_t));
     hw_radio_enable_preloading(true);
 
     // Prepare the subsequent background frames which include the preamble and the sync word
@@ -721,8 +737,6 @@ static void fill_in_fifo(uint8_t remaining_bytes_len)
     else
     {
         // Disable the refill event since this is the last chunk of data to transmit
-        //netopt_enable_t enable = NETOPT_DISABLE;
-        //netdev->driver->set(netdev, NETOPT_TX_REFILL_IRQ, &enable, sizeof(netopt_enable_t));
         hw_radio_enable_refill(false);
         hw_radio_send_payload(fg_frame.encoded_packet, fg_frame.encoded_length);
     }
@@ -752,13 +766,13 @@ error_t phy_start_background_scan(phy_rx_config_t* config)
 
     DEBUG_RX_START();
 
-    hw_radio_set_opmode(HW_STATE_RX);
-
     int16_t rssi = hw_radio_get_rssi();
     if (rssi <= config->rssi_thr)
     {
-        //DPRINT("FAST RX termination RSSI %i limit %i", rssi, rssi_thr);
-        switch_to_standby_mode();
+        DPRINT("FAST RX termination RSSI %i below limit %i", rssi, config->rssi_thr);
+        switch_to_sleep_mode();
+        // TODO choose standby mode to allow rapid channel cycling
+        //switch_to_standby_mode();
         DEBUG_RX_END();
         return FAIL;
     }
@@ -766,21 +780,12 @@ error_t phy_start_background_scan(phy_rx_config_t* config)
     DPRINT("rssi %i, waiting for BG frame", rssi);
 
     // the device has a period of To to successfully detect the sync word
-    // FIXME
-    //netdev->driver->set(netdev, NETOPT_RX_TIMEOUT, &bg_timeout[current_channel_id.channel_header.ch_class], sizeof(uint32_t));
     hw_radio_set_rx_timeout(bg_timeout[current_channel_id.channel_header.ch_class]);
-
-    // enable the interrupt after packet reception
-    // FIXME
-    //netopt_enable_t enable = NETOPT_ENABLE;
-    //netdev->driver->set(netdev, NETOPT_RX_END_IRQ, &enable, sizeof(netopt_enable_t));
-    hw_radio_enable_rx_interrupt(true);
+    hw_radio_set_opmode(HW_STATE_RX);
 
     return SUCCESS;
 }
 void phy_continuous_tx(phy_tx_config_t* config, bool continuous_wave)
-//void phy_continuous_tx(channel_id_t *channel, syncword_class_t syncword_class,
-//                       eirp_t eirp, bool continuous_wave)
 {
     DPRINT("Continuous tx\n");
 
@@ -789,9 +794,6 @@ void phy_continuous_tx(phy_tx_config_t* config, bool continuous_wave)
     configure_syncword(config->syncword_class, &config->channel_id);
     configure_channel(&config->channel_id);
 
-    // FIXME
-    //netopt_enable_t enable = NETOPT_ENABLE;
-    //netdev->driver->set(netdev, NETOPT_TX_REFILL_IRQ, &enable, sizeof(netopt_enable_t));
     hw_radio_enable_refill(true);
 
     fg_frame.bg_adv = false;
