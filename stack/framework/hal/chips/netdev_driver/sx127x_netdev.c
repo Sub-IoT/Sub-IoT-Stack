@@ -556,6 +556,11 @@ static int _get(netdev_t *netdev, netopt_t opt, void *val, size_t max_len)
             }
             return sizeof(netopt_enable_t);
 
+        case NETOPT_FIFOTHRESHOLD:
+            assert(max_len >= sizeof(uint8_t));
+            *((uint8_t*) val) = dev->packet.fifothresh;
+            return sizeof(uint8_t);
+
         default:
             break;
     }

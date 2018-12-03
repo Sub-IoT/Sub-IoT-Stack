@@ -170,7 +170,7 @@ const uint8_t bg_timeout[4] = {
     To_CLASS_HI_RATE
 };
 
-static void fill_in_fifo();
+static void fill_in_fifo(uint8_t remaining_bytes_len);
 
 static hw_radio_packet_t* alloc_new_packet(uint8_t length)
 {
@@ -624,6 +624,7 @@ error_t phy_send_packet_with_advertising(hw_radio_packet_t* packet, phy_tx_confi
     DPRINT("Original payload with ETA %i", eta);
     DPRINT_DATA(packet->data, packet->length);
 
+    DPRINT("tx_duration_bg_frame %i", bg_adv.tx_duration);
     fg_frame.bg_adv = true;
     memset(fg_frame.encoded_packet, 0xAA, preamble_len);
     sync_word = __builtin_bswap16(sync_word_value[PHY_SYNCWORD_CLASS1][current_channel_id.channel_header.ch_coding]);
@@ -646,7 +647,9 @@ error_t phy_send_packet_with_advertising(hw_radio_packet_t* packet, phy_tx_confi
 
     // start Tx
     timer_tick_t start = timer_get_counter_value();
-    bg_adv.stop_time = start + bg_adv.eta;
+    bg_adv.stop_time = start + eta + bg_adv.tx_duration; // Tadv = Tsched + Ttx
+    DPRINT("BG Tadv %i (start time @ %i stop time @ %i)", eta + bg_adv.tx_duration, start, bg_adv.stop_time);
+
     DPRINT("BG advertising start time @ %i stop time @ %i", start, bg_adv.stop_time);
 
     state = STATE_TX;
@@ -658,13 +661,26 @@ error_t phy_send_packet_with_advertising(hw_radio_packet_t* packet, phy_tx_confi
 }
 
 
-static void fill_in_fifo()
+static void fill_in_fifo(uint8_t remaining_bytes_len)
 {
+    // To update the ETA, we take into account the number of remaining bytes still to be transmitted
+    // Also, at the time we calculate ETA here we will only insert the previously crafted packet (containing the prev ETA) in the
+    // FIFO. So we will need to take this into account as well.
+
+    // TODO adapt how we calculate ETA. There is no reason to use current time for each ETA update, we can just use the BG frame duration
+    // and a frame counter to determine this.
+
     if (fg_frame.bg_adv == true)
     {
         timer_tick_t current = timer_get_counter_value();
-        if (bg_adv.stop_time > current)
-            bg_adv.eta = (bg_adv.stop_time - current) - bg_adv.tx_duration; // ETA is updated according the real current time
+
+        // calculate the time needed to flush the remaining bytes in the TX
+        uint16_t flush_duration = phy_calculate_tx_duration(current_channel_id.channel_header.ch_class,
+                                                            PHY_CODING_PN9, // override FEC, we need the time for the BG_THRESHOLD bytes in the fifo, regardless of coding
+                                                            remaining_bytes_len, true); // don't take syncword and preamble into account
+
+        if (bg_adv.stop_time > current + 2 * bg_adv.tx_duration + flush_duration)
+            bg_adv.eta = (bg_adv.stop_time - current) - 2 * bg_adv.tx_duration - flush_duration; // ETA is updated according the real current time
         else
             //TODO avoid stop time being elapsed
             bg_adv.eta = 0;
@@ -676,7 +692,7 @@ static void fill_in_fifo()
          * The FIFO level allows to write enough padding preamble bytes without overflow
          */
 
-        if (bg_adv.eta > bg_adv.tx_duration)
+        if (bg_adv.eta)
         {
             // Fill up the TX FIFO with the full packet including the preamble and the SYNC word
             hw_radio_send_payload(bg_adv.packet, bg_adv.packet_size);
@@ -691,9 +707,10 @@ static void fill_in_fifo()
             uint16_t preamble_len = 0;
             uint8_t preamble[bg_adv.packet_size];
 
-            preamble_len = bg_adv.eta * (bg_adv.packet_size / bg_adv.tx_duration);
-            DPRINT("Add preamble_bytes: %d", preamble_len);
+            preamble_len = (bg_adv.stop_time - current) * (bg_adv.packet_size / (float)bg_adv.tx_duration); // TODO instead of current we should use the timestamp
+            DPRINT("ETA %d, packet size %d, tx_duration %d, current time %d", bg_adv.eta, bg_adv.packet_size, bg_adv.tx_duration, timer_get_counter_value());
 
+            DPRINT("Add preamble_bytes: %d", preamble_len);
             memset(preamble, 0xAA, preamble_len);
             hw_radio_send_payload(preamble, preamble_len);
 

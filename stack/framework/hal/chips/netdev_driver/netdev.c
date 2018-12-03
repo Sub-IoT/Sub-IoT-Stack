@@ -241,14 +241,19 @@ static void _event_cb(netdev_t *dev, netdev_event_t event)
             case NETDEV_EVENT_TX_COMPLETE:
                 DPRINT("Transmission completed");
                 DEBUG_TX_END();
-                 if(tx_packet_callback) {
-                  tx_packet_callback(timer_get_counter_value());
+                if(tx_packet_callback) {
+                    tx_packet_callback(timer_get_counter_value());
                 }
                 break;
             case NETDEV_EVENT_TX_REFILL_NEEDED:
-                 DPRINT("New data needed to transmit without discontinuity");
-                 tx_refill_callback();
-                 break;
+                DPRINT("New data needed to transmit without discontinuity");
+
+                if (tx_refill_callback) {
+                    uint8_t thr;
+                    netdev->driver->get(netdev, NETOPT_FIFOTHRESHOLD, &thr, sizeof(uint8_t));
+                    tx_refill_callback(thr);
+                }
+                break;
             case NETDEV_EVENT_RX_STARTED: {
                 uint8_t buffer[4];
                 uint8_t len;
