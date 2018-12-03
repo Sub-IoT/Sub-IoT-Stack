@@ -455,6 +455,13 @@ typedef enum {
     NETOPT_LAST_ED_LEVEL,
 
     /**
+     * @brief   (uint8_t) Tx/RX fifo threshold for the radio transceiver
+     *
+     * Get/set the TX/RX FIFO threshold
+     */
+    NETOPT_FIFOTHRESHOLD,
+
+    /**
      * @brief   (uint16_t) preamble length
      */
     NETOPT_PREAMBLE_LENGTH,
