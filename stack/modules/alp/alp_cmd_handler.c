@@ -113,7 +113,7 @@ void alp_cmd_handler_output_alp_command(fifo_t* resp_fifo)
         fifo_pop(resp_fifo, alp_resp,resp_len);
         modem_interface_print_bytes(alp_resp, resp_len, ALP_DATA);
     }
-    // TODO crc?
+
 }
 
 
@@ -153,10 +153,6 @@ void alp_cmd_handler_output_d7asp_response(d7ap_session_result_t d7asp_result, u
     DPRINT("output D7ASP response to console");
     uint8_t* ptr = alp_resp;
 
-    //(*ptr) = SERIAL_ALP_FRAME_SYNC_BYTE; ptr++;               // serial interface sync byte
-    //(*ptr) = SERIAL_ALP_FRAME_VERSION; ptr++;               // serial interface version
-    //ptr++;                              // payload length byte, skip for now and fill later
-
     ptr += append_interface_status_action(&d7asp_result, ptr);
 
     // the actual received data ...
@@ -164,9 +160,6 @@ void alp_cmd_handler_output_d7asp_response(d7ap_session_result_t d7asp_result, u
     
     ptr+= alp_command_size;
 
-    //alp_resp[2] = ptr - (alp_resp + 3);       // fill length byte
-
-    //console_print_bytes(alp_resp, ptr - alp_resp);
     modem_interface_print_bytes(alp_resp, ptr - alp_resp, ALP_DATA);
 }
 

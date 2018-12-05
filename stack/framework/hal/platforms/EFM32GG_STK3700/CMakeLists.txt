@@ -36,6 +36,9 @@ PLATFORM_PARAM(PLATFORM_CONSOLE_UART     "0"      STRING "The UART channel used 
 PLATFORM_PARAM(PLATFORM_CONSOLE_LOCATION "1"      STRING "The route location used by the console UART configuration." )
 PLATFORM_PARAM(PLATFORM_CONSOLE_BAUDRATE "115200" STRING "The baudrate used by the second console configuration."       )
 
+PLATFORM_PARAM(PLATFORM_MODEM_INTERFACE_UART     "1"      STRING "The UART channel used by the modem interface UART configuration."   )
+PLATFORM_PARAM(PLATFORM_MODEM_INTERFACE_BAUDRATE "115200" STRING "The baudrate used by the modem interface configuration."       )
+
 PLATFORM_OPTION(PLATFORM_DEBUGPINS "Enable/Disable Hardware Debug Pins support (see 'hwdebug.h')" TRUE)
 PLATFORM_OPTION(PLATFORM_USE_USB_CDC "Enable/Disable the use of CDC (UART Communication using USB" FALSE)
 #Restrict the number of possible options for the radio option in the usual manner...
@@ -73,6 +76,8 @@ PLATFORM_HEADER_DEFINE(
   NUMBER PLATFORM_CONSOLE_UART
          PLATFORM_CONSOLE_LOCATION
          PLATFORM_CONSOLE_BAUDRATE
+         PLATFORM_MODEM_INTERFACE_UART
+         PLATFORM_MODEM_INTERFACE_BAUDRATE
   BOOL   PLATFORM_DEBUGPINS
          PLATFORM_USE_USB_CDC
          PLATFORM_SX127X_USE_PA_BOOST
