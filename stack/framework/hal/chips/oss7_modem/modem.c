@@ -109,7 +109,7 @@ static void process_serial_frame(fifo_t* fifo) {
 
     command.is_active = false;
   }
-  //command.is_active = false;
+
 }
 
 static void process_rx_fifo(void *arg) {
@@ -185,7 +185,7 @@ void modem_cb_init(modem_callbacks_t* cbs)
 
 void modem_init() 
 {
-  modem_interface_init(MODEM_UART, MODEM_UART_BAUDRATE, 0, MCU2MODEM_INT_PIN, MODEM2MCU_INT_PIN);
+  modem_interface_init(PLATFORM_MODEM_INTERFACE_UART, PLATFORM_MODEM_INTERFACE_BAUDRATE, 0, MCU2MODEM_INT_PIN, MODEM2MCU_INT_PIN);
   modem_interface_register_handler(&process_serial_frame, ALP_DATA); 
 }
 
@@ -199,7 +199,6 @@ void modem_send_ping() {
 }
 
 bool modem_execute_raw_alp(uint8_t* alp, uint8_t len) {
-  //send(alp, len);
   modem_interface_print_bytes(alp,len,ALP_DATA);
 }
 
@@ -224,7 +223,6 @@ bool modem_read_file(uint8_t file_id, uint32_t offset, uint32_t size) {
 
   alp_append_read_file_data_action(&command.fifo, file_id, offset, size, true, false);
 
-  //send(command.buffer, fifo_get_size(&command.fifo));
   modem_interface_print_bytes(command.buffer,fifo_get_size(&command.fifo),ALP_DATA);
 
   return true;
@@ -236,7 +234,6 @@ bool modem_write_file(uint8_t file_id, uint32_t offset, uint32_t size, uint8_t* 
 
   alp_append_write_file_data_action(&command.fifo, file_id, offset, size, data, true, false);
 
-  //send(command.buffer, fifo_get_size(&command.fifo));
   modem_interface_print_bytes(command.buffer,fifo_get_size(&command.fifo),ALP_DATA);
 
   return true;
@@ -257,7 +254,6 @@ bool modem_send_unsolicited_response(uint8_t file_id, uint32_t offset, uint32_t 
   alp_append_return_file_data_action(&command.fifo, file_id, offset, length, data);
 
   modem_interface_print_bytes(command.buffer,fifo_get_size(&command.fifo),ALP_DATA);
-  //send(command.buffer, fifo_get_size(&command.fifo));
   return true;
 }
 
@@ -275,7 +271,6 @@ bool modem_send_raw_unsolicited_response(uint8_t* alp_command, uint32_t length,
 
   fifo_put(&command.fifo, alp_command, length);
 
-  //send(command.buffer, fifo_get_size(&command.fifo));
   modem_interface_print_bytes(command.buffer,fifo_get_size(&command.fifo),ALP_DATA);
   return true;
 }

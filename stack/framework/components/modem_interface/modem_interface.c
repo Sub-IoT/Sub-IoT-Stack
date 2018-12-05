@@ -33,13 +33,13 @@ static uint32_t baudrate1;
 static uint8_t pins1;
 
 
-//#if defined(FRAMEWORK_LOG_ENABLED) && defined(FRAMEWORK_MODEM_LOG_ENABLED) //TODO add log option for modem_interface
-  //#define DPRINT(...) log_print_string(__VA_ARGS__)
-  //#define DPRINT_DATA(...) log_print_data(__VA_ARGS__)
-//#else
+#if defined(FRAMEWORK_LOG_ENABLED) && defined(FRAMEWORK_MODEM_INTERFACE_LOG_ENABLED)
+  #define DPRINT(...) log_print_string(__VA_ARGS__)
+  #define DPRINT_DATA(...) log_print_data(__VA_ARGS__)
+#else
   #define DPRINT(...)
   #define DPRINT_DATA(...)
-//#endif
+#endif
 
 #define MODEM_INTERFACE_TX_FIFO_SIZE 255
 static uint8_t modem_interface_tx_buffer[MODEM_INTERFACE_TX_FIFO_SIZE];
@@ -297,7 +297,7 @@ static void modem_listen(void* arg)
   {
     // prevent the MCU to go back to stop mode by scheduling ourself again until pin goes low,
     // to keep UART RX enabled
-    sched_post_task_prio(&modem_listen, MIN_PRIORITY-2, NULL); //TODO check if desired -2
+    sched_post_task_prio(&modem_listen, MIN_PRIORITY, NULL);
   }
   else 
   {

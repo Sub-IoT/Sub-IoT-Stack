@@ -42,6 +42,9 @@ PLATFORM_PARAM(PLATFORM_CONSOLE_UART     "0"      STRING "The UART port used by 
 PLATFORM_PARAM(PLATFORM_CONSOLE_BAUDRATE "115200" STRING "The baudrate used by the second console configuration."       )
 PLATFORM_PARAM(PLATFORM_CONSOLE_LOCATION "0" STRING "The location") # TODO remove after removing the pins param from the API
 
+PLATFORM_PARAM(PLATFORM_MODEM_INTERFACE_UART     "1"      STRING "The UART channel used by the modem interface UART configuration."   )
+PLATFORM_PARAM(PLATFORM_MODEM_INTERFACE_BAUDRATE "115200" STRING "The baudrate used by the modem interface configuration."       )
+
 PLATFORM_PARAM(PLATFORM_NUM_LEDS "4" STRING "The number of LEDs.")
 PLATFORM_PARAM(PLATFORM_NUM_BUTTONS "1" STRING "The number of buttons.")
 PLATFORM_PARAM(PLATFORM_NUM_DEBUGPINS "2" STRING "The number of debugpins available.")
