@@ -185,7 +185,7 @@ void modem_cb_init(modem_callbacks_t* cbs)
 
 void modem_init() 
 {
-  modem_interface_init(PLATFORM_MODEM_INTERFACE_UART, PLATFORM_MODEM_INTERFACE_BAUDRATE, 0, MCU2MODEM_INT_PIN, MODEM2MCU_INT_PIN);
+  modem_interface_init(PLATFORM_MODEM_INTERFACE_UART, PLATFORM_MODEM_INTERFACE_BAUDRATE, MCU2MODEM_INT_PIN, MODEM2MCU_INT_PIN);
   modem_interface_register_handler(&process_serial_frame, ALP_DATA); 
 }
 

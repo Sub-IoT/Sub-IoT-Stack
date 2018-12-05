@@ -43,8 +43,11 @@
 void bootstrap()
 {
     log_print_string("Device booted\n");
-
-    modem_interface_init(PLATFORM_MODEM_INTERFACE_UART, PLATFORM_MODEM_INTERFACE_BAUDRATE,0,MODEM2MCU_INT_PIN,MCU2MODEM_INT_PIN);
+#ifdef PLATFORM_USE_MODEM_INTERRUPT_LINES
+    modem_interface_init(PLATFORM_MODEM_INTERFACE_UART, PLATFORM_MODEM_INTERFACE_BAUDRATE, MODEM2MCU_INT_PIN, MCU2MODEM_INT_PIN);
+#else
+    modem_interface_init(PLATFORM_MODEM_INTERFACE_UART, PLATFORM_MODEM_INTERFACE_BAUDRATE, (pin_id_t) 0, (pin_id_t) 0);
+#endif
 
     fs_init_args_t fs_init_args = (fs_init_args_t){
         .fs_d7aactp_cb = &alp_layer_process_d7aactp,

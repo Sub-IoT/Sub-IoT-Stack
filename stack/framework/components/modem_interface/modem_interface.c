@@ -341,18 +341,15 @@ static void modem_interface_set_rx_interrupt_callback(uart_rx_inthandler_t uart_
 #endif
 }
 
-void modem_interface_init(uint8_t idx, uint32_t baudrate, uint8_t pins, pin_id_t uart_state_int_pin, pin_id_t target_uart_state_int_pin) 
+void modem_interface_init(uint8_t idx, uint32_t baudrate, pin_id_t uart_state_int_pin, pin_id_t target_uart_state_int_pin) 
 {
   fifo_init(&modem_interface_tx_fifo, modem_interface_tx_buffer, MODEM_INTERFACE_TX_FIFO_SIZE);
   sched_register_task(&flush_modem_interface_tx_fifo);
   sched_register_task(&get_receiver_ready);
-  idx1=idx;
-  baudrate1=baudrate;
-  pins1=pins;
   uart_state_pin=uart_state_int_pin;
   target_uart_state_pin=target_uart_state_int_pin;
 
-  uart = uart_init(idx1, baudrate1,pins1);
+  uart = uart_init(idx, baudrate,0);
   DPRINT("uart initialized");
   
   fifo_init(&rx_fifo, rx_buffer, sizeof(rx_buffer));

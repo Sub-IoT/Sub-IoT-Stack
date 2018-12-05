@@ -34,12 +34,11 @@ typedef void (*cmd_handler_t)(fifo_t* cmd_fifo);
  *  tasks, initialising fifos/UART and registering callbacks/interrupts
  *  @param idx The UART port id.
  *  @param baudrate The used baud rate for UART communication
- *  @param pins NOT USED
  *  @param mcu2modem The GPIO pin id of interrupt line indication request transmission/ready to receive
  *  @param modem2mcu The GPIO pin id of interrupt line indication request transmission/ready to receive
  *  @return Void.
  */
-void modem_interface_init(uint8_t idx, uint32_t baudrate, uint8_t pins, pin_id_t mcu2modem, pin_id_t modem2mcu);
+void modem_interface_init(uint8_t idx, uint32_t baudrate, pin_id_t mcu2modem, pin_id_t modem2mcu);
 
 /** @brief  Adds header to bytes containing sync bytes, counter, length and crc and puts it in UART fifo
  *  @param bytes Bytes that need to be transmitted

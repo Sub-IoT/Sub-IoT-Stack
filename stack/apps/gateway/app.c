@@ -71,7 +71,7 @@ static alp_init_args_t alp_init_args;
 
 void bootstrap()
 {
-   modem_interface_init(PLATFORM_MODEM_INTERFACE_UART, PLATFORM_MODEM_INTERFACE_BAUDRATE,0,NULL,NULL);
+   modem_interface_init(PLATFORM_MODEM_INTERFACE_UART, PLATFORM_MODEM_INTERFACE_BAUDRATE, (pin_id_t) 0, (pin_id_t) 0);
 
     fs_init_args_t fs_init_args = (fs_init_args_t){
         .fs_d7aactp_cb = &alp_layer_process_d7aactp,
