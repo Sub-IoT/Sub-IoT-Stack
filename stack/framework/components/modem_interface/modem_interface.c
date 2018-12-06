@@ -265,7 +265,10 @@ static void process_rx_fifo(void *arg)
         modem_interface_transfer_bytes((uint8_t*) &ping_reply,1,SERIAL_MESSAGE_TYPE_PING_RESPONSE);
       }
       else
+      {
+        fifo_skip(&payload_fifo, payload_len);
         DPRINT("!!!FRAME TYPE NOT IMPLEMENTED");
+      }
       fifo_skip(&rx_fifo, payload_len - fifo_get_size(&payload_fifo)); // pop parsed bytes from original fifo
     }
     else
