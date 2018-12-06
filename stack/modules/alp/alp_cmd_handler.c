@@ -111,7 +111,7 @@ void alp_cmd_handler_output_alp_command(fifo_t* resp_fifo)
         DPRINT("output ALP cmd of size %i", resp_len);
 
         fifo_pop(resp_fifo, alp_resp,resp_len);
-        modem_interface_print_bytes(alp_resp, resp_len, ALP_DATA);
+        modem_interface_transfer_bytes(alp_resp, resp_len, SERIAL_MESSAGE_TYPE_ALP_DATA);
     }
 
 }
@@ -160,6 +160,6 @@ void alp_cmd_handler_output_d7asp_response(d7ap_session_result_t d7asp_result, u
     
     ptr+= alp_command_size;
 
-    modem_interface_print_bytes(alp_resp, ptr - alp_resp, ALP_DATA);
+    modem_interface_transfer_bytes(alp_resp, ptr - alp_resp, SERIAL_MESSAGE_TYPE_ALP_DATA);
 }
 

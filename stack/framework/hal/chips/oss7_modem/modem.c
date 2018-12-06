@@ -186,7 +186,7 @@ void modem_cb_init(modem_callbacks_t* cbs)
 void modem_init() 
 {
   modem_interface_init(PLATFORM_MODEM_INTERFACE_UART, PLATFORM_MODEM_INTERFACE_BAUDRATE, MCU2MODEM_INT_PIN, MODEM2MCU_INT_PIN);
-  modem_interface_register_handler(&process_serial_frame, ALP_DATA); 
+  modem_interface_register_handler(&process_serial_frame, SERIAL_MESSAGE_TYPE_ALP_DATA); 
 }
 
 void modem_reinit() {
@@ -194,12 +194,12 @@ void modem_reinit() {
 }
 
 void modem_send_ping() {
-  uint8_t ping_reply[15]={0x64 ,0x69 ,0x74 ,0x20 ,0x69 ,0x73 ,0x20 ,0x65 ,0x65 ,0x6e ,0x20 ,0x70 ,0x69 ,0x6e ,0x67};
-  modem_interface_print_bytes((uint8_t*) &ping_reply,15,PING_REQUEST);
+  uint8_t ping_request[1]={0x01};
+  modem_interface_transfer_bytes((uint8_t*) &ping_request, 1, SERIAL_MESSAGE_TYPE_PING_REQUEST);
 }
 
 bool modem_execute_raw_alp(uint8_t* alp, uint8_t len) {
-  modem_interface_print_bytes(alp,len,ALP_DATA);
+  modem_interface_transfer_bytes(alp, len, SERIAL_MESSAGE_TYPE_ALP_DATA);
 }
 
 bool alloc_command() {
@@ -223,7 +223,7 @@ bool modem_read_file(uint8_t file_id, uint32_t offset, uint32_t size) {
 
   alp_append_read_file_data_action(&command.fifo, file_id, offset, size, true, false);
 
-  modem_interface_print_bytes(command.buffer,fifo_get_size(&command.fifo),ALP_DATA);
+  modem_interface_transfer_bytes(command.buffer, fifo_get_size(&command.fifo), SERIAL_MESSAGE_TYPE_ALP_DATA);
 
   return true;
 }
@@ -234,7 +234,7 @@ bool modem_write_file(uint8_t file_id, uint32_t offset, uint32_t size, uint8_t* 
 
   alp_append_write_file_data_action(&command.fifo, file_id, offset, size, data, true, false);
 
-  modem_interface_print_bytes(command.buffer,fifo_get_size(&command.fifo),ALP_DATA);
+  modem_interface_transfer_bytes(command.buffer, fifo_get_size(&command.fifo), SERIAL_MESSAGE_TYPE_ALP_DATA);
 
   return true;
 }
@@ -253,7 +253,7 @@ bool modem_send_unsolicited_response(uint8_t file_id, uint32_t offset, uint32_t 
 
   alp_append_return_file_data_action(&command.fifo, file_id, offset, length, data);
 
-  modem_interface_print_bytes(command.buffer,fifo_get_size(&command.fifo),ALP_DATA);
+  modem_interface_transfer_bytes(command.buffer, fifo_get_size(&command.fifo), SERIAL_MESSAGE_TYPE_ALP_DATA);
   return true;
 }
 
@@ -271,6 +271,6 @@ bool modem_send_raw_unsolicited_response(uint8_t* alp_command, uint32_t length,
 
   fifo_put(&command.fifo, alp_command, length);
 
-  modem_interface_print_bytes(command.buffer,fifo_get_size(&command.fifo),ALP_DATA);
+  modem_interface_transfer_bytes(command.buffer, fifo_get_size(&command.fifo), SERIAL_MESSAGE_TYPE_ALP_DATA);
   return true;
 }

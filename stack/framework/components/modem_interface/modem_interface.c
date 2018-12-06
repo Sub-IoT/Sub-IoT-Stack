@@ -28,10 +28,6 @@ static uart_handle_t* uart;
 
 static uint8_t rx_buffer[RX_BUFFER_SIZE];
 static fifo_t rx_fifo;
-static uint8_t idx1;
-static uint32_t baudrate1;
-static uint8_t pins1;
-
 
 #if defined(FRAMEWORK_LOG_ENABLED) && defined(FRAMEWORK_MODEM_INTERFACE_LOG_ENABLED)
   #define DPRINT(...) log_print_string(__VA_ARGS__)
@@ -41,13 +37,20 @@ static uint8_t pins1;
   #define DPRINT_DATA(...)
 #endif
 
+
+#define SERIAL_FRAME_SYNC_BYTE 0xC0
+#define SERIAL_FRAME_VERSION   0x00
+#define SERIAL_FRAME_HEADER_SIZE 7
+#define SERIAL_FRAME_SIZE 4
+#define SERIAL_FRAME_COUNTER 2
+#define SERIAL_FRAME_TYPE 3
+#define SERIAL_FRAME_CRC1   5
+#define SERIAL_FRAME_CRC2   6
+
 #define MODEM_INTERFACE_TX_FIFO_SIZE 255
 static uint8_t modem_interface_tx_buffer[MODEM_INTERFACE_TX_FIFO_SIZE];
 static fifo_t modem_interface_tx_fifo;
 static bool flush_in_progress = false;
-
-uint8_t ping_reply[15]=
-{0x64 ,0x69 ,0x74 ,0x20 ,0x69 ,0x73 ,0x20 ,0x65 ,0x65 ,0x6e ,0x20 ,0x70 ,0x69 ,0x6e ,0x67};
 
 uint8_t header[SERIAL_FRAME_HEADER_SIZE];
 static uint8_t payload_len = 0;
@@ -92,7 +95,7 @@ static void modem_interface_disable(void)
  *  to wake up the receiver.
  *  @return void
  */
-static void platform_wakeup()
+static void wakeup_receiver()
 { 
   if(!waiting_for_receiver)
   {
@@ -105,7 +108,7 @@ static void platform_wakeup()
  *  all the data has been transfered
  *  @return void
  */
-static void platform_release()
+static void release_receiver()
 {
 #ifdef PLATFORM_USE_MODEM_INTERRUPT_LINES
   modem_interface_disable();
@@ -136,7 +139,7 @@ static void flush_modem_interface_tx_fifo(void *arg)
     fifo_pop(&modem_interface_tx_fifo, chunk, len);
     uart_send_bytes(uart, chunk, len);
     transmitting=false;
-    platform_release();
+    release_receiver();
   } 
   else 
   {
@@ -156,7 +159,7 @@ static void get_receiver_ready()
   if(!receiving)
   {
     transmitting=true;
-    platform_wakeup();
+    wakeup_receiver();
     DPRINT("request receiver");
     while(waiting_for_receiver){} //TODO timeout?
     modem_interface_enable();
@@ -249,14 +252,18 @@ static void process_rx_fifo(void *arg)
   
     if(verify_payload(&payload_fifo,(uint8_t *)&header))
     {
-      if(header[SERIAL_FRAME_TYPE]==ALP_DATA && alp_handler != NULL)
+      if(header[SERIAL_FRAME_TYPE]==SERIAL_MESSAGE_TYPE_ALP_DATA && alp_handler != NULL)
         alp_handler(&payload_fifo);
-      else if (header[SERIAL_FRAME_TYPE]==LOGGING && ping_response_handler != NULL)
+      else if (header[SERIAL_FRAME_TYPE]==SERIAL_MESSAGE_TYPE_PING_RESPONSE  && ping_response_handler != NULL)
         ping_response_handler(&payload_fifo);
-      else if (header[SERIAL_FRAME_TYPE]==PING_RESPONSE && logging_handler != NULL)
+      else if (header[SERIAL_FRAME_TYPE]==SERIAL_MESSAGE_TYPE_LOGGING && logging_handler != NULL)
         logging_handler(&payload_fifo);
-      else if (header[SERIAL_FRAME_TYPE]==PING_REQUEST)
-        modem_interface_print_bytes((uint8_t*) &ping_reply,15,PING_RESPONSE);
+      else if (header[SERIAL_FRAME_TYPE]==SERIAL_MESSAGE_TYPE_PING_REQUEST)
+      {
+        uint8_t ping_reply[1]={0x02};
+        fifo_skip(&payload_fifo,1);
+        modem_interface_transfer_bytes((uint8_t*) &ping_reply,1,SERIAL_MESSAGE_TYPE_PING_RESPONSE);
+      }
       else
         DPRINT("!!!FRAME TYPE NOT IMPLEMENTED");
       fifo_skip(&rx_fifo, payload_len - fifo_get_size(&payload_fifo)); // pop parsed bytes from original fifo
@@ -346,6 +353,7 @@ void modem_interface_init(uint8_t idx, uint32_t baudrate, pin_id_t uart_state_in
   fifo_init(&modem_interface_tx_fifo, modem_interface_tx_buffer, MODEM_INTERFACE_TX_FIFO_SIZE);
   sched_register_task(&flush_modem_interface_tx_fifo);
   sched_register_task(&get_receiver_ready);
+  sched_register_task(&process_rx_fifo);
   uart_state_pin=uart_state_int_pin;
   target_uart_state_pin=target_uart_state_int_pin;
 
@@ -373,12 +381,11 @@ void modem_interface_init(uint8_t idx, uint32_t baudrate, pin_id_t uart_state_in
 #ifndef PLATFORM_USE_MODEM_INTERRUPT_LINES
   modem_interface_enable();
 #endif
-  sched_register_task(&process_rx_fifo);
 }
 
 
 
-void modem_interface_print_bytes(uint8_t* bytes, uint8_t length, serial_message_type_t type) 
+void modem_interface_transfer_bytes(uint8_t* bytes, uint8_t length, serial_message_type_t type) 
 {
   uint8_t header[SERIAL_FRAME_HEADER_SIZE];
   uint16_t crc=crc_calculate(bytes,length);
@@ -408,18 +415,18 @@ void modem_interface_print_bytes(uint8_t* bytes, uint8_t length, serial_message_
 #endif  
 }
 
-void modem_interface_print(char* string) {
-  modem_interface_print_bytes((uint8_t*) string, strnlen(string, 100), LOGGING); 
+void modem_interface_transfer(char* string) {
+  modem_interface_transfer_bytes((uint8_t*) string, strnlen(string, 100), SERIAL_MESSAGE_TYPE_LOGGING); 
 }
 
 
 void modem_interface_register_handler(cmd_handler_t cmd_handler, serial_message_type_t type)
 {
-  if(type == ALP_DATA) 
+  if(type == SERIAL_MESSAGE_TYPE_ALP_DATA) 
     alp_handler=cmd_handler;
-  else if(type == PING_RESPONSE) 
+  else if(type == SERIAL_MESSAGE_TYPE_PING_RESPONSE) 
     ping_response_handler=cmd_handler;
-  else if(type == LOGGING) 
+  else if(type == SERIAL_MESSAGE_TYPE_LOGGING) 
     logging_handler=cmd_handler;
   else
     DPRINT("Modem interface callback not implemented");

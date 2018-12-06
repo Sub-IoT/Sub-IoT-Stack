@@ -40,7 +40,6 @@
 #include "alp_layer.h"
 #include "alp_cmd_handler.h"
 #include "modem_interface.h"
-#include "hwgpio.h"
 
 #if defined(FRAMEWORK_LOG_ENABLED) && defined(MODULE_ALP_LOG_ENABLED)
 #define DPRINT(...) log_print_stack_string(LOG_STACK_ALP, __VA_ARGS__)
@@ -145,7 +144,7 @@ void alp_layer_init(alp_init_args_t* alp_init_args, bool is_shell_enabled)
       .unsolicited_cb = alp_layer_process_command_from_d7ap
   };
 
-  modem_interface_register_handler(&modem_interface_cmd_handler, ALP_DATA);
+  modem_interface_register_handler(&modem_interface_cmd_handler, SERIAL_MESSAGE_TYPE_ALP_DATA);
 
 #ifdef MODULE_LORAWAN
   lorawan_register_cbs(lorwan_rx,alp_layer_command_completed_from_lorawan, lorawan_join_completed);

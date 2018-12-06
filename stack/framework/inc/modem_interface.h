@@ -5,21 +5,13 @@
 #include "hwuart.h"
 #include "hwgpio.h"
 
-#define SERIAL_FRAME_SYNC_BYTE 0xC0
-#define SERIAL_FRAME_VERSION   0x00
-#define SERIAL_FRAME_HEADER_SIZE 7
-#define SERIAL_FRAME_SIZE 4
-#define SERIAL_FRAME_COUNTER 2
-#define SERIAL_FRAME_TYPE 3
-#define SERIAL_FRAME_CRC1   5
-#define SERIAL_FRAME_CRC2   6
 
 typedef enum
 {
-    ALP_DATA=0X01,
-    PING_REQUEST=0X02,
-    PING_RESPONSE=0X03,
-    LOGGING=0X04
+    SERIAL_MESSAGE_TYPE_ALP_DATA=0X01,
+    SERIAL_MESSAGE_TYPE_PING_REQUEST=0X02,
+    SERIAL_MESSAGE_TYPE_PING_RESPONSE=0X03,
+    SERIAL_MESSAGE_TYPE_LOGGING=0X04
 } serial_message_type_t;
 
 typedef void (*cmd_handler_t)(fifo_t* cmd_fifo);
@@ -43,20 +35,20 @@ void modem_interface_init(uint8_t idx, uint32_t baudrate, pin_id_t mcu2modem, pi
 /** @brief  Adds header to bytes containing sync bytes, counter, length and crc and puts it in UART fifo
  *  @param bytes Bytes that need to be transmitted
  *  @param length Length of bytes
- *  @param type type of message (ALP, PING_REQUEST, LOGGING, ...)
+ *  @param type type of message (SERIAL_MESSAGE_TYPE_ALP, SERIAL_MESSAGE_TYPE_PING_REQUEST, SERIAL_MESSAGE_TYPE_LOGGING, ...)
  *  @return Void.
  */
-void modem_interface_print_bytes(uint8_t* bytes, uint8_t length, serial_message_type_t type);
+void modem_interface_transfer_bytes(uint8_t* bytes, uint8_t length, serial_message_type_t type);
 /** @brief Transmits a string by adding a header and putting it in the UART fifo
  *  @param string Bytes that need to be transmitted
  *  @return Void.
  */
-void modem_interface_print(char* string);
+void modem_interface_transfer(char* string);
 /** @brief Registers callback to process a certain type op received UART data
  *  @param cmd_handler Pointer to function that processes the data
  *  @param type The type of data that needs to be processed by the given callback function
  *  @return Void.
  */
-void modem_interface_register_handler(cmd_handler_t cmd_handler, uint8_t type);
+void modem_interface_register_handler(cmd_handler_t cmd_handler, serial_message_type_t type);
 
 #endif //MODEM_INTERFACE_H
