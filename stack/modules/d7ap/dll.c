@@ -484,7 +484,7 @@ static void cca_rssi_valid(int16_t cur_rssi)
             {
                 DPRINT("Start background advertising @ %i", timer_get_counter_value());
                 uint8_t dll_header_bg_frame[2];
-                assert(dll_assemble_packet_header(current_packet, dll_header_bg_frame) == 2);
+                dll_assemble_packet_header_bg(current_packet, dll_header_bg_frame);
 
                 err = hw_radio_send_packet(&current_packet->hw_radio_packet, &packet_transmitted, current_packet->ETA, dll_header_bg_frame);
             }
@@ -1095,6 +1095,23 @@ void dll_stop_foreground_scan()
       switch_state(DLL_STATE_IDLE);
 }
 
+uint8_t dll_assemble_packet_header_bg(packet_t* packet, uint8_t* data_ptr)
+{
+    *data_ptr = packet->dll_header.subnet; data_ptr += sizeof(packet->dll_header.subnet);
+
+    uint16_t crc;
+    uint8_t addr_len = packet->dll_header.control_target_id_type == ID_TYPE_VID? 2 : 8;
+    crc = crc_calculate(packet->d7anp_addressee->id, addr_len);
+    DPRINT("crc %04x ", crc);
+
+    packet->dll_header.control_identifier_tag = (uint8_t)crc & 0x3F;
+    DPRINT("dll_header.control_identifier_tag %x ", packet->dll_header.control_identifier_tag);
+
+    *data_ptr = (packet->dll_header.control_target_id_type << 6) | (packet->dll_header.control_identifier_tag & 0x3F);
+    DPRINT("dll_header.control %x ", *data_ptr);
+    data_ptr ++;
+}
+
 uint8_t dll_assemble_packet_header(packet_t* packet, uint8_t* data_ptr)
 {
     uint8_t* dll_header_start = data_ptr;
@@ -1103,26 +1120,9 @@ uint8_t dll_assemble_packet_header(packet_t* packet, uint8_t* data_ptr)
     if (!ID_TYPE_IS_BROADCAST(packet->dll_header.control_target_id_type))
     {
         uint8_t addr_len = packet->dll_header.control_target_id_type == ID_TYPE_VID? 2 : 8;
-
-        if (packet->type == BACKGROUND_ADV)
-        {
-            uint16_t crc;
-            crc = crc_calculate(packet->d7anp_addressee->id, addr_len);
-            DPRINT("crc %04x ", crc);
-
-            packet->dll_header.control_identifier_tag = (uint8_t)crc & 0x3F;
-            DPRINT("dll_header.control_identifier_tag %x ", packet->dll_header.control_identifier_tag);
-
-            *data_ptr = (packet->dll_header.control_target_id_type << 6) | (packet->dll_header.control_identifier_tag & 0x3F);
-            DPRINT("dll_header.control %x ", *data_ptr);
-            data_ptr ++;
-        }
-        else
-        {
-            *data_ptr = (packet->dll_header.control_target_id_type << 6) | (packet->dll_header.control_eirp_index & 0x3F);
-            data_ptr ++;
-            memcpy(data_ptr, packet->d7anp_addressee->id, addr_len); data_ptr += addr_len;
-        }
+        *data_ptr = (packet->dll_header.control_target_id_type << 6) | (packet->dll_header.control_eirp_index & 0x3F);
+        data_ptr ++;
+        memcpy(data_ptr, packet->d7anp_addressee->id, addr_len); data_ptr += addr_len;
     }
     else
     {

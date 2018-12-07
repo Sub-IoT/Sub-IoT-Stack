@@ -73,6 +73,7 @@ void dll_stop_foreground_scan();
 void dll_execute_scan_automation();
 void dll_notify_dialog_terminated();
 uint8_t dll_assemble_packet_header(packet_t* packet, uint8_t* data_ptr);
+uint8_t dll_assemble_packet_header_bg(packet_t* packet, uint8_t* data_ptr);
 bool dll_disassemble_packet_header(packet_t* packet, uint8_t* data_idx);
 uint16_t dll_calculate_tx_duration(phy_channel_class_t channel_class, phy_coding_t ch_coding, uint8_t packet_length);
 void dll_stop_background_scan();
