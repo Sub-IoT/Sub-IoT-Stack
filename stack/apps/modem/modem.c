@@ -34,6 +34,8 @@
 #include "log.h"
 #include "dae.h"
 #include "platform_defs.h"
+#include "modem_interface.h"
+#include "platform.h"
 
 // This example application contains a modem which can be used from another MCU through
 // the serial interface
@@ -41,6 +43,11 @@
 void bootstrap()
 {
     log_print_string("Device booted\n");
+#ifdef PLATFORM_USE_MODEM_INTERRUPT_LINES
+    modem_interface_init(PLATFORM_MODEM_INTERFACE_UART, PLATFORM_MODEM_INTERFACE_BAUDRATE, MODEM2MCU_INT_PIN, MCU2MODEM_INT_PIN);
+#else
+    modem_interface_init(PLATFORM_MODEM_INTERFACE_UART, PLATFORM_MODEM_INTERFACE_BAUDRATE, (pin_id_t) 0, (pin_id_t) 0);
+#endif
 
     fs_init_args_t fs_init_args = (fs_init_args_t){
         .fs_d7aactp_cb = &alp_layer_process_d7aactp,
@@ -57,11 +64,5 @@ void bootstrap()
     uint8_t uid[8];
     fs_read_uid(uid);
     log_print_string("UID %02X%02X%02X%02X%02X%02X%02X%02X", uid[0], uid[1], uid[2], uid[3], uid[4], uid[5], uid[6], uid[7]);
-
-#ifdef PLATFORM_USE_MODEM_INTERRUPT_LINES
-    // console will be enabled when the interrupt line is toggled
-    // TODO remove when serial ALP is removed from console
-    console_disable();
-#endif
 }
 

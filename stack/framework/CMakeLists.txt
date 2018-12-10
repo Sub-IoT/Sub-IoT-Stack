@@ -69,6 +69,9 @@ FRAMEWORK_HEADER_DEFINE(BOOL FRAMEWORK_ALP_LOG_ENABLED)
 SET(FRAMEWORK_MODEM_LOG_ENABLED "FALSE" CACHE BOOL "Select whether to enable or disable the generation of logs from the modem component")
 FRAMEWORK_HEADER_DEFINE(BOOL FRAMEWORK_MODEM_LOG_ENABLED)
 
+SET(FRAMEWORK_MODEM_INTERFACE_LOG_ENABLED "FALSE" CACHE BOOL "Select whether to enable or disable the generation of logs from the modem interface component")
+FRAMEWORK_HEADER_DEFINE(BOOL FRAMEWORK_MODEM_INTERFACE_LOG_ENABLED)
+
 SET(FRAMEWORK_SCHED_LOG_ENABLED "FALSE" CACHE BOOL "Select whether to enable or disable the generation of logs from the scheduler component")
 FRAMEWORK_HEADER_DEFINE(BOOL FRAMEWORK_SCHED_LOG_ENABLED)
 

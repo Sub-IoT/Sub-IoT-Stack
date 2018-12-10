@@ -42,6 +42,7 @@
 #include "d7ap.h"
 #include "alp_layer.h"
 #include "dae.h"
+#include "modem_interface.h"
 
 #if PLATFORM_NUM_LEDS > 0
   #include "hwleds.h"
@@ -70,6 +71,8 @@ static alp_init_args_t alp_init_args;
 
 void bootstrap()
 {
+   modem_interface_init(PLATFORM_MODEM_INTERFACE_UART, PLATFORM_MODEM_INTERFACE_BAUDRATE, (pin_id_t) 0, (pin_id_t) 0);
+
     fs_init_args_t fs_init_args = (fs_init_args_t){
         .fs_d7aactp_cb = &alp_layer_process_d7aactp,
         .fs_user_files_init_cb = NULL,

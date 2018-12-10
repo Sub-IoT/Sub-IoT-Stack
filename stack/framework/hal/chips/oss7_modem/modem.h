@@ -37,7 +37,9 @@ typedef struct {
     modem_write_file_data_callback_t write_file_data_callback;
 } modem_callbacks_t;
 
-void modem_init(uart_handle_t* uart_handle, modem_callbacks_t* callbacks);
+void modem_init();
+void modem_send_ping();
+void modem_cb_init(modem_callbacks_t* cbs);
 void modem_reinit();
 bool modem_execute_raw_alp(uint8_t* alp, uint8_t len);
 bool modem_read_file(uint8_t file_id, uint32_t offset, uint32_t size);

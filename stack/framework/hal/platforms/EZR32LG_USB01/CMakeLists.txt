@@ -37,6 +37,10 @@ PLATFORM_PARAM(PLATFORM_CONSOLE_UART     "0"      STRING "The UART channel used 
 PLATFORM_PARAM(PLATFORM_CONSOLE_LOCATION "1"      STRING "The route location used by the console UART configuration." )
 PLATFORM_PARAM(PLATFORM_CONSOLE_BAUDRATE "115200" STRING "The baudrate used by the second console configuration."       )
 
+PLATFORM_PARAM(PLATFORM_MODEM_INTERFACE_UART     "1"      STRING "The UART channel used by the modem interface UART configuration."   )
+PLATFORM_PARAM(PLATFORM_MODEM_INTERFACE_BAUDRATE "115200" STRING "The baudrate used by the modem interface configuration."       )
+
+
 PLATFORM_PARAM(PLATFORM_NUM_LEDS "3" STRING "The number of LEDs available.")
 PLATFORM_PARAM(PLATFORM_NUM_BUTTONS "1" STRING "The number of buttons available.")
 
@@ -73,6 +77,8 @@ PLATFORM_HEADER_DEFINE(
   NUMBER PLATFORM_CONSOLE_UART
          PLATFORM_CONSOLE_LOCATION
          PLATFORM_CONSOLE_BAUDRATE
+         PLATFORM_MODEM_INTERFACE_UART
+         PLATFORM_MODEM_INTERFACE_BAUDRATE
          PLATFORM_NUM_BUTTONS
          PLATFORM_NUM_LEDS
   BOOL   ${PLATFORM_PREFIX}_DEBUGPINS
