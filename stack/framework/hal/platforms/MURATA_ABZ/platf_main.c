@@ -222,9 +222,9 @@ void hw_deinit_pheriperals()
   __HAL_RCC_GPIOA_CLK_ENABLE();
   // set PA2 (=MODEM2MCUINT) as analog // TODO move to modem module?
    //GPIOA->MODER |= 0x03 << (2*2);
+#ifdef PLATFORM_USE_MODEM_INTERRUPT_LINES
    assert(hw_gpio_configure_pin(MODEM2MCU_INT_PIN, false, GPIO_MODE_OUTPUT_PP, 0) == SUCCESS);
-   hw_gpio_clr(MODEM2MCU_INT_PIN);
-   //hw_gpio_clr(MCU2MODEM_INT_PIN);
+#endif
    //__HAL_RCC_GPIOA_CLK_DISABLE();
 
   // TODO remove here, ports can be used for other purposes, needs to be managed by gpio driver
