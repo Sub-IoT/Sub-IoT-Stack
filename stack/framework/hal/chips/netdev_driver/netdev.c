@@ -67,15 +67,48 @@ static void isr_handler(void *arg) {
     netdev->driver->isr(netdev);
 }
 
-hw_state_t hw_radio_get_opmode() {
-    hw_state_t opmode;
 
-    netdev->driver->get(netdev, NETOPT_STATE, &opmode, sizeof(netopt_state_t));
-    return opmode;
-}
+hw_state_t hw_radio_get_opmode() {
+    netopt_state_t state;
+
+    netdev->driver->get(netdev, NETOPT_STATE, &state, sizeof(netopt_state_t));
+
+    switch(state)
+    {
+    case NETOPT_STATE_RX:
+        return HW_STATE_RX;
+    case NETOPT_STATE_TX:
+        return HW_STATE_TX;
+    case NETOPT_STATE_STANDBY:
+        return HW_STATE_STANDBY;
+    default:
+        DPRINT("Not supported mode");
+        break;
+    }
+
+    return state;
+ }
 
 void hw_radio_set_opmode(hw_state_t opmode) {
-    netdev->driver->set(netdev, NETOPT_STATE, &opmode, sizeof(netopt_state_t));
+    netopt_state_t state;
+
+    switch(opmode)
+    {
+    case HW_STATE_RX:
+        state = NETOPT_STATE_RX;
+        break;
+    case HW_STATE_TX:
+        state = NETOPT_STATE_TX;
+        break;
+    case HW_STATE_STANDBY:
+        state = NETOPT_STATE_STANDBY;
+        break;
+    default:
+        DPRINT("Not supported mode");
+        return;
+    }
+
+    netdev->driver->set(netdev, NETOPT_STATE, &state, sizeof(netopt_state_t));
 }
 
 void hw_radio_set_center_freq(uint32_t center_freq)
