@@ -6,16 +6,21 @@
 #include "types.h"
 #include "errors.h"
 
+typedef struct blockdevice blockdevice_t;
 
 typedef struct {
-  void (*init)();
-  error_t (*read)(uint8_t* data, uint32_t addr, uint32_t size);
-  error_t (*program)(uint8_t* data, uint32_t addr, uint32_t size);
+  void (*init)(blockdevice_t* bd);
+  error_t (*read)(blockdevice_t* bd, uint8_t* data, uint32_t addr, uint32_t size);
+  error_t (*program)(blockdevice_t* bd, uint8_t* data, uint32_t addr, uint32_t size);
 } blockdevice_driver_t;
 
-void blockdevice_init(blockdevice_driver_t* driver);
-error_t blockdevice_read(blockdevice_driver_t* driver, uint8_t* data, uint32_t addr, uint32_t size);
-error_t blockdevice_program(blockdevice_driver_t* driver, uint8_t* data, uint32_t addr, uint32_t size);
+struct blockdevice {
+  blockdevice_driver_t* driver;
+};
+
+void blockdevice_init(blockdevice_t* bd);
+error_t blockdevice_read(blockdevice_t* bd, uint8_t* data, uint32_t addr, uint32_t size);
+error_t blockdevice_program(blockdevice_t* bd, uint8_t* data, uint32_t addr, uint32_t size);
 
 #endif
 
