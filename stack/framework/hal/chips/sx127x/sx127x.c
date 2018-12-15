@@ -276,6 +276,21 @@ static opmode_t get_opmode() {
 }
 
 
+static void dump_register()
+{
+
+    DPRINT("************************DUMP REGISTER*********************");
+
+    for (uint8_t add=0; add <= REG_VERSION; add++)
+        DPRINT("ADDR %2X DATA %02X \r\n", add, read_reg(add));
+
+    // Please note that when reading the first byte of the FIFO register, this
+    // byte is removed so the dump is not recommended before a TX or take care
+    // to fill it after the dump
+
+    DPRINT("**********************************************************");
+}
+
 static void set_antenna_switch(opmode_t opmode) {
   if(opmode == OPMODE_TX) {
 #ifdef PLATFORM_SX127X_USE_MANUAL_RXTXSW_PIN

@@ -445,7 +445,13 @@ error_t d7asp_send_response(uint8_t* payload, uint8_t length)
 {
     DPRINT("Send the expected response");
     DPRINT_DATA(payload, length);
-    assert(d7asp_state == D7ASP_STATE_SLAVE_WAITING_RESPONSE); // return an error instead?
+
+    if (d7asp_state != D7ASP_STATE_SLAVE_WAITING_RESPONSE)
+    {
+        // Response comes too late, the response period is probably expired
+        DPRINT("Not waiting for a response, discard it");
+        return EINVAL;
+    }
 
     current_response_packet->payload_length = length;
     memcpy(current_response_packet->payload, payload, length);
@@ -592,14 +598,23 @@ void d7asp_process_received_response(packet_t* packet, bool extension)
         d7atp_stop_transaction();
     }
     // switch to the state slave when the D7ATP Dialog Extension Procedure is initiated and all request are handled
-    else if ((extension) && (current_request_id == current_master_session.next_request_id - 1))
+    else if (current_request_id == current_master_session.next_request_id - 1)
     {
-        DPRINT("Dialog Extension Procedure is initiated, mark the FIFO flush "
-               "completed before switching to a responder state");
         d7ap_stack_session_completed(current_master_session.token, current_master_session.progress_bitmap,
                                      current_master_session.success_bitmap, current_master_session.next_request_id - 1);
+        init_master_session(&current_master_session);
         current_master_session.state = D7ASP_MASTER_SESSION_IDLE;
-        switch_state(D7ASP_STATE_SLAVE);
+
+        if (extension)
+        {
+            DPRINT("Dialog Extension Procedure is initiated");
+            switch_state(D7ASP_STATE_SLAVE);
+        }
+        else
+        {
+            d7atp_signal_dialog_termination();
+            switch_state(D7ASP_STATE_IDLE);
+        }
     }
 }
 
@@ -797,6 +812,8 @@ void d7asp_signal_transaction_terminated()
             switch_state(D7ASP_STATE_SLAVE_PENDING_MASTER);
         else
             switch_state(D7ASP_STATE_SLAVE);
+
+        d7ap_stack_signal_transaction_terminated();
     }
     else if (d7asp_state == D7ASP_STATE_MASTER)
         on_request_completed();

@@ -56,6 +56,8 @@ void d7ap_stack_signal_active_master_session(uint8_t session_token);
 
 void d7ap_stack_signal_slave_session_terminated(void);
 
+void d7ap_stack_signal_transaction_terminated(void);
+
 #endif //OSS_7_D7AP_STACK_H
 
 /** @}*/

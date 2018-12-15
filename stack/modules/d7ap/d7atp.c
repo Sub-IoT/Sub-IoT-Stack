@@ -24,6 +24,7 @@
 
 #include "debug.h"
 #include "hwdebug.h"
+#include "d7ap.h"
 #include "d7atp.h"
 #include "packet_queue.h"
 #include "packet.h"
@@ -39,8 +40,10 @@
 
 #if defined(FRAMEWORK_LOG_ENABLED) && defined(MODULE_D7AP_TP_LOG_ENABLED)
 #define DPRINT(...) log_print_stack_string(LOG_STACK_TRANS, __VA_ARGS__)
+#define DPRINT_DATA(...) log_print_data(__VA_ARGS__)
 #else
 #define DPRINT(...)
+#define DPRINT_DATA(...)
 #endif
 
 
@@ -135,6 +138,22 @@ static void execution_delay_timeout_handler()
     d7anp_start_foreground_scan();
 }
 
+static void terminate_dialog()
+{
+    DPRINT("Dialog terminated");
+
+    switch_state(D7ATP_STATE_IDLE);
+    current_dialog_id = 0;
+    current_transaction_id = NO_ACTIVE_REQUEST_ID;
+    stop_dialog_after_tx = false;
+
+    // Discard eventually the Tc timer
+    timer_cancel_event(&d7atp_response_period_expired_timer);
+
+    d7asp_signal_dialog_terminated();
+    dll_notify_dialog_terminated();
+}
+
 static void response_period_timeout_handler()
 {
 //    DEBUG_PIN_CLR(2);
@@ -145,11 +164,20 @@ static void response_period_timeout_handler()
            || d7atp_state == D7ATP_STATE_SLAVE_TRANSACTION_SENDING_RESPONSE);
 
     current_transaction_id = NO_ACTIVE_REQUEST_ID;
+    DPRINT("Transaction is terminated");
     d7asp_signal_transaction_terminated();
 
-    DPRINT("Transaction is terminated");
-
-    d7anp_start_foreground_scan();
+    if (stop_dialog_after_tx)
+    {
+        // no FG scan required after transaction, we can end dialog now
+        d7anp_stop_foreground_scan();
+        terminate_dialog();
+    }
+    else if (current_Tl_received > 0)
+    {
+        d7anp_set_foreground_scan_timeout(current_Tl_received);
+        d7anp_start_foreground_scan();
+    }
 }
 
 static timer_tick_t adjust_timeout_value(timer_tick_t timeout_ticks, timer_tick_t request_received_timestamp)
@@ -175,17 +203,6 @@ static void schedule_response_period_timeout_handler(timer_tick_t timeout_ticks)
     d7atp_response_period_expired_timer.next_event = timeout_ticks;
     d7atp_response_period_expired_timer.priority = MAX_PRIORITY;
     assert(timer_add_event(&d7atp_response_period_expired_timer) == SUCCESS);
-}
-
-
-static void terminate_dialog()
-{
-    DPRINT("Dialog terminated");
-    current_dialog_id = 0;
-    stop_dialog_after_tx = false;
-    d7asp_signal_dialog_terminated();
-    dll_notify_dialog_terminated();
-    switch_state(D7ATP_STATE_IDLE);
 }
 
 void d7atp_signal_foreground_scan_expired()
@@ -509,7 +526,7 @@ void d7atp_signal_packet_transmitted(packet_t* packet)
 
         if (stop_dialog_after_tx)
         {
-            // no FG scan and no response period are scheduled, we can end dialog now
+            // no FG scan required after transaction, we can end dialog now
             d7anp_stop_foreground_scan();
             terminate_dialog();
         }
@@ -539,6 +556,7 @@ void d7atp_signal_transmission_failure()
 void d7atp_process_received_packet(packet_t* packet)
 {
     bool extension = false;
+    timer_tick_t Tc;
 
     assert(d7atp_state == D7ATP_STATE_MASTER_TRANSACTION_RESPONSE_PERIOD
            || d7atp_state == D7ATP_STATE_SLAVE_TRANSACTION_RESPONSE_PERIOD
@@ -614,9 +632,11 @@ void d7atp_process_received_packet(packet_t* packet)
          // The FG scan is only started when the response period expires.
         if (packet->d7atp_ctrl.ctrl_is_ack_requested)
         {
-            timer_tick_t Tc = CT_DECOMPRESS(packet->d7atp_tc);
+            Tc = CT_DECOMPRESS(packet->d7atp_tc);
 
             DPRINT("Tc=%i (CT) -> %i (Ti) ", packet->d7atp_tc, Tc);
+
+            // extend Tc with Te
             if (packet->d7atp_ctrl.ctrl_te)
                 Tc += CT_DECOMPRESS(packet->d7atp_te);
 
@@ -624,7 +644,12 @@ void d7atp_process_received_packet(packet_t* packet)
             if (current_Tl_received > Tc)
                 current_Tl_received -= Tc;
             else
+            {
                 current_Tl_received = 0;
+                // If there is no listen period, then we can end the dialog after the response transmission
+                stop_dialog_after_tx = true;
+            }
+
 
             Tc = adjust_timeout_value(Tc, packet->hw_radio_packet.rx_meta.timestamp);
 
@@ -633,12 +658,6 @@ void d7atp_process_received_packet(packet_t* packet)
                 DPRINT("Discard the request since the response period is expired");
                 packet_queue_free_packet(packet);
                 return;
-            }
-
-            if (current_Tl_received)
-            {
-                d7anp_set_foreground_scan_timeout(current_Tl_received);
-                schedule_response_period_timeout_handler(Tc);
             }
 
             /* stop eventually the FG scan and force the radio to go back to IDLE */
@@ -677,16 +696,17 @@ void d7atp_process_received_packet(packet_t* packet)
 
         if (packet->d7atp_ctrl.ctrl_is_ack_requested)
         {
-            // If there is no listen period, then we can end the dialog after the response transmission
-            if (current_Tl_received == 0)
-                stop_dialog_after_tx = true;
-
             if (response_payload_expected)
             {
-                // wait for response payload before sending ...
+                // wait for response payload, should be sent before expiration of the response period
+                schedule_response_period_timeout_handler(Tc);
             }
             else
             {
+                // If a listen period is set, start the foreground scan after the response period
+                if (current_Tl_received)
+                    schedule_response_period_timeout_handler(Tc);
+
                 // if ACK requested and no response payload expected, send the ack now
                 packet->payload_length = 0;
                 d7atp_send_response(packet);
