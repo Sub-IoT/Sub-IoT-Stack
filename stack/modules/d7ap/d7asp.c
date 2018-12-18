@@ -598,23 +598,14 @@ void d7asp_process_received_response(packet_t* packet, bool extension)
         d7atp_stop_transaction();
     }
     // switch to the state slave when the D7ATP Dialog Extension Procedure is initiated and all request are handled
-    else if (current_request_id == current_master_session.next_request_id - 1)
+    else if ((extension) && (current_request_id == current_master_session.next_request_id - 1))
     {
+        DPRINT("Dialog Extension Procedure is initiated, mark the FIFO flush "
+               "completed before switching to a responder state");
         d7ap_stack_session_completed(current_master_session.token, current_master_session.progress_bitmap,
                                      current_master_session.success_bitmap, current_master_session.next_request_id - 1);
-        init_master_session(&current_master_session);
         current_master_session.state = D7ASP_MASTER_SESSION_IDLE;
-
-        if (extension)
-        {
-            DPRINT("Dialog Extension Procedure is initiated");
-            switch_state(D7ASP_STATE_SLAVE);
-        }
-        else
-        {
-            d7atp_signal_dialog_termination();
-            switch_state(D7ASP_STATE_IDLE);
-        }
+        switch_state(D7ASP_STATE_SLAVE);
     }
 }
 
