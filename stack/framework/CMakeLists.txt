@@ -136,7 +136,7 @@ SET(FRAMEWORK_HEADERS
 # PLATFORM: Object library of the platform itself
 # FRAMEWORK_OVERRIDE_LIBS: non-hal object libraries that were overridden by the HAL
 # FRAMEWORK_LIBS: non-hal object libraries (not overridden)
-SET(LIBNAMES "PLATFORM" ${PLATFORM_CHIP_LIBS} ${FRAMEWORK_OVERRIDE_LIBS} ${FRAMEWORK_LIBS})
+SET(LIBNAMES "PLATFORM" ${PLATFORM_CHIP_LIBS} ${FRAMEWORK_OVERRIDE_LIBS} ${FRAMEWORK_LIBS} HAL_COMMON)
 
 #Some wizardry to get ADD_LIBRARY to accept everything
 FOREACH(libname ${LIBNAMES})
