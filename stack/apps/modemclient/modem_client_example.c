@@ -92,8 +92,8 @@ modem_callbacks_t callbacks = (modem_callbacks_t){
 
 
 void bootstrap() {
-  modem_uart = uart_init(1, 9600, 0);
-  modem_init(modem_uart, &callbacks);
+  modem_init();
+  modem_cb_init(&callbacks);
 
   sched_register_task(&send_counter);
   sched_post_task(&send_counter);
