@@ -73,6 +73,9 @@ bool uart_enable(uart_handle_t* uart) {
 
   switch ((intptr_t)*(&uart->uart_port->uart))
   {
+    case LPUART1_BASE:
+      __HAL_RCC_LPUART1_CLK_ENABLE();
+      break;
     case USART1_BASE:
       __HAL_RCC_USART1_CLK_ENABLE();
       break;
@@ -98,7 +101,6 @@ bool uart_enable(uart_handle_t* uart) {
   uart->handle.Instance = uart->uart_port->uart;
   if (HAL_UART_Init(&(uart->handle)) != HAL_OK)
   {
-    assert ("cannot init");
     return false;
   }
 
@@ -129,6 +131,8 @@ bool uart_disable(uart_handle_t* uart) {
   HAL_UART_DeInit(&(uart->handle));
   switch ((intptr_t)*(&uart->uart_port->uart))
   {
+    case LPUART1_BASE:
+      __HAL_RCC_LPUART1_CLK_DISABLE();
     case USART1_BASE:
       __HAL_RCC_USART1_CLK_DISABLE();
       break;
@@ -247,6 +251,10 @@ void USART2_IRQHandler(void) {
 
 void USART1_IRQHandler(void) {
   uart_irq_handler(USART1);
+}
+
+void LPUART1_IRQHandler(void) {
+  uart_irq_handler(LPUART1);
 }
 
 //void HAL_UART_RxCpltCallback(UART_HandleTypeDef *UartHandle) {
