@@ -163,21 +163,6 @@ static void rx_cb(uint8_t byte) {
     sched_post_task_prio(&process_rx_fifo, MAX_PRIORITY, NULL);
 }
 
-static void send(uint8_t* buffer, uint8_t len) {
-#ifdef PLATFORM_USE_MODEM_INTERRUPT_LINES
-  platform_modem_wakeup();
-#endif
-
-  uint8_t header[] = {'A', 'T', '$', 'D', 0xC0, 0x00, len };
-  uart_send_bytes(uart_handle, header, sizeof(header));
-  uart_send_bytes(uart_handle, buffer, len);
-
-#ifdef PLATFORM_USE_MODEM_INTERRUPT_LINES
-  platform_modem_release();
-#endif
-
-  DPRINT("> %i bytes @ %i", len, timer_get_counter_value());
-}
 void modem_cb_init(modem_callbacks_t* cbs)
 {
     callbacks = cbs;
