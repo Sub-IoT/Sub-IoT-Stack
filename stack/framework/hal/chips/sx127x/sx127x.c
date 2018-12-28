@@ -965,7 +965,7 @@ error_t hw_radio_init(alloc_packet_callback_t alloc_packet_cb, release_packet_ca
   release_packet_callback = release_packet_cb;
 
   if(sx127x_spi == NULL) {
-    spi_handle = spi_init(SX127x_SPI_INDEX, SX127x_SPI_BAUDRATE, 8, true);
+    spi_handle = spi_init(SX127x_SPI_INDEX, SX127x_SPI_BAUDRATE, 8, true, false);
     sx127x_spi = spi_init_slave(spi_handle, SX127x_SPI_PIN_CS, true);
   }
 

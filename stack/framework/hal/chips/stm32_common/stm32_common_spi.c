@@ -152,7 +152,7 @@ void spi_disable(spi_handle_t* spi) {
 }
 
 
-spi_handle_t* spi_init(uint8_t spi_number, uint32_t baudrate, uint8_t databits, bool msbf) {
+spi_handle_t* spi_init(uint8_t spi_number, uint32_t baudrate, uint8_t databits, bool msbf, bool half_duplex) {
   // assert what is supported by HW
   assert(databits == 8);
   assert(spi_number < SPI_COUNT);
@@ -172,7 +172,11 @@ spi_handle_t* spi_init(uint8_t spi_number, uint32_t baudrate, uint8_t databits, 
 
   handle[spi_number].hspi.Instance = spi_ports[spi_number].spi;
   handle[spi_number].hspi.Init.Mode = SPI_MODE_MASTER;
-  handle[spi_number].hspi.Init.Direction = SPI_DIRECTION_2LINES;
+  if(half_duplex)
+    handle[spi_number].hspi.Init.Direction = SPI_DIRECTION_1LINE;
+  else
+    handle[spi_number].hspi.Init.Direction = SPI_DIRECTION_2LINES;
+
   handle[spi_number].hspi.Init.DataSize = SPI_DATASIZE_8BIT;
   handle[spi_number].hspi.Init.CLKPolarity = SPI_POLARITY_LOW;
   handle[spi_number].hspi.Init.CLKPhase = SPI_PHASE_1EDGE;
@@ -292,7 +296,7 @@ void spi_send_byte_with_control(spi_slave_handle_t* slave, uint16_t data) {
   HAL_SPI_Transmit(&slave->spi->hspi, (uint8_t *)&data, 2, HAL_MAX_DELAY);
 }
 
-void spi_exchange_bytes(spi_slave_handle_t* slave, uint8_t* TxData, uint8_t* RxData, unsigned int length) {
+void spi_exchange_bytes(spi_slave_handle_t* slave, uint8_t* TxData, uint8_t* RxData, size_t length) {
   if( RxData != NULL && TxData != NULL ) {           // two way transmission
     HAL_SPI_TransmitReceive(&slave->spi->hspi, TxData, RxData, length, HAL_MAX_DELAY);
   } else if( RxData == NULL && TxData != NULL ) {    // send only
