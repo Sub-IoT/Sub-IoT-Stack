@@ -72,7 +72,7 @@ void _cc1101_interface_init(end_of_packet_isr_t end_of_packet_isr_cb, fifo_thr_i
     end_of_packet_isr_callback = end_of_packet_isr_cb;
     fifo_thr_isr_callback = fifo_thr_isr_cb;
 
-    spi = spi_init(CC1101_SPI_USART, CC1101_SPI_BAUDRATE, 8, true);
+    spi = spi_init(CC1101_SPI_USART, CC1101_SPI_BAUDRATE, 8, true, false);
     spi_enable(spi);
     spi_slave = spi_init_slave(spi, CC1101_SPI_PIN_CS, true);
 

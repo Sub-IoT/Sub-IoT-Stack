@@ -57,11 +57,12 @@ uint8_t next_spi_slave_handle = 0;
 
 #define TIMING_ADJ
 
-spi_handle_t* spi_init(uint8_t idx, uint32_t baudrate, uint8_t databits, bool msbf)
+spi_handle_t* spi_init(uint8_t idx, uint32_t baudrate, uint8_t databits, bool msbf, bool half_duplex)
 {
     // assert what is supported by CORTUS
     assert(databits == 8);
     assert(idx < SPI_COUNT);
+    assert(!half_duplex); // TODO not implemented
 
     // configure new handle
     if (idx == 0)

@@ -75,7 +75,7 @@ static spi_handle_t* spi_handle = NULL;
  */
 void HW_SPI_Init( void )
 {
-  spi_handle = spi_init(SX127x_SPI_INDEX, SX127x_SPI_BAUDRATE, 8, true);
+  spi_handle = spi_init(SX127x_SPI_INDEX, SX127x_SPI_BAUDRATE, 8, true, false);
   sx127x_spi = spi_init_slave(spi_handle, SX127x_SPI_PIN_CS, true);
   spi_enable(spi_handle);
 }

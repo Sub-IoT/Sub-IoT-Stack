@@ -167,7 +167,7 @@ void spi_disable(spi_handle_t* spi) {
 
 // public interface
 
-spi_handle_t* spi_init(uint8_t idx,  uint32_t baudrate, uint8_t databits, bool msbf)
+spi_handle_t* spi_init(uint8_t idx,  uint32_t baudrate, uint8_t databits, bool msbf, bool half_duplex)
 {
   // limit pre-allocated handles
   assert(next_spi_handle < MAX_SPI_HANDLES);
@@ -175,6 +175,7 @@ spi_handle_t* spi_init(uint8_t idx,  uint32_t baudrate, uint8_t databits, bool m
   // assert what is supported by HW and emlib
   assert(databits == 8 || databits == 9);
   assert(idx < USARTS);
+  assert(!half_duplex); // TODO not implemented
 
   // configure new handle
   handle[next_spi_handle] = (spi_handle_t){
