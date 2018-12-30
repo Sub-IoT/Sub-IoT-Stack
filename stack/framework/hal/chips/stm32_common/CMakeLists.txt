@@ -38,4 +38,5 @@ ADD_LIBRARY (${CHIP_LIBRARY_NAME} OBJECT
     stm32_common_timer.c
     stm32_common_uart.c
     stm32_common_watchdog.c
+    stm32_common_eeprom.c
 )
