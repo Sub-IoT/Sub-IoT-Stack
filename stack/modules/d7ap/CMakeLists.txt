@@ -70,6 +70,7 @@ EXPORT_GLOBAL_INCLUDE_DIRECTORIES(.)
 ADD_LIBRARY(d7ap STATIC
     d7ap_stack.c
     d7ap.c
+    d7ap_fs.c
     d7asp.c
     d7atp.c
     d7anp.c

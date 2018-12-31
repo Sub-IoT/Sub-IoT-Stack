@@ -1,6 +1,7 @@
 MEMORY
 {
-  FLASH (rx) : ORIGIN = 0x08000000, LENGTH = 192k
+  FLASH (rx) : ORIGIN = 0x08000000, LENGTH = 192K
+  EEPROM (r) : ORIGIN = 0x08080000, LENGTH = 6K
   RAM (rwx) : ORIGIN = 0x20000000, LENGTH = 20K
 }
 
@@ -52,6 +53,13 @@ SECTIONS
     __etext = .;
     _sidata = .;
 
+    /* store D7AP FS in EEPROM */
+    .d7ap_fs :
+    {
+      . = ALIGN(4);
+      KEEP(*(.d7ap_fs))
+    } > EEPROM
+
     /* stack section contains no symbols, used to check that there is enough RAM left.
         Place at start of RAM before data, so that is the stack overflows we would get a HardFault
         exception instead of silently overwriting other data, so this is easier to notice */
@@ -83,7 +91,6 @@ SECTIONS
         KEEP(*(SORT(.init_array.*)))
         KEEP(*(.init_array))
         PROVIDE_HIDDEN (__init_array_end = .);
-
 
         . = ALIGN(4);
         /* finit data */
