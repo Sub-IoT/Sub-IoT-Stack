@@ -21,206 +21,228 @@
 
 #include "d7ap_fs.h"
 
+// The cog section below does not generate code but defines some global variables and functions which are used in subsequent cog sections below,
+// which do the actual code generation
+/*[[[cog
+import cog
+from d7a.system_files.system_files import SystemFiles
+from d7a.system_files.access_profile import AccessProfileFile
+from d7a.system_files.dll_config import DllConfigFile
+from d7a.system_files.firmware_version import FirmwareVersionFile
+from d7a.system_files.system_file_ids import SystemFileIds
+from d7a.system_files.not_implemented import NotImplementedFile
+from d7a.system_files.security_key import SecurityKeyFile
+from d7a.system_files.uid import UidFile
+from d7a.fs.file_permissions import FilePermissions
+from d7a.fs.file_properties import FileProperties
+from d7a.fs.file_properties import ActionCondition, StorageClass, FileProperties
+from d7a.fs.file_header import FileHeader
+from d7a.dll.access_profile import AccessProfile, CsmaCaMode, SubBand
+from d7a.dll.sub_profile import SubProfile
+from d7a.phy.channel_header import ChannelHeader, ChannelBand, ChannelCoding, ChannelClass
+from d7a.types.ct import CT
+
+ap = AccessProfile(
+  channel_header=ChannelHeader(
+    channel_class=ChannelClass.LO_RATE,
+    channel_coding=ChannelCoding.FEC_PN9,
+    channel_band=ChannelBand.BAND_868
+  ),
+  sub_profiles=[SubProfile(subband_bitmap=0x01, scan_automation_period=CT(0))] * 4,
+  sub_bands=[SubBand()] * 8
+)
+
+system_files = [
+  UidFile(),
+  NotImplementedFile(SystemFileIds.FACTORY_SETTINGS.value, 0),
+  FirmwareVersionFile(),
+  NotImplementedFile(SystemFileIds.DEVICE_CAPACITY.value, 19),
+  NotImplementedFile(SystemFileIds.DEVICE_STATUS, 9),
+  NotImplementedFile(SystemFileIds.ENGINEERING_MODE, 0),
+  NotImplementedFile(SystemFileIds.VID, 3),
+  NotImplementedFile(SystemFileIds.PHY_CONFIG, 9),
+  NotImplementedFile(SystemFileIds.PHY_STATUS, 24),  # TODO assuming 3 channels for now
+  DllConfigFile(),
+  NotImplementedFile(SystemFileIds.DLL_STATUS, 12),
+  NotImplementedFile(SystemFileIds.NWL_ROUTING, 1),  # TODO variable routing table
+  NotImplementedFile(SystemFileIds.NWL_SECURITY, 5),
+  SecurityKeyFile(),
+  NotImplementedFile(SystemFileIds.NWL_SSR, 4),  # TODO 0 recorded devices
+  NotImplementedFile(SystemFileIds.NWL_STATUS, 20),
+  NotImplementedFile(SystemFileIds.TRL_STATUS, 1),  # TODO 0 TRL records
+  NotImplementedFile(SystemFileIds.SEL_CONFIG, 6),
+  NotImplementedFile(SystemFileIds.FOF_STATUS, 10),
+  NotImplementedFile(SystemFileIds.LOCATION_DATA, 1),  # TODO 0 recorded locations
+  AccessProfileFile(0, ap),
+  AccessProfileFile(1, ap),
+  AccessProfileFile(2, ap),
+  AccessProfileFile(3, ap),
+  AccessProfileFile(4, ap),
+  AccessProfileFile(5, ap),
+  AccessProfileFile(6, ap),
+  AccessProfileFile(7, ap),
+  AccessProfileFile(8, ap),
+  AccessProfileFile(9, ap),
+  AccessProfileFile(10, ap),
+  AccessProfileFile(11, ap),
+  AccessProfileFile(12, ap),
+  AccessProfileFile(13, ap),
+  AccessProfileFile(14, ap)
+]
+
+sys_file_permission_default = FilePermissions(encrypted=False, executeable=False, user_readable=True, user_writeable=False, user_executeable=False,
+                   guest_readable=True, guest_writeable=False, guest_executeable=False)
+sys_file_permission_non_readable = FilePermissions(encrypted=False, executeable=False, user_readable=False, user_writeable=False, user_executeable=False,
+                   guest_readable=False, guest_writeable=False, guest_executeable=False)
+sys_file_prop_default = FileProperties(act_enabled=False, act_condition=ActionCondition.WRITE, storage_class=StorageClass.PERMANENT)
+
+def output_file(file):
+  file_type = SystemFileIds(file.id)
+  cog.outl("\t// {} - {}".format(file_type.name, file_type.value))
+  file_array_elements = "\t"
+  for byte in bytearray(file):
+    file_array_elements += "{}, ".format(byte)
+
+  cog.outl(file_array_elements)
+
+def output_fileheader(file):
+  file_type = SystemFileIds(system_file.id)
+  cog.outl("\t// {} - {}".format(file_type.name, file_type.value))
+  file_header = FileHeader(permissions=file_permissions, properties=sys_file_prop_default, alp_command_file_id=0xFF, interface_file_id=0xFF, file_size=system_file.length, allocated_size=system_file.length)
+  file_header_array_elements = "\t"
+  for byte in bytearray(file_header):
+    file_header_array_elements += "{}, ".format(byte)
+
+  cog.outl(file_header_array_elements)
+]]]*/
+//[[[end]]]
+
+
 // TODO platform dependent, move
 static const uint8_t fs_headers[] __attribute__((used)) __attribute__((section(".d7ap_fs_headers"))) = {
     /*[[[cog
-    import cog
-    from d7a.system_files.system_files import SystemFiles
-    from d7a.system_files.access_profile import AccessProfileFile
-    from d7a.system_files.dll_config import DllConfigFile
-    from d7a.system_files.firmware_version import FirmwareVersionFile
-    from d7a.system_files.system_file_ids import SystemFileIds
-    from d7a.system_files.uid import UidFile
-    from d7a.fs.file_permissions import FilePermissions
-    from d7a.fs.file_properties import FileProperties
-    from d7a.fs.file_properties import ActionCondition, StorageClass, FileProperties
-    from d7a.fs.file_header import FileHeader
-
-
-    sys_file_permission_default = FilePermissions(encrypted=False, executeable=False, user_readable=True, user_writeable=False, user_executeable=False,
-                       guest_readable=True, guest_writeable=False, guest_executeable=False)
-    sys_file_permission_non_readable = FilePermissions(encrypted=False, executeable=False, user_readable=False, user_writeable=False, user_executeable=False,
-                       guest_readable=False, guest_writeable=False, guest_executeable=False)
-    sys_file_prop_default = FileProperties(act_enabled=False, act_condition=ActionCondition.WRITE, storage_class=StorageClass.PERMANENT)
-    for sys_file_idx in range(0x2F):
-        file_len = 0
-        file_name = "not implemented"
-        file_permissions = sys_file_permission_default
-        implemented_files = [file.value for file in SystemFileIds]
-        if sys_file_idx in implemented_files:
-          file_type = SystemFileIds(sys_file_idx)
-          if file_type == SystemFileIds.SECURITY_KEY:
-              file_permissions = sys_file_permission_non_readable
-
-          file_name = file_type.name
-          if file_type in SystemFiles().files:
-              file_len = SystemFiles().files[file_type].length.value
-
-        cog.outl("\t// {} - {}".format(sys_file_idx, file_name))
-        file_header = FileHeader(permissions=file_permissions, properties=sys_file_prop_default, alp_command_file_id=0xFF, interface_file_id=0xFF, file_size=file_len, allocated_size=file_len)
-        file_header_array_elements = "\t"
-        for byte in bytearray(file_header):
-          file_header_array_elements += "{}, ".format(byte)
-
-        cog.outl(file_header_array_elements)
+    file_permissions = sys_file_permission_default
+    for system_file in system_files:
+      output_fileheader(system_file)
     ]]]*/
-    // 0 - UID
+    // UID - 0
     36, 35, 255, 255, 0, 0, 0, 8, 0, 0, 0, 8, 
-    // 1 - not implemented
+    // FACTORY_SETTINGS - 1
     36, 35, 255, 255, 0, 0, 0, 0, 0, 0, 0, 0, 
-    // 2 - FIRMWARE_VERSION
+    // FIRMWARE_VERSION - 2
     36, 35, 255, 255, 0, 0, 0, 15, 0, 0, 0, 15, 
-    // 3 - not implemented
+    // DEVICE_CAPACITY - 3
+    36, 35, 255, 255, 0, 0, 0, 19, 0, 0, 0, 19, 
+    // DEVICE_STATUS - 4
+    36, 35, 255, 255, 0, 0, 0, 9, 0, 0, 0, 9, 
+    // ENGINEERING_MODE - 5
     36, 35, 255, 255, 0, 0, 0, 0, 0, 0, 0, 0, 
-    // 4 - not implemented
-    36, 35, 255, 255, 0, 0, 0, 0, 0, 0, 0, 0, 
-    // 5 - not implemented
-    36, 35, 255, 255, 0, 0, 0, 0, 0, 0, 0, 0, 
-    // 6 - not implemented
-    36, 35, 255, 255, 0, 0, 0, 0, 0, 0, 0, 0, 
-    // 7 - not implemented
-    36, 35, 255, 255, 0, 0, 0, 0, 0, 0, 0, 0, 
-    // 8 - not implemented
-    36, 35, 255, 255, 0, 0, 0, 0, 0, 0, 0, 0, 
-    // 9 - not implemented
-    36, 35, 255, 255, 0, 0, 0, 0, 0, 0, 0, 0, 
-    // 10 - DLL_CONFIG
+    // VID - 6
+    36, 35, 255, 255, 0, 0, 0, 3, 0, 0, 0, 3, 
+    // PHY_CONFIG - 8
+    36, 35, 255, 255, 0, 0, 0, 9, 0, 0, 0, 9, 
+    // PHY_STATUS - 9
+    36, 35, 255, 255, 0, 0, 0, 24, 0, 0, 0, 24, 
+    // DLL_CONFIG - 10
     36, 35, 255, 255, 0, 0, 0, 6, 0, 0, 0, 6, 
-    // 11 - not implemented
-    36, 35, 255, 255, 0, 0, 0, 0, 0, 0, 0, 0, 
-    // 12 - not implemented
-    36, 35, 255, 255, 0, 0, 0, 0, 0, 0, 0, 0, 
-    // 13 - not implemented
-    36, 35, 255, 255, 0, 0, 0, 0, 0, 0, 0, 0, 
-    // 14 - SECURITY_KEY
-    0, 35, 255, 255, 0, 0, 0, 16, 0, 0, 0, 16, 
-    // 15 - not implemented
-    36, 35, 255, 255, 0, 0, 0, 0, 0, 0, 0, 0, 
-    // 16 - not implemented
-    36, 35, 255, 255, 0, 0, 0, 0, 0, 0, 0, 0, 
-    // 17 - not implemented
-    36, 35, 255, 255, 0, 0, 0, 0, 0, 0, 0, 0, 
-    // 18 - not implemented
-    36, 35, 255, 255, 0, 0, 0, 0, 0, 0, 0, 0, 
-    // 19 - not implemented
-    36, 35, 255, 255, 0, 0, 0, 0, 0, 0, 0, 0, 
-    // 20 - not implemented
-    36, 35, 255, 255, 0, 0, 0, 0, 0, 0, 0, 0, 
-    // 21 - not implemented
-    36, 35, 255, 255, 0, 0, 0, 0, 0, 0, 0, 0, 
-    // 22 - not implemented
-    36, 35, 255, 255, 0, 0, 0, 0, 0, 0, 0, 0, 
-    // 23 - not implemented
-    36, 35, 255, 255, 0, 0, 0, 0, 0, 0, 0, 0, 
-    // 24 - not implemented
-    36, 35, 255, 255, 0, 0, 0, 0, 0, 0, 0, 0, 
-    // 25 - not implemented
-    36, 35, 255, 255, 0, 0, 0, 0, 0, 0, 0, 0, 
-    // 26 - not implemented
-    36, 35, 255, 255, 0, 0, 0, 0, 0, 0, 0, 0, 
-    // 27 - not implemented
-    36, 35, 255, 255, 0, 0, 0, 0, 0, 0, 0, 0, 
-    // 28 - not implemented
-    36, 35, 255, 255, 0, 0, 0, 0, 0, 0, 0, 0, 
-    // 29 - not implemented
-    36, 35, 255, 255, 0, 0, 0, 0, 0, 0, 0, 0, 
-    // 30 - not implemented
-    36, 35, 255, 255, 0, 0, 0, 0, 0, 0, 0, 0, 
-    // 31 - not implemented
-    36, 35, 255, 255, 0, 0, 0, 0, 0, 0, 0, 0, 
-    // 32 - ACCESS_PROFILE_0
+    // DLL_STATUS - 11
+    36, 35, 255, 255, 0, 0, 0, 12, 0, 0, 0, 12, 
+    // NWL_ROUTING - 12
+    36, 35, 255, 255, 0, 0, 0, 1, 0, 0, 0, 1, 
+    // NWL_SECURITY - 13
+    36, 35, 255, 255, 0, 0, 0, 5, 0, 0, 0, 5, 
+    // NWL_SECURITY_KEY - 14
+    36, 35, 255, 255, 0, 0, 0, 16, 0, 0, 0, 16, 
+    // NWL_SSR - 15
+    36, 35, 255, 255, 0, 0, 0, 4, 0, 0, 0, 4, 
+    // NWL_STATUS - 16
+    36, 35, 255, 255, 0, 0, 0, 20, 0, 0, 0, 20, 
+    // TRL_STATUS - 17
+    36, 35, 255, 255, 0, 0, 0, 1, 0, 0, 0, 1, 
+    // SEL_CONFIG - 18
+    36, 35, 255, 255, 0, 0, 0, 6, 0, 0, 0, 6, 
+    // FOF_STATUS - 19
+    36, 35, 255, 255, 0, 0, 0, 10, 0, 0, 0, 10, 
+    // LOCATION_DATA - 23
+    36, 35, 255, 255, 0, 0, 0, 1, 0, 0, 0, 1, 
+    // ACCESS_PROFILE_0 - 32
     36, 35, 255, 255, 0, 0, 0, 65, 0, 0, 0, 65, 
-    // 33 - ACCESS_PROFILE_1
+    // ACCESS_PROFILE_1 - 33
     36, 35, 255, 255, 0, 0, 0, 65, 0, 0, 0, 65, 
-    // 34 - ACCESS_PROFILE_2
+    // ACCESS_PROFILE_2 - 34
     36, 35, 255, 255, 0, 0, 0, 65, 0, 0, 0, 65, 
-    // 35 - ACCESS_PROFILE_3
+    // ACCESS_PROFILE_3 - 35
     36, 35, 255, 255, 0, 0, 0, 65, 0, 0, 0, 65, 
-    // 36 - ACCESS_PROFILE_4
+    // ACCESS_PROFILE_4 - 36
     36, 35, 255, 255, 0, 0, 0, 65, 0, 0, 0, 65, 
-    // 37 - ACCESS_PROFILE_5
+    // ACCESS_PROFILE_5 - 37
     36, 35, 255, 255, 0, 0, 0, 65, 0, 0, 0, 65, 
-    // 38 - ACCESS_PROFILE_6
+    // ACCESS_PROFILE_6 - 38
     36, 35, 255, 255, 0, 0, 0, 65, 0, 0, 0, 65, 
-    // 39 - ACCESS_PROFILE_7
+    // ACCESS_PROFILE_7 - 39
     36, 35, 255, 255, 0, 0, 0, 65, 0, 0, 0, 65, 
-    // 40 - ACCESS_PROFILE_8
+    // ACCESS_PROFILE_8 - 40
     36, 35, 255, 255, 0, 0, 0, 65, 0, 0, 0, 65, 
-    // 41 - ACCESS_PROFILE_9
+    // ACCESS_PROFILE_9 - 41
     36, 35, 255, 255, 0, 0, 0, 65, 0, 0, 0, 65, 
-    // 42 - ACCESS_PROFILE_10
+    // ACCESS_PROFILE_10 - 42
     36, 35, 255, 255, 0, 0, 0, 65, 0, 0, 0, 65, 
-    // 43 - ACCESS_PROFILE_11
+    // ACCESS_PROFILE_11 - 43
     36, 35, 255, 255, 0, 0, 0, 65, 0, 0, 0, 65, 
-    // 44 - ACCESS_PROFILE_12
+    // ACCESS_PROFILE_12 - 44
     36, 35, 255, 255, 0, 0, 0, 65, 0, 0, 0, 65, 
-    // 45 - ACCESS_PROFILE_13
+    // ACCESS_PROFILE_13 - 45
     36, 35, 255, 255, 0, 0, 0, 65, 0, 0, 0, 65, 
-    // 46 - ACCESS_PROFILE_14
+    // ACCESS_PROFILE_14 - 46
     36, 35, 255, 255, 0, 0, 0, 65, 0, 0, 0, 65, 
     //[[[end]]]
 };
 
 static const uint8_t eeprom_fs[] __attribute__((used)) __attribute__((section(".d7ap_fs_data"))) = {
     /*[[[cog
-    import cog
-    from d7a.system_files.system_files import SystemFiles
-    from d7a.system_files.access_profile import AccessProfileFile
-    from d7a.system_files.dll_config import DllConfigFile
-    from d7a.system_files.firmware_version import FirmwareVersionFile
-    from d7a.system_files.system_file_ids import SystemFileIds
-    from d7a.system_files.uid import UidFile
-    from d7a.dll.access_profile import AccessProfile, CsmaCaMode, SubBand
-    from d7a.dll.sub_profile import SubProfile
-    from d7a.phy.channel_header import ChannelHeader, ChannelBand, ChannelCoding, ChannelClass
-    from d7a.types.ct import CT
-
-    #for file in SystemFiles().get_all_system_files():
-    #    cog.outl("{} - {}".format(file.name, file.value))
-
-    def output_file(file):
-      file_type = SystemFileIds(file.id)
-      cog.outl("\t// {} - {}".format(file_type.name, file_type.value))
-      file_array_elements = "\t"
-      for byte in bytearray(file):
-        file_array_elements += "{}, ".format(byte)
-
-      cog.outl(file_array_elements)
-
-    output_file(UidFile())
-    output_file(FirmwareVersionFile())
-    output_file(DllConfigFile())
-    ap = AccessProfile(
-      channel_header=ChannelHeader(
-        channel_class=ChannelClass.LO_RATE,
-        channel_coding=ChannelCoding.FEC_PN9,
-        channel_band=ChannelBand.BAND_868
-      ),
-      sub_profiles=[SubProfile(subband_bitmap=0x01, scan_automation_period=CT(0))] * 4,
-      sub_bands=[SubBand()] * 8
-    )
-    output_file(AccessProfileFile(0, ap))
-    output_file(AccessProfileFile(1, ap))
-    output_file(AccessProfileFile(2, ap))
-    output_file(AccessProfileFile(3, ap))
-    output_file(AccessProfileFile(4, ap))
-    output_file(AccessProfileFile(5, ap))
-    output_file(AccessProfileFile(6, ap))
-    output_file(AccessProfileFile(7, ap))
-    output_file(AccessProfileFile(8, ap))
-    output_file(AccessProfileFile(9, ap))
-    output_file(AccessProfileFile(10, ap))
-    output_file(AccessProfileFile(11, ap))
-    output_file(AccessProfileFile(12, ap))
-    output_file(AccessProfileFile(13, ap))
-    output_file(AccessProfileFile(14, ap))
+    for system_file in system_files:
+      output_file(system_file)
     ]]]*/
     // UID - 0
     0, 0, 0, 0, 0, 0, 0, 0, 
+    // FACTORY_SETTINGS - 1
+
     // FIRMWARE_VERSION - 2
     0, 0, 
+    // DEVICE_CAPACITY - 3
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
+    // DEVICE_STATUS - 4
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 
+    // ENGINEERING_MODE - 5
+
+    // VID - 6
+    0, 0, 0, 
+    // PHY_CONFIG - 8
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 
+    // PHY_STATUS - 9
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
     // DLL_CONFIG - 10
     0, 255, 255, 
+    // DLL_STATUS - 11
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
+    // NWL_ROUTING - 12
+    0, 
+    // NWL_SECURITY - 13
+    0, 0, 0, 0, 0, 
+    // NWL_SECURITY_KEY - 14
+
+    // NWL_SSR - 15
+    0, 0, 0, 0, 
+    // NWL_STATUS - 16
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
+    // TRL_STATUS - 17
+    0, 
+    // SEL_CONFIG - 18
+    0, 0, 0, 0, 0, 0, 
+    // FOF_STATUS - 19
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
+    // LOCATION_DATA - 23
+    0, 
     // ACCESS_PROFILE_0 - 32
     50, 1, 0, 1, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 86, 255, 0, 0, 0, 0, 0, 86, 255, 0, 0, 0, 0, 0, 86, 255, 0, 0, 0, 0, 0, 86, 255, 0, 0, 0, 0, 0, 86, 255, 0, 0, 0, 0, 0, 86, 255, 0, 0, 0, 0, 0, 86, 255, 0, 0, 0, 0, 0, 86, 255, 
     // ACCESS_PROFILE_1 - 33
@@ -252,32 +274,6 @@ static const uint8_t eeprom_fs[] __attribute__((used)) __attribute__((section(".
     // ACCESS_PROFILE_14 - 46
     50, 1, 0, 1, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 86, 255, 0, 0, 0, 0, 0, 86, 255, 0, 0, 0, 0, 0, 86, 255, 0, 0, 0, 0, 0, 86, 255, 0, 0, 0, 0, 0, 86, 255, 0, 0, 0, 0, 0, 86, 255, 0, 0, 0, 0, 0, 86, 255, 0, 0, 0, 0, 0, 86, 255, 
     //[[[end]]]
-
-  // 0x01 - factory settings, not defined
-  // 0x02 - firmware version
-  // 0x03 - device capacity
-  // 0x04 - device status
-  // 0x05 - engineering mode
-  // 0x06 - VID
-  // 0x07 - RFU
-  // 0x08 - PHY config
-  // 0x09 - PHY status
-  // 0x0A - DLL config
-  // 0x0B - DLL status
-  // 0x0C - NWL routing
-  // 0x0E - NWL security key
-  // 0x0F - NWL securty state register
-  // 0x10 - NWL status
-  // 0x11 - TRL status
-  // 0x12 - SEL config
-  // 0x13 - FOF status
-  // 0x14 - RFU
-  // 0x15 - RFU
-  // 0x16 - RFU
-  // 0x17 - location data
-  // 0x18-0x1F - reserved for D7AALP
-  // 0x20-0x2E - Access Profiles
-  // 0x2F - RFU
 };
 
 
