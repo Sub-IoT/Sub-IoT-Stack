@@ -54,11 +54,21 @@ SECTIONS
     _sidata = .;
 
     /* store D7AP FS in EEPROM */
-    .d7ap_fs :
+    .d7ap_fs_headers :
     {
       . = ALIGN(4);
-      KEEP(*(.d7ap_fs))
+      KEEP(*(.d7ap_fs_data))
     } > EEPROM
+
+    __d7ap_fs_headers_end = .;
+
+    .d7ap_fs_data :
+    {
+      . = ALIGN(4);
+      KEEP(*(.d7ap_fs_data))
+    } > EEPROM
+
+    __d7ap_fs_data_end = .;
 
     /* stack section contains no symbols, used to check that there is enough RAM left.
         Place at start of RAM before data, so that is the stack overflows we would get a HardFault

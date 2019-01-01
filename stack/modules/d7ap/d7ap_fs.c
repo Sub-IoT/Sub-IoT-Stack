@@ -22,7 +22,146 @@
 #include "d7ap_fs.h"
 
 // TODO platform dependent, move
-static const uint8_t eeprom_fs[] __attribute__((used)) __attribute__((section(".d7ap_fs"))) = {
+static const uint8_t fs_headers[] __attribute__((used)) __attribute__((section(".d7ap_fs_headers"))) = {
+    /*[[[cog
+    import cog
+    from d7a.system_files.system_files import SystemFiles
+    from d7a.system_files.access_profile import AccessProfileFile
+    from d7a.system_files.dll_config import DllConfigFile
+    from d7a.system_files.firmware_version import FirmwareVersionFile
+    from d7a.system_files.system_file_ids import SystemFileIds
+    from d7a.system_files.uid import UidFile
+    from d7a.fs.file_permissions import FilePermissions
+    from d7a.fs.file_properties import FileProperties
+    from d7a.fs.file_properties import ActionCondition, StorageClass, FileProperties
+    from d7a.fs.file_header import FileHeader
+
+
+    sys_file_permission_default = FilePermissions(encrypted=False, executeable=False, user_readable=True, user_writeable=False, user_executeable=False,
+                       guest_readable=True, guest_writeable=False, guest_executeable=False)
+    sys_file_permission_non_readable = FilePermissions(encrypted=False, executeable=False, user_readable=False, user_writeable=False, user_executeable=False,
+                       guest_readable=False, guest_writeable=False, guest_executeable=False)
+    sys_file_prop_default = FileProperties(act_enabled=False, act_condition=ActionCondition.WRITE, storage_class=StorageClass.PERMANENT)
+    for sys_file_idx in range(0x2F):
+        file_len = 0
+        file_name = "not implemented"
+        file_permissions = sys_file_permission_default
+        implemented_files = [file.value for file in SystemFileIds]
+        if sys_file_idx in implemented_files:
+          file_type = SystemFileIds(sys_file_idx)
+          if file_type == SystemFileIds.SECURITY_KEY:
+              file_permissions = sys_file_permission_non_readable
+
+          file_name = file_type.name
+          if file_type in SystemFiles().files:
+              file_len = SystemFiles().files[file_type].length.value
+
+        cog.outl("\t// {} - {}".format(sys_file_idx, file_name))
+        file_header = FileHeader(permissions=file_permissions, properties=sys_file_prop_default, alp_command_file_id=0xFF, interface_file_id=0xFF, file_size=file_len, allocated_size=file_len)
+        file_header_array_elements = "\t"
+        for byte in bytearray(file_header):
+          file_header_array_elements += "{}, ".format(byte)
+
+        cog.outl(file_header_array_elements)
+    ]]]*/
+    // 0 - UID
+    36, 35, 255, 255, 0, 0, 0, 8, 0, 0, 0, 8, 
+    // 1 - not implemented
+    36, 35, 255, 255, 0, 0, 0, 0, 0, 0, 0, 0, 
+    // 2 - FIRMWARE_VERSION
+    36, 35, 255, 255, 0, 0, 0, 15, 0, 0, 0, 15, 
+    // 3 - not implemented
+    36, 35, 255, 255, 0, 0, 0, 0, 0, 0, 0, 0, 
+    // 4 - not implemented
+    36, 35, 255, 255, 0, 0, 0, 0, 0, 0, 0, 0, 
+    // 5 - not implemented
+    36, 35, 255, 255, 0, 0, 0, 0, 0, 0, 0, 0, 
+    // 6 - not implemented
+    36, 35, 255, 255, 0, 0, 0, 0, 0, 0, 0, 0, 
+    // 7 - not implemented
+    36, 35, 255, 255, 0, 0, 0, 0, 0, 0, 0, 0, 
+    // 8 - not implemented
+    36, 35, 255, 255, 0, 0, 0, 0, 0, 0, 0, 0, 
+    // 9 - not implemented
+    36, 35, 255, 255, 0, 0, 0, 0, 0, 0, 0, 0, 
+    // 10 - DLL_CONFIG
+    36, 35, 255, 255, 0, 0, 0, 6, 0, 0, 0, 6, 
+    // 11 - not implemented
+    36, 35, 255, 255, 0, 0, 0, 0, 0, 0, 0, 0, 
+    // 12 - not implemented
+    36, 35, 255, 255, 0, 0, 0, 0, 0, 0, 0, 0, 
+    // 13 - not implemented
+    36, 35, 255, 255, 0, 0, 0, 0, 0, 0, 0, 0, 
+    // 14 - SECURITY_KEY
+    0, 35, 255, 255, 0, 0, 0, 16, 0, 0, 0, 16, 
+    // 15 - not implemented
+    36, 35, 255, 255, 0, 0, 0, 0, 0, 0, 0, 0, 
+    // 16 - not implemented
+    36, 35, 255, 255, 0, 0, 0, 0, 0, 0, 0, 0, 
+    // 17 - not implemented
+    36, 35, 255, 255, 0, 0, 0, 0, 0, 0, 0, 0, 
+    // 18 - not implemented
+    36, 35, 255, 255, 0, 0, 0, 0, 0, 0, 0, 0, 
+    // 19 - not implemented
+    36, 35, 255, 255, 0, 0, 0, 0, 0, 0, 0, 0, 
+    // 20 - not implemented
+    36, 35, 255, 255, 0, 0, 0, 0, 0, 0, 0, 0, 
+    // 21 - not implemented
+    36, 35, 255, 255, 0, 0, 0, 0, 0, 0, 0, 0, 
+    // 22 - not implemented
+    36, 35, 255, 255, 0, 0, 0, 0, 0, 0, 0, 0, 
+    // 23 - not implemented
+    36, 35, 255, 255, 0, 0, 0, 0, 0, 0, 0, 0, 
+    // 24 - not implemented
+    36, 35, 255, 255, 0, 0, 0, 0, 0, 0, 0, 0, 
+    // 25 - not implemented
+    36, 35, 255, 255, 0, 0, 0, 0, 0, 0, 0, 0, 
+    // 26 - not implemented
+    36, 35, 255, 255, 0, 0, 0, 0, 0, 0, 0, 0, 
+    // 27 - not implemented
+    36, 35, 255, 255, 0, 0, 0, 0, 0, 0, 0, 0, 
+    // 28 - not implemented
+    36, 35, 255, 255, 0, 0, 0, 0, 0, 0, 0, 0, 
+    // 29 - not implemented
+    36, 35, 255, 255, 0, 0, 0, 0, 0, 0, 0, 0, 
+    // 30 - not implemented
+    36, 35, 255, 255, 0, 0, 0, 0, 0, 0, 0, 0, 
+    // 31 - not implemented
+    36, 35, 255, 255, 0, 0, 0, 0, 0, 0, 0, 0, 
+    // 32 - ACCESS_PROFILE_0
+    36, 35, 255, 255, 0, 0, 0, 65, 0, 0, 0, 65, 
+    // 33 - ACCESS_PROFILE_1
+    36, 35, 255, 255, 0, 0, 0, 65, 0, 0, 0, 65, 
+    // 34 - ACCESS_PROFILE_2
+    36, 35, 255, 255, 0, 0, 0, 65, 0, 0, 0, 65, 
+    // 35 - ACCESS_PROFILE_3
+    36, 35, 255, 255, 0, 0, 0, 65, 0, 0, 0, 65, 
+    // 36 - ACCESS_PROFILE_4
+    36, 35, 255, 255, 0, 0, 0, 65, 0, 0, 0, 65, 
+    // 37 - ACCESS_PROFILE_5
+    36, 35, 255, 255, 0, 0, 0, 65, 0, 0, 0, 65, 
+    // 38 - ACCESS_PROFILE_6
+    36, 35, 255, 255, 0, 0, 0, 65, 0, 0, 0, 65, 
+    // 39 - ACCESS_PROFILE_7
+    36, 35, 255, 255, 0, 0, 0, 65, 0, 0, 0, 65, 
+    // 40 - ACCESS_PROFILE_8
+    36, 35, 255, 255, 0, 0, 0, 65, 0, 0, 0, 65, 
+    // 41 - ACCESS_PROFILE_9
+    36, 35, 255, 255, 0, 0, 0, 65, 0, 0, 0, 65, 
+    // 42 - ACCESS_PROFILE_10
+    36, 35, 255, 255, 0, 0, 0, 65, 0, 0, 0, 65, 
+    // 43 - ACCESS_PROFILE_11
+    36, 35, 255, 255, 0, 0, 0, 65, 0, 0, 0, 65, 
+    // 44 - ACCESS_PROFILE_12
+    36, 35, 255, 255, 0, 0, 0, 65, 0, 0, 0, 65, 
+    // 45 - ACCESS_PROFILE_13
+    36, 35, 255, 255, 0, 0, 0, 65, 0, 0, 0, 65, 
+    // 46 - ACCESS_PROFILE_14
+    36, 35, 255, 255, 0, 0, 0, 65, 0, 0, 0, 65, 
+    //[[[end]]]
+};
+
+static const uint8_t eeprom_fs[] __attribute__((used)) __attribute__((section(".d7ap_fs_data"))) = {
     /*[[[cog
     import cog
     from d7a.system_files.system_files import SystemFiles
