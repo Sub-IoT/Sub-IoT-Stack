@@ -24,7 +24,7 @@
 #include "dll.h"
 #include "crc.h"
 #include "debug.h"
-#include "fs.h"
+#include "d7ap_fs.h"
 #include "ng.h"
 #include "hwdebug.h"
 #include "random.h"

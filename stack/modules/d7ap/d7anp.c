@@ -22,7 +22,7 @@
 #include "debug.h"
 #include "packet.h"
 #include "d7anp.h"
-#include "fs.h"
+#include "d7ap_fs.h"
 #include "ng.h"
 #include "log.h"
 #include "math.h"

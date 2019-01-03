@@ -36,32 +36,6 @@
 #include "alp.h"
 #include "d7ap.h"
 
-typedef enum
-{
-    FS_STORAGE_TRANSIENT = 0,
-    FS_STORAGE_VOLATILE = 1,
-    FS_STORAGE_RESTORABLE = 2,
-    FS_STORAGE_PERMANENT = 3
-} fs_storage_class_t;
-
-typedef struct __attribute__((__packed__))
-{
-    fs_storage_class_t storage_class : 2;
-    uint8_t _rfu : 2;
-    alp_act_condition_t action_condition : 3;
-    bool action_protocol_enabled : 1;
-} fs_file_properties_t;
-
-typedef struct __attribute__((__packed__))
-{
-    uint8_t file_permissions; // TODO not used for now
-    fs_file_properties_t file_properties;
-    uint8_t alp_cmd_file_id;
-    uint8_t interface_file_id;
-    uint32_t length;
-    uint32_t allocated_length;
-} fs_file_header_t;
-
 /**
  * \brief Initialize the user files in this callback.
  *

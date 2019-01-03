@@ -21,7 +21,7 @@
 #include "d7ap.h"
 #include "d7ap_stack.h"
 
-#include "fs.h"
+#include "d7ap_fs.h"
 #include "phy.h"
 #include "errors.h"
 #include "debug.h"

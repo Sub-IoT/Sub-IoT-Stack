@@ -32,7 +32,7 @@
 #include "dll.h"
 #include "ng.h"
 #include "log.h"
-#include "fs.h"
+#include "d7ap_fs.h"
 #include "MODULE_D7AP_defs.h"
 #include "compress.h"
 #include "phy.h"

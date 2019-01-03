@@ -23,7 +23,7 @@
 #include "string.h"
 #include "debug.h"
 #include "d7ap.h"
-#include "fs.h"
+#include "d7ap_fs.h"
 #include "ng.h"
 #include "hwsystem.h"
 #include "version.h"
