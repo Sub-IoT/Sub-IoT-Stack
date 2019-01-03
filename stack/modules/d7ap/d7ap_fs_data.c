@@ -125,6 +125,8 @@ def output_system_file_offsets():
 ]]]*/
 //[[[end]]] (checksum: d41d8cd98f00b204e9800998ecf8427e)
 
+//extern int __d7ap_fs_systemfiles_start, __d7ap_fs_systemfiles_header_data_end, __d7ap_fs_systemfiles_data_end;
+
 
 // TODO platform dependent, move
 const uint8_t fs_systemfiles_header_data[] __attribute__((used)) __attribute__((section(".d7ap_fs_systemfiles_header_data"))) = {
@@ -206,7 +208,7 @@ const uint8_t fs_systemfiles_header_data[] __attribute__((used)) __attribute__((
     //[[[end]]] (checksum: 2d4146c568e92c3baa1b3fdd9210bc3b)
 };
 
-static const uint8_t fs_systemfiles_file_data[] __attribute__((used)) __attribute__((section(".d7ap_fs_systemfiles_data"))) = {
+const uint8_t fs_systemfiles_file_data[] __attribute__((used)) __attribute__((section(".d7ap_fs_systemfiles_data"))) = {
     /*[[[cog
     for system_file in system_files:
       output_file(system_file)
@@ -286,7 +288,7 @@ static const uint8_t fs_systemfiles_file_data[] __attribute__((used)) __attribut
 
 // Store the offsets of the start of each system file in the data section, for fast lookup
 // This is stored only in RAM since it doesn't take much space
-static const uint16_t fs_systemfiles_file_offsets[] = {
+__attribute__((used)) const uint16_t fs_systemfiles_file_offsets[] = {
   /*[[[cog
   output_system_file_offsets()
   ]]]*/

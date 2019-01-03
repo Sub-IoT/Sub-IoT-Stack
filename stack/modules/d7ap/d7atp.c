@@ -312,7 +312,7 @@ error_t d7atp_send_request(uint8_t dialog_id, uint8_t transaction_id, bool is_la
     uint8_t access_class = packet->d7anp_addressee->access_class;
     if (access_class != current_access_class)
     {
-        fs_read_access_class(packet->d7anp_addressee->access_specifier, &active_addressee_access_profile);
+        d7ap_fs_read_access_class(packet->d7anp_addressee->access_specifier, &active_addressee_access_profile);
         current_access_class = access_class;
     }
 
@@ -686,7 +686,7 @@ void d7atp_process_received_packet(packet_t* packet)
         // set active_addressee_access_profile to the access_profile supplied by the requester
         if (current_access_class != current_addressee.access_class)
         {
-            fs_read_access_class(current_addressee.access_specifier, &active_addressee_access_profile);
+            d7ap_fs_read_access_class(current_addressee.access_specifier, &active_addressee_access_profile);
             current_access_class = current_addressee.access_class;
         }
 

@@ -35,6 +35,7 @@
 #include "modules_defs.h"
 #include "MODULE_ALP_defs.h"
 #include "d7ap.h"
+#include "d7ap_fs.h"
 #include "lorawan_stack.h"
 
 #include "alp_layer.h"
@@ -96,7 +97,7 @@ static void free_command(alp_command_t* command) {
   fifo_init(&command->alp_command_fifo, command->alp_command, ALP_PAYLOAD_MAX_SIZE);
   fifo_init(&command->alp_response_fifo, command->alp_response, ALP_PAYLOAD_MAX_SIZE);
   // other fields are initialized on usage
-};
+}
 
 static void init_commands()
 {
@@ -242,7 +243,7 @@ static alp_status_codes_t process_op_read_file_data(alp_command_t* command) {
     return ALP_STATUS_UNKNOWN_ERROR; // TODO more specific error + move to fs_read_file?
 
   uint8_t data[operand.requested_data_length];
-  alp_status_codes_t alp_status = fs_read_file(operand.file_offset.file_id, operand.file_offset.offset, data, operand.requested_data_length);
+  alp_status_codes_t alp_status = d7ap_fs_read_file(operand.file_offset.file_id, operand.file_offset.offset, data, operand.requested_data_length);
   if(alp_status == ALP_STATUS_FILE_ID_NOT_EXISTS) {
     // give the application layer the chance to fullfill this request ...
     if(init_args != NULL && init_args->alp_unhandled_read_action_cb != NULL)
@@ -266,7 +267,7 @@ static alp_status_codes_t process_op_read_file_properties(alp_command_t* command
   DPRINT("READ FILE PROPERTIES %i", file_id);
 
   fs_file_header_t file_header;
-  alp_status_codes_t alp_status = fs_read_file_header(file_id, &file_header);
+  alp_status_codes_t alp_status = d7ap_fs_read_file_header(file_id, &file_header);
 
   if(alp_status == ALP_STATUS_OK) {
     // fill response
@@ -287,7 +288,7 @@ static alp_status_codes_t process_op_write_file_properties(alp_command_t* comman
   err = fifo_pop(&command->alp_command_fifo, (uint8_t*)&file_header, sizeof(fs_file_header_t)); assert(err == SUCCESS);
   DPRINT("WRITE FILE PROPERTIES %i", file_id);
 
-  return fs_write_file_header(file_id, &file_header);
+  return d7ap_fs_write_file_header(file_id, &file_header);
 }
 
 static alp_status_codes_t process_op_write_file_data(alp_command_t* command) {
@@ -300,7 +301,7 @@ static alp_status_codes_t process_op_write_file_data(alp_command_t* command) {
 
   uint8_t data[operand.provided_data_length];
   err = fifo_pop(&command->alp_command_fifo, data, operand.provided_data_length);
-  return fs_write_file(operand.file_offset.file_id, operand.file_offset.offset, data, operand.provided_data_length);
+  return d7ap_fs_write_file(operand.file_offset.file_id, operand.file_offset.offset, data, operand.provided_data_length);
 }
 
 bool process_arithm_predicate(uint8_t* value1, uint8_t* value2, uint32_t len, alp_query_arithmetic_comparison_type_t comp_type) {
@@ -357,7 +358,7 @@ static alp_status_codes_t process_op_break_query(alp_command_t* command) {
   alp_operand_file_offset_t offset_a = alp_parse_file_offset_operand(&command->alp_command_fifo);
 
   uint8_t file_value[comp_length];
-  fs_read_file(offset_a.file_id, offset_a.offset, file_value, comp_length);
+  d7ap_fs_read_file(offset_a.file_id, offset_a.offset, file_value, comp_length);
 
   bool success = process_arithm_predicate(file_value, value, comp_length, comp_type);
   DPRINT("predicate result: %i", success);
@@ -626,8 +627,7 @@ static bool alp_layer_parse_and_execute_alp_command(alp_command_t* command)
                   lorawan_interface_state=STATE_NOT_INITIALIZED;
                 }
 #endif
-                //d7ap_stack_init();
-                d7ap_init();
+                d7ap_stack_init();
                 d7ap_interface_state=STATE_INITIALIZED;
               } 
               uint8_t forwarded_alp_size = fifo_get_size(&command->alp_command_fifo);

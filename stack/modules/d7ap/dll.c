@@ -729,10 +729,10 @@ void dll_execute_scan_automation(void *arg)
     // since they might not be necessary for current active class anymore
     timer_cancel_event(&dll_background_scan_timer);
 
-    uint8_t scan_access_class = fs_read_dll_conf_active_access_class();
+    uint8_t scan_access_class = d7ap_fs_read_dll_conf_active_access_class();
     if (active_access_class != scan_access_class)
     {
-        fs_read_access_class(ACCESS_SPECIFIER(scan_access_class), &current_access_profile);
+        d7ap_fs_read_access_class(ACCESS_SPECIFIER(scan_access_class), &current_access_profile);
         active_access_class = scan_access_class;
     }
 
@@ -859,7 +859,7 @@ void dll_init()
 
     hw_radio_init(&alloc_new_packet, &release_packet);
 
-    fs_read_file(D7A_FILE_DLL_CONF_FILE_ID, 4, &nf_ctrl, 1);
+    d7ap_fs_read_file(D7A_FILE_DLL_CONF_FILE_ID, 4, &nf_ctrl, 1);
     tx_nf_method = (nf_ctrl >> 4) & 0x0F;
 
     dll_state = DLL_STATE_IDLE;
@@ -867,9 +867,9 @@ void dll_init()
     process_received_packets_after_tx = false;
     resume_fg_scan = false;
 
-    fs_register_file_modified_callback(D7A_FILE_DLL_CONF_FILE_ID, &conf_file_changed_callback);
+    d7ap_fs_register_file_modified_callback(D7A_FILE_DLL_CONF_FILE_ID, &conf_file_changed_callback);
     for(int i = 0; i < 15; i++)
-        fs_register_file_modified_callback(D7A_FILE_ACCESS_PROFILE_ID + i, &access_profile_file_changed_callback);
+        d7ap_fs_register_file_modified_callback(D7A_FILE_ACCESS_PROFILE_ID + i, &access_profile_file_changed_callback);
 
     // Start immediately the scan automation
     guarded_channel = false;
@@ -942,7 +942,7 @@ void dll_tx_frame(packet_t* packet)
     }
     else
     {
-        fs_read_access_class(packet->d7anp_addressee->access_specifier, &remote_access_profile);
+        d7ap_fs_read_access_class(packet->d7anp_addressee->access_specifier, &remote_access_profile);
 
         /*
          * For now the access mask and the subband bitmap are not used
@@ -1174,12 +1174,12 @@ bool dll_disassemble_packet_header(packet_t* packet, uint8_t* data_idx)
     {
         if (packet->dll_header.control_target_id_type == ID_TYPE_UID)
         {
-            fs_read_uid(id);
+            d7ap_fs_read_uid(id);
             address_len = 8;
         }
         else
         {
-            fs_read_vid(id);
+            d7ap_fs_read_vid(id);
             address_len = 2;
         }
 

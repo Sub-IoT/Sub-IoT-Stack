@@ -211,17 +211,17 @@ void d7anp_init()
      * Init Security
      * Read the 128 bits key from the "NWL Security Key" file
      */
-    assert (fs_read_nwl_security_key(key) == ALP_STATUS_OK); // TODO permission
+    assert (d7ap_fs_read_nwl_security_key(key) == ALP_STATUS_OK); // TODO permission
     DPRINT("KEY");
     DPRINT_DATA(key, AES_BLOCK_SIZE);
     AES128_init(key);
 
     /* Read the NWL security parameters */
-    fs_read_nwl_security(&security_state);
+    d7ap_fs_read_nwl_security(&security_state);
     DPRINT("Initial Key counter %d", security_state.key_counter);
     DPRINT("Initial Frame counter %ld", security_state.frame_counter);
     /* Read the NWL security state of the successfully decrypted and authenticated devices */
-    fs_read_nwl_security_state_register(&node_security_state);
+    d7ap_fs_read_nwl_security_state_register(&node_security_state);
     latest_node = NULL;
 #endif
 }
@@ -254,7 +254,7 @@ error_t d7anp_tx_foreground_frame(packet_t* packet, bool should_include_origin_t
     else
     {
         uint8_t vid[2];
-        fs_read_vid(vid);
+        d7ap_fs_read_vid(vid);
         if (memcmp(vid, (uint8_t[2]){ 0xFF, 0xFF }, 2) == 0)
             packet->d7anp_ctrl.origin_id_type = ID_TYPE_UID;
         else
@@ -457,12 +457,12 @@ bool d7anp_unsecure_payload(packet_t *packet, uint8_t index)
         /* For unicast access, an additional authentication data is used by CBC-MAC */
         if(packet->dll_header.control_target_id_type == ID_TYPE_UID)
         {
-            fs_read_uid(add);
+            d7ap_fs_read_uid(add);
             add_len = 8;
         }
         else if(packet->dll_header.control_target_id_type == ID_TYPE_VID)
         {
-            fs_read_vid(add);
+            d7ap_fs_read_vid(add);
             add_len = 2;
         }
     }
@@ -536,13 +536,13 @@ uint8_t d7anp_assemble_packet_header(packet_t *packet, uint8_t *data_ptr)
 
         if (packet->d7anp_ctrl.origin_id_type == ID_TYPE_UID)
         {
-            fs_read_uid(data_ptr);
+            d7ap_fs_read_uid(data_ptr);
             memcpy(packet->origin_access_id, data_ptr, 8);
             data_ptr += 8;
         }
         else if (packet->d7anp_ctrl.origin_id_type == ID_TYPE_VID)
         {
-            fs_read_vid(data_ptr);
+            d7ap_fs_read_vid(data_ptr);
             memcpy(packet->origin_access_id, data_ptr, 2);
             data_ptr += 2;
         }
@@ -601,7 +601,7 @@ dae_nwl_trusted_node_t *add_trusted_node(uint8_t *address, uint32_t frame_counte
 
     DPRINT("Add node <%p> total number <%d>", node, node_security_state.trusted_node_nb);
     /* Update the FS */
-    fs_add_nwl_security_state_register_entry(node, node_security_state.trusted_node_nb);
+    d7ap_fs_add_nwl_security_state_register_entry(node, node_security_state.trusted_node_nb);
     return node;
 }
 

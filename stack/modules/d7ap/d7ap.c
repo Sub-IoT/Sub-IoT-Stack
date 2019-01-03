@@ -98,12 +98,16 @@ dae_access_profile_t default_access_profiles[DEFAULT_ACCESS_PROFILES_COUNT] = {
 d7ap_resource_desc_t registered_client[MODULE_D7AP_MAX_CLIENT_COUNT];
 uint8_t registered_client_nb = 0;
 
-void d7ap_init(void)
+void d7ap_init(blockdevice_t* systemfiles_bd)
 {
+    d7ap_fs_init(systemfiles_bd);
+
     // Initialize the D7AP stack
     d7ap_stack_init();
 
     registered_client_nb = 0;
+
+    // TODO remove
     // Initialize Fs with the default access profiles if not done by the application
     fs_init_args_t fs_init_args = (fs_init_args_t){
         .fs_d7aactp_cb = NULL,
@@ -113,7 +117,6 @@ void d7ap_init(void)
         .access_class = 0x01 // use access profile 0 and select the first subprofile
     };
 
-    fs_init(&fs_init_args);
 }
 
 void d7ap_stop()
