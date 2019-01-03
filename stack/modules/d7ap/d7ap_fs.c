@@ -23,6 +23,7 @@
 
 // The cog section below does not generate code but defines some global variables and functions which are used in subsequent cog sections below,
 // which do the actual code generation
+
 /*[[[cog
 import cog
 from d7a.system_files.system_files import SystemFiles
@@ -114,12 +115,19 @@ def output_fileheader(file):
     file_header_array_elements += "{}, ".format(byte)
 
   cog.outl(file_header_array_elements)
+
+def output_system_file_offsets():
+  current_offset = 0
+  for system_file in system_files:
+    file_type = SystemFileIds(system_file.id)
+    cog.outl("\t{}, // {} - {}".format(current_offset, file_type.name, file_type.value))
+    current_offset += system_file.length
 ]]]*/
 //[[[end]]]
 
 
 // TODO platform dependent, move
-static const uint8_t fs_headers[] __attribute__((used)) __attribute__((section(".d7ap_fs_headers"))) = {
+const uint8_t fs_systemfiles_header_data[] __attribute__((used)) __attribute__((section(".d7ap_fs_systemfiles_header_data"))) = {
     /*[[[cog
     file_permissions = sys_file_permission_default
     for system_file in system_files:
@@ -198,7 +206,7 @@ static const uint8_t fs_headers[] __attribute__((used)) __attribute__((section("
     //[[[end]]]
 };
 
-static const uint8_t eeprom_fs[] __attribute__((used)) __attribute__((section(".d7ap_fs_data"))) = {
+static const uint8_t fs_systemfiles_file_data[] __attribute__((used)) __attribute__((section(".d7ap_fs_systemfiles_data"))) = {
     /*[[[cog
     for system_file in system_files:
       output_file(system_file)
@@ -276,7 +284,49 @@ static const uint8_t eeprom_fs[] __attribute__((used)) __attribute__((section(".
     //[[[end]]]
 };
 
-
+// Store the offsets of the start of each system file in the data section, for fast lookup
+// This is stored only in RAM since it doesn't take much space
+static const uint16_t fs_systemfiles_file_offsets[] = {
+  /*[[[cog
+  output_system_file_offsets()
+  ]]]*/
+  0, // UID - 0
+  8, // FACTORY_SETTINGS - 1
+  8, // FIRMWARE_VERSION - 2
+  23, // DEVICE_CAPACITY - 3
+  42, // DEVICE_STATUS - 4
+  51, // ENGINEERING_MODE - 5
+  51, // VID - 6
+  54, // PHY_CONFIG - 8
+  63, // PHY_STATUS - 9
+  87, // DLL_CONFIG - 10
+  93, // DLL_STATUS - 11
+  105, // NWL_ROUTING - 12
+  106, // NWL_SECURITY - 13
+  111, // NWL_SECURITY_KEY - 14
+  127, // NWL_SSR - 15
+  131, // NWL_STATUS - 16
+  151, // TRL_STATUS - 17
+  152, // SEL_CONFIG - 18
+  158, // FOF_STATUS - 19
+  168, // LOCATION_DATA - 23
+  169, // ACCESS_PROFILE_0 - 32
+  234, // ACCESS_PROFILE_1 - 33
+  299, // ACCESS_PROFILE_2 - 34
+  364, // ACCESS_PROFILE_3 - 35
+  429, // ACCESS_PROFILE_4 - 36
+  494, // ACCESS_PROFILE_5 - 37
+  559, // ACCESS_PROFILE_6 - 38
+  624, // ACCESS_PROFILE_7 - 39
+  689, // ACCESS_PROFILE_8 - 40
+  754, // ACCESS_PROFILE_9 - 41
+  819, // ACCESS_PROFILE_10 - 42
+  884, // ACCESS_PROFILE_11 - 43
+  949, // ACCESS_PROFILE_12 - 44
+  1014, // ACCESS_PROFILE_13 - 45
+  1079, // ACCESS_PROFILE_14 - 46
+  //[[[end]]]
+};
 
 void d7ap_fs_init() {
 
