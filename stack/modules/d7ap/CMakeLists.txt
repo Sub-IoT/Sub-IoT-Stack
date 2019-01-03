@@ -71,6 +71,7 @@ ADD_LIBRARY(d7ap STATIC
     d7ap_stack.c
     d7ap.c
     d7ap_fs.c
+    d7ap_fs_data.c
     d7asp.c
     d7atp.c
     d7anp.c
