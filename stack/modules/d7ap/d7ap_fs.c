@@ -92,8 +92,13 @@ void d7ap_fs_init(blockdevice_t* blockdevice_systemfiles)
   assert(blockdevice_systemfiles);
 
   bd_systemfiles = blockdevice_systemfiles;
-
   systemfiles_file_data_offset = (uint32_t)(fs_systemfiles_file_data - fs_systemfiles_header_data);
+
+  // TODO platform specific
+
+  // TODO sanity check
+  // TODO set FW version
+
 
   uint8_t uid[8];
   uint8_t uid_not_set[8] = { 0 };
@@ -105,12 +110,16 @@ void d7ap_fs_init(blockdevice_t* blockdevice_systemfiles)
     d7ap_fs_write_file(D7A_FILE_UID_FILE_ID, 0, (const uint8_t*)&id_be, D7A_FILE_UID_SIZE);
   }
 
-  // TODO platform specific
-  // TODO take as param?
+  // always update firmware version file upon boot
+  uint8_t firmware_version[D7A_FILE_FIRMWARE_VERSION_SIZE] = {
+    D7A_PROTOCOL_VERSION_MAJOR, D7A_PROTOCOL_VERSION_MINOR,
+  };
 
-  // TODO sanity check
-  // TODO set UID
-  // TODO set FW version
+  memcpy(firmware_version + 2, _APP_NAME, D7A_FILE_FIRMWARE_VERSION_APP_NAME_SIZE);
+  memcpy(firmware_version + 2 + D7A_FILE_FIRMWARE_VERSION_APP_NAME_SIZE, _GIT_SHA1, D7A_FILE_FIRMWARE_VERSION_GIT_SHA1_SIZE);
+  d7ap_fs_write_file(D7A_FILE_FIRMWARE_VERSION_FILE_ID, 0, firmware_version, D7A_FILE_FIRMWARE_VERSION_SIZE);
+
+
 //    // TODO store as big endian!
 //    if (is_fs_init_completed)
 //        return;
@@ -120,38 +129,6 @@ void d7ap_fs_init(blockdevice_t* blockdevice_systemfiles)
 //    assert(init_args != NULL);
 //    assert(init_args->access_profiles_count > 0); // there should be at least one access profile defined
 
-//    // 0x00 - UID
-//    file_offsets[D7A_FILE_UID_FILE_ID] = current_data_offset;
-//    file_headers[D7A_FILE_UID_FILE_ID] = (fs_file_header_t){
-//        .file_properties.action_protocol_enabled = 0,
-//        .file_properties.storage_class = FS_STORAGE_PERMANENT,
-//        .file_permissions = 0, // TODO
-//        .length = D7A_FILE_UID_SIZE,
-//        .allocated_length = D7A_FILE_UID_SIZE
-//    };
-
-//    uint64_t id = hw_get_unique_id();
-//    uint64_t id_be = __builtin_bswap64(id);
-//    memcpy(data + current_data_offset, &id_be, D7A_FILE_UID_SIZE);
-//    current_data_offset += D7A_FILE_UID_SIZE;
-
-
-//    // 0x02 - Firmware version
-//    file_offsets[D7A_FILE_FIRMWARE_VERSION_FILE_ID] = current_data_offset;
-//    file_headers[D7A_FILE_FIRMWARE_VERSION_FILE_ID] = (fs_file_header_t){
-//        .file_properties.action_protocol_enabled = 0,
-//        .file_properties.storage_class = FS_STORAGE_PERMANENT,
-//        .file_permissions = 0, // TODO
-//        .length = D7A_FILE_FIRMWARE_VERSION_SIZE,
-//        .allocated_length = D7A_FILE_FIRMWARE_VERSION_SIZE
-//    };
-
-//    memset(data + current_data_offset, D7A_PROTOCOL_VERSION_MAJOR, 1); current_data_offset++;
-//    memset(data + current_data_offset, D7A_PROTOCOL_VERSION_MINOR, 1); current_data_offset++;
-//    memcpy(data + current_data_offset, _APP_NAME, D7A_FILE_FIRMWARE_VERSION_APP_NAME_SIZE);
-//    current_data_offset += D7A_FILE_FIRMWARE_VERSION_APP_NAME_SIZE;
-//    memcpy(data + current_data_offset, _GIT_SHA1, D7A_FILE_FIRMWARE_VERSION_GIT_SHA1_SIZE);
-//    current_data_offset += D7A_FILE_FIRMWARE_VERSION_GIT_SHA1_SIZE;
 
 //    // 0x0A - DLL Configuration
 //    file_offsets[D7A_FILE_DLL_CONF_FILE_ID] = current_data_offset;
