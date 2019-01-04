@@ -58,22 +58,26 @@ system_files = [
   NotImplementedFile(SystemFileIds.FACTORY_SETTINGS.value, 0),
   FirmwareVersionFile(),
   NotImplementedFile(SystemFileIds.DEVICE_CAPACITY.value, 19),
-  NotImplementedFile(SystemFileIds.DEVICE_STATUS, 9),
-  NotImplementedFile(SystemFileIds.ENGINEERING_MODE, 0),
-  NotImplementedFile(SystemFileIds.VID, 3),
-  NotImplementedFile(SystemFileIds.PHY_CONFIG, 9),
-  NotImplementedFile(SystemFileIds.PHY_STATUS, 24),  # TODO assuming 3 channels for now
-  DllConfigFile(),
-  NotImplementedFile(SystemFileIds.DLL_STATUS, 12),
-  NotImplementedFile(SystemFileIds.NWL_ROUTING, 1),  # TODO variable routing table
-  NotImplementedFile(SystemFileIds.NWL_SECURITY, 5),
+  NotImplementedFile(SystemFileIds.DEVICE_STATUS.value, 9),
+  NotImplementedFile(SystemFileIds.ENGINEERING_MODE.value, 0),
+  NotImplementedFile(SystemFileIds.VID.value, 3),
+  NotImplementedFile(SystemFileIds.RFU_07.value, 0),
+  NotImplementedFile(SystemFileIds.PHY_CONFIG.value, 9),
+  NotImplementedFile(SystemFileIds.PHY_STATUS.value, 24),  # TODO assuming 3 channels for now
+  DllConfigFile(active_access_class=0x21),
+  NotImplementedFile(SystemFileIds.DLL_STATUS.value, 12),
+  NotImplementedFile(SystemFileIds.NWL_ROUTING.value, 1),  # TODO variable routing table
+  NotImplementedFile(SystemFileIds.NWL_SECURITY.value, 5),
   SecurityKeyFile(),
-  NotImplementedFile(SystemFileIds.NWL_SSR, 4),  # TODO 0 recorded devices
-  NotImplementedFile(SystemFileIds.NWL_STATUS, 20),
-  NotImplementedFile(SystemFileIds.TRL_STATUS, 1),  # TODO 0 TRL records
-  NotImplementedFile(SystemFileIds.SEL_CONFIG, 6),
-  NotImplementedFile(SystemFileIds.FOF_STATUS, 10),
-  NotImplementedFile(SystemFileIds.LOCATION_DATA, 1),  # TODO 0 recorded locations
+  NotImplementedFile(SystemFileIds.NWL_SSR.value, 4),  # TODO 0 recorded devices
+  NotImplementedFile(SystemFileIds.NWL_STATUS.value, 20),
+  NotImplementedFile(SystemFileIds.TRL_STATUS.value, 1),  # TODO 0 TRL records
+  NotImplementedFile(SystemFileIds.SEL_CONFIG.value, 6),
+  NotImplementedFile(SystemFileIds.FOF_STATUS.value, 10),
+  NotImplementedFile(SystemFileIds.RFU_14.value, 0),
+  NotImplementedFile(SystemFileIds.RFU_15.value, 0),
+  NotImplementedFile(SystemFileIds.RFU_16.value, 0),
+  NotImplementedFile(SystemFileIds.LOCATION_DATA.value, 1),  # TODO 0 recorded locations
   AccessProfileFile(0, ap),
   AccessProfileFile(1, ap),
   AccessProfileFile(2, ap),
@@ -120,12 +124,10 @@ def output_system_file_offsets():
   current_offset = 0
   for system_file in system_files:
     file_type = SystemFileIds(system_file.id)
-    cog.outl("\t{}, // {} - {}".format(current_offset, file_type.name, file_type.value))
+    cog.outl("\t{}, // {} - {} (length {}))".format(current_offset, file_type.name, file_type.value, system_file.length))
     current_offset += system_file.length
 ]]]*/
 //[[[end]]] (checksum: d41d8cd98f00b204e9800998ecf8427e)
-
-//extern int __d7ap_fs_systemfiles_start, __d7ap_fs_systemfiles_header_data_end, __d7ap_fs_systemfiles_data_end;
 
 
 // TODO platform dependent, move
@@ -149,12 +151,14 @@ const uint8_t fs_systemfiles_header_data[] __attribute__((used)) __attribute__((
     36, 35, 255, 255, 0, 0, 0, 0, 0, 0, 0, 0, 
     // VID - 6
     36, 35, 255, 255, 0, 0, 0, 3, 0, 0, 0, 3, 
+    // RFU_07 - 7
+    36, 35, 255, 255, 0, 0, 0, 0, 0, 0, 0, 0, 
     // PHY_CONFIG - 8
     36, 35, 255, 255, 0, 0, 0, 9, 0, 0, 0, 9, 
     // PHY_STATUS - 9
     36, 35, 255, 255, 0, 0, 0, 24, 0, 0, 0, 24, 
     // DLL_CONFIG - 10
-    36, 35, 255, 255, 0, 0, 0, 6, 0, 0, 0, 6, 
+    36, 35, 255, 255, 0, 0, 0, 3, 0, 0, 0, 3, 
     // DLL_STATUS - 11
     36, 35, 255, 255, 0, 0, 0, 12, 0, 0, 0, 12, 
     // NWL_ROUTING - 12
@@ -173,6 +177,12 @@ const uint8_t fs_systemfiles_header_data[] __attribute__((used)) __attribute__((
     36, 35, 255, 255, 0, 0, 0, 6, 0, 0, 0, 6, 
     // FOF_STATUS - 19
     36, 35, 255, 255, 0, 0, 0, 10, 0, 0, 0, 10, 
+    // RFU_14 - 20
+    36, 35, 255, 255, 0, 0, 0, 0, 0, 0, 0, 0, 
+    // RFU_15 - 21
+    36, 35, 255, 255, 0, 0, 0, 0, 0, 0, 0, 0, 
+    // RFU_16 - 22
+    36, 35, 255, 255, 0, 0, 0, 0, 0, 0, 0, 0, 
     // LOCATION_DATA - 23
     36, 35, 255, 255, 0, 0, 0, 1, 0, 0, 0, 1, 
     // ACCESS_PROFILE_0 - 32
@@ -205,20 +215,20 @@ const uint8_t fs_systemfiles_header_data[] __attribute__((used)) __attribute__((
     36, 35, 255, 255, 0, 0, 0, 65, 0, 0, 0, 65, 
     // ACCESS_PROFILE_14 - 46
     36, 35, 255, 255, 0, 0, 0, 65, 0, 0, 0, 65, 
-    //[[[end]]] (checksum: 2d4146c568e92c3baa1b3fdd9210bc3b)
+    //[[[end]]] (checksum: 7b44b025c4e29c253325e9856b92e55f)
 };
 
 const uint8_t fs_systemfiles_file_data[] __attribute__((used)) __attribute__((section(".d7ap_fs_systemfiles_data"))) = {
     /*[[[cog
     for system_file in system_files:
       output_file(system_file)
-    ]]]*/
+    ]]]*/    
     // UID - 0
     0, 0, 0, 0, 0, 0, 0, 0, 
     // FACTORY_SETTINGS - 1
 
     // FIRMWARE_VERSION - 2
-    0, 0, 
+    0, 0, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 
     // DEVICE_CAPACITY - 3
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
     // DEVICE_STATUS - 4
@@ -227,12 +237,14 @@ const uint8_t fs_systemfiles_file_data[] __attribute__((used)) __attribute__((se
 
     // VID - 6
     0, 0, 0, 
+    // RFU_07 - 7
+
     // PHY_CONFIG - 8
     0, 0, 0, 0, 0, 0, 0, 0, 0, 
     // PHY_STATUS - 9
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
     // DLL_CONFIG - 10
-    0, 255, 255, 
+    33, 255, 255, 
     // DLL_STATUS - 11
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
     // NWL_ROUTING - 12
@@ -251,6 +263,12 @@ const uint8_t fs_systemfiles_file_data[] __attribute__((used)) __attribute__((se
     0, 0, 0, 0, 0, 0, 
     // FOF_STATUS - 19
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
+    // RFU_14 - 20
+
+    // RFU_15 - 21
+
+    // RFU_16 - 22
+
     // LOCATION_DATA - 23
     0, 
     // ACCESS_PROFILE_0 - 32
@@ -283,7 +301,7 @@ const uint8_t fs_systemfiles_file_data[] __attribute__((used)) __attribute__((se
     50, 1, 0, 1, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 86, 255, 0, 0, 0, 0, 0, 86, 255, 0, 0, 0, 0, 0, 86, 255, 0, 0, 0, 0, 0, 86, 255, 0, 0, 0, 0, 0, 86, 255, 0, 0, 0, 0, 0, 86, 255, 0, 0, 0, 0, 0, 86, 255, 0, 0, 0, 0, 0, 86, 255, 
     // ACCESS_PROFILE_14 - 46
     50, 1, 0, 1, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 86, 255, 0, 0, 0, 0, 0, 86, 255, 0, 0, 0, 0, 0, 86, 255, 0, 0, 0, 0, 0, 86, 255, 0, 0, 0, 0, 0, 86, 255, 0, 0, 0, 0, 0, 86, 255, 0, 0, 0, 0, 0, 86, 255, 0, 0, 0, 0, 0, 86, 255, 
-    //[[[end]]] (checksum: 9cfa30bac8d2919b53a01a00c8f1e60b)
+    //[[[end]]] (checksum: a21799d5eee898783484168c4ccf131b)
 };
 
 // Store the offsets of the start of each system file in the data section, for fast lookup
@@ -292,40 +310,44 @@ __attribute__((used)) const uint16_t fs_systemfiles_file_offsets[] = {
   /*[[[cog
   output_system_file_offsets()
   ]]]*/
-  0, // UID - 0
-  8, // FACTORY_SETTINGS - 1
-  8, // FIRMWARE_VERSION - 2
-  23, // DEVICE_CAPACITY - 3
-  42, // DEVICE_STATUS - 4
-  51, // ENGINEERING_MODE - 5
-  51, // VID - 6
-  54, // PHY_CONFIG - 8
-  63, // PHY_STATUS - 9
-  87, // DLL_CONFIG - 10
-  93, // DLL_STATUS - 11
-  105, // NWL_ROUTING - 12
-  106, // NWL_SECURITY - 13
-  111, // NWL_SECURITY_KEY - 14
-  127, // NWL_SSR - 15
-  131, // NWL_STATUS - 16
-  151, // TRL_STATUS - 17
-  152, // SEL_CONFIG - 18
-  158, // FOF_STATUS - 19
-  168, // LOCATION_DATA - 23
-  169, // ACCESS_PROFILE_0 - 32
-  234, // ACCESS_PROFILE_1 - 33
-  299, // ACCESS_PROFILE_2 - 34
-  364, // ACCESS_PROFILE_3 - 35
-  429, // ACCESS_PROFILE_4 - 36
-  494, // ACCESS_PROFILE_5 - 37
-  559, // ACCESS_PROFILE_6 - 38
-  624, // ACCESS_PROFILE_7 - 39
-  689, // ACCESS_PROFILE_8 - 40
-  754, // ACCESS_PROFILE_9 - 41
-  819, // ACCESS_PROFILE_10 - 42
-  884, // ACCESS_PROFILE_11 - 43
-  949, // ACCESS_PROFILE_12 - 44
-  1014, // ACCESS_PROFILE_13 - 45
-  1079, // ACCESS_PROFILE_14 - 46
-  //[[[end]]] (checksum: c75b616c5a0dbe10e91dbb30d375c01e)
+  0, // UID - 0 (length 8))
+  8, // FACTORY_SETTINGS - 1 (length 0))
+  8, // FIRMWARE_VERSION - 2 (length 15))
+  23, // DEVICE_CAPACITY - 3 (length 19))
+  42, // DEVICE_STATUS - 4 (length 9))
+  51, // ENGINEERING_MODE - 5 (length 0))
+  51, // VID - 6 (length 3))
+  54, // RFU_07 - 7 (length 0))
+  54, // PHY_CONFIG - 8 (length 9))
+  63, // PHY_STATUS - 9 (length 24))
+  87, // DLL_CONFIG - 10 (length 3))
+  90, // DLL_STATUS - 11 (length 12))
+  102, // NWL_ROUTING - 12 (length 1))
+  103, // NWL_SECURITY - 13 (length 5))
+  108, // NWL_SECURITY_KEY - 14 (length 16))
+  124, // NWL_SSR - 15 (length 4))
+  128, // NWL_STATUS - 16 (length 20))
+  148, // TRL_STATUS - 17 (length 1))
+  149, // SEL_CONFIG - 18 (length 6))
+  155, // FOF_STATUS - 19 (length 10))
+  165, // RFU_14 - 20 (length 0))
+  165, // RFU_15 - 21 (length 0))
+  165, // RFU_16 - 22 (length 0))
+  165, // LOCATION_DATA - 23 (length 1))
+  166, // ACCESS_PROFILE_0 - 32 (length 65))
+  231, // ACCESS_PROFILE_1 - 33 (length 65))
+  296, // ACCESS_PROFILE_2 - 34 (length 65))
+  361, // ACCESS_PROFILE_3 - 35 (length 65))
+  426, // ACCESS_PROFILE_4 - 36 (length 65))
+  491, // ACCESS_PROFILE_5 - 37 (length 65))
+  556, // ACCESS_PROFILE_6 - 38 (length 65))
+  621, // ACCESS_PROFILE_7 - 39 (length 65))
+  686, // ACCESS_PROFILE_8 - 40 (length 65))
+  751, // ACCESS_PROFILE_9 - 41 (length 65))
+  816, // ACCESS_PROFILE_10 - 42 (length 65))
+  881, // ACCESS_PROFILE_11 - 43 (length 65))
+  946, // ACCESS_PROFILE_12 - 44 (length 65))
+  1011, // ACCESS_PROFILE_13 - 45 (length 65))
+  1076, // ACCESS_PROFILE_14 - 46 (length 65))
+  //[[[end]]] (checksum: 68fd47716d36477d9628812405ca3ac3)
 };
