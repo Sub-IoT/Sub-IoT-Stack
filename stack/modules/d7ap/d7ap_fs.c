@@ -31,6 +31,7 @@
 #include "log.h"
 
 #define DPRINT(...) log_print_string(__VA_ARGS__)
+#define DPRINT_DATA(p, len) log_print_data(p, len)
 //#define DPRINT(...)
 
 
@@ -209,7 +210,7 @@ alp_status_codes_t d7ap_fs_read_file(uint8_t file_id, uint8_t offset, uint8_t* b
     if(!is_file_defined(file_id)) return ALP_STATUS_FILE_ID_NOT_EXISTS;
     if(systemfiles_headers[file_id].length < offset + length) return ALP_STATUS_UNKNOWN_ERROR; // TODO more specific error (wait for spec discussion)
 
-    DPRINT("RD %i %i\n", systemfiles_file_data_offset, fs_systemfiles_file_offsets[file_id]);
+    DPRINT("RD %i + %i = %i\n", systemfiles_file_data_offset, fs_systemfiles_file_offsets[file_id], systemfiles_file_data_offset + fs_systemfiles_file_offsets[file_id]);
     blockdevice_read(bd_systemfiles, buffer, systemfiles_file_data_offset + fs_systemfiles_file_offsets[file_id] + offset, length);
     return ALP_STATUS_OK;
 }
@@ -354,25 +355,9 @@ alp_status_codes_t d7ap_fs_update_nwl_security_state_register(dae_nwl_trusted_no
 
 void d7ap_fs_read_access_class(uint8_t access_class_index, dae_access_profile_t *access_class)
 {
-//    assert(access_class_index < 15);
-//    assert(is_file_defined(D7A_FILE_ACCESS_PROFILE_ID + access_class_index));
-//    uint8_t* data_ptr = data + file_offsets[D7A_FILE_ACCESS_PROFILE_ID + access_class_index];
-//    memcpy(&(access_class->channel_header), data_ptr, 1); data_ptr++;
-
-//    for(uint8_t i = 0; i < SUBPROFILES_NB; i++)
-//    {
-//        memcpy(&(access_class->subprofiles[i].subband_bitmap), data_ptr, 1); data_ptr++;
-//        memcpy(&(access_class->subprofiles[i].scan_automation_period), data_ptr, 1); data_ptr++;
-//    }
-
-//    for(uint8_t i = 0; i < SUBBANDS_NB; i++)
-//    {
-//        memcpy(&(access_class->subbands[i].channel_index_start), data_ptr, 2); data_ptr += 2;
-//        memcpy(&(access_class->subbands[i].channel_index_end), data_ptr, 2); data_ptr += 2;
-//        memcpy(&(access_class->subbands[i].eirp), data_ptr, 1); data_ptr++;
-//        memcpy(&(access_class->subbands[i].cca), data_ptr, 1); data_ptr++;
-//        memcpy(&(access_class->subbands[i].duty), data_ptr, 1); data_ptr++;
-//    }
+  assert(access_class_index < 15);
+  assert(is_file_defined(D7A_FILE_ACCESS_PROFILE_ID + access_class_index));
+  d7ap_fs_read_file(D7A_FILE_ACCESS_PROFILE_ID + access_class_index, 0, (uint8_t*)access_class, D7A_FILE_ACCESS_PROFILE_SIZE);
 }
 
 void d7ap_fs_write_access_class(uint8_t access_class_index, dae_access_profile_t* access_class)
