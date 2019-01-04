@@ -25,6 +25,7 @@
 #include "hwsystem.h"
 #include "debug.h"
 #include "stm32_device.h"
+#include "stm32_common_mcu.h"
 #include "log.h"
 
 #define DPRINT(...)
