@@ -78,6 +78,14 @@ system_files = [
   NotImplementedFile(SystemFileIds.RFU_15.value, 0),
   NotImplementedFile(SystemFileIds.RFU_16.value, 0),
   NotImplementedFile(SystemFileIds.LOCATION_DATA.value, 1),  # TODO 0 recorded locations
+  NotImplementedFile(SystemFileIds.D7AALP_RFU_18.value, 0),
+  NotImplementedFile(SystemFileIds.D7AALP_RFU_19.value, 0),
+  NotImplementedFile(SystemFileIds.D7AALP_RFU_1A.value, 0),
+  NotImplementedFile(SystemFileIds.D7AALP_RFU_1B.value, 0),
+  NotImplementedFile(SystemFileIds.D7AALP_RFU_1C.value, 0),
+  NotImplementedFile(SystemFileIds.D7AALP_RFU_1D.value, 0),
+  NotImplementedFile(SystemFileIds.D7AALP_RFU_1E.value, 0),
+  NotImplementedFile(SystemFileIds.D7AALP_RFU_1F.value, 0),
   AccessProfileFile(0, ap),
   AccessProfileFile(1, ap),
   AccessProfileFile(2, ap),
@@ -185,6 +193,22 @@ const uint8_t fs_systemfiles_header_data[] __attribute__((used)) __attribute__((
     36, 35, 255, 255, 0, 0, 0, 0, 0, 0, 0, 0, 
     // LOCATION_DATA - 23
     36, 35, 255, 255, 0, 0, 0, 1, 0, 0, 0, 1, 
+    // D7AALP_RFU_18 - 24
+    36, 35, 255, 255, 0, 0, 0, 0, 0, 0, 0, 0, 
+    // D7AALP_RFU_19 - 25
+    36, 35, 255, 255, 0, 0, 0, 0, 0, 0, 0, 0, 
+    // D7AALP_RFU_1A - 26
+    36, 35, 255, 255, 0, 0, 0, 0, 0, 0, 0, 0, 
+    // D7AALP_RFU_1B - 27
+    36, 35, 255, 255, 0, 0, 0, 0, 0, 0, 0, 0, 
+    // D7AALP_RFU_1C - 28
+    36, 35, 255, 255, 0, 0, 0, 0, 0, 0, 0, 0, 
+    // D7AALP_RFU_1D - 29
+    36, 35, 255, 255, 0, 0, 0, 0, 0, 0, 0, 0, 
+    // D7AALP_RFU_1E - 30
+    36, 35, 255, 255, 0, 0, 0, 0, 0, 0, 0, 0, 
+    // D7AALP_RFU_1F - 31
+    36, 35, 255, 255, 0, 0, 0, 0, 0, 0, 0, 0, 
     // ACCESS_PROFILE_0 - 32
     36, 35, 255, 255, 0, 0, 0, 65, 0, 0, 0, 65, 
     // ACCESS_PROFILE_1 - 33
@@ -215,7 +239,7 @@ const uint8_t fs_systemfiles_header_data[] __attribute__((used)) __attribute__((
     36, 35, 255, 255, 0, 0, 0, 65, 0, 0, 0, 65, 
     // ACCESS_PROFILE_14 - 46
     36, 35, 255, 255, 0, 0, 0, 65, 0, 0, 0, 65, 
-    //[[[end]]] (checksum: 7b44b025c4e29c253325e9856b92e55f)
+    //[[[end]]] (checksum: 895c0b5ce2d7dfb9a3dd21225254693f)
 };
 
 const uint8_t fs_systemfiles_file_data[] __attribute__((used)) __attribute__((section(".d7ap_fs_systemfiles_data"))) = {
@@ -252,7 +276,7 @@ const uint8_t fs_systemfiles_file_data[] __attribute__((used)) __attribute__((se
     // NWL_SECURITY - 13
     0, 0, 0, 0, 0, 
     // NWL_SECURITY_KEY - 14
-
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
     // NWL_SSR - 15
     0, 0, 0, 0, 
     // NWL_STATUS - 16
@@ -271,6 +295,22 @@ const uint8_t fs_systemfiles_file_data[] __attribute__((used)) __attribute__((se
 
     // LOCATION_DATA - 23
     0, 
+    // D7AALP_RFU_18 - 24
+
+    // D7AALP_RFU_19 - 25
+
+    // D7AALP_RFU_1A - 26
+
+    // D7AALP_RFU_1B - 27
+
+    // D7AALP_RFU_1C - 28
+
+    // D7AALP_RFU_1D - 29
+
+    // D7AALP_RFU_1E - 30
+
+    // D7AALP_RFU_1F - 31
+
     // ACCESS_PROFILE_0 - 32
     50, 1, 0, 1, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 86, 255, 0, 0, 0, 0, 0, 86, 255, 0, 0, 0, 0, 0, 86, 255, 0, 0, 0, 0, 0, 86, 255, 0, 0, 0, 0, 0, 86, 255, 0, 0, 0, 0, 0, 86, 255, 0, 0, 0, 0, 0, 86, 255, 0, 0, 0, 0, 0, 86, 255, 
     // ACCESS_PROFILE_1 - 33
@@ -301,7 +341,7 @@ const uint8_t fs_systemfiles_file_data[] __attribute__((used)) __attribute__((se
     50, 1, 0, 1, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 86, 255, 0, 0, 0, 0, 0, 86, 255, 0, 0, 0, 0, 0, 86, 255, 0, 0, 0, 0, 0, 86, 255, 0, 0, 0, 0, 0, 86, 255, 0, 0, 0, 0, 0, 86, 255, 0, 0, 0, 0, 0, 86, 255, 0, 0, 0, 0, 0, 86, 255, 
     // ACCESS_PROFILE_14 - 46
     50, 1, 0, 1, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 86, 255, 0, 0, 0, 0, 0, 86, 255, 0, 0, 0, 0, 0, 86, 255, 0, 0, 0, 0, 0, 86, 255, 0, 0, 0, 0, 0, 86, 255, 0, 0, 0, 0, 0, 86, 255, 0, 0, 0, 0, 0, 86, 255, 0, 0, 0, 0, 0, 86, 255, 
-    //[[[end]]] (checksum: a21799d5eee898783484168c4ccf131b)
+    //[[[end]]] (checksum: 04f1b5f8329a6d0a6d0403e3eaf47a72)
 };
 
 // Store the offsets of the start of each system file in the data section, for fast lookup
@@ -334,6 +374,14 @@ __attribute__((used)) const uint16_t fs_systemfiles_file_offsets[] = {
   165, // RFU_15 - 21 (length 0))
   165, // RFU_16 - 22 (length 0))
   165, // LOCATION_DATA - 23 (length 1))
+  166, // D7AALP_RFU_18 - 24 (length 0))
+  166, // D7AALP_RFU_19 - 25 (length 0))
+  166, // D7AALP_RFU_1A - 26 (length 0))
+  166, // D7AALP_RFU_1B - 27 (length 0))
+  166, // D7AALP_RFU_1C - 28 (length 0))
+  166, // D7AALP_RFU_1D - 29 (length 0))
+  166, // D7AALP_RFU_1E - 30 (length 0))
+  166, // D7AALP_RFU_1F - 31 (length 0))
   166, // ACCESS_PROFILE_0 - 32 (length 65))
   231, // ACCESS_PROFILE_1 - 33 (length 65))
   296, // ACCESS_PROFILE_2 - 34 (length 65))
@@ -349,5 +397,5 @@ __attribute__((used)) const uint16_t fs_systemfiles_file_offsets[] = {
   946, // ACCESS_PROFILE_12 - 44 (length 65))
   1011, // ACCESS_PROFILE_13 - 45 (length 65))
   1076, // ACCESS_PROFILE_14 - 46 (length 65))
-  //[[[end]]] (checksum: 68fd47716d36477d9628812405ca3ac3)
+  //[[[end]]] (checksum: 01a082019e42bbc0dbf7f7f3ff409c24)
 };
