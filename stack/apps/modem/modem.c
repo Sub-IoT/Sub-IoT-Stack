@@ -56,9 +56,6 @@ void bootstrap()
     // TODO remove
     fs_init_args_t fs_init_args = (fs_init_args_t){
         .fs_d7aactp_cb = &alp_layer_process_d7aactp,
-        .access_profiles_count = DEFAULT_ACCESS_PROFILES_COUNT,
-        .access_profiles = default_access_profiles,
-        .access_class = 0x21
     };
 
     systemfiles_eeprom_blockdevice = (blockdevice_stm32_eeprom_t){

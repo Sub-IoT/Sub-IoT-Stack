@@ -32,9 +32,6 @@
 #define ACCESS_SPECIFIER(val) (uint8_t)(val >> 4 & 0x0F)
 #define ACCESS_MASK(val) (uint8_t)(val & 0x0F)
 
-#define DEFAULT_ACCESS_PROFILES_COUNT 3
-#define DEFAULT_ACCESS_CLASS 0x21
-
 typedef enum
 {
     CSMA_CA_MODE_UNC = 0,
@@ -76,8 +73,6 @@ typedef struct
     subprofile_t subprofiles[SUBPROFILES_NB];
     subband_t subbands[SUBBANDS_NB];
 } dae_access_profile_t;
-
-extern dae_access_profile_t default_access_profiles[DEFAULT_ACCESS_PROFILES_COUNT];
 
 typedef struct {
     uint8_t key_counter;
