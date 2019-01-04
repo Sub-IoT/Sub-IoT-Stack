@@ -38,8 +38,6 @@
 
 #include "platform.h"
 
-//#include <string.h> //strnlen ?
-
 #define UARTS     5   // 2 UARTs + 3 USARTs
 #define LOCATIONS 6
 
