@@ -1,3 +1,5 @@
+#include <string.h>
+
 #include "hwuart.h"
 
 #include "framework_defs.h"
