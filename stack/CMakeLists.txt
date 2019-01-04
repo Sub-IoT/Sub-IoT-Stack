@@ -50,7 +50,7 @@ ENDIF()
 PROJECT (${PROJECT_NAME})
 
 #Set the c standard to use
-INSERT_C_FLAGS(BEFORE -std=c99 -fno-common)
+INSERT_C_FLAGS(BEFORE -std=gnu99 -fno-common)
 #Retrieve the selected toolchain
 GET_CURRENT_TOOLCHAIN(TOOLCHAIN)
 
