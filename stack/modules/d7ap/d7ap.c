@@ -104,19 +104,7 @@ void d7ap_init(blockdevice_t* systemfiles_bd)
 
     // Initialize the D7AP stack
     d7ap_stack_init();
-
     registered_client_nb = 0;
-
-    // TODO remove
-    // Initialize Fs with the default access profiles if not done by the application
-    fs_init_args_t fs_init_args = (fs_init_args_t){
-        .fs_d7aactp_cb = NULL,
-        .fs_user_files_init_cb = NULL,
-        .access_profiles_count = DEFAULT_ACCESS_PROFILES_COUNT,
-        .access_profiles = default_access_profiles,
-        .access_class = 0x01 // use access profile 0 and select the first subprofile
-    };
-
 }
 
 void d7ap_stop()

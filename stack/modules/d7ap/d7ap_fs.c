@@ -119,17 +119,6 @@ void d7ap_fs_init(blockdevice_t* blockdevice_systemfiles)
   memcpy(firmware_version + 2 + D7A_FILE_FIRMWARE_VERSION_APP_NAME_SIZE, _GIT_SHA1, D7A_FILE_FIRMWARE_VERSION_GIT_SHA1_SIZE);
   d7ap_fs_write_file(D7A_FILE_FIRMWARE_VERSION_FILE_ID, 0, firmware_version, D7A_FILE_FIRMWARE_VERSION_SIZE);
 
-
-//    // TODO store as big endian!
-//    if (is_fs_init_completed)
-//        return;
-
-//    current_data_offset = 0;
-
-//    assert(init_args != NULL);
-//    assert(init_args->access_profiles_count > 0); // there should be at least one access profile defined
-
-
 //    // 0x0A - DLL Configuration
 //    file_offsets[D7A_FILE_DLL_CONF_FILE_ID] = current_data_offset;
 //    file_headers[D7A_FILE_DLL_CONF_FILE_ID] = (fs_file_header_t){
@@ -143,76 +132,6 @@ void d7ap_fs_init(blockdevice_t* blockdevice_systemfiles)
 //    data[current_data_offset] = init_args->access_class; current_data_offset += 1; // active access class
 //    memset(data + current_data_offset, 0xFF, 2); current_data_offset += 2; // VID; 0xFFFF means not valid
 
-//    // 0x20-0x2E - Access Profiles
-//    for(uint8_t i = 0; i < D7A_FILE_ACCESS_PROFILE_COUNT; i++)
-//    {
-//        dae_access_profile_t* access_class;
-
-//        // make sure we fill all 15 AP files, either with the supplied AP or by repeating the last one
-//        if(i < init_args->access_profiles_count)
-//          access_class = &(init_args->access_profiles[i]);
-//        else
-//          access_class = &(init_args->access_profiles[init_args->access_profiles_count - 1]);
-
-//        file_offsets[D7A_FILE_ACCESS_PROFILE_ID + i] = current_data_offset;
-//        fs_write_access_class(i, access_class);
-//        file_headers[D7A_FILE_ACCESS_PROFILE_ID + i] = (fs_file_header_t){
-//            .file_properties.action_protocol_enabled = 0,
-//            .file_properties.storage_class = FS_STORAGE_PERMANENT,
-//            .file_permissions = 0, // TODO
-//            .length = D7A_FILE_ACCESS_PROFILE_SIZE,
-//            .allocated_length = D7A_FILE_ACCESS_PROFILE_SIZE
-//        };
-//    }
-
-//    // 0x0D- Network security
-//    file_offsets[D7A_FILE_NWL_SECURITY] = current_data_offset;
-//    file_headers[D7A_FILE_NWL_SECURITY] = (fs_file_header_t){
-//        .file_properties.action_protocol_enabled = 0,
-//        .file_properties.storage_class = FS_STORAGE_PERMANENT,
-//        .file_permissions = 0, // TODO
-//        .length = D7A_FILE_NWL_SECURITY_SIZE,
-//        .allocated_length = D7A_FILE_ACCESS_PROFILE_SIZE
-//    };
-
-//    memset(data + current_data_offset, 0, D7A_FILE_NWL_SECURITY_SIZE);
-//    data[current_data_offset] = PROVISIONED_KEY_COUNTER;
-
-//    current_data_offset += D7A_FILE_NWL_SECURITY_SIZE;
-
-//    // 0x0E - Network security key
-//    file_offsets[D7A_FILE_NWL_SECURITY_KEY] = current_data_offset;
-//    file_headers[D7A_FILE_NWL_SECURITY_KEY] = (fs_file_header_t){
-//        .file_properties.action_protocol_enabled = 0,
-//        .file_properties.storage_class = FS_STORAGE_PERMANENT,
-//        .file_permissions = 0, // TODO
-//        .length = D7A_FILE_NWL_SECURITY_KEY_SIZE,
-//        .allocated_length = D7A_FILE_NWL_SECURITY_KEY_SIZE
-//    };
-
-//    memcpy(data + current_data_offset, AES128_key, D7A_FILE_NWL_SECURITY_KEY_SIZE);
-//    current_data_offset += D7A_FILE_NWL_SECURITY_KEY_SIZE;
-
-//    // 0x0F - Network security state register
-//    file_offsets[D7A_FILE_NWL_SECURITY_STATE_REG] = current_data_offset;
-//    file_headers[D7A_FILE_NWL_SECURITY_STATE_REG] = (fs_file_header_t){
-//        .file_properties.action_protocol_enabled = 0,
-//        .file_properties.storage_class = FS_STORAGE_PERMANENT,
-//        .file_permissions = 0, // TODO
-//        .length = init_args->ssr_filter_mode & FS_ENABLE_SSR_FILTER ? D7A_FILE_NWL_SECURITY_STATE_REG_SIZE : 1,
-//        .allocated_length = init_args->ssr_filter_mode & FS_ENABLE_SSR_FILTER ? D7A_FILE_NWL_SECURITY_STATE_REG_SIZE : 1
-//    };
-
-//    data[current_data_offset] = init_args->ssr_filter_mode; current_data_offset++;
-//    data[current_data_offset] = 0; current_data_offset++;
-//    if (init_args->ssr_filter_mode & FS_ENABLE_SSR_FILTER)
-//        current_data_offset += D7A_FILE_NWL_SECURITY_STATE_REG_SIZE - 2;
-
-//    // init user files
-//    if(init_args->fs_user_files_init_cb)
-//        init_args->fs_user_files_init_cb();
-
-//    assert(current_data_offset <= FRAMEWORK_FS_FILESYSTEM_SIZE);
 //    d7aactp_callback = init_args->fs_d7aactp_cb;
 //    is_fs_init_completed = true;
 }
@@ -480,9 +399,9 @@ void d7ap_fs_write_access_class(uint8_t access_class_index, dae_access_profile_t
 
 uint8_t d7ap_fs_read_dll_conf_active_access_class()
 {
-//    uint8_t access_class;
-//    fs_read_file(D7A_FILE_DLL_CONF_FILE_ID, 0, &access_class, 1);
-//    return access_class;
+  uint8_t access_class;
+  d7ap_fs_read_file(D7A_FILE_DLL_CONF_FILE_ID, 0, &access_class, 1);
+  return access_class;
 }
 
 void d7ap_fs_write_dll_conf_active_access_class(uint8_t access_class)
