@@ -32,12 +32,14 @@
 #include "scheduler.h"
 #include "timer.h"
 #include "debug.h"
-#include "fs.h"
+#include "d7ap_fs.h"
 #include "log.h"
 
 #include "d7ap.h"
 #include "alp_layer.h"
 #include "dae.h"
+
+#include "stm32_common_eeprom.h"
 
 #ifdef USE_HTS221
   #include "HTS221_Driver.h"
@@ -51,6 +53,8 @@
 #ifdef USE_HTS221
   static i2c_handle_t* hts221_handle;
 #endif
+
+static blockdevice_stm32_eeprom_t systemfiles_eeprom_blockdevice;
 
 // Define the D7 interface configuration used for sending the ALP command on
 static d7ap_session_config_t session_config = {
@@ -124,15 +128,18 @@ void bootstrap()
 
     log_print_string("Device booted\n");
 
-    fs_init_args_t fs_init_args = (fs_init_args_t){
-        .fs_d7aactp_cb = &alp_layer_process_d7aactp,
-        .access_profiles_count = DEFAULT_ACCESS_PROFILES_COUNT,
-        .access_profiles = default_access_profiles,
-        .access_class = 0x21 // push only AC, no scanning
+    // TODO remove
+//    fs_init_args_t fs_init_args = (fs_init_args_t){
+//        .fs_d7aactp_cb = &alp_layer_process_d7aactp,
+//    };
+
+    systemfiles_eeprom_blockdevice = (blockdevice_stm32_eeprom_t){
+      .base.driver = &blockdevice_driver_stm32_eeprom,
     };
 
-    fs_init(&fs_init_args);
-    d7ap_init();
+    blockdevice_init((blockdevice_t*)&systemfiles_eeprom_blockdevice);
+
+    d7ap_init((blockdevice_t*)&systemfiles_eeprom_blockdevice);
 
     alp_init_args.alp_command_completed_cb = &on_alp_command_completed_cb;
     alp_init_args.alp_command_result_cb = &on_alp_command_result_cb;
