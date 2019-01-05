@@ -32,7 +32,7 @@
 #include "timer.h"
 #include "log.h"
 #include "debug.h"
-#include "fs.h"
+#include "d7ap_fs.h"
 #include "fifo.h"
 #include "version.h"
 #include "compress.h"
@@ -43,6 +43,9 @@
 #include "alp_layer.h"
 #include "dae.h"
 #include "modem_interface.h"
+#include "stm32_common_eeprom.h"
+
+static blockdevice_stm32_eeprom_t systemfiles_eeprom_blockdevice;
 
 #if PLATFORM_NUM_LEDS > 0
   #include "hwleds.h"
@@ -73,16 +76,20 @@ void bootstrap()
 {
    modem_interface_init(PLATFORM_MODEM_INTERFACE_UART, PLATFORM_MODEM_INTERFACE_BAUDRATE, (pin_id_t) 0, (pin_id_t) 0);
 
-    fs_init_args_t fs_init_args = (fs_init_args_t){
-        .fs_d7aactp_cb = &alp_layer_process_d7aactp,
-        .fs_user_files_init_cb = NULL,
-        .access_profiles_count = DEFAULT_ACCESS_PROFILES_COUNT,
-        .access_profiles = default_access_profiles,
-        .access_class = 0x01 // use access profile 0 and select the first subprofile
+   // TODO remove
+//    fs_init_args_t fs_init_args = (fs_init_args_t){
+//        .fs_d7aactp_cb = &alp_layer_process_d7aactp,
+//        .fs_user_files_init_cb = NULL,
+//    };
+
+    systemfiles_eeprom_blockdevice = (blockdevice_stm32_eeprom_t){
+      .base.driver = &blockdevice_driver_stm32_eeprom,
     };
 
-    fs_init(&fs_init_args);
-    d7ap_init();
+    blockdevice_init((blockdevice_t*)&systemfiles_eeprom_blockdevice);
+
+    d7ap_init((blockdevice_t*)&systemfiles_eeprom_blockdevice);
+
 
     alp_init_args.alp_received_unsolicited_data_cb = &on_unsolicited_response_received;
     alp_layer_init(&alp_init_args, true);
