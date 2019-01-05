@@ -387,8 +387,8 @@ uint8_t d7ap_fs_get_file_length(uint8_t file_id)
 
 bool d7ap_fs_register_file_modified_callback(uint8_t file_id, fs_modified_file_callback_t callback)
 {
-//  if(file_modified_callbacks[file_id])
-//    return false; // already registered
+  if(file_modified_callbacks[file_id])
+    return false; // already registered
 
-//  file_modified_callbacks[file_id] = callback;
+  file_modified_callbacks[file_id] = callback;
 }

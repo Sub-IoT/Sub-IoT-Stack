@@ -90,6 +90,7 @@ void bootstrap()
 
     d7ap_init((blockdevice_t*)&systemfiles_eeprom_blockdevice);
 
+    d7ap_fs_write_dll_conf_active_access_class(0x01); // set to first AC, which is continuous FG scan
 
     alp_init_args.alp_received_unsolicited_data_cb = &on_unsolicited_response_received;
     alp_layer_init(&alp_init_args, true);
