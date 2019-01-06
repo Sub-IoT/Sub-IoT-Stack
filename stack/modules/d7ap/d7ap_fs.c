@@ -208,7 +208,7 @@ void d7ap_fs_init(blockdevice_t* blockdevice_systemfiles)
 //    fs_init_file(file_id, &action_file_header, alp_command_buffer);
 //}
 
-alp_status_codes_t d7ap_fs_read_file(uint8_t file_id, uint8_t offset, uint8_t* buffer, uint8_t length)
+alp_status_codes_t d7ap_fs_read_file(uint8_t file_id, uint16_t offset, uint8_t* buffer, uint16_t length)
 {
   assert(IS_SYSTEM_FILE(file_id)); // TODO user files not implemented
   if(!is_file_defined(file_id)) return ALP_STATUS_FILE_ID_NOT_EXISTS;
@@ -235,122 +235,111 @@ alp_status_codes_t d7ap_fs_write_file_header(uint8_t file_id, fs_file_header_t* 
   return ALP_STATUS_OK;
 }
 
-alp_status_codes_t d7ap_fs_write_file(uint8_t file_id, uint8_t offset, const uint8_t* buffer, uint8_t length)
+alp_status_codes_t d7ap_fs_write_file(uint8_t file_id, uint16_t offset, const uint8_t* buffer, uint16_t length)
 {
-    assert(IS_SYSTEM_FILE(file_id)); // TODO user files not implemented
-    if(!is_file_defined(file_id)) return ALP_STATUS_FILE_ID_NOT_EXISTS;
-    if(systemfiles_headers[file_id].length < offset + length) return ALP_STATUS_UNKNOWN_ERROR; // TODO more specific error (wait for spec discussion)
+  assert(IS_SYSTEM_FILE(file_id)); // TODO user files not implemented
+  if(!is_file_defined(file_id)) return ALP_STATUS_FILE_ID_NOT_EXISTS;
+  if(systemfiles_headers[file_id].length < offset + length) return ALP_STATUS_UNKNOWN_ERROR; // TODO more specific error (wait for spec discussion)
 
-    blockdevice_program(bd_systemfiles, buffer, systemfiles_file_data_offset + fs_systemfiles_file_offsets[file_id] + offset, length);
+  blockdevice_program(bd_systemfiles, buffer, systemfiles_file_data_offset + fs_systemfiles_file_offsets[file_id] + offset, length);
 
-    if(systemfiles_headers[file_id].file_properties.action_protocol_enabled == true
-            && systemfiles_headers[file_id].file_properties.action_condition == ALP_ACT_COND_WRITE) // TODO ALP_ACT_COND_WRITEFLUSH?
-    {
-        execute_d7a_action_protocol(systemfiles_headers[file_id].alp_cmd_file_id, systemfiles_headers[file_id].interface_file_id);
-    }
+  if(systemfiles_headers[file_id].file_properties.action_protocol_enabled == true
+    && systemfiles_headers[file_id].file_properties.action_condition == ALP_ACT_COND_WRITE) // TODO ALP_ACT_COND_WRITEFLUSH?
+  {
+    execute_d7a_action_protocol(systemfiles_headers[file_id].alp_cmd_file_id, systemfiles_headers[file_id].interface_file_id);
+  }
 
+  if(file_modified_callbacks[file_id])
+    file_modified_callbacks[file_id](file_id);
 
-    if(file_modified_callbacks[file_id])
-      file_modified_callbacks[file_id](file_id);
-
-    return ALP_STATUS_OK;
+  return ALP_STATUS_OK;
 }
 
 void d7ap_fs_read_uid(uint8_t *buffer)
 {
-    d7ap_fs_read_file(D7A_FILE_UID_FILE_ID, 0, buffer, D7A_FILE_UID_SIZE);
+  d7ap_fs_read_file(D7A_FILE_UID_FILE_ID, 0, buffer, D7A_FILE_UID_SIZE);
 }
 
 void d7ap_fs_read_vid(uint8_t *buffer)
 {
-//    fs_read_file(D7A_FILE_DLL_CONF_FILE_ID, 1, buffer, 2);
+  d7ap_fs_read_file(D7A_FILE_DLL_CONF_FILE_ID, 1, buffer, 2);
 }
 
 
 alp_status_codes_t d7ap_fs_read_nwl_security_key(uint8_t *buffer)
 {
-//    return fs_read_file(D7A_FILE_NWL_SECURITY_KEY, 0, buffer, D7A_FILE_NWL_SECURITY_KEY_SIZE);
+  return d7ap_fs_read_file(D7A_FILE_NWL_SECURITY_KEY, 0, buffer, D7A_FILE_NWL_SECURITY_KEY_SIZE);
 }
 
 alp_status_codes_t d7ap_fs_read_nwl_security(dae_nwl_security_t *nwl_security)
 {
-//    uint8_t* data_ptr = data + file_offsets[D7A_FILE_NWL_SECURITY];
-//    uint32_t frame_counter;
+  if(!is_file_defined(D7A_FILE_NWL_SECURITY)) return ALP_STATUS_FILE_ID_NOT_EXISTS;
 
-//    if(!is_file_defined(D7A_FILE_NWL_SECURITY)) return ALP_STATUS_FILE_ID_NOT_EXISTS;
-
-//    nwl_security->key_counter = (*data_ptr); data_ptr++;
-//    memcpy(&frame_counter, data_ptr, sizeof(uint32_t));
-//    nwl_security->frame_counter = (uint32_t)__builtin_bswap32(frame_counter);
-//    return ALP_STATUS_OK;
+  d7ap_fs_read_file(D7A_FILE_NWL_SECURITY, 0, (uint8_t*)nwl_security, D7A_FILE_NWL_SECURITY_SIZE);
+  nwl_security->frame_counter = (uint32_t)__builtin_bswap32(nwl_security->frame_counter); // correct endianess
+  return ALP_STATUS_OK;
 }
 
 alp_status_codes_t d7ap_fs_write_nwl_security(dae_nwl_security_t *nwl_security)
 {
-//    uint8_t* data_ptr = data + file_offsets[D7A_FILE_NWL_SECURITY];
-//    uint32_t frame_counter;
+  if(!is_file_defined(D7A_FILE_NWL_SECURITY)) return ALP_STATUS_FILE_ID_NOT_EXISTS;
 
-//    if(!is_file_defined(D7A_FILE_NWL_SECURITY)) return ALP_STATUS_FILE_ID_NOT_EXISTS;
-
-//    (*data_ptr) = nwl_security->key_counter; data_ptr++;
-//    frame_counter = __builtin_bswap32(nwl_security->frame_counter);
-//    memcpy(data_ptr, &frame_counter, sizeof(uint32_t));
-//    return ALP_STATUS_OK;
+  dae_nwl_security_t sec;
+  memcpy(&sec, nwl_security, sizeof (sec));
+  sec.frame_counter = (uint32_t)__builtin_bswap32(nwl_security->frame_counter); // correct endianess
+  d7ap_fs_write_file(D7A_FILE_NWL_SECURITY, 0, (uint8_t*)&sec, D7A_FILE_NWL_SECURITY_SIZE);
+  return ALP_STATUS_OK;
 }
 
 alp_status_codes_t d7ap_fs_read_nwl_security_state_register(dae_nwl_ssr_t *node_security_state)
 {
-//    uint8_t* data_ptr = data + file_offsets[D7A_FILE_NWL_SECURITY_STATE_REG];
-//    uint32_t frame_counter;
+  if(!is_file_defined(D7A_FILE_NWL_SECURITY_STATE_REG)) return ALP_STATUS_FILE_ID_NOT_EXISTS;
 
-//    if(!is_file_defined(D7A_FILE_NWL_SECURITY_STATE_REG)) return ALP_STATUS_FILE_ID_NOT_EXISTS;
+  d7ap_fs_read_file(D7A_FILE_NWL_SECURITY_STATE_REG, 0, (uint8_t*)node_security_state, sizeof(dae_nwl_ssr_t));
 
-//    node_security_state->filter_mode = (*data_ptr); data_ptr++;
-//    node_security_state->trusted_node_nb = (*data_ptr); data_ptr++;
+  // correct endiannes
+  for(uint8_t i = 0; i < node_security_state->trusted_node_nb; i++)
+  {
+    node_security_state->trusted_node_table[i].frame_counter = (uint32_t)__builtin_bswap32(node_security_state->trusted_node_table[i].frame_counter);
+  }
 
-//    for(uint8_t i = 0; i < node_security_state->trusted_node_nb; i++)
-//    {
-//        node_security_state->trusted_node_table[i].key_counter = (*data_ptr); data_ptr++;
-//        memcpy(&frame_counter, data_ptr, sizeof(uint32_t)); data_ptr += sizeof(uint32_t);
-//        node_security_state->trusted_node_table[i].frame_counter = (uint32_t)__builtin_bswap32(frame_counter);
-//        memcpy(node_security_state->trusted_node_table[i].addr, data_ptr, 8); data_ptr += 8;
-//    }
-//    return ALP_STATUS_OK;
+  return ALP_STATUS_OK;
+}
+
+static void write_security_state_register_entry(dae_nwl_trusted_node_t *trusted_node,
+                                                uint8_t trusted_node_nb)
+{
+  assert(trusted_node_nb <= FRAMEWORK_FS_TRUSTED_NODE_TABLE_SIZE);
+
+  uint16_t entry_offset = (D7A_FILE_NWL_SECURITY_SIZE + D7A_FILE_UID_SIZE)*(trusted_node_nb - 1) + 2;
+  // correct endiannes before writing
+  dae_nwl_trusted_node_t node;
+  memcpy(&node, trusted_node, sizeof(dae_nwl_trusted_node_t));
+  node.frame_counter = __builtin_bswap32(node.frame_counter);
+  d7ap_fs_write_file(D7A_FILE_NWL_SECURITY, entry_offset, (uint8_t*)&node, sizeof(dae_nwl_trusted_node_t));
 }
 
 alp_status_codes_t d7ap_fs_add_nwl_security_state_register_entry(dae_nwl_trusted_node_t *trusted_node,
                                                             uint8_t trusted_node_nb)
 {
-//    uint8_t* data_ptr = data + file_offsets[D7A_FILE_NWL_SECURITY_STATE_REG];
-//    uint32_t frame_counter;
+  // TODO test
+  assert(trusted_node_nb <= FRAMEWORK_FS_TRUSTED_NODE_TABLE_SIZE);
+  if(!is_file_defined(D7A_FILE_NWL_SECURITY_STATE_REG)) return ALP_STATUS_FILE_ID_NOT_EXISTS;
 
-//    if(!is_file_defined(D7A_FILE_NWL_SECURITY_STATE_REG)) return ALP_STATUS_FILE_ID_NOT_EXISTS;
-
-//    data_ptr[1] = trusted_node_nb;
-//    data_ptr += (D7A_FILE_NWL_SECURITY_SIZE + D7A_FILE_UID_SIZE)*(trusted_node_nb - 1) + 2;
-//    assert(trusted_node_nb <= FRAMEWORK_FS_TRUSTED_NODE_TABLE_SIZE);
-
-//    (*data_ptr) = trusted_node->key_counter; data_ptr++;
-//    frame_counter = __builtin_bswap32(trusted_node->frame_counter);
-//    memcpy(data_ptr, &frame_counter, sizeof(uint32_t));
-//    data_ptr += sizeof(uint32_t);
-//    memcpy(data_ptr, trusted_node->addr, 8);
-//    return ALP_STATUS_OK;
+  // first add the new entry ...
+  write_security_state_register_entry(trusted_node, trusted_node_nb);
+  // ... and finally update the node count
+  d7ap_fs_write_file(D7A_FILE_NWL_SECURITY, 1, &trusted_node_nb, 1);
+  return ALP_STATUS_OK;
 }
 
 alp_status_codes_t d7ap_fs_update_nwl_security_state_register(dae_nwl_trusted_node_t *trusted_node,
                                                         uint8_t trusted_node_index)
 {
-//    uint8_t* data_ptr = data + file_offsets[D7A_FILE_NWL_SECURITY_STATE_REG];
-//    uint32_t frame_counter;
+  if(!is_file_defined(D7A_FILE_NWL_SECURITY_STATE_REG)) return ALP_STATUS_FILE_ID_NOT_EXISTS;
 
-//    if(!is_file_defined(D7A_FILE_NWL_SECURITY_STATE_REG)) return ALP_STATUS_FILE_ID_NOT_EXISTS;
-
-//    data_ptr += (D7A_FILE_NWL_SECURITY_SIZE + D7A_FILE_UID_SIZE)*(trusted_node_index - 1) + 2;
-//    (*data_ptr) = trusted_node->key_counter; data_ptr++;
-//    frame_counter = __builtin_bswap32(trusted_node->frame_counter);
-//    memcpy(data_ptr, &frame_counter, sizeof(uint32_t));
-//    return ALP_STATUS_OK;
+  write_security_state_register_entry(trusted_node, trusted_node_index);
+  return ALP_STATUS_OK;
 }
 
 void d7ap_fs_read_access_class(uint8_t access_class_index, dae_access_profile_t *access_class)
