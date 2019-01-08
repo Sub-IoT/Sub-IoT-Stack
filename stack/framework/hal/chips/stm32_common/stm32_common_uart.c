@@ -31,6 +31,9 @@
 #include "ports.h"
 #include "errors.h"
 
+DMA_HandleTypeDef hdma_usart1_tx;
+DMA_HandleTypeDef hdma_usart2_tx;
+
 // private definition of the UART handle, passed around publicly as a pointer
 struct uart_handle {
   const uart_port_t* uart_port;
@@ -56,6 +59,72 @@ uart_handle_t* uart_init(uint8_t port_idx, uint32_t baudrate, uint8_t pins) {
 
   handle[port_idx].baudrate = baudrate;
   return &handle[port_idx];
+}
+
+/**
+* @brief UART MSP Initialization
+* This function configures the hardware resources used in this example
+* @param huart: UART handle pointer
+* @retval None
+*/
+void HAL_UART_MspInitCustom(UART_HandleTypeDef* huart)
+{
+  GPIO_InitTypeDef GPIO_InitStruct = {0};
+  if(huart->Instance==USART1)
+  {
+    /* USART1 DMA Init */
+    /* USART1_TX Init */
+    hdma_usart1_tx.Instance = DMA1_Channel2;
+    hdma_usart1_tx.Init.Request = DMA_REQUEST_3;
+    hdma_usart1_tx.Init.Direction = DMA_MEMORY_TO_PERIPH;
+    hdma_usart1_tx.Init.PeriphInc = DMA_PINC_DISABLE;
+    hdma_usart1_tx.Init.MemInc = DMA_MINC_ENABLE;
+    hdma_usart1_tx.Init.PeriphDataAlignment = DMA_PDATAALIGN_BYTE;
+    hdma_usart1_tx.Init.MemDataAlignment = DMA_MDATAALIGN_BYTE;
+    hdma_usart1_tx.Init.Mode = DMA_NORMAL;
+    hdma_usart1_tx.Init.Priority = DMA_PRIORITY_LOW;
+    if (HAL_DMA_Init(&hdma_usart1_tx) != HAL_OK)
+    {
+      //Error_Handler();
+    }
+
+    __HAL_LINKDMA(huart,hdmatx,hdma_usart1_tx);
+
+    /* USART1 interrupt Init */
+    HAL_NVIC_SetPriority(USART1_IRQn, 0, 0);
+    HAL_NVIC_EnableIRQ(USART1_IRQn);
+  /* USER CODE BEGIN USART1_MspInit 1 */
+
+  /* USER CODE END USART1_MspInit 1 */
+  }
+  else if(huart->Instance==USART2)
+  {
+    /* USART2 DMA Init */
+    /* USART2_TX Init */
+    hdma_usart2_tx.Instance = DMA1_Channel4;
+    hdma_usart2_tx.Init.Request = DMA_REQUEST_4;
+    hdma_usart2_tx.Init.Direction = DMA_MEMORY_TO_PERIPH;
+    hdma_usart2_tx.Init.PeriphInc = DMA_PINC_DISABLE;
+    hdma_usart2_tx.Init.MemInc = DMA_MINC_ENABLE;
+    hdma_usart2_tx.Init.PeriphDataAlignment = DMA_PDATAALIGN_BYTE;
+    hdma_usart2_tx.Init.MemDataAlignment = DMA_MDATAALIGN_BYTE;
+    hdma_usart2_tx.Init.Mode = DMA_NORMAL;
+    hdma_usart2_tx.Init.Priority = DMA_PRIORITY_LOW;
+    if (HAL_DMA_Init(&hdma_usart2_tx) != HAL_OK)
+    {
+      //Error_Handler();
+    }
+
+    __HAL_LINKDMA(huart,hdmatx,hdma_usart2_tx);
+
+    /* USART2 interrupt Init */
+    HAL_NVIC_SetPriority(USART2_IRQn, 0, 0);
+    HAL_NVIC_EnableIRQ(USART2_IRQn);
+  /* USER CODE BEGIN USART2_MspInit 1 */
+
+  /* USER CODE END USART2_MspInit 1 */
+  }
+
 }
 
 bool uart_enable(uart_handle_t* uart) {
@@ -120,7 +189,15 @@ bool uart_enable(uart_handle_t* uart) {
   //   		return false;
   //   	}
 
+  /* DMA controller clock enable */
+  __HAL_RCC_DMA1_CLK_ENABLE();
 
+  /* DMA interrupt init */
+  /* DMA1_Channel4_5_6_7_IRQn interrupt configuration */
+  HAL_NVIC_SetPriority(DMA1_Channel4_5_6_7_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(DMA1_Channel4_5_6_7_IRQn);
+
+  HAL_UART_MspInitCustom(&uart->handle);
 
   HAL_NVIC_SetPriority(uart->uart_port->irq, 0, 3);
   
@@ -164,7 +241,7 @@ void uart_set_rx_interrupt_callback(uart_handle_t* uart,
 void uart_send_byte(uart_handle_t* uart, uint8_t data) {
   //   while(!(uart->channel->STATUS & (1 << 6))); // wait for TX buffer to empty
   // 	uart->channel->TXDATA = data;
-  HAL_UART_Transmit(&uart->handle, &data, 1, HAL_MAX_DELAY);
+  HAL_UART_Transmit_DMA(&uart->handle, &data, 1);
 }
 
 // TODO remove or extend API?
@@ -180,7 +257,7 @@ void uart_send_byte(uart_handle_t* uart, uint8_t data) {
 
 void uart_send_bytes(uart_handle_t* uart, void const *data, size_t length) {
 
-  HAL_UART_Transmit(&uart->handle, (uint8_t*) data, length, HAL_MAX_DELAY);
+  HAL_UART_Transmit_DMA(&uart->handle, (uint8_t*) data, length);
   // 	for(uint8_t i=0; i<length; i++)	{
   // 		uart_send_byte(uart, ((uint8_t const*)data)[i]);
   // 	}
