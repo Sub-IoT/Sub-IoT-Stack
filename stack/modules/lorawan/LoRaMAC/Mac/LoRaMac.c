@@ -3367,3 +3367,36 @@ void LoRaMacTestSetChannel( uint8_t channel )
 {
     Channel = channel;
 }
+
+uint8_t LoRaMacGetMaxPayload()
+{
+    AdrNextParams_t adrNext;
+    GetPhyParams_t getPhy;
+    PhyParam_t phyParam;
+    int8_t datarate = LoRaMacParamsDefaults.ChannelsDatarate;
+    int8_t txPower = LoRaMacParamsDefaults.ChannelsTxPower;
+    uint8_t fOptLen = MacCommandsBufferIndex + MacCommandsBufferToRepeatIndex;
+
+    // Setup ADR request
+    adrNext.UpdateChanMask = false;
+    adrNext.AdrEnabled = AdrCtrlOn;
+    adrNext.AdrAckCounter = AdrAckCounter;
+    adrNext.Datarate = LoRaMacParams.ChannelsDatarate;
+    adrNext.TxPower = LoRaMacParams.ChannelsTxPower;
+    adrNext.UplinkDwellTime = LoRaMacParams.UplinkDwellTime;
+    // We call the function for information purposes only. We don't want to
+    // apply the datarate, the tx power and the ADR ack counter.
+    RegionAdrNext( LoRaMacRegion, &adrNext, &datarate, &txPower, &AdrAckCounter );
+    // Setup PHY request
+    getPhy.UplinkDwellTime = LoRaMacParams.UplinkDwellTime;
+    getPhy.Datarate = datarate;
+    getPhy.Attribute = PHY_MAX_PAYLOAD;
+
+    // Change request in case repeater is supported
+    if( RepeaterSupport == true )
+    {
+        getPhy.Attribute = PHY_MAX_PAYLOAD_REPEATER;
+    }
+    phyParam = RegionGetPhyParam( LoRaMacRegion, &getPhy );
+    return (uint8_t) (phyParam.Value - fOptLen);
+}

@@ -297,6 +297,15 @@ void send_data()
     sendDataLen = 0;
 }
 
+uint8_t get_max_payload_len(void)
+{
+    if ((network_mode == MODE_LORA) && (lora_join_status == JOINED))
+    {
+        return lorawan_stack_get_max_payload_size();
+    }
+    return 0;
+}
+
 void handle_serial_data(void)
 {
     if(strcmp(serialRxBuffer,"AT") == 0)
@@ -453,6 +462,14 @@ void handle_serial_data(void)
                 modem_write_string("\r\n+LORAJOIN:UNKNOWN\r\n\r\nOK\r\n");
                 break;
         }
+    }
+    else if (strstr(serialRxBuffer,"AT+LORAMAXLEN?") != NULL)
+    {
+        char maxLen[8];
+        sprintf(maxLen,"%d",get_max_payload_len());
+        modem_write_string("\r\n+LORAMAXLEN:");
+        modem_write_string(maxLen);
+        modem_write_string("\r\n\r\nOK\r\n");
     }
     else
         modem_write_string("\r\nERROR\r\n");

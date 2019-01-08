@@ -76,6 +76,7 @@ void lorawan_stack_deinit(void);
 bool lorawan_stack_join(void);
 void lorawan_register_cbs(lorawan_rx_callback_t  lorawan_rx_cb, lorawan_tx_completed_callback_t lorawan_tx_cb, join_completed_callback_t join_completed_cb);
 lorawan_stack_error_t lorawan_stack_send(uint8_t* payload, uint8_t length, uint8_t app_port, bool request_ack);
+uint8_t lorawan_stack_get_max_payload_size(void);
 
 #endif //LORAWAN_STACK_H
 

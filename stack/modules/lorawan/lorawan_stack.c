@@ -88,7 +88,7 @@
 #define LORAWAN_PUBLIC_NETWORK_ENABLED              1 // TODO configurable?
 #define LORAWAN_CLASS                               CLASS_A // TODO configurable?
 #define JOINREQ_NBTRIALS                            3
-#define LORAWAN_APP_DATA_BUFF_SIZE                  64 // TODO = max?
+#define LORAWAN_APP_DATA_BUFF_SIZE                  128 // TODO = max?
 #define LORAWAN_DATARATE                            0 // TODO configurable? assuming ADR for now
 
 typedef enum
@@ -623,4 +623,11 @@ lorawan_stack_error_t lorawan_stack_send(uint8_t* payload, uint8_t length, uint8
   }
 
   return LORAWAN_STACK_ERROR_OK;
+}
+
+uint8_t lorawan_stack_get_max_payload_size(void)
+{
+    uint8_t len = LoRaMacGetMaxPayload();
+
+    return (len<LORAWAN_APP_DATA_BUFF_SIZE)?len:LORAWAN_APP_DATA_BUFF_SIZE;
 }

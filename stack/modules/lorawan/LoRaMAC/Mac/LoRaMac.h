@@ -1959,6 +1959,15 @@ LoRaMacStatus_t LoRaMacMlmeRequest( MlmeReq_t *mlmeRequest );
  */
 LoRaMacStatus_t LoRaMacMcpsRequest( McpsReq_t *mcpsRequest );
 
+/*!
+ * \brief   LoRaMAC Get Max Payload
+ *
+ * \details Get max allowed applicative payload to be sent
+ *
+ * \retval  uint8_t
+ */
+uint8_t LoRaMacGetMaxPayload();
+
 /*! \} defgroup LORAMAC */
 
 #endif // __LORAMAC_H__
