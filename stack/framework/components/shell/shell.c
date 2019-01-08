@@ -86,6 +86,7 @@ static cmd_handler_t get_cmd_handler_callback(int8_t id)
         console_printf("%d:%d ", i, cmd_handler_registrations[i].id);
     }
     console_print("\r\n");
+    return NULL;
 }
 
 // TODO doc
@@ -98,40 +99,53 @@ static cmd_handler_t get_cmd_handler_callback(int8_t id)
 // called again later when more data is received.
 static void process_cmd_fifo()
 {
-    if(fifo_get_size(&cmd_fifo) >= SHELL_CMD_HEADER_SIZE)
+    uint8_t size = fifo_get_size(&cmd_fifo);
+
+    if(!size)
+        return;
+
+    if(size == (SHELL_CMD_HEADER_SIZE -1))
     {
         uint8_t cmd_header[SHELL_CMD_HEADER_SIZE];
-        fifo_peek(&cmd_fifo, cmd_header, 0, SHELL_CMD_HEADER_SIZE);
-        if(cmd_header[0] != 'A' || cmd_header[1] != 'T')
-        {
-            // unexpected data, pop and return
-            // TODO log?
-            fifo_pop(&cmd_fifo, cmd_header, 1);
-            sched_post_task(&process_cmd_fifo);
-            return;
-        }
+        fifo_pop(&cmd_fifo, cmd_header,SHELL_CMD_HEADER_SIZE - 1);
 
-        if(cmd_header[2] != '$')
+        if(cmd_header[0] == 'A' || cmd_header[1] == 'T')
         {
             process_shell_cmd(cmd_header[2]);
-            fifo_pop(&cmd_fifo, cmd_header, SHELL_CMD_HEADER_SIZE);
+            return;
+        }
+    }
+    else
+    {
+        uint8_t cmd_header[SHELL_CMD_HEADER_SIZE];
+        fifo_peek(&cmd_fifo, cmd_header, 0, (size<SHELL_CMD_HEADER_SIZE)?size:SHELL_CMD_HEADER_SIZE);
+        
+        if ((size >= SHELL_CMD_HEADER_SIZE) && (cmd_header[0] == 'A') && (cmd_header[1] == 'T') && (cmd_header[2] == '$'))
+        {
+            cmd_handler_t cmd = get_cmd_handler_callback(cmd_header[3]);
+
+            if (cmd != NULL)
+                cmd(&cmd_fifo);
+            else
+                fifo_clear(&cmd_fifo);
+        }
+        else if ((size == (SHELL_CMD_HEADER_SIZE - 2)) && (cmd_header[0] == 'A') && (cmd_header[1] == 'T'))
+        {
+            console_print("\r\nOK\r\n");
+            fifo_pop(&cmd_fifo, cmd_header, SHELL_CMD_HEADER_SIZE - 2);
         }
         else
         {
-            get_cmd_handler_callback(cmd_header[3])(&cmd_fifo);
+            for(uint8_t i = 0; i < CMD_HANDLER_REGISTRATIONS_COUNT; i++)
+            {
+                if((cmd_handler_registrations[i].id == CMD_DEFAULT_HANDLER_ID) && (cmd_handler_registrations[i].cmd_handler_callback != NULL))
+                {
+                    cmd_handler_registrations[i].cmd_handler_callback(&cmd_fifo);
+                    return;
+                }
+            }
+            fifo_clear(&cmd_fifo);
         }
-
-        sched_post_task(&process_cmd_fifo);
-    } else if(fifo_get_size(&cmd_fifo) >= 3) {
-      // AT[\r|\n]
-      uint8_t cmd_header[3];
-      fifo_peek(&cmd_fifo, cmd_header, 0, 3);
-      if( cmd_header[0] == 'A' && cmd_header[1] == 'T'
-          && ( cmd_header[2] == '\r' || cmd_header[2] == '\n' ) )
-      {
-        console_print("OK\r\n");
-        fifo_pop(&cmd_fifo, cmd_header, 3);
-      }
     }
 }
 
@@ -141,15 +155,17 @@ static void uart_rx_cb(uint8_t data)
       console_print_byte(data);
       if( data == '\r' ) { console_print_byte('\n'); }
     }
-
     error_t err;
 
+    if((data == '\r') || (data == '\n'))
+    {
+        if(!sched_is_scheduled(&process_cmd_fifo))
+            sched_post_task_prio(&process_cmd_fifo, MIN_PRIORITY - 1, NULL);
+        return;
+    }
     start_atomic();
-        err = fifo_put(&cmd_fifo, &data, 1); assert(err == SUCCESS);
+    err = fifo_put(&cmd_fifo, &data, 1); assert(err == SUCCESS);
     end_atomic();
-
-    if(!sched_is_scheduled(&process_cmd_fifo))
-        sched_post_task_prio(&process_cmd_fifo, MIN_PRIORITY - 1, NULL);
 }
 
 void shell_init()

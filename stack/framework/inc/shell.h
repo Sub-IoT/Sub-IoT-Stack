@@ -30,6 +30,7 @@
 #include "framework_defs.h"
 
 #define SHELL_CMD_HEADER_SIZE 4
+#define CMD_DEFAULT_HANDLER_ID 'E'
 
 #include "link_c.h"
 #include "types.h"
