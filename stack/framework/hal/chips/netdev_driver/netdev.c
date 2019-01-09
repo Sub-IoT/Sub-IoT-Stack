@@ -202,12 +202,12 @@ int16_t hw_radio_get_rssi()
     return rssi;
 }
 
-void hw_radio_set_payload_length(uint8_t length)
+void hw_radio_set_payload_length(uint16_t length)
 {
-    netdev->driver->set(netdev, NETOPT_MAX_PACKET_SIZE, &length, sizeof(uint8_t));
+    netdev->driver->set(netdev, NETOPT_MAX_PACKET_SIZE, &length, sizeof(uint16_t));
 }
 
-void hw_radio_send_payload(uint8_t * data, uint8_t len)
+void hw_radio_send_payload(uint8_t * data, uint16_t len)
 {
     iolist_t iolist = {
             .iol_base = data,
@@ -259,8 +259,8 @@ static void _event_cb(netdev_t *dev, netdev_event_t event)
                 rx_packet->length = len;
 
                 dev->driver->recv(netdev, rx_packet->data, len, &packet_info);
-                DPRINT("RX done\n");
-                DPRINT("Payload: %d bytes, RSSI: %i, LQI: %i" /*SNR: %i, TOA: %i}\n"*/,
+                printf("RX done\n");
+                printf("Payload: %d bytes, RSSI: %i, LQI: %i" /*SNR: %i, TOA: %i}\n"*/,
                         len, packet_info.rssi, packet_info.lqi/*(int)packet_info.snr,
                        (int)packet_info.time_on_air*/);
                 DPRINT_DATA(rx_packet->data, len);

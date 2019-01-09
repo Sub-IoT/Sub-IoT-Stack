@@ -136,7 +136,7 @@ typedef struct
         hw_tx_metadata_t tx_meta;		/**< The RX Metadata of the packet */
     };
 
-    uint8_t    length;			/**< The length of the packet. This fields overlaps with the first byte of the packet data */
+    uint16_t    length;			/**< The length of the packet*/
     struct
     {
         uint8_t	__resv[0];		//this is ONLY here to keep the compiler happy: DO NOT USE
@@ -176,7 +176,7 @@ typedef struct
  *				data field to contain at least length bytes. If no sufficiently large 
  *				buffer can be allocated, 0x0 is returned.
  */
-typedef hw_radio_packet_t* (*alloc_packet_callback_t)(uint8_t length);
+typedef hw_radio_packet_t* (*alloc_packet_callback_t)(uint16_t length);
 
 /** \brief definition of the callback used by the radio driver to 'release' control of a previously allocated 
  *	   packet buffer.
@@ -437,8 +437,8 @@ void hw_radio_set_dc_free(uint8_t scheme);
 void hw_radio_set_sync_word(uint8_t *sync_word, uint8_t sync_size);
 void hw_radio_set_crc_on(uint8_t enable);
 
-void hw_radio_send_payload(uint8_t * data, uint8_t len);
-void hw_radio_set_payload_length(uint8_t length);
+void hw_radio_send_payload(uint8_t * data, uint16_t len);
+void hw_radio_set_payload_length(uint16_t length);
 
 error_t hw_radio_set_idle(void);
 bool hw_radio_is_idle(void);

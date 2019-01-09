@@ -356,11 +356,11 @@ void sx127x_set_rx(sx127x_t *dev)
             sx127x_reg_write(dev, SX127X_REG_DIOMAPPING1, 0x0C); // DIO2 interrupt on sync detect and DIO0 interrupt on PayloadReady
             sx127x_reg_write(dev, SX127X_REG_FIFOTHRESH, 0x83);
 
-            uint8_t max_payload_len = sx127x_get_max_payload_len(dev);
+            uint16_t expected_payload_len = sx127x_get_max_payload_len(dev);
             sx127x_set_packet_handler_enabled(dev, true);
 
             // In case of unlimited length packet format, interrupt is generated once the header is received
-            if (max_payload_len == 0)
+            if (expected_payload_len == 0)
             {
                 dev->packet.length = 0;
                 hw_gpio_set_edge_interrupt(dev->params.dio1_pin, GPIO_RISING_EDGE);
@@ -370,7 +370,7 @@ void sx127x_set_rx(sx127x_t *dev)
             else
             {
                 // Don't overrride the payload length which must have been set by the upper layer
-                dev->packet.length = sx127x_get_max_payload_len(dev);
+                dev->packet.length = expected_payload_len;
                 hw_gpio_set_edge_interrupt(dev->params.dio0_pin, GPIO_RISING_EDGE);
                 hw_gpio_enable_interrupt(dev->params.dio0_pin); // enable the PayloadReady interrupt
             }
@@ -545,7 +545,7 @@ void sx127x_set_tx(sx127x_t *dev)
     sx127x_set_op_mode(dev, SX127X_RF_OPMODE_TRANSMITTER );
 }
 
-uint8_t sx127x_get_max_payload_len(const sx127x_t *dev)
+uint16_t sx127x_get_max_payload_len(const sx127x_t *dev)
 {
     switch (dev->settings.modem) {
         case SX127X_MODEM_FSK:
@@ -559,7 +559,7 @@ uint8_t sx127x_get_max_payload_len(const sx127x_t *dev)
     return 0;
 }
 
-void sx127x_set_max_payload_len(sx127x_t *dev, uint8_t maxlen)
+void sx127x_set_max_payload_len(sx127x_t *dev, uint16_t maxlen)
 {
     DEBUG("[sx127x] Set max payload len: %d\n", maxlen);
 
@@ -993,7 +993,7 @@ void sx127x_set_fixed_header_len_mode(sx127x_t *dev, bool fixed_len)
     sx127x_reg_write(dev, SX127X_REG_LR_MODEMCONFIG1, config1_reg);
 }
 
-uint8_t sx127x_get_payload_length(const sx127x_t *dev)
+uint16_t sx127x_get_payload_length(const sx127x_t *dev)
 {
     switch (dev->settings.modem) {
         case SX127X_MODEM_FSK:
@@ -1005,7 +1005,7 @@ uint8_t sx127x_get_payload_length(const sx127x_t *dev)
     }
 }
 
-void sx127x_set_payload_length(sx127x_t *dev, uint8_t len)
+void sx127x_set_payload_length(sx127x_t *dev, uint16_t len)
 {
     DEBUG("[sx127x] Set payload len: %d\n", len);
 
