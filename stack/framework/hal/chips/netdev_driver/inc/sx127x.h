@@ -268,10 +268,10 @@ typedef uint8_t sx127x_flags_t;
  * @brief struct holding sx127x packet + metadata
  */
 typedef struct {
-    uint8_t length;                      /**< Length of the packet (without length byte) */
-    uint8_t pos;                         /**< Index of the data already transmitted. */
+    uint16_t length;                      /**< Length of the packet (without length byte) */
+    uint16_t pos;                         /**< Index of the data already transmitted. */
     uint8_t fifothresh;                  /**< Threshold used to trigger FifoLevel interrupt. */
-    uint8_t buf[SX127X_PACKET_LENGTH +1];/**< buffer for the whole packet including the length byte */
+    uint8_t buf[(SX127X_PACKET_LENGTH +1)*2];/**< buffer for the whole packet including the length byte */
 } sx127x_pkt_t;
 
 /**
@@ -492,7 +492,7 @@ void sx127x_set_tx(sx127x_t *dev);
  *
  * @return The maximum payload length
  */
-uint8_t sx127x_get_max_payload_len(const sx127x_t *dev);
+uint16_t sx127x_get_max_payload_len(const sx127x_t *dev);
 
 /**
  * @brief   Sets the maximum payload length.
@@ -500,7 +500,7 @@ uint8_t sx127x_get_max_payload_len(const sx127x_t *dev);
  * @param[in] dev                      The sx127x device descriptor
  * @param[in] maxlen                   Maximum payload length in bytes
  */
-void sx127x_set_max_payload_len(sx127x_t *dev, uint8_t maxlen);
+void sx127x_set_max_payload_len(sx127x_t *dev, uint16_t maxlen);
 
 /**
  * @brief   Gets the SX127X operating mode
@@ -645,7 +645,7 @@ void sx127x_set_fixed_header_len_mode(sx127x_t *dev, bool mode);
  *
  * @return the payload length
  */
-uint8_t sx127x_get_payload_length(const sx127x_t *dev);
+uint16_t sx127x_get_payload_length(const sx127x_t *dev);
 
 /**
  * @brief   Sets the SX127X payload length
@@ -653,7 +653,7 @@ uint8_t sx127x_get_payload_length(const sx127x_t *dev);
  * @param[in] dev                      The sx127x device descriptor
  * @param[in] len                      The payload len
  */
-void sx127x_set_payload_length(sx127x_t *dev, uint8_t len);
+void sx127x_set_payload_length(sx127x_t *dev, uint16_t len);
 
 /**
  * @brief   Gets the SX127X TX radio power

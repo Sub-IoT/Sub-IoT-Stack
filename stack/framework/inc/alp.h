@@ -43,7 +43,7 @@
 #define SERIAL_ALP_FRAME_VERSION   0x00
 #define SERIAL_ALP_FRAME_HEADER_SIZE 3
 
-#define ALP_PAYLOAD_MAX_SIZE 200 // TODO configurable?
+#define ALP_PAYLOAD_MAX_SIZE D7A_PAYLOAD_MAX_SIZE + 1 // TODO configurable?
 
 typedef enum
 {

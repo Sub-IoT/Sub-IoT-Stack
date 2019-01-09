@@ -104,7 +104,7 @@ static int _send(netdev_t *netdev, const iolist_t *iolist)
     }
 
     // assume only one item in this list
-    uint8_t size = iolist->iol_len; //iolist_size(iolist);
+    uint16_t size = iolist->iol_len; //iolist_size(iolist);
 
     if (sx127x_get_state(dev) == SX127X_RF_TX_RUNNING)
     {
@@ -254,7 +254,7 @@ static int _recv(netdev_t *netdev, void *buf, size_t len, void *info)
             if (info != NULL) {
                 netdev_sx127x_packet_info_t *packet_info = info;
 
-                packet_info->rssi = (uint8_t)sx127x_read_rssi(dev);
+                packet_info->rssi = sx127x_read_rssi(dev);
                 packet_info->lqi = 0;
             }
             return dev->packet.length;
@@ -455,9 +455,9 @@ static int _get(netdev_t *netdev, netopt_t opt, void *val, size_t max_len)
             return sizeof(uint32_t);
 
         case NETOPT_MAX_PACKET_SIZE:
-            assert(max_len >= sizeof(uint8_t));
-            *((uint8_t*) val) = sx127x_get_max_payload_len(dev);
-            return sizeof(uint8_t);
+            assert(max_len >= sizeof(uint16_t));
+            *((uint16_t*) val) = sx127x_get_max_payload_len(dev);
+            return sizeof(uint16_t);
 
         case NETOPT_INTEGRITY_CHECK:
             assert(max_len >= sizeof(netopt_enable_t));
@@ -635,9 +635,9 @@ static int _set(netdev_t *netdev, netopt_t opt, const void *val, size_t len)
             return sizeof(uint32_t);
 
         case NETOPT_MAX_PACKET_SIZE:
-            assert(len <= sizeof(uint8_t));
-            sx127x_set_max_payload_len(dev, *((const uint8_t*) val));
-            return sizeof(uint8_t);
+            assert(len <= sizeof(uint16_t));
+            sx127x_set_max_payload_len(dev, *((const uint16_t*) val));
+            return sizeof(uint16_t);
 
         case NETOPT_INTEGRITY_CHECK:
             assert(len <= sizeof(netopt_enable_t));
@@ -843,7 +843,7 @@ static int _get_state(sx127x_t *dev, void *val)
 
 static void fill_in_fifo(sx127x_t *dev)
 {
-    uint8_t remaining_bytes = dev->packet.length - dev->packet.pos;
+    uint16_t remaining_bytes = dev->packet.length - dev->packet.pos;
     uint8_t space_left = SX127X_FIFO_MAX_SIZE - dev->packet.fifothresh;
 
     if (remaining_bytes == 0) // means that we need to ask the upper layer to refill the fifo
@@ -996,7 +996,7 @@ void _on_dio1_irq(void *arg)
                     while(!(sx127x_is_fifo_empty(dev)) && (dev->packet.pos < dev->packet.length))
                          dev->packet.buf[dev->packet.pos++] = sx127x_reg_read(dev, SX127X_REG_FIFO);
 
-                    uint8_t remaining_bytes = dev->packet.length - dev->packet.pos;
+                    uint16_t remaining_bytes = dev->packet.length - dev->packet.pos;
                     DEBUG("read %i bytes, %i remaining, FLAGS2 %x \n", dev->packet.pos,
                             remaining_bytes, sx127x_reg_read(dev, SX127X_REG_IRQFLAGS2));
 

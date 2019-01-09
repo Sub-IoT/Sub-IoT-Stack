@@ -37,8 +37,9 @@
 #include "fec.h"
 
 #include "packet_queue.h"
+#include "MODULE_D7AP_defs.h"
 
-#if defined(FRAMEWORK_LOG_ENABLED) && defined(MODULE_PHY_LOG_ENABLED)
+#if defined(FRAMEWORK_LOG_ENABLED) && defined(MODULE_D7AP_PHY_LOG_ENABLED)
 #define DPRINT(...) log_print_stack_string(LOG_STACK_PHY, __VA_ARGS__)
 #define DPRINT_DATA(...) log_print_data(__VA_ARGS__)
 #else
@@ -141,9 +142,9 @@ bg_adv_t bg_adv;
 
 typedef struct
 {
-    uint8_t encoded_length;
-    uint8_t encoded_packet[PREAMBLE_HI_RATE_CLASS + 2 + 256]; // include space for preamble and syncword
-    uint8_t transmitted_index;
+    uint16_t encoded_length;
+    uint8_t encoded_packet[PREAMBLE_HI_RATE_CLASS + 2 + (PACKET_MAX_SIZE + 1)*2]; // include space for preamble and syncword
+    uint16_t transmitted_index;
     bool bg_adv;
 }fg_frame_t;
 
@@ -172,7 +173,7 @@ const uint8_t bg_timeout[4] = {
 
 static void fill_in_fifo(uint8_t remaining_bytes_len);
 
-static hw_radio_packet_t* alloc_new_packet(uint8_t length)
+static hw_radio_packet_t* alloc_new_packet(uint16_t length)
 {
     // note we don't use length because in the current implementation the packets in the queue are of
     // fixed (maximum) size
@@ -215,12 +216,18 @@ static void packet_received(hw_radio_packet_t* hw_radio_packet)
     assert(state == STATE_RX || state == STATE_BG_SCAN);
     // we are in interrupt context here, so mark packet for further processing,
     // schedule it and return
-    DPRINT("packet received @ %i , RSSI = %i", hw_radio_packet->rx_meta.timestamp, hw_radio_packet->rx_meta.rssi);
+    DPRINT("packet received @ %i , RSSI = %d", hw_radio_packet->rx_meta.timestamp, hw_radio_packet->rx_meta.rssi);
 
     packet_t* packet = packet_queue_mark_received(hw_radio_packet);
 
+    DPRINT("Rx packet before decoding <len = %d>", hw_radio_packet->length);
+    DPRINT_DATA(hw_radio_packet->data, hw_radio_packet->length);
+
 #ifndef HAL_RADIO_USE_HW_DC_FREE
     pn9_encode(hw_radio_packet->data, hw_radio_packet->length);
+
+    DPRINT("Rx packet after pn9 encoding <len = %d>", hw_radio_packet->length);
+    DPRINT_DATA(hw_radio_packet->data, hw_radio_packet->length);
 #endif
 #ifndef HAL_RADIO_USE_HW_FEC
     if (current_channel_id.channel_header.ch_coding == PHY_CODING_FEC_PN9)
@@ -238,6 +245,9 @@ static void packet_received(hw_radio_packet_t* hw_radio_packet)
     else
         hw_radio_packet->length = hw_radio_packet->data[0] + 1;
 
+    DPRINT("RX packet fully decoded <len = %d>", hw_radio_packet->length);
+    DPRINT_DATA(hw_radio_packet->data, hw_radio_packet->length);
+
     packet->phy_config.rx.syncword_class = current_syncword_class;
     memcpy(&(packet->phy_config.rx.channel_id), &current_channel_id, sizeof(channel_id_t));
 
@@ -254,7 +264,7 @@ static void packet_received(hw_radio_packet_t* hw_radio_packet)
 
 static void packet_header_received(uint8_t *data, uint8_t len)
 {
-    uint8_t packet_len;
+    uint16_t packet_len;
     DPRINT("Packet Header received %i\n", len);
     DPRINT_DATA(data, len);
 
@@ -269,6 +279,9 @@ static void packet_header_received(uint8_t *data, uint8_t len)
 #ifndef HAL_RADIO_USE_HW_FEC
         fec_decode_packet(data, len, len);
 #endif
+        DPRINT("RX packet header after decoding");
+        DPRINT_DATA(data, len);
+
         packet_len = fec_calculated_decoded_length(data[0] + 1);
     }
     else
@@ -483,6 +496,8 @@ error_t phy_start_energy_scan(channel_id_t* channel, rssi_valid_callback_t rssi_
 
     int16_t rssi = hw_radio_get_rssi();
     rssi_cb(rssi);
+
+    return SUCCESS;
 }
 
 error_t phy_stop_rx(){
@@ -491,15 +506,18 @@ error_t phy_stop_rx(){
     return SUCCESS;
 }
 
-static uint8_t encode_packet(hw_radio_packet_t* packet, uint8_t* encoded_packet)
+static uint16_t encode_packet(hw_radio_packet_t* packet, uint8_t* encoded_packet)
 {
-    uint8_t encoded_len = packet->length;
+    uint16_t encoded_len = packet->length;
     memcpy(encoded_packet, packet->data, packet->length);
 
 #ifndef HAL_RADIO_USE_HW_FEC
     if (current_channel_id.channel_header.ch_coding == PHY_CODING_FEC_PN9)
         encoded_len = fec_encode(encoded_packet, packet->length);
 #endif
+
+    DPRINT("AFTER FEC ENCODING TX len=%d", encoded_len);
+    DPRINT_DATA(encoded_packet, encoded_len);
 
 #ifndef HAL_RADIO_USE_HW_DC_FREE
     pn9_encode(encoded_packet, encoded_len);
@@ -510,7 +528,7 @@ static uint8_t encode_packet(hw_radio_packet_t* packet, uint8_t* encoded_packet)
 
 error_t phy_send_packet(hw_radio_packet_t* packet, phy_tx_config_t* config)
 {
-    assert(packet->length < PACKET_MAX_SIZE);
+    assert(packet->length <= PACKET_MAX_SIZE);
 
     if(packet->length == 0)
         return ESIZE;
@@ -535,8 +553,8 @@ error_t phy_send_packet(hw_radio_packet_t* packet, phy_tx_config_t* config)
     DPRINT_DATA(packet->data, packet->length);
 
     // Encode the packet if not supported by xcvr
-    uint8_t encoded_packet[PACKET_MAX_SIZE + 1];
-    uint8_t encoded_length = encode_packet(packet, encoded_packet);
+    uint8_t encoded_packet[(PACKET_MAX_SIZE + 1)*2]; // bufer sized for FEC encoding
+    uint16_t encoded_length = encode_packet(packet, encoded_packet);
 
     DPRINT("AFTER ENCODING TX len=%i", encoded_length);
     DPRINT_DATA(encoded_packet, encoded_length);
@@ -645,7 +663,7 @@ error_t phy_send_packet_with_advertising(hw_radio_packet_t* packet, phy_tx_confi
     memset(fg_frame.encoded_packet, 0xAA, preamble_len);
     sync_word = __builtin_bswap16(sync_word_value[PHY_SYNCWORD_CLASS1][current_channel_id.channel_header.ch_coding]);
     memcpy(&fg_frame.encoded_packet[preamble_len], &sync_word, 2);
-    fg_frame.encoded_length = encode_packet(packet, fg_frame.encoded_packet + preamble_len + 2);
+    fg_frame.encoded_length = encode_packet(packet, &fg_frame.encoded_packet[preamble_len + 2]);
     fg_frame.encoded_length += preamble_len + 2; // add preamble + syncword
 
     uint8_t payload_len;
