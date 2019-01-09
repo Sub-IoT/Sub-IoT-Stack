@@ -37,7 +37,7 @@
 /*
  * PN9 Encoder used for data whitening
  */
-void pn9_encode(uint8_t *data, uint8_t length);
+void pn9_encode(uint8_t *data, uint16_t length);
 
 #endif // PN9_H_
 

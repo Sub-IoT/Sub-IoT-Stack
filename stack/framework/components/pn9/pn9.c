@@ -41,7 +41,7 @@ uint16_t pn9_generator(uint16_t *pn9)
     return *pn9;
 }
 
-void pn9_encode(uint8_t *data, uint8_t length)
+void pn9_encode(uint8_t *data, uint16_t length)
 {
     uint16_t pn9 = PN9_INITIALIZER; //// LFSR initialised to the specified polynomial
     uint8_t *p = data;

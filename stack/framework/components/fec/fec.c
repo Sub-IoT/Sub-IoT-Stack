@@ -45,7 +45,7 @@ static uint8_t data_buffer[FEC_BUFFER_SIZE];
 static uint8_t* input_buffer;
 static uint8_t* output_buffer;
 
-static uint8_t packetlength;
+static uint16_t packetlength;
 static uint16_t fecpacketlength;
 static uint16_t output_packet_length;
 
@@ -122,7 +122,7 @@ static void print_vstate()
 }
 
 
-uint16_t fec_calculated_decoded_length(uint8_t packet_length)
+uint16_t fec_calculated_decoded_length(uint16_t packet_length)
 {
 	return 2* (packet_length + 2 - (packet_length % 2));
 }
@@ -212,7 +212,7 @@ uint16_t fec_encode(uint8_t *data, uint16_t nbytes)
 	return length;
 }
 
-uint8_t fec_decode_packet(uint8_t* data, uint8_t packet_length, uint8_t output_length)
+uint16_t fec_decode_packet(uint8_t* data, uint16_t packet_length, uint16_t output_length)
 {
 	uint8_t* output = data_buffer;
 	if(output_length < packet_length)
@@ -229,7 +229,6 @@ uint8_t fec_decode_packet(uint8_t* data, uint8_t packet_length, uint8_t output_l
 
 	output_buffer = output;
 	packetlength = packet_length;
-	fecpacketlength = ((packet_length & 0xFE) + 2) << 1;
 	output_packet_length = output_length;
 
 	processedbytes = 0;
@@ -245,9 +244,9 @@ uint8_t fec_decode_packet(uint8_t* data, uint8_t packet_length, uint8_t output_l
 	vstate.old = vstate.states1;
 	vstate.new = vstate.states2;
 
-	uint8_t decoded_length = 0;
+	uint16_t decoded_length = 0;
 
-	for(i = 0; i < packet_length; i =i+4)
+	for(i = 0; i < packet_length; i = i + 4)
 	{
 		//printf("FEC encoding i = %d\n", i);
 
@@ -272,7 +271,7 @@ static bool fec_decode(uint8_t* input)
 	uint8_t fecbuffer[4];
 	VITERBIPATH* vstate_tmp;
 
-	if(fecprocessedbytes >= fecpacketlength)
+	if(fecprocessedbytes >= packetlength)
 		return false;
 
 	//Deinterleaving (symbols are stored in reverse as this is easier for Viterbi decoding)
