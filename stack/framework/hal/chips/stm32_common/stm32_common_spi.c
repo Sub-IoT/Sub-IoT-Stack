@@ -141,11 +141,8 @@ void spi_disable(spi_handle_t* spi) {
       assert(false);
   }
 
-  // turn off all CS lines, because bus is down
-  // clients should be powered down also
-  for(uint8_t s=0; s<spi->slaves; s++) {
-    hw_gpio_clr(spi->slave[s]->cs);
-  }
+  // turn off all CS lines
+  ensure_slaves_deselected(spi);
 
   deinit_pins(spi);
   spi->active = false;
