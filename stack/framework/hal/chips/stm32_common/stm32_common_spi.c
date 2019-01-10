@@ -141,11 +141,8 @@ void spi_disable(spi_handle_t* spi) {
       assert(false);
   }
 
-  // turn off all CS lines, because bus is down
-  // clients should be powered down also
-  for(uint8_t s=0; s<spi->slaves; s++) {
-    hw_gpio_clr(spi->slave[s]->cs);
-  }
+  // turn off all CS lines
+  ensure_slaves_deselected(spi);
 
   deinit_pins(spi);
   spi->active = false;
@@ -297,6 +294,11 @@ void spi_send_byte_with_control(spi_slave_handle_t* slave, uint16_t data) {
 }
 
 void spi_exchange_bytes(spi_slave_handle_t* slave, uint8_t* TxData, uint8_t* RxData, size_t length) {
+  // HACK: in half duplex mode we encountered cases where the SPI clock stays enabled too long, causing extra bytes being received,
+  // which are returned on a new receive call. Drop received bytes first
+  while(slave->spi->hspi.Instance->SR & SPI_SR_RXNE)
+    slave->spi->hspi.Instance->DR;
+
   if( RxData != NULL && TxData != NULL ) {           // two way transmission
     HAL_SPI_TransmitReceive(&slave->spi->hspi, TxData, RxData, length, HAL_MAX_DELAY);
   } else if( RxData == NULL && TxData != NULL ) {    // send only
