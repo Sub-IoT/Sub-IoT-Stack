@@ -239,7 +239,7 @@ static void GPIO_EZRadio_INT_IRQHandler( uint8_t pin )
 
   if (int_callback)
 	  //sched_post_task_prio(int_callback, MAX_PRIORITY);
-	  int_callback();
+	  int_callback(NULL);
 
 
 
