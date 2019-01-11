@@ -44,7 +44,7 @@
 
 #define BUTTON0				PIN(2, 13)
 
-#ifdef USE_SX127X
+#if defined(USE_SX127X) || defined(USE_NETDEV_DRIVER)
   #define SX127x_SPI_INDEX    0
   #define SX127x_SPI_PIN_CS PIN(1, 6)
   #define SX127x_SPI_BAUDRATE 8000000
