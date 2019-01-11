@@ -75,8 +75,8 @@ void hw_radio_io_deinit() {
   hw_gpio_configure_pin_stm(SX127x_DIO3_PIN, &initStruct);
 #endif
 #ifdef PLATFORM_SX127X_USE_MANUAL_RXTXSW_PIN
-#endif
   hw_gpio_configure_pin_stm(SX127x_MANUAL_RXTXSW_PIN, &initStruct);
+#endif
 #ifdef PLATFORM_SX127X_USE_RESET_PIN
   hw_gpio_configure_pin_stm(SX127x_RESET_PIN, &initStruct);
 #endif
