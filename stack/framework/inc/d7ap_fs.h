@@ -96,7 +96,7 @@ alp_status_codes_t d7ap_fs_write_nwl_security(dae_nwl_security_t *nwl_security);
 alp_status_codes_t d7ap_fs_read_nwl_security_state_register(dae_nwl_ssr_t *node_security_state);
 alp_status_codes_t d7ap_fs_add_nwl_security_state_register_entry(dae_nwl_trusted_node_t *trusted_node, uint8_t trusted_node_nb);
 alp_status_codes_t d7ap_fs_update_nwl_security_state_register(dae_nwl_trusted_node_t *trusted_node, uint8_t trusted_node_index);
-uint8_t d7ap_fs_get_file_length(uint8_t file_id);
+uint16_t d7ap_fs_get_file_length(uint8_t file_id);
 
 bool d7ap_fs_register_file_modified_callback(uint8_t file_id, fs_modified_file_callback_t callback);
 

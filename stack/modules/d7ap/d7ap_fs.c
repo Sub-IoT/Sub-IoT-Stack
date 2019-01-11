@@ -368,7 +368,7 @@ void d7ap_fs_write_dll_conf_active_access_class(uint8_t access_class)
   d7ap_fs_write_file(D7A_FILE_DLL_CONF_FILE_ID, 0, &access_class, 1);
 }
 
-uint8_t d7ap_fs_get_file_length(uint8_t file_id)
+uint16_t d7ap_fs_get_file_length(uint8_t file_id)
 {
   assert(is_file_defined(file_id));
   return systemfiles_headers[file_id].length;

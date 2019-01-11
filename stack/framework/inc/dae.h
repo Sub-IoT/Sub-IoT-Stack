@@ -40,7 +40,7 @@ typedef enum
     CSMA_CA_MODE_RIGD = 3
 } csma_ca_mode_t; // TODO move
 
-typedef struct
+typedef struct __attribute__((__packed__))
 {
     uint16_t channel_index_start;
     uint16_t channel_index_end;
@@ -49,13 +49,13 @@ typedef struct
     uint8_t duty; // Maximum per-channel transmission duty cycle in per-mil (‰)
 } subband_t;
 
-typedef struct
+typedef struct __attribute__((__packed__))
 {
     uint8_t subband_bitmap; // Bitmap of used subbands
     uint8_t scan_automation_period;
 } subprofile_t;
 
-typedef struct
+typedef struct __attribute__((__packed__))
 {
     uint8_t ch_coding: 2;     /**< The 'coding' field in the channel header */
     uint8_t ch_class: 2;      /**< The 'class' field in the channel header */
@@ -63,7 +63,7 @@ typedef struct
     uint8_t _rfu: 1;
 } channel_header_t;
 
-typedef struct
+typedef struct __attribute__((__packed__))
 {
     union
     {
