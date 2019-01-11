@@ -56,7 +56,9 @@
 enum module_mode
 {
     MODE_LORA,
-    MODE_DASH7
+    MODE_DASH7_TX,
+    MODE_DASH7_RX,
+    MODE_DASH7_TXRX
 };
 
 enum join_status
@@ -83,7 +85,7 @@ static alp_init_args_t alp_init_args;
 // Define the D7 interface configuration used for sending the ALP command on
 static d7ap_session_config_t session_config = {
         .qos = {
-                .qos_resp_mode = SESSION_RESP_MODE_ANY,
+                .qos_resp_mode = SESSION_RESP_MODE_PREFERRED,
                 .qos_retry_mode = SESSION_RETRY_MODE_NO,
                 .qos_stop_on_error       = false,
                 .qos_record              = false
@@ -101,7 +103,8 @@ static d7ap_session_config_t session_config = {
 
 uint8_t serialRxBuffer[MAX_SERIAL_RX_BUFFER_LEN];
 uint8_t serialRxBufferLen = 0;
-uint8_t network_mode = MODE_DASH7;
+uint8_t dash7RxBuffer[MAX_SERIAL_RX_BUFFER_LEN];
+uint8_t network_mode = MODE_DASH7_TX;
 uint8_t lora_port = 3;
 uint8_t lora_join_status = NOT_JOINED;
 uint8_t dash7_alp_file_id = 0x40;
@@ -139,6 +142,29 @@ void on_alp_command_result_cb(d7ap_session_result_t result, uint8_t* payload, ui
 {
     log_print_string("recv response @ %i dB link budget from:", result.link_budget);
     log_print_data(result.addressee.id, 8);
+}
+
+void on_unsolicited_response_received(d7ap_session_result_t d7asp_result, uint8_t *alp_command, uint8_t alp_command_size)
+{
+    if((network_mode == MODE_DASH7_RX) || (network_mode == MODE_DASH7_TXRX))
+    {
+        if (alp_command_size == (alp_command[3] + 4))
+        {
+            char buff[8];
+            sprintf(buff, "%d", 2 * alp_command[3]);
+            modem_write_string("\r\n+DASH7RXDATA:");
+            modem_write_string(buff);
+            modem_write_string("\r\n");
+            sprintf(dash7RxBuffer, "");
+
+            for (uint8_t cpt = 4; cpt < alp_command[3] + 4; cpt++)
+                sprintf(dash7RxBuffer, "%s%02x", dash7RxBuffer, alp_command[cpt]);
+        }
+        else
+        {
+            modem_write_string("\r\nINVALDRX\r\n");
+        }
+    }
 }
 
 static uint8_t transmit_d7ap(uint8_t* alp, uint16_t len)
@@ -214,20 +240,7 @@ void network_drivers_init()
 
 static void set_network_mode(uint8_t mode)
 {
-    if (mode == MODE_DASH7)
-    {
-        if(network_mode != MODE_DASH7)
-        {
-            log_print_string("Switching from %s to %s", lora.name, d7.name);
-            lora_join_status = NOT_JOINED;
-            current_network_driver->stop();
-            current_network_driver = &d7;
-            current_network_driver->init();
-            network_mode = MODE_DASH7;
-            log_print_string("Switching done");
-        }
-    }
-    else if (mode == MODE_LORA)
+    if (mode == MODE_LORA)
     {
         if(network_mode != MODE_LORA)
         {
@@ -239,6 +252,19 @@ static void set_network_mode(uint8_t mode)
             network_mode = MODE_LORA;
             log_print_string("Switching done");
         }
+    }
+    else
+    {
+        if(network_mode == MODE_LORA)
+        {
+            log_print_string("Switching from %s to %s", lora.name, d7.name);
+            lora_join_status = NOT_JOINED;
+            current_network_driver->stop();
+            current_network_driver = &d7;
+            current_network_driver->init();
+            log_print_string("Switching done");
+        }
+        network_mode = mode;
     }
 }
 
@@ -268,7 +294,7 @@ static void set_unique_devEUI()
 
 void send_data()
 {
-    if (network_mode == MODE_DASH7)
+    if ((network_mode == MODE_DASH7_TX) || (network_mode == MODE_DASH7_TXRX))
     {
         // Generate ALP command. We do this manually for now (until we have an API for this).
         // We will be sending a return file data action, without a preceding file read request.
@@ -319,17 +345,42 @@ void handle_serial_data(void)
     }
     else if (strstr(serialRxBuffer,"AT+MODE?") != NULL)
     {
-        if (network_mode == MODE_DASH7)
-            modem_write_string("\r\n+MODE:DASH7\r\n\r\nOK\r\n");
-        else
-            modem_write_string("\r\n+MODE:LORA\r\n\r\nOK\r\n");
+        switch(network_mode)
+        {
+            case MODE_DASH7_TX:
+                modem_write_string("\r\n+MODE:DASH7TX\r\n\r\nOK\r\n");
+                break;
+
+            case MODE_DASH7_RX:
+                modem_write_string("\r\n+MODE:DASH7RX\r\n\r\nOK\r\n");
+                break;
+
+            case MODE_DASH7_TXRX:
+                modem_write_string("\r\n+MODE:DASH7TXRX\r\n\r\nOK\r\n");
+                break;
+
+            case MODE_LORA:
+            default:
+                modem_write_string("\r\n+MODE:LORA\r\n\r\nOK\r\n");
+                break;
+        }
     }
     else if (strstr(serialRxBuffer,"AT+MODE=") != NULL)
     {
-        if (strstr(serialRxBuffer,"DASH7"))
+        if (strstr(serialRxBuffer,"DASH7TXRX"))
         {
             modem_write_string("\r\nOK\r\n");
-            set_network_mode(MODE_DASH7);
+            set_network_mode(MODE_DASH7_TXRX);
+        }
+        else if (strstr(serialRxBuffer,"DASH7RX"))
+        {
+            modem_write_string("\r\nOK\r\n");
+            set_network_mode(MODE_DASH7_RX);
+        }
+        else if (strstr(serialRxBuffer,"DASH7TX"))
+        {
+            modem_write_string("\r\nOK\r\n");
+            set_network_mode(MODE_DASH7_TX);
         }
         else  if (strstr(serialRxBuffer,"LORA"))
         {
@@ -471,6 +522,48 @@ void handle_serial_data(void)
         modem_write_string(maxLen);
         modem_write_string("\r\n\r\nOK\r\n");
     }
+    else if (strstr(serialRxBuffer,"AT+READ=") != NULL)
+    {
+        if((network_mode == MODE_DASH7_RX) || (network_mode == MODE_DASH7_TXRX))
+        {
+            char *ptr = strstr(serialRxBuffer, "AT+READ=");
+            uint8_t len = atoi(ptr + strlen("AT+READ="));
+            modem_write_string("\r\n+READ:");
+
+            if (len >= strlen(dash7RxBuffer))
+            {
+                modem_write_string(dash7RxBuffer);
+                sprintf(dash7RxBuffer, "");
+            }
+            else
+            {
+                uint8_t remainLen = strlen(dash7RxBuffer) - len;
+                modem_write_buffer(dash7RxBuffer, len);
+                strncpy(dash7RxBuffer, &dash7RxBuffer[len], remainLen);
+                dash7RxBuffer[remainLen] = '\0';
+            }
+            modem_write_string("\r\n\r\nOK\r\n");
+        }
+        else
+        {
+            modem_write_string("\r\nERROR\r\n");
+        }
+    }
+    else if (strstr(serialRxBuffer,"AT+DASH7RXDATALEN?") != NULL)
+    {
+        if((network_mode == MODE_DASH7_RX) || (network_mode == MODE_DASH7_TXRX))
+        {
+            char buff[8];
+            sprintf(buff, "%d", strlen(dash7RxBuffer));
+            modem_write_string("\r\n+DASH7RXDATALEN:");
+            modem_write_string(buff);
+            modem_write_string("\r\n\r\nOK\r\n");
+        }
+        else
+        {
+            modem_write_string("\r\nERROR\r\n");
+        }
+    }
     else
         modem_write_string("\r\nERROR\r\n");
     serialRxBufferLen = 0;
@@ -495,17 +588,19 @@ void bootstrap() {
     fs_init_args_t fs_init_args = (fs_init_args_t){
             .fs_d7aactp_cb = &alp_layer_process_d7aactp,
             .access_profiles_count = DEFAULT_ACCESS_PROFILES_COUNT,
+            .fs_user_files_init_cb = NULL,
             .access_profiles = default_access_profiles,
-            .access_class = 0x21
+            .access_class = 0x01
     };
     fs_init(&fs_init_args);
     set_unique_devEUI();
     network_drivers_init();
-    network_mode = MODE_DASH7;
+    network_mode = MODE_DASH7_TX;
     current_network_driver = &d7;
     current_network_driver->init();
     alp_init_args.alp_command_completed_cb = &on_alp_command_completed_cb;
     alp_init_args.alp_command_result_cb = &on_alp_command_result_cb;
+    alp_init_args.alp_received_unsolicited_data_cb = &on_unsolicited_response_received;
     alp_layer_init(&alp_init_args, false);
     sched_register_task(&send_data);
     sched_register_task(&handle_serial_data);
