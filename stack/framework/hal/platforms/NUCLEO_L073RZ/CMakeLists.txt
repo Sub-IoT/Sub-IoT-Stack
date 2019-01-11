@@ -23,10 +23,10 @@ REQUIRE_TOOLCHAIN(gcc-arm-embedded)
 #Define platform specific options
 PLATFORM_PARAM(PLATFORM_MCU "STM32L073xx" STRING "The MCU series name of the platform")
 SET(JLINK_DEVICE "STM32L073RZ" CACHE STRING "The device passed to JLinkExe for flashing")
-PLATFORM_PARAM(${PLATFORM_PREFIX}_RADIO "sx127x" STRING "The radio chip connected to the board")
+PLATFORM_PARAM(${PLATFORM_PREFIX}_RADIO "netdev_driver" STRING "The radio chip connected to the board")
 PLATFORM_OPTION(PLATFORM_USE_DEBUGPINS "Enable/Disable Hardware Debug Pins support (see 'hwdebug.h')" FALSE)
 #Restrict the number of possible options for the radio option in the usual manner...
-SET_PROPERTY(CACHE ${PLATFORM_PREFIX}_RADIO PROPERTY STRINGS "sx127x;none")
+SET_PROPERTY(CACHE ${PLATFORM_PREFIX}_RADIO PROPERTY STRINGS "sx127x;netdev_driver;none")
 PLATFORM_OPTION(PLATFORM_USE_USB_CDC "Enable/Disable the use of CDC (UART Communication using USB" FALSE)
 PLATFORM_OPTION(PLATFORM_BUILD_BOOTLOADABLE_VERSION "When set builds applications to be deployed using bootloader as well (modified linker script)" FALSE)
 PLATFORM_OPTION(PLATFORM_SX127X_USE_PA_BOOST "Use the PA_BOOST output of sx127x chip" FALSE)

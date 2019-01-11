@@ -42,7 +42,7 @@ void hw_radio_reset()
 }
 #endif
 
-#if defined(USE_SX127X)
+#if defined(USE_SX127X) || defined(USE_NETDEV_DRIVER)
 // override the weak definition
 void hw_radio_io_init() {
   // configure the radio GPIO pins here, since hw_gpio_configure_pin() is MCU
@@ -106,7 +106,7 @@ void __platform_init()
     __gpio_init();
     __hw_debug_init();
 
-#ifdef USE_SX127X
+#if defined(USE_SX127X) || defined(USE_NETDEV_DRIVER)
     hw_radio_io_init();
 
   #ifdef PLATFORM_SX127X_USE_RESET_PIN
