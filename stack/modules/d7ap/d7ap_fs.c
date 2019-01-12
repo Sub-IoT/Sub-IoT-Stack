@@ -1,7 +1,7 @@
-/*! \file fs.c
+/*! \file d7ap_fs.c
  *
 
- *  \copyright (C) Copyright 2015 University of Antwerp and others (http://oss-7.cosys.be)
+ *  \copyright (C) Copyright 2019 University of Antwerp and others (http://mosaic-lopow.github.io/dash7-ap-open-source-stack/)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -63,7 +63,7 @@ static blockdevice_t* bd_systemfiles;
 
 static inline bool is_file_defined(uint8_t file_id)
 {
-    return systemfiles_headers[file_id].length != 0;
+  return systemfiles_headers[file_id].length != 0;
 }
 
 static void execute_d7a_action_protocol(uint8_t command_file_id, uint8_t interface_file_id)
@@ -368,7 +368,7 @@ void d7ap_fs_write_dll_conf_active_access_class(uint8_t access_class)
   d7ap_fs_write_file(D7A_FILE_DLL_CONF_FILE_ID, 0, &access_class, 1);
 }
 
-uint16_t d7ap_fs_get_file_length(uint8_t file_id)
+uint32_t d7ap_fs_get_file_length(uint8_t file_id)
 {
   assert(is_file_defined(file_id));
   return systemfiles_headers[file_id].length;
