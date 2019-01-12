@@ -87,6 +87,13 @@ alp_operand_file_offset_t alp_parse_file_offset_operand(fifo_t* cmd_fifo) {
   return operand;
 }
 
+alp_operand_file_header_t alp_parse_file_header_operand(fifo_t* cmd_fifo) {
+  alp_operand_file_header_t operand;
+  error_t err = fifo_pop(cmd_fifo, &operand.file_id, 1); assert(err == SUCCESS);
+  err = fifo_pop(cmd_fifo, (uint8_t*)&operand.file_header, sizeof(fs_file_header_t)); assert(err == SUCCESS);
+  return operand;
+}
+
 void alp_append_file_offset_operand(fifo_t* fifo, uint8_t file_id, uint32_t offset) {
   assert(fifo_put_byte(fifo, file_id) == SUCCESS);
   alp_append_length_operand(fifo, offset);

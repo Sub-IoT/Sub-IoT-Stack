@@ -34,7 +34,6 @@
 #define DPRINT_DATA(p, len) log_print_data(p, len)
 //#define DPRINT(...)
 
-
 #define D7A_PROTOCOL_VERSION_MAJOR 1
 #define D7A_PROTOCOL_VERSION_MINOR 1
 
@@ -45,7 +44,7 @@
 static bool NGDEF(_is_fs_init_completed) = false;
 #define is_fs_init_completed NG(_is_fs_init_completed)
 
-static fs_modified_file_callback_t file_modified_callbacks[FRAMEWORK_FS_FILE_COUNT] = { NULL };
+static fs_modified_file_callback_t file_modified_callbacks[FRAMEWORK_FS_USER_FILE_COUNT] = { NULL };
 
 static fs_d7aactp_callback_t d7aactp_callback = NULL;
 
@@ -58,12 +57,23 @@ static uint32_t systemfiles_file_data_offset;
 // the offset in blockdevice where the file header section starts
 static uint32_t systemfiles_header_offset = 0;
 
-
 static blockdevice_t* bd_systemfiles;
+
+static uint8_t userfiles_allocated_nr = 0;
+static uint8_t userfiles_ids[FRAMEWORK_FS_USER_FILE_COUNT];
 
 static inline bool is_file_defined(uint8_t file_id)
 {
-  return systemfiles_headers[file_id].length != 0;
+  if(IS_SYSTEM_FILE(file_id)) {
+    return systemfiles_headers[file_id].length != 0;
+  } else {
+      for(uint8_t i = 0; i < FRAMEWORK_FS_USER_FILE_COUNT; i++) {
+          if(userfiles_ids[i] == file_id)
+            return true;
+      }
+
+      return false;
+  }
 }
 
 static void execute_d7a_action_protocol(uint8_t command_file_id, uint8_t interface_file_id)
@@ -124,37 +134,49 @@ void d7ap_fs_init(blockdevice_t* blockdevice_systemfiles)
   memcpy(firmware_version + 2 + D7A_FILE_FIRMWARE_VERSION_APP_NAME_SIZE, _GIT_SHA1, D7A_FILE_FIRMWARE_VERSION_GIT_SHA1_SIZE);
   d7ap_fs_write_file(D7A_FILE_FIRMWARE_VERSION_FILE_ID, 0, firmware_version, D7A_FILE_FIRMWARE_VERSION_SIZE);
 
-//    // 0x0A - DLL Configuration
-//    file_offsets[D7A_FILE_DLL_CONF_FILE_ID] = current_data_offset;
-//    file_headers[D7A_FILE_DLL_CONF_FILE_ID] = (fs_file_header_t){
-//        .file_properties.action_protocol_enabled = 0,
-//        .file_properties.storage_class = FS_STORAGE_RESTORABLE,
-//        .file_permissions = 0, // TODO
-//        .length = D7A_FILE_DLL_CONF_SIZE,
-//        .allocated_length = D7A_FILE_DLL_CONF_SIZE
-//    };
-
-//    data[current_data_offset] = init_args->access_class; current_data_offset += 1; // active access class
-//    memset(data + current_data_offset, 0xFF, 2); current_data_offset += 2; // VID; 0xFFFF means not valid
-
-//    d7aactp_callback = init_args->fs_d7aactp_cb;
-//    is_fs_init_completed = true;
+  userfiles_allocated_nr = 0;
 }
 
-//void fs_init_file(uint8_t file_id, const fs_file_header_t* file_header, const uint8_t* initial_data)
-//{
-//    assert(!is_fs_init_completed); // initing files not allowed after fs_init() completed (for now?)
-//    assert(file_id < FRAMEWORK_FS_FILE_COUNT);
-//    assert(file_id >= 0x40); // system files may not be inited
-//    assert(current_data_offset + file_header->length <= FRAMEWORK_FS_FILESYSTEM_SIZE);
+static uint32_t get_user_file_data_offset(uint8_t file_id)
+{
+  assert(file_id >= 0x40); // only user files allowed
+  assert(file_id - 0x40 < FRAMEWORK_FS_USER_FILE_COUNT);
 
-//    file_offsets[file_id] = current_data_offset;
-//    memcpy(file_headers + file_id, file_header, sizeof(fs_file_header_t));
-//    memset(data + current_data_offset, 0, file_header->length);
-//    current_data_offset += file_header->length;
-//    if(initial_data != NULL)
-//        fs_write_file(file_id, 0, initial_data, file_header->length);
-//}
+  uint32_t offset = 0;
+  for(uint8_t i = 0; i < FRAMEWORK_FS_USER_FILE_COUNT; i++) {
+    if(userfiles_ids[i] == file_id)
+      break;
+
+    offset += fs_userfiles_header_data[i].length;
+  }
+
+  return offset;
+}
+
+static uint8_t get_user_file_header_index(uint8_t file_id)
+{
+  assert(file_id >= 0x40); // only user files allowed
+  assert(file_id - 0x40 < FRAMEWORK_FS_USER_FILE_COUNT);
+
+  for(uint8_t i = 0; i < FRAMEWORK_FS_USER_FILE_COUNT; i++) {
+    if(userfiles_ids[i] == file_id)
+      return i;
+  }
+
+  return 0; // TODO
+}
+
+void d7ap_fs_init_file(uint8_t file_id, const fs_file_header_t* file_header, const uint8_t* initial_data)
+{
+  assert(file_id >= 0x40); // only user files allowed
+  assert(file_id - 0x40 < FRAMEWORK_FS_USER_FILE_COUNT);
+
+  userfiles_ids[userfiles_allocated_nr] = file_id;
+  memcpy((void*)&fs_userfiles_header_data[userfiles_allocated_nr], (const void*)file_header, sizeof(fs_file_header_t));
+  userfiles_allocated_nr++;
+
+  d7ap_fs_write_file(file_id, 0, initial_data, file_header->length);
+}
 
 //void fs_init_file_with_d7asp_interface_config(uint8_t file_id, const d7ap_session_config_t* fifo_config)
 //{
@@ -208,14 +230,18 @@ void d7ap_fs_init(blockdevice_t* blockdevice_systemfiles)
 //    fs_init_file(file_id, &action_file_header, alp_command_buffer);
 //}
 
-alp_status_codes_t d7ap_fs_read_file(uint8_t file_id, uint16_t offset, uint8_t* buffer, uint16_t length)
+alp_status_codes_t d7ap_fs_read_file(uint8_t file_id, uint32_t offset, uint8_t* buffer, uint32_t length)
 {
-  assert(IS_SYSTEM_FILE(file_id)); // TODO user files not implemented
   if(!is_file_defined(file_id)) return ALP_STATUS_FILE_ID_NOT_EXISTS;
-  if(systemfiles_headers[file_id].length < offset + length) return ALP_STATUS_UNKNOWN_ERROR; // TODO more specific error (wait for spec discussion)
+  if(IS_SYSTEM_FILE(file_id)) {
+    if(systemfiles_headers[file_id].length < offset + length) return ALP_STATUS_UNKNOWN_ERROR; // TODO more specific error (wait for spec discussion)
 
-  DPRINT("RD %i + %i = %i\n", systemfiles_file_data_offset, fs_systemfiles_file_offsets[file_id], systemfiles_file_data_offset + fs_systemfiles_file_offsets[file_id]);
-  blockdevice_read(bd_systemfiles, buffer, systemfiles_file_data_offset + fs_systemfiles_file_offsets[file_id] + offset, length);
+    blockdevice_read(bd_systemfiles, buffer, systemfiles_file_data_offset + fs_systemfiles_file_offsets[file_id] + offset, length);
+  } else {
+      int i = get_user_file_header_index(file_id); // TODO tmp
+    if(fs_userfiles_header_data[get_user_file_header_index(file_id)].length < offset + length) return ALP_STATUS_UNKNOWN_ERROR; // TODO more specific error (wait for spec discussion)
+    memcpy(buffer, (const void*)&(fs_userfiles_file_data[get_user_file_data_offset(file_id) + offset]) , length);
+  }
   return ALP_STATUS_OK;
 }
 
@@ -223,7 +249,12 @@ alp_status_codes_t d7ap_fs_read_file_header(uint8_t file_id, fs_file_header_t* f
 {
   if(!is_file_defined(file_id)) return ALP_STATUS_FILE_ID_NOT_EXISTS;
 
-  blockdevice_read(bd_systemfiles, (uint8_t*)file_header, systemfiles_header_offset + (file_id * sizeof(fs_file_header_t)), sizeof(fs_file_header_t));
+  if(IS_SYSTEM_FILE(file_id))
+    blockdevice_read(bd_systemfiles, (uint8_t*)file_header, systemfiles_header_offset + (file_id * sizeof(fs_file_header_t)), sizeof(fs_file_header_t));
+  else {
+    memcpy(file_header, (const void*)&fs_userfiles_header_data[get_user_file_header_index(file_id)], sizeof(fs_file_header_t));
+  }
+
   return ALP_STATUS_OK;
 }
 
@@ -235,9 +266,8 @@ alp_status_codes_t d7ap_fs_write_file_header(uint8_t file_id, fs_file_header_t* 
   return ALP_STATUS_OK;
 }
 
-alp_status_codes_t d7ap_fs_write_file(uint8_t file_id, uint16_t offset, const uint8_t* buffer, uint16_t length)
+alp_status_codes_t d7ap_fs_write_file(uint8_t file_id, uint32_t offset, const uint8_t* buffer, uint32_t length)
 {
-  assert(IS_SYSTEM_FILE(file_id)); // TODO user files not implemented
   if(!is_file_defined(file_id)) return ALP_STATUS_FILE_ID_NOT_EXISTS;
   if(systemfiles_headers[file_id].length < offset + length) return ALP_STATUS_UNKNOWN_ERROR; // TODO more specific error (wait for spec discussion)
 

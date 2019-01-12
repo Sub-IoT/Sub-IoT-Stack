@@ -480,6 +480,16 @@ static alp_status_codes_t process_op_return_file_data(alp_command_t* command) {
   return ALP_STATUS_OK;
 }
 
+static alp_status_codes_t process_op_create_file(alp_command_t* command) {
+  alp_operand_file_header_t operand;
+  error_t err;
+  err = fifo_skip(&command->alp_command_fifo, 1); assert(err == SUCCESS); // skip the control byte
+  operand = alp_parse_file_header_operand(&command->alp_command_fifo);
+  DPRINT("CREATE FILE %i", operand.file_id);
+
+  d7ap_fs_init_file(operand.file_id, &operand.file_header, NULL);
+}
+
 static void add_tag_response(alp_command_t* command, bool eop, bool error) {
   // fill response with tag response
   DPRINT("add_tag_response %i", command->tag_id);
@@ -726,7 +736,10 @@ static bool alp_layer_parse_and_execute_alp_command(alp_command_t* command)
         case ALP_OP_RETURN_FILE_DATA:
             alp_status = process_op_return_file_data(command);
             break;
-        default:
+        case ALP_OP_CREATE_FILE:
+            alp_status = process_op_create_file(command);
+            break;
+          default:
             assert(false); // TODO return error
             //alp_status = ALP_STATUS_UNKNOWN_OPERATION;
         }

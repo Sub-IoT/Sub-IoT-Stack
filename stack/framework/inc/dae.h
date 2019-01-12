@@ -24,7 +24,7 @@
 
 #include "stdint.h"
 #include "framework_defs.h"
-#include "alp.h"
+#include "stdbool.h"
 
 #define SUBPROFILES_NB	4
 #define SUBBANDS_NB		8
@@ -100,6 +100,14 @@ typedef enum
     FS_STORAGE_RESTORABLE = 2,
     FS_STORAGE_PERMANENT = 3
 } fs_storage_class_t;
+
+typedef enum
+{
+    ALP_ACT_COND_LIST = 0,
+    ALP_ACT_COND_READ = 1,
+    ALP_ACT_COND_WRITE = 2,
+    ALP_ACT_COND_WRITEFLUSH = 3
+} alp_act_condition_t;
 
 typedef struct __attribute__((__packed__))
 {

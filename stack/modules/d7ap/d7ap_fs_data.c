@@ -399,3 +399,8 @@ __attribute__((used)) const uint16_t fs_systemfiles_file_offsets[] = {
   0x434, // ACCESS_PROFILE_14 - 46 (length 65))
   //[[[end]]] (checksum: d05b693f5c31a03235ad7a5e320988d3)
 };
+
+
+// The userfiles are only stored in RAM for now
+const fs_file_header_t fs_userfiles_header_data[FRAMEWORK_FS_USER_FILE_COUNT];
+const uint8_t fs_userfiles_file_data[FRAMEWORK_FS_USER_FILESYSTEM_SIZE];

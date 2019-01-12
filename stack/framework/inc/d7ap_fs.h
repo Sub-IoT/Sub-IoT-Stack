@@ -61,13 +61,16 @@ typedef struct {
 extern const uint8_t fs_systemfiles_header_data[];
 extern const uint16_t fs_systemfiles_file_offsets[];
 extern const uint8_t fs_systemfiles_file_data[];
+extern const fs_file_header_t fs_userfiles_header_data[];
+extern const uint8_t fs_userfiles_file_data[];
+
 
 void d7ap_fs_init(blockdevice_t* blockdevice_systemfiles);
 void d7ap_fs_init_file(uint8_t file_id, const fs_file_header_t* file_header, const uint8_t* initial_data);
 void d7ap_fs_init_file_with_D7AActP(uint8_t file_id, const d7ap_session_config_t* fifo_config, const uint8_t* alp_command, const uint8_t alp_command_len);
 void d7ap_fs_init_file_with_d7asp_interface_config(uint8_t file_id, const d7ap_session_config_t* fifo_config);
-alp_status_codes_t d7ap_fs_read_file(uint8_t file_id, uint16_t offset, uint8_t* buffer, uint16_t length);
-alp_status_codes_t d7ap_fs_write_file(uint8_t file_id, uint16_t offset, const uint8_t* buffer, uint16_t length);
+alp_status_codes_t d7ap_fs_read_file(uint8_t file_id, uint32_t offset, uint8_t* buffer, uint32_t length);
+alp_status_codes_t d7ap_fs_write_file(uint8_t file_id, uint32_t offset, const uint8_t* buffer, uint32_t length);
 void d7ap_fs_read_access_class(uint8_t access_class_index, dae_access_profile_t* access_class);
 void d7ap_fs_write_access_class(uint8_t access_class_index, dae_access_profile_t* access_class);
 alp_status_codes_t d7ap_fs_read_file_header(uint8_t file_id, fs_file_header_t* file_header);
