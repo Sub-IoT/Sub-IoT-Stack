@@ -30,7 +30,7 @@ SET_PROPERTY(CACHE ${PLATFORM_PREFIX}_RADIO PROPERTY STRINGS "sx127x;netdev_driv
 PLATFORM_OPTION(PLATFORM_USE_USB_CDC "Enable/Disable the use of CDC (UART Communication using USB" FALSE)
 PLATFORM_OPTION(PLATFORM_BUILD_BOOTLOADABLE_VERSION "When set builds applications to be deployed using bootloader as well (modified linker script)" FALSE)
 PLATFORM_OPTION(PLATFORM_SX127X_USE_PA_BOOST "Use the PA_BOOST output of sx127x chip" FALSE)
-PLATFORM_OPTION(PLATFORM_SX127X_USE_RESET_PIN "Platform has access to the RESET pin of sx127x chip" TRUE)
+PLATFORM_OPTION(PLATFORM_SX127X_USE_RESET_PIN "Platform has access to the RESET pin of sx127x chip" FALSE)
 PLATFORM_OPTION(PLATFORM_SX127X_USE_DIO3_PIN "Platform has access to the DIO3 pin of sx127x chip" TRUE)
 PLATFORM_OPTION(PLATFORM_SX127X_USE_MANUAL_RXTXSW_PIN "Use the SX1276MB1xAS RXTX pin to switch between RX and TX path" FALSE)
 
