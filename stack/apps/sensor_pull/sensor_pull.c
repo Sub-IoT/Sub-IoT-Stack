@@ -33,7 +33,7 @@
 #include "scheduler.h"
 #include "timer.h"
 #include "debug.h"
-#include "fs.h"
+#include "d7ap_fs.h"
 #include "log.h"
 #include "compress.h"
 
@@ -42,6 +42,7 @@
 #include "dae.h"
 #include "platform_defs.h"
 #include "modules_defs.h"
+#include "stm32_common_eeprom.h"
 
 #ifdef USE_HTS221
   #include "HTS221_Driver.h"
@@ -65,6 +66,9 @@
   static i2c_handle_t* hts221_handle;
 #endif
 
+
+static blockdevice_stm32_eeprom_t systemfiles_eeprom_blockdevice;
+
 void execute_sensor_measurement()
 {
   int16_t temperature = 0; // in decicelsius. When there is no sensor, we just transmit 0 degrees
@@ -74,7 +78,7 @@ void execute_sensor_measurement()
 #endif
 
   temperature = __builtin_bswap16(temperature); // need to store in big endian in fs
-  fs_write_file(SENSOR_FILE_ID, 0, (uint8_t*)&temperature, SENSOR_FILE_SIZE);
+  d7ap_fs_write_file(SENSOR_FILE_ID, 0, (uint8_t*)&temperature, SENSOR_FILE_SIZE);
 
   timer_post_task_delay(&execute_sensor_measurement, SENSOR_INTERVAL_SEC);
 }
@@ -87,7 +91,7 @@ void init_user_files()
       .length = SENSOR_FILE_SIZE,
   };
 
-  fs_init_file(SENSOR_FILE_ID, &sensor_file_header, NULL);
+  d7ap_fs_init_file(SENSOR_FILE_ID, &sensor_file_header, NULL);
 
   // file 0x41: reserved file (for example action file)
   // TODO this can be removed when we support creating files post init
@@ -96,29 +100,28 @@ void init_user_files()
       .length = 11,
   };
 
-  fs_init_file(0x41, &file_header, NULL);
+  d7ap_fs_init_file(0x41, &file_header, NULL);
 
   // file 0x42: reserved file for interface configuration
   // TODO this can be removed when we support creating files post init
   d7ap_session_config_t session_config;
-  fs_init_file_with_d7asp_interface_config(0x42, &session_config);
+  d7ap_fs_init_file_with_d7asp_interface_config(0x42, &session_config);
 }
 
 void bootstrap()
 {
     log_print_string("Device booted\n");
 
-    fs_init_args_t fs_init_args = (fs_init_args_t){
-        .fs_d7aactp_cb = &alp_layer_process_d7aactp,
-        .access_profiles_count = DEFAULT_ACCESS_PROFILES_COUNT,
-        .access_profiles = default_access_profiles,
-        .access_class = 0x11, // use scanning AC
-        .fs_user_files_init_cb = &init_user_files
+    systemfiles_eeprom_blockdevice = (blockdevice_stm32_eeprom_t){
+      .base.driver = &blockdevice_driver_stm32_eeprom,
     };
 
-    fs_init(&fs_init_args);
-    d7ap_init();
+    blockdevice_init((blockdevice_t*)&systemfiles_eeprom_blockdevice);
+
+    d7ap_init((blockdevice_t*)&systemfiles_eeprom_blockdevice);
     alp_layer_init(NULL, false);
+    d7ap_fs_write_dll_conf_active_access_class(0x11); // use scanning AC
+    init_user_files();
 
 #if defined USE_HTS221
     hts221_handle = i2c_init(0, 0, 100000);

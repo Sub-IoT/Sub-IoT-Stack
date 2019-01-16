@@ -29,13 +29,15 @@
 
 #include "d7ap.h"
 #include "dae.h"
-#include "fs.h"
+#include "d7ap_fs.h"
 #include "alp_layer.h"
 #include "lorawan_stack.h"
 
 #include "string.h"
 
 #include "modules_defs.h"
+#include "hwblockdevice.h"
+#include "stm32_common_eeprom.h" // TODO platform specific
 
 #ifndef MODULE_LORAWAN
   #error "sensor multimodal requires MODULE_LORAWAN=y"
@@ -65,6 +67,8 @@ typedef struct {
 network_driver_t lora;
 network_driver_t d7;
 network_driver_t* current_network_driver;
+
+static blockdevice_stm32_eeprom_t systemfiles_eeprom_blockdevice;
 
 static alp_init_args_t alp_init_args;
 
@@ -110,7 +114,7 @@ static uint8_t transmit_d7ap(uint8_t* alp, uint16_t len) {
 }
 
 static void init_d7ap() {
-  d7ap_init();
+  d7ap_init(&systemfiles_eeprom_blockdevice);
   DEBUG_PRINTF("DASH7 init");
 }
 
@@ -210,14 +214,13 @@ void execute_sensor_measurement()
 void bootstrap() {
   DEBUG_PRINTF("Device booted\n");
 
-  fs_init_args_t fs_init_args = (fs_init_args_t){
-      .fs_d7aactp_cb = &alp_layer_process_d7aactp,
-      .access_profiles_count = DEFAULT_ACCESS_PROFILES_COUNT,
-      .access_profiles = default_access_profiles,
-      .access_class = 0x21
+  systemfiles_eeprom_blockdevice = (blockdevice_stm32_eeprom_t){
+    .base.driver = &blockdevice_driver_stm32_eeprom,
   };
 
-  fs_init(&fs_init_args);
+  blockdevice_init((blockdevice_t*)&systemfiles_eeprom_blockdevice);
+
+  d7ap_fs_write_dll_conf_active_access_class(0x21);
 
   network_drivers_init();
   current_network_driver = &d7;
