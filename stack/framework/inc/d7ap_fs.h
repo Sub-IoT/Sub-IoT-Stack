@@ -50,11 +50,11 @@ typedef void (*fs_modified_file_callback_t)(uint8_t file_id);
 typedef void (*fs_d7aactp_callback_t)(d7ap_session_config_t* session_config, uint8_t* alp_command, uint32_t alp_command_length);
 
 // externs defined in d7ap_fs_data.c
-extern const uint8_t fs_systemfiles_header_data[];
-extern const uint16_t fs_systemfiles_file_offsets[];
-extern const uint8_t fs_systemfiles_file_data[];
-extern const fs_file_header_t fs_userfiles_header_data[];
-extern const uint8_t fs_userfiles_file_data[];
+extern uint8_t fs_systemfiles_header_data[];
+extern uint16_t fs_systemfiles_file_offsets[];
+extern uint8_t fs_systemfiles_file_data[];
+extern fs_file_header_t fs_userfiles_header_data[];
+extern uint8_t fs_userfiles_file_data[];
 
 
 void d7ap_fs_init(blockdevice_t* blockdevice_systemfiles);

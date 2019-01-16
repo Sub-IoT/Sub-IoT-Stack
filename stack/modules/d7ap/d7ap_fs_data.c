@@ -139,7 +139,7 @@ def output_system_file_offsets():
 
 
 // TODO platform dependent, move
-const uint8_t fs_systemfiles_header_data[] __attribute__((used)) __attribute__((section(".d7ap_fs_systemfiles_header_data"))) = {
+uint8_t fs_systemfiles_header_data[] __attribute__((used)) __attribute__((section(".d7ap_fs_systemfiles_header_data"))) = {
     /*[[[cog
     file_permissions = sys_file_permission_default
     for system_file in system_files:
@@ -242,7 +242,7 @@ const uint8_t fs_systemfiles_header_data[] __attribute__((used)) __attribute__((
     //[[[end]]] (checksum: 58fdd9c7bbf493dbbcf9b488e74e23ae)
 };
 
-const uint8_t fs_systemfiles_file_data[] __attribute__((used)) __attribute__((section(".d7ap_fs_systemfiles_data"))) = {
+uint8_t fs_systemfiles_file_data[] __attribute__((used)) __attribute__((section(".d7ap_fs_systemfiles_data"))) = {
     /*[[[cog
     for system_file in system_files:
       output_file(system_file)
@@ -346,7 +346,7 @@ const uint8_t fs_systemfiles_file_data[] __attribute__((used)) __attribute__((se
 
 // Store the offsets of the start of each system file in the data section, for fast lookup
 // This is stored only in RAM since it doesn't take much space
-__attribute__((used)) const uint16_t fs_systemfiles_file_offsets[] = {
+__attribute__((used)) uint16_t fs_systemfiles_file_offsets[] = {
   /*[[[cog
   output_system_file_offsets()
   ]]]*/
@@ -402,5 +402,5 @@ __attribute__((used)) const uint16_t fs_systemfiles_file_offsets[] = {
 
 
 // The userfiles are only stored in RAM for now
-const fs_file_header_t fs_userfiles_header_data[FRAMEWORK_FS_USER_FILE_COUNT];
-const uint8_t fs_userfiles_file_data[FRAMEWORK_FS_USER_FILESYSTEM_SIZE];
+fs_file_header_t fs_userfiles_header_data[FRAMEWORK_FS_USER_FILE_COUNT];
+uint8_t fs_userfiles_file_data[FRAMEWORK_FS_USER_FILESYSTEM_SIZE];

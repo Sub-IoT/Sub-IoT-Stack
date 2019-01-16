@@ -125,13 +125,7 @@ static alp_init_args_t alp_init_args;
 
 void bootstrap()
 {
-
     log_print_string("Device booted\n");
-
-    // TODO remove
-//    fs_init_args_t fs_init_args = (fs_init_args_t){
-//        .fs_d7aactp_cb = &alp_layer_process_d7aactp,
-//    };
 
     systemfiles_eeprom_blockdevice = (blockdevice_stm32_eeprom_t){
       .base.driver = &blockdevice_driver_stm32_eeprom,

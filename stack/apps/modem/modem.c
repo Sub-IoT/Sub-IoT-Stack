@@ -53,11 +53,6 @@ void bootstrap()
     modem_interface_init(PLATFORM_MODEM_INTERFACE_UART, PLATFORM_MODEM_INTERFACE_BAUDRATE, (pin_id_t) 0, (pin_id_t) 0);
 #endif
 
-    // TODO remove
-    fs_init_args_t fs_init_args = (fs_init_args_t){
-        .fs_d7aactp_cb = &alp_layer_process_d7aactp,
-    };
-
     systemfiles_eeprom_blockdevice = (blockdevice_stm32_eeprom_t){
       .base.driver = &blockdevice_driver_stm32_eeprom,
     };
