@@ -26,6 +26,11 @@ INCLUDE_DIRECTORIES(
     inc
 )
 
+#Export the 'inc' directory globally		    
+EXPORT_GLOBAL_INCLUDE_DIRECTORIES(
+    inc
+)
+
 SET(netdev_driver_SRC
     netdev.c
     sx127x.c
