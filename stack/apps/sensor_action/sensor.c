@@ -26,13 +26,15 @@
 #include "scheduler.h"
 #include "timer.h"
 #include "debug.h"
-#include "fs.h"
+#include "d7ap_fs.h"
 #include "log.h"
 
 #include "d7ap.h"
 #include "alp_layer.h"
 
 #include "dae.h"
+
+#include "stm32_common_eeprom.h"
 
 #ifdef USE_HTS221
   #include "HTS221_Driver.h"
@@ -55,6 +57,8 @@
   static i2c_handle_t* hts221_handle;
 #endif
 
+static blockdevice_stm32_eeprom_t systemfiles_eeprom_blockdevice;
+
 void execute_sensor_measurement()
 {
   int16_t temperature = 0; // in decicelsius. When there is no sensor, we just transmit 0 degrees
@@ -64,7 +68,7 @@ void execute_sensor_measurement()
 #endif
 
   temperature = __builtin_bswap16(temperature); // need to store in big endian in fs
-  fs_write_file(SENSOR_FILE_ID, 0, (uint8_t*)&temperature, SENSOR_FILE_SIZE);
+  d7ap_fs_write_file(SENSOR_FILE_ID, 0, (uint8_t*)&temperature, SENSOR_FILE_SIZE);
 
   log_print_string("temp %i dC", temperature);
   timer_post_task_delay(&execute_sensor_measurement, SENSOR_INTERVAL_SEC);
@@ -94,7 +98,7 @@ void init_user_files()
     .allocated_length = sizeof(alp_command),
   };
 
-  fs_init_file(ACTION_FILE_ID, &action_file_header, alp_command);
+  d7ap_fs_init_file(ACTION_FILE_ID, &action_file_header, alp_command);
 
   // define the D7 interface configuration used for sending the result of above ALP command on
   d7ap_session_config_t session_config = {
@@ -115,7 +119,7 @@ void init_user_files()
     }
   };
 
-  fs_init_file_with_d7asp_interface_config(INTERFACE_FILE_ID, &session_config);
+  d7ap_fs_init_file_with_d7asp_interface_config(INTERFACE_FILE_ID, &session_config);
 
   // finally, register the sensor file, configured to use D7AActP
   fs_file_header_t file_header = (fs_file_header_t){
@@ -128,25 +132,22 @@ void init_user_files()
     .length = SENSOR_FILE_SIZE
   };
 
-  fs_init_file(SENSOR_FILE_ID, &file_header, NULL);
+  d7ap_fs_init_file(SENSOR_FILE_ID, &file_header, NULL);
 }
 
 void bootstrap()
 {
     log_print_string("Device booted\n");
 
-    fs_init_args_t fs_init_args = (fs_init_args_t){
-        .fs_d7aactp_cb = &alp_layer_process_d7aactp,
-        .fs_user_files_init_cb = &init_user_files,
-        .access_profiles_count = DEFAULT_ACCESS_PROFILES_COUNT,
-        .access_profiles = default_access_profiles,
-        .access_class = 0x21
+    systemfiles_eeprom_blockdevice = (blockdevice_stm32_eeprom_t){
+      .base.driver = &blockdevice_driver_stm32_eeprom,
     };
 
-    fs_init(&fs_init_args);
-    d7ap_init();
-
+    blockdevice_init((blockdevice_t*)&systemfiles_eeprom_blockdevice);
+    d7ap_init((blockdevice_t*)&systemfiles_eeprom_blockdevice);
     alp_layer_init(NULL, false);
+
+    init_user_files();
 
 #if defined USE_HTS221
     hts221_handle = i2c_init(0, 0, 100000);
