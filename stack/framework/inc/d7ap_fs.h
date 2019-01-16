@@ -47,15 +47,7 @@ typedef void (*fs_modified_file_callback_t)(uint8_t file_id);
 /**
  * \brief Callback function executed when D7AActP is triggered
  */
-typedef void (*fs_d7aactp_callback_t)(d7ap_session_config_t* session_config, uint8_t* alp_command, uint8_t alp_command_length);
-
-/**
- * \brief Arguments used by the stack for filesystem initialization
- */
-typedef struct {
-    fs_d7aactp_callback_t fs_d7aactp_cb; /**< Callback function executed when D7AActP is triggered */
-} fs_init_args_t; // TODO
-
+typedef void (*fs_d7aactp_callback_t)(d7ap_session_config_t* session_config, uint8_t* alp_command, uint32_t alp_command_length);
 
 // externs defined in d7ap_fs_data.c
 extern const uint8_t fs_systemfiles_header_data[];
@@ -89,7 +81,7 @@ alp_status_codes_t d7ap_fs_update_nwl_security_state_register(dae_nwl_trusted_no
 uint32_t d7ap_fs_get_file_length(uint8_t file_id);
 
 bool d7ap_fs_register_file_modified_callback(uint8_t file_id, fs_modified_file_callback_t callback);
-
+bool d7ap_fs_register_d7aactp_callback(fs_d7aactp_callback_t d7aactp_cb);
 
 #endif /* D7AP_FS_H_ */
 

@@ -41,13 +41,9 @@
 
 #define IS_SYSTEM_FILE(file_id) (file_id <= 0x3F)
 
-static bool NGDEF(_is_fs_init_completed) = false;
-#define is_fs_init_completed NG(_is_fs_init_completed)
-
 static fs_modified_file_callback_t file_modified_callbacks[FRAMEWORK_FS_USER_FILE_COUNT] = { NULL };
 
 static fs_d7aactp_callback_t d7aactp_callback = NULL;
-
 
 static const fs_file_header_t* systemfiles_headers = (const fs_file_header_t*)fs_systemfiles_header_data;
 
@@ -78,27 +74,22 @@ static inline bool is_file_defined(uint8_t file_id)
 
 static void execute_d7a_action_protocol(uint8_t command_file_id, uint8_t interface_file_id)
 {
-// TODO
-//    assert(is_file_defined(command_file_id));
-//    // TODO interface_file_id is optional, how do we code this in file header?
-//    // for now we assume it's always used
-//    assert(is_file_defined(interface_file_id));
+  if(!d7aactp_callback) return;
 
-//    uint8_t* data_ptr = (uint8_t*)(data + file_offsets[interface_file_id]);
+  assert(is_file_defined(command_file_id));
+  // TODO interface_file_id is optional, how do we code this in file header?
+  // for now we assume it's always used
+  assert(is_file_defined(interface_file_id));
 
-//    d7ap_session_config_t fifo_config;
-//    assert((*data_ptr) == ALP_ITF_ID_D7ASP); // only D7ASP supported for now
-//    data_ptr++;
-//    // TODO add length field according to spec
-//    fifo_config.qos.raw = (*data_ptr); data_ptr++;
-//    fifo_config.dormant_timeout = (*data_ptr); data_ptr++;;
-//    // TODO add Te field according to spec
-//    fifo_config.addressee.ctrl.raw = (*data_ptr); data_ptr++;
-//    fifo_config.addressee.access_class = (*data_ptr); data_ptr++;
-//    memcpy(&(fifo_config.addressee.id), data_ptr, 8); data_ptr += 8; // TODO assume 8 for now
-
-//    if(d7aactp_callback)
-//      d7aactp_callback(&fifo_config, (uint8_t*)(data + file_offsets[command_file_id]), file_headers[command_file_id].length);
+  uint8_t itf_id;
+  d7ap_fs_read_file(interface_file_id, 0, &itf_id, 1);
+  assert(itf_id == ALP_ITF_ID_D7ASP); // only D7ASP supported for now
+  d7ap_session_config_t fifo_config;
+  d7ap_fs_read_file(interface_file_id, 1, (uint8_t*)&fifo_config, sizeof(d7ap_session_config_t));
+  uint32_t command_len = d7ap_fs_get_file_length(command_file_id);
+  uint8_t command[command_len];
+  d7ap_fs_read_file(command_file_id, 0, command, command_len);
+  d7aactp_callback(&fifo_config, command, command_len);
 }
 
 
@@ -170,6 +161,7 @@ void d7ap_fs_init_file(uint8_t file_id, const fs_file_header_t* file_header, con
 {
   assert(file_id >= 0x40); // only user files allowed
   assert(file_id - 0x40 < FRAMEWORK_FS_USER_FILE_COUNT);
+  // TODO only volatile for now, return error when permanent storage requested
 
   userfiles_ids[userfiles_allocated_nr] = file_id;
   memcpy((void*)&fs_userfiles_header_data[userfiles_allocated_nr], (const void*)file_header, sizeof(fs_file_header_t));
@@ -178,31 +170,33 @@ void d7ap_fs_init_file(uint8_t file_id, const fs_file_header_t* file_header, con
   d7ap_fs_write_file(file_id, 0, initial_data, file_header->length);
 }
 
-//void fs_init_file_with_d7asp_interface_config(uint8_t file_id, const d7ap_session_config_t* fifo_config)
-//{
-//    // TODO check file not already defined
+void d7ap_fs_init_file_with_d7asp_interface_config(uint8_t file_id, const d7ap_session_config_t* fifo_config)
+{
+  // TODO store in file 0x18-0x1F - reserved for D7AALP ?
+  assert(!IS_SYSTEM_FILE(file_id));
+  assert(!is_file_defined(file_id));
 
-//    uint8_t alp_command_buffer[40] = { 0 };
-//    uint8_t* ptr = alp_command_buffer;
-//    (*ptr) = ALP_ITF_ID_D7ASP; ptr++;
-//    (*ptr) = fifo_config->qos.raw; ptr++;
-//    (*ptr) = fifo_config->dormant_timeout; ptr++;
-//    (*ptr) = fifo_config->addressee.ctrl.raw; ptr++;
-//    (*ptr) = fifo_config->addressee.access_class; ptr++;
-//    memcpy(ptr, &(fifo_config->addressee.id), 8); ptr += 8; // TODO assume 8 for now
+  uint8_t alp_command_buffer[40] = { 0 };
+  uint8_t* ptr = alp_command_buffer;
+  (*ptr) = ALP_ITF_ID_D7ASP; ptr++;
+  (*ptr) = fifo_config->qos.raw; ptr++;
+  (*ptr) = fifo_config->dormant_timeout; ptr++;
+  (*ptr) = fifo_config->addressee.ctrl.raw; ptr++;
+  (*ptr) = fifo_config->addressee.access_class; ptr++;
+  memcpy(ptr, &(fifo_config->addressee.id), 8); ptr += 8; // TODO assume 8 for now
 
-//    uint32_t len = ptr - alp_command_buffer;
-//    // TODO fixed header implemented here, or should this be configurable by app?
-//    fs_file_header_t file_header = (fs_file_header_t){
-//        .file_properties.action_protocol_enabled = 0,
-//        .file_properties.storage_class = FS_STORAGE_PERMANENT,
-//        .file_permissions = 0, // TODO
-//        .length = len,
-//        .allocated_length = len,
-//    };
+  uint32_t len = (uint32_t)(ptr - alp_command_buffer);
+  // TODO fixed header implemented here, or should this be configurable by app?
+  fs_file_header_t file_header = (fs_file_header_t){
+    .file_properties.action_protocol_enabled = 0,
+    .file_properties.storage_class = FS_STORAGE_PERMANENT,
+    .file_permissions = 0, // TODO
+    .length = len,
+    .allocated_length = len,
+  };
 
-//    fs_init_file(file_id, &file_header, alp_command_buffer);
-//}
+  d7ap_fs_init_file(file_id, &file_header, alp_command_buffer);
+}
 
 //void fs_init_file_with_D7AActP(uint8_t file_id, const d7ap_session_config_t* fifo_config, const uint8_t* alp_command, const uint8_t alp_command_len)
 //{
@@ -409,7 +403,11 @@ void d7ap_fs_write_dll_conf_active_access_class(uint8_t access_class)
 uint32_t d7ap_fs_get_file_length(uint8_t file_id)
 {
   assert(is_file_defined(file_id));
-  return systemfiles_headers[file_id].length;
+  if(IS_SYSTEM_FILE(file_id)) {
+    return systemfiles_headers[file_id].length;
+  } else {
+    return fs_userfiles_header_data[get_user_file_header_index(file_id)].length;
+  }
 }
 
 bool d7ap_fs_register_file_modified_callback(uint8_t file_id, fs_modified_file_callback_t callback)
@@ -418,4 +416,9 @@ bool d7ap_fs_register_file_modified_callback(uint8_t file_id, fs_modified_file_c
     return false; // already registered
 
   file_modified_callbacks[file_id] = callback;
+}
+
+bool d7ap_fs_register_d7aactp_callback(fs_d7aactp_callback_t d7aactp_cb)
+{
+  d7aactp_callback = d7aactp_cb;
 }
