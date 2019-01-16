@@ -154,6 +154,8 @@ void alp_layer_init(alp_init_args_t* alp_init_args, bool is_shell_enabled)
   alp_client_id = d7ap_register(&alp_desc);
   timer_init_event(&alp_layer_process_command_timer, &_async_process_command_from_d7ap);
 
+  d7ap_fs_register_d7aactp_callback(&alp_layer_process_d7aactp);
+
 
 #ifdef MODULE_ALP_BROADCAST_VERSION_ON_BOOT_ENABLED
   uint8_t read_firmware_version_alp_command[] = { 0x01, D7A_FILE_FIRMWARE_VERSION_FILE_ID, 0, D7A_FILE_FIRMWARE_VERSION_SIZE };
@@ -499,7 +501,7 @@ static void add_tag_response(alp_command_t* command, bool eop, bool error) {
   err = fifo_put_byte(&command->alp_response_fifo, command->tag_id); assert(err == SUCCESS);
 }
 
-void alp_layer_process_d7aactp(d7ap_session_config_t* session_config, uint8_t* alp_command, uint8_t alp_command_length)
+void alp_layer_process_d7aactp(d7ap_session_config_t* session_config, uint8_t* alp_command, uint32_t alp_command_length)
 {
   uint8_t alp_result_length = 0;
   // TODO refactor
