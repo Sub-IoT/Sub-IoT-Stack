@@ -522,6 +522,11 @@ typedef enum {
     NETOPT_CRC_ON,
 
     /**
+     * @brief   Get/Set the FEC enable flag as uint8_t in host byte order.
+     */
+    NETOPT_FEC_ON,
+
+    /**
      * @brief   Get/Set the DC-free encoding scheme as netopt_dc_free_t type
      */
     NETOPT_DC_FREE_SCHEME,
