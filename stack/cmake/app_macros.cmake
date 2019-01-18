@@ -118,7 +118,6 @@ MACRO(APP_BUILD)
     #INSERT_LINKER_FLAGS(AFTER OBJECTS INSERT "-Xlinker  -Map=.map")
 
     SET(ELF ${__APP_BUILD_NAME}.elf)
-    SET(BIN ${__APP_BUILD_NAME}.bin)    
     ADD_EXECUTABLE(${ELF} ${__APP_BUILD_SOURCES})
 
     TARGET_LINK_LIBRARIES(${ELF} ${__APP_BUILD_LIBS})
@@ -132,25 +131,55 @@ MACRO(APP_BUILD)
 
     SET_TARGET_PROPERTIES(${ELF} PROPERTIES LINK_FLAGS "${__LINKER_SCRIPT_FLAG} ${LINKER_FLAGS}")
 
-    IF(${PLATFORM_BUILD_BOOTLOADABLE_VERSION})
-        SET(BOOTLOADABLE_ELF ${__APP_BUILD_NAME}_bootloadable.elf)
-        SET(BOOTLOADABLE_BIN ${__APP_BUILD_NAME}_bootloadable.bin)
-        ADD_EXECUTABLE(${BOOTLOADABLE_ELF} ${__APP_BUILD_SOURCES})
-        TARGET_LINK_LIBRARIES(${BOOTLOADABLE_ELF} -Wl,--whole-archive ${__APP_BUILD_LIBS}  -Wl,--no-whole-archive)
-        TARGET_COMPILE_DEFINITIONS(${BOOTLOADABLE_ELF} PUBLIC ${__global_compile_definitions})
-        SET_TARGET_PROPERTIES(${BOOTLOADABLE_ELF} PROPERTIES LINK_FLAGS "-T${LINKER_SCRIPT_BOOTLOADABLE} ${LINKER_FLAGS}")
-        ADD_CUSTOM_COMMAND(TARGET ${BOOTLOADABLE_ELF} POST_BUILD COMMAND ${CMAKE_OBJCOPY} -O binary ${BOOTLOADABLE_ELF} ${BOOTLOADABLE_BIN})
-    ENDIF()
+#    TODO not used for now
+#    IF(${PLATFORM_BUILD_BOOTLOADABLE_VERSION})
+#        SET(BOOTLOADABLE_ELF ${__APP_BUILD_NAME}_bootloadable.elf)
+#        SET(BOOTLOADABLE_BIN ${__APP_BUILD_NAME}_bootloadable.bin)
+#        ADD_EXECUTABLE(${BOOTLOADABLE_ELF} ${__APP_BUILD_SOURCES})
+#        TARGET_LINK_LIBRARIES(${BOOTLOADABLE_ELF} -Wl,--whole-archive ${__APP_BUILD_LIBS}  -Wl,--no-whole-archive)
+#        TARGET_COMPILE_DEFINITIONS(${BOOTLOADABLE_ELF} PUBLIC ${__global_compile_definitions})
+#        SET_TARGET_PROPERTIES(${BOOTLOADABLE_ELF} PROPERTIES LINK_FLAGS "-T${LINKER_SCRIPT_BOOTLOADABLE} ${LINKER_FLAGS}")
+#        ADD_CUSTOM_COMMAND(TARGET ${BOOTLOADABLE_ELF} POST_BUILD COMMAND ${CMAKE_OBJCOPY} -O binary ${BOOTLOADABLE_ELF} ${BOOTLOADABLE_BIN})
+#    ENDIF()
 
-    # extract bin file
-    ADD_CUSTOM_COMMAND(TARGET ${ELF} POST_BUILD COMMAND ${CMAKE_OBJCOPY} -O binary ${ELF} ${BIN})
+    # extract hex files
+    ADD_CUSTOM_COMMAND(TARGET ${ELF} POST_BUILD COMMAND ${CMAKE_OBJCOPY} -O ihex ${ELF} ${__APP_BUILD_NAME}-full.hex)
+    ADD_CUSTOM_COMMAND(TARGET ${ELF} POST_BUILD COMMAND ${CMAKE_OBJCOPY}
+      -O ihex
+      -R .d7ap_fs_systemfiles_header_data
+      -R .d7ap_fs_systemfiles_data
+      ${ELF} ${__APP_BUILD_NAME}-app.hex
+    )
+    ADD_CUSTOM_COMMAND(TARGET ${ELF} POST_BUILD COMMAND ${CMAKE_OBJCOPY}
+      -O ihex
+      -j .d7ap_fs_systemfiles_header_data
+      -j .d7ap_fs_systemfiles_data
+      ${ELF} ${__APP_BUILD_NAME}-eeprom-fs.hex
+    )
 
     # generate target for flashing application using jlink
     # TODO optional depending on platform?
-    CONFIGURE_FILE(${PROJECT_SOURCE_DIR}/cmake/jlink-flash.in ${CMAKE_CURRENT_BINARY_DIR}/jlink-flash.script)
+    SET(HEX ${__APP_BUILD_NAME}-full.hex)
+    CONFIGURE_FILE(${PROJECT_SOURCE_DIR}/cmake/jlink-flash.in ${CMAKE_CURRENT_BINARY_DIR}/jlink-flash-full.script)
     ADD_CUSTOM_TARGET(
         flash-${__APP_BUILD_NAME}
-        COMMAND ${JLinkExe} -speed 10000 -if SWD -CommandFile ${CMAKE_CURRENT_BINARY_DIR}/jlink-flash.script
+        COMMAND ${JLinkExe} -speed 10000 -if SWD -CommandFile ${CMAKE_CURRENT_BINARY_DIR}/jlink-flash-full.script
+        DEPENDS ${ELF}
+    )
+
+    SET(HEX ${__APP_BUILD_NAME}-app.hex)
+    CONFIGURE_FILE(${PROJECT_SOURCE_DIR}/cmake/jlink-flash.in ${CMAKE_CURRENT_BINARY_DIR}/jlink-flash-app.script)
+    ADD_CUSTOM_TARGET(
+        flash-${__APP_BUILD_NAME}-app
+        COMMAND ${JLinkExe} -speed 10000 -if SWD -CommandFile ${CMAKE_CURRENT_BINARY_DIR}/jlink-flash-app.script
+        DEPENDS ${ELF}
+    )
+
+    SET(HEX ${__APP_BUILD_NAME}-eeprom-fs.hex)
+    CONFIGURE_FILE(${PROJECT_SOURCE_DIR}/cmake/jlink-flash.in ${CMAKE_CURRENT_BINARY_DIR}/jlink-flash-eeprom-fs.script)
+    ADD_CUSTOM_TARGET(
+        flash-${__APP_BUILD_NAME}-eeprom-fs
+        COMMAND ${JLinkExe} -speed 10000 -if SWD -CommandFile ${CMAKE_CURRENT_BINARY_DIR}/jlink-flash-eeprom-fs.script
         DEPENDS ${ELF}
     )
 ENDMACRO()
