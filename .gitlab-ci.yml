@@ -35,8 +35,8 @@ job 2:
   - job 1
   script:
   - cd build/apps/modem
-  - JLinkExe -SelectEmuBySN 770821797 -CommandFile jlink-flash.script > flashOutput1.txt  
-  - JLinkExe -SelectEmuBySN 772958091 -CommandFile jlink-flash.script > flashOutput2.txt 
+  - JLinkExe -SelectEmuBySN 770821797 -CommandFile jlink-flash-full.script > flashOutput1.txt
+  - JLinkExe -SelectEmuBySN 772958091 -CommandFile jlink-flash-full.script > flashOutput2.txt
   - cat flashOutput1.txt
   - cat flashOutput2.txt
   - if grep -q FAILED "flashOutput1.txt"; then exit 1; fi
