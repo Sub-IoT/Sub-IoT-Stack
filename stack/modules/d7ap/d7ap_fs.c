@@ -41,7 +41,7 @@
 
 #define IS_SYSTEM_FILE(file_id) (file_id <= 0x3F)
 
-static fs_modified_file_callback_t file_modified_callbacks[FRAMEWORK_FS_USER_FILE_COUNT] = { NULL };
+static fs_modified_file_callback_t file_modified_callbacks[0x3F] = { NULL };
 
 static fs_d7aactp_callback_t d7aactp_callback = NULL;
 
@@ -412,6 +412,7 @@ uint32_t d7ap_fs_get_file_length(uint8_t file_id)
 
 bool d7ap_fs_register_file_modified_callback(uint8_t file_id, fs_modified_file_callback_t callback)
 {
+  assert(IS_SYSTEM_FILE(file_id)); // TODO only system files supported for now
   if(file_modified_callbacks[file_id])
     return false; // already registered
 
