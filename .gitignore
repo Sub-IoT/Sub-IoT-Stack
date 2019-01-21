@@ -1,4 +1,4 @@
 CMakeLists.txt.user
 *.local
-
+build
 .DS_Store

@@ -196,10 +196,10 @@ bool uart_enable(uart_handle_t* uart) {
 //TODO SELECT ONE
  /* DMA interrupt init */
   /* DMA1_Channel2_3_IRQn interrupt configuration */
-  HAL_NVIC_SetPriority(DMA1_Channel2_3_IRQn, 0, 0);
-  HAL_NVIC_EnableIRQ(DMA1_Channel2_3_IRQn);
+  //HAL_NVIC_SetPriority(DMA1_Channel2_3_IRQn, 0, 0);
+  //HAL_NVIC_EnableIRQ(DMA1_Channel2_3_IRQn);
   /* DMA1_Channel4_5_6_7_IRQn interrupt configuration */
-  HAL_NVIC_SetPriority(DMA1_Channel4_5_6_7_IRQn, 0, 0);
+  HAL_NVIC_SetPriority(DMA1_Channel4_5_6_7_IRQn, 0, 3);
   HAL_NVIC_EnableIRQ(DMA1_Channel4_5_6_7_IRQn);
 
   HAL_UART_MspInitCustom(&uart->handle);
@@ -324,6 +324,22 @@ static void uart_irq_handler(USART_TypeDef* uart) {
     } while(idx < UART_COUNT);
 
     assert(false); // we should not reach this point
+  }
+
+
+  if (((READ_REG(uart->ISR) & USART_ISR_TC) != 0U) && ((READ_REG(uart->CR1) & USART_CR1_TCIE) != 0U))
+  {
+      /* Disable the UART Transmit Complete Interrupt */
+  CLEAR_BIT(uart->CR1, USART_CR1_TCIE);
+
+  /* Tx process is ended, restore huart->gState to Ready */
+  handle[0].handle.gState = HAL_UART_STATE_READY;
+
+  //HAL_UART_TxCpltCallback(huart);
+
+    //UART_EndTransmit_IT(handle[0].handle);
+    //USART_EndTransmit_IT(handle[0]->handle);
+    return;
   }
 }
 
