@@ -60,6 +60,12 @@ static spi_handle_t handle[SPI_COUNT] = {
   {.hspi.Instance=NULL}
 };
 
+static DMA_HandleTypeDef dma_rx;
+static bool rx_busy; // for synchronizing RX until DMA completed
+static spi_slave_handle_t* current_slave; // TODO tmp
+
+
+
 static void ensure_slaves_deselected(spi_handle_t* spi) {
   // make sure CS lines for all slaves of this bus are high for active low
   // slaves and vice versa
@@ -219,9 +225,44 @@ spi_handle_t* spi_init(uint8_t spi_number, uint32_t baudrate, uint8_t databits, 
   handle[spi_number].hspi.Init.CRCCalculation = SPI_CRCCALCULATION_DISABLE;
   handle[spi_number].hspi.Init.CRCPolynomial = 10;
 
+  // configure DMA
+  __HAL_RCC_DMA1_CLK_ENABLE(); // TODO disable before sleep
+
+  dma_rx.Instance = DMA1_Channel4; // TODO get from ports
+  dma_rx.Init.Request = DMA_REQUEST_2; // TODO get from ports
+  dma_rx.Init.Direction = DMA_PERIPH_TO_MEMORY;
+  dma_rx.Init.PeriphInc = DMA_PINC_DISABLE;
+  dma_rx.Init.MemInc = DMA_MINC_ENABLE;
+  dma_rx.Init.PeriphDataAlignment = DMA_PDATAALIGN_BYTE;
+  dma_rx.Init.MemDataAlignment = DMA_MDATAALIGN_BYTE;
+  dma_rx.Init.Mode = DMA_NORMAL;
+  dma_rx.Init.Priority = DMA_PRIORITY_HIGH;
+  HAL_DMA_Init(&dma_rx);
+  __HAL_LINKDMA(&handle[spi_number].hspi, hdmarx, dma_rx); // TODO needed?
+  HAL_NVIC_SetPriority(DMA1_Channel4_5_6_7_IRQn, 1, 0); // TODO depending on channel
+  HAL_NVIC_EnableIRQ(DMA1_Channel4_5_6_7_IRQn); // TODO depending on channel
+
+  // TODO deinit DMA, clock and irq
+
   spi_enable(&handle[spi_number]);
   return &handle[spi_number];
 }
+
+// TODO move
+void DMA1_Channel4_5_6_7_IRQHandler(void) {
+  HAL_DMA_IRQHandler(current_slave->spi->hspi.hdmarx); // TODO
+}
+
+void HAL_SPI_RxCpltCallback(SPI_HandleTypeDef *hspi)
+{
+  rx_busy = false;
+}
+
+void HAL_SPI_ErrorCallback(SPI_HandleTypeDef *hspi)
+{
+  assert(false); // TODO
+}
+
 
 spi_slave_handle_t*  spi_init_slave(spi_handle_t* spi, pin_id_t cs_pin, bool cs_is_active_low) {
   assert(next_spi_slave_handle < MAX_SPI_SLAVE_HANDLES);
@@ -304,6 +345,12 @@ void spi_exchange_bytes(spi_slave_handle_t* slave, uint8_t* TxData, uint8_t* RxD
   } else if( RxData == NULL && TxData != NULL ) {    // send only
     HAL_SPI_Transmit(&slave->spi->hspi, TxData, length, HAL_MAX_DELAY);
   } else if( RxData != NULL && TxData == NULL ) {   // receive only
-    HAL_SPI_Receive(&slave->spi->hspi, RxData, length, HAL_MAX_DELAY);
+    // RX done using DMA, but we block until completed
+    current_slave = slave; // TODO tmp
+    rx_busy = true;
+    __HAL_SPI_DISABLE(&slave->spi->hspi); // TODO HACK
+    HAL_SPI_Receive_DMA(&slave->spi->hspi, RxData, length);
+    while(rx_busy); // TODO timeout
   }
 }
+
