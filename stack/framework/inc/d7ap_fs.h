@@ -37,6 +37,8 @@
 #include "d7ap.h"
 #include "hwblockdevice.h"
 
+#define D7AP_FS_MAGIC_NUMBER { 0x34, 0xC2, 0x00, 0x00 } // first 2 bytes fixed, last 2 byte for version
+#define D7AP_FS_MAGIC_NUMBER_SIZE 4
 
 /* \brief The callback function for when a user file is modified
  *
@@ -50,6 +52,7 @@ typedef void (*fs_modified_file_callback_t)(uint8_t file_id);
 typedef void (*fs_d7aactp_callback_t)(d7ap_session_config_t* session_config, uint8_t* alp_command, uint32_t alp_command_length);
 
 // externs defined in d7ap_fs_data.c
+extern uint8_t fs_systemfiles_magic_number[];
 extern uint8_t fs_systemfiles_header_data[];
 extern uint16_t fs_systemfiles_file_offsets[];
 extern uint8_t fs_systemfiles_file_data[];

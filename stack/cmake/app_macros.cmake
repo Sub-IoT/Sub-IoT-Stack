@@ -146,12 +146,14 @@ MACRO(APP_BUILD)
     ADD_CUSTOM_COMMAND(TARGET ${ELF} POST_BUILD COMMAND ${CMAKE_OBJCOPY} -O ihex ${ELF} ${__APP_BUILD_NAME}-full.hex)
     ADD_CUSTOM_COMMAND(TARGET ${ELF} POST_BUILD COMMAND ${CMAKE_OBJCOPY}
       -O ihex
+      -R .d7ap_fs_systemfiles_magic_number
       -R .d7ap_fs_systemfiles_header_data
       -R .d7ap_fs_systemfiles_data
       ${ELF} ${__APP_BUILD_NAME}-app.hex
     )
     ADD_CUSTOM_COMMAND(TARGET ${ELF} POST_BUILD COMMAND ${CMAKE_OBJCOPY}
       -O ihex
+      -j .d7ap_fs_systemfiles_magic_number
       -j .d7ap_fs_systemfiles_header_data
       -j .d7ap_fs_systemfiles_data
       ${ELF} ${__APP_BUILD_NAME}-eeprom-fs.hex

@@ -51,7 +51,7 @@ static const fs_file_header_t* systemfiles_headers = (const fs_file_header_t*)fs
 static uint32_t systemfiles_file_data_offset;
 
 // the offset in blockdevice where the file header section starts
-static uint32_t systemfiles_header_offset = 0;
+static uint32_t systemfiles_header_offset = D7AP_FS_MAGIC_NUMBER_SIZE; // after magic number
 
 static blockdevice_t* bd_systemfiles;
 
@@ -98,11 +98,14 @@ void d7ap_fs_init(blockdevice_t* blockdevice_systemfiles)
   assert(blockdevice_systemfiles);
 
   bd_systemfiles = blockdevice_systemfiles;
-  systemfiles_file_data_offset = (uint32_t)(fs_systemfiles_file_data - fs_systemfiles_header_data);
+
+  uint8_t expected_magic_number[] = D7AP_FS_MAGIC_NUMBER;
+  assert(memcmp(expected_magic_number, fs_systemfiles_magic_number, sizeof(expected_magic_number)) == 0); // if not the FS on EEPROM is not compatible with the current code
+
+  systemfiles_file_data_offset = (uint32_t)(fs_systemfiles_file_data - fs_systemfiles_magic_number);
 
   // TODO platform specific
 
-  // TODO sanity check
   // TODO set FW version
 
 

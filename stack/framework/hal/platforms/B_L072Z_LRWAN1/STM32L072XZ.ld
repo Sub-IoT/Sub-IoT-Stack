@@ -54,6 +54,12 @@ SECTIONS
     _sidata = .;
 
     /* store D7AP FS in EEPROM */
+    .d7ap_fs_systemfiles_magic_number :
+    {
+      . = ALIGN(4);
+      KEEP(*(.d7ap_fs_systemfiles_magic_number))
+    } > EEPROM
+
     .d7ap_fs_systemfiles_header_data :
     {
       . = ALIGN(4);

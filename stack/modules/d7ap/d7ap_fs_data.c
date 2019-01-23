@@ -137,6 +137,8 @@ def output_system_file_offsets():
 ]]]*/
 //[[[end]]] (checksum: d41d8cd98f00b204e9800998ecf8427e)
 
+// used to validate EEPROM contents contains D7AP FS of expected version
+uint8_t fs_systemfiles_magic_number[] __attribute__((used)) __attribute__((section(".d7ap_fs_systemfiles_magic_number"))) = D7AP_FS_MAGIC_NUMBER;
 
 // TODO platform dependent, move
 uint8_t fs_systemfiles_header_data[] __attribute__((used)) __attribute__((section(".d7ap_fs_systemfiles_header_data"))) = {
