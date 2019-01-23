@@ -115,6 +115,7 @@ static uint8_t transmit_d7ap(uint8_t* alp, uint16_t len) {
 
 static void init_d7ap() {
   d7ap_init(&systemfiles_eeprom_blockdevice);
+  d7ap_fs_write_dll_conf_active_access_class(0x21);
   DEBUG_PRINTF("DASH7 init");
 }
 
@@ -219,8 +220,6 @@ void bootstrap() {
   };
 
   blockdevice_init((blockdevice_t*)&systemfiles_eeprom_blockdevice);
-
-  d7ap_fs_write_dll_conf_active_access_class(0x21);
 
   network_drivers_init();
   current_network_driver = &d7;
