@@ -40,6 +40,12 @@ typedef struct {
   pin_id_t mosi_pin;
   uint32_t alternate;
   SPI_TypeDef* spi;
+  DMA_Channel_TypeDef* dma_rx_channel;
+  uint32_t dma_rx_request_number;
+  IRQn_Type dma_rx_irq;
+  DMA_Channel_TypeDef* dma_tx_channel;
+  uint32_t dma_tx_request_number;
+  IRQn_Type dma_tx_irq;
 } spi_port_t;
 
 typedef struct {

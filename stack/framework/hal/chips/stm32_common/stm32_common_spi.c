@@ -61,6 +61,7 @@ static spi_handle_t handle[SPI_COUNT] = {
 };
 
 static DMA_HandleTypeDef dma_rx;
+static DMA_HandleTypeDef dma_tx;
 static bool rx_busy; // for synchronizing RX until DMA completed
 static spi_slave_handle_t* current_slave; // TODO tmp
 
@@ -228,8 +229,8 @@ spi_handle_t* spi_init(uint8_t spi_number, uint32_t baudrate, uint8_t databits, 
   // configure DMA
   __HAL_RCC_DMA1_CLK_ENABLE(); // TODO disable before sleep
 
-  dma_rx.Instance = DMA1_Channel4; // TODO get from ports
-  dma_rx.Init.Request = DMA_REQUEST_2; // TODO get from ports
+  dma_rx.Instance = spi_ports[spi_number].dma_rx_channel;
+  dma_rx.Init.Request = spi_ports[spi_number].dma_rx_request_number;
   dma_rx.Init.Direction = DMA_PERIPH_TO_MEMORY;
   dma_rx.Init.PeriphInc = DMA_PINC_DISABLE;
   dma_rx.Init.MemInc = DMA_MINC_ENABLE;
@@ -239,8 +240,23 @@ spi_handle_t* spi_init(uint8_t spi_number, uint32_t baudrate, uint8_t databits, 
   dma_rx.Init.Priority = DMA_PRIORITY_HIGH;
   HAL_DMA_Init(&dma_rx);
   __HAL_LINKDMA(&handle[spi_number].hspi, hdmarx, dma_rx); // TODO needed?
-  HAL_NVIC_SetPriority(DMA1_Channel4_5_6_7_IRQn, 1, 0); // TODO depending on channel
-  HAL_NVIC_EnableIRQ(DMA1_Channel4_5_6_7_IRQn); // TODO depending on channel
+  HAL_NVIC_SetPriority(spi_ports[spi_number].dma_rx_irq, 1, 0);
+  HAL_NVIC_EnableIRQ(spi_ports[spi_number].dma_rx_irq);
+
+
+  dma_tx.Instance = spi_ports[spi_number].dma_tx_channel;
+  dma_tx.Init.Request = spi_ports[spi_number].dma_tx_request_number;
+  dma_tx.Init.Direction = DMA_MEMORY_TO_PERIPH;
+  dma_tx.Init.PeriphInc = DMA_PINC_DISABLE;
+  dma_tx.Init.MemInc = DMA_MINC_ENABLE;
+  dma_tx.Init.PeriphDataAlignment = DMA_PDATAALIGN_BYTE;
+  dma_tx.Init.MemDataAlignment = DMA_MDATAALIGN_BYTE;
+  dma_tx.Init.Mode = DMA_NORMAL;
+  dma_tx.Init.Priority = DMA_PRIORITY_HIGH;
+  HAL_DMA_Init(&dma_tx);
+  __HAL_LINKDMA(&handle[spi_number].hspi, hdmatx, dma_tx); // TODO needed?
+  HAL_NVIC_SetPriority(spi_ports[spi_number].dma_tx_irq, 1, 0);
+  HAL_NVIC_EnableIRQ(spi_ports[spi_number].dma_tx_irq);
 
   // TODO deinit DMA, clock and irq
 
@@ -251,10 +267,30 @@ spi_handle_t* spi_init(uint8_t spi_number, uint32_t baudrate, uint8_t databits, 
 // TODO move
 void DMA1_Channel4_5_6_7_IRQHandler(void) {
   HAL_DMA_IRQHandler(current_slave->spi->hspi.hdmarx); // TODO
+  HAL_DMA_IRQHandler(current_slave->spi->hspi.hdmatx); // TODO
 }
+
+void DMA1_Channel2_3_IRQHandler(void) {
+  HAL_DMA_IRQHandler(current_slave->spi->hspi.hdmarx); // TODO
+  HAL_DMA_IRQHandler(current_slave->spi->hspi.hdmatx); // TODO
+}
+
 
 void HAL_SPI_RxCpltCallback(SPI_HandleTypeDef *hspi)
 {
+  //log_print_string("!!! cmplt DMA->ISR %x\n", DMA1->ISR);
+  rx_busy = false;
+}
+
+void HAL_SPI_TxRxCpltCallback(SPI_HandleTypeDef *hspi)
+{
+  //log_print_string("!!! TxRx cmplt DMA->ISR %x\n", DMA1->ISR);
+  rx_busy = false;
+}
+
+void HAL_SPI_TxCpltCallback(SPI_HandleTypeDef *hspi)
+{
+  //log_print_string("!!! TxRx cmplt DMA->ISR %x\n", DMA1->ISR);
   rx_busy = false;
 }
 
@@ -324,33 +360,82 @@ void spi_deselect(spi_slave_handle_t* slave) {
 
   slave->selected = false;            // unmark it
 }
+
+static void wait_until_completed(spi_slave_handle_t* slave) {
+  while(__HAL_SPI_GET_FLAG(&slave->spi->hspi, SPI_FLAG_RXNE));
+  while(! __HAL_SPI_GET_FLAG(&slave->spi->hspi, SPI_FLAG_TXE));
+  while(__HAL_SPI_GET_FLAG(&slave->spi->hspi, SPI_FLAG_BSY));
+}
+
 unsigned char spi_exchange_byte(spi_slave_handle_t* slave, unsigned char data) {
+  log_print_string("> SPI byte %x\n", data);
+  //  log_print_string("SPI SR %x\n", &slave->spi->hspi.Instance->SR);
+  //assert(slave->spi->hspi.Instance->SR == 0);
+  log_print_string("DMA ISR %x\n", DMA1->ISR);
+  __HAL_DMA_CLEAR_FLAG(current_slave->spi->hspi.hdmarx, __HAL_DMA_GET_GI_FLAG_INDEX(current_slave->spi->hspi.hdmarx));
+  __HAL_DMA_CLEAR_FLAG(current_slave->spi->hspi.hdmarx, __HAL_DMA_GET_TC_FLAG_INDEX(current_slave->spi->hspi.hdmarx));
+  __HAL_DMA_CLEAR_FLAG(current_slave->spi->hspi.hdmarx, __HAL_DMA_GET_TE_FLAG_INDEX(current_slave->spi->hspi.hdmarx));
+  __HAL_DMA_CLEAR_FLAG(current_slave->spi->hspi.hdmarx, __HAL_DMA_GET_HT_FLAG_INDEX(current_slave->spi->hspi.hdmarx));
+  __HAL_DMA_CLEAR_FLAG(current_slave->spi->hspi.hdmatx, __HAL_DMA_GET_GI_FLAG_INDEX(current_slave->spi->hspi.hdmatx));
+  __HAL_DMA_CLEAR_FLAG(current_slave->spi->hspi.hdmatx, __HAL_DMA_GET_TC_FLAG_INDEX(current_slave->spi->hspi.hdmatx));
+  __HAL_DMA_CLEAR_FLAG(current_slave->spi->hspi.hdmatx, __HAL_DMA_GET_TE_FLAG_INDEX(current_slave->spi->hspi.hdmatx));
+  __HAL_DMA_CLEAR_FLAG(current_slave->spi->hspi.hdmatx, __HAL_DMA_GET_HT_FLAG_INDEX(current_slave->spi->hspi.hdmatx));
+
+
+  assert(DMA1->ISR == 0);
+
   uint8_t returnData;
-  HAL_SPI_TransmitReceive(&slave->spi->hspi, &data, &returnData, 1, HAL_MAX_DELAY);
+  //while(rx_busy);
+  current_slave = slave; // TODO tmp
+  rx_busy = true;
+  HAL_SPI_TransmitReceive_DMA(&slave->spi->hspi, &data, &returnData, 1);
+  //while(rx_busy); // TODO timeout
+  wait_until_completed(slave);
+  log_print_string("< SPI byte %x\n", returnData);
   return returnData;
 }
 
 void spi_send_byte_with_control(spi_slave_handle_t* slave, uint16_t data) {
-  HAL_SPI_Transmit(&slave->spi->hspi, (uint8_t *)&data, 2, HAL_MAX_DELAY);
+  while(rx_busy);
+  rx_busy = true;
+  current_slave = slave; // TODO tmp
+  HAL_SPI_Transmit_DMA(&slave->spi->hspi, (uint8_t *)&data, 2);
+  while(rx_busy); // TODO timeout
+  wait_until_completed(slave);
 }
 
 void spi_exchange_bytes(spi_slave_handle_t* slave, uint8_t* TxData, uint8_t* RxData, size_t length) {
   // HACK: in half duplex mode we encountered cases where the SPI clock stays enabled too long, causing extra bytes being received,
   // which are returned on a new receive call. Drop received bytes first
-  while(slave->spi->hspi.Instance->SR & SPI_SR_RXNE)
-    slave->spi->hspi.Instance->DR;
 
+//  log_print_string("> SPI bytes\n");
+//  if(TxData)
+//    log_print_data(TxData, length);
+
+//  while(slave->spi->hspi.Instance->SR & SPI_SR_RXNE)
+//    slave->spi->hspi.Instance->DR;
+
+  assert(slave->spi->hspi.Instance->SR == 0);
+  assert(DMA1->ISR == 0);
+
+  while(rx_busy);
+  current_slave = slave; // TODO tmp
+  rx_busy = true;
   if( RxData != NULL && TxData != NULL ) {           // two way transmission
-    HAL_SPI_TransmitReceive(&slave->spi->hspi, TxData, RxData, length, HAL_MAX_DELAY);
+    HAL_SPI_TransmitReceive_DMA(&slave->spi->hspi, TxData, RxData, length);
   } else if( RxData == NULL && TxData != NULL ) {    // send only
-    HAL_SPI_Transmit(&slave->spi->hspi, TxData, length, HAL_MAX_DELAY);
+    HAL_SPI_Transmit_DMA(&slave->spi->hspi, TxData, length);
   } else if( RxData != NULL && TxData == NULL ) {   // receive only
     // RX done using DMA, but we block until completed
-    current_slave = slave; // TODO tmp
-    rx_busy = true;
-    __HAL_SPI_DISABLE(&slave->spi->hspi); // TODO HACK
+    //__HAL_SPI_DISABLE(&slave->spi->hspi); // TODO HACK
+  log_print_string("!! RX DMA\n");
     HAL_SPI_Receive_DMA(&slave->spi->hspi, RxData, length);
-    while(rx_busy); // TODO timeout
   }
+
+  while(rx_busy); // TODO timeout
+  wait_until_completed(slave);
+//  log_print_string("< SPI bytes\n");
+//  if(RxData)
+//    log_print_data(TxData, length);
 }
 

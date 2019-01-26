@@ -31,6 +31,12 @@ static const spi_port_t spi_ports[] = {
         .mosi_pin = PIN(GPIO_PORTA, 7),
         .sck_pin = PIN(GPIO_PORTA, 5),
         .alternate = GPIO_AF0_SPI1,
+        .dma_rx_channel = DMA1_Channel2,
+        .dma_rx_request_number = DMA_REQUEST_1,
+        .dma_rx_irq = DMA1_Channel2_3_IRQn,
+        .dma_tx_channel = DMA1_Channel3,
+        .dma_tx_request_number = DMA_REQUEST_1,
+        .dma_tx_irq = DMA1_Channel2_3_IRQn
     }
 };
 

@@ -264,11 +264,11 @@ static void write_fifo(uint8_t* buffer, uint8_t size) {
 }
 
 static void read_fifo(uint8_t* buffer, uint8_t size) {
+  DPRINT("READ FIFO %i", size);
   spi_select(sx127x_spi);
   spi_exchange_byte(sx127x_spi, 0x00);
   spi_exchange_bytes(sx127x_spi, NULL, buffer, size);
   spi_deselect(sx127x_spi);
-  DPRINT("READ FIFO %i", size);
 }
 
 static opmode_t get_opmode() {
@@ -795,9 +795,12 @@ static void dio1_isr(pin_id_t pin_id, uint8_t event_mask) {
 
     if(state == STATE_RX) {
         fifo_threshold_isr();
-    } else {
+    } else if(state == STATE_TX) {
+        DPRINT("!! state %i", state);
         fifo_level_isr();
     }
+
+    // TODO seems to be called for state == IDLE, find out why
 }
 
 static void configure_syncword(syncword_class_t syncword_class, const channel_id_t* channel)
