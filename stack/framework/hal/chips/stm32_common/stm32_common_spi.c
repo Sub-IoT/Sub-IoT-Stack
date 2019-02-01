@@ -35,6 +35,12 @@
 
 #define MAX_SPI_SLAVE_HANDLES 4        // TODO expose this in chip configuration
 
+#define __SPI_DIRECTION_1LINE_RX(__HANDLE__) do {\
+                                             CLEAR_BIT((__HANDLE__)->Instance->CR1, SPI_CR1_RXONLY | SPI_CR1_BIDIMODE | SPI_CR1_BIDIOE);\
+                                             SET_BIT((__HANDLE__)->Instance->CR1, SPI_CR1_BIDIMODE);\
+                                             } while(0);
+
+
 struct spi_slave_handle {
   spi_handle_t* spi;
   pin_id_t      cs;
@@ -294,16 +300,36 @@ void spi_send_byte_with_control(spi_slave_handle_t* slave, uint16_t data) {
 }
 
 void spi_exchange_bytes(spi_slave_handle_t* slave, uint8_t* TxData, uint8_t* RxData, size_t length) {
-  // HACK: in half duplex mode we encountered cases where the SPI clock stays enabled too long, causing extra bytes being received,
-  // which are returned on a new receive call. Drop received bytes first
-  while(slave->spi->hspi.Instance->SR & SPI_SR_RXNE)
-    slave->spi->hspi.Instance->DR;
-
+  // TODO replace HAL calls with direct registry access for performance / code size ?
   if( RxData != NULL && TxData != NULL ) {           // two way transmission
     HAL_SPI_TransmitReceive(&slave->spi->hspi, TxData, RxData, length, HAL_MAX_DELAY);
   } else if( RxData == NULL && TxData != NULL ) {    // send only
     HAL_SPI_Transmit(&slave->spi->hspi, TxData, length, HAL_MAX_DELAY);
   } else if( RxData != NULL && TxData == NULL ) {   // receive only
-    HAL_SPI_Receive(&slave->spi->hspi, RxData, length, HAL_MAX_DELAY);
+    if(slave->spi->hspi.Init.Direction == SPI_DIRECTION_2LINES) {
+      HAL_SPI_Receive(&slave->spi->hspi, RxData, length, HAL_MAX_DELAY);
+    } else {
+      // in 3 wire mode RX the SPI pheriperal seems unable to stock clocking after receiving the expected number of bytes
+      // disabling the SPI by polling until RXNE is set will result in too many clocks being generated, causing the slave to clokc out more bytes then needed.
+      // This can be problematic for some SPI slaves for example when reading a FIFO, where the slave will return bytes from the FIFO but these will be missed by the master.
+      // The workaround used by STM in the LMS303 sample of the STM32L4 discovery board is to disable the clock manually after a few cycles, instead of polling RXNE.
+      // We use a similar implementation for now
+      __SPI_DIRECTION_1LINE_RX(&slave->spi->hspi);
+      for(size_t i = 0; i < length; i++) {
+        __HAL_SPI_ENABLE(&slave->spi->hspi);
+        __DSB();
+        __DSB();
+        __DSB();
+        __DSB();
+        __DSB();
+        __DSB();
+        __DSB();
+        __DSB();
+        __HAL_SPI_DISABLE(&slave->spi->hspi);
+        while(!(slave->spi->hspi.Instance->SR & SPI_FLAG_RXNE));
+        RxData[i] = *((__IO uint8_t *)&slave->spi->hspi.Instance->DR);
+        while((slave->spi->hspi.Instance->SR & SPI_FLAG_BSY) == SPI_FLAG_BSY);
+      }
+    }
   }
 }
