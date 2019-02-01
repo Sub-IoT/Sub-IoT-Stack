@@ -30,6 +30,7 @@
 #include "string.h"
 #include "ports.h"
 #include "errors.h"
+#include "log.h"
 
 // private definition of the UART handle, passed around publicly as a pointer
 struct uart_handle {
@@ -40,20 +41,12 @@ struct uart_handle {
 };
 
 // private storage of handles, pointers to these records are passed around
-static uart_handle_t handle[UART_COUNT] = {
-  {
-    .uart_port = &uart_ports[0],
-    .rx_cb = NULL
-  },
-  {
-    .uart_port = &uart_ports[1],
-    .rx_cb = NULL
-  }
-};
+static uart_handle_t handle[UART_COUNT];
 
 uart_handle_t* uart_init(uint8_t port_idx, uint32_t baudrate, uint8_t pins) {
   assert(port_idx < UART_COUNT);
-
+  handle[port_idx].uart_port = &uart_ports[port_idx];
+  handle[port_idx].rx_cb = NULL;
   handle[port_idx].baudrate = baudrate;
   return &handle[port_idx];
 }
@@ -233,6 +226,10 @@ static void uart_irq_handler(USART_TypeDef* uart) {
   {
     uint8_t idx = 0;
     do {
+      if(handle[idx].uart_port == NULL) //handle[idx] has not yet been initialized
+      {
+        continue;
+      }
       if(handle[idx].handle.Instance == uart) {
         handle[idx].rx_cb(LL_USART_ReceiveData8(uart)); // RXNE flag will be cleared by reading of DR register
         return;
