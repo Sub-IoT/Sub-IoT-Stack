@@ -225,11 +225,7 @@ static void uart_irq_handler(USART_TypeDef* uart) {
   {
     uint8_t idx = 0;
     do {
-      if(handle[idx].uart_port == NULL) //handle[idx] has not yet been initialized
-      {
-        continue;
-      }
-      if(handle[idx].handle.Instance == uart) {
+      if(handle[idx].uart_port != NULL && handle[idx].handle.Instance == uart) {
         handle[idx].rx_cb(LL_USART_ReceiveData8(uart)); // RXNE flag will be cleared by reading of DR register
         return;
       }
