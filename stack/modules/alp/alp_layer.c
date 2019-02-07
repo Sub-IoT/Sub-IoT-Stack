@@ -153,45 +153,33 @@ void alp_layer_init(alp_init_args_t* alp_init_args, bool is_shell_enabled)
   alp_client_id = d7ap_register(&alp_desc);
   timer_init_event(&alp_layer_process_command_timer, &_async_process_command_from_d7ap);
 
-  if(shell_enabled)
-  {
-#ifdef FRAMEWORK_SHELL_ENABLED
-      shell_init();
-      shell_register_handler((cmd_handler_registration_t){ .id = ALP_CMD_HANDLER_ID, .cmd_handler_callback = &alp_cmd_handler });
-      // alp_cmd_handler_set_appl_itf_callback(alp_cmd_handler_appl_itf_cb); // TODO
-
-      // notify booted to serial
-      uint8_t read_firmware_version_alp_command[] = { 0x01, D7A_FILE_FIRMWARE_VERSION_FILE_ID, 0, D7A_FILE_FIRMWARE_VERSION_SIZE };
-      alp_layer_process_command_console_output(read_firmware_version_alp_command, sizeof(read_firmware_version_alp_command));
-#endif
-  }
 
 #ifdef MODULE_ALP_BROADCAST_VERSION_ON_BOOT_ENABLED
-      uint8_t read_firmware_version_alp_command[] = { 0x01, D7A_FILE_FIRMWARE_VERSION_FILE_ID, 0, D7A_FILE_FIRMWARE_VERSION_SIZE };
+  uint8_t read_firmware_version_alp_command[] = { 0x01, D7A_FILE_FIRMWARE_VERSION_FILE_ID, 0, D7A_FILE_FIRMWARE_VERSION_SIZE };
 
-      // notify booted by broadcasting and retrying 3 times (for diagnostics ie to detect reboots)
-        // TODO: default access class
-        d7ap_session_config_t broadcast_fifo_config = {
-            .qos = {
-                .qos_resp_mode                = SESSION_RESP_MODE_NO,
-                .qos_retry_mode               = SESSION_RETRY_MODE_NO,
-                .qos_record                   = false,
-                .qos_stop_on_error            = false
-            },
-            .dormant_timeout = 0,
-            .addressee = {
-                .ctrl = {
-                    .nls_method               = AES_NONE,
-                    .id_type                  = ID_TYPE_NOID,
-                },
-                .access_class                 = 0x01,
-                .id = 0
-            }
-        };
+  // notify booted by broadcasting and retrying 3 times (for diagnostics ie to detect reboots)
+  // TODO: default access class
+  d7ap_session_config_t broadcast_fifo_config = {
+      .qos = {
+          .qos_resp_mode                = SESSION_RESP_MODE_NO,
+          .qos_retry_mode               = SESSION_RETRY_MODE_NO,
+          .qos_record                   = false,
+          .qos_stop_on_error            = false
+      },
+      .dormant_timeout = 0,
+      .addressee = {
+          .ctrl = {
+              .nls_method               = AES_NONE,
+              .id_type                  = ID_TYPE_NOID,
+          },
+          .access_class                 = 0x01,
+          .id = 0
+      }
+  };
 
-        alp_layer_execute_command_over_d7a(read_firmware_version_alp_command,
-                                           sizeof(read_firmware_version_alp_command)
-                                           &broadcast_fifo_config);
+  alp_layer_execute_command_over_d7a(read_firmware_version_alp_command,
+                                     sizeof(read_firmware_version_alp_command)
+                                     &broadcast_fifo_config);
 #endif
 }
 
