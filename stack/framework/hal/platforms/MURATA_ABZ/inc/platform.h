@@ -22,6 +22,7 @@
 #include "platform_defs.h"
 #include "stm32_device.h"
 #include "stm32_common_mcu.h"
+#include "stm32_common_eeprom.h"
 
 #ifndef PLATFORM_MURATA_ABZ
     #error Mismatch between the configured platform and the actual platform. Expected PLATFORM_MURATA_ABZ to be defined
@@ -57,5 +58,12 @@
   #define MODEM2MCU_INT_PIN PIN(0, 11)
   #define MCU2MODEM_INT_PIN PIN(0, 0)
 #endif
+
+static blockdevice_stm32_eeprom_t eeprom_bd = (blockdevice_stm32_eeprom_t){
+  .base.driver = &blockdevice_driver_stm32_eeprom,
+};
+
+static blockdevice_t* d7_systemfiles_blockdevice = (blockdevice_t*)&eeprom_bd;
+
 
 #endif

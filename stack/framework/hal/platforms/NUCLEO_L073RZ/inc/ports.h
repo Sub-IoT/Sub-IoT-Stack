@@ -23,7 +23,6 @@
 #include "stm32_common_mcu.h"
 #include "platform_defs.h"
 #include "hwgpio.h"
-#include "stm32_common_eeprom.h"
 
 static const spi_port_t spi_ports[] = {
     {
@@ -39,7 +38,7 @@ static const spi_port_t spi_ports[] = {
 
 static const uart_port_t uart_ports[] = {
   {
-    // USART2, connected to VCOM of debugger USB connection
+    // USART2, usconnected to VCOM of debugger USB connection
     .tx = PIN(GPIO_PORTA, 2),
     .rx = PIN(GPIO_PORTA, 3),
     .alternate = GPIO_AF4_USART2,
@@ -66,12 +65,5 @@ static pin_id_t debug_pins[PLATFORM_NUM_DEBUGPINS] = {
   PIN(GPIO_PORTC, 6), // exposed on CN10 header, pin 4
   PIN(GPIO_PORTC, 5), // exposed on CN10 header, pin 2
 };
-
-
-static blockdevice_stm32_eeprom_t eeprom_bd = (blockdevice_stm32_eeprom_t){
-  .base.driver = &blockdevice_driver_stm32_eeprom,
-};
-
-static blockdevice_t* d7_systemfiles_blockdevice = (blockdevice_t*)&eeprom_bd;
 
 #endif

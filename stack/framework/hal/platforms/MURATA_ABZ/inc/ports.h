@@ -23,8 +23,6 @@
 #include "stm32_common_mcu.h"
 #include "platform_defs.h"
 #include "hwgpio.h"
-#include "stm32_common_eeprom.h"
-
 
 static const spi_port_t spi_ports[] = {
   {
@@ -67,11 +65,5 @@ static const i2c_port_t i2c_ports[] = {
 };
 
 #define I2C_COUNT sizeof(i2c_ports) / sizeof(i2c_port_t)
-
-static blockdevice_stm32_eeprom_t eeprom_bd = (blockdevice_stm32_eeprom_t){
-  .base.driver = &blockdevice_driver_stm32_eeprom,
-};
-
-static blockdevice_t* d7_systemfiles_blockdevice = (blockdevice_t*)&eeprom_bd;
 
 #endif

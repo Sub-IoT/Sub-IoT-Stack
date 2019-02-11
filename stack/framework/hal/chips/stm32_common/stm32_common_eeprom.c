@@ -12,8 +12,8 @@
 
 // forward declare driver function pointers
 static void init(blockdevice_t* bd);
-static error_t read(blockdevice_t* bd, uint8_t* data, uint32_t addr, uint32_t size);
-static error_t program(blockdevice_t* bd, uint8_t* data, uint32_t addr, uint32_t size);
+static error_t read(blockdevice_t* bd, const uint8_t* data, uint32_t addr, uint32_t size);
+static error_t program(blockdevice_t* bd, const uint8_t* data, uint32_t addr, uint32_t size);
 
 blockdevice_driver_t blockdevice_driver_stm32_eeprom = {
     .init = init,
@@ -27,7 +27,7 @@ static void init(blockdevice_t* bd) { // TODO SPI as param
   (void)bd; // suppress unused warning
 }
 
-static error_t read(blockdevice_t* bd, uint8_t* data, uint32_t addr, uint32_t size) {
+static error_t read(blockdevice_t* bd, const uint8_t* data, uint32_t addr, uint32_t size) {
   (void)bd; // suppress unused warning
   DPRINT("BD READ %i @ %x\n", size, addr);
 
@@ -41,7 +41,7 @@ static error_t read(blockdevice_t* bd, uint8_t* data, uint32_t addr, uint32_t si
   return SUCCESS;
 }
 
-static error_t program(blockdevice_t* bd, uint8_t* data, uint32_t addr, uint32_t size) {
+static error_t program(blockdevice_t* bd, const uint8_t* data, uint32_t addr, uint32_t size) {
   (void)bd; // suppress unused warning
   DPRINT("BD WRITE %i @ %x\n", size, addr);
 

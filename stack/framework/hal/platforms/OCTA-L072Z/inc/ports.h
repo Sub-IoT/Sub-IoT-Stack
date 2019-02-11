@@ -23,7 +23,6 @@
 #include "stm32_common_mcu.h"
 #include "platform_defs.h"
 #include "hwgpio.h"
-#include "stm32_common_eeprom.h"
 
 static const spi_port_t spi_ports[] = {
   {
@@ -81,12 +80,5 @@ static pin_id_t debug_pins[PLATFORM_NUM_DEBUGPINS] = {
   PIN(GPIO_PORTB, 9), // exposed on CN3 header, pin 24
   PIN(GPIO_PORTB, 8), // exposed on CN3 header, pin 25
 };
-
-
-static blockdevice_stm32_eeprom_t eeprom_bd = (blockdevice_stm32_eeprom_t){
-  .base.driver = &blockdevice_driver_stm32_eeprom,
-};
-
-static blockdevice_t* d7_systemfiles_blockdevice = (blockdevice_t*)&eeprom_bd;
 
 #endif
