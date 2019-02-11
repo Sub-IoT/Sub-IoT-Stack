@@ -43,7 +43,7 @@
 #include "alp_layer.h"
 #include "dae.h"
 #include "modem_interface.h"
-#include "ports.h"
+#include "platform.h"
 
 #if PLATFORM_NUM_LEDS > 0
   #include "hwleds.h"
