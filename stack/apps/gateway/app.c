@@ -45,8 +45,6 @@
 #include "modem_interface.h"
 #include "ports.h"
 
-static blockdevice_stm32_eeprom_t systemfiles_eeprom_blockdevice;
-
 #if PLATFORM_NUM_LEDS > 0
   #include "hwleds.h"
 
