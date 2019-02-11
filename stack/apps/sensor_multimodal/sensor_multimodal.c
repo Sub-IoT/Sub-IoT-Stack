@@ -37,7 +37,7 @@
 
 #include "modules_defs.h"
 #include "hwblockdevice.h"
-#include "stm32_common_eeprom.h" // TODO platform specific
+#include "ports.h"
 
 #ifndef MODULE_LORAWAN
   #error "sensor multimodal requires MODULE_LORAWAN=y"
@@ -114,7 +114,7 @@ static uint8_t transmit_d7ap(uint8_t* alp, uint16_t len) {
 }
 
 static void init_d7ap() {
-  d7ap_init(&systemfiles_eeprom_blockdevice);
+  d7ap_init(d7_systemfiles_blockdevice);
   d7ap_fs_write_dll_conf_active_access_class(0x21);
   DEBUG_PRINTF("DASH7 init");
 }
@@ -215,11 +215,7 @@ void execute_sensor_measurement()
 void bootstrap() {
   DEBUG_PRINTF("Device booted\n");
 
-  systemfiles_eeprom_blockdevice = (blockdevice_stm32_eeprom_t){
-    .base.driver = &blockdevice_driver_stm32_eeprom,
-  };
-
-  blockdevice_init((blockdevice_t*)&systemfiles_eeprom_blockdevice);
+  blockdevice_init(d7_systemfiles_blockdevice);
 
   network_drivers_init();
   current_network_driver = &d7;

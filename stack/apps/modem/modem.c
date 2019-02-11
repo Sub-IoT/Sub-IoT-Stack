@@ -37,12 +37,10 @@
 #include "modem_interface.h"
 #include "platform.h"
 #include "hwblockdevice.h"
-#include "stm32_common_eeprom.h"
+#include "ports.h"
 
 // This example application contains a modem which can be used from another MCU through
 // the serial interface
-
-static blockdevice_stm32_eeprom_t systemfiles_eeprom_blockdevice;
 
 void bootstrap()
 {
@@ -53,13 +51,9 @@ void bootstrap()
     modem_interface_init(PLATFORM_MODEM_INTERFACE_UART, PLATFORM_MODEM_INTERFACE_BAUDRATE, (pin_id_t) 0, (pin_id_t) 0);
 #endif
 
-    systemfiles_eeprom_blockdevice = (blockdevice_stm32_eeprom_t){
-      .base.driver = &blockdevice_driver_stm32_eeprom,
-    };
 
-    blockdevice_init((blockdevice_t*)&systemfiles_eeprom_blockdevice);
-
-    d7ap_init((blockdevice_t*)&systemfiles_eeprom_blockdevice);
+    blockdevice_init(d7_systemfiles_blockdevice);
+    d7ap_init(d7_systemfiles_blockdevice);
     alp_layer_init(NULL, true);
 
     uint8_t uid[8];

@@ -34,7 +34,7 @@
 
 #include "dae.h"
 
-#include "stm32_common_eeprom.h"
+#include "ports.h"
 
 #ifdef USE_HTS221
   #include "HTS221_Driver.h"
@@ -139,12 +139,9 @@ void bootstrap()
 {
     log_print_string("Device booted\n");
 
-    systemfiles_eeprom_blockdevice = (blockdevice_stm32_eeprom_t){
-      .base.driver = &blockdevice_driver_stm32_eeprom,
-    };
+    blockdevice_init(d7_systemfiles_blockdevice);
+    d7ap_init(d7_systemfiles_blockdevice);
 
-    blockdevice_init((blockdevice_t*)&systemfiles_eeprom_blockdevice);
-    d7ap_init((blockdevice_t*)&systemfiles_eeprom_blockdevice);
     alp_layer_init(NULL, false);
 
     init_user_files();
