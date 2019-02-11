@@ -39,7 +39,7 @@
 #include "alp_layer.h"
 #include "dae.h"
 
-#include "ports.h"
+#include "platform.h"
 
 #ifdef USE_HTS221
   #include "HTS221_Driver.h"

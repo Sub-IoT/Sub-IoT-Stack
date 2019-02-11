@@ -42,7 +42,7 @@
 #include "dae.h"
 #include "platform_defs.h"
 #include "modules_defs.h"
-#include "ports.h"
+#include "platform.h"
 
 #ifdef USE_HTS221
   #include "HTS221_Driver.h"
