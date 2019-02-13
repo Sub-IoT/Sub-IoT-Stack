@@ -29,4 +29,8 @@
 #SET_PROPERTY(CACHE ${APP_PREFIX}_<param_name> PROPERTY STRINGS "value1;value2")
 #
 
+#Add App specific linker flags
+#Add newlib for this app
+INSERT_LINKER_FLAGS(AFTER LINK_LIBRARIES INSERT "-fuse-clib=newlib")
+
 APP_BUILD(NAME ${APP_NAME} SOURCES at_modem.c at_parser.c LIBS d7ap framework)
