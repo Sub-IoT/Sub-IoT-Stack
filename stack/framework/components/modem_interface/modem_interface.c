@@ -21,6 +21,7 @@
 
 #include "log.h"
 
+
 #define RX_BUFFER_SIZE 256
 
 #define TX_FIFO_FLUSH_CHUNK_SIZE 10 // at a baudrate of 115200 this ensures completion within 1 ms
@@ -52,7 +53,7 @@ static fifo_t rx_fifo;
 #define MODEM_INTERFACE_TX_FIFO_SIZE 255
 static uint8_t modem_interface_tx_buffer[MODEM_INTERFACE_TX_FIFO_SIZE];
 static fifo_t modem_interface_tx_fifo;
-static bool flush_in_progress = false;
+static bool request_pending = false;
 
 uint8_t header[SERIAL_FRAME_HEADER_SIZE];
 static uint8_t payload_len = 0;
@@ -63,14 +64,30 @@ static pin_id_t target_uart_state_pin;
 
 static bool modem_listen_uart_inited = false;
 static bool parsed_header = false;
-static bool waiting_for_receiver = false;
-static bool transmitting = false;
-static bool receiving = false;
-
 
 cmd_handler_t alp_handler;
 cmd_handler_t ping_response_handler;
 cmd_handler_t logging_handler;
+
+
+typedef enum {
+  STATE_IDLE,
+  STATE_REQ_START,
+  STATE_REQ_WAIT,
+  STATE_REQ_BUSY,
+  STATE_RESP,
+  STATE_RESP_PENDING_REQ
+} state_t;
+
+static state_t state = STATE_IDLE;
+
+#define SWITCH_STATE(s) do { \
+  state = s; \
+  DPRINT("switch to %s\n", #s); \
+} while(0)
+
+static void process_rx_fifo(void *arg);
+
 
 /** @Brief Enable UART interface and UART interrupt
  *  @return void
@@ -88,22 +105,9 @@ static void modem_interface_enable(void)
  */
 static void modem_interface_disable(void) 
 {
-  DPRINT("uart disabled @ %i",timer_get_counter_value());
   modem_listen_uart_inited = false;
   assert(uart_disable(uart));
-}
-
-/** @brief Enables UART interrupt line in 
- *  to wake up the receiver.
- *  @return void
- */
-static void wakeup_receiver()
-{ 
-  if(!waiting_for_receiver)
-  {
-    hw_gpio_set(uart_state_pin);
-    waiting_for_receiver=true;
-  }
+  DPRINT("uart disabled @ %i",timer_get_counter_value());
 }
 
 /** @brief Lets receiver know that 
@@ -113,6 +117,7 @@ static void wakeup_receiver()
 static void release_receiver()
 {
 #ifdef PLATFORM_USE_MODEM_INTERRUPT_LINES
+  DPRINT("release receiver\n");
   modem_interface_disable();
   hw_gpio_clr(uart_state_pin);
 #endif
@@ -136,11 +141,11 @@ static void flush_modem_interface_tx_fifo(void *arg)
   // When there is still data left in the fifo this will be rescheduled
   // with lowest prio
   uint8_t chunk[TX_FIFO_FLUSH_CHUNK_SIZE];
-  if(len < 10) 
+  if(len <= TX_FIFO_FLUSH_CHUNK_SIZE)
   {
     fifo_pop(&modem_interface_tx_fifo, chunk, len);
     uart_send_bytes(uart, chunk, len);
-    transmitting=false;
+    request_pending = false;
     release_receiver();
   } 
   else 
@@ -152,24 +157,90 @@ static void flush_modem_interface_tx_fifo(void *arg)
 #endif
 }
 
+/** @Brief Keeps µC awake while receiving UART data
+ *  @return void
+ */
+static void modem_listen(void* arg)
+{
+  if(!modem_listen_uart_inited)
+  {
+    modem_interface_enable();
+    hw_gpio_set(uart_state_pin); //set interrupt gpio to indicate ready for data
+  }
+
+  // prevent the MCU to go back to stop mode by scheduling ourself again until pin goes low,
+  // to keep UART RX enabled
+  sched_post_task_prio(&modem_listen, MIN_PRIORITY, NULL);
+}
+
+
 /** @Brief Schedules flush tx fifo when receiver is ready
  *  @return void
  */
-static void get_receiver_ready()
+static void execute_state_machine()
 {
 #ifdef PLATFORM_USE_MODEM_INTERRUPT_LINES
-  if(!receiving)
-  {
-    transmitting=true;
-    wakeup_receiver();
-    DPRINT("request receiver");
-    while(waiting_for_receiver){} //TODO timeout?
-    modem_interface_enable();
-    sched_post_task_prio(&flush_modem_interface_tx_fifo, MIN_PRIORITY, NULL);
-  }
-  else
-  {
-    sched_post_task_prio(&get_receiver_ready, MIN_PRIORITY, NULL);
+  switch(state) {
+    case STATE_RESP:
+      // response period completed, process the request
+      assert(!hw_gpio_get_in(target_uart_state_pin));
+      sched_post_task(&process_rx_fifo);
+      if(request_pending) {
+        SWITCH_STATE(STATE_RESP_PENDING_REQ);
+      } else {
+        SWITCH_STATE(STATE_IDLE);
+        hw_gpio_clr(uart_state_pin);
+        sched_cancel_task(&modem_listen);
+        modem_interface_disable();
+      }
+      break;
+    case STATE_IDLE:
+      if(hw_gpio_get_in(target_uart_state_pin)) {
+        // wake-up requested
+        SWITCH_STATE(STATE_RESP);
+        modem_listen(NULL);
+        break;
+      } else {
+        SWITCH_STATE(STATE_REQ_START);
+        // fall-through to STATE_REQ_START!
+      }
+    case STATE_REQ_START:
+      // TODO timeout
+      SWITCH_STATE(STATE_REQ_WAIT);
+      hw_gpio_set(uart_state_pin); // wake-up receiver
+      DPRINT("wake-up receiver\n");
+      sched_post_task(&execute_state_machine); // reschedule again to prevent sleeoping
+      // in principle we could go to sleep but this will cause pin to float, this can be improved later
+      break;
+    case STATE_REQ_WAIT:
+      if(hw_gpio_get_in(target_uart_state_pin)) {
+        // receiver active
+        SWITCH_STATE(STATE_REQ_BUSY);
+        // fall-through to STATE_REQ_BUSY!
+      } else {
+        // TODO timeout
+        sched_post_task(&execute_state_machine); // reschedule again to prevent sleeoping
+        // in principle we could go to sleep but this will cause pin to float, this can be improved later
+        break;
+      }
+    case STATE_REQ_BUSY:
+      if(request_pending) {
+        modem_interface_enable();
+        sched_post_task_prio(&flush_modem_interface_tx_fifo, MIN_PRIORITY, NULL);
+      } else {
+        SWITCH_STATE(STATE_IDLE);
+      }
+      break;
+    case STATE_RESP_PENDING_REQ:
+      assert(request_pending);
+      // response period completed, initiate pending request by switching to REQ_START
+      assert(!hw_gpio_get_in(target_uart_state_pin));
+      SWITCH_STATE(STATE_REQ_START);
+      sched_post_task(&execute_state_machine);
+      break;
+    default:
+      DPRINT("unexpected state %i\n", state);
+      assert(false);
   }
 #endif
 }
@@ -290,59 +361,15 @@ static void uart_rx_cb(uint8_t data)
     start_atomic();
         err = fifo_put(&rx_fifo, &data, 1); assert(err == SUCCESS);
     end_atomic();
-
-    if(!sched_is_scheduled(&process_rx_fifo))
-        sched_post_task_prio(&process_rx_fifo, MIN_PRIORITY - 1, NULL);
 }
-/** @Brief Keeps µC awake while receiving UART data
- *  @return void
- */
-static void modem_listen(void* arg) 
-{
-  if(!modem_listen_uart_inited) 
-  {
-    modem_interface_enable();
-    hw_gpio_set(uart_state_pin); //set interrupt gpio to indicate ready for data
-  }
 
-  if(receiving==true)
-  {
-    // prevent the MCU to go back to stop mode by scheduling ourself again until pin goes low,
-    // to keep UART RX enabled
-    sched_post_task_prio(&modem_listen, MIN_PRIORITY, NULL);
-  }
-  else 
-  {
-    hw_gpio_clr(uart_state_pin);
-    modem_interface_disable();
-  }
-}
 /** @Brief Processes events on UART interrupt line
  *  @return void
  */
 static void uart_int_cb(pin_id_t pin_id, uint8_t event_mask)
 {
-  /*
-    Delay uart init until scheduled task,
-    MCU clock will only be initialzed correclty after ISR, 
-    when entering scheduler again
-  */
-  if(event_mask & GPIO_RISING_EDGE) 
-  {
-    if(transmitting)
-    {
-      DPRINT("Target ready @ %i",timer_get_counter_value());
-      waiting_for_receiver=false;
-    }
-    else
-    {
-      receiving=true;
-      DPRINT("Ready to receive @ %i",timer_get_counter_value());
-      sched_post_task(&modem_listen);
-    }
-  }
-  else
-    receiving=false;
+  // do not read GPIO level here in interrupt context (GPIO clock might not be enabled yet), execute state machine instead
+  sched_post_task(&execute_state_machine);
 }
 
 static void modem_interface_set_rx_interrupt_callback(uart_rx_inthandler_t uart_rx_cb) {
@@ -357,8 +384,9 @@ void modem_interface_init(uint8_t idx, uint32_t baudrate, pin_id_t uart_state_in
 {
   fifo_init(&modem_interface_tx_fifo, modem_interface_tx_buffer, MODEM_INTERFACE_TX_FIFO_SIZE);
   sched_register_task(&flush_modem_interface_tx_fifo);
-  sched_register_task(&get_receiver_ready);
+  sched_register_task(&execute_state_machine);
   sched_register_task(&process_rx_fifo);
+  state = STATE_IDLE;
   uart_state_pin=uart_state_int_pin;
   target_uart_state_pin=target_uart_state_int_pin;
 
@@ -375,7 +403,6 @@ void modem_interface_init(uint8_t idx, uint32_t baudrate, pin_id_t uart_state_in
   assert(hw_gpio_enable_interrupt(target_uart_state_pin) == SUCCESS);
   if(hw_gpio_get_in(target_uart_state_pin))
   {
-    receiving=true;
     sched_post_task(&modem_listen);
     DPRINT("Ready to receive (boot) @ %i",timer_get_counter_value());
   }
@@ -387,8 +414,6 @@ void modem_interface_init(uint8_t idx, uint32_t baudrate, pin_id_t uart_state_in
   modem_interface_enable();
 #endif
 }
-
-
 
 void modem_interface_transfer_bytes(uint8_t* bytes, uint8_t length, serial_message_type_t type) 
 {
@@ -410,13 +435,16 @@ void modem_interface_transfer_bytes(uint8_t* bytes, uint8_t length, serial_messa
   DPRINT("TX PAYLOAD:");
   DPRINT_DATA(bytes, length);
    
+  start_atomic();
+  request_pending = true;
   fifo_put(&modem_interface_tx_fifo, (uint8_t*) &header, SERIAL_FRAME_HEADER_SIZE);
   fifo_put(&modem_interface_tx_fifo, bytes, length);
+  end_atomic();
 
 #ifdef PLATFORM_USE_MODEM_INTERRUPT_LINES
-  sched_post_task_prio(&get_receiver_ready, MIN_PRIORITY, NULL);
+  sched_post_task_prio(&execute_state_machine, MIN_PRIORITY, NULL);
 #else
-  sched_post_task_prio(&flush_modem_interface_tx_fifo, MIN_PRIORITY, NULL);
+  sched_post_task_prio(&flush_modem_interface_tx_fifo, MIN_PRIORITY, NULL); // TODO also use execute_state_machine() here, move logic when not using interrupt lines in there as well
 #endif  
 }
 
