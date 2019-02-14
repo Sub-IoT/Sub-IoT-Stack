@@ -361,6 +361,10 @@ static void uart_rx_cb(uint8_t data)
     start_atomic();
         err = fifo_put(&rx_fifo, &data, 1); assert(err == SUCCESS);
     end_atomic();
+
+#ifndef PLATFORM_USE_MODEM_INTERRUPT_LINES
+    sched_post_task(&process_rx_fifo);
+#endif
 }
 
 /** @Brief Processes events on UART interrupt line
@@ -444,7 +448,7 @@ void modem_interface_transfer_bytes(uint8_t* bytes, uint8_t length, serial_messa
 #ifdef PLATFORM_USE_MODEM_INTERRUPT_LINES
   sched_post_task_prio(&execute_state_machine, MIN_PRIORITY, NULL);
 #else
-  sched_post_task_prio(&flush_modem_interface_tx_fifo, MIN_PRIORITY, NULL); // TODO also use execute_state_machine() here, move logic when not using interrupt lines in there as well
+  sched_post_task_prio(&flush_modem_interface_tx_fifo, MIN_PRIORITY, NULL); // state machine is not used when not using interrupt lines
 #endif  
 }
 
