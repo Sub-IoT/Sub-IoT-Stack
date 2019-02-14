@@ -196,8 +196,13 @@ static void gpio_int_callback(uint8_t pin)
   start_atomic();
   assert(interrupts[pin].callback != 0x0);
   pin_id_t id = PIN(interrupts[pin].interrupt_port, pin);
-  interrupts[pin].callback(id,hw_gpio_get_in(id));
-  // TODO clear?
+  // when interrupting on both edges and when using low power mode where GPIO clocks are disabled we don't know which edge triggered the interrupt.
+  // We could enable the clocks to read in the current GPIO level but most drivers and apps do not need to know this or can determine this based on state.
+  // If the upper layer needs to know it can read the GPIO level, but not in the interrupt context (the callback). Scheduling a task in the callback and reading the pin
+  // in this taks in thread context ensures that the clocks are active and the actual current state (instead of the last latched) is read.
+  // For this reason we pass 0 to the event_mask param of the callback.
+  // TODO when only one interrupt edge is configured we _can_ reliably determine the edge so this can be improved
+  interrupts[pin].callback(id, 0);
   end_atomic();
 }
 
