@@ -1,4 +1,4 @@
-/* * OSS-7 - An opensource implementation of the DASH7 Alliance Protocol for ultra
+`/* * OSS-7 - An opensource implementation of the DASH7 Alliance Protocol for ultra
  * lowpower wireless sensor communication
  *
  * Copyright 2015 University of Antwerp
@@ -27,6 +27,8 @@
 
 #include "cortus_mcu.h"
 #include "machine/gpio.h"
+#include "blockdevice_ram.h"
+#include "d7ap_fs.h"
 
 /********************
  * LED DEFINITIONS *
@@ -87,5 +89,15 @@
 #define SX127x_DIO0_PIN     PIN(gpioPortA, 0)
 #define SX127x_DIO1_PIN     PIN(gpioPortA, 1)
 #endif
+
+
+static blockdevice_ram_t ram_bd = (blockdevice_ram_t){
+ .base.driver = &blockdevice_driver_ram,
+ .size = sizeof(fs_systemfiles),
+ .buffer = (uint8_t*)&fs_systemfiles
+};
+
+static blockdevice_t* d7_systemfiles_blockdevice = (blockdevice_t*)&ram_bd;
+
 
 #endif
