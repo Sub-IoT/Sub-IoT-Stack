@@ -37,7 +37,6 @@
 #include "modem_interface.h"
 #include "platform.h"
 #include "hwblockdevice.h"
-#include "ports.h"
 
 // This example application contains a modem which can be used from another MCU through
 // the serial interface
