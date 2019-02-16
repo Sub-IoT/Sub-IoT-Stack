@@ -1,4 +1,4 @@
-`/* * OSS-7 - An opensource implementation of the DASH7 Alliance Protocol for ultra
+/* * OSS-7 - An opensource implementation of the DASH7 Alliance Protocol for ultra
  * lowpower wireless sensor communication
  *
  * Copyright 2015 University of Antwerp
