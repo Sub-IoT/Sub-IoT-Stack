@@ -45,13 +45,13 @@ static fs_modified_file_callback_t file_modified_callbacks[0x3F] = { NULL };
 
 static fs_d7aactp_callback_t d7aactp_callback = NULL;
 
-static const fs_file_header_t* systemfiles_headers = (const fs_file_header_t*)fs_systemfiles_header_data;
+static const fs_file_header_t* systemfiles_headers = (const fs_file_header_t*)fs_systemfiles.header_data;
 
 // the offset in blockdevice where the file data section starts
 static uint32_t systemfiles_file_data_offset;
 
 // the offset in blockdevice where the file header section starts
-static uint32_t systemfiles_header_offset = D7AP_FS_MAGIC_NUMBER_SIZE; // after magic number
+static uint32_t systemfiles_header_offset;
 
 static blockdevice_t* bd_systemfiles;
 
@@ -100,10 +100,10 @@ void d7ap_fs_init(blockdevice_t* blockdevice_systemfiles)
   bd_systemfiles = blockdevice_systemfiles;
 
   uint8_t expected_magic_number[] = D7AP_FS_MAGIC_NUMBER;
-  assert(memcmp(expected_magic_number, fs_systemfiles_magic_number, sizeof(expected_magic_number)) == 0); // if not the FS on EEPROM is not compatible with the current code
+  assert(memcmp(expected_magic_number, fs_systemfiles.magic_number, sizeof(expected_magic_number)) == 0); // if not the FS on EEPROM is not compatible with the current code
 
-  systemfiles_file_data_offset = (uint32_t)(fs_systemfiles_file_data - fs_systemfiles_magic_number);
-
+  systemfiles_header_offset = (uint32_t)(fs_systemfiles.header_data - fs_systemfiles.magic_number);
+  systemfiles_file_data_offset = (uint32_t)(fs_systemfiles.file_data - fs_systemfiles.magic_number);
   // TODO platform specific
 
   // TODO set FW version
@@ -233,7 +233,7 @@ alp_status_codes_t d7ap_fs_read_file(uint8_t file_id, uint32_t offset, uint8_t* 
   if(IS_SYSTEM_FILE(file_id)) {
     if(systemfiles_headers[file_id].length < offset + length) return ALP_STATUS_UNKNOWN_ERROR; // TODO more specific error (wait for spec discussion)
 
-    blockdevice_read(bd_systemfiles, buffer, systemfiles_file_data_offset + fs_systemfiles_file_offsets[file_id] + offset, length);
+    blockdevice_read(bd_systemfiles, buffer,  systemfiles_file_data_offset + fs_systemfiles_file_offsets[file_id] + offset, length);
   } else {
     if(fs_userfiles_header_data[get_user_file_header_index(file_id)].length < offset + length) return ALP_STATUS_UNKNOWN_ERROR; // TODO more specific error (wait for spec discussion)
     memcpy(buffer, (const void*)&(fs_userfiles_file_data[get_user_file_data_offset(file_id) + offset]) , length);

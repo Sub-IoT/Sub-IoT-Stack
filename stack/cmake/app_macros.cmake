@@ -143,19 +143,22 @@ MACRO(APP_BUILD)
 #    ENDIF()
 
     # extract hex files
+
+    # when the system files are not stored a separate linker section but in RAM (default when not defined in platform) make sure these sections are not removed from the app hex
+    IF((DEFINED PLATFORM_FS_SYSTEMFILES_IN_SEPARATE_LINKER_SECTION) AND PLATFORM_FS_SYSTEMFILES_IN_SEPARATE_LINKER_SECTION)
+      SET(REMOVE_SECTIONS "-R .d7ap_fs_systemfiles")
+      SET(ADD_SECTIONS "-j .d7ap_fs_systemfile")
+    ENDIF()
+
     ADD_CUSTOM_COMMAND(TARGET ${ELF} POST_BUILD COMMAND ${CMAKE_OBJCOPY} -O ihex ${ELF} ${__APP_BUILD_NAME}-full.hex)
     ADD_CUSTOM_COMMAND(TARGET ${ELF} POST_BUILD COMMAND ${CMAKE_OBJCOPY}
       -O ihex
-      -R .d7ap_fs_systemfiles_magic_number
-      -R .d7ap_fs_systemfiles_header_data
-      -R .d7ap_fs_systemfiles_data
+      ${REMOVE_SECTIONS}
       ${ELF} ${__APP_BUILD_NAME}-app.hex
     )
     ADD_CUSTOM_COMMAND(TARGET ${ELF} POST_BUILD COMMAND ${CMAKE_OBJCOPY}
       -O ihex
-      -j .d7ap_fs_systemfiles_magic_number
-      -j .d7ap_fs_systemfiles_header_data
-      -j .d7ap_fs_systemfiles_data
+      ${ADD_SECTIONS}
       ${ELF} ${__APP_BUILD_NAME}-eeprom-fs.hex
     )
 
