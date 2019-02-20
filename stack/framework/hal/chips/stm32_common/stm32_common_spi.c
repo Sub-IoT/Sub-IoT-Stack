@@ -33,7 +33,7 @@
 #include "errors.h"
 
 
-#define MAX_SPI_SLAVE_HANDLES 4        // TODO expose this in chip configuration
+#define MAX_SPI_SLAVE_HANDLES 5        // TODO expose this in chip configuration
 
 #define __SPI_DIRECTION_1LINE_RX(__HANDLE__) do {\
                                              CLEAR_BIT((__HANDLE__)->Instance->CR1, SPI_CR1_RXONLY | SPI_CR1_BIDIMODE | SPI_CR1_BIDIOE);\
