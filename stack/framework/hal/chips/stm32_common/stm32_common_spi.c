@@ -160,7 +160,6 @@ spi_handle_t* spi_init(uint8_t spi_number, uint32_t baudrate, uint8_t databits, 
   assert(databits == 8);
   assert(spi_number < SPI_COUNT);
 
-  next_spi_slave_handle = 0;
   handle[spi_number].slaves=0;
   
   if (handle[spi_number].hspi.Instance != NULL)
@@ -231,16 +230,12 @@ spi_handle_t* spi_init(uint8_t spi_number, uint32_t baudrate, uint8_t databits, 
 
 spi_slave_handle_t*  spi_init_slave(spi_handle_t* spi, pin_id_t cs_pin, bool cs_is_active_low) {
   assert(next_spi_slave_handle < MAX_SPI_SLAVE_HANDLES);
-
   bool initial_level = spi->active > 0 && cs_is_active_low;
-
   GPIO_InitTypeDef GPIO_InitStruct;
-  GPIO_InitStruct.Pin = 1 << GPIO_PIN(cs_pin);
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_PULLUP; // TODO depending on cs_is_active_low?
   GPIO_InitStruct.Speed = GPIO_SPEED_HIGH;
   error_t err = hw_gpio_configure_pin_stm(cs_pin, &GPIO_InitStruct);
-  __HAL_RCC_GPIOB_CLK_ENABLE(); // TODO
   assert(err == SUCCESS || err == EALREADY);
 
   if(cs_is_active_low) {
@@ -254,13 +249,11 @@ spi_slave_handle_t*  spi_init_slave(spi_handle_t* spi, pin_id_t cs_pin, bool cs_
       .cs               = cs_pin,
       .cs_is_active_low = cs_is_active_low,
       .selected         = false
-};
+  };
 
   // add slave to spi for back-reference
   spi->slave[spi->slaves] = &slave_handle[next_spi_slave_handle];
   spi->slaves++;
-
-
 
   next_spi_slave_handle++;
   return &slave_handle[next_spi_slave_handle-1];
