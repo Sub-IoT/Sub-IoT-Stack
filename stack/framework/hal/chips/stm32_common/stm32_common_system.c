@@ -31,6 +31,8 @@
 #define DPRINT(...)
 //#define DPRINT(...) log_print_string(__VA_ARGS__)
 
+static system_reboot_reason_t reboot_reason = REBOOT_REASON_NOT_IMPLEMENTED;
+
 static uint32_t gpioa_moder;
 static uint32_t gpiob_moder;
 static uint32_t gpioc_moder;
@@ -76,6 +78,16 @@ static void gpio_config_restore() {
   __HAL_RCC_GPIOH_CLK_DISABLE();
 
   RCC->IOPENR = iopenr;
+}
+
+system_reboot_reason_t hw_system_reboot_reason()
+{
+  return reboot_reason;
+}
+
+void hw_system_save_reboot_reason()
+{
+  reboot_reason = REBOOT_REASON_OTHER; // TODO
 }
 
 void hw_enter_lowpower_mode(uint8_t mode)

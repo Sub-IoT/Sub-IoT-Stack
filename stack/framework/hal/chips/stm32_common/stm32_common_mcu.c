@@ -25,7 +25,7 @@
 #include "debug.h"
 
 #include "timer.h"
-
+#include "hwsystem.h"
 #include "platform_defs.h"
 
 
@@ -88,6 +88,7 @@ void stm32_common_mcu_init()
 {
   HAL_Init();
   init_clock();
+  hw_system_save_reboot_reason();
 }
 
 uint32_t HAL_GetTick(void)

@@ -4,6 +4,7 @@
 #include "fifo.h"
 #include "hwuart.h"
 #include "hwgpio.h"
+#include "hwsystem.h"
 
 
 typedef enum
@@ -11,10 +12,12 @@ typedef enum
     SERIAL_MESSAGE_TYPE_ALP_DATA=0X01,
     SERIAL_MESSAGE_TYPE_PING_REQUEST=0X02,
     SERIAL_MESSAGE_TYPE_PING_RESPONSE=0X03,
-    SERIAL_MESSAGE_TYPE_LOGGING=0X04
+    SERIAL_MESSAGE_TYPE_LOGGING=0X04,
+    SERIAL_MESSAGE_TYPE_REBOOTED=0X05,
 } serial_message_type_t;
 
 typedef void (*cmd_handler_t)(fifo_t* cmd_fifo);
+typedef void (*target_rebooted_callback_t)(system_reboot_reason_t reboot_reason);
 
 /*
 ---------------HEADER(bytes)---------------------
@@ -44,11 +47,16 @@ void modem_interface_transfer_bytes(uint8_t* bytes, uint8_t length, serial_messa
  *  @return Void.
  */
 void modem_interface_transfer(char* string);
-/** @brief Registers callback to process a certain type op received UART data
+/** @brief Registers callback to process a certain type of received UART data
  *  @param cmd_handler Pointer to function that processes the data
  *  @param type The type of data that needs to be processed by the given callback function
  *  @return Void.
  */
 void modem_interface_register_handler(cmd_handler_t cmd_handler, serial_message_type_t type);
+
+/** @brief Registers callback to be executed when the remote target reboots
+ *  @param cb Callback function pointer
+ */
+void modem_interface_set_target_rebooted_callback(target_rebooted_callback_t cb);
 
 #endif //MODEM_INTERFACE_H
