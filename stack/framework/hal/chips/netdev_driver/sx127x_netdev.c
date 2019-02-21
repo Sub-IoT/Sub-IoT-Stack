@@ -119,6 +119,7 @@ static int _send(netdev_t *netdev, const iolist_t *iolist)
         }
     }
 
+
     /* FIFO operations can not take place in Sleep mode
      * So wake up the chip */
     if (sx127x_get_op_mode(dev) == SX127X_RF_OPMODE_SLEEP) {
@@ -153,8 +154,17 @@ static int _send(netdev_t *netdev, const iolist_t *iolist)
                 dev->packet.pos = size;
                 if (dev->options & SX127X_OPT_TELL_TX_REFILL) // we expect to refill the FIFO with subsequent data
                 {
-                    sx127x_reg_write(dev, SX127X_REG_FIFOTHRESH, 0x80 | (size/2 - 1));
-                    dev->packet.fifothresh = size/2;
+                	// Setting the fifo threshold to half the packet length
+                	if ((dev->packet.length % 2) == 1)
+                	{
+                		dev->packet.fifothresh = ((dev->packet.length+1)/2);
+                		sx127x_reg_write(dev, SX127X_REG_FIFOTHRESH, (0x80 | (dev->packet.fifothresh-1)));
+                	}
+                	else
+                	{
+                		dev->packet.fifothresh = ((dev->packet.length/2)+1);
+                		sx127x_reg_write(dev, SX127X_REG_FIFOTHRESH, (0x80 | (dev->packet.fifothresh-1)));
+                	}
 
                     sx127x_write_fifo(dev, iolist->iol_base, size);
                     hw_gpio_set_edge_interrupt(dev->params.dio1_pin, GPIO_FALLING_EDGE);
@@ -221,9 +231,16 @@ static int _send(netdev_t *netdev, const iolist_t *iolist)
             timer_add_event(&dev->_internal.tx_timeout_timer);
         }
 
-        /* Put chip into transfer mode */
-        sx127x_set_state(dev, SX127X_RF_TX_RUNNING);
-        sx127x_set_op_mode(dev, SX127X_RF_OPMODE_TRANSMITTER);
+        if (sx127x_get_state(dev) & SX127X_RF_TX_RUNNING) {}
+        else {
+        	/* Put chip into Standby mode */
+            sx127x_set_state(dev, SX127X_RF_IDLE);
+            sx127x_set_op_mode(dev, SX127X_RF_OPMODE_STANDBY);
+
+        	/* Put chip into transfer mode */
+        	sx127x_set_state(dev, SX127X_RF_TX_RUNNING);
+        	sx127x_set_op_mode(dev, SX127X_RF_OPMODE_TRANSMITTER);
+        }
     }
 
     return 0;
@@ -371,6 +388,9 @@ static int _init(netdev_t *netdev)
     sx127x_init_radio_settings(sx127x);
     /* Put chip into sleep */
     sx127x_set_sleep(sx127x);
+
+    /* Put chip into standby mode*/
+    sx127x_set_standby(sx127x);
 
     DEBUG("[sx127x] init_radio: sx127x initialization done\n");
     init_done = true;

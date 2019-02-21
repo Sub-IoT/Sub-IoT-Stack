@@ -58,7 +58,6 @@ uint8_t sx127x_get_state(const sx127x_t *dev)
 
 void sx127x_set_state(sx127x_t *dev, uint8_t state)
 {
-#if ENABLE_DEBUG
     switch (state) {
     case SX127X_RF_IDLE:
         DEBUG("[sx127x] Change state: IDLE\n");
@@ -73,7 +72,6 @@ void sx127x_set_state(sx127x_t *dev, uint8_t state)
         DEBUG("[sx127x] Change state: UNKNOWN\n");
         break;
     }
-#endif
 
     dev->settings.state = state;
 }
@@ -629,7 +627,6 @@ uint8_t sx127x_get_op_mode(const sx127x_t *dev)
 
 void sx127x_set_op_mode(const sx127x_t *dev, uint8_t op_mode)
 {
-#if ENABLE_DEBUG
     switch(op_mode) {
     case SX127X_RF_OPMODE_SLEEP:
         DEBUG("[sx127x] Set op mode: SLEEP\n");
@@ -650,16 +647,13 @@ void sx127x_set_op_mode(const sx127x_t *dev, uint8_t op_mode)
         DEBUG("[sx127x] Set op mode: UNKNOWN (%d)\n", op_mode);
         break;
     }
-#endif
 
 #if defined(PLATFORM_SX127X_USE_MANUAL_RXTXSW_PIN) || defined(PLATFORM_USE_ABZ)
   set_antenna_switch(dev, op_mode);
 #endif
 
     /* Replace previous mode value and setup new mode value */
-    sx127x_reg_write(dev, SX127X_REG_OPMODE,
-                     (sx127x_reg_read(dev, SX127X_REG_OPMODE) &
-                      SX127X_RF_OPMODE_MASK) | op_mode);
+    sx127x_reg_write(dev, SX127X_REG_OPMODE, op_mode);
 }
 
 uint32_t computeRxBw( uint8_t mantisse, uint8_t exponent )
