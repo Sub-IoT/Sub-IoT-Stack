@@ -79,9 +79,7 @@ char at_execute_command(string_t command, char *value, unsigned char type)
 
     for(i = 0; cmd_items[i].cmd != NULL; i++)
     {
-        int cmd_len = strlen(cmd_items[i].cmd);
-
-        if(strncmp((const char *)command, cmd_items[i].cmd, cmd_len) == 0)
+        if(strcmp((const char *)command, cmd_items[i].cmd) == 0)
         {            
             switch(type)
             {
