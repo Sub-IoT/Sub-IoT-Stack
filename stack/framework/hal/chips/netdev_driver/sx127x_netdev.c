@@ -97,12 +97,6 @@ static int _send(netdev_t *netdev, const iolist_t *iolist)
 {
     sx127x_t *dev = (sx127x_t*) netdev;
 
-    if (sx127x_get_state(dev) == SX127X_RF_TX_RUNNING) {
-            DEBUG("[sx127x] Cannot send packet: radio already in transmitting "
-                  "state.\n");
-            return -ENOTSUP;
-    }
-
     // assume only one item in this list
     uint16_t size = iolist->iol_len; //iolist_size(iolist);
 

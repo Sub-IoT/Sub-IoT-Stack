@@ -149,20 +149,21 @@ uint16_t default_syncword = 0x192F;
 
 static frame_t tx_frame;
 static frame_t rx_frame;
-static char payload[120]; // max size allowed to apply FEC
 
 static uint16_t counter = 0;
 static uint16_t missed_packets_counter = 0;
 static uint16_t received_packets_counter = 0;
-static int16_t tx_packet_delay_s = 5;
 
 static uint64_t id;
 
+bool refill_flag = 0;
+
+static char cmd_tx_continuously(char *value);
 static char cmd_tx(char *value);
 
 // TODO code duplication with noise_test, refactor later
 static void channel_id_to_string(channel_id_t* channel, char* str, size_t len) {
-    char rate;
+    char rate = 'N';
     char band[3];
     switch(channel->channel_header.ch_class)
     {
@@ -181,24 +182,23 @@ static void channel_id_to_string(channel_id_t* channel, char* str, size_t len) {
     snprintf(str, len, "%.3s%c%i", band, rate, channel->center_freq_index);
 }
 
-static uint8_t encode_packet(hw_radio_packet_t* packet, uint8_t* encoded_packet)
+static uint16_t encode_packet(uint8_t *data, uint16_t nbytes)
 {
-    uint8_t encoded_len = packet->length;
-    memcpy(encoded_packet, packet->data, packet->length);
+    uint16_t encoded_len = nbytes;
 
 #ifndef HAL_RADIO_USE_HW_FEC
     if (current_channel_id.channel_header.ch_coding == PHY_CODING_FEC_PN9)
-        encoded_len = fec_encode(encoded_packet, packet->length);
+        encoded_len = fec_encode(data, nbytes);
 #endif
 
 #ifndef HAL_RADIO_USE_HW_DC_FREE
-    pn9_encode(encoded_packet, encoded_len);
+    pn9_encode(data, encoded_len);
 #endif
 
     return encoded_len;
 }
 
-static hw_radio_packet_t* alloc_new_packet(uint8_t length) {
+static hw_radio_packet_t* alloc_new_packet(uint16_t length) {
     return &rx_frame.hw_radio_packet;
 }
 
@@ -255,8 +255,8 @@ static void packet_received(hw_radio_packet_t* hw_radio_packet)
     rx_data[data_len] = '\0';
     char chan[8];
     channel_id_to_string(&default_channel_id, chan, sizeof(chan));
-    console_printf("\r\nDATA received: %s", rx_data);
-    console_printf("\r\n%7s, counter <%i>, rssi <%idBm>, msgId <%lu>, Id <%lu>, timestamp <%lu>\n", chan, msg_counter, hw_radio_packet->rx_meta.rssi, (unsigned long)msg_id, (unsigned long)id, hw_radio_packet->rx_meta.timestamp);
+    DPRINT("DATA received: %s", rx_data);
+    DPRINT("%7s, counter <%i>, rssi <%idBm>, msgId <%lu>, Id <%lu>, timestamp <%lu>", chan, msg_counter, hw_radio_packet->rx_meta.rssi, (unsigned long)msg_id, (unsigned long)id, hw_radio_packet->rx_meta.timestamp);
 
     if(counter == 0)
     {
@@ -281,7 +281,7 @@ static void packet_received(hw_radio_packet_t* hw_radio_packet)
     if(msg_counter > 0)
         per = 100.0 - ((double)received_packets_counter / (double)msg_counter) * 100.0;
 
-    console_printf("\r\nRX failure rate = %i %%\r\n", (int)per);
+    DPRINT("RX failure rate = %i %%", (int)per);
 }
 
 static void packet_header_received(uint8_t *data, uint8_t len)
@@ -317,11 +317,11 @@ static void stop() {
     netdev->driver->set(netdev, NETOPT_STATE, &opmode, sizeof(netopt_state_t));
 
     // make sure to cancel tasks which might me pending already
-    if(state == STATE_TX)
+    /*if(state == STATE_TX)
     {
-        timer_cancel_task(&cmd_tx);
-        sched_cancel_task(&cmd_tx);
-    }
+        timer_cancel_task(&cmd_tx_repeat);
+        sched_cancel_task(&cmd_tx_repeat);
+    }*/
 }
 
 static void packet_transmitted(timer_tick_t timestamp)
@@ -331,13 +331,21 @@ static void packet_transmitted(timer_tick_t timestamp)
 
     state = STATE_IDLE;
 
+    /* TODO Repeat ?
     timer_tick_t delay;
     if(tx_packet_delay_s == 0)
         delay = TIMER_TICKS_PER_SEC * 5;
     else
         delay = TIMER_TICKS_PER_SEC * tx_packet_delay_s;
 
-    timer_post_task_delay(&cmd_tx, delay);
+    timer_post_task_delay(&cmd_tx_repeat, delay);
+    */
+}
+
+static void fill_in_fifo(uint8_t remaining_bytes_len)
+{
+    //Refill the fifo with the same packet
+    hw_radio_send_payload(tx_frame.hw_radio_packet.data, tx_frame.hw_radio_packet.length);
 }
 
 static void process_uart_rx_fifo()
@@ -910,6 +918,9 @@ static char cmd_start_rx(char *value)
     if (state == STATE_TX)
         stop();
 
+    // Setting refill_flag to false
+    refill_flag = false;
+
     // Unlimited Length packet format to set the Receive packet of arbitrary length
     hw_radio_set_payload_length(0x00); // unlimited length mode
 
@@ -925,20 +936,17 @@ static char cmd_start_rx(char *value)
 
 static char cmd_tx(char *value)
 {
-    uint8_t encoded_packet[PACKET_MAX_SIZE + 1];
-
     DPRINT("Sending \"%s\" payload (%d bytes)\n", value, strlen(value));
 
     state = STATE_TX;
 
-    counter = 0;
     tx_frame.hw_radio_packet.length = sizeof(id) + sizeof(counter) + strlen(value);
     memcpy(tx_frame.hw_radio_packet.data + 1, &id, sizeof(id));
     memcpy(tx_frame.hw_radio_packet.data + 1 + sizeof(id), &counter, sizeof(counter));
-    /* the CRC calculation shall include all the bytes of the frame including the byte for the length*/
     memcpy(tx_frame.hw_radio_packet.data + 1 + sizeof(id) + sizeof(counter), value, strlen(value));
 
-#ifndef  HAL_RADIO_USE_HW_CRC
+#ifndef HAL_RADIO_USE_HW_CRC
+    /* the CRC calculation shall include all the bytes of the frame including the byte for the length*/
     uint16_t crc = __builtin_bswap16(crc_calculate(tx_frame.hw_radio_packet.data, tx_frame.hw_radio_packet.length + 1 - 2));
     memcpy(tx_frame.hw_radio_packet.data + 1 + sizeof(id) + sizeof(counter) + strlen(value), &crc, 2);
     tx_frame.hw_radio_packet.length += sizeof(uint16_t); /* CRC is an uint16_t */
@@ -951,17 +959,28 @@ static char cmd_tx(char *value)
     DPRINT_DATA(tx_frame.hw_radio_packet.data, tx_frame.hw_radio_packet.length);
 
     // Encode the packet if not supported by xcvr
-    uint8_t encoded_length = encode_packet(&tx_frame.hw_radio_packet, encoded_packet);
+    tx_frame.hw_radio_packet.length = encode_packet(tx_frame.hw_radio_packet.data,
+                                                    tx_frame.hw_radio_packet.length);
 
-    DPRINT("Encoded frame len<%i>", encoded_length);
-    DPRINT_DATA(encoded_packet, encoded_length);
+    DPRINT("Encoded frame len<%i>", tx_frame.hw_radio_packet.length);
+    DPRINT_DATA(tx_frame.hw_radio_packet.data, tx_frame.hw_radio_packet.length);
 
-    if (hw_radio_send_payload(encoded_packet, encoded_length) == -ENOTSUP) {
+    if(refill_flag)
+        hw_radio_enable_refill(true);
+
+    if (hw_radio_send_payload(tx_frame.hw_radio_packet.data, tx_frame.hw_radio_packet.length) == -ENOTSUP) {
         DPRINT("Cannot send: radio is still transmitting");
         return AT_ERROR;
     }
 
     return AT_OK;
+}
+
+static char cmd_tx_continuously(char *value)
+{
+    // If you need traces, increase the baudrate to 576000
+    refill_flag = true;
+    return (cmd_tx(value));
 }
 
 static uint32_t get_parameter(netopt_t opt, size_t maxlen)
@@ -1111,6 +1130,7 @@ static char cmd_print_help(char *value);
     { "+MODE", cmd_set_opmode, cmd_get_opmode, "<%d>", "get/set operation mode"},
     { "+PAYLEN", cmd_set_payload_length, NULL, "<%d>", "set payload length"},
     { "+TX", cmd_tx, NULL, "<%d or string>","transmit packet over phy"},
+    { "+TXC", cmd_tx_continuously, NULL, "<%d or string>", "transmit continuously same packet over phy"},
     { "+RX", cmd_start_rx, NULL, "","start RX"},
 
     { "+STATUS", cmd_print_status, cmd_print_status, "","print status"},
@@ -1195,7 +1215,7 @@ void bootstrap() {
     init_args.rx_packet_cb = packet_received;
     init_args.tx_packet_cb = packet_transmitted;
     init_args.rx_packet_header_cb = packet_header_received;
-//    init_args.tx_refill_cb = fill_in_fifo;
+    init_args.tx_refill_cb = fill_in_fifo;
 
     hw_radio_init(&init_args);
 
@@ -1219,15 +1239,11 @@ void bootstrap() {
     netdev = (netdev_t*) &xcvr;
 
     id = hw_get_unique_id();
-    strcpy(payload, "TEST");
 
     fifo_init(&uart_rx_fifo, uart_rx_buffer, sizeof(uart_rx_buffer));
     console_set_rx_interrupt_callback(&uart_rx_cb);
 
-    sched_register_task(&cmd_tx);
     sched_register_task(&process_uart_rx_fifo);
-
-    //timer_post_task_delay(&send_packet, TIMER_TICKS_PER_SEC * 5);
 
     // put in RX mode by default
     cmd_start_rx(NULL);
