@@ -166,6 +166,8 @@ static void rx_cb(uint8_t byte) {
 void modem_cb_init(modem_callbacks_t* cbs)
 {
     callbacks = cbs;
+    if(cbs->modem_rebooted_callback)
+      modem_interface_set_target_rebooted_callback(cbs->modem_rebooted_callback);
 }
 
 void modem_init() 

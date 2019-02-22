@@ -85,9 +85,14 @@ void return_file_data_cb(uint8_t file_id, uint32_t offset, uint32_t size, uint8_
   }
 }
 
+void modem_rebooted_cb(system_reboot_reason_t reboot_reason) {
+  log_print_string("modem rebooted (reason %i)\n", (uint8_t)reboot_reason);
+}
+
 modem_callbacks_t callbacks = (modem_callbacks_t){
   .command_completed_callback = &command_completed_cb,
   .return_file_data_callback = &return_file_data_cb,
+  .modem_rebooted_callback = &modem_rebooted_cb
 };
 
 
