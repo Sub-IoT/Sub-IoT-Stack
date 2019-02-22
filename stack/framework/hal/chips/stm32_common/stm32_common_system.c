@@ -31,6 +31,8 @@
 #define DPRINT(...)
 //#define DPRINT(...) log_print_string(__VA_ARGS__)
 
+static system_reboot_reason_t reboot_reason = REBOOT_REASON_NOT_IMPLEMENTED;
+
 static uint32_t gpioa_moder;
 static uint32_t gpiob_moder;
 static uint32_t gpioc_moder;
@@ -76,6 +78,43 @@ static void gpio_config_restore() {
   __HAL_RCC_GPIOH_CLK_DISABLE();
 
   RCC->IOPENR = iopenr;
+}
+
+system_reboot_reason_t hw_system_reboot_reason()
+{
+  return reboot_reason;
+}
+
+void hw_system_save_reboot_reason()
+{
+  reboot_reason = REBOOT_REASON_OTHER;
+
+  if (__HAL_RCC_GET_FLAG(RCC_FLAG_LPWRRST))
+  {
+      assert(false); // not expected
+  }
+  else if (__HAL_RCC_GET_FLAG(RCC_FLAG_WWDGRST) || __HAL_RCC_GET_FLAG(RCC_FLAG_IWDGRST))
+  {
+      reboot_reason = REBOOT_REASON_WDT;
+  }
+  else if (__HAL_RCC_GET_FLAG(RCC_FLAG_SFTRST))
+  {
+      reboot_reason = REBOOT_REASON_SOFTWARE_REBOOT;
+  }
+  else if (__HAL_RCC_GET_FLAG(RCC_FLAG_PORRST))
+  {
+      reboot_reason = REBOOT_REASON_POR;
+  }
+  else if (__HAL_RCC_GET_FLAG(RCC_FLAG_PINRST))
+  {
+      reboot_reason = REBOOT_REASON_RESET_PIN;
+  }
+  else
+  {
+      reboot_reason = REBOOT_REASON_OTHER; // TODO
+  }
+
+  __HAL_RCC_CLEAR_RESET_FLAGS();
 }
 
 void hw_enter_lowpower_mode(uint8_t mode)

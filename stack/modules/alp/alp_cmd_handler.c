@@ -61,51 +61,6 @@ void modem_interface_cmd_handler(fifo_t* cmd_fifo)
     alp_layer_process_command_console_output(alp_command, alp_command_len);
 }
 
-void alp_cmd_handler(fifo_t* cmd_fifo)
-{
-    // AT$D<serial ALP command>
-    // where <serial ALP command> is constructed as follows:
-    // <sync byte (0xC0)><version (0x00)><length of ALP command (1 byte)><ALP command> // TODO CRC
-    // TODO other commands (AT$D to return ALP status)
-    if(fifo_get_size(cmd_fifo) > SHELL_CMD_HEADER_SIZE + 2)
-    {
-        uint8_t byte;
-        error_t err;
-        fifo_peek(cmd_fifo, &byte, SHELL_CMD_HEADER_SIZE, 1);
-        if(byte == SERIAL_ALP_FRAME_SYNC_BYTE)
-        {
-            err = fifo_peek(cmd_fifo, &byte, SHELL_CMD_HEADER_SIZE + 1, 1); assert(err == SUCCESS);
-            assert(byte == SERIAL_ALP_FRAME_VERSION); // only version 0 implemented for now // TODO pop and return error
-            uint8_t alp_command_len;
-            err = fifo_peek(cmd_fifo, &alp_command_len, SHELL_CMD_HEADER_SIZE + 2, 1); assert(err == SUCCESS);
-
-            if(fifo_get_size(cmd_fifo) >= SHELL_CMD_HEADER_SIZE + 3 + alp_command_len)
-            {
-                start_atomic();
-                    err = fifo_pop(cmd_fifo, alp_command, SHELL_CMD_HEADER_SIZE + 3); assert(err == SUCCESS); // pop header
-                    err = fifo_pop(cmd_fifo, alp_command, alp_command_len); assert(err == SUCCESS); // pop full ALP command
-                end_atomic();
-
-                alp_layer_process_command_console_output(alp_command, alp_command_len);
-            }
-            else
-            {
-                //DPRINT("ALP command not complete yet");
-            }
-        }
-        else
-        {
-            assert(false); // TODO
-        }
-
-//        else if(alp_interface_id == ALP_ITF_ID_APP)
-//        {
-//            if(alp_cmd_handler_appl_itf_cb != NULL)
-//              alp_cmd_handler_appl_itf_cb(payload, length);
-//        }
-    }
-}
-
 void alp_cmd_handler_output_alp_command(fifo_t* resp_fifo)
 {
     uint8_t resp_len = fifo_get_size(resp_fifo);

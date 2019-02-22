@@ -29,6 +29,18 @@
 #include "types.h"
 #include "link_c.h"
 
+typedef enum {
+    REBOOT_REASON_POR = 0,
+    REBOOT_REASON_WDT = 1,
+    REBOOT_REASON_SOFTWARE_REBOOT = 2,
+    REBOOT_REASON_RESET_PIN = 3,
+    REBOOT_REASON_OTHER = 254,
+    REBOOT_REASON_NOT_IMPLEMENTED = 255,
+} system_reboot_reason_t;
+
+system_reboot_reason_t hw_system_reboot_reason();
+void hw_system_save_reboot_reason();
+
 /*! \brief Put the system in low power mode
  *
  * When the system is in low power mode the CPU is halted until it

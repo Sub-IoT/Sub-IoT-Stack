@@ -65,10 +65,10 @@ static pin_id_t target_uart_state_pin;
 static bool modem_listen_uart_inited = false;
 static bool parsed_header = false;
 
-cmd_handler_t alp_handler;
-cmd_handler_t ping_response_handler;
-cmd_handler_t logging_handler;
-
+static cmd_handler_t alp_handler;
+static cmd_handler_t ping_response_handler;
+static cmd_handler_t logging_handler;
+static target_rebooted_callback_t target_rebooted_cb;
 
 typedef enum {
   STATE_IDLE,
@@ -337,6 +337,14 @@ static void process_rx_fifo(void *arg)
         fifo_skip(&payload_fifo,1);
         modem_interface_transfer_bytes((uint8_t*) &ping_reply,1,SERIAL_MESSAGE_TYPE_PING_RESPONSE);
       }
+      else if(header[SERIAL_FRAME_TYPE]==SERIAL_MESSAGE_TYPE_REBOOTED)
+      {
+        uint8_t reboot_reason;
+        fifo_pop(&payload_fifo, &reboot_reason, 1);
+        DPRINT("target rebooted, reason=%i\n", reboot_reason);
+        if(target_rebooted_cb)
+          target_rebooted_cb(reboot_reason);
+      }
       else
       {
         fifo_skip(&payload_fifo, payload_len);
@@ -417,6 +425,9 @@ void modem_interface_init(uint8_t idx, uint32_t baudrate, pin_id_t uart_state_in
 #ifndef PLATFORM_USE_MODEM_INTERRUPT_LINES
   modem_interface_enable();
 #endif
+
+  uint8_t reboot_reason = (uint8_t)hw_system_reboot_reason();
+  modem_interface_transfer_bytes(&reboot_reason, 1, SERIAL_MESSAGE_TYPE_REBOOTED);
 }
 
 void modem_interface_transfer_bytes(uint8_t* bytes, uint8_t length, serial_message_type_t type) 
@@ -467,4 +478,9 @@ void modem_interface_register_handler(cmd_handler_t cmd_handler, serial_message_
     logging_handler=cmd_handler;
   else
     DPRINT("Modem interface callback not implemented");
+}
+
+void modem_interface_set_target_rebooted_callback(target_rebooted_callback_t cb)
+{
+  target_rebooted_cb = cb;
 }
