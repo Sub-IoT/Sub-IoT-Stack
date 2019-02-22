@@ -87,7 +87,34 @@ system_reboot_reason_t hw_system_reboot_reason()
 
 void hw_system_save_reboot_reason()
 {
-  reboot_reason = REBOOT_REASON_OTHER; // TODO
+  reboot_reason = REBOOT_REASON_OTHER;
+
+  if (__HAL_RCC_GET_FLAG(RCC_FLAG_LPWRRST))
+  {
+      assert(false); // not expected
+  }
+  else if (__HAL_RCC_GET_FLAG(RCC_FLAG_WWDGRST) || __HAL_RCC_GET_FLAG(RCC_FLAG_IWDGRST))
+  {
+      reboot_reason = REBOOT_REASON_WDT;
+  }
+  else if (__HAL_RCC_GET_FLAG(RCC_FLAG_SFTRST))
+  {
+      reboot_reason = REBOOT_REASON_SOFTWARE_REBOOT;
+  }
+  else if (__HAL_RCC_GET_FLAG(RCC_FLAG_PORRST))
+  {
+      reboot_reason = REBOOT_REASON_POR;
+  }
+  else if (__HAL_RCC_GET_FLAG(RCC_FLAG_PINRST))
+  {
+      reboot_reason = REBOOT_REASON_RESET_PIN;
+  }
+  else
+  {
+      reboot_reason = REBOOT_REASON_OTHER; // TODO
+  }
+
+  __HAL_RCC_CLEAR_RESET_FLAGS();
 }
 
 void hw_enter_lowpower_mode(uint8_t mode)
