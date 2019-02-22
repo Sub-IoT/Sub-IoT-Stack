@@ -152,10 +152,13 @@ __LINK_C error_t hw_gpio_configure_pin(pin_id_t pin_id, bool int_allowed, uint32
   {
     GPIO_InitStruct.Pull = GPIO_NOPULL;
   } else {
-    if(out)
+    if(out) {
       GPIO_InitStruct.Pull = GPIO_PULLUP;
-    else
+      PORT_BASE(pin_id)->BSRR = 1 << GPIO_PIN(pin_id); // make sure pin level is high when configured (HAL_GPIO_Init() does not take this into account)
+    } else {
       GPIO_InitStruct.Pull = GPIO_PULLDOWN;
+    }
+
     GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   }
 
