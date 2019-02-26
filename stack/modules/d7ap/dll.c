@@ -818,7 +818,7 @@ static void conf_file_changed_callback(uint8_t file_id)
     // when doing scan automation restart this
     if (dll_state == DLL_STATE_IDLE || dll_state == DLL_STATE_SCAN_AUTOMATION)
     {
-        dll_execute_scan_automation(NULL);
+        sched_post_task(&dll_execute_scan_automation);
     }
 }
 
@@ -832,7 +832,7 @@ static void access_profile_file_changed_callback(uint8_t file_id)
     // when we are idle switch to scan automation now as well, in case the new AP enables scanning
     if (dll_state == DLL_STATE_IDLE || dll_state == DLL_STATE_SCAN_AUTOMATION)
     {
-        dll_execute_scan_automation(NULL);
+        sched_post_task(&dll_execute_scan_automation);
     }
 }
 
