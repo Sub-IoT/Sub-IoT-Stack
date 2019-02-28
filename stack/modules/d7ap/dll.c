@@ -822,7 +822,7 @@ static void conf_file_changed_callback(uint8_t file_id)
     }
 }
 
-static void access_profile_file_changed_callback(uint8_t file_id)
+void dll_notify_access_profile_file_changed(uint8_t file_id)
 {
     DPRINT("AP file changed");
 
@@ -868,8 +868,6 @@ void dll_init()
     resume_fg_scan = false;
 
     d7ap_fs_register_file_modified_callback(D7A_FILE_DLL_CONF_FILE_ID, &conf_file_changed_callback);
-    for(int i = 0; i < 15; i++)
-        d7ap_fs_register_file_modified_callback(D7A_FILE_ACCESS_PROFILE_ID + i, &access_profile_file_changed_callback);
 
     // Start immediately the scan automation
     guarded_channel = false;
@@ -943,7 +941,6 @@ void dll_tx_frame(packet_t* packet)
     else
     {
         d7ap_fs_read_access_class(packet->d7anp_addressee->access_specifier, &remote_access_profile);
-
         /*
          * For now the access mask and the subband bitmap are not used
          * By default, subprofile[0] is selected and subband[0] is used

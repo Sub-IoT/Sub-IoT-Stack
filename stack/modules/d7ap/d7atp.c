@@ -278,6 +278,12 @@ void d7atp_init()
     timer_init_event(&d7atp_execution_delay_expired_timer, &execution_delay_timeout_handler);
 }
 
+void d7atp_notify_access_profile_file_changed(uint8_t file_id)
+{
+    // invalidate cached access class
+    current_access_class = ACCESS_CLASS_NOT_SET;
+}
+
 void d7atp_stop()
 {
     d7atp_state = D7ATP_STATE_STOPPED;
