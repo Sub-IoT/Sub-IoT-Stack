@@ -44,26 +44,22 @@ static error_t read(blockdevice_t* bd, const uint8_t* data, uint32_t addr, uint3
 static error_t program(blockdevice_t* bd, const uint8_t* data, uint32_t addr, uint32_t size) {
   (void)bd; // suppress unused warning
   DPRINT("BD WRITE %i @ %x\n", size, addr);
+  DPRINT_DATA(data, size);
 
   if(size == 0) return SUCCESS;
 
   addr += DATA_EEPROM_BASE;
   if(addr + size > DATA_EEPROM_BANK2_END) return -ESIZE;
 
+  // TODO optimize by writing per word when possible
   HAL_FLASHEx_DATAEEPROM_Unlock();
-  if(FLASH_WaitForLastOperation(HAL_MAX_DELAY) != HAL_OK)
-    return -ETIMEDOUT;
-
   for (size_t i = 0; i < size; i++) {
-      *(uint8_t*)(addr + i) = data[i];
+    while (FLASH->SR & FLASH_SR_BSY); // TODO timeout
+    *(uint8_t*)(addr + i) = data[i];
+    while (FLASH->SR & FLASH_SR_BSY); // TODO timeout
   }
 
-  if(FLASH_WaitForLastOperation(HAL_MAX_DELAY) != HAL_OK)
-    return -ETIMEDOUT;
-
   HAL_FLASHEx_DATAEEPROM_Lock();
-
-  DPRINT_DATA(data, size);
 
   return SUCCESS;
 }
