@@ -237,8 +237,12 @@ static void uart_irq_handler(USART_TypeDef* uart) {
   }
 }
 
-void USART2_IRQHandler(void) {
-  uart_irq_handler(USART2);
+//void USART2_IRQHandler(void) {
+//  uart_irq_handler(USART2);
+//}
+
+void HAL_UARTEx_WakeupCallback(UART_HandleTypeDef *huart)
+{
 }
 
 void USART1_IRQHandler(void) {
@@ -254,17 +258,17 @@ void LPUART1_IRQHandler(void) {
 //  //UartReady = SET;
 //}
 
-void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart) {
+//void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart) {
   //   if(RingBuffer_GetDataLength(&txBuf) > 0) {
   //     RingBuffer_Read(&txBuf, &txData, 1);
   //     HAL_UART_Transmit_IT(huart, &txData, 1);
   //   }
-}
+//}
 
-void HAL_UART_ErrorCallback(UART_HandleTypeDef *huart) {
+//void HAL_UART_ErrorCallback(UART_HandleTypeDef *huart) {
   //   if(huart->ErrorCode == HAL_UART_ERROR_ORE)
   //     HAL_UART_Receive_IT(huart, (uint8_t *)readBuf, 1);
-}
+//}
 
 // void UART1_RX_IRQHandler(void) {
 //   if(handle[1].channel->STATUS & UART_STATUS_RXDATAV) {
