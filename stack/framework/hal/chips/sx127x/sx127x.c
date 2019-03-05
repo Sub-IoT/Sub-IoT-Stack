@@ -228,6 +228,8 @@ const uint16_t sync_word_value[2][4] = {
 #define To_CLASS_NORMAL_RATE 4 // (12(FEC encode payload) + 2 (SYNC) + 8 (Max preamble)) / 6 bytes/tick
 #define To_CLASS_HI_RATE 2 // (12(FEC encode payload) + 2 (SYNC) + 16 (Max preamble)) / 20 bytes/tick
 
+volatile bool const_radio;
+
 const uint8_t bg_timeout[4] = {
     To_CLASS_LO_RATE,
     0, // RFU
@@ -257,7 +259,7 @@ static void write_reg(uint8_t addr, uint8_t value) {
 
 static void write_fifo(uint8_t* buffer, uint8_t size) {
   spi_select(sx127x_spi);
-  spi_exchange_byte(sx127x_spi, 0x80); // send address with bit 8 high to signal a write operation
+  spi_exchange_byte(sx127x_spi, 0x80); // send address with bit 8 high to signal a write operation 0x80
   spi_exchange_bytes(sx127x_spi, buffer, NULL, size);
   spi_deselect(sx127x_spi);
   //DPRINT("WRITE FIFO %i", size);
@@ -503,8 +505,8 @@ static void init_regs() {
   write_reg(REG_SYNCVALUE2, 0xD0);
 
   write_reg(REG_PACKETCONFIG1, 0x08); // fixed length (unlimited length mode), CRC auto clear OFF, whitening and CRC disabled (not compatible), addressFiltering off.
-  write_reg(REG_PACKETCONFIG2, 0x40); // packet mode
-  write_reg(REG_PAYLOADLENGTH, 0x00); // unlimited length mode (in combination with PacketFormat = 0), so we can encode/decode length byte in software
+  write_reg(REG_PACKETCONFIG2, 0x40); // 0x43 packet mode
+  write_reg(REG_PAYLOADLENGTH, 0x00); // 0xFF unlimited length mode (in combination with PacketFormat = 0), so we can encode/decode length byte in software
   write_reg(REG_FIFOTHRESH, 0x83); // tx start condition true when there is at least one byte in FIFO (we are in standby/sleep when filling FIFO anyway)
                                    // For RX the threshold is set to 4 since this is the minimum length of a D7 packet (number of bytes in FIFO >= FifoThreshold + 1).
 
@@ -1482,23 +1484,96 @@ int16_t hw_radio_get_rssi() {
         return (- read_reg(REG_RSSIVALUE) / 2);
 }
 
+void stop_hw_radio_continuous_tx(){
+  const_radio = false;
+}
+
+void start_hw_radio_continuous_tx(){ 
+  // chip does not include a PN9 generator so fill fifo manually ...
+  uint8_t payload_len = 63;  
+  uint8_t data[payload_len + 1];
+
+  while(const_radio){
+    data[0]= payload_len;
+    pn9_encode(data + 1 , sizeof(data) - 1);
+    
+    write_fifo(data, payload_len+1);
+  }
+}
+
 void hw_radio_continuous_tx(hw_tx_cfg_t const* tx_cfg, bool continuous_wave) {
   // TODO tx_cfg
+  const_radio = true;
   log_print_string("cont tx\n");
-  assert(!continuous_wave); // TODO CW not supported for now
+
+  resume_from_sleep_mode();
+
+  flush_fifo();
+
+  configure_eirp(tx_cfg->eirp);
+  configure_channel(&(tx_cfg->channel_id));
+  configure_syncword(tx_cfg->syncword_class, &(tx_cfg->channel_id));
+
+  if(continuous_wave){
+    write_reg(REG_FDEVMSB, 0x00);
+    write_reg(REG_FDEVLSB, 0x00);
+  }
+
+  state = STATE_TX;
+
+  set_opmode(OPMODE_TX);
+
+  /*
   configure_eirp(tx_cfg->eirp);
   configure_channel(&(tx_cfg->channel_id));
   hw_gpio_disable_interrupt(SX127x_DIO0_PIN);
   set_opmode(OPMODE_TX);
 
   // chip does not include a PN9 generator so fill fifo manually ...
-  while(1) {
-    uint8_t payload_len = 63;
-    uint8_t data[payload_len + 1];
-    data[0]= payload_len;
-    pn9_encode(data + 1 , sizeof(data) - 1);
-    write_fifo(data, payload_len + 1);
-    //while(read_reg(REG_IRQFLAGS2) & 0x20) {} // wait until we go under Fifo threshold
-    // TODO waiting for fifo threshold causes ugly spikes in the spectrum (possibly there are gaps where fifo is empty causing the chip to transmit preamble or unmodulated signal)
+  uint8_t payload_len = 63; //63
+  uint8_t data[payload_len + 1];
+
+  write_reg(REG_DIOMAPPING1, 0x00); // FIFO LEVEL ISR or Packet Sent ISR
+
+  set_packet_handler_enabled(true);
+
+  write_reg(REG_FIFOTHRESH, 0x80 | FG_THRESHOLD); //Fifo Threshold set to 32 bytes (max is 64)
+
+  if(read_reg(REG_IRQFLAGS1) & 0x20)
+    DPRINT("TX is ready\n");
+  if((read_reg(REG_OPMODE) & 0x07) != OPMODE_TX){
+    DPRINT("mode was not right \n");
+    set_opmode(OPMODE_TX);
   }
+  DPRINT("mode: %2X \n", read_reg(REG_OPMODE));
+
+  while((!(read_reg(REG_IRQFLAGS1) & 0x80)) | ((read_reg(REG_OPMODE) & 0x07) == OPMODE_TX)); // wait for Tx mode ready
+
+  DPRINT("mode solved \n");
+
+  if(continuous_wave) {
+    while(1) {
+      write_fifo(data, payload_len + 1);
+    }
+  } else {
+    flush_fifo();
+    if(read_reg(REG_IRQFLAGS2) & 0x80) //Fifo full?
+      DPRINT("Fifo is full");
+    if(!read_reg(REG_IRQFLAGS2) & 0x20)
+      DPRINT("under threshold\n");
+    while(1) {
+      data[0]= payload_len;
+      pn9_encode(data + 1 , sizeof(data) - 1);
+      // if(!read_reg(REG_IRQFLAGS2) && 0x20) // wait until we go under Fifo threshold
+      if(!(read_reg(REG_IRQFLAGS2) & 0x80)){
+        DPRINT("writing\n");
+        write_fifo(data, payload_len + 1);
+      } 
+      // else
+        // DPRINT("FULL\n");
+      //while(read_reg(REG_IRQFLAGS2) & 0x20) {} // wait until we go under Fifo threshold
+      // TODO waiting for fifo threshold causes ugly spikes in the spectrum (possibly there are gaps where fifo is empty causing the chip to transmit preamble or unmodulated signal)
+    }
+  }
+  */
 }

@@ -84,17 +84,17 @@ typedef enum {
   MODULATION_GFSK,
 } modulation_t;
 
-
-#define NORMAL_RATE_CHANNEL_COUNT 8
-#define LO_RATE_CHANNEL_COUNT 69
+#define HI_RATE_CHANNEL_COUNT 32
+#define NORMAL_RATE_CHANNEL_COUNT 32
+#define LO_RATE_CHANNEL_COUNT 280
 
 static hw_tx_cfg_t tx_cfg;
-static uint8_t current_channel_indexes_index = 0;
-static modulation_t current_modulation = MODULATION_GFSK;
+static uint16_t current_channel_indexes_index = 13;
+static modulation_t current_modulation = MODULATION_CW; // MODULATION_GFSK; 
 static phy_channel_band_t current_channel_band = PHY_BAND_868;
 static phy_channel_class_t current_channel_class = PHY_CLASS_NORMAL_RATE;
-static uint8_t channel_indexes[LO_RATE_CHANNEL_COUNT] = { 0 }; // reallocated later depending on band/class
-static uint8_t channel_count = LO_RATE_CHANNEL_COUNT;
+static uint16_t channel_indexes[LO_RATE_CHANNEL_COUNT] = { 0 }; // reallocated later depending on band/class
+static uint16_t channel_count = LO_RATE_CHANNEL_COUNT;
 static uint8_t current_eirp_level = DEFAULT_EIRP;
 
 void stop_radio(){
@@ -103,6 +103,8 @@ void stop_radio(){
     ezradio_change_state(EZRADIO_CMD_CHANGE_STATE_ARG_NEXT_STATE1_NEW_STATE_ENUM_READY);
 #elif defined USE_CC1101
     cc1101_interface_strobe(RF_SIDLE);
+#elif defined USE_SX127X
+    stop_hw_radio_continuous_tx();
 #endif
 }
 
@@ -114,6 +116,10 @@ void start_radio(){
 #elif defined USE_CC1101
     cc1101_interface_strobe(RF_SCAL);
     cc1101_interface_strobe(RF_STX);
+#endif
+#if defined USE_SX127X
+    log_print_string("sending \n");
+    start_hw_radio_continuous_tx();
 #endif
 }
 
@@ -239,22 +245,38 @@ void bootstrap()
     lcd_write_string("cont TX \n");
 #endif
 
+uint16_t i = 0;
     switch(current_channel_class)
     {
         case PHY_CLASS_NORMAL_RATE:
           channel_count = NORMAL_RATE_CHANNEL_COUNT;
             realloc(channel_indexes, channel_count);
-            for(int i = 0; i < channel_count; i++)
-                channel_indexes[i] = i * 8;
+            
+            for(; i < channel_count-4; i++)
+                channel_indexes[i] = i*8;
+            channel_indexes[i++]=229;
+            channel_indexes[i++]=239;
+            channel_indexes[i++]=257;
+            channel_indexes[i++]=270;
 
             break;
         case PHY_CLASS_LO_RATE:
           channel_count = LO_RATE_CHANNEL_COUNT;
             realloc(channel_indexes, channel_count);
-            for(int i = 0; i < channel_count; i++)
+            for(; i < channel_count; i++)
                 channel_indexes[i] = i;
 
             break;
+        case PHY_CLASS_HI_RATE:
+          channel_count = HI_RATE_CHANNEL_COUNT;
+            realloc(channel_indexes, channel_count);
+
+            for(; i < channel_count-4; i++)
+                channel_indexes[i] = i*8;
+            channel_indexes[i++]=229;
+            channel_indexes[i++]=239;
+            channel_indexes[i++]=257;
+            channel_indexes[i++]=270; 
     }
 
 #if PLATFORM_NUM_BUTTONS > 1
