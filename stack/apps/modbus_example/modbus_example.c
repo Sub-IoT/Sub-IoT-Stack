@@ -42,12 +42,10 @@
 
 #include "emmacro.h"
 #include "emtype.h"
-#include "CpuL1.h"
 #include "TimersL1.h"
-#include "OsIntfL1.h"
-#include "DigIoL1.h"
 #include "ComL1.h"
 #include "ModbusRtuSlaveL7.h"
+#include "ModbusRtuSlaveIntrL6.h"
 
 static alp_init_args_t alp_init_args;
 void some_other_task()
@@ -58,18 +56,13 @@ void some_other_task()
 void some_task()
 {
         ModbusRtuSlaveIntrL7_WorkerThread();
-        //DigIoL1_DoWork();
-        OSIntfL1_KickWatchDog();
         sched_post_task(&some_task);
 }
 
 void bootstrap()
 {
     log_print_string("Device booted\n");
-    //CpuL1_Init();
-    //OSIntfL1_Init();
     //TimersL1_Init();
-    //DigIoL1_Init();
 
 	ComL1_OpenPort(ComL1_GetPortHandle(M_COM_MODBUS), 9600u);
 	ModbusRtuSlaveIntrL7_Reset();

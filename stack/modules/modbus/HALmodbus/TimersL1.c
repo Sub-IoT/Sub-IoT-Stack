@@ -113,17 +113,6 @@ void TimersL1_AddCallBack(void (*pCallBackFn)(void), uint32_t callPeriod)
 	s_aTimerCallBack[callBack].m_ElapsedTime = callPeriod;
 }
 
-/*!
-*	Delay for milliseconds
-*	Caution: Blocking
-*
-*	\param[in]		delayMs		Delay in milliseconds
-*/
-void TimersL1_Delay(uint32_t delayMs)
-{
-	/* Make sure to wait at least delayMs */
-	HAL_Delay(delayMs + 1u);
-}
 
 
 /*-- Private functions --*/

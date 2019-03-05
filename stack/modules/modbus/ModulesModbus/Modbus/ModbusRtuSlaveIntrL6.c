@@ -17,7 +17,6 @@
 
 /*-- Includes --*/
 
-#include "OsintfL1.h"
 #include "ComL1.h" /* For com port defines */
 #include "emmacro.h"
 #include "Crc16.h"
@@ -25,6 +24,7 @@
 #include "ModbusRtuSlaveIntrL6-fif.h"
 #include "log.h"
 #include "debug.h"
+#include "hwatomic.h"
 
 /*-- Local definitions --*/
 /*! \cond *//* Local definitions shouldn't be documented */
@@ -186,12 +186,11 @@ void ModbusRtuSlaveIntrL6_RxHandler( uint16_t RxCharStatus, uint32_t modbusInsta
             /* store byte */
             Modbus[modbusInstance].aBuf[Modbus[modbusInstance].RxCount] = (uint8_t)RxCharStatus;
             /* inc RxCount and reset Timer in one atomic operation */
-			saveInterruptState_t x = OSSaveInterruptState() ;
-			OSDisableInterrupts() ;
+			start_atomic();
             ++Modbus[modbusInstance].RxCount;
             
             Modbus[modbusInstance].Time = 0u;
-		    OSRestoreInterruptState(x);
+		    end_atomic();
 
         }
         else
@@ -269,20 +268,18 @@ void ModbusRtuSlaveIntrL6_TimerHandler(void)
 */
 static void InstanceTimerHandler(uint8_t instanceID)
 {
-    saveInterruptState_t SaveInterrupt;
     uint32_t AtomicTime;
     uint32_t AtomicRxCount;
     
     /* our time +1ms */
     /* and get RxCount and Timer in one atomic operation */
-    SaveInterrupt = OSSaveInterruptState();
-    OSDisableInterrupts();
+    start_atomic();
 
     ++Modbus[instanceID].Time;
     AtomicTime = Modbus[instanceID].Time;
     AtomicRxCount = Modbus[instanceID].RxCount;
 
-    OSRestoreInterruptState( SaveInterrupt);
+    end_atomic();
 
     /* are we in receiving state? */
     if( Modbus[instanceID].State == M_STATE_RX)
@@ -426,10 +423,10 @@ static void InstanceWorker(uint32_t instanceID)
     default:
         /* invalid state? restart */
         /* reset RxCount and Timer in one atomic operation */
-        OSDisableInterrupts();
+        start_atomic();
         Modbus[instanceID].RxCount = 0u;
         Modbus[instanceID].Time = 0u;
-        OSEnableInterrupts();
+        end_atomic();
         Modbus[instanceID].State = M_STATE_RX;
         break;
     }

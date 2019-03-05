@@ -19,13 +19,12 @@
 
 
 /*-- Includes --*/
-#include "OsintfL1.h"
 #include "TimersL1.h"
 #include "ModbusRtuSlaveintrL6.h"
 #include "ModbusRtuSlaveL7.h"
 #include "emmacro.h"
+#include "hwatomic.h"
 
-#include "DigIOL1.h"
 #include "Testmode.h"
 #include "SoftwareVersion.h"
 #include "log.h"

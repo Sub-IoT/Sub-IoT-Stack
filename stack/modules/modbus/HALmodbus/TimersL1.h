@@ -18,7 +18,7 @@
 
 
 /*-- Includes --*/
-
+#include <stdint.h>
 /*-- Public definitions --*/
 
 /*-- Public types --*/
@@ -32,8 +32,6 @@ void TimersL1_Enable(void);
 void TimersL1_Disable(void);
 
 void TimersL1_AddCallBack(void (*pCallBackFn)(void), uint32_t callPeriod);
-
-void TimersL1_Delay(uint32_t delayMs);
 
 #endif /* !TIMERSL1_H__ */
 

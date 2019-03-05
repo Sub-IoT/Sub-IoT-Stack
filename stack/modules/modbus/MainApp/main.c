@@ -14,10 +14,7 @@
  */
 
 /*-- Includes --*/
-#include "CpuL1.h"
 #include "TimersL1.h"
-#include "OsIntfL1.h"
-#include "DigIoL1.h"
 #include "ComL1.h"
 #include "ModbusRtuSlaveL7.h"
 
@@ -41,7 +38,7 @@
  */
 void main(void)
 {
-    CpuL1_Init();
+   /*  CpuL1_Init();
     OSIntfL1_Init();
     TimersL1_Init();
     DigIoL1_Init();
@@ -56,7 +53,7 @@ void main(void)
         //DigIoL1_DoWork();
 
         OSIntfL1_KickWatchDog();
-    }
+    } */
 }
 
 

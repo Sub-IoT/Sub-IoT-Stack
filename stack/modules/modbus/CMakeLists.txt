@@ -30,9 +30,6 @@ EXPORT_GLOBAL_INCLUDE_DIRECTORIES(.)
 #By convention, each module should generate a single 'static' library that can be included by the application
 ADD_LIBRARY(modbus STATIC
     HALmodbus/ComL1.c
-    HALmodbus/CpuL1.c
-    HALmodbus/DigIoL1.c
-    HALmodbus/OsIntfL1.c
     HALmodbus/TimersL1.c
     ModulesModbus/Modbus/CRC16.c
     ModulesModbus/Modbus/ModbusRtuSlaveIntrL6-fif.c

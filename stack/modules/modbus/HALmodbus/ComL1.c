@@ -16,11 +16,11 @@
 /*-- Includes --*/
 
 #include <string.h>
-#include <osintfl1.h>
 #include "debug.h"
 #include "log.h"
 #include "ComL1.h"
 #include "stm32_device.h"
+#include "hwatomic.h"
 
 /*-- Suppress Parasoft rules --*/
 
@@ -211,9 +211,7 @@ void ComL1_Transmit(comL1DeviceData_t *const pThis, uint8_t *pData, uint16_t siz
 */
 void ComL1_ReceiveByte(comL1DeviceData_t *const pThis)
 {
-	//uint8_t temp=HAL_UART_Receive_IT(&pThis->uartHandle, &pThis->receiveByte, 1u);
 	uint8_t temp=HAL_UART_Receive_DMA(&pThis->uartHandle, &pThis->receiveByte, 1u);
-	//uint8_t temp=HAL_UART_Receive(&pThis->uartHandle, &pThis->receiveByte, 1u,HAL_MAX_DELAY);
 	assert(temp == HAL_OK); /* parasoft-suppress MISRA2012-RULE-17_7_a "Check with M_ASSERT" */
 }
 
@@ -231,35 +229,6 @@ void DMA1_Channel4_5_6_7_IRQHandler(void)
 
 
 /*!
-* GUID: - Check if transmission is busy
-*
-* \retval true Driver is currently busy transmitting data
-* \retval false Driver is not handling any transmit request
-*/
-bool ComL1_IsTxBusy(comL1DeviceData_t const *const pThis)
-{
-	return (pThis->bTxBusy);
-}
-
-/*!
-* GUID: - Gets the current baudrate of the uart device
-*
-* \param[in]		pThis Ptr to serial port object
-*
-* \return			The baudrate in bits per second
-*/
-uint32_t ComL1_GetBaudRate(comL1DeviceData_t const *const pThis)
-{
-	if(!pThis->bIsOpen)
-	{
-		assert(false);
-	}
-	
-	return (pThis->BaudRate);
-}
-
-
-/*!
 * GUID: - Set receive interrupt callback handler
 *
 * \param[in] callback Method to be called for handling received bytes
@@ -267,13 +236,12 @@ uint32_t ComL1_GetBaudRate(comL1DeviceData_t const *const pThis)
 */
 void ComL1_SetRxCallback(comL1DeviceData_t *const pThis, comReceiveCallback_t *callback, uint32_t callbaData)
 {
-	saveInterruptState_t irqState = OSSaveInterruptState();
-	OSDisableInterrupts();
+	start_atomic();
 	
 	pThis->ReceiveIsrHandler = callback;
 	pThis->receiveIsrCallbaData = callbaData;
 	
-	OSRestoreInterruptState(irqState);
+	end_atomic();
 }
 
 /*!
@@ -284,13 +252,12 @@ void ComL1_SetRxCallback(comL1DeviceData_t *const pThis, comReceiveCallback_t *c
 */
 void ComL1_SetTxCallback(comL1DeviceData_t *const pThis, comTransmitCallback_t *callback, uint32_t callbaData)
 {
-	saveInterruptState_t irqState = OSSaveInterruptState();
-	OSDisableInterrupts();
+	start_atomic();
 	
 	pThis->TransmitIsrHandler = callback;
 	pThis->transmitIsrCallbaData = callbaData;
 	
-	OSRestoreInterruptState(irqState);
+	end_atomic();
 }
 
 /*!
@@ -301,13 +268,12 @@ void ComL1_SetTxCallback(comL1DeviceData_t *const pThis, comTransmitCallback_t *
 */
 void ComL1_SetErrorCallback(comL1DeviceData_t *const pThis, comErrorCallback_t *callback, uint32_t callbaData)
 {
-	saveInterruptState_t irqState = OSSaveInterruptState();
-	OSDisableInterrupts();
+	start_atomic();
 	
 	pThis->ErrorIsrHandler = callback;
 	pThis->errorIsrCallbaData = callbaData;
 	
-	OSRestoreInterruptState(irqState);
+	end_atomic();
 }
 
 /*-- Private functions --*/

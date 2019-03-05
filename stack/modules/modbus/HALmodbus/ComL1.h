@@ -62,9 +62,6 @@ void ComL1_Close(comL1DeviceData_t *const pThis);
 void ComL1_Transmit(comL1DeviceData_t *const pThis, uint8_t *pData, uint16_t size);
 void ComL1_ReceiveByte(comL1DeviceData_t *const pThis);
 
-bool ComL1_IsTxBusy(comL1DeviceData_t const *const pThis);
-uint32_t ComL1_GetBaudRate(comL1DeviceData_t const *const pThis);
-
 void ComL1_SetRxCallback(comL1DeviceData_t *const pThis, comReceiveCallback_t *callback, uint32_t callbaData);
 void ComL1_SetTxCallback(comL1DeviceData_t *const pThis, comTransmitCallback_t *callback, uint32_t callbaData);
 void ComL1_SetErrorCallback(comL1DeviceData_t *const pThis, comErrorCallback_t *callback, uint32_t callbaData);
