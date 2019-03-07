@@ -1,0 +1,15 @@
+stm32_common_uart.c:207:13:uart_irq_handler	8	static
+stm32_common_uart.c:45:16:uart_init	16	static
+stm32_common_uart.c:53:6:uart_enable	32	static
+stm32_common_uart.c:122:6:uart_disable	32	static
+stm32_common_uart.c:150:6:uart_set_rx_interrupt_callback	0	static
+stm32_common_uart.c:156:6:uart_send_byte	16	static
+stm32_common_uart.c:173:6:uart_send_bytes	8	static
+stm32_common_uart.c:181:6:uart_send_string	16	static
+stm32_common_uart.c:185:9:uart_rx_interrupt_enable	8	static
+stm32_common_uart.c:200:6:uart_rx_interrupt_disable	8	static
+stm32_common_uart.c:240:6:USART2_IRQHandler	8	static
+stm32_common_uart.c:244:6:USART1_IRQHandler	8	static
+stm32_common_uart.c:248:6:RNG_LPUART1_IRQHandler	8	static
+stm32_common_uart.c:257:6:HAL_UART_TxCpltCallback	0	static
+stm32_common_uart.c:264:6:HAL_UART_ErrorCallback	0	static

@@ -1,0 +1,5 @@
+fec.c:265:13:fec_decode	56	static
+fec.c:86:13:int_to_binary	16	static
+fec.c:125:10:fec_calculated_decoded_length	0	static
+fec.c:131:10:fec_encode	64	static
+fec.c:215:9:fec_decode_packet	24	static

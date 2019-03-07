@@ -1,0 +1,2 @@
+/home/liam/Documents/toolchain/gcc-arm-none-eabi-8-2018-q4-major/bin/arm-none-eabi-ar qc libd7ap.a  CMakeFiles/d7ap.dir/d7ap_stack.c.obj CMakeFiles/d7ap.dir/d7ap.c.obj CMakeFiles/d7ap.dir/d7asp.c.obj CMakeFiles/d7ap.dir/d7atp.c.obj CMakeFiles/d7ap.dir/d7anp.c.obj CMakeFiles/d7ap.dir/packet_queue.c.obj CMakeFiles/d7ap.dir/packet.c.obj CMakeFiles/d7ap.dir/dll.c.obj
+/home/liam/Documents/toolchain/gcc-arm-none-eabi-8-2018-q4-major/bin/arm-none-eabi-ranlib libd7ap.a

@@ -1,0 +1,134 @@
+Compiling the C compiler identification source file "CMakeCCompilerId.c" failed.
+Compiler: /home/liam/Documents/toolchain/gcc-arm-none-eabi-8-2018-q4-major/bin/arm-none-eabi-gcc 
+Build flags: 
+Id flags:  
+
+The output was:
+1
+/home/liam/Documents/toolchain/gcc-arm-none-eabi-8-2018-q4-major/bin/../lib/gcc/arm-none-eabi/8.2.1/../../../../arm-none-eabi/bin/ld: /home/liam/Documents/toolchain/gcc-arm-none-eabi-8-2018-q4-major/bin/../lib/gcc/arm-none-eabi/8.2.1/../../../../arm-none-eabi/lib/libc.a(lib_a-exit.o): in function `exit':
+exit.c:(.text.exit+0x2c): undefined reference to `_exit'
+collect2: error: ld returned 1 exit status
+
+
+Compiling the CXX compiler identification source file "CMakeCXXCompilerId.cpp" failed.
+Compiler: /home/liam/Documents/toolchain/gcc-arm-none-eabi-8-2018-q4-major/bin/arm-none-eabi-g++ 
+Build flags: 
+Id flags:  
+
+The output was:
+1
+/home/liam/Documents/toolchain/gcc-arm-none-eabi-8-2018-q4-major/bin/../lib/gcc/arm-none-eabi/8.2.1/../../../../arm-none-eabi/bin/ld: /home/liam/Documents/toolchain/gcc-arm-none-eabi-8-2018-q4-major/bin/../lib/gcc/arm-none-eabi/8.2.1/../../../../arm-none-eabi/lib/libc.a(lib_a-exit.o): in function `exit':
+exit.c:(.text.exit+0x2c): undefined reference to `_exit'
+collect2: error: ld returned 1 exit status
+
+
+Detecting C compiler ABI info failed to compile with the following output:
+Change Dir: /media/sf_Virtualbox-shared/oss-7/build/CMakeFiles/CMakeTmp
+
+Run Build Command:"/usr/bin/make" "cmTC_e1a48/fast"
+/usr/bin/make -f CMakeFiles/cmTC_e1a48.dir/build.make CMakeFiles/cmTC_e1a48.dir/build
+make[1]: Entering directory '/media/sf_Virtualbox-shared/oss-7/build/CMakeFiles/CMakeTmp'
+Building C object CMakeFiles/cmTC_e1a48.dir/CMakeCCompilerABI.c.obj
+/home/liam/Documents/toolchain/gcc-arm-none-eabi-8-2018-q4-major/bin/arm-none-eabi-gcc    -o CMakeFiles/cmTC_e1a48.dir/CMakeCCompilerABI.c.obj   -c /usr/share/cmake-3.10/Modules/CMakeCCompilerABI.c
+Linking C executable cmTC_e1a48
+/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_e1a48.dir/link.txt --verbose=1
+/home/liam/Documents/toolchain/gcc-arm-none-eabi-8-2018-q4-major/bin/arm-none-eabi-gcc     -v CMakeFiles/cmTC_e1a48.dir/CMakeCCompilerABI.c.obj  -o cmTC_e1a48 
+Using built-in specs.
+COLLECT_GCC=/home/liam/Documents/toolchain/gcc-arm-none-eabi-8-2018-q4-major/bin/arm-none-eabi-gcc
+COLLECT_LTO_WRAPPER=/home/liam/Documents/toolchain/gcc-arm-none-eabi-8-2018-q4-major/bin/../lib/gcc/arm-none-eabi/8.2.1/lto-wrapper
+Target: arm-none-eabi
+Configured with: /tmp/jenkins/jenkins-GCC-8-build_toolchain_docker-519_20181216_1544945247/src/gcc/configure --target=arm-none-eabi --prefix=/tmp/jenkins/jenkins-GCC-8-build_toolchain_docker-519_20181216_1544945247/install-native --libexecdir=/tmp/jenkins/jenkins-GCC-8-build_toolchain_docker-519_20181216_1544945247/install-native/lib --infodir=/tmp/jenkins/jenkins-GCC-8-build_toolchain_docker-519_20181216_1544945247/install-native/share/doc/gcc-arm-none-eabi/info --mandir=/tmp/jenkins/jenkins-GCC-8-build_toolchain_docker-519_20181216_1544945247/install-native/share/doc/gcc-arm-none-eabi/man --htmldir=/tmp/jenkins/jenkins-GCC-8-build_toolchain_docker-519_20181216_1544945247/install-native/share/doc/gcc-arm-none-eabi/html --pdfdir=/tmp/jenkins/jenkins-GCC-8-build_toolchain_docker-519_20181216_1544945247/install-native/share/doc/gcc-arm-none-eabi/pdf --enable-languages=c,c++ --enable-plugins --disable-decimal-float --disable-libffi --disable-libgomp --disable-libmudflap --disable-libquadmath --disable-libssp --disable-libstdcxx-pch --disable-nls --disable-shared --disable-threads --disable-tls --with-gnu-as --with-gnu-ld --with-newlib --with-headers=yes --with-python-dir=share/gcc-arm-none-eabi --with-sysroot=/tmp/jenkins/jenkins-GCC-8-build_toolchain_docker-519_20181216_1544945247/install-native/arm-none-eabi --build=x86_64-linux-gnu --host=x86_64-linux-gnu --with-gmp=/tmp/jenkins/jenkins-GCC-8-build_toolchain_docker-519_20181216_1544945247/build-native/host-libs/usr --with-mpfr=/tmp/jenkins/jenkins-GCC-8-build_toolchain_docker-519_20181216_1544945247/build-native/host-libs/usr --with-mpc=/tmp/jenkins/jenkins-GCC-8-build_toolchain_docker-519_20181216_1544945247/build-native/host-libs/usr --with-isl=/tmp/jenkins/jenkins-GCC-8-build_toolchain_docker-519_20181216_1544945247/build-native/host-libs/usr --with-libelf=/tmp/jenkins/jenkins-GCC-8-build_toolchain_docker-519_20181216_1544945247/build-native/host-libs/usr --with-host-libstdcxx='-static-libgcc -Wl,-Bstatic,-lstdc++,-Bdynamic -lm' --with-pkgversion='GNU Tools for Arm Embedded Processors 8-2018-q4-major' --with-multilib-list=rmprofile
+Thread model: single
+gcc version 8.2.1 20181213 (release) [gcc-8-branch revision 267074] (GNU Tools for Arm Embedded Processors 8-2018-q4-major) 
+COMPILER_PATH=/home/liam/Documents/toolchain/gcc-arm-none-eabi-8-2018-q4-major/bin/../lib/gcc/arm-none-eabi/8.2.1/:/home/liam/Documents/toolchain/gcc-arm-none-eabi-8-2018-q4-major/bin/../lib/gcc/:/home/liam/Documents/toolchain/gcc-arm-none-eabi-8-2018-q4-major/bin/../lib/gcc/arm-none-eabi/8.2.1/../../../../arm-none-eabi/bin/
+LIBRARY_PATH=/home/liam/Documents/toolchain/gcc-arm-none-eabi-8-2018-q4-major/bin/../lib/gcc/arm-none-eabi/8.2.1/:/home/liam/Documents/toolchain/gcc-arm-none-eabi-8-2018-q4-major/bin/../lib/gcc/:/home/liam/Documents/toolchain/gcc-arm-none-eabi-8-2018-q4-major/bin/../lib/gcc/arm-none-eabi/8.2.1/../../../../arm-none-eabi/lib/:/home/liam/Documents/toolchain/gcc-arm-none-eabi-8-2018-q4-major/bin/../arm-none-eabi/lib/
+COLLECT_GCC_OPTIONS='-v' '-o' 'cmTC_e1a48' '-mcpu=arm7tdmi' '-mfloat-abi=soft' '-marm' '-march=armv4t'
+ /home/liam/Documents/toolchain/gcc-arm-none-eabi-8-2018-q4-major/bin/../lib/gcc/arm-none-eabi/8.2.1/collect2 -plugin /home/liam/Documents/toolchain/gcc-arm-none-eabi-8-2018-q4-major/bin/../lib/gcc/arm-none-eabi/8.2.1/liblto_plugin.so -plugin-opt=/home/liam/Documents/toolchain/gcc-arm-none-eabi-8-2018-q4-major/bin/../lib/gcc/arm-none-eabi/8.2.1/lto-wrapper -plugin-opt=-fresolution=/tmp/cckkpiPU.res -plugin-opt=-pass-through=-lgcc -plugin-opt=-pass-through=-lc --sysroot=/home/liam/Documents/toolchain/gcc-arm-none-eabi-8-2018-q4-major/bin/../arm-none-eabi -X -o cmTC_e1a48 /home/liam/Documents/toolchain/gcc-arm-none-eabi-8-2018-q4-major/bin/../lib/gcc/arm-none-eabi/8.2.1/crti.o /home/liam/Documents/toolchain/gcc-arm-none-eabi-8-2018-q4-major/bin/../lib/gcc/arm-none-eabi/8.2.1/crtbegin.o /home/liam/Documents/toolchain/gcc-arm-none-eabi-8-2018-q4-major/bin/../lib/gcc/arm-none-eabi/8.2.1/../../../../arm-none-eabi/lib/crt0.o -L/home/liam/Documents/toolchain/gcc-arm-none-eabi-8-2018-q4-major/bin/../lib/gcc/arm-none-eabi/8.2.1 -L/home/liam/Documents/toolchain/gcc-arm-none-eabi-8-2018-q4-major/bin/../lib/gcc -L/home/liam/Documents/toolchain/gcc-arm-none-eabi-8-2018-q4-major/bin/../lib/gcc/arm-none-eabi/8.2.1/../../../../arm-none-eabi/lib -L/home/liam/Documents/toolchain/gcc-arm-none-eabi-8-2018-q4-major/bin/../arm-none-eabi/lib CMakeFiles/cmTC_e1a48.dir/CMakeCCompilerABI.c.obj --start-group -lgcc -lc --end-group /home/liam/Documents/toolchain/gcc-arm-none-eabi-8-2018-q4-major/bin/../lib/gcc/arm-none-eabi/8.2.1/crtend.o /home/liam/Documents/toolchain/gcc-arm-none-eabi-8-2018-q4-major/bin/../lib/gcc/arm-none-eabi/8.2.1/crtn.o
+/home/liam/Documents/toolchain/gcc-arm-none-eabi-8-2018-q4-major/bin/../lib/gcc/arm-none-eabi/8.2.1/../../../../arm-none-eabi/bin/ld: /home/liam/Documents/toolchain/gcc-arm-none-eabi-8-2018-q4-major/bin/../lib/gcc/arm-none-eabi/8.2.1/../../../../arm-none-eabi/lib/libc.a(lib_a-exit.o): in function `exit':
+exit.c:(.text.exit+0x2c): undefined reference to `_exit'
+collect2: error: ld returned 1 exit status
+CMakeFiles/cmTC_e1a48.dir/build.make:97: recipe for target 'cmTC_e1a48' failed
+make[1]: *** [cmTC_e1a48] Error 1
+make[1]: Leaving directory '/media/sf_Virtualbox-shared/oss-7/build/CMakeFiles/CMakeTmp'
+Makefile:126: recipe for target 'cmTC_e1a48/fast' failed
+make: *** [cmTC_e1a48/fast] Error 2
+
+
+
+Detecting C [-std=c11] compiler features failed to compile with the following output:
+Change Dir: /media/sf_Virtualbox-shared/oss-7/build/CMakeFiles/CMakeTmp
+
+Run Build Command:"/usr/bin/make" "cmTC_2f9da/fast"
+/usr/bin/make -f CMakeFiles/cmTC_2f9da.dir/build.make CMakeFiles/cmTC_2f9da.dir/build
+make[1]: Entering directory '/media/sf_Virtualbox-shared/oss-7/build/CMakeFiles/CMakeTmp'
+Building C object CMakeFiles/cmTC_2f9da.dir/feature_tests.c.obj
+/home/liam/Documents/toolchain/gcc-arm-none-eabi-8-2018-q4-major/bin/arm-none-eabi-gcc   -std=c11 -o CMakeFiles/cmTC_2f9da.dir/feature_tests.c.obj   -c /media/sf_Virtualbox-shared/oss-7/build/CMakeFiles/feature_tests.c
+Linking C executable cmTC_2f9da
+/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_2f9da.dir/link.txt --verbose=1
+/home/liam/Documents/toolchain/gcc-arm-none-eabi-8-2018-q4-major/bin/arm-none-eabi-gcc      CMakeFiles/cmTC_2f9da.dir/feature_tests.c.obj  -o cmTC_2f9da 
+/home/liam/Documents/toolchain/gcc-arm-none-eabi-8-2018-q4-major/bin/../lib/gcc/arm-none-eabi/8.2.1/../../../../arm-none-eabi/bin/ld: /home/liam/Documents/toolchain/gcc-arm-none-eabi-8-2018-q4-major/bin/../lib/gcc/arm-none-eabi/8.2.1/../../../../arm-none-eabi/lib/libc.a(lib_a-exit.o): in function `exit':
+exit.c:(.text.exit+0x2c): undefined reference to `_exit'
+collect2: error: ld returned 1 exit status
+CMakeFiles/cmTC_2f9da.dir/build.make:97: recipe for target 'cmTC_2f9da' failed
+make[1]: *** [cmTC_2f9da] Error 1
+make[1]: Leaving directory '/media/sf_Virtualbox-shared/oss-7/build/CMakeFiles/CMakeTmp'
+Makefile:126: recipe for target 'cmTC_2f9da/fast' failed
+make: *** [cmTC_2f9da/fast] Error 2
+
+
+
+Detecting CXX compiler ABI info failed to compile with the following output:
+Change Dir: /media/sf_Virtualbox-shared/oss-7/build/CMakeFiles/CMakeTmp
+
+Run Build Command:"/usr/bin/make" "cmTC_41170/fast"
+/usr/bin/make -f CMakeFiles/cmTC_41170.dir/build.make CMakeFiles/cmTC_41170.dir/build
+make[1]: Entering directory '/media/sf_Virtualbox-shared/oss-7/build/CMakeFiles/CMakeTmp'
+Building CXX object CMakeFiles/cmTC_41170.dir/CMakeCXXCompilerABI.cpp.obj
+/home/liam/Documents/toolchain/gcc-arm-none-eabi-8-2018-q4-major/bin/arm-none-eabi-g++     -o CMakeFiles/cmTC_41170.dir/CMakeCXXCompilerABI.cpp.obj -c /usr/share/cmake-3.10/Modules/CMakeCXXCompilerABI.cpp
+Linking CXX executable cmTC_41170
+/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_41170.dir/link.txt --verbose=1
+/home/liam/Documents/toolchain/gcc-arm-none-eabi-8-2018-q4-major/bin/arm-none-eabi-g++      -v CMakeFiles/cmTC_41170.dir/CMakeCXXCompilerABI.cpp.obj  -o cmTC_41170 
+Using built-in specs.
+COLLECT_GCC=/home/liam/Documents/toolchain/gcc-arm-none-eabi-8-2018-q4-major/bin/arm-none-eabi-g++
+COLLECT_LTO_WRAPPER=/home/liam/Documents/toolchain/gcc-arm-none-eabi-8-2018-q4-major/bin/../lib/gcc/arm-none-eabi/8.2.1/lto-wrapper
+Target: arm-none-eabi
+Configured with: /tmp/jenkins/jenkins-GCC-8-build_toolchain_docker-519_20181216_1544945247/src/gcc/configure --target=arm-none-eabi --prefix=/tmp/jenkins/jenkins-GCC-8-build_toolchain_docker-519_20181216_1544945247/install-native --libexecdir=/tmp/jenkins/jenkins-GCC-8-build_toolchain_docker-519_20181216_1544945247/install-native/lib --infodir=/tmp/jenkins/jenkins-GCC-8-build_toolchain_docker-519_20181216_1544945247/install-native/share/doc/gcc-arm-none-eabi/info --mandir=/tmp/jenkins/jenkins-GCC-8-build_toolchain_docker-519_20181216_1544945247/install-native/share/doc/gcc-arm-none-eabi/man --htmldir=/tmp/jenkins/jenkins-GCC-8-build_toolchain_docker-519_20181216_1544945247/install-native/share/doc/gcc-arm-none-eabi/html --pdfdir=/tmp/jenkins/jenkins-GCC-8-build_toolchain_docker-519_20181216_1544945247/install-native/share/doc/gcc-arm-none-eabi/pdf --enable-languages=c,c++ --enable-plugins --disable-decimal-float --disable-libffi --disable-libgomp --disable-libmudflap --disable-libquadmath --disable-libssp --disable-libstdcxx-pch --disable-nls --disable-shared --disable-threads --disable-tls --with-gnu-as --with-gnu-ld --with-newlib --with-headers=yes --with-python-dir=share/gcc-arm-none-eabi --with-sysroot=/tmp/jenkins/jenkins-GCC-8-build_toolchain_docker-519_20181216_1544945247/install-native/arm-none-eabi --build=x86_64-linux-gnu --host=x86_64-linux-gnu --with-gmp=/tmp/jenkins/jenkins-GCC-8-build_toolchain_docker-519_20181216_1544945247/build-native/host-libs/usr --with-mpfr=/tmp/jenkins/jenkins-GCC-8-build_toolchain_docker-519_20181216_1544945247/build-native/host-libs/usr --with-mpc=/tmp/jenkins/jenkins-GCC-8-build_toolchain_docker-519_20181216_1544945247/build-native/host-libs/usr --with-isl=/tmp/jenkins/jenkins-GCC-8-build_toolchain_docker-519_20181216_1544945247/build-native/host-libs/usr --with-libelf=/tmp/jenkins/jenkins-GCC-8-build_toolchain_docker-519_20181216_1544945247/build-native/host-libs/usr --with-host-libstdcxx='-static-libgcc -Wl,-Bstatic,-lstdc++,-Bdynamic -lm' --with-pkgversion='GNU Tools for Arm Embedded Processors 8-2018-q4-major' --with-multilib-list=rmprofile
+Thread model: single
+gcc version 8.2.1 20181213 (release) [gcc-8-branch revision 267074] (GNU Tools for Arm Embedded Processors 8-2018-q4-major) 
+COMPILER_PATH=/home/liam/Documents/toolchain/gcc-arm-none-eabi-8-2018-q4-major/bin/../lib/gcc/arm-none-eabi/8.2.1/:/home/liam/Documents/toolchain/gcc-arm-none-eabi-8-2018-q4-major/bin/../lib/gcc/:/home/liam/Documents/toolchain/gcc-arm-none-eabi-8-2018-q4-major/bin/../lib/gcc/arm-none-eabi/8.2.1/../../../../arm-none-eabi/bin/
+LIBRARY_PATH=/home/liam/Documents/toolchain/gcc-arm-none-eabi-8-2018-q4-major/bin/../lib/gcc/arm-none-eabi/8.2.1/:/home/liam/Documents/toolchain/gcc-arm-none-eabi-8-2018-q4-major/bin/../lib/gcc/:/home/liam/Documents/toolchain/gcc-arm-none-eabi-8-2018-q4-major/bin/../lib/gcc/arm-none-eabi/8.2.1/../../../../arm-none-eabi/lib/:/home/liam/Documents/toolchain/gcc-arm-none-eabi-8-2018-q4-major/bin/../arm-none-eabi/lib/
+COLLECT_GCC_OPTIONS='-v' '-o' 'cmTC_41170' '-mcpu=arm7tdmi' '-mfloat-abi=soft' '-marm' '-march=armv4t'
+ /home/liam/Documents/toolchain/gcc-arm-none-eabi-8-2018-q4-major/bin/../lib/gcc/arm-none-eabi/8.2.1/collect2 -plugin /home/liam/Documents/toolchain/gcc-arm-none-eabi-8-2018-q4-major/bin/../lib/gcc/arm-none-eabi/8.2.1/liblto_plugin.so -plugin-opt=/home/liam/Documents/toolchain/gcc-arm-none-eabi-8-2018-q4-major/bin/../lib/gcc/arm-none-eabi/8.2.1/lto-wrapper -plugin-opt=-fresolution=/tmp/cc8CJquz.res -plugin-opt=-pass-through=-lgcc -plugin-opt=-pass-through=-lc --sysroot=/home/liam/Documents/toolchain/gcc-arm-none-eabi-8-2018-q4-major/bin/../arm-none-eabi -X -o cmTC_41170 /home/liam/Documents/toolchain/gcc-arm-none-eabi-8-2018-q4-major/bin/../lib/gcc/arm-none-eabi/8.2.1/crti.o /home/liam/Documents/toolchain/gcc-arm-none-eabi-8-2018-q4-major/bin/../lib/gcc/arm-none-eabi/8.2.1/crtbegin.o /home/liam/Documents/toolchain/gcc-arm-none-eabi-8-2018-q4-major/bin/../lib/gcc/arm-none-eabi/8.2.1/../../../../arm-none-eabi/lib/crt0.o -L/home/liam/Documents/toolchain/gcc-arm-none-eabi-8-2018-q4-major/bin/../lib/gcc/arm-none-eabi/8.2.1 -L/home/liam/Documents/toolchain/gcc-arm-none-eabi-8-2018-q4-major/bin/../lib/gcc -L/home/liam/Documents/toolchain/gcc-arm-none-eabi-8-2018-q4-major/bin/../lib/gcc/arm-none-eabi/8.2.1/../../../../arm-none-eabi/lib -L/home/liam/Documents/toolchain/gcc-arm-none-eabi-8-2018-q4-major/bin/../arm-none-eabi/lib CMakeFiles/cmTC_41170.dir/CMakeCXXCompilerABI.cpp.obj -lstdc++ -lm --start-group -lgcc -lc --end-group /home/liam/Documents/toolchain/gcc-arm-none-eabi-8-2018-q4-major/bin/../lib/gcc/arm-none-eabi/8.2.1/crtend.o /home/liam/Documents/toolchain/gcc-arm-none-eabi-8-2018-q4-major/bin/../lib/gcc/arm-none-eabi/8.2.1/crtn.o
+/home/liam/Documents/toolchain/gcc-arm-none-eabi-8-2018-q4-major/bin/../lib/gcc/arm-none-eabi/8.2.1/../../../../arm-none-eabi/bin/ld: /home/liam/Documents/toolchain/gcc-arm-none-eabi-8-2018-q4-major/bin/../lib/gcc/arm-none-eabi/8.2.1/../../../../arm-none-eabi/lib/libc.a(lib_a-exit.o): in function `exit':
+exit.c:(.text.exit+0x2c): undefined reference to `_exit'
+collect2: error: ld returned 1 exit status
+CMakeFiles/cmTC_41170.dir/build.make:97: recipe for target 'cmTC_41170' failed
+make[1]: *** [cmTC_41170] Error 1
+make[1]: Leaving directory '/media/sf_Virtualbox-shared/oss-7/build/CMakeFiles/CMakeTmp'
+Makefile:126: recipe for target 'cmTC_41170/fast' failed
+make: *** [cmTC_41170/fast] Error 2
+
+
+
+Detecting CXX [-std=c++1z] compiler features failed to compile with the following output:
+Change Dir: /media/sf_Virtualbox-shared/oss-7/build/CMakeFiles/CMakeTmp
+
+Run Build Command:"/usr/bin/make" "cmTC_6ba5e/fast"
+/usr/bin/make -f CMakeFiles/cmTC_6ba5e.dir/build.make CMakeFiles/cmTC_6ba5e.dir/build
+make[1]: Entering directory '/media/sf_Virtualbox-shared/oss-7/build/CMakeFiles/CMakeTmp'
+Building CXX object CMakeFiles/cmTC_6ba5e.dir/feature_tests.cxx.obj
+/home/liam/Documents/toolchain/gcc-arm-none-eabi-8-2018-q4-major/bin/arm-none-eabi-g++    -std=c++1z -o CMakeFiles/cmTC_6ba5e.dir/feature_tests.cxx.obj -c /media/sf_Virtualbox-shared/oss-7/build/CMakeFiles/feature_tests.cxx
+Linking CXX executable cmTC_6ba5e
+/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_6ba5e.dir/link.txt --verbose=1
+/home/liam/Documents/toolchain/gcc-arm-none-eabi-8-2018-q4-major/bin/arm-none-eabi-g++       CMakeFiles/cmTC_6ba5e.dir/feature_tests.cxx.obj  -o cmTC_6ba5e 
+/home/liam/Documents/toolchain/gcc-arm-none-eabi-8-2018-q4-major/bin/../lib/gcc/arm-none-eabi/8.2.1/../../../../arm-none-eabi/bin/ld: /home/liam/Documents/toolchain/gcc-arm-none-eabi-8-2018-q4-major/bin/../lib/gcc/arm-none-eabi/8.2.1/../../../../arm-none-eabi/lib/libc.a(lib_a-exit.o): in function `exit':
+exit.c:(.text.exit+0x2c): undefined reference to `_exit'
+collect2: error: ld returned 1 exit status
+CMakeFiles/cmTC_6ba5e.dir/build.make:97: recipe for target 'cmTC_6ba5e' failed
+make[1]: *** [cmTC_6ba5e] Error 1
+make[1]: Leaving directory '/media/sf_Virtualbox-shared/oss-7/build/CMakeFiles/CMakeTmp'
+Makefile:126: recipe for target 'cmTC_6ba5e/fast' failed
+make: *** [cmTC_6ba5e/fast] Error 2
+
+
+

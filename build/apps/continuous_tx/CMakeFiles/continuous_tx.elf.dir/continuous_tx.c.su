@@ -1,0 +1,8 @@
+continuous_tx.c:233:20:alloc_packet_callback	8	static
+continuous_tx.c:237:6:release_packet_callback	8	static
+continuous_tx.c:101:6:stop_radio	8	static
+continuous_tx.c:112:6:start_radio	8	static
+continuous_tx.c:127:6:configure_radio	8	static
+continuous_tx.c:167:6:start	8	static
+continuous_tx.c:154:6:change_eirp	0	static
+continuous_tx.c:241:6:bootstrap	8	static

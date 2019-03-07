@@ -1,0 +1,5 @@
+hwblockdevice.c:5:6:blockdevice_init	8	static
+hwblockdevice.c:10:9:blockdevice_read	8	static
+hwblockdevice.c:15:9:blockdevice_program	8	static
+hwblockdevice.c:20:9:blockdevice_erase_chip	8	static
+hwblockdevice.c:24:9:blockdevice_erase_block32k	8	static

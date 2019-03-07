@@ -1,0 +1,9 @@
+console.c:28:13:flush_console_tx_fifo	24	static
+console.c:62:6:console_init	8	static
+console.c:70:6:console_enable	8	static
+console.c:74:6:console_disable	8	static
+console.c:78:13:console_print_byte	8	static
+console.c:83:13:console_print_bytes	8	static
+console.c:88:13:console_print	8	static
+console.c:92:13:console_set_rx_interrupt_callback	8	static
+console.c:100:13:console_rx_interrupt_enable	8	static

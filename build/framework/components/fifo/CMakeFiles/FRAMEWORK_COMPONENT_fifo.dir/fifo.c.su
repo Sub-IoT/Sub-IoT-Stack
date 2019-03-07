@@ -1,0 +1,13 @@
+fifo.c:108:13:skip	8	static
+fifo.c:33:6:fifo_init_filled	0	static
+fifo.c:28:6:fifo_init	8	static
+fifo.c:58:9:fifo_put	24	static
+fifo.c:93:9:fifo_put_byte	16	static
+fifo.c:165:10:fifo_get_size	0	static
+fifo.c:42:6:fifo_init_subview	24	static
+fifo.c:98:16:check_len	8	static
+fifo.c:115:9:fifo_skip	16	static
+fifo.c:125:9:fifo_peek	40	static
+fifo.c:155:9:fifo_pop	16	static
+fifo.c:173:6:fifo_clear	0	static
+fifo.c:179:6:fifo_is_full	8	static

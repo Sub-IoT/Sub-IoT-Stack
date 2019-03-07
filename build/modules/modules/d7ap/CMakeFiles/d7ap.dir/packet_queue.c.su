@@ -1,0 +1,9 @@
+packet_queue.c:46:6:packet_queue_init	8	static
+packet_queue.c:55:11:packet_queue_alloc_packet	0	static
+packet_queue.c:72:6:packet_queue_free_packet	8	static
+packet_queue.c:90:11:packet_queue_find_packet	8	static
+packet_queue.c:101:6:packet_queue_mark_received	8	static
+packet_queue.c:118:11:packet_queue_mark_transmitted	8	static
+packet_queue.c:134:11:packet_queue_get_received_packet	0	static
+packet_queue.c:148:11:packet_queue_get_transmitted_packet	0	static
+packet_queue.c:160:6:packet_queue_mark_processing	8	static

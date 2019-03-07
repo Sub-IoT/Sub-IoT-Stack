@@ -1,0 +1,2 @@
+random.c:23:19:get_rnd	8	static
+random.c:28:15:set_rng_seed	8	static

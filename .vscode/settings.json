@@ -1,0 +1,10 @@
+{
+    "files.associations": {
+        "si4460.h": "c",
+        "ezradio_cmd.h": "c",
+        "ezradio_api_lib.h": "c",
+        "ezradio_api_lib.h\u0000ezradio_api_lib.h": "c",
+        "ezradio_api_lib.h\u0000radio_api_lib.h": "c",
+        "ezradio_api_lib.h\u0000zradio_api_lib.h": "c"
+    }
+}

@@ -1,0 +1,4 @@
+ccm.c:50:13:xor_aes_block	12	static
+ccm.c:68:9:AES128_CBC_MAC	72	static
+ccm.c:194:9:AES128_CCM_encrypt	72	static
+ccm.c:246:9:AES128_CCM_decrypt	88	static

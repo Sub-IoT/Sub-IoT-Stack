@@ -1,0 +1,10 @@
+stm32_common_system.c:44:13:gpio_config_save	0	static
+stm32_common_system.c:55:13:gpio_config_restore	24	static
+stm32_common_system.c:83:24:hw_system_reboot_reason	0	static
+stm32_common_system.c:88:6:hw_system_save_reboot_reason	8	static
+stm32_common_system.c:120:6:hw_enter_lowpower_mode	8	static
+stm32_common_system.c:173:10:hw_get_unique_id	8	static
+stm32_common_system.c:178:6:hw_busy_wait	8	static
+stm32_common_system.c:192:6:hw_reset	8	static
+stm32_common_system.c:197:6:__hardfault_handler	8	static
+stm32_common_system.c:203:6:HardFault_Handler	0	static
