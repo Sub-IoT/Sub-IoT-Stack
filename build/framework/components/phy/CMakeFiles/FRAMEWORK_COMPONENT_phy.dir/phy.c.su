@@ -1,0 +1,2 @@
+phy.c:28:6:phy_radio_channel_ids_equal	0	static
+phy.c:34:10:phy_calculate_tx_duration	16	static

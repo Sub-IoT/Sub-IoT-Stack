@@ -1,0 +1,2 @@
+/home/liam/Documents/toolchain/gcc-arm-none-eabi-8-2018-q4-major/bin/arm-none-eabi-ar qc libalp.a  CMakeFiles/alp.dir/alp_cmd_handler.c.obj CMakeFiles/alp.dir/alp_layer.c.obj
+/home/liam/Documents/toolchain/gcc-arm-none-eabi-8-2018-q4-major/bin/arm-none-eabi-ranlib libalp.a

@@ -1,0 +1,9 @@
+stm32_common_i2c.c:191:15:i2c_init	96	static
+stm32_common_i2c.c:248:8:i2c_deinit	8	static
+stm32_common_i2c.c:255:6:i2c_acquire	8	static
+stm32_common_i2c.c:261:6:i2c_release	8	static
+stm32_common_i2c.c:266:8:i2c_write	16	static
+stm32_common_i2c.c:271:8:i2c_read	16	static
+stm32_common_i2c.c:277:8:i2c_read_memory	24	static
+stm32_common_i2c.c:284:8:i2c_write_memory	24	static
+stm32_common_i2c.c:291:8:i2c_write_read	24	static

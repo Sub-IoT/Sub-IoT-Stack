@@ -1,0 +1,3 @@
+stm32_common_mcu.c:32:13:init_clock	120	static
+stm32_common_mcu.c:87:6:stm32_common_mcu_init	8	static
+stm32_common_mcu.c:94:10:HAL_GetTick	8	static

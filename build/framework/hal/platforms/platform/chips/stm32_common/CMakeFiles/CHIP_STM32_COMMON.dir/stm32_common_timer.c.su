@@ -1,0 +1,9 @@
+stm32_common_timer.c:60:9:hw_timer_init	16	static
+stm32_common_timer.c:130:23:hw_timer_get_info	0	static
+stm32_common_timer.c:146:16:hw_timer_getvalue	0	static
+stm32_common_timer.c:165:9:hw_timer_schedule	8	static
+stm32_common_timer.c:191:9:hw_timer_cancel	8	static
+stm32_common_timer.c:212:9:hw_timer_counter_reset	8	static
+stm32_common_timer.c:236:6:hw_timer_is_overflow_pending	8	static
+stm32_common_timer.c:252:6:hw_timer_is_interrupt_pending	8	static
+stm32_common_timer.c:268:6:LPTIM1_IRQHandler	8	static

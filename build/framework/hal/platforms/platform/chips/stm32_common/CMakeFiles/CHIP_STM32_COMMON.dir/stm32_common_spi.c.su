@@ -1,0 +1,12 @@
+stm32_common_spi.c:81:13:init_pins	48	static
+stm32_common_spi.c:93:13:deinit_pins	40	static
+stm32_common_spi.c:69:13:ensure_slaves_deselected	16	static
+stm32_common_spi.c:102:6:spi_enable	8	static
+stm32_common_spi.c:132:6:spi_disable	8	static
+stm32_common_spi.c:158:15:spi_init	40	static
+stm32_common_spi.c:231:22:spi_init_slave	56	static
+stm32_common_spi.c:262:6:spi_select	8	static
+stm32_common_spi.c:274:6:spi_deselect	8	static
+stm32_common_spi.c:285:15:spi_exchange_byte	32	static
+stm32_common_spi.c:291:6:spi_send_byte_with_control	16	static
+stm32_common_spi.c:295:6:spi_exchange_bytes	24	static

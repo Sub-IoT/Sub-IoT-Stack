@@ -1,0 +1,30 @@
+#IncludeRegexLine: ^[ 	]*[#%][ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+/media/sf_Virtualbox-shared/oss-7/stack/framework/components/fec/fec.c
+stdbool.h
+-
+stddef.h
+-
+stdint.h
+-
+stdio.h
+-
+stdint.h
+-
+string.h
+-
+fec.h
+/media/sf_Virtualbox-shared/oss-7/stack/framework/components/fec/fec.h
+
+/media/sf_Virtualbox-shared/oss-7/stack/framework/inc/fec.h
+stdbool.h
+-
+stdint.h
+-
+

@@ -1,0 +1,8 @@
+device STM32L072CZ
+if SWD
+speed 10000
+h
+loadfile continuous_tx.bin, 0x0
+verifybin continuous_tx.bin, 0x0
+r
+qc

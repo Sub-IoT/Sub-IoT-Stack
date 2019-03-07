@@ -1,0 +1,5 @@
+continuous_rx.c:93:6:stop_radio	0	static
+continuous_rx.c:102:6:start_radio	8	static
+continuous_rx.c:119:6:configure_radio	8	static
+continuous_rx.c:143:6:start	8	static
+continuous_rx.c:196:6:bootstrap	8	static

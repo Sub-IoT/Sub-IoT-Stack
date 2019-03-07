@@ -1,0 +1,5 @@
+platf_debug.c:70:6:__hw_debug_init	0	static
+platf_debug.c:71:6:hw_debug_set	0	static
+platf_debug.c:72:6:hw_debug_clr	0	static
+platf_debug.c:73:6:hw_debug_toggle	0	static
+platf_debug.c:74:6:hw_debug_mask	0	static

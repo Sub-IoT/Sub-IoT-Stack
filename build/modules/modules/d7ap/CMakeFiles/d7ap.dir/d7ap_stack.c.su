@@ -1,0 +1,16 @@
+bitmap.h:57:13:bitmap_get	0	static
+d7ap_stack.c:150:13:free_session	0	static
+d7ap_stack.c:157:19:alloc_session	12	static
+d7ap_stack.c:169:13:init_session_list	8	static
+d7ap_stack.c:200:19:get_session_by_session_token	8	static
+d7ap_stack.c:82:13:switch_state	8	static
+d7ap_stack.c:176:6:d7ap_stack_init	8	static
+d7ap_stack.c:189:6:d7ap_stack_stop	8	static
+d7ap_stack.c:220:9:d7ap_stack_send	32	static
+d7ap_stack.c:264:6:d7ap_stack_process_unsolicited_request	48	static
+d7ap_stack.c:290:6:d7ap_stack_process_received_response	56	static
+d7ap_stack.c:312:6:d7ap_stack_session_completed	32	static
+d7ap_stack.c:338:6:d7ap_stack_signal_active_master_session	8	static
+d7ap_stack.c:349:6:d7ap_stack_signal_slave_session_terminated	8	static
+d7ap_stack.c:356:6:d7ap_stack_signal_transaction_terminated	8	static
+d7ap_stack.c:364:6:d7ap_stack_is_client_session_active	0	static

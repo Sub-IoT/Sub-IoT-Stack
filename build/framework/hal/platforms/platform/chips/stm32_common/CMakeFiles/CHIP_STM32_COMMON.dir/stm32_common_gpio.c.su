@@ -1,0 +1,14 @@
+stm32_common_gpio.c:194:13:gpio_int_callback	8	static
+stm32_common_gpio.c:74:15:__gpio_init	80	static
+stm32_common_gpio.c:117:18:hw_gpio_configure_pin_stm	40	static
+stm32_common_gpio.c:135:18:hw_gpio_configure_pin	32	static
+stm32_common_gpio.c:165:18:hw_gpio_set	8	static
+stm32_common_gpio.c:171:18:hw_gpio_clr	8	static
+stm32_common_gpio.c:177:18:hw_gpio_toggle	8	static
+stm32_common_gpio.c:183:15:hw_gpio_get_out	8	static
+stm32_common_gpio.c:189:15:hw_gpio_get_in	8	static
+stm32_common_gpio.c:209:18:hw_gpio_set_edge_interrupt	8	static
+stm32_common_gpio.c:234:18:hw_gpio_configure_interrupt	32	static
+stm32_common_gpio.c:302:18:hw_gpio_enable_interrupt	8	static
+stm32_common_gpio.c:347:18:hw_gpio_disable_interrupt	0	static
+stm32_common_gpio.c:369:6:EXTI_IRQHandler	8	static

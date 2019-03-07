@@ -1,0 +1,10 @@
+d7ap.c:101:6:d7ap_init	32	static
+d7ap.c:119:6:d7ap_stop	8	static
+d7ap.c:132:9:d7ap_register	16	static
+d7ap.c:147:6:d7ap_get_dev_addr	0	static
+d7ap.c:160:9:d7ap_get_payload_max_size	0	static
+d7ap.c:180:9:d7ap_send	24	static
+d7ap.c:203:6:d7ap_set_tx_power	0	static
+d7ap.c:214:9:d7ap_get_tx_power	0	static
+d7ap.c:225:6:d7ap_set_access_class	0	static
+d7ap.c:236:9:d7ap_get_access_class	0	static

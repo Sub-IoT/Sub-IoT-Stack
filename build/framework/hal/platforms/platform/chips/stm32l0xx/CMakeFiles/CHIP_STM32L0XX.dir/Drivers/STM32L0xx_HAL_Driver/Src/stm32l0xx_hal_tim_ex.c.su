@@ -1,0 +1,2 @@
+stm32l0xx_hal_tim_ex.c:127:19:HAL_TIMEx_MasterConfigSynchronization	20	static
+stm32l0xx_hal_tim_ex.c:432:19:HAL_TIMEx_RemapConfig	0	static

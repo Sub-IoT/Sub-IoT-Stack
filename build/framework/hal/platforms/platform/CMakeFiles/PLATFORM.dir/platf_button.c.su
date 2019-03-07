@@ -1,0 +1,6 @@
+platf_button.c:148:6:button_task	16	static
+platf_button.c:134:13:button_callback	16	static
+platf_button.c:47:15:__ubutton_init	24	static
+platf_button.c:62:15:ubutton_pressed	8	static
+platf_button.c:68:18:ubutton_register_callback	16	static
+platf_button.c:100:18:ubutton_deregister_callback	16	static
