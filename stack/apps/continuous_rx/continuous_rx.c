@@ -76,17 +76,19 @@ static uint8_t max_eirp_level = 0xC0;//868 MHz = +12 dBm , 433 MHz = +10 dBm
 static ezradio_cmd_reply_t ezradioReply;
 #endif
 
-#define NORMAL_RATE_CHANNEL_COUNT 8
-#define LO_RATE_CHANNEL_COUNT 69
+#define HI_RATE_CHANNEL_COUNT 32
+#define NORMAL_RATE_CHANNEL_COUNT 32
+#define LO_RATE_CHANNEL_COUNT 280
 
 static hw_rx_cfg_t rx_cfg;
-static uint8_t current_channel_indexes_index = 0;
+static uint16_t current_channel_indexes_index = 13;
 static uint8_t current_eirp_level = 0x7f;
 static modulation_t current_modulation = MODULATION_GFSK;
 static phy_channel_band_t current_channel_band = PHY_BAND_868;
-static phy_channel_class_t current_channel_class = PHY_CLASS_NORMAL_RATE;
-static uint8_t channel_indexes[NORMAL_RATE_CHANNEL_COUNT] = { 0 }; // reallocated later depending on band/class
-static uint8_t channel_count = NORMAL_RATE_CHANNEL_COUNT;
+static phy_channel_class_t current_channel_class = PHY_CLASS_HI_RATE;
+static uint16_t channel_indexes[LO_RATE_CHANNEL_COUNT] = { 0 }; // reallocated later depending on band/class
+static uint16_t channel_count = NORMAL_RATE_CHANNEL_COUNT;
+static bool receive_data = true;
 
 void stop_radio(){
 #if defined USE_SI4460
@@ -103,6 +105,9 @@ void start_radio(){
         /* start the device as receiver  */
         ezradio_change_state(EZRADIO_CMD_CHANGE_STATE_ARG_NEXT_STATE1_NEW_STATE_ENUM_READY);
         hw_radio_set_rx(&rx_cfg, NULL, NULL);
+#elif defined USE_SX127X
+        start_hw_radio_continuous_rx(receive_data);
+        return;
 #endif
         while (true) {
             int16_t rss = hw_radio_get_rssi();
@@ -131,7 +136,7 @@ void configure_radio(modulation_t mod){
     cc1101_interface_write_single_reg(0x12, mod); // MDMCFG2
     cc1101_interface_strobe(0x32); // strobe calibrate
 #elif defined USE_SX127X
-    hw_radio_set_rx(&rx_cfg, NULL, NULL);
+    hw_radio_continuous_rx(&rx_cfg);
 #endif
 }
 
@@ -196,23 +201,39 @@ void bootstrap()
     lcd_write_string("cont RX \n");
 #endif
 
+uint16_t i = 0;
     switch(current_channel_class)
     {
-        // TODO only 433 for now
-        case PHY_CLASS_NORMAL_RATE:
-          channel_count = NORMAL_RATE_CHANNEL_COUNT;
-            realloc(channel_indexes, channel_count);
-            for(int i = 0; i < channel_count; i++)
-                channel_indexes[i] = i * 8;
-
-            break;
         case PHY_CLASS_LO_RATE:
           channel_count = LO_RATE_CHANNEL_COUNT;
             realloc(channel_indexes, channel_count);
-            for(int i = 0; i < channel_count; i++)
+            
+            for(; i < channel_count; i++)
                 channel_indexes[i] = i;
 
             break;
+        case PHY_CLASS_NORMAL_RATE:
+          channel_count = NORMAL_RATE_CHANNEL_COUNT;
+            realloc(channel_indexes, channel_count);
+            
+            for(; i < channel_count-4; i++)
+                channel_indexes[i] = i*8;
+            channel_indexes[i++]=229;
+            channel_indexes[i++]=239;
+            channel_indexes[i++]=257;
+            channel_indexes[i++]=270;
+
+            break;
+        case PHY_CLASS_HI_RATE:
+          channel_count = HI_RATE_CHANNEL_COUNT;
+            realloc(channel_indexes, channel_count);
+
+            for(; i < channel_count-4; i++)
+                channel_indexes[i] = i*8;
+            channel_indexes[i++]=229;
+            channel_indexes[i++]=239;
+            channel_indexes[i++]=257;
+            channel_indexes[i++]=270; 
     }
 
 #if PLATFORM_NUM_BUTTONS > 1

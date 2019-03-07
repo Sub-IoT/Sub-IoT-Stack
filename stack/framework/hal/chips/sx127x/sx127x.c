@@ -270,7 +270,7 @@ static void read_fifo(uint8_t* buffer, uint8_t size) {
   spi_exchange_byte(sx127x_spi, 0x00);
   spi_exchange_bytes(sx127x_spi, NULL, buffer, size);
   spi_deselect(sx127x_spi);
-  DPRINT("READ FIFO %i", size);
+  // DPRINT("READ FIFO %i: %d", size, buffer[0]);
 }
 
 static opmode_t get_opmode() {
@@ -1487,16 +1487,26 @@ void stop_hw_radio_continuous_tx(){
   const_radio = false;
 }
 
-void start_hw_radio_continuous_tx(){ 
-  // chip does not include a PN9 generator so fill fifo manually ...
-  uint8_t payload_len = 63;  
-  uint8_t data[payload_len + 1];
-
-  while(const_radio){
-    data[0]= payload_len;
-    pn9_encode(data + 1 , sizeof(data) - 1);
-    
-    write_fifo(data, payload_len+1); //data in fifo gets sent out
+void start_hw_radio_continuous_tx(bool send_random){ 
+  
+  if(send_random){
+    uint8_t payload_len = 63;  
+    uint8_t data[payload_len + 1];
+    while(const_radio){
+      // chip does not include a PN9 generator so fill fifo manually ...
+      data[0] = payload_len;
+      pn9_encode(data + 1 , sizeof(data) - 1);
+      write_fifo(data, payload_len+1); //data in fifo gets sent out
+    }
+  } else {
+    uint8_t data[1];
+    data[0] = 0;
+    while(const_radio){
+      if(!(read_reg(REG_IRQFLAGS2) & 0x80)){
+        write_fifo(data, 1); //data in fifo gets sent out
+        data[0]++;
+      }
+    }
   }
 }
 
@@ -1520,4 +1530,90 @@ void hw_radio_continuous_tx(hw_tx_cfg_t const* tx_cfg, bool continuous_wave) {
   state = STATE_TX;
 
   set_opmode(OPMODE_TX);
+}
+
+void hw_radio_continuous_rx(hw_rx_cfg_t const* rx_cfg){
+  resume_from_sleep_mode();
+  configure_channel(&(rx_cfg->channel_id));
+  configure_syncword(rx_cfg->syncword_class, &(rx_cfg->channel_id));
+
+  flush_fifo();
+  FskPacketHandler.NbBytes = 0;
+  FskPacketHandler.Size = 0;
+  FskPacketHandler.FifoThresh = 0;
+
+  //fixed length with 0 payloadlength = unlimited payloadlength
+  write_reg(REG_PACKETCONFIG1, read_reg(REG_PACKETCONFIG1) & 0x7F); 
+  write_reg(REG_PACKETCONFIG2, read_reg(REG_PACKETCONFIG2) & 0xF8);
+  write_reg(REG_PAYLOADLENGTH, 0x00);
+
+  //no automatic restart
+  write_reg(REG_RXCONFIG,read_reg(REG_RXCONFIG) & 0x7F);
+
+  // write_reg(REG_DIOMAPPING1, 0x0C); // DIO2 = 0b11 => interrupt on sync detect
+
+  // hw_gpio_set_edge_interrupt(SX127x_DIO1_PIN, GPIO_RISING_EDGE);
+  // hw_gpio_enable_interrupt(SX127x_DIO1_PIN);
+  set_packet_handler_enabled(true);
+
+  //CHECK SETTINGS
+  if(read_reg(REG_PACKETCONFIG2) & 0x40)
+    DPRINT("PACKET MODE");
+  else
+    DPRINT("CONTINUOUS MODE");
+  if((read_reg(REG_PACKETCONFIG1) & 0xF6) == 0x00)
+    DPRINT("Fixed unlimited length, no decoding, CRC off, addressfiltering off");
+  else
+    DPRINT("something wrong: %X",read_reg(REG_PACKETCONFIG1) & 0xF6);
+  if(!(read_reg(REG_OPMODE) & 0xE0))
+    DPRINT("FSK");
+  
+
+  if(state == STATE_RX)
+    restart_rx_chain();
+
+  state = STATE_RX;
+  set_opmode(OPMODE_RX);
+
+  if(rssi_valid_callback != 0) {
+    while(!(read_reg(REG_IRQFLAGS1) & 0x08)) {} // wait until we have a valid RSSI value
+
+    rssi_valid_callback(get_rssi());
+  }
+  DPRINT("OPMODE set to: %X, ready to receive",get_opmode());
+}
+
+void start_hw_radio_continuous_rx(bool receive_data){
+  if(!receive_data)
+    while (true) {
+      int16_t rss = hw_radio_get_rssi();
+      log_print_string("rss : %d \n", rss);
+      hw_busy_wait(5000);
+    }
+  else{
+    uint8_t data[64];
+    uint8_t previous_data = 255;
+    uint8_t count_bad = 0;
+    bool first_time = true;
+    while(true) {
+      if((read_reg(REG_IRQFLAGS2) & 0x80)){ //If Fifo full, read 64 bytes
+        if(first_time){
+          DPRINT("Receiving...\n");
+          first_time = false;
+        }
+        read_fifo(data, 64);
+        //check if data is complete
+        if((previous_data != data[0] - 1) && (previous_data != data[0] + 255) && (data[0] != data[63] + 63))
+          DPRINT("missing data: %d - %d", previous_data, data[0]);
+        previous_data = data[63];
+
+        /*
+        In HI_RATE this program is having a lot of missing data. We can see this isn't caused by
+        the microcontroller because it has time between 2 flags (proved by having prints between
+        two flags). HI_RATE also activates the receiver without being reset (and thus sending 
+        preamble). When checking the success-rate, the real data comes through ~1/10 times.
+        */
+      } 
+    }
+  }  
 }

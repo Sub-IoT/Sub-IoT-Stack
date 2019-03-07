@@ -89,13 +89,14 @@ typedef enum {
 #define LO_RATE_CHANNEL_COUNT 280
 
 static hw_tx_cfg_t tx_cfg;
-static uint16_t current_channel_indexes_index = 13;
+static uint16_t current_channel_indexes_index = 13; //108
 static modulation_t current_modulation = MODULATION_GFSK; // MODULATION_CW; 
 static phy_channel_band_t current_channel_band = PHY_BAND_868;
-static phy_channel_class_t current_channel_class = PHY_CLASS_HI_RATE;
+static phy_channel_class_t current_channel_class = PHY_CLASS_HI_RATE; 
 static uint16_t channel_indexes[LO_RATE_CHANNEL_COUNT] = { 0 }; // reallocated later depending on band/class
 static uint16_t channel_count = LO_RATE_CHANNEL_COUNT;
 static uint8_t current_eirp_level = DEFAULT_EIRP;
+static bool send_random = false; // if false, it will send numbers going from 0 to 255
 
 void stop_radio(){
 #if defined USE_SI4460
@@ -119,7 +120,7 @@ void start_radio(){
 #endif
 #if defined USE_SX127X
     log_print_string("sending \n");
-    start_hw_radio_continuous_tx();
+    start_hw_radio_continuous_tx(send_random);
 #endif
 }
 
