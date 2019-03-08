@@ -1481,34 +1481,26 @@ int16_t hw_radio_get_rssi() {
         return (- read_reg(REG_RSSIVALUE) / 2);
 }
 
-void start_hw_radio_continuous_tx(uint8_t time_period, bool send_random){ 
-  bool const_radio = (time_period == 0);
+void start_hw_radio_continuous_tx(uint8_t time_period){ 
   state = STATE_TX;
   set_opmode(OPMODE_TX);
+
+  bool const_radio = (time_period == 0);
+  // chip does not include a PN9 generator so fill fifo manually ...
+  uint8_t payload_len = 63;  
+  uint8_t data[payload_len + 1];
 
   assert(time_period <= 60);
   uint16_t period = time_period * 1024;
   uint16_t time = hw_timer_getvalue(0) + period;
-
-  if(send_random){
-    uint8_t payload_len = 63;  
-    uint8_t data[payload_len + 1];
-    while(const_radio || ((hw_timer_getvalue(0) < time) || (hw_timer_getvalue(0) > (time + 100)))){
-      // chip does not include a PN9 generator so fill fifo manually ...
-      data[0] = payload_len;
-      pn9_encode(data + 1 , sizeof(data) - 1);
-      write_fifo(data, payload_len+1); //data in fifo gets sent out
-    }
-  } else {
-    uint8_t data[1];
-    data[0] = 0;
-    //data[0] = 0x55;
-    while(const_radio || ((hw_timer_getvalue(0) < time) || (hw_timer_getvalue(0) > (time + 100)))){
-      if(!(read_reg(REG_IRQFLAGS2) & 0x80)){
-        write_fifo(data, 1); //data in fifo gets sent out
-        data[0]++;
-      }
-    }
+  
+  DPRINT("%d untill %d\n %d < %d ||\n%d < %d && %d > %d\n", hw_timer_getvalue(0),
+  time, hw_timer_getvalue(0),time, time, (period-1), hw_timer_getvalue(0), 0xFFFF - (period-1));
+  while(const_radio || ((hw_timer_getvalue(0) < time) || ((time < (period-1)) && (hw_timer_getvalue(0) > 0xFFFF - (period-1))))){
+    data[0]= payload_len;
+    pn9_encode(data + 1 , sizeof(data) - 1);
+    
+    write_fifo(data, payload_len+1); //data in fifo gets sent out
   }
 
   switch_to_sleep_mode();

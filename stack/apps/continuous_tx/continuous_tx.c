@@ -118,7 +118,7 @@ void start_radio(){
 #endif
 #if defined USE_SX127X
     log_print_string("sending \n");
-    start_hw_radio_continuous_tx(0, send_random); //time of 0 is send unlimited
+    start_hw_radio_continuous_tx(0); //time of 0 is send unlimited
 #endif
 }
 

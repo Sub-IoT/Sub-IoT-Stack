@@ -71,68 +71,43 @@ static bool send_random = false; // if false, it will send numbers going from 0 
 static bool receive_data = false; //if false, it will show RSSI instead of data
 static uint8_t time_period = 5;
 
+#include "hwradio.h"
+
+#define ENGINEERING_FILE_ID      0x43
+#define ACTION_FILE_ID           0x44
+#define INTERFACE_FILE_ID        0x45
+#define ENGINEERING_FILE_SIZE    20
+#define written_data_size        3
+
+#define DEFAULT_EIRP 0 // TODO
+#define MAX_EIRP 0 // TODO
+
+typedef enum {
+  MODULATION_CW,
+  MODULATION_GFSK,
+} modulation_t;
+
+#define HI_RATE_CHANNEL_COUNT 32
+#define NORMAL_RATE_CHANNEL_COUNT 32
+#define LO_RATE_CHANNEL_COUNT 280
+
+static hw_tx_cfg_t tx_cfg;
+static uint16_t current_channel_indexes_index = 13;
+static modulation_t current_modulation = MODULATION_GFSK; // MODULATION_CW; 
+static phy_channel_band_t current_channel_band = PHY_BAND_868;
+static phy_channel_class_t current_channel_class = PHY_CLASS_HI_RATE;
+static uint16_t channel_indexes[LO_RATE_CHANNEL_COUNT] = { 0 }; // reallocated later depending on band/class
+static uint16_t channel_count = LO_RATE_CHANNEL_COUNT;
+static uint8_t current_eirp_level = DEFAULT_EIRP;
+static uint8_t time_period = 5;
+
 // This example application contains a modem which can be used from another MCU through
 // the serial interface
 void start_tx(){
-    start_hw_radio_continuous_tx(time_period, send_random);
+    start_hw_radio_continuous_tx(time_period);
 }
 
-void start_rx(){
-    start_hw_radio_continuous_rx(time_period, receive_data);
-}
-
-void continuous_rx(uint8_t* data){
-    switch (data[0] & 0x0C)
-    {
-        case 0x04:
-            log_print_string("low_rate");
-            current_channel_class = PHY_CLASS_LO_RATE;
-            break;
-
-        case 0x08:
-            log_print_string("normal_rate");
-            current_channel_class = PHY_CLASS_NORMAL_RATE;
-            break;
-
-        case 0x0C:
-            log_print_string("high_rate");
-            current_channel_class = PHY_CLASS_HI_RATE;
-            break;
-    
-        default:
-            break;
-    }
-
-    if(data[0] & 0x10) {
-        log_print_string("receive data");
-        receive_data = true;
-    } else {
-        log_print_string("receive RSSI");
-        receive_data = false;
-    }
-
-    current_channel_indexes_index = (data[1] & 0x01) * 256 + data[2];
-
-    time_period = (data[1] & 0xFE) >> 1;
-
-    log_print_string("channel is %d",current_channel_indexes_index);
-
-    rx_cfg.channel_id.channel_header.ch_coding = PHY_CODING_PN9;
-    rx_cfg.channel_id.channel_header.ch_class = current_channel_class;
-    rx_cfg.channel_id.channel_header.ch_freq_band = current_channel_band;
-    rx_cfg.channel_id.center_freq_index = channel_indexes[current_channel_indexes_index];
-
-    /* Configure */
-    hw_radio_continuous_rx(&rx_cfg);
-
-    /* start the radio */
-    log_print_string("receiving \n");
-    sched_register_task(&start_rx);
-    //give it time to answer through uart
-    timer_post_task_delay(&start_rx, 500);
-}
-
-void continuous_tx(uint8_t* data){
+continuous_tx(uint8_t* data){
     if(data[0] & 0x02) { 
         log_print_string("modulated");
         current_modulation = MODULATION_GFSK;
@@ -224,6 +199,7 @@ void start(){
 
     fs_file_header_t file_header = (fs_file_header_t){
         .file_properties.action_protocol_enabled = 0,
+        //.file_properties.action_condition = ALP_ACT_COND_WRITE,
         .file_properties.storage_class = FS_STORAGE_VOLATILE,
         .file_permissions = 0, // TODO
         .alp_cmd_file_id = ACTION_FILE_ID,
