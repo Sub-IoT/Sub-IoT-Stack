@@ -228,8 +228,6 @@ const uint16_t sync_word_value[2][4] = {
 #define To_CLASS_NORMAL_RATE 4 // (12(FEC encode payload) + 2 (SYNC) + 8 (Max preamble)) / 6 bytes/tick
 #define To_CLASS_HI_RATE 2 // (12(FEC encode payload) + 2 (SYNC) + 16 (Max preamble)) / 20 bytes/tick
 
-volatile bool const_radio;
-
 const uint8_t bg_timeout[4] = {
     To_CLASS_LO_RATE,
     0, // RFU
@@ -1484,25 +1482,32 @@ int16_t hw_radio_get_rssi() {
         return (- read_reg(REG_RSSIVALUE) / 2);
 }
 
-void stop_hw_radio_continuous_tx(){
-  const_radio = false;
-}
+void start_hw_radio_continuous_tx(uint8_t time_period){ 
+  state = STATE_TX;
+  set_opmode(OPMODE_TX);
 
-void start_hw_radio_continuous_tx(){ 
+  bool const_radio = (time_period == 0);
   // chip does not include a PN9 generator so fill fifo manually ...
   uint8_t payload_len = 63;  
   uint8_t data[payload_len + 1];
 
-  while(const_radio){
+  assert(time_period <= 60);
+  uint16_t period = time_period * 1024;
+  uint16_t time = hw_timer_getvalue(0) + period;
+  
+  DPRINT("%d untill %d\n %d < %d ||\n%d < %d && %d > %d\n", hw_timer_getvalue(0),
+  time, hw_timer_getvalue(0),time, time, (period-1), hw_timer_getvalue(0), 0xFFFF - (period-1));
+  while(const_radio || ((hw_timer_getvalue(0) < time) || ((time < (period-1)) && (hw_timer_getvalue(0) > 0xFFFF - (period-1))))){
     data[0]= payload_len;
     pn9_encode(data + 1 , sizeof(data) - 1);
     
     write_fifo(data, payload_len+1); //data in fifo gets sent out
   }
+
+  switch_to_sleep_mode();
 }
 
 void hw_radio_continuous_tx(hw_tx_cfg_t const* tx_cfg, bool continuous_wave) {
-  const_radio = true;
   log_print_string("cont tx\n");
 
   resume_from_sleep_mode();
@@ -1517,8 +1522,4 @@ void hw_radio_continuous_tx(hw_tx_cfg_t const* tx_cfg, bool continuous_wave) {
     write_reg(REG_FDEVMSB, 0x00);
     write_reg(REG_FDEVLSB, 0x00);
   }
-
-  state = STATE_TX;
-
-  set_opmode(OPMODE_TX);
 }
