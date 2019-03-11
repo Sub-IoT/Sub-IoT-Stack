@@ -65,7 +65,7 @@ static phy_channel_band_t current_channel_band = PHY_BAND_868;
 static phy_channel_class_t current_channel_class = PHY_CLASS_HI_RATE;
 static uint16_t channel_indexes[LO_RATE_CHANNEL_COUNT] = { 0 }; // reallocated later depending on band/class
 static uint16_t channel_count = LO_RATE_CHANNEL_COUNT;
-static uint8_t current_eirp_level = DEFAULT_EIRP;
+static eirp_t current_eirp_level = DEFAULT_EIRP;
 static bool send_random = false; // if false, it will send numbers going from 0 to 255
 static bool receive_data = false; //if false, it will show RSSI instead of data
 static uint8_t time_period = 5;
@@ -169,6 +169,9 @@ void continuous_tx(uint8_t* data){
         send_random = true;
     }
 
+    current_eirp_level = (data[0] & 0xE0) >> 5;
+    current_eirp_level = current_eirp_level * 16 / 7 - 2; //Map to -2 untill 14 dBm
+
     current_channel_indexes_index = (data[1] & 0x01) * 256 + data[2];
 
     time_period = (data[1] & 0xFE) >> 1;
@@ -179,7 +182,7 @@ void continuous_tx(uint8_t* data){
     tx_cfg.channel_id.channel_header.ch_class = current_channel_class;
     tx_cfg.channel_id.channel_header.ch_freq_band = current_channel_band;
     tx_cfg.channel_id.center_freq_index = channel_indexes[current_channel_indexes_index];
-    tx_cfg.eirp = 10;
+    tx_cfg.eirp = current_eirp_level;
 
     /* Configure */
     hw_radio_continuous_tx(&tx_cfg, current_modulation == MODULATION_CW);
