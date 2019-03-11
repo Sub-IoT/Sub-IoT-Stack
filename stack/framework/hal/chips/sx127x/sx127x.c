@@ -228,8 +228,6 @@ const uint16_t sync_word_value[2][4] = {
 #define To_CLASS_NORMAL_RATE 4 // (12(FEC encode payload) + 2 (SYNC) + 8 (Max preamble)) / 6 bytes/tick
 #define To_CLASS_HI_RATE 2 // (12(FEC encode payload) + 2 (SYNC) + 16 (Max preamble)) / 20 bytes/tick
 
-volatile bool const_radio;
-
 const uint8_t bg_timeout[4] = {
     To_CLASS_LO_RATE,
     0, // RFU
@@ -382,9 +380,9 @@ static bool is_lora_channel(const channel_id_t* channel) {
 }
 
 static void configure_channel(const channel_id_t* channel) {
-  if(phy_radio_channel_ids_equal(&current_channel_id, channel)) {
+  /*if(phy_radio_channel_ids_equal(&current_channel_id, channel)) {
     return;
-  }
+  }*/
 
   if(is_sx1272) {
     assert(channel->channel_header.ch_freq_band != PHY_BAND_433);
@@ -1484,16 +1482,19 @@ int16_t hw_radio_get_rssi() {
         return (- read_reg(REG_RSSIVALUE) / 2);
 }
 
-void stop_hw_radio_continuous_tx(){
-  const_radio = false;
-}
+void start_hw_radio_continuous_tx(uint8_t time_period, bool send_random){ 
+  bool const_radio = (time_period == 0);
+  state = STATE_TX;
+  set_opmode(OPMODE_TX);
 
-void start_hw_radio_continuous_tx(bool send_random){ 
-  
+  assert(time_period <= 60);
+  uint16_t period = time_period * 1024;
+  uint16_t time = hw_timer_getvalue(0) + period;
+
   if(send_random){
     uint8_t payload_len = 63;  
     uint8_t data[payload_len + 1];
-    while(const_radio){
+    while(const_radio || ((hw_timer_getvalue(0) < time) || ((time < (period-1)) && (hw_timer_getvalue(0) > 0xFFFF - (period-1))))){
       // chip does not include a PN9 generator so fill fifo manually ...
       data[0] = payload_len;
       pn9_encode(data + 1 , sizeof(data) - 1);
@@ -1502,17 +1503,19 @@ void start_hw_radio_continuous_tx(bool send_random){
   } else {
     uint8_t data[1];
     data[0] = 0;
-    while(const_radio){
+    //data[0] = 0x55;
+    while(const_radio || hw_timer_getvalue(0) != time){
       if(!(read_reg(REG_IRQFLAGS2) & 0x80)){
         write_fifo(data, 1); //data in fifo gets sent out
         data[0]++;
       }
     }
   }
+
+  switch_to_sleep_mode();
 }
 
 void hw_radio_continuous_tx(hw_tx_cfg_t const* tx_cfg, bool continuous_wave) {
-  const_radio = true;
   log_print_string("cont tx\n");
 
   resume_from_sleep_mode();
@@ -1527,10 +1530,6 @@ void hw_radio_continuous_tx(hw_tx_cfg_t const* tx_cfg, bool continuous_wave) {
     write_reg(REG_FDEVMSB, 0x00);
     write_reg(REG_FDEVLSB, 0x00);
   }
-
-  state = STATE_TX;
-
-  set_opmode(OPMODE_TX);
 }
 
 void hw_radio_continuous_rx(hw_rx_cfg_t const* rx_cfg){
@@ -1551,10 +1550,6 @@ void hw_radio_continuous_rx(hw_rx_cfg_t const* rx_cfg){
   //no automatic restart
   write_reg(REG_RXCONFIG,read_reg(REG_RXCONFIG) & 0x7F);
 
-  // write_reg(REG_DIOMAPPING1, 0x0C); // DIO2 = 0b11 => interrupt on sync detect
-
-  // hw_gpio_set_edge_interrupt(SX127x_DIO1_PIN, GPIO_RISING_EDGE);
-  // hw_gpio_enable_interrupt(SX127x_DIO1_PIN);
   set_packet_handler_enabled(true);
 
   //CHECK SETTINGS
@@ -1581,12 +1576,20 @@ void hw_radio_continuous_rx(hw_rx_cfg_t const* rx_cfg){
 
     rssi_valid_callback(get_rssi());
   }
-  DPRINT("OPMODE set to: %X, ready to receive",get_opmode());
 }
 
-void start_hw_radio_continuous_rx(bool receive_data){
+void start_hw_radio_continuous_rx(uint8_t time_period, bool receive_data){
+  DPRINT("start rx");
+  bool const_rx = (time_period == 0);
+
+  assert(time_period <= 60);
+  uint16_t period = time_period * 1024;
+  uint16_t time = hw_timer_getvalue(0) + period;
+
+  DPRINT("real start\n");
+  
   if(!receive_data)
-    while (true) {
+    while(const_rx || ((hw_timer_getvalue(0) < time) || (hw_timer_getvalue(0) > (time + 100)))){
       int16_t rss = hw_radio_get_rssi();
       log_print_string("rss : %d \n", rss);
       hw_busy_wait(5000);
@@ -1596,7 +1599,8 @@ void start_hw_radio_continuous_rx(bool receive_data){
     uint8_t previous_data = 255;
     uint8_t count_bad = 0;
     bool first_time = true;
-    while(true) {
+    DPRINT("%d || %d -> %d to %d\n", const_rx, hw_timer_getvalue(0) != time, hw_timer_getvalue(0), time);
+    while(const_rx || ((hw_timer_getvalue(0) < time) || (hw_timer_getvalue(0) > (time + 100)))){
       if((read_reg(REG_IRQFLAGS2) & 0x80)){ //If Fifo full, read 64 bytes
         if(first_time){
           DPRINT("Receiving...\n");
@@ -1604,6 +1608,10 @@ void start_hw_radio_continuous_rx(bool receive_data){
         }
         read_fifo(data, 64);
         //check if data is complete
+        // if(data[0] != 0x55 && data[63] != 0x55)
+        //   DPRINT("%d - %d",data[0], data[63]);
+        // else
+        //   DPRINT("success!");
         if((previous_data != data[0] - 1) && (previous_data != data[0] + 255) && (data[0] != data[63] + 63))
           DPRINT("missing data: %d - %d", previous_data, data[0]);
         previous_data = data[63];
@@ -1616,5 +1624,9 @@ void start_hw_radio_continuous_rx(bool receive_data){
         */
       } 
     }
-  }  
+  }
+
+  DPRINT("out of the loop\n");
+
+  switch_to_sleep_mode();
 }
