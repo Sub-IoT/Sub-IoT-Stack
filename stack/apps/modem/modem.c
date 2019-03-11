@@ -201,6 +201,7 @@ void release_packet_callback(hw_radio_packet_t* p) {
   assert(false);
 }
 
+/* if engineering file gets changed */
 void engin_file_change_callback(uint8_t file_id){
     uint8_t data[ENGINEERING_FILE_SIZE];
 
@@ -223,7 +224,6 @@ void start(){
 
     fs_file_header_t file_header = (fs_file_header_t){
         .file_properties.action_protocol_enabled = 0,
-        //.file_properties.action_condition = ALP_ACT_COND_WRITE,
         .file_properties.storage_class = FS_STORAGE_VOLATILE,
         .file_permissions = 0, // TODO
         .alp_cmd_file_id = ACTION_FILE_ID,

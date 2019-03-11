@@ -1493,7 +1493,7 @@ void start_hw_radio_continuous_tx(uint8_t time_period, bool send_random){
   if(send_random){
     uint8_t payload_len = 63;  
     uint8_t data[payload_len + 1];
-    while(const_radio || ((hw_timer_getvalue(0) < time) || ((time < (period-1)) && (hw_timer_getvalue(0) > 0xFFFF - (period-1))))){
+    while(const_radio || ((hw_timer_getvalue(0) < time) || (hw_timer_getvalue(0) > (time + 100)))){
       // chip does not include a PN9 generator so fill fifo manually ...
       data[0] = payload_len;
       pn9_encode(data + 1 , sizeof(data) - 1);
@@ -1503,7 +1503,7 @@ void start_hw_radio_continuous_tx(uint8_t time_period, bool send_random){
     uint8_t data[1];
     data[0] = 0;
     //data[0] = 0x55;
-    while(const_radio || hw_timer_getvalue(0) != time){
+    while(const_radio || ((hw_timer_getvalue(0) < time) || (hw_timer_getvalue(0) > (time + 100)))){
       if(!(read_reg(REG_IRQFLAGS2) & 0x80)){
         write_fifo(data, 1); //data in fifo gets sent out
         data[0]++;
@@ -1584,8 +1584,6 @@ void start_hw_radio_continuous_rx(uint8_t time_period, bool receive_data){
   assert(time_period <= 60);
   uint16_t period = time_period * 1024;
   uint16_t time = hw_timer_getvalue(0) + period;
-
-  DPRINT("real start\n");
   
   if(!receive_data)
     while(const_rx || ((hw_timer_getvalue(0) < time) || (hw_timer_getvalue(0) > (time + 100)))){
@@ -1598,7 +1596,6 @@ void start_hw_radio_continuous_rx(uint8_t time_period, bool receive_data){
     uint8_t previous_data = 255;
     uint8_t count_bad = 0;
     bool first_time = true;
-    DPRINT("%d || %d -> %d to %d\n", const_rx, hw_timer_getvalue(0) != time, hw_timer_getvalue(0), time);
     while(const_rx || ((hw_timer_getvalue(0) < time) || (hw_timer_getvalue(0) > (time + 100)))){
       if((read_reg(REG_IRQFLAGS2) & 0x80)){ //If Fifo full, read 64 bytes
         if(first_time){
@@ -1624,8 +1621,5 @@ void start_hw_radio_continuous_rx(uint8_t time_period, bool receive_data){
       } 
     }
   }
-
-  DPRINT("out of the loop\n");
-
   switch_to_sleep_mode();
 }
