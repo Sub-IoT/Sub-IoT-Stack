@@ -1522,6 +1522,8 @@ void hw_radio_continuous_tx(hw_tx_cfg_t const* tx_cfg, bool continuous_wave) {
 
   flush_fifo();
 
+  log_print_string("channel is: %d",tx_cfg->channel_id.center_freq_index);
+
   configure_eirp(tx_cfg->eirp);
   configure_channel(&(tx_cfg->channel_id));
   configure_syncword(tx_cfg->syncword_class, &(tx_cfg->channel_id));

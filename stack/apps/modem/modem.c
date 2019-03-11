@@ -63,63 +63,98 @@ static uint16_t current_channel_indexes_index = 13;
 static modulation_t current_modulation = MODULATION_GFSK; // MODULATION_CW; 
 static phy_channel_band_t current_channel_band = PHY_BAND_868;
 static phy_channel_class_t current_channel_class = PHY_CLASS_HI_RATE;
-static uint16_t channel_indexes[LO_RATE_CHANNEL_COUNT] = { 0 }; // reallocated later depending on band/class
+static uint16_t channel_index = 0;
 static uint16_t channel_count = LO_RATE_CHANNEL_COUNT;
 static eirp_t current_eirp_level = DEFAULT_EIRP;
-static bool send_random = false; // if false, it will send numbers going from 0 to 255
-static bool receive_data = false; //if false, it will show RSSI instead of data
+static bool data_predifined = true; // if false, it will send numbers going from 0 to 255
 static uint8_t time_period = 5;
 
 // This example application contains a modem which can be used from another MCU through
 // the serial interface
 void start_tx(){
-    start_hw_radio_continuous_tx(time_period, send_random);
+    start_hw_radio_continuous_tx(time_period, !data_predifined);
 }
 
 void start_rx(){
-    start_hw_radio_continuous_rx(time_period, receive_data);
+    start_hw_radio_continuous_rx(time_period, data_predifined);
 }
 
-void continuous_rx(uint8_t* data){
+void interpret_data(uint8_t* data){
+    current_channel_indexes_index = (data[1] & 0x01) * 256 + data[2];
+    log_print_string("channel is %d",current_channel_indexes_index);
+
     switch (data[0] & 0x0C)
     {
         case 0x04:
             log_print_string("low_rate");
             current_channel_class = PHY_CLASS_LO_RATE;
+            channel_index = current_channel_indexes_index;
             break;
 
         case 0x08:
             log_print_string("normal_rate");
             current_channel_class = PHY_CLASS_NORMAL_RATE;
+            if(current_channel_indexes_index < NORMAL_RATE_CHANNEL_COUNT - 4)
+                channel_index = current_channel_indexes_index * 8;
+            else if(current_channel_indexes_index == NORMAL_RATE_CHANNEL_COUNT - 4)
+                channel_index = 229;
+            else if(current_channel_indexes_index == NORMAL_RATE_CHANNEL_COUNT - 3)
+                channel_index = 239;
+            else if(current_channel_indexes_index == NORMAL_RATE_CHANNEL_COUNT - 2)
+                channel_index = 257;
+            else 
+                channel_index = 270;
             break;
 
         case 0x0C:
             log_print_string("high_rate");
             current_channel_class = PHY_CLASS_HI_RATE;
+            if(current_channel_indexes_index < HI_RATE_CHANNEL_COUNT - 4)
+                channel_index = current_channel_indexes_index * 8;
+            else if(current_channel_indexes_index == HI_RATE_CHANNEL_COUNT - 4)
+                channel_index = 229;
+            else if(current_channel_indexes_index == HI_RATE_CHANNEL_COUNT - 3)
+                channel_index = 239;
+            else if(current_channel_indexes_index == HI_RATE_CHANNEL_COUNT - 2)
+                channel_index = 257;
+            else 
+                channel_index = 270;
             break;
     
         default:
             break;
     }
 
-    if(data[0] & 0x10) {
-        log_print_string("receive data");
-        receive_data = true;
-    } else {
-        log_print_string("receive RSSI");
-        receive_data = false;
+    data_predifined = data[0] & 0x10;
+    log_print_string("%s", data_predifined ? "data is predefined" : "rssi/random");
+
+    if(data[0] & 0x01){
+        if(data[0] & 0x02) { 
+            log_print_string("modulated");
+            current_modulation = MODULATION_GFSK;
+        } else {
+            log_print_string("unmodulated");
+            current_modulation = MODULATION_CW;
+        }
+
+        current_eirp_level = (data[0] & 0xE0) >> 5;
+        #ifdef PLATFORM_SX127X_USE_PA_BOOST
+            current_eirp_level = current_eirp_level * 15 / 7 + 2; //Map to 2 untill 17 dBm
+        #else
+            current_eirp_level = current_eirp_level * 16 / 7 - 2; //Map to -2 untill 14 dBm
+        #endif
     }
 
-    current_channel_indexes_index = (data[1] & 0x01) * 256 + data[2];
-
     time_period = (data[1] & 0xFE) >> 1;
+}
 
-    log_print_string("channel is %d",current_channel_indexes_index);
+void continuous_rx(uint8_t* data){
+    interpret_data(data);
 
     rx_cfg.channel_id.channel_header.ch_coding = PHY_CODING_PN9;
     rx_cfg.channel_id.channel_header.ch_class = current_channel_class;
     rx_cfg.channel_id.channel_header.ch_freq_band = current_channel_band;
-    rx_cfg.channel_id.center_freq_index = channel_indexes[current_channel_indexes_index];
+    rx_cfg.channel_id.center_freq_index = channel_index;
 
     /* Configure */
     hw_radio_continuous_rx(&rx_cfg);
@@ -132,56 +167,12 @@ void continuous_rx(uint8_t* data){
 }
 
 void continuous_tx(uint8_t* data){
-    if(data[0] & 0x02) { 
-        log_print_string("modulated");
-        current_modulation = MODULATION_GFSK;
-    } else {
-        log_print_string("unmodulated");
-        current_modulation = MODULATION_CW;
-    }
-
-    switch (data[0] & 0x0C)
-    {
-        case 0x04:
-            log_print_string("low_rate");
-            current_channel_class = PHY_CLASS_LO_RATE;
-            break;
-
-        case 0x08:
-            log_print_string("normal_rate");
-            current_channel_class = PHY_CLASS_NORMAL_RATE;
-            break;
-
-        case 0x0C:
-            log_print_string("high_rate");
-            current_channel_class = PHY_CLASS_HI_RATE;
-            break;
-    
-        default:
-            break;
-    }
-
-    if(data[0] & 0x10) {
-        log_print_string("send predefined");
-        send_random = false;
-    } else {
-        log_print_string("send random");
-        send_random = true;
-    }
-
-    current_eirp_level = (data[0] & 0xE0) >> 5;
-    current_eirp_level = current_eirp_level * 16 / 7 - 2; //Map to -2 untill 14 dBm
-
-    current_channel_indexes_index = (data[1] & 0x01) * 256 + data[2];
-
-    time_period = (data[1] & 0xFE) >> 1;
-
-    log_print_string("channel is %d",current_channel_indexes_index);
+    interpret_data(data);
 
     tx_cfg.channel_id.channel_header.ch_coding = PHY_CODING_PN9;
     tx_cfg.channel_id.channel_header.ch_class = current_channel_class;
     tx_cfg.channel_id.channel_header.ch_freq_band = current_channel_band;
-    tx_cfg.channel_id.center_freq_index = channel_indexes[current_channel_indexes_index];
+    tx_cfg.channel_id.center_freq_index = channel_index;
     tx_cfg.eirp = current_eirp_level;
 
     /* Configure */
@@ -208,9 +199,6 @@ void engin_file_change_callback(uint8_t file_id){
     uint8_t data[ENGINEERING_FILE_SIZE];
 
     fs_read_file(ENGINEERING_FILE_ID,0,data,20);
-
-    for(uint8_t i=0;i<written_data_size; i++)
-        log_print_string("%d ",data[i]);
     
     if(data[0] & 0x01){ 
         log_print_string("tx");
@@ -222,8 +210,6 @@ void engin_file_change_callback(uint8_t file_id){
 }
 
 void start(){
-    log_print_string("start\n");
-
     fs_file_header_t file_header = (fs_file_header_t){
         .file_properties.action_protocol_enabled = 0,
         .file_properties.storage_class = FS_STORAGE_VOLATILE,
@@ -234,8 +220,6 @@ void start(){
     };
 
     fs_init_file(ENGINEERING_FILE_ID, &file_header, 1);
-
-    fs_read_file(ENGINEERING_FILE_ID, 0, NULL, 0);
 
     fs_register_file_modified_callback(ENGINEERING_FILE_ID, &engin_file_change_callback);
 }
@@ -257,41 +241,6 @@ void bootstrap()
         .access_profiles = default_access_profiles,
         .access_class = 0x21
     };
-
-    uint16_t i = 0;
-    switch(current_channel_class)
-    {
-        case PHY_CLASS_LO_RATE:
-          channel_count = LO_RATE_CHANNEL_COUNT;
-            realloc(channel_indexes, channel_count);
-            
-            for(; i < channel_count; i++)
-                channel_indexes[i] = i;
-
-            break;
-        case PHY_CLASS_NORMAL_RATE:
-          channel_count = NORMAL_RATE_CHANNEL_COUNT;
-            realloc(channel_indexes, channel_count);
-            
-            for(; i < channel_count-4; i++)
-                channel_indexes[i] = i*8;
-            channel_indexes[i++]=229;
-            channel_indexes[i++]=239;
-            channel_indexes[i++]=257;
-            channel_indexes[i++]=270;
-
-            break;
-        case PHY_CLASS_HI_RATE:
-          channel_count = HI_RATE_CHANNEL_COUNT;
-            realloc(channel_indexes, channel_count);
-
-            for(; i < channel_count-4; i++)
-                channel_indexes[i] = i*8;
-            channel_indexes[i++]=229;
-            channel_indexes[i++]=239;
-            channel_indexes[i++]=257;
-            channel_indexes[i++]=270; 
-    }
 
     hw_radio_init(&alloc_packet_callback, &release_packet_callback);
 
