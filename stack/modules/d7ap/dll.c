@@ -725,6 +725,9 @@ static void execute_csma_ca(void *arg)
 
 void dll_execute_scan_automation(void *arg)
 {
+    if (!(dll_state == DLL_STATE_IDLE || dll_state == DLL_STATE_SCAN_AUTOMATION))
+        return;
+
     // first make sure the background scan timer is stopped and the pending task canceled
     // since they might not be necessary for current active class anymore
     timer_cancel_event(&dll_background_scan_timer);
