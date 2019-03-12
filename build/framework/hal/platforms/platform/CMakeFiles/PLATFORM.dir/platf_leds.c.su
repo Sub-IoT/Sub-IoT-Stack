@@ -1,7 +1,0 @@
-platf_leds.c:43:6:__led_init	16	static
-platf_leds.c:57:6:led_on	8	static
-platf_leds.c:63:6:led_off	8	static
-platf_leds.c:78:13:end_flash_green	8	static
-platf_leds.c:69:6:led_toggle	8	static
-platf_leds.c:80:6:led_flash_green	8	static
-platf_leds.c:85:6:led_init	8	static

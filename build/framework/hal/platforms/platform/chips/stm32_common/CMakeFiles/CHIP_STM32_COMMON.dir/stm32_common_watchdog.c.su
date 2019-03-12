@@ -1,2 +1,0 @@
-stm32_common_watchdog.c:29:6:__watchdog_init	32	static
-stm32_common_watchdog.c:46:6:hw_watchdog_feed	8	static

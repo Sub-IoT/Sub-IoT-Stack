@@ -1,4 +1,0 @@
-log.c:44:15:log_counter_reset	0	static
-log.c:49:15:log_print_string	16	static
-log.c:58:15:log_print_stack_string	20	static
-log.c:67:15:log_print_data	16	static

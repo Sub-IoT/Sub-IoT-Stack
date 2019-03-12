@@ -1,2 +1,0 @@
-crc.c:31:13:update_crc	0	static
-crc.c:41:10:crc_calculate	16	static

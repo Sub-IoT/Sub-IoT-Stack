@@ -1,8 +1,0 @@
-cli.c:56:16:peek	16	static
-cli.c:50:16:consume	16	static
-cli.c:62:13:drop	8	static
-cli.c:71:13:cli_handle_command	24	static
-cli.c:97:13:cli_info	8	static
-cli.c:109:6:cli_init	16	static
-cli.c:122:6:cli_register_command	24	static
-cli.c:135:6:cli_help	16	static

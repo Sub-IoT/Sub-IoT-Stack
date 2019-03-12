@@ -1,3 +1,0 @@
-pn9.c:26:6:pn9_next	0	static
-pn9.c:34:10:pn9_generator	16	static
-pn9.c:44:6:pn9_encode	24	static
