@@ -1,5 +1,0 @@
-stm32l0xx_hal_msp.c:65:19:HAL_InitTick	0	static
-stm32l0xx_hal_msp.c:85:6:HAL_MspInit	8	static
-stm32l0xx_hal_msp.c:124:6:HAL_RTC_MspInit	104	static
-stm32l0xx_hal_msp.c:175:6:HAL_RTC_AlarmAEventCallback	8	static
-stm32l0xx_hal_msp.c:195:11:MSP_GetIRQn	0	static

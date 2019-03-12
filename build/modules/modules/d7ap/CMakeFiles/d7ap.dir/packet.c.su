@@ -1,3 +1,0 @@
-packet.c:49:6:packet_init	8	static
-packet.c:54:6:packet_assemble	32	static
-packet.c:103:6:packet_disassemble	24	static

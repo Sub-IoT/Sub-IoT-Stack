@@ -1,8 +1,0 @@
-device STM32L072CZ
-if SWD
-speed 10000
-h
-loadfile continuous_rx.bin, 0x0
-verifybin continuous_rx.bin, 0x0
-r
-qc

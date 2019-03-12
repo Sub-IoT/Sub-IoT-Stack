@@ -1,6 +1,0 @@
-platf_main.c:35:6:hw_radio_reset	8	static
-platf_main.c:62:6:__platform_post_framework_init	8	static
-platf_main.c:83:6:hw_radio_io_init	8	static
-platf_main.c:45:6:__platform_init	8	static
-platf_main.c:68:5:main	8	static
-platf_main.c:107:6:hw_radio_io_deinit	32	static

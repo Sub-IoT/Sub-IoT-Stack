@@ -1,3 +1,0 @@
-stm32_common_eeprom.c:25:13:init	8	static
-stm32_common_eeprom.c:44:16:program	16	static
-stm32_common_eeprom.c:30:16:read	16	static

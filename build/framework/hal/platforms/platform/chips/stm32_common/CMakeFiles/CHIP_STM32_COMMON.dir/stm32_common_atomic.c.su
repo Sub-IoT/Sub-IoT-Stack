@@ -1,2 +1,0 @@
-stm32_common_atomic.c:29:6:start_atomic	0	static
-stm32_common_atomic.c:34:6:end_atomic	0	static

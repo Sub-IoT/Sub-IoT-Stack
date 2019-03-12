@@ -1,8 +1,0 @@
-shell.c:56:13:process_shell_cmd	8	static
-shell.c:74:22:get_cmd_handler_callback	8	static
-shell.c:99:13:process_cmd_fifo	16	static
-shell.c:138:13:uart_rx_cb	16	static
-shell.c:155:6:shell_init	8	static
-shell.c:171:6:shell_echo_enable	0	static
-shell.c:175:6:shell_echo_disable	0	static
-shell.c:179:6:shell_register_handler	16	static
