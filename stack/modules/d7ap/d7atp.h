@@ -80,6 +80,7 @@ void d7atp_signal_foreground_scan_expired();
 void d7atp_process_received_packet(packet_t* packet);
 void d7atp_signal_dialog_termination();
 void d7atp_stop_transaction();
+void d7atp_notify_access_profile_file_changed(uint8_t file_id);
 #endif /* D7ATP_H_ */
 
 /** @}*/

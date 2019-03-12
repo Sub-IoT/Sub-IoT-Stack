@@ -30,12 +30,13 @@
 
 #include "d7ap.h"
 #include "alp_layer.h"
-#include "fs.h"
+#include "d7ap_fs.h"
 #include "log.h"
 #include "dae.h"
 #include "platform_defs.h"
 #include "modem_interface.h"
 #include "platform.h"
+#include "hwblockdevice.h"
 
 #include "hwradio.h"
 
@@ -233,24 +234,12 @@ void bootstrap()
     modem_interface_init(PLATFORM_MODEM_INTERFACE_UART, PLATFORM_MODEM_INTERFACE_BAUDRATE, (pin_id_t) 0, (pin_id_t) 0);
 #endif
 
-    start();
-
-    fs_init_args_t fs_init_args = (fs_init_args_t){
-        .fs_d7aactp_cb = &alp_layer_process_d7aactp,
-        .access_profiles_count = DEFAULT_ACCESS_PROFILES_COUNT,
-        .access_profiles = default_access_profiles,
-        .access_class = 0x21
-    };
-
-    hw_radio_init(&alloc_packet_callback, &release_packet_callback);
-
-    fs_init(&fs_init_args);
-    d7ap_init();
-
+    blockdevice_init(d7_systemfiles_blockdevice);
+    d7ap_init(d7_systemfiles_blockdevice);
     alp_layer_init(NULL, true);
 
     uint8_t uid[8];
-    fs_read_uid(uid);
-    log_print_string("UID %02X%02X%02X%02X%02X%02X%02X%02X", uid[0], uid[1], uid[2], uid[3], uid[4], uid[5], uid[6], uid[7]);
+    d7ap_fs_read_uid(uid);
+    log_print_string("UID %02X%02X%02X%02X%02X%02X%02X%02X\n", uid[0], uid[1], uid[2], uid[3], uid[4], uid[5], uid[6], uid[7]);
 }
 

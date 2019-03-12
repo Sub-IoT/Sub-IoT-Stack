@@ -32,12 +32,14 @@
 #include "scheduler.h"
 #include "timer.h"
 #include "debug.h"
-#include "fs.h"
+#include "d7ap_fs.h"
 #include "log.h"
 
 #include "d7ap.h"
 #include "alp_layer.h"
 #include "dae.h"
+
+#include "platform.h"
 
 #ifdef USE_HTS221
   #include "HTS221_Driver.h"
@@ -70,8 +72,6 @@ static d7ap_session_config_t session_config = {
         .id = 0
     }
 };
-
-
 
 void execute_sensor_measurement()
 {
@@ -121,18 +121,10 @@ static alp_init_args_t alp_init_args;
 
 void bootstrap()
 {
-
     log_print_string("Device booted\n");
 
-    fs_init_args_t fs_init_args = (fs_init_args_t){
-        .fs_d7aactp_cb = &alp_layer_process_d7aactp,
-        .access_profiles_count = DEFAULT_ACCESS_PROFILES_COUNT,
-        .access_profiles = default_access_profiles,
-        .access_class = 0x21 // push only AC, no scanning
-    };
-
-    fs_init(&fs_init_args);
-    d7ap_init();
+    blockdevice_init(d7_systemfiles_blockdevice);
+    d7ap_init(d7_systemfiles_blockdevice);
 
     alp_init_args.alp_command_completed_cb = &on_alp_command_completed_cb;
     alp_init_args.alp_command_result_cb = &on_alp_command_result_cb;

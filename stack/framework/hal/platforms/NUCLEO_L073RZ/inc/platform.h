@@ -22,6 +22,7 @@
 #include "stm32_device.h"
 #include "stm32_common_mcu.h"
 #include "platform_defs.h"
+#include "stm32_common_eeprom.h"
 
 #ifndef PLATFORM_NUCLEO_L073RZ
     #error Mismatch between the configured platform and the actual platform. Expected PLATFORM_NUCLEO_STM32L152 to be defined
@@ -61,5 +62,11 @@
 #endif
 
 #define PLATFORM_NUM_TIMERS 1
+
+static blockdevice_stm32_eeprom_t eeprom_bd = (blockdevice_stm32_eeprom_t){
+  .base.driver = &blockdevice_driver_stm32_eeprom,
+};
+
+static blockdevice_t* d7_systemfiles_blockdevice = (blockdevice_t*)&eeprom_bd;
 
 #endif

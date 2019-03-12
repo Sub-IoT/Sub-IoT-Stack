@@ -24,6 +24,7 @@ INCLUDE_DIRECTORIES(
 
 SET(HAL_COMMON_SRC
     hwblockdevice.c
+    blockdevice_ram.c
 )
 
 ADD_LIBRARY (HAL_COMMON OBJECT ${HAL_COMMON_SRC})

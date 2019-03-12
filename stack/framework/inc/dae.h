@@ -24,15 +24,13 @@
 
 #include "stdint.h"
 #include "framework_defs.h"
+#include "stdbool.h"
 
 #define SUBPROFILES_NB	4
 #define SUBBANDS_NB		8
 
 #define ACCESS_SPECIFIER(val) (uint8_t)(val >> 4 & 0x0F)
 #define ACCESS_MASK(val) (uint8_t)(val & 0x0F)
-
-#define DEFAULT_ACCESS_PROFILES_COUNT 3
-#define DEFAULT_ACCESS_CLASS 0x21
 
 typedef enum
 {
@@ -42,7 +40,7 @@ typedef enum
     CSMA_CA_MODE_RIGD = 3
 } csma_ca_mode_t; // TODO move
 
-typedef struct
+typedef struct __attribute__((__packed__))
 {
     uint16_t channel_index_start;
     uint16_t channel_index_end;
@@ -51,13 +49,13 @@ typedef struct
     uint8_t duty; // Maximum per-channel transmission duty cycle in per-mil (‰)
 } subband_t;
 
-typedef struct
+typedef struct __attribute__((__packed__))
 {
     uint8_t subband_bitmap; // Bitmap of used subbands
     uint8_t scan_automation_period;
 } subprofile_t;
 
-typedef struct
+typedef struct __attribute__((__packed__))
 {
     uint8_t ch_coding: 2;     /**< The 'coding' field in the channel header */
     uint8_t ch_class: 2;      /**< The 'class' field in the channel header */
@@ -65,7 +63,7 @@ typedef struct
     uint8_t _rfu: 1;
 } channel_header_t;
 
-typedef struct
+typedef struct __attribute__((__packed__))
 {
     union
     {
@@ -75,8 +73,6 @@ typedef struct
     subprofile_t subprofiles[SUBPROFILES_NB];
     subband_t subbands[SUBBANDS_NB];
 } dae_access_profile_t;
-
-extern dae_access_profile_t default_access_profiles[DEFAULT_ACCESS_PROFILES_COUNT];
 
 typedef struct {
     uint8_t key_counter;
@@ -96,5 +92,40 @@ typedef struct {
     uint8_t trusted_node_nb;
     dae_nwl_trusted_node_t trusted_node_table[FRAMEWORK_FS_TRUSTED_NODE_TABLE_SIZE];
 } dae_nwl_ssr_t;
+
+typedef enum
+{
+    FS_STORAGE_TRANSIENT = 0,
+    FS_STORAGE_VOLATILE = 1,
+    FS_STORAGE_RESTORABLE = 2,
+    FS_STORAGE_PERMANENT = 3
+} fs_storage_class_t;
+
+typedef enum
+{
+    ALP_ACT_COND_LIST = 0,
+    ALP_ACT_COND_READ = 1,
+    ALP_ACT_COND_WRITE = 2,
+    ALP_ACT_COND_WRITEFLUSH = 3
+} alp_act_condition_t;
+
+typedef struct __attribute__((__packed__))
+{
+    fs_storage_class_t storage_class : 2;
+    uint8_t _rfu : 2;
+    alp_act_condition_t action_condition : 3;
+    bool action_protocol_enabled : 1;
+} fs_file_properties_t;
+
+typedef struct __attribute__((__packed__))
+{
+    uint8_t file_permissions; // TODO not used for now
+    fs_file_properties_t file_properties;
+    uint8_t alp_cmd_file_id;
+    uint8_t interface_file_id;
+    uint32_t length;
+    uint32_t allocated_length;
+} fs_file_header_t;
+// TODO ALP depends on this struct for now, but this is D7A specific. Refactor?
 
 #endif /* DAE_H_ */

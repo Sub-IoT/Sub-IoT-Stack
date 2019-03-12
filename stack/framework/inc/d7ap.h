@@ -34,6 +34,7 @@
 
 #include "types.h"
 #include "debug.h"
+#include "hwblockdevice.h"
 
 #define D7AP_MAX_CLIENT_COUNT 8
 
@@ -201,7 +202,7 @@ typedef struct{
 /**
  * @brief   Initializes d7a module
  */
-void d7ap_init(void);
+void d7ap_init(blockdevice_t* systemfiles_bd);
 
 /**
  * @brief Stop the D7A stack

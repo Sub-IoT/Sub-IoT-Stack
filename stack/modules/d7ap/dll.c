@@ -24,7 +24,7 @@
 #include "dll.h"
 #include "crc.h"
 #include "debug.h"
-#include "fs.h"
+#include "d7ap_fs.h"
 #include "ng.h"
 #include "hwdebug.h"
 #include "random.h"
@@ -725,14 +725,17 @@ static void execute_csma_ca(void *arg)
 
 void dll_execute_scan_automation(void *arg)
 {
+    if (!(dll_state == DLL_STATE_IDLE || dll_state == DLL_STATE_SCAN_AUTOMATION))
+        return;
+
     // first make sure the background scan timer is stopped and the pending task canceled
     // since they might not be necessary for current active class anymore
     timer_cancel_event(&dll_background_scan_timer);
 
-    uint8_t scan_access_class = fs_read_dll_conf_active_access_class();
+    uint8_t scan_access_class = d7ap_fs_read_dll_conf_active_access_class();
     if (active_access_class != scan_access_class)
     {
-        fs_read_access_class(ACCESS_SPECIFIER(scan_access_class), &current_access_profile);
+        d7ap_fs_read_access_class(ACCESS_SPECIFIER(scan_access_class), &current_access_profile);
         active_access_class = scan_access_class;
     }
 
@@ -818,11 +821,11 @@ static void conf_file_changed_callback(uint8_t file_id)
     // when doing scan automation restart this
     if (dll_state == DLL_STATE_IDLE || dll_state == DLL_STATE_SCAN_AUTOMATION)
     {
-        dll_execute_scan_automation(NULL);
+        sched_post_task(&dll_execute_scan_automation);
     }
 }
 
-static void access_profile_file_changed_callback(uint8_t file_id)
+void dll_notify_access_profile_file_changed(uint8_t file_id)
 {
     DPRINT("AP file changed");
 
@@ -832,7 +835,7 @@ static void access_profile_file_changed_callback(uint8_t file_id)
     // when we are idle switch to scan automation now as well, in case the new AP enables scanning
     if (dll_state == DLL_STATE_IDLE || dll_state == DLL_STATE_SCAN_AUTOMATION)
     {
-        dll_execute_scan_automation(NULL);
+        sched_post_task(&dll_execute_scan_automation);
     }
 }
 
@@ -859,7 +862,7 @@ void dll_init()
 
     hw_radio_init(&alloc_new_packet, &release_packet);
 
-    fs_read_file(D7A_FILE_DLL_CONF_FILE_ID, 4, &nf_ctrl, 1);
+    d7ap_fs_read_file(D7A_FILE_DLL_CONF_FILE_ID, 4, &nf_ctrl, 1);
     tx_nf_method = (nf_ctrl >> 4) & 0x0F;
 
     dll_state = DLL_STATE_IDLE;
@@ -867,9 +870,7 @@ void dll_init()
     process_received_packets_after_tx = false;
     resume_fg_scan = false;
 
-    fs_register_file_modified_callback(D7A_FILE_DLL_CONF_FILE_ID, &conf_file_changed_callback);
-    for(int i = 0; i < 15; i++)
-        fs_register_file_modified_callback(D7A_FILE_ACCESS_PROFILE_ID + i, &access_profile_file_changed_callback);
+    d7ap_fs_register_file_modified_callback(D7A_FILE_DLL_CONF_FILE_ID, &conf_file_changed_callback);
 
     // Start immediately the scan automation
     guarded_channel = false;
@@ -942,8 +943,7 @@ void dll_tx_frame(packet_t* packet)
     }
     else
     {
-        fs_read_access_class(packet->d7anp_addressee->access_specifier, &remote_access_profile);
-
+        d7ap_fs_read_access_class(packet->d7anp_addressee->access_specifier, &remote_access_profile);
         /*
          * For now the access mask and the subband bitmap are not used
          * By default, subprofile[0] is selected and subband[0] is used
@@ -1174,12 +1174,12 @@ bool dll_disassemble_packet_header(packet_t* packet, uint8_t* data_idx)
     {
         if (packet->dll_header.control_target_id_type == ID_TYPE_UID)
         {
-            fs_read_uid(id);
+            d7ap_fs_read_uid(id);
             address_len = 8;
         }
         else
         {
-            fs_read_vid(id);
+            d7ap_fs_read_vid(id);
             address_len = 2;
         }
 

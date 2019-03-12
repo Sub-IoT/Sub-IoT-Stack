@@ -73,5 +73,4 @@ static pin_id_t debug_pins[PLATFORM_NUM_DEBUGPINS] = {
   PIN(GPIO_PORTB, 8), // exposed on CN3 header, pin 25
 };
 
-
 #endif

@@ -2,7 +2,7 @@ device ${JLINK_DEVICE}
 if SWD
 speed 10000
 h
-loadfile ${BIN}, 0x0
-verifybin ${BIN}, 0x0
+loadfile ${HEX}, 0x0
+verifybin ${HEX}, 0x0
 r
 qc

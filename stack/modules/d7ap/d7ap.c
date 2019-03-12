@@ -21,7 +21,7 @@
 #include "d7ap.h"
 #include "d7ap_stack.h"
 
-#include "fs.h"
+#include "d7ap_fs.h"
 #include "phy.h"
 #include "errors.h"
 #include "debug.h"
@@ -35,85 +35,17 @@
 #define DPRINT(...)
 #endif
 
-dae_access_profile_t default_access_profiles[DEFAULT_ACCESS_PROFILES_COUNT] = {
-    {
-        // AC used for pushing data to the GW, continuous FG scan
-        .channel_header = {
-            .ch_coding = PHY_CODING_FEC_PN9,
-            .ch_class = PHY_CLASS_LO_RATE,
-            .ch_freq_band = PHY_BAND_868
-        },
-        .subprofiles[0] = {
-            .subband_bitmap = 0x01, // only the first subband is selectable
-            .scan_automation_period = 0,
-        },
-        .subbands[0] = (subband_t){
-            .channel_index_start = 0,
-            .channel_index_end = 0,
-            .eirp = 14,
-            .cca = 86,
-            .duty = 0,
-        }
-    },
-    {
-        // AC used by sensors for scanning for BG request every second
-        .channel_header = {
-            .ch_coding = PHY_CODING_FEC_PN9,
-            .ch_class = PHY_CLASS_LO_RATE,
-            .ch_freq_band = PHY_BAND_868
-        },
-        .subprofiles[0] = {
-          .subband_bitmap = 0x01,
-          .scan_automation_period = 112, // 1024 ticks
-        },
-        .subbands[0] = (subband_t){
-            .channel_index_start = 0,
-            .channel_index_end = 0,
-            .eirp = 14,
-            .cca = 86,
-            .duty = 0,
-        }
-    },
-    {
-        // AC used by sensor, push only, no scanning
-        .channel_header = {
-            .ch_coding = PHY_CODING_FEC_PN9,
-            .ch_class = PHY_CLASS_LO_RATE,
-            .ch_freq_band = PHY_BAND_868
-        },
-        .subprofiles[0] = {
-            .subband_bitmap = 0x00, // void scan automation channel list
-            .scan_automation_period = 0,
-        },
-        .subbands[0] = (subband_t){
-            .channel_index_start = 0,
-            .channel_index_end = 0,
-            .eirp = 14,
-            .cca = 86,
-            .duty = 0,
-        }
-    }
-};
 
 d7ap_resource_desc_t registered_client[MODULE_D7AP_MAX_CLIENT_COUNT];
 uint8_t registered_client_nb = 0;
 
-void d7ap_init(void)
+void d7ap_init(blockdevice_t* systemfiles_bd)
 {
+    d7ap_fs_init(systemfiles_bd);
+
     // Initialize the D7AP stack
     d7ap_stack_init();
-
     registered_client_nb = 0;
-    // Initialize Fs with the default access profiles if not done by the application
-    fs_init_args_t fs_init_args = (fs_init_args_t){
-        .fs_d7aactp_cb = NULL,
-        .fs_user_files_init_cb = NULL,
-        .access_profiles_count = DEFAULT_ACCESS_PROFILES_COUNT,
-        .access_profiles = default_access_profiles,
-        .access_class = 0x01 // use access profile 0 and select the first subprofile
-    };
-
-    fs_init(&fs_init_args);
 }
 
 void d7ap_stop()

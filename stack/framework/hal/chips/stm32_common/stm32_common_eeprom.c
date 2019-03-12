@@ -12,8 +12,8 @@
 
 // forward declare driver function pointers
 static void init(blockdevice_t* bd);
-static error_t read(blockdevice_t* bd, uint8_t* data, uint32_t addr, uint32_t size);
-static error_t program(blockdevice_t* bd, uint8_t* data, uint32_t addr, uint32_t size);
+static error_t read(blockdevice_t* bd, const uint8_t* data, uint32_t addr, uint32_t size);
+static error_t program(blockdevice_t* bd, const uint8_t* data, uint32_t addr, uint32_t size);
 
 blockdevice_driver_t blockdevice_driver_stm32_eeprom = {
     .init = init,
@@ -27,7 +27,7 @@ static void init(blockdevice_t* bd) { // TODO SPI as param
   (void)bd; // suppress unused warning
 }
 
-static error_t read(blockdevice_t* bd, uint8_t* data, uint32_t addr, uint32_t size) {
+static error_t read(blockdevice_t* bd, const uint8_t* data, uint32_t addr, uint32_t size) {
   (void)bd; // suppress unused warning
   DPRINT("BD READ %i @ %x\n", size, addr);
 
@@ -41,29 +41,25 @@ static error_t read(blockdevice_t* bd, uint8_t* data, uint32_t addr, uint32_t si
   return SUCCESS;
 }
 
-static error_t program(blockdevice_t* bd, uint8_t* data, uint32_t addr, uint32_t size) {
+static error_t program(blockdevice_t* bd, const uint8_t* data, uint32_t addr, uint32_t size) {
   (void)bd; // suppress unused warning
   DPRINT("BD WRITE %i @ %x\n", size, addr);
+  DPRINT_DATA(data, size);
 
   if(size == 0) return SUCCESS;
 
   addr += DATA_EEPROM_BASE;
   if(addr + size > DATA_EEPROM_BANK2_END) return -ESIZE;
 
+  // TODO optimize by writing per word when possible
   HAL_FLASHEx_DATAEEPROM_Unlock();
-  if(FLASH_WaitForLastOperation(HAL_MAX_DELAY) != HAL_OK)
-    return -ETIMEDOUT;
-
   for (size_t i = 0; i < size; i++) {
-      *(uint8_t*)(addr + i) = data[i];
+    while (FLASH->SR & FLASH_SR_BSY); // TODO timeout
+    *(uint8_t*)(addr + i) = data[i];
+    while (FLASH->SR & FLASH_SR_BSY); // TODO timeout
   }
 
-  if(FLASH_WaitForLastOperation(HAL_MAX_DELAY) != HAL_OK)
-    return -ETIMEDOUT;
-
   HAL_FLASHEx_DATAEEPROM_Lock();
-
-  DPRINT_DATA(data, size);
 
   return SUCCESS;
 }

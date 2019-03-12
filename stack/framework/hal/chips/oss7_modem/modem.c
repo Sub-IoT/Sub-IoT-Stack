@@ -166,12 +166,15 @@ static void rx_cb(uint8_t byte) {
 void modem_cb_init(modem_callbacks_t* cbs)
 {
     callbacks = cbs;
+    if(cbs->modem_rebooted_callback)
+      modem_interface_set_target_rebooted_callback(cbs->modem_rebooted_callback);
 }
 
 void modem_init() 
 {
   modem_interface_init(PLATFORM_MODEM_INTERFACE_UART, PLATFORM_MODEM_INTERFACE_BAUDRATE, MCU2MODEM_INT_PIN, MODEM2MCU_INT_PIN);
   modem_interface_register_handler(&process_serial_frame, SERIAL_MESSAGE_TYPE_ALP_DATA); 
+  command.is_active = false;
 }
 
 void modem_reinit() {

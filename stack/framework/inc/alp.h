@@ -35,6 +35,7 @@
 #include "stdbool.h"
 #include "d7ap.h"
 #include "lorawan_stack.h"
+#include "dae.h"
 
 #include "fifo.h"
 
@@ -68,14 +69,6 @@ typedef enum
     ALP_ITF_ID_LORAWAN_OTAA = 0x03, // not part of the spec
     ALP_ITF_ID_D7ASP = 0xD7
 } alp_itf_id_t;
-
-typedef enum
-{
-    ALP_ACT_COND_LIST = 0,
-    ALP_ACT_COND_READ = 1,
-    ALP_ACT_COND_WRITE = 2,
-    ALP_ACT_COND_WRITEFLUSH = 3
-} alp_act_condition_t;
 
 typedef enum {
     ALP_OP_NOP = 0,
@@ -204,6 +197,11 @@ typedef struct {
 } alp_operand_file_data_t;
 
 typedef struct {
+    uint8_t file_id;
+    fs_file_header_t file_header;
+} alp_operand_file_header_t;
+
+typedef struct {
     uint8_t data[255];
     uint8_t len;
 } alp_interface_status_t;
@@ -242,6 +240,7 @@ void alp_append_length_operand(fifo_t* fifo, uint32_t length);
 
 uint32_t alp_parse_length_operand(fifo_t* cmd_fifo);
 alp_operand_file_offset_t alp_parse_file_offset_operand(fifo_t* cmd_fifo);
+alp_operand_file_header_t alp_parse_file_header_operand(fifo_t* cmd_fifo);
 
 void alp_parse_action(fifo_t* fifo, alp_action_t* action);
 

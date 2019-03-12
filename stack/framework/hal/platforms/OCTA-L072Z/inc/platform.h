@@ -22,6 +22,7 @@
 #include "platform_defs.h"
 #include "stm32_device.h"
 #include "stm32_common_mcu.h"
+#include "stm32_common_eeprom.h"
 
 #ifndef PLATFORM_OCTA-L072Z
     #error Mismatch between the configured platform and the actual platform. Expected PLATFORM_OCTA-L072Z to be defined
@@ -68,5 +69,12 @@
 #define ABZ_ANT_SW_RX_PIN PIN(0, 1)
 #define ABZ_ANT_SW_TX_PIN PIN(2, 2)
 #define ABZ_ANT_SW_PA_BOOST_PIN PIN(2, 1)
+
+static blockdevice_stm32_eeprom_t eeprom_bd = (blockdevice_stm32_eeprom_t){
+  .base.driver = &blockdevice_driver_stm32_eeprom,
+};
+
+static blockdevice_t* d7_systemfiles_blockdevice = (blockdevice_t*)&eeprom_bd;
+
 
 #endif

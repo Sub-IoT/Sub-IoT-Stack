@@ -21,6 +21,9 @@
 
 #include "platform_defs.h"
 #include "ezr32lg_mcu.h"
+#include "blockdevice_ram.h"
+#include "d7ap_fs.h"
+
 
 #ifndef PLATFORM_EZR32LG_USB01
     #error Mismatch between the configured platform and the actual platform. Expected PLATFORM_EZR32LG_USB01 to be defined
@@ -81,6 +84,16 @@
  *************************/
 
 #define BUTTON0				PIN(5, 5)
+
+
+static blockdevice_ram_t ram_bd = (blockdevice_ram_t){
+ .base.driver = &blockdevice_driver_ram,
+ .size = sizeof(fs_systemfiles),
+ .buffer = (uint8_t*)&fs_systemfiles
+};
+
+static blockdevice_t* d7_systemfiles_blockdevice = (blockdevice_t*)&ram_bd;
+
 
 
 #endif

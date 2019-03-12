@@ -24,7 +24,7 @@
 #include "ng.h"
 #include "log.h"
 #include "bitmap.h"
-#include "fs.h"
+#include "d7ap_fs.h"
 #include "random.h"
 #include "errors.h"
 #include "compress.h"

@@ -31,6 +31,7 @@
 #include "d7atp.h"
 #include "d7anp.h"
 #include "dll.h"
+#include "d7ap_fs.h"
 
 
 
@@ -173,6 +174,12 @@ static void init_session_list()
     }
 }
 
+static void on_access_profile_file_changed(uint8_t file_id) {
+  DPRINT("invalidate cached APs\n");
+  d7atp_notify_access_profile_file_changed(file_id);
+  dll_notify_access_profile_file_changed(file_id);
+}
+
 void d7ap_stack_init(void)
 {
     assert(d7ap_stack_state == D7AP_STACK_STATE_STOPPED);
@@ -184,6 +191,9 @@ void d7ap_stack_init(void)
     packet_queue_init();
     dll_init();
     init_session_list();
+
+    for(int i = 0; i < 15; i++)
+      d7ap_fs_register_file_modified_callback(D7A_FILE_ACCESS_PROFILE_ID + i, &on_access_profile_file_changed);
 }
 
 void d7ap_stack_stop()
