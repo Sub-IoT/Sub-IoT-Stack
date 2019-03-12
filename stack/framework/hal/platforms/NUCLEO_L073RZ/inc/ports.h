@@ -38,7 +38,7 @@ static const spi_port_t spi_ports[] = {
 
 static const uart_port_t uart_ports[] = {
   {
-    // USART2, usconnected to VCOM of debugger USB connection
+    // USART2, connected to VCOM of debugger USB connection
     .tx = PIN(GPIO_PORTA, 2),
     .rx = PIN(GPIO_PORTA, 3),
     .alternate = GPIO_AF4_USART2,
