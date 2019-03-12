@@ -103,8 +103,6 @@ void stop_radio(){
     ezradio_change_state(EZRADIO_CMD_CHANGE_STATE_ARG_NEXT_STATE1_NEW_STATE_ENUM_READY);
 #elif defined USE_CC1101
     cc1101_interface_strobe(RF_SIDLE);
-#elif defined USE_SX127X
-    stop_hw_radio_continuous_tx();
 #endif
 }
 
@@ -119,7 +117,7 @@ void start_radio(){
 #endif
 #if defined USE_SX127X
     log_print_string("sending \n");
-    start_hw_radio_continuous_tx();
+    start_hw_radio_continuous_tx(0); //time of 0 is send unlimited
 #endif
 }
 
