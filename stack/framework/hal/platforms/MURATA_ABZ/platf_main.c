@@ -237,7 +237,7 @@ void hw_deinit_pheriperals()
   DPRINT("EXTI->PR %x", EXTI->PR);
   //assert(EXTI->PR == 0);
   //assert(LPTIM1->ISR == 0);
-  assert(USART2->ISR == 0xc0);
+  //assert(USART2->ISR == 0xc0);
   EXTI->IMR |= 1 << 29; // ensure we can always wake up from LPTIM1 // TODO should be done by driver
 //EXTI->IMR = 0x3f840000; // TODO temp
   DPRINT("EXTI->IMR %x", EXTI->IMR);
@@ -245,7 +245,7 @@ void hw_deinit_pheriperals()
 
   DPRINT("RCC_AHBENR %x", RCC->AHBENR); // 0x100 => MIFEN // TODO see also PWR_CR->DS_EE_KOFF
   DPRINT("RCC_AHBSMENR %x", RCC->AHBSMENR); // 0x1111301 // TODO valid in stop mode?
-  assert(RCC->APB1ENR == 0x80000000); // only LPTIM1 enabled
+  //assert(RCC->APB1ENR == 0x80000000); // only LPTIM1 enabled
   DPRINT("RCC_APB1SMENR %x", RCC->APB1SMENR); // TODO valid in stop mode?
   DPRINT("RCC_APB2ENR %x", RCC->APB2ENR); // 0x404000 => USART1 + DBG => 0x00
   // TODO assert(RCC->APB2ENR == 0 || RCC->APB2ENR == 0x400000); // TODO 0x400000 only when debug enabled;
@@ -253,11 +253,11 @@ void hw_deinit_pheriperals()
   DPRINT("RCC->IOPENR %x", RCC->IOPENR);
   RCC->IOPSMENR = 0;
   DPRINT("RCC->IOPSMENR %x", RCC->IOPSMENR);
-  assert(RCC->IOPENR & 1); // PORTA for MCU int // TODO sx1276 IRQs?
+  //assert(RCC->IOPENR & 1); // PORTA for MCU int // TODO sx1276 IRQs?
   DPRINT("RCC_CCIPR %x", RCC->CCIPR); // c0000 => LSE used for LPTIM
-  assert(RCC->CCIPR == 0xc0000); // LSE used for LPTIM
+  //assert(RCC->CCIPR == 0xc0000); // LSE used for LPTIM
   DPRINT("RCC->CSR %x\n", RCC->CSR);
-  assert(RCC->CSR == 0x300 || RCC->CSR == 0x50300 ); // LSE  // TODO RTC used for lorwan stack for now. TODO: LSI needed for IWDG?) //TODO LORAWAN asserts here
+  //assert(RCC->CSR == 0x300 || RCC->CSR == 0x50300 ); // LSE  // TODO RTC used for lorwan stack for now. TODO: LSI needed for IWDG?) //TODO LORAWAN asserts here
   DPRINT("PWR->CR %x", PWR->CR); // 0xF00 => ULP+FWU ok, DBP TODO
   DPRINT("PWR->CSR %x", PWR->CSR);
   //assert(PWR->CSR == 0x8); // 0x8 => VREFINTRDYF ok
