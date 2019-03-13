@@ -35,6 +35,7 @@ from d7a.system_files.system_file_ids import SystemFileIds
 from d7a.system_files.not_implemented import NotImplementedFile
 from d7a.system_files.security_key import SecurityKeyFile
 from d7a.system_files.uid import UidFile
+from d7a.system_files.engineering_mode import EngineeringModeFile
 from d7a.fs.file_permissions import FilePermissions
 from d7a.fs.file_properties import FileProperties
 from d7a.fs.file_properties import ActionCondition, StorageClass, FileProperties
@@ -77,7 +78,7 @@ system_files = [
   FirmwareVersionFile(),
   NotImplementedFile(SystemFileIds.DEVICE_CAPACITY.value, 19),
   NotImplementedFile(SystemFileIds.DEVICE_STATUS.value, 9),
-  NotImplementedFile(SystemFileIds.ENGINEERING_MODE.value, 0),
+  EngineeringModeFile(),
   NotImplementedFile(SystemFileIds.VID.value, 3),
   NotImplementedFile(SystemFileIds.RFU_07.value, 0),
   NotImplementedFile(SystemFileIds.PHY_CONFIG.value, 9),
@@ -179,7 +180,7 @@ fs_systemfiles_t fs_systemfiles __attribute__((used)) LINKER_SECTION_FS_SYSTEM_F
       // DEVICE_STATUS - 4
       0x24, 0x23, 0xff, 0xff, 0x0, 0x0, 0x0, 0x9, 0x0, 0x0, 0x0, 0x9, 
       // ENGINEERING_MODE - 5
-      0x24, 0x23, 0xff, 0xff, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 
+      0x24, 0x23, 0xff, 0xff, 0x0, 0x0, 0x0, 0x9, 0x0, 0x0, 0x0, 0x9, 
       // VID - 6
       0x24, 0x23, 0xff, 0xff, 0x0, 0x0, 0x0, 0x3, 0x0, 0x0, 0x0, 0x3, 
       // RFU_07 - 7
@@ -262,7 +263,7 @@ fs_systemfiles_t fs_systemfiles __attribute__((used)) LINKER_SECTION_FS_SYSTEM_F
       0x24, 0x23, 0xff, 0xff, 0x0, 0x0, 0x0, 0x41, 0x0, 0x0, 0x0, 0x41, 
       // ACCESS_PROFILE_14 - 46
       0x24, 0x23, 0xff, 0xff, 0x0, 0x0, 0x0, 0x41, 0x0, 0x0, 0x0, 0x41, 
-      //[[[end]]] (checksum: 65730ebac1508bce97a151e342afd94c)
+      //[[[end]]] (checksum: 5b12650d4774ea114679f5e2cd12b882)
   },
   .file_data = {
       /*[[[cog
@@ -280,7 +281,7 @@ fs_systemfiles_t fs_systemfiles __attribute__((used)) LINKER_SECTION_FS_SYSTEM_F
       // DEVICE_STATUS - 4
       0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 
       // ENGINEERING_MODE - 5
-
+      0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 
       // VID - 6
       0x0, 0x0, 0x0, 
       // RFU_07 - 7
@@ -363,7 +364,7 @@ fs_systemfiles_t fs_systemfiles __attribute__((used)) LINKER_SECTION_FS_SYSTEM_F
       0x32, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0xe, 0x56, 0xff, 0x0, 0x0, 0x0, 0x0, 0xe, 0x56, 0xff, 0x0, 0x0, 0x0, 0x0, 0xe, 0x56, 0xff, 0x0, 0x0, 0x0, 0x0, 0xe, 0x56, 0xff, 0x0, 0x0, 0x0, 0x0, 0xe, 0x56, 0xff, 0x0, 0x0, 0x0, 0x0, 0xe, 0x56, 0xff, 0x0, 0x0, 0x0, 0x0, 0xe, 0x56, 0xff, 0x0, 0x0, 0x0, 0x0, 0xe, 0x56, 0xff, 
       // ACCESS_PROFILE_14 - 46
       0x32, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0xe, 0x56, 0xff, 0x0, 0x0, 0x0, 0x0, 0xe, 0x56, 0xff, 0x0, 0x0, 0x0, 0x0, 0xe, 0x56, 0xff, 0x0, 0x0, 0x0, 0x0, 0xe, 0x56, 0xff, 0x0, 0x0, 0x0, 0x0, 0xe, 0x56, 0xff, 0x0, 0x0, 0x0, 0x0, 0xe, 0x56, 0xff, 0x0, 0x0, 0x0, 0x0, 0xe, 0x56, 0xff, 0x0, 0x0, 0x0, 0x0, 0xe, 0x56, 0xff, 
-      //[[[end]]] (checksum: 92389c59dcafa5db6356c1971ab8469f)
+      //[[[end]]] (checksum: 39ae54c08fc3c0d6f08a50e94cf09cd8)
   }
 };
 
@@ -379,49 +380,49 @@ __attribute__((used)) uint16_t fs_systemfiles_file_offsets[] = {
   0x8, // FIRMWARE_VERSION - 2 (length 15))
   0x17, // DEVICE_CAPACITY - 3 (length 19))
   0x2a, // DEVICE_STATUS - 4 (length 9))
-  0x33, // ENGINEERING_MODE - 5 (length 0))
-  0x33, // VID - 6 (length 3))
-  0x36, // RFU_07 - 7 (length 0))
-  0x36, // PHY_CONFIG - 8 (length 9))
-  0x3f, // PHY_STATUS - 9 (length 24))
-  0x57, // DLL_CONFIG - 10 (length 3))
-  0x5a, // DLL_STATUS - 11 (length 12))
-  0x66, // NWL_ROUTING - 12 (length 1))
-  0x67, // NWL_SECURITY - 13 (length 5))
-  0x6c, // NWL_SECURITY_KEY - 14 (length 16))
-  0x7c, // NWL_SSR - 15 (length 4))
-  0x80, // NWL_STATUS - 16 (length 20))
-  0x94, // TRL_STATUS - 17 (length 1))
-  0x95, // SEL_CONFIG - 18 (length 6))
-  0x9b, // FOF_STATUS - 19 (length 10))
-  0xa5, // RFU_14 - 20 (length 0))
-  0xa5, // RFU_15 - 21 (length 0))
-  0xa5, // RFU_16 - 22 (length 0))
-  0xa5, // LOCATION_DATA - 23 (length 1))
-  0xa6, // D7AALP_RFU_18 - 24 (length 0))
-  0xa6, // D7AALP_RFU_19 - 25 (length 0))
-  0xa6, // D7AALP_RFU_1A - 26 (length 0))
-  0xa6, // D7AALP_RFU_1B - 27 (length 0))
-  0xa6, // D7AALP_RFU_1C - 28 (length 0))
-  0xa6, // D7AALP_RFU_1D - 29 (length 0))
-  0xa6, // D7AALP_RFU_1E - 30 (length 0))
-  0xa6, // D7AALP_RFU_1F - 31 (length 0))
-  0xa6, // ACCESS_PROFILE_0 - 32 (length 65))
-  0xe7, // ACCESS_PROFILE_1 - 33 (length 65))
-  0x128, // ACCESS_PROFILE_2 - 34 (length 65))
-  0x169, // ACCESS_PROFILE_3 - 35 (length 65))
-  0x1aa, // ACCESS_PROFILE_4 - 36 (length 65))
-  0x1eb, // ACCESS_PROFILE_5 - 37 (length 65))
-  0x22c, // ACCESS_PROFILE_6 - 38 (length 65))
-  0x26d, // ACCESS_PROFILE_7 - 39 (length 65))
-  0x2ae, // ACCESS_PROFILE_8 - 40 (length 65))
-  0x2ef, // ACCESS_PROFILE_9 - 41 (length 65))
-  0x330, // ACCESS_PROFILE_10 - 42 (length 65))
-  0x371, // ACCESS_PROFILE_11 - 43 (length 65))
-  0x3b2, // ACCESS_PROFILE_12 - 44 (length 65))
-  0x3f3, // ACCESS_PROFILE_13 - 45 (length 65))
-  0x434, // ACCESS_PROFILE_14 - 46 (length 65))
-  //[[[end]]] (checksum: d05b693f5c31a03235ad7a5e320988d3)
+  0x33, // ENGINEERING_MODE - 5 (length 9))
+  0x3c, // VID - 6 (length 3))
+  0x3f, // RFU_07 - 7 (length 0))
+  0x3f, // PHY_CONFIG - 8 (length 9))
+  0x48, // PHY_STATUS - 9 (length 24))
+  0x60, // DLL_CONFIG - 10 (length 3))
+  0x63, // DLL_STATUS - 11 (length 12))
+  0x6f, // NWL_ROUTING - 12 (length 1))
+  0x70, // NWL_SECURITY - 13 (length 5))
+  0x75, // NWL_SECURITY_KEY - 14 (length 16))
+  0x85, // NWL_SSR - 15 (length 4))
+  0x89, // NWL_STATUS - 16 (length 20))
+  0x9d, // TRL_STATUS - 17 (length 1))
+  0x9e, // SEL_CONFIG - 18 (length 6))
+  0xa4, // FOF_STATUS - 19 (length 10))
+  0xae, // RFU_14 - 20 (length 0))
+  0xae, // RFU_15 - 21 (length 0))
+  0xae, // RFU_16 - 22 (length 0))
+  0xae, // LOCATION_DATA - 23 (length 1))
+  0xaf, // D7AALP_RFU_18 - 24 (length 0))
+  0xaf, // D7AALP_RFU_19 - 25 (length 0))
+  0xaf, // D7AALP_RFU_1A - 26 (length 0))
+  0xaf, // D7AALP_RFU_1B - 27 (length 0))
+  0xaf, // D7AALP_RFU_1C - 28 (length 0))
+  0xaf, // D7AALP_RFU_1D - 29 (length 0))
+  0xaf, // D7AALP_RFU_1E - 30 (length 0))
+  0xaf, // D7AALP_RFU_1F - 31 (length 0))
+  0xaf, // ACCESS_PROFILE_0 - 32 (length 65))
+  0xf0, // ACCESS_PROFILE_1 - 33 (length 65))
+  0x131, // ACCESS_PROFILE_2 - 34 (length 65))
+  0x172, // ACCESS_PROFILE_3 - 35 (length 65))
+  0x1b3, // ACCESS_PROFILE_4 - 36 (length 65))
+  0x1f4, // ACCESS_PROFILE_5 - 37 (length 65))
+  0x235, // ACCESS_PROFILE_6 - 38 (length 65))
+  0x276, // ACCESS_PROFILE_7 - 39 (length 65))
+  0x2b7, // ACCESS_PROFILE_8 - 40 (length 65))
+  0x2f8, // ACCESS_PROFILE_9 - 41 (length 65))
+  0x339, // ACCESS_PROFILE_10 - 42 (length 65))
+  0x37a, // ACCESS_PROFILE_11 - 43 (length 65))
+  0x3bb, // ACCESS_PROFILE_12 - 44 (length 65))
+  0x3fc, // ACCESS_PROFILE_13 - 45 (length 65))
+  0x43d, // ACCESS_PROFILE_14 - 46 (length 65))
+  //[[[end]]] (checksum: 0adb2f883d72be16ca76884aa87acee0)
 };
 
 
