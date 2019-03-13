@@ -199,7 +199,7 @@ void release_packet_callback(hw_radio_packet_t* p) {
 void engin_file_change_callback(uint8_t file_id){
     uint8_t data[ENGINEERING_FILE_SIZE];
 
-    fs_read_file(ENGINEERING_FILE_ID,0,data,20);
+    d7ap_fs_read_file(ENGINEERING_FILE_ID,0,data,20);
     
     if(data[0] & 0x01){ 
         log_print_string("tx");
@@ -210,7 +210,7 @@ void engin_file_change_callback(uint8_t file_id){
     }
 }
 
-void start(){
+void create_engineering_file(){
     fs_file_header_t file_header = (fs_file_header_t){
         .file_properties.action_protocol_enabled = 0,
         .file_properties.storage_class = FS_STORAGE_VOLATILE,
@@ -220,9 +220,11 @@ void start(){
         .length = ENGINEERING_FILE_SIZE
     };
 
-    fs_init_file(ENGINEERING_FILE_ID, &file_header, 1);
+    uint8_t init_data[ENGINEERING_FILE_SIZE];
 
-    fs_register_file_modified_callback(ENGINEERING_FILE_ID, &engin_file_change_callback);
+    d7ap_fs_init_file(ENGINEERING_FILE_ID, &file_header, init_data);
+
+    d7ap_fs_register_file_modified_callback(ENGINEERING_FILE_ID, &engin_file_change_callback);
 }
 
 void bootstrap()
@@ -237,6 +239,8 @@ void bootstrap()
     blockdevice_init(d7_systemfiles_blockdevice);
     d7ap_init(d7_systemfiles_blockdevice);
     alp_layer_init(NULL, true);
+
+    //create_engineering_file();
 
     uint8_t uid[8];
     d7ap_fs_read_uid(uid);
