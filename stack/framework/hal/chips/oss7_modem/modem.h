@@ -28,7 +28,7 @@
 // TODO for now we are assuming running on OSS-7, we can refactor later
 // so it is more portable
 
-typedef void (*modem_command_completed_callback_t)(bool with_error);
+typedef void (*modem_command_completed_callback_t)(bool with_error,uint8_t tag_id);
 typedef void (*modem_return_file_data_callback_t)(uint8_t file_id, uint32_t offset, uint32_t size, uint8_t* output_buffer);
 typedef void (*modem_write_file_data_callback_t)(uint8_t file_id, uint32_t offset, uint32_t size, uint8_t* output_buffer);
 

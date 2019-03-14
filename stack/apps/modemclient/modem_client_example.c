@@ -73,7 +73,7 @@ void send_counter() {
   counter++;
 }
 
-void command_completed_cb(bool with_error) {
+void command_completed_cb(bool with_error,  uint8_t tag_id) {
   log_print_string("command completed!");
   timer_post_task_delay(&send_counter, TX_INTERVAL_TICKS);
 }
