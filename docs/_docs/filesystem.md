@@ -22,9 +22,10 @@ The platform should define the blockdevice to use by defining a `static blockdev
 The data in the systemfiles contained in `d7ap_fs_data.c` is not hardcoded, instead it is generated.
 For this we use [pyd7a](https://github.com/MOSAIC-LoPoW/pyd7a), which provides an API to generate the files, together with [cog](https://bitbucket.org/ned/cog). Cog is a code generation tool which allows to run the python code embedded in comments in `d7ap_fs_data.c` and generate output, which is used to fill the C arrays. If wanted, the filesystem data can be updated by running `PYTHONPATH="<path to pyd7a>" python2 -m cogapp -c -r stack/modules/d7ap/d7ap_fs_data.c` (after installing pyd7a).
 
+The value of the systemfiles in `d7ap_fs_data.c` is provided as a default. If you want to override it for your application you can do it out-of-tree to keep the source in sync with upstream. To do so, set the `MODULE_D7AP_USE_DEFAULT_SYSTEMFILES` cmake variable to `false` and define `fs_systemfiles` and `fs_systemfiles_file_offsets` in your application code (which can be [out-of-tree]({{ site.baseurl }}{% link _docs/out-of-tree.md %})). The easiest way is to copy `d7ap_fs_data.c` to your application directory, strip everything besides the `fs_systemfiles` and `fs_systemfiles_file_offsets` definitions, adapt file contents where needed and add it to the `APP_BUILD` sources in the app's CMakeLists.txt.
+
 # Future work
 
 - Allow to store user files in non volatile memory
 - Enable RAM caching of some files which change frequently, with periodic flushing to permanent memory
 - Enable using real filesystem implementations underneath of d7ap_fs
-- Make it possible to use a filesystem which is generated out of tree (instead of `d7ap_fs_data.c`)

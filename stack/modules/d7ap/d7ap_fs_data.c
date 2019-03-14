@@ -21,6 +21,9 @@
 
 #include "d7ap_fs.h"
 #include "platform_defs.h"
+#include "MODULE_D7AP_defs.h"
+
+#ifdef MODULE_D7AP_USE_DEFAULT_SYSTEMFILES
 
 // The cog section below does not generate code but defines some global variables and functions which are used in subsequent cog sections below,
 // which do the actual code generation
@@ -425,6 +428,9 @@ __attribute__((used)) uint16_t fs_systemfiles_file_offsets[] = {
 };
 
 
+#endif
+
 // The userfiles are only stored in RAM for now
 fs_file_header_t fs_userfiles_header_data[FRAMEWORK_FS_USER_FILE_COUNT];
 uint8_t fs_userfiles_file_data[FRAMEWORK_FS_USER_FILESYSTEM_SIZE];
+
