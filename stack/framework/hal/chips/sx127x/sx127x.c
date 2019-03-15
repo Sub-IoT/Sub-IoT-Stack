@@ -1481,43 +1481,69 @@ int16_t hw_radio_get_rssi() {
         return (- read_reg(REG_RSSIVALUE) / 2);
 }
 
-void start_hw_radio_continuous_tx(uint8_t time_period){ 
+void start_hw_radio_continuous_tx(uint8_t time_period) { 
+  bool const_radio = (time_period == 0);
   state = STATE_TX;
   set_opmode(OPMODE_TX);
 
-  bool const_radio = (time_period == 0);
-  // chip does not include a PN9 generator so fill fifo manually ...
-  uint8_t payload_len = 63;  
-  uint8_t data[payload_len + 1];
-
-  assert(time_period <= 60);
+  //assert(time_period <= 60);
   uint16_t period = time_period * 1024;
   uint16_t time = hw_timer_getvalue(0) + period;
-  
-  DPRINT("%d untill %d\n %d < %d ||\n%d < %d && %d > %d\n", hw_timer_getvalue(0),
-  time, hw_timer_getvalue(0),time, time, (period-1), hw_timer_getvalue(0), 0xFFFF - (period-1));
-  while(const_radio || ((hw_timer_getvalue(0) < time) || ((time < (period-1)) && (hw_timer_getvalue(0) > 0xFFFF - (period-1))))){
-    data[0]= payload_len;
-    pn9_encode(data + 1 , sizeof(data) - 1);
-    
-    write_fifo(data, payload_len+1); //data in fifo gets sent out
+
+  if (current_channel_id.channel_header.ch_coding == PHY_CODING_FEC_PN9) {
+
+      uint8_t payload_len = 32;  
+      uint8_t data[64];
+      data[0] = payload_len;
+      for (uint8_t i=0; i<payload_len; i++)
+        data[i+1] = i;
+
+      payload_len = fec_encode(data, payload_len);
+      pn9_encode(data, payload_len);
+      
+      while(const_radio || ((hw_timer_getvalue(0) < time) || (hw_timer_getvalue(0) > (time + 100)))){
+        write_fifo(data, payload_len);
+      }
+  }
+  else if (current_channel_id.channel_header.ch_coding == PHY_CODING_PN9) {
+    uint8_t payload_len = 63;  
+    uint8_t data[payload_len + 1];
+    data[0] = payload_len;
+    for (uint8_t i=0; i<payload_len; i++)
+      data[i+1] = 0xAA;
+
+    pn9_encode(data + 1 , payload_len);
+
+    while(const_radio || ((hw_timer_getvalue(0) < time) || (hw_timer_getvalue(0) > (time + 100)))){
+      write_fifo(data, payload_len+1); //data in fifo gets sent out
+    }
+  } else {
+    uint8_t data[1];
+    data[0] = 0;
+    while(const_radio || ((hw_timer_getvalue(0) < time) || (hw_timer_getvalue(0) > (time + 100)))){
+      if(!(read_reg(REG_IRQFLAGS2) & 0x80)){
+        write_fifo(data, 1); //data in fifo gets sent out
+        data[0]++; // count from 0 till 1
+      }
+    }
   }
 
   switch_to_sleep_mode();
 }
 
 void hw_radio_continuous_tx(hw_tx_cfg_t const* tx_cfg, bool continuous_wave) {
-  log_print_string("cont tx\n");
+  DPRINT("hw_radio_continuous_tx");
 
   resume_from_sleep_mode();
 
   flush_fifo();
 
-  log_print_string("channel is: %d",tx_cfg->channel_id.center_freq_index);
-
-  configure_eirp(tx_cfg->eirp);
   configure_channel(&(tx_cfg->channel_id));
-  configure_syncword(tx_cfg->syncword_class, &(tx_cfg->channel_id));
+  //DPRINT("channel is: %d",tx_cfg->channel_id.center_freq_index);
+
+  //configure_eirp(tx_cfg->eirp);
+  //configure_channel(&(tx_cfg->channel_id));
+  //configure_syncword(tx_cfg->syncword_class, &(tx_cfg->channel_id));
 
   if(continuous_wave){ //set frequency deviation to 0 to send a continuous wave
     write_reg(REG_FDEVMSB, 0x00);
@@ -1525,10 +1551,11 @@ void hw_radio_continuous_tx(hw_tx_cfg_t const* tx_cfg, bool continuous_wave) {
   }
 }
 
-void hw_radio_continuous_rx(hw_rx_cfg_t const* rx_cfg){
+void hw_radio_continuous_rx(hw_rx_cfg_t const* rx_cfg) {
   resume_from_sleep_mode();
+  //configure_channel(&(rx_cfg->channel_id));
+  //configure_syncword(rx_cfg->syncword_class, &(rx_cfg->channel_id));
   configure_channel(&(rx_cfg->channel_id));
-  configure_syncword(rx_cfg->syncword_class, &(rx_cfg->channel_id));
 
   flush_fifo();
   FskPacketHandler.NbBytes = 0;
@@ -1571,49 +1598,39 @@ void hw_radio_continuous_rx(hw_rx_cfg_t const* rx_cfg){
   }
 }
 
-void start_hw_radio_continuous_rx(uint8_t time_period, bool receive_data){
-  DPRINT("start rx");
+void start_hw_radio_continuous_rx(uint8_t time_period){
+  DPRINT("start_hw_radio_continuous_rx");
   bool const_rx = (time_period == 0);
 
   assert(time_period <= 60);
   uint16_t period = time_period * 1024;
   uint16_t time = hw_timer_getvalue(0) + period;
-  
-  if(!receive_data)
+
+  if (current_channel_id.channel_header.ch_coding == PHY_CODING_FEC_PN9) {
+      uint8_t data[64];
+      while(const_rx || ((hw_timer_getvalue(0) < time) || (hw_timer_getvalue(0) > (time + 100)))){
+        if((read_reg(REG_IRQFLAGS2) & 0x80)){ //If Fifo full, read 64 bytes
+          read_fifo(data, 64);
+          fec_decode_packet(data, 64, 64);
+          log_print_data(data, 32);
+        } 
+      }
+  }
+  else if (current_channel_id.channel_header.ch_coding == PHY_CODING_PN9) {
     while(const_rx || ((hw_timer_getvalue(0) < time) || (hw_timer_getvalue(0) > (time + 100)))){
       int16_t rss = hw_radio_get_rssi();
-      log_print_string("rss : %d \n", rss);
+      DPRINT("rss : %d \n", rss);
       hw_busy_wait(5000);
     }
-  else{
+  } else {
     uint8_t data[64];
-    uint8_t previous_data = 255;
-    uint8_t count_bad = 0;
-    bool first_time = true;
     while(const_rx || ((hw_timer_getvalue(0) < time) || (hw_timer_getvalue(0) > (time + 100)))){
       if((read_reg(REG_IRQFLAGS2) & 0x80)){ //If Fifo full, read 64 bytes
-        if(first_time){
-          DPRINT("Receiving...\n");
-          first_time = false;
-        }
         read_fifo(data, 64);
-        //check if data is complete
-        // if(data[0] != 0x55 && data[63] != 0x55)
-        //   DPRINT("%d - %d",data[0], data[63]);
-        // else
-        //   DPRINT("success!");
-        if((previous_data != data[0] - 1) && (previous_data != data[0] + 255) && (data[0] != data[63] + 63))
-          DPRINT("missing data: %d - %d", previous_data, data[0]);
-        previous_data = data[63];
-
-        /*
-        In HI_RATE this program is having a lot of missing data. We can see this isn't caused by
-        the microcontroller because it has time between 2 flags (proved by having prints between
-        two flags). HI_RATE also activates the receiver without being reset (and thus sending 
-        preamble). When checking the success-rate, the real data comes through ~1/10 times.
-        */
+        log_print_data(data, 64);
       } 
     }
   }
+
   switch_to_sleep_mode();
 }
