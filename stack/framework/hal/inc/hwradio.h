@@ -462,6 +462,26 @@ __LINK_C error_t hw_radio_start_background_scan(hw_rx_cfg_t const* rx_cfg, rx_pa
  */
 __LINK_C void hw_radio_continuous_tx(hw_tx_cfg_t const* tx_cfg, bool continuous_wave);
 
+/**
+ * \brief This function starts the continous wave which is configured by hw_radio_continuous_tx
+ * \param time_period  Timout in seconds.
+ *
+ */
+__LINK_C void start_hw_radio_continuous_tx(uint8_t time_period);
+
+/**
+ * \brief This function enables us for testing purposes to configure a device with a continuous wave or GFSK wave.
+ *
+ */
+__LINK_C void hw_radio_continuous_rx(hw_rx_cfg_t const* rx_cfg);
+
+/**
+ * \brief This function starts the continous wave which is configured by hw_radio_continuous_rx
+ * \param time_period  Timout in seconds.
+ *
+ */
+__LINK_C void start_hw_radio_continuous_rx(uint8_t time_period);
+
 /** \brief Check whether or not the radio is currently transmitting a packet
  *
  *  \return bool	true if the radio is currently transmitting a packet, false if it is not.

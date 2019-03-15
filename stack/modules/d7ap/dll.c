@@ -34,6 +34,7 @@
 #include "fec.h"
 #include "errors.h"
 #include "timer.h"
+#include "d7ap_em.h"
 
 #if defined(FRAMEWORK_LOG_ENABLED) && defined(MODULE_D7AP_DLL_LOG_ENABLED)
 #define DPRINT(...) log_print_stack_string(LOG_STACK_DLL, __VA_ARGS__)
@@ -871,6 +872,10 @@ void dll_init()
     resume_fg_scan = false;
 
     d7ap_fs_register_file_modified_callback(D7A_FILE_DLL_CONF_FILE_ID, &conf_file_changed_callback);
+
+#ifdef MODULE_D7AP_EM_ENABLED   
+    em_init();
+#endif
 
     // Start immediately the scan automation
     guarded_channel = false;
