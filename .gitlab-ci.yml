@@ -52,7 +52,7 @@ job 3:
   - cd lib/pyd7a/
   - pip install -r requirements.txt
   - cd ../..
-  - python2 run.py --serial-test-device=/dev/ttyUSB0 --serial-dut=/dev/ttyUSB1 -m "not band433 and not band915 and not known_issue" --junitxml report.xml -v
+  - python2 run.py --serial-test-device=/dev/ttyUSB0 --serial-dut=/dev/ttyUSB1 -m "not band433 and not band915 and not lora and not known_issue" --junitxml report.xml -v
   artifacts:
     reports:
       junit: oss7-testsuite/report.xml
