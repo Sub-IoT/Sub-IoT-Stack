@@ -286,7 +286,7 @@ alp_status_codes_t d7ap_fs_write_file(uint8_t file_id, uint32_t offset, const ui
     execute_d7a_action_protocol(header.alp_cmd_file_id, header.interface_file_id);
   }
 
-  if(file_modified_callbacks[file_id])
+  if(IS_SYSTEM_FILE(file_id) && file_modified_callbacks[file_id]) // only supported for system files for now
     file_modified_callbacks[file_id](file_id);
 
   return ALP_STATUS_OK;
