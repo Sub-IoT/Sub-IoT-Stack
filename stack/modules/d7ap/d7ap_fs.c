@@ -170,7 +170,9 @@ void d7ap_fs_init_file(uint8_t file_id, const fs_file_header_t* file_header, con
   memcpy((void*)&fs_userfiles_header_data[userfiles_allocated_nr], (const void*)file_header, sizeof(fs_file_header_t));
   userfiles_allocated_nr++;
 
-  d7ap_fs_write_file(file_id, 0, initial_data, file_header->length);
+  if(initial_data != NULL) {
+    d7ap_fs_write_file(file_id, 0, initial_data, file_header->length);
+  }
 }
 
 void d7ap_fs_init_file_with_d7asp_interface_config(uint8_t file_id, const d7ap_session_config_t* fifo_config)
