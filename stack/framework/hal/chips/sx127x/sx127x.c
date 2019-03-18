@@ -1490,6 +1490,8 @@ void start_hw_radio_continuous_tx(uint8_t time_period) {
   uint16_t period = time_period * 1024;
   uint16_t time = hw_timer_getvalue(0) + period;
 
+  DPRINT("sending for %d seconds\n",time_period);
+
   if (current_channel_id.channel_header.ch_coding == PHY_CODING_FEC_PN9) {
 
       uint8_t payload_len = 32;  
@@ -1528,6 +1530,8 @@ void start_hw_radio_continuous_tx(uint8_t time_period) {
     }
   }
 
+  DPRINT("Done\n");
+
   switch_to_sleep_mode();
 }
 
@@ -1539,11 +1543,8 @@ void hw_radio_continuous_tx(hw_tx_cfg_t const* tx_cfg, bool continuous_wave) {
   flush_fifo();
 
   configure_channel(&(tx_cfg->channel_id));
+  configure_eirp(tx_cfg->eirp);
   //DPRINT("channel is: %d",tx_cfg->channel_id.center_freq_index);
-
-  //configure_eirp(tx_cfg->eirp);
-  //configure_channel(&(tx_cfg->channel_id));
-  //configure_syncword(tx_cfg->syncword_class, &(tx_cfg->channel_id));
 
   if(continuous_wave){ //set frequency deviation to 0 to send a continuous wave
     write_reg(REG_FDEVMSB, 0x00);
