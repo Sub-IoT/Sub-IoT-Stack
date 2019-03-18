@@ -89,14 +89,14 @@ typedef enum {
 #define LO_RATE_CHANNEL_COUNT 280
 
 static hw_tx_cfg_t tx_cfg;
-static uint16_t current_channel_indexes_index = 0; //108
+static uint16_t current_channel_indexes_index = 13; //108
 static modulation_t current_modulation = MODULATION_GFSK; // MODULATION_CW; 
 static phy_channel_band_t current_channel_band = PHY_BAND_868;
-static phy_channel_class_t current_channel_class = PHY_CLASS_LO_RATE; 
+static phy_channel_class_t current_channel_class = PHY_CLASS_NORMAL_RATE; 
 static uint16_t channel_indexes[LO_RATE_CHANNEL_COUNT] = { 0 }; // reallocated later depending on band/class
 static uint16_t channel_count = LO_RATE_CHANNEL_COUNT;
 static uint8_t current_eirp_level = DEFAULT_EIRP;
-static bool send_random = false; // if false, it will send numbers going from 0 to 255
+static phy_coding_t current_coding = PHY_CODING_RFU;
 
 void stop_radio(){
 #if defined USE_SI4460
@@ -118,7 +118,7 @@ void start_radio(){
 #endif
 #if defined USE_SX127X
     log_print_string("sending \n");
-    start_hw_radio_continuous_tx(0, send_random); //time of 0 is send unlimited
+    start_hw_radio_continuous_tx(0); //time of 0 is send unlimited
 #endif
 }
 
@@ -161,8 +161,7 @@ void change_eirp(){
 
 void start()
 {
-    return;
-    tx_cfg.channel_id.channel_header.ch_coding = PHY_CODING_PN9;
+    tx_cfg.channel_id.channel_header.ch_coding = current_coding;
     tx_cfg.channel_id.channel_header.ch_class = current_channel_class;
     tx_cfg.channel_id.channel_header.ch_freq_band = current_channel_band;
     tx_cfg.channel_id.center_freq_index = channel_indexes[current_channel_indexes_index];
@@ -192,11 +191,11 @@ void start()
 
     /* Configure */
     DPRINT("configure_radio\n");
-    //configure_radio(current_modulation);
+    configure_radio(current_modulation);
 
     /* start the radio */
     DPRINT("start_radio\n");
-    //start_radio();
+    start_radio();
 
 }
 
