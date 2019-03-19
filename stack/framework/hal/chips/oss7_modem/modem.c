@@ -262,7 +262,8 @@ bool modem_send_raw_unsolicited_response(uint8_t* alp_command, uint32_t length,
   modem_interface_transfer_bytes(command.buffer, fifo_get_size(&command.fifo), SERIAL_MESSAGE_TYPE_ALP_DATA);
   return true;
 }
-uint8_t get_tag_id()
+
+uint8_t modem_get_active_tag_id()
 {
   return next_tag_id;
 }

@@ -48,6 +48,6 @@ bool modem_read_file(uint8_t file_id, uint32_t offset, uint32_t size);
 bool modem_write_file(uint8_t file_id, uint32_t offset, uint32_t size, uint8_t* data);
 bool modem_send_unsolicited_response(uint8_t file_id, uint32_t offset, uint32_t length, uint8_t* data, session_config_t* session_config);
 bool modem_send_raw_unsolicited_response(uint8_t* alp_command, uint32_t length, session_config_t* session_config);
-uint8_t get_tag_id();
+uint8_t modem_get_active_tag_id();
 
 #endif
