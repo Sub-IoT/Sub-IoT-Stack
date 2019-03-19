@@ -49,6 +49,10 @@ static void em_file_change_callback(uint8_t file_id){
 
     em_file* em_command = (em_file*) data;
 
+
+    DPRINT("em_file_change_callback");
+    DPRINT_DATA(data, D7A_FILE_ENGINEERING_MODE_SIZE);
+
     timeout_em = em_command->timeout;
   
     switch (em_command->mode)
