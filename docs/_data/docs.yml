@@ -5,6 +5,7 @@
   - building
   - d7ap-intro
   - running-examples
+  - filesystem
 - title: Other Topics
   docs:
   - logging

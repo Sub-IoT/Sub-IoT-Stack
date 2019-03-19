@@ -187,6 +187,7 @@ static void execute_state_machine()
       sched_post_task(&process_rx_fifo);
       if(request_pending) {
         SWITCH_STATE(STATE_RESP_PENDING_REQ);
+        sched_post_task(&execute_state_machine);
       } else {
         SWITCH_STATE(STATE_IDLE);
         hw_gpio_clr(uart_state_pin);
@@ -206,6 +207,7 @@ static void execute_state_machine()
       }
     case STATE_REQ_START:
       // TODO timeout
+      sched_cancel_task(&modem_listen);
       SWITCH_STATE(STATE_REQ_WAIT);
       hw_gpio_set(uart_state_pin); // wake-up receiver
       DPRINT("wake-up receiver\n");
@@ -235,6 +237,7 @@ static void execute_state_machine()
       assert(request_pending);
       // response period completed, initiate pending request by switching to REQ_START
       assert(!hw_gpio_get_in(target_uart_state_pin));
+      hw_gpio_clr(uart_state_pin);
       SWITCH_STATE(STATE_REQ_START);
       sched_post_task(&execute_state_machine);
       break;

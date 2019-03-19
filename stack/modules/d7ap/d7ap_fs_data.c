@@ -21,6 +21,9 @@
 
 #include "d7ap_fs.h"
 #include "platform_defs.h"
+#include "MODULE_D7AP_defs.h"
+
+#ifdef MODULE_D7AP_USE_DEFAULT_SYSTEMFILES
 
 // The cog section below does not generate code but defines some global variables and functions which are used in subsequent cog sections below,
 // which do the actual code generation
@@ -50,25 +53,27 @@ default_channel_header = ChannelHeader(
   channel_band=ChannelBand.BAND_868
 )
 
+default_channel_index = 0
+
 # AP used by GW doing continuous FG scan
 ap_cont_fg_scan = AccessProfile(
   channel_header=default_channel_header,
   sub_profiles=[SubProfile(subband_bitmap=0x01, scan_automation_period=CT.compress(0))] * 4,
-  sub_bands=[SubBand(eirp=14)] * 8
+  sub_bands=[SubBand(eirp=14, channel_index_start=default_channel_index, channel_index_end=default_channel_index)] * 8
 )
 
 # AP used for scanning for BG request every second
 ap_bg_scan = AccessProfile(
   channel_header=default_channel_header,
   sub_profiles=[SubProfile(subband_bitmap=0x01, scan_automation_period=CT.compress(1024))] * 4,
-  sub_bands=[SubBand(eirp=14)] * 8
+  sub_bands=[SubBand(eirp=14, channel_index_start=default_channel_index, channel_index_end=default_channel_index)] * 8
 )
 
 # AP used for push only, no scanning
 ap_no_scan = AccessProfile(
   channel_header=default_channel_header,
   sub_profiles=[SubProfile(subband_bitmap=0x00, scan_automation_period=CT.compress(0))] * 4,
-  sub_bands=[SubBand(eirp=14)] * 8
+  sub_bands=[SubBand(eirp=14, channel_index_start=default_channel_index, channel_index_end=default_channel_index)] * 8
 )
 
 system_files = [
@@ -425,6 +430,9 @@ __attribute__((used)) uint16_t fs_systemfiles_file_offsets[] = {
 };
 
 
+#endif
+
 // The userfiles are only stored in RAM for now
 fs_file_header_t fs_userfiles_header_data[FRAMEWORK_FS_USER_FILE_COUNT];
 uint8_t fs_userfiles_file_data[FRAMEWORK_FS_USER_FILESYSTEM_SIZE];
+

@@ -28,7 +28,7 @@
 // TODO for now we are assuming running on OSS-7, we can refactor later
 // so it is more portable
 
-typedef void (*modem_command_completed_callback_t)(bool with_error);
+typedef void (*modem_command_completed_callback_t)(bool with_error,uint8_t tag_id);
 typedef void (*modem_return_file_data_callback_t)(uint8_t file_id, uint32_t offset, uint32_t size, uint8_t* output_buffer);
 typedef void (*modem_write_file_data_callback_t)(uint8_t file_id, uint32_t offset, uint32_t size, uint8_t* output_buffer);
 
@@ -48,5 +48,6 @@ bool modem_read_file(uint8_t file_id, uint32_t offset, uint32_t size);
 bool modem_write_file(uint8_t file_id, uint32_t offset, uint32_t size, uint8_t* data);
 bool modem_send_unsolicited_response(uint8_t file_id, uint32_t offset, uint32_t length, uint8_t* data, session_config_t* session_config);
 bool modem_send_raw_unsolicited_response(uint8_t* alp_command, uint32_t length, session_config_t* session_config);
+uint8_t modem_get_active_tag_id();
 
 #endif

@@ -882,8 +882,6 @@ static void start_rx(hw_rx_cfg_t const* rx_cfg) {
       rssi_valid_callback(-140);
     }
   } else {
-   
-
     flush_fifo();
     FskPacketHandler.NbBytes = 0;
     FskPacketHandler.Size = 0;
@@ -1447,7 +1445,8 @@ error_t hw_radio_start_background_scan(hw_rx_cfg_t const* rx_cfg, rx_packet_call
     FskPacketHandler.NbBytes = 0;
     FskPacketHandler.Size = packet_len;
     FskPacketHandler.FifoThresh = 0;
-    write_reg(REG_DIOMAPPING1, 0x0C); // DIO2 interrupt on sync detect and DIO0 interrupt on PayloadReady
+    write_reg(REG_DIOMAPPING1, 0x3C); // DIO2 interrupt on sync detect and DIO0 interrupt on PayloadReady, DIO1 disabled
+    hw_gpio_disable_interrupt(SX127x_DIO1_PIN);
     set_opmode(OPMODE_RX);
 
     // wait for RSSI sample ready
@@ -1464,7 +1463,7 @@ error_t hw_radio_start_background_scan(hw_rx_cfg_t const* rx_cfg, rx_packet_call
     else
     {
         //hw_gpio_enable_interrupt(SX127x_DIO2_PIN); // enable the SyncAddress interrupt to stop the sync detection timeout
-        DPRINT("rssi %i, waiting for BG frame", rssi);
+        DPRINT("rssi %i, waiting for BG frame\n", rssi);
         hw_gpio_enable_interrupt(SX127x_DIO0_PIN); // enable the PayloadReady interrupt
     }
 
