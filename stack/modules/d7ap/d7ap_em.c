@@ -31,15 +31,15 @@
 #define DPRINT_DATA(...)
 #endif
 
-static uint8_t timeout_tx_sf = 0;
+static uint8_t timeout_em = 0;
 
 
 static void start_tx(){
-    start_hw_radio_continuous_tx(timeout_tx_sf);
+    start_hw_radio_continuous_tx(timeout_em);
 }
 
 static void start_rx(){
-    start_hw_radio_continuous_rx(timeout_tx_sf);
+    start_hw_radio_continuous_rx(timeout_em);
 }
 
 static void em_file_change_callback(uint8_t file_id){
@@ -47,25 +47,25 @@ static void em_file_change_callback(uint8_t file_id){
 
     d7ap_fs_read_file(D7A_FILE_ENGINEERING_MODE_FILE_ID,0,data,D7A_FILE_ENGINEERING_MODE_SIZE);
 
-    uint8_t mode = data[0];
-    uint8_t* command = &data[1];
+    em_file* em_command = (em_file*) data;
 
-    timeout_tx_sf = command[0];
+    timeout_em = em_command->timeout;
   
-    switch (mode)
+    switch (em_command->mode)
     {
       case EM_MODE_CONTINOUS_TX:
         DPRINT("EM_MODE_CONTINOUS_TX");
-        hw_tx_cfg_t* tx_cfg = (hw_tx_cfg_t*) &command[1];
-        modulation_t modulation = command[7];
+        hw_tx_cfg_t tx_cfg;
+        memcpy( &(tx_cfg.channel_id), &(em_command->channel_id), sizeof(channel_id_t));
+        tx_cfg.eirp = em_command->eirp;
 
-        DPRINT("Tx: %d seconds, coding: %X \nclass: %X, freq band: %X \nchannel id: %d, syncword class: %X \neirp: %d, modulation: %X\n",timeout_tx_sf,
-        tx_cfg->channel_id.channel_header.ch_coding, tx_cfg->channel_id.channel_header.ch_class,
-        tx_cfg->channel_id.channel_header.ch_freq_band, tx_cfg->channel_id.center_freq_index,
-        tx_cfg->syncword_class, tx_cfg->eirp, modulation);
+        DPRINT("Tx: %d seconds, coding: %X \nclass: %X, freq band: %X \nchannel id: %d, syncword class: %X \neirp: %d, flags: %X\n",
+        timeout_em, tx_cfg.channel_id.channel_header.ch_coding, tx_cfg.channel_id.channel_header.ch_class,
+        tx_cfg.channel_id.channel_header.ch_freq_band, tx_cfg.channel_id.center_freq_index,
+        tx_cfg.syncword_class, tx_cfg.eirp, em_command->flags);
         
         /* Configure */
-        hw_radio_continuous_tx(tx_cfg, modulation == MODULATION_CW);
+        hw_radio_continuous_tx(&tx_cfg, (em_command->flags & EM_FLAGS_MODULATED_MASK) == EM_FLAGS_UNMODULATED);
 
         /* start the radio */
         sched_register_task(&start_tx);
@@ -75,10 +75,12 @@ static void em_file_change_callback(uint8_t file_id){
         break;
       case EM_MODE_CONTINOUS_RX:
         DPRINT("EM_MODE_CONTINOUS_RX");
-        hw_rx_cfg_t* rx_cfg = (hw_rx_cfg_t*) &command[1];
+        hw_rx_cfg_t rx_cfg;
+        memcpy( &(rx_cfg.channel_id), &(em_command->channel_id), sizeof(channel_id_t));
+
         
         /* Configure */
-        hw_radio_continuous_rx(rx_cfg);
+        hw_radio_continuous_rx(&rx_cfg);
 
         /* start the radio */
         sched_register_task(&start_rx);

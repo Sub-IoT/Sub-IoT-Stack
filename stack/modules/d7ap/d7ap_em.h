@@ -28,28 +28,26 @@
 #ifndef D7AP_EM_H
 #define D7AP_EM_H
 
+#include "types.h"
+#include "hwradio.h"
+#include "MODULE_D7AP_defs.h"
+
 // first byte is the mode
 #define EM_MODE_OFF           0
 #define EM_MODE_CONTINOUS_TX  1
 #define EM_MODE_CONTINOUS_RX  2
 
-// command
-// for EM_MODE_CONTINOUS_TX
-// 0 timout in secs (0 means always on - dangerous...)
-// 2-6 hw_tx_cfg_t
-// 7-7 modulation_t
+#define EM_FLAGS_UNMODULATED  0 << 0
+#define EM_FLAGS_MODULATED    1 << 0
+#define EM_FLAGS_MODULATED_MASK 0x01
 
-// for EM_MODE_CONTINOUS_RX
-// 0 timout in secs (0 means always on - dangerous...)
-// 2-5 hw_rx_cfg_t
-
-typedef enum {
-  MODULATION_CW,
-  MODULATION_GFSK,
-} modulation_t;
-
-#include "types.h"
-#include "MODULE_D7AP_defs.h"
+typedef struct {
+  uint8_t mode;
+  uint8_t flags;
+  uint8_t timeout;
+  channel_id_t channel_id;
+  int8_t eirp;
+} __attribute__ ((packed)) em_file;
 
 error_t em_init(); 
 
