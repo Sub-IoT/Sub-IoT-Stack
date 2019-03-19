@@ -460,7 +460,7 @@ void lorawan_stack_init_abp(lorawan_session_config_abp_t* lorawan_session_config
   LoRaMacMibSetRequestConfirm( &mibReq );
 
 #if defined( REGION_EU868 )
-  LoRaMacTestSetDutyCycleOn(false);
+  LoRaMacTestSetDutyCycleOn(true);
 
 #if( USE_SEMTECH_DEFAULT_CHANNEL_LINEUP == 1 )
   LoRaMacChannelAdd( 3, ( ChannelParams_t )LC4 );
@@ -535,7 +535,7 @@ void lorawan_stack_init_otaa(lorawan_session_config_otaa_t* lorawan_session_conf
   LoRaMacMibSetRequestConfirm( &mibReq );
 
 #if defined( REGION_EU868 )
-  LoRaMacTestSetDutyCycleOn(false);
+  LoRaMacTestSetDutyCycleOn(true);
 
 #if( USE_SEMTECH_DEFAULT_CHANNEL_LINEUP == 1 )
   LoRaMacChannelAdd( 3, ( ChannelParams_t )LC4 );

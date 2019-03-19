@@ -105,7 +105,7 @@ static void process_serial_frame(fifo_t* fifo) {
   if(command_completed) {
     DPRINT("command with tag %i completed @ %i", command.tag_id, timer_get_counter_value());
     if(callbacks->command_completed_callback)
-      callbacks->command_completed_callback(completed_with_error);
+      callbacks->command_completed_callback(completed_with_error,command.tag_id);
 
     command.is_active = false;
   }
@@ -261,4 +261,9 @@ bool modem_send_raw_unsolicited_response(uint8_t* alp_command, uint32_t length,
 
   modem_interface_transfer_bytes(command.buffer, fifo_get_size(&command.fifo), SERIAL_MESSAGE_TYPE_ALP_DATA);
   return true;
+}
+
+uint8_t modem_get_active_tag_id()
+{
+  return next_tag_id;
 }
