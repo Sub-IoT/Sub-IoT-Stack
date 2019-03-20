@@ -33,9 +33,9 @@
 #include "MODULE_D7AP_defs.h"
 
 // first byte is the mode
-#define EM_MODE_OFF           0
-#define EM_MODE_CONTINOUS_TX  1
-#define EM_MODE_CONTINOUS_RX  2
+#define EM_MODE_OFF            0
+#define EM_MODE_CONTINUOUS_TX  1
+#define EM_MODE_CONTINUOUS_RX  2
 
 #define EM_FLAGS_UNMODULATED  0 << 0
 #define EM_FLAGS_MODULATED    1 << 0
@@ -47,7 +47,7 @@ typedef struct {
   uint8_t timeout;
   channel_id_t channel_id;
   int8_t eirp;
-} __attribute__ ((packed)) em_file;
+} __attribute__ ((packed)) em_file_t;
 
 error_t em_init(); 
 

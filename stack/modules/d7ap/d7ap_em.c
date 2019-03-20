@@ -47,7 +47,7 @@ static void em_file_change_callback(uint8_t file_id){
 
     d7ap_fs_read_file(D7A_FILE_ENGINEERING_MODE_FILE_ID,0,data,D7A_FILE_ENGINEERING_MODE_SIZE);
 
-    em_file* em_command = (em_file*) data;
+    em_file_t* em_command = (em_file_t*) data;
 
 
     DPRINT("em_file_change_callback");
@@ -57,8 +57,8 @@ static void em_file_change_callback(uint8_t file_id){
   
     switch (em_command->mode)
     {
-      case EM_MODE_CONTINOUS_TX:
-        DPRINT("EM_MODE_CONTINOUS_TX");
+      case EM_MODE_CONTINUOUS_TX:
+        DPRINT("EM_MODE_CONTINUOUS_TX");
         hw_tx_cfg_t tx_cfg;
         memcpy( &(tx_cfg.channel_id), &(em_command->channel_id), sizeof(channel_id_t));
         tx_cfg.eirp = em_command->eirp;
@@ -77,8 +77,8 @@ static void em_file_change_callback(uint8_t file_id){
         timer_post_task_delay(&start_tx, 500);
 
         break;
-      case EM_MODE_CONTINOUS_RX:
-        DPRINT("EM_MODE_CONTINOUS_RX");
+      case EM_MODE_CONTINUOUS_RX:
+        DPRINT("EM_MODE_CONTINUOUS_RX");
         hw_rx_cfg_t rx_cfg;
         memcpy( &(rx_cfg.channel_id), &(em_command->channel_id), sizeof(channel_id_t));
 
