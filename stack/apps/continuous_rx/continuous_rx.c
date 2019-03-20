@@ -106,7 +106,7 @@ void start_radio(){
         ezradio_change_state(EZRADIO_CMD_CHANGE_STATE_ARG_NEXT_STATE1_NEW_STATE_ENUM_READY);
         hw_radio_set_rx(&rx_cfg, NULL, NULL);
 #elif defined USE_SX127X
-        start_hw_radio_continuous_rx(receive_data);
+        start_hw_radio_continuous_rx(0, receive_data);
         return;
 #endif
         while (true) {
