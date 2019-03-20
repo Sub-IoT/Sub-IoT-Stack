@@ -40,10 +40,6 @@
 
 #include "hwradio.h"
 
-void start(){
-  em_init();
-}
-
 // packet callbacks only here to make hwradio_init() happy, not used
 hw_radio_packet_t* alloc_packet_callback(uint8_t length) {
   assert(false);
@@ -69,7 +65,5 @@ void bootstrap()
     uint8_t uid[8];
     d7ap_fs_read_uid(uid);
     log_print_string("UID %02X%02X%02X%02X%02X%02X%02X%02X\n", uid[0], uid[1], uid[2], uid[3], uid[4], uid[5], uid[6], uid[7]);
-
-    sched_post_task(&start);
 }
 

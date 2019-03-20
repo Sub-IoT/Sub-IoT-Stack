@@ -41,6 +41,9 @@
 #define EM_FLAGS_MODULATED    1 << 0
 #define EM_FLAGS_MODULATED_MASK 0x01
 
+/* \brief The coding schemes and corresponding indices as defined in D7A
+ *
+ */
 typedef enum
 {
     PHY_CODING_PN9 = 0x00,
@@ -48,6 +51,9 @@ typedef enum
     PHY_CODING_FEC_PN9 = 0x02
 } phy_coding_t;
 
+/* \brief The channel bands and corresponding band indices as defined in D7A
+ *
+ */
 typedef enum
 {
     PHY_BAND_433 = 0x02,
@@ -55,6 +61,9 @@ typedef enum
     PHY_BAND_915 = 0x04,
 } phy_channel_band_t;
 
+/* \brief The channel classes and corresponding indices as defined in D7A
+ *
+ */
 typedef enum
 {
     PHY_CLASS_LO_RATE = 0x00, // 9.6 kbps
@@ -65,6 +74,8 @@ typedef enum
     PHY_CLASS_HI_RATE = 0x03 // 166.667 kbps
 } phy_channel_class_t;
 
+/* \brief The channel header as defined in D7AP
+ */
 typedef struct
 {
     phy_coding_t ch_coding: 2; 	/**< The 'coding' field in the channel header */
@@ -73,6 +84,10 @@ typedef struct
     uint8_t _rfu: 1;
 } phy_channel_header_t;
 
+/** \brief channel id used to identify the spectrum settings
+ *
+ * This struct adheres to the 'Channel ID' format the Dash7 PHY layer. (@17/03/2015)
+ */
 typedef struct
 {
     union
