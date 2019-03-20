@@ -1080,11 +1080,12 @@ void dll_start_foreground_scan()
 
 void dll_stop_foreground_scan()
 {
+    DPRINT("Stop FG scan\n");
     if(dll_state == DLL_STATE_IDLE)
         return;
 
     if (is_tx_busy())
-        discard_tx();
+        return; // will go to IDLE after TX
 
     DPRINT("Set the radio to idle state");
     hw_radio_set_idle();
