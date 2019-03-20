@@ -267,7 +267,7 @@ alp_status_codes_t d7ap_fs_write_file_header(uint8_t file_id, fs_file_header_t* 
 alp_status_codes_t d7ap_fs_write_file(uint8_t file_id, uint32_t offset, const uint8_t* buffer, uint32_t length)
 {
   if(!is_file_defined(file_id)) return ALP_STATUS_FILE_ID_NOT_EXISTS;
-  if(systemfiles_headers[file_id].length < offset + length) return ALP_STATUS_UNKNOWN_ERROR; // TODO more specific error (wait for spec discussion)
+
   DPRINT("FS WR %i", file_id);
   fs_file_header_t header;
   d7ap_fs_read_file_header(file_id, &header);
