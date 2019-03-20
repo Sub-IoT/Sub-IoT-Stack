@@ -25,8 +25,14 @@
 #include "string.h"
 #include "framework_defs.h"
 
-//#define DPRINT(...) log_print_string(__VA_ARGS__)
-//#define DPRINT_DATA(p, n) log_print_data(p, n)
+
+#if defined(FRAMEWORK_LOG_ENABLED) && defined(HAL_PERIPH_LOG_ENABLED)
+#define DPRINT(...) log_print_stack_string(LOG_STACK_ALP, __VA_ARGS__)
+#define DPRINT_DATA(p, n) log_print_data(p, n)
+#else
+#define DPRINT(...)
+#define DPRINT_DATA(p, n)
+#endif
 
 // forward declare driver function pointers
 static void init(blockdevice_t* bd);

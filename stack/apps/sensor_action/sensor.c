@@ -57,8 +57,6 @@
   static i2c_handle_t* hts221_handle;
 #endif
 
-static blockdevice_stm32_eeprom_t systemfiles_eeprom_blockdevice;
-
 void execute_sensor_measurement()
 {
   int16_t temperature = 0; // in decicelsius. When there is no sensor, we just transmit 0 degrees

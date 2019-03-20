@@ -35,6 +35,7 @@
 #include "modules_defs.h"
 #include "MODULE_ALP_defs.h"
 #include "d7ap.h"
+#include "d7ap_stack.h"
 #include "d7ap_fs.h"
 #include "lorawan_stack.h"
 
@@ -51,8 +52,8 @@
 #endif
 
 static bool NGDEF(_shell_enabled);
-static interface_state_t lorawan_interface_state=STATE_NOT_INITIALIZED;
-static interface_state_t d7ap_interface_state=STATE_INITIALIZED;
+static interface_state_t lorawan_interface_state = STATE_NOT_INITIALIZED;
+static interface_state_t d7ap_interface_state = STATE_INITIALIZED;
 static bool send_on_join = false;
 #define shell_enabled NG(_shell_enabled)
 
@@ -632,15 +633,15 @@ static bool alp_layer_parse_and_execute_alp_command(alp_command_t* command)
             do_forward = true;
             if(forward_itf_id == ALP_ITF_ID_D7ASP) {
             // forward rest of the actions over the D7ASP interface
-             if(d7ap_interface_state==STATE_NOT_INITIALIZED){
+             if(d7ap_interface_state == STATE_NOT_INITIALIZED){
 #ifdef MODULE_LORAWAN
-               if(lorawan_interface_state==STATE_INITIALIZED){
+               if(lorawan_interface_state == STATE_INITIALIZED){
                   lorawan_stack_deinit();
-                  lorawan_interface_state=STATE_NOT_INITIALIZED;
+                  lorawan_interface_state = STATE_NOT_INITIALIZED;
                 }
 #endif
                 d7ap_stack_init();
-                d7ap_interface_state=STATE_INITIALIZED;
+                d7ap_interface_state = STATE_INITIALIZED;
               } 
               uint8_t forwarded_alp_size = fifo_get_size(&command->alp_command_fifo);
               uint8_t forwarded_alp_actions[forwarded_alp_size];
@@ -654,14 +655,14 @@ static bool alp_layer_parse_and_execute_alp_command(alp_command_t* command)
             }
 #ifdef MODULE_LORAWAN
             else if(forward_itf_id == ALP_ITF_ID_LORAWAN_ABP ) {
-              if(lorawan_interface_state==STATE_NOT_INITIALIZED){
-                if(d7ap_interface_state==STATE_INITIALIZED){
+              if(lorawan_interface_state == STATE_NOT_INITIALIZED){
+                if(d7ap_interface_state == STATE_INITIALIZED){
                   d7ap_stop();
-                  d7ap_interface_state=STATE_NOT_INITIALIZED;
+                  d7ap_interface_state = STATE_NOT_INITIALIZED;
                 }
                 lorawan_stack_init_abp(&session_config.lorawan_session_config_abp); 
-                lorawan_interface_state=STATE_INITIALIZED;
-                send_on_join=true;
+                lorawan_interface_state = STATE_INITIALIZED;
+                send_on_join = true;
                } else {
                 bool joined=lorawan_abp_is_joined(&session_config.lorawan_session_config_abp);
                 if (!joined){
@@ -671,20 +672,20 @@ static bool alp_layer_parse_and_execute_alp_command(alp_command_t* command)
                   uint8_t forwarded_alp_actions[forwarded_alp_size];
                   fifo_pop(&command->alp_command_fifo, forwarded_alp_actions, forwarded_alp_size);
                   lorawan_stack_error_t e = lorawan_stack_send(forwarded_alp_actions, forwarded_alp_size, session_config.lorawan_session_config_abp.application_port, session_config.lorawan_session_config_abp.request_ack);
-                  if(e !=LORAWAN_STACK_ERROR_OK )
+                  if(e != LORAWAN_STACK_ERROR_OK )
                     alp_layer_command_completed_from_lorawan(NULL);    
                 }
               }
               break; // TODO return response
             }
             else if(forward_itf_id == ALP_ITF_ID_LORAWAN_OTAA ) {
-              if(lorawan_interface_state==STATE_NOT_INITIALIZED){
-                if(d7ap_interface_state==STATE_INITIALIZED){
+              if(lorawan_interface_state == STATE_NOT_INITIALIZED){
+                if(d7ap_interface_state == STATE_INITIALIZED){
                   d7ap_stop();
-                  d7ap_interface_state=STATE_NOT_INITIALIZED;
+                  d7ap_interface_state = STATE_NOT_INITIALIZED;
                 }
                 lorawan_stack_init_otaa(&session_config.lorawan_session_config_otaa); 
-                lorawan_interface_state=STATE_INITIALIZED;
+                lorawan_interface_state = STATE_INITIALIZED;
                 send_on_join=true;
                } else {
                 bool joined=lorawan_otaa_is_joined(&session_config.lorawan_session_config_otaa);
@@ -695,7 +696,7 @@ static bool alp_layer_parse_and_execute_alp_command(alp_command_t* command)
                   uint8_t forwarded_alp_actions[forwarded_alp_size];
                   fifo_pop(&command->alp_command_fifo, forwarded_alp_actions, forwarded_alp_size);
                   lorawan_stack_error_t e = lorawan_stack_send(forwarded_alp_actions, forwarded_alp_size, session_config.lorawan_session_config_otaa.application_port, session_config.lorawan_session_config_otaa.request_ack);
-                  if(e !=LORAWAN_STACK_ERROR_OK )
+                  if(e != LORAWAN_STACK_ERROR_OK )
                     alp_layer_command_completed_from_lorawan(NULL);    
                 }
               }

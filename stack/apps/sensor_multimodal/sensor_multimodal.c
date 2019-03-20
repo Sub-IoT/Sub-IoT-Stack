@@ -68,7 +68,6 @@ network_driver_t lora;
 network_driver_t d7;
 network_driver_t* current_network_driver;
 
-static blockdevice_stm32_eeprom_t systemfiles_eeprom_blockdevice;
 
 static alp_init_args_t alp_init_args;
 

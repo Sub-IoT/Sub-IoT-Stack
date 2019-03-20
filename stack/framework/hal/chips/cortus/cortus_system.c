@@ -66,3 +66,8 @@ uint32_t hw_get_battery(void)
    // TODO
    return 0;
 }
+
+system_reboot_reason_t hw_system_reboot_reason()
+{
+  return REBOOT_REASON_NOT_IMPLEMENTED;
+}

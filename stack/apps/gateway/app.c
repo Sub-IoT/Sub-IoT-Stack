@@ -72,22 +72,22 @@ static alp_init_args_t alp_init_args;
 
 void bootstrap()
 {
-   modem_interface_init(PLATFORM_MODEM_INTERFACE_UART, PLATFORM_MODEM_INTERFACE_BAUDRATE, (pin_id_t) 0, (pin_id_t) 0);
+  modem_interface_init(PLATFORM_MODEM_INTERFACE_UART, PLATFORM_MODEM_INTERFACE_BAUDRATE, (pin_id_t) 0, (pin_id_t) 0);
 
-   blockdevice_init(d7_systemfiles_blockdevice);
-   d7ap_init(d7_systemfiles_blockdevice);
+  blockdevice_init(d7_systemfiles_blockdevice);
+  d7ap_init(d7_systemfiles_blockdevice);
 
-    d7ap_fs_write_dll_conf_active_access_class(0x01); // set to first AC, which is continuous FG scan
+  d7ap_fs_write_dll_conf_active_access_class(0x01); // set to first AC, which is continuous FG scan
 
-    alp_init_args.alp_received_unsolicited_data_cb = &on_unsolicited_response_received;
-    alp_layer_init(&alp_init_args, true);
+  alp_init_args.alp_received_unsolicited_data_cb = &on_unsolicited_response_received;
+  alp_layer_init(&alp_init_args, true);
 
 #ifdef HAS_LCD
-    lcd_write_string("GW %s", _GIT_SHA1);
+  lcd_write_string("GW %s", _GIT_SHA1);
 #endif
 
 #if PLATFORM_NUM_LEDS > 0
-    sched_register_task(&led_blink_off);
+  sched_register_task(&led_blink_off);
 #endif
 }
 
