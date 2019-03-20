@@ -47,9 +47,11 @@
 // Temperature data is used as a sensor value, when a HTS221 is available, otherwise value 0 is used.
 
 #define SENSOR_FILE_ID           0x40
-#define SENSOR_FILE_SIZE         2
 #define ACTION_FILE_ID           0x41
 #define INTERFACE_FILE_ID        0x42
+
+#define SENSOR_FILE_SIZE         2
+#define ACTION_FILE_SIZE         20
 
 #define SENSOR_INTERVAL_SEC	TIMER_TICKS_PER_SEC * 30
 
@@ -93,7 +95,7 @@ void init_user_files()
     .file_properties.storage_class = FS_STORAGE_PERMANENT,
     .file_permissions = 0, // TODO
     .length = sizeof(alp_command),
-    .allocated_length = sizeof(alp_command),
+    .allocated_length = ACTION_FILE_SIZE,
   };
 
   d7ap_fs_init_file(ACTION_FILE_ID, &action_file_header, alp_command);
@@ -127,7 +129,8 @@ void init_user_files()
     .file_permissions = 0, // TODO
     .alp_cmd_file_id = ACTION_FILE_ID,
     .interface_file_id = INTERFACE_FILE_ID,
-    .length = SENSOR_FILE_SIZE
+    .length = SENSOR_FILE_SIZE,
+    .allocated_length = SENSOR_FILE_SIZE
   };
 
   d7ap_fs_init_file(SENSOR_FILE_ID, &file_header, NULL);

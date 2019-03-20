@@ -141,7 +141,7 @@ static uint32_t get_user_file_data_offset(uint8_t file_id)
     if(userfiles_ids[i] == file_id)
       break;
 
-    offset += fs_userfiles_header_data[i].length;
+    offset += fs_userfiles_header_data[i].allocated_length;
   }
 
   return offset;
@@ -169,6 +169,8 @@ void d7ap_fs_init_file(uint8_t file_id, const fs_file_header_t* file_header, con
   userfiles_ids[userfiles_allocated_nr] = file_id;
   memcpy((void*)&fs_userfiles_header_data[userfiles_allocated_nr], (const void*)file_header, sizeof(fs_file_header_t));
   userfiles_allocated_nr++;
+
+  memset((void*)&(fs_userfiles_file_data[get_user_file_data_offset(file_id)]), 0, file_header->allocated_length);
 
   if(initial_data != NULL) {
     d7ap_fs_write_file(file_id, 0, initial_data, file_header->length);
@@ -282,7 +284,7 @@ alp_status_codes_t d7ap_fs_write_file(uint8_t file_id, uint32_t offset, const ui
   DPRINT("FS WR %i", file_id);
   fs_file_header_t header;
   d7ap_fs_read_file_header(file_id, &header);
-  if(header.length < offset + length)
+  if(header.allocated_length < offset + length)
     return ALP_STATUS_UNKNOWN_ERROR;
 
   if(IS_SYSTEM_FILE(file_id)) {
@@ -290,6 +292,9 @@ alp_status_codes_t d7ap_fs_write_file(uint8_t file_id, uint32_t offset, const ui
   } else {
     memcpy((void*)&(fs_userfiles_file_data[get_user_file_data_offset(file_id) + offset]), buffer, length);
   }
+
+  if (header.length < offset + length)
+    header.length = offset + length;
 
   if(header.file_properties.action_protocol_enabled == true
     && header.file_properties.action_condition == ALP_ACT_COND_WRITE) // TODO ALP_ACT_COND_WRITEFLUSH?
