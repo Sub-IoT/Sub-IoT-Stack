@@ -507,6 +507,7 @@ static void cca_rssi_valid(int16_t cur_rssi)
 
 static void execute_cca(void *arg)
 {
+    (void)arg;
     DPRINT("execute_cca @%i", timer_get_counter_value());
 
     assert(dll_state == DLL_STATE_CCA1 || dll_state == DLL_STATE_CCA2);
@@ -521,6 +522,7 @@ static void execute_cca(void *arg)
 
 static void execute_csma_ca(void *arg)
 {
+    (void)arg;
     // TODO select Channel at front of the channel queue
 
     /*
@@ -817,6 +819,7 @@ void dll_execute_scan_automation(void *arg)
 
 static void conf_file_changed_callback(uint8_t file_id)
 {
+    (void)file_id;
     DPRINT("DLL config file changed");
     // when doing scan automation restart this
     if (dll_state == DLL_STATE_IDLE || dll_state == DLL_STATE_SCAN_AUTOMATION)

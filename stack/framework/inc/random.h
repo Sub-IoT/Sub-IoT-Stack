@@ -38,7 +38,7 @@
  *
  * \return uint32_t	a semi-random number between 0 and 2^32-1
  */
-__LINK_C uint32_t get_rnd();
+__LINK_C uint32_t get_rnd(void);
 
 /*! \brief Set the seed for the random nuber generator
  *

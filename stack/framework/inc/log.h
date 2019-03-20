@@ -58,7 +58,7 @@ typedef enum
 #ifdef FRAMEWORK_LOG_ENABLED
 
 /*! \brief Reset the log counter back to zero */
-__LINK_C void log_counter_reset();
+__LINK_C void log_counter_reset(void);
 
 /*! \brief Log a string which can be optionally formatted using printf() style
  * format specifiers. */

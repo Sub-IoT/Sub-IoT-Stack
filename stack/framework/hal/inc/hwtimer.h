@@ -54,7 +54,7 @@ typedef struct {
 /*! \brief Timer callback definition
  * 
  */
-typedef void (*timer_callback_t)();
+typedef void (*timer_callback_t)(void);
 
 /*! \brief Type definition of the type used to identify timers;
  * 

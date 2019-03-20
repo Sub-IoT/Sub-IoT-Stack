@@ -422,9 +422,11 @@ bool d7ap_fs_register_file_modified_callback(uint8_t file_id, fs_modified_file_c
     return false; // already registered
 
   file_modified_callbacks[file_id] = callback;
+  return true;
 }
 
 bool d7ap_fs_register_d7aactp_callback(fs_d7aactp_callback_t d7aactp_cb)
 {
   d7aactp_callback = d7aactp_cb;
+  return true;
 }

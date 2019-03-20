@@ -120,6 +120,8 @@ static void switch_state(state_t next_state)
 
 static void foreground_scan_expired(void *arg)
 {
+    (void)arg;
+
     // the FG scan expiration may also happen while Tx is busy (d7anp_state = D7ANP_STATE_TRANSMIT) // TODO validate
     assert(d7anp_state == D7ANP_STATE_FOREGROUND_SCAN || d7anp_state == D7ANP_STATE_TRANSMIT);
     DPRINT("Foreground scan expired @%i", timer_get_counter_value());
@@ -163,7 +165,6 @@ void d7anp_set_foreground_scan_timeout(timer_tick_t timeout)
 {
     DPRINT("Set FG scan timeout = %i", timeout);
     assert(d7anp_state == D7ANP_STATE_IDLE || d7anp_state == D7ANP_STATE_FOREGROUND_SCAN);
-    assert(timeout >= 0);
 
     fg_scan_timeout_ticks = timeout;
 }
@@ -188,6 +189,8 @@ void d7anp_stop_foreground_scan()
 
 void start_foreground_scan_after_D7AAdvP(void *arg)
 {
+    (void)arg;
+
     DPRINT("start_foreground_scan_after_D7AAdvP");
     fg_scan_timeout_ticks = FG_SCAN_TIMEOUT;
     d7anp_start_foreground_scan();
@@ -291,6 +294,7 @@ security:
 
     switch_state(D7ANP_STATE_TRANSMIT);
     dll_tx_frame(packet);
+    return SUCCESS;
 }
 
 static void schedule_foreground_scan_after_D7AAdvP(timer_tick_t eta)

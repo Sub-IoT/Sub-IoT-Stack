@@ -60,7 +60,7 @@ void hw_system_save_reboot_reason();
  * The exact definition of each additional low power mode however, depends on the 
  * specific platform.
  *
- * \param mode	The low power mode to enter. Defaults to 0
+ * \param mode  The low power mode to enter. Defaults to 0
  *
  */
 __LINK_C void hw_enter_lowpower_mode(uint8_t mode);
@@ -69,12 +69,12 @@ __LINK_C void hw_enter_lowpower_mode(uint8_t mode);
 /** \brief Deinitializes all pheriperals before going to low power mode.
  * This is a weak symbol which can be implemented in the platform if you want to use this
  */
-__LINK_C __attribute__((weak)) void hw_deinit_pheriperals();
+__LINK_C __attribute__((weak)) void hw_deinit_pheriperals(void);
 
 /** \brief Reinitializes all pheriperals after resuming from low power mode.
  * This is a weak symbol which can be implemented in the platform if you want to use this
  */
-__LINK_C __attribute__((weak)) void hw_reinit_pheriperals();
+__LINK_C __attribute__((weak)) void hw_reinit_pheriperals(void);
 
 /*! \brief Get a 64-bit identifier that is unique to the device on which this function is called.
  *
@@ -89,9 +89,9 @@ __LINK_C __attribute__((weak)) void hw_reinit_pheriperals();
  * serial_number, the bits of the serial_number should be placed in the least significant bits of the 
  * returned ID.
  *
- * \return uint64_t	A device unique identifier
+ * \return uint64_t A device unique identifier
  */
-__LINK_C uint64_t hw_get_unique_id();
+__LINK_C uint64_t hw_get_unique_id(void);
 
 /*! \brief Starts a busy wait loop blocking execution for the specified number of microseconds.
   *
@@ -103,17 +103,17 @@ __LINK_C void hw_busy_wait(int16_t microseconds);
 
 /*! \brief Resets the MCU.
   */
-__LINK_C void hw_reset();
+__LINK_C void hw_reset(void);
 
 /*!
  * /brief Returns the internal temperature of the MCU
  */
-__LINK_C float hw_get_internal_temperature();
+__LINK_C float hw_get_internal_temperature(void);
 
 /*!
  * /brief Returns the battery voltage in mV (VDD)
  */
-__LINK_C uint32_t hw_get_battery();
+__LINK_C uint32_t hw_get_battery(void);
 
 #endif //__HW_SYSTEM_H
 

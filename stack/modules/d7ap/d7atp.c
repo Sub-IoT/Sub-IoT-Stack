@@ -294,6 +294,10 @@ void d7atp_stop()
 error_t d7atp_send_request(uint8_t dialog_id, uint8_t transaction_id, bool is_last_transaction,
                         packet_t* packet, d7ap_session_qos_t* qos_settings, uint8_t listen_timeout, uint8_t expected_response_length)
 {
+    // unused parameters
+    (void)is_last_transaction;
+    (void)listen_timeout;
+
     /* check that we are not initiating a different dialog if a dialog is still ongoing */
     if (current_dialog_id)
     {
@@ -323,7 +327,6 @@ error_t d7atp_send_request(uint8_t dialog_id, uint8_t transaction_id, bool is_la
     }
 
     DPRINT("Start dialog Id=%i transID=%i on AC=%x, expected resp len=%i", dialog_id, transaction_id, access_class, expected_response_length);
-    uint8_t slave_listen_timeout = listen_timeout;
 
     bool ack_requested = true;
     if ((qos_settings->qos_resp_mode == SESSION_RESP_MODE_NO || qos_settings->qos_resp_mode == SESSION_RESP_MODE_NO_RPT)

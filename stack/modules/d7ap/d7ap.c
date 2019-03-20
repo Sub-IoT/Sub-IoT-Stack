@@ -23,6 +23,7 @@
 
 #include "d7ap_fs.h"
 #include "phy.h"
+#include "hwradio.h"
 #include "errors.h"
 #include "debug.h"
 #include "dae.h"
@@ -69,7 +70,12 @@ uint8_t d7ap_register(d7ap_resource_desc_t* desc)
     return (registered_client_nb-1);
 }
 
-//TODO do we need also an API to unregister a client?
+//TODO to unregister, better to introduce a linked list for the registered clients
+/*void d7ap_unregister(uint8_t client_id)
+{
+    assert(client_id < registered_client_nb);
+
+}*/
 
 /**
  * @brief   Gets the device address UID/VID
@@ -134,7 +140,7 @@ error_t d7ap_send(uint8_t client_id, d7ap_session_config_t* config, uint8_t* pay
  */
 void d7ap_set_tx_power(uint8_t power)
 {
-
+    hw_radio_set_tx_power(power);
 }
 
 
@@ -145,7 +151,8 @@ void d7ap_set_tx_power(uint8_t power)
  */
 uint8_t d7ap_get_tx_power(void)
 {
-
+    // TODO
+    return 0;
 }
 
 
@@ -156,7 +163,7 @@ uint8_t d7ap_get_tx_power(void)
  */
 void d7ap_set_access_class(uint8_t access_class)
 {
-
+    d7ap_fs_write_dll_conf_active_access_class(access_class);
 }
 
 
@@ -167,5 +174,5 @@ void d7ap_set_access_class(uint8_t access_class)
  */
 uint8_t d7ap_get_access_class(void)
 {
-
+    return d7ap_fs_read_dll_conf_active_access_class();
 }

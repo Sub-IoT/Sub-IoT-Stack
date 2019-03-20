@@ -78,7 +78,7 @@ alp_status_codes_t d7ap_fs_write_file_header(uint8_t file_id, fs_file_header_t* 
 void d7ap_fs_read_uid(uint8_t* buffer);
 void d7ap_fs_read_vid(uint8_t* buffer);
 void d7ap_fs_write_vid(uint8_t* buffer);
-uint8_t d7ap_fs_read_dll_conf_active_access_class();
+uint8_t d7ap_fs_read_dll_conf_active_access_class(void);
 void d7ap_fs_write_dll_conf_active_access_class(uint8_t access_class);
 alp_status_codes_t d7ap_fs_read_nwl_security_key(uint8_t* key);
 alp_status_codes_t d7ap_fs_read_nwl_security(dae_nwl_security_t *nwl_security);
