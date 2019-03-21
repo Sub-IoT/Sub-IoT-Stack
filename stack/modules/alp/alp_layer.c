@@ -271,6 +271,10 @@ static alp_status_codes_t process_op_read_file_properties(alp_command_t* command
   fs_file_header_t file_header;
   alp_status_codes_t alp_status = d7ap_fs_read_file_header(file_id, &file_header);
 
+  // convert to big endian
+  file_header.length = __builtin_bswap32(file_header.length);
+  file_header.allocated_length = __builtin_bswap32(file_header.allocated_length);
+
   if(alp_status == ALP_STATUS_OK) {
     // fill response
     err = fifo_put_byte(&command->alp_response_fifo, ALP_OP_RETURN_FILE_PROPERTIES); assert(err == SUCCESS);

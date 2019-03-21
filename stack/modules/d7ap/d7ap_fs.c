@@ -162,12 +162,18 @@ static uint8_t get_user_file_header_index(uint8_t file_id)
 
 void d7ap_fs_init_file(uint8_t file_id, const fs_file_header_t* file_header, const uint8_t* initial_data)
 {
+  DPRINT("FS init %i, alloc %i", file_id, file_header->allocated_length);
   assert(file_id >= 0x40); // only user files allowed
   assert(file_id - 0x40 < FRAMEWORK_FS_USER_FILE_COUNT);
   // TODO only volatile for now, return error when permanent storage requested
 
   userfiles_ids[userfiles_allocated_nr] = file_id;
-  memcpy((void*)&fs_userfiles_header_data[userfiles_allocated_nr], (const void*)file_header, sizeof(fs_file_header_t));
+
+  fs_file_header_t file_header_big_endian;
+  memcpy(&file_header_big_endian, file_header, sizeof (fs_file_header_t));
+  file_header_big_endian.length = __builtin_bswap32(file_header_big_endian.length);
+  file_header_big_endian.allocated_length = __builtin_bswap32(file_header_big_endian.allocated_length);
+  memcpy((void*)&fs_userfiles_header_data[userfiles_allocated_nr], (const void*)&file_header_big_endian, sizeof(fs_file_header_t));
   userfiles_allocated_nr++;
 
   memset((void*)&(fs_userfiles_file_data[get_user_file_data_offset(file_id)]), 0, file_header->allocated_length);
@@ -266,6 +272,9 @@ alp_status_codes_t d7ap_fs_read_file_header(uint8_t file_id, fs_file_header_t* f
     memcpy(file_header, (const void*)&fs_userfiles_header_data[get_user_file_header_index(file_id)], sizeof(fs_file_header_t));
   }
 
+  // convert to little endian (native)
+  file_header->length = __builtin_bswap32(file_header->length);
+  file_header->allocated_length = __builtin_bswap32(file_header->allocated_length);
   return ALP_STATUS_OK;
 }
 

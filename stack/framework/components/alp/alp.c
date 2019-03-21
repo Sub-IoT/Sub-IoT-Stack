@@ -91,6 +91,10 @@ alp_operand_file_header_t alp_parse_file_header_operand(fifo_t* cmd_fifo) {
   alp_operand_file_header_t operand;
   error_t err = fifo_pop(cmd_fifo, &operand.file_id, 1); assert(err == SUCCESS);
   err = fifo_pop(cmd_fifo, (uint8_t*)&operand.file_header, sizeof(fs_file_header_t)); assert(err == SUCCESS);
+
+  // convert to little endian (native)
+  operand.file_header.length = __builtin_bswap32(operand.file_header.length);
+  operand.file_header.allocated_length = __builtin_bswap32(operand.file_header.allocated_length);
   return operand;
 }
 
