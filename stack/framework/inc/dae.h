@@ -76,7 +76,7 @@ typedef enum
 
 /* \brief The channel header as defined in D7AP
  */
-typedef struct
+typedef struct __attribute__((__packed__))
 {
     phy_coding_t ch_coding: 2; 	/**< The 'coding' field in the channel header */
     phy_channel_class_t ch_class: 2;  	/**< The 'class' field in the channel header */
@@ -88,7 +88,7 @@ typedef struct
  *
  * This struct adheres to the 'Channel ID' format the Dash7 PHY layer. (@17/03/2015)
  */
-typedef struct
+typedef struct __attribute__((__packed__))
 {
     union
     {
