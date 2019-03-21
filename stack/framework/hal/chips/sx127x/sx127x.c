@@ -355,14 +355,29 @@ static void set_lora_mode(bool use_lora) {
 static void configure_eirp(eirp_t eirp) {
 #ifdef PLATFORM_SX127X_USE_PA_BOOST
   // Pout = 17-(15-outputpower)
-  assert(eirp >= 2); // lower not supported when using PA_BOOST output
-  assert(eirp <= 17); // chip supports until +20 dBm but then we need to enable PaDac. Max 17 for now.
-  write_reg(REG_PACONFIG, 0x80 | (eirp - 2));
+  assert(eirp >= -5); // -4.2 dBm is minimum
+  assert(eirp <= 20); // chip supports until +15 dBm default, +17 dBm with PA_BOOST and +20 dBm with PaDac enabled. 
+  if(eirp <= 5) {
+    write_reg(REG_PACONFIG, (uint8_t)(eirp - 10.8 + 15));
+    write_reg(REG_PADAC, 0x84); //Default Power
+  } else if(eirp <= 15) {
+    write_reg(REG_PACONFIG, 0x70 | (uint8_t)(eirp));
+    write_reg(REG_PADAC, 0x84); //Default Power
+  } else if(eirp <= 17) {
+    write_reg(REG_PACONFIG, 0x80 | (eirp - 2));
+    write_reg(REG_PADAC, 0x84); //Default Power
+  } else {
+    write_reg(REG_PACONFIG, 0x80 | (eirp - 5));
+    write_reg(REG_PADAC, 0x87); //High Power
+  }
 #else
   // Pout = Pmax-(15-outputpower)
-  assert(eirp <= 14); // Pmax = 13.8 dBm
-  assert(eirp >= -2); // -1.2 dBm is minimum with this Pmax. We can modify Pmax later as well if we need to go lower.
-  write_reg(REG_PACONFIG, 0x70 | (uint8_t)(eirp - 13.8 + 15));
+  assert(eirp <= 15); // Pmax = 15 dBm
+  assert(eirp >= -5); // -4.2 dBm is minimum
+  if(eirp <= 5)
+    write_reg(REG_PACONFIG, (uint8_t)(eirp - 10.8 + 15));
+  else
+    write_reg(REG_PACONFIG, 0x70 | (uint8_t)(eirp));
 #endif
 }
 
