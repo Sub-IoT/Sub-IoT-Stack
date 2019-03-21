@@ -84,8 +84,9 @@ static hw_rx_cfg_t rx_cfg;
 static uint16_t current_channel_indexes_index = 13;
 static uint8_t current_eirp_level = 0x7f;
 static modulation_t current_modulation = MODULATION_GFSK;
+static phy_coding_t current_coding = PHY_CODING_RFU;
 static phy_channel_band_t current_channel_band = PHY_BAND_868;
-static phy_channel_class_t current_channel_class = PHY_CLASS_HI_RATE;
+static phy_channel_class_t current_channel_class = PHY_CLASS_NORMAL_RATE;
 static uint16_t channel_indexes[LO_RATE_CHANNEL_COUNT] = { 0 }; // reallocated later depending on band/class
 static uint16_t channel_count = NORMAL_RATE_CHANNEL_COUNT;
 static bool receive_data = true;
@@ -106,7 +107,7 @@ void start_radio(){
         ezradio_change_state(EZRADIO_CMD_CHANGE_STATE_ARG_NEXT_STATE1_NEW_STATE_ENUM_READY);
         hw_radio_set_rx(&rx_cfg, NULL, NULL);
 #elif defined USE_SX127X
-        start_hw_radio_continuous_rx(0, receive_data);
+        start_hw_radio_continuous_rx(0);
         return;
 #endif
         while (true) {
@@ -142,7 +143,7 @@ void configure_radio(modulation_t mod){
 
 void start()
 {
-    rx_cfg.channel_id.channel_header.ch_coding = PHY_CODING_PN9;
+    rx_cfg.channel_id.channel_header.ch_coding = current_coding;
     rx_cfg.channel_id.channel_header.ch_class = current_channel_class;
     rx_cfg.channel_id.channel_header.ch_freq_band = current_channel_band;
     rx_cfg.channel_id.center_freq_index = channel_indexes[current_channel_indexes_index];

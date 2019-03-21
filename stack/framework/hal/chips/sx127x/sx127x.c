@@ -1487,8 +1487,7 @@ void start_hw_radio_continuous_tx(uint8_t time_period) {
   set_opmode(OPMODE_TX);
 
   //assert(time_period <= 60);
-  uint16_t period = time_period * 1024;
-  uint16_t time = hw_timer_getvalue(0) + period;
+  uint16_t time = hw_timer_getvalue(0) + time_period * 1024;
 
   DPRINT("sending for %d seconds\n",time_period);
 
@@ -1604,8 +1603,7 @@ void start_hw_radio_continuous_rx(uint8_t time_period){
   bool const_rx = (time_period == 0);
 
   assert(time_period <= 60);
-  uint16_t period = time_period * 1024;
-  uint16_t time = hw_timer_getvalue(0) + period;
+  uint16_t time = hw_timer_getvalue(0) + time_period * 1024;
 
   if (current_channel_id.channel_header.ch_coding == PHY_CODING_FEC_PN9) {
       uint8_t data[64];
