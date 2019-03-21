@@ -35,7 +35,6 @@
 #include "modules_defs.h"
 #include "MODULE_ALP_defs.h"
 #include "d7ap.h"
-#include "d7ap_stack.h"
 #include "d7ap_fs.h"
 #include "lorawan_stack.h"
 
