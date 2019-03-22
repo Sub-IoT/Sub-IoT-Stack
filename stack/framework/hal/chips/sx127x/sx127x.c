@@ -268,7 +268,7 @@ static void read_fifo(uint8_t* buffer, uint8_t size) {
   spi_exchange_byte(sx127x_spi, 0x00);
   spi_exchange_bytes(sx127x_spi, NULL, buffer, size);
   spi_deselect(sx127x_spi);
-  DPRINT("READ FIFO %i", size);
+  // DPRINT("READ FIFO %i: %d", size, buffer[0]);
 }
 
 static opmode_t get_opmode() {
@@ -395,9 +395,9 @@ static bool is_lora_channel(const channel_id_t* channel) {
 }
 
 static void configure_channel(const channel_id_t* channel) {
-  if(phy_radio_channel_ids_equal(&current_channel_id, channel)) {
+  /*if(phy_radio_channel_ids_equal(&current_channel_id, channel)) {
     return;
-  }
+  }*/
 
   if(is_sx1272) {
     assert(channel->channel_header.ch_freq_band != PHY_BAND_433);
@@ -1496,23 +1496,155 @@ int16_t hw_radio_get_rssi() {
         return (- read_reg(REG_RSSIVALUE) / 2);
 }
 
-void hw_radio_continuous_tx(hw_tx_cfg_t const* tx_cfg, bool continuous_wave) {
-  // TODO tx_cfg
-  log_print_string("cont tx\n");
-  assert(!continuous_wave); // TODO CW not supported for now
-  configure_eirp(tx_cfg->eirp);
-  configure_channel(&(tx_cfg->channel_id));
-  hw_gpio_disable_interrupt(SX127x_DIO0_PIN);
+void start_hw_radio_continuous_tx(uint8_t time_period) { 
+  bool const_radio = (time_period == 0);
+  state = STATE_TX;
   set_opmode(OPMODE_TX);
 
-  // chip does not include a PN9 generator so fill fifo manually ...
-  while(1) {
-    uint8_t payload_len = 63;
-    uint8_t data[payload_len + 1];
-    data[0]= payload_len;
-    pn9_encode(data + 1 , sizeof(data) - 1);
-    write_fifo(data, payload_len + 1);
-    //while(read_reg(REG_IRQFLAGS2) & 0x20) {} // wait until we go under Fifo threshold
-    // TODO waiting for fifo threshold causes ugly spikes in the spectrum (possibly there are gaps where fifo is empty causing the chip to transmit preamble or unmodulated signal)
+  //assert(time_period <= 60);
+  uint16_t time = hw_timer_getvalue(0) + time_period * 1024;
+
+  DPRINT("sending for %d seconds\n",time_period);
+
+  if (current_channel_id.channel_header.ch_coding == PHY_CODING_FEC_PN9) {
+
+      uint8_t payload_len = 32;  
+      uint8_t data[64];
+      data[0] = payload_len;
+      for (uint8_t i=0; i<payload_len; i++)
+        data[i+1] = i;
+
+      payload_len = fec_encode(data, payload_len);
+      pn9_encode(data, payload_len);
+      
+      while(const_radio || ((hw_timer_getvalue(0) < time) || (hw_timer_getvalue(0) > (time + 100)))){
+        write_fifo(data, payload_len);
+      }
   }
+  else if (current_channel_id.channel_header.ch_coding == PHY_CODING_PN9) {
+    uint8_t payload_len = 63;  
+    uint8_t data[payload_len + 1];
+    data[0] = payload_len;
+    for (uint8_t i=0; i<payload_len; i++)
+      data[i+1] = 0xAA;
+
+    pn9_encode(data + 1 , payload_len);
+
+    while(const_radio || ((hw_timer_getvalue(0) < time) || (hw_timer_getvalue(0) > (time + 100)))){
+      write_fifo(data, payload_len+1); //data in fifo gets sent out
+    }
+  } else {
+    uint8_t data[1];
+    data[0] = 0;
+    while(const_radio || ((hw_timer_getvalue(0) < time) || (hw_timer_getvalue(0) > (time + 100)))){
+      if(!(read_reg(REG_IRQFLAGS2) & 0x80)){
+        write_fifo(data, 1); //data in fifo gets sent out
+        data[0]++; // count from 0 till 1
+      }
+    }
+  }
+
+  DPRINT("Done\n");
+
+  switch_to_sleep_mode();
+}
+
+void hw_radio_continuous_tx(hw_tx_cfg_t const* tx_cfg, bool continuous_wave) {
+  DPRINT("hw_radio_continuous_tx");
+
+  resume_from_sleep_mode();
+
+  flush_fifo();
+
+  configure_channel(&(tx_cfg->channel_id));
+  configure_eirp(tx_cfg->eirp);
+  //DPRINT("channel is: %d",tx_cfg->channel_id.center_freq_index);
+
+  if(continuous_wave){ //set frequency deviation to 0 to send a continuous wave
+    write_reg(REG_FDEVMSB, 0x00);
+    write_reg(REG_FDEVLSB, 0x00);
+  }
+}
+
+void hw_radio_continuous_rx(hw_rx_cfg_t const* rx_cfg) {
+  resume_from_sleep_mode();
+  //configure_channel(&(rx_cfg->channel_id));
+  //configure_syncword(rx_cfg->syncword_class, &(rx_cfg->channel_id));
+  configure_channel(&(rx_cfg->channel_id));
+
+  flush_fifo();
+  FskPacketHandler.NbBytes = 0;
+  FskPacketHandler.Size = 0;
+  FskPacketHandler.FifoThresh = 0;
+
+  //fixed length with 0 payloadlength = unlimited payloadlength
+  write_reg(REG_PACKETCONFIG1, read_reg(REG_PACKETCONFIG1) & 0x7F); 
+  write_reg(REG_PACKETCONFIG2, read_reg(REG_PACKETCONFIG2) & 0xF8);
+  write_reg(REG_PAYLOADLENGTH, 0x00);
+
+  //no automatic restart
+  write_reg(REG_RXCONFIG,read_reg(REG_RXCONFIG) & 0x7F);
+
+  set_packet_handler_enabled(true);
+
+  //CHECK SETTINGS
+  if(read_reg(REG_PACKETCONFIG2) & 0x40)
+    DPRINT("PACKET MODE");
+  else
+    DPRINT("CONTINUOUS MODE");
+  if((read_reg(REG_PACKETCONFIG1) & 0xF6) == 0x00)
+    DPRINT("Fixed unlimited length, no decoding, CRC off, addressfiltering off");
+  else
+    DPRINT("something wrong: %X",read_reg(REG_PACKETCONFIG1) & 0xF6);
+  if(!(read_reg(REG_OPMODE) & 0xE0))
+    DPRINT("FSK");
+  
+
+  if(state == STATE_RX)
+    restart_rx_chain();
+
+  state = STATE_RX;
+  set_opmode(OPMODE_RX);
+
+  if(rssi_valid_callback != 0) {
+    while(!(read_reg(REG_IRQFLAGS1) & 0x08)) {} // wait until we have a valid RSSI value
+
+    rssi_valid_callback(get_rssi());
+  }
+}
+
+void start_hw_radio_continuous_rx(uint8_t time_period){
+  DPRINT("start_hw_radio_continuous_rx");
+  bool const_rx = (time_period == 0);
+
+  assert(time_period <= 60);
+  uint16_t time = hw_timer_getvalue(0) + time_period * 1024;
+
+  if (current_channel_id.channel_header.ch_coding == PHY_CODING_FEC_PN9) {
+      uint8_t data[64];
+      while(const_rx || ((hw_timer_getvalue(0) < time) || (hw_timer_getvalue(0) > (time + 100)))){
+        if((read_reg(REG_IRQFLAGS2) & 0x80)){ //If Fifo full, read 64 bytes
+          read_fifo(data, 64);
+          fec_decode_packet(data, 64, 64);
+          log_print_data(data, 32);
+        } 
+      }
+  }
+  else if (current_channel_id.channel_header.ch_coding == PHY_CODING_PN9) {
+    while(const_rx || ((hw_timer_getvalue(0) < time) || (hw_timer_getvalue(0) > (time + 100)))){
+      int16_t rss = hw_radio_get_rssi();
+      DPRINT("rss : %d \n", rss);
+      hw_busy_wait(5000);
+    }
+  } else {
+    uint8_t data[64];
+    while(const_rx || ((hw_timer_getvalue(0) < time) || (hw_timer_getvalue(0) > (time + 100)))){
+      if((read_reg(REG_IRQFLAGS2) & 0x80)){ //If Fifo full, read 64 bytes
+        read_fifo(data, 64);
+        log_print_data(data, 64);
+      } 
+    }
+  }
+
+  switch_to_sleep_mode();
 }

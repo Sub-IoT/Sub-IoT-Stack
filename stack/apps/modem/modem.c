@@ -38,8 +38,16 @@
 #include "platform.h"
 #include "hwblockdevice.h"
 
-// This example application contains a modem which can be used from another MCU through
-// the serial interface
+#include "hwradio.h"
+
+// packet callbacks only here to make hwradio_init() happy, not used
+hw_radio_packet_t* alloc_packet_callback(uint8_t length) {
+  assert(false);
+}
+
+void release_packet_callback(hw_radio_packet_t* p) {
+  assert(false);
+}
 
 void bootstrap()
 {
@@ -49,7 +57,6 @@ void bootstrap()
 #else
     modem_interface_init(PLATFORM_MODEM_INTERFACE_UART, PLATFORM_MODEM_INTERFACE_BAUDRATE, (pin_id_t) 0, (pin_id_t) 0);
 #endif
-
 
     blockdevice_init(d7_systemfiles_blockdevice);
     d7ap_init(d7_systemfiles_blockdevice);
