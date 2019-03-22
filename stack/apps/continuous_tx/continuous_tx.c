@@ -79,23 +79,18 @@
   #define MAX_EIRP 0 // TODO
 #endif
 
-typedef enum {
-  MODULATION_CW,
-  MODULATION_GFSK,
-} modulation_t;
-
-
-#define NORMAL_RATE_CHANNEL_COUNT 8
-#define LO_RATE_CHANNEL_COUNT 69
+#define HI_RATE_CHANNEL_COUNT 32
+#define NORMAL_RATE_CHANNEL_COUNT 32
+#define LO_RATE_CHANNEL_COUNT 280
 
 static hw_tx_cfg_t tx_cfg;
-static uint8_t current_channel_indexes_index = 0;
-static modulation_t current_modulation = MODULATION_GFSK;
+static uint16_t current_channel_indexes_index = 13; //108
 static phy_channel_band_t current_channel_band = PHY_BAND_868;
-static phy_channel_class_t current_channel_class = PHY_CLASS_NORMAL_RATE;
-static uint8_t channel_indexes[LO_RATE_CHANNEL_COUNT] = { 0 }; // reallocated later depending on band/class
-static uint8_t channel_count = LO_RATE_CHANNEL_COUNT;
+static phy_channel_class_t current_channel_class = PHY_CLASS_NORMAL_RATE; 
+static uint16_t channel_indexes[LO_RATE_CHANNEL_COUNT] = { 0 }; // reallocated later depending on band/class
+static uint16_t channel_count = LO_RATE_CHANNEL_COUNT;
 static uint8_t current_eirp_level = DEFAULT_EIRP;
+static phy_coding_t current_coding = PHY_CODING_RFU;
 
 void stop_radio(){
 #if defined USE_SI4460
@@ -117,13 +112,9 @@ void start_radio(){
 #endif
 }
 
-void configure_radio(modulation_t mod){
+void configure_radio(){
 #if defined USE_SI4460 || defined USE_SX127X
-    if(mod == MODULATION_CW){
-        hw_radio_continuous_tx(&tx_cfg, true);
-    } else {
-        hw_radio_continuous_tx(&tx_cfg, false);
-    }
+    hw_radio_continuous_tx(&tx_cfg, 0); //time of 0 is send unlimited
 
 #elif defined USE_CC1101
 
@@ -134,7 +125,7 @@ void configure_radio(modulation_t mod){
     cc1101_interface_write_single_patable(current_eirp_level);
     //cc1101_interface_write_single_reg(0x08, 0x22); // PKTCTRL0 random PN9 mode + disable data whitening
     cc1101_interface_write_single_reg(0x08, 0x22); // PKTCTRL0 disable data whitening, continious preamble
-    if(mod == MODULATION_CW) {
+    if(tx_cfg.channel_id.channel_header.ch_coding == PHY_CODING_CW) {
       cc1101_interface_write_single_reg(0x12, 0x30); // MDMCFG2
     } else {
       cc1101_interface_write_single_reg(0x12, 0x12); // MDMCFG2
@@ -159,7 +150,7 @@ void change_eirp(){
 
 void start()
 {
-    tx_cfg.channel_id.channel_header.ch_coding = PHY_CODING_PN9;
+    tx_cfg.channel_id.channel_header.ch_coding = current_coding;
     tx_cfg.channel_id.channel_header.ch_class = current_channel_class;
     tx_cfg.channel_id.channel_header.ch_freq_band = current_channel_band;
     tx_cfg.channel_id.center_freq_index = channel_indexes[current_channel_indexes_index];
@@ -188,9 +179,11 @@ void start()
 #endif
 
     /* Configure */
-    configure_radio(current_modulation);
+    DPRINT("configure_radio\n");
+    configure_radio();
 
     /* start the radio */
+    DPRINT("start_radio\n");
     start_radio();
 
 }
@@ -233,28 +226,47 @@ void release_packet_callback(hw_radio_packet_t* p) {
 
 void bootstrap()
 {
-    DPRINT("Device booted at time: %d\n", timer_get_counter_value()); // TODO not printed for some reason, debug later
+    DPRINT("Device booted at time: %d\n", timer_get_counter_value()); 
 
 #ifdef HAS_LCD
     lcd_write_string("cont TX \n");
 #endif
 
+    DPRINT("Initializing channels\n");
+
+    int16_t i = 0;
     switch(current_channel_class)
     {
-        case PHY_CLASS_NORMAL_RATE:
-          channel_count = NORMAL_RATE_CHANNEL_COUNT;
-            realloc(channel_indexes, channel_count);
-            for(int i = 0; i < channel_count; i++)
-                channel_indexes[i] = i * 8;
-
-            break;
         case PHY_CLASS_LO_RATE:
           channel_count = LO_RATE_CHANNEL_COUNT;
             realloc(channel_indexes, channel_count);
-            for(int i = 0; i < channel_count; i++)
+            
+            for(; i < channel_count; i++)
                 channel_indexes[i] = i;
 
             break;
+        case PHY_CLASS_NORMAL_RATE:
+          channel_count = NORMAL_RATE_CHANNEL_COUNT;
+            realloc(channel_indexes, channel_count);
+            
+            for(; i < channel_count-4; i++)
+                channel_indexes[i] = i*8;
+            channel_indexes[i++]=229;
+            channel_indexes[i++]=239;
+            channel_indexes[i++]=257;
+            channel_indexes[i++]=270;
+
+            break;
+        case PHY_CLASS_HI_RATE:
+          channel_count = HI_RATE_CHANNEL_COUNT;
+            realloc(channel_indexes, channel_count);
+
+            for(; i < channel_count-4; i++)
+                channel_indexes[i] = i*8;
+            channel_indexes[i++]=229;
+            channel_indexes[i++]=239;
+            channel_indexes[i++]=257;
+            channel_indexes[i++]=270; 
     }
 
 #if PLATFORM_NUM_BUTTONS > 1
@@ -262,8 +274,10 @@ void bootstrap()
     ubutton_register_callback(1, &userbutton_callback);
 #endif
 
+    DPRINT("Init radio\n");
     hw_radio_init(&alloc_packet_callback, &release_packet_callback);
 
+    DPRINT("start\n");
     sched_register_task(&start);
     timer_post_task_delay(&start, 500);
 }

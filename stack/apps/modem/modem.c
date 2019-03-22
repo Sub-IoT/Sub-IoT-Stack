@@ -38,8 +38,7 @@
 #include "platform.h"
 #include "hwblockdevice.h"
 
-// This example application contains a modem which can be used from another MCU through
-// the serial interface
+//This application contains a modem which can be used from another MCU through the serial interface
 
 void bootstrap()
 {
@@ -49,7 +48,6 @@ void bootstrap()
 #else
     modem_interface_init(PLATFORM_MODEM_INTERFACE_UART, PLATFORM_MODEM_INTERFACE_BAUDRATE, (pin_id_t) 0, (pin_id_t) 0);
 #endif
-
 
     blockdevice_init(d7_systemfiles_blockdevice);
     d7ap_init(d7_systemfiles_blockdevice);
