@@ -89,7 +89,6 @@ static phy_channel_band_t current_channel_band = PHY_BAND_868;
 static phy_channel_class_t current_channel_class = PHY_CLASS_NORMAL_RATE;
 static uint16_t channel_indexes[LO_RATE_CHANNEL_COUNT] = { 0 }; // reallocated later depending on band/class
 static uint16_t channel_count = NORMAL_RATE_CHANNEL_COUNT;
-static bool receive_data = true;
 
 void stop_radio(){
 #if defined USE_SI4460
@@ -106,9 +105,6 @@ void start_radio(){
         /* start the device as receiver  */
         ezradio_change_state(EZRADIO_CMD_CHANGE_STATE_ARG_NEXT_STATE1_NEW_STATE_ENUM_READY);
         hw_radio_set_rx(&rx_cfg, NULL, NULL);
-#elif defined USE_SX127X
-        start_hw_radio_continuous_rx(0);
-        return;
 #endif
         while (true) {
             int16_t rss = hw_radio_get_rssi();
@@ -137,7 +133,7 @@ void configure_radio(modulation_t mod){
     cc1101_interface_write_single_reg(0x12, mod); // MDMCFG2
     cc1101_interface_strobe(0x32); // strobe calibrate
 #elif defined USE_SX127X
-    hw_radio_continuous_rx(&rx_cfg);
+    hw_radio_continuous_rx(&rx_cfg, 0);
 #endif
 }
 

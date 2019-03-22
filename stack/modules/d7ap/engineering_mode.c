@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-#include "d7ap_em.h"
+#include "engineering_mode.h"
 
 #include "d7ap.h"
 #include "log.h"
@@ -32,14 +32,16 @@
 #endif
 
 static uint8_t timeout_em = 0;
+static hw_tx_cfg_t tx_cfg;
+static hw_rx_cfg_t rx_cfg;
 
 
 static void start_tx(){
-    start_hw_radio_continuous_tx(timeout_em);
+    hw_radio_continuous_tx(&tx_cfg, timeout_em);
 }
 
 static void start_rx(){
-    start_hw_radio_continuous_rx(timeout_em);
+    hw_radio_continuous_rx(&rx_cfg, timeout_em);
 }
 
 static void em_file_change_callback(uint8_t file_id){
@@ -59,7 +61,6 @@ static void em_file_change_callback(uint8_t file_id){
     {
       case EM_MODE_CONTINUOUS_TX:
         DPRINT("EM_MODE_CONTINUOUS_TX");
-        hw_tx_cfg_t tx_cfg;
         memcpy( &(tx_cfg.channel_id), &(em_command->channel_id), sizeof(channel_id_t));
         tx_cfg.eirp = em_command->eirp;
 
@@ -67,9 +68,6 @@ static void em_file_change_callback(uint8_t file_id){
         timeout_em, tx_cfg.channel_id.channel_header.ch_coding, tx_cfg.channel_id.channel_header.ch_class,
         tx_cfg.channel_id.channel_header.ch_freq_band, tx_cfg.channel_id.center_freq_index,
         tx_cfg.syncword_class, tx_cfg.eirp, em_command->flags);
-        
-        /* Configure */
-        hw_radio_continuous_tx(&tx_cfg, (em_command->flags & EM_FLAGS_MODULATED_MASK) == EM_FLAGS_UNMODULATED);
 
         /* start the radio */
         sched_register_task(&start_tx);
@@ -79,12 +77,7 @@ static void em_file_change_callback(uint8_t file_id){
         break;
       case EM_MODE_CONTINUOUS_RX:
         DPRINT("EM_MODE_CONTINUOUS_RX");
-        hw_rx_cfg_t rx_cfg;
         memcpy( &(rx_cfg.channel_id), &(em_command->channel_id), sizeof(channel_id_t));
-
-        
-        /* Configure */
-        hw_radio_continuous_rx(&rx_cfg);
 
         /* start the radio */
         sched_register_task(&start_rx);
@@ -94,7 +87,7 @@ static void em_file_change_callback(uint8_t file_id){
     }
 }
 
-error_t em_init()
+error_t engineering_mode_init()
 {
   // always init EM file to 0 to avoid bricking the device
   uint8_t init_data[D7A_FILE_ENGINEERING_MODE_SIZE] = {0};

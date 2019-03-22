@@ -16,25 +16,23 @@
  * limitations under the License.
  */
 
-/*! \file d7ap_em.h
- * \addtogroup D7AP_EM
+/*! \file engineering_mode.h
+ * \addtogroup ENGINEERING_MODE_H
  * \ingroup D7AP
  * @{
- * \brief D7AP enginieering mode
+ * \brief D7AP engineering mode
  * \author   maarten.weyn@aloxy.io
  */
 
 
-#ifndef D7AP_EM_H
-#define D7AP_EM_H
+#ifndef ENGINEERING_MODE_H
+#define ENGINEERING_MODE_H
 
 #include "types.h"
-#include "hwradio.h"
-#include "MODULE_D7AP_defs.h"
 
-error_t em_init(); 
+error_t engineering_mode_init(); 
 
 
-#endif //D7AP_EM_H
+#endif //ENGINEERING_MODE_H
 
 /** @}*/

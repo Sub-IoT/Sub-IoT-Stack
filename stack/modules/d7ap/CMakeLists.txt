@@ -84,7 +84,7 @@ ADD_LIBRARY(d7ap STATIC
     d7asp.c
     d7atp.c
     d7anp.c
-    d7ap_em.c
+    engineering_mode.c
     packet_queue.c
     packet.c
     dll.c

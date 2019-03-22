@@ -38,16 +38,7 @@
 #include "platform.h"
 #include "hwblockdevice.h"
 
-#include "hwradio.h"
-
-// packet callbacks only here to make hwradio_init() happy, not used
-hw_radio_packet_t* alloc_packet_callback(uint8_t length) {
-  assert(false);
-}
-
-void release_packet_callback(hw_radio_packet_t* p) {
-  assert(false);
-}
+//This application contains a modem which can be used from another MCU through the serial interface
 
 void bootstrap()
 {

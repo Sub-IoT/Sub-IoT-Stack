@@ -268,7 +268,7 @@ static void read_fifo(uint8_t* buffer, uint8_t size) {
   spi_exchange_byte(sx127x_spi, 0x00);
   spi_exchange_bytes(sx127x_spi, NULL, buffer, size);
   spi_deselect(sx127x_spi);
-  // DPRINT("READ FIFO %i: %d", size, buffer[0]);
+  DPRINT("READ FIFO %i", size);
 }
 
 static opmode_t get_opmode() {
@@ -395,9 +395,9 @@ static bool is_lora_channel(const channel_id_t* channel) {
 }
 
 static void configure_channel(const channel_id_t* channel) {
-  /*if(phy_radio_channel_ids_equal(&current_channel_id, channel)) {
+  if(phy_radio_channel_ids_equal(&current_channel_id, channel)) {
     return;
-  }*/
+  }
 
   if(is_sx1272) {
     assert(channel->channel_header.ch_freq_band != PHY_BAND_433);
@@ -1496,7 +1496,22 @@ int16_t hw_radio_get_rssi() {
         return (- read_reg(REG_RSSIVALUE) / 2);
 }
 
-void start_hw_radio_continuous_tx(uint8_t time_period) { 
+void hw_radio_continuous_tx(hw_tx_cfg_t const* tx_cfg, uint8_t time_period) {
+  DPRINT("hw_radio_continuous_tx");
+
+  resume_from_sleep_mode();
+
+  flush_fifo();
+
+  configure_channel(&(tx_cfg->channel_id));
+  configure_eirp(tx_cfg->eirp);
+  //DPRINT("channel is: %d",tx_cfg->channel_id.center_freq_index);
+
+  if(tx_cfg->channel_id.channel_header.ch_coding == PHY_CODING_CW){ //set frequency deviation to 0 to send a continuous wave
+    write_reg(REG_FDEVMSB, 0x00);
+    write_reg(REG_FDEVLSB, 0x00);
+  }
+  
   bool const_radio = (time_period == 0);
   state = STATE_TX;
   set_opmode(OPMODE_TX);
@@ -1549,24 +1564,7 @@ void start_hw_radio_continuous_tx(uint8_t time_period) {
   switch_to_sleep_mode();
 }
 
-void hw_radio_continuous_tx(hw_tx_cfg_t const* tx_cfg, bool continuous_wave) {
-  DPRINT("hw_radio_continuous_tx");
-
-  resume_from_sleep_mode();
-
-  flush_fifo();
-
-  configure_channel(&(tx_cfg->channel_id));
-  configure_eirp(tx_cfg->eirp);
-  //DPRINT("channel is: %d",tx_cfg->channel_id.center_freq_index);
-
-  if(continuous_wave){ //set frequency deviation to 0 to send a continuous wave
-    write_reg(REG_FDEVMSB, 0x00);
-    write_reg(REG_FDEVLSB, 0x00);
-  }
-}
-
-void hw_radio_continuous_rx(hw_rx_cfg_t const* rx_cfg) {
+void hw_radio_continuous_rx(hw_rx_cfg_t const* rx_cfg, uint8_t time_period) {
   resume_from_sleep_mode();
   //configure_channel(&(rx_cfg->channel_id));
   //configure_syncword(rx_cfg->syncword_class, &(rx_cfg->channel_id));
@@ -1611,9 +1609,7 @@ void hw_radio_continuous_rx(hw_rx_cfg_t const* rx_cfg) {
 
     rssi_valid_callback(get_rssi());
   }
-}
 
-void start_hw_radio_continuous_rx(uint8_t time_period){
   DPRINT("start_hw_radio_continuous_rx");
   bool const_rx = (time_period == 0);
 

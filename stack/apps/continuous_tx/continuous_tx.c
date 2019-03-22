@@ -79,18 +79,12 @@
   #define MAX_EIRP 0 // TODO
 #endif
 
-typedef enum {
-  MODULATION_CW,
-  MODULATION_GFSK,
-} modulation_t;
-
 #define HI_RATE_CHANNEL_COUNT 32
 #define NORMAL_RATE_CHANNEL_COUNT 32
 #define LO_RATE_CHANNEL_COUNT 280
 
 static hw_tx_cfg_t tx_cfg;
 static uint16_t current_channel_indexes_index = 13; //108
-static modulation_t current_modulation = MODULATION_GFSK; // MODULATION_CW; 
 static phy_channel_band_t current_channel_band = PHY_BAND_868;
 static phy_channel_class_t current_channel_class = PHY_CLASS_NORMAL_RATE; 
 static uint16_t channel_indexes[LO_RATE_CHANNEL_COUNT] = { 0 }; // reallocated later depending on band/class
@@ -116,16 +110,11 @@ void start_radio(){
     cc1101_interface_strobe(RF_SCAL);
     cc1101_interface_strobe(RF_STX);
 #endif
-#if defined USE_SX127X
-    log_print_string("sending \n");
-    start_hw_radio_continuous_tx(0); //time of 0 is send unlimited
-#endif
 }
 
-void configure_radio(modulation_t mod){
+void configure_radio(){
 #if defined USE_SI4460 || defined USE_SX127X
-    hw_radio_continuous_tx(&tx_cfg, mod == MODULATION_CW);
-
+    hw_radio_continuous_tx(&tx_cfg, 0); //time of 0 is send unlimited
 
 #elif defined USE_CC1101
 
@@ -136,7 +125,7 @@ void configure_radio(modulation_t mod){
     cc1101_interface_write_single_patable(current_eirp_level);
     //cc1101_interface_write_single_reg(0x08, 0x22); // PKTCTRL0 random PN9 mode + disable data whitening
     cc1101_interface_write_single_reg(0x08, 0x22); // PKTCTRL0 disable data whitening, continious preamble
-    if(mod == MODULATION_CW) {
+    if(tx_cfg.channel_id.channel_header.ch_coding == PHY_CODING_CW) {
       cc1101_interface_write_single_reg(0x12, 0x30); // MDMCFG2
     } else {
       cc1101_interface_write_single_reg(0x12, 0x12); // MDMCFG2
@@ -191,7 +180,7 @@ void start()
 
     /* Configure */
     DPRINT("configure_radio\n");
-    configure_radio(current_modulation);
+    configure_radio();
 
     /* start the radio */
     DPRINT("start_radio\n");

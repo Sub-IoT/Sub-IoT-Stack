@@ -37,10 +37,6 @@
 #define EM_MODE_CONTINUOUS_TX  1
 #define EM_MODE_CONTINUOUS_RX  2
 
-#define EM_FLAGS_UNMODULATED  0 << 0
-#define EM_FLAGS_MODULATED    1 << 0
-#define EM_FLAGS_MODULATED_MASK 0x01
-
 /* \brief The coding schemes and corresponding indices as defined in D7A
  *
  */
@@ -48,7 +44,8 @@ typedef enum
 {
     PHY_CODING_PN9 = 0x00,
     PHY_CODING_RFU = 0x01,
-    PHY_CODING_FEC_PN9 = 0x02
+    PHY_CODING_FEC_PN9 = 0x02,
+    PHY_CODING_CW = 0x03
 } phy_coding_t;
 
 /* \brief The channel bands and corresponding band indices as defined in D7A
