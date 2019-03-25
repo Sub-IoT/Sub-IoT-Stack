@@ -48,7 +48,7 @@
 
 
 // configuration options
-#define PACKET_SIZE 255
+#define PACKET_SIZE 10
 
 #ifdef FRAMEWORK_LOG_ENABLED
 #include "log.h"
@@ -69,12 +69,17 @@
 #define COMMAND_DATA "DATA"
 
 // Define the maximum length of the user data according the size occupied already by the parameters length, counter, id and crc
-#define DATA_MAX_LEN PACKET_SIZE - 2*sizeof(uint16_t) /* word for crc + counter */  - sizeof(uint64_t) /* id */ - 1 /*byte length*/
+#define PACKET_METADATA_SIZE (2*sizeof(uint16_t) /* word for crc + counter */  + 1 /*byte length*/)
+#if(PACKET_SIZE <= 5)
+  # error
+#endif
 
-#define UART_RX_BUFFER_SIZE COMMAND_SIZE + DATA_MAX_LEN
+#define FILL_DATA_SIZE PACKET_SIZE - PACKET_METADATA_SIZE
+
+#define UART_RX_BUFFER_SIZE 512
 static uint8_t uart_rx_buffer[UART_RX_BUFFER_SIZE] = { 0 };
 static fifo_t uart_rx_fifo;
-static char TX_DATA[DATA_MAX_LEN+1];
+static uint8_t TX_DATA[FILL_DATA_SIZE + 1];
 
 
 typedef enum
@@ -112,7 +117,6 @@ static uint16_t missed_packets_counter = 0;
 static uint16_t received_packets_counter = 0;
 static int16_t tx_packet_delay_s = 0;
 static char lcd_msg[15];
-static uint64_t id;
 static bool is_mode_rx = false;
 static state_t current_state = STATE_CONFIG_DIRECTION;
 
@@ -124,6 +128,7 @@ static void increase_channel();
 static void start_rx() {
     DPRINT("start RX");
     current_state = STATE_RUNNING;
+    rx_cfg.channel_id = current_channel_id;
     hw_radio_set_rx(&rx_cfg, &packet_received, NULL);
 }
 
@@ -131,13 +136,12 @@ static void transmit_packet() {
     DPRINT("transmitting packet");
     current_state = STATE_RUNNING;
     counter++;
-    data[0] = sizeof(id) + sizeof(counter) + strlen(TX_DATA) + sizeof(uint16_t); /* CRC is an uint16_t */
-    memcpy(data + 1, &id, sizeof(id));
-    memcpy(data + 1 + sizeof(id), &counter, sizeof(counter));
+    data[0] = sizeof(counter) + FILL_DATA_SIZE + sizeof(uint16_t); /* CRC is an uint16_t */
+    memcpy(data + 1, &counter, sizeof(counter));
     /* the CRC calculation shall include all the bytes of the frame including the byte for the length*/
-    memcpy(data + 1 + sizeof(id) + sizeof(counter), TX_DATA, strlen(TX_DATA));
+    memcpy(data + 1 + sizeof(counter), TX_DATA, FILL_DATA_SIZE);
     uint16_t crc = __builtin_bswap16(crc_calculate(data, data[0] + 1 - 2));
-    memcpy(data + 1 + sizeof(id) + sizeof(counter) + strlen(TX_DATA), &crc, 2);
+    memcpy(data + 1 + sizeof(counter) + FILL_DATA_SIZE, &crc, 2);
     memcpy(&tx_packet->data, data, sizeof(data));
 
     tx_cfg.channel_id = current_channel_id;
@@ -189,17 +193,14 @@ static void packet_received(hw_radio_packet_t* packet) {
 		#endif
 		uint16_t msg_counter = 0;
         uint64_t msg_id;
-        uint16_t data_len = packet->length - sizeof(msg_id) - sizeof(msg_counter) - 2;
+        uint16_t data_len = packet->length - sizeof(msg_counter) - 2;
 
-        char rx_data[DATA_MAX_LEN+1];
-        memcpy(&msg_id, packet->data + 1, sizeof(msg_id));
-        memcpy(&msg_counter, packet->data + 1 + sizeof(msg_id), sizeof(msg_counter));
-        memcpy(rx_data, packet->data + 1 + sizeof(msg_id) + sizeof(msg_counter), data_len);
-        rx_data[data_len] = '\0';
+        uint8_t rx_data[FILL_DATA_SIZE+1];
+        memcpy(&msg_counter, packet->data + 1, sizeof(msg_counter));
+        memcpy(rx_data, packet->data + 1 + sizeof(msg_counter), data_len);
         char chan[8];
         channel_id_to_string(&(packet->rx_meta.rx_cfg.channel_id), chan, sizeof(chan));
-		console_printf("DATA received: %s\n", rx_data);
-		console_printf("%7s, counter <%i>, rssi <%idBm>, msgId <%lu>, Id <%lu>, timestamp <%lu>\n", chan, msg_counter, packet->rx_meta.rssi, (unsigned long)msg_id, (unsigned long)id, packet->rx_meta.timestamp);
+                console_printf("%7s, counter <%i>, rssi <%idBm>, length <%i>, timestamp <%lu>\n", chan, msg_counter, packet->rx_meta.rssi, packet->length + 1, packet->rx_meta.timestamp);
 
 		if(counter == 0)
 		{
@@ -260,7 +261,7 @@ static void packet_transmitted(hw_radio_packet_t* packet) {
         delay = TIMER_TICKS_PER_SEC * tx_packet_delay_s;
 
     //increase_channel();
-    timer_post_task(&transmit_packet, delay);
+    timer_post_task_delay(&transmit_packet, delay);
     hw_watchdog_feed();
 }
 
@@ -420,6 +421,7 @@ static void process_command_chan()
     fifo_pop(&uart_rx_fifo, param, COMMAND_CHAN_PARAM_SIZE);
 
     channel_id_t new_channel;
+    new_channel.channel_header.ch_coding = PHY_CODING_PN9;
 
     if(strncmp((const char*)param, "433", 3) == 0)
         new_channel.channel_header.ch_freq_band = PHY_BAND_433;
@@ -460,7 +462,7 @@ static void process_command_chan()
 
     char str[20];
     channel_id_to_string(&current_channel_id, str, sizeof(str));
-    console_print(str);
+    console_printf("Switch to channel %s\n", str);
 
 #ifdef PLATFORM_EFM32GG_STK3700
 #elif HAS_LCD
@@ -484,12 +486,12 @@ static void process_uart_rx_fifo()
         fifo_pop(&uart_rx_fifo, received_cmd, COMMAND_SIZE);
         if(strncmp((const char*)received_cmd, COMMAND_CHAN, COMMAND_SIZE) == 0)
         {
-            if (fifo_get_size(&uart_rx_fifo) == COMMAND_CHAN_PARAM_SIZE)
+            if (fifo_get_size(&uart_rx_fifo) >= COMMAND_CHAN_PARAM_SIZE)
                 process_command_chan();
         }
         else if(strncmp((const char*)received_cmd, COMMAND_TRAN, COMMAND_SIZE) == 0)
         {
-            if (fifo_get_size(&uart_rx_fifo)  == COMMAND_TRAN_PARAM_SIZE)
+            if (fifo_get_size(&uart_rx_fifo)  >= COMMAND_TRAN_PARAM_SIZE)
             {
                 uint8_t param[COMMAND_TRAN_PARAM_SIZE];
                 fifo_pop(&uart_rx_fifo, param, COMMAND_TRAN_PARAM_SIZE);
@@ -519,7 +521,7 @@ static void process_uart_rx_fifo()
         else if(strncmp((const char*)received_cmd, COMMAND_DATA, COMMAND_SIZE) == 0)
         {
             DPRINT("New DATA to be sent \r\n");
-            int16_t data_len = MIN(DATA_MAX_LEN, fifo_get_size(&uart_rx_fifo));
+            int16_t data_len = MIN(FILL_DATA_SIZE, fifo_get_size(&uart_rx_fifo));
 
             fifo_pop(&uart_rx_fifo, TX_DATA, data_len);
             TX_DATA[data_len] = '\0'; // null terminate the data string
@@ -563,9 +565,9 @@ void bootstrap() {
     console_print("  TRANsss      transmit a packet every sss seconds.\r\n");
     console_print("  RECV         receive packets\r\n");
     console_print("  RSET         reset module\r\n");
+    console_print("\r\n");
 
-    id = hw_get_unique_id();
-    strcpy(TX_DATA, "TEST");
+    memset(TX_DATA, 0, FILL_DATA_SIZE);
     hw_radio_init(&alloc_new_packet, &release_packet);
 
     rx_cfg.channel_id = current_channel_id;
@@ -597,6 +599,6 @@ void bootstrap() {
     	lcd_write_line(6, str);
 #endif
 
-    timer_post_task(&transmit_packet, TIMER_TICKS_PER_SEC * 1);
+    //timer_post_task(&transmit_packet, TIMER_TICKS_PER_SEC * 1);
 
 }
