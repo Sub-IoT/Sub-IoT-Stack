@@ -1507,6 +1507,10 @@ void hw_radio_continuous_tx(hw_tx_cfg_t const* tx_cfg, uint8_t time_period) {
   configure_eirp(tx_cfg->eirp);
   //DPRINT("channel is: %d",tx_cfg->channel_id.center_freq_index);
 
+   if(tx_cfg->channel_id.channel_header.ch_class == PHY_CLASS_LORA) {
+    write_reg(REG_LR_MODEMCONFIG2, read_reg(REG_LR_MODEMCONFIG2) | (1 << 3));
+  }
+
   if(tx_cfg->channel_id.channel_header.ch_coding == PHY_CODING_CW){ //set frequency deviation to 0 to send a continuous wave
     write_reg(REG_FDEVMSB, 0x00);
     write_reg(REG_FDEVLSB, 0x00);
