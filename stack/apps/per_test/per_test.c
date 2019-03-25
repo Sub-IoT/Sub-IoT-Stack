@@ -71,7 +71,7 @@
 // Define the maximum length of the user data according the size occupied already by the parameters length, counter, id and crc
 #define PACKET_METADATA_SIZE (2*sizeof(uint16_t) /* word for crc + counter */  + 1 /*byte length*/)
 #if(PACKET_SIZE <= 5)
-  # error
+# error
 #endif
 
 #define FILL_DATA_SIZE PACKET_SIZE - PACKET_METADATA_SIZE
@@ -90,14 +90,14 @@ typedef enum
 } state_t;
 
 static channel_id_t current_channel_id = {
-	.channel_header.ch_coding = PHY_CODING_PN9,
-	.channel_header.ch_class = PHY_CLASS_NORMAL_RATE,
-	.channel_header.ch_freq_band = PHY_BAND_433,
-	.center_freq_index = 0
+    .channel_header.ch_coding = PHY_CODING_PN9,
+    .channel_header.ch_class = PHY_CLASS_NORMAL_RATE,
+    .channel_header.ch_freq_band = PHY_BAND_433,
+    .center_freq_index = 0
 };
 
 static hw_rx_cfg_t rx_cfg = {
-	// channel_id set in bootstrap
+    // channel_id set in bootstrap
     .syncword_class = PHY_SYNCWORD_CLASS0
 };
 
@@ -163,16 +163,16 @@ static void channel_id_to_string(channel_id_t* channel, char* str, size_t len) {
     char band[3];
     switch(channel->channel_header.ch_class)
     {
-        case PHY_CLASS_LO_RATE: rate = 'L'; break;
-        case PHY_CLASS_NORMAL_RATE: rate = 'N'; break;
-        case PHY_CLASS_HI_RATE: rate = 'H'; break;
+    case PHY_CLASS_LO_RATE: rate = 'L'; break;
+    case PHY_CLASS_NORMAL_RATE: rate = 'N'; break;
+    case PHY_CLASS_HI_RATE: rate = 'H'; break;
     }
 
     switch(channel->channel_header.ch_freq_band)
     {
-        case PHY_BAND_433: strncpy(band, "433", sizeof(band)); break;
-        case PHY_BAND_868: strncpy(band, "868", sizeof(band)); break;
-        case PHY_BAND_915: strncpy(band, "915", sizeof(band)); break;
+    case PHY_BAND_433: strncpy(band, "433", sizeof(band)); break;
+    case PHY_BAND_868: strncpy(band, "868", sizeof(band)); break;
+    case PHY_BAND_915: strncpy(band, "915", sizeof(band)); break;
     }
 
     snprintf(str, len, "%.3s%c%03i", band, rate, channel->center_freq_index);
@@ -188,10 +188,10 @@ static void packet_received(hw_radio_packet_t* packet) {
     }
     else
     {
-		#if PLATFORM_NUM_LEDS > 0
-			led_toggle(0);
-		#endif
-		uint16_t msg_counter = 0;
+#if PLATFORM_NUM_LEDS > 0
+        led_toggle(0);
+#endif
+        uint16_t msg_counter = 0;
         uint64_t msg_id;
         uint16_t data_len = packet->length - sizeof(msg_counter) - 2;
 
@@ -200,42 +200,42 @@ static void packet_received(hw_radio_packet_t* packet) {
         memcpy(rx_data, packet->data + 1 + sizeof(msg_counter), data_len);
         char chan[8];
         channel_id_to_string(&(packet->rx_meta.rx_cfg.channel_id), chan, sizeof(chan));
-                console_printf("%7s, counter <%i>, rssi <%idBm>, length <%i>, timestamp <%lu>\n", chan, msg_counter, packet->rx_meta.rssi, packet->length + 1, packet->rx_meta.timestamp);
+        console_printf("%7s, counter <%i>, rssi <%idBm>, length <%i>, timestamp <%lu>\n", chan, msg_counter, packet->rx_meta.rssi, packet->length + 1, packet->rx_meta.timestamp);
 
-		if(counter == 0)
-		{
-			// just start, assume received all previous counters to reset PER to 0%
-			received_packets_counter = msg_counter - 1;
-			counter = msg_counter - 1;
-		}
+        if(counter == 0)
+        {
+            // just start, assume received all previous counters to reset PER to 0%
+            received_packets_counter = msg_counter - 1;
+            counter = msg_counter - 1;
+        }
 
-		uint16_t expected_counter = counter + 1;
-		if(msg_counter == expected_counter)
-		{
-			received_packets_counter++;
-			counter++;
-		}
-		else if(msg_counter > expected_counter)
-		{
-			missed_packets_counter += msg_counter - expected_counter;
-			counter = msg_counter;
-		}
-		else
-		{
+        uint16_t expected_counter = counter + 1;
+        if(msg_counter == expected_counter)
+        {
+            received_packets_counter++;
+            counter++;
+        }
+        else if(msg_counter > expected_counter)
+        {
+            missed_packets_counter += msg_counter - expected_counter;
+            counter = msg_counter;
+        }
+        else
+        {
             sched_post_task(&start);
-		}
+        }
 
-	    double per = 0;
-	    if(msg_counter > 0)
-	        per = 100.0 - ((double)received_packets_counter / (double)msg_counter) * 100.0;
+        double per = 0;
+        if(msg_counter > 0)
+            per = 100.0 - ((double)received_packets_counter / (double)msg_counter) * 100.0;
 
-	    sprintf(lcd_msg, "%i %i", (int)per, packet->rx_meta.rssi);
-	    console_printf("RX failure rate = %i %%", (int)per);
+        sprintf(lcd_msg, "%i %i", (int)per, packet->rx_meta.rssi);
+        console_printf("RX failure rate = %i %%", (int)per);
 
 #ifdef PLATFORM_EFM32GG_STK3700
-	    lcd_write_string(lcd_msg);
+        lcd_write_string(lcd_msg);
 #elif defined HAS_LCD
-	    lcd_write_line(4, lcd_msg);
+        lcd_write_line(4, lcd_msg);
 #endif
 
     }
@@ -249,9 +249,9 @@ static void packet_transmitted(hw_radio_packet_t* packet) {
     DPRINT("packet transmitted");
     sprintf(lcd_msg, "TX %i", counter);
 #ifdef PLATFORM_EFM32GG_STK3700
-	    lcd_write_string(lcd_msg);
+    lcd_write_string(lcd_msg);
 #elif defined HAS_LCD
-	    lcd_write_line(4, lcd_msg);
+    lcd_write_line(4, lcd_msg);
 #endif
 
     timer_tick_t delay;
@@ -266,48 +266,48 @@ static void packet_transmitted(hw_radio_packet_t* packet) {
 }
 
 static void stop() {
-	// make sure to cancel tasks which might me pending already
-	hw_radio_set_idle();
+    // make sure to cancel tasks which might me pending already
+    hw_radio_set_idle();
 
-	if(is_mode_rx) {
-		sched_cancel_task(&start_rx);
-	} else {
-		timer_cancel_task(&transmit_packet);
-		sched_cancel_task(&transmit_packet);
-	}
+    if(is_mode_rx) {
+        sched_cancel_task(&start_rx);
+    } else {
+        timer_cancel_task(&transmit_packet);
+        sched_cancel_task(&transmit_packet);
+    }
 }
 
 static void increase_channel() {
-	if (current_channel_id.channel_header.ch_freq_band == PHY_BAND_433)
-	{
-		if (current_channel_id.channel_header.ch_class == PHY_CLASS_LO_RATE)
-		{
-			current_channel_id.center_freq_index = (current_channel_id.center_freq_index == 68) ? 0 : current_channel_id.center_freq_index + 1;
-		}
-		else
-		{
-			current_channel_id.center_freq_index = (current_channel_id.center_freq_index == 56) ? 0 : current_channel_id.center_freq_index + 8;
-		}
-	}else if (current_channel_id.channel_header.ch_freq_band == PHY_BAND_868)
-	{
-		if (current_channel_id.channel_header.ch_class == PHY_CLASS_LO_RATE)
-		{
-			current_channel_id.center_freq_index = (current_channel_id.center_freq_index == 279) ? 0 : current_channel_id.center_freq_index + 1;
-		}
-		else
-		{
-			current_channel_id.center_freq_index = (current_channel_id.center_freq_index == 272) ? 0 : current_channel_id.center_freq_index + 8;
-		}
-	}
+    if (current_channel_id.channel_header.ch_freq_band == PHY_BAND_433)
+    {
+        if (current_channel_id.channel_header.ch_class == PHY_CLASS_LO_RATE)
+        {
+            current_channel_id.center_freq_index = (current_channel_id.center_freq_index == 68) ? 0 : current_channel_id.center_freq_index + 1;
+        }
+        else
+        {
+            current_channel_id.center_freq_index = (current_channel_id.center_freq_index == 56) ? 0 : current_channel_id.center_freq_index + 8;
+        }
+    }else if (current_channel_id.channel_header.ch_freq_band == PHY_BAND_868)
+    {
+        if (current_channel_id.channel_header.ch_class == PHY_CLASS_LO_RATE)
+        {
+            current_channel_id.center_freq_index = (current_channel_id.center_freq_index == 279) ? 0 : current_channel_id.center_freq_index + 1;
+        }
+        else
+        {
+            current_channel_id.center_freq_index = (current_channel_id.center_freq_index == 272) ? 0 : current_channel_id.center_freq_index + 8;
+        }
+    }
 
 
 
-	#ifdef PLATFORM_EZR32LG_WSTK6200A
-		char str[20];
-		channel_id_to_string(&current_channel_id, str, sizeof(str));
-		console_print(str);
-		lcd_write_line(6, str);
-	#endif
+#ifdef PLATFORM_EZR32LG_WSTK6200A
+    char str[20];
+    channel_id_to_string(&current_channel_id, str, sizeof(str));
+    console_print(str);
+    lcd_write_line(6, str);
+#endif
 }
 
 static void start() {
@@ -320,94 +320,94 @@ static void start() {
 
     switch(current_state)
     {
-        case STATE_CONFIG_DIRECTION:
-            is_mode_rx? sprintf(lcd_msg, "PER RX") : sprintf(lcd_msg, "PER TX");
-            break;
-        case STATE_CONFIG_DATARATE:
+    case STATE_CONFIG_DIRECTION:
+        is_mode_rx? sprintf(lcd_msg, "PER RX") : sprintf(lcd_msg, "PER TX");
+        break;
+    case STATE_CONFIG_DATARATE:
 #ifdef HAS_LCD
-        	lcd_line = 1;
+        lcd_line = 1;
 #endif
-            switch(current_channel_id.channel_header.ch_class)
-            {
-                case PHY_CLASS_LO_RATE:
-                    sprintf(lcd_msg, "LO-RATE");
-                    break;
-                case PHY_CLASS_NORMAL_RATE:
-                    sprintf(lcd_msg, "NOR-RATE");
-                    break;
-                case PHY_CLASS_HI_RATE:
-                    sprintf(lcd_msg, "HI-RATE");
-                    break;
-            }
+        switch(current_channel_id.channel_header.ch_class)
+        {
+        case PHY_CLASS_LO_RATE:
+            sprintf(lcd_msg, "LO-RATE");
             break;
-        case STATE_RUNNING:
+        case PHY_CLASS_NORMAL_RATE:
+            sprintf(lcd_msg, "NOR-RATE");
+            break;
+        case PHY_CLASS_HI_RATE:
+            sprintf(lcd_msg, "HI-RATE");
+            break;
+        }
+        break;
+    case STATE_RUNNING:
 #ifdef HAS_LCD
-        	lcd_line = 2;
+        lcd_line = 2;
 #endif
-            if(is_mode_rx)
-            {
-                sprintf(lcd_msg, "RUN RX");
-                //lcd_write_string(lcd_msg);
-                console_printf("%s,%s,%s,%s,%s,%s\n", "channel_id", "counter", "rssi", "tx_id", "rx_id", "timestamp");
-                rx_cfg.channel_id = current_channel_id;
-                timer_post_task(&start_rx, TIMER_TICKS_PER_SEC * 5);
-            }
-            else
-            {
-                hw_radio_set_idle();
-                sprintf(lcd_msg, "RUN TX");
-                //lcd_write_string(lcd_msg);
-                timer_post_task(&transmit_packet, TIMER_TICKS_PER_SEC * 5);
-            }
-            break;
+        if(is_mode_rx)
+        {
+            sprintf(lcd_msg, "RUN RX");
+            //lcd_write_string(lcd_msg);
+            console_printf("%s,%s,%s,%s,%s,%s\n", "channel_id", "counter", "rssi", "tx_id", "rx_id", "timestamp");
+            rx_cfg.channel_id = current_channel_id;
+            timer_post_task(&start_rx, TIMER_TICKS_PER_SEC * 5);
+        }
+        else
+        {
+            hw_radio_set_idle();
+            sprintf(lcd_msg, "RUN TX");
+            //lcd_write_string(lcd_msg);
+            timer_post_task(&transmit_packet, TIMER_TICKS_PER_SEC * 5);
+        }
+        break;
     }
 
 #ifdef PLATFORM_EFM32GG_STK3700
-	lcd_write_string(lcd_msg);
+    lcd_write_string(lcd_msg);
 #elif defined HAS_LCD
-	lcd_write_line(lcd_line, lcd_msg);
+    lcd_write_line(lcd_line, lcd_msg);
 #endif
 
 }
 
 static void userbutton_callback(button_id_t button_id)
 {
-	stop();
+    stop();
     switch(button_id)
     {
-        case 0:
-            switch(current_state)
-            {
-                case STATE_CONFIG_DIRECTION:
-                    current_state = STATE_CONFIG_DATARATE;
-                    break;
-                case STATE_CONFIG_DATARATE:
-                    current_state = STATE_RUNNING;
-                    break;
-                case STATE_RUNNING:
-                    current_state = STATE_CONFIG_DIRECTION;
-                    break;
-            }
+    case 0:
+        switch(current_state)
+        {
+        case STATE_CONFIG_DIRECTION:
+            current_state = STATE_CONFIG_DATARATE;
             break;
-        case 1:
-            switch(current_state)
-            {
-                case STATE_CONFIG_DIRECTION:
-                    is_mode_rx = !is_mode_rx;
-                    break;
-                case STATE_CONFIG_DATARATE:
-                    if(current_channel_id.channel_header.ch_class == PHY_CLASS_NORMAL_RATE)
-                        current_channel_id.channel_header.ch_class = PHY_CLASS_LO_RATE;
-                    else
-                        current_channel_id.channel_header.ch_class = PHY_CLASS_NORMAL_RATE;
-
-                    break;
-
-                case STATE_RUNNING:
-                	increase_channel();
-                    break;
-            }
+        case STATE_CONFIG_DATARATE:
+            current_state = STATE_RUNNING;
             break;
+        case STATE_RUNNING:
+            current_state = STATE_CONFIG_DIRECTION;
+            break;
+        }
+        break;
+    case 1:
+        switch(current_state)
+        {
+        case STATE_CONFIG_DIRECTION:
+            is_mode_rx = !is_mode_rx;
+            break;
+        case STATE_CONFIG_DATARATE:
+            if(current_channel_id.channel_header.ch_class == PHY_CLASS_NORMAL_RATE)
+                current_channel_id.channel_header.ch_class = PHY_CLASS_LO_RATE;
+            else
+                current_channel_id.channel_header.ch_class = PHY_CLASS_NORMAL_RATE;
+
+            break;
+
+        case STATE_RUNNING:
+            increase_channel();
+            break;
+        }
+        break;
     }
 
     sched_post_task(&start);
@@ -466,16 +466,16 @@ static void process_command_chan()
 
 #ifdef PLATFORM_EFM32GG_STK3700
 #elif HAS_LCD
-	lcd_write_line(6, str);
+    lcd_write_line(6, str);
 #endif
 
     // change channel and restart
     // TODOsched_post_task(&start_rx);
     return;
 
-    error:
-        console_print("Error parsing CHAN command. Expected format example: '433L001'\n");
-        fifo_clear(&uart_rx_fifo);
+error:
+    console_print("Error parsing CHAN command. Expected format example: '433L001'\n");
+    fifo_clear(&uart_rx_fifo);
 }
 
 static void process_uart_rx_fifo()
@@ -497,13 +497,13 @@ static void process_uart_rx_fifo()
                 fifo_pop(&uart_rx_fifo, param, COMMAND_TRAN_PARAM_SIZE);
                 tx_packet_delay_s = atoi((const char*)param);
                 DPRINT("performing TRAN command with %d tx_packet_delay_s\r\n",
-                        tx_packet_delay_s);
+                       tx_packet_delay_s);
 
                 stop();
                 is_mode_rx = false;
                 current_state = STATE_RUNNING;
                 sched_post_task(&start);
-			}
+            }
         }
         else if(strncmp((const char*)received_cmd, COMMAND_RECV, COMMAND_SIZE) == 0)
         {
@@ -594,9 +594,9 @@ void bootstrap() {
 
 #ifdef PLATFORM_EFM32GG_STK3700
 #elif defined HAS_LCD
-    	char str[20];
-    	channel_id_to_string(&current_channel_id, str, sizeof(str));
-    	lcd_write_line(6, str);
+    char str[20];
+    channel_id_to_string(&current_channel_id, str, sizeof(str));
+    lcd_write_line(6, str);
 #endif
 
     //timer_post_task(&transmit_packet, TIMER_TICKS_PER_SEC * 1);
