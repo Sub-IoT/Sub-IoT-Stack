@@ -230,7 +230,7 @@ static void packet_received(hw_radio_packet_t* packet) {
             per = 100.0 - ((double)received_packets_counter / (double)msg_counter) * 100.0;
 
         sprintf(lcd_msg, "%i %i", (int)per, packet->rx_meta.rssi);
-        console_printf("RX failure rate = %i %%", (int)per);
+        console_printf("PER = %i%%\n", (int)per);
 
 #ifdef PLATFORM_EFM32GG_STK3700
         lcd_write_string(lcd_msg);
