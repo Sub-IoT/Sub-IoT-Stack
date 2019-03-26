@@ -36,7 +36,7 @@
 #define EM_MODE_OFF            0
 #define EM_MODE_CONTINUOUS_TX  1
 #define EM_MODE_CONTINUOUS_RX  2
-#define EM_MODE_SPURIOUS_TX    3
+#define EM_MODE_TRANSIENT_TX   3
 
 /* \brief The coding schemes and corresponding indices as defined in D7A
  *
