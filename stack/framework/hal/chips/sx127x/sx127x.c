@@ -1519,6 +1519,9 @@ void hw_radio_continuous_tx(hw_tx_cfg_t const* tx_cfg, uint8_t time_period) {
 
   flush_fifo();
 
+  /*activate low battery detector*/
+  write_reg(REG_LOWBAT, read_reg(REG_LOWBAT) | (1 << 3) | 0x02);
+
   use_lora_250 = (tx_cfg->channel_id.center_freq_index == 208);
   configure_channel(&(tx_cfg->channel_id));
   configure_eirp(tx_cfg->eirp);
@@ -1553,7 +1556,11 @@ void hw_radio_continuous_tx(hw_tx_cfg_t const* tx_cfg, uint8_t time_period) {
       payload_len = fec_encode(data, payload_len);
       pn9_encode(data, payload_len);
       
-      while(const_radio || ((hw_timer_getvalue(0) < time) || (hw_timer_getvalue(0) > (time + 100)))){
+      while(const_radio || ((hw_timer_getvalue(0) < time) || (hw_timer_getvalue(0) > (time + 100)))) {
+        if(read_reg(REG_IRQFLAGS2) & 0x01) {
+          write_reg(REG_IRQFLAGS2, 0x01);
+          break;
+        }
         write_fifo(data, payload_len);
       }
   }
@@ -1566,13 +1573,22 @@ void hw_radio_continuous_tx(hw_tx_cfg_t const* tx_cfg, uint8_t time_period) {
 
     pn9_encode(data + 1 , payload_len);
 
-    while(const_radio || ((hw_timer_getvalue(0) < time) || (hw_timer_getvalue(0) > (time + 100)))){
+    while(const_radio || ((hw_timer_getvalue(0) < time) || (hw_timer_getvalue(0) > (time + 100)))) {
+      if(read_reg(REG_IRQFLAGS2) & 0x01) {
+        write_reg(REG_IRQFLAGS2, 0x01);
+        break;
+      }
       write_fifo(data, payload_len+1); //data in fifo gets sent out
     }
   } else {
     uint8_t data[1];
     data[0] = 0;
-    while(const_radio || ((hw_timer_getvalue(0) < time) || (hw_timer_getvalue(0) > (time + 100)))){
+    while(const_radio || ((hw_timer_getvalue(0) < time) || (hw_timer_getvalue(0) > (time + 100)))) {
+      if(read_reg(REG_IRQFLAGS2) & 0x01) {
+        DPRINT("irqflags is %02X", read_reg(REG_IRQFLAGS2));
+        write_reg(REG_IRQFLAGS2, 0x01);
+        break;
+      }
       if(!(read_reg(REG_IRQFLAGS2) & 0x80)){
         write_fifo(data, 1); //data in fifo gets sent out
         data[0]++; // count from 0 till 1
@@ -1581,6 +1597,8 @@ void hw_radio_continuous_tx(hw_tx_cfg_t const* tx_cfg, uint8_t time_period) {
   }
 
   DPRINT("Done\n");
+
+  write_reg(REG_LOWBAT, read_reg(REG_LOWBAT) & 0xf7);
 
   switch_to_sleep_mode();
 }
