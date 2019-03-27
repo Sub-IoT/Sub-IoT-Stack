@@ -169,6 +169,7 @@ static channel_id_t default_channel_id = {
 };
 
 static bool is_sx1272 = false;
+static bool use_lora_250 = false;
 
 #define EMPTY_CHANNEL_ID { .channel_header_raw = 0xFF, .center_freq_index = 0xFF };
 
@@ -343,7 +344,10 @@ static void set_lora_mode(bool use_lora) {
   write_reg(REG_OPMODE, (read_reg(REG_OPMODE) & RFLR_OPMODE_LONGRANGEMODE_MASK) | (use_lora << 7)); // TODO can only be modified in sleep mode
   if(use_lora) {
     DPRINT("Enabling LoRa mode");
-    write_reg(REG_LR_MODEMCONFIG1, 0x72); // BW=125 kHz, CR=4/5, explicit header mode
+    if(use_lora_250)
+      write_reg(REG_LR_MODEMCONFIG1, 0x82); // BW=250 kHz, CR=4/5, explicit header mode
+    else
+      write_reg(REG_LR_MODEMCONFIG1, 0x72); // BW=125 kHz, CR=4/5, explicit header mode
     write_reg(REG_LR_MODEMCONFIG2, 0x90); // SF=9, CRC disabled
     lora_mode = true;
   } else {
@@ -1503,9 +1507,14 @@ void hw_radio_continuous_tx(hw_tx_cfg_t const* tx_cfg, uint8_t time_period) {
 
   flush_fifo();
 
+  use_lora_250 = (tx_cfg->channel_id.center_freq_index == 208);
   configure_channel(&(tx_cfg->channel_id));
   configure_eirp(tx_cfg->eirp);
   //DPRINT("channel is: %d",tx_cfg->channel_id.center_freq_index);
+
+  if(tx_cfg->channel_id.channel_header.ch_class == PHY_CLASS_LORA) {
+    write_reg(REG_LR_MODEMCONFIG2, read_reg(REG_LR_MODEMCONFIG2) | (1 << 3));
+  }
 
   if(tx_cfg->channel_id.channel_header.ch_coding == PHY_CODING_CW){ //set frequency deviation to 0 to send a continuous wave
     write_reg(REG_FDEVMSB, 0x00);

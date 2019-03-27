@@ -34,7 +34,20 @@
 static uint8_t timeout_em = 0;
 static hw_tx_cfg_t tx_cfg;
 static hw_rx_cfg_t rx_cfg;
+static bool stop = false;
 
+static void stop_transient_tx(){
+    stop = true;
+}
+
+static void start_transient_tx(){
+    if(!stop) {
+      sched_register_task(&start_transient_tx);
+      timer_post_task_delay(&start_transient_tx, 1200);
+
+      hw_radio_continuous_tx(&tx_cfg, 1);
+    }
+}
 
 static void start_tx(){
     hw_radio_continuous_tx(&tx_cfg, timeout_em);
@@ -83,6 +96,20 @@ static void em_file_change_callback(uint8_t file_id){
         sched_register_task(&start_rx);
         //give it time to answer through uart
         timer_post_task_delay(&start_rx, 500);
+        break;
+      case EM_MODE_TRANSIENT_TX:
+        DPRINT("EM_MODE_TRANSIENT_TX");
+        memcpy( &(tx_cfg.channel_id), &(em_command->channel_id), sizeof(channel_id_t));
+        tx_cfg.eirp = em_command->eirp;
+
+        if(timeout_em != 0) {
+          sched_register_task(&stop_transient_tx);
+          timer_post_task_delay(&stop_transient_tx, timeout_em * 1000 + 500);
+        }
+
+        sched_register_task(&start_transient_tx);
+        //give it time to answer through uart
+        timer_post_task_delay(&start_transient_tx, 500);
         break;
     }
 }
