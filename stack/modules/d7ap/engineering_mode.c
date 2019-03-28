@@ -17,6 +17,7 @@
  */
 
 #include "engineering_mode.h"
+#include "MODULE_D7AP_defs.h"
 
 #include "d7ap.h"
 #include "log.h"
@@ -78,6 +79,13 @@ static void start_transient_tx(){
 
       hw_radio_continuous_tx(&tx_cfg, 1);
     }
+}
+
+static void config_eirp(eirp_t eirp){
+    int8_t factory_settings[D7A_FILE_FACTORY_SETTINGS_SIZE]; //byte 0 is gain offset
+    d7ap_fs_read_file(D7A_FILE_FACTORY_SETTINGS_FILE_ID, 0, factory_settings, D7A_FILE_FACTORY_SETTINGS_SIZE);
+    DPRINT("offset is %d, tx eirp is %d", factory_settings[0], eirp - factory_settings[0]);
+    tx_cfg.eirp = eirp - factory_settings[0];
 }
 
 static void start_tx(){
@@ -178,20 +186,7 @@ static void em_file_change_callback(uint8_t file_id){
 
     em_file_t* em_command = (em_file_t*) data;
 
-    #if defined(FRAMEWORK_LOG_ENABLED) && defined(MODULE_D7AP_EM_LOG_ENABLED)
-      log_print_string("both defined #####################");
-    #elif !defined(FRAMEWORK_LOG_ENABLED) && defined(MODULE_D7AP_EM_LOG_ENABLED)
-      log_print_string("framework log not enabled, EM log enabled#######################");
-    #elif defined(FRAMEWORK_LOG_ENABLED) && !defined(MODULE_D7AP_EM_LOG_ENABLED)
-      log_print_string("framework log enabled, EM log not enabled#######################");
-    #elif !defined(FRAMEWORK_LOG_ENABLED) && !defined(MODULE_D7AP_EM_LOG_ENABLED)
-      log_print_string("framework log not enabled, EM log not enabled#######################");
-    #else
-      log_print_string("something went wrong#######################");
-    #endif
-
-
-    DPRINT("em_file_change_callback\n");
+    DPRINT("em_file_change_callback");
     DPRINT_DATA(data, D7A_FILE_ENGINEERING_MODE_SIZE);
 
     timeout_em = em_command->timeout;
@@ -208,10 +203,7 @@ static void em_file_change_callback(uint8_t file_id){
       case EM_MODE_CONTINUOUS_TX:
         DPRINT("EM_MODE_CONTINUOUS_TX\n");
         memcpy( &(tx_cfg.channel_id), &(em_command->channel_id), sizeof(channel_id_t));
-        int8_t factory_settings[D7A_FILE_FACTORY_SETTINGS_SIZE]; //byte 0 is gain offset
-        d7ap_fs_read_file(D7A_FILE_FACTORY_SETTINGS_FILE_ID, 0, factory_settings, D7A_FILE_FACTORY_SETTINGS_SIZE);
-        DPRINT("offset is %d", factory_settings[0]);
-        tx_cfg.eirp = em_command->eirp + factory_settings[0];
+        config_eirp(em_command->eirp);
 
         DPRINT("Tx: %d seconds, coding: %X \nclass: %X, freq band: %X \nchannel id: %d, syncword class: %X \neirp: %d, flags: %X\n",
         timeout_em, tx_cfg.channel_id.channel_header.ch_coding, tx_cfg.channel_id.channel_header.ch_class,
@@ -227,7 +219,7 @@ static void em_file_change_callback(uint8_t file_id){
       case EM_MODE_TRANSIENT_TX:
         DPRINT("EM_MODE_TRANSIENT_TX\n");
         memcpy( &(tx_cfg.channel_id), &(em_command->channel_id), sizeof(channel_id_t));
-        tx_cfg.eirp = em_command->eirp;
+        config_eirp(em_command->eirp);
 
         if(timeout_em != 0) {
           sched_register_task(&stop_transient_tx);
