@@ -357,10 +357,18 @@ static void set_lora_mode(bool use_lora) {
 }
 
 static void configure_eirp(eirp_t eirp) {
+  if(eirp < -5) {
+    eirp = -5;
+    DPRINT("The given eirp is too low, adjusted to %d dBm, offset excluded", eirp);
+    // assert(eirp >= -5); // -4.2 dBm is minimum
+  } 
 #ifdef PLATFORM_SX127X_USE_PA_BOOST
   // Pout = 17-(15-outputpower)
-  assert(eirp >= -5); // -4.2 dBm is minimum
-  assert(eirp <= 20); // chip supports until +15 dBm default, +17 dBm with PA_BOOST and +20 dBm with PaDac enabled. 
+  if(eirp > 20) {
+    eirp = 20;
+    DPRINT("The given eirp is too high, adjusted to %d dBm, offset excluded", eirp);
+    // assert(eirp <= 20); // chip supports until +15 dBm default, +17 dBm with PA_BOOST and +20 dBm with PaDac enabled. 
+  }
   if(eirp <= 5) {
     write_reg(REG_PACONFIG, (uint8_t)(eirp - 10.8 + 15));
     write_reg(REG_PADAC, 0x84); //Default Power
@@ -376,8 +384,11 @@ static void configure_eirp(eirp_t eirp) {
   }
 #else
   // Pout = Pmax-(15-outputpower)
-  assert(eirp <= 15); // Pmax = 15 dBm
-  assert(eirp >= -5); // -4.2 dBm is minimum
+  if(eirp > 15) {
+    eirp = 15;
+    DPRINT("The given eirp is too high, adjusted to %d dBm, offset excluded", eirp);
+    // assert(eirp <= 15); // Pmax = 15 dBm
+  }
   if(eirp <= 5)
     write_reg(REG_PACONFIG, (uint8_t)(eirp - 10.8 + 15));
   else

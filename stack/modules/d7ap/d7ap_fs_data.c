@@ -79,7 +79,7 @@ ap_no_scan = AccessProfile(
 
 system_files = [
   UidFile(),
-  NotImplementedFile(SystemFileIds.FACTORY_SETTINGS.value, 0),
+  NotImplementedFile(SystemFileIds.FACTORY_SETTINGS.value, 1),
   FirmwareVersionFile(),
   NotImplementedFile(SystemFileIds.DEVICE_CAPACITY.value, 19),
   NotImplementedFile(SystemFileIds.DEVICE_STATUS.value, 9),
@@ -177,7 +177,7 @@ fs_systemfiles_t fs_systemfiles __attribute__((used)) LINKER_SECTION_FS_SYSTEM_F
       // UID - 0
       0x24, 0x23, 0xff, 0xff, 0x0, 0x0, 0x0, 0x8, 0x0, 0x0, 0x0, 0x8, 
       // FACTORY_SETTINGS - 1
-      0x24, 0x23, 0xff, 0xff, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 
+      0x24, 0x23, 0xff, 0xff, 0x0, 0x0, 0x0, 0x1, 0x0, 0x0, 0x0, 0x1, 
       // FIRMWARE_VERSION - 2
       0x24, 0x23, 0xff, 0xff, 0x0, 0x0, 0x0, 0xf, 0x0, 0x0, 0x0, 0xf, 
       // DEVICE_CAPACITY - 3
@@ -278,7 +278,7 @@ fs_systemfiles_t fs_systemfiles __attribute__((used)) LINKER_SECTION_FS_SYSTEM_F
       // UID - 0
       0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 
       // FACTORY_SETTINGS - 1
-
+      0x00,
       // FIRMWARE_VERSION - 2
       0x0, 0x0, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 
       // DEVICE_CAPACITY - 3
@@ -381,52 +381,52 @@ __attribute__((used)) uint16_t fs_systemfiles_file_offsets[] = {
   output_system_file_offsets()
   ]]]*/
   0x0, // UID - 0 (length 8))
-  0x8, // FACTORY_SETTINGS - 1 (length 0))
-  0x8, // FIRMWARE_VERSION - 2 (length 15))
-  0x17, // DEVICE_CAPACITY - 3 (length 19))
-  0x2a, // DEVICE_STATUS - 4 (length 9))
-  0x33, // ENGINEERING_MODE - 5 (length 9))
-  0x3c, // VID - 6 (length 3))
-  0x3f, // RFU_07 - 7 (length 0))
-  0x3f, // PHY_CONFIG - 8 (length 9))
-  0x48, // PHY_STATUS - 9 (length 24))
-  0x60, // DLL_CONFIG - 10 (length 3))
-  0x63, // DLL_STATUS - 11 (length 12))
-  0x6f, // NWL_ROUTING - 12 (length 1))
-  0x70, // NWL_SECURITY - 13 (length 5))
-  0x75, // NWL_SECURITY_KEY - 14 (length 16))
-  0x85, // NWL_SSR - 15 (length 4))
-  0x89, // NWL_STATUS - 16 (length 20))
-  0x9d, // TRL_STATUS - 17 (length 1))
-  0x9e, // SEL_CONFIG - 18 (length 6))
-  0xa4, // FOF_STATUS - 19 (length 10))
-  0xae, // RFU_14 - 20 (length 0))
-  0xae, // RFU_15 - 21 (length 0))
-  0xae, // RFU_16 - 22 (length 0))
-  0xae, // LOCATION_DATA - 23 (length 1))
-  0xaf, // D7AALP_RFU_18 - 24 (length 0))
-  0xaf, // D7AALP_RFU_19 - 25 (length 0))
-  0xaf, // D7AALP_RFU_1A - 26 (length 0))
-  0xaf, // D7AALP_RFU_1B - 27 (length 0))
-  0xaf, // D7AALP_RFU_1C - 28 (length 0))
-  0xaf, // D7AALP_RFU_1D - 29 (length 0))
-  0xaf, // D7AALP_RFU_1E - 30 (length 0))
-  0xaf, // D7AALP_RFU_1F - 31 (length 0))
-  0xaf, // ACCESS_PROFILE_0 - 32 (length 65))
-  0xf0, // ACCESS_PROFILE_1 - 33 (length 65))
-  0x131, // ACCESS_PROFILE_2 - 34 (length 65))
-  0x172, // ACCESS_PROFILE_3 - 35 (length 65))
-  0x1b3, // ACCESS_PROFILE_4 - 36 (length 65))
-  0x1f4, // ACCESS_PROFILE_5 - 37 (length 65))
-  0x235, // ACCESS_PROFILE_6 - 38 (length 65))
-  0x276, // ACCESS_PROFILE_7 - 39 (length 65))
-  0x2b7, // ACCESS_PROFILE_8 - 40 (length 65))
-  0x2f8, // ACCESS_PROFILE_9 - 41 (length 65))
-  0x339, // ACCESS_PROFILE_10 - 42 (length 65))
-  0x37a, // ACCESS_PROFILE_11 - 43 (length 65))
-  0x3bb, // ACCESS_PROFILE_12 - 44 (length 65))
-  0x3fc, // ACCESS_PROFILE_13 - 45 (length 65))
-  0x43d, // ACCESS_PROFILE_14 - 46 (length 65))
+  0x8, // FACTORY_SETTINGS - 1 (length 1))
+  0x9, // FIRMWARE_VERSION - 2 (length 15))
+  0x18, // DEVICE_CAPACITY - 3 (length 19))
+  0x2b, // DEVICE_STATUS - 4 (length 9))
+  0x34, // ENGINEERING_MODE - 5 (length 9))
+  0x3d, // VID - 6 (length 3))
+  0x40, // RFU_07 - 7 (length 0))
+  0x40, // PHY_CONFIG - 8 (length 9))
+  0x49, // PHY_STATUS - 9 (length 24))
+  0x61, // DLL_CONFIG - 10 (length 3))
+  0x64, // DLL_STATUS - 11 (length 12))
+  0x70, // NWL_ROUTING - 12 (length 1))
+  0x71, // NWL_SECURITY - 13 (length 5))
+  0x76, // NWL_SECURITY_KEY - 14 (length 16))
+  0x86, // NWL_SSR - 15 (length 4))
+  0x8a, // NWL_STATUS - 16 (length 20))
+  0x9e, // TRL_STATUS - 17 (length 1))
+  0x9f, // SEL_CONFIG - 18 (length 6))
+  0xa5, // FOF_STATUS - 19 (length 10))
+  0xaf, // RFU_14 - 20 (length 0))
+  0xaf, // RFU_15 - 21 (length 0))
+  0xaf, // RFU_16 - 22 (length 0))
+  0xaf, // LOCATION_DATA - 23 (length 1))
+  0xb0, // D7AALP_RFU_18 - 24 (length 0))
+  0xb0, // D7AALP_RFU_19 - 25 (length 0))
+  0xb0, // D7AALP_RFU_1A - 26 (length 0))
+  0xb0, // D7AALP_RFU_1B - 27 (length 0))
+  0xb0, // D7AALP_RFU_1C - 28 (length 0))
+  0xb0, // D7AALP_RFU_1D - 29 (length 0))
+  0xb0, // D7AALP_RFU_1E - 30 (length 0))
+  0xb0, // D7AALP_RFU_1F - 31 (length 0))
+  0xb0, // ACCESS_PROFILE_0 - 32 (length 65))
+  0xf1, // ACCESS_PROFILE_1 - 33 (length 65))
+  0x132, // ACCESS_PROFILE_2 - 34 (length 65))
+  0x173, // ACCESS_PROFILE_3 - 35 (length 65))
+  0x1b4, // ACCESS_PROFILE_4 - 36 (length 65))
+  0x1f5, // ACCESS_PROFILE_5 - 37 (length 65))
+  0x236, // ACCESS_PROFILE_6 - 38 (length 65))
+  0x277, // ACCESS_PROFILE_7 - 39 (length 65))
+  0x2b8, // ACCESS_PROFILE_8 - 40 (length 65))
+  0x2f9, // ACCESS_PROFILE_9 - 41 (length 65))
+  0x33a, // ACCESS_PROFILE_10 - 42 (length 65))
+  0x37b, // ACCESS_PROFILE_11 - 43 (length 65))
+  0x3bc, // ACCESS_PROFILE_12 - 44 (length 65))
+  0x3fd, // ACCESS_PROFILE_13 - 45 (length 65))
+  0x43e, // ACCESS_PROFILE_14 - 46 (length 65))
   //[[[end]]] (checksum: 0adb2f883d72be16ca76884aa87acee0)
 };
 
