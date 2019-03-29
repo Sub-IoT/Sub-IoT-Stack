@@ -22,12 +22,16 @@
 #include "d7ap.h"
 #include "log.h"
 #include "d7ap_fs.h"
+<<<<<<< HEAD
 #include "hwradio.h"
 #include "crc.h"
 #include "packet_queue.h"
 #include "MODULE_D7AP_defs.h"
 
 #include "modem_interface.h"
+=======
+#include "phy.h"
+>>>>>>> Update engineering mode to deal with the phy layer
 
 #if defined(FRAMEWORK_LOG_ENABLED) && defined(MODULE_D7AP_EM_LOG_ENABLED)
 #define DPRINT(...) log_print_stack_string(LOG_STACK_EM, __VA_ARGS__)
@@ -48,8 +52,8 @@
 #define PER_PACKET_DELAY 20
 
 static uint8_t timeout_em = 0;
-static hw_tx_cfg_t tx_cfg;
-static hw_rx_cfg_t rx_cfg;
+static phy_tx_config_t tx_cfg;
+static phy_rx_config_t rx_cfg;
 static bool stop = false;
 static uint16_t per_missed_packets_counter = 0;
 static uint16_t per_received_packets_counter = 0;
@@ -77,7 +81,7 @@ static void start_transient_tx(){
     if(!stop) {
       timer_post_task_delay(&start_transient_tx, 1200);
 
-      hw_radio_continuous_tx(&tx_cfg, 1);
+      phy_continuous_tx(&tx_cfg, 1);
     }
 }
 
@@ -89,38 +93,11 @@ static void config_eirp(eirp_t eirp){
 }
 
 static void start_tx(){
-    hw_radio_continuous_tx(&tx_cfg, timeout_em);
+    phy_continuous_tx(&tx_cfg, timeout_em);
 }
 
-static void start_per_rx() {
-    hw_radio_set_rx(&rx_cfg, &packet_received, NULL);
-}
-
-static void transmit_per_packet() {
-    DPRINT("transmitting packet");
-    //current_state = STATE_RUNNING;
-    per_packet_counter++;
-    per_data[0] = sizeof(per_packet_counter) + FILL_DATA_SIZE + sizeof(uint16_t); /* CRC is an uint16_t */
-    memcpy(per_data + 1, &per_packet_counter, sizeof(per_packet_counter));
-    /* the CRC calculation shall include all the bytes of the frame including the byte for the length*/
-    memcpy(per_data + 1 + sizeof(per_packet_counter), per_fill_data, FILL_DATA_SIZE);
-    uint16_t crc = __builtin_bswap16(crc_calculate(per_data, per_data[0] + 1 - 2));
-    memcpy(per_data + 1 + sizeof(per_packet_counter) + FILL_DATA_SIZE, &crc, 2);
-    memcpy(&per_packet->data, per_data, sizeof(per_data));
-
-    tx_cfg.channel_id = per_channel_id;
-    per_packet->tx_meta.tx_cfg = tx_cfg;
-    hw_radio_send_packet(per_packet, &packet_transmitted, 0, NULL);
-}
-
-static void packet_transmitted(hw_radio_packet_t* packet) {
-    DPRINT("packet %i transmitted\n", per_packet_counter);
-    if(per_packet_counter >= per_packet_limit) {
-      DPRINT("PER test done\n");
-      return;
-    }
-
-    timer_post_task_delay(&transmit_per_packet, PER_PACKET_DELAY);
+static void start_rx(){
+    phy_continuous_rx(&rx_cfg, timeout_em);
 }
 
 static void packet_received(hw_radio_packet_t* packet) {
@@ -259,8 +236,4 @@ error_t engineering_mode_init()
   d7ap_fs_write_file(D7A_FILE_ENGINEERING_MODE_FILE_ID, 0, init_data, D7A_FILE_ENGINEERING_MODE_SIZE);
 
   d7ap_fs_register_file_modified_callback(D7A_FILE_ENGINEERING_MODE_FILE_ID, &em_file_change_callback);
-
-  sched_register_task(&start_transient_tx);
-  sched_register_task(&transmit_per_packet);
-  sched_register_task(&start_per_rx);
 }
