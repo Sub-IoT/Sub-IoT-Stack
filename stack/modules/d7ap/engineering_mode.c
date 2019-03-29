@@ -21,7 +21,7 @@
 #include "d7ap.h"
 #include "log.h"
 #include "d7ap_fs.h"
-#include "hwradio.h"
+#include "phy.h"
 
 #if defined(FRAMEWORK_LOG_ENABLED) && defined(MODULE_D7AP_EM_LOG_ENABLED)
 #define DPRINT(...) log_print_stack_string(LOG_STACK_EM, __VA_ARGS__)
@@ -32,8 +32,8 @@
 #endif
 
 static uint8_t timeout_em = 0;
-static hw_tx_cfg_t tx_cfg;
-static hw_rx_cfg_t rx_cfg;
+static phy_tx_config_t tx_cfg;
+static phy_rx_config_t rx_cfg;
 static bool stop = false;
 
 static void stop_transient_tx(){
@@ -45,16 +45,16 @@ static void start_transient_tx(){
       sched_register_task(&start_transient_tx);
       timer_post_task_delay(&start_transient_tx, 1200);
 
-      hw_radio_continuous_tx(&tx_cfg, 1);
+      phy_continuous_tx(&tx_cfg, 1);
     }
 }
 
 static void start_tx(){
-    hw_radio_continuous_tx(&tx_cfg, timeout_em);
+    phy_continuous_tx(&tx_cfg, timeout_em);
 }
 
 static void start_rx(){
-    hw_radio_continuous_rx(&rx_cfg, timeout_em);
+    phy_continuous_rx(&rx_cfg, timeout_em);
 }
 
 static void em_file_change_callback(uint8_t file_id){
