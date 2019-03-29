@@ -455,26 +455,34 @@ static alp_status_codes_t process_op_return_file_data(alp_command_t* command) {
   uint8_t length_field;
   uint8_t len; // b7 b6 of length field
   uint32_t data_len;
+  uint8_t alp_response[total_len];
+  uint16_t fifo_skip_size;
 
   //read length field of file offset
-  fifo_peek(&command->alp_command_fifo, &length_field, total_len, 1);
+  error_t e = fifo_peek(&command->alp_command_fifo, &length_field, total_len, 1);
+  if(e != SUCCESS) goto incomplete_error;
+
   len = (length_field >> 6);
   DPRINT("file offset length: %d", len + 1);
   total_len += len + 1;
 
   //read length field of data length data
-  fifo_peek(&command->alp_command_fifo, &length_field, total_len, 1);
+  e = fifo_peek(&command->alp_command_fifo, &length_field, total_len, 1);
+  if(e != SUCCESS) goto incomplete_error;
+
   len = (length_field >> 6);
   DPRINT("data length length: %d", len + 1);
 
-  //read data lenght data
+  //read data length data
   data_len = (length_field & 0x3F) << ( 8 * len); // mask field length specificier bits and shift before adding other length bytes
-  fifo_peek(&command->alp_command_fifo, (uint8_t*) &data_len, total_len + 1, len); //ofset is one byte further as we have read the first byte
+  e = fifo_peek(&command->alp_command_fifo, (uint8_t*) &data_len, total_len + 1, len); // offset is one byte further as we have read the first byte
+  if(e != SUCCESS) goto incomplete_error;
 
   DPRINT("data length: %d", data_len);
   total_len += len + 1 + data_len;
 
-  uint8_t alp_response[total_len];
+  if(fifo_get_size(&command->alp_command_fifo) < total_len) goto incomplete_error;
+
   fifo_pop(&command->alp_command_fifo, alp_response, total_len);
 
   if(shell_enabled)
@@ -483,7 +491,17 @@ static alp_status_codes_t process_op_return_file_data(alp_command_t* command) {
   if(init_args != NULL && init_args->alp_received_unsolicited_data_cb != NULL)
     init_args->alp_received_unsolicited_data_cb(current_d7asp_result, alp_response, total_len);
 
-  return ALP_STATUS_OK;
+  return ALP_STATUS_OK;  
+
+incomplete_error:
+  // pop processed bytes
+  fifo_skip_size = fifo_get_size(&command->alp_command_fifo);
+  if(total_len < fifo_skip_size)
+    fifo_skip_size = total_len;
+
+  DPRINT("incomplete operand, skipping %i\n", fifo_skip_size);
+  fifo_skip(&command->alp_command_fifo, fifo_skip_size);
+  return ALP_STATUS_INCOMPLETE_OPERAND;
 }
 
 static alp_status_codes_t process_op_create_file(alp_command_t* command) {
@@ -780,6 +798,7 @@ static void _async_process_command_from_d7ap(void* arg)
 bool alp_layer_process_command(uint8_t* alp_command, uint8_t alp_command_length, uint8_t* alp_response, uint8_t* alp_response_length, alp_command_origin_t origin)
 {
   DPRINT("ALP cmd size %i", alp_command_length);
+  DPRINT_DATA(alp_command, alp_command_length);
   assert(alp_command_length <= ALP_PAYLOAD_MAX_SIZE);
 
   // TODO support more than 1 active cmd
