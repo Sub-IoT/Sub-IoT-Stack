@@ -27,6 +27,7 @@
 #include "debug.h"
 #include "log.h"
 #include "scheduler.h"
+#include "timer.h"
 
 #include "hwradio.h"
 #include "hwdebug.h"
@@ -90,7 +91,9 @@ typedef enum {
   STATE_IDLE,
   STATE_TX,
   STATE_RX,
-  STATE_BG_SCAN
+  STATE_BG_SCAN,
+  STATE_CONT_TX,
+  STATE_CONT_RX
 } state_t;
 
 static hwradio_init_args_t init_args;
@@ -170,6 +173,12 @@ const uint8_t bg_timeout[4] = {
     To_CLASS_NORMAL_RATE,
     To_CLASS_HI_RATE
 };
+
+uint16_t end_time;
+/*!
+ * D7A timer used to expire the continuous TX
+ */
+static timer_event continuous_tx_expiration_timer;
 
 static void fill_in_fifo(uint8_t remaining_bytes_len);
 
@@ -411,6 +420,14 @@ static void configure_syncword(syncword_class_t syncword_class, const channel_id
     hw_radio_set_sync_word((uint8_t *)&sync_word, sizeof(uint16_t));
 }
 
+void continuous_tx_expiration()
+{
+    switch_to_standby_mode();
+    hw_radio_enable_refill(false);
+    DPRINT("Continuous TX is now terminated");
+}
+
+
 error_t phy_init(void) {
 
     error_t ret = SUCCESS;
@@ -445,6 +462,8 @@ error_t phy_init(void) {
 
     //hw_radio_set_opmode(OPMODE_STANDBY); --> done by the netdev driver
     //while(hw_radio_get_opmode() != OPMODE_STANDBY) {}
+
+    timer_init_event(&continuous_tx_expiration_timer, &continuous_tx_expiration);
 
     return ret;
 }
@@ -755,7 +774,8 @@ static void fill_in_fifo(uint8_t remaining_bytes_len)
     else
     {
         // Disable the refill event since this is the last chunk of data to transmit
-        hw_radio_enable_refill(false);
+        if (state != STATE_CONT_TX)
+            hw_radio_enable_refill(false);
         hw_radio_send_payload(fg_frame.encoded_packet, fg_frame.encoded_length);
     }
 }
@@ -803,26 +823,67 @@ error_t phy_start_background_scan(phy_rx_config_t* config)
 
     return SUCCESS;
 }
-void phy_continuous_tx(phy_tx_config_t* config, bool continuous_wave)
+
+void phy_continuous_tx(phy_tx_config_t const* tx_cfg, uint8_t time_period)
 {
     DPRINT("Continuous tx\n");
 
-    assert(!continuous_wave); // TODO CW not supported for now
-    configure_eirp(config->eirp);
-    configure_syncword(config->syncword_class, &config->channel_id);
-    configure_channel(&config->channel_id);
+    if(state == STATE_RX)
+    {
+        pending_rx_cfg.channel_id = current_channel_id;
+        pending_rx_cfg.syncword_class = current_syncword_class;
+        should_rx_after_tx_completed = true;
+        switch_to_standby_mode();
+    }
 
+    configure_channel(&tx_cfg->channel_id);
+    configure_eirp(tx_cfg->eirp);
+    configure_syncword(tx_cfg->syncword_class, &tx_cfg->channel_id);
     hw_radio_enable_refill(true);
 
+    state = STATE_CONT_TX;
+    continuous_tx_expiration_timer.next_event = time_period * 1024;
+    timer_add_event(&continuous_tx_expiration_timer);
+
     fg_frame.bg_adv = false;
-    fg_frame.encoded_length = 64;
-    fg_frame.encoded_packet[0] = fg_frame.encoded_length - 1;
+    if (current_channel_id.channel_header.ch_coding == PHY_CODING_FEC_PN9)
+    {
+        uint8_t payload_len = 32;
+        fg_frame.encoded_packet[0] = payload_len;
+        for (uint8_t i = 0; i < payload_len; i++)
+            fg_frame.encoded_packet[i+1] = i;
 
-    for(int i = 1; i < fg_frame.encoded_length; i++)
-        fg_frame.encoded_packet[i] = i;
+        fg_frame.encoded_length = fec_encode(fg_frame.encoded_packet, payload_len);
+        pn9_encode(fg_frame.encoded_packet, fg_frame.encoded_length);
+    }
+    else if (current_channel_id.channel_header.ch_coding == PHY_CODING_PN9)
+    {
+        uint8_t payload_len = 63;
+        fg_frame.encoded_packet[0] = payload_len;
+        for (uint8_t i = 0; i < payload_len; i++)
+            fg_frame.encoded_packet[i+1] = 0xAA;
 
-    pn9_encode(fg_frame.encoded_packet, fg_frame.encoded_length);
+        pn9_encode(fg_frame.encoded_packet, payload_len);
+        fg_frame.encoded_length = payload_len;
+    } else {
+        uint8_t payload_len = 0xFF;
+        fg_frame.encoded_packet[0] = payload_len;
+        for (uint8_t i = 1; i <= payload_len; i++)
+            fg_frame.encoded_packet[i+1] = i;
+    }
 
     hw_radio_send_payload(fg_frame.encoded_packet, fg_frame.encoded_length);
 }
 
+void phy_continuous_rx(phy_rx_config_t const* rx_cfg, uint8_t time_period)
+{
+    state = STATE_CONT_RX;
+
+    configure_channel(&rx_cfg->channel_id);
+    configure_syncword(rx_cfg->syncword_class, &rx_cfg->channel_id);
+
+    // unlimited payloadlength
+    hw_radio_set_payload_length(0);
+
+    //TODO our callback is based on packet reception. So we need probably to add a specific hw_radio_continuous_rx API
+}
