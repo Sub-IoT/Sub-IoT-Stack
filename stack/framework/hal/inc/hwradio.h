@@ -447,7 +447,7 @@ bool hw_radio_is_rx(void);
 void hw_radio_enable_refill(bool enable);
 void hw_radio_enable_preloading(bool enable);
 
-void hw_radio_set_tx_power(uint8_t eirp);
+void hw_radio_set_tx_power(uint8_t eirp); // TODO signed
 
 void hw_radio_set_rx_timeout(uint32_t timeout);
 

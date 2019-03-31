@@ -87,6 +87,10 @@
 // => BW > 250 + 17.36 kHz => > 267.36 kHZ.
 #define RXBW_H    267360 //Hz
 
+#define LORA_T_SYMBOL_SF9_MS 4.096 // based on SF9 and 125k BW
+#define LORA_T_PREAMBE_SF9_MS (8 + 4.25) * LORA_T_SYMBOL_SF9_MS // assuming 8 symbols for now
+
+
 typedef enum {
   STATE_IDLE,
   STATE_TX,
@@ -111,7 +115,7 @@ static channel_id_t default_channel_id = {
   .center_freq_index = 0
 };
 
-#define EMPTY_CHANNEL_ID { .channel_header_raw = 0xFF, .center_freq_index = 0xFF };
+#define EMPTY_CHANNEL_ID { .channel_header_raw = 0xFF, .center_freq_index = 0xFF }
 
 static channel_id_t current_channel_id = EMPTY_CHANNEL_ID;
 
@@ -359,6 +363,10 @@ static void configure_eirp(eirp_t eirp)
     DPRINT("Set Tx power: %d dBm\n", eirp);
 
     hw_radio_set_tx_power(eirp);
+}
+
+static bool is_lora_channel(const channel_id_t* channel) {
+  return channel->channel_header.ch_class == PHY_CLASS_LORA;
 }
 
 static void configure_channel(const channel_id_t* channel) {
