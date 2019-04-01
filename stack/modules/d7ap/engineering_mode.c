@@ -26,6 +26,8 @@
 #include "packet_queue.h"
 #include "MODULE_D7AP_defs.h"
 
+#include "modem_interface.h"
+
 #if defined(FRAMEWORK_LOG_ENABLED) && defined(MODULE_D7AP_EM_LOG_ENABLED)
 #define DPRINT(...) log_print_stack_string(LOG_STACK_EM, __VA_ARGS__)
 #define DPRINT_DATA(...) log_print_data(__VA_ARGS__)
@@ -118,7 +120,6 @@ static void packet_received(hw_radio_packet_t* packet) {
 
     if(memcmp(&crc, packet->data + packet->length + 1 - 2, 2) != 0)
     {
-        DPRINT("CRC error");
         per_missed_packets_counter++;
     }
     else
@@ -129,8 +130,7 @@ static void packet_received(hw_radio_packet_t* packet) {
         uint8_t rx_data[FILL_DATA_SIZE+1];
         memcpy(&msg_counter, packet->data + 1, sizeof(msg_counter));
         memcpy(rx_data, packet->data + 1 + sizeof(msg_counter), data_len);
-        DPRINT("counter <%i>, rssi <%idBm>, length <%i>, timestamp <%lu>\n", msg_counter, packet->rx_meta.rssi, packet->length + 1, packet->rx_meta.timestamp);
-
+        
         if(per_packet_counter == 0)
         {
             // just start, assume received all previous counters to reset PER to 0%
@@ -158,7 +158,12 @@ static void packet_received(hw_radio_packet_t* packet) {
         if(msg_counter > 0)
             per = 100.0 - ((double)per_received_packets_counter / (double)msg_counter) * 100.0;
 
-        DPRINT("PER = %i%%\n", (int)per);
+        if(msg_counter % 50 == 0) {
+          uint8_t to_uart_uint[34];
+          sprintf(to_uart_uint, "PER %i%%. Counter %i, rssi %idBm      ", (int)per, msg_counter, packet->rx_meta.rssi);
+          modem_interface_transfer_bytes(to_uart_uint, 34, SERIAL_MESSAGE_TYPE_LOGGING);
+          DPRINT("PER = %i%%\n counter <%i>, rssi <%idBm>, length <%i>, timestamp <%lu>\n", (int)per, msg_counter, packet->rx_meta.rssi, packet->length + 1, packet->rx_meta.timestamp);
+        }
     }
 
     packet_queue_free_packet(packet_queue_find_packet(packet));
@@ -177,6 +182,9 @@ static void em_file_change_callback(uint8_t file_id){
     DPRINT_DATA(data, D7A_FILE_ENGINEERING_MODE_SIZE);
 
     timeout_em = em_command->timeout;
+
+    rx_cfg.syncword_class = PHY_SYNCWORD_CLASS1;
+    tx_cfg.syncword_class = PHY_SYNCWORD_CLASS1;
   
     switch (em_command->mode)
     {

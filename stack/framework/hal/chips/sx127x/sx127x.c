@@ -407,8 +407,8 @@ static void configure_channel(const channel_id_t* channel) {
     assert(channel->channel_header.ch_freq_band != PHY_BAND_433);
   }
 
-  if(is_lora_channel(channel) != is_lora_channel(&current_channel_id))
-    set_lora_mode(is_lora_channel(channel)); // only set mode when changed compared to current
+  if(is_lora_channel(channel) != is_lora_channel(&current_channel_id) || ((is_lora_channel(channel) && channel->center_freq_index != current_channel_id.center_freq_index)))
+    set_lora_mode(is_lora_channel(channel)); // only set mode when changed compared to current or when freq has changed (125 vs 250 kHz)
 
   // TODO check channel index is allowed
   // TODO define channel settings for LoRa PHY
@@ -575,8 +575,8 @@ static void packet_transmitted_isr() {
     // in LoRa mode we have to clear the IRQ register manually
     write_reg(REG_LR_IRQFLAGS, 0xFF);
   }
-
   DEBUG_TX_END();
+  hw_busy_wait(1);
   set_opmode(OPMODE_STANDBY);
   state = STATE_IDLE;
   if(tx_packet_callback) {
@@ -861,6 +861,7 @@ static void resume_from_sleep_mode() {
 
 static void start_rx(hw_rx_cfg_t const* rx_cfg) {
   resume_from_sleep_mode();
+  use_lora_250 = is_lora_channel(&(rx_cfg->channel_id)) && rx_cfg->channel_id.center_freq_index == 208;
   configure_channel(&(rx_cfg->channel_id));
   configure_syncword(rx_cfg->syncword_class, &(rx_cfg->channel_id));
 
@@ -1121,7 +1122,7 @@ error_t hw_radio_send_packet(hw_radio_packet_t* packet, tx_packet_callback_t tx_
 
         return hw_radio_send_packet_with_advertising(dll_header_bg_frame, tx_duration_bg_frame, eta, packet);
     }
-
+  use_lora_250 = is_lora_channel(&(current_packet->tx_meta.tx_cfg.channel_id)) && current_packet->tx_meta.tx_cfg.channel_id.center_freq_index == 208;
   configure_channel((channel_id_t*)&(current_packet->tx_meta.tx_cfg.channel_id));
   configure_eirp(current_packet->tx_meta.tx_cfg.eirp);
   configure_syncword(current_packet->tx_meta.tx_cfg.syncword_class,
