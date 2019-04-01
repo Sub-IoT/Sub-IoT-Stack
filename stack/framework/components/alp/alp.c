@@ -244,6 +244,7 @@ static void parse_op_return_status(fifo_t* fifo, alp_action_t* action, bool b6, 
     lorawan_session_result_t interface_status = *((lorawan_session_result_t*)action->status.data);
     fifo_skip(fifo,1); //size
     fifo_pop(fifo, &interface_status.attempts, 1);
+    fifo_pop(fifo, &interface_status.error_state, 1);
   }
 
   DPRINT("parsed interface status");

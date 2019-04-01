@@ -88,7 +88,7 @@ bool alp_layer_process_command_from_d7ap(uint8_t* alp_command, uint8_t alp_comma
 void alp_layer_command_completed(uint16_t trans_id, error_t error);
 
 static void lorwan_rx(lorawan_AppData_t *AppData);
-static void alp_layer_command_completed_from_lorawan(bool error, uint8_t retries);
+static void alp_layer_command_completed_from_lorawan(lorawan_stack_error_t error, uint8_t attempts);
 static void lorawan_join_completed(bool success,uint8_t app_port, bool request_ack);
 static void lorawan_send(uint8_t* payload, uint8_t length, uint8_t app_port, bool request_ack);
 
@@ -873,29 +873,31 @@ void lorwan_rx(lorawan_AppData_t *AppData)
   free_command(command); // when forwarding the response will arrive async, clean up then   
 }
 
-void add_interface_status_lorawan(alp_command_t* command, uint8_t retries, alp_itf_id_t alp_interface)
+void add_interface_status_lorawan(alp_command_t* command, uint8_t attempts, alp_itf_id_t alp_interface, lorawan_stack_error_t error)
 {
   fifo_put_byte(&command->alp_response_fifo, ALP_OP_RETURN_STATUS + (1 << 6));
   fifo_put_byte(&command->alp_response_fifo, alp_interface);
   fifo_put_byte(&command->alp_response_fifo, 1); //length
-  fifo_put_byte(&command->alp_response_fifo, retries);
+  fifo_put_byte(&command->alp_response_fifo, attempts);
+  fifo_put_byte(&command->alp_response_fifo, error);
+  
 }
 
-void alp_layer_command_completed_from_lorawan(bool error, uint8_t retries)
+void alp_layer_command_completed_from_lorawan(lorawan_stack_error_t error, uint8_t attempts)
 {
   // TODO end session
   DPRINT("LORAWAN flush completed");
   alp_command_t* command =&commands[0];
 
   if(shell_enabled && command->respond_when_completed) {
-      add_tag_response(command, true, error);
-      add_interface_status_lorawan(command, retries, current_lorawan_interface_type);
+      add_tag_response(command, true, (error != LORAWAN_STACK_ERROR_OK));
+      add_interface_status_lorawan(command, attempts, current_lorawan_interface_type, error);
       alp_cmd_handler_output_alp_command(&(command->alp_response_fifo));
       fifo_clear(&(command->alp_response_fifo));
   }
 
   if(init_args != NULL && init_args->alp_command_completed_cb != NULL)
-      init_args->alp_command_completed_cb(command->tag_id, !error);
+      init_args->alp_command_completed_cb(command->tag_id, (error==LORAWAN_STACK_ERROR_OK));
 
   free_command(command);  
 }
@@ -915,7 +917,7 @@ void lorawan_join_completed(bool success,uint8_t app_port,bool request_ack)
   }
   else if(send_on_join&&!success)
   {
-    alp_layer_command_completed_from_lorawan(true, 1); //join failed
+    alp_layer_command_completed_from_lorawan(true, LORAWAN_STACK_ERROR_NOT_JOINED); //join failed
   }
 }
 
@@ -926,7 +928,7 @@ static void lorawan_send(uint8_t* payload, uint8_t length, uint8_t app_port, boo
     if(e !=LORAWAN_STACK_ERROR_OK )
     {
       log_print_string("!!!LORAWAN SEND ERROR: %d\n", e);
-      alp_layer_command_completed_from_lorawan(true, 1); //with error 
+      alp_layer_command_completed_from_lorawan(true, e); //with error 
     }  
 }
 #endif

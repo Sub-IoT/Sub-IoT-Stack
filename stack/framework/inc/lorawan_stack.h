@@ -37,6 +37,7 @@ typedef enum {
   LORAWAN_STACK_ERROR_NOT_JOINED,
   LORAWAN_STACK_ERROR_TX_NOT_POSSIBLE,
   LORAWAN_STACK_ERROR_UNKNOWN,
+  LORAWAN_STACK_ERROR_NACK,
 } lorawan_stack_error_t;
 
 typedef enum {
@@ -46,6 +47,7 @@ typedef enum {
 
 typedef struct __attribute__((__packed__)) {
     uint8_t attempts;
+    lorawan_stack_error_t error_state;
 } lorawan_session_result_t;
 
 
@@ -68,7 +70,7 @@ typedef struct {
 
 typedef void (*lorawan_rx_callback_t)(lorawan_AppData_t *AppData);
 typedef void (*join_completed_callback_t)(bool success,uint8_t app_port2,bool request_ack2);
-typedef void (*lorawan_tx_completed_callback_t)(bool error, uint8_t retries);
+typedef void (*lorawan_tx_completed_callback_t)(lorawan_stack_error_t error, uint8_t retries);
 
 
 bool lorawan_abp_is_joined(lorawan_session_config_abp_t* lorawan_session_config);
