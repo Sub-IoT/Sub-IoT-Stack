@@ -222,7 +222,7 @@ static void mcps_confirm(McpsConfirm_t *McpsConfirm)
   else
     error = true;
 
-  tx_callback(error);
+  tx_callback(error,  McpsConfirm->NbRetries);
 }
 
 static void mcps_indication(McpsIndication_t *mcpsIndication)

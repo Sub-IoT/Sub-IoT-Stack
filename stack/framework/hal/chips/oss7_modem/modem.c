@@ -89,12 +89,16 @@ static void process_serial_frame(fifo_t* fifo) {
                                                action.file_data_operand.provided_data_length,
                                                action.file_data_operand.data);
         break;
-      case ALP_OP_RETURN_STATUS: ;
-        d7ap_session_result_t interface_status = *((d7ap_session_result_t*)action.status.data);
-        uint8_t addressee_len = d7ap_addressee_id_length(interface_status.addressee.ctrl.id_type);
-        DPRINT("received resp from: ");
-        DPRINT_DATA(interface_status.addressee.id, addressee_len);
-        // TODO callback?
+      case ALP_OP_RETURN_STATUS:
+        if(action.status.type==ALP_ITF_ID_D7ASP)
+        {
+          d7ap_session_result_t interface_status = *((d7ap_session_result_t*)action.status.data);
+          uint8_t addressee_len = d7ap_addressee_id_length(interface_status.addressee.ctrl.id_type);
+          DPRINT("received resp from: ");
+          DPRINT_DATA(interface_status.addressee.id, addressee_len);
+        }
+        if(callbacks->modem_interface_status_callback)
+          callbacks->modem_interface_status_callback(action.status.type,&action.status.data);
         break;
       default:
         assert(false);
