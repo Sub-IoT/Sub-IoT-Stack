@@ -917,7 +917,7 @@ void lorawan_join_completed(bool success,uint8_t app_port,bool request_ack)
   }
   else if(send_on_join&&!success)
   {
-    alp_layer_command_completed_from_lorawan(true, LORAWAN_STACK_ERROR_NOT_JOINED); //join failed
+    alp_layer_command_completed_from_lorawan(LORAWAN_STACK_ERROR_NOT_JOINED, 1); //join failed
   }
 }
 
@@ -928,7 +928,7 @@ static void lorawan_send(uint8_t* payload, uint8_t length, uint8_t app_port, boo
     if(e !=LORAWAN_STACK_ERROR_OK )
     {
       log_print_string("!!!LORAWAN SEND ERROR: %d\n", e);
-      alp_layer_command_completed_from_lorawan(true, e); //with error 
+      alp_layer_command_completed_from_lorawan(e, 1); //with error 
     }  
 }
 #endif
