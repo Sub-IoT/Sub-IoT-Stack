@@ -205,6 +205,7 @@ typedef struct {
 typedef struct {
     uint8_t data[255];
     uint8_t len;
+    alp_itf_id_t type;
 } alp_interface_status_t;
 
 

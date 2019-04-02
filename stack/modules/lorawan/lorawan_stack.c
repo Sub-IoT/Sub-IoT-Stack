@@ -212,17 +212,17 @@ static void run_fsm()
 static void mcps_confirm(McpsConfirm_t *McpsConfirm)
 {
   DPRINT("mcps_confirm: %i",McpsConfirm->AckReceived);
-  bool error = false;
+  lorawan_stack_error_t error = LORAWAN_STACK_ERROR_NACK;
   if(McpsConfirm!=NULL) {
     if(((McpsConfirm->McpsRequest == MCPS_CONFIRMED && McpsConfirm->AckReceived == 1) || (McpsConfirm->McpsRequest == MCPS_UNCONFIRMED)) && McpsConfirm->Status==LORAMAC_EVENT_INFO_STATUS_OK)
-      error = false;
+      error = LORAWAN_STACK_ERROR_OK;
     else if(McpsConfirm->McpsRequest == MCPS_CONFIRMED && McpsConfirm->AckReceived != 1)
-      error = true;
+      error = LORAWAN_STACK_ERROR_NACK;
   }
   else
-    error = true;
+    error = LORAWAN_STACK_ERROR_UNKNOWN;
 
-  tx_callback(error);
+  tx_callback(error,  McpsConfirm->NbRetries);
 }
 
 static void mcps_indication(McpsIndication_t *mcpsIndication)

@@ -217,9 +217,9 @@ static void parse_op_return_status(fifo_t* fifo, alp_action_t* action, bool b6, 
   assert(b6 && !b7); // TODO implement action status
   uint8_t itf_id;
   assert(fifo_pop(fifo, &itf_id, 1) == SUCCESS);
-  assert(itf_id == 0xD7); // TODO only D7 supported for now
   // TODO uint32_t itf_len = parse_length_operand(fifo);
   // assert(itf_len == sizeof(d7ap_session_result_t));
+  action->status.type=itf_id;
   if (itf_id == ALP_ITF_ID_D7ASP)
   {
     d7ap_session_result_t interface_status =  *((d7ap_session_result_t*)action->status.data);
@@ -238,6 +238,13 @@ static void parse_op_return_status(fifo_t* fifo, alp_action_t* action, bool b6, 
     fifo_pop(fifo, &interface_status.addressee.access_class, 1);
     uint8_t addressee_len = d7ap_addressee_id_length(interface_status.addressee.ctrl.id_type);
     assert(fifo_pop(fifo, interface_status.addressee.id, addressee_len) == SUCCESS);
+  }
+  else if ( (itf_id == ALP_ITF_ID_LORAWAN_OTAA) || (itf_id == ALP_ITF_ID_LORAWAN_ABP))
+  {
+    lorawan_session_result_t interface_status = *((lorawan_session_result_t*)action->status.data);
+    fifo_skip(fifo,1); //size
+    fifo_pop(fifo, &interface_status.attempts, 1);
+    fifo_pop(fifo, &interface_status.error_state, 1);
   }
 
   DPRINT("parsed interface status");
