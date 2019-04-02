@@ -576,7 +576,7 @@ static void packet_transmitted_isr() {
     write_reg(REG_LR_IRQFLAGS, 0xFF);
   }
   DEBUG_TX_END();
-  hw_busy_wait(1);
+  hw_busy_wait(110);
   set_opmode(OPMODE_STANDBY);
   state = STATE_IDLE;
   if(tx_packet_callback) {

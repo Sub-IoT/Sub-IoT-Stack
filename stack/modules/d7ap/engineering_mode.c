@@ -121,6 +121,7 @@ static void packet_received(hw_radio_packet_t* packet) {
     if(memcmp(&crc, packet->data + packet->length + 1 - 2, 2) != 0)
     {
         per_missed_packets_counter++;
+        DPRINT("##fault##");
     }
     else
     {
