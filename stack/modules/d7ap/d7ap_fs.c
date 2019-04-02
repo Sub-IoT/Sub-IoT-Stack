@@ -141,7 +141,7 @@ static uint32_t get_user_file_data_offset(uint8_t file_id)
     if(userfiles_ids[i] == file_id)
       break;
 
-    offset += fs_userfiles_header_data[i].allocated_length;
+    offset += __builtin_bswap32(fs_userfiles_header_data[i].allocated_length);
   }
 
   return offset;
