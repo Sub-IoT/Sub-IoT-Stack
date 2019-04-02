@@ -443,43 +443,45 @@ static alp_status_codes_t process_op_request_tag(alp_command_t* command, bool re
 }
 
 static alp_status_codes_t process_op_return_file_data(alp_command_t* command) {
-//  alp_control_tag_response_t crtl;
-//  alp_operand_file_data_request_t operand;
-
-//  fifo_pop(&command->alp_command_fifo, &crtl, 1); //get control byte
-//  operand.file_offset = alp_parse_file_offset_operand(&command->alp_command_fifo);
-//  operand.requested_data_length = alp_parse_length_operand(&command->alp_command_fifo);
-
   // determine total size of alp
   uint8_t total_len = 2; // ALP control byte + File ID byte
-  uint8_t length_field;
   uint8_t len; // b7 b6 of length field
   uint32_t data_len;
-  uint8_t alp_response[total_len];
   uint16_t fifo_skip_size;
+  uint8_t alp_response[ALP_PAYLOAD_MAX_SIZE];
 
-  //read length field of file offset
-  error_t e = fifo_peek(&command->alp_command_fifo, &length_field, total_len, 1);
+  // TODO refactor to reuse alp_parse_file_offset_operand() etc but in a way that does not pop() from fifo ..
+
+  // parse file offset length
+  error_t e = fifo_peek(&command->alp_command_fifo, (uint8_t*)&len, total_len, 1);
   if(e != SUCCESS) goto incomplete_error;
 
-  len = (length_field >> 6);
-  DPRINT("file offset length: %d", len + 1);
-  total_len += len + 1;
+  uint8_t field_len = len >> 6;
+  data_len = (uint32_t)(len & 0x3F) << ( 8 * field_len); // mask field length specificier bits and shift before adding other length bytes
+  if(field_len > 0) {
+    fifo_peek(&command->alp_command_fifo, (uint8_t*)&data_len, total_len, field_len);
+    total_len += field_len;
+    if(e != SUCCESS) goto incomplete_error;
+  }
 
-  //read length field of data length data
-  e = fifo_peek(&command->alp_command_fifo, &length_field, total_len, 1);
+  DPRINT("file offset length: %d", field_len + 1);
+  total_len += 1;
+
+  // parse file length length
+  fifo_peek(&command->alp_command_fifo, (uint8_t*)&len, total_len, 1);
   if(e != SUCCESS) goto incomplete_error;
 
-  len = (length_field >> 6);
-  DPRINT("data length length: %d", len + 1);
+  field_len = len >> 6;
+  data_len = (uint32_t)(len & 0x3F) << ( 8 * field_len); // mask field length specificier bits and shift before adding other length bytes
+  if(field_len > 0) {
+    fifo_peek(&command->alp_command_fifo, (uint8_t*)&data_len, total_len, field_len);
+    total_len += field_len;
+    if(e != SUCCESS) goto incomplete_error;
+  }
 
-  //read data length data
-  data_len = (length_field & 0x3F) << ( 8 * len); // mask field length specificier bits and shift before adding other length bytes
-  e = fifo_peek(&command->alp_command_fifo, (uint8_t*) &data_len, total_len + 1, len); // offset is one byte further as we have read the first byte
-  if(e != SUCCESS) goto incomplete_error;
-
-  DPRINT("data length: %d", data_len);
-  total_len += len + 1 + data_len;
+  DPRINT("file data length length: %d", field_len + 1);
+  DPRINT("file data length: %d", data_len);
+  total_len += 1 + data_len;
 
   if(fifo_get_size(&command->alp_command_fifo) < total_len) goto incomplete_error;
 
