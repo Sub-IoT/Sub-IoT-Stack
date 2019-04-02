@@ -25,9 +25,9 @@
     #error Mismatch between the configured platform and the actual platform. Expected PLATFORM_CORTUS_FPGA to be defined
 #endif
 
-#include "cortus_mcu.h"
 #include "machine/gpio.h"
 #include "blockdevice_ram.h"
+#include "cortus_mcu.h"
 #include "d7ap_fs.h"
 
 /********************
