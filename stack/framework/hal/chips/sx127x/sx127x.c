@@ -171,7 +171,7 @@ static channel_id_t default_channel_id = {
 static bool is_sx1272 = false;
 static bool use_lora_250 = false;
 
-#define EMPTY_CHANNEL_ID { .channel_header_raw = 0xFF, .center_freq_index = 0xFF };
+#define EMPTY_CHANNEL_ID { .channel_header_raw = 0xFF, .center_freq_index = 0xFF }
 
 static channel_id_t current_channel_id = EMPTY_CHANNEL_ID;
 
@@ -407,8 +407,8 @@ static void configure_channel(const channel_id_t* channel) {
     assert(channel->channel_header.ch_freq_band != PHY_BAND_433);
   }
 
-  if(is_lora_channel(channel) != is_lora_channel(&current_channel_id))
-    set_lora_mode(is_lora_channel(channel)); // only set mode when changed compared to current
+  if(is_lora_channel(channel) != is_lora_channel(&current_channel_id) || ((is_lora_channel(channel) && channel->center_freq_index != current_channel_id.center_freq_index)))
+    set_lora_mode(is_lora_channel(channel)); // only set mode when changed compared to current or when freq has changed (125 vs 250 kHz)
 
   // TODO check channel index is allowed
   // TODO define channel settings for LoRa PHY
@@ -575,8 +575,8 @@ static void packet_transmitted_isr() {
     // in LoRa mode we have to clear the IRQ register manually
     write_reg(REG_LR_IRQFLAGS, 0xFF);
   }
-
   DEBUG_TX_END();
+  hw_busy_wait(110);
   set_opmode(OPMODE_STANDBY);
   state = STATE_IDLE;
   if(tx_packet_callback) {
@@ -861,6 +861,7 @@ static void resume_from_sleep_mode() {
 
 static void start_rx(hw_rx_cfg_t const* rx_cfg) {
   resume_from_sleep_mode();
+  use_lora_250 = is_lora_channel(&(rx_cfg->channel_id)) && rx_cfg->channel_id.center_freq_index == 208;
   configure_channel(&(rx_cfg->channel_id));
   configure_syncword(rx_cfg->syncword_class, &(rx_cfg->channel_id));
 
@@ -1121,7 +1122,7 @@ error_t hw_radio_send_packet(hw_radio_packet_t* packet, tx_packet_callback_t tx_
 
         return hw_radio_send_packet_with_advertising(dll_header_bg_frame, tx_duration_bg_frame, eta, packet);
     }
-
+  use_lora_250 = is_lora_channel(&(current_packet->tx_meta.tx_cfg.channel_id)) && current_packet->tx_meta.tx_cfg.channel_id.center_freq_index == 208;
   configure_channel((channel_id_t*)&(current_packet->tx_meta.tx_cfg.channel_id));
   configure_eirp(current_packet->tx_meta.tx_cfg.eirp);
   configure_syncword(current_packet->tx_meta.tx_cfg.syncword_class,
@@ -1573,83 +1574,3 @@ void hw_radio_continuous_tx(hw_tx_cfg_t const* tx_cfg, uint8_t time_period) {
   switch_to_sleep_mode();
 }
 
-void hw_radio_continuous_rx(hw_rx_cfg_t const* rx_cfg, uint8_t time_period) {
-  resume_from_sleep_mode();
-  //configure_channel(&(rx_cfg->channel_id));
-  //configure_syncword(rx_cfg->syncword_class, &(rx_cfg->channel_id));
-  configure_channel(&(rx_cfg->channel_id));
-
-  flush_fifo();
-  FskPacketHandler.NbBytes = 0;
-  FskPacketHandler.Size = 0;
-  FskPacketHandler.FifoThresh = 0;
-
-  //fixed length with 0 payloadlength = unlimited payloadlength
-  write_reg(REG_PACKETCONFIG1, read_reg(REG_PACKETCONFIG1) & 0x7F); 
-  write_reg(REG_PACKETCONFIG2, read_reg(REG_PACKETCONFIG2) & 0xF8);
-  write_reg(REG_PAYLOADLENGTH, 0x00);
-
-  //no automatic restart
-  write_reg(REG_RXCONFIG,read_reg(REG_RXCONFIG) & 0x7F);
-
-  set_packet_handler_enabled(true);
-
-  //CHECK SETTINGS
-  if(read_reg(REG_PACKETCONFIG2) & 0x40)
-    DPRINT("PACKET MODE");
-  else
-    DPRINT("CONTINUOUS MODE");
-  if((read_reg(REG_PACKETCONFIG1) & 0xF6) == 0x00)
-    DPRINT("Fixed unlimited length, no decoding, CRC off, addressfiltering off");
-  else
-    DPRINT("something wrong: %X",read_reg(REG_PACKETCONFIG1) & 0xF6);
-  if(!(read_reg(REG_OPMODE) & 0xE0))
-    DPRINT("FSK");
-  
-
-  if(state == STATE_RX)
-    restart_rx_chain();
-
-  state = STATE_RX;
-  set_opmode(OPMODE_RX);
-
-  if(rssi_valid_callback != 0) {
-    while(!(read_reg(REG_IRQFLAGS1) & 0x08)) {} // wait until we have a valid RSSI value
-
-    rssi_valid_callback(get_rssi());
-  }
-
-  DPRINT("start_hw_radio_continuous_rx");
-  bool const_rx = (time_period == 0);
-
-  assert(time_period <= 60);
-  uint16_t time = hw_timer_getvalue(0) + time_period * 1024;
-
-  if (current_channel_id.channel_header.ch_coding == PHY_CODING_FEC_PN9) {
-      uint8_t data[64];
-      while(const_rx || ((hw_timer_getvalue(0) < time) || (hw_timer_getvalue(0) > (time + 100)))){
-        if((read_reg(REG_IRQFLAGS2) & 0x80)){ //If Fifo full, read 64 bytes
-          read_fifo(data, 64);
-          fec_decode_packet(data, 64, 64);
-          log_print_data(data, 32);
-        } 
-      }
-  }
-  else if (current_channel_id.channel_header.ch_coding == PHY_CODING_PN9) {
-    while(const_rx || ((hw_timer_getvalue(0) < time) || (hw_timer_getvalue(0) > (time + 100)))){
-      int16_t rss = hw_radio_get_rssi();
-      DPRINT("rss : %d \n", rss);
-      hw_busy_wait(5000);
-    }
-  } else {
-    uint8_t data[64];
-    while(const_rx || ((hw_timer_getvalue(0) < time) || (hw_timer_getvalue(0) > (time + 100)))){
-      if((read_reg(REG_IRQFLAGS2) & 0x80)){ //If Fifo full, read 64 bytes
-        read_fifo(data, 64);
-        log_print_data(data, 64);
-      } 
-    }
-  }
-
-  switch_to_sleep_mode();
-}

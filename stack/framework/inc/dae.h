@@ -32,11 +32,13 @@
 #define ACCESS_SPECIFIER(val) (uint8_t)(val >> 4 & 0x0F)
 #define ACCESS_MASK(val) (uint8_t)(val & 0x0F)
 
-// first byte is the mode
-#define EM_MODE_OFF            0
-#define EM_MODE_CONTINUOUS_TX  1
-#define EM_MODE_CONTINUOUS_RX  2
-#define EM_MODE_TRANSIENT_TX   3
+typedef enum {
+  EM_MODE_OFF = 0,
+  EM_MODE_CONTINUOUS_TX = 1,
+  EM_MODE_TRANSIENT_TX = 2,
+  EM_MODE_PER_RX = 3,
+  EM_MODE_PER_TX = 4
+} engineering_mode_mode_t;
 
 /* \brief The coding schemes and corresponding indices as defined in D7A
  *
