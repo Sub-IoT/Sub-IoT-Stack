@@ -8,14 +8,10 @@ variables:
 job 1:
   tags: 
   - linux
+  - arm-toolchain
   stage: build stack
   script: 
-  - apt-get update -y
-  - apt-get install cmake -y
-  - wget https://developer.arm.com/-/media/Files/downloads/gnu-rm/7-2018q2/gcc-arm-none-eabi-7-2018-q2-update-linux.tar.bz2
-  - tar xvf gcc-arm-none-eabi-7-2018-q2-update-linux.tar.bz2
-  - rm gcc-arm-none-eabi-7-2018-q2-update-linux.tar.bz2
-  - PATH="$(pwd)/gcc-arm-none-eabi-7-2018-q2-update/bin/:$PATH"
+  - PATH="/opt/gcc-arm-none-eabi-7-2018-q2-update/bin/:$PATH"
   - mkdir build && cd build
   - platform="B_L072Z_LRWAN1"
   - cmake ../stack/ -DAPP_GATEWAY=y -DAPP_MODEM=y -DAPP_SENSOR_PUSH=y -DPLATFORM=$platform
@@ -46,7 +42,7 @@ job 3:
   - JLink
   stage: run tests
   script:
-  - git clone --recurse-submodules git@github.com:MOSAIC-LoPoW/oss7-testsuite.git
+  - git clone --recurse-submodules https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.com/aloxy/oss7-testsuite.git
   - cd oss7-testsuite
   - pip install -r requirements.txt
   - cd lib/pyd7a/
