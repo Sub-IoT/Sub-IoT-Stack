@@ -62,7 +62,7 @@
 // assuming 1 ppm crystals gives max error of: 2 * 1 ppm * 868 = 1.736 kHz
 // => BW > 19.2 + 1.736 kHz => > 20.936 kHZ. 
 // Closest possible value is 20.8 kHz. This is an actual ppm of 0.92. ((2 << 3) | 4)
-// Other possibility is 25 kHz. This is an actual ppm of 14.40. ((1 << 3) | 4)
+// Other possibility is 25 kHz. This is an actual ppm of 3.34. ((1 << 3) | 4)
 #define RXBW_L ((2 << 3) | 4)  // TODO validate sensitivity / xtal accuracy tradeoff
 
 // normal rate
