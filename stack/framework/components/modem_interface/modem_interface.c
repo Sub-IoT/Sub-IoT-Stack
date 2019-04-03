@@ -87,6 +87,7 @@ static state_t state = STATE_IDLE;
 } while(0)
 
 static void process_rx_fifo(void *arg);
+static void execute_state_machine();
 
 
 /** @Brief Enable UART interface and UART interrupt
@@ -147,6 +148,9 @@ static void flush_modem_interface_tx_fifo(void *arg)
     uart_send_bytes(uart, chunk, len);
     request_pending = false;
     release_receiver();
+#ifdef PLATFORM_USE_MODEM_INTERRUPT_LINES
+    sched_post_task(&execute_state_machine);
+#endif
   } 
   else 
   {
@@ -201,9 +205,12 @@ static void execute_state_machine()
         SWITCH_STATE(STATE_RESP);
         modem_listen(NULL);
         break;
-      } else {
+      } else if(request_pending) { //check if we are really requesting a start
         SWITCH_STATE(STATE_REQ_START);
         // fall-through to STATE_REQ_START!
+      } else
+      {
+        break;
       }
     case STATE_REQ_START:
       // TODO timeout
@@ -229,9 +236,11 @@ static void execute_state_machine()
       if(request_pending) {
         modem_interface_enable();
         sched_post_task_prio(&flush_modem_interface_tx_fifo, MIN_PRIORITY, NULL);
-      } else {
+      } else if (!hw_gpio_get_in(target_uart_state_pin)){
         SWITCH_STATE(STATE_IDLE);
-      }
+      } else
+        sched_post_task(&execute_state_machine); 
+        //keep active until target reacts
       break;
     case STATE_RESP_PENDING_REQ:
       assert(request_pending);
