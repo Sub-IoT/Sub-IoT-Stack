@@ -42,6 +42,8 @@
 #include "pn9.h"
 #include "fec.h"
 
+#define SX127X_FXOSC       32000000UL
+
 #define FREQ_STEP 61.03515625
 
 #define FIFO_SIZE   64
@@ -189,6 +191,11 @@ static void write_reg(uint8_t addr, uint8_t value) {
   spi_exchange_byte(sx127x_spi, value);
   spi_deselect(sx127x_spi);
   //DPRINT("WRITE %02x: %02x", addr, value);
+}
+
+void write_reg_16(uint8_t start_reg, uint16_t value){
+  write_reg(start_reg, (uint8_t)((value >> 8) & 0xFF));
+  write_reg(start_reg + 1, (uint8_t)(value & 0xFF));
 }
 
 static void write_fifo(uint8_t* buffer, uint8_t size) {
@@ -814,44 +821,67 @@ bool hw_radio_is_idle() {
 }
 
 hw_state_t hw_radio_get_opmode(void) {
-  // TODO
+  get_opmode();
 }
 
 void hw_radio_set_opmode(hw_state_t opmode) {
-// TODO
-  //#if defined(PLATFORM_SX127X_USE_MANUAL_RXTXSW_PIN) || defined(PLATFORM_USE_ABZ)
-//  set_antenna_switch(opmode);
-//#endif
+  #if defined(PLATFORM_SX127X_USE_MANUAL_RXTXSW_PIN) || defined(PLATFORM_USE_ABZ)
+  set_antenna_switch(opmode);
+  #endif
 
-//  write_reg(REG_OPMODE, (read_reg(REG_OPMODE) & RF_OPMODE_MASK) | opmode);
+  write_reg(REG_OPMODE, (read_reg(REG_OPMODE) & RF_OPMODE_MASK) | opmode);
 
-//#ifdef PLATFORM_SX127X_USE_VCC_TXCO
-//  if(opmode == OPMODE_SLEEP)
-//    hw_gpio_clr(SX127x_VCC_TXCO);
-//  else
-//    hw_gpio_set(SX127x_VCC_TXCO);
-//#endif
-
+  #ifdef PLATFORM_SX127X_USE_VCC_TXCO
+  if(opmode == OPMODE_SLEEP)
+    hw_gpio_clr(SX127x_VCC_TXCO);
+  else
+    hw_gpio_set(SX127x_VCC_TXCO);
+  #endif
 }
 
 void hw_radio_set_center_freq(uint32_t center_freq) {
-  // TODO
+  center_freq = (uint32_t)(center_freq / FREQ_STEP);
+
+  write_reg(REG_FRFMSB, (uint8_t)((center_freq >> 16) & 0xFF));
+  write_reg(REG_FRFMID, (uint8_t)((center_freq >> 8) & 0xFF));
+  write_reg(REG_FRFLSB, (uint8_t)(center_freq & 0xFF));
 }
 
 void hw_radio_set_rx_bw_hz(uint32_t bw_hz) {
-  // TODO
+  uint8_t bw_exp_count, bw_mant_count;
+  uint32_t computed_bw;
+  uint32_t min_bw_dif = 10e6;
+  uint8_t reg_bw;
+
+  for(bw_exp_count = 1; bw_exp_count < 8; bw_exp_count++){
+    for(bw_mant_count = 16; bw_mant_count <= 24; bw_mant_count += 4){
+      computed_bw = SX127X_FXOSC / (bw_mant_count * (1 << (bw_exp_count + 2)));
+      if(abs(computed_bw - bw_hz) < min_bw_dif){
+        min_bw_dif = abs(computed_bw - bw_hz);
+        reg_bw = ((((bw_mant_count - 16) / 4) << 3) | bw_exp_count);
+      }
+    }
+  }
+
+  write_reg(REG_RXBW, reg_bw);
 }
 
 void hw_radio_set_bitrate(uint32_t bps) {
-  // TODO
+  /* Bitrate(15,0) + (BitrateFrac / 16) = FXOSC / bps */
+  uint16_t bps_downscaled = (uint16_t)(SX127X_FXOSC / bps)); 
+  
+  write_reg_16(REG_BITRATEMSB, bps_downscaled)
 }
 
 void hw_radio_set_tx_fdev(uint32_t fdev) {
-  // TODO
+  /* Fdev(13,0) = Fdev / Fstep */
+  uint16_t fdev_downscaled = fdev / FREQ_STEP;
+
+  write_reg_16(REG_FDEVMSB, fdev_downscaled);
 }
 
 void hw_radio_set_preamble_size(uint16_t size) {
-  // TODO
+  write_reg_16(REG_PREAMBLEMSB, size);
 }
 
 void hw_radio_set_dc_free(uint8_t scheme) {
@@ -859,7 +889,9 @@ void hw_radio_set_dc_free(uint8_t scheme) {
 }
 
 void hw_radio_set_sync_word(uint8_t *sync_word, uint8_t sync_size) {
-  // TODO
+  //TODO: make sync word dependant on size
+  uint16_t full_sync_word = *((const uint16_t *)sync_word);
+  write_reg_16(REG_SYNCVALUE1, full_sync_word);
 }
 
 void hw_radio_set_crc_on(uint8_t enable) {
@@ -888,7 +920,44 @@ void hw_radio_enable_preloading(bool enable) {
 }
 
 void hw_radio_set_tx_power(uint8_t eirp) { // TODO signed
-  // TODO
+  if(eirp < -5) {
+    eirp = -5;
+    DPRINT("The given eirp is too low, adjusted to %d dBm, offset excluded", eirp);
+    // assert(eirp >= -5); // -4.2 dBm is minimum
+  } 
+#ifdef PLATFORM_SX127X_USE_PA_BOOST
+ // Pout = 17-(15-outputpower)
+  if(eirp > 20) {
+    eirp = 20;
+    DPRINT("The given eirp is too high, adjusted to %d dBm, offset excluded", eirp);
+    // chip supports until +15 dBm default, +17 dBm with PA_BOOST and +20 dBm with PaDac enabled. 
+  }
+  if(eirp <= 5) {
+    write_reg(REG_PACONFIG, (uint8_t)(eirp - 10.8 + 15));
+    write_reg(REG_PADAC, 0x84); //Default Power
+  } else if(eirp <= 15) {
+    write_reg(REG_PACONFIG, 0x70 | (uint8_t)(eirp));
+    write_reg(REG_PADAC, 0x84); //Default Power
+  } else if(eirp <= 17) {
+    write_reg(REG_PACONFIG, 0x80 | (eirp - 2));
+    write_reg(REG_PADAC, 0x84); //Default Power
+  } else {
+    write_reg(REG_PACONFIG, 0x80 | (eirp - 5));
+    write_reg(REG_PADAC, 0x87); //High Power
+  }
+#else
+  // Pout = Pmax-(15-outputpower)
+  if(eirp > 15) {
+    eirp = 15;
+    DPRINT("The given eirp is too high, adjusted to %d dBm, offset excluded", eirp);
+    // assert(eirp <= 15); // Pmax = 15 dBm
+  }
+  if(eirp <= 5)
+    write_reg(REG_PACONFIG, (uint8_t)(eirp - 10.8 + 15));
+  else
+    write_reg(REG_PACONFIG, 0x70 | (uint8_t)(eirp));
+#endif
+
 }
 
 void hw_radio_set_rx_timeout(uint32_t timeout) {
