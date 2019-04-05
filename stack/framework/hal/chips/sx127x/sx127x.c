@@ -164,6 +164,8 @@ static alloc_packet_callback_t alloc_packet_callback;
 static release_packet_callback_t release_packet_callback;
 static rx_packet_callback_t rx_packet_callback;
 static tx_packet_callback_t tx_packet_callback;
+static rx_packet_header_callback_t rx_packet_header_callback;
+static tx_refill_callback_t tx_refill_callback;
 static state_t state = STATE_IDLE;
 static bool lora_mode = false;
 static hw_radio_packet_t* current_packet;
@@ -428,23 +430,14 @@ static inline int16_t get_rssi() {
 }
 
 // TODO
-//static void packet_transmitted_isr() {
-//  hw_gpio_disable_interrupt(SX127x_DIO0_PIN);
-//  DPRINT("packet transmitted ISR @ %d\n", timer_get_counter_value());
-//  assert(state == STATE_TX);
-//  if(current_channel_id.channel_header.ch_class == PHY_CLASS_LORA) {
-//    // in LoRa mode we have to clear the IRQ register manually
-//    write_reg(REG_LR_IRQFLAGS, 0xFF);
-//  }
+static void packet_transmitted_isr() {
+  hw_gpio_disable_interrupt(SX127x_DIO0_PIN);
 
-//  DEBUG_TX_END();
-//  set_opmode(OPMODE_STANDBY);
-//  state = STATE_IDLE;
-//  if(tx_packet_callback) {
-//    current_packet->tx_meta.timestamp = timer_get_counter_value();
-//    tx_packet_callback(current_packet);
-//  }
-//}
+  DEBUG_TX_END();
+  hw_radio_set_opmode(OPMODE_STANDBY);
+
+  tx_packet_callback(timer_get_counter_value());
+}
 
 // TODO
 //static void lora_rxdone_isr() {
@@ -510,15 +503,11 @@ static inline int16_t get_rssi() {
 
 
 static void dio0_isr(pin_id_t pin_id, uint8_t event_mask) {
-// TODO
-  //    if(state == STATE_RX) {
-//        if(lora_mode)
-//            lora_rxdone_isr();
-//        else
-//            bg_scan_rx_done();
-//    } else {
-//      packet_transmitted_isr();
-//    }
+  if(state == STATE_RX) {
+    bg_scan_rx_done();
+  } else {
+    packet_transmitted_isr();
+  }
 }
 
 static void set_packet_handler_enabled(bool enable) {
@@ -540,7 +529,8 @@ static void fifo_level_isr()
         assert(false);
     }
 
-    fill_in_fifo();
+    tx_refill_callback(1); //TODO add remaining #bytes
+    // fill_in_fifo();
 }
 
 //static void restart_rx() {
@@ -675,12 +665,11 @@ static void fifo_level_isr()
 //}
 
 static void dio1_isr(pin_id_t pin_id, uint8_t event_mask) {
-// TODO
-//    if(state == STATE_RX) {
-//        fifo_threshold_isr();
-//    } else {
-//        fifo_level_isr();
-//    }
+   if(state == STATE_RX) {
+      //  fifo_threshold_isr();
+   } else {
+       fifo_level_isr();
+   }
 }
 
 //static void configure_syncword(syncword_class_t syncword_class, const channel_id_t* channel)
@@ -764,7 +753,10 @@ static void calibrate_rx_chain() {
 error_t hw_radio_init(hwradio_init_args_t* init_args) {
   alloc_packet_callback = init_args->alloc_packet_cb;
   release_packet_callback = init_args->release_packet_cb;
-  // TODO other callbacks
+  rx_packet_callback = init_args->rx_packet_cb;
+  rx_packet_header_callback = init_args->rx_packet_header_cb;
+  tx_packet_callback = init_args->tx_packet_cb;
+  tx_refill_callback = init_args->tx_refill_cb;
 
   if(sx127x_spi == NULL) {
     spi_handle = spi_init(SX127x_SPI_INDEX, SX127x_SPI_BAUDRATE, 8, true, false);
@@ -775,9 +767,8 @@ error_t hw_radio_init(hwradio_init_args_t* init_args) {
   hw_radio_io_init();
   hw_radio_reset();
 
-//  set_opmode(OPMODE_STANDBY);
-//  while(get_opmode() != OPMODE_STANDBY) {}
-   // TODO
+  hw_radio_set_opmode(OPMODE_STANDBY);
+  while(hw_radio_get_opmode() != OPMODE_STANDBY) {}
 
   uint8_t chip_version = read_reg(REG_VERSION);
   if(chip_version == 0x12) {
@@ -798,8 +789,8 @@ error_t hw_radio_init(hwradio_init_args_t* init_args) {
   hw_radio_set_idle();
 
   error_t e;
-  e = hw_gpio_configure_interrupt(SX127x_DIO0_PIN, &dio0_isr, GPIO_RISING_EDGE, NULL); assert(e == SUCCESS);
-  e = hw_gpio_configure_interrupt(SX127x_DIO1_PIN, &dio1_isr, GPIO_RISING_EDGE, NULL); assert(e == SUCCESS);
+  e = hw_gpio_configure_interrupt(SX127x_DIO0_PIN, GPIO_RISING_EDGE, &dio0_isr, NULL); assert(e == SUCCESS);
+  e = hw_gpio_configure_interrupt(SX127x_DIO1_PIN, GPIO_RISING_EDGE, &dio1_isr, NULL); assert(e == SUCCESS);
   DPRINT("inited sx127x");
 
   return SUCCESS; // TODO FAIL return code
@@ -868,9 +859,9 @@ void hw_radio_set_rx_bw_hz(uint32_t bw_hz) {
 
 void hw_radio_set_bitrate(uint32_t bps) {
   /* Bitrate(15,0) + (BitrateFrac / 16) = FXOSC / bps */
-  uint16_t bps_downscaled = (uint16_t)(SX127X_FXOSC / bps)); 
+  uint16_t bps_downscaled = (uint16_t)(SX127X_FXOSC / bps); 
   
-  write_reg_16(REG_BITRATEMSB, bps_downscaled)
+  write_reg_16(REG_BITRATEMSB, bps_downscaled);
 }
 
 void hw_radio_set_tx_fdev(uint32_t fdev) {
@@ -899,7 +890,39 @@ void hw_radio_set_crc_on(uint8_t enable) {
 }
 
 error_t hw_radio_send_payload(uint8_t * data, uint16_t len) {
-  // TODO
+  if(hw_radio_get_opmode() == OPMODE_SLEEP){
+    hw_radio_set_opmode(OPMODE_STANDBY);
+    while(hw_radio_get_opmode != OPMODE_STANDBY) ;
+  }
+
+  write_reg(REG_DIOMAPPING1, 0x00); //FIFO LEVEL ISR or Packet Sent ISR
+  flush_fifo();
+
+  // fg_frame.encoded_packet = data;
+  // fg_frame.encoded_length = len;
+  // fg_frame.transmitted_index = 0;
+  // fg_frame.bg_adv = false;
+
+  if(len > FIFO_SIZE){
+    write_reg(REG_FIFOTHRESH, 0x80 | FG_THRESHOLD);
+    write_fifo(data, FIFO_SIZE);
+    // fg_frame.transmitted_index = FIFO_SIZE;
+    log_print_string("len %d is bigger than FIFO_SIZE %d\n", len, FIFO_SIZE);
+    hw_gpio_set_edge_interrupt(SX127x_DIO1_PIN, GPIO_FALLING_EDGE);
+    hw_gpio_disable_interrupt(SX127x_DIO0_PIN);
+    hw_gpio_enable_interrupt(SX127x_DIO1_PIN);
+  } else {
+    write_fifo(data, len);
+    // fg_frame.transmitted_index = fg_frame.encoded_length;
+    log_print_string("len %d is smaller than FIFO_SIZE %d\n", len, FIFO_SIZE);
+    hw_gpio_set_edge_interrupt(SX127x_DIO0_PIN, GPIO_RISING_EDGE);
+    hw_gpio_enable_interrupt(SX127x_DIO0_PIN);
+    hw_gpio_disable_interrupt(SX127x_DIO1_PIN);
+  }
+
+  set_packet_handler_enabled(true);
+
+  hw_radio_set_opmode(OPMODE_TX);
 }
 
 void hw_radio_set_payload_length(uint16_t length) {

@@ -64,6 +64,19 @@ static channel_id_t per_channel_id = {
 static void packet_transmitted(hw_radio_packet_t* packet);
 static void packet_received(hw_radio_packet_t* packet);
 
+static uint16_t per_packet_counter = 0;
+static uint8_t per_data[PACKET_SIZE] = { [0 ... PACKET_SIZE-1]  = 0 };
+static uint8_t per_fill_data[FILL_DATA_SIZE + 1];
+static uint8_t per_packet_buffer[sizeof(hw_radio_packet_t) + 255] = { 0 };
+static hw_radio_packet_t* per_packet = (hw_radio_packet_t*)per_packet_buffer;
+static channel_id_t per_channel_id = {
+    .channel_header.ch_coding = PHY_CODING_PN9,
+    .channel_header.ch_class = PHY_CLASS_NORMAL_RATE,
+    .channel_header.ch_freq_band = PHY_BAND_433,
+    .center_freq_index = 0
+};
+
+
 static void stop_transient_tx(){
     stop = true;
 }
@@ -72,7 +85,20 @@ static void start_transient_tx(){
     if(!stop) {
       timer_post_task_delay(&start_transient_tx, 1200);
 
-      phy_continuous_tx(&tx_cfg, 1);
+      // phy_continuous_tx(&tx_cfg, 1);
+      per_packet_counter++;
+      per_data[0] = sizeof(per_packet_counter) + FILL_DATA_SIZE + sizeof(uint16_t); /* CRC is an uint16_t */
+      memcpy(per_data + 1, &per_packet_counter, sizeof(per_packet_counter));
+      /* the CRC calculation shall include all the bytes of the frame including the byte for the length*/
+      memcpy(per_data + 1 + sizeof(per_packet_counter), per_fill_data, FILL_DATA_SIZE);
+      uint16_t crc = __builtin_bswap16(crc_calculate(per_data, per_data[0] + 1 - 2));
+      memcpy(per_data + 1 + sizeof(per_packet_counter) + FILL_DATA_SIZE, &crc, 2);
+      memcpy(&per_packet->data, per_data, sizeof(per_data));
+      per_packet->length = per_data[0];
+      tx_cfg.channel_id = per_channel_id;
+      error_t e = phy_send_packet(per_packet, &tx_cfg);
+      if(e != SUCCESS)
+        DPRINT("failed to send package with error code: %d", e);
     }
 }
 
