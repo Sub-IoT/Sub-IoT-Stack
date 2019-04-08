@@ -59,10 +59,10 @@
 #define FDEVMSB_L 0x00
 #define FDEVLSB_L 0x4F
 // Carson's rule: fm + fd  = 9.600/2 + 4.800 = 9.6 kHz
-// assuming 1 ppm crystals gives max error of: 2 * 1 ppm * 868 = 1.736 kHz
-// => BW > 9.6 + 1.736 kHz => > 11.336 kHZ. 
-// Closest possible value is 10.4 kHz. This is an actual ppm of 0.46. ((2 << 3) | 5)
-// Other possibility is 12.5 kHz. This is an actual ppm of 1.67. ((1 << 3) | 5)
+// assuming 1 ppm crystals gives max error of: 1 ppm * 868 = 0.868 kHz
+// => BW > 9.6 + 0.868 kHz => > 10.468 kHZ. 
+// Closest possible value is 10.4 kHz. This is an actual ppm of 0.92. ((2 << 3) | 5)
+// Other possibility is 12.5 kHz. This is an actual ppm of 3.34. ((1 << 3) | 5)
 #define RXBW_L ((2 << 3) | 5)  // TODO validate sensitivity / xtal accuracy tradeoff
 
 // normal rate
@@ -74,8 +74,8 @@
 #define FDEVLSB_N 0x33
 // data rate 55.542 kBaud
 // Carson's rule: fm + fd  = 55.555/2 + 50 = 77.778 kHz
-// assuming 1 ppm crystals gives max error of: 2 * 1 ppm * 868 = 1.736 kHz
-// => BW > 77.778 + 1.736 => 79.514 kHz. Closest possible value is 83.3 kHz. This is an actual ppm of 3.18.
+// assuming 1 ppm crystals gives max error of: 1 ppm * 868 = 0.868 kHz
+// => BW > 77.778 + 0.868 => 78.646 kHz. Closest possible value is 83.3 kHz. This is an actual ppm of 6.36.
 // TODO bit too high, next step is 200, validate sensitivity / xtal accuracy tradeoff
 #define RXBW_N ((2 << 3) | 2)
 
@@ -87,10 +87,10 @@
 #define FDEVMSB_H 0x02
 #define FDEVLSB_H 0xAA
 // Carson's rule: fm + fd  = 166.667/2 + 41.667 = 125 kHz
-// assuming 1 ppm crystals gives max error of: 2 * 1 ppm * 868 = 1.736 kHz
-// => BW > 125 + 1.736 kHz => > 126.736 kHZ. 
+// assuming 1 ppm crystals gives max error of: 1 ppm * 868 = 0.868 kHz
+// => BW > 125 + 0.868 kHz => > 125.868 kHZ. 
 // Closest possible value is 125 kHz. This is an actual ppm of 0. ((0 << 3) | 2)
-// Other possibility is 166.7 kHz. This is an actual ppm of 24.02. ((2 << 3) | 1)
+// Other possibility is 166.7 kHz. This is an actual ppm of 48.04. ((2 << 3) | 1)
 #define RXBW_H ((0 << 3) | 2)  // TODO validate sensitivity / xtal accuracy tradeoff
 
 #if defined(FRAMEWORK_LOG_ENABLED) && defined(FRAMEWORK_PHY_LOG_ENABLED)
