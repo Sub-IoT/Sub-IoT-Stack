@@ -58,12 +58,12 @@
 // Fdev => 4.8 kHz
 #define FDEVMSB_L 0x00
 #define FDEVLSB_L 0x4F
-// Carson's rule: 2 x fm + 2 x fd  = 9.600 + 2 x 4.800 = 19.2 kHz
+// Carson's rule: fm + fd  = 9.600/2 + 4.800 = 9.6 kHz
 // assuming 1 ppm crystals gives max error of: 2 * 1 ppm * 868 = 1.736 kHz
-// => BW > 19.2 + 1.736 kHz => > 20.936 kHZ. 
-// Closest possible value is 20.8 kHz. This is an actual ppm of 0.92. ((2 << 3) | 4)
-// Other possibility is 25 kHz. This is an actual ppm of 3.34. ((1 << 3) | 4)
-#define RXBW_L ((2 << 3) | 4)  // TODO validate sensitivity / xtal accuracy tradeoff
+// => BW > 9.6 + 1.736 kHz => > 11.336 kHZ. 
+// Closest possible value is 10.4 kHz. This is an actual ppm of 0.46. ((2 << 3) | 5)
+// Other possibility is 12.5 kHz. This is an actual ppm of 1.67. ((1 << 3) | 5)
+#define RXBW_L ((2 << 3) | 5)  // TODO validate sensitivity / xtal accuracy tradeoff
 
 // normal rate
 // BR 0x0240 => 55555.55555 bps
@@ -73,11 +73,11 @@
 #define FDEVMSB_N 0x03
 #define FDEVLSB_N 0x33
 // data rate 55.542 kBaud
-// Carson's rule: 2 x fm + 2 x fd  = 55.555 + 2 x 50 = 155.555 kHz
+// Carson's rule: fm + fd  = 55.555/2 + 50 = 77.778 kHz
 // assuming 1 ppm crystals gives max error of: 2 * 1 ppm * 868 = 1.736 kHz
-// => BW > 155.555 + 1.736 => 157.291 kHz. Closest possible value is 166.7 kHz. This is an actual ppm of 6.42.
+// => BW > 77.778 + 1.736 => 79.514 kHz. Closest possible value is 83.3 kHz. This is an actual ppm of 3.18.
 // TODO bit too high, next step is 200, validate sensitivity / xtal accuracy tradeoff
-#define RXBW_N ((2 << 3) | 1)
+#define RXBW_N ((2 << 3) | 2)
 
 // hi rate
 // BR 0x00C0 => 166666.667 bps
@@ -86,10 +86,12 @@
 // Fdev => 41.667 kHz
 #define FDEVMSB_H 0x02
 #define FDEVLSB_H 0xAA
-// Carson's rule: 2 x fm + 2 x fd  = 166.667 + 2 x 41.667 = 250 kHz
+// Carson's rule: fm + fd  = 166.667/2 + 41.667 = 125 kHz
 // assuming 1 ppm crystals gives max error of: 2 * 1 ppm * 868 = 1.736 kHz
-// => BW > 250 + 1.736 kHz => > 251.736 kHZ. Closest possible value is 250 kHz (=max).
-#define RXBW_H ((0 << 3) | 1)  // TODO validate sensitivity / xtal accuracy tradeoff
+// => BW > 125 + 1.736 kHz => > 126.736 kHZ. 
+// Closest possible value is 125 kHz. This is an actual ppm of 0. ((0 << 3) | 2)
+// Other possibility is 166.7 kHz. This is an actual ppm of 24.02. ((2 << 3) | 1)
+#define RXBW_H ((0 << 3) | 2)  // TODO validate sensitivity / xtal accuracy tradeoff
 
 #if defined(FRAMEWORK_LOG_ENABLED) && defined(FRAMEWORK_PHY_LOG_ENABLED)
 #define DPRINT(...) log_print_stack_string(LOG_STACK_PHY, __VA_ARGS__)
