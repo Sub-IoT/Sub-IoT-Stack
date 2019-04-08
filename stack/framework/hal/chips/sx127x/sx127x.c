@@ -436,7 +436,10 @@ static void packet_transmitted_isr() {
   DEBUG_TX_END();
   hw_radio_set_opmode(OPMODE_STANDBY);
 
-  tx_packet_callback(timer_get_counter_value());
+  if(tx_packet_callback) {
+    DPRINT("Packet transmitted\n");
+    tx_packet_callback(timer_get_counter_value());
+  }
 }
 
 // TODO
@@ -907,14 +910,12 @@ error_t hw_radio_send_payload(uint8_t * data, uint16_t len) {
     write_reg(REG_FIFOTHRESH, 0x80 | FG_THRESHOLD);
     write_fifo(data, FIFO_SIZE);
     // fg_frame.transmitted_index = FIFO_SIZE;
-    log_print_string("len %d is bigger than FIFO_SIZE %d\n", len, FIFO_SIZE);
     hw_gpio_set_edge_interrupt(SX127x_DIO1_PIN, GPIO_FALLING_EDGE);
     hw_gpio_disable_interrupt(SX127x_DIO0_PIN);
     hw_gpio_enable_interrupt(SX127x_DIO1_PIN);
   } else {
     write_fifo(data, len);
     // fg_frame.transmitted_index = fg_frame.encoded_length;
-    log_print_string("len %d is smaller than FIFO_SIZE %d\n", len, FIFO_SIZE);
     hw_gpio_set_edge_interrupt(SX127x_DIO0_PIN, GPIO_RISING_EDGE);
     hw_gpio_enable_interrupt(SX127x_DIO0_PIN);
     hw_gpio_disable_interrupt(SX127x_DIO1_PIN);

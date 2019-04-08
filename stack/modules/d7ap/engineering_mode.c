@@ -95,7 +95,6 @@ static void start_transient_tx(){
       memcpy(per_data + 1 + sizeof(per_packet_counter) + FILL_DATA_SIZE, &crc, 2);
       memcpy(&per_packet->data, per_data, sizeof(per_data));
       per_packet->length = per_data[0];
-      tx_cfg.channel_id = per_channel_id;
       error_t e = phy_send_packet(per_packet, &tx_cfg);
       if(e != SUCCESS)
         DPRINT("failed to send package with error code: %d", e);
