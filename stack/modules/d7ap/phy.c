@@ -580,16 +580,16 @@ error_t phy_send_packet(hw_radio_packet_t* packet, phy_tx_config_t* config)
     DPRINT_DATA(packet->data, packet->length);
 
     // Encode the packet if not supported by xcvr
-    uint8_t encoded_packet[(PACKET_MAX_SIZE + 1)*2]; // bufer sized for FEC encoding
-    uint16_t encoded_length = encode_packet(packet, encoded_packet);
+    // uint8_t encoded_packet[(PACKET_MAX_SIZE + 1)*2]; // bufer sized for FEC encoding
+    fg_frame.encoded_length = encode_packet(packet, fg_frame.encoded_packet);
 
-    DPRINT("AFTER ENCODING TX len=%i", encoded_length);
-    DPRINT_DATA(encoded_packet, encoded_length);
+    DPRINT("AFTER ENCODING TX len=%i", fg_frame.encoded_length);
+    DPRINT_DATA(fg_frame.encoded_packet, fg_frame.encoded_length);
 
     DEBUG_RX_END();
     DEBUG_TX_START();
 
-    hw_radio_send_payload(encoded_packet, encoded_length);
+    hw_radio_send_payload(fg_frame.encoded_packet, fg_frame.encoded_length);
 
     return SUCCESS; // TODO other return codes
 }
