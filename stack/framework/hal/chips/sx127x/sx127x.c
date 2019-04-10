@@ -149,6 +149,18 @@ typedef enum {
 } state_t;
 
 /*
+ * FSK packet handler structure
+ */
+typedef struct
+{
+    uint8_t Size;
+    uint8_t NbBytes;
+    uint8_t FifoThresh;
+}FskPacketHandler_t;
+
+FskPacketHandler_t FskPacketHandler_sx127x;
+
+/*
  * TODO:
  * - packets > 64 bytes
  * - FEC
@@ -319,15 +331,6 @@ static void configure_eirp(uint8_t eirp) {
   else
     write_reg(REG_PACONFIG, 0x70 | (uint8_t)(eirp));
 #endif
-}
-
-static void set_center_freq(uint32_t center_freq) {
-  DPRINT("set center: %d\n", center_freq);
-  center_freq = (uint32_t)(center_freq/FREQ_STEP);
-
-  write_reg(REG_FRFMSB, (uint8_t)((center_freq >> 16) & 0xFF));
-  write_reg(REG_FRFMID, (uint8_t)((center_freq >> 8) & 0xFF));
-  write_reg(REG_FRFLSB, (uint8_t)(center_freq & 0xFF));
 }
 
 static void init_regs() {
@@ -543,145 +546,124 @@ static void fifo_level_isr()
         DPRINT("FlagsIRQ2: %x means that packet has been sent! ", flags);
         assert(false);
     }
-    log_print_string("fifo_level_isr, %d remaining\n", remaining_bytes_len);
+
     tx_refill_callback(remaining_bytes_len); //TODO add remaining #bytes
     // fill_in_fifo();
 }
 
-//static void restart_rx() {
-//  FskPacketHandler.NbBytes = 0;
-//  FskPacketHandler.Size = 0;
-//  FskPacketHandler.FifoThresh = 0;
+static void restart_rx() {
+ FskPacketHandler_sx127x.NbBytes = 0;
+ FskPacketHandler_sx127x.Size = 0;
+ FskPacketHandler_sx127x.FifoThresh = 0;
 
-//  write_reg(REG_FIFOTHRESH, 0x83);
-//  write_reg(REG_DIOMAPPING1, 0x0C);
+ write_reg(REG_FIFOTHRESH, 0x83);
+ write_reg(REG_DIOMAPPING1, 0x0C);
 
-//  // Trigger a manual restart of the Receiver chain (no frequency change)
-//  write_reg(REG_RXCONFIG, 0x4E);
-//  flush_fifo();
+ // Trigger a manual restart of the Receiver chain (no frequency change)
+ write_reg(REG_RXCONFIG, 0x4E);
+ flush_fifo();
 
-//  // Seems that the SyncAddressMatch is not cleared after the flush, so set again the RX mode
-//  set_opmode(OPMODE_RX);
-//  //DPRINT("Before enabling interrupt: FLAGS1 %x FLAGS2 %x\n", read_reg(REG_IRQFLAGS1), read_reg(REG_IRQFLAGS2));
-//  hw_gpio_set_edge_interrupt(SX127x_DIO1_PIN, GPIO_RISING_EDGE);
-//  hw_gpio_enable_interrupt(SX127x_DIO1_PIN);
-//}
+ // Seems that the SyncAddressMatch is not cleared after the flush, so set again the RX mode
+ set_opmode(OPMODE_RX);
+ //DPRINT("Before enabling interrupt: FLAGS1 %x FLAGS2 %x\n", read_reg(REG_IRQFLAGS1), read_reg(REG_IRQFLAGS2));
+ hw_gpio_set_edge_interrupt(SX127x_DIO1_PIN, GPIO_RISING_EDGE);
+ hw_gpio_enable_interrupt(SX127x_DIO1_PIN);
+}
 
 // TODO
-//static void fifo_threshold_isr() {
-//  // TODO might be optimized. Initial plan was to read length byte and reconfigure threshold
-//  // based on the expected length so we can wait for next interrupt to read remaining bytes.
-//  // This doesn't seem to work for now however: the interrupt doesn't fire again for some unclear reason.
-//  // So now we do it as suggest in the datasheet: reading bytes from FIFO until FifoEmpty flag is set.
-//  // Reading more bytes at once might be more efficient, however getting the number of bytes in the FIFO seems
-//  // not possible at least in FSK mode (for LoRa, the register RegRxNbBytes gives the number of received bytes).
-//    hw_gpio_disable_interrupt(SX127x_DIO1_PIN);
-//    DPRINT("THR ISR with IRQ %x\n", read_reg(REG_IRQFLAGS2));
-//    assert(state == STATE_RX);
+static void fifo_threshold_isr() {
+ // TODO might be optimized. Initial plan was to read length byte and reconfigure threshold
+ // based on the expected length so we can wait for next interrupt to read remaining bytes.
+ // This doesn't seem to work for now however: the interrupt doesn't fire again for some unclear reason.
+ // So now we do it as suggest in the datasheet: reading bytes from FIFO until FifoEmpty flag is set.
+ // Reading more bytes at once might be more efficient, however getting the number of bytes in the FIFO seems
+ // not possible at least in FSK mode (for LoRa, the register RegRxNbBytes gives the number of received bytes).
+   hw_gpio_disable_interrupt(SX127x_DIO1_PIN);
+   DPRINT("THR ISR with IRQ %x\n", read_reg(REG_IRQFLAGS2));
+   assert(state == STATE_RX);
 
-//    uint8_t packet_len;
+   if (FskPacketHandler_sx127x.Size == 0 && FskPacketHandler_sx127x.NbBytes == 0)
+   {
+       // For RX, the threshold is set to 4, so if the DIO1 interrupt occurs, it means that can read at least 4 bytes
+       uint8_t rx_bytes = 0;
+       uint8_t buffer[4];
+       uint8_t backup_buffer[4];
+       while(!(CHECK_FIFO_EMPTY()) && rx_bytes < 4)
+       {
+           buffer[rx_bytes++] = read_reg(REG_FIFO);
+       }
 
-//    if (FskPacketHandler.Size == 0 && FskPacketHandler.NbBytes == 0)
-//    {
-//        // For RX, the threshold is set to 4, so if the DIO1 interrupt occurs, it means that can read at least 4 bytes
-//        uint8_t rx_bytes = 0;
-//        uint8_t buffer[4];
-//        while(!(CHECK_FIFO_EMPTY()) && rx_bytes < 4)
-//        {
-//            buffer[rx_bytes++] = read_reg(REG_FIFO);
-//        }
+       assert(rx_bytes == 4);
 
-//        assert(rx_bytes == 4);
+      memcpy(backup_buffer, buffer, rx_bytes);
+       rx_packet_header_callback(buffer, rx_bytes);
 
-//        if (current_channel_id.channel_header.ch_coding == PHY_CODING_FEC_PN9)
-//        {
-//            uint8_t decoded_buffer[4];
-//            memcpy(decoded_buffer, buffer, 4);
-//            pn9_encode(decoded_buffer, 4);
-//            fec_decode_packet(decoded_buffer, 4, 4);
-//            packet_len = fec_calculated_decoded_length(decoded_buffer[0]+1);
-//        }
-//        else
-//        {
-//            packet_len = buffer[0];
-//            pn9_encode(&packet_len, 1); // decode only packet_len for now so we know how many bytes to receive.
-//                                        // the full packet is decoded at once, when completely received
-//            packet_len++;
-//        }
+       current_packet = alloc_packet_callback(FskPacketHandler_sx127x.Size);
 
-//        DPRINT("RX Packet Length: %i ", packet_len);
+       current_packet->rx_meta.rssi = get_rssi();
+       memcpy(current_packet->data, backup_buffer, 4);
+       current_packet->length = FskPacketHandler_sx127x.Size;
 
-//        current_packet = alloc_packet_callback(packet_len);
-//        if(current_packet == NULL) {
-//          DPRINT("Could not alloc packet, skipping");
-//          restart_rx();
-//          return;
-//        }
+       FskPacketHandler_sx127x.NbBytes = 4;
+   }
 
-//        current_packet->rx_meta.rssi = get_rssi(); // we assume TX is still ongoing now
-//        memcpy(current_packet->data, buffer, 4);
+   if (FskPacketHandler_sx127x.FifoThresh)
+   {
+       read_fifo(&current_packet->data[FskPacketHandler_sx127x.NbBytes], FskPacketHandler_sx127x.FifoThresh);
+       FskPacketHandler_sx127x.NbBytes += FskPacketHandler_sx127x.FifoThresh;
+   }
 
-//        FskPacketHandler.Size = packet_len;
-//        FskPacketHandler.NbBytes = 4;
-//        //DPRINT_DATA(current_packet->data, 4);
-//    }
+   while(!(CHECK_FIFO_EMPTY()) && (FskPacketHandler_sx127x.NbBytes < FskPacketHandler_sx127x.Size))
+      current_packet->data[FskPacketHandler_sx127x.NbBytes++] = read_reg(REG_FIFO);
 
-//    if (FskPacketHandler.FifoThresh)
-//    {
-//        read_fifo(&current_packet->data[FskPacketHandler.NbBytes], FskPacketHandler.FifoThresh);
-//        FskPacketHandler.NbBytes += FskPacketHandler.FifoThresh;
-//    }
+   uint8_t remaining_bytes = FskPacketHandler_sx127x.Size - FskPacketHandler_sx127x.NbBytes;
 
-//    while(!(CHECK_FIFO_EMPTY()) && (FskPacketHandler.NbBytes < FskPacketHandler.Size))
-//       current_packet->data[FskPacketHandler.NbBytes++] = read_reg(REG_FIFO);
+   if(remaining_bytes == 0) {
+    current_packet->rx_meta.timestamp = timer_get_counter_value();
+    current_packet->rx_meta.crc_status = HW_CRC_UNAVAILABLE;
+    current_packet->rx_meta.lqi = 0; // TODO
 
-//    uint8_t remaining_bytes = FskPacketHandler.Size - FskPacketHandler.NbBytes;
+    rx_packet_callback(current_packet);
+    //  uint8_t nr_bytes = FskPacketHandler_sx127x.NbBytes; // cache because restart_rx() resets this
 
-//    if(remaining_bytes == 0) {
-//        uint8_t nr_bytes = FskPacketHandler.NbBytes; // cache because restart_rx() resets this
+    // Restart the reception until upper layer decides to stop it
+    restart_rx(); // restart already before doing decoding so we don't miss packets on low clock speeds
 
-//        // Restart the reception until upper layer decides to stop it
-//        restart_rx(); // restart already before doing decoding so we don't miss packets on low clock speeds
+    //  // RSSI is measured during reception of the first part of the packet
+    //  // to make sure we are actually measuring during a TX, instead of after
+    //  memcpy(&(current_packet->rx_meta.rx_cfg.channel_id), &current_channel_id, sizeof(channel_id_t));
 
-//        current_packet->rx_meta.timestamp = timer_get_counter_value();
-//        current_packet->rx_meta.rx_cfg.syncword_class = current_syncword_class;
-//        current_packet->rx_meta.crc_status = HW_CRC_UNAVAILABLE;
-//        current_packet->rx_meta.lqi = 0; // TODO
-//        // RSSI is measured during reception of the first part of the packet
-//        // to make sure we are actually measuring during a TX, instead of after
-//        memcpy(&(current_packet->rx_meta.rx_cfg.channel_id), &current_channel_id, sizeof(channel_id_t));
+    //  pn9_encode(current_packet->data, nr_bytes);
 
-//        pn9_encode(current_packet->data, nr_bytes);
+    //  if (current_channel_id.channel_header.ch_coding == PHY_CODING_FEC_PN9)
+    //      fec_decode_packet(current_packet->data, nr_bytes, nr_bytes);
 
-//        if (current_channel_id.channel_header.ch_coding == PHY_CODING_FEC_PN9)
-//            fec_decode_packet(current_packet->data, nr_bytes, nr_bytes);
+    //  DPRINT_DATA(current_packet->data, current_packet->length + 1);
+    //  DPRINT("RX done (%i dBm)", current_packet->rx_meta.rssi);
+    //  rx_packet_callback(current_packet);
 
-//        DPRINT_DATA(current_packet->data, current_packet->length + 1);
-//        DPRINT("RX done (%i dBm)", current_packet->rx_meta.rssi);
-//        rx_packet_callback(current_packet);
+    return;
+   }
 
-//        return;
-//    }
+   //Trigger FifoLevel interrupt
+   if ( remaining_bytes > FIFO_SIZE)
+   {
+       write_reg(REG_FIFOTHRESH, 0x80 | (BYTES_IN_RX_FIFO - 1));
+       FskPacketHandler_sx127x.FifoThresh = BYTES_IN_RX_FIFO;
+   } else {
+       write_reg(REG_FIFOTHRESH, 0x80 | (remaining_bytes - 1));
+       FskPacketHandler_sx127x.FifoThresh = remaining_bytes;
+   }
 
-//    //Trigger FifoLevel interrupt
-//    if ( remaining_bytes > FIFO_SIZE)
-//    {
-//        write_reg(REG_FIFOTHRESH, 0x80 | (BYTES_IN_RX_FIFO - 1));
-//        FskPacketHandler.FifoThresh = BYTES_IN_RX_FIFO;
-//    } else {
-//        write_reg(REG_FIFOTHRESH, 0x80 | (remaining_bytes - 1));
-//        FskPacketHandler.FifoThresh = remaining_bytes;
-//    }
+   hw_gpio_set_edge_interrupt(SX127x_DIO1_PIN, GPIO_RISING_EDGE);
+   hw_gpio_enable_interrupt(SX127x_DIO1_PIN);
 
-//    hw_gpio_set_edge_interrupt(SX127x_DIO1_PIN, GPIO_RISING_EDGE);
-//    hw_gpio_enable_interrupt(SX127x_DIO1_PIN);
-
-//    DPRINT("read %i bytes, %i remaining, FLAGS2 %x \n", FskPacketHandler.NbBytes, remaining_bytes, read_reg(REG_IRQFLAGS2));
-//}
+   DPRINT("read %i bytes, %i remaining, FLAGS2 %x \n", FskPacketHandler_sx127x.NbBytes, remaining_bytes, read_reg(REG_IRQFLAGS2));
+}
 
 static void dio1_isr(pin_id_t pin_id, uint8_t event_mask) {
    if(state == STATE_RX) {
-      //  fifo_threshold_isr();
+     fifo_threshold_isr();
    } else {
        fifo_level_isr();
    }
@@ -739,7 +721,7 @@ static void calibrate_rx_chain() {
 
   // We are not calibrating for LF band for now, this is done at POR already
 
-  set_center_freq(863150000);   // Sets a Frequency in HF band
+  hw_radio_set_center_freq(863150000);   // Sets a Frequency in HF band
 
   write_reg(REG_IMAGECAL, 0x01 | RF_IMAGECAL_IMAGECAL_START); // TODO temperature monitoring disabled for now
   while((read_reg(REG_IMAGECAL) & RF_IMAGECAL_IMAGECAL_RUNNING) == RF_IMAGECAL_IMAGECAL_RUNNING) { }
@@ -850,7 +832,6 @@ void set_opmode(uint8_t opmode){
   #if defined(PLATFORM_SX127X_USE_MANUAL_RXTXSW_PIN) || defined(PLATFORM_USE_ABZ)
   set_antenna_switch(opmode);
   #endif
-  log_print_string("set reg to %d\n", opmode);
   write_reg(REG_OPMODE, (read_reg(REG_OPMODE) & RF_OPMODE_MASK) | opmode);
 
   #ifdef PLATFORM_SX127X_USE_VCC_TXCO
@@ -866,6 +847,8 @@ void hw_radio_set_opmode(hw_state_t opmode) {
     case HW_STATE_OFF:
     case HW_STATE_SLEEP:
       state = STATE_IDLE;
+      hw_gpio_disable_interrupt(SX127x_DIO0_PIN);
+      hw_gpio_disable_interrupt(SX127x_DIO1_PIN);
       set_opmode(OPMODE_SLEEP);
       break;
     case HW_STATE_STANDBY:
@@ -880,6 +863,9 @@ void hw_radio_set_opmode(hw_state_t opmode) {
     case HW_STATE_RX:
       state = STATE_RX;
       set_opmode(OPMODE_RX);
+      hw_gpio_set_edge_interrupt(SX127x_DIO1_PIN, GPIO_RISING_EDGE);
+      hw_gpio_enable_interrupt(SX127x_DIO1_PIN);
+      set_packet_handler_enabled(true);
       break;
     case HW_STATE_RESET:
       hw_reset();
@@ -948,34 +934,53 @@ void hw_radio_set_crc_on(uint8_t enable) {
 }
 
 error_t hw_radio_send_payload(uint8_t * data, uint16_t len) {
+  if(state == STATE_TX)
+    return EBUSY;
+
+  if(len == 0)
+    return ESIZE;
+
+  if(state == STATE_RX) {
+    hw_gpio_disable_interrupt(SX127x_DIO0_PIN);
+    hw_gpio_disable_interrupt(SX127x_DIO1_PIN);
+    set_opmode(OPMODE_STANDBY);
+    while(!(read_reg(REG_IRQFLAGS1) & 0x80));
+  }
+
+  uint8_t start = 0;
+  uint8_t available_size = FIFO_SIZE;
+  if(remaining_bytes_len == 0){
+    remaining_bytes_len = len;
+    flush_fifo();
+  } else {
+    available_size = FIFO_AVAILABLE_SPACE;
+    start = len - remaining_bytes_len;
+  }
   if(get_opmode() == OPMODE_SLEEP){
     set_opmode(OPMODE_STANDBY);
-    while(get_opmode != OPMODE_STANDBY) ;
+    while(!(read_reg(REG_IRQFLAGS1) & 0x80));
   }
 
   write_reg(REG_DIOMAPPING1, 0x00); //FIFO LEVEL ISR or Packet Sent ISR
-  flush_fifo();
 
   // fg_frame.encoded_packet = data;
   // fg_frame.encoded_length = len;
   // fg_frame.transmitted_index = 0;
   // fg_frame.bg_adv = false;
 
-  if(len > FIFO_SIZE){
+  if(remaining_bytes_len > available_size){
     write_reg(REG_FIFOTHRESH, 0x80 | FG_THRESHOLD);
-    write_fifo(data, FIFO_SIZE);
-    remaining_bytes_len = len - FIFO_SIZE;
+    write_fifo(data + start, available_size);
+    remaining_bytes_len = remaining_bytes_len - available_size;
     // fg_frame.transmitted_index = FIFO_SIZE;
     hw_gpio_set_edge_interrupt(SX127x_DIO1_PIN, GPIO_FALLING_EDGE);
-    hw_gpio_disable_interrupt(SX127x_DIO0_PIN);
-    hw_gpio_enable_interrupt(SX127x_DIO1_PIN);
+    hw_gpio_enable_interrupt(SX127x_DIO1_PIN); 
   } else {
-    write_fifo(data, len);
+    write_fifo(data + start, remaining_bytes_len);
     // fg_frame.transmitted_index = fg_frame.encoded_length;
     remaining_bytes_len = 0;
     hw_gpio_set_edge_interrupt(SX127x_DIO0_PIN, GPIO_RISING_EDGE);
-    hw_gpio_enable_interrupt(SX127x_DIO0_PIN);
-    hw_gpio_disable_interrupt(SX127x_DIO1_PIN);
+    hw_gpio_enable_interrupt(SX127x_DIO0_PIN); 
   }
 
   set_packet_handler_enabled(true);
@@ -984,7 +989,8 @@ error_t hw_radio_send_payload(uint8_t * data, uint16_t len) {
 }
 
 void hw_radio_set_payload_length(uint16_t length) {
-  // TODO
+  write_reg(REG_PAYLOADLENGTH, length);
+  FskPacketHandler_sx127x.Size = length;
 }
 
 
