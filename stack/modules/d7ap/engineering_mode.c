@@ -23,6 +23,11 @@
 #include "log.h"
 #include "d7ap_fs.h"
 #include "phy.h"
+#include "packet.h"
+#include "crc.h"
+#include "packet_queue.h"
+
+#include "modem_interface.h"
 
 #if defined(FRAMEWORK_LOG_ENABLED) //&& defined(MODULE_D7AP_EM_LOG_ENABLED)
 #define DPRINT(...) log_print_stack_string(LOG_STACK_EM, __VA_ARGS__)
@@ -41,6 +46,8 @@
 
 #define FILL_DATA_SIZE PACKET_SIZE - PACKET_METADATA_SIZE
 #define PER_PACKET_DELAY 20
+
+typedef struct packet packet_t;
 
 static uint8_t timeout_em = 0;
 static phy_tx_config_t tx_cfg;
@@ -64,28 +71,104 @@ static channel_id_t per_channel_id = {
 static void packet_transmitted(hw_radio_packet_t* packet);
 static void packet_received(hw_radio_packet_t* packet);
 
+static uint16_t per_missed_packets_counter = 0;
+static uint16_t per_received_packets_counter = 0;
 static uint16_t per_packet_counter = 0;
+static uint16_t per_packet_limit = 0;
 static uint8_t per_data[PACKET_SIZE] = { [0 ... PACKET_SIZE-1]  = 0 };
 static uint8_t per_fill_data[FILL_DATA_SIZE + 1];
 static uint8_t per_packet_buffer[sizeof(hw_radio_packet_t) + 255] = { 0 };
 static hw_radio_packet_t* per_packet = (hw_radio_packet_t*)per_packet_buffer;
-static channel_id_t per_channel_id = {
-    .channel_header.ch_coding = PHY_CODING_PN9,
-    .channel_header.ch_class = PHY_CLASS_NORMAL_RATE,
-    .channel_header.ch_freq_band = PHY_BAND_433,
-    .center_freq_index = 0
-};
+
+static void start_per_rx();
+static void transmit_per_packet();
+
+void cont_tx_done_callback(packet_t* packet) {}
+
+void packet_transmitted_callback(packet_t* packet) {
+  DPRINT("packet %i transmitted", per_packet_counter);
+  if(per_packet_counter >= per_packet_limit) {
+    DPRINT("PER test done");
+    return;
+  }
+
+  timer_post_task_delay(&transmit_per_packet, PER_PACKET_DELAY);
+}
+
+static void packet_received_em(packet_t* packet) {
+  uint16_t crc = __builtin_bswap16(crc_calculate(packet->hw_radio_packet.data, packet->hw_radio_packet.length - 2));
+  if(memcmp(&crc, packet->hw_radio_packet.data + packet->hw_radio_packet.length - 2, 2) != 0)
+  {
+      per_missed_packets_counter++;
+      DPRINT("##fault##");
+  }
+  else
+  {
+      uint16_t msg_counter = 0;
+      uint16_t data_len = packet->hw_radio_packet.length - sizeof(msg_counter) - 2;
+
+      uint8_t rx_data[FILL_DATA_SIZE+1];
+      memcpy(&msg_counter, packet->hw_radio_packet.data + 1, sizeof(msg_counter));
+      memcpy(rx_data, packet->hw_radio_packet.data + 1 + sizeof(msg_counter), data_len);
+      
+      if(per_packet_counter == 0)
+      {
+          // just start, assume received all previous counters to reset PER to 0%
+          per_received_packets_counter = msg_counter - 1;
+          per_packet_counter = msg_counter - 1;
+      }
+
+      uint16_t expected_counter = per_packet_counter + 1;
+      if(msg_counter == expected_counter)
+      {
+          per_received_packets_counter++;
+          per_packet_counter++;
+      }
+      else if(msg_counter > expected_counter)
+      {
+          per_missed_packets_counter += msg_counter - expected_counter;
+          per_packet_counter = msg_counter;
+      }
+      else
+      {
+          sched_post_task(&start_per_rx);
+      }
+
+      double per = 0;
+      if(msg_counter > 0)
+          per = 100.0 - ((double)per_received_packets_counter / (double)msg_counter) * 100.0;
+      
+      if(msg_counter % 50 == 0) {
+        uint8_t to_uart_uint[34];
+        sprintf(to_uart_uint, "PER %i%%. Counter %i, rssi %idBm      ", (int)per, msg_counter, packet->hw_radio_packet.rx_meta.rssi);
+        modem_interface_transfer_bytes(to_uart_uint, 34, 0x04); //SERIAL_MESSAGE_TYPE_LOGGING
+        DPRINT("PER = %i%%\n counter <%i>, rssi <%idBm>, length <%i>, timestamp <%lu>\n", (int)per, msg_counter, packet->hw_radio_packet.rx_meta.rssi, packet->hw_radio_packet.length + 1, packet->hw_radio_packet.rx_meta.timestamp);
+      }
+  }
+  packet_queue_free_packet(packet);
+}
+
+static void start_per_rx() {
+  phy_start_rx(&(rx_cfg.channel_id), rx_cfg.syncword_class, &packet_received_em);
+}
 
 
-static void stop_transient_tx(){
+static void stop_transient_tx() {
     stop = true;
 }
 
-static void start_transient_tx(){
-    if(!stop) {
-      timer_post_task_delay(&start_transient_tx, 1200);
+static void start_transient_tx() {
+  if(!stop) {
+    timer_post_task_delay(&start_transient_tx, 1200);
 
-      // phy_continuous_tx(&tx_cfg, 1);
+    phy_continuous_tx(&tx_cfg, 1, &cont_tx_done_callback);
+  }
+}
+
+static void transmit_per_packet() {
+    if(!stop) {
+      DPRINT("transmitting packet");
+
       per_packet_counter++;
       per_data[0] = sizeof(per_packet_counter) + FILL_DATA_SIZE + sizeof(uint16_t); /* CRC is an uint16_t */
       memcpy(per_data + 1, &per_packet_counter, sizeof(per_packet_counter));
@@ -94,85 +177,25 @@ static void start_transient_tx(){
       uint16_t crc = __builtin_bswap16(crc_calculate(per_data, per_data[0] + 1 - 2));
       memcpy(per_data + 1 + sizeof(per_packet_counter) + FILL_DATA_SIZE, &crc, 2);
       memcpy(&per_packet->data, per_data, sizeof(per_data));
-      per_packet->length = per_data[0];
-      error_t e = phy_send_packet(per_packet, &tx_cfg);
+      per_packet->length = per_data[0] + 1;
+
+      error_t e = phy_send_packet(per_packet, &tx_cfg, &packet_transmitted_callback);
       if(e != SUCCESS)
         DPRINT("failed to send package with error code: %d", e);
+      else
+        DPRINT("transmitted");
     }
 }
 
-static void config_eirp(eirp_t eirp){
-    int8_t factory_settings[D7A_FILE_FACTORY_SETTINGS_SIZE]; //byte 0 is gain offset
-    d7ap_fs_read_file(D7A_FILE_FACTORY_SETTINGS_FILE_ID, 0, factory_settings, D7A_FILE_FACTORY_SETTINGS_SIZE);
-    DPRINT("offset is %d, tx eirp is %d", factory_settings[0], eirp - factory_settings[0]);
-    tx_cfg.eirp = eirp - factory_settings[0];
+static void start_tx() {
+    phy_continuous_tx(&tx_cfg, timeout_em, &cont_tx_done_callback);
 }
 
-static void start_tx(){
-    phy_continuous_tx(&tx_cfg, timeout_em);
+static void stop_tx() {
+    continuous_tx_expiration();
 }
 
-static void start_rx(){
-    phy_continuous_rx(&rx_cfg, timeout_em);
-}
-
-static void packet_received(hw_radio_packet_t* packet) {
-    uint16_t crc = __builtin_bswap16(crc_calculate(packet->data, packet->length + 1 - 2));
-
-    if(memcmp(&crc, packet->data + packet->length + 1 - 2, 2) != 0)
-    {
-        per_missed_packets_counter++;
-        DPRINT("##fault##");
-    }
-    else
-    {
-        uint16_t msg_counter = 0;
-        uint16_t data_len = packet->length - sizeof(msg_counter) - 2;
-
-        uint8_t rx_data[FILL_DATA_SIZE+1];
-        memcpy(&msg_counter, packet->data + 1, sizeof(msg_counter));
-        memcpy(rx_data, packet->data + 1 + sizeof(msg_counter), data_len);
-        
-        if(per_packet_counter == 0)
-        {
-            // just start, assume received all previous counters to reset PER to 0%
-            per_received_packets_counter = msg_counter - 1;
-            per_packet_counter = msg_counter - 1;
-        }
-
-        uint16_t expected_counter = per_packet_counter + 1;
-        if(msg_counter == expected_counter)
-        {
-            per_received_packets_counter++;
-            per_packet_counter++;
-        }
-        else if(msg_counter > expected_counter)
-        {
-            per_missed_packets_counter += msg_counter - expected_counter;
-            per_packet_counter = msg_counter;
-        }
-        else
-        {
-            sched_post_task(&start_per_rx);
-        }
-
-        double per = 0;
-        if(msg_counter > 0)
-            per = 100.0 - ((double)per_received_packets_counter / (double)msg_counter) * 100.0;
-
-        if(msg_counter % 50 == 0) {
-          uint8_t to_uart_uint[34];
-          sprintf(to_uart_uint, "PER %i%%. Counter %i, rssi %idBm      ", (int)per, msg_counter, packet->rx_meta.rssi);
-          modem_interface_transfer_bytes(to_uart_uint, 34, SERIAL_MESSAGE_TYPE_LOGGING);
-          DPRINT("PER = %i%%\n counter <%i>, rssi <%idBm>, length <%i>, timestamp <%lu>\n", (int)per, msg_counter, packet->rx_meta.rssi, packet->length + 1, packet->rx_meta.timestamp);
-        }
-    }
-
-    packet_queue_free_packet(packet_queue_find_packet(packet));
-}
-
-
-static void em_file_change_callback(uint8_t file_id){
+static void em_file_change_callback(uint8_t file_id) {
     uint8_t data[D7A_FILE_ENGINEERING_MODE_SIZE];
 
     d7ap_fs_read_file(D7A_FILE_ENGINEERING_MODE_FILE_ID,0,data,D7A_FILE_ENGINEERING_MODE_SIZE);
@@ -182,6 +205,9 @@ static void em_file_change_callback(uint8_t file_id){
     DPRINT("em_file_change_callback");
     DPRINT_DATA(data, D7A_FILE_ENGINEERING_MODE_SIZE);
 
+    rx_cfg.syncword_class = PHY_SYNCWORD_CLASS1;
+    tx_cfg.syncword_class = PHY_SYNCWORD_CLASS1;
+
     timeout_em = em_command->timeout;
 
     rx_cfg.syncword_class = PHY_SYNCWORD_CLASS1;
@@ -190,7 +216,8 @@ static void em_file_change_callback(uint8_t file_id){
     switch (em_command->mode)
     {
       case EM_MODE_OFF:
-        DPRINT("EM_MODE_OFF\n");
+        DPRINT("EM_MODEM_OFF");
+        stop_tx();
         hw_reset();
         break;
       case EM_MODE_CONTINUOUS_TX:
@@ -225,22 +252,21 @@ static void em_file_change_callback(uint8_t file_id){
         break;
       case EM_MODE_PER_RX:
         DPRINT("EM_MODE_PER_RX\n");
+        hw_radio_set_opmode(HW_STATE_STANDBY);
         per_packet_counter = 0;
         per_missed_packets_counter = 0;
         per_received_packets_counter = 0;
-        per_channel_id = em_command->channel_id;
-        rx_cfg.channel_id = per_channel_id;
+        rx_cfg.channel_id = em_command->channel_id;
         sched_post_task(&start_per_rx);
         break;
       case EM_MODE_PER_TX:
         DPRINT("EM_MODE_PER_TX\n");
         per_packet_counter = 0;
-        per_channel_id = em_command->channel_id;
-        tx_cfg.channel_id = per_channel_id;
+        tx_cfg.channel_id = em_command->channel_id;
         tx_cfg.eirp = em_command->eirp;
         per_packet_limit = em_command->timeout * 100;
         hw_radio_set_idle();
-        sched_post_task(&transmit_per_packet);
+        timer_post_task_delay(&transmit_per_packet, 500);
         break;
     }
 }
@@ -252,4 +278,8 @@ error_t engineering_mode_init()
   d7ap_fs_write_file(D7A_FILE_ENGINEERING_MODE_FILE_ID, 0, init_data, D7A_FILE_ENGINEERING_MODE_SIZE);
 
   d7ap_fs_register_file_modified_callback(D7A_FILE_ENGINEERING_MODE_FILE_ID, &em_file_change_callback);
+
+  sched_register_task(&start_transient_tx);
+  sched_register_task(&transmit_per_packet);
+  sched_register_task(&start_per_rx);
 }

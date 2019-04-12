@@ -32,6 +32,7 @@
 #define ACCESS_SPECIFIER(val) (uint8_t)(val >> 4 & 0x0F)
 #define ACCESS_MASK(val) (uint8_t)(val & 0x0F)
 
+// first byte is the mode
 typedef enum {
   EM_MODE_OFF = 0,
   EM_MODE_CONTINUOUS_TX = 1,
