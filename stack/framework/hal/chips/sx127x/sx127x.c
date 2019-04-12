@@ -190,9 +190,6 @@ static bool enable_refill = false;
 static bool enable_preloading = false;
 static uint8_t remaining_bytes_len = 0;
 
-
-static error_t hw_radio_send_packet_with_advertising(uint8_t dll_header_bg_frame[2], uint16_t tx_duration_bg_frame, uint16_t eta, hw_radio_packet_t* packet);
-
 static uint8_t read_reg(uint8_t addr) {
   spi_select(sx127x_spi);
   spi_exchange_byte(sx127x_spi, addr & 0x7F); // send address with bit 7 low to signal a read operation
@@ -513,7 +510,7 @@ static void fifo_level_isr()
     // fill_in_fifo();
 }
 
-static void restart_rx() {
+static void reinit_rx() {
  FskPacketHandler_sx127x.NbBytes = 0;
  FskPacketHandler_sx127x.Size = 0;
  FskPacketHandler_sx127x.FifoThresh = 0;
@@ -526,11 +523,11 @@ static void restart_rx() {
   RF_RXCONFIG_AGCAUTO_ON | RF_RXCONFIG_RXTRIGER_PREAMBLEDETECT);
  flush_fifo();
 
- // Seems that the SyncAddressMatch is not cleared after the flush, so set again the RX mode
- set_opmode(OPMODE_RX);
- //DPRINT("Before enabling interrupt: FLAGS1 %x FLAGS2 %x\n", read_reg(REG_IRQFLAGS1), read_reg(REG_IRQFLAGS2));
- hw_gpio_set_edge_interrupt(SX127x_DIO1_PIN, GPIO_RISING_EDGE);
- hw_gpio_enable_interrupt(SX127x_DIO1_PIN);
+//  // Seems that the SyncAddressMatch is not cleared after the flush, so set again the RX mode
+//  set_opmode(OPMODE_RX);
+//  //DPRINT("Before enabling interrupt: FLAGS1 %x FLAGS2 %x\n", read_reg(REG_IRQFLAGS1), read_reg(REG_IRQFLAGS2));
+//  hw_gpio_set_edge_interrupt(SX127x_DIO1_PIN, GPIO_RISING_EDGE);
+//  hw_gpio_enable_interrupt(SX127x_DIO1_PIN);
 }
 
 // TODO
@@ -590,7 +587,8 @@ static void fifo_threshold_isr() {
     // to make sure we are actually measuring during a TX, instead of after
 
     // Restart the reception until upper layer decides to stop it
-    restart_rx(); // restart already before doing decoding so we don't miss packets on low clock speeds
+    reinit_rx(); // restart already before doing decoding so we don't miss packets on low clock speeds
+    hw_radio_set_opmode(HW_STATE_IDLE);
 
     rx_packet_callback(current_packet);
 
@@ -760,13 +758,14 @@ void set_opmode(uint8_t opmode) {
 }
 
 void set_state_rx() {
+  if(get_opmode() >= OPMODE_FSRX) 
+    set_opmode(OPMODE_STANDBY); //Restart when changing freq/datarate
 
   state = STATE_RX;
   flush_fifo();
 
   FskPacketHandler_sx127x.FifoThresh = 0;
   FskPacketHandler_sx127x.NbBytes = 0;
-  // FskPacketHandler_sx127x.Size = read_reg(REG_PAYLOADLENGTH);
 
   set_packet_handler_enabled(true);
 
@@ -868,9 +867,6 @@ void hw_radio_set_crc_on(uint8_t enable) {
 }
 
 error_t hw_radio_send_payload(uint8_t * data, uint16_t len) {
-  if(state == STATE_TX)
-    return EBUSY;
-
   if(len == 0)
     return ESIZE;
 
