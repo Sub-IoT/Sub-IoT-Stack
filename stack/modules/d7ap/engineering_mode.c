@@ -252,7 +252,6 @@ static void em_file_change_callback(uint8_t file_id) {
         break;
       case EM_PER_RX:
         DPRINT("EM_MODE_PER_RX\n");
-        hw_radio_set_opmode(HW_STATE_STANDBY);
         per_packet_counter = 0;
         per_missed_packets_counter = 0;
         per_received_packets_counter = 0;
