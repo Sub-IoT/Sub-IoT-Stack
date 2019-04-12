@@ -296,7 +296,7 @@ void start_background_scan()
         .channel_id = current_channel_id,
         .rssi_thr = - E_CCA,
     };
-    phy_start_background_scan(&config);
+    phy_start_background_scan(&config, &dll_signal_packet_received);
 }
 
 void dll_stop_background_scan()
@@ -444,11 +444,12 @@ static void cca_rssi_valid(int16_t cur_rssi)
 
                 err = phy_send_packet_with_advertising(&current_packet->hw_radio_packet,
                                                        &current_packet->phy_config.tx,
-                                                       dll_header_bg_frame, current_packet->ETA);
+                                                       dll_header_bg_frame, current_packet->ETA,
+                                                       &dll_signal_packet_transmitted);
             }
             else
             {
-                err = phy_send_packet(&current_packet->hw_radio_packet, &current_packet->phy_config.tx);
+                err = phy_send_packet(&current_packet->hw_radio_packet, &current_packet->phy_config.tx, &dll_signal_packet_transmitted);
             }
 
             assert(err == SUCCESS);
@@ -489,7 +490,7 @@ static void execute_csma_ca(void *arg)
     {
         DPRINT("Guarded channel, UNC CSMA-CA");
         switch_state(DLL_STATE_TX_FOREGROUND);
-        error_t rtc = phy_send_packet(&current_packet->hw_radio_packet, &current_packet->phy_config.tx);
+        error_t rtc = phy_send_packet(&current_packet->hw_radio_packet, &current_packet->phy_config.tx, &dll_signal_packet_transmitted);
         assert(rtc == SUCCESS);
         return;
     }
@@ -738,7 +739,7 @@ void dll_execute_scan_automation(void *arg)
     {
         rx_cfg.syncword_class = PHY_SYNCWORD_CLASS1;
         current_channel_id = rx_cfg.channel_id;
-        phy_start_rx(&current_channel_id, PHY_SYNCWORD_CLASS1);
+        phy_start_rx(&current_channel_id, PHY_SYNCWORD_CLASS1, &dll_signal_packet_received);
     }
     else
     {
@@ -1029,7 +1030,7 @@ static void start_foreground_scan()
     // are expected on the channel list of the Requester's Access Class and not
     // necessarily on the current channel used to send the initial request
 
-    phy_start_rx(&current_channel_id, PHY_SYNCWORD_CLASS1);
+    phy_start_rx(&current_channel_id, PHY_SYNCWORD_CLASS1, &dll_signal_packet_received);
 }
 
 
