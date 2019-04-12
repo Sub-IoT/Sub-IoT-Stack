@@ -102,6 +102,9 @@ typedef enum {
 
 static hwradio_init_args_t init_args;
 
+static tx_packet_callback_t transmitted_callback;
+static rx_packet_callback_t received_callback;
+
 static state_t state = STATE_IDLE;
 static hw_radio_packet_t *current_packet;
 static bool should_rx_after_tx_completed = false;
@@ -212,16 +215,14 @@ static void switch_to_sleep_mode()
 
 static void packet_transmitted(timer_tick_t timestamp)
 {
-    assert(state == STATE_TX);
+    assert(state == STATE_TX || state == STATE_CONT_TX);
 
     current_packet->tx_meta.timestamp = timestamp;
     DPRINT("Transmitted packet @ %i with length = %i", current_packet->tx_meta.timestamp, current_packet->length);
 
-    packet_t* packet = packet_queue_mark_transmitted(current_packet);
+    switch_to_standby_mode();
 
-    state = STATE_IDLE;
-
-    dll_signal_packet_transmitted(packet);
+    transmitted_callback(packet_queue_find_packet(current_packet));
 }
 
 static void packet_received(hw_radio_packet_t* hw_radio_packet)
@@ -231,7 +232,7 @@ static void packet_received(hw_radio_packet_t* hw_radio_packet)
     // schedule it and return
     DPRINT("packet received @ %i , RSSI = %d", hw_radio_packet->rx_meta.timestamp, hw_radio_packet->rx_meta.rssi);
 
-    packet_t* packet = packet_queue_mark_received(hw_radio_packet);
+    packet_t* packet = packet_queue_find_packet(hw_radio_packet);
 
     DPRINT("Rx packet before decoding <len = %d>", hw_radio_packet->length);
     DPRINT_DATA(hw_radio_packet->data, hw_radio_packet->length);
@@ -272,7 +273,7 @@ static void packet_received(hw_radio_packet_t* hw_radio_packet)
     else
         switch_to_standby_mode();
 
-    dll_signal_packet_received(packet);
+    received_callback(packet);
 }
 
 static void packet_header_received(uint8_t *data, uint8_t len)
@@ -430,7 +431,6 @@ static void configure_syncword(syncword_class_t syncword_class, const channel_id
 
 void continuous_tx_expiration()
 {
-    switch_to_standby_mode();
     hw_radio_enable_refill(false);
     DPRINT("Continuous TX is now terminated");
 }
@@ -476,8 +476,8 @@ error_t phy_init(void) {
     return ret;
 }
 
-error_t phy_start_rx(channel_id_t* channel, syncword_class_t syncword_class){
-
+error_t phy_start_rx(channel_id_t* channel, syncword_class_t syncword_class, rx_packet_callback_t rx_cb) {
+    received_callback = rx_cb;
     // TODO error handling EINVAL, EOFF
 
     // if we are currently transmitting wait until TX completed before entering RX
@@ -553,9 +553,11 @@ static uint16_t encode_packet(hw_radio_packet_t* packet, uint8_t* encoded_packet
     return encoded_len;
 }
 
-error_t phy_send_packet(hw_radio_packet_t* packet, phy_tx_config_t* config)
+error_t phy_send_packet(hw_radio_packet_t* packet, phy_tx_config_t* config, tx_packet_callback_t tx_callback)
 {
     assert(packet->length <= PACKET_MAX_SIZE);
+
+    transmitted_callback = tx_callback;
 
     if(packet->length == 0)
         return ESIZE;
@@ -644,8 +646,9 @@ static uint8_t assemble_background_payload()
  * packet, in order to guarantee no silence period on the channel between D7AAdvP and D7ANP.
  */
 error_t phy_send_packet_with_advertising(hw_radio_packet_t* packet, phy_tx_config_t* config,
-                                         uint8_t dll_header_bg_frame[2], uint16_t eta)
+                                         uint8_t dll_header_bg_frame[2], uint16_t eta, tx_packet_callback_t tx_callback)
 {
+    transmitted_callback = tx_callback;
     DPRINT("Start the bg advertising for ad-hoc sync before transmitting the FG frame");
 
     configure_syncword(PHY_SYNCWORD_CLASS0, &config->channel_id);
@@ -788,8 +791,9 @@ static void fill_in_fifo(uint8_t remaining_bytes_len)
     }
 }
 
-error_t phy_start_background_scan(phy_rx_config_t* config)
+error_t phy_start_background_scan(phy_rx_config_t* config, rx_packet_callback_t rx_cb)
 {
+    received_callback = rx_cb;
     uint8_t packet_len;
 
     //DPRINT("START BG scan @ %i", timer_get_counter_value());
@@ -832,8 +836,9 @@ error_t phy_start_background_scan(phy_rx_config_t* config)
     return SUCCESS;
 }
 
-void phy_continuous_tx(phy_tx_config_t const* tx_cfg, uint8_t time_period)
+void phy_continuous_tx(phy_tx_config_t const* tx_cfg, uint8_t time_period, tx_packet_callback_t tx_cb)
 {
+    transmitted_callback = tx_cb;
     DPRINT("Continuous tx\n");
 
     if(state == STATE_RX)
@@ -850,8 +855,10 @@ void phy_continuous_tx(phy_tx_config_t const* tx_cfg, uint8_t time_period)
     hw_radio_enable_refill(true);
 
     state = STATE_CONT_TX;
-    continuous_tx_expiration_timer.next_event = time_period * 1024;
-    timer_add_event(&continuous_tx_expiration_timer);
+    if(time_period) {
+        continuous_tx_expiration_timer.next_event = time_period * 1024;
+        timer_add_event(&continuous_tx_expiration_timer);
+    }
 
     fg_frame.bg_adv = false;
     if (current_channel_id.channel_header.ch_coding == PHY_CODING_FEC_PN9)
@@ -881,17 +888,4 @@ void phy_continuous_tx(phy_tx_config_t const* tx_cfg, uint8_t time_period)
     }
 
     hw_radio_send_payload(fg_frame.encoded_packet, fg_frame.encoded_length);
-}
-
-void phy_continuous_rx(phy_rx_config_t const* rx_cfg, uint8_t time_period)
-{
-    state = STATE_CONT_RX;
-
-    configure_channel(&rx_cfg->channel_id);
-    configure_syncword(rx_cfg->syncword_class, &rx_cfg->channel_id);
-
-    // unlimited payloadlength
-    hw_radio_set_payload_length(0);
-
-    //TODO our callback is based on packet reception. So we need probably to add a specific hw_radio_continuous_rx API
 }
