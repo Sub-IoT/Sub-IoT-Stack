@@ -187,6 +187,7 @@ static bool should_rx_after_tx_completed = false;
 static bool is_sx1272 = false;
 static bool use_lora_250 = false;
 static bool enable_refill = false;
+static bool enable_preloading = false;
 static uint8_t remaining_bytes_len = 0;
 
 
@@ -209,7 +210,7 @@ static void write_reg(uint8_t addr, uint8_t value) {
   //DPRINT("WRITE %02x: %02x", addr, value);
 }
 
-void write_reg_16(uint8_t start_reg, uint16_t value){
+void write_reg_16(uint8_t start_reg, uint16_t value) {
   write_reg(start_reg, (uint8_t)((value >> 8) & 0xFF));
   write_reg(start_reg + 1, (uint8_t)(value & 0xFF));
 }
@@ -278,7 +279,7 @@ static void set_antenna_switch(opmode_t opmode) {
 }
 
 static inline void flush_fifo() {
-  write_reg(REG_IRQFLAGS2, 0x10);
+  write_reg(REG_IRQFLAGS2, RF_IRQFLAGS2_FIFOOVERRUN);
 }
 
 //static void set_lora_mode(bool use_lora) {
@@ -298,60 +299,25 @@ static inline void flush_fifo() {
 //  }
 //}
 
-static void configure_eirp(uint8_t eirp) {
-#ifdef PLATFORM_SX127X_USE_PA_BOOST
-  // Pout = 17-(15-outputpower)
-  if(eirp > 20) {
-    eirp = 20;
-    DPRINT("The given eirp is too high, adjusted to %d dBm, offset excluded", eirp);
-    // assert(eirp <= 20); // chip supports until +15 dBm default, +17 dBm with PA_BOOST and +20 dBm with PaDac enabled. 
-  }
-  if(eirp <= 5) {
-    write_reg(REG_PACONFIG, (uint8_t)(eirp - 10.8 + 15));
-    write_reg(REG_PADAC, 0x84); //Default Power
-  } else if(eirp <= 15) {
-    write_reg(REG_PACONFIG, 0x70 | (uint8_t)(eirp));
-    write_reg(REG_PADAC, 0x84); //Default Power
-  } else if(eirp <= 17) {
-    write_reg(REG_PACONFIG, 0x80 | (eirp - 2));
-    write_reg(REG_PADAC, 0x84); //Default Power
-  } else {
-    write_reg(REG_PACONFIG, 0x80 | (eirp - 5));
-    write_reg(REG_PADAC, 0x87); //High Power
-  }
-#else
-  // Pout = Pmax-(15-outputpower)
-  if(eirp > 15) {
-    eirp = 15;
-    DPRINT("The given eirp is too high, adjusted to %d dBm, offset excluded", eirp);
-    // assert(eirp <= 15); // Pmax = 15 dBm
-  }
-  if(eirp <= 5)
-    write_reg(REG_PACONFIG, (uint8_t)(eirp - 10.8 + 15));
-  else
-    write_reg(REG_PACONFIG, 0x70 | (uint8_t)(eirp));
-#endif
-}
-
 static void init_regs() {
   uint8_t gaussian_shape_filter = 2; // 0: no shaping, 1: BT=1.0, 2: BT=0.5, 3: BT=0.3 // TODO benchmark?
   if(is_sx1272) {
-    write_reg(REG_OPMODE, gaussian_shape_filter << 3); // FSK; modulation shaping, sleep
+    write_reg(REG_OPMODE, RF_OPMODE_SLEEP | gaussian_shape_filter << 3); // FSK; modulation shaping, sleep
   } else {
-    write_reg(REG_OPMODE, 0x00); // FSK, hi freq, sleep
+    write_reg(REG_OPMODE, RF_OPMODE_SLEEP | RF_OPMODE_MODULATIONTYPE_FSK); // FSK, hi freq, sleep
   }
 
   // PA
-  configure_eirp(10);
+  hw_radio_set_tx_power(10);
   if(is_sx1272) {
-    write_reg(REG_PARAMP, 0x19); // PaRamp=40us // TODO, use LowPnRxPll?
+    write_reg(REG_PARAMP, RF_PARAMP_0040_US | RF_PARAMP_LOWPNTXPLL_OFF); // PaRamp=40us // TODO, use LowPnRxPll?
   } else {
-    write_reg(REG_PARAMP, (gaussian_shape_filter << 5) | 0x09); // modulation shaping and PaRamp=40us
+    write_reg(REG_PARAMP, RF_PARAMP_0040_US | (gaussian_shape_filter << 5)); // modulation shaping and PaRamp=40us
   }
 
   // RX
   //  write_reg(REG_OCP, 0); // TODO default for now
-  write_reg(REG_LNA, 0x23); // highest gain for now, for 868 // TODO LnaBoostHf consumes 150% current compared to default LNA
+  write_reg(REG_LNA, RF_LNA_GAIN_G1 | RF_LNA_BOOST_ON); // highest gain for now, for 868 // TODO LnaBoostHf consumes 150% current compared to default LNA
 
   // TODO validate:
   // - RestartRxOnCollision (off for now)
@@ -359,11 +325,12 @@ static void init_regs() {
   // - AfcAutoOn: default for now
   // - AgcAutoOn: default for now (use AGC)
   // - RxTrigger: default for now
-  write_reg(REG_RXCONFIG, 0x0E);
+  write_reg(REG_RXCONFIG, RF_RXCONFIG_RESTARTRXONCOLLISION_OFF | RF_RXCONFIG_AFCAUTO_OFF | 
+                                RF_RXCONFIG_AGCAUTO_ON | RF_RXCONFIG_RXTRIGER_PREAMBLEDETECT);
 
-  write_reg(REG_RSSICONFIG, 0x02); // TODO no RSSI offset for now + using 8 samples for smoothing
+  write_reg(REG_RSSICONFIG, RF_RSSICONFIG_OFFSET_P_00_DB | RF_RSSICONFIG_SMOOTHING_8); // TODO no RSSI offset for now + using 8 samples for smoothing
   //  write_reg(REG_RSSICOLLISION, 0); // TODO not used for now
-  write_reg(REG_RSSITHRESH, 0xFF); // TODO using -128 dBm for now
+  write_reg(REG_RSSITHRESH, RF_RSSITHRESH_THRESHOLD); // TODO using -128 dBm for now
 
   //  write_reg(REG_AFCBW, 0); // TODO not used for now (AfcAutoOn not set)
   //  write_reg(REG_AFCFEI, 0); // TODO not used for now (AfcAutoOn not set)
@@ -371,24 +338,31 @@ static void init_regs() {
   //  write_reg(REG_AFCLSB, 0); // TODO not used for now (AfcAutoOn not set)
   //  write_reg(REG_FEIMSB, 0); // TODO freq offset not used for now
   //  write_reg(REG_FEILSB, 0); // TODO freq offset not used for now
-  write_reg(REG_PREAMBLEDETECT, 0xCA); // TODO validate PreambleDetectorSize (2 now) and PreambleDetectorTol (10 now)
+  write_reg(REG_PREAMBLEDETECT, RF_PREAMBLEDETECT_DETECTOR_ON | RF_PREAMBLEDETECT_DETECTORSIZE_3 | RF_PREAMBLEDETECT_DETECTORTOL_10); 
+  // TODO validate PreambleDetectorSize (2 now) and PreambleDetectorTol (10 now)
   // write_reg(REG_RXTIMEOUT1, 0); // not used for now
   // write_reg(REG_RXTIMEOUT2, 0); // not used for now
   // write_reg(REG_RXTIMEOUT3, 0); // not used for now
   // write_reg(REG_RXDELAY, 0); // not used for now
   // write_reg(REG_OSC, 0x07); // keep as default: off
 
-  write_reg(REG_SYNCCONFIG, 0x11); // no AutoRestartRx, default PreambePolarity, enable syncword of 2 bytes
+  write_reg(REG_SYNCCONFIG, RF_SYNCCONFIG_AUTORESTARTRXMODE_OFF | RF_SYNCCONFIG_PREAMBLEPOLARITY_AA | 
+    RF_SYNCCONFIG_SYNC_ON | RF_SYNCCONFIG_SYNCSIZE_2); // no AutoRestartRx, default PreambePolarity, enable syncword of 2 bytes
   write_reg(REG_SYNCVALUE1, 0xE6); // by default, the syncword is set for CS0(PN9) class 0
   write_reg(REG_SYNCVALUE2, 0xD0);
 
-  write_reg(REG_PACKETCONFIG1, 0x08); // fixed length (unlimited length mode), CRC auto clear OFF, whitening and CRC disabled (not compatible), addressFiltering off.
-  write_reg(REG_PACKETCONFIG2, 0x40); // packet mode
+  write_reg(REG_PACKETCONFIG1, RF_PACKETCONFIG1_PACKETFORMAT_FIXED | RF_PACKETCONFIG1_DCFREE_OFF |
+    RF_PACKETCONFIG1_CRC_OFF | RF_PACKETCONFIG1_CRCAUTOCLEAR_OFF | RF_PACKETCONFIG1_ADDRSFILTERING_OFF | 
+    RF_PACKETCONFIG1_CRCWHITENINGTYPE_CCITT); // fixed length (unlimited length mode), CRC auto clear OFF, whitening and CRC disabled (not compatible), addressFiltering off.
+  write_reg(REG_PACKETCONFIG2, RF_PACKETCONFIG2_WMBUS_CRC_DISABLE | RF_PACKETCONFIG2_DATAMODE_PACKET |
+    RF_PACKETCONFIG2_IOHOME_OFF | RF_PACKETCONFIG2_BEACON_OFF); // packet mode
   write_reg(REG_PAYLOADLENGTH, 0x00); // unlimited length mode (in combination with PacketFormat = 0), so we can encode/decode length byte in software
-  write_reg(REG_FIFOTHRESH, 0x83); // tx start condition true when there is at least one byte in FIFO (we are in standby/sleep when filling FIFO anyway)
+  write_reg(REG_FIFOTHRESH, RF_FIFOTHRESH_TXSTARTCONDITION_FIFONOTEMPTY | 0x03); // tx start condition true when there is at least one byte in FIFO (we are in standby/sleep when filling FIFO anyway)
                                    // For RX the threshold is set to 4 since this is the minimum length of a D7 packet (number of bytes in FIFO >= FifoThreshold + 1).
 
-  write_reg(REG_SEQCONFIG1, 0x40); // force off for now
+  write_reg(REG_SEQCONFIG1, RF_SEQCONFIG1_SEQUENCER_STOP | RF_SEQCONFIG1_IDLEMODE_STANDBY |
+    RF_SEQCONFIG1_FROMSTART_TOLPS | RF_SEQCONFIG1_LPS_SEQUENCER_OFF | RF_SEQCONFIG1_FROMIDLE_TOTX |
+    RF_SEQCONFIG1_FROMTX_TOLPS); // force off for now
   //  write_reg(REG_SEQCONFIG2, 0); // not used for now
   //  write_reg(REG_TIMERRESOL, 0); // not used for now
   //  write_reg(REG_TIMER1COEF, 0); // not used for now
@@ -396,8 +370,10 @@ static void init_regs() {
   //  write_reg(REG_IMAGECAL, 0); // TODO not used for now
   //  write_reg(REG_LOWBAT, 0); // TODO not used for now
 
-  write_reg(REG_DIOMAPPING1, 0x0C); // DIO0 = 00 | DIO1 = 00 | DIO2 = 0b11 => interrupt on sync detect | DIO3 = 00
-  write_reg(REG_DIOMAPPING2, 0x30); // ModeReady TODO configure for RSSI interrupt when doing CCA?
+  write_reg(REG_DIOMAPPING1, RF_DIOMAPPING1_DIO0_00 | RF_DIOMAPPING1_DIO1_00 |
+    RF_DIOMAPPING1_DIO2_11 | RF_DIOMAPPING1_DIO3_00); // DIO2 = 0b11 => interrupt on sync detect 
+  write_reg(REG_DIOMAPPING2, RF_DIOMAPPING2_DIO4_00 | RF_DIOMAPPING2_DIO5_11 |
+    RF_DIOMAPPING2_MAP_RSSI); // ModeReady TODO configure for RSSI interrupt when doing CCA?
   //  write_reg(REG_PLLHOP, 0); // TODO might be interesting for channel hopping
   //  write_reg(REG_TCXO, 0); // default
   //  write_reg(REG_PADAC, 0); // default
@@ -434,7 +410,6 @@ static inline int16_t get_rssi() {
   return - read_reg(REG_RSSIVALUE) / 2;
 }
 
-// TODO
 static void packet_transmitted_isr() {
   hw_gpio_disable_interrupt(SX127x_DIO0_PIN);
   remaining_bytes_len = 0;
@@ -484,40 +459,27 @@ static void packet_transmitted_isr() {
 //  hw_gpio_enable_interrupt(SX127x_DIO0_PIN);
 //}
 
-//static void bg_scan_rx_done()
-//{
-//    hw_gpio_disable_interrupt(SX127x_DIO0_PIN);
+static void bg_scan_rx_done() 
+{
+   hw_gpio_disable_interrupt(SX127x_DIO0_PIN);
 
-//    assert(current_syncword_class == PHY_SYNCWORD_CLASS0);
-//    timer_tick_t rx_timestamp = timer_get_counter_value();
-//    DPRINT("BG packet received!");
+  //  assert(current_syncword_class == PHY_SYNCWORD_CLASS0);
+   timer_tick_t rx_timestamp = timer_get_counter_value();
+   DPRINT("BG packet received!");
 
-//    current_packet = alloc_packet_callback(FskPacketHandler.Size);
-//    assert(current_packet); // TODO handle
-//    current_packet->length = BACKGROUND_FRAME_LENGTH;
+   current_packet = alloc_packet_callback(FskPacketHandler_sx127x.Size);
+   assert(current_packet); // TODO handle
+   current_packet->length = FskPacketHandler_sx127x.Size;
 
-//    read_fifo(current_packet->data + 1, FskPacketHandler.Size);
+   read_fifo(current_packet->data + 1, FskPacketHandler_sx127x.Size);
 
-//    current_packet->rx_meta.timestamp = rx_timestamp;
-//    current_packet->rx_meta.rx_cfg.syncword_class = current_syncword_class;
-//    current_packet->rx_meta.crc_status = HW_CRC_UNAVAILABLE;
-//    current_packet->rx_meta.rssi = get_rssi();
-//    current_packet->rx_meta.lqi = 0; // TODO
-//    memcpy(&(current_packet->rx_meta.rx_cfg.channel_id), &current_channel_id, sizeof(channel_id_t));
+   current_packet->rx_meta.timestamp = rx_timestamp;
+   current_packet->rx_meta.crc_status = HW_CRC_UNAVAILABLE;
+   current_packet->rx_meta.rssi = get_rssi();
+   current_packet->rx_meta.lqi = 0; // TODO
 
-//    pn9_encode(current_packet->data + 1, FskPacketHandler.Size);
-//    if (current_channel_id.channel_header.ch_coding == PHY_CODING_FEC_PN9)
-//        fec_decode_packet(current_packet->data + 1, FskPacketHandler.Size, FskPacketHandler.Size);
-
-//    DPRINT_DATA(current_packet->data, BACKGROUND_FRAME_LENGTH + 1);
-//    DPRINT("RX done\n");
-//    flush_fifo();
-//    rx_packet_callback(current_packet);
-//}
-
-static void bg_scan_rx_done() {
-  //TODO
-  log_print_string("in bg_scan_rx_done, not implemented yet");
+   flush_fifo();
+   rx_packet_callback(current_packet);
 }
 
 static void dio0_isr(pin_id_t pin_id, uint8_t event_mask) {
@@ -556,11 +518,12 @@ static void restart_rx() {
  FskPacketHandler_sx127x.Size = 0;
  FskPacketHandler_sx127x.FifoThresh = 0;
 
- write_reg(REG_FIFOTHRESH, 0x83);
- write_reg(REG_DIOMAPPING1, 0x0C);
+ write_reg(REG_FIFOTHRESH, RF_FIFOTHRESH_TXSTARTCONDITION_FIFONOTEMPTY | 0x03);
+ write_reg(REG_DIOMAPPING1, RF_DIOMAPPING1_DIO2_11);
 
  // Trigger a manual restart of the Receiver chain (no frequency change)
- write_reg(REG_RXCONFIG, 0x4E);
+ write_reg(REG_RXCONFIG, RF_RXCONFIG_RESTARTRXWITHOUTPLLLOCK | RF_RXCONFIG_AFCAUTO_OFF| 
+  RF_RXCONFIG_AGCAUTO_ON | RF_RXCONFIG_RXTRIGER_PREAMBLEDETECT);
  flush_fifo();
 
  // Seems that the SyncAddressMatch is not cleared after the flush, so set again the RX mode
@@ -623,24 +586,13 @@ static void fifo_threshold_isr() {
     current_packet->rx_meta.crc_status = HW_CRC_UNAVAILABLE;
     current_packet->rx_meta.lqi = 0; // TODO
 
-    rx_packet_callback(current_packet);
-    //  uint8_t nr_bytes = FskPacketHandler_sx127x.NbBytes; // cache because restart_rx() resets this
+    // RSSI is measured during reception of the first part of the packet
+    // to make sure we are actually measuring during a TX, instead of after
 
     // Restart the reception until upper layer decides to stop it
     restart_rx(); // restart already before doing decoding so we don't miss packets on low clock speeds
 
-    //  // RSSI is measured during reception of the first part of the packet
-    //  // to make sure we are actually measuring during a TX, instead of after
-    //  memcpy(&(current_packet->rx_meta.rx_cfg.channel_id), &current_channel_id, sizeof(channel_id_t));
-
-    //  pn9_encode(current_packet->data, nr_bytes);
-
-    //  if (current_channel_id.channel_header.ch_coding == PHY_CODING_FEC_PN9)
-    //      fec_decode_packet(current_packet->data, nr_bytes, nr_bytes);
-
-    //  DPRINT_DATA(current_packet->data, current_packet->length + 1);
-    //  DPRINT("RX done (%i dBm)", current_packet->rx_meta.rssi);
-    //  rx_packet_callback(current_packet);
+    rx_packet_callback(current_packet);
 
     return;
    }
@@ -648,10 +600,10 @@ static void fifo_threshold_isr() {
    //Trigger FifoLevel interrupt
    if ( remaining_bytes > FIFO_SIZE)
    {
-       write_reg(REG_FIFOTHRESH, 0x80 | (BYTES_IN_RX_FIFO - 1));
+       write_reg(REG_FIFOTHRESH, RF_FIFOTHRESH_TXSTARTCONDITION_FIFONOTEMPTY | (BYTES_IN_RX_FIFO - 1));
        FskPacketHandler_sx127x.FifoThresh = BYTES_IN_RX_FIFO;
    } else {
-       write_reg(REG_FIFOTHRESH, 0x80 | (remaining_bytes - 1));
+       write_reg(REG_FIFOTHRESH, RF_FIFOTHRESH_TXSTARTCONDITION_FIFONOTEMPTY | (remaining_bytes - 1));
        FskPacketHandler_sx127x.FifoThresh = remaining_bytes;
    }
 
@@ -662,29 +614,12 @@ static void fifo_threshold_isr() {
 }
 
 static void dio1_isr(pin_id_t pin_id, uint8_t event_mask) {
-   if(state == STATE_RX) {
-     fifo_threshold_isr();
-   } else {
-       fifo_level_isr();
-   }
+    if(state == STATE_RX) {
+      fifo_threshold_isr();
+    } else {
+      fifo_level_isr();
+    }
 }
-
-//static void configure_syncword(syncword_class_t syncword_class, const channel_id_t* channel)
-//{
-//  if(channel->channel_header.ch_class == PHY_CLASS_LORA) {
-//    assert(syncword_class == PHY_SYNCWORD_CLASS1); // TODO CLASS0 not implemented for LoRa for now
-//    current_syncword_class = syncword_class;
-//    return;
-//    // TODO
-//  }
-
-//  current_syncword_class = syncword_class;
-//  uint16_t sync_word = sync_word_value[syncword_class][channel->channel_header.ch_coding ];
-
-//  DPRINT("sync_word = %04x", sync_word);
-//  write_reg(REG_SYNCVALUE2, sync_word & 0xFF);
-//  write_reg(REG_SYNCVALUE1, sync_word >> 8);
-//}
 
 static void restart_rx_chain() {
   // TODO restarting by triggering RF_RXCONFIG_RESTARTRXWITHPLLLOCK seems not to work
@@ -723,29 +658,11 @@ static void calibrate_rx_chain() {
 
   hw_radio_set_center_freq(863150000);   // Sets a Frequency in HF band
 
-  write_reg(REG_IMAGECAL, 0x01 | RF_IMAGECAL_IMAGECAL_START); // TODO temperature monitoring disabled for now
+  write_reg(REG_IMAGECAL, RF_IMAGECAL_TEMPMONITOR_OFF | RF_IMAGECAL_IMAGECAL_START); // TODO temperature monitoring disabled for now
   while((read_reg(REG_IMAGECAL) & RF_IMAGECAL_IMAGECAL_RUNNING) == RF_IMAGECAL_IMAGECAL_RUNNING) { }
 
   write_reg(REG_PACONFIG, reg_pa_config_initial_value);
 }
-
-//static void switch_to_sleep_mode()
-//{
-//    DPRINT("Switching to sleep mode");
-
-//    //Ensure interrupts are disabled before selecting the chip mode
-//    hw_gpio_disable_interrupt(SX127x_DIO0_PIN);
-//    hw_gpio_disable_interrupt(SX127x_DIO1_PIN);
-
-//    set_opmode(OPMODE_SLEEP);
-//    state = STATE_IDLE;
-
-//    spi_disable(spi_handle);  // TODO only disable the slave, other slaves might be attached to the same SPI pheriperal,
-//                              // so only the SPI driver should be able to decide to disable the pheriperal as a whole
-
-//    hw_radio_io_deinit();
-//}
-
 
 error_t hw_radio_init(hwradio_init_args_t* init_args) {
   alloc_packet_callback = init_args->alloc_packet_cb;
@@ -795,7 +712,7 @@ error_t hw_radio_init(hwradio_init_args_t* init_args) {
 
 void hw_radio_stop() {
   // TODO reset chip?
-  switch_to_sleep_mode();
+  hw_radio_set_idle();
 }
 
 error_t hw_radio_set_idle() {
@@ -805,7 +722,7 @@ error_t hw_radio_set_idle() {
 }
 
 bool hw_radio_is_idle() {
-  // TODO
+  return (hw_radio_get_opmode() == HW_STATE_STANDBY);
 }
 
 hw_state_t hw_radio_get_opmode(void) {
@@ -828,7 +745,7 @@ hw_state_t hw_radio_get_opmode(void) {
   }
 }
 
-void set_opmode(uint8_t opmode){
+void set_opmode(uint8_t opmode) {
   #if defined(PLATFORM_SX127X_USE_MANUAL_RXTXSW_PIN) || defined(PLATFORM_USE_ABZ)
   set_antenna_switch(opmode);
   #endif
@@ -842,8 +759,30 @@ void set_opmode(uint8_t opmode){
   #endif
 }
 
+void set_state_rx() {
+
+  state = STATE_RX;
+  flush_fifo();
+
+  FskPacketHandler_sx127x.FifoThresh = 0;
+  FskPacketHandler_sx127x.NbBytes = 0;
+  // FskPacketHandler_sx127x.Size = read_reg(REG_PAYLOADLENGTH);
+
+  set_packet_handler_enabled(true);
+
+  if(FskPacketHandler_sx127x.Size == 0) {
+    hw_gpio_set_edge_interrupt(SX127x_DIO1_PIN, GPIO_RISING_EDGE);
+    hw_gpio_enable_interrupt(SX127x_DIO1_PIN);
+  } else {
+    hw_gpio_set_edge_interrupt(SX127x_DIO0_PIN, GPIO_RISING_EDGE);
+    hw_gpio_enable_interrupt(SX127x_DIO0_PIN);
+  }
+
+  set_opmode(OPMODE_RX);
+}
+
 void hw_radio_set_opmode(hw_state_t opmode) {
-  switch(opmode){
+  switch(opmode) {
     case HW_STATE_OFF:
     case HW_STATE_SLEEP:
       state = STATE_IDLE;
@@ -861,11 +800,7 @@ void hw_radio_set_opmode(hw_state_t opmode) {
       break;
     case HW_STATE_IDLE:
     case HW_STATE_RX:
-      state = STATE_RX;
-      set_opmode(OPMODE_RX);
-      hw_gpio_set_edge_interrupt(SX127x_DIO1_PIN, GPIO_RISING_EDGE);
-      hw_gpio_enable_interrupt(SX127x_DIO1_PIN);
-      set_packet_handler_enabled(true);
+      set_state_rx();
       break;
     case HW_STATE_RESET:
       hw_reset();
@@ -874,7 +809,6 @@ void hw_radio_set_opmode(hw_state_t opmode) {
 }
 
 void hw_radio_set_center_freq(uint32_t center_freq) {
-  center_freq = 866212500;
   center_freq = (uint32_t)(center_freq / FREQ_STEP);
 
   write_reg(REG_FRFMSB, (uint8_t)((center_freq >> 16) & 0xFF));
@@ -888,10 +822,10 @@ void hw_radio_set_rx_bw_hz(uint32_t bw_hz) {
   uint32_t min_bw_dif = 10e6;
   uint8_t reg_bw;
 
-  for(bw_exp_count = 1; bw_exp_count < 8; bw_exp_count++){
-    for(bw_mant_count = 16; bw_mant_count <= 24; bw_mant_count += 4){
+  for(bw_exp_count = 1; bw_exp_count < 8; bw_exp_count++) {
+    for(bw_mant_count = 16; bw_mant_count <= 24; bw_mant_count += 4) {
       computed_bw = SX127X_FXOSC / (bw_mant_count * (1 << (bw_exp_count + 2)));
-      if(abs(computed_bw - bw_hz) < min_bw_dif){
+      if(abs(computed_bw - bw_hz) < min_bw_dif) {
         min_bw_dif = abs(computed_bw - bw_hz);
         reg_bw = ((((bw_mant_count - 16) / 4) << 3) | bw_exp_count);
       }
@@ -920,7 +854,7 @@ void hw_radio_set_preamble_size(uint16_t size) {
 }
 
 void hw_radio_set_dc_free(uint8_t scheme) {
-  // TODO
+  write_reg(REG_PACKETCONFIG1, (read_reg(REG_PACKETCONFIG1) & RF_PACKETCONFIG1_DCFREE_MASK) | (scheme << 5));
 }
 
 void hw_radio_set_sync_word(uint8_t *sync_word, uint8_t sync_size) {
@@ -930,7 +864,7 @@ void hw_radio_set_sync_word(uint8_t *sync_word, uint8_t sync_size) {
 }
 
 void hw_radio_set_crc_on(uint8_t enable) {
-  // TODO
+  write_reg(REG_PACKETCONFIG1, (read_reg(REG_PACKETCONFIG1) & RF_PACKETCONFIG1_CRC_MASK) | (enable << 4));
 }
 
 error_t hw_radio_send_payload(uint8_t * data, uint16_t len) {
@@ -949,43 +883,44 @@ error_t hw_radio_send_payload(uint8_t * data, uint16_t len) {
 
   uint8_t start = 0;
   uint8_t available_size = FIFO_SIZE;
-  if(remaining_bytes_len == 0){
+  if(remaining_bytes_len == 0) {
     remaining_bytes_len = len;
     flush_fifo();
   } else {
     available_size = FIFO_AVAILABLE_SPACE;
     start = len - remaining_bytes_len;
   }
-  if(get_opmode() == OPMODE_SLEEP){
+  if(get_opmode() == OPMODE_SLEEP) {
     set_opmode(OPMODE_STANDBY);
     while(!(read_reg(REG_IRQFLAGS1) & 0x80));
   }
 
   write_reg(REG_DIOMAPPING1, 0x00); //FIFO LEVEL ISR or Packet Sent ISR
 
-  // fg_frame.encoded_packet = data;
-  // fg_frame.encoded_length = len;
-  // fg_frame.transmitted_index = 0;
-  // fg_frame.bg_adv = false;
-
-  if(remaining_bytes_len > available_size){
-    write_reg(REG_FIFOTHRESH, 0x80 | FG_THRESHOLD);
+  if(remaining_bytes_len > available_size) {
+    write_reg(REG_FIFOTHRESH, RF_FIFOTHRESH_TXSTARTCONDITION_FIFONOTEMPTY | FG_THRESHOLD);
     write_fifo(data + start, available_size);
     remaining_bytes_len = remaining_bytes_len - available_size;
-    // fg_frame.transmitted_index = FIFO_SIZE;
     hw_gpio_set_edge_interrupt(SX127x_DIO1_PIN, GPIO_FALLING_EDGE);
     hw_gpio_enable_interrupt(SX127x_DIO1_PIN); 
   } else {
-    write_fifo(data + start, remaining_bytes_len);
-    // fg_frame.transmitted_index = fg_frame.encoded_length;
-    remaining_bytes_len = 0;
-    hw_gpio_set_edge_interrupt(SX127x_DIO0_PIN, GPIO_RISING_EDGE);
-    hw_gpio_enable_interrupt(SX127x_DIO0_PIN); 
+    if(!enable_refill) {
+      write_fifo(data + start, remaining_bytes_len);
+      remaining_bytes_len = 0;
+      hw_gpio_set_edge_interrupt(SX127x_DIO0_PIN, GPIO_RISING_EDGE);
+      hw_gpio_enable_interrupt(SX127x_DIO0_PIN); 
+    } else {
+      write_reg(REG_FIFOTHRESH, RF_FIFOTHRESH_TXSTARTCONDITION_FIFONOTEMPTY | 2); //FIFO is 66 bytes, 2 bytes to spare
+      write_fifo(data+start, remaining_bytes_len);
+      hw_gpio_set_edge_interrupt(SX127x_DIO1_PIN, GPIO_FALLING_EDGE);
+      hw_gpio_enable_interrupt(SX127x_DIO1_PIN); 
+    }
   }
 
   set_packet_handler_enabled(true);
 
-  set_opmode(OPMODE_TX);
+  if(!enable_preloading)
+    set_opmode(OPMODE_TX);
 }
 
 void hw_radio_set_payload_length(uint16_t length) {
@@ -995,7 +930,7 @@ void hw_radio_set_payload_length(uint16_t length) {
 
 
 bool hw_radio_is_rx(void) {
-  // TODO
+  return (hw_radio_get_opmode() == HW_STATE_RX);
 }
 
 void hw_radio_enable_refill(bool enable) {
@@ -1003,7 +938,7 @@ void hw_radio_enable_refill(bool enable) {
 }
 
 void hw_radio_enable_preloading(bool enable) {
-  // TODO
+  enable_preloading = enable;
 }
 
 void hw_radio_set_tx_power(uint8_t eirp) { // TODO signed
@@ -1021,16 +956,16 @@ void hw_radio_set_tx_power(uint8_t eirp) { // TODO signed
   }
   if(eirp <= 5) {
     write_reg(REG_PACONFIG, (uint8_t)(eirp - 10.8 + 15));
-    write_reg(REG_PADAC, 0x84); //Default Power
+    write_reg(REG_PADAC, (read_reg(REG_PADAC) & RF_PADAC_20DBM_MASK) | RF_PADAC_20DBM_OFF); //Default Power
   } else if(eirp <= 15) {
     write_reg(REG_PACONFIG, 0x70 | (uint8_t)(eirp));
-    write_reg(REG_PADAC, 0x84); //Default Power
+    write_reg(REG_PADAC, (read_reg(REG_PADAC) & RF_PADAC_20DBM_MASK) | RF_PADAC_20DBM_OFF); //Default Power
   } else if(eirp <= 17) {
-    write_reg(REG_PACONFIG, 0x80 | (eirp - 2));
-    write_reg(REG_PADAC, 0x84); //Default Power
+    write_reg(REG_PACONFIG, RF_PACONFIG_PASELECT_PABOOST | (eirp - 2));
+    write_reg(REG_PADAC, (read_reg(REG_PADAC) & RF_PADAC_20DBM_MASK) | RF_PADAC_20DBM_OFF); //Default Power
   } else {
-    write_reg(REG_PACONFIG, 0x80 | (eirp - 5));
-    write_reg(REG_PADAC, 0x87); //High Power
+    write_reg(REG_PACONFIG, RF_PACONFIG_PASELECT_PABOOST | (eirp - 5));
+    write_reg(REG_PADAC, (read_reg(REG_PADAC) & RF_PADAC_20DBM_MASK) | RF_PADAC_20DBM_ON);  //High Power
   }
 #else
   // Pout = Pmax-(15-outputpower)
@@ -1048,7 +983,8 @@ void hw_radio_set_tx_power(uint8_t eirp) { // TODO signed
 }
 
 void hw_radio_set_rx_timeout(uint32_t timeout) {
-  // TODO
+  timer_post_task_delay(&hw_radio_set_idle, timeout);
+  // Add enable interrupt dio0 here?
 }
 
 __attribute__((weak)) void hw_radio_reset() {
@@ -1063,363 +999,9 @@ __attribute__((weak)) void hw_radio_io_deinit() {
   // needs to be implemented in platform for now (until we have a public API to configure GPIO pins)
 }
 
-//error_t hw_radio_set_rx(hw_rx_cfg_t const* rx_cfg, rx_packet_callback_t rx_cb, rssi_valid_callback_t rssi_valid_cb) {
-//  if(rx_cb) {
-//    assert(alloc_packet_callback != NULL);
-//    assert(release_packet_callback != NULL);
-//  }
-
-//  // assert(rx_cb != NULL || rssi_valid_cb != NULL); // at least one callback should be valid
-
-//  // TODO error handling EINVAL, EOFF
-
-//  rx_packet_callback = rx_cb;
-//  rssi_valid_callback = rssi_valid_cb;
-
-//  // if we are currently transmitting wait until TX completed before entering RX
-//  // we return now and go into RX when TX is completed
-//  if(state == STATE_TX)
-//  {
-//    should_rx_after_tx_completed = true;
-//    memcpy(&pending_rx_cfg, rx_cfg, sizeof(hw_rx_cfg_t));
-//    return SUCCESS;
-//  }
-
-//  start_rx(rx_cfg);
-
-//  return SUCCESS;
-//}
-
-//error_t hw_radio_send_packet(hw_radio_packet_t* packet, tx_packet_callback_t tx_callback, uint16_t eta, uint8_t dll_header_bg_frame[2])
-//{
-//    if(state == STATE_TX)
-//        return EBUSY;
-
-//    if(packet->length == 0)
-//        return ESIZE;
-
-//    tx_packet_callback = tx_callback;
-//    current_packet = packet;
-
-//    resume_from_sleep_mode();
-//    if(state == STATE_RX)
-//    {
-//        pending_rx_cfg.channel_id = current_channel_id;
-//        pending_rx_cfg.syncword_class = current_syncword_class;
-//        should_rx_after_tx_completed = true;
-//        // switch to standby for now
-//        hw_gpio_disable_interrupt(SX127x_DIO0_PIN);
-//        hw_gpio_disable_interrupt(SX127x_DIO1_PIN);
-//        set_opmode(OPMODE_STANDBY);
-//        while(!(read_reg(REG_IRQFLAGS1) & 0x80)); // wait for Standby mode ready
-//    }
-
-//    flush_fifo();
-
-//    if (eta) {
-//        uint16_t tx_duration_bg_frame = phy_calculate_tx_duration(current_channel_id.channel_header.ch_class,
-//                                                                current_channel_id.channel_header.ch_coding,
-//                                                                BACKGROUND_FRAME_LENGTH, false);
-
-//        return hw_radio_send_packet_with_advertising(dll_header_bg_frame, tx_duration_bg_frame, eta, packet);
-//    }
-
-//  configure_channel((channel_id_t*)&(current_packet->tx_meta.tx_cfg.channel_id));
-//  configure_eirp(current_packet->tx_meta.tx_cfg.eirp);
-//  configure_syncword(current_packet->tx_meta.tx_cfg.syncword_class,
-//                     &(current_packet->tx_meta.tx_cfg.channel_id));
-
-//  state = STATE_TX;
-
-//  if(packet->tx_meta.tx_cfg.channel_id.channel_header.ch_class != PHY_CLASS_LORA) {
-//    // sx127x does not support PN9 whitening in hardware ...
-//    // copy the packet so we do not encode original packet->data
-//    DPRINT("TX len=%i", packet->length);
-//    DPRINT_DATA(packet->data, packet->length + 1);
-
-//    write_reg(REG_DIOMAPPING1, 0x00); // FIFO LEVEL ISR or Packet Sent ISR
-
-//    fg_frame.encoded_length = encode_packet(packet, fg_frame.encoded_packet);
-//    fg_frame.transmitted_index = 0;
-//    fg_frame.bg_adv = false;
-
-//    if (fg_frame.encoded_length > FIFO_SIZE)
-//    {
-//        write_reg(REG_FIFOTHRESH, 0x80 | FG_THRESHOLD);
-//        write_fifo(fg_frame.encoded_packet, FIFO_SIZE);
-//        fg_frame.transmitted_index = FIFO_SIZE;
-//        hw_gpio_set_edge_interrupt(SX127x_DIO1_PIN, GPIO_FALLING_EDGE);
-//        hw_gpio_enable_interrupt(SX127x_DIO1_PIN);
-//    }
-//    else
-//    {
-//        write_fifo(fg_frame.encoded_packet, fg_frame.encoded_length);
-//        fg_frame.transmitted_index = fg_frame.encoded_length;
-//        hw_gpio_set_edge_interrupt(SX127x_DIO0_PIN, GPIO_RISING_EDGE);
-//        hw_gpio_enable_interrupt(SX127x_DIO0_PIN);
-//    }
-
-//    set_packet_handler_enabled(true);
-
-//    DEBUG_RX_END();
-//    DEBUG_TX_START();
-//    set_opmode(OPMODE_TX);
-//  } else {
-//    DPRINT("TX LoRa len=%i", packet->length);
-//    DPRINT_DATA(packet->data, packet->length + 1);
-//    set_opmode(OPMODE_STANDBY); // LoRa FIFO can only be filled in standby mode
-//    write_reg(REG_LR_PAYLOADLENGTH, packet->length + 1);
-//    write_reg(REG_LR_FIFOTXBASEADDR, 0);
-//    write_reg(REG_LR_FIFOADDRPTR, 0);
-//    write_fifo(packet->data, packet->length + 1);
-//    write_reg(REG_LR_IRQFLAGS, 0xFF);
-//    // mask all interrupts except for TxDone
-//    write_reg(REG_LR_IRQFLAGSMASK,  RFLR_IRQFLAGS_RXTIMEOUT |
-//                                    RFLR_IRQFLAGS_RXDONE |
-//                                    RFLR_IRQFLAGS_PAYLOADCRCERROR |
-//                                    RFLR_IRQFLAGS_VALIDHEADER |
-//                                    // RFLR_IRQFLAGS_TXDONE |
-//                                    RFLR_IRQFLAGS_CADDONE |
-//                                    RFLR_IRQFLAGS_FHSSCHANGEDCHANNEL |
-//                                    RFLR_IRQFLAGS_CADDETECTED);
-
-//    // DIO0 mapped to TxDone
-//    write_reg(REG_DIOMAPPING1, RFLR_DIOMAPPING1_DIO0_01 );
-
-//    DEBUG_TX_START();
-//    hw_gpio_enable_interrupt(SX127x_DIO0_PIN);
-//    set_opmode(OPMODE_TX);
-//  }
-
-//  return SUCCESS; // TODO other return codes
-//}
-
-
-
-//error_t hw_radio_start_background_scan(hw_rx_cfg_t const* rx_cfg, rx_packet_callback_t rx_cb, int16_t rssi_thr)
-//{
-//    uint8_t packet_len;
-
-//    //DPRINT("START BG scan @ %i", timer_get_counter_value());
-
-//    if(rx_cb != NULL)
-//    {
-//        assert(alloc_packet_callback != NULL);
-//        assert(release_packet_callback != NULL);
-//    }
-//    rx_packet_callback = rx_cb;
-
-//    resume_from_sleep_mode();
-
-//    // We should not initiate a background scan before TX is completed
-//    assert(state != STATE_TX);
-
-//    state = STATE_RX;
-
-//    configure_syncword(rx_cfg->syncword_class, &(rx_cfg->channel_id));
-//    configure_channel(&(rx_cfg->channel_id));
-
-//    if (current_channel_id.channel_header.ch_coding == PHY_CODING_FEC_PN9)
-//        packet_len = fec_calculated_decoded_length(BACKGROUND_FRAME_LENGTH);
-//    else
-//        packet_len = BACKGROUND_FRAME_LENGTH;
-
-//    // set PayloadLength to the length of the expected Background frame (fixed length packet format is used)
-//    write_reg(REG_PAYLOADLENGTH, packet_len);
-
-//    DEBUG_RX_START();
-
-//    flush_fifo();
-//    FskPacketHandler.NbBytes = 0;
-//    FskPacketHandler.Size = packet_len;
-//    FskPacketHandler.FifoThresh = 0;
-//    write_reg(REG_DIOMAPPING1, 0x3C); // DIO2 interrupt on sync detect and DIO0 interrupt on PayloadReady, DIO1 disabled
-//    hw_gpio_disable_interrupt(SX127x_DIO1_PIN);
-//    set_opmode(OPMODE_RX);
-
-//    // wait for RSSI sample ready
-//    while(!(read_reg(REG_IRQFLAGS1) & 0x08));
-
-//    int16_t rssi = hw_radio_get_rssi();
-//    if (rssi <= rssi_thr)
-//    {
-//        //DPRINT("FAST RX termination RSSI %i limit %i", rssi, rssi_thr);
-//        switch_to_sleep_mode(); // TODO we might want to switch to standby mode here instead, to allow rapid channel cycling
-//        DEBUG_RX_END();
-//        return FAIL;
-//    }
-//    else
-//    {
-//        //hw_gpio_enable_interrupt(SX127x_DIO2_PIN); // enable the SyncAddress interrupt to stop the sync detection timeout
-//        DPRINT("rssi %i, waiting for BG frame\n", rssi);
-//        hw_gpio_enable_interrupt(SX127x_DIO0_PIN); // enable the PayloadReady interrupt
-//    }
-
-//    // the device has a period of To to successfully detect the sync word
-//    error_t rtc = timer_post_task_delay(&switch_to_sleep_mode, bg_timeout[current_channel_id.channel_header.ch_class]);
-//    assert(rtc == SUCCESS);
-//    // TODO we might want to switch to standby mode here instead, to allow rapid channel cycling
-
-//    return SUCCESS;
-//}
-
 int16_t hw_radio_get_rssi() {
     if(lora_mode)
         return (read_reg(REG_LR_RSSIVALUE) -157); // for HF output port
     else
         return (- read_reg(REG_RSSIVALUE) / 2);
 }
-
-//void hw_radio_continuous_tx(hw_tx_cfg_t const* tx_cfg, uint8_t time_period) {
-//  DPRINT("hw_radio_continuous_tx");
-
-//  resume_from_sleep_mode();
-
-//  flush_fifo();
-
-//  use_lora_250 = (tx_cfg->channel_id.center_freq_index == 208);
-//  configure_channel(&(tx_cfg->channel_id));
-//  configure_eirp(tx_cfg->eirp);
-//  //DPRINT("channel is: %d",tx_cfg->channel_id.center_freq_index);
-
-//  if(tx_cfg->channel_id.channel_header.ch_class == PHY_CLASS_LORA) {
-//    write_reg(REG_LR_MODEMCONFIG2, read_reg(REG_LR_MODEMCONFIG2) | (1 << 3));
-//  }
-
-//  if(tx_cfg->channel_id.channel_header.ch_coding == PHY_CODING_CW){ //set frequency deviation to 0 to send a continuous wave
-//    write_reg(REG_FDEVMSB, 0x00);
-//    write_reg(REG_FDEVLSB, 0x00);
-//  }
-  
-//  bool const_radio = (time_period == 0);
-//  state = STATE_TX;
-//  set_opmode(OPMODE_TX);
-
-//  //assert(time_period <= 60);
-//  uint16_t time = hw_timer_getvalue(0) + time_period * 1024;
-
-//  DPRINT("sending for %d seconds\n",time_period);
-
-//  if (current_channel_id.channel_header.ch_coding == PHY_CODING_FEC_PN9) {
-
-//      uint8_t payload_len = 32;
-//      uint8_t data[64];
-//      data[0] = payload_len;
-//      for (uint8_t i=0; i<payload_len; i++)
-//        data[i+1] = i;
-
-//      payload_len = fec_encode(data, payload_len);
-//      pn9_encode(data, payload_len);
-      
-//      while(const_radio || ((hw_timer_getvalue(0) < time) || (hw_timer_getvalue(0) > (time + 100)))){
-//        write_fifo(data, payload_len);
-//      }
-//  }
-//  else if (current_channel_id.channel_header.ch_coding == PHY_CODING_PN9) {
-//    uint8_t payload_len = 63;
-//    uint8_t data[payload_len + 1];
-//    data[0] = payload_len;
-//    for (uint8_t i=0; i<payload_len; i++)
-//      data[i+1] = 0xAA;
-
-//    pn9_encode(data + 1 , payload_len);
-
-//    while(const_radio || ((hw_timer_getvalue(0) < time) || (hw_timer_getvalue(0) > (time + 100)))){
-//      write_fifo(data, payload_len+1); //data in fifo gets sent out
-//    }
-//  } else {
-//    uint8_t data[1];
-//    data[0] = 0;
-//    while(const_radio || ((hw_timer_getvalue(0) < time) || (hw_timer_getvalue(0) > (time + 100)))){
-//      if(!(read_reg(REG_IRQFLAGS2) & 0x80)){
-//        write_fifo(data, 1); //data in fifo gets sent out
-//        data[0]++; // count from 0 till 1
-//      }
-//    }
-//  }
-
-//  DPRINT("Done\n");
-
-//  switch_to_sleep_mode();
-//}
-
-//void hw_radio_continuous_rx(hw_rx_cfg_t const* rx_cfg, uint8_t time_period) {
-//  resume_from_sleep_mode();
-//  //configure_channel(&(rx_cfg->channel_id));
-//  //configure_syncword(rx_cfg->syncword_class, &(rx_cfg->channel_id));
-//  configure_channel(&(rx_cfg->channel_id));
-
-//  flush_fifo();
-//  FskPacketHandler.NbBytes = 0;
-//  FskPacketHandler.Size = 0;
-//  FskPacketHandler.FifoThresh = 0;
-
-//  //fixed length with 0 payloadlength = unlimited payloadlength
-//  write_reg(REG_PACKETCONFIG1, read_reg(REG_PACKETCONFIG1) & 0x7F);
-//  write_reg(REG_PACKETCONFIG2, read_reg(REG_PACKETCONFIG2) & 0xF8);
-//  write_reg(REG_PAYLOADLENGTH, 0x00);
-
-//  //no automatic restart
-//  write_reg(REG_RXCONFIG,read_reg(REG_RXCONFIG) & 0x7F);
-
-//  set_packet_handler_enabled(true);
-
-//  //CHECK SETTINGS
-//  if(read_reg(REG_PACKETCONFIG2) & 0x40)
-//    DPRINT("PACKET MODE");
-//  else
-//    DPRINT("CONTINUOUS MODE");
-//  if((read_reg(REG_PACKETCONFIG1) & 0xF6) == 0x00)
-//    DPRINT("Fixed unlimited length, no decoding, CRC off, addressfiltering off");
-//  else
-//    DPRINT("something wrong: %X",read_reg(REG_PACKETCONFIG1) & 0xF6);
-//  if(!(read_reg(REG_OPMODE) & 0xE0))
-//    DPRINT("FSK");
-  
-
-//  if(state == STATE_RX)
-//    restart_rx_chain();
-
-//  state = STATE_RX;
-//  set_opmode(OPMODE_RX);
-
-//  if(rssi_valid_callback != 0) {
-//    while(!(read_reg(REG_IRQFLAGS1) & 0x08)) {} // wait until we have a valid RSSI value
-
-//    rssi_valid_callback(get_rssi());
-//  }
-
-//  DPRINT("start_hw_radio_continuous_rx");
-//  bool const_rx = (time_period == 0);
-
-//  assert(time_period <= 60);
-//  uint16_t time = hw_timer_getvalue(0) + time_period * 1024;
-
-//  if (current_channel_id.channel_header.ch_coding == PHY_CODING_FEC_PN9) {
-//      uint8_t data[64];
-//      while(const_rx || ((hw_timer_getvalue(0) < time) || (hw_timer_getvalue(0) > (time + 100)))){
-//        if((read_reg(REG_IRQFLAGS2) & 0x80)){ //If Fifo full, read 64 bytes
-//          read_fifo(data, 64);
-//          fec_decode_packet(data, 64, 64);
-//          log_print_data(data, 32);
-//        }
-//      }
-//  }
-//  else if (current_channel_id.channel_header.ch_coding == PHY_CODING_PN9) {
-//    while(const_rx || ((hw_timer_getvalue(0) < time) || (hw_timer_getvalue(0) > (time + 100)))){
-//      int16_t rss = hw_radio_get_rssi();
-//      DPRINT("rss : %d \n", rss);
-//      hw_busy_wait(5000);
-//    }
-//  } else {
-//    uint8_t data[64];
-//    while(const_rx || ((hw_timer_getvalue(0) < time) || (hw_timer_getvalue(0) > (time + 100)))){
-//      if((read_reg(REG_IRQFLAGS2) & 0x80)){ //If Fifo full, read 64 bytes
-//        read_fifo(data, 64);
-//        log_print_data(data, 64);
-//      }
-//    }
-//  }
-
-//  switch_to_sleep_mode();
-//}
