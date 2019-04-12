@@ -98,65 +98,6 @@ packet_t* packet_queue_find_packet(hw_radio_packet_t* hw_radio_packet)
     return NULL;
 }
 
-packet_t* packet_queue_mark_received(hw_radio_packet_t* hw_radio_packet)
-{
-    assert(hw_radio_packet != NULL);
-    for(uint8_t i = 0; i < MODULE_D7AP_PACKET_QUEUE_SIZE; i++)
-    {
-        if(&(packet_queue[i].hw_radio_packet) == hw_radio_packet)
-        {
-            assert(packet_queue_element_status[i] == PACKET_QUEUE_ELEMENT_STATUS_ALLOCATED);
-            DPRINT("Packet queue mark received %p, slot %i", &(packet_queue[i].hw_radio_packet), i);
-            packet_queue_element_status[i] = PACKET_QUEUE_ELEMENT_STATUS_RECEIVED;
-            return &(packet_queue[i]);
-        }
-    }
-
-    assert(false);
-}
-
-packet_t* packet_queue_mark_transmitted(hw_radio_packet_t* hw_radio_packet)
-{
-    for(uint8_t i = 0; i < MODULE_D7AP_PACKET_QUEUE_SIZE; i++)
-    {
-        if(&(packet_queue[i].hw_radio_packet) == hw_radio_packet)
-        {
-            assert(packet_queue_element_status[i] == PACKET_QUEUE_ELEMENT_STATUS_PROCESSING);
-            DPRINT("Packet queue mark transmitted %p slot %i", &(packet_queue[i].hw_radio_packet), i);
-            packet_queue_element_status[i] = PACKET_QUEUE_ELEMENT_STATUS_TRANSMITTED;
-            return &(packet_queue[i]);
-        }
-    }
-
-    assert(false);
-}
-
-packet_t* packet_queue_get_received_packet()
-{
-    // note: we return the first found received packet, this may not be the oldest one
-    for(uint8_t i = 0; i < MODULE_D7AP_PACKET_QUEUE_SIZE; i++)
-    {
-        if(packet_queue_element_status[i] == PACKET_QUEUE_ELEMENT_STATUS_RECEIVED) {
-            DPRINT("Packet slot %i", i);
-            return &(packet_queue[i]);
-        }
-    }
-
-    return NULL;
-}
-
-packet_t* packet_queue_get_transmitted_packet()
-{
-    // note: we return the first found transmitted packet but it is not expected to find more than one entry
-    for(uint8_t i = 0; i < MODULE_D7AP_PACKET_QUEUE_SIZE; i++)
-    {
-        if(packet_queue_element_status[i] == PACKET_QUEUE_ELEMENT_STATUS_TRANSMITTED)
-            return &(packet_queue[i]);
-    }
-
-    return NULL;
-}
-
 void packet_queue_mark_processing(packet_t* packet)
 {
     DPRINT("Packet queue mark processing %p", packet);
