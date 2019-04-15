@@ -475,8 +475,8 @@ static void bg_scan_rx_done()
    current_packet->rx_meta.rssi = get_rssi();
    current_packet->rx_meta.lqi = 0; // TODO
 
-   flush_fifo();
    rx_packet_callback(current_packet);
+   flush_fifo(); 
 }
 
 static void dio0_isr(pin_id_t pin_id, uint8_t event_mask) {
