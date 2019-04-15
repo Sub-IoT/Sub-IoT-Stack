@@ -366,10 +366,6 @@ static void configure_eirp(eirp_t eirp)
     hw_radio_set_tx_power(eirp);
 }
 
-static bool is_lora_channel(const channel_id_t* channel) {
-  return channel->channel_header.ch_class == PHY_CLASS_LORA;
-}
-
 static void configure_channel(const channel_id_t* channel) {
     if(phy_radio_channel_ids_equal(&current_channel_id, channel)) {
         return;
