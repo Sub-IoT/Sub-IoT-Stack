@@ -714,8 +714,6 @@ error_t phy_send_packet_with_advertising(hw_radio_packet_t* packet, phy_tx_confi
     bg_adv.stop_time = start + eta + bg_adv.tx_duration; // Tadv = Tsched + Ttx
     DPRINT("BG Tadv %i (start time @ %i stop time @ %i)", eta + bg_adv.tx_duration, start, bg_adv.stop_time);
 
-    DPRINT("BG advertising start time @ %i stop time @ %i", start, bg_adv.stop_time);
-
     state = STATE_TX;
     DEBUG_RX_END();
     DEBUG_TX_START();
@@ -736,6 +734,7 @@ static void fill_in_fifo(uint8_t remaining_bytes_len)
 
     if (fg_frame.bg_adv == true)
     {
+        DPRINT("fill in fifo, bg adv\n");
         timer_tick_t current = timer_get_counter_value();
 
         // calculate the time needed to flush the remaining bytes in the TX
@@ -755,8 +754,7 @@ static void fill_in_fifo(uint8_t remaining_bytes_len)
          * symbols after the end of the background packet, in order to guarantee no silence period.
          * The FIFO level allows to write enough padding preamble bytes without overflow
          */
-
-        if (bg_adv.eta)
+        if(bg_adv.eta)
         {
             // Fill up the TX FIFO with the full packet including the preamble and the SYNC word
             hw_radio_send_payload(bg_adv.packet, bg_adv.packet_size);
@@ -814,12 +812,14 @@ error_t phy_start_background_scan(phy_rx_config_t* config, rx_packet_callback_t 
     // set PayloadLength to the length of the expected Background frame (fixed length packet format is used)
     hw_radio_set_payload_length(packet_len);
 
+    hw_radio_set_opmode(HW_STATE_RX);
+
     DEBUG_RX_START();
 
     int16_t rssi = hw_radio_get_rssi();
-    if (rssi <= config->rssi_thr)
+    if (rssi <= config->rssi_thr + 20) //TODO SET BACK
     {
-        DPRINT("FAST RX termination RSSI %i below limit %i", rssi, config->rssi_thr);
+        DPRINT("FAST RX termination RSSI %i below limit %i", rssi, config->rssi_thr+20);
         switch_to_sleep_mode();
         // TODO choose standby mode to allow rapid channel cycling
         //switch_to_standby_mode();
@@ -831,7 +831,6 @@ error_t phy_start_background_scan(phy_rx_config_t* config, rx_packet_callback_t 
 
     // the device has a period of To to successfully detect the sync word
     hw_radio_set_rx_timeout(bg_timeout[current_channel_id.channel_header.ch_class]);
-    hw_radio_set_opmode(HW_STATE_RX);
 
     return SUCCESS;
 }
