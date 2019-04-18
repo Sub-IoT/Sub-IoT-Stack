@@ -1021,6 +1021,7 @@ static void start_foreground_scan()
     if (dll_state == DLL_STATE_SCAN_AUTOMATION)
     {
         timer_cancel_event(&dll_background_scan_timer);
+        DPRINT("cancel BG scan, start FG scan\n");
         hw_radio_set_idle();
     }
 

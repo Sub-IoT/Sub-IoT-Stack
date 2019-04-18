@@ -217,7 +217,7 @@ static void write_fifo(uint8_t* buffer, uint8_t size) {
   spi_exchange_byte(sx127x_spi, 0x80); // send address with bit 8 high to signal a write operation
   spi_exchange_bytes(sx127x_spi, buffer, NULL, size);
   spi_deselect(sx127x_spi);
-  //DPRINT("WRITE FIFO %i", size);
+  // DPRINT("WRITE FIFO %i", size);
 }
 
 static void read_fifo(uint8_t* buffer, uint8_t size) {
@@ -705,6 +705,8 @@ error_t hw_radio_init(hwradio_init_args_t* init_args) {
   e = hw_gpio_configure_interrupt(SX127x_DIO1_PIN, GPIO_RISING_EDGE, &dio1_isr, NULL); assert(e == SUCCESS);
   DPRINT("inited sx127x");
 
+  sched_register_task(&hw_radio_set_idle);
+
   return SUCCESS; // TODO FAIL return code
 }
 
@@ -714,6 +716,7 @@ void hw_radio_stop() {
 }
 
 error_t hw_radio_set_idle() {
+    DPRINT("set to sleep\n");
     hw_radio_set_opmode(HW_STATE_SLEEP);
     DEBUG_RX_END();
     DEBUG_TX_END();
@@ -758,8 +761,10 @@ void set_opmode(uint8_t opmode) {
 }
 
 void set_state_rx() {
-  if(get_opmode() >= OPMODE_FSRX) 
+  if(get_opmode() >= OPMODE_FSRX || get_opmode() == OPMODE_SLEEP) {
     set_opmode(OPMODE_STANDBY); //Restart when changing freq/datarate
+    while(!(read_reg(REG_IRQFLAGS1) & 0x80));
+  }
 
   state = STATE_RX;
   flush_fifo();
@@ -866,6 +871,8 @@ void hw_radio_set_crc_on(uint8_t enable) {
   write_reg(REG_PACKETCONFIG1, (read_reg(REG_PACKETCONFIG1) & RF_PACKETCONFIG1_CRC_MASK) | (enable << 4));
 }
 
+static bool temp = false;
+
 error_t hw_radio_send_payload(uint8_t * data, uint16_t len) {
   if(len == 0)
     return ESIZE;
@@ -881,7 +888,7 @@ error_t hw_radio_send_payload(uint8_t * data, uint16_t len) {
   uint8_t available_size = FIFO_SIZE;
   if(remaining_bytes_len == 0) {
     remaining_bytes_len = len;
-    flush_fifo();
+    // flush_fifo();
   } else {
     available_size = FIFO_AVAILABLE_SPACE;
     start = len - remaining_bytes_len;
@@ -906,8 +913,9 @@ error_t hw_radio_send_payload(uint8_t * data, uint16_t len) {
       hw_gpio_set_edge_interrupt(SX127x_DIO0_PIN, GPIO_RISING_EDGE);
       hw_gpio_enable_interrupt(SX127x_DIO0_PIN); 
     } else {
-      write_reg(REG_FIFOTHRESH, RF_FIFOTHRESH_TXSTARTCONDITION_FIFONOTEMPTY | 2); //FIFO is 66 bytes, 2 bytes to spare
-      write_fifo(data+start, remaining_bytes_len);
+      write_reg(REG_FIFOTHRESH, RF_FIFOTHRESH_TXSTARTCONDITION_FIFONOTEMPTY | 2);
+      write_fifo(data + start, remaining_bytes_len);
+      remaining_bytes_len = 0;
       hw_gpio_set_edge_interrupt(SX127x_DIO1_PIN, GPIO_FALLING_EDGE);
       hw_gpio_enable_interrupt(SX127x_DIO1_PIN); 
     }
@@ -917,6 +925,8 @@ error_t hw_radio_send_payload(uint8_t * data, uint16_t len) {
 
   if(!enable_preloading)
     set_opmode(OPMODE_TX);
+  else
+    enable_preloading = false;
 }
 
 void hw_radio_set_payload_length(uint16_t length) {
@@ -996,8 +1006,10 @@ __attribute__((weak)) void hw_radio_io_deinit() {
 }
 
 int16_t hw_radio_get_rssi() {
-    if(lora_mode)
-        return (read_reg(REG_LR_RSSIVALUE) -157); // for HF output port
-    else
-        return (- read_reg(REG_RSSIVALUE) / 2);
+    state = STATE_RX;
+    hw_gpio_disable_interrupt(SX127x_DIO1_PIN);
+    set_opmode(OPMODE_RX);
+    // hw_busy_wait(700); //time to let it start up
+    while(!read_reg(REG_IRQFLAGS1) & 0x08);
+    return (- read_reg(REG_RSSIVALUE) >> 1);
 }

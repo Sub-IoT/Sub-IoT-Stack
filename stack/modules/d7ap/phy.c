@@ -643,7 +643,7 @@ static uint8_t assemble_background_payload()
  */
 error_t phy_send_packet_with_advertising(hw_radio_packet_t* packet, phy_tx_config_t* config,
                                          uint8_t dll_header_bg_frame[2], uint16_t eta, tx_packet_callback_t tx_callback)
-{
+{   
     transmitted_callback = tx_callback;
     DPRINT("Start the bg advertising for ad-hoc sync before transmitting the FG frame");
 
@@ -730,8 +730,8 @@ static void fill_in_fifo(uint8_t remaining_bytes_len)
 
     if (fg_frame.bg_adv == true)
     {
-        DPRINT("fill in fifo, bg adv\n");
         timer_tick_t current = timer_get_counter_value();
+        // DPRINT("fill in fifo, bg adv, currently %d untill %d\n", current, bg_adv.stop_time);
 
         // calculate the time needed to flush the remaining bytes in the TX
         uint16_t flush_duration = phy_calculate_tx_duration(current_channel_id.channel_header.ch_class,
@@ -743,6 +743,8 @@ static void fill_in_fifo(uint8_t remaining_bytes_len)
         else
             //TODO avoid stop time being elapsed
             bg_adv.eta = 0;
+
+        DPRINT("ts after tx %d, new ETA %d\n", current + bg_adv.tx_duration, bg_adv.eta);
 
         /*
          * When no more advertising background frames can be fully transmitted before
@@ -766,20 +768,22 @@ static void fill_in_fifo(uint8_t remaining_bytes_len)
             uint8_t preamble[bg_adv.packet_size];
 
             preamble_len = (bg_adv.stop_time - current) * (bg_adv.packet_size / (float)bg_adv.tx_duration); // TODO instead of current we should use the timestamp
-            DPRINT("ETA %d, packet size %d, tx_duration %d, current time %d", bg_adv.eta, bg_adv.packet_size, bg_adv.tx_duration, timer_get_counter_value());
+            DPRINT("ETA %d, packet size %d, tx_duration %d, current time %d\n", bg_adv.eta, bg_adv.packet_size, bg_adv.tx_duration, timer_get_counter_value());
 
-            DPRINT("Add preamble_bytes: %d", preamble_len);
+            DPRINT("Add preamble_bytes: %d\n", preamble_len);
             memset(preamble, 0xAA, preamble_len);
             hw_radio_send_payload(preamble, preamble_len);
 
             bg_adv.eta = 0;
             fg_frame.bg_adv = false;
+
+            DPRINT("preamble bytes are sent, now send data\n");
         }
     }
     else
     {
         // Disable the refill event since this is the last chunk of data to transmit
-        if (state != STATE_CONT_TX)
+        if (state != STATE_CONT_TX) 
             hw_radio_enable_refill(false);
         hw_radio_send_payload(fg_frame.encoded_packet, fg_frame.encoded_length);
     }
@@ -808,14 +812,12 @@ error_t phy_start_background_scan(phy_rx_config_t* config, rx_packet_callback_t 
     // set PayloadLength to the length of the expected Background frame (fixed length packet format is used)
     hw_radio_set_payload_length(packet_len);
 
-    hw_radio_set_opmode(HW_STATE_RX);
-
     DEBUG_RX_START();
 
     int16_t rssi = hw_radio_get_rssi();
-    if (rssi <= config->rssi_thr + 20) //TODO SET BACK
+    if (rssi <= config->rssi_thr)
     {
-        DPRINT("FAST RX termination RSSI %i below limit %i", rssi, config->rssi_thr+20);
+        DPRINT("FAST RX termination RSSI %i below limit %i\n", rssi, config->rssi_thr);
         switch_to_sleep_mode();
         // TODO choose standby mode to allow rapid channel cycling
         //switch_to_standby_mode();
@@ -823,10 +825,11 @@ error_t phy_start_background_scan(phy_rx_config_t* config, rx_packet_callback_t 
         return FAIL;
     }
 
-    DPRINT("rssi %i, waiting for BG frame", rssi);
+    DPRINT("rssi %i, waiting for BG frame\n", rssi);
 
     // the device has a period of To to successfully detect the sync word
     hw_radio_set_rx_timeout(bg_timeout[current_channel_id.channel_header.ch_class]);
+    hw_radio_set_opmode(HW_STATE_RX);
 
     return SUCCESS;
 }
