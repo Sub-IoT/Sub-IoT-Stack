@@ -866,7 +866,9 @@ void dll_init()
 
     hw_radio_init(&alloc_new_packet, &release_packet);
 
-    d7ap_fs_read_file(D7A_FILE_DLL_CONF_FILE_ID, 4, &nf_ctrl, 1);
+    if (d7ap_fs_read_file(D7A_FILE_DLL_CONF_FILE_ID, 4, &nf_ctrl, 1) != 0)
+        nf_ctrl = (D7ADLL_FIXED_NOISE_FLOOR << 4) & 0x0F; // set default NF computation method if the setting is not present
+
     tx_nf_method = (nf_ctrl >> 4) & 0x0F;
 
     dll_state = DLL_STATE_IDLE;
