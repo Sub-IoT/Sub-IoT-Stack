@@ -134,12 +134,7 @@ void hw_enter_lowpower_mode(uint8_t mode)
       HAL_PWR_EnterSLEEPMode(PWR_MAINREGULATOR_ON, PWR_SLEEPENTRY_WFI);
       break;
     case 1: // STOP mode
-#ifdef FRAMEWORK_DEBUG_ENABLE_SWD
-      // enable debugger in stop mode
-      __HAL_RCC_DBGMCU_CLK_ENABLE();
-      DBGMCU->CR |= DBGMCU_CR_DBG_STOP;
-      __HAL_RCC_DBGMCU_CLK_DISABLE( );
-#else
+#ifndef FRAMEWORK_DEBUG_ENABLE_SWD
       __HAL_FLASH_SLEEP_POWERDOWN_ENABLE(); // TODO test
       // we can't do this in debug mode since DBGMCU the core is always clocked and will not wait for flash to be ready
 #endif

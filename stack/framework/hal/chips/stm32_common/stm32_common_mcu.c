@@ -28,7 +28,6 @@
 #include "hwsystem.h"
 #include "platform_defs.h"
 
-
 static void init_clock(void)
 {
   RCC_ClkInitTypeDef RCC_ClkInitStruct = {0};
@@ -62,6 +61,7 @@ static void init_clock(void)
   RCC_OscInitStruct.PLL.PLLDIV          = RCC_PLL_DIV3;
   assert(HAL_RCC_OscConfig(&RCC_OscInitStruct) == HAL_OK);
   while (__HAL_PWR_GET_FLAG(PWR_FLAG_VOS) != RESET) {};
+
   RCC_OscInitStruct.OscillatorType =  RCC_OSCILLATORTYPE_LSE;
   RCC_OscInitStruct.PLL.PLLState = RCC_PLL_NONE;
   RCC_OscInitStruct.LSEState = RCC_LSE_ON;
@@ -81,6 +81,20 @@ static void init_clock(void)
   RCC_PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_LPTIM1;
   RCC_PeriphClkInit.LptimClockSelection = RCC_LPTIM1CLKSOURCE_LSE;
   assert(HAL_RCCEx_PeriphCLKConfig(&RCC_PeriphClkInit) == HAL_OK);
+#endif
+
+#ifdef FRAMEWORK_DEBUG_ENABLE_SWD
+    __HAL_RCC_DBGMCU_CLK_ENABLE( );
+
+    HAL_DBGMCU_EnableDBGSleepMode( );
+    HAL_DBGMCU_EnableDBGStopMode( );
+    HAL_DBGMCU_EnableDBGStandbyMode( );
+#else
+    __HAL_RCC_DBGMCU_CLK_ENABLE( );
+    HAL_DBGMCU_DisableDBGSleepMode( );
+    HAL_DBGMCU_DisableDBGStopMode( );
+    HAL_DBGMCU_DisableDBGStandbyMode( );
+    __HAL_RCC_DBGMCU_CLK_DISABLE( );
 #endif
 }
 
