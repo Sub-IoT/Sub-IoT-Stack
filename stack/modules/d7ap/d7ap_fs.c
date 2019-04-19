@@ -270,11 +270,11 @@ alp_status_codes_t d7ap_fs_read_file_header(uint8_t file_id, fs_file_header_t* f
     blockdevice_read(bd_systemfiles, (uint8_t*)file_header, systemfiles_header_offset + (file_id * sizeof(fs_file_header_t)), sizeof(fs_file_header_t));
   else {
     memcpy(file_header, (const void*)&fs_userfiles_header_data[get_user_file_header_index(file_id)], sizeof(fs_file_header_t));
+    // convert to little endian (native)
+    file_header->length = __builtin_bswap32(file_header->length);
+    file_header->allocated_length = __builtin_bswap32(file_header->allocated_length);
   }
 
-  // convert to little endian (native)
-  file_header->length = __builtin_bswap32(file_header->length);
-  file_header->allocated_length = __builtin_bswap32(file_header->allocated_length);
   return ALP_STATUS_OK;
 }
 
@@ -436,7 +436,7 @@ uint32_t d7ap_fs_get_file_length(uint8_t file_id)
   if(IS_SYSTEM_FILE(file_id)) {
     return systemfiles_headers[file_id].length;
   } else {
-    return fs_userfiles_header_data[get_user_file_header_index(file_id)].length;
+    return __builtin_bswap32(fs_userfiles_header_data[get_user_file_header_index(file_id)].length);
   }
 }
 
