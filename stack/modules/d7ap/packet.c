@@ -108,7 +108,11 @@ void packet_disassemble(packet_t* packet)
         goto cleanup;
     }
 
-    uint8_t data_idx = 1;
+    uint8_t data_idx;
+    if (packet->type != BACKGROUND_ADV)
+        data_idx = 1;
+    else
+        data_idx = 0;
 
     if(!dll_disassemble_packet_header(packet, &data_idx))
         goto cleanup;
