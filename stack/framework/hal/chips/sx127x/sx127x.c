@@ -468,7 +468,7 @@ static void bg_scan_rx_done()
    assert(current_packet); // TODO handle
    current_packet->length = FskPacketHandler_sx127x.Size;
 
-   read_fifo(current_packet->data + 1, FskPacketHandler_sx127x.Size);
+   read_fifo(current_packet->data, FskPacketHandler_sx127x.Size); //current_packet->data + 1
 
    current_packet->rx_meta.timestamp = rx_timestamp;
    current_packet->rx_meta.crc_status = HW_CRC_UNAVAILABLE;
@@ -769,6 +769,8 @@ void set_state_rx() {
   state = STATE_RX;
   flush_fifo();
 
+  write_reg(REG_FIFOTHRESH, 0x83);
+
   FskPacketHandler_sx127x.FifoThresh = 0;
   FskPacketHandler_sx127x.NbBytes = 0;
 
@@ -1006,10 +1008,9 @@ __attribute__((weak)) void hw_radio_io_deinit() {
 }
 
 int16_t hw_radio_get_rssi() {
-    state = STATE_RX;
+    hw_radio_set_opmode(HW_STATE_RX);
     hw_gpio_disable_interrupt(SX127x_DIO1_PIN);
-    set_opmode(OPMODE_RX);
-    // hw_busy_wait(700); //time to let it start up
+    hw_busy_wait(700); //time to let it start up
     while(!read_reg(REG_IRQFLAGS1) & 0x08);
     return (- read_reg(REG_RSSIVALUE) >> 1);
 }

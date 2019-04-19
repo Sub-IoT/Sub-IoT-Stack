@@ -301,7 +301,6 @@ void start_background_scan()
 
 void dll_stop_background_scan()
 {
-    DPRINT("STOPPING BACKGROUND SCAN\n\n\n");
     assert(dll_state == DLL_STATE_SCAN_AUTOMATION);
 
     timer_cancel_event(&dll_background_scan_timer);
@@ -310,11 +309,8 @@ void dll_stop_background_scan()
 
 void dll_signal_packet_received(packet_t* packet)
 {
-    DPRINT("dll received callback\n");
-    DPRINT("extra print just in case\n\n");
     assert((dll_state == DLL_STATE_IDLE && process_received_packets_after_tx) || dll_state == DLL_STATE_FOREGROUND_SCAN || dll_state == DLL_STATE_SCAN_AUTOMATION);
     assert(packet != NULL);
-    DPRINT("Processing received packet\n");
 
     if (packet->type != BACKGROUND_ADV)
     {

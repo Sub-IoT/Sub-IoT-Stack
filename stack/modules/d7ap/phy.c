@@ -651,6 +651,8 @@ error_t phy_send_packet_with_advertising(hw_radio_packet_t* packet, phy_tx_confi
     configure_channel(&config->channel_id);
     configure_eirp(config->eirp);
 
+    current_packet = packet;
+
     // During the advertising flooding, use the infinite packet length mode
     hw_radio_set_payload_length(0x00); // unlimited length mode
 
