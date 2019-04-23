@@ -251,10 +251,7 @@ static void packet_received(hw_radio_packet_t* hw_radio_packet)
     if (current_syncword_class == PHY_SYNCWORD_CLASS0)
     {
         packet->type = BACKGROUND_ADV;
-        if (current_channel_id.channel_header.ch_coding == PHY_CODING_FEC_PN9)
-            hw_radio_packet->length = fec_calculated_decoded_length(BACKGROUND_FRAME_LENGTH);
-        else
-            hw_radio_packet->length = BACKGROUND_FRAME_LENGTH;
+        hw_radio_packet->length = BACKGROUND_FRAME_LENGTH;
     }
     else
         hw_radio_packet->length = hw_radio_packet->data[0] + 1;
@@ -778,8 +775,6 @@ static void fill_in_fifo(uint8_t remaining_bytes_len)
 
             bg_adv.eta = 0;
             fg_frame.bg_adv = false;
-
-            DPRINT("preamble bytes are sent, now send data\n");
         }
     }
     else
@@ -830,7 +825,7 @@ error_t phy_start_background_scan(phy_rx_config_t* config, rx_packet_callback_t 
     DPRINT("rssi %i, waiting for BG frame\n", rssi);
 
     // the device has a period of To to successfully detect the sync word
-    hw_radio_set_rx_timeout(bg_timeout[current_channel_id.channel_header.ch_class]);
+    hw_radio_set_rx_timeout(bg_timeout[current_channel_id.channel_header.ch_class] + 40);
     hw_radio_set_opmode(HW_STATE_RX);
 
     return SUCCESS;
