@@ -883,8 +883,6 @@ void hw_radio_set_crc_on(uint8_t enable) {
   write_reg(REG_PACKETCONFIG1, (read_reg(REG_PACKETCONFIG1) & RF_PACKETCONFIG1_CRC_MASK) | (enable << 4));
 }
 
-static bool temp = false;
-
 error_t hw_radio_send_payload(uint8_t * data, uint16_t len) {
   if(len == 0)
     return ESIZE;
