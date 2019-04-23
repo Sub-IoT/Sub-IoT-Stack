@@ -311,6 +311,7 @@ void dll_signal_packet_received(packet_t* packet)
 {
     assert((dll_state == DLL_STATE_IDLE && process_received_packets_after_tx) || dll_state == DLL_STATE_FOREGROUND_SCAN || dll_state == DLL_STATE_SCAN_AUTOMATION);
     assert(packet != NULL);
+    DPRINT("Processing received packet");
 
     if (packet->type != BACKGROUND_ADV)
     {
@@ -1017,7 +1018,6 @@ static void start_foreground_scan()
     if (dll_state == DLL_STATE_SCAN_AUTOMATION)
     {
         timer_cancel_event(&dll_background_scan_timer);
-        DPRINT("cancel BG scan, start FG scan\n");
         hw_radio_set_idle();
     }
 
@@ -1044,7 +1044,7 @@ void dll_start_foreground_scan()
 
 void dll_stop_foreground_scan()
 {
-    DPRINT("Stop FG scan\n");
+    DPRINT("Stop FG scan @ %i\n", timer_get_counter_value());
     if(dll_state == DLL_STATE_IDLE)
         return;
 

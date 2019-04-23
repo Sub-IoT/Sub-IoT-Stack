@@ -189,6 +189,7 @@ static bool use_lora_250 = false;
 static bool enable_refill = false;
 static bool enable_preloading = false;
 static uint8_t remaining_bytes_len = 0;
+static uint8_t previous_threshold = 0;
 
 static uint8_t read_reg(uint8_t addr) {
   spi_select(sx127x_spi);
@@ -218,6 +219,7 @@ static void write_fifo(uint8_t* buffer, uint8_t size) {
   spi_exchange_bytes(sx127x_spi, buffer, NULL, size);
   spi_deselect(sx127x_spi);
   // DPRINT("WRITE FIFO %i", size);
+  // DPRINT_DATA(buffer, size);
 }
 
 static void read_fifo(uint8_t* buffer, uint8_t size) {
@@ -770,6 +772,10 @@ void set_state_rx() {
   flush_fifo();
 
   write_reg(REG_FIFOTHRESH, 0x83);
+  if(FskPacketHandler_sx127x.Size == 0)
+    write_reg(REG_DIOMAPPING1, 0x0C);
+  else
+    write_reg(REG_DIOMAPPING1, 0x3C); // DIO2 = 0b11 => interrupt on sync detect
 
   FskPacketHandler_sx127x.FifoThresh = 0;
   FskPacketHandler_sx127x.NbBytes = 0;
@@ -887,14 +893,12 @@ error_t hw_radio_send_payload(uint8_t * data, uint16_t len) {
   }
 
   uint8_t start = 0;
-  uint8_t available_size = FIFO_SIZE;
-  if(remaining_bytes_len == 0) {
+  uint8_t available_size = FIFO_SIZE - previous_threshold;
+  if(remaining_bytes_len == 0)
     remaining_bytes_len = len;
-    // flush_fifo();
-  } else {
-    available_size = FIFO_AVAILABLE_SPACE;
+  else
     start = len - remaining_bytes_len;
-  }
+
   if(get_opmode() == OPMODE_SLEEP) {
     set_opmode(OPMODE_STANDBY);
     while(!(read_reg(REG_IRQFLAGS1) & 0x80));
@@ -903,6 +907,7 @@ error_t hw_radio_send_payload(uint8_t * data, uint16_t len) {
   write_reg(REG_DIOMAPPING1, 0x00); //FIFO LEVEL ISR or Packet Sent ISR
 
   if(remaining_bytes_len > available_size) {
+    previous_threshold = FG_THRESHOLD;
     write_reg(REG_FIFOTHRESH, RF_FIFOTHRESH_TXSTARTCONDITION_FIFONOTEMPTY | FG_THRESHOLD);
     write_fifo(data + start, available_size);
     remaining_bytes_len = remaining_bytes_len - available_size;
@@ -910,11 +915,13 @@ error_t hw_radio_send_payload(uint8_t * data, uint16_t len) {
     hw_gpio_enable_interrupt(SX127x_DIO1_PIN); 
   } else {
     if(!enable_refill) {
+      previous_threshold = 0;
       write_fifo(data + start, remaining_bytes_len);
       remaining_bytes_len = 0;
       hw_gpio_set_edge_interrupt(SX127x_DIO0_PIN, GPIO_RISING_EDGE);
       hw_gpio_enable_interrupt(SX127x_DIO0_PIN); 
     } else {
+      previous_threshold = 2;
       write_reg(REG_FIFOTHRESH, RF_FIFOTHRESH_TXSTARTCONDITION_FIFONOTEMPTY | 2);
       write_fifo(data + start, remaining_bytes_len);
       remaining_bytes_len = 0;
@@ -992,7 +999,6 @@ void hw_radio_set_tx_power(uint8_t eirp) { // TODO signed
 
 void hw_radio_set_rx_timeout(uint32_t timeout) {
   timer_post_task_delay(&hw_radio_set_idle, timeout);
-  // Add enable interrupt dio0 here?
 }
 
 __attribute__((weak)) void hw_radio_reset() {
