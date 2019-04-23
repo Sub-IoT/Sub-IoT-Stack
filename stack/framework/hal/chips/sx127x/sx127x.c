@@ -60,8 +60,8 @@
 // Fdev => 4.8 kHz
 #define FDEVMSB_L 0x00
 #define FDEVLSB_L 0x4F
-// Carson's rule: fm * 2 + fd * 2  = 9.600 + 4.800 * 2 = 19.2 kHz
-// assuming 1 ppm crystals gives max error of: 2* 1 ppm * 868 = 1.736 kHz
+// Carson's rule: 2 x fm + 2 x fd  = 9.600 + 2 x 4.800 = 19.2 kHz
+// assuming 1 ppm crystals gives max error of: 2 * 1 ppm * 868 = 1.736 kHz
 // => BW > 19.2 + 1.736 kHz => > 20.936 kHZ. 
 // This results in 10.468 kHz on a single sideband.
 // Closest possible value is 10.4 kHz. This is an actual ppm of 0.92. ((2 << 3) | 5)
