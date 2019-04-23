@@ -699,6 +699,10 @@ error_t hw_radio_init(hwradio_init_args_t* init_args) {
   calibrate_rx_chain();
   init_regs();
 
+#ifdef PLATFORM_SX127X_USE_LOW_BAT_SHUTDOWN
+  write_reg(REG_LOWBAT, read_reg(REG_LOWBAT) | (1 << 3) | 0x02);
+#endif
+
   // TODO set_lora_mode(false);
   hw_radio_set_idle();
 
@@ -885,6 +889,15 @@ error_t hw_radio_send_payload(uint8_t * data, uint16_t len) {
   if(len == 0)
     return ESIZE;
 
+#ifdef PLATFORM_SX127X_USE_LOW_BAT_SHUTDOWN
+  /*activate low battery detector*/
+  if(read_reg(REG_IRQFLAGS2) & 0x01){
+    write_reg(REG_IRQFLAGS2, 0x01);
+    hw_radio_set_opmode(HW_STATE_SLEEP);
+    return;
+  }
+#endif
+  
   if(state == STATE_RX) {
     hw_gpio_disable_interrupt(SX127x_DIO0_PIN);
     hw_gpio_disable_interrupt(SX127x_DIO1_PIN);
