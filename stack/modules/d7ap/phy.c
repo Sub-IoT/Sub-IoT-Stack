@@ -825,7 +825,7 @@ error_t phy_start_background_scan(phy_rx_config_t* config, rx_packet_callback_t 
     DPRINT("rssi %i, waiting for BG frame\n", rssi);
 
     // the device has a period of To to successfully detect the sync word
-    hw_radio_set_rx_timeout(bg_timeout[current_channel_id.channel_header.ch_class] + 40);
+    hw_radio_set_rx_timeout(bg_timeout[current_channel_id.channel_header.ch_class] + 40); //TO DO: OPTIMISE THIS TIMEOUT
     hw_radio_set_opmode(HW_STATE_RX);
 
     return SUCCESS;
