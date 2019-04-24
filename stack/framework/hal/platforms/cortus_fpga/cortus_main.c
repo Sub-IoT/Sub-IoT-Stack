@@ -22,13 +22,38 @@
 #include "bootstrap.h"
 #include "platform.h"
 #include "button.h"
+#include "fs.h"
 
 #include "hwgpio.h"
 #include "hwleds.h"
 #include "hwwatchdog.h"
 
+#include "hwblockdevice.h"
+#include "blockdevice_ram.h"
+
 #include "button.h"
 #include "cortus_gpio.h"
+
+/*** Cortus FPGA only supports a simple RAM-based blockdevice ***/
+
+extern uint8_t d7ap_permanent_files_data[FRAMEWORK_FS_PERMANENT_STORAGE_SIZE];
+extern uint8_t d7ap_volatile_files_data[FRAMEWORK_FS_VOLATILE_STORAGE_SIZE];
+
+static blockdevice_ram_t permanent_bd = (blockdevice_ram_t){
+ .base.driver = &blockdevice_driver_ram,
+ .size = FRAMEWORK_FS_PERMANENT_STORAGE_SIZE,
+ .buffer = d7ap_permanent_files_data
+};
+
+static blockdevice_ram_t volatile_bd = (blockdevice_ram_t){
+ .base.driver = &blockdevice_driver_ram,
+ .size = FRAMEWORK_FS_VOLATILE_STORAGE_SIZE,
+ .buffer = d7ap_volatile_files_data
+};
+
+blockdevice_t * const permanent_blockdevice = (blockdevice_t* const) &permanent_bd;
+blockdevice_t * const volatile_blockdevice = (blockdevice_t* const) &volatile_bd;
+
 
 void __platform_init()
 {
@@ -52,6 +77,12 @@ void __platform_init()
 #endif
 
     //__watchdog_init();
+
+    /* Initialize NVRAM */
+
+
+    /* Initialize NOR flash */
+    blockdevice_init(permanent_blockdevice);
 }
 
 int main (void)

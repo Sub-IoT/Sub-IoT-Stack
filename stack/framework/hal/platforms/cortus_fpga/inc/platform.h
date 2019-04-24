@@ -26,9 +26,8 @@
 #endif
 
 #include "machine/gpio.h"
-#include "blockdevice_ram.h"
 #include "cortus_mcu.h"
-#include "d7ap_fs.h"
+#include "hwblockdevice.h"
 
 /********************
  * LED DEFINITIONS *
@@ -91,13 +90,11 @@
 #endif
 
 
-static blockdevice_ram_t ram_bd = (blockdevice_ram_t){
- .base.driver = &blockdevice_driver_ram,
- .size = sizeof(fs_systemfiles),
- .buffer = (uint8_t*)&fs_systemfiles
-};
+extern blockdevice_t * const permanent_blockdevice;
+extern blockdevice_t * const volatile_blockdevice;
 
-static blockdevice_t* d7_systemfiles_blockdevice = (blockdevice_t*)&ram_bd;
-
+/** Platform BD drivers*/
+#define PLATFORM_PERMANENT_BD permanent_blockdevice
+#define PLATFORM_VOLATILE_BD volatile_blockdevice
 
 #endif

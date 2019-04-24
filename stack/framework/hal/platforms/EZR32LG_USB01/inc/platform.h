@@ -22,7 +22,7 @@
 #include "platform_defs.h"
 #include "ezr32lg_mcu.h"
 #include "blockdevice_ram.h"
-#include "d7ap_fs.h"
+#include "fs.h"
 
 
 #ifndef PLATFORM_EZR32LG_USB01
@@ -86,14 +86,24 @@
 #define BUTTON0				PIN(5, 5)
 
 
-static blockdevice_ram_t ram_bd = (blockdevice_ram_t){
+extern uint8_t d7ap_permanent_files_data[FRAMEWORK_FS_PERMANENT_STORAGE_SIZE];
+extern uint8_t d7ap_volatile_files_data[FRAMEWORK_FS_VOLATILE_STORAGE_SIZE];
+
+static blockdevice_ram_t permanent_bd = (blockdevice_ram_t){
  .base.driver = &blockdevice_driver_ram,
- .size = sizeof(fs_systemfiles),
- .buffer = (uint8_t*)&fs_systemfiles
+ .size = FRAMEWORK_FS_PERMANENT_STORAGE_SIZE,
+ .buffer = d7ap_permanent_files_data
 };
 
-static blockdevice_t* d7_systemfiles_blockdevice = (blockdevice_t*)&ram_bd;
+static blockdevice_ram_t volatile_bd = (blockdevice_ram_t){
+ .base.driver = &blockdevice_driver_ram,
+ .size = FRAMEWORK_FS_VOLATILE_STORAGE_SIZE,
+ .buffer = d7ap_volatile_files_data
+};
 
+/** Platform BD drivers*/
+#define PLATFORM_PERMANENT_BD (blockdevice_t*)&permanent_bd
+#define PLATFORM_VOLATILE_BD (blockdevice_t*)&volatile_bd
 
 
 #endif
