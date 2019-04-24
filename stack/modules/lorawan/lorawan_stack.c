@@ -84,12 +84,13 @@
 #endif
 
 // TODO configurable
-#define LORAWAN_ADR_ENABLED                         1 // TODO configurable?
+//#define LORAWAN_ADR_ENABLED                         1 // TODO configurable?
 #define LORAWAN_PUBLIC_NETWORK_ENABLED              1 // TODO configurable?
 #define LORAWAN_CLASS                               CLASS_A // TODO configurable?
 #define JOINREQ_NBTRIALS                            3
 #define LORAWAN_APP_DATA_BUFF_SIZE                  64 // TODO = max?
-#define LORAWAN_DATARATE                            0 // TODO configurable? assuming ADR for now
+uint8_t LORAWAN_ADR_ENABLED = 1;
+uint8_t LORAWAN_DATARATE; 
 
 typedef enum
 {
@@ -492,6 +493,8 @@ void lorawan_stack_init_abp(lorawan_session_config_abp_t* lorawan_session_config
 void lorawan_stack_init_otaa(lorawan_session_config_otaa_t* lorawan_session_config) {
 
   activationMethod=OTAA;
+  LORAWAN_DATARATE = lorawan_session_config->data_rate;
+  LORAWAN_ADR_ENABLED = lorawan_session_config->adr;
   app_port=lorawan_session_config->application_port;
   request_ack=lorawan_session_config->request_ack;
 
@@ -511,6 +514,12 @@ void lorawan_stack_init_otaa(lorawan_session_config_otaa_t* lorawan_session_conf
   DPRINT("AppKey:");
   DPRINT_DATA(lorawan_session_config->appKey, 16);
   
+  if(LORAWAN_ADR_ENABLED){
+    DPRINT("ADR enabled");
+  }
+  else{
+    DPRINT("ADR disabled. Data rate: %i", LORAWAN_DATARATE);
+  }
 
   sched_register_task(&run_fsm);
   sched_post_task(&run_fsm);
@@ -529,7 +538,7 @@ void lorawan_stack_init_otaa(lorawan_session_config_otaa_t* lorawan_session_conf
 
   MibRequestConfirm_t mibReq;
   mibReq.Type = MIB_ADR;
-  mibReq.Param.AdrEnable = LORAWAN_ADR_ENABLED;
+  mibReq.Param.AdrEnable = lorawan_session_config->adr;
   LoRaMacMibSetRequestConfirm( &mibReq );
 
   mibReq.Type = MIB_PUBLIC_NETWORK;
