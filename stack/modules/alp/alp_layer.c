@@ -669,7 +669,7 @@ static bool alp_layer_parse_and_execute_alp_command(alp_command_t* command)
                   lorawan_interface_state = STATE_NOT_INITIALIZED;
                 }
 #endif
-                d7ap_stack_init();
+                d7ap_init();
                 d7ap_interface_state = STATE_INITIALIZED;
               } 
               uint8_t forwarded_alp_size = fifo_get_size(&command->alp_command_fifo);
