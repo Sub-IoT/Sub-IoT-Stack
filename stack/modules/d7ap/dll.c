@@ -876,7 +876,7 @@ void dll_init()
     process_received_packets_after_tx = false;
     resume_fg_scan = false;
 
-    d7ap_fs_register_file_modified_callback(D7A_FILE_DLL_CONF_FILE_ID, &conf_file_changed_callback);
+    fs_register_file_modified_callback(D7A_FILE_DLL_CONF_FILE_ID, &conf_file_changed_callback);
 
 #ifdef MODULE_D7AP_EM_ENABLED   
     engineering_mode_init();

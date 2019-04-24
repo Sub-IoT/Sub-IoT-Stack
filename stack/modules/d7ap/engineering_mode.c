@@ -258,7 +258,7 @@ error_t engineering_mode_init()
   uint8_t init_data[D7A_FILE_ENGINEERING_MODE_SIZE] = {0};
   d7ap_fs_write_file(D7A_FILE_ENGINEERING_MODE_FILE_ID, 0, init_data, D7A_FILE_ENGINEERING_MODE_SIZE);
 
-  d7ap_fs_register_file_modified_callback(D7A_FILE_ENGINEERING_MODE_FILE_ID, &em_file_change_callback);
+  fs_register_file_modified_callback(D7A_FILE_ENGINEERING_MODE_FILE_ID, &em_file_change_callback);
 
   sched_register_task(&start_transient_tx);
   sched_register_task(&transmit_per_packet);

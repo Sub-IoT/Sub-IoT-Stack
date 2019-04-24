@@ -193,7 +193,7 @@ void d7ap_stack_init(void)
     init_session_list();
 
     for(int i = 0; i < 15; i++)
-      d7ap_fs_register_file_modified_callback(D7A_FILE_ACCESS_PROFILE_ID + i, &on_access_profile_file_changed);
+      fs_register_file_modified_callback(D7A_FILE_ACCESS_PROFILE_ID + i, &on_access_profile_file_changed);
 }
 
 void d7ap_stack_stop()
