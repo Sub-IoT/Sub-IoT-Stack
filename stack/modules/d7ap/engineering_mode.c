@@ -184,7 +184,7 @@ static void em_file_change_callback(uint8_t file_id){
 
     d7ap_fs_read_file(D7A_FILE_ENGINEERING_MODE_FILE_ID, 0, data, D7A_FILE_ENGINEERING_MODE_SIZE);
 
-    em_file_t* em_command = (em_file_t*) data;
+    d7ap_fs_engineering_mode_t* em_command = (d7ap_fs_engineering_mode_t*)data;
 
     DPRINT("em_file_change_callback");
     DPRINT_DATA(data, D7A_FILE_ENGINEERING_MODE_SIZE);
@@ -196,11 +196,11 @@ static void em_file_change_callback(uint8_t file_id){
   
     switch (em_command->mode)
     {
-      case EM_MODE_OFF:
+      case EM_OFF:
         DPRINT("EM_MODE_OFF\n");
         hw_reset();
         break;
-      case EM_MODE_CONTINUOUS_TX:
+      case EM_CONTINUOUS_TX:
         DPRINT("EM_MODE_CONTINUOUS_TX\n");
         memcpy( &(tx_cfg.channel_id), &(em_command->channel_id), sizeof(channel_id_t));
         config_eirp(em_command->eirp);
@@ -216,7 +216,7 @@ static void em_file_change_callback(uint8_t file_id){
         timer_post_task_delay(&start_tx, 500);
 
         break;
-      case EM_MODE_TRANSIENT_TX:
+      case EM_TRANSIENT_TX:
         DPRINT("EM_MODE_TRANSIENT_TX\n");
         memcpy( &(tx_cfg.channel_id), &(em_command->channel_id), sizeof(channel_id_t));
         config_eirp(em_command->eirp);
@@ -230,7 +230,7 @@ static void em_file_change_callback(uint8_t file_id){
         //give it time to answer through uart
         timer_post_task_delay(&start_transient_tx, 500);
         break;
-      case EM_MODE_PER_RX:
+      case EM_PER_RX:
         DPRINT("EM_MODE_PER_RX\n");
         per_packet_counter = 0;
         per_missed_packets_counter = 0;
@@ -239,7 +239,7 @@ static void em_file_change_callback(uint8_t file_id){
         rx_cfg.channel_id = per_channel_id;
         sched_post_task(&start_per_rx);
         break;
-      case EM_MODE_PER_TX:
+      case EM_PER_TX:
         DPRINT("EM_MODE_PER_TX\n");
         per_packet_counter = 0;
         per_channel_id = em_command->channel_id;
