@@ -66,6 +66,8 @@ typedef struct {
     uint8_t appKey[16];
    bool request_ack;
     uint8_t application_port;
+    uint8_t adr;
+    uint8_t data_rate;
 } lorawan_session_config_otaa_t;
 
 typedef void (*lorawan_rx_callback_t)(lorawan_AppData_t *AppData);
