@@ -38,37 +38,6 @@
 
 #define D7AP_MAX_CLIENT_COUNT 8
 
-#define D7A_FILE_UID_FILE_ID 0x00
-#define D7A_FILE_UID_SIZE 8
-
-#define D7A_FILE_FIRMWARE_VERSION_FILE_ID 0x02
-#define D7A_FILE_FIRMWARE_VERSION_APP_NAME_SIZE 6
-#define D7A_FILE_FIRMWARE_VERSION_GIT_SHA1_SIZE 7
-#define D7A_FILE_FIRMWARE_VERSION_SIZE (2 + D7A_FILE_FIRMWARE_VERSION_APP_NAME_SIZE + D7A_FILE_FIRMWARE_VERSION_GIT_SHA1_SIZE)
-
-#define D7A_FILE_FACTORY_SETTINGS_FILE_ID 0x01
-#define D7A_FILE_FACTORY_SETTINGS_SIZE 1
-
-#define D7A_FILE_ENGINEERING_MODE_FILE_ID 0x05
-#define D7A_FILE_ENGINEERING_MODE_SIZE  9
-
-#define D7A_FILE_DLL_CONF_FILE_ID	0x0A
-#define D7A_FILE_DLL_CONF_SIZE		6
-
-#define D7A_FILE_ACCESS_PROFILE_ID 0x20 // the first access class file
-#define D7A_FILE_ACCESS_PROFILE_SIZE 65
-#define D7A_FILE_ACCESS_PROFILE_COUNT 15
-
-#define D7A_FILE_NWL_SECURITY		0x0D
-#define D7A_FILE_NWL_SECURITY_SIZE	5
-
-#define D7A_FILE_NWL_SECURITY_KEY		0x0E
-#define D7A_FILE_NWL_SECURITY_KEY_SIZE	16
-
-#define D7A_FILE_NWL_SECURITY_STATE_REG			0x0F
-#define D7A_FILE_NWL_SECURITY_STATE_REG_SIZE	2 + (FRAMEWORK_FS_TRUSTED_NODE_TABLE_SIZE)*(D7A_FILE_NWL_SECURITY_SIZE + D7A_FILE_UID_SIZE)
-
-
 #define ID_TYPE_NBID_ID_LENGTH 1
 #define ID_TYPE_NOID_ID_LENGTH 0
 #define ID_TYPE_UID_ID_LENGTH   8
@@ -179,7 +148,7 @@ typedef struct {
     };
 } d7ap_session_qos_t;
 
-typedef struct {
+typedef struct __attribute__((__packed__)) {
     d7ap_session_qos_t qos;
     uint8_t dormant_timeout;
     d7ap_addressee_t addressee;
@@ -208,7 +177,7 @@ typedef struct{
 /**
  * @brief   Initializes d7a module
  */
-void d7ap_init(blockdevice_t* systemfiles_bd);
+void d7ap_init();
 
 /**
  * @brief Stop the D7A stack

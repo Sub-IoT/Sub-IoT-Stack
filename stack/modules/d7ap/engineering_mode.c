@@ -83,7 +83,7 @@ static void start_transient_tx(){
 
 static void config_eirp(eirp_t eirp){
     int8_t factory_settings[D7A_FILE_FACTORY_SETTINGS_SIZE]; //byte 0 is gain offset
-    d7ap_fs_read_file(D7A_FILE_FACTORY_SETTINGS_FILE_ID, 0, factory_settings, D7A_FILE_FACTORY_SETTINGS_SIZE);
+    d7ap_fs_read_file(D7A_FILE_FACTORY_SETTINGS_FILE_ID, 0, (uint8_t *)factory_settings, D7A_FILE_FACTORY_SETTINGS_SIZE);
     DPRINT("offset is %d, tx eirp is %d", factory_settings[0], eirp - factory_settings[0]);
     tx_cfg.eirp = eirp - factory_settings[0];
 }
@@ -182,7 +182,7 @@ static void packet_received(hw_radio_packet_t* packet) {
 static void em_file_change_callback(uint8_t file_id){
     uint8_t data[D7A_FILE_ENGINEERING_MODE_SIZE];
 
-    d7ap_fs_read_file(D7A_FILE_ENGINEERING_MODE_FILE_ID,0,data,D7A_FILE_ENGINEERING_MODE_SIZE);
+    d7ap_fs_read_file(D7A_FILE_ENGINEERING_MODE_FILE_ID, 0, data, D7A_FILE_ENGINEERING_MODE_SIZE);
 
     em_file_t* em_command = (em_file_t*) data;
 

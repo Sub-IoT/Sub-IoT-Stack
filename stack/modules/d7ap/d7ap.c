@@ -40,9 +40,9 @@
 d7ap_resource_desc_t registered_client[MODULE_D7AP_MAX_CLIENT_COUNT];
 uint8_t registered_client_nb = 0;
 
-void d7ap_init(blockdevice_t* systemfiles_bd)
+void d7ap_init()
 {
-    d7ap_fs_init(systemfiles_bd);
+    d7ap_fs_init();
 
     // Initialize the D7AP stack
     d7ap_stack_init();

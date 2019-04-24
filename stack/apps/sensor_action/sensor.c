@@ -53,7 +53,7 @@
 #define SENSOR_FILE_SIZE         2
 #define ACTION_FILE_SIZE         20
 
-#define SENSOR_INTERVAL_SEC	TIMER_TICKS_PER_SEC * 30
+#define SENSOR_INTERVAL_SEC	TIMER_TICKS_PER_SEC * 2
 
 #ifdef USE_HTS221
   static i2c_handle_t* hts221_handle;
@@ -90,9 +90,9 @@ void init_user_files()
     SENSOR_FILE_SIZE // requested data length
   };
 
-  fs_file_header_t action_file_header = (fs_file_header_t){
+  d7ap_fs_file_header_t action_file_header = (d7ap_fs_file_header_t){
     .file_properties.action_protocol_enabled = 0,
-    .file_properties.storage_class = FS_STORAGE_PERMANENT,
+    .file_properties.storage_class = FS_STORAGE_VOLATILE,
     .file_permissions = 0, // TODO
     .length = sizeof(alp_command),
     .allocated_length = ACTION_FILE_SIZE,
@@ -122,12 +122,12 @@ void init_user_files()
   d7ap_fs_init_file_with_d7asp_interface_config(INTERFACE_FILE_ID, &session_config);
 
   // finally, register the sensor file, configured to use D7AActP
-  fs_file_header_t file_header = (fs_file_header_t){
+  d7ap_fs_file_header_t file_header = (d7ap_fs_file_header_t){
     .file_properties.action_protocol_enabled = 1,
-    .file_properties.action_condition = ALP_ACT_COND_WRITE,
-    .file_properties.storage_class = FS_STORAGE_VOLATILE,
+    .file_properties.action_condition = D7A_ACT_COND_WRITE,
+    .file_properties.storage_class = FS_STORAGE_PERMANENT,
     .file_permissions = 0, // TODO
-    .alp_cmd_file_id = ACTION_FILE_ID,
+    .action_file_id = ACTION_FILE_ID,
     .interface_file_id = INTERFACE_FILE_ID,
     .length = SENSOR_FILE_SIZE,
     .allocated_length = SENSOR_FILE_SIZE
@@ -140,8 +140,7 @@ void bootstrap()
 {
     log_print_string("Device booted\n");
 
-    blockdevice_init(d7_systemfiles_blockdevice);
-    d7ap_init(d7_systemfiles_blockdevice);
+    d7ap_init();
 
     alp_layer_init(NULL, false);
 

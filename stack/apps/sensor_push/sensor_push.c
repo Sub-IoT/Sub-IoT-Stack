@@ -123,8 +123,7 @@ void bootstrap()
 {
     log_print_string("Device booted\n");
 
-    blockdevice_init(d7_systemfiles_blockdevice);
-    d7ap_init(d7_systemfiles_blockdevice);
+    d7ap_init();
 
     alp_init_args.alp_command_completed_cb = &on_alp_command_completed_cb;
     alp_init_args.alp_command_result_cb = &on_alp_command_result_cb;

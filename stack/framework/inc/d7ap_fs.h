@@ -33,63 +33,97 @@
 #include "stdint.h"
 
 #include "dae.h"
-#include "alp.h"
 #include "d7ap.h"
-#include "hwblockdevice.h"
+#include "phy.h"
+#include "fs.h"
 
-#define D7AP_FS_MAGIC_NUMBER { 0x34, 0xC2, 0x00, 0x00 } // first 2 bytes fixed, last 2 byte for version
-#define D7AP_FS_MAGIC_NUMBER_SIZE 4
+#define D7A_FILE_UID_FILE_ID 0x00
+#define D7A_FILE_UID_SIZE 8
+
+#define D7A_FILE_FIRMWARE_VERSION_FILE_ID 0x02
+#define D7A_FILE_FIRMWARE_VERSION_APP_NAME_SIZE 6
+#define D7A_FILE_FIRMWARE_VERSION_GIT_SHA1_SIZE 7
+#define D7A_FILE_FIRMWARE_VERSION_SIZE (2 + D7A_FILE_FIRMWARE_VERSION_APP_NAME_SIZE + D7A_FILE_FIRMWARE_VERSION_GIT_SHA1_SIZE)
+
+#define D7A_FILE_FACTORY_SETTINGS_FILE_ID 0x01
+#define D7A_FILE_FACTORY_SETTINGS_SIZE 1
+
+#define D7A_FILE_ENGINEERING_MODE_FILE_ID 0x05
+#define D7A_FILE_ENGINEERING_MODE_SIZE  9
+
+#define D7A_FILE_DLL_CONF_FILE_ID	0x0A
+#define D7A_FILE_DLL_CONF_SIZE		6
+
+#define D7A_FILE_ACCESS_PROFILE_ID 0x20 // the first access class file
+#define D7A_FILE_ACCESS_PROFILE_SIZE 65
+#define D7A_FILE_ACCESS_PROFILE_COUNT 15
+
+#define D7A_FILE_NWL_SECURITY		0x0D
+#define D7A_FILE_NWL_SECURITY_SIZE	5
+
+#define D7A_FILE_NWL_SECURITY_KEY		0x0E
+#define D7A_FILE_NWL_SECURITY_KEY_SIZE	16
+
+#define D7A_FILE_NWL_SECURITY_STATE_REG			0x0F
+#define D7A_FILE_NWL_SECURITY_STATE_REG_SIZE	2 + (FRAMEWORK_FS_TRUSTED_NODE_TABLE_SIZE)*(D7A_FILE_NWL_SECURITY_SIZE + D7A_FILE_UID_SIZE)
+
 #define D7AP_FS_SYSTEMFILES_COUNT 0x2F // reserved up until 0x3F but used only until 0x2F so use this for limiting memory usage
+#define D7AP_FS_USERFILES_COUNT (FRAMEWORK_FS_FILE_COUNT - D7AP_FS_SYSTEMFILES_COUNT)
 
-/* \brief The callback function for when a user file is modified
- *
- * \param file_id		The id of the modified user file
- * **/
-typedef void (*fs_modified_file_callback_t)(uint8_t file_id);
+
+typedef struct __attribute__((__packed__))
+{
+    fs_storage_class_t storage_class : 2;
+    uint8_t _rfu : 2;
+    dae_act_condition_t action_condition : 3;
+    bool action_protocol_enabled : 1;
+} d7ap_fs_file_properties_t;
+
+typedef struct __attribute__((__packed__))
+{
+    uint8_t file_permissions; // TODO not used for now
+    d7ap_fs_file_properties_t file_properties;
+    uint8_t action_file_id;
+    uint8_t interface_file_id;
+    uint32_t length;
+    uint32_t allocated_length;
+} d7ap_fs_file_header_t;
 
 /**
  * \brief Callback function executed when D7AActP is triggered
  */
-typedef void (*fs_d7aactp_callback_t)(d7ap_session_config_t* session_config, uint8_t* alp_command, uint32_t alp_command_length);
+typedef void (*d7ap_fs_d7aactp_callback_t)(d7ap_session_config_t* session_config, uint8_t* action, uint32_t action_length);
 
-// externs defined in d7ap_fs_data.c
-extern uint16_t fs_systemfiles_file_offsets[];
-extern fs_file_header_t fs_userfiles_header_data[];
-extern uint8_t fs_userfiles_file_data[];
+void d7ap_fs_init();
+int d7ap_fs_init_file(uint8_t file_id, const d7ap_fs_file_header_t* file_header, const uint8_t* initial_data);
+int d7ap_fs_init_file_with_d7asp_interface_config(uint8_t file_id, const d7ap_session_config_t* fifo_config);
 
-typedef struct __attribute__((__packed__)) {
-  uint8_t magic_number[D7AP_FS_MAGIC_NUMBER_SIZE];   // used to validate FS contents contains D7AP FS of expected version
-  uint8_t header_data[sizeof(fs_file_header_t) * D7AP_FS_SYSTEMFILES_COUNT];
-  uint8_t file_data[1200]; // TODO size hardcoded for now, generate like file content/headers
-} fs_systemfiles_t;
+int d7ap_fs_read_file(uint8_t file_id, uint32_t offset, uint8_t* buffer, uint32_t length);
+int d7ap_fs_write_file(uint8_t file_id, uint32_t offset, const uint8_t* buffer, uint32_t length);
 
-extern fs_systemfiles_t fs_systemfiles;
+int d7ap_fs_read_access_class(uint8_t access_class_index, dae_access_profile_t* access_class);
+int d7ap_fs_write_access_class(uint8_t access_class_index, dae_access_profile_t* access_class);
 
-void d7ap_fs_init(blockdevice_t* blockdevice_systemfiles);
-void d7ap_fs_init_file(uint8_t file_id, const fs_file_header_t* file_header, const uint8_t* initial_data);
-void d7ap_fs_init_file_with_D7AActP(uint8_t file_id, const d7ap_session_config_t* fifo_config, const uint8_t* alp_command, const uint8_t alp_command_len);
-void d7ap_fs_init_file_with_d7asp_interface_config(uint8_t file_id, const d7ap_session_config_t* fifo_config);
-alp_status_codes_t d7ap_fs_read_file(uint8_t file_id, uint32_t offset, uint8_t* buffer, uint32_t length);
-alp_status_codes_t d7ap_fs_write_file(uint8_t file_id, uint32_t offset, const uint8_t* buffer, uint32_t length);
-void d7ap_fs_read_access_class(uint8_t access_class_index, dae_access_profile_t* access_class);
-void d7ap_fs_write_access_class(uint8_t access_class_index, dae_access_profile_t* access_class);
-alp_status_codes_t d7ap_fs_read_file_header(uint8_t file_id, fs_file_header_t* file_header);
-alp_status_codes_t d7ap_fs_write_file_header(uint8_t file_id, fs_file_header_t* file_header);
-void d7ap_fs_read_uid(uint8_t* buffer);
-void d7ap_fs_read_vid(uint8_t* buffer);
-void d7ap_fs_write_vid(uint8_t* buffer);
+int d7ap_fs_read_file_header(uint8_t file_id, d7ap_fs_file_header_t* file_header);
+int d7ap_fs_write_file_header(uint8_t file_id, d7ap_fs_file_header_t* file_header);
+
+int d7ap_fs_read_uid(uint8_t* buffer);
+int d7ap_fs_read_vid(uint8_t* buffer);
+int d7ap_fs_write_vid(uint8_t* buffer);
+
 uint8_t d7ap_fs_read_dll_conf_active_access_class(void);
-void d7ap_fs_write_dll_conf_active_access_class(uint8_t access_class);
-alp_status_codes_t d7ap_fs_read_nwl_security_key(uint8_t* key);
-alp_status_codes_t d7ap_fs_read_nwl_security(dae_nwl_security_t *nwl_security);
-alp_status_codes_t d7ap_fs_write_nwl_security(dae_nwl_security_t *nwl_security);
-alp_status_codes_t d7ap_fs_read_nwl_security_state_register(dae_nwl_ssr_t *node_security_state);
-alp_status_codes_t d7ap_fs_add_nwl_security_state_register_entry(dae_nwl_trusted_node_t *trusted_node, uint8_t trusted_node_nb);
-alp_status_codes_t d7ap_fs_update_nwl_security_state_register(dae_nwl_trusted_node_t *trusted_node, uint8_t trusted_node_index);
+int d7ap_fs_write_dll_conf_active_access_class(uint8_t access_class);
+
+int d7ap_fs_read_nwl_security_key(uint8_t* key);
+int d7ap_fs_read_nwl_security(dae_nwl_security_t *nwl_security);
+int d7ap_fs_write_nwl_security(dae_nwl_security_t *nwl_security);
+int d7ap_fs_read_nwl_security_state_register(dae_nwl_ssr_t *node_security_state);
+int d7ap_fs_add_nwl_security_state_register_entry(dae_nwl_trusted_node_t *trusted_node, uint8_t trusted_node_nb);
+int d7ap_fs_update_nwl_security_state_register(dae_nwl_trusted_node_t *trusted_node, uint8_t trusted_node_index);
+
 uint32_t d7ap_fs_get_file_length(uint8_t file_id);
 
-bool d7ap_fs_register_file_modified_callback(uint8_t file_id, fs_modified_file_callback_t callback);
-bool d7ap_fs_register_d7aactp_callback(fs_d7aactp_callback_t d7aactp_cb);
+bool d7ap_fs_register_d7aactp_callback(d7ap_fs_d7aactp_callback_t d7aactp_cb);
 
 #endif /* D7AP_FS_H_ */
 

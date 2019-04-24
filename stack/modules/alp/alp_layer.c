@@ -269,7 +269,7 @@ static alp_status_codes_t process_op_read_file_properties(alp_command_t* command
   err = fifo_pop(&command->alp_command_fifo, &file_id, 1); assert(err == SUCCESS);
   DPRINT("READ FILE PROPERTIES %i", file_id);
 
-  fs_file_header_t file_header;
+  d7ap_fs_file_header_t file_header;
   alp_status_codes_t alp_status = d7ap_fs_read_file_header(file_id, &file_header);
 
   // convert to big endian
@@ -280,7 +280,7 @@ static alp_status_codes_t process_op_read_file_properties(alp_command_t* command
     // fill response
     err = fifo_put_byte(&command->alp_response_fifo, ALP_OP_RETURN_FILE_PROPERTIES); assert(err == SUCCESS);
     err = fifo_put_byte(&command->alp_response_fifo, file_id); assert(err == SUCCESS);
-    err = fifo_put(&command->alp_response_fifo, (uint8_t*)&file_header, sizeof(fs_file_header_t)); assert(err == SUCCESS);
+    err = fifo_put(&command->alp_response_fifo, (uint8_t*)&file_header, sizeof(d7ap_fs_file_header_t)); assert(err == SUCCESS);
   }
 
   return alp_status;
@@ -289,11 +289,15 @@ static alp_status_codes_t process_op_read_file_properties(alp_command_t* command
 static alp_status_codes_t process_op_write_file_properties(alp_command_t* command) {
   uint8_t file_id;
   error_t err;
-  fs_file_header_t file_header;
+  d7ap_fs_file_header_t file_header;
   err = fifo_skip(&command->alp_command_fifo, 1); assert(err == SUCCESS); // skip the control byte
   err = fifo_pop(&command->alp_command_fifo, &file_id, 1); assert(err == SUCCESS);
-  err = fifo_pop(&command->alp_command_fifo, (uint8_t*)&file_header, sizeof(fs_file_header_t)); assert(err == SUCCESS);
+  err = fifo_pop(&command->alp_command_fifo, (uint8_t*)&file_header, sizeof(d7ap_fs_file_header_t)); assert(err == SUCCESS);
   DPRINT("WRITE FILE PROPERTIES %i", file_id);
+
+  // convert to little endian (native)
+  file_header.length = __builtin_bswap32(file_header.length);
+  file_header.allocated_length = __builtin_bswap32(file_header.allocated_length);
 
   return d7ap_fs_write_file_header(file_id, &file_header);
 }

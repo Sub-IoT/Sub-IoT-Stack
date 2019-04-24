@@ -84,7 +84,7 @@ void execute_sensor_measurement()
 void init_user_files()
 {
   // file 0x40: contains our sensor data
-  fs_file_header_t sensor_file_header = (fs_file_header_t){
+  d7ap_fs_file_header_t sensor_file_header = (d7ap_fs_file_header_t){
       .file_properties.action_protocol_enabled = 0,
       .length = SENSOR_FILE_SIZE,
   };
@@ -93,7 +93,7 @@ void init_user_files()
 
   // file 0x41: reserved file (for example action file)
   // TODO this can be removed when we support creating files post init
-  fs_file_header_t file_header = (fs_file_header_t){
+  d7ap_fs_file_header_t file_header = (d7ap_fs_file_header_t){
       .file_properties.action_protocol_enabled = 0,
       .length = 11,
   };
@@ -110,8 +110,7 @@ void bootstrap()
 {
     log_print_string("Device booted\n");
 
-    blockdevice_init(d7_systemfiles_blockdevice);
-    d7ap_init(d7_systemfiles_blockdevice);
+    d7ap_init();
 
     alp_layer_init(NULL, false);
     d7ap_fs_write_dll_conf_active_access_class(0x11); // use scanning AC

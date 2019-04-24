@@ -90,7 +90,7 @@ alp_operand_file_offset_t alp_parse_file_offset_operand(fifo_t* cmd_fifo) {
 alp_operand_file_header_t alp_parse_file_header_operand(fifo_t* cmd_fifo) {
   alp_operand_file_header_t operand;
   error_t err = fifo_pop(cmd_fifo, &operand.file_id, 1); assert(err == SUCCESS);
-  err = fifo_pop(cmd_fifo, (uint8_t*)&operand.file_header, sizeof(fs_file_header_t)); assert(err == SUCCESS);
+  err = fifo_pop(cmd_fifo, (uint8_t*)&operand.file_header, sizeof(d7ap_fs_file_header_t)); assert(err == SUCCESS);
 
   // convert to little endian (native)
   operand.file_header.length = __builtin_bswap32(operand.file_header.length);
@@ -321,7 +321,7 @@ uint8_t alp_get_expected_response_length(uint8_t* alp_command, uint8_t alp_comma
         // other ITFs have no configuration
         break;
       case ALP_OP_WRITE_FILE_PROPERTIES:
-        fifo_skip(&fifo, 1 + sizeof(fs_file_header_t)); // skip file ID & header
+        fifo_skip(&fifo, 1 + sizeof(d7ap_fs_file_header_t)); // skip file ID & header
         break;
       // TODO other operations
       default:

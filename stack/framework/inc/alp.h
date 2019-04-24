@@ -34,6 +34,7 @@
 #include "stdint.h"
 #include "stdbool.h"
 #include "d7ap.h"
+#include "d7ap_fs.h"
 #include "lorawan_stack.h"
 #include "dae.h"
 
@@ -199,7 +200,7 @@ typedef struct {
 
 typedef struct {
     uint8_t file_id;
-    fs_file_header_t file_header;
+    d7ap_fs_file_header_t file_header;
 } alp_operand_file_header_t;
 
 typedef struct {
