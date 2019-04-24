@@ -65,6 +65,14 @@ typedef struct
     //uint8_t target_address[8]; // TODO assuming 8B UID for now
 } dll_header_t;
 
+typedef enum
+{
+    CSMA_CA_MODE_UNC = 0,
+    CSMA_CA_MODE_AIND = 1,
+    CSMA_CA_MODE_RAIND = 2,
+    CSMA_CA_MODE_RIGD = 3
+} csma_ca_mode_t;
+
 void dll_init();
 void dll_stop();
 void dll_tx_frame(packet_t* packet);
