@@ -240,7 +240,7 @@ bool modem_send_unsolicited_response(uint8_t file_id, uint32_t offset, uint32_t 
     alp_append_forward_action(&command.fifo, ALP_ITF_ID_D7ASP, (uint8_t *) &session_config->d7ap_session_config, sizeof(d7ap_session_config_t));
   else if(session_config->interface_type==LORAWAN_OTAA)
     alp_append_forward_action(&command.fifo, ALP_ITF_ID_LORAWAN_OTAA, (uint8_t *) &session_config->lorawan_session_config_otaa, sizeof(lorawan_session_config_otaa_t));
-  else if(session_config->interface_type==lorawan_ABP)
+  else if(session_config->interface_type==LORAWAN_ABP)
     alp_append_forward_action(&command.fifo, ALP_ITF_ID_LORAWAN_ABP, (uint8_t *) &session_config->lorawan_session_config_abp, sizeof(lorawan_session_config_abp_t));
 
   alp_append_return_file_data_action(&command.fifo, file_id, offset, length, data);
@@ -258,7 +258,7 @@ bool modem_send_raw_unsolicited_response(uint8_t* alp_command, uint32_t length,
     alp_append_forward_action(&command.fifo, ALP_ITF_ID_D7ASP, (uint8_t *) &session_config->d7ap_session_config, sizeof(d7ap_session_config_t));
   else if(session_config->interface_type==LORAWAN_OTAA)
     alp_append_forward_action(&command.fifo, ALP_ITF_ID_LORAWAN_OTAA, (uint8_t *) &session_config->lorawan_session_config_otaa, sizeof(lorawan_session_config_otaa_t));
-  else if(session_config->interface_type==lorawan_ABP)
+  else if(session_config->interface_type==LORAWAN_ABP)
     alp_append_forward_action(&command.fifo, ALP_ITF_ID_LORAWAN_ABP, (uint8_t *) &session_config->lorawan_session_config_abp, sizeof(lorawan_session_config_abp_t));
 
   fifo_put(&command.fifo, alp_command, length);

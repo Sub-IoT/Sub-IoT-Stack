@@ -95,7 +95,8 @@ typedef enum
 {
   STATE_NOT_JOINED,
   STATE_JOINED,
-  STATE_JOIN_FAILED
+  STATE_JOIN_FAILED,
+  STATE_JOINING
 } state_t;
 
 static state_t state = STATE_NOT_JOINED;
@@ -129,7 +130,7 @@ static void run_fsm()
 {
   switch(state)
   {
-    case STATE_NOT_JOINED:
+    case STATE_JOINING:
     {
       if(activationMethod==OTAA)
       {
@@ -293,6 +294,8 @@ bool lorawan_abp_is_joined(lorawan_session_config_abp_t* lorawan_session_config)
   sched_cancel_task(&run_fsm);
   if(state!=STATE_JOINED)
     joined=false;
+  if (state==STATE_JOINING)
+    return false;
   app_port=lorawan_session_config->application_port;
   request_ack=lorawan_session_config->request_ack;
   
@@ -342,8 +345,8 @@ bool lorawan_abp_is_joined(lorawan_session_config_abp_t* lorawan_session_config)
     DPRINT("DevAddr: %lu", lorawan_session_config->devAddr);
     DPRINT("LORAWAN_NETWORK_ID: %lu", lorawan_session_config->network_id);
     
-    state = STATE_NOT_JOINED;
-    sched_post_task(&run_fsm);
+    state = STATE_JOINING;
+    run_fsm();
   }
     return joined;
 }
@@ -352,9 +355,12 @@ bool lorawan_otaa_is_joined(lorawan_session_config_otaa_t* lorawan_session_confi
 {
   DPRINT("Checking for change in config");
   bool joined=true;
-  sched_cancel_task(&run_fsm);
   if(state!=STATE_JOINED)
     joined=false;
+  if (state==STATE_JOINING)
+    return false;
+
+  sched_cancel_task(&run_fsm);
   app_port=lorawan_session_config->application_port;
   request_ack=lorawan_session_config->request_ack;
   
@@ -399,8 +405,7 @@ bool lorawan_otaa_is_joined(lorawan_session_config_otaa_t* lorawan_session_confi
     DPRINT_DATA(lorawan_session_config->appKey, 16);
 
    
-    
-    state = STATE_NOT_JOINED;
+    state = STATE_JOINING;
     sched_post_task(&run_fsm);
   }
     return joined;
@@ -419,7 +424,7 @@ void lorawan_stack_init_abp(lorawan_session_config_abp_t* lorawan_session_config
   
   HW_Init(); // TODO refactor
 
-  state = STATE_NOT_JOINED;
+  state = STATE_JOINING;
   
   
   DPRINT("Init using ABP");
@@ -432,7 +437,7 @@ void lorawan_stack_init_abp(lorawan_session_config_abp_t* lorawan_session_config
   
 
   sched_register_task(&run_fsm);
-  sched_post_task(&run_fsm);
+  //sched_post_task(&run_fsm);
 
   loraMacPrimitives.MacMcpsConfirm = &mcps_confirm;
   loraMacPrimitives.MacMcpsIndication = &mcps_indication;
@@ -481,7 +486,8 @@ void lorawan_stack_init_abp(lorawan_session_config_abp_t* lorawan_session_config
 #endif
 
 #endif
-
+  run_fsm();
+   DPRINT("JOINED");
 }
 void lorawan_stack_init_otaa(lorawan_session_config_otaa_t* lorawan_session_config) {
 
@@ -495,7 +501,7 @@ void lorawan_stack_init_otaa(lorawan_session_config_otaa_t* lorawan_session_conf
   
   HW_Init(); // TODO refactor
 
-  state = STATE_NOT_JOINED;
+  state = STATE_JOINING;
   
   DPRINT("Init using OTAA");
   DPRINT("DevEui:");
