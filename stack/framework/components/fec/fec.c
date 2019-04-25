@@ -124,7 +124,7 @@ static void print_vstate()
 
 uint16_t fec_calculated_decoded_length(uint16_t packet_length)
 {
-	return 2* (packet_length + 2 - (packet_length % 2));
+	return 2* (packet_length + 2 + (packet_length % 2));
 }
 
 /* Convolutional encoder */
@@ -251,7 +251,11 @@ uint16_t fec_decode_packet(uint8_t* data, uint16_t packet_length, uint16_t outpu
 		//printf("FEC encoding i = %d\n", i);
 
 		bool err = fec_decode(&data[i]);
-		decoded_length+=2;
+		if(i == packet_length - 8 && output_buffer[0] == TRELLIS_TERMINATOR)
+			decoded_length += 1;
+		else if(i < packet_length - 4)
+			decoded_length += 2;
+
 		if (!err)
 			DPRINT("FEC encoding error\n");
 	}
