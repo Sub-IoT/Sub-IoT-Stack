@@ -411,7 +411,6 @@ static inline int16_t get_rssi() {
 
 static void packet_transmitted_isr() {
   hw_gpio_disable_interrupt(SX127x_DIO0_PIN);
-  remaining_bytes_len = 0;
 
   DEBUG_TX_END();
   hw_busy_wait(110);
@@ -419,12 +418,10 @@ static void packet_transmitted_isr() {
 
   // hw_radio_set_idle();
 
-  if(tx_packet_callback) {
-    DPRINT("Packet transmitted\n");
-    tx_packet_callback(timer_get_counter_value());
-  }
+  DPRINT("Packet transmitted\n");
 
-  DPRINT("done\n");
+  if(tx_packet_callback)
+    tx_packet_callback(timer_get_counter_value());
 }
 
 // TODO
@@ -519,6 +516,7 @@ static void reinit_rx() {
 
  write_reg(REG_FIFOTHRESH, RF_FIFOTHRESH_TXSTARTCONDITION_FIFONOTEMPTY | 0x03);
  write_reg(REG_DIOMAPPING1, RF_DIOMAPPING1_DIO2_11);
+ write_reg(REG_PAYLOADLENGTH, 0);
 
  // Trigger a manual restart of the Receiver chain (no frequency change)
  write_reg(REG_RXCONFIG, RF_RXCONFIG_RESTARTRXWITHOUTPLLLOCK | RF_RXCONFIG_AFCAUTO_OFF| 
@@ -610,7 +608,7 @@ static void fifo_threshold_isr() {
    hw_gpio_set_edge_interrupt(SX127x_DIO1_PIN, GPIO_RISING_EDGE);
    hw_gpio_enable_interrupt(SX127x_DIO1_PIN);
 
-   DPRINT("read %i bytes, %i remaining, FLAGS2 %x \n", FskPacketHandler_sx127x.NbBytes, remaining_bytes, read_reg(REG_IRQFLAGS2));
+   DPRINT("read %i bytes, %i remaining, FLAGS2 %x, time: %i \n", FskPacketHandler_sx127x.NbBytes, remaining_bytes, read_reg(REG_IRQFLAGS2), timer_get_counter_value());
 }
 
 static void dio1_isr(pin_id_t pin_id, uint8_t event_mask) {
@@ -722,7 +720,7 @@ void hw_radio_stop() {
 }
 
 error_t hw_radio_set_idle() {
-    DPRINT("set to sleep\n");
+    DPRINT("set to sleep at %i\n", timer_get_counter_value());
     hw_radio_set_opmode(HW_STATE_SLEEP);
     DEBUG_RX_END();
     DEBUG_TX_END();
@@ -776,10 +774,7 @@ void set_state_rx() {
   flush_fifo();
 
   write_reg(REG_FIFOTHRESH, 0x83);
-  if(FskPacketHandler_sx127x.Size == 0)
-    write_reg(REG_DIOMAPPING1, 0x0C);
-  else
-    write_reg(REG_DIOMAPPING1, 0x3C); // DIO2 = 0b11 => interrupt on sync detect
+  write_reg(REG_DIOMAPPING1, 0x0C);
 
   FskPacketHandler_sx127x.FifoThresh = 0;
   FskPacketHandler_sx127x.NbBytes = 0;
@@ -802,6 +797,8 @@ void hw_radio_set_opmode(hw_state_t opmode) {
     case HW_STATE_OFF:
     case HW_STATE_SLEEP:
       state = STATE_IDLE;
+      DEBUG_TX_END();
+      DEBUG_RX_END();
       hw_gpio_disable_interrupt(SX127x_DIO0_PIN);
       hw_gpio_disable_interrupt(SX127x_DIO1_PIN);
       set_opmode(OPMODE_SLEEP);
@@ -811,11 +808,14 @@ void hw_radio_set_opmode(hw_state_t opmode) {
       set_opmode(OPMODE_STANDBY);
       break;
     case HW_STATE_TX:
+      DEBUG_RX_END();
+      DEBUG_TX_START();
       state = STATE_TX;
       set_opmode(OPMODE_TX);
       break;
     case HW_STATE_IDLE:
     case HW_STATE_RX:
+      DEBUG_RX_START();
       set_state_rx();
       break;
     case HW_STATE_RESET:
