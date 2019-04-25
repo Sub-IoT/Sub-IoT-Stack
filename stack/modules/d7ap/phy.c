@@ -578,11 +578,13 @@ error_t phy_send_packet(hw_radio_packet_t* packet, phy_tx_config_t* config, tx_p
     // uint8_t encoded_packet[(PACKET_MAX_SIZE + 1)*2]; // bufer sized for FEC encoding
     fg_frame.encoded_length = encode_packet(packet, fg_frame.encoded_packet);
 
-    DPRINT("AFTER ENCODING TX len=%i", fg_frame.encoded_length);
+    DPRINT("AFTER ENCODING TX len=%i\n", fg_frame.encoded_length);
     DPRINT_DATA(fg_frame.encoded_packet, fg_frame.encoded_length);
 
     DEBUG_RX_END();
     DEBUG_TX_START();
+
+    DPRINT("start sending @ %i\n", timer_get_counter_value());
 
     hw_radio_send_payload(fg_frame.encoded_packet, fg_frame.encoded_length);
 
