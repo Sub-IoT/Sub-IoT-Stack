@@ -45,7 +45,7 @@ static uint8_t data_buffer[FEC_BUFFER_SIZE];
 static uint8_t* input_buffer;
 static uint8_t* output_buffer;
 
-static uint8_t packetlength;
+static uint16_t packetlength;
 static uint16_t fecpacketlength;
 static uint16_t output_packet_length;
 
@@ -58,19 +58,22 @@ static VITERBISTATE vstate;
 
 static bool fec_decode(uint8_t* input);
 
-#define DPRINT(...) printf(__VA_ARGS__)
-#define DPRINT_DATA(...) print_array(__VA_ARGS__)
+#if defined(FRAMEWORK_LOG_ENABLED) && defined(FRAMEWORK_PHY_LOG_ENABLED) // TODO more granular (LOG_PHY_ENABLED)
+#define DPRINT(...) log_print_stack_string(LOG_STACK_PHY, __VA_ARGS__)
+#define DPRINT_DATA(...) log_print_data(__VA_ARGS__)
+#else
+#define DPRINT(...)
+#define DPRINT_DATA(...)
+#endif
 
 void print_array(uint8_t* buffer, uint8_t length, uint8_t binary)
 {
 	int i = 0;
 	for (; i < length; i++)
 	{
-	    printf("%02X", buffer[i]);
+	    printf("%02X ", buffer[i]);
 	}
-
-	if (binary)
-	{
+	if(binary) {
 		printf(" ");
 
 		for (i = 0; i < length; i++)
@@ -108,14 +111,20 @@ static void print_vstate()
 //		VITERBIPATH states2[8];
 //	} VITERBISTATE;
 
-	printf("VSTATE:\n");
-	printf(" - path_size: %d\n", vstate.path_size);
+  DPRINT("VSTATE:\n");
+  DPRINT(" - path_size: %d\n", vstate.path_size);
 	//printf(" - old: %03d - %s\n", vstate.old->cost, int_to_binary(vstate.old->path));
 	//printf(" - new: %03d - %s\n", vstate.new->cost, int_to_binary(vstate.new->path));
 	int i;
 	for (i=0;i<8;i++)
-		printf(" - states - %d: %03d - %s\n", i, vstate.old[i].cost, int_to_binary(vstate.old[i].path));
+    DPRINT(" - states - %d: %03d - %s\n", i, vstate.old[i].cost, int_to_binary(vstate.old[i].path));
 
+}
+
+
+uint16_t fec_calculated_decoded_length(uint16_t packet_length)
+{
+	return 2* (packet_length + 2 + (packet_length % 2));
 }
 
 /* Convolutional encoder */
@@ -126,15 +135,15 @@ uint16_t fec_encode(uint8_t *data, uint16_t nbytes)
 	unsigned int encstate = 0;
 	int i;
 
-	int termintor_bytes = 2 + nbytes%2;
+	int terminator_bytes = 2 + nbytes%2;
 	//printf("Length %d -> terminator %d\n", nbytes, termintor_bytes);
-	nbytes+=termintor_bytes;
+	nbytes+=terminator_bytes;
 	uint16_t length = 0;
 	uint8_t fecbuffer[4] = {0,0,0,0};
 
 	int8_t buffer_pointer = 0;
 	while(nbytes-- > 0){
-		if (nbytes < termintor_bytes) *input = TRELLIS_TERMINATOR;
+		if (nbytes < terminator_bytes) *input = TRELLIS_TERMINATOR;
 
 		//printf("%02X:", *input);
 
@@ -203,7 +212,7 @@ uint16_t fec_encode(uint8_t *data, uint16_t nbytes)
 	return length;
 }
 
-uint8_t fec_decode_packet(uint8_t* data, uint8_t packet_length, uint8_t output_length)
+uint16_t fec_decode_packet(uint8_t* data, uint16_t packet_length, uint16_t output_length)
 {
 	uint8_t* output = data_buffer;
 	if(output_length < packet_length)
@@ -220,7 +229,6 @@ uint8_t fec_decode_packet(uint8_t* data, uint8_t packet_length, uint8_t output_l
 
 	output_buffer = output;
 	packetlength = packet_length;
-	fecpacketlength = ((packet_length & 0xFE) + 2) << 1;
 	output_packet_length = output_length;
 
 	processedbytes = 0;
@@ -236,14 +244,18 @@ uint8_t fec_decode_packet(uint8_t* data, uint8_t packet_length, uint8_t output_l
 	vstate.old = vstate.states1;
 	vstate.new = vstate.states2;
 
-	uint8_t decoded_length = 0;
+	uint16_t decoded_length = 0;
 
-	for(i = 0; i < packet_length; i =i+4)
+	for(i = 0; i < packet_length; i = i + 4)
 	{
 		//printf("FEC encoding i = %d\n", i);
 
 		bool err = fec_decode(&data[i]);
-		decoded_length+=2;
+		if(i == packet_length - 8 && output_buffer[0] == TRELLIS_TERMINATOR)
+			decoded_length += 1;
+		else if(i < packet_length - 4)
+			decoded_length += 2;
+
 		if (!err)
 			DPRINT("FEC encoding error\n");
 	}
@@ -263,7 +275,7 @@ static bool fec_decode(uint8_t* input)
 	uint8_t fecbuffer[4];
 	VITERBIPATH* vstate_tmp;
 
-	if(fecprocessedbytes >= fecpacketlength)
+	if(fecprocessedbytes >= packetlength)
 		return false;
 
 	//Deinterleaving (symbols are stored in reverse as this is easier for Viterbi decoding)

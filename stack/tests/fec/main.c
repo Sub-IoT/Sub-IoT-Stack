@@ -94,7 +94,7 @@ int main(int argc, char *argv[])
 	memset(errors, 0, 255);
 
 
-	printf("Input: %d ", input_length);
+	printf("Input: %d \n", input_length);
 	print_array(input, input_length, BINARY);
 	printf("\n");
 
@@ -102,7 +102,7 @@ int main(int argc, char *argv[])
 
 	uint16_t lenght_encoded = fec_encode(encoded, input_length);
 
-	printf("Encoded: %d ", lenght_encoded);
+	printf("Encoded length: %d, theoretical encoded length: %d\n", lenght_encoded, fec_calculated_decoded_length(input_length));
 	print_array(encoded, lenght_encoded, BINARY);
 	printf("\n");
 
@@ -111,7 +111,7 @@ int main(int argc, char *argv[])
 
 	uint8_t length_decoded =  fec_decode_packet(decoded, lenght_encoded, 255);
 
-	printf("Decoded: %d ", length_decoded);
+	printf("Decoded length: %d\n", length_decoded);
 	print_array(decoded, length_decoded, BINARY);
 	printf("\n");
 
