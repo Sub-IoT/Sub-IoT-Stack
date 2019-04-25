@@ -135,15 +135,15 @@ uint16_t fec_encode(uint8_t *data, uint16_t nbytes)
 	unsigned int encstate = 0;
 	int i;
 
-	int termintor_bytes = 2 + nbytes%2;
+	int terminator_bytes = 2 - nbytes%2;
 	//printf("Length %d -> terminator %d\n", nbytes, termintor_bytes);
-	nbytes+=termintor_bytes;
+	nbytes+=terminator_bytes;
 	uint16_t length = 0;
 	uint8_t fecbuffer[4] = {0,0,0,0};
 
 	int8_t buffer_pointer = 0;
 	while(nbytes-- > 0){
-		if (nbytes < termintor_bytes) *input = TRELLIS_TERMINATOR;
+		if (nbytes < terminator_bytes) *input = TRELLIS_TERMINATOR;
 
 		//printf("%02X:", *input);
 
