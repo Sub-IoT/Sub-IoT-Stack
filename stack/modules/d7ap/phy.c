@@ -41,6 +41,7 @@
 
 #include "packet_queue.h"
 #include "MODULE_D7AP_defs.h"
+#include "d7ap_fs.h"
 
 #if defined(FRAMEWORK_LOG_ENABLED) && defined(MODULE_D7AP_PHY_LOG_ENABLED)
 #define DPRINT(...) log_print_stack_string(LOG_STACK_PHY, __VA_ARGS__)
@@ -360,7 +361,10 @@ uint16_t phy_calculate_tx_duration(phy_channel_class_t channel_class, phy_coding
 
 static void configure_eirp(eirp_t eirp)
 {
-    DPRINT("Set Tx power: %d dBm\n", eirp);
+    int8_t factory_settings[D7A_FILE_FACTORY_SETTINGS_SIZE]; //Byte 0 is gain offset
+    d7ap_fs_read_file(D7A_FILE_FACTORY_SETTINGS_FILE_ID, 0, factory_settings, D7A_FILE_FACTORY_SETTINGS_SIZE);
+    eirp -= factory_settings[0];
+    DPRINT("Set Tx power: %d dBm including offset of %i\n", eirp, factory_settings[0]);
 
     hw_radio_set_tx_power(eirp);
 }
