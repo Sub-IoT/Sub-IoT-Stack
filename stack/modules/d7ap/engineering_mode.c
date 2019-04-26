@@ -53,20 +53,6 @@ static uint8_t timeout_em = 0;
 static phy_tx_config_t tx_cfg;
 static phy_rx_config_t rx_cfg;
 static bool stop = false;
-static uint16_t per_missed_packets_counter = 0;
-static uint16_t per_received_packets_counter = 0;
-static uint16_t per_packet_counter = 0;
-static uint16_t per_packet_limit = 0;
-static uint8_t per_data[PACKET_SIZE] = { [0 ... PACKET_SIZE-1]  = 0 };
-static uint8_t per_fill_data[FILL_DATA_SIZE + 1];
-static uint8_t per_packet_buffer[sizeof(hw_radio_packet_t) + 255] = { 0 };
-static hw_radio_packet_t* per_packet = (hw_radio_packet_t*)per_packet_buffer;
-static channel_id_t per_channel_id = {
-    .channel_header.ch_coding = PHY_CODING_PN9,
-    .channel_header.ch_class = PHY_CLASS_NORMAL_RATE,
-    .channel_header.ch_freq_band = PHY_BAND_433,
-    .center_freq_index = 0
-};
 
 static void packet_transmitted(hw_radio_packet_t* packet);
 static void packet_received(hw_radio_packet_t* packet);
@@ -223,7 +209,7 @@ static void em_file_change_callback(uint8_t file_id) {
       case EM_CONTINUOUS_TX:
         DPRINT("EM_MODE_CONTINUOUS_TX\n");
         memcpy( &(tx_cfg.channel_id), &(em_command->channel_id), sizeof(channel_id_t));
-        config_eirp(em_command->eirp);
+        tx_cfg.eirp = em_command->eirp;
 
         DPRINT("Tx: %d seconds, coding: %X \nclass: %X, freq band: %X \nchannel id: %d, syncword class: %X \neirp: %d, flags: %X\n",
         timeout_em, tx_cfg.channel_id.channel_header.ch_coding, tx_cfg.channel_id.channel_header.ch_class,
@@ -239,7 +225,7 @@ static void em_file_change_callback(uint8_t file_id) {
       case EM_TRANSIENT_TX:
         DPRINT("EM_MODE_TRANSIENT_TX\n");
         memcpy( &(tx_cfg.channel_id), &(em_command->channel_id), sizeof(channel_id_t));
-        config_eirp(em_command->eirp);
+        tx_cfg.eirp = em_command->eirp;
 
         if(timeout_em != 0) {
           sched_register_task(&stop_transient_tx);
