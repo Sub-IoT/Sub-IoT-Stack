@@ -49,7 +49,7 @@ typedef enum
 {
     DASH7,
     LORAWAN_OTAA,
-    lorawan_ABP
+    LORAWAN_ABP
 } interface_type_t;
 
 typedef struct {
