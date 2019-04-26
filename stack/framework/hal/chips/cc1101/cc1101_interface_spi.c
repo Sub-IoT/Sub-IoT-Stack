@@ -77,8 +77,8 @@ void _cc1101_interface_init(end_of_packet_isr_t end_of_packet_isr_cb, fifo_thr_i
     spi_slave = spi_init_slave(spi, CC1101_SPI_PIN_CS, true);
 
     error_t err;
-    err = hw_gpio_configure_interrupt(CC1101_GDO0_PIN, &_cc1101_gdo_isr, GPIO_FALLING_EDGE); assert(err == SUCCESS);
-    err = hw_gpio_configure_interrupt(CC1101_GDO2_PIN, &_cc1101_gdo_isr, GPIO_FALLING_EDGE); assert(err == SUCCESS);
+    err = hw_gpio_configure_interrupt(CC1101_GDO0_PIN, GPIO_FALLING_EDGE, &_cc1101_gdo_isr, NULL); assert(err == SUCCESS);
+    err = hw_gpio_configure_interrupt(CC1101_GDO2_PIN, GPIO_FALLING_EDGE, &_cc1101_gdo_isr, NULL); assert(err == SUCCESS);
 
     DPRINT("CC1101 SPI initialised\r\n");
 }
