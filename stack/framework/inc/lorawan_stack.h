@@ -58,15 +58,17 @@ typedef struct {
     uint32_t network_id;
     bool request_ack;
     uint8_t application_port;
+    bool adr_enabled;
+    uint8_t data_rate;
 } lorawan_session_config_abp_t;
 
 typedef struct {
     uint8_t devEUI[8];
     uint8_t appEUI[8];
     uint8_t appKey[16];
-   bool request_ack;
+    bool request_ack;
     uint8_t application_port;
-    uint8_t adr;
+    bool adr_enabled;
     uint8_t data_rate;
 } lorawan_session_config_otaa_t;
 

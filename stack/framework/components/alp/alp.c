@@ -120,8 +120,10 @@ void alp_append_forward_action(fifo_t* fifo, uint8_t itf_id, uint8_t *config, ui
   else if(itf_id == ALP_ITF_ID_LORAWAN_ABP)
   {
     uint8_t control_byte = ((lorawan_session_config_abp_t*)config)->request_ack << 1;
+    control_byte += ((lorawan_session_config_abp_t*)config)->adr_enabled << 2;
     assert(fifo_put_byte(fifo, control_byte) == SUCCESS);
     assert(fifo_put_byte(fifo, ((lorawan_session_config_abp_t*)config)->application_port) == SUCCESS);
+    assert(fifo_put_byte(fifo, ((lorawan_session_config_abp_t*)config)->data_rate) == SUCCESS);
     assert(fifo_put(fifo, ((lorawan_session_config_abp_t*)config)->nwkSKey, 16) == SUCCESS);
     assert(fifo_put(fifo, ((lorawan_session_config_abp_t*)config)->appSKey, 16) == SUCCESS);
     uint32_t dev_addr = __builtin_bswap32(((lorawan_session_config_abp_t*)config)->devAddr);
@@ -133,8 +135,10 @@ void alp_append_forward_action(fifo_t* fifo, uint8_t itf_id, uint8_t *config, ui
   else if(itf_id == ALP_ITF_ID_LORAWAN_OTAA)
   {
     uint8_t control_byte = ((lorawan_session_config_otaa_t*)config)->request_ack << 1;
+    control_byte += ((lorawan_session_config_otaa_t*)config)->adr_enabled << 2;
     assert(fifo_put_byte(fifo, control_byte) == SUCCESS);
     assert(fifo_put_byte(fifo, ((lorawan_session_config_otaa_t*)config)->application_port) == SUCCESS);
+    assert(fifo_put_byte(fifo, ((lorawan_session_config_otaa_t*)config)->data_rate) == SUCCESS);
     assert(fifo_put(fifo, ((lorawan_session_config_otaa_t*)config)->devEUI, 8) == SUCCESS);
     assert(fifo_put(fifo, ((lorawan_session_config_otaa_t*)config)->appEUI, 8) == SUCCESS);
     assert(fifo_put(fifo, ((lorawan_session_config_otaa_t*)config)->appKey, 16) == SUCCESS);
