@@ -125,6 +125,8 @@ static channel_id_t default_channel_id = {
 
 static channel_id_t current_channel_id = EMPTY_CHANNEL_ID;
 
+static uint8_t gain_offset = 0;
+
 /*
  * FSK packet handler structure
  */
@@ -361,10 +363,8 @@ uint16_t phy_calculate_tx_duration(phy_channel_class_t channel_class, phy_coding
 
 static void configure_eirp(eirp_t eirp)
 {
-    int8_t factory_settings[D7A_FILE_FACTORY_SETTINGS_SIZE]; //Byte 0 is gain offset
-    d7ap_fs_read_file(D7A_FILE_FACTORY_SETTINGS_FILE_ID, 0, factory_settings, D7A_FILE_FACTORY_SETTINGS_SIZE);
-    eirp -= factory_settings[0];
-    DPRINT("Set Tx power: %d dBm including offset of %i\n", eirp, factory_settings[0]);
+    eirp -= gain_offset;
+    DPRINT("Set Tx power: %d dBm including offset of %i\n", eirp, gain_offset);
 
     hw_radio_set_tx_power(eirp);
 }
@@ -443,6 +443,16 @@ void continuous_tx_expiration()
     DPRINT("Continuous TX is now terminated");
 }
 
+void fact_settings_file_change_callback()
+{
+    uint8_t fact_settings[D7A_FILE_FACTORY_SETTINGS_SIZE];
+    d7ap_fs_read_file(D7A_FILE_FACTORY_SETTINGS_FILE_ID, 0, fact_settings, D7A_FILE_FACTORY_SETTINGS_SIZE);
+
+    gain_offset = (int8_t)fact_settings[0];
+
+    DPRINT("gain set to %i\n", gain_offset);
+}
+
 
 error_t phy_init(void) {
 
@@ -468,6 +478,10 @@ error_t phy_init(void) {
 #else
     hw_radio_set_dc_free(HW_DC_FREE_NONE);
 #endif
+
+    fact_settings_file_change_callback();
+
+    d7ap_fs_register_file_modified_callback(D7A_FILE_FACTORY_SETTINGS_FILE_ID, &fact_settings_file_change_callback);
 
     configure_syncword(PHY_SYNCWORD_CLASS0, &default_channel_id);
     configure_channel(&default_channel_id);
