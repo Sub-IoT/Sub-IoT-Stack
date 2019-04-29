@@ -257,7 +257,7 @@ int d7ap_fs_read_uid(uint8_t *buffer)
 
 int d7ap_fs_read_vid(uint8_t *buffer)
 {
-  return (d7ap_fs_read_file(D7A_FILE_DLL_CONF_FILE_ID, 1, buffer, 2));
+  return (d7ap_fs_read_file(D7A_FILE_VID_FILE_ID, 0, buffer, ID_TYPE_VID_LENGTH));
 }
 
 int d7ap_fs_read_nwl_security_key(uint8_t *buffer)

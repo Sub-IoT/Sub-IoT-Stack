@@ -40,6 +40,7 @@ from d7a.system_files.security_key import SecurityKeyFile
 from d7a.system_files.uid import UidFile
 from d7a.system_files.engineering_mode import EngineeringModeFile
 from d7a.system_files.factory_settings import FactorySettingsFile
+from d7a.system_files.vid import VidFile
 from d7a.fs.file_permissions import FilePermissions
 from d7a.fs.file_properties import FileProperties
 from d7a.fs.file_properties import ActionCondition, StorageClass, FileProperties
@@ -85,7 +86,7 @@ system_files = [
   NotImplementedFile(SystemFileIds.DEVICE_CAPACITY.value, 19),
   NotImplementedFile(SystemFileIds.DEVICE_STATUS.value, 9),
   EngineeringModeFile(),
-  NotImplementedFile(SystemFileIds.VID.value, 3),
+  VidFile(),
   NotImplementedFile(SystemFileIds.RFU_07.value, 0),
   NotImplementedFile(SystemFileIds.PHY_CONFIG.value, 9),
   NotImplementedFile(SystemFileIds.PHY_STATUS.value, 24),  # TODO assuming 3 channels for now
