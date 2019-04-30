@@ -35,6 +35,11 @@ static void init_clock(void)
 
   // using 32MHz clock based on HSI+PLL, use 32k LSE for timer
   __HAL_PWR_VOLTAGESCALING_CONFIG(PWR_REGULATOR_VOLTAGE_SCALE1);
+  
+  /* Poll VOSF bit of in PWR_CSR. Wait until it is reset to 0 */
+  while (__HAL_PWR_GET_FLAG(PWR_FLAG_VOS) != RESET) {};
+
+
 #if defined(STM32L0)
   // TODO not defined on STM32L1
   __HAL_RCC_LSEDRIVE_CONFIG(RCC_LSEDRIVE_MEDIUMHIGH);
