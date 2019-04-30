@@ -75,6 +75,14 @@ error_t hw_timer_init(hwtimer_id_t timer_id, uint8_t frequency, timer_callback_t
 	overflow_f = overflow_callback;
 	timer_inited = true;
 
+  #if defined(STM32L0)
+  // set LPTIM1 clock source to LSE
+  RCC_PeriphCLKInitTypeDef RCC_PeriphClkInit;
+  RCC_PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_LPTIM1;
+  RCC_PeriphClkInit.LptimClockSelection = RCC_LPTIM1CLKSOURCE_LSE;
+  assert(HAL_RCCEx_PeriphCLKConfig(&RCC_PeriphClkInit) == HAL_OK);
+  #endif
+
 #if defined(STM32L0)
   __HAL_RCC_LPTIM1_CLK_ENABLE();
   __HAL_RCC_LPTIM1_FORCE_RESET();

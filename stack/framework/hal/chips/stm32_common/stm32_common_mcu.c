@@ -35,10 +35,9 @@ static void init_clock(void)
 
   // using 32MHz clock based on HSI+PLL, use 32k LSE for timer
   __HAL_PWR_VOLTAGESCALING_CONFIG(PWR_REGULATOR_VOLTAGE_SCALE1);
-  
+
   /* Poll VOSF bit of in PWR_CSR. Wait until it is reset to 0 */
   while (__HAL_PWR_GET_FLAG(PWR_FLAG_VOS) != RESET) {};
-
 
 #if defined(STM32L0)
   // TODO not defined on STM32L1
@@ -80,13 +79,6 @@ static void init_clock(void)
   RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV1;
   assert(HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_1) == HAL_OK);
 
-#if defined(STM32L0)
-  // set LPTIM1 clock source to LSE
-  RCC_PeriphCLKInitTypeDef RCC_PeriphClkInit;
-  RCC_PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_LPTIM1;
-  RCC_PeriphClkInit.LptimClockSelection = RCC_LPTIM1CLKSOURCE_LSE;
-  assert(HAL_RCCEx_PeriphCLKConfig(&RCC_PeriphClkInit) == HAL_OK);
-#endif
 
 #ifdef FRAMEWORK_DEBUG_ENABLE_SWD
     __HAL_RCC_DBGMCU_CLK_ENABLE( );
