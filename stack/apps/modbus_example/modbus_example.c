@@ -32,7 +32,6 @@
 #include "scheduler.h"
 #include "timer.h"
 #include "debug.h"
-#include "fs.h"
 #include "log.h"
 
 #include "d7ap.h"
