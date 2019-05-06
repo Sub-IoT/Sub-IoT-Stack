@@ -36,7 +36,6 @@
 #include "errors.h"
 
 #include "sx1276Regs-Fsk.h"
-#include "sx1276Regs-LoRa.h"
 
 #include "crc.h"
 #include "pn9.h"
@@ -133,13 +132,18 @@
   #error "Invalid configuration"
 #endif
 
+static const uint16_t rx_bw_startup_time[21] = {63, 74, 85, 71, 84, 97, 119, 144, 169, 215, 264, 313, 
+  407, 504, 601, 791, 984, 1180, 1560, 1940, 2330};
+
+static uint8_t rx_bw_number = 21;
+
 typedef enum {
   OPMODE_SLEEP = 0,
   OPMODE_STANDBY = 1,
   OPMODE_FSTX = 2,
   OPMODE_TX = 3,
   OPMODE_FSRX = 4,
-  OPMODE_RX = 5, // RXCONTINUOUS in case of LoRa
+  OPMODE_RX = 5,
 } opmode_t;
 
 typedef enum {
@@ -275,25 +279,9 @@ static void set_antenna_switch(opmode_t opmode) {
 }
 
 static inline void flush_fifo() {
+  DPRINT("Flush fifo\n");
   write_reg(REG_IRQFLAGS2, RF_IRQFLAGS2_FIFOOVERRUN);
 }
-
-//static void set_lora_mode(bool use_lora) {
-//  set_opmode(OPMODE_SLEEP); // mode changing requires being in sleep
-//  write_reg(REG_OPMODE, (read_reg(REG_OPMODE) & RFLR_OPMODE_LONGRANGEMODE_MASK) | (use_lora << 7)); // TODO can only be modified in sleep mode
-//  if(use_lora) {
-//    DPRINT("Enabling LoRa mode");
-//    if(use_lora_250)
-//      write_reg(REG_LR_MODEMCONFIG1, 0x82); // BW=250 kHz, CR=4/5, explicit header mode
-//    else
-//      write_reg(REG_LR_MODEMCONFIG1, 0x72); // BW=125 kHz, CR=4/5, explicit header mode
-//    write_reg(REG_LR_MODEMCONFIG2, 0x90); // SF=9, CRC disabled
-//    lora_mode = true;
-//  } else {
-//    DPRINT("Enabling GFSK mode");
-//    lora_mode = false;
-//  }
-//}
 
 static void init_regs() {
   uint8_t gaussian_shape_filter = 2; // 0: no shaping, 1: BT=1.0, 2: BT=0.5, 3: BT=0.3 // TODO benchmark?
@@ -415,37 +403,6 @@ static void packet_transmitted_isr() {
   if(tx_packet_callback)
     tx_packet_callback(timer_get_counter_value());
 }
-
-// TODO
-//static void lora_rxdone_isr() {
-//  hw_gpio_disable_interrupt(SX127x_DIO0_PIN);
-//  DPRINT("LoRa RxDone ISR\n");
-//  assert(state == STATE_RX && lora_mode);
-//  uint8_t irqflags = read_reg(REG_LR_IRQFLAGS);
-//  assert(irqflags & RFLR_IRQFLAGS_RXDONE_MASK);
-//  // TODO check PayloadCRCError and ValidHeader?
-
-//  uint8_t len = read_reg(REG_LR_RXNBBYTES);
-//  write_reg(REG_LR_FIFOADDRPTR, read_reg(REG_LR_FIFORXCURRENTADDR));
-//  DPRINT("rx packet len=%i\n", len);
-//  current_packet = alloc_packet_callback(len);
-//  assert(current_packet); // TODO handle
-//  current_packet->length = len - 1;
-//  read_fifo(current_packet->data, len);
-//  write_reg(REG_LR_IRQFLAGS, 0xFF);
-
-//  current_packet->rx_meta.timestamp = timer_get_counter_value();
-//  current_packet->rx_meta.rx_cfg.syncword_class = current_syncword_class;
-//  current_packet->rx_meta.crc_status = HW_CRC_UNAVAILABLE;
-//  current_packet->rx_meta.rssi = -157 + read_reg(REG_LR_PKTRSSIVALUE); // TODO only valid for HF port
-//  current_packet->rx_meta.lqi = 0; // TODO
-//  memcpy(&(current_packet->rx_meta.rx_cfg.channel_id), &current_channel_id, sizeof(channel_id_t));
-//  DPRINT_DATA(current_packet->data, current_packet->length + 1);
-//  DPRINT("RX done\n");
-
-//  rx_packet_callback(current_packet);
-//  hw_gpio_enable_interrupt(SX127x_DIO0_PIN);
-//}
 
 static void bg_scan_rx_done() 
 {
@@ -691,7 +648,6 @@ error_t hw_radio_init(hwradio_init_args_t* init_args) {
   write_reg(REG_LOWBAT, read_reg(REG_LOWBAT) | (1 << 3) | 0x02);
 #endif
 
-  // TODO set_lora_mode(false);
   hw_radio_set_idle();
 
   error_t e;
@@ -841,6 +797,7 @@ void hw_radio_set_rx_bw_hz(uint32_t bw_hz) {
       if(abs(computed_bw - bw_hz) < min_bw_dif) {
         min_bw_dif = abs(computed_bw - bw_hz);
         reg_bw = ((((bw_mant_count - 16) / 4) << 3) | bw_exp_count);
+        rx_bw_number = (bw_exp_count - 1) * 3 + ((bw_mant_count - 16) >> 2);
       }
     }
   }
@@ -1029,7 +986,8 @@ __attribute__((weak)) void hw_radio_io_deinit() {
 int16_t hw_radio_get_rssi() {
     hw_radio_set_opmode(HW_STATE_RX);
     hw_gpio_disable_interrupt(SX127x_DIO1_PIN);
-    hw_busy_wait(700); //time to let it start up
+    assert(rx_bw_number < 21);
+    hw_busy_wait(rx_bw_startup_time[rx_bw_number]); //time to let it start up
     while(!read_reg(REG_IRQFLAGS1) & 0x08);
     return (- read_reg(REG_RSSIVALUE) >> 1);
 }
