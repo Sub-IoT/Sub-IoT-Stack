@@ -152,25 +152,19 @@ static void start_transient_tx() {
 }
 
 static void transmit_per_packet() {
-    if(!stop) {
-      DPRINT("transmitting packet");
+    DPRINT("transmitting packet");
 
-      per_packet_counter++;
-      per_data[0] = sizeof(per_packet_counter) + FILL_DATA_SIZE + sizeof(uint16_t); /* CRC is an uint16_t */
-      memcpy(per_data + 1, &per_packet_counter, sizeof(per_packet_counter));
-      /* the CRC calculation shall include all the bytes of the frame including the byte for the length*/
-      memcpy(per_data + 1 + sizeof(per_packet_counter), per_fill_data, FILL_DATA_SIZE);
-      uint16_t crc = __builtin_bswap16(crc_calculate(per_data, per_data[0] + 1 - 2));
-      memcpy(per_data + 1 + sizeof(per_packet_counter) + FILL_DATA_SIZE, &crc, 2);
-      memcpy(&per_packet->data, per_data, sizeof(per_data));
-      per_packet->length = per_data[0] + 1;
+    per_packet_counter++;
+    per_data[0] = sizeof(per_packet_counter) + FILL_DATA_SIZE + sizeof(uint16_t); /* CRC is an uint16_t */
+    memcpy(per_data + 1, &per_packet_counter, sizeof(per_packet_counter));
+    /* the CRC calculation shall include all the bytes of the frame including the byte for the length*/
+    memcpy(per_data + 1 + sizeof(per_packet_counter), per_fill_data, FILL_DATA_SIZE);
+    uint16_t crc = __builtin_bswap16(crc_calculate(per_data, per_data[0] + 1 - 2));
+    memcpy(per_data + 1 + sizeof(per_packet_counter) + FILL_DATA_SIZE, &crc, 2);
+    memcpy(&per_packet->data, per_data, sizeof(per_data));
+    per_packet->length = per_data[0] + 1;
 
-      error_t e = phy_send_packet(per_packet, &tx_cfg, &packet_transmitted_callback);
-      if(e != SUCCESS)
-        DPRINT("failed to send package with error code: %d", e);
-      else
-        DPRINT("transmitted");
-    }
+    error_t e = phy_send_packet(per_packet, &tx_cfg, &packet_transmitted_callback);
 }
 
 static void start_tx() {
@@ -195,9 +189,6 @@ static void em_file_change_callback(uint8_t file_id) {
     tx_cfg.syncword_class = PHY_SYNCWORD_CLASS1;
 
     timeout_em = em_command->timeout;
-
-    rx_cfg.syncword_class = PHY_SYNCWORD_CLASS1;
-    tx_cfg.syncword_class = PHY_SYNCWORD_CLASS1;
   
     switch (em_command->mode)
     {
@@ -227,6 +218,7 @@ static void em_file_change_callback(uint8_t file_id) {
         memcpy( &(tx_cfg.channel_id), &(em_command->channel_id), sizeof(channel_id_t));
         tx_cfg.eirp = em_command->eirp;
 
+        stop = false;
         if(timeout_em != 0) {
           sched_register_task(&stop_transient_tx);
           timer_post_task_delay(&stop_transient_tx, timeout_em * 1000 + 500);

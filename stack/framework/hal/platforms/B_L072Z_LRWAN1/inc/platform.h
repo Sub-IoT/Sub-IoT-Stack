@@ -67,7 +67,8 @@
   #endif
 #endif
 
-// TODO temp disabled, until set_antenna_switch() is ported #define PLATFORM_USE_ABZ // this platform is based on the Murata ABZ module
+// TODO temp disabled, until set_antenna_switch() is ported 
+#define PLATFORM_USE_ABZ // this platform is based on the Murata ABZ module
 // Antenna switching uses 3 pins on murata ABZ module
 #define ABZ_ANT_SW_RX_PIN PIN(0, 1)
 #define ABZ_ANT_SW_TX_PIN PIN(2, 2)
