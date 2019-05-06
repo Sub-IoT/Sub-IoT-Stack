@@ -179,13 +179,10 @@ static tx_packet_callback_t tx_packet_callback;
 static rx_packet_header_callback_t rx_packet_header_callback;
 static tx_refill_callback_t tx_refill_callback;
 static state_t state = STATE_IDLE;
-static bool lora_mode = false;
 static hw_radio_packet_t* current_packet;
 static rssi_valid_callback_t rssi_valid_callback;
-static bool should_rx_after_tx_completed = false;
 
 static bool is_sx1272 = false;
-static bool use_lora_250 = false;
 static bool enable_refill = false;
 static bool enable_preloading = false;
 static uint8_t remaining_bytes_len = 0;
@@ -406,19 +403,14 @@ static void init_regs() {
 }
 
 static inline int16_t get_rssi() {
-  return - read_reg(REG_RSSIVALUE) / 2;
+  return (- read_reg(REG_RSSIVALUE) >> 1);
 }
 
 static void packet_transmitted_isr() {
   hw_gpio_disable_interrupt(SX127x_DIO0_PIN);
 
   DEBUG_TX_END();
-  hw_busy_wait(110);
-  set_opmode(OPMODE_STANDBY);
-
-  // hw_radio_set_idle();
-
-  DPRINT("Packet transmitted\n");
+  // hw_busy_wait(110); // NECESSARY? 
 
   if(tx_packet_callback)
     tx_packet_callback(timer_get_counter_value());
@@ -504,9 +496,7 @@ static void fifo_level_isr()
         DPRINT("FlagsIRQ2: %x means that packet has been sent! ", flags);
         assert(false);
     }
-
-    tx_refill_callback(remaining_bytes_len); //TODO add remaining #bytes
-    // fill_in_fifo();
+    tx_refill_callback(remaining_bytes_len);
 }
 
 static void reinit_rx() {
@@ -722,12 +712,20 @@ void hw_radio_stop() {
 error_t hw_radio_set_idle() {
     DPRINT("set to sleep at %i\n", timer_get_counter_value());
     hw_radio_set_opmode(HW_STATE_SLEEP);
+    spi_disable(spi_handle);
+    hw_radio_io_deinit();
     DEBUG_RX_END();
     DEBUG_TX_END();
 }
 
 bool hw_radio_is_idle() {
-  return (hw_radio_get_opmode() == HW_STATE_STANDBY);
+  if(state != STATE_IDLE)
+    return false;
+  
+  hw_radio_io_init();
+
+  spi_enable(spi_handle);
+  return true;
 }
 
 hw_state_t hw_radio_get_opmode(void) {
@@ -810,7 +808,6 @@ void hw_radio_set_opmode(hw_state_t opmode) {
     case HW_STATE_TX:
       DEBUG_RX_END();
       DEBUG_TX_START();
-      state = STATE_TX;
       set_opmode(OPMODE_TX);
       break;
     case HW_STATE_IDLE:
@@ -887,6 +884,11 @@ error_t hw_radio_send_payload(uint8_t * data, uint16_t len) {
   if(len == 0)
     return ESIZE;
 
+  if(state != STATE_TX) {
+    flush_fifo();
+    state = STATE_TX;
+  }
+
 #ifdef PLATFORM_SX127X_USE_LOW_BAT_SHUTDOWN
   /*activate low battery detector*/
   if(read_reg(REG_IRQFLAGS2) & 0x01){
@@ -903,17 +905,17 @@ error_t hw_radio_send_payload(uint8_t * data, uint16_t len) {
     while(!(read_reg(REG_IRQFLAGS1) & 0x80));
   }
 
+  if(state == STATE_IDLE) { //Sleeping
+    set_opmode(OPMODE_STANDBY);
+    while(!(read_reg(REG_IRQFLAGS1) & 0x80));
+  }
+
   uint8_t start = 0;
   uint8_t available_size = FIFO_SIZE - previous_threshold;
   if(remaining_bytes_len == 0)
     remaining_bytes_len = len;
   else
     start = len - remaining_bytes_len;
-
-  if(get_opmode() == OPMODE_SLEEP) {
-    set_opmode(OPMODE_STANDBY);
-    while(!(read_reg(REG_IRQFLAGS1) & 0x80));
-  }
 
   write_reg(REG_DIOMAPPING1, 0x00); //FIFO LEVEL ISR or Packet Sent ISR
 

@@ -161,8 +161,8 @@ typedef struct
 fg_frame_t fg_frame;
 
 const uint16_t sync_word_value[2][4] = {
-    { 0xE6D0, 0x0000, 0xF498, 0x0000 },
-    { 0x0B67, 0x0000, 0x192F, 0x0000 }
+    { 0xE6D0, 0x0000, 0xF498, 0xE6D0 },
+    { 0x0B67, 0x0000, 0x192F, 0x0B67 }
 };
 
 /*
@@ -209,7 +209,7 @@ static void switch_to_standby_mode()
 
 static void switch_to_sleep_mode()
 {
-    hw_radio_set_opmode(HW_STATE_SLEEP);
+    hw_radio_set_idle();
     state = STATE_IDLE;
 }
 
@@ -372,21 +372,30 @@ static void configure_channel(const channel_id_t* channel) {
     if(channel->channel_header.ch_class == PHY_CLASS_LO_RATE)
     {
         hw_radio_set_bitrate(BITRATE_L);
-        hw_radio_set_tx_fdev(FDEV_L);
+        if(channel->channel_header.ch_coding != PHY_CODING_CW)
+            hw_radio_set_tx_fdev(FDEV_L);
+        else
+            hw_radio_set_tx_fdev(0);
         hw_radio_set_rx_bw_hz(RXBW_L);
         hw_radio_set_preamble_size(PREAMBLE_LOW_RATE_CLASS * 8);
     }
     else if(channel->channel_header.ch_class == PHY_CLASS_NORMAL_RATE)
     {
         hw_radio_set_bitrate(BITRATE_N);
-        hw_radio_set_tx_fdev(FDEV_N);
+        if(channel->channel_header.ch_coding != PHY_CODING_CW)
+            hw_radio_set_tx_fdev(FDEV_N);
+        else
+            hw_radio_set_tx_fdev(0);
         hw_radio_set_rx_bw_hz(RXBW_N);
         hw_radio_set_preamble_size(PREAMBLE_NORMAL_RATE_CLASS * 8);
     }
     else if(channel->channel_header.ch_class == PHY_CLASS_HI_RATE)
     {
         hw_radio_set_bitrate(BITRATE_H);
-        hw_radio_set_tx_fdev(FDEV_H);
+        if(channel->channel_header.ch_coding != PHY_CODING_CW)
+            hw_radio_set_tx_fdev(FDEV_H);
+        else
+            hw_radio_set_tx_fdev(0);
         hw_radio_set_rx_bw_hz(RXBW_H);
         hw_radio_set_preamble_size(PREAMBLE_HI_RATE_CLASS * 8);
     }
@@ -473,6 +482,8 @@ error_t phy_start_rx(channel_id_t* channel, syncword_class_t syncword_class, rx_
     received_callback = rx_cb;
     // TODO error handling EINVAL, EOFF
 
+    hw_radio_is_idle();
+
     // if we are currently transmitting wait until TX completed before entering RX
     // we return now and go into RX when TX is completed
     if(state == STATE_TX)
@@ -551,6 +562,8 @@ error_t phy_send_packet(hw_radio_packet_t* packet, phy_tx_config_t* config, tx_p
     assert(packet->length <= PACKET_MAX_SIZE);
 
     transmitted_callback = tx_callback;
+
+    hw_radio_is_idle();
 
     if(packet->length == 0)
         return ESIZE;
@@ -729,7 +742,7 @@ static void fill_in_fifo(uint8_t remaining_bytes_len)
     // TODO adapt how we calculate ETA. There is no reason to use current time for each ETA update, we can just use the BG frame duration
     // and a frame counter to determine this.
 
-    if (fg_frame.bg_adv == true)
+    if (fg_frame.bg_adv)
     {
         timer_tick_t current = timer_get_counter_value();
         // DPRINT("fill in fifo, bg adv, currently %d untill %d\n", current, bg_adv.stop_time);
@@ -795,6 +808,8 @@ error_t phy_start_background_scan(phy_rx_config_t* config, rx_packet_callback_t 
 
     //DPRINT("START BG scan @ %i", timer_get_counter_value());
 
+    hw_radio_is_idle();
+
     // We should not initiate a background scan before TX is completed
     assert(state != STATE_TX);
 
@@ -838,6 +853,8 @@ void phy_continuous_tx(phy_tx_config_t const* tx_cfg, uint8_t time_period, tx_pa
     transmitted_callback = tx_cb;
     DPRINT("Continuous tx\n");
 
+    hw_radio_is_idle();
+
     if(state == STATE_RX)
     {
         pending_rx_cfg.channel_id = current_channel_id;
@@ -880,9 +897,9 @@ void phy_continuous_tx(phy_tx_config_t const* tx_cfg, uint8_t time_period, tx_pa
     } else {
         uint8_t payload_len = 0xFF;
         fg_frame.encoded_packet[0] = payload_len;
-        for (uint8_t i = 1; i <= payload_len; i++)
+        for (uint8_t i = 1; i < payload_len; i++)
             fg_frame.encoded_packet[i+1] = i;
+        fg_frame.encoded_length = payload_len;
     }
-
     hw_radio_send_payload(fg_frame.encoded_packet, fg_frame.encoded_length);
 }
