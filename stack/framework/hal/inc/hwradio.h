@@ -66,7 +66,7 @@ typedef enum {
     HW_STATE_STANDBY,       /**< standby mode. The devices is awake but
                              *   not listening to packets. */
     /* add other states if needed */
-} hw_state_t;
+} hw_radio_state_t;
 
 /** \brief The type for the result of a 'hardware' crc check
  *
@@ -414,8 +414,8 @@ bool hw_radio_rssi_valid(void);
  */
 __LINK_C int16_t hw_radio_get_rssi(void);
 
-hw_state_t hw_radio_get_opmode(void);
-void hw_radio_set_opmode(hw_state_t opmode);
+hw_radio_state_t hw_radio_get_opmode(void);
+void hw_radio_set_opmode(hw_radio_state_t opmode);
 
 void hw_radio_set_center_freq(uint32_t center_freq);
 void hw_radio_set_rx_bw_hz(uint32_t bw_hz);
