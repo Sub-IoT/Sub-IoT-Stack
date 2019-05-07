@@ -418,10 +418,10 @@ static alp_status_codes_t process_op_forward(alp_command_t* command, uint8_t* it
       
       err = fifo_pop(&command->alp_command_fifo, &session_config_flags, 1); assert(err == SUCCESS);
       session_config->lorawan_session_config_abp.request_ack=session_config_flags & (1<<requestAckBitLocation);
-      session_config->lorawan_session_config_otaa.adr_enabled=session_config_flags & (1<<adrEnabledLocation);
+      session_config->lorawan_session_config_abp.adr_enabled=session_config_flags & (1<<adrEnabledLocation);
       err = fifo_pop(&command->alp_command_fifo, &session_config->lorawan_session_config_abp.application_port, 1); assert(err == SUCCESS);
-      err = fifo_pop(&command->alp_command_fifo, &session_config->lorawan_session_config_otaa.data_rate, 1); assert(err == SUCCESS);
-
+      err = fifo_pop(&command->alp_command_fifo, &session_config->lorawan_session_config_abp.data_rate, 1); assert(err == SUCCESS);
+      
       err = fifo_pop(&command->alp_command_fifo, session_config->lorawan_session_config_abp.nwkSKey, 16); assert(err == SUCCESS);
       err = fifo_pop(&command->alp_command_fifo, session_config->lorawan_session_config_abp.appSKey, 16); assert(err == SUCCESS);
       err = fifo_pop(&command->alp_command_fifo, (uint8_t*) &session_config->lorawan_session_config_abp.devAddr, 4); assert(err == SUCCESS);
