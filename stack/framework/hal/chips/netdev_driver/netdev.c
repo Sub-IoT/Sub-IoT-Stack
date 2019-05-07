@@ -68,7 +68,7 @@ static void isr_handler(void *arg) {
 }
 
 
-hw_state_t hw_radio_get_opmode() {
+hw_radio_state_t hw_radio_get_opmode() {
     netopt_state_t state;
 
     netdev->driver->get(netdev, NETOPT_STATE, &state, sizeof(netopt_state_t));
@@ -89,7 +89,7 @@ hw_state_t hw_radio_get_opmode() {
     return state;
  }
 
-void hw_radio_set_opmode(hw_state_t opmode) {
+void hw_radio_set_opmode(hw_radio_state_t opmode) {
     netopt_state_t state;
 
     switch(opmode)

@@ -684,7 +684,7 @@ bool hw_radio_is_idle() {
   return true;
 }
 
-hw_state_t hw_radio_get_opmode(void) {
+hw_radio_state_t hw_radio_get_opmode(void) {
   switch(get_opmode()) {
     case OPMODE_TX:
       return HW_STATE_TX;
@@ -746,7 +746,7 @@ void set_state_rx() {
   set_opmode(OPMODE_RX);
 }
 
-void hw_radio_set_opmode(hw_state_t opmode) {
+void hw_radio_set_opmode(hw_radio_state_t opmode) {
   switch(opmode) {
     case HW_STATE_OFF:
     case HW_STATE_SLEEP:
