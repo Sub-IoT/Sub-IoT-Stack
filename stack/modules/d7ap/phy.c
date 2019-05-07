@@ -514,6 +514,8 @@ error_t phy_start_energy_scan(channel_id_t* channel, rssi_valid_callback_t rssi_
     // We should not initiate a RSSI measurement before TX is completed
     assert(state != STATE_TX);
 
+    hw_radio_is_idle();
+
     configure_channel(channel);
     //configure_syncword(syncword_class, channel);
     hw_radio_set_payload_length(0x00); // unlimited length mode
