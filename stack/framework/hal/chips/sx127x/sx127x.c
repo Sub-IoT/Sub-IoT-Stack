@@ -279,7 +279,7 @@ static void set_antenna_switch(opmode_t opmode) {
 }
 
 static inline void flush_fifo() {
-  DPRINT("Flush fifo\n");
+  DPRINT("Flush fifo @ %i\n", timer_get_counter_value());
   write_reg(REG_IRQFLAGS2, RF_IRQFLAGS2_FIFOOVERRUN);
 }
 
@@ -535,7 +535,7 @@ static void fifo_threshold_isr() {
 
     // Restart the reception until upper layer decides to stop it
     reinit_rx(); // restart already before doing decoding so we don't miss packets on low clock speeds
-    hw_radio_set_opmode(HW_STATE_IDLE);
+    hw_radio_set_opmode(HW_STATE_RX);
 
     rx_packet_callback(current_packet);
 
@@ -723,7 +723,6 @@ void set_state_rx() {
     set_opmode(OPMODE_STANDBY); //Restart when changing freq/datarate
     while(!(read_reg(REG_IRQFLAGS1) & 0x80));
   }
-
   state = STATE_RX;
   flush_fifo();
 
@@ -758,12 +757,12 @@ void hw_radio_set_opmode(hw_radio_state_t opmode) {
       set_opmode(OPMODE_SLEEP);
       break;
     case HW_STATE_STANDBY:
-      state = STATE_IDLE;
       set_opmode(OPMODE_STANDBY);
       break;
     case HW_STATE_TX:
       DEBUG_RX_END();
       DEBUG_TX_START();
+      state = STATE_TX;
       set_opmode(OPMODE_TX);
       break;
     case HW_STATE_IDLE:
@@ -841,11 +840,6 @@ error_t hw_radio_send_payload(uint8_t * data, uint16_t len) {
   if(len == 0)
     return ESIZE;
 
-  if(state != STATE_TX) {
-    flush_fifo();
-    state = STATE_TX;
-  }
-
 #ifdef PLATFORM_SX127X_USE_LOW_BAT_SHUTDOWN
   /*activate low battery detector*/
   if(read_reg(REG_IRQFLAGS2) & 0x01){
@@ -903,7 +897,7 @@ error_t hw_radio_send_payload(uint8_t * data, uint16_t len) {
   set_packet_handler_enabled(true);
 
   if(!enable_preloading)
-    set_opmode(OPMODE_TX);
+    hw_radio_set_opmode(HW_STATE_TX);
   else
     enable_preloading = false;
 }

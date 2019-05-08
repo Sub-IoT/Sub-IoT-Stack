@@ -661,6 +661,8 @@ error_t phy_send_packet_with_advertising(hw_radio_packet_t* packet, phy_tx_confi
     transmitted_callback = tx_callback;
     DPRINT("Start the bg advertising for ad-hoc sync before transmitting the FG frame");
 
+    hw_radio_is_idle();
+
     configure_syncword(PHY_SYNCWORD_CLASS0, &config->channel_id);
     configure_channel(&config->channel_id);
     configure_eirp(config->eirp);
