@@ -84,12 +84,10 @@
 #endif
 
 // TODO configurable
-#define LORAWAN_ADR_ENABLED                         1 // TODO configurable?
 #define LORAWAN_PUBLIC_NETWORK_ENABLED              1 // TODO configurable?
 #define LORAWAN_CLASS                               CLASS_A // TODO configurable?
 #define JOINREQ_NBTRIALS                            3
 #define LORAWAN_APP_DATA_BUFF_SIZE                  64 // TODO = max?
-#define LORAWAN_DATARATE                            0 // TODO configurable? assuming ADR for now
 
 typedef enum
 {
@@ -115,6 +113,8 @@ static uint32_t LORAWAN_NETWORK_ID=0; //used for ABP
 
 static uint8_t app_port;
 static bool request_ack;
+bool adr_enabled = true;
+uint8_t datarate = 0; 
 
 static bool next_tx = true;
 static bool use_confirmed_tx = false;
@@ -298,6 +298,8 @@ bool lorawan_abp_is_joined(lorawan_session_config_abp_t* lorawan_session_config)
     return false;
   app_port=lorawan_session_config->application_port;
   request_ack=lorawan_session_config->request_ack;
+  datarate = lorawan_session_config->data_rate;
+  adr_enabled = lorawan_session_config->adr_enabled;
   
   if(activationMethod!=ABP)
   {
@@ -344,6 +346,7 @@ bool lorawan_abp_is_joined(lorawan_session_config_abp_t* lorawan_session_config)
     DPRINT_DATA(lorawan_session_config->appSKey, 16);
     DPRINT("DevAddr: %lu", lorawan_session_config->devAddr);
     DPRINT("LORAWAN_NETWORK_ID: %lu", lorawan_session_config->network_id);
+    DPRINT("Adaptive Data Rate: %d, Data rate: %d", adr_enabled, datarate);
     
     state = STATE_JOINING;
     run_fsm();
@@ -363,6 +366,16 @@ bool lorawan_otaa_is_joined(lorawan_session_config_otaa_t* lorawan_session_confi
   sched_cancel_task(&run_fsm);
   app_port=lorawan_session_config->application_port;
   request_ack=lorawan_session_config->request_ack;
+  datarate = lorawan_session_config->data_rate;
+  
+  if( adr_enabled != lorawan_session_config->adr_enabled)
+  {
+    adr_enabled = lorawan_session_config->adr_enabled;
+    MibRequestConfirm_t mibReq;
+    mibReq.Type = MIB_ADR;
+    mibReq.Param.AdrEnable = adr_enabled;
+    LoRaMacMibSetRequestConfirm( &mibReq );
+  }
   
   if(activationMethod!=OTAA)
   {
@@ -403,6 +416,7 @@ bool lorawan_otaa_is_joined(lorawan_session_config_otaa_t* lorawan_session_confi
     DPRINT_DATA(lorawan_session_config->appEUI, 8);
     DPRINT("AppKey:");
     DPRINT_DATA(lorawan_session_config->appKey, 16);
+    DPRINT("Adaptive Data Rate: %d, Data rate: %d", adr_enabled, datarate);
 
    
     state = STATE_JOINING;
@@ -415,6 +429,16 @@ void lorawan_stack_init_abp(lorawan_session_config_abp_t* lorawan_session_config
   activationMethod=ABP;
   app_port=lorawan_session_config->application_port;
   request_ack=lorawan_session_config->request_ack;
+  datarate = lorawan_session_config->data_rate;
+
+  if( adr_enabled != lorawan_session_config->adr_enabled)
+  {
+    adr_enabled = lorawan_session_config->adr_enabled;
+    MibRequestConfirm_t mibReq;
+    mibReq.Type = MIB_ADR;
+    mibReq.Param.AdrEnable = adr_enabled;
+    LoRaMacMibSetRequestConfirm( &mibReq );
+  }
 
   memcpy(NwkSKey,&lorawan_session_config->nwkSKey ,16);
   memcpy( AppSKey,&lorawan_session_config->appSKey ,16);
@@ -434,6 +458,7 @@ void lorawan_stack_init_abp(lorawan_session_config_abp_t* lorawan_session_config
   DPRINT_DATA(lorawan_session_config->appSKey, 16);
   DPRINT("DevAddr: %lu", lorawan_session_config->devAddr);
   DPRINT("LORAWAN_NETWORK_ID: %lu", lorawan_session_config->network_id);
+  DPRINT("Adaptive Data Rate: %d, Data rate: %d", adr_enabled, datarate);
   
 
   sched_register_task(&run_fsm);
@@ -453,7 +478,7 @@ void lorawan_stack_init_abp(lorawan_session_config_abp_t* lorawan_session_config
 
   MibRequestConfirm_t mibReq;
   mibReq.Type = MIB_ADR;
-  mibReq.Param.AdrEnable = LORAWAN_ADR_ENABLED;
+  mibReq.Param.AdrEnable = lorawan_session_config->adr_enabled;
   LoRaMacMibSetRequestConfirm( &mibReq );
 
   mibReq.Type = MIB_PUBLIC_NETWORK;
@@ -494,6 +519,8 @@ void lorawan_stack_init_otaa(lorawan_session_config_otaa_t* lorawan_session_conf
   activationMethod=OTAA;
   app_port=lorawan_session_config->application_port;
   request_ack=lorawan_session_config->request_ack;
+  datarate = lorawan_session_config->data_rate;
+  adr_enabled = lorawan_session_config->adr_enabled;
 
   memcpy(devEui,&lorawan_session_config->devEUI ,8);
   memcpy( appEui,&lorawan_session_config->appEUI,8);
@@ -510,7 +537,7 @@ void lorawan_stack_init_otaa(lorawan_session_config_otaa_t* lorawan_session_conf
   DPRINT_DATA(lorawan_session_config->appEUI, 8);
   DPRINT("AppKey:");
   DPRINT_DATA(lorawan_session_config->appKey, 16);
-  
+  DPRINT("Adaptive Data Rate: %d, Data rate: %d", adr_enabled, datarate);
 
   sched_register_task(&run_fsm);
   sched_post_task(&run_fsm);
@@ -529,7 +556,7 @@ void lorawan_stack_init_otaa(lorawan_session_config_otaa_t* lorawan_session_conf
 
   MibRequestConfirm_t mibReq;
   mibReq.Type = MIB_ADR;
-  mibReq.Param.AdrEnable = LORAWAN_ADR_ENABLED;
+  mibReq.Param.AdrEnable = lorawan_session_config->adr_enabled;
   LoRaMacMibSetRequestConfirm( &mibReq );
 
   mibReq.Type = MIB_PUBLIC_NETWORK;
@@ -597,7 +624,7 @@ lorawan_stack_error_t lorawan_stack_send(uint8_t* payload, uint8_t length, uint8
     mcpsReq.Type = MCPS_UNCONFIRMED;
     mcpsReq.Req.Unconfirmed.fBuffer = NULL;
     mcpsReq.Req.Unconfirmed.fBufferSize = 0;
-    mcpsReq.Req.Unconfirmed.Datarate = LORAWAN_DATARATE;
+    mcpsReq.Req.Unconfirmed.Datarate = datarate;
     LoRaMacMcpsRequest(&mcpsReq);
     //state = STATE_SLEEP;
     return LORAWAN_STACK_ERROR_TX_NOT_POSSIBLE;
@@ -609,7 +636,7 @@ lorawan_stack_error_t lorawan_stack_send(uint8_t* payload, uint8_t length, uint8
     mcpsReq.Req.Unconfirmed.fPort = app_data.Port;
     mcpsReq.Req.Unconfirmed.fBuffer = app_data.Buff;
     mcpsReq.Req.Unconfirmed.fBufferSize = app_data.BuffSize;
-    mcpsReq.Req.Unconfirmed.Datarate = LORAWAN_DATARATE;
+    mcpsReq.Req.Unconfirmed.Datarate = datarate;
   }
   else
   {
@@ -618,7 +645,7 @@ lorawan_stack_error_t lorawan_stack_send(uint8_t* payload, uint8_t length, uint8
     mcpsReq.Req.Confirmed.fBuffer = app_data.Buff;
     mcpsReq.Req.Confirmed.fBufferSize = app_data.BuffSize;
     mcpsReq.Req.Confirmed.NbTrials = 8;
-    mcpsReq.Req.Confirmed.Datarate = LORAWAN_DATARATE;
+    mcpsReq.Req.Confirmed.Datarate = datarate;
   }
 
   LoRaMacStatus_t status = LoRaMacMcpsRequest(&mcpsReq);
