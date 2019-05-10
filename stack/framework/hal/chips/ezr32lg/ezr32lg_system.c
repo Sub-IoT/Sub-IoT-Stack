@@ -66,6 +66,12 @@ uint64_t hw_get_unique_id()
     return SYSTEM_GetUnique();
 }
 
+
+system_reboot_reason_t hw_system_reboot_reason()
+{
+  return REBOOT_REASON_NOT_IMPLEMENTED; // TODO
+}
+
 void hw_busy_wait(int16_t microseconds)
 {
     // note: uses core debugger cycle counter mechanism for now,
