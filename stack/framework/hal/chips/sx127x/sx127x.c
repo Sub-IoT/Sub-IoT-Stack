@@ -132,11 +132,6 @@
   #error "Invalid configuration"
 #endif
 
-static const uint16_t rx_bw_startup_time[21] = {63, 74, 85, 71, 84, 97, 119, 144, 169, 215, 264, 313, 
-  407, 504, 601, 791, 984, 1180, 1560, 1940, 2330};
-
-static uint8_t rx_bw_number = 21;
-
 typedef enum {
   OPMODE_SLEEP = 0,
   OPMODE_STANDBY = 1,
@@ -796,7 +791,6 @@ void hw_radio_set_rx_bw_hz(uint32_t bw_hz) {
       if(abs(computed_bw - bw_hz) < min_bw_dif) {
         min_bw_dif = abs(computed_bw - bw_hz);
         reg_bw = ((((bw_mant_count - 16) / 4) << 3) | bw_exp_count);
-        rx_bw_number = (bw_exp_count - 1) * 3 + ((bw_mant_count - 16) >> 2);
       }
     }
   }
@@ -980,8 +974,6 @@ __attribute__((weak)) void hw_radio_io_deinit() {
 int16_t hw_radio_get_rssi() {
     hw_radio_set_opmode(HW_STATE_RX);
     hw_gpio_disable_interrupt(SX127x_DIO1_PIN);
-    assert(rx_bw_number < 21);
-    hw_busy_wait(rx_bw_startup_time[rx_bw_number]); //time to let it start up
-    while(!read_reg(REG_IRQFLAGS1) & 0x08);
+    while(!(read_reg(REG_IRQFLAGS1) & 0x08));
     return (- read_reg(REG_RSSIVALUE) >> 1);
 }
