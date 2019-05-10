@@ -270,6 +270,8 @@ error_t phy_start_rx(channel_id_t *channel, syncword_class_t syncword_class, rx_
  */
 error_t phy_start_energy_scan(channel_id_t *channel, rssi_valid_callback_t rssi_cb, int16_t scan_duration);
 
+void phy_switch_to_sleep_mode(void);
+void phy_switch_to_standby_mode(void);
 
 #endif //__HW_RADIO_H_
 
