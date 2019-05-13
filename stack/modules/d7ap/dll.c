@@ -294,7 +294,7 @@ void start_background_scan()
 
     phy_rx_config_t config = {
         .channel_id = current_channel_id,
-        .rssi_thr = - E_CCA,
+        .rssi_thr = E_CCA,
     };
     phy_start_background_scan(&config, &dll_signal_packet_received);
 }
@@ -751,7 +751,7 @@ void dll_execute_scan_automation(void *arg)
         if (tx_nf_method == D7ADLL_FIXED_NOISE_FLOOR)
         {
             //Use the default channel CCA threshold
-            E_CCA = current_access_profile.subbands[0].cca; // Eccao is set to 0 dB
+            E_CCA = - current_access_profile.subbands[0].cca; // Eccao is set to 0 dB
             DPRINT("E_CCA %i", E_CCA);
         }
 
@@ -967,7 +967,7 @@ void dll_tx_frame(packet_t* packet)
         if (tx_nf_method == D7ADLL_FIXED_NOISE_FLOOR)
         {
             //Use the default channel CCA threshold
-            E_CCA = remote_access_profile.subbands[0].cca; // Eccao is set to 0 dB
+            E_CCA = - remote_access_profile.subbands[0].cca; // Eccao is set to 0 dB
             DPRINT("E_CCA %i", E_CCA);
         }
         else
