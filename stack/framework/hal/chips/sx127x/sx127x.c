@@ -20,6 +20,8 @@
  *
  * Driver for sx127x
  *
+ * @author philippe.nunes@cortus.com
+ * @author liam.oorts@aloxy.io
  * @author glenn.ergeerts@uantwerpen.be
  */
 
