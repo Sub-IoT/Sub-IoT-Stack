@@ -416,12 +416,12 @@ static void cca_rssi_valid(int16_t cur_rssi)
     {
         if (dll_state == DLL_STATE_CCA1)
         {
+            phy_switch_to_standby_mode(); //~400µs before in standby
             DPRINT("CCA1 RSSI: %d", cur_rssi);
             switch_state(DLL_STATE_CCA2);
 
             // execute CCA2 directly after busy wait instead of scheduling this, to prevent another long running
             // scheduled task to interfer with this timer (for instance d7asp_received_unsollicited_data_cb() )
-            phy_switch_to_sleep_mode();
             hw_busy_wait(5000);
             execute_cca(NULL);
             return;
