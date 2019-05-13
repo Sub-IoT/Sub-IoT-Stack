@@ -460,7 +460,7 @@ int fs_read_file(uint8_t file_id, uint32_t offset, uint8_t* buffer, uint32_t len
     blockdevice_read(bd[storage], buffer, files[file_id].addr + offset, length);
 #endif
 
-    DPRINT("fs read_file(file_id %d, offset %d, addr %p, length%d)",file_id, offset, files[file_id].addr, length);
+    DPRINT("fs read_file(file_id %d, offset %d, addr %p, length %d)",file_id, offset, files[file_id].addr, length);
     return 0;
 }
 
