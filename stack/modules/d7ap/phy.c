@@ -1,7 +1,7 @@
 /* * OSS-7 - An opensource implementation of the DASH7 Alliance Protocol for ultra
  * lowpower wireless sensor communication
  *
- * Copyright 2017 CORTUS
+ * Copyright 2019 CORTUS, Aloxy
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,6 +16,8 @@
  * limitations under the License.
  *
  * @author philippe.nunes@cortus.com
+ * @author liam.oorts@aloxy.io
+ * @author glenn.ergeerts@aloxy.io
  */
 
 #include <stdlib.h>
