@@ -148,7 +148,7 @@ int d7ap_fs_init_file_with_d7asp_interface_config(uint8_t file_id, const d7ap_se
 
   d7ap_fs_file_header_t file_header = (d7ap_fs_file_header_t){
     .file_properties.action_protocol_enabled = 0,
-    .file_properties.storage_class = FS_STORAGE_VOLATILE,
+    .file_properties.storage_class = FS_STORAGE_PERMANENT,
     .file_permissions = 0, // TODO
     .length = sizeof(d7ap_session_config_t),
     .allocated_length = sizeof(d7ap_session_config_t),

@@ -92,7 +92,7 @@ void init_user_files()
 
   d7ap_fs_file_header_t action_file_header = (d7ap_fs_file_header_t){
     .file_properties.action_protocol_enabled = 0,
-    .file_properties.storage_class = FS_STORAGE_VOLATILE,
+    .file_properties.storage_class = FS_STORAGE_PERMANENT,
     .file_permissions = 0, // TODO
     .length = sizeof(alp_command),
     .allocated_length = ACTION_FILE_SIZE,
@@ -125,7 +125,7 @@ void init_user_files()
   d7ap_fs_file_header_t file_header = (d7ap_fs_file_header_t){
     .file_properties.action_protocol_enabled = 1,
     .file_properties.action_condition = D7A_ACT_COND_WRITE,
-    .file_properties.storage_class = FS_STORAGE_PERMANENT,
+    .file_properties.storage_class = FS_STORAGE_VOLATILE,
     .file_permissions = 0, // TODO
     .action_file_id = ACTION_FILE_ID,
     .interface_file_id = INTERFACE_FILE_ID,
