@@ -426,9 +426,9 @@ static void bg_scan_rx_done()
 
 static void dio0_isr(pin_id_t pin_id, uint8_t event_mask) {
   if(state == STATE_RX) {
-    bg_scan_rx_done();
+    sched_post_task(&bg_scan_rx_done);
   } else {
-    packet_transmitted_isr();
+    sched_post_task(&packet_transmitted_isr);
   }
 }
 
@@ -557,9 +557,9 @@ static void fifo_threshold_isr() {
 
 static void dio1_isr(pin_id_t pin_id, uint8_t event_mask) {
     if(state == STATE_RX) {
-      fifo_threshold_isr();
+      sched_post_task(&fifo_threshold_isr);
     } else {
-      fifo_level_isr();
+      sched_post_task(&fifo_level_isr);
     }
 }
 
@@ -653,6 +653,11 @@ error_t hw_radio_init(hwradio_init_args_t* init_args) {
   DPRINT("inited sx127x");
 
   sched_register_task(&hw_radio_set_idle);
+
+  sched_register_task(&bg_scan_rx_done);
+  sched_register_task(&packet_transmitted_isr);
+  sched_register_task(&fifo_threshold_isr);
+  sched_register_task(&fifo_level_isr);
 
   return SUCCESS; // TODO FAIL return code
 }
