@@ -397,7 +397,7 @@ int _fs_create_file(uint8_t file_id, fs_storage_class_t storage_class, const uin
     // update file caching for stat lookup
     files[file_id].storage = storage_class;
     files[file_id].length = length;
-    DPRINT("fs init file(file_id %d, storage %d, addr %p, length%d)",file_id, storage_class, files[file_id].addr, length);
+    DPRINT("fs init file(file_id %d, storage %d, addr %p, length %d)",file_id, storage_class, files[file_id].addr, length);
     return 0;
 }
 
@@ -406,6 +406,7 @@ int fs_init_file(uint8_t file_id, fs_storage_class_t storage_class, const uint8_
     assert(is_fs_init_completed);
     assert(file_id < FRAMEWORK_FS_FILE_COUNT);
     assert(file_id >= 0x40); // system files may not be inited
+    assert(storage_class == FS_STORAGE_VOLATILE || storage_class == FS_STORAGE_PERMANENT); // other options not implemented
 
     return (_fs_create_file(file_id, storage_class, initial_data, length));
 }
