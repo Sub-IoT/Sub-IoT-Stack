@@ -76,7 +76,8 @@ void execute_sensor_measurement()
 #endif
 
   temperature = __builtin_bswap16(temperature); // need to store in big endian in fs
-  d7ap_fs_write_file(SENSOR_FILE_ID, 0, (uint8_t*)&temperature, SENSOR_FILE_SIZE);
+  int rc = d7ap_fs_write_file(SENSOR_FILE_ID, 0, (uint8_t*)&temperature, SENSOR_FILE_SIZE);
+  assert(rc == 0);
 
   timer_post_task_delay(&execute_sensor_measurement, SENSOR_INTERVAL_SEC);
 }
@@ -86,24 +87,12 @@ void init_user_files()
   // file 0x40: contains our sensor data
   d7ap_fs_file_header_t sensor_file_header = (d7ap_fs_file_header_t){
       .file_properties.action_protocol_enabled = 0,
+      .file_properties.storage_class = FS_STORAGE_VOLATILE,
       .length = SENSOR_FILE_SIZE,
+      .allocated_length = SENSOR_FILE_SIZE,
   };
 
   d7ap_fs_init_file(SENSOR_FILE_ID, &sensor_file_header, NULL);
-
-  // file 0x41: reserved file (for example action file)
-  // TODO this can be removed when we support creating files post init
-  d7ap_fs_file_header_t file_header = (d7ap_fs_file_header_t){
-      .file_properties.action_protocol_enabled = 0,
-      .length = 11,
-  };
-
-  d7ap_fs_init_file(0x41, &file_header, NULL);
-
-  // file 0x42: reserved file for interface configuration
-  // TODO this can be removed when we support creating files post init
-  d7ap_session_config_t session_config;
-  d7ap_fs_init_file_with_d7asp_interface_config(0x42, &session_config);
 }
 
 void bootstrap()
