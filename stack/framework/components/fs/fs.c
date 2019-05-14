@@ -33,6 +33,7 @@
 #include "fs.h"
 #include "errors.h"
 #include "platform.h"
+#include "hwblockdevice.h"
 
 #if defined(FRAMEWORK_LOG_ENABLED) && defined(FRAMEWORK_FS_LOG_ENABLED)
   #define DPRINT(...) log_print_string( __VA_ARGS__)
