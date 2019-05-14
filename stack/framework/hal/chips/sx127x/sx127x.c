@@ -188,6 +188,7 @@ static bool enable_refill = false;
 static bool enable_preloading = false;
 static uint8_t remaining_bytes_len = 0;
 static uint8_t previous_threshold = 0;
+static bool io_inited = false;
 
 static uint8_t read_reg(uint8_t addr) {
   spi_select(sx127x_spi);
@@ -199,6 +200,11 @@ static uint8_t read_reg(uint8_t addr) {
 }
 
 static void write_reg(uint8_t addr, uint8_t value) {
+  if(!io_inited){
+    hw_radio_io_init();
+    spi_enable(spi_handle);
+    io_inited = true;
+  }
   spi_select(sx127x_spi);
   spi_exchange_byte(sx127x_spi, addr | 0x80); // send address with bit 8 high to signal a write operation
   spi_exchange_byte(sx127x_spi, value);
@@ -582,8 +588,8 @@ static void resume_from_sleep_mode() {
 
   DPRINT("resuming from sleep mode");
   hw_radio_io_init();
-
   spi_enable(spi_handle);
+  io_inited = true;
 }
 
 
@@ -621,6 +627,7 @@ error_t hw_radio_init(hwradio_init_args_t* init_args) {
 
   spi_enable(spi_handle);
   hw_radio_io_init();
+  io_inited = true;
   hw_radio_reset();
 
   set_opmode(OPMODE_STANDBY);
@@ -672,6 +679,7 @@ error_t hw_radio_set_idle() {
     hw_radio_set_opmode(HW_STATE_SLEEP);
     spi_disable(spi_handle);
     hw_radio_io_deinit();
+    io_inited = false;
     DEBUG_RX_END();
     DEBUG_TX_END();
 }
@@ -679,11 +687,8 @@ error_t hw_radio_set_idle() {
 bool hw_radio_is_idle() {
   if(state != STATE_IDLE)
     return false;
-  
-  hw_radio_io_init();
-
-  spi_enable(spi_handle);
-  return true;
+  else
+    return true;
 }
 
 hw_radio_state_t hw_radio_get_opmode(void) {

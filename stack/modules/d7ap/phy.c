@@ -484,8 +484,6 @@ error_t phy_start_rx(channel_id_t* channel, syncword_class_t syncword_class, rx_
     received_callback = rx_cb;
     // TODO error handling EINVAL, EOFF
 
-    hw_radio_is_idle();
-
     // if we are currently transmitting wait until TX completed before entering RX
     // we return now and go into RX when TX is completed
     if(state == STATE_TX)
@@ -515,8 +513,6 @@ error_t phy_start_energy_scan(channel_id_t* channel, rssi_valid_callback_t rssi_
 {
     // We should not initiate a RSSI measurement before TX is completed
     assert(state != STATE_TX);
-
-    hw_radio_is_idle();
 
     configure_channel(channel);
     //configure_syncword(syncword_class, channel);
@@ -566,8 +562,6 @@ error_t phy_send_packet(hw_radio_packet_t* packet, phy_tx_config_t* config, tx_p
     assert(packet->length <= PACKET_MAX_SIZE);
 
     transmitted_callback = tx_callback;
-
-    hw_radio_is_idle();
 
     if(packet->length == 0)
         return ESIZE;
@@ -662,8 +656,6 @@ error_t phy_send_packet_with_advertising(hw_radio_packet_t* packet, phy_tx_confi
 {   
     transmitted_callback = tx_callback;
     DPRINT("Start the bg advertising for ad-hoc sync before transmitting the FG frame");
-
-    hw_radio_is_idle();
 
     configure_syncword(PHY_SYNCWORD_CLASS0, &config->channel_id);
     configure_channel(&config->channel_id);
@@ -814,8 +806,6 @@ error_t phy_start_background_scan(phy_rx_config_t* config, rx_packet_callback_t 
 
     //DPRINT("START BG scan @ %i", timer_get_counter_value());
 
-    hw_radio_is_idle();
-
     // We should not initiate a background scan before TX is completed
     assert(state != STATE_TX);
 
@@ -858,8 +848,6 @@ void phy_continuous_tx(phy_tx_config_t const* tx_cfg, uint8_t time_period, tx_pa
 {
     transmitted_callback = tx_cb;
     DPRINT("Continuous tx\n");
-
-    hw_radio_is_idle();
 
     if(state == STATE_RX)
     {
