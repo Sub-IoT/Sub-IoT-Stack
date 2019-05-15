@@ -87,7 +87,7 @@ void init_user_files()
   // file 0x40: contains our sensor data
   d7ap_fs_file_header_t sensor_file_header = (d7ap_fs_file_header_t){
       .file_properties.action_protocol_enabled = 0,
-      .file_properties.storage_class = FS_STORAGE_VOLATILE,
+      .file_properties.storage_class = FS_STORAGE_PERMANENT,
       .length = SENSOR_FILE_SIZE,
       .allocated_length = SENSOR_FILE_SIZE,
   };
