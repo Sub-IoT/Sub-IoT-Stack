@@ -29,9 +29,18 @@
 #define ENGINEERING_MODE_H
 
 #include "types.h"
+#include "phy.h"
+
+typedef struct __attribute__((__packed__))
+{
+  uint8_t mode;
+  uint8_t flags;
+  uint8_t timeout;
+  channel_id_t channel_id;
+  int8_t eirp;
+} d7ap_fs_engineering_mode_t;
 
 error_t engineering_mode_init(); 
-
 
 #endif //ENGINEERING_MODE_H
 

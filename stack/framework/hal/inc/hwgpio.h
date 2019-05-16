@@ -80,17 +80,17 @@ enum
  * are called in interrupt context and that any processing therefore needs to be as minimal
  * as possible.
  *
- * \param pin_id	The pin_id of the pin on which the event occurred
- * \param event_mask	A mask indicating which events occurred. The event_mask can
- *			be one of thesevalues:
- *			  - 0: if a rising/falling edge interrupt was triggered
- *			       but the MCU is not capable of RELIABLY reporting which one
- *			  - GPIO_RISING_EDGE: if a rising edge was detected on the GPIO pin
- *			  - GPIO_FALLING_EDGE: if a falling edge was detected on the GPIO pin
- *			  - (GPIO_RISING_EDGE | GPIO_FALLING_EDGE): if both a rising and a falling
- *				edge were detected before the callback could be fired.
+ * \param arg    Optional argument for the callback
  */
-typedef void (*gpio_inthandler_t)(pin_id_t pin_id, uint8_t event_mask);
+typedef void (*gpio_cb_t)(void *arg);
+
+/**
+ * @brief   Default interrupt context for GPIO pins
+ */
+typedef struct {
+	gpio_cb_t cb;           /**< interrupt callback */
+    void *arg;              /**< optional argument */
+} gpio_isr_ctx_t;
 
 /*! \brief Set the output of a GPIO pin to 'high'
  * 
@@ -187,9 +187,6 @@ __LINK_C bool hw_gpio_get_in(pin_id_t pin_id);
  * this function.
  *
  * \param pin_id	The id of the GPIO pin on which to configure the interrupt
- * \param callback	The function to call when the interrupt occurs. Please note that
- * 			this function is called from an interrupt context and that all processing
- *			should therefore be as minimal as possible.
  * \param event_mask	A bitmask of the events that should be captured. The event_mask can
  *			be one of three values:
  *			  - 0: no events will be captured
@@ -197,15 +194,19 @@ __LINK_C bool hw_gpio_get_in(pin_id_t pin_id);
  *			  - GPIO_FALLING_EDGE: capture falling edge events only
  *			  - (GPIO_RISING_EDGE | GPIO_FALLING_EDGE): capture both
  *				rising and falling edge events.
- * \return error_t	SUCCESS if the GPIO interrupt was configured successfully
+ *	\param callback	The function to call when the interrupt occurs. Please note that
+ *			this function is called from an interrupt context and that all processing
+ *			should therefore be as minimal as possible.
+ *	\param arg The parameter to pass to the callback function.
+ *	\return error_t	SUCCESS if the GPIO interrupt was configured successfully
  *			EOFF if the selected GPIO pin does not support GPIO interrupts
  *			EINVALID if the MCU does not support the event_mask specified
  *			         or if the supplied callback is 0x0
  *			EBUSY if the callback function does not match the callback
  *			      function of an earlier call to this function
  */
-__LINK_C error_t hw_gpio_configure_interrupt(pin_id_t pin_id, gpio_inthandler_t callback, uint8_t event_mask);
-
+__LINK_C error_t hw_gpio_configure_interrupt(pin_id_t pin_id, uint8_t event_mask,
+                                             gpio_cb_t callback, void *arg);
 /*! \brief Enable the interrupts for a specific GPIO pin.
  *
  * Please note that hw_gpio_configure_interrupt() must be called before the interrupt

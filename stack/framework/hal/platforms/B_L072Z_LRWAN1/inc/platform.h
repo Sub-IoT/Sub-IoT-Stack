@@ -49,7 +49,7 @@
 
 #define BUTTON0           PIN(1, 2)
 
-#ifdef USE_SX127X
+#if defined(USE_SX127X) || defined(USE_NETDEV_DRIVER)
   // TODO tmp
   #define SX127x_SPI_INDEX  0
   #define SX127x_SPI_PIN_CS  PIN(0, 15)
@@ -67,6 +67,7 @@
   #endif
 #endif
 
+// TODO temp disabled, until set_antenna_switch() is ported 
 #define PLATFORM_USE_ABZ // this platform is based on the Murata ABZ module
 // Antenna switching uses 3 pins on murata ABZ module
 #define ABZ_ANT_SW_RX_PIN PIN(0, 1)

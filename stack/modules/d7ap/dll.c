@@ -18,23 +18,26 @@
 
 
 #include "log.h"
-#include "hwradio.h"
-#include "packet_queue.h"
-#include "packet.h"
-#include "dll.h"
 #include "crc.h"
 #include "debug.h"
 #include "d7ap_fs.h"
 #include "ng.h"
-#include "hwdebug.h"
 #include "random.h"
-#include "MODULE_D7AP_defs.h"
-#include "hwatomic.h"
 #include "compress.h"
 #include "fec.h"
 #include "errors.h"
 #include "timer.h"
 #include "engineering_mode.h"
+
+#include "phy.h"
+#include "packet_queue.h"
+#include "packet.h"
+#include "dll.h"
+
+#include "hwdebug.h"
+#include "hwatomic.h"
+
+#include "MODULE_D7AP_defs.h"
 
 #if defined(FRAMEWORK_LOG_ENABLED) && defined(MODULE_D7AP_DLL_LOG_ENABLED)
 #define DPRINT(...) log_print_stack_string(LOG_STACK_DLL, __VA_ARGS__)
@@ -121,23 +124,6 @@ static bool NGDEF(_guarded_channel);
 static void execute_cca(void *arg);
 static void execute_csma_ca(void *arg);
 static void start_foreground_scan();
-static void packet_received(hw_radio_packet_t* hw_radio_packet);
-
-static hw_radio_packet_t* alloc_new_packet(uint8_t length)
-{
-    // note we don't use length because in the current implementation the packets in the queue are of
-    // fixed (maximum) size
-    packet_t* packet = packet_queue_alloc_packet();
-    if(packet)
-      return &packet->hw_radio_packet;
-
-    return NULL;
-}
-
-static void release_packet(hw_radio_packet_t* hw_radio_packet)
-{
-    packet_queue_free_packet(packet_queue_find_packet(hw_radio_packet));
-}
 
 /*!
  * D7A timer used to perform a CCA
@@ -295,7 +281,6 @@ void start_guard_period(timer_tick_t period)
     DPRINT("guard channel");
     guarded_channel = true;
     dll_guard_period_expiration_timer.next_event = period;
-    dll_guard_period_expiration_timer.priority = MAX_PRIORITY;
     timer_add_event(&dll_guard_period_expiration_timer);
 }
 
@@ -305,15 +290,13 @@ void start_background_scan()
 
     // Start a new tsched timer
     dll_background_scan_timer.next_event = tsched;
-    dll_background_scan_timer.priority = MAX_PRIORITY;
     timer_add_event(&dll_background_scan_timer);
 
-    hw_rx_cfg_t rx_cfg = {
+    phy_rx_config_t config = {
         .channel_id = current_channel_id,
-        .syncword_class = PHY_SYNCWORD_CLASS0,
-       };
-
-    hw_radio_start_background_scan(&rx_cfg, &packet_received, - E_CCA);
+        .rssi_thr = - E_CCA,
+    };
+    phy_start_background_scan(&config, &dll_signal_packet_received);
 }
 
 void dll_stop_background_scan()
@@ -324,39 +307,17 @@ void dll_stop_background_scan()
     hw_radio_set_idle();
 }
 
-static void process_received_packets(void *arg)
+void dll_signal_packet_received(packet_t* packet)
 {
-    if (is_tx_busy())
-    {
-        // this task might be scheduled while a TX is busy (for example after scheduling an execute_cca()).
-        // make sure we don't start processing this packet before the TX is completed.
-        // will be rescheduled by packet_transmitted() or an CSMA failed.
-        process_received_packets_after_tx = true;
-        return;
-    }
-
-    packet_t* packet = packet_queue_get_received_packet();
+    assert((dll_state == DLL_STATE_IDLE && process_received_packets_after_tx) || dll_state == DLL_STATE_FOREGROUND_SCAN || dll_state == DLL_STATE_SCAN_AUTOMATION);
     assert(packet != NULL);
     DPRINT("Processing received packet");
 
-    if (packet->hw_radio_packet.rx_meta.rx_cfg.syncword_class == PHY_SYNCWORD_CLASS0)
-        packet->type = BACKGROUND_ADV;
-
-    packet_queue_mark_processing(packet);
-    packet_disassemble(packet);
-
-    // TODO check if more received packets are pending
-}
-
-static void packet_received(hw_radio_packet_t* hw_radio_packet)
-{
-    assert(dll_state == DLL_STATE_FOREGROUND_SCAN || dll_state == DLL_STATE_SCAN_AUTOMATION);
-
-    if (hw_radio_packet->rx_meta.rx_cfg.syncword_class == PHY_SYNCWORD_CLASS1)
+    if (packet->type != BACKGROUND_ADV)
     {
         uint16_t tx_duration = phy_calculate_tx_duration(current_channel_id.channel_header.ch_class,
                                                          current_channel_id.channel_header.ch_coding,
-                                                         hw_radio_packet->length + 1, false);
+                                                         packet->hw_radio_packet.length + 1, false);
         // If the first transmission duration is greater than or equal to the Guard Interval TG,
         // the channel guard period is extended by TG following the transmission.
         if (tx_duration >= t_g)
@@ -367,21 +328,35 @@ static void packet_received(hw_radio_packet_t* hw_radio_packet)
         guarded_channel = true;
     }
 
-    // we are in interrupt context here, so mark packet for further processing,
-    // schedule it and return
-    DPRINT("packet received @ %i , RSSI = %i", hw_radio_packet->rx_meta.timestamp, hw_radio_packet->rx_meta.rssi);
-    packet_queue_mark_received(hw_radio_packet);
+    if (is_tx_busy())
+    {
+        // this notification might be received while a TX is busy (for example after scheduling an execute_cca()).
+        // make sure we don't start processing this packet before the TX is completed.
+        // will be invoked again by packet_transmitted() or an CSMA failed.
+        DPRINT("Postpone the processing of the received packet after Tx is completed");
+        process_received_packets_after_tx = true;
+        dll_process_received_packet_timer.arg = packet;
+        return;
+    }
 
-    /* the received packet needs to be handled in priority */
-    dll_process_received_packet_timer.next_event = 0;
-    dll_process_received_packet_timer.priority = MAX_PRIORITY;
-    assert(timer_add_event(&dll_process_received_packet_timer) == SUCCESS);
+    packet_queue_mark_processing(packet);
+    packet_disassemble(packet);
+
+    // TODO check if more received packets are pending
 }
 
-static void notify_transmitted_packet(void *arg)
+void dll_signal_packet_transmitted(packet_t* packet)
 {
-    packet_t* packet = (packet_t*)arg;
-    assert(packet != NULL);
+    assert(dll_state == DLL_STATE_TX_FOREGROUND);
+    switch_state(DLL_STATE_TX_FOREGROUND_COMPLETED);
+    DPRINT("Transmitted packet @ %i with length = %i", packet->hw_radio_packet.tx_meta.timestamp, packet->hw_radio_packet.length);
+  
+    if (packet->tx_duration >= t_g )
+    {
+        start_guard_period(t_g);
+    }
+    else
+        start_guard_period(t_g - packet->tx_duration);
 
     switch_state(DLL_STATE_IDLE);
     d7anp_signal_packet_transmitted(packet);
@@ -389,8 +364,8 @@ static void notify_transmitted_packet(void *arg)
     if (process_received_packets_after_tx)
     {
         dll_process_received_packet_timer.next_event = 0;
-        dll_process_received_packet_timer.priority = MAX_PRIORITY;
-        assert(timer_add_event(&dll_process_received_packet_timer) == SUCCESS);
+        error_t rtc = timer_add_event(&dll_process_received_packet_timer);
+        assert(rtc == SUCCESS);
         process_received_packets_after_tx = false;
     }
 
@@ -399,25 +374,6 @@ static void notify_transmitted_packet(void *arg)
         start_foreground_scan();
         resume_fg_scan = false;
     }
-}
-
-void packet_transmitted(hw_radio_packet_t* hw_radio_packet)
-{
-    assert(dll_state == DLL_STATE_TX_FOREGROUND);
-    switch_state(DLL_STATE_TX_FOREGROUND_COMPLETED);
-    DPRINT("Transmitted packet @ %i with length = %i", hw_radio_packet->tx_meta.timestamp, hw_radio_packet->length);
-
-    packet_t* packet = packet_queue_mark_transmitted(hw_radio_packet);
-
-    if (packet->tx_duration >= t_g )
-    {
-        start_guard_period(t_g);
-    }
-    else
-        start_guard_period(t_g - packet->tx_duration);
-
-    /* the notification task needs to be handled in priority */
-    sched_post_task_prio(&notify_transmitted_packet, MAX_PRIORITY, packet);
 }
 
 static void discard_tx()
@@ -443,7 +399,6 @@ static void discard_tx()
     {
         timer_cancel_event(&dll_guard_period_expiration_timer);
         guarded_channel = false;
-        sched_cancel_task(&notify_transmitted_packet);
     }
 
     switch_state(DLL_STATE_IDLE);
@@ -487,11 +442,14 @@ static void cca_rssi_valid(int16_t cur_rssi)
                 uint8_t dll_header_bg_frame[2];
                 dll_assemble_packet_header_bg(current_packet, dll_header_bg_frame);
 
-                err = hw_radio_send_packet(&current_packet->hw_radio_packet, &packet_transmitted, current_packet->ETA, dll_header_bg_frame);
+                err = phy_send_packet_with_advertising(&current_packet->hw_radio_packet,
+                                                       &current_packet->phy_config.tx,
+                                                       dll_header_bg_frame, current_packet->ETA,
+                                                       &dll_signal_packet_transmitted);
             }
             else
             {
-                err = hw_radio_send_packet(&current_packet->hw_radio_packet, &packet_transmitted, 0, NULL);
+                err = phy_send_packet(&current_packet->hw_radio_packet, &current_packet->phy_config.tx, &dll_signal_packet_transmitted);
             }
 
             assert(err == SUCCESS);
@@ -513,12 +471,7 @@ static void execute_cca(void *arg)
 
     assert(dll_state == DLL_STATE_CCA1 || dll_state == DLL_STATE_CCA2);
 
-    hw_rx_cfg_t rx_cfg =(hw_rx_cfg_t){
-        .channel_id = current_channel_id,
-        .syncword_class = PHY_SYNCWORD_CLASS1,
-    };
-
-    hw_radio_set_rx(&rx_cfg, NULL, &cca_rssi_valid);
+    phy_start_energy_scan(&current_channel_id, cca_rssi_valid, 160);
 }
 
 static void execute_csma_ca(void *arg)
@@ -537,7 +490,8 @@ static void execute_csma_ca(void *arg)
     {
         DPRINT("Guarded channel, UNC CSMA-CA");
         switch_state(DLL_STATE_TX_FOREGROUND);
-        assert(hw_radio_send_packet(&current_packet->hw_radio_packet, &packet_transmitted, 0, NULL) == SUCCESS);
+        error_t rtc = phy_send_packet(&current_packet->hw_radio_packet, &current_packet->phy_config.tx, &dll_signal_packet_transmitted);
+        assert(rtc == SUCCESS);
         return;
     }
 
@@ -625,15 +579,15 @@ static void execute_csma_ca(void *arg)
             {
                 switch_state(DLL_STATE_CCA1);
                 dll_cca_timer.next_event = t_offset;
-                dll_cca_timer.priority = MAX_PRIORITY;
-                assert(timer_add_event(&dll_cca_timer) == SUCCESS);
+                error_t rtc = timer_add_event(&dll_cca_timer);
+                assert(rtc == SUCCESS);
             }
             else
             {
                 switch_state(DLL_STATE_CCA1);
                 dll_cca_timer.next_event = 0;
-                dll_cca_timer.priority = MAX_PRIORITY;
-                assert(timer_add_event(&dll_cca_timer) == SUCCESS);
+                error_t rtc = timer_add_event(&dll_cca_timer);
+                assert(rtc == SUCCESS);
             }
 
             break;
@@ -648,8 +602,8 @@ static void execute_csma_ca(void *arg)
                 DPRINT("CCA fail because dll_to = %i", dll_to);
                 switch_state(DLL_STATE_CCA_FAIL);
                 dll_csma_timer.next_event = 0;
-                dll_csma_timer.priority = MAX_PRIORITY;
-                assert(timer_add_event(&dll_csma_timer) == SUCCESS);
+                error_t rtc = timer_add_event(&dll_csma_timer);
+                assert(rtc == SUCCESS);
                 break;
             }
 
@@ -699,8 +653,8 @@ static void execute_csma_ca(void *arg)
             }
 
             switch_state(DLL_STATE_CCA1);
-            dll_cca_timer.priority = MAX_PRIORITY;
-            assert(timer_add_event(&dll_cca_timer) == SUCCESS);
+            error_t rtc = timer_add_event(&dll_cca_timer);
+            assert(rtc == SUCCESS);
             break;
         }
         case DLL_STATE_CCA_FAIL:
@@ -711,8 +665,8 @@ static void execute_csma_ca(void *arg)
             if (process_received_packets_after_tx)
             {
                 dll_process_received_packet_timer.next_event = 0;
-                dll_process_received_packet_timer.priority = MAX_PRIORITY;
-                assert(timer_add_event(&dll_process_received_packet_timer) == SUCCESS);
+                error_t rtc = timer_add_event(&dll_process_received_packet_timer);
+                assert(rtc == SUCCESS);
                 process_received_packets_after_tx = false;
             }
 
@@ -735,13 +689,6 @@ void dll_execute_scan_automation(void *arg)
     // since they might not be necessary for current active class anymore
     timer_cancel_event(&dll_background_scan_timer);
 
-    uint8_t scan_access_class = d7ap_fs_read_dll_conf_active_access_class();
-    if (active_access_class != scan_access_class)
-    {
-        d7ap_fs_read_access_class(ACCESS_SPECIFIER(scan_access_class), &current_access_profile);
-        active_access_class = scan_access_class;
-    }
-
     DPRINT("DLL execute scan autom AC=0x%02x", active_access_class);
 
     /*
@@ -762,11 +709,9 @@ void dll_execute_scan_automation(void *arg)
     }
 
     switch_state(DLL_STATE_SCAN_AUTOMATION);
-    hw_rx_cfg_t rx_cfg = {
-        .channel_id = {
-            .channel_header_raw = current_access_profile.channel_header_raw,
-            .center_freq_index = current_access_profile.subbands[0].channel_index_start
-        },
+    phy_rx_config_t rx_cfg = {
+        .channel_id.channel_header_raw = current_access_profile.channel_header_raw,
+        .channel_id.center_freq_index = current_access_profile.subbands[0].channel_index_start,
     };
 
     // The Scan Automation TSCHED is obtained as the minimum of all selected subprofiles' TSCHED.
@@ -793,11 +738,13 @@ void dll_execute_scan_automation(void *arg)
     if (tsched == 0)
     {
         rx_cfg.syncword_class = PHY_SYNCWORD_CLASS1;
-        hw_radio_set_rx(&rx_cfg, &packet_received, NULL);
+        current_channel_id = rx_cfg.channel_id;
+        phy_start_rx(&current_channel_id, PHY_SYNCWORD_CLASS1, &dll_signal_packet_received);
     }
     else
     {
         rx_cfg.syncword_class = PHY_SYNCWORD_CLASS0;
+        current_channel_id = rx_cfg.channel_id;
 
         // compute Ecca = NF + Eccao
         if (tx_nf_method == D7ADLL_FIXED_NOISE_FLOOR)
@@ -810,10 +757,10 @@ void dll_execute_scan_automation(void *arg)
         // If TSCHED > 0, an independent scheduler is set to generate regular scan start events at TSCHED rate.
         DPRINT("Perform a dll background scan at the end of TSCHED (%d ticks)", tsched);
         dll_background_scan_timer.next_event = tsched;
-        assert(timer_add_event(&dll_background_scan_timer) == SUCCESS);
+        error_t rtc = timer_add_event(&dll_background_scan_timer);
+        assert(rtc == SUCCESS);
     }
 
-    current_channel_id = rx_cfg.channel_id;
     // Set by default the eirp in case we need to respond to an incoming request
     current_eirp = current_access_profile.subbands[0].eirp;
 }
@@ -822,24 +769,36 @@ static void conf_file_changed_callback(uint8_t file_id)
 {
     (void)file_id;
     DPRINT("DLL config file changed");
-    // when doing scan automation restart this
-    if (dll_state == DLL_STATE_IDLE || dll_state == DLL_STATE_SCAN_AUTOMATION)
+    uint8_t scan_access_class = d7ap_fs_read_dll_conf_active_access_class();
+
+    // if the access class has been modified, update the current access profile
+    if (active_access_class != scan_access_class)
     {
-        sched_post_task(&dll_execute_scan_automation);
+        d7ap_fs_read_access_class(ACCESS_SPECIFIER(scan_access_class), &current_access_profile);
+        active_access_class = scan_access_class;
+
+        // when doing scan automation restart this
+        if (dll_state == DLL_STATE_IDLE || dll_state == DLL_STATE_SCAN_AUTOMATION)
+        {
+            sched_post_task(&dll_execute_scan_automation);
+        }
     }
 }
 
 void dll_notify_access_profile_file_changed(uint8_t file_id)
 {
-    DPRINT("AP file changed");
+    DPRINT("Access Profile changed");
 
-    // make sure access class is re-read when entering scan automation
-    active_access_class = NO_ACTIVE_ACCESS_CLASS;
-
-    // when we are idle switch to scan automation now as well, in case the new AP enables scanning
-    if (dll_state == DLL_STATE_IDLE || dll_state == DLL_STATE_SCAN_AUTOMATION)
+    // update only the current access profile if this access profile has been changed
+    if (file_id == D7A_FILE_ACCESS_PROFILE_ID + ACCESS_SPECIFIER(active_access_class))
     {
-        sched_post_task(&dll_execute_scan_automation);
+        d7ap_fs_read_access_class(ACCESS_SPECIFIER(active_access_class), &current_access_profile);
+
+        // when we are idle switch to scan automation now as well, in case the new AP enables scanning
+        if (dll_state == DLL_STATE_IDLE || dll_state == DLL_STATE_SCAN_AUTOMATION)
+        {
+            sched_post_task(&dll_execute_scan_automation);
+        }
     }
 }
 
@@ -856,15 +815,14 @@ void dll_init()
     uint8_t nf_ctrl;
 
     // Initialize timers
-    sched_register_task(&notify_transmitted_packet);
     timer_init_event(&dll_cca_timer, &execute_cca);
     timer_init_event(&dll_csma_timer, &execute_csma_ca);
     timer_init_event(&dll_scan_automation_timer, &dll_execute_scan_automation);
     timer_init_event(&dll_background_scan_timer, &start_background_scan);
     timer_init_event(&dll_guard_period_expiration_timer, &guard_period_expiration);
-    timer_init_event(&dll_process_received_packet_timer, &process_received_packets);
+    timer_init_event(&dll_process_received_packet_timer, &dll_signal_packet_received);
 
-    hw_radio_init(&alloc_new_packet, &release_packet);
+    phy_init();
 
     if (d7ap_fs_read_file(D7A_FILE_DLL_CONF_FILE_ID, 4, &nf_ctrl, 1) != 0)
         nf_ctrl = (D7ADLL_FIXED_NOISE_FLOOR << 4) & 0x0F; // set default NF computation method if the setting is not present
@@ -872,7 +830,11 @@ void dll_init()
     tx_nf_method = (nf_ctrl >> 4) & 0x0F;
 
     dll_state = DLL_STATE_IDLE;
-    active_access_class = NO_ACTIVE_ACCESS_CLASS;
+
+    // caching of the active class and the selected access profile
+    active_access_class = d7ap_fs_read_dll_conf_active_access_class();
+    d7ap_fs_read_access_class(ACCESS_SPECIFIER(active_access_class), &current_access_profile);
+
     process_received_packets_after_tx = false;
     resume_fg_scan = false;
 
@@ -890,8 +852,6 @@ void dll_init()
 void dll_stop()
 {
     dll_state = DLL_STATE_STOPPED;
-    timer_cancel_task(&notify_transmitted_packet);
-    sched_cancel_task(&notify_transmitted_packet);
     timer_cancel_event(&dll_cca_timer);
     timer_cancel_event(&dll_csma_timer);
     timer_cancel_event(&dll_scan_automation_timer);
@@ -935,7 +895,7 @@ void dll_tx_frame(packet_t* packet)
          // We need to check if the channel has really been confirmed through a previous transaction
          // otherwise we need to set packet->ETA to enable the ad-hoc sync.
 
-        packet->hw_radio_packet.tx_meta.tx_cfg = (hw_tx_cfg_t){
+        packet->phy_config.tx = (phy_tx_config_t){
             .channel_id = current_channel_id,
             .syncword_class = PHY_SYNCWORD_CLASS1,
             .eirp = current_eirp
@@ -945,9 +905,9 @@ void dll_tx_frame(packet_t* packet)
     {
         dll_header->control_eirp_index = current_eirp + 32;
 
-        packet->hw_radio_packet.tx_meta.tx_cfg = (hw_tx_cfg_t){
-                .channel_id = packet->hw_radio_packet.rx_meta.rx_cfg.channel_id,
-                .syncword_class = packet->hw_radio_packet.rx_meta.rx_cfg.syncword_class,
+        packet->phy_config.tx = (phy_tx_config_t){
+                .channel_id = packet->phy_config.rx.channel_id,
+                .syncword_class = packet->phy_config.rx.syncword_class,
                 .eirp = current_eirp
             };
     }
@@ -969,7 +929,7 @@ void dll_tx_frame(packet_t* packet)
                          remote_access_profile.subbands[0].channel_index_start);
         dll_header->control_eirp_index = remote_access_profile.subbands[0].eirp + 32;
 
-        packet->hw_radio_packet.tx_meta.tx_cfg = (hw_tx_cfg_t){
+        packet->phy_config.tx = (phy_tx_config_t){
             .channel_id.channel_header_raw = remote_access_profile.channel_header_raw,
             .channel_id.center_freq_index = remote_access_profile.subbands[0].channel_index_start,
             .eirp = remote_access_profile.subbands[0].eirp
@@ -996,11 +956,11 @@ void dll_tx_frame(packet_t* packet)
             DPRINT("This request requires ad-hoc sync with access scheduling period (Tsched) <%d> ti", packet->ETA);
         }
 
-        packet->hw_radio_packet.tx_meta.tx_cfg.syncword_class = PHY_SYNCWORD_CLASS1;
+        packet->phy_config.tx.syncword_class = PHY_SYNCWORD_CLASS1;
 
         // store the channel id and eirp
-        current_eirp = packet->hw_radio_packet.tx_meta.tx_cfg.eirp;
-        current_channel_id = packet->hw_radio_packet.tx_meta.tx_cfg.channel_id;
+        current_eirp = packet->phy_config.tx.eirp;
+        current_channel_id = packet->phy_config.tx.channel_id;
 
         // compute Ecca = NF + Eccao
         if (tx_nf_method == D7ADLL_FIXED_NOISE_FLOOR)
@@ -1011,8 +971,8 @@ void dll_tx_frame(packet_t* packet)
         }
         else
         {
-            //TODO support the Slow RSSI Variation computation method
-            assert(false);
+#warning "TODO support the Slow RSSI Variation computation method"
+            //assert(false);
         }
     }
 
@@ -1042,7 +1002,6 @@ void dll_tx_frame(packet_t* packet)
             {
                 Te -= Trpd;
                 dll_csma_timer.next_event = Te;
-                dll_csma_timer.priority = MAX_PRIORITY;
                 timer_add_event(&dll_csma_timer);
                 return;
             }
@@ -1071,12 +1030,7 @@ static void start_foreground_scan()
     // are expected on the channel list of the Requester's Access Class and not
     // necessarily on the current channel used to send the initial request
 
-    hw_rx_cfg_t rx_cfg = (hw_rx_cfg_t){
-            .channel_id = current_channel_id,
-            .syncword_class = PHY_SYNCWORD_CLASS1,
-    };
-
-    hw_radio_set_rx(&rx_cfg, &packet_received, NULL);
+    phy_start_rx(&current_channel_id, PHY_SYNCWORD_CLASS1, &dll_signal_packet_received);
 }
 
 
@@ -1090,7 +1044,7 @@ void dll_start_foreground_scan()
 
 void dll_stop_foreground_scan()
 {
-    DPRINT("Stop FG scan\n");
+    DPRINT("Stop FG scan @ %i\n", timer_get_counter_value());
     if(dll_state == DLL_STATE_IDLE)
         return;
 
@@ -1100,10 +1054,10 @@ void dll_stop_foreground_scan()
     DPRINT("Set the radio to idle state");
     hw_radio_set_idle();
 
-    if(dll_state == DLL_STATE_SCAN_AUTOMATION)
-      return; // stay in scan automation
-    else
-      switch_state(DLL_STATE_IDLE);
+    if((dll_state == DLL_STATE_SCAN_AUTOMATION) || (dll_state == DLL_STATE_IDLE))
+        return; // stay in scan automation
+
+    switch_state(DLL_STATE_IDLE);
 }
 
 uint8_t dll_assemble_packet_header_bg(packet_t* packet, uint8_t* data_ptr)

@@ -31,6 +31,7 @@
 #include "d7atp.h"
 #include "dll.h"
 #include "d7anp.h"
+#include "phy.h"
 #include "hwradio.h"
 
 typedef enum {
@@ -69,7 +70,7 @@ struct packet
     uint8_t payload_length;
     uint8_t payload[239]; // TODO make max size configurable using cmake
                             // TODO store payload here or only pointer to file where we need to fetch it? can we assume data will not be changed in between
-
+    phy_config_t phy_config;
     hw_radio_packet_t hw_radio_packet; // TODO we might not need all metadata included in hw_radio_packet_t. If not copy needed data fields
     uint8_t __data[255];    // reserves space for hw_radio_packet_t.data flexible array member,
                             // do not use this directly but use hw_radio_packet_t.data instead, which contains the length byte

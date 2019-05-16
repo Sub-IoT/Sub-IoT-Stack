@@ -26,10 +26,11 @@ SET(JLINK_DEVICE "STM32L072CZ" CACHE STRING "The device passed to JLinkExe for f
 PLATFORM_PARAM(${PLATFORM_PREFIX}_RADIO "sx127x" STRING "The radio chip connected to the board")
 PLATFORM_OPTION(PLATFORM_USE_DEBUGPINS "Enable/Disable Hardware Debug Pins support (see 'hwdebug.h')" FALSE)
 #Restrict the number of possible options for the radio option in the usual manner...
-SET_PROPERTY(CACHE ${PLATFORM_PREFIX}_RADIO PROPERTY STRINGS "sx127x;none")
+SET_PROPERTY(CACHE ${PLATFORM_PREFIX}_RADIO PROPERTY STRINGS "sx127x;netdev_driver;none")
 PLATFORM_OPTION(PLATFORM_USE_USB_CDC "Enable/Disable the use of CDC (UART Communication using USB" FALSE)
 PLATFORM_OPTION(PLATFORM_BUILD_BOOTLOADABLE_VERSION "When set builds applications to be deployed using bootloader as well (modified linker script)" FALSE)
 PLATFORM_OPTION(PLATFORM_SX127X_USE_PA_BOOST "Use the PA_BOOST output of sx127x chip" FALSE)
+PLATFORM_OPTION(PLATFORM_SX127X_USE_LOW_BAT_SHUTDOWN "Shutdown modem when Vin lower than 2V" FALSE)
 PLATFORM_OPTION(PLATFORM_SX127X_USE_RESET_PIN "Platform has access to the RESET pin of sx127x chip" TRUE)
 PLATFORM_OPTION(PLATFORM_SX127X_USE_DIO3_PIN "Platform has access to the DIO3 pin of sx127x chip" TRUE)
 PLATFORM_OPTION(PLATFORM_SX127X_USE_VCC_TXCO "Platform has access to the VCC TCXO pin of sx127x chip" TRUE)
@@ -103,6 +104,7 @@ PLATFORM_HEADER_DEFINE(
     PLATFORM_SX127X_USE_RESET_PIN
     PLATFORM_SX127X_USE_DIO3_PIN
     PLATFORM_SX127X_USE_PA_BOOST
+    PLATFORM_SX127X_USE_LOW_BAT_SHUTDOWN
     PLATFORM_SX127X_USE_VCC_TXCO
     PLATFORM_USE_NUCLEO_IKS01A2_SHIELD
     PLATFORM_USE_EXTERNAL_MODEM

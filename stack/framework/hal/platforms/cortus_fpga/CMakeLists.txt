@@ -39,13 +39,14 @@ PLATFORM_PARAM(PLATFORM_NUM_BUTTONS "2" STRING "The number of buttons.")
 INCLUDE_DIRECTORIES(inc)
 
 #Restrict the number of possible options for the radio option in the usual manner...
-SET_PROPERTY(CACHE ${PLATFORM_PREFIX}_RADIO PROPERTY STRINGS "cc1101;sx127x")
+SET_PROPERTY(CACHE ${PLATFORM_PREFIX}_RADIO PROPERTY STRINGS "cc1101;sx127x;netdev_driver;internal")
+SET_PROPERTY(CACHE ${PLATFORM_PREFIX}_MCU PROPERTY STRINGS "aps3r;aps25;ciot25")
 
 PLATFORM_OPTION(PLATFORM_SX127X_USE_PA_BOOST "Use the PA_BOOST output of sx127x chip" TRUE)
 
-#Add a 'global' definition for the specific MCU and -mmcu (needed by toolchain)
-EXPORT_GLOBAL_COMPILE_DEFINITIONS("${${PLATFORM_PREFIX}_MCU}")
-ADD_DEFINITIONS("-mcpu=${${PLATFORM_PREFIX}_MCU}")
+IF(${${PLATFORM_PREFIX}_MCU} STREQUAL "aps3r" AND ${${PLATFORM_PREFIX}_RADIO} STREQUAL "internal")
+MESSAGE(FATAL_ERROR "Internal transceiver can be used only with chip CIoT25, CMake will exit.")
+ENDIF()
 
 #Make the 'inc' directory available so 'platform.h' can be found
 EXPORT_GLOBAL_INCLUDE_DIRECTORIES(inc)
@@ -76,12 +77,24 @@ ADD_LIBRARY(PLATFORM OBJECT
         inc/button.h
 )
 
-#Include the sources for the cortus fpga
-ADD_CHIP("cortus")
+#Specify the name of the target processor and include the sources for the selected chip 
+IF(${${PLATFORM_PREFIX}_MCU} STREQUAL "aps25")
+	INSERT_C_FLAGS(BEFORE "-mcpu=aps25")
+	ADD_CHIP("ciot25")
+ELSE()
+	INSERT_C_FLAGS(BEFORE "-mcpu=aps3r")
+	IF(${${PLATFORM_PREFIX}_MCU} STREQUAL "ciot25")
+		ADD_CHIP("ciot25")
+	ELSE()
+		ADD_CHIP("cortus")
+	ENDIF()
+ENDIF()
 
 #Include the sources for the radio chip, if needed
-IF(NOT ("${${PLATFORM_PREFIX}_RADIO}" STREQUAL "none"))
-    ADD_CHIP(${${PLATFORM_PREFIX}_RADIO})
+IF("${${PLATFORM_PREFIX}_RADIO}" STREQUAL "internal")
+	#The internal transceiver is selected in ciot25 CMakeLists.txt
+ELSE()
+	ADD_CHIP(${${PLATFORM_PREFIX}_RADIO})
 ENDIF()
 
 PLATFORM_HEADER_DEFINE(

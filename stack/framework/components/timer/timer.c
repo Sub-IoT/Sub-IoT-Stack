@@ -78,7 +78,7 @@ error_t timer_init_event(timer_event* event, task_t callback)
 {
     event->f = callback;
     event->arg = NULL;
-    event->priority = DEFAULT_PRIORITY;
+    event->priority = MAX_PRIORITY;
     return (sched_register_task(callback)); // register the function callback to be called at the end of the timeout
 }
 
@@ -188,6 +188,17 @@ __LINK_C error_t timer_cancel_task(task_t task)
     end_atomic();
 
     return status;
+}
+
+error_t timer_add_event(timer_event* event)
+{
+    return timer_post_task_prio(event->f, timer_get_counter_value() + event->next_event, event->priority, event->arg);
+}
+
+void timer_cancel_event(timer_event* event)
+{
+    timer_cancel_task(event->f);
+    sched_cancel_task(event->f);
 }
 
 __LINK_C bool timer_is_task_scheduled(task_t task)

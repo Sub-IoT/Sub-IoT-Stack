@@ -71,6 +71,9 @@ static dae_nwl_trusted_node_t* NGDEF(_latest_node);
 static timer_event d7anp_fg_scan_expired_timer;
 static timer_event d7anp_start_fg_scan_after_d7aadvp_timer;
 
+d7ap_addressee_id_type_t address_id_type;
+uint8_t address_id[8];
+
 #if defined(MODULE_D7AP_NLS_ENABLED)
 static inline uint8_t get_auth_len(uint8_t nls_method)
 {
@@ -146,8 +149,8 @@ static void schedule_foreground_scan_expired_timer()
 
     DPRINT("starting foreground scan expiration timer (%i ticks, now %i)", fg_scan_timeout_ticks, timer_get_counter_value());
     d7anp_fg_scan_expired_timer.next_event = fg_scan_timeout_ticks;
-    d7anp_fg_scan_expired_timer.priority = MAX_PRIORITY;
-    assert(timer_add_event(&d7anp_fg_scan_expired_timer) == SUCCESS);
+    error_t rtc = timer_add_event(&d7anp_fg_scan_expired_timer);
+    assert(rtc == SUCCESS);
 }
 
 void d7anp_start_foreground_scan()
@@ -211,6 +214,19 @@ void d7anp_init()
     timer_init_event(&d7anp_fg_scan_expired_timer, &foreground_scan_expired);
     timer_init_event(&d7anp_start_fg_scan_after_d7aadvp_timer, &start_foreground_scan_after_D7AAdvP);
 
+    /*
+     * vid or uid caching to prevent latency due to file access
+     */
+    d7ap_fs_read_vid(address_id);
+
+    // vid is not valid when set to FF
+    if (memcmp(address_id, (uint8_t[2]){ 0xFF, 0xFF }, 2) == 0)
+    {
+        d7ap_fs_read_uid(address_id);
+        address_id_type = ID_TYPE_UID;
+    } else
+        address_id_type = ID_TYPE_VID;
+
 #if defined(MODULE_D7AP_NLS_ENABLED)
     /*
      * Init Security
@@ -260,13 +276,7 @@ error_t d7anp_tx_foreground_frame(packet_t* packet, bool should_include_origin_t
     }
     else
     {
-        uint8_t vid[2];
-        d7ap_fs_read_vid(vid);
-        if (memcmp(vid, (uint8_t[2]){ 0xFF, 0xFF }, 2) == 0)
-            packet->d7anp_ctrl.origin_id_type = ID_TYPE_UID;
-        else
-            packet->d7anp_ctrl.origin_id_type = ID_TYPE_VID;
-
+        packet->d7anp_ctrl.origin_id_type = address_id_type;
         packet->d7anp_ctrl.origin_void = false;
         // note we set packet->origin_access_class in DLL, since we cache the active access class there already
     }
@@ -305,8 +315,8 @@ static void schedule_foreground_scan_after_D7AAdvP(timer_tick_t eta)
 {
     DPRINT("Perform a dll foreground scan at the end of the delay period (%i ticks)", eta);
     d7anp_start_fg_scan_after_d7aadvp_timer.next_event = eta;
-    d7anp_start_fg_scan_after_d7aadvp_timer.priority = MAX_PRIORITY;
-    assert(timer_add_event(&d7anp_start_fg_scan_after_d7aadvp_timer) == SUCCESS);
+    error_t rtc = timer_add_event(&d7anp_start_fg_scan_after_d7aadvp_timer);
+    assert(rtc == SUCCESS);
 }
 
 #if defined(MODULE_D7AP_NLS_ENABLED)
@@ -545,14 +555,14 @@ uint8_t d7anp_assemble_packet_header(packet_t *packet, uint8_t *data_ptr)
 
         if (packet->d7anp_ctrl.origin_id_type == ID_TYPE_UID)
         {
-            d7ap_fs_read_uid(data_ptr);
-            memcpy(packet->origin_access_id, data_ptr, 8);
+            memcpy(packet->origin_access_id, address_id, 8);
+            memcpy(data_ptr, address_id, 8);
             data_ptr += 8;
         }
         else if (packet->d7anp_ctrl.origin_id_type == ID_TYPE_VID)
         {
-            d7ap_fs_read_vid(data_ptr);
-            memcpy(packet->origin_access_id, data_ptr, 2);
+            memcpy(packet->origin_access_id, address_id, 2);
+            memcpy(data_ptr, address_id, 2);
             data_ptr += 2;
         }
         else if (packet->d7anp_ctrl.origin_id_type == ID_TYPE_NBID)

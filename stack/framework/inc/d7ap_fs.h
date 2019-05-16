@@ -34,7 +34,6 @@
 
 #include "dae.h"
 #include "d7ap.h"
-#include "phy.h"
 #include "fs.h"
 
 #define D7A_FILE_UID_FILE_ID 0x00
@@ -88,15 +87,6 @@ typedef struct __attribute__((__packed__))
     uint32_t length;
     uint32_t allocated_length;
 } d7ap_fs_file_header_t;
-
-typedef struct __attribute__((__packed__))
-{
-  uint8_t mode;
-  uint8_t flags;
-  uint8_t timeout;
-  channel_id_t channel_id;
-  int8_t eirp;
-} d7ap_fs_engineering_mode_t;
 
 typedef enum {
   EM_OFF = 0,

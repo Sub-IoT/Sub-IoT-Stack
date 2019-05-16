@@ -167,8 +167,8 @@ static void schedule_current_session() {
 
     DPRINT("Re-schedule immediately the current session");
     current_session_timer.next_event = 0;
-    current_session_timer.priority = MAX_PRIORITY;
-    assert(timer_add_event(&current_session_timer) == SUCCESS);
+    int rtc = timer_add_event(&current_session_timer);
+    assert(rtc == SUCCESS);
 }
 
 static void flush_fifos()
@@ -363,8 +363,8 @@ static void schedule_dormant_session(d7asp_master_session_t* dormant_session) {
   timer_tick_t timeout = CT_DECOMPRESS(dormant_session->config.dormant_timeout);
   DPRINT("Sched dormant timeout in %i s", timeout);
   dormant_session_timer.next_event = timeout * 1024;
-  dormant_session_timer.priority = MAX_PRIORITY;
-  assert(timer_add_event(&dormant_session_timer) == SUCCESS);
+  error_t rtc = timer_add_event(&dormant_session_timer);
+  assert(rtc == SUCCESS);
 }
 
 void d7asp_init()
@@ -526,8 +526,8 @@ void d7asp_process_received_response(packet_t* packet, bool extension)
     hw_watchdog_feed(); // TODO do here?
     d7ap_session_result_t result = {
         .channel = {
-            .channel_header = packet->hw_radio_packet.rx_meta.rx_cfg.channel_id.channel_header_raw,
-            .center_freq_index = packet->hw_radio_packet.rx_meta.rx_cfg.channel_id.center_freq_index,
+            .channel_header = packet->phy_config.rx.channel_id.channel_header_raw,
+            .center_freq_index = packet->phy_config.rx.channel_id.center_freq_index,
         },
         .rx_level =  - packet->hw_radio_packet.rx_meta.rssi,
         .link_budget = (packet->dll_header.control_eirp_index - 32) - packet->hw_radio_packet.rx_meta.rssi,
@@ -628,8 +628,8 @@ bool d7asp_process_received_packet(packet_t* packet)
     {
         d7ap_session_result_t result = {
             .channel = {
-                .channel_header = packet->hw_radio_packet.rx_meta.rx_cfg.channel_id.channel_header_raw,
-                .center_freq_index = packet->hw_radio_packet.rx_meta.rx_cfg.channel_id.center_freq_index,
+                .channel_header = packet->phy_config.rx.channel_id.channel_header_raw,
+                .center_freq_index = packet->phy_config.rx.channel_id.center_freq_index,
             },
             .rx_level =  - packet->hw_radio_packet.rx_meta.rssi,
             .link_budget = (packet->dll_header.control_eirp_index - 32) - packet->hw_radio_packet.rx_meta.rssi,
@@ -657,38 +657,38 @@ bool d7asp_process_received_packet(packet_t* packet)
         current_master_session.state = D7ASP_MASTER_SESSION_PENDING_DORMANT_TRIGGERED;
     }
 
-        /*
-         * activate the dialog extension procedure in the unicast response if the dialog is terminated
-         * and a master session is pending
-         */
-        if ((!ID_TYPE_IS_BROADCAST(packet->dll_header.control_target_id_type)) &&
-                (d7asp_state == D7ASP_STATE_SLAVE))
-        {
-            packet->d7atp_ctrl.ctrl_is_start = true;
-            packet->d7atp_ctrl.ctrl_tl = true;
-            // calculate Tl
-            // TODO payload length does not include headers ... + hardcoded subband
-            // TODO this length does not include lower layers overhead for now, assume 20 bytes for now ...
-            uint16_t len = packet->payload_length;
-            if(len < 255 - 20)
-              len += 20;
+    /*
+     * activate the dialog extension procedure in the unicast response if the dialog is terminated
+     * and a master session is pending
+     */
+    if ((!ID_TYPE_IS_BROADCAST(packet->dll_header.control_target_id_type)) &&
+        (d7asp_state == D7ASP_STATE_SLAVE))
+    {
+        packet->d7atp_ctrl.ctrl_is_start = true;
+        packet->d7atp_ctrl.ctrl_tl = true;
+        // calculate Tl
+        // TODO payload length does not include headers ... + hardcoded subband
+        // TODO this length does not include lower layers overhead for now, assume 20 bytes for now ...
+        uint16_t len = packet->payload_length;
+        if(len < 255 - 20)
+            len += 20;
 
-            // TX duration for ack
-            uint16_t estimated_tl = phy_calculate_tx_duration(packet->hw_radio_packet.rx_meta.rx_cfg.channel_id.channel_header.ch_class,
-                                                              packet->hw_radio_packet.rx_meta.rx_cfg.channel_id.channel_header.ch_coding,
-                                                              len, false);
+        // TX duration for ack
+        uint16_t estimated_tl = phy_calculate_tx_duration(packet->phy_config.rx.channel_id.channel_header.ch_class,
+                                                          packet->phy_config.rx.channel_id.channel_header.ch_coding,
+                                                          len, false);
 
-            estimated_tl += 2; // Tt
-            // TX duration for dormant session
-            estimated_tl += phy_calculate_tx_duration(packet->hw_radio_packet.rx_meta.rx_cfg.channel_id.channel_header.ch_class,
-                                                      packet->hw_radio_packet.rx_meta.rx_cfg.channel_id.channel_header.ch_coding,
-                                                      current_master_session.requests_lengths[0], false); // TODO assuming 1 queued request for now
+        estimated_tl += 2; // Tt
+        // TX duration for dormant session
+        estimated_tl += phy_calculate_tx_duration(packet->phy_config.rx.channel_id.channel_header.ch_class,
+                                                  packet->phy_config.rx.channel_id.channel_header.ch_coding,
+                                                  current_master_session.requests_lengths[0], false); // TODO assuming 1 queued request for now
 
-            DPRINT("Dormant session estimated Tl=%i", estimated_tl);
-            packet->d7atp_tl = compress_data(estimated_tl, true);
-        }
-        else
-            packet->d7atp_ctrl.ctrl_is_start = 0;
+        DPRINT("Dormant session estimated Tl=%i", estimated_tl);
+        packet->d7atp_tl = compress_data(estimated_tl, true);
+    }
+    else
+        packet->d7atp_ctrl.ctrl_is_start = 0;
 
     // execute slave transaction
     if (packet->d7atp_ctrl.ctrl_is_ack_requested)
@@ -777,8 +777,6 @@ void d7asp_signal_packet_transmitted(packet_t *packet)
         // requests (in master sessions) will be cleanup upon termination of the dialog.
         current_response_packet = NULL;
         packet_queue_free_packet(packet);
-
-
     }
 }
 

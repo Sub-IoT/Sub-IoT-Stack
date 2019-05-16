@@ -423,7 +423,7 @@ void modem_interface_init(uint8_t idx, uint32_t baudrate, pin_id_t uart_state_in
 #ifdef PLATFORM_USE_MODEM_INTERRUPT_LINES
   assert(sched_register_task(&modem_listen) == SUCCESS);
   DPRINT("using interrupt lines");
-  assert(hw_gpio_configure_interrupt(target_uart_state_pin, &uart_int_cb, GPIO_RISING_EDGE | GPIO_FALLING_EDGE) == SUCCESS);
+  assert(hw_gpio_configure_interrupt(target_uart_state_pin, GPIO_RISING_EDGE | GPIO_FALLING_EDGE, &uart_int_cb, NULL) == SUCCESS);
   assert(hw_gpio_enable_interrupt(target_uart_state_pin) == SUCCESS);
   if(hw_gpio_get_in(target_uart_state_pin))
   {

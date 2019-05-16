@@ -29,6 +29,8 @@
 #include "cortus_mcu.h"
 #include "hwblockdevice.h"
 
+#define XTAL_FREQ   32000000
+
 /********************
  * LED DEFINITIONS *
  *******************/
@@ -81,7 +83,7 @@
 #define CC1101_GDO2_PIN     PIN(gpioPortA, 1)
 #endif
 
-#ifdef USE_SX127X
+#if defined(USE_SX127X) || defined(USE_NETDEV_DRIVER)
 #define SX127x_SPI_INDEX    1
 #define SX127x_SPI_PIN_CS   PIN(gpioPortA, 2)
 #define SX127x_SPI_BAUDRATE 8 //10000000
