@@ -53,7 +53,7 @@
   #error "sensor_pull app is not compatible with LoRaWAN, so disable MODULE_LORAWAN in cmake"
 #endif
 
-#if !defined(USE_SX127X) && !defined(USE_NETDEV_SX127X)
+#if !defined(USE_SX127X) && !defined(USE_NETDEV_DRIVER)
   #error "background frames are only supported by the sx127x driver for now"
 #endif
 
