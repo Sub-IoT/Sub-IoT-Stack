@@ -481,7 +481,7 @@ error_t phy_init(void) {
 
     fact_settings_file_change_callback();
 
-    d7ap_fs_register_file_modified_callback(D7A_FILE_FACTORY_SETTINGS_FILE_ID, &fact_settings_file_change_callback);
+    fs_register_file_modified_callback(D7A_FILE_FACTORY_SETTINGS_FILE_ID, &fact_settings_file_change_callback);
 
     configure_syncword(PHY_SYNCWORD_CLASS0, &default_channel_id);
     configure_channel(&default_channel_id);
