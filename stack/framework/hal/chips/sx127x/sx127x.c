@@ -53,53 +53,6 @@
 #define FG_THRESHOLD                32
 #define FIFO_AVAILABLE_SPACE        FIFO_SIZE - FG_THRESHOLD
 
-// modulation settings
-// lo rate
-// BR 0x0D05 => 9600.960 bps
-#define BITRATEMSB_L 0x0D
-#define BITRATELSB_L 0x05
-// Fdev => 4.8 kHz
-#define FDEVMSB_L 0x00
-#define FDEVLSB_L 0x4F
-// Carson's rule: 2 x fm + 2 x fd  = 9.600 + 2 x 4.800 = 19.2 kHz
-// assuming 1 ppm crystals gives max error of: 2 * 1 ppm * 868 = 1.736 kHz
-// => BW > 19.2 + 1.736 kHz => > 20.936 kHZ. 
-// This results in 10.468 kHz on a single sideband.
-// Closest possible value is 10.4 kHz. This is an actual ppm of 0.92. ((2 << 3) | 5)
-// Other possibility is 12.5 kHz. This is an actual ppm of 3.34. ((1 << 3) | 5)
-#define RXBW_L ((2 << 3) | 5)  // TODO validate sensitivity / xtal accuracy tradeoff
-
-// normal rate
-// BR 0x0240 => 55555.55555 bps
-#define BITRATEMSB_N 0x02
-#define BITRATELSB_N 0x40
-// Fdev => 49.988 kHz
-#define FDEVMSB_N 0x03
-#define FDEVLSB_N 0x33
-// data rate 55.542 kBaud
-// Carson's rule: 2 x fm + 2 x fd  = 55.555 + 2 x 50 = 155.555 kHz
-// assuming 1 ppm crystals gives max error of: 2 * 1 ppm * 868 = 1.736 kHz
-// => BW > 155.555 + 1.736 => 157.291 kHz. 
-// This results in 78.646 kHz on a single sideband.
-// Closest possible value is 83.3 kHz. This is an actual ppm of 6.36.
-// TODO bit too high, next step is 200, validate sensitivity / xtal accuracy tradeoff
-#define RXBW_N ((2 << 3) | 2)
-
-// hi rate
-// BR 0x00C0 => 166666.667 bps
-#define BITRATEMSB_H 0x00
-#define BITRATELSB_H 0xC0
-// Fdev => 41.667 kHz
-#define FDEVMSB_H 0x02
-#define FDEVLSB_H 0xAA
-// Carson's rule: 2 x fm + 2 x fd  = 166.667 + 2 x 41.667 = 250 kHz
-// assuming 1 ppm crystals gives max error of: 2 * 1 ppm * 868 = 1.736 kHz
-// => BW > 250 + 1.736 kHz => 251.736 kHz.
-// This results in 125.868 kHz on a single sideband.
-// Closest possible value is 125 kHz. This is an actual ppm of 0. ((0 << 3) | 2)
-// Other possibility is 166.7 kHz. This is an actual ppm of 48.04. ((2 << 3) | 1)
-#define RXBW_H ((0 << 3) | 2)  // TODO validate sensitivity / xtal accuracy tradeoff
-
 #if defined(FRAMEWORK_LOG_ENABLED) && defined(FRAMEWORK_PHY_LOG_ENABLED)
 #define DPRINT(...) log_print_stack_string(LOG_STACK_PHY, __VA_ARGS__)
 #define DPRINT_DATA(...) log_print_data(__VA_ARGS__)
@@ -932,7 +885,7 @@ void hw_radio_enable_preloading(bool enable) {
   enable_preloading = enable;
 }
 
-void hw_radio_set_tx_power(uint8_t eirp) { // TODO signed
+void hw_radio_set_tx_power(int8_t eirp) { // TODO signed
   if(eirp < -5) {
     eirp = -5;
     DPRINT("The given eirp is too low, adjusted to %d dBm, offset excluded", eirp);

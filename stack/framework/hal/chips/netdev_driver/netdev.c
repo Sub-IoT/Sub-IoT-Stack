@@ -355,9 +355,9 @@ void hw_radio_enable_preloading(bool enable)
     netdev->driver->set(netdev, NETOPT_PRELOADING, &netopt_enable, sizeof(netopt_enable_t));
 }
 
-void hw_radio_set_tx_power(uint8_t eirp)
+void hw_radio_set_tx_power(int8_t eirp)
 {
-    netdev->driver->set(netdev, NETOPT_TX_POWER, &eirp, sizeof(uint8_t));
+    netdev->driver->set(netdev, NETOPT_TX_POWER, &eirp, sizeof(int8_t));
 }
 
 void hw_radio_set_rx_timeout(uint32_t timeout)
