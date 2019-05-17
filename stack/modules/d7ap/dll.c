@@ -416,7 +416,7 @@ static void cca_rssi_valid(int16_t cur_rssi)
     {
         if (dll_state == DLL_STATE_CCA1)
         {
-            phy_switch_to_standby_mode(); //~400µs before in standby
+            phy_switch_to_standby_mode();
             DPRINT("CCA1 RSSI: %d", cur_rssi);
             switch_state(DLL_STATE_CCA2);
 
