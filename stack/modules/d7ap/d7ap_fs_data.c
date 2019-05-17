@@ -191,44 +191,44 @@ __attribute__((used)) uint16_t files_offset[] = {
   0x9b,	// RFU_07 - 7 (length 0))
   0xa7,	// PHY_CONFIG - 8 (length 9))
   0xbc,	// PHY_STATUS - 9 (length 24))
-  0xe0,	// DLL_CONFIG - 10 (length 3))
-  0xef,	// DLL_STATUS - 11 (length 12))
-  0x107,	// NWL_ROUTING - 12 (length 1))
-  0x114,	// NWL_SECURITY - 13 (length 5))
-  0x125,	// NWL_SECURITY_KEY - 14 (length 16))
-  0x141,	// NWL_SSR - 15 (length 4))
-  0x151,	// NWL_STATUS - 16 (length 20))
-  0x171,	// TRL_STATUS - 17 (length 1))
-  0x17e,	// SEL_CONFIG - 18 (length 6))
-  0x190,	// FOF_STATUS - 19 (length 10))
-  0x1a6,	// RFU_14 - 20 (length 0))
-  0x1b2,	// RFU_15 - 21 (length 0))
-  0x1be,	// RFU_16 - 22 (length 0))
-  0x1ca,	// LOCATION_DATA - 23 (length 1))
-  0x1d7,	// D7AALP_RFU_18 - 24 (length 0))
-  0x1e3,	// D7AALP_RFU_19 - 25 (length 0))
-  0x1ef,	// D7AALP_RFU_1A - 26 (length 0))
-  0x1fb,	// D7AALP_RFU_1B - 27 (length 0))
-  0x207,	// D7AALP_RFU_1C - 28 (length 0))
-  0x213,	// D7AALP_RFU_1D - 29 (length 0))
-  0x21f,	// D7AALP_RFU_1E - 30 (length 0))
-  0x22b,	// D7AALP_RFU_1F - 31 (length 0))
-  0x237,	// ACCESS_PROFILE_0 - 32 (length 65))
-  0x284,	// ACCESS_PROFILE_1 - 33 (length 65))
-  0x2d1,	// ACCESS_PROFILE_2 - 34 (length 65))
-  0x31e,	// ACCESS_PROFILE_3 - 35 (length 65))
-  0x36b,	// ACCESS_PROFILE_4 - 36 (length 65))
-  0x3b8,	// ACCESS_PROFILE_5 - 37 (length 65))
-  0x405,	// ACCESS_PROFILE_6 - 38 (length 65))
-  0x452,	// ACCESS_PROFILE_7 - 39 (length 65))
-  0x49f,	// ACCESS_PROFILE_8 - 40 (length 65))
-  0x4ec,	// ACCESS_PROFILE_9 - 41 (length 65))
-  0x539,	// ACCESS_PROFILE_10 - 42 (length 65))
-  0x586,	// ACCESS_PROFILE_11 - 43 (length 65))
-  0x5d3,	// ACCESS_PROFILE_12 - 44 (length 65))
-  0x620,	// ACCESS_PROFILE_13 - 45 (length 65))
-  0x66d,	// ACCESS_PROFILE_14 - 46 (length 65))
-  //[[[end]]] (checksum: 130e32b284b338c84403ad3d6198ff1f)
+  0xe0,	// DLL_CONFIG - 10 (length 7))
+  0xf3,	// DLL_STATUS - 11 (length 12))
+  0x10b,	// NWL_ROUTING - 12 (length 1))
+  0x118,	// NWL_SECURITY - 13 (length 5))
+  0x129,	// NWL_SECURITY_KEY - 14 (length 16))
+  0x145,	// NWL_SSR - 15 (length 4))
+  0x155,	// NWL_STATUS - 16 (length 20))
+  0x175,	// TRL_STATUS - 17 (length 1))
+  0x182,	// SEL_CONFIG - 18 (length 6))
+  0x194,	// FOF_STATUS - 19 (length 10))
+  0x1aa,	// RFU_14 - 20 (length 0))
+  0x1b6,	// RFU_15 - 21 (length 0))
+  0x1c2,	// RFU_16 - 22 (length 0))
+  0x1ce,	// LOCATION_DATA - 23 (length 1))
+  0x1db,	// D7AALP_RFU_18 - 24 (length 0))
+  0x1e7,	// D7AALP_RFU_19 - 25 (length 0))
+  0x1f3,	// D7AALP_RFU_1A - 26 (length 0))
+  0x1ff,	// D7AALP_RFU_1B - 27 (length 0))
+  0x20b,	// D7AALP_RFU_1C - 28 (length 0))
+  0x217,	// D7AALP_RFU_1D - 29 (length 0))
+  0x223,	// D7AALP_RFU_1E - 30 (length 0))
+  0x22f,	// D7AALP_RFU_1F - 31 (length 0))
+  0x23b,	// ACCESS_PROFILE_0 - 32 (length 65))
+  0x288,	// ACCESS_PROFILE_1 - 33 (length 65))
+  0x2d5,	// ACCESS_PROFILE_2 - 34 (length 65))
+  0x322,	// ACCESS_PROFILE_3 - 35 (length 65))
+  0x36f,	// ACCESS_PROFILE_4 - 36 (length 65))
+  0x3bc,	// ACCESS_PROFILE_5 - 37 (length 65))
+  0x409,	// ACCESS_PROFILE_6 - 38 (length 65))
+  0x456,	// ACCESS_PROFILE_7 - 39 (length 65))
+  0x4a3,	// ACCESS_PROFILE_8 - 40 (length 65))
+  0x4f0,	// ACCESS_PROFILE_9 - 41 (length 65))
+  0x53d,	// ACCESS_PROFILE_10 - 42 (length 65))
+  0x58a,	// ACCESS_PROFILE_11 - 43 (length 65))
+  0x5d7,	// ACCESS_PROFILE_12 - 44 (length 65))
+  0x624,	// ACCESS_PROFILE_13 - 45 (length 65))
+  0x671,	// ACCESS_PROFILE_14 - 46 (length 65))
+  //[[[end]]] (checksum: 798913e0a6af67a14112df377fbc85a3)
 };
 
 __attribute__((used)) uint8_t files_length[] = {
@@ -245,7 +245,7 @@ __attribute__((used)) uint8_t files_length[] = {
   0xc,	// RFU_07 - 7)
   0x15,	// PHY_CONFIG - 8)
   0x24,	// PHY_STATUS - 9)
-  0xf,	// DLL_CONFIG - 10)
+  0x13,	// DLL_CONFIG - 10)
   0x18,	// DLL_STATUS - 11)
   0xd,	// NWL_ROUTING - 12)
   0x11,	// NWL_SECURITY - 13)
@@ -282,7 +282,7 @@ __attribute__((used)) uint8_t files_length[] = {
   0x4d,	// ACCESS_PROFILE_12 - 44)
   0x4d,	// ACCESS_PROFILE_13 - 45)
   0x4d,	// ACCESS_PROFILE_14 - 46)
-  //[[[end]]] (checksum: 3c8db48a9505d827b95106ac98851d3c)
+  //[[[end]]] (checksum: e84fba5d8d3ec166279358e4bea2f101)
 };
 
 __attribute__((used)) uint8_t d7ap_permanent_files_data[FRAMEWORK_FS_PERMANENT_STORAGE_SIZE] LINKER_SECTION_FS_SYSTEM_FILE = {
@@ -313,7 +313,7 @@ __attribute__((used)) uint8_t d7ap_permanent_files_data[FRAMEWORK_FS_PERMANENT_S
   0x0, 0x0, 0x0, 0x30, 0x0, 0x0, 0x0, 0x0, 0x0, 
   // VID - 6
   0x24, 0x23, 0xff, 0xff, 0x0, 0x0, 0x0, 0x3, 0x0, 0x0, 0x0, 0x3, 
-  0x0, 0x0, 0x0, 
+  0xff, 0xff, 0x0, 
   // RFU_07 - 7
   0x24, 0x23, 0xff, 0xff, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 
 
@@ -324,8 +324,8 @@ __attribute__((used)) uint8_t d7ap_permanent_files_data[FRAMEWORK_FS_PERMANENT_S
   0x24, 0x23, 0xff, 0xff, 0x0, 0x0, 0x0, 0x18, 0x0, 0x0, 0x0, 0x18, 
   0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 
   // DLL_CONFIG - 10
-  0x24, 0x23, 0xff, 0xff, 0x0, 0x0, 0x0, 0x3, 0x0, 0x0, 0x0, 0x3, 
-  0x21, 0xff, 0xff, 
+  0x24, 0x23, 0xff, 0xff, 0x0, 0x0, 0x0, 0x7, 0x0, 0x0, 0x0, 0x7, 
+  0x21, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 
   // DLL_STATUS - 11
   0x24, 0x23, 0xff, 0xff, 0x0, 0x0, 0x0, 0xc, 0x0, 0x0, 0x0, 0xc, 
   0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 
@@ -434,7 +434,7 @@ __attribute__((used)) uint8_t d7ap_permanent_files_data[FRAMEWORK_FS_PERMANENT_S
   // ACCESS_PROFILE_14 - 46
   0x24, 0x23, 0xff, 0xff, 0x0, 0x0, 0x0, 0x41, 0x0, 0x0, 0x0, 0x41, 
   0x32, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0xe, 0x56, 0xff, 0x0, 0x0, 0x0, 0x0, 0xe, 0x56, 0xff, 0x0, 0x0, 0x0, 0x0, 0xe, 0x56, 0xff, 0x0, 0x0, 0x0, 0x0, 0xe, 0x56, 0xff, 0x0, 0x0, 0x0, 0x0, 0xe, 0x56, 0xff, 0x0, 0x0, 0x0, 0x0, 0xe, 0x56, 0xff, 0x0, 0x0, 0x0, 0x0, 0xe, 0x56, 0xff, 0x0, 0x0, 0x0, 0x0, 0xe, 0x56, 0xff, 
-  //[[[end]]] (checksum: 6a2a7b05a04acc64d665b305b56b842b)
+  //[[[end]]] (checksum: 149f22e1928490f8553b2faf3cdef27a)
 };
 
 
