@@ -70,25 +70,28 @@
 #define BITRATE_L 9600 // bps
 #define FDEV_L    4800 // Hz
 // Carson's rule: 2 x fm + 2 x fd  = 9.600 + 2 x 4.800 = 19.2 kHz
-// assuming 10 ppm crystals gives max error of: 2 * 10 ppm * 868 = 17.36 kHz
-// => BW > 19.2 + 17.36 kHz => > 36.5 kHZ.
-#define RXBW_L    36500 //Hz
+// assuming 1 ppm crystals gives max error of: 2 * 1 ppm * 868 = 1.736 kHz
+// => BW > 19.2 + 1.736 kHz => > 20.936 kHZ. 
+// This results in 10.468 kHz on a single sideband.
+// #define RXBW_L    10468 //Hz
 
 // normal rate
 #define BITRATE_N 55555 // bps
 #define FDEV_N    50000 // Hz
 // Carson's rule: 2 x fm + 2 x fd  = 55.555 + 2 x 50 = 155.555 kHz
-// assuming 10 ppm crystals gives max error of: 2 * 10 ppm * 868 = 17.36 kHz
-// => BW > 155.555 + 17.36 => 172.91 KHz
-#define RXBW_N   172910 //Hz
+// assuming 1 ppm crystals gives max error of: 2 * 1 ppm * 868 = 1.736 kHz
+// => BW > 155.555 + 1.736 => 157.291 kHz. 
+// This results in 78.646 kHz on a single sideband.
+// #define RXBW_N   78646 //Hz
 
 // high rate
 #define BITRATE_H 166667 // bps
 #define FDEV_H     41667 // Hz
 // Carson's rule: 2 x fm + 2 x fd  = 166.667 + 2 x 41.667 = 250 kHz
-// assuming 10 ppm crystals gives max error of: 2 * 10 ppm * 868 = 17.36 kHz
-// => BW > 250 + 17.36 kHz => > 267.36 kHZ.
-#define RXBW_H    267360 //Hz
+// assuming 1 ppm crystals gives max error of: 2 * 1 ppm * 868 = 1.736 kHz
+// => BW > 250 + 1.736 kHz => 251.736 kHz.
+// This results in 125.868 kHz on a single sideband.
+// #define RXBW_H    125868 //Hz
 
 #define LORA_T_SYMBOL_SF9_MS 4.096 // based on SF9 and 125k BW
 #define LORA_T_PREAMBE_SF9_MS (8 + 4.25) * LORA_T_SYMBOL_SF9_MS // assuming 8 symbols for now
@@ -124,6 +127,11 @@ static channel_id_t default_channel_id = {
 #define EMPTY_CHANNEL_ID { .channel_header_raw = 0xFF, .center_freq_index = 0xFF }
 
 static channel_id_t current_channel_id = EMPTY_CHANNEL_ID;
+
+static uint32_t rx_bw_lo_rate;
+static uint32_t rx_bw_normal_rate;
+static uint32_t rx_bw_hi_rate;
+static bool rx_bw_changed = false;
 
 static uint8_t gain_offset = 0;
 
@@ -370,9 +378,11 @@ static void configure_eirp(eirp_t eirp)
 }
 
 static void configure_channel(const channel_id_t* channel) {
-    if(phy_radio_channel_ids_equal(&current_channel_id, channel)) {
+    if(phy_radio_channel_ids_equal(&current_channel_id, channel) && !rx_bw_changed) {
         return;
     }
+
+    rx_bw_changed = false;
 
     // configure modulation settings
     if(channel->channel_header.ch_class == PHY_CLASS_LO_RATE)
@@ -382,7 +392,7 @@ static void configure_channel(const channel_id_t* channel) {
             hw_radio_set_tx_fdev(FDEV_L);
         else
             hw_radio_set_tx_fdev(0);
-        hw_radio_set_rx_bw_hz(RXBW_L);
+        hw_radio_set_rx_bw_hz(rx_bw_lo_rate);
         hw_radio_set_preamble_size(PREAMBLE_LOW_RATE_CLASS * 8);
     }
     else if(channel->channel_header.ch_class == PHY_CLASS_NORMAL_RATE)
@@ -392,7 +402,7 @@ static void configure_channel(const channel_id_t* channel) {
             hw_radio_set_tx_fdev(FDEV_N);
         else
             hw_radio_set_tx_fdev(0);
-        hw_radio_set_rx_bw_hz(RXBW_N);
+        hw_radio_set_rx_bw_hz(rx_bw_normal_rate);
         hw_radio_set_preamble_size(PREAMBLE_NORMAL_RATE_CLASS * 8);
     }
     else if(channel->channel_header.ch_class == PHY_CLASS_HI_RATE)
@@ -402,7 +412,7 @@ static void configure_channel(const channel_id_t* channel) {
             hw_radio_set_tx_fdev(FDEV_H);
         else
             hw_radio_set_tx_fdev(0);
-        hw_radio_set_rx_bw_hz(RXBW_H);
+        hw_radio_set_rx_bw_hz(rx_bw_hi_rate);
         hw_radio_set_preamble_size(PREAMBLE_HI_RATE_CLASS * 8);
     }
 
@@ -449,8 +459,14 @@ void fact_settings_file_change_callback()
     d7ap_fs_read_file(D7A_FILE_FACTORY_SETTINGS_FILE_ID, 0, fact_settings, D7A_FILE_FACTORY_SETTINGS_SIZE);
 
     gain_offset = (int8_t)fact_settings[0];
+    rx_bw_lo_rate = __builtin_bswap32(*((uint32_t*)(fact_settings+1)));
+    rx_bw_normal_rate = __builtin_bswap32(*((uint32_t*)(fact_settings+5)));
+    rx_bw_hi_rate = __builtin_bswap32(*((uint32_t*)(fact_settings+9)));
 
-    DPRINT("gain set to %i\n", gain_offset);
+    DPRINT("rx bw low rate is %i, normal rate is %i, high rate is %i\n", rx_bw_lo_rate, rx_bw_normal_rate, rx_bw_hi_rate);
+    DPRINT("gain offset set to %i\n", gain_offset);
+
+    rx_bw_changed = true;
 }
 
 
