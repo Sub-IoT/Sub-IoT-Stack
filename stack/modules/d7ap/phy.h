@@ -108,7 +108,7 @@ typedef struct
  *
  * This struct adheres to the 'Channel ID' format the Dash7 PHY layer. (@17/03/2015)
  */
-typedef struct
+typedef struct __attribute__((__packed__))
 {
     union
     {
