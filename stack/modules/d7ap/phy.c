@@ -203,13 +203,13 @@ static void release_packet(hw_radio_packet_t* hw_radio_packet)
     packet_queue_free_packet(packet_queue_find_packet(hw_radio_packet));
 }
 
-static void switch_to_standby_mode()
+void phy_switch_to_standby_mode()
 {
     hw_radio_set_opmode(HW_STATE_STANDBY);
     state = STATE_IDLE;
 }
 
-static void switch_to_sleep_mode()
+void phy_switch_to_sleep_mode()
 {
     hw_radio_set_idle();
     state = STATE_IDLE;
@@ -222,7 +222,7 @@ static void packet_transmitted(timer_tick_t timestamp)
     current_packet->tx_meta.timestamp = timestamp;
     DPRINT("Transmitted packet @ %i with length = %i", current_packet->tx_meta.timestamp, current_packet->length);
 
-    switch_to_standby_mode();
+    phy_switch_to_standby_mode();
 
     transmitted_callback(packet_queue_find_packet(current_packet));
 }
@@ -270,7 +270,7 @@ static void packet_received(hw_radio_packet_t* hw_radio_packet)
         hw_radio_set_opmode(HW_STATE_RX);
     }
     else
-        switch_to_standby_mode();
+        phy_switch_to_standby_mode();
 
     received_callback(packet);
 }
@@ -533,7 +533,7 @@ error_t phy_start_energy_scan(channel_id_t* channel, rssi_valid_callback_t rssi_
 
 error_t phy_stop_rx(){
 
-    switch_to_sleep_mode();
+    phy_switch_to_sleep_mode();
     return SUCCESS;
 }
 
@@ -573,7 +573,7 @@ error_t phy_send_packet(hw_radio_packet_t* packet, phy_tx_config_t* config, tx_p
         pending_rx_cfg.channel_id = current_channel_id;
         pending_rx_cfg.syncword_class = current_syncword_class;
         should_rx_after_tx_completed = true;
-        switch_to_standby_mode();
+        phy_switch_to_standby_mode();
     }
 
     configure_channel(&config->channel_id);
@@ -828,9 +828,9 @@ error_t phy_start_background_scan(phy_rx_config_t* config, rx_packet_callback_t 
     if (rssi <= config->rssi_thr)
     {
         DPRINT("FAST RX termination RSSI %i below limit %i\n", rssi, config->rssi_thr);
-        switch_to_sleep_mode();
+        phy_switch_to_sleep_mode();
         // TODO choose standby mode to allow rapid channel cycling
-        //switch_to_standby_mode();
+        //phy_switch_to_standby_mode();
         DEBUG_RX_END();
         return FAIL;
     }
@@ -854,7 +854,7 @@ void phy_continuous_tx(phy_tx_config_t const* tx_cfg, uint8_t time_period, tx_pa
         pending_rx_cfg.channel_id = current_channel_id;
         pending_rx_cfg.syncword_class = current_syncword_class;
         should_rx_after_tx_completed = true;
-        switch_to_standby_mode();
+        phy_switch_to_standby_mode();
     }
 
     configure_channel(&tx_cfg->channel_id);
