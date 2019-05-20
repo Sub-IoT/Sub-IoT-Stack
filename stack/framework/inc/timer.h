@@ -51,6 +51,10 @@
 #include "hwtimer.h"
 #include "framework_defs.h"
 
+#ifndef FRAMEWORK_TIMER_RESOLUTION
+#define FRAMEWORK_TIMER_RESOLUTION 1MS
+#endif
+
 typedef uint32_t timer_tick_t;
 
 typedef struct

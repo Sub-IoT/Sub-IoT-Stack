@@ -34,6 +34,9 @@
 #define ACCESS_SPECIFIER(val) (uint8_t)(val >> 4 & 0x0F)
 #define ACCESS_MASK(val) (uint8_t)(val & 0x0F)
 
+#ifndef FRAMEWORK_FS_TRUSTED_NODE_TABLE_SIZE
+#define FRAMEWORK_FS_TRUSTED_NODE_TABLE_SIZE 16
+#endif
 
 typedef enum
 {
