@@ -180,7 +180,8 @@ static void em_file_change_callback(uint8_t file_id) {
 
     d7ap_fs_read_file(D7A_FILE_ENGINEERING_MODE_FILE_ID, 0, data, D7A_FILE_ENGINEERING_MODE_SIZE);
 
-    d7ap_fs_engineering_mode_t* em_command = (d7ap_fs_engineering_mode_t*)data;
+    d7ap_fs_engineering_mode_t* em_command = (d7ap_fs_engineering_mode_t*) data;
+    em_command->channel_id.center_freq_index = __builtin_bswap16(em_command->channel_id.center_freq_index);
 
     DPRINT("em_file_change_callback");
     DPRINT_DATA(data, D7A_FILE_ENGINEERING_MODE_SIZE);
