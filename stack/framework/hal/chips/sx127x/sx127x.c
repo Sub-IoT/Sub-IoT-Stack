@@ -885,7 +885,7 @@ void hw_radio_enable_preloading(bool enable) {
   enable_preloading = enable;
 }
 
-void hw_radio_set_tx_power(int8_t eirp) { // TODO signed
+void hw_radio_set_tx_power(int8_t eirp) {
   if(eirp < -5) {
     eirp = -5;
     DPRINT("The given eirp is too low, adjusted to %d dBm, offset excluded", eirp);
