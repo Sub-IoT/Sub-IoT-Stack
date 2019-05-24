@@ -35,7 +35,7 @@ ADD_SUBDIRECTORY("components")
 #Add framework options && import them in the framework_defs.h file
 #This is NOT done seperately for each component since components can be overridden by a platform
 #And these settings should not be
-SET(FRAMEWORK_SCHEDULER_MAX_TASKS "32" CACHE STRING "The maximum number of tasks that can be registered with the scheduler")
+SET(FRAMEWORK_SCHEDULER_MAX_TASKS "40" CACHE STRING "The maximum number of tasks that can be registered with the scheduler")
 FRAMEWORK_HEADER_DEFINE(NUMBER FRAMEWORK_SCHEDULER_MAX_TASKS)
 
 SET(FRAMEWORK_SCHEDULER_LP_MODE "0" CACHE STRING "The low power mode to use. Only change this if you know exactly what you are doing")
