@@ -27,68 +27,8 @@
 #include "errors.h"
 #include "platform_defs.h"
 
-//#define DPRINT(...)
-#define DPRINT(...) log_print_string(__VA_ARGS__)
-
-static bool modem_listen_uart_inited = false;
-
-#ifdef PLATFORM_USE_MODEM_INTERRUPT_LINES
-static void app_uart_on() {
-  uart_init(PLATFORM_CONSOLE_UART, PLATFORM_CONSOLE_BAUDRATE, PLATFORM_CONSOLE_LOCATION);
-  console_enable();
-  console_rx_interrupt_enable();
-}
-
-static void app_uart_off() {
-  console_disable();
-}
-
-static void modem_listen(void* arg) {
-  if(!modem_listen_uart_inited) {
-    modem_listen_uart_inited = true;
-    app_uart_on();
-  }
-
-  if(hw_gpio_get_in(MCU2MODEM_INT_PIN)) {
-    // prevent the MCU to go back to stop mode by scheduling ourself again until pin goes low,
-    // to keep UART RX enabled
-    sched_post_task_prio(&modem_listen, MIN_PRIORITY, NULL);
-  } else {
-    DPRINT("!!! modem released\n");
-    app_uart_off();
-  }
-}
-
-// TODO move to modem module
-static void on_modem_wakeup(pin_id_t pin_id, uint8_t event_mask)
-{
-  hw_gpio_set(MODEM2MCU_INT_PIN); // TODO tmp
-  if(event_mask & GPIO_RISING_EDGE) {
-    DPRINT("!!! modem wakeup requested");
-
-    // delay uart init until scheduled task, MCU clock will only be initialzed correclty after ISR, when entering scheduler again
-    modem_listen_uart_inited = false;
-    sched_post_task(&modem_listen);
-  }
-}
-
-// TODO move to modem module
-void platform_app_mcu_wakeup() {
-  log_print_string("!!! wake app mcu @ %d", timer_get_counter_value()); // TODO tmp
-  hw_gpio_set(MODEM2MCU_INT_PIN);
-  hw_busy_wait(5000); // TODO
-  app_uart_on();
-}
-
-// TODO move to modem module
-void platform_app_mcu_release() {
-  log_print_string("!!! release app mcu @ %d", timer_get_counter_value()); // TODO tmp
-//  hw_busy_wait(5000); // TODO
-  hw_gpio_clr(MODEM2MCU_INT_PIN);
-  app_uart_off();
-}
-
-#endif
+#define DPRINT(...)
+//#define DPRINT(...) log_print_string(__VA_ARGS__)
 
 #if defined(USE_SX127X) && defined(PLATFORM_SX127X_USE_RESET_PIN)
 // override the weak definition
@@ -134,10 +74,6 @@ void __platform_post_framework_init()
 
     GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
     hw_gpio_configure_pin_stm(MCU2MODEM_INT_PIN, &GPIO_InitStruct);
-    error_t err = hw_gpio_configure_interrupt(MCU2MODEM_INT_PIN, &on_modem_wakeup, GPIO_RISING_EDGE); assert(err == SUCCESS);
-    err = hw_gpio_enable_interrupt(MCU2MODEM_INT_PIN); assert(err == SUCCESS);
-
-    sched_register_task(&modem_listen);
 #endif
 }
 
@@ -270,36 +206,36 @@ void hw_deinit_pheriperals()
 //  assert(GPIOA->MODER == 0xFFFFFFFC);
 //#endif
 
-  uint32_t gpioa_moder_mask = 0;
-  gpioa_moder_mask |= 0b11 << (0 * 2); // MCU2MODEM INT => TODO hardcoded for now
-  gpioa_moder_mask |= 0b11 << (11 * 2); // MODEM2MCU INT => TODO hardcoded for now
-  gpioa_moder_mask |= 0b11 << (1 * 2); // A1 = ANT SW, can be enabled during RX or TX
-#ifdef FRAMEWORK_DEBUG_ENABLE_SWD
-  gpioa_moder_mask |= 0b11 << (13 * 2); // SWD
-  gpioa_moder_mask |= 0b11 << (14 * 2); // SWD
-#endif
-  gpioa_moder_mask |= 0b11 << (6 * 2); // SPI MISO // TODO not always disabled
-  gpioa_moder_mask |= 0b11 << (7 * 2); // SPI MOSI // TODO not always disabled
-  gpioa_moder_mask |= 0b11 << (12 * 2); // TCXO VCC // TODO not always disabled
-  gpioa_moder_mask |= 0b11 << (15 * 2); // SPI CS // TODO not always disabled
-  DPRINT("GPIOA->MODER %x, mask %x, result %x", GPIOA->MODER, gpioa_moder_mask, GPIOA->MODER | gpioa_moder_mask);
-  assert((GPIOA->MODER | gpioa_moder_mask) == 0xFFFFFFFF);
+//  uint32_t gpioa_moder_mask = 0;
+//  gpioa_moder_mask |= 0b11 << (0 * 2); // MCU2MODEM INT => TODO hardcoded for now
+//  gpioa_moder_mask |= 0b11 << (11 * 2); // MODEM2MCU INT => TODO hardcoded for now
+//  gpioa_moder_mask |= 0b11 << (1 * 2); // A1 = ANT SW, can be enabled during RX or TX
+//#ifdef FRAMEWORK_DEBUG_ENABLE_SWD
+//  gpioa_moder_mask |= 0b11 << (13 * 2); // SWD
+//  gpioa_moder_mask |= 0b11 << (14 * 2); // SWD
+//#endif
+//  gpioa_moder_mask |= 0b11 << (6 * 2); // SPI MISO // TODO not always disabled
+//  gpioa_moder_mask |= 0b11 << (7 * 2); // SPI MOSI // TODO not always disabled
+//  gpioa_moder_mask |= 0b11 << (12 * 2); // TCXO VCC // TODO not always disabled
+//  gpioa_moder_mask |= 0b11 << (15 * 2); // SPI CS // TODO not always disabled
+//  DPRINT("GPIOA->MODER %x, mask %x, result %x", GPIOA->MODER, gpioa_moder_mask, GPIOA->MODER | gpioa_moder_mask);
+//  assert((GPIOA->MODER | gpioa_moder_mask) == 0xFFFFFFFF);
 
 
-  uint32_t gpiob_moder_mask = 0;
-  gpiob_moder_mask |= 0b11 << (1 * 2); // B1 = DIO1
-  gpiob_moder_mask |= 0b11 << (4 * 2); // B4 = DIO0
-  gpiob_moder_mask |= 0b11 << (3 * 2); // B3 = SPI CLK // TODO not always disabled (for example during TX)
-  DPRINT("GPIOB->MODER %x, mask %x, result %x", GPIOB->MODER, gpiob_moder_mask, GPIOB->MODER | gpiob_moder_mask);
-  assert((GPIOB->MODER | gpiob_moder_mask) == 0xFFFFFFFF);
+//  uint32_t gpiob_moder_mask = 0;
+//  gpiob_moder_mask |= 0b11 << (1 * 2); // B1 = DIO1
+//  gpiob_moder_mask |= 0b11 << (4 * 2); // B4 = DIO0
+//  gpiob_moder_mask |= 0b11 << (3 * 2); // B3 = SPI CLK // TODO not always disabled (for example during TX)
+//  DPRINT("GPIOB->MODER %x, mask %x, result %x", GPIOB->MODER, gpiob_moder_mask, GPIOB->MODER | gpiob_moder_mask);
+//  assert((GPIOB->MODER | gpiob_moder_mask) == 0xFFFFFFFF);
 
-  uint32_t gpioc_moder_mask = 0;
-  gpioc_moder_mask |= 0b11 << (0 * 2); // C0 = nRESET sx127x // TODO
-  gpioc_moder_mask |= 0b11 << (1 * 2); // C1 = ANT SW, can be enabled during RX or TX
-  gpioc_moder_mask |= 0b11 << (2 * 2); // C2 = ANT SW, can be enabled during RX or TX
-  gpioc_moder_mask |= 0b11 << (13 * 2); // DIO3, can be enabled during RX or TX
-  DPRINT("GPIOC->MODER %x, mask %x, result %x", GPIOC->MODER, gpioc_moder_mask, GPIOC->MODER | gpioc_moder_mask);
-  assert((GPIOC->MODER | gpioc_moder_mask) == 0xFFFFFFFF); //TODO LORAWAN asserts here
+//  uint32_t gpioc_moder_mask = 0;
+//  gpioc_moder_mask |= 0b11 << (0 * 2); // C0 = nRESET sx127x // TODO
+//  gpioc_moder_mask |= 0b11 << (1 * 2); // C1 = ANT SW, can be enabled during RX or TX
+//  gpioc_moder_mask |= 0b11 << (2 * 2); // C2 = ANT SW, can be enabled during RX or TX
+//  gpioc_moder_mask |= 0b11 << (13 * 2); // DIO3, can be enabled during RX or TX
+//  DPRINT("GPIOC->MODER %x, mask %x, result %x", GPIOC->MODER, gpioc_moder_mask, GPIOC->MODER | gpioc_moder_mask);
+//  assert((GPIOC->MODER | gpioc_moder_mask) == 0xFFFFFFFF); //TODO LORAWAN asserts here
 
   // TODO internal voltage ref
   // TODO GPIO direction
