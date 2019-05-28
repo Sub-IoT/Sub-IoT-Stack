@@ -20,6 +20,10 @@
  *
  */
 
+#include "platform_defs.h"
+
+#ifndef PLATFORM_USE_RTC
+
 #include <stdbool.h>
 #include <stdint.h>
 
@@ -339,3 +343,4 @@ void TIMER_ISR(void)
 #endif
 }
 
+#endif

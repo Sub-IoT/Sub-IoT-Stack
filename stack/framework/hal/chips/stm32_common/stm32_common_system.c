@@ -140,6 +140,7 @@ void hw_enter_lowpower_mode(uint8_t mode)
 #endif
 
       __HAL_RCC_PWR_CLK_ENABLE(); // to be able to change PWR registers
+
       PWR->CR |= (PWR_CR_ULP & PWR_CR_FWU & PWR_CR_PVDE); // we don't need Vrefint and PVD
       //RCC->CFGR |= RCC_CFGR_STOPWUCK; // use HSI16 after wake up
       __HAL_PWR_CLEAR_FLAG(PWR_FLAG_WU);
@@ -154,6 +155,46 @@ void hw_enter_lowpower_mode(uint8_t mode)
       // after resuming from STOP mode we should reinit the clock config
       stm32_common_mcu_init();
       break;
+    
+    case 2: // STANDBY mode
+
+       __HAL_RCC_GPIOA_CLK_ENABLE();
+      //__HAL_RCC_GPIOB_CLK_ENABLE();
+      //__HAL_RCC_GPIOC_CLK_ENABLE();
+      // __HAL_RCC_GPIOD_CLK_ENABLE();
+      // __HAL_RCC_GPIOE_CLK_ENABLE();
+      // __HAL_RCC_GPIOH_CLK_ENABLE();
+
+         GPIOA->MODER = 0xFFFFFFFF;
+      //   GPIOB->MODER = 0xFFFFFFFF;
+      //   GPIOC->MODER = 0xFFFFFFFF;
+      //   GPIOD->MODER = 0xFFFFFFFF;
+      //   GPIOE->MODER = 0xFFFFFFFF;
+      //   GPIOH->MODER = 0xFFFFFFFF;
+
+
+       __HAL_RCC_GPIOA_CLK_DISABLE();
+      // __HAL_RCC_GPIOB_CLK_DISABLE();
+      // __HAL_RCC_GPIOC_CLK_DISABLE();
+      // __HAL_RCC_GPIOD_CLK_DISABLE();
+      // __HAL_RCC_GPIOE_CLK_DISABLE();
+      // __HAL_RCC_GPIOH_CLK_DISABLE();
+
+      __HAL_RCC_PWR_CLK_ENABLE();
+
+      PWR->CR |= (PWR_CR_ULP & PWR_CR_FWU & PWR_CR_PVDE);
+      HAL_PWR_DisableWakeUpPin(PWR_WAKEUP_PIN1);
+      HAL_PWR_DisableWakeUpPin(PWR_WAKEUP_PIN2);
+
+      __HAL_PWR_CLEAR_FLAG(PWR_FLAG_WU);
+      //HAL_PWR_EnableWakeUpPin(PWR_WAKEUP_PIN2)
+      //__HAL_RCC_PWR_CLK_DISABLE();
+
+      __HAL_RCC_LSE_CONFIG(RCC_LSE_OFF);
+
+      HAL_PWR_EnterSTANDBYMode();
+
+      
     case 255:
       break;
     default:
