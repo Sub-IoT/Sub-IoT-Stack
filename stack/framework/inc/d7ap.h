@@ -177,7 +177,7 @@ typedef struct{
 /**
  * @brief   Initializes d7a module
  */
-void d7ap_init();
+void d7ap_init(void);
 
 /**
  * @brief Stop the D7A stack

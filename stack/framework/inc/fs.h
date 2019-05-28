@@ -28,7 +28,8 @@
 #ifndef FS_H_
 #define FS_H_
 
-#include "stdint.h"
+#include <stdint.h>
+#include <stdbool.h>
 
 #ifndef FRAMEWORK_FS_FILE_COUNT
 #define FRAMEWORK_FS_FILE_COUNT 80

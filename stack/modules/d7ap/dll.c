@@ -1098,6 +1098,8 @@ uint8_t dll_assemble_packet_header_bg(packet_t* packet, uint8_t* data_ptr)
     *data_ptr = (packet->dll_header.control_target_id_type << 6) | (packet->dll_header.control_identifier_tag & 0x3F);
     DPRINT("dll_header.control %x ", *data_ptr);
     data_ptr ++;
+
+    return 0;
 }
 
 uint8_t dll_assemble_packet_header(packet_t* packet, uint8_t* data_ptr)

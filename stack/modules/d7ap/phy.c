@@ -108,8 +108,8 @@ typedef enum {
 
 static hwradio_init_args_t init_args;
 
-static tx_packet_callback_t transmitted_callback;
-static rx_packet_callback_t received_callback;
+static phy_tx_packet_callback_t transmitted_callback;
+static phy_rx_packet_callback_t received_callback;
 
 static state_t state = STATE_IDLE;
 static hw_radio_packet_t *current_packet;
@@ -514,7 +514,7 @@ error_t phy_init(void) {
     return ret;
 }
 
-error_t phy_start_rx(channel_id_t* channel, syncword_class_t syncword_class, rx_packet_callback_t rx_cb) {
+error_t phy_start_rx(channel_id_t* channel, syncword_class_t syncword_class, phy_rx_packet_callback_t rx_cb) {
     received_callback = rx_cb;
     // TODO error handling EINVAL, EOFF
 
@@ -591,7 +591,7 @@ static uint16_t encode_packet(hw_radio_packet_t* packet, uint8_t* encoded_packet
     return encoded_len;
 }
 
-error_t phy_send_packet(hw_radio_packet_t* packet, phy_tx_config_t* config, tx_packet_callback_t tx_callback)
+error_t phy_send_packet(hw_radio_packet_t* packet, phy_tx_config_t* config, phy_tx_packet_callback_t tx_callback)
 {
     assert(packet->length <= PACKET_MAX_SIZE);
 
@@ -686,7 +686,7 @@ static uint8_t assemble_background_payload()
  * packet, in order to guarantee no silence period on the channel between D7AAdvP and D7ANP.
  */
 error_t phy_send_packet_with_advertising(hw_radio_packet_t* packet, phy_tx_config_t* config,
-                                         uint8_t dll_header_bg_frame[2], uint16_t eta, tx_packet_callback_t tx_callback)
+                                         uint8_t dll_header_bg_frame[2], uint16_t eta, phy_tx_packet_callback_t tx_callback)
 {   
     transmitted_callback = tx_callback;
     DPRINT("Start the bg advertising for ad-hoc sync before transmitting the FG frame");
@@ -833,7 +833,7 @@ static void fill_in_fifo(uint8_t remaining_bytes_len)
     }
 }
 
-error_t phy_start_background_scan(phy_rx_config_t* config, rx_packet_callback_t rx_cb)
+error_t phy_start_background_scan(phy_rx_config_t* config, phy_rx_packet_callback_t rx_cb)
 {
     received_callback = rx_cb;
     uint8_t packet_len;
@@ -878,7 +878,7 @@ error_t phy_start_background_scan(phy_rx_config_t* config, rx_packet_callback_t 
     return SUCCESS;
 }
 
-void phy_continuous_tx(phy_tx_config_t const* tx_cfg, uint8_t time_period, tx_packet_callback_t tx_cb)
+void phy_continuous_tx(phy_tx_config_t const* tx_cfg, uint8_t time_period, phy_tx_packet_callback_t tx_cb)
 {
     transmitted_callback = tx_cb;
     DPRINT("Continuous tx\n");

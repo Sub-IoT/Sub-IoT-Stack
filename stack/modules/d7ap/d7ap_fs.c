@@ -135,9 +135,9 @@ int d7ap_fs_init_file(uint8_t file_id, const d7ap_fs_file_header_t* file_header,
     memcpy(default_data + sizeof (d7ap_fs_file_header_t), initial_data, file_header->length);
 
   rtc = fs_init_file(file_id, file_header->file_properties.storage_class,
-		             (const uint8_t *)default_data, sizeof(d7ap_fs_file_header_t) + file_header->allocated_length);
-  if (rtc != 0)
-    return rtc;
+                     (const uint8_t *)default_data, sizeof(d7ap_fs_file_header_t) + file_header->allocated_length);
+
+  return rtc;
 }
 
 int d7ap_fs_init_file_with_d7asp_interface_config(uint8_t file_id, const d7ap_session_config_t* fifo_config)

@@ -37,20 +37,20 @@
  * \code{.c}
  *    void foo()
  *    {
- *  start_atomic();
- *  ...
- *  end_atomic();
+ *	start_atomic();
+ *	...
+ *	end_atomic();
  *    }
  *    
  *    void bar()
  *    {
- *  start_atomic();
- *  ...
- *  foo();
- *  //interrupts are still disabled despite end_atomic() being called from foo()
- *  ...
- *  end_atomic();
- *  //interrupts are re-enabled
+ *	start_atomic();
+ *	...
+ *	foo();
+ *	//interrupts are still disabled despite end_atomic() being called from foo()
+ *	...
+ *	end_atomic();
+ *	//interrupts are re-enabled
  *    }
  * \endcode
  *

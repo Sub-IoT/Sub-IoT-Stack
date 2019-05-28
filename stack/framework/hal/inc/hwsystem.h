@@ -38,8 +38,8 @@ typedef enum {
     REBOOT_REASON_NOT_IMPLEMENTED = 255,
 } system_reboot_reason_t;
 
-system_reboot_reason_t hw_system_reboot_reason();
-void hw_system_save_reboot_reason();
+system_reboot_reason_t hw_system_reboot_reason(void);
+void hw_system_save_reboot_reason(void);
 
 /*! \brief Put the system in low power mode
  *

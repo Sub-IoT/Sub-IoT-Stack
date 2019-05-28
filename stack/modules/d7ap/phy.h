@@ -164,6 +164,12 @@ typedef struct
 } phy_config_t;
 
 
+#include "packet.h"
+typedef void (*phy_rx_packet_callback_t)(packet_t* packet);
+typedef void (*phy_tx_packet_callback_t)(packet_t* packet);
+
+
+
 /** \brief Type definition for the rssi_valid callback function.
  *
  * The rssi_valid callback is called by the PHY driver every time the RSSI measurements of the 
@@ -213,7 +219,7 @@ typedef void (*rssi_valid_callback_t)(int16_t cur_rssi);
  *          ESIZE if the packet is either too long or too small
  *          EOFF if the radio has not yet been initialised
  */
-__LINK_C error_t phy_send_packet(hw_radio_packet_t* packet, phy_tx_config_t* config, tx_packet_callback_t tx_callback);
+__LINK_C error_t phy_send_packet(hw_radio_packet_t* packet, phy_tx_config_t* config, phy_tx_packet_callback_t tx_callback);
 
 
 /** \brief Initiate a packet transmission with a preliminary advertising period for ad-hoc
@@ -224,7 +230,7 @@ __LINK_C error_t phy_send_packet(hw_radio_packet_t* packet, phy_tx_config_t* con
  * synchronization with the responder. In this case the dll_header_bg_frame parameter should be not NULL.
  */
 
-error_t phy_send_packet_with_advertising(hw_radio_packet_t* packet, phy_tx_config_t* config, uint8_t dll_header_bg_frame[2], uint16_t eta, tx_packet_callback_t tx_callback);
+error_t phy_send_packet_with_advertising(hw_radio_packet_t* packet, phy_tx_config_t* config, uint8_t dll_header_bg_frame[2], uint16_t eta, phy_tx_packet_callback_t tx_callback);
 
 
 /** \brief Start a background scan.
@@ -241,7 +247,7 @@ error_t phy_send_packet_with_advertising(hw_radio_packet_t* packet, phy_tx_confi
  *                 EINVAL if the supplied rx_cfg contains invalid parameters.
  *                 EOFF if the radio is not yet initialised.
  */
-error_t phy_start_background_scan(phy_rx_config_t* config, rx_packet_callback_t rx_cb);
+error_t phy_start_background_scan(phy_rx_config_t* config, phy_rx_packet_callback_t rx_cb);
 
 /* \brief Utility function to check whether two channel_id_t are equal
  *
@@ -253,11 +259,11 @@ bool phy_radio_channel_ids_equal(const channel_id_t* a, const channel_id_t* b);
 
 uint16_t phy_calculate_tx_duration(phy_channel_class_t channel_class, phy_coding_t ch_coding, uint8_t packet_length, bool payload_only);
 
-void phy_continuous_tx(phy_tx_config_t const* tx_cfg, uint8_t time_period, tx_packet_callback_t tx_cb);
+void phy_continuous_tx(phy_tx_config_t const* tx_cfg, uint8_t time_period, phy_tx_packet_callback_t tx_cb);
 
 error_t phy_init();
 
-error_t phy_start_rx(channel_id_t *channel, syncword_class_t syncword_class, rx_packet_callback_t rx_cb);
+error_t phy_start_rx(channel_id_t *channel, syncword_class_t syncword_class, phy_rx_packet_callback_t rx_cb);
 
 /** \brief Start the energy scan sequence on the radio.
  *
