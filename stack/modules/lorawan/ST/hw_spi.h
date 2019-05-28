@@ -107,6 +107,9 @@ void HW_SPI_IoDeInit( void );
  */
 uint16_t HW_SPI_InOut( uint16_t outData );
 
+void HW_SPI_enable( void );
+void HW_SPI_disable( void );
+
 
 
 #ifdef __cplusplus
