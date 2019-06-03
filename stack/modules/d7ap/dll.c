@@ -345,6 +345,12 @@ void dll_signal_packet_received(packet_t* packet)
     // TODO check if more received packets are pending
 }
 
+static void packet_received(void *arg)
+{
+    dll_signal_packet_received((packet_t*)arg);
+
+}
+
 void dll_signal_packet_transmitted(packet_t* packet)
 {
     assert(dll_state == DLL_STATE_TX_FOREGROUND);
@@ -681,7 +687,7 @@ static void execute_csma_ca(void *arg)
     }
 }
 
-void dll_execute_scan_automation(void *arg)
+void dll_execute_scan_automation()
 {
     if (!(dll_state == DLL_STATE_IDLE || dll_state == DLL_STATE_SCAN_AUTOMATION))
         return;
@@ -766,6 +772,12 @@ void dll_execute_scan_automation(void *arg)
     current_eirp = current_access_profile.subbands[0].eirp;
 }
 
+static void execute_scan_automation(void *arg)
+{
+    (void)arg;
+    dll_execute_scan_automation();
+}
+
 static void conf_file_changed_callback(uint8_t file_id)
 {
     (void)file_id;
@@ -781,7 +793,10 @@ static void conf_file_changed_callback(uint8_t file_id)
         // when doing scan automation restart this
         if (dll_state == DLL_STATE_IDLE || dll_state == DLL_STATE_SCAN_AUTOMATION)
         {
-            sched_post_task(&dll_execute_scan_automation);
+            DPRINT("Re-start the scan automation to apply this change");
+            dll_scan_automation_timer.next_event = 0;
+            int rtc = timer_add_event(&dll_scan_automation_timer);
+            assert(rtc == SUCCESS);
         }
     }
 }
@@ -798,7 +813,10 @@ void dll_notify_access_profile_file_changed(uint8_t file_id)
         // when we are idle switch to scan automation now as well, in case the new AP enables scanning
         if (dll_state == DLL_STATE_IDLE || dll_state == DLL_STATE_SCAN_AUTOMATION)
         {
-            sched_post_task(&dll_execute_scan_automation);
+            DPRINT("Re-start the scan automation to apply this change");
+            dll_scan_automation_timer.next_event = 0;
+            int rtc = timer_add_event(&dll_scan_automation_timer);
+            assert(rtc == SUCCESS);
         }
     }
 }
@@ -806,7 +824,7 @@ void dll_notify_access_profile_file_changed(uint8_t file_id)
 void dll_notify_dialog_terminated()
 {
     DPRINT("Since the dialog is terminated, we can resume the automation scan");
-    dll_execute_scan_automation(NULL);
+    dll_execute_scan_automation();
 }
 
 void dll_init()
@@ -818,10 +836,10 @@ void dll_init()
     // Initialize timers
     timer_init_event(&dll_cca_timer, &execute_cca);
     timer_init_event(&dll_csma_timer, &execute_csma_ca);
-    timer_init_event(&dll_scan_automation_timer, &dll_execute_scan_automation);
+    timer_init_event(&dll_scan_automation_timer, &execute_scan_automation);
     timer_init_event(&dll_background_scan_timer, &start_background_scan);
     timer_init_event(&dll_guard_period_expiration_timer, &guard_period_expiration);
-    timer_init_event(&dll_process_received_packet_timer, &dll_signal_packet_received);
+    timer_init_event(&dll_process_received_packet_timer, &packet_received);
 
     phy_init();
 
@@ -841,13 +859,13 @@ void dll_init()
 
     fs_register_file_modified_callback(D7A_FILE_DLL_CONF_FILE_ID, &conf_file_changed_callback);
 
-#ifdef MODULE_D7AP_EM_ENABLED   
+#ifdef MODULE_D7AP_EM_ENABLED
     engineering_mode_init();
 #endif
 
     // Start immediately the scan automation
     guarded_channel = false;
-    dll_execute_scan_automation(NULL);
+    dll_execute_scan_automation();
 }
 
 void dll_stop()
@@ -863,6 +881,8 @@ void dll_stop()
 
 void dll_tx_frame(packet_t* packet)
 {
+    timer_cancel_event(&dll_scan_automation_timer); //enable this code if this costly operation proves to be necessary
+
     if (dll_state == DLL_STATE_SCAN_AUTOMATION)
     {
         timer_cancel_event(&dll_background_scan_timer);
@@ -1016,6 +1036,8 @@ void dll_tx_frame(packet_t* packet)
 
 static void start_foreground_scan()
 {
+    //timer_cancel_event(&dll_scan_automation_timer);  //enable this code if this costly operation proves to be necessary
+
     if (dll_state == DLL_STATE_SCAN_AUTOMATION)
     {
         timer_cancel_event(&dll_background_scan_timer);
