@@ -98,6 +98,7 @@ typedef enum {
     ALP_OP_CHUNK = 48,
     ALP_OP_LOGIC = 49,
     ALP_OP_FORWARD = 50,
+    ALP_OP_INDIRECT_FORWARD = 51,
     ALP_OP_REQUEST_TAG = 52
 } alp_operation_t;
 
