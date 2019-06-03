@@ -773,11 +773,6 @@ static bool alp_layer_parse_and_execute_alp_command(alp_command_t* command)
     uint8_t forward_itf_id = ALP_ITF_ID_HOST;
     bool do_forward = false;
 
-    //Check for indirect forward?
-    alp_control_t control; //alp_control_t includes forward at b7 (ALP Error Template at b6)
-    assert(fifo_peek(&command->alp_command_fifo, &control.raw, 0, 1) == SUCCESS); 
-    
-
     while(fifo_get_size(&command->alp_command_fifo) > 0)
     {
         if(forward_itf_id != ALP_ITF_ID_HOST) {
@@ -856,6 +851,8 @@ static bool alp_layer_parse_and_execute_alp_command(alp_command_t* command)
             return true;
         }
 
+        alp_control_t control;
+        assert(fifo_peek(&command->alp_command_fifo, &control.raw, 0, 1) == SUCCESS); 
         alp_status_codes_t alp_status;
         switch(control.operation) {
             case ALP_OP_READ_FILE_DATA:
