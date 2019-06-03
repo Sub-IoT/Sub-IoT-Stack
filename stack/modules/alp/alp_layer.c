@@ -394,53 +394,31 @@ static alp_status_codes_t process_op_indirect_forward(alp_command_t* command, ui
   err = fifo_pop(&command->alp_command_fifo, &interface_file_id, 1);
   switch(*itf_id) {
     case ALP_ITF_ID_D7ASP: ;
-      uint8_t data[12];
-      uint8_t id_length;
       if(ctrl.b7) { //Overload bit
-        err = fifo_peek(&command->alp_command_fifo, &session_config->d7ap_session_config.addressee.ctrl.raw, 2, 1); assert(err == SUCCESS);
-        id_length = d7ap_addressee_id_length(session_config->d7ap_session_config.addressee.ctrl.id_type);
-        err = fifo_pop(&command->alp_command_fifo, &data, id_length + 4); assert(err == SUCCESS);
-        if(fs_file_stat(interface_file_id) == NULL){
-          d7ap_fs_file_header_t header = (d7ap_fs_file_header_t){
-            .file_properties.action_protocol_enabled = 0,
-            .file_properties.storage_class = FS_STORAGE_PERMANENT,
-            .file_permissions = 0, // TODO
-            .length = id_length + 4,
-            .allocated_length = 12,
-          };
-          d7ap_fs_init(interface_file_id, &header, data);
-        } else
-          d7ap_fs_write_file(interface_file_id, 0, data, id_length + 4);
+        uint8_t data[2];
+        d7ap_fs_read_file(interface_file_id, 0, data, 2);
+        session_config->d7ap_session_config.qos.raw = data[0];
+        session_config->d7ap_session_config.dormant_timeout = data[1];
+        err = fifo_pop(&command->alp_command_fifo, &session_config->d7ap_session_config.addressee.ctrl.raw, 1); assert(err == SUCCESS);
+        uint8_t id_length = d7ap_addressee_id_length(session_config->d7ap_session_config.addressee.ctrl.id_type);
+        err = fifo_pop(&command->alp_command_fifo, &session_config->d7ap_session_config.addressee.access_class, 1); assert(err == SUCCESS);
+        err = fifo_pop(&command->alp_command_fifo, session_config->d7ap_session_config.addressee.id, id_length); assert(err == SUCCESS);
       } else {
-        d7ap_fs_read_file(interface_file_id, 2, &session_config->d7ap_session_config.addressee.ctrl.raw, 1);
-        id_length = d7ap_addressee_id_length(session_config->d7ap_session_config.addressee.ctrl.id_type);
-        err = d7ap_fs_read_file(interface_file_id, 0, data, id_length + 4);
+        uint8_t data[12];
+        d7ap_fs_read_file(interface_file_id, 0, data, 12);
+        session_config->d7ap_session_config.qos.raw = data[0];
+        session_config->d7ap_session_config.dormant_timeout = data[1];
+        session_config->d7ap_session_config.addressee.ctrl.raw = data[2];
+        uint8_t id_length = d7ap_addressee_id_length(session_config->d7ap_session_config.addressee.ctrl.id_type);
+        session_config->d7ap_session_config.addressee.access_class = data[3];
+        memcpy(session_config->d7ap_session_config.addressee.id, &data[4], id_length);
       }
-
-      session_config->d7ap_session_config.qos.raw = data[0];
-      session_config->d7ap_session_config.dormant_timeout = data[1];
-      session_config->d7ap_session_config.addressee.access_class = data[3];
-      memcpy(session_config->d7ap_session_config.addressee.id, &data, id_length);
       DPRINT("INDIRECT FORWARD D7ASP");
       break;
 #ifdef MODULE_LORAWAN
     case ALP_ITF_ID_LORAWAN_OTAA: ;
       uint8_t data[35];
-      if(ctrl.b7) {
-        err = fifo_pop(&command->alp_command_fifo, &data, 35); assert(err == SUCCESS);
-        if(fs_file_stat(interface_file_id) == NULL){
-          d7ap_fs_file_header_t header = (d7ap_fs_file_header_t){
-            .file_properties.action_protocol_enabled = 0,
-            .file_properties.storage_class = FS_STORAGE_PERMANENT,
-            .file_permissions = 0, // TODO
-            .length = 35,
-            .allocated_length = 35,
-          };
-          d7ap_fs_init(interface_file_id, &header, data);
-        } else
-          d7ap_fs_write_file(interface_file_id, 0, data, 35);
-      } else
-        d7ap_fs_read_file(interface_file_id, 0, data, 35);
+      d7ap_fs_read_file(interface_file_id, 0, data, 35);
       
       session_config_flags = data[0];
       session_config->lorawan_session_config_otaa.request_ack = session_config_flags & (1<<requestAckBitLocation);
@@ -456,21 +434,7 @@ static alp_status_codes_t process_op_indirect_forward(alp_command_t* command, ui
       break;
     case ALP_ITF_ID_LORAWAN_ABP: ;
       uint8_t data[43];
-      if(ctrl.b7) {
-        err = fifo_pop(&command->alp_command_fifo, &data, 43); assert(err == SUCCESS);
-        if(fs_file_stat(interface_file_id) == NULL){
-          d7ap_fs_file_header_t header = (d7ap_fs_file_header_t){
-            .file_properties.action_protocol_enabled = 0,
-            .file_properties.storage_class = FS_STORAGE_PERMANENT,
-            .file_permissions = 0, // TODO
-            .length = 43,
-            .allocated_length = 43,
-          };
-          d7ap_fs_init(interface_file_id, &header, data);
-        } else
-          d7ap_fs_write_file(interface_file_id, 0, data, 43);
-      } else
-        d7ap_fs_read_file(interface_file_id, 0, data, 43);
+      d7ap_fs_read_file(interface_file_id, 0, data, 43);
       
       session_config_flags = data[0];
       session_config->lorawan_session_config_abp.request_ack=session_config_flags & (1<<requestAckBitLocation);
@@ -852,7 +816,7 @@ static bool alp_layer_parse_and_execute_alp_command(alp_command_t* command)
         }
 
         alp_control_t control;
-        assert(fifo_peek(&command->alp_command_fifo, &control.raw, 0, 1) == SUCCESS); 
+        assert(fifo_peek(&command->alp_command_fifo, &control.raw, 0, 1) == SUCCESS);
         alp_status_codes_t alp_status;
         switch(control.operation) {
             case ALP_OP_READ_FILE_DATA:
