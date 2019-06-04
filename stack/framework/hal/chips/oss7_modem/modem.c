@@ -209,7 +209,7 @@ bool alloc_command() {
   return true;
 }
 
-bool modem_create_file(uint8_t file_id, uint8_t length, fs_storage_class_t storage_class) {
+bool modem_create_file(uint8_t file_id, uint32_t length, fs_storage_class_t storage_class) {
   if(!alloc_command())
     return false;
   

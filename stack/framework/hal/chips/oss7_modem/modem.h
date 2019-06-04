@@ -46,7 +46,7 @@ void modem_send_ping();
 void modem_cb_init(modem_callbacks_t* cbs);
 void modem_reinit();
 bool modem_execute_raw_alp(uint8_t* alp, uint8_t len);
-bool modem_create_file(uint8_t file_id, uint8_t length, fs_storage_class_t storage_class);
+bool modem_create_file(uint8_t file_id, uint32_t length, fs_storage_class_t storage_class);
 bool modem_read_file(uint8_t file_id, uint32_t offset, uint32_t size);
 bool modem_write_file(uint8_t file_id, uint32_t offset, uint32_t size, uint8_t* data);
 bool modem_send_unsolicited_response(uint8_t file_id, uint32_t offset, uint32_t length, uint8_t* data, session_config_t* session_config);

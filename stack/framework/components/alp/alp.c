@@ -374,7 +374,7 @@ void alp_append_write_file_data_action(fifo_t* fifo, uint8_t file_id, uint32_t o
   assert(fifo_put(fifo, data, length) == SUCCESS);
 }
 
-void alp_append_create_new_file_data_action(fifo_t* fifo, uint8_t file_id, uint8_t length, fs_storage_class_t storage_class, bool resp, bool group) {
+void alp_append_create_new_file_data_action(fifo_t* fifo, uint8_t file_id, uint32_t length, fs_storage_class_t storage_class, bool resp, bool group) {
   uint8_t op = ALP_OP_CREATE_FILE | (resp << 6) | (group << 7);
   assert(fifo_put_byte(fifo, op) == SUCCESS);
   alp_operand_file_header_t header = {
@@ -383,8 +383,8 @@ void alp_append_create_new_file_data_action(fifo_t* fifo, uint8_t file_id, uint8
       .file_permissions = 0,
       .file_properties.action_protocol_enabled = 0,
       .file_properties.storage_class = storage_class,
-      .length = length,
-      .allocated_length = length
+      .length = __builtin_bswap32(length),
+      .allocated_length = __builtin_bswap32(length)
     }
   };
   assert(fifo_put(fifo, &header, sizeof(alp_operand_file_header_t)) == SUCCESS);
