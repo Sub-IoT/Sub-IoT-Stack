@@ -111,10 +111,10 @@ void alp_append_indirect_forward_action(fifo_t* fifo, uint8_t itf_id, uint8_t fi
   if (overload) {
     if (itf_id == ALP_ITF_ID_D7ASP)
     {
-      assert(fifo_put_byte(fifo, ((d7ap_session_config_t*)config)->addressee.ctrl.raw) == SUCCESS);
-      uint8_t id_length = d7ap_addressee_id_length(((d7ap_session_config_t*)config)->addressee.ctrl.id_type);
-      assert(fifo_put_byte(fifo, ((d7ap_session_config_t*)config)->addressee.access_class) == SUCCESS);
-      assert(fifo_put(fifo, ((d7ap_session_config_t*)config)->addressee.id, id_length) == SUCCESS);
+      assert(fifo_put_byte(fifo, ((d7ap_addressee_t*)config)->ctrl.raw) == SUCCESS);
+      uint8_t id_length = d7ap_addressee_id_length(((d7ap_addressee_t*)config)->ctrl.id_type);
+      assert(fifo_put_byte(fifo, ((d7ap_addressee_t*)config)->access_class) == SUCCESS);
+      assert(fifo_put(fifo, ((d7ap_addressee_t*)config)->id, id_length) == SUCCESS);
     }
   }
 
