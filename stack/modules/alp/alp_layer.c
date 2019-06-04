@@ -481,7 +481,7 @@ static alp_status_codes_t process_op_indirect_forward(alp_command_t* command, ui
       break;
 #endif
     default:
-      DPRINT("unsupported ITF %i", itf_id);
+      DPRINT("unsupported ITF %i", interface_id);
       assert(false);
   }
 

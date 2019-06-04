@@ -209,6 +209,17 @@ bool alloc_command() {
   return true;
 }
 
+bool modem_create_and_write_file(uint8_t file_id, uint32_t offset, uint32_t length, uint8_t* data, fs_storage_class_t storage_class) {
+  if(!alloc_command())
+    return false;
+
+  alp_append_create_new_file_data_action(&command.fifo, file_id, length, storage_class, true, false);
+
+  alp_append_write_file_data_action(&command.fifo, file_id, offset, length, data, true, false);
+
+  return true;
+}
+
 bool modem_create_file(uint8_t file_id, uint32_t length, fs_storage_class_t storage_class) {
   if(!alloc_command())
     return false;

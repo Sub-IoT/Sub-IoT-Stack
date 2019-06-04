@@ -109,13 +109,6 @@ void alp_append_indirect_forward_action(fifo_t* fifo, uint8_t file_id, bool over
 
   if (overload) {
     assert(fifo_put(fifo, overload_config, overload_config_len) == SUCCESS);
-    // if (itf_id == ALP_ITF_ID_D7ASP)
-    // {
-    //   assert(fifo_put_byte(fifo, ((d7ap_addressee_t*)config)->ctrl.raw) == SUCCESS);
-    //   uint8_t id_length = d7ap_addressee_id_length(((d7ap_addressee_t*)config)->ctrl.id_type);
-    //   assert(fifo_put_byte(fifo, ((d7ap_addressee_t*)config)->access_class) == SUCCESS);
-    //   assert(fifo_put(fifo, ((d7ap_addressee_t*)config)->id, id_length) == SUCCESS);
-    // }
   }
 
   DPRINT("INDIRECT FORWARD");
