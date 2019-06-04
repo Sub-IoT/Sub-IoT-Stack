@@ -209,6 +209,17 @@ bool alloc_command() {
   return true;
 }
 
+bool modem_create_file(uint8_t file_id, uint32_t length, fs_storage_class_t storage_class) {
+  if(!alloc_command())
+    return false;
+  
+  alp_append_create_new_file_data_action(&command.fifo, file_id, length, storage_class, true, false);
+
+  modem_interface_transfer_bytes(command.buffer, fifo_get_size(&command.fifo), SERIAL_MESSAGE_TYPE_ALP_DATA);
+
+  return true;
+}
+
 bool modem_read_file(uint8_t file_id, uint32_t offset, uint32_t size) {
   if(!alloc_command())
     return false;
@@ -254,12 +265,50 @@ bool modem_send_raw_unsolicited_response(uint8_t* alp_command, uint32_t length,
   if(!alloc_command())
     return false;
 
+  //sends alp to modem
+
    if(session_config->interface_type==DASH7)
     alp_append_forward_action(&command.fifo, ALP_ITF_ID_D7ASP, (uint8_t *) &session_config->d7ap_session_config, sizeof(d7ap_session_config_t));
   else if(session_config->interface_type==LORAWAN_OTAA)
     alp_append_forward_action(&command.fifo, ALP_ITF_ID_LORAWAN_OTAA, (uint8_t *) &session_config->lorawan_session_config_otaa, sizeof(lorawan_session_config_otaa_t));
   else if(session_config->interface_type==LORAWAN_ABP)
     alp_append_forward_action(&command.fifo, ALP_ITF_ID_LORAWAN_ABP, (uint8_t *) &session_config->lorawan_session_config_abp, sizeof(lorawan_session_config_abp_t));
+
+  fifo_put(&command.fifo, alp_command, length);
+
+  modem_interface_transfer_bytes(command.buffer, fifo_get_size(&command.fifo), SERIAL_MESSAGE_TYPE_ALP_DATA);
+  return true;
+}
+
+bool modem_send_indirect_unsolicited_response(uint8_t data_file_id, uint32_t offset, uint32_t length, uint8_t* data, 
+                                              interface_type_t interface_type, uint8_t interface_file_id, bool overload, d7ap_addressee_t* d7_addressee) {
+  if(!alloc_command())
+    return false;
+  
+  if(interface_type == DASH7)
+    alp_append_indirect_forward_action(&command.fifo, ALP_ITF_ID_D7ASP, interface_file_id, overload, (uint8_t *) &d7_addressee);
+  else if(interface_type == LORAWAN_OTAA)
+    alp_append_indirect_forward_action(&command.fifo, ALP_ITF_ID_LORAWAN_OTAA, interface_file_id, false, NULL);
+  else if(interface_type == LORAWAN_ABP)
+    alp_append_indirect_forward_action(&command.fifo, ALP_ITF_ID_LORAWAN_ABP, interface_file_id, false, NULL);
+
+  alp_append_return_file_data_action(&command.fifo, data_file_id, offset, length, data);
+
+  modem_interface_transfer_bytes(command.buffer, fifo_get_size(&command.fifo), SERIAL_MESSAGE_TYPE_ALP_DATA);
+  return true;
+}
+
+bool modem_send_raw_indirect_unsolicited_response(uint8_t* alp_command, uint32_t length,
+                                                  interface_type_t interface_type, uint8_t interface_file_id, bool overload, d7ap_addressee_t* d7_addressee) {
+  if(!alloc_command())
+    return false;
+  
+  if(interface_type == DASH7)
+    alp_append_indirect_forward_action(&command.fifo, ALP_ITF_ID_D7ASP, interface_file_id, overload, (uint8_t *) &d7_addressee);
+  else if(interface_type == LORAWAN_OTAA)
+    alp_append_indirect_forward_action(&command.fifo, ALP_ITF_ID_LORAWAN_OTAA, interface_file_id, false, NULL);
+  else if(interface_type == LORAWAN_ABP)
+    alp_append_indirect_forward_action(&command.fifo, ALP_ITF_ID_LORAWAN_ABP, interface_file_id, false, NULL);
 
   fifo_put(&command.fifo, alp_command, length);
 

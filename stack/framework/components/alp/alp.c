@@ -103,6 +103,24 @@ void alp_append_file_offset_operand(fifo_t* fifo, uint8_t file_id, uint32_t offs
   alp_append_length_operand(fifo, offset);
 }
 
+void alp_append_indirect_forward_action(fifo_t* fifo, uint8_t itf_id, uint8_t file_id, bool overload, uint8_t *config) {
+  assert(fifo_put_byte(fifo, ALP_OP_INDIRECT_FORWARD | (overload << 7)) == SUCCESS);
+  assert(fifo_put_byte(fifo, itf_id) == SUCCESS);
+  assert(fifo_put_byte(fifo, file_id) == SUCCESS);
+
+  if (overload) {
+    if (itf_id == ALP_ITF_ID_D7ASP)
+    {
+      assert(fifo_put_byte(fifo, ((d7ap_addressee_t*)config)->ctrl.raw) == SUCCESS);
+      uint8_t id_length = d7ap_addressee_id_length(((d7ap_addressee_t*)config)->ctrl.id_type);
+      assert(fifo_put_byte(fifo, ((d7ap_addressee_t*)config)->access_class) == SUCCESS);
+      assert(fifo_put(fifo, ((d7ap_addressee_t*)config)->id, id_length) == SUCCESS);
+    }
+  }
+
+  DPRINT("INDIRECT FORWARD");
+}
+
 void alp_append_forward_action(fifo_t* fifo, uint8_t itf_id, uint8_t *config, uint8_t config_len) {
   assert(config!=NULL);
   assert(fifo_put_byte(fifo, ALP_OP_FORWARD) == SUCCESS);
@@ -354,6 +372,22 @@ void alp_append_write_file_data_action(fifo_t* fifo, uint8_t file_id, uint32_t o
   alp_append_file_offset_operand(fifo, file_id, offset);
   alp_append_length_operand(fifo, length);
   assert(fifo_put(fifo, data, length) == SUCCESS);
+}
+
+void alp_append_create_new_file_data_action(fifo_t* fifo, uint8_t file_id, uint32_t length, fs_storage_class_t storage_class, bool resp, bool group) {
+  uint8_t op = ALP_OP_CREATE_FILE | (resp << 6) | (group << 7);
+  assert(fifo_put_byte(fifo, op) == SUCCESS);
+  alp_operand_file_header_t header = {
+    .file_id = file_id,
+    .file_header = {
+      .file_permissions = 0,
+      .file_properties.action_protocol_enabled = 0,
+      .file_properties.storage_class = storage_class,
+      .length = __builtin_bswap32(length),
+      .allocated_length = __builtin_bswap32(length)
+    }
+  };
+  assert(fifo_put(fifo, &header, sizeof(alp_operand_file_header_t)) == SUCCESS);
 }
 
 uint8_t alp_length_operand_coded_length(uint32_t length) {
