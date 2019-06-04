@@ -533,6 +533,14 @@ fs_file_stat_t *fs_file_stat(uint8_t file_id)
         return NULL;
 }
 
+bool fs_unregister_file_modified_callback(uint8_t file_id) {
+    if(file_modified_callbacks[file_id]) {
+        file_modified_callbacks[file_id] = NULL;
+        return true;
+    } else
+        return false;
+}
+
 bool fs_register_file_modified_callback(uint8_t file_id, fs_modified_file_callback_t callback)
 {
     assert(_is_file_defined(file_id));

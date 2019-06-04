@@ -242,7 +242,7 @@ void alp_append_forward_action(fifo_t* fifo, uint8_t itf_id, uint8_t *config, ui
 void alp_append_return_file_data_action(fifo_t* fifo, uint8_t file_id, uint32_t offset, uint32_t length, uint8_t* data);
 void alp_append_length_operand(fifo_t* fifo, uint32_t length);
 void alp_append_create_new_file_data_action(fifo_t* fifo, uint8_t file_id, uint32_t length, fs_storage_class_t storage_class, bool resp, bool group);
-void alp_append_indirect_forward_action(fifo_t* fifo, uint8_t itf_id, uint8_t file_id, bool overload, uint8_t *config);
+void alp_append_indirect_forward_action(fifo_t* fifo, uint8_t file_id, bool overload, uint8_t *overload_config, uint8_t overload_config_len);
 
 uint32_t alp_parse_length_operand(fifo_t* cmd_fifo);
 alp_operand_file_offset_t alp_parse_file_offset_operand(fifo_t* cmd_fifo);

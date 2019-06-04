@@ -103,19 +103,19 @@ void alp_append_file_offset_operand(fifo_t* fifo, uint8_t file_id, uint32_t offs
   alp_append_length_operand(fifo, offset);
 }
 
-void alp_append_indirect_forward_action(fifo_t* fifo, uint8_t itf_id, uint8_t file_id, bool overload, uint8_t *config) {
+void alp_append_indirect_forward_action(fifo_t* fifo, uint8_t file_id, bool overload, uint8_t *overload_config, uint8_t overload_config_len) {
   assert(fifo_put_byte(fifo, ALP_OP_INDIRECT_FORWARD | (overload << 7)) == SUCCESS);
-  assert(fifo_put_byte(fifo, itf_id) == SUCCESS);
   assert(fifo_put_byte(fifo, file_id) == SUCCESS);
 
   if (overload) {
-    if (itf_id == ALP_ITF_ID_D7ASP)
-    {
-      assert(fifo_put_byte(fifo, ((d7ap_addressee_t*)config)->ctrl.raw) == SUCCESS);
-      uint8_t id_length = d7ap_addressee_id_length(((d7ap_addressee_t*)config)->ctrl.id_type);
-      assert(fifo_put_byte(fifo, ((d7ap_addressee_t*)config)->access_class) == SUCCESS);
-      assert(fifo_put(fifo, ((d7ap_addressee_t*)config)->id, id_length) == SUCCESS);
-    }
+    assert(fifo_put(fifo, overload_config, overload_config_len) == SUCCESS);
+    // if (itf_id == ALP_ITF_ID_D7ASP)
+    // {
+    //   assert(fifo_put_byte(fifo, ((d7ap_addressee_t*)config)->ctrl.raw) == SUCCESS);
+    //   uint8_t id_length = d7ap_addressee_id_length(((d7ap_addressee_t*)config)->ctrl.id_type);
+    //   assert(fifo_put_byte(fifo, ((d7ap_addressee_t*)config)->access_class) == SUCCESS);
+    //   assert(fifo_put(fifo, ((d7ap_addressee_t*)config)->id, id_length) == SUCCESS);
+    // }
   }
 
   DPRINT("INDIRECT FORWARD");
