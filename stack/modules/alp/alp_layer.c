@@ -1001,9 +1001,11 @@ void add_interface_status_lorawan(alp_command_t* command, uint8_t attempts, alp_
 {
   fifo_put_byte(&command->alp_response_fifo, ALP_OP_RETURN_STATUS + (1 << 6));
   fifo_put_byte(&command->alp_response_fifo, alp_interface);
-  fifo_put_byte(&command->alp_response_fifo, 1); //length
+  fifo_put_byte(&command->alp_response_fifo, 6); //length
   fifo_put_byte(&command->alp_response_fifo, attempts);
   fifo_put_byte(&command->alp_response_fifo, error);
+   uint32_t duty = __builtin_bswap32(lorawanGetDutyCycleWaitTime());
+  fifo_put(&command->alp_response_fifo, (uint8_t*)&duty, 4);
   
 }
 

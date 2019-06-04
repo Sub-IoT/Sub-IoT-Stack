@@ -288,6 +288,10 @@ static bool LastTxIsJoinRequest;
 static TimerTime_t LoRaMacInitializationTime = 0;
 
 /*!
+ * Current duty cycle backoff time
+ */
+static uint32_t dutyCycleWaitTime = 0;
+/*!
  * LoRaMac internal states
  */
 enum eLoRaMacState
@@ -603,10 +607,17 @@ LoRaMacStatus_t SetTxContinuousWave( uint16_t timeout );
  */
 LoRaMacStatus_t SetTxContinuousWave1( uint16_t timeout, uint32_t frequency, uint8_t power );
 
+uint32_t lorawanGetDutyCycleWaitTime();
+
 /*!
  * \brief Resets MAC specific parameters to default
  */
 static void ResetMacParameters( void );
+
+uint32_t lorawanGetDutyCycleWaitTime()
+{
+    return dutyCycleWaitTime;
+}
 
 static void OnRadioTxDone( void )
 {
@@ -1971,12 +1982,14 @@ static LoRaMacStatus_t ScheduleTx( void )
     if( dutyCycleTimeOff == 0 )
     {
         // Try to send now
+        dutyCycleWaitTime = 0;
         return SendFrameOnChannel( Channel );
     }
     else
     {
         // Send later - prepare timer
         log_print_string("delaying TX by %i ms due to duty cycle limit", dutyCycleTimeOff);
+        dutyCycleWaitTime = dutyCycleTimeOff;
         LoRaMacState |= LORAMAC_TX_DELAYED;
         TimerSetValue( &TxDelayedTimer, dutyCycleTimeOff );
         TimerStart( &TxDelayedTimer );

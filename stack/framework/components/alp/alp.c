@@ -260,6 +260,9 @@ static void parse_op_return_status(fifo_t* fifo, alp_action_t* action, bool b6, 
     fifo_skip(fifo,1); //size
     fifo_pop(fifo, &interface_status.attempts, 1);
     fifo_pop(fifo, &interface_status.error_state, 1);
+    fifo_pop(fifo,  &interface_status.dutyCycleWaitTime, 4);
+    interface_status.dutyCycleWaitTime = __builtin_bswap32(interface_status.dutyCycleWaitTime);
+    //log_print_string("!!!WAIT TIME: %i", interface_status.dutyCycleWaitTime);
   }
 
   DPRINT("parsed interface status");

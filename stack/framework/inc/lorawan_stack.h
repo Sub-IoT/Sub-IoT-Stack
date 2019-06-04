@@ -48,6 +48,7 @@ typedef enum {
 typedef struct __attribute__((__packed__)) {
     uint8_t attempts;
     lorawan_stack_error_t error_state;
+    uint32_t dutyCycleWaitTime;
 } lorawan_session_result_t;
 
 
