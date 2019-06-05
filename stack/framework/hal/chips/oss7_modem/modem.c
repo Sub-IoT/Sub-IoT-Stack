@@ -217,6 +217,8 @@ bool modem_create_and_write_file(uint8_t file_id, uint32_t offset, uint32_t leng
 
   alp_append_write_file_data_action(&command.fifo, file_id, offset, length, data, true, false);
 
+  modem_interface_transfer_bytes(command.buffer, fifo_get_size(&command.fifo), SERIAL_MESSAGE_TYPE_ALP_DATA);
+
   return true;
 }
 
