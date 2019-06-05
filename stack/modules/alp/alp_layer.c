@@ -399,7 +399,6 @@ static alp_status_codes_t process_op_indirect_forward(alp_command_t* command, ui
   alp_control_t ctrl;
   err = fifo_pop(&command->alp_command_fifo, &ctrl.raw, 1); assert(err == SUCCESS);
   uint8_t interface_file_id;
-  alp_itf_id_t interface_id;
   err = fifo_pop(&command->alp_command_fifo, &interface_file_id, 1);
   if((previous_interface_file_id != interface_file_id) || interface_file_changed) {
     re_read = true;
