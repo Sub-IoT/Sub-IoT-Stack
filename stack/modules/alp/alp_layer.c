@@ -408,22 +408,23 @@ static alp_status_codes_t process_op_indirect_forward(alp_command_t* command, ui
       if(fs_file_stat(interface_file_id)!=NULL) {
         fs_unregister_file_modified_callback(previous_interface_file_id);
         fs_register_file_modified_callback(interface_file_changed, &interface_file_changed_callback);
-        d7ap_fs_read_file(interface_file_id, 0, &interface_id, 1);
+        d7ap_fs_read_file(interface_file_id, 0, itf_id, 1);
         previous_interface_file_id = interface_file_id;
       } else {
         DPRINT("given file is not defined");
         assert(false);
       }
     } else
-      interface_id = session_config_saved.interface_type;
+      *itf_id = session_config_saved.interface_type;
   } else
-    interface_id = session_config_saved.interface_type;
-  switch(interface_id) {
+    *itf_id = session_config_saved.interface_type;
+  switch(*itf_id) {
     case ALP_ITF_ID_D7ASP: ;
       if(re_read) {
         uint8_t data[12];
         d7ap_fs_read_file(interface_file_id, 1, data, 12);
-        session_config_saved.interface_type = interface_id;
+
+        session_config_saved.interface_type = ALP_ITF_ID_D7ASP;
         session_config_saved.d7ap_session_config.qos.raw = data[0];
         session_config_saved.d7ap_session_config.dormant_timeout = data[1];
         session_config_saved.d7ap_session_config.addressee.ctrl.raw = data[2];
@@ -448,6 +449,8 @@ static alp_status_codes_t process_op_indirect_forward(alp_command_t* command, ui
       if(re_read) {
         uint8_t data[35];
         d7ap_fs_read_file(interface_file_id, 1, data, 35);
+
+        session_config_saved.interface_type = ALP_ITF_ID_LORAWAN_OTAA;
         session_config_flags = data[0];
         session_config_saved.lorawan_session_config_otaa.request_ack = session_config_flags & (1<<requestAckBitLocation);
         session_config_saved.lorawan_session_config_otaa.adr_enabled = session_config_flags & (1<<adrEnabledLocation);
@@ -458,6 +461,7 @@ static alp_status_codes_t process_op_indirect_forward(alp_command_t* command, ui
         memcpy(session_config_saved.lorawan_session_config_otaa.appEUI, &data[11], 8);
         memcpy(session_config_saved.lorawan_session_config_otaa.appKey, &data[19], 16);
       }
+      session_config->interface_type = session_config_saved.interface_type;
       session_config->lorawan_session_config_otaa = session_config_saved.lorawan_session_config_otaa;
 
       DPRINT("INDIRECT FORWARD LORAWAN");
@@ -467,6 +471,7 @@ static alp_status_codes_t process_op_indirect_forward(alp_command_t* command, ui
         uint8_t data_abp[43];
         d7ap_fs_read_file(interface_file_id, 1, data_abp, 43);
         
+        session_config_saved.interface_type = ALP_ITF_ID_LORAWAN_ABP;
         session_config_flags = data_abp[0];
         session_config_saved.lorawan_session_config_abp.request_ack=session_config_flags & (1<<requestAckBitLocation);
         session_config_saved.lorawan_session_config_abp.adr_enabled=session_config_flags & (1<<adrEnabledLocation);
@@ -480,13 +485,14 @@ static alp_status_codes_t process_op_indirect_forward(alp_command_t* command, ui
         memcpy(session_config_saved.lorawan_session_config_abp.network_id, &data_abp[39], 4);
         session_config_saved.lorawan_session_config_abp.network_id=__builtin_bswap32(session_config_saved.lorawan_session_config_abp.network_id);
       }
-      session_config->lorawan_session_config_otaa = session_config_saved.lorawan_session_config_otaa;
+      session_config->interface_type = session_config_saved.interface_type;
+      session_config->lorawan_session_config_abp = session_config_saved.lorawan_session_config_abp;
 
       DPRINT("INDIRECT FORWARD LORAWAN");
       break;
 #endif
     default:
-      DPRINT("unsupported ITF %i", interface_id);
+      DPRINT("unsupported ITF %i from file 0x%02X\n", *itf_id, interface_file_id);
       assert(false);
   }
 
