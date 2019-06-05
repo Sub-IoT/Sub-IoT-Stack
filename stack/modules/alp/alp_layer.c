@@ -405,10 +405,15 @@ static alp_status_codes_t process_op_indirect_forward(alp_command_t* command, ui
     re_read = true;
     interface_file_changed = false;
     if(previous_interface_file_id != interface_file_id) {
-      fs_unregister_file_modified_callback(previous_interface_file_id);
-      fs_register_file_modified_callback(interface_file_changed, &interface_file_changed_callback);
-      previous_interface_file_id = interface_file_id;
-      d7ap_fs_read_file(interface_file_id, 0, &interface_id, 1);
+      if(fs_file_stat(interface_file_id)!=NULL) {
+        fs_unregister_file_modified_callback(previous_interface_file_id);
+        fs_register_file_modified_callback(interface_file_changed, &interface_file_changed_callback);
+        d7ap_fs_read_file(interface_file_id, 0, &interface_id, 1);
+        previous_interface_file_id = interface_file_id;
+      } else {
+        DPRINT("given file is not defined");
+        assert(false);
+      }
     } else
       interface_id = session_config_saved.interface_type;
   } else
