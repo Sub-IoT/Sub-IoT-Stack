@@ -84,6 +84,8 @@ static uint8_t previous_interface_file_id = 0;
 static bool interface_file_changed = true;
 static session_config_t session_config_saved;
 static uint8_t forwarded_alp_actions[ALP_PAYLOAD_MAX_SIZE]; // temp buffer statically allocated to prevent runtime stackoverflows
+static uint8_t alp_data[ALP_PAYLOAD_MAX_SIZE]; // temp buffer statically allocated to prevent runtime stackoverflows
+static uint8_t alp_data2[ALP_PAYLOAD_MAX_SIZE]; // temp buffer statically allocated to prevent runtime stackoverflows
 
 static void _async_process_command_from_d7ap(void* arg);
 void alp_layer_process_response_from_d7ap(uint16_t trans_id, uint8_t* alp_command,
@@ -252,19 +254,17 @@ static alp_status_codes_t process_op_read_file_data(alp_command_t* command) {
   if(operand.requested_data_length <= 0 || operand.requested_data_length > ALP_PAYLOAD_MAX_SIZE)
     return ALP_STATUS_UNKNOWN_ERROR; // TODO more specific error + move to fs_read_file?
 
-
-  uint8_t data[ALP_PAYLOAD_MAX_SIZE];
-  int rc = d7ap_fs_read_file(operand.file_offset.file_id, operand.file_offset.offset, data, operand.requested_data_length);
+  int rc = d7ap_fs_read_file(operand.file_offset.file_id, operand.file_offset.offset, alp_data, operand.requested_data_length);
   if(rc == -ENOENT) {
     // give the application layer the chance to fullfill this request ...
     if(init_args != NULL && init_args->alp_unhandled_read_action_cb != NULL)
-      rc = init_args->alp_unhandled_read_action_cb(current_d7asp_result, operand, data);
+      rc = init_args->alp_unhandled_read_action_cb(current_d7asp_result, operand, alp_data);
   }
 
   if(rc == 0) {
     // fill response
     alp_append_return_file_data_action(&command->alp_response_fifo, operand.file_offset.file_id, operand.file_offset.offset,
-                                       operand.requested_data_length, data);
+                                       operand.requested_data_length, alp_data);
   }
 
   return ALP_STATUS_OK;
@@ -325,9 +325,8 @@ static alp_status_codes_t process_op_write_file_data(alp_command_t* command) {
   if(operand.provided_data_length > ALP_PAYLOAD_MAX_SIZE)
     return ALP_STATUS_UNKNOWN_ERROR; // TODO more specific error
 
-  uint8_t data[ALP_PAYLOAD_MAX_SIZE];
-  err = fifo_pop(&command->alp_command_fifo, data, (uint16_t)operand.provided_data_length);
-  int rc = d7ap_fs_write_file(operand.file_offset.file_id, operand.file_offset.offset, data, operand.provided_data_length);
+  err = fifo_pop(&command->alp_command_fifo, alp_data, (uint16_t)operand.provided_data_length);
+  int rc = d7ap_fs_write_file(operand.file_offset.file_id, operand.file_offset.offset, alp_data, operand.provided_data_length);
   if(rc != 0)
     return ALP_STATUS_UNKNOWN_ERROR; // TODO more specific error
 
@@ -382,18 +381,16 @@ static alp_status_codes_t process_op_break_query(alp_command_t* command) {
   uint32_t comp_length = alp_parse_length_operand(&command->alp_command_fifo);
   // TODO assuming no compare mask for now + assume compare value present + only 1 file offset operand
 
-  if(comp_length > ALP_PAYLOAD_MAX_SIZE / 2)
+  if(comp_length > ALP_PAYLOAD_MAX_SIZE)
     goto error;
 
-  uint8_t value[ALP_PAYLOAD_MAX_SIZE / 2];
-  memset(value, 0, comp_length);
-  err = fifo_pop(&command->alp_command_fifo, value, (uint16_t)comp_length); assert(err == SUCCESS);
+  memset(alp_data, 0, comp_length);
+  err = fifo_pop(&command->alp_command_fifo, alp_data, (uint16_t)comp_length); assert(err == SUCCESS);
   alp_operand_file_offset_t offset_a = alp_parse_file_offset_operand(&command->alp_command_fifo);
 
-  uint8_t file_value[ALP_PAYLOAD_MAX_SIZE / 2];
-  d7ap_fs_read_file(offset_a.file_id, offset_a.offset, file_value, comp_length);
+  d7ap_fs_read_file(offset_a.file_id, offset_a.offset, alp_data2, comp_length);
 
-  if(!process_arithm_predicate(file_value, value, comp_length, comp_type)) {
+  if(!process_arithm_predicate(alp_data2, alp_data, comp_length, comp_type)) {
     DPRINT("predicate failed, clearing ALP command to stop further processing");
     goto error;
   }
@@ -592,7 +589,6 @@ static alp_status_codes_t process_op_return_file_data(alp_command_t* command) {
   uint8_t len; // b7 b6 of length field
   uint32_t data_len;
   uint16_t fifo_skip_size;
-  uint8_t alp_response[ALP_PAYLOAD_MAX_SIZE];
 
   // TODO refactor to reuse alp_parse_file_offset_operand() etc but in a way that does not pop() from fifo ..
 
@@ -629,13 +625,13 @@ static alp_status_codes_t process_op_return_file_data(alp_command_t* command) {
 
   if(fifo_get_size(&command->alp_command_fifo) < total_len) goto incomplete_error;
 
-  fifo_pop(&command->alp_command_fifo, alp_response, total_len);
+  fifo_pop(&command->alp_command_fifo, alp_data, total_len);
 
   if(shell_enabled)
-    alp_cmd_handler_output_d7asp_response(current_d7asp_result, alp_response, total_len);
+    alp_cmd_handler_output_d7asp_response(current_d7asp_result, alp_data, total_len);
 
   if(init_args != NULL && init_args->alp_received_unsolicited_data_cb != NULL)
-    init_args->alp_received_unsolicited_data_cb(current_d7asp_result, alp_response, total_len);
+    init_args->alp_received_unsolicited_data_cb(current_d7asp_result, alp_data, total_len);
 
   return ALP_STATUS_OK;  
 

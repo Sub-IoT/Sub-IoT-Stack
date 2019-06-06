@@ -263,7 +263,7 @@ static void execute_state_machine()
  */
 static bool verify_payload(fifo_t* bytes, uint8_t* header)
 {
-  uint8_t payload[RX_BUFFER_SIZE - SERIAL_FRAME_HEADER_SIZE];
+  static uint8_t payload[RX_BUFFER_SIZE - SERIAL_FRAME_HEADER_SIZE]; // statically allocated so this does not end up on stack
   fifo_peek(bytes, (uint8_t*) &payload, 0, header[SERIAL_FRAME_SIZE]);
 
   //check for missing packages
