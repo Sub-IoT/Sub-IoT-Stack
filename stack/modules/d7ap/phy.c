@@ -454,7 +454,7 @@ void continuous_tx_expiration()
     DPRINT("Continuous TX is now terminated");
 }
 
-void fact_settings_file_change_callback()
+void fact_settings_file_change_callback(uint8_t file_id)
 {
     uint8_t fact_settings[D7A_FILE_FACTORY_SETTINGS_SIZE];
     d7ap_fs_read_file(D7A_FILE_FACTORY_SETTINGS_FILE_ID, 0, fact_settings, D7A_FILE_FACTORY_SETTINGS_SIZE);
@@ -496,7 +496,7 @@ error_t phy_init(void) {
     hw_radio_set_dc_free(HW_DC_FREE_NONE);
 #endif
 
-    fact_settings_file_change_callback();
+    fact_settings_file_change_callback(D7A_FILE_FACTORY_SETTINGS_FILE_ID); // trigger read
 
     fs_register_file_modified_callback(D7A_FILE_FACTORY_SETTINGS_FILE_ID, &fact_settings_file_change_callback);
 

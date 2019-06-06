@@ -479,13 +479,14 @@ static alp_status_codes_t process_op_indirect_forward(alp_command_t* command, ui
 
         memcpy(session_config_saved.lorawan_session_config_abp.nwkSKey, &data[3], 16);
         memcpy(session_config_saved.lorawan_session_config_abp.appSKey, &data[19], 16);
-        memcpy(session_config_saved.lorawan_session_config_abp.devAddr, &data[35], 4);
+        memcpy((void*)(intptr_t)session_config_saved.lorawan_session_config_abp.devAddr, &data[35], 4);
         session_config_saved.lorawan_session_config_abp.devAddr=__builtin_bswap32(session_config_saved.lorawan_session_config_abp.devAddr);
-        memcpy(session_config_saved.lorawan_session_config_abp.network_id, &data[39], 4);
+        memcpy((void*)(intptr_t)session_config_saved.lorawan_session_config_abp.network_id, &data[39], 4);
         session_config_saved.lorawan_session_config_abp.network_id=__builtin_bswap32(session_config_saved.lorawan_session_config_abp.network_id);
       }
       session_config->interface_type = session_config_saved.interface_type;
       session_config->lorawan_session_config_abp = session_config_saved.lorawan_session_config_abp;
+
 
       DPRINT("INDIRECT FORWARD LORAWAN");
       break;

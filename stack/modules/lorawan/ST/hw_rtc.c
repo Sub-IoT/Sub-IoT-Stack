@@ -632,6 +632,13 @@ static TimerTime_t HW_RTC_GetCalendarValue( RTC_DateTypeDef* RTC_DateStruct, RTC
   return( calendarValue );
 }
 
+// TODO refactor
+extern void TimerIrqHandler(void);
+void HAL_RTC_AlarmAEventCallback(RTC_HandleTypeDef *hrtc)
+{
+  TimerIrqHandler( );
+}
+
 
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/
 
