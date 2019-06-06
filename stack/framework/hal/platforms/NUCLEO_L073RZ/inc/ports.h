@@ -34,7 +34,7 @@ static const spi_port_t spi_ports[] = {
     }
 };
 
-#define SPI_COUNT sizeof(spi_ports) / sizeof(spi_port_t)
+#define SPI_COUNT (sizeof(spi_ports) / sizeof(spi_port_t))
 
 static const uart_port_t uart_ports[] = {
   {
@@ -47,7 +47,7 @@ static const uart_port_t uart_ports[] = {
   }
 };
 
-#define UART_COUNT sizeof(uart_ports) / sizeof(uart_port_t)
+#define UART_COUNT (sizeof(uart_ports) / sizeof(uart_port_t))
 
 static const i2c_port_t i2c_ports[] = {
   {
@@ -58,7 +58,7 @@ static const i2c_port_t i2c_ports[] = {
   }
 };
 
-#define I2C_COUNT sizeof(i2c_ports) / sizeof(i2c_port_t)
+#define I2C_COUNT (sizeof(i2c_ports) / sizeof(i2c_port_t))
 
 static pin_id_t debug_pins[PLATFORM_NUM_DEBUGPINS] = {
   PIN(GPIO_PORTC, 8), // exposed on CN10 header, pin 2
