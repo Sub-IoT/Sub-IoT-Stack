@@ -11,6 +11,7 @@
 #include "debug.h"
 #include "errors.h"
 #include "platform_defs.h"
+#include "timer.h"
 
 #include "hwsystem.h"
 #include "hwatomic.h"
@@ -262,7 +263,7 @@ static void execute_state_machine()
  */
 static bool verify_payload(fifo_t* bytes, uint8_t* header)
 {
-  uint8_t payload[header[SERIAL_FRAME_SIZE]];
+  uint8_t payload[RX_BUFFER_SIZE - SERIAL_FRAME_HEADER_SIZE];
   fifo_peek(bytes, (uint8_t*) &payload, 0, header[SERIAL_FRAME_SIZE]);
 
   //check for missing packages

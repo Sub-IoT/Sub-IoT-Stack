@@ -21,6 +21,9 @@
  * \author contact@christophe.vg
  */
 
+#include "framework_defs.h"
+#ifdef FRAMEWORK_CONSOLE_ENABLED
+
 #include <assert.h>
 #include <stdbool.h>
 #include <stdio.h>
@@ -30,6 +33,8 @@
 #include "console.h"
 #include "shell.h"
 #include "cli.h"
+
+
 
 // TODO configure this elsewhere, in another way
 #define CLI_CMDS 10
@@ -143,3 +148,4 @@ void cli_help() {
   console_print("\r\n");
 }
 
+#endif

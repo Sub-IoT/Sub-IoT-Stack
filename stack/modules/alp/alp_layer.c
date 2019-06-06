@@ -248,10 +248,11 @@ static alp_status_codes_t process_op_read_file_data(alp_command_t* command) {
   operand.requested_data_length = alp_parse_length_operand(&command->alp_command_fifo);
   DPRINT("READ FILE %i LEN %i", operand.file_offset.file_id, operand.requested_data_length);
 
-  if(operand.requested_data_length <= 0)
+  if(operand.requested_data_length <= 0 || operand.requested_data_length > ALP_PAYLOAD_MAX_SIZE)
     return ALP_STATUS_UNKNOWN_ERROR; // TODO more specific error + move to fs_read_file?
 
-  uint8_t data[operand.requested_data_length];
+
+  uint8_t data[ALP_PAYLOAD_MAX_SIZE];
   int rc = d7ap_fs_read_file(operand.file_offset.file_id, operand.file_offset.offset, data, operand.requested_data_length);
   if(rc == -ENOENT) {
     // give the application layer the chance to fullfill this request ...
@@ -305,7 +306,11 @@ static alp_status_codes_t process_op_write_file_properties(alp_command_t* comman
   file_header.length = __builtin_bswap32(file_header.length);
   file_header.allocated_length = __builtin_bswap32(file_header.allocated_length);
 
-  return d7ap_fs_write_file_header(file_id, &file_header);
+  int rc = d7ap_fs_write_file_header(file_id, &file_header);
+  if(rc != 0)
+    return ALP_STATUS_UNKNOWN_ERROR; // TODO more specific error
+
+  return ALP_STATUS_OK;
 }
 
 static alp_status_codes_t process_op_write_file_data(alp_command_t* command) {
@@ -316,9 +321,16 @@ static alp_status_codes_t process_op_write_file_data(alp_command_t* command) {
   operand.provided_data_length = alp_parse_length_operand(&command->alp_command_fifo);
   DPRINT("WRITE FILE %i LEN %i", operand.file_offset.file_id, operand.provided_data_length);
 
-  uint8_t data[operand.provided_data_length];
-  err = fifo_pop(&command->alp_command_fifo, data, operand.provided_data_length);
-  return d7ap_fs_write_file(operand.file_offset.file_id, operand.file_offset.offset, data, operand.provided_data_length);
+  if(operand.provided_data_length > ALP_PAYLOAD_MAX_SIZE)
+    return ALP_STATUS_UNKNOWN_ERROR; // TODO more specific error
+
+  uint8_t data[ALP_PAYLOAD_MAX_SIZE];
+  err = fifo_pop(&command->alp_command_fifo, data, (uint16_t)operand.provided_data_length);
+  int rc = d7ap_fs_write_file(operand.file_offset.file_id, operand.file_offset.offset, data, operand.provided_data_length);
+  if(rc != 0)
+    return ALP_STATUS_UNKNOWN_ERROR; // TODO more specific error
+
+  return ALP_STATUS_OK;
 }
 
 bool process_arithm_predicate(uint8_t* value1, uint8_t* value2, uint32_t len, alp_query_arithmetic_comparison_type_t comp_type) {
@@ -369,23 +381,27 @@ static alp_status_codes_t process_op_break_query(alp_command_t* command) {
   uint32_t comp_length = alp_parse_length_operand(&command->alp_command_fifo);
   // TODO assuming no compare mask for now + assume compare value present + only 1 file offset operand
 
-  uint8_t value[comp_length];
+  if(comp_length > ALP_PAYLOAD_MAX_SIZE / 2)
+    goto error;
+
+  uint8_t value[ALP_PAYLOAD_MAX_SIZE / 2];
   memset(value, 0, comp_length);
-  err = fifo_pop(&command->alp_command_fifo, value, comp_length); assert(err == SUCCESS);
+  err = fifo_pop(&command->alp_command_fifo, value, (uint16_t)comp_length); assert(err == SUCCESS);
   alp_operand_file_offset_t offset_a = alp_parse_file_offset_operand(&command->alp_command_fifo);
 
-  uint8_t file_value[comp_length];
+  uint8_t file_value[ALP_PAYLOAD_MAX_SIZE / 2];
   d7ap_fs_read_file(offset_a.file_id, offset_a.offset, file_value, comp_length);
 
-  bool success = process_arithm_predicate(file_value, value, comp_length, comp_type);
-  DPRINT("predicate result: %i", success);
-
-  if(!success) {
+  if(!process_arithm_predicate(file_value, value, comp_length, comp_type)) {
     DPRINT("predicate failed, clearing ALP command to stop further processing");
-    fifo_clear(&command->alp_command_fifo);
+    goto error;
   }
 
   return ALP_STATUS_OK;
+
+error:
+  fifo_clear(&command->alp_command_fifo);
+  return ALP_STATUS_UNKNOWN_ERROR; // TODO more specific
 }
 
 static void interface_file_changed_callback() {
@@ -777,6 +793,7 @@ static bool alp_layer_parse_and_execute_alp_command(alp_command_t* command)
     session_config_t session_config;
     uint8_t forward_itf_id = ALP_ITF_ID_HOST;
     bool do_forward = false;
+    uint8_t forwarded_alp_actions[ALP_PAYLOAD_MAX_SIZE];
 
     while(fifo_get_size(&command->alp_command_fifo) > 0)
     {
@@ -795,7 +812,7 @@ static bool alp_layer_parse_and_execute_alp_command(alp_command_t* command)
                 d7ap_interface_state = STATE_INITIALIZED;
               } 
               uint8_t forwarded_alp_size = fifo_get_size(&command->alp_command_fifo);
-              uint8_t forwarded_alp_actions[forwarded_alp_size];
+              assert(forwarded_alp_size <= ALP_PAYLOAD_MAX_SIZE); // TODO
               fifo_pop(&command->alp_command_fifo, forwarded_alp_actions, forwarded_alp_size);
               uint8_t expected_response_length = alp_get_expected_response_length(forwarded_alp_actions, forwarded_alp_size);
               error_t error = d7ap_send(alp_client_id, &session_config.d7ap_session_config, forwarded_alp_actions,
@@ -823,7 +840,7 @@ static bool alp_layer_parse_and_execute_alp_command(alp_command_t* command)
                 lorawan_abp_is_joined(&session_config.lorawan_session_config_abp);
                }
                 uint8_t forwarded_alp_size = fifo_get_size(&command->alp_command_fifo);
-                uint8_t forwarded_alp_actions[forwarded_alp_size];
+                assert(forwarded_alp_size <= ALP_PAYLOAD_MAX_SIZE); // TODO
                 fifo_pop(&command->alp_command_fifo, forwarded_alp_actions, forwarded_alp_size);
                 lorawan_send(forwarded_alp_actions, forwarded_alp_size, session_config.lorawan_session_config_abp.application_port, session_config.lorawan_session_config_abp.request_ack, command);              
               break; // TODO return response
@@ -841,7 +858,7 @@ static bool alp_layer_parse_and_execute_alp_command(alp_command_t* command)
                } else {
                 if(lorawan_otaa_is_joined(&session_config.lorawan_session_config_otaa)){
                   uint8_t forwarded_alp_size = fifo_get_size(&command->alp_command_fifo);
-                  uint8_t forwarded_alp_actions[forwarded_alp_size];
+                  assert(forwarded_alp_size <= ALP_PAYLOAD_MAX_SIZE); // TODO
                   fifo_pop(&command->alp_command_fifo, forwarded_alp_actions, forwarded_alp_size);
                   lorawan_send(forwarded_alp_actions, forwarded_alp_size, session_config.lorawan_session_config_otaa.application_port, session_config.lorawan_session_config_otaa.request_ack, command);
                 } else {
