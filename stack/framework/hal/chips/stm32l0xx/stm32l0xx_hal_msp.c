@@ -172,10 +172,10 @@ void HAL_RTC_MspInit(RTC_HandleTypeDef *hrtc)
   * @param  hrtc: RTC handle
   * @retval None
   */
-void HAL_RTC_AlarmAEventCallback(RTC_HandleTypeDef *hrtc)
-{
-  TimerIrqHandler( );
-}
+//void HAL_RTC_AlarmAEventCallback(RTC_HandleTypeDef *hrtc)
+//{
+//  TimerIrqHandler( );
+//}
 
 /**
   * @brief  EXTI line detection callbacks.

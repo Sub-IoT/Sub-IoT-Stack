@@ -24,6 +24,8 @@
 
 #if defined(STM32L0) // TODO not supported yet on STM32L1 (CubeMX HAL I2C API is not compatible)
 
+#if (I2C_COUNT > 0)
+
 #define I2C_CLK_ENABLE(i2c_instance)                          \
 do {                                                          \
     switch(i2c_instance)                                      \
@@ -296,5 +298,7 @@ int8_t i2c_write_read(i2c_handle_t* i2c, uint8_t to, uint8_t* payload, int lengt
   status = HAL_I2C_Master_Receive(&i2c->hal_handle, (uint16_t) to << 1, receive, receive_length, I2C_DEFAULT_TIMEOUT);
   return status == HAL_OK;
 }
+
+#endif // I2C_COUNT
 
 #endif

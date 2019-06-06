@@ -380,7 +380,7 @@ void alp_append_create_new_file_data_action(fifo_t* fifo, uint8_t file_id, uint3
       .allocated_length = __builtin_bswap32(length)
     }
   };
-  assert(fifo_put(fifo, &header, sizeof(alp_operand_file_header_t)) == SUCCESS);
+  assert(fifo_put(fifo, (uint8_t*)&header, sizeof(alp_operand_file_header_t)) == SUCCESS);
 }
 
 uint8_t alp_length_operand_coded_length(uint32_t length) {

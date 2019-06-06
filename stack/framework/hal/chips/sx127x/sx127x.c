@@ -27,7 +27,7 @@
 
 #include "string.h"
 #include "types.h"
-
+#include "stdlib.h"
 
 #include "debug.h"
 #include "log.h"
@@ -390,6 +390,11 @@ static void bg_scan_rx_done()
    flush_fifo(); 
 }
 
+static void rx_timeout(void *arg) {
+  DPRINT("RX timeout");
+  hw_radio_set_idle();
+}
+
 static void dio0_isr(void *arg) {
   if(state == STATE_RX) {
     sched_post_task(&bg_scan_rx_done);
@@ -619,8 +624,7 @@ error_t hw_radio_init(hwradio_init_args_t* init_args) {
   e = hw_gpio_configure_interrupt(SX127x_DIO1_PIN, GPIO_RISING_EDGE, &dio1_isr, NULL); assert(e == SUCCESS);
   DPRINT("inited sx127x");
 
-  sched_register_task(&hw_radio_set_idle);
-
+  sched_register_task(&rx_timeout);
   sched_register_task(&bg_scan_rx_done);
   sched_register_task(&packet_transmitted_isr);
   sched_register_task(&fifo_threshold_isr);
@@ -929,7 +933,7 @@ void hw_radio_set_tx_power(int8_t eirp) {
 }
 
 void hw_radio_set_rx_timeout(uint32_t timeout) {
-  timer_post_task_delay(&hw_radio_set_idle, timeout);
+  timer_post_task_delay(&rx_timeout, timeout);
 }
 
 __attribute__((weak)) void hw_radio_reset() {

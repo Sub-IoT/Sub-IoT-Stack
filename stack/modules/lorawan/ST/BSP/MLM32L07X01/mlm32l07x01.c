@@ -61,6 +61,8 @@ Maintainer: Miguel Luis and Gregory Cristian
 
 #define IRQ_HIGH_PRIORITY  0
 
+extern void hw_radio_io_init(void); // TODO refactor
+
 /* Delay in ms between radio set in sleep mode and TCXO off*/
 #define TCXO_OFF_DELAY 3
 

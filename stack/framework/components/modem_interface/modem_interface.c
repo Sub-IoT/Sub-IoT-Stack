@@ -390,7 +390,7 @@ static void uart_rx_cb(uint8_t data)
 /** @Brief Processes events on UART interrupt line
  *  @return void
  */
-static void uart_int_cb(pin_id_t pin_id, uint8_t event_mask)
+static void uart_int_cb(void *arg)
 {
   // do not read GPIO level here in interrupt context (GPIO clock might not be enabled yet), execute state machine instead
   sched_post_task(&execute_state_machine);
