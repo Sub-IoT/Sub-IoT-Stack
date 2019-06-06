@@ -61,6 +61,9 @@ extern fs_systemfiles_t d7ap_systemfiles;
 
 static d7ap_fs_d7aactp_callback_t d7aactp_callback = NULL;
 
+#define FILE_SIZE_MAX (256 + sizeof(d7ap_fs_file_header_t))
+static uint8_t file_buffer[FILE_SIZE_MAX]; // statically allocated buffer used during file operations, to prevent stack overflow at runtime
+
 
 static inline bool is_file_defined(uint8_t file_id)
 {
@@ -80,12 +83,11 @@ static void execute_d7a_action_protocol(uint8_t action_file_id, uint8_t interfac
   d7ap_session_config_t fifo_config;
   d7ap_fs_read_file(interface_file_id, 0, (uint8_t*)&fifo_config, sizeof(d7ap_session_config_t));
   uint32_t action_len = d7ap_fs_get_file_length(action_file_id);
-  assert(action_len <= 256);
-  uint8_t action[256];
-  fs_read_file(action_file_id, sizeof(d7ap_fs_file_header_t), action, action_len);
+  assert(action_len <= FILE_SIZE_MAX);
+  fs_read_file(action_file_id, sizeof(d7ap_fs_file_header_t), file_buffer, action_len);
 
   // invoke application callback to parse and execute the action. Result is then given to the D7ASP layer
-  d7aactp_callback(&fifo_config, action, action_len);
+  d7aactp_callback(&fifo_config, file_buffer, action_len);
 }
 
 void d7ap_fs_init()
@@ -129,48 +131,13 @@ int d7ap_fs_init_file(uint8_t file_id, const d7ap_fs_file_header_t* file_header,
   file_header_big_endian.length = __builtin_bswap32(file_header_big_endian.length);
   file_header_big_endian.allocated_length = __builtin_bswap32(file_header_big_endian.allocated_length);
 
-//  uint8_t default_data[sizeof(d7ap_fs_file_header_t) + file_header->allocated_length];
-//  memset(default_data, 0, sizeof(d7ap_fs_file_header_t) + file_header->allocated_length);
-//  memcpy(default_data, (uint8_t *)&file_header_big_endian, sizeof (d7ap_fs_file_header_t));
-//  if(initial_data != NULL)
-//    memcpy(default_data + sizeof (d7ap_fs_file_header_t), initial_data, file_header->length);
+  memset(file_buffer, 0, sizeof(d7ap_fs_file_header_t) + file_header->allocated_length);
+  memcpy(file_buffer, (uint8_t *)&file_header_big_endian, sizeof (d7ap_fs_file_header_t));
+  if(initial_data != NULL)
+    memcpy(file_buffer + sizeof (d7ap_fs_file_header_t), initial_data, file_header->length);
 
-  // first init and then write, as opposed to initing with default data to prevent having to declare
-  // a large array on the stack to prepare file data (header + data)
   rtc = fs_init_file(file_id, file_header->file_properties.storage_class,
-                     (const uint8_t *)&file_header_big_endian, sizeof(d7ap_fs_file_header_t));
-  if(rtc != 0)
-    return rtc;
-
-  if(initial_data) {
-    rtc = fs_write_file(file_id, sizeof(d7ap_fs_file_header_t), initial_data, file_header->length);
-    if(rtc != 0)
-      return rtc;
-  } else {
-    // no initial data, fill with 0xFF
-    // do not use variable length array to limit stack usage, do in chunks instead
-    uint8_t default_data[64];
-    memset(default_data, 0xFF, 64);
-    uint32_t remaining_length = file_header->allocated_length;
-    uint32_t i = 0;
-    while(remaining_length > 64) {
-      rtc = fs_write_file(file_id, sizeof(d7ap_fs_file_header_t)  + (i * 64), default_data, 64);
-      if(rtc != 0)
-        return rtc;
-
-      remaining_length -= 64;
-      i ++;
-    }
-
-    rtc = fs_write_file(file_id, sizeof(d7ap_fs_file_header_t)  + (i * 64), default_data, remaining_length);
-    if(rtc != 0)
-      return rtc;
-
-  }
-  if(rtc != 0)
-    return rtc;
-
-
+                     (const uint8_t *)file_buffer, sizeof(d7ap_fs_file_header_t) + file_header->allocated_length);
   return rtc;
 }
 

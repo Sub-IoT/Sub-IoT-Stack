@@ -82,7 +82,8 @@ static timer_event alp_layer_process_command_timer;
 
 static uint8_t previous_interface_file_id = 0;
 static bool interface_file_changed = true;
-session_config_t session_config_saved;
+static session_config_t session_config_saved;
+static uint8_t forwarded_alp_actions[ALP_PAYLOAD_MAX_SIZE]; // temp buffer statically allocated to prevent runtime stackoverflows
 
 static void _async_process_command_from_d7ap(void* arg);
 void alp_layer_process_response_from_d7ap(uint16_t trans_id, uint8_t* alp_command,
@@ -793,7 +794,6 @@ static bool alp_layer_parse_and_execute_alp_command(alp_command_t* command)
     session_config_t session_config;
     uint8_t forward_itf_id = ALP_ITF_ID_HOST;
     bool do_forward = false;
-    uint8_t forwarded_alp_actions[ALP_PAYLOAD_MAX_SIZE];
 
     while(fifo_get_size(&command->alp_command_fifo) > 0)
     {
