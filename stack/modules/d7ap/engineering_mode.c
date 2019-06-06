@@ -171,10 +171,6 @@ static void start_tx() {
     phy_continuous_tx(&tx_cfg, timeout_em, &cont_tx_done_callback);
 }
 
-static void stop_tx() {
-    continuous_tx_expiration();
-}
-
 static void em_file_change_callback(uint8_t file_id) {
     uint8_t data[D7A_FILE_ENGINEERING_MODE_SIZE];
 
@@ -195,7 +191,6 @@ static void em_file_change_callback(uint8_t file_id) {
     {
       case EM_OFF:
         DPRINT("EM_MODEM_OFF");
-        stop_tx();
         hw_reset();
         break;
       case EM_CONTINUOUS_TX:

@@ -148,6 +148,8 @@ static uint8_t remaining_bytes_len = 0;
 static uint8_t previous_threshold = 0;
 static bool io_inited = false;
 
+void set_opmode(uint8_t opmode);
+
 static uint8_t read_reg(uint8_t addr) {
   spi_select(sx127x_spi);
   spi_exchange_byte(sx127x_spi, addr & 0x7F); // send address with bit 7 low to signal a read operation
@@ -388,7 +390,7 @@ static void bg_scan_rx_done()
    flush_fifo(); 
 }
 
-static void dio0_isr(pin_id_t pin_id, uint8_t event_mask) {
+static void dio0_isr(void *arg) {
   if(state == STATE_RX) {
     sched_post_task(&bg_scan_rx_done);
   } else {
@@ -519,7 +521,7 @@ static void fifo_threshold_isr() {
    DPRINT("read %i bytes, %i remaining, FLAGS2 %x, time: %i \n", FskPacketHandler_sx127x.NbBytes, remaining_bytes, read_reg(REG_IRQFLAGS2), timer_get_counter_value());
 }
 
-static void dio1_isr(pin_id_t pin_id, uint8_t event_mask) {
+static void dio1_isr(void *arg) {
     if(state == STATE_RX) {
       sched_post_task(&fifo_threshold_isr);
     } else {
