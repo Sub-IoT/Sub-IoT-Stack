@@ -6,6 +6,8 @@
 #include "hwuart.h"
 
 #include "framework_defs.h"
+#ifdef FRAMEWORK_CONSOLE_ENABLED
+
 #include "platform_defs.h"
 #include "fifo.h"
 #include "scheduler.h"
@@ -13,7 +15,6 @@
 #include "hal_defs.h"
 #include "debug.h"
 
-#ifdef FRAMEWORK_CONSOLE_ENABLED
 
 #define TX_FIFO_FLUSH_CHUNK_SIZE 10 // at a baudrate of 115200 this ensures completion within 1 ms
                                     // TODO baudrate dependent

@@ -811,7 +811,7 @@ static void fill_in_fifo(uint8_t remaining_bytes_len)
             // not enough time for sending another BG frame, send the FG frame,
             // prepend with preamble bytes if necessary
             uint16_t preamble_len = 0;
-            uint8_t preamble[bg_adv.packet_size];
+            uint8_t preamble[20];
 
             preamble_len = (bg_adv.stop_time - current) * (bg_adv.packet_size / (float)bg_adv.tx_duration); // TODO instead of current we should use the timestamp
             DPRINT("ETA %d, packet size %d, tx_duration %d, current time %d\n", bg_adv.eta, bg_adv.packet_size, bg_adv.tx_duration, timer_get_counter_value());

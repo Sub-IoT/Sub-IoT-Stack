@@ -31,6 +31,8 @@
 #include <stdint.h>
 #include <stdbool.h>
 
+#include "framework_defs.h"
+
 #ifndef FRAMEWORK_FS_FILE_COUNT
 #define FRAMEWORK_FS_FILE_COUNT 80
 #endif

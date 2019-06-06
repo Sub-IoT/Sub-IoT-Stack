@@ -389,9 +389,18 @@ int _fs_create_file(uint8_t file_id, fs_storage_class_t storage_class, const uin
         blockdevice_program(bd[storage_class], initial_data, files[file_id].addr, length);
     }
     else{
-        uint8_t default_data[length];
-        memset(default_data, 0xff, length);
-        blockdevice_program(bd[storage_class], default_data, files[file_id].addr, length);
+        // do not use variable length array to limit stack usage, do in chunks instead
+        uint8_t default_data[64];
+        memset(default_data, 0xff, 64);
+        uint32_t remaining_length = length;
+        int i = 0;
+        while(remaining_length > 64) {
+          blockdevice_program(bd[storage_class], default_data, files[file_id].addr + (i * 64), 64);
+          remaining_length -= 64;
+          i++;
+        }
+
+        blockdevice_program(bd[storage_class], default_data, files[file_id].addr  + (i * 64), remaining_length);
     }
 #endif
 

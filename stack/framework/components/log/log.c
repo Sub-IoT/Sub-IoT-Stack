@@ -33,8 +33,6 @@
 #include "framework_defs.h"
 #include "hwsystem.h"
 
-#include "console.h"
-
 #ifdef FRAMEWORK_LOG_ENABLED
 
 
