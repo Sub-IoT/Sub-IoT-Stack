@@ -228,12 +228,12 @@ static void mcps_confirm(McpsConfirm_t *McpsConfirm)
 
 static void mcps_indication(McpsIndication_t *mcpsIndication)
 {
+  HW_SPI_disable();
   if(mcpsIndication->Status != LORAMAC_EVENT_INFO_STATUS_OK)
   {
     DPRINT("mcps_indication status: %i", mcpsIndication->Status);
     return;
   }
-  HW_SPI_disable();
   if( mcpsIndication->RxData == true )
   {
     DPRINT("received %i bytes for port %i", mcpsIndication->BufferSize, mcpsIndication->Port);
@@ -246,9 +246,9 @@ static void mcps_indication(McpsIndication_t *mcpsIndication)
 
 static void mlme_confirm(MlmeConfirm_t *mlmeConfirm)
 {
+  HW_SPI_disable();
   switch(mlmeConfirm->MlmeRequest)
   {
-    HW_SPI_disable();
     case MLME_JOIN:
     {
       if(mlmeConfirm->Status == LORAMAC_EVENT_INFO_STATUS_OK)

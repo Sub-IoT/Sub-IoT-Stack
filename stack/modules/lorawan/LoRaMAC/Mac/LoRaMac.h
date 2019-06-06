@@ -1959,6 +1959,8 @@ LoRaMacStatus_t LoRaMacMlmeRequest( MlmeReq_t *mlmeRequest );
  */
 LoRaMacStatus_t LoRaMacMcpsRequest( McpsReq_t *mcpsRequest );
 
+uint16_t lorawanGetDutyCycleWaitTime();
+
 /*! \} defgroup LORAMAC */
 
 #endif // __LORAMAC_H__
