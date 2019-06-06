@@ -156,6 +156,9 @@ void enable_spi_io() {
   spi_enable(spi_handle);
 }
 
+void set_opmode(uint8_t opmode);
+
+
 static uint8_t read_reg(uint8_t addr) {
   enable_spi_io();
   spi_select(sx127x_spi);
@@ -395,7 +398,7 @@ static void bg_scan_rx_done()
    flush_fifo(); 
 }
 
-static void dio0_isr(pin_id_t pin_id, uint8_t event_mask) {
+static void dio0_isr(void *arg) {
   if(state == STATE_RX) {
     sched_post_task(&bg_scan_rx_done);
   } else {
@@ -539,7 +542,7 @@ static void fifo_threshold_isr() {
    DPRINT("read %i bytes, %i remaining, FLAGS2 %x, time: %i \n", FskPacketHandler_sx127x.NbBytes, remaining_bytes, read_reg(REG_IRQFLAGS2), timer_get_counter_value());
 }
 
-static void dio1_isr(pin_id_t pin_id, uint8_t event_mask) {
+static void dio1_isr(void *arg) {
     if(state == STATE_RX) {
       sched_post_task(&fifo_threshold_isr);
     } else {
