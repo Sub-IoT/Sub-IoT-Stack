@@ -232,14 +232,6 @@ int d7ap_fs_write_file(uint8_t file_id, uint32_t offset, const uint8_t* buffer, 
   if (rtc != 0)
     return rtc;
 
-  //update header
-  if (header.length != offset + length)
-  {
-    header.length = offset + length;
-    rtc = d7ap_fs_write_file_header(file_id, &header);
-    if (rtc != 0)
-      return rtc;
-  }
 
   if(header.file_properties.action_protocol_enabled == true
     && header.file_properties.action_condition == D7A_ACT_COND_WRITE) // TODO ALP_ACT_COND_WRITEFLUSH?
