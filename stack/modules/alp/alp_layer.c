@@ -417,10 +417,10 @@ static alp_status_codes_t process_op_indirect_forward(alp_command_t* command, ui
       *itf_id = session_config_saved.interface_type;
   } else
     *itf_id = session_config_saved.interface_type;
+  uint8_t data[43];
   switch(*itf_id) {
     case ALP_ITF_ID_D7ASP: ;
       if(re_read) {
-        uint8_t data[12];
         d7ap_fs_read_file(interface_file_id, 1, data, 12);
 
         session_config_saved.interface_type = ALP_ITF_ID_D7ASP;
@@ -446,7 +446,6 @@ static alp_status_codes_t process_op_indirect_forward(alp_command_t* command, ui
 #ifdef MODULE_LORAWAN
     case ALP_ITF_ID_LORAWAN_OTAA: ;
       if(re_read) {
-        uint8_t data[35];
         d7ap_fs_read_file(interface_file_id, 1, data, 35);
 
         session_config_saved.interface_type = ALP_ITF_ID_LORAWAN_OTAA;
@@ -467,21 +466,20 @@ static alp_status_codes_t process_op_indirect_forward(alp_command_t* command, ui
       break;
     case ALP_ITF_ID_LORAWAN_ABP: ;
       if(re_read) {
-        uint8_t data_abp[43];
-        d7ap_fs_read_file(interface_file_id, 1, data_abp, 43);
+        d7ap_fs_read_file(interface_file_id, 1, data, 43);
         
         session_config_saved.interface_type = ALP_ITF_ID_LORAWAN_ABP;
-        session_config_flags = data_abp[0];
+        session_config_flags = data[0];
         session_config_saved.lorawan_session_config_abp.request_ack=session_config_flags & (1<<requestAckBitLocation);
         session_config_saved.lorawan_session_config_abp.adr_enabled=session_config_flags & (1<<adrEnabledLocation);
-        session_config_saved.lorawan_session_config_abp.application_port = data_abp[1];
-        session_config_saved.lorawan_session_config_abp.data_rate = data_abp[2];
+        session_config_saved.lorawan_session_config_abp.application_port = data[1];
+        session_config_saved.lorawan_session_config_abp.data_rate = data[2];
 
-        memcpy(session_config_saved.lorawan_session_config_abp.nwkSKey, &data_abp[3], 16);
-        memcpy(session_config_saved.lorawan_session_config_abp.appSKey, &data_abp[19], 16);
-        memcpy(session_config_saved.lorawan_session_config_abp.devAddr, &data_abp[35], 4);
+        memcpy(session_config_saved.lorawan_session_config_abp.nwkSKey, &data[3], 16);
+        memcpy(session_config_saved.lorawan_session_config_abp.appSKey, &data[19], 16);
+        memcpy(session_config_saved.lorawan_session_config_abp.devAddr, &data[35], 4);
         session_config_saved.lorawan_session_config_abp.devAddr=__builtin_bswap32(session_config_saved.lorawan_session_config_abp.devAddr);
-        memcpy(session_config_saved.lorawan_session_config_abp.network_id, &data_abp[39], 4);
+        memcpy(session_config_saved.lorawan_session_config_abp.network_id, &data[39], 4);
         session_config_saved.lorawan_session_config_abp.network_id=__builtin_bswap32(session_config_saved.lorawan_session_config_abp.network_id);
       }
       session_config->interface_type = session_config_saved.interface_type;
