@@ -237,29 +237,31 @@ static void parse_op_return_status(fifo_t* fifo, alp_action_t* action, bool b6, 
   action->status.type=itf_id;
   if (itf_id == ALP_ITF_ID_D7ASP)
   {
-    d7ap_session_result_t interface_status =  *((d7ap_session_result_t*)action->status.data);
+    d7ap_session_result_t* interface_status =  ((d7ap_session_result_t*)action->status.data);
 
-    fifo_pop(fifo, &interface_status.channel.channel_header, 1);
-    fifo_pop(fifo, (uint8_t*)&interface_status.channel.center_freq_index, 2);
-    interface_status.channel.center_freq_index = __builtin_bswap16(interface_status.channel.center_freq_index);
-    fifo_pop(fifo, &interface_status.rx_level, 1);
-    fifo_pop(fifo, &interface_status.link_budget, 1);
-    fifo_pop(fifo, &interface_status.target_rx_level, 1);
-    fifo_pop(fifo, &interface_status.status.raw, 1);
-    fifo_pop(fifo, &interface_status.fifo_token, 1);
-    fifo_pop(fifo, &interface_status.seqnr, 1);
-    fifo_pop(fifo, &interface_status.response_to, 1);
-    fifo_pop(fifo, &interface_status.addressee.ctrl.raw, 1);
-    fifo_pop(fifo, &interface_status.addressee.access_class, 1);
-    uint8_t addressee_len = d7ap_addressee_id_length(interface_status.addressee.ctrl.id_type);
-    assert(fifo_pop(fifo, interface_status.addressee.id, addressee_len) == SUCCESS);
+    fifo_pop(fifo, &interface_status->channel.channel_header, 1);
+    fifo_pop(fifo, (uint8_t*)&interface_status->channel.center_freq_index, 2);
+    interface_status->channel.center_freq_index = __builtin_bswap16(interface_status->channel.center_freq_index);
+    fifo_pop(fifo, &interface_status->rx_level, 1);
+    fifo_pop(fifo, &interface_status->link_budget, 1);
+    fifo_pop(fifo, &interface_status->target_rx_level, 1);
+    fifo_pop(fifo, &interface_status->status.raw, 1);
+    fifo_pop(fifo, &interface_status->fifo_token, 1);
+    fifo_pop(fifo, &interface_status->seqnr, 1);
+    fifo_pop(fifo, &interface_status->response_to, 1);
+    fifo_pop(fifo, &interface_status->addressee.ctrl.raw, 1);
+    fifo_pop(fifo, &interface_status->addressee.access_class, 1);
+    uint8_t addressee_len = d7ap_addressee_id_length(interface_status->addressee.ctrl.id_type);
+    assert(fifo_pop(fifo, (uint8_t*)&interface_status->addressee.id, addressee_len) == SUCCESS);
   }
   else if ( (itf_id == ALP_ITF_ID_LORAWAN_OTAA) || (itf_id == ALP_ITF_ID_LORAWAN_ABP))
   {
-    lorawan_session_result_t interface_status = *((lorawan_session_result_t*)action->status.data);
+    lorawan_session_result_t* interface_status = ((lorawan_session_result_t*)action->status.data);
     fifo_skip(fifo,1); //size
-    fifo_pop(fifo, &interface_status.attempts, 1);
-    fifo_pop(fifo, &interface_status.error_state, 1);
+    fifo_pop(fifo, &interface_status->attempts, 1);
+    fifo_pop(fifo, &interface_status->error_state, 1);
+    fifo_pop(fifo,  (uint8_t*)&interface_status->duty_cycle_wait_time,2);
+    interface_status->duty_cycle_wait_time= __builtin_bswap16(interface_status->duty_cycle_wait_time);
   }
 
   DPRINT("parsed interface status");
@@ -380,7 +382,7 @@ void alp_append_create_new_file_data_action(fifo_t* fifo, uint8_t file_id, uint3
       .allocated_length = __builtin_bswap32(length)
     }
   };
-  assert(fifo_put(fifo, &header, sizeof(alp_operand_file_header_t)) == SUCCESS);
+  assert(fifo_put(fifo, (uint8_t*)&header, sizeof(alp_operand_file_header_t)) == SUCCESS);
 }
 
 uint8_t alp_length_operand_coded_length(uint32_t length) {

@@ -222,18 +222,18 @@ static void mcps_confirm(McpsConfirm_t *McpsConfirm)
   }
   else
     error = LORAWAN_STACK_ERROR_UNKNOWN;
-
+  HW_SPI_disable();
   tx_callback(error,  McpsConfirm->NbRetries);
 }
 
 static void mcps_indication(McpsIndication_t *mcpsIndication)
 {
+  HW_SPI_disable();
   if(mcpsIndication->Status != LORAMAC_EVENT_INFO_STATUS_OK)
   {
     DPRINT("mcps_indication status: %i", mcpsIndication->Status);
     return;
   }
-
   if( mcpsIndication->RxData == true )
   {
     DPRINT("received %i bytes for port %i", mcpsIndication->BufferSize, mcpsIndication->Port);
@@ -246,6 +246,7 @@ static void mcps_indication(McpsIndication_t *mcpsIndication)
 
 static void mlme_confirm(MlmeConfirm_t *mlmeConfirm)
 {
+  HW_SPI_disable();
   switch(mlmeConfirm->MlmeRequest)
   {
     case MLME_JOIN:
@@ -610,6 +611,8 @@ lorawan_stack_error_t lorawan_stack_send(uint8_t* payload, uint8_t length, uint8
 
   if(length > LORAWAN_APP_DATA_BUFF_SIZE)
       length = LORAWAN_APP_DATA_BUFF_SIZE;
+  
+  HW_SPI_enable();
 
   memcpy1(app_data.Buff, payload, length);
   app_data.BuffSize = length;
