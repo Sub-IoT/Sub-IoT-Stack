@@ -47,14 +47,15 @@ void modem_cb_init(modem_callbacks_t* cbs);
 void modem_reinit();
 bool modem_execute_raw_alp(uint8_t* alp, uint8_t len);
 bool modem_create_file(uint8_t file_id, uint32_t length, fs_storage_class_t storage_class);
+bool modem_create_and_write_file(uint8_t file_id, uint32_t offset, uint32_t length, uint8_t* data, fs_storage_class_t storage_class);
 bool modem_read_file(uint8_t file_id, uint32_t offset, uint32_t size);
 bool modem_write_file(uint8_t file_id, uint32_t offset, uint32_t size, uint8_t* data);
 bool modem_send_unsolicited_response(uint8_t file_id, uint32_t offset, uint32_t length, uint8_t* data, session_config_t* session_config);
 bool modem_send_raw_unsolicited_response(uint8_t* alp_command, uint32_t length, session_config_t* session_config);
 bool modem_send_indirect_unsolicited_response(uint8_t data_file_id, uint32_t offset, uint32_t length, uint8_t* data, 
-                                              interface_type_t interface_type, uint8_t interface_file_id, bool overload, d7ap_addressee_t* d7_addressee);
+                                              uint8_t interface_file_id, bool overload, d7ap_addressee_t* d7_addressee);
 bool modem_send_raw_indirect_unsolicited_response(uint8_t* alp_command, uint32_t length,
-                                                  interface_type_t interface_type, uint8_t interface_file_id, bool overload, d7ap_addressee_t* d7_addressee);
+                                                  uint8_t interface_file_id, bool overload, d7ap_addressee_t* d7_addressee);
 uint8_t modem_get_active_tag_id();
 
 #endif

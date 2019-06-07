@@ -209,6 +209,19 @@ bool alloc_command() {
   return true;
 }
 
+bool modem_create_and_write_file(uint8_t file_id, uint32_t offset, uint32_t length, uint8_t* data, fs_storage_class_t storage_class) {
+  if(!alloc_command())
+    return false;
+
+  alp_append_create_new_file_data_action(&command.fifo, file_id, length, storage_class, true, false);
+
+  alp_append_write_file_data_action(&command.fifo, file_id, offset, length, data, true, false);
+
+  modem_interface_transfer_bytes(command.buffer, fifo_get_size(&command.fifo), SERIAL_MESSAGE_TYPE_ALP_DATA);
+
+  return true;
+}
+
 bool modem_create_file(uint8_t file_id, uint32_t length, fs_storage_class_t storage_class) {
   if(!alloc_command())
     return false;
@@ -281,16 +294,12 @@ bool modem_send_raw_unsolicited_response(uint8_t* alp_command, uint32_t length,
 }
 
 bool modem_send_indirect_unsolicited_response(uint8_t data_file_id, uint32_t offset, uint32_t length, uint8_t* data, 
-                                              interface_type_t interface_type, uint8_t interface_file_id, bool overload, d7ap_addressee_t* d7_addressee) {
+                                              uint8_t interface_file_id, bool overload, d7ap_addressee_t* d7_addressee) {
   if(!alloc_command())
     return false;
   
-  if(interface_type == DASH7)
-    alp_append_indirect_forward_action(&command.fifo, ALP_ITF_ID_D7ASP, interface_file_id, overload, (uint8_t *) &d7_addressee);
-  else if(interface_type == LORAWAN_OTAA)
-    alp_append_indirect_forward_action(&command.fifo, ALP_ITF_ID_LORAWAN_OTAA, interface_file_id, false, NULL);
-  else if(interface_type == LORAWAN_ABP)
-    alp_append_indirect_forward_action(&command.fifo, ALP_ITF_ID_LORAWAN_ABP, interface_file_id, false, NULL);
+  //overload only D7 implemented
+  alp_append_indirect_forward_action(&command.fifo, interface_file_id, overload, (uint8_t *) &d7_addressee, d7ap_addressee_id_length(d7_addressee->ctrl.id_type));
 
   alp_append_return_file_data_action(&command.fifo, data_file_id, offset, length, data);
 
@@ -299,16 +308,12 @@ bool modem_send_indirect_unsolicited_response(uint8_t data_file_id, uint32_t off
 }
 
 bool modem_send_raw_indirect_unsolicited_response(uint8_t* alp_command, uint32_t length,
-                                                  interface_type_t interface_type, uint8_t interface_file_id, bool overload, d7ap_addressee_t* d7_addressee) {
+                                                  uint8_t interface_file_id, bool overload, d7ap_addressee_t* d7_addressee) {
   if(!alloc_command())
     return false;
   
-  if(interface_type == DASH7)
-    alp_append_indirect_forward_action(&command.fifo, ALP_ITF_ID_D7ASP, interface_file_id, overload, (uint8_t *) &d7_addressee);
-  else if(interface_type == LORAWAN_OTAA)
-    alp_append_indirect_forward_action(&command.fifo, ALP_ITF_ID_LORAWAN_OTAA, interface_file_id, false, NULL);
-  else if(interface_type == LORAWAN_ABP)
-    alp_append_indirect_forward_action(&command.fifo, ALP_ITF_ID_LORAWAN_ABP, interface_file_id, false, NULL);
+  //overload only D7 implemented
+  alp_append_indirect_forward_action(&command.fifo, interface_file_id, overload, (uint8_t *) &d7_addressee, sizeof(d7_addressee));
 
   fifo_put(&command.fifo, alp_command, length);
 

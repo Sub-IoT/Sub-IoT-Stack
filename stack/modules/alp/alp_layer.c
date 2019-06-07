@@ -80,6 +80,10 @@ static alp_init_args_t* NGDEF(_init_args);
 static uint8_t alp_client_id = 0;
 static timer_event alp_layer_process_command_timer;
 
+static uint8_t previous_interface_file_id = 0;
+static bool interface_file_changed = true;
+session_config_t session_config_saved;
+
 static void _async_process_command_from_d7ap(void* arg);
 void alp_layer_process_response_from_d7ap(uint16_t trans_id, uint8_t* alp_command,
                                           uint8_t alp_command_length, d7ap_session_result_t d7asp_result);
@@ -382,78 +386,112 @@ static alp_status_codes_t process_op_break_query(alp_command_t* command) {
   return ALP_STATUS_OK;
 }
 
+static void interface_file_changed_callback() {
+  interface_file_changed = true;
+}
+
 static alp_status_codes_t process_op_indirect_forward(alp_command_t* command, uint8_t* itf_id, session_config_t* session_config) {
   error_t err;
   uint8_t requestAckBitLocation=1;
   uint8_t adrEnabledLocation=2;
   uint8_t session_config_flags;
+  bool re_read = false;
   alp_control_t ctrl;
   err = fifo_pop(&command->alp_command_fifo, &ctrl.raw, 1); assert(err == SUCCESS);
-  err = fifo_pop(&command->alp_command_fifo, itf_id, 1); assert(err == SUCCESS);
   uint8_t interface_file_id;
   err = fifo_pop(&command->alp_command_fifo, &interface_file_id, 1);
+  if((previous_interface_file_id != interface_file_id) || interface_file_changed) {
+    re_read = true;
+    interface_file_changed = false;
+    if(previous_interface_file_id != interface_file_id) {
+      if(fs_file_stat(interface_file_id)!=NULL) {
+        fs_unregister_file_modified_callback(previous_interface_file_id);
+        fs_register_file_modified_callback(interface_file_changed, &interface_file_changed_callback);
+        d7ap_fs_read_file(interface_file_id, 0, itf_id, 1);
+        previous_interface_file_id = interface_file_id;
+      } else {
+        DPRINT("given file is not defined");
+        assert(false);
+      }
+    } else
+      *itf_id = session_config_saved.interface_type;
+  } else
+    *itf_id = session_config_saved.interface_type;
   switch(*itf_id) {
     case ALP_ITF_ID_D7ASP: ;
+      if(re_read) {
+        uint8_t data[12];
+        d7ap_fs_read_file(interface_file_id, 1, data, 12);
+
+        session_config_saved.interface_type = ALP_ITF_ID_D7ASP;
+        session_config_saved.d7ap_session_config.qos.raw = data[0];
+        session_config_saved.d7ap_session_config.dormant_timeout = data[1];
+        session_config_saved.d7ap_session_config.addressee.ctrl.raw = data[2];
+        uint8_t id_length = d7ap_addressee_id_length(session_config_saved.d7ap_session_config.addressee.ctrl.id_type);
+        session_config_saved.d7ap_session_config.addressee.access_class = data[3];
+        memcpy(session_config->d7ap_session_config.addressee.id, &data[4], id_length);
+      }
       if(ctrl.b7) { //Overload bit
-        uint8_t data[2];
-        d7ap_fs_read_file(interface_file_id, 0, data, 2);
-        session_config->d7ap_session_config.qos.raw = data[0];
-        session_config->d7ap_session_config.dormant_timeout = data[1];
+        session_config->d7ap_session_config.qos.raw = session_config_saved.d7ap_session_config.qos.raw;
+        session_config->d7ap_session_config.dormant_timeout = session_config_saved.d7ap_session_config.dormant_timeout;
         err = fifo_pop(&command->alp_command_fifo, &session_config->d7ap_session_config.addressee.ctrl.raw, 1); assert(err == SUCCESS);
         uint8_t id_length = d7ap_addressee_id_length(session_config->d7ap_session_config.addressee.ctrl.id_type);
         err = fifo_pop(&command->alp_command_fifo, &session_config->d7ap_session_config.addressee.access_class, 1); assert(err == SUCCESS);
         err = fifo_pop(&command->alp_command_fifo, session_config->d7ap_session_config.addressee.id, id_length); assert(err == SUCCESS);
       } else {
-        uint8_t data[12];
-        d7ap_fs_read_file(interface_file_id, 0, data, 12);
-        session_config->d7ap_session_config.qos.raw = data[0];
-        session_config->d7ap_session_config.dormant_timeout = data[1];
-        session_config->d7ap_session_config.addressee.ctrl.raw = data[2];
-        uint8_t id_length = d7ap_addressee_id_length(session_config->d7ap_session_config.addressee.ctrl.id_type);
-        session_config->d7ap_session_config.addressee.access_class = data[3];
-        memcpy(session_config->d7ap_session_config.addressee.id, &data[4], id_length);
+        session_config->d7ap_session_config = session_config_saved.d7ap_session_config;
       }
       DPRINT("INDIRECT FORWARD D7ASP");
       break;
 #ifdef MODULE_LORAWAN
     case ALP_ITF_ID_LORAWAN_OTAA: ;
-      uint8_t data[35];
-      d7ap_fs_read_file(interface_file_id, 0, data, 35);
-      
-      session_config_flags = data[0];
-      session_config->lorawan_session_config_otaa.request_ack = session_config_flags & (1<<requestAckBitLocation);
-      session_config->lorawan_session_config_otaa.adr_enabled = session_config_flags & (1<<adrEnabledLocation);
-      session_config->lorawan_session_config_otaa.application_port = data[1];
-      session_config->lorawan_session_config_otaa.data_rate = data[2];
+      if(re_read) {
+        uint8_t data[35];
+        d7ap_fs_read_file(interface_file_id, 1, data, 35);
 
-      memcpy(session_config->lorawan_session_config_otaa.devEUI, &data[3], 8);
-      memcpy(session_config->lorawan_session_config_otaa.appEUI, &data[11], 8);
-      memcpy(session_config->lorawan_session_config_otaa.appKey, &data[19], 16);
+        session_config_saved.interface_type = ALP_ITF_ID_LORAWAN_OTAA;
+        session_config_flags = data[0];
+        session_config_saved.lorawan_session_config_otaa.request_ack = session_config_flags & (1<<requestAckBitLocation);
+        session_config_saved.lorawan_session_config_otaa.adr_enabled = session_config_flags & (1<<adrEnabledLocation);
+        session_config_saved.lorawan_session_config_otaa.application_port = data[1];
+        session_config_saved.lorawan_session_config_otaa.data_rate = data[2];
+
+        memcpy(session_config_saved.lorawan_session_config_otaa.devEUI, &data[3], 8);
+        memcpy(session_config_saved.lorawan_session_config_otaa.appEUI, &data[11], 8);
+        memcpy(session_config_saved.lorawan_session_config_otaa.appKey, &data[19], 16);
+      }
+      session_config->interface_type = session_config_saved.interface_type;
+      session_config->lorawan_session_config_otaa = session_config_saved.lorawan_session_config_otaa;
 
       DPRINT("INDIRECT FORWARD LORAWAN");
       break;
     case ALP_ITF_ID_LORAWAN_ABP: ;
-      uint8_t data_abp[43];
-      d7ap_fs_read_file(interface_file_id, 0, data_abp, 43);
-      
-      session_config_flags = data_abp[0];
-      session_config->lorawan_session_config_abp.request_ack=session_config_flags & (1<<requestAckBitLocation);
-      session_config->lorawan_session_config_abp.adr_enabled=session_config_flags & (1<<adrEnabledLocation);
-      session_config->lorawan_session_config_abp.application_port = data_abp[1];
-      session_config->lorawan_session_config_abp.data_rate = data_abp[2];
+      if(re_read) {
+        uint8_t data_abp[43];
+        d7ap_fs_read_file(interface_file_id, 1, data_abp, 43);
+        
+        session_config_saved.interface_type = ALP_ITF_ID_LORAWAN_ABP;
+        session_config_flags = data_abp[0];
+        session_config_saved.lorawan_session_config_abp.request_ack=session_config_flags & (1<<requestAckBitLocation);
+        session_config_saved.lorawan_session_config_abp.adr_enabled=session_config_flags & (1<<adrEnabledLocation);
+        session_config_saved.lorawan_session_config_abp.application_port = data_abp[1];
+        session_config_saved.lorawan_session_config_abp.data_rate = data_abp[2];
 
-      memcpy(session_config->lorawan_session_config_abp.nwkSKey, &data_abp[3], 16);
-      memcpy(session_config->lorawan_session_config_abp.appSKey, &data_abp[19], 16);
-      memcpy(session_config->lorawan_session_config_abp.devAddr, &data_abp[35], 4);
-      session_config->lorawan_session_config_abp.devAddr=__builtin_bswap32(session_config->lorawan_session_config_abp.devAddr);
-      memcpy(session_config->lorawan_session_config_abp.network_id, &data_abp[39], 4);
-      session_config->lorawan_session_config_abp.network_id=__builtin_bswap32(session_config->lorawan_session_config_abp.network_id);
+        memcpy(session_config_saved.lorawan_session_config_abp.nwkSKey, &data_abp[3], 16);
+        memcpy(session_config_saved.lorawan_session_config_abp.appSKey, &data_abp[19], 16);
+        memcpy(session_config_saved.lorawan_session_config_abp.devAddr, &data_abp[35], 4);
+        session_config_saved.lorawan_session_config_abp.devAddr=__builtin_bswap32(session_config_saved.lorawan_session_config_abp.devAddr);
+        memcpy(session_config_saved.lorawan_session_config_abp.network_id, &data_abp[39], 4);
+        session_config_saved.lorawan_session_config_abp.network_id=__builtin_bswap32(session_config_saved.lorawan_session_config_abp.network_id);
+      }
+      session_config->interface_type = session_config_saved.interface_type;
+      session_config->lorawan_session_config_abp = session_config_saved.lorawan_session_config_abp;
 
       DPRINT("INDIRECT FORWARD LORAWAN");
       break;
 #endif
     default:
-      DPRINT("unsupported ITF %i", itf_id);
+      DPRINT("unsupported ITF %i from file 0x%02X\n", *itf_id, interface_file_id);
       assert(false);
   }
 
