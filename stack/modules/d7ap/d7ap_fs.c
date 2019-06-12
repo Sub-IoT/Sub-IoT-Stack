@@ -347,13 +347,13 @@ int d7ap_fs_write_access_class(uint8_t access_class_index, dae_access_profile_t*
 {
   assert(access_class_index < 15);
   assert(is_file_defined(D7A_FILE_ACCESS_PROFILE_ID + access_class_index));
-  dae_access_profile_t* temp_access_class;
-  memcpy(&temp_access_class, &access_class, sizeof(dae_access_profile_t));
+  dae_access_profile_t temp_access_class;
+  memcpy(&temp_access_class, access_class, sizeof(dae_access_profile_t));
   for(int i=0; i<SUBBANDS_NB; i++) {
-    temp_access_class->subbands[i].channel_index_start = __builtin_bswap16(temp_access_class->subbands[i].channel_index_start);
-    temp_access_class->subbands[i].channel_index_end = __builtin_bswap16(temp_access_class->subbands[i].channel_index_end);
+    temp_access_class.subbands[i].channel_index_start = __builtin_bswap16(temp_access_class.subbands[i].channel_index_start);
+    temp_access_class.subbands[i].channel_index_end = __builtin_bswap16(temp_access_class.subbands[i].channel_index_end);
   }
-  return d7ap_fs_write_file(D7A_FILE_ACCESS_PROFILE_ID + access_class_index, 0, (uint8_t*)temp_access_class, D7A_FILE_ACCESS_PROFILE_SIZE);
+  return d7ap_fs_write_file(D7A_FILE_ACCESS_PROFILE_ID + access_class_index, 0, (uint8_t*)&temp_access_class, D7A_FILE_ACCESS_PROFILE_SIZE);
 }
 
 uint8_t d7ap_fs_read_dll_conf_active_access_class()

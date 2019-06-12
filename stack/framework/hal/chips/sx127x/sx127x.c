@@ -359,7 +359,7 @@ static void packet_transmitted_isr() {
   hw_gpio_disable_interrupt(SX127x_DIO0_PIN);
 
   DEBUG_TX_END();
-  hw_busy_wait(110); // TO DO: OPTIMISE
+  hw_busy_wait(170); // TO DO: OPTIMISE 170
 
   if(tx_packet_callback)
     tx_packet_callback(timer_get_counter_value());
