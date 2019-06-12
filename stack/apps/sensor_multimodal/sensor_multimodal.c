@@ -127,7 +127,7 @@ static void lora_init(void) {
      .request_ack = false
   };
 
-  lorawan_register_cbs(NULL, NULL, NULL);
+  lorawan_register_cbs(NULL, NULL, NULL, NULL);
   lorawan_stack_init_abp(&lorawan_session_config);
 }
 

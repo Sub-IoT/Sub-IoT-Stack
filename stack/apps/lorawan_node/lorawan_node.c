@@ -68,7 +68,7 @@ void bootstrap()
     memcpy(&lorawan_session_config.devEUI,devEui ,8);
     memcpy(&lorawan_session_config.appEUI, appEui,8);
     memcpy(&lorawan_session_config.appKey,appKey,16);
-    lorawan_register_cbs(lorwan_rx,lorwan_tx,on_join_completed);
+    lorawan_register_cbs(lorwan_rx,lorwan_tx,on_join_completed, NULL);
     lorawan_stack_init_otaa(&lorawan_session_config);
 
     sched_register_task(&read_sensor_task);

@@ -125,6 +125,7 @@ static lorawan_AppData_t app_data = { payload_data_buffer, 0 ,0 };
 static lorawan_rx_callback_t rx_callback = NULL; //called when transmitting is done
 static lorawan_tx_completed_callback_t tx_callback = NULL;
 static join_completed_callback_t join_completed_callback = NULL;
+static lorawan_duty_cycle_delay_callback_t duty_delay_cb = NULL;
 
 static void run_fsm()
 {
@@ -209,6 +210,17 @@ static void run_fsm()
     }
   }
 }
+uint16_t lorawan_get_duty_cycle_delay()
+{
+  return lorawanGetDutyCycleWaitTime();
+}
+
+
+static void duty_cycle_delay_cb(uint32_t delay, uint8_t attempt)
+{
+  if(duty_delay_cb != NULL)
+    duty_delay_cb(delay,attempt);
+}
 
 static void mcps_confirm(McpsConfirm_t *McpsConfirm)
 {
@@ -282,11 +294,12 @@ static bool is_joined()
   return (mibReq.Param.IsNetworkJoined == true);
 }
 
-void lorawan_register_cbs(lorawan_rx_callback_t  lorawan_rx_cb, lorawan_tx_completed_callback_t lorawan_tx_cb,join_completed_callback_t join_completed_cb)
+void lorawan_register_cbs(lorawan_rx_callback_t  lorawan_rx_cb, lorawan_tx_completed_callback_t lorawan_tx_cb, join_completed_callback_t join_completed_cb, lorawan_duty_cycle_delay_callback_t lorawan_duty_cycle_delay_cb )
 {
   rx_callback = lorawan_rx_cb;
   tx_callback = lorawan_tx_cb;
   join_completed_callback = join_completed_cb;
+  duty_delay_cb = lorawan_duty_cycle_delay_cb;
 }
 bool lorawan_abp_is_joined(lorawan_session_config_abp_t* lorawan_session_config)
 {
@@ -468,6 +481,7 @@ void lorawan_stack_init_abp(lorawan_session_config_abp_t* lorawan_session_config
   loraMacPrimitives.MacMcpsConfirm = &mcps_confirm;
   loraMacPrimitives.MacMcpsIndication = &mcps_indication;
   loraMacPrimitives.MacMlmeConfirm = &mlme_confirm;
+  loraMacPrimitives.MacDutyDelay = &duty_cycle_delay_cb;
 
   // Initialization for the region EU868
   loraMacStatus = LoRaMacInitialization(&loraMacPrimitives, &loraMacCallbacks, LORAMAC_REGION_EU868);
@@ -546,6 +560,7 @@ void lorawan_stack_init_otaa(lorawan_session_config_otaa_t* lorawan_session_conf
   loraMacPrimitives.MacMcpsConfirm = &mcps_confirm;
   loraMacPrimitives.MacMcpsIndication = &mcps_indication;
   loraMacPrimitives.MacMlmeConfirm = &mlme_confirm;
+  loraMacPrimitives.MacDutyDelay = &duty_cycle_delay_cb;
 
   // Initialization for the region EU868
   loraMacStatus = LoRaMacInitialization(&loraMacPrimitives, &loraMacCallbacks, LORAMAC_REGION_EU868);
