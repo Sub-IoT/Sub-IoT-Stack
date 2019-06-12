@@ -23,7 +23,6 @@
 
 #include "platform_defs.h"
 
-#ifdef PLATFORM_USE_RTC
 
 #include <stdbool.h>
 #include <stdint.h>
@@ -95,12 +94,11 @@ typedef struct
 /* Calculates ceiling(X/N) */
 #define DIVC(X,N)   ( ( (X) + (N) -1 ) / (N) )
 
-static timer_callback_t compare_f = 0x0;
-static timer_callback_t overflow_f = 0x0;
+static timer_callback_t callback = 0x0;
 static bool timer_inited = false;
-static RTC_HandleTypeDef RtcHandle={0};
-static RtcTimerContext_t RtcTimerContext;
-static RTC_AlarmTypeDef RTC_AlarmStructure;
+static RTC_HandleTypeDef rtcHandle={0};
+static RtcTimerContext_t rtcTimerContext;
+static RTC_AlarmTypeDef rtcAlarmStructure;
 
 /*!
  * Number of days in each month on a normal year
@@ -120,13 +118,13 @@ static TimerTime_t HW_RTC_GetCalendarValue( RTC_DateTypeDef* RTC_DateStruct, RTC
   uint32_t correction;
   
   /* Get Time and Date*/
-  HAL_RTC_GetTime( &RtcHandle, RTC_TimeStruct, RTC_FORMAT_BIN );
+  HAL_RTC_GetTime( &rtcHandle, RTC_TimeStruct, RTC_FORMAT_BIN );
  
    /* make sure it is correct due to asynchronus nature of RTC*/
   do {
     first_read = RTC_TimeStruct->SubSeconds;
-    HAL_RTC_GetDate( &RtcHandle, RTC_DateStruct, RTC_FORMAT_BIN );
-    HAL_RTC_GetTime( &RtcHandle, RTC_TimeStruct, RTC_FORMAT_BIN );
+    HAL_RTC_GetDate( &rtcHandle, RTC_DateStruct, RTC_FORMAT_BIN );
+    HAL_RTC_GetTime( &rtcHandle, RTC_TimeStruct, RTC_FORMAT_BIN );
   } while (first_read != RTC_TimeStruct->SubSeconds);
  
   /* calculte amount of elapsed days since 01/01/2000 */
@@ -136,7 +134,7 @@ static TimerTime_t HW_RTC_GetCalendarValue( RTC_DateTypeDef* RTC_DateStruct, RTC
  
   calendarValue +=( DIVC( (RTC_DateStruct->Month-1)*(30+31) ,2 ) - (((correction>> ((RTC_DateStruct->Month-1)*2) )&0x3)));
 
-  calendarValue += (RTC_DateStruct->Date -1);
+  calendarValue += (RTC_DateStruct->Date - 1);
   
   /* convert from days to seconds */
   calendarValue *= SECONDS_IN_1DAY; 
@@ -145,8 +143,6 @@ static TimerTime_t HW_RTC_GetCalendarValue( RTC_DateTypeDef* RTC_DateStruct, RTC
                      ( ( uint32_t )RTC_TimeStruct->Minutes * SECONDS_IN_1MINUTE ) +
                      ( ( uint32_t )RTC_TimeStruct->Hours * SECONDS_IN_1HOUR ) ) ;
 
-
-  
   calendarValue = (calendarValue<<N_PREDIV_S) + ( PREDIV_S - RTC_TimeStruct->SubSeconds);
 
   return( calendarValue );
@@ -154,56 +150,44 @@ static TimerTime_t HW_RTC_GetCalendarValue( RTC_DateTypeDef* RTC_DateStruct, RTC
 
 static void rtc_setalarmconfig( void )
 {
-  HAL_RTC_DeactivateAlarm(&RtcHandle, RTC_ALARM_A);
+  HAL_RTC_DeactivateAlarm(&rtcHandle, RTC_ALARM_A);
 }
 
 uint32_t rtc_settimercontext( void )
 {
-  RtcTimerContext.Rtc_Time = HW_RTC_GetCalendarValue( &RtcTimerContext.RTC_Calndr_Date, &RtcTimerContext.RTC_Calndr_Time );
-  return ( uint32_t ) RtcTimerContext.Rtc_Time;
+  rtcTimerContext.Rtc_Time = HW_RTC_GetCalendarValue( &rtcTimerContext.RTC_Calndr_Date, &rtcTimerContext.RTC_Calndr_Time );
+  return ( uint32_t ) rtcTimerContext.Rtc_Time;
 }
 
 // Sets up a timer to count at 1024 Hz, driven by the 32.768 kHz LSE
 // The timer is running continuously. On STM32L0 the RTC is used
-error_t hw_timer_init(hwtimer_id_t timer_id, uint8_t frequency, timer_callback_t compare_callback, timer_callback_t overflow_callback)
+error_t hw_rtc_init()
 {
-  DPRINT("hw_timer_init\n");
-  // TODO using only one timer for now
-	if(timer_id >= HWTIMER_NUM)
-		return ESIZE;
-	if(timer_inited)
-		return EALREADY;
-  if(frequency != HWTIMER_FREQ_1MS && frequency != HWTIMER_FREQ_32K)
-		return EINVAL;
-
   TIM_ClockConfigTypeDef clock_source_config;
   TIM_MasterConfigTypeDef master_config;
 
   start_atomic();
-	compare_f = compare_callback;
-	overflow_f = overflow_callback;
-  
+
   RTC_TimeTypeDef RTC_TimeStruct;
   RTC_DateTypeDef RTC_DateStruct;
 
-  RtcHandle.Instance = RTC;
+  rtcHandle.Instance = RTC;
 
-  RtcHandle.Init.HourFormat = RTC_HOURFORMAT_24;
-  RtcHandle.Init.AsynchPrediv = PREDIV_A; /* RTC_ASYNCH_PREDIV; */
-  RtcHandle.Init.SynchPrediv = PREDIV_S; /* RTC_SYNCH_PREDIV; */
-  RtcHandle.Init.OutPut = RTC_OUTPUT_DISABLE;
-  RtcHandle.Init.OutPutPolarity = RTC_OUTPUT_POLARITY_HIGH;
-  RtcHandle.Init.OutPutType = RTC_OUTPUT_TYPE_OPENDRAIN;
+  rtcHandle.Init.HourFormat = RTC_HOURFORMAT_24;
+  rtcHandle.Init.AsynchPrediv = PREDIV_A; /* RTC_ASYNCH_PREDIV; */
+  rtcHandle.Init.SynchPrediv = PREDIV_S; /* RTC_SYNCH_PREDIV; */
+  rtcHandle.Init.OutPut = RTC_OUTPUT_DISABLE;
+  rtcHandle.Init.OutPutPolarity = RTC_OUTPUT_POLARITY_HIGH;
+  rtcHandle.Init.OutPutType = RTC_OUTPUT_TYPE_OPENDRAIN;
 
-  DPRINT("HAL_RTC_Init\n");
-  HAL_RTC_Init( &RtcHandle );
+  HAL_RTC_Init( &rtcHandle );
   
-  /*Monday 1st January 2016*/
+  /*Monday 1st January 2019*/
   RTC_DateStruct.Year = 0;
   RTC_DateStruct.Month = RTC_MONTH_JANUARY;
   RTC_DateStruct.Date = 1;
   RTC_DateStruct.WeekDay = RTC_WEEKDAY_MONDAY;
-  HAL_RTC_SetDate(&RtcHandle , &RTC_DateStruct, RTC_FORMAT_BIN);
+  HAL_RTC_SetDate(&rtcHandle , &RTC_DateStruct, RTC_FORMAT_BIN);
 
   /*at 0:0:0*/
   RTC_TimeStruct.Hours = 0;
@@ -215,11 +199,10 @@ error_t hw_timer_init(hwtimer_id_t timer_id, uint8_t frequency, timer_callback_t
   RTC_TimeStruct.StoreOperation = RTC_DAYLIGHTSAVING_NONE;
   RTC_TimeStruct.DayLightSaving = RTC_STOREOPERATION_RESET;
 
-  DPRINT("HAL_RTC_SetTime\n");
-  HAL_RTC_SetTime(&RtcHandle , &RTC_TimeStruct, RTC_FORMAT_BIN);
+  HAL_RTC_SetTime(&rtcHandle , &RTC_TimeStruct, RTC_FORMAT_BIN);
 
  /*Enable Direct Read of the calendar registers (not through Shadow) */
-  HAL_RTCEx_EnableBypassShadow(&RtcHandle);
+  HAL_RTCEx_EnableBypassShadow(&rtcHandle);
 
 	timer_inited = true;
   end_atomic();
@@ -227,45 +210,54 @@ error_t hw_timer_init(hwtimer_id_t timer_id, uint8_t frequency, timer_callback_t
   rtc_setalarmconfig();
   rtc_settimercontext();
 
-  DPRINT("return\n");
   return SUCCESS;
 }
 
-const hwtimer_info_t* hw_timer_get_info(hwtimer_id_t timer_id)
-{
-    if(timer_id >= HWTIMER_NUM)
-      return NULL;
 
+__LINK_C error_t hw_rtc_setcallback(timer_callback_t cb)
+{
+  callback = cb;
+  return SUCCESS;
+}
+
+const hwtimer_info_t* hw_rtc_get_info()
+{
     static const hwtimer_info_t timer_info = {
-      .min_delay_ticks = 3, // for LPTIMER we need a minimal delay
+      .min_delay_ticks = 3, 
     };
 
     return &timer_info;
 }
 
-hwtimer_tick_t hw_timer_getvalue(hwtimer_id_t timer_id)
+uint32_t hw_rtc_getvalue()
 {
- 	if(timer_id >= HWTIMER_NUM || (!timer_inited))
+ 	if(!timer_inited) {
  		return 0;
- 	else
- 	{
+  } else {
     RTC_TimeTypeDef RTC_TimeStruct;
     RTC_DateTypeDef RTC_DateStruct;
     
-    uint32_t CalendarValue = (uint32_t) HW_RTC_GetCalendarValue(&RTC_DateStruct, &RTC_TimeStruct );
+    uint32_t calendarValue = (uint32_t) HW_RTC_GetCalendarValue(&RTC_DateStruct, &RTC_TimeStruct );
 
-    return( CalendarValue );
+    return calendarValue;
  	}
 }
 
-error_t hw_timer_schedule(hwtimer_id_t timer_id, hwtimer_tick_t tick )
+error_t hw_rtc_getdatetime(RTC_TimeTypeDef* time, RTC_DateTypeDef* date)
 {
- 	if(timer_id >= HWTIMER_NUM)
- 		return ESIZE;
- 	if(!timer_inited)
- 		return EOFF;
+ 	if(!timer_inited) {
+ 		return ERROR;
+  } else {
+    
+    uint32_t calendarValue = (uint32_t) HW_RTC_GetCalendarValue(date, time);
 
-  DPRINT("hw_timer_schedule %d", tick);
+    return SUCCESS;
+ 	}
+}
+
+error_t hw_rtc_schedule_delay_ticks(uint32_t tick)
+{
+  DPRINT("hw_rtc_schedule_delay %d\n", tick);
 
   start_atomic();
   uint16_t rtcAlarmSubSeconds = 0;
@@ -273,10 +265,14 @@ error_t hw_timer_schedule(hwtimer_id_t timer_id, hwtimer_tick_t tick )
   uint16_t rtcAlarmMinutes = 0;
   uint16_t rtcAlarmHours = 0;
   uint16_t rtcAlarmDays = 0;
-  RTC_TimeTypeDef RTC_TimeStruct = RtcTimerContext.RTC_Calndr_Time;
-  RTC_DateTypeDef RTC_DateStruct = RtcTimerContext.RTC_Calndr_Date;
+  RTC_TimeTypeDef RTC_TimeStruct = rtcTimerContext.RTC_Calndr_Time;
+  RTC_DateTypeDef RTC_DateStruct = rtcTimerContext.RTC_Calndr_Date;
 
-  HW_RTC_StopAlarm( );
+
+  /* Clear RTC Alarm Flag */
+  __HAL_RTC_ALARM_CLEAR_FLAG( &rtcHandle, RTC_FLAG_ALRAF);
+  /* Disable the Alarm A interrupt */
+  HAL_RTC_DeactivateAlarm(&rtcHandle, RTC_ALARM_A);
 
   /*reverse counter */
   rtcAlarmSubSeconds = ( tick & PREDIV_S);
@@ -284,7 +280,8 @@ error_t hw_timer_schedule(hwtimer_id_t timer_id, hwtimer_tick_t tick )
   tick >>= N_PREDIV_S;  /* convert timeout  in seconds */
 
   /*convert microsecs to RTC format and add to 'Now' */
-  rtcAlarmDays =  0;
+  rtcAlarmDays =  1;
+
   while (tick >= SECONDS_IN_1DAY)
   {
     tick -= SECONDS_IN_1DAY;
@@ -350,47 +347,191 @@ error_t hw_timer_schedule(hwtimer_id_t timer_id, hwtimer_tick_t tick )
     }
   }
 
-  /* Set RTC_AlarmStructure with calculated values*/
-  RTC_AlarmStructure.AlarmTime.SubSeconds = PREDIV_S-rtcAlarmSubSeconds;
-  RTC_AlarmStructure.AlarmSubSecondMask  = HW_RTC_ALARMSUBSECONDMASK; 
-  RTC_AlarmStructure.AlarmTime.Seconds = rtcAlarmSeconds;
-  RTC_AlarmStructure.AlarmTime.Minutes = rtcAlarmMinutes;
-  RTC_AlarmStructure.AlarmTime.Hours   = rtcAlarmHours;
-  RTC_AlarmStructure.AlarmDateWeekDay    = ( uint8_t )rtcAlarmDays;
-  RTC_AlarmStructure.AlarmTime.TimeFormat   = RTC_TimeStruct.TimeFormat;
-  RTC_AlarmStructure.AlarmDateWeekDaySel   = RTC_ALARMDATEWEEKDAYSEL_DATE; 
-  RTC_AlarmStructure.AlarmMask       = RTC_ALARMMASK_NONE;
-  RTC_AlarmStructure.Alarm = RTC_ALARM_A;
-  RTC_AlarmStructure.AlarmTime.DayLightSaving = RTC_DAYLIGHTSAVING_NONE;
-  RTC_AlarmStructure.AlarmTime.StoreOperation = RTC_STOREOPERATION_RESET;
+  /* Set rtcAlarmStructure with calculated values*/
+  rtcAlarmStructure.AlarmTime.SubSeconds = PREDIV_S-rtcAlarmSubSeconds;
+  rtcAlarmStructure.AlarmSubSecondMask  = HW_RTC_ALARMSUBSECONDMASK; 
+  rtcAlarmStructure.AlarmTime.Seconds = rtcAlarmSeconds;
+  rtcAlarmStructure.AlarmTime.Minutes = rtcAlarmMinutes;
+  rtcAlarmStructure.AlarmTime.Hours   = rtcAlarmHours;
+  rtcAlarmStructure.AlarmDateWeekDay    = ( uint8_t )rtcAlarmDays;
+  rtcAlarmStructure.AlarmTime.TimeFormat   = RTC_TimeStruct.TimeFormat;
+  rtcAlarmStructure.AlarmDateWeekDaySel   = RTC_ALARMDATEWEEKDAYSEL_DATE; 
+  rtcAlarmStructure.AlarmMask       = RTC_ALARMMASK_NONE;
+  rtcAlarmStructure.Alarm = RTC_ALARM_A;
+  rtcAlarmStructure.AlarmTime.DayLightSaving = RTC_DAYLIGHTSAVING_NONE;
+  rtcAlarmStructure.AlarmTime.StoreOperation = RTC_STOREOPERATION_RESET;
 
-  DPRINT("HAL_RTC_SetAlarm_IT %d %d:%d:%d.%d", 
-    RTC_AlarmStructure.AlarmDateWeekDay,
-    RTC_AlarmStructure.AlarmTime.Hours,
-    RTC_AlarmStructure.AlarmTime.Minutes,
-    RTC_AlarmStructure.AlarmTime.Seconds,
-    RTC_AlarmStructure.AlarmTime.SubSeconds);
+  DPRINT("HAL_RTC_SetAlarm_IT %d %d:%d:%d.%d\n", 
+    rtcAlarmStructure.AlarmDateWeekDay,
+    rtcAlarmStructure.AlarmTime.Hours,
+    rtcAlarmStructure.AlarmTime.Minutes,
+    rtcAlarmStructure.AlarmTime.Seconds,
+    rtcAlarmStructure.AlarmTime.SubSeconds);
 
   /* Set RTC_Alarm */
-  HAL_RTC_SetAlarm_IT( &RtcHandle, &RTC_AlarmStructure, RTC_FORMAT_BIN );
+  HAL_StatusTypeDef ret = HAL_RTC_SetAlarm_IT( &rtcHandle, &rtcAlarmStructure, RTC_FORMAT_BIN );
+  if (ret != HAL_OK) DPRINT("HAL_RTC_SetAlarm_IT error %d\n", ret);
+
   end_atomic();
+
+  /// debug
+#ifdef DEBUG
+  uint32_t first_read;
+  /* Get Time and Date*/
+  HAL_RTC_GetTime( &rtcHandle, &RTC_TimeStruct, RTC_FORMAT_BIN );
+ 
+   /* make sure it is correct due to asynchronus nature of RTC*/
+  do {
+    first_read = RTC_TimeStruct.SubSeconds;
+    HAL_RTC_GetDate( &rtcHandle, &RTC_DateStruct, RTC_FORMAT_BIN );
+    HAL_RTC_GetTime( &rtcHandle, &RTC_TimeStruct, RTC_FORMAT_BIN );
+  } while (first_read != RTC_TimeStruct.SubSeconds);
+
+  DPRINT("Current time %d-%d-%d %d:%d:%d.%d\n", 
+  RTC_DateStruct.Year,
+  RTC_DateStruct.Month,
+  RTC_DateStruct.Date,
+  RTC_TimeStruct.Hours,
+  RTC_TimeStruct.Minutes,
+  RTC_TimeStruct.Seconds,
+  RTC_TimeStruct.SubSeconds);
+#endif
 
   return SUCCESS;
 }
 
-error_t hw_timer_cancel(hwtimer_id_t timer_id)
+error_t hw_rtc_schedule_delay(uint8_t hours, uint8_t minutes, uint8_t seconds, uint32_t subseconds)
 {
- 	if(timer_id >= HWTIMER_NUM)
- 		return ESIZE;
- 	if(!timer_inited)
- 		return EOFF;
+  
+  DPRINT("hw_rtc_schedule_delay %d:%d:%d.%d\n", hours, minutes, seconds, subseconds);
 
+  uint32_t first_read;
+  RTC_TimeTypeDef time;
+  RTC_DateTypeDef date;
+  
+  /* Get Time and Date*/
+  HAL_RTC_GetTime( &rtcHandle, &time, RTC_FORMAT_BIN );
+ 
+   /* make sure it is correct due to asynchronus nature of RTC*/
+  do {
+    first_read = time.SubSeconds;
+    HAL_RTC_GetDate( &rtcHandle, &date, RTC_FORMAT_BIN );
+    HAL_RTC_GetTime( &rtcHandle, &time, RTC_FORMAT_BIN );
+  } while (first_read != time.SubSeconds);
+
+  
+  time.SubSeconds += subseconds;
+  time.Seconds += seconds;
+  time.Minutes += minutes;
+  time.Hours += hours;
+
+
+  start_atomic();
+  /* Clear RTC Alarm Flag */
+  __HAL_RTC_ALARM_CLEAR_FLAG( &rtcHandle, RTC_FLAG_ALRAF);
+  /* Disable the Alarm A interrupt */
+  HAL_RTC_DeactivateAlarm(&rtcHandle, RTC_ALARM_A);
+
+  if (time.SubSeconds >= PREDIV_S + 1)
+  {
+    time.SubSeconds -= (PREDIV_S+1);
+    time.Seconds++;
+  }
+
+  if (time.Seconds >= SECONDS_IN_1MINUTE)
+  {
+    time.Seconds -= SECONDS_IN_1MINUTE;
+    time.Minutes++;
+  }
+
+  if (time.Minutes >= MINUTES_IN_1HOUR)
+  {
+    time.Minutes -= MINUTES_IN_1HOUR;
+    time.Hours++;
+  }
+
+  if (time.Hours >= HOURS_IN_1DAY)
+  {
+    time.Hours -= HOURS_IN_1DAY;
+    date.Date++;
+  }
+
+  if( date.Year % 4 == 0 ) 
+  {
+    if( date.Date > DaysInMonthLeapYear[ date.Month - 1 ] )    
+    {
+      date.Date = date.Date % DaysInMonthLeapYear[ date.Month - 1 ];
+    }
+  }
+  else
+  {
+    if( date.Date > DaysInMonth[ date.Month - 1 ] )    
+    {   
+      date.Date = date.Date % DaysInMonth[ date.Month - 1 ];
+    }
+  }
+
+  /* Set rtcAlarmStructure with calculated values*/
+  rtcAlarmStructure.AlarmTime.SubSeconds = PREDIV_S-time.SubSeconds;
+  rtcAlarmStructure.AlarmSubSecondMask  = HW_RTC_ALARMSUBSECONDMASK; 
+  rtcAlarmStructure.AlarmTime.Seconds = time.Seconds;
+  rtcAlarmStructure.AlarmTime.Minutes = time.Minutes;
+  rtcAlarmStructure.AlarmTime.Hours   = time.Hours;
+  rtcAlarmStructure.AlarmDateWeekDay    = date.Date;
+  rtcAlarmStructure.AlarmTime.TimeFormat   = time.TimeFormat;
+  rtcAlarmStructure.AlarmDateWeekDaySel   = RTC_ALARMDATEWEEKDAYSEL_DATE; 
+  rtcAlarmStructure.AlarmMask       = RTC_ALARMMASK_NONE;
+  rtcAlarmStructure.Alarm = RTC_ALARM_A;
+  rtcAlarmStructure.AlarmTime.DayLightSaving = RTC_DAYLIGHTSAVING_NONE;
+  rtcAlarmStructure.AlarmTime.StoreOperation = RTC_STOREOPERATION_RESET;
+
+  DPRINT("HAL_RTC_SetAlarm_IT %d %d:%d:%d.%d\n", 
+    rtcAlarmStructure.AlarmDateWeekDay,
+    rtcAlarmStructure.AlarmTime.Hours,
+    rtcAlarmStructure.AlarmTime.Minutes,
+    rtcAlarmStructure.AlarmTime.Seconds,
+    rtcAlarmStructure.AlarmTime.SubSeconds);
+
+  /* Set RTC_Alarm */
+  HAL_StatusTypeDef ret = HAL_RTC_SetAlarm_IT( &rtcHandle, &rtcAlarmStructure, RTC_FORMAT_BIN );
+  if (ret != HAL_OK) DPRINT("HAL_RTC_SetAlarm_IT error %d\n", ret);
+
+  end_atomic();
+
+  /// debug
+#ifdef DEBUG
+  uint32_t first_read;
+  /* Get Time and Date*/
+  HAL_RTC_GetTime( &rtcHandle, &RTC_TimeStruct, RTC_FORMAT_BIN );
+ 
+   /* make sure it is correct due to asynchronus nature of RTC*/
+  do {
+    first_read = RTC_TimeStruct.SubSeconds;
+    HAL_RTC_GetDate( &rtcHandle, &RTC_DateStruct, RTC_FORMAT_BIN );
+    HAL_RTC_GetTime( &rtcHandle, &RTC_TimeStruct, RTC_FORMAT_BIN );
+  } while (first_read != RTC_TimeStruct.SubSeconds);
+
+  DPRINT("Current time %d-%d-%d %d:%d:%d.%d\n", 
+  RTC_DateStruct.Year,
+  RTC_DateStruct.Month,
+  RTC_DateStruct.Date,
+  RTC_TimeStruct.Hours,
+  RTC_TimeStruct.Minutes,
+  RTC_TimeStruct.Seconds,
+  RTC_TimeStruct.SubSeconds);
+#endif
+
+  return SUCCESS;
+}
+
+error_t hw_rtc_cancel()
+{
  	start_atomic();
   /* Disable the Alarm A interrupt */
-  HAL_RTC_DeactivateAlarm(&RtcHandle, RTC_ALARM_A );
+  HAL_RTC_DeactivateAlarm(&rtcHandle, RTC_ALARM_A );
 
   /* Clear RTC Alarm Flag */
-  __HAL_RTC_ALARM_CLEAR_FLAG( &RtcHandle, RTC_FLAG_ALRAF);
+  __HAL_RTC_ALARM_CLEAR_FLAG( &rtcHandle, RTC_FLAG_ALRAF);
 
   /* Clear the EXTI's line Flag for RTC Alarm */
   __HAL_RTC_ALARM_EXTI_CLEAR_FLAG();
@@ -399,58 +540,49 @@ error_t hw_timer_cancel(hwtimer_id_t timer_id)
   return SUCCESS;
 }
 
-error_t hw_timer_counter_reset(hwtimer_id_t timer_id)
+error_t hw_rtc_set(uint16_t year, uint8_t month, uint8_t day, uint8_t hours, uint8_t minutes, uint8_t seconds, uint32_t subseconds)
 {
- 	if(timer_id >= HWTIMER_NUM)
- 		return ESIZE;
- 	if(!timer_inited)
- 		return EOFF;
-
-  hw_timer_cancel(timer_id);
+  hw_rtc_cancel();
 
   RTC_TimeTypeDef RTC_TimeStruct;
   RTC_DateTypeDef RTC_DateStruct;
 
  	start_atomic();
-  /*Monday 1st January 2016*/
-  RTC_DateStruct.Year = 0;
-  RTC_DateStruct.Month = RTC_MONTH_JANUARY;
-  RTC_DateStruct.Date = 1;
-  RTC_DateStruct.WeekDay = RTC_WEEKDAY_MONDAY;
-  HAL_RTC_SetDate(&RtcHandle , &RTC_DateStruct, RTC_FORMAT_BIN);
+  /*Monday 1st January 2019*/
+  RTC_DateStruct.Year = year;
+  RTC_DateStruct.Month = month;
+  RTC_DateStruct.Date = day;
+  //RTC_DateStruct.WeekDay = RTC_WEEKDAY_MONDAY;
+  HAL_RTC_SetDate(&rtcHandle , &RTC_DateStruct, RTC_FORMAT_BIN);
 
   /*at 0:0:0*/
-  RTC_TimeStruct.Hours = 0;
-  RTC_TimeStruct.Minutes = 0;
+  RTC_TimeStruct.Hours = hours;
+  RTC_TimeStruct.Minutes = minutes;
 
-  RTC_TimeStruct.Seconds = 0;
+  RTC_TimeStruct.Seconds = seconds;
   RTC_TimeStruct.TimeFormat = 0;
-  RTC_TimeStruct.SubSeconds = 0;
+  RTC_TimeStruct.SubSeconds = subseconds;
   RTC_TimeStruct.StoreOperation = RTC_DAYLIGHTSAVING_NONE;
   RTC_TimeStruct.DayLightSaving = RTC_STOREOPERATION_RESET;
 
-  HAL_RTC_SetTime(&RtcHandle , &RTC_TimeStruct, RTC_FORMAT_BIN);
+  HAL_RTC_SetTime(&rtcHandle , &RTC_TimeStruct, RTC_FORMAT_BIN);
 
  	end_atomic();
 
   return SUCCESS;
 }
 
-bool hw_timer_is_overflow_pending(hwtimer_id_t timer_id)
+error_t hw_rtc_reset()
 {
-  if(timer_id >= HWTIMER_NUM)
-    return false;
-
-  return false;
+  hw_rtc_set(0, RTC_MONTH_JANUARY, 1, 0, 0, 0, 0);
 }
 
-bool hw_timer_is_interrupt_pending(hwtimer_id_t timer_id)
-{
-  if(timer_id >= HWTIMER_NUM)
-    return false;
 
+
+bool hw_rtc_is_interrupt_pending()
+{
   start_atomic();
-    bool is_pending = __HAL_RTC_ALARM_GET_FLAG(&RtcHandle, RTC_FLAG_ALRAF);
+  bool is_pending = __HAL_RTC_ALARM_GET_FLAG(&rtcHandle, RTC_FLAG_ALRAF);
   end_atomic();
 
   return is_pending;
@@ -460,7 +592,7 @@ bool hw_timer_is_interrupt_pending(hwtimer_id_t timer_id)
 
 void TIMER_ISR(void)
 {
-  RTC_HandleTypeDef* hrtc=&RtcHandle;
+  RTC_HandleTypeDef* hrtc=&rtcHandle;
   /* enable low power at irq*/
   //LowPower_Enable( e_LOW_POWER_RTC );
   
@@ -475,11 +607,9 @@ void TIMER_ISR(void)
       /* Clear the EXTI's line Flag for RTC Alarm */
       __HAL_RTC_ALARM_EXTI_CLEAR_FLAG();
       /* AlarmA callback */
-      compare_f();
+      if (callback != 0x0) callback();
     }
   }
 
   //todo: use only time, not date and use overflow_f when day changes.
 }
-
-#endif

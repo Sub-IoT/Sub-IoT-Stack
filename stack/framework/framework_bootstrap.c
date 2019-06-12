@@ -23,6 +23,9 @@
 #include "log.h"
 #include "console.h"
 
+//#define DPRINT(...)
+#define DPRINT(...) log_print_string(__VA_ARGS__)
+
 void bootstrap();
 void __framework_bootstrap()
 {
