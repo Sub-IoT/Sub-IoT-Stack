@@ -45,8 +45,6 @@
 #include "modem_interface.h"
 #include "platform.h"
 
-#include "phy.h"
-
 #if PLATFORM_NUM_LEDS > 0
   #include "hwleds.h"
 
@@ -77,27 +75,6 @@ void bootstrap()
   modem_interface_init(PLATFORM_MODEM_INTERFACE_UART, PLATFORM_MODEM_INTERFACE_BAUDRATE, (pin_id_t) 0, (pin_id_t) 0);
 
   d7ap_init();
-
-  dae_access_profile_t access_profile = (dae_access_profile_t){
-    .channel_header = {
-      .ch_coding = PHY_CODING_FEC_PN9,
-      .ch_class = PHY_CLASS_LO_RATE,
-      .ch_freq_band = PHY_BAND_868
-    },
-    .subprofiles[0] = {
-      .subband_bitmap = 1,
-      .scan_automation_period = 0
-    },
-    .subbands[0] = {
-      .channel_index_start = 0,
-      .channel_index_end = 0,
-      .eirp = 0xe,
-      .cca = 0x56,
-      .duty = 0xff
-    }
-  };
-
-  d7ap_fs_write_access_class(0x01, &access_profile);
 
   d7ap_fs_write_dll_conf_active_access_class(0x01); // set to first AC, which is continuous FG scan
 
