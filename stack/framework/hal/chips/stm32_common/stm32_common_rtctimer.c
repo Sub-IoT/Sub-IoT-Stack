@@ -57,10 +57,6 @@ typedef struct
   #define DPRINT(...)
 #endif
 
-
-#define TIMER_INSTANCE RTC
-#define TIMER_IRQ RTC_IRQn
-#define TIMER_ISR RTC_IRQHandler
 #define CONV_NUMER                (MSEC_NUMBER>>COMMON_FACTOR)
 #define CONV_DENOM                (1<<(N_PREDIV_S-COMMON_FACTOR))
 
@@ -590,7 +586,7 @@ bool hw_rtc_is_interrupt_pending()
 
 
 
-void TIMER_ISR(void)
+void RTC_IRQHandler(void)
 {
   RTC_HandleTypeDef* hrtc=&rtcHandle;
   /* enable low power at irq*/

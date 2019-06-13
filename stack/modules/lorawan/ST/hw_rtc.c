@@ -61,6 +61,8 @@ Maintainer: Miguel Luis and Gregory Cristian
 /* Includes ------------------------------------------------------------------*/
 #include "hw.h"
 #include "low_power.h"
+#include "hwrtc.h"
+#include "timeServer.h"
 
 /* Private typedef -----------------------------------------------------------*/
 typedef struct
@@ -175,6 +177,8 @@ static void HW_RTC_StartWakeUpAlarm( uint32_t timeoutValue );
 
 static TimerTime_t HW_RTC_GetCalendarValue(  RTC_DateTypeDef* RTC_DateStruct, RTC_TimeTypeDef* RTC_TimeStruct  );
 
+static void HW_RTC_IrqHandler ( void );
+
 /* Exported functions ---------------------------------------------------------*/
 
 /*!
@@ -191,6 +195,7 @@ void HW_RTC_Init( void )
     HW_RTC_SetAlarmConfig( );
     HW_RTC_SetTimerContext( );
     HW_RTC_Initalized = true;
+    hw_rtc_setcallback(&HW_RTC_IrqHandler);
   }
 }
 
@@ -389,32 +394,12 @@ void HW_RTC_StopAlarm( void )
  * @param none
  * @retval none
  */
-void HW_RTC_IrqHandler ( void )
+static void HW_RTC_IrqHandler ( void )
 {
-  RTC_HandleTypeDef* hrtc=&RtcHandle;
   /* enable low power at irq*/
   LowPower_Enable( e_LOW_POWER_RTC );
   
-    /* Get the AlarmA interrupt source enable status */
-  if(__HAL_RTC_ALARM_GET_IT_SOURCE(hrtc, RTC_IT_ALRA) != RESET)
-  {
-    /* Get the pending status of the AlarmA Interrupt */
-    if(__HAL_RTC_ALARM_GET_FLAG(hrtc, RTC_FLAG_ALRAF) != RESET)
-    {
-      /* Clear the AlarmA interrupt pending bit */
-      __HAL_RTC_ALARM_CLEAR_FLAG(hrtc, RTC_FLAG_ALRAF); 
-      /* Clear the EXTI's line Flag for RTC Alarm */
-      __HAL_RTC_ALARM_EXTI_CLEAR_FLAG();
-      /* AlarmA callback */
-      HAL_RTC_AlarmAEventCallback(hrtc);
-    }
-  }
-}
-
-// TODO move
-void RTC_IRQHandler( void )
-{
-  HW_RTC_IrqHandler ( );
+  TimerIrqHandler( );
 }
 
 /*!
