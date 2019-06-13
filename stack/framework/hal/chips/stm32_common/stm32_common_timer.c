@@ -185,10 +185,9 @@ error_t hw_timer_schedule(hwtimer_id_t timer_id, hwtimer_tick_t tick )
   start_atomic();
 #if defined(STM32L0)
       cmp_reg_write_pending = true; // cleared in ISR
-    __HAL_LPTIM_DISABLE_IT(&timer, LPTIM_IT_CMPM);
     __HAL_LPTIM_CLEAR_FLAG(&timer, LPTIM_FLAG_CMPM);
     __HAL_LPTIM_COMPARE_SET(&timer, tick - 1);
-    // __HAL_LPTIM_ENABLE_IT(&timer, LPTIM_IT_CMPM);
+    __HAL_LPTIM_ENABLE_IT(&timer, LPTIM_IT_CMPM);
 #elif defined(STM32L1)
     __HAL_TIM_DISABLE_IT(&timer, TIM_IT_CC1);
     __HAL_TIM_SET_COMPARE(&timer, TIM_CHANNEL_1, tick);
@@ -287,7 +286,6 @@ void TIMER_ISR(void)
      // compare register write done, new writes are allowed now
      __HAL_LPTIM_CLEAR_FLAG(&timer, LPTIM_FLAG_CMPOK);
      cmp_reg_write_pending = false;
-     __HAL_LPTIM_ENABLE_IT(&timer, LPTIM_IT_CMPM);
   }
 
   // first check for overflow ...
@@ -308,7 +306,7 @@ void TIMER_ISR(void)
     {
       //__HAL_LPTIM_DISABLE_IT(&timer, LPTIM_IT_CMPM);
       __HAL_LPTIM_CLEAR_FLAG(&timer, LPTIM_IT_CMPM);
-      if(compare_f != 0x0)
+      if((compare_f != 0x0) && (cmp_reg_write_pending == false))
           compare_f();
     }
   }
