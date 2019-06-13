@@ -306,7 +306,7 @@ void TIMER_ISR(void)
     {
       //__HAL_LPTIM_DISABLE_IT(&timer, LPTIM_IT_CMPM);
       __HAL_LPTIM_CLEAR_FLAG(&timer, LPTIM_IT_CMPM);
-      if(compare_f != 0x0)
+      if((compare_f != 0x0) && (cmp_reg_write_pending == false))
           compare_f();
     }
   }
