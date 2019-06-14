@@ -600,7 +600,7 @@ void d7asp_process_received_response(packet_t* packet, bool extension)
         current_request_id = NO_ACTIVE_REQUEST_ID;
         schedule_current_session(); // continue flushing until all request handled ...
         // stop the current transaction
-        d7atp_stop_transaction();
+        // d7atp_stop_transaction(); //TO BE CHECKED THAT COMMENTING THIS OUT HAS NO NEGATIVE EFFECT
     }
     // switch to the state slave when the D7ATP Dialog Extension Procedure is initiated and all request are handled
     else if ((extension) && (current_request_id == current_master_session.next_request_id - 1))
