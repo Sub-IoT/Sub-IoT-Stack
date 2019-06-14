@@ -130,7 +130,9 @@ static void mark_current_request_successful()
 
 static void init_master_session(d7asp_master_session_t* session) {
     session->state = D7ASP_MASTER_SESSION_IDLE;
-    session->token = get_rnd() % 0xFF;
+    do {
+        session->token = get_rnd() % 0xFF;
+    } while(session->token == 0);
     memset(session->progress_bitmap, 0x00, REQUESTS_BITMAP_BYTE_COUNT);
     memset(session->success_bitmap, 0x00, REQUESTS_BITMAP_BYTE_COUNT);
     session->next_request_id = 0;
@@ -403,7 +405,8 @@ uint8_t d7asp_master_session_create(d7ap_session_config_t* d7asp_master_session_
                 (current_master_session.config.addressee.ctrl.id_type == d7asp_master_session_config->addressee.ctrl.id_type && 
                 memcmp(current_master_session.config.addressee.id, d7asp_master_session_config->addressee.id, d7ap_addressee_id_length(d7asp_master_session_config->addressee.ctrl.id_type)) == 0)))
             return current_master_session.token;
-
+        else
+            return 0;
         // TODO create a pending session or a dormant session if TO (DORM_TIMER) !=0
     }
 

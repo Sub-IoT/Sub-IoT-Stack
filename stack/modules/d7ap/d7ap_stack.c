@@ -241,6 +241,9 @@ error_t d7ap_stack_send(uint8_t client_id, d7ap_session_config_t* config, uint8_
     // Create or return the master session if the current one is compatible with the given session configuration.
     uint8_t session_token = d7asp_master_session_create(config);
 
+    if(session_token == 0)
+        return ERETRY;
+
     // Check if a session already exists
     session_t* session = get_session_by_session_token(session_token);
 

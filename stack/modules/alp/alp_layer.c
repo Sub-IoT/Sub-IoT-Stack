@@ -796,9 +796,13 @@ static bool alp_layer_parse_and_execute_alp_command(alp_command_t* command)
               uint8_t forwarded_alp_actions[forwarded_alp_size];
               fifo_pop(&command->alp_command_fifo, forwarded_alp_actions, forwarded_alp_size);
               uint8_t expected_response_length = alp_get_expected_response_length(forwarded_alp_actions, forwarded_alp_size);
-              d7ap_send(alp_client_id, &session_config.d7ap_session_config, forwarded_alp_actions,
+              error_t error = d7ap_send(alp_client_id, &session_config.d7ap_session_config, forwarded_alp_actions,
                         forwarded_alp_size, expected_response_length, &command->trans_id);
-                break; // TODO return response
+              if (error) {
+                DPRINT("d7ap_send returned an error %x", error);
+                alp_layer_command_completed(command->trans_id, error);
+              }
+              break; // TODO return response
             } else if(forward_itf_id == ALP_ITF_ID_SERIAL) {
                 alp_cmd_handler_output_alp_command(&command->alp_command_fifo);
             }
