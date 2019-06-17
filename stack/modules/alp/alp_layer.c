@@ -805,6 +805,7 @@ static bool alp_layer_parse_and_execute_alp_command(alp_command_t* command)
               break; // TODO return response
             } else if(forward_itf_id == ALP_ITF_ID_SERIAL) {
                 alp_cmd_handler_output_alp_command(&command->alp_command_fifo);
+                alp_layer_command_completed(command->trans_id, SUCCESS);
             }
 #ifdef MODULE_LORAWAN
             else if(forward_itf_id == ALP_ITF_ID_LORAWAN_ABP ) {
