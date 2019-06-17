@@ -127,12 +127,12 @@ static void lora_init(void) {
      .request_ack = false
   };
 
-  lorawan_register_cbs(NULL, NULL, NULL, NULL);
+  lorawan_register_cbs(NULL, NULL, NULL);
   lorawan_stack_init_abp(&lorawan_session_config);
 }
 
 static uint8_t lora_send(uint8_t* buffer, uint16_t length) {
-  lorawan_stack_error_t err;
+  lorawan_stack_status_t err;
   err = lorawan_stack_send(buffer, length, LORAWAN_APP_PORT, false);
 
   DEBUG_PRINTF("network_driver_send(): lorawan_stack_send returned %d, ", err);

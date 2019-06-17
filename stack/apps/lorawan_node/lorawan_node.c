@@ -34,7 +34,7 @@ static uint8_t appKey[] = { 0x7E, 0xEF, 0x56, 0xEC, 0xDA, 0x1D, 0xD5, 0xA4, 0x70
 void read_sensor_task() {
   static uint8_t msg_counter = 0;
   log_print_string("read sensor");
-  lorawan_stack_error_t e = lorawan_stack_send(&msg_counter, 1, 2, false);
+  lorawan_stack_status_t e = lorawan_stack_send(&msg_counter, 1, 2, false);
   if(e == LORAWAN_STACK_ERROR_OK) {
     log_print_string("TX ok (%i)", msg_counter);
   } else {
@@ -45,11 +45,11 @@ void read_sensor_task() {
   timer_post_task_delay(&read_sensor_task, 60 * TIMER_TICKS_PER_SEC);
 }
 
-void on_join_completed(bool success,uint8_t app_port,bool request_ack) {
-  if(!success) {
+void lorawan_status_cb(lorawan_stack_status_t status, uint8_t attempt) {
+  if(status == LORAWAN_STACK_JOIN_FAILED) {
     log_print_string("join failed");
     // ...
-  } else {
+  } else if(status == LORAWAN_STACK_JOINED{
     log_print_string("join succeeded");
   }
 }
@@ -68,7 +68,7 @@ void bootstrap()
     memcpy(&lorawan_session_config.devEUI,devEui ,8);
     memcpy(&lorawan_session_config.appEUI, appEui,8);
     memcpy(&lorawan_session_config.appKey,appKey,16);
-    lorawan_register_cbs(lorwan_rx,lorwan_tx,on_join_completed, NULL);
+    lorawan_register_cbs(lorwan_rx, lorwan_tx, lorawan_status_cb);
     lorawan_stack_init_otaa(&lorawan_session_config);
 
     sched_register_task(&read_sensor_task);

@@ -2269,6 +2269,7 @@ LoRaMacStatus_t SendFrameOnChannel( uint8_t channel )
     if( IsLoRaMacNetworkJoined == false )
     {
         JoinRequestTrials++;
+        LoRaMacPrimitives->MacJoinAttempt(JoinRequestTrials);
     }
 
     // Send now
@@ -2327,8 +2328,8 @@ LoRaMacStatus_t LoRaMacInitialization( LoRaMacPrimitives_t *primitives, LoRaMacC
     if( ( primitives->MacMcpsConfirm == NULL ) ||
         ( primitives->MacMcpsIndication == NULL ) ||
         ( primitives->MacMlmeConfirm == NULL ) ||
-        ( primitives->MacDutyDelay == NULL)
-         )
+        ( primitives->MacDutyDelay == NULL ) ||
+        ( primitives->MacJoinAttempt == NULL ) )
     {
         return LORAMAC_STATUS_PARAMETER_INVALID;
     }

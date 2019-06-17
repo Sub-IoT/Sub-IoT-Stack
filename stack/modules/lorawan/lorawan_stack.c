@@ -86,7 +86,7 @@
 // TODO configurable
 #define LORAWAN_PUBLIC_NETWORK_ENABLED              1 // TODO configurable?
 #define LORAWAN_CLASS                               CLASS_A // TODO configurable?
-#define JOINREQ_NBTRIALS                            3
+#define JOINREQ_NBTRIALS                            48 // (>=48 according to spec)
 #define LORAWAN_APP_DATA_BUFF_SIZE                  64 // TODO = max?
 
 typedef enum
@@ -124,9 +124,11 @@ static lorawan_AppData_t app_data = { payload_data_buffer, 0 ,0 };
 
 static lorawan_rx_callback_t rx_callback = NULL; //called when transmitting is done
 static lorawan_tx_completed_callback_t tx_callback = NULL;
-static join_completed_callback_t join_completed_callback = NULL;
-static lorawan_duty_cycle_delay_callback_t duty_delay_cb = NULL;
+static lorawan_status_callback_t stack_status_callback = NULL;
 
+/**
+ * @brief LoRaWAN state machine. Sets parameters in the LoRaWAN stack and handles callbacks
+ */
 static void run_fsm()
 {
   switch(state)
@@ -192,15 +194,15 @@ static void run_fsm()
     {
       DPRINT("JOINED");
       sched_cancel_task(&run_fsm);
-      if(join_completed_callback)
-        join_completed_callback(true,app_port,request_ack);
+      //if(stack_status_callback)
+      //  stack_status_callback(LORAWAN_STACK_JOINED, 0);
       break;
     }
     case STATE_JOIN_FAILED:
     {
       DPRINT("JOIN FAILED");
-      if(join_completed_callback)
-        join_completed_callback(false,app_port,request_ack);
+      //if(stack_status_callback)
+      //  stack_status_callback(LORAWAN_STACK_JOIN_FAILED, 0);
       break;
     }
     default:
@@ -210,34 +212,65 @@ static void run_fsm()
     }
   }
 }
+
+/**
+ * @brief Gets the current delay caused by the duty cycle restriction
+ * This will update automatically with each function call
+ * @return delay in seconds
+ */
 uint16_t lorawan_get_duty_cycle_delay()
 {
   return lorawanGetDutyCycleWaitTime();
 }
 
-
+/**
+ * @brief Called from LoRaWAN stack and calls registered callback. 
+ * This will be called everytime a message is delayed because of duty cycle limitations.
+ * @param delay
+ * @param attempt: the attempt number. Indicated how many NACKS have occured
+ */
 static void duty_cycle_delay_cb(uint32_t delay, uint8_t attempt)
 {
-  if(duty_delay_cb != NULL)
-    duty_delay_cb(delay,attempt);
+  if(stack_status_callback != NULL)
+    stack_status_callback(LORAWAN_STACK_DUTY_CYCLE_DELAY, attempt);
+}
+/**
+ * @brief Called from LoRaWAN stack and calls registered callback. 
+ * This will be called everytime a LoRaWAN network join attempt is executed
+ * @param join_attempt_number
+ */
+static void network_join_attempt(uint8_t join_attempt_number)
+{
+  if(stack_status_callback != NULL)
+    stack_status_callback(LORAWAN_STACK_JOIN_ATTEMPT, join_attempt_number);
 }
 
+/**
+ * @brief Called from LoRaWAN stack and calls registered callbacks. 
+ * Provides us with MAC Common Part Sublayer data after a LoRaWAN transmit
+ * @param McpsConfirm
+ */
 static void mcps_confirm(McpsConfirm_t *McpsConfirm)
 {
   DPRINT("mcps_confirm: %i",McpsConfirm->AckReceived);
-  lorawan_stack_error_t error = LORAWAN_STACK_ERROR_NACK;
+  lorawan_stack_status_t status = LORAWAN_STACK_ERROR_NACK;
   if(McpsConfirm!=NULL) {
     if(((McpsConfirm->McpsRequest == MCPS_CONFIRMED && McpsConfirm->AckReceived == 1) || (McpsConfirm->McpsRequest == MCPS_UNCONFIRMED)) && McpsConfirm->Status==LORAMAC_EVENT_INFO_STATUS_OK)
-      error = LORAWAN_STACK_ERROR_OK;
+      status = LORAWAN_STACK_ERROR_OK;
     else if(McpsConfirm->McpsRequest == MCPS_CONFIRMED && McpsConfirm->AckReceived != 1)
-      error = LORAWAN_STACK_ERROR_NACK;
+      status = LORAWAN_STACK_ERROR_NACK;
   }
   else
-    error = LORAWAN_STACK_ERROR_UNKNOWN;
+    status = LORAWAN_STACK_ERROR_UNKNOWN;
   HW_SPI_disable();
-  tx_callback(error,  McpsConfirm->NbRetries);
+  tx_callback(status, McpsConfirm->NbRetries);
 }
 
+/**
+ * @brief Called from LoRaWAN stack and calls registered callbacks. 
+ * Provides us with MAC Common Part Sublayer data after a LoRaWAN received 
+ * @param mcpsIndication
+ */
 static void mcps_indication(McpsIndication_t *mcpsIndication)
 {
   HW_SPI_disable();
@@ -256,6 +289,11 @@ static void mcps_indication(McpsIndication_t *mcpsIndication)
   }
 }
 
+/**
+ * @brief Called from LoRaWAN stack and calls registered callbacks. 
+ * Provides us with MAC layer management entity data after a LoRaWAN join 
+ * @param mlmeConfirm
+ */
 static void mlme_confirm(MlmeConfirm_t *mlmeConfirm)
 {
   HW_SPI_disable();
@@ -267,14 +305,15 @@ static void mlme_confirm(MlmeConfirm_t *mlmeConfirm)
       {
         DPRINT("join succeeded");
         state = STATE_JOINED;
-        if(join_completed_callback)
-            join_completed_callback(true,app_port,request_ack);
+        if(stack_status_callback)
+            stack_status_callback(LORAWAN_STACK_JOINED, mlmeConfirm->NbRetries);
       }
       else
       {
         DPRINT("join failed");
         state = STATE_JOIN_FAILED;
-        sched_post_task(&run_fsm);
+        if(stack_status_callback)
+          stack_status_callback(LORAWAN_STACK_JOIN_ATTEMPT, mlmeConfirm->NbRetries);
       }
       break;
     }
@@ -286,6 +325,10 @@ static void mlme_confirm(MlmeConfirm_t *mlmeConfirm)
   next_tx = true; // TODO needed?
 }
 
+/**
+ * @brief Checks if we have joined a LoRaWAN network
+ * @return bool representing the joined status
+ */
 static bool is_joined()
 {
   MibRequestConfirm_t mibReq;
@@ -294,13 +337,26 @@ static bool is_joined()
   return (mibReq.Param.IsNetworkJoined == true);
 }
 
-void lorawan_register_cbs(lorawan_rx_callback_t  lorawan_rx_cb, lorawan_tx_completed_callback_t lorawan_tx_cb, join_completed_callback_t join_completed_cb, lorawan_duty_cycle_delay_callback_t lorawan_duty_cycle_delay_cb )
+/**
+ * @brief Register the different callbacks
+ * @param lorawan_rx_cb: LoRaWAN received data
+ * @param lorawan_tx_cb: LoRaWAN transmitted data
+ * @param join_completed_cb: LoRaWAN network joined
+ * @param lorawan_duty_cycle_delay_cb: LoRaWAN delayed because of duty cycle
+ * @param lorawan_join_attempt_cb: attempt to join network
+ */
+void lorawan_register_cbs(lorawan_rx_callback_t  lorawan_rx_cb, lorawan_tx_completed_callback_t lorawan_tx_cb, lorawan_status_callback_t lorawan_status_cb )
 {
   rx_callback = lorawan_rx_cb;
   tx_callback = lorawan_tx_cb;
-  join_completed_callback = join_completed_cb;
-  duty_delay_cb = lorawan_duty_cycle_delay_cb;
+  stack_status_callback = lorawan_status_cb;
 }
+
+/**
+ * @brief Updates the abp network paramters
+ * @param lorawan_session_config
+ * @return bool represents if a change has occured
+ */
 bool lorawan_abp_is_joined(lorawan_session_config_abp_t* lorawan_session_config)
 {
   DPRINT("Checking for change in config");
@@ -353,7 +409,7 @@ bool lorawan_abp_is_joined(lorawan_session_config_abp_t* lorawan_session_config)
     if(status!=LORAMAC_STATUS_OK) {
       assert(false);}
 
-    DPRINT("Init using ABP");
+    DPRINT("Change found - Init using ABP");
     DPRINT("NwkSKey:");
     DPRINT_DATA(lorawan_session_config->nwkSKey, 16);
     DPRINT("AppSKey:");
@@ -368,6 +424,12 @@ bool lorawan_abp_is_joined(lorawan_session_config_abp_t* lorawan_session_config)
     return joined;
 }
 
+/**
+ * @brief Check if there are changes to the network config. Updates some parameters
+ * that can be adjusted on the fly.
+ * @param lorawan_session_config
+ * @return bool represents if the LoRaWAN network is still joined
+ */
 bool lorawan_otaa_is_joined(lorawan_session_config_otaa_t* lorawan_session_config)
 {
   DPRINT("Checking for change in config");
@@ -422,8 +484,7 @@ bool lorawan_otaa_is_joined(lorawan_session_config_otaa_t* lorawan_session_confi
     if(status!=LORAMAC_STATUS_OK) {
       assert(false);}
 
-    DPRINT("Change found");
-    DPRINT("Init using OTAA");
+    DPRINT("Change found - Init using OTAA");
     DPRINT("DevEui:");
     DPRINT_DATA(lorawan_session_config->devEUI, 8);
     DPRINT("AppEui:");
@@ -438,6 +499,11 @@ bool lorawan_otaa_is_joined(lorawan_session_config_otaa_t* lorawan_session_confi
   }
     return joined;
 }
+
+/**
+ * @brief Inits the LoRaWAN stack using activation by personalization
+ * @param lorawan_session_config
+ */
 void lorawan_stack_init_abp(lorawan_session_config_abp_t* lorawan_session_config) {
 
   activationMethod=ABP;
@@ -482,13 +548,14 @@ void lorawan_stack_init_abp(lorawan_session_config_abp_t* lorawan_session_config
   loraMacPrimitives.MacMcpsIndication = &mcps_indication;
   loraMacPrimitives.MacMlmeConfirm = &mlme_confirm;
   loraMacPrimitives.MacDutyDelay = &duty_cycle_delay_cb;
+  loraMacPrimitives.MacJoinAttempt = &network_join_attempt;
 
   // Initialization for the region EU868
   loraMacStatus = LoRaMacInitialization(&loraMacPrimitives, &loraMacCallbacks, LORAMAC_REGION_EU868);
   if(loraMacStatus == LORAMAC_STATUS_OK) {
     DPRINT("init OK");
   } else {
-    DPRINT("init failed");
+    DPRINT("init failed %d", loraMacStatus);
   }
 
   MibRequestConfirm_t mibReq;
@@ -527,8 +594,12 @@ void lorawan_stack_init_abp(lorawan_session_config_abp_t* lorawan_session_config
 
 #endif
   run_fsm();
-   DPRINT("JOINED");
 }
+
+/**
+ * @brief Inits the LoRaWAN stack using over the air activation
+ * @param lorawan_session_config
+ */
 void lorawan_stack_init_otaa(lorawan_session_config_otaa_t* lorawan_session_config) {
 
   activationMethod=OTAA;
@@ -561,13 +632,14 @@ void lorawan_stack_init_otaa(lorawan_session_config_otaa_t* lorawan_session_conf
   loraMacPrimitives.MacMcpsIndication = &mcps_indication;
   loraMacPrimitives.MacMlmeConfirm = &mlme_confirm;
   loraMacPrimitives.MacDutyDelay = &duty_cycle_delay_cb;
+  loraMacPrimitives.MacJoinAttempt = &network_join_attempt;
 
   // Initialization for the region EU868
   loraMacStatus = LoRaMacInitialization(&loraMacPrimitives, &loraMacCallbacks, LORAMAC_REGION_EU868);
   if(loraMacStatus == LORAMAC_STATUS_OK) {
     DPRINT("init OK");
   } else {
-    DPRINT("init failed");
+    DPRINT("init failed %d", loraMacStatus);
   }
 
   MibRequestConfirm_t mibReq;
@@ -608,7 +680,10 @@ void lorawan_stack_init_otaa(lorawan_session_config_otaa_t* lorawan_session_conf
 
 }
 
-
+/**
+ * @brief Deinitialize the LoRaWAN stack
+ * @param lorawan_session_config
+ */
 void lorawan_stack_deinit(){
     DPRINT("Deiniting LoRaWAN stack");
     sched_cancel_task(&run_fsm);
@@ -617,7 +692,15 @@ void lorawan_stack_deinit(){
     HW_DeInit();
 }
 
-lorawan_stack_error_t lorawan_stack_send(uint8_t* payload, uint8_t length, uint8_t app_port, bool request_ack) {
+/**
+ * @brief Sends data using LoRaWAN
+ * @param payload
+ * @param length
+ * @param app_port
+ * @param request_ack
+ * @return lorawan stack status
+ */
+lorawan_stack_status_t lorawan_stack_send(uint8_t* payload, uint8_t length, uint8_t app_port, bool request_ack) {
 
   if(!is_joined()) {
     DPRINT("TX not possible, not joined");
