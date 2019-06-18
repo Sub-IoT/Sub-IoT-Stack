@@ -456,6 +456,7 @@ static void fifo_threshold_isr() {
        uint8_t rx_bytes = 0;
        uint8_t buffer[4];
        uint8_t backup_buffer[4];
+       int16_t rssi = get_rssi();
        while(!(CHECK_FIFO_EMPTY()) && rx_bytes < 4)
        {
            buffer[rx_bytes++] = read_reg(REG_FIFO);
@@ -468,7 +469,7 @@ static void fifo_threshold_isr() {
 
        current_packet = alloc_packet_callback(FskPacketHandler_sx127x.Size);
 
-       current_packet->rx_meta.rssi = get_rssi();
+       current_packet->rx_meta.rssi = rssi;
        memcpy(current_packet->data, backup_buffer, 4);
        current_packet->length = FskPacketHandler_sx127x.Size;
 
