@@ -37,6 +37,7 @@
 
 
 __LINK_C error_t hw_rtc_init( void );
+__LINK_C error_t hw_rtc_deinit( void ) ;
 __LINK_C error_t hw_rtc_setcallback(timer_callback_t cb);
 
 __LINK_C const hwtimer_info_t* hw_rtc_get_info();

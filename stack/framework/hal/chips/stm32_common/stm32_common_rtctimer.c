@@ -209,6 +209,16 @@ error_t hw_rtc_init()
   return SUCCESS;
 }
 
+error_t hw_rtc_deinit() {
+  if (rtcHandle.Instance  == RTC) {
+    HAL_RTC_Init( &rtcHandle );
+    return SUCCESS;
+  }
+
+  return ERROR;
+}
+
+
 
 __LINK_C error_t hw_rtc_setcallback(timer_callback_t cb)
 {
