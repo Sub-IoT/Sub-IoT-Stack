@@ -552,9 +552,7 @@ void status_write() {
     write_file_counter++;
     if(write_file_counter == 100) {
         write_file_counter = 0;
-        uint16_t bg_trigger_ratio = 0;
-        if(total_bg)
-            bg_trigger_ratio = 1024 * total_rssi_triggers / total_bg;
+        uint16_t bg_trigger_ratio = 1024 * total_rssi_triggers / total_bg;
         uint16_t scan_timeout_ratio = 1024 * (total_fg - total_succeeded_fg) / total_fg;
         uint8_t buffer[4] = {(uint8_t)(bg_trigger_ratio >> 8), (uint8_t)(bg_trigger_ratio & 0xFF), (uint8_t)(scan_timeout_ratio >> 8), (uint8_t)(scan_timeout_ratio & 0xFF)};
         d7ap_fs_write_file(D7A_FILE_DLL_STATUS_FILE_ID, 8, buffer, 4);
@@ -935,7 +933,6 @@ error_t phy_start_background_scan(phy_rx_config_t* config, phy_rx_packet_callbac
     DEBUG_BG_END();
 
     total_rssi_triggers++;
-    status_write();
 
     DPRINT("rssi %i, waiting for BG frame\n", rssi);
 
