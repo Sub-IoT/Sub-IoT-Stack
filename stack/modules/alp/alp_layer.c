@@ -1039,6 +1039,7 @@ static void alp_layer_command_response_from_lorawan(lorawan_stack_status_t statu
 static void lorawan_status_callback(lorawan_stack_status_t status, uint8_t attempt)
 {
   alp_command_t* command = alloc_command();
+  command->respond_when_completed=true;
   alp_layer_command_response_from_lorawan(status, attempt, command, false);
   free_command(command);
 }

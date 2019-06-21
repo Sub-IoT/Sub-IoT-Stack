@@ -313,7 +313,7 @@ static void mlme_confirm(MlmeConfirm_t *mlmeConfirm)
         DPRINT("join failed");
         state = STATE_JOIN_FAILED;
         if(stack_status_callback)
-          stack_status_callback(LORAWAN_STACK_JOIN_ATTEMPT, mlmeConfirm->NbRetries);
+          stack_status_callback(LORAWAN_STACK_JOIN_FAILED, mlmeConfirm->NbRetries);
       }
       break;
     }
