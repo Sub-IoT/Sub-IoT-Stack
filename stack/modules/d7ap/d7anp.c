@@ -260,12 +260,12 @@ error_t d7anp_tx_foreground_frame(packet_t* packet, bool should_include_origin_t
     }
     else
     {
-        uint8_t vid[2];
-        d7ap_fs_read_vid(vid);
-        if (memcmp(vid, (uint8_t[2]){ 0xFF, 0xFF }, 2) == 0)
-            packet->d7anp_ctrl.origin_id_type = ID_TYPE_UID;
-        else
-            packet->d7anp_ctrl.origin_id_type = ID_TYPE_VID;
+        //uint8_t vid[2];
+        //d7ap_fs_read_vid(vid);
+        //if (memcmp(vid, (uint8_t[2]){ 0xFF, 0xFF }, 2) == 0)
+        packet->d7anp_ctrl.origin_id_type = ID_TYPE_UID;
+        //else
+        //    packet->d7anp_ctrl.origin_id_type = ID_TYPE_VID;
 
         packet->d7anp_ctrl.origin_void = false;
         // note we set packet->origin_access_class in DLL, since we cache the active access class there already
