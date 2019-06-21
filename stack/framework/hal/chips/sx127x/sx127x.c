@@ -88,7 +88,7 @@
 #endif
 
 static const uint16_t rx_bw_startup_time[21] = {63, 74, 85, 71, 84, 97, 119, 144, 169, 215, 264, 313, 
-  407, 504, 601, 791, 984, 1180, 1560, 1940, 2330};
+  407, 504, 560, 791, 984, 1180, 1560, 1940, 2330};
 
 static uint8_t rx_bw_number = 21;
 
@@ -948,5 +948,9 @@ int16_t hw_radio_get_rssi() {
     hw_radio_set_opmode(HW_STATE_RX); 
     hw_gpio_disable_interrupt(SX127x_DIO1_PIN);
     hw_busy_wait(rx_bw_startup_time[rx_bw_number]); //TODO: optimise this timing. Now it should wait for ~700µs but actually waits ~900µs (low rate)
-    return (- read_reg(REG_RSSIVALUE) >> 1);
+    uint16_t rssi_value;
+    do {
+      rssi_value = - read_reg(REG_RSSIVALUE) >> 1;
+    } while(rssi_value == 0);
+    return rssi_value;
 }
