@@ -164,7 +164,8 @@ int d7ap_fs_read_file(uint8_t file_id, uint32_t offset, uint8_t* buffer, uint32_
 
   DPRINT("FS RD %i", file_id);
 
-  if(!is_file_defined(file_id)) return -ENOENT;
+  //if(!is_file_defined(file_id)) return -ENOENT;
+  if(!is_file_defined(file_id)) return 0xFF;
 
   rtc = d7ap_fs_read_file_header(file_id, &header);
   if (rtc != 0)
