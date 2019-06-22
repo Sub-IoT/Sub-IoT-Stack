@@ -165,26 +165,26 @@ MACRO(APP_BUILD)
     # generate target for flashing application using jlink
     # TODO optional depending on platform?
     SET(HEX ${__APP_BUILD_NAME}-full.hex)
-    CONFIGURE_FILE(${PROJECT_SOURCE_DIR}/cmake/jlink-flash.in ${CMAKE_CURRENT_BINARY_DIR}/jlink-flash-full.script)
+    CONFIGURE_FILE(${PROJECT_SOURCE_DIR}/cmake/jlink-flash.in ${CMAKE_CURRENT_BINARY_DIR}/jlink-flash-${__APP_BUILD_NAME}-full.script)
     ADD_CUSTOM_TARGET(
         flash-${__APP_BUILD_NAME}
-        COMMAND ${JLinkExe} -speed 10000 -if SWD -CommandFile ${CMAKE_CURRENT_BINARY_DIR}/jlink-flash-full.script
+        COMMAND ${JLinkExe} -speed 10000 -if SWD -CommandFile ${CMAKE_CURRENT_BINARY_DIR}/jlink-flash-${__APP_BUILD_NAME}-full.script
         DEPENDS ${ELF}
     )
 
     SET(HEX ${__APP_BUILD_NAME}-app.hex)
-    CONFIGURE_FILE(${PROJECT_SOURCE_DIR}/cmake/jlink-flash.in ${CMAKE_CURRENT_BINARY_DIR}/jlink-flash-app.script)
+    CONFIGURE_FILE(${PROJECT_SOURCE_DIR}/cmake/jlink-flash.in ${CMAKE_CURRENT_BINARY_DIR}/jlink-flash-${__APP_BUILD_NAME}-app.script)
     ADD_CUSTOM_TARGET(
         flash-${__APP_BUILD_NAME}-app
-        COMMAND ${JLinkExe} -speed 10000 -if SWD -CommandFile ${CMAKE_CURRENT_BINARY_DIR}/jlink-flash-app.script
+        COMMAND ${JLinkExe} -speed 10000 -if SWD -CommandFile ${CMAKE_CURRENT_BINARY_DIR}/jlink-flash-${__APP_BUILD_NAME}-app.script
         DEPENDS ${ELF}
     )
 
     SET(HEX ${__APP_BUILD_NAME}-eeprom-fs.hex)
-    CONFIGURE_FILE(${PROJECT_SOURCE_DIR}/cmake/jlink-flash.in ${CMAKE_CURRENT_BINARY_DIR}/jlink-flash-eeprom-fs.script)
+    CONFIGURE_FILE(${PROJECT_SOURCE_DIR}/cmake/jlink-flash.in ${CMAKE_CURRENT_BINARY_DIR}/jlink-flash-${__APP_BUILD_NAME}-eeprom-fs.script)
     ADD_CUSTOM_TARGET(
         flash-${__APP_BUILD_NAME}-eeprom-fs
-        COMMAND ${JLinkExe} -speed 10000 -if SWD -CommandFile ${CMAKE_CURRENT_BINARY_DIR}/jlink-flash-eeprom-fs.script
+        COMMAND ${JLinkExe} -speed 10000 -if SWD -CommandFile ${CMAKE_CURRENT_BINARY_DIR}/jlink-flash-${__APP_BUILD_NAME}-eeprom-fs.script
         DEPENDS ${ELF}
     )
 ENDMACRO()
