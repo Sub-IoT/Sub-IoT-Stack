@@ -88,7 +88,7 @@ void packet_assemble(packet_t* packet)
 
 }
 
-void packet_disassemble(packet_t* packet)
+bool packet_disassemble(packet_t* packet)
 {
 
     if (packet->hw_radio_packet.rx_meta.crc_status == HW_CRC_UNAVAILABLE)
@@ -146,10 +146,10 @@ void packet_disassemble(packet_t* packet)
 
     d7anp_process_received_packet(packet);
 
-    return;
+    return true;
 
     cleanup:
         DPRINT_FWK("Skipping packet");
         packet_queue_free_packet(packet);
-        return;
+        return false;
 }
