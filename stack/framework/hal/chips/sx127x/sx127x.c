@@ -635,6 +635,8 @@ void hw_radio_stop() {
 
 error_t hw_radio_set_idle() {
     timer_cancel_task(&hw_radio_set_idle);
+    hw_gpio_disable_interrupt(SX127x_DIO0_PIN);
+    hw_gpio_disable_interrupt(SX127x_DIO1_PIN);
     DPRINT("set to sleep at %i\n", timer_get_counter_value());
     hw_radio_set_opmode(HW_STATE_SLEEP);
     spi_disable(spi_handle);
