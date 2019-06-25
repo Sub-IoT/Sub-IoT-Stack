@@ -149,6 +149,11 @@ static uint8_t previous_threshold = 0;
 static bool io_inited = false;
 
 static uint8_t read_reg(uint8_t addr) {
+  if(!io_inited){
+    hw_radio_io_init();
+    io_inited = true;
+  }
+  spi_enable(spi_handle);
   spi_select(sx127x_spi);
   spi_exchange_byte(sx127x_spi, addr & 0x7F); // send address with bit 7 low to signal a read operation
   uint8_t value = spi_exchange_byte(sx127x_spi, 0x00); // get the response
@@ -160,9 +165,9 @@ static uint8_t read_reg(uint8_t addr) {
 static void write_reg(uint8_t addr, uint8_t value) {
   if(!io_inited){
     hw_radio_io_init();
-    spi_enable(spi_handle);
     io_inited = true;
   }
+  spi_enable(spi_handle);
   spi_select(sx127x_spi);
   spi_exchange_byte(sx127x_spi, addr | 0x80); // send address with bit 8 high to signal a write operation
   spi_exchange_byte(sx127x_spi, value);
@@ -176,6 +181,11 @@ void write_reg_16(uint8_t start_reg, uint16_t value) {
 }
 
 static void write_fifo(uint8_t* buffer, uint8_t size) {
+  if(!io_inited){
+    hw_radio_io_init();
+    io_inited = true;
+  }
+  spi_enable(spi_handle);
   spi_select(sx127x_spi);
   spi_exchange_byte(sx127x_spi, 0x80); // send address with bit 8 high to signal a write operation
   spi_exchange_bytes(sx127x_spi, buffer, NULL, size);
@@ -185,6 +195,11 @@ static void write_fifo(uint8_t* buffer, uint8_t size) {
 }
 
 static void read_fifo(uint8_t* buffer, uint8_t size) {
+  if(!io_inited){
+    hw_radio_io_init();
+    io_inited = true;
+  }
+  spi_enable(spi_handle);
   spi_select(sx127x_spi);
   spi_exchange_byte(sx127x_spi, 0x00);
   spi_exchange_bytes(sx127x_spi, NULL, buffer, size);
