@@ -49,15 +49,15 @@ void lorawan_status_cb(lorawan_stack_status_t status, uint8_t attempt) {
   if(status == LORAWAN_STACK_JOIN_FAILED) {
     log_print_string("join failed");
     // ...
-  } else if(status == LORAWAN_STACK_JOINED{
+  } else if(status == LORAWAN_STACK_JOINED){
     log_print_string("join succeeded");
   }
 }
-void lorwan_rx(lorawan_AppData_t *AppData)
+void lorawan_rx(lorawan_AppData_t *AppData)
 {
    log_print_string("RECEIVED DATA"); //TODO
 }
-void lorwan_tx(bool error)
+void lorawan_tx(bool error)
 {
    log_print_string("RECEIVED DATA"); //TODO
 }
@@ -68,7 +68,7 @@ void bootstrap()
     memcpy(&lorawan_session_config.devEUI,devEui ,8);
     memcpy(&lorawan_session_config.appEUI, appEui,8);
     memcpy(&lorawan_session_config.appKey,appKey,16);
-    lorawan_register_cbs(lorwan_rx, lorwan_tx, lorawan_status_cb);
+    lorawan_register_cbs(lorawan_rx, lorawan_tx, lorawan_status_cb);
     lorawan_stack_init_otaa(&lorawan_session_config);
 
     sched_register_task(&read_sensor_task);

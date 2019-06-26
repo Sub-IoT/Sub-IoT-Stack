@@ -90,8 +90,8 @@ void alp_layer_process_response_from_d7ap(uint16_t trans_id, uint8_t* alp_comman
 bool alp_layer_process_command_from_d7ap(uint8_t* alp_command, uint8_t alp_command_length, d7ap_session_result_t d7asp_result);
 void alp_layer_command_completed(uint16_t trans_id, error_t error);
 
-static void lorwan_rx(lorawan_AppData_t *AppData);
-static void alp_layer_command_response_from_lorawan(lorawan_stack_status_t error, uint8_t attempts, alp_command_t* command, bool command_completed);
+static void lorawan_rx(lorawan_AppData_t *AppData);
+static void alp_layer_command_response_from_lorawan(lorawan_stack_status_t status, uint8_t attempts, alp_command_t* command, bool command_completed);
 void lorawan_command_completed(lorawan_stack_status_t status, uint8_t attempts);
 static void lorawan_send(uint8_t* payload, uint8_t length, uint8_t app_port, bool request_ack, alp_command_t* command);
 static void lorawan_status_callback(lorawan_stack_status_t status, uint8_t attempt);
@@ -155,7 +155,7 @@ void alp_layer_init(alp_init_args_t* alp_init_args, bool is_shell_enabled)
   modem_interface_register_handler(&modem_interface_cmd_handler, SERIAL_MESSAGE_TYPE_ALP_DATA);
 
 #ifdef MODULE_LORAWAN
-  lorawan_register_cbs(lorwan_rx, lorawan_command_completed, lorawan_status_callback);
+  lorawan_register_cbs(lorawan_rx, lorawan_command_completed, lorawan_status_callback);
 #endif
 
   alp_client_id = d7ap_register(&alp_desc);
@@ -985,7 +985,7 @@ void alp_layer_command_completed(uint16_t trans_id, error_t error) {
 }
 
 #ifdef MODULE_LORAWAN
-void lorwan_rx(lorawan_AppData_t *AppData)
+void lorawan_rx(lorawan_AppData_t *AppData)
 {
   DPRINT("RECEIVED DOWNLINK"); //TODO
   DPRINT_DATA(AppData->Buff,AppData->BuffSize);
