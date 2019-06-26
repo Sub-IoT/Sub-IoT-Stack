@@ -80,7 +80,7 @@ struct packet
 
 void packet_init(packet_t*);
 void packet_assemble(packet_t*);
-bool packet_disassemble(packet_t*);
+void packet_disassemble(packet_t*);
 
 #endif //OSS_7_PACKET_H
 

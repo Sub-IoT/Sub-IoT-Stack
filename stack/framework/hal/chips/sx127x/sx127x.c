@@ -462,7 +462,7 @@ static void fifo_threshold_isr() {
  // Reading more bytes at once might be more efficient, however getting the number of bytes in the FIFO seems
  // not possible at least in FSK mode (for LoRa, the register RegRxNbBytes gives the number of received bytes).
    hw_gpio_disable_interrupt(SX127x_DIO1_PIN);
-   DPRINT("THR ISR with IRQ %x\n", read_reg(REG_IRQFLAGS2));
+   DPRINT("dio1 THR ISR with IRQ1 %02X, IRQ2 %02X of diomapping %02X with state %i\n", read_reg(REG_IRQFLAGS1), read_reg(REG_IRQFLAGS2), read_reg(REG_DIOMAPPING1), state);
    assert(state == STATE_RX);
 
    if (FskPacketHandler_sx127x.Size == 0 && FskPacketHandler_sx127x.NbBytes == 0)
@@ -477,7 +477,11 @@ static void fifo_threshold_isr() {
            buffer[rx_bytes++] = read_reg(REG_FIFO);
        }
 
-       assert(rx_bytes == 4);
+       if(rx_bytes != 4) {
+        DPRINT("rx bytes fault! read %i bytes instead of 4. These bytes are: ", rx_bytes);
+        DPRINT_DATA(buffer, rx_bytes);
+        assert(rx_bytes == 4);
+       }
 
       memcpy(backup_buffer, buffer, rx_bytes);
        rx_packet_header_callback(buffer, rx_bytes);
@@ -649,9 +653,9 @@ void hw_radio_stop() {
 }
 
 error_t hw_radio_set_idle() {
-    timer_cancel_task(&hw_radio_set_idle);
     hw_gpio_disable_interrupt(SX127x_DIO0_PIN);
     hw_gpio_disable_interrupt(SX127x_DIO1_PIN);
+    timer_cancel_task(&hw_radio_set_idle);
     DPRINT("set to sleep at %i\n", timer_get_counter_value());
     hw_radio_set_opmode(HW_STATE_SLEEP);
     spi_disable(spi_handle);
@@ -689,6 +693,7 @@ hw_radio_state_t hw_radio_get_opmode(void) {
 }
 
 void set_opmode(uint8_t opmode) {
+  DPRINT("switching opmode to %i", opmode);
   #if defined(PLATFORM_SX127X_USE_MANUAL_RXTXSW_PIN) || defined(PLATFORM_USE_ABZ)
   set_antenna_switch(opmode);
   #endif
@@ -962,8 +967,13 @@ __attribute__((weak)) void hw_radio_io_deinit() {
 }
 
 int16_t hw_radio_get_rssi() {
-    hw_radio_set_opmode(HW_STATE_RX); 
+    if(get_opmode() >= OPMODE_FSRX || get_opmode() == OPMODE_SLEEP) {
+      set_opmode(OPMODE_STANDBY); //Restart when changing freq/datarate
+      while(!(read_reg(REG_IRQFLAGS1) & 0x80));
+    }
+    hw_gpio_disable_interrupt(SX127x_DIO0_PIN);
     hw_gpio_disable_interrupt(SX127x_DIO1_PIN);
+    set_opmode(OPMODE_RX);
     hw_busy_wait(rx_bw_startup_time[rx_bw_number]); //TODO: optimise this timing. Now it should wait for ~700µs but actually waits ~900µs (low rate)
     return (- read_reg(REG_RSSIVALUE) >> 1);
 }

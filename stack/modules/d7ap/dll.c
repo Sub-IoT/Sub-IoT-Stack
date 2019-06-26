@@ -340,8 +340,7 @@ void dll_signal_packet_received(packet_t* packet)
     }
 
     packet_queue_mark_processing(packet);
-    if(!packet_disassemble(packet))
-        phy_switch_to_sleep_mode();
+    packet_disassemble(packet);
 
     // TODO check if more received packets are pending
 }
