@@ -1253,6 +1253,7 @@ void SX1276SetOpMode( uint8_t opMode )
       LoRaBoardCallbacks->SX1276BoardSetAntSwLowPower( true );
       
       LoRaBoardCallbacks->SX1276BoardSetXO( RESET ); 
+      HW_SPI_disable();
     }
     else
     {
@@ -1317,6 +1318,7 @@ uint8_t SX1276Read( uint8_t addr )
 
 void SX1276WriteBuffer( uint8_t addr, uint8_t *buffer, uint8_t size )
 {
+  HW_SPI_enable();
     uint8_t i;
 
     //NSS = 0;
@@ -1334,6 +1336,7 @@ void SX1276WriteBuffer( uint8_t addr, uint8_t *buffer, uint8_t size )
 
 void SX1276ReadBuffer( uint8_t addr, uint8_t *buffer, uint8_t size )
 {
+ HW_SPI_enable();
     uint8_t i;
 
     //NSS = 0;

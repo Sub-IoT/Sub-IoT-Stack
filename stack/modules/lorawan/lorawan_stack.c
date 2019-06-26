@@ -236,13 +236,14 @@ static void duty_cycle_delay_cb(uint32_t delay, uint8_t attempt)
 }
 /**
  * @brief Called from LoRaWAN stack and calls registered callback. 
- * This will be called everytime a LoRaWAN network join attempt is executed
+ * This will be called everytime a LoRaWAN retransmission is executed.
+ * This will be executed when joining or when nacks are received when an ack was requested
  * @param join_attempt_number
  */
-static void network_join_attempt(uint8_t join_attempt_number)
+static void network_retry_transmission(uint8_t attempt)
 {
   if(stack_status_callback != NULL)
-    stack_status_callback(LORAWAN_STACK_JOIN_ATTEMPT, join_attempt_number);
+    stack_status_callback(LORAWAN_STACK_RETRY_TRANSMISSION, attempt);
 }
 
 /**
@@ -262,7 +263,6 @@ static void mcps_confirm(McpsConfirm_t *McpsConfirm)
   }
   else
     status = LORAWAN_STACK_ERROR_UNKNOWN;
-  HW_SPI_disable();
   tx_callback(status, McpsConfirm->NbRetries);
 }
 
@@ -273,7 +273,6 @@ static void mcps_confirm(McpsConfirm_t *McpsConfirm)
  */
 static void mcps_indication(McpsIndication_t *mcpsIndication)
 {
-  HW_SPI_disable();
   if(mcpsIndication->Status != LORAMAC_EVENT_INFO_STATUS_OK)
   {
     DPRINT("mcps_indication status: %i", mcpsIndication->Status);
@@ -296,7 +295,6 @@ static void mcps_indication(McpsIndication_t *mcpsIndication)
  */
 static void mlme_confirm(MlmeConfirm_t *mlmeConfirm)
 {
-  HW_SPI_disable();
   switch(mlmeConfirm->MlmeRequest)
   {
     case MLME_JOIN:
@@ -310,7 +308,7 @@ static void mlme_confirm(MlmeConfirm_t *mlmeConfirm)
       }
       else
       {
-        DPRINT("join failed");
+        DPRINT("Error while trying to join: %i", mlmeConfirm->Status);
         state = STATE_JOIN_FAILED;
         if(stack_status_callback)
           stack_status_callback(LORAWAN_STACK_JOIN_FAILED, mlmeConfirm->NbRetries);
@@ -548,7 +546,7 @@ void lorawan_stack_init_abp(lorawan_session_config_abp_t* lorawan_session_config
   loraMacPrimitives.MacMcpsIndication = &mcps_indication;
   loraMacPrimitives.MacMlmeConfirm = &mlme_confirm;
   loraMacPrimitives.MacDutyDelay = &duty_cycle_delay_cb;
-  loraMacPrimitives.MacJoinAttempt = &network_join_attempt;
+  loraMacPrimitives.MacRetryTransmission = &network_retry_transmission;
 
   // Initialization for the region EU868
   loraMacStatus = LoRaMacInitialization(&loraMacPrimitives, &loraMacCallbacks, LORAMAC_REGION_EU868);
@@ -632,7 +630,7 @@ void lorawan_stack_init_otaa(lorawan_session_config_otaa_t* lorawan_session_conf
   loraMacPrimitives.MacMcpsIndication = &mcps_indication;
   loraMacPrimitives.MacMlmeConfirm = &mlme_confirm;
   loraMacPrimitives.MacDutyDelay = &duty_cycle_delay_cb;
-  loraMacPrimitives.MacJoinAttempt = &network_join_attempt;
+  loraMacPrimitives.MacRetryTransmission = &network_retry_transmission;
 
   // Initialization for the region EU868
   loraMacStatus = LoRaMacInitialization(&loraMacPrimitives, &loraMacCallbacks, LORAMAC_REGION_EU868);
@@ -710,7 +708,6 @@ lorawan_stack_status_t lorawan_stack_send(uint8_t* payload, uint8_t length, uint
   if(length > LORAWAN_APP_DATA_BUFF_SIZE)
       length = LORAWAN_APP_DATA_BUFF_SIZE;
   
-  HW_SPI_enable();
 
   memcpy1(app_data.Buff, payload, length);
   app_data.BuffSize = length;

@@ -1692,7 +1692,7 @@ typedef struct sLoRaMacPrimitives
      *
      * \param   [OUT] MLME-Confirm parameters
      */
-    void ( *MacJoinAttempt )( uint8_t joinAttempt );
+    void ( *MacRetryTransmission )( uint8_t attempt );
 }LoRaMacPrimitives_t;
 
 /*!
