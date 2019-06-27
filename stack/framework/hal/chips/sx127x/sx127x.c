@@ -656,7 +656,7 @@ void hw_radio_stop() {
 error_t hw_radio_set_idle() {
     hw_gpio_disable_interrupt(SX127x_DIO0_PIN);
     hw_gpio_disable_interrupt(SX127x_DIO1_PIN);
-    if(FskPacketHandler_sx127x.Size - FskPacketHandler_sx127x.NbBytes != 0) {
+    if(FskPacketHandler_sx127x.Size - FskPacketHandler_sx127x.NbBytes != 0 && FskPacketHandler_sx127x.NbBytes != 0) {
       DPRINT("going to idle while still %i bytes to read.", FskPacketHandler_sx127x.Size - FskPacketHandler_sx127x.NbBytes);
       FskPacketHandler_sx127x.Size = 0;
       FskPacketHandler_sx127x.NbBytes = 0;
@@ -981,6 +981,7 @@ int16_t hw_radio_get_rssi() {
       set_opmode(OPMODE_STANDBY); //Restart when changing freq/datarate
       while(!(read_reg(REG_IRQFLAGS1) & 0x80));
     }
+    state = STATE_RX;
     hw_gpio_disable_interrupt(SX127x_DIO0_PIN);
     hw_gpio_disable_interrupt(SX127x_DIO1_PIN);
     set_opmode(OPMODE_RX);
