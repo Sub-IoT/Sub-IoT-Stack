@@ -818,6 +818,7 @@ static void OnRadioRxDone( uint8_t *payload, uint16_t size, int16_t rssi, int8_t
 
                 MlmeConfirm.Status = LORAMAC_EVENT_INFO_STATUS_OK;
                 IsLoRaMacNetworkJoined = true;
+                JoinRequestTrials = 0;
                 LoRaMacParams.ChannelsDatarate = LoRaMacParamsDefaults.ChannelsDatarate;
             }
             else
@@ -1988,6 +1989,12 @@ static LoRaMacStatus_t ScheduleTx( void )
     {
         // Try to send now
         dutyCycleWaitTime = 0;
+        uint8_t attemptNumber = (JoinRequestTrials > 0) ? JoinRequestTrials : AckTimeoutRetriesCounter;
+        if(attemptNumber > 1)
+        {
+            log_print_string("Nack so trying again without delay: %d", attemptNumber);
+            LoRaMacPrimitives->MacRetryTransmission(attemptNumber);
+        }
         return SendFrameOnChannel( Channel );
     }
     else
@@ -1999,7 +2006,8 @@ static LoRaMacStatus_t ScheduleTx( void )
         LoRaMacState |= LORAMAC_TX_DELAYED;
         TimerSetValue( &TxDelayedTimer, dutyCycleTimeOff );
         TimerStart( &TxDelayedTimer );
-
+        if(dutyCycleTimeOff>10)
+            LoRaMacPrimitives->MacDutyDelay( dutyCycleTimeOff, AckTimeoutRetriesCounter);
         return LORAMAC_STATUS_OK;
     }
 }
@@ -2326,7 +2334,9 @@ LoRaMacStatus_t LoRaMacInitialization( LoRaMacPrimitives_t *primitives, LoRaMacC
 
     if( ( primitives->MacMcpsConfirm == NULL ) ||
         ( primitives->MacMcpsIndication == NULL ) ||
-        ( primitives->MacMlmeConfirm == NULL ) )
+        ( primitives->MacMlmeConfirm == NULL ) ||
+        ( primitives->MacDutyDelay == NULL ) ||
+        ( primitives->MacRetryTransmission == NULL ) )
     {
         return LORAMAC_STATUS_PARAMETER_INVALID;
     }
@@ -2763,6 +2773,7 @@ LoRaMacStatus_t LoRaMacMibSetRequestConfirm( MibRequestConfirm_t *mibSet )
         }
         case MIB_NETWORK_JOINED:
         {
+            JoinRequestTrials = 0;
             IsLoRaMacNetworkJoined = mibSet->Param.IsNetworkJoined;
             break;
         }

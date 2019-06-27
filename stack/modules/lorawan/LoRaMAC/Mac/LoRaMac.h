@@ -1681,6 +1681,18 @@ typedef struct sLoRaMacPrimitives
      * \param   [OUT] MLME-Confirm parameters
      */
     void ( *MacMlmeConfirm )( MlmeConfirm_t *MlmeConfirm );
+    /*!
+     * \brief   Return current delay
+     *
+     * \param   [OUT] MLME-Confirm parameters
+     */
+    void ( *MacDutyDelay )( uint32_t delay, uint8_t attempt );
+      /*!
+     * \brief   Return when a join attempt occurs
+     *
+     * \param   [OUT] MLME-Confirm parameters
+     */
+    void ( *MacRetryTransmission )( uint8_t attempt );
 }LoRaMacPrimitives_t;
 
 /*!
