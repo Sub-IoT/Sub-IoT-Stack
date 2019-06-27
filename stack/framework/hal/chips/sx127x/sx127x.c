@@ -481,9 +481,16 @@ static void fifo_threshold_isr() {
 
       memcpy(backup_buffer, buffer, rx_bytes);
        rx_packet_header_callback(buffer, rx_bytes);
+       if(FskPacketHandler_sx127x.Size == 0) {
+         DPRINT("Length was to large, discarding packet");
+         reinit_rx();
+         hw_radio_set_opmode(HW_STATE_RX);
+         return;
+       }
 
        current_packet = alloc_packet_callback(FskPacketHandler_sx127x.Size);
        if(current_packet == NULL) {
+         DPRINT("Could not allocate package, discarding.");
          reinit_rx();
          hw_radio_set_opmode(HW_STATE_RX);
          return;
@@ -902,8 +909,12 @@ error_t hw_radio_send_payload(uint8_t * data, uint16_t len) {
 }
 
 void hw_radio_set_payload_length(uint16_t length) {
-  write_reg(REG_PAYLOADLENGTH, length);
-  FskPacketHandler_sx127x.Size = length;
+  if(length > 0xFF) //Max length is 255 for this chip, return impossible length
+    FskPacketHandler_sx127x.Size = 0;
+  else {
+    write_reg(REG_PAYLOADLENGTH, length);
+    FskPacketHandler_sx127x.Size = length;
+  }
 }
 
 
