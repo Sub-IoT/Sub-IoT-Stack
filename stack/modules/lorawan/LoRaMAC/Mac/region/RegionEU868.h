@@ -73,7 +73,7 @@
 /*!
  * Default datarate used by the node
  */
-#define EU868_DEFAULT_DATARATE                      DR_5
+#define EU868_DEFAULT_DATARATE                      DR_3
 
 /*!
  * Minimal Rx1 receive datarate offset
