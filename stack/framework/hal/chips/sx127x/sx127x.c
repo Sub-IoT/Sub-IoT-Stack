@@ -668,7 +668,7 @@ error_t hw_radio_set_idle() {
       FskPacketHandler_sx127x.NbBytes = 0;
       release_packet_callback(current_packet);
     }
-    timer_cancel_task(&hw_radio_set_idle);
+
     sched_cancel_task(&fifo_threshold_isr);
     sched_cancel_task(&fifo_level_isr);
     sched_cancel_task(&bg_scan_rx_done);
