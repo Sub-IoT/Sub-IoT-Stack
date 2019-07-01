@@ -150,7 +150,7 @@ void hw_enter_lowpower_mode(uint8_t mode)
       //assert(EXTI->PR == 0);
       assert((PWR->CSR & PWR_CSR_WUF) == 0);
 
-      HAL_PWR_EnterSTOPMode(PWR_LOWPOWERREGULATOR_ON, PWR_SLEEPENTRY_WFI);
+      HAL_PWR_EnterSTOPMode(PWR_LOWPOWERREGULATOR_ON, PWR_STOPENTRY_WFI);
 
       // after resuming from STOP mode we should reinit the clock config
       stm32_common_mcu_init();
