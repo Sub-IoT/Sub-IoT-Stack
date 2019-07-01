@@ -86,6 +86,7 @@ static session_config_t session_config_saved;
 static uint8_t forwarded_alp_actions[ALP_PAYLOAD_MAX_SIZE]; // temp buffer statically allocated to prevent runtime stackoverflows
 static uint8_t alp_data[ALP_PAYLOAD_MAX_SIZE]; // temp buffer statically allocated to prevent runtime stackoverflows
 static uint8_t alp_data2[ALP_PAYLOAD_MAX_SIZE]; // temp buffer statically allocated to prevent runtime stackoverflows
+static alp_operand_file_data_t file_data_operand; // statically allocated to prevent runtime stackoverflows
 
 static void _async_process_command_from_d7ap(void* arg);
 void alp_layer_process_response_from_d7ap(uint16_t trans_id, uint8_t* alp_command,
@@ -315,18 +316,17 @@ static alp_status_codes_t process_op_write_file_properties(alp_command_t* comman
 }
 
 static alp_status_codes_t process_op_write_file_data(alp_command_t* command) {
-  alp_operand_file_data_t operand;
   error_t err;
   err = fifo_skip(&command->alp_command_fifo, 1); assert(err == SUCCESS); // skip the control byte
-  operand.file_offset = alp_parse_file_offset_operand(&command->alp_command_fifo);
-  operand.provided_data_length = alp_parse_length_operand(&command->alp_command_fifo);
+  file_data_operand.file_offset = alp_parse_file_offset_operand(&command->alp_command_fifo);
+  file_data_operand.provided_data_length = alp_parse_length_operand(&command->alp_command_fifo);
   DPRINT("WRITE FILE %i LEN %i", operand.file_offset.file_id, operand.provided_data_length);
 
-  if(operand.provided_data_length > ALP_PAYLOAD_MAX_SIZE)
+  if(file_data_operand.provided_data_length > ALP_PAYLOAD_MAX_SIZE)
     return ALP_STATUS_UNKNOWN_ERROR; // TODO more specific error
 
-  err = fifo_pop(&command->alp_command_fifo, alp_data, (uint16_t)operand.provided_data_length);
-  int rc = d7ap_fs_write_file(operand.file_offset.file_id, operand.file_offset.offset, alp_data, operand.provided_data_length);
+  err = fifo_pop(&command->alp_command_fifo, alp_data, (uint16_t)file_data_operand.provided_data_length);
+  int rc = d7ap_fs_write_file(file_data_operand.file_offset.file_id, file_data_operand.file_offset.offset, alp_data, file_data_operand.provided_data_length);
   if(rc != 0)
     return ALP_STATUS_UNKNOWN_ERROR; // TODO more specific error
 
