@@ -230,7 +230,6 @@ spi_handle_t* spi_init(uint8_t spi_number, uint32_t baudrate, uint8_t databits, 
 
 spi_slave_handle_t*  spi_init_slave(spi_handle_t* spi, pin_id_t cs_pin, bool cs_is_active_low) {
   assert(next_spi_slave_handle < MAX_SPI_SLAVE_HANDLES);
-  bool initial_level = spi->active > 0 && cs_is_active_low;
   GPIO_InitTypeDef GPIO_InitStruct;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_PULLUP; // TODO depending on cs_is_active_low?

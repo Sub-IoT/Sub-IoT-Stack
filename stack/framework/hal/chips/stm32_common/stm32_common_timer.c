@@ -71,9 +71,6 @@ error_t hw_timer_init(hwtimer_id_t timer_id, uint8_t frequency, timer_callback_t
 	if(frequency != HWTIMER_FREQ_1MS && frequency != HWTIMER_FREQ_32K)
 		return EINVAL;
 
-  TIM_ClockConfigTypeDef clock_source_config;
-  TIM_MasterConfigTypeDef master_config;
-
   start_atomic();
 	compare_f = compare_callback;
 	overflow_f = overflow_callback;
@@ -107,6 +104,8 @@ error_t hw_timer_init(hwtimer_id_t timer_id, uint8_t frequency, timer_callback_t
   __HAL_LPTIM_ENABLE_IT(&timer, LPTIM_IT_ARRM);
   __HAL_LPTIM_ENABLE_IT(&timer, LPTIM_IT_CMPOK);
 #elif defined(STM32L1)
+  TIM_ClockConfigTypeDef clock_source_config;
+  TIM_MasterConfigTypeDef master_config;
   __HAL_RCC_TIM10_CLK_ENABLE();
   timer.Instance = TIMER_INSTANCE;
   timer.Init.Prescaler = 31;

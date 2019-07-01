@@ -139,7 +139,6 @@ static rx_packet_header_callback_t rx_packet_header_callback;
 static tx_refill_callback_t tx_refill_callback;
 static state_t state = STATE_IDLE;
 static hw_radio_packet_t* current_packet;
-static rssi_valid_callback_t rssi_valid_callback;
 
 static bool is_sx1272 = false;
 static bool enable_refill = false;
@@ -207,20 +206,20 @@ static opmode_t get_opmode() {
 }
 
 
-static void dump_register()
-{
+//static void dump_register()
+//{
 
-    DPRINT("************************DUMP REGISTER*********************");
+//    DPRINT("************************DUMP REGISTER*********************");
 
-    for (uint8_t add=0; add <= REG_VERSION; add++)
-        DPRINT("ADDR %2X DATA %02X \r\n", add, read_reg(add));
+//    for (uint8_t add=0; add <= REG_VERSION; add++)
+//        DPRINT("ADDR %2X DATA %02X \r\n", add, read_reg(add));
 
-    // Please note that when reading the first byte of the FIFO register, this
-    // byte is removed so the dump is not recommended before a TX or take care
-    // to fill it after the dump
+//    // Please note that when reading the first byte of the FIFO register, this
+//    // byte is removed so the dump is not recommended before a TX or take care
+//    // to fill it after the dump
 
-    DPRINT("**********************************************************");
-}
+//    DPRINT("**********************************************************");
+//}
 
 static void set_antenna_switch(opmode_t opmode) {
   if(opmode == OPMODE_TX) {
@@ -567,17 +566,6 @@ static void restart_rx_chain() {
   // write_reg(REG_RXCONFIG, read_reg(REG_RXCONFIG) | RF_RXCONFIG_RESTARTRXWITHPLLLOCK);
   DPRINT("restart RX chain with PLL lock");
 }
-
-static void resume_from_sleep_mode() {
-  if(state != STATE_IDLE)
-    return;
-
-  DPRINT("resuming from sleep mode");
-  hw_radio_io_init();
-  spi_enable(spi_handle);
-  io_inited = true;
-}
-
 
 static void calibrate_rx_chain() {
   // TODO currently assumes to be called on boot only
