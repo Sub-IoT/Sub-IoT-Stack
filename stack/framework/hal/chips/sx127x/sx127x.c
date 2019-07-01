@@ -660,6 +660,9 @@ void hw_radio_stop() {
 }
 
 error_t hw_radio_set_idle() {
+    if(state == STATE_IDLE)
+        return EALREADY;
+
     hw_gpio_disable_interrupt(SX127x_DIO0_PIN);
     hw_gpio_disable_interrupt(SX127x_DIO1_PIN);
     if(FskPacketHandler_sx127x.Size - FskPacketHandler_sx127x.NbBytes != 0 && FskPacketHandler_sx127x.NbBytes != 0) {
@@ -680,6 +683,7 @@ error_t hw_radio_set_idle() {
     io_inited = false;
     DEBUG_RX_END();
     DEBUG_TX_END();
+    return SUCCESS;
 }
 
 bool hw_radio_is_idle() {
@@ -905,6 +909,8 @@ error_t hw_radio_send_payload(uint8_t * data, uint16_t len) {
     hw_radio_set_opmode(HW_STATE_TX);
   else
     enable_preloading = false;
+
+  return SUCCESS;
 }
 
 void hw_radio_set_payload_length(uint16_t length) {
