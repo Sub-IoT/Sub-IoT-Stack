@@ -402,7 +402,7 @@ error:
   return ALP_STATUS_UNKNOWN_ERROR; // TODO more specific
 }
 
-static void interface_file_changed_callback() {
+static void interface_file_changed_callback(uint8_t file_id) {
   interface_file_changed = true;
 }
 
