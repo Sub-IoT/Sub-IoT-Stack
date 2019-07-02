@@ -725,7 +725,7 @@ error_t phy_send_packet_with_advertising(hw_radio_packet_t* packet, phy_tx_confi
     bg_adv.eta = eta;
     bg_adv.tx_duration = phy_calculate_tx_duration(current_channel_id.channel_header.ch_class,
                                                    current_channel_id.channel_header.ch_coding,
-                                                   bg_adv.packet_size, false);
+                                                   BACKGROUND_FRAME_LENGTH, false);
 
     // prepare the foreground frame, so we can transmit this immediately
     DPRINT("Original payload with ETA %i", eta);
