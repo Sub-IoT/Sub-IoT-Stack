@@ -148,7 +148,16 @@ static uint8_t remaining_bytes_len = 0;
 static uint8_t previous_threshold = 0;
 static bool io_inited = false;
 
+void enable_spi_io() {
+  if(!io_inited){
+    hw_radio_io_init();
+    io_inited = true;
+  }
+  spi_enable(spi_handle);
+}
+
 static uint8_t read_reg(uint8_t addr) {
+  enable_spi_io();
   spi_select(sx127x_spi);
   spi_exchange_byte(sx127x_spi, addr & 0x7F); // send address with bit 7 low to signal a read operation
   uint8_t value = spi_exchange_byte(sx127x_spi, 0x00); // get the response
@@ -158,11 +167,7 @@ static uint8_t read_reg(uint8_t addr) {
 }
 
 static void write_reg(uint8_t addr, uint8_t value) {
-  if(!io_inited){
-    hw_radio_io_init();
-    spi_enable(spi_handle);
-    io_inited = true;
-  }
+  enable_spi_io();
   spi_select(sx127x_spi);
   spi_exchange_byte(sx127x_spi, addr | 0x80); // send address with bit 8 high to signal a write operation
   spi_exchange_byte(sx127x_spi, value);
@@ -176,6 +181,7 @@ void write_reg_16(uint8_t start_reg, uint16_t value) {
 }
 
 static void write_fifo(uint8_t* buffer, uint8_t size) {
+  enable_spi_io();
   spi_select(sx127x_spi);
   spi_exchange_byte(sx127x_spi, 0x80); // send address with bit 8 high to signal a write operation
   spi_exchange_bytes(sx127x_spi, buffer, NULL, size);
@@ -185,6 +191,7 @@ static void write_fifo(uint8_t* buffer, uint8_t size) {
 }
 
 static void read_fifo(uint8_t* buffer, uint8_t size) {
+  enable_spi_io();
   spi_select(sx127x_spi);
   spi_exchange_byte(sx127x_spi, 0x00);
   spi_exchange_bytes(sx127x_spi, NULL, buffer, size);
@@ -466,8 +473,20 @@ static void fifo_threshold_isr() {
 
       memcpy(backup_buffer, buffer, rx_bytes);
        rx_packet_header_callback(buffer, rx_bytes);
+       if(FskPacketHandler_sx127x.Size == 0) {
+         DPRINT("Length was to large, discarding packet");
+         reinit_rx();
+         hw_radio_set_opmode(HW_STATE_RX);
+         return;
+       }
 
        current_packet = alloc_packet_callback(FskPacketHandler_sx127x.Size);
+       if(current_packet == NULL) {
+         DPRINT("Could not allocate package, discarding.");
+         reinit_rx();
+         hw_radio_set_opmode(HW_STATE_RX);
+         return;
+       }
 
        current_packet->rx_meta.rssi = rssi;
        memcpy(current_packet->data, backup_buffer, 4);
@@ -634,7 +653,19 @@ void hw_radio_stop() {
 }
 
 error_t hw_radio_set_idle() {
+    hw_gpio_disable_interrupt(SX127x_DIO0_PIN);
+    hw_gpio_disable_interrupt(SX127x_DIO1_PIN);
+    if(FskPacketHandler_sx127x.Size - FskPacketHandler_sx127x.NbBytes != 0 && FskPacketHandler_sx127x.NbBytes != 0) {
+      DPRINT("going to idle while still %i bytes to read.", FskPacketHandler_sx127x.Size - FskPacketHandler_sx127x.NbBytes);
+      FskPacketHandler_sx127x.Size = 0;
+      FskPacketHandler_sx127x.NbBytes = 0;
+      release_packet_callback(current_packet);
+    }
     timer_cancel_task(&hw_radio_set_idle);
+    sched_cancel_task(&fifo_threshold_isr);
+    sched_cancel_task(&fifo_level_isr);
+    sched_cancel_task(&bg_scan_rx_done);
+    sched_cancel_task(&packet_transmitted_isr);
     DPRINT("set to sleep at %i\n", timer_get_counter_value());
     hw_radio_set_opmode(HW_STATE_SLEEP);
     spi_disable(spi_handle);
@@ -870,8 +901,12 @@ error_t hw_radio_send_payload(uint8_t * data, uint16_t len) {
 }
 
 void hw_radio_set_payload_length(uint16_t length) {
-  write_reg(REG_PAYLOADLENGTH, length);
-  FskPacketHandler_sx127x.Size = length;
+  if(length > 0xFF) //Max length is 255 for this chip, return impossible length
+    FskPacketHandler_sx127x.Size = 0;
+  else {
+    write_reg(REG_PAYLOADLENGTH, length);
+    FskPacketHandler_sx127x.Size = length;
+  }
 }
 
 
@@ -945,7 +980,8 @@ __attribute__((weak)) void hw_radio_io_deinit() {
 }
 
 int16_t hw_radio_get_rssi() {
-    hw_radio_set_opmode(HW_STATE_RX); 
+    hw_radio_set_opmode(HW_STATE_RX);
+    hw_gpio_disable_interrupt(SX127x_DIO0_PIN);
     hw_gpio_disable_interrupt(SX127x_DIO1_PIN);
     hw_busy_wait(rx_bw_startup_time[rx_bw_number]); //TODO: optimise this timing. Now it should wait for ~700µs but actually waits ~900µs (low rate)
     return (- read_reg(REG_RSSIVALUE) >> 1);

@@ -206,7 +206,8 @@ static hw_radio_packet_t* alloc_new_packet(uint16_t length)
 {
     // note we don't use length because in the current implementation the packets in the queue are of
     // fixed (maximum) size
-    return &(packet_queue_alloc_packet()->hw_radio_packet);
+    packet_t* allocated_packet = packet_queue_alloc_packet();
+    return allocated_packet == NULL ? NULL : &allocated_packet->hw_radio_packet;
 }
 
 static void release_packet(hw_radio_packet_t* hw_radio_packet)
