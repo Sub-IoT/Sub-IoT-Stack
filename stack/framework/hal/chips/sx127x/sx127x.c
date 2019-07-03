@@ -983,7 +983,6 @@ int16_t hw_radio_get_rssi() {
     hw_radio_set_opmode(HW_STATE_RX);
     hw_gpio_disable_interrupt(SX127x_DIO0_PIN);
     hw_gpio_disable_interrupt(SX127x_DIO1_PIN);
-    set_opmode(OPMODE_RX);
     hw_busy_wait(rx_bw_startup_time[rx_bw_number]); //TODO: optimise this timing. Now it should wait for ~700µs but actually waits ~900µs (low rate)
     return (- read_reg(REG_RSSIVALUE) >> 1);
 }
