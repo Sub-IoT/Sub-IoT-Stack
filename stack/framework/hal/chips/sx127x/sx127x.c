@@ -980,11 +980,6 @@ __attribute__((weak)) void hw_radio_io_deinit() {
 }
 
 int16_t hw_radio_get_rssi() {
-    // if(get_opmode() >= OPMODE_FSRX || get_opmode() == OPMODE_SLEEP) {
-    //   set_opmode(OPMODE_STANDBY); //Restart when changing freq/datarate
-    //   while(!(read_reg(REG_IRQFLAGS1) & 0x80));
-    // }
-    // state = STATE_RX;
     hw_radio_set_opmode(HW_STATE_RX);
     hw_gpio_disable_interrupt(SX127x_DIO0_PIN);
     hw_gpio_disable_interrupt(SX127x_DIO1_PIN);
