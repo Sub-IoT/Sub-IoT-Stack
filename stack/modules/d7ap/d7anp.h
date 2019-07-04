@@ -50,7 +50,7 @@ typedef struct packet packet_t;
 
 #define FG_SCAN_TIMEOUT    200   // expressed in Ti, to be adjusted
 #define FG_SCAN_STARTUP_TIME 3   // to be adjusted per platform
-#define FG_SCAN_START_BEFORE_ETA_SAFETY_MARGIN 8 // safety margin to start the FG scan before the designated ETA // TODO lower this, possibly transmitted ETA is still off
+#define FG_SCAN_START_BEFORE_ETA_SAFETY_MARGIN_MULTIPLIER 1 // safety margin to start the FG scan before the designated ETA // TODO lower this, possibly transmitted ETA is still off
 //HSI16 has an accuracy of 1% at 16MHz. This means in a period of 786 millisecond (max allowed), it can differ up to 7.8ms. As we use a frequency of 1kHz this results in 8 ticks.
 
 

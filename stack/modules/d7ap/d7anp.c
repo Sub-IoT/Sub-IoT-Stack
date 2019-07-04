@@ -768,13 +768,13 @@ void d7anp_process_received_packet(packet_t* packet)
                 // TODO assert FG_SCAN_STARTUP_TIME + FG_SCAN_START_BEFORE_ETA_SAFETY_MARGIN < BG frame tx time,
                 // or else we risk missing packets
                 uint16_t delay = packet->ETA - time_elapsed - FG_SCAN_STARTUP_TIME;
-                if(delay <= FG_SCAN_START_BEFORE_ETA_SAFETY_MARGIN)
+                if(delay <= FG_SCAN_START_BEFORE_ETA_SAFETY_MARGIN_MULTIPLIER * (packet->ETA/100 + 1))
                   delay = 0;
                 else
-                  delay -= FG_SCAN_START_BEFORE_ETA_SAFETY_MARGIN;
+                  delay -= FG_SCAN_START_BEFORE_ETA_SAFETY_MARGIN_MULTIPLIER * (packet->ETA/100 + 1);
 
                 DPRINT("FG scan start after %d", delay);
-                DPRINT("FG scan start after %d - (%d + %d + %d)", packet->ETA, time_elapsed, FG_SCAN_STARTUP_TIME, FG_SCAN_START_BEFORE_ETA_SAFETY_MARGIN);
+                DPRINT("FG scan start after %d - (%d + %d + %d)", packet->ETA, time_elapsed, FG_SCAN_STARTUP_TIME, FG_SCAN_START_BEFORE_ETA_SAFETY_MARGIN_MULTIPLIER * (packet->ETA/100 + 1));
                 schedule_foreground_scan_after_D7AAdvP(delay);
                 // meanwhile stay in idle
                 dll_stop_background_scan();
