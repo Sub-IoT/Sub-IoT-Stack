@@ -52,16 +52,37 @@
 #define DPRINT_DATA(...)
 #endif
 
+#define testing_ADV
+
 #if PLATFORM_NUM_DEBUGPINS >= 2
-    #define DEBUG_TX_START() hw_debug_set(0);
-    #define DEBUG_TX_END() hw_debug_clr(0);
-    #define DEBUG_RX_START() hw_debug_set(1);
-    #define DEBUG_RX_END() hw_debug_clr(1);
+    #ifndef testing_ADV
+        #define DEBUG_TX_START() hw_debug_set(0);
+        #define DEBUG_TX_END() hw_debug_clr(0);
+        #define DEBUG_RX_START() hw_debug_set(1);
+        #define DEBUG_RX_END() hw_debug_clr(1);
+        #define DEBUG_FG_START()
+        #define DEBUG_FG_END()
+        #define DEBUG_BG_START()
+        #define DEBUG_BG_END()
+    #else
+        #define DEBUG_TX_START()
+        #define DEBUG_TX_END()
+        #define DEBUG_RX_START()
+        #define DEBUG_RX_END()
+        #define DEBUG_FG_START() hw_debug_set(0);
+        #define DEBUG_FG_END() hw_debug_clr(0);
+        #define DEBUG_BG_START() hw_debug_set(1);
+        #define DEBUG_BG_END() hw_debug_clr(1);
+    #endif
 #else
     #define DEBUG_TX_START()
     #define DEBUG_TX_END()
     #define DEBUG_RX_START()
     #define DEBUG_RX_END()
+    #define DEBUG_FG_START()
+    #define DEBUG_FG_END()
+    #define DEBUG_BG_START()
+    #define DEBUG_BG_END()
 #endif
 
 // modulation settings
@@ -537,6 +558,7 @@ error_t phy_start_rx(channel_id_t* channel, syncword_class_t syncword_class, phy
 
     DPRINT("START FG scan @ %i", timer_get_counter_value());
     DEBUG_RX_START();
+    DEBUG_FG_START();
 
     state = STATE_RX;
     hw_radio_set_opmode(HW_STATE_RX);
@@ -760,6 +782,7 @@ error_t phy_send_packet_with_advertising(hw_radio_packet_t* packet, phy_tx_confi
     state = STATE_TX;
     DEBUG_RX_END();
     DEBUG_TX_START();
+    DEBUG_BG_START();
     hw_radio_set_opmode(HW_STATE_TX);
 
     return SUCCESS;
@@ -820,6 +843,7 @@ static void fill_in_fifo(uint8_t remaining_bytes_len)
             DPRINT("Add preamble_bytes: %d\n", preamble_len);
             memset(preamble, 0xAA, preamble_len);
             hw_radio_send_payload(preamble, preamble_len);
+            DEBUG_BG_END();
 
             bg_adv.eta = 0;
             fg_frame.bg_adv = false;
@@ -830,6 +854,7 @@ static void fill_in_fifo(uint8_t remaining_bytes_len)
         // Disable the refill event since this is the last chunk of data to transmit
         if (state != STATE_CONT_TX) 
             hw_radio_enable_refill(false);
+        DEBUG_FG_START();
         hw_radio_send_payload(fg_frame.encoded_packet, fg_frame.encoded_length);
     }
 }
@@ -858,6 +883,7 @@ error_t phy_start_background_scan(phy_rx_config_t* config, phy_rx_packet_callbac
     hw_radio_set_payload_length(packet_len);
 
     DEBUG_RX_START();
+    DEBUG_BG_START();
 
     int16_t rssi = hw_radio_get_rssi();
     if (rssi <= config->rssi_thr)
@@ -869,11 +895,13 @@ error_t phy_start_background_scan(phy_rx_config_t* config, phy_rx_packet_callbac
         DEBUG_RX_END();
         return FAIL;
     }
+    DEBUG_BG_END();
 
     DPRINT("rssi %i, waiting for BG frame\n", rssi);
 
     // the device has a period of To to successfully detect the sync word
     hw_radio_set_rx_timeout(bg_timeout[current_channel_id.channel_header.ch_class] + 40); //TO DO: OPTIMISE THIS TIMEOUT
+    DEBUG_BG_START();
     hw_radio_set_opmode(HW_STATE_RX);
 
     return SUCCESS;

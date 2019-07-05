@@ -62,16 +62,37 @@
 #define DPRINT_DATA(...)
 #endif
 
+#define testing_ADV
+
 #if PLATFORM_NUM_DEBUGPINS >= 2
-    #define DEBUG_TX_START() hw_debug_set(0);
-    #define DEBUG_TX_END() hw_debug_clr(0);
-    #define DEBUG_RX_START() hw_debug_set(1);
-    #define DEBUG_RX_END() hw_debug_clr(1);
+    #ifndef testing_ADV
+        #define DEBUG_TX_START() hw_debug_set(0);
+        #define DEBUG_TX_END() hw_debug_clr(0);
+        #define DEBUG_RX_START() hw_debug_set(1);
+        #define DEBUG_RX_END() hw_debug_clr(1);
+        #define DEBUG_FG_START()
+        #define DEBUG_FG_END()
+        #define DEBUG_BG_START()
+        #define DEBUG_BG_END()
+    #else
+        #define DEBUG_TX_START()
+        #define DEBUG_TX_END()
+        #define DEBUG_RX_START()
+        #define DEBUG_RX_END()
+        #define DEBUG_FG_START() hw_debug_set(0);
+        #define DEBUG_FG_END() hw_debug_clr(0);
+        #define DEBUG_BG_START() hw_debug_set(1);
+        #define DEBUG_BG_END() hw_debug_clr(1);
+    #endif
 #else
     #define DEBUG_TX_START()
     #define DEBUG_TX_END()
     #define DEBUG_RX_START()
     #define DEBUG_RX_END()
+    #define DEBUG_FG_START()
+    #define DEBUG_FG_END()
+    #define DEBUG_BG_START()
+    #define DEBUG_BG_END()
 #endif
 
 #ifdef PLATFORM_SX127X_USE_DIO3_PIN
@@ -368,6 +389,7 @@ static void packet_transmitted_isr() {
   hw_gpio_disable_interrupt(SX127x_DIO0_PIN);
 
   DEBUG_TX_END();
+  DEBUG_FG_END();
   hw_busy_wait(110); // TO DO: OPTIMISE
 
   if(tx_packet_callback)
@@ -381,6 +403,8 @@ static void bg_scan_rx_done()
   //  assert(current_syncword_class == PHY_SYNCWORD_CLASS0);
    timer_tick_t rx_timestamp = timer_get_counter_value();
    DPRINT("BG packet received!");
+
+   DEBUG_BG_END();
 
    current_packet = alloc_packet_callback(FskPacketHandler_sx127x.Size);
    assert(current_packet); // TODO handle
@@ -398,6 +422,7 @@ static void bg_scan_rx_done()
 }
 
 static void rx_timeout(void *arg) {
+  DEBUG_BG_END();
   DPRINT("RX timeout");
   hw_radio_set_idle();
 }
@@ -672,6 +697,8 @@ error_t hw_radio_set_idle() {
     io_inited = false;
     DEBUG_RX_END();
     DEBUG_TX_END();
+    DEBUG_BG_END();
+    DEBUG_FG_END();
     return SUCCESS;
 }
 
