@@ -22,9 +22,10 @@
 #include <stdio.h>
 #include "timer.h"
 #include "SEGGER_RTT.h"
+#ifdef FRAMEWORK_CONSOLE_ENABLED
 #include "console.h"
+#endif
 #include "stm32l0xx.h"
-
 
 //Overwrite _write so 'printf''s get pushed over the uart
 int _write(int fd, char *ptr, int len)

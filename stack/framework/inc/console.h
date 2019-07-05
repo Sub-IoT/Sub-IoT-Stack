@@ -47,7 +47,7 @@ __LINK_C void console_rx_interrupt_enable();
 
 #define console_init()                         ((void)0)
 #define console_enable()                       ((void)0)
-#define console_dissable()                     ((void)0)
+#define console_disable()                     ((void)0)
 
 #define console_print_byte(...)                ((void)0)
 #define console_print_bytes(...)               ((void)0)

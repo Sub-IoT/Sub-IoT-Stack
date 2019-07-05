@@ -27,7 +27,7 @@
 
 #include "string.h"
 #include "types.h"
-
+#include "stdlib.h"
 
 #include "debug.h"
 #include "log.h"
@@ -139,7 +139,6 @@ static rx_packet_header_callback_t rx_packet_header_callback;
 static tx_refill_callback_t tx_refill_callback;
 static state_t state = STATE_IDLE;
 static hw_radio_packet_t* current_packet;
-static rssi_valid_callback_t rssi_valid_callback;
 
 static bool is_sx1272 = false;
 static bool enable_refill = false;
@@ -155,6 +154,9 @@ void enable_spi_io() {
   }
   spi_enable(spi_handle);
 }
+
+void set_opmode(uint8_t opmode);
+
 
 static uint8_t read_reg(uint8_t addr) {
   enable_spi_io();
@@ -204,20 +206,20 @@ static opmode_t get_opmode() {
 }
 
 
-static void dump_register()
-{
+//static void dump_register()
+//{
 
-    DPRINT("************************DUMP REGISTER*********************");
+//    DPRINT("************************DUMP REGISTER*********************");
 
-    for (uint8_t add=0; add <= REG_VERSION; add++)
-        DPRINT("ADDR %2X DATA %02X \r\n", add, read_reg(add));
+//    for (uint8_t add=0; add <= REG_VERSION; add++)
+//        DPRINT("ADDR %2X DATA %02X \r\n", add, read_reg(add));
 
-    // Please note that when reading the first byte of the FIFO register, this
-    // byte is removed so the dump is not recommended before a TX or take care
-    // to fill it after the dump
+//    // Please note that when reading the first byte of the FIFO register, this
+//    // byte is removed so the dump is not recommended before a TX or take care
+//    // to fill it after the dump
 
-    DPRINT("**********************************************************");
-}
+//    DPRINT("**********************************************************");
+//}
 
 static void set_antenna_switch(opmode_t opmode) {
   if(opmode == OPMODE_TX) {
@@ -395,7 +397,12 @@ static void bg_scan_rx_done()
    flush_fifo(); 
 }
 
-static void dio0_isr(pin_id_t pin_id, uint8_t event_mask) {
+static void rx_timeout(void *arg) {
+  DPRINT("RX timeout");
+  hw_radio_set_idle();
+}
+
+static void dio0_isr(void *arg) {
   if(state == STATE_RX) {
     sched_post_task(&bg_scan_rx_done);
   } else {
@@ -539,7 +546,7 @@ static void fifo_threshold_isr() {
    DPRINT("read %i bytes, %i remaining, FLAGS2 %x, time: %i \n", FskPacketHandler_sx127x.NbBytes, remaining_bytes, read_reg(REG_IRQFLAGS2), timer_get_counter_value());
 }
 
-static void dio1_isr(pin_id_t pin_id, uint8_t event_mask) {
+static void dio1_isr(void *arg) {
     if(state == STATE_RX) {
       sched_post_task(&fifo_threshold_isr);
     } else {
@@ -559,17 +566,6 @@ static void restart_rx_chain() {
   // write_reg(REG_RXCONFIG, read_reg(REG_RXCONFIG) | RF_RXCONFIG_RESTARTRXWITHPLLLOCK);
   DPRINT("restart RX chain with PLL lock");
 }
-
-static void resume_from_sleep_mode() {
-  if(state != STATE_IDLE)
-    return;
-
-  DPRINT("resuming from sleep mode");
-  hw_radio_io_init();
-  spi_enable(spi_handle);
-  io_inited = true;
-}
-
 
 static void calibrate_rx_chain() {
   // TODO currently assumes to be called on boot only
@@ -637,8 +633,7 @@ error_t hw_radio_init(hwradio_init_args_t* init_args) {
   e = hw_gpio_configure_interrupt(SX127x_DIO1_PIN, GPIO_RISING_EDGE, &dio1_isr, NULL); assert(e == SUCCESS);
   DPRINT("inited sx127x");
 
-  sched_register_task(&hw_radio_set_idle);
-
+  sched_register_task(&rx_timeout);
   sched_register_task(&bg_scan_rx_done);
   sched_register_task(&packet_transmitted_isr);
   sched_register_task(&fifo_threshold_isr);
@@ -653,6 +648,9 @@ void hw_radio_stop() {
 }
 
 error_t hw_radio_set_idle() {
+    if(state == STATE_IDLE)
+        return EALREADY;
+
     hw_gpio_disable_interrupt(SX127x_DIO0_PIN);
     hw_gpio_disable_interrupt(SX127x_DIO1_PIN);
     if(FskPacketHandler_sx127x.Size - FskPacketHandler_sx127x.NbBytes != 0 && FskPacketHandler_sx127x.NbBytes != 0) {
@@ -661,7 +659,7 @@ error_t hw_radio_set_idle() {
       FskPacketHandler_sx127x.NbBytes = 0;
       release_packet_callback(current_packet);
     }
-    timer_cancel_task(&hw_radio_set_idle);
+
     sched_cancel_task(&fifo_threshold_isr);
     sched_cancel_task(&fifo_level_isr);
     sched_cancel_task(&bg_scan_rx_done);
@@ -673,6 +671,7 @@ error_t hw_radio_set_idle() {
     io_inited = false;
     DEBUG_RX_END();
     DEBUG_TX_END();
+    return SUCCESS;
 }
 
 bool hw_radio_is_idle() {
@@ -898,6 +897,8 @@ error_t hw_radio_send_payload(uint8_t * data, uint16_t len) {
     hw_radio_set_opmode(HW_STATE_TX);
   else
     enable_preloading = false;
+
+  return SUCCESS;
 }
 
 void hw_radio_set_payload_length(uint16_t length) {
@@ -964,7 +965,7 @@ void hw_radio_set_tx_power(int8_t eirp) {
 }
 
 void hw_radio_set_rx_timeout(uint32_t timeout) {
-  timer_post_task_delay(&hw_radio_set_idle, timeout);
+  timer_post_task_delay(&rx_timeout, timeout);
 }
 
 __attribute__((weak)) void hw_radio_reset() {

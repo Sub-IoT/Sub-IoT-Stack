@@ -26,9 +26,9 @@
 
 #include "hwatomic.h"
 #include "types.h"
+#include "string.h"
 #include "alp_layer.h"
 #include "shell.h"
-#include "console.h"
 #include "debug.h"
 #include "d7ap.h"
 #include "ng.h"

@@ -8,7 +8,7 @@
 
 // forward declare driver function pointers
 static void init(blockdevice_t* bd);
-static error_t read(blockdevice_t* bd, const uint8_t* data, uint32_t addr, uint32_t size);
+static error_t read(blockdevice_t* bd, uint8_t* data, uint32_t addr, uint32_t size);
 static error_t program(blockdevice_t* bd, const uint8_t* data, uint32_t addr, uint32_t size);
 
 blockdevice_driver_t blockdevice_driver_stm32_eeprom = {
@@ -22,7 +22,7 @@ static void init(blockdevice_t* bd) { // TODO SPI as param
   (void)bd; // suppress unused warning
 }
 
-static error_t read(blockdevice_t* bd, const uint8_t* data, uint32_t addr, uint32_t size) {
+static error_t read(blockdevice_t* bd, uint8_t* data, uint32_t addr, uint32_t size) {
   (void)bd; // suppress unused warning
 
   if(size == 0) return SUCCESS;
@@ -30,7 +30,7 @@ static error_t read(blockdevice_t* bd, const uint8_t* data, uint32_t addr, uint3
   addr += DATA_EEPROM_BASE;
   if(addr + size > DATA_EEPROM_BANK2_END) return -ESIZE;
 
-  memcpy(data, (const void*)(addr), size);
+  memcpy(data, (const void*)(intptr_t)(addr), size);
 
   return SUCCESS;
 }

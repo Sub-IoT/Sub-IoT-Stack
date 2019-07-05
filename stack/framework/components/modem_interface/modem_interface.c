@@ -11,6 +11,7 @@
 #include "debug.h"
 #include "errors.h"
 #include "platform_defs.h"
+#include "timer.h"
 
 #include "hwsystem.h"
 #include "hwatomic.h"
@@ -262,7 +263,7 @@ static void execute_state_machine()
  */
 static bool verify_payload(fifo_t* bytes, uint8_t* header)
 {
-  uint8_t payload[header[SERIAL_FRAME_SIZE]];
+  static uint8_t payload[RX_BUFFER_SIZE - SERIAL_FRAME_HEADER_SIZE]; // statically allocated so this does not end up on stack
   fifo_peek(bytes, (uint8_t*) &payload, 0, header[SERIAL_FRAME_SIZE]);
 
   //check for missing packages
@@ -390,7 +391,7 @@ static void uart_rx_cb(uint8_t data)
 /** @Brief Processes events on UART interrupt line
  *  @return void
  */
-static void uart_int_cb(pin_id_t pin_id, uint8_t event_mask)
+static void uart_int_cb(void *arg)
 {
   // do not read GPIO level here in interrupt context (GPIO clock might not be enabled yet), execute state machine instead
   sched_post_task(&execute_state_machine);

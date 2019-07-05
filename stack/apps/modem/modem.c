@@ -23,7 +23,6 @@
 #include "hwleds.h"
 #include "hwsystem.h"
 #include "debug.h"
-#include "console.h"
 
 #include <stdio.h>
 #include <stdlib.h>

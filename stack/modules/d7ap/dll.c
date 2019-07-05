@@ -992,8 +992,8 @@ void dll_tx_frame(packet_t* packet)
         }
         else
         {
-#warning "TODO support the Slow RSSI Variation computation method"
-            //assert(false);
+          // TODO support the Slow RSSI Variation computation method"
+          assert(false);
         }
     }
 

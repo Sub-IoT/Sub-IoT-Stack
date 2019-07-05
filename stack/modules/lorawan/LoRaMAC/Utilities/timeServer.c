@@ -397,7 +397,7 @@ TimerTime_t TimerGetElapsedTime( TimerTime_t past )
 
 static void TimerSetTimeout( TimerEvent_t *obj )
 {
-  int32_t minTicks= HW_RTC_GetMinimumTimeout( );
+  int32_t minTicks= (int32_t)HW_RTC_GetMinimumTimeout( );
   obj->IsRunning = true; 
 
   //in case deadline too soon

@@ -369,7 +369,7 @@ __LINK_C error_t hw_radio_set_idle(void);
  *          ESIZE if the packet is either too long or too small
  *          EOFF if the radio has not yet been initialised
  */
-__LINK_C error_t hw_radio_transmit(uint8_t *data, uint16_t len);
+error_t hw_radio_send_payload(uint8_t * data, uint16_t len);
 
 /** \brief Check whether or not the radio is currently transmitting a packet
  *
@@ -437,7 +437,6 @@ void hw_radio_set_dc_free(uint8_t scheme);
 void hw_radio_set_sync_word(uint8_t *sync_word, uint8_t sync_size);
 void hw_radio_set_crc_on(uint8_t enable);
 
-error_t hw_radio_send_payload(uint8_t * data, uint16_t len);
 void hw_radio_set_payload_length(uint16_t length);
 
 error_t hw_radio_set_idle(void);

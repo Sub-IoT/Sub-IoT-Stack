@@ -24,7 +24,9 @@
 #include "platform_defs.h"
 #include "hwgpio.h"
 
-static const spi_port_t spi_ports[] = {
+
+#define SPI_COUNT 1
+static const spi_port_t spi_ports[SPI_COUNT] = {
   {
     .spi = SPI1,
     .miso_pin = PIN(GPIO_PORTA, 6),
@@ -34,9 +36,8 @@ static const spi_port_t spi_ports[] = {
   }
 };
 
-#define SPI_COUNT sizeof(spi_ports) / sizeof(spi_port_t)
-
-static const uart_port_t uart_ports[] = {
+#define UART_COUNT 2
+static const uart_port_t uart_ports[UART_COUNT] = {
   {
     // USART2, connected to VCOM of debugger USB connection
     .tx = PIN(GPIO_PORTA, 2),
@@ -55,9 +56,8 @@ static const uart_port_t uart_ports[] = {
   }
 };
 
-#define UART_COUNT sizeof(uart_ports) / sizeof(uart_port_t)
-
-static const i2c_port_t i2c_ports[] = {
+#define I2C_COUNT 1
+static const i2c_port_t i2c_ports[I2C_COUNT] = {
   {
     .i2c = I2C1,
     .scl_pin = PIN(GPIO_PORTB, 8),
@@ -65,8 +65,6 @@ static const i2c_port_t i2c_ports[] = {
     .alternate = GPIO_AF4_I2C1,
   }
 };
-
-#define I2C_COUNT sizeof(i2c_ports) / sizeof(i2c_port_t)
 
 static pin_id_t debug_pins[PLATFORM_NUM_DEBUGPINS] = {
   PIN(GPIO_PORTB, 9), // exposed on CN3 header, pin 24
