@@ -664,6 +664,7 @@ error_t hw_radio_set_idle() {
     sched_cancel_task(&fifo_level_isr);
     sched_cancel_task(&bg_scan_rx_done);
     sched_cancel_task(&packet_transmitted_isr);
+    sched_cancel_task(&rx_timeout);
     DPRINT("set to sleep at %i\n", timer_get_counter_value());
     hw_radio_set_opmode(HW_STATE_SLEEP);
     spi_disable(spi_handle);
