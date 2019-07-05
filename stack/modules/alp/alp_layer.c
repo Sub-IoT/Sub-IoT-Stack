@@ -320,7 +320,7 @@ static alp_status_codes_t process_op_write_file_data(alp_command_t* command) {
   err = fifo_skip(&command->alp_command_fifo, 1); assert(err == SUCCESS); // skip the control byte
   file_data_operand.file_offset = alp_parse_file_offset_operand(&command->alp_command_fifo);
   file_data_operand.provided_data_length = alp_parse_length_operand(&command->alp_command_fifo);
-  DPRINT("WRITE FILE %i LEN %i", operand.file_offset.file_id, operand.provided_data_length);
+  DPRINT("WRITE FILE %i LEN %i", file_data_operand.file_offset.file_id, file_data_operand.provided_data_length);
 
   if(file_data_operand.provided_data_length > ALP_PAYLOAD_MAX_SIZE)
     return ALP_STATUS_UNKNOWN_ERROR; // TODO more specific error
