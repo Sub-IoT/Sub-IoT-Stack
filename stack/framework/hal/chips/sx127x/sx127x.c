@@ -550,6 +550,8 @@ static void fifo_threshold_isr() {
     reinit_rx(); // restart already before doing decoding so we don't miss packets on low clock speeds
     hw_radio_set_opmode(HW_STATE_RX);
 
+    DEBUG_FG_END();
+
     rx_packet_callback(current_packet);
 
     return;
