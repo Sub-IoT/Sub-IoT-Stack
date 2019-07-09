@@ -75,7 +75,8 @@ void packet_transmitted_callback(packet_t* packet) {
   DPRINT("packet %i transmitted", per_packet_counter);
   if(per_packet_counter >= per_packet_limit) {
     DPRINT("PER test done");
-    return;
+    per_packet_counter = 0;
+    // return;
   }
 
   timer_post_task_delay(&transmit_per_packet, PER_PACKET_DELAY);
