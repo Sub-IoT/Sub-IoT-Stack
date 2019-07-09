@@ -54,5 +54,8 @@ void bootstrap()
     uint8_t uid[8];
     d7ap_fs_read_uid(uid);
     log_print_string("UID %02X%02X%02X%02X%02X%02X%02X%02X\n", uid[0], uid[1], uid[2], uid[3], uid[4], uid[5], uid[6], uid[7]);
+    
+// uint8_t to_write[D7A_FILE_ENGINEERING_MODE_SIZE] = {1, 0, 0, 48, 0, 0, 0, 0, 0};
+// d7ap_fs_write_file(D7A_FILE_ENGINEERING_MODE_FILE_ID, 0, to_write, to_write);
 }
 
