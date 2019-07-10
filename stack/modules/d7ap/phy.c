@@ -415,7 +415,7 @@ static void configure_channel(const channel_id_t* channel) {
         else
             hw_radio_set_tx_fdev(0);
         hw_radio_set_rx_bw_hz(rx_bw_lo_rate);
-        hw_radio_set_preamble_size(PREAMBLE_LOW_RATE_CLASS * 8);
+        hw_radio_set_preamble_size(PREAMBLE_LOW_RATE_CLASS);
     }
     else if(channel->channel_header.ch_class == PHY_CLASS_NORMAL_RATE)
     {
@@ -425,7 +425,7 @@ static void configure_channel(const channel_id_t* channel) {
         else
             hw_radio_set_tx_fdev(0);
         hw_radio_set_rx_bw_hz(rx_bw_normal_rate);
-        hw_radio_set_preamble_size(PREAMBLE_NORMAL_RATE_CLASS * 8);
+        hw_radio_set_preamble_size(PREAMBLE_NORMAL_RATE_CLASS);
     }
     else if(channel->channel_header.ch_class == PHY_CLASS_HI_RATE)
     {
@@ -435,7 +435,7 @@ static void configure_channel(const channel_id_t* channel) {
         else
             hw_radio_set_tx_fdev(0);
         hw_radio_set_rx_bw_hz(rx_bw_hi_rate);
-        hw_radio_set_preamble_size(PREAMBLE_HI_RATE_CLASS * 8);
+        hw_radio_set_preamble_size(PREAMBLE_HI_RATE_CLASS);
     }
 
     // TODO regopmode for LF?
@@ -771,12 +771,12 @@ error_t phy_send_packet_with_advertising(hw_radio_packet_t* packet, phy_tx_confi
     hw_radio_send_payload(bg_adv.packet_payload, payload_len); // in preloading mode
 
     // prepare the next advertising frame, insert the preamble and the SYNC word
-    bg_adv.eta -= bg_adv.tx_duration; // the next ETA is the time remaining after the end transmission time of the D7AAdvP frame
+    bg_adv.eta -= 2 * bg_adv.tx_duration; // the next ETA is the time remaining after the end transmission time of the D7AAdvP frame
     assemble_background_payload();
 
     // start Tx
     timer_tick_t start = timer_get_counter_value();
-    bg_adv.stop_time = start + eta + bg_adv.tx_duration; // Tadv = Tsched + Ttx
+    bg_adv.stop_time = start + eta + 2 * bg_adv.tx_duration; // Tadv = Tsched + Ttx
     DPRINT("BG Tadv %i (start time @ %i stop time @ %i)", eta + bg_adv.tx_duration, start, bg_adv.stop_time);
 
     state = STATE_TX;
@@ -800,6 +800,7 @@ static void fill_in_fifo(uint8_t remaining_bytes_len)
 
     if (fg_frame.bg_adv)
     {
+        DEBUG_BG_END();
         timer_tick_t current = timer_get_counter_value();
         // DPRINT("fill in fifo, bg adv, currently %d untill %d\n", current, bg_adv.stop_time);
 
@@ -824,6 +825,7 @@ static void fill_in_fifo(uint8_t remaining_bytes_len)
          */
         if(bg_adv.eta)
         {
+            DEBUG_BG_START();
             // Fill up the TX FIFO with the full packet including the preamble and the SYNC word
             hw_radio_send_payload(bg_adv.packet, bg_adv.packet_size);
 
