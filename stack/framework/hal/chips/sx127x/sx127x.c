@@ -166,15 +166,15 @@ static bool enable_refill = false;
 static bool enable_preloading = false;
 static uint8_t remaining_bytes_len = 0;
 static uint8_t previous_threshold = 0;
-static uint8_t previous_payload_length = 0;
+static uint16_t previous_payload_length = 0;
 static bool io_inited = false;
 
 void enable_spi_io() {
   if(!io_inited){
     hw_radio_io_init();
     io_inited = true;
-    spi_enable(spi_handle);
   }
+  spi_enable(spi_handle);
 }
 
 void set_opmode(uint8_t opmode);
