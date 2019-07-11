@@ -148,12 +148,18 @@ void hw_enter_lowpower_mode(uint8_t mode)
 
       DPRINT("EXTI->PR %x", EXTI->PR);
       //assert(EXTI->PR == 0);
-      assert((PWR->CSR & PWR_CSR_WUF) == 0);
+      //assert((PWR->CSR & PWR_CSR_WUF) == 0);
+
+      /*clear wake up flag*/
+      SET_BIT(PWR->CR, PWR_CR_CWUF);
+
+      stm32_common_mcu_prepare_sleep();
 
       HAL_PWR_EnterSTOPMode(PWR_LOWPOWERREGULATOR_ON, PWR_STOPENTRY_WFI);
+      //HAL_PWR_EnterSTOPMode(PWR_MAINREGULATOR_ON, PWR_STOPENTRY_WFI);
 
       // after resuming from STOP mode we should reinit the clock config
-      stm32_common_mcu_init();
+      stm32_common_mcu_reinit_after_sleep();
       break;
     
     case 2: // STANDBY mode
