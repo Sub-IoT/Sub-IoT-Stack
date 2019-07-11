@@ -416,7 +416,7 @@ static void configure_channel(const channel_id_t* channel) {
         else
             hw_radio_set_tx_fdev(0);
         hw_radio_set_rx_bw_hz(rx_bw_lo_rate);
-        hw_radio_set_preamble_size(PREAMBLE_LOW_RATE_CLASS*8);
+        hw_radio_set_preamble_size(PREAMBLE_LOW_RATE_CLASS);
     }
     else if(channel->channel_header.ch_class == PHY_CLASS_NORMAL_RATE)
     {
@@ -426,7 +426,7 @@ static void configure_channel(const channel_id_t* channel) {
         else
             hw_radio_set_tx_fdev(0);
         hw_radio_set_rx_bw_hz(rx_bw_normal_rate);
-        hw_radio_set_preamble_size(PREAMBLE_NORMAL_RATE_CLASS*8);
+        hw_radio_set_preamble_size(PREAMBLE_NORMAL_RATE_CLASS);
     }
     else if(channel->channel_header.ch_class == PHY_CLASS_HI_RATE)
     {
@@ -436,7 +436,7 @@ static void configure_channel(const channel_id_t* channel) {
         else
             hw_radio_set_tx_fdev(0);
         hw_radio_set_rx_bw_hz(rx_bw_hi_rate);
-        hw_radio_set_preamble_size(PREAMBLE_HI_RATE_CLASS*8);
+        hw_radio_set_preamble_size(PREAMBLE_HI_RATE_CLASS);
     }
 
     // TODO regopmode for LF?
