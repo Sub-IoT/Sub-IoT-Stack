@@ -166,14 +166,15 @@ static bool enable_refill = false;
 static bool enable_preloading = false;
 static uint8_t remaining_bytes_len = 0;
 static uint8_t previous_threshold = 0;
+static uint8_t previous_payload_length = 0;
 static bool io_inited = false;
 
 void enable_spi_io() {
   if(!io_inited){
     hw_radio_io_init();
     io_inited = true;
+    spi_enable(spi_handle);
   }
-  spi_enable(spi_handle);
 }
 
 void set_opmode(uint8_t opmode);
@@ -332,6 +333,7 @@ static void init_regs() {
   write_reg(REG_PACKETCONFIG2, RF_PACKETCONFIG2_WMBUS_CRC_DISABLE | RF_PACKETCONFIG2_DATAMODE_PACKET |
     RF_PACKETCONFIG2_IOHOME_OFF | RF_PACKETCONFIG2_BEACON_OFF); // packet mode
   write_reg(REG_PAYLOADLENGTH, 0x00); // unlimited length mode (in combination with PacketFormat = 0), so we can encode/decode length byte in software
+  previous_payload_length = 0;
   write_reg(REG_FIFOTHRESH, RF_FIFOTHRESH_TXSTARTCONDITION_FIFONOTEMPTY | 0x03); // tx start condition true when there is at least one byte in FIFO (we are in standby/sleep when filling FIFO anyway)
                                    // For RX the threshold is set to 4 since this is the minimum length of a D7 packet (number of bytes in FIFO >= FifoThreshold + 1).
 
@@ -463,6 +465,7 @@ static void reinit_rx() {
 
  write_reg(REG_FIFOTHRESH, RF_FIFOTHRESH_TXSTARTCONDITION_FIFONOTEMPTY | 0x03);
  write_reg(REG_DIOMAPPING1, RF_DIOMAPPING1_DIO2_11);
+ previous_payload_length = 0;
  write_reg(REG_PAYLOADLENGTH, 0);
 
  // Trigger a manual restart of the Receiver chain (no frequency change)
@@ -677,7 +680,7 @@ void hw_radio_stop() {
 error_t hw_radio_set_idle() {
     if(state == STATE_IDLE)
         return EALREADY;
-
+    set_opmode(OPMODE_SLEEP);
     hw_gpio_disable_interrupt(SX127x_DIO0_PIN);
     hw_gpio_disable_interrupt(SX127x_DIO1_PIN);
     if(FskPacketHandler_sx127x.Size - FskPacketHandler_sx127x.NbBytes != 0 && FskPacketHandler_sx127x.NbBytes != 0) {
@@ -691,9 +694,8 @@ error_t hw_radio_set_idle() {
     sched_cancel_task(&fifo_level_isr);
     sched_cancel_task(&bg_scan_rx_done);
     sched_cancel_task(&packet_transmitted_isr);
-    sched_cancel_task(&rx_timeout);
-    DPRINT("set to sleep at %i\n", timer_get_counter_value());
-    hw_radio_set_opmode(HW_STATE_SLEEP);
+    timer_cancel_task(&rx_timeout);
+    // DPRINT("set to sleep at %i\n", timer_get_counter_value());
     spi_disable(spi_handle);
     hw_radio_io_deinit();
     io_inited = false;
@@ -782,6 +784,9 @@ void hw_radio_set_opmode(hw_radio_state_t opmode) {
       hw_gpio_disable_interrupt(SX127x_DIO0_PIN);
       hw_gpio_disable_interrupt(SX127x_DIO1_PIN);
       set_opmode(OPMODE_SLEEP);
+      spi_disable(spi_handle);
+      hw_radio_io_deinit();
+      io_inited = false;
       break;
     case HW_STATE_STANDBY:
       set_opmode(OPMODE_STANDBY);
@@ -871,7 +876,7 @@ error_t hw_radio_send_payload(uint8_t * data, uint16_t len) {
   /*activate low battery detector*/
   if(read_reg(REG_IRQFLAGS2) & 0x01){
     write_reg(REG_IRQFLAGS2, 0x01);
-    hw_radio_set_opmode(HW_STATE_SLEEP);
+    hw_radio_set_idle();
     return;
   }
 #endif
@@ -935,7 +940,10 @@ void hw_radio_set_payload_length(uint16_t length) {
   if(length > 0xFF) //Max length is 255 for this chip, return impossible length
     FskPacketHandler_sx127x.Size = 0;
   else {
-    write_reg(REG_PAYLOADLENGTH, length);
+    if(previous_payload_length != length) {
+      write_reg(REG_PAYLOADLENGTH, length);
+      previous_payload_length = length;
+    }
     FskPacketHandler_sx127x.Size = length;
   }
 }
@@ -1011,9 +1019,9 @@ __attribute__((weak)) void hw_radio_io_deinit() {
 }
 
 int16_t hw_radio_get_rssi() {
-    hw_radio_set_opmode(HW_STATE_RX);
-    hw_gpio_disable_interrupt(SX127x_DIO0_PIN);
+    set_opmode(OPMODE_RX); //0.103 ms
+    hw_gpio_disable_interrupt(SX127x_DIO0_PIN); //3.7µs
     hw_gpio_disable_interrupt(SX127x_DIO1_PIN);
-    hw_busy_wait(rx_bw_startup_time[rx_bw_number]); //TODO: optimise this timing. Now it should wait for ~700µs but actually waits ~900µs (low rate)
+    hw_busy_wait(rx_bw_startup_time[rx_bw_number]); //TODO: optimise this timing. Now it should wait for ~700µs but actually waits ~926µs (low rate)
     return (- read_reg(REG_RSSIVALUE) >> 1);
 }
