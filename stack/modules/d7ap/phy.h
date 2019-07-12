@@ -89,9 +89,9 @@ typedef enum
 
 typedef enum
 {
-    PREAMBLE_LOW_RATE_CLASS = 8, //(4 bytes, 32 bits)
-    PREAMBLE_NORMAL_RATE_CLASS = 8, //(4 bytes, 32 bits)
-    PREAMBLE_HI_RATE_CLASS = 12, //(6 bytes, 48 bits)
+    PREAMBLE_LOW_RATE_CLASS = 4, //between 32 bits (4 bytes) and 64 bits (8 bytes)
+    PREAMBLE_NORMAL_RATE_CLASS = 4, //between 32 bits (4 bytes) and 64 bits (8 bytes)
+    PREAMBLE_HI_RATE_CLASS = 6, //between 48 bits (6 bytes) and 128 bits (16 bytes)
 } phy_preamble_min_length_t;
 
 /* \brief The channel header as defined in D7AP
