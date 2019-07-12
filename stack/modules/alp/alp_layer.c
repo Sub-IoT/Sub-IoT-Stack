@@ -431,7 +431,7 @@ static alp_status_codes_t process_op_indirect_forward(alp_command_t* command, ui
         session_config_saved.d7ap_session_config.addressee.ctrl.raw = data[2];
         uint8_t id_length = d7ap_addressee_id_length(session_config_saved.d7ap_session_config.addressee.ctrl.id_type);
         session_config_saved.d7ap_session_config.addressee.access_class = data[3];
-        memcpy(session_config->d7ap_session_config.addressee.id, &data[4], id_length);
+        memcpy(session_config_saved.d7ap_session_config.addressee.id, &data[4], id_length);
       }
       if(ctrl.b7) { //Overload bit
         session_config->d7ap_session_config.qos.raw = session_config_saved.d7ap_session_config.qos.raw;
