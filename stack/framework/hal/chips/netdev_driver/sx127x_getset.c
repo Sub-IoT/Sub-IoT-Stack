@@ -42,6 +42,14 @@
     #define DEBUG(...)
 #endif
 
+typedef enum {
+  OPMODE_SLEEP = 0,
+  OPMODE_STANDBY = 1,
+  OPMODE_FSTX = 2,
+  OPMODE_TX = 3,
+  OPMODE_FSRX = 4,
+  OPMODE_RX = 5,
+} opmode_t;
 
 uint8_t sx127x_get_state(const sx127x_t *dev)
 {
@@ -581,14 +589,14 @@ void sx127x_set_max_payload_len(sx127x_t *dev, uint16_t maxlen)
 }
 
 #if defined(PLATFORM_SX127X_USE_MANUAL_RXTXSW_PIN) || defined(PLATFORM_USE_ABZ)
-static void set_antenna_switch(opmode_t opmode) {
+static void set_antenna_switch(const sx127x_t *dev, opmode_t opmode) {
   if(opmode == OPMODE_TX) {
 #ifdef PLATFORM_SX127X_USE_MANUAL_RXTXSW_PIN
     hw_gpio_set(SX127x_MANUAL_RXTXSW_PIN);
 #endif
 #ifdef PLATFORM_USE_ABZ
     hw_gpio_clr(ABZ_ANT_SW_RX_PIN);
-    if((read_reg(REG_PACONFIG) & RF_PACONFIG_PASELECT_PABOOST) == RF_PACONFIG_PASELECT_PABOOST) {
+    if((sx127x_reg_read(dev, SX127X_REG_PACONFIG) & SX127X_RF_PACONFIG_PASELECT_PABOOST) == SX127X_RF_PACONFIG_PASELECT_PABOOST) {
       hw_gpio_clr(ABZ_ANT_SW_TX_PIN);
       hw_gpio_set(ABZ_ANT_SW_PA_BOOST_PIN);
     } else {
@@ -608,7 +616,6 @@ static void set_antenna_switch(opmode_t opmode) {
   }
 }
 #endif
-
 
 uint8_t sx127x_get_op_mode(const sx127x_t *dev)
 {
@@ -641,7 +648,7 @@ void sx127x_set_op_mode(const sx127x_t *dev, uint8_t op_mode)
 #endif
 
 #if defined(PLATFORM_SX127X_USE_MANUAL_RXTXSW_PIN) || defined(PLATFORM_USE_ABZ)
-  set_antenna_switch(opmode);
+  set_antenna_switch(dev, op_mode);
 #endif
 
     /* Replace previous mode value and setup new mode value */
