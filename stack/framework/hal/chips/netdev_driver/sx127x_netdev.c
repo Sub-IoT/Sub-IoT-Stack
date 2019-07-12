@@ -900,8 +900,6 @@ static void restart_rx(sx127x_t *dev)
     sx127x_reg_write(dev, SX127X_REG_RXCONFIG, 0x4E);
     sx127x_flush_fifo(dev);
 
-    // Seems that the SyncAddressMatch is not cleared after the flush, so set again the RX mode
-    sx127x_set_op_mode(dev, SX127X_RF_OPMODE_RECEIVER);
     //DPRINT("Before enabling interrupt: FLAGS1 %x FLAGS2 %x\n", hw_radio_read_reg(REG_IRQFLAGS1), hw_radio_read_reg(REG_IRQFLAGS2));
     hw_gpio_set_edge_interrupt(dev->params.dio1_pin, GPIO_RISING_EDGE);
     hw_gpio_enable_interrupt(dev->params.dio1_pin);

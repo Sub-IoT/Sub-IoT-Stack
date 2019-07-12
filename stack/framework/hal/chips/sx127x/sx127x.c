@@ -476,8 +476,6 @@ static void reinit_rx() {
   RF_RXCONFIG_AGCAUTO_ON | RF_RXCONFIG_RXTRIGER_PREAMBLEDETECT);
  flush_fifo();
 
-//  // Seems that the SyncAddressMatch is not cleared after the flush, so set again the RX mode
-//  set_opmode(OPMODE_RX);
 //  //DPRINT("Before enabling interrupt: FLAGS1 %x FLAGS2 %x\n", read_reg(REG_IRQFLAGS1), read_reg(REG_IRQFLAGS2));
 //  hw_gpio_set_edge_interrupt(SX127x_DIO1_PIN, GPIO_RISING_EDGE);
 //  hw_gpio_enable_interrupt(SX127x_DIO1_PIN);
@@ -554,7 +552,6 @@ static void fifo_threshold_isr() {
 
     // Restart the reception until upper layer decides to stop it
     reinit_rx(); // restart already before doing decoding so we don't miss packets on low clock speeds
-    hw_radio_set_opmode(HW_STATE_RX);
 
     DEBUG_FG_END();
 
