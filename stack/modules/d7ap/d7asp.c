@@ -426,6 +426,7 @@ uint8_t d7asp_master_session_create(d7ap_session_config_t* d7asp_master_session_
       // for now one ALP command execution mostly results one new session, which
       // would break the preferred addressee mechanism. For now this is cached regardless
       // over the session, until we decide on session lifetime etc.
+      current_master_session.config.addressee.id[0] = d7asp_master_session_config->addressee.id[0];
       assert(d7asp_master_session_config->addressee.ctrl.id_type == ID_TYPE_NBID
              || d7asp_master_session_config->addressee.ctrl.id_type == ID_TYPE_NOID);
     }
