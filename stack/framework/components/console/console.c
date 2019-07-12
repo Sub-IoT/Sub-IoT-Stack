@@ -82,16 +82,17 @@ inline void console_print_byte(uint8_t byte) {
 }
 
 inline void console_print_bytes(uint8_t* bytes, uint8_t length) {
+
+  // If no space enough in the TX FIFO, it's time to flush.
+  while(length >= (console_tx_fifo.max_size - fifo_get_size(&console_tx_fifo)))
+    flush_console_tx_fifo(&console_tx_fifo);
+
   fifo_put(&console_tx_fifo, bytes, length);
   sched_post_task_prio(&flush_console_tx_fifo, MIN_PRIORITY, NULL);
 }
 
 inline void console_print(char* string) {
     uint8_t len = strnlen(string, CONSOLE_TX_FIFO_SIZE);
-
-    // If no space enough in the TX FIFO, it's time to flush.
-    while(len > (console_tx_fifo.max_size - fifo_get_size(&console_tx_fifo)))
-        flush_console_tx_fifo(&console_tx_fifo);
 
     console_print_bytes((uint8_t*) string, len);
 }

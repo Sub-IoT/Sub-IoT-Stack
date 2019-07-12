@@ -84,7 +84,7 @@ static void dump_register(sx127x_t *dev)
     DEBUG("************************DUMP REGISTER*********************");
 
     for (uint8_t add=0; add <= SX127X_REG_VERSION; add++)
-        printf("ADDR %2X DATA %02X \r\n", add, sx127x_reg_read(dev, add));
+    	DEBUG("ADDR %2X DATA %02X \r\n", add, sx127x_reg_read(dev, add));
 
     // Please note that when reading the first byte of the FIFO register, this
     // byte is removed so the dump is not recommended before a TX or take care
