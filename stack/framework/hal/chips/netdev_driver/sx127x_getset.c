@@ -303,6 +303,11 @@ void sx127x_set_sleep(sx127x_t *dev)
     timer_cancel_event(&dev->_internal.tx_timeout_timer);
     timer_cancel_event(&dev->_internal.rx_timeout_timer);
 
+    dev->options = 0; // clear the options
+     /* Disable the interrupts */
+    hw_gpio_disable_interrupt(dev->params.dio0_pin);
+    hw_gpio_disable_interrupt(dev->params.dio1_pin);
+
     /* Put chip into sleep */
     sx127x_set_op_mode(dev, SX127X_RF_OPMODE_SLEEP);
     sx127x_set_state(dev,  SX127X_RF_IDLE);

@@ -931,7 +931,6 @@ void _on_dio0_irq(void *arg)
                 default:
                     hw_gpio_disable_interrupt(dev->params.dio0_pin);
                     sx127x_set_standby(dev);
-                    sx127x_set_state(dev, SX127X_RF_IDLE);
                     netdev->event_callback(netdev, NETDEV_EVENT_TX_COMPLETE);
                     break;
             }

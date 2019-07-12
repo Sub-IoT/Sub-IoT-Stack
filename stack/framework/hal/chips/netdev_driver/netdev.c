@@ -81,6 +81,8 @@ hw_radio_state_t hw_radio_get_opmode() {
         return HW_STATE_TX;
     case NETOPT_STATE_STANDBY:
         return HW_STATE_STANDBY;
+    case NETOPT_STATE_SLEEP:
+        return HW_STATE_SLEEP;
     default:
         DPRINT("Not supported mode");
         break;
@@ -102,6 +104,9 @@ void hw_radio_set_opmode(hw_radio_state_t opmode) {
         break;
     case HW_STATE_STANDBY:
         state = NETOPT_STATE_STANDBY;
+        break;
+    case HW_STATE_SLEEP:
+        state = NETOPT_STATE_SLEEP;
         break;
     default:
         DPRINT("Not supported mode");
@@ -233,12 +238,11 @@ error_t hw_radio_set_idle() {
 }
 
 bool hw_radio_is_idle() {
-    if (hw_radio_get_opmode() == HW_STATE_STANDBY)
+    if (hw_radio_get_opmode() == HW_STATE_SLEEP)
         return true;
     else
         return false;
 }
-
 
 static void _event_cb(netdev_t *dev, netdev_event_t event)
 {
@@ -259,8 +263,8 @@ static void _event_cb(netdev_t *dev, netdev_event_t event)
                 rx_packet->length = len;
 
                 dev->driver->recv(netdev, rx_packet->data, len, &packet_info);
-                printf("RX done\n");
-                printf("Payload: %d bytes, RSSI: %i, LQI: %i" /*SNR: %i, TOA: %i}\n"*/,
+                DPRINT("RX done\n");
+                DPRINT("Payload: %d bytes, RSSI: %i, LQI: %i" /*SNR: %i, TOA: %i}\n"*/,
                         len, packet_info.rssi, packet_info.lqi/*(int)packet_info.snr,
                        (int)packet_info.time_on_air*/);
                 DPRINT_DATA(rx_packet->data, len);
