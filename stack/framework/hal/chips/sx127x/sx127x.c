@@ -301,11 +301,11 @@ static void init_regs() {
   // TODO validate:
   // - RestartRxOnCollision (off for now)
   // - RestartRxWith(out)PllLock flags: set on freq change
-  // - AfcAutoOn: default for now
+  // - AfcAutoOn: default for now (use AGC)
   // - AgcAutoOn: default for now (use AGC)
   // - RxTrigger: default for now
-  write_reg(REG_RXCONFIG, RF_RXCONFIG_RESTARTRXONCOLLISION_OFF | RF_RXCONFIG_AFCAUTO_OFF | 
-                                RF_RXCONFIG_AGCAUTO_ON | RF_RXCONFIG_RXTRIGER_PREAMBLEDETECT);
+  write_reg(REG_RXCONFIG, RF_RXCONFIG_RESTARTRXONCOLLISION_OFF | RF_RXCONFIG_AFCAUTO_ON |
+                          RF_RXCONFIG_AGCAUTO_ON | RF_RXCONFIG_RXTRIGER_PREAMBLEDETECT);
 
   write_reg(REG_RSSICONFIG, RF_RSSICONFIG_OFFSET_P_00_DB | RF_RSSICONFIG_SMOOTHING_8); // TODO no RSSI offset for now + using 8 samples for smoothing
   //  write_reg(REG_RSSICOLLISION, 0); // TODO not used for now
@@ -472,7 +472,7 @@ static void reinit_rx() {
  write_reg(REG_PAYLOADLENGTH, 0);
 
  // Trigger a manual restart of the Receiver chain (no frequency change)
- write_reg(REG_RXCONFIG, RF_RXCONFIG_RESTARTRXWITHOUTPLLLOCK | RF_RXCONFIG_AFCAUTO_OFF| 
+ write_reg(REG_RXCONFIG, RF_RXCONFIG_RESTARTRXWITHOUTPLLLOCK | RF_RXCONFIG_AFCAUTO_ON| 
   RF_RXCONFIG_AGCAUTO_ON | RF_RXCONFIG_RXTRIGER_PREAMBLEDETECT);
  flush_fifo();
 
@@ -840,6 +840,8 @@ void hw_radio_set_rx_bw_hz(uint32_t bw_hz) {
   }
 
   write_reg(REG_RXBW, reg_bw);
+  // set the same bandwidth for the AFC if AFC is enabled
+  write_reg(REG_AFCBW, reg_bw);
 }
 
 void hw_radio_set_bitrate(uint32_t bps) {

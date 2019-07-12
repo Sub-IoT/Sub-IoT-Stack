@@ -127,10 +127,13 @@ void sx127x_init_radio_settings(sx127x_t *dev)
             // TODO validate:
             // - RestartRxOnCollision (off for now)
             // - RestartRxWith(out)PllLock flags: set on freq change
-            // - AfcAutoOn: default for now
+            // - AfcAutoOn: default for now (use AFC)
             // - AgcAutoOn: default for now (use AGC)
             // - RxTrigger: default for now
-            sx127x_reg_write(dev, SX127X_REG_RXCONFIG, 0x0E);
+            sx127x_reg_write(dev, SX127X_REG_RXCONFIG, SX127X_RF_RXCONFIG_RESTARTRXONCOLLISION_OFF |
+                                                       SX127X_RF_RXCONFIG_AFCAUTO_ON |
+                                                       SX127X_RF_RXCONFIG_AGCAUTO_ON |
+                                                       SX127X_RF_RXCONFIG_RXTRIGER_PREAMBLEDETECT);
 
             sx127x_reg_write(dev, SX127X_REG_RSSICONFIG, 0x02); // TODO no RSSI offset for now + using 8 samples for smoothing
             //  sx127x_reg_write(dev, SX127X_REG_RSSICOLLISION, 0); // TODO not used for now

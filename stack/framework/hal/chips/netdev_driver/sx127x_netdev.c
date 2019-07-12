@@ -892,19 +892,21 @@ static void restart_rx(sx127x_t *dev)
     dev->packet.length = 0;
     dev->packet.pos = 0;
 
-    sx127x_reg_write(dev, SX127X_REG_FIFOTHRESH, 0x83);
-    sx127x_reg_write(dev, SX127X_REG_DIOMAPPING1, 0x0C);
+    sx127x_reg_write(dev, SX127X_REG_FIFOTHRESH, SX127X_RF_FIFOTHRESH_TXSTARTCONDITION_FIFONOTEMPTY | 0x03);
+    sx127x_reg_write(dev, SX127X_REG_DIOMAPPING1, SX127X_RF_DIOMAPPING1_DIO2_11);
     sx127x_reg_write(dev, SX127X_REG_PAYLOADLENGTH, 0x00);
 
     // Trigger a manual restart of the Receiver chain (no frequency change)
-    sx127x_reg_write(dev, SX127X_REG_RXCONFIG, 0x4E);
+    sx127x_reg_write(dev, SX127X_REG_RXCONFIG, SX127X_RF_RXCONFIG_RESTARTRXWITHOUTPLLLOCK |
+                                               SX127X_RF_RXCONFIG_AFCAUTO_ON |
+                                               SX127X_RF_RXCONFIG_AGCAUTO_ON |
+                                               SX127X_RF_RXCONFIG_RXTRIGER_PREAMBLEDETECT);
     sx127x_flush_fifo(dev);
 
     //DPRINT("Before enabling interrupt: FLAGS1 %x FLAGS2 %x\n", hw_radio_read_reg(REG_IRQFLAGS1), hw_radio_read_reg(REG_IRQFLAGS2));
     hw_gpio_set_edge_interrupt(dev->params.dio1_pin, GPIO_RISING_EDGE);
     hw_gpio_enable_interrupt(dev->params.dio1_pin);
 }
-
 
 void _on_dio0_irq(void *arg)
 {
