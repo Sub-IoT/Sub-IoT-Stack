@@ -219,7 +219,7 @@ static void write_fifo(uint8_t* buffer, uint8_t size) {
 static void read_fifo(uint8_t* buffer, uint8_t size) {
   enable_spi_io();
   spi_select(sx127x_spi);
-  spi_exchange_byte(sx127x_spi, 0x00);
+  spi_exchange_byte(sx127x_spi, REG_FIFO);
   spi_exchange_bytes(sx127x_spi, NULL, buffer, size);
   spi_deselect(sx127x_spi);
   DPRINT("READ FIFO %i", size);
@@ -391,7 +391,6 @@ static inline int16_t get_rssi() {
 }
 
 static void packet_transmitted_isr() {
-  hw_gpio_disable_interrupt(SX127x_DIO0_PIN);
 
   DEBUG_TX_END();
   DEBUG_FG_END();
@@ -403,7 +402,6 @@ static void packet_transmitted_isr() {
 
 static void bg_scan_rx_done() 
 {
-   hw_gpio_disable_interrupt(SX127x_DIO0_PIN);
 
   //  assert(current_syncword_class == PHY_SYNCWORD_CLASS0);
    timer_tick_t rx_timestamp = timer_get_counter_value();
@@ -433,6 +431,8 @@ static void rx_timeout(void *arg) {
 }
 
 static void dio0_isr(void *arg) {
+  hw_gpio_disable_interrupt(SX127x_DIO0_PIN);  
+
   if(state == STATE_RX) {
     sched_post_task(&bg_scan_rx_done);
   } else {
@@ -477,8 +477,8 @@ static void reinit_rx() {
  flush_fifo();
 
 //  //DPRINT("Before enabling interrupt: FLAGS1 %x FLAGS2 %x\n", read_reg(REG_IRQFLAGS1), read_reg(REG_IRQFLAGS2));
-//  hw_gpio_set_edge_interrupt(SX127x_DIO1_PIN, GPIO_RISING_EDGE);
-//  hw_gpio_enable_interrupt(SX127x_DIO1_PIN);
+ hw_gpio_set_edge_interrupt(SX127x_DIO1_PIN, GPIO_RISING_EDGE);
+ hw_gpio_enable_interrupt(SX127x_DIO1_PIN);
 }
 
 // TODO
@@ -510,9 +510,8 @@ static void fifo_threshold_isr() {
       memcpy(backup_buffer, buffer, rx_bytes);
        rx_packet_header_callback(buffer, rx_bytes);
        if(FskPacketHandler_sx127x.Size == 0) {
-         DPRINT("Length was to large, discarding packet");
+         DPRINT("Length was too large, discarding packet");
          reinit_rx();
-         hw_radio_set_opmode(HW_STATE_RX);
          return;
        }
 
@@ -520,7 +519,6 @@ static void fifo_threshold_isr() {
        if(current_packet == NULL) {
          DPRINT("Could not allocate package, discarding.");
          reinit_rx();
-         hw_radio_set_opmode(HW_STATE_RX);
          return;
        }
 
@@ -578,6 +576,8 @@ static void fifo_threshold_isr() {
 
 static void dio1_isr(void *arg) {
     DPRINT("DIO1_irq");
+
+    hw_gpio_disable_interrupt(SX127x_DIO1_PIN);
     if(state == STATE_RX) {
       sched_post_task(&fifo_threshold_isr);
     } else {
@@ -763,8 +763,8 @@ void set_state_rx() {
   }
   flush_fifo();
 
-  write_reg(REG_FIFOTHRESH, 0x83);
-  write_reg(REG_DIOMAPPING1, 0x0C);
+  write_reg(REG_FIFOTHRESH, RF_FIFOTHRESH_TXSTARTCONDITION_FIFONOTEMPTY | 0x03);
+  write_reg(REG_DIOMAPPING1, RF_DIOMAPPING1_DIO2_11);
 
   FskPacketHandler_sx127x.FifoThresh = 0;
   FskPacketHandler_sx127x.NbBytes = 0;
