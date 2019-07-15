@@ -763,18 +763,18 @@ void d7anp_process_received_packet(packet_t* packet)
         if (packet->type == BACKGROUND_ADV)
         {
             timer_tick_t time_elapsed = timer_get_counter_value() - packet->hw_radio_packet.rx_meta.timestamp;
-            if (packet->ETA > time_elapsed + FG_SCAN_STARTUP_TIME)
+            if (packet->ETA >= time_elapsed + FG_SCAN_STARTUP_TIME)
             {
                 // TODO assert FG_SCAN_STARTUP_TIME + FG_SCAN_START_BEFORE_ETA_SAFETY_MARGIN < BG frame tx time,
                 // or else we risk missing packets
                 uint16_t delay = packet->ETA - time_elapsed - FG_SCAN_STARTUP_TIME;
-                if(delay <= FG_SCAN_START_BEFORE_ETA_SAFETY_MARGIN_MULTIPLIER * (packet->ETA/100 + 1))
+                if(delay <= CLK_ACCURACY_100_MS * (packet->ETA/100 + 1))
                   delay = 0;
                 else
-                  delay -= FG_SCAN_START_BEFORE_ETA_SAFETY_MARGIN_MULTIPLIER * (packet->ETA/100 + 1);
+                  delay -= CLK_ACCURACY_100_MS * (packet->ETA/100 + 1);
 
                 DPRINT("FG scan start after %d", delay);
-                DPRINT("FG scan start after %d - (%d + %d + %d)", packet->ETA, time_elapsed, FG_SCAN_STARTUP_TIME, FG_SCAN_START_BEFORE_ETA_SAFETY_MARGIN_MULTIPLIER * (packet->ETA/100 + 1));
+                DPRINT("FG scan start after %d - (%d + %d + %d)", packet->ETA, time_elapsed, FG_SCAN_STARTUP_TIME, CLK_ACCURACY_100_MS * (packet->ETA/100 + 1));
                 schedule_foreground_scan_after_D7AAdvP(delay);
                 // meanwhile stay in idle
                 dll_stop_background_scan();

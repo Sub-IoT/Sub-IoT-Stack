@@ -52,7 +52,7 @@
 #define DPRINT_DATA(...)
 #endif
 
-#define testing_ADV
+// #define testing_ADV
 
 #if PLATFORM_NUM_DEBUGPINS >= 2
     #ifndef testing_ADV
@@ -371,19 +371,19 @@ uint16_t phy_calculate_tx_duration(phy_channel_class_t channel_class, phy_coding
         if(!payload_only)
           packet_length += PREAMBLE_LOW_RATE_CLASS;
 
-        data_rate = 1.0; // Lo Rate 9.6 kbps: 1.2 bytes/tick
+        data_rate = 1.2; // Lo Rate 9.6 kbps: 1.2 bytes/tick
         break;
     case PHY_CLASS_NORMAL_RATE:
         if(!payload_only)
           packet_length += PREAMBLE_NORMAL_RATE_CLASS;
 
-        data_rate = 6.0; // Normal Rate 55.555 kbps: 6.94 bytes/tick
+        data_rate = 6.9; // Normal Rate 55.555 kbps: 6.94 bytes/tick
         break;
     case PHY_CLASS_HI_RATE:
         if(!payload_only)
           packet_length += PREAMBLE_HI_RATE_CLASS;
 
-        data_rate = 20.0; // High rate 166.667 kbps: 20.83 byte/tick
+        data_rate = 20.8; // High rate 166.667 kbps: 20.83 byte/tick
         break;
     }
 
@@ -779,7 +779,7 @@ error_t phy_send_packet_with_advertising(hw_radio_packet_t* packet, phy_tx_confi
 
     // start Tx
     timer_tick_t start = timer_get_counter_value();
-    bg_adv.stop_time = start + eta + bg_adv.tx_duration; // Tadv = Tsched + Ttx
+    bg_adv.stop_time = start + eta + bg_adv.tx_duration + FG_SCAN_STARTUP_TIME + 4; // Tadv = Tsched + Ttx + Tfg_startup + Tcalc
     DPRINT("BG Tadv %i (start time @ %i stop time @ %i)", eta + bg_adv.tx_duration, start, bg_adv.stop_time);
 
     state = STATE_TX;
@@ -813,9 +813,9 @@ static void fill_in_fifo(uint8_t remaining_bytes_len)
                                                             remaining_bytes_len, true); // don't take syncword and preamble into account
 
         if (bg_adv.stop_time > current + 2 * bg_adv.tx_duration + flush_duration)
-            bg_adv.eta = (bg_adv.stop_time - current) - 2 * bg_adv.tx_duration - flush_duration; // ETA is updated according the real current time
+            bg_adv.eta = (bg_adv.stop_time - current) - 2 * bg_adv.tx_duration; // ETA is updated according the real current time
         else if(bg_adv.stop_time > current + bg_adv.tx_duration + flush_duration)
-            bg_adv.eta = 1;
+            bg_adv.eta = 1; // Send last background frame with ETA which we calculated and assembled previous loop.
         else
             //TODO avoid stop time being elapsed
             bg_adv.eta = 0;

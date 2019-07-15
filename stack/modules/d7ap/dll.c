@@ -973,7 +973,7 @@ void dll_tx_frame(packet_t* packet)
         /* use D7AAdvP if the receiver is engaged in ultra low power scan */
         if (tsched)
         {
-            packet->ETA = tsched + phy_calculate_tx_duration(remote_access_profile.channel_header.ch_class, remote_access_profile.channel_header.ch_coding, BACKGROUND_FRAME_LENGTH, false);
+            packet->ETA = tsched;
             DPRINT("This request requires ad-hoc sync with access scheduling period (Tsched) <%d> ti", packet->ETA);
         }
 
