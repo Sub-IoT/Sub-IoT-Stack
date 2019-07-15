@@ -934,6 +934,8 @@ error_t phy_start_background_scan(phy_rx_config_t* config, phy_rx_packet_callbac
 
     total_rssi_triggers++;
 
+    status_write();
+
     DPRINT("rssi %i, waiting for BG frame\n", rssi);
 
     // the device has a period of To to successfully detect the sync word
