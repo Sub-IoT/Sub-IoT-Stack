@@ -62,7 +62,7 @@
 #define DPRINT_DATA(...)
 #endif
 
-#define testing_ADV
+// #define testing_ADV
 
 #if PLATFORM_NUM_DEBUGPINS >= 2
     #ifndef testing_ADV
@@ -695,7 +695,7 @@ error_t hw_radio_set_idle() {
     sched_cancel_task(&bg_scan_rx_done);
     sched_cancel_task(&packet_transmitted_isr);
     timer_cancel_task(&rx_timeout);
-    // DPRINT("set to sleep at %i\n", timer_get_counter_value());
+    DPRINT("set to sleep at %i\n", timer_get_counter_value());
     DEBUG_RX_END();
     DEBUG_TX_END();
     DEBUG_BG_END();
