@@ -52,16 +52,37 @@
 #define DPRINT_DATA(...)
 #endif
 
+// #define testing_ADV
+
 #if PLATFORM_NUM_DEBUGPINS >= 2
-    #define DEBUG_TX_START() hw_debug_set(0);
-    #define DEBUG_TX_END() hw_debug_clr(0);
-    #define DEBUG_RX_START() hw_debug_set(1);
-    #define DEBUG_RX_END() hw_debug_clr(1);
+    #ifndef testing_ADV
+        #define DEBUG_TX_START() hw_debug_set(0);
+        #define DEBUG_TX_END() hw_debug_clr(0);
+        #define DEBUG_RX_START() hw_debug_set(1);
+        #define DEBUG_RX_END() hw_debug_clr(1);
+        #define DEBUG_FG_START()
+        #define DEBUG_FG_END()
+        #define DEBUG_BG_START()
+        #define DEBUG_BG_END()
+    #else
+        #define DEBUG_TX_START()
+        #define DEBUG_TX_END()
+        #define DEBUG_RX_START()
+        #define DEBUG_RX_END()
+        #define DEBUG_FG_START() hw_debug_set(0);
+        #define DEBUG_FG_END() hw_debug_clr(0);
+        #define DEBUG_BG_START() hw_debug_set(1);
+        #define DEBUG_BG_END() hw_debug_clr(1);
+    #endif
 #else
     #define DEBUG_TX_START()
     #define DEBUG_TX_END()
     #define DEBUG_RX_START()
     #define DEBUG_RX_END()
+    #define DEBUG_FG_START()
+    #define DEBUG_FG_END()
+    #define DEBUG_BG_START()
+    #define DEBUG_BG_END()
 #endif
 
 // modulation settings
@@ -115,6 +136,7 @@ static state_t state = STATE_IDLE;
 static hw_radio_packet_t *current_packet;
 static bool should_rx_after_tx_completed = false;
 static syncword_class_t current_syncword_class = PHY_SYNCWORD_CLASS0;
+static uint16_t current_syncword = 0;
 static phy_rx_config_t pending_rx_cfg;
 
 static channel_id_t default_channel_id = {
@@ -349,19 +371,19 @@ uint16_t phy_calculate_tx_duration(phy_channel_class_t channel_class, phy_coding
         if(!payload_only)
           packet_length += PREAMBLE_LOW_RATE_CLASS;
 
-        data_rate = 1.0; // Lo Rate 9.6 kbps: 1.2 bytes/tick
+        data_rate = 1.2; // Lo Rate 9.6 kbps: 1.2 bytes/tick
         break;
     case PHY_CLASS_NORMAL_RATE:
         if(!payload_only)
           packet_length += PREAMBLE_NORMAL_RATE_CLASS;
 
-        data_rate = 6.0; // Normal Rate 55.555 kbps: 6.94 bytes/tick
+        data_rate = 6.9; // Normal Rate 55.555 kbps: 6.94 bytes/tick
         break;
     case PHY_CLASS_HI_RATE:
         if(!payload_only)
           packet_length += PREAMBLE_HI_RATE_CLASS;
 
-        data_rate = 20.0; // High rate 166.667 kbps: 20.83 byte/tick
+        data_rate = 20.8; // High rate 166.667 kbps: 20.83 byte/tick
         break;
     }
 
@@ -394,7 +416,7 @@ static void configure_channel(const channel_id_t* channel) {
         else
             hw_radio_set_tx_fdev(0);
         hw_radio_set_rx_bw_hz(rx_bw_lo_rate);
-        hw_radio_set_preamble_size(PREAMBLE_LOW_RATE_CLASS * 8);
+        hw_radio_set_preamble_size(PREAMBLE_LOW_RATE_CLASS);
     }
     else if(channel->channel_header.ch_class == PHY_CLASS_NORMAL_RATE)
     {
@@ -404,7 +426,7 @@ static void configure_channel(const channel_id_t* channel) {
         else
             hw_radio_set_tx_fdev(0);
         hw_radio_set_rx_bw_hz(rx_bw_normal_rate);
-        hw_radio_set_preamble_size(PREAMBLE_NORMAL_RATE_CLASS * 8);
+        hw_radio_set_preamble_size(PREAMBLE_NORMAL_RATE_CLASS);
     }
     else if(channel->channel_header.ch_class == PHY_CLASS_HI_RATE)
     {
@@ -414,7 +436,7 @@ static void configure_channel(const channel_id_t* channel) {
         else
             hw_radio_set_tx_fdev(0);
         hw_radio_set_rx_bw_hz(rx_bw_hi_rate);
-        hw_radio_set_preamble_size(PREAMBLE_HI_RATE_CLASS * 8);
+        hw_radio_set_preamble_size(PREAMBLE_HI_RATE_CLASS);
     }
 
     // TODO regopmode for LF?
@@ -441,11 +463,13 @@ static void configure_channel(const channel_id_t* channel) {
 
 static void configure_syncword(syncword_class_t syncword_class, const channel_id_t* channel)
 {
+    if(current_syncword == sync_word_value[syncword_class][channel->channel_header.ch_coding ])
+        return;
     current_syncword_class = syncword_class;
-    uint16_t sync_word = sync_word_value[syncword_class][channel->channel_header.ch_coding ];
+    current_syncword = sync_word_value[syncword_class][channel->channel_header.ch_coding ];
 
-    DPRINT("sync_word = %04x", sync_word);
-    hw_radio_set_sync_word((uint8_t *)&sync_word, sizeof(uint16_t));
+    // DPRINT("sync_word = %04x", sync_word);
+    hw_radio_set_sync_word((uint8_t *)&current_syncword, sizeof(uint16_t));
 }
 
 void continuous_tx_expiration()
@@ -537,6 +561,7 @@ error_t phy_start_rx(channel_id_t* channel, syncword_class_t syncword_class, phy
 
     DPRINT("START FG scan @ %i", timer_get_counter_value());
     DEBUG_RX_START();
+    DEBUG_FG_START();    
 
     state = STATE_RX;
     hw_radio_set_opmode(HW_STATE_RX);
@@ -725,7 +750,7 @@ error_t phy_send_packet_with_advertising(hw_radio_packet_t* packet, phy_tx_confi
     bg_adv.eta = eta;
     bg_adv.tx_duration = phy_calculate_tx_duration(current_channel_id.channel_header.ch_class,
                                                    current_channel_id.channel_header.ch_coding,
-                                                   bg_adv.packet_size, false);
+                                                   BACKGROUND_FRAME_LENGTH, false);
 
     // prepare the foreground frame, so we can transmit this immediately
     DPRINT("Original payload with ETA %i", eta);
@@ -754,12 +779,13 @@ error_t phy_send_packet_with_advertising(hw_radio_packet_t* packet, phy_tx_confi
 
     // start Tx
     timer_tick_t start = timer_get_counter_value();
-    bg_adv.stop_time = start + eta + bg_adv.tx_duration; // Tadv = Tsched + Ttx
+    bg_adv.stop_time = start + eta + bg_adv.tx_duration + FG_SCAN_STARTUP_TIME + 4; // Tadv = Tsched + Ttx + Tfg_startup + Tcalc
     DPRINT("BG Tadv %i (start time @ %i stop time @ %i)", eta + bg_adv.tx_duration, start, bg_adv.stop_time);
 
     state = STATE_TX;
     DEBUG_RX_END();
     DEBUG_TX_START();
+    DEBUG_BG_START();
     hw_radio_set_opmode(HW_STATE_TX);
 
     return SUCCESS;
@@ -777,6 +803,7 @@ static void fill_in_fifo(uint8_t remaining_bytes_len)
 
     if (fg_frame.bg_adv)
     {
+        DEBUG_BG_END();
         timer_tick_t current = timer_get_counter_value();
         // DPRINT("fill in fifo, bg adv, currently %d untill %d\n", current, bg_adv.stop_time);
 
@@ -786,7 +813,9 @@ static void fill_in_fifo(uint8_t remaining_bytes_len)
                                                             remaining_bytes_len, true); // don't take syncword and preamble into account
 
         if (bg_adv.stop_time > current + 2 * bg_adv.tx_duration + flush_duration)
-            bg_adv.eta = (bg_adv.stop_time - current) - 2 * bg_adv.tx_duration - flush_duration; // ETA is updated according the real current time
+            bg_adv.eta = (bg_adv.stop_time - current) - 2 * bg_adv.tx_duration; // ETA is updated according the real current time
+        else if(bg_adv.stop_time > current + bg_adv.tx_duration + flush_duration)
+            bg_adv.eta = 1; // Send last background frame with ETA which we calculated and assembled previous loop.
         else
             //TODO avoid stop time being elapsed
             bg_adv.eta = 0;
@@ -801,6 +830,7 @@ static void fill_in_fifo(uint8_t remaining_bytes_len)
          */
         if(bg_adv.eta)
         {
+            DEBUG_BG_START();
             // Fill up the TX FIFO with the full packet including the preamble and the SYNC word
             hw_radio_send_payload(bg_adv.packet, bg_adv.packet_size);
 
@@ -820,6 +850,7 @@ static void fill_in_fifo(uint8_t remaining_bytes_len)
             DPRINT("Add preamble_bytes: %d\n", preamble_len);
             memset(preamble, 0xAA, preamble_len);
             hw_radio_send_payload(preamble, preamble_len);
+            DEBUG_BG_END();
 
             bg_adv.eta = 0;
             fg_frame.bg_adv = false;
@@ -830,12 +861,14 @@ static void fill_in_fifo(uint8_t remaining_bytes_len)
         // Disable the refill event since this is the last chunk of data to transmit
         if (state != STATE_CONT_TX) 
             hw_radio_enable_refill(false);
+        DEBUG_FG_START();
         hw_radio_send_payload(fg_frame.encoded_packet, fg_frame.encoded_length);
     }
 }
 
 error_t phy_start_background_scan(phy_rx_config_t* config, phy_rx_packet_callback_t rx_cb)
 {
+    DEBUG_BG_START();
     received_callback = rx_cb;
     uint8_t packet_len;
 
@@ -863,17 +896,20 @@ error_t phy_start_background_scan(phy_rx_config_t* config, phy_rx_packet_callbac
     if (rssi <= config->rssi_thr)
     {
         DPRINT("FAST RX termination RSSI %i below limit %i\n", rssi, config->rssi_thr);
-        phy_switch_to_sleep_mode();
+        hw_radio_set_opmode(HW_STATE_SLEEP); //0.136ms + 0.066ms io_deinit = 0.207ms
         // TODO choose standby mode to allow rapid channel cycling
         //phy_switch_to_standby_mode();
+        DEBUG_BG_END();
         DEBUG_RX_END();
         return FAIL;
     }
+    DEBUG_BG_END();
 
     DPRINT("rssi %i, waiting for BG frame\n", rssi);
 
     // the device has a period of To to successfully detect the sync word
     hw_radio_set_rx_timeout(bg_timeout[current_channel_id.channel_header.ch_class] + 40); //TO DO: OPTIMISE THIS TIMEOUT
+    DEBUG_BG_START();
     hw_radio_set_opmode(HW_STATE_RX);
 
     return SUCCESS;

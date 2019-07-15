@@ -62,16 +62,37 @@
 #define DPRINT_DATA(...)
 #endif
 
+// #define testing_ADV
+
 #if PLATFORM_NUM_DEBUGPINS >= 2
-    #define DEBUG_TX_START() hw_debug_set(0);
-    #define DEBUG_TX_END() hw_debug_clr(0);
-    #define DEBUG_RX_START() hw_debug_set(1);
-    #define DEBUG_RX_END() hw_debug_clr(1);
+    #ifndef testing_ADV
+        #define DEBUG_TX_START() hw_debug_set(0);
+        #define DEBUG_TX_END() hw_debug_clr(0);
+        #define DEBUG_RX_START() hw_debug_set(1);
+        #define DEBUG_RX_END() hw_debug_clr(1);
+        #define DEBUG_FG_START()
+        #define DEBUG_FG_END()
+        #define DEBUG_BG_START()
+        #define DEBUG_BG_END()
+    #else
+        #define DEBUG_TX_START()
+        #define DEBUG_TX_END()
+        #define DEBUG_RX_START()
+        #define DEBUG_RX_END()
+        #define DEBUG_FG_START() hw_debug_set(0);
+        #define DEBUG_FG_END() hw_debug_clr(0);
+        #define DEBUG_BG_START() hw_debug_set(1);
+        #define DEBUG_BG_END() hw_debug_clr(1);
+    #endif
 #else
     #define DEBUG_TX_START()
     #define DEBUG_TX_END()
     #define DEBUG_RX_START()
     #define DEBUG_RX_END()
+    #define DEBUG_FG_START()
+    #define DEBUG_FG_END()
+    #define DEBUG_BG_START()
+    #define DEBUG_BG_END()
 #endif
 
 #ifdef PLATFORM_SX127X_USE_DIO3_PIN
@@ -145,6 +166,7 @@ static bool enable_refill = false;
 static bool enable_preloading = false;
 static uint8_t remaining_bytes_len = 0;
 static uint8_t previous_threshold = 0;
+static uint16_t previous_payload_length = 0;
 static bool io_inited = false;
 
 void enable_spi_io() {
@@ -156,6 +178,7 @@ void enable_spi_io() {
 }
 
 void set_opmode(uint8_t opmode);
+static void fifo_threshold_isr();
 
 
 static uint8_t read_reg(uint8_t addr) {
@@ -249,6 +272,7 @@ static void set_antenna_switch(opmode_t opmode) {
 }
 
 static inline void flush_fifo() {
+  sched_cancel_task(&fifo_threshold_isr);
   DPRINT("Flush fifo @ %i\n", timer_get_counter_value());
   write_reg(REG_IRQFLAGS2, RF_IRQFLAGS2_FIFOOVERRUN);
 }
@@ -292,7 +316,7 @@ static void init_regs() {
   //  write_reg(REG_AFCLSB, 0); // TODO not used for now (AfcAutoOn not set)
   //  write_reg(REG_FEIMSB, 0); // TODO freq offset not used for now
   //  write_reg(REG_FEILSB, 0); // TODO freq offset not used for now
-  write_reg(REG_PREAMBLEDETECT, RF_PREAMBLEDETECT_DETECTOR_ON | RF_PREAMBLEDETECT_DETECTORSIZE_3 | RF_PREAMBLEDETECT_DETECTORTOL_10); 
+  write_reg(REG_PREAMBLEDETECT, RF_PREAMBLEDETECT_DETECTOR_ON | RF_PREAMBLEDETECT_DETECTORSIZE_2 | RF_PREAMBLEDETECT_DETECTORTOL_10); 
   // TODO validate PreambleDetectorSize (2 now) and PreambleDetectorTol (10 now)
   // write_reg(REG_RXTIMEOUT1, 0); // not used for now
   // write_reg(REG_RXTIMEOUT2, 0); // not used for now
@@ -311,6 +335,7 @@ static void init_regs() {
   write_reg(REG_PACKETCONFIG2, RF_PACKETCONFIG2_WMBUS_CRC_DISABLE | RF_PACKETCONFIG2_DATAMODE_PACKET |
     RF_PACKETCONFIG2_IOHOME_OFF | RF_PACKETCONFIG2_BEACON_OFF); // packet mode
   write_reg(REG_PAYLOADLENGTH, 0x00); // unlimited length mode (in combination with PacketFormat = 0), so we can encode/decode length byte in software
+  previous_payload_length = 0;
   write_reg(REG_FIFOTHRESH, RF_FIFOTHRESH_TXSTARTCONDITION_FIFONOTEMPTY | 0x03); // tx start condition true when there is at least one byte in FIFO (we are in standby/sleep when filling FIFO anyway)
                                    // For RX the threshold is set to 4 since this is the minimum length of a D7 packet (number of bytes in FIFO >= FifoThreshold + 1).
 
@@ -368,6 +393,7 @@ static void packet_transmitted_isr() {
   hw_gpio_disable_interrupt(SX127x_DIO0_PIN);
 
   DEBUG_TX_END();
+  DEBUG_FG_END();
   hw_busy_wait(110); // TO DO: OPTIMISE
 
   if(tx_packet_callback)
@@ -381,6 +407,8 @@ static void bg_scan_rx_done()
   //  assert(current_syncword_class == PHY_SYNCWORD_CLASS0);
    timer_tick_t rx_timestamp = timer_get_counter_value();
    DPRINT("BG packet received!");
+
+   DEBUG_BG_END();
 
    current_packet = alloc_packet_callback(FskPacketHandler_sx127x.Size);
    assert(current_packet); // TODO handle
@@ -398,6 +426,7 @@ static void bg_scan_rx_done()
 }
 
 static void rx_timeout(void *arg) {
+  DEBUG_BG_END();
   DPRINT("RX timeout");
   hw_radio_set_idle();
 }
@@ -438,6 +467,7 @@ static void reinit_rx() {
 
  write_reg(REG_FIFOTHRESH, RF_FIFOTHRESH_TXSTARTCONDITION_FIFONOTEMPTY | 0x03);
  write_reg(REG_DIOMAPPING1, RF_DIOMAPPING1_DIO2_11);
+ previous_payload_length = 0;
  write_reg(REG_PAYLOADLENGTH, 0);
 
  // Trigger a manual restart of the Receiver chain (no frequency change)
@@ -525,6 +555,8 @@ static void fifo_threshold_isr() {
     reinit_rx(); // restart already before doing decoding so we don't miss packets on low clock speeds
     hw_radio_set_opmode(HW_STATE_RX);
 
+    DEBUG_FG_END();
+
     rx_packet_callback(current_packet);
 
     return;
@@ -547,6 +579,7 @@ static void fifo_threshold_isr() {
 }
 
 static void dio1_isr(void *arg) {
+    DPRINT("DIO1_irq");
     if(state == STATE_RX) {
       sched_post_task(&fifo_threshold_isr);
     } else {
@@ -650,28 +683,23 @@ void hw_radio_stop() {
 error_t hw_radio_set_idle() {
     if(state == STATE_IDLE)
         return EALREADY;
-
-    hw_gpio_disable_interrupt(SX127x_DIO0_PIN);
-    hw_gpio_disable_interrupt(SX127x_DIO1_PIN);
+    hw_radio_set_opmode(HW_STATE_SLEEP);
     if(FskPacketHandler_sx127x.Size - FskPacketHandler_sx127x.NbBytes != 0 && FskPacketHandler_sx127x.NbBytes != 0) {
       DPRINT("going to idle while still %i bytes to read.", FskPacketHandler_sx127x.Size - FskPacketHandler_sx127x.NbBytes);
       FskPacketHandler_sx127x.Size = 0;
       FskPacketHandler_sx127x.NbBytes = 0;
       release_packet_callback(current_packet);
     }
-
     sched_cancel_task(&fifo_threshold_isr);
     sched_cancel_task(&fifo_level_isr);
     sched_cancel_task(&bg_scan_rx_done);
     sched_cancel_task(&packet_transmitted_isr);
-    sched_cancel_task(&rx_timeout);
+    timer_cancel_task(&rx_timeout);
     DPRINT("set to sleep at %i\n", timer_get_counter_value());
-    hw_radio_set_opmode(HW_STATE_SLEEP);
-    spi_disable(spi_handle);
-    hw_radio_io_deinit();
-    io_inited = false;
     DEBUG_RX_END();
     DEBUG_TX_END();
+    DEBUG_BG_END();
+    DEBUG_FG_END();
     return SUCCESS;
 }
 
@@ -753,6 +781,9 @@ void hw_radio_set_opmode(hw_radio_state_t opmode) {
       hw_gpio_disable_interrupt(SX127x_DIO0_PIN);
       hw_gpio_disable_interrupt(SX127x_DIO1_PIN);
       set_opmode(OPMODE_SLEEP);
+      spi_disable(spi_handle);
+      hw_radio_io_deinit();
+      io_inited = false;
       break;
     case HW_STATE_STANDBY:
       set_opmode(OPMODE_STANDBY);
@@ -842,7 +873,7 @@ error_t hw_radio_send_payload(uint8_t * data, uint16_t len) {
   /*activate low battery detector*/
   if(read_reg(REG_IRQFLAGS2) & 0x01){
     write_reg(REG_IRQFLAGS2, 0x01);
-    hw_radio_set_opmode(HW_STATE_SLEEP);
+    hw_radio_set_idle();
     return;
   }
 #endif
@@ -906,7 +937,10 @@ void hw_radio_set_payload_length(uint16_t length) {
   if(length > 0xFF) //Max length is 255 for this chip, return impossible length
     FskPacketHandler_sx127x.Size = 0;
   else {
-    write_reg(REG_PAYLOADLENGTH, length);
+    if(previous_payload_length != length) {
+      write_reg(REG_PAYLOADLENGTH, length);
+      previous_payload_length = length;
+    }
     FskPacketHandler_sx127x.Size = length;
   }
 }
@@ -982,9 +1016,9 @@ __attribute__((weak)) void hw_radio_io_deinit() {
 }
 
 int16_t hw_radio_get_rssi() {
-    hw_radio_set_opmode(HW_STATE_RX);
-    hw_gpio_disable_interrupt(SX127x_DIO0_PIN);
+    set_opmode(OPMODE_RX); //0.103 ms
+    hw_gpio_disable_interrupt(SX127x_DIO0_PIN); //3.7µs
     hw_gpio_disable_interrupt(SX127x_DIO1_PIN);
-    hw_busy_wait(rx_bw_startup_time[rx_bw_number]); //TODO: optimise this timing. Now it should wait for ~700µs but actually waits ~900µs (low rate)
+    hw_busy_wait(rx_bw_startup_time[rx_bw_number]); //TODO: optimise this timing. Now it should wait for ~700µs but actually waits ~926µs (low rate)
     return (- read_reg(REG_RSSIVALUE) >> 1);
 }
