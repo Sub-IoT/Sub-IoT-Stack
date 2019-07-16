@@ -155,6 +155,12 @@ static uint32_t rx_bw_normal_rate;
 static uint32_t rx_bw_hi_rate;
 static bool rx_bw_changed = false;
 
+static uint16_t total_bg = 0;
+static uint16_t total_rssi_triggers = 0;
+static uint16_t total_fg = 0;
+static uint16_t total_succeeded_fg = 0;
+static uint8_t write_file_counter = 0;
+
 static uint8_t gain_offset = 0;
 
 /*
@@ -291,6 +297,9 @@ static void packet_received(hw_radio_packet_t* hw_radio_packet)
     }
     else
         hw_radio_packet->length = hw_radio_packet->data[0] + 1;
+
+    if(packet->type != BACKGROUND_ADV)
+        total_succeeded_fg++;
 
     DPRINT("RX packet fully decoded <len = %d>", hw_radio_packet->length);
     DPRINT_DATA(hw_radio_packet->data, hw_radio_packet->length);
@@ -539,6 +548,18 @@ error_t phy_init(void) {
     return ret;
 }
 
+void status_write() {
+    write_file_counter++;
+    if(write_file_counter == 100) {
+        write_file_counter = 0;
+        uint16_t bg_trigger_ratio = 1024 * total_rssi_triggers / total_bg;
+        uint16_t scan_timeout_ratio = 1024 * (total_fg - total_succeeded_fg) / total_fg;
+        uint8_t buffer[4] = {(uint8_t)(bg_trigger_ratio >> 8), (uint8_t)(bg_trigger_ratio & 0xFF), (uint8_t)(scan_timeout_ratio >> 8), (uint8_t)(scan_timeout_ratio & 0xFF)};
+        d7ap_fs_write_file(D7A_FILE_DLL_STATUS_FILE_ID, 8, buffer, 4);
+        DPRINT("wrote to file 0x%02X the bg trigger ratio %d and scan timeout ratio %d", D7A_FILE_DLL_STATUS_FILE_ID, bg_trigger_ratio, scan_timeout_ratio);
+    }
+}
+
 error_t phy_start_rx(channel_id_t* channel, syncword_class_t syncword_class, phy_rx_packet_callback_t rx_cb) {
     received_callback = rx_cb;
     // TODO error handling EINVAL, EOFF
@@ -562,6 +583,10 @@ error_t phy_start_rx(channel_id_t* channel, syncword_class_t syncword_class, phy
     DPRINT("START FG scan @ %i", timer_get_counter_value());
     DEBUG_RX_START();
     DEBUG_FG_START();    
+
+    total_fg++;
+
+    status_write();
 
     state = STATE_RX;
     hw_radio_set_opmode(HW_STATE_RX);
@@ -890,6 +915,8 @@ error_t phy_start_background_scan(phy_rx_config_t* config, phy_rx_packet_callbac
     // set PayloadLength to the length of the expected Background frame (fixed length packet format is used)
     hw_radio_set_payload_length(packet_len);
 
+    total_bg++;
+
     DEBUG_RX_START();
 
     int16_t rssi = hw_radio_get_rssi();
@@ -904,6 +931,10 @@ error_t phy_start_background_scan(phy_rx_config_t* config, phy_rx_packet_callbac
         return FAIL;
     }
     DEBUG_BG_END();
+
+    total_rssi_triggers++;
+
+    status_write();
 
     DPRINT("rssi %i, waiting for BG frame\n", rssi);
 
