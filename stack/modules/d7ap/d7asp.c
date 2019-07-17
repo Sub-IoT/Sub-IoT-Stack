@@ -668,7 +668,7 @@ bool d7asp_process_received_packet(packet_t* packet)
      * and a master session is pending
      */
     if ((!ID_TYPE_IS_BROADCAST(packet->dll_header.control_target_id_type)) &&
-        (d7asp_state == D7ASP_STATE_SLAVE))
+        (d7asp_state == D7ASP_STATE_SLAVE) && (current_master_session.state == D7ASP_MASTER_SESSION_PENDING_DORMANT_TRIGGERED))
     {
         packet->d7atp_ctrl.ctrl_is_start = true;
         packet->d7atp_ctrl.ctrl_tl = true;
