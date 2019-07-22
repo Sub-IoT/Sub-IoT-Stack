@@ -264,6 +264,7 @@ void phy_continuous_tx(phy_tx_config_t const* tx_cfg, uint8_t time_period, phy_t
 error_t phy_init();
 
 error_t phy_start_rx(channel_id_t *channel, syncword_class_t syncword_class, phy_rx_packet_callback_t rx_cb);
+error_t phy_stop_rx();
 
 /** \brief Start the energy scan sequence on the radio.
  *
