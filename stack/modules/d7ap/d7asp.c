@@ -215,6 +215,7 @@ static void flush_fifos()
         }
 
         current_request_id = found_next_req_index;
+        DPRINT("Found request Id %x", current_request_id);
         current_request_retry_count = 0;
 
         current_request_packet = packet_queue_alloc_packet();
@@ -410,6 +411,9 @@ uint8_t d7asp_master_session_create(d7ap_session_config_t* d7asp_master_session_
         // TODO create a pending session or a dormant session if TO (DORM_TIMER) !=0
     }
 
+    DPRINT("current master session state %d", current_master_session.state);
+
+
     init_master_session(&current_master_session);
 
     DPRINT("Create master session %d", current_master_session.token);
@@ -555,7 +559,7 @@ void d7asp_process_received_response(packet_t* packet, bool extension)
     assert(packet->d7atp_transaction_id == current_request_id);
 
     // received ack
-    DPRINT("Received ACK");
+    DPRINT("Received ACK for request ID %d", current_request_id);
     if (current_master_session.config.qos.qos_resp_mode != SESSION_RESP_MODE_NO
        && current_master_session.config.qos.qos_resp_mode != SESSION_RESP_MODE_NO_RPT)
     {
