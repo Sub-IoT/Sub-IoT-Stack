@@ -355,8 +355,8 @@ static void init_regs() {
 
   write_reg(REG_DIOMAPPING1, RF_DIOMAPPING1_DIO0_00 | RF_DIOMAPPING1_DIO1_00 |
     RF_DIOMAPPING1_DIO2_11 | RF_DIOMAPPING1_DIO3_00); // DIO2 = 0b11 => interrupt on sync detect 
-  write_reg(REG_DIOMAPPING2, RF_DIOMAPPING2_DIO4_00 | RF_DIOMAPPING2_DIO5_11 |
-    RF_DIOMAPPING2_MAP_RSSI); // ModeReady TODO configure for RSSI interrupt when doing CCA?
+  write_reg(REG_DIOMAPPING2, RF_DIOMAPPING2_DIO4_11 | RF_DIOMAPPING2_DIO5_11 |
+     RF_DIOMAPPING2_MAP_PREAMBLEDETECT); // ModeReady TODO configure for RSSI interrupt when doing CCA?
   //  write_reg(REG_PLLHOP, 0); // TODO might be interesting for channel hopping
   //  write_reg(REG_TCXO, 0); // default
   //  write_reg(REG_PADAC, 0); // default
@@ -471,6 +471,7 @@ static void reinit_rx() {
 
  write_reg(REG_FIFOTHRESH, RF_FIFOTHRESH_TXSTARTCONDITION_FIFONOTEMPTY | 0x03);
  write_reg(REG_DIOMAPPING1, RF_DIOMAPPING1_DIO2_11);
+ write_reg(REG_DIOMAPPING2, RF_DIOMAPPING2_DIO4_11 | RF_DIOMAPPING2_MAP_PREAMBLEDETECT);
  previous_payload_length = 0;
  write_reg(REG_PAYLOADLENGTH, 0);
 
@@ -588,6 +589,21 @@ static void dio1_isr(void *arg) {
     }
 }
 
+static void dio4_isr(void *arg){
+  hw_gpio_disable_interrupt(SX127x_DIO4_PIN);
+  uint8_t msb = read_reg(REG_FEIMSB);
+  uint8_t lsb = read_reg(REG_FEILSB);
+  DPRINT("dio4 ~ frequency offset is %i * 256 + %i = %d", msb, lsb, (int16_t)(msb * 256 + lsb));
+
+  if(FskPacketHandler_sx127x.Size == 0) {
+    hw_gpio_set_edge_interrupt(SX127x_DIO1_PIN, GPIO_RISING_EDGE);
+    hw_gpio_enable_interrupt(SX127x_DIO1_PIN);
+  } else {
+    hw_gpio_set_edge_interrupt(SX127x_DIO0_PIN, GPIO_RISING_EDGE);
+    hw_gpio_enable_interrupt(SX127x_DIO0_PIN);
+  }
+}
+
 static void restart_rx_chain() {
   // TODO restarting by triggering RF_RXCONFIG_RESTARTRXWITHPLLLOCK seems not to work
   // for some reason, when already in RX and after a freq change.
@@ -665,6 +681,7 @@ error_t hw_radio_init(hwradio_init_args_t* init_args) {
   error_t e;
   e = hw_gpio_configure_interrupt(SX127x_DIO0_PIN, GPIO_RISING_EDGE, &dio0_isr, NULL); assert(e == SUCCESS);
   e = hw_gpio_configure_interrupt(SX127x_DIO1_PIN, GPIO_RISING_EDGE, &dio1_isr, NULL); assert(e == SUCCESS);
+  e = hw_gpio_configure_interrupt(SX127x_DIO4_PIN, GPIO_RISING_EDGE, &dio4_isr, NULL); assert(e == SUCCESS);
   DPRINT("inited sx127x");
 
   sched_register_task(&rx_timeout);
@@ -771,19 +788,24 @@ void set_state_rx() {
 
   write_reg(REG_FIFOTHRESH, RF_FIFOTHRESH_TXSTARTCONDITION_FIFONOTEMPTY | 0x03);
   write_reg(REG_DIOMAPPING1, RF_DIOMAPPING1_DIO2_11);
+  write_reg(REG_DIOMAPPING2, RF_DIOMAPPING2_DIO4_11 | RF_DIOMAPPING2_MAP_PREAMBLEDETECT);
 
   FskPacketHandler_sx127x.FifoThresh = 0;
   FskPacketHandler_sx127x.NbBytes = 0;
 
   set_packet_handler_enabled(true);
 
-  if(FskPacketHandler_sx127x.Size == 0) {
-    hw_gpio_set_edge_interrupt(SX127x_DIO1_PIN, GPIO_RISING_EDGE);
-    hw_gpio_enable_interrupt(SX127x_DIO1_PIN);
-  } else {
-    hw_gpio_set_edge_interrupt(SX127x_DIO0_PIN, GPIO_RISING_EDGE);
-    hw_gpio_enable_interrupt(SX127x_DIO0_PIN);
-  }
+  // if(FskPacketHandler_sx127x.Size == 0) {
+  //   hw_gpio_set_edge_interrupt(SX127x_DIO1_PIN, GPIO_RISING_EDGE);
+  //   hw_gpio_enable_interrupt(SX127x_DIO1_PIN);
+  // } else {
+  //   hw_gpio_set_edge_interrupt(SX127x_DIO0_PIN, GPIO_RISING_EDGE);
+  //   hw_gpio_enable_interrupt(SX127x_DIO0_PIN);
+  // }
+
+  error_t e;
+  e = hw_gpio_set_edge_interrupt(SX127x_DIO4_PIN, GPIO_RISING_EDGE); assert(e==SUCCESS);
+  e = hw_gpio_enable_interrupt(SX127x_DIO4_PIN); assert(e==SUCCESS);
 
   set_opmode(OPMODE_RX);
 }
@@ -934,6 +956,7 @@ error_t hw_radio_send_payload(uint8_t * data, uint16_t len) {
       remaining_bytes_len = 0;
       hw_gpio_set_edge_interrupt(SX127x_DIO0_PIN, GPIO_RISING_EDGE);
       hw_gpio_enable_interrupt(SX127x_DIO0_PIN); 
+      hw_gpio_disable_interrupt(SX127x_DIO1_PIN);
     } else {
       previous_threshold = 2;
       write_reg(REG_FIFOTHRESH, RF_FIFOTHRESH_TXSTARTCONDITION_FIFONOTEMPTY | 2);

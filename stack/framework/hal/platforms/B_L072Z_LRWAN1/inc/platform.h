@@ -59,6 +59,7 @@
   #ifdef PLATFORM_SX127X_USE_DIO3_PIN
     #define SX127x_DIO3_PIN PIN(2, 13)
   #endif
+  #define SX127x_DIO4_PIN PIN(0, 5)
   #ifdef PLATFORM_SX127X_USE_RESET_PIN
     #define SX127x_RESET_PIN PIN(2, 0)
   #endif
