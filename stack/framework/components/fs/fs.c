@@ -43,14 +43,6 @@
 
 #define FS_STORAGE_CLASS_NUMOF       (FS_STORAGE_PERMANENT + 1)
 
-typedef struct
-{
-    uint32_t length;
-    fs_storage_class_t storage : 2;
-    uint8_t rfu : 6; //FIXME: 'valid' field or invalid storage qualifier?
-    uint32_t addr;
-} fs_file_t;
-
 
 static fs_file_t files[FRAMEWORK_FS_FILE_COUNT] = { 0 };
 
@@ -111,7 +103,7 @@ static int _get_file_name(char* file_name, uint8_t file_id, const fs_file_header
 static int _create_file_name(char* file_name, uint8_t file_id, fs_storage_class_t storage_class);
 #endif
 
-static int _fs_init_permanent_systemfiles(fs_systemfiles_t* permanent_systemfiles);
+static int _fs_init_permanent_systemfiles(fs_filesystem_t* permanent_systemfiles);
 static int _fs_create_magic(fs_storage_class_t storage_class);
 static int _fs_verify_magic(fs_storage_class_t storage_class, uint8_t* magic_number);
 static int _fs_create_file(uint8_t file_id, fs_storage_class_t storage_class, const uint8_t* initial_data, uint32_t length);
@@ -122,7 +114,7 @@ static inline bool _is_file_defined(uint8_t file_id)
     return files[file_id].length != 0;
 }
 
-void fs_init(fs_systemfiles_t* provisioning)
+void fs_init(fs_filesystem_t* provisioning)
 {
     if (is_fs_init_completed)
         return /*0*/;
@@ -167,9 +159,9 @@ void fs_init(fs_systemfiles_t* provisioning)
     DPRINT("fs_init OK");
 }
 
-int _fs_init_permanent_systemfiles(fs_systemfiles_t* permanent_systemfiles)
+int _fs_init_permanent_systemfiles(fs_filesystem_t* permanent_systemfiles)
 {
-    if (_fs_verify_magic(FS_STORAGE_PERMANENT, permanent_systemfiles->magic_number) < 0)
+    if (_fs_verify_magic(FS_STORAGE_PERMANENT, permanent_systemfiles->metadata->magic_number) < 0)
     {
         DPRINT("fs_init: no valid magic, recreating fs...");
 
@@ -208,15 +200,15 @@ int _fs_init_permanent_systemfiles(fs_systemfiles_t* permanent_systemfiles)
     }
 #else
     // initialise system file caching
-    for (int file_id = 0; file_id < permanent_systemfiles->nfiles; file_id++)
+    for (int file_id = 0; file_id < permanent_systemfiles->metadata->nfiles; file_id++)
     {
         files[file_id].storage = FS_STORAGE_PERMANENT;
-        files[file_id].length = permanent_systemfiles->files_length[file_id];
-        files[file_id].addr = permanent_systemfiles->files_offset[file_id];
+        files[file_id].length = permanent_systemfiles->file_headers[file_id].length;
+        files[file_id].addr = permanent_systemfiles->file_headers[file_id].addr;
     }
 
-    permanent_data_offset = permanent_systemfiles->files_offset[permanent_systemfiles->nfiles - 1] +
-                            permanent_systemfiles->files_length[permanent_systemfiles->nfiles - 1];
+    permanent_data_offset = permanent_systemfiles->file_headers[permanent_systemfiles->metadata->nfiles - 1].addr +
+                            permanent_systemfiles->file_headers[permanent_systemfiles->metadata->nfiles - 1].length;
 #endif
     return 0;
 }

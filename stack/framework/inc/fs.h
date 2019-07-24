@@ -68,6 +68,20 @@ typedef struct  __attribute__((__packed__))
 } fs_file_stat_t;
 
 
+typedef struct __attribute__((__packed__))
+{
+    uint8_t magic_number[FS_MAGIC_NUMBER_SIZE];   /**< used to validate FS contents */
+    size_t nfiles; /**< Number of files */
+} fs_metadata_t;
+
+typedef struct __attribute__((__packed__))
+{
+    uint32_t length;
+    fs_storage_class_t storage : 2;
+    uint8_t rfu : 6; //FIXME: 'valid' field or invalid storage qualifier?
+    uint32_t addr;
+} fs_file_t;
+
 /* \brief The callback function for when a user file is modified
  *
  * \param file_id		The id of the modified user file
@@ -78,14 +92,12 @@ typedef void (*fs_modified_file_callback_t)(uint8_t file_id);
  * @brief Descriptor of a file system
  */
 typedef struct __attribute__((__packed__)) {
-  uint8_t magic_number[FS_MAGIC_NUMBER_SIZE];   /**< used to validate FS contents */
-  size_t nfiles; /**< Number of files */
-  uint8_t* files_length; /**< Files length array */
-  uint16_t* files_offset; /**< Files offset array */
+  fs_metadata_t* metadata; // magic number + #files
+  fs_file_t* file_headers;
   uint8_t* files_data; /**< Files data array */
-} fs_systemfiles_t;
+} fs_filesystem_t;
 
-void fs_init(fs_systemfiles_t* provisioning);
+void fs_init(fs_filesystem_t* provisioning);
 int fs_init_file(uint8_t file_id, fs_storage_class_t storage, const uint8_t* initial_data, uint32_t length);
 int fs_read_file(uint8_t file_id, uint32_t offset, uint8_t* buffer, uint32_t length);
 int fs_write_file(uint8_t file_id, uint32_t offset, const uint8_t* buffer, uint32_t length);
