@@ -595,6 +595,14 @@ static void dio1_isr(void *arg) {
 static void dio4_isr(void *arg){
   hw_gpio_disable_interrupt(SX127x_DIO4_PIN);
   measured_fof = (int16_t)(read_reg(REG_FEIMSB) * 256 + read_reg(REG_FEILSB));
+  /* the measured value can differ up to 32767 * FREQ_STEP ~ 2MHz, this is not necessary. max out on 32.766 kHz on either side. */
+  if(measured_fof > 546)
+    measured_fof = 32766;
+  else if(measured_fof < -546)
+    measured_fof = -32768;
+  else
+    // send the frequency offset in Hz instead of freq_steps
+    measured_fof = measured_fof * FREQ_STEP;
 }
 #endif
 
