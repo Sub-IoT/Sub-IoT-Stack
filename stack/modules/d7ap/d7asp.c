@@ -540,6 +540,7 @@ void d7asp_process_received_response(packet_t* packet, bool extension)
             .center_freq_index = packet->phy_config.rx.channel_id.center_freq_index,
         },
         .rx_level =  - packet->hw_radio_packet.rx_meta.rssi,
+        .fof = packet->hw_radio_packet.rx_meta.fof,
         .link_budget = (packet->dll_header.control_eirp_index - 32) - packet->hw_radio_packet.rx_meta.rssi,
         .target_rx_level = 80, // TODO not implemented yet, use default for now
         .status = {
@@ -642,6 +643,7 @@ bool d7asp_process_received_packet(packet_t* packet)
                 .center_freq_index = packet->phy_config.rx.channel_id.center_freq_index,
             },
             .rx_level =  - packet->hw_radio_packet.rx_meta.rssi,
+            .fof = packet->hw_radio_packet.rx_meta.fof,
             .link_budget = (packet->dll_header.control_eirp_index - 32) - packet->hw_radio_packet.rx_meta.rssi,
             .target_rx_level = 80, // TODO not implemented yet, use default for now
             .status = {

@@ -98,6 +98,7 @@ typedef struct
                              * HW_CRC_INVALID 	if the CRC was not valid
                              * HW_CRC_VALID	if the CRC was valid
                              */
+    int16_t fof;            /**<  measured frequency offset. */
 
 // TODO optimize struct for size. This was packed but resulted in alignment issues on Cortex-M0 so removed for now.
 } hw_rx_metadata_t;
@@ -132,8 +133,8 @@ typedef struct
 {
     union
     {
-        hw_rx_metadata_t rx_meta;		/**< The TX Metadata of the packet */
-        hw_tx_metadata_t tx_meta;		/**< The RX Metadata of the packet */
+        hw_rx_metadata_t rx_meta;		/**< The RX Metadata of the packet */
+        hw_tx_metadata_t tx_meta;		/**< The TX Metadata of the packet */
     };
 
     uint16_t    length;			/**< The length of the packet*/

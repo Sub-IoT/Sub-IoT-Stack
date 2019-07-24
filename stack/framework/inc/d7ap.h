@@ -115,6 +115,7 @@ typedef struct __attribute__((__packed__)) {
     uint8_t link_budget;
     uint8_t link_quality;
     uint8_t target_rx_level;
+    int16_t fof;
     d7ap_sp_state_t status;
     uint8_t fifo_token;
     uint8_t seqnr;

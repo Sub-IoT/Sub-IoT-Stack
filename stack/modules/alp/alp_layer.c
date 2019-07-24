@@ -704,6 +704,8 @@ static void add_interface_status_action(fifo_t* alp_response_fifo, d7ap_session_
   fifo_put_byte(alp_response_fifo, d7asp_result->rx_level);
   fifo_put_byte(alp_response_fifo, d7asp_result->link_budget);
   fifo_put_byte(alp_response_fifo, d7asp_result->target_rx_level);
+  uint16_t fof_be = __builtin_bswap16(d7asp_result->fof);
+  fifo_put(alp_response_fifo, (uint8_t*)&fof_be, 2);
   fifo_put_byte(alp_response_fifo, d7asp_result->status.raw);
   fifo_put_byte(alp_response_fifo, d7asp_result->fifo_token);
   fifo_put_byte(alp_response_fifo, d7asp_result->seqnr);

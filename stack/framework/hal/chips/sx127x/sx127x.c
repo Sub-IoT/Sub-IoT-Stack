@@ -171,6 +171,7 @@ static uint8_t remaining_bytes_len = 0;
 static uint8_t previous_threshold = 0;
 static uint16_t previous_payload_length = 0;
 static bool io_inited = false;
+static int16_t measured_fof = 0;
 
 void enable_spi_io() {
   if(!io_inited){
@@ -527,6 +528,7 @@ static void fifo_threshold_isr() {
        }
 
        current_packet->rx_meta.rssi = rssi;
+       current_packet->rx_meta.fof = measured_fof;
        memcpy(current_packet->data, backup_buffer, 4);
        current_packet->length = FskPacketHandler_sx127x.Size;
 
@@ -589,20 +591,12 @@ static void dio1_isr(void *arg) {
     }
 }
 
+#ifdef PLATFORM_SX127X_MEASURE_FOF
 static void dio4_isr(void *arg){
   hw_gpio_disable_interrupt(SX127x_DIO4_PIN);
-  uint8_t msb = read_reg(REG_FEIMSB);
-  uint8_t lsb = read_reg(REG_FEILSB);
-  DPRINT("dio4 ~ frequency offset is %i * 256 + %i = %d", msb, lsb, (int16_t)(msb * 256 + lsb));
-
-  if(FskPacketHandler_sx127x.Size == 0) {
-    hw_gpio_set_edge_interrupt(SX127x_DIO1_PIN, GPIO_RISING_EDGE);
-    hw_gpio_enable_interrupt(SX127x_DIO1_PIN);
-  } else {
-    hw_gpio_set_edge_interrupt(SX127x_DIO0_PIN, GPIO_RISING_EDGE);
-    hw_gpio_enable_interrupt(SX127x_DIO0_PIN);
-  }
+  measured_fof = (int16_t)(read_reg(REG_FEIMSB) * 256 + read_reg(REG_FEILSB));
 }
+#endif
 
 static void restart_rx_chain() {
   // TODO restarting by triggering RF_RXCONFIG_RESTARTRXWITHPLLLOCK seems not to work
@@ -681,7 +675,9 @@ error_t hw_radio_init(hwradio_init_args_t* init_args) {
   error_t e;
   e = hw_gpio_configure_interrupt(SX127x_DIO0_PIN, GPIO_RISING_EDGE, &dio0_isr, NULL); assert(e == SUCCESS);
   e = hw_gpio_configure_interrupt(SX127x_DIO1_PIN, GPIO_RISING_EDGE, &dio1_isr, NULL); assert(e == SUCCESS);
+#ifdef PLATFORM_SX127X_MEASURE_FOF
   e = hw_gpio_configure_interrupt(SX127x_DIO4_PIN, GPIO_RISING_EDGE, &dio4_isr, NULL); assert(e == SUCCESS);
+#endif
   DPRINT("inited sx127x");
 
   sched_register_task(&rx_timeout);
@@ -795,22 +791,26 @@ void set_state_rx() {
 
   set_packet_handler_enabled(true);
 
-  // if(FskPacketHandler_sx127x.Size == 0) {
-  //   hw_gpio_set_edge_interrupt(SX127x_DIO1_PIN, GPIO_RISING_EDGE);
-  //   hw_gpio_enable_interrupt(SX127x_DIO1_PIN);
-  // } else {
-  //   hw_gpio_set_edge_interrupt(SX127x_DIO0_PIN, GPIO_RISING_EDGE);
-  //   hw_gpio_enable_interrupt(SX127x_DIO0_PIN);
-  // }
+  if(FskPacketHandler_sx127x.Size == 0) {
+    hw_gpio_set_edge_interrupt(SX127x_DIO1_PIN, GPIO_RISING_EDGE);
+    hw_gpio_enable_interrupt(SX127x_DIO1_PIN);
+  } else {
+    hw_gpio_set_edge_interrupt(SX127x_DIO0_PIN, GPIO_RISING_EDGE);
+    hw_gpio_enable_interrupt(SX127x_DIO0_PIN);
+  }
 
+  measured_fof = 32767;
+#ifdef PLATFORM_SX127X_MEASURE_FOF
   error_t e;
   e = hw_gpio_set_edge_interrupt(SX127x_DIO4_PIN, GPIO_RISING_EDGE); assert(e==SUCCESS);
   e = hw_gpio_enable_interrupt(SX127x_DIO4_PIN); assert(e==SUCCESS);
+#endif
 
   set_opmode(OPMODE_RX);
 }
 
 void hw_radio_set_opmode(hw_radio_state_t opmode) {
+  timer_cancel_task(&rx_timeout);
   switch(opmode) {
     case HW_STATE_OFF:
     case HW_STATE_SLEEP:

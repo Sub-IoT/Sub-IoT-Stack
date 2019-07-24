@@ -92,6 +92,8 @@ static uint8_t append_interface_status_action(d7ap_session_result_t* d7asp_resul
   memcpy(ptr, &(d7asp_result->rx_level), 1); ptr += 1;
   (*ptr) = d7asp_result->link_budget; ptr++;
   (*ptr) = d7asp_result->target_rx_level; ptr++;
+  uint16_t fof_be = __builtin_bswap16(d7asp_result->fof);
+  memcpy(ptr, (uint8_t*)&fof_be, 2); ptr += 2;
   (*ptr) = d7asp_result->status.raw; ptr++;
   (*ptr) = d7asp_result->fifo_token; ptr++;
   (*ptr) = d7asp_result->seqnr; ptr++;

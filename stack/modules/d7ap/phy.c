@@ -162,6 +162,9 @@ static uint32_t fdev_normal_rate;
 static uint32_t bitrate_hi_rate;
 static uint32_t fdev_hi_rate;
 
+static int16_t frequency_offset = 0;
+static bool fof_changed = false;
+
 static uint16_t total_bg = 0;
 static uint16_t total_rssi_triggers = 0;
 static uint16_t total_fg = 0;
@@ -414,7 +417,7 @@ static void configure_eirp(eirp_t eirp)
 }
 
 static void configure_channel(const channel_id_t* channel) {
-    if(phy_radio_channel_ids_equal(&current_channel_id, channel) && !fact_settings_changed) {
+    if(phy_radio_channel_ids_equal(&current_channel_id, channel) && !fact_settings_changed && !fof_changed) {
         return;
     }
 
@@ -465,6 +468,7 @@ static void configure_channel(const channel_id_t* channel) {
         channel_spacing_half = 12500;
 
     center_freq += 25000 * channel->center_freq_index + channel_spacing_half;
+    center_freq -= frequency_offset;
     hw_radio_set_center_freq(center_freq);
 
     current_channel_id = *channel;
@@ -489,6 +493,19 @@ void continuous_tx_expiration()
 {
     hw_radio_enable_refill(false);
     DPRINT("Continuous TX is now terminated");
+}
+
+void fof_status_file_change_callback(uint8_t file_id)
+{
+    uint8_t fof[2];
+    d7ap_fs_read_file(D7A_FILE_FOF_STATUS, 0, fof, 2);
+
+    if(frequency_offset != (int16_t)__builtin_bswap16(*((uint16_t*)(fof)))) {
+        frequency_offset = (int16_t)__builtin_bswap16(*((uint16_t*)(fof)));
+        fof_changed = true;
+
+        DPRINT("frequency offset set to %d Hz", frequency_offset);
+    }
 }
 
 void fact_settings_file_change_callback(uint8_t file_id)
@@ -543,8 +560,10 @@ error_t phy_init(void) {
 #endif
 
     fact_settings_file_change_callback(D7A_FILE_FACTORY_SETTINGS_FILE_ID); // trigger read
+    fof_status_file_change_callback(D7A_FILE_FOF_STATUS);
 
     fs_register_file_modified_callback(D7A_FILE_FACTORY_SETTINGS_FILE_ID, &fact_settings_file_change_callback);
+    fs_register_file_modified_callback(D7A_FILE_FOF_STATUS, &fof_status_file_change_callback);
 
     configure_syncword(PHY_SYNCWORD_CLASS0, &default_channel_id);
     configure_channel(&default_channel_id);
@@ -952,9 +971,9 @@ error_t phy_start_background_scan(phy_rx_config_t* config, phy_rx_packet_callbac
     DPRINT("rssi %i, waiting for BG frame\n", rssi);
 
     // the device has a period of To to successfully detect the sync word
-    hw_radio_set_rx_timeout(bg_timeout[current_channel_id.channel_header.ch_class] + 40); //TO DO: OPTIMISE THIS TIMEOUT
     DEBUG_BG_START();
     hw_radio_set_opmode(HW_STATE_RX);
+    hw_radio_set_rx_timeout(bg_timeout[current_channel_id.channel_header.ch_class] + 40); //TO DO: OPTIMISE THIS TIMEOUT
 
     return SUCCESS;
 }
