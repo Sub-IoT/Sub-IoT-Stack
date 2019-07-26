@@ -467,11 +467,15 @@ bool d7atp_disassemble_packet_header(packet_t *packet, uint8_t *data_idx)
         packet->d7atp_tl = packet->hw_radio_packet.data[(*data_idx)];
         (*data_idx)++;
     }
+    else
+        packet->d7atp_tl = 0;
 
     if (packet->d7atp_ctrl.ctrl_te) {
         packet->d7atp_te = packet->hw_radio_packet.data[(*data_idx)];
         (*data_idx)++;
     }
+    else
+        packet->d7atp_te = 0;
 
     if ((d7atp_state != D7ATP_STATE_MASTER_TRANSACTION_RESPONSE_PERIOD) && (packet->d7atp_ctrl.ctrl_is_ack_requested)) {
       packet->d7atp_tc = packet->hw_radio_packet.data[(*data_idx)];
@@ -578,7 +582,11 @@ void d7atp_process_received_packet(packet_t* packet)
     packet->d7anp_addressee = &current_addressee;
 
     DPRINT("Recvd dialog %i trans id %i, curr %i - %i", packet->d7atp_dialog_id, packet->d7atp_transaction_id, current_dialog_id, current_transaction_id);
-    current_Tl_received = CT_DECOMPRESS(packet->d7atp_tl);
+
+    if (packet->d7atp_tl)
+        current_Tl_received = CT_DECOMPRESS(packet->d7atp_tl);
+    else
+        current_Tl_received = 0;
     DPRINT("Tl=%i (CT) -> %i (Ti) ", packet->d7atp_tl, current_Tl_received);
     if (IS_IN_MASTER_TRANSACTION())
     {
