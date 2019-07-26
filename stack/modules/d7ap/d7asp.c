@@ -52,7 +52,6 @@ typedef enum {
   D7ASP_MASTER_SESSION_IDLE,
   D7ASP_MASTER_SESSION_DORMANT,
   D7ASP_MASTER_SESSION_PENDING,
-  D7ASP_MASTER_SESSION_PENDING_DORMANT_TIMEOUT,
   D7ASP_MASTER_SESSION_PENDING_DORMANT_TRIGGERED,
   D7ASP_MASTER_SESSION_ACTIVE,
 } d7asp_master_session_state_t;
@@ -70,10 +69,17 @@ struct d7asp_master_session {
     uint8_t response_lengths[MODULE_D7AP_FIFO_MAX_REQUESTS_COUNT]; /**< Contains for every request ID the index in command_buffer the expected length of the ALP response for the specific request */
     uint8_t request_buffer[MODULE_D7AP_FIFO_COMMAND_BUFFER_SIZE];
     d7ap_addressee_t preferred_addressee;
+    d7asp_master_session_t  *next;
+    d7asp_master_session_t  *previous;
 };
 
-static d7asp_master_session_t NGDEF(_current_master_session); // TODO we only use 1 fifo for now, should be multiple later (1 per on unique addressee and QoS combination)
+static d7asp_master_session_t master_sessions[MODULE_D7AP_MAX_SESSION_COUNT];
+
+static d7asp_master_session_t* NGDEF(_current_master_session); // TODO we only use 1 fifo for now, should be multiple later (1 per on unique addressee and QoS combination)
 #define current_master_session NG(_current_master_session)
+
+d7asp_master_session_t  *latest_session = NULL;
+d7asp_master_session_t  *first_session = NULL;
 
 static uint8_t NGDEF(_current_request_id); // TODO move ?
 #define current_request_id NG(_current_request_id)
@@ -117,22 +123,74 @@ static state_t NGDEF(_state) = D7ASP_STATE_STOPPED;
 
 static void switch_state(state_t new_state);
 
+static void free_master_session(d7asp_master_session_t* session) {
+    DPRINT("Free master session %i", session->token);
+    session->token = 0;
+    session->state = D7ASP_MASTER_SESSION_IDLE;
+    memcpy(session->preferred_addressee.id, (uint8_t[8]){ 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 }, 8); // TODO check why doing this
+
+    // update linked list
+    if (session->previous == NULL)
+        first_session = session->next;
+    else if ((session->previous)->state != D7ASP_MASTER_SESSION_IDLE)
+        (session->previous)->next = session->next;
+
+    if (session->next)
+        (session->next)->previous = session->previous;
+
+    if (latest_session == session)
+        latest_session = session->previous;
+
+    session->previous = NULL;
+    session->next = NULL;
+    current_request_id = NO_ACTIVE_REQUEST_ID;
+    DPRINT("latest %p, first %p", latest_session, first_session);
+};
+
+static d7asp_master_session_t* alloc_master_session() {
+    for(uint8_t i = 0; i < MODULE_D7AP_MAX_SESSION_COUNT; i++) {
+        if(master_sessions[i].token == 0) {
+            do {
+                master_sessions[i].token = get_rnd() % 0xFF;
+            } while(master_sessions[i].token == 0);
+
+            assert(master_sessions[i].state == D7ASP_MASTER_SESSION_IDLE);
+            master_sessions[i].previous = latest_session;
+            if (latest_session)
+                latest_session->next = &master_sessions[i];
+            else
+                first_session = &master_sessions[i];
+            latest_session = &master_sessions[i];
+
+            return &(master_sessions[i]);
+        }
+    }
+
+    DPRINT("Could not allocate master session, all %i reserved slots active", MODULE_D7AP_MAX_SESSION_COUNT);
+    return NULL;
+}
+
+static void init_master_session_list()
+{
+    for(uint8_t i = 0; i < MODULE_D7AP_MAX_SESSION_COUNT; i++) {
+    	free_master_session(&master_sessions[i]);
+    }
+}
+
 static void mark_current_request_done()
 {
-    bitmap_set(current_master_session.progress_bitmap, current_request_id);
+    bitmap_set(current_master_session->progress_bitmap, current_request_id);
     // current_request_packet will be free-ed in the packet_queue when the transaction is completed
 }
 
 static void mark_current_request_successful()
 {
-    bitmap_set(current_master_session.success_bitmap, current_request_id);
+    bitmap_set(current_master_session->success_bitmap, current_request_id);
 }
 
 static void init_master_session(d7asp_master_session_t* session) {
     session->state = D7ASP_MASTER_SESSION_IDLE;
-    do {
-        session->token = get_rnd() % 0xFF;
-    } while(session->token == 0);
+
     memset(session->progress_bitmap, 0x00, REQUESTS_BITMAP_BYTE_COUNT);
     memset(session->success_bitmap, 0x00, REQUESTS_BITMAP_BYTE_COUNT);
     session->next_request_id = 0;
@@ -148,6 +206,35 @@ static void init_master_session(d7asp_master_session_t* session) {
     // over the session, until we decide on session lifetime etc
 }
 
+static void schedule_current_session() {
+    assert(d7asp_state == D7ASP_STATE_MASTER || d7asp_state == D7ASP_STATE_PENDING_MASTER || d7asp_state == D7ASP_STATE_SLAVE);
+    assert(current_master_session->state >= D7ASP_MASTER_SESSION_PENDING);
+
+    DPRINT("Re-schedule immediately the current session");
+    current_session_timer.next_event = 0;
+    int rtc = timer_add_event(&current_session_timer);
+    assert(rtc == SUCCESS);
+}
+
+static void switch_to_next_session()
+{
+    // switch to the next eligible session in the list
+    current_master_session = first_session;
+    while(current_master_session)
+    {
+        // pick up the first pending session or the first dormant session from the list (priority order is given by the linked list)
+        if (current_master_session->state == D7ASP_MASTER_SESSION_PENDING ||
+            current_master_session->state == D7ASP_MASTER_SESSION_PENDING_DORMANT_TRIGGERED)
+            break;
+        current_master_session = current_master_session->next;
+    }
+
+    if (current_master_session == NULL)
+        DPRINT("There's no pending session");
+    else
+        DPRINT("switch to session %p with token %d", current_master_session, current_master_session->token);
+}
+
 static void flush_completed() {
     DPRINT("FIFO flush completed");
 
@@ -155,22 +242,18 @@ static void flush_completed() {
     // the RETRY_MODE pattern defined in the Configuration file
 
     // single flush of the FIFO without retry
-    d7ap_stack_session_completed(current_master_session.token, current_master_session.progress_bitmap,
-                                   current_master_session.success_bitmap, current_master_session.next_request_id - 1);
-    init_master_session(&current_master_session);
-    current_master_session.state = D7ASP_MASTER_SESSION_IDLE;
+    d7ap_stack_session_completed(current_master_session->token, current_master_session->progress_bitmap,
+                                   current_master_session->success_bitmap, current_master_session->next_request_id - 1);
+
     d7atp_signal_dialog_termination();
-    switch_state(D7ASP_STATE_IDLE);
-}
 
-static void schedule_current_session() {
-    assert(d7asp_state == D7ASP_STATE_MASTER || d7asp_state == D7ASP_STATE_PENDING_MASTER || d7asp_state == D7ASP_STATE_SLAVE);
-    assert(current_master_session.state >= D7ASP_MASTER_SESSION_PENDING);
+    free_master_session(current_master_session);
+    switch_to_next_session();
 
-    DPRINT("Re-schedule immediately the current session");
-    current_session_timer.next_event = 0;
-    int rtc = timer_add_event(&current_session_timer);
-    assert(rtc == SUCCESS);
+    if (current_master_session)
+        schedule_current_session();
+    else
+        switch_state(D7ASP_STATE_IDLE);
 }
 
 static void flush_fifos()
@@ -183,20 +266,24 @@ static void flush_fifos()
         return;
     }
 
-    if(current_master_session.state != D7ASP_MASTER_SESSION_PENDING &&
-       current_master_session.state != D7ASP_MASTER_SESSION_ACTIVE &&
-       current_master_session.state != D7ASP_MASTER_SESSION_PENDING_DORMANT_TIMEOUT &&
-       current_master_session.state != D7ASP_MASTER_SESSION_PENDING_DORMANT_TRIGGERED) {
+    if(current_master_session->state != D7ASP_MASTER_SESSION_PENDING &&
+       current_master_session->state != D7ASP_MASTER_SESSION_ACTIVE &&
+       current_master_session->state != D7ASP_MASTER_SESSION_PENDING_DORMANT_TRIGGERED) {
       DPRINT("No sessions in pending or active state, skipping");
       return;
     }
 
-    bool is_triggered_dormant_session = (current_master_session.state == D7ASP_MASTER_SESSION_PENDING_DORMANT_TRIGGERED);
-    current_master_session.state = D7ASP_MASTER_SESSION_ACTIVE;
+    bool is_triggered_dormant_session = (current_master_session->state == D7ASP_MASTER_SESSION_PENDING_DORMANT_TRIGGERED);
+    if (current_master_session->state == D7ASP_MASTER_SESSION_PENDING ||
+        current_master_session->state == D7ASP_MASTER_SESSION_PENDING_DORMANT_TRIGGERED)
+    {
+        current_master_session->state = D7ASP_MASTER_SESSION_ACTIVE;
+        d7ap_stack_signal_active_master_session(current_master_session->token);
+    }
+
     if (d7asp_state == D7ASP_STATE_PENDING_MASTER)
     {
         switch_state(D7ASP_STATE_MASTER);
-        d7ap_stack_signal_active_master_session(current_master_session.token);
     }
 
     current_responder_lowest_lb.lb = LB_MAX;
@@ -206,8 +293,8 @@ static void flush_fifos()
     if (current_request_id == NO_ACTIVE_REQUEST_ID)
     {
         // find first request which is not acked or dropped
-        int8_t found_next_req_index = bitmap_search(current_master_session.progress_bitmap, false, MODULE_D7AP_FIFO_MAX_REQUESTS_COUNT);
-        if (found_next_req_index == -1 || found_next_req_index == current_master_session.next_request_id)
+        int8_t found_next_req_index = bitmap_search(current_master_session->progress_bitmap, false, MODULE_D7AP_FIFO_MAX_REQUESTS_COUNT);
+        if (found_next_req_index == -1 || found_next_req_index == current_master_session->next_request_id)
         {
             // we handled all requests ...
             flush_completed();
@@ -221,20 +308,20 @@ static void flush_fifos()
         current_request_packet = packet_queue_alloc_packet();
         assert(current_request_packet);
         packet_queue_mark_processing(current_request_packet);
-        current_request_packet->d7anp_addressee = &(current_master_session.config.addressee); // TODO explicitly pass addressee down the stack layers?
+        current_request_packet->d7anp_addressee = &(current_master_session->config.addressee); // TODO explicitly pass addressee down the stack layers?
 
-        if(current_master_session.config.qos.qos_resp_mode == SESSION_RESP_MODE_PREFERRED
-           && memcmp(current_master_session.preferred_addressee.id,(uint8_t[8]){ 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 }, 8) != 0)
+        if(current_master_session->config.qos.qos_resp_mode == SESSION_RESP_MODE_PREFERRED
+           && memcmp(current_master_session->preferred_addressee.id,(uint8_t[8]){ 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 }, 8) != 0)
         {
             DPRINT("overriding addressee with preferred one");
-            current_master_session.preferred_addressee.access_class = current_master_session.config.addressee.access_class;
-            current_master_session.preferred_addressee.ctrl.nls_method = current_master_session.config.addressee.ctrl.nls_method;
-            current_master_session.config.addressee.ctrl.id_type = ID_TYPE_UID; // TODO no VID for now
-            current_request_packet->d7anp_addressee = &current_master_session.preferred_addressee;
+            current_master_session->preferred_addressee.access_class = current_master_session->config.addressee.access_class;
+            current_master_session->preferred_addressee.ctrl.nls_method = current_master_session->config.addressee.ctrl.nls_method;
+            current_master_session->config.addressee.ctrl.id_type = ID_TYPE_UID; // TODO no VID for now
+            current_request_packet->d7anp_addressee = &current_master_session->preferred_addressee;
         }
 
-        memcpy(current_request_packet->payload, current_master_session.request_buffer + current_master_session.requests_indices[current_request_id], current_master_session.requests_lengths[current_request_id]);
-        current_request_packet->payload_length = current_master_session.requests_lengths[current_request_id];
+        memcpy(current_request_packet->payload, current_master_session->request_buffer + current_master_session->requests_indices[current_request_id], current_master_session->requests_lengths[current_request_id]);
+        current_request_packet->payload_length = current_master_session->requests_lengths[current_request_id];
 
         if(is_triggered_dormant_session)
         {
@@ -272,8 +359,8 @@ static void flush_fifos()
     }
 
     uint8_t listen_timeout = 0; // TODO calculate timeout (and update during transaction lifetime) (based on Tc, channel, cs, payload size, # msgs, # retries)
-    ret = d7atp_send_request(current_master_session.token, current_request_id, (current_request_id == current_master_session.next_request_id - 1),
-                       current_request_packet, &current_master_session.config.qos, listen_timeout, current_master_session.response_lengths[current_request_id]);
+    ret = d7atp_send_request(current_master_session->token, current_request_id, (current_request_id == current_master_session->next_request_id - 1),
+                       current_request_packet, &current_master_session->config.qos, listen_timeout, current_master_session->response_lengths[current_request_id]);
     if (ret == EPERM)
     {
         // this is probably because no further encryption is possible (frame counter reaches the maximum value)
@@ -352,8 +439,8 @@ static void switch_state(state_t new_state)
 static void dormant_session_timeout() {
   // TODO pass session so we can have multiple
   DPRINT("dormant session timeout");
-  if(current_master_session.state == D7ASP_MASTER_SESSION_DORMANT) {
-    current_master_session.state = D7ASP_MASTER_SESSION_PENDING_DORMANT_TIMEOUT;
+  if(current_master_session->state == D7ASP_MASTER_SESSION_DORMANT) {
+    current_master_session->state = D7ASP_MASTER_SESSION_PENDING;
     if(d7asp_state == D7ASP_STATE_IDLE)
       d7asp_state = D7ASP_STATE_PENDING_MASTER;
 
@@ -377,9 +464,11 @@ void d7asp_init()
     d7asp_state = D7ASP_STATE_IDLE;
     current_request_id = NO_ACTIVE_REQUEST_ID;
 
-    current_master_session.state = D7ASP_MASTER_SESSION_IDLE;
+    current_master_session->state = D7ASP_MASTER_SESSION_IDLE;
+    init_master_session_list();
+    current_master_session = NULL;
+
     memcpy(current_responder_lowest_lb.id, (uint8_t[8]){ 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 }, 8);
-    memcpy(current_master_session.preferred_addressee.id, (uint8_t[8]){ 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 }, 8);
     DPRINT("REQUESTS_BITMAP_BYTE_COUNT %d", REQUESTS_BITMAP_BYTE_COUNT);
     DPRINT("FIFO_MAX_REQUESTS_COUNT %d", MODULE_D7AP_FIFO_MAX_REQUESTS_COUNT);
 
@@ -395,60 +484,70 @@ void d7asp_stop()
 }
 
 uint8_t d7asp_master_session_create(d7ap_session_config_t* d7asp_master_session_config) {
-    // TODO for now we assume only one concurrent session, in the future we should dynamically allocate (or return from pool) a session
 
-    if (current_master_session.state != D7ASP_MASTER_SESSION_IDLE)
+    d7asp_master_session_t* master_session;
+
+    //TODO check amongst all the pending and dormant session if the address match?
+
+    if (current_master_session)
     {
+        DPRINT("current master session state %d", current_master_session->state);
+
         // Requests can be pushed in the FIFO by upper layer anytime
-        if ((current_master_session.config.addressee.access_class == d7asp_master_session_config->addressee.access_class) &&
-                (current_master_session.config.addressee.ctrl.nls_method == d7asp_master_session_config->addressee.ctrl.nls_method) &&
-                ((d7asp_master_session_config->qos.qos_resp_mode == SESSION_RESP_MODE_PREFERRED && current_master_session.config.qos.qos_resp_mode == SESSION_RESP_MODE_PREFERRED) ||
-                (current_master_session.config.addressee.ctrl.id_type == d7asp_master_session_config->addressee.ctrl.id_type && 
-                memcmp(current_master_session.config.addressee.id, d7asp_master_session_config->addressee.id, d7ap_addressee_id_length(d7asp_master_session_config->addressee.ctrl.id_type)) == 0)))
-            return current_master_session.token;
-        else
-            return 0;
-        // TODO create a pending session or a dormant session if TO (DORM_TIMER) !=0
+        if ((current_master_session->config.addressee.access_class == d7asp_master_session_config->addressee.access_class) &&
+                (current_master_session->config.addressee.ctrl.nls_method == d7asp_master_session_config->addressee.ctrl.nls_method) &&
+                ((d7asp_master_session_config->qos.qos_resp_mode == SESSION_RESP_MODE_PREFERRED && current_master_session->config.qos.qos_resp_mode == SESSION_RESP_MODE_PREFERRED) ||
+                (current_master_session->config.addressee.ctrl.id_type == d7asp_master_session_config->addressee.ctrl.id_type &&
+                memcmp(current_master_session->config.addressee.id, d7asp_master_session_config->addressee.id, d7ap_addressee_id_length(d7asp_master_session_config->addressee.ctrl.id_type)) == 0)))
+        {
+            DPRINT("use the current master session state %d", current_master_session->state);
+            return current_master_session->token;
+        }
     }
 
-    DPRINT("current master session state %d", current_master_session.state);
+    // create a pending session or a dormant session if TO (DORM_TIMER) !=0
+    master_session = alloc_master_session();
 
+    if (master_session == NULL)
+        return 0;
 
-    init_master_session(&current_master_session);
+    init_master_session(master_session);
 
-    DPRINT("Create master session %d", current_master_session.token);
+    DPRINT("Create master session %d", master_session->token);
 
-    current_master_session.config.qos = d7asp_master_session_config->qos;
-    current_master_session.config.dormant_timeout = d7asp_master_session_config->dormant_timeout;
-    current_master_session.config.addressee.ctrl = d7asp_master_session_config->addressee.ctrl;
-    current_master_session.config.addressee.access_class = d7asp_master_session_config->addressee.access_class;
+    master_session->config.qos = d7asp_master_session_config->qos;
+    master_session->config.dormant_timeout = d7asp_master_session_config->dormant_timeout;
+    master_session->config.addressee.ctrl = d7asp_master_session_config->addressee.ctrl;
+    master_session->config.addressee.access_class = d7asp_master_session_config->addressee.access_class;
 
-    if(current_master_session.config.qos.qos_resp_mode != SESSION_RESP_MODE_PREFERRED) {
-      memcpy(current_master_session.config.addressee.id, d7asp_master_session_config->addressee.id, sizeof(current_master_session.config.addressee.id));
+    if(master_session->config.qos.qos_resp_mode != SESSION_RESP_MODE_PREFERRED) {
+      memcpy(master_session->config.addressee.id, d7asp_master_session_config->addressee.id, sizeof(master_session->config.addressee.id));
     } else {
       // in this case we don't reset the preferred addressee.
       // for now one ALP command execution mostly results one new session, which
       // would break the preferred addressee mechanism. For now this is cached regardless
       // over the session, until we decide on session lifetime etc.
-      current_master_session.config.addressee.id[0] = d7asp_master_session_config->addressee.id[0];
+      master_session->config.addressee.id[0] = d7asp_master_session_config->addressee.id[0];
       assert(d7asp_master_session_config->addressee.ctrl.id_type == ID_TYPE_NBID
              || d7asp_master_session_config->addressee.ctrl.id_type == ID_TYPE_NOID);
     }
 
-    if(current_master_session.config.dormant_timeout) {
-      current_master_session.state = D7ASP_MASTER_SESSION_DORMANT;
-      schedule_dormant_session(&current_master_session);
+    if(master_session->config.dormant_timeout) {
+        master_session->state = D7ASP_MASTER_SESSION_DORMANT;
+        schedule_dormant_session(master_session);
     }
 
-    return current_master_session.token;
+    return master_session->token;
 }
 
 static d7asp_master_session_t* get_master_session_from_token(uint8_t session_token)
 {
-    //TODO handle a list of sessions
-    //for now, return systematically the current master session
-    assert(current_master_session.token == session_token);
-    return(&current_master_session);
+    for(uint8_t i = 0; i < MODULE_D7AP_MAX_SESSION_COUNT; i++) {
+        if(master_sessions[i].token == session_token)
+            return &(master_sessions[i]);
+    }
+
+    return NULL;
 }
 
 error_t d7asp_send_response(uint8_t* payload, uint8_t length)
@@ -467,7 +566,7 @@ error_t d7asp_send_response(uint8_t* payload, uint8_t length)
     memcpy(current_response_packet->payload, payload, length);
 
     // check if there is a pending session
-    if (current_master_session.state == D7ASP_MASTER_SESSION_ACTIVE)
+    if (current_master_session->state == D7ASP_MASTER_SESSION_ACTIVE)
         switch_state(D7ASP_STATE_SLAVE_PENDING_MASTER);
     else
         switch_state(D7ASP_STATE_SLAVE);
@@ -512,20 +611,22 @@ uint8_t d7asp_queue_request(uint8_t session_token, uint8_t* alp_payload_buffer, 
     session->request_buffer_tail_idx += alp_payload_length + 1;
     session->next_request_id++;
 
-    if(current_master_session.state == D7ASP_MASTER_SESSION_IDLE) {
-      current_master_session.state = D7ASP_MASTER_SESSION_PENDING;
-      DPRINT("converting IDLE session to PENDING");
-    } else if(current_master_session.state == D7ASP_MASTER_SESSION_DORMANT) {
-      DPRINT("session is dormant, not activating");
+    if(session->state == D7ASP_MASTER_SESSION_IDLE) {
+        session->state = D7ASP_MASTER_SESSION_PENDING;
+        DPRINT("converting IDLE session to PENDING");
+    } else if(session->state == D7ASP_MASTER_SESSION_DORMANT) {
+        DPRINT("session is dormant, not activating");
     }
 
     // TODO for master only set to pending when asked by upper layer (ie new function call)
-    if ((d7asp_state == D7ASP_STATE_IDLE) && (current_master_session.state != D7ASP_MASTER_SESSION_DORMANT))
+    if ((d7asp_state == D7ASP_STATE_IDLE) && (session->state == D7ASP_MASTER_SESSION_PENDING))
     {
+        assert(current_master_session == NULL);
+        current_master_session = session;
         switch_state(D7ASP_STATE_PENDING_MASTER);
         schedule_current_session();
     }
-    else if (d7asp_state == D7ASP_STATE_SLAVE)
+    else if ((d7asp_state == D7ASP_STATE_SLAVE) && (session->state == D7ASP_MASTER_SESSION_PENDING))
         switch_state(D7ASP_STATE_SLAVE_PENDING_MASTER);
 
     return request_id;
@@ -555,23 +656,23 @@ void d7asp_process_received_response(packet_t* packet, bool extension)
     };
 
     assert(d7asp_state == D7ASP_STATE_MASTER);
-    assert(packet->d7atp_dialog_id == current_master_session.token);
+    assert(packet->d7atp_dialog_id == current_master_session->token);
     assert(packet->d7atp_transaction_id == current_request_id);
 
     // received ack
     DPRINT("Received ACK for request ID %d", current_request_id);
-    if (current_master_session.config.qos.qos_resp_mode != SESSION_RESP_MODE_NO
-       && current_master_session.config.qos.qos_resp_mode != SESSION_RESP_MODE_NO_RPT)
+    if (current_master_session->config.qos.qos_resp_mode != SESSION_RESP_MODE_NO
+       && current_master_session->config.qos.qos_resp_mode != SESSION_RESP_MODE_NO_RPT)
     {
         // for SESSION_RESP_MODE_NO and SESSION_RESP_MODE_NO_RPT the request was already marked as done
         // upon successfull CSMA insertion. We don't care about response in these cases.
 
-        result.fifo_token = current_master_session.token;
+        result.fifo_token = current_master_session->token;
         result.seqnr = current_request_id;
         mark_current_request_successful();
         mark_current_request_done();
-        if(current_master_session.config.qos.qos_resp_mode == SESSION_RESP_MODE_PREFERRED
-           && ID_TYPE_IS_BROADCAST(current_master_session.config.addressee.ctrl.id_type))
+        if(current_master_session->config.qos.qos_resp_mode == SESSION_RESP_MODE_PREFERRED
+           && ID_TYPE_IS_BROADCAST(current_master_session->config.addressee.ctrl.id_type))
         {
             if(result.link_budget < current_responder_lowest_lb.lb)
             {
@@ -589,7 +690,7 @@ void d7asp_process_received_response(packet_t* packet, bool extension)
     packet_queue_free_packet(packet); // ACK can be cleaned
 
     /* In case of unicast session, it is acceptable to switch to the next request before the expiration of Tc */
-    if (!ID_TYPE_IS_BROADCAST(current_master_session.config.addressee.ctrl.id_type))
+    if (!ID_TYPE_IS_BROADCAST(current_master_session->config.addressee.ctrl.id_type))
     {
         DPRINT("Request completed, don't wait end of transaction");
         packet_queue_free_packet(current_request_packet);
@@ -597,7 +698,7 @@ void d7asp_process_received_response(packet_t* packet, bool extension)
         // terminate the dialog if all request handled
         // we need to switch to the state idle otherwise we may receive a new packet before the task flush_fifos is handled
         // in this case, we may assert since the state remains MASTER
-        if (current_request_id == current_master_session.next_request_id - 1)
+        if (current_request_id == current_master_session->next_request_id - 1)
         {
             flush_completed();
             return;
@@ -608,14 +709,20 @@ void d7asp_process_received_response(packet_t* packet, bool extension)
         // d7atp_stop_transaction(); //TO BE CHECKED THAT COMMENTING THIS OUT HAS NO NEGATIVE EFFECT
     }
     // switch to the state slave when the D7ATP Dialog Extension Procedure is initiated and all request are handled
-    else if ((extension) && (current_request_id == current_master_session.next_request_id - 1))
+    else if ((extension) && (current_request_id == current_master_session->next_request_id - 1))
     {
         DPRINT("Dialog Extension Procedure is initiated, mark the FIFO flush "
                "completed before switching to a responder state");
-        d7ap_stack_session_completed(current_master_session.token, current_master_session.progress_bitmap,
-                                     current_master_session.success_bitmap, current_master_session.next_request_id - 1);
-        current_master_session.state = D7ASP_MASTER_SESSION_IDLE;
-        switch_state(D7ASP_STATE_SLAVE);
+        d7ap_stack_session_completed(current_master_session->token, current_master_session->progress_bitmap,
+                                     current_master_session->success_bitmap, current_master_session->next_request_id - 1);
+
+        free_master_session(current_master_session);
+        switch_to_next_session();
+
+        if (current_master_session == NULL)
+            switch_state(D7ASP_STATE_SLAVE);
+        else
+            switch_state(D7ASP_STATE_PENDING_MASTER);
     }
 }
 
@@ -660,19 +767,30 @@ bool d7asp_process_received_packet(packet_t* packet)
         expect_upper_layer_resp_payload = d7ap_stack_process_unsolicited_request(packet->payload, packet->payload_length, result);
     }
 
-    if (current_master_session.state == D7ASP_MASTER_SESSION_DORMANT &&
+    if (current_master_session->state == D7ASP_MASTER_SESSION_DORMANT &&
         (!ID_TYPE_IS_BROADCAST(packet->dll_header.control_target_id_type)) &&
-        memcmp(current_master_session.config.addressee.id, packet->d7anp_addressee->id, d7ap_addressee_id_length(packet->d7anp_addressee->ctrl.id_type)) == 0) {
+        memcmp(current_master_session->config.addressee.id, packet->d7anp_addressee->id, d7ap_addressee_id_length(packet->d7anp_addressee->ctrl.id_type)) == 0) {
         DPRINT("pending dormant session for requester");
-        current_master_session.state = D7ASP_MASTER_SESSION_PENDING_DORMANT_TRIGGERED;
+        current_master_session->state = D7ASP_MASTER_SESSION_PENDING_DORMANT_TRIGGERED;
     }
+
+    // execute slave transaction
+    if (!packet->d7atp_ctrl.ctrl_is_ack_requested)
+    {
+        // no ack to be transmitted, free packet
+        packet_queue_free_packet(packet);
+        return false;
+    }
+
+    // a response is required, either with payload or just an ack without payload
+    current_response_packet = packet;
 
     /*
      * activate the dialog extension procedure in the unicast response if the dialog is terminated
      * and a master session is pending
      */
     if ((!ID_TYPE_IS_BROADCAST(packet->dll_header.control_target_id_type)) &&
-        (d7asp_state == D7ASP_STATE_SLAVE) && (current_master_session.state == D7ASP_MASTER_SESSION_PENDING_DORMANT_TRIGGERED))
+        (d7asp_state == D7ASP_STATE_SLAVE) && (current_master_session->state == D7ASP_MASTER_SESSION_PENDING_DORMANT_TRIGGERED))
     {
         packet->d7atp_ctrl.ctrl_is_start = true;
         packet->d7atp_ctrl.ctrl_tl = true;
@@ -692,7 +810,7 @@ bool d7asp_process_received_packet(packet_t* packet)
         // TX duration for dormant session
         estimated_tl += phy_calculate_tx_duration(packet->phy_config.rx.channel_id.channel_header.ch_class,
                                                   packet->phy_config.rx.channel_id.channel_header.ch_coding,
-                                                  current_master_session.requests_lengths[0], false); // TODO assuming 1 queued request for now
+                                                  current_master_session->requests_lengths[0], false); // TODO assuming 1 queued request for now
 
         DPRINT("Dormant session estimated Tl=%i", estimated_tl);
         packet->d7atp_tl = compress_data(estimated_tl, true);
@@ -700,25 +818,13 @@ bool d7asp_process_received_packet(packet_t* packet)
     else
         packet->d7atp_ctrl.ctrl_is_start = 0;
 
-    // execute slave transaction
-    if (packet->d7atp_ctrl.ctrl_is_ack_requested)
-    {
-        // a response is required, either with payload or just an ack without payload
-        current_response_packet = packet;
-        if(expect_upper_layer_resp_payload == false) {
-          DPRINT("Don't need resp payload from upper layer, send the ACK");
-          return false; // don't free the packet here, it will be done in d7asp_signal_packet_transmitted()
-        } else {
-          DPRINT("Wait for resp from upper layer");
-          switch_state(D7ASP_STATE_SLAVE_WAITING_RESPONSE);
-          return true;
-        }
-    }
-    else
-    {
-        // no ack to be transmitted, free packet
-        packet_queue_free_packet(packet);
-        return false;
+    if(expect_upper_layer_resp_payload == false) {
+      DPRINT("Don't need resp payload from upper layer, send the ACK");
+      return false; // don't free the packet here, it will be done in d7asp_signal_packet_transmitted()
+    } else {
+      DPRINT("Wait for resp from upper layer");
+      switch_state(D7ASP_STATE_SLAVE_WAITING_RESPONSE);
+      return true;
     }
 }
 
@@ -727,22 +833,22 @@ static void on_request_completed()
     assert(d7asp_state == D7ASP_STATE_MASTER);
     DPRINT("request completed");
 
-    if(current_master_session.config.qos.qos_resp_mode == SESSION_RESP_MODE_PREFERRED) {
-      memcpy(current_master_session.preferred_addressee.id, current_responder_lowest_lb.id, 8); // TODO assume UID for now
-      current_master_session.preferred_addressee.ctrl.id_type = ID_TYPE_UID;
+    if(current_master_session->config.qos.qos_resp_mode == SESSION_RESP_MODE_PREFERRED) {
+      memcpy(current_master_session->preferred_addressee.id, current_responder_lowest_lb.id, 8); // TODO assume UID for now
+      current_master_session->preferred_addressee.ctrl.id_type = ID_TYPE_UID;
 
       DPRINT("preferred addressee with LB %i is now:", current_responder_lowest_lb.lb);
-      DPRINT_DATA(current_master_session.preferred_addressee.id, 8);
+      DPRINT_DATA(current_master_session->preferred_addressee.id, 8);
     }
 
-    if (!bitmap_get(current_master_session.progress_bitmap, current_request_id))
+    if (!bitmap_get(current_master_session->progress_bitmap, current_request_id))
     {
-        if(current_master_session.config.qos.qos_resp_mode == SESSION_RESP_MODE_PREFERRED
-          && memcmp(current_master_session.preferred_addressee.id, (uint8_t[8]){ 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 }, 8) != 0)
+        if(current_master_session->config.qos.qos_resp_mode == SESSION_RESP_MODE_PREFERRED
+          && memcmp(current_master_session->preferred_addressee.id, (uint8_t[8]){ 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 }, 8) != 0)
         {
             DPRINT("No ack from preferred addressee, switching to bcast");
             current_responder_lowest_lb.lb = LB_MAX;
-            memcpy(current_master_session.preferred_addressee.id, (uint8_t[8]){ 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 }, 8);
+            memcpy(current_master_session->preferred_addressee.id, (uint8_t[8]){ 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 }, 8);
         }
         current_request_retry_count++;
         // the request may be retransmitted, don't free yet (this will be done in flush_fifo() when failed)
@@ -755,7 +861,7 @@ static void on_request_completed()
         // terminate the dialog if all request handled
         // we need to switch to the state idle otherwise we may receive a new packet before the task flush_fifos is handled
         // in this case, we may assert since the state remains MASTER
-        if (current_request_id == current_master_session.next_request_id - 1)
+        if (current_request_id == current_master_session->next_request_id - 1)
         {
             flush_completed();
             return;
@@ -772,8 +878,8 @@ void d7asp_signal_packet_transmitted(packet_t *packet)
     if (d7asp_state == D7ASP_STATE_MASTER)
     {
         // for the lowest QoS level the packet is ack-ed when CSMA/CA process succeeded
-        if (current_master_session.config.qos.qos_resp_mode == SESSION_RESP_MODE_NO ||
-           current_master_session.config.qos.qos_resp_mode == SESSION_RESP_MODE_NO_RPT)
+        if (current_master_session->config.qos.qos_resp_mode == SESSION_RESP_MODE_NO ||
+           current_master_session->config.qos.qos_resp_mode == SESSION_RESP_MODE_NO_RPT)
         {
             mark_current_request_done();
             mark_current_request_successful();
@@ -807,7 +913,7 @@ void d7asp_signal_transaction_terminated()
     if (d7asp_state == D7ASP_STATE_SLAVE_WAITING_RESPONSE)
     {
         // the time window to respond is expired, so it is not possible to send a response anymore
-        if (current_master_session.state == D7ASP_MASTER_SESSION_ACTIVE)
+        if (current_master_session->state == D7ASP_MASTER_SESSION_ACTIVE)
             switch_state(D7ASP_STATE_SLAVE_PENDING_MASTER);
         else
             switch_state(D7ASP_STATE_SLAVE);
@@ -830,7 +936,7 @@ void d7asp_signal_dialog_terminated()
         current_response_packet = NULL;
     }
 
-    if (current_master_session.state == D7ASP_MASTER_SESSION_PENDING_DORMANT_TRIGGERED) {
+    if (current_master_session->state == D7ASP_MASTER_SESSION_PENDING_DORMANT_TRIGGERED) {
       switch_state(D7ASP_STATE_PENDING_MASTER);
       schedule_current_session();
     } else {

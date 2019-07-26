@@ -239,7 +239,7 @@ error_t d7ap_stack_send(uint8_t client_id, d7ap_session_config_t* config, uint8_
         return (d7asp_send_response(payload, len));
     }
 
-    // Create or return the master session if the current one is compatible with the given session configuration.
+    // Create or just return the token of the first pending master session compatible with the given session configuration.
     uint8_t session_token = d7asp_master_session_create(config);
 
     if(session_token == 0)
@@ -349,9 +349,8 @@ void d7ap_stack_session_completed(uint8_t session_token, uint8_t* progress_bitma
         registered_client[session->client_id].transmitted_cb(session->trans_id[i], error);
     }
 
-    switch_state(D7AP_STACK_STATE_IDLE);
-
 free_session:
+    switch_state(D7AP_STACK_STATE_IDLE);
     free_session(session);
 }
 
