@@ -153,6 +153,7 @@ static void free_session(session_t* session) {
     session->active = false;
     session->request_nb = 0;
     session->client_id = INVALID_CLIENT_ID;
+    session->token = 0;
 };
 
 static session_t* alloc_session(uint8_t client_id) {
