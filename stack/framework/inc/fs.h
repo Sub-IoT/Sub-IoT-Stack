@@ -51,6 +51,13 @@
 
 #define FS_MAGIC_NUMBER { 0x34, 0xC2, 0x00, 0x00 } // first 2 bytes fixed, last 2 byte for version
 #define FS_MAGIC_NUMBER_SIZE 4
+#define FS_MAGIC_NUMBER_ADDRESS 0
+
+#define FS_NUMBER_OF_FILES_SIZE 4
+#define FS_NUMBER_OF_FILES_ADDRESS  4
+
+#define FS_FILE_HEADERS_ADDRESS 8
+#define FS_FILE_HEADER_SIZE sizeof(fs_file_t)
 
 typedef enum
 {

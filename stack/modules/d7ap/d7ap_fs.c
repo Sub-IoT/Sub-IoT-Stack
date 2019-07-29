@@ -98,9 +98,10 @@ void d7ap_fs_init()
   // TODO platform specific
   // TODO set FW version
 
-  uint8_t uid[8];
+  uint8_t uid[8] = {0};
   uint8_t uid_not_set[8] = { 0 };
   d7ap_fs_read_uid(uid);
+
   if(memcmp(uid, uid_not_set, 8) == 0) {
     // initializing UID
     uint64_t id = hw_get_unique_id();

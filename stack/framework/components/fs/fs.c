@@ -114,6 +114,11 @@ static inline bool _is_file_defined(uint8_t file_id)
     return files[file_id].length != 0;
 }
 
+static inline uint32_t _get_file_header_address(uint8_t file_id)
+{
+    return FS_FILE_HEADERS_ADDRESS + (file_id * FS_FILE_HEADER_SIZE);
+}
+
 void fs_init(fs_filesystem_t* provisioning)
 {
     if (is_fs_init_completed)
@@ -161,7 +166,8 @@ void fs_init(fs_filesystem_t* provisioning)
 
 int _fs_init_permanent_systemfiles(fs_filesystem_t* permanent_systemfiles)
 {
-    if (_fs_verify_magic(FS_STORAGE_PERMANENT, permanent_systemfiles->metadata->magic_number) < 0)
+    uint8_t expected_magic_number[FS_MAGIC_NUMBER_SIZE] = FS_MAGIC_NUMBER;
+    if (_fs_verify_magic(FS_STORAGE_PERMANENT, expected_magic_number) < 0)
     {
         DPRINT("fs_init: no valid magic, recreating fs...");
 
@@ -199,16 +205,17 @@ int _fs_init_permanent_systemfiles(fs_filesystem_t* permanent_systemfiles)
                         permanent_systemfiles->files_length[file_id]);
     }
 #else
+    DPRINT("metadata addr: %x", permanent_systemfiles->metadata);
+    DPRINT("metadata nfiles: %x", permanent_systemfiles->metadata->nfiles);
     // initialise system file caching
-    for (int file_id = 0; file_id < permanent_systemfiles->metadata->nfiles; file_id++)
+    size_t number_of_files;
+    blockdevice_read(bd[FS_STORAGE_PERMANENT], (uint8_t*)&number_of_files, FS_NUMBER_OF_FILES_ADDRESS, FS_NUMBER_OF_FILES_SIZE);
+    assert(number_of_files < FRAMEWORK_FS_FILE_COUNT);
+    for(int file_id = 0; file_id < number_of_files; file_id++)
     {
-        files[file_id].storage = FS_STORAGE_PERMANENT;
-        files[file_id].length = permanent_systemfiles->file_headers[file_id].length;
-        files[file_id].addr = permanent_systemfiles->file_headers[file_id].addr;
+        blockdevice_read(bd[FS_STORAGE_PERMANENT], (uint8_t*)&files[file_id],
+                         _get_file_header_address(file_id), FS_FILE_HEADER_SIZE);
     }
-
-    permanent_data_offset = permanent_systemfiles->file_headers[permanent_systemfiles->metadata->nfiles - 1].addr +
-                            permanent_systemfiles->file_headers[permanent_systemfiles->metadata->nfiles - 1].length;
 #endif
     return 0;
 }
@@ -339,6 +346,10 @@ int _fs_create_file(uint8_t file_id, fs_storage_class_t storage_class, const uin
     if (_is_file_defined(file_id))
         return -EEXIST;
 
+    // update file caching for stat lookup
+    files[file_id].storage = storage_class;
+    files[file_id].length = length;
+
 #ifdef VFS_MODULE
     char fn[MAX_FILE_NAME];
     int rtc;
@@ -369,6 +380,7 @@ int _fs_create_file(uint8_t file_id, fs_storage_class_t storage_class, const uin
     if (storage_class == FS_STORAGE_PERMANENT)
     {
         files[file_id].addr = permanent_data_offset;
+        blockdevice_program(bd[FS_STORAGE_PERMANENT], (uint8_t*)&files[file_id], _get_file_header_address(file_id), FS_FILE_HEADER_SIZE);
         permanent_data_offset += length;
     }
     else
@@ -395,10 +407,7 @@ int _fs_create_file(uint8_t file_id, fs_storage_class_t storage_class, const uin
         blockdevice_program(bd[storage_class], default_data, files[file_id].addr  + (i * 64), remaining_length);
     }
 #endif
-
-    // update file caching for stat lookup
-    files[file_id].storage = storage_class;
-    files[file_id].length = length;
+    
     DPRINT("fs init file(file_id %d, storage %d, addr %p, length %d)",file_id, storage_class, files[file_id].addr, length);
     return 0;
 }
@@ -418,7 +427,6 @@ int fs_read_file(uint8_t file_id, uint32_t offset, uint8_t* buffer, uint32_t len
     if(!_is_file_defined(file_id)) return -ENOENT;
 
     if(files[file_id].length < offset + length) return -EINVAL;
-
 #ifdef MODULE_VFS
     char fn[MAX_FILE_NAME];
     int rtc;
