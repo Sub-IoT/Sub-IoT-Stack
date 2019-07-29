@@ -159,7 +159,7 @@ static rx_packet_callback_t rx_packet_callback;
 static tx_packet_callback_t tx_packet_callback;
 static rx_packet_header_callback_t rx_packet_header_callback;
 static tx_refill_callback_t tx_refill_callback;
-static state_t state = STATE_IDLE;
+static state_t state = STATE_STANDBY;
 static hw_radio_packet_t* current_packet;
 
 static bool is_sx1272 = false;
