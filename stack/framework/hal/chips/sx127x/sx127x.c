@@ -125,7 +125,8 @@ typedef enum {
 typedef enum {
   STATE_IDLE,
   STATE_TX,
-  STATE_RX
+  STATE_RX,
+  STATE_STANDBY
 } state_t;
 
 /*
@@ -731,6 +732,20 @@ hw_radio_state_t hw_radio_get_opmode(void) {
 }
 
 void set_opmode(uint8_t opmode) {
+  switch(opmode) {
+    case OPMODE_SLEEP:
+      state = STATE_IDLE;
+      break;
+    case OPMODE_RX:
+      state = STATE_RX;
+      break;
+    case OPMODE_TX:
+      state = STATE_TX;
+      break;
+    case OPMODE_STANDBY:
+      state = STATE_STANDBY;
+      break;
+  }
   #if defined(PLATFORM_SX127X_USE_MANUAL_RXTXSW_PIN) || defined(PLATFORM_USE_ABZ)
   set_antenna_switch(opmode);
   #endif
@@ -749,7 +764,6 @@ void set_state_rx() {
     set_opmode(OPMODE_STANDBY); //Restart when changing freq/datarate
     while(!(read_reg(REG_IRQFLAGS1) & 0x80));
   }
-  state = STATE_RX;
   flush_fifo();
 
   write_reg(REG_FIFOTHRESH, 0x83);
@@ -775,7 +789,6 @@ void hw_radio_set_opmode(hw_radio_state_t opmode) {
   switch(opmode) {
     case HW_STATE_OFF:
     case HW_STATE_SLEEP:
-      state = STATE_IDLE;
       DEBUG_TX_END();
       DEBUG_RX_END();
       hw_gpio_disable_interrupt(SX127x_DIO0_PIN);
@@ -791,7 +804,6 @@ void hw_radio_set_opmode(hw_radio_state_t opmode) {
     case HW_STATE_TX:
       DEBUG_RX_END();
       DEBUG_TX_START();
-      state = STATE_TX;
       set_opmode(OPMODE_TX);
       break;
     case HW_STATE_IDLE:
