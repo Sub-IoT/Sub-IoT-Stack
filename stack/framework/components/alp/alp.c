@@ -37,6 +37,21 @@
   #define DPRINT(...)
 #endif
 
+alp_interface_t* interfaces[MODULE_ALP_INTERFACE_SIZE];
+
+alp_status_codes_t alp_register_interface(alp_interface_t* itf)
+{
+  for(uint8_t i=0; i < MODULE_ALP_INTERFACE_SIZE; i++) {
+    if(interfaces[i] == NULL) {                 //interface empty, add new one
+      interfaces[i] = itf;
+      return ALP_STATUS_OK;
+    } else if(interfaces[i]->itf_id == itf->itf_id) { //interface already present, only update
+      interfaces[i] = itf;
+      return ALP_STATUS_PARTIALLY_COMPLETED; 
+    }
+  }
+  return ALP_STATUS_UNKNOWN_ERROR;                  //all slots are taken, return error
+}
 
 alp_operation_t alp_get_operation(uint8_t* alp_command)
 {

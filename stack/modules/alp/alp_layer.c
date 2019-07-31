@@ -88,6 +88,8 @@ static uint8_t alp_data[ALP_PAYLOAD_MAX_SIZE]; // temp buffer statically allocat
 static uint8_t alp_data2[ALP_PAYLOAD_MAX_SIZE]; // temp buffer statically allocated to prevent runtime stackoverflows
 static alp_operand_file_data_t file_data_operand; // statically allocated to prevent runtime stackoverflows
 
+extern alp_interface_t* interfaces[MODULE_ALP_INTERFACE_SIZE];
+
 static void _async_process_command_from_d7ap(void* arg);
 void alp_layer_process_response_from_d7ap(uint16_t trans_id, uint8_t* alp_command,
                                           uint8_t alp_command_length, d7ap_session_result_t d7asp_result);
@@ -193,6 +195,11 @@ void alp_layer_init(alp_init_args_t* alp_init_args, bool is_shell_enabled)
                                      sizeof(read_firmware_version_alp_command)
                                      &broadcast_fifo_config);
 #endif
+}
+
+void alp_layer_register_interface(alp_interface_t* interface) {
+  interface->receive_cb = alp_layer_process_command_new;
+  alp_register_interface(interface);
 }
 
 static uint8_t process_action(uint8_t* alp_action, uint8_t* alp_response, uint8_t* alp_response_length)
@@ -663,6 +670,30 @@ static void add_tag_response(alp_command_t* command, bool eop, bool error) {
   op_return_tag |= (error << 6);
   error_t err = fifo_put_byte(&command->alp_response_fifo, op_return_tag); assert(err == SUCCESS);
   err = fifo_put_byte(&command->alp_response_fifo, command->tag_id); assert(err == SUCCESS);
+}
+
+void alp_layer_process_command_new(uint8_t* payload, uint8_t payload_length, session_config_t session_config, alp_interface_status_t itf_status) {
+  alp_command_t* command = alloc_command();
+  assert(command != NULL);
+  
+  memcpy(command->alp_command, payload, payload_length);
+  fifo_init_filled(&(command->alp_command_fifo), command->alp_command, payload_length, ALP_PAYLOAD_MAX_SIZE);
+  fifo_init(&(command->alp_response_fifo), command->alp_response, ALP_PAYLOAD_MAX_SIZE);
+  command->origin = itf_status.type;
+
+  bool do_forward = alp_layer_parse_and_execute_alp_command(command);
+
+  uint8_t alp_response_length = (uint8_t)fifo_get_size(&command->alp_response_fifo);
+
+  for(uint8_t i; i < MODULE_ALP_INTERFACE_SIZE; i++) {
+    if((interfaces[i] != NULL) && (interfaces[i]->itf_id == command->origin)) {
+      interfaces[i]->transmit_cb(command->alp_response, alp_response_length, alp_get_expected_response_length(command->alp_response, alp_response_length), )
+    }
+  }
+
+  if(!do_forward) {
+    free_command(command);
+  }
 }
 
 void alp_layer_process_d7aactp(d7ap_session_config_t* session_config, uint8_t* alp_command, uint32_t alp_command_length)

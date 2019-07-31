@@ -40,6 +40,7 @@
 
 #include "fifo.h"
 
+#define MODULE_ALP_INTERFACE_SIZE 10
 
 #define ALP_PAYLOAD_MAX_SIZE D7A_PAYLOAD_MAX_SIZE // TODO configurable?
 
@@ -56,6 +57,7 @@ typedef struct {
         d7ap_session_config_t d7ap_session_config;
         lorawan_session_config_otaa_t lorawan_session_config_otaa;
         lorawan_session_config_abp_t lorawan_session_config_abp;
+        uint8_t raw_data[43];
     };
 } session_config_t;
 
@@ -222,6 +224,17 @@ typedef struct {
 
 } alp_action_t;
 
+typedef bool (*receive_callback)(uint8_t* payload, uint8_t length, uint16_t trans_id, alp_interface_status_t status);
+typedef error_t (*transmit_callback)(uint8_t* payload, uint8_t length, uint8_t expected_response_length, uint16_t* trans_id, uint8_t* itf_cfg);
+
+typedef struct {
+    alp_itf_id_t itf_id;
+    uint8_t itf_cfg_len;
+    uint8_t itf_status_len;
+    receive_callback receive_cb;
+    transmit_callback transmit_cb;
+} alp_interface_t;
+
 /*!
  * \brief Returns the ALP operation type contained in alp_command
  * \param alp_command
@@ -232,6 +245,7 @@ alp_operation_t alp_get_operation(uint8_t* alp_command);
 
 uint8_t alp_get_expected_response_length(uint8_t* alp_command, uint8_t alp_command_length);
 
+alp_status_codes_t alp_register_interface(alp_interface_t* itf);
 void alp_append_tag_request_action(fifo_t* fifo, uint8_t tag_id, bool eop);
 void alp_append_read_file_data_action(fifo_t* fifo, uint8_t file_id, uint32_t offset, uint32_t length, bool resp, bool group);
 void alp_append_write_file_data_action(fifo_t* fifo, uint8_t file_id, uint32_t offset, uint32_t length, uint8_t* data, bool resp, bool group);
