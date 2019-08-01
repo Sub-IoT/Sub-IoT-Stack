@@ -159,7 +159,7 @@ static rx_packet_callback_t rx_packet_callback;
 static tx_packet_callback_t tx_packet_callback;
 static rx_packet_header_callback_t rx_packet_header_callback;
 static tx_refill_callback_t tx_refill_callback;
-static state_t state = STATE_IDLE;
+static state_t state = STATE_STANDBY;
 static hw_radio_packet_t* current_packet;
 
 static bool is_sx1272 = false;
@@ -682,7 +682,7 @@ void hw_radio_stop() {
 }
 
 error_t hw_radio_set_idle() {
-    if(state == STATE_IDLE)
+    if(state == STATE_IDLE && !io_inited)
         return EALREADY;
     hw_radio_set_opmode(HW_STATE_SLEEP);
     if(FskPacketHandler_sx127x.Size - FskPacketHandler_sx127x.NbBytes != 0 && FskPacketHandler_sx127x.NbBytes != 0) {
