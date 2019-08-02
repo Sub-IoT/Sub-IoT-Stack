@@ -227,8 +227,8 @@ typedef struct {
 
 } alp_action_t;
 
-typedef bool (*receive_callback)(uint8_t* payload, uint8_t length, uint16_t trans_id, alp_interface_status_t status);
-typedef error_t (*transmit_callback)(uint8_t* payload, uint8_t length, uint8_t expected_response_length, uint16_t* trans_id, uint8_t* itf_cfg);
+typedef void (*receive_callback)(uint8_t* payload, uint8_t payload_length, session_config_t session_config, alp_interface_status_t itf_status);
+typedef error_t (*transmit_callback)(fifo_t* payload_fifo, uint8_t expected_response_length, uint16_t trans_id, session_config_t itf_cfg);
 
 typedef struct {
     alp_itf_id_t itf_id;
