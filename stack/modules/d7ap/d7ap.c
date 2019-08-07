@@ -29,6 +29,8 @@
 #include "dae.h"
 #include "MODULE_D7AP_defs.h"
 
+#include "alp_layer.h"
+
 #if defined(FRAMEWORK_LOG_ENABLED) && defined(MODULE_D7AP_LOG_ENABLED)
 #include "log.h"
 #define DPRINT(...) log_print_stack_string(LOG_STACK_D7AP, __VA_ARGS__)
@@ -40,6 +42,60 @@
 
 d7ap_resource_desc_t registered_client[MODULE_D7AP_MAX_CLIENT_COUNT];
 uint8_t registered_client_nb = 0;
+alp_interface_t d7_alp_interface;
+uint8_t alp_client_id;
+
+void d7ap_add_result_to_array(d7ap_session_result_t* result, uint8_t* array) {
+    array[0] = ALP_OP_RETURN_STATUS + (1 << 6);
+    array[1] = ALP_ITF_ID_D7ASP;
+    array[2] = result->channel.channel_header;
+    uint16_t center_freq = __builtin_bswap16(result->channel.center_freq_index);
+    memcpy(&array[3], (uint8_t*)&center_freq, 2);
+    array[5] = result->rx_level;
+    array[6] = result->link_budget;
+    array[7] = result->target_rx_level;
+    array[8] = result->status.raw;
+    array[9] = result->fifo_token;
+    array[10] = result->seqnr;
+    array[11] = result->response_to;
+    array[12] = result->addressee.ctrl.raw;
+    array[13] = result->addressee.access_class;
+    memcpy(&array[14], result->addressee.id, d7ap_addressee_id_length(result->addressee.ctrl.id_type));
+}
+
+void response_from_d7ap(uint16_t trans_id, uint8_t* payload, uint8_t len, d7ap_session_result_t result) {
+    DPRINT("got response from d7 of trans %i with len %i and result linkbudget %i", trans_id, len, result.link_budget);
+
+    alp_interface_status_t d7_status = (alp_interface_status_t) {
+        .type = ALP_ITF_ID_D7ASP,
+        .len = 14 + d7ap_addressee_id_length(result.addressee.ctrl.id_type)
+    };
+    d7ap_add_result_to_array(&result, (uint8_t*)&d7_status.data);
+
+    d7_alp_interface.response_cb(trans_id, payload, len, d7_status);
+}
+
+bool command_from_d7ap(uint8_t* payload, uint8_t len, d7ap_session_result_t result) {
+    DPRINT("command from d7 with len %i result linkbudget %i", len, result.link_budget);
+    alp_interface_status_t d7_status = (alp_interface_status_t) {
+        .type = ALP_ITF_ID_D7ASP,
+        .len = 14 + d7ap_addressee_id_length(result.addressee.ctrl.id_type),
+    };
+    d7ap_add_result_to_array(&result, (uint8_t*)&d7_status.data);
+
+    return d7_alp_interface.receive_cb(payload, len, NULL, d7_status);
+}
+
+error_t d7ap_alp_send(fifo_t* payload_fifo, uint8_t expected_response_length, uint16_t* trans_id, session_config_t* itf_cfg) {
+    uint16_t len = fifo_get_size(payload_fifo);
+    uint8_t send_buffer[255];
+    fifo_pop(payload_fifo, send_buffer, len);
+    if(itf_cfg != NULL) {
+        return d7ap_send(alp_client_id, &itf_cfg->d7ap_session_config, send_buffer, len, expected_response_length, trans_id);
+    } else {
+        return d7ap_send(alp_client_id, NULL, send_buffer, len, expected_response_length, trans_id);
+    }
+}
 
 void d7ap_init()
 {
@@ -48,6 +104,28 @@ void d7ap_init()
     // Initialize the D7AP stack
     d7ap_stack_init();
     registered_client_nb = 0;
+
+    d7_alp_interface= (alp_interface_t) {
+        .itf_id = 0xD7,
+        .itf_cfg_len = sizeof(d7ap_session_config_t),
+        .itf_status_len = sizeof(d7ap_session_result_t),
+        .transmit_cb = d7ap_alp_send,
+        .response_cb = NULL,
+        .command_completed_cb = NULL,
+        .receive_cb = NULL
+    };
+
+    alp_layer_register_interface(&d7_alp_interface);
+
+    d7ap_resource_desc_t alp_desc = {
+      .receive_cb = response_from_d7ap,
+      .transmitted_cb = d7_alp_interface.command_completed_cb,
+      .unsolicited_cb = command_from_d7ap
+    };
+
+    alp_client_id = d7ap_register(&alp_desc);
+
+    DPRINT("alp_client_id is %i",alp_client_id);
 }
 
 void d7ap_stop()

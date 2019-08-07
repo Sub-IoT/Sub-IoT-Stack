@@ -204,7 +204,7 @@ typedef struct {
 } alp_operand_file_header_t;
 
 typedef struct {
-    uint8_t data[255];
+    uint8_t data[40];
     uint8_t len;
     alp_itf_id_t type;
 } alp_interface_status_t;
@@ -224,14 +224,18 @@ typedef struct {
 
 } alp_action_t;
 
-typedef void (*receive_callback)(uint8_t* payload, uint8_t payload_length, session_config_t session_config, alp_interface_status_t itf_status);
-typedef error_t (*transmit_callback)(fifo_t* payload_fifo, uint8_t expected_response_length, uint16_t trans_id, session_config_t itf_cfg);
+typedef bool (*receive_callback)(uint8_t* payload, uint8_t payload_length, session_config_t* session_config, alp_interface_status_t itf_status);
+typedef void (*command_completed_callback)(uint16_t trans_id, error_t error);
+typedef error_t (*transmit_callback)(fifo_t* payload_fifo, uint8_t expected_response_length, uint16_t* trans_id, session_config_t* itf_cfg);
+typedef void (*response_callback)(uint16_t trans_id, uint8_t* payload, uint8_t payload_length, alp_interface_status_t itf_status);
 
 typedef struct {
     alp_itf_id_t itf_id;
     uint8_t itf_cfg_len;
     uint8_t itf_status_len;
     receive_callback receive_cb;
+    command_completed_callback command_completed_cb;
+    response_callback response_cb;
     transmit_callback transmit_cb;
 } alp_interface_t;
 
@@ -243,7 +247,7 @@ typedef struct {
 alp_operation_t alp_get_operation(uint8_t* alp_command);
 
 
-uint8_t alp_get_expected_response_length(uint8_t* alp_command, uint8_t alp_command_length);
+uint8_t alp_get_expected_response_length(fifo_t fifo);
 
 alp_status_codes_t alp_register_interface(alp_interface_t* itf);
 void alp_append_tag_request_action(fifo_t* fifo, uint8_t tag_id, bool eop);
