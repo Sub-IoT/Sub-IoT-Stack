@@ -104,14 +104,15 @@ static uint8_t append_interface_status_action(d7ap_session_result_t* d7asp_resul
 }
 
 // TODO remove after refactoring (SP should pass unsolicited resp to ALP layer, which will output if shell enabled)
-void alp_cmd_handler_output_d7asp_response(d7ap_session_result_t d7asp_result, uint8_t *alp_command, uint8_t alp_command_size)
+void alp_cmd_handler_output_response(alp_interface_status_t result, uint8_t *alp_command, uint8_t alp_command_size)
 {
     // TODO refactor, move partly to alp + call from SP when shell enabled instead of from app
     DPRINT("output D7ASP response to console");
     DPRINT_DATA(alp_command, alp_command_size);
     uint8_t* ptr = alp_resp;
 
-    ptr += append_interface_status_action(&d7asp_result, ptr);
+    memcpy(ptr, result.data, result.len);
+    ptr += result.len;
 
     // the actual received data ...
     memcpy(ptr, alp_command, alp_command_size); 

@@ -31,6 +31,7 @@
 #include "types.h"
 #include "fifo.h"
 #include "d7ap.h"
+#include "alp_layer.h"
 
 #define ALP_CMD_HANDLER_ID 'D'
 
@@ -55,7 +56,7 @@ void alp_cmd_handler_output_alp_command(fifo_t* resp_fifo);
 /// \param alp_command
 /// \param alp_command_size
 ///
-void alp_cmd_handler_output_d7asp_response(d7ap_session_result_t d7asp_result, uint8_t *alp_command, uint8_t alp_command_size);
+void alp_cmd_handler_output_response(alp_interface_status_t result, uint8_t *alp_command, uint8_t alp_command_size);
 
 ///
 /// \brief Set the callback which will be called when an ALP command is received for the application interface

@@ -287,7 +287,13 @@ static inline uint8_t d7ap_addressee_id_length(d7ap_addressee_id_type_t id_type)
   return ID_TYPE_NOID_ID_LENGTH;
 }
 
-
+/**
+ * @brief adds d7ap_session_result_t to array
+ * 
+ * @param[in] result    the D7 result
+ * @param[in] array     the array where the d7 result has to go
+ */
+void d7ap_add_result_to_array(d7ap_session_result_t* result, uint8_t* array);
 
 #endif // D7AP_H
 

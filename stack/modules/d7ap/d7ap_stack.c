@@ -135,6 +135,7 @@ static void switch_state(state_t new_state)
                 case D7AP_STACK_STATE_RECEIVING:
                 case D7AP_STACK_STATE_TRANSMITTING:
                 case D7AP_STACK_STATE_WAIT_APP_ANSWER:
+                case D7AP_STACK_STATE_IDLE:
                     d7ap_stack_state = new_state;
                     DPRINT("[D7AP] Switching to state D7AP_STACK_STATE_IDLE");
                     break;
