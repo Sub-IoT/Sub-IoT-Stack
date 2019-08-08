@@ -191,12 +191,6 @@ def output_number_of_files():
 //[[[end]]] (checksum: d41d8cd98f00b204e9800998ecf8427e)
 
 #ifdef PLATFORM_FS_SYSTEMFILES_IN_SEPARATE_LINKER_SECTION
-  #define LINKER_SECTION_FS_SYSTEM_FILE __attribute__((section(".d7ap_fs_systemfiles")))
-#else
-  #define LINKER_SECTION_FS_SYSTEM_FILE
-#endif
-
-#ifdef PLATFORM_FS_SYSTEMFILES_IN_SEPARATE_LINKER_SECTION
   #define LINKER_SECTION_FS_METADATA __attribute__((section(".d7ap_fs_metadata")))
   #define LINKER_SECTION_FS_FILE_HEADERS __attribute__((section(".d7ap_fs_file_headers")))
   #define LINKER_SECTION_FS_SYSTEM_FILE __attribute__((section(".d7ap_fs_systemfiles")))
