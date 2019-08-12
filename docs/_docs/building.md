@@ -108,7 +108,27 @@ If all went well the application should be running on the target.
 
 Please refer to the [running the examples section]({{ site.baseurl }}{% link _docs/running-examples.md %}), but it is advised to read the next section first, which gives [an introduction to DASH7 Alliance Protocol]({{ site.baseurl }}{% link _docs/D7AP-intro.md %}).
 
-
 # MS Windows support
 
 While the above is written for Unix OS's (GNU/Linux and Mac OS X) it works on MS Windows as well. On MS Windows you should install the mingw32 compiler and use the "MinGW32 Makefiles" generator option when running cmake. Finally, you should use the `mingw32-make` command instead of `make`.
+
+# Unittests on native platform
+
+The unittests in `stack/tests` can be executed on the native platform. To do this, generate a buildscript as follows:
+
+    $ cmake ../dash7-ap-open-source-stack/stack/ -DPLATFORM="NATIVE" -DCMAKE_TOOLCHAIN_FILE="../dash7-ap-open-source-stack/stack/cmake/toolchains/gcc.cmake" -DBUILD_UNIT_TESTS=y -DFRAMEWORK_CONSOLE_ENABLED=n -DTEST_AES=y -DTEST_FEC=y
+
+This will result in a native binary per test, for example:
+
+    $ ./tests/aes/test_aes
+    Unit-tests for AES-CTR / AES-CCM mode
+    AES-CTR test vector #1 passed
+    AES-CTR test vector #2 passed
+    AES-CTR test vector #3 passed
+    AES-CCM test vector #1 passed
+    AES-CCM test vector #2 passed
+    AES-CCM test vector #3 passed
+    AES-CCM test vector #4 passed
+    AES-CCM test vector #5 passed
+    AES-CCM test vector #6 passed
+    AES all unit tests OK !
