@@ -45,7 +45,7 @@
 
 #define ID_TYPE_IS_BROADCAST(id_type) (id_type == ID_TYPE_NBID || id_type == ID_TYPE_NOID)
 
-#define D7A_PAYLOAD_MAX_SIZE 239 // TODO confirm this value when FEC and security are disabled
+#define D7A_PAYLOAD_MAX_SIZE 200 //239 // TODO confirm this value when FEC and security are disabled
 
 
 typedef enum {
