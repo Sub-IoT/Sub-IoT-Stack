@@ -224,10 +224,12 @@ typedef struct {
 
 } alp_action_t;
 
-typedef bool (*receive_callback)(uint8_t* payload, uint8_t payload_length, session_config_t* session_config, alp_interface_status_t itf_status);
-typedef void (*command_completed_callback)(uint16_t trans_id, error_t error);
-typedef error_t (*transmit_callback)(fifo_t* payload_fifo, uint8_t expected_response_length, uint16_t* trans_id, session_config_t* itf_cfg);
-typedef void (*response_callback)(uint16_t trans_id, uint8_t* payload, uint8_t payload_length, alp_interface_status_t itf_status);
+typedef bool (*receive_callback)(uint8_t* payload, uint8_t payload_length, session_config_t* session_config, alp_interface_status_t* itf_status);
+typedef void (*command_completed_callback)(uint16_t trans_id, error_t* error, alp_interface_status_t* status);
+typedef error_t (*transmit_callback)(uint8_t* payload, uint8_t payload_length, uint8_t expected_response_length, uint16_t* trans_id, session_config_t* itf_cfg);
+typedef void (*response_callback)(uint16_t trans_id, uint8_t* payload, uint8_t payload_length, alp_interface_status_t* itf_status);
+typedef void (*init_callback)(session_config_t* itf_cfg);
+typedef void (*deinit_callback)();
 
 typedef struct {
     alp_itf_id_t itf_id;
@@ -237,6 +239,9 @@ typedef struct {
     command_completed_callback command_completed_cb;
     response_callback response_cb;
     transmit_callback transmit_cb;
+    init_callback init_cb;
+    deinit_callback deinit_cb;
+    bool unique;
 } alp_interface_t;
 
 /*!

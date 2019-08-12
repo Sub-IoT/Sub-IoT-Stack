@@ -72,7 +72,7 @@ void response_from_d7ap(uint16_t trans_id, uint8_t* payload, uint8_t len, d7ap_s
     };
     d7ap_add_result_to_array(&result, (uint8_t*)&d7_status.data);
 
-    d7_alp_interface.response_cb(trans_id, payload, len, d7_status);
+    d7_alp_interface.response_cb(trans_id, payload, len, &d7_status);
 }
 
 bool command_from_d7ap(uint8_t* payload, uint8_t len, d7ap_session_result_t result) {
@@ -83,18 +83,20 @@ bool command_from_d7ap(uint8_t* payload, uint8_t len, d7ap_session_result_t resu
     };
     d7ap_add_result_to_array(&result, (uint8_t*)&d7_status.data);
 
-    return d7_alp_interface.receive_cb(payload, len, NULL, d7_status);
+    return d7_alp_interface.receive_cb(payload, len, NULL, &d7_status);
 }
 
-error_t d7ap_alp_send(fifo_t* payload_fifo, uint8_t expected_response_length, uint16_t* trans_id, session_config_t* itf_cfg) {
-    uint16_t len = fifo_get_size(payload_fifo);
-    uint8_t send_buffer[255];
-    fifo_pop(payload_fifo, send_buffer, len);
+error_t d7ap_alp_send(uint8_t* payload, uint8_t payload_length, uint8_t expected_response_length, uint16_t* trans_id, session_config_t* itf_cfg) {
+    DPRINT("sending D7 packet");
     if(itf_cfg != NULL) {
-        return d7ap_send(alp_client_id, &itf_cfg->d7ap_session_config, send_buffer, len, expected_response_length, trans_id);
+        return d7ap_send(alp_client_id, &itf_cfg->d7ap_session_config, payload, payload_length, expected_response_length, trans_id);
     } else {
-        return d7ap_send(alp_client_id, NULL, send_buffer, len, expected_response_length, trans_id);
+        return d7ap_send(alp_client_id, NULL, payload, payload_length, expected_response_length, trans_id);
     }
+}
+
+void d7ap_command_completed(uint16_t trans_id, error_t error) {
+    d7_alp_interface.command_completed_cb(trans_id, &error, NULL);
 }
 
 void d7ap_init()
@@ -112,14 +114,17 @@ void d7ap_init()
         .transmit_cb = d7ap_alp_send,
         .response_cb = NULL,
         .command_completed_cb = NULL,
-        .receive_cb = NULL
+        .receive_cb = NULL,
+        .init_cb = (void (*)(session_config_t *))d7ap_init, //we do not use the session config in d7ap init
+        .deinit_cb = d7ap_stop,
+        .unique = true
     };
 
     alp_layer_register_interface(&d7_alp_interface);
 
     d7ap_resource_desc_t alp_desc = {
       .receive_cb = response_from_d7ap,
-      .transmitted_cb = d7_alp_interface.command_completed_cb,
+      .transmitted_cb = d7ap_command_completed,
       .unsolicited_cb = command_from_d7ap
     };
 
