@@ -325,6 +325,9 @@ uint8_t alp_get_expected_response_length(fifo_t fifo) {
         expected_response_length += alp_length_operand_coded_length(offset) + 1; // the length of the offset operand
         expected_response_length += 1; // the opcode
         break;
+      case ALP_OP_READ_FILE_PROPERTIES:
+        fifo_skip(&fifo, 1); //skip file ID
+        break;
       case ALP_OP_REQUEST_TAG:
         fifo_skip(&fifo, 1); // skip tag ID operand
         break;
@@ -337,17 +340,33 @@ uint8_t alp_get_expected_response_length(fifo_t fifo) {
       case ALP_OP_FORWARD: ;
         uint8_t itf_id;
         fifo_pop(&fifo, &itf_id, 1);
-        if(itf_id == ALP_ITF_ID_D7ASP) {
-          fifo_skip(&fifo, 1); // skip QoS, dormant timeout
-          d7ap_addressee_ctrl_t addressee_ctrl;
-          fifo_pop(&fifo, (uint8_t*)&addressee_ctrl.raw, 1);
-          fifo_skip(&fifo, 2 + d7ap_addressee_id_length(addressee_ctrl.id_type)); // skip addressee ctrl, access class
-          // TODO refactor to reuse same logic for parsing and response length counting
+        for(uint8_t i = 0; i < MODULE_ALP_INTERFACE_SIZE; i++) {
+          if((interfaces[i] != NULL) && (itf_id == interfaces[i]->itf_id)) {
+            if(interfaces[i]->itf_id == ALP_ITF_ID_D7ASP) {
+              fifo_skip(&fifo, 2);
+              d7ap_addressee_ctrl_t addressee_ctrl;
+              fifo_pop(&fifo, (uint8_t*)&addressee_ctrl.raw, 1);
+              fifo_skip(&fifo, 1 + d7ap_addressee_id_length(addressee_ctrl.id_type)); // skip addressee ctrl, access class
+            } else 
+              fifo_skip(&fifo, interfaces[i]->itf_cfg_len);
+          }
         }
-        // other ITFs have no configuration
+        break;
+      case ALP_OP_INDIRECT_FORWARD: ;
+        fifo_skip(&fifo, 1);
+        if(control.b7 && (itf_id == ALP_ITF_ID_D7ASP))
+          fifo_skip(&fifo, 10);
         break;
       case ALP_OP_WRITE_FILE_PROPERTIES:
+      case ALP_OP_CREATE_FILE:
+      case ALP_OP_RETURN_FILE_PROPERTIES:
         fifo_skip(&fifo, 1 + sizeof(d7ap_fs_file_header_t)); // skip file ID & header
+        break;
+      case ALP_OP_BREAK_QUERY:
+        fifo_skip(&fifo, 1);
+        fifo_skip(&fifo, (uint16_t)alp_parse_length_operand(&fifo));
+        fifo_skip(&fifo, 1);
+        alp_parse_length_operand(&fifo);
         break;
       // TODO other operations
       default:
