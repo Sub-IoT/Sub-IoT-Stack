@@ -155,8 +155,7 @@ void alp_layer_init(alp_init_args_t* alp_init_args, bool is_shell_enabled)
   shell_enabled = is_shell_enabled;
   init_commands();
 
-
-  modem_interface_register_handler(&modem_interface_cmd_handler, SERIAL_MESSAGE_TYPE_ALP_DATA);
+  alp_cmd_handler_register_interface();
 
 #ifdef MODULE_LORAWAN
   alp_layer_lorawan_init();
@@ -678,13 +677,22 @@ static alp_status_codes_t process_op_return_file_data(alp_command_t* command) {
 
   if(fifo_get_size(&command->alp_command_fifo) < total_len) goto incomplete_error;
 
-  fifo_pop(&command->alp_command_fifo, alp_data, total_len);
-
-  if(shell_enabled)
-    alp_cmd_handler_output_response(current_status, alp_data, total_len);
+  if(shell_enabled) {
+    for(uint8_t i = 0; i < MODULE_ALP_INTERFACE_SIZE; i++) {
+      if((interfaces[i] != NULL) && (interfaces[i]->itf_id == ALP_ITF_ID_SERIAL)) {
+        DPRINT("serial itf found, sending");
+        memcpy(alp_data, current_status.data, current_status.len);
+        fifo_pop(&command->alp_command_fifo, &alp_data[current_status.len], total_len);
+        DPRINT("data ready, sending");
+        interfaces[i]->transmit_cb(alp_data, total_len+current_status.len, 0, NULL, NULL);
+      }
+    }
+  } else {
+    fifo_pop(&command->alp_command_fifo, alp_data, total_len);
+  } 
 
   if(init_args != NULL && init_args->alp_received_unsolicited_data_cb != NULL)
-    init_args->alp_received_unsolicited_data_cb(&current_status, alp_data, total_len);
+    init_args->alp_received_unsolicited_data_cb(&current_status, &alp_data[shell_enabled * current_status.len], total_len);
 
   return ALP_STATUS_OK;  
 
@@ -1098,10 +1106,10 @@ static void _async_process_command(void* arg)
 
     bool do_forward = alp_layer_parse_and_execute_alp_command(command);
 
-    uint8_t alp_response_length = (uint8_t)fifo_get_size(&command->alp_response_fifo);
     uint8_t expected_response_length = alp_get_expected_response_length(command->alp_response_fifo);
     if(command->respond_when_completed && !do_forward && (command->origin == ALP_CMD_ORIGIN_SERIAL_CONSOLE))
       add_tag_response(command, true, false);
+    uint8_t alp_response_length = (uint8_t)fifo_get_size(&command->alp_response_fifo);
     fifo_pop(&command->alp_response_fifo, command->alp_response, alp_response_length);
 
     if(alp_response_length) {

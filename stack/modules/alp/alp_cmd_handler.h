@@ -70,6 +70,11 @@ void alp_cmd_handler_set_appl_itf_callback(alp_cmd_handler_appl_itf_callback cb)
 ///
 void modem_interface_cmd_handler(fifo_t* cmd_fifo);
 
+///
+/// \brief Register modem interface in alp
+///
+void alp_cmd_handler_register_interface();
+
 #endif // ALP_CMD_HANDLER_H
 
 /** @}*/
