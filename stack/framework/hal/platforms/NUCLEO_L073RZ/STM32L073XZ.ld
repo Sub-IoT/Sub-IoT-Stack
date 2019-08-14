@@ -54,28 +54,12 @@ SECTIONS
     _sidata = .;
 
     /* store D7AP FS in EEPROM */
-    .d7ap_fs_metadata :
+    .d7ap_fs :
     {
       . = ALIGN(4);
-      __d7ap_fs_metadata_start = .;
-      KEEP(*(.d7ap_fs_metadata))
-      __d7ap_fs_metadata_end = .;
-    } > EEPROM
-
-    .d7ap_fs_file_headers :
-    {
-      . = ALIGN(4);
-      __d7ap_fs_file_headers_start = .;
-      KEEP(*(.d7ap_fs_metadata))
-      __d7ap_fs_file_headers_end = .;
-    } > EEPROM
-
-    .d7ap_fs_systemfiles :
-    {
-      . = ALIGN(4);
-      __d7ap_fs_systemfiles_start = .;
-      KEEP(*(.d7ap_fs_systemfiles))
-      __d7ap_fs_systemfiles_end = .;
+      __d7ap_fs_start = .;
+      KEEP(*(.d7ap_fs))
+      __d7ap_fs_end = .;
     } > EEPROM
 
     /* stack section contains no symbols, used to check that there is enough RAM left.

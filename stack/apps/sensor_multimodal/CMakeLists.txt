@@ -29,4 +29,4 @@
 #SET_PROPERTY(CACHE ${APP_PREFIX}_<param_name> PROPERTY STRINGS "value1;value2")
 #
 
-APP_BUILD(NAME ${APP_NAME} SOURCES sensor_multimodal.c LIBS alp d7ap lorawan framework)
+APP_BUILD(NAME ${APP_NAME} SOURCES sensor_multimodal.c LIBS alp d7ap d7ap_fs lorawan framework)

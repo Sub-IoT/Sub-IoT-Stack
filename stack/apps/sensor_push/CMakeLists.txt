@@ -30,9 +30,9 @@
 #
 
 IF(${MODULE_LORAWAN})
-    SET(libs alp d7ap lorawan framework)
+    SET(libs alp d7ap d7ap_fs lorawan framework)
 ELSE()
-    SET(libs alp d7ap framework)
+    SET(libs alp d7ap d7ap_fs framework)
 ENDIF()
 
 APP_BUILD(NAME ${APP_NAME} SOURCES sensor_push.c LIBS ${libs})
