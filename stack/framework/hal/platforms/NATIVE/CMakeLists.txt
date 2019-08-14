@@ -33,6 +33,7 @@ EXPORT_GLOBAL_INCLUDE_DIRECTORIES(${CMAKE_CURRENT_BINARY_DIR})
 #Define the 'platform library'. Every platform must define a 'PLATFORM' object library
 ADD_LIBRARY(PLATFORM OBJECT
     platf_main.c
+    libc_overrides.c
     inc/platform.h
 )
 

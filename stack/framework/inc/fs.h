@@ -53,10 +53,10 @@
 #define FS_MAGIC_NUMBER_SIZE 4
 #define FS_MAGIC_NUMBER_ADDRESS 0
 
-#define FS_NUMBER_OF_FILES_SIZE 4
+#define FS_NUMBER_OF_FILES_SIZE 1
 #define FS_NUMBER_OF_FILES_ADDRESS  4
 
-#define FS_FILE_HEADERS_ADDRESS 8
+#define FS_FILE_HEADERS_ADDRESS 5
 #define FS_FILE_HEADER_SIZE sizeof(fs_file_t)
 
 typedef enum
@@ -66,6 +66,12 @@ typedef enum
     FS_STORAGE_RESTORABLE = 2, // The content is kept in a volatile memory of the device. It is accessible for read, and can be backed-up upon request in a permanent storage location. It is restored from the permanent location on device power on.
     FS_STORAGE_PERMANENT = 3  // The content is kept in a permanent memory of the device. It is accessible for read and write
 } fs_storage_class_t;
+
+typedef enum
+{
+    FS_BLOCKDEVICE_TYPE_PERMANENT = 0,
+    FS_BLOCKDEVICE_TYPE_VOLATILE = 1
+} fs_blockdevice_types_t;
 
 typedef struct  __attribute__((__packed__))
 {
@@ -83,9 +89,8 @@ typedef struct __attribute__((__packed__))
 
 typedef struct __attribute__((__packed__))
 {
+    uint8_t blockdevice_index; // the members of fs_blockdevice_types_t are required, but more blockdevices can be registered
     uint32_t length;
-    fs_storage_class_t storage : 2;
-    uint8_t rfu : 6; //FIXME: 'valid' field or invalid storage qualifier?
     uint32_t addr;
 } fs_file_t;
 
@@ -95,16 +100,7 @@ typedef struct __attribute__((__packed__))
  * **/
 typedef void (*fs_modified_file_callback_t)(uint8_t file_id);
 
-/**
- * @brief Descriptor of a file system
- */
-typedef struct __attribute__((__packed__)) {
-  fs_metadata_t* metadata; // magic number + #files
-  fs_file_t* file_headers;
-  uint8_t* files_data; /**< Files data array */
-} fs_filesystem_t;
-
-void fs_init(fs_filesystem_t* provisioning);
+void fs_init(uint8_t* provisioning);
 int fs_init_file(uint8_t file_id, fs_storage_class_t storage, const uint8_t* initial_data, uint32_t length);
 int fs_read_file(uint8_t file_id, uint32_t offset, uint8_t* buffer, uint32_t length);
 int fs_write_file(uint8_t file_id, uint32_t offset, const uint8_t* buffer, uint32_t length);
