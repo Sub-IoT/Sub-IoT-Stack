@@ -51,7 +51,7 @@
 #define D7A_PROTOCOL_VERSION_MAJOR 1
 #define D7A_PROTOCOL_VERSION_MINOR 1
 
-extern fs_filesystem_t d7ap_filesystem;
+extern uint8_t* d7ap_filesystem;
 
 #define FS_STORAGE_COUNT (sizeof(d7ap_fs)/sizeof(d7ap_fs[0]))
 
@@ -93,7 +93,7 @@ static void execute_d7a_action_protocol(uint8_t action_file_id, uint8_t interfac
 void d7ap_fs_init()
 {
   //init fs with the D7A specific system files
-  fs_init(&d7ap_filesystem);
+  fs_init(d7ap_filesystem);
 
   // TODO platform specific
   // TODO set FW version
@@ -104,7 +104,7 @@ void d7ap_fs_init()
 
   if(memcmp(uid, uid_not_set, 8) == 0) {
     // initializing UID
-    uint64_t id = hw_get_unique_id();
+    uint64_t id; // TODO = hw_get_unique_id();
     uint64_t id_be = __builtin_bswap64(id);
     fs_write_file(D7A_FILE_UID_FILE_ID, sizeof(d7ap_fs_file_header_t), (const uint8_t*)&id_be, D7A_FILE_UID_SIZE);
   }

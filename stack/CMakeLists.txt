@@ -75,6 +75,7 @@ ELSE()
 ENDIF()
 
 SET(MODULE_D7AP true CACHE BOOLEAN "") # D7AP module enabled by default
+SET(MODULE_D7AP_FS true CACHE BOOLEAN "")  # D7AP_FS module enabled by default
 SET(MODULE_ALP true CACHE BOOLEAN "")  # ALP module enabled by default
 
 #Then load the modules
