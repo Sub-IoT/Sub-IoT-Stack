@@ -30,12 +30,12 @@
 #endif
 
 // on native we use a RAM blockdevice as NVM as well for now
-extern uint8_t d7ap_permanent_files_data[FRAMEWORK_FS_PERMANENT_STORAGE_SIZE];
+extern uint8_t d7ap_filesystem[FRAMEWORK_FS_PERMANENT_STORAGE_SIZE];
 
 static blockdevice_ram_t eeprom_bd = (blockdevice_ram_t){
     .base.driver = &blockdevice_driver_ram,
     .size = FRAMEWORK_FS_PERMANENT_STORAGE_SIZE,
-    .buffer = d7ap_permanent_files_data
+    .buffer = d7ap_filesystem
 };
 
 extern uint8_t d7ap_volatile_files_data[FRAMEWORK_FS_VOLATILE_STORAGE_SIZE];
