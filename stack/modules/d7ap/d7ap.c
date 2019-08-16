@@ -44,6 +44,10 @@ d7ap_resource_desc_t registered_client[MODULE_D7AP_MAX_CLIENT_COUNT];
 uint8_t registered_client_nb = 0;
 alp_interface_t d7_alp_interface;
 uint8_t alp_client_id;
+bool inited = false;
+session_config_t d7ap_session_config_buffer = (session_config_t) {
+    .interface_type = ALP_ITF_ID_D7ASP
+};
 
 void d7ap_add_result_to_array(d7ap_session_result_t* result, uint8_t* array) {
     array[0] = ALP_OP_RETURN_STATUS + (1 << 6);
@@ -95,12 +99,22 @@ error_t d7ap_alp_send(uint8_t* payload, uint8_t payload_length, uint8_t expected
     }
 }
 
+void d7ap_alp_process_d7aactp(d7ap_session_config_t* session_config, uint8_t* alp_command, uint32_t alp_command_length) {
+    DPRINT("d7aactp triggered, processing command");
+    d7ap_session_config_buffer.d7ap_session_config = *session_config;
+    d7_alp_interface.receive_cb(alp_command, alp_command_length, &d7ap_session_config_buffer, NULL);
+}
+
 void d7ap_command_completed(uint16_t trans_id, error_t error) {
     d7_alp_interface.command_completed_cb(trans_id, &error, NULL);
 }
 
 void d7ap_init()
 {
+    if(inited)
+        return;
+    inited = true;
+
     d7ap_fs_init();
 
     // Initialize the D7AP stack
@@ -122,6 +136,8 @@ void d7ap_init()
 
     alp_layer_register_interface(&d7_alp_interface);
 
+    d7ap_fs_register_d7aactp_callback(&d7ap_alp_process_d7aactp);
+
     d7ap_resource_desc_t alp_desc = {
       .receive_cb = response_from_d7ap,
       .transmitted_cb = d7ap_command_completed,
@@ -135,6 +151,7 @@ void d7ap_init()
 
 void d7ap_stop()
 {
+    inited = false;
     d7ap_stack_stop();
     registered_client_nb = 0;
 }
