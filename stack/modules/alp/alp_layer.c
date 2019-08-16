@@ -34,7 +34,13 @@
 #include "timer.h"
 #include "modules_defs.h"
 #include "MODULE_ALP_defs.h"
+
+#define MODULE_D7
+
+#ifdef MODULE_D7
 #include "d7ap.h"
+#endif
+
 #include "d7ap_fs.h"
 #include "lorawan_stack.h"
 
@@ -383,12 +389,14 @@ static alp_status_codes_t process_op_indirect_forward(alp_command_t* command, ui
         d7ap_fs_read_file(interface_file_id, 1, session_config_saved.raw_data, interfaces[i]->itf_cfg_len);
       if(!ctrl.b7) 
         memcpy(session_config->raw_data, session_config_saved.raw_data, interfaces[i]->itf_cfg_len);
+#ifdef MODULE_D7
       else { //overload bit set
         memcpy(session_config->raw_data, session_config_saved.raw_data, interfaces[i]->itf_cfg_len - 10);
         err = fifo_pop(&command->alp_command_fifo, &session_config->raw_data[interfaces[i]->itf_cfg_len - 10], 2); assert(err == SUCCESS);
         uint8_t id_len = d7ap_addressee_id_length(session_config->d7ap_session_config.addressee.ctrl.id_type);
         err = fifo_pop(&command->alp_command_fifo, &session_config->raw_data[interfaces[i]->itf_cfg_len - 8], id_len); assert(err == SUCCESS);
       }
+#endif
       found = true;
       DPRINT("indirect forward %02X", *itf_id);
       break;
@@ -415,10 +423,12 @@ static alp_status_codes_t process_op_forward(alp_command_t* command, uint8_t* it
     if(*itf_id == interfaces[i]->itf_id) {
       session_config->interface_type = *itf_id;
       if(*itf_id == ALP_ITF_ID_D7ASP) {
+#ifdef MODULE_D7
         uint8_t amount = interfaces[i]->itf_cfg_len - 8;
         err = fifo_pop(&command->alp_command_fifo, session_config->raw_data, amount); assert(err == SUCCESS);
         uint8_t id_len = d7ap_addressee_id_length(session_config->d7ap_session_config.addressee.ctrl.id_type);
         err = fifo_pop(&command->alp_command_fifo, &session_config->raw_data[amount], id_len); assert(err == SUCCESS);
+#endif
       } else {
         err = fifo_pop(&command->alp_command_fifo, session_config->raw_data, interfaces[i]->itf_cfg_len); assert(err == SUCCESS);
       }
