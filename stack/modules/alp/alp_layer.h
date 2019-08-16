@@ -88,61 +88,18 @@ void alp_layer_init(alp_init_args_t* init_args, bool shell_enabled);
 
 
 /*!
- * \brief Execute the command asynchronously against the provided D7ASP session configuration
+ * \brief Execute the command asynchronously against the provided session configuration
  * \param alp_command
  * \param alp_command_length
- * \param d7asp_master_session_config
+ * \param session_config
  */
-void alp_layer_execute_command_over_d7a(uint8_t* alp_command, uint8_t alp_command_length, d7ap_session_config_t* config);
+void alp_layer_execute_command_over_itf(uint8_t* alp_command, uint8_t alp_command_length,  session_config_t* session_config);
 
 /*!
- * \brief Process the ALP command.
- * Processing will be done against the local host interface unless explicitely forwarded to another interface using an (indirect) forward action.
- *
- * Note: alp_command and alp_response may point to the same buffer
- * \param alp_command   The raw command
- * \param alp_command_length The length of the command
- * \param alp_response Pointer to a buffer where a possible response will be written
- * \param alp_response_length The length of the response
- * \param origin Where the ALP command originates from, determines where response will go to
- * \return If the ALP command was processed correctly or not
+ * \brief Register a new interface in alp_layer
+ * \param interface
  */
-bool alp_layer_process_command(uint8_t* alp_command, uint8_t alp_command_length, uint8_t* alp_response, uint8_t* alp_response_length, alp_command_origin_t origin);
-
-/*!
- * \brief Process a result received from D7ASP.
- *
- * Note: alp_command and alp_response may point to the same buffer
- * \param alp_command         The raw command
- * \param alp_command_length  The length of the command
- * \param alp_response        Pointer to a buffer where a possible response will be written
- * \param alp_response_length The length of the response
- * \param d7asp_result        The D7AP session result
- */
-void alp_layer_process_d7ap_result(uint8_t* alp_command, uint8_t alp_command_length, d7ap_session_result_t d7asp_result);
-
-/*!
- * \brief Process the ALP command on the local host interface and output the response to the D7ASP interface
- *
- * \param d7asp_fifo_config The config of the D7ASP fifo to output the ALP response to
- * \param alp_command   The raw command
- * \param alp_command_length The length of the command
- */
-void alp_layer_process_d7aactp(d7ap_session_config_t* config, uint8_t* alp_command, uint32_t alp_command_length);
-
-/*!
- * \brief Process the ALP command and output the result on the console.
- * Processing will be done against the local host interface unless explicitely forwarded to another interface using an (indirect) forward action.
- *
- * Note: alp_command and alp_response may point to the same buffer
- * \param alp_command   The raw command
- * \param alp_command_length The length of the command
- */
-void alp_layer_process_command_console_output(uint8_t* alp_command, uint8_t alp_command_length);
-
 void alp_layer_register_interface(alp_interface_t* interface);
-
-void alp_layer_d7ap_session_completed(void);
 
 #endif /* ALP_LAYER_H_ */
 

@@ -55,7 +55,9 @@
 #endif
 
 // Define the D7 interface configuration used for sending the ALP command on
-static d7ap_session_config_t session_config = {
+static session_config_t session_config = (session_config_t){
+  .interface_type = ALP_ITF_ID_D7ASP,
+  .d7ap_session_config = {
     .qos = {
         .qos_resp_mode = SESSION_RESP_MODE_PREFERRED,
         .qos_retry_mode = SESSION_RETRY_MODE_NO
@@ -69,6 +71,7 @@ static d7ap_session_config_t session_config = {
         .access_class = 0x01,
         .id = 0
     }
+  }
 };
 
 void execute_sensor_measurement()
@@ -95,7 +98,7 @@ void execute_sensor_measurement()
   alp_append_return_file_data_action(&alp_command_fifo, SENSOR_FILE_ID, 0, SENSOR_FILE_SIZE, (uint8_t*)&temperature);
 
   // and execute this
-  alp_layer_execute_command_over_d7a(alp_command, fifo_get_size(&alp_command_fifo), &session_config);
+  alp_layer_execute_command_over_itf(alp_command, fifo_get_size(&alp_command_fifo), &session_config);
 }
 
 void on_alp_command_completed_cb(uint8_t tag_id, bool success)

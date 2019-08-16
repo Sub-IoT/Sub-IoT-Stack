@@ -194,30 +194,6 @@ static void append_tag_response(fifo_t* fifo, uint8_t tag_id, bool eop, bool err
 }
 
 
-static void add_interface_status_action(fifo_t* alp_response_fifo, uint8_t itf_id, uint8_t *status, uint8_t status_len) {
-  if (itf_id == ALP_ITF_ID_D7ASP)
-  {
-    fifo_put_byte(alp_response_fifo, ALP_OP_RETURN_STATUS + (1 << 6));
-    fifo_put_byte(alp_response_fifo, ALP_ITF_ID_D7ASP);
-    //TODO insert status len
-    fifo_put_byte(alp_response_fifo, ((d7ap_session_result_t*)status)->channel.channel_header);
-    uint16_t center_freq_index_be = __builtin_bswap16(((d7ap_session_result_t*)status)->channel.center_freq_index);
-    fifo_put(alp_response_fifo, (uint8_t*)&center_freq_index_be, 2);
-    fifo_put_byte(alp_response_fifo, ((d7ap_session_result_t*)status)->rx_level);
-    fifo_put_byte(alp_response_fifo, ((d7ap_session_result_t*)status)->link_budget);
-    fifo_put_byte(alp_response_fifo, ((d7ap_session_result_t*)status)->target_rx_level);
-    fifo_put_byte(alp_response_fifo, ((d7ap_session_result_t*)status)->status.raw);
-    fifo_put_byte(alp_response_fifo, ((d7ap_session_result_t*)status)->fifo_token);
-    fifo_put_byte(alp_response_fifo, ((d7ap_session_result_t*)status)->seqnr);
-    fifo_put_byte(alp_response_fifo, ((d7ap_session_result_t*)status)->response_to);
-    fifo_put_byte(alp_response_fifo, ((d7ap_session_result_t*)status)->addressee.ctrl.raw);
-    fifo_put_byte(alp_response_fifo, ((d7ap_session_result_t*)status)->addressee.access_class);
-    uint8_t address_len = d7ap_addressee_id_length(((d7ap_session_result_t*)status)->addressee.ctrl.id_type);
-    fifo_put(alp_response_fifo, ((d7ap_session_result_t*)status)->addressee.id, address_len);
-  }
-}
-
-
 static void parse_operand_file_data(fifo_t* fifo, alp_action_t* action) {
   action->file_data_operand.file_offset = alp_parse_file_offset_operand(fifo);
   action->file_data_operand.provided_data_length = alp_parse_length_operand(fifo);

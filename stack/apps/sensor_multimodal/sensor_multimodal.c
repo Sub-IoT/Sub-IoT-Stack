@@ -71,19 +71,24 @@ network_driver_t* current_network_driver;
 static alp_init_args_t alp_init_args;
 
 // Define the D7 interface configuration used for sending the ALP command on
-static d7ap_session_config_t session_config = {
-  .qos = {
-    .qos_resp_mode = SESSION_RESP_MODE_ANY,
-    .qos_retry_mode = SESSION_RETRY_MODE_NO
-  },
-  .dormant_timeout = 0,
-  .addressee = {
-    .ctrl = {
-      .nls_method = AES_NONE,
-      .id_type = ID_TYPE_NOID,
+static session_config_t session_config = {
+  .interface_type = ALP_ITF_ID_D7ASP,
+  .d7ap_session_config = {
+    .qos = {
+      .qos_resp_mode = SESSION_RESP_MODE_ANY,
+      .qos_retry_mode = SESSION_RETRY_MODE_NO,
+      .qos_stop_on_error       = false,
+      .qos_record              = false
     },
-    .access_class = 0x01,
-    .id = 0
+    .dormant_timeout = 0,
+    .addressee = {
+      .ctrl = {
+        .nls_method = AES_NONE,
+        .id_type = ID_TYPE_NOID,
+      },
+      .access_class = 0x01,
+      .id = 0
+    }
   }
 };
 
@@ -99,13 +104,15 @@ void on_alp_command_completed_cb(uint8_t tag_id, bool success) {
     log_print_string("Command failed, no ack received");
 }
 
-void on_alp_command_result_cb(d7ap_session_result_t result, uint8_t* payload, uint8_t payload_length) {
-  log_print_string("recv response @ %i dB link budget from:", result.link_budget);
-  log_print_data(result.addressee.id, 8);
+void on_alp_command_result_cb(alp_interface_status_t* result, uint8_t* payload, uint8_t payload_length) {
+  d7ap_session_result_t d7_result;
+  memcpy(&d7_result, result->data, result->len);
+  log_print_string("recv response @ %i dB link budget from:", d7_result.link_budget);
+  log_print_data(d7_result.addressee.id, 8);
 }
 
 static uint8_t transmit_d7ap(uint8_t* alp, uint16_t len) {
-  alp_layer_execute_command_over_d7a(alp, len, &session_config);
+  alp_layer_execute_command_over_itf(alp, len, &session_config);
   return 0;
 }
 
