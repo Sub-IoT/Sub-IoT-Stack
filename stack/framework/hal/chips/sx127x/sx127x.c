@@ -108,7 +108,7 @@
   #error "Invalid configuration"
 #endif
 
-static const uint16_t rx_bw_startup_time[21] = {63, 74, 85, 71, 84, 97, 119, 144, 169, 215, 264, 313, 
+static const uint16_t rx_bw_startup_time[21] = {63, 74, 85, 100, 84, 120, 119, 144, 169, 215, 264, 313, 
   407, 504, 601, 791, 984, 1180, 1560, 1940, 2330};
 
 static uint8_t rx_bw_number = 21;
@@ -317,7 +317,7 @@ static void init_regs() {
   //  write_reg(REG_AFCLSB, 0); // TODO not used for now (AfcAutoOn not set)
   //  write_reg(REG_FEIMSB, 0); // TODO freq offset not used for now
   //  write_reg(REG_FEILSB, 0); // TODO freq offset not used for now
-  write_reg(REG_PREAMBLEDETECT, RF_PREAMBLEDETECT_DETECTOR_ON | RF_PREAMBLEDETECT_DETECTORSIZE_2 | RF_PREAMBLEDETECT_DETECTORTOL_5);  
+  write_reg(REG_PREAMBLEDETECT, RF_PREAMBLEDETECT_DETECTOR_ON | RF_PREAMBLEDETECT_DETECTORSIZE_2 | RF_PREAMBLEDETECT_DETECTORTOL_6);  
   // TODO validate PreambleDetectorSize (2 now) and PreambleDetectorTol (10 now)
   // write_reg(REG_RXTIMEOUT1, 0); // not used for now
   // write_reg(REG_RXTIMEOUT2, 0); // not used for now
