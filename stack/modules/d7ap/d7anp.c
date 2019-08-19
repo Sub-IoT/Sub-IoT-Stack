@@ -203,7 +203,7 @@ void start_foreground_scan_after_D7AAdvP(void *arg)
     d7anp_start_foreground_scan();
 }
 
-void d7anp_set_address_id()
+void d7anp_set_address_id(uint8_t file_id)
 {
     d7ap_fs_read_uid(address_id);
 }
