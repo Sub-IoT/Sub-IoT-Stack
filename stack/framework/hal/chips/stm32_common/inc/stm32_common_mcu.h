@@ -58,5 +58,9 @@ typedef struct {
 } i2c_port_t;
 
 void stm32_common_mcu_init();
+void stm32_common_mcu_prepare_longsleep();
+void stm32_common_mcu_prepare_shortsleep();
+void stm32_common_mcu_reinit_after_longsleep();
+void stm32_common_mcu_reinit_after_shortsleep();
 
 #endif

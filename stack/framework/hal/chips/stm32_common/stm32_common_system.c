@@ -153,16 +153,45 @@ void hw_enter_lowpower_mode(uint8_t mode)
       /*clear wake up flag*/
       SET_BIT(PWR->CR, PWR_CR_CWUF);
 
-      stm32_common_mcu_prepare_sleep();
+      //stm32_common_mcu_prepare_sleep();
+      stm32_common_mcu_prepare_shortsleep();
 
-      HAL_PWR_EnterSTOPMode(PWR_LOWPOWERREGULATOR_ON, PWR_STOPENTRY_WFI);
-      //HAL_PWR_EnterSTOPMode(PWR_MAINREGULATOR_ON, PWR_STOPENTRY_WFI);
+      HAL_PWR_EnterSTOPMode(PWR_MAINREGULATOR_ON, PWR_STOPENTRY_WFI);
 
       // after resuming from STOP mode we should reinit the clock config
-      stm32_common_mcu_reinit_after_sleep();
+      stm32_common_mcu_reinit_after_shortsleep();
       break;
     
-    case 2: // STANDBY mode
+    case 2:  // STOP mode with MSI
+#ifndef FRAMEWORK_DEBUG_ENABLE_SWD
+      __HAL_FLASH_SLEEP_POWERDOWN_ENABLE(); // TODO test
+      // we can't do this in debug mode since DBGMCU the core is always clocked and will not wait for flash to be ready
+#endif
+
+      __HAL_RCC_PWR_CLK_ENABLE(); // to be able to change PWR registers
+
+      PWR->CR |= (PWR_CR_ULP & PWR_CR_FWU & PWR_CR_PVDE); // we don't need Vrefint and PVD
+      //RCC->CFGR |= RCC_CFGR_STOPWUCK; // use HSI16 after wake up
+      __HAL_PWR_CLEAR_FLAG(PWR_FLAG_WU);
+      __HAL_RCC_PWR_CLK_DISABLE();
+
+      DPRINT("EXTI->PR %x", EXTI->PR);
+      //assert(EXTI->PR == 0);
+      //assert((PWR->CSR & PWR_CSR_WUF) == 0);
+
+      /*clear wake up flag*/
+      SET_BIT(PWR->CR, PWR_CR_CWUF);
+
+      stm32_common_mcu_prepare_longsleep();
+
+      HAL_PWR_EnterSTOPMode(PWR_LOWPOWERREGULATOR_ON, PWR_STOPENTRY_WFI);
+
+      // after resuming from STOP mode we should reinit the clock config
+      stm32_common_mcu_reinit_after_longsleep();
+      break;
+    
+    case 3: 
+    // STANDBY mode
 
        __HAL_RCC_GPIOA_CLK_ENABLE();
       //__HAL_RCC_GPIOB_CLK_ENABLE();

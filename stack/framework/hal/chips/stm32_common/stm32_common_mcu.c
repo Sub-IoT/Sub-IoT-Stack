@@ -113,7 +113,7 @@ static void init_clock(void)
 #endif
 }
 
-void stm32_common_mcu_reinit_after_sleep() {
+void stm32_common_mcu_reinit_after_longsleep() {
   DPRINT("stm32_common_mcu_reinit_after_sleep");
   
   /* Set voltage scaling to enable 32 32MHz */
@@ -129,10 +129,19 @@ void stm32_common_mcu_reinit_after_sleep() {
 
   /* DISABLE MSI */
   assert(HAL_RCC_OscConfig(&RCC_OSC_active_msi) == HAL_OK);
+}
+
+void stm32_common_mcu_reinit_after_shortsleep() {
+  DPRINT("stm32_common_mcu_reinit_after_shortsleep");
+
+  /* Enable HSI */
+  //assert(HAL_RCC_OscConfig(&RCC_OSC_active_hsi) == HAL_OK);
+
+  init_clock();
 
 }
 
-void stm32_common_mcu_prepare_sleep() {
+void stm32_common_mcu_prepare_longsleep() {
   DPRINT("stm32_common_mcu_prepare_sleep");
 
   RCC_OscInitTypeDef RCC_OscInitStruct;
@@ -153,6 +162,10 @@ void stm32_common_mcu_prepare_sleep() {
   __HAL_PWR_VOLTAGESCALING_CONFIG(PWR_REGULATOR_VOLTAGE_SCALE3);
   /* Poll VOSF bit of in PWR_CSR. Wait until it is reset to 0 */
   while (__HAL_PWR_GET_FLAG(PWR_FLAG_VOS) != RESET) {};
+}
+
+void stm32_common_mcu_prepare_shortsleep() {
+  DPRINT("stm32_common_mcu_prepare_shortsleep");
 }
 
 void stm32_common_mcu_init()
