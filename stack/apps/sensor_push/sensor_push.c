@@ -56,7 +56,7 @@
 
 // Define the D7 interface configuration used for sending the ALP command on
 static alp_interface_config_t session_config = (alp_interface_config_t){
-  .interface_type = ALP_ITF_ID_D7ASP,
+  .alp_itf_id = ALP_ITF_ID_D7ASP,
   .d7ap_session_config = {
     .qos = {
         .qos_resp_mode = SESSION_RESP_MODE_PREFERRED,
