@@ -66,7 +66,7 @@ typedef struct {
   uint16_t trans_id;
   uint8_t tag_id;
   bool respond_when_completed;
-  alp_command_origin_t origin;
+  alp_itf_id_t itf_id;
   fifo_t alp_command_fifo;
   fifo_t alp_response_fifo;
   uint8_t alp_command[ALP_PAYLOAD_MAX_SIZE];
@@ -87,7 +87,7 @@ static timer_event alp_layer_process_command_timer;
 
 static uint8_t previous_interface_file_id = 0;
 static bool interface_file_changed = true;
-static session_config_t session_config_saved;
+static alp_interface_config_t session_config_saved;
 static uint8_t forwarded_alp_actions[ALP_PAYLOAD_MAX_SIZE]; // temp buffer statically allocated to prevent runtime stackoverflows
 static uint8_t alp_data[ALP_PAYLOAD_MAX_SIZE]; // temp buffer statically allocated to prevent runtime stackoverflows
 static uint8_t alp_data2[ALP_PAYLOAD_MAX_SIZE]; // temp buffer statically allocated to prevent runtime stackoverflows
@@ -95,13 +95,31 @@ static alp_operand_file_data_t file_data_operand; // statically allocated to pre
 
 extern alp_interface_t* interfaces[MODULE_ALP_INTERFACE_SIZE];
 
-static session_config_t* session_config_buffer;
+static alp_interface_config_t* session_config_buffer;
 static bool expect_completed = false;
+
+static alp_interface_t host_ift = (alp_interface_t){
+    .itf_id = ALP_ITF_ID_HOST,
+    .itf_cfg_len = 0,
+    .itf_status_len = 0,
+    .receive_cb = NULL,
+    .command_completed_cb = NULL,
+    .response_cb = NULL,
+    .transmit_cb = NULL,
+    .init_cb = NULL,
+    .deinit_cb = NULL,
+    .unique = NULL
+};
+
+static alp_interface_status_t host_itf_status = (alp_interface_status_t){
+    .itf_id = ALP_ITF_ID_HOST,
+    .len = 0
+};
 
 static void _async_process_command(void* arg);
 static void alp_layer_lorawan_init();
 static void lorawan_error_handler(uint16_t* trans_id, lorawan_stack_status_t status);
-bool alp_layer_process_command(uint8_t* payload, uint8_t payload_length, session_config_t* session_config, alp_interface_status_t* itf_status);
+bool alp_layer_process_command(uint8_t* payload, uint8_t payload_length, alp_interface_config_t* session_config, alp_interface_status_t* itf_status);
 void alp_layer_command_completed(uint16_t trans_id, error_t* error, alp_interface_status_t* status);
 void alp_layer_received_response(uint16_t trans_id, uint8_t* payload, uint8_t payload_length, alp_interface_status_t* itf_status);
 
@@ -153,7 +171,14 @@ void alp_layer_init(alp_init_args_t* alp_init_args, bool is_shell_enabled)
   shell_enabled = is_shell_enabled;
   init_commands();
 
+  if(alp_init_args) {
+      host_ift.transmit_cb = alp_init_args->transmit_cb;
+  }
+
+  alp_layer_register_interface(&host_ift);
+
   alp_cmd_handler_register_interface();
+
 
 #ifdef MODULE_LORAWAN
   alp_layer_lorawan_init();
@@ -354,7 +379,7 @@ static void interface_file_changed_callback(uint8_t file_id) {
   interface_file_changed = true;
 }
 
-static alp_status_codes_t process_op_indirect_forward(alp_command_t* command, uint8_t* itf_id, session_config_t* session_config) {
+static alp_status_codes_t process_op_indirect_forward(alp_command_t* command, uint8_t* itf_id, alp_interface_config_t* session_config) {
   error_t err;
   uint8_t requestAckBitLocation=1;
   uint8_t adrEnabledLocation=2;
@@ -379,12 +404,12 @@ static alp_status_codes_t process_op_indirect_forward(alp_command_t* command, ui
         assert(false);
       }
     } else
-      *itf_id = session_config_saved.interface_type;
+      *itf_id = session_config_saved.alp_itf_id;
   } else
-    *itf_id = session_config_saved.interface_type;
+    *itf_id = session_config_saved.alp_itf_id;
   for(uint8_t i = 0; i < MODULE_ALP_INTERFACE_SIZE; i++) {
     if(*itf_id == interfaces[i]->itf_id) {
-      session_config->interface_type = *itf_id;
+      session_config->alp_itf_id = *itf_id;
       if(re_read)
         d7ap_fs_read_file(interface_file_id, 1, session_config_saved.raw_data, interfaces[i]->itf_cfg_len);
       if(!ctrl.b7) 
@@ -410,7 +435,7 @@ static alp_status_codes_t process_op_indirect_forward(alp_command_t* command, ui
   return ALP_STATUS_PARTIALLY_COMPLETED;
 }
 
-static alp_status_codes_t process_op_forward(alp_command_t* command, uint8_t* itf_id, session_config_t* session_config) {
+static alp_status_codes_t process_op_forward(alp_command_t* command, uint8_t* itf_id, alp_interface_config_t* session_config) {
   // TODO move session config to alp_command_t struct
   error_t err;
   uint8_t requestAckBitLocation=1;
@@ -421,7 +446,7 @@ static alp_status_codes_t process_op_forward(alp_command_t* command, uint8_t* it
   err = fifo_pop(&command->alp_command_fifo, itf_id, 1); assert(err == SUCCESS);
   for(uint8_t i = 0; i < MODULE_ALP_INTERFACE_SIZE; i++) {
     if(*itf_id == interfaces[i]->itf_id) {
-      session_config->interface_type = *itf_id;
+      session_config->alp_itf_id = *itf_id;
       if(*itf_id == ALP_ITF_ID_D7ASP) {
 #ifdef MODULE_D7
         uint8_t amount = interfaces[i]->itf_cfg_len - 8;
@@ -475,11 +500,11 @@ static alp_status_codes_t process_op_status(alp_command_t* command) {
       break;
     case 1: ;//interface status operation
       alp_interface_status_t status;
-      fifo_pop(&command->alp_command_fifo, &status.type, 1);
+      fifo_pop(&command->alp_command_fifo, &status.itf_id, 1);
       status.len = (uint8_t)alp_parse_length_operand(&command->alp_command_fifo);
       fifo_pop(&command->alp_command_fifo, status.data, status.len);
       if((init_args != NULL) &&(init_args->alp_command_result_cb != NULL))
-        init_args->alp_command_result_cb(&status, NULL, 0);
+          init_args->alp_command_result_cb(&status, NULL, 0);
       break;
     case 2: //RFU
     case 3: //RFU
@@ -597,7 +622,7 @@ static void add_tag_response(alp_command_t* command, bool eop, bool error) {
   err = fifo_put_byte(&command->alp_response_fifo, command->tag_id); assert(err == SUCCESS);
 }
 
-void alp_layer_execute_command_over_itf(uint8_t* alp_command, uint8_t alp_command_length, session_config_t* session_config) {
+void alp_layer_execute_command_over_itf(uint8_t* alp_command, uint8_t alp_command_length, alp_interface_config_t* session_config) {
     bool found = false;
     DPRINT("alp cmd size %i", alp_command_length);
     assert(alp_command_length <= ALP_PAYLOAD_MAX_SIZE);
@@ -609,7 +634,7 @@ void alp_layer_execute_command_over_itf(uint8_t* alp_command, uint8_t alp_comman
     error_t err;
 
     for(uint8_t i = 0; i < MODULE_ALP_INTERFACE_SIZE; i++) {
-      if((interfaces[i] != NULL) && (interfaces[i]->itf_id == session_config->interface_type)) {
+      if((interfaces[i] != NULL) && (interfaces[i]->itf_id == session_config->alp_itf_id)) {
         err = interfaces[i]->transmit_cb(alp_command, alp_command_length, alp_get_expected_response_length(command->alp_command_fifo), &command->trans_id, session_config);
         found = true;
         break;
@@ -628,7 +653,7 @@ void alp_layer_execute_command_over_itf(uint8_t* alp_command, uint8_t alp_comman
 
 static bool alp_layer_parse_and_execute_alp_command(alp_command_t* command) {
   DPRINT("parse and exe command");
-  session_config_t session_config;
+  alp_interface_config_t session_config;
   uint8_t forward_itf_id = ALP_ITF_ID_HOST;
   bool do_forward = false;
   bool found = false;
@@ -716,12 +741,13 @@ static bool alp_layer_parse_and_execute_alp_command(alp_command_t* command) {
   return do_forward;
 }
 
-bool alp_layer_process_command(uint8_t* payload, uint8_t payload_length, session_config_t* session_config, alp_interface_status_t* itf_status) {
+bool alp_layer_process_command(uint8_t* payload, uint8_t payload_length, alp_interface_config_t* itf_cfg, alp_interface_status_t* itf_status) {
   DPRINT("alp_layer_new_command");
   alp_command_t* command = alloc_command();
   assert(command != NULL);
+  assert(itf_cfg != NULL);
 
-  session_config_buffer = session_config;
+  session_config_buffer = itf_cfg;
 
   if(itf_status != NULL)
     current_status = *itf_status;
@@ -729,12 +755,12 @@ bool alp_layer_process_command(uint8_t* payload, uint8_t payload_length, session
   memcpy(command->alp_command, payload, payload_length);
   fifo_init_filled(&(command->alp_command_fifo), command->alp_command, payload_length, ALP_PAYLOAD_MAX_SIZE);
   fifo_init(&(command->alp_response_fifo), command->alp_response, ALP_PAYLOAD_MAX_SIZE);
-  if(session_config)
-    command->origin = session_config->interface_type;
-  else 
-    command->origin = itf_status->type;
+  if(itf_cfg)
+    command->itf_id = itf_cfg->alp_itf_id;
+  else
+    command->itf_id = itf_status->itf_id; // TODO needed?
 
-  if(session_config && (command->origin == ALP_ITF_ID_D7ASP))
+  if(itf_cfg && (command->itf_id == ALP_ITF_ID_D7ASP))
     expect_completed = true; //d7aactp
 
   alp_layer_process_command_timer.next_event = 0;
@@ -757,21 +783,23 @@ static void _async_process_command(void* arg)
     bool do_forward = alp_layer_parse_and_execute_alp_command(command);
 
     uint8_t expected_response_length = alp_get_expected_response_length(command->alp_response_fifo);
-    if(command->respond_when_completed && !do_forward && (command->origin == ALP_ITF_ID_SERIAL))
+    if(command->respond_when_completed && !do_forward && (command->itf_id == ALP_ITF_ID_SERIAL)) // TODO will proabably not work anymore, but should be refactored
       add_tag_response(command, true, false);
+
     uint8_t alp_response_length = (uint8_t)fifo_get_size(&command->alp_response_fifo);
     fifo_pop(&command->alp_response_fifo, command->alp_response, alp_response_length);
 
     if(alp_response_length) {
       bool found = false;
       for(uint8_t i = 0; i < MODULE_ALP_INTERFACE_SIZE; i++) {
-        if((interfaces[i] != NULL) && (interfaces[i]->itf_id == command->origin)) {
+        if((interfaces[i] != NULL) && (interfaces[i]->itf_id == command->itf_id)) {
           DPRINT("interface found, sending len %i, expect %i answer", alp_response_length, expected_response_length);
           found = true;
           error_t err = interfaces[i]->transmit_cb(command->alp_response, alp_response_length, expected_response_length, &command->trans_id, session_config_buffer);
           if(err) {
             free_command(command);
           }
+
           break;
         }
       }
@@ -854,7 +882,7 @@ void alp_layer_received_response(uint16_t trans_id, uint8_t* payload, uint8_t pa
   }
 
   if(init_args != NULL && init_args->alp_command_result_cb != NULL)
-      init_args->alp_command_result_cb(itf_status, payload, payload_length);
+    init_args->alp_command_result_cb(itf_status, payload, payload_length);
 }
 
 #ifdef MODULE_LORAWAN

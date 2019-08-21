@@ -225,7 +225,7 @@ static void parse_op_return_status(fifo_t* fifo, alp_action_t* action, bool b6, 
   assert(fifo_pop(fifo, &itf_id, 1) == SUCCESS);
   // TODO uint32_t itf_len = parse_length_operand(fifo);
   // assert(itf_len == sizeof(d7ap_session_result_t));
-  action->status.type=itf_id;
+  action->status.itf_id=itf_id;
   if (itf_id == ALP_ITF_ID_D7ASP)
   {
     d7ap_session_result_t* interface_status =  ((d7ap_session_result_t*)action->status.data);

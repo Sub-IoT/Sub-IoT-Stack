@@ -45,8 +45,8 @@ uint8_t registered_client_nb = 0;
 alp_interface_t d7_alp_interface;
 uint8_t alp_client_id;
 bool inited = false;
-session_config_t d7ap_session_config_buffer = (session_config_t) {
-    .interface_type = ALP_ITF_ID_D7ASP
+alp_interface_config_t d7ap_session_config_buffer = (alp_interface_config_t) {
+    .alp_itf_id = ALP_ITF_ID_D7ASP
 };
 
 void d7ap_add_result_to_array(d7ap_session_result_t* result, uint8_t* array) {
@@ -72,7 +72,7 @@ void response_from_d7ap(uint16_t trans_id, uint8_t* payload, uint8_t len, d7ap_s
     DPRINT("got response from d7 of trans %i with len %i and result linkbudget %i", trans_id, len, result.link_budget);
 
     alp_interface_status_t d7_status = (alp_interface_status_t) {
-        .type = ALP_ITF_ID_D7ASP,
+        .itf_id = ALP_ITF_ID_D7ASP,
         .len = 15 + d7ap_addressee_id_length(result.addressee.ctrl.id_type)
     };
     d7ap_add_result_to_array(&result, (uint8_t*)&d7_status.data);
@@ -83,7 +83,7 @@ void response_from_d7ap(uint16_t trans_id, uint8_t* payload, uint8_t len, d7ap_s
 bool command_from_d7ap(uint8_t* payload, uint8_t len, d7ap_session_result_t result) {
     DPRINT("command from d7 with len %i result linkbudget %i", len, result.link_budget);
     alp_interface_status_t d7_status = (alp_interface_status_t) {
-        .type = ALP_ITF_ID_D7ASP,
+        .itf_id = ALP_ITF_ID_D7ASP,
         .len = 15 + d7ap_addressee_id_length(result.addressee.ctrl.id_type),
     };
     d7ap_add_result_to_array(&result, (uint8_t*)&d7_status.data);
@@ -91,7 +91,7 @@ bool command_from_d7ap(uint8_t* payload, uint8_t len, d7ap_session_result_t resu
     return d7_alp_interface.receive_cb(payload, len, NULL, &d7_status);
 }
 
-error_t d7ap_alp_send(uint8_t* payload, uint8_t payload_length, uint8_t expected_response_length, uint16_t* trans_id, session_config_t* itf_cfg) {
+error_t d7ap_alp_send(uint8_t* payload, uint8_t payload_length, uint8_t expected_response_length, uint16_t* trans_id, alp_interface_config_t* itf_cfg) {
     DPRINT("sending D7 packet");
     if(itf_cfg != NULL) {
         return d7ap_send(alp_client_id, &itf_cfg->d7ap_session_config, payload, payload_length, expected_response_length, trans_id);
@@ -130,7 +130,7 @@ void d7ap_init()
         .response_cb = NULL,
         .command_completed_cb = NULL,
         .receive_cb = NULL,
-        .init_cb = (void (*)(session_config_t *))d7ap_init, //we do not use the session config in d7ap init
+        .init_cb = (void (*)(alp_interface_config_t *))d7ap_init, //we do not use the session config in d7ap init
         .deinit_cb = d7ap_stop,
         .unique = true
     };

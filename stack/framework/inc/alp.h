@@ -44,22 +44,6 @@
 
 #define ALP_PAYLOAD_MAX_SIZE D7A_PAYLOAD_MAX_SIZE // TODO configurable?
 
-typedef enum
-{
-    DASH7,
-    LORAWAN_OTAA,
-    LORAWAN_ABP
-} interface_type_t;
-
-typedef struct {
-    interface_type_t interface_type;
-    union {
-        d7ap_session_config_t d7ap_session_config;
-        lorawan_session_config_otaa_t lorawan_session_config_otaa;
-        lorawan_session_config_abp_t lorawan_session_config_abp;
-        uint8_t raw_data[43];
-    };
-} session_config_t;
 
 typedef enum
 {
@@ -69,6 +53,17 @@ typedef enum
     ALP_ITF_ID_LORAWAN_OTAA = 0x03, // not part of the spec
     ALP_ITF_ID_D7ASP = 0xD7
 } alp_itf_id_t;
+
+typedef struct {
+    alp_itf_id_t alp_itf_id;
+    union {
+        d7ap_session_config_t d7ap_session_config;
+        lorawan_session_config_otaa_t lorawan_session_config_otaa;
+        lorawan_session_config_abp_t lorawan_session_config_abp;
+        uint8_t raw_data[43];
+    };
+} alp_interface_config_t;
+
 
 typedef enum {
     ALP_OP_NOP = 0,
@@ -204,9 +199,9 @@ typedef struct {
 } alp_operand_file_header_t;
 
 typedef struct {
-    uint8_t data[40];
+    alp_itf_id_t itf_id;
     uint8_t len;
-    alp_itf_id_t type;
+    uint8_t data[40]; //  TODO union instead of fixed size?
 } alp_interface_status_t;
 
 
@@ -224,11 +219,11 @@ typedef struct {
 
 } alp_action_t;
 
-typedef bool (*receive_callback)(uint8_t* payload, uint8_t payload_length, session_config_t* session_config, alp_interface_status_t* itf_status);
+typedef bool (*receive_callback)(uint8_t* payload, uint8_t payload_length, alp_interface_config_t* session_config, alp_interface_status_t* itf_status);
 typedef void (*command_completed_callback)(uint16_t trans_id, error_t* error, alp_interface_status_t* status);
-typedef error_t (*transmit_callback)(uint8_t* payload, uint8_t payload_length, uint8_t expected_response_length, uint16_t* trans_id, session_config_t* itf_cfg);
+typedef error_t (*transmit_callback)(uint8_t* payload, uint8_t payload_length, uint8_t expected_response_length, uint16_t* trans_id, alp_interface_config_t* itf_cfg); // TODO
 typedef void (*response_callback)(uint16_t trans_id, uint8_t* payload, uint8_t payload_length, alp_interface_status_t* itf_status);
-typedef void (*init_callback)(session_config_t* itf_cfg);
+typedef void (*init_callback)(alp_interface_config_t* itf_cfg);
 typedef void (*deinit_callback)();
 
 typedef struct {

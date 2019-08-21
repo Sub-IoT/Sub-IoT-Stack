@@ -53,7 +53,7 @@ static uint8_t alp_resp[ALP_CMD_MAX_SIZE] = { 0x00 };
 
 alp_interface_t alp_modem_interface;
 
-error_t alp_cmd_send_output(uint8_t* payload, uint8_t payload_length, uint8_t expected_response_length, uint16_t* trans_id, session_config_t* session_config);
+error_t alp_cmd_send_output(uint8_t* payload, uint8_t payload_length, uint8_t expected_response_length, uint16_t* trans_id, alp_interface_config_t* session_config);
 
 void modem_interface_cmd_handler(fifo_t* cmd_fifo)
 {
@@ -64,7 +64,7 @@ void modem_interface_cmd_handler(fifo_t* cmd_fifo)
     end_atomic();
     DPRINT_DATA(alp_command, alp_command_len);
     alp_interface_status_t temp_status = {
-        .type = ALP_ITF_ID_SERIAL,
+        .itf_id = ALP_ITF_ID_SERIAL,
         .len = 0
     };
     alp_modem_interface.receive_cb(alp_command, alp_command_len, NULL, &temp_status);
@@ -131,7 +131,7 @@ static uint8_t append_interface_status_action(d7ap_session_result_t* d7asp_resul
   return ptr - ptr_start;
 }
 
-error_t alp_cmd_send_output(uint8_t* payload, uint8_t payload_length, uint8_t expected_response_length, uint16_t* trans_id, session_config_t* session_config) {
+error_t alp_cmd_send_output(uint8_t* payload, uint8_t payload_length, uint8_t expected_response_length, uint16_t* trans_id, alp_interface_config_t* session_config) {
     DPRINT("sending payload to modem");
     DPRINT_DATA(payload, payload_length);
     modem_interface_transfer_bytes(payload, payload_length, SERIAL_MESSAGE_TYPE_ALP_DATA);
