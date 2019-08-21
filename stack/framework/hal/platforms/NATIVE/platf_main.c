@@ -82,3 +82,22 @@ int main()
     return 0;
 }
 
+// empty stubs
+__LINK_C uart_handle_t* uart_init(uint8_t port_idx, uint32_t baudrate, uint8_t pins) {}
+__LINK_C bool uart_enable(uart_handle_t* uart) {}
+__LINK_C bool uart_disable(uart_handle_t* uart) {}
+__LINK_C void uart_send_bytes(uart_handle_t* uart, void const *data, size_t length) {}
+__LINK_C error_t uart_rx_interrupt_enable(uart_handle_t* uart) {}
+__LINK_C void uart_set_rx_interrupt_callback(uart_handle_t* uart, uart_rx_inthandler_t rx_handler) {}
+__LINK_C error_t hw_gpio_set(pin_id_t pin_id) {}
+system_reboot_reason_t hw_system_reboot_reason(void) {}
+__LINK_C void hw_enter_lowpower_mode(uint8_t mode) {}
+__LINK_C hwtimer_tick_t hw_timer_getvalue(hwtimer_id_t timer_id) {}
+__LINK_C const hwtimer_info_t* hw_timer_get_info(hwtimer_id_t timer_id) {}
+__LINK_C error_t hw_timer_schedule(hwtimer_id_t timer_id, hwtimer_tick_t tick ) {}
+__LINK_C error_t hw_timer_init(hwtimer_id_t timer_id, uint8_t frequency, timer_callback_t compare_callback, timer_callback_t overflow_callback) {}
+__LINK_C bool hw_timer_is_overflow_pending(hwtimer_id_t id) {}
+__LINK_C error_t hw_timer_cancel(hwtimer_id_t timer_id) {}
+__LINK_C uint64_t hw_get_unique_id(void) { return 0xFFFFFFFFFFFFFF;}
+
+

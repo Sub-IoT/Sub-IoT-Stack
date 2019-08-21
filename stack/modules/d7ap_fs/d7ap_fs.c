@@ -104,7 +104,7 @@ void d7ap_fs_init()
 
   if(memcmp(uid, uid_not_set, 8) == 0) {
     // initializing UID
-    uint64_t id; // TODO = hw_get_unique_id();
+    uint64_t id = hw_get_unique_id();
     uint64_t id_be = __builtin_bswap64(id);
     fs_write_file(D7A_FILE_UID_FILE_ID, sizeof(d7ap_fs_file_header_t), (const uint8_t*)&id_be, D7A_FILE_UID_SIZE);
   }
