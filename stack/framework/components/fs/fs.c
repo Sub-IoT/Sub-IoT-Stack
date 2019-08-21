@@ -114,6 +114,7 @@ int _fs_init_permanent_systemfiles(fs_filesystem_t* permanent_systemfiles)
     {
         blockdevice_read(bd[FS_BLOCKDEVICE_TYPE_METADATA], (uint8_t*)&files[file_id],
                          _get_file_header_address(file_id), FS_FILE_HEADER_SIZE);
+
 #if __BYTE_ORDER__ != __ORDER_BIG_ENDIAN__
         // FS headers are stored in big endian
         files[file_id].addr = __builtin_bswap32(files[file_id].addr);

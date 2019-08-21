@@ -211,8 +211,10 @@ int d7ap_fs_write_file_header(uint8_t file_id, d7ap_fs_file_header_t* file_heade
   if(!is_file_defined(file_id)) return -ENOENT;
 
   // Input of data shall be in big-endian ordering
+#if __BYTE_ORDER__ != __ORDER_BIG_ENDIAN__
   file_header->length = __builtin_bswap32(file_header->length);
   file_header->allocated_length = __builtin_bswap32(file_header->allocated_length);
+#endif
 
   return (fs_write_file(file_id, 0, (const uint8_t*)file_header, sizeof(d7ap_fs_file_header_t)));
 }
