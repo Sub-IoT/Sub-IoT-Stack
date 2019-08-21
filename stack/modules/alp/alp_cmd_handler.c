@@ -111,8 +111,9 @@ static uint8_t append_interface_status_action(d7ap_session_result_t* d7asp_resul
 {
   // TODO refactor: duplicate of add_interface_status_action() in alp.c??
   uint8_t* ptr_start = ptr;
-  (*ptr) = ALP_OP_RETURN_STATUS + (1 << 6); ptr++;
+  (*ptr) = ALP_OP_STATUS + (1 << 6); ptr++;
   (*ptr) = ALP_ITF_ID_D7ASP; ptr++;
+  (*ptr) = 12 + d7ap_addressee_id_length(d7asp_result->addressee.ctrl.id_type); ptr++;
   (*ptr) = d7asp_result->channel.channel_header; ptr++;
   uint16_t center_freq_index_be = __builtin_bswap16(d7asp_result->channel.center_freq_index);
   memcpy(ptr, &center_freq_index_be, 2); ptr += 2;

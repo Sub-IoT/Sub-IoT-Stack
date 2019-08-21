@@ -187,7 +187,7 @@ void alp_append_return_file_data_action(fifo_t* fifo, uint8_t file_id, uint32_t 
 
 static void append_tag_response(fifo_t* fifo, uint8_t tag_id, bool eop, bool error) {
   // fill response with tag response
-  uint8_t op_return_tag = ALP_OP_RETURN_TAG | (eop << 7);
+  uint8_t op_return_tag = ALP_OP_RESPONSE_TAG | (eop << 7);
   op_return_tag |= (error << 6);
   error_t err = fifo_put_byte(fifo, op_return_tag); assert(err == SUCCESS);
   err = fifo_put_byte(fifo, tag_id); assert(err == SUCCESS);
@@ -229,7 +229,7 @@ static void parse_op_return_status(fifo_t* fifo, alp_action_t* action, bool b6, 
   if (itf_id == ALP_ITF_ID_D7ASP)
   {
     d7ap_session_result_t* interface_status =  ((d7ap_session_result_t*)action->status.data);
-
+    fifo_skip(fifo, 1); //size
     fifo_pop(fifo, &interface_status->channel.channel_header, 1);
     fifo_pop(fifo, (uint8_t*)&interface_status->channel.center_freq_index, 2);
     interface_status->channel.center_freq_index = __builtin_bswap16(interface_status->channel.center_freq_index);
@@ -272,10 +272,10 @@ void alp_parse_action(fifo_t* fifo, alp_action_t* action) {
     case ALP_OP_RETURN_FILE_DATA:
       parse_op_return_file_data(fifo, action);
       break;
-    case ALP_OP_RETURN_TAG:
+    case ALP_OP_RESPONSE_TAG:
       parse_op_return_tag(fifo, action, b6, b7);
       break;
-    case ALP_OP_RETURN_STATUS:
+    case ALP_OP_STATUS:
       parse_op_return_status(fifo, action, b6, b7);
       break;
     default:

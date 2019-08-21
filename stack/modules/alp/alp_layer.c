@@ -445,6 +445,51 @@ static alp_status_codes_t process_op_forward(alp_command_t* command, uint8_t* it
   return ALP_STATUS_PARTIALLY_COMPLETED;
 }
 
+static alp_status_codes_t process_op_response_tag(alp_command_t* command) {
+  error_t err;
+  alp_control_t ctrl;
+  uint8_t tag_id;
+  err = fifo_pop(&command->alp_command_fifo, (uint8_t*)&ctrl, 1); assert(err == SUCCESS);
+  err = fifo_pop(&command->alp_command_fifo, &tag_id, 1); assert(err == SUCCESS);
+  if(tag_id == command->tag_id && ctrl.b7) {
+    if(init_args != NULL && init_args->alp_command_completed_cb != NULL) {
+      init_args->alp_command_completed_cb(command->tag_id, !ctrl.b6);
+    } 
+    return ALP_STATUS_OK;
+  }
+  
+  DPRINT("command does not carry same tag_id: %i != %i or not completed: %i", tag_id, command->tag_id, ctrl.b7);
+  return ALP_STATUS_UNKNOWN_ERROR;
+}
+
+static alp_status_codes_t process_op_status(alp_command_t* command) {
+  error_t err;
+  alp_control_t ctrl;
+  err = fifo_pop(&command->alp_command_fifo, (uint8_t*)&ctrl, 1);
+  uint8_t ext = (ctrl.b7 < 1) + ctrl.b6;
+  switch(ext) {
+    case 0: ; //action status operation
+      uint8_t status_code;
+      fifo_pop(&command->alp_command_fifo, &status_code, 1);
+      //TO DO implement handling of action status
+      break;
+    case 1: ;//interface status operation
+      alp_interface_status_t status;
+      fifo_pop(&command->alp_command_fifo, &status.type, 1);
+      status.len = (uint8_t)alp_parse_length_operand(&command->alp_command_fifo);
+      fifo_pop(&command->alp_command_fifo, status.data, status.len);
+      if((init_args != NULL) &&(init_args->alp_command_result_cb != NULL))
+        init_args->alp_command_result_cb(&status, NULL, 0);
+      break;
+    case 2: //RFU
+    case 3: //RFU
+    default:
+      DPRINT("op_status ext %i not defined", ext);
+      assert(false);
+
+  }
+}
+
 static alp_status_codes_t process_op_request_tag(alp_command_t* command, bool respond_when_completed) {
   error_t err;
   err = fifo_skip(&command->alp_command_fifo, 1); assert(err == SUCCESS); // skip the control byte
@@ -546,7 +591,7 @@ static alp_status_codes_t process_op_create_file(alp_command_t* command) {
 static void add_tag_response(alp_command_t* command, bool eop, bool error) {
   // fill response with tag response
   DPRINT("add_tag_response %i", command->tag_id);
-  uint8_t op_return_tag = ALP_OP_RETURN_TAG | (eop << 7);
+  uint8_t op_return_tag = ALP_OP_RESPONSE_TAG | (eop << 7);
   op_return_tag |= (error << 6);
   error_t err = fifo_put_byte(&command->alp_response_fifo, op_return_tag); assert(err == SUCCESS);
   err = fifo_put_byte(&command->alp_response_fifo, command->tag_id); assert(err == SUCCESS);
@@ -639,6 +684,12 @@ static bool alp_layer_parse_and_execute_alp_command(alp_command_t* command) {
         break;
     case ALP_OP_BREAK_QUERY:
         alp_status = process_op_break_query(command);
+        break;
+    case ALP_OP_STATUS:
+        alp_status = process_op_status(command);
+        break;
+    case ALP_OP_RESPONSE_TAG:
+        alp_status = process_op_response_tag(command);
         break;
     case ALP_OP_FORWARD:
         alp_status = process_op_forward(command, &forward_itf_id, &session_config);
@@ -819,7 +870,7 @@ void lorawan_rx(lorawan_AppData_t *AppData)
 }
 
 void add_interface_status_lorawan(uint8_t* payload, uint8_t attempts, lorawan_stack_status_t status) {
-  payload[0] = ALP_OP_RETURN_STATUS + (1 << 6);
+  payload[0] = ALP_OP_STATUS + (1 << 6);
   payload[1] = current_lorawan_interface_type;
   payload[2] = 4; //length
   payload[3] = attempts;

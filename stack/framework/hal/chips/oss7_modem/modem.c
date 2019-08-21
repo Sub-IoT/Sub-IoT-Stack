@@ -29,6 +29,7 @@
 #include <stdlib.h>
 #include "platform.h"
 #include "modem_interface.h"
+#include "alp_layer.h"
 
 #define RX_BUFFER_SIZE 256
 #define CMD_BUFFER_SIZE 256
@@ -66,7 +67,7 @@ static void process_serial_frame(fifo_t* fifo) {
     alp_parse_action(fifo, &action);
 
     switch(action.operation) {
-      case ALP_OP_RETURN_TAG:
+      case ALP_OP_RESPONSE_TAG:
         if(action.tag_response.tag_id == command.tag_id) {
           command_completed = action.tag_response.completed;
           completed_with_error = action.tag_response.error;
@@ -89,7 +90,7 @@ static void process_serial_frame(fifo_t* fifo) {
                                                action.file_data_operand.provided_data_length,
                                                action.file_data_operand.data);
         break;
-      case ALP_OP_RETURN_STATUS:
+      case ALP_OP_STATUS:
         if(action.status.type==ALP_ITF_ID_D7ASP)
         {
           d7ap_session_result_t interface_status = *((d7ap_session_result_t*)action.status.data);
