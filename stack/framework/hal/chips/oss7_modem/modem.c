@@ -29,6 +29,7 @@
 #include <stdlib.h>
 #include "platform.h"
 #include "modem_interface.h"
+#include "alp_layer.h"
 
 #define RX_BUFFER_SIZE 256
 #define CMD_BUFFER_SIZE 256
@@ -66,7 +67,7 @@ static void process_serial_frame(fifo_t* fifo) {
     alp_parse_action(fifo, &action);
 
     switch(action.operation) {
-      case ALP_OP_RETURN_TAG:
+      case ALP_OP_RESPONSE_TAG:
         if(action.tag_response.tag_id == command.tag_id) {
           command_completed = action.tag_response.completed;
           completed_with_error = action.tag_response.error;
@@ -89,7 +90,7 @@ static void process_serial_frame(fifo_t* fifo) {
                                                action.file_data_operand.provided_data_length,
                                                action.file_data_operand.data);
         break;
-      case ALP_OP_RETURN_STATUS:
+      case ALP_OP_STATUS:
         if(action.status.type==ALP_ITF_ID_D7ASP)
         {
           d7ap_session_result_t interface_status = *((d7ap_session_result_t*)action.status.data);
@@ -116,56 +117,56 @@ static void process_serial_frame(fifo_t* fifo) {
 
 }
 
-static void process_rx_fifo(void *arg) {
-  if(!parsed_header) {
-    // <sync byte (0xC0)><version (0x00)><length of ALP command (1 byte)><ALP command> // TODO CRC
-    if(fifo_get_size(&rx_fifo) > SERIAL_ALP_FRAME_HEADER_SIZE) {
-        uint8_t header[SERIAL_ALP_FRAME_HEADER_SIZE];
-        fifo_peek(&rx_fifo, header, 0, SERIAL_ALP_FRAME_HEADER_SIZE);
-        DPRINT_DATA(header, 3); // TODO tmp
+// static void process_rx_fifo(void *arg) {
+//   if(!parsed_header) {
+//     // <sync byte (0xC0)><version (0x00)><length of ALP command (1 byte)><ALP command> // TODO CRC
+//     if(fifo_get_size(&rx_fifo) > SERIAL_ALP_FRAME_HEADER_SIZE) {
+//         uint8_t header[SERIAL_ALP_FRAME_HEADER_SIZE];
+//         fifo_peek(&rx_fifo, header, 0, SERIAL_ALP_FRAME_HEADER_SIZE);
+//         DPRINT_DATA(header, 3); // TODO tmp
 
-        if(header[0] != SERIAL_ALP_FRAME_SYNC_BYTE || header[1] != SERIAL_ALP_FRAME_VERSION) {
-          fifo_skip(&rx_fifo, 1);
-          DPRINT("skip");
-          parsed_header = false;
-          payload_len = 0;
-          if(fifo_get_size(&rx_fifo) > SERIAL_ALP_FRAME_HEADER_SIZE)
-            sched_post_task(&process_rx_fifo);
+//         if(header[0] != SERIAL_ALP_FRAME_SYNC_BYTE || header[1] != SERIAL_ALP_FRAME_VERSION) {
+//           fifo_skip(&rx_fifo, 1);
+//           DPRINT("skip");
+//           parsed_header = false;
+//           payload_len = 0;
+//           if(fifo_get_size(&rx_fifo) > SERIAL_ALP_FRAME_HEADER_SIZE)
+//             sched_post_task(&process_rx_fifo);
 
-          return;
-        }
+//           return;
+//         }
 
-        parsed_header = true;
-        fifo_skip(&rx_fifo, SERIAL_ALP_FRAME_HEADER_SIZE);
-        payload_len = header[2];
-        DPRINT("found header, payload size = %i", payload_len);
-        sched_post_task(&process_rx_fifo);
-    }
-  } else {
-    if(fifo_get_size(&rx_fifo) < payload_len) {
-      DPRINT("payload not complete yet");
-      return;
-    }
+//         parsed_header = true;
+//         fifo_skip(&rx_fifo, SERIAL_ALP_FRAME_HEADER_SIZE);
+//         payload_len = header[2];
+//         DPRINT("found header, payload size = %i", payload_len);
+//         sched_post_task(&process_rx_fifo);
+//     }
+//   } else {
+//     if(fifo_get_size(&rx_fifo) < payload_len) {
+//       DPRINT("payload not complete yet");
+//       return;
+//     }
 
-    // payload complete, start parsing
-    // rx_fifo can be bigger than the current serial packet, init a subview fifo
-    // which is restricted to payload_len so we can't parse past this packet.
-    fifo_t payload_fifo;
-    fifo_init_subview(&payload_fifo, &rx_fifo, 0, payload_len);
-    process_serial_frame(&payload_fifo);
+//     // payload complete, start parsing
+//     // rx_fifo can be bigger than the current serial packet, init a subview fifo
+//     // which is restricted to payload_len so we can't parse past this packet.
+//     fifo_t payload_fifo;
+//     fifo_init_subview(&payload_fifo, &rx_fifo, 0, payload_len);
+//     process_serial_frame(&payload_fifo);
 
-    // pop parsed bytes from original fifo
-    fifo_skip(&rx_fifo, payload_len - fifo_get_size(&payload_fifo));
-    parsed_header = false;
-  }
-}
+//     // pop parsed bytes from original fifo
+//     fifo_skip(&rx_fifo, payload_len - fifo_get_size(&payload_fifo));
+//     parsed_header = false;
+//   }
+// }
 
 
-static void rx_cb(uint8_t byte) {
-  fifo_put_byte(&rx_fifo, byte);
-  if(!sched_is_scheduled(&process_rx_fifo))
-    sched_post_task_prio(&process_rx_fifo, MAX_PRIORITY, NULL);
-}
+// static void rx_cb(uint8_t byte) {
+//   fifo_put_byte(&rx_fifo, byte);
+//   if(!sched_is_scheduled(&process_rx_fifo))
+//     sched_post_task_prio(&process_rx_fifo, MAX_PRIORITY, NULL);
+// }
 
 void modem_cb_init(modem_callbacks_t* cbs)
 {

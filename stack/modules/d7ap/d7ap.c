@@ -50,21 +50,22 @@ session_config_t d7ap_session_config_buffer = (session_config_t) {
 };
 
 void d7ap_add_result_to_array(d7ap_session_result_t* result, uint8_t* array) {
-    array[0] = ALP_OP_RETURN_STATUS + (1 << 6);
+    array[0] = ALP_OP_STATUS + (1 << 6);
     array[1] = ALP_ITF_ID_D7ASP;
-    array[2] = result->channel.channel_header;
+    array[2] = 12 + d7ap_addressee_id_length(result->addressee.ctrl.id_type);
+    array[3] = result->channel.channel_header;
     uint16_t center_freq = __builtin_bswap16(result->channel.center_freq_index);
-    memcpy(&array[3], (uint8_t*)&center_freq, 2);
-    array[5] = result->rx_level;
-    array[6] = result->link_budget;
-    array[7] = result->target_rx_level;
-    array[8] = result->status.raw;
-    array[9] = result->fifo_token;
-    array[10] = result->seqnr;
-    array[11] = result->response_to;
-    array[12] = result->addressee.ctrl.raw;
-    array[13] = result->addressee.access_class;
-    memcpy(&array[14], result->addressee.id, d7ap_addressee_id_length(result->addressee.ctrl.id_type));
+    memcpy(&array[4], (uint8_t*)&center_freq, 2);
+    array[6] = result->rx_level;
+    array[7] = result->link_budget;
+    array[8] = result->target_rx_level;
+    array[9] = result->status.raw;
+    array[10] = result->fifo_token;
+    array[11] = result->seqnr;
+    array[12] = result->response_to;
+    array[13] = result->addressee.ctrl.raw;
+    array[14] = result->addressee.access_class;
+    memcpy(&array[15], result->addressee.id, d7ap_addressee_id_length(result->addressee.ctrl.id_type));
 }
 
 void response_from_d7ap(uint16_t trans_id, uint8_t* payload, uint8_t len, d7ap_session_result_t result) {
@@ -72,7 +73,7 @@ void response_from_d7ap(uint16_t trans_id, uint8_t* payload, uint8_t len, d7ap_s
 
     alp_interface_status_t d7_status = (alp_interface_status_t) {
         .type = ALP_ITF_ID_D7ASP,
-        .len = 14 + d7ap_addressee_id_length(result.addressee.ctrl.id_type)
+        .len = 15 + d7ap_addressee_id_length(result.addressee.ctrl.id_type)
     };
     d7ap_add_result_to_array(&result, (uint8_t*)&d7_status.data);
 
@@ -83,7 +84,7 @@ bool command_from_d7ap(uint8_t* payload, uint8_t len, d7ap_session_result_t resu
     DPRINT("command from d7 with len %i result linkbudget %i", len, result.link_budget);
     alp_interface_status_t d7_status = (alp_interface_status_t) {
         .type = ALP_ITF_ID_D7ASP,
-        .len = 14 + d7ap_addressee_id_length(result.addressee.ctrl.id_type),
+        .len = 15 + d7ap_addressee_id_length(result.addressee.ctrl.id_type),
     };
     d7ap_add_result_to_array(&result, (uint8_t*)&d7_status.data);
 
