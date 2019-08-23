@@ -89,7 +89,7 @@ typedef enum
 
 typedef enum
 {
-    PREAMBLE_LOW_RATE_CLASS = 5, //between 32 bits (4 bytes) and 64 bits (8 bytes)
+    PREAMBLE_LOW_RATE_CLASS = 4, //between 32 bits (4 bytes) and 64 bits (8 bytes)
     PREAMBLE_NORMAL_RATE_CLASS = 5, //between 32 bits (4 bytes) and 64 bits (8 bytes)
     PREAMBLE_HI_RATE_CLASS = 7, //between 48 bits (6 bytes) and 128 bits (16 bytes)
 } phy_preamble_min_length_t;

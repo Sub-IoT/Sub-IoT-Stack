@@ -317,7 +317,7 @@ static void init_regs() {
   //  write_reg(REG_AFCLSB, 0); // TODO not used for now (AfcAutoOn not set)
   //  write_reg(REG_FEIMSB, 0); // TODO freq offset not used for now
   //  write_reg(REG_FEILSB, 0); // TODO freq offset not used for now
-  write_reg(REG_PREAMBLEDETECT, RF_PREAMBLEDETECT_DETECTOR_ON | RF_PREAMBLEDETECT_DETECTORSIZE_3 | RF_PREAMBLEDETECT_DETECTORTOL_10);  
+  write_reg(REG_PREAMBLEDETECT, RF_PREAMBLEDETECT_DETECTOR_ON | RF_PREAMBLEDETECT_DETECTORSIZE_3 | RF_PREAMBLEDETECT_DETECTORTOL_15);  
   // TODO validate PreambleDetectorSize (2 now) and PreambleDetectorTol (10 now)
   // write_reg(REG_RXTIMEOUT1, 0); // not used for now
   // write_reg(REG_RXTIMEOUT2, 0); // not used for now
@@ -860,6 +860,11 @@ void hw_radio_set_tx_fdev(uint32_t fdev) {
 }
 
 void hw_radio_set_preamble_size(uint16_t size) {
+  if(size > 4) {
+    write_reg(REG_PREAMBLEDETECT, RF_PREAMBLEDETECT_DETECTOR_ON | RF_PREAMBLEDETECT_DETECTORSIZE_3 | RF_PREAMBLEDETECT_DETECTORTOL_10);  
+  } else {
+    write_reg(REG_PREAMBLEDETECT, RF_PREAMBLEDETECT_DETECTOR_ON | RF_PREAMBLEDETECT_DETECTORSIZE_3 | RF_PREAMBLEDETECT_DETECTORTOL_15);  
+  }
   write_reg_16(REG_PREAMBLEMSB, size);
 }
 
