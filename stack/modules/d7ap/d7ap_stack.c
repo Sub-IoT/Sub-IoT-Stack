@@ -153,6 +153,7 @@ static void free_session(session_t* session) {
     session->active = false;
     session->request_nb = 0;
     session->client_id = INVALID_CLIENT_ID;
+    session->token = 0;
 };
 
 static session_t* alloc_session(uint8_t client_id) {
@@ -247,7 +248,7 @@ error_t d7ap_stack_send(uint8_t client_id, d7ap_session_config_t* config, uint8_
     // Check if a session already exists
     session_t* session = get_session_by_session_token(session_token);
 
-    if ((session == NULL) || (session->active == false)) {
+    if (session == NULL) {
         session = alloc_session(client_id);
 
         if (session == NULL)
@@ -269,6 +270,8 @@ error_t d7ap_stack_send(uint8_t client_id, d7ap_session_config_t* config, uint8_
 
     if (trans_id != NULL)
         *trans_id = session->trans_id[session->request_nb];
+
+    DPRINT("[D7AP] request posted with trans_id %02X and request_nb %d", *trans_id, session->request_nb);
 
     session->request_nb++;
     return SUCCESS;
@@ -310,9 +313,13 @@ void d7ap_stack_process_received_response(uint8_t *payload, uint8_t length, d7ap
     uint16_t trans_id = ((uint16_t)result.fifo_token << 8) | (result.seqnr & 0x00FF);
     uint8_t i = 0;
 
+    DPRINT("[D7AP] received trans_id %02X", trans_id);
+    DPRINT("[D7AP] session->request_nb %d", session->request_nb);
+
     for(i = 0; i < session->request_nb; i++)
     {
-        if (session->trans_id[i] == trans_id)
+    	DPRINT("[D7AP] session->trans_id[i] = %02X", session->trans_id[i]);
+    	if (session->trans_id[i] == trans_id)
             break;
     }
 

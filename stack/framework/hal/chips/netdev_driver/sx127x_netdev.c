@@ -84,7 +84,7 @@ static void dump_register(sx127x_t *dev)
     DEBUG("************************DUMP REGISTER*********************");
 
     for (uint8_t add=0; add <= SX127X_REG_VERSION; add++)
-        printf("ADDR %2X DATA %02X \r\n", add, sx127x_reg_read(dev, add));
+    	DEBUG("ADDR %2X DATA %02X \r\n", add, sx127x_reg_read(dev, add));
 
     // Please note that when reading the first byte of the FIFO register, this
     // byte is removed so the dump is not recommended before a TX or take care
@@ -900,8 +900,6 @@ static void restart_rx(sx127x_t *dev)
     sx127x_reg_write(dev, SX127X_REG_RXCONFIG, 0x4E);
     sx127x_flush_fifo(dev);
 
-    // Seems that the SyncAddressMatch is not cleared after the flush, so set again the RX mode
-    sx127x_set_op_mode(dev, SX127X_RF_OPMODE_RECEIVER);
     //DPRINT("Before enabling interrupt: FLAGS1 %x FLAGS2 %x\n", hw_radio_read_reg(REG_IRQFLAGS1), hw_radio_read_reg(REG_IRQFLAGS2));
     hw_gpio_set_edge_interrupt(dev->params.dio1_pin, GPIO_RISING_EDGE);
     hw_gpio_enable_interrupt(dev->params.dio1_pin);
@@ -931,7 +929,6 @@ void _on_dio0_irq(void *arg)
                 default:
                     hw_gpio_disable_interrupt(dev->params.dio0_pin);
                     sx127x_set_standby(dev);
-                    sx127x_set_state(dev, SX127X_RF_IDLE);
                     netdev->event_callback(netdev, NETDEV_EVENT_TX_COMPLETE);
                     break;
             }

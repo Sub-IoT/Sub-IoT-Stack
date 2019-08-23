@@ -604,7 +604,8 @@ static alp_status_codes_t process_op_return_file_data(alp_command_t* command) {
     if(e != SUCCESS) goto incomplete_error;
   }
 
-  DPRINT("file offset length: %d", field_len + 1);
+  DPRINT("Return file data:");
+  DPRINT("offset size: %d", field_len + 1);
   total_len += 1;
 
   // parse file length length
@@ -619,8 +620,8 @@ static alp_status_codes_t process_op_return_file_data(alp_command_t* command) {
     if(e != SUCCESS) goto incomplete_error;
   }
 
-  DPRINT("file data length length: %d", field_len + 1);
-  DPRINT("file data length: %d", data_len);
+  DPRINT("length size: %d", field_len + 1);
+  DPRINT("data size: %d", data_len);
   total_len += 1 + data_len;
 
   if(fifo_get_size(&command->alp_command_fifo) < total_len) goto incomplete_error;

@@ -1075,7 +1075,7 @@ void dll_stop_foreground_scan()
         return; // will go to IDLE after TX
 
     DPRINT("Set the radio to idle state");
-    hw_radio_set_idle();
+    phy_stop_rx();
 
     if((dll_state == DLL_STATE_SCAN_AUTOMATION) || (dll_state == DLL_STATE_IDLE))
         return; // stay in scan automation

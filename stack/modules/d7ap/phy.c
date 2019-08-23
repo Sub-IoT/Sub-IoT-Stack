@@ -307,13 +307,10 @@ static void packet_received(hw_radio_packet_t* hw_radio_packet)
     packet->phy_config.rx.syncword_class = current_syncword_class;
     memcpy(&(packet->phy_config.rx.channel_id), &current_channel_id, sizeof(channel_id_t));
 
-    if (state == STATE_RX)
-    {
-        // Restart the reception until upper layer decides to stop it
-        hw_radio_set_opmode(HW_STATE_RX);
-    }
-    else
+    if (state == STATE_BG_SCAN)
         phy_switch_to_standby_mode();
+
+    // in case of FG scan, reception is continuous until upper layer decides to stop it
 
     received_callback(packet);
 }
@@ -573,6 +570,10 @@ error_t phy_start_rx(channel_id_t* channel, syncword_class_t syncword_class, phy
         pending_rx_cfg.syncword_class = syncword_class;
         return SUCCESS;
     }
+
+    // if RX state is already set, it means that the radio is also already configured
+    if (state == STATE_RX)
+        return SUCCESS;
 
     configure_channel(channel);
     configure_syncword(syncword_class, channel);
