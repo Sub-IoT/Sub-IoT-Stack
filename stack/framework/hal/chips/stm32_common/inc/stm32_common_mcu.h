@@ -32,6 +32,7 @@ enum
   GPIO_PORTC,
   GPIO_PORTD,
   GPIO_PORTE,
+  GPIO_PORTH,
 };
 
 typedef struct {

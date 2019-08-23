@@ -26,6 +26,12 @@
 
 #define GPIO_PORT(pin_id) ((pin_id >> 10) & 0xF)
 #define GPIO_PIN(pin_id)  (pin_id & 0xF)
+#define GPIO_PORT_MASK(pin_id)    ((GPIO_PORT(pin_id) == (0))? 0U :\
+                                      (GPIO_PORT(pin_id) == (1))? 1U :\
+                                      (GPIO_PORT(pin_id) == (2))? 2U :\
+                                      (GPIO_PORT(pin_id) == (3))? 3U :\
+                                      (GPIO_PORT(pin_id) == (4))? 4U :\
+                                      (GPIO_PORT(pin_id) == (7))? 5U : 6U)
 
 /* \brief Implementation of hw_gpio_configure_pin
  *

@@ -263,8 +263,9 @@ __LINK_C error_t hw_gpio_configure_interrupt(pin_id_t pin_id, uint8_t event_mask
     // set external interrupt configuration
     uint32_t temp = SYSCFG->EXTICR[GPIO_PIN(pin_id) >> 2U];
     CLEAR_BIT(temp, ((uint32_t)0x0FU) << (4U * (GPIO_PIN(pin_id) & 0x03U)));
-    SET_BIT(temp, (GPIO_PORT(pin_id)) << (4 * (GPIO_PIN(pin_id) & 0x03U)));
+    SET_BIT(temp, (GPIO_PORT_MASK(pin_id)) << (4 * (GPIO_PIN(pin_id) & 0x03U)));
     SYSCFG->EXTICR[GPIO_PIN(pin_id) >> 2U] = temp;
+
 
     uint32_t exti_line = 1 << GPIO_PIN(pin_id);
     /* First Disable Event on provided Lines */
@@ -296,7 +297,7 @@ __LINK_C error_t hw_gpio_configure_interrupt(pin_id_t pin_id, uint8_t event_mask
     err = SUCCESS;
   //}
 
-    __HAL_RCC_SYSCFG_CLK_DISABLE();
+  __HAL_RCC_SYSCFG_CLK_DISABLE();
 
   end_atomic();
   return err;
