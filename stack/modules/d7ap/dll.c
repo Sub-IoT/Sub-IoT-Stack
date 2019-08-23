@@ -112,6 +112,9 @@ static csma_ca_mode_t NGDEF(_csma_ca_mode);
 static uint8_t NGDEF(_tx_nf_method);
 #define tx_nf_method NG(_tx_nf_method)
 
+static uint8_t NGDEF(_rx_nf_method);
+#define rx_nf_method NG(_rx_nf_method)
+
 static int16_t NGDEF(_E_CCA);
 #define E_CCA NG(_E_CCA)
 
@@ -120,6 +123,9 @@ static uint16_t NGDEF(_tsched);
 
 static bool NGDEF(_guarded_channel);
 #define guarded_channel NG(_guarded_channel)
+
+static uint8_t nf_last_msr[3] = {0, 0, 0};
+static uint8_t nf_last_msr_index = 0;
 
 static void execute_cca(void *arg);
 static void execute_csma_ca(void *arg);
@@ -297,6 +303,17 @@ void start_background_scan()
         .rssi_thr = E_CCA,
     };
     phy_start_background_scan(&config, &dll_signal_packet_received);
+    if((rx_nf_method == D7ADLL_MSR_MIN) && (config.rssi_thr != E_CCA)) {
+        nf_last_msr[nf_last_msr_index] = - config.rssi_thr;
+        if(nf_last_msr_index < 2)
+            nf_last_msr_index++;
+        else
+            nf_last_msr_index = 0;
+        if(nf_last_msr[0] && nf_last_msr[1] && nf_last_msr[2]) {
+            uint8_t min = (nf_last_msr[0] < nf_last_msr[1] ? nf_last_msr[0] : nf_last_msr[1]) < nf_last_msr[2] ? (nf_last_msr[0] < nf_last_msr[1] ? nf_last_msr[0] : nf_last_msr[1]) : nf_last_msr[2];
+            E_CCA = - min + 6; //Mean of last 3 with 6dB offset
+        }
+    }
 }
 
 void dll_stop_background_scan()
@@ -413,6 +430,15 @@ static void discard_tx()
 static void cca_rssi_valid(int16_t cur_rssi)
 {
     DPRINT("cca_rssi_valid @%i", timer_get_counter_value());
+
+    if((tx_nf_method == D7ADLL_MSR_MIN || rx_nf_method == D7ADLL_MSR_MIN) && (cur_rssi <= remote_access_profile.subbands[0].cca))
+    {
+        nf_last_msr[nf_last_msr_index] = - cur_rssi;
+        if(nf_last_msr_index < 2)
+            nf_last_msr_index++;
+        else
+            nf_last_msr_index = 0;
+    }
 
     // When the radio goes back to Rx state, the rssi_valid callback may be still set. Skip it in this case
     if (dll_state != DLL_STATE_CCA1 && dll_state != DLL_STATE_CCA2)
@@ -754,11 +780,30 @@ void dll_execute_scan_automation()
         current_channel_id = rx_cfg.channel_id;
 
         // compute Ecca = NF + Eccao
-        if (tx_nf_method == D7ADLL_FIXED_NOISE_FLOOR)
+        if (rx_nf_method == D7ADLL_FIXED_NOISE_FLOOR)
         {
             //Use the default channel CCA threshold
             E_CCA = - current_access_profile.subbands[0].cca; // Eccao is set to 0 dB
             DPRINT("E_CCA %i", E_CCA);
+        } 
+        else if(rx_nf_method == D7ADLL_MSR_MIN) 
+        {
+            if(nf_last_msr[0] && nf_last_msr[1] && nf_last_msr[2])
+            {
+                uint8_t min = (nf_last_msr[0] < nf_last_msr[1] ? nf_last_msr[0] : nf_last_msr[1]) < nf_last_msr[2] ? (nf_last_msr[0] < nf_last_msr[1] ? nf_last_msr[0] : nf_last_msr[1]) : nf_last_msr[2];
+                E_CCA = - min + 6; //Minimum of last 3 CCA with 6dB offset
+                DPRINT("rx CCA mean: E_CCA %i", E_CCA);
+            }
+            else
+            {
+                E_CCA = - current_access_profile.subbands[0].cca;
+                DPRINT("rx CCA mean, CCA not set: E_CCA %i", E_CCA);
+            }
+        }
+        else
+        {
+          // TODO support the Slow RSSI Variation computation method" and possibly add other methods
+          assert(false);
         }
 
         // If TSCHED > 0, an independent scheduler is set to generate regular scan start events at TSCHED rate.
@@ -787,8 +832,14 @@ static void conf_file_changed_callback(uint8_t file_id)
     // if the access class has been modified, update the current access profile
     if (active_access_class != scan_access_class)
     {
+        channel_header_t backup_ch_header = current_access_profile.channel_header;
+        uint16_t backup_ch_index_start = current_access_profile.subbands[0].channel_index_start;
+
         d7ap_fs_read_access_class(ACCESS_SPECIFIER(scan_access_class), &current_access_profile);
         active_access_class = scan_access_class;
+
+        if((current_access_profile.channel_header.ch_class != backup_ch_header.ch_class) || (current_access_profile.channel_header.ch_freq_band != backup_ch_header.ch_freq_band) || (current_access_profile.subbands[0].channel_index_start != backup_ch_index_start))
+            memset(nf_last_msr, 0, 3);
 
         // when doing scan automation restart this
         if (dll_state == DLL_STATE_IDLE || dll_state == DLL_STATE_SCAN_AUTOMATION)
@@ -808,7 +859,13 @@ void dll_notify_access_profile_file_changed(uint8_t file_id)
     // update only the current access profile if this access profile has been changed
     if (file_id == D7A_FILE_ACCESS_PROFILE_ID + ACCESS_SPECIFIER(active_access_class))
     {
+        channel_header_t backup_ch_header = current_access_profile.channel_header;
+        uint16_t backup_ch_index_start = current_access_profile.subbands[0].channel_index_start;
+
         d7ap_fs_read_access_class(ACCESS_SPECIFIER(active_access_class), &current_access_profile);
+
+        if((current_access_profile.channel_header.ch_class != backup_ch_header.ch_class) || (current_access_profile.channel_header.ch_freq_band != backup_ch_header.ch_freq_band) || (current_access_profile.subbands[0].channel_index_start != backup_ch_index_start))
+            memset(nf_last_msr, 0, 3);
 
         // when we are idle switch to scan automation now as well, in case the new AP enables scanning
         if (dll_state == DLL_STATE_IDLE || dll_state == DLL_STATE_SCAN_AUTOMATION)
@@ -847,6 +904,7 @@ void dll_init()
         nf_ctrl = (D7ADLL_FIXED_NOISE_FLOOR << 4) & 0x0F; // set default NF computation method if the setting is not present
 
     tx_nf_method = (nf_ctrl >> 4) & 0x0F;
+    rx_nf_method = nf_ctrl & 0x0F;
 
     dll_state = DLL_STATE_IDLE;
 
@@ -988,11 +1046,25 @@ void dll_tx_frame(packet_t* packet)
         {
             //Use the default channel CCA threshold
             E_CCA = - remote_access_profile.subbands[0].cca; // Eccao is set to 0 dB
-            DPRINT("E_CCA %i", E_CCA);
+            DPRINT("fixed floor: E_CCA %i", E_CCA);
+        }
+        else if(tx_nf_method == D7ADLL_MSR_MIN)
+        {
+            if(nf_last_msr[0] && nf_last_msr[1] && nf_last_msr[2])
+            {
+                uint8_t min = (nf_last_msr[0] < nf_last_msr[1] ? nf_last_msr[0] : nf_last_msr[1]) < nf_last_msr[2] ? (nf_last_msr[0] < nf_last_msr[1] ? nf_last_msr[0] : nf_last_msr[1]) : nf_last_msr[2];
+                E_CCA = - min + 6; //Mean of last 3 CCA with 6dB offset
+                DPRINT("tx CCA mean: E_CCA %i", E_CCA);
+            }
+            else
+            {
+                E_CCA = - remote_access_profile.subbands[0].cca;
+                DPRINT("tx CCA mean, CCA not set: E_CCA %i", E_CCA);
+            }
         }
         else
         {
-          // TODO support the Slow RSSI Variation computation method"
+          // TODO support the Slow RSSI Variation computation method" and possibly add other methods
           assert(false);
         }
     }

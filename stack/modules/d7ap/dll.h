@@ -37,7 +37,8 @@
 
 typedef enum {
     D7ADLL_FIXED_NOISE_FLOOR,
-    D7ADLL_SLOW_RSSI_VARIATION
+    D7ADLL_SLOW_RSSI_VARIATION,
+    D7ADLL_MSR_MIN
 } noise_floor_computation_method_t;
 
 /*
