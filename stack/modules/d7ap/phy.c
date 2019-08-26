@@ -571,10 +571,6 @@ error_t phy_start_rx(channel_id_t* channel, syncword_class_t syncword_class, phy
         return SUCCESS;
     }
 
-    // if RX state is already set, it means that the radio is also already configured
-    if (state == STATE_RX)
-        return SUCCESS;
-
     configure_channel(channel);
     configure_syncword(syncword_class, channel);
 
