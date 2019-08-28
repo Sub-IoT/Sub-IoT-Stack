@@ -176,9 +176,7 @@ void alp_layer_init(alp_init_args_t* alp_init_args, bool is_shell_enabled)
   d7ap_session_config_t broadcast_fifo_config = {
       .qos = {
           .qos_resp_mode                = SESSION_RESP_MODE_NO,
-          .qos_retry_mode               = SESSION_RETRY_MODE_NO,
-          .qos_record                   = false,
-          .qos_stop_on_error            = false
+          .qos_retry_mode               = SESSION_RETRY_MODE_NO
       },
       .dormant_timeout = 0,
       .addressee = {

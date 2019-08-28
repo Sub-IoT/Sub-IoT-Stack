@@ -58,9 +58,7 @@
 static d7ap_session_config_t session_config = {
     .qos = {
         .qos_resp_mode = SESSION_RESP_MODE_PREFERRED,
-        .qos_retry_mode = SESSION_RETRY_MODE_NO,
-        .qos_stop_on_error       = false,
-        .qos_record              = false
+        .qos_retry_mode = SESSION_RETRY_MODE_NO
     },
     .dormant_timeout = 0,
     .addressee = {

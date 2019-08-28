@@ -142,8 +142,6 @@ typedef struct {
         struct {
             d7ap_session_resp_mode_t qos_resp_mode : 3;
             d7ap_session_retry_mode_t qos_retry_mode: 3;
-            bool qos_record : 1;
-            bool qos_stop_on_error : 1;
         };
     };
 } d7ap_session_qos_t;
