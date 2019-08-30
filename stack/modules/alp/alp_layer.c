@@ -745,7 +745,8 @@ bool alp_layer_process_command(uint8_t* payload, uint8_t payload_length, alp_int
   DPRINT("alp_layer_new_command");
   alp_command_t* command = alloc_command();
   assert(command != NULL);
-  assert(itf_cfg != NULL);
+  // TODO origin?
+  //assert(itf_cfg != NULL);
 
   session_config_buffer = itf_cfg;
 
