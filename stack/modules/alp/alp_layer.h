@@ -84,7 +84,7 @@ void alp_layer_init(alp_init_args_t* init_args, bool shell_enabled);
  * \param alp_command_length
  * \param session_config
  */
-void alp_layer_execute_command_over_itf(uint8_t* alp_command, uint8_t alp_command_length,  alp_interface_config_t* session_config);
+void alp_layer_execute_command_over_itf(uint8_t* alp_command, uint8_t alp_command_length,  alp_interface_config_t* itf_cfg);
 
 /*!
  * \brief Register a new interface in alp_layer

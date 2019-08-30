@@ -622,7 +622,7 @@ static void add_tag_response(alp_command_t* command, bool eop, bool error) {
   err = fifo_put_byte(&command->alp_response_fifo, command->tag_id); assert(err == SUCCESS);
 }
 
-void alp_layer_execute_command_over_itf(uint8_t* alp_command, uint8_t alp_command_length, alp_interface_config_t* session_config) {
+void alp_layer_execute_command_over_itf(uint8_t* alp_command, uint8_t alp_command_length, alp_interface_config_t* itf_cfg) {
     bool found = false;
     DPRINT("alp cmd size %i", alp_command_length);
     assert(alp_command_length <= ALP_PAYLOAD_MAX_SIZE);
@@ -634,14 +634,14 @@ void alp_layer_execute_command_over_itf(uint8_t* alp_command, uint8_t alp_comman
     error_t err;
 
     for(uint8_t i = 0; i < MODULE_ALP_INTERFACE_SIZE; i++) {
-      if((interfaces[i] != NULL) && (interfaces[i]->itf_id == session_config->alp_itf_id)) {
-        err = interfaces[i]->transmit_cb(alp_command, alp_command_length, alp_get_expected_response_length(command->alp_command_fifo), &command->trans_id, session_config);
+      if((interfaces[i] != NULL) && (interfaces[i]->itf_id == itf_cfg->alp_itf_id)) {
+        err = interfaces[i]->transmit_cb(alp_command, alp_command_length, alp_get_expected_response_length(command->alp_command_fifo), &command->trans_id, itf_cfg);
         found = true;
         break;
       }
     }
     if(!found) {
-      DPRINT("interface %i not found", session_config->interface_type);
+      DPRINT("interface %i not found", itf_cfg->alp_itf_id);
       assert(false);
     }
 
@@ -804,7 +804,7 @@ static void _async_process_command(void* arg)
         }
       }
       if(!found) {
-        DPRINT("interface %i not found", command->origin);
+        DPRINT("interface %i not found", command->itf_id);
         assert(false);
       }
     }
