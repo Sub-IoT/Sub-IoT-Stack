@@ -222,6 +222,7 @@ int _fs_init_permanent_systemfiles(fs_filesystem_t* permanent_systemfiles)
         files[file_id].addr = __builtin_bswap32(files[file_id].addr);
         files[file_id].length = __builtin_bswap32(files[file_id].length);
 #endif
+
         if(_is_file_defined(file_id))
         {
             switch(files[file_id].blockdevice_index)
@@ -419,7 +420,17 @@ int _fs_create_file(uint8_t file_id, fs_storage_class_t storage_class, const uin
     if (bd_type == FS_BLOCKDEVICE_TYPE_PERMANENT)
     {
         files[file_id].addr = permanent_data_offset;
+
+#if __BYTE_ORDER__ != __ORDER_BIG_ENDIAN__
+        fs_file_t file_header_big_endian;
+        memcpy(&file_header_big_endian, (void*)&files[file_id], sizeof (fs_file_t));
+        file_header_big_endian.length = __builtin_bswap32(file_header_big_endian.length);
+        file_header_big_endian.addr = __builtin_bswap32(file_header_big_endian.addr);
+        blockdevice_program(bd[FS_BLOCKDEVICE_TYPE_METADATA], (uint8_t*)&file_header_big_endian, _get_file_header_address(file_id), FS_FILE_HEADER_SIZE);
+#else
         blockdevice_program(bd[FS_BLOCKDEVICE_TYPE_METADATA], (uint8_t*)&files[file_id], _get_file_header_address(file_id), FS_FILE_HEADER_SIZE);
+#endif
+
         permanent_data_offset += length;
     }
     else
@@ -506,7 +517,8 @@ int fs_read_file(uint8_t file_id, uint32_t offset, uint8_t* buffer, uint32_t len
 
     vfs_close(fd);
 #else
-    blockdevice_read(bd[files[file_id].blockdevice_index], buffer, files[file_id].addr + offset, length);
+    error_t e = blockdevice_read(bd[files[file_id].blockdevice_index], buffer, files[file_id].addr + offset, length);
+    assert(e == SUCCESS);
 #endif
 
     DPRINT("fs read_file(file_id %d, offset %d, addr %p, length %d)\n",file_id, offset, files[file_id].addr, length);
