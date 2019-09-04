@@ -98,7 +98,7 @@ static void process_serial_frame(fifo_t* fifo) {
           DPRINT_DATA(interface_status.addressee.id, addressee_len);
         }
         if(callbacks->modem_interface_status_callback)
-          callbacks->modem_interface_status_callback(action.status.type,&action.status.data);
+          callbacks->modem_interface_status_callback(action.status.type, (uint8_t*) &action.status.data);
         break;
       default:
         assert(false);

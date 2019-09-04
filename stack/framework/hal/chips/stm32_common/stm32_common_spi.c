@@ -59,6 +59,7 @@ struct spi_handle {
   uint8_t             users;   // for reference counting of active slaves
   bool                active;
   uint8_t             spi_port_number; // for reference to SPI port defined in ports.h (pins)
+  bool                deinit_on_disable; //determins if SPI pins need to be configured as input upon spi_disable call
 };
 
 // private storage for handles, pointers to these records are passed around
@@ -91,12 +92,15 @@ static void init_pins(spi_handle_t* spi) {
 }
 
 static void deinit_pins(spi_handle_t* spi) {
-  GPIO_InitTypeDef GPIO_InitStruct;
-  GPIO_InitStruct.Mode = GPIO_MODE_ANALOG;
+  if(spi->deinit_on_disable)
+  {
+    GPIO_InitTypeDef GPIO_InitStruct;
+    GPIO_InitStruct.Mode = GPIO_MODE_ANALOG;
 
-  hw_gpio_configure_pin_stm(spi_ports[spi->spi_port_number].sck_pin, &GPIO_InitStruct);
-  hw_gpio_configure_pin_stm(spi_ports[spi->spi_port_number].miso_pin, &GPIO_InitStruct);
-  hw_gpio_configure_pin_stm(spi_ports[spi->spi_port_number].mosi_pin, &GPIO_InitStruct);
+    hw_gpio_configure_pin_stm(spi_ports[spi->spi_port_number].sck_pin, &GPIO_InitStruct);
+    hw_gpio_configure_pin_stm(spi_ports[spi->spi_port_number].miso_pin, &GPIO_InitStruct);
+    hw_gpio_configure_pin_stm(spi_ports[spi->spi_port_number].mosi_pin, &GPIO_InitStruct);
+  }
 }
 
 void spi_enable(spi_handle_t* spi) {
@@ -155,12 +159,13 @@ void spi_disable(spi_handle_t* spi) {
 }
 
 
-spi_handle_t* spi_init(uint8_t spi_number, uint32_t baudrate, uint8_t databits, bool msbf, bool half_duplex) {
+spi_handle_t* spi_init(uint8_t spi_number, uint32_t baudrate, uint8_t databits, bool msbf, bool half_duplex, bool deinit_on_disable) {
   // assert what is supported by HW
   assert(databits == 8);
   assert(spi_number < SPI_COUNT);
 
   handle[spi_number].slaves=0;
+  handle[spi_number].deinit_on_disable = deinit_on_disable;
   
   if (handle[spi_number].hspi.Instance != NULL)
   {

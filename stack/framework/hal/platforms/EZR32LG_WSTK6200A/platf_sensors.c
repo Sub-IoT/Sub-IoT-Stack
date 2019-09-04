@@ -58,7 +58,7 @@ void initSensors()
 	/* Enable si7021 sensor isolation switch */
 	GPIO_PinModeSet(gpioPortF, 8, gpioModePushPull, 1);
 
-        i2c = i2c_init(0, 1, 10000);
+  i2c = i2c_init(0, 1, 10000, true);
 	bool si7013_status = Si7013_Detect((I2C_TypeDef*) (i2c->channel), SI7021_ADDR, NULL);
 }
 

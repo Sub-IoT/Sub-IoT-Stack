@@ -626,7 +626,7 @@ error_t hw_radio_init(hwradio_init_args_t* init_args) {
   tx_refill_callback = init_args->tx_refill_cb;
 
   if(sx127x_spi == NULL) {
-    spi_handle = spi_init(SX127x_SPI_INDEX, SX127x_SPI_BAUDRATE, 8, true, false);
+    spi_handle = spi_init(SX127x_SPI_INDEX, SX127x_SPI_BAUDRATE, 8, true, false, true);
     sx127x_spi = spi_init_slave(spi_handle, SX127x_SPI_PIN_CS, true);
   }
 
