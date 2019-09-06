@@ -53,11 +53,17 @@
 #define FS_MAGIC_NUMBER_SIZE 4
 #define FS_MAGIC_NUMBER_ADDRESS 0
 
+#define FS_METADATA_SIZE sizeof(fs_metadata_t)
+
 #define FS_NUMBER_OF_FILES_SIZE 4
 #define FS_NUMBER_OF_FILES_ADDRESS  4
 
 #define FS_FILE_HEADERS_ADDRESS 8
 #define FS_FILE_HEADER_SIZE sizeof(fs_file_t)
+
+#define FS_FILES_DATA_SIZE FRAMEWORK_FS_PERMANENT_STORAGE_SIZE
+#define FS_FILES_DATA_OFFSET    FS_METADATA_SIZE + FS_FILE_HEADER_SIZE*FRAMEWORK_FS_FILE_COUNT
+#define FS_FILE_SYSTEM_SIZE     FS_METADATA_SIZE + FS_FILE_HEADER_SIZE*FRAMEWORK_FS_FILE_COUNT + FRAMEWORK_FS_PERMANENT_STORAGE_SIZE
 
 typedef enum
 {
@@ -99,9 +105,9 @@ typedef void (*fs_modified_file_callback_t)(uint8_t file_id);
  * @brief Descriptor of a file system
  */
 typedef struct __attribute__((__packed__)) {
-  fs_metadata_t* metadata; // magic number + #files
-  fs_file_t* file_headers;
-  uint8_t* files_data; /**< Files data array */
+  fs_metadata_t metadata; // magic number + #files
+  fs_file_t file_headers[FRAMEWORK_FS_FILE_COUNT];
+  uint8_t files_data[FS_FILES_DATA_SIZE]; /**< Files data array */
 } fs_filesystem_t;
 
 void fs_init(fs_filesystem_t* provisioning);

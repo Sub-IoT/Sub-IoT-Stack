@@ -132,6 +132,7 @@ int d7ap_fs_init_file(uint8_t file_id, const d7ap_fs_file_header_t* file_header,
   file_header_big_endian.length = __builtin_bswap32(file_header_big_endian.length);
   file_header_big_endian.allocated_length = __builtin_bswap32(file_header_big_endian.allocated_length);
 
+// TODO init file by chunk to remove the file size limitation to 256
   memset(file_buffer, 0, sizeof(d7ap_fs_file_header_t) + file_header->allocated_length);
   memcpy(file_buffer, (uint8_t *)&file_header_big_endian, sizeof (d7ap_fs_file_header_t));
   if(initial_data != NULL)

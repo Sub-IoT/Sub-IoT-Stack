@@ -90,7 +90,7 @@ static const vfs_mount_t* const d7a_fs[] = {
 #else
 
 static uint32_t volatile_data_offset = 0;
-static uint32_t permanent_data_offset =FS_MAGIC_NUMBER_SIZE + FS_NUMBER_OF_FILES_SIZE + 256 * FS_FILE_HEADER_SIZE ;
+static uint32_t permanent_data_offset = FS_FILES_DATA_OFFSET;
 
 static blockdevice_t* bd[FS_STORAGE_CLASS_NUMOF];
 
@@ -199,19 +199,19 @@ int _fs_init_permanent_systemfiles(fs_filesystem_t* permanent_systemfiles)
    }
 
 #ifdef VFS_MODULE
-    for (int file_id = 0; file_id < permanent_systemfiles->nfiles; file_id++)
+    for (int file_id = 0; file_id < permanent_systemfiles->metadata.nfiles; file_id++)
     {
-        _fs_create_file(file_id, permanent_systemfiles->files_data + permanent_systemfiles->files_offset[file_id],
-                        permanent_systemfiles->files_length[file_id]);
+        _fs_create_file(file_id, permanent_systemfiles->files_data + permanent_systemfiles->file_headers[file_id].addr,
+                        permanent_systemfiles->file_headers[file_id].length);
     }
 #else
     DPRINT("metadata addr: %x", permanent_systemfiles->metadata);
-    DPRINT("metadata nfiles: %x", permanent_systemfiles->metadata->nfiles);
+    DPRINT("metadata nfiles: %x", permanent_systemfiles->metadata.nfiles);
     // initialise system file caching
     size_t number_of_files;
     blockdevice_read(bd[FS_STORAGE_PERMANENT], (uint8_t*)&number_of_files, FS_NUMBER_OF_FILES_ADDRESS, FS_NUMBER_OF_FILES_SIZE);
     assert(number_of_files < FRAMEWORK_FS_FILE_COUNT);
-    for(int file_id = 0; file_id < FRAMEWORK_FS_FILE_COUNT; file_id++)
+    for(int file_id = 0; file_id < number_of_files; file_id++)
     {
         blockdevice_read(bd[FS_STORAGE_PERMANENT], (uint8_t*)&files[file_id],
                          _get_file_header_address(file_id), FS_FILE_HEADER_SIZE);

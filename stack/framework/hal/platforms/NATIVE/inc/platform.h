@@ -29,16 +29,14 @@
     #error Mismatch between the configured platform and the actual platform. Expected PLATFORM_NATIVE to be defined
 #endif
 
-// on native we use a RAM blockdevice as NVM as well for now
-extern uint8_t d7ap_permanent_files_data[FRAMEWORK_FS_PERMANENT_STORAGE_SIZE];
-
-static blockdevice_ram_t eeprom_bd = (blockdevice_ram_t){
-    .base.driver = &blockdevice_driver_ram,
-    .size = FRAMEWORK_FS_PERMANENT_STORAGE_SIZE,
-    .buffer = d7ap_permanent_files_data
-};
-
+extern fs_filesystem_t d7ap_filesystem;
 extern uint8_t d7ap_volatile_files_data[FRAMEWORK_FS_VOLATILE_STORAGE_SIZE];
+
+static blockdevice_ram_t permanent_bd = (blockdevice_ram_t){
+ .base.driver = &blockdevice_driver_ram,
+ .size = FS_FILE_SYSTEM_SIZE,
+ .buffer = (uint8_t*)&d7ap_filesystem
+};
 
 static blockdevice_ram_t volatile_bd = (blockdevice_ram_t){
  .base.driver = &blockdevice_driver_ram,
@@ -47,7 +45,7 @@ static blockdevice_ram_t volatile_bd = (blockdevice_ram_t){
 };
 
 /** Platform BD drivers*/
-#define PLATFORM_PERMANENT_BD (blockdevice_t*)&eeprom_bd
+#define PLATFORM_PERMANENT_BD (blockdevice_t*)&permanent_bd
 #define PLATFORM_VOLATILE_BD (blockdevice_t*)&volatile_bd
 
 #endif
