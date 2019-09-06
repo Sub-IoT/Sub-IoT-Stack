@@ -379,11 +379,8 @@ static void interface_file_changed_callback(uint8_t file_id) {
   interface_file_changed = true;
 }
 
-static alp_status_codes_t process_op_indirect_forward(alp_command_t* command, uint8_t* itf_id, alp_interface_config_t* session_config) {
+static alp_status_codes_t process_op_indirect_forward(alp_command_t* command, alp_itf_id_t* itf_id, alp_interface_config_t* session_config) {
   error_t err;
-  uint8_t requestAckBitLocation=1;
-  uint8_t adrEnabledLocation=2;
-  uint8_t session_config_flags;
   bool re_read = false;
   bool found = false;
   alp_control_t ctrl;
@@ -410,8 +407,10 @@ static alp_status_codes_t process_op_indirect_forward(alp_command_t* command, ui
   for(uint8_t i = 0; i < MODULE_ALP_INTERFACE_SIZE; i++) {
     if(*itf_id == interfaces[i]->itf_id) {
       session_config->alp_itf_id = *itf_id;
-      if(re_read)
+      if(re_read) {
+        session_config_saved.alp_itf_id = *itf_id;
         d7ap_fs_read_file(interface_file_id, 1, session_config_saved.raw_data, interfaces[i]->itf_cfg_len);
+      }
       if(!ctrl.b7) 
         memcpy(session_config->raw_data, session_config_saved.raw_data, interfaces[i]->itf_cfg_len);
 #ifdef MODULE_D7
