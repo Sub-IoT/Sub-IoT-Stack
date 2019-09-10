@@ -321,7 +321,7 @@ void sx127x_set_standby(sx127x_t *dev)
     timer_cancel_event(&dev->_internal.tx_timeout_timer);
     timer_cancel_event(&dev->_internal.rx_timeout_timer);
 
-    dev->options = 0; // clear the options
+    //Do not clear the options here
      /* Disable the interrupts */
     hw_gpio_disable_interrupt(dev->params.dio0_pin);
     hw_gpio_disable_interrupt(dev->params.dio1_pin);
