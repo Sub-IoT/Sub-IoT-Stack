@@ -30,6 +30,7 @@
 
 /*[[[cog
 import cog
+import ConfigParser
 from d7a.system_files.system_files import SystemFiles
 from d7a.system_files.access_profile import AccessProfileFile
 from d7a.system_files.dll_config import DllConfigFile
@@ -173,7 +174,10 @@ def output_system_file_length():
 
 
 def output_fs_file_headers():
-  current_offset = 4 + 4 + (256 * 9) # magic number + number of files + 256 * fs_file_t
+  config = ConfigParser.ConfigParser()
+  config.read('d7a.ini')
+  file_count = int(config.get('FRAMEWORK', 'FRAMEWORK_FS_FILE_COUNT'))
+  current_offset = 8 + (9 * file_count) # sizeof(fs_metadata_t) + sizeof(fs_file_t) * FRAMEWORK_FS_FILE_COUNT
   headerlength = 12
   for system_file in system_files:
     file_type = SystemFileIds(system_file.id)

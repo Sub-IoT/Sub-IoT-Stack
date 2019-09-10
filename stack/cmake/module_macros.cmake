@@ -124,6 +124,12 @@ MACRO(MODULE_BUILD_SETTINGS_FILE)
                         ID "${MODULE_EXTRA_DEFS_ID}"
                         NUMBER "${MODULE_EXTRA_DEFS_NUMBER}"
                         )
+    GEN_SETTINGS_INI("${MODULE_PREFIX}"
+                     STRING "${MODULE_EXTRA_DEFS_STRING}"
+                     BOOL "${MODULE_EXTRA_DEFS_BOOL}"
+                     ID "${MODULE_EXTRA_DEFS_ID}"
+                     NUMBER "${MODULE_EXTRA_DEFS_NUMBER}"
+                     )
     SET_GLOBAL(MODULE_EXTRA_DEFS_STRING "")
     SET_GLOBAL(MODULE_EXTRA_DEFS_BOOL "")
     SET_GLOBAL(MODULE_EXTRA_DEFS_ID "")
