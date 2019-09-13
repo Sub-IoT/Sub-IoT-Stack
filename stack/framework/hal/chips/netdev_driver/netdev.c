@@ -63,7 +63,7 @@ static tx_refill_callback_t tx_refill_callback;
 static netdev_t *netdev;
 
 static void isr_handler(void *arg) {
-    DPRINT("Netdev ISR handler outside the IRQ context");
+    //DPRINT("Netdev ISR handler outside the IRQ context");
     netdev->driver->isr(netdev);
 }
 
@@ -284,7 +284,7 @@ static void _event_cb(netdev_t *dev, netdev_event_t event)
                 }
                 break;
             case NETDEV_EVENT_TX_REFILL_NEEDED:
-                DPRINT("New data needed to transmit without discontinuity");
+                //DPRINT("New data needed to transmit without discontinuity");
 
                 if (tx_refill_callback) {
                     uint8_t thr;
