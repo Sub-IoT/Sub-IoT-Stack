@@ -352,6 +352,7 @@ static int _init(netdev_t *netdev)
 
     sx127x->irq = 0;
     sx127x_radio_settings_t settings;
+    memset((uint8_t*)&settings, 0, sizeof(sx127x_radio_settings_t));
     settings.channel = SX127X_CHANNEL_DEFAULT;
     settings.modem = SX127X_MODEM_DEFAULT;
     settings.state = SX127X_RF_IDLE;

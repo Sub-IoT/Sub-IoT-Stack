@@ -326,10 +326,12 @@ static void _init_timers(sx127x_t *dev)
 {
     dev->_internal.tx_timeout_timer.f = _on_tx_timeout;
     dev->_internal.tx_timeout_timer.priority = MAX_PRIORITY;
+    dev->_internal.tx_timeout_timer.arg = dev;
     timer_init_event(&dev->_internal.tx_timeout_timer, &_on_tx_timeout);
 
     dev->_internal.rx_timeout_timer.f = _on_rx_timeout;
     dev->_internal.rx_timeout_timer.priority = MAX_PRIORITY;
+    dev->_internal.rx_timeout_timer.arg = dev;
     timer_init_event(&dev->_internal.rx_timeout_timer, &_on_rx_timeout);
 }
 
