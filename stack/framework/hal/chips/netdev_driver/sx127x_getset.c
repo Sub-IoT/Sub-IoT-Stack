@@ -1051,7 +1051,7 @@ static inline uint8_t sx127x_get_pa_select(const sx127x_t *dev)
     return SX127X_RF_PACONFIG_PASELECT_RFO;
 }
 
-uint8_t sx127x_get_tx_power(const sx127x_t *dev)
+int8_t sx127x_get_tx_power(const sx127x_t *dev)
 {
     switch (dev->settings.modem) {
         case SX127X_MODEM_FSK:
