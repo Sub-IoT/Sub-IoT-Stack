@@ -224,6 +224,32 @@ char at_parse_extract_number(string_t parameter, uint32_t *number)
     return AT_OK;
 }
 
+char at_parse_extract_signed_number(string_t parameter, int32_t *number)
+{
+    int pos = 0;
+    int32_t value = 0;
+    int sign = 1;
+
+    if ((uint8_t)parameter[pos]=='-')
+    {
+        sign = -1;
+        pos += 1;
+    }
+
+    while (parameter[pos] >= '0' && parameter[pos] <= '9') {
+        value = value * 10 + (int32_t)(parameter[pos] - '0');
+        pos += 1;
+    }
+
+    if (pos == 0)
+        return AT_ERROR;
+
+    if (number)
+        *number = (value * sign);
+
+    return AT_OK;
+}
+
 char at_parse_extract_hexstring(string_t parameter, uint8_t *bytes, uint8_t *bytes_len)
 {
     int pos = 0;
@@ -251,13 +277,13 @@ char at_parse_extract_hexstring(string_t parameter, uint8_t *bytes, uint8_t *byt
         unsigned byte ;
         sscanf( &parameter[i * 2], "%02X", &byte ) ;
 
-        DPRINT("byte <%x>", byte);
+        //DPRINT("byte <%x>", byte);
 
         //DPRINT("parameter + pos %s ", &parameter[pos]);
         //sscanf(&parameter[pos], "%02hhx", buf);
 
         bytes[i] = byte;
-        DPRINT("byte[%d]=0x%X", i, bytes[i]);
+        //DPRINT("byte[%d]=0x%X", i, bytes[i]);
     }
 
     return AT_OK;
