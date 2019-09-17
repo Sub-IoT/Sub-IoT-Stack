@@ -57,7 +57,8 @@ bool uart_enable(uart_handle_t* uart_handle) {
     while(uart1->rx_status)
         dump = uart1->rx_data;
 
-    uart1->rx_mask = 1;  /* start Rx interrupt */
+    /* starting Rx interrupt should be done with uart_rx_interrupt_enable */
+    uart1->rx_mask = 0;
 
     return true;
 }
