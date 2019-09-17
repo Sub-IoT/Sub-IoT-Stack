@@ -116,57 +116,6 @@ static void process_serial_frame(fifo_t* fifo) {
 
 }
 
-static void process_rx_fifo(void *arg) {
-  if(!parsed_header) {
-    // <sync byte (0xC0)><version (0x00)><length of ALP command (1 byte)><ALP command> // TODO CRC
-    if(fifo_get_size(&rx_fifo) > SERIAL_ALP_FRAME_HEADER_SIZE) {
-        uint8_t header[SERIAL_ALP_FRAME_HEADER_SIZE];
-        fifo_peek(&rx_fifo, header, 0, SERIAL_ALP_FRAME_HEADER_SIZE);
-        DPRINT_DATA(header, 3); // TODO tmp
-
-        if(header[0] != SERIAL_ALP_FRAME_SYNC_BYTE || header[1] != SERIAL_ALP_FRAME_VERSION) {
-          fifo_skip(&rx_fifo, 1);
-          DPRINT("skip");
-          parsed_header = false;
-          payload_len = 0;
-          if(fifo_get_size(&rx_fifo) > SERIAL_ALP_FRAME_HEADER_SIZE)
-            sched_post_task(&process_rx_fifo);
-
-          return;
-        }
-
-        parsed_header = true;
-        fifo_skip(&rx_fifo, SERIAL_ALP_FRAME_HEADER_SIZE);
-        payload_len = header[2];
-        DPRINT("found header, payload size = %i", payload_len);
-        sched_post_task(&process_rx_fifo);
-    }
-  } else {
-    if(fifo_get_size(&rx_fifo) < payload_len) {
-      DPRINT("payload not complete yet");
-      return;
-    }
-
-    // payload complete, start parsing
-    // rx_fifo can be bigger than the current serial packet, init a subview fifo
-    // which is restricted to payload_len so we can't parse past this packet.
-    fifo_t payload_fifo;
-    fifo_init_subview(&payload_fifo, &rx_fifo, 0, payload_len);
-    process_serial_frame(&payload_fifo);
-
-    // pop parsed bytes from original fifo
-    fifo_skip(&rx_fifo, payload_len - fifo_get_size(&payload_fifo));
-    parsed_header = false;
-  }
-}
-
-
-static void rx_cb(uint8_t byte) {
-  fifo_put_byte(&rx_fifo, byte);
-  if(!sched_is_scheduled(&process_rx_fifo))
-    sched_post_task_prio(&process_rx_fifo, MAX_PRIORITY, NULL);
-}
-
 void modem_cb_init(modem_callbacks_t* cbs)
 {
     callbacks = cbs;
