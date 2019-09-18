@@ -636,6 +636,34 @@ static char cmd_get_bandwidth(char *value)
     return AT_OK;
 }
 
+static char cmd_set_eirp(char *value)
+{
+    char ret;
+    int32_t eirp;
+
+    ret = at_parse_extract_signed_number(value, &eirp);
+    if (ret == AT_OK)
+    {
+        if (eirp < -128 || eirp > 127)
+             return AT_ERROR;
+
+    	netdev->driver->set(netdev, NETOPT_TX_POWER, &eirp, sizeof(int8_t));
+        netdev->driver->get(netdev, NETOPT_TX_POWER, &eirp, sizeof(int8_t));
+        snprintf(value, MAX_AT_RESPONSE_SIZE, "\r\n+EIRP: %d\r\n", eirp);
+    }
+
+    return ret;
+}
+
+static char cmd_get_eirp(char *value)
+{
+    int8_t eirp;
+
+    netdev->driver->get(netdev, NETOPT_TX_POWER, &eirp, sizeof(int8_t));
+    snprintf(value, MAX_AT_RESPONSE_SIZE, "\r\n+EIRP: %d\r\n", eirp);
+    return AT_OK;
+}
+
 static char cmd_set_rssi_threshold(char *value)
 {
     char ret;
@@ -1132,6 +1160,7 @@ static char cmd_print_help(char *value);
     { "+TX", cmd_tx, NULL, "<%d or string>","transmit packet over phy"},
     { "+TXC", cmd_tx_continuously, NULL, "<%d or string>", "transmit continuously same packet over phy"},
     { "+RX", cmd_start_rx, NULL, "","start RX"},
+    { "+EIRP", cmd_set_eirp, cmd_get_eirp, "%d", "get/set the TX power"},
 
     { "+STATUS", cmd_print_status, cmd_print_status, "","print status"},
     { "+HELP", cmd_print_help, cmd_print_help, "","this list of commands"},
