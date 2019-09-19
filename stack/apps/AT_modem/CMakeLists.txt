@@ -30,7 +30,8 @@
 #
 
 #Add App specific linker flags
-#Add newlib for this app
-INSERT_LINKER_FLAGS(AFTER LINK_LIBRARIES INSERT "-fuse-clib=newlib")
+IF(${PLATFORM} STREQUAL "cortus_fpga")
+    INSERT_LINKER_FLAGS(AFTER LINK_LIBRARIES INSERT "-fuse-clib=newlib")
+ENDIF()
 
 APP_BUILD(NAME ${APP_NAME} SOURCES at_modem.c at_parser.c LIBS d7ap framework)
