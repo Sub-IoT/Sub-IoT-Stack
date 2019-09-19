@@ -204,7 +204,6 @@ char at_parse_line(string_t line, char *ret)
     return result;
 }
 
-
 char at_parse_extract_number(string_t parameter, uint32_t *number)
 {
     int pos = 0;
@@ -250,6 +249,30 @@ char at_parse_extract_signed_number(string_t parameter, int32_t *number)
     return AT_OK;
 }
 
+char at_parse_extract_string(string_t parameter, char *string, uint8_t *string_len)
+{
+    int pos = 0;
+    int len = strlen((const char *)parameter);
+
+    // check if the size of the string is compatible with the size of the expected number
+    if (*string_len < len)
+        return AT_ERROR;
+
+    while ((pos < len) && (parameter[pos] != ','))
+    {
+        pos += 1;
+    }
+
+    if (pos == 0)
+        return AT_ERROR;
+
+    strncpy(string, parameter, pos);
+    string[pos] = '\0';
+    *string_len = pos;
+
+    return AT_OK;
+}
+
 char at_parse_extract_hexstring(string_t parameter, uint8_t *bytes, uint8_t *bytes_len)
 {
     int pos = 0;
@@ -289,3 +312,17 @@ char at_parse_extract_hexstring(string_t parameter, uint8_t *bytes, uint8_t *byt
     return AT_OK;
 }
 
+
+int skip_to_next_field(char *line, int len)
+{
+    int pos = 0;
+
+    while (pos < len && line[pos] != ',')
+        pos += 1;
+
+    if (pos < len && line[pos] == ',')
+        pos += 1;
+
+    line += pos;
+    return pos;
+}
