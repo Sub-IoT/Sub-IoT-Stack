@@ -153,7 +153,16 @@ static channel_id_t current_channel_id = EMPTY_CHANNEL_ID;
 static uint32_t rx_bw_lo_rate;
 static uint32_t rx_bw_normal_rate;
 static uint32_t rx_bw_hi_rate;
-static bool rx_bw_changed = false;
+static bool fact_settings_changed = false;
+
+static uint32_t bitrate_ultra_lo_rate;
+static uint32_t fdev_ultra_lo_rate;
+static uint32_t bitrate_lo_rate;
+static uint32_t fdev_lo_rate;
+static uint32_t bitrate_normal_rate;
+static uint32_t fdev_normal_rate;
+static uint32_t bitrate_hi_rate;
+static uint32_t fdev_hi_rate;
 
 static uint16_t total_bg = 0;
 static uint16_t total_rssi_triggers = 0;
@@ -407,18 +416,18 @@ static void configure_eirp(eirp_t eirp)
 }
 
 static void configure_channel(const channel_id_t* channel) {
-    if(phy_radio_channel_ids_equal(&current_channel_id, channel) && !rx_bw_changed) {
+    if(phy_radio_channel_ids_equal(&current_channel_id, channel) && !fact_settings_changed) {
         return;
     }
 
-    rx_bw_changed = false;
+    fact_settings_changed = false;
 
     // configure modulation settings
     if(channel->channel_header.ch_class == PHY_CLASS_LO_RATE)
     {
-        hw_radio_set_bitrate(BITRATE_L);
+        hw_radio_set_bitrate(bitrate_lo_rate);
         if(channel->channel_header.ch_coding != PHY_CODING_CW)
-            hw_radio_set_tx_fdev(FDEV_L);
+            hw_radio_set_tx_fdev(fdev_lo_rate);
         else
             hw_radio_set_tx_fdev(0);
         hw_radio_set_rx_bw_hz(rx_bw_lo_rate);
@@ -426,9 +435,9 @@ static void configure_channel(const channel_id_t* channel) {
     }
     else if(channel->channel_header.ch_class == PHY_CLASS_NORMAL_RATE)
     {
-        hw_radio_set_bitrate(BITRATE_N);
+        hw_radio_set_bitrate(bitrate_normal_rate);
         if(channel->channel_header.ch_coding != PHY_CODING_CW)
-            hw_radio_set_tx_fdev(FDEV_N);
+            hw_radio_set_tx_fdev(fdev_normal_rate);
         else
             hw_radio_set_tx_fdev(0);
         hw_radio_set_rx_bw_hz(rx_bw_normal_rate);
@@ -436,9 +445,9 @@ static void configure_channel(const channel_id_t* channel) {
     }
     else if(channel->channel_header.ch_class == PHY_CLASS_HI_RATE)
     {
-        hw_radio_set_bitrate(BITRATE_H);
+        hw_radio_set_bitrate(bitrate_hi_rate);
         if(channel->channel_header.ch_coding != PHY_CODING_CW)
-            hw_radio_set_tx_fdev(FDEV_H);
+            hw_radio_set_tx_fdev(fdev_hi_rate);
         else
             hw_radio_set_tx_fdev(0);
         hw_radio_set_rx_bw_hz(rx_bw_hi_rate);
@@ -494,10 +503,23 @@ void fact_settings_file_change_callback(uint8_t file_id)
     rx_bw_normal_rate = __builtin_bswap32(*((uint32_t*)(fact_settings+5)));
     rx_bw_hi_rate = __builtin_bswap32(*((uint32_t*)(fact_settings+9)));
 
+    bitrate_ultra_lo_rate = __builtin_bswap32(*((uint32_t*)(fact_settings+13)));
+    fdev_ultra_lo_rate = __builtin_bswap32(*((uint32_t*)(fact_settings+17)));
+    bitrate_lo_rate = __builtin_bswap32(*((uint32_t*)(fact_settings+21)));
+    fdev_lo_rate = __builtin_bswap32(*((uint32_t*)(fact_settings+25)));
+    bitrate_normal_rate = __builtin_bswap32(*((uint32_t*)(fact_settings+29)));
+    fdev_normal_rate = __builtin_bswap32(*((uint32_t*)(fact_settings+33)));
+    bitrate_hi_rate = __builtin_bswap32(*((uint32_t*)(fact_settings+37)));
+    fdev_hi_rate = __builtin_bswap32(*((uint32_t*)(fact_settings+41)));
+
+    DPRINT("ultra low rate bitrate %i : fdev %i", bitrate_ultra_lo_rate, fdev_ultra_lo_rate);
+    DPRINT("low rate bitrate %i : fdev %i", bitrate_lo_rate, fdev_lo_rate);
+    DPRINT("normal rate bitrate %i : fdev %i", bitrate_normal_rate, fdev_normal_rate);
+    DPRINT("high rate bitrate %i : fdev %i", bitrate_hi_rate, fdev_hi_rate);
     DPRINT("rx bw low rate is %i, normal rate is %i, high rate is %i\n", rx_bw_lo_rate, rx_bw_normal_rate, rx_bw_hi_rate);
     DPRINT("gain offset set to %i\n", gain_offset);
 
-    rx_bw_changed = true;
+    fact_settings_changed = true;
 }
 
 
