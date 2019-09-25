@@ -217,145 +217,145 @@ __attribute__((used)) fs_file_t fs_file_headers[256] LINKER_SECTION_FS_FILE_HEAD
   {	//	UID - 0 (length 20)
   	.length = 0x14, .storage = FS_STORAGE_PERMANENT, .rfu = 0, .addr = 0x908
   },
-  {	//	FACTORY_SETTINGS - 1 (length 57)
-  	.length = 0x39, .storage = FS_STORAGE_PERMANENT, .rfu = 0, .addr = 0x91c
+  {	//	FACTORY_SETTINGS - 1 (length 49)
+  	.length = 0x31, .storage = FS_STORAGE_PERMANENT, .rfu = 0, .addr = 0x91c
   },
   {	//	FIRMWARE_VERSION - 2 (length 27)
-  	.length = 0x1b, .storage = FS_STORAGE_PERMANENT, .rfu = 0, .addr = 0x955
+  	.length = 0x1b, .storage = FS_STORAGE_PERMANENT, .rfu = 0, .addr = 0x94d
   },
   {	//	DEVICE_CAPACITY - 3 (length 31)
-  	.length = 0x1f, .storage = FS_STORAGE_PERMANENT, .rfu = 0, .addr = 0x970
+  	.length = 0x1f, .storage = FS_STORAGE_PERMANENT, .rfu = 0, .addr = 0x968
   },
   {	//	DEVICE_STATUS - 4 (length 21)
-  	.length = 0x15, .storage = FS_STORAGE_PERMANENT, .rfu = 0, .addr = 0x98f
+  	.length = 0x15, .storage = FS_STORAGE_PERMANENT, .rfu = 0, .addr = 0x987
   },
   {	//	ENGINEERING_MODE - 5 (length 21)
-  	.length = 0x15, .storage = FS_STORAGE_PERMANENT, .rfu = 0, .addr = 0x9a4
+  	.length = 0x15, .storage = FS_STORAGE_PERMANENT, .rfu = 0, .addr = 0x99c
   },
   {	//	VID - 6 (length 15)
-  	.length = 0xf, .storage = FS_STORAGE_PERMANENT, .rfu = 0, .addr = 0x9b9
+  	.length = 0xf, .storage = FS_STORAGE_PERMANENT, .rfu = 0, .addr = 0x9b1
   },
   {	//	RFU_07 - 7 (length 12)
-  	.length = 0xc, .storage = FS_STORAGE_PERMANENT, .rfu = 0, .addr = 0x9c8
+  	.length = 0xc, .storage = FS_STORAGE_PERMANENT, .rfu = 0, .addr = 0x9c0
   },
   {	//	PHY_CONFIG - 8 (length 21)
-  	.length = 0x15, .storage = FS_STORAGE_PERMANENT, .rfu = 0, .addr = 0x9d4
+  	.length = 0x15, .storage = FS_STORAGE_PERMANENT, .rfu = 0, .addr = 0x9cc
   },
   {	//	PHY_STATUS - 9 (length 36)
-  	.length = 0x24, .storage = FS_STORAGE_PERMANENT, .rfu = 0, .addr = 0x9e9
+  	.length = 0x24, .storage = FS_STORAGE_PERMANENT, .rfu = 0, .addr = 0x9e1
   },
   {	//	DLL_CONFIG - 10 (length 19)
-  	.length = 0x13, .storage = FS_STORAGE_PERMANENT, .rfu = 0, .addr = 0xa0d
+  	.length = 0x13, .storage = FS_STORAGE_PERMANENT, .rfu = 0, .addr = 0xa05
   },
   {	//	DLL_STATUS - 11 (length 24)
-  	.length = 0x18, .storage = FS_STORAGE_PERMANENT, .rfu = 0, .addr = 0xa20
+  	.length = 0x18, .storage = FS_STORAGE_PERMANENT, .rfu = 0, .addr = 0xa18
   },
   {	//	NWL_ROUTING - 12 (length 13)
-  	.length = 0xd, .storage = FS_STORAGE_PERMANENT, .rfu = 0, .addr = 0xa38
+  	.length = 0xd, .storage = FS_STORAGE_PERMANENT, .rfu = 0, .addr = 0xa30
   },
   {	//	NWL_SECURITY - 13 (length 17)
-  	.length = 0x11, .storage = FS_STORAGE_PERMANENT, .rfu = 0, .addr = 0xa45
+  	.length = 0x11, .storage = FS_STORAGE_PERMANENT, .rfu = 0, .addr = 0xa3d
   },
   {	//	NWL_SECURITY_KEY - 14 (length 28)
-  	.length = 0x1c, .storage = FS_STORAGE_PERMANENT, .rfu = 0, .addr = 0xa56
+  	.length = 0x1c, .storage = FS_STORAGE_PERMANENT, .rfu = 0, .addr = 0xa4e
   },
   {	//	NWL_SSR - 15 (length 16)
-  	.length = 0x10, .storage = FS_STORAGE_PERMANENT, .rfu = 0, .addr = 0xa72
+  	.length = 0x10, .storage = FS_STORAGE_PERMANENT, .rfu = 0, .addr = 0xa6a
   },
   {	//	NWL_STATUS - 16 (length 32)
-  	.length = 0x20, .storage = FS_STORAGE_PERMANENT, .rfu = 0, .addr = 0xa82
+  	.length = 0x20, .storage = FS_STORAGE_PERMANENT, .rfu = 0, .addr = 0xa7a
   },
   {	//	TRL_STATUS - 17 (length 13)
-  	.length = 0xd, .storage = FS_STORAGE_PERMANENT, .rfu = 0, .addr = 0xaa2
+  	.length = 0xd, .storage = FS_STORAGE_PERMANENT, .rfu = 0, .addr = 0xa9a
   },
   {	//	SEL_CONFIG - 18 (length 18)
-  	.length = 0x12, .storage = FS_STORAGE_PERMANENT, .rfu = 0, .addr = 0xaaf
+  	.length = 0x12, .storage = FS_STORAGE_PERMANENT, .rfu = 0, .addr = 0xaa7
   },
   {	//	FOF_STATUS - 19 (length 22)
-  	.length = 0x16, .storage = FS_STORAGE_PERMANENT, .rfu = 0, .addr = 0xac1
+  	.length = 0x16, .storage = FS_STORAGE_PERMANENT, .rfu = 0, .addr = 0xab9
   },
   {	//	RFU_14 - 20 (length 12)
-  	.length = 0xc, .storage = FS_STORAGE_PERMANENT, .rfu = 0, .addr = 0xad7
+  	.length = 0xc, .storage = FS_STORAGE_PERMANENT, .rfu = 0, .addr = 0xacf
   },
   {	//	RFU_15 - 21 (length 12)
-  	.length = 0xc, .storage = FS_STORAGE_PERMANENT, .rfu = 0, .addr = 0xae3
+  	.length = 0xc, .storage = FS_STORAGE_PERMANENT, .rfu = 0, .addr = 0xadb
   },
   {	//	RFU_16 - 22 (length 12)
-  	.length = 0xc, .storage = FS_STORAGE_PERMANENT, .rfu = 0, .addr = 0xaef
+  	.length = 0xc, .storage = FS_STORAGE_PERMANENT, .rfu = 0, .addr = 0xae7
   },
   {	//	LOCATION_DATA - 23 (length 13)
-  	.length = 0xd, .storage = FS_STORAGE_PERMANENT, .rfu = 0, .addr = 0xafb
+  	.length = 0xd, .storage = FS_STORAGE_PERMANENT, .rfu = 0, .addr = 0xaf3
   },
   {	//	D7AALP_RFU_18 - 24 (length 12)
-  	.length = 0xc, .storage = FS_STORAGE_PERMANENT, .rfu = 0, .addr = 0xb08
+  	.length = 0xc, .storage = FS_STORAGE_PERMANENT, .rfu = 0, .addr = 0xb00
   },
   {	//	D7AALP_RFU_19 - 25 (length 12)
-  	.length = 0xc, .storage = FS_STORAGE_PERMANENT, .rfu = 0, .addr = 0xb14
+  	.length = 0xc, .storage = FS_STORAGE_PERMANENT, .rfu = 0, .addr = 0xb0c
   },
   {	//	D7AALP_RFU_1A - 26 (length 12)
-  	.length = 0xc, .storage = FS_STORAGE_PERMANENT, .rfu = 0, .addr = 0xb20
+  	.length = 0xc, .storage = FS_STORAGE_PERMANENT, .rfu = 0, .addr = 0xb18
   },
   {	//	D7AALP_RFU_1B - 27 (length 12)
-  	.length = 0xc, .storage = FS_STORAGE_PERMANENT, .rfu = 0, .addr = 0xb2c
+  	.length = 0xc, .storage = FS_STORAGE_PERMANENT, .rfu = 0, .addr = 0xb24
   },
   {	//	D7AALP_RFU_1C - 28 (length 12)
-  	.length = 0xc, .storage = FS_STORAGE_PERMANENT, .rfu = 0, .addr = 0xb38
+  	.length = 0xc, .storage = FS_STORAGE_PERMANENT, .rfu = 0, .addr = 0xb30
   },
   {	//	D7AALP_RFU_1D - 29 (length 12)
-  	.length = 0xc, .storage = FS_STORAGE_PERMANENT, .rfu = 0, .addr = 0xb44
+  	.length = 0xc, .storage = FS_STORAGE_PERMANENT, .rfu = 0, .addr = 0xb3c
   },
   {	//	D7AALP_RFU_1E - 30 (length 12)
-  	.length = 0xc, .storage = FS_STORAGE_PERMANENT, .rfu = 0, .addr = 0xb50
+  	.length = 0xc, .storage = FS_STORAGE_PERMANENT, .rfu = 0, .addr = 0xb48
   },
   {	//	D7AALP_RFU_1F - 31 (length 12)
-  	.length = 0xc, .storage = FS_STORAGE_PERMANENT, .rfu = 0, .addr = 0xb5c
+  	.length = 0xc, .storage = FS_STORAGE_PERMANENT, .rfu = 0, .addr = 0xb54
   },
   {	//	ACCESS_PROFILE_0 - 32 (length 77)
-  	.length = 0x4d, .storage = FS_STORAGE_PERMANENT, .rfu = 0, .addr = 0xb68
+  	.length = 0x4d, .storage = FS_STORAGE_PERMANENT, .rfu = 0, .addr = 0xb60
   },
   {	//	ACCESS_PROFILE_1 - 33 (length 77)
-  	.length = 0x4d, .storage = FS_STORAGE_PERMANENT, .rfu = 0, .addr = 0xbb5
+  	.length = 0x4d, .storage = FS_STORAGE_PERMANENT, .rfu = 0, .addr = 0xbad
   },
   {	//	ACCESS_PROFILE_2 - 34 (length 77)
-  	.length = 0x4d, .storage = FS_STORAGE_PERMANENT, .rfu = 0, .addr = 0xc02
+  	.length = 0x4d, .storage = FS_STORAGE_PERMANENT, .rfu = 0, .addr = 0xbfa
   },
   {	//	ACCESS_PROFILE_3 - 35 (length 77)
-  	.length = 0x4d, .storage = FS_STORAGE_PERMANENT, .rfu = 0, .addr = 0xc4f
+  	.length = 0x4d, .storage = FS_STORAGE_PERMANENT, .rfu = 0, .addr = 0xc47
   },
   {	//	ACCESS_PROFILE_4 - 36 (length 77)
-  	.length = 0x4d, .storage = FS_STORAGE_PERMANENT, .rfu = 0, .addr = 0xc9c
+  	.length = 0x4d, .storage = FS_STORAGE_PERMANENT, .rfu = 0, .addr = 0xc94
   },
   {	//	ACCESS_PROFILE_5 - 37 (length 77)
-  	.length = 0x4d, .storage = FS_STORAGE_PERMANENT, .rfu = 0, .addr = 0xce9
+  	.length = 0x4d, .storage = FS_STORAGE_PERMANENT, .rfu = 0, .addr = 0xce1
   },
   {	//	ACCESS_PROFILE_6 - 38 (length 77)
-  	.length = 0x4d, .storage = FS_STORAGE_PERMANENT, .rfu = 0, .addr = 0xd36
+  	.length = 0x4d, .storage = FS_STORAGE_PERMANENT, .rfu = 0, .addr = 0xd2e
   },
   {	//	ACCESS_PROFILE_7 - 39 (length 77)
-  	.length = 0x4d, .storage = FS_STORAGE_PERMANENT, .rfu = 0, .addr = 0xd83
+  	.length = 0x4d, .storage = FS_STORAGE_PERMANENT, .rfu = 0, .addr = 0xd7b
   },
   {	//	ACCESS_PROFILE_8 - 40 (length 77)
-  	.length = 0x4d, .storage = FS_STORAGE_PERMANENT, .rfu = 0, .addr = 0xdd0
+  	.length = 0x4d, .storage = FS_STORAGE_PERMANENT, .rfu = 0, .addr = 0xdc8
   },
   {	//	ACCESS_PROFILE_9 - 41 (length 77)
-  	.length = 0x4d, .storage = FS_STORAGE_PERMANENT, .rfu = 0, .addr = 0xe1d
+  	.length = 0x4d, .storage = FS_STORAGE_PERMANENT, .rfu = 0, .addr = 0xe15
   },
   {	//	ACCESS_PROFILE_10 - 42 (length 77)
-  	.length = 0x4d, .storage = FS_STORAGE_PERMANENT, .rfu = 0, .addr = 0xe6a
+  	.length = 0x4d, .storage = FS_STORAGE_PERMANENT, .rfu = 0, .addr = 0xe62
   },
   {	//	ACCESS_PROFILE_11 - 43 (length 77)
-  	.length = 0x4d, .storage = FS_STORAGE_PERMANENT, .rfu = 0, .addr = 0xeb7
+  	.length = 0x4d, .storage = FS_STORAGE_PERMANENT, .rfu = 0, .addr = 0xeaf
   },
   {	//	ACCESS_PROFILE_12 - 44 (length 77)
-  	.length = 0x4d, .storage = FS_STORAGE_PERMANENT, .rfu = 0, .addr = 0xf04
+  	.length = 0x4d, .storage = FS_STORAGE_PERMANENT, .rfu = 0, .addr = 0xefc
   },
   {	//	ACCESS_PROFILE_13 - 45 (length 77)
-  	.length = 0x4d, .storage = FS_STORAGE_PERMANENT, .rfu = 0, .addr = 0xf51
+  	.length = 0x4d, .storage = FS_STORAGE_PERMANENT, .rfu = 0, .addr = 0xf49
   },
   {	//	ACCESS_PROFILE_14 - 46 (length 77)
-  	.length = 0x4d, .storage = FS_STORAGE_PERMANENT, .rfu = 0, .addr = 0xf9e
+  	.length = 0x4d, .storage = FS_STORAGE_PERMANENT, .rfu = 0, .addr = 0xf96
   },
-  //[[[end]]] (checksum: 567b980b6d98ef7319a89637695bfe9b)
+  //[[[end]]] (checksum: 0e0b7e3b3272be198b89b3728bcaaf4f)
 };
 
 __attribute__((used)) uint8_t d7ap_files_data[FRAMEWORK_FS_PERMANENT_STORAGE_SIZE] LINKER_SECTION_FS_SYSTEM_FILE = {
@@ -369,9 +369,9 @@ __attribute__((used)) uint8_t d7ap_files_data[FRAMEWORK_FS_PERMANENT_STORAGE_SIZ
       // UID - 0 (length 8)
       0x24, 0x23, 0xff, 0xff, 0x0, 0x0, 0x0, 0x8, 0x0, 0x0, 0x0, 0x8, 
       0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 
-      // FACTORY_SETTINGS - 1 (length 45)
-      0x24, 0x23, 0xff, 0xff, 0x0, 0x0, 0x0, 0x2d, 0x0, 0x0, 0x0, 0x2d, 
-      0x0, 0x0, 0x0, 0x28, 0xe4, 0x0, 0x1, 0x33, 0x36, 0x0, 0x1, 0xeb, 0xac, 0x0, 0x0, 0x9, 0x60, 0x0, 0x0, 0x4, 0xb0, 0x0, 0x0, 0x25, 0x80, 0x0, 0x0, 0x12, 0xc0, 0x0, 0x0, 0xd9, 0x3, 0x0, 0x0, 0xc3, 0x50, 0x0, 0x2, 0x8b, 0xb, 0x0, 0x0, 0xa2, 0xc3, 
+      // FACTORY_SETTINGS - 1 (length 37)
+      0x24, 0x23, 0xff, 0xff, 0x0, 0x0, 0x0, 0x25, 0x0, 0x0, 0x0, 0x25, 
+      0x0, 0x0, 0x0, 0x28, 0xe4, 0x0, 0x1, 0x33, 0x36, 0x0, 0x1, 0xeb, 0xac, 0x0, 0x0, 0x25, 0x80, 0x0, 0x0, 0x12, 0xc0, 0x0, 0x0, 0xd9, 0x3, 0x0, 0x0, 0xc3, 0x50, 0x0, 0x2, 0x8b, 0xb, 0x0, 0x0, 0xa2, 0xc3, 
       // FIRMWARE_VERSION - 2 (length 15)
       0x24, 0x23, 0xff, 0xff, 0x0, 0x0, 0x0, 0xf, 0x0, 0x0, 0x0, 0xf, 
       0x0, 0x0, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 
@@ -495,7 +495,7 @@ __attribute__((used)) uint8_t d7ap_files_data[FRAMEWORK_FS_PERMANENT_STORAGE_SIZ
       // ACCESS_PROFILE_14 - 46 (length 65)
       0x24, 0x23, 0xff, 0xff, 0x0, 0x0, 0x0, 0x41, 0x0, 0x0, 0x0, 0x41, 
       0x32, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0xe, 0x56, 0xff, 0x0, 0x0, 0x0, 0x0, 0xe, 0x56, 0xff, 0x0, 0x0, 0x0, 0x0, 0xe, 0x56, 0xff, 0x0, 0x0, 0x0, 0x0, 0xe, 0x56, 0xff, 0x0, 0x0, 0x0, 0x0, 0xe, 0x56, 0xff, 0x0, 0x0, 0x0, 0x0, 0xe, 0x56, 0xff, 0x0, 0x0, 0x0, 0x0, 0xe, 0x56, 0xff, 0x0, 0x0, 0x0, 0x0, 0xe, 0x56, 0xff, 
-      //[[[end]]] (checksum: d788b34068cb989a8d7ca5d869ece854)  
+      //[[[end]]] (checksum: 3ac346293585cefc04b4854d8349e22f)  
   };
 
 fs_filesystem_t d7ap_filesystem __attribute__((used)) = {

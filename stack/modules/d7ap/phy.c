@@ -155,8 +155,6 @@ static uint32_t rx_bw_normal_rate;
 static uint32_t rx_bw_hi_rate;
 static bool fact_settings_changed = false;
 
-static uint32_t bitrate_ultra_lo_rate;
-static uint32_t fdev_ultra_lo_rate;
 static uint32_t bitrate_lo_rate;
 static uint32_t fdev_lo_rate;
 static uint32_t bitrate_normal_rate;
@@ -503,20 +501,16 @@ void fact_settings_file_change_callback(uint8_t file_id)
     rx_bw_normal_rate = __builtin_bswap32(*((uint32_t*)(fact_settings+5)));
     rx_bw_hi_rate = __builtin_bswap32(*((uint32_t*)(fact_settings+9)));
 
-    bitrate_ultra_lo_rate = __builtin_bswap32(*((uint32_t*)(fact_settings+13)));
-    fdev_ultra_lo_rate = __builtin_bswap32(*((uint32_t*)(fact_settings+17)));
-    bitrate_lo_rate = __builtin_bswap32(*((uint32_t*)(fact_settings+21)));
-    fdev_lo_rate = __builtin_bswap32(*((uint32_t*)(fact_settings+25)));
-    bitrate_normal_rate = __builtin_bswap32(*((uint32_t*)(fact_settings+29)));
-    fdev_normal_rate = __builtin_bswap32(*((uint32_t*)(fact_settings+33)));
-    bitrate_hi_rate = __builtin_bswap32(*((uint32_t*)(fact_settings+37)));
-    fdev_hi_rate = __builtin_bswap32(*((uint32_t*)(fact_settings+41)));
+    bitrate_lo_rate = __builtin_bswap32(*((uint32_t*)(fact_settings+13)));
+    fdev_lo_rate = __builtin_bswap32(*((uint32_t*)(fact_settings+17)));
+    bitrate_normal_rate = __builtin_bswap32(*((uint32_t*)(fact_settings+21)));
+    fdev_normal_rate = __builtin_bswap32(*((uint32_t*)(fact_settings+25)));
+    bitrate_hi_rate = __builtin_bswap32(*((uint32_t*)(fact_settings+29)));
+    fdev_hi_rate = __builtin_bswap32(*((uint32_t*)(fact_settings+33)));
 
-    DPRINT("ultra low rate bitrate %i : fdev %i", bitrate_ultra_lo_rate, fdev_ultra_lo_rate);
-    DPRINT("low rate bitrate %i : fdev %i", bitrate_lo_rate, fdev_lo_rate);
-    DPRINT("normal rate bitrate %i : fdev %i", bitrate_normal_rate, fdev_normal_rate);
-    DPRINT("high rate bitrate %i : fdev %i", bitrate_hi_rate, fdev_hi_rate);
-    DPRINT("rx bw low rate is %i, normal rate is %i, high rate is %i\n", rx_bw_lo_rate, rx_bw_normal_rate, rx_bw_hi_rate);
+    DPRINT("low rate bitrate %i : fdev %i : rx_bw %i", bitrate_lo_rate, fdev_lo_rate, rx_bw_lo_rate);
+    DPRINT("normal rate bitrate %i : fdev %i : rx_bw %i", bitrate_normal_rate, fdev_normal_rate, rx_bw_normal_rate);
+    DPRINT("high rate bitrate %i : fdev %i : rx_bw %i", bitrate_hi_rate, fdev_hi_rate, rx_bw_hi_rate);
     DPRINT("gain offset set to %i\n", gain_offset);
 
     fact_settings_changed = true;
