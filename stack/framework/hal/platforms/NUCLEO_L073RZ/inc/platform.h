@@ -67,20 +67,13 @@
 
 #define PLATFORM_NUM_TIMERS 1
 
-static blockdevice_stm32_eeprom_t eeprom_bd = (blockdevice_stm32_eeprom_t){
-  .base.driver = &blockdevice_driver_stm32_eeprom,
-};
-
-extern uint8_t d7ap_volatile_files_data[FRAMEWORK_FS_VOLATILE_STORAGE_SIZE];
-
-static blockdevice_ram_t volatile_bd = (blockdevice_ram_t){
- .base.driver = &blockdevice_driver_ram,
- .size = FRAMEWORK_FS_VOLATILE_STORAGE_SIZE,
- .buffer = d7ap_volatile_files_data
-};
 
 /** Platform BD drivers*/
-#define PLATFORM_PERMANENT_BD (blockdevice_t*)&eeprom_bd
-#define PLATFORM_VOLATILE_BD (blockdevice_t*)&volatile_bd
+extern blockdevice_t * const metadata_blockdevice;
+extern blockdevice_t * const persistent_files_blockdevice;
+extern blockdevice_t * const volatile_blockdevice;
+#define PLATFORM_METADATA_BLOCKDEVICE metadata_blockdevice
+#define PLATFORM_PERMANENT_BLOCKDEVICE persistent_files_blockdevice
+#define PLATFORM_VOLATILE_BLOCKDEVICE volatile_blockdevice
 
 #endif

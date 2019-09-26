@@ -41,8 +41,7 @@
   #define DPRINT(...)
 #endif
 
-#define FS_STORAGE_CLASS_NUMOF       (FS_STORAGE_PERMANENT + 1)
-
+#define FS_BLOCKDEVICES_COUNT       3 // metadata, permanent and volatile
 
 static fs_file_t files[FRAMEWORK_FS_FILE_COUNT] = { 0 };
 
@@ -90,9 +89,9 @@ static const vfs_mount_t* const d7a_fs[] = {
 #else
 
 static uint32_t volatile_data_offset = 0;
-static uint32_t permanent_data_offset =FS_MAGIC_NUMBER_SIZE + FS_NUMBER_OF_FILES_SIZE + 256 * FS_FILE_HEADER_SIZE ;
+static uint32_t permanent_data_offset = 0;
 
-static blockdevice_t* bd[FS_STORAGE_CLASS_NUMOF];
+static blockdevice_t* bd[FS_BLOCKDEVICES_COUNT];
 
 #endif
 
@@ -103,9 +102,9 @@ static int _get_file_name(char* file_name, uint8_t file_id, const fs_file_header
 static int _create_file_name(char* file_name, uint8_t file_id, fs_storage_class_t storage_class);
 #endif
 
-static int _fs_init_permanent_systemfiles(fs_filesystem_t* permanent_systemfiles);
-static int _fs_create_magic(fs_storage_class_t storage_class);
-static int _fs_verify_magic(fs_storage_class_t storage_class, uint8_t* magic_number);
+static int _fs_init_permanent_systemfiles(fs_filesystem_t* fs);
+static int _fs_create_magic();
+static int _fs_verify_magic(uint8_t* magic_number);
 static int _fs_create_file(uint8_t file_id, fs_storage_class_t storage_class, const uint8_t* initial_data, uint32_t length);
 
 static inline bool _is_file_defined(uint8_t file_id)
@@ -151,10 +150,11 @@ void fs_init(fs_filesystem_t* provisioning)
 #endif
 
 #ifndef VFS_MODULE
-    // initialise the blockdevice driver according platform specificities
-    // for now, only permanent and volatile storage are supported
-    bd[FS_STORAGE_PERMANENT] = PLATFORM_PERMANENT_BD;
-    bd[FS_STORAGE_VOLATILE] = PLATFORM_VOLATILE_BD;
+    // inject the mandatory blockdevice types from the platform
+    // for now, only metadata, permanent and volatile storage are supported
+    bd[FS_BLOCKDEVICE_TYPE_METADATA] = PLATFORM_METADATA_BLOCKDEVICE;
+    bd[FS_BLOCKDEVICE_TYPE_PERMANENT] = PLATFORM_PERMANENT_BLOCKDEVICE;
+    bd[FS_BLOCKDEVICE_TYPE_VOLATILE] = PLATFORM_VOLATILE_BLOCKDEVICE;
 #endif
 
     if (provisioning)
@@ -167,7 +167,7 @@ void fs_init(fs_filesystem_t* provisioning)
 int _fs_init_permanent_systemfiles(fs_filesystem_t* permanent_systemfiles)
 {
     uint8_t expected_magic_number[FS_MAGIC_NUMBER_SIZE] = FS_MAGIC_NUMBER;
-    if (_fs_verify_magic(FS_STORAGE_PERMANENT, expected_magic_number) < 0)
+    if (_fs_verify_magic(expected_magic_number) < 0)
     {
         DPRINT("fs_init: no valid magic, recreating fs...");
 
@@ -205,28 +205,35 @@ int _fs_init_permanent_systemfiles(fs_filesystem_t* permanent_systemfiles)
                         permanent_systemfiles->files_length[file_id]);
     }
 #else
-    DPRINT("metadata addr: %x", permanent_systemfiles->metadata);
-    DPRINT("metadata nfiles: %x", permanent_systemfiles->metadata->nfiles);
     // initialise system file caching
-    size_t number_of_files;
-    blockdevice_read(bd[FS_STORAGE_PERMANENT], (uint8_t*)&number_of_files, FS_NUMBER_OF_FILES_ADDRESS, FS_NUMBER_OF_FILES_SIZE);
+    uint32_t number_of_files;
+    blockdevice_read(bd[FS_BLOCKDEVICE_TYPE_METADATA], (uint8_t*)&number_of_files, FS_NUMBER_OF_FILES_ADDRESS, FS_NUMBER_OF_FILES_SIZE);
+#if __BYTE_ORDER__ != __ORDER_BIG_ENDIAN__
+    number_of_files = __builtin_bswap32(number_of_files);
+#endif
+
     assert(number_of_files < FRAMEWORK_FS_FILE_COUNT);
     for(int file_id = 0; file_id < FRAMEWORK_FS_FILE_COUNT; file_id++)
     {
-        blockdevice_read(bd[FS_STORAGE_PERMANENT], (uint8_t*)&files[file_id],
+        blockdevice_read(bd[FS_BLOCKDEVICE_TYPE_METADATA], (uint8_t*)&files[file_id],
                          _get_file_header_address(file_id), FS_FILE_HEADER_SIZE);
+#if __BYTE_ORDER__ != __ORDER_BIG_ENDIAN__
+        // FS headers are stored in big endian
+        files[file_id].addr = __builtin_bswap32(files[file_id].addr);
+        files[file_id].length = __builtin_bswap32(files[file_id].length);
+#endif
         if(_is_file_defined(file_id))
         {
-            switch(files[file_id].storage)
+            switch(files[file_id].blockdevice_index)
             {
-                case FS_STORAGE_VOLATILE:
+                case FS_BLOCKDEVICE_TYPE_VOLATILE:
                 {
                     //copy defaults from permanent storage to volatile
                     uint8_t data = 0x00;
                     for(int i=0; i < files[file_id].length; i++)
                     {
-                        blockdevice_read(bd[FS_STORAGE_PERMANENT], &data, files[file_id].addr + i, 1);
-                        blockdevice_program(bd[FS_STORAGE_VOLATILE], &data, volatile_data_offset + i, 1);
+                        blockdevice_read(bd[FS_BLOCKDEVICE_TYPE_PERMANENT], &data, files[file_id].addr + i, 1);
+                        blockdevice_program(bd[FS_BLOCKDEVICE_TYPE_VOLATILE], &data, volatile_data_offset + i, 1);
     
                     }
                     // update file header
@@ -234,11 +241,13 @@ int _fs_init_permanent_systemfiles(fs_filesystem_t* permanent_systemfiles)
                     volatile_data_offset += files[file_id].length;
                     break;
                 }
-                case FS_STORAGE_PERMANENT:
+                case FS_BLOCKDEVICE_TYPE_PERMANENT:
                 {
                     permanent_data_offset += files[file_id].length;
                     break;
                 }
+                default:
+                    assert(false);
             }
         }
     }
@@ -247,7 +256,7 @@ int _fs_init_permanent_systemfiles(fs_filesystem_t* permanent_systemfiles)
 }
 
 //TODO: CRC MAGIC
-static int _fs_create_magic(fs_storage_class_t storage_class)
+static int _fs_create_magic()
 {
     assert(!is_fs_init_completed);
     uint8_t magic[] = FS_MAGIC_NUMBER;
@@ -278,12 +287,12 @@ static int _fs_create_magic(fs_storage_class_t storage_class)
 #endif
 
     /* verify */
-    return _fs_verify_magic(storage_class, magic);
+    return _fs_verify_magic(magic);
 }
 
 
 /* The magic number allows to check filesystem integrity.*/
-static int _fs_verify_magic(fs_storage_class_t storage_class, uint8_t* expected_magic_number)
+static int _fs_verify_magic(uint8_t* expected_magic_number)
 {
     is_fs_init_completed = false;
 
@@ -323,7 +332,7 @@ static int _fs_verify_magic(fs_storage_class_t storage_class, uint8_t* expected_
 #else
     uint8_t magic_number[FS_MAGIC_NUMBER_SIZE];
     memset(magic_number,0,FS_MAGIC_NUMBER_SIZE);
-    blockdevice_read(bd[storage_class], magic_number, 0, FS_MAGIC_NUMBER_SIZE);
+    blockdevice_read(bd[FS_BLOCKDEVICE_TYPE_METADATA], magic_number, 0, FS_MAGIC_NUMBER_SIZE);
     assert(memcmp(expected_magic_number, magic_number, FS_MAGIC_NUMBER_SIZE) == 0); // if not the FS on EEPROM is not compatible with the current code
 #endif
 
@@ -373,7 +382,11 @@ int _fs_create_file(uint8_t file_id, fs_storage_class_t storage_class, const uin
         return -EEXIST;
 
     // update file caching for stat lookup
-    files[file_id].storage = storage_class;
+    uint8_t bd_type = FS_BLOCKDEVICE_TYPE_PERMANENT;
+    if(storage_class == FS_STORAGE_VOLATILE)
+        bd_type = FS_BLOCKDEVICE_TYPE_VOLATILE;
+
+    files[file_id].blockdevice_index = (uint8_t)bd_type;
     files[file_id].length = length;
 
 #ifdef VFS_MODULE
@@ -403,10 +416,10 @@ int _fs_create_file(uint8_t file_id, fs_storage_class_t storage_class, const uin
     // only user files can be created
     assert(file_id >= 0x40);
 
-    if (storage_class == FS_STORAGE_PERMANENT)
+    if (bd_type == FS_BLOCKDEVICE_TYPE_PERMANENT)
     {
         files[file_id].addr = permanent_data_offset;
-        blockdevice_program(bd[FS_STORAGE_PERMANENT], (uint8_t*)&files[file_id], _get_file_header_address(file_id), FS_FILE_HEADER_SIZE);
+        blockdevice_program(bd[FS_BLOCKDEVICE_TYPE_METADATA], (uint8_t*)&files[file_id], _get_file_header_address(file_id), FS_FILE_HEADER_SIZE);
         permanent_data_offset += length;
     }
     else
@@ -416,7 +429,7 @@ int _fs_create_file(uint8_t file_id, fs_storage_class_t storage_class, const uin
     }
 
     if(initial_data != NULL) {
-        blockdevice_program(bd[storage_class], initial_data, files[file_id].addr, length);
+        blockdevice_program(bd[bd_type], initial_data, files[file_id].addr, length);
     }
     else{
         // do not use variable length array to limit stack usage, do in chunks instead
@@ -425,16 +438,16 @@ int _fs_create_file(uint8_t file_id, fs_storage_class_t storage_class, const uin
         uint32_t remaining_length = length;
         int i = 0;
         while(remaining_length > 64) {
-          blockdevice_program(bd[storage_class], default_data, files[file_id].addr + (i * 64), 64);
+          blockdevice_program(bd[bd_type], default_data, files[file_id].addr + (i * 64), 64);
           remaining_length -= 64;
           i++;
         }
 
-        blockdevice_program(bd[storage_class], default_data, files[file_id].addr  + (i * 64), remaining_length);
+        blockdevice_program(bd[bd_type], default_data, files[file_id].addr  + (i * 64), remaining_length);
     }
 #endif
     
-    DPRINT("fs init file(file_id %d, storage %d, addr %p, length %d)",file_id, storage_class, files[file_id].addr, length);
+    DPRINT("fs init file(file_id %d, storage %d, addr %p, length %d)\n",file_id, storage_class, files[file_id].addr, length);
     return 0;
 }
 
@@ -493,11 +506,10 @@ int fs_read_file(uint8_t file_id, uint32_t offset, uint8_t* buffer, uint32_t len
 
     vfs_close(fd);
 #else
-    fs_storage_class_t storage = files[file_id].storage;
-    blockdevice_read(bd[storage], buffer, files[file_id].addr + offset, length);
+    blockdevice_read(bd[files[file_id].blockdevice_index], buffer, files[file_id].addr + offset, length);
 #endif
 
-    DPRINT("fs read_file(file_id %d, offset %d, addr %p, length %d)",file_id, offset, files[file_id].addr, length);
+    DPRINT("fs read_file(file_id %d, offset %d, addr %p, length %d)\n",file_id, offset, files[file_id].addr, length);
     return 0;
 }
 
@@ -543,11 +555,10 @@ int fs_write_file(uint8_t file_id, uint32_t offset, const uint8_t* buffer, uint3
 #else
     if(files[file_id].length < offset + length) return -ENOBUFS;
 
-    fs_storage_class_t storage = files[file_id].storage;
-    blockdevice_program(bd[storage], buffer, files[file_id].addr + offset, length);
+    blockdevice_program(bd[files[file_id].blockdevice_index], buffer, files[file_id].addr + offset, length);
 #endif
 
-    DPRINT("fs write_file (file_id %d, offset %d, addr %p, length %d)",
+    DPRINT("fs write_file (file_id %d, offset %d, addr %p, length %d)\n",
            file_id, offset, files[file_id].addr, length);
 
     if(file_modified_callbacks[file_id])

@@ -24,10 +24,44 @@
 #include "hwdebug.h"
 #include "hwradio.h"
 #include "errors.h"
+#include "blockdevice_ram.h"
+#include "framework_defs.h"
+
+#define METADATA_SIZE (4 + 4 + (12 * FRAMEWORK_FS_FILE_COUNT))
+
+// on native we use a RAM blockdevice as NVM as well for now
+extern uint8_t d7ap_fs_metadata[METADATA_SIZE];
+extern uint8_t d7ap_permanent_files_data[FRAMEWORK_FS_PERMANENT_STORAGE_SIZE];
+extern uint8_t d7ap_volatile_files_data[FRAMEWORK_FS_VOLATILE_STORAGE_SIZE];
+
+static blockdevice_ram_t metadata_bd = (blockdevice_ram_t){
+    .base.driver = &blockdevice_driver_ram,
+    .size = METADATA_SIZE,
+    .buffer = d7ap_fs_metadata
+};
+
+static blockdevice_ram_t permanent_bd = (blockdevice_ram_t){
+    .base.driver = &blockdevice_driver_ram,
+    .size = FRAMEWORK_FS_PERMANENT_STORAGE_SIZE,
+    .buffer = d7ap_permanent_files_data
+};
+
+static blockdevice_ram_t volatile_bd = (blockdevice_ram_t){
+    .base.driver = &blockdevice_driver_ram,
+    .size = FRAMEWORK_FS_VOLATILE_STORAGE_SIZE,
+    .buffer = d7ap_volatile_files_data
+};
+
+blockdevice_t * const metadata_blockdevice = (blockdevice_t* const) &metadata_bd;
+blockdevice_t * const persistent_files_blockdevice = (blockdevice_t* const) &permanent_bd;
+blockdevice_t * const volatile_blockdevice = (blockdevice_t* const) &volatile_bd;
 
 
 void __platform_init()
 {
+    blockdevice_init(&metadata_blockdevice);
+    blockdevice_init(&persistent_files_blockdevice);
+    blockdevice_init(&volatile_blockdevice);
 }
 
 void __platform_post_framework_init()
