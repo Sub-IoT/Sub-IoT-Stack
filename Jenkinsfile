@@ -128,12 +128,12 @@ node {
         }
     }
 
-    stage ('Save Artifacts'){
-            archiveArtifacts '**'
-    }
-    stage ('Flash B_L072Z_LRWAN1'){
-           build job: 'FlashRPI_P_B_L072Z_LRWAN1_param', wait: false, parameters: [string(name: 'PASS_BRANCH_NAME', value: env.BRANCH_NAME)]
-    }
+//    stage ('Save Artifacts'){
+//            archiveArtifacts '**'
+//    }
+//    stage ('Flash B_L072Z_LRWAN1'){
+//           build job: 'FlashRPI_P_B_L072Z_LRWAN1_param', wait: false, parameters: [string(name: 'PASS_BRANCH_NAME', value: env.BRANCH_NAME)]
+//    }
     
 }
 def setBuildStatus(String context,String message, String state) {
