@@ -21,9 +21,9 @@
 
 #include "d7ap_fs.h"
 #include "platform_defs.h"
-#include "MODULE_D7AP_defs.h"
+#include "MODULE_D7AP_FS_defs.h"
 
-#ifdef MODULE_D7AP_USE_DEFAULT_SYSTEMFILES
+#ifdef MODULE_D7AP_FS_USE_DEFAULT_SYSTEMFILES
 
 // The cog section below does not generate code but defines some global variables and functions which are used in subsequent cog sections below,
 // which do the actual code generation
