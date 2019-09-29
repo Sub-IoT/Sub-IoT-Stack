@@ -46,6 +46,7 @@ job 3:
   - cd oss7-testsuite
   - pip install -r requirements.txt
   - cd lib/pyd7a/
+  - git checkout add-size-to-itf-status
   - pip install -r requirements.txt
   - cd ../..
   - python2 run.py --serial-test-device=/dev/ttyUSB0 --serial-dut=/dev/ttyUSB1 -m "not band433 and not band915 and not known_issue" --junitxml report.xml -v
