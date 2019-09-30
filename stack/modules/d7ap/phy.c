@@ -166,6 +166,15 @@ static uint32_t fdev_hi_rate;
 static uint32_t lora_bw;
 static uint8_t lora_SF;
 
+static uint8_t preamble_size_lo_rate;
+static uint8_t preamble_size_normal_rate;
+static uint8_t preamble_size_hi_rate;
+static uint8_t preamble_detector_size;
+static uint8_t preamble_tol;
+
+static uint8_t rssi_smoothing;
+static uint8_t rssi_offset;
+
 static uint16_t total_bg = 0;
 static uint16_t total_rssi_triggers = 0;
 static uint16_t total_fg = 0;
@@ -439,7 +448,7 @@ static void configure_channel(const channel_id_t* channel) {
         else
             hw_radio_set_tx_fdev(0);
         hw_radio_set_rx_bw_hz(rx_bw_lo_rate);
-        hw_radio_set_preamble_size(PREAMBLE_LOW_RATE_CLASS);
+        hw_radio_set_preamble_size(preamble_size_lo_rate);
     }
     else if(channel->channel_header.ch_class == PHY_CLASS_NORMAL_RATE)
     {
@@ -449,7 +458,7 @@ static void configure_channel(const channel_id_t* channel) {
         else
             hw_radio_set_tx_fdev(0);
         hw_radio_set_rx_bw_hz(rx_bw_normal_rate);
-        hw_radio_set_preamble_size(PREAMBLE_NORMAL_RATE_CLASS);
+        hw_radio_set_preamble_size(preamble_size_normal_rate);
     }
     else if(channel->channel_header.ch_class == PHY_CLASS_HI_RATE)
     {
@@ -459,7 +468,7 @@ static void configure_channel(const channel_id_t* channel) {
         else
             hw_radio_set_tx_fdev(0);
         hw_radio_set_rx_bw_hz(rx_bw_hi_rate);
-        hw_radio_set_preamble_size(PREAMBLE_HI_RATE_CLASS);
+        hw_radio_set_preamble_size(preamble_size_hi_rate);
     }
 #ifdef USE_SX127X
     else if(channel->channel_header.ch_class == PHY_CLASS_LORA)
@@ -524,13 +533,27 @@ void fact_settings_file_change_callback(uint8_t file_id)
     bitrate_hi_rate = __builtin_bswap32(*((uint32_t*)(fact_settings+29)));
     fdev_hi_rate = __builtin_bswap32(*((uint32_t*)(fact_settings+33)));
 
+    preamble_size_lo_rate = fact_settings[37];
+    preamble_size_normal_rate = fact_settings[38];
+    preamble_size_hi_rate = fact_settings[39];
+
+    preamble_detector_size = fact_settings[40];
+    preamble_tol = fact_settings[41];
+
+    rssi_smoothing = fact_settings[42];
+    rssi_offset = fact_settings[43];
+
+    set_preamble_rssi_settings(preamble_detector_size, preamble_tol, rssi_smoothing, rssi_offset);
+
     lora_bw = __builtin_bswap32(*((uint32_t*)(fact_settings+37)));
     lora_SF = (uint8_t)fact_settings[41];
 
-    DPRINT("low rate bitrate %i : fdev %i : rx_bw %i", bitrate_lo_rate, fdev_lo_rate, rx_bw_lo_rate);
-    DPRINT("normal rate bitrate %i : fdev %i : rx_bw %i", bitrate_normal_rate, fdev_normal_rate, rx_bw_normal_rate);
-    DPRINT("high rate bitrate %i : fdev %i : rx_bw %i", bitrate_hi_rate, fdev_hi_rate, rx_bw_hi_rate);
-    DPRINT("gain offset set to %i", gain_offset);
+    DPRINT("low rate bitrate %i : fdev %i : rx_bw %i : preamble size %i", bitrate_lo_rate, fdev_lo_rate, rx_bw_lo_rate, preamble_size_lo_rate);
+    DPRINT("normal rate bitrate %i : fdev %i : rx_bw %i : preamble size %i", bitrate_normal_rate, fdev_normal_rate, rx_bw_normal_rate, preamble_size_normal_rate);
+    DPRINT("high rate bitrate %i : fdev %i : rx_bw %i : preamble size %i", bitrate_hi_rate, fdev_hi_rate, rx_bw_hi_rate, preamble_size_hi_rate);
+    DPRINT("set preamble detector size to %i with tol %i", preamble_detector_size, preamble_tol);
+    DPRINT("rssi smoothing is set to %i with an offset of %i", 2 << rssi_smoothing, rssi_offset);
+    DPRINT("gain offset set to %i\n", gain_offset);
     DPRINT("set lora bw to %i Hz with SF %i\n", lora_bw, lora_SF);
 
     fact_settings_changed = true;

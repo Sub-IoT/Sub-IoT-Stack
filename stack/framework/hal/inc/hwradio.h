@@ -455,6 +455,8 @@ void hw_radio_set_tx_power(int8_t eirp);
 
 void hw_radio_set_rx_timeout(uint32_t timeout);
 
+void set_preamble_rssi_settings(uint8_t preamble_detector_size, uint8_t preamble_tol, uint8_t rssi_smoothing, uint8_t rssi_offset);
+
 #endif //__HW_RADIO_H_
 
 /** @}*/

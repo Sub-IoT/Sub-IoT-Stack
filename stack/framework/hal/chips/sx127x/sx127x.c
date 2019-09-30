@@ -396,6 +396,12 @@ static void init_regs() {
   // TODO burst write reg?
 }
 
+void set_preamble_rssi_settings(uint8_t preamble_detector_size, uint8_t preamble_tol, uint8_t rssi_smoothing, uint8_t rssi_offset) {
+  write_reg(REG_PREAMBLEDETECT, (read_reg(REG_PREAMBLEDETECT) & RF_PREAMBLEDETECT_DETECTOR_MASK) | (preamble_detector_size-1) << 4 | preamble_tol);
+
+  write_reg(REG_RSSICONFIG, rssi_offset << 3 | rssi_smoothing);
+}
+
 static inline int16_t get_rssi() {
   return (- read_reg(REG_RSSIVALUE) >> 1);
 }
@@ -925,11 +931,11 @@ void hw_radio_set_tx_fdev(uint32_t fdev) {
 }
 
 void hw_radio_set_preamble_size(uint16_t size) {
-  if(size > 4) {
-    write_reg(REG_PREAMBLEDETECT, RF_PREAMBLEDETECT_DETECTOR_ON | RF_PREAMBLEDETECT_DETECTORSIZE_3 | RF_PREAMBLEDETECT_DETECTORTOL_10);  
-  } else {
-    write_reg(REG_PREAMBLEDETECT, RF_PREAMBLEDETECT_DETECTOR_ON | RF_PREAMBLEDETECT_DETECTORSIZE_3 | RF_PREAMBLEDETECT_DETECTORTOL_15);  
-  }
+  // if(size > 4) {
+  //   write_reg(REG_PREAMBLEDETECT, RF_PREAMBLEDETECT_DETECTOR_ON | RF_PREAMBLEDETECT_DETECTORSIZE_3 | RF_PREAMBLEDETECT_DETECTORTOL_10);  
+  // } else {
+  //   write_reg(REG_PREAMBLEDETECT, RF_PREAMBLEDETECT_DETECTOR_ON | RF_PREAMBLEDETECT_DETECTORSIZE_3 | RF_PREAMBLEDETECT_DETECTORTOL_15);  
+  // }
   write_reg_16(REG_PREAMBLEMSB, size);
 }
 
