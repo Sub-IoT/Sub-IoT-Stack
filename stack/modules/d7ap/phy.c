@@ -495,10 +495,10 @@ void continuous_tx_expiration()
     DPRINT("Continuous TX is now terminated");
 }
 
-void fof_status_file_change_callback(uint8_t file_id)
+void phy_config_file_change_callback(uint8_t file_id)
 {
     uint8_t fof[2];
-    d7ap_fs_read_file(D7A_FILE_FOF_STATUS, 0, fof, 2);
+    d7ap_fs_read_file(D7A_FILE_PHY_CONFIG, 9, fof, 2);
 
     if(frequency_offset != (int16_t)__builtin_bswap16(*((uint16_t*)(fof)))) {
         frequency_offset = (int16_t)__builtin_bswap16(*((uint16_t*)(fof)));
@@ -560,10 +560,10 @@ error_t phy_init(void) {
 #endif
 
     fact_settings_file_change_callback(D7A_FILE_FACTORY_SETTINGS_FILE_ID); // trigger read
-    fof_status_file_change_callback(D7A_FILE_FOF_STATUS);
+    phy_config_file_change_callback(D7A_FILE_PHY_CONFIG);
 
     fs_register_file_modified_callback(D7A_FILE_FACTORY_SETTINGS_FILE_ID, &fact_settings_file_change_callback);
-    fs_register_file_modified_callback(D7A_FILE_FOF_STATUS, &fof_status_file_change_callback);
+    fs_register_file_modified_callback(D7A_FILE_PHY_CONFIG, &phy_config_file_change_callback);
 
     configure_syncword(PHY_SYNCWORD_CLASS0, &default_channel_id);
     configure_channel(&default_channel_id);

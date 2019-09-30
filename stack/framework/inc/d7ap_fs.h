@@ -75,6 +75,9 @@
 #define D7A_FILE_FOF_STATUS      0x13
 #define D7A_FILE_FOF_STATUS_SIZE 10
 
+#define D7A_FILE_PHY_CONFIG       0x08
+#define D7A_FILE_PHY_CONFIG_SIZE  11
+
 #define D7AP_FS_SYSTEMFILES_COUNT 0x2F // reserved up until 0x3F but used only until 0x2F so use this for limiting memory usage
 #define D7AP_FS_USERFILES_COUNT (FRAMEWORK_FS_FILE_COUNT - D7AP_FS_SYSTEMFILES_COUNT)
 
