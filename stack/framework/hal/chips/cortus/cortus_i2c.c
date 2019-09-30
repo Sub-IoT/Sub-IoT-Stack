@@ -39,7 +39,7 @@ volatile unsigned int tmp;
 
 
 
-i2c_handle_t* i2c_init(uint8_t idx, uint8_t pins, uint32_t baudrate) {
+i2c_handle_t* i2c_init(uint8_t idx, uint8_t pins, uint32_t baudrate, bool pullup) {
     i2c->divider = 542;
     i2c->master = 1;
     i2c->selclk = 0; // 0:50MHz, 1:25MHz, 2:12.5MHZ, 3:3.125MHz

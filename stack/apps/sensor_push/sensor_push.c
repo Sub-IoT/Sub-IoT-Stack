@@ -128,7 +128,7 @@ void bootstrap()
     alp_layer_init(&alp_init_args, false);
 
 #if defined USE_HTS221
-    hts221_handle = i2c_init(0, 0, 100000);
+    hts221_handle = i2c_init(0, 0, 100000, true);
     HTS221_DeActivate(hts221_handle);
     HTS221_Set_BduMode(hts221_handle, HTS221_ENABLE);
     HTS221_Set_Odr(hts221_handle, HTS221_ODR_7HZ);

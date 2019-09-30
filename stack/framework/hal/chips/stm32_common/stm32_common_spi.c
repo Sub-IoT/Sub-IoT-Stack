@@ -90,15 +90,6 @@ static void init_pins(spi_handle_t* spi) {
   hw_gpio_configure_pin_stm(spi_ports[spi->spi_port_number].mosi_pin, &GPIO_InitStruct);
 }
 
-static void deinit_pins(spi_handle_t* spi) {
-  GPIO_InitTypeDef GPIO_InitStruct;
-  GPIO_InitStruct.Mode = GPIO_MODE_ANALOG;
-
-  hw_gpio_configure_pin_stm(spi_ports[spi->spi_port_number].sck_pin, &GPIO_InitStruct);
-  hw_gpio_configure_pin_stm(spi_ports[spi->spi_port_number].miso_pin, &GPIO_InitStruct);
-  hw_gpio_configure_pin_stm(spi_ports[spi->spi_port_number].mosi_pin, &GPIO_InitStruct);
-}
-
 void spi_enable(spi_handle_t* spi) {
   // already active?
   if(spi->active) { return; }
@@ -150,7 +141,6 @@ void spi_disable(spi_handle_t* spi) {
   // turn off all CS lines
   ensure_slaves_deselected(spi);
 
-  deinit_pins(spi);
   spi->active = false;
 }
 
