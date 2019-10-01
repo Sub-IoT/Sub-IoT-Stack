@@ -422,6 +422,7 @@ static void configure_channel(const channel_id_t* channel) {
     }
 
     fact_settings_changed = false;
+    fof_changed = false;
 
     // configure modulation settings
     if(channel->channel_header.ch_class == PHY_CLASS_LO_RATE)
