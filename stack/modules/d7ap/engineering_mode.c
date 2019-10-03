@@ -73,7 +73,7 @@ void cont_tx_done_callback(packet_t* packet) {}
 
 void packet_transmitted_callback(packet_t* packet) {
   DPRINT("packet %i transmitted", per_packet_counter);
-  if(per_packet_counter >= per_packet_limit) {
+  if(per_packet_counter >= per_packet_limit && per_packet_limit != 25500) { //timeout of 255 = unlimited
     DPRINT("PER test done");
     return;
   }
@@ -124,7 +124,7 @@ static void packet_received_em(packet_t* packet) {
       if(msg_counter > 0)
           per = 100.0 - ((double)per_received_packets_counter / (double)msg_counter) * 100.0;
       
-      if(msg_counter % 50 == 0) {
+      if(msg_counter % 5 == 0) {
         uint8_t to_uart_uint[34];
         sprintf(to_uart_uint, "PER %i%%. Counter %i, rssi %idBm      ", (int)per, msg_counter, packet->hw_radio_packet.rx_meta.rssi);
         modem_interface_transfer_bytes(to_uart_uint, 34, 0x04); //SERIAL_MESSAGE_TYPE_LOGGING
