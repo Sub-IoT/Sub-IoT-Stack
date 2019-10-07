@@ -397,7 +397,7 @@ static void init_regs() {
 }
 
 void set_preamble_rssi_settings(uint8_t preamble_detector_size, uint8_t preamble_tol, uint8_t rssi_smoothing, uint8_t rssi_offset) {
-  write_reg(REG_PREAMBLEDETECT, (read_reg(REG_PREAMBLEDETECT) & RF_PREAMBLEDETECT_DETECTOR_MASK) | (preamble_detector_size-1) << 4 | preamble_tol);
+  write_reg(REG_PREAMBLEDETECT, RF_PREAMBLEDETECT_DETECTOR_ON | (preamble_detector_size-1) << 5 | preamble_tol);
 
   write_reg(REG_RSSICONFIG, rssi_offset << 3 | rssi_smoothing);
 }
