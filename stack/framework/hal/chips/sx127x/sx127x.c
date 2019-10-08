@@ -108,10 +108,12 @@
   #error "Invalid configuration"
 #endif
 
-static const uint16_t rx_bw_startup_time[21] = {63, 74, 85, 100, 84, 120, 119, 144, 169, 215, 264, 313, 
-  407, 504, 601, 791, 984, 1180, 1560, 1940, 2330};
+static const uint16_t rx_bw_startup_time[21] = {66, 78, 89, 105, 88, 126, 125, 151, 177, 226, 277, 329, 
+  427, 529, 631, 831, 1033, 1239, 1638, 2037, 2447}; //TS_RE + 5% margin
 
 static uint8_t rx_bw_number = 21;
+static uint8_t rx_bw_khz = 0;
+static uint8_t rssi_smoothing_full = 0;
 
 typedef enum {
   OPMODE_SLEEP = 0,
@@ -308,6 +310,7 @@ static void init_regs() {
                                 RF_RXCONFIG_AGCAUTO_ON | RF_RXCONFIG_RXTRIGER_PREAMBLEDETECT);
 
   write_reg(REG_RSSICONFIG, RF_RSSICONFIG_OFFSET_P_00_DB | RF_RSSICONFIG_SMOOTHING_8); // TODO no RSSI offset for now + using 8 samples for smoothing
+  rssi_smoothing_full = 8;
   //  write_reg(REG_RSSICOLLISION, 0); // TODO not used for now
   write_reg(REG_RSSITHRESH, RF_RSSITHRESH_THRESHOLD); // TODO using -128 dBm for now
 
@@ -835,6 +838,7 @@ void hw_radio_set_rx_bw_hz(uint32_t bw_hz) {
         min_bw_dif = abs(computed_bw - bw_hz);
         reg_bw = ((((bw_mant_count - 16) / 4) << 3) | bw_exp_count);
         rx_bw_number = (bw_exp_count - 1) * 3 + ((bw_mant_count - 16) >> 2);
+        rx_bw_khz = (uint8_t) (computed_bw / 1000);
       }
     }
   }
@@ -1029,10 +1033,13 @@ __attribute__((weak)) void hw_radio_io_deinit() {
   // needs to be implemented in platform for now (until we have a public API to configure GPIO pins)
 }
 
+/* startup time = TS_RE + TS_RSSI */
+/* with TS_RE = rx_bw_startup_time */
+/* with TS_RSSI = 2^(rssi_smoothing + 1) / (4 * RXBW[kHz]) [ms] */
 int16_t hw_radio_get_rssi() {
     set_opmode(OPMODE_RX); //0.103 ms
     hw_gpio_disable_interrupt(SX127x_DIO0_PIN); //3.7µs
     hw_gpio_disable_interrupt(SX127x_DIO1_PIN);
-    hw_busy_wait(rx_bw_startup_time[rx_bw_number]); //TODO: optimise this timing. Now it should wait for ~700µs but actually waits ~926µs (low rate)
+    hw_busy_wait(rx_bw_startup_time[rx_bw_number] + (rssi_smoothing_full * 1000)/(4 * rx_bw_khz));
     return (- read_reg(REG_RSSIVALUE) >> 1);
 }
