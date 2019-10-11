@@ -684,7 +684,7 @@ void hw_radio_stop() {
 error_t hw_radio_set_idle() {
     if(state == STATE_IDLE && !io_inited)
         return EALREADY;
-    hw_radio_set_opmode(HW_STATE_SLEEP);
+     hw_radio_set_opmode(HW_STATE_SLEEP);
     if(FskPacketHandler_sx127x.Size - FskPacketHandler_sx127x.NbBytes != 0 && FskPacketHandler_sx127x.NbBytes != 0) {
       DPRINT("going to idle while still %i bytes to read.", FskPacketHandler_sx127x.Size - FskPacketHandler_sx127x.NbBytes);
       FskPacketHandler_sx127x.Size = 0;
@@ -753,7 +753,10 @@ void set_opmode(uint8_t opmode) {
 
   #ifdef PLATFORM_SX127X_USE_VCC_TXCO
   if(opmode == OPMODE_SLEEP)
+  {
+    while(read_reg(REG_OPMODE) != OPMODE_SLEEP){} //ensure setting sleep mode is processed
     hw_gpio_clr(SX127x_VCC_TXCO);
+  }
   else
     hw_gpio_set(SX127x_VCC_TXCO);
   #endif
