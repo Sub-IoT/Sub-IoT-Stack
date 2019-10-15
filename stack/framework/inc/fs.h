@@ -67,6 +67,13 @@ typedef enum
     FS_STORAGE_PERMANENT = 3  // The content is kept in a permanent memory of the device. It is accessible for read and write
 } fs_storage_class_t;
 
+typedef enum
+{
+    FS_BLOCKDEVICE_TYPE_METADATA = 0,
+    FS_BLOCKDEVICE_TYPE_PERMANENT = 1,
+    FS_BLOCKDEVICE_TYPE_VOLATILE = 2,
+} fs_blockdevice_types_t;
+
 typedef struct  __attribute__((__packed__))
 {
     uint32_t length;
@@ -74,20 +81,13 @@ typedef struct  __attribute__((__packed__))
     uint8_t rfu : 6; //FIXME: 'valid' field or invalid storage qualifier?
 } fs_file_stat_t;
 
-
 typedef struct __attribute__((__packed__))
 {
-    uint8_t magic_number[FS_MAGIC_NUMBER_SIZE];   /**< used to validate FS contents */
-    size_t nfiles; /**< Number of files */
-} fs_metadata_t;
-
-typedef struct __attribute__((__packed__))
-{
+    uint8_t blockdevice_index; // the members of fs_blockdevice_types_t are required, but more blockdevices can be registered in the futute
     uint32_t length;
-    fs_storage_class_t storage : 2;
-    uint8_t rfu : 6; //FIXME: 'valid' field or invalid storage qualifier?
     uint32_t addr;
 } fs_file_t;
+
 
 /* \brief The callback function for when a user file is modified
  *
@@ -99,9 +99,9 @@ typedef void (*fs_modified_file_callback_t)(uint8_t file_id);
  * @brief Descriptor of a file system
  */
 typedef struct __attribute__((__packed__)) {
-  fs_metadata_t* metadata; // magic number + #files
-  fs_file_t* file_headers;
+  uint8_t* metadata; // magic number + #files + file headers
   uint8_t* files_data; /**< Files data array */
+  // TODO
 } fs_filesystem_t;
 
 void fs_init(fs_filesystem_t* provisioning);

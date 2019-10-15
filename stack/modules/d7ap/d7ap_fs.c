@@ -164,7 +164,7 @@ int d7ap_fs_read_file(uint8_t file_id, uint32_t offset, uint8_t* buffer, uint32_
   int rtc;
   d7ap_fs_file_header_t header;
 
-  DPRINT("FS RD %i", file_id);
+  DPRINT("FS RD %i\n", file_id);
 
   if(!is_file_defined(file_id)) return -ENOENT;
 
@@ -197,9 +197,12 @@ int d7ap_fs_read_file_header(uint8_t file_id, d7ap_fs_file_header_t* file_header
   if (rtc != 0)
     return rtc;
 
+#if __BYTE_ORDER__ != __ORDER_BIG_ENDIAN__
   // convert to little endian (native)
   file_header->length = __builtin_bswap32(file_header->length);
   file_header->allocated_length = __builtin_bswap32(file_header->allocated_length);
+#endif
+
   return 0;
 }
 
@@ -219,7 +222,7 @@ int d7ap_fs_write_file(uint8_t file_id, uint32_t offset, const uint8_t* buffer, 
   int rtc;
   d7ap_fs_file_header_t header;
 
-  DPRINT("FS WR %i", file_id);
+  DPRINT("FS WR %i\n", file_id);
 
   if(!is_file_defined(file_id)) return -ENOENT;
 

@@ -23,11 +23,12 @@ static void init(blockdevice_t* bd) { // TODO SPI as param
 }
 
 static error_t read(blockdevice_t* bd, uint8_t* data, uint32_t addr, uint32_t size) {
-  (void)bd; // suppress unused warning
+  blockdevice_stm32_eeprom_t* bd_eeprom = (blockdevice_stm32_eeprom_t*)bd;
 
   if(size == 0) return SUCCESS;
+  if(size > bd_eeprom->size) return -ESIZE;
 
-  addr += DATA_EEPROM_BASE;
+  addr += DATA_EEPROM_BASE + bd_eeprom->offset;
   if(addr + size > DATA_EEPROM_BANK2_END) return -ESIZE;
 
   memcpy(data, (const void*)(intptr_t)(addr), size);
@@ -36,11 +37,12 @@ static error_t read(blockdevice_t* bd, uint8_t* data, uint32_t addr, uint32_t si
 }
 
 static error_t program(blockdevice_t* bd, const uint8_t* data, uint32_t addr, uint32_t size) {
-  (void)bd; // suppress unused warning
+  blockdevice_stm32_eeprom_t* bd_eeprom = (blockdevice_stm32_eeprom_t*)bd;
 
   if(size == 0) return SUCCESS;
+  if(size > bd_eeprom->size) return -ESIZE;
 
-  addr += DATA_EEPROM_BASE;
+  addr += DATA_EEPROM_BASE + bd_eeprom->offset;
   if(addr + size > DATA_EEPROM_BANK2_END) return -ESIZE;
 
   // TODO optimize by writing per word when possible

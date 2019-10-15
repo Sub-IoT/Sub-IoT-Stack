@@ -29,6 +29,28 @@
 #include "errors.h"
 #include "stm32_common_gpio.h"
 
+// defined in linker script
+extern uint32_t __d7ap_fs_metadata_start;
+extern uint32_t __d7ap_fs_metadata_end;
+extern uint32_t __d7ap_fs_permanent_files_start;
+extern uint32_t __d7ap_fs_permanent_files_end;
+
+static blockdevice_stm32_eeprom_t metadata_bd;
+static blockdevice_stm32_eeprom_t permanent_files_bd;
+
+extern uint8_t d7ap_volatile_files_data[FRAMEWORK_FS_VOLATILE_STORAGE_SIZE];
+static blockdevice_ram_t ram_bd = (blockdevice_ram_t){
+    .base.driver = &blockdevice_driver_ram,
+    .size = FRAMEWORK_FS_VOLATILE_STORAGE_SIZE,
+    .buffer = d7ap_volatile_files_data
+};
+
+blockdevice_t * const metadata_blockdevice = (blockdevice_t* const) &metadata_bd;
+blockdevice_t * const persistent_files_blockdevice = (blockdevice_t* const) &permanent_files_bd;
+blockdevice_t * const volatile_blockdevice = (blockdevice_t* const) &ram_bd;
+
+
+
 #if defined(USE_SX127X) && defined(PLATFORM_SX127X_USE_RESET_PIN)
 // override the weak definition
 // TODO might be moved to radio driver is hw_gpio_configure_pin() is part of public HAL API instead of platform specific
@@ -115,6 +137,23 @@ void __platform_init()
 #endif
 
     HAL_EnableDBGSleepMode(); // TODO impact on power?
+
+    // init blockdevices
+    // the embedded EEPROM is divided in 2 logical block devices, 1 for metadata and 1 for permanent files
+    blockdevice_stm32_eeprom_t* stm32_eeprom_metadata_bd = (blockdevice_stm32_eeprom_t*)metadata_blockdevice;
+    stm32_eeprom_metadata_bd->base.driver = &blockdevice_driver_stm32_eeprom;
+    stm32_eeprom_metadata_bd->offset = 0;
+    stm32_eeprom_metadata_bd->size = (uint32_t)((uint8_t*)&__d7ap_fs_metadata_end - (uint8_t*)&__d7ap_fs_metadata_start);
+
+    blockdevice_init(metadata_blockdevice);
+
+    blockdevice_stm32_eeprom_t* stm32_eeprom_permanent_files_bd = (blockdevice_stm32_eeprom_t*)persistent_files_blockdevice;
+    stm32_eeprom_permanent_files_bd->base.driver = &blockdevice_driver_stm32_eeprom;
+    stm32_eeprom_permanent_files_bd->offset = (uint32_t)((uint8_t*)&__d7ap_fs_metadata_end - (uint8_t*)&__d7ap_fs_metadata_start); // blockdevices begins after metadata block device // TODO aligment on sector?
+    stm32_eeprom_permanent_files_bd->size = (uint32_t)((uint8_t*)&__d7ap_fs_permanent_files_end - (uint8_t*)&__d7ap_fs_permanent_files_start);
+
+    blockdevice_init(persistent_files_blockdevice);
+    blockdevice_init(volatile_blockdevice);
 }
 
 void __platform_post_framework_init()
