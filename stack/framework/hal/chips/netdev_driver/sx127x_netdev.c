@@ -153,8 +153,9 @@ static int _send(netdev_t *netdev, const iolist_t *iolist)
                 dev->packet.pos = size;
                 if (dev->options & SX127X_OPT_TELL_TX_REFILL) // we expect to refill the FIFO with subsequent data
                 {
-                    sx127x_reg_write(dev, SX127X_REG_FIFOTHRESH, 0x81); // FIFO level interrupt if under 2 bytes
-                    dev->packet.fifothresh = 2;
+                    sx127x_reg_write(dev, SX127X_REG_FIFOTHRESH, 0x80 | (size/2 - 1));
+                    dev->packet.fifothresh = size/2;
+
                     sx127x_write_fifo(dev, iolist->iol_base, size);
                     hw_gpio_set_edge_interrupt(dev->params.dio1_pin, GPIO_FALLING_EDGE);
                     hw_gpio_enable_interrupt(dev->params.dio1_pin);
