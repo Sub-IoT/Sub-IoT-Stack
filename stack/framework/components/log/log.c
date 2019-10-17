@@ -69,9 +69,7 @@ __LINK_C void log_print_data(uint8_t* message, uint32_t length)
     for( uint32_t i=0 ; i<length ; i++ )
     {
         printf(" %02X", message[i]);
-        //printf will enter an infinite loop when we enter to many characters without a newline character
-        if(((i % 100) == 0) && i)
-            printf("\n\r");
+        fflush(stdout);
     }
 }
 
