@@ -887,10 +887,6 @@ __attribute__((used)) uint8_t d7ap_files_data[FRAMEWORK_FS_PERMANENT_STORAGE_SIZ
       //[[[end]]] (checksum: a696b8a4ac0ffb529700f64b24a93fbd)
   };
 
-fs_filesystem_t d7ap_filesystem __attribute__((used)) = {
-  .metadata = d7ap_fs_metadata,
-  .files_data = d7ap_files_data
-};
 #endif
 
 // The userfiles are only stored in RAM for now
