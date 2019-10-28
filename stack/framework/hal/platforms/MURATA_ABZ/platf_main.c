@@ -16,19 +16,38 @@
  * limitations under the License.
  */
 
-#include "platform.h"
 #include "stm32_device.h"
+#include "platform.h"
 #include "bootstrap.h"
 #include "hwgpio.h"
 #include "hwsystem.h"
 #include "debug.h"
 #include "stm32_common_gpio.h"
+#include "hwdebug.h"
 #include "hwradio.h"
 #include "errors.h"
-#include "platform_defs.h"
 
-#define DPRINT(...)
-//#define DPRINT(...) log_print_string(__VA_ARGS__)
+
+// defined in linker script
+extern uint32_t __d7ap_fs_metadata_start;
+extern uint32_t __d7ap_fs_metadata_end;
+extern uint32_t __d7ap_fs_permanent_files_start;
+extern uint32_t __d7ap_fs_permanent_files_end;
+
+static blockdevice_stm32_eeprom_t metadata_bd;
+static blockdevice_stm32_eeprom_t permanent_files_bd;
+
+extern uint8_t d7ap_volatile_files_data[FRAMEWORK_FS_VOLATILE_STORAGE_SIZE];
+static blockdevice_ram_t ram_bd = (blockdevice_ram_t){
+    .base.driver = &blockdevice_driver_ram,
+    .size = FRAMEWORK_FS_VOLATILE_STORAGE_SIZE,
+    .buffer = d7ap_volatile_files_data
+};
+
+blockdevice_t * const metadata_blockdevice = (blockdevice_t* const) &metadata_bd;
+blockdevice_t * const persistent_files_blockdevice = (blockdevice_t* const) &permanent_files_bd;
+blockdevice_t * const volatile_blockdevice = (blockdevice_t* const) &ram_bd;
+
 
 #if defined(USE_SX127X) && defined(PLATFORM_SX127X_USE_RESET_PIN)
 // override the weak definition
@@ -47,8 +66,8 @@ void __platform_init()
 {
     stm32_common_mcu_init();
     __gpio_init();
-
-#ifdef USE_SX127X
+ 
+#if defined(USE_SX127X) || defined(USE_NETDEV_DRIVER)
     hw_radio_io_init();
 
   #ifdef PLATFORM_SX127X_USE_RESET_PIN
@@ -56,25 +75,29 @@ void __platform_init()
   #endif
 #endif
 
-    __HAL_RCC_CLEAR_RESET_FLAGS();
     HAL_EnableDBGSleepMode(); // TODO impact on power?
+
+
+    // init blockdevices
+    // the embedded EEPROM is divided in 2 logical block devices, 1 for metadata and 1 for permanent files
+    blockdevice_stm32_eeprom_t* stm32_eeprom_metadata_bd = (blockdevice_stm32_eeprom_t*)metadata_blockdevice;
+    stm32_eeprom_metadata_bd->base.driver = &blockdevice_driver_stm32_eeprom;
+    stm32_eeprom_metadata_bd->offset = 0;
+    stm32_eeprom_metadata_bd->size = (uint32_t)((uint8_t*)&__d7ap_fs_metadata_end - (uint8_t*)&__d7ap_fs_metadata_start);
+
+    blockdevice_init(metadata_blockdevice);
+
+    blockdevice_stm32_eeprom_t* stm32_eeprom_permanent_files_bd = (blockdevice_stm32_eeprom_t*)persistent_files_blockdevice;
+    stm32_eeprom_permanent_files_bd->base.driver = &blockdevice_driver_stm32_eeprom;
+    stm32_eeprom_permanent_files_bd->offset = (uint32_t)((uint8_t*)&__d7ap_fs_metadata_end - (uint8_t*)&__d7ap_fs_metadata_start); // blockdevices begins after metadata block device // TODO aligment on sector?
+    stm32_eeprom_permanent_files_bd->size = (uint32_t)((uint8_t*)&__d7ap_fs_permanent_files_end - (uint8_t*)&__d7ap_fs_permanent_files_start);
+
+    blockdevice_init(persistent_files_blockdevice);
+    blockdevice_init(volatile_blockdevice);
 }
 
 void __platform_post_framework_init()
 {
-  // TODO move to modem module
-#ifdef PLATFORM_USE_MODEM_INTERRUPT_LINES
-    // define interrupt pins between modem and application mcu
-    GPIO_InitTypeDef GPIO_InitStruct;
-    GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
-    GPIO_InitStruct.Pull = GPIO_PULLDOWN;
-    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-    hw_gpio_configure_pin_stm(MODEM2MCU_INT_PIN, &GPIO_InitStruct);
-    hw_gpio_clr(MODEM2MCU_INT_PIN);
-
-    GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
-    hw_gpio_configure_pin_stm(MCU2MODEM_INT_PIN, &GPIO_InitStruct);
-#endif
 }
 
 int main()
@@ -90,7 +113,7 @@ int main()
     return 0;
 }
 
-#if defined(USE_SX127X)
+#if defined(USE_SX127X) || defined(USE_NETDEV_DRIVER)
 // override the weak definition
 void hw_radio_io_init() {
   // configure the radio GPIO pins here, since hw_gpio_configure_pin() is MCU
@@ -152,95 +175,3 @@ void hw_radio_io_deinit() {
 //  __HAL_RCC_GPIOH_CLK_DISABLE();
 }
 #endif
-
-void hw_deinit_pheriperals()
-{
-  __HAL_RCC_GPIOA_CLK_ENABLE();
-  // set PA2 (=MODEM2MCUINT) as analog // TODO move to modem module?
-   //GPIOA->MODER |= 0x03 << (2*2);
-#ifdef PLATFORM_USE_MODEM_INTERRUPT_LINES
-   assert(hw_gpio_configure_pin(MODEM2MCU_INT_PIN, false, GPIO_MODE_OUTPUT_PP, 0) == SUCCESS);
-#endif
-   //__HAL_RCC_GPIOA_CLK_DISABLE();
-
-  // TODO remove here, ports can be used for other purposes, needs to be managed by gpio driver
-//  __HAL_RCC_GPIOB_CLK_DISABLE();
-//  __HAL_RCC_GPIOC_CLK_DISABLE();
-//  __HAL_RCC_GPIOD_CLK_DISABLE();
-//  __HAL_RCC_GPIOE_CLK_DISABLE();
-//  __HAL_RCC_GPIOH_CLK_DISABLE();
-
-  DPRINT("EXTI->PR %x", EXTI->PR);
-  //assert(EXTI->PR == 0);
-  //assert(LPTIM1->ISR == 0);
-  //assert(USART2->ISR == 0xc0);
-  EXTI->IMR |= 1 << 29; // ensure we can always wake up from LPTIM1 // TODO should be done by driver
-//EXTI->IMR = 0x3f840000; // TODO temp
-  DPRINT("EXTI->IMR %x", EXTI->IMR);
-  //assert(EXTI->IMR == 0x3F840001); // 3f842000 = default value (direct lines) + MCU2MODEM interrupt
-
-  DPRINT("RCC_AHBENR %x", RCC->AHBENR); // 0x100 => MIFEN // TODO see also PWR_CR->DS_EE_KOFF
-  DPRINT("RCC_AHBSMENR %x", RCC->AHBSMENR); // 0x1111301 // TODO valid in stop mode?
-  //assert(RCC->APB1ENR == 0x80000000); // only LPTIM1 enabled
-  DPRINT("RCC_APB1SMENR %x", RCC->APB1SMENR); // TODO valid in stop mode?
-  DPRINT("RCC_APB2ENR %x", RCC->APB2ENR); // 0x404000 => USART1 + DBG => 0x00
-  // TODO assert(RCC->APB2ENR == 0 || RCC->APB2ENR == 0x400000); // TODO 0x400000 only when debug enabled;
-  DPRINT("RCC_APB2SMENR %x", RCC->APB2SMENR); // TODO valid in stop mode?
-  DPRINT("RCC->IOPENR %x", RCC->IOPENR);
-  RCC->IOPSMENR = 0;
-  DPRINT("RCC->IOPSMENR %x", RCC->IOPSMENR);
-  //assert(RCC->IOPENR & 1); // PORTA for MCU int // TODO sx1276 IRQs?
-  DPRINT("RCC_CCIPR %x", RCC->CCIPR); // c0000 => LSE used for LPTIM
-  //assert(RCC->CCIPR == 0xc0000); // LSE used for LPTIM
-  DPRINT("RCC->CSR %x\n", RCC->CSR);
-  //assert(RCC->CSR == 0x300 || RCC->CSR == 0x50300 ); // LSE  // TODO RTC used for lorwan stack for now. TODO: LSI needed for IWDG?) //TODO LORAWAN asserts here
-  DPRINT("PWR->CR %x", PWR->CR); // 0xF00 => ULP+FWU ok, DBP TODO
-  DPRINT("PWR->CSR %x", PWR->CSR);
-  //assert(PWR->CSR == 0x8); // 0x8 => VREFINTRDYF ok
-
-
-// TODO
-  //#ifndef NDEBUG
-//  assert(GPIOA->MODER == 0xEBFFFFFC); // PA13 & PA14 = SWD, PA0 = MCU2MODEM interrupt
-//#else
-//  assert(GPIOA->MODER == 0xFFFFFFFC);
-//#endif
-
-//  uint32_t gpioa_moder_mask = 0;
-//  gpioa_moder_mask |= 0b11 << (0 * 2); // MCU2MODEM INT => TODO hardcoded for now
-//  gpioa_moder_mask |= 0b11 << (11 * 2); // MODEM2MCU INT => TODO hardcoded for now
-//  gpioa_moder_mask |= 0b11 << (1 * 2); // A1 = ANT SW, can be enabled during RX or TX
-//#ifdef FRAMEWORK_DEBUG_ENABLE_SWD
-//  gpioa_moder_mask |= 0b11 << (13 * 2); // SWD
-//  gpioa_moder_mask |= 0b11 << (14 * 2); // SWD
-//#endif
-//  gpioa_moder_mask |= 0b11 << (6 * 2); // SPI MISO // TODO not always disabled
-//  gpioa_moder_mask |= 0b11 << (7 * 2); // SPI MOSI // TODO not always disabled
-//  gpioa_moder_mask |= 0b11 << (12 * 2); // TCXO VCC // TODO not always disabled
-//  gpioa_moder_mask |= 0b11 << (15 * 2); // SPI CS // TODO not always disabled
-//  DPRINT("GPIOA->MODER %x, mask %x, result %x", GPIOA->MODER, gpioa_moder_mask, GPIOA->MODER | gpioa_moder_mask);
-//  assert((GPIOA->MODER | gpioa_moder_mask) == 0xFFFFFFFF);
-
-
-//  uint32_t gpiob_moder_mask = 0;
-//  gpiob_moder_mask |= 0b11 << (1 * 2); // B1 = DIO1
-//  gpiob_moder_mask |= 0b11 << (4 * 2); // B4 = DIO0
-//  gpiob_moder_mask |= 0b11 << (3 * 2); // B3 = SPI CLK // TODO not always disabled (for example during TX)
-//  DPRINT("GPIOB->MODER %x, mask %x, result %x", GPIOB->MODER, gpiob_moder_mask, GPIOB->MODER | gpiob_moder_mask);
-//  assert((GPIOB->MODER | gpiob_moder_mask) == 0xFFFFFFFF);
-
-//  uint32_t gpioc_moder_mask = 0;
-//  gpioc_moder_mask |= 0b11 << (0 * 2); // C0 = nRESET sx127x // TODO
-//  gpioc_moder_mask |= 0b11 << (1 * 2); // C1 = ANT SW, can be enabled during RX or TX
-//  gpioc_moder_mask |= 0b11 << (2 * 2); // C2 = ANT SW, can be enabled during RX or TX
-//  gpioc_moder_mask |= 0b11 << (13 * 2); // DIO3, can be enabled during RX or TX
-//  DPRINT("GPIOC->MODER %x, mask %x, result %x", GPIOC->MODER, gpioc_moder_mask, GPIOC->MODER | gpioc_moder_mask);
-//  assert((GPIOC->MODER | gpioc_moder_mask) == 0xFFFFFFFF); //TODO LORAWAN asserts here
-
-  // TODO internal voltage ref
-  // TODO GPIO direction
-  // TODO voltage scaling?
-  // TODO PWR->CSR |= (PWR_CSR_EWUP1 | PWR_CSR_EWUP2);
-  // TODO watchdog?
-}
-
