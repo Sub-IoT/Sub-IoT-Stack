@@ -935,11 +935,6 @@ void hw_radio_set_tx_fdev(uint32_t fdev) {
 }
 
 void hw_radio_set_preamble_size(uint16_t size) {
-  // if(size > 4) {
-  //   write_reg(REG_PREAMBLEDETECT, RF_PREAMBLEDETECT_DETECTOR_ON | RF_PREAMBLEDETECT_DETECTORSIZE_3 | RF_PREAMBLEDETECT_DETECTORTOL_10);  
-  // } else {
-  //   write_reg(REG_PREAMBLEDETECT, RF_PREAMBLEDETECT_DETECTOR_ON | RF_PREAMBLEDETECT_DETECTORSIZE_3 | RF_PREAMBLEDETECT_DETECTORTOL_15);  
-  // }
   write_reg_16(REG_PREAMBLEMSB, size);
 }
 
