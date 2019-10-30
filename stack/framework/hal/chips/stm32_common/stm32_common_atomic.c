@@ -24,14 +24,23 @@
 #include "hwatomic.h"
 #include "stm32_device.h"
 
- // TODO nesting?
+static volatile uint32_t reentrancy_counter = 0;
 
 void start_atomic()
-{  
-  __disable_irq();
+{
+    __disable_irq();
+    ++reentrancy_counter;
 }
 
 void end_atomic()
 {
-  __enable_irq();
+    if (reentrancy_counter == 0) {
+        return;
+    }
+
+    --reentrancy_counter;
+
+    if (reentrancy_counter == 0) {
+        __enable_irq();
+    }
 }
