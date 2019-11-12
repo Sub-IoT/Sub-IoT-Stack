@@ -154,8 +154,8 @@ MACRO(APP_BUILD)
 
     # when the system files are not stored a separate linker section but in RAM (default when not defined in platform) make sure these sections are not removed from the app hex
     IF((DEFINED PLATFORM_FS_SYSTEMFILES_IN_SEPARATE_LINKER_SECTION) AND PLATFORM_FS_SYSTEMFILES_IN_SEPARATE_LINKER_SECTION)
-      SET(REMOVE_SECTIONS "-R" ".d7ap_fs_metadata" "-R" ".d7ap_fs_file_headers" "-R" ".d7ap_fs_systemfiles")
-      SET(ADD_SECTIONS "-j" ".d7ap_fs_metadata" "-j" ".d7ap_fs_file_headers" "-j" ".d7ap_fs_systemfiles")
+      SET(REMOVE_SECTIONS "-R" ".d7ap_fs_metadata_section" "-R" ".d7ap_fs_permanent_files_section")
+      SET(ADD_SECTIONS "-j" ".d7ap_fs_metadata_section" "-j" ".d7ap_fs_permanent_files_section")
     ENDIF()
 
     ADD_CUSTOM_COMMAND(TARGET ${ELF} POST_BUILD COMMAND ${CMAKE_OBJCOPY} -O ihex ${ELF} ${__APP_BUILD_NAME}-full.hex)
