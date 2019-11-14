@@ -1108,6 +1108,7 @@ void hw_radio_switch_longRangeMode(bool use_lora) {
 
 void hw_radio_set_lora_mode(bool use_lora_250) {
   DPRINT("set to lora mode with %i kHz bandwidth", use_lora_250 ? 250 : 125);
+  set_opmode(OPMODE_STANDBY); //device has to be in sleep or standby when configuring
   write_reg(REG_LR_MODEMCONFIG1, 0x02 | ((7 + use_lora_250) << 4)); // BW=125/250 kHz, CR=4/5, explicit header mode
   write_reg(REG_LR_MODEMCONFIG2, 0x90); // SF=9, CRC disabled
 }
