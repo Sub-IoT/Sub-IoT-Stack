@@ -874,8 +874,6 @@ static bool alp_layer_parse_and_execute_alp_command(alp_command_t* command)
         alp_control_t control;
         assert(fifo_peek(&command->alp_command_fifo, &control.raw, 0, 1) == SUCCESS);
         alp_status_codes_t alp_status;
-        uint8_t size;
-        uint8_t temp[255];
         switch(control.operation) {
             case ALP_OP_READ_FILE_DATA:
                 alp_status = process_op_read_file_data(command);
@@ -902,21 +900,13 @@ static bool alp_layer_parse_and_execute_alp_command(alp_command_t* command)
             alp_control_tag_request_t* tag_request = (alp_control_tag_request_t*)&control;
             alp_status = process_op_request_tag(command, tag_request->respond_when_completed);
             break;
-        case ALP_OP_RETURN_FILE_DATA: ;
-            size = fifo_get_size(&command->alp_command_fifo);
-            fifo_peek(&command->alp_command_fifo, temp, 0, size);
-            DPRINT("found return file data in %i of %i: ", control.operation, control.raw);
-            DPRINT_DATA(temp, size);
+        case ALP_OP_RETURN_FILE_DATA:
             alp_status = process_op_return_file_data(command);
             break;
         case ALP_OP_CREATE_FILE:
             alp_status = process_op_create_file(command);
             break;
-          default: ;
-            size = fifo_get_size(&command->alp_command_fifo);
-            fifo_peek(&command->alp_command_fifo, temp, 0, size);
-            DPRINT("\ndidn't find operation %i in %i", control.operation, control.raw);
-            DPRINT_DATA(temp, size);
+          default:
             assert(false); // TODO return error
             //alp_status = ALP_STATUS_UNKNOWN_OPERATION;
         }

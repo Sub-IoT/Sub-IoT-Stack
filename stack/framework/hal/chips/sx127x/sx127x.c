@@ -956,7 +956,6 @@ error_t hw_radio_send_payload(uint8_t * data, uint16_t len) {
 
 void hw_radio_set_payload_length(uint16_t length) {
   if(previous_payload_length != length) {
-    DPRINT("write to payload length: %i - %i + %i", length, ((length >> 8) & 0x07) * 0xFF, length&0xFF);
     write_reg(REG_PACKETCONFIG2, (read_reg(REG_PACKETCONFIG2) & RF_PACKETCONFIG2_PAYLOADLENGTH_MSB_MASK) | ((length >> 8) & 0x07));
     write_reg(REG_PAYLOADLENGTH, length & 0xFF);
     previous_payload_length = length;
