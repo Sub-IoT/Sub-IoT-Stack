@@ -257,7 +257,7 @@ error_t phy_start_background_scan(phy_rx_config_t* config, phy_rx_packet_callbac
  */
 bool phy_radio_channel_ids_equal(const channel_id_t* a, const channel_id_t* b);
 
-uint16_t phy_calculate_tx_duration(phy_channel_class_t channel_class, phy_coding_t ch_coding, uint8_t packet_length, bool payload_only);
+uint16_t phy_calculate_tx_duration(phy_channel_class_t channel_class, phy_coding_t ch_coding, uint16_t packet_length, bool payload_only);
 
 void phy_continuous_tx(phy_tx_config_t const* tx_cfg, uint8_t time_period, phy_tx_packet_callback_t tx_cb);
 

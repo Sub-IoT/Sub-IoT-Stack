@@ -235,7 +235,7 @@ uint16_t end_time;
  */
 static timer_event continuous_tx_expiration_timer;
 
-static void fill_in_fifo(uint8_t remaining_bytes_len);
+static void fill_in_fifo(uint16_t remaining_bytes_len);
 
 static hw_radio_packet_t* alloc_new_packet(uint16_t length)
 {
@@ -358,7 +358,7 @@ bool phy_radio_channel_ids_equal(const channel_id_t* a, const channel_id_t* b)
     return (a->channel_header_raw == b->channel_header_raw) && (a->center_freq_index == b->center_freq_index);
 }
 
-uint16_t phy_calculate_tx_duration(phy_channel_class_t channel_class, phy_coding_t ch_coding, uint8_t packet_length, bool payload_only)
+uint16_t phy_calculate_tx_duration(phy_channel_class_t channel_class, phy_coding_t ch_coding, uint16_t packet_length, bool payload_only)
 {
     double data_rate = 6.0; // Normal rate: 6.9 bytes/tick
 
@@ -830,7 +830,7 @@ error_t phy_send_packet_with_advertising(hw_radio_packet_t* packet, phy_tx_confi
 }
 
 
-static void fill_in_fifo(uint8_t remaining_bytes_len)
+static void fill_in_fifo(uint16_t remaining_bytes_len)
 {
     // To update the ETA, we take into account the number of remaining bytes still to be transmitted
     // Also, at the time we calculate ETA here we will only insert the previously crafted packet (containing the prev ETA) in the

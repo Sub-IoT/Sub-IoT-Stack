@@ -596,31 +596,32 @@ static alp_status_codes_t process_op_return_file_data(alp_command_t* command) {
 
   uint8_t field_len = len >> 6;
   data_len = (uint32_t)(len & 0x3F) << ( 8 * field_len); // mask field length specificier bits and shift before adding other length bytes
+  total_len += 1;
   if(field_len > 0) {
-    fifo_peek(&command->alp_command_fifo, (uint8_t*)&data_len, total_len, field_len);
+    e = fifo_peek(&command->alp_command_fifo, (uint8_t*)&data_len, total_len, field_len);
     total_len += field_len;
     if(e != SUCCESS) goto incomplete_error;
   }
 
   DPRINT("Return file data:");
   DPRINT("offset size: %d", field_len + 1);
-  total_len += 1;
 
   // parse file length length
-  fifo_peek(&command->alp_command_fifo, (uint8_t*)&len, total_len, 1);
+  e = fifo_peek(&command->alp_command_fifo, (uint8_t*)&len, total_len, 1);
   if(e != SUCCESS) goto incomplete_error;
 
   field_len = len >> 6;
   data_len = (uint32_t)(len & 0x3F) << ( 8 * field_len); // mask field length specificier bits and shift before adding other length bytes
+  total_len += 1;
   if(field_len > 0) {
-    fifo_peek(&command->alp_command_fifo, (uint8_t*)&data_len, total_len, field_len);
+    e = fifo_peek(&command->alp_command_fifo, (uint8_t*)&data_len, total_len, field_len);
     total_len += field_len;
     if(e != SUCCESS) goto incomplete_error;
   }
 
   DPRINT("length size: %d", field_len + 1);
   DPRINT("data size: %d", data_len);
-  total_len += 1 + data_len;
+  total_len += data_len;
 
   if(fifo_get_size(&command->alp_command_fifo) < total_len) goto incomplete_error;
 
@@ -873,6 +874,8 @@ static bool alp_layer_parse_and_execute_alp_command(alp_command_t* command)
         alp_control_t control;
         assert(fifo_peek(&command->alp_command_fifo, &control.raw, 0, 1) == SUCCESS);
         alp_status_codes_t alp_status;
+        uint8_t size;
+        uint8_t temp[255];
         switch(control.operation) {
             case ALP_OP_READ_FILE_DATA:
                 alp_status = process_op_read_file_data(command);
@@ -899,13 +902,21 @@ static bool alp_layer_parse_and_execute_alp_command(alp_command_t* command)
             alp_control_tag_request_t* tag_request = (alp_control_tag_request_t*)&control;
             alp_status = process_op_request_tag(command, tag_request->respond_when_completed);
             break;
-        case ALP_OP_RETURN_FILE_DATA:
+        case ALP_OP_RETURN_FILE_DATA: ;
+            size = fifo_get_size(&command->alp_command_fifo);
+            fifo_peek(&command->alp_command_fifo, temp, 0, size);
+            DPRINT("found return file data in %i of %i: ", control.operation, control.raw);
+            DPRINT_DATA(temp, size);
             alp_status = process_op_return_file_data(command);
             break;
         case ALP_OP_CREATE_FILE:
             alp_status = process_op_create_file(command);
             break;
-          default:
+          default: ;
+            size = fifo_get_size(&command->alp_command_fifo);
+            fifo_peek(&command->alp_command_fifo, temp, 0, size);
+            DPRINT("\ndidn't find operation %i in %i", control.operation, control.raw);
+            DPRINT_DATA(temp, size);
             assert(false); // TODO return error
             //alp_status = ALP_STATUS_UNKNOWN_OPERATION;
         }
