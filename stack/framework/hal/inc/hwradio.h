@@ -249,7 +249,7 @@ typedef void (*tx_packet_callback_t)(timer_tick_t timestamp);
  * \param    len     The length of the remaining bytes before refill
  *
  */
-typedef void (*tx_refill_callback_t)(uint8_t remaining_bytes_len);
+typedef void (*tx_refill_callback_t)(uint16_t remaining_bytes_len);
 
 
 /** \brief Type definition for the rssi_valid callback function.

@@ -136,9 +136,9 @@ typedef enum {
  */
 typedef struct
 {
-    uint8_t Size;
-    uint8_t NbBytes;
-    uint8_t FifoThresh;
+    uint16_t Size;
+    uint16_t NbBytes;
+    uint16_t FifoThresh;
 }FskPacketHandler_t;
 
 FskPacketHandler_t FskPacketHandler_sx127x;
@@ -167,7 +167,7 @@ static hw_radio_packet_t* current_packet;
 static bool is_sx1272 = false;
 static bool enable_refill = false;
 static bool enable_preloading = false;
-static uint8_t remaining_bytes_len = 0;
+static uint16_t remaining_bytes_len = 0;
 static uint8_t previous_threshold = 0;
 static uint16_t previous_payload_length = 0;
 static bool io_inited = false;
@@ -898,7 +898,7 @@ error_t hw_radio_send_payload(uint8_t * data, uint16_t len) {
     return;
   }
 #endif
-  
+
   if(state == STATE_RX) {
     hw_gpio_disable_interrupt(SX127x_DIO0_PIN);
     hw_gpio_disable_interrupt(SX127x_DIO1_PIN);
@@ -911,7 +911,7 @@ error_t hw_radio_send_payload(uint8_t * data, uint16_t len) {
     while(!(read_reg(REG_IRQFLAGS1) & 0x80));
   }
 
-  uint8_t start = 0;
+  uint16_t start = 0;
   uint8_t available_size = FIFO_SIZE - previous_threshold;
   if(remaining_bytes_len == 0)
     remaining_bytes_len = len;
@@ -955,15 +955,12 @@ error_t hw_radio_send_payload(uint8_t * data, uint16_t len) {
 }
 
 void hw_radio_set_payload_length(uint16_t length) {
-  if(length > 0xFF) //Max length is 255 for this chip, return impossible length
-    FskPacketHandler_sx127x.Size = 0;
-  else {
-    if(previous_payload_length != length) {
-      write_reg(REG_PAYLOADLENGTH, length);
-      previous_payload_length = length;
-    }
-    FskPacketHandler_sx127x.Size = length;
+  if(previous_payload_length != length) {
+    write_reg(REG_PACKETCONFIG2, (read_reg(REG_PACKETCONFIG2) & RF_PACKETCONFIG2_PAYLOADLENGTH_MSB_MASK) | ((length >> 8) & 0x07));
+    write_reg(REG_PAYLOADLENGTH, length & 0xFF);
+    previous_payload_length = length;
   }
+  FskPacketHandler_sx127x.Size = length;
 }
 
 
