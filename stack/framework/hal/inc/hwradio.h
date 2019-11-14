@@ -446,6 +446,11 @@ bool hw_radio_is_rx(void);
 void hw_radio_enable_refill(bool enable);
 void hw_radio_enable_preloading(bool enable);
 
+#ifdef USE_SX127X
+void hw_radio_switch_longRangeMode(bool use_lora);
+void hw_radio_set_lora_mode(bool use_lora_250);
+#endif
+
 void hw_radio_set_tx_power(int8_t eirp);
 
 void hw_radio_set_rx_timeout(uint32_t timeout);

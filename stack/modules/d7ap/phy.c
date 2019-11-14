@@ -420,6 +420,11 @@ static void configure_channel(const channel_id_t* channel) {
 
     fact_settings_changed = false;
 
+#ifdef USE_SX127X
+    if(channel->channel_header.ch_class != current_channel_id.channel_header.ch_class && ((channel->channel_header.ch_class == PHY_CLASS_LORA) || (current_channel_id.channel_header.ch_class == PHY_CLASS_LORA)))
+        hw_radio_switch_longRangeMode(channel->channel_header.ch_class == PHY_CLASS_LORA);
+#endif
+
     // configure modulation settings
     if(channel->channel_header.ch_class == PHY_CLASS_LO_RATE)
     {
@@ -451,6 +456,12 @@ static void configure_channel(const channel_id_t* channel) {
         hw_radio_set_rx_bw_hz(rx_bw_hi_rate);
         hw_radio_set_preamble_size(PREAMBLE_HI_RATE_CLASS);
     }
+#ifdef USE_SX127X
+    else if(channel->channel_header.ch_class == PHY_CLASS_LORA)
+    {
+        hw_radio_set_lora_mode(channel->center_freq_index == 208); //we currently only use channel 208 for 250kHz Lora (868.3)
+    }
+#endif
 
     // TODO regopmode for LF?
 
