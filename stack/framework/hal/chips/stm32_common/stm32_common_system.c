@@ -144,7 +144,6 @@ void hw_enter_lowpower_mode(uint8_t mode)
       PWR->CR |= (PWR_CR_ULP & PWR_CR_FWU & PWR_CR_PVDE); // we don't need Vrefint and PVD
       //RCC->CFGR |= RCC_CFGR_STOPWUCK; // use HSI16 after wake up
       __HAL_PWR_CLEAR_FLAG(PWR_FLAG_WU);
-      __HAL_RCC_PWR_CLK_DISABLE();
 
       DPRINT("EXTI->PR %x", EXTI->PR);
       //assert(EXTI->PR == 0);
