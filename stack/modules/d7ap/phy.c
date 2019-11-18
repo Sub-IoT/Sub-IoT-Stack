@@ -114,8 +114,9 @@
 // This results in 125.868 kHz on a single sideband.
 // #define RXBW_H    125868 //Hz
 
-#define LORA_T_SYMBOL_SF9_MS 4.096 // based on SF9 and 125k BW
-#define LORA_T_PREAMBE_SF9_MS (8 + 4.25) * LORA_T_SYMBOL_SF9_MS // assuming 8 symbols for now
+#define LORA_T_PREAMBLE_LENGTH 8
+// #define LORA_T_SYMBOL_SF9_MS 4.096 // based on SF9 and 125k BW
+// #define LORA_T_PREAMBE_SF9_MS (8 + 4.25) * LORA_T_SYMBOL_SF9_MS // assuming 8 symbols for now
 
 
 typedef enum {
@@ -161,6 +162,9 @@ static uint32_t bitrate_normal_rate;
 static uint32_t fdev_normal_rate;
 static uint32_t bitrate_hi_rate;
 static uint32_t fdev_hi_rate;
+
+static uint32_t lora_bw;
+static uint8_t lora_SF;
 
 static uint16_t total_bg = 0;
 static uint16_t total_rssi_triggers = 0;
@@ -373,7 +377,8 @@ uint16_t phy_calculate_tx_duration(phy_channel_class_t channel_class, phy_coding
         // based on http://www.semtech.com/images/datasheet/LoraDesignGuide_STD.pdf
         // only valid for explicit header, CR4/5, SF9 for now
         uint16_t payload_symbols = 8 + ceil(2*(packet_length+1)/9)*5;
-        uint16_t packet_duration = LORA_T_PREAMBE_SF9_MS + payload_symbols * LORA_T_SYMBOL_SF9_MS;
+        double lora_duration = (double)(1 << lora_SF * 1000) / lora_bw;
+        uint16_t packet_duration = lora_duration * (LORA_T_PREAMBLE_LENGTH + payload_symbols); 
         return packet_duration;
     }
 #endif
@@ -420,6 +425,11 @@ static void configure_channel(const channel_id_t* channel) {
 
     fact_settings_changed = false;
 
+#ifdef USE_SX127X
+    if(channel->channel_header.ch_class != current_channel_id.channel_header.ch_class && ((channel->channel_header.ch_class == PHY_CLASS_LORA) || (current_channel_id.channel_header.ch_class == PHY_CLASS_LORA)))
+        hw_radio_switch_longRangeMode(channel->channel_header.ch_class == PHY_CLASS_LORA);
+#endif
+
     // configure modulation settings
     if(channel->channel_header.ch_class == PHY_CLASS_LO_RATE)
     {
@@ -451,6 +461,12 @@ static void configure_channel(const channel_id_t* channel) {
         hw_radio_set_rx_bw_hz(rx_bw_hi_rate);
         hw_radio_set_preamble_size(PREAMBLE_HI_RATE_CLASS);
     }
+#ifdef USE_SX127X
+    else if(channel->channel_header.ch_class == PHY_CLASS_LORA)
+    {
+        hw_radio_set_lora_mode(lora_bw, lora_SF);
+    }
+#endif
 
     // TODO regopmode for LF?
 
@@ -508,10 +524,14 @@ void fact_settings_file_change_callback(uint8_t file_id)
     bitrate_hi_rate = __builtin_bswap32(*((uint32_t*)(fact_settings+29)));
     fdev_hi_rate = __builtin_bswap32(*((uint32_t*)(fact_settings+33)));
 
+    lora_bw = __builtin_bswap32(*((uint32_t*)(fact_settings+37)));
+    lora_SF = (uint8_t)fact_settings[41];
+
     DPRINT("low rate bitrate %i : fdev %i : rx_bw %i", bitrate_lo_rate, fdev_lo_rate, rx_bw_lo_rate);
     DPRINT("normal rate bitrate %i : fdev %i : rx_bw %i", bitrate_normal_rate, fdev_normal_rate, rx_bw_normal_rate);
     DPRINT("high rate bitrate %i : fdev %i : rx_bw %i", bitrate_hi_rate, fdev_hi_rate, rx_bw_hi_rate);
-    DPRINT("gain offset set to %i\n", gain_offset);
+    DPRINT("gain offset set to %i", gain_offset);
+    DPRINT("set lora bw to %i Hz with SF %i\n", lora_bw, lora_SF);
 
     fact_settings_changed = true;
 }
