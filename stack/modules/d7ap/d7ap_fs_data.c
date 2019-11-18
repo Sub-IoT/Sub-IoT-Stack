@@ -58,12 +58,13 @@ default_channel_header = ChannelHeader(
 )
 
 default_channel_index = 0
+default_eirp = 14
 
 # AP used by GW doing continuous FG scan
 ap_cont_fg_scan = AccessProfile(
   channel_header=default_channel_header,
   sub_profiles=[SubProfile(subband_bitmap=0x01, scan_automation_period=CT.compress(0))] * 4,
-  sub_bands=[SubBand(eirp=14, channel_index_start=default_channel_index, channel_index_end=default_channel_index)] * 8
+  sub_bands=[SubBand(eirp=default_eirp, channel_index_start=default_channel_index, channel_index_end=default_channel_index)] * 8
 )
 
 # AP used for scanning for BG request at max allowed rate (maximum 1 second of sending including foreground and background frames)
@@ -72,14 +73,14 @@ ap_cont_fg_scan = AccessProfile(
 ap_bg_scan = AccessProfile(
   channel_header=default_channel_header,
   sub_profiles=[SubProfile(subband_bitmap=0x01, scan_automation_period=CT.compress(786, ceil=False))] * 4,
-  sub_bands=[SubBand(eirp=14, channel_index_start=default_channel_index, channel_index_end=default_channel_index)] * 8
+  sub_bands=[SubBand(eirp=default_eirp, channel_index_start=default_channel_index, channel_index_end=default_channel_index)] * 8
 )
 
 # AP used for push only, no scanning
 ap_no_scan = AccessProfile(
   channel_header=default_channel_header,
   sub_profiles=[SubProfile(subband_bitmap=0x00, scan_automation_period=CT.compress(0))] * 4,
-  sub_bands=[SubBand(eirp=14, channel_index_start=default_channel_index, channel_index_end=default_channel_index)] * 8
+  sub_bands=[SubBand(eirp=default_eirp, channel_index_start=default_channel_index, channel_index_end=default_channel_index)] * 8
 )
 
 system_files = [
@@ -215,7 +216,7 @@ def output_number_of_files():
   #define LINKER_SECTION_FS_PERMANENT_FILES
 #endif
 
-__attribute__((used)) uint8_t d7ap_fs_metadata[4 + 4 + (255 * 12)] LINKER_SECTION_FS_METADATA = { // TODO size link sect
+__attribute__((used)) uint8_t d7ap_fs_metadata[4 + 4 + (255 * 12)] LINKER_SECTION_FS_METADATA = {
   0x34, 0xC2, 0x00, 0x00, // FS_MAGIC_NUMBER first 2 bytes fixed, last 2 byte for version
   /*[[[cog
   output_number_of_files()
