@@ -448,7 +448,7 @@ void hw_radio_enable_preloading(bool enable);
 
 #ifdef USE_SX127X
 void hw_radio_switch_longRangeMode(bool use_lora);
-void hw_radio_set_lora_mode(bool use_lora_250);
+void hw_radio_set_lora_mode(uint32_t lora_bw, uint8_t lora_SF);
 #endif
 
 void hw_radio_set_tx_power(int8_t eirp);

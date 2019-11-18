@@ -112,6 +112,8 @@
 static const uint16_t rx_bw_startup_time[21] = {66, 78, 89, 105, 88, 126, 125, 151, 177, 226, 277, 329, 
   427, 529, 631, 831, 1033, 1239, 1638, 2037, 2447}; //TS_RE + 5% margin
 
+static const uint32_t lora_available_bw[10] = {7800, 10400, 15600, 20800, 31250, 41700, 62500, 125000, 250000, 500000}; // in Hz
+
 static uint8_t rx_bw_number = 21;
 static uint8_t rx_bw_khz = 0;
 static uint8_t rssi_smoothing_full = 0;
@@ -1106,11 +1108,23 @@ void hw_radio_switch_longRangeMode(bool use_lora) {
   lora_mode = true;
 }
 
-void hw_radio_set_lora_mode(bool use_lora_250) {
-  DPRINT("set to lora mode with %i kHz bandwidth", use_lora_250 ? 250 : 125);
+void hw_radio_set_lora_mode(uint32_t lora_bw, uint8_t lora_SF) {
   set_opmode(OPMODE_STANDBY); //device has to be in sleep or standby when configuring
-  write_reg(REG_LR_MODEMCONFIG1, 0x02 | ((7 + use_lora_250) << 4)); // BW=125/250 kHz, CR=4/5, explicit header mode
-  write_reg(REG_LR_MODEMCONFIG2, 0x90); // SF=9, CRC disabled
+  uint8_t closest_bw_ptr;
+  uint32_t min_diff = UINT32_MAX;
+
+  for(uint8_t bw_cnt = 0; bw_cnt < 10; bw_cnt++) {
+    if(abs(lora_bw - lora_available_bw[bw_cnt]) < min_diff) {
+      closest_bw_ptr = bw_cnt;
+      min_diff = abs(lora_bw - lora_available_bw[bw_cnt]);
+    }
+  }
+  write_reg(REG_LR_MODEMCONFIG1, RFLR_MODEMCONFIG1_CODINGRATE_4_5 | RFLR_MODEMCONFIG1_IMPLICITHEADER_OFF | (closest_bw_ptr << 4));
+
+  DPRINT("set to lora mode with %i Hz bandwidth (corrected to %i Hz) and Spreading Factor %i", lora_bw, lora_available_bw[closest_bw_ptr], lora_SF);
+
+  assert((lora_SF >= 7) && (lora_SF <= 12));
+  write_reg(REG_LR_MODEMCONFIG2, RFLR_MODEMCONFIG2_RXPAYLOADCRC_OFF | RFLR_MODEMCONFIG2_TXCONTINUOUSMODE_OFF | (lora_SF << 4));
 }
 
 void hw_radio_set_lora_cont_tx(bool activate) {
