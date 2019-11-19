@@ -401,7 +401,7 @@ __LINK_C void scheduler_run()
 			end_atomic();
 		}
 #if defined FRAMEWORK_USE_WATCHDOG
-		timer_post_task_prio_delay(&__feed_watchdog_task, hw_watchdog_get_min_timeout() * TIMER_TICKS_PER_SEC, MAX_PRIORITY);
+		timer_post_task_prio_delay(&__feed_watchdog_task, hw_watchdog_get_timeout() * TIMER_TICKS_PER_SEC, MAX_PRIORITY);
 #endif		
 		hw_enter_lowpower_mode(low_power_mode);
 	}

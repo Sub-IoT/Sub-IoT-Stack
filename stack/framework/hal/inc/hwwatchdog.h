@@ -47,7 +47,7 @@ __LINK_C void hw_watchdog_feed(void);
 
 /*! \brief Gets the timeout value of the watchdog timer in seconds.
  */
-__LINK_C uint8_t hw_watchdog_get_min_timeout(void);
+__LINK_C uint8_t hw_watchdog_get_timeout(void);
 
 #endif // __HWWATCHDOG_H__
 
