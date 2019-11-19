@@ -36,6 +36,7 @@
 #include "hwsystem.h"
 #include "errors.h"
 #include "timer.h"
+#include "hwwatchdog.h"
 
 #include "framework_defs.h"
 #define SCHEDULER_MAX_TASKS FRAMEWORK_SCHEDULER_MAX_TASKS
@@ -144,6 +145,14 @@ void check_structs_are_valid()
 #else
 static inline void check_structs_are_valid(){}
 #endif
+
+#if defined FRAMEWORK_USE_WATCHDOG
+static void __feed_watchdog_task(void *arg)
+{
+	hw_watchdog_feed();
+}
+#endif
+
 __LINK_C void scheduler_init()
 {
 	for(unsigned int i = 0; i < NUM_TASKS; i++)
@@ -161,6 +170,10 @@ __LINK_C void scheduler_init()
 	NG(current_priority) = NUM_PRIORITIES;
 	NG(num_registered_tasks) = 0;
 	check_structs_are_valid();
+#if defined FRAMEWORK_USE_WATCHDOG
+	__watchdog_init();
+	sched_register_task(&__feed_watchdog_task);
+#endif
 }
 
 __LINK_C uint8_t get_task_id(task_t task)
@@ -361,6 +374,9 @@ __LINK_C void scheduler_run()
 			check_structs_are_valid();
 			for(uint8_t id = pop_task((NG(current_priority))); id != NO_TASK; id = pop_task(NG(current_priority)))
 			{
+#if defined FRAMEWORK_USE_WATCHDOG
+				hw_watchdog_feed();
+#endif
 				check_structs_are_valid();
 #if defined(FRAMEWORK_LOG_ENABLED) && defined(FRAMEWORK_SCHED_LOG_ENABLED)
         timer_tick_t start = timer_get_counter_value();
@@ -384,6 +400,9 @@ __LINK_C void scheduler_run()
 #endif
 			end_atomic();
 		}
+#if defined FRAMEWORK_USE_WATCHDOG
+		timer_post_task_prio_delay(&__feed_watchdog_task, hw_watchdog_get_timeout() * TIMER_TICKS_PER_SEC, MAX_PRIORITY);
+#endif		
 		hw_enter_lowpower_mode(low_power_mode);
 	}
 
