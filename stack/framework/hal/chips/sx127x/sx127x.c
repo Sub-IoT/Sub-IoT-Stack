@@ -510,6 +510,7 @@ static void reinit_rx() {
  write_reg(REG_FIFOTHRESH, RF_FIFOTHRESH_TXSTARTCONDITION_FIFONOTEMPTY | 0x03);
  write_reg(REG_DIOMAPPING1, RF_DIOMAPPING1_DIO2_11);
  previous_payload_length = 0;
+ write_reg(REG_PACKETCONFIG2, (read_reg(REG_PACKETCONFIG2) & RF_PACKETCONFIG2_PAYLOADLENGTH_MSB_MASK));
  write_reg(REG_PAYLOADLENGTH, 0);
 
  // Trigger a manual restart of the Receiver chain (no frequency change)
@@ -579,7 +580,7 @@ static void fifo_threshold_isr() {
    while(!(CHECK_FIFO_EMPTY()) && (FskPacketHandler_sx127x.NbBytes < FskPacketHandler_sx127x.Size))
       current_packet->data[FskPacketHandler_sx127x.NbBytes++] = read_reg(REG_FIFO);
 
-   uint8_t remaining_bytes = FskPacketHandler_sx127x.Size - FskPacketHandler_sx127x.NbBytes;
+   uint16_t remaining_bytes = FskPacketHandler_sx127x.Size - FskPacketHandler_sx127x.NbBytes;
 
    if(remaining_bytes == 0) {
     current_packet->rx_meta.timestamp = timer_get_counter_value();
@@ -611,7 +612,7 @@ static void fifo_threshold_isr() {
 
    hw_gpio_set_edge_interrupt(SX127x_DIO1_PIN, GPIO_RISING_EDGE);
    hw_gpio_enable_interrupt(SX127x_DIO1_PIN);
-
+   
    DPRINT("read %i bytes, %i remaining, FLAGS2 %x, time: %i \n", FskPacketHandler_sx127x.NbBytes, remaining_bytes, read_reg(REG_IRQFLAGS2), timer_get_counter_value());
 }
 
