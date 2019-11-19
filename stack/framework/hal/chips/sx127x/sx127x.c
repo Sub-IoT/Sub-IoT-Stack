@@ -1108,7 +1108,7 @@ void hw_radio_set_tx_power(int8_t eirp) {
 void hw_radio_switch_longRangeMode(bool use_lora) {
   set_opmode(OPMODE_SLEEP);
   write_reg(REG_OPMODE, (read_reg(REG_OPMODE) & RFLR_OPMODE_LONGRANGEMODE_MASK) | (use_lora << 7));
-  lora_mode = true;
+  lora_mode = use_lora;
 }
 
 void hw_radio_set_lora_mode(uint32_t lora_bw, uint8_t lora_SF) {
