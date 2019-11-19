@@ -556,8 +556,8 @@ void fact_settings_file_change_callback(uint8_t file_id)
 
     set_rssi_config(rssi_smoothing, rssi_offset);
 
-    lora_bw = __builtin_bswap32(*((uint32_t*)(fact_settings+37)));
-    lora_SF = (uint8_t)fact_settings[41];
+    lora_bw = __builtin_bswap32(*((uint32_t*)(fact_settings+48)));
+    lora_SF = (uint8_t)fact_settings[52];
 
     DPRINT("low rate bitrate %i : fdev %i : rx_bw %i : preamble size %i : preamble detector size %i : tol %i", bitrate_lo_rate, fdev_lo_rate, rx_bw_lo_rate, preamble_size_lo_rate, preamble_detector_size_lo_rate, preamble_tol_lo_rate);
     DPRINT("normal rate bitrate %i : fdev %i : rx_bw %i : preamble size %i : preamble detector size %i : tol %i", bitrate_normal_rate, fdev_normal_rate, rx_bw_normal_rate, preamble_size_normal_rate, preamble_detector_size_normal_rate, preamble_tol_normal_rate);
