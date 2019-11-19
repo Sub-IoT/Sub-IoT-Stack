@@ -113,6 +113,8 @@ static const uint16_t rx_bw_startup_time[21] = {66, 78, 89, 105, 88, 126, 125, 1
   427, 529, 631, 831, 1033, 1239, 1638, 2037, 2447}; //TS_RE + 5% margin
 
 static const uint32_t lora_available_bw[10] = {7800, 10400, 15600, 20800, 31250, 41700, 62500, 125000, 250000, 500000}; // in Hz
+static const uint8_t lora_bw_indexes[10] = {15, 14, 12, 11, 9, 8, 6, 3, 0, 0}; // indexes of lora bw's of startup times
+uint8_t lora_closest_bw_index;
 
 static uint8_t rx_bw_number = 21;
 static uint8_t rx_bw_khz = 0;
@@ -1111,18 +1113,17 @@ void hw_radio_switch_longRangeMode(bool use_lora) {
 
 void hw_radio_set_lora_mode(uint32_t lora_bw, uint8_t lora_SF) {
   set_opmode(OPMODE_STANDBY); //device has to be in sleep or standby when configuring
-  uint8_t closest_bw_ptr;
   uint32_t min_diff = UINT32_MAX;
 
   for(uint8_t bw_cnt = 0; bw_cnt < 10; bw_cnt++) {
     if(abs(lora_bw - lora_available_bw[bw_cnt]) < min_diff) {
-      closest_bw_ptr = bw_cnt;
+      lora_closest_bw_index = bw_cnt;
       min_diff = abs(lora_bw - lora_available_bw[bw_cnt]);
     }
   }
-  write_reg(REG_LR_MODEMCONFIG1, RFLR_MODEMCONFIG1_CODINGRATE_4_5 | RFLR_MODEMCONFIG1_IMPLICITHEADER_OFF | (closest_bw_ptr << 4));
+  write_reg(REG_LR_MODEMCONFIG1, RFLR_MODEMCONFIG1_CODINGRATE_4_5 | RFLR_MODEMCONFIG1_IMPLICITHEADER_OFF | (lora_closest_bw_index << 4));
 
-  DPRINT("set to lora mode with %i Hz bandwidth (corrected to %i Hz) and Spreading Factor %i", lora_bw, lora_available_bw[closest_bw_ptr], lora_SF);
+  DPRINT("set to lora mode with %i Hz bandwidth (corrected to %i Hz) and Spreading Factor %i", lora_bw, lora_available_bw[lora_closest_bw_index], lora_SF);
 
   assert((lora_SF >= 7) && (lora_SF <= 12));
   write_reg(REG_LR_MODEMCONFIG2, RFLR_MODEMCONFIG2_RXPAYLOADCRC_OFF | RFLR_MODEMCONFIG2_TXCONTINUOUSMODE_OFF | (lora_SF << 4));
@@ -1155,6 +1156,11 @@ int16_t hw_radio_get_rssi() {
     set_opmode(OPMODE_RX); //0.103 ms
     hw_gpio_disable_interrupt(SX127x_DIO0_PIN); //3.7µs
     hw_gpio_disable_interrupt(SX127x_DIO1_PIN);
-    hw_busy_wait(rx_bw_startup_time[rx_bw_number] + (rssi_smoothing_full * 1000)/(4 * rx_bw_khz));
-    return (- read_reg(REG_RSSIVALUE) >> 1);
+    if(!lora_mode) {
+      hw_busy_wait(rx_bw_startup_time[rx_bw_number] + (rssi_smoothing_full * 1000)/(4 * rx_bw_khz));
+      return (- read_reg(REG_RSSIVALUE) >> 1);
+    } else {
+      hw_busy_wait(rx_bw_startup_time[lora_bw_indexes[lora_closest_bw_index]] + ((rssi_smoothing_full * 1000)/(4 * lora_available_bw[lora_closest_bw_index] / 1000)));
+      return ( - 157 + read_reg(REG_LR_RSSIVALUE));
+    }
 }

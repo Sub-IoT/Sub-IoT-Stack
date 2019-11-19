@@ -377,7 +377,7 @@ uint16_t phy_calculate_tx_duration(phy_channel_class_t channel_class, phy_coding
         // based on http://www.semtech.com/images/datasheet/LoraDesignGuide_STD.pdf
         // only valid for explicit header, CR4/5, SF9 for now
         uint16_t payload_symbols = 8 + ceil(2*(packet_length+1)/9)*5;
-        double lora_duration = (double)(1 << lora_SF * 1000) / lora_bw;
+        uint16_t lora_duration = ((1 << lora_SF) * 1000) / lora_bw;
         uint16_t packet_duration = lora_duration * (LORA_T_PREAMBLE_LENGTH + payload_symbols); 
         return packet_duration;
     }
