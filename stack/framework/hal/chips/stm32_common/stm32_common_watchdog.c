@@ -25,7 +25,7 @@
 
 #include <assert.h>
 
-#define WATCHDOG_MIN_TIMEOUT_SECONDS 18 
+#define WATCHDOG_TIMEOUT_SECONDS 18 
 
 static IWDG_HandleTypeDef iwdg_hal_hadle = {.Instance = NULL};
 void __watchdog_init()
@@ -50,7 +50,7 @@ void hw_watchdog_feed()
     HAL_IWDG_Refresh(&iwdg_hal_hadle);
 }
 
-uint8_t hw_watchdog_get_min_timeout(void)
+uint8_t hw_watchdog_get_timeout(void)
 {
-    return WATCHDOG_MIN_TIMEOUT_SECONDS;
+    return WATCHDOG_TIMEOUT_SECONDS;
 }
