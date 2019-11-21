@@ -171,6 +171,10 @@ static void start_tx() {
     phy_continuous_tx(&tx_cfg, timeout_em, &cont_tx_done_callback);
 }
 
+static void em_reset() {
+  hw_reset();
+}
+
 static void em_file_change_callback(uint8_t file_id) {
     uint8_t data[D7A_FILE_ENGINEERING_MODE_SIZE];
 
@@ -191,7 +195,7 @@ static void em_file_change_callback(uint8_t file_id) {
     {
       case EM_OFF:
         DPRINT("EM_MODEM_OFF");
-        hw_reset();
+        timer_post_task_delay(&em_reset, 500);
         break;
       case EM_CONTINUOUS_TX:
         DPRINT("EM_MODE_CONTINUOUS_TX\n");
@@ -255,4 +259,5 @@ error_t engineering_mode_init()
   sched_register_task(&start_transient_tx);
   sched_register_task(&transmit_per_packet);
   sched_register_task(&start_per_rx);
+  sched_register_task(&em_reset);
 }
