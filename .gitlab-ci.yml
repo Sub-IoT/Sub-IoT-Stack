@@ -14,7 +14,7 @@ job 1:
   - PATH="/opt/gcc-arm-none-eabi-7-2018-q2-update/bin/:$PATH"
   - mkdir build && cd build
   - platform="B_L072Z_LRWAN1"
-  - cmake ../stack/ -DAPP_GATEWAY=y -DAPP_MODEM=y -DAPP_SENSOR_PUSH=y -DPLATFORM=$platform
+  - cmake ../stack/ -DAPP_GATEWAY=y -DAPP_MODEM=y -DAPP_SENSOR_PUSH=y -DPLATFORM=$platform -DFRAMEWORK_DEBUG_ASSERT_REBOOT=y
   - make
   artifacts:
    name: "$CI_COMMIT_REF_NAME"
