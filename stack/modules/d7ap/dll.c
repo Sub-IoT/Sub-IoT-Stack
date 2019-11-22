@@ -443,21 +443,20 @@ static void cca_rssi_valid(int16_t cur_rssi)
 {
     DPRINT("cca_rssi_valid @%i", timer_get_counter_value());
 
-    if((tx_nf_method == D7ADLL_MSR_MIN || rx_nf_method == D7ADLL_MSR_MIN) && (cur_rssi <= remote_access_profile.subbands[0].cca))
-    {
-        nf_last_msr[nf_last_msr_index] = - cur_rssi;
-        if(nf_last_msr_index < 2)
-            nf_last_msr_index++;
-        else
-            nf_last_msr_index = 0;
-    }
-
     // When the radio goes back to Rx state, the rssi_valid callback may be still set. Skip it in this case
     if (dll_state != DLL_STATE_CCA1 && dll_state != DLL_STATE_CCA2)
         return;
 
     if (cur_rssi <= E_CCA)
     {
+        if((tx_nf_method == D7ADLL_MSR_MIN || rx_nf_method == D7ADLL_MSR_MIN) && (cur_rssi <= remote_access_profile.subbands[0].cca))
+        {
+            nf_last_msr[nf_last_msr_index] = - cur_rssi;
+            if(nf_last_msr_index < 2)
+                nf_last_msr_index++;
+            else
+                nf_last_msr_index = 0;
+        }
         if (dll_state == DLL_STATE_CCA1)
         {
             phy_switch_to_standby_mode();
