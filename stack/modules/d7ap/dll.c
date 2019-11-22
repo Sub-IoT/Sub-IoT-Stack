@@ -310,8 +310,8 @@ void start_background_scan()
         else
             nf_last_msr_index = 0;
         if(nf_last_msr[0] && nf_last_msr[1] && nf_last_msr[2]) {
-            uint8_t min = (nf_last_msr[0] < nf_last_msr[1] ? nf_last_msr[0] : nf_last_msr[1]) < nf_last_msr[2] ? (nf_last_msr[0] < nf_last_msr[1] ? nf_last_msr[0] : nf_last_msr[1]) : nf_last_msr[2];
-            E_CCA = - min + 6; //Mean of last 3 with 6dB offset
+            uint8_t min = ((nf_last_msr[0] < nf_last_msr[1] ? nf_last_msr[0] : nf_last_msr[1]) < nf_last_msr[2]) ? (nf_last_msr[0] < nf_last_msr[1] ? nf_last_msr[0] : nf_last_msr[1]) : nf_last_msr[2];
+            E_CCA = - min + 6; //Min of last 3 with 6dB offset
         }
     }
 }
@@ -792,12 +792,12 @@ void dll_execute_scan_automation()
             {
                 uint8_t min = (nf_last_msr[0] < nf_last_msr[1] ? nf_last_msr[0] : nf_last_msr[1]) < nf_last_msr[2] ? (nf_last_msr[0] < nf_last_msr[1] ? nf_last_msr[0] : nf_last_msr[1]) : nf_last_msr[2];
                 E_CCA = - min + 6; //Minimum of last 3 CCA with 6dB offset
-                DPRINT("rx CCA mean: E_CCA %i", E_CCA);
+                DPRINT("rx CCA min: E_CCA %i", E_CCA);
             }
             else
             {
                 E_CCA = - current_access_profile.subbands[0].cca;
-                DPRINT("rx CCA mean, CCA not set: E_CCA %i", E_CCA);
+                DPRINT("rx CCA min, CCA not set: E_CCA %i", E_CCA);
             }
         }
         else
@@ -1054,12 +1054,12 @@ void dll_tx_frame(packet_t* packet)
             {
                 uint8_t min = (nf_last_msr[0] < nf_last_msr[1] ? nf_last_msr[0] : nf_last_msr[1]) < nf_last_msr[2] ? (nf_last_msr[0] < nf_last_msr[1] ? nf_last_msr[0] : nf_last_msr[1]) : nf_last_msr[2];
                 E_CCA = - min + 6; //Mean of last 3 CCA with 6dB offset
-                DPRINT("tx CCA mean: E_CCA %i", E_CCA);
+                DPRINT("tx CCA min: E_CCA %i", E_CCA);
             }
             else
             {
                 E_CCA = - remote_access_profile.subbands[0].cca;
-                DPRINT("tx CCA mean, CCA not set: E_CCA %i", E_CCA);
+                DPRINT("tx CCA min, CCA not set: E_CCA %i", E_CCA);
             }
         }
         else
