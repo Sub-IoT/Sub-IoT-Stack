@@ -126,6 +126,7 @@ static bool NGDEF(_guarded_channel);
 
 static uint8_t nf_last_msr[3] = {0, 0, 0};
 static uint8_t nf_last_msr_index = 0;
+static uint8_t CCA_trigger_no_answer = 0;
 
 static void execute_cca(void *arg);
 static void execute_csma_ca(void *arg);
@@ -303,16 +304,26 @@ void start_background_scan()
         .rssi_thr = E_CCA,
     };
     phy_start_background_scan(&config, &dll_signal_packet_received);
-    if((rx_nf_method == D7ADLL_MSR_MIN) && (config.rssi_thr != E_CCA)) {
-        nf_last_msr[nf_last_msr_index] = - config.rssi_thr;
-        if(nf_last_msr_index < 2)
-            nf_last_msr_index++;
-        else
-            nf_last_msr_index = 0;
+    if(rx_nf_method == D7ADLL_MSR_MIN) { 
+        if (config.rssi_thr != E_CCA) {
+            CCA_trigger_no_answer = 0;
+            nf_last_msr[nf_last_msr_index] = - config.rssi_thr;
+            if(nf_last_msr_index < 2)
+                nf_last_msr_index++;
+            else
+                nf_last_msr_index = 0;
+        } else {
+            if(CCA_trigger_no_answer > 3) { //After 3 consecutive triggers of background scan with no package received, set noise level back to default
+                DPRINT("Got 3 consecutive fails of background scan, resetting to default CCA value");
+                memset(nf_last_msr, 0, 3);
+            } else
+                CCA_trigger_no_answer += 1;
+        }
         if(nf_last_msr[0] && nf_last_msr[1] && nf_last_msr[2]) {
             uint8_t min = ((nf_last_msr[0] < nf_last_msr[1] ? nf_last_msr[0] : nf_last_msr[1]) < nf_last_msr[2]) ? (nf_last_msr[0] < nf_last_msr[1] ? nf_last_msr[0] : nf_last_msr[1]) : nf_last_msr[2];
             E_CCA = - min + 6; //Min of last 3 with 6dB offset
-        }
+        } else
+            E_CCA = - current_access_profile.subbands[0].cca;
     }
 }
 
@@ -343,7 +354,8 @@ void dll_signal_packet_received(packet_t* packet)
             start_guard_period(t_g - tx_duration);
 
         guarded_channel = true;
-    }
+    } else
+        CCA_trigger_no_answer = 0;
 
     if (is_tx_busy())
     {
@@ -633,6 +645,7 @@ static void execute_csma_ca(void *arg)
             if (dll_to <= 0)
             {
                 DPRINT("CCA fail because dll_to = %i", dll_to);
+                memset(nf_last_msr, 0, 3); //If CCA fails, reset noise level to default
                 switch_state(DLL_STATE_CCA_FAIL);
                 dll_csma_timer.next_event = 0;
                 error_t rtc = timer_add_event(&dll_csma_timer);
