@@ -448,6 +448,7 @@ static void lora_rxdone_isr() {
   DPRINT("LoRa RxDone ISR\n");
   assert(state == STATE_RX && lora_mode);
   uint8_t raw_rssi = read_reg(REG_LR_PKTRSSIVALUE);
+  int8_t raw_snr = read_reg(REG_LR_PKTSNRVALUE);
   uint8_t irqflags = read_reg(REG_LR_IRQFLAGS);
   assert(irqflags & RFLR_IRQFLAGS_RXDONE_MASK);
   // TODO check PayloadCRCError and ValidHeader?
@@ -466,7 +467,10 @@ static void lora_rxdone_isr() {
 
   current_packet->rx_meta.timestamp = timer_get_counter_value();
   current_packet->rx_meta.crc_status = HW_CRC_UNAVAILABLE;
-  current_packet->rx_meta.rssi = -157 + raw_rssi; // TODO only valid for HF port
+  if(raw_snr > 0)
+    current_packet->rx_meta.rssi = -157 + 16*raw_rssi/15; // TODO only valid for HF port
+  else
+    current_packet->rx_meta.rssi = -157 + raw_rssi + raw_snr / 4;
   current_packet->rx_meta.lqi = 0; // TODO
   DPRINT("RX done\n");
 
