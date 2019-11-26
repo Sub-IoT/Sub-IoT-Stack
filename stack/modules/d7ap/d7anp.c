@@ -203,10 +203,6 @@ void start_foreground_scan_after_D7AAdvP(void *arg)
     d7anp_start_foreground_scan();
 }
 
-void d7anp_set_address_id(uint8_t file_id)
-{
-    d7ap_fs_read_uid(address_id);
-}
 
 void d7anp_init()
 {
@@ -227,7 +223,6 @@ void d7anp_init()
     // vid is not valid when set to FF
     if (memcmp(address_id, (uint8_t[2]){ 0xFF, 0xFF }, 2) == 0)
     {
-        fs_register_file_modified_callback(D7A_FILE_UID_FILE_ID, &d7anp_set_address_id);
         d7ap_fs_read_uid(address_id);
         address_id_type = ID_TYPE_UID;
     } else
@@ -550,6 +545,7 @@ bool d7anp_unsecure_payload(packet_t *packet, uint8_t index)
 
 uint8_t d7anp_assemble_packet_header(packet_t *packet, uint8_t *data_ptr)
 {
+    d7ap_fs_read_uid(address_id);
     assert(!packet->d7anp_ctrl.hop_enabled); // TODO hopping not yet supported
 
     uint8_t* d7anp_header_start = data_ptr;
