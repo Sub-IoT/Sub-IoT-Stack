@@ -43,13 +43,13 @@
 
 #define FS_BLOCKDEVICES_COUNT       3 // metadata, permanent and volatile
 
-static fs_file_t files[FRAMEWORK_FS_FILE_COUNT] = { 0 };
+static fs_file_t files[FRAMEWORK_FS_FILE_COUNT] = { 0 }; // TODO do not keep all file metadata in RAM but use smaller MRU cache to save RAM
 
 static bool is_fs_init_completed = false;  //set in _d7a_verify_magic()
 
 #define IS_SYSTEM_FILE(file_id)         (file_id <= 0x3F)
 
-static fs_modified_file_callback_t file_modified_callbacks[FRAMEWORK_FS_FILE_COUNT] = { NULL };
+static fs_modified_file_callback_t file_modified_callbacks[FRAMEWORK_FS_FILE_COUNT] = { NULL }; // TODO limit to lower number so save RAM?
 
 static uint32_t volatile_data_offset = 0;
 static uint32_t permanent_data_offset = 0;

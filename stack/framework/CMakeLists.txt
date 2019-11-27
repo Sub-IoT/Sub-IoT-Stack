@@ -113,7 +113,7 @@ FRAMEWORK_HEADER_DEFINE(NUMBER FRAMEWORK_FS_USER_FILE_COUNT)
 SET(FRAMEWORK_FS_PERMANENT_STORAGE_SIZE "1900" CACHE STRING "The total number of bytes which can be stored in the user filesystem")
 FRAMEWORK_HEADER_DEFINE(NUMBER FRAMEWORK_FS_PERMANENT_STORAGE_SIZE)
 
-SET(FRAMEWORK_FS_VOLATILE_STORAGE_SIZE "200" CACHE STRING "The total number of bytes which can be stored in the user filesystem")
+SET(FRAMEWORK_FS_VOLATILE_STORAGE_SIZE "30" CACHE STRING "The total number of bytes which can be stored in the user filesystem")
 FRAMEWORK_HEADER_DEFINE(NUMBER FRAMEWORK_FS_VOLATILE_STORAGE_SIZE)
 
 SET(FRAMEWORK_FS_LOG_ENABLED "FALSE" CACHE BOOL "Select whether to enable or disable the generation of logs from the fs")
