@@ -638,7 +638,7 @@ error_t hw_radio_init(hwradio_init_args_t* init_args) {
   io_inited = true;
   hw_radio_reset();
 
-  set_opmode(OPMODE_STANDBY);
+  write_reg(REG_OPMODE, ((read_reg(REG_OPMODE) & RF_OPMODE_MASK) & RF_OPMODE_LONGRANGEMODE_MASK) | OPMODE_STANDBY);
   while(get_opmode() != OPMODE_STANDBY) {}
 
   uint8_t chip_version = read_reg(REG_VERSION);
@@ -754,7 +754,7 @@ void set_opmode(uint8_t opmode) {
   #ifdef PLATFORM_SX127X_USE_VCC_TXCO
   if(opmode == OPMODE_SLEEP)
   {
-    while(read_reg(REG_OPMODE) != OPMODE_SLEEP){} //ensure setting sleep mode is processed
+    while((read_reg(REG_OPMODE) & (0xFF - RF_OPMODE_MASK)) != OPMODE_SLEEP){} //ensure setting sleep mode is processed
     hw_gpio_clr(SX127x_VCC_TXCO);
   }
   else
