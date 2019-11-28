@@ -693,7 +693,7 @@ error_t hw_radio_init(hwradio_init_args_t* init_args) {
   io_inited = true;
   hw_radio_reset();
 
-  set_opmode(OPMODE_STANDBY);
+  write_reg(REG_OPMODE, ((read_reg(REG_OPMODE) & RF_OPMODE_MASK) & RF_OPMODE_LONGRANGEMODE_MASK) | OPMODE_STANDBY);
   while(get_opmode() != OPMODE_STANDBY) {}
 
   uint8_t chip_version = read_reg(REG_VERSION);
