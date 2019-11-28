@@ -236,6 +236,7 @@ static void em_file_change_callback(uint8_t file_id) {
         per_packet_counter = 0;
         per_missed_packets_counter = 0;
         per_received_packets_counter = 0;
+        per_start_index = 65535;
         rx_cfg.channel_id = em_command->channel_id;
         sched_post_task(&start_per_rx);
         break;
