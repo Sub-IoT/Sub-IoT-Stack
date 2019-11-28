@@ -59,7 +59,8 @@ static void packet_received(hw_radio_packet_t* packet);
 
 static uint16_t per_missed_packets_counter = 0;
 static uint16_t per_received_packets_counter = 0;
-static uint16_t per_packet_counter = 0;
+static uint16_t per_packet_counter = 0; 
+static uint16_t per_start_index = 65535; //Impossible value to show this is not yet set
 static uint16_t per_packet_limit = 0;
 static uint8_t per_data[PACKET_SIZE] = { [0 ... PACKET_SIZE-1]  = 0 };
 static uint8_t per_fill_data[FILL_DATA_SIZE + 1];
@@ -97,14 +98,16 @@ static void packet_received_em(packet_t* packet) {
       memcpy(&msg_counter, packet->hw_radio_packet.data + 1, sizeof(msg_counter));
       memcpy(rx_data, packet->hw_radio_packet.data + 1 + sizeof(msg_counter), data_len);
       
-      if(per_packet_counter == 0)
-      {
+      if((per_start_index == 65535) || (msg_counter == 1)) {
+          per_start_index = msg_counter - 1;
+
           // just start, assume received all previous counters to reset PER to 0%
-          per_received_packets_counter = msg_counter - 1;
-          per_packet_counter = msg_counter - 1;
+          per_received_packets_counter = 0;
+          per_packet_counter = 0;
+          per_missed_packets_counter = 0;
       }
 
-      uint16_t expected_counter = per_packet_counter + 1;
+      uint16_t expected_counter = per_packet_counter + 1 + per_start_index;
       if(msg_counter == expected_counter)
       {
           per_received_packets_counter++;
@@ -113,7 +116,7 @@ static void packet_received_em(packet_t* packet) {
       else if(msg_counter > expected_counter)
       {
           per_missed_packets_counter += msg_counter - expected_counter;
-          per_packet_counter = msg_counter;
+          per_packet_counter = msg_counter - per_start_index;
       }
       else
       {
@@ -122,12 +125,12 @@ static void packet_received_em(packet_t* packet) {
 
       double per = 0;
       if(msg_counter > 0)
-          per = 100.0 - ((double)per_received_packets_counter / (double)msg_counter) * 100.0;
+          per = 100.0 - ((double)per_received_packets_counter / (double)(msg_counter - per_start_index)) * 100.0;
       
       if(msg_counter % 5 == 0) {
-        uint8_t to_uart_uint[34];
+        uint8_t to_uart_uint[40];
         sprintf(to_uart_uint, "PER %i%%. Counter %i, rssi %idBm      ", (int)per, msg_counter, packet->hw_radio_packet.rx_meta.rssi);
-        modem_interface_transfer_bytes(to_uart_uint, 34, 0x04); //SERIAL_MESSAGE_TYPE_LOGGING
+        modem_interface_transfer_bytes(to_uart_uint, 40, 0x04); //SERIAL_MESSAGE_TYPE_LOGGING
         DPRINT("PER = %i%%\n counter <%i>, rssi <%idBm>, length <%i>, timestamp <%lu>\n", (int)per, msg_counter, packet->hw_radio_packet.rx_meta.rssi, packet->hw_radio_packet.length + 1, packet->hw_radio_packet.rx_meta.timestamp);
       }
   }
