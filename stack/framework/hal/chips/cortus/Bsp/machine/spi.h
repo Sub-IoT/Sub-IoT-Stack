@@ -71,7 +71,7 @@ typedef struct SPI
 
 } SPI;
 
-/***************  Bit definition for SPI_TX_STATUS register ******************/
+/***************  Bit definition ******************/
 #define SPI_TX_SR_FIFO_NOT_FULL       0x01 /*!< space in the fifo - bit 0 of spi.tx_status*/
 #define SPI_RX_SR_DATA_AVAILABLE      0x01 /*!< data available in fifo - bit 0 of spi.rx_status*/
 #define SPI_BUS_ACTIVE                0x01 /*!< activity on spi bus - bit 0 of spi.bus_active*/
