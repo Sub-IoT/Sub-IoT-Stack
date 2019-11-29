@@ -266,6 +266,9 @@ static void packet_received(hw_radio_packet_t* hw_radio_packet)
         return;
     }
 
+    if (hw_radio_packet->length < (1 + sizeof(uint64_t) + sizeof(uint16_t) + 2))
+        return;
+
 #if PLATFORM_NUM_LEDS > 0
     led_toggle(0);
 #endif
@@ -591,16 +594,16 @@ static char cmd_set_preamble_size(char *value)
 
     ret = at_parse_extract_number(value, &size);
     if (ret == AT_OK)
-        netdev->driver->set(netdev, NETOPT_PREAMBLE_LENGTH, &size, sizeof(uint16_t));
+        netdev->driver->set(netdev, NETOPT_PREAMBLE_LENGTH, &size, sizeof(uint8_t));
 
     return ret;
 }
 
 static char cmd_get_preamble_size(char *value)
 {
-    uint16_t size;
+    uint8_t size;
 
-    netdev->driver->get(netdev, NETOPT_PREAMBLE_LENGTH, &size, sizeof(uint16_t));
+    netdev->driver->get(netdev, NETOPT_PREAMBLE_LENGTH, &size, sizeof(uint8_t));
     snprintf(value, MAX_AT_RESPONSE_SIZE, "\r\n+PRES: %d\r\n", size);
     return AT_OK;
 }
@@ -621,7 +624,7 @@ static char cmd_get_preamble_polarity(char *value)
 {
     uint32_t polarity;
 
-    netdev->driver->set(netdev, NETOPT_PREAMBLE_POLARITY, &polarity, sizeof(uint8_t));
+    netdev->driver->get(netdev, NETOPT_PREAMBLE_POLARITY, &polarity, sizeof(uint8_t));
     snprintf(value, MAX_AT_RESPONSE_SIZE, "\r\n+PREP: %d\r\n", (uint8_t)polarity);
     return AT_OK;
 }
@@ -889,7 +892,7 @@ static char cmd_get_mod_shaping(char *value)
     uint8_t BT;
 
     netdev->driver->get(netdev, NETOPT_MOD_SHAPING, &BT, sizeof(uint8_t));
-    snprintf(value, MAX_AT_RESPONSE_SIZE, "\r\n+MODS: %d\r\n", BT);
+    snprintf(value, MAX_AT_RESPONSE_SIZE, "\r\n+BT: %d\r\n", BT);
     return AT_OK;
 }
 
@@ -944,15 +947,16 @@ static char cmd_set_fec_on(char *value)
     if(ret == AT_ERROR)
         return AT_ERROR;
 
-#ifdef HAL_RADIO_USE_HW_FEC
-    netdev->driver->set(netdev, NETOPT_FEC_ON, &enable, sizeof(uint8_t));
-#endif
     snprintf(value, MAX_AT_RESPONSE_SIZE, "\r\n+FEC: %d\r\n", (uint8_t)enable);
 
+#ifdef HAL_RADIO_USE_HW_FEC
+    netdev->driver->set(netdev, NETOPT_FEC_ON, &enable, sizeof(uint8_t));
+#else
     if(enable == 0)
         current_encoding &= ~CODING_FEC;
     else
         current_encoding |= CODING_FEC;
+#endif
     return AT_OK;
 }
 
@@ -1035,15 +1039,16 @@ static char cmd_set_dc_free_scheme(char *value)
     if(ret == AT_ERROR)
         return AT_ERROR;
 
+    snprintf(value, MAX_AT_RESPONSE_SIZE, "\r\n+DCFREE: %d\r\n", (uint8_t)scheme);
+
 #ifdef HAL_RADIO_USE_HW_FEC
     netdev->driver->set(netdev, NETOPT_DC_FREE_SCHEME, &scheme, sizeof(uint8_t));
-#endif
-    snprintf(value, MAX_AT_RESPONSE_SIZE, "+DCFREE: %d\r\n", (uint8_t)scheme);
-
+#else
     if(scheme == 0)
         current_encoding &= ~CODING_PN9;
     else
         current_encoding |= CODING_PN9;
+#endif
 
     return AT_OK;
 }
@@ -1121,16 +1126,15 @@ static char cmd_tx(char *value)
     // Otherwise cmd_tx was called from cmd_tx_continuously()
     if(extract_field_number(value) == 2)
     {
-        char interval[sizeof(uint16_t)];
-        strncpy(interval, value+(len+1), strlen(value)-(len+1));
-        if (at_parse_extract_number(interval, &time) == AT_ERROR)
+        char *time_field = value + skip_to_next_field(value, strlen(value));
+        if (at_parse_extract_number(time_field, &time) == AT_ERROR)
             return AT_ERROR;
     }
     else {
         time = 0;
     }
 
-    DPRINT("Sending \"%s\" payload (%d bytes)\n", data, strlen(data));
+    DPRINT("Sending \"%s\" payload (%d bytes)\n", data, len);
 
     state = STATE_TX;
 
@@ -1140,13 +1144,13 @@ static char cmd_tx(char *value)
 
     if(refill_flag)
     {
-        if (strlen(data) > 235) // 256bytes -16 bytes preamble + 2 bytes sync + 1 bytes length + 2 bytes CRC
+        if (len > 235) // 256 bytes -16 bytes preamble + 2 bytes sync + 1 bytes length + 2 bytes CRC
             return AT_ERROR;
 
         hw_radio_enable_refill(true);
 
         uint8_t i = 0;
-        
+
         if (len == 2) //fill the byte stream with this character
         {
             uint8_t hex_byte;
@@ -1168,28 +1172,29 @@ static char cmd_tx(char *value)
             tx_frame.hw_radio_packet.data[i++] = 0x2F;
         
             // insert the byte length
-            tx_frame.hw_radio_packet.data[i++] = strlen(data) + 2;
+            tx_frame.hw_radio_packet.data[i++] = len + 2;
 
-            memcpy(tx_frame.hw_radio_packet.data + i, data, strlen(data));
+            memcpy(tx_frame.hw_radio_packet.data + i, data, len);
 
-            uint16_t crc = __builtin_bswap16(crc_calculate(tx_frame.hw_radio_packet.data + 18, strlen(data) + 1));
-            memcpy(tx_frame.hw_radio_packet.data + i + strlen(data), &crc, 2);
+            uint16_t crc = __builtin_bswap16(crc_calculate(tx_frame.hw_radio_packet.data + 18, len + 1));
+            memcpy(tx_frame.hw_radio_packet.data + i + len, &crc, 2);
 
-            tx_frame.hw_radio_packet.length = 16 + 2 + 1 + strlen(data) + 2;
+            tx_frame.hw_radio_packet.length = 16 + 2 + 1 + len + 2;
         }
 
         DPRINT("Frame <%d>", tx_frame.hw_radio_packet.length);
         DPRINT_DATA(tx_frame.hw_radio_packet.data, tx_frame.hw_radio_packet.length);
 
+        hw_radio_set_payload_length(tx_frame.hw_radio_packet.length);
     }
     else
     {
         hw_radio_enable_refill(false);
         counter++;
-        tx_frame.hw_radio_packet.length = 1 + sizeof(id) + sizeof(counter) + strlen(data);
+        tx_frame.hw_radio_packet.length = 1 + sizeof(id) + sizeof(counter) + len;
         memcpy(tx_frame.hw_radio_packet.data + 1, &id, sizeof(id));
         memcpy(tx_frame.hw_radio_packet.data + 1 + sizeof(id), &counter, sizeof(counter));
-        memcpy(tx_frame.hw_radio_packet.data + 1 + sizeof(id) + sizeof(counter), data, strlen(data));
+        memcpy(tx_frame.hw_radio_packet.data + 1 + sizeof(id) + sizeof(counter), data, len);
         tx_frame.hw_radio_packet.data[0] = tx_frame.hw_radio_packet.length -1 + sizeof(uint16_t); /* CRC is an uint16_t */;
 
 #ifndef HAL_RADIO_USE_HW_CRC
@@ -1199,8 +1204,8 @@ static char cmd_tx(char *value)
         tx_frame.hw_radio_packet.length += sizeof(uint16_t); /* CRC is an uint16_t */
 #endif
 
-        //DPRINT("Frame <%i>", counter);
-        //DPRINT_DATA(tx_frame.hw_radio_packet.data, tx_frame.hw_radio_packet.length);
+        DPRINT("Frame <%i>", counter);
+        DPRINT_DATA(tx_frame.hw_radio_packet.data, tx_frame.hw_radio_packet.length);
 
         //backup the initial frame
         memcpy(raw_tx_frame, tx_frame.hw_radio_packet.data, tx_frame.hw_radio_packet.length);
@@ -1209,8 +1214,10 @@ static char cmd_tx(char *value)
         // Encode the packet if not supported by xcvr
         tx_frame.hw_radio_packet.length = encode_packet(tx_frame.hw_radio_packet.data,
                                                         tx_frame.hw_radio_packet.length);
-        DPRINT("Encoded frame len<%i>", tx_frame.hw_radio_packet.length);
-        DPRINT_DATA(tx_frame.hw_radio_packet.data, tx_frame.hw_radio_packet.length);
+        //    DPRINT("Encoded frame len<%i>", tx_frame.hw_radio_packet.length);
+        //    DPRINT_DATA(tx_frame.hw_radio_packet.data, tx_frame.hw_radio_packet.length);
+
+        hw_radio_set_payload_length(tx_frame.hw_radio_packet.length + sizeof(uint16_t));
     }
 
     if (hw_radio_send_payload(tx_frame.hw_radio_packet.data, tx_frame.hw_radio_packet.length) == -ENOTSUP) {
@@ -1379,8 +1386,8 @@ static char cmd_print_help(char *value);
     { "+BR", cmd_set_bitrate, cmd_get_bitrate, "<bps>","get/set bitrate"},
 
     { "+BT", cmd_set_mod_shaping, cmd_get_mod_shaping, "", "get/set modulation shaping"},
-    { "+DCFREE", cmd_set_dc_free_scheme, cmd_get_dc_free_scheme, "%d", "get/set the DC free coding scheme"},
-    { "+FEC", cmd_set_fec_on, cmd_get_fec_on, "%d", "get/set the FEC encoder"},
+    { "+DCFREE", cmd_set_dc_free_scheme, cmd_get_dc_free_scheme, "<%d>", "get/set the DC free coding scheme"},
+    { "+FEC", cmd_set_fec_on, cmd_get_fec_on, "<%d>", "get/set the FEC encoder"},
 
     { "+MODE", cmd_set_opmode, cmd_get_opmode, "<%d>", "get/set operation mode"},
     { "+PAYLEN", cmd_set_payload_length, NULL, "<%d>", "set payload length"},
@@ -1483,7 +1490,10 @@ void bootstrap() {
 #endif
 
 #ifdef HAL_RADIO_USE_HW_DC_FREE
-    hw_radio_set_dc_free(HW_DC_FREE_WHITENING);
+    if (default_channel_id.channel_header.ch_coding == PHY_CODING_RFU)
+    	hw_radio_set_dc_free(HW_DC_FREE_NONE);
+    else
+    	hw_radio_set_dc_free(HW_DC_FREE_WHITENING);
 #else
     hw_radio_set_dc_free(HW_DC_FREE_NONE);
 #endif
