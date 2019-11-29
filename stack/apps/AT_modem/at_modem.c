@@ -138,8 +138,18 @@ static hwradio_init_args_t init_args;
 
 static state_t state = STATE_IDLE;
 
+typedef enum
+{
+    CODING_RFU = 0x00,
+    CODING_PN9 = 0x01,
+    CODING_FEC = 0x02,
+    CODING_FEC_PN9 = 0x04
+} coding_t;
+
+static uint8_t current_encoding = 0;
+
 static channel_id_t default_channel_id = {
-  .channel_header.ch_coding = PHY_CODING_PN9,
+  .channel_header.ch_coding = PHY_CODING_RFU,
   .channel_header.ch_class = PHY_CLASS_NORMAL_RATE,
   .channel_header.ch_freq_band = PHY_BAND_868,
   .center_freq_index = 0
@@ -192,12 +202,14 @@ static uint16_t encode_packet(uint8_t *data, uint16_t nbytes)
     uint16_t encoded_len = nbytes;
 
 #ifndef HAL_RADIO_USE_HW_FEC
-    if (current_channel_id.channel_header.ch_coding == PHY_CODING_FEC_PN9)
+    if (current_encoding == CODING_FEC)
         encoded_len = fec_encode(data, nbytes);
 #endif
 
 #ifndef HAL_RADIO_USE_HW_DC_FREE
-    pn9_encode(data, encoded_len);
+    if ((current_encoding == CODING_PN9) ||
+        (current_encoding == CODING_FEC_PN9))
+        pn9_encode(data, encoded_len);
 #endif
 
     return encoded_len;
@@ -312,10 +324,12 @@ static void packet_header_received(uint8_t *data, uint8_t len)
     assert(len == 4);
 
 #ifndef HAL_RADIO_USE_HW_DC_FREE
-    pn9_encode(data, len);
+    if ((current_encoding == CODING_PN9) ||
+        (current_encoding == CODING_FEC_PN9))
+        pn9_encode(data, len);
 #endif
 
-    if (current_channel_id.channel_header.ch_coding == PHY_CODING_FEC_PN9)
+    if (current_encoding == CODING_FEC)
     {
 #ifndef HAL_RADIO_USE_HW_FEC
         fec_decode_packet(data, len, len);
@@ -917,18 +931,35 @@ static char cmd_set_fec_on(char *value)
     uint32_t enable;
 
     ret = at_parse_extract_number(value, &enable);
-    if (ret == AT_OK)
-        netdev->driver->set(netdev, NETOPT_FEC_ON, &enable, sizeof(uint8_t));
+    if(ret == AT_ERROR)
+        return AT_ERROR;
 
+#ifdef HAL_RADIO_USE_HW_FEC
+    netdev->driver->set(netdev, NETOPT_FEC_ON, &enable, sizeof(uint8_t));
+#endif
+    snprintf(value, MAX_AT_RESPONSE_SIZE, "\r\n+FEC: %d\r\n", (uint8_t)enable);
+
+    if(enable == 0)
+        current_encoding &= ~CODING_FEC;
+    else
+        current_encoding |= CODING_FEC;
     return AT_OK;
 }
 
 static char cmd_get_fec_on(char *value)
 {
+#ifdef HAL_RADIO_USE_HW_FEC
     uint8_t enable;
 
     netdev->driver->get(netdev, NETOPT_FEC_ON, &enable, sizeof(uint8_t));
-    snprintf(value, MAX_AT_RESPONSE_SIZE, "\r\n+FEC: %d\r\n", enable);
+    snprintf(value, MAX_AT_RESPONSE_SIZE, "+FEC: %d\r\n", enable);
+#else
+    if((current_encoding & CODING_FEC) == CODING_FEC)
+        snprintf(value, MAX_AT_RESPONSE_SIZE, "\r\n+FEC: 1\r\n");
+    else
+        snprintf(value, MAX_AT_RESPONSE_SIZE, "\r\n+FEC: 0\r\n");
+#endif
+
     return AT_OK;
 }
 
@@ -991,18 +1022,36 @@ static char cmd_set_dc_free_scheme(char *value)
     uint32_t scheme;
 
     ret = at_parse_extract_number(value, &scheme);
-    if (ret == AT_OK)
-        netdev->driver->set(netdev, NETOPT_DC_FREE_SCHEME, &scheme, sizeof(uint8_t));
+    if(ret == AT_ERROR)
+        return AT_ERROR;
+
+#ifdef HAL_RADIO_USE_HW_FEC
+    netdev->driver->set(netdev, NETOPT_DC_FREE_SCHEME, &scheme, sizeof(uint8_t));
+#endif
+    snprintf(value, MAX_AT_RESPONSE_SIZE, "+DCFREE: %d\r\n", (uint8_t)scheme);
+
+    if(scheme == 0)
+        current_encoding &= ~CODING_PN9;
+    else
+        current_encoding |= CODING_PN9;
 
     return AT_OK;
 }
 
 static char cmd_get_dc_free_scheme(char *value)
 {
+#ifdef HAL_RADIO_USE_HW_FEC
     uint8_t scheme;
 
     netdev->driver->get(netdev, NETOPT_DC_FREE_SCHEME, &scheme, sizeof(uint8_t));
-    snprintf(value, MAX_AT_RESPONSE_SIZE, "\r\n+DCFREE: %d\r\n", scheme);
+    snprintf(value, MAX_AT_RESPONSE_SIZE, "+DCFREE: %d\r\n", scheme);
+#else
+    if((current_encoding&CODING_PN9) == CODING_PN9)
+        snprintf(value, MAX_AT_RESPONSE_SIZE, "\r\n+DCFREE: 1\r\n");
+    else
+        snprintf(value, MAX_AT_RESPONSE_SIZE, "\r\n+DCFREE: 0\r\n");
+#endif
+
     return AT_OK;
 }
 
