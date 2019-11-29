@@ -36,14 +36,14 @@
 #include "hwsystem.h"
 #include "debug.h"
 
-#if defined(FRAMEWORK_LOG_ENABLED) && defined(HAL_RADIO_LOG_ENABLED)
+//#if defined(FRAMEWORK_LOG_ENABLED) && defined(HAL_RADIO_LOG_ENABLED)
 #include "log.h"
     #define DEBUG(...) log_print_string(__VA_ARGS__)
     #define DEBUG_DATA(...) log_print_data(__VA_ARGS__)
-#else
+/*#else
     #define DEBUG(...)
     #define DEBUG_DATA(...)
-#endif
+#endif*/
 
 /* Internal helper functions */
 static int _set_state(sx127x_t *dev, netopt_state_t state);
@@ -957,6 +957,27 @@ void _on_dio1_irq(void *arg)
                 case SX127X_MODEM_FSK:
                     hw_gpio_disable_interrupt(dev->params.dio1_pin);
                     timer_cancel_event(&dev->_internal.rx_timeout_timer);
+
+                    uint8_t byte = 0;
+                    if (!(dev->options & SX127X_OPT_TELL_RX_END))
+                    {
+                        while(!sx127x_is_fifo_empty(dev))
+                        {
+                            byte = sx127x_reg_read(dev, SX127X_REG_FIFO);
+                            //log_print_data(&byte, 1);
+                            //DEBUG("%02X", byte);
+                            printf("%02X\r\n", byte);
+                        }
+
+                    	//sx127x_read_fifo(dev, &dev->packet.buf[dev->packet.pos], dev->packet.fifothresh);
+                    	//DEBUG_DATA(dev->packet.buf, dev->packet.fifothresh);
+
+                        sx127x_reg_write(dev, SX127X_REG_FIFOTHRESH, 0x80 | (60 - 1));
+                        dev->packet.fifothresh = 60;
+                        hw_gpio_set_edge_interrupt(dev->params.dio1_pin, GPIO_RISING_EDGE);
+                        hw_gpio_enable_interrupt(dev->params.dio1_pin);
+                        return;
+                    }
 
                     if (dev->packet.length == 0 && dev->packet.pos == 0)
                     {
