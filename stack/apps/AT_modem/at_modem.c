@@ -171,7 +171,8 @@ static uint16_t received_packets_counter = 0;
 static uint64_t id;
 static uint32_t time = 0;
 
-bool refill_flag = 0;
+bool refill_flag = false;
+bool infinite_rx = false;
 
 static char cmd_tx_continuously(char *value);
 static char cmd_tx(char *value);
@@ -240,6 +241,9 @@ static void packet_received(hw_radio_packet_t* hw_radio_packet)
 
     DPRINT("len %i", hw_radio_packet->length);
     DPRINT_DATA(hw_radio_packet->data, hw_radio_packet->length);
+
+    if (infinite_rx)
+        return;
 
     if (hw_radio_packet->rx_meta.crc_status == HW_CRC_UNAVAILABLE)
     {
@@ -320,6 +324,12 @@ static void packet_header_received(uint8_t *data, uint8_t len)
     uint16_t packet_len;
     DPRINT("Packet Header received %i\n", len);
     DPRINT_DATA(data, len);
+
+    if (infinite_rx)
+    {
+        hw_radio_set_payload_length(0xFF);
+        return;
+    }
 
     assert(len == 4);
 
@@ -1063,6 +1073,12 @@ static char cmd_start_rx(char *value)
     // Setting refill_flag to false
     refill_flag = false;
 
+    if (infinite_rx == false)
+    {
+        netopt_enable_t netopt_enable = NETOPT_ENABLE;
+        netdev->driver->set(netdev, NETOPT_RX_END_IRQ, &netopt_enable, sizeof(netopt_enable_t));
+    }
+
     // Unlimited Length packet format to set the Receive packet of arbitrary length
     hw_radio_set_payload_length(0x00); // unlimited length mode
 
@@ -1120,6 +1136,7 @@ static char cmd_tx(char *value)
 
     // ensure state is standby before switching to TX mode
     hw_radio_set_opmode(HW_STATE_STANDBY);
+    infinite_rx = false;
 
     if(refill_flag)
     {
@@ -1210,6 +1227,16 @@ static char cmd_tx_continuously(char *value)
     refill_flag = true;
     return (cmd_tx(value));
 }
+
+static char cmd_start_rx_continuously(char *value)
+{
+    // If you need traces, increase the baudrate to 576000
+    infinite_rx = true;
+    netopt_enable_t netopt_enable = NETOPT_DISABLE;
+    netdev->driver->set(netdev, NETOPT_RX_END_IRQ, &netopt_enable, sizeof(netopt_enable_t));
+    return (cmd_start_rx(value));
+}
+
 
 static uint32_t get_parameter(netopt_t opt, size_t maxlen)
 {
@@ -1360,6 +1387,7 @@ static char cmd_print_help(char *value);
     { "+TX", cmd_tx, NULL, "<%d or string>,[time (ms)]","transmit packet over phy [every X msec]"},
     { "+TXC", cmd_tx_continuously, NULL, "<%d or string>", "transmit continuously same packet over phy"},
     { "+RX", cmd_start_rx, NULL, "","start RX"},
+    { "+RXC", cmd_start_rx_continuously, NULL, "","start RX in continuous mode"},
     { "+EIRP", cmd_set_eirp, cmd_get_eirp, "%d", "get/set the TX power"},
 
     { "+STATUS", cmd_print_status, cmd_print_status, "","print status"},
