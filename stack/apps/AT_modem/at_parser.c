@@ -188,12 +188,12 @@ char at_parse_line(string_t line, char *ret)
             {
                 ms_array_slice_to_string(line, index_write_start, line_len - 1, ret);
                 result = at_execute_command(temp, ret, state);
-                ret[0] = 0;
+                //ret[0] = 0;
             }
             else
             {
                 result = at_execute_command(temp, ret, state);
-                ret[0] = 0;
+                //ret[0] = 0;
             }
             break;
 
@@ -325,4 +325,17 @@ int skip_to_next_field(char *line, int len)
 
     line += pos;
     return pos;
+}
+
+int extract_field_number(char *line)
+{
+    int ret = 1;
+
+    for(int i=0; i < strlen(line); i++)
+    {
+        if(line[i] == ',')
+            ret++;
+    }
+
+    return ret;
 }
