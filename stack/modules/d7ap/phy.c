@@ -364,6 +364,10 @@ static void packet_header_received(uint8_t *data, uint8_t len)
     else
         packet_len = data[0] + 1 ;
 
+    if((current_channel_id.channel_header.ch_coding == PHY_CODING_FEC_PN9 && (packet_len > (0xFF * 2))) ||
+       (current_channel_id.channel_header.ch_coding != PHY_CODING_FEC_PN9 && (packet_len > 0xFF)) || (packet_len < 4))
+        packet_len = 0;
+
     DPRINT("RX Packet Length: %i ", packet_len);
     // set PayloadLength to the length of the expected foreground frame
     hw_radio_set_payload_length(packet_len);

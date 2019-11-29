@@ -124,6 +124,7 @@ static void packet_received_em(packet_t* packet) {
       }
 
       double per = 0;
+      assert((msg_counter - per_start_index) != 0); 
       if(msg_counter > 0)
           per = 100.0 - ((double)per_received_packets_counter / (double)(msg_counter - per_start_index)) * 100.0;
       
