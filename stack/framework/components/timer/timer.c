@@ -110,7 +110,7 @@ __LINK_C error_t timer_post_task_prio(task_t task, timer_tick_t fire_time, uint8
             // it is allowed to update only the fire time
             if (NG(timers)[i].priority == priority)
             {
-                NG(timers)[empty_index].next_event = fire_time;
+                NG(timers)[i].next_event = fire_time;
                 goto config;
             }
             else
