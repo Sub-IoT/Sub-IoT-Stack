@@ -237,8 +237,9 @@ static void execute_state_machine()
       if(request_pending) {
         modem_interface_enable();
         sched_post_task_prio(&flush_modem_interface_tx_fifo, MIN_PRIORITY, NULL);
-      } else if (!hw_gpio_get_in(target_uart_state_pin)){
+      } else if (!hw_gpio_get_in(target_uart_state_pin) || !hw_gpio_get_in(get_uart_rx_port(uart))){
         SWITCH_STATE(STATE_IDLE);
+        sched_post_task(&execute_state_machine);
       } else
         sched_post_task(&execute_state_machine); 
         //keep active until target reacts

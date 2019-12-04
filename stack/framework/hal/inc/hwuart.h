@@ -44,6 +44,7 @@ typedef void (*uart_rx_inthandler_t)(uint8_t byte);
 
 __LINK_C uart_handle_t* uart_init(uint8_t port_idx, uint32_t baudrate, uint8_t pins);
 __LINK_C bool           uart_disable(uart_handle_t* uart);
+__LINK_C uint32_t       get_uart_rx_port(uart_handle_t* uart);
 __LINK_C bool           uart_enable(uart_handle_t* uart);
 
 __LINK_C void           uart_send_byte(uart_handle_t* uart, uint8_t data);
