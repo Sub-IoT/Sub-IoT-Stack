@@ -119,9 +119,9 @@ bool uart_enable(uart_handle_t* uart) {
   return true;
 }
 
-uint32_t get_uart_rx_port(uart_handle_t* uart)
+bool uart_get_rx_port_state(uart_handle_t* uart)
 {
-  return uart->uart_port->rx;
+  return hw_gpio_get_in(uart->uart_port->rx);
 }
 
 bool uart_disable(uart_handle_t* uart) {
@@ -145,7 +145,8 @@ bool uart_disable(uart_handle_t* uart) {
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Pin = 1 << GPIO_PIN(uart->uart_port->tx);
   assert(hw_gpio_configure_pin_stm(uart->uart_port->tx, &GPIO_InitStruct) == SUCCESS);
-   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+  GPIO_InitStruct.Pull = GPIO_PULLDOWN;
   GPIO_InitStruct.Pin = 1 << GPIO_PIN(uart->uart_port->rx);
   assert(hw_gpio_configure_pin_stm(uart->uart_port->rx, &GPIO_InitStruct) == SUCCESS);
 
