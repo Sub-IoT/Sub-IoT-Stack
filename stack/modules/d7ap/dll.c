@@ -127,6 +127,7 @@ static bool NGDEF(_guarded_channel);
 static uint8_t nf_last_msr[3] = {0, 0, 0};
 static uint8_t nf_last_msr_index = 0;
 static uint8_t CCA_trigger_no_answer = 0;
+static uint8_t cycle_counter = 0;
 
 static void execute_cca(void *arg);
 static void execute_csma_ca(void *arg);
@@ -324,6 +325,31 @@ void start_background_scan()
             E_CCA = - min + 6; //Min of last 3 with 6dB offset
         } else
             E_CCA = - current_access_profile.subbands[0].cca;
+
+        if(cycle_counter > 10) {
+            cycle_counter = 0;
+            uint8_t channels[D7A_FILE_PHY_STATUS_SIZE - 15];
+            d7ap_fs_read_file(D7A_FILE_PHY_STATUS_FILE_ID, 15, channels, D7A_FILE_PHY_STATUS_SIZE - 15);
+            for(uint8_t counter = 0; counter+=3; counter < (D7A_FILE_PHY_STATUS_SIZE - 15)) {
+                // if the channel status identifier is empty OR if the channel status identifier matches the current channel, change that noise floor
+                if ( ( (channels[counter] & 0xE0) == 0) ||
+                     ( (channels[counter + 1] + ((channels[counter + 0] & 0x07) * 255) == current_channel_id.center_freq_index) && 
+                       ((channels[counter + 0] & 0xE0) >> 5 == current_channel_id.channel_header.ch_freq_band) && 
+                       ( ((current_channel_id.channel_header.ch_class == PHY_CLASS_LO_RATE) && ((channels[counter + 0] & 0x10) == 0x10)) || 
+                         ((current_channel_id.channel_header.ch_class != PHY_CLASS_LO_RATE) && ((channels[counter + 0] & 0x10) == 0x00)) ) ) ) {
+                    
+                    channels[0] = (current_channel_id.channel_header.ch_freq_band << 5) | ((current_channel_id.channel_header.ch_class == PHY_CLASS_LO_RATE) << 4) | ((current_channel_id.center_freq_index >> 8) & 0x07);
+                    channels[1] = current_channel_id.center_freq_index & 0xFF;
+                    channels[2] = - E_CCA;
+                    d7ap_fs_write_file(D7A_FILE_PHY_STATUS_FILE_ID, 15 + counter, channels, 3);
+
+                    log_print_string("written E_CCA %i to phy status at location %i", -E_CCA, counter);
+                    log_print_data(channels, 3);
+                    break;
+                }
+            }
+        } else
+            cycle_counter++;
     }
 }
 
@@ -818,6 +844,31 @@ void dll_execute_scan_automation()
           assert(false);
         }
 
+        if(cycle_counter > 10) {
+            cycle_counter = 0;
+            uint8_t channels[D7A_FILE_PHY_STATUS_SIZE - 15];
+            d7ap_fs_read_file(D7A_FILE_PHY_STATUS_FILE_ID, 15, channels, D7A_FILE_PHY_STATUS_SIZE - 15);
+            for(uint8_t counter = 0; counter+=3; counter < (D7A_FILE_PHY_STATUS_SIZE - 15)) {
+                // if the channel status identifier is empty OR if the channel status identifier matches the current channel, change that noise floor
+                if ( ( (channels[counter] & 0xE0) == 0) ||
+                     ( (channels[counter + 1] + ((channels[counter + 0] & 0x07) * 255) == current_channel_id.center_freq_index) && 
+                       ((channels[counter + 0] & 0xE0) >> 5 == current_channel_id.channel_header.ch_freq_band) && 
+                       ( ((current_channel_id.channel_header.ch_class == PHY_CLASS_LO_RATE) && ((channels[counter + 0] & 0x10) == 0x10)) || 
+                         ((current_channel_id.channel_header.ch_class != PHY_CLASS_LO_RATE) && ((channels[counter + 0] & 0x10) == 0x00)) ) ) ) {
+                    
+                    channels[0] = (current_channel_id.channel_header.ch_freq_band << 5) | ((current_channel_id.channel_header.ch_class == PHY_CLASS_LO_RATE) << 4) | ((current_channel_id.center_freq_index >> 8) & 0x07);
+                    channels[1] = current_channel_id.center_freq_index & 0xFF;
+                    channels[2] = - E_CCA;
+                    d7ap_fs_write_file(D7A_FILE_PHY_STATUS_FILE_ID, 15 + counter, channels, 3);
+
+                    log_print_string("written E_CCA %i to phy status at location %i", -E_CCA, counter);
+                    log_print_data(channels, 3);
+                    break;
+                }
+            }
+        } else
+            cycle_counter++;
+
         // If TSCHED > 0, an independent scheduler is set to generate regular scan start events at TSCHED rate.
         DPRINT("Perform a dll background scan at the end of TSCHED (%d ticks)", tsched);
         dll_background_scan_timer.next_event = tsched;
@@ -1079,6 +1130,31 @@ void dll_tx_frame(packet_t* packet)
           // TODO support the Slow RSSI Variation computation method" and possibly add other methods
           assert(false);
         }
+
+        if(cycle_counter > 10) {
+            cycle_counter = 0;
+            uint8_t channels[D7A_FILE_PHY_STATUS_SIZE - 15];
+            d7ap_fs_read_file(D7A_FILE_PHY_STATUS_FILE_ID, 15, channels, D7A_FILE_PHY_STATUS_SIZE - 15);
+            for(uint8_t counter = 0; counter+=3; counter < (D7A_FILE_PHY_STATUS_SIZE - 15)) {
+                // if the channel status identifier is empty OR if the channel status identifier matches the current channel, change that noise floor
+                if ( ( (channels[counter] & 0xE0) == 0) ||
+                     ( (channels[counter + 1] + ((channels[counter + 0] & 0x07) * 255) == current_channel_id.center_freq_index) && 
+                       ((channels[counter + 0] & 0xE0) >> 5 == current_channel_id.channel_header.ch_freq_band) && 
+                       ( ((current_channel_id.channel_header.ch_class == PHY_CLASS_LO_RATE) && ((channels[counter + 0] & 0x10) == 0x10)) || 
+                         ((current_channel_id.channel_header.ch_class != PHY_CLASS_LO_RATE) && ((channels[counter + 0] & 0x10) == 0x00)) ) ) ) {
+                    
+                    channels[0] = (current_channel_id.channel_header.ch_freq_band << 5) | ((current_channel_id.channel_header.ch_class == PHY_CLASS_LO_RATE) << 4) | ((current_channel_id.center_freq_index >> 8) & 0x07);
+                    channels[1] = current_channel_id.center_freq_index & 0xFF;
+                    channels[2] = - E_CCA;
+                    d7ap_fs_write_file(D7A_FILE_PHY_STATUS_FILE_ID, 15 + counter, channels, 3);
+
+                    log_print_string("written E_CCA %i to phy status at location %i", -E_CCA, counter);
+                    log_print_data(channels, 3);
+                    break;
+                }
+            }
+        } else
+            cycle_counter++;
     }
 
     packet_assemble(packet);
