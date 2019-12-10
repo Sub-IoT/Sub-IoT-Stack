@@ -179,8 +179,6 @@ static bool io_inited = false;
 
 static bool lora_mode = false;
 
-static bool one_time_cal = false;
-
 void enable_spi_io() {
   if(!io_inited){
     hw_radio_io_init();
@@ -661,15 +659,7 @@ static void restart_rx_chain() {
 static void calibrate_rx_chain() {
   // TODO currently assumes to be called on boot only
   DPRINT("Calibrating RX chain");
-
-  //has to be in STANDBY to calibrate rx
-  uint8_t opmode = get_opmode();
-  if(opmode != OPMODE_STANDBY) {
-    set_opmode(OPMODE_STANDBY);
-    while(opmode != OPMODE_STANDBY)
-      opmode = get_opmode();
-  }
-
+  assert(get_opmode() == OPMODE_STANDBY);
   uint8_t reg_pa_config_initial_value = read_reg(REG_PACONFIG);
 
   // Cut the PA just in case, RFO output, power = -1 dBm
@@ -719,7 +709,6 @@ error_t hw_radio_init(hwradio_init_args_t* init_args) {
 
 
   calibrate_rx_chain();
-  one_time_cal = true;
   init_regs();
 
 #ifdef PLATFORM_SX127X_USE_LOW_BAT_SHUTDOWN
@@ -1173,10 +1162,6 @@ __attribute__((weak)) void hw_radio_io_deinit() {
 /* with TS_RE = rx_bw_startup_time */
 /* with TS_RSSI = 2^(rssi_smoothing + 1) / (4 * RXBW[kHz]) [ms] */
 int16_t hw_radio_get_rssi() {
-    if(one_time_cal) { //calibrate it once after initing
-      calibrate_rx_chain();
-      one_time_cal = false;
-    }
     set_opmode(OPMODE_RX); //0.103 ms
     hw_gpio_disable_interrupt(SX127x_DIO0_PIN); //3.7µs
     hw_gpio_disable_interrupt(SX127x_DIO1_PIN);
