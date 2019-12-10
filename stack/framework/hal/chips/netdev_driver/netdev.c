@@ -143,6 +143,19 @@ void hw_radio_set_preamble_size(uint16_t size)
     netdev->driver->set(netdev, NETOPT_PREAMBLE_LENGTH, &size, sizeof(uint16_t));
 }
 
+void hw_radio_set_preamble_detector(uint8_t preamble_detector_size, uint8_t preamble_tol)
+{
+    netdev->driver->set(netdev, NETOPT_PREAMBLE_DETECT_SIZE, &preamble_detector_size, sizeof(uint8_t));
+    netdev->driver->set(netdev, NETOPT_PREAMBLE_DETECT_TOLERANCE, &preamble_tol, sizeof(uint8_t));
+}
+
+void hw_radio_set_rssi_config(uint8_t rssi_smoothing, uint8_t rssi_offset)
+{
+    netdev->driver->set(netdev, NETOPT_RSSI_SMOOTHING, &rssi_smoothing, sizeof(uint8_t));
+    netdev->driver->set(netdev, NETOPT_RSSI_OFFSET, &rssi_smoothing, sizeof(uint8_t));
+}
+
+
 /* TODO Make use of the following APIs to setup the xcvr */
 /*
 void hw_radio_set_modulation_shaping(uint8_t shaping)
@@ -333,6 +346,9 @@ error_t hw_radio_init(hwradio_init_args_t* init_args)
 
     netdev->event_callback = _event_cb;
     sched_register_task(&isr_handler);
+
+    netopt_enable_t netopt_enable = NETOPT_ENABLE;
+    netdev->driver->set(netdev, NETOPT_RX_END_IRQ, &netopt_enable, sizeof(netopt_enable_t));
 
     // put the chip into sleep mode after init
     hw_radio_set_idle();

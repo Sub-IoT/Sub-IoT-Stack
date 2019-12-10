@@ -1317,6 +1317,21 @@ uint8_t sx127x_get_rssi_smoothing(const sx127x_t *dev)
     return (1 << (1 + rssi_samples));
 }
 
+void sx127x_set_rssi_offset(sx127x_t *dev, int8_t rssi_offset)
+{
+    sx127x_reg_write(dev, SX127X_REG_RSSICONFIG,
+                         (sx127x_reg_read(dev, SX127X_REG_RSSICONFIG) &
+                          SX127X_RF_RSSICONFIG_OFFSET_MASK) | rssi_offset);
+}
+
+int8_t sx127x_get_rssi_offset(const sx127x_t *dev)
+{
+    int8_t rssi_offset = sx127x_reg_read(dev, SX127X_REG_RSSICONFIG) &
+                           ~SX127X_RF_RSSICONFIG_OFFSET_MASK;
+    return rssi_offset;
+}
+
+
 void sx127x_set_sync_on(sx127x_t *dev, uint8_t enable)
 {
     sx127x_reg_write(dev, SX127X_REG_SYNCCONFIG,
@@ -1343,6 +1358,33 @@ uint8_t sx127x_get_preamble_detect_on(const sx127x_t *dev)
 {
     return ((sx127x_reg_read(dev, SX127X_REG_PREAMBLEDETECT) &
             ~SX127X_RF_PREAMBLEDETECT_DETECTOR_MASK) >> 7);
+}
+
+void sx127x_set_preamble_detect_tol(sx127x_t *dev, uint8_t tol)
+{
+    sx127x_reg_write(dev, SX127X_REG_PREAMBLEDETECT,
+                     (sx127x_reg_read(dev, SX127X_REG_PREAMBLEDETECT) &
+                      SX127X_RF_PREAMBLEDETECT_DETECTORTOL_MASK) | tol);
+}
+
+uint8_t sx127x_get_preamble_detect_tol(const sx127x_t *dev)
+{
+    return (sx127x_reg_read(dev, SX127X_REG_PREAMBLEDETECT) &
+            ~SX127X_RF_PREAMBLEDETECT_DETECTORTOL_MASK);
+}
+
+void sx127x_set_preamble_detect_size(sx127x_t *dev, uint8_t size)
+{
+    sx127x_reg_write(dev, SX127X_REG_PREAMBLEDETECT,
+                    (sx127x_reg_read(dev, SX127X_REG_PREAMBLEDETECT) &
+                     SX127X_RF_PREAMBLEDETECT_DETECTORSIZE_MASK) |
+                     ((size -1) << 5));
+}
+
+uint8_t sx127x_get_preamble_detect_size(const sx127x_t *dev)
+{
+    return (((sx127x_reg_read(dev, SX127X_REG_PREAMBLEDETECT) &
+            ~SX127X_RF_PREAMBLEDETECT_DETECTORSIZE_MASK) >> 5) + 1);
 }
 
 void sx127x_set_dc_free(sx127x_t *dev, uint8_t encoding_scheme)
