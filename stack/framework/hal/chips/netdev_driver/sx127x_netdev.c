@@ -511,6 +511,11 @@ static int _get(netdev_t *netdev, netopt_t opt, void *val, size_t max_len)
             *((uint8_t*) val) = sx127x_get_rssi_smoothing(dev);
             return sizeof(uint8_t);
 
+        case NETOPT_RSSI_OFFSET:
+            assert(max_len >= sizeof(int8_t));
+            *((int8_t*) val) = sx127x_get_rssi_offset(dev);
+            return sizeof(int8_t);
+
         case NETOPT_SYNC_ON:
             assert(max_len >= sizeof(uint8_t));
             *((uint8_t*) val) = sx127x_get_sync_on(dev);
@@ -530,6 +535,16 @@ static int _get(netdev_t *netdev, netopt_t opt, void *val, size_t max_len)
             assert(max_len >= sizeof(uint8_t));
             *((uint8_t*) val) = sx127x_get_preamble_polarity(dev);
             return sizeof(uint8_t);
+
+        case NETOPT_PREAMBLE_DETECT_SIZE:
+             assert(max_len >= sizeof(uint8_t));
+             *((uint8_t*) val) = sx127x_get_preamble_detect_size(dev);
+             return sizeof(uint8_t);
+
+        case NETOPT_PREAMBLE_DETECT_TOLERANCE:
+             assert(max_len >= sizeof(uint8_t));
+             *((uint8_t*) val) = sx127x_get_preamble_detect_tol(dev);
+             return sizeof(uint8_t);
 
         case NETOPT_DC_FREE_SCHEME:
             assert(max_len >= sizeof(uint8_t));
@@ -693,6 +708,16 @@ static int _set(netdev_t *netdev, netopt_t opt, const void *val, size_t len)
             sx127x_set_preamble_detect_on(dev, *((const uint8_t*) val));
             return sizeof(uint8_t);
 
+        case NETOPT_PREAMBLE_DETECT_SIZE:
+            assert(len <= sizeof(uint8_t));
+            sx127x_set_preamble_detect_size(dev, *((const uint8_t*) val));
+            return sizeof(uint8_t);
+
+        case NETOPT_PREAMBLE_DETECT_TOLERANCE:
+            assert(len <= sizeof(uint8_t));
+            sx127x_set_preamble_detect_tol(dev, *((const uint8_t*) val));
+            return sizeof(uint8_t);
+
         case NETOPT_IQ_INVERT:
             assert(len <= sizeof(netopt_enable_t));
             sx127x_set_iq_invert(dev, *((const netopt_enable_t*) val) ? true : false);
@@ -731,6 +756,11 @@ static int _set(netdev_t *netdev, netopt_t opt, const void *val, size_t len)
             assert(len <= sizeof(uint8_t));
             sx127x_set_rssi_smoothing(dev, *((const uint8_t*) val));
             return sizeof(uint8_t);
+
+        case NETOPT_RSSI_OFFSET:
+            assert(len <= sizeof(int8_t));
+            sx127x_set_rssi_offset(dev, *((const int8_t*) val));
+            return sizeof(int8_t);
 
         case NETOPT_DC_FREE_SCHEME:
             assert(len <= sizeof(uint8_t));

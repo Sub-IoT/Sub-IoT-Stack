@@ -959,6 +959,8 @@ extern "C" {
 #define SX127X_RF_RSSICONFIG_SMOOTHING_128                           (0x06)
 #define SX127X_RF_RSSICONFIG_SMOOTHING_256                           (0x07)
 
+#define SX127X_RF_RSSICONFIG_OFFSET_MASK                             (0x07)
+
 /* RegRssiCollision */
 #define SX127X_RF_RSSICOLISION_THRESHOLD                             (0x0A)  /* Default */
 
