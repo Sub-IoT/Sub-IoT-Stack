@@ -766,11 +766,20 @@ uint8_t sx127x_get_rssi_threshold(const sx127x_t *dev);
 void sx127x_set_rssi_smoothing(sx127x_t *dev, uint8_t rssi_samples);
 uint8_t sx127x_get_rssi_smoothing(const sx127x_t *dev);
 
+void sx127x_set_rssi_offset(sx127x_t *dev, int8_t rssi_offset);
+int8_t sx127x_get_rssi_offset(const sx127x_t *dev);
+
 void sx127x_set_sync_on(sx127x_t *dev, uint8_t enable);
 uint8_t sx127x_get_sync_on(const sx127x_t *dev);
 
 void sx127x_set_preamble_detect_on(sx127x_t *dev, uint8_t enable);
 uint8_t sx127x_get_preamble_detect_on(const sx127x_t *dev);
+
+void sx127x_set_preamble_detect_size(sx127x_t *dev, uint8_t size);
+uint8_t sx127x_get_preamble_detect_size(const sx127x_t *dev);
+
+void sx127x_set_preamble_detect_tol(sx127x_t *dev, uint8_t tol);
+uint8_t sx127x_get_preamble_detect_tol(const sx127x_t *dev);
 
 void sx127x_set_dc_free(sx127x_t *dev, uint8_t encoding_scheme);
 uint8_t sx127x_get_dc_free(const sx127x_t *dev);

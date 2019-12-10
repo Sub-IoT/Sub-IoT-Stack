@@ -422,6 +422,8 @@ void hw_radio_set_rx_bw_hz(uint32_t bw_hz);
 void hw_radio_set_bitrate(uint32_t bps);
 void hw_radio_set_tx_fdev(uint32_t fdev);
 void hw_radio_set_preamble_size(uint16_t size);
+void hw_radio_set_preamble_detector(uint8_t preamble_detector_size, uint8_t preamble_tol);
+void hw_radio_set_rssi_config(uint8_t rssi_smoothing, uint8_t rssi_offset);
 
 #if 0
 void hw_radio_set_modulation_shaping(uint8_t shaping);
@@ -454,10 +456,6 @@ void hw_radio_set_lora_mode(uint32_t lora_bw, uint8_t lora_SF);
 void hw_radio_set_tx_power(int8_t eirp);
 
 void hw_radio_set_rx_timeout(uint32_t timeout);
-
-void set_preamble_detector(uint8_t preamble_detector_size, uint8_t preamble_tol);
-
-void set_rssi_config(uint8_t rssi_smoothing, uint8_t rssi_offset);
 
 #endif //__HW_RADIO_H_
 

@@ -477,6 +477,16 @@ typedef enum {
     NETOPT_PREAMBLE_DETECT_ON,
 
     /**
+     * @brief   Get/Set the Preamble detector size as uint8_t in host byte order.
+     */
+    NETOPT_PREAMBLE_DETECT_SIZE,
+
+    /**
+     * @brief   Get/Set the Preamble detector tolerance as uint8_t in host byte order.
+     */
+    NETOPT_PREAMBLE_DETECT_TOLERANCE,
+
+    /**
      * @brief   Get/Set the SYNC enable flag as uint8_t in host byte order.
      */
     NETOPT_SYNC_ON,
@@ -510,6 +520,11 @@ typedef enum {
      * @brief   Get/Set the RSSI smoothing value as uint8_t in host byte order.
      */
     NETOPT_RSSI_SMOOTHING,
+
+    /**
+     * @brief   Get/Set the RSSI offset value as uint8_t in host byte order.
+     */
+    NETOPT_RSSI_OFFSET,
 
     /**
      * @brief   Get/Set the modulation shaping as uint8_t in host byte order.
