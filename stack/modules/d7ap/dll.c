@@ -128,6 +128,8 @@ static uint8_t nf_last_msr[3] = {0, 0, 0};
 static uint8_t nf_last_msr_index = 0;
 static uint8_t CCA_trigger_no_answer = 0;
 static uint8_t cycle_counter = 0;
+static uint8_t channels[61]; //20 channels max for now
+static bool reset_nf_last_msr = false;
 
 static void execute_cca(void *arg);
 static void execute_csma_ca(void *arg);
@@ -293,6 +295,19 @@ void start_guard_period(timer_tick_t period)
     timer_add_event(&dll_guard_period_expiration_timer);
 }
 
+void calc_msr_min() {
+    if(nf_last_msr[0] && nf_last_msr[1] && nf_last_msr[2]) {
+        uint8_t min = ((nf_last_msr[0] < nf_last_msr[1] ? nf_last_msr[0] : nf_last_msr[1]) < nf_last_msr[2]) ? (nf_last_msr[0] < nf_last_msr[1] ? nf_last_msr[0] : nf_last_msr[1]) : nf_last_msr[2];
+        E_CCA = - min + 6; //Min of last 3 with 6dB offset
+        if(reset_nf_last_msr) {
+            memset(nf_last_msr, 0, 3);
+            reset_nf_last_msr = false;
+            DPRINT("reset CCA next cycle");
+        }
+    } else
+        E_CCA = - current_access_profile.subbands[0].cca;
+}
+
 void start_background_scan()
 {
     assert(dll_state == DLL_STATE_SCAN_AUTOMATION);
@@ -321,11 +336,7 @@ void start_background_scan()
             } else
                 CCA_trigger_no_answer += 1;
         }
-        if(nf_last_msr[0] && nf_last_msr[1] && nf_last_msr[2]) {
-            uint8_t min = ((nf_last_msr[0] < nf_last_msr[1] ? nf_last_msr[0] : nf_last_msr[1]) < nf_last_msr[2]) ? (nf_last_msr[0] < nf_last_msr[1] ? nf_last_msr[0] : nf_last_msr[1]) : nf_last_msr[2];
-            E_CCA = - min + 6; //Min of last 3 with 6dB offset
-        } else
-            E_CCA = - current_access_profile.subbands[0].cca;
+        calc_msr_min();
 
         save_noise_floor();
     }
@@ -730,29 +741,31 @@ static void execute_csma_ca(void *arg)
 }
 
 static void save_noise_floor() {
+    for(uint8_t position = 0; position < (sizeof(channels) / 3); position+=3) {
+        // if the channel status identifier is empty OR if the channel status identifier matches the current channel, change that noise floor
+        if ( (channels[position + 1] & 0xE0) == 0) { //channel is still empty, fill in
+            channels[position + 1] = (current_channel_id.channel_header.ch_freq_band << 5) | ((current_channel_id.channel_header.ch_class == PHY_CLASS_LO_RATE) << 4) | ((current_channel_id.center_freq_index >> 8) & 0x07);
+            channels[position + 2] = current_channel_id.center_freq_index & 0xFF;
+            channels[position + 3] = - E_CCA;
+            channels[0]++;
+            d7ap_fs_file_header_t header;
+            d7ap_fs_read_file_header(D7A_FILE_PHY_STATUS_FILE_ID, &header);
+            header.length = 15 + channels[0] * 3;
+            d7ap_fs_write_file_header(D7A_FILE_PHY_STATUS_FILE_ID, &header);
+            break;
+        } else if ( (channels[position + 2] + ((channels[position + 1] & 0x07) * 255) == current_channel_id.center_freq_index) && 
+                    ((channels[position + 1] & 0xE0) >> 5 == current_channel_id.channel_header.ch_freq_band) && 
+                    ( ((current_channel_id.channel_header.ch_class == PHY_CLASS_LO_RATE) && ((channels[position + 1] & 0x10) == 0x10)) || 
+                      ((current_channel_id.channel_header.ch_class != PHY_CLASS_LO_RATE) && ((channels[position + 1] & 0x10) == 0x00)) ) ){
+            channels[position + 3] = - E_CCA;
+            break;
+        }
+    }
     if(cycle_counter > 10) {
         cycle_counter = 0;
-        uint8_t channels[D7A_FILE_PHY_STATUS_SIZE - 15];
-        d7ap_fs_read_file(D7A_FILE_PHY_STATUS_FILE_ID, 15, channels, D7A_FILE_PHY_STATUS_SIZE - 15);
-        DPRINT_DATA(channels, D7A_FILE_PHY_STATUS_SIZE - 15);
-        for(uint8_t counter = 0; counter < (D7A_FILE_PHY_STATUS_SIZE - 15); counter+=3) {
-            // if the channel status identifier is empty OR if the channel status identifier matches the current channel, change that noise floor
-            if ( ( (channels[counter] & 0xE0) == 0) ||
-                    ( (channels[counter + 1] + ((channels[counter + 0] & 0x07) * 255) == current_channel_id.center_freq_index) && 
-                    ((channels[counter + 0] & 0xE0) >> 5 == current_channel_id.channel_header.ch_freq_band) && 
-                    ( ((current_channel_id.channel_header.ch_class == PHY_CLASS_LO_RATE) && ((channels[counter + 0] & 0x10) == 0x10)) || 
-                        ((current_channel_id.channel_header.ch_class != PHY_CLASS_LO_RATE) && ((channels[counter + 0] & 0x10) == 0x00)) ) ) ) {
-                
-                channels[0] = (current_channel_id.channel_header.ch_freq_band << 5) | ((current_channel_id.channel_header.ch_class == PHY_CLASS_LO_RATE) << 4) | ((current_channel_id.center_freq_index >> 8) & 0x07);
-                channels[1] = current_channel_id.center_freq_index & 0xFF;
-                channels[2] = - E_CCA;
-                d7ap_fs_write_file(D7A_FILE_PHY_STATUS_FILE_ID, 15 + counter, channels, 3);
-
-                DPRINT("written E_CCA %i to phy status at location %i", -E_CCA, counter);
-                DPRINT_DATA(channels, 3);
-                break;
-            }
-        }
+        d7ap_fs_write_file(D7A_FILE_PHY_STATUS_FILE_ID, 14, channels, channels[0]*3 + 1);
+        DPRINT("10th measurement, writing to phy status file: ");
+        DPRINT_DATA(channels, channels[0]*3 + 1);
     } else
         cycle_counter++;
 }
@@ -832,17 +845,7 @@ void dll_execute_scan_automation()
         } 
         else if(rx_nf_method == D7ADLL_MSR_MIN) 
         {
-            if(nf_last_msr[0] && nf_last_msr[1] && nf_last_msr[2])
-            {
-                uint8_t min = (nf_last_msr[0] < nf_last_msr[1] ? nf_last_msr[0] : nf_last_msr[1]) < nf_last_msr[2] ? (nf_last_msr[0] < nf_last_msr[1] ? nf_last_msr[0] : nf_last_msr[1]) : nf_last_msr[2];
-                E_CCA = - min + 6; //Minimum of last 3 CCA with 6dB offset
-                DPRINT("rx CCA min: E_CCA %i", E_CCA);
-            }
-            else
-            {
-                E_CCA = - current_access_profile.subbands[0].cca;
-                DPRINT("rx CCA min, CCA not set: E_CCA %i", E_CCA);
-            }
+            calc_msr_min();
         }
         else
         {
@@ -885,7 +888,7 @@ static void conf_file_changed_callback(uint8_t file_id)
         active_access_class = scan_access_class;
 
         if((current_access_profile.channel_header.ch_class != backup_ch_header.ch_class) || (current_access_profile.channel_header.ch_freq_band != backup_ch_header.ch_freq_band) || (current_access_profile.subbands[0].channel_index_start != backup_ch_index_start))
-            memset(nf_last_msr, 0, 3);
+            reset_nf_last_msr = true;
 
         // when doing scan automation restart this
         if (dll_state == DLL_STATE_IDLE || dll_state == DLL_STATE_SCAN_AUTOMATION)
@@ -911,7 +914,7 @@ void dll_notify_access_profile_file_changed(uint8_t file_id)
         d7ap_fs_read_access_class(ACCESS_SPECIFIER(active_access_class), &current_access_profile);
 
         if((current_access_profile.channel_header.ch_class != backup_ch_header.ch_class) || (current_access_profile.channel_header.ch_freq_band != backup_ch_header.ch_freq_band) || (current_access_profile.subbands[0].channel_index_start != backup_ch_index_start))
-            memset(nf_last_msr, 0, 3);
+            reset_nf_last_msr = true;
 
         // when we are idle switch to scan automation now as well, in case the new AP enables scanning
         if (dll_state == DLL_STATE_IDLE || dll_state == DLL_STATE_SCAN_AUTOMATION)
@@ -966,6 +969,10 @@ void dll_init()
 #ifdef MODULE_D7AP_EM_ENABLED
     engineering_mode_init();
 #endif
+
+    d7ap_fs_read_file(D7A_FILE_PHY_STATUS_FILE_ID, 14, channels, 1);
+    if(channels[0])
+        d7ap_fs_read_file(D7A_FILE_PHY_STATUS_FILE_ID, 15, &channels[1], channels[0]*3);
 
     // Start immediately the scan automation
     guarded_channel = false;
@@ -1096,17 +1103,7 @@ void dll_tx_frame(packet_t* packet)
         }
         else if(tx_nf_method == D7ADLL_MSR_MIN)
         {
-            if(nf_last_msr[0] && nf_last_msr[1] && nf_last_msr[2])
-            {
-                uint8_t min = (nf_last_msr[0] < nf_last_msr[1] ? nf_last_msr[0] : nf_last_msr[1]) < nf_last_msr[2] ? (nf_last_msr[0] < nf_last_msr[1] ? nf_last_msr[0] : nf_last_msr[1]) : nf_last_msr[2];
-                E_CCA = - min + 6; //Mean of last 3 CCA with 6dB offset
-                DPRINT("tx CCA min: E_CCA %i", E_CCA);
-            }
-            else
-            {
-                E_CCA = - remote_access_profile.subbands[0].cca;
-                DPRINT("tx CCA min, CCA not set: E_CCA %i", E_CCA);
-            }
+            calc_msr_min();
         }
         else
         {
