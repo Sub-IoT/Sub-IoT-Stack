@@ -208,7 +208,7 @@ int d7ap_fs_read_file_header(uint8_t file_id, d7ap_fs_file_header_t* file_header
 
 int d7ap_fs_write_file_header(uint8_t file_id, d7ap_fs_file_header_t* file_header)
 {
-  if(!is_file_defined(file_id)) return -ENOENT;
+  if(!is_file_defined(file_id)) return -ENOENT; 
 
   // Input of data shall be in big-endian ordering
   file_header->length = __builtin_bswap32(file_header->length);
@@ -376,8 +376,6 @@ int d7ap_fs_write_dll_conf_active_access_class(uint8_t access_class)
 uint32_t d7ap_fs_get_file_length(uint8_t file_id)
 {
   d7ap_fs_file_header_t header;
-
-  assert(is_file_defined(file_id));
 
   d7ap_fs_read_file_header(file_id, &header);
   return header.length;
