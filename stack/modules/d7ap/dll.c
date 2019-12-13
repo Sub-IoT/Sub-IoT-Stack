@@ -125,7 +125,6 @@ static bool NGDEF(_guarded_channel);
 #define guarded_channel NG(_guarded_channel)
 
 static uint8_t nf_last_msr[30];
-static uint8_t nf_last_msr_index = 0;
 static uint8_t CCA_trigger_no_answer = 0;
 static uint8_t cycle_counter = 0;
 static uint8_t channels[31]; //10 channels max for now
@@ -465,11 +464,9 @@ static void cca_rssi_valid(int16_t cur_rssi)
     {
         if((tx_nf_method == D7ADLL_MSR_MIN || rx_nf_method == D7ADLL_MSR_MIN) && (cur_rssi <= remote_access_profile.subbands[0].cca))
         {
-            nf_last_msr[nf_last_msr_index] = - cur_rssi;
-            if(nf_last_msr_index < 2)
-                nf_last_msr_index++;
-            else
-                nf_last_msr_index = 0;
+            uint8_t position = get_position_channel();
+            memcpy(&nf_last_msr[position], &nf_last_msr[position+1], 2);
+            nf_last_msr[position + 2] = - cur_rssi;
         }
         if (dll_state == DLL_STATE_CCA1)
         {
@@ -761,10 +758,10 @@ static void save_noise_floor(uint8_t position) {
         channels[position + 2] = current_channel_id.center_freq_index & 0xFF;
         channels[position + 3] = - E_CCA;
         channels[0]++;
-        d7ap_fs_file_header_t header;
-        d7ap_fs_read_file_header(D7A_FILE_PHY_STATUS_FILE_ID, &header);
-        header.length = D7A_FILE_PHY_STATUS_MINIMUM_SIZE + channels[0] * 3;
-        d7ap_fs_write_file_header(D7A_FILE_PHY_STATUS_FILE_ID, &header);
+        // d7ap_fs_file_header_t header;
+        // d7ap_fs_read_file_header(D7A_FILE_PHY_STATUS_FILE_ID, &header);
+        // header.length = D7A_FILE_PHY_STATUS_MINIMUM_SIZE + channels[0] * 3;
+        // d7ap_fs_write_file_header(D7A_FILE_PHY_STATUS_FILE_ID, &header);
     }
     if(cycle_counter > 10) {
         cycle_counter = 0;
@@ -886,9 +883,6 @@ static void conf_file_changed_callback(uint8_t file_id)
     // if the access class has been modified, update the current access profile
     if (active_access_class != scan_access_class)
     {
-        channel_header_t backup_ch_header = current_access_profile.channel_header;
-        uint16_t backup_ch_index_start = current_access_profile.subbands[0].channel_index_start;
-
         d7ap_fs_read_access_class(ACCESS_SPECIFIER(scan_access_class), &current_access_profile);
         active_access_class = scan_access_class;
 
@@ -910,9 +904,6 @@ void dll_notify_access_profile_file_changed(uint8_t file_id)
     // update only the current access profile if this access profile has been changed
     if (file_id == D7A_FILE_ACCESS_PROFILE_ID + ACCESS_SPECIFIER(active_access_class))
     {
-        channel_header_t backup_ch_header = current_access_profile.channel_header;
-        uint16_t backup_ch_index_start = current_access_profile.subbands[0].channel_index_start;
-
         d7ap_fs_read_access_class(ACCESS_SPECIFIER(active_access_class), &current_access_profile);
 
         // when we are idle switch to scan automation now as well, in case the new AP enables scanning
