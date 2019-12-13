@@ -147,8 +147,8 @@ def output_file(file):
   for byte in bytearray(file):
     file_array_elements += "{}, ".format(hex(byte))
   
-  if file.length < file.allocated_length :
-    file_array_elements += "0x0, " * (file.allocated_length - file.length)
+  if len(bytearray(file)) < file.length :
+    file_array_elements += "0x0, " * (file.length - len(bytearray(file)))
 
   if(len(file_array_elements) > 1):
     cog.outl(file_array_elements)
@@ -156,7 +156,7 @@ def output_file(file):
 def output_fileheader(file):
   file_type = SystemFileIds(system_file.id)
   cog.outl("\t// {} - {} (length {})".format(file_type.name, file_type.value, file.length))
-  file_header = FileHeader(permissions=file_permissions, properties=sys_file_prop_default, alp_command_file_id=0xFF, interface_file_id=0xFF, file_size=system_file.length, allocated_size=system_file.allocated_length)
+  file_header = FileHeader(permissions=file_permissions, properties=sys_file_prop_default, alp_command_file_id=0xFF, interface_file_id=0xFF, file_size=system_file.length, allocated_size=system_file.length)
   file_header_array_elements = "\t"
   for byte in bytearray(file_header):
     file_header_array_elements += "{}, ".format(hex(byte))
@@ -182,18 +182,18 @@ def output_fs_file_headers():
   d7ap_fs_headerlength = 12
   for system_file in system_files:
     file_type = SystemFileIds(system_file.id)
-    cog.outl("\t//\t{} - {} (length {})".format(file_type.name, file_type.value, system_file.allocated_length + d7ap_fs_headerlength))
+    cog.outl("\t//\t{} - {} (length {})".format(file_type.name, file_type.value, system_file.length + d7ap_fs_headerlength))
 
     header_bytes_line = "\t"
     header_bytes_line += "0x01, " # permanent blockdevice index
-    for byte in bytearray(struct.pack(">I", system_file.allocated_length + d7ap_fs_headerlength)):
+    for byte in bytearray(struct.pack(">I", system_file.length + d7ap_fs_headerlength)):
         header_bytes_line += "{}, ".format(hex(byte))
 
     for byte in bytearray(struct.pack(">I", current_offset)):
         header_bytes_line += "{}, ".format(hex(byte))
 
     cog.outl(header_bytes_line)
-    current_offset += system_file.allocated_length + d7ap_fs_headerlength
+    current_offset += system_file.length + d7ap_fs_headerlength
 
   for i in range(len(system_files), 256):
     cog.outl("\t//\tRFU - {}".format(i))
@@ -776,8 +776,8 @@ __attribute__((used)) uint8_t d7ap_files_data[FRAMEWORK_FS_PERMANENT_STORAGE_SIZ
       // PHY_CONFIG - 8 (length 9)
       0x24, 0x23, 0xff, 0xff, 0x0, 0x0, 0x0, 0x9, 0x0, 0x0, 0x0, 0x9, 
       0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 
-      // PHY_STATUS - 9 (length 15)
-      0x24, 0x23, 0xff, 0xff, 0x0, 0x0, 0x0, 0xf, 0x0, 0x0, 0x0, 0x2d, 
+      // PHY_STATUS - 9 (length 45)
+      0x24, 0x23, 0xff, 0xff, 0x0, 0x0, 0x0, 0x2d, 0x0, 0x0, 0x0, 0x2d, 
       0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 
       // DLL_CONFIG - 10 (length 7)
       0x24, 0x23, 0xff, 0xff, 0x0, 0x0, 0x0, 0x7, 0x0, 0x0, 0x0, 0x7, 
@@ -879,7 +879,7 @@ __attribute__((used)) uint8_t d7ap_files_data[FRAMEWORK_FS_PERMANENT_STORAGE_SIZ
       // ACCESS_PROFILE_14 - 46 (length 65)
       0x24, 0x23, 0xff, 0xff, 0x0, 0x0, 0x0, 0x41, 0x0, 0x0, 0x0, 0x41, 
       0x32, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0xe, 0x50, 0xff, 0x0, 0x0, 0x0, 0x0, 0xe, 0x50, 0xff, 0x0, 0x0, 0x0, 0x0, 0xe, 0x50, 0xff, 0x0, 0x0, 0x0, 0x0, 0xe, 0x50, 0xff, 0x0, 0x0, 0x0, 0x0, 0xe, 0x50, 0xff, 0x0, 0x0, 0x0, 0x0, 0xe, 0x50, 0xff, 0x0, 0x0, 0x0, 0x0, 0xe, 0x50, 0xff, 0x0, 0x0, 0x0, 0x0, 0xe, 0x50, 0xff, 
-      //[[[end]]] (checksum: 23eab0748f0a0176f9798f664363a851)
+      //[[[end]]] (checksum: 5105ee2e1f74f9cea26ab548774f1257)
   };
 
 fs_filesystem_t d7ap_filesystem __attribute__((used)) = {
