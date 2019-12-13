@@ -763,12 +763,12 @@ static void save_noise_floor(uint8_t position) {
         channels[0]++;
         d7ap_fs_file_header_t header;
         d7ap_fs_read_file_header(D7A_FILE_PHY_STATUS_FILE_ID, &header);
-        header.length = 15 + channels[0] * 3;
+        header.length = D7A_FILE_PHY_STATUS_MINIMUM_SIZE + channels[0] * 3;
         d7ap_fs_write_file_header(D7A_FILE_PHY_STATUS_FILE_ID, &header);
     }
     if(cycle_counter > 10) {
         cycle_counter = 0;
-        d7ap_fs_write_file(D7A_FILE_PHY_STATUS_FILE_ID, 14, channels, channels[0]*3 + 1);
+        d7ap_fs_write_file(D7A_FILE_PHY_STATUS_FILE_ID, D7A_FILE_PHY_STATUS_MINIMUM_SIZE - 1, channels, channels[0]*3 + 1);
         DPRINT("10th measurement, writing to phy status file: ");
         DPRINT_DATA(channels, channels[0]*3 + 1);
     } else
@@ -969,9 +969,9 @@ void dll_init()
     engineering_mode_init();
 #endif
 
-    d7ap_fs_read_file(D7A_FILE_PHY_STATUS_FILE_ID, 14, channels, 1);
+    d7ap_fs_read_file(D7A_FILE_PHY_STATUS_FILE_ID, D7A_FILE_PHY_STATUS_MINIMUM_SIZE - 1, channels, 1);
     if(channels[0] && (channels[0] < (sizeof(channels) / 3)))
-        d7ap_fs_read_file(D7A_FILE_PHY_STATUS_FILE_ID, 15, &channels[1], channels[0]*3);
+        d7ap_fs_read_file(D7A_FILE_PHY_STATUS_FILE_ID, D7A_FILE_PHY_STATUS_MINIMUM_SIZE, &channels[1], channels[0]*3);
 
     // Start immediately the scan automation
     guarded_channel = false;
