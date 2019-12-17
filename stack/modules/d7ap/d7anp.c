@@ -783,7 +783,8 @@ void d7anp_process_received_packet(packet_t* packet)
             }
             else
             {
-                DPRINT("No time to switch to FG scan because ETA is too short %i", packet->ETA);
+                DPRINT("No time to switch to FG scan because ETA is too short %i compared to %i", packet->ETA, time_elapsed + FG_SCAN_STARTUP_TIME);
+                dll_execute_scan_automation();
             }
 
             packet_queue_free_packet(packet);

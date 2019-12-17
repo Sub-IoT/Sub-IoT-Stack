@@ -52,14 +52,14 @@
 #define DPRINT_DATA(...)
 #endif
 
-// #define testing_ADV
+#define testing_ADV
 
 #if PLATFORM_NUM_DEBUGPINS >= 2
     #ifndef testing_ADV
-        #define DEBUG_TX_START() hw_debug_set(0);
-        #define DEBUG_TX_END() hw_debug_clr(0);
-        #define DEBUG_RX_START() hw_debug_set(1);
-        #define DEBUG_RX_END() hw_debug_clr(1);
+        #define DEBUG_TX_START() hw_debug_set(0)
+        #define DEBUG_TX_END() hw_debug_clr(0)
+        #define DEBUG_RX_START() hw_debug_set(1)
+        #define DEBUG_RX_END() hw_debug_clr(1)
         #define DEBUG_FG_START()
         #define DEBUG_FG_END()
         #define DEBUG_BG_START()
@@ -69,10 +69,10 @@
         #define DEBUG_TX_END()
         #define DEBUG_RX_START()
         #define DEBUG_RX_END()
-        #define DEBUG_FG_START() hw_debug_set(0);
-        #define DEBUG_FG_END() hw_debug_clr(0);
-        #define DEBUG_BG_START() hw_debug_set(1);
-        #define DEBUG_BG_END() hw_debug_clr(1);
+        #define DEBUG_FG_START() hw_debug_set(0)
+        #define DEBUG_FG_END() hw_debug_clr(0)
+        #define DEBUG_BG_START() hw_debug_set(1)
+        #define DEBUG_BG_END() hw_debug_clr(1)
     #endif
 #else
     #define DEBUG_TX_START()
@@ -294,6 +294,10 @@ static void packet_transmitted(timer_tick_t timestamp)
 static void packet_received(hw_radio_packet_t* hw_radio_packet)
 {
     assert(state == STATE_RX || state == STATE_BG_SCAN);
+    if(hw_radio_packet == NULL) {
+        received_callback(NULL);
+        return;
+    }
     // we are in interrupt context here, so mark packet for further processing,
     // schedule it and return
     DPRINT("packet received @ %i , RSSI = %d", hw_radio_packet->rx_meta.timestamp, hw_radio_packet->rx_meta.rssi);
@@ -907,7 +911,7 @@ static void fill_in_fifo(uint16_t remaining_bytes_len)
                                                             PHY_CODING_PN9, // override FEC, we need the time for the BG_THRESHOLD bytes in the fifo, regardless of coding
                                                             remaining_bytes_len, true); // don't take syncword and preamble into account
 
-        if (bg_adv.stop_time > current + 2 * bg_adv.tx_duration + flush_duration)
+        if (bg_adv.stop_time > current + 2 * bg_adv.tx_duration + flush_duration + FG_SCAN_STARTUP_TIME)
             bg_adv.eta = (bg_adv.stop_time - current) - 2 * bg_adv.tx_duration; // ETA is updated according the real current time
         else if(bg_adv.stop_time > current + bg_adv.tx_duration + flush_duration)
             bg_adv.eta = 1; // Send last background frame with ETA which we calculated and assembled previous loop.
@@ -993,9 +997,7 @@ error_t phy_start_background_scan(phy_rx_config_t* config, phy_rx_packet_callbac
     if (rssi <= config->rssi_thr)
     {
         DPRINT("FAST RX termination RSSI %i below limit %i\n", rssi, config->rssi_thr);
-        hw_radio_set_opmode(HW_STATE_SLEEP); //0.136ms + 0.066ms io_deinit = 0.207ms
-        // TODO choose standby mode to allow rapid channel cycling
-        //phy_switch_to_standby_mode();
+        // shut down should be handled in higher layer
         DEBUG_BG_END();
         DEBUG_RX_END();
         config->rssi_thr = rssi; //Put new value to update E_CCA in higher layer
@@ -1008,7 +1010,7 @@ error_t phy_start_background_scan(phy_rx_config_t* config, phy_rx_packet_callbac
 
     status_write();
 
-    DPRINT("rssi %i, waiting for BG frame\n", rssi);
+    DPRINT("rssi %i > %i, waiting for BG frame on channel %i\n", rssi, config->rssi_thr, config->channel_id.center_freq_index);
 
     // the device has a period of To to successfully detect the sync word
     hw_radio_set_rx_timeout(bg_timeout[current_channel_id.channel_header.ch_class] + 40); //TO DO: OPTIMISE THIS TIMEOUT
