@@ -71,6 +71,24 @@ typedef struct __attribute__((__packed__))
 
 typedef struct __attribute__((__packed__))
 {
+    uint8_t ch_freq_band: 3;
+    uint8_t bandwidth_25kHz: 1;
+    uint8_t _rfu: 1;
+    uint16_t channel_index: 11;
+} channel_status_identifier_t;
+
+typedef struct __attribute__((__packed__))
+{
+    union
+    {
+        uint16_t channel_status_identifier_raw;
+        channel_status_identifier_t channel_status_identifier;
+    };
+    uint8_t noise_floor;
+} channel_status_t;
+
+typedef struct __attribute__((__packed__))
+{
     union
     {
         uint8_t channel_header_raw;          /**< The raw (8-bit) channel header */
