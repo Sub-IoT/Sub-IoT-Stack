@@ -124,10 +124,10 @@ static uint16_t NGDEF(_tsched);
 static bool NGDEF(_guarded_channel);
 #define guarded_channel NG(_guarded_channel)
 
-static uint8_t noisefl_last_measurements[PHY_STATUS_CHANNEL_BYTES * PHY_STATUS_MAX_CHANNELS];
+static uint8_t noisefl_last_measurements[3 * PHY_STATUS_MAX_CHANNELS]; //3 measurement per channel
 static uint8_t CCA_trigger_no_answer = 0;
 static uint8_t cycle_counter = 0;
-static uint8_t channels[PHY_STATUS_CHANNEL_BYTES * PHY_STATUS_MAX_CHANNELS];
+static channel_status_t channels[PHY_STATUS_MAX_CHANNELS];
 static uint8_t phy_status_channel_counter = 0;
 static bool reset_noisefl_last_measurements = false;
 
@@ -740,25 +740,29 @@ static void execute_csma_ca(void *arg)
 
 static uint8_t get_position_channel() {
     uint8_t position;
-    for(position = 0; position < sizeof(channels); position+=3) {
-        if ( ( (channels[position] & 0xE0) == 0) ||
-             ( (channels[position + 1] + ((channels[position] & 0x07) * 255) == current_channel_id.center_freq_index) && 
-               ((channels[position] & 0xE0) >> 5 == current_channel_id.channel_header.ch_freq_band) && 
-               ( ((current_channel_id.channel_header.ch_class == PHY_CLASS_LO_RATE) && ((channels[position] & 0x10) == 0x10)) || 
-                 ((current_channel_id.channel_header.ch_class != PHY_CLASS_LO_RATE) && ((channels[position] & 0x10) == 0x00)) ) )) {
+    channel_status_t local_channel = {
+        .channel_status_identifier = {
+            .ch_freq_band = current_channel_id.channel_header.ch_freq_band,
+            .bandwidth_25kHz = (current_channel_id.channel_header.ch_class == PHY_CLASS_LO_RATE),
+            .channel_index = (current_channel_id.center_freq_index & 0x07FF),
+        },
+    };
+    for(position = 0; position < sizeof(channels); position++) {
+        if((channels[position].channel_status_identifier_raw == 0) || 
+            (channels[position].channel_status_identifier_raw == local_channel.channel_status_identifier_raw))
             break;
-        }
     }
     return position;
 }
 
 static void save_noise_floor(uint8_t position) {
-    if(channels[position] & 0xE0) { //channel already defined
-        channels[position + 2] = - E_CCA;
-    } else { //new channel
-        channels[position ] = (current_channel_id.channel_header.ch_freq_band << 5) | ((current_channel_id.channel_header.ch_class == PHY_CLASS_LO_RATE) << 4) | ((current_channel_id.center_freq_index >> 8) & 0x07);
-        channels[position + 1] = current_channel_id.center_freq_index & 0xFF;
-        channels[position + 2] = - E_CCA;
+    channels[position].noise_floor = - E_CCA;
+    if(channels[position].channel_status_identifier_raw == 0) { // new channel
+        channels[position].channel_status_identifier = (channel_status_identifier_t) {
+            .ch_freq_band = current_channel_id.channel_header.ch_freq_band,
+            .bandwidth_25kHz = (current_channel_id.channel_header.ch_class == PHY_CLASS_LO_RATE),
+            .channel_index = (current_channel_id.center_freq_index & 0x07FF)
+        };
         phy_status_channel_counter++;
     }
     //only write once every 10 measurements
@@ -766,9 +770,9 @@ static void save_noise_floor(uint8_t position) {
         cycle_counter = 0;
 
         d7ap_fs_write_file(D7A_FILE_PHY_STATUS_FILE_ID, D7A_FILE_PHY_STATUS_MINIMUM_SIZE - 1, &phy_status_channel_counter, 1);
-        d7ap_fs_write_file(D7A_FILE_PHY_STATUS_FILE_ID, D7A_FILE_PHY_STATUS_MINIMUM_SIZE, channels, phy_status_channel_counter*3);
+        d7ap_fs_write_file(D7A_FILE_PHY_STATUS_FILE_ID, D7A_FILE_PHY_STATUS_MINIMUM_SIZE, (uint8_t*) channels, phy_status_channel_counter * sizeof(channel_status_t));
         DPRINT("10th measurement, writing to phy status file with %i channels: ", phy_status_channel_counter);
-        DPRINT_DATA(channels, phy_status_channel_counter*3);
+        DPRINT_DATA((uint8_t*)channels, phy_status_channel_counter * sizeof(channel_status_t));
     } else
         cycle_counter++;
 }
@@ -962,8 +966,8 @@ void dll_init()
 #endif
 
     d7ap_fs_read_file(D7A_FILE_PHY_STATUS_FILE_ID, D7A_FILE_PHY_STATUS_MINIMUM_SIZE - 1, &phy_status_channel_counter, 1);
-    if(phy_status_channel_counter && (phy_status_channel_counter < (sizeof(channels) / 3)))
-        d7ap_fs_read_file(D7A_FILE_PHY_STATUS_FILE_ID, D7A_FILE_PHY_STATUS_MINIMUM_SIZE, channels, phy_status_channel_counter*3);
+    if(phy_status_channel_counter && (phy_status_channel_counter < sizeof(channels)))
+        d7ap_fs_read_file(D7A_FILE_PHY_STATUS_FILE_ID, D7A_FILE_PHY_STATUS_MINIMUM_SIZE, (uint8_t*) channels, phy_status_channel_counter*3);
 
     // Start immediately the scan automation
     guarded_channel = false;
