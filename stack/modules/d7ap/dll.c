@@ -124,8 +124,7 @@ static uint16_t NGDEF(_tsched);
 static bool NGDEF(_guarded_channel);
 #define guarded_channel NG(_guarded_channel)
 
-static uint8_t noisefl_last_measurements[3 * PHY_STATUS_MAX_CHANNELS]; //3 measurement per channel
-static uint8_t CCA_trigger_no_answer = 0;
+static uint8_t noisefl_last_measurements[PHY_STATUS_MAX_CHANNELS][NOISEFL_NUMBER_MEASUREMENTS]; //3 measurement per channel
 static uint8_t cycle_counter = 0;
 static channel_status_t channels[PHY_STATUS_MAX_CHANNELS];
 static uint8_t phy_status_channel_counter = 0;
@@ -296,15 +295,19 @@ void start_guard_period(timer_tick_t period)
     timer_add_event(&dll_guard_period_expiration_timer);
 }
 
-void min_measured_noisefloor(uint8_t position) {
+void median_measured_noisefloor(uint8_t position) {
+    if(position == UINT8_MAX) {
+        E_CCA = - current_access_profile.subbands[0].cca;
+        return;
+    }
     if(reset_noisefl_last_measurements) {
-        memset(&noisefl_last_measurements[position], 0, 3);
+        memset(noisefl_last_measurements[position], 0, 3);
         reset_noisefl_last_measurements = false;
         DPRINT("reset CCA");
     }
-    if(noisefl_last_measurements[position] && noisefl_last_measurements[position+1] && noisefl_last_measurements[position+2]) { //If not default 0 values
-        uint8_t min = ((noisefl_last_measurements[position] < noisefl_last_measurements[position+1] ? noisefl_last_measurements[position] : noisefl_last_measurements[position+1]) < noisefl_last_measurements[position+2]) ? (noisefl_last_measurements[position] < noisefl_last_measurements[position+1] ? noisefl_last_measurements[position] : noisefl_last_measurements[position+1]) : noisefl_last_measurements[position+2];
-        E_CCA = - min + 6; //Min of last 3 with 6dB offset
+    if(noisefl_last_measurements[position][0] && noisefl_last_measurements[position][1] && noisefl_last_measurements[position][2]) { //If not default 0 values
+        uint8_t median = noisefl_last_measurements[position][0]>noisefl_last_measurements[position][1]?  ( noisefl_last_measurements[position][2]>noisefl_last_measurements[position][0]? noisefl_last_measurements[position][0] : (noisefl_last_measurements[position][1]>noisefl_last_measurements[position][2]? noisefl_last_measurements[position][1]:noisefl_last_measurements[position][2]) )  :  ( noisefl_last_measurements[position][2]>noisefl_last_measurements[position][1]? noisefl_last_measurements[position][1] : (noisefl_last_measurements[position][0]>noisefl_last_measurements[position][2]? noisefl_last_measurements[position][0]:noisefl_last_measurements[position][2]) );
+        E_CCA = - median + 6; //Min of last 3 with 6dB offset
     } else
         E_CCA = - current_access_profile.subbands[0].cca;
 }
@@ -321,23 +324,17 @@ void start_background_scan()
         .channel_id = current_channel_id,
         .rssi_thr = E_CCA,
     };
-    phy_start_background_scan(&config, &dll_signal_packet_received);
-    if(rx_nf_method == D7ADLL_MIN_OF_THREE) { 
+    error_t err = phy_start_background_scan(&config, &dll_signal_packet_received);
+    if(rx_nf_method == D7ADLL_MEDIAN_OF_THREE) { 
         uint8_t position = get_position_channel();
-        if (config.rssi_thr != E_CCA) { //rssi_thr of E_CCA means it was above the noisefloor level
-            CCA_trigger_no_answer = 0;
+        //if current_channel in array of channels AND gotten rssi_thr smaller than pre-programmed Ecca
+        if(position != UINT8_MAX && (config.rssi_thr <= - current_access_profile.subbands[0].cca)) {
             //rotate measurements and add new at the end
-            memcpy(&noisefl_last_measurements[position], &noisefl_last_measurements[position+1], 2);
-            noisefl_last_measurements[position + 2] = - config.rssi_thr;
-        } else {
-            if(CCA_trigger_no_answer > 3) { //After 3 consecutive triggers of background scan with no package received, set noise level back to default
-                DPRINT("Got 3 consecutive fails of background scan, resetting to default CCA value");
-                reset_noisefl_last_measurements = true;
-            } else
-                CCA_trigger_no_answer += 1;
+            memcpy(noisefl_last_measurements[position], &noisefl_last_measurements[position][1], 2);
+            noisefl_last_measurements[position][2] = - config.rssi_thr;
         }
 
-        min_measured_noisefloor(position);
+        median_measured_noisefloor(position);
         save_noise_floor(position);
     }
 }
@@ -369,8 +366,7 @@ void dll_signal_packet_received(packet_t* packet)
             start_guard_period(t_g - tx_duration);
 
         guarded_channel = true;
-    } else
-        CCA_trigger_no_answer = 0;
+    }
 
     if (is_tx_busy())
     {
@@ -464,11 +460,12 @@ static void cca_rssi_valid(int16_t cur_rssi)
 
     if (cur_rssi <= E_CCA)
     {
-        if((tx_nf_method == D7ADLL_MIN_OF_THREE || rx_nf_method == D7ADLL_MIN_OF_THREE) && (cur_rssi <= remote_access_profile.subbands[0].cca))
+        if((tx_nf_method == D7ADLL_MEDIAN_OF_THREE || rx_nf_method == D7ADLL_MEDIAN_OF_THREE))
         {
             uint8_t position = get_position_channel();
-            memcpy(&noisefl_last_measurements[position], &noisefl_last_measurements[position+1], 2);
-            noisefl_last_measurements[position + 2] = - cur_rssi;
+            memcpy(noisefl_last_measurements[position], &noisefl_last_measurements[position][1], 2);
+            noisefl_last_measurements[position][2] = - cur_rssi;
+            median_measured_noisefloor(position);
         }
         if (dll_state == DLL_STATE_CCA1)
         {
@@ -657,7 +654,6 @@ static void execute_csma_ca(void *arg)
             if (dll_to <= 0)
             {
                 DPRINT("CCA fail because dll_to = %i", dll_to);
-                reset_noisefl_last_measurements = true;
                 switch_state(DLL_STATE_CCA_FAIL);
                 dll_csma_timer.next_event = 0;
                 error_t rtc = timer_add_event(&dll_csma_timer);
@@ -733,11 +729,14 @@ static void execute_csma_ca(void *arg)
                 start_foreground_scan();
                 resume_fg_scan = false;
             }
+
+            reset_noisefl_last_measurements = true;
             break;
         }
     }
 }
 
+/* returns the position of the current_channel_id in the channel array. If not found and no more room, returns Max value */
 static uint8_t get_position_channel() {
     uint8_t position;
     channel_status_t local_channel = {
@@ -750,12 +749,15 @@ static uint8_t get_position_channel() {
     for(position = 0; position < sizeof(channels); position++) {
         if((channels[position].channel_status_identifier_raw == 0) || 
             (channels[position].channel_status_identifier_raw == local_channel.channel_status_identifier_raw))
-            break;
+            return position;
     }
-    return position;
+    DPRINT("position of channel out of bound. Increase channels size or delete previous");
+    return UINT8_MAX;
 }
 
 static void save_noise_floor(uint8_t position) {
+    if(position == UINT8_MAX)
+        return;
     channels[position].noise_floor = - E_CCA;
     if(channels[position].channel_status_identifier_raw == 0) { // new channel
         channels[position].channel_status_identifier = (channel_status_identifier_t) {
@@ -848,12 +850,11 @@ void dll_execute_scan_automation()
         {
             //Use the default channel CCA threshold
             E_CCA = - current_access_profile.subbands[0].cca; // Eccao is set to 0 dB
-            DPRINT("E_CCA %i", E_CCA);
         } 
-        else if(rx_nf_method == D7ADLL_MIN_OF_THREE) 
+        else if(rx_nf_method == D7ADLL_MEDIAN_OF_THREE) 
         {
             uint8_t position = get_position_channel();
-            min_measured_noisefloor(position);
+            median_measured_noisefloor(position);
             save_noise_floor(position);
         }
         else
@@ -861,6 +862,7 @@ void dll_execute_scan_automation()
           // TODO support the Slow RSSI Variation computation method" and possibly add other methods
           assert(false);
         }
+        DPRINT("E_CCA %i", E_CCA);
 
         // If TSCHED > 0, an independent scheduler is set to generate regular scan start events at TSCHED rate.
         DPRINT("Perform a dll background scan at the end of TSCHED (%d ticks)", tsched);
@@ -1096,11 +1098,10 @@ void dll_tx_frame(packet_t* packet)
             E_CCA = - remote_access_profile.subbands[0].cca; // Eccao is set to 0 dB
             DPRINT("fixed floor: E_CCA %i", E_CCA);
         }
-        else if(tx_nf_method == D7ADLL_MIN_OF_THREE)
+        else if(tx_nf_method == D7ADLL_MEDIAN_OF_THREE)
         {
             uint8_t position = get_position_channel();
-            min_measured_noisefloor(position);
-            save_noise_floor(position);
+            median_measured_noisefloor(position);
         }
         else
         {
