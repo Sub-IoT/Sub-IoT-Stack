@@ -38,7 +38,7 @@
 typedef enum {
     D7ADLL_FIXED_NOISE_FLOOR,
     D7ADLL_SLOW_RSSI_VARIATION,
-    D7ADLL_MIN_OF_THREE
+    D7ADLL_MEDIAN_OF_THREE
 } noise_floor_computation_method_t;
 
 /*
@@ -54,6 +54,8 @@ typedef enum {
 
 #define PHY_STATUS_CHANNEL_BYTES 3
 #define PHY_STATUS_MAX_CHANNELS 10
+
+#define NOISEFL_NUMBER_MEASUREMENTS 3
 
 typedef struct packet packet_t;
 
