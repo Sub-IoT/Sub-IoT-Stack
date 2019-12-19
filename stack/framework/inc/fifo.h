@@ -37,10 +37,11 @@
  * A pointer to this is passed to alle functions of the fifo module
  **/
 typedef struct {
-    uint16_t head_idx;      /**< The offset in buffer to the head of the FIFO */
-    uint16_t tail_idx;      /**< The offset in buffer to the head of the FIFO */
-    uint16_t max_size;      /**< The maximum size of bytes contained in the FIFO */
+    uint16_t head_idx;      /**< The index in buffer to first data byte of the FIFO */
+    uint16_t tail_idx;      /**< The index in buffer to first empty byte of the FIFO */
+    uint16_t max_size;      /**< The maximum number of bytes contained in the FIFO */
     uint8_t* buffer;        /**< The buffer where the data is stored*/
+    bool is_full;          /**< Used to discern between full and empty when tail_idx == head_idx */
     bool is_subview;
 } fifo_t;
 
@@ -69,7 +70,7 @@ void fifo_init_filled(fifo_t *fifo, uint8_t *buffer, uint16_t filled_size, uint1
  * @param offset        The offset index in original fifo which will be used as the subset's head (starting from original_fifo's head)
  * @param subset_size   The size of the subset (must be smaller than fifo_get_size(&original_fifo))
  */
-void fifo_init_subview(fifo_t *subview_fifo, fifo_t* original_fifo, uint16_t offset, uint16_t subset_size);
+error_t fifo_init_subview(fifo_t *subview_fifo, fifo_t* original_fifo, uint16_t offset, uint16_t subset_size);
 
 /**
  * @brief Put bytes in to the FIFO
