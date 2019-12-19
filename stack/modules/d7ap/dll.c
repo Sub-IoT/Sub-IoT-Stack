@@ -131,6 +131,7 @@ static bool reset_noisefl_last_measurements = false;
 static channel_id_t scan_automation_channel_list[SCAN_AUTOMATION_CHANNEL_LIST_MAX_LENGTH];
 static uint8_t channel_list_length;
 static uint8_t current_channel_index;
+static bool set_sched_event = true;
 
 static void execute_cca(void *arg);
 static void execute_csma_ca(void *arg);
@@ -318,6 +319,13 @@ void start_background_scan()
 {
     assert(dll_state == DLL_STATE_SCAN_AUTOMATION);
 
+    if(set_sched_event) {
+        // Start a new tsched timer
+        dll_background_scan_timer.next_event = tsched;
+        timer_add_event(&dll_background_scan_timer);
+        set_sched_event = false;
+    }
+
     current_channel_id = scan_automation_channel_list[current_channel_index];
 
     uint8_t position = get_position_channel();
@@ -328,16 +336,12 @@ void start_background_scan()
         //Use the default channel CCA threshold
         E_CCA = - current_access_profile.subbands[0].cca; // Eccao is set to 0 dB
     } 
-    else if(rx_nf_method == D7ADLL_MIN_OF_THREE) 
+    else if(rx_nf_method == D7ADLL_MEDIAN_OF_THREE) 
     {
         //Use the minimum of 3 measurements of the noisefloor
-        min_measured_noisefloor(position);
+        median_measured_noisefloor(position);
     }
     else assert(false);
-
-    // Start a new tsched timer
-    dll_background_scan_timer.next_event = tsched;
-    timer_add_event(&dll_background_scan_timer);
 
     phy_rx_config_t config = {
         .channel_id = current_channel_id,
@@ -349,7 +353,6 @@ void start_background_scan()
         current_channel_index = 0;
     }
     if(rx_nf_method == D7ADLL_MEDIAN_OF_THREE) { 
-        uint8_t position = get_position_channel();
         //if current_channel in array of channels AND gotten rssi_thr smaller than pre-programmed Ecca
         if(position != UINT8_MAX && (config.rssi_thr <= - current_access_profile.subbands[0].cca)) {
             //rotate measurements and add new at the end
@@ -366,6 +369,7 @@ void start_background_scan()
         sched_post_task(&start_background_scan);
     } else {
         current_channel_index = 0;
+        set_sched_event = true;
         if((err == FAIL) && (tsched > (10 * channel_list_length))) { //if nothing detected and long tsched, set to sleep mode
             phy_switch_to_sleep_mode();
         }
@@ -386,7 +390,6 @@ void dll_signal_packet_received(packet_t* packet)
     if(packet == NULL) { //empty packet means rx timeout triggered
         DPRINT("bg scan falsely triggered, resetting");
         sched_post_task(&start_background_scan);
-        CCA_trigger_no_answer++;
         return;
     }
     assert(packet != NULL);
