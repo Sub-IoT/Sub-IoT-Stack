@@ -57,6 +57,8 @@ typedef enum {
 
 #define NOISEFL_NUMBER_MEASUREMENTS 3
 
+#define SCAN_AUTOMATION_CHANNEL_LIST_MAX_LENGTH 10
+
 typedef struct packet packet_t;
 
 typedef struct

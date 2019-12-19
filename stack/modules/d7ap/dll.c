@@ -128,9 +128,9 @@ static uint8_t noisefl_last_measurements[PHY_STATUS_MAX_CHANNELS][NOISEFL_NUMBER
 static channel_status_t channels[PHY_STATUS_MAX_CHANNELS];
 static uint8_t phy_status_channel_counter = 0;
 static bool reset_noisefl_last_measurements = false;
-
-static uint8_t current_subprofile = SUBPROFILES_NB;
-static uint8_t current_subband = SUBBANDS_NB;
+static channel_id_t scan_automation_channel_list[SCAN_AUTOMATION_CHANNEL_LIST_MAX_LENGTH];
+static uint8_t channel_list_length;
+static uint8_t current_channel_index;
 
 static void execute_cca(void *arg);
 static void execute_csma_ca(void *arg);
@@ -316,8 +316,24 @@ void median_measured_noisefloor(uint8_t position) {
 
 void start_background_scan()
 {
-    dll_execute_scan_automation();
     assert(dll_state == DLL_STATE_SCAN_AUTOMATION);
+
+    current_channel_id = scan_automation_channel_list[current_channel_index];
+
+    uint8_t position = get_position_channel();
+
+    // compute Ecca = NF + Eccao
+    if (rx_nf_method == D7ADLL_FIXED_NOISE_FLOOR)
+    {
+        //Use the default channel CCA threshold
+        E_CCA = - current_access_profile.subbands[0].cca; // Eccao is set to 0 dB
+    } 
+    else if(rx_nf_method == D7ADLL_MIN_OF_THREE) 
+    {
+        //Use the minimum of 3 measurements of the noisefloor
+        min_measured_noisefloor(position);
+    }
+    else assert(false);
 
     // Start a new tsched timer
     dll_background_scan_timer.next_event = tsched;
@@ -327,10 +343,10 @@ void start_background_scan()
         .channel_id = current_channel_id,
         .rssi_thr = E_CCA,
     };
-    if(phy_start_background_scan(&config, &dll_signal_packet_received) == SUCCESS) {
-        timer_cancel_event(&dll_background_scan_timer);
-    } else if(tsched > 5){
-        phy_switch_to_sleep_mode();
+    error_t err = phy_start_background_scan(&config, &dll_signal_packet_received);
+    if(err == SUCCESS) {
+        timer_cancel_event(&dll_background_scan_timer); //give time for scan to succeed
+        current_channel_index = 0;
     }
     if(rx_nf_method == D7ADLL_MEDIAN_OF_THREE) { 
         uint8_t position = get_position_channel();
@@ -343,6 +359,16 @@ void start_background_scan()
 
         median_measured_noisefloor(position);
         save_noise_floor(position);
+    }
+
+    if(current_channel_index + 1 < channel_list_length) {
+        current_channel_index++;
+        sched_post_task(&start_background_scan);
+    } else {
+        current_channel_index = 0;
+        if((err == FAIL) && (tsched > (10 * channel_list_length))) { //if nothing detected and long tsched, set to sleep mode
+            phy_switch_to_sleep_mode();
+        }
     }
 }
 
@@ -359,7 +385,7 @@ void dll_signal_packet_received(packet_t* packet)
     assert((dll_state == DLL_STATE_IDLE && process_received_packets_after_tx) || dll_state == DLL_STATE_FOREGROUND_SCAN || dll_state == DLL_STATE_SCAN_AUTOMATION);
     if(packet == NULL) { //empty packet means rx timeout triggered
         DPRINT("bg scan falsely triggered, resetting");
-        timer_add_event(&dll_background_scan_timer);
+        sched_post_task(&start_background_scan);
         CCA_trigger_no_answer++;
         return;
     }
@@ -815,47 +841,36 @@ void dll_execute_scan_automation()
         return;
     }
 
-    uint8_t empty_subprofiles = 0;
-    phy_rx_config_t rx_cfg = {.channel_id.channel_header_raw = 0};
-    while(rx_cfg.channel_id.channel_header_raw == 0) {
-        if((active_access_class & (1 << current_subprofile)) && current_access_profile.subprofiles[current_subprofile].subband_bitmap) {
-            if(current_access_profile.subprofiles[current_subprofile].subband_bitmap & (1 << current_subband)) {
-                if(dll_state != DLL_STATE_SCAN_AUTOMATION)
-                    switch_state(DLL_STATE_SCAN_AUTOMATION);
-                rx_cfg = (phy_rx_config_t){
-                    .channel_id.channel_header_raw = current_access_profile.channel_header_raw,
-                    .channel_id.center_freq_index = current_access_profile.subbands[current_subband].channel_index_start
-                };
-            } 
-            if(current_subband < (SUBBANDS_NB - 1)) {
-                current_subband++;
-            } else {
-                current_subband = 0;
-                if(current_subprofile < (SUBPROFILES_NB - 1)) {
-                    current_subprofile++;
-                } else {
-                    current_subprofile = 0;
-                    empty_subprofiles++;
+    channel_list_length = 0; current_channel_index = 0;
+    for(uint8_t subprofile = 0; subprofile < SUBPROFILES_NB; subprofile++) {
+        if((active_access_class & (1 << subprofile)) && 
+           (current_access_profile.subprofiles[subprofile].subband_bitmap)) {
+            for(uint8_t subband = 0; subband < SUBBANDS_NB; subband++) {
+                if(current_access_profile.subprofiles[subprofile].subband_bitmap & (1 << subband)) {
+                    scan_automation_channel_list[channel_list_length].channel_header_raw = current_access_profile.channel_header_raw;
+                    scan_automation_channel_list[channel_list_length].center_freq_index = current_access_profile.subbands[subband].channel_index_start;
+                    channel_list_length++;
+                    if(channel_list_length == SCAN_AUTOMATION_CHANNEL_LIST_MAX_LENGTH) {
+                        DPRINT("Too many channels activated, enlarge max channels!");
+                        subprofile = SUBPROFILES_NB;
+                        subband = SUBBANDS_NB;
+                        break;
+                    }
                 }
             }
-        } else {
-            if(current_subprofile < (SUBPROFILES_NB - 1))
-                current_subprofile++;
-            else {
-                current_subprofile = 0;
-            }
-            current_subband = 0;
-            empty_subprofiles++;
         }
-        if(empty_subprofiles > SUBPROFILES_NB) {
-            DPRINT("selected subprofiles have empty subband bitmaps, not entering scan\n");
-            hw_radio_set_idle();
-            if(dll_state != DLL_STATE_IDLE)
+    }
+
+    if(channel_list_length == 0) {
+        DPRINT("selected subprofiles have empty subband bitmaps, not entering scan\n");
+        hw_radio_set_idle();
+        if(dll_state != DLL_STATE_IDLE)
             switch_state(DLL_STATE_IDLE);
 
-            return;
-        }
-    };
+        return;
+    }
+
+    switch_state(DLL_STATE_SCAN_AUTOMATION);
 
     // The Scan Automation TSCHED is obtained as the minimum of all selected subprofiles' TSCHED.
     uint16_t scan_period;
@@ -880,33 +895,11 @@ void dll_execute_scan_automation()
      */
     if (tsched == 0)
     {
-        rx_cfg.syncword_class = PHY_SYNCWORD_CLASS1;
-        current_channel_id = rx_cfg.channel_id;
+        current_channel_id = scan_automation_channel_list[0]; //just use the first channel when using foreground scan
         phy_start_rx(&current_channel_id, PHY_SYNCWORD_CLASS1, &dll_signal_packet_received);
     }
     else
     {
-        rx_cfg.syncword_class = PHY_SYNCWORD_CLASS0;
-        current_channel_id = rx_cfg.channel_id;
-
-        // compute Ecca = NF + Eccao
-        if (rx_nf_method == D7ADLL_FIXED_NOISE_FLOOR)
-        {
-            //Use the default channel CCA threshold
-            E_CCA = - current_access_profile.subbands[0].cca; // Eccao is set to 0 dB
-        } 
-        else if(rx_nf_method == D7ADLL_MEDIAN_OF_THREE) 
-        {
-            uint8_t position = get_position_channel();
-            min_measured_noisefloor(position);
-        }
-        else
-        {
-          // TODO support the Slow RSSI Variation computation method" and possibly add other methods
-          assert(false);
-        }
-        DPRINT("E_CCA %i", E_CCA);
-
         // If TSCHED > 0, an independent scheduler is set to generate regular scan start events at TSCHED rate.
         DPRINT("Perform a dll background scan at the end of TSCHED (%d ticks)", tsched);
         dll_background_scan_timer.next_event = tsched;
@@ -935,9 +928,6 @@ static void conf_file_changed_callback(uint8_t file_id)
     {
         d7ap_fs_read_access_class(ACCESS_SPECIFIER(scan_access_class), &current_access_profile);
         active_access_class = scan_access_class;
-
-        current_subprofile = 0;
-        current_subband = 0;
 
         // when doing scan automation restart this
         if (dll_state == DLL_STATE_IDLE || dll_state == DLL_STATE_SCAN_AUTOMATION)
