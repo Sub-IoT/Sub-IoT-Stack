@@ -84,61 +84,64 @@ ap_no_scan = AccessProfile(
   sub_bands=[SubBand(eirp=default_eirp, channel_index_start=default_channel_index, channel_index_end=default_channel_index, cca=80)] * 8
 )
 
+sys_file_prop_perm = FileProperties(act_enabled=False, act_condition=ActionCondition.WRITE, storage_class=StorageClass.PERMANENT)
+sys_file_prop_vol = FileProperties(act_enabled=False, act_condition=ActionCondition.WRITE, storage_class=StorageClass.VOLATILE)
+
 system_files = [
-  UidFile(),
-  FactorySettingsFile(),
-  FirmwareVersionFile(),
-  NotImplementedFile(SystemFileIds.DEVICE_CAPACITY.value, 19),
-  NotImplementedFile(SystemFileIds.DEVICE_STATUS.value, 9),
-  EngineeringModeFile(),
-  VidFile(),
-  NotImplementedFile(SystemFileIds.RFU_07.value, 0),
-  NotImplementedFile(SystemFileIds.PHY_CONFIG.value, 9),
-  PhyStatusFile(),  # TODO assuming 3 channels for now
-  DllConfigFile(active_access_class=0x21, nf_ctrl=0x22),
-  NotImplementedFile(SystemFileIds.DLL_STATUS.value, 12),
-  NotImplementedFile(SystemFileIds.NWL_ROUTING.value, 1),  # TODO variable routing table
-  NotImplementedFile(SystemFileIds.NWL_SECURITY.value, 5),
-  SecurityKeyFile(),
-  NotImplementedFile(SystemFileIds.NWL_SSR.value, 4),  # TODO 0 recorded devices
-  NotImplementedFile(SystemFileIds.NWL_STATUS.value, 20),
-  NotImplementedFile(SystemFileIds.TRL_STATUS.value, 1),  # TODO 0 TRL records
-  NotImplementedFile(SystemFileIds.SEL_CONFIG.value, 6),
-  NotImplementedFile(SystemFileIds.FOF_STATUS.value, 10),
-  NotImplementedFile(SystemFileIds.RFU_14.value, 0),
-  NotImplementedFile(SystemFileIds.RFU_15.value, 0),
-  NotImplementedFile(SystemFileIds.RFU_16.value, 0),
-  NotImplementedFile(SystemFileIds.LOCATION_DATA.value, 1),  # TODO 0 recorded locations
-  NotImplementedFile(SystemFileIds.D7AALP_RFU_18.value, 0),
-  NotImplementedFile(SystemFileIds.D7AALP_RFU_19.value, 0),
-  NotImplementedFile(SystemFileIds.D7AALP_RFU_1A.value, 0),
-  NotImplementedFile(SystemFileIds.D7AALP_RFU_1B.value, 0),
-  NotImplementedFile(SystemFileIds.D7AALP_RFU_1C.value, 0),
-  NotImplementedFile(SystemFileIds.D7AALP_RFU_1D.value, 0),
-  NotImplementedFile(SystemFileIds.D7AALP_RFU_1E.value, 0),
-  NotImplementedFile(SystemFileIds.D7AALP_RFU_1F.value, 0),
-  AccessProfileFile(0, ap_cont_fg_scan),
-  AccessProfileFile(1, ap_bg_scan),
-  AccessProfileFile(2, ap_no_scan),
-  AccessProfileFile(3, ap_no_scan),
-  AccessProfileFile(4, ap_no_scan),
-  AccessProfileFile(5, ap_no_scan),
-  AccessProfileFile(6, ap_no_scan),
-  AccessProfileFile(7, ap_no_scan),
-  AccessProfileFile(8, ap_no_scan),
-  AccessProfileFile(9, ap_no_scan),
-  AccessProfileFile(10, ap_no_scan),
-  AccessProfileFile(11, ap_no_scan),
-  AccessProfileFile(12, ap_no_scan),
-  AccessProfileFile(13, ap_no_scan),
-  AccessProfileFile(14, ap_no_scan)
+  (UidFile(),                                                   sys_file_prop_perm),
+  (FactorySettingsFile(),                                       sys_file_prop_perm),
+  (FirmwareVersionFile(),                                       sys_file_prop_perm),
+  (NotImplementedFile(SystemFileIds.DEVICE_CAPACITY.value, 19), sys_file_prop_perm),
+  (NotImplementedFile(SystemFileIds.DEVICE_STATUS.value, 9),    sys_file_prop_perm),
+  (EngineeringModeFile(),                                       sys_file_prop_perm),
+  (VidFile(),                                                   sys_file_prop_perm),
+  (NotImplementedFile(SystemFileIds.RFU_07.value, 0),           sys_file_prop_perm),
+  (NotImplementedFile(SystemFileIds.PHY_CONFIG.value, 9),       sys_file_prop_perm),
+  (PhyStatusFile(),                                             sys_file_prop_vol),
+  (DllConfigFile(active_access_class=0x21, nf_ctrl=0x22),       sys_file_prop_perm),
+  (NotImplementedFile(SystemFileIds.DLL_STATUS.value, 12),      sys_file_prop_perm),
+  (NotImplementedFile(SystemFileIds.NWL_ROUTING.value, 1),      sys_file_prop_perm),  # TODO variable routing table
+  (NotImplementedFile(SystemFileIds.NWL_SECURITY.value, 5),     sys_file_prop_perm),
+  (SecurityKeyFile(),                                           sys_file_prop_perm),
+  (NotImplementedFile(SystemFileIds.NWL_SSR.value, 4),          sys_file_prop_perm),  # TODO 0 recorded devices
+  (NotImplementedFile(SystemFileIds.NWL_STATUS.value, 20),      sys_file_prop_perm),
+  (NotImplementedFile(SystemFileIds.TRL_STATUS.value, 1),       sys_file_prop_perm),  # TODO 0 TRL records
+  (NotImplementedFile(SystemFileIds.SEL_CONFIG.value, 6),       sys_file_prop_perm),
+  (NotImplementedFile(SystemFileIds.FOF_STATUS.value, 10),      sys_file_prop_perm),
+  (NotImplementedFile(SystemFileIds.RFU_14.value, 0),           sys_file_prop_perm),
+  (NotImplementedFile(SystemFileIds.RFU_15.value, 0),           sys_file_prop_perm),
+  (NotImplementedFile(SystemFileIds.RFU_16.value, 0),           sys_file_prop_perm),
+  (NotImplementedFile(SystemFileIds.LOCATION_DATA.value, 1),    sys_file_prop_perm),  # TODO 0 recorded locations
+  (NotImplementedFile(SystemFileIds.D7AALP_RFU_18.value, 0),    sys_file_prop_perm),
+  (NotImplementedFile(SystemFileIds.D7AALP_RFU_19.value, 0),    sys_file_prop_perm),
+  (NotImplementedFile(SystemFileIds.D7AALP_RFU_1A.value, 0),    sys_file_prop_perm),
+  (NotImplementedFile(SystemFileIds.D7AALP_RFU_1B.value, 0),    sys_file_prop_perm),
+  (NotImplementedFile(SystemFileIds.D7AALP_RFU_1C.value, 0),    sys_file_prop_perm),
+  (NotImplementedFile(SystemFileIds.D7AALP_RFU_1D.value, 0),    sys_file_prop_perm),
+  (NotImplementedFile(SystemFileIds.D7AALP_RFU_1E.value, 0),    sys_file_prop_perm),
+  (NotImplementedFile(SystemFileIds.D7AALP_RFU_1F.value, 0),    sys_file_prop_perm),
+  (AccessProfileFile(0, ap_cont_fg_scan),                       sys_file_prop_perm),
+  (AccessProfileFile(1, ap_bg_scan),                            sys_file_prop_perm),
+  (AccessProfileFile(2, ap_no_scan),                            sys_file_prop_perm),
+  (AccessProfileFile(3, ap_no_scan),                            sys_file_prop_perm),
+  (AccessProfileFile(4, ap_no_scan),                            sys_file_prop_perm),
+  (AccessProfileFile(5, ap_no_scan),                            sys_file_prop_perm),
+  (AccessProfileFile(6, ap_no_scan),                            sys_file_prop_perm),
+  (AccessProfileFile(7, ap_no_scan),                            sys_file_prop_perm),
+  (AccessProfileFile(8, ap_no_scan),                            sys_file_prop_perm),
+  (AccessProfileFile(9, ap_no_scan),                            sys_file_prop_perm),
+  (AccessProfileFile(10, ap_no_scan),                           sys_file_prop_perm),
+  (AccessProfileFile(11, ap_no_scan),                           sys_file_prop_perm),
+  (AccessProfileFile(12, ap_no_scan),                           sys_file_prop_perm),
+  (AccessProfileFile(13, ap_no_scan),                           sys_file_prop_perm),
+  (AccessProfileFile(14, ap_no_scan),                           sys_file_prop_perm)
 ]
 
 sys_file_permission_default = FilePermissions(encrypted=False, executeable=False, user_readable=True, user_writeable=False, user_executeable=False,
                    guest_readable=True, guest_writeable=False, guest_executeable=False)
 sys_file_permission_non_readable = FilePermissions(encrypted=False, executeable=False, user_readable=False, user_writeable=False, user_executeable=False,
                    guest_readable=False, guest_writeable=False, guest_executeable=False)
-sys_file_prop_default = FileProperties(act_enabled=False, act_condition=ActionCondition.WRITE, storage_class=StorageClass.PERMANENT)
+sys_file_prop_default = sys_file_prop_perm
 
 def output_file(file):
   file_type = SystemFileIds(file.id)
@@ -154,9 +157,9 @@ def output_file(file):
     cog.outl(file_array_elements)
 
 def output_fileheader(file):
-  file_type = SystemFileIds(system_file.id)
+  file_type = SystemFileIds(system_file[0].id)
   cog.outl("\t// {} - {} (length {})".format(file_type.name, file_type.value, file.length))
-  file_header = FileHeader(permissions=file_permissions, properties=sys_file_prop_default, alp_command_file_id=0xFF, interface_file_id=0xFF, file_size=system_file.length, allocated_size=system_file.length)
+  file_header = FileHeader(permissions=file_permissions, properties=system_file[1], alp_command_file_id=0xFF, interface_file_id=0xFF, file_size=system_file[0].length, allocated_size=system_file[0].length)
   file_header_array_elements = "\t"
   for byte in bytearray(file_header):
     file_header_array_elements += "{}, ".format(hex(byte))
@@ -167,38 +170,41 @@ def output_system_file_offsets():
   current_offset = 4
   headerlength = 12
   for system_file in system_files:
-    file_type = SystemFileIds(system_file.id)
-    cog.outl("\t{}, // {} - {} (length {}))".format(hex(current_offset), file_type.name, file_type.value, system_file.length))
-    current_offset += system_file.length + headerlength
+    file_type = SystemFileIds(system_file[0].id)
+    cog.outl("\t{}, // {} - {} (length {}))".format(hex(current_offset), file_type.name, file_type.value, system_file[0].length))
+    current_offset += system_file[0].length + headerlength
 
 def output_system_file_length():
   headerlength = 12
   for system_file in system_files:
-    file_type = SystemFileIds(system_file.id)
-    cog.outl("\t{},\t// {} - {})".format(hex(system_file.length + headerlength), file_type.name, file_type.value))
+    file_type = SystemFileIds(system_file[0].id)
+    cog.outl("\t{},\t// {} - {})".format(hex(system_file[0].length + headerlength), file_type.name, file_type.value))
 
 def output_fs_file_headers():
   current_offset = 0
   d7ap_fs_headerlength = 12
   for system_file in system_files:
-    file_type = SystemFileIds(system_file.id)
-    cog.outl("\t//\t{} - {} (length {})".format(file_type.name, file_type.value, system_file.length + d7ap_fs_headerlength))
+    file_type = SystemFileIds(system_file[0].id)
+    cog.outl("\t//\t{} - {} (length {})".format(file_type.name, file_type.value, system_file[0].length + d7ap_fs_headerlength))
 
     header_bytes_line = "\t"
-    header_bytes_line += "0x01, " # permanent blockdevice index
-    for byte in bytearray(struct.pack(">I", system_file.length + d7ap_fs_headerlength)):
+    if system_file[1].storage_class == StorageClass.VOLATILE:
+      header_bytes_line += "0x02, " # volatile blockdevice index
+    else:
+      header_bytes_line += "0x01, " # permanent blockdevice index
+    for byte in bytearray(struct.pack(">I", system_file[0].length + d7ap_fs_headerlength)):
         header_bytes_line += "{}, ".format(hex(byte))
 
     for byte in bytearray(struct.pack(">I", current_offset)):
         header_bytes_line += "{}, ".format(hex(byte))
 
     cog.outl(header_bytes_line)
-    current_offset += system_file.length + d7ap_fs_headerlength
+    current_offset += system_file[0].length + d7ap_fs_headerlength
 
   for i in range(len(system_files), 256):
     cog.outl("\t//\tRFU - {}".format(i))
     cog.outl("\t0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, ")
-    current_offset += system_file.length + d7ap_fs_headerlength
+    current_offset += system_file[0].length + d7ap_fs_headerlength
 
 
 def output_number_of_files():
@@ -246,7 +252,7 @@ __attribute__((used)) uint8_t d7ap_fs_metadata[4 + 4 + (255 * 12)] LINKER_SECTIO
   //	PHY_CONFIG - 8 (length 21)
   0x01, 0x0, 0x0, 0x0, 0x15, 0x0, 0x0, 0x0, 0xd4, 
   //	PHY_STATUS - 9 (length 57)
-  0x01, 0x0, 0x0, 0x0, 0x39, 0x0, 0x0, 0x0, 0xe9, 
+  0x02, 0x0, 0x0, 0x0, 0x39, 0x0, 0x0, 0x0, 0xe9, 
   //	DLL_CONFIG - 10 (length 19)
   0x01, 0x0, 0x0, 0x0, 0x13, 0x0, 0x0, 0x1, 0x22, 
   //	DLL_STATUS - 11 (length 24)
@@ -739,7 +745,7 @@ __attribute__((used)) uint8_t d7ap_fs_metadata[4 + 4 + (255 * 12)] LINKER_SECTIO
   0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
   //	RFU - 255
   0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
-  //[[[end]]] (checksum: 7ae1416c65d4bb293b369d5117a19d52)
+  //[[[end]]] (checksum: d3ec3c880c1f4aa2994274206cd91e6f)
 };
 
 __attribute__((used)) uint8_t d7ap_files_data[FRAMEWORK_FS_PERMANENT_STORAGE_SIZE] LINKER_SECTION_FS_PERMANENT_FILES = {
@@ -747,8 +753,8 @@ __attribute__((used)) uint8_t d7ap_files_data[FRAMEWORK_FS_PERMANENT_STORAGE_SIZ
       /*[[[cog
       file_permissions = sys_file_permission_default
       for system_file in system_files:
-        output_fileheader(system_file)
-        output_file(system_file)
+        output_fileheader(system_file[0])
+        output_file(system_file[0])
       ]]]*/
       // UID - 0 (length 8)
       0x24, 0x23, 0xff, 0xff, 0x0, 0x0, 0x0, 0x8, 0x0, 0x0, 0x0, 0x8, 
@@ -777,7 +783,7 @@ __attribute__((used)) uint8_t d7ap_files_data[FRAMEWORK_FS_PERMANENT_STORAGE_SIZ
       0x24, 0x23, 0xff, 0xff, 0x0, 0x0, 0x0, 0x9, 0x0, 0x0, 0x0, 0x9, 
       0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 
       // PHY_STATUS - 9 (length 45)
-      0x24, 0x23, 0xff, 0xff, 0x0, 0x0, 0x0, 0x2d, 0x0, 0x0, 0x0, 0x2d, 
+      0x24, 0x21, 0xff, 0xff, 0x0, 0x0, 0x0, 0x2d, 0x0, 0x0, 0x0, 0x2d, 
       0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 
       // DLL_CONFIG - 10 (length 7)
       0x24, 0x23, 0xff, 0xff, 0x0, 0x0, 0x0, 0x7, 0x0, 0x0, 0x0, 0x7, 
@@ -879,7 +885,7 @@ __attribute__((used)) uint8_t d7ap_files_data[FRAMEWORK_FS_PERMANENT_STORAGE_SIZ
       // ACCESS_PROFILE_14 - 46 (length 65)
       0x24, 0x23, 0xff, 0xff, 0x0, 0x0, 0x0, 0x41, 0x0, 0x0, 0x0, 0x41, 
       0x32, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0xe, 0x50, 0xff, 0x0, 0x0, 0x0, 0x0, 0xe, 0x50, 0xff, 0x0, 0x0, 0x0, 0x0, 0xe, 0x50, 0xff, 0x0, 0x0, 0x0, 0x0, 0xe, 0x50, 0xff, 0x0, 0x0, 0x0, 0x0, 0xe, 0x50, 0xff, 0x0, 0x0, 0x0, 0x0, 0xe, 0x50, 0xff, 0x0, 0x0, 0x0, 0x0, 0xe, 0x50, 0xff, 0x0, 0x0, 0x0, 0x0, 0xe, 0x50, 0xff, 
-      //[[[end]]] (checksum: 5105ee2e1f74f9cea26ab548774f1257)
+      //[[[end]]] (checksum: a696b8a4ac0ffb529700f64b24a93fbd)
   };
 
 fs_filesystem_t d7ap_filesystem __attribute__((used)) = {
