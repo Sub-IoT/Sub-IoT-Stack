@@ -377,8 +377,6 @@ uint32_t d7ap_fs_get_file_length(uint8_t file_id)
 {
   d7ap_fs_file_header_t header;
 
-  assert(is_file_defined(file_id));
-
   d7ap_fs_read_file_header(file_id, &header);
   return header.length;
 }

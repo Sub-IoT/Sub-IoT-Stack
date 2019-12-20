@@ -998,8 +998,10 @@ error_t phy_start_background_scan(phy_rx_config_t* config, phy_rx_packet_callbac
         //phy_switch_to_standby_mode();
         DEBUG_BG_END();
         DEBUG_RX_END();
+        config->rssi_thr = rssi; //Put new value to update E_CCA in higher layer
         return FAIL;
     }
+    config->rssi_thr = rssi;
     DEBUG_BG_END();
 
     total_rssi_triggers++;
