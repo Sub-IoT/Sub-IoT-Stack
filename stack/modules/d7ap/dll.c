@@ -768,7 +768,7 @@ static void save_noise_floor(uint8_t position) {
         phy_status_channel_counter++;
     }
     d7ap_fs_write_file(D7A_FILE_PHY_STATUS_FILE_ID, D7A_FILE_PHY_STATUS_MINIMUM_SIZE - 1, &phy_status_channel_counter, sizeof(uint8_t));
-    d7ap_fs_write_file(D7A_FILE_PHY_STATUS_FILE_ID, D7A_FILE_PHY_STATUS_MINIMUM_SIZE, channels, phy_status_channel_counter * sizeof(channel_status_t));
+    d7ap_fs_write_file(D7A_FILE_PHY_STATUS_FILE_ID, D7A_FILE_PHY_STATUS_MINIMUM_SIZE, (uint8_t*) channels, phy_status_channel_counter * sizeof(channel_status_t));
 }
 
 void dll_execute_scan_automation()
