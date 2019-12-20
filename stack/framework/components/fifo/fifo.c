@@ -34,42 +34,45 @@ void fifo_init_filled(fifo_t *fifo, uint8_t *buffer, uint16_t filled_size, uint1
 {
     fifo->buffer = buffer;
     fifo->head_idx = 0;
-    fifo->max_size = max_size - 1;
-    fifo->tail_idx = filled_size;
-    fifo->is_subview = false;
+    fifo->max_size = max_size;
+    fifo->tail_idx = filled_size == 0 ? 0 : filled_size;
+    fifo->tail_idx = filled_size == max_size ? 0 : filled_size;
+    fifo->is_full = (filled_size == max_size);
+    fifo->is_subview = false;    
 }
 
-void fifo_init_subview(fifo_t *subset_fifo, fifo_t* original_fifo, uint16_t offset, uint16_t subset_size) {
-    assert(subset_size <= fifo_get_size(original_fifo));
-    assert(subset_size + offset <= original_fifo->max_size);
+error_t fifo_init_subview(fifo_t *subset_fifo, fifo_t* original_fifo, uint16_t offset, uint16_t subset_size) {
+    if(offset + subset_size > fifo_get_size(original_fifo))
+        return ESIZE;
 
     subset_fifo->buffer = original_fifo->buffer;
-    subset_fifo->head_idx = original_fifo->head_idx + offset;
-    subset_fifo->tail_idx = original_fifo->head_idx + offset + subset_size;
-    if(subset_fifo->tail_idx > original_fifo->max_size) {
-      // wrap
-      subset_fifo->tail_idx = subset_fifo->tail_idx - original_fifo->max_size;
-    }
-
+    subset_fifo->head_idx = (original_fifo->head_idx + offset) % original_fifo->max_size;
+    subset_fifo->tail_idx = (original_fifo->head_idx + offset + subset_size) % original_fifo->max_size;
     subset_fifo->max_size = original_fifo->max_size;
+    subset_fifo->is_full = (subset_size == subset_fifo->max_size);
     subset_fifo->is_subview = true;
+    return SUCCESS;
 }
 
 error_t fifo_put(fifo_t *fifo, uint8_t *data, uint16_t len)
 {
     if(fifo->is_subview)
         return EINVAL;
+    
+    if(fifo->is_full)
+        return ESIZE;
 
     if(fifo->tail_idx < fifo->head_idx)
     {
-        if(fifo->tail_idx + len >= fifo->head_idx)
+        if(fifo->tail_idx + len > fifo->head_idx)
             return ESIZE;
         memcpy(fifo->buffer + fifo->tail_idx, data, len);
         fifo->tail_idx += len;
+        fifo->is_full = (fifo->tail_idx == fifo->head_idx);
         return SUCCESS;
     }
 
-    if(fifo->tail_idx + len <= fifo->max_size)
+    if(fifo->tail_idx + len < fifo->max_size)
     {
         memcpy(fifo->buffer + fifo->tail_idx, data, len);
         fifo->tail_idx += len;
@@ -78,12 +81,13 @@ error_t fifo_put(fifo_t *fifo, uint8_t *data, uint16_t len)
 
     uint16_t space_left_before_max_size = fifo->max_size - fifo->tail_idx;
     uint16_t space_needed_after_wrap = len - space_left_before_max_size;
-    if(fifo->head_idx > space_needed_after_wrap)
+    if(fifo->head_idx >= space_needed_after_wrap)
     {
         // wrap
         memcpy(fifo->buffer + fifo->tail_idx, data, space_left_before_max_size);
         memcpy(fifo->buffer, data + space_left_before_max_size, space_needed_after_wrap);
         fifo->tail_idx = space_needed_after_wrap;
+        fifo->is_full = (fifo->tail_idx == fifo->head_idx);
         return SUCCESS;
     }
     else
@@ -108,8 +112,11 @@ static error_t check_len(fifo_t* fifo, uint16_t len) {
 static void skip(fifo_t* fifo, uint16_t len) {
   // progress head to implement popping behaviour
   fifo->head_idx = (fifo->head_idx + len);
-  if(fifo->head_idx > fifo->max_size)
-    fifo->head_idx = fifo->head_idx % fifo->max_size; // when head_idx == max_size we do not want to point to 0 since size will not be correct then
+  if(fifo->head_idx >= fifo->max_size)
+  {
+    fifo->head_idx = fifo->head_idx % fifo->max_size;
+  }
+  fifo->is_full = (len == 0);
 }
 
 error_t fifo_skip(fifo_t* fifo, uint16_t len) {
@@ -124,27 +131,32 @@ error_t fifo_skip(fifo_t* fifo, uint16_t len) {
 
 error_t fifo_remove(fifo_t *fifo, uint16_t len)
 {
+    if(check_len(fifo, len) != SUCCESS)
+        return ESIZE;
+        
     if(fifo->tail_idx > fifo->head_idx)
     {
         if((fifo->tail_idx - len) < fifo->head_idx)
             return ESIZE;
         fifo->tail_idx -= len;
+        fifo->is_full = (len == 0);
         return SUCCESS;
     }
 
     if(fifo->tail_idx - len > 0)
     {
         fifo->tail_idx -= len;
+        fifo->is_full = (len == 0);
         return SUCCESS;
     }
 
     uint16_t space_left_before_0 = fifo->tail_idx;
-
     uint16_t space_freed_after_wrap = len - space_left_before_0;
     if(fifo->max_size - fifo->head_idx > space_freed_after_wrap)
     {
         // wrap
         fifo->tail_idx = fifo->max_size - space_freed_after_wrap;
+        fifo->is_full = (len == 0);
         return SUCCESS;
     }
     else
@@ -156,7 +168,7 @@ error_t fifo_remove_last_byte(fifo_t* fifo) {
 }
 
 error_t fifo_peek(fifo_t* fifo, uint8_t* buffer, uint16_t offset, uint16_t len) {
-  error_t err = check_len(fifo, len);
+  error_t err = check_len(fifo, offset + len);
   if(err != SUCCESS)
     return err;
 
@@ -197,7 +209,9 @@ error_t fifo_pop(fifo_t* fifo, uint8_t* buffer, uint16_t len) {
 
 uint16_t fifo_get_size(fifo_t* fifo)
 {
-    if(fifo->head_idx <= fifo->tail_idx)
+    if(fifo->head_idx == fifo->tail_idx)
+        return fifo->is_full ? fifo->max_size : 0;
+    else if(fifo->head_idx < fifo->tail_idx)
         return fifo->tail_idx - fifo->head_idx;
     else
         return fifo->tail_idx + (fifo->max_size - fifo->head_idx);
@@ -210,5 +224,5 @@ void fifo_clear(fifo_t* fifo)
 }
 
 bool fifo_is_full(fifo_t* fifo) {
-    return fifo_get_size(fifo) == fifo->max_size;
+    return fifo->is_full;
 }

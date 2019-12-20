@@ -298,7 +298,7 @@ void alp_parse_action(fifo_t* fifo, alp_action_t* action) {
 uint8_t alp_get_expected_response_length(uint8_t* alp_command, uint8_t alp_command_length) {
   uint8_t expected_response_length = 0;
   fifo_t fifo;
-  fifo_init_filled(&fifo, alp_command, alp_command_length, alp_command_length + 1);
+  fifo_init_filled(&fifo, alp_command, alp_command_length, alp_command_length);
 
   while(fifo_get_size(&fifo) > 0) {
     alp_control_t control;

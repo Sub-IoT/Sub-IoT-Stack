@@ -41,7 +41,7 @@
 #include "fifo.h"
 
 
-#define ALP_PAYLOAD_MAX_SIZE D7A_PAYLOAD_MAX_SIZE + 1 // TODO configurable?
+#define ALP_PAYLOAD_MAX_SIZE D7A_PAYLOAD_MAX_SIZE // TODO configurable?
 
 typedef enum
 {
