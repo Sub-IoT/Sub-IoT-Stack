@@ -141,7 +141,6 @@ sys_file_permission_default = FilePermissions(encrypted=False, executeable=False
                    guest_readable=True, guest_writeable=False, guest_executeable=False)
 sys_file_permission_non_readable = FilePermissions(encrypted=False, executeable=False, user_readable=False, user_writeable=False, user_executeable=False,
                    guest_readable=False, guest_writeable=False, guest_executeable=False)
-sys_file_prop_default = sys_file_prop_perm
 
 def output_file(file):
   file_type = SystemFileIds(file.id)

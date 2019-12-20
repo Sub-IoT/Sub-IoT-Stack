@@ -746,7 +746,7 @@ static uint8_t get_position_channel() {
             .channel_index = (current_channel_id.center_freq_index & 0x07FF),
         },
     };
-    for(position = 0; position < sizeof(channels); position++) {
+    for(position = 0; position < PHY_STATUS_MAX_CHANNELS; position++) {
         if((channels[position].channel_status_identifier_raw == 0) || 
             (channels[position].channel_status_identifier_raw == local_channel.channel_status_identifier_raw))
             return position;
@@ -767,16 +767,8 @@ static void save_noise_floor(uint8_t position) {
         };
         phy_status_channel_counter++;
     }
-    //only write once every 10 measurements
-    if(cycle_counter > 10) {
-        cycle_counter = 0;
-
-        d7ap_fs_write_file(D7A_FILE_PHY_STATUS_FILE_ID, D7A_FILE_PHY_STATUS_MINIMUM_SIZE - 1, &phy_status_channel_counter, 1);
-        d7ap_fs_write_file(D7A_FILE_PHY_STATUS_FILE_ID, D7A_FILE_PHY_STATUS_MINIMUM_SIZE, (uint8_t*) channels, phy_status_channel_counter * sizeof(channel_status_t));
-        DPRINT("10th measurement, writing to phy status file with %i channels: ", phy_status_channel_counter);
-        DPRINT_DATA((uint8_t*)channels, phy_status_channel_counter * sizeof(channel_status_t));
-    } else
-        cycle_counter++;
+    d7ap_fs_write_file(D7A_FILE_PHY_STATUS_FILE_ID, D7A_FILE_PHY_STATUS_MINIMUM_SIZE - 1, &phy_status_channel_counter, sizeof(uint8_t));
+    d7ap_fs_write_file(D7A_FILE_PHY_STATUS_FILE_ID, D7A_FILE_PHY_STATUS_MINIMUM_SIZE, channels, phy_status_channel_counter * sizeof(channel_status_t));
 }
 
 void dll_execute_scan_automation()
@@ -968,7 +960,7 @@ void dll_init()
 #endif
 
     d7ap_fs_read_file(D7A_FILE_PHY_STATUS_FILE_ID, D7A_FILE_PHY_STATUS_MINIMUM_SIZE - 1, &phy_status_channel_counter, 1);
-    if(phy_status_channel_counter && (phy_status_channel_counter < sizeof(channels)))
+    if(phy_status_channel_counter && (phy_status_channel_counter < PHY_STATUS_MAX_CHANNELS))
         d7ap_fs_read_file(D7A_FILE_PHY_STATUS_FILE_ID, D7A_FILE_PHY_STATUS_MINIMUM_SIZE, (uint8_t*) channels, phy_status_channel_counter*3);
 
     // Start immediately the scan automation
