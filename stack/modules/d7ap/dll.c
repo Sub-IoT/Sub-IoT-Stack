@@ -125,7 +125,6 @@ static bool NGDEF(_guarded_channel);
 #define guarded_channel NG(_guarded_channel)
 
 static uint8_t noisefl_last_measurements[PHY_STATUS_MAX_CHANNELS][NOISEFL_NUMBER_MEASUREMENTS]; //3 measurement per channel
-static uint8_t cycle_counter = 0;
 static channel_status_t channels[PHY_STATUS_MAX_CHANNELS];
 static uint8_t phy_status_channel_counter = 0;
 static bool reset_noisefl_last_measurements = false;
