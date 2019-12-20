@@ -739,15 +739,15 @@ static void execute_csma_ca(void *arg)
 static uint8_t get_position_channel() {
     uint8_t position;
     channel_status_t local_channel = {
-        .channel_status_identifier = {
-            .ch_freq_band = current_channel_id.channel_header.ch_freq_band,
-            .bandwidth_25kHz = (current_channel_id.channel_header.ch_class == PHY_CLASS_LO_RATE),
-            .channel_index = (current_channel_id.center_freq_index & 0x07FF),
-        },
+        .ch_freq_band = current_channel_id.channel_header.ch_freq_band,
+        .bandwidth_25kHz = (current_channel_id.channel_header.ch_class == PHY_CLASS_LO_RATE),
+        .channel_index_lsb = (current_channel_id.center_freq_index & 0xFF),
+        .channel_index_msb = (uint8_t)((current_channel_id.center_freq_index >> 8) & 0x07),
+        .noise_floor = - E_CCA
     };
     for(position = 0; position < PHY_STATUS_MAX_CHANNELS; position++) {
-        if((channels[position].channel_status_identifier_raw == 0) || 
-            (channels[position].channel_status_identifier_raw == local_channel.channel_status_identifier_raw))
+        if(((channels[position].raw_channel_status_identifier == 0) && (channels[position].channel_index_lsb == 0)) || 
+           ((channels[position].raw_channel_status_identifier == local_channel.raw_channel_status_identifier) && (channels[position].channel_index_lsb == local_channel.channel_index_lsb)))
             return position;
     }
     DPRINT("position of channel out of bound. Increase channels size or delete previous");
@@ -757,15 +757,18 @@ static uint8_t get_position_channel() {
 static void save_noise_floor(uint8_t position) {
     if(position == UINT8_MAX)
         return;
-    channels[position].noise_floor = - E_CCA;
-    if(channels[position].channel_status_identifier_raw == 0) { // new channel
-        channels[position].channel_status_identifier = (channel_status_identifier_t) {
+    if((channels[position].raw_channel_status_identifier == 0) && (channels[position].channel_index_lsb == 0)) { // new channel
+        channels[position] = (channel_status_t) {
             .ch_freq_band = current_channel_id.channel_header.ch_freq_band,
             .bandwidth_25kHz = (current_channel_id.channel_header.ch_class == PHY_CLASS_LO_RATE),
-            .channel_index = (current_channel_id.center_freq_index & 0x07FF)
+            .channel_index_lsb = (current_channel_id.center_freq_index & 0xFF),
+            .channel_index_msb = (uint8_t)((current_channel_id.center_freq_index >> 8) & 0x07),
+            .noise_floor = - E_CCA
         };
         phy_status_channel_counter++;
-    }
+    } else
+        channels[position].noise_floor = - E_CCA;
+
     d7ap_fs_write_file(D7A_FILE_PHY_STATUS_FILE_ID, D7A_FILE_PHY_STATUS_MINIMUM_SIZE - 1, &phy_status_channel_counter, sizeof(uint8_t));
     d7ap_fs_write_file(D7A_FILE_PHY_STATUS_FILE_ID, D7A_FILE_PHY_STATUS_MINIMUM_SIZE, (uint8_t*) channels, phy_status_channel_counter * sizeof(channel_status_t));
 }
