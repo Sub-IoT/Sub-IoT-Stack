@@ -594,9 +594,17 @@ error_t phy_init(void) {
 #endif
 
 #ifdef HAL_RADIO_USE_HW_DC_FREE
-    hw_radio_set_dc_free(HW_DC_FREE_WHITENING);
+    if (default_channel_id.channel_header.ch_coding == PHY_CODING_RFU)
+        hw_radio_set_dc_free(HW_DC_FREE_NONE);
+    else
+        hw_radio_set_dc_free(HW_DC_FREE_WHITENING);
 #else
     hw_radio_set_dc_free(HW_DC_FREE_NONE);
+#endif
+
+#ifdef HAL_RADIO_USE_HW_FEC
+    uint8_t enable = (default_channel_id.channel_header.ch_coding == PHY_CODING_FEC_PN9) ? 1 : 0;
+    hw_radio_set_fec(enable);
 #endif
 
     fact_settings_file_change_callback(D7A_FILE_FACTORY_SETTINGS_FILE_ID); // trigger read
