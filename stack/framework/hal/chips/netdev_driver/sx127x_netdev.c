@@ -979,7 +979,7 @@ void _on_dio1_irq(void *arg)
                     timer_cancel_event(&dev->_internal.rx_timeout_timer);
 
                     uint8_t byte = 0;
-                    if (!(dev->options & SX127X_OPT_TELL_RX_END))
+/*                    if (!(dev->options & SX127X_OPT_TELL_RX_END))
                     {
                         while(!sx127x_is_fifo_empty(dev))
                         {
@@ -997,7 +997,7 @@ void _on_dio1_irq(void *arg)
                         hw_gpio_set_edge_interrupt(dev->params.dio1_pin, GPIO_RISING_EDGE);
                         hw_gpio_enable_interrupt(dev->params.dio1_pin);
                         return;
-                    }
+                    }*/
 
                     if (dev->packet.length == 0 && dev->packet.pos == 0)
                     {
