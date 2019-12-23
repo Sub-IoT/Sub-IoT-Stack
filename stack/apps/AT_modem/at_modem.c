@@ -79,7 +79,7 @@
 // Carson's rule: 2 x fm + 2 x fd  = 9.600 + 2 x 4.800 = 19.2 kHz
 // assuming 10 ppm crystals gives max error of: 2 * 10 ppm * 868 = 17.36 kHz
 // => BW > 19.2 + 17.36 kHz => > 36.5 kHZ.
-#define RXBW_L    36500 //Hz
+#define RXBW_L    10468 //Hz
 
 // normal rate
 #define BITRATE_N 55555 // bps
@@ -87,7 +87,7 @@
 // Carson's rule: 2 x fm + 2 x fd  = 55.555 + 2 x 50 = 155.555 kHz
 // assuming 10 ppm crystals gives max error of: 2 * 10 ppm * 868 = 17.36 kHz
 // => BW > 155.555 + 17.36 => 172.91 KHz
-#define RXBW_N   172910 //Hz
+#define RXBW_N   78646 //Hz
 
 // high rate
 #define BITRATE_H 166667 // bps
@@ -95,7 +95,7 @@
 // Carson's rule: 2 x fm + 2 x fd  = 166.667 + 2 x 41.667 = 250 kHz
 // assuming 10 ppm crystals gives max error of: 2 * 10 ppm * 868 = 17.36 kHz
 // => BW > 250 + 17.36 kHz => > 267.36 kHZ.
-#define RXBW_H    267360 //Hz
+#define RXBW_H    125868 //Hz
 
 typedef struct
 {
