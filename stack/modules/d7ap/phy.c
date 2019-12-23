@@ -279,6 +279,10 @@ void phy_switch_to_sleep_mode()
     state = STATE_IDLE;
 }
 
+void phy_enable_fast_hop(bool enable) {
+    hw_radio_enable_fast_hop(enable);
+}
+
 static void packet_transmitted(timer_tick_t timestamp)
 {
     assert(state == STATE_TX || state == STATE_CONT_TX);
@@ -873,12 +877,15 @@ error_t phy_send_packet_with_advertising(hw_radio_packet_t* packet, phy_tx_confi
     hw_radio_send_payload(bg_adv.packet_payload, payload_len); // in preloading mode
 
     // prepare the next advertising frame, insert the preamble and the SYNC word
-    bg_adv.eta -= bg_adv.tx_duration; // the next ETA is the time remaining after the end transmission time of the D7AAdvP frame
+    if(bg_adv.eta > bg_adv.tx_duration - (FG_SCAN_STARTUP_TIME + 7))
+        bg_adv.eta -= bg_adv.tx_duration - (FG_SCAN_STARTUP_TIME + 7); // the next ETA is the time remaining after the end transmission time of the D7AAdvP frame
+    else
+        bg_adv.eta = 0;
     assemble_background_payload();
 
     // start Tx
     timer_tick_t start = timer_get_counter_value();
-    bg_adv.stop_time = start + eta + bg_adv.tx_duration + FG_SCAN_STARTUP_TIME + 4; // Tadv = Tsched + Ttx + Tfg_startup + Tcalc
+    bg_adv.stop_time = start + eta + bg_adv.tx_duration + FG_SCAN_STARTUP_TIME + 7; // Tadv = Tsched + Ttx + Tfg_startup + Tcalc
     DPRINT("BG Tadv %i (start time @ %i stop time @ %i)", eta + bg_adv.tx_duration, start, bg_adv.stop_time);
 
     state = STATE_TX;
@@ -911,9 +918,9 @@ static void fill_in_fifo(uint16_t remaining_bytes_len)
                                                             PHY_CODING_PN9, // override FEC, we need the time for the BG_THRESHOLD bytes in the fifo, regardless of coding
                                                             remaining_bytes_len, true); // don't take syncword and preamble into account
 
-        if (bg_adv.stop_time > current + 2 * bg_adv.tx_duration + flush_duration + FG_SCAN_STARTUP_TIME)
+        if (bg_adv.stop_time > current + 2 * bg_adv.tx_duration + flush_duration + FG_SCAN_STARTUP_TIME + 2)
             bg_adv.eta = (bg_adv.stop_time - current) - 2 * bg_adv.tx_duration; // ETA is updated according the real current time
-        else if(bg_adv.stop_time > current + bg_adv.tx_duration + flush_duration)
+        else if(bg_adv.stop_time > current + bg_adv.tx_duration + flush_duration + FG_SCAN_STARTUP_TIME + 2) //calculation time
             bg_adv.eta = 1; // Send last background frame with ETA which we calculated and assembled previous loop.
         else
             //TODO avoid stop time being elapsed

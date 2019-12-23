@@ -177,6 +177,8 @@ static uint8_t previous_threshold = 0;
 static uint16_t previous_payload_length = 0;
 static bool io_inited = false;
 
+static bool fast_hop_enabled = false;
+
 static bool lora_mode = false;
 
 void enable_spi_io() {
@@ -1114,6 +1116,14 @@ void hw_radio_set_tx_power(int8_t eirp) {
     write_reg(REG_PACONFIG, 0x70 | (uint8_t)(eirp));
 #endif
 
+}
+
+void hw_radio_enable_fast_hop(bool enable) {
+  if(fast_hop_enabled != enable) {
+    DPRINT("set fasthop to %s", enable ? "enable" : "disable");
+    write_reg(REG_PLLHOP, (read_reg(REG_PLLHOP) & RFLR_PLLHOP_FASTHOP_MASK) | (RF_PLLHOP_FASTHOP_ON * enable));
+    fast_hop_enabled = enable;
+  }
 }
 
 void hw_radio_switch_longRangeMode(bool use_lora) {

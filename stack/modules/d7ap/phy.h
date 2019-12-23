@@ -279,6 +279,7 @@ error_t phy_start_energy_scan(channel_id_t *channel, rssi_valid_callback_t rssi_
 
 void phy_switch_to_sleep_mode(void);
 void phy_switch_to_standby_mode(void);
+void phy_enable_fast_hop(bool enable);
 
 #endif //__HW_RADIO_H_
 

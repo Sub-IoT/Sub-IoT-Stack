@@ -453,6 +453,8 @@ void hw_radio_set_lora_mode(uint32_t lora_bw, uint8_t lora_SF);
 
 void hw_radio_set_tx_power(int8_t eirp);
 
+void hw_radio_enable_fast_hop(bool enable);
+
 void hw_radio_set_rx_timeout(uint32_t timeout);
 
 void set_preamble_detector(uint8_t preamble_detector_size, uint8_t preamble_tol);

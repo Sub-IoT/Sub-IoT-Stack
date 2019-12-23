@@ -41,6 +41,8 @@ typedef enum {
     D7ADLL_MEDIAN_OF_THREE
 } noise_floor_computation_method_t;
 
+#define NOISEFL_MEDIAN_OFFSET 10
+
 /*
  * Background frames are of fixed length
  * Subnet / CTRL / Payload / CRC16

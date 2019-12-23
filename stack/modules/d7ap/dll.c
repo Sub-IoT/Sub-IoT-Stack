@@ -310,7 +310,7 @@ void median_measured_noisefloor(uint8_t position) {
     }
     if(noisefl_last_measurements[position][0] && noisefl_last_measurements[position][1] && noisefl_last_measurements[position][2]) { //If not default 0 values
         uint8_t median = noisefl_last_measurements[position][0]>noisefl_last_measurements[position][1]?  ( noisefl_last_measurements[position][2]>noisefl_last_measurements[position][0]? noisefl_last_measurements[position][0] : (noisefl_last_measurements[position][1]>noisefl_last_measurements[position][2]? noisefl_last_measurements[position][1]:noisefl_last_measurements[position][2]) )  :  ( noisefl_last_measurements[position][2]>noisefl_last_measurements[position][1]? noisefl_last_measurements[position][1] : (noisefl_last_measurements[position][0]>noisefl_last_measurements[position][2]? noisefl_last_measurements[position][0]:noisefl_last_measurements[position][2]) );
-        E_CCA = - median + 6; //Min of last 3 with 6dB offset
+        E_CCA = - median + NOISEFL_MEDIAN_OFFSET; //Min of last 3 with 6dB offset
     } else
         E_CCA = - current_access_profile.subbands[0].cca;
 }
@@ -324,6 +324,8 @@ void start_background_scan()
         dll_background_scan_timer.next_event = tsched;
         timer_add_event(&dll_background_scan_timer);
         set_sched_event = false;
+        if(channel_list_length > 1)
+            phy_enable_fast_hop(true);
     }
 
     current_channel_id = scan_automation_channel_list[current_channel_index];
@@ -350,7 +352,7 @@ void start_background_scan()
     error_t err = phy_start_background_scan(&config, &dll_signal_packet_received);
     if(err == SUCCESS) {
         timer_cancel_event(&dll_background_scan_timer); //give time for scan to succeed
-        current_channel_index = 0;
+        DPRINT("triggered background scan on channel %i", current_channel_id.center_freq_index);
     }
     if(rx_nf_method == D7ADLL_MEDIAN_OF_THREE) { 
         //if current_channel in array of channels AND gotten rssi_thr smaller than pre-programmed Ecca
@@ -366,10 +368,14 @@ void start_background_scan()
 
     if(current_channel_index + 1 < channel_list_length) {
         current_channel_index++;
-        sched_post_task(&start_background_scan);
+        if(err == SUCCESS)
+            set_sched_event = true;
+        else
+            sched_post_task(&start_background_scan);
     } else {
         current_channel_index = 0;
         set_sched_event = true;
+        phy_enable_fast_hop(false);
         if((err == FAIL) && (tsched > (10 * channel_list_length))) { //if nothing detected and long tsched, set to sleep mode
             phy_switch_to_sleep_mode();
         }
@@ -388,8 +394,12 @@ void dll_signal_packet_received(packet_t* packet)
 {
     assert((dll_state == DLL_STATE_IDLE && process_received_packets_after_tx) || dll_state == DLL_STATE_FOREGROUND_SCAN || dll_state == DLL_STATE_SCAN_AUTOMATION);
     if(packet == NULL) { //empty packet means rx timeout triggered
-        DPRINT("bg scan falsely triggered, resetting");
-        sched_post_task(&start_background_scan);
+        DPRINT("bg scan falsely triggered, retry background scan");
+        if(current_channel_index == 0) { // new cycle
+            dll_background_scan_timer.next_event = tsched;
+            timer_add_event(&dll_background_scan_timer);
+        } else
+            sched_post_task(&start_background_scan);
         return;
     }
     assert(packet != NULL);
@@ -408,7 +418,8 @@ void dll_signal_packet_received(packet_t* packet)
             start_guard_period(t_g - tx_duration);
 
         guarded_channel = true;
-    }
+    } else
+        phy_enable_fast_hop(false);
 
     if (is_tx_busy())
     {
