@@ -130,7 +130,8 @@ static uint8_t phy_status_channel_counter = 0;
 static bool reset_noisefl_last_measurements = false;
 static channel_id_t scan_automation_channel_list[SCAN_AUTOMATION_CHANNEL_LIST_MAX_LENGTH];
 static uint8_t channel_list_length;
-static uint8_t current_channel_index;
+static uint8_t current_rx_channel_index = 1;
+static uint8_t current_tx_channel_index = 1;
 static bool set_sched_event = true;
 
 static void execute_cca(void *arg);
@@ -324,11 +325,9 @@ void start_background_scan()
         dll_background_scan_timer.next_event = tsched;
         timer_add_event(&dll_background_scan_timer);
         set_sched_event = false;
-        if(channel_list_length > 1)
-            phy_enable_fast_hop(true);
     }
 
-    current_channel_id = scan_automation_channel_list[current_channel_index];
+    current_channel_id = scan_automation_channel_list[current_rx_channel_index];
 
     uint8_t position = get_position_channel();
 
@@ -352,7 +351,7 @@ void start_background_scan()
     error_t err = phy_start_background_scan(&config, &dll_signal_packet_received);
     if(err == SUCCESS) {
         timer_cancel_event(&dll_background_scan_timer); //give time for scan to succeed
-        DPRINT("triggered background scan on channel %i", current_channel_id.center_freq_index);
+        DPRINT("triggered background scan on channel %i with rssi %i", current_channel_id.center_freq_index, config.rssi_thr);
     }
     if(rx_nf_method == D7ADLL_MEDIAN_OF_THREE) { 
         //if current_channel in array of channels AND gotten rssi_thr smaller than pre-programmed Ecca
@@ -366,16 +365,18 @@ void start_background_scan()
         save_noise_floor(position);
     }
 
-    if(current_channel_index + 1 < channel_list_length) {
-        current_channel_index++;
-        if(err == SUCCESS)
+    if(current_rx_channel_index + 1 < channel_list_length) {
+        current_rx_channel_index++;
+        if(err == SUCCESS) {
             set_sched_event = true;
-        else
+            phy_enable_fast_hop(false);
+        } else {
             sched_post_task(&start_background_scan);
+            phy_enable_fast_hop(true);
+        }
     } else {
-        current_channel_index = 0;
+        current_rx_channel_index = 0;
         set_sched_event = true;
-        phy_enable_fast_hop(false);
         if((err == FAIL) && (tsched > (10 * channel_list_length))) { //if nothing detected and long tsched, set to sleep mode
             phy_switch_to_sleep_mode();
         }
@@ -394,15 +395,14 @@ void dll_signal_packet_received(packet_t* packet)
 {
     assert((dll_state == DLL_STATE_IDLE && process_received_packets_after_tx) || dll_state == DLL_STATE_FOREGROUND_SCAN || dll_state == DLL_STATE_SCAN_AUTOMATION);
     if(packet == NULL) { //empty packet means rx timeout triggered
-        DPRINT("bg scan falsely triggered, retry background scan");
-        if(current_channel_index == 0) { // new cycle
+        DPRINT("bg scan falsely triggered on channel %i, retry background scan", current_channel_id.center_freq_index);
+        if(current_rx_channel_index == 0) { // new cycle
             dll_background_scan_timer.next_event = tsched;
             timer_add_event(&dll_background_scan_timer);
         } else
             sched_post_task(&start_background_scan);
         return;
     }
-    assert(packet != NULL);
     DPRINT("Processing received packet");
 
     if (packet->type != BACKGROUND_ADV)
@@ -539,6 +539,9 @@ static void cca_rssi_valid(int16_t cur_rssi)
             DPRINT("CCA2 RSSI: %d", cur_rssi);
             DPRINT("CCA2 succeeded, transmitting ...");
             // log_print_data(current_packet->hw_radio_packet.data, current_packet->hw_radio_packet.length + 1); // TODO tmp
+
+            phy_enable_fast_hop(false);
+            current_packet->phy_config.tx.channel_id = current_channel_id;
 
             switch_state(DLL_STATE_TX_FOREGROUND);
             guarded_channel = true;
@@ -716,7 +719,11 @@ static void execute_csma_ca(void *arg)
 
             DPRINT("RETRY with dll_to = %i", dll_to);
 
-            // TODO shift channel queue
+            if(channel_list_length > 1) {
+                current_tx_channel_index = (current_tx_channel_index + 3) % channel_list_length;
+                current_channel_id = scan_automation_channel_list[current_tx_channel_index];
+                phy_enable_fast_hop(true);
+            }
 
             dll_tca = dll_to;
             dll_cca_started = timer_get_counter_value();
@@ -767,6 +774,7 @@ static void execute_csma_ca(void *arg)
         case DLL_STATE_CCA_FAIL:
         {
             // TODO hw_radio_set_idle();
+            phy_enable_fast_hop(false);
             switch_state(DLL_STATE_IDLE);
             d7anp_signal_transmission_failure();
             if (process_received_packets_after_tx)
@@ -855,7 +863,7 @@ void dll_execute_scan_automation()
         return;
     }
 
-    channel_list_length = 0; current_channel_index = 0;
+    channel_list_length = 0;
     for(uint8_t subprofile = 0; subprofile < SUBPROFILES_NB; subprofile++) {
         if((active_access_class & (1 << subprofile)) && 
            (current_access_profile.subprofiles[subprofile].subband_bitmap)) {
@@ -883,6 +891,9 @@ void dll_execute_scan_automation()
 
         return;
     }
+
+    current_rx_channel_index = 0;
+    set_sched_event = true;
 
     switch_state(DLL_STATE_SCAN_AUTOMATION);
 
@@ -1108,9 +1119,32 @@ void dll_tx_frame(packet_t* packet)
                          remote_access_profile.subbands[0].channel_index_start);
         dll_header->control_eirp_index = remote_access_profile.subbands[0].eirp + 32;
 
+        channel_list_length = 0;
+        for(uint8_t subprofile = 0; subprofile < SUBPROFILES_NB; subprofile++) {
+            if((packet->d7anp_addressee->access_mask & (1 << subprofile)) && (remote_access_profile.subprofiles[subprofile].subband_bitmap)) {
+                for(uint8_t subband = 0; subband < SUBBANDS_NB; subband++) {
+                    if(remote_access_profile.subprofiles[subprofile].subband_bitmap & (1 << subband)) {
+                        scan_automation_channel_list[channel_list_length].channel_header_raw = remote_access_profile.channel_header_raw;
+                        scan_automation_channel_list[channel_list_length].center_freq_index = remote_access_profile.subbands[subband].channel_index_start;
+                        channel_list_length++;
+                        if(channel_list_length == SCAN_AUTOMATION_CHANNEL_LIST_MAX_LENGTH) {
+                            DPRINT("Too many transmit channels activated, enlarge max channels!");
+                            subprofile = SUBPROFILES_NB;
+                            subband = SUBBANDS_NB;
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+
+        phy_enable_fast_hop(false);
+
+        current_tx_channel_index = (current_tx_channel_index + 3) % channel_list_length; //pseudorandom channel picker
+
         packet->phy_config.tx = (phy_tx_config_t){
-            .channel_id.channel_header_raw = remote_access_profile.channel_header_raw,
-            .channel_id.center_freq_index = remote_access_profile.subbands[0].channel_index_start,
+            .channel_id.channel_header_raw = scan_automation_channel_list[current_tx_channel_index].channel_header_raw,
+            .channel_id.center_freq_index = scan_automation_channel_list[current_tx_channel_index].center_freq_index,
             .eirp = remote_access_profile.subbands[0].eirp
         };
 
@@ -1134,8 +1168,6 @@ void dll_tx_frame(packet_t* packet)
             packet->ETA = tsched;
             DPRINT("This request requires ad-hoc sync with access scheduling period (Tsched) <%d> ti", packet->ETA);
         }
-
-        packet->phy_config.tx.syncword_class = PHY_SYNCWORD_CLASS1;
 
         // store the channel id and eirp
         current_eirp = packet->phy_config.tx.eirp;
