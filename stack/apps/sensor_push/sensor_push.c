@@ -54,6 +54,8 @@
   static i2c_handle_t* hts221_handle;
 #endif
 
+uint8_t alp_command[128];
+
 // Define the D7 interface configuration used for sending the ALP command on
 static alp_interface_config_t session_config = (alp_interface_config_t){
   .alp_itf_id = ALP_ITF_ID_D7ASP,
@@ -88,9 +90,6 @@ void execute_sensor_measurement()
   // Generate ALP command.
   // We will be sending a return file data action, without a preceding file read request.
   // This is an unsolicited message, where we push the sensor data to the gateway(s).
-
-  // allocate a buffer and fifo to store the command
-  uint8_t alp_command[128];
   fifo_t alp_command_fifo;
   fifo_init(&alp_command_fifo, alp_command, sizeof(alp_command));
 
