@@ -116,7 +116,9 @@ static void skip(fifo_t* fifo, uint16_t len) {
   {
     fifo->head_idx = fifo->head_idx % fifo->max_size;
   }
-  fifo->is_full = (len == 0);
+
+  if(len > 0)
+    fifo->is_full = 0;
 }
 
 error_t fifo_skip(fifo_t* fifo, uint16_t len) {

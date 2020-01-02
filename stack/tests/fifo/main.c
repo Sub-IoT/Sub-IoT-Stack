@@ -222,6 +222,20 @@ void test_remove_last_byte()
 
 }
 
+void test_pop_empty()
+{
+    fifo_t test_fifo;
+    uint8_t buffer[BUFFER_SIZE] = {0,1,2,3,4,5,6,7,8,9};
+    uint8_t expected[BUFFER_SIZE] = {0,1,2,3,4,5,6,7,8,9};
+    uint8_t buff[BUFFER_SIZE] = {0};
+
+    // single element pop
+    fifo_init(&test_fifo, buffer, BUFFER_SIZE);
+    assert(fifo_get_size(&test_fifo) == 0);
+    assert(fifo_pop(&test_fifo, buff, 0) == SUCCESS);
+    assert(fifo_get_size(&test_fifo) == 0);
+}
+
 int main(int argc, char *argv[])
 {
     printf("Testing fifo_peek ... ");
@@ -248,6 +262,8 @@ int main(int argc, char *argv[])
     test_remove_last_byte();
     printf("Success!\n");
 
-
+    printf("Testing fifo_pop with current size 0 ... ");
+    test_pop_empty();
+    printf("Success!\n");
 
 }

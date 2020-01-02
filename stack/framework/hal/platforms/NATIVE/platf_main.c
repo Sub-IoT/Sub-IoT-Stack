@@ -23,6 +23,7 @@
 #include "debug.h"
 #include "hwdebug.h"
 #include "hwradio.h"
+#include "hwuart.h"
 #include "errors.h"
 #include "blockdevice_ram.h"
 #include "framework_defs.h"
