@@ -531,6 +531,7 @@ static void configure_syncword(syncword_class_t syncword_class, const channel_id
 void continuous_tx_expiration()
 {
     hw_radio_enable_refill(false);
+    dll_execute_scan_automation();
     DPRINT("Continuous TX is now terminated");
 }
 
@@ -1004,14 +1005,15 @@ error_t phy_start_background_scan(phy_rx_config_t* config, phy_rx_packet_callbac
         config->rssi_thr = rssi; //Put new value to update E_CCA in higher layer
         return FAIL;
     }
-    config->rssi_thr = rssi;
     DEBUG_BG_END();
+
+    DPRINT("rssi %i > %i, waiting for BG frame on channel %i\n", rssi, config->rssi_thr, config->channel_id.center_freq_index);
+    config->rssi_thr = rssi;
 
     total_rssi_triggers++;
 
     status_write();
 
-    DPRINT("rssi %i > %i, waiting for BG frame on channel %i\n", rssi, config->rssi_thr, config->channel_id.center_freq_index);
 
     // the device has a period of To to successfully detect the sync word
     hw_radio_set_rx_timeout(bg_timeout[current_channel_id.channel_header.ch_class] + 40); //TO DO: OPTIMISE THIS TIMEOUT

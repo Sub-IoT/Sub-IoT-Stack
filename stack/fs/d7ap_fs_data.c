@@ -94,7 +94,7 @@ ap_no_scan = AccessProfile(
 # Scan period of 1 channel is ~ 2.5 ticks => minimum period of 10 ticks 
 ap_cont_div_scan = AccessProfile(
   channel_header=default_channel_header,
-  sub_profiles=[SubProfile(subband_bitmap=0b00001111, scan_automation_period=CT.compress(17, ceil=False))] * 4, #17 seems the best
+  sub_profiles=[SubProfile(subband_bitmap=0b00001111, scan_automation_period=CT.compress(17, ceil=False))] * 4,
   sub_bands=[SubBand(eirp=default_eirp, channel_index_start=default_channel_index, channel_index_end=default_channel_index, cca=80),
              SubBand(eirp=default_eirp, channel_index_start=channel_index_1, channel_index_end=channel_index_1, cca=80),
              SubBand(eirp=default_eirp, channel_index_start=channel_index_2, channel_index_end=channel_index_2, cca=80),
