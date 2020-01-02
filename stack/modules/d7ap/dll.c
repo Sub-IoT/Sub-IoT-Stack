@@ -722,7 +722,7 @@ static void execute_csma_ca(void *arg)
             DPRINT("RETRY with dll_to = %i", dll_to);
 
             if(channel_list_length > 1) {
-                current_tx_channel_index = (current_tx_channel_index + 3) % channel_list_length;
+                current_tx_channel_index = (uint8_t) get_rnd() % channel_list_length;
                 current_channel_id = scan_automation_channel_list[current_tx_channel_index];
                 phy_enable_fast_hop(true);
             }
@@ -1142,7 +1142,7 @@ void dll_tx_frame(packet_t* packet)
 
         phy_enable_fast_hop(false);
 
-        current_tx_channel_index = (current_tx_channel_index + 3) % channel_list_length; //pseudorandom channel picker
+        current_tx_channel_index = (uint8_t) get_rnd() % channel_list_length;
 
         packet->phy_config.tx = (phy_tx_config_t){
             .channel_id.channel_header_raw = scan_automation_channel_list[current_tx_channel_index].channel_header_raw,
