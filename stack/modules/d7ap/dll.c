@@ -377,8 +377,10 @@ void start_background_scan()
     } else {
         current_rx_channel_index = 0;
         set_sched_event = true;
-        if((err == FAIL) && (tsched > (10 * channel_list_length))) { //if nothing detected and long tsched, set to sleep mode
-            phy_switch_to_sleep_mode();
+        if(err == FAIL) {
+            phy_configure_channel(&scan_automation_channel_list[current_rx_channel_index]);
+            if(tsched > (10 * channel_list_length)) //if large tsched, set to sleep
+                phy_switch_to_sleep_mode();
         }
     }
 }

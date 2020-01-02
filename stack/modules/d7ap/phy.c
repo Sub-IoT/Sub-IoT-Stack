@@ -442,7 +442,7 @@ static void configure_eirp(eirp_t eirp)
     hw_radio_set_tx_power(eirp);
 }
 
-static void configure_channel(const channel_id_t* channel) {
+void phy_configure_channel(const channel_id_t* channel) {
     if(phy_radio_channel_ids_equal(&current_channel_id, channel) && !fact_settings_changed) {
         return;
     }
@@ -611,7 +611,7 @@ error_t phy_init(void) {
     fs_register_file_modified_callback(D7A_FILE_FACTORY_SETTINGS_FILE_ID, &fact_settings_file_change_callback);
 
     configure_syncword(PHY_SYNCWORD_CLASS0, &default_channel_id);
-    configure_channel(&default_channel_id);
+    phy_configure_channel(&default_channel_id);
     configure_eirp(10);
 
     //netdev->event_callback = _event_cb;
@@ -646,7 +646,7 @@ error_t phy_start_rx(channel_id_t* channel, syncword_class_t syncword_class, phy
         return SUCCESS;
     }
 
-    configure_channel(channel);
+    phy_configure_channel(channel);
     configure_syncword(syncword_class, channel);
 
     // Unlimited Length packet format to set the Receive packet of arbitrary length
@@ -671,7 +671,7 @@ error_t phy_start_energy_scan(channel_id_t* channel, rssi_valid_callback_t rssi_
     // We should not initiate a RSSI measurement before TX is completed
     assert(state != STATE_TX);
 
-    configure_channel(channel);
+    phy_configure_channel(channel);
     //configure_syncword(syncword_class, channel);
     hw_radio_set_payload_length(0x00); // unlimited length mode
 
@@ -733,7 +733,7 @@ error_t phy_send_packet(hw_radio_packet_t* packet, phy_tx_config_t* config, phy_
         phy_switch_to_standby_mode();
     }
 
-    configure_channel(&config->channel_id);
+    phy_configure_channel(&config->channel_id);
     configure_eirp(config->eirp);
     configure_syncword(config->syncword_class, &config->channel_id);
 
@@ -815,7 +815,7 @@ error_t phy_send_packet_with_advertising(hw_radio_packet_t* packet, phy_tx_confi
     DPRINT("Start the bg advertising for ad-hoc sync before transmitting the FG frame");
 
     configure_syncword(PHY_SYNCWORD_CLASS0, &config->channel_id);
-    configure_channel(&config->channel_id);
+    phy_configure_channel(&config->channel_id);
     configure_eirp(config->eirp);
 
     current_packet = packet;
@@ -980,7 +980,7 @@ error_t phy_start_background_scan(phy_rx_config_t* config, phy_rx_packet_callbac
     state = STATE_BG_SCAN;
 
     configure_syncword(PHY_SYNCWORD_CLASS0, &config->channel_id);
-    configure_channel(&config->channel_id);
+    phy_configure_channel(&config->channel_id);
 
     if (current_channel_id.channel_header.ch_coding == PHY_CODING_FEC_PN9)
         packet_len = fec_calculated_decoded_length(BACKGROUND_FRAME_LENGTH);
@@ -1034,7 +1034,7 @@ void phy_continuous_tx(phy_tx_config_t const* tx_cfg, uint8_t time_period, phy_t
         phy_switch_to_standby_mode();
     }
 
-    configure_channel(&tx_cfg->channel_id);
+    phy_configure_channel(&tx_cfg->channel_id);
     configure_eirp(tx_cfg->eirp);
     configure_syncword(tx_cfg->syncword_class, &tx_cfg->channel_id);
     hw_radio_enable_refill(true);

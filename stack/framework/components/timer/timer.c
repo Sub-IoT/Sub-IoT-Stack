@@ -370,7 +370,7 @@ static void timer_fired()
     if(timer_busy_programming && fired_by_interrupt)
         return;
     assert(NG(next_event) != NO_EVENT);
-    assert(NG(timers)[NG(next_event)].f != 0x0);
+    assert(NG(timers)[NG(next_event)].f != 0x0); //asserts when extensively testing (every 1 second send small advertising)
     sched_post_task_prio(NG(timers)[NG(next_event)].f, NG(timers)[NG(next_event)].priority, NG(timers)[NG(next_event)].arg);
     if(NG(timers)[NG(next_event)].period > 0) {
         task_t recursive_task = NG(timers)[NG(next_event)].f;
