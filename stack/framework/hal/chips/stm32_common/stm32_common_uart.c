@@ -225,6 +225,16 @@ static void uart_irq_handler(USART_TypeDef* uart) {
       LL_USART_ClearFlag_FE(uart);
     }
 
+    if(LL_USART_IsActiveFlag_ORE(uart))
+    {
+      LL_USART_ClearFlag_ORE(uart);
+    }
+
+     if(LL_USART_IsActiveFlag_PE(uart))
+    {
+      LL_USART_ClearFlag_PE(uart);
+    }
+
     // TODO other flags?
   }
 
