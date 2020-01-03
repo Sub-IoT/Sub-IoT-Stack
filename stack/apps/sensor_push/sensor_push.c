@@ -58,7 +58,7 @@ uint8_t alp_command[128];
 
 // Define the D7 interface configuration used for sending the ALP command on
 static alp_interface_config_t session_config = (alp_interface_config_t){
-  .alp_itf_id = ALP_ITF_ID_D7ASP,
+  .itf_id = ALP_ITF_ID_D7ASP,
   .d7ap_session_config = {
     .qos = {
         .qos_resp_mode = SESSION_RESP_MODE_PREFERRED,
@@ -71,7 +71,7 @@ static alp_interface_config_t session_config = (alp_interface_config_t){
             .id_type = ID_TYPE_NOID,
         },
         .access_class = 0x01,
-        .id = 0
+        .id = { 0 }
     }
   }
 };

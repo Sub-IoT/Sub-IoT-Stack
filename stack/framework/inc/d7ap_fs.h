@@ -23,7 +23,7 @@
  * @{
  * \brief Filesystem APIs
  * \author maarten.weyn@uantwerpen.be
- * \author	glenn.ergeerts@uantwerpen.be
+ * \author	glenn.ergeerts@aloxy.be
  * \author	philippe.nunes@cortus.com
  */
 
@@ -33,7 +33,6 @@
 #include "stdint.h"
 
 #include "dae.h"
-#include "d7ap.h"
 #include "fs.h"
 
 #define D7A_FILE_UID_FILE_ID 0x00
@@ -79,23 +78,6 @@
 #define D7AP_FS_USERFILES_COUNT (FRAMEWORK_FS_FILE_COUNT - D7AP_FS_SYSTEMFILES_COUNT)
 
 
-typedef struct __attribute__((__packed__))
-{
-    fs_storage_class_t storage_class : 2;
-    uint8_t _rfu : 2;
-    dae_act_condition_t action_condition : 3;
-    bool action_protocol_enabled : 1;
-} d7ap_fs_file_properties_t;
-
-typedef struct __attribute__((__packed__))
-{
-    uint8_t file_permissions; // TODO not used for now
-    d7ap_fs_file_properties_t file_properties;
-    uint8_t action_file_id;
-    uint8_t interface_file_id;
-    uint32_t length;
-    uint32_t allocated_length;
-} d7ap_fs_file_header_t;
 
 typedef enum {
   EM_OFF = 0,
@@ -105,14 +87,9 @@ typedef enum {
   EM_PER_TX = 4
 } engineering_mode_t;
 
-/**
- * \brief Callback function executed when D7AActP is triggered
- */
-typedef void (*d7ap_fs_d7aactp_callback_t)(d7ap_session_config_t* session_config, uint8_t* action, uint32_t action_length);
 
 void d7ap_fs_init();
 int d7ap_fs_init_file(uint8_t file_id, const d7ap_fs_file_header_t* file_header, const uint8_t* initial_data);
-int d7ap_fs_init_file_with_d7asp_interface_config(uint8_t file_id, const d7ap_session_config_t* fifo_config);
 
 int d7ap_fs_read_file(uint8_t file_id, uint32_t offset, uint8_t* buffer, uint32_t length);
 int d7ap_fs_write_file(uint8_t file_id, uint32_t offset, const uint8_t* buffer, uint32_t length);
@@ -138,8 +115,6 @@ int d7ap_fs_add_nwl_security_state_register_entry(dae_nwl_trusted_node_t *truste
 int d7ap_fs_update_nwl_security_state_register(dae_nwl_trusted_node_t *trusted_node, uint8_t trusted_node_index);
 
 uint32_t d7ap_fs_get_file_length(uint8_t file_id);
-
-bool d7ap_fs_register_d7aactp_callback(d7ap_fs_d7aactp_callback_t d7aactp_cb);
 
 #endif /* D7AP_FS_H_ */
 

@@ -25,7 +25,7 @@
 #include "fs.h"
 #include "d7ap.h"
 #include "d7ap_fs.h"
-
+#include "alp_layer.h"
 #include "hwsystem.h"
 #include "version.h"
 #include "key.h"
@@ -57,8 +57,6 @@
 
 #define IS_SYSTEM_FILE(file_id) (file_id <= 0x3F)
 
-static d7ap_fs_d7aactp_callback_t d7aactp_callback = NULL;
-
 #define FILE_SIZE_MAX (256 + sizeof(d7ap_fs_file_header_t))
 static uint8_t file_buffer[FILE_SIZE_MAX]; // statically allocated buffer used during file operations, to prevent stack overflow at runtime
 
@@ -71,21 +69,18 @@ static inline bool is_file_defined(uint8_t file_id)
 
 static void execute_d7a_action_protocol(uint8_t action_file_id, uint8_t interface_file_id)
 {
-  if(!d7aactp_callback) return;
-
   assert(is_file_defined(action_file_id));
   // TODO interface_file_id is optional, how do we code this in file header?
   // for now we assume it's always used
   assert(is_file_defined(interface_file_id));
 
-  d7ap_session_config_t fifo_config;
-  d7ap_fs_read_file(interface_file_id, 0, (uint8_t*)&fifo_config, sizeof(d7ap_session_config_t));
+  alp_interface_config_t itf_cfg;
+  d7ap_fs_read_file(interface_file_id, 0, (uint8_t*)&itf_cfg, sizeof(alp_interface_config_t));
   uint32_t action_len = d7ap_fs_get_file_length(action_file_id);
   assert(action_len <= FILE_SIZE_MAX);
   fs_read_file(action_file_id, sizeof(d7ap_fs_file_header_t), file_buffer, action_len);
 
-  // invoke application callback to parse and execute the action. Result is then given to the D7ASP layer
-  d7aactp_callback(&fifo_config, file_buffer, action_len);
+  alp_layer_process_command(file_buffer, action_len, &itf_cfg, NULL);
 }
 
 void d7ap_fs_init()
@@ -138,23 +133,6 @@ int d7ap_fs_init_file(uint8_t file_id, const d7ap_fs_file_header_t* file_header,
   rtc = fs_init_file(file_id, file_header->file_properties.storage_class,
                      (const uint8_t *)file_buffer, sizeof(d7ap_fs_file_header_t) + file_header->allocated_length);
   return rtc;
-}
-
-int d7ap_fs_init_file_with_d7asp_interface_config(uint8_t file_id, const d7ap_session_config_t* fifo_config)
-{
-  // TODO store in file 0x18-0x1F - reserved for D7AALP ?
-  assert(!IS_SYSTEM_FILE(file_id));
-  assert(!is_file_defined(file_id));
-
-  d7ap_fs_file_header_t file_header = (d7ap_fs_file_header_t){
-    .file_properties.action_protocol_enabled = 0,
-    .file_properties.storage_class = FS_STORAGE_PERMANENT,
-    .file_permissions = 0, // TODO
-    .length = sizeof(d7ap_session_config_t),
-    .allocated_length = sizeof(d7ap_session_config_t),
-  };
-
-  return (d7ap_fs_init_file(file_id, &file_header, (const uint8_t *)fifo_config));
 }
 
 int d7ap_fs_read_file(uint8_t file_id, uint32_t offset, uint8_t* buffer, uint32_t length)
@@ -379,10 +357,4 @@ uint32_t d7ap_fs_get_file_length(uint8_t file_id)
 
   d7ap_fs_read_file_header(file_id, &header);
   return header.length;
-}
-
-bool d7ap_fs_register_d7aactp_callback(d7ap_fs_d7aactp_callback_t d7aactp_cb)
-{
-  d7aactp_callback = d7aactp_cb;
-  return true;
 }

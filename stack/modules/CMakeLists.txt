@@ -45,6 +45,17 @@ ENDFOREACH()
 #Modules that are enabled will re-enable their parameters during declaration (eg by calling MODULE_PARAM)
 HIDE_PARAMETERS(MODULE_PARAM_LIST)
 
+# define the enabled modules in modules_defs.h
+#FOREACH(__dir ${MODULE_DIRS})
+#    GET_FILENAME_COMPONENT(__module_name ${__dir} NAME) # strip full path keeping only module name
+#    GEN_PREFIX(MODULE_PREFIX "MODULE" ${__module_name})
+#    IF(BUILD_MODULES AND ${MODULE_PREFIX})
+#        STRING(TOUPPER ${__module_name} __upper_name)
+#        MODULES_HEADER_DEFINE(BOOL MODULE_${__upper_name})
+#    ENDIF()
+#    UNSET(MODULE_PREFIX)
+#ENDFOREACH()
+
 #Finally Load the individual modules
 FOREACH(__dir ${MODULE_DIRS})
     GET_FILENAME_COMPONENT(__module_name ${__dir} NAME) # strip full path keeping only module name

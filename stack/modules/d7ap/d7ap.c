@@ -46,7 +46,7 @@ alp_interface_t d7_alp_interface;
 uint8_t alp_client_id;
 bool inited = false;
 alp_interface_config_t d7ap_session_config_buffer = (alp_interface_config_t) {
-    .alp_itf_id = ALP_ITF_ID_D7ASP
+    .itf_id = ALP_ITF_ID_D7ASP
 };
 
 void d7ap_add_result_to_array(d7ap_session_result_t* result, uint8_t* array) {
@@ -94,16 +94,10 @@ bool command_from_d7ap(uint8_t* payload, uint8_t len, d7ap_session_result_t resu
 error_t d7ap_alp_send(uint8_t* payload, uint8_t payload_length, uint8_t expected_response_length, uint16_t* trans_id, alp_interface_config_t* itf_cfg) {
     DPRINT("sending D7 packet");
     if(itf_cfg != NULL) {
-        return d7ap_send(alp_client_id, &itf_cfg->d7ap_session_config, payload, payload_length, expected_response_length, trans_id);
+        return d7ap_send(alp_client_id, (d7ap_session_config_t*)&itf_cfg->itf_config, payload, payload_length, expected_response_length, trans_id);
     } else {
         return d7ap_send(alp_client_id, NULL, payload, payload_length, expected_response_length, trans_id);
     }
-}
-
-void d7ap_alp_process_d7aactp(d7ap_session_config_t* session_config, uint8_t* alp_command, uint32_t alp_command_length) {
-    DPRINT("d7aactp triggered, processing command");
-    d7ap_session_config_buffer.d7ap_session_config = *session_config;
-    d7_alp_interface.receive_cb(alp_command, alp_command_length, &d7ap_session_config_buffer, NULL);
 }
 
 void d7ap_command_completed(uint16_t trans_id, error_t error) {
@@ -136,8 +130,6 @@ void d7ap_init()
     };
 
     alp_layer_register_interface(&d7_alp_interface);
-
-    d7ap_fs_register_d7aactp_callback(&d7ap_alp_process_d7aactp);
 
     d7ap_resource_desc_t alp_desc = {
       .receive_cb = response_from_d7ap,

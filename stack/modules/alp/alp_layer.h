@@ -92,6 +92,8 @@ void alp_layer_execute_command_over_itf(uint8_t* alp_command, uint8_t alp_comman
  */
 void alp_layer_register_interface(alp_interface_t* interface);
 
+bool alp_layer_process_command(uint8_t* payload, uint8_t payload_length, alp_interface_config_t* itf_cfg, alp_interface_status_t* itf_status);
+
 #endif /* ALP_LAYER_H_ */
 
 /** @}*/

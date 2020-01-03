@@ -120,9 +120,9 @@ typedef enum {
 } alp_query_arithmetic_comparison_type_t;
 
 typedef struct {
-    uint8_t alp_itf_id;
+    uint8_t itf_id;
     union {
-        uint8_t alp_itf_cfg[ALP_ITF_CONFIG_SIZE];
+        uint8_t itf_config[ALP_ITF_CONFIG_SIZE];
 #ifdef MODULE_D7AP
         d7ap_session_config_t d7ap_session_config;
 #endif
