@@ -908,7 +908,7 @@ void add_interface_status_lorawan(uint8_t* payload, uint8_t attempts, lorawan_st
 void lorawan_command_completed(lorawan_stack_status_t status, uint8_t attempts) {
   error_t status_buffer = (error_t)status;
   alp_interface_status_t result = (alp_interface_status_t) {
-    .type = current_lorawan_interface_type,
+    .itf_id = current_lorawan_interface_type,
     .len = 7
   };
   add_interface_status_lorawan(result.data, attempts, status);
@@ -922,7 +922,7 @@ static void lorawan_status_callback(lorawan_stack_status_t status, uint8_t attem
   command->respond_when_completed=true;
 
   alp_interface_status_t result = (alp_interface_status_t) {
-    .type = current_lorawan_interface_type,
+    .itf_id = current_lorawan_interface_type,
     .len = 7
   };
   add_interface_status_lorawan(result.data, attempts, status);
@@ -930,7 +930,7 @@ static void lorawan_status_callback(lorawan_stack_status_t status, uint8_t attem
   interface_lorawan_otaa.command_completed_cb(command->trans_id, NULL, &result);
 }
 
-static error_t lorawan_send_otaa(uint8_t* payload, uint8_t payload_length, uint8_t expected_response_length, uint16_t* trans_id, session_config_t* itf_cfg) {
+static error_t lorawan_send_otaa(uint8_t* payload, uint8_t payload_length, uint8_t expected_response_length, uint16_t* trans_id, alp_interface_config_t* itf_cfg) {
   if(!otaa_just_inited && (lorawan_otaa_is_joined(&itf_cfg->lorawan_session_config_otaa))) {
     DPRINT("sending otaa payload");
     current_lorawan_interface_type = ALP_ITF_ID_LORAWAN_OTAA;
@@ -946,7 +946,7 @@ static error_t lorawan_send_otaa(uint8_t* payload, uint8_t payload_length, uint8
   return SUCCESS;
 }
 
-static error_t lorawan_send_abp(uint8_t* payload, uint8_t payload_length, uint8_t expected_response_length, uint16_t* trans_id, session_config_t* itf_cfg) {
+static error_t lorawan_send_abp(uint8_t* payload, uint8_t payload_length, uint8_t expected_response_length, uint16_t* trans_id, alp_interface_config_t* itf_cfg) {
   if(!abp_just_inited) {
     itf_cfg->lorawan_session_config_abp.devAddr = __builtin_bswap32(itf_cfg->lorawan_session_config_abp.devAddr);
     itf_cfg->lorawan_session_config_abp.network_id = __builtin_bswap32(itf_cfg->lorawan_session_config_abp.network_id);
@@ -965,7 +965,7 @@ static void lorawan_error_handler(uint16_t* trans_id, lorawan_stack_status_t sta
     log_print_string("!!!LORAWAN ERROR: %d\n", status);
     error_t status_buffer = (error_t)status;
     alp_interface_status_t result = (alp_interface_status_t) {
-      .type = current_lorawan_interface_type,
+      .itf_id = current_lorawan_interface_type,
       .len = 7
     };
     add_interface_status_lorawan(result.data, 1, status);
@@ -975,12 +975,12 @@ static void lorawan_error_handler(uint16_t* trans_id, lorawan_stack_status_t sta
     lorawan_trans_id = *trans_id;
 }
 
-static void lorawan_init_otaa(session_config_t* session_cfg) {
+static void lorawan_init_otaa(alp_interface_config_t* session_cfg) {
   lorawan_stack_init_otaa(&session_cfg->lorawan_session_config_otaa);
   otaa_just_inited = true;
 }
 
-static void lorawan_init_abp(session_config_t* session_cfg) {
+static void lorawan_init_abp(alp_interface_config_t* session_cfg) {
   session_cfg->lorawan_session_config_abp.devAddr = __builtin_bswap32(session_cfg->lorawan_session_config_abp.devAddr);
   session_cfg->lorawan_session_config_abp.network_id = __builtin_bswap32(session_cfg->lorawan_session_config_abp.network_id);
   lorawan_stack_init_abp(&session_cfg->lorawan_session_config_abp);
