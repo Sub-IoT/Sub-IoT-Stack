@@ -40,6 +40,8 @@ ADD_LIBRARY(alp STATIC
     alp_cmd_handler.c
     alp_cmd_handler.h
     alp_layer.c
+    alp.c
+    alp.h
 )
 
 GET_PROPERTY(__global_include_dirs GLOBAL PROPERTY GLOBAL_INCLUDE_DIRECTORIES)

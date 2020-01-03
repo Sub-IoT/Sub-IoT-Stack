@@ -409,16 +409,17 @@ static alp_status_codes_t process_op_indirect_forward(alp_command_t* command, al
       session_config->alp_itf_id = *itf_id;
       if(re_read) {
         session_config_saved.alp_itf_id = *itf_id;
-        d7ap_fs_read_file(interface_file_id, 1, session_config_saved.raw_data, interfaces[i]->itf_cfg_len);
+        d7ap_fs_read_file(interface_file_id, 1, session_config_saved.alp_itf_cfg, interfaces[i]->itf_cfg_len);
       }
       if(!ctrl.b7) 
-        memcpy(session_config->raw_data, session_config_saved.raw_data, interfaces[i]->itf_cfg_len);
+        memcpy(session_config->alp_itf_cfg, session_config_saved.alp_itf_cfg, interfaces[i]->itf_cfg_len);
 #ifdef MODULE_D7
       else { //overload bit set
-        memcpy(session_config->raw_data, session_config_saved.raw_data, interfaces[i]->itf_cfg_len - 10);
-        err = fifo_pop(&command->alp_command_fifo, &session_config->raw_data[interfaces[i]->itf_cfg_len - 10], 2); assert(err == SUCCESS);
+          // TODO
+        memcpy(session_config->alp_itf_cfg, session_config_saved.alp_itf_cfg, interfaces[i]->itf_cfg_len - 10);
+        err = fifo_pop(&command->alp_command_fifo, &session_config->alp_itf_cfg[interfaces[i]->itf_cfg_len - 10], 2); assert(err == SUCCESS);
         uint8_t id_len = d7ap_addressee_id_length(session_config->d7ap_session_config.addressee.ctrl.id_type);
-        err = fifo_pop(&command->alp_command_fifo, &session_config->raw_data[interfaces[i]->itf_cfg_len - 8], id_len); assert(err == SUCCESS);
+        err = fifo_pop(&command->alp_command_fifo, &session_config->alp_itf_cfg[interfaces[i]->itf_cfg_len - 8], id_len); assert(err == SUCCESS);
       }
 #endif
       found = true;
@@ -437,9 +438,6 @@ static alp_status_codes_t process_op_indirect_forward(alp_command_t* command, al
 static alp_status_codes_t process_op_forward(alp_command_t* command, uint8_t* itf_id, alp_interface_config_t* session_config) {
   // TODO move session config to alp_command_t struct
   error_t err;
-  uint8_t requestAckBitLocation=1;
-  uint8_t adrEnabledLocation=2;
-  uint8_t session_config_flags;
   bool found = false;
   err = fifo_skip(&command->alp_command_fifo, 1); assert(err == SUCCESS); // skip the control byte
   err = fifo_pop(&command->alp_command_fifo, itf_id, 1); assert(err == SUCCESS);
@@ -448,13 +446,13 @@ static alp_status_codes_t process_op_forward(alp_command_t* command, uint8_t* it
       session_config->alp_itf_id = *itf_id;
       if(*itf_id == ALP_ITF_ID_D7ASP) {
 #ifdef MODULE_D7
-        uint8_t amount = interfaces[i]->itf_cfg_len - 8;
-        err = fifo_pop(&command->alp_command_fifo, session_config->raw_data, amount); assert(err == SUCCESS);
+        uint8_t min_size = interfaces[i]->itf_cfg_len - 8; // substract max size of responder ID
+        err = fifo_pop(&command->alp_command_fifo, session_config->alp_itf_cfg, min_size); assert(err == SUCCESS);
         uint8_t id_len = d7ap_addressee_id_length(session_config->d7ap_session_config.addressee.ctrl.id_type);
-        err = fifo_pop(&command->alp_command_fifo, &session_config->raw_data[amount], id_len); assert(err == SUCCESS);
+        err = fifo_pop(&command->alp_command_fifo, session_config->alp_itf_cfg + min_size, id_len); assert(err == SUCCESS);
 #endif
       } else {
-        err = fifo_pop(&command->alp_command_fifo, session_config->raw_data, interfaces[i]->itf_cfg_len); assert(err == SUCCESS);
+        err = fifo_pop(&command->alp_command_fifo, session_config->alp_itf_cfg, interfaces[i]->itf_cfg_len); assert(err == SUCCESS);
       }
       found = true;
       DPRINT("FORWARD %02X", *itf_id);

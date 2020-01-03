@@ -1,4 +1,4 @@
-/*! \file alpr.h
+/*! \file alp.h
  *
 
  *  \copyright (C) Copyright 2015 University of Antwerp and others (http://oss-7.cosys.be)
@@ -25,7 +25,7 @@
  * \ingroup D7AP
  * @{
  * \brief Application Layer Protocol APIs
- * \author	glenn.ergeerts@uantwerpen.be
+ * \author	glenn.ergeerts@aloxy.be
  */
 
 #ifndef ALP_H_
@@ -33,9 +33,17 @@
 
 #include "stdint.h"
 #include "stdbool.h"
+#include "modules_defs.h"
+
+#ifdef MODULE_D7AP
 #include "d7ap.h"
-#include "d7ap_fs.h"
+#endif
+
+#ifdef MODULE_LORAWAN
 #include "lorawan_stack.h"
+#endif
+
+#include "d7ap_fs.h"
 #include "dae.h"
 
 #include "fifo.h"
@@ -43,7 +51,7 @@
 #define MODULE_ALP_INTERFACE_SIZE 10
 
 #define ALP_PAYLOAD_MAX_SIZE D7A_PAYLOAD_MAX_SIZE // TODO configurable?
-
+#define ALP_ITF_CONFIG_SIZE 43
 
 typedef enum
 {
@@ -53,16 +61,6 @@ typedef enum
     ALP_ITF_ID_LORAWAN_OTAA = 0x03, // not part of the spec
     ALP_ITF_ID_D7ASP = 0xD7
 } alp_itf_id_t;
-
-typedef struct {
-    alp_itf_id_t alp_itf_id;
-    union {
-        d7ap_session_config_t d7ap_session_config;
-        lorawan_session_config_otaa_t lorawan_session_config_otaa;
-        lorawan_session_config_abp_t lorawan_session_config_abp;
-        uint8_t raw_data[43];
-    };
-} alp_interface_config_t;
 
 
 typedef enum {
@@ -120,6 +118,21 @@ typedef enum {
   ARITH_COMP_TYPE_GREATER_THAN = 4,
   ARITH_COMP_TYPE_GREATER_THAN_OR_EQUAL_TO = 5
 } alp_query_arithmetic_comparison_type_t;
+
+typedef struct {
+    uint8_t alp_itf_id;
+    union {
+        uint8_t alp_itf_cfg[ALP_ITF_CONFIG_SIZE];
+#ifdef MODULE_D7AP
+        d7ap_session_config_t d7ap_session_config;
+#endif
+#ifdef MODULE_LORAWAN
+        lorawan_session_config_otaa_t lorawan_session_config_otaa;
+        lorawan_session_config_abp_t lorawan_session_config_abp;
+#endif
+    };
+} alp_interface_config_t;
+
 
 /*! \brief The ALP CTRL header
  *
