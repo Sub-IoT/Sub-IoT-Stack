@@ -59,6 +59,7 @@ typedef enum
     ALP_ITF_ID_SERIAL = 0x01, // not part of the spec
     ALP_ITF_ID_LORAWAN_ABP = 0x02, // not part of the spec
     ALP_ITF_ID_LORAWAN_OTAA = 0x03, // not part of the spec
+    ALP_ITF_ID_APP = 0x04,
     ALP_ITF_ID_D7ASP = 0xD7
 } alp_itf_id_t;
 

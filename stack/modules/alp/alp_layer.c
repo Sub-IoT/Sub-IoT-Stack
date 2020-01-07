@@ -98,8 +98,8 @@ extern alp_interface_t* interfaces[MODULE_ALP_INTERFACE_SIZE];
 static alp_interface_config_t* session_config_buffer;
 static bool expect_completed = false;
 
-static alp_interface_t host_ift = (alp_interface_t){
-    .itf_id = ALP_ITF_ID_HOST,
+static alp_interface_t app_itf = (alp_interface_t){
+    .itf_id = ALP_ITF_ID_APP,
     .itf_cfg_len = 0,
     .itf_status_len = 0,
     .receive_cb = NULL,
@@ -109,11 +109,6 @@ static alp_interface_t host_ift = (alp_interface_t){
     .init_cb = NULL,
     .deinit_cb = NULL,
     .unique = NULL
-};
-
-static alp_interface_status_t host_itf_status = (alp_interface_status_t){
-    .itf_id = ALP_ITF_ID_HOST,
-    .len = 0
 };
 
 static void _async_process_command(void* arg);
@@ -172,10 +167,10 @@ void alp_layer_init(alp_init_args_t* alp_init_args, bool is_shell_enabled)
   init_commands();
 
   if(alp_init_args) {
-      host_ift.transmit_cb = alp_init_args->transmit_cb;
+      app_itf.transmit_cb = alp_init_args->transmit_cb;
   }
 
-  alp_layer_register_interface(&host_ift);
+  alp_layer_register_interface(&app_itf);
 
   alp_cmd_handler_register_interface();
 
