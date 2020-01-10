@@ -132,7 +132,7 @@ static channel_id_t scan_automation_channel_list[SCAN_AUTOMATION_CHANNEL_LIST_MA
 static uint8_t channel_list_length;
 static uint8_t current_rx_channel_index = 1;
 static uint8_t current_tx_channel_index = 1;
-static bool set_sched_event = true;
+static bool ready_for_bg_scan = true;
 
 static void execute_cca(void *arg);
 static void execute_csma_ca(void *arg);
@@ -320,12 +320,7 @@ void start_background_scan()
 {
     assert(dll_state == DLL_STATE_SCAN_AUTOMATION);
 
-    if(set_sched_event) {
-        // Start a new tsched timer
-        dll_background_scan_timer.next_event = tsched;
-        timer_add_event(&dll_background_scan_timer);
-        set_sched_event = false;
-    }
+    ready_for_bg_scan = false;
 
     current_channel_id = scan_automation_channel_list[current_rx_channel_index];
 
@@ -350,7 +345,7 @@ void start_background_scan()
     };
     error_t err = phy_start_background_scan(&config, &dll_signal_packet_received);
     if(err == SUCCESS) {
-        timer_cancel_event(&dll_background_scan_timer); //give time for scan to succeed
+        ready_for_bg_scan = false; //give time for scan to succeed
         DPRINT("triggered background scan on channel %i with rssi %i", current_channel_id.center_freq_index, config.rssi_thr);
     }
     if(rx_nf_method == D7ADLL_MEDIAN_OF_THREE) { 
@@ -368,7 +363,6 @@ void start_background_scan()
     if(current_rx_channel_index + 1 < channel_list_length) {
         current_rx_channel_index++;
         if(err == SUCCESS) {
-            set_sched_event = true;
             phy_enable_fast_hop(false);
         } else {
             sched_post_task(&start_background_scan);
@@ -376,8 +370,8 @@ void start_background_scan()
         }
     } else {
         current_rx_channel_index = 0;
-        set_sched_event = true;
         if(err == FAIL) {
+            ready_for_bg_scan = true;
             phy_configure_channel(&scan_automation_channel_list[current_rx_channel_index]);
             if(tsched > (10 * channel_list_length)) //if large tsched, set to sleep
                 phy_switch_to_sleep_mode();
@@ -385,11 +379,16 @@ void start_background_scan()
     }
 }
 
+void background_scan_trigger()
+{
+    if(ready_for_bg_scan)
+        start_background_scan();
+}
+
 void dll_stop_background_scan()
 {
     assert(dll_state == DLL_STATE_SCAN_AUTOMATION);
 
-    timer_cancel_event(&dll_background_scan_timer);
     hw_radio_set_idle();
 }
 
@@ -399,10 +398,10 @@ void dll_signal_packet_received(packet_t* packet)
     if(packet == NULL) { //empty packet means rx timeout triggered
         DPRINT("bg scan falsely triggered on channel %i, retry background scan", current_channel_id.center_freq_index);
         if(current_rx_channel_index == 0) { // new cycle
-            dll_background_scan_timer.next_event = tsched;
-            timer_add_event(&dll_background_scan_timer);
-        } else
+            ready_for_bg_scan = true;
+        } else {
             sched_post_task(&start_background_scan);
+        }
         return;
     }
     DPRINT("Processing received packet");
@@ -435,7 +434,13 @@ void dll_signal_packet_received(packet_t* packet)
     }
 
     packet_queue_mark_processing(packet);
-    packet_disassemble(packet);
+    if(!packet_disassemble(packet) && (packet->type == BACKGROUND_ADV)) {
+        if(current_rx_channel_index == 0) {
+            ready_for_bg_scan = true;
+        } else {
+            sched_post_task(&start_background_scan);
+        }
+    }
 
     // TODO check if more received packets are pending
 }
@@ -845,6 +850,7 @@ void dll_execute_scan_automation()
     // first make sure the background scan timer is stopped and the pending task canceled
     // since they might not be necessary for current active class anymore
     timer_cancel_event(&dll_background_scan_timer);
+    sched_cancel_task(&start_background_scan);
 
     DPRINT("DLL execute scan autom AC=0x%02x", active_access_class);
 
@@ -895,7 +901,6 @@ void dll_execute_scan_automation()
     }
 
     current_rx_channel_index = 0;
-    set_sched_event = true;
 
     switch_state(DLL_STATE_SCAN_AUTOMATION);
 
@@ -929,8 +934,9 @@ void dll_execute_scan_automation()
     {
         // If TSCHED > 0, an independent scheduler is set to generate regular scan start events at TSCHED rate.
         DPRINT("Perform a dll background scan at the end of TSCHED (%d ticks)", tsched);
+        ready_for_bg_scan = true;
         dll_background_scan_timer.next_event = tsched;
-        error_t rtc = timer_add_event(&dll_background_scan_timer);
+        error_t rtc = timer_add_recurring_event(&dll_background_scan_timer);
         assert(rtc == SUCCESS);
     }
 
@@ -1003,9 +1009,10 @@ void dll_init()
     timer_init_event(&dll_cca_timer, &execute_cca);
     timer_init_event(&dll_csma_timer, &execute_csma_ca);
     timer_init_event(&dll_scan_automation_timer, &execute_scan_automation);
-    timer_init_event(&dll_background_scan_timer, &start_background_scan);
+    timer_init_event(&dll_background_scan_timer, &background_scan_trigger);
     timer_init_event(&dll_guard_period_expiration_timer, &guard_period_expiration);
     timer_init_event(&dll_process_received_packet_timer, &packet_received);
+    sched_register_task(&start_background_scan);
 
     phy_init();
 
@@ -1046,6 +1053,7 @@ void dll_stop()
     timer_cancel_event(&dll_csma_timer);
     timer_cancel_event(&dll_scan_automation_timer);
     timer_cancel_event(&dll_background_scan_timer);
+    sched_cancel_task(&start_background_scan);
     timer_cancel_event(&dll_guard_period_expiration_timer);
     timer_cancel_event(&dll_process_received_packet_timer);
 }
@@ -1057,6 +1065,7 @@ void dll_tx_frame(packet_t* packet)
     if (dll_state == DLL_STATE_SCAN_AUTOMATION)
     {
         timer_cancel_event(&dll_background_scan_timer);
+        sched_cancel_task(&start_background_scan);
     }
 
     if (dll_state != DLL_STATE_FOREGROUND_SCAN)
@@ -1237,7 +1246,8 @@ static void start_foreground_scan()
 
     if (dll_state == DLL_STATE_SCAN_AUTOMATION)
     {
-        timer_cancel_event(&dll_background_scan_timer);
+        ready_for_bg_scan = false;
+        sched_cancel_task(&start_background_scan);
         hw_radio_set_idle();
     }
 
