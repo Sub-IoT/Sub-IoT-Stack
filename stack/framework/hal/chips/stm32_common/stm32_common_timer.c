@@ -186,6 +186,7 @@ error_t hw_timer_schedule(hwtimer_id_t timer_id, hwtimer_tick_t tick )
   ready_for_trigger = true;
   start_atomic();
 #if defined(STM32L0)
+      canceled_timer = false;
       cmp_reg_write_pending = true; // cleared in ISR
     __HAL_LPTIM_DISABLE_IT(&timer, LPTIM_IT_CMPM);
     __HAL_LPTIM_CLEAR_FLAG(&timer, LPTIM_FLAG_CMPM);

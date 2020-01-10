@@ -52,7 +52,10 @@ static volatile bool NGDEF(hw_event_scheduled);
 static volatile timer_tick_t NGDEF(timer_offset);
 static const hwtimer_info_t* timer_info;
 static bool timer_busy_programming = false;
+<<<<<<< HEAD
 static bool fired_by_interrupt = true;
+=======
+>>>>>>> timer bugfix: interrupts where still triggered when writing to compare register. Cancel timer was not active from the start. optimise multiple writes to same timer.
 enum
 {
     NO_EVENT = FRAMEWORK_TIMER_STACK_SIZE,
@@ -367,7 +370,11 @@ static void timer_overflow()
 
 static void timer_fired()
 {
+<<<<<<< HEAD
     if(timer_busy_programming && fired_by_interrupt)
+=======
+    if(timer_busy_programming)
+>>>>>>> timer bugfix: interrupts where still triggered when writing to compare register. Cancel timer was not active from the start. optimise multiple writes to same timer.
         return;
     assert(NG(next_event) != NO_EVENT);
     assert(NG(timers)[NG(next_event)].f != 0x0); //asserts when extensively testing (every 1 second send small advertising)
