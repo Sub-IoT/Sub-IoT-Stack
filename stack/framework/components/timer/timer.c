@@ -52,6 +52,7 @@ static volatile bool NGDEF(hw_event_scheduled);
 static volatile timer_tick_t NGDEF(timer_offset);
 static const hwtimer_info_t* timer_info;
 static bool timer_busy_programming = false;
+static bool fired_by_interrupt = true;
 enum
 {
     NO_EVENT = FRAMEWORK_TIMER_STACK_SIZE,
@@ -287,13 +288,21 @@ static void configure_next_event()
 			next_fire_time = NG(timers)[NG(next_event)].next_event;
       if ( (((int32_t)next_fire_time) - ((int32_t)current_time) - timer_info->min_delay_ticks) <= 0 )
 			{
-        DPRINT("will be late, sched immediately");
-        sched_post_task_prio(NG(timers)[NG(next_event)].f, NG(timers)[NG(next_event)].priority, NG(timers)[NG(next_event)].arg);
-				NG(timers)[NG(next_event)].f = 0x0;
+                DPRINT("will be late, sched immediately\n\n");
+                if(NG(timers)[NG(next_event)].f == 0)
+                    DPRINT("function was empty, skipping");
+                else {
+                    fired_by_interrupt = false;
+                    timer_fired();
+                }
 			}
 		}
     }
     while(NG(next_event) != NO_EVENT && ( (((int32_t)next_fire_time) - ((int32_t)current_time)  - timer_info->min_delay_ticks) <= 0  ) );
+
+    // if recursive event was scheduled immediately, don't set hw timer delay until last time in configure next event
+    if(!fired_by_interrupt)
+        return;
 
     //at this point NG(next_event) is eiter equal to NO_EVENT (no tasks left)
     //or we have the next event we can schedule
@@ -363,7 +372,7 @@ static void timer_overflow()
 
 static void timer_fired()
 {
-    if(timer_busy_programming)
+    if(timer_busy_programming && fired_by_interrupt)
         return;
     assert(NG(next_event) != NO_EVENT);
     assert(NG(timers)[NG(next_event)].f != 0x0);
@@ -372,8 +381,12 @@ static void timer_fired()
         task_t recursive_task = NG(timers)[NG(next_event)].f;
         NG(timers)[NG(next_event)].f = 0x0;
         timer_post_task_prio(recursive_task, timer_get_counter_value() + NG(timers)[NG(next_event)].recurring, NG(timers)[NG(next_event)].priority, NG(timers)[NG(next_event)].recurring, NG(timers)[NG(next_event)].arg);
+        fired_by_interrupt = true;
         return;
     }
     NG(timers)[NG(next_event)].f = 0x0;
-    configure_next_event();
+    if(fired_by_interrupt)
+        configure_next_event();
+    else
+        fired_by_interrupt = true;
 }
