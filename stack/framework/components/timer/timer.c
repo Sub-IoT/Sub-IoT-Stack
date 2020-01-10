@@ -80,11 +80,12 @@ error_t timer_init_event(timer_event* event, task_t callback)
     event->f = callback;
     event->arg = NULL;
     event->priority = MAX_PRIORITY;
+    event->recurring = 0;
     return (sched_register_task(callback)); // register the function callback to be called at the end of the timeout
 }
 
 static void configure_next_event();
-__LINK_C error_t timer_post_task_prio(task_t task, timer_tick_t fire_time, uint8_t priority, void *arg)
+__LINK_C error_t timer_post_task_prio(task_t task, timer_tick_t fire_time, uint8_t priority, timer_tick_t period, void *arg)
 {
     error_t status = ENOMEM;
     if (priority > MIN_PRIORITY)
@@ -111,6 +112,7 @@ __LINK_C error_t timer_post_task_prio(task_t task, timer_tick_t fire_time, uint8
             // it is allowed to update only the fire time
             if (NG(timers)[i].priority == priority)
             {
+                NG(timers)[i].recurring = period;
                 NG(timers)[i].next_event = fire_time;
                 goto config;
             }
@@ -129,6 +131,7 @@ __LINK_C error_t timer_post_task_prio(task_t task, timer_tick_t fire_time, uint8
         NG(timers)[empty_index].next_event = fire_time;
         NG(timers)[empty_index].priority = priority;
         NG(timers)[empty_index].arg = arg;
+        NG(timers)[empty_index].recurring = period;
     }
     else
         goto end;
@@ -153,7 +156,7 @@ config:
             DPRINT("next_fire_delay <%lu>" , next_fire_delay);
 
             int32_t old_fire_delay = ((int32_t)NG(timers)[NG(next_event)].next_event) - ((int32_t)counter);
-            do_config = next_fire_delay < old_fire_delay;
+            do_config = (next_fire_delay < old_fire_delay) || NG(next_event) == empty_index; //when same index is overwritten, also update
         }
 
         if (do_config)
@@ -193,7 +196,12 @@ __LINK_C error_t timer_cancel_task(task_t task)
 
 error_t timer_add_event(timer_event* event)
 {
-    return timer_post_task_prio(event->f, timer_get_counter_value() + event->next_event, event->priority, event->arg);
+    return timer_post_task_prio(event->f, timer_get_counter_value() + event->next_event, event->priority, 0, event->arg);
+}
+
+error_t timer_add_recurring_event(timer_event* event)
+{
+    return timer_post_task_prio(event->f, timer_get_counter_value() + event->next_event, event->priority, event->next_event, event->arg);
 }
 
 void timer_cancel_event(timer_event* event)
@@ -360,6 +368,12 @@ static void timer_fired()
     assert(NG(next_event) != NO_EVENT);
     assert(NG(timers)[NG(next_event)].f != 0x0);
     sched_post_task_prio(NG(timers)[NG(next_event)].f, NG(timers)[NG(next_event)].priority, NG(timers)[NG(next_event)].arg);
+    if(NG(timers)[NG(next_event)].recurring > 0) {
+        task_t recursive_task = NG(timers)[NG(next_event)].f;
+        NG(timers)[NG(next_event)].f = 0x0;
+        timer_post_task_prio(recursive_task, timer_get_counter_value() + NG(timers)[NG(next_event)].recurring, NG(timers)[NG(next_event)].priority, NG(timers)[NG(next_event)].recurring, NG(timers)[NG(next_event)].arg);
+        return;
+    }
     NG(timers)[NG(next_event)].f = 0x0;
     configure_next_event();
 }

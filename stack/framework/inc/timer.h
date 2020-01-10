@@ -63,6 +63,7 @@ typedef struct
     timer_tick_t next_event;
     uint8_t priority;
     void *arg;
+    timer_tick_t recurring;
 } timer_event;
 
 //a bit of dirty macro evaluation to prepend HWTIMER_FREQ_ to the value of 'FRAMEWORK_TIMER_RESOLUTION'
@@ -121,6 +122,7 @@ __LINK_C timer_tick_t timer_get_counter_value();
  * \param task		The task to be scheduled at the given time.
  * \param time		The time at which to schedule the task for execution.
  * \param priority	The priority with which the task should be executed
+ * \param period    The period on which the task should be repeated (0 is not repeated)
  *
  * \returns error_t	SUCCESS if the task was posted successfully
  *					ENOMEM if the task could not be posted there are already too
@@ -129,7 +131,7 @@ __LINK_C timer_tick_t timer_get_counter_value();
  *					EINVAL if an invalid priority was specified.
  *
  */
-__LINK_C error_t timer_post_task_prio(task_t task, timer_tick_t time, uint8_t priority, void *arg);
+__LINK_C error_t timer_post_task_prio(task_t task, timer_tick_t time, uint8_t priority, timer_tick_t period, void *arg);
 
 /*! \brief Post a task \<task\> to be scheduled at a given \<time\> with the default priority.
  *
@@ -149,7 +151,7 @@ __LINK_C error_t timer_post_task_prio(task_t task, timer_tick_t time, uint8_t pr
  *						   many tasks waiting for execution.
  * 					EALREADY if the task was already scheduled.
  */
-inline error_t timer_post_task(task_t task, timer_tick_t time) { return timer_post_task_prio(task,time,DEFAULT_PRIORITY,NULL);}
+inline error_t timer_post_task(task_t task, timer_tick_t time) { return timer_post_task_prio(task,time,DEFAULT_PRIORITY,0,NULL);}
 
 
 /*! \brief Post a task \<task\> to be scheduled with a certain \<delay\> with a given \<priority\>
@@ -175,7 +177,7 @@ inline error_t timer_post_task(task_t task, timer_tick_t time) { return timer_po
  */
 inline error_t timer_post_task_prio_delay(task_t task, timer_tick_t delay, uint8_t priority)
 {
-    return timer_post_task_prio(task, timer_get_counter_value() + delay, priority, NULL);
+    return timer_post_task_prio(task, timer_get_counter_value() + delay, priority, 0, NULL);
 }
 /*! \brief Post a task to be scheduled with a certain \<delay\> with the default priority.
  *
@@ -210,6 +212,17 @@ error_t timer_init_event(timer_event* event, task_t callback);
  *					EALREADY if the task was already scheduled.
  */
 error_t timer_add_event(timer_event* event);
+
+/*! \brief Schedule a given \<timer_event\> at a certain period
+ * 
+ * \param event		The event to schedule
+ * \returns error_t	SUCCESS if the task was posted successfully
+ *					ENOMEM if the task could not be posted there are already too
+ *						   many tasks waiting for execution.
+ *					EINVAL if an invalid priority was specified.
+ *					EALREADY if the task was already scheduled.
+ */
+error_t timer_add_recurring_event(timer_event* event);
 
 /*! \brief Cancel a previously scheduled task
  *
