@@ -54,8 +54,7 @@ static bool timer_inited = false;
 #if defined(STM32L0)
   static LPTIM_HandleTypeDef timer;
   static bool cmp_reg_write_pending = false;
-  static bool waiting_for_write = false;
-  static bool canceled_timer = false;
+  static bool ready_for_trigger = false;
 #elif defined(STM32L1)
   static TIM_HandleTypeDef timer;
 #endif
@@ -181,12 +180,12 @@ error_t hw_timer_schedule(hwtimer_id_t timer_id, hwtimer_tick_t tick )
  		return ESIZE;
  	if(!timer_inited)
  		return EOFF;
-  waiting_for_write = true;
+  //don't enable the interrupt while waiting to write a new compare value
+  ready_for_trigger = false;
   while(cmp_reg_write_pending); // prev write operation is pending, writing again before may give unpredicatable results (see datasheet), so block here
-  waiting_for_write = false;
+  ready_for_trigger = true;
   start_atomic();
 #if defined(STM32L0)
-      canceled_timer = false;
       cmp_reg_write_pending = true; // cleared in ISR
     __HAL_LPTIM_DISABLE_IT(&timer, LPTIM_IT_CMPM);
     __HAL_LPTIM_CLEAR_FLAG(&timer, LPTIM_FLAG_CMPM);
@@ -214,7 +213,7 @@ error_t hw_timer_cancel(hwtimer_id_t timer_id)
 #if defined(STM32L0)
     __HAL_LPTIM_DISABLE_IT(&timer, LPTIM_IT_CMPM);
     __HAL_LPTIM_CLEAR_FLAG(&timer, LPTIM_IT_CMPM);
-    canceled_timer = true;
+    ready_for_trigger = false;
 #elif defined(STM32L1)
     __HAL_TIM_DISABLE_IT(&timer, TIM_IT_CC1);
     __HAL_TIM_CLEAR_FLAG(&timer, TIM_IT_CC1);
@@ -290,7 +289,8 @@ void TIMER_ISR(void)
      // compare register write done, new writes are allowed now
      __HAL_LPTIM_CLEAR_FLAG(&timer, LPTIM_FLAG_CMPOK);
      __HAL_LPTIM_CLEAR_FLAG(&timer, LPTIM_IT_CMPM);
-     if(!waiting_for_write) {
+     // When timer event is canceled or when another event is already waiting to be written, don't enable the trigger
+     if(ready_for_trigger) {
       __HAL_LPTIM_ENABLE_IT(&timer, LPTIM_IT_CMPM);
      }
      cmp_reg_write_pending = false;
@@ -314,7 +314,8 @@ void TIMER_ISR(void)
     {
       //__HAL_LPTIM_DISABLE_IT(&timer, LPTIM_IT_CMPM);
       __HAL_LPTIM_CLEAR_FLAG(&timer, LPTIM_IT_CMPM);
-      if((compare_f != 0x0) && !cmp_reg_write_pending && !waiting_for_write && !canceled_timer) {
+      // do not trigger higher layer when compare register isn't fully written yet, another write is in queue or when the timer is canceled
+      if((compare_f != 0x0) && !cmp_reg_write_pending && ready_for_trigger) {
           compare_f();
       }
     }
