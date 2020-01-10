@@ -54,6 +54,8 @@ static bool timer_inited = false;
 #if defined(STM32L0)
   static LPTIM_HandleTypeDef timer;
   static bool cmp_reg_write_pending = false;
+  static bool waiting_for_write = false;
+  static bool canceled_timer = false;
 #elif defined(STM32L1)
   static TIM_HandleTypeDef timer;
 #endif
@@ -179,14 +181,16 @@ error_t hw_timer_schedule(hwtimer_id_t timer_id, hwtimer_tick_t tick )
  		return ESIZE;
  	if(!timer_inited)
  		return EOFF;
-
+  waiting_for_write = true;
   while(cmp_reg_write_pending); // prev write operation is pending, writing again before may give unpredicatable results (see datasheet), so block here
+  waiting_for_write = false;
   start_atomic();
 #if defined(STM32L0)
+      canceled_timer = false;
       cmp_reg_write_pending = true; // cleared in ISR
+    __HAL_LPTIM_DISABLE_IT(&timer, LPTIM_IT_CMPM);
     __HAL_LPTIM_CLEAR_FLAG(&timer, LPTIM_FLAG_CMPM);
     __HAL_LPTIM_COMPARE_SET(&timer, tick - 1);
-    __HAL_LPTIM_ENABLE_IT(&timer, LPTIM_IT_CMPM);
 #elif defined(STM32L1)
     __HAL_TIM_DISABLE_IT(&timer, TIM_IT_CC1);
     __HAL_TIM_SET_COMPARE(&timer, TIM_CHANNEL_1, tick);
@@ -195,7 +199,7 @@ error_t hw_timer_schedule(hwtimer_id_t timer_id, hwtimer_tick_t tick )
 #endif
     HAL_NVIC_ClearPendingIRQ(TIMER_IRQ);
   end_atomic();
-
+  
   return SUCCESS;
 }
 
@@ -210,6 +214,7 @@ error_t hw_timer_cancel(hwtimer_id_t timer_id)
 #if defined(STM32L0)
     __HAL_LPTIM_DISABLE_IT(&timer, LPTIM_IT_CMPM);
     __HAL_LPTIM_CLEAR_FLAG(&timer, LPTIM_IT_CMPM);
+    canceled_timer = true;
 #elif defined(STM32L1)
     __HAL_TIM_DISABLE_IT(&timer, TIM_IT_CC1);
     __HAL_TIM_CLEAR_FLAG(&timer, TIM_IT_CC1);
@@ -284,6 +289,10 @@ void TIMER_ISR(void)
   {
      // compare register write done, new writes are allowed now
      __HAL_LPTIM_CLEAR_FLAG(&timer, LPTIM_FLAG_CMPOK);
+     __HAL_LPTIM_CLEAR_FLAG(&timer, LPTIM_IT_CMPM);
+     if(!waiting_for_write) {
+      __HAL_LPTIM_ENABLE_IT(&timer, LPTIM_IT_CMPM);
+     }
      cmp_reg_write_pending = false;
   }
 
@@ -305,8 +314,9 @@ void TIMER_ISR(void)
     {
       //__HAL_LPTIM_DISABLE_IT(&timer, LPTIM_IT_CMPM);
       __HAL_LPTIM_CLEAR_FLAG(&timer, LPTIM_IT_CMPM);
-      if((compare_f != 0x0) && (cmp_reg_write_pending == false))
+      if((compare_f != 0x0) && !cmp_reg_write_pending && !waiting_for_write && !canceled_timer) {
           compare_f();
+      }
     }
   }
 
