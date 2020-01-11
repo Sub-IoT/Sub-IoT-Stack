@@ -54,7 +54,6 @@ typedef alp_status_codes_t (*alp_unhandled_read_action_callback)(alp_interface_s
 typedef struct {
     alp_command_completed_callback alp_command_completed_cb;
     alp_command_result_callback alp_command_result_cb;
-    transmit_callback transmit_cb; // TODO rename
     alp_received_unsolicited_data_callback alp_received_unsolicited_data_cb;
     /**
      * @brief alp_unhandled_read_action_cb Called when the stack received an ALP read action which cannot be processed against the local filesystem,
@@ -92,7 +91,9 @@ void alp_layer_execute_command_over_itf(uint8_t* alp_command, uint8_t alp_comman
  */
 void alp_layer_register_interface(alp_interface_t* interface);
 
-bool alp_layer_process_command(uint8_t* payload, uint8_t payload_length, alp_interface_config_t* itf_cfg, alp_interface_status_t* itf_status);
+bool alp_layer_process_command(uint8_t* payload, uint8_t payload_length, alp_itf_id_t origin_itf_id, alp_interface_status_t* itf_status);
+void alp_layer_received_response(uint16_t trans_id, uint8_t* payload, uint8_t payload_length, alp_interface_status_t* itf_status); // TODO merge with alp_layer_process_command()?
+void alp_layer_command_completed(uint16_t trans_id, error_t* error, alp_interface_status_t* status);
 
 #endif /* ALP_LAYER_H_ */
 

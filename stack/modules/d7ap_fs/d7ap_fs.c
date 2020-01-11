@@ -80,7 +80,8 @@ static void execute_d7a_action_protocol(uint8_t action_file_id, uint8_t interfac
   assert(action_len <= FILE_SIZE_MAX);
   fs_read_file(action_file_id, sizeof(d7ap_fs_file_header_t), file_buffer, action_len);
 
-  alp_layer_process_command(file_buffer, action_len, &itf_cfg, NULL);
+  // TODO
+  //alp_layer_process_command(file_buffer, action_len, &itf_cfg, NULL);
 }
 
 void d7ap_fs_init()

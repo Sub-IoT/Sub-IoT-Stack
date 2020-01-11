@@ -59,7 +59,6 @@ typedef enum
     ALP_ITF_ID_SERIAL = 0x01, // not part of the spec
     ALP_ITF_ID_LORAWAN_ABP = 0x02, // not part of the spec
     ALP_ITF_ID_LORAWAN_OTAA = 0x03, // not part of the spec
-    ALP_ITF_ID_APP = 0x04,
     ALP_ITF_ID_D7ASP = 0xD7
 } alp_itf_id_t;
 
@@ -123,6 +122,7 @@ typedef enum {
 typedef struct {
     uint8_t itf_id;
     union {
+        // 'known' interfaces can use the typed variable (which will be serialized when necessary), other interfaces need to fill the raw buffer
         uint8_t itf_config[ALP_ITF_CONFIG_SIZE];
 #ifdef MODULE_D7AP
         d7ap_session_config_t d7ap_session_config;
@@ -215,7 +215,15 @@ typedef struct {
 typedef struct {
     alp_itf_id_t itf_id;
     uint8_t len;
-    uint8_t data[40]; //  TODO union instead of fixed size?
+    union {
+      uint8_t itf_status[40];
+#ifdef MODULE_D7AP
+      d7ap_session_result_t d7ap_session_result;
+#endif
+#ifdef MODULE_LORAWAN
+      lorawan_session_result_t lorawan_session_result;
+#endif
+    };
 } alp_interface_status_t;
 
 
@@ -235,7 +243,6 @@ typedef struct {
 
 typedef bool (*receive_callback)(uint8_t* payload, uint8_t payload_length, alp_interface_config_t* session_config, alp_interface_status_t* itf_status);
 typedef void (*command_completed_callback)(uint16_t trans_id, error_t* error, alp_interface_status_t* status);
-typedef error_t (*transmit_callback)(uint8_t* payload, uint8_t payload_length, uint8_t expected_response_length, uint16_t* trans_id, alp_interface_config_t* itf_cfg); // TODO
 typedef void (*response_callback)(uint16_t trans_id, uint8_t* payload, uint8_t payload_length, alp_interface_status_t* itf_status);
 typedef void (*init_callback)(alp_interface_config_t* itf_cfg);
 typedef void (*deinit_callback)();
@@ -244,14 +251,14 @@ typedef struct {
     alp_itf_id_t itf_id;
     uint8_t itf_cfg_len;
     uint8_t itf_status_len;
-    receive_callback receive_cb;
-    command_completed_callback command_completed_cb;
-    response_callback response_cb;
-    transmit_callback transmit_cb;
-    init_callback init_cb;
-    deinit_callback deinit_cb;
-    bool unique;
+    response_callback response_cb; // TODO
+    error_t (*send_command)(uint8_t* payload, uint8_t payload_length, uint8_t expected_response_length, uint16_t* trans_id, alp_interface_config_t* itf_cfg); // TODO send_command send_command;
+    init_callback init_cb; // TODO
+    deinit_callback deinit_cb; // TODO
+
+    bool unique; // TODO
 } alp_interface_t;
+
 
 /*!
  * \brief Returns the ALP operation type contained in alp_command
@@ -267,11 +274,12 @@ alp_status_codes_t alp_register_interface(alp_interface_t* itf);
 void alp_append_tag_request_action(fifo_t* fifo, uint8_t tag_id, bool eop);
 void alp_append_read_file_data_action(fifo_t* fifo, uint8_t file_id, uint32_t offset, uint32_t length, bool resp, bool group);
 void alp_append_write_file_data_action(fifo_t* fifo, uint8_t file_id, uint32_t offset, uint32_t length, uint8_t* data, bool resp, bool group);
-void alp_append_forward_action(fifo_t* fifo, uint8_t itf_id, uint8_t *config, uint8_t config_len);
+void alp_append_forward_action(fifo_t* fifo, alp_interface_config_t* config, uint8_t config_len);
 void alp_append_return_file_data_action(fifo_t* fifo, uint8_t file_id, uint32_t offset, uint32_t length, uint8_t* data);
 void alp_append_length_operand(fifo_t* fifo, uint32_t length);
 void alp_append_create_new_file_data_action(fifo_t* fifo, uint8_t file_id, uint32_t length, fs_storage_class_t storage_class, bool resp, bool group);
 void alp_append_indirect_forward_action(fifo_t* fifo, uint8_t file_id, bool overload, uint8_t *overload_config, uint8_t overload_config_len);
+void alp_append_interface_status(fifo_t* fifo, alp_interface_status_t* status);
 
 uint32_t alp_parse_length_operand(fifo_t* cmd_fifo);
 alp_operand_file_offset_t alp_parse_file_offset_operand(fifo_t* cmd_fifo);

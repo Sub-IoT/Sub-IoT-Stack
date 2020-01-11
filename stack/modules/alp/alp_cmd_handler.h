@@ -33,36 +33,12 @@
 #include "d7ap.h"
 #include "alp_layer.h"
 
-#define ALP_CMD_HANDLER_ID 'D'
-
-typedef void (*alp_cmd_handler_appl_itf_callback)(uint8_t* alp_command, uint8_t alp_command_length);
 
 ///
 /// \brief Shell command handler for ALP interface
 /// \param cmd_fifo
 ///
 void alp_cmd_handler(fifo_t* cmd_fifo);
-
-///
-/// \brief Output ALP command to the shell interface
-/// \param alp_command
-/// \param alp_command_len
-///
-void alp_cmd_handler_output_alp_command(fifo_t* resp_fifo);
-
-///
-/// \brief Output received responses received from D7ASP to the shell interface
-/// \param d7asp_result
-/// \param alp_command
-/// \param alp_command_size
-///
-void alp_cmd_handler_output_response(alp_interface_status_t result, uint8_t *alp_command, uint8_t alp_command_size);
-
-///
-/// \brief Set the callback which will be called when an ALP command is received for the application interface
-/// \param cb
-///
-void alp_cmd_handler_set_appl_itf_callback(alp_cmd_handler_appl_itf_callback cb);
 
 ///
 /// \brief Modem interface command handler for ALP interface

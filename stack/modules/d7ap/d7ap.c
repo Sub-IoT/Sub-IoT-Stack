@@ -49,35 +49,19 @@ alp_interface_config_t d7ap_session_config_buffer = (alp_interface_config_t) {
     .itf_id = ALP_ITF_ID_D7ASP
 };
 
-void d7ap_add_result_to_array(d7ap_session_result_t* result, uint8_t* array) {
-    array[0] = ALP_OP_STATUS + (1 << 6);
-    array[1] = ALP_ITF_ID_D7ASP;
-    array[2] = 12 + d7ap_addressee_id_length(result->addressee.ctrl.id_type);
-    array[3] = result->channel.channel_header;
-    uint16_t center_freq = __builtin_bswap16(result->channel.center_freq_index);
-    memcpy(&array[4], (uint8_t*)&center_freq, 2);
-    array[6] = result->rx_level;
-    array[7] = result->link_budget;
-    array[8] = result->target_rx_level;
-    array[9] = result->status.raw;
-    array[10] = result->fifo_token;
-    array[11] = result->seqnr;
-    array[12] = result->response_to;
-    array[13] = result->addressee.ctrl.raw;
-    array[14] = result->addressee.access_class;
-    memcpy(&array[15], result->addressee.id, d7ap_addressee_id_length(result->addressee.ctrl.id_type));
-}
+
 
 void response_from_d7ap(uint16_t trans_id, uint8_t* payload, uint8_t len, d7ap_session_result_t result) {
     DPRINT("got response from d7 of trans %i with len %i and result linkbudget %i", trans_id, len, result.link_budget);
 
     alp_interface_status_t d7_status = (alp_interface_status_t) {
         .itf_id = ALP_ITF_ID_D7ASP,
-        .len = 15 + d7ap_addressee_id_length(result.addressee.ctrl.id_type)
+        .len = 15 + d7ap_addressee_id_length(result.addressee.ctrl.id_type),
+        .d7ap_session_result = result
     };
-    d7ap_add_result_to_array(&result, (uint8_t*)&d7_status.data);
+    //d7ap_add_result_to_array(&result, (uint8_t*)&d7_status.data);
 
-    d7_alp_interface.response_cb(trans_id, payload, len, &d7_status);
+    alp_layer_received_response(trans_id, payload, len, &d7_status);
 }
 
 bool command_from_d7ap(uint8_t* payload, uint8_t len, d7ap_session_result_t result) {
@@ -85,10 +69,10 @@ bool command_from_d7ap(uint8_t* payload, uint8_t len, d7ap_session_result_t resu
     alp_interface_status_t d7_status = (alp_interface_status_t) {
         .itf_id = ALP_ITF_ID_D7ASP,
         .len = 15 + d7ap_addressee_id_length(result.addressee.ctrl.id_type),
+        .d7ap_session_result = result
     };
-    d7ap_add_result_to_array(&result, (uint8_t*)&d7_status.data);
 
-    return d7_alp_interface.receive_cb(payload, len, NULL, &d7_status);
+    return alp_layer_process_command(payload, len, ALP_ITF_ID_D7ASP, &d7_status);
 }
 
 error_t d7ap_alp_send(uint8_t* payload, uint8_t payload_length, uint8_t expected_response_length, uint16_t* trans_id, alp_interface_config_t* itf_cfg) {
@@ -101,7 +85,7 @@ error_t d7ap_alp_send(uint8_t* payload, uint8_t payload_length, uint8_t expected
 }
 
 void d7ap_command_completed(uint16_t trans_id, error_t error) {
-    d7_alp_interface.command_completed_cb(trans_id, &error, NULL);
+    alp_layer_command_completed(trans_id, &error, NULL);
 }
 
 void d7ap_init()
@@ -120,10 +104,7 @@ void d7ap_init()
         .itf_id = 0xD7,
         .itf_cfg_len = sizeof(d7ap_session_config_t),
         .itf_status_len = sizeof(d7ap_session_result_t),
-        .transmit_cb = d7ap_alp_send,
-        .response_cb = NULL,
-        .command_completed_cb = NULL,
-        .receive_cb = NULL,
+        .send_command = d7ap_alp_send,
         .init_cb = (void (*)(alp_interface_config_t *))d7ap_init, //we do not use the session config in d7ap init
         .deinit_cb = d7ap_stop,
         .unique = true
