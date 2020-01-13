@@ -1004,6 +1004,7 @@ static void alp_layer_lorawan_init() {
     .itf_status_len = 7,
     .init = lorawan_init_otaa,
     .deinit = lorawan_stack_deinit,
+    .send_command = lorawan_send_otaa,
     .unique = true
   };
   alp_layer_register_interface(&interface_lorawan_otaa);
@@ -1014,6 +1015,7 @@ static void alp_layer_lorawan_init() {
     .itf_status_len = 7,
     .init = lorawan_init_abp,
     .deinit = lorawan_stack_deinit,
+    .send_command = lorawan_send_abp,
     .unique = true
   };
   alp_layer_register_interface(&interface_lorawan_abp);
