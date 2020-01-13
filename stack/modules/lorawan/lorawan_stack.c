@@ -717,7 +717,7 @@ lorawan_stack_status_t lorawan_stack_send(uint8_t* payload, uint8_t length, uint
   LoRaMacTxInfo_t txInfo;
   if(LoRaMacQueryTxPossible(app_data.BuffSize, &txInfo) != LORAMAC_STATUS_OK )
   {
-    log_print_string("TX not possible, max payloadsize %i, trying to transmit %i", txInfo.MaxPossiblePayload, txInfo.CurrentPayloadSize);
+    DPRINT("TX not possible, max payloadsize %i, trying to transmit %i", txInfo.MaxPossiblePayload, txInfo.CurrentPayloadSize);
     //state = STATE_SLEEP;
     return LORAWAN_STACK_ERROR_TX_NOT_POSSIBLE;
   }
