@@ -202,6 +202,7 @@ error_t timer_add_event(timer_event* event)
 
 error_t timer_add_recurring_event(timer_event* event)
 {
+    assert(event->next_event > timer_info->min_delay_ticks);
     return timer_post_task_prio(event->f, timer_get_counter_value() + event->next_event, event->priority, event->next_event, event->arg);
 }
 
