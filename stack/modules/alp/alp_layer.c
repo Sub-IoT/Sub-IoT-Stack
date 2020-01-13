@@ -88,7 +88,6 @@ static timer_event alp_layer_process_command_timer;
 static uint8_t previous_interface_file_id = 0;
 static bool interface_file_changed = true;
 static alp_interface_config_t session_config_saved;
-static uint8_t forwarded_alp_actions[ALP_PAYLOAD_MAX_SIZE]; // temp buffer statically allocated to prevent runtime stackoverflows
 static uint8_t alp_data[ALP_PAYLOAD_MAX_SIZE]; // temp buffer statically allocated to prevent runtime stackoverflows
 static uint8_t alp_data2[ALP_PAYLOAD_MAX_SIZE]; // temp buffer statically allocated to prevent runtime stackoverflows
 static alp_operand_file_data_t file_data_operand; // statically allocated to prevent runtime stackoverflows
@@ -162,29 +161,6 @@ void alp_layer_init(alp_init_args_t* alp_init_args, bool is_shell_enabled)
 
 void alp_layer_register_interface(alp_interface_t* interface) {
   alp_register_interface(interface);
-}
-
-static void generate_length_operand(fifo_t* cmd_fifo, uint32_t length) {
-  if(length < 64) {
-    // can be coded in one byte
-    fifo_put(cmd_fifo, (uint8_t*)&length, 1);
-    return;
-  }
-
-  uint8_t size = 1;
-  if(length > 0x3FFF)
-    size = 2;
-  if(length > 0x3FFFFF)
-    size = 3;
-
-  uint8_t byte = 0;
-  byte += (size << 6); // length specifier bits
-  byte += ((uint8_t*)(&length))[size];
-  fifo_put(cmd_fifo, &byte, 1);
-  do {
-    size--;
-    fifo_put(cmd_fifo, (uint8_t*)&length + size, 1);
-  } while(size > 0);
 }
 
 static alp_status_codes_t process_op_read_file_data(alp_command_t* command) {
@@ -480,6 +456,8 @@ static alp_status_codes_t process_op_status(alp_command_t* command) {
       assert(false);
 
   }
+
+  return ALP_STATUS_OK;
 }
 
 static alp_status_codes_t process_op_request_tag(alp_command_t* command, bool respond_when_completed) {
