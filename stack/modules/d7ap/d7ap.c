@@ -59,7 +59,6 @@ void response_from_d7ap(uint16_t trans_id, uint8_t* payload, uint8_t len, d7ap_s
         .len = 15 + d7ap_addressee_id_length(result.addressee.ctrl.id_type),
         .d7ap_session_result = result
     };
-    //d7ap_add_result_to_array(&result, (uint8_t*)&d7_status.data);
 
     alp_layer_received_response(trans_id, payload, len, &d7_status);
 }
@@ -105,8 +104,8 @@ void d7ap_init()
         .itf_cfg_len = sizeof(d7ap_session_config_t),
         .itf_status_len = sizeof(d7ap_session_result_t),
         .send_command = d7ap_alp_send,
-        .init_cb = (void (*)(alp_interface_config_t *))d7ap_init, //we do not use the session config in d7ap init
-        .deinit_cb = d7ap_stop,
+        .init = (void (*)(alp_interface_config_t *))d7ap_init, //we do not use the session config in d7ap init
+        .deinit = d7ap_stop,
         .unique = true
     };
 

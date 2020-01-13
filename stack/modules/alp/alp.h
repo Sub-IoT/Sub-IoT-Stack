@@ -241,21 +241,15 @@ typedef struct {
 
 } alp_action_t;
 
-typedef bool (*receive_callback)(uint8_t* payload, uint8_t payload_length, alp_interface_config_t* session_config, alp_interface_status_t* itf_status);
-typedef void (*command_completed_callback)(uint16_t trans_id, error_t* error, alp_interface_status_t* status);
-typedef void (*response_callback)(uint16_t trans_id, uint8_t* payload, uint8_t payload_length, alp_interface_status_t* itf_status);
-typedef void (*init_callback)(alp_interface_config_t* itf_cfg);
-typedef void (*deinit_callback)();
+typedef void (*interface_deinit)();
 
 typedef struct {
     alp_itf_id_t itf_id;
     uint8_t itf_cfg_len;
     uint8_t itf_status_len;
-    response_callback response_cb; // TODO
-    error_t (*send_command)(uint8_t* payload, uint8_t payload_length, uint8_t expected_response_length, uint16_t* trans_id, alp_interface_config_t* itf_cfg); // TODO send_command send_command;
-    init_callback init_cb; // TODO
-    deinit_callback deinit_cb; // TODO
-
+    error_t (*send_command)(uint8_t* payload, uint8_t payload_length, uint8_t expected_response_length, uint16_t* trans_id, alp_interface_config_t* itf_cfg);
+    void (*init)(alp_interface_config_t* itf_cfg);
+    interface_deinit deinit;
     bool unique; // TODO
 } alp_interface_t;
 

@@ -93,7 +93,9 @@ void alp_layer_register_interface(alp_interface_t* interface);
 
 bool alp_layer_process_command(uint8_t* payload, uint8_t payload_length, alp_itf_id_t origin_itf_id, alp_interface_status_t* itf_status);
 void alp_layer_received_response(uint16_t trans_id, uint8_t* payload, uint8_t payload_length, alp_interface_status_t* itf_status); // TODO merge with alp_layer_process_command()?
-void alp_layer_command_completed(uint16_t trans_id, error_t* error, alp_interface_status_t* status);
+void alp_layer_command_completed(uint16_t trans_id, error_t* error, alp_interface_status_t* itf_status);
+void alp_layer_process_d7aactp(d7ap_session_config_t* session_config, uint8_t* alp_command, uint32_t alp_command_length);
+
 
 #endif /* ALP_LAYER_H_ */
 

@@ -58,7 +58,7 @@
 
 static bool NGDEF(_shell_enabled);
 static alp_itf_id_t current_lorawan_interface_type = ALP_ITF_ID_LORAWAN_OTAA;
-static deinit_callback current_itf_deinit = NULL;
+static interface_deinit current_itf_deinit = NULL;
 #define shell_enabled NG(_shell_enabled)
 
 typedef struct {
@@ -161,7 +161,6 @@ void alp_layer_init(alp_init_args_t* alp_init_args, bool is_shell_enabled)
 }
 
 void alp_layer_register_interface(alp_interface_t* interface) {
-  interface->response_cb = alp_layer_received_response;
   alp_register_interface(interface);
 }
 
@@ -350,7 +349,7 @@ static void interface_file_changed_callback(uint8_t file_id) {
   interface_file_changed = true;
 }
 
-static alp_status_codes_t process_op_indirect_forward(alp_command_t* command, alp_itf_id_t* itf_id, alp_interface_config_t* session_config) {
+static alp_status_codes_t process_op_indirect_forward(alp_command_t* command, uint8_t* itf_id, alp_interface_config_t* session_config) {
   error_t err;
   bool re_read = false;
   bool found = false;
@@ -634,12 +633,15 @@ static bool alp_layer_parse_and_execute_alp_command(alp_command_t* command) {
       do_forward = true;
       for(uint8_t i = 0; i < MODULE_ALP_INTERFACE_SIZE; i++) {
         if(forward_itf_id == interfaces[i]->itf_id) {
-          if(interfaces[i]->unique && (interfaces[i]->deinit_cb != current_itf_deinit)) {
+          if(interfaces[i]->unique && (interfaces[i]->deinit != current_itf_deinit)) {
+            // TODO refactor?
             if(current_itf_deinit != NULL)
               current_itf_deinit();
-            interfaces[i]->init_cb(&session_config);
-            current_itf_deinit = interfaces[i]->deinit_cb;
+
+            interfaces[i]->init(&session_config);
+            current_itf_deinit = interfaces[i]->deinit;
           }
+
           uint8_t forwarded_alp_size = fifo_get_size(&command->alp_command_fifo);
           assert(forwarded_alp_size <= ALP_PAYLOAD_MAX_SIZE);
           uint8_t expected_response_length = alp_get_expected_response_length(command->alp_command_fifo);
@@ -649,6 +651,7 @@ static bool alp_layer_parse_and_execute_alp_command(alp_command_t* command) {
             DPRINT("transmit returned error %x", error);
             alp_layer_command_completed(command->trans_id, &error, NULL);
           }
+
           found = true;
           DPRINT("forwarded over interface %02X", forward_itf_id);
           break;
@@ -658,7 +661,8 @@ static bool alp_layer_parse_and_execute_alp_command(alp_command_t* command) {
         DPRINT("interface %02X not registered, can therefore not be forwarded");
         assert(false);
       }
-      return true;
+
+      return do_forward;
     }
 
     alp_control_t control;
@@ -719,7 +723,7 @@ bool alp_layer_process_command(uint8_t* payload, uint8_t payload_length, alp_itf
   command->origin_itf_id = origin_itf_id;
 
   if(itf_status != NULL) // TODO
-    current_status = *itf_status;
+      current_status = *itf_status;
 
   memcpy(command->alp_command, payload, payload_length);
   fifo_init_filled(&(command->alp_command_fifo), command->alp_command, payload_length, ALP_PAYLOAD_MAX_SIZE);
@@ -861,6 +865,32 @@ void alp_layer_received_response(uint16_t trans_id, uint8_t* payload, uint8_t pa
     init_args->alp_command_result_cb(itf_status, payload, payload_length);
 }
 
+#ifdef MODULE_D7
+void alp_layer_process_d7aactp(d7ap_session_config_t* session_config, uint8_t* alp_command, uint32_t alp_command_length)
+{
+    // TODO refactor, might be removed
+    uint8_t alp_result_length = 0;
+    alp_command_t* command = alloc_command();
+    assert(command != NULL);
+
+    memcpy(command->alp_command, alp_command, alp_command_length);
+    fifo_init_filled(&(command->alp_command_fifo), command->alp_command, alp_command_length, ALP_PAYLOAD_MAX_SIZE);
+    fifo_init(&(command->alp_response_fifo), command->alp_response, ALP_PAYLOAD_MAX_SIZE);
+
+    alp_layer_parse_and_execute_alp_command(command);
+
+    uint8_t expected_response_length = alp_get_expected_response_length(command->alp_response_fifo);
+    error_t error = d7ap_send(alp_client_id, session_config, command->alp_command,
+        alp_result_length, expected_response_length, &command->trans_id);
+
+    if (error)
+    {
+        DPRINT("d7ap_send returned an error %x", error);
+        free_command(command);
+    }
+}
+#endif // MODULE_D7
+
 #ifdef MODULE_LORAWAN
 alp_interface_t interface_lorawan_otaa;
 alp_interface_t interface_lorawan_abp;
@@ -972,9 +1002,8 @@ static void alp_layer_lorawan_init() {
     .itf_id = 0x03,
     .itf_cfg_len = sizeof(lorawan_session_config_otaa_t),
     .itf_status_len = 7,
-    .response_cb = NULL,
-    .init_cb = lorawan_init_otaa,
-    .deinit_cb = lorawan_stack_deinit,
+    .init = lorawan_init_otaa,
+    .deinit = lorawan_stack_deinit,
     .unique = true
   };
   alp_layer_register_interface(&interface_lorawan_otaa);
@@ -983,9 +1012,8 @@ static void alp_layer_lorawan_init() {
     .itf_id = ALP_ITF_ID_LORAWAN_ABP,
     .itf_cfg_len = sizeof(lorawan_session_config_abp_t),
     .itf_status_len = 7,
-    .response_cb = NULL,
-    .init_cb = lorawan_init_abp,
-    .deinit_cb = lorawan_stack_deinit,
+    .init = lorawan_init_abp,
+    .deinit = lorawan_stack_deinit,
     .unique = true
   };
   alp_layer_register_interface(&interface_lorawan_abp);

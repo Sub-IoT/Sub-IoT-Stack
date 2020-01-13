@@ -69,10 +69,9 @@ void alp_cmd_handler_register_interface() {
         .itf_id = ALP_ITF_ID_SERIAL,
         .itf_cfg_len = 0,
         .itf_status_len = 0,
-        .response_cb = NULL,
         .send_command = alp_cmd_send_output,
-        .init_cb = NULL,
-        .deinit_cb = NULL,
+        .init = NULL,
+        .deinit = NULL,
         .unique = false
     };
 
