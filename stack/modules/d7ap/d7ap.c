@@ -29,8 +29,6 @@
 #include "dae.h"
 #include "MODULE_D7AP_defs.h"
 
-#include "alp_layer.h"
-
 #if defined(FRAMEWORK_LOG_ENABLED) && defined(MODULE_D7AP_LOG_ENABLED)
 #include "log.h"
 #define DPRINT(...) log_print_stack_string(LOG_STACK_D7AP, __VA_ARGS__)
@@ -42,15 +40,17 @@
 
 d7ap_resource_desc_t registered_client[MODULE_D7AP_MAX_CLIENT_COUNT];
 uint8_t registered_client_nb = 0;
-alp_interface_t d7_alp_interface;
 uint8_t alp_client_id;
 bool inited = false;
+
+#ifdef MODULE_ALP
+alp_interface_t d7_alp_interface;
 alp_interface_config_t d7ap_session_config_buffer = (alp_interface_config_t) {
     .itf_id = ALP_ITF_ID_D7ASP
 };
+#endif // MODULE_ALP
 
-
-
+#ifdef MODULE_ALP
 void response_from_d7ap(uint16_t trans_id, uint8_t* payload, uint8_t len, d7ap_session_result_t result) {
     DPRINT("got response from d7 of trans %i with len %i and result linkbudget %i", trans_id, len, result.link_budget);
 
@@ -86,6 +86,7 @@ error_t d7ap_alp_send(uint8_t* payload, uint8_t payload_length, uint8_t expected
 void d7ap_command_completed(uint16_t trans_id, error_t error) {
     alp_layer_command_completed(trans_id, &error, NULL);
 }
+#endif // MODULE_ALP
 
 void d7ap_init()
 {
@@ -99,7 +100,8 @@ void d7ap_init()
     d7ap_stack_init();
     registered_client_nb = 0;
 
-    d7_alp_interface= (alp_interface_t) {
+#ifdef MODULE_ALP
+    d7_alp_interface = (alp_interface_t) {
         .itf_id = 0xD7,
         .itf_cfg_len = sizeof(d7ap_session_config_t),
         .itf_status_len = sizeof(d7ap_session_result_t),
@@ -120,6 +122,7 @@ void d7ap_init()
     alp_client_id = d7ap_register(&alp_desc);
 
     DPRINT("alp_client_id is %i",alp_client_id);
+#endif // MODULE_ALP
 }
 
 void d7ap_stop()
