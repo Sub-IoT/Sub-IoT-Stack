@@ -63,7 +63,7 @@ typedef struct
     timer_tick_t next_event;
     uint8_t priority;
     void *arg;
-    timer_tick_t recurring;
+    timer_tick_t period;
 } timer_event;
 
 //a bit of dirty macro evaluation to prepend HWTIMER_FREQ_ to the value of 'FRAMEWORK_TIMER_RESOLUTION'
@@ -212,17 +212,6 @@ error_t timer_init_event(timer_event* event, task_t callback);
  *					EALREADY if the task was already scheduled.
  */
 error_t timer_add_event(timer_event* event);
-
-/*! \brief Schedule a given \<timer_event\> at a certain period
- * 
- * \param event		The event to schedule
- * \returns error_t	SUCCESS if the task was posted successfully
- *					ENOMEM if the task could not be posted there are already too
- *						   many tasks waiting for execution.
- *					EINVAL if an invalid priority was specified.
- *					EALREADY if the task was already scheduled.
- */
-error_t timer_add_recurring_event(timer_event* event);
 
 /*! \brief Cancel a previously scheduled task
  *
