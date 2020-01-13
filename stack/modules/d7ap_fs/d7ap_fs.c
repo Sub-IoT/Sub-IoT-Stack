@@ -135,8 +135,9 @@ int d7ap_fs_init_file(uint8_t file_id, const d7ap_fs_file_header_t* file_header,
   if(initial_data != NULL)
     memcpy(file_buffer + sizeof (d7ap_fs_file_header_t), initial_data, file_header->length);
 
-  rtc = fs_init_file(file_id, file_header->file_properties.storage_class,
-                     (const uint8_t *)file_buffer, sizeof(d7ap_fs_file_header_t) + file_header->allocated_length);
+  fs_blockdevice_types_t bd_type = (file_header->file_properties.storage_class == FS_STORAGE_VOLATILE) ? FS_BLOCKDEVICE_TYPE_VOLATILE : FS_BLOCKDEVICE_TYPE_PERMANENT;
+
+  rtc = fs_init_file(file_id, bd_type, (const uint8_t *)file_buffer, sizeof(d7ap_fs_file_header_t) + file_header->allocated_length);
   return rtc;
 }
 
