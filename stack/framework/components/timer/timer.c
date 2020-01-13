@@ -51,6 +51,7 @@ static volatile timer_tick_t NGDEF(next_event);
 static volatile bool NGDEF(hw_event_scheduled);
 static volatile timer_tick_t NGDEF(timer_offset);
 static const hwtimer_info_t* timer_info;
+static bool timer_busy_programming = false;
 enum
 {
     NO_EVENT = FRAMEWORK_TIMER_STACK_SIZE,
@@ -265,6 +266,8 @@ static void configure_next_event()
 	timer_tick_t next_fire_time;
     timer_tick_t current_time = timer_get_counter_value();
 
+    timer_busy_programming = true;
+
     do
     {
 		//find the next event that has not yet passed, and schedule
@@ -321,6 +324,7 @@ static void configure_next_event()
 			NG(hw_event_scheduled) = false;
 		}
     }
+    timer_busy_programming = false;
 }
 static void timer_overflow()
 {
@@ -351,6 +355,8 @@ static void timer_overflow()
 
 static void timer_fired()
 {
+    if(timer_busy_programming)
+        return;
     assert(NG(next_event) != NO_EVENT);
     assert(NG(timers)[NG(next_event)].f != 0x0);
     sched_post_task_prio(NG(timers)[NG(next_event)].f, NG(timers)[NG(next_event)].priority, NG(timers)[NG(next_event)].arg);
