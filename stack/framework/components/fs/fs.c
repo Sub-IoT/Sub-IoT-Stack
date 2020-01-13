@@ -41,8 +41,6 @@
   #define DPRINT(...)
 #endif
 
-#define FS_BLOCKDEVICES_COUNT       3 // metadata, permanent and volatile
-
 static fs_file_t files[FRAMEWORK_FS_FILE_COUNT] = { 0 }; // TODO do not keep all file metadata in RAM but use smaller MRU cache to save RAM
 
 static bool is_fs_init_completed = false;  //set in _d7a_verify_magic()
@@ -54,13 +52,14 @@ static fs_modified_file_callback_t file_modified_callbacks[FRAMEWORK_FS_FILE_COU
 static uint32_t volatile_data_offset = 0;
 static uint32_t permanent_data_offset = 0;
 
-static blockdevice_t* bd[FS_BLOCKDEVICES_COUNT];
+static uint32_t bd_data_offset[FRAMEWORK_FS_BLOCKDEVICES_COUNT] = { 0 };
+static blockdevice_t* bd[FRAMEWORK_FS_BLOCKDEVICES_COUNT] = { 0 };
 
 /* forward internal declarations */
 static int _fs_init(void);
 static int _fs_create_magic(void);
 static int _fs_verify_magic(uint8_t* magic_number);
-static int _fs_create_file(uint8_t file_id, fs_storage_class_t storage_class, const uint8_t* initial_data, uint32_t length);
+static int _fs_create_file(uint8_t file_id, fs_blockdevice_types_t bd_type, const uint8_t* initial_data, uint32_t length);
 
 static inline bool _is_file_defined(uint8_t file_id)
 {
@@ -71,6 +70,18 @@ static inline bool _is_file_defined(uint8_t file_id)
 static inline uint32_t _get_file_header_address(uint8_t file_id)
 {
     return FS_FILE_HEADERS_ADDRESS + (file_id * FS_FILE_HEADER_SIZE);
+}
+
+error_t fs_register_block_device(blockdevice_t* block_device, uint8_t bd_index)
+{
+    if(bd_index > 2 && bd[bd_index] == NULL && block_device != NULL && bd_index < FRAMEWORK_FS_BLOCKDEVICES_COUNT)
+    {
+        bd[bd_index] = block_device;
+        return SUCCESS;
+    }
+    else
+        return FAIL;
+    
 }
 
 void fs_init()
@@ -126,27 +137,28 @@ int _fs_init()
             {
                 case FS_BLOCKDEVICE_TYPE_VOLATILE:
                 {
-                    //copy defaults from permanent storage to volatile
-                    uint8_t data = 0x00;
-                    for(int i=0; i < files[file_id].length; i++)
+                    //wipe volatile memory space
+                    uint8_t default_data[64];
+                    memset(default_data, 0xff, 64);
+                    uint32_t remaining_length = files[file_id].length;
+                    int i = 0;
+                    while(remaining_length > 64) 
                     {
-                        blockdevice_read(bd[FS_BLOCKDEVICE_TYPE_PERMANENT], &data, files[file_id].addr + i, 1);
-                        blockdevice_program(bd[FS_BLOCKDEVICE_TYPE_VOLATILE], &data, volatile_data_offset + i, 1);
-    
+                        blockdevice_program(bd[files[file_id].blockdevice_index], default_data, bd_data_offset[files[file_id].blockdevice_index] + (i * 64), 64);
+                        remaining_length -= 64;
+                        i++;
                     }
-                    // update file header
-                    files[file_id].addr = volatile_data_offset;
-                    volatile_data_offset += files[file_id].length;
-                    break;
-                }
-                case FS_BLOCKDEVICE_TYPE_PERMANENT:
-                {
-                    permanent_data_offset += files[file_id].length;
+                    blockdevice_program(bd[files[file_id].blockdevice_index], default_data, bd_data_offset[files[file_id].blockdevice_index]  + (i * 64), remaining_length);
+
+                    files[file_id].addr = bd_data_offset[files[file_id].blockdevice_index];
+                    bd_data_offset[files[file_id].blockdevice_index] += files[file_id].length;
                     break;
                 }
                 default:
-                    assert(false);
+                    files[file_id].addr = bd_data_offset[files[file_id].blockdevice_index];
+                    bd_data_offset[files[file_id].blockdevice_index] += files[file_id].length;
             }
+
         }
     }
     return 0;
@@ -177,7 +189,7 @@ static int _fs_verify_magic(uint8_t* expected_magic_number)
 }
 
 
-int _fs_create_file(uint8_t file_id, fs_storage_class_t storage_class, const uint8_t* initial_data, uint32_t length)
+int _fs_create_file(uint8_t file_id, fs_blockdevice_types_t bd_type, const uint8_t* initial_data, uint32_t length)
 {
     assert(file_id < FRAMEWORK_FS_FILE_COUNT);
 
@@ -185,19 +197,20 @@ int _fs_create_file(uint8_t file_id, fs_storage_class_t storage_class, const uin
         return -EEXIST;
 
     // update file caching for stat lookup
-    uint8_t bd_type = FS_BLOCKDEVICE_TYPE_PERMANENT;
-    if(storage_class == FS_STORAGE_VOLATILE)
-        bd_type = FS_BLOCKDEVICE_TYPE_VOLATILE;
-
     files[file_id].blockdevice_index = (uint8_t)bd_type;
     files[file_id].length = length;
 
     // only user files can be created
     assert(file_id >= 0x40);
 
-    if (bd_type == FS_BLOCKDEVICE_TYPE_PERMANENT)
+    if (bd_type == FS_BLOCKDEVICE_TYPE_VOLATILE)
     {
-        files[file_id].addr = permanent_data_offset;
+        files[file_id].addr = bd_data_offset[bd_type];
+        bd_data_offset[bd_type] += length;        
+    }
+    else
+    {
+        files[file_id].addr = bd_data_offset[bd_type];
 
 #if __BYTE_ORDER__ != __ORDER_BIG_ENDIAN__
         fs_file_t file_header_big_endian;
@@ -209,12 +222,7 @@ int _fs_create_file(uint8_t file_id, fs_storage_class_t storage_class, const uin
         blockdevice_program(bd[FS_BLOCKDEVICE_TYPE_METADATA], (uint8_t*)&files[file_id], _get_file_header_address(file_id), FS_FILE_HEADER_SIZE);
 #endif
 
-        permanent_data_offset += length;
-    }
-    else
-    {
-        files[file_id].addr = volatile_data_offset;
-        volatile_data_offset += length;
+        bd_data_offset[bd_type] += length;
     }
 
     if(initial_data != NULL) {
@@ -235,18 +243,17 @@ int _fs_create_file(uint8_t file_id, fs_storage_class_t storage_class, const uin
         blockdevice_program(bd[bd_type], default_data, files[file_id].addr  + (i * 64), remaining_length);
     }
 
-    DPRINT("fs init file(file_id %d, storage %d, addr %p, length %d)\n",file_id, storage_class, files[file_id].addr, length);
+    DPRINT("fs init file(file_id %d, bd_type %d, addr %p, length %d)\n",file_id, bd_type, files[file_id].addr, length);
     return 0;
 }
 
-int fs_init_file(uint8_t file_id, fs_storage_class_t storage_class, const uint8_t* initial_data, uint32_t length)
+int fs_init_file(uint8_t file_id, fs_blockdevice_types_t bd_type, const uint8_t* initial_data, uint32_t length)
 {
     assert(is_fs_init_completed);
     assert(file_id < FRAMEWORK_FS_FILE_COUNT);
     assert(file_id >= 0x40); // system files may not be inited
-    assert(storage_class == FS_STORAGE_VOLATILE || storage_class == FS_STORAGE_PERMANENT); // other options not implemented
-
-    return (_fs_create_file(file_id, storage_class, initial_data, length));
+   
+    return (_fs_create_file(file_id, bd_type, initial_data, length));
 }
 
 int fs_read_file(uint8_t file_id, uint32_t offset, uint8_t* buffer, uint32_t length)

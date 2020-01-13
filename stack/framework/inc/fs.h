@@ -33,9 +33,14 @@
 
 #include "framework_defs.h"
 #include "dae.h"
-
+#include "hwblockdevice.h"
+    
 #ifndef FRAMEWORK_FS_FILE_COUNT
 #define FRAMEWORK_FS_FILE_COUNT 70
+#endif
+
+#ifndef FRAMEWORK_FS_BLOCKDEVICES_COUNT
+#define FRAMEWORK_FS_BLOCKDEVICES_COUNT 3
 #endif
 
 #ifndef FRAMEWORK_FS_USER_FILE_COUNT
@@ -90,13 +95,15 @@ typedef struct __attribute__((__packed__))
 typedef void (*fs_modified_file_callback_t)(uint8_t file_id);
 
 void fs_init();
-int fs_init_file(uint8_t file_id, fs_storage_class_t storage, const uint8_t* initial_data, uint32_t length);
+int fs_init_file(uint8_t file_id, fs_blockdevice_types_t bd_type, const uint8_t* initial_data, uint32_t length);
 int fs_read_file(uint8_t file_id, uint32_t offset, uint8_t* buffer, uint32_t length);
 int fs_write_file(uint8_t file_id, uint32_t offset, const uint8_t* buffer, uint32_t length);
 fs_file_stat_t *fs_file_stat(uint8_t file_id);
 
 bool fs_register_file_modified_callback(uint8_t file_id, fs_modified_file_callback_t callback);
 bool fs_unregister_file_modified_callback(uint8_t file_id);
+
+error_t fs_register_block_device(blockdevice_t* block_device, uint8_t bd_index);
 
 #endif /* FS_H_ */
 
