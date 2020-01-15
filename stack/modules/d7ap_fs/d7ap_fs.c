@@ -70,7 +70,7 @@ static inline bool is_file_defined(uint8_t file_id)
     return (stat != NULL);
 }
 
-#ifdef MODULE_ALP
+#if defined(MODULE_ALP) && defined(MODULE_D7AP)
 static void execute_d7a_action_protocol(uint8_t action_file_id, uint8_t interface_file_id)
 {
   assert(is_file_defined(action_file_id));
@@ -87,7 +87,7 @@ static void execute_d7a_action_protocol(uint8_t action_file_id, uint8_t interfac
   //alp_layer_execute_command_over_itf(file_buffer, action_len, &itf_cfg);
   alp_layer_process_d7aactp(&itf_cfg.d7ap_session_config, file_buffer, action_len);
 }
-#endif // MODULE_ALP
+#endif // defined(MODULE_ALP) && defined(MODULE_D7AP)
 
 void d7ap_fs_init()
 {
@@ -161,13 +161,13 @@ int d7ap_fs_read_file(uint8_t file_id, uint32_t offset, uint8_t* buffer, uint32_
   if (rtc != 0)
     return rtc;
 
-#ifdef MODULE_ALP
+#if defined(MODULE_ALP) && defined(MODULE_D7AP)
   if(header.file_properties.action_protocol_enabled == true
      && header.file_properties.action_condition == D7A_ACT_COND_READ)
   {
     execute_d7a_action_protocol(header.action_file_id, header.interface_file_id);
   }
-#endif // MODULE_ALP
+#endif // defined(MODULE_ALP) && defined(MODULE_D7AP)
 
   return 0;
 }
@@ -224,13 +224,13 @@ int d7ap_fs_write_file(uint8_t file_id, uint32_t offset, const uint8_t* buffer, 
     return rtc;
 
 
-#ifdef MODULE_ALP
+#if defined(MODULE_ALP) && defined(MODULE_D7AP)
   if(header.file_properties.action_protocol_enabled == true
     && header.file_properties.action_condition == D7A_ACT_COND_WRITE) // TODO ALP_ACT_COND_WRITEFLUSH?
   {
     execute_d7a_action_protocol(header.action_file_id, header.interface_file_id);
   }
-#endif // MODULE_ALP
+#endif // defined(MODULE_ALP) && defined(MODULE_D7AP)
 
   return 0;
 }

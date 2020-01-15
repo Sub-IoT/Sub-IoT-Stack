@@ -35,9 +35,8 @@
 #include "modules_defs.h"
 #include "MODULE_ALP_defs.h"
 
-#define MODULE_D7
 
-#ifdef MODULE_D7
+#ifdef MODULE_D7AP
 #include "d7ap.h"
 #endif
 

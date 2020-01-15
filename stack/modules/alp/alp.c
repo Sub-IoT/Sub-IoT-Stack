@@ -185,15 +185,6 @@ void alp_append_return_file_data_action(fifo_t* fifo, uint8_t file_id, uint32_t 
   assert(fifo_put(fifo, data, length) == SUCCESS);
 }
 
-static void append_tag_response(fifo_t* fifo, uint8_t tag_id, bool eop, bool error) {
-  // fill response with tag response
-  uint8_t op_return_tag = ALP_OP_RESPONSE_TAG | (eop << 7);
-  op_return_tag |= (error << 6);
-  error_t err = fifo_put_byte(fifo, op_return_tag); assert(err == SUCCESS);
-  err = fifo_put_byte(fifo, tag_id); assert(err == SUCCESS);
-}
-
-
 static void parse_operand_file_data(fifo_t* fifo, alp_action_t* action) {
   action->file_data_operand.file_offset = alp_parse_file_offset_operand(fifo);
   action->file_data_operand.provided_data_length = alp_parse_length_operand(fifo);
@@ -378,6 +369,7 @@ void alp_append_write_file_data_action(fifo_t* fifo, uint8_t file_id, uint32_t o
 }
 
 void alp_append_interface_status(fifo_t* fifo, alp_interface_status_t* status) {
+#ifdef MODULE_D7AP
   if(status->itf_id == ALP_ITF_ID_D7ASP) {
     fifo_put_byte(fifo, ALP_OP_STATUS + (1 << 6));
     fifo_put_byte(fifo, ALP_ITF_ID_D7ASP);
@@ -399,7 +391,11 @@ void alp_append_interface_status(fifo_t* fifo, alp_interface_status_t* status) {
   else {
     assert(false);
   }
-  // TODO other interfaces + return error when not implemented
+#else
+    fifo_put_byte(fifo, ALP_OP_STATUS + (1 << 6));
+    fifo_put_byte(fifo, status->itf_id);
+    fifo_put(fifo, status->itf_status, status->len);
+#endif
 }
 
 void alp_append_create_new_file_data_action(fifo_t* fifo, uint8_t file_id, uint32_t length, fs_storage_class_t storage_class, bool resp, bool group) {
