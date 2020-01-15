@@ -32,6 +32,7 @@
 
 #ifdef MODULE_ALP
 #include "alp.h"
+#include "alp_layer.h"
 #endif
 
 #if defined(FRAMEWORK_LOG_ENABLED) && defined(MODULE_D7AP_LOG_ENABLED)
