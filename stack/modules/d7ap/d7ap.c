@@ -27,7 +27,12 @@
 #include "errors.h"
 #include "debug.h"
 #include "dae.h"
+#include "modules_defs.h"
 #include "MODULE_D7AP_defs.h"
+
+#ifdef MODULE_ALP
+#include "alp.h"
+#endif
 
 #if defined(FRAMEWORK_LOG_ENABLED) && defined(MODULE_D7AP_LOG_ENABLED)
 #include "log.h"
