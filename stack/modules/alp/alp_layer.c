@@ -358,7 +358,7 @@ static alp_status_codes_t process_op_indirect_forward(alp_command_t* command, ui
       }
       if(!ctrl.b7) 
         memcpy(session_config->itf_config, session_config_saved.itf_config, interfaces[i]->itf_cfg_len);
-#ifdef MODULE_D7
+#ifdef MODULE_D7AP
       else { //overload bit set
           // TODO
         memcpy(session_config->itf_config, session_config_saved.itf_config, interfaces[i]->itf_cfg_len - 10);
@@ -390,7 +390,7 @@ static alp_status_codes_t process_op_forward(alp_command_t* command, uint8_t* it
     if(*itf_id == interfaces[i]->itf_id) {
       session_config->itf_id = *itf_id;
       if(*itf_id == ALP_ITF_ID_D7ASP) {
-#ifdef MODULE_D7
+#ifdef MODULE_D7AP
         uint8_t min_size = interfaces[i]->itf_cfg_len - 8; // substract max size of responder ID
         err = fifo_pop(&command->alp_command_fifo, session_config->itf_config, min_size); assert(err == SUCCESS);
         uint8_t id_len = d7ap_addressee_id_length(session_config->d7ap_session_config.addressee.ctrl.id_type);
@@ -842,7 +842,7 @@ void alp_layer_received_response(uint16_t trans_id, uint8_t* payload, uint8_t pa
     init_args->alp_command_result_cb(itf_status, payload, payload_length);
 }
 
-#ifdef MODULE_D7
+#ifdef MODULE_D7AP
 void alp_layer_process_d7aactp(d7ap_session_config_t* session_config, uint8_t* alp_command, uint32_t alp_command_length)
 {
     // TODO refactor, might be removed
@@ -866,7 +866,7 @@ void alp_layer_process_d7aactp(d7ap_session_config_t* session_config, uint8_t* a
         free_command(command);
     }
 }
-#endif // MODULE_D7
+#endif // MODULE_D7AP
 
 #ifdef MODULE_LORAWAN
 alp_interface_t interface_lorawan_otaa;
