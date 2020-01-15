@@ -182,6 +182,8 @@ static void em_reset() {
 static void em_file_change_callback(uint8_t file_id) {
     uint8_t data[D7A_FILE_ENGINEERING_MODE_SIZE];
 
+    dll_stop();
+
     d7ap_fs_read_file(D7A_FILE_ENGINEERING_MODE_FILE_ID, 0, data, D7A_FILE_ENGINEERING_MODE_SIZE);
 
     d7ap_fs_engineering_mode_t* em_command = (d7ap_fs_engineering_mode_t*)data;

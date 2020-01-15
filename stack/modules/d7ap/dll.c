@@ -316,6 +316,16 @@ void median_measured_noisefloor(uint8_t position) {
         E_CCA = - current_access_profile.subbands[0].cca;
 }
 
+/* return to default values */
+void background_scan_return() {
+    phy_enable_fast_hop(true);
+    ready_for_bg_scan = true;
+    phy_configure_channel(&scan_automation_channel_list[current_rx_channel_index]);
+    phy_enable_fast_hop(false);
+    if(tsched > (10 * channel_list_length)) //if large tsched, set to sleep
+        phy_switch_to_sleep_mode();
+}
+
 void start_background_scan()
 {
     assert(dll_state == DLL_STATE_SCAN_AUTOMATION);
@@ -360,22 +370,15 @@ void start_background_scan()
         save_noise_floor(position);
     }
 
-    if(current_rx_channel_index + 1 < channel_list_length) {
-        current_rx_channel_index++;
-        if(err == SUCCESS) {
-            phy_enable_fast_hop(false);
-        } else {
+    phy_enable_fast_hop(err != SUCCESS);
+
+    current_rx_channel_index = (current_rx_channel_index + 1) % channel_list_length;
+
+    if(err != SUCCESS) {
+        if (current_rx_channel_index != 0)
             sched_post_task(&start_background_scan);
-            phy_enable_fast_hop(true);
-        }
-    } else {
-        current_rx_channel_index = 0;
-        if(err == FAIL) {
-            ready_for_bg_scan = true;
-            phy_configure_channel(&scan_automation_channel_list[current_rx_channel_index]);
-            if(tsched > (10 * channel_list_length)) //if large tsched, set to sleep
-                phy_switch_to_sleep_mode();
-        }
+        else
+            background_scan_return();
     }
 }
 
@@ -398,7 +401,7 @@ void dll_signal_packet_received(packet_t* packet)
     if(packet == NULL) { //empty packet means rx timeout triggered
         DPRINT("bg scan falsely triggered on channel %i, retry background scan", current_channel_id.center_freq_index);
         if(current_rx_channel_index == 0) { // new cycle
-            ready_for_bg_scan = true;
+            background_scan_return();
         } else {
             sched_post_task(&start_background_scan);
         }
@@ -436,7 +439,7 @@ void dll_signal_packet_received(packet_t* packet)
     packet_queue_mark_processing(packet);
     if(!packet_disassemble(packet) && (packet->type == BACKGROUND_ADV)) {
         if(current_rx_channel_index == 0) {
-            ready_for_bg_scan = true;
+            background_scan_return();
         } else {
             sched_post_task(&start_background_scan);
         }
@@ -936,7 +939,8 @@ void dll_execute_scan_automation()
         DPRINT("Perform a dll background scan at the end of TSCHED (%d ticks)", tsched);
         ready_for_bg_scan = true;
         dll_background_scan_timer.next_event = tsched;
-        error_t rtc = timer_add_recurring_event(&dll_background_scan_timer);
+        dll_background_scan_timer.period = tsched;
+        error_t rtc = timer_add_event(&dll_background_scan_timer);
         assert(rtc == SUCCESS);
     }
 

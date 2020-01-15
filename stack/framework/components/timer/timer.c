@@ -82,6 +82,7 @@ error_t timer_init_event(timer_event* event, task_t callback)
     event->arg = NULL;
     event->priority = MAX_PRIORITY;
     event->period = 0;
+    event->is_active = false;
     return (sched_register_task(callback)); // register the function callback to be called at the end of the timeout
 }
 
@@ -287,7 +288,10 @@ static void configure_next_event()
                 if(NG(timers)[NG(next_event)].f == 0)
                     DPRINT("function was empty, skipping");
                 else {
+                    start_atomic();
+                    NG(timers)[NG(next_event)].is_active = true;
                     fired_by_interrupt = false;
+                    end_atomic();
                     timer_fired();
                 }
 			}
@@ -367,7 +371,7 @@ static void timer_overflow()
 
 static void timer_fired()
 {
-    if(timer_busy_programming && fired_by_interrupt)
+    if((timer_busy_programming && fired_by_interrupt) || ((NG(timers)[NG(next_event)].f == 0x0) && !fired_by_interrupt) || (NG(timers)[NG(next_event)].is_active && fired_by_interrupt))
         return;
     assert(NG(next_event) != NO_EVENT);
     assert(NG(timers)[NG(next_event)].f != 0x0); //asserts when extensively testing (every 1 second send small advertising)
@@ -377,6 +381,7 @@ static void timer_fired()
         NG(timers)[NG(next_event)].f = 0x0;
         timer_post_task_prio(recursive_task, timer_get_counter_value() + NG(timers)[NG(next_event)].period, NG(timers)[NG(next_event)].priority, NG(timers)[NG(next_event)].period, NG(timers)[NG(next_event)].arg);
         fired_by_interrupt = true;
+        NG(timers)[NG(next_event)].is_active = false;
         return;
     }
     NG(timers)[NG(next_event)].f = 0x0;
@@ -384,4 +389,5 @@ static void timer_fired()
         configure_next_event();
     else
         fired_by_interrupt = true;
+    NG(timers)[NG(next_event)].is_active = false;
 }

@@ -64,6 +64,7 @@ typedef struct
     uint8_t priority;
     void *arg;
     timer_tick_t period;
+    bool is_active;
 } timer_event;
 
 //a bit of dirty macro evaluation to prepend HWTIMER_FREQ_ to the value of 'FRAMEWORK_TIMER_RESOLUTION'
