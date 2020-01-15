@@ -259,6 +259,7 @@ int fs_init_file(uint8_t file_id, fs_blockdevice_types_t bd_type, const uint8_t*
 int fs_read_file(uint8_t file_id, uint32_t offset, uint8_t* buffer, uint32_t length)
 {
     if(!_is_file_defined(file_id)) return -ENOENT;
+    assert(bd[files[file_id].blockdevice_index] != NULL);
 
     if(files[file_id].length < offset + length) return -EINVAL;
 
@@ -272,6 +273,7 @@ int fs_read_file(uint8_t file_id, uint32_t offset, uint8_t* buffer, uint32_t len
 int fs_write_file(uint8_t file_id, uint32_t offset, const uint8_t* buffer, uint32_t length)
 {
     if(!_is_file_defined(file_id)) return -ENOENT;
+    assert(bd[files[file_id].blockdevice_index] != NULL);
 
     if(files[file_id].length < offset + length) return -ENOBUFS;
 
