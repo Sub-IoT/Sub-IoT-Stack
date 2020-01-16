@@ -845,7 +845,6 @@ void alp_layer_received_response(uint16_t trans_id, uint8_t* payload, uint8_t pa
 void alp_layer_process_d7aactp(d7ap_session_config_t* session_config, uint8_t* alp_command, uint32_t alp_command_length)
 {
     // TODO refactor, might be removed
-    uint8_t alp_result_length = 0;
     alp_command_t* command = alloc_command();
     assert(command != NULL);
 
@@ -856,8 +855,8 @@ void alp_layer_process_d7aactp(d7ap_session_config_t* session_config, uint8_t* a
     alp_layer_parse_and_execute_alp_command(command);
 
     uint8_t expected_response_length = alp_get_expected_response_length(command->alp_response_fifo);
-    error_t error = d7ap_send(alp_client_id, session_config, command->alp_command,
-        alp_result_length, expected_response_length, &command->trans_id);
+    error_t error = d7ap_send(alp_client_id, session_config, command->alp_response,
+        fifo_get_size(&(command->alp_response_fifo)), expected_response_length, &command->trans_id);
 
     if (error)
     {
