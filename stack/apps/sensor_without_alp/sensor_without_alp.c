@@ -20,6 +20,7 @@
 // This example is similar to sensor_push except that it does not use the ALP layer.
 // Note that this only exist as an example on how to build without ALP layer, allowing you to plug other upper layer on top.
 // Other examples like the gateway are all based on ALP and thus not compatible with this example.
+// It will also be in RX mode continuously allowing to flash on 2 devices which will receive each other
 
 
 #include <stdio.h>
@@ -92,19 +93,18 @@ void execute_sensor_measurement()
 void on_receive(uint16_t trans_id, uint8_t* payload, uint8_t len, d7ap_session_result_t result)
 {
     log_print_string("Received\n");
-    assert(false);
 }
 
 void on_transmitted(uint16_t trans_id, error_t error)
 {
     log_print_string("Transmitted (with error: %i)\n", error);
-    timer_post_task(&execute_sensor_measurement, SENSOR_INTERVAL_SEC);
+    timer_post_task_delay(&execute_sensor_measurement, SENSOR_INTERVAL_SEC);
 }
 
 bool on_unsolicited_response(uint8_t* payload, uint8_t len, d7ap_session_result_t result)
 {
     log_print_string("Unsolicited response received\n");
-    assert(false);
+    return false;
 }
 
 void bootstrap()
@@ -113,6 +113,8 @@ void bootstrap()
 
     d7ap_init();
     d7_client_id = d7ap_register(&callbacks);
+
+    d7ap_set_access_class(0x01); // continuous FS scan
 
     sched_register_task(&execute_sensor_measurement);
     sched_post_task(&execute_sensor_measurement);
