@@ -101,23 +101,34 @@ void init_user_files()
   d7ap_fs_init_file(ACTION_FILE_ID, &action_file_header, alp_command);
 
   // define the D7 interface configuration used for sending the result of above ALP command on
-  d7ap_session_config_t session_config = {
-    .qos = {
-      .qos_resp_mode = SESSION_RESP_MODE_NO,
-      .qos_retry_mode = SESSION_RETRY_MODE_NO
-    },
-    .dormant_timeout = 0,
-    .addressee = {
-      .ctrl = {
-        .nls_method = AES_NONE,
-        .id_type = ID_TYPE_NOID,
-      },
-      .access_class = 0x01,
-      .id = 0
+  alp_interface_config_t itf_cfg = {
+    .itf_id = ALP_ITF_ID_D7ASP,
+    .d7ap_session_config = {
+        .qos = {
+          .qos_resp_mode = SESSION_RESP_MODE_NO,
+          .qos_retry_mode = SESSION_RETRY_MODE_NO
+        },
+        .dormant_timeout = 0,
+        .addressee = {
+          .ctrl = {
+            .nls_method = AES_NONE,
+            .id_type = ID_TYPE_NOID,
+          },
+          .access_class = 0x01,
+          .id = 0
+        }
     }
   };
 
-  d7ap_fs_init_file_with_d7asp_interface_config(INTERFACE_FILE_ID, &session_config);
+  d7ap_fs_file_header_t itf_file_header = (d7ap_fs_file_header_t){
+      .file_properties.action_protocol_enabled = 0,
+      .file_properties.storage_class = FS_STORAGE_PERMANENT,
+      .file_permissions = 0, // TODO
+      .length = sizeof(alp_interface_config_t),
+      .allocated_length = sizeof(alp_interface_config_t),
+  };
+
+  d7ap_fs_init_file(INTERFACE_FILE_ID, &itf_file_header, (const uint8_t *)&itf_cfg);
 
   // finally, register the sensor file, configured to use D7AActP
   d7ap_fs_file_header_t file_header = (d7ap_fs_file_header_t){

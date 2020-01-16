@@ -21,9 +21,9 @@
 
 #include "d7ap_fs.h"
 #include "platform_defs.h"
-#include "MODULE_D7AP_defs.h"
+#include "MODULE_D7AP_FS_defs.h"
 
-#ifdef MODULE_D7AP_USE_DEFAULT_SYSTEMFILES
+#ifdef MODULE_D7AP_FS_USE_DEFAULT_SYSTEMFILES
 
 // The cog section below does not generate code but defines some global variables and functions which are used in subsequent cog sections below,
 // which do the actual code generation
@@ -887,10 +887,6 @@ __attribute__((used)) uint8_t d7ap_files_data[FRAMEWORK_FS_PERMANENT_STORAGE_SIZ
       //[[[end]]] (checksum: a696b8a4ac0ffb529700f64b24a93fbd)
   };
 
-fs_filesystem_t d7ap_filesystem __attribute__((used)) = {
-  .metadata = d7ap_fs_metadata,
-  .files_data = d7ap_files_data
-};
 #endif
 
 // The userfiles are only stored in RAM for now

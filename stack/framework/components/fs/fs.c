@@ -57,8 +57,8 @@ static uint32_t permanent_data_offset = 0;
 static blockdevice_t* bd[FS_BLOCKDEVICES_COUNT];
 
 /* forward internal declarations */
-static int _fs_init_permanent_systemfiles(fs_filesystem_t* fs);
-static int _fs_create_magic();
+static int _fs_init(void);
+static int _fs_create_magic(void);
 static int _fs_verify_magic(uint8_t* magic_number);
 static int _fs_create_file(uint8_t file_id, fs_storage_class_t storage_class, const uint8_t* initial_data, uint32_t length);
 
@@ -73,7 +73,7 @@ static inline uint32_t _get_file_header_address(uint8_t file_id)
     return FS_FILE_HEADERS_ADDRESS + (file_id * FS_FILE_HEADER_SIZE);
 }
 
-void fs_init(fs_filesystem_t* provisioning)
+void fs_init()
 {
     if (is_fs_init_completed)
         return /*0*/;
@@ -86,20 +86,19 @@ void fs_init(fs_filesystem_t* provisioning)
     bd[FS_BLOCKDEVICE_TYPE_PERMANENT] = PLATFORM_PERMANENT_BLOCKDEVICE;
     bd[FS_BLOCKDEVICE_TYPE_VOLATILE] = PLATFORM_VOLATILE_BLOCKDEVICE;
 
-    if (provisioning)
-        _fs_init_permanent_systemfiles(provisioning);
+    _fs_init();
 
     is_fs_init_completed = true;
     DPRINT("fs_init OK");
 }
 
-int _fs_init_permanent_systemfiles(fs_filesystem_t* permanent_systemfiles)
+int _fs_init()
 {
     uint8_t expected_magic_number[FS_MAGIC_NUMBER_SIZE] = FS_MAGIC_NUMBER;
     if (_fs_verify_magic(expected_magic_number) < 0)
     {
         DPRINT("fs_init: no valid magic, recreating fs...");
-        _fs_create_magic(FS_STORAGE_PERMANENT);
+        _fs_create_magic();
    }
 
     // initialise system file caching
@@ -114,6 +113,7 @@ int _fs_init_permanent_systemfiles(fs_filesystem_t* permanent_systemfiles)
     {
         blockdevice_read(bd[FS_BLOCKDEVICE_TYPE_METADATA], (uint8_t*)&files[file_id],
                          _get_file_header_address(file_id), FS_FILE_HEADER_SIZE);
+
 #if __BYTE_ORDER__ != __ORDER_BIG_ENDIAN__
         // FS headers are stored in big endian
         files[file_id].addr = __builtin_bswap32(files[file_id].addr);

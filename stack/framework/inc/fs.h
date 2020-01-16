@@ -32,6 +32,7 @@
 #include <stdbool.h>
 
 #include "framework_defs.h"
+#include "dae.h"
 
 #ifndef FRAMEWORK_FS_FILE_COUNT
 #define FRAMEWORK_FS_FILE_COUNT 70
@@ -59,13 +60,6 @@
 #define FS_FILE_HEADERS_ADDRESS 8
 #define FS_FILE_HEADER_SIZE sizeof(fs_file_t)
 
-typedef enum
-{
-    FS_STORAGE_TRANSIENT = 0, // The content is not kept in memory. It cannot be read back.
-    FS_STORAGE_VOLATILE = 1,  // The content is kept in a volatile memory of the device. It is accessible for read, and is lost on power off.
-    FS_STORAGE_RESTORABLE = 2, // The content is kept in a volatile memory of the device. It is accessible for read, and can be backed-up upon request in a permanent storage location. It is restored from the permanent location on device power on.
-    FS_STORAGE_PERMANENT = 3  // The content is kept in a permanent memory of the device. It is accessible for read and write
-} fs_storage_class_t;
 
 typedef enum
 {
@@ -95,16 +89,7 @@ typedef struct __attribute__((__packed__))
  * **/
 typedef void (*fs_modified_file_callback_t)(uint8_t file_id);
 
-/**
- * @brief Descriptor of a file system
- */
-typedef struct __attribute__((__packed__)) {
-  uint8_t* metadata; // magic number + #files + file headers
-  uint8_t* files_data; /**< Files data array */
-  // TODO
-} fs_filesystem_t;
-
-void fs_init(fs_filesystem_t* provisioning);
+void fs_init();
 int fs_init_file(uint8_t file_id, fs_storage_class_t storage, const uint8_t* initial_data, uint32_t length);
 int fs_read_file(uint8_t file_id, uint32_t offset, uint8_t* buffer, uint32_t length);
 int fs_write_file(uint8_t file_id, uint32_t offset, const uint8_t* buffer, uint32_t length);

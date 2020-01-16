@@ -16,41 +16,26 @@
  * limitations under the License.
  */
 
+#include <stdio.h>
+#include "console.h"
+#include "assert.h"
 
-/*! \file alp_cmd_handler.h
- * \addtogroup alp_cmd_handler
- * \ingroup D7AP
- * @{
- * \brief APIs to handle ALP through the shell interface
- * \author	glenn.ergeerts@uantwerpen.be
- */
+////Overwrite _write so 'printf''s get pushed over the uart
+//int _write(int fd, char *ptr, int len)
+//{
+//#ifdef FRAMEWORK_LOG_OUTPUT_ON_RTT
+//    SEGGER_RTT_Write(0, ptr, len);
+//#else
+//    console_print_bytes((uint8_t*)ptr, len);
+//#endif
 
-#ifndef ALP_CMD_HANDLER_H
-#define ALP_CMD_HANDLER_H
+//    return len;
+//}
 
-#include "types.h"
-#include "fifo.h"
-#include "d7ap.h"
-#include "alp_layer.h"
+void __assert_func( const char *file, int line, const char *func, const char *failedexpr)
+{
+    __assert(failedexpr, file, line);
+}
 
-
-///
-/// \brief Shell command handler for ALP interface
-/// \param cmd_fifo
-///
-void alp_cmd_handler(fifo_t* cmd_fifo);
-
-///
-/// \brief Modem interface command handler for ALP interface
-/// \param cmd_fifo
-///
-void modem_interface_cmd_handler(fifo_t* cmd_fifo);
-
-///
-/// \brief Register modem interface in alp
-///
-void alp_cmd_handler_register_interface();
-
-#endif // ALP_CMD_HANDLER_H
-
-/** @}*/
+void start_atomic(void) {}
+void end_atomic(void) {}

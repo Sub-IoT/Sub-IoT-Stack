@@ -38,6 +38,7 @@
 #define FRAMEWORK_FS_TRUSTED_NODE_TABLE_SIZE 16
 #endif
 
+
 typedef enum
 {
     D7A_ACT_COND_LIST = 0, // check for existence
@@ -45,6 +46,33 @@ typedef enum
     D7A_ACT_COND_WRITE = 2,
     D7A_ACT_COND_WRITEFLUSH = 3
 } dae_act_condition_t;
+
+typedef enum
+{
+    FS_STORAGE_TRANSIENT = 0, // The content is not kept in memory. It cannot be read back.
+    FS_STORAGE_VOLATILE = 1,  // The content is kept in a volatile memory of the device. It is accessible for read, and is lost on power off.
+    FS_STORAGE_RESTORABLE = 2, // The content is kept in a volatile memory of the device. It is accessible for read, and can be backed-up upon request in a permanent storage location. It is restored from the permanent location on device power on.
+    FS_STORAGE_PERMANENT = 3  // The content is kept in a permanent memory of the device. It is accessible for read and write
+} fs_storage_class_t;
+
+
+typedef struct __attribute__((__packed__))
+{
+    fs_storage_class_t storage_class : 2;
+    uint8_t _rfu : 2;
+    dae_act_condition_t action_condition : 3;
+    bool action_protocol_enabled : 1;
+} d7ap_fs_file_properties_t;
+
+typedef struct __attribute__((__packed__))
+{
+    uint8_t file_permissions; // TODO not used for now
+    d7ap_fs_file_properties_t file_properties;
+    uint8_t action_file_id;
+    uint8_t interface_file_id;
+    uint32_t length;
+    uint32_t allocated_length;
+} d7ap_fs_file_header_t;
 
 typedef struct __attribute__((__packed__))
 {

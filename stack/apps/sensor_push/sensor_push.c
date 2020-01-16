@@ -54,8 +54,13 @@
   static i2c_handle_t* hts221_handle;
 #endif
 
+uint8_t alp_command[128];
+
 // Define the D7 interface configuration used for sending the ALP command on
-static d7ap_session_config_t session_config = {
+
+static alp_interface_config_t itf_config = (alp_interface_config_t){
+  .itf_id = ALP_ITF_ID_D7ASP,
+  .d7ap_session_config = {
     .qos = {
         .qos_resp_mode = SESSION_RESP_MODE_PREFERRED,
         .qos_retry_mode = SESSION_RETRY_MODE_NO
@@ -67,8 +72,9 @@ static d7ap_session_config_t session_config = {
             .id_type = ID_TYPE_NOID,
         },
         .access_class = 0x01,
-        .id = 0
+        .id = { 0 }
     }
+  }
 };
 
 void execute_sensor_measurement()
@@ -85,17 +91,18 @@ void execute_sensor_measurement()
   // Generate ALP command.
   // We will be sending a return file data action, without a preceding file read request.
   // This is an unsolicited message, where we push the sensor data to the gateway(s).
-
-  // allocate a buffer and fifo to store the command
-  uint8_t alp_command[128];
   fifo_t alp_command_fifo;
   fifo_init(&alp_command_fifo, alp_command, sizeof(alp_command));
+
+  alp_append_forward_action(&alp_command_fifo, (alp_interface_config_t*)&itf_config, sizeof(itf_config));
 
   // add the return file data action
   alp_append_return_file_data_action(&alp_command_fifo, SENSOR_FILE_ID, 0, SENSOR_FILE_SIZE, (uint8_t*)&temperature);
 
   // and execute this
-  alp_layer_execute_command_over_d7a(alp_command, fifo_get_size(&alp_command_fifo), &session_config);
+  //alp_layer_execute_command_over_itf(alp_command, fifo_get_size(&alp_command_fifo), &session_config);
+  alp_layer_process_command(alp_command, fifo_get_size(&alp_command_fifo), ALP_ITF_ID_HOST, NULL);
+
 }
 
 void on_alp_command_completed_cb(uint8_t tag_id, bool success)
@@ -109,10 +116,17 @@ void on_alp_command_completed_cb(uint8_t tag_id, bool success)
     timer_post_task_delay(&execute_sensor_measurement, SENSOR_INTERVAL_SEC);
 }
 
-void on_alp_command_result_cb(d7ap_session_result_t result, uint8_t* payload, uint8_t payload_length)
+void on_alp_command_result_cb(alp_interface_status_t* result, uint8_t* payload, uint8_t payload_length)
 {
-    log_print_string("recv response @ %i dB link budget from:", result.link_budget);
-    log_print_data(result.addressee.id, 8);
+  if(result->itf_id == ALP_ITF_ID_D7ASP) {
+    d7ap_session_result_t d7_result;
+    memcpy(&d7_result, result->itf_status, result->len);
+    log_print_string("recv response @ %i dB link budget from:", d7_result.link_budget);
+    log_print_data(d7_result.addressee.id, 8);
+  }
+
+  log_print_string("response payload:");
+  log_print_data(payload, payload_length);
 }
 
 static alp_init_args_t alp_init_args;

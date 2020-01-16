@@ -2,8 +2,7 @@
 # OSS-7 - An opensource implementation of the DASH7 Alliance Protocol for ultra
 # lowpower wireless sensor communication
 #
-# Copyright 2015 University of Antwerp
-# Copyright 2018 CORTUS S.A
+# Copyright 2019 Aloxy
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -22,12 +21,8 @@
 #MODULE_OPTION and MODULE_PARAMETER
 #See cmake/module_macros.cmake for more information
 
-
-MODULE_OPTION(${MODULE_PREFIX}_LOG_ENABLED "Enable logging for ALP layer" FALSE)
-MODULE_HEADER_DEFINE(BOOL ${MODULE_PREFIX}_LOG_ENABLED)
-
-MODULE_PARAM(${MODULE_PREFIX}_MAX_ACTIVE_COMMAND_COUNT "3" STRING "The maximum number of active ALP commands")
-MODULE_HEADER_DEFINE(NUMBER ${MODULE_PREFIX}_MAX_ACTIVE_COMMAND_COUNT)
+MODULE_OPTION(${MODULE_PREFIX}_USE_DEFAULT_SYSTEMFILES "Use the default D7AP systemfiles values" TRUE)
+MODULE_HEADER_DEFINE(BOOL ${MODULE_PREFIX}_USE_DEFAULT_SYSTEMFILES)
 
 #Generate the 'module_defs.h'
 MODULE_BUILD_SETTINGS_FILE()
@@ -36,19 +31,14 @@ MODULE_BUILD_SETTINGS_FILE()
 EXPORT_GLOBAL_INCLUDE_DIRECTORIES(.)
 
 #By convention, each module should generate a single 'static' library that can be included by the application
-ADD_LIBRARY(alp STATIC
-    alp_cmd_handler.c
-    alp_cmd_handler.h
-    alp_layer.c
-    alp.c
-    alp.h
+ADD_LIBRARY(d7ap_fs STATIC
+    d7ap_fs.c
+    ../../fs/d7ap_fs_data.c
 )
 
 GET_PROPERTY(__global_include_dirs GLOBAL PROPERTY GLOBAL_INCLUDE_DIRECTORIES)
-target_include_directories(alp PUBLIC
-    ${__global_include_dirs}
-    ${CMAKE_BINARY_DIR}/framework/ #framework_defs.h
-    ${CMAKE_CURRENT_BINARY_DIR} # MODULE_D7AP_defs.h
+target_include_directories(d7ap_fs PUBLIC
+	${__global_include_dirs}
+    ${CMAKE_CURRENT_BINARY_DIR} # MODULE_D7AP_FS_defs.h
 )
 
-TARGET_LINK_LIBRARIES(alp m)

@@ -56,25 +56,39 @@ typedef struct __attribute__((__packed__)) {
 } lorawan_session_result_t;
 
 
-typedef struct {
+typedef struct __attribute__((__packed__)) {
+    union {
+      uint8_t raw;
+      struct {
+        uint8_t _rfu : 1;
+        bool request_ack : 1;
+        bool adr_enabled : 1;
+        uint8_t __rfu : 5;
+      };
+    };
+    uint8_t application_port;
+    uint8_t data_rate;
     uint8_t nwkSKey[16] ;
     uint8_t appSKey[16] ;
     uint32_t devAddr;
     uint32_t network_id;
-    bool request_ack;
-    uint8_t application_port;
-    bool adr_enabled;
-    uint8_t data_rate;
 } lorawan_session_config_abp_t;
 
-typedef struct {
+typedef struct __attribute__((__packed__)) {
+    union {
+      uint8_t raw;
+      struct {
+        uint8_t _rfu : 1;
+        bool request_ack : 1;
+        bool adr_enabled : 1;
+        uint8_t __rfu : 5;
+      };
+    };
+    uint8_t application_port;
+    uint8_t data_rate;
     uint8_t devEUI[8];
     uint8_t appEUI[8];
     uint8_t appKey[16];
-    bool request_ack;
-    uint8_t application_port;
-    bool adr_enabled;
-    uint8_t data_rate;
 } lorawan_session_config_otaa_t;
 
 typedef void (*lorawan_rx_callback_t)(lorawan_AppData_t *AppData);

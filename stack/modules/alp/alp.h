@@ -1,4 +1,4 @@
-/*! \file alpr.h
+/*! \file alp.h
  *
 
  *  \copyright (C) Copyright 2015 University of Antwerp and others (http://oss-7.cosys.be)
@@ -25,7 +25,7 @@
  * \ingroup D7AP
  * @{
  * \brief Application Layer Protocol APIs
- * \author	glenn.ergeerts@uantwerpen.be
+ * \author	glenn.ergeerts@aloxy.be
  */
 
 #ifndef ALP_H_
@@ -33,31 +33,25 @@
 
 #include "stdint.h"
 #include "stdbool.h"
+#include "modules_defs.h"
+
+#ifdef MODULE_D7AP
 #include "d7ap.h"
-#include "d7ap_fs.h"
+#endif
+
+#ifdef MODULE_LORAWAN
 #include "lorawan_stack.h"
+#endif
+
+#include "d7ap_fs.h"
 #include "dae.h"
 
 #include "fifo.h"
 
+#define MODULE_ALP_INTERFACE_SIZE 10
 
 #define ALP_PAYLOAD_MAX_SIZE D7A_PAYLOAD_MAX_SIZE // TODO configurable?
-
-typedef enum
-{
-    DASH7,
-    LORAWAN_OTAA,
-    LORAWAN_ABP
-} interface_type_t;
-
-typedef struct {
-    interface_type_t interface_type;
-    union {
-        d7ap_session_config_t d7ap_session_config;
-        lorawan_session_config_otaa_t lorawan_session_config_otaa;
-        lorawan_session_config_abp_t lorawan_session_config_abp;
-    };
-} session_config_t;
+#define ALP_ITF_CONFIG_SIZE 43
 
 typedef enum
 {
@@ -67,6 +61,7 @@ typedef enum
     ALP_ITF_ID_LORAWAN_OTAA = 0x03, // not part of the spec
     ALP_ITF_ID_D7ASP = 0xD7
 } alp_itf_id_t;
+
 
 typedef enum {
     ALP_OP_NOP = 0,
@@ -90,8 +85,8 @@ typedef enum {
     ALP_OP_EXECUTE_FILE = 31,
     ALP_OP_RETURN_FILE_DATA = 32,
     ALP_OP_RETURN_FILE_PROPERTIES = 33,
-    ALP_OP_RETURN_STATUS = 34,
-    ALP_OP_RETURN_TAG = 35,
+    ALP_OP_STATUS = 34,
+    ALP_OP_RESPONSE_TAG = 35,
     ALP_OP_CHUNK = 48,
     ALP_OP_LOGIC = 49,
     ALP_OP_FORWARD = 50,
@@ -123,6 +118,22 @@ typedef enum {
   ARITH_COMP_TYPE_GREATER_THAN = 4,
   ARITH_COMP_TYPE_GREATER_THAN_OR_EQUAL_TO = 5
 } alp_query_arithmetic_comparison_type_t;
+
+typedef struct {
+    uint8_t itf_id;
+    union {
+        // 'known' interfaces can use the typed variable (which will be serialized when necessary), other interfaces need to fill the raw buffer
+        uint8_t itf_config[ALP_ITF_CONFIG_SIZE];
+#ifdef MODULE_D7AP
+        d7ap_session_config_t d7ap_session_config;
+#endif
+#ifdef MODULE_LORAWAN
+        lorawan_session_config_otaa_t lorawan_session_config_otaa;
+        lorawan_session_config_abp_t lorawan_session_config_abp;
+#endif
+    };
+} alp_interface_config_t;
+
 
 /*! \brief The ALP CTRL header
  *
@@ -202,9 +213,17 @@ typedef struct {
 } alp_operand_file_header_t;
 
 typedef struct {
-    uint8_t data[255];
+    alp_itf_id_t itf_id;
     uint8_t len;
-    alp_itf_id_t type;
+    union {
+      uint8_t itf_status[40];
+#ifdef MODULE_D7AP
+      d7ap_session_result_t d7ap_session_result;
+#endif
+#ifdef MODULE_LORAWAN
+      lorawan_session_result_t lorawan_session_result;
+#endif
+    };
 } alp_interface_status_t;
 
 
@@ -222,6 +241,19 @@ typedef struct {
 
 } alp_action_t;
 
+typedef void (*interface_deinit)();
+
+typedef struct {
+    alp_itf_id_t itf_id;
+    uint8_t itf_cfg_len;
+    uint8_t itf_status_len;
+    error_t (*send_command)(uint8_t* payload, uint8_t payload_length, uint8_t expected_response_length, uint16_t* trans_id, alp_interface_config_t* itf_cfg);
+    void (*init)(alp_interface_config_t* itf_cfg);
+    interface_deinit deinit;
+    bool unique; // TODO
+} alp_interface_t;
+
+
 /*!
  * \brief Returns the ALP operation type contained in alp_command
  * \param alp_command
@@ -230,16 +262,18 @@ typedef struct {
 alp_operation_t alp_get_operation(uint8_t* alp_command);
 
 
-uint8_t alp_get_expected_response_length(uint8_t* alp_command, uint8_t alp_command_length);
+uint8_t alp_get_expected_response_length(fifo_t fifo);
 
+alp_status_codes_t alp_register_interface(alp_interface_t* itf);
 void alp_append_tag_request_action(fifo_t* fifo, uint8_t tag_id, bool eop);
 void alp_append_read_file_data_action(fifo_t* fifo, uint8_t file_id, uint32_t offset, uint32_t length, bool resp, bool group);
 void alp_append_write_file_data_action(fifo_t* fifo, uint8_t file_id, uint32_t offset, uint32_t length, uint8_t* data, bool resp, bool group);
-void alp_append_forward_action(fifo_t* fifo, uint8_t itf_id, uint8_t *config, uint8_t config_len);
+void alp_append_forward_action(fifo_t* fifo, alp_interface_config_t* config, uint8_t config_len);
 void alp_append_return_file_data_action(fifo_t* fifo, uint8_t file_id, uint32_t offset, uint32_t length, uint8_t* data);
 void alp_append_length_operand(fifo_t* fifo, uint32_t length);
 void alp_append_create_new_file_data_action(fifo_t* fifo, uint8_t file_id, uint32_t length, fs_storage_class_t storage_class, bool resp, bool group);
 void alp_append_indirect_forward_action(fifo_t* fifo, uint8_t file_id, bool overload, uint8_t *overload_config, uint8_t overload_config_len);
+void alp_append_interface_status(fifo_t* fifo, alp_interface_status_t* status);
 
 uint32_t alp_parse_length_operand(fifo_t* cmd_fifo);
 alp_operand_file_offset_t alp_parse_file_offset_operand(fifo_t* cmd_fifo);
