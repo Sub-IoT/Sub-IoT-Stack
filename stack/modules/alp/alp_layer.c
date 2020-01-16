@@ -765,7 +765,6 @@ static void _async_process_command(void* arg)
 
 cleanup:
     if(!do_forward && !expect_completed) {
-      expect_completed = false;
       free_command(command);
     }
 
