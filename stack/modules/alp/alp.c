@@ -389,7 +389,9 @@ void alp_append_interface_status(fifo_t* fifo, alp_interface_status_t* status) {
     fifo_put(fifo, status->d7ap_session_result.addressee.id, d7ap_addressee_id_length(status->d7ap_session_result.addressee.ctrl.id_type));
   }
   else {
-    assert(false);
+    fifo_put_byte(fifo, ALP_OP_STATUS + (1 << 6));
+    fifo_put_byte(fifo, status->itf_id);
+    fifo_put(fifo, status->itf_status, status->len);
   }
 #else
     fifo_put_byte(fifo, ALP_OP_STATUS + (1 << 6));
