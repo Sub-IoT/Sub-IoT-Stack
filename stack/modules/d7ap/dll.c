@@ -1153,6 +1153,8 @@ void dll_tx_frame(packet_t* packet)
             }
         }
 
+        assert(channel_list_length != 0);
+
         phy_enable_fast_hop(false);
 
         current_tx_channel_index = (uint8_t) get_rnd() % channel_list_length;
