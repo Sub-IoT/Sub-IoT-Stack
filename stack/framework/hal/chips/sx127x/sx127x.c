@@ -63,7 +63,7 @@
 #define DPRINT_DATA(...)
 #endif
 
-#define testing_ADV
+// #define testing_ADV
 
 #if PLATFORM_NUM_DEBUGPINS >= 2
     #ifndef testing_ADV
@@ -366,7 +366,7 @@ static void init_regs() {
     RF_DIOMAPPING1_DIO2_11 | RF_DIOMAPPING1_DIO3_00); // DIO2 = 0b11 => interrupt on sync detect 
   write_reg(REG_DIOMAPPING2, RF_DIOMAPPING2_DIO4_00 | RF_DIOMAPPING2_DIO5_11 |
     RF_DIOMAPPING2_MAP_RSSI); // ModeReady TODO configure for RSSI interrupt when doing CCA?
-  //  write_reg(REG_PLLHOP, RF_PLLHOP_FASTHOP_ON); // TODO might be interesting for channel hopping //ACTIVATING THIS LOWERS RSSI VALUES BUT LISTENS TO OTHER FREQ?
+  write_reg(REG_PLLHOP, 0x2d | RF_PLLHOP_FASTHOP_OFF); //default value and fasthop off
   //  write_reg(REG_TCXO, 0); // default
   //  write_reg(REG_PADAC, 0); // default
   //  write_reg(REG_FORMERTEMP, 0); // not used for now
@@ -484,7 +484,7 @@ static void rx_timeout(void *arg) {
   DEBUG_BG_END();
   DPRINT("RX timeout");
   hw_radio_set_idle();
-  rx_packet_callback(NULL); //let upper layer now scan has failed
+  rx_packet_callback(NULL); //let upper layer know scan has failed
 }
 
 static void dio0_isr(void *arg) {

@@ -52,7 +52,7 @@
 #define DPRINT_DATA(...)
 #endif
 
-#define testing_ADV
+// #define testing_ADV
 
 #if PLATFORM_NUM_DEBUGPINS >= 2
     #ifndef testing_ADV

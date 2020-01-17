@@ -960,6 +960,14 @@ static void conf_file_changed_callback(uint8_t file_id)
     DPRINT("DLL config file changed");
     uint8_t scan_access_class = d7ap_fs_read_dll_conf_active_access_class();
 
+    uint8_t nf_ctrl;
+
+    if (d7ap_fs_read_file(D7A_FILE_DLL_CONF_FILE_ID, 4, &nf_ctrl, 1) != 0)
+        nf_ctrl = (D7ADLL_FIXED_NOISE_FLOOR << 4) & 0x0F; // set default NF computation method if the setting is not present
+
+    tx_nf_method = (nf_ctrl >> 4) & 0x0F;
+    rx_nf_method = nf_ctrl & 0x0F;
+
     // if the access class has been modified, update the current access profile
     if (active_access_class != scan_access_class)
     {
@@ -1185,6 +1193,8 @@ void dll_tx_frame(packet_t* packet)
             packet->ETA = tsched;
             DPRINT("This request requires ad-hoc sync with access scheduling period (Tsched) <%d> ti", packet->ETA);
         }
+
+        packet->phy_config.tx.syncword_class = PHY_SYNCWORD_CLASS1;
 
         // store the channel id and eirp
         current_eirp = packet->phy_config.tx.eirp;
