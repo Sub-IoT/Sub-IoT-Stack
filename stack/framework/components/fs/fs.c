@@ -74,6 +74,9 @@ static inline uint32_t _get_file_header_address(uint8_t file_id)
 
 error_t fs_register_block_device(blockdevice_t* block_device, uint8_t bd_index)
 {
+    //TODO this should be done on a seperate layer and will have to include a metadata block device. This metadata block device should copy all content to the regular meta data device upon initialization.
+    //Everytime a file on the registered block device is added, the relevant metadata block device needs to be modified as well.
+    //This is to ensure that all apps use the same order of files once they are created somewhere.
     if(bd_index > 2 && bd[bd_index] == NULL && block_device != NULL && bd_index < FRAMEWORK_FS_BLOCKDEVICES_COUNT)
     {
         bd[bd_index] = block_device;
