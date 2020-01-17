@@ -627,8 +627,22 @@ error_t phy_init(void) {
 }
 
 void status_write() {
-    uint16_t bg_trigger_ratio = 1024 * (uint64_t)total_rssi_triggers / total_bg;
-    uint16_t scan_timeout_ratio = 1024 * (uint64_t)(total_fg - total_succeeded_fg) / total_fg;
+    uint16_t bg_trigger_ratio;
+    if(total_bg < 0xFFFFFFFF)
+        bg_trigger_ratio = 1024 * (uint64_t)total_rssi_triggers / total_bg;
+    else {
+        total_bg = 1;
+        total_rssi_triggers=0;
+        bg_trigger_ratio = 0;
+    }
+    uint16_t scan_timeout_ratio;
+    if(total_fg < 0xFFFFFFFF)
+        scan_timeout_ratio = 1024 * (uint64_t)(total_fg - total_succeeded_fg) / total_fg;
+    else {
+        total_fg = 1;
+        total_succeeded_fg = 0;
+        scan_timeout_ratio = 1024;
+    }
     uint8_t buffer[4] = {(uint8_t)(bg_trigger_ratio >> 8), (uint8_t)(bg_trigger_ratio & 0xFF), (uint8_t)(scan_timeout_ratio >> 8), (uint8_t)(scan_timeout_ratio & 0xFF)};
     d7ap_fs_write_file(D7A_FILE_DLL_STATUS_FILE_ID, 8, buffer, 4);
 }
