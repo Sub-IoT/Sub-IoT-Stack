@@ -37,7 +37,7 @@ LIST(APPEND MODULE_DIRS ${EXTRA_MODULES_DIRS})
 FOREACH(__dir ${MODULE_DIRS})
     GET_FILENAME_COMPONENT(__module_name ${__dir} NAME) # strip full path keeping only module name
     STRING(TOUPPER ${__module_name} __upper_name)
-    OPTION(MODULE_${__upper_name} "Build Module ${__module_name}" false)
+    OPTION(MODULE_${__upper_name} "Build Module ${__module_name}" OFF)
     UNSET(__upper_name)
 ENDFOREACH()
 
