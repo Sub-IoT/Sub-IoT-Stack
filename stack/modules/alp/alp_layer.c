@@ -522,7 +522,7 @@ static alp_status_codes_t process_op_return_file_data(alp_command_t* command) {
         fifo_init(&serial_fifo, alp_data, sizeof(alp_data));
         alp_append_interface_status(&serial_fifo, &current_status);
         fifo_pop(&command->alp_command_fifo, alp_data + fifo_get_size(&serial_fifo), total_len);
-        interfaces[i]->send_command(alp_data, total_len+current_status.len, 0, NULL, NULL);
+        interfaces[i]->send_command(alp_data, total_len + fifo_get_size(&serial_fifo), 0, NULL, NULL);
         break;
       }
     }
