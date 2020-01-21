@@ -739,8 +739,12 @@ static void _async_process_command(void* arg)
     if(alp_response_length) {
       // when the command originates from the app code call callbacks directly, since this is not a 'real' interface
       if(command->origin_itf_id == ALP_ITF_ID_HOST) {
-        init_args->alp_command_result_cb(NULL, command->alp_response, alp_response_length);
-        init_args->alp_command_completed_cb(command->tag_id, true); // TODO pass possible error
+        if(init_args && init_args->alp_command_result_cb)
+          init_args->alp_command_result_cb(NULL, command->alp_response, alp_response_length);
+
+        if(init_args && init_args->alp_command_completed_cb)
+          init_args->alp_command_completed_cb(command->tag_id, true); // TODO pass possible error
+
         goto cleanup;
       }
 
