@@ -356,7 +356,7 @@ void start_background_scan()
     error_t err = phy_start_background_scan(&config, &dll_signal_packet_received);
     if(err == SUCCESS) {
         ready_for_bg_scan = false; //give time for scan to succeed
-        DPRINT("triggered background scan on channel %i with rssi %i", current_channel_id.center_freq_index, config.rssi_thr);
+        DPRINT("triggered background scan on channel %i with rssi %i > E_CCA %i", current_channel_id.center_freq_index, config.rssi_thr, E_CCA);
     }
     if(rx_nf_method == D7ADLL_MEDIAN_OF_THREE) { 
         //if current_channel in array of channels AND gotten rssi_thr smaller than pre-programmed Ecca
@@ -437,7 +437,8 @@ void dll_signal_packet_received(packet_t* packet)
     }
 
     packet_queue_mark_processing(packet);
-    if(!packet_disassemble(packet) && (packet->type == BACKGROUND_ADV)) {
+    bool background_packet = (packet->type == BACKGROUND_ADV);
+    if(!packet_disassemble(packet) && background_packet) {
         if(current_rx_channel_index == 0) {
             background_scan_return();
         } else {

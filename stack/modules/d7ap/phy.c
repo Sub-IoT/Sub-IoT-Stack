@@ -1013,7 +1013,7 @@ error_t phy_start_background_scan(phy_rx_config_t* config, phy_rx_packet_callbac
     if (rssi <= config->rssi_thr)
     {
         DPRINT("FAST RX termination RSSI %i below limit %i\n", rssi, config->rssi_thr);
-        hw_radio_set_opmode(HW_STATE_STANDBY);
+        phy_switch_to_standby_mode();
         // shut down should be handled in higher layer
         DEBUG_BG_END();
         DEBUG_RX_END();
