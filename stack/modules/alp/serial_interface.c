@@ -20,7 +20,7 @@
  * \author	glenn.ergeerts@uantwerpen.be
  */
 
-#include "alp_cmd_handler.h"
+#include "serial_interface.h"
 
 #define ALP_CMD_MAX_SIZE 0xFF
 
@@ -48,13 +48,12 @@
 #endif
 
 static uint8_t alp_command[ALP_CMD_MAX_SIZE] = { 0x00 };
-static uint8_t alp_resp[ALP_CMD_MAX_SIZE] = { 0x00 };
 
 alp_interface_t alp_modem_interface;
 
-error_t alp_cmd_send_output(uint8_t* payload, uint8_t payload_length, uint8_t expected_response_length, uint16_t* trans_id, alp_interface_config_t* session_config);
+static error_t serial_interface_send(uint8_t* payload, uint8_t payload_length, uint8_t expected_response_length, uint16_t* trans_id, alp_interface_config_t* session_config);
 
-void modem_interface_cmd_handler(fifo_t* cmd_fifo)
+static void serial_interface_cmd_handler(fifo_t* cmd_fifo)
 {
     error_t err;
     uint8_t alp_command_len=fifo_get_size(cmd_fifo);
@@ -66,13 +65,12 @@ void modem_interface_cmd_handler(fifo_t* cmd_fifo)
     alp_layer_process_command(alp_command, alp_command_len, ALP_ITF_ID_SERIAL, NULL);
 }
 
-// TODO move
-void alp_cmd_handler_register_interface() {
+void serial_interface_register() {
     alp_modem_interface = (alp_interface_t) {
         .itf_id = ALP_ITF_ID_SERIAL,
         .itf_cfg_len = 0,
         .itf_status_len = 0,
-        .send_command = alp_cmd_send_output,
+        .send_command = &serial_interface_send,
         .init = NULL,
         .deinit = NULL,
         .unique = false
@@ -86,13 +84,15 @@ void alp_cmd_handler_register_interface() {
     modem_interface_init(PLATFORM_MODEM_INTERFACE_UART, PLATFORM_MODEM_INTERFACE_BAUDRATE, (pin_id_t) 0, (pin_id_t) 0);
 #endif
 
-    modem_interface_register_handler(&modem_interface_cmd_handler, SERIAL_MESSAGE_TYPE_ALP_DATA);
-
-    DPRINT("registered interface and handler");
+    modem_interface_register_handler(&serial_interface_cmd_handler, SERIAL_MESSAGE_TYPE_ALP_DATA);
 }
 
-error_t alp_cmd_send_output(uint8_t* payload, uint8_t payload_length, uint8_t expected_response_length, uint16_t* trans_id, alp_interface_config_t* session_config) {
-    DPRINT("sending payload to modem");
+static error_t serial_interface_send(uint8_t* payload, uint8_t payload_length,
+    __attribute__((__unused__)) uint8_t expected_response_length,
+    __attribute__((__unused__)) uint16_t* trans_id,
+    __attribute__((__unused__)) alp_interface_config_t* session_config)
+{
+    DPRINT("sending payload to serial interface");
     DPRINT_DATA(payload, payload_length);
     modem_interface_transfer_bytes(payload, payload_length, SERIAL_MESSAGE_TYPE_ALP_DATA);
 

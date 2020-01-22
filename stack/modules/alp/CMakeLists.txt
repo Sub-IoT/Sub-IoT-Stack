@@ -37,8 +37,7 @@ EXPORT_GLOBAL_INCLUDE_DIRECTORIES(.)
 
 #By convention, each module should generate a single 'static' library that can be included by the application
 ADD_LIBRARY(alp STATIC
-    alp_cmd_handler.c
-    alp_cmd_handler.h
+    serial_interface.c
     alp_layer.c
     alp.c
 )

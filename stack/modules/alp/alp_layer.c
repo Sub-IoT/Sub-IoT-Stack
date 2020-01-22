@@ -44,8 +44,10 @@
 #include "lorawan_stack.h"
 
 #include "alp_layer.h"
-#include "alp_cmd_handler.h"
-#include "modem_interface.h"
+#include "serial_interface.h"
+
+#include "platform_defs.h"
+#include "platform.h"
 
 #if defined(FRAMEWORK_LOG_ENABLED) && defined(MODULE_ALP_LOG_ENABLED)
 #define DPRINT(...) log_print_stack_string(LOG_STACK_ALP, __VA_ARGS__)
@@ -57,6 +59,7 @@
 
 static alp_itf_id_t current_lorawan_interface_type = ALP_ITF_ID_LORAWAN_OTAA;
 static interface_deinit current_itf_deinit = NULL;
+
 bool use_serial_itf;
 
 typedef struct {
@@ -91,14 +94,13 @@ static uint8_t alp_data2[ALP_PAYLOAD_MAX_SIZE]; // temp buffer statically alloca
 static alp_operand_file_data_t file_data_operand; // statically allocated to prevent runtime stackoverflows
 
 extern alp_interface_t* interfaces[MODULE_ALP_INTERFACE_SIZE];
-
+static alp_interface_t serial_interface;
 static alp_interface_config_t* session_config_buffer;
 static bool expect_completed = false;
 
 static void _async_process_command(void* arg);
 static void alp_layer_lorawan_init();
 static void lorawan_error_handler(uint16_t* trans_id, lorawan_stack_status_t status);
-
 
 static void free_command(alp_command_t* command) {
   DPRINT("Free cmd %02x", command->trans_id);
@@ -148,8 +150,8 @@ void alp_layer_init(alp_init_args_t* alp_init_args, bool use_serial_interface)
   use_serial_itf = use_serial_interface;
   init_commands();
 
-  if(use_serial_itf)
-    alp_cmd_handler_register_interface();
+  if (use_serial_itf)
+    serial_interface_register();
 
 #ifdef MODULE_LORAWAN
   alp_layer_lorawan_init();
@@ -511,15 +513,11 @@ static alp_status_codes_t process_op_return_file_data(alp_command_t* command) {
 
   if(fifo_get_size(&command->alp_command_fifo) < total_len) goto incomplete_error;
 
-  if(use_serial_itf) {
+  if(use_serial_itf && command->origin_itf_id != ALP_ITF_ID_SERIAL) { // make sure we not transmit again over the itf on which we received
     // TODO refactor
     bool found = false;
     for(uint8_t i = 0; i < MODULE_ALP_INTERFACE_SIZE; i++) {
-        if(
-            (interfaces[i] != NULL)
-            && (interfaces[i]->itf_id == ALP_ITF_ID_SERIAL)
-            && (command->origin_itf_id != interfaces[i]->itf_id)) // make sure we not transmit again over the itf on which we received
-        {
+        if((interfaces[i] != NULL) && (interfaces[i]->itf_id == ALP_ITF_ID_SERIAL)) {
         DPRINT("serial itf found, sending");
         found = true;
         fifo_t serial_fifo;
@@ -848,6 +846,8 @@ void alp_layer_received_response(uint16_t trans_id, uint8_t* payload, uint8_t pa
   if(init_args != NULL && init_args->alp_command_result_cb != NULL)
     init_args->alp_command_result_cb(itf_status, payload, payload_length);
 }
+
+
 
 #ifdef MODULE_D7AP
 void alp_layer_process_d7aactp(d7ap_session_config_t* session_config, uint8_t* alp_command, uint32_t alp_command_length)
