@@ -63,9 +63,9 @@ void response_from_d7ap(uint16_t trans_id, uint8_t* payload, uint8_t len, d7ap_s
     alp_interface_status_t d7_status = (alp_interface_status_t) {
         .itf_id = ALP_ITF_ID_D7ASP,
         .len = 15 + d7ap_addressee_id_length(result.addressee.ctrl.id_type),
-        .d7ap_session_result = result
     };
 
+    memcpy(d7_status.itf_status, &result, d7_status.len);
     alp_layer_received_response(trans_id, payload, len, &d7_status);
 }
 
@@ -74,9 +74,9 @@ bool command_from_d7ap(uint8_t* payload, uint8_t len, d7ap_session_result_t resu
     alp_interface_status_t d7_status = (alp_interface_status_t) {
         .itf_id = ALP_ITF_ID_D7ASP,
         .len = 15 + d7ap_addressee_id_length(result.addressee.ctrl.id_type),
-        .d7ap_session_result = result
-    };
+        };
 
+    memcpy(d7_status.itf_status, &result, d7_status.len);
     return alp_layer_process_command(payload, len, ALP_ITF_ID_D7ASP, &d7_status);
 }
 
