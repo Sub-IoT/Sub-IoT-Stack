@@ -80,7 +80,12 @@ void alp_cmd_handler_register_interface() {
 
     alp_layer_register_interface(&alp_modem_interface);
 
+#ifdef PLATFORM_USE_MODEM_INTERRUPT_LINES
     modem_interface_init(PLATFORM_MODEM_INTERFACE_UART, PLATFORM_MODEM_INTERFACE_BAUDRATE, SERIAL_MODEM_INTERFACE_UART_STATE_PIN, SERIAL_MODEM_INTERFACE_TARGET_UART_STATE_PIN);
+#else
+    modem_interface_init(PLATFORM_MODEM_INTERFACE_UART, PLATFORM_MODEM_INTERFACE_BAUDRATE, (pin_id_t) 0, (pin_id_t) 0);
+#endif
+
     modem_interface_register_handler(&modem_interface_cmd_handler, SERIAL_MESSAGE_TYPE_ALP_DATA);
 
     DPRINT("registered interface and handler");
