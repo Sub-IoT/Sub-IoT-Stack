@@ -101,7 +101,7 @@ void init_user_files()
   d7ap_fs_init_file(ACTION_FILE_ID, &action_file_header, alp_command);
 
   // define the D7 interface configuration used for sending the result of above ALP command on
-  alp_interface_config_t itf_cfg = {
+  alp_interface_config_d7ap_t itf_cfg = {
     .itf_id = ALP_ITF_ID_D7ASP,
     .d7ap_session_config = {
         .qos = {

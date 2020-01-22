@@ -91,6 +91,18 @@ typedef struct __attribute__((__packed__)) {
     uint8_t appKey[16];
 } lorawan_session_config_otaa_t;
 
+// override alp_interface_config_t
+typedef struct {
+    uint8_t itf_id;
+    lorawan_session_config_otaa_t lorawan_session_config_otaa;
+} __attribute__ ((__packed__)) alp_interface_config_lorawan_otaa_t;
+
+// override alp_interface_config_t
+typedef struct {
+    uint8_t itf_id;
+    lorawan_session_config_abp_t lorawan_session_config_abp;
+} __attribute__ ((__packed__)) alp_interface_config_lorawan_abp_t;
+
 typedef void (*lorawan_rx_callback_t)(lorawan_AppData_t *AppData);
 typedef void (*join_completed_callback_t)(bool success);
 typedef void (*lorawan_tx_completed_callback_t)(lorawan_stack_status_t status, uint8_t retries);

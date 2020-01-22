@@ -33,15 +33,6 @@
 
 #include "stdint.h"
 #include "stdbool.h"
-#include "modules_defs.h"
-
-#ifdef MODULE_D7AP
-#include "d7ap.h"
-#endif
-
-#ifdef MODULE_LORAWAN
-#include "lorawan_stack.h"
-#endif
 
 #include "d7ap_fs.h"
 #include "dae.h"
@@ -121,18 +112,8 @@ typedef enum {
 
 typedef struct {
     uint8_t itf_id;
-    union {
-        // 'known' interfaces can use the typed variable (which will be serialized when necessary), other interfaces need to fill the raw buffer
-        uint8_t itf_config[ALP_ITF_CONFIG_SIZE];
-#ifdef MODULE_D7AP
-        d7ap_session_config_t d7ap_session_config;
-#endif
-#ifdef MODULE_LORAWAN
-        lorawan_session_config_otaa_t lorawan_session_config_otaa;
-        lorawan_session_config_abp_t lorawan_session_config_abp;
-#endif
-    };
-} alp_interface_config_t;
+    uint8_t itf_config[ALP_ITF_CONFIG_SIZE];
+} __attribute__ ((__packed__)) alp_interface_config_t;
 
 
 /*! \brief The ALP CTRL header
@@ -215,15 +196,7 @@ typedef struct {
 typedef struct {
     alp_itf_id_t itf_id;
     uint8_t len;
-    union {
-      uint8_t itf_status[40];
-#ifdef MODULE_D7AP
-      d7ap_session_result_t d7ap_session_result;
-#endif
-#ifdef MODULE_LORAWAN
-      lorawan_session_result_t lorawan_session_result;
-#endif
-    };
+    uint8_t itf_status[40];
 } alp_interface_status_t;
 
 

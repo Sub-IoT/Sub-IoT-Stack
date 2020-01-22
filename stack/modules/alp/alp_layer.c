@@ -365,7 +365,7 @@ static alp_status_codes_t process_op_indirect_forward(alp_command_t* command, ui
           // TODO
         memcpy(session_config->itf_config, session_config_saved.itf_config, interfaces[i]->itf_cfg_len - 10);
         err = fifo_pop(&command->alp_command_fifo, &session_config->itf_config[interfaces[i]->itf_cfg_len - 10], 2); assert(err == SUCCESS);
-        uint8_t id_len = d7ap_addressee_id_length(session_config->d7ap_session_config.addressee.ctrl.id_type);
+        uint8_t id_len = d7ap_addressee_id_length(((alp_interface_config_d7ap_t*)session_config)->d7ap_session_config.addressee.ctrl.id_type);
         err = fifo_pop(&command->alp_command_fifo, &session_config->itf_config[interfaces[i]->itf_cfg_len - 8], id_len); assert(err == SUCCESS);
       }
 #endif
@@ -395,7 +395,7 @@ static alp_status_codes_t process_op_forward(alp_command_t* command, uint8_t* it
 #ifdef MODULE_D7AP
         uint8_t min_size = interfaces[i]->itf_cfg_len - 8; // substract max size of responder ID
         err = fifo_pop(&command->alp_command_fifo, session_config->itf_config, min_size); assert(err == SUCCESS);
-        uint8_t id_len = d7ap_addressee_id_length(session_config->d7ap_session_config.addressee.ctrl.id_type);
+        uint8_t id_len = d7ap_addressee_id_length(((alp_interface_config_d7ap_t*)session_config)->d7ap_session_config.addressee.ctrl.id_type);
         err = fifo_pop(&command->alp_command_fifo, session_config->itf_config + min_size, id_len); assert(err == SUCCESS);
 #endif
       } else {
@@ -921,11 +921,13 @@ static void lorawan_status_callback(lorawan_stack_status_t status, uint8_t attem
   alp_layer_command_completed(command->trans_id, NULL, &result);
 }
 
-static error_t lorawan_send_otaa(uint8_t* payload, uint8_t payload_length, uint8_t expected_response_length, uint16_t* trans_id, alp_interface_config_t* itf_cfg) {
-  if(!otaa_just_inited && (lorawan_otaa_is_joined(&itf_cfg->lorawan_session_config_otaa))) {
+static error_t lorawan_send_otaa(uint8_t* payload, uint8_t payload_length, uint8_t expected_response_length, uint16_t* trans_id, alp_interface_config_t* itf_cfg)
+{
+  alp_interface_config_lorawan_otaa_t* lorawan_itf_cfg = (alp_interface_config_lorawan_otaa_t*)itf_cfg;
+  if(!otaa_just_inited && (lorawan_otaa_is_joined(&lorawan_itf_cfg->lorawan_session_config_otaa))) {
     DPRINT("sending otaa payload");
     current_lorawan_interface_type = ALP_ITF_ID_LORAWAN_OTAA;
-    lorawan_stack_status_t status = lorawan_stack_send(payload, payload_length, itf_cfg->lorawan_session_config_otaa.application_port, itf_cfg->lorawan_session_config_otaa.request_ack);
+    lorawan_stack_status_t status = lorawan_stack_send(payload, payload_length, lorawan_itf_cfg->lorawan_session_config_otaa.application_port, lorawan_itf_cfg->lorawan_session_config_otaa.request_ack);
     lorawan_error_handler(trans_id, status);
   } else { //OTAA not joined yet or still initing
     DPRINT("OTAA not joined yet");
@@ -938,15 +940,16 @@ static error_t lorawan_send_otaa(uint8_t* payload, uint8_t payload_length, uint8
 }
 
 static error_t lorawan_send_abp(uint8_t* payload, uint8_t payload_length, uint8_t expected_response_length, uint16_t* trans_id, alp_interface_config_t* itf_cfg) {
+  alp_interface_config_lorawan_abp_t* lorawan_itf_cfg = (alp_interface_config_lorawan_abp_t*)itf_cfg;
   if(!abp_just_inited) {
-    itf_cfg->lorawan_session_config_abp.devAddr = __builtin_bswap32(itf_cfg->lorawan_session_config_abp.devAddr);
-    itf_cfg->lorawan_session_config_abp.network_id = __builtin_bswap32(itf_cfg->lorawan_session_config_abp.network_id);
-    lorawan_abp_is_joined(&itf_cfg->lorawan_session_config_abp);
+    lorawan_itf_cfg->lorawan_session_config_abp.devAddr = __builtin_bswap32(lorawan_itf_cfg->lorawan_session_config_abp.devAddr);
+    lorawan_itf_cfg->lorawan_session_config_abp.network_id = __builtin_bswap32(lorawan_itf_cfg->lorawan_session_config_abp.network_id);
+    lorawan_abp_is_joined(&lorawan_itf_cfg->lorawan_session_config_abp);
   } else
     abp_just_inited = false;
   DPRINT("sending abp payload");
   current_lorawan_interface_type = ALP_ITF_ID_LORAWAN_ABP;
-  lorawan_stack_status_t status = lorawan_stack_send(payload, payload_length, itf_cfg->lorawan_session_config_abp.application_port, itf_cfg->lorawan_session_config_abp.request_ack);
+  lorawan_stack_status_t status = lorawan_stack_send(payload, payload_length, lorawan_itf_cfg->lorawan_session_config_abp.application_port, lorawan_itf_cfg->lorawan_session_config_abp.request_ack);
   lorawan_error_handler(trans_id, status);
   return SUCCESS;
 }
@@ -966,15 +969,16 @@ static void lorawan_error_handler(uint16_t* trans_id, lorawan_stack_status_t sta
     lorawan_trans_id = *trans_id;
 }
 
-static void lorawan_init_otaa(alp_interface_config_t* session_cfg) {
-  lorawan_stack_init_otaa(&session_cfg->lorawan_session_config_otaa);
+static void lorawan_init_otaa(alp_interface_config_t* itf_cfg) {
+  lorawan_stack_init_otaa(&((alp_interface_config_lorawan_otaa_t*)itf_cfg)->lorawan_session_config_otaa);
   otaa_just_inited = true;
 }
 
-static void lorawan_init_abp(alp_interface_config_t* session_cfg) {
-  session_cfg->lorawan_session_config_abp.devAddr = __builtin_bswap32(session_cfg->lorawan_session_config_abp.devAddr);
-  session_cfg->lorawan_session_config_abp.network_id = __builtin_bswap32(session_cfg->lorawan_session_config_abp.network_id);
-  lorawan_stack_init_abp(&session_cfg->lorawan_session_config_abp);
+static void lorawan_init_abp(alp_interface_config_t* itf_cfg) {
+  alp_interface_config_lorawan_abp_t* lorawan_itf_cfg = (alp_interface_config_lorawan_abp_t*)itf_cfg;
+  lorawan_itf_cfg->lorawan_session_config_abp.devAddr = __builtin_bswap32(lorawan_itf_cfg->lorawan_session_config_abp.devAddr);
+  lorawan_itf_cfg->lorawan_session_config_abp.network_id = __builtin_bswap32(lorawan_itf_cfg->lorawan_session_config_abp.network_id);
+  lorawan_stack_init_abp(&lorawan_itf_cfg->lorawan_session_config_abp);
   abp_just_inited = true;
 }
 

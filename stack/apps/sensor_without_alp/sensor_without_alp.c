@@ -42,8 +42,14 @@
 
 #include "platform.h"
 
-#define SENSOR_INTERVAL_SEC	TIMER_TICKS_PER_SEC * 30
+#include "modules_defs.h"
 
+#ifdef MODULE_ALP
+#error "This app should be build with MODULE_ALP=n"
+#endif
+
+
+#define SENSOR_INTERVAL_SEC	TIMER_TICKS_PER_SEC * 30
 
 
 // Define the D7 interface configuration used for sending payload on

@@ -171,6 +171,12 @@ typedef struct{
                                                           if NULL, the associated packet will be release without notification */
 } d7ap_resource_desc_t;
 
+// override alp_interface_config_t
+typedef struct {
+    uint8_t itf_id;
+    d7ap_session_config_t d7ap_session_config;
+} __attribute__ ((__packed__)) alp_interface_config_d7ap_t;
+
 
 //=========================== prototypes ======================================
 /**
