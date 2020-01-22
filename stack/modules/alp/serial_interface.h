@@ -17,40 +17,22 @@
  */
 
 
-/*! \file alp_cmd_handler.h
- * \addtogroup alp_cmd_handler
- * \ingroup D7AP
+/*! \file serial_interface.h
+ * \addtogroup serial_interface
+ * \ingroup ALP
  * @{
- * \brief APIs to handle ALP through the shell interface
- * \author	glenn.ergeerts@uantwerpen.be
+ * \brief ALP serial interface
+ * \author	glenn.ergeerts@aloxy.be
  */
 
-#ifndef ALP_CMD_HANDLER_H
-#define ALP_CMD_HANDLER_H
-
-#include "types.h"
-#include "fifo.h"
-#include "d7ap.h"
-#include "alp_layer.h"
-
+#ifndef SERIAL_INTERFACE_H
+#define SERIAL_INTERFACE_H
 
 ///
-/// \brief Shell command handler for ALP interface
-/// \param cmd_fifo
+/// \brief Register serial interface in ALP
 ///
-void alp_cmd_handler(fifo_t* cmd_fifo);
+void serial_interface_register();
 
-///
-/// \brief Modem interface command handler for ALP interface
-/// \param cmd_fifo
-///
-void modem_interface_cmd_handler(fifo_t* cmd_fifo);
-
-///
-/// \brief Register modem interface in alp
-///
-void alp_cmd_handler_register_interface();
-
-#endif // ALP_CMD_HANDLER_H
+#endif // SERIAL_INTERFACE_H
 
 /** @}*/
