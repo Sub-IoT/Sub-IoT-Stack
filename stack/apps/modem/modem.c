@@ -36,16 +36,9 @@
 #include "modem_interface.h"
 #include "platform.h"
 
-//This application contains a modem which can be used from another MCU through the serial interface
-
 void bootstrap()
 {
     log_print_string("Device booted\n");
-#ifdef PLATFORM_USE_MODEM_INTERRUPT_LINES
-    modem_interface_init(PLATFORM_MODEM_INTERFACE_UART, PLATFORM_MODEM_INTERFACE_BAUDRATE, MODEM2MCU_INT_PIN, MCU2MODEM_INT_PIN);
-#else
-    modem_interface_init(PLATFORM_MODEM_INTERFACE_UART, PLATFORM_MODEM_INTERFACE_BAUDRATE, (pin_id_t) 0, (pin_id_t) 0);
-#endif
 
     d7ap_init();
     alp_layer_init(NULL, true);

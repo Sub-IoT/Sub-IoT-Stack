@@ -381,7 +381,8 @@ static void uart_rx_cb(uint8_t data)
 {
     error_t err;
     start_atomic();
-        err = fifo_put(&rx_fifo, &data, 1); assert(err == SUCCESS);
+    err = fifo_put(&rx_fifo, &data, 1);
+    assert(err == SUCCESS);
     end_atomic();
 
 #ifndef PLATFORM_USE_MODEM_INTERRUPT_LINES
@@ -406,15 +407,15 @@ static void modem_interface_set_rx_interrupt_callback(uart_rx_inthandler_t uart_
 #endif
 }
 
-void modem_interface_init(uint8_t idx, uint32_t baudrate, pin_id_t uart_state_int_pin, pin_id_t target_uart_state_int_pin) 
+void modem_interface_init(uint8_t idx, uint32_t baudrate, pin_id_t uart_state_pin_id, pin_id_t target_uart_state_pin_id)
 {
   fifo_init(&modem_interface_tx_fifo, modem_interface_tx_buffer, MODEM_INTERFACE_TX_FIFO_SIZE);
   sched_register_task(&flush_modem_interface_tx_fifo);
   sched_register_task(&execute_state_machine);
   sched_register_task(&process_rx_fifo);
   state = STATE_IDLE;
-  uart_state_pin=uart_state_int_pin;
-  target_uart_state_pin=target_uart_state_int_pin;
+  uart_state_pin=uart_state_pin_id;
+  target_uart_state_pin=target_uart_state_pin_id;
 
   uart = uart_init(idx, baudrate,0);
   DPRINT("uart initialized");

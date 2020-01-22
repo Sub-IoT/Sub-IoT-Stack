@@ -134,7 +134,11 @@ void alp_append_forward_action(fifo_t* fifo, alp_interface_config_t *itf_config,
   assert(fifo_put_byte(fifo, ALP_OP_FORWARD) == SUCCESS);
   assert(fifo_put_byte(fifo, itf_config->itf_id) == SUCCESS);
 
-  if (itf_config->itf_id == ALP_ITF_ID_D7ASP)
+  if (itf_config->itf_id == ALP_ITF_ID_SERIAL) // TODO make optional?
+  {
+    // empty interface config
+  }
+  else if (itf_config->itf_id == ALP_ITF_ID_D7ASP)
   {
     assert(fifo_put_byte(fifo, ((d7ap_session_config_t*)itf_config->itf_config)->qos.raw) == SUCCESS);
     assert(fifo_put_byte(fifo, ((d7ap_session_config_t*)itf_config->itf_config)->dormant_timeout) == SUCCESS);
@@ -296,6 +300,7 @@ uint8_t alp_get_expected_response_length(fifo_t fifo) {
         fifo_skip(&fifo, 1); //skip file ID
         break;
       case ALP_OP_REQUEST_TAG:
+      case ALP_OP_RESPONSE_TAG:
         fifo_skip(&fifo, 1); // skip tag ID operand
         break;
       case ALP_OP_RETURN_FILE_DATA:

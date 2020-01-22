@@ -72,9 +72,9 @@ typedef struct {
 /*!
  * \brief Initializes the ALP layer
  * \param init_args Specifies the callback function pointers
- * \param shell_enabled Specifies if ALP is accessible over the serial console
+ * \param use_serial_interface Specifies if the ALP layer should initialize and use a serial interface
  */
-void alp_layer_init(alp_init_args_t* init_args, bool shell_enabled);
+void alp_layer_init(alp_init_args_t* init_args, bool use_serial_interface);
 
 
 /*!
