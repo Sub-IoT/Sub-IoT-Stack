@@ -55,10 +55,9 @@
 #define DPRINT_DATA(p, n)
 #endif
 
-static bool NGDEF(_shell_enabled);
 static alp_itf_id_t current_lorawan_interface_type = ALP_ITF_ID_LORAWAN_OTAA;
 static interface_deinit current_itf_deinit = NULL;
-#define shell_enabled NG(_shell_enabled)
+bool use_serial_itf;
 
 typedef struct {
   bool is_active;
@@ -143,13 +142,14 @@ static alp_command_t* get_command_by_transid(uint16_t trans_id) {
   return NULL;
 }
 
-void alp_layer_init(alp_init_args_t* alp_init_args, bool is_shell_enabled)
+void alp_layer_init(alp_init_args_t* alp_init_args, bool use_serial_interface)
 {
   init_args = alp_init_args;
-  shell_enabled = is_shell_enabled;
+  use_serial_itf = use_serial_interface;
   init_commands();
 
-  alp_cmd_handler_register_interface();
+  if(use_serial_itf)
+    alp_cmd_handler_register_interface();
 
 #ifdef MODULE_LORAWAN
   alp_layer_lorawan_init();
@@ -511,11 +511,15 @@ static alp_status_codes_t process_op_return_file_data(alp_command_t* command) {
 
   if(fifo_get_size(&command->alp_command_fifo) < total_len) goto incomplete_error;
 
-  if(shell_enabled) {
+  if(use_serial_itf) {
     // TODO refactor
     bool found = false;
     for(uint8_t i = 0; i < MODULE_ALP_INTERFACE_SIZE; i++) {
-      if((interfaces[i] != NULL) && (interfaces[i]->itf_id == ALP_ITF_ID_SERIAL)) {
+        if(
+            (interfaces[i] != NULL)
+            && (interfaces[i]->itf_id == ALP_ITF_ID_SERIAL)
+            && (command->origin_itf_id != interfaces[i]->itf_id)) // make sure we not transmit again over the itf on which we received
+        {
         DPRINT("serial itf found, sending");
         found = true;
         fifo_t serial_fifo;
@@ -535,7 +539,7 @@ static alp_status_codes_t process_op_return_file_data(alp_command_t* command) {
   } 
 
   if(init_args != NULL && init_args->alp_received_unsolicited_data_cb != NULL)
-    init_args->alp_received_unsolicited_data_cb(&current_status, &alp_data[shell_enabled * current_status.len], total_len);
+    init_args->alp_received_unsolicited_data_cb(&current_status, &alp_data[use_serial_itf * current_status.len], total_len);
 
   return ALP_STATUS_OK;  
 
@@ -780,7 +784,7 @@ void alp_layer_command_completed(uint16_t trans_id, error_t* error, alp_interfac
   alp_command_t* command = get_command_by_transid(trans_id);
   assert(command != NULL);
 
-  if(shell_enabled && command->respond_when_completed) {
+  if(use_serial_itf && command->respond_when_completed) {
     if(error != NULL)
       add_tag_response(command, true, *error);
     if(status != NULL)
@@ -816,7 +820,7 @@ void alp_layer_received_response(uint16_t trans_id, uint8_t* payload, uint8_t pa
 
 
   // received result for known command
-  if(shell_enabled) {
+  if(use_serial_itf) {
       // TODO refactor
 
       alp_append_interface_status(&command->alp_response_fifo, itf_status);

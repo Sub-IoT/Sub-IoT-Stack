@@ -29,11 +29,11 @@ typedef void (*target_rebooted_callback_t)(system_reboot_reason_t reboot_reason)
  *  tasks, initialising fifos/UART and registering callbacks/interrupts
  *  @param idx The UART port id.
  *  @param baudrate The used baud rate for UART communication
- *  @param mcu2modem The GPIO pin id of interrupt line indication request transmission/ready to receive
- *  @param modem2mcu The GPIO pin id of interrupt line indication request transmission/ready to receive
+ *  @param uart_state_pin_id The GPIO pin used to signal to the target we are ready for transmit or receive
+ *  @param target_uart_state_pin_id The GPIO pin used by the target to signal that the target is ready for transmit or receive
  *  @return Void.
  */
-void modem_interface_init(uint8_t idx, uint32_t baudrate, pin_id_t mcu2modem, pin_id_t modem2mcu);
+void modem_interface_init(uint8_t idx, uint32_t baudrate, pin_id_t uart_state_pin_id, pin_id_t target_uart_state_pin_id);
 
 /** @brief  Adds header to bytes containing sync bytes, counter, length and crc and puts it in UART fifo
  *  @param bytes Bytes that need to be transmitted

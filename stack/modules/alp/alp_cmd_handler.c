@@ -25,6 +25,7 @@
 #define ALP_CMD_MAX_SIZE 0xFF
 
 #include "hwatomic.h"
+#include "hwsystem.h"
 #include "types.h"
 #include "string.h"
 #include "alp_layer.h"
@@ -35,6 +36,8 @@
 #include "log.h"
 #include "MODULE_ALP_defs.h"
 #include "modem_interface.h"
+#include "platform_defs.h"
+#include "platform.h"
 
 #if defined(FRAMEWORK_LOG_ENABLED) && defined(MODULE_ALP_LOG_ENABLED)
 #define DPRINT(...) log_print_stack_string(LOG_STACK_ALP, __VA_ARGS__)
@@ -77,6 +80,7 @@ void alp_cmd_handler_register_interface() {
 
     alp_layer_register_interface(&alp_modem_interface);
 
+    modem_interface_init(PLATFORM_MODEM_INTERFACE_UART, PLATFORM_MODEM_INTERFACE_BAUDRATE, SERIAL_MODEM_INTERFACE_UART_STATE_PIN, SERIAL_MODEM_INTERFACE_TARGET_UART_STATE_PIN);
     modem_interface_register_handler(&modem_interface_cmd_handler, SERIAL_MESSAGE_TYPE_ALP_DATA);
 
     DPRINT("registered interface and handler");
@@ -86,5 +90,7 @@ error_t alp_cmd_send_output(uint8_t* payload, uint8_t payload_length, uint8_t ex
     DPRINT("sending payload to modem");
     DPRINT_DATA(payload, payload_length);
     modem_interface_transfer_bytes(payload, payload_length, SERIAL_MESSAGE_TYPE_ALP_DATA);
+
+    return SUCCESS;
 }
 

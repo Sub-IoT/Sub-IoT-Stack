@@ -50,4 +50,7 @@ target_include_directories(alp PUBLIC
     ${CMAKE_CURRENT_BINARY_DIR} # MODULE_D7AP_defs.h
 )
 
+GET_PROPERTY(__global_compile_definitions GLOBAL PROPERTY GLOBAL_COMPILE_DEFINITIONS)
+TARGET_COMPILE_DEFINITIONS(alp PUBLIC ${__global_compile_definitions})
+
 TARGET_LINK_LIBRARIES(alp m)

@@ -72,8 +72,6 @@ static alp_init_args_t alp_init_args;
 
 void bootstrap()
 {
-  modem_interface_init(PLATFORM_MODEM_INTERFACE_UART, PLATFORM_MODEM_INTERFACE_BAUDRATE, (pin_id_t) 0, (pin_id_t) 0);
-
   d7ap_init();
 
   d7ap_fs_write_dll_conf_active_access_class(0x01); // set to first AC, which is continuous FG scan
