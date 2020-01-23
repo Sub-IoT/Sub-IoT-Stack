@@ -374,35 +374,8 @@ void alp_append_write_file_data_action(fifo_t* fifo, uint8_t file_id, uint32_t o
 }
 
 void alp_append_interface_status(fifo_t* fifo, alp_interface_status_t* status) {
-#ifdef MODULE_D7AP
-  if(status->itf_id == ALP_ITF_ID_D7ASP) {
     fifo_put_byte(fifo, ALP_OP_STATUS + (1 << 6));
-    fifo_put_byte(fifo, ALP_ITF_ID_D7ASP);
-    fifo_put_byte(fifo, (12 + d7ap_addressee_id_length(status->d7ap_session_result.addressee.ctrl.id_type)));
-    fifo_put_byte(fifo, status->d7ap_session_result.channel.channel_header);
-    uint16_t center_freq = __builtin_bswap16(status->d7ap_session_result.channel.center_freq_index);
-    fifo_put(fifo, (uint8_t*)&center_freq, 2);
-    fifo_put_byte(fifo, status->d7ap_session_result.rx_level);
-    fifo_put_byte(fifo, status->d7ap_session_result.link_budget);
-    fifo_put_byte(fifo, status->d7ap_session_result.target_rx_level);
-    fifo_put_byte(fifo, status->d7ap_session_result.status.raw);
-    fifo_put_byte(fifo, status->d7ap_session_result.fifo_token);
-    fifo_put_byte(fifo, status->d7ap_session_result.seqnr);
-    fifo_put_byte(fifo, status->d7ap_session_result.response_to);
-    fifo_put_byte(fifo, status->d7ap_session_result.addressee.ctrl.raw);
-    fifo_put_byte(fifo, status->d7ap_session_result.addressee.access_class);
-    fifo_put(fifo, status->d7ap_session_result.addressee.id, d7ap_addressee_id_length(status->d7ap_session_result.addressee.ctrl.id_type));
-  }
-  else {
-    fifo_put_byte(fifo, ALP_OP_STATUS + (1 << 6));
-    fifo_put_byte(fifo, status->itf_id);
-    fifo_put(fifo, status->itf_status, status->len);
-  }
-#else
-    fifo_put_byte(fifo, ALP_OP_STATUS + (1 << 6));
-    fifo_put_byte(fifo, status->itf_id);
-    fifo_put(fifo, status->itf_status, status->len);
-#endif
+    fifo_put(fifo, (uint8_t*)status, status->len + 2);
 }
 
 void alp_append_create_new_file_data_action(fifo_t* fifo, uint8_t file_id, uint32_t length, fs_storage_class_t storage_class, bool resp, bool group) {

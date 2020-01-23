@@ -193,7 +193,7 @@ typedef struct {
     d7ap_fs_file_header_t file_header;
 } alp_operand_file_header_t;
 
-typedef struct {
+typedef struct __attribute__((packed)) {
     alp_itf_id_t itf_id;
     uint8_t len;
     uint8_t itf_status[40];
