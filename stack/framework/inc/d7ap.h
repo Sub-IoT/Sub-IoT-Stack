@@ -104,7 +104,7 @@ typedef struct {
     };
 } d7ap_sp_state_t;
 
-typedef struct
+typedef struct __attribute__((__packed__))
 {
     uint8_t channel_header;         /**< PHY layer channel header */
     uint16_t center_freq_index;     /**< The center frequency index of the channel id */

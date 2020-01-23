@@ -57,26 +57,53 @@ alp_interface_config_t d7ap_session_config_buffer = (alp_interface_config_t) {
 #endif // MODULE_ALP
 
 #ifdef MODULE_ALP
+
+static alp_interface_status_t serialize_session_result_to_alp_interface_status(const d7ap_session_result_t* session_result)
+{
+    alp_interface_status_t d7_status = (alp_interface_status_t) {
+        .itf_id = ALP_ITF_ID_D7ASP,
+        .len = 12 + d7ap_addressee_id_length(session_result->addressee.ctrl.id_type),
+    };
+
+    uint8_t* ptr = d7_status.itf_status;
+    (*ptr) = session_result->channel.channel_header;
+    ptr++;
+    uint16_t center_freq = __builtin_bswap16(session_result->channel.center_freq_index);
+    memcpy(ptr, &center_freq, 2);
+    ptr += 2;
+    (*ptr) = session_result->rx_level;
+    ptr++;
+    (*ptr) = session_result->link_budget;
+    ptr++;
+    (*ptr) = session_result->target_rx_level;
+    ptr++;
+    (*ptr) = session_result->status.raw;
+    ptr++;
+    (*ptr) = session_result->fifo_token;
+    ptr++;
+    (*ptr) = session_result->seqnr;
+    ptr++;
+    (*ptr) = session_result->response_to;
+    ptr++;
+    (*ptr) = session_result->addressee.ctrl.raw;
+    ptr++;
+    (*ptr) = session_result->addressee.access_class;
+    ptr++;
+    memcpy(ptr, session_result->addressee.id, d7ap_addressee_id_length(session_result->addressee.ctrl.id_type));
+
+    return d7_status;
+}
+
 void response_from_d7ap(uint16_t trans_id, uint8_t* payload, uint8_t len, d7ap_session_result_t result) {
     DPRINT("got response from d7 of trans %i with len %i and result linkbudget %i", trans_id, len, result.link_budget);
 
-    alp_interface_status_t d7_status = (alp_interface_status_t) {
-        .itf_id = ALP_ITF_ID_D7ASP,
-        .len = 15 + d7ap_addressee_id_length(result.addressee.ctrl.id_type),
-    };
-
-    memcpy(d7_status.itf_status, &result, d7_status.len);
+    alp_interface_status_t d7_status = serialize_session_result_to_alp_interface_status(&result);
     alp_layer_received_response(trans_id, payload, len, &d7_status);
 }
 
 bool command_from_d7ap(uint8_t* payload, uint8_t len, d7ap_session_result_t result) {
     DPRINT("command from d7 with len %i result linkbudget %i", len, result.link_budget);
-    alp_interface_status_t d7_status = (alp_interface_status_t) {
-        .itf_id = ALP_ITF_ID_D7ASP,
-        .len = 15 + d7ap_addressee_id_length(result.addressee.ctrl.id_type),
-        };
-
-    memcpy(d7_status.itf_status, &result, d7_status.len);
+    alp_interface_status_t d7_status = serialize_session_result_to_alp_interface_status(&result);
     return alp_layer_process_command(payload, len, ALP_ITF_ID_D7ASP, &d7_status);
 }
 

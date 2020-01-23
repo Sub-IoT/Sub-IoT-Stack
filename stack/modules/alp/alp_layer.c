@@ -524,7 +524,7 @@ static alp_status_codes_t process_op_return_file_data(alp_command_t* command) {
         fifo_init(&serial_fifo, alp_data, sizeof(alp_data));
         alp_append_interface_status(&serial_fifo, &current_status);
         fifo_pop(&command->alp_command_fifo, alp_data + fifo_get_size(&serial_fifo), total_len);
-        interfaces[i]->send_command(alp_data, total_len+current_status.len, 0, NULL, NULL);
+        interfaces[i]->send_command(alp_data, total_len + current_status.len + 3, 0, NULL, NULL);
         break;
       }
     }
@@ -826,7 +826,6 @@ void alp_layer_received_response(uint16_t trans_id, uint8_t* payload, uint8_t pa
 
       // tag and send response already with EOP bit cleared
       add_tag_response(command, false, false); // TODO error
-
       uint8_t response_size = fifo_get_size(&command->alp_response_fifo);
       bool found = false;
       fifo_pop(&command->alp_response_fifo, command->alp_response, response_size);
