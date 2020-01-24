@@ -25,4 +25,8 @@ error_t blockdevice_erase_block32k(blockdevice_t* bd, uint32_t addr){
   assert(bd && bd->driver && bd->driver->erase_block32k);
   return bd->driver->erase_block32k(bd, addr);
 }
+error_t blockdevice_erase_sector4k(blockdevice_t *bd, uint32_t addr){
+  assert(bd && bd->driver && bd->driver->erase_block32k);
+  return bd->driver->erase_sector4k(bd, addr);
+}
 
