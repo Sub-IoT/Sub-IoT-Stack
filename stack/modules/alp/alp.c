@@ -340,8 +340,22 @@ uint8_t alp_get_expected_response_length(fifo_t fifo) {
         fifo_skip(&fifo, 1);
         alp_parse_length_operand(&fifo);
         break;
+      case ALP_OP_STATUS:
+          if (!control.b6 && !control.b7) {
+              // action status
+              fifo_skip(&fifo, 1); // skip status code
+          } else if (control.b6 && !control.b7) {
+              // interface status
+              fifo_skip(&fifo, 1); // skip status code
+              fifo_skip(&fifo, (uint16_t)alp_parse_length_operand(&fifo)); // itf_status_len + itf status
+          } else {
+              assert(false); // TODO
+          }
+
+          break;
       // TODO other operations
       default:
+          DPRINT("!!op %i not implemented", control.raw);
         DPRINT("op %i not implemented", control.operation);
         assert(false);
     }

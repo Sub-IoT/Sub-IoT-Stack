@@ -435,27 +435,22 @@ static alp_status_codes_t process_op_status(alp_command_t* command) {
   error_t err;
   alp_control_t ctrl;
   err = fifo_pop(&command->alp_command_fifo, (uint8_t*)&ctrl, 1);
-  uint8_t ext = (ctrl.b7 < 1) + ctrl.b6;
-  switch(ext) {
-    case 0: ; //action status operation
+  if (!ctrl.b7 && !ctrl.b6) {
+      //action status operation
       uint8_t status_code;
       fifo_pop(&command->alp_command_fifo, &status_code, 1);
       //TO DO implement handling of action status
-      break;
-    case 1: ;//interface status operation
+  } else if (!ctrl.b7 && ctrl.b6) {
+      //interface status operation
       alp_interface_status_t status;
-      fifo_pop(&command->alp_command_fifo, &status.itf_id, 1);
+      fifo_pop(&command->alp_command_fifo, (uint8_t*)&status.itf_id, 1);
       status.len = (uint8_t)alp_parse_length_operand(&command->alp_command_fifo);
       fifo_pop(&command->alp_command_fifo, status.itf_status, status.len);
-      if((init_args != NULL) &&(init_args->alp_command_result_cb != NULL))
+      if ((init_args != NULL) && (init_args->alp_command_result_cb != NULL))
           init_args->alp_command_result_cb(&status, NULL, 0);
-      break;
-    case 2: //RFU
-    case 3: //RFU
-    default:
-      DPRINT("op_status ext %i not defined", ext);
-      assert(false);
-
+  } else {
+      DPRINT("op_status ext not defined b6=%i, b7=%i", ctrl.b6, ctrl.b7);
+      assert(false); // TODO
   }
 
   return ALP_STATUS_OK;
