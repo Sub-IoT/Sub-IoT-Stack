@@ -114,6 +114,7 @@ static const uint16_t rx_bw_startup_time[21] = {66, 78, 89, 105, 88, 126, 125, 1
 
 static const uint32_t lora_available_bw[10] = {7800, 10400, 15600, 20800, 31250, 41700, 62500, 125000, 250000, 500000}; // in Hz
 static const uint8_t lora_bw_indexes[10] = {15, 14, 12, 11, 9, 8, 6, 3, 0, 0}; // indexes of lora bw's of startup times
+static const uint16_t pa_ramp_available[16] = {3400, 2000, 1000, 500, 250, 125, 100, 62, 50, 40, 31, 25, 20, 15, 12, 10}; //in µs
 uint8_t lora_closest_bw_index;
 
 static uint8_t rx_bw_number = 21;
@@ -290,7 +291,7 @@ static inline void flush_fifo() {
 }
 
 static void init_regs() {
-  uint8_t gaussian_shape_filter = 2; // 0: no shaping, 1: BT=1.0, 2: BT=0.5, 3: BT=0.3 // TODO benchmark?
+  uint8_t gaussian_shape_filter = 3; // 0: no shaping, 1: BT=1.0, 2: BT=0.5, 3: BT=0.3 // TODO benchmark?
   if(is_sx1272) {
     write_reg(REG_OPMODE, RF_OPMODE_SLEEP | gaussian_shape_filter << 3); // FSK; modulation shaping, sleep
   } else {
@@ -302,7 +303,7 @@ static void init_regs() {
   if(is_sx1272) {
     write_reg(REG_PARAMP, RF_PARAMP_0040_US | RF_PARAMP_LOWPNTXPLL_OFF); // PaRamp=40us // TODO, use LowPnRxPll?
   } else {
-    write_reg(REG_PARAMP, RF_PARAMP_0040_US | (gaussian_shape_filter << 5)); // modulation shaping and PaRamp=40us
+    write_reg(REG_PARAMP, RF_PARAMP_0500_US | (gaussian_shape_filter << 5)); // modulation shaping and PaRamp=40us
   }
 
   // RX
@@ -406,6 +407,32 @@ void set_rssi_config(uint8_t rssi_smoothing, uint8_t rssi_offset) {
   write_reg(REG_RSSICONFIG, rssi_offset << 3 | rssi_smoothing);
 
   rssi_smoothing_full = 2 << rssi_smoothing;
+}
+
+/**
+ * @brief set gaussian shape filter and paramp
+ * 
+ * @param gaussian BT = 1/gaussian with 0 unshaped and max value of 3
+ * @param paramp microseconds of paramp
+ */
+void hw_radio_set_tx_config(uint8_t gaussian, uint16_t paramp) {
+  assert(gaussian <= 3);
+  uint16_t min_dif = UINT16_MAX;
+  uint8_t reg_paramp = 0;
+
+  for(uint8_t index = 0; index < 16; index++) {
+    if(abs(paramp - pa_ramp_available[index]) < min_dif) {
+      min_dif = abs(paramp - pa_ramp_available[index]);
+      reg_paramp = index;
+    } else
+      break;
+  }
+
+  if(is_sx1272) {
+    write_reg(REG_OPMODE, (read_reg(REG_OPMODE) & RF_OPMODE_MODULATIONSHAPING_MASK) | gaussian << 3);
+    write_reg(REG_PARAMP, (read_reg(REG_PARAMP) & RF_PARAMP_MASK) | reg_paramp); 
+  } else
+    write_reg(REG_PARAMP, reg_paramp | (gaussian << 5));
 }
 
 static inline int16_t get_rssi() {
@@ -1012,8 +1039,8 @@ error_t hw_radio_send_payload(uint8_t * data, uint16_t len) {
         hw_gpio_set_edge_interrupt(SX127x_DIO0_PIN, GPIO_RISING_EDGE);
         hw_gpio_enable_interrupt(SX127x_DIO0_PIN); 
       } else {
-        previous_threshold = 2;
-        write_reg(REG_FIFOTHRESH, RF_FIFOTHRESH_TXSTARTCONDITION_FIFONOTEMPTY | 2);
+        previous_threshold = 10;
+        write_reg(REG_FIFOTHRESH, RF_FIFOTHRESH_TXSTARTCONDITION_FIFONOTEMPTY | 10);
         write_fifo(data + start, remaining_bytes_len);
         remaining_bytes_len = 0;
         hw_gpio_set_edge_interrupt(SX127x_DIO1_PIN, GPIO_FALLING_EDGE);

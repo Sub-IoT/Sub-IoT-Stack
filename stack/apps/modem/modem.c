@@ -50,6 +50,8 @@ void bootstrap()
     d7ap_init();
     alp_layer_init(NULL, true);
 
+    d7ap_set_access_class(0x11);
+
     uint8_t uid[8];
     d7ap_fs_read_uid(uid);
     log_print_string("UID %02X%02X%02X%02X%02X%02X%02X%02X\n", uid[0], uid[1], uid[2], uid[3], uid[4], uid[5], uid[6], uid[7]);

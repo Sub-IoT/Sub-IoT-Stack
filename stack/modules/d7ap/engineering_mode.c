@@ -70,12 +70,16 @@ static hw_radio_packet_t* per_packet = (hw_radio_packet_t*)per_packet_buffer;
 static void start_per_rx();
 static void transmit_per_packet();
 
-void cont_tx_done_callback(packet_t* packet) {}
+void cont_tx_done_callback(packet_t* packet) {
+  if(stop)
+    dll_execute_scan_automation();
+}
 
 void packet_transmitted_callback(packet_t* packet) {
   DPRINT("packet %i transmitted", per_packet_counter);
   if(per_packet_counter >= per_packet_limit && per_packet_limit != 25500) { //timeout of 255 = unlimited
     DPRINT("PER test done");
+    dll_execute_scan_automation();
     return;
   }
 
@@ -205,6 +209,7 @@ static void em_file_change_callback(uint8_t file_id) {
         break;
       case EM_CONTINUOUS_TX:
         DPRINT("EM_MODE_CONTINUOUS_TX\n");
+        stop = true;
         memcpy( &(tx_cfg.channel_id), &(em_command->channel_id), sizeof(channel_id_t));
         tx_cfg.eirp = em_command->eirp;
 

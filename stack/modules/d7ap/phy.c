@@ -179,6 +179,9 @@ static uint8_t preamble_tol_hi_rate;
 static uint8_t rssi_smoothing;
 static uint8_t rssi_offset;
 
+static uint8_t gaussian;
+static uint16_t paramp;
+
 static uint32_t total_bg = 0;
 static uint32_t total_rssi_triggers = 0;
 static uint32_t total_fg = 1;
@@ -531,7 +534,6 @@ static void configure_syncword(syncword_class_t syncword_class, const channel_id
 void continuous_tx_expiration()
 {
     hw_radio_enable_refill(false);
-    dll_execute_scan_automation();
     DPRINT("Continuous TX is now terminated");
 }
 
@@ -571,12 +573,18 @@ void fact_settings_file_change_callback(uint8_t file_id)
     lora_bw = __builtin_bswap32(*((uint32_t*)(fact_settings+48)));
     lora_SF = (uint8_t)fact_settings[52];
 
+    gaussian = (uint8_t)fact_settings[53]; // 0: no shaping, 1: BT=1/1=1, 2: BT=1/2=0.5, 3: BT=1/3=0.3
+    paramp = __builtin_bswap16(*((uint16_t*)(fact_settings+54)));
+
+    hw_radio_set_tx_config(gaussian, paramp);
+
     DPRINT("low rate bitrate %i : fdev %i : rx_bw %i : preamble size %i : preamble detector size %i : tol %i", bitrate_lo_rate, fdev_lo_rate, rx_bw_lo_rate, preamble_size_lo_rate, preamble_detector_size_lo_rate, preamble_tol_lo_rate);
     DPRINT("normal rate bitrate %i : fdev %i : rx_bw %i : preamble size %i : preamble detector size %i : tol %i", bitrate_normal_rate, fdev_normal_rate, rx_bw_normal_rate, preamble_size_normal_rate, preamble_detector_size_normal_rate, preamble_tol_normal_rate);
     DPRINT("high rate bitrate %i : fdev %i : rx_bw %i : preamble size %i : preamble detector size %i : tol %i", bitrate_hi_rate, fdev_hi_rate, rx_bw_hi_rate, preamble_size_hi_rate, preamble_detector_size_hi_rate, preamble_tol_hi_rate);
     DPRINT("rssi smoothing is set to %i with an offset of %i", 2 << rssi_smoothing, rssi_offset);
     DPRINT("gain offset set to %i\n", gain_offset);
     DPRINT("set lora bw to %i Hz with SF %i\n", lora_bw, lora_SF);
+    DPRINT("gaussian BT set to %i and paramp set to %i µs", gaussian, paramp);
 
     fact_settings_changed = true;
 }

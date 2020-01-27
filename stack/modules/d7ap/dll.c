@@ -216,7 +216,8 @@ static void switch_state(dll_state_t next_state)
                || dll_state == DLL_STATE_CCA2
                || dll_state == DLL_STATE_CSMA_CA_RETRY
                || dll_state == DLL_STATE_SCAN_AUTOMATION
-               || dll_state == DLL_STATE_IDLE);
+               || dll_state == DLL_STATE_IDLE
+               || dll_state == DLL_STATE_STOPPED);
         dll_state = next_state;
         DPRINT("Switched to DLL_STATE_IDLE");
         break;
@@ -224,7 +225,8 @@ static void switch_state(dll_state_t next_state)
         assert(dll_state == DLL_STATE_FOREGROUND_SCAN
                || dll_state == DLL_STATE_IDLE
                || dll_state == DLL_STATE_TX_FOREGROUND_COMPLETED
-               || dll_state == DLL_STATE_SCAN_AUTOMATION);
+               || dll_state == DLL_STATE_SCAN_AUTOMATION
+               || dll_state == DLL_STATE_STOPPED);
         dll_state = next_state;
         DPRINT("Switched to DLL_STATE_SCAN_AUTOMATION");
         break;
@@ -311,7 +313,7 @@ void median_measured_noisefloor(uint8_t position) {
     }
     if(noisefl_last_measurements[position][0] && noisefl_last_measurements[position][1] && noisefl_last_measurements[position][2]) { //If not default 0 values
         uint8_t median = noisefl_last_measurements[position][0]>noisefl_last_measurements[position][1]?  ( noisefl_last_measurements[position][2]>noisefl_last_measurements[position][0]? noisefl_last_measurements[position][0] : (noisefl_last_measurements[position][1]>noisefl_last_measurements[position][2]? noisefl_last_measurements[position][1]:noisefl_last_measurements[position][2]) )  :  ( noisefl_last_measurements[position][2]>noisefl_last_measurements[position][1]? noisefl_last_measurements[position][1] : (noisefl_last_measurements[position][0]>noisefl_last_measurements[position][2]? noisefl_last_measurements[position][0]:noisefl_last_measurements[position][2]) );
-        E_CCA = - median + NOISEFL_MEDIAN_OFFSET; //Min of last 3 with 6dB offset
+        E_CCA = - median + NOISEFL_MEDIAN_OFFSET; //Mean of last 3 with offset
     } else
         E_CCA = - current_access_profile.subbands[0].cca;
 }
@@ -848,7 +850,7 @@ static void save_noise_floor(uint8_t position) {
 
 void dll_execute_scan_automation()
 {
-    if (!(dll_state == DLL_STATE_IDLE || dll_state == DLL_STATE_SCAN_AUTOMATION))
+    if (!(dll_state == DLL_STATE_IDLE || dll_state == DLL_STATE_SCAN_AUTOMATION || dll_state == DLL_STATE_STOPPED))
         return;
 
     // first make sure the background scan timer is stopped and the pending task canceled
