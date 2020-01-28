@@ -183,7 +183,7 @@ static uint8_t gaussian;
 static uint16_t paramp;
 
 static uint32_t total_bg = 0;
-static uint32_t total_rssi_triggers = 0;
+static uint32_t total_bg_timeout = 0;
 static uint32_t total_fg = 1;
 static uint32_t total_succeeded_fg = 0;
 
@@ -255,6 +255,7 @@ uint16_t end_time;
 static timer_event continuous_tx_expiration_timer;
 
 static void fill_in_fifo(uint16_t remaining_bytes_len);
+static void status_write();
 
 static hw_radio_packet_t* alloc_new_packet(uint16_t length)
 {
@@ -301,6 +302,8 @@ static void packet_received(hw_radio_packet_t* hw_radio_packet)
 {
     assert(state == STATE_RX || state == STATE_BG_SCAN);
     if(hw_radio_packet == NULL) {
+        total_bg_timeout++;
+        status_write();
         received_callback(NULL);
         return;
     }
@@ -634,25 +637,27 @@ error_t phy_init(void) {
     return ret;
 }
 
-void status_write() {
-    uint16_t bg_trigger_ratio;
-    if(total_bg < 0xFFFFFFFF)
-        bg_trigger_ratio = 1024 * (uint64_t)total_rssi_triggers / total_bg;
-    else {
-        total_bg = 1;
-        total_rssi_triggers=0;
-        bg_trigger_ratio = 0;
+static void status_write() {
+    if(total_bg >= 0xFFFFFFF0) {
+        total_bg = 0;
+        total_bg_timeout = 0;
     }
     uint16_t scan_timeout_ratio;
-    if(total_fg < 0xFFFFFFFF)
+    if(total_fg < 0xFFFFFFF0)
         scan_timeout_ratio = 1024 * (uint64_t)(total_fg - total_succeeded_fg) / total_fg;
     else {
         total_fg = 1;
         total_succeeded_fg = 0;
         scan_timeout_ratio = 1024;
     }
-    uint8_t buffer[4] = {(uint8_t)(bg_trigger_ratio >> 8), (uint8_t)(bg_trigger_ratio & 0xFF), (uint8_t)(scan_timeout_ratio >> 8), (uint8_t)(scan_timeout_ratio & 0xFF)};
-    d7ap_fs_write_file(D7A_FILE_DLL_STATUS_FILE_ID, 8, buffer, 4);
+    uint8_t buffer[10] = {(uint8_t)(scan_timeout_ratio >> 8), (uint8_t)(scan_timeout_ratio & 0xFF)};
+    scan_timeout_ratio = __builtin_bswap16(scan_timeout_ratio);
+    memcpy(buffer, &scan_timeout_ratio, 2);
+    uint32_t temp_buffer = __builtin_bswap32(total_bg);
+    memcpy(&buffer[2], &temp_buffer, 4);
+    temp_buffer = __builtin_bswap32(total_bg_timeout);
+    memcpy(&buffer[6], &temp_buffer, 4);
+    d7ap_fs_write_file(D7A_FILE_DLL_STATUS_FILE_ID, 6, buffer, 10);
 }
 
 error_t phy_start_rx(channel_id_t* channel, syncword_class_t syncword_class, phy_rx_packet_callback_t rx_cb) {
@@ -1015,6 +1020,8 @@ error_t phy_start_background_scan(phy_rx_config_t* config, phy_rx_packet_callbac
 
     total_bg++;
 
+    status_write();
+
     DEBUG_RX_START();
 
     int16_t rssi = hw_radio_get_rssi();
@@ -1032,11 +1039,6 @@ error_t phy_start_background_scan(phy_rx_config_t* config, phy_rx_packet_callbac
 
     DPRINT("rssi %i > %i, waiting for BG frame on channel %i\n", rssi, config->rssi_thr, config->channel_id.center_freq_index);
     config->rssi_thr = rssi;
-
-    total_rssi_triggers++;
-
-    status_write();
-
 
     // the device has a period of To to successfully detect the sync word
     hw_radio_set_rx_timeout(bg_timeout[current_channel_id.channel_header.ch_class] + 40); //TO DO: OPTIMISE THIS TIMEOUT
