@@ -124,10 +124,12 @@ static uint16_t NGDEF(_tsched);
 static bool NGDEF(_guarded_channel);
 #define guarded_channel NG(_guarded_channel)
 
-static uint8_t noisefl_last_measurements[PHY_STATUS_MAX_CHANNELS][NOISEFL_NUMBER_MEASUREMENTS]; //3 measurement per channel
+static uint8_t noisefl_average[PHY_STATUS_MAX_CHANNELS];
+static uint8_t noisefl_alpha = 5;
+static uint8_t noisefl_offset = 6;
 static channel_status_t channels[PHY_STATUS_MAX_CHANNELS];
 static uint8_t phy_status_channel_counter = 0;
-static bool reset_noisefl_last_measurements = false;
+static bool reset_noisefl_average = false;
 static channel_id_t scan_automation_channel_list[SCAN_AUTOMATION_CHANNEL_LIST_MAX_LENGTH];
 static uint8_t channel_list_length;
 static uint8_t current_rx_channel_index = 1;
@@ -301,21 +303,17 @@ void start_guard_period(timer_tick_t period)
     timer_add_event(&dll_guard_period_expiration_timer);
 }
 
-void median_measured_noisefloor(uint8_t position) {
+void noisefloor_get_average(uint8_t position) {
     if(position == UINT8_MAX) {
         E_CCA = - current_access_profile.subbands[0].cca;
         return;
     }
-    if(reset_noisefl_last_measurements) {
-        memset(noisefl_last_measurements[position], 0, 3);
-        reset_noisefl_last_measurements = false;
+    if(reset_noisefl_average) {
+        noisefl_average[position] = - current_access_profile.subbands[0].cca;
+        reset_noisefl_average = false;
         DPRINT("reset CCA");
     }
-    if(noisefl_last_measurements[position][0] && noisefl_last_measurements[position][1] && noisefl_last_measurements[position][2]) { //If not default 0 values
-        uint8_t median = noisefl_last_measurements[position][0]>noisefl_last_measurements[position][1]?  ( noisefl_last_measurements[position][2]>noisefl_last_measurements[position][0]? noisefl_last_measurements[position][0] : (noisefl_last_measurements[position][1]>noisefl_last_measurements[position][2]? noisefl_last_measurements[position][1]:noisefl_last_measurements[position][2]) )  :  ( noisefl_last_measurements[position][2]>noisefl_last_measurements[position][1]? noisefl_last_measurements[position][1] : (noisefl_last_measurements[position][0]>noisefl_last_measurements[position][2]? noisefl_last_measurements[position][0]:noisefl_last_measurements[position][2]) );
-        E_CCA = - median + NOISEFL_MEDIAN_OFFSET; //Mean of last 3 with offset
-    } else
-        E_CCA = - current_access_profile.subbands[0].cca;
+    E_CCA = - noisefl_average[position] + noisefl_offset;
 }
 
 /* return to default values */
@@ -344,10 +342,10 @@ void start_background_scan()
         //Use the default channel CCA threshold
         E_CCA = - current_access_profile.subbands[0].cca; // Eccao is set to 0 dB
     } 
-    else if(rx_nf_method == D7ADLL_MEDIAN_OF_THREE) 
+    else if(rx_nf_method == D7ADLL_MOVING_AVERAGE) 
     {
         //Use the minimum of 3 measurements of the noisefloor
-        median_measured_noisefloor(position);
+        noisefloor_get_average(position);
     }
     else assert(false);
 
@@ -360,15 +358,14 @@ void start_background_scan()
         ready_for_bg_scan = false; //give time for scan to succeed
         DPRINT("triggered background scan on channel %i with rssi %i > E_CCA %i", current_channel_id.center_freq_index, config.rssi_thr, E_CCA);
     }
-    if(rx_nf_method == D7ADLL_MEDIAN_OF_THREE) { 
+    if(rx_nf_method == D7ADLL_MOVING_AVERAGE) { 
         //if current_channel in array of channels AND gotten rssi_thr smaller than pre-programmed Ecca
         if(position != UINT8_MAX && (config.rssi_thr <= - current_access_profile.subbands[0].cca)) {
-            //rotate measurements and add new at the end
-            memcpy(noisefl_last_measurements[position], &noisefl_last_measurements[position][1], 2);
-            noisefl_last_measurements[position][2] = - config.rssi_thr;
+            // Xn = Xn-1 * (1 - b) + S * b with b = 1/alpha and S = sample 
+            noisefl_average[position] = (noisefl_average[position] * (noisefl_alpha - 1) + (-config.rssi_thr)) / noisefl_alpha;
         }
 
-        median_measured_noisefloor(position);
+        noisefloor_get_average(position);
         save_noise_floor(position);
     }
 
@@ -526,12 +523,12 @@ static void cca_rssi_valid(int16_t cur_rssi)
 
     if (cur_rssi <= E_CCA)
     {
-        if((tx_nf_method == D7ADLL_MEDIAN_OF_THREE || rx_nf_method == D7ADLL_MEDIAN_OF_THREE))
+        if((tx_nf_method == D7ADLL_MOVING_AVERAGE || rx_nf_method == D7ADLL_MOVING_AVERAGE))
         {
             uint8_t position = get_position_channel();
-            memcpy(noisefl_last_measurements[position], &noisefl_last_measurements[position][1], 2);
-            noisefl_last_measurements[position][2] = - cur_rssi;
-            median_measured_noisefloor(position);
+            // Xn = Xn-1 * (1 - b) + S * b with b = 1/alpha and S = sample 
+            noisefl_average[position] = (noisefl_average[position] * (noisefl_alpha - 1) + (-cur_rssi)) / noisefl_alpha;
+            noisefloor_get_average(position);
         }
         if (dll_state == DLL_STATE_CCA1)
         {
@@ -804,7 +801,7 @@ static void execute_csma_ca(void *arg)
                 resume_fg_scan = false;
             }
 
-            reset_noisefl_last_measurements = true;
+            reset_noisefl_average = true;
             break;
         }
     }
@@ -963,13 +960,21 @@ static void conf_file_changed_callback(uint8_t file_id)
     DPRINT("DLL config file changed");
     uint8_t scan_access_class = d7ap_fs_read_dll_conf_active_access_class();
 
-    uint8_t nf_ctrl;
+    uint8_t nf_ctrl[3];
 
-    if (d7ap_fs_read_file(D7A_FILE_DLL_CONF_FILE_ID, 4, &nf_ctrl, 1) != 0)
-        nf_ctrl = (D7ADLL_FIXED_NOISE_FLOOR << 4) & 0x0F; // set default NF computation method if the setting is not present
+    if (d7ap_fs_read_file(D7A_FILE_DLL_CONF_FILE_ID, 4, nf_ctrl, 3) != 0)
+        nf_ctrl[0] = (D7ADLL_FIXED_NOISE_FLOOR << 4) & 0x0F | (D7ADLL_FIXED_NOISE_FLOOR & 0x0F); // set default NF computation method if the setting is not present
 
-    tx_nf_method = (nf_ctrl >> 4) & 0x0F;
-    rx_nf_method = nf_ctrl & 0x0F;
+    tx_nf_method = (nf_ctrl[0] >> 4) & 0x0F;
+    rx_nf_method = nf_ctrl[0] & 0x0F;
+
+    if(rx_nf_method == D7ADLL_MOVING_AVERAGE) {
+        noisefl_alpha = (nf_ctrl[1] >> 4) & 0x0F;
+        noisefl_offset = nf_ctrl[1] & 0x0F;
+    } else if(tx_nf_method == D7ADLL_MOVING_AVERAGE) {
+        noisefl_alpha = (nf_ctrl[2] >> 4) & 0x0F;
+        noisefl_offset = nf_ctrl[2] & 0x0F;
+    }
 
     // if the access class has been modified, update the current access profile
     if (active_access_class != scan_access_class)
@@ -1018,7 +1023,7 @@ void dll_init()
 {
     assert(dll_state == DLL_STATE_STOPPED);
 
-    uint8_t nf_ctrl;
+    uint8_t nf_ctrl[3];
 
     // Initialize timers
     timer_init_event(&dll_cca_timer, &execute_cca);
@@ -1031,11 +1036,19 @@ void dll_init()
 
     phy_init();
 
-    if (d7ap_fs_read_file(D7A_FILE_DLL_CONF_FILE_ID, 4, &nf_ctrl, 1) != 0)
-        nf_ctrl = (D7ADLL_FIXED_NOISE_FLOOR << 4) & 0x0F; // set default NF computation method if the setting is not present
+    if (d7ap_fs_read_file(D7A_FILE_DLL_CONF_FILE_ID, 4, nf_ctrl, 3) != 0)
+        nf_ctrl[0] = (D7ADLL_FIXED_NOISE_FLOOR << 4) & 0x0F | (D7ADLL_FIXED_NOISE_FLOOR & 0x0F); // set default NF computation method if the setting is not present
 
-    tx_nf_method = (nf_ctrl >> 4) & 0x0F;
-    rx_nf_method = nf_ctrl & 0x0F;
+    tx_nf_method = (nf_ctrl[0] >> 4) & 0x0F;
+    rx_nf_method = nf_ctrl[0] & 0x0F;
+
+    if(rx_nf_method == D7ADLL_MOVING_AVERAGE) {
+        noisefl_alpha = (nf_ctrl[1] >> 4) & 0x0F;
+        noisefl_offset = nf_ctrl[1] & 0x0F;
+    } else if(tx_nf_method == D7ADLL_MOVING_AVERAGE) {
+        noisefl_alpha = (nf_ctrl[2] >> 4) & 0x0F;
+        noisefl_offset = nf_ctrl[2] & 0x0F;
+    }
 
     dll_state = DLL_STATE_IDLE;
 
@@ -1210,10 +1223,10 @@ void dll_tx_frame(packet_t* packet)
             E_CCA = - remote_access_profile.subbands[0].cca; // Eccao is set to 0 dB
             DPRINT("fixed floor: E_CCA %i", E_CCA);
         }
-        else if(tx_nf_method == D7ADLL_MEDIAN_OF_THREE)
+        else if(tx_nf_method == D7ADLL_MOVING_AVERAGE)
         {
             uint8_t position = get_position_channel();
-            median_measured_noisefloor(position);
+            noisefloor_get_average(position);
         }
         else
         {

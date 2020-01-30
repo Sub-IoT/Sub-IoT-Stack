@@ -107,53 +107,53 @@ sys_file_prop_perm = FileProperties(act_enabled=False, act_condition=ActionCondi
 sys_file_prop_vol = FileProperties(act_enabled=False, act_condition=ActionCondition.WRITE, storage_class=StorageClass.VOLATILE)
 
 system_files = [
-  (UidFile(),                                                   sys_file_prop_perm),
-  (FactorySettingsFile(),                                       sys_file_prop_perm),
-  (FirmwareVersionFile(),                                       sys_file_prop_perm),
-  (NotImplementedFile(SystemFileIds.DEVICE_CAPACITY.value, 19), sys_file_prop_perm),
-  (NotImplementedFile(SystemFileIds.DEVICE_STATUS.value, 9),    sys_file_prop_perm),
-  (EngineeringModeFile(),                                       sys_file_prop_perm),
-  (VidFile(),                                                   sys_file_prop_perm),
-  (NotImplementedFile(SystemFileIds.RFU_07.value, 0),           sys_file_prop_perm),
-  (NotImplementedFile(SystemFileIds.PHY_CONFIG.value, 9),       sys_file_prop_perm),
-  (PhyStatusFile(),                                             sys_file_prop_vol),
-  (DllConfigFile(active_access_class=0x21, nf_ctrl=0x22),       sys_file_prop_perm),
-  (DllStatusFile(),                                             sys_file_prop_vol),
-  (NotImplementedFile(SystemFileIds.NWL_ROUTING.value, 1),      sys_file_prop_perm),  # TODO variable routing table
-  (NotImplementedFile(SystemFileIds.NWL_SECURITY.value, 5),     sys_file_prop_perm),
-  (SecurityKeyFile(),                                           sys_file_prop_perm),
-  (NotImplementedFile(SystemFileIds.NWL_SSR.value, 4),          sys_file_prop_perm),  # TODO 0 recorded devices
-  (NotImplementedFile(SystemFileIds.NWL_STATUS.value, 20),      sys_file_prop_perm),
-  (NotImplementedFile(SystemFileIds.TRL_STATUS.value, 1),       sys_file_prop_perm),  # TODO 0 TRL records
-  (NotImplementedFile(SystemFileIds.SEL_CONFIG.value, 6),       sys_file_prop_perm),
-  (NotImplementedFile(SystemFileIds.FOF_STATUS.value, 10),      sys_file_prop_perm),
-  (NotImplementedFile(SystemFileIds.RFU_14.value, 0),           sys_file_prop_perm),
-  (NotImplementedFile(SystemFileIds.RFU_15.value, 0),           sys_file_prop_perm),
-  (NotImplementedFile(SystemFileIds.RFU_16.value, 0),           sys_file_prop_perm),
-  (NotImplementedFile(SystemFileIds.LOCATION_DATA.value, 1),    sys_file_prop_perm),  # TODO 0 recorded locations
-  (NotImplementedFile(SystemFileIds.D7AALP_RFU_18.value, 0),    sys_file_prop_perm),
-  (NotImplementedFile(SystemFileIds.D7AALP_RFU_19.value, 0),    sys_file_prop_perm),
-  (NotImplementedFile(SystemFileIds.D7AALP_RFU_1A.value, 0),    sys_file_prop_perm),
-  (NotImplementedFile(SystemFileIds.D7AALP_RFU_1B.value, 0),    sys_file_prop_perm),
-  (NotImplementedFile(SystemFileIds.D7AALP_RFU_1C.value, 0),    sys_file_prop_perm),
-  (NotImplementedFile(SystemFileIds.D7AALP_RFU_1D.value, 0),    sys_file_prop_perm),
-  (NotImplementedFile(SystemFileIds.D7AALP_RFU_1E.value, 0),    sys_file_prop_perm),
-  (NotImplementedFile(SystemFileIds.D7AALP_RFU_1F.value, 0),    sys_file_prop_perm),
-  (AccessProfileFile(0, ap_cont_fg_scan),                       sys_file_prop_perm),
-  (AccessProfileFile(1, ap_bg_scan),                            sys_file_prop_perm),
-  (AccessProfileFile(2, ap_no_scan),                            sys_file_prop_perm),
-  (AccessProfileFile(3, ap_cont_div_scan),                      sys_file_prop_perm),
-  (AccessProfileFile(4, ap_no_scan),                            sys_file_prop_perm),
-  (AccessProfileFile(5, ap_no_scan),                            sys_file_prop_perm),
-  (AccessProfileFile(6, ap_no_scan),                            sys_file_prop_perm),
-  (AccessProfileFile(7, ap_no_scan),                            sys_file_prop_perm),
-  (AccessProfileFile(8, ap_no_scan),                            sys_file_prop_perm),
-  (AccessProfileFile(9, ap_no_scan),                            sys_file_prop_perm),
-  (AccessProfileFile(10, ap_no_scan),                           sys_file_prop_perm),
-  (AccessProfileFile(11, ap_no_scan),                           sys_file_prop_perm),
-  (AccessProfileFile(12, ap_no_scan),                           sys_file_prop_perm),
-  (AccessProfileFile(13, ap_no_scan),                           sys_file_prop_perm),
-  (AccessProfileFile(14, ap_no_scan),                           sys_file_prop_perm)
+  (UidFile(),                                                                                                       sys_file_prop_perm),
+  (FactorySettingsFile(),                                                                                           sys_file_prop_perm),
+  (FirmwareVersionFile(),                                                                                           sys_file_prop_perm),
+  (NotImplementedFile(SystemFileIds.DEVICE_CAPACITY.value, 19),                                                     sys_file_prop_perm),
+  (NotImplementedFile(SystemFileIds.DEVICE_STATUS.value, 9),                                                        sys_file_prop_perm),
+  (EngineeringModeFile(),                                                                                           sys_file_prop_perm),
+  (VidFile(),                                                                                                       sys_file_prop_perm),
+  (NotImplementedFile(SystemFileIds.RFU_07.value, 0),                                                               sys_file_prop_perm),
+  (NotImplementedFile(SystemFileIds.PHY_CONFIG.value, 9),                                                           sys_file_prop_perm),
+  (PhyStatusFile(),                                                                                                 sys_file_prop_vol),
+  (DllConfigFile(active_access_class=0x21, nf_ctrl=0x22, rx_nf_method_parameter=0x56, tx_nf_method_parameter=0x56), sys_file_prop_perm),
+  (DllStatusFile(),                                                                                                 sys_file_prop_vol),
+  (NotImplementedFile(SystemFileIds.NWL_ROUTING.value, 1),                                                          sys_file_prop_perm),  # TODO variable routing table
+  (NotImplementedFile(SystemFileIds.NWL_SECURITY.value, 5),                                                         sys_file_prop_perm),
+  (SecurityKeyFile(),                                                                                               sys_file_prop_perm),
+  (NotImplementedFile(SystemFileIds.NWL_SSR.value, 4),                                                              sys_file_prop_perm),  # TODO 0 recorded devices
+  (NotImplementedFile(SystemFileIds.NWL_STATUS.value, 20),                                                          sys_file_prop_perm),
+  (NotImplementedFile(SystemFileIds.TRL_STATUS.value, 1),                                                           sys_file_prop_perm),  # TODO 0 TRL records
+  (NotImplementedFile(SystemFileIds.SEL_CONFIG.value, 6),                                                           sys_file_prop_perm),
+  (NotImplementedFile(SystemFileIds.FOF_STATUS.value, 10),                                                          sys_file_prop_perm),
+  (NotImplementedFile(SystemFileIds.RFU_14.value, 0),                                                               sys_file_prop_perm),
+  (NotImplementedFile(SystemFileIds.RFU_15.value, 0),                                                               sys_file_prop_perm),
+  (NotImplementedFile(SystemFileIds.RFU_16.value, 0),                                                               sys_file_prop_perm),
+  (NotImplementedFile(SystemFileIds.LOCATION_DATA.value, 1),                                                        sys_file_prop_perm),  # TODO 0 recorded locations
+  (NotImplementedFile(SystemFileIds.D7AALP_RFU_18.value, 0),                                                        sys_file_prop_perm),
+  (NotImplementedFile(SystemFileIds.D7AALP_RFU_19.value, 0),                                                        sys_file_prop_perm),
+  (NotImplementedFile(SystemFileIds.D7AALP_RFU_1A.value, 0),                                                        sys_file_prop_perm),
+  (NotImplementedFile(SystemFileIds.D7AALP_RFU_1B.value, 0),                                                        sys_file_prop_perm),
+  (NotImplementedFile(SystemFileIds.D7AALP_RFU_1C.value, 0),                                                        sys_file_prop_perm),
+  (NotImplementedFile(SystemFileIds.D7AALP_RFU_1D.value, 0),                                                        sys_file_prop_perm),
+  (NotImplementedFile(SystemFileIds.D7AALP_RFU_1E.value, 0),                                                        sys_file_prop_perm),
+  (NotImplementedFile(SystemFileIds.D7AALP_RFU_1F.value, 0),                                                        sys_file_prop_perm),
+  (AccessProfileFile(0, ap_cont_fg_scan),                                                                           sys_file_prop_perm),
+  (AccessProfileFile(1, ap_bg_scan),                                                                                sys_file_prop_perm),
+  (AccessProfileFile(2, ap_no_scan),                                                                                sys_file_prop_perm),
+  (AccessProfileFile(3, ap_cont_div_scan),                                                                          sys_file_prop_perm),
+  (AccessProfileFile(4, ap_no_scan),                                                                                sys_file_prop_perm),
+  (AccessProfileFile(5, ap_no_scan),                                                                                sys_file_prop_perm),
+  (AccessProfileFile(6, ap_no_scan),                                                                                sys_file_prop_perm),
+  (AccessProfileFile(7, ap_no_scan),                                                                                sys_file_prop_perm),
+  (AccessProfileFile(8, ap_no_scan),                                                                                sys_file_prop_perm),
+  (AccessProfileFile(9, ap_no_scan),                                                                                sys_file_prop_perm),
+  (AccessProfileFile(10, ap_no_scan),                                                                               sys_file_prop_perm),
+  (AccessProfileFile(11, ap_no_scan),                                                                               sys_file_prop_perm),
+  (AccessProfileFile(12, ap_no_scan),                                                                               sys_file_prop_perm),
+  (AccessProfileFile(13, ap_no_scan),                                                                               sys_file_prop_perm),
+  (AccessProfileFile(14, ap_no_scan),                                                                               sys_file_prop_perm)
 ]
 
 sys_file_permission_default = FilePermissions(encrypted=False, executeable=False, user_readable=True, user_writeable=False, user_executeable=False,
@@ -805,7 +805,7 @@ __attribute__((used)) uint8_t d7ap_files_data[FRAMEWORK_FS_PERMANENT_STORAGE_SIZ
       0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 
       // DLL_CONFIG - 10 (length 7)
       0x24, 0x23, 0xff, 0xff, 0x0, 0x0, 0x0, 0x7, 0x0, 0x0, 0x0, 0x7, 
-      0x21, 0x0, 0x0, 0x0, 0x22, 0x0, 0x0, 
+      0x21, 0x0, 0x0, 0x0, 0x22, 0x56, 0x56, 
       // DLL_STATUS - 11 (length 16)
       0x24, 0x21, 0xff, 0xff, 0x0, 0x0, 0x0, 0x10, 0x0, 0x0, 0x0, 0x10, 
       0x0, 0x0, 0x0, 0x32, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 
@@ -903,7 +903,7 @@ __attribute__((used)) uint8_t d7ap_files_data[FRAMEWORK_FS_PERMANENT_STORAGE_SIZ
       // ACCESS_PROFILE_14 - 46 (length 65)
       0x24, 0x23, 0xff, 0xff, 0x0, 0x0, 0x0, 0x41, 0x0, 0x0, 0x0, 0x41, 
       0x32, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0xe, 0x50, 0xff, 0x0, 0x0, 0x0, 0x0, 0xe, 0x50, 0xff, 0x0, 0x0, 0x0, 0x0, 0xe, 0x50, 0xff, 0x0, 0x0, 0x0, 0x0, 0xe, 0x50, 0xff, 0x0, 0x0, 0x0, 0x0, 0xe, 0x50, 0xff, 0x0, 0x0, 0x0, 0x0, 0xe, 0x50, 0xff, 0x0, 0x0, 0x0, 0x0, 0xe, 0x50, 0xff, 0x0, 0x0, 0x0, 0x0, 0xe, 0x50, 0xff, 
-      //[[[end]]] (checksum: 7f865fc661bd4ff395f7b22a7985e513) 
+      //[[[end]]] (checksum: ab54f960d74814a9ba45336b5a9ffa08) 
   };
 
 #endif

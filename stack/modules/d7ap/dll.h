@@ -38,10 +38,8 @@
 typedef enum {
     D7ADLL_FIXED_NOISE_FLOOR,
     D7ADLL_SLOW_RSSI_VARIATION,
-    D7ADLL_MEDIAN_OF_THREE
+    D7ADLL_MOVING_AVERAGE
 } noise_floor_computation_method_t;
-
-#define NOISEFL_MEDIAN_OFFSET 10
 
 /*
  * Background frames are of fixed length
