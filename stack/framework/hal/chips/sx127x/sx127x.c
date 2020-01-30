@@ -1039,8 +1039,8 @@ error_t hw_radio_send_payload(uint8_t * data, uint16_t len) {
         hw_gpio_set_edge_interrupt(SX127x_DIO0_PIN, GPIO_RISING_EDGE);
         hw_gpio_enable_interrupt(SX127x_DIO0_PIN); 
       } else {
-        previous_threshold = 10;
-        write_reg(REG_FIFOTHRESH, RF_FIFOTHRESH_TXSTARTCONDITION_FIFONOTEMPTY | 10);
+        previous_threshold = 2;
+        write_reg(REG_FIFOTHRESH, RF_FIFOTHRESH_TXSTARTCONDITION_FIFONOTEMPTY | 2);
         write_fifo(data + start, remaining_bytes_len);
         remaining_bytes_len = 0;
         hw_gpio_set_edge_interrupt(SX127x_DIO1_PIN, GPIO_FALLING_EDGE);

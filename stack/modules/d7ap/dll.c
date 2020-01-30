@@ -308,10 +308,12 @@ void noisefloor_get_average(uint8_t position) {
         E_CCA = - current_access_profile.subbands[0].cca;
         return;
     }
-    if(reset_noisefl_average) {
-        noisefl_average[position] = - current_access_profile.subbands[0].cca;
+    if(reset_noisefl_average || (noisefl_average[position] == 0)) {
+        noisefl_average[position] = current_access_profile.subbands[0].cca;
         reset_noisefl_average = false;
         DPRINT("reset CCA");
+        E_CCA = - noisefl_average[position];
+        return;
     }
     E_CCA = - noisefl_average[position] + noisefl_offset;
 }
@@ -361,8 +363,12 @@ void start_background_scan()
     if(rx_nf_method == D7ADLL_MOVING_AVERAGE) { 
         //if current_channel in array of channels AND gotten rssi_thr smaller than pre-programmed Ecca
         if(position != UINT8_MAX && (config.rssi_thr <= - current_access_profile.subbands[0].cca)) {
-            // Xn = Xn-1 * (1 - b) + S * b with b = 1/alpha and S = sample 
-            noisefl_average[position] = (noisefl_average[position] * (noisefl_alpha - 1) + (-config.rssi_thr)) / noisefl_alpha;
+            if(noisefl_average[position] == 0)
+                noisefl_average[position] = config.rssi_thr;
+            else {
+                // Xn = Xn-1 * (1 - b) + S * b with b = 1/alpha and S = sample 
+                noisefl_average[position] = (noisefl_average[position] * (noisefl_alpha - 1) + (-config.rssi_thr)) / noisefl_alpha;
+            }
         }
 
         noisefloor_get_average(position);
@@ -526,8 +532,12 @@ static void cca_rssi_valid(int16_t cur_rssi)
         if((tx_nf_method == D7ADLL_MOVING_AVERAGE || rx_nf_method == D7ADLL_MOVING_AVERAGE))
         {
             uint8_t position = get_position_channel();
-            // Xn = Xn-1 * (1 - b) + S * b with b = 1/alpha and S = sample 
-            noisefl_average[position] = (noisefl_average[position] * (noisefl_alpha - 1) + (-cur_rssi)) / noisefl_alpha;
+            if(noisefl_average[position] == 0)
+                noisefl_average[position] = -cur_rssi;
+            else {
+                // Xn = Xn-1 * (1 - b) + S * b with b = 1/alpha and S = sample 
+                noisefl_average[position] = (noisefl_average[position] * (noisefl_alpha - 1) + (-cur_rssi)) / noisefl_alpha;
+            }
             noisefloor_get_average(position);
         }
         if (dll_state == DLL_STATE_CCA1)
