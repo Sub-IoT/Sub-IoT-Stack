@@ -38,8 +38,10 @@
 #if defined(FRAMEWORK_LOG_ENABLED) && defined(MODULE_D7AP_LOG_ENABLED)
 #include "log.h"
 #define DPRINT(...) log_print_stack_string(LOG_STACK_D7AP, __VA_ARGS__)
+#define DPRINT_DATA(ptr, len) log_print_data(ptr, len)
 #else
 #define DPRINT(...)
+#define DPRINT_DATA(ptr, len)
 #endif
 
 #define D7A_SECURITY_HEADER_SIZE 5
@@ -96,15 +98,32 @@ static alp_interface_status_t serialize_session_result_to_alp_interface_status(c
 
 void response_from_d7ap(uint16_t trans_id, uint8_t* payload, uint8_t len, d7ap_session_result_t result) {
     DPRINT("got response from d7 of trans %i with len %i and result linkbudget %i", trans_id, len, result.link_budget);
-
+    DPRINT_DATA(payload, len);
     alp_interface_status_t d7_status = serialize_session_result_to_alp_interface_status(&result);
+    DPRINT(&d7_status, d7_status.len);
     alp_layer_received_response(trans_id, payload, len, &d7_status);
+
+//    uint8_t tag_id = (uint8_t)(trans_id & 0xFF);
+//    alp_command_t* resp = alp_layer_command_alloc(false);
+//    alp_append_tag_response_action(&resp->alp_command_fifo, tag_id, false, false); // TODO err flag?
+//    fifo_put(&resp->alp_command_fifo, payload, len);
+//    alp_layer_process_command(resp->alp_command, fifo_get_size(&resp->alp_command_fifo), ALP_ITF_ID_D7ASP, &d7_status); // TODO remove status?
 }
 
 bool command_from_d7ap(uint8_t* payload, uint8_t len, d7ap_session_result_t result) {
     DPRINT("command from d7 with len %i result linkbudget %i", len, result.link_budget);
     alp_interface_status_t d7_status = serialize_session_result_to_alp_interface_status(&result);
-    return alp_layer_process_command(payload, len, ALP_ITF_ID_D7ASP, &d7_status);
+    alp_command_t* command = alp_layer_command_alloc(false, false);
+    if (command == NULL) {
+        assert(false); // TODO error handling
+    }
+
+    command->origin_itf_id = ALP_ITF_ID_D7ASP;
+    command->respond_when_completed = result.response_expected;
+    alp_append_interface_status(&command->alp_command_fifo, &d7_status);
+    fifo_put(&command->alp_command_fifo, payload, len);
+    //return alp_layer_process(command->alp_command, fifo_get_size((&command->alp_command_fifo)));
+    return alp_layer_process(command);
 }
 
 error_t d7ap_alp_send(uint8_t* payload, uint8_t payload_length, uint8_t expected_response_length, uint16_t* trans_id, alp_interface_config_t* itf_cfg) {
@@ -116,8 +135,15 @@ error_t d7ap_alp_send(uint8_t* payload, uint8_t payload_length, uint8_t expected
     }
 }
 
+static alp_interface_status_t empty_itf_status = {
+    .itf_id = ALP_ITF_ID_D7ASP,
+    .len = 0
+};
+
 void d7ap_command_completed(uint16_t trans_id, error_t error) {
-    alp_layer_command_completed(trans_id, &error, NULL);
+    // TODO D7ASP ALP status maps to D7ASP Result, which is only relevant for responses and not for the command (dialog as a whole)
+    // TBD in D7 PAG, for now supply 'empty' D7 status
+    alp_layer_forwarded_command_completed(trans_id, &error, &empty_itf_status);
 }
 #endif // MODULE_ALP
 

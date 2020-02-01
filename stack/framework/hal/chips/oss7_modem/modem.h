@@ -31,7 +31,7 @@
 typedef void (*modem_command_completed_callback_t)(bool with_error,uint8_t tag_id);
 typedef void (*modem_return_file_data_callback_t)(uint8_t file_id, uint32_t offset, uint32_t size, uint8_t* output_buffer);
 typedef void (*modem_write_file_data_callback_t)(uint8_t file_id, uint32_t offset, uint32_t size, uint8_t* output_buffer);
-typedef void (*modem_interface_status_callback_t)(alp_itf_id_t interface_type, uint8_t* data);
+typedef void (*modem_interface_status_callback_t)(uint8_t interface_id, uint8_t len, uint8_t* interface_status);
 
 typedef struct {
     modem_command_completed_callback_t command_completed_callback;
@@ -40,6 +40,8 @@ typedef struct {
     modem_write_file_data_callback_t write_file_data_callback;
     target_rebooted_callback_t modem_rebooted_callback;
 } modem_callbacks_t;
+
+// TODO doc
 
 void modem_init();
 void modem_send_ping();
@@ -50,11 +52,11 @@ bool modem_create_file(uint8_t file_id, uint32_t length, fs_storage_class_t stor
 bool modem_create_and_write_file(uint8_t file_id, uint32_t offset, uint32_t length, uint8_t* data, fs_storage_class_t storage_class);
 bool modem_read_file(uint8_t file_id, uint32_t offset, uint32_t size);
 bool modem_write_file(uint8_t file_id, uint32_t offset, uint32_t size, uint8_t* data);
-bool modem_send_unsolicited_response(uint8_t file_id, uint32_t offset, uint32_t length, uint8_t* data, session_config_t* session_config);
-bool modem_send_raw_unsolicited_response(uint8_t* alp_command, uint32_t length, session_config_t* session_config);
+bool modem_send_unsolicited_response(uint8_t file_id, uint32_t offset, uint32_t length, uint8_t* data, alp_interface_config_t* interface_config);
+bool modem_send_raw_unsolicited_response(uint8_t* alp_command, uint32_t length, alp_interface_config_t* interface_config);
 bool modem_send_indirect_unsolicited_response(uint8_t data_file_id, uint32_t offset, uint32_t length, uint8_t* data, 
                                               uint8_t interface_file_id, bool overload, d7ap_addressee_t* d7_addressee);
-bool modem_send_raw_indirect_unsolicited_response(uint8_t* alp_command, uint32_t length,
+int8_t modem_send_raw_indirect_unsolicited_response(uint8_t* alp_command, uint32_t length,
                                                   uint8_t interface_file_id, bool overload, d7ap_addressee_t* d7_addressee);
 uint8_t modem_get_active_tag_id();
 

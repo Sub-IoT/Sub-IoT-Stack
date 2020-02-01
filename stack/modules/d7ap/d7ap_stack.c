@@ -38,8 +38,10 @@
 #if defined(FRAMEWORK_LOG_ENABLED) && defined(MODULE_D7AP_LOG_ENABLED)
 #include "log.h"
 #define DPRINT(...) log_print_stack_string(LOG_STACK_D7AP, __VA_ARGS__)
+#define DPRINT_DATA(ptr, len) log_print_data(ptr, len)
 #else
 #define DPRINT(...)
+#define DPRINT_DATA(ptr, len)
 #endif
 
 #define INVALID_CLIENT_ID 0xFF
@@ -237,6 +239,8 @@ error_t d7ap_stack_send(uint8_t client_id, d7ap_session_config_t* config, uint8_
     // TODO how to filter by client Id since we don't know to which client the request is addressed?
     if (d7ap_stack_state == D7AP_STACK_STATE_WAIT_APP_ANSWER)
     {
+        DPRINT("[D7AP] sending response");
+        DPRINT_DATA(payload, len);
         return (d7asp_send_response(payload, len));
     }
 
@@ -273,6 +277,7 @@ error_t d7ap_stack_send(uint8_t client_id, d7ap_session_config_t* config, uint8_
         *trans_id = session->trans_id[session->request_nb];
 
     DPRINT("[D7AP] request posted with trans_id %02X and request_nb %d", *trans_id, session->request_nb);
+    DPRINT_DATA(payload, len);
 
     session->request_nb++;
     return SUCCESS;
@@ -284,6 +289,7 @@ bool d7ap_stack_process_unsolicited_request(uint8_t *payload, uint8_t length, d7
 
     //TODO handle here the re-assembly if needed?
     DPRINT("[D7AP] received an unsolicited request");
+    DPRINT_DATA(payload, length);
 
     slave_session.active = true;
     slave_session.token = result.fifo_token;
@@ -307,6 +313,7 @@ bool d7ap_stack_process_unsolicited_request(uint8_t *payload, uint8_t length, d7
 void d7ap_stack_process_received_response(uint8_t *payload, uint8_t length, d7ap_session_result_t result)
 {
     DPRINT("[D7AP] received a response");
+    DPRINT_DATA(payload, length);
     session_t* session = get_session_by_session_token(result.fifo_token);
 
     assert(session != NULL);
