@@ -33,5 +33,5 @@ APP_BUILD(NAME ${APP_NAME}
     SOURCES
         modem_client_example.c
     LIBS
-        framework
+        framework alp d7ap_fs
 )

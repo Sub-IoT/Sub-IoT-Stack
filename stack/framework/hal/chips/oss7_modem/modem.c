@@ -17,22 +17,20 @@
  */
 
 #include "modem.h"
+#include "alp.h"
+#include "alp_layer.h"
+#include "d7ap.h"
 #include "debug.h"
-#include "log.h"
 #include "errors.h"
 #include "fifo.h"
-#include "alp.h"
+#include "log.h"
+#include "modem_interface.h"
+#include "platform.h"
 #include "scheduler.h"
+#include "string.h"
 #include "timer.h"
-#include "d7ap.h"
 #include <stdio.h>
 #include <stdlib.h>
-#include "platform.h"
-#include "modem_interface.h"
-#include "alp_layer.h"
-
-#define RX_BUFFER_SIZE 256
-#define CMD_BUFFER_SIZE 256
 
 #if defined(FRAMEWORK_LOG_ENABLED) && defined(FRAMEWORK_MODEM_LOG_ENABLED)
   #define DPRINT(...) log_print_string(__VA_ARGS__)
@@ -43,78 +41,73 @@
 #endif
 
 
-typedef struct {
-  uint8_t tag_id;
-  bool is_active;
-  fifo_t fifo;
-  uint8_t buffer[256];
-} command_t;
-
-static uart_handle_t* uart_handle;
 static modem_callbacks_t* callbacks;
-static fifo_t rx_fifo;
-static uint8_t rx_buffer[RX_BUFFER_SIZE];
-static command_t command; // TODO only one active command supported for now
-static uint8_t next_tag_id = 0;
-static bool parsed_header = false;
-static uint8_t payload_len = 0;
+static alp_init_args_t alp_init_args;
 
-static void process_serial_frame(fifo_t* fifo) {
-  bool command_completed = false;
-  bool completed_with_error = false;
-  while(fifo_get_size(fifo)) {
+static alp_interface_config_t serial_itf_config = (alp_interface_config_t) {
+    .itf_id = ALP_ITF_ID_SERIAL,
+};
+
+static void on_alp_command_completed_cb(uint8_t tag_id, bool success)
+{
+    if (success)
+        log_print_string("Command %i completed successfully\n", tag_id);
+    else
+        log_print_string("Command %i failed, no ack received\n", tag_id);
+
+    DPRINT("command with tag %i completed @ %i", tag_id, timer_get_counter_value());
+    if (callbacks->command_completed_callback)
+        callbacks->command_completed_callback(!success, tag_id);
+}
+
+static void on_alp_command_result_cb(alp_interface_status_t* status, uint8_t* payload, uint8_t payload_length)
+{
     alp_action_t action;
-    alp_parse_action(fifo, &action);
+    uint8_t parse_index = 0;
+    while (parse_index < payload_length) {
+        alp_parse_action(payload, &parse_index, &action);
+        switch (action.ctrl.operation) {
+        case ALP_OP_STATUS:
+            if (action.interface_status.itf_id == ALP_ITF_ID_SERIAL) {
+                break; // skip the serial interface status
+            }
+            if (action.interface_status.itf_id == ALP_ITF_ID_D7ASP) {
+                if (action.interface_status.len > 0) {
+                    d7ap_session_result_t* d7_result = ((d7ap_session_result_t*)status->itf_status);
+                    log_print_string("recv response @ %i dB link budget from:", d7_result->rx_level);
+                    log_print_data(d7_result->addressee.id, d7ap_addressee_id_length(d7_result->addressee.ctrl.id_type));
+                }
+            } else {
+                log_print_string("itf status for itf id %i len %i", action.interface_status.itf_id, action.interface_status.len);
+            }
 
-    switch(action.operation) {
-      case ALP_OP_RESPONSE_TAG:
-        if(action.tag_response.tag_id == command.tag_id) {
-          command_completed = action.tag_response.completed;
-          completed_with_error = action.tag_response.error;
-        } else {
-          DPRINT("received resp with unexpected tag_id (%i vs %i)", action.tag_response.tag_id, command.tag_id);
-          // TODO unsolicited responses
+            if (callbacks->modem_interface_status_callback) {
+                callbacks->modem_interface_status_callback(action.interface_status.itf_id, action.interface_status.len, action.interface_status.itf_status);
+            }
+            break;
+        case ALP_OP_RESPONSE_TAG:
+            // skip, ALP layer will call on_alp_command_completed_cb()
+            break;
+        case ALP_OP_WRITE_FILE_DATA:
+            if (callbacks->write_file_data_callback)
+                callbacks->write_file_data_callback(action.file_data_operand.file_offset.file_id,
+                    action.file_data_operand.file_offset.offset,
+                    action.file_data_operand.provided_data_length,
+                    action.file_data_operand.data);
+            break;
+        case ALP_OP_RETURN_FILE_DATA:
+            if (callbacks->return_file_data_callback)
+                callbacks->return_file_data_callback(action.file_data_operand.file_offset.file_id,
+                    action.file_data_operand.file_offset.offset,
+                    action.file_data_operand.provided_data_length,
+                    action.file_data_operand.data);
+            break;
+
+        default:
+            log_print_string("ALP op %i not handled", action.ctrl.operation);
+            break;
         }
-        break;
-      case ALP_OP_WRITE_FILE_DATA:
-        if(callbacks->write_file_data_callback)
-          callbacks->write_file_data_callback(action.file_data_operand.file_offset.file_id,
-                                               action.file_data_operand.file_offset.offset,
-                                               action.file_data_operand.provided_data_length,
-                                               action.file_data_operand.data);
-        break;
-      case ALP_OP_RETURN_FILE_DATA:
-        if(callbacks->return_file_data_callback)
-          callbacks->return_file_data_callback(action.file_data_operand.file_offset.file_id,
-                                               action.file_data_operand.file_offset.offset,
-                                               action.file_data_operand.provided_data_length,
-                                               action.file_data_operand.data);
-        break;
-      case ALP_OP_STATUS:
-        if(action.status.type==ALP_ITF_ID_D7ASP)
-        {
-          d7ap_session_result_t interface_status = *((d7ap_session_result_t*)action.status.data);
-          uint8_t addressee_len = d7ap_addressee_id_length(interface_status.addressee.ctrl.id_type);
-          DPRINT("received resp from: ");
-          DPRINT_DATA(interface_status.addressee.id, addressee_len);
-        }
-        if(callbacks->modem_interface_status_callback)
-          callbacks->modem_interface_status_callback(action.status.type, (uint8_t*) &action.status.data);
-        break;
-      default:
-        assert(false);
     }
-  }
-
-
-  if(command_completed) {
-    DPRINT("command with tag %i completed @ %i", command.tag_id, timer_get_counter_value());
-    if(callbacks->command_completed_callback)
-      callbacks->command_completed_callback(completed_with_error,command.tag_id);
-
-    command.is_active = false;
-  }
-
 }
 
 void modem_cb_init(modem_callbacks_t* cbs)
@@ -124,154 +117,138 @@ void modem_cb_init(modem_callbacks_t* cbs)
       modem_interface_set_target_rebooted_callback(cbs->modem_rebooted_callback);
 }
 
-void modem_init() 
+void modem_init()
 {
-  modem_interface_init(PLATFORM_MODEM_INTERFACE_UART, PLATFORM_MODEM_INTERFACE_BAUDRATE, MCU2MODEM_INT_PIN, MODEM2MCU_INT_PIN);
-  modem_interface_register_handler(&process_serial_frame, SERIAL_MESSAGE_TYPE_ALP_DATA); 
-  command.is_active = false;
+    alp_init_args.alp_command_completed_cb = &on_alp_command_completed_cb;
+    alp_init_args.alp_command_result_cb = &on_alp_command_result_cb;
+    //alp_init_args.alp_received_unsolicited_data_cb = &on_alp_received_unsolicited_data_cb;
+
+    alp_layer_init(&alp_init_args, true);
 }
 
-void modem_reinit() {
-  command.is_active = false;
-}
 
-void modem_send_ping() {
-  uint8_t ping_request[1]={0x01};
-  modem_interface_transfer_bytes((uint8_t*) &ping_request, 1, SERIAL_MESSAGE_TYPE_PING_REQUEST);
-}
+//void modem_send_ping() {
+//  uint8_t ping_request[1]={0x01};
+//  modem_interface_transfer_bytes((uint8_t*) &ping_request, 1, SERIAL_MESSAGE_TYPE_PING_REQUEST);
+//}
 
-bool modem_execute_raw_alp(uint8_t* alp, uint8_t len) {
-  modem_interface_transfer_bytes(alp, len, SERIAL_MESSAGE_TYPE_ALP_DATA);
-}
+//bool modem_execute_raw_alp(uint8_t* alp, uint8_t len) {
+//  modem_interface_transfer_bytes(alp, len, SERIAL_MESSAGE_TYPE_ALP_DATA);
+//}
 
-bool alloc_command() {
-  if(command.is_active) {
-    DPRINT("prev command still active @ %i", timer_get_counter_value());
-    return false;
-  }
+//bool modem_create_and_write_file(uint8_t file_id, uint32_t offset, uint32_t length, uint8_t* data, fs_storage_class_t storage_class) {
+//  if(!alloc_command())
+//    return false;
 
-  command.is_active = true;
-  fifo_init(&command.fifo, command.buffer, CMD_BUFFER_SIZE);
-  command.tag_id = next_tag_id;
-  next_tag_id++;
+//  alp_append_create_new_file_data_action(&command.fifo, file_id, length, storage_class, true, false);
 
-  alp_append_tag_request_action(&command.fifo, command.tag_id, true);
-  return true;
-}
+//  alp_append_write_file_data_action(&command.fifo, file_id, offset, length, data, true, false);
 
-bool modem_create_and_write_file(uint8_t file_id, uint32_t offset, uint32_t length, uint8_t* data, fs_storage_class_t storage_class) {
-  if(!alloc_command())
-    return false;
+//  modem_interface_transfer_bytes(command.buffer, fifo_get_size(&command.fifo), SERIAL_MESSAGE_TYPE_ALP_DATA);
 
-  alp_append_create_new_file_data_action(&command.fifo, file_id, length, storage_class, true, false);
+//  return true;
+//}
 
-  alp_append_write_file_data_action(&command.fifo, file_id, offset, length, data, true, false);
-
-  modem_interface_transfer_bytes(command.buffer, fifo_get_size(&command.fifo), SERIAL_MESSAGE_TYPE_ALP_DATA);
-
-  return true;
-}
-
-bool modem_create_file(uint8_t file_id, uint32_t length, fs_storage_class_t storage_class) {
-  if(!alloc_command())
-    return false;
+//bool modem_create_file(uint8_t file_id, uint32_t length, fs_storage_class_t storage_class) {
+//  if(!alloc_command())
+//    return false;
   
-  alp_append_create_new_file_data_action(&command.fifo, file_id, length, storage_class, true, false);
+//  alp_append_create_new_file_data_action(&command.fifo, file_id, length, storage_class, true, false);
 
-  modem_interface_transfer_bytes(command.buffer, fifo_get_size(&command.fifo), SERIAL_MESSAGE_TYPE_ALP_DATA);
+//  modem_interface_transfer_bytes(command.buffer, fifo_get_size(&command.fifo), SERIAL_MESSAGE_TYPE_ALP_DATA);
 
-  return true;
-}
+//  return true;
+//}
 
-bool modem_read_file(uint8_t file_id, uint32_t offset, uint32_t size) {
-  if(!alloc_command())
-    return false;
+bool modem_read_file(uint8_t file_id, uint32_t offset, uint32_t size)
+{
+    alp_command_t* command = alp_layer_command_alloc(true, false);
+    if (command == NULL)
+        return false;
 
-  alp_append_read_file_data_action(&command.fifo, file_id, offset, size, true, false);
+    alp_append_forward_action(&command->alp_command_fifo, &serial_itf_config, 0);
+    alp_append_tag_request_action(&command->alp_command_fifo, command->tag_id, true);
+    alp_append_read_file_data_action(&command->alp_command_fifo, file_id, offset, size, true, false);
 
-  modem_interface_transfer_bytes(command.buffer, fifo_get_size(&command.fifo), SERIAL_MESSAGE_TYPE_ALP_DATA);
+    alp_layer_process(command);
 
-  return true;
+    return true;
 }
 
 bool modem_write_file(uint8_t file_id, uint32_t offset, uint32_t size, uint8_t* data) {
-  if(!alloc_command())
-    return false;
+    alp_command_t* command = alp_layer_command_alloc(true, false);
+    if (command == NULL)
+        return false;
 
-  alp_append_write_file_data_action(&command.fifo, file_id, offset, size, data, true, false);
+    alp_append_forward_action(&command->alp_command_fifo, &serial_itf_config, 0);
+    alp_append_tag_request_action(&command->alp_command_fifo, command->tag_id, true);
+    alp_append_write_file_data_action(&command->alp_command_fifo, file_id, offset, size, data, true, false);
 
-  modem_interface_transfer_bytes(command.buffer, fifo_get_size(&command.fifo), SERIAL_MESSAGE_TYPE_ALP_DATA);
+    alp_layer_process(command);
 
-  return true;
+    return true;
 }
 
 bool modem_send_unsolicited_response(uint8_t file_id, uint32_t offset, uint32_t length, uint8_t* data,
-                                     session_config_t* session_config) {
-  if(!alloc_command())
-    return false;
+                                     alp_interface_config_t* interface_config) {
+    alp_command_t* command = alp_layer_command_alloc(true, false);
+    if (command == NULL)
+        return false;
 
-  if(session_config->interface_type==DASH7)
-    alp_append_forward_action(&command.fifo, ALP_ITF_ID_D7ASP, (uint8_t *) &session_config->d7ap_session_config, sizeof(d7ap_session_config_t));
-  else if(session_config->interface_type==LORAWAN_OTAA)
-    alp_append_forward_action(&command.fifo, ALP_ITF_ID_LORAWAN_OTAA, (uint8_t *) &session_config->lorawan_session_config_otaa, sizeof(lorawan_session_config_otaa_t));
-  else if(session_config->interface_type==LORAWAN_ABP)
-    alp_append_forward_action(&command.fifo, ALP_ITF_ID_LORAWAN_ABP, (uint8_t *) &session_config->lorawan_session_config_abp, sizeof(lorawan_session_config_abp_t));
+    alp_append_forward_action(&command->alp_command_fifo, &serial_itf_config, 0);
+    alp_append_tag_request_action(&command->alp_command_fifo, command->tag_id, true);
+    alp_append_forward_action(&command->alp_command_fifo, interface_config, 0);
+    alp_append_return_file_data_action(&command->alp_command_fifo, file_id, offset, length, data);
 
-  alp_append_return_file_data_action(&command.fifo, file_id, offset, length, data);
-
-  modem_interface_transfer_bytes(command.buffer, fifo_get_size(&command.fifo), SERIAL_MESSAGE_TYPE_ALP_DATA);
-  return true;
+    alp_layer_process(command);
+    return true;
 }
 
 bool modem_send_raw_unsolicited_response(uint8_t* alp_command, uint32_t length,
-                                         session_config_t* session_config) {
-  if(!alloc_command())
-    return false;
+                                         alp_interface_config_t* interface_config) {
+    alp_command_t* command = alp_layer_command_alloc(true, false);
+    if (command == NULL)
+        return false;
 
-  //sends alp to modem
+    alp_append_forward_action(&command->alp_command_fifo, &serial_itf_config, 0);
+    alp_append_tag_request_action(&command->alp_command_fifo, command->tag_id, true);
+    alp_append_forward_action(&command->alp_command_fifo, interface_config, 0);
+    fifo_put(&command->alp_command_fifo, alp_command, length);
 
-   if(session_config->interface_type==DASH7)
-    alp_append_forward_action(&command.fifo, ALP_ITF_ID_D7ASP, (uint8_t *) &session_config->d7ap_session_config, sizeof(d7ap_session_config_t));
-  else if(session_config->interface_type==LORAWAN_OTAA)
-    alp_append_forward_action(&command.fifo, ALP_ITF_ID_LORAWAN_OTAA, (uint8_t *) &session_config->lorawan_session_config_otaa, sizeof(lorawan_session_config_otaa_t));
-  else if(session_config->interface_type==LORAWAN_ABP)
-    alp_append_forward_action(&command.fifo, ALP_ITF_ID_LORAWAN_ABP, (uint8_t *) &session_config->lorawan_session_config_abp, sizeof(lorawan_session_config_abp_t));
+    alp_layer_process(command);
 
-  fifo_put(&command.fifo, alp_command, length);
-
-  modem_interface_transfer_bytes(command.buffer, fifo_get_size(&command.fifo), SERIAL_MESSAGE_TYPE_ALP_DATA);
-  return true;
+    return true;
 }
 
-bool modem_send_indirect_unsolicited_response(uint8_t data_file_id, uint32_t offset, uint32_t length, uint8_t* data, 
-                                              uint8_t interface_file_id, bool overload, d7ap_addressee_t* d7_addressee) {
-  if(!alloc_command())
-    return false;
-  
-  //overload only D7 implemented
-  alp_append_indirect_forward_action(&command.fifo, interface_file_id, overload, (uint8_t *) &d7_addressee, d7ap_addressee_id_length(d7_addressee->ctrl.id_type));
-
-  alp_append_return_file_data_action(&command.fifo, data_file_id, offset, length, data);
-
-  modem_interface_transfer_bytes(command.buffer, fifo_get_size(&command.fifo), SERIAL_MESSAGE_TYPE_ALP_DATA);
-  return true;
-}
-
-bool modem_send_raw_indirect_unsolicited_response(uint8_t* alp_command, uint32_t length,
-                                                  uint8_t interface_file_id, bool overload, d7ap_addressee_t* d7_addressee) {
-  if(!alloc_command())
-    return false;
-  
-  //overload only D7 implemented
-  alp_append_indirect_forward_action(&command.fifo, interface_file_id, overload, (uint8_t *) &d7_addressee, sizeof(d7_addressee));
-
-  fifo_put(&command.fifo, alp_command, length);
-
-  modem_interface_transfer_bytes(command.buffer, fifo_get_size(&command.fifo), SERIAL_MESSAGE_TYPE_ALP_DATA);
-  return true;
-}
-
-uint8_t modem_get_active_tag_id()
+bool modem_send_indirect_unsolicited_response(uint8_t data_file_id, uint32_t offset, uint32_t length, uint8_t* data,
+    uint8_t interface_file_id, bool overload, d7ap_addressee_t* d7_addressee)
 {
-  return next_tag_id;
+    alp_command_t* command = alp_layer_command_alloc(true, false);
+    if (command == NULL)
+        return false;
+
+    alp_append_forward_action(&command->alp_command_fifo, &serial_itf_config, 0);
+    alp_append_tag_request_action(&command->alp_command_fifo, command->tag_id, true);
+    alp_append_indirect_forward_action(&command->alp_command_fifo, interface_file_id, overload, (uint8_t*)&d7_addressee, d7ap_addressee_id_length(d7_addressee->ctrl.id_type));
+
+    alp_append_return_file_data_action(&command->alp_command_fifo, data_file_id, offset, length, data);
+
+    alp_layer_process(command);
+    return true;
+}
+
+int8_t modem_send_raw_indirect_unsolicited_response(uint8_t* alp_command, uint32_t length,
+    uint8_t interface_file_id, bool overload, d7ap_addressee_t* d7_addressee)
+{
+    alp_command_t* command = alp_layer_command_alloc(true, false);
+    if (command == NULL)
+        return -1;
+
+    alp_append_forward_action(&command->alp_command_fifo, &serial_itf_config, 0);
+    alp_append_tag_request_action(&command->alp_command_fifo, command->tag_id, true);
+    alp_append_indirect_forward_action(&command->alp_command_fifo, interface_file_id, overload, (uint8_t *) &d7_addressee, sizeof(d7_addressee));
+    fifo_put(&command->alp_command_fifo, alp_command, length);
+
+    alp_layer_process(command);
+    return command->tag_id;
 }

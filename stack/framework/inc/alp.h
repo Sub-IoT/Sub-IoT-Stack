@@ -41,8 +41,9 @@
 
 #define MODULE_ALP_INTERFACE_SIZE 10
 
-#define ALP_PAYLOAD_MAX_SIZE D7A_PAYLOAD_MAX_SIZE // TODO configurable?
+#define ALP_PAYLOAD_MAX_SIZE 255 // TODO configurable?
 #define ALP_ITF_CONFIG_SIZE 43
+#define ALP_ITF_STATUS_MAX_SIZE 40
 
 typedef enum
 {
@@ -109,12 +110,6 @@ typedef enum {
   ARITH_COMP_TYPE_GREATER_THAN = 4,
   ARITH_COMP_TYPE_GREATER_THAN_OR_EQUAL_TO = 5
 } alp_query_arithmetic_comparison_type_t;
-
-typedef struct {
-    uint8_t itf_id;
-    uint8_t itf_config[ALP_ITF_CONFIG_SIZE];
-} __attribute__ ((__packed__)) alp_interface_config_t;
-
 
 /*! \brief The ALP CTRL header
  *
@@ -193,15 +188,19 @@ typedef struct {
     d7ap_fs_file_header_t file_header;
 } alp_operand_file_header_t;
 
+typedef struct __attribute__ ((__packed__)) {
+    uint8_t itf_id;
+    uint8_t itf_config[ALP_ITF_CONFIG_SIZE];
+} alp_interface_config_t;
+
 typedef struct __attribute__((packed)) {
-    alp_itf_id_t itf_id;
+    uint8_t itf_id;
     uint8_t len;
-    uint8_t itf_status[40];
+    uint8_t itf_status[ALP_ITF_STATUS_MAX_SIZE];
 } alp_interface_status_t;
 
-
 typedef struct {
-    alp_operation_t operation;
+    alp_control_t ctrl;
     union {
         alp_operand_file_data_t file_data_operand;
         struct {
@@ -209,7 +208,8 @@ typedef struct {
             bool error;
             uint8_t tag_id;
         } tag_response;
-        alp_interface_status_t status;
+        alp_interface_status_t interface_status;
+        alp_interface_config_t interface_config;
     };
 
 } alp_action_t;
@@ -226,6 +226,22 @@ typedef struct {
     bool unique; // TODO
 } alp_interface_t;
 
+// TODO internal struct, only expose opaque struct to users?
+typedef struct {
+    bool is_active;
+    bool is_response;
+    bool respond_when_completed;
+    bool is_response_completed;
+    bool is_response_error;
+    bool is_tag_requested;
+    uint8_t forward_itf_id;
+    uint16_t trans_id;
+    uint8_t tag_id;
+    alp_itf_id_t origin_itf_id;
+    alp_interface_status_t origin_itf_status;
+    fifo_t alp_command_fifo;
+    uint8_t alp_command[ALP_PAYLOAD_MAX_SIZE];
+} alp_command_t;
 
 /*!
  * \brief Returns the ALP operation type contained in alp_command
@@ -234,11 +250,11 @@ typedef struct {
  */
 alp_operation_t alp_get_operation(uint8_t* alp_command);
 
-
-uint8_t alp_get_expected_response_length(fifo_t fifo);
+uint8_t alp_get_expected_response_length(uint8_t* command, uint32_t len);
 
 alp_status_codes_t alp_register_interface(alp_interface_t* itf);
 void alp_append_tag_request_action(fifo_t* fifo, uint8_t tag_id, bool eop);
+void alp_append_tag_response_action(fifo_t* fifo, uint8_t tag_id, bool eop, bool err);
 void alp_append_read_file_data_action(fifo_t* fifo, uint8_t file_id, uint32_t offset, uint32_t length, bool resp, bool group);
 void alp_append_write_file_data_action(fifo_t* fifo, uint8_t file_id, uint32_t offset, uint32_t length, uint8_t* data, bool resp, bool group);
 void alp_append_forward_action(fifo_t* fifo, alp_interface_config_t* config, uint8_t config_len);
@@ -248,9 +264,9 @@ void alp_append_create_new_file_data_action(fifo_t* fifo, uint8_t file_id, uint3
 void alp_append_indirect_forward_action(fifo_t* fifo, uint8_t file_id, bool overload, uint8_t *overload_config, uint8_t overload_config_len);
 void alp_append_interface_status(fifo_t* fifo, alp_interface_status_t* status);
 
-uint32_t alp_parse_length_operand(fifo_t* cmd_fifo);
-alp_operand_file_offset_t alp_parse_file_offset_operand(fifo_t* cmd_fifo);
-alp_operand_file_header_t alp_parse_file_header_operand(fifo_t* cmd_fifo);
+uint32_t alp_parse_length_operand(fifo_t* fifo);
+alp_operand_file_offset_t alp_parse_file_offset_operand(fifo_t* fifo);
+alp_operand_file_header_t alp_parse_file_header_operand(fifo_t* fifo);
 
 void alp_parse_action(fifo_t* fifo, alp_action_t* action);
 

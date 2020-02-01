@@ -53,6 +53,11 @@ alp_interface_t alp_modem_interface;
 
 static error_t serial_interface_send(uint8_t* payload, uint8_t payload_length, uint8_t expected_response_length, uint16_t* trans_id, alp_interface_config_t* session_config);
 
+static alp_interface_status_t serial_itf_status = {
+    .itf_id = ALP_ITF_ID_SERIAL,
+    .len = 0
+};
+
 static void serial_interface_cmd_handler(fifo_t* cmd_fifo)
 {
     error_t err;
@@ -60,9 +65,14 @@ static void serial_interface_cmd_handler(fifo_t* cmd_fifo)
     start_atomic();
     err = fifo_pop(cmd_fifo, alp_command, alp_command_len); assert(err == SUCCESS); // pop full ALP command
     end_atomic();
-    DPRINT_DATA(alp_command, alp_command_len);
 
-    alp_layer_process_command(alp_command, alp_command_len, ALP_ITF_ID_SERIAL, NULL);
+    alp_command_t* command = alp_layer_command_alloc(false, false);
+    command->origin_itf_id = ALP_ITF_ID_SERIAL;
+    
+    alp_append_interface_status(&command->alp_command_fifo, &serial_itf_status);
+    fifo_put(&command->alp_command_fifo, alp_command, alp_command_len);
+    // alp_layer_process(command->alp_command, fifo_get_size(&command->alp_command_fifo));
+    alp_layer_process(command);
 }
 
 void serial_interface_register() {

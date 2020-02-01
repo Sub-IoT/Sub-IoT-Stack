@@ -48,7 +48,7 @@
 
 #define SENSOR_FILE_ID           0x40
 #define SENSOR_FILE_SIZE         2
-#define SENSOR_INTERVAL_SEC	TIMER_TICKS_PER_SEC * 30
+#define SENSOR_INTERVAL_SEC	TIMER_TICKS_PER_SEC * 10
 
 #ifdef USE_HTS221
   static i2c_handle_t* hts221_handle;
@@ -100,9 +100,7 @@ void execute_sensor_measurement()
   alp_append_return_file_data_action(&alp_command_fifo, SENSOR_FILE_ID, 0, SENSOR_FILE_SIZE, (uint8_t*)&temperature);
 
   // and execute this
-  //alp_layer_execute_command_over_itf(alp_command, fifo_get_size(&alp_command_fifo), &session_config);
-  alp_layer_process_command(alp_command, fifo_get_size(&alp_command_fifo), ALP_ITF_ID_HOST, NULL);
-
+  // TODO alp_layer_process(alp_command, fifo_get_size(&alp_command_fifo));
 }
 
 void on_alp_command_completed_cb(uint8_t tag_id, bool success)

@@ -40,6 +40,7 @@
 #include "d7ap.h"
 #include "lorawan_stack.h"
 
+
 typedef enum
 {
   STATE_NOT_INITIALIZED,
@@ -91,11 +92,20 @@ void alp_layer_execute_command_over_itf(uint8_t* alp_command, uint8_t alp_comman
  */
 void alp_layer_register_interface(alp_interface_t* interface);
 
-bool alp_layer_process_command(uint8_t* payload, uint8_t payload_length, alp_itf_id_t origin_itf_id, alp_interface_status_t* itf_status);
+/*!
+ * \brief Processes the ALP command in an asynchronous way
+ * \param payload
+ * \param len
+ * \return True if response payload is to be expected
+ */
+bool alp_layer_process(alp_command_t* command);
 void alp_layer_received_response(uint16_t trans_id, uint8_t* payload, uint8_t payload_length, alp_interface_status_t* itf_status); // TODO merge with alp_layer_process_command()?
-void alp_layer_command_completed(uint16_t trans_id, error_t* error, alp_interface_status_t* itf_status);
+void alp_layer_forwarded_command_completed(uint16_t trans_id, error_t* error, alp_interface_status_t* itf_status);
 void alp_layer_process_d7aactp(d7ap_session_config_t* session_config, uint8_t* alp_command, uint32_t alp_command_length);
 
+
+alp_command_t* alp_layer_command_alloc(bool with_tag_request, bool always_respond); // TODO expose?
+alp_command_t* alp_layer_get_command_by_transid(uint16_t trans_id, uint8_t itf_id); // TODO alp_layer_forwarded_command_completed ?
 
 #endif /* ALP_LAYER_H_ */
 

@@ -26,7 +26,7 @@
 MODULE_OPTION(${MODULE_PREFIX}_LOG_ENABLED "Enable logging for ALP layer" FALSE)
 MODULE_HEADER_DEFINE(BOOL ${MODULE_PREFIX}_LOG_ENABLED)
 
-MODULE_PARAM(${MODULE_PREFIX}_MAX_ACTIVE_COMMAND_COUNT "3" STRING "The maximum number of active ALP commands")
+MODULE_PARAM(${MODULE_PREFIX}_MAX_ACTIVE_COMMAND_COUNT "8" STRING "The maximum number of active ALP commands")
 MODULE_HEADER_DEFINE(NUMBER ${MODULE_PREFIX}_MAX_ACTIVE_COMMAND_COUNT)
 
 #Generate the 'module_defs.h'
@@ -40,6 +40,7 @@ ADD_LIBRARY(alp STATIC
     serial_interface.c
     alp_layer.c
     alp.c
+    lorawan_interface.c
 )
 
 GET_PROPERTY(__global_include_dirs GLOBAL PROPERTY GLOBAL_INCLUDE_DIRECTORIES)

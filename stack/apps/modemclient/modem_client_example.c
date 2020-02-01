@@ -34,22 +34,21 @@
 #include "scheduler.h"
 #include "timer.h"
 
+#include "alp_layer.h"
+
 #define TX_INTERVAL_TICKS (TIMER_TICKS_PER_SEC * 2)
 
 #define FILE_ID 0x40
 
 // This example application shows how to integrate a serial D7 modem
 
-static uart_handle_t* modem_uart;
-
-
 // define the D7 interface configuration used for sending the file data to
-static session_config_t session_config   = 
+static alp_interface_config_d7ap_t session_config  =
 {
-    .interface_type = DASH7,
+    .itf_id = ALP_ITF_ID_D7ASP,
     .d7ap_session_config = {
         .qos = {
-          .qos_resp_mode = SESSION_RESP_MODE_NO,
+          .qos_resp_mode = SESSION_RESP_MODE_ANY,
           .qos_retry_mode = SESSION_RETRY_MODE_NO
         },
         .dormant_timeout = 0,
@@ -67,7 +66,9 @@ static session_config_t session_config   =
 void send_counter() {
   static uint8_t counter = 0;
   log_print_string("counter %i", counter);
+
   modem_send_unsolicited_response(FILE_ID, 0, 1, &counter, &session_config);
+  //alp_layer_process_raw_indirect_unsolicited_response(alp_command, sizeof (alp_command), 29, false, NULL);
   counter++;
 }
 
@@ -93,13 +94,13 @@ modem_callbacks_t callbacks = (modem_callbacks_t){
   .modem_rebooted_callback = &modem_rebooted_cb
 };
 
+void bootstrap()
+{
 
-void bootstrap() {
-  modem_init();
-  modem_cb_init(&callbacks);
+    modem_init();
+    modem_cb_init(&callbacks);
 
-  sched_register_task(&send_counter);
-  sched_post_task(&send_counter);
-  log_print_string("Device booted\n");
+    sched_register_task(&send_counter);
+    sched_post_task(&send_counter);
+    log_print_string("Device booted\n");
 }
-
